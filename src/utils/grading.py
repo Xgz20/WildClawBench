@@ -64,8 +64,16 @@ def run_grading(
             write_error_score,
         )
 
+    shim_src = Path(__file__).with_name("judge_shim.py")
+
     runner_code = "\n".join([
         "import json",
+        # Route inline `openai` judge calls whose model is `anthropic/*` to the
+        # Anthropic Messages API (judge endpoint). Non-fatal if unavailable.
+        "try:",
+        "    import _judge_shim; _judge_shim.install()",
+        "except Exception as _shim_exc:",
+        "    import sys as _sys; print('judge_shim install failed:', _shim_exc, file=_sys.stderr)",
         "from _transcript_loader import load_transcript",
         f"_transcript = load_transcript({json.dumps(transcript_container_path)})",
         "",
@@ -94,6 +102,16 @@ def run_grading(
                 f"docker cp transcript loader failed: {r_loader.stderr}",
                 write_error_score,
             )
+
+        if shim_src.exists():
+            r_shim = subprocess.run(
+                ["docker", "cp", str(shim_src), f"{task_id}:/tmp/_judge_shim.py"],
+                capture_output=True, text=True,
+            )
+            if r_shim.returncode != 0:
+                logger.warning("[%s] docker cp judge shim failed: %s", task_id, r_shim.stderr)
+        else:
+            logger.warning("[%s] judge shim module not found: %s", task_id, shim_src)
 
         r = subprocess.run(
             ["docker", "cp", runner_host, f"{task_id}:/tmp/_grade_runner.py"],
@@ -126,6 +144,19 @@ def run_grading(
             env_args += ["-e", f"{key}={value}"]
             masked = value[:4] + "***"
             logger.info("[%s] Injecting grading lobster env: %s=%s", task_id, key, masked)
+
+        # Judge routing: expose the Anthropic-format judge endpoint to the
+        # in-container judge_shim (see src/utils/judge_shim.py). These are not
+        # part of a task's `## Env` section, so inject them explicitly whenever
+        # set on the host. JUDGE_MODEL is re-injected here as a safety net in
+        # case a task omits it from its `## Env` list.
+        for key in ("ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL", "ANTHROPIC_MODEL", "JUDGE_MODEL"):
+            value = os.environ.get(key, "").strip()
+            if not value:
+                continue
+            env_args += ["-e", f"{key}={value}"]
+            masked = (value[:4] + "***") if key.endswith("KEY") else value
+            logger.info("[%s] Injecting grading judge env: %s=%s", task_id, key, masked)
 
         r = subprocess.run(
             ["docker", "exec", *env_args, task_id, "python3", "/tmp/_grade_runner.py"],
