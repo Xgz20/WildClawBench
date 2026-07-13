@@ -4,8 +4,12 @@ name: Customer Issue Escalation Routing
 category: 03_Social_Interaction
 timeout_seconds: 600
 modality: pure-text
+difficulty: L4
+grading_type: hybrid
+grading_weights:
+  automated: 0.1
+  llm_judge: 0.9
 ---
-
 ## Prompt
 
 I'm behind on triaging my support inbox. Can you go through everything, figure out what's urgent, and put together an escalation report? Route each issue to the right person on our team. Don't message customers directly — draft those for my review.

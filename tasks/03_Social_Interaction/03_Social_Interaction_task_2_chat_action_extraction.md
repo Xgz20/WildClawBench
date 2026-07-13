@@ -4,8 +4,12 @@ name: Chat Message Action Item Extraction
 category: 03_Social_Interaction
 timeout_seconds: 300
 modality: pure-text
+difficulty: L3
+grading_type: hybrid
+grading_weights:
+  automated: 0.7
+  llm_judge: 0.3
 ---
-
 ## Prompt
 
 I've been swamped lately and I think I'm dropping the ball on things. Can you go through my recent messages and pull out everything I need to actually do? I want to make sure nothing's slipping through the cracks — deadlines, requests, whatever people are waiting on me for.

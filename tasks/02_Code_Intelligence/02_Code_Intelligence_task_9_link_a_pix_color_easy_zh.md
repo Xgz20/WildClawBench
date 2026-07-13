@@ -4,8 +4,9 @@ name: Link-a-Pix Color (Easy) — Solve Puzzle and Recognize Filled Pattern
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L2
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 这是一道连数字谜题游戏（也叫 Link-a-Pix / Paint by Pairs）。请你完成以下任务（注意：时间有限，尽量15分钟内完成，请注意高效）：

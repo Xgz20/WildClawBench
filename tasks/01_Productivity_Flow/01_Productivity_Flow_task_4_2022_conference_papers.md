@@ -4,8 +4,9 @@ name: Compile Kaiming He 2022 Conference Papers
 category: 01_Productivity_Flow
 timeout_seconds: 1200
 modality: pure-text
+difficulty: L4
+grading_type: automated
 ---
-
 ## Prompt
 Please compile all papers authored or co-authored by **Kaiming He** that were published at **academic conferences in 2022** and save them to:
 

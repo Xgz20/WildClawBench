@@ -4,8 +4,12 @@ name: GitHub Repository to Project Homepage
 category: 05_Creative_Synthesis
 timeout_seconds: 600
 modality: multimodal
+difficulty: L3
+grading_type: hybrid
+grading_weights:
+  automated: 0.25
+  llm_judge: 0.75
 ---
-
 ## Prompt
 
 请为开源项目 VLMEvalKit（https://github.com/open-compass/VLMEvalKit/）制作一个现代化的单页宣传主页 `/tmp_workspace/results/index.html`。主页需完整介绍项目核心信息，包含不少于 5 张图片（logo、架构示意、效果展示等），设计应专业美观。所有样式内联或内嵌，确保单文件即可完整渲染。

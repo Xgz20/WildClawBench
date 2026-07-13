@@ -4,8 +4,9 @@ name: Summarize Main OpenMMLab Contributors
 category: 01_Productivity_Flow
 timeout_seconds: 900
 modality: pure-text
+difficulty: L3
+grading_type: automated
 ---
-
 ## Prompt
 
 请先识别出满足要求的 OpenMMLab repo 集合，再整理这些 repo 中的主要 contributor 列表（GitHub ID），以及他们在这些 repo 中主要 contribute 的项目和对应的 commit 数量。

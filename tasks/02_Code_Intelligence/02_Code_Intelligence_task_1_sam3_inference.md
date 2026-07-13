@@ -4,8 +4,9 @@ name: SAM3 Inference Code Implementation
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L3
+grading_type: automated
 ---
-
 ## Prompt
 
 你是一名 AI 编程专家。在 `/tmp_workspace` 目录下有一个 **SAM3**（Segment Anything Model 3）的完整代码库，但**没有任何文档、README 或示例 Notebook**。你需要通过阅读源代码，理解 SAM3 的使用方法，然后编写推理脚本完成以下 4 个目标检测用例。

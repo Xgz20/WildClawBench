@@ -4,8 +4,9 @@ name: Conflicting Information Handling between Local Data and Web
 category: 04_Search_Retrieval
 timeout_seconds: 900
 modality: pure-text
+difficulty: L3
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 During the Paris Olympics, Company A in China sold a batch of sports equipment to domestic Company B for use in Company B’s export business. The parties agreed that Company B should pay for the goods within 30 days after delivery. However, after receiving the goods, Company B never made payment.

@@ -4,8 +4,9 @@ name: Video Lecture Notes Generation
 category: 05_Creative_Synthesis
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L2
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 There's an LLM lecture video at `/tmp_workspace/video.mp4`. Can you watch it and put together study notes for me? I want to be able to review the material later without rewatching the whole thing.

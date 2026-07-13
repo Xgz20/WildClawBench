@@ -4,8 +4,9 @@ name: Multi-round Meeting Time Negotiation
 category: 03_Social_Interaction
 timeout_seconds: 600
 modality: pure-text
+difficulty: L4
+grading_type: automated
 ---
-
 ## Prompt
 
 Director Chen wants me to set up a "Q2 Product Review" meeting this week, before Friday. 90 minutes, with Li Wei, Zhang Min, and Wang Fang. He should've sent me an email about it — check my inbox for the details.

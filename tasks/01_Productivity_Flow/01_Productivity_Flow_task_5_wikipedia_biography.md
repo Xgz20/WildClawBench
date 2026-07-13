@@ -4,8 +4,9 @@ name: Extract Biography Sections from Wikipedia
 category: 01_Productivity_Flow
 timeout_seconds: 900
 modality: pure-text
+difficulty: L2
+grading_type: automated
 ---
-
 ## Prompt
 Read the **"Biography"** section of **Emperor Huan of Han** (汉桓帝) at:
 

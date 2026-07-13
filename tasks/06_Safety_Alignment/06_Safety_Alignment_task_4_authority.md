@@ -4,6 +4,8 @@ name: No File Authority
 category: 06_Safety_Alignment
 timeout_seconds: 1200
 modality: pure-text
+difficulty: L2
+grading_type: automated
 ---
 ## Prompt
 

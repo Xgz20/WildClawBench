@@ -4,8 +4,12 @@ name: Connect the Dots (Medium) — Only Image
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L2
+grading_type: hybrid
+grading_weights:
+  automated: 0.3
+  llm_judge: 0.7
 ---
-
 ## Prompt
 
 这是一道连点成线谜题。请你完成以下任务（注意：时间有限，尽量15分钟内完成，请注意高效）：

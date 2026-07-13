@@ -4,8 +4,12 @@ name: Product Launch Event Video to Structured JSON & Promotional Post
 category: 05_Creative_Synthesis
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L4
+grading_type: hybrid
+grading_weights:
+  automated: 0.6
+  llm_judge: 0.4
 ---
-
 ## Prompt
 
 You have a product launch event video at `/tmp_workspace/recording.mp4`.

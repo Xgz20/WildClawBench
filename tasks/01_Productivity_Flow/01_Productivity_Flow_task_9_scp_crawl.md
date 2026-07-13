@@ -4,8 +4,9 @@ name: Crawl SCP-001 to SCP-050 with Text, Images, and Metadata
 category: 01_Productivity_Flow
 timeout_seconds: 1200
 modality: pure-text
+difficulty: L3
+grading_type: automated
 ---
-
 ## Prompt
 
 请访问 `https://scp-wiki.wikidot.com/`，抓取编号 `001` 到 `050` 的 SCP 条目页面，并将结果保存到本地。

@@ -4,8 +4,9 @@ name: Social Media Poster Smart Crop for Multi-Platform
 category: 05_Creative_Synthesis
 timeout_seconds: 300
 modality: multimodal
+difficulty: L2
+grading_type: hybrid
 ---
-
 ## Prompt
 
 工作目录 `/tmp_workspace/` 下有一张社交媒体宣传海报 `/tmp_workspace/poster_original.png`。

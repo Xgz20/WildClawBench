@@ -4,8 +4,9 @@ name: Fuzzy Repository Search
 category: 04_Search_Retrieval
 timeout_seconds: 900
 modality: pure-text
+difficulty: L2
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 Help me find that open-source project from 2023–2024 that made it possible to run large language models on ordinary laptops and desktops without requiring a dedicated GPU. I only vaguely remember a few things about it:

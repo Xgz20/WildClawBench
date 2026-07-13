@@ -4,8 +4,12 @@ name: Chat Message Thread Consolidation with Contradiction Detection
 category: 03_Social_Interaction
 timeout_seconds: 600
 modality: pure-text
+difficulty: L3
+grading_type: hybrid
+grading_weights:
+  automated: 0.35
+  llm_judge: 0.65
 ---
-
 ## Prompt
 
 I need to send Director Zhao (our client) a status update on the Phoenix Project, but honestly I've lost track of where things actually stand. People keep sending me revised numbers and I'm not sure what's current anymore.

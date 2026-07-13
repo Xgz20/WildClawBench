@@ -4,8 +4,10 @@ name: ArXiv Daily Paper Digest
 category: 01_Productivity_Flow
 timeout_seconds: 1200
 modality: pure-text
+difficulty: L4
+grading_type: automated
+能力：
 ---
-
 ## Prompt
 
 I'm a CV researcher and the author of **CapRL**.

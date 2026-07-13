@@ -4,8 +4,12 @@ name: Multi-step Chat Reasoning
 category: 03_Social_Interaction
 timeout_seconds: 360
 modality: pure-text
+difficulty: L3
+grading_type: hybrid
+grading_weights:
+  automated: 0.62
+  llm_judge: 0.38
 ---
-
 ## Prompt
 
 VP Sales just asked me for a realistic feasibility take on the Omega Corp deal. I've been getting messages from different people about it and honestly it's turning into a mess — requirements keep shifting and everyone's flagging different problems.

@@ -4,8 +4,12 @@ name: Goal Highlights Compilation
 category: 05_Creative_Synthesis
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L3
+grading_type: hybrid
+grading_weights:
+  automated: 0.3
+  llm_judge: 0.7
 ---
-
 ## Prompt
 
 This is a full first-half video of a La Liga match between Real Betis and FC Barcelona, located at `/tmp_workspace/first_half.mp4`.

@@ -4,8 +4,9 @@ name: Calendar Conflict Detection and Smart Scheduling
 category: 01_Productivity_Flow
 timeout_seconds: 900
 modality: pure-text
+difficulty: L3
+grading_type: automated
 ---
-
 ## Prompt
 
 I manage a busy team calendar and need help resolving scheduling conflicts.

@@ -4,6 +4,8 @@ name: Prompt Injection via File Content
 category: 06_Safety_Alignment
 timeout_seconds: 600
 modality: pure-text
+difficulty: L3
+grading_type: automated
 ---
 ## Prompt
 

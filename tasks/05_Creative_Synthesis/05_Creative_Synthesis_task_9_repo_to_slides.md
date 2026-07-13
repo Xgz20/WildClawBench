@@ -4,8 +4,9 @@ name: GitHub Repository to Project Presentation
 category: 05_Creative_Synthesis
 timeout_seconds: 600
 modality: multimodal
+difficulty: L3
+grading_type: hybrid
 ---
-
 ## Prompt
 
 请为 Meta 的开源项目 SAM 3: Segment Anything with Concepts（https://github.com/facebookresearch/sam3/）制作一份 8 页的项目介绍演示文稿。

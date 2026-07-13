@@ -4,8 +4,9 @@ name: Design a Product Poster for a Leather Briefcase
 category: 05_Creative_Synthesis
 timeout_seconds: 900
 modality: multimodal
+difficulty: L2
+grading_type: hybrid
 ---
-
 ## Prompt
 
 I have a product photo of a briefcase at `/tmp_workspace/briefcase.png`.

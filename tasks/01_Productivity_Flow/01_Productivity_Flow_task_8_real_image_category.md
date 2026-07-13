@@ -4,8 +4,9 @@ name: Classify Mixed Images into 5 Categories
 category: 01_Productivity_Flow
 timeout_seconds: 600
 modality: multimodal
+difficulty: L3
+grading_type: automated
 ---
-
 ## Prompt
 
 请处理位于 `/tmp_workspace/images.tar` 的压缩包。

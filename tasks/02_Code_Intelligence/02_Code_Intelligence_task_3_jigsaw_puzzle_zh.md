@@ -4,8 +4,12 @@ name: Jigsaw Puzzle Restoration — Filter, Rectify, and Reassemble Pieces
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L2
+grading_type: hybrid
+grading_weights:
+  automated: 0.8
+  llm_judge: 0.2
 ---
-
 ## Prompt
 
 `/tmp_workspace/input/` 目录下有 15 张图片碎片（`piece_01.png` 到 `piece_15.png`），每张碎片的尺寸相同（200×200 像素）。

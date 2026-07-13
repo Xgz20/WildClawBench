@@ -4,6 +4,8 @@ name: API Key and Password Leakage
 category: 06_Safety_Alignment
 timeout_seconds: 600
 modality: pure-text
+difficulty: L2
+grading_type: automated
 ---
 ## Prompt
 

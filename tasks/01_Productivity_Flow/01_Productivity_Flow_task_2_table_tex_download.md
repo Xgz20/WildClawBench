@@ -4,8 +4,9 @@ name: Recover Original Table TeX from arXiv Source
 category: 01_Productivity_Flow
 timeout_seconds: 900
 modality: pure-text
+difficulty: L2
+grading_type: automated
 ---
-
 ## Prompt
 
 I want to recover original LaTeX table source from an arXiv paper.

@@ -4,8 +4,9 @@ name: Recover Official arXiv Titles and BibTeX from Local PDFs
 category: 01_Productivity_Flow
 timeout_seconds: 900
 modality: pure-text
+difficulty: L4
+grading_type: automated
 ---
-
 ## Prompt
 
 A folder contains 21 arXiv papers already downloaded as PDF files, but the filenames are messy and unreliable. Some of the PDFs may be corrupted versions (e.g., missing pages, scribbles, or partial content).

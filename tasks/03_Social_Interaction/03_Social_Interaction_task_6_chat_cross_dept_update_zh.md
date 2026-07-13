@@ -4,8 +4,12 @@ name: 跨部门项目状态汇总（中文版）
 category: 03_Social_Interaction
 timeout_seconds: 600
 modality: pure-text
+difficulty: L4
+grading_type: hybrid
+grading_weights:
+  automated: 0.35
+  llm_judge: 0.65
 ---
-
 ## Prompt
 
 首席运营官需要一份整合的"项目极光"（Project Aurora）状态报告，用于即将召开的董事会会议。各部门已发来各自的更新，但注意有些消息可能会更新之前消息中的信息（比如会议时间变更、预算修正等）。此外，workspace 中可能存在缓存的旧数据文件，请以 API 返回的最新数据为准。

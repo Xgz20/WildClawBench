@@ -4,8 +4,9 @@ name: SAM3 Model Bug Debugging
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L3
+grading_type: automated
 ---
-
 ## Prompt
 
 你是一名 AI 调试专家。在 `/tmp_workspace` 目录下有一个 **SAM3**（Segment Anything Model 3）的代码库以及一个推理测试脚本 `test_sam3.py`。但是现在代码里好像有一些 Bug 导致推理结果不正确，我需要你定位并修复所有被注入的 Bug，使测试脚本能产生正确的推理结果。

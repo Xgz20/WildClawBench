@@ -4,8 +4,12 @@ name: Medium Jigsaw Puzzle — 4×4 Pieces, Filter, Rectify, and Reassemble
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L3
+grading_type: hybrid
+grading_weights:
+  automated: 0.85
+  llm_judge: 0.15
 ---
-
 ## Prompt
 
 `/tmp_workspace/input/` 目录下有 24 张图片碎片（`piece_01.png` 到 `piece_24.png`），每张碎片的尺寸相同（150×150 像素）。

@@ -4,8 +4,9 @@ name: PDF Paper Digest - Rename, Classify, and Extract
 category: 01_Productivity_Flow
 timeout_seconds: 900
 modality: pure-text
+difficulty: L4
+grading_type: automated
 ---
-
 ## Prompt
 
 请处理位于 `/tmp_workspace/papers.tar` 的压缩包。这个压缩包中共有 65 篇论文 PDF。

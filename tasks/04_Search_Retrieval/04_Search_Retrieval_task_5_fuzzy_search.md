@@ -4,8 +4,9 @@ name: Fuzzy Intent Search
 category: 04_Search_Retrieval
 timeout_seconds: 900
 modality: pure-text
+difficulty: L2
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 Help me find that paper from 2025 which was among the earlier works to transfer a DeepSeek-R1-like approach to visual perception tasks. I only remember that the first author’s last name was Liu, and their GitHub repository should have more than 2k stars.

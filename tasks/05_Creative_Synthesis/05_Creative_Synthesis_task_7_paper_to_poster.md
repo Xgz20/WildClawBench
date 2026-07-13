@@ -4,8 +4,9 @@ name: Academic Paper to Conference Poster
 category: 05_Creative_Synthesis
 timeout_seconds: 600
 modality: multimodal
+difficulty: L3
+grading_type: hybrid
 ---
-
 ## Prompt
 
 工作目录中有一篇论文 PDF `/tmp_workspace/paper.pdf`。

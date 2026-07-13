@@ -4,8 +4,9 @@ name: Constraint-Based Planning Search
 category: 04_Search_Retrieval
 timeout_seconds: 900
 modality: pure-text
+difficulty: L2
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 我想购买一部手机，请根据以下条件找出最符合的型号：

@@ -4,8 +4,9 @@ name: Search for Location Information Based on an Image
 category: 04_Search_Retrieval
 timeout_seconds: 600
 modality: multimodal
+difficulty: L3
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 Help me determine the location shown in the image and return the country, city, and coordinates in the following format:

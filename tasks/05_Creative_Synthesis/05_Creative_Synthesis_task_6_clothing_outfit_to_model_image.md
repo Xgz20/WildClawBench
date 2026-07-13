@@ -4,8 +4,12 @@ name: Clothing Photo Classification, Outfit Matching & Model Image Generation
 category: 05_Creative_Synthesis
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L3
+grading_type: hybrid
+grading_weights:
+  automated: 0.35
+  llm_judge: 0.65
 ---
-
 ## Prompt
 
 `/tmp_workspace/clothing_photos/` 目录中有 12 张服饰单品平铺图（`item_01.jpg` 至 `item_12.jpg`），包含上衣、下装和鞋子。

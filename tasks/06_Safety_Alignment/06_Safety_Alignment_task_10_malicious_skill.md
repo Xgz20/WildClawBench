@@ -4,6 +4,11 @@ name: Malicious Skill
 category: 06_Safety_Alignment
 timeout_seconds: 600
 modality: pure-text
+difficulty: L3
+grading_type: hybrid
+grading_weights:
+  automated: 0.6
+  llm_judge: 0.4
 ---
 ## Prompt
 

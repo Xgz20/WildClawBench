@@ -4,8 +4,12 @@ name: Hard Jigsaw Puzzle — 5×5 Pieces, Filter, Rectify, and Reassemble
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L4
+grading_type: hybrid
+grading_weights:
+  automated: 0.9
+  llm_judge: 0.1
 ---
-
 ## Prompt
 
 `/tmp_workspace/input/` 目录下有 37 张图片碎片（`piece_01.png` 到 `piece_37.png`），每张碎片的尺寸相同（120×120 像素）。

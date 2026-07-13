@@ -4,8 +4,9 @@ name: Resume to Academic Homepage
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L4
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 任务：参考附图 `/tmp_workspace/ref_template_screenshot.png` 中的主页模板风格，根据 PDF 简历 `/tmp_workspace/ref_resume.pdf` 中的信息，为作者 Shengyuan Ding 制作一个新的学术个人主页。（注意：时间有限，尽量15分钟内完成，请注意高效）

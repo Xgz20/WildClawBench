@@ -4,8 +4,9 @@ name: Search Efficiency Test
 category: 04_Search_Retrieval
 timeout_seconds: 600
 modality: pure-text
+difficulty: L2
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 Question: 

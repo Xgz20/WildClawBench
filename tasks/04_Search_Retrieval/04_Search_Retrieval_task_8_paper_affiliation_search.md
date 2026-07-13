@@ -4,8 +4,9 @@ name: Academic Paper and Affiliation Search
 category: 04_Search_Retrieval
 timeout_seconds: 1200
 modality: pure-text
+difficulty: L4
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 Help me compile the Oral papers accepted at ICCV 2025, and determine how many of them have SJTU (Shanghai Jiao Tong University) as the first affiliation and how many have FDU (Fudan University) as the first affiliation. 

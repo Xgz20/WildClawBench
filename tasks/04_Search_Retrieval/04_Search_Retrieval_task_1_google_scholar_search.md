@@ -4,8 +4,9 @@ name: Find the connections between two researchers
 category: 04_Search_Retrieval
 timeout_seconds: 1200
 modality: pure-text
+difficulty: L4
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 I now need to identify the relationship between two scholars. Please complete the following tasks:

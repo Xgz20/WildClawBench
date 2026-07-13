@@ -4,8 +4,12 @@ name: Video English Speech Extraction, Translation & Chinese Dubbing
 category: 05_Creative_Synthesis
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L4
+grading_type: hybrid
+grading_weights:
+  automated: 0.43
+  llm_judge: 0.57
 ---
-
 ## Prompt
 
 工作目录 `/tmp_workspace/` 中有一段英语演讲视频 `/tmp_workspace/recording.mp4`。

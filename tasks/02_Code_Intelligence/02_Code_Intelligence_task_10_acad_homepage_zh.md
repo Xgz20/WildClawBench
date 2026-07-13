@@ -4,8 +4,9 @@ name: Academic Homepage Style Transfer
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+difficulty: L4
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 任务：参考附图 `/tmp_workspace/ref_template_screenshot.png` 中的主页模板风格，为作者 Shuangrui Ding（丁双睿）制作一个新的学术个人主页。（注意：时间有限，尽量15分钟内完成，请注意高效）

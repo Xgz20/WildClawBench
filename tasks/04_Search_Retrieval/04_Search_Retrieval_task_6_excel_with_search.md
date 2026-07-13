@@ -4,8 +4,9 @@ name: Integrated Search of Local and Online Information
 category: 04_Search_Retrieval
 timeout_seconds: 600
 modality: pure-text
+difficulty: L3
+grading_type: llm_judge
 ---
-
 ## Prompt
 
 Please examine the two Excel files in `/tmp_workspace/04_Search_Retrieval_task_6_excel_with_search/files` and, with internet access, complete the following task:
