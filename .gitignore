@@ -12,6 +12,7 @@ __pycache__/
 *.tar
 *.zip
 *.gz
+*.tgz
 *.7z
 
 *.tar.gz

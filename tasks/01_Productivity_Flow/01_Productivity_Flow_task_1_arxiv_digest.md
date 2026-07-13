@@ -6,7 +6,6 @@ timeout_seconds: 1200
 modality: pure-text
 difficulty: L4
 grading_type: automated
-能力：
 ---
 ## Prompt
 
