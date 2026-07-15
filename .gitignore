@@ -29,7 +29,6 @@ Images/
 _workspace/
 workspace/
 script/
-tools/
 output/
 output_sum/
 output_qwen/
@@ -43,3 +42,5 @@ cookies.txt
 output.rar
 output_qwen.rar
 *.rar
+
+.claude
