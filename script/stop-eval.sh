@@ -15,14 +15,28 @@
 #   bash docs/local/deploy/stop-eval.sh --astroncode # 只清 AstronCode 镜像的容器
 #   IMAGES="img1 img2" bash docs/local/deploy/stop-eval.sh   # 自定义镜像列表
 #
+# 镜像匹配：按 repo 枚举所有本地 tag（如 astroncode 的 v0.0 与 v0.1-test.8
+# 同时存在时都会被清），env（DOCKER_IMAGE_*）指定的镜像额外并入。
+#
 # 安全说明：只按 `ancestor=<评测镜像>` 过滤删除，不会碰共享服务器上
 # 其它项目的镜像/容器。切勿用 `docker system prune -a` 代替本脚本。
 # ============================================================
 set -uo pipefail
 
-CODEX_IMAGE="${DOCKER_IMAGE_CODEX:-wildclawbench-codex-ubuntu:v0.0}"
-OPENCLAW_IMAGE="${DOCKER_IMAGE:-wildclawbench-ubuntu:v1.3}"
-ASTRONCODE_IMAGE="${DOCKER_IMAGE_ASTRONCODE:-wildclawbench-astroncode-ubuntu:v0.1-test.8}"
+# 各 harness 的镜像 repo；清理时涵盖该 repo 的所有本地 tag（docker 的
+# ancestor 过滤不带 tag 时只匹配 :latest，所以必须逐 tag 枚举）
+CODEX_REPO="wildclawbench-codex-ubuntu"
+OPENCLAW_REPO="wildclawbench-ubuntu"
+ASTRONCODE_REPO="wildclawbench-astroncode-ubuntu"
+
+# 输出：repo 的全部本地 tag + env 显式指定的镜像（可能未加载），去重
+repo_images() {
+  {
+    docker images --format '{{.Repository}}:{{.Tag}}' 2>/dev/null \
+      | grep -E "^$1:" | grep -v ':<none>$'
+    [ -n "${2:-}" ] && echo "$2"
+  } | sort -u
+}
 PROC_PATTERN="eval/run_batch.py"
 KILL_WAIT="${KILL_WAIT:-5}"          # SIGTERM 后等待秒数
 
@@ -37,22 +51,28 @@ for arg in "$@"; do
     --codex)    SELECTED="codex" ;;
     --openclaw) SELECTED="openclaw" ;;
     --astroncode) SELECTED="astroncode" ;;
-    -h|--help)  sed -n '2,21p' "$0"; exit 0 ;;
+    -h|--help)  sed -n '2,23p' "$0"; exit 0 ;;
     *) echo "未知参数: $arg（-h 查看用法）"; exit 1 ;;
   esac
 done
 
-# 待清理的镜像列表
+# 待清理的镜像列表（repo 全 tag 展开）
 if [ -n "${IMAGES:-}" ]; then
   read -r -a IMG_LIST <<< "$IMAGES"
 elif [ "$SELECTED" = "codex" ]; then
-  IMG_LIST=("$CODEX_IMAGE")
+  IMG_LIST=($(repo_images "$CODEX_REPO" "${DOCKER_IMAGE_CODEX:-}"))
 elif [ "$SELECTED" = "openclaw" ]; then
-  IMG_LIST=("$OPENCLAW_IMAGE")
+  IMG_LIST=($(repo_images "$OPENCLAW_REPO" "${DOCKER_IMAGE:-}"))
 elif [ "$SELECTED" = "astroncode" ]; then
-  IMG_LIST=("$ASTRONCODE_IMAGE")
+  IMG_LIST=($(repo_images "$ASTRONCODE_REPO" "${DOCKER_IMAGE_ASTRONCODE:-}"))
 else
-  IMG_LIST=("$CODEX_IMAGE" "$OPENCLAW_IMAGE" "$ASTRONCODE_IMAGE")
+  IMG_LIST=($(repo_images "$CODEX_REPO" "${DOCKER_IMAGE_CODEX:-}") \
+            $(repo_images "$OPENCLAW_REPO" "${DOCKER_IMAGE:-}") \
+            $(repo_images "$ASTRONCODE_REPO" "${DOCKER_IMAGE_ASTRONCODE:-}"))
+fi
+if [ "${#IMG_LIST[@]}" -eq 0 ]; then
+  echo "未发现任何评测镜像（本地无相关 repo，且未通过 env 指定），无事可做。"
+  exit 0
 fi
 
 GRN=$'\e[32m'; RED=$'\e[31m'; YEL=$'\e[33m'; DIM=$'\e[2m'; RST=$'\e[0m'
@@ -133,7 +153,7 @@ done
 
 # ── 校验 ─────────────────────────────────────────────────────
 hdr "校验"
-left_p="$(pgrep -cf "$PROC_PATTERN" 2>/dev/null || echo 0)"
+left_p="$(pgrep -f "$PROC_PATTERN" 2>/dev/null | wc -l | tr -d ' ')"
 left_c=0
 for img in "${IMG_LIST[@]}"; do
   docker image inspect "$img" >/dev/null 2>&1 || continue
