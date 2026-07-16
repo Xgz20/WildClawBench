@@ -25,7 +25,16 @@ def start_container(task_id: str, workspace_path: str, extra_env: str = "",
                     tmp_path: str = "", lobster_env: list[str] | None = None) -> None:
     workspace = Path(workspace_path).expanduser()
     if not workspace.is_dir():
-        raise RuntimeError(f"Workspace path does not exist or is not a directory: {workspace}")
+        # Some tasks ship no input files, so the HF dataset has no workspace dir
+        # for them. Auto-create an empty dir, but warn loudly in case the dataset
+        # upload is actually incomplete.
+        logger.warning(
+            "[%s] Workspace dir missing, auto-creating empty dir "
+            "(assuming task has no input files; verify dataset if unexpected): %s",
+            task_id,
+            workspace,
+        )
+        workspace.mkdir(parents=True, exist_ok=True)
 
     proxy_http = os.environ.get('HTTP_PROXY_INNER', '')
     proxy_https = os.environ.get('HTTPS_PROXY_INNER', '')

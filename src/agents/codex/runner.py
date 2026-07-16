@@ -307,15 +307,18 @@ class CodexAgent(BaseAgent):
         lobster: dict[str, Any] | None,
     ) -> None:
         workspace = Path(workspace_path).expanduser()
-        if not workspace.is_dir():
-            raise RuntimeError(
-                f"Workspace path does not exist or is not a directory: {workspace}"
-            )
         exec_path = workspace / "exec"
         if not exec_path.is_dir():
-            raise RuntimeError(
-                f"Workspace exec directory does not exist or is not a directory: {exec_path}"
+            # Some tasks (e.g. 01/task_1_arxiv_digest) ship no input files, so the
+            # HF dataset has no workspace dir for them. Auto-create an empty exec
+            # dir, but warn loudly in case the dataset upload is actually incomplete.
+            logger.warning(
+                "[%s] Workspace exec dir missing, auto-creating empty dir "
+                "(assuming task has no input files; verify dataset if unexpected): %s",
+                task_id,
+                exec_path,
             )
+            exec_path.mkdir(parents=True, exist_ok=True)
 
         proxy_http = os.environ.get("HTTP_PROXY_INNER", "").strip()
         proxy_https = os.environ.get("HTTPS_PROXY_INNER", "").strip()
