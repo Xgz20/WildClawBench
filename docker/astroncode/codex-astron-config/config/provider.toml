@@ -1,0 +1,7 @@
+[model_providers.astron-spark]
+name = "Astron Spark"
+base_url = "https://maas-api.cn-huabei-1.xf-yun.com/v1"
+env_key = "ASTRON_SPARK_API_KEY"
+wire_api = "responses"
+requires_openai_auth = false
+stream_idle_timeout_ms = 300000

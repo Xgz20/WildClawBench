@@ -27,6 +27,9 @@ ASTRONCODE_HOME = "/root/.acode"
 ASTRONCODE_SESSIONS_DIR = f"{ASTRONCODE_HOME}/sessions"
 ASTRONCODE_CONFIG_PATH = f"{ASTRONCODE_HOME}/config.toml"
 ASTRONCODE_SKILLS_DIR = f"{ASTRONCODE_HOME}/skills"
+# 镜像构建时由 codex-astron-config 安装脚本烘焙（docker/astroncode/Dockerfile）
+ASTRONCODE_CATALOG_PATH = f"{ASTRONCODE_HOME}/astron-spark.json"
+ASTRON_SPARK_DEFAULT_BASE_URL = "https://maas-api.cn-huabei-1.xf-yun.com/v1"
 OPENCLAW_TRANSCRIPT_DIR = "/root/.openclaw/agents/main/sessions"
 OPENCLAW_TRANSCRIPT_PATH = f"{OPENCLAW_TRANSCRIPT_DIR}/chat.jsonl"
 DEFAULT_REASONING_EFFORT = "medium" #"high"
@@ -116,7 +119,7 @@ class AstronCodeAgent(BaseAgent):
         openrouter_base_url: str = "",
         reasoning_effort_default: str = DEFAULT_REASONING_EFFORT,
     ) -> None:
-        resolved_image = image or os.environ.get("DOCKER_IMAGE_ASTRONCODE") or "wildclawbench-astroncode-ubuntu:v0.0"
+        resolved_image = image or os.environ.get("DOCKER_IMAGE_ASTRONCODE") or "wildclawbench-astroncode-ubuntu:v0.1-test.8"
         self.image: str = resolved_image
         self.openrouter_api_key = (
             openrouter_api_key or os.environ.get("OPENROUTER_API_KEY", "")
@@ -325,6 +328,10 @@ class AstronCodeAgent(BaseAgent):
         no_proxy = "" if not proxy_http else os.environ.get("NO_PROXY_INNER", "").strip()
         env_map: dict[str, str] = {
             "OPENROUTER_API_KEY": self.openrouter_api_key,
+            "ASTRON_SPARK_API_KEY": (
+                os.environ.get("ASTRON_SPARK_API_KEY", "").strip()
+                or self.openrouter_api_key
+            ),
             "OPENROUTER_BASE_URL": self.openrouter_base_url,
             "OPENROUTER_IMAGE_MODEL": os.environ.get("OPENROUTER_IMAGE_MODEL", "").strip(),
             "WILDCLAW_IMAGE_MODEL": os.environ.get("WILDCLAW_IMAGE_MODEL", "").strip(),
@@ -497,29 +504,39 @@ class AstronCodeAgent(BaseAgent):
         reasoning_effort: str | None,
         wire_api: str | None,
     ) -> str:
+        """Render the official astron-spark provider config.
+
+        与 codex-astron-config 安装脚本产出的配置同构：astron-spark provider
+        （env_key=ASTRON_SPARK_API_KEY、wire_api=responses）+ model_catalog_json
+        指向镜像内烘焙的模型 catalog。base_url 优先取 OPENROUTER_BASE_URL 以便
+        与其他 harness 共用同一套 export 脚本。
+        """
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
-        safe_base_url = self.openrouter_base_url.replace('"', '\\"')
+        base_url = self.openrouter_base_url or ASTRON_SPARK_DEFAULT_BASE_URL
+        safe_base_url = base_url.replace('"', '\\"')
         reasoning_line = (
             f'model_reasoning_effort = "{reasoning_effort}"\n'
             if reasoning_effort
             else ""
         )
-        provider_wire_api_line = f'wire_api = "{wire_api}"\n' if wire_api else ""
         return (
-            f'model_provider = "openrouter"\n'
+            f'model_provider = "astron-spark"\n'
             f"{reasoning_line}"
             f'model_reasoning_summary = "none"\n'
             f'model_supports_reasoning_summaries = false\n'
             f'hide_agent_reasoning = true\n'
             f'model = "{bare_model}"\n'
+            f'model_catalog_json = "{ASTRONCODE_CATALOG_PATH}"\n'
             f'approval_policy = "never"\n'
             f'sandbox_mode = "danger-full-access"\n'
             f'\n'
-            f'[model_providers.openrouter]\n'
-            f'name = "openrouter"\n'
+            f'[model_providers.astron-spark]\n'
+            f'name = "Astron Spark"\n'
             f'base_url = "{safe_base_url}"\n'
-            f'env_key = "OPENROUTER_API_KEY"\n'
-            f"{provider_wire_api_line}"
+            f'env_key = "ASTRON_SPARK_API_KEY"\n'
+            f'wire_api = "{wire_api or "responses"}"\n'
+            f'requires_openai_auth = false\n'
+            f'stream_idle_timeout_ms = 300000\n'
         )
 
     def _install_image_helper(self, task_id: str, model: str) -> None:
