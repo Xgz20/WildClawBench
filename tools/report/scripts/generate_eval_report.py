@@ -46,7 +46,6 @@ except ImportError:
 
 SUITE_DIR_RE = re.compile(r"^\d{2}_")
 CELL_MAX_LEN = 32000
-TRANSCRIPT_SUMMARY_MAX = 20000
 
 HEADER_FONT = Font(bold=True, color="FFFFFF")
 HEADER_FILL = PatternFill("solid", fgColor="4472C4")
@@ -55,6 +54,38 @@ WRAP_TOP = Alignment(wrap_text=True, vertical="top")
 
 DIFFICULTY_ORDER = ["L1", "L2", "L3", "L4", "L5"]
 MODALITY_ORDER = ["pure-text", "multimodal"]
+
+# 7 维能力口径（与 PinchBench cap7 对齐）；映射文件见 tools/report/data/checkpoint_capability_map7.yaml
+CAP7_ORDER = ["code_generation", "tool_use", "data_processing", "retrieval_verification",
+              "reasoning_planning", "content_generation", "verification_delivery"]
+CAP7_ZH = {
+    "code_generation": "代码生成", "tool_use": "工具调用", "data_processing": "数据处理",
+    "retrieval_verification": "检索验证", "reasoning_planning": "推理规划",
+    "content_generation": "内容生成", "verification_delivery": "验证交付",
+}
+# 去落盘污染列：仅统计"产物成功落盘"的用例，剥离未落盘对上游能力得分的污染
+CAP7_DECON = ["data_processing", "reasoning_planning", "content_generation"]
+FILE_CKPT_RE = re.compile(r"exist|created|saved|written|parseable", re.I)
+CAP_RANK_MIN_COUNT = 5  # 强项/短板排名要求的最少涉及用例数
+# 诊断计量键（调用次数/重试次数/满分常量等），不是 0~1 得分，不参与能力聚合
+METRIC_CKPT_RE = re.compile(r"(_max$|_calls$|_attempts$|_triggered$|^penalty)")
+
+
+def normalize_ckpt_value(key: str, value: float, all_ckpts: dict) -> float | None:
+    """把检查点值归一到 0~1；诊断计量键与无法归一的原始值返回 None。
+
+    WildClawBench 的 score.json 混有三类值：0~1 比率（主体）、
+    `X_earned`/`X_max` 原始计分对（按比值归一）、诊断计数（排除）。
+    """
+    if METRIC_CKPT_RE.search(key):
+        return None
+    if key.endswith("_earned"):
+        mx = all_ckpts.get(key[: -len("_earned")] + "_max")
+        if isinstance(mx, (int, float)) and mx > 0:
+            return min(1.0, max(0.0, value / mx))
+    if 0 <= value <= 1:
+        return float(value)
+    return None
 
 
 # ===========================================================================
@@ -188,7 +219,17 @@ SECTION_KEYS = {
     "Expected Behavior": "expected",
     "Grading Criteria": "criteria",
     "Automated Checks": "checks",
+    "Workspace Path": "workspace",
+    "Skills": "skills",
+    "Env": "env",
+    "Warmup": "warmup",
 }
+
+
+def strip_code_fence(text: str) -> str:
+    """去掉章节内容外层的 ``` 围栏，只留内容本身。"""
+    lines = [l for l in text.strip().splitlines() if not l.strip().startswith("```")]
+    return "\n".join(lines).strip()
 
 
 def parse_task_md(path: Path) -> dict:
@@ -244,45 +285,18 @@ def build_suite_zh_map(task_meta: dict[str, dict]) -> dict[str, str]:
 
 
 # ===========================================================================
-# transcript 执行记录摘要
+# transcript 执行记录（jsonl 原文，超出单元格上限时截断）
 # ===========================================================================
 
-def summarize_transcript(path: Path | None) -> str:
+def read_transcript_raw(path: Path | None) -> str:
     if path is None or not path.is_file():
         return ""
-    parts: list[str] = []
-    total = 0
     try:
+        # 单元格上限 32000，最多多读一段用于触发截断标记
         with path.open(encoding="utf-8") as f:
-            for line in f:
-                try:
-                    event = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                msg = event.get("message") or {}
-                role = msg.get("role", "")
-                for c in msg.get("content") or []:
-                    ctype = c.get("type")
-                    if ctype == "text" and role == "assistant":
-                        snippet = f"[assistant] {c.get('text', '').strip()}"
-                    elif ctype == "tool_use":
-                        arg = json.dumps(c.get("input"), ensure_ascii=False)
-                        snippet = f"[tool_use {c.get('name')}] {arg[:500]}"
-                    elif ctype == "tool_result":
-                        content = c.get("content")
-                        if isinstance(content, list):
-                            content = " ".join(x.get("text", "") for x in content if isinstance(x, dict))
-                        snippet = f"[tool_result] {str(content).strip()[:300]}"
-                    else:
-                        continue
-                    parts.append(snippet)
-                    total += len(snippet)
-                    if total > TRANSCRIPT_SUMMARY_MAX:
-                        parts.append("…（已截断）")
-                        return "\n".join(parts)
+            return f.read(CELL_MAX_LEN + 1024)
     except OSError:
         return ""
-    return "\n".join(parts)
 
 
 # ===========================================================================
@@ -488,6 +502,100 @@ def write_case_compare_sheet(wb, units: list[UnitResult], order: list[tuple[str,
     ws.auto_filter.ref = f"A1:{get_column_letter(ws.max_column)}1"
 
 
+def load_capability_map(explicit: str | None) -> dict[str, dict[str, list[str]]]:
+    """加载 {task_id: {checkpoint: [维度...]}} 映射；文件或 pyyaml 缺失时返回空。"""
+    path = Path(explicit) if explicit else Path(__file__).resolve().parent.parent / "data" / "checkpoint_capability_map7.yaml"
+    if not path.is_file():
+        print(f"[警告] 能力映射文件不存在（{path}），跳过 Agent能力对比 Sheet", file=sys.stderr)
+        return {}
+    try:
+        import yaml
+    except ImportError:
+        print("[警告] 缺少 pyyaml，跳过 Agent能力对比 Sheet（pip install pyyaml）", file=sys.stderr)
+        return {}
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    return {t: {c: list(dims) for c, dims in (ckpts or {}).items()}
+            for t, ckpts in data.items() if isinstance(ckpts, dict)}
+
+
+def _cap_task_scores(u: UnitResult, cap_map: dict, dim: str, delivered_only: bool) -> list[float]:
+    """该 unit 在某维度上的任务级得分列表（任务内映射检查点均值）。"""
+    out = []
+    for t in u.tasks:
+        if not t.checkpoints:
+            continue
+        if delivered_only:
+            file_scores = [v for k, v in t.checkpoints.items() if FILE_CKPT_RE.search(k)]
+            if file_scores and sum(file_scores) / len(file_scores) < 0.5:
+                continue
+        # LLM 裁判单分制任务（如 04 套件）无检查点明细，映射可显式引用 overall_score
+        candidates = {
+            k: nv for k, v in t.checkpoints.items()
+            if (nv := normalize_ckpt_value(k, v, t.checkpoints)) is not None
+        }
+        if t.score is not None and 0 <= t.score <= 1:
+            candidates["overall_score"] = t.score
+        mapped = [candidates[c] for c, dims in cap_map.get(t.task_id, {}).items()
+                  if dim in dims and c in candidates]
+        if mapped:
+            out.append(sum(mapped) / len(mapped))
+    return out
+
+
+def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
+    from openpyxl.comments import Comment
+    ws = wb.create_sheet("Agent能力对比", index=3)  # 紧跟用例对比明细之后
+    header = (["模型@Harness", "总平均分"]
+              + [f"{CAP7_ZH[d]}({d})" for d in CAP7_ORDER]
+              + [f"{CAP7_ZH[d]}·去落盘污染" for d in CAP7_DECON]
+              + ["模型强项", "模型短板"])
+    ws.append(header)
+    n_dims = len(CAP7_ORDER) + len(CAP7_DECON)
+    for u in units:
+        scores: dict[str, tuple[float | None, int]] = {}
+        for d in CAP7_ORDER:
+            vals = _cap_task_scores(u, cap_map, d, delivered_only=False)
+            scores[d] = (sum(vals) / len(vals) * 100 if vals else None, len(vals))
+        row = [u.unit, round(u.total_pct, 1)]
+        row += [round(scores[d][0], 1) if scores[d][0] is not None else "-" for d in CAP7_ORDER]
+        decon: dict[str, tuple[float | None, int]] = {}
+        for d in CAP7_DECON:
+            vals = _cap_task_scores(u, cap_map, d, delivered_only=True)
+            decon[d] = (sum(vals) / len(vals) * 100 if vals else None, len(vals))
+        row += [round(decon[d][0], 1) if decon[d][0] is not None else "-" for d in CAP7_DECON]
+        ranked = sorted((d for d in CAP7_ORDER
+                         if scores[d][0] is not None and scores[d][1] >= CAP_RANK_MIN_COUNT),
+                        key=lambda d: scores[d][0], reverse=True)
+        fmt_rank = lambda ds: "\n".join(f"{CAP7_ZH[d]} {scores[d][0]:.1f}%" for d in ds) or "-"
+        row += [fmt_rank(ranked[:3]), fmt_rank(list(reversed(ranked[-3:])))]
+        ws.append(row)
+        r = ws.max_row
+        apply_pct_format(ws, r, range(2, 3 + n_dims))
+        for i, d in enumerate(CAP7_ORDER):
+            ws.cell(row=r, column=3 + i).comment = Comment(f"涉及 {scores[d][1]} 例", "report")
+        for i, d in enumerate(CAP7_DECON):
+            ws.cell(row=r, column=3 + len(CAP7_ORDER) + i).comment = Comment(
+                f"涉及 {decon[d][1]} 例（仅产物落盘成功的用例）", "report")
+        for col in (3 + n_dims, 4 + n_dims):
+            ws.cell(row=r, column=col).alignment = WRAP_TOP
+    style_header_row(ws)
+    set_widths(ws, {1: 28, 2: 12, 3 + n_dims: 24, 4 + n_dims: 24}, default=17)
+    ws.freeze_panes = "C2"
+    add_color_scale(ws, 2, ws.max_row, 2, 2 + n_dims)
+    # 覆盖率告警：实测检查点未被映射的
+    unmapped = set()
+    for u in units:
+        for t in u.tasks:
+            known = cap_map.get(t.task_id, {})
+            if "overall_score" in known:  # 单分制任务不要求逐检查点覆盖
+                continue
+            unmapped |= {f"{t.task_id}.{c}" for c in t.checkpoints
+                         if c not in known and not METRIC_CKPT_RE.search(c)}
+    if unmapped:
+        print(f"[警告] {len(unmapped)} 个实测检查点未被能力映射覆盖（不计入能力得分），"
+              f"示例：{sorted(unmapped)[:5]}", file=sys.stderr)
+
+
 def write_dimension_sheet(wb, title: str, dim_label: str, units: list[UnitResult],
                           groups: list[tuple[str, set[str]]]) -> None:
     """通用维度对比：行=维度取值，列=各 unit 均分 + 最佳 + 分差。"""
@@ -572,10 +680,11 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
     ws = wb.create_sheet(f"评分详情_{u.unit}"[:31])
     header = ["分类", "用例ID", "用例名称", "难度", "超时时间(秒)", "模态",
               "输入(Prompt)", "预期行为", "评分标准", "Automated Checks",
+              "工作目录(Workspace)", "预置技能(Skills)", "环境变量(Env)", "预热(Warmup)",
               "状态", "总得分", "检查点得分明细", "失分点", "执行错误",
-              "总tokens", "请求数", "耗时(s)", "执行记录摘要", "结果分析", "根因分析"]
+              "总tokens", "请求数", "耗时(s)", "执行记录(jsonl)", "结果分析", "根因分析"]
     ws.append(header)
-    wrap_cols = {7, 8, 9, 10, 13, 14, 15, 19, 20, 21}
+    wrap_cols = {7, 8, 9, 10, 12, 14, 17, 18, 19, 23, 24, 25}
     for suite, tid in order:
         t = u.task_map.get(tid)
         if t is None:
@@ -592,13 +701,17 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
             meta.get("modality", "-"),
             truncate(meta.get("prompt", "")), truncate(meta.get("expected", "")),
             truncate(meta.get("criteria", "")), truncate(meta.get("checks", "")),
+            strip_code_fence(meta.get("workspace", "")) or "-",
+            strip_code_fence(meta.get("skills", "")) or "-",
+            strip_code_fence(meta.get("env", "")) or "-",
+            strip_code_fence(meta.get("warmup", "")) or "-",
             (t.status or "-") + ("（超时）" if t.timed_out else ""),
             round(t.score, 3) if t.score is not None else "-",
             format_breakdown(t), format_lost_points(t), truncate(err),
             int((t.usage or {}).get("total_tokens", 0)),
             int((t.usage or {}).get("request_count", 0)),
             round(t.elapsed, 1) if isinstance(t.elapsed, (int, float)) else "-",
-            truncate(summarize_transcript(t.transcript)),
+            truncate(read_transcript_raw(t.transcript)),
             truncate(item.get("result_analysis", "") or ""),
             truncate(item.get("root_cause_analysis", "") or item.get("root_cause", "") or ""),
         ])
@@ -606,9 +719,10 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
             ws.cell(row=ws.max_row, column=col).alignment = WRAP_TOP
     style_header_row(ws)
     set_widths(ws, {1: 18, 2: 40, 3: 30, 4: 8, 5: 12, 6: 12,
-                    7: 45, 8: 45, 9: 45, 10: 45, 11: 14, 12: 8,
-                    13: 40, 14: 40, 15: 40, 16: 12, 17: 8, 18: 8,
-                    19: 60, 20: 45, 21: 40})
+                    7: 45, 8: 45, 9: 45, 10: 45,
+                    11: 38, 12: 20, 13: 20, 14: 30,
+                    15: 14, 16: 8, 17: 40, 18: 40, 19: 40,
+                    20: 12, 21: 8, 22: 8, 23: 60, 24: 45, 25: 40})
     ws.freeze_panes = "C2"
 
 
@@ -625,6 +739,7 @@ def main() -> None:
                     help="根因分析 JSON（可多个），回填到详情 Sheet")
     ap.add_argument("-o", "--output-dir", help="输出目录（默认 <result-root>/report-workspace/output）")
     ap.add_argument("--tasks-dir", help="任务定义目录（默认从脚本位置向上找 <repo>/tasks）")
+    ap.add_argument("--capability-map", help="检查点能力映射 YAML（默认 tools/report/data/checkpoint_capability_map7.yaml）")
     args = ap.parse_args()
 
     result_root = Path(args.result_root).resolve()
@@ -662,6 +777,9 @@ def main() -> None:
     write_overview_sheet(wb, units, suites, suite_zh)
     write_matrix_sheet(wb, units)
     write_case_compare_sheet(wb, units, order, task_meta, suite_zh)
+    cap_map = load_capability_map(args.capability_map)
+    if cap_map:
+        write_capability_sheet(wb, units, cap_map)
     write_dimension_sheet(wb, "分类对比", "分类", units,
                           [(suite_zh.get(s, s), {tid for su, tid in order if su == s})
                            for s in suites])
