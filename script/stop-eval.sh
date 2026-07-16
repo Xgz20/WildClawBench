@@ -12,6 +12,7 @@
 #   bash docs/local/deploy/stop-eval.sh --dry-run    # 只预览，不动手
 #   bash docs/local/deploy/stop-eval.sh --codex      # 只清 Codex 镜像的容器
 #   bash docs/local/deploy/stop-eval.sh --openclaw   # 只清 OpenClaw 镜像的容器
+#   bash docs/local/deploy/stop-eval.sh --astroncode # 只清 AstronCode 镜像的容器
 #   IMAGES="img1 img2" bash docs/local/deploy/stop-eval.sh   # 自定义镜像列表
 #
 # 安全说明：只按 `ancestor=<评测镜像>` 过滤删除，不会碰共享服务器上
@@ -21,6 +22,7 @@ set -uo pipefail
 
 CODEX_IMAGE="${DOCKER_IMAGE_CODEX:-wildclawbench-codex-ubuntu:v0.0}"
 OPENCLAW_IMAGE="${DOCKER_IMAGE:-wildclawbench-ubuntu:v1.3}"
+ASTRONCODE_IMAGE="${DOCKER_IMAGE_ASTRONCODE:-wildclawbench-astroncode-ubuntu:v0.1-test.8}"
 PROC_PATTERN="eval/run_batch.py"
 KILL_WAIT="${KILL_WAIT:-5}"          # SIGTERM 后等待秒数
 
@@ -34,7 +36,8 @@ for arg in "$@"; do
     --dry-run)  DRY_RUN=1 ;;
     --codex)    SELECTED="codex" ;;
     --openclaw) SELECTED="openclaw" ;;
-    -h|--help)  sed -n '2,20p' "$0"; exit 0 ;;
+    --astroncode) SELECTED="astroncode" ;;
+    -h|--help)  sed -n '2,21p' "$0"; exit 0 ;;
     *) echo "未知参数: $arg（-h 查看用法）"; exit 1 ;;
   esac
 done
@@ -46,8 +49,10 @@ elif [ "$SELECTED" = "codex" ]; then
   IMG_LIST=("$CODEX_IMAGE")
 elif [ "$SELECTED" = "openclaw" ]; then
   IMG_LIST=("$OPENCLAW_IMAGE")
+elif [ "$SELECTED" = "astroncode" ]; then
+  IMG_LIST=("$ASTRONCODE_IMAGE")
 else
-  IMG_LIST=("$CODEX_IMAGE" "$OPENCLAW_IMAGE")
+  IMG_LIST=("$CODEX_IMAGE" "$OPENCLAW_IMAGE" "$ASTRONCODE_IMAGE")
 fi
 
 GRN=$'\e[32m'; RED=$'\e[31m'; YEL=$'\e[33m'; DIM=$'\e[2m'; RST=$'\e[0m'
