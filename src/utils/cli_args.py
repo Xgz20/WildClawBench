@@ -53,6 +53,15 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
              "CLI takes precedence; falls back to env WILDCLAW_TIMEOUT_MULTIPLIER, then 1.0",
     )
     parser.add_argument(
+        "--timeout-override",
+        type=int,
+        default=None,
+        metavar="SECONDS",
+        help="Set every task's timeout to this fixed value in seconds, ignoring "
+             "each task's own timeout_seconds. Takes precedence over "
+             "--timeout-multiplier. CLI first; falls back to env WILDCLAW_TIMEOUT_OVERRIDE",
+    )
+    parser.add_argument(
         "--lobster-name",
         default=None,
         help="Lobster name (used in output directory for comparison)",

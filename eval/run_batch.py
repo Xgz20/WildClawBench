@@ -59,6 +59,10 @@ DEFAULT_PARALLEL = int(os.environ.get("DEFAULT_PARALLEL", "1"))
 # 任务超时放大倍数；main() 里解析（CLI --timeout-multiplier 优先，
 # env WILDCLAW_TIMEOUT_MULTIPLIER 兜底，默认 1.0），线程启动前设定
 TIMEOUT_MULTIPLIER = 1.0
+# 统一超时覆盖（秒）：设置后所有任务忽略各自 timeout_seconds，直接用该值，
+# 优先级高于 TIMEOUT_MULTIPLIER；CLI --timeout-override 优先，
+# env WILDCLAW_TIMEOUT_OVERRIDE 兜底，默认 None（不覆盖）
+TIMEOUT_OVERRIDE: int | None = None
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_BASE_URL_OPENCLAW = normalize_openrouter_base_url_for_openclaw(
@@ -197,7 +201,10 @@ def run_single_task(
     task_id_ori     = task["task_id"]
     workspace_path  = task["workspace_path"]
     prompt          = task["prompt"]
-    timeout_seconds = max(1, int(round(task["timeout_seconds"] * TIMEOUT_MULTIPLIER)))
+    if TIMEOUT_OVERRIDE is not None:
+        timeout_seconds = TIMEOUT_OVERRIDE
+    else:
+        timeout_seconds = max(1, int(round(task["timeout_seconds"] * TIMEOUT_MULTIPLIER)))
     system_prompt = f"You are an expert in a restricted, non-interactive environment. Solve the task efficiently before the timeout ({timeout_seconds}s). Run all processes in the foreground without user input or background services. Provide a complete, functional solution in a single pass with no placeholders. \n"
     prompt = system_prompt + prompt
 
@@ -327,6 +334,19 @@ def main() -> None:
         )
     if TIMEOUT_MULTIPLIER != 1.0:
         logger.info("Timeout multiplier: %.2fx (applies to every task's timeout_seconds)", TIMEOUT_MULTIPLIER)
+
+    global TIMEOUT_OVERRIDE
+    if args.timeout_override is not None:
+        TIMEOUT_OVERRIDE = args.timeout_override
+    else:
+        env_override = os.environ.get("WILDCLAW_TIMEOUT_OVERRIDE", "").strip()
+        TIMEOUT_OVERRIDE = int(env_override) if env_override else None
+    if TIMEOUT_OVERRIDE is not None:
+        if TIMEOUT_OVERRIDE <= 0:
+            raise SystemExit(f"timeout override must be > 0, got {TIMEOUT_OVERRIDE}")
+        if TIMEOUT_MULTIPLIER != 1.0:
+            logger.warning("Both timeout override and multiplier set; override wins (%ds)", TIMEOUT_OVERRIDE)
+        logger.info("Timeout override: %ds (every task uses this fixed timeout)", TIMEOUT_OVERRIDE)
 
     if args.agent_backend == "claudecode":
         backend: BaseAgent = ClaudeCodeAgent(
