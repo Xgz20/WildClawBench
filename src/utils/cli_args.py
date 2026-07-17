@@ -18,6 +18,13 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
     )
 
     parser.add_argument(
+        "--modality",
+        choices=["pure-text", "multimodal"],
+        default=None,
+        help="Only run tasks with this frontmatter modality (applies to --category mode; "
+             "an explicit --task is never filtered)",
+    )
+    parser.add_argument(
         "--agent-backend",
         default="openclaw",
         choices=["openclaw", "claudecode", "codex", "hermesagent", "astroncode"],

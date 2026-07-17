@@ -82,4 +82,5 @@ def parse_task_md(task_file: Path) -> dict:
         "timeout_seconds":  timeout_seconds,
         "file_path":        str(task_file.resolve()),
         "category":         task_file.parent.name,
+        "modality":         str(metadata.get("modality", "")).strip(),
     }

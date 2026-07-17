@@ -410,6 +410,12 @@ def main() -> None:
             except Exception as exc:
                 logger.error("Parse failed %s: %s", tf, exc)
 
+        if args.modality:
+            before = len(tasks)
+            tasks = [t for t in tasks if t.get("modality") == args.modality]
+            logger.info("Modality filter '%s': %d/%d tasks kept in %s",
+                        args.modality, len(tasks), before, category)
+
         if not tasks:
             continue
 
