@@ -76,6 +76,24 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
              "CLI first; falls back to env WILDCLAW_DOCKER_CPUS. Default: no limit",
     )
     parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Skip tasks whose latest run (same model) already has a valid score.json; "
+             "only missing/failed-to-produce tasks are executed",
+    )
+    parser.add_argument(
+        "--rerun-error",
+        action="store_true",
+        help="With --resume (implied): also rerun tasks whose latest run has "
+             "ERROR-level anomalies (timeout/crash/empty transcript/...)",
+    )
+    parser.add_argument(
+        "--rerun-anomalous",
+        action="store_true",
+        help="With --resume (implied): also rerun tasks whose latest run has ANY "
+             "anomaly (including WARNING-level, e.g. transient rate limits)",
+    )
+    parser.add_argument(
         "--lobster-name",
         default=None,
         help="Lobster name (used in output directory for comparison)",
