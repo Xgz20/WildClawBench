@@ -39,12 +39,11 @@ from src.utils.grading import (
     write_error_score as write_error_score_file,
 )
 
+from src.utils.log_format import configure_console_logging, attach_file_logging
+
 load_dotenv()
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%H:%M:%S",
-)
+# 终端：颜色 + emoji（stdout）。文件日志在 main() 里按 output_root 追加（纯文本 + emoji）。
+configure_console_logging(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 GATEWAY_PORT     = int(os.environ.get("GATEWAY_PORT", "18789"))
@@ -371,6 +370,15 @@ def main() -> None:
             image_model=args.openclaw_image_model,
         )
     output_root = OUTPUT_DIR / args.agent_backend
+    # 内置文件日志：程序自己写 <output_root>/run.log（纯文本 + emoji），
+    # 无需 shell `> run.log` 重定向；VS Code 打开干净、可随时 tail、随结果归档。
+    try:
+        output_root.mkdir(parents=True, exist_ok=True)
+        run_log_path = output_root / "run.log"
+        attach_file_logging(run_log_path)
+        logger.info("Run log: %s", run_log_path)
+    except OSError as exc:
+        logger.warning("Failed to attach run.log file handler: %s", exc)
     models_config = None
     if args.models_config:
         models_config_path = Path(args.models_config).expanduser()
