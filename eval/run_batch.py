@@ -320,6 +320,18 @@ def main() -> None:
         default_parallel=DEFAULT_PARALLEL,
     )
 
+    # 内置文件日志：程序自己写 <output_root>/run.log（纯文本 + emoji），
+    # 无需 shell `> run.log` 重定向；VS Code 打开干净、可随时 tail、随结果归档。
+    # 尽早挂载，使 run.log 从第一行起完整（含下方 timeout 配置日志）。
+    output_root = OUTPUT_DIR / args.agent_backend
+    try:
+        output_root.mkdir(parents=True, exist_ok=True)
+        run_log_path = output_root / "run.log"
+        attach_file_logging(run_log_path)
+        logger.info("Run log: %s", run_log_path)
+    except OSError as exc:
+        logger.warning("Failed to attach run.log file handler: %s", exc)
+
     global TIMEOUT_MULTIPLIER
     if args.timeout_multiplier is not None:
         TIMEOUT_MULTIPLIER = args.timeout_multiplier
@@ -369,16 +381,6 @@ def main() -> None:
             openrouter_base_url=OPENROUTER_BASE_URL_OPENCLAW,
             image_model=args.openclaw_image_model,
         )
-    output_root = OUTPUT_DIR / args.agent_backend
-    # 内置文件日志：程序自己写 <output_root>/run.log（纯文本 + emoji），
-    # 无需 shell `> run.log` 重定向；VS Code 打开干净、可随时 tail、随结果归档。
-    try:
-        output_root.mkdir(parents=True, exist_ok=True)
-        run_log_path = output_root / "run.log"
-        attach_file_logging(run_log_path)
-        logger.info("Run log: %s", run_log_path)
-    except OSError as exc:
-        logger.warning("Failed to attach run.log file handler: %s", exc)
     models_config = None
     if args.models_config:
         models_config_path = Path(args.models_config).expanduser()
