@@ -486,6 +486,8 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
     style_header_row(ws)
     set_widths(ws, {1: 22, 2: 12}, default=18)
     ws.freeze_panes = "C2"
+    # 6 大分类均分列红黄绿色阶（列 7 起，共 len(suites) 列）
+    add_color_scale(ws, 2, ws.max_row, 7, 6 + len(suites))
 
 
 def write_matrix_sheet(wb, units: list[UnitResult]) -> None:
