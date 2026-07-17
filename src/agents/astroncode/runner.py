@@ -18,7 +18,7 @@ from src.agents.astroncode.backend import (
     load_skill_documents,
     prepare_codex_prompt,
 )
-from src.utils.docker_utils import run_warmup, setup_skills, snapshot_workspace_state
+from src.utils.docker_utils import container_resource_args, run_warmup, setup_skills, snapshot_workspace_state
 from src.utils.endpoint_utils import normalize_openrouter_base_url_for_openclaw
 
 logger = logging.getLogger(__name__)
@@ -374,6 +374,7 @@ class AstronCodeAgent(BaseAgent):
             "-d",
             "--name",
             task_id,
+            *container_resource_args(),
             *env_args,
             "-v",
             f"{exec_path}:/workspace:ro",

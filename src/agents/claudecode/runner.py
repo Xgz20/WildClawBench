@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 from src.agents.base import AgentExecution, AgentTaskSpec, BaseAgent
 from src.agents.claudecode.transcript import convert_claudecode_chat_to_openclaw_jsonl
-from src.utils.docker_utils import run_warmup, setup_skills, snapshot_workspace_state
+from src.utils.docker_utils import container_resource_args, run_warmup, setup_skills, snapshot_workspace_state
 from src.utils.endpoint_utils import normalize_openrouter_base_url_for_claudecode
 
 load_dotenv()
@@ -387,6 +387,7 @@ class ClaudeCodeAgent(BaseAgent):
             "-d",
             "--name",
             task_id,
+            *container_resource_args(),
             *env_args,
             "-v",
             f"{exec_path}:/workspace:ro",

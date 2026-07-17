@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 
 from src.agents.base import AgentExecution, AgentTaskSpec, BaseAgent
 from src.utils.docker_utils import (
+    container_resource_args,
     run_warmup,
     setup_skills,
     inject_lobster_workspace,
@@ -265,6 +266,7 @@ class HermesAgentAgent(BaseAgent):
         cmd = [
             "docker", "run", "-d",
             "--name", task_id,
+            *container_resource_args(),
             *env_args,
             "-v", f"{workspace_path}:/app:ro",
             self.image,

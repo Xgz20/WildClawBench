@@ -62,6 +62,20 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
              "--timeout-multiplier. CLI first; falls back to env WILDCLAW_TIMEOUT_OVERRIDE",
     )
     parser.add_argument(
+        "--memory",
+        default=None,
+        metavar="SIZE",
+        help="Per-task container memory limit, e.g. 4g / 512m (docker --memory). "
+             "CLI first; falls back to env WILDCLAW_DOCKER_MEMORY. Default: no limit",
+    )
+    parser.add_argument(
+        "--cpus",
+        default=None,
+        metavar="N",
+        help="Per-task container CPU limit, e.g. 2 / 1.5 (docker --cpus). "
+             "CLI first; falls back to env WILDCLAW_DOCKER_CPUS. Default: no limit",
+    )
+    parser.add_argument(
         "--lobster-name",
         default=None,
         help="Lobster name (used in output directory for comparison)",

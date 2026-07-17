@@ -21,6 +21,22 @@ BRAVE_API_KEY = os.environ.get("BRAVE_API_KEY", "")
 def remove_container(name: str) -> None:
     subprocess.run(["docker", "rm", "-f", name], capture_output=True)
 
+def container_resource_args() -> list[str]:
+    """任务容器资源限额参数（--memory/--cpus）。
+
+    读环境变量 WILDCLAW_DOCKER_MEMORY / WILDCLAW_DOCKER_CPUS（由 run_batch
+    的 CLI 参数写入，或用户直接 export）。都未设置时返回空列表——
+    即默认无限额，现有评测命令行为不变。
+    """
+    args: list[str] = []
+    memory = os.environ.get("WILDCLAW_DOCKER_MEMORY", "").strip()
+    cpus = os.environ.get("WILDCLAW_DOCKER_CPUS", "").strip()
+    if memory:
+        args += ["--memory", memory]
+    if cpus:
+        args += ["--cpus", cpus]
+    return args
+
 def start_container(task_id: str, workspace_path: str, extra_env: str = "",
                     tmp_path: str = "", lobster_env: list[str] | None = None) -> None:
     workspace = Path(workspace_path).expanduser()
@@ -67,6 +83,7 @@ def start_container(task_id: str, workspace_path: str, extra_env: str = "",
     cmd = [
         "docker", "run", "-d",
         "--name", task_id,
+        *container_resource_args(),
         *env_args,
         "-v", f"{workspace}:/app:ro",
         DOCKER_IMAGE,

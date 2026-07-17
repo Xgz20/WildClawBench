@@ -359,6 +359,18 @@ def main() -> None:
             logger.warning("Both timeout override and multiplier set; override wins (%ds)", TIMEOUT_OVERRIDE)
         logger.info("Timeout override: %ds (every task uses this fixed timeout)", TIMEOUT_OVERRIDE)
 
+    # 容器资源限额：CLI 优先写入 env，runner 侧经 container_resource_args() 读取；
+    # 两者皆未设置时不加任何 docker 参数（与现状一致）
+    if args.memory:
+        os.environ["WILDCLAW_DOCKER_MEMORY"] = args.memory
+    if args.cpus:
+        os.environ["WILDCLAW_DOCKER_CPUS"] = str(args.cpus)
+    _mem = os.environ.get("WILDCLAW_DOCKER_MEMORY", "").strip()
+    _cpu = os.environ.get("WILDCLAW_DOCKER_CPUS", "").strip()
+    if _mem or _cpu:
+        logger.info("Container resource limits: memory=%s cpus=%s",
+                    _mem or "unlimited", _cpu or "unlimited")
+
     if args.agent_backend == "claudecode":
         backend: BaseAgent = ClaudeCodeAgent(
             anthropic_api_key=OPENROUTER_API_KEY,
