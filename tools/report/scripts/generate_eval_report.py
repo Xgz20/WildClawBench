@@ -38,11 +38,13 @@ from pathlib import Path
 try:
     from openpyxl import Workbook
     from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
+    from openpyxl.cell.rich_text import CellRichText, TextBlock
+    from openpyxl.cell.text import InlineFont
     from openpyxl.formatting.rule import ColorScaleRule
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import get_column_letter
 except ImportError:
-    sys.exit("缺少 openpyxl，请先安装：pip install openpyxl")
+    sys.exit("缺少 openpyxl（需 3.1+，含富文本支持），请先安装：pip install 'openpyxl>=3.1'")
 
 SUITE_DIR_RE = re.compile(r"^\d{2}_")
 CELL_MAX_LEN = 32000
@@ -124,6 +126,31 @@ def _load_json(path: Path) -> dict:
         return {}
 
 
+# 裁判判词类字段：键名含 reason/reasoning（如 judge_reason、image_judge_reason、
+# llm_judge_reasoning、嵌套 llm_judge.reasoning、06 套件 recognized_*_reason）
+_JUDGE_REASON_RE = re.compile(r"reason", re.I)
+_JUDGE_ERROR_RE = re.compile(r"(judge_error|llm_error)$", re.I)
+
+
+def extract_judge_notes(score: dict) -> str:
+    """从 score.json 递归提取 LLM/VLM 裁判判词与裁判异常，逐行 `键: 文本`。"""
+    lines: list[str] = []
+
+    def walk(prefix: str, obj: dict) -> None:
+        for k, v in obj.items():
+            key = f"{prefix}{k}"
+            if isinstance(v, dict):
+                walk(f"{key}.", v)
+            elif isinstance(v, str) and v.strip():
+                if _JUDGE_REASON_RE.search(k):
+                    lines.append(f"{key}: {v.strip()}")
+                elif _JUDGE_ERROR_RE.search(k):
+                    lines.append(f"⚠裁判异常 {key}: {v.strip()}")
+
+    walk("", score)
+    return "\n".join(lines)
+
+
 class TaskRecord:
     def __init__(self, suite: str, task_dir: Path):
         self.task_id = task_dir.name
@@ -141,6 +168,7 @@ class TaskRecord:
         }
         overall = score.get("overall_score")
         self.score = float(overall) if isinstance(overall, (int, float)) else None
+        self.judge_notes = extract_judge_notes(score)
         self.error_grading = score.get("error") or ("" if score else "score.json 缺失")
         self.error_execution = status.get("error") or ""
         self.timed_out = bool(status.get("timed_out"))
@@ -232,6 +260,27 @@ def strip_code_fence(text: str) -> str:
     return "\n".join(lines).strip()
 
 
+# 非数值检查点的键（文本型字段 / 汇总键），提取时排除
+_CKPT_KEY_BLACKLIST_RE = re.compile(r"^(overall_score|error)$|(_reason|_error)$")
+
+
+def extract_defined_ckpts(checks_code: str) -> list[str]:
+    """从任务 md 的 Automated Checks 判分代码提取检查点键（定义序）。
+
+    检查点由任务定义决定，与是否跑过评测无关。静态解析覆盖两种主流写法：
+    scores["key"] = ... 赋值、ALL_CRITERIA 键列表；动态键（如 f"..._{i}"）
+    解析不到，由调用方用实测键补全。
+    """
+    keys: dict[str, None] = {}
+    for lst in re.findall(r"(?:ALL_CRITERIA|CRITERIA|ALL_KEYS)\s*=\s*[\[\(](.*?)[\]\)]",
+                          checks_code, re.S):
+        for k in re.findall(r"[\"']([A-Za-z_][A-Za-z_0-9]*)[\"']", lst):
+            keys.setdefault(k)
+    for k in re.findall(r"scores\[\s*[\"']([A-Za-z_][A-Za-z_0-9]*)[\"']\s*\]", checks_code):
+        keys.setdefault(k)
+    return [k for k in keys if not _CKPT_KEY_BLACKLIST_RE.search(k)]
+
+
 def parse_task_md(path: Path) -> dict:
     """解析任务 .md：frontmatter（name/category/difficulty/...）+ 正文各章节。"""
     try:
@@ -252,6 +301,10 @@ def parse_task_md(path: Path) -> dict:
         key = SECTION_KEYS.get(m.group(1).strip())
         if key:
             meta[key] = m.group(2).strip()
+    if meta.get("checks"):
+        ckpts = extract_defined_ckpts(meta["checks"])
+        if ckpts:
+            meta["ckpt_keys"] = ckpts
     return meta
 
 
@@ -475,29 +528,76 @@ def build_task_order(units: list[UnitResult]) -> list[tuple[str, str]]:
     return [(suite, tid) for tid, suite in sorted(seen.items(), key=sort_key)]
 
 
+# 检查点富文本字体色（语义同能力 Sheet 色阶：0 红 / 部分 黄 / 满分 绿，取文字可读的深色变体）
+CKPT_FONT_GREEN = "FF2E7D32"
+CKPT_FONT_AMBER = "FFBF8F00"
+CKPT_FONT_RED = "FFC00000"
+
+
+def _ckpt_font_color(v: float) -> str:
+    if v >= 1.0 - 1e-9:
+        return CKPT_FONT_GREEN
+    if v <= 1e-9:
+        return CKPT_FONT_RED
+    return CKPT_FONT_AMBER
+
+
+def build_unit_score_cell(t: TaskRecord | None):
+    """unit 得分单元格：总分 + 按得分着色的检查点明细（富文本）。"""
+    if t is None:
+        return "-"
+    total = round(t.score, 3) if t.score is not None else "-"
+    if not t.checkpoints:  # 单分制（LLM 裁判）或判分失败，无检查点明细
+        return f"总分：{total}"
+    rt = CellRichText(f"总分：{total}\n检查点得分：\n")
+    items = list(t.checkpoints.items())
+    for i, (k, v) in enumerate(items):
+        line = f"{k}: {v}" + ("" if i == len(items) - 1 else "\n")
+        rt.append(TextBlock(InlineFont(color=_ckpt_font_color(v)), line))
+    return rt
+
+
 def write_case_compare_sheet(wb, units: list[UnitResult], order: list[tuple[str, str]],
                              task_meta: dict[str, dict], suite_zh: dict[str, str]) -> None:
     ws = wb.create_sheet("用例对比明细")
-    header = (["分类", "用例ID", "用例名称", "难度", "模态", "输入(Prompt)"]
+    header = (["分类", "用例ID", "用例名称", "难度", "模态", "输入(Prompt)", "预期行为", "评分标准", "检查点"]
               + [f"{u.unit} 得分" for u in units]
               + ["最优单元", "最大分差"])
     ws.append(header)
+    n_meta_cols = 9
     for suite, tid in order:
         meta = task_meta.get(tid, {})
         scores = {u.unit: u.task_map[tid].score for u in units if tid in u.task_map}
         valid = {k: v for k, v in scores.items() if v is not None}
         best = max(valid, key=valid.get) if valid else "-"
         spread = round(max(valid.values()) - min(valid.values()), 3) if len(valid) > 1 else "-"
+        # 检查点列表由任务定义决定（md 判分代码提取，定义序）；
+        # 动态键名（如 f"ordered_match_{i}"）静态解析不到，用各 unit 实测键补全
+        ckpt_keys: dict[str, None] = {k: None for k in meta.get("ckpt_keys", [])}
+        for u in units:
+            t = u.task_map.get(tid)
+            if t:
+                for k in t.checkpoints:
+                    ckpt_keys.setdefault(k)
+        if ckpt_keys:
+            ckpt_cell = "\n".join(ckpt_keys)
+        elif meta.get("checks"):  # 判分代码存在但无明细键 → 单分制（如 LLM 裁判、跑分任务）
+            ckpt_cell = "（单分制：判分仅输出 overall_score）"
+        else:
+            ckpt_cell = "-"
         row = [suite_zh.get(suite, suite), tid, meta.get("name", "-"), meta.get("difficulty", "-"),
-               meta.get("modality", "-"), truncate(meta.get("prompt", ""))]
-        row += [(round(scores[u.unit], 3) if scores.get(u.unit) is not None else "-")
-                if u.unit in scores else "-" for u in units]
+               meta.get("modality", "-"), truncate(meta.get("prompt", "")),
+               truncate(meta.get("expected", "")), truncate(meta.get("criteria", "")),
+               ckpt_cell]
+        row += [build_unit_score_cell(u.task_map.get(tid)) for u in units]
         row += [best, spread]
         ws.append(row)
-        ws.cell(row=ws.max_row, column=6).alignment = WRAP_TOP
+        r = ws.max_row
+        for col in list(range(6, n_meta_cols + 1)) + list(range(n_meta_cols + 1, n_meta_cols + 1 + len(units))):
+            ws.cell(row=r, column=col).alignment = WRAP_TOP
     style_header_row(ws)
-    set_widths(ws, {1: 22, 2: 40, 3: 30, 4: 8, 5: 12, 6: 50,
-                    7 + len(units): 26, 8 + len(units): 10}, default=20)
+    set_widths(ws, {1: 22, 2: 40, 3: 30, 4: 8, 5: 12, 6: 45, 7: 45, 8: 45, 9: 35,
+                    n_meta_cols + 1 + len(units): 26, n_meta_cols + 2 + len(units): 10}, default=34)
     ws.freeze_panes = "C2"
     ws.auto_filter.ref = f"A1:{get_column_letter(ws.max_column)}1"
 
@@ -681,10 +781,10 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
     header = ["分类", "用例ID", "用例名称", "难度", "超时时间(秒)", "模态",
               "输入(Prompt)", "预期行为", "评分标准", "Automated Checks",
               "工作目录(Workspace)", "预置技能(Skills)", "环境变量(Env)", "预热(Warmup)",
-              "状态", "总得分", "检查点得分明细", "失分点", "执行错误",
+              "状态", "总得分", "检查点得分明细", "失分点", "裁判判词", "执行错误",
               "总tokens", "请求数", "耗时(s)", "执行记录(jsonl)", "结果分析", "根因分析"]
     ws.append(header)
-    wrap_cols = {7, 8, 9, 10, 12, 14, 17, 18, 19, 23, 24, 25}
+    wrap_cols = {7, 8, 9, 10, 12, 14, 17, 18, 19, 20, 24, 25, 26}
     for suite, tid in order:
         t = u.task_map.get(tid)
         if t is None:
@@ -707,7 +807,8 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
             strip_code_fence(meta.get("warmup", "")) or "-",
             (t.status or "-") + ("（超时）" if t.timed_out else ""),
             round(t.score, 3) if t.score is not None else "-",
-            format_breakdown(t), format_lost_points(t), truncate(err),
+            format_breakdown(t), format_lost_points(t),
+            truncate(t.judge_notes) or "-", truncate(err),
             int((t.usage or {}).get("total_tokens", 0)),
             int((t.usage or {}).get("request_count", 0)),
             round(t.elapsed, 1) if isinstance(t.elapsed, (int, float)) else "-",
@@ -721,8 +822,8 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
     set_widths(ws, {1: 18, 2: 40, 3: 30, 4: 8, 5: 12, 6: 12,
                     7: 45, 8: 45, 9: 45, 10: 45,
                     11: 38, 12: 20, 13: 20, 14: 30,
-                    15: 14, 16: 8, 17: 40, 18: 40, 19: 40,
-                    20: 12, 21: 8, 22: 8, 23: 60, 24: 45, 25: 40})
+                    15: 14, 16: 8, 17: 40, 18: 40, 19: 45, 20: 40,
+                    21: 12, 22: 8, 23: 8, 24: 60, 25: 45, 26: 40})
     ws.freeze_panes = "C2"
 
 
