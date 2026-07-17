@@ -39,6 +39,7 @@ from src.utils.grading import (
     write_error_score as write_error_score_file,
 )
 
+from src.utils.anomalies import scan_run_dir
 from src.utils.log_format import configure_console_logging, attach_file_logging
 
 load_dotenv()
@@ -182,6 +183,71 @@ def load_models_config(models_config_path: Path) -> dict:
     return parsed_models_config
 
 
+def _short_model_slug(model: str) -> str:
+    return re.sub(r'[^a-zA-Z0-9.\-_]', '_', model.rsplit('/', 1)[-1])
+
+
+def _find_latest_run(output_root: Path, task: dict, model: str) -> Path | None:
+    task_dir = output_root / task["category"] / task["task_id"]
+    if not task_dir.is_dir():
+        return None
+    prefix = f"{_short_model_slug(model)}_"
+    runs = sorted(p for p in task_dir.iterdir() if p.is_dir() and p.name.startswith(prefix))
+    return runs[-1] if runs else None
+
+
+def _load_resume_result(
+    output_root: Path, task: dict, model: str,
+    rerun_error: bool, rerun_anomalous: bool,
+) -> dict | None:
+    """已完成且无需重跑 → 返回重建的 result dict；否则返回 None（需执行）。"""
+    latest = _find_latest_run(output_root, task, model)
+    if latest is None:
+        return None
+    try:
+        scores = json.loads((latest / "score.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    anomalies = None
+    anomalies_file = latest / "anomalies.json"
+    if anomalies_file.exists():
+        try:
+            anomalies = json.loads(anomalies_file.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            anomalies = None
+    if anomalies is None:
+        # 旧产物没有 anomalies.json，现场补算
+        anomalies = scan_run_dir(latest)
+    if rerun_anomalous and anomalies.get("is_anomalous"):
+        logger.info("[resume] %s 最新 run 有异常，将重跑: %s",
+                    task["task_id"], [i["id"] for i in anomalies["items"]])
+        return None
+    if rerun_error and anomalies.get("has_error"):
+        logger.info("[resume] %s 最新 run 有 ERROR 级异常，将重跑: %s",
+                    task["task_id"],
+                    [i["id"] for i in anomalies["items"] if i["severity"] == "error"])
+        return None
+    usage = {}
+    try:
+        usage = json.loads((latest / "usage.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        pass
+    status = {}
+    try:
+        status = json.loads((latest / "execution_status.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        pass
+    logger.info("[resume] 跳过已完成任务 %s（沿用 %s）", task["task_id"], latest.name)
+    return {
+        "task_id": latest.name,
+        "scores": scores,
+        "error": status.get("error"),
+        "usage": usage,
+        "anomalies": anomalies,
+        "_resumed_from": str(latest),
+    }
+
+
 def run_single_task(
     task: dict,
     model: str,
@@ -292,6 +358,22 @@ def run_single_task(
             )
         except Exception as exc:
             logger.warning("[%s] Failed to collect task output: %s", task_id, exc)
+
+        # 全部产物落盘后做 run 级异常检测（纯读文件，不影响评分产物）
+        try:
+            anomalies = scan_run_dir(output_dir)
+            (output_dir / "anomalies.json").write_text(
+                json.dumps(anomalies, indent=2, ensure_ascii=False), encoding="utf-8"
+            )
+            if anomalies["has_error"]:
+                logger.warning(
+                    "[%s] Anomalies detected (score unreliable): %s",
+                    task_id,
+                    ", ".join(i["id"] for i in anomalies["items"] if i["severity"] == "error"),
+                )
+            result["anomalies"] = anomalies
+        except Exception as exc:
+            logger.warning("[%s] Anomaly scan failed: %s", task_id, exc)
 
         if gateway_proc is not None:
             try:
@@ -430,6 +512,12 @@ def main() -> None:
             sys.exit(1)
         task = parse_task_md(task_file)
         logger.info("Single task mode: %s", task["task_id"])
+        if args.resume or args.rerun_error or args.rerun_anomalous:
+            prior = _load_resume_result(
+                output_root, task, args.model, args.rerun_error, args.rerun_anomalous
+            )
+            if prior is not None:
+                return  # _load_resume_result 已打印跳过日志；沿用旧结果，正常退出
         result = run_single_task(
             task,
             args.model,
@@ -449,6 +537,7 @@ def main() -> None:
 
     all_results: list[dict] = []
     safe_model_name = re.sub(r'[^a-zA-Z0-9.\-_]', '_', args.model)
+    resume_enabled = args.resume or args.rerun_error or args.rerun_anomalous
 
     for category in categories:
         category_dir = TASKS_DIR / category
@@ -479,6 +568,21 @@ def main() -> None:
 
         if not tasks:
             continue
+
+        resumed_results: list[dict] = []
+        if resume_enabled:
+            pending = []
+            for task in tasks:
+                prior = _load_resume_result(
+                    output_root, task, args.model, args.rerun_error, args.rerun_anomalous
+                )
+                if prior is None:
+                    pending.append(task)
+                else:
+                    resumed_results.append(prior)
+            logger.info("[resume] %s: 复用 %d 个已完成 run，待执行 %d 个任务",
+                        category, len(resumed_results), len(pending))
+            tasks = pending
 
         results: list[dict] = []
         if args.parallel <= 1:
@@ -517,6 +621,7 @@ def main() -> None:
                         logger.error("[%s] Thread exception: %s", tid, exc)
                         results.append({"task_id": tid, "scores": {}, "error": str(exc)})
 
+        results.extend(resumed_results)
         summary_label = f"{lobster['name']}_{safe_model_name}" if lobster else safe_model_name
         print_summary(results, category, output_root, summary_label)
         all_results.extend(results)
@@ -524,6 +629,26 @@ def main() -> None:
     if len(categories) > 1 and all_results:
         summary_label = f"{lobster['name']}_{safe_model_name}" if lobster else safe_model_name
         print_global_summary(all_results, output_root, summary_label)
+
+    # 批级异常汇总（含跨 run 规则），供出数前把关与 --rerun-error 决策
+    try:
+        from src.utils.anomalies import scan_batch
+        report = scan_batch(output_root)
+        (output_root / "anomaly_report.json").write_text(
+            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        if report["error_runs"]:
+            logger.warning(
+                "Anomaly summary: %d/%d runs have ERROR-level anomalies — "
+                "consider --resume --rerun-error (report: %s)",
+                report["error_runs"], report["total_runs"],
+                output_root / "anomaly_report.json",
+            )
+        else:
+            logger.info("Anomaly summary: %d runs scanned, no ERROR-level anomalies",
+                        report["total_runs"])
+    except Exception as exc:
+        logger.warning("Batch anomaly scan failed: %s", exc)
 
 if __name__ == "__main__":
     main()
