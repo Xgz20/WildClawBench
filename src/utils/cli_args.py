@@ -45,6 +45,14 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
         help="Number of parallel containers (default: 1, i.e. sequential)",
     )
     parser.add_argument(
+        "--timeout-multiplier",
+        type=float,
+        default=None,
+        metavar="X",
+        help="Scale every task's timeout_seconds by this factor. "
+             "CLI takes precedence; falls back to env WILDCLAW_TIMEOUT_MULTIPLIER, then 1.0",
+    )
+    parser.add_argument(
         "--lobster-name",
         default=None,
         help="Lobster name (used in output directory for comparison)",

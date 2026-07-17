@@ -56,6 +56,10 @@ OUTPUT_DIR       = ROOT_DIR / os.environ.get("OUTPUT_SUBDIR", "output")
 DEFAULT_MODEL    = os.environ.get("DEFAULT_MODEL",    "openrouter/anthropic/claude-sonnet-4.6")
 DEFAULT_PARALLEL = int(os.environ.get("DEFAULT_PARALLEL", "1"))
 
+# 任务超时放大倍数；main() 里解析（CLI --timeout-multiplier 优先，
+# env WILDCLAW_TIMEOUT_MULTIPLIER 兜底，默认 1.0），线程启动前设定
+TIMEOUT_MULTIPLIER = 1.0
+
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_BASE_URL_OPENCLAW = normalize_openrouter_base_url_for_openclaw(
     os.environ.get("OPENROUTER_BASE_URL", "")
@@ -193,7 +197,7 @@ def run_single_task(
     task_id_ori     = task["task_id"]
     workspace_path  = task["workspace_path"]
     prompt          = task["prompt"]
-    timeout_seconds = task["timeout_seconds"]
+    timeout_seconds = max(1, int(round(task["timeout_seconds"] * TIMEOUT_MULTIPLIER)))
     system_prompt = f"You are an expert in a restricted, non-interactive environment. Solve the task efficiently before the timeout ({timeout_seconds}s). Run all processes in the foreground without user input or background services. Provide a complete, functional solution in a single pass with no placeholders. \n"
     prompt = system_prompt + prompt
 
@@ -309,6 +313,21 @@ def main() -> None:
         default_model=DEFAULT_MODEL,
         default_parallel=DEFAULT_PARALLEL,
     )
+
+    global TIMEOUT_MULTIPLIER
+    if args.timeout_multiplier is not None:
+        TIMEOUT_MULTIPLIER = args.timeout_multiplier
+    else:
+        TIMEOUT_MULTIPLIER = float(
+            os.environ.get("WILDCLAW_TIMEOUT_MULTIPLIER", "").strip() or "1"
+        )
+    if TIMEOUT_MULTIPLIER <= 0:
+        raise SystemExit(
+            f"timeout multiplier must be > 0, got {TIMEOUT_MULTIPLIER}"
+        )
+    if TIMEOUT_MULTIPLIER != 1.0:
+        logger.info("Timeout multiplier: %.2fx (applies to every task's timeout_seconds)", TIMEOUT_MULTIPLIER)
+
     if args.agent_backend == "claudecode":
         backend: BaseAgent = ClaudeCodeAgent(
             anthropic_api_key=OPENROUTER_API_KEY,
