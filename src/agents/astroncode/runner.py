@@ -479,11 +479,16 @@ class AstronCodeAgent(BaseAgent):
         output_dir: Path,
     ) -> None:
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
+        provider = self._provider_for_model(model)
         astron_api_key = self._resolve_astron_api_key()
-        if not astron_api_key:
+        if provider == "astron-spark" and not astron_api_key:
             raise RuntimeError(
                 "AstronCode 0.0.6 requires an Astron API key. "
                 "Set ASTRON_API_KEY, ASTRON_SPARK_API_KEY, or OPENROUTER_API_KEY."
+            )
+        if provider == "openrouter" and not self.openrouter_api_key:
+            raise RuntimeError(
+                "AstronCode external models require OPENROUTER_API_KEY."
             )
         config_toml = self._render_codex_config(
             model=model,
@@ -518,9 +523,11 @@ class AstronCodeAgent(BaseAgent):
         if r.returncode != 0:
             raise RuntimeError(f"AstronCode config write failed:\n{r.stderr}")
         logger.info(
-            "[%s] AstronCode config written (model=%s, reasoning=%s, wire_api=%s)",
+            "[%s] AstronCode config written "
+            "(model=%s, provider=%s, reasoning=%s, wire_api=%s)",
             task_id,
             bare_model,
+            provider,
             reasoning_effort or "model-default",
             wire_api or "default",
         )
@@ -533,22 +540,22 @@ class AstronCodeAgent(BaseAgent):
         astron_api_key: str,
         redact_secrets: bool,
     ) -> str:
-        """Render the AstronCode 0.0.6+ config.
+        """Render the AstronCode 0.0.6+ config for the selected model.
 
-        0.0.6 起 astron-spark 默认配置随 CLI 内置，配置文件只需要覆盖当前
-        benchmark run 的模型名、运行策略和 provider bearer token。
+        Astron-native models use the CLI's built-in astron-spark provider.
+        External models use the benchmark's OpenRouter-compatible endpoint.
         """
         _ = wire_api
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
-        models_base_url = self._resolve_astron_models_base_url()
+        provider = self._provider_for_model(model)
         reasoning_line = (
             f'model_reasoning_effort = "{reasoning_effort}"\n'
             if reasoning_effort
             else ""
         )
         token = "***" if redact_secrets else astron_api_key
-        return (
-            f'model_provider = "astron-spark"\n'
+        common_config = (
+            f"model_provider = {toml_basic_string(provider)}\n"
             f"{reasoning_line}"
             f'model_reasoning_summary = "none"\n'
             f'model_supports_reasoning_summaries = false\n'
@@ -556,9 +563,21 @@ class AstronCodeAgent(BaseAgent):
             f"model = {toml_basic_string(bare_model)}\n"
             f'approval_policy = "never"\n'
             f'sandbox_mode = "danger-full-access"\n'
-            f'\n'
-            f'[model_providers.astron-spark]\n'
-            f'name = "Astron Spark"\n'
+        )
+        if provider == "openrouter":
+            return common_config + (
+                '\n'
+                '[model_providers.openrouter]\n'
+                'name = "openrouter"\n'
+                f"base_url = {toml_basic_string(self.openrouter_base_url)}\n"
+                'env_key = "OPENROUTER_API_KEY"\n'
+            )
+
+        models_base_url = self._resolve_astron_models_base_url()
+        return common_config + (
+            '\n'
+            '[model_providers.astron-spark]\n'
+            'name = "Astron Spark"\n'
             f"experimental_bearer_token = {toml_basic_string(token)}\n"
             f"models_base_url = {toml_basic_string(models_base_url)}\n"
         )
@@ -569,6 +588,13 @@ class AstronCodeAgent(BaseAgent):
             or os.environ.get("ASTRON_SPARK_API_KEY", "").strip()
             or self.openrouter_api_key
         )
+
+    @staticmethod
+    def _provider_for_model(model: str) -> str:
+        bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
+        if bare_model.lower().startswith(("xspark", "xop")):
+            return "astron-spark"
+        return "openrouter"
 
     @staticmethod
     def _resolve_astron_models_base_url() -> str:
