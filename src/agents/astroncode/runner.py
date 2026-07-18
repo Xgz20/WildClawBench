@@ -27,9 +27,9 @@ ASTRONCODE_HOME = "/root/.acode"
 ASTRONCODE_SESSIONS_DIR = f"{ASTRONCODE_HOME}/sessions"
 ASTRONCODE_CONFIG_PATH = f"{ASTRONCODE_HOME}/config.toml"
 ASTRONCODE_SKILLS_DIR = f"{ASTRONCODE_HOME}/skills"
-# 镜像构建时由 codex-astron-config 安装脚本烘焙（docker/astroncode/Dockerfile）
-ASTRONCODE_CATALOG_PATH = f"{ASTRONCODE_HOME}/astron-spark.json"
-ASTRON_SPARK_DEFAULT_BASE_URL = "https://maas-api.cn-huabei-1.xf-yun.com/v1"
+DEFAULT_ASTRON_MODELS_BASE_URL = (
+    "https://astroncode-api-pre.xf-yun.com/astroncode-backend/v1"
+)
 OPENCLAW_TRANSCRIPT_DIR = "/root/.openclaw/agents/main/sessions"
 OPENCLAW_TRANSCRIPT_PATH = f"{OPENCLAW_TRANSCRIPT_DIR}/chat.jsonl"
 DEFAULT_REASONING_EFFORT = "medium" #"high"
@@ -111,6 +111,16 @@ def sanitize_agent_log(log_path: Path) -> None:
         log_path.write_text("\n".join(kept) + ("\n" if kept else ""), encoding="utf-8")
 
 
+def toml_basic_string(value: str) -> str:
+    escaped = (
+        value.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\r", "\\r")
+        .replace("\n", "\\n")
+    )
+    return f'"{escaped}"'
+
+
 class AstronCodeAgent(BaseAgent):
     def __init__(
         self,
@@ -119,7 +129,7 @@ class AstronCodeAgent(BaseAgent):
         openrouter_base_url: str = "",
         reasoning_effort_default: str = DEFAULT_REASONING_EFFORT,
     ) -> None:
-        resolved_image = image or os.environ.get("DOCKER_IMAGE_ASTRONCODE") or "wildclawbench-astroncode-ubuntu:v0.1-test.8"
+        resolved_image = image or os.environ.get("DOCKER_IMAGE_ASTRONCODE") or "wildclawbench-astroncode-ubuntu:v0.2"
         self.image: str = resolved_image
         self.openrouter_api_key = (
             openrouter_api_key or os.environ.get("OPENROUTER_API_KEY", "")
@@ -328,6 +338,7 @@ class AstronCodeAgent(BaseAgent):
         no_proxy = "" if not proxy_http else os.environ.get("NO_PROXY_INNER", "").strip()
         env_map: dict[str, str] = {
             "OPENROUTER_API_KEY": self.openrouter_api_key,
+            "ASTRON_API_KEY": os.environ.get("ASTRON_API_KEY", "").strip(),
             "ASTRON_SPARK_API_KEY": (
                 os.environ.get("ASTRON_SPARK_API_KEY", "").strip()
                 or self.openrouter_api_key
@@ -468,15 +479,30 @@ class AstronCodeAgent(BaseAgent):
         output_dir: Path,
     ) -> None:
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
+        astron_api_key = self._resolve_astron_api_key()
+        if not astron_api_key:
+            raise RuntimeError(
+                "AstronCode 0.0.6 requires an Astron API key. "
+                "Set ASTRON_API_KEY, ASTRON_SPARK_API_KEY, or OPENROUTER_API_KEY."
+            )
         config_toml = self._render_codex_config(
             model=model,
             reasoning_effort=reasoning_effort,
             wire_api=wire_api,
+            astron_api_key=astron_api_key,
+            redact_secrets=False,
+        )
+        debug_config_toml = self._render_codex_config(
+            model=model,
+            reasoning_effort=reasoning_effort,
+            wire_api=wire_api,
+            astron_api_key=astron_api_key,
+            redact_secrets=True,
         )
 
-        # Mirror the rendered config host-side so future debugging is trivial.
+        # Mirror a redacted config host-side so future debugging is trivial.
         output_dir.mkdir(parents=True, exist_ok=True)
-        (output_dir / "config.toml").write_text(config_toml, encoding="utf-8")
+        (output_dir / "config.toml").write_text(debug_config_toml, encoding="utf-8")
 
         heredoc = (
             f"mkdir -p {ASTRONCODE_HOME} && "
@@ -504,40 +530,51 @@ class AstronCodeAgent(BaseAgent):
         model: str,
         reasoning_effort: str | None,
         wire_api: str | None,
+        astron_api_key: str,
+        redact_secrets: bool,
     ) -> str:
-        """Render the official astron-spark provider config.
+        """Render the AstronCode 0.0.6+ config.
 
-        与 codex-astron-config 安装脚本产出的配置同构：astron-spark provider
-        （env_key=ASTRON_SPARK_API_KEY、wire_api=responses）+ model_catalog_json
-        指向镜像内烘焙的模型 catalog。base_url 优先取 OPENROUTER_BASE_URL 以便
-        与其他 harness 共用同一套 export 脚本。
+        0.0.6 起 astron-spark 默认配置随 CLI 内置，配置文件只需要覆盖当前
+        benchmark run 的模型名、运行策略和 provider bearer token。
         """
+        _ = wire_api
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
-        base_url = self.openrouter_base_url or ASTRON_SPARK_DEFAULT_BASE_URL
-        safe_base_url = base_url.replace('"', '\\"')
+        models_base_url = self._resolve_astron_models_base_url()
         reasoning_line = (
             f'model_reasoning_effort = "{reasoning_effort}"\n'
             if reasoning_effort
             else ""
         )
+        token = "***" if redact_secrets else astron_api_key
         return (
             f'model_provider = "astron-spark"\n'
             f"{reasoning_line}"
             f'model_reasoning_summary = "none"\n'
             f'model_supports_reasoning_summaries = false\n'
             f'hide_agent_reasoning = true\n'
-            f'model = "{bare_model}"\n'
-            f'model_catalog_json = "{ASTRONCODE_CATALOG_PATH}"\n'
+            f"model = {toml_basic_string(bare_model)}\n"
             f'approval_policy = "never"\n'
             f'sandbox_mode = "danger-full-access"\n'
             f'\n'
             f'[model_providers.astron-spark]\n'
             f'name = "Astron Spark"\n'
-            f'base_url = "{safe_base_url}"\n'
-            f'env_key = "ASTRON_SPARK_API_KEY"\n'
-            f'wire_api = "{wire_api or "responses"}"\n'
-            f'requires_openai_auth = false\n'
-            f'stream_idle_timeout_ms = 300000\n'
+            f"experimental_bearer_token = {toml_basic_string(token)}\n"
+            f"models_base_url = {toml_basic_string(models_base_url)}\n"
+        )
+
+    def _resolve_astron_api_key(self) -> str:
+        return (
+            os.environ.get("ASTRON_API_KEY", "").strip()
+            or os.environ.get("ASTRON_SPARK_API_KEY", "").strip()
+            or self.openrouter_api_key
+        )
+
+    @staticmethod
+    def _resolve_astron_models_base_url() -> str:
+        return (
+            os.environ.get("ASTRON_MODELS_BASE_URL", "").strip()
+            or DEFAULT_ASTRON_MODELS_BASE_URL
         )
 
     def _install_image_helper(self, task_id: str, model: str) -> None:
