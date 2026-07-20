@@ -56,6 +56,7 @@ WRAP_TOP = Alignment(wrap_text=True, vertical="top")
 
 DIFFICULTY_ORDER = ["L1", "L2", "L3", "L4", "L5"]
 MODALITY_ORDER = ["pure-text", "multimodal"]
+MODALITY_ZH = {"pure-text": "纯文本", "multimodal": "多模态"}
 
 # 7 维能力口径（与 PinchBench cap7 对齐）；映射文件见 tools/report/data/checkpoint_capability_map7.yaml
 CAP7_ORDER = ["code_generation", "tool_use", "data_processing", "retrieval_verification",
@@ -646,25 +647,33 @@ def _cap_task_scores(u: UnitResult, cap_map: dict, dim: str, delivered_only: boo
 
 def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
     from openpyxl.comments import Comment
-    ws = wb.create_sheet("Agent能力对比", index=3)  # 紧跟用例对比明细之后
-    header = (["模型@Harness", "总平均分"]
-              + [f"{CAP7_ZH[d]}({d})" for d in CAP7_ORDER]
-              + [f"{CAP7_ZH[d]}·去落盘污染" for d in CAP7_DECON]
-              + ["模型强项", "模型短板"])
-    ws.append(header)
-    n_dims = len(CAP7_ORDER) + len(CAP7_DECON)
+
+    # 预先计算每个 unit 的 7 项原始能力分与 3 项去污染分（供两个 Sheet 复用）
+    unit_scores: dict[str, dict[str, tuple[float | None, int]]] = {}
+    unit_decon: dict[str, dict[str, tuple[float | None, int]]] = {}
     for u in units:
         scores: dict[str, tuple[float | None, int]] = {}
         for d in CAP7_ORDER:
             vals = _cap_task_scores(u, cap_map, d, delivered_only=False)
             scores[d] = (sum(vals) / len(vals) * 100 if vals else None, len(vals))
-        row = [u.unit, round(u.total_pct, 1)]
-        row += [round(scores[d][0], 1) if scores[d][0] is not None else "-" for d in CAP7_ORDER]
+        unit_scores[u.unit] = scores
         decon: dict[str, tuple[float | None, int]] = {}
         for d in CAP7_DECON:
             vals = _cap_task_scores(u, cap_map, d, delivered_only=True)
             decon[d] = (sum(vals) / len(vals) * 100 if vals else None, len(vals))
-        row += [round(decon[d][0], 1) if decon[d][0] is not None else "-" for d in CAP7_DECON]
+        unit_decon[u.unit] = decon
+
+    # ---- Sheet 1：7 项原始能力（不去污染）+ 强项/短板 ----
+    ws = wb.create_sheet("Agent能力对比", index=3)  # 紧跟用例对比明细之后
+    header = (["模型@Harness", "总平均分"]
+              + [f"{CAP7_ZH[d]}" for d in CAP7_ORDER]
+              + ["模型强项", "模型短板"])
+    ws.append(header)
+    n_dims = len(CAP7_ORDER)
+    for u in units:
+        scores = unit_scores[u.unit]
+        row = [u.unit, round(u.total_pct, 1)]
+        row += [round(scores[d][0], 1) if scores[d][0] is not None else "-" for d in CAP7_ORDER]
         ranked = sorted((d for d in CAP7_ORDER
                          if scores[d][0] is not None and scores[d][1] >= CAP_RANK_MIN_COUNT),
                         key=lambda d: scores[d][0], reverse=True)
@@ -675,15 +684,34 @@ def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
         apply_pct_format(ws, r, range(2, 3 + n_dims))
         for i, d in enumerate(CAP7_ORDER):
             ws.cell(row=r, column=3 + i).comment = Comment(f"涉及 {scores[d][1]} 例", "report")
-        for i, d in enumerate(CAP7_DECON):
-            ws.cell(row=r, column=3 + len(CAP7_ORDER) + i).comment = Comment(
-                f"涉及 {decon[d][1]} 例（仅产物落盘成功的用例）", "report")
         for col in (3 + n_dims, 4 + n_dims):
             ws.cell(row=r, column=col).alignment = WRAP_TOP
     style_header_row(ws)
     set_widths(ws, {1: 28, 2: 12, 3 + n_dims: 24, 4 + n_dims: 24}, default=17)
     ws.freeze_panes = "C2"
     add_color_scale(ws, 2, ws.max_row, 2, 2 + n_dims)
+
+    # ---- Sheet 2：仅 3 项去落盘污染能力 ----
+    ws2 = wb.create_sheet("Agent能力对比·去污染", index=4)
+    header2 = (["模型@Harness", "总平均分"]
+               + [f"{CAP7_ZH[d]}·去落盘污染" for d in CAP7_DECON])
+    ws2.append(header2)
+    n_decon = len(CAP7_DECON)
+    for u in units:
+        decon = unit_decon[u.unit]
+        row = [u.unit, round(u.total_pct, 1)]
+        row += [round(decon[d][0], 1) if decon[d][0] is not None else "-" for d in CAP7_DECON]
+        ws2.append(row)
+        r = ws2.max_row
+        apply_pct_format(ws2, r, range(2, 3 + n_decon))
+        for i, d in enumerate(CAP7_DECON):
+            ws2.cell(row=r, column=3 + i).comment = Comment(
+                f"涉及 {decon[d][1]} 例（仅产物落盘成功的用例）", "report")
+    style_header_row(ws2)
+    set_widths(ws2, {1: 28, 2: 12}, default=20)
+    ws2.freeze_panes = "C2"
+    add_color_scale(ws2, 2, ws2.max_row, 2, 2 + n_decon)
+
     # 覆盖率告警：实测检查点未被映射的
     unmapped = set()
     for u in units:
@@ -726,7 +754,7 @@ def write_dimension_sheet_transposed(wb, title: str, units: list[UnitResult],
     ws = wb.create_sheet(title)
     groups = [(label, ids) for label, ids in groups if ids]
     ws.append(["模型@Harness", "总平均分"]
-              + [f"{label} 平均分({len(ids)}例)" for label, ids in groups])
+              + [f"{label}平均分({len(ids)}例)" for label, ids in groups])
     for u in units:  # units 已按总平均分降序
         row = [u.unit, round(u.total_pct, 1)]
         for _, ids in groups:
@@ -887,15 +915,17 @@ def main() -> None:
                           [(suite_zh.get(s, s), {tid for su, tid in order if su == s})
                            for s in suites])
 
-    def meta_groups(field: str, known_order: list[str]) -> list[tuple[str, set[str]]]:
+    def meta_groups(field: str, known_order: list[str],
+                    label_map: dict[str, str] | None = None) -> list[tuple[str, set[str]]]:
         values = {task_meta.get(tid, {}).get(field, "") for _, tid in order}
         values.discard("")
         ordered = [v for v in known_order if v in values] + sorted(values - set(known_order))
-        return [(v, {tid for _, tid in order if task_meta.get(tid, {}).get(field) == v})
+        return [((label_map or {}).get(v, v),
+                 {tid for _, tid in order if task_meta.get(tid, {}).get(field) == v})
                 for v in ordered]
 
     write_dimension_sheet_transposed(wb, "难度对比", units, meta_groups("difficulty", DIFFICULTY_ORDER))
-    write_dimension_sheet_transposed(wb, "模态对比", units, meta_groups("modality", MODALITY_ORDER))
+    write_dimension_sheet_transposed(wb, "模态对比", units, meta_groups("modality", MODALITY_ORDER, MODALITY_ZH))
     write_diff_matrix_sheet(wb, units)
     for u in units:
         write_detail_sheet(wb, u, order, task_meta, analysis, suite_zh)
