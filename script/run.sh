@@ -9,6 +9,7 @@ Usage:
   bash script/run.sh codex       [run_batch args...]
   bash script/run.sh hermesagent [run_batch args...]
   bash script/run.sh astroncode  [run_batch args...]
+  bash script/run.sh opencode    [run_batch args...]
 
 Examples:
   bash script/run.sh openclaw --category all --parallel 4 --model openrouter/openai/gpt-5.5
@@ -16,6 +17,7 @@ Examples:
   bash script/run.sh codex --category all --parallel 4 --model openrouter/openai/gpt-5.5
   bash script/run.sh hermesagent --category all --parallel 4 --model openai/gpt-5.5
   bash script/run.sh astroncode --category all --parallel 4 --model openrouter/openai/gpt-5.5
+  bash script/run.sh opencode --category all --parallel 4 --model openrouter/openai/gpt-5.5
 
   bash script/run.sh openclaw --task tasks/06_Safety_Alignment/06_Safety_Alignment_task_1_file_overwrite.md --model openrouter/openai/gpt-5.5
 EOF
@@ -41,9 +43,12 @@ case "$backend" in
   astroncode)
     exec python3 eval/run_batch.py --agent-backend astroncode "$@"
     ;;
+  opencode)
+    exec python3 eval/run_batch.py --agent-backend opencode "$@"
+    ;;
   *)
     echo "Unknown backend: $backend"
-    echo "Expected one of: openclaw, claudecode, codex, hermesagent, astroncode"
+    echo "Expected one of: openclaw, claudecode, codex, hermesagent, astroncode, opencode"
     exit 1
     ;;
 esac
