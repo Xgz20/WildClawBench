@@ -858,6 +858,432 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
 
 
 # ===========================================================================
+# Summary JSON / Markdown / HTML 产出（供 --emit）
+# ===========================================================================
+
+def _build_dim_comparison(
+    units: list[UnitResult],
+    task_meta: dict[str, dict],
+    dim_field: str,
+    order: list[str],
+) -> list[dict]:
+    """按某维度（category/difficulty/modality）聚合各 unit 的平均分。"""
+    dim_to_tasks: dict[str, set[str]] = {}
+    for tid, meta in task_meta.items():
+        val = meta.get(dim_field)
+        if val:
+            dim_to_tasks.setdefault(val, set()).add(tid)
+
+    # 按给定顺序排列，未知值追加到末尾
+    known_vals = [v for v in order if v in dim_to_tasks]
+    unknown_vals = sorted(v for v in dim_to_tasks if v not in order)
+    ordered_vals = known_vals + unknown_vals
+
+    rows = []
+    for val in ordered_vals:
+        task_ids = dim_to_tasks[val]
+        row = {
+            "name": val,
+            "task_count": len(task_ids),
+            "scores": {},  # unit → 平均分（百分制）
+        }
+        for u in units:
+            avg = u.avg_pct(task_ids)
+            if avg is not None:
+                row["scores"][u.unit] = round(avg, 1)
+        rows.append(row)
+    return rows
+
+
+def build_summary(
+    units: list[UnitResult],
+    task_meta: dict[str, dict],
+    cap_map: dict[str, dict[str, list[str]]],
+    suite_zh: dict[str, str],
+    analysis_by_unit: dict[str, dict],
+    task_order: list[tuple[str, str]],
+) -> dict:
+    """组装 summary JSON，章节与 Excel Sheet 一一对应。
+
+    返回结构：
+    - units: 单元标签列表（与 scores_by_unit 位置数组同序）
+    - overview: 总览指标
+    - unit_summaries: 各单元汇总（对应「总览」Sheet）
+    - case_comparisons: 用例对比明细（对应「用例对比明细」Sheet）
+    - capability_comparison: 7维能力对比（对应「Agent能力对比」Sheet）
+    - dimension_comparisons: 分类/难度/模态对比（对应「分类/难度/模态」Sheet）
+    - score_matrix: 模型×Harness 得分矩阵
+    - diff_matrix: 分差矩阵
+    - root_cause_summary: 根因分析统计
+    - recommendations: 改进建议
+    """
+    # 各 unit 按套件分类的均分
+    suites = sorted({suite for suite, _ in task_order})
+    category_scores = {}
+    for suite in suites:
+        task_ids = {tid for s, tid in task_order if s == suite}
+        category_scores[suite] = {
+            u.unit: u.avg_pct(task_ids) for u in units
+        }
+
+    # run_summaries（对应「总览」Sheet，字段名对齐前端）
+    run_summaries = []
+    for u in units:
+        run_summaries.append({
+            "run_label": u.unit,  # 前端期望 run_label
+            "model": u.model,
+            "harness": u.harness,
+            "average_score": round(u.total_pct / 100, 4),  # 前端期望 0-1 范围
+            "category_scores": {
+                suite_zh.get(suite, suite): round(score / 100, 4) if score is not None else None
+                for suite, scores in category_scores.items()
+                for unit, score in scores.items()
+                if unit == u.unit
+            },
+            "total_tokens": int(u.usage_total("total_tokens")),
+            "cost_usd": round(u.usage_total("cost_usd"), 4),
+            "elapsed_time": round(u.usage_total("elapsed_time"), 1),
+            "request_count": int(u.usage_total("request_count")),
+            "error_count": sum(1 for t in u.tasks if t.error_grading or t.error_execution),
+            "timeout_count": sum(1 for t in u.tasks if t.timed_out),
+        })
+
+    # case_comparisons（对应「用例对比明细」Sheet）
+    case_comparisons = []
+    for suite, tid in task_order:
+        meta = task_meta.get(tid, {})
+        scores_by_unit = []
+        for u in units:
+            t = u.task_map.get(tid)
+            scores_by_unit.append(t.score if t and t.score is not None else None)
+
+        valid_scores = [s for s in scores_by_unit if s is not None]
+
+        # 构建前端期望的 results 对象数组格式
+        results = []
+        for i, u in enumerate(units):
+            score = scores_by_unit[i]
+            results.append({
+                "run_label": u.unit,
+                "average_score": score,
+            })
+
+        case_comparisons.append({
+            "case_task_id": tid,
+            "case_name": meta.get("name", ""),
+            "suite": suite,
+            "suite_zh": suite_zh.get(suite, suite),
+            "category": suite_zh.get(suite, suite),
+            "difficulty": meta.get("difficulty", ""),
+            "modality": meta.get("modality", ""),
+            "results": results,  # 前端期望的对象数组
+            "best_score": max(valid_scores) if valid_scores else None,
+            "score_gap": round((max(valid_scores) - min(valid_scores)), 4) if len(valid_scores) > 1 else None,
+        })
+
+    # capability_comparison（对应「Agent能力对比」Sheet，7维）
+    capability_comparison = {
+        "dimensions": [{"code": d, "label": CAP7_ZH[d]} for d in CAP7_ORDER],
+        "rows": [],
+    }
+    for u in units:
+        dim_scores = {}
+        for dim in CAP7_ORDER:
+            scores = _cap_task_scores(u, cap_map, dim, delivered_only=False)
+            dim_scores[dim] = round(sum(scores) / len(scores), 4) if scores else None
+        capability_comparison["rows"].append({
+            "run_label": u.unit,
+            "dim_scores": dim_scores,
+        })
+
+    # dimension_comparisons（对应「分类/难度/模态」Sheet）
+    dimension_comparisons = {
+        "category": _build_dim_comparison(units, task_meta, "category", sorted(suites)),
+        "difficulty": _build_dim_comparison(units, task_meta, "difficulty", DIFFICULTY_ORDER),
+        "modality": _build_dim_comparison(units, task_meta, "modality", MODALITY_ORDER),
+    }
+
+    # score_matrix 和 diff_matrix（对应「模型×Harness 矩阵」和「分差矩阵」Sheet）
+    score_matrix = [[round(u.total_pct, 1) for u in units] for _ in units]
+    diff_matrix = []
+    for i, u_a in enumerate(units):
+        row = []
+        for u_b in units:
+            row.append(0.0 if u_a is u_b else round(u_a.total_pct - u_b.total_pct, 1))
+        diff_matrix.append(row)
+
+    # root_cause_summary 和 recommendations（如有根因分析）
+    root_cause_summary = []
+    recommendations = []
+    if analysis_by_unit:
+        # 提取根因统计和建议（简化处理，后续可扩展）
+        for unit, ana_data in analysis_by_unit.items():
+            if isinstance(ana_data, dict):
+                root_cause_summary.append({
+                    "unit": unit,
+                    "summary": ana_data.get("summary", ""),
+                })
+
+    return {
+        "units": [u.unit for u in units],  # 位置数组基准
+        "overview": {
+            "unit_count": len(units),
+            "total_tasks": len(task_order),
+            "average_score": round(sum(u.total_pct for u in units) / len(units) / 100, 4) if units else 0.0,
+        },
+        "run_summaries": run_summaries,
+        "case_comparisons": case_comparisons,
+        "capability_comparison": capability_comparison,
+        "dimension_comparisons": dimension_comparisons,
+        "score_matrix": score_matrix,
+        "diff_matrix": diff_matrix,
+        "root_cause_summary": root_cause_summary,
+        "recommendations": recommendations,
+    }
+
+
+def _md_table(headers: list[str], rows: list[list]) -> str:
+    """生成 Markdown 表格。"""
+    lines = []
+    lines.append("| " + " | ".join(str(h) for h in headers) + " |")
+    lines.append("|" + "---|" * len(headers))
+    for row in rows:
+        lines.append("| " + " | ".join(str(cell) if cell is not None else "-" for cell in row) + " |")
+    return "\n".join(lines)
+
+
+
+def render_markdown(summary: dict) -> str:
+    """从 summary JSON 渲染 Markdown 报告。"""
+    lines = []
+    lines.append(f"# WildClawBench 评测报告")
+    lines.append("")
+    lines.append(f"**单元数**: {summary['overview']['unit_count']}  ")
+    lines.append(f"**总任务数**: {summary['overview']['total_tasks']}  ")
+    lines.append(f"**平均分**: {summary['overview']['average_score']*100:.1f}%")
+    lines.append("")
+
+    # 单元汇总
+    lines.append("## 单元汇总")
+    lines.append("")
+    lines.append("| 单元 | 平均分 | Tokens | 成本($) | 错误 | 超时 |")
+    lines.append("|------|--------|--------|---------|------|------|")
+    for item in summary["run_summaries"]:
+        lines.append(
+            f"| {item['run_label']} | {item['average_score']*100:.1f}% | "
+            f"{item['total_tokens']:,} | {item['cost_usd']:.4f} | "
+            f"{item['error_count']} | {item['timeout_count']} |"
+        )
+    lines.append("")
+
+    # 用例对比明细（简化版，仅展示部分列）
+    lines.append("## 用例对比明细")
+    lines.append("")
+    run_labels = [item['run_label'] for item in summary["run_summaries"]]
+    lines.append("| 用例ID | 难度 | 最优分 | 分差 | " + " | ".join(run_labels) + " |")
+    lines.append("|" + "---|" * (4 + len(run_labels)))
+    for case in summary["case_comparisons"]:
+        scores_str = " | ".join(
+            f"{r['average_score']*100:.1f}%" if r['average_score'] is not None else "-"
+            for r in case["results"]
+        )
+        gap_str = f"{case['score_gap']*100:.1f}%" if case['score_gap'] is not None else "-"
+        best_str = f"{case['best_score']*100:.1f}%" if case['best_score'] is not None else "-"
+        lines.append(
+            f"| {case['case_task_id']} | {case['difficulty']} | "
+            f"{best_str} | {gap_str} | {scores_str} |"
+        )
+    lines.append("")
+
+    # Agent能力对比
+    cap = summary.get("capability_comparison", {})
+    if cap.get("dimensions"):
+        lines.append("## Agent能力对比")
+        lines.append("")
+        headers = ["单元"] + [f"{d['label']}" for d in cap["dimensions"]]
+        rows = []
+        for r in cap.get("rows", []):
+            row = [r["run_label"]]
+            for d in cap["dimensions"]:
+                v = r["dim_scores"].get(d["code"])
+                row.append(f"{v*100:.1f}%" if v is not None else "-")
+            rows.append(row)
+        lines.append(_md_table(headers, rows))
+        lines.append("")
+
+    # 分类/难度/模态对比
+    for title, key in [("分类对比", "category"), ("难度对比", "difficulty"), ("模态对比", "modality")]:
+        dim_data = summary.get("dimension_comparisons", {}).get(key, [])
+        if dim_data:
+            lines.append(f"## {title}")
+            lines.append("")
+
+            # 难度对比特殊处理：转置为模型×难度（参考 PinchBench）
+            if key == "difficulty":
+                headers = ["模型"] + [f"{d['name']}(用例数{d['task_count']})" for d in dim_data]
+                rows = []
+                for label in run_labels:
+                    row = [label]
+                    for d in dim_data:
+                        v = d["scores"].get(label)
+                        row.append(f"{v:.1f}%" if v is not None else "-")
+                    rows.append(row)
+                lines.append(_md_table(headers, rows))
+            else:
+                # 分类/模态：维度×模型（原逻辑）
+                headers = ["名称", "任务数"] + run_labels
+                rows = []
+                for d in dim_data:
+                    row = [d["name"], d["task_count"]]
+                    for label in run_labels:
+                        v = d["scores"].get(label)
+                        row.append(f"{v:.1f}%" if v is not None else "-")
+                    rows.append(row)
+                lines.append(_md_table(headers, rows))
+            lines.append("")
+
+    # 分差矩阵
+    diff = summary.get("diff_matrix", [])
+    if diff:
+        lines.append("## 分差矩阵")
+        lines.append("")
+        headers = ["行单元 - 列单元"] + run_labels
+        rows = []
+        for i, row_vals in enumerate(diff):
+            row = [run_labels[i]] + [f"{v:+.1f}%" for v in row_vals]
+            rows.append(row)
+        lines.append(_md_table(headers, rows))
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def render_html(summary: dict) -> str:
+    """从 summary JSON 渲染自包含 HTML 报告。"""
+    run_labels = [item['run_label'] for item in summary["run_summaries"]]
+
+    def pct01(v):
+        """0-1 分数格式化为百分比（None → '-'）。"""
+        return f"{v*100:.1f}%" if v is not None else "-"
+
+    def pct100(v):
+        """已是百分制的分数格式化（None → '-'）。"""
+        return f"{v:.1f}%" if v is not None else "-"
+
+    # 单元汇总表
+    unit_rows = "".join(
+        f"<tr><td>{item['run_label']}</td><td>{pct01(item['average_score'])}</td>"
+        f"<td>{item['total_tokens']:,}</td><td>{item['cost_usd']:.4f}</td>"
+        f"<td>{item['error_count']}</td><td>{item['timeout_count']}</td></tr>"
+        for item in summary["run_summaries"]
+    )
+
+    # 用例对比明细表
+    units_th = "".join(f"<th>{label}</th>" for label in run_labels)
+    case_rows = "".join(
+        f"<tr><td>{case['case_task_id']}</td><td>{case['difficulty']}</td>"
+        f"<td>{pct01(case['best_score'])}</td>"
+        f"<td>{pct01(case['score_gap'])}</td>"
+        + "".join(f"<td>{pct01(r['average_score'])}</td>" for r in case["results"])
+        + "</tr>"
+        for case in summary["case_comparisons"]
+    )
+
+    # Agent能力对比表
+    cap = summary.get("capability_comparison", {})
+    cap_section = ""
+    if cap.get("dimensions"):
+        cap_headers = "".join(f"<th>{d['label']}</th>" for d in cap["dimensions"])
+        cap_rows = "".join(
+            f"<tr><td>{r['run_label']}</td>"
+            + "".join(f"<td>{pct01(r['dim_scores'].get(d['code']))}</td>"
+                      for d in cap["dimensions"])
+            + "</tr>"
+            for r in cap.get("rows", [])
+        )
+        cap_section = f"""
+<h2>Agent能力对比</h2>
+<table><thead><tr><th>单元</th>{cap_headers}</tr></thead>
+<tbody>{cap_rows}</tbody></table>"""
+
+    # 分类/难度/模态对比表
+    dim_sections = ""
+    for title, key in [("分类对比", "category"), ("难度对比", "difficulty"), ("模态对比", "modality")]:
+        dim_data = summary.get("dimension_comparisons", {}).get(key, [])
+        if dim_data:
+            # 难度对比特殊处理：转置为模型×难度
+            if key == "difficulty":
+                diff_headers = "".join(f"<th>{d['name']}(用例数{d['task_count']})</th>" for d in dim_data)
+                diff_rows = "".join(
+                    f"<tr><td>{label}</td>"
+                    + "".join(f"<td>{pct100(d['scores'].get(label))}</td>" for d in dim_data)
+                    + "</tr>"
+                    for label in run_labels
+                )
+                dim_sections += f"""
+<h2>{title}</h2>
+<table><thead><tr><th>模型</th>{diff_headers}</tr></thead>
+<tbody>{diff_rows}</tbody></table>"""
+            else:
+                # 分类/模态：维度×模型（原逻辑）
+                dim_headers = "".join(f"<th>{label}</th>" for label in run_labels)
+                dim_rows = "".join(
+                    f"<tr><td>{d['name']}</td><td>{d['task_count']}</td>"
+                    + "".join(f"<td>{pct100(d['scores'].get(label))}</td>"
+                              for label in run_labels)
+                    + "</tr>"
+                    for d in dim_data
+                )
+                dim_sections += f"""
+<h2>{title}</h2>
+<table><thead><tr><th>名称</th><th>任务数</th>{dim_headers}</tr></thead>
+<tbody>{dim_rows}</tbody></table>"""
+
+    # 分差矩阵表
+    diff_section = ""
+    diff = summary.get("diff_matrix", [])
+    if diff:
+        diff_headers = "".join(f"<th>{label}</th>" for label in run_labels)
+        diff_rows = "".join(
+            f"<tr><td>{run_labels[i]}</td>"
+            + "".join(f"<td>{v:+.1f}%</td>" for v in row_vals)
+            + "</tr>"
+            for i, row_vals in enumerate(diff)
+        )
+        diff_section = f"""
+<h2>分差矩阵</h2>
+<table><thead><tr><th>行单元 - 列单元</th>{diff_headers}</tr></thead>
+<tbody>{diff_rows}</tbody></table>"""
+
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>WildClawBench 评测报告</title>
+<style>
+body{{font-family:system-ui,sans-serif;max-width:1400px;margin:20px auto;padding:0 20px}}
+h1,h2{{color:#1f2937}}
+table{{border-collapse:collapse;width:100%;margin:16px 0}}
+th,td{{border:1px solid #d1d5db;padding:8px;text-align:left}}
+th{{background:#f3f4f6;font-weight:600}}
+</style>
+</head>
+<body>
+<h1>WildClawBench 评测报告</h1>
+<p><strong>单元数</strong>: {summary['overview']['unit_count']} |
+<strong>总任务数</strong>: {summary['overview']['total_tasks']} |
+<strong>平均分</strong>: {summary['overview']['average_score']*100:.1f}%</p>
+<h2>单元汇总</h2>
+<table><thead><tr><th>单元</th><th>平均分</th><th>Tokens</th><th>成本($)</th><th>错误</th><th>超时</th></tr></thead>
+<tbody>{unit_rows}</tbody></table>
+<h2>用例对比明细</h2>
+<table><thead><tr><th>用例ID</th><th>难度</th><th>最优分</th><th>分差</th>{units_th}</tr></thead>
+<tbody>{case_rows}</tbody></table>
+{cap_section}
+{dim_sections}
+{diff_section}
+</body></html>"""
+
+
+# ===========================================================================
 # main
 # ===========================================================================
 
@@ -871,6 +1297,7 @@ def main() -> None:
     ap.add_argument("-o", "--output-dir", help="输出目录（默认 <result-root>/report-workspace/output）")
     ap.add_argument("--tasks-dir", help="任务定义目录（默认从脚本位置向上找 <repo>/tasks）")
     ap.add_argument("--capability-map", help="检查点能力映射 YAML（默认 tools/report/data/checkpoint_capability_map7.yaml）")
+    ap.add_argument("--emit", type=str, help="额外产出，逗号分隔：summary_json,md,html（默认仅 Excel）")
     args = ap.parse_args()
 
     result_root = Path(args.result_root).resolve()
@@ -935,7 +1362,27 @@ def main() -> None:
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     out_path = out_dir / f"report_{len(units)}units_{ts}.xlsx"
     wb.save(out_path)
-    print(f"\n✅ 报告已生成：{out_path}")
+    print(f"\n✅ Excel 报告已生成：{out_path}")
+
+    # --emit 额外产出
+    if args.emit:
+        emit_set = set(args.emit.split(","))
+        summary = build_summary(units, task_meta, cap_map or {}, suite_zh, analysis, order)
+
+        if "summary_json" in emit_set:
+            summary_path = out_dir / f"report_{len(units)}units_{ts}.summary.json"
+            summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"✓ summary.json 已生成：{summary_path}")
+
+        if "md" in emit_set:
+            md_path = out_dir / f"report_{len(units)}units_{ts}.md"
+            md_path.write_text(render_markdown(summary), encoding="utf-8")
+            print(f"✓ Markdown 已生成：{md_path}")
+
+        if "html" in emit_set:
+            html_path = out_dir / f"report_{len(units)}units_{ts}.html"
+            html_path.write_text(render_html(summary), encoding="utf-8")
+            print(f"✓ HTML 已生成：{html_path}")
 
 
 if __name__ == "__main__":
