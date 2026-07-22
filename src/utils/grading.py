@@ -288,27 +288,58 @@ def extract_usage_from_jsonl(jsonl_path: Path) -> dict:
     return totals
 
 def print_global_summary(results: list[dict], output_dir: Path, model_name: str) -> None:
+    from src.utils.multirun_stats import aggregate_runs
+    from eval.run_batch import PASS_THRESHOLD
+
     print(f"\n{'#'*60}")
     print(f"  Global Summary Report — ALL CATEGORIES")
     print(f"{'#'*60}")
 
-    total_tasks = len(results)
+    # 按 task_id_ori 分组（多轮下同一任务有多个 result）
+    grouped: dict[str, list[dict]] = {}
+    for r in results:
+        tid_ori = r.get("task_id_ori", r["task_id"])  # 兼容旧 result 无 task_id_ori
+        grouped.setdefault(tid_ori, []).append(r)
+
+    total_tasks = len(grouped)
     scored_tasks = 0
     missing_score_tasks = 0
     total_score = 0.0
-    for r in results:
-        scores = r.get("scores", {})
-        numeric = {
-            k: v
-            for k, v in scores.items()
-            if isinstance(v, (int, float))
-        } if scores else {}
-        if not numeric:
+
+    # 多轮统计（runs > 1 时）
+    per_task_stats: dict[str, dict] = {}
+    runs_per_task = max((len(runs) for runs in grouped.values()), default=1)
+
+    for tid_ori, runs in grouped.items():
+        # 收集有效 overall_score
+        scores_list = []
+        for r in runs:
+            scores = r.get("scores", {})
+            numeric = {
+                k: v
+                for k, v in scores.items()
+                if isinstance(v, (int, float))
+            } if scores else {}
+            if not numeric:
+                continue
+            # 提取 overall_score
+            final = numeric.get("overall_score", sum(numeric.values()) / len(numeric) if numeric else 0)
+            scores_list.append(final)
+
+        if not scores_list:
             missing_score_tasks += 1
             continue
-        final = numeric.get("overall_score", sum(numeric.values()) / len(numeric))
-        total_score += final
-        scored_tasks += 1
+
+        # 单轮/多轮分支
+        if runs_per_task > 1:
+            stats = aggregate_runs(scores_list, PASS_THRESHOLD)
+            per_task_stats[tid_ori] = stats
+            total_score += stats["mean"]
+            scored_tasks += 1
+        else:
+            # 单轮：直接取值（保持现有逻辑）
+            total_score += scores_list[0]
+            scored_tasks += 1
 
     global_avg = 0.0
     if total_tasks > 0:
@@ -319,6 +350,8 @@ def print_global_summary(results: list[dict], output_dir: Path, model_name: str)
         if missing_score_tasks > 0:
             print("  Possible causes: task execution failed, such as OOM, or grading failed.")
         print(f"  Global average: {bar} {global_avg:.4f}")
+        if runs_per_task > 1:
+            print(f"  Runs per task: {runs_per_task}")
     else:
         print("  No tasks found")
 
@@ -326,16 +359,34 @@ def print_global_summary(results: list[dict], output_dir: Path, model_name: str)
     total_cost    = sum(r.get("usage", {}).get("cost_usd",      0.0) for r in results)
     print(f"  Total output tokens: {total_out_tok}   Total cost: ${total_cost:.4f}")
 
+    # 构建 summary JSON
+    summary_data = {
+        "global_avg": global_avg if total_tasks else None,
+        "task_count": total_tasks,
+        "scored_task_count": scored_tasks,
+        "missing_score_task_count": missing_score_tasks,
+        "results": results,
+    }
+
+    # 多轮时追加 multirun 段
+    if runs_per_task > 1 and per_task_stats:
+        # 宏观统计：mean_of_means / mean_pass_at_k / mean_pass_hat_k
+        mean_pass_at_k = sum(s["pass_at_k"] for s in per_task_stats.values()) / len(per_task_stats)
+        mean_pass_hat_k = sum(s["pass_hat_k"] for s in per_task_stats.values()) / len(per_task_stats)
+        summary_data["multirun"] = {
+            "runs_per_task": runs_per_task,
+            "pass_threshold": PASS_THRESHOLD,
+            "per_task": per_task_stats,
+            "macro": {
+                "mean_of_means": global_avg,  # 已经是跨 task 的 mean
+                "mean_pass_at_k": mean_pass_at_k,
+                "mean_pass_hat_k": mean_pass_hat_k,
+            }
+        }
+
     summary_path = output_dir / f"summary_all_{model_name}.json"
     summary_path.write_text(
-        json.dumps(
-            {"global_avg": global_avg if total_tasks else None,
-             "task_count": total_tasks,
-             "scored_task_count": scored_tasks,
-             "missing_score_task_count": missing_score_tasks,
-             "results": results},
-            indent=2, ensure_ascii=False, default=str,
-        ),
+        json.dumps(summary_data, indent=2, ensure_ascii=False, default=str),
         encoding="utf-8",
     )
     print(f"\n  Global summary written to → {summary_path}")
