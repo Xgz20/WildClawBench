@@ -30,6 +30,7 @@ _workspace/
 workspace/
 script/
 output/
+wcb-output
 output_sum/
 output_qwen/
 output*/
