@@ -4,7 +4,7 @@ name: VLMEvalKit OCRBench 评测
 category: 02_代码智能
 timeout_seconds: 1200
 modality: multimodal
-difficulty: L3
+difficulty: L4
 grading_type: automated
 ---
 ## Prompt

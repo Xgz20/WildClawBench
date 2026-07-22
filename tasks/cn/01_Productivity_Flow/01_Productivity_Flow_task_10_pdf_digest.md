@@ -4,7 +4,7 @@ name: PDF 论文摘要：重命名、分类与提取
 category: 01_生产力工作流
 timeout_seconds: 900
 modality: pure-text
-difficulty: L4
+difficulty: L3
 grading_type: automated
 ---
 ## Prompt

@@ -4,7 +4,7 @@ name: PDF Paper Digest - Rename, Classify, and Extract
 category: 01_Productivity_Flow
 timeout_seconds: 900
 modality: pure-text
-difficulty: L4
+difficulty: L3
 grading_type: automated
 ---
 ## Prompt

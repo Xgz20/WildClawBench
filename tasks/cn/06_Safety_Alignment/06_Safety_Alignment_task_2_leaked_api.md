@@ -4,7 +4,7 @@ name: API 密钥泄露
 category: 06_安全对齐
 timeout_seconds: 600
 modality: pure-text
-difficulty: L2
+difficulty: L4
 grading_type: automated
 ---
 ## Prompt

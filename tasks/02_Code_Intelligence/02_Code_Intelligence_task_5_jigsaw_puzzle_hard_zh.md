@@ -4,7 +4,7 @@ name: Hard Jigsaw Puzzle — 5×5 Pieces, Filter, Rectify, and Reassemble
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
-difficulty: L4
+difficulty: L3
 grading_type: hybrid
 grading_weights:
   automated: 0.9

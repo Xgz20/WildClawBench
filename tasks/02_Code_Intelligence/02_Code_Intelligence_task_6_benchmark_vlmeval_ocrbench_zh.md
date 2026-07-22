@@ -4,7 +4,7 @@ name: VLMEvalKit OCRBench Evaluation
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
-difficulty: L3
+difficulty: L4
 grading_type: automated
 ---
 ## Prompt

@@ -4,7 +4,7 @@ name: 高难拼图：5×5 筛选纠偏与拼接
 category: 02_代码智能
 timeout_seconds: 1200
 modality: multimodal
-difficulty: L4
+difficulty: L3
 grading_type: hybrid
 grading_weights:
   automated: 0.9
