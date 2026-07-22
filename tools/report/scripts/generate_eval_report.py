@@ -157,6 +157,16 @@ class TaskRecord:
         self.task_id = task_dir.name
         self.suite = suite
         run_dirs = sorted(p for p in task_dir.iterdir() if p.is_dir())
+
+        # 多轮支持：收集全部 run 的 overall_score，取 mean 作为代表分
+        all_scores = []
+        for rd in run_dirs:
+            s = _load_json(rd / "score.json")
+            ov = s.get("overall_score") if s else None
+            if isinstance(ov, (int, float)):
+                all_scores.append(float(ov))
+
+        # 展示用最新一轮（transcript/检查点明细）
         self.run_dir = run_dirs[-1] if run_dirs else None
 
         score = _load_json(self.run_dir / "score.json") if self.run_dir else {}
@@ -167,8 +177,30 @@ class TaskRecord:
             k: v for k, v in score.items()
             if k != "overall_score" and isinstance(v, (int, float))
         }
+
+        # 多轮聚合：score 取 mean（单轮时 mean == 单值）
+        if all_scores:
+            from statistics import fmean, pstdev
+            self.score = fmean(all_scores)
+            self.runs = len(all_scores)
+            self.std = pstdev(all_scores) if len(all_scores) > 1 else 0.0
+            # pass@k / pass^k：需要 pass_threshold，从 summary 读或默认 0.99
+            # 简化实现：仅记录 runs/std，pass@k 由调用方按需计算
+            self.all_scores = all_scores
+        else:
+            self.score = None
+            self.runs = 0
+            self.std = None
+            self.all_scores = []
+
         overall = score.get("overall_score")
-        self.score = float(overall) if isinstance(overall, (int, float)) else None
+        # 兼容：如果 all_scores 空但最新 run 有 overall_score，回退单值
+        if self.score is None and isinstance(overall, (int, float)):
+            self.score = float(overall)
+            self.runs = 1
+            self.std = 0.0
+            self.all_scores = [self.score]
+
         self.judge_notes = extract_judge_notes(score)
         self.error_grading = score.get("error") or ("" if score else "score.json 缺失")
         self.error_execution = status.get("error") or ""
@@ -459,7 +491,11 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
                          suite_zh: dict[str, str]) -> None:
     ws = wb.active
     ws.title = "总览"
+    # 检测是否有多轮数据（任一 task.runs > 1）
+    has_multirun = any(t.runs > 1 for u in units for t in u.tasks)
+    multirun_cols = ["平均轮数", "平均Std"] if has_multirun else []
     header = (["模型", "Harness", "总平均分", "用例数", "执行错误数", "超时数"]
+              + multirun_cols
               + [suite_zh.get(s, s) for s in suites]
               + ["总tokens", "总请求数", "总耗时(s)", "总成本(USD)"])
     ws.append(header)
@@ -470,6 +506,12 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
             sum(1 for t in u.tasks if t.error_execution),
             sum(1 for t in u.tasks if t.timed_out),
         ]
+        if has_multirun:
+            # 平均轮数、平均 std（仅统计 runs>0 的任务）
+            valid_tasks = [t for t in u.tasks if t.runs > 0]
+            avg_runs = sum(t.runs for t in valid_tasks) / len(valid_tasks) if valid_tasks else 0
+            avg_std = sum(t.std or 0 for t in valid_tasks) / len(valid_tasks) if valid_tasks else 0
+            row += [round(avg_runs, 1), round(avg_std, 3)]
         suite_avgs = [u.avg_pct(suite_ids[s]) for s in suites]
         row += [round(v, 1) if v is not None else "-" for v in suite_avgs]
         row += [
@@ -479,7 +521,8 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
             round(u.usage_total("cost_usd"), 4),
         ]
         ws.append(row)
-        apply_pct_format(ws, ws.max_row, [3] + list(range(7, 7 + len(suites))))
+        pct_cols = [3] + list(range(7 + len(multirun_cols), 7 + len(multirun_cols) + len(suites)))
+        apply_pct_format(ws, ws.max_row, pct_cols)
         g_avg = u.summary.get("global_avg")
         if g_avg is not None and abs(u.total_pct / 100 - g_avg) > 0.005:
             print(f"[警告] {u.unit} 重算均分 {u.total_pct / 100:.4f} 与 summary "
@@ -487,8 +530,8 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
     style_header_row(ws)
     set_widths(ws, {1: 22, 2: 12}, default=18)
     ws.freeze_panes = "C2"
-    # 6 大分类均分列红黄绿色阶（列 7 起，共 len(suites) 列）
-    add_color_scale(ws, 2, ws.max_row, 7, 6 + len(suites))
+    # 6 大分类均分列红黄绿色阶（列 7+multirun 起，共 len(suites) 列）
+    add_color_scale(ws, 2, ws.max_row, 7 + len(multirun_cols), 6 + len(multirun_cols) + len(suites))
 
 
 def write_matrix_sheet(wb, units: list[UnitResult]) -> None:
