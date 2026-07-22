@@ -1024,6 +1024,11 @@ def build_summary(
                     "summary": ana_data.get("summary", ""),
                 })
 
+    # 用例交集对齐信息（参考 PinchBench）
+    case_sets = [set(u.task_map.keys()) for u in units]
+    intersection = set.intersection(*case_sets) if case_sets else set()
+    aligned = all(len(s) == len(intersection) for s in case_sets) if case_sets else True
+
     return {
         "units": [u.unit for u in units],  # 位置数组基准
         "overview": {
@@ -1037,6 +1042,11 @@ def build_summary(
         "dimension_comparisons": dimension_comparisons,
         "score_matrix": score_matrix,
         "diff_matrix": diff_matrix,
+        "alignment": {
+            "runs": [{"label": u.unit, "case_count": len(u.task_map)} for u in units],
+            "intersection_count": len(intersection),
+            "aligned": aligned,
+        },
         "root_cause_summary": root_cause_summary,
         "recommendations": recommendations,
     }
