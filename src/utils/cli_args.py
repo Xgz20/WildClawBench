@@ -123,6 +123,21 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
         default=None,
         help="Optional OpenClaw image tool model. If unset, falls back to the chat --model.",
     )
+    parser.add_argument(
+        "--runs",
+        type=int,
+        default=1,
+        metavar="K",
+        help="Repeat each task K times for multi-run stats (mean/std/pass@k/pass^k). "
+             "Default 1 (single run, current behavior). Each run gets its own run dir.",
+    )
+    parser.add_argument(
+        "--pass-threshold",
+        type=float,
+        default=0.99,
+        metavar="T",
+        help="overall_score >= T counts as a 'pass' for pass@k/pass^k. Default 0.99 (full score).",
+    )
     return parser
 
 

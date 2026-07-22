@@ -47,6 +47,8 @@ load_dotenv()
 configure_console_logging(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+PASS_THRESHOLD = 0.99  # 全局 pass 阈值，main() 里从 --pass-threshold 覆盖
+
 GATEWAY_PORT     = int(os.environ.get("GATEWAY_PORT", "18789"))
 
 ROOT_DIR         = Path(__file__).resolve().parent.parent
@@ -285,7 +287,7 @@ def run_single_task(
     output_dir = output_root / task["category"] / f"{task_id_ori}" / f"{suffix}"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    result = {"task_id": task_id, "scores": {}, "error": None}
+    result = {"task_id": task_id, "task_id_ori": task_id_ori, "scores": {}, "error": None}
 
     gateway_proc = None
     agent_proc = None
@@ -397,6 +399,7 @@ def run_single_task(
 
 
 def main() -> None:
+    global PASS_THRESHOLD
     args = parse_run_batch_args(
         default_model=DEFAULT_MODEL,
         default_parallel=DEFAULT_PARALLEL,
@@ -453,6 +456,8 @@ def main() -> None:
         logger.info("Container resource limits: memory=%s cpus=%s",
                     _mem or "unlimited", _cpu or "unlimited")
 
+    global PASS_THRESHOLD
+    PASS_THRESHOLD = args.pass_threshold  # 全局阈值供 summary 聚合使用
     if args.agent_backend == "claudecode":
         backend: BaseAgent = ClaudeCodeAgent(
             anthropic_api_key=OPENROUTER_API_KEY,
@@ -518,17 +523,22 @@ def main() -> None:
             )
             if prior is not None:
                 return  # _load_resume_result 已打印跳过日志；沿用旧结果，正常退出
-        result = run_single_task(
-            task,
-            args.model,
-            backend=backend,
-            output_root=output_root,
-            lobster=lobster,
-            models_config=models_config,
-            thinking=args.thinking,
-        )
-        if result.get("error") or (result.get("scores") or {}).get("error"):
-            sys.exit(1)
+        # 多轮执行：k 次调用 run_single_task，各自独立 run 目录
+        for run_idx in range(args.runs):
+            if args.runs > 1:
+                logger.info("[run %d/%d] Starting task %s", run_idx + 1, args.runs, task["task_id"])
+            result = run_single_task(
+                task,
+                args.model,
+                backend=backend,
+                output_root=output_root,
+                lobster=lobster,
+                models_config=models_config,
+                thinking=args.thinking,
+            )
+            # 单任务模式：任一轮出错即退出（保持现有语义）
+            if result.get("error") or (result.get("scores") or {}).get("error"):
+                sys.exit(1)
         return
     if args.category.lower() == "all":
         categories = ALL_CATEGORIES
@@ -584,9 +594,14 @@ def main() -> None:
                         category, len(resumed_results), len(pending))
             tasks = pending
 
+        # 多轮执行：把任务列表展开成 (task, run_idx) 工作项
+        # TODO: 多轮 + resume 耦合优化：改为"数够 k 条有效 run 才跳过"，当前简化为整任务跳过
+        work_items = [(task, ri) for task in tasks for ri in range(args.runs)]
         results: list[dict] = []
         if args.parallel <= 1:
-            for task in tasks:
+            for task, run_idx in work_items:
+                if args.runs > 1:
+                    logger.info("[run %d/%d] %s", run_idx + 1, args.runs, task["task_id"])
                 results.append(
                     run_single_task(
                         task,
@@ -610,15 +625,15 @@ def main() -> None:
                         lobster,
                         args.thinking,
                         models_config,
-                    ): task["task_id"]
-                    for task in tasks
+                    ): (task["task_id"], run_idx)
+                    for task, run_idx in work_items
                 }
                 for future in as_completed(futures):
-                    tid = futures[future]
+                    tid, run_idx = futures[future]
                     try:
                         results.append(future.result())
                     except Exception as exc:
-                        logger.error("[%s] Thread exception: %s", tid, exc)
+                        logger.error("[%s run %d] Thread exception: %s", tid, run_idx + 1, exc)
                         results.append({"task_id": tid, "scores": {}, "error": str(exc)})
 
         results.extend(resumed_results)
