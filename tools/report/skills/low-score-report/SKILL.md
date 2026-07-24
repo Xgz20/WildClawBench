@@ -41,8 +41,10 @@ description: Generate a comprehensive root-cause report for WildClawBench low-sc
 ### 必需输入
 
 1. **评测结果 unit 目录**：如 `eval_out/all_suite/round1/gpt-5.5-pro/codex`
-2. **低分任务清单**：`<result-root>/report-workspace/_failed_tasks_<model>@<harness>.json`
-3. **根因分析结果**：`<result-root>/report-workspace/analysis_<model>@<harness>.json`
+2. **低分任务清单**：`<round>/report-workspace/_failed_tasks_<model>@<harness>__<scope>.json`
+3. **根因分析结果**：`<round>/report-workspace/analysis_<model>@<harness>__<scope>.json`
+
+manifest 与 analysis 必须使用同一个 scope。默认报告口径使用 `lt60`；可按用户要求使用 `lt80`、`gte60_lt80` 或 `imperfect`，并从 manifest 的 `selection_label` 在报告头准确说明范围。`all` 含满分成功对照，不得直接用于低分根因分布；如需全量对照报告，应明确拆分 `analysis_type=success_control` 后另设对照章节。
 
 ### 可选输入（元信息）
 
@@ -56,7 +58,7 @@ description: Generate a comprehensive root-cause report for WildClawBench low-sc
 
 ### 标题与开头信息
 
-用 `report_utils.generate_report_header()` 生成：标题 `# WildClawBench <unit> 低分任务根因分析报告`，含被测模型/harness、评测轮次（用 `extract_eval_metadata()` 从 summary_all_*.json 取 task_count/global_avg，`format_round_description()` 生成描述）、分析样本、数据来源、四层维度定义。
+用 `report_utils.generate_report_header(..., selection_label=<manifest中的范围说明>)` 生成：标题 `# WildClawBench <unit> 低分任务根因分析报告`，含被测模型/harness、评测轮次（用 `extract_eval_metadata()` 从 summary_all_*.json 取 task_count/global_avg，`format_round_description()` 生成描述）、分析样本、数据来源、四层维度定义。
 
 **术语**：所有 "provider" 统一写作"推理服务"。
 

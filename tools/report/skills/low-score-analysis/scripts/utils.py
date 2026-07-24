@@ -1,8 +1,8 @@
 """low-score-analysis Skill 工具函数（WildClawBench 版）。
 
 职责：manifest 精简、分批、断点续传、批次结果保存与合并。
-全链路以 unit = "<model>@<harness>" 命名分析产物：
-    analysis_<unit>.json / analysis_<unit>_batch<N>.json
+全链路以 unit + selection_scope 命名分析产物：
+    analysis_<unit>__<scope>.json / analysis_<unit>__<scope>_batch<N>.json
 """
 
 from __future__ import annotations
@@ -20,7 +20,10 @@ def simplify_task(task: dict) -> dict:
         "suite": task.get("suite", ""),
         "unit": task.get("unit", ""),
         "score_pct": task.get("score_pct"),
+        "overall_score": task.get("overall_score"),
         "low_score_type": task.get("low_score_type", "low"),
+        "analysis_type": task.get("analysis_type", "failure"),
+        "selection_scope": task.get("selection_scope", ""),
         "failed_checkpoints": task.get("failed_checkpoints", {}),
         "error_execution": (task.get("error_execution") or "")[:NOTE_MAX_LEN],
         "error_grading": (task.get("error_grading") or "")[:NOTE_MAX_LEN],
@@ -52,12 +55,22 @@ def split_into_batches(tasks: list[dict], batch_size: int = 10) -> list[list[dic
     return [tasks[i:i + batch_size] for i in range(0, len(tasks), batch_size)]
 
 
-def load_completed_tasks(workspace_dir: str | Path, unit: str) -> dict:
+def analysis_stem(unit: str, selection_scope: str | None = None) -> str:
+    """返回分析文件 stem；scope 为空时兼容旧产物命名。"""
+    return f"analysis_{unit}" + (f"__{selection_scope}" if selection_scope else "")
+
+
+def load_completed_tasks(
+    workspace_dir: str | Path,
+    unit: str,
+    selection_scope: str | None = None,
+) -> dict:
     """读取已有分析结果（最终文件 + 批次文件），用于断点续传。"""
     workspace = Path(workspace_dir)
     completed: dict[str, dict] = {}
-    candidates = [workspace / f"analysis_{unit}.json"]
-    candidates += sorted(workspace.glob(f"analysis_{unit}_batch*.json"))
+    stem = analysis_stem(unit, selection_scope)
+    candidates = [workspace / f"{stem}.json"]
+    candidates += sorted(workspace.glob(f"{stem}_batch*.json"))
     for path in candidates:
         if not path.is_file():
             continue
@@ -70,28 +83,47 @@ def load_completed_tasks(workspace_dir: str | Path, unit: str) -> dict:
     return completed
 
 
-def save_batch_result(results: list[dict], workspace_dir: str | Path, unit: str, batch_index: int) -> Path:
+def save_batch_result(
+    results: list[dict],
+    workspace_dir: str | Path,
+    unit: str,
+    batch_index: int,
+    selection_scope: str | None = None,
+) -> Path:
     """把 Workflow 返回的结果列表转成 {task_id: {...}} 并写批次文件。"""
     workspace = Path(workspace_dir)
     workspace.mkdir(parents=True, exist_ok=True)
+    stem = analysis_stem(unit, selection_scope)
+    path = workspace / f"{stem}_batch{batch_index}.json"
     out: dict[str, dict] = {}
+    if path.is_file():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(existing, dict):
+                out.update(existing)
+        except (OSError, json.JSONDecodeError):
+            pass
     for item in results or []:
         if not isinstance(item, dict) or not item.get("task_id"):
             continue
         out[item["task_id"]] = {
             "result_analysis": item.get("result_analysis", ""),
             "root_cause_analysis": item.get("root_cause_analysis", ""),
+            "analysis_type": item.get("analysis_type", "failure"),
         }
-    path = workspace / f"analysis_{unit}_batch{batch_index}.json"
     path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
     return path
 
 
-def merge_all_batches(workspace_dir: str | Path, unit: str) -> Path:
-    """合并全部批次文件（含已有最终文件）为 analysis_<unit>.json。"""
+def merge_all_batches(
+    workspace_dir: str | Path,
+    unit: str,
+    selection_scope: str | None = None,
+) -> Path:
+    """合并同一选择范围的批次文件与已有最终文件。"""
     workspace = Path(workspace_dir)
-    merged = load_completed_tasks(workspace, unit)
-    final_path = workspace / f"analysis_{unit}.json"
+    merged = load_completed_tasks(workspace, unit, selection_scope)
+    final_path = workspace / f"{analysis_stem(unit, selection_scope)}.json"
     final_path.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
     return final_path
 

@@ -4,7 +4,7 @@
 
 | 组件 | 位置 | 用途 |
 |---|---|---|
-| 低分任务根因分析 Skill | `skills/low-score-analysis/` | 筛出低分任务，LLM 结合判分明细 + transcript 逐任务找失分根因，产出 `analysis_<unit>.json` |
+| 评测用例/低分根因分析 Skill | `skills/low-score-analysis/` | 支持阈值、区间、未满分、全量对照及指定任务分析，产出 scoped analysis JSON |
 | 根因分析报告 Skill | `skills/low-score-report/` | 基于分析结果生成 Markdown 根因共性分析报告（四层归因 + 环境失效专项） |
 | 评测报告 Excel 脚本 | `scripts/generate_eval_report.py` | 多单元（`model@harness`）对比 Excel，支持把根因分析回填到详情 Sheet |
 
@@ -14,8 +14,8 @@
 eval_out/all_suite/round1/<model>/<harness>/           ← 评测结果
         │
         ▼ ① skills/low-score-analysis（筛选 + LLM 分析）
-report-workspace/_failed_tasks_<model>@<harness>.json
-report-workspace/analysis_<model>@<harness>.json
+<round>/report-workspace/_failed_tasks_<model>@<harness>__lt60.json
+<round>/report-workspace/analysis_<model>@<harness>__lt60.json
         │
         ├─▼ ② skills/low-score-report
         │  <result-root>/低分任务根因分析报告_<model>@<harness>.md
@@ -40,7 +40,7 @@ python3 tools/report/skills/low-score-analysis/scripts/generate_failed_tasks_man
 # 4. Excel 报告（可不带 --analysis 先出对比报告）
 python3 tools/report/scripts/generate_eval_report.py \
   --result-root /path/to/eval_out/all_suite/round1 \
-  --analysis /path/to/report-workspace/analysis_gpt-5.5-pro@codex.json
+  --analysis "gpt-5.5-pro@codex=/path/to/round1/report-workspace/analysis_gpt-5.5-pro@codex__lt60.json"
 ```
 
 ## 安装 Skill（软链到 .claude/skills）

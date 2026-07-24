@@ -1,8 +1,8 @@
 """low-score-report Skill 辅助工具（WildClawBench 版）。
 
 输入：
-- _failed_tasks_<unit>.json：低分任务清单（low-score-analysis 产出）
-- analysis_<unit>.json：{task_id: {result_analysis, root_cause_analysis}}
+- _failed_tasks_<unit>__<scope>.json：低分任务清单（low-score-analysis 产出）
+- analysis_<unit>__<scope>.json：{task_id: {result_analysis, root_cause_analysis}}
 - <unit_dir>/summary_all_*.json：评测元信息（global_avg / task_count）
 
 职责：分桶（主口径 / 环境失效专项）、根因分类、四层归因、
@@ -232,13 +232,20 @@ def suite_avg_table(all_tasks: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def generate_report_header(unit: str, round_desc: str, n_low: int, n_infra: int, workspace: str) -> str:
+def generate_report_header(
+    unit: str,
+    round_desc: str,
+    n_low: int,
+    n_infra: int,
+    workspace: str,
+    selection_label: str = "单轮得分 < 60",
+) -> str:
     model, _, harness = unit.partition("@")
     return f"""# WildClawBench {unit} 低分任务根因分析报告
 
 - **被测模型**：{model}（Agent Harness：{harness}）
 - **评测轮次**：{round_desc}
-- **分析样本**：主口径低分任务 {n_low} 个（单轮得分 < 60），环境/基础设施失效专项 {n_infra} 个
+- **分析样本**：主口径低分任务 {n_low} 个（{selection_label}），环境/基础设施失效专项 {n_infra} 个
 - **数据来源**：`{workspace}` 下的低分任务清单与逐任务根因分析（判分明细 + transcript 全量取证）
 
 ## 分析维度定义

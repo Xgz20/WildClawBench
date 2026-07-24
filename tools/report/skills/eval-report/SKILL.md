@@ -7,7 +7,7 @@ description: End-to-end WildClawBench evaluation report pipeline for a target mo
 
 针对一轮评测结果（round 目录）与一个目标模型，一条龙产出三件产物：
 
-1. **根因分析 JSON**（`analysis_<model>@<harness>.json`，逐低分任务的结果分析+根因）
+1. **根因分析 JSON**（默认 `analysis_<model>@<harness>__lt60.json`，逐低分任务的结果分析+根因）
 2. **Excel 评测报告**（多 Sheet 对比 + 根因回填到详情 Sheet）
 3. **领导版 Markdown 评测报告**（六维度、评语+表格+备注版式，商务文风）
 
@@ -32,7 +32,7 @@ description: End-to-end WildClawBench evaluation report pipeline for a target mo
 # 1a. 生成低分清单（阈值 60）
 python3 tools/report/skills/low-score-analysis/scripts/generate_failed_tasks_manifest.py \
   --result-root <round>/<model>/<harness> --threshold 60
-# 末行输出 MANIFEST_PATH
+# 记录 WORKSPACE_DIR、SELECTION_SCOPE=lt60、ANALYSIS_PATH、MANIFEST_PATH
 ```
 
 ```python
@@ -44,16 +44,17 @@ python3 tools/report/skills/low-score-analysis/scripts/generate_failed_tasks_man
 - **不要把任务数组内联进 Workflow args**（会触发参数体积限制/手工内联易错）。正确做法：workflow 脚本内先用一个 `effort:'low'` 的 Load 子代理按路径读批次 JSON（schema 强制返回 `{tasks:[...]}`），再对每个任务并发起分析子代理。参考脚本：`references/workflow_batch_loader.js`。
 - 分析子代理 prompt 必带：失分检查点字典、双层错误（error_execution/error_grading）、超时标志、用量；要求**先读任务 .md 判分代码，再全量读 transcript 取证**，输出 `{task_id, result_analysis, root_cause_analysis}`，根因须标注 L1a/L1b/L3/L4 归属层。
 - **后台任务 `.output` 文件是包装 dict**，真正结果在 `["result"]` 键。
-- 每批返回即 `utils.save_batch_result(result, workspace, unit, batch_i)` 落盘；全部完成后 `merge_all_batches(workspace, unit)`（**返回的是合并文件路径**，不是 dict）。
+- 每批返回即 `utils.save_batch_result(result, workspace, unit, batch_i, "lt60")` 落盘；全部完成后 `merge_all_batches(workspace, unit, "lt60")`（**返回的是合并文件路径**，不是 dict）。
 - 合并后必须校验：任务数与清单 1:1 对齐、无缺失/多余、result_analysis/root_cause_analysis 均非空。
+- 所有分析文件统一落在 `<round>/report-workspace`。即使第 1 步传入 unit 目录，也禁止改用 `<unit>/report-workspace`。
 
 ## 第 2 步：Excel 报告 + 根因回填
 
 ```bash
 python3 tools/report/scripts/generate_eval_report.py \
   --result-root <round> \
-  --analysis "<model1>@<harness>=<...>/analysis_<model1>@<harness>.json" \
-             "<model2>@<harness>=<...>/analysis_<model2>@<harness>.json"
+  --analysis "<model1>@<harness>=<round>/report-workspace/analysis_<model1>@<harness>__lt60.json" \
+             "<model2>@<harness>=<round>/report-workspace/analysis_<model2>@<harness>__lt60.json"
 # 输出 <round>/report-workspace/output/report_<N>units_<ts>.xlsx
 ```
 
@@ -116,13 +117,15 @@ python3 tools/report/scripts/generate_eval_report.py \
 
 ```
 <round>/
-├── <model>/<harness>/report-workspace/
-│   ├── _failed_tasks_<unit>.json
-│   └── analysis_<unit>.json
+├── report-workspace/
+│   ├── _failed_tasks_<unit>__lt60.json
+│   ├── analysis_<unit>__lt60.json
+│   └── output/report_<N>units_<ts>.xlsx
 ├── <model>/<harness>/低分任务根因分析报告_<unit>.md   # 可选（low-score-report skill）
-├── report-workspace/output/report_<N>units_<ts>.xlsx
 └── 评测报告_<目标模型>_<round>.md                      # 领导版
 ```
+
+需要回填其它范围时，显式把相应 scoped JSON 传给 `--analysis`。同一个 unit 一次只传一个最终范围文件；若传入多个重叠文件，后加载的任务会覆盖先加载值并产生警告。
 
 ## 安装
 

@@ -120,6 +120,11 @@ def discover_units(result_root: Path) -> list[tuple[str, str, Path]]:
     return units
 
 
+def round_root_from_unit_dir(unit_dir: Path) -> Path:
+    """按 <round>/<model>/<harness> 结构从 unit 反推 round 根目录。"""
+    return unit_dir.resolve().parent.parent
+
+
 def _load_json(path: Path) -> dict:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -427,7 +432,11 @@ def load_analysis(specs: list[str], units: list[UnitResult]) -> dict[str, dict]:
                 print(f"[警告] 无法从文件名 {path.name} 匹配到已加载 unit，"
                       f"请用 UNIT=PATH 显式绑定（已加载：{unit_ids}）", file=sys.stderr)
                 break
-            merged[f"{unit}::{key}"] = val
+            merged_key = f"{unit}::{key}"
+            if merged_key in merged:
+                print(f"[警告] 分析项重复，后加载文件覆盖前值：{merged_key}（{path.name}）",
+                      file=sys.stderr)
+            merged[merged_key] = val
             count += 1
         if count:
             print(f"已加载分析 {count} 条：{path.name}")
@@ -1347,7 +1356,7 @@ def main() -> None:
     ap.add_argument("--harnesses", nargs="+", help="按 harness 目录名过滤")
     ap.add_argument("--analysis", nargs="+", default=[], metavar="[UNIT=]PATH",
                     help="根因分析 JSON（可多个），回填到详情 Sheet")
-    ap.add_argument("-o", "--output-dir", help="输出目录（默认 <result-root>/report-workspace/output）")
+    ap.add_argument("-o", "--output-dir", help="输出目录（默认 <round>/report-workspace/output）")
     ap.add_argument("--tasks-dir", help="任务定义目录（默认从脚本位置向上找 <repo>/tasks）")
     ap.add_argument("--capability-map", help="检查点能力映射 YAML（默认 tools/report/data/checkpoint_capability_map7.yaml）")
     ap.add_argument("--emit", type=str, help="额外产出，逗号分隔：summary_json,md,html（默认仅 Excel）")
@@ -1410,7 +1419,12 @@ def main() -> None:
     for u in units:
         write_detail_sheet(wb, u, order, task_meta, analysis, suite_zh)
 
-    out_dir = Path(args.output_dir) if args.output_dir else result_root / "report-workspace" / "output"
+    # 即使 --result-root 传入 model 或 unit，报告仍集中到 round 工作区。
+    round_roots = {round_root_from_unit_dir(u.unit_dir) for u in units}
+    if len(round_roots) != 1:
+        sys.exit(f"错误：加载的 unit 不属于同一个 round：{sorted(map(str, round_roots))}")
+    round_root = next(iter(round_roots))
+    out_dir = Path(args.output_dir) if args.output_dir else round_root / "report-workspace" / "output"
     out_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     out_path = out_dir / f"report_{len(units)}units_{ts}.xlsx"

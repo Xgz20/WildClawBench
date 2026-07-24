@@ -51,13 +51,15 @@ eval_out/all_suite/round1/<model>/<harness>/          ← 模型×Harness 多对
 
 **筛选口径**（相对 PinchBench 的变化）：单轮无极差，「高波动专项」通道取消：
 
-- 主口径 `low`：`overall_score × 100 < threshold`（默认 60）
-- 指定任务 `specified`：`--task-id`（可重复、支持 `@file.txt`），覆盖阈值筛选
+- 阈值/区间：按未四舍五入的原始 `overall_score` 选择 `<N` 或 `[min, max)`（默认 `<60`）
+- 未满分/全量：`--imperfect` 选择所有未满分与无有效分数任务；`--all` 加入满分成功对照
+- 指定任务 `specified`：`--task-id` 或 `--task-path`（可重复、支持 `@file.txt`），不限分数
+- 每次选择生成稳定 scope（如 `lt60`、`gte60_lt80`、`all`），用于隔离增量产物
 - 每条记录附加双层错误信号：`error_execution` / `error_grading` / `timed_out` / `status`，供下游区分「模型能力问题」与「环境/基础设施失效」
 
-**manifest 条目**：`task_id`、`suite`、`model`、`harness`、`unit`、`low_score_type`、`score_pct`、`checkpoints`、`failed_checkpoints`、`error_execution`、`error_grading`、`timed_out`、`status`、`elapsed_time`、`usage`、`task_file`、`run_dir`、`transcript`、`agent_log`、`transcript_kb`、`all_run_dirs`
+**manifest 条目**：`task_id`、`suite`、`model`、`harness`、`unit`、`overall_score`、`score_pct`、`analysis_type`、`selection_scope`、`selection_label`、`checkpoints`、`failed_checkpoints`、错误/用量字段及 task/run/transcript 路径。
 
-**分析流程**（沿用 PinchBench）：manifest → `simplify_task` 精简 → 分批（≤10/批）调用 Workflow（`references/workflow_template.js`）→ 每任务一个子代理按 schema `{task_id, result_analysis, root_cause_analysis}` 返回 → `save_batch_result` / `merge_all_batches` 合并为 `analysis_<unit>.json`（`{task_id: {result_analysis, root_cause_analysis}}`）。
+**分析流程**：manifest → `simplify_task` 精简 → 分批（≤10/批）调用 Workflow → 每任务返回 `{task_id, analysis_type, result_analysis, root_cause_analysis}` → 按 unit + scope 保存/合并为 `analysis_<unit>__<scope>.json`。满分任务输出成功路径对照，`root_cause_analysis` 明确“无失分根因”。
 
 **分析 prompt 适配要点**：
 1. 读 `task_file`（.md 内含判分代码，等价于 PinchBench 的"判决书"）
@@ -79,7 +81,7 @@ eval_out/all_suite/round1/<model>/<harness>/          ← 模型×Harness 多对
 
 **对比单元**：`model@harness` 扁平单元（方案 A）+「模型×Harness 矩阵」轻量 Sheet。
 
-**CLI**：`--result-root <round目录|unit目录>`、`--models`、`--harnesses`、`--analysis [UNIT=]PATH`（可重复）、`-o/--output-dir`（默认 `<result-root>/report-workspace/output`）、`--tasks-dir`（默认从脚本位置向上推导 `<repo>/tasks`）。
+**CLI**：`--result-root <round目录|unit目录>`、`--models`、`--harnesses`、`--analysis [UNIT=]PATH`（可重复）、`-o/--output-dir`（默认 `<round>/report-workspace/output`）、`--tasks-dir`（默认从脚本位置向上推导 `<repo>/tasks`）。
 
 **Sheet 布局**（7 + N）：
 
@@ -120,9 +122,9 @@ WildClawBench/tools/report/          ← 工具（本目录，未来可平级扩
 │   └── low-score-report/{SKILL.md, scripts/report_utils.py}
 └── scripts/generate_eval_report.py
 
-<result-root>/report-workspace/      ← 产物（评测结果侧，工具目录不放产物）
-├── _failed_tasks_<unit>.json
-├── analysis_<unit>.json
+<round>/report-workspace/            ← 产物集中在 round 层
+├── _failed_tasks_<unit>__<scope>.json
+├── analysis_<unit>__<scope>.json
 └── output/report_<N>units_<ts>.xlsx
 
 <result-root>/低分任务根因分析报告_<unit>.md
