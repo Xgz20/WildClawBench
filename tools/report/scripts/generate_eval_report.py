@@ -58,6 +58,25 @@ DIFFICULTY_ORDER = ["L1", "L2", "L3", "L4", "L5"]
 MODALITY_ORDER = ["pure-text", "multimodal"]
 MODALITY_ZH = {"pure-text": "纯文本", "multimodal": "多模态"}
 
+# 多轮 pass@k/pass^k：复用评测框架的无偏估计公式，避免口径漂移。
+# 展示层默认阈值 0.99（满分算 pass），与 summary 默认口径一致。
+PASS_THRESHOLD_DISPLAY = 0.99
+try:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+    from src.utils.multirun_stats import pass_at_k as _pass_at_k, pass_hat_k as _pass_hat_k
+except Exception:  # 独立分发/路径异常时内联同款公式兜底
+    import math as _math
+    def _pass_at_k(n: int, c: int, k: int) -> float:
+        if k > n or n <= 0 or c <= 0:
+            return 0.0
+        if n - c < k:
+            return 1.0
+        return 1.0 - _math.comb(n - c, k) / _math.comb(n, k)
+    def _pass_hat_k(n: int, c: int, k: int) -> float:
+        if k > n or n <= 0 or c < k:
+            return 0.0
+        return _math.comb(c, k) / _math.comb(n, k)
+
 # 7 维能力口径（与 PinchBench cap7 对齐）；映射文件见 tools/report/data/checkpoint_capability_map7.yaml
 CAP7_ORDER = ["code_generation", "tool_use", "data_processing", "retrieval_verification",
               "reasoning_planning", "content_generation", "verification_delivery"]
@@ -184,19 +203,29 @@ class TaskRecord:
         }
 
         # 多轮聚合：score 取 mean（单轮时 mean == 单值）
+        # pass@k/pass^k 按默认阈值 0.99（满分算 pass）计算——展示层用默认即可，
+        # 与 summary_all_*.json 的 multirun.pass_threshold 口径一致（默认未改时）。
         if all_scores:
             from statistics import fmean, pstdev
             self.score = fmean(all_scores)
             self.runs = len(all_scores)
             self.std = pstdev(all_scores) if len(all_scores) > 1 else 0.0
-            # pass@k / pass^k：需要 pass_threshold，从 summary 读或默认 0.99
-            # 简化实现：仅记录 runs/std，pass@k 由调用方按需计算
             self.all_scores = all_scores
+            if len(all_scores) > 1:
+                n = len(all_scores)
+                c = sum(1 for s in all_scores if s >= PASS_THRESHOLD_DISPLAY)
+                self.pass_at_k = _pass_at_k(n, c, n)
+                self.pass_hat_k = _pass_hat_k(n, c, n)
+            else:
+                self.pass_at_k = None
+                self.pass_hat_k = None
         else:
             self.score = None
             self.runs = 0
             self.std = None
             self.all_scores = []
+            self.pass_at_k = None
+            self.pass_hat_k = None
 
         overall = score.get("overall_score")
         # 兼容：如果 all_scores 空但最新 run 有 overall_score，回退单值
@@ -455,6 +484,14 @@ def style_header_row(ws) -> None:
         cell.alignment = CENTER
 
 
+def style_row(ws, row: int) -> None:
+    """把指定行作为表头样式（用于多分区 Sheet 的各段表头）。"""
+    for cell in ws[row]:
+        cell.font = HEADER_FONT
+        cell.fill = HEADER_FILL
+        cell.alignment = CENTER
+
+
 def set_widths(ws, widths: dict[int, int], default: int = 16, ncols: int | None = None) -> None:
     ncols = ncols or ws.max_column
     for i in range(1, ncols + 1):
@@ -501,8 +538,10 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
     ws = wb.active
     ws.title = "总览"
     # 检测是否有多轮数据（任一 task.runs > 1）
+    # 总览只放"平均轮数"（说明这是几轮的结果）；std/pass@k/pass^k 跨题聚合无统计意义，
+    # 移到独立的「多轮稳定性分析」Sheet 用分布统计展示（见 write_stability_sheet）。
     has_multirun = any(t.runs > 1 for u in units for t in u.tasks)
-    multirun_cols = ["平均轮数", "平均Std"] if has_multirun else []
+    multirun_cols = ["平均轮数"] if has_multirun else []
     header = (["模型", "Harness", "总平均分", "用例数", "正常完成数", "执行错误数", "超时数", "完成率"]
               + multirun_cols
               + [suite_zh.get(s, s) for s in suites]
@@ -523,11 +562,10 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
             n_finished, n_error, n_timeout, finish_rate,
         ]
         if has_multirun:
-            # 平均轮数、平均 std（仅统计 runs>0 的任务）
+            # 仅平均轮数（跨题平均 std 无统计意义，不展示）
             valid_tasks = [t for t in u.tasks if t.runs > 0]
             avg_runs = sum(t.runs for t in valid_tasks) / len(valid_tasks) if valid_tasks else 0
-            avg_std = sum(t.std or 0 for t in valid_tasks) / len(valid_tasks) if valid_tasks else 0
-            row += [round(avg_runs, 1), round(avg_std, 3)]
+            row += [round(avg_runs, 1)]
         suite_avgs = [u.avg_pct(suite_ids[s]) for s in suites]
         row += [round(v, 1) if v is not None else "-" for v in suite_avgs]
         row += [
@@ -865,6 +903,132 @@ def format_lost_points(t: TaskRecord) -> str:
     return "\n".join(lines)
 
 
+def _write_stability_distributions(ws, units, mtasks, high_std: float) -> None:
+    """std 分布 + pass@k/pass^k 分布（各区间题数与占比）。"""
+    def dist_row(vals, edges):
+        # edges 如 [0, 0.05, 0.15, 1.01]，返回各桶计数
+        buckets = [0] * (len(edges) - 1)
+        for v in vals:
+            for i in range(len(edges) - 1):
+                if edges[i] <= v < edges[i + 1]:
+                    buckets[i] += 1
+                    break
+        return buckets
+
+    ws.append([])
+    ws.append(["【std 分布】（跨题聚合无意义，故看分布：低=稳定 / 高=抖动）"])
+    ws.append(["模型@Harness", "std[0,0.05] 稳定", "std[0.05,0.15] 中抖", "std[0.15,1] 高抖"])
+    hdr = ws.max_row
+    for u in units:
+        mt = mtasks(u)
+        if not mt:
+            continue
+        b = dist_row([t.std or 0 for t in mt], [0, 0.05, high_std, 1.01])
+        n = len(mt)
+        ws.append([u.unit] + [f"{c} ({c/n*100:.0f}%)" for c in b])
+    style_row(ws, hdr)
+
+    ws.append([])
+    ws.append(["【pass@k 分布】能力上界：k 次至少成功一次的概率（越高越有潜力攻克）"])
+    ws.append(["模型@Harness", "pass@k[0.95,1] 优", "pass@k[0.8,0.95) 良", "pass@k[0,0.8) 弱"])
+    hdr = ws.max_row
+    for u in units:
+        mt = [t for t in mtasks(u) if t.pass_at_k is not None]
+        if not mt:
+            continue
+        b = dist_row([t.pass_at_k for t in mt], [0, 0.8, 0.95, 1.01])
+        n = len(mt)
+        # 注意桶顺序：[0,0.8)/[0.8,0.95)/[0.95,1]，展示时倒序为 优/良/弱
+        ws.append([u.unit, f"{b[2]} ({b[2]/n*100:.0f}%)",
+                   f"{b[1]} ({b[1]/n*100:.0f}%)", f"{b[0]} ({b[0]/n*100:.0f}%)"])
+    style_row(ws, hdr)
+
+    ws.append([])
+    ws.append(["【pass^k 分布】可靠性下界：连续 k 次全部成功的概率（越高越可稳定交付）"])
+    ws.append(["模型@Harness", "pass^k[0.8,1] 优", "pass^k[0.5,0.8) 中", "pass^k[0,0.5) 差"])
+    hdr = ws.max_row
+    for u in units:
+        mt = [t for t in mtasks(u) if t.pass_hat_k is not None]
+        if not mt:
+            continue
+        b = dist_row([t.pass_hat_k for t in mt], [0, 0.5, 0.8, 1.01])
+        n = len(mt)
+        ws.append([u.unit, f"{b[2]} ({b[2]/n*100:.0f}%)",
+                   f"{b[1]} ({b[1]/n*100:.0f}%)", f"{b[0]} ({b[0]/n*100:.0f}%)"])
+    style_row(ws, hdr)
+
+
+def _write_stability_high_std_detail(ws, units, mtasks, task_meta, suite_zh, high_std: float) -> None:
+    """高抖题明细：std>阈值的题逐条列出（跨所有 unit，按 std 降序）。"""
+    ws.append([])
+    ws.append([f"【高抖题明细】std>{high_std} 的用例（按 std 降序；结合难度判断是难题固有抖动还是模型不稳）"])
+    ws.append(["模型@Harness", "分类", "用例ID", "难度", "轮数", "mean", "std",
+               "各轮分数", "pass@k", "pass^k"])
+    hdr = ws.max_row
+    rows = []
+    for u in units:
+        for t in mtasks(u):
+            if (t.std or 0) > high_std:
+                meta = task_meta.get(t.task_id, {})
+                rows.append((
+                    (t.std or 0), u.unit, suite_zh.get(t.suite, t.suite), t.task_id,
+                    meta.get("difficulty", "-"), t.runs, round(t.score, 3), round(t.std, 3),
+                    ", ".join(str(round(s, 3)) for s in t.all_scores),
+                    round(t.pass_at_k, 3) if t.pass_at_k is not None else "-",
+                    round(t.pass_hat_k, 3) if t.pass_hat_k is not None else "-",
+                ))
+    rows.sort(key=lambda r: -r[0])  # std 降序
+    for r in rows:
+        ws.append(list(r[1:]))  # 去掉排序键
+    if not rows:
+        ws.append(["（无高抖题：所有多轮用例 std 均 ≤ 阈值，稳定性良好）"])
+    style_row(ws, hdr)
+
+
+def write_stability_sheet(wb, units: list[UnitResult],
+                          task_meta: dict[str, dict], suite_zh: dict[str, str]) -> None:
+    """多轮稳定性分析 Sheet（仅在有多轮数据时生成）。
+
+    std/pass@k/pass^k 跨题聚合无统计意义，故用「分布统计」而非「平均值」呈现：
+    - 第1部分 模型宏观对比：高抖题数/不稳定率 + 能力上界/可靠性优秀率
+    - 第2部分 std 分布：各 std 区间的题数占比
+    - 第3部分 pass@k/pass^k 分布：能力上界/可靠性下界的分层
+    - 第4部分 高抖题明细：std>0.15 的题逐条列出（含各轮分数）
+    """
+    if not any(t.runs > 1 for u in units for t in u.tasks):
+        return  # 无多轮数据，不生成
+    ws = wb.create_sheet("多轮稳定性分析", index=1)  # 紧跟总览
+    HIGH_STD = 0.15  # 高抖动阈值
+
+    def mtasks(u):  # 该 unit 的多轮任务
+        return [t for t in u.tasks if t.runs > 1]
+
+    # ---- 第 1 部分：模型宏观对比 ----
+    ws.append(["【模型宏观对比】"])
+    ws.append(["模型@Harness", "轮数", "多轮题数", "高抖题数(std>0.15)", "不稳定率",
+               "pass@k≥0.95题数", "能力上界优秀率", "pass^k≥0.8题数", "可靠性优秀率"])
+    for u in units:
+        mt = mtasks(u)
+        if not mt:
+            continue
+        n = len(mt)
+        runs = max((t.runs for t in mt), default=0)
+        high_std = sum(1 for t in mt if (t.std or 0) > HIGH_STD)
+        pak_good = sum(1 for t in mt if t.pass_at_k is not None and t.pass_at_k >= 0.95)
+        phk_good = sum(1 for t in mt if t.pass_hat_k is not None and t.pass_hat_k >= 0.8)
+        ws.append([
+            u.unit, runs, n, high_std, round(high_std / n * 100, 1),
+            pak_good, round(pak_good / n * 100, 1),
+            phk_good, round(phk_good / n * 100, 1),
+        ])
+        apply_pct_format(ws, ws.max_row, [5, 7, 9])
+    style_row(ws, 2)
+
+    _write_stability_distributions(ws, units, mtasks, HIGH_STD)
+    _write_stability_high_std_detail(ws, units, mtasks, task_meta, suite_zh, HIGH_STD)
+    set_widths(ws, {1: 30, 2: 8, 3: 10, 4: 18, 5: 12, 6: 16, 7: 14, 8: 16, 9: 14}, default=14)
+
+
 def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
                        task_meta: dict[str, dict], analysis: dict[str, dict],
                        suite_zh: dict[str, str]) -> None:
@@ -872,10 +1036,11 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
     header = ["分类", "用例ID", "用例名称", "难度", "超时时间(秒)", "模态",
               "输入(Prompt)", "预期行为", "评分标准", "Automated Checks",
               "工作目录(Workspace)", "预置技能(Skills)", "环境变量(Env)", "预热(Warmup)",
-              "状态", "总得分", "检查点得分明细", "失分点", "裁判判词", "执行错误",
+              "状态", "总得分", "轮数", "Std", "各轮分数",  # 🆕 追加 3 列
+              "检查点得分明细", "失分点", "裁判判词", "执行错误",
               "总tokens", "请求数", "耗时(s)", "执行记录(jsonl)", "结果分析", "根因分析"]
     ws.append(header)
-    wrap_cols = {7, 8, 9, 10, 12, 14, 17, 18, 19, 20, 24, 25, 26}
+    wrap_cols = {7, 8, 9, 10, 12, 14, 19, 20, 21, 22, 23, 27, 28, 29}  # 更新自动换行列索引（19=各轮分数 也换行）
     for suite, tid in order:
         t = u.task_map.get(tid)
         if t is None:
@@ -886,6 +1051,15 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
             f"执行层: {t.error_execution}" if t.error_execution else "",
             f"判分层: {t.error_grading}" if t.error_grading else "",
         ) if x) or "-"
+
+        # 🆕 格式化各轮分数（多轮时展开，单轮时显示"-"）
+        runs_display = t.runs if t.runs > 0 else 1
+        std_display = round(t.std, 3) if t.std is not None and t.runs > 1 else "-"
+        all_scores_display = (
+            ", ".join(str(round(s, 3)) for s in t.all_scores)
+            if len(t.all_scores) > 1 else "-"
+        )
+
         ws.append([
             suite_zh.get(suite, suite), tid, meta.get("name", "-"),
             meta.get("difficulty", "-"), meta.get("timeout_seconds", "-"),
@@ -898,6 +1072,9 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
             strip_code_fence(meta.get("warmup", "")) or "-",
             (t.status or "-") + ("（超时）" if t.timed_out else ""),
             round(t.score, 3) if t.score is not None else "-",
+            runs_display,  # 🆕 轮数
+            std_display,   # 🆕 Std
+            all_scores_display,  # 🆕 各轮分数
             format_breakdown(t), format_lost_points(t),
             truncate(t.judge_notes) or "-", truncate(err),
             int((t.usage or {}).get("total_tokens", 0)),
@@ -913,8 +1090,10 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
     set_widths(ws, {1: 18, 2: 40, 3: 30, 4: 8, 5: 12, 6: 12,
                     7: 45, 8: 45, 9: 45, 10: 45,
                     11: 38, 12: 20, 13: 20, 14: 30,
-                    15: 14, 16: 8, 17: 40, 18: 40, 19: 45, 20: 40,
-                    21: 12, 22: 8, 23: 8, 24: 60, 25: 45, 26: 40})
+                    15: 14, 16: 8,  # 状态、总得分
+                    17: 6, 18: 8, 19: 20,  # 🆕 轮数、Std、各轮分数
+                    20: 40, 21: 40, 22: 45, 23: 40,  # 检查点明细、失分点、判词、执行错误（后移 3 列）
+                    24: 12, 25: 8, 26: 8, 27: 60, 28: 45, 29: 40})  # tokens、请求数、耗时、执行记录、结果分析、根因分析
     ws.freeze_panes = "C2"
 
 
@@ -1430,6 +1609,7 @@ def main() -> None:
     write_dimension_sheet_transposed(wb, "难度对比", units, meta_groups("difficulty", DIFFICULTY_ORDER))
     write_dimension_sheet_transposed(wb, "模态对比", units, meta_groups("modality", MODALITY_ORDER, MODALITY_ZH))
     write_diff_matrix_sheet(wb, units)
+    write_stability_sheet(wb, units, task_meta, suite_zh)  # 有多轮数据时才生成
     for u in units:
         write_detail_sheet(wb, u, order, task_meta, analysis, suite_zh)
 
