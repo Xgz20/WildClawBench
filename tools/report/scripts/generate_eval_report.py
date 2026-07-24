@@ -1031,16 +1031,24 @@ def write_stability_sheet(wb, units: list[UnitResult],
 
 def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
                        task_meta: dict[str, dict], analysis: dict[str, dict],
-                       suite_zh: dict[str, str]) -> None:
+                       suite_zh: dict[str, str], has_multirun: bool = False) -> None:
     ws = wb.create_sheet(f"评分详情_{u.unit}"[:31])
-    header = ["分类", "用例ID", "用例名称", "难度", "超时时间(秒)", "模态",
-              "输入(Prompt)", "预期行为", "评分标准", "Automated Checks",
-              "工作目录(Workspace)", "预置技能(Skills)", "环境变量(Env)", "预热(Warmup)",
-              "状态", "总得分", "轮数", "Std", "各轮分数",  # 🆕 追加 3 列
-              "检查点得分明细", "失分点", "裁判判词", "执行错误",
-              "总tokens", "请求数", "耗时(s)", "执行记录(jsonl)", "结果分析", "根因分析"]
+    # 多轮列仅在存在多轮数据时插入（单轮评测报告结构与改造前完全一致）
+    mr_cols = ["轮数", "Std", "各轮分数"] if has_multirun else []
+    header = (["分类", "用例ID", "用例名称", "难度", "超时时间(秒)", "模态",
+               "输入(Prompt)", "预期行为", "评分标准", "Automated Checks",
+               "工作目录(Workspace)", "预置技能(Skills)", "环境变量(Env)", "预热(Warmup)",
+               "状态", "总得分"]
+              + mr_cols
+              + ["检查点得分明细", "失分点", "裁判判词", "执行错误",
+                 "总tokens", "请求数", "耗时(s)", "执行记录(jsonl)", "结果分析", "根因分析"])
     ws.append(header)
-    wrap_cols = {7, 8, 9, 10, 12, 14, 19, 20, 21, 22, 23, 27, 28, 29}  # 更新自动换行列索引（19=各轮分数 也换行）
+    # 自动换行列：按是否有多轮列动态偏移（多轮列占 3 列，之后的列右移 3）
+    off = len(mr_cols)  # 0 或 3
+    wrap_cols = {7, 8, 9, 10, 12, 14}
+    if has_multirun:
+        wrap_cols.add(19)  # 各轮分数列
+    wrap_cols |= {17 + off, 18 + off, 19 + off, 20 + off, 24 + off, 25 + off, 26 + off}
     for suite, tid in order:
         t = u.task_map.get(tid)
         if t is None:
@@ -1052,13 +1060,15 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
             f"判分层: {t.error_grading}" if t.error_grading else "",
         ) if x) or "-"
 
-        # 🆕 格式化各轮分数（多轮时展开，单轮时显示"-"）
-        runs_display = t.runs if t.runs > 0 else 1
-        std_display = round(t.std, 3) if t.std is not None and t.runs > 1 else "-"
-        all_scores_display = (
-            ", ".join(str(round(s, 3)) for s in t.all_scores)
-            if len(t.all_scores) > 1 else "-"
-        )
+        # 多轮列（仅 has_multirun 时插入）：轮数/Std/各轮分数
+        mr_cells = []
+        if has_multirun:
+            std_display = round(t.std, 3) if t.std is not None and t.runs > 1 else "-"
+            all_scores_display = (
+                ", ".join(str(round(s, 3)) for s in t.all_scores)
+                if len(t.all_scores) > 1 else "-"
+            )
+            mr_cells = [t.runs if t.runs > 0 else 1, std_display, all_scores_display]
 
         ws.append([
             suite_zh.get(suite, suite), tid, meta.get("name", "-"),
@@ -1072,9 +1082,7 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
             strip_code_fence(meta.get("warmup", "")) or "-",
             (t.status or "-") + ("（超时）" if t.timed_out else ""),
             round(t.score, 3) if t.score is not None else "-",
-            runs_display,  # 🆕 轮数
-            std_display,   # 🆕 Std
-            all_scores_display,  # 🆕 各轮分数
+            *mr_cells,  # 多轮列（单轮时为空，结构不变）
             format_breakdown(t), format_lost_points(t),
             truncate(t.judge_notes) or "-", truncate(err),
             int((t.usage or {}).get("total_tokens", 0)),
@@ -1087,13 +1095,17 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
         for col in wrap_cols:
             ws.cell(row=ws.max_row, column=col).alignment = WRAP_TOP
     style_header_row(ws)
-    set_widths(ws, {1: 18, 2: 40, 3: 30, 4: 8, 5: 12, 6: 12,
-                    7: 45, 8: 45, 9: 45, 10: 45,
-                    11: 38, 12: 20, 13: 20, 14: 30,
-                    15: 14, 16: 8,  # 状态、总得分
-                    17: 6, 18: 8, 19: 20,  # 🆕 轮数、Std、各轮分数
-                    20: 40, 21: 40, 22: 45, 23: 40,  # 检查点明细、失分点、判词、执行错误（后移 3 列）
-                    24: 12, 25: 8, 26: 8, 27: 60, 28: 45, 29: 40})  # tokens、请求数、耗时、执行记录、结果分析、根因分析
+    # 列宽：前 16 列固定；多轮 3 列（17/18/19）仅 has_multirun 时存在；其后列按 off 偏移
+    widths = {1: 18, 2: 40, 3: 30, 4: 8, 5: 12, 6: 12,
+              7: 45, 8: 45, 9: 45, 10: 45,
+              11: 38, 12: 20, 13: 20, 14: 30,
+              15: 14, 16: 8}  # 状态、总得分
+    if has_multirun:
+        widths.update({17: 6, 18: 8, 19: 20})  # 轮数、Std、各轮分数
+    # 检查点明细、失分点、判词、执行错误、tokens、请求数、耗时、执行记录、结果分析、根因分析
+    for base, w in {17: 40, 18: 40, 19: 45, 20: 40, 21: 12, 22: 8, 23: 8, 24: 60, 25: 45, 26: 40}.items():
+        widths[base + off] = w
+    set_widths(ws, widths)
     ws.freeze_panes = "C2"
 
 
@@ -1609,9 +1621,11 @@ def main() -> None:
     write_dimension_sheet_transposed(wb, "难度对比", units, meta_groups("difficulty", DIFFICULTY_ORDER))
     write_dimension_sheet_transposed(wb, "模态对比", units, meta_groups("modality", MODALITY_ORDER, MODALITY_ZH))
     write_diff_matrix_sheet(wb, units)
-    write_stability_sheet(wb, units, task_meta, suite_zh)  # 有多轮数据时才生成
+    # 全局多轮判定：任一 unit 任一 task 跑了多轮才启用多轮列/Sheet（单轮报告零变化）
+    has_multirun = any(t.runs > 1 for u in units for t in u.tasks)
+    write_stability_sheet(wb, units, task_meta, suite_zh)  # 内部同样判定，无多轮则跳过
     for u in units:
-        write_detail_sheet(wb, u, order, task_meta, analysis, suite_zh)
+        write_detail_sheet(wb, u, order, task_meta, analysis, suite_zh, has_multirun)
 
     # 即使 --result-root 传入 model 或 unit，报告仍集中到 round 工作区。
     round_roots = {round_root_from_unit_dir(u.unit_dir) for u in units}
