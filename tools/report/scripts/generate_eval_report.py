@@ -503,17 +503,24 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
     # 检测是否有多轮数据（任一 task.runs > 1）
     has_multirun = any(t.runs > 1 for u in units for t in u.tasks)
     multirun_cols = ["平均轮数", "平均Std"] if has_multirun else []
-    header = (["模型", "Harness", "总平均分", "用例数", "执行错误数", "超时数"]
+    header = (["模型", "Harness", "总平均分", "用例数", "正常完成数", "执行错误数", "超时数", "完成率"]
               + multirun_cols
               + [suite_zh.get(s, s) for s in suites]
               + ["总tokens", "总请求数", "总耗时(s)", "总成本(USD)"])
     ws.append(header)
     for u in units:
         suite_ids = {s: {t.task_id for t in u.tasks if t.suite == s} for s in suites}
+        n_total = len(u.tasks)
+        # 三态互斥且完备（finished + 非超时执行错误 + 超时 = 用例数）：
+        # 超时任务的 execution_status 同时写了 error 字段（"...timed out"），
+        # 故执行错误数排除 timed_out，使三列互斥不重复计数。
+        n_error = sum(1 for t in u.tasks if t.error_execution and not t.timed_out)
+        n_timeout = sum(1 for t in u.tasks if t.timed_out)
+        n_finished = n_total - n_error - n_timeout
+        finish_rate = round(n_finished / n_total * 100, 1) if n_total else 0.0
         row = [
-            u.model, u.harness, round(u.total_pct, 1), len(u.tasks),
-            sum(1 for t in u.tasks if t.error_execution),
-            sum(1 for t in u.tasks if t.timed_out),
+            u.model, u.harness, round(u.total_pct, 1), n_total,
+            n_finished, n_error, n_timeout, finish_rate,
         ]
         if has_multirun:
             # 平均轮数、平均 std（仅统计 runs>0 的任务）
@@ -530,7 +537,9 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
             round(u.usage_total("cost_usd"), 4),
         ]
         ws.append(row)
-        pct_cols = [3] + list(range(7 + len(multirun_cols), 7 + len(multirun_cols) + len(suites)))
+        # 百分比列：总平均分(3)、完成率(8)、各分类均分(9+multirun 起)
+        suite_start = 9 + len(multirun_cols)
+        pct_cols = [3, 8] + list(range(suite_start, suite_start + len(suites)))
         apply_pct_format(ws, ws.max_row, pct_cols)
         g_avg = u.summary.get("global_avg")
         if g_avg is not None and abs(u.total_pct / 100 - g_avg) > 0.005:
@@ -996,7 +1005,12 @@ def build_summary(
             "cost_usd": round(u.usage_total("cost_usd"), 4),
             "elapsed_time": round(u.usage_total("elapsed_time"), 1),
             "request_count": int(u.usage_total("request_count")),
-            "error_count": sum(1 for t in u.tasks if t.error_grading or t.error_execution),
+            # 与总览 Sheet 一致：排除超时（超时任务也写了 execution error 字段），
+            # 使 error_count 与 timeout_count 互斥。
+            "error_count": sum(
+                1 for t in u.tasks
+                if (t.error_grading or t.error_execution) and not t.timed_out
+            ),
             "timeout_count": sum(1 for t in u.tasks if t.timed_out),
         })
 
