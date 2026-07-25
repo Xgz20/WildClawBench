@@ -1199,6 +1199,10 @@ def build_summary(
     # run_summaries（对应「总览」Sheet，字段名对齐前端）
     run_summaries = []
     for u in units:
+        # 多轮聚合：该 unit 内所有多轮任务的 pass@k/pass^k 平均；max_runs 标识是否多轮
+        pass_at_k_vals = [t.pass_at_k for t in u.tasks if t.pass_at_k is not None]
+        pass_hat_k_vals = [t.pass_hat_k for t in u.tasks if t.pass_hat_k is not None]
+        max_runs = max((t.runs for t in u.tasks), default=0)
         run_summaries.append({
             "run_label": u.unit,  # 前端期望 run_label
             "model": u.model,
@@ -1221,6 +1225,15 @@ def build_summary(
                 if (t.error_grading or t.error_execution) and not t.timed_out
             ),
             "timeout_count": sum(1 for t in u.tasks if t.timed_out),
+            "max_runs": max_runs,
+            "avg_pass_at_k": (
+                round(sum(pass_at_k_vals) / len(pass_at_k_vals), 4)
+                if pass_at_k_vals else None
+            ),
+            "avg_pass_hat_k": (
+                round(sum(pass_hat_k_vals) / len(pass_hat_k_vals), 4)
+                if pass_hat_k_vals else None
+            ),
         })
 
     # case_comparisons（对应「用例对比明细」Sheet）
@@ -1234,13 +1247,19 @@ def build_summary(
 
         valid_scores = [s for s in scores_by_unit if s is not None]
 
-        # 构建前端期望的 results 对象数组格式
+        # 构建前端期望的 results 对象数组格式（含多轮统计）
         results = []
         for i, u in enumerate(units):
             score = scores_by_unit[i]
+            t = u.task_map.get(tid)
             results.append({
                 "run_label": u.unit,
                 "average_score": score,
+                "runs": t.runs if t else 0,
+                "std": t.std if t else None,
+                "pass_at_k": t.pass_at_k if t else None,
+                "pass_hat_k": t.pass_hat_k if t else None,
+                "round_scores": t.all_scores if t else [],
             })
 
         case_comparisons.append({
@@ -1287,17 +1306,59 @@ def build_summary(
             row.append(0.0 if u_a is u_b else round(u_a.total_pct - u_b.total_pct, 1))
         diff_matrix.append(row)
 
-    # root_cause_summary 和 recommendations（如有根因分析）
-    root_cause_summary = []
-    recommendations = []
-    if analysis_by_unit:
-        # 提取根因统计和建议（简化处理，后续可扩展）
-        for unit, ana_data in analysis_by_unit.items():
-            if isinstance(ana_data, dict):
-                root_cause_summary.append({
-                    "unit": unit,
-                    "summary": ana_data.get("summary", ""),
-                })
+    # root_cause_summary（前端期望 {completed_count, items[]}）+ recommendations 汇总。
+    # analysis_by_unit 的 key 为 "<unit>::<task_id>"，value 为
+    # {result_analysis, root_cause_analysis}（backend 已把 summary/root_causes/
+    # recommendations 规整并折叠进这两个字符串字段）。
+    unit_map = {u.unit: u for u in units}
+    rc_items = []
+    rec_lines: list[str] = []
+    for full_key, ana_data in analysis_by_unit.items():
+        if not isinstance(ana_data, dict) or "::" not in full_key:
+            continue
+        unit, task_id = full_key.split("::", 1)
+        result_analysis = (ana_data.get("result_analysis", "") or "").strip()
+        root_cause_text = (
+            ana_data.get("root_cause_analysis", "")
+            or ana_data.get("root_cause", "")
+            or ""
+        ).strip()
+        if not result_analysis and not root_cause_text:
+            continue
+        # root_cause_analysis 已是多行文本（含「改进建议：」分隔），按行拆分回列表；
+        # 「改进建议：」之后的行归入 recommendations。
+        root_causes: list[str] = []
+        recommendations_item: list[str] = []
+        in_rec = False
+        for line in root_cause_text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith("改进建议"):
+                in_rec = True
+                continue
+            (recommendations_item if in_rec else root_causes).append(line)
+        rec_lines.extend(recommendations_item)
+        task_record = unit_map.get(unit, {})
+        score = None
+        if task_record and hasattr(task_record, "task_map"):
+            tr = task_record.task_map.get(task_id)
+            score = tr.score if tr else None
+        rc_items.append({
+            "task_run_id": unit,  # 无数值 run_id，用 unit 标签作稳定 key
+            "case_task_id": task_id,
+            "run_label": unit,
+            "average_score": score,
+            "summary": result_analysis,
+            "root_causes": root_causes,
+            "recommendations": recommendations_item,
+        })
+    root_cause_summary = {
+        "completed_count": len(rc_items),
+        "items": rc_items,
+    }
+    # 顶层 recommendations 去重保序
+    recommendations = list(dict.fromkeys(rec_lines))
 
     # 用例交集对齐信息（参考 PinchBench）
     case_sets = [set(u.task_map.keys()) for u in units]
@@ -1310,6 +1371,7 @@ def build_summary(
             "unit_count": len(units),
             "total_tasks": len(task_order),
             "average_score": round(sum(u.total_pct for u in units) / len(units) / 100, 4) if units else 0.0,
+            "pass_threshold": PASS_THRESHOLD_DISPLAY,
         },
         "run_summaries": run_summaries,
         "case_comparisons": case_comparisons,
@@ -1583,7 +1645,21 @@ def main() -> None:
     ap.add_argument("--tasks-dir", help="任务定义目录（默认从脚本位置向上找 <repo>/tasks）")
     ap.add_argument("--capability-map", help="检查点能力映射 YAML（默认 tools/report/data/checkpoint_capability_map7.yaml）")
     ap.add_argument("--emit", type=str, help="额外产出，逗号分隔：summary_json,md,html（默认仅 Excel）")
+    ap.add_argument(
+        "--pass-threshold",
+        type=float,
+        default=None,
+        help="pass@k/pass^k 判定阈值：overall_score >= T 记为 pass（默认 0.99 满分）",
+    )
     args = ap.parse_args()
+
+    # 展示层 pass@k 阈值可由 CLI 覆盖（默认 PASS_THRESHOLD_DISPLAY=0.99）；
+    # 须在创建 UnitResult/TaskRecord 之前设置，因为 TaskRecord 构造时即计算 pass@k。
+    if args.pass_threshold is not None:
+        if not 0 < args.pass_threshold <= 1:
+            ap.error("--pass-threshold 必须在 (0, 1] 区间")
+        global PASS_THRESHOLD_DISPLAY
+        PASS_THRESHOLD_DISPLAY = args.pass_threshold
 
     result_root = Path(args.result_root).resolve()
     if not result_root.is_dir():
