@@ -3,7 +3,8 @@
 # 离线分发通过 docker save 出 tar.gz。
 FROM wildclawbench-codex-ubuntu:v0.0
 
-ARG OPENCODE_VERSION=
+# 锁定版本以保证镜像可复现（当前评测基线 1.18.4）；重建/升级只需改此默认值或传 --build-arg。
+ARG OPENCODE_VERSION=1.18.4
 # 默认用公共 npm registry；内网构建可传 --build-arg NPM_REGISTRY=...
 ARG NPM_REGISTRY=https://registry.npmjs.org/
 

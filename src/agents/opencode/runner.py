@@ -139,7 +139,15 @@ class OpenCodeAgent(BaseAgent):
             try:
                 write_execution_status(spec.output_dir, status="starting_container")
                 self._start_container(task_id, spec.workspace_path, spec.task, spec.lobster)
-                write_execution_status(spec.output_dir, status="container_started")
+                # Record harness identity/version for traceability (which
+                # OpenCode build produced these scores).
+                write_execution_status(
+                    spec.output_dir,
+                    status="container_started",
+                    harness="opencode",
+                    harness_version=self._probe_harness_version(task_id),
+                    image=self.image,
+                )
                 write_execution_status(spec.output_dir, status="preparing_workspace")
                 self._prepare_workspace(task_id, spec.workspace_path)
                 skills_text = spec.task.get("skills", "") if spec.task else ""
@@ -365,6 +373,34 @@ class OpenCodeAgent(BaseAgent):
         if r.returncode != 0:
             raise RuntimeError(f"OpenCode container startup failed:\n{r.stderr}")
         logger.info("[%s] Container ID: %s", task_id, r.stdout.strip()[:12])
+
+    @staticmethod
+    def _probe_harness_version(task_id: str) -> str:
+        """Read the OpenCode CLI version from inside the running container.
+
+        Returns the version string (e.g. "1.18.4") or "" if it can't be read.
+        Non-fatal: version is metadata, never blocks the run.
+        """
+        try:
+            r = subprocess.run(
+                ["docker", "exec", task_id, "opencode", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except (subprocess.SubprocessError, OSError) as exc:
+            logger.warning("[%s] opencode --version probe failed: %s", task_id, exc)
+            return ""
+        if r.returncode != 0:
+            logger.warning(
+                "[%s] opencode --version returned %s: %s",
+                task_id,
+                r.returncode,
+                (r.stderr or r.stdout).strip(),
+            )
+            return ""
+        # `opencode --version` prints just the version (e.g. "1.18.4").
+        return (r.stdout or "").strip().splitlines()[0].strip() if r.stdout.strip() else ""
 
     def _prepare_workspace(self, task_id: str, workspace_path: str) -> None:
         r = subprocess.run(

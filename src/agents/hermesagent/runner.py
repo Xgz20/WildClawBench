@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import re
+import shlex
 import subprocess
 import tempfile
 import time
@@ -168,7 +169,67 @@ class HermesAgentAgent(BaseAgent):
         self._copy_session_log(task_id, output_dir)
 
         usage["elapsed_time"] = round(elapsed_time, 2)
+        # Record harness identity/version for traceability. HermesAgent has no
+        # execution_status.json flow, so write a minimal one here (container
+        # still alive at collect_usage time — see transcript docker cp above).
+        self._write_harness_metadata(task_id, output_dir)
         return usage
+
+    def _write_harness_metadata(self, task_id: str, output_dir: Path) -> None:
+        version = self._probe_harness_version(task_id)
+        status_path = output_dir / "execution_status.json"
+        status: dict[str, Any] = {}
+        if status_path.exists():
+            try:
+                status = json.loads(status_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                status = {}
+        status.update({
+            "harness": "hermesagent",
+            "harness_version": version,
+            "image": self.image,
+        })
+        output_dir.mkdir(parents=True, exist_ok=True)
+        status_path.write_text(
+            json.dumps(status, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+
+    @staticmethod
+    def _probe_harness_version(task_id: str) -> str:
+        """Read HermesAgent version from the container (non-fatal).
+
+        No standalone CLI; try installed package metadata, then git rev of the
+        source checkout at /opt/hermes. Returns "" if none succeed.
+        """
+        # Try installed package metadata (a few candidate names); if none
+        # found, print nothing so the shell falls back to the git short rev.
+        py = (
+            "import importlib.metadata as m\n"
+            "v=''\n"
+            "for n in ('hermes-agent','hermes_agent','hermes'):\n"
+            "    try:\n"
+            "        v=m.version(n); break\n"
+            "    except Exception:\n"
+            "        pass\n"
+            "print(v)\n"
+        )
+        probe = (
+            f"v=$({HERMES_VENV_PYTHON} -c {shlex.quote(py)} 2>/dev/null); "
+            f'if [ -n "$v" ]; then echo "$v"; '
+            f"else git -C {HERMES_INSTALL_DIR} rev-parse --short HEAD 2>/dev/null; fi"
+        )
+        try:
+            r = subprocess.run(
+                ["docker", "exec", task_id, "/bin/bash", "-lc", probe],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except (subprocess.SubprocessError, OSError) as exc:
+            logger.warning("[%s] hermes version probe failed: %s", task_id, exc)
+            return ""
+        out = (r.stdout or "").strip()
+        return out.splitlines()[0].strip() if out else ""
 
     # ------------------------------------------------------------------
     # Provider / thinking helpers

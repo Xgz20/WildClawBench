@@ -241,6 +241,8 @@ class TaskRecord:
         self.timed_out = bool(status.get("timed_out"))
         self.status = status.get("status") or ""
         self.elapsed = status.get("elapsed_time")
+        # Harness build version (runner writes it to execution_status.json).
+        self.harness_version = status.get("harness_version") or ""
 
         self.transcript = None
         if self.run_dir:
@@ -290,6 +292,22 @@ class UnitResult:
 
     def usage_total(self, key: str) -> float:
         return sum((t.usage or {}).get(key, 0) or 0 for t in self.tasks)
+
+    @property
+    def harness_version(self) -> str:
+        """该 unit 的 harness 版本（取任务中出现最多的非空版本）。
+
+        版本由 runner 写入各 run 的 execution_status.json。旧结果没有该字段
+        时返回 ""，展示层退化为不带版本的 harness 名。
+        """
+        from collections import Counter
+        versions = Counter(t.harness_version for t in self.tasks if t.harness_version)
+        return versions.most_common(1)[0][0] if versions else ""
+
+    @property
+    def harness_label(self) -> str:
+        """带版本的 harness 展示名，如 "opencode (1.18.4)"；无版本则退化为 "opencode"。"""
+        return f"{self.harness} ({self.harness_version})" if self.harness_version else self.harness
 
 
 # ===========================================================================
@@ -558,7 +576,7 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
         n_finished = n_total - n_error - n_timeout
         finish_rate = round(n_finished / n_total * 100, 1) if n_total else 0.0
         row = [
-            u.model, u.harness, round(u.total_pct, 1), n_total,
+            u.model, u.harness_label, round(u.total_pct, 1), n_total,
             n_finished, n_error, n_timeout, finish_rate,
         ]
         if has_multirun:

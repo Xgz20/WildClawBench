@@ -152,7 +152,52 @@ class OpenClawAgent(BaseAgent):
                 "request_count": 0,
             }
         usage["elapsed_time"] = round(elapsed_time, 2)
+        # Record harness identity/version for traceability. OpenClaw has no
+        # execution_status.json flow, so write a minimal one here (container
+        # still alive at collect_usage time — see transcript docker cp above).
+        self._write_harness_metadata(task_id, output_dir)
         return usage
+
+    def _write_harness_metadata(self, task_id: str, output_dir: Path) -> None:
+        version = self._probe_harness_version(task_id)
+        status_path = output_dir / "execution_status.json"
+        status: dict = {}
+        if status_path.exists():
+            try:
+                status = json.loads(status_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                status = {}
+        status.update({
+            "harness": "openclaw",
+            "harness_version": version,
+            "image": os.environ.get("DOCKER_IMAGE", "wildclawbench-ubuntu:v1.3"),
+        })
+        output_dir.mkdir(parents=True, exist_ok=True)
+        status_path.write_text(
+            json.dumps(status, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+
+    @staticmethod
+    def _probe_harness_version(task_id: str) -> str:
+        """Read the OpenClaw CLI version from inside the container (non-fatal)."""
+        try:
+            r = subprocess.run(
+                ["docker", "exec", task_id, "openclaw", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except (subprocess.SubprocessError, OSError) as exc:
+            logger.warning("[%s] openclaw --version probe failed: %s", task_id, exc)
+            return ""
+        if r.returncode != 0:
+            logger.warning(
+                "[%s] openclaw --version returned %s: %s",
+                task_id, r.returncode, (r.stderr or r.stdout).strip(),
+            )
+            return ""
+        out = (r.stdout or "").strip()
+        return out.splitlines()[0].strip().split()[-1] if out else ""
 
     def _set_model(self, task_id: str, model: str) -> None:
         r = subprocess.run(
