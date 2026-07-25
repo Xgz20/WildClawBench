@@ -18,6 +18,7 @@ from src.agents.base import AgentTaskSpec, BaseAgent
 from src.agents.astroncode import AstronCodeAgent
 from src.agents.claudecode import ClaudeCodeAgent
 from src.agents.codex import CodexAgent
+from src.agents.opencode import OpenCodeAgent
 from src.agents.openclaw import OpenClawAgent
 from src.utils.cli_args import parse_run_batch_args
 from src.utils.endpoint_utils import (
@@ -319,7 +320,7 @@ def run_single_task(
 
     finally:
         grading_transcript_path = backend.transcript_container_path
-        grade_on_error = isinstance(backend, (CodexAgent, ClaudeCodeAgent, AstronCodeAgent))
+        grade_on_error = isinstance(backend, (CodexAgent, ClaudeCodeAgent, AstronCodeAgent, OpenCodeAgent))
         should_grade = task.get("automated_checks") and (
             not result.get("error") or grade_on_error
         )
@@ -356,7 +357,7 @@ def run_single_task(
             collect_task_output(
                 task_id,
                 output_dir,
-                include_workspace_changes=isinstance(backend, (CodexAgent, ClaudeCodeAgent, AstronCodeAgent)),
+                include_workspace_changes=isinstance(backend, (CodexAgent, ClaudeCodeAgent, AstronCodeAgent, OpenCodeAgent)),
             )
         except Exception as exc:
             logger.warning("[%s] Failed to collect task output: %s", task_id, exc)
@@ -467,6 +468,8 @@ def main() -> None:
         backend = CodexAgent()
     elif args.agent_backend == "astroncode":
         backend = AstronCodeAgent()
+    elif args.agent_backend == "opencode":
+        backend = OpenCodeAgent()
     elif args.agent_backend == "hermesagent":
         from src.agents.hermesagent import HermesAgentAgent
         backend = HermesAgentAgent(
