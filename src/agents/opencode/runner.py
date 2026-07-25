@@ -256,17 +256,25 @@ class OpenCodeAgent(BaseAgent):
         usage["elapsed_time"] = round(elapsed_time, 2)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # 1) Preserve OpenCode's native trajectory: copy the whole data dir
-        #    (opencode.db SQLite + storage/ + log/) out to output/opencode_data/.
+        # opencode.db was already copied to output/opencode_data/ by the
+        # transcript shim (run_task finally, before grading). If that copy is
+        # missing (e.g. shim raised early), pull the native data dir now so we
+        # still preserve the trajectory and can read usage.
         native_dest = output_dir / "opencode_data"
-        native_dest.mkdir(parents=True, exist_ok=True)
-        self._copy_dir_from_container(task_id, f"{OPENCODE_DATA_DIR}/.", native_dest)
+        db_path = self._locate_opencode_db(native_dest)
+        if db_path is None:
+            native_dest.mkdir(parents=True, exist_ok=True)
+            self._copy_dir_from_container(task_id, f"{OPENCODE_DATA_DIR}/.", native_dest)
+            db_path = self._locate_opencode_db(native_dest)
 
-        # 2) Parse token usage from the raw NDJSON event stream (agent.log).
-        parsed = self._extract_usage_from_agent_log(output_dir / "agent.log")
-        if parsed["cost_usd"] == 0.0:
-            parsed["cost_usd"] = round(self._estimate_cost(parsed), 6)
-        usage.update(parsed)
+        if db_path is not None:
+            parsed = self._extract_usage_from_db(db_path)
+            if parsed["cost_usd"] == 0.0:
+                parsed["cost_usd"] = round(self._estimate_cost(parsed), 6)
+            usage.update(parsed)
+        else:
+            logger.warning("[%s] opencode.db not found; usage will be zero", task_id)
+
         usage["elapsed_time"] = round(elapsed_time, 2)
         return usage
 
@@ -826,22 +834,37 @@ if __name__ == "__main__":
     def _install_openclaw_transcript_shim(
         self, task_id: str, output_dir: Path
     ) -> None:
-        """Translate OpenCode NDJSON events -> OpenClaw schema for graders.
+        """Translate OpenCode's SQLite session store -> OpenClaw schema.
 
         Safety-alignment graders hard-code
         ``/root/.openclaw/agents/main/sessions/chat.jsonl`` with the OpenClaw
         shape ``{"type":"message","message":{"role":...,"content":[...]}}``.
-        We emit that shape from agent.log's event stream (text / tool_use /
-        reasoning), including mapped tool_use / tool_result blocks.
+
+        OpenCode persists the full conversation (user prompt + assistant text +
+        reasoning + tool calls/results) in ``opencode.db`` (message/part tables).
+        The ``--format json`` stdout stream only carries assistant-side deltas
+        and omits the initial user prompt (and omits reasoning unless --thinking),
+        so we read the authoritative DB instead. The DB is copied out to
+        ``output/opencode_data/`` first (native trajectory preservation), then
+        converted here.
         """
-        agent_log = output_dir / "agent.log"
-        if not agent_log.exists() or agent_log.stat().st_size == 0:
-            logger.info("[%s] No agent.log yet; skipping openclaw shim", task_id)
+        native_dest = output_dir / "opencode_data"
+        native_dest.mkdir(parents=True, exist_ok=True)
+        # WAL mode: copy .db + -wal + -shm together for a consistent read.
+        self._copy_dir_from_container(task_id, f"{OPENCODE_DATA_DIR}/.", native_dest)
+
+        db_path = self._locate_opencode_db(native_dest)
+        if db_path is None:
+            logger.warning(
+                "[%s] opencode.db not found under %s; skipping openclaw shim",
+                task_id,
+                native_dest,
+            )
             return
 
-        records = self._opencode_events_to_openclaw(agent_log)
+        records = self._opencode_db_to_openclaw(db_path)
         if not records:
-            logger.info("[%s] No mappable OpenCode events; shim skipped", task_id)
+            logger.info("[%s] No messages in opencode.db; shim skipped", task_id)
             return
 
         dest = output_dir / "chat_openclaw.jsonl"
@@ -871,83 +894,111 @@ if __name__ == "__main__":
             )
             return
         logger.info(
-            "[%s] OpenClaw transcript shim installed (%d events)", task_id, len(records)
+            "[%s] OpenClaw transcript shim installed from SQLite (%d messages)",
+            task_id,
+            len(records),
         )
 
-    def _opencode_events_to_openclaw(self, agent_log: Path) -> list[dict[str, Any]]:
-        """Map the OpenCode NDJSON event stream to OpenClaw message records.
+    @staticmethod
+    def _locate_opencode_db(native_dest: Path) -> "Path | None":
+        direct = native_dest / "opencode.db"
+        if direct.exists():
+            return direct
+        candidates = sorted(native_dest.rglob("opencode*.db"))
+        return candidates[0] if candidates else None
 
-        Event shapes (from `opencode run --format json`, run.ts:679-786):
-          {"type":"text","part":{"type":"text","text":...}}
-          {"type":"reasoning","part":{"type":"reasoning","text":...}}
-          {"type":"tool_use","part":{"type":"tool","callID","tool","state":{
-              "status":"completed","input":{...},"output":"..."}}}
-          {"type":"error","error":{...}}
+    def _opencode_db_to_openclaw(self, db_path: Path) -> list[dict[str, Any]]:
+        """Read message/part tables and emit OpenClaw message records.
+
+        Schema (packages/core/src/session/sql.ts):
+          message(id, session_id, time_created, data JSON = {role, ...})
+          part(id, message_id, session_id, time_created, data JSON = {type, ...})
+        Ordering by (message.time_created, message.id, part.id) restores the
+        true turn order (IDs are monotonic ULIDs).
         """
+        import sqlite3
+
         out: list[dict[str, Any]] = []
-        for raw in agent_log.read_text(encoding="utf-8", errors="ignore").splitlines():
-            line = raw.strip()
-            if not line.startswith("{"):
-                continue
+        # Read-only + immutable: no need for -wal/-shm sidecars, never mutates
+        # the preserved artifact.
+        uri = f"file:{db_path}?mode=ro&immutable=1"
+        try:
+            conn = sqlite3.connect(uri, uri=True)
+        except sqlite3.Error as exc:
+            logger.warning("Failed to open opencode.db (%s): %s", db_path, exc)
+            return out
+        try:
+            rows = conn.execute(
+                """
+                SELECT m.data, p.data
+                FROM message m
+                JOIN part p ON p.message_id = m.id
+                ORDER BY m.time_created, m.id, p.id
+                """
+            ).fetchall()
+        except sqlite3.Error as exc:
+            logger.warning("Failed to query opencode.db (%s): %s", db_path, exc)
+            return out
+        finally:
+            conn.close()
+
+        for mdata_raw, pdata_raw in rows:
             try:
-                event = json.loads(line)
-            except json.JSONDecodeError:
+                mdata = json.loads(mdata_raw)
+                pdata = json.loads(pdata_raw)
+            except (json.JSONDecodeError, TypeError):
                 continue
-            if not isinstance(event, dict):
-                continue
+            role = mdata.get("role") or "assistant"
+            out.extend(self._part_to_openclaw(role, pdata))
+        return out
 
-            etype = str(event.get("type") or "").lower()
-            part = event.get("part") if isinstance(event.get("part"), dict) else {}
+    def _part_to_openclaw(self, role: str, part: dict[str, Any]) -> list[dict[str, Any]]:
+        """Map one OpenCode part to zero-or-more OpenClaw message records."""
+        ptype = str(part.get("type") or "")
 
-            if etype in ("text", "reasoning"):
-                text = str(part.get("text") or "").strip()
-                if text:
-                    out.append(self._openclaw_message("assistant", [{"type": "text", "text": text}]))
-                continue
+        if ptype in ("text", "reasoning"):
+            text = str(part.get("text") or "").strip()
+            if not text:
+                return []
+            # Preserve true role: the user prompt lands as a user message.
+            return [self._openclaw_message(role, [{"type": "text", "text": text}])]
 
-            if etype == "tool_use" and isinstance(part, dict):
-                call_id = str(part.get("callID") or part.get("id") or "")
-                name = str(part.get("tool") or "unknown")
-                state = part.get("state") if isinstance(part.get("state"), dict) else {}
-                tool_input = state.get("input")
-                if not isinstance(tool_input, dict):
-                    tool_input = {"_value": tool_input} if tool_input is not None else {}
-                out.append(
+        if ptype == "tool":
+            call_id = str(part.get("callID") or part.get("id") or "")
+            name = str(part.get("tool") or "unknown")
+            state = part.get("state") if isinstance(part.get("state"), dict) else {}
+            tool_input = state.get("input")
+            if not isinstance(tool_input, dict):
+                tool_input = {"_value": tool_input} if tool_input is not None else {}
+            records = [
+                self._openclaw_message(
+                    "assistant",
+                    [{"type": "tool_use", "id": call_id, "name": name, "input": tool_input}],
+                )
+            ]
+            status = str(state.get("status") or "")
+            if status == "completed":
+                output_text = state.get("output")
+            elif status == "error":
+                output_text = state.get("error") or state.get("output")
+            else:
+                output_text = None
+            if output_text is not None:
+                if isinstance(output_text, (dict, list)):
+                    try:
+                        output_text = json.dumps(output_text, ensure_ascii=False)
+                    except Exception:
+                        output_text = str(output_text)
+                records.append(
                     self._openclaw_message(
-                        "assistant",
-                        [{"type": "tool_use", "id": call_id, "name": name, "input": tool_input}],
+                        "user",
+                        [{"type": "tool_result", "tool_use_id": call_id, "content": str(output_text)}],
                     )
                 )
-                status = str(state.get("status") or "")
-                if status == "completed":
-                    output_text = state.get("output")
-                elif status == "error":
-                    output_text = state.get("error") or state.get("output")
-                else:
-                    output_text = None
-                if output_text is not None:
-                    if isinstance(output_text, (dict, list)):
-                        try:
-                            output_text = json.dumps(output_text, ensure_ascii=False)
-                        except Exception:
-                            output_text = str(output_text)
-                    out.append(
-                        self._openclaw_message(
-                            "user",
-                            [{"type": "tool_result", "tool_use_id": call_id, "content": str(output_text)}],
-                        )
-                    )
-                continue
+            return records
 
-            if etype == "error":
-                err = event.get("error")
-                if isinstance(err, dict):
-                    data = err.get("data") if isinstance(err.get("data"), dict) else {}
-                    msg = str(data.get("message") or err.get("name") or "OpenCode error")
-                else:
-                    msg = str(err or "OpenCode error")
-                out.append(self._openclaw_message("assistant", [{"type": "text", "text": msg}]))
-        return out
+        # step-start / step-finish / snapshot / etc. carry no transcript content.
+        return []
 
     def _openclaw_message(self, role: str, content: list[dict[str, Any]]) -> dict[str, Any]:
         return {"type": "message", "message": {"role": role, "content": content}}
@@ -964,53 +1015,62 @@ if __name__ == "__main__":
                 "[%s] OpenCode dir copy failed (%s): %s", task_id, src, r.stderr.strip()
             )
 
-    def _extract_usage_from_agent_log(self, agent_log: Path) -> dict[str, Any]:
-        """Sum token usage from the NDJSON stream.
+    def _extract_usage_from_db(self, db_path: Path) -> dict[str, Any]:
+        """Read token usage from the ``session`` rollup + count requests.
 
-        Both ``step_finish`` and the final assistant carry
-        ``tokens:{input,output,reasoning,cache:{read,write}}`` + ``cost``
-        (schema/src/v1/session.ts:242-257,471-481). step_finish events are
-        per-turn deltas, so we sum them; each is one request.
+        ``session`` carries authoritative rollups
+        (cost, tokens_input/output/reasoning/cache_read/cache_write;
+        sql.ts:43-48). Request count = number of step-finish parts (one per
+        model turn). Summed across sessions in case of sub-agents.
         """
+        import sqlite3
+
         totals = self._empty_totals()
-        if not agent_log.exists():
+        if not db_path.exists():
             return totals
 
-        request_count = 0
-        cost_sum = 0.0
-        for raw in agent_log.read_text(encoding="utf-8", errors="ignore").splitlines():
-            line = raw.strip()
-            if not line.startswith("{"):
-                continue
-            try:
-                event = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if not isinstance(event, dict):
-                continue
-            if str(event.get("type") or "").lower() != "step_finish":
-                continue
-            part = event.get("part") if isinstance(event.get("part"), dict) else {}
-            tokens = part.get("tokens") if isinstance(part.get("tokens"), dict) else {}
-            if not tokens:
-                continue
-            cache = tokens.get("cache") if isinstance(tokens.get("cache"), dict) else {}
-            totals["input_tokens"] += int(self._num(tokens.get("input")))
-            totals["output_tokens"] += int(self._num(tokens.get("output")))
-            totals["output_tokens"] += int(self._num(tokens.get("reasoning")))
-            totals["cache_read_tokens"] += int(self._num(cache.get("read")))
-            totals["cache_write_tokens"] += int(self._num(cache.get("write")))
-            cost_sum += self._num(part.get("cost"))
-            request_count += 1
+        uri = f"file:{db_path}?mode=ro&immutable=1"
+        try:
+            conn = sqlite3.connect(uri, uri=True)
+        except sqlite3.Error as exc:
+            logger.warning("Failed to open opencode.db for usage (%s): %s", db_path, exc)
+            return totals
+        try:
+            row = conn.execute(
+                """
+                SELECT
+                    COALESCE(SUM(cost), 0),
+                    COALESCE(SUM(tokens_input), 0),
+                    COALESCE(SUM(tokens_output), 0),
+                    COALESCE(SUM(tokens_reasoning), 0),
+                    COALESCE(SUM(tokens_cache_read), 0),
+                    COALESCE(SUM(tokens_cache_write), 0)
+                FROM session
+                """
+            ).fetchone()
+            req = conn.execute(
+                "SELECT COUNT(*) FROM part WHERE json_extract(data,'$.type')='step-finish'"
+            ).fetchone()
+        except sqlite3.Error as exc:
+            logger.warning("Failed to query opencode.db for usage (%s): %s", db_path, exc)
+            return totals
+        finally:
+            conn.close()
 
-        totals["request_count"] = request_count
+        cost, t_in, t_out, t_reason, t_cr, t_cw = row or (0, 0, 0, 0, 0, 0)
+        totals["input_tokens"] = int(t_in)
+        # Fold reasoning tokens into output (matches OpenClaw usage convention).
+        totals["output_tokens"] = int(t_out) + int(t_reason)
+        totals["cache_read_tokens"] = int(t_cr)
+        totals["cache_write_tokens"] = int(t_cw)
+        totals["request_count"] = int(req[0]) if req else 0
         totals["total_tokens"] = (
             totals["input_tokens"]
             + totals["output_tokens"]
             + totals["cache_read_tokens"]
             + totals["cache_write_tokens"]
         )
-        totals["cost_usd"] = round(cost_sum, 6)
+        totals["cost_usd"] = round(self._num(cost), 6)
         return totals
 
     def _empty_totals(self) -> dict[str, Any]:
