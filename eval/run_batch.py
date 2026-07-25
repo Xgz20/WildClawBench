@@ -644,7 +644,8 @@ def main() -> None:
         print_summary(results, category, output_root, summary_label)
         all_results.extend(results)
 
-    if len(categories) > 1 and all_results:
+    # 批级汇总（单分类也产出，含多轮 multirun 段）
+    if all_results:
         summary_label = f"{lobster['name']}_{safe_model_name}" if lobster else safe_model_name
         print_global_summary(all_results, output_root, summary_label)
 
