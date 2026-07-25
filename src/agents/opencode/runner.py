@@ -955,9 +955,14 @@ if __name__ == "__main__":
         import sqlite3
 
         out: list[dict[str, Any]] = []
-        # Read-only + immutable: no need for -wal/-shm sidecars, never mutates
-        # the preserved artifact.
-        uri = f"file:{db_path}?mode=ro&immutable=1"
+        # mode=rw (not immutable): OpenCode uses WAL journaling, and the DB is
+        # copied out (with -wal/-shm sidecars) while the container may still be
+        # running — so the -wal may hold uncheckpointed schema+rows. immutable=1
+        # ignores the -wal entirely, which surfaced as "no such table: message"
+        # and empty transcripts/usage. rw lets SQLite replay the -wal into this
+        # copied-out artifact (never the container's live DB), giving a
+        # consistent read; it also works when the DB is already self-contained.
+        uri = f"file:{db_path}?mode=rw"
         try:
             conn = sqlite3.connect(uri, uri=True)
         except sqlite3.Error as exc:
@@ -1065,7 +1070,11 @@ if __name__ == "__main__":
         if not db_path.exists():
             return totals
 
-        uri = f"file:{db_path}?mode=ro&immutable=1"
+        # mode=rw (not immutable): replay any uncheckpointed -wal on the
+        # copied-out DB — see _opencode_db_to_openclaw for the full rationale.
+        # Without this the `session` table reads as "no such table" and usage
+        # falls back to all-zero.
+        uri = f"file:{db_path}?mode=rw"
         try:
             conn = sqlite3.connect(uri, uri=True)
         except sqlite3.Error as exc:
