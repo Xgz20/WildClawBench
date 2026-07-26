@@ -12,6 +12,28 @@ load_dotenv()
 ROOT_DIR = Path(__file__).resolve().parents[2]
 
 
+def normalize_tags(raw) -> list[str]:
+    """Coerce a frontmatter `tags` value into a clean, deduplicated str list.
+
+    Accepts a YAML list or a comma-separated string; each tag is trimmed and
+    lower-cased so matching is case-insensitive. Order is preserved.
+    """
+    if raw is None:
+        return []
+    if isinstance(raw, str):
+        items = raw.split(",")
+    elif isinstance(raw, (list, tuple)):
+        items = raw
+    else:
+        items = [raw]
+    seen: dict[str, None] = {}
+    for item in items:
+        tag = str(item).strip().lower()
+        if tag:
+            seen.setdefault(tag, None)
+    return list(seen.keys())
+
+
 def parse_task_md(task_file: Path) -> dict:
     """Extract task_id, prompt, workspace_path, and automated_checks from task.md."""
     content = task_file.read_text(encoding="utf-8")
@@ -83,4 +105,5 @@ def parse_task_md(task_file: Path) -> dict:
         "file_path":        str(task_file.resolve()),
         "category":         task_file.parent.name,
         "modality":         str(metadata.get("modality", "")).strip(),
+        "tags":             normalize_tags(metadata.get("tags")),
     }

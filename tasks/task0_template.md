@@ -4,6 +4,10 @@ name: Human-readable task name
 category: <category>
 timeout_seconds: 300
 modality: pure-text
+# Optional. Free-form labels for filtering with --tag / --exclude-tag.
+# Use `custom` to mark self-authored cases (vs. the native WildClawBench suite).
+tags:
+  - custom
 ---
 
 ## Prompt

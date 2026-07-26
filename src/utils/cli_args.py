@@ -25,6 +25,26 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
              "an explicit --task is never filtered)",
     )
     parser.add_argument(
+        "--tag",
+        dest="tags",
+        action="append",
+        default=None,
+        metavar="TAG",
+        help="Only run tasks whose frontmatter `tags` include this tag. Repeatable; "
+             "multiple --tag form a union (a task matching ANY of them is kept). "
+             "Applies to --category mode; an explicit --task is never filtered",
+    )
+    parser.add_argument(
+        "--exclude-tag",
+        dest="exclude_tags",
+        action="append",
+        default=None,
+        metavar="TAG",
+        help="Skip tasks whose frontmatter `tags` include this tag. Repeatable. "
+             "Applied after --tag, so a task is kept only when it matches the --tag "
+             "union AND carries none of the --exclude-tag values",
+    )
+    parser.add_argument(
         "--agent-backend",
         default="openclaw",
         choices=["openclaw", "claudecode", "codex", "hermesagent", "astroncode", "opencode"],

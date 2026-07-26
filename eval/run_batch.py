@@ -579,6 +579,21 @@ def main() -> None:
             logger.info("Modality filter '%s': %d/%d tasks kept in %s",
                         args.modality, len(tasks), before, category)
 
+        include_tags = {t.strip().lower() for t in (args.tags or []) if t.strip()}
+        exclude_tags = {t.strip().lower() for t in (args.exclude_tags or []) if t.strip()}
+        if include_tags:
+            before = len(tasks)
+            tasks = [t for t in tasks
+                     if include_tags & set(t.get("tags") or [])]
+            logger.info("Tag filter (any of %s): %d/%d tasks kept in %s",
+                        sorted(include_tags), len(tasks), before, category)
+        if exclude_tags:
+            before = len(tasks)
+            tasks = [t for t in tasks
+                     if not (exclude_tags & set(t.get("tags") or []))]
+            logger.info("Exclude-tag filter (none of %s): %d/%d tasks kept in %s",
+                        sorted(exclude_tags), len(tasks), before, category)
+
         if not tasks:
             continue
 
