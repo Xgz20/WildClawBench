@@ -107,19 +107,24 @@ def grade_the_task(
         else:
             logger.info("[%s] gt directory copied to container %s/gt", task_id, TMP_WORKSPACE)
 
-    should_grade = task.get("automated_checks") and (
+    # v2: a task is gradable if it has rule checks OR a declarative rubric.
+    has_gradable = bool(task.get("automated_checks") or task.get("rubric_criteria"))
+    should_grade = has_gradable and (
         not result.get("error") or grade_on_error
     )
     if should_grade:
         try:
             scores = run_grading(
                 task_id=task_id,
-                automated_checks=task["automated_checks"],
+                automated_checks=task.get("automated_checks", ""),
                 output_dir=output_dir,
                 extra_env=task.get("env", ""),
                 lobster_env=lobster_env,
                 transcript_container_path=transcript_container_path,
                 write_error_score=write_error_score_on_failure,
+                llm_judge_rubric=task.get("llm_judge_rubric", ""),
+                rubric_criteria=task.get("rubric_criteria") or [],
+                grading_weights=task.get("grading_weights") or {},
             )
             result["scores"] = scores
             print(format_scores(task_id, scores))
@@ -127,8 +132,8 @@ def grade_the_task(
         except Exception as exc:
             logger.error("[%s] Grading failed: %s", task_id, exc)
             result["scores"] = write_error_score_file(output_dir, task_id, str(exc))
-    elif not task.get("automated_checks"):
-        logger.info("[%s] No Automated Checks, skipping grading", task_id)
+    elif not has_gradable:
+        logger.info("[%s] No Automated Checks or rubric, skipping grading", task_id)
         if result.get("error"):
             result["scores"] = write_error_score_file(output_dir, task_id, result["error"])
 

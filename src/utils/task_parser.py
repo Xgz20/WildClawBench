@@ -34,6 +34,52 @@ def normalize_tags(raw) -> list[str]:
     return list(seen.keys())
 
 
+def parse_rubric_criteria(rubric_text: str) -> list[dict]:
+    """Parse `## LLM Judge Rubric` into an ordered list of criteria.
+
+    Each criterion heading follows the v2 format:
+        ### Criterion N: <名称> (key: <stable_key>, weight: <0.X>)
+    followed by `**Score 1.0**: ...` band descriptions.
+
+    Returns a list preserving document order; each item is:
+        {"key": str, "weight": float, "name": str, "rubric": str}
+    `rubric` is the full band-description text belonging to that criterion,
+    used verbatim in the judge prompt. Headings that don't match the format
+    are skipped (so free-form rubrics degrade gracefully to an empty list,
+    which routes the task through the legacy path).
+    """
+    if not rubric_text:
+        return []
+    heading_re = re.compile(
+        r"^###\s+.*?\(key:\s*([A-Za-z0-9_\-]+)\s*,\s*weight:\s*([\d.]+)\s*\)\s*$"
+    )
+    # Capture the human name, stripping an optional "Criterion N:" prefix.
+    name_re = re.compile(r"^###\s+(?:Criterion\s+\d+\s*[:：]\s*)?(.*?)\s*\(key:")
+    criteria: list[dict] = []
+    cur: Optional[dict] = None
+    body: list[str] = []
+    for line in rubric_text.split("\n"):
+        m = heading_re.match(line.strip())
+        if m:
+            if cur is not None:
+                cur["rubric"] = "\n".join(body).strip()
+                criteria.append(cur)
+            nm = name_re.match(line.strip())
+            cur = {
+                "key": m.group(1),
+                "weight": float(m.group(2)),
+                "name": nm.group(1).strip() if nm else m.group(1),
+                "rubric": "",
+            }
+            body = [line]
+        elif cur is not None:
+            body.append(line)
+    if cur is not None:
+        cur["rubric"] = "\n".join(body).strip()
+        criteria.append(cur)
+    return criteria
+
+
 def parse_task_md(task_file: Path) -> dict:
     """Extract task_id, prompt, workspace_path, and automated_checks from task.md."""
     content = task_file.read_text(encoding="utf-8")
@@ -79,6 +125,15 @@ def parse_task_md(task_file: Path) -> dict:
     skills = strip_codeblock(sections.get("Skills",    ""))
     warmup = strip_codeblock(sections.get("Warmup", ""))
 
+    # v2 format: LLM Judge Rubric section + grading config from frontmatter.
+    # Empty rubric_criteria routes the task through the legacy grading path.
+    llm_judge_rubric = sections.get("LLM Judge Rubric", "").strip()
+    rubric_criteria = parse_rubric_criteria(llm_judge_rubric)
+    grading_type = str(metadata.get("grading_type", "")).strip()
+    grading_weights = metadata.get("grading_weights") or {}
+    if not isinstance(grading_weights, dict):
+        grading_weights = {}
+
     task_id         = metadata.get("id",             task_file.stem)
     timeout_seconds = int(metadata.get("timeout_seconds", 120))
 
@@ -106,4 +161,9 @@ def parse_task_md(task_file: Path) -> dict:
         "category":         task_file.parent.name,
         "modality":         str(metadata.get("modality", "")).strip(),
         "tags":             normalize_tags(metadata.get("tags")),
+        # v2 fields for hybrid grading separation
+        "grading_type":     grading_type,
+        "grading_weights":  grading_weights,
+        "llm_judge_rubric": llm_judge_rubric,
+        "rubric_criteria":  rubric_criteria,
     }

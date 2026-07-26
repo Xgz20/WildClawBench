@@ -6,6 +6,9 @@
 #       content_generation 内容生成 / verification_delivery 验证交付
 # 判据：该检查点失分时最能说明模型缺什么能力。
 # 特例：LLM 裁判单分制任务（04 套件、02_task_6）无检查点明细，映射键为 overall_score。
+# v2 分离格式任务（有 ## LLM Judge Rubric 段）：检查点键带来源前缀——规则项
+#   `automated.<key>`，LLM 项 `llm_judge.<canonical_key>`（rubric 里显式声明的稳定 key）。
+#   映射时直接引用带前缀的键即可（键由作者定义、框架强制对齐，不会因 judge 运行而漂移）。
 # 生成：2026-07-15 由 LLM 逐任务阅读 tasks/*.md（Prompt + Automated Checks）标注，
 # 注：*_max/*_calls/*_attempts 等诊断计量键不入映射（聚合时也会被归一化规则排除）；
 #     *_earned 键按 earned/max 比值归一；02 拼图任务为原始点数制，映射键用 overall_score。

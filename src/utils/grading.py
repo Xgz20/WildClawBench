@@ -51,7 +51,59 @@ def run_grading(
     lobster_env: list[str] | None = None,
     transcript_container_path: str = "",
     write_error_score: bool = False,
+    *,
+    llm_judge_rubric: str = "",
+    rubric_criteria: list[dict] | None = None,
+    grading_weights: dict | None = None,
 ) -> dict:
+    """Dispatch grading by task format.
+
+    - v2 (has parsed rubric_criteria): run rule checks and the declarative LLM
+      rubric separately, then weight-combine (see _grade_* helpers below).
+    - legacy (no rubric section): exec the single grade() function verbatim.
+
+    The presence of `rubric_criteria` is the only switch; existing tasks have
+    none and therefore keep their exact prior behaviour.
+    """
+    if rubric_criteria:
+        return _run_grading_v2(
+            task_id=task_id,
+            automated_checks=automated_checks,
+            output_dir=output_dir,
+            extra_env=extra_env,
+            lobster_env=lobster_env,
+            transcript_container_path=transcript_container_path,
+            write_error_score=write_error_score,
+            llm_judge_rubric=llm_judge_rubric,
+            rubric_criteria=rubric_criteria,
+            grading_weights=grading_weights or {},
+        )
+    return _run_grading_legacy(
+        task_id,
+        automated_checks,
+        output_dir,
+        extra_env=extra_env,
+        lobster_env=lobster_env,
+        transcript_container_path=transcript_container_path,
+        write_error_score=write_error_score,
+    )
+
+
+def _run_grading_legacy(
+    task_id: str,
+    automated_checks: str,
+    output_dir: Path,
+    extra_env: str = "",
+    lobster_env: list[str] | None = None,
+    transcript_container_path: str = "",
+    write_error_score: bool = False,
+) -> dict:
+    """Legacy grading path: exec the task's single grade() function verbatim.
+
+    Behaviour is byte-for-byte the pre-v2 run_grading. Tasks with no
+    `## LLM Judge Rubric` section route here (see run_grading dispatcher),
+    so all 60 existing tasks are unaffected.
+    """
     logger.info("[%s] Starting in-container grading...", task_id)
 
     loader_src = Path(__file__).with_name("transcript_loader.py")
@@ -197,6 +249,394 @@ def run_grading(
     finally:
         Path(runner_host).unlink(missing_ok=True)
 
+    _write_score(output_dir, task_id, scores)
+    return scores
+
+
+# ===========================================================================
+# v2 grading: separated rule checks + declarative LLM rubric
+# ===========================================================================
+
+def _exec_container_grade(
+    task_id: str,
+    automated_checks: str,
+    extra_env: str,
+    lobster_env: list[str] | None,
+    transcript_container_path: str,
+) -> tuple[dict | None, str]:
+    """Run a task's rule-only grade() inside its container.
+
+    Returns (scores_dict, error_msg). On success error_msg is "". Reuses the
+    same loader/shim/docker-exec machinery as the legacy path, but returns the
+    parsed dict instead of writing score.json (the v2 combiner writes once).
+    """
+    loader_src = Path(__file__).with_name("transcript_loader.py")
+    if not loader_src.exists():
+        return None, f"transcript loader module not found: {loader_src}"
+    shim_src = Path(__file__).with_name("judge_shim.py")
+
+    runner_code = "\n".join([
+        "import json",
+        "try:",
+        "    import _judge_shim; _judge_shim.install()",
+        "except Exception as _shim_exc:",
+        "    import sys as _sys; print('judge_shim install failed:', _shim_exc, file=_sys.stderr)",
+        "from _transcript_loader import load_transcript",
+        f"_transcript = load_transcript({json.dumps(transcript_container_path)})",
+        "",
+        automated_checks,
+        "",
+        f'result = grade(transcript=_transcript, workspace_path="{TMP_WORKSPACE}")',
+        "print(json.dumps(result))",
+    ]) + "\n"
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".py", delete=False, encoding="utf-8"
+    ) as f:
+        f.write(runner_code)
+        runner_host = f.name
+
+    try:
+        r_loader = subprocess.run(
+            ["docker", "cp", str(loader_src), f"{task_id}:/tmp/_transcript_loader.py"],
+            capture_output=True, text=True,
+        )
+        if r_loader.returncode != 0:
+            return None, f"docker cp transcript loader failed: {r_loader.stderr}"
+        if shim_src.exists():
+            subprocess.run(
+                ["docker", "cp", str(shim_src), f"{task_id}:/tmp/_judge_shim.py"],
+                capture_output=True, text=True,
+            )
+        r = subprocess.run(
+            ["docker", "cp", runner_host, f"{task_id}:/tmp/_grade_runner.py"],
+            capture_output=True, text=True,
+        )
+        if r.returncode != 0:
+            return None, f"docker cp failed: {r.stderr}"
+
+        env_args = _build_grading_env_args(task_id, extra_env, lobster_env)
+        r = subprocess.run(
+            ["docker", "exec", *env_args, task_id, "python3", "/tmp/_grade_runner.py"],
+            capture_output=True, text=True, timeout=120,
+        )
+        if r.returncode != 0:
+            return None, f"grade script failed: {r.stderr}"
+        scores = _parse_grade_stdout(r.stdout)
+        if scores is None:
+            return None, "json parse failed: no valid JSON in stdout"
+        return scores, ""
+    finally:
+        Path(runner_host).unlink(missing_ok=True)
+
+
+def _build_grading_env_args(
+    task_id: str, extra_env: str, lobster_env: list[str] | None
+) -> list[str]:
+    """Assemble `-e KEY=VALUE` docker args for grading (task env + judge routing)."""
+    env_args: list[str] = []
+    for line in extra_env.splitlines():
+        key = line.strip()
+        if not key or key.startswith("#"):
+            continue
+        value = os.environ.get(key, "")
+        env_args += ["-e", f"{key}={value}"]
+        masked = (value[:4] + "***") if value else "(empty)"
+        logger.info("[%s] Injecting grading env: %s=%s", task_id, key, masked)
+    for key in (lobster_env or []):
+        value = os.environ.get(key, "")
+        if not value:
+            continue
+        env_args += ["-e", f"{key}={value}"]
+    for key in ("ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL", "ANTHROPIC_MODEL",
+                "JUDGE_MODEL", "OPENROUTER_API_KEY", "OPENROUTER_BASE_URL"):
+        value = os.environ.get(key, "").strip()
+        if value:
+            env_args += ["-e", f"{key}={value}"]
+    return env_args
+
+
+def _parse_grade_stdout(stdout: str) -> dict | None:
+    """Extract the last valid JSON object from grade runner stdout."""
+    try:
+        return json.loads(stdout.strip())
+    except json.JSONDecodeError:
+        for line in reversed(stdout.strip().splitlines()):
+            line = line.strip()
+            if line.startswith("{"):
+                try:
+                    return json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+    return None
+
+
+def _combine_v2(
+    auto_score: float | None,
+    auto_breakdown: dict,
+    llm_score: float,
+    llm_breakdown: dict,
+    llm_notes: str,
+    grading_weights: dict,
+) -> dict:
+    """Weight-combine rule and LLM sub-scores into a v2 score.json dict.
+
+    If a task has no rule part (auto_score is None), the LLM score is used
+    directly (weight collapses to LLM-only). Breakdown keys are prefixed by
+    source so the report tool and capability map can reference stable keys.
+    """
+    w_auto = float(grading_weights.get("automated", 0.5))
+    w_llm = float(grading_weights.get("llm_judge", 0.5))
+
+    if auto_score is None:
+        overall = llm_score
+        w_auto = 0.0
+    else:
+        total_w = w_auto + w_llm
+        if total_w <= 0:
+            w_auto = w_llm = 0.5
+            total_w = 1.0
+        overall = (auto_score * w_auto + llm_score * w_llm) / total_w
+
+    scores: dict = {}
+    for k, v in auto_breakdown.items():
+        scores[f"automated.{k}"] = v
+    for k, v in llm_breakdown.items():
+        scores[f"llm_judge.{k}"] = v
+    scores["_grading"] = {
+        "mode": "v2_hybrid" if auto_score is not None else "v2_llm_only",
+        "automated_score": round(auto_score, 5) if auto_score is not None else None,
+        "llm_judge_score": round(llm_score, 5),
+        "weights": {"automated": w_auto, "llm_judge": w_llm},
+    }
+    if llm_notes:
+        scores["_grading"]["llm_notes"] = llm_notes
+    scores["overall_score"] = round(max(0.0, min(1.0, overall)), 4)
+    return scores
+
+
+def _exec_container_python(
+    task_id: str, runner_code: str, transcript_container_path: str,
+) -> tuple[dict | None, str]:
+    """Copy loader+shim+runner into the container, exec, return parsed JSON.
+
+    Generic sibling of _exec_container_grade for judge runners (which read the
+    transcript and call the judge shim). Returns (parsed_dict, error_msg).
+    """
+    loader_src = Path(__file__).with_name("transcript_loader.py")
+    shim_src = Path(__file__).with_name("judge_shim.py")
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".py", delete=False, encoding="utf-8"
+    ) as f:
+        f.write(runner_code)
+        runner_host = f.name
+    try:
+        if loader_src.exists():
+            subprocess.run(
+                ["docker", "cp", str(loader_src), f"{task_id}:/tmp/_transcript_loader.py"],
+                capture_output=True, text=True,
+            )
+        if shim_src.exists():
+            subprocess.run(
+                ["docker", "cp", str(shim_src), f"{task_id}:/tmp/_judge_shim.py"],
+                capture_output=True, text=True,
+            )
+        r = subprocess.run(
+            ["docker", "cp", runner_host, f"{task_id}:/tmp/_judge_runner.py"],
+            capture_output=True, text=True,
+        )
+        if r.returncode != 0:
+            return None, f"docker cp judge runner failed: {r.stderr}"
+        env_args = _build_grading_env_args(task_id, "", None)
+        r = subprocess.run(
+            ["docker", "exec", *env_args, task_id, "python3", "/tmp/_judge_runner.py"],
+            capture_output=True, text=True, timeout=180,
+        )
+        if r.returncode != 0:
+            return None, f"judge runner failed: {r.stderr}"
+        parsed = _parse_grade_stdout(r.stdout)
+        if parsed is None:
+            return None, "judge returned no valid JSON"
+        return parsed, ""
+    finally:
+        Path(runner_host).unlink(missing_ok=True)
+
+
+def _align_rubric_scores(
+    task_id: str, raw: dict, rubric_criteria: list[dict],
+) -> tuple[float, dict, str]:
+    """Map judge-returned scores onto canonical keys (defensive alignment)."""
+    raw_scores = raw.get("scores", {}) if isinstance(raw, dict) else {}
+    if not isinstance(raw_scores, dict):
+        raw_scores = {}
+    raw_items = list(raw_scores.items())
+    breakdown: dict = {}
+    for i, crit in enumerate(rubric_criteria):
+        key = crit["key"]
+        val = None
+        if key in raw_scores:                      # 1. exact match
+            val = raw_scores[key]
+        elif i < len(raw_items):                   # 2. positional fallback
+            got_key, got_val = raw_items[i]
+            val = got_val
+            logger.warning(
+                "[%s] judge key mismatch: expected '%s', using positional '%s'",
+                task_id, key, got_key,
+            )
+        if isinstance(val, (int, float)):
+            breakdown[key] = max(0.0, min(1.0, float(val)))
+        else:                                      # 3. unresolved -> 0 + error
+            breakdown[key] = 0.0
+            logger.error("[%s] judge missing criterion '%s', scored 0.0", task_id, key)
+
+    total_w = sum(c["weight"] for c in rubric_criteria)
+    if total_w > 0:
+        score = sum(breakdown[c["key"]] * c["weight"] for c in rubric_criteria) / total_w
+    else:
+        score = sum(breakdown.values()) / len(breakdown) if breakdown else 0.0
+    notes = str(raw.get("notes", "")) if isinstance(raw, dict) else ""
+    return score, breakdown, notes
+
+
+def _build_rubric_judge_prompt(rubric_criteria: list[dict], rubric_text: str) -> str:
+    """Judge prompt that forces scores under the author-defined canonical keys."""
+    keys = [c["key"] for c in rubric_criteria]
+    keys_json = ", ".join(f'"{k}": 0.0' for k in keys)
+    return (
+        "You are a strict grading assistant. Score the agent's performance "
+        "against the rubric below, using the agent transcript as evidence.\n\n"
+        "Return ONLY a JSON object, no prose, no code fences, in EXACTLY this shape:\n"
+        f'{{"scores": {{{keys_json}}}, "notes": "<brief reason>"}}\n\n'
+        f"CRITICAL: the \"scores\" object MUST contain EXACTLY these keys: {keys}\n"
+        "Do NOT rename, translate, omit, or add keys. Each score is a float 0.0-1.0.\n\n"
+        "## Grading Rubric\n"
+        f"{rubric_text}\n"
+    )
+
+
+def _grade_llm_rubric(
+    task_id: str,
+    rubric_text: str,
+    rubric_criteria: list[dict],
+    transcript_container_path: str,
+) -> tuple[float, dict, str]:
+    """Run the declarative LLM rubric in-container; align to canonical keys.
+
+    Returns (llm_score, breakdown_by_canonical_key, notes). llm_score is the
+    weight-normalised mean of criterion scores. Key alignment is defensive:
+    exact match -> positional fallback (warn) -> 0.0 + error, never silently
+    dropping a criterion.
+    """
+    prompt = _build_rubric_judge_prompt(rubric_criteria, rubric_text)
+    judge_model = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
+
+    # In-container judge runner: reads transcript + agent-produced text
+    # artifacts (rubrics commonly grade output files like results.md, not just
+    # the transcript), calls the judge via the OpenAI shim, prints raw JSON.
+    ws_reader = (
+        "_ws = Path(%s)\n"
+        "_files = []\n"
+        "_exts = ('.md','.txt','.json','.csv','.py','.yaml','.yml','.html')\n"
+        "if _ws.is_dir():\n"
+        "    for _p in sorted(_ws.rglob('*')):\n"
+        "        if not (_p.is_file() and _p.suffix.lower() in _exts):\n"
+        "            continue\n"
+        "        if 'gt' in _p.relative_to(_ws).parts:\n"  # skip ground-truth
+        "            continue\n"
+        "        try:\n"
+        "            _c = _p.read_text(encoding='utf-8', errors='ignore')[:8000]\n"
+        "        except Exception:\n"
+        "            continue\n"
+        "        _files.append('### ' + str(_p.relative_to(_ws)) + '\\n' + _c)\n"
+        "        if len(_files) >= 12:\n"
+        "            break\n"
+        "_ws_text = '\\n\\n'.join(_files)\n"
+    ) % json.dumps(TMP_WORKSPACE)
+
+    runner_code = (
+        "import json, os, sys\n"
+        "from pathlib import Path\n"
+        "try:\n"
+        "    import _judge_shim; _judge_shim.install()\n"
+        "except Exception as _e:\n"
+        "    print('judge_shim install failed:', _e, file=sys.stderr)\n"
+        "from _transcript_loader import load_transcript\n"
+        f"_t = load_transcript({json.dumps(transcript_container_path)})\n"
+        "_summary = json.dumps(_t, ensure_ascii=False)[:20000]\n"
+        + ws_reader +
+        "from openai import OpenAI\n"
+        "client = OpenAI(api_key=os.environ.get('OPENROUTER_API_KEY',''),"
+        " base_url=os.environ.get('OPENROUTER_BASE_URL',''))\n"
+        f"_prompt = {json.dumps(prompt)}\n"
+        "_msg = _prompt + '\\n\\n## Agent Workspace Files\\n' + _ws_text"
+        " + '\\n\\n## Agent Transcript (JSON)\\n' + _summary\n"
+        "try:\n"
+        f"    resp = client.chat.completions.create(model={json.dumps(judge_model)},"
+        " max_tokens=800, messages=[{'role':'user','content':_msg}],"
+        " response_format={'type':'json_object'})\n"
+        "    print(resp.choices[0].message.content)\n"
+        "except Exception as _e:\n"
+        "    print(json.dumps({'scores': {}, 'notes': 'judge_call_failed: ' + str(_e)}))\n"
+    )
+
+    raw, err = _exec_container_python(task_id, runner_code, transcript_container_path)
+    if err:
+        logger.error("[%s] LLM rubric judge failed: %s", task_id, err)
+        # all criteria -> 0, so failure is visible (and score-impacting)
+        return 0.0, {c["key"]: 0.0 for c in rubric_criteria}, f"judge failed: {err}"
+
+    return _align_rubric_scores(task_id, raw, rubric_criteria)
+
+
+def _run_grading_v2(
+    *,
+    task_id: str,
+    automated_checks: str,
+    output_dir: Path,
+    extra_env: str,
+    lobster_env: list[str] | None,
+    transcript_container_path: str,
+    write_error_score: bool,
+    llm_judge_rubric: str,
+    rubric_criteria: list[dict],
+    grading_weights: dict,
+) -> dict:
+    """v2 path: rule checks + declarative LLM rubric, weight-combined.
+
+    Produces a score.json where rule checkpoints are prefixed `automated.`
+    and LLM criteria `llm_judge.` (canonical keys), plus a `_grading` block
+    recording sub-scores and weights. overall_score is the weighted mean.
+    """
+    logger.info("[%s] Starting v2 grading (rules + rubric)...", task_id)
+
+    # ---- rule part (optional; may be empty for pure-LLM tasks) ----
+    auto_score, auto_breakdown = 0.0, {}
+    has_rules = bool(automated_checks.strip())
+    if has_rules:
+        raw, err = _exec_container_grade(
+            task_id, automated_checks, extra_env, lobster_env,
+            transcript_container_path,
+        )
+        if err:
+            logger.error("[%s] v2 rule grading failed: %s", task_id, err)
+            return _grading_error(output_dir, task_id, err, write_error_score)
+        auto_breakdown = {k: v for k, v in raw.items()
+                          if isinstance(v, (int, float)) and k != "overall_score"}
+        auto_score = raw.get("overall_score")
+        if not isinstance(auto_score, (int, float)):
+            auto_score = (sum(auto_breakdown.values()) / len(auto_breakdown)
+                          if auto_breakdown else 0.0)
+
+    # ---- LLM rubric part ----
+    llm_score, llm_breakdown, llm_notes = _grade_llm_rubric(
+        task_id, llm_judge_rubric, rubric_criteria, transcript_container_path,
+    )
+
+    # ---- combine ----
+    scores = _combine_v2(
+        auto_score if has_rules else None, auto_breakdown,
+        llm_score, llm_breakdown, llm_notes, grading_weights,
+    )
     _write_score(output_dir, task_id, scores)
     return scores
 
