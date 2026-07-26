@@ -77,6 +77,29 @@ except Exception:  # 独立分发/路径异常时内联同款公式兜底
             return 0.0
         return _math.comb(c, k) / _math.comb(n, k)
 
+# 工具调用指标：复用评测框架共享模块（判定口径唯一来源），避免与平台后端漂移。
+# 见 docs/local/design/Harness工具调用指标设计.md。
+try:
+    from src.utils.tool_metrics import (
+        parse_tool_metrics as _parse_tool_metrics,
+        merge_metrics as _merge_tool_metrics,
+        format_accuracy as _tm_format_accuracy,
+        execution_success_rate as _tm_exec_success,
+        overall_success_rate as _tm_overall_success,
+        unclear_ratio as _tm_unclear_ratio,
+    )
+    _TOOL_METRICS_OK = True
+except Exception:  # 独立分发/路径异常时降级：不统计工具调用指标
+    _TOOL_METRICS_OK = False
+    def _parse_tool_metrics(path, harness):
+        return {"total": 0, "success": 0, "failure": 0, "format_error": 0,
+                "unclear": 0, "by_tool": {}}
+    def _merge_tool_metrics(lst):
+        return {"total": 0, "success": 0, "failure": 0, "format_error": 0,
+                "unclear": 0, "by_tool": {}}
+    _tm_format_accuracy = _tm_exec_success = _tm_overall_success = \
+        _tm_unclear_ratio = lambda m: None
+
 # 7 维能力口径（与 PinchBench cap7 对齐）；映射文件见 tools/report/data/checkpoint_capability_map7.yaml
 CAP7_ORDER = ["code_generation", "tool_use", "data_processing", "retrieval_verification",
               "reasoning_planning", "content_generation", "verification_delivery"]
@@ -177,9 +200,10 @@ def extract_judge_notes(score: dict) -> str:
 
 
 class TaskRecord:
-    def __init__(self, suite: str, task_dir: Path):
+    def __init__(self, suite: str, task_dir: Path, harness: str = ""):
         self.task_id = task_dir.name
         self.suite = suite
+        self.harness = harness
         run_dirs = sorted(p for p in task_dir.iterdir() if p.is_dir())
 
         # 多轮支持：收集全部 run 的 overall_score，取 mean 作为代表分
@@ -252,6 +276,9 @@ class TaskRecord:
                     self.transcript = cand
                     break
 
+        # 工具调用指标（基于最新一轮的归一化轨迹）。未注册 harness / 无轨迹 → 空指标。
+        self.tool_metrics = _parse_tool_metrics(self.transcript, self.harness)
+
     @property
     def effective_score(self) -> float:
         """聚合口径：无有效得分按 0 计（与 summary global_avg 口径一致）。"""
@@ -270,7 +297,7 @@ class UnitResult:
                 continue
             for task_dir in sorted(suite_dir.iterdir()):
                 if task_dir.is_dir() and any(p.is_dir() for p in task_dir.iterdir()):
-                    self.tasks.append(TaskRecord(suite_dir.name, task_dir))
+                    self.tasks.append(TaskRecord(suite_dir.name, task_dir, harness))
         self.task_map = {t.task_id: t for t in self.tasks}
         self.summary = self._load_summary()
 
@@ -292,6 +319,10 @@ class UnitResult:
 
     def usage_total(self, key: str) -> float:
         return sum((t.usage or {}).get(key, 0) or 0 for t in self.tasks)
+
+    def tool_metrics_total(self) -> dict:
+        """聚合该 unit 全部用例的工具调用指标（含 by_tool 明细）。"""
+        return _merge_tool_metrics([t.tool_metrics for t in self.tasks])
 
     @property
     def harness_version(self) -> str:
@@ -527,6 +558,11 @@ PCT_FMT = '0.0"%"'            # 数值单元格显示为 41.6%，排序/色阶�
 PCT_SIGNED_FMT = '+0.0"%";-0.0"%";0.0"%"'
 
 
+def _pct_or_dash(frac: float | None):
+    """比率(0~1)转百分比数值(如 68.3)供 PCT_FMT 展示；None → "-"。"""
+    return round(frac * 100, 1) if frac is not None else "-"
+
+
 def apply_pct_format(ws, row: int, cols) -> None:
     """对指定行的列应用百分比数字格式（仅数值单元格）。"""
     for col in cols:
@@ -560,10 +596,14 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
     # 移到独立的「多轮稳定性分析」Sheet 用分布统计展示（见 write_stability_sheet）。
     has_multirun = any(t.runs > 1 for u in units for t in u.tasks)
     multirun_cols = ["平均轮数"] if has_multirun else []
+    # 工具调用指标列（放最末，避免打乱既有百分比/色阶列索引）。
+    # 仅当存在任一已注册 harness 的有效指标时才追加，避免全 N/A 空列。
+    has_tool_metrics = any(u.tool_metrics_total().get("total", 0) for u in units)
+    tool_cols = ["工具调用数", "格式准确率", "执行成功率", "不确定占比"] if has_tool_metrics else []
     header = (["模型", "Harness", "总平均分", "用例数", "正常完成数", "执行错误数", "超时数", "完成率"]
               + multirun_cols
-              + [suite_zh.get(s, s) for s in suites]
-              + ["总tokens", "总请求数", "总耗时(s)", "总成本(USD)"])
+              + ["总tokens", "总请求数", "总耗时(s)", "总成本(USD)"]
+              + tool_cols)
     ws.append(header)
     for u in units:
         suite_ids = {s: {t.task_id for t in u.tasks if t.suite == s} for s in suites}
@@ -584,18 +624,27 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
             valid_tasks = [t for t in u.tasks if t.runs > 0]
             avg_runs = sum(t.runs for t in valid_tasks) / len(valid_tasks) if valid_tasks else 0
             row += [round(avg_runs, 1)]
-        suite_avgs = [u.avg_pct(suite_ids[s]) for s in suites]
-        row += [round(v, 1) if v is not None else "-" for v in suite_avgs]
         row += [
             int(u.usage_total("total_tokens")),
             int(u.usage_total("request_count")),
             round(u.usage_total("elapsed_time"), 1),
             round(u.usage_total("cost_usd"), 4),
         ]
+        if tool_cols:
+            tm = u.tool_metrics_total()
+            row += [
+                tm.get("total", 0),
+                _pct_or_dash(_tm_format_accuracy(tm)),
+                _pct_or_dash(_tm_exec_success(tm)),
+                _pct_or_dash(_tm_unclear_ratio(tm)),
+            ]
         ws.append(row)
-        # 百分比列：总平均分(3)、完成率(8)、各分类均分(9+multirun 起)
-        suite_start = 9 + len(multirun_cols)
-        pct_cols = [3, 8] + list(range(suite_start, suite_start + len(suites)))
+        # 百分比列：总平均分(3)、完成率(8)
+        pct_cols = [3, 8]
+        if tool_cols:
+            # 工具指标 3 个比率列（资源列之后，从 tokens/请求数/耗时/成本 再 +1）
+            tool_start = 9 + len(multirun_cols) + 4  # 完成率后+multirun+4资源
+            pct_cols += [tool_start + 1, tool_start + 2, tool_start + 3]  # 格式/成功/不确定
         apply_pct_format(ws, ws.max_row, pct_cols)
         g_avg = u.summary.get("global_avg")
         if g_avg is not None and abs(u.total_pct / 100 - g_avg) > 0.005:
@@ -604,8 +653,6 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
     style_header_row(ws)
     set_widths(ws, {1: 22, 2: 12}, default=18)
     ws.freeze_panes = "C2"
-    # 6 大分类均分列红黄绿色阶（列 7+multirun 起，共 len(suites) 列）
-    add_color_scale(ws, 2, ws.max_row, 7 + len(multirun_cols), 6 + len(multirun_cols) + len(suites))
 
 
 def write_matrix_sheet(wb, units: list[UnitResult]) -> None:
@@ -885,6 +932,86 @@ def write_dimension_sheet_transposed(wb, title: str, units: list[UnitResult],
     add_color_scale(ws, 2, ws.max_row, 2, 2 + len(groups))
 
 
+def write_tool_compare_sheet(wb, units: list[UnitResult]) -> None:
+    """工具调用对比：按 harness 分块，块内每行 = 模型 × 工具名。
+
+    列：模型 / 工具 / 调用数 / 成功 / 失败 / 不确定 / 格式错误 / 成功率 / 格式准确率。
+    仅纳入已注册（有有效指标）的 harness；无任何有效指标则不建表。
+    区分模型：同 harness 下不同模型的工具画像差异大（有的用 shell、有的用
+    exec_command），逐模型展示才能定位某模型在某工具上的系统性失败。
+    见 docs/local/design/Harness工具调用指标设计.md §6.4。
+    """
+    # 按 harness 分组，仅保留有工具调用记录的 unit
+    from collections import OrderedDict
+    by_harness: "OrderedDict[str, list[UnitResult]]" = OrderedDict()
+    for u in units:
+        if u.tool_metrics_total().get("total", 0):
+            by_harness.setdefault(u.harness, []).append(u)
+    if not by_harness:
+        return  # 无任何已注册 harness 的有效指标（如仅 openclaw/hermes）
+
+    ws = wb.create_sheet("工具调用对比", index=2)  # 紧跟模型×Harness矩阵之后
+    header = ["模型", "工具", "调用数", "成功", "失败", "不确定", "格式错误",
+              "成功率", "格式准确率"]
+    section_fill = PatternFill("solid", fgColor="D9E1F2")
+    # 模型行底色：浅灰/浅蓝交替，比表头淡，用于区分同 harness 下不同模型
+    model_fills = [
+        PatternFill("solid", fgColor="F2F2F2"),  # 浅灰
+        PatternFill("solid", fgColor="E7F3FF"),  # 浅蓝
+    ]
+
+    for harness, hunits in by_harness.items():
+        # harness 分节标题行（合并首列展示）
+        ws.append([f"【Harness: {harness}】"] + [""] * (len(header) - 1))
+        sec_row = ws.max_row
+        for cell in ws[sec_row]:
+            cell.fill = section_fill
+            cell.font = Font(bold=True)
+        # 列名行
+        ws.append(header)
+        style_header_row_at(ws, ws.max_row)
+
+        # 每个 unit（模型）：先总计行，再按调用数降序的各工具行
+        for idx, u in enumerate(hunits):
+            fill = model_fills[idx % len(model_fills)]
+            tm = u.tool_metrics_total()
+            start_row = ws.max_row + 1
+            _append_tool_row(ws, u.model, "（全部工具）", tm, bold=True)
+            by_tool = tm.get("by_tool", {})
+            for tool_name in sorted(by_tool, key=lambda k: -by_tool[k]["total"]):
+                _append_tool_row(ws, u.model, tool_name, by_tool[tool_name])
+            # 给这个模型的所有行（总计+各工具）加底色
+            for row_idx in range(start_row, ws.max_row + 1):
+                for cell in ws[row_idx]:
+                    cell.fill = fill
+        ws.append([""] * len(header))  # 块间空行
+
+    set_widths(ws, {1: 24, 2: 22}, default=12)
+    ws.freeze_panes = "A1"
+
+
+def _append_tool_row(ws, model: str, tool_name: str, m: dict, bold: bool = False) -> None:
+    """向工具对比表追加一行（成功率=综合成功率，格式准确率单列）。"""
+    ws.append([
+        model, tool_name, m.get("total", 0), m.get("success", 0),
+        m.get("failure", 0), m.get("unclear", 0), m.get("format_error", 0),
+        _pct_or_dash(_tm_overall_success(m)),
+        _pct_or_dash(_tm_format_accuracy(m)),
+    ])
+    apply_pct_format(ws, ws.max_row, [8, 9])
+    if bold:
+        for cell in ws[ws.max_row]:
+            cell.font = Font(bold=True)
+
+
+def style_header_row_at(ws, row: int) -> None:
+    """对指定行应用表头样式（用于同 Sheet 内多个子表头）。"""
+    for cell in ws[row]:
+        cell.font = HEADER_FONT
+        cell.fill = HEADER_FILL
+        cell.alignment = CENTER
+
+
 def write_diff_matrix_sheet(wb, units: list[UnitResult]) -> None:
     ws = wb.create_sheet("分差矩阵")
     ws.append(["行单元 - 列单元"] + [u.unit for u in units])
@@ -1059,7 +1186,8 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
                "状态", "总得分"]
               + mr_cols
               + ["检查点得分明细", "失分点", "裁判判词", "执行错误",
-                 "总tokens", "请求数", "耗时(s)", "执行记录(jsonl)", "结果分析", "根因分析"])
+                 "总tokens", "请求数", "耗时(s)", "执行记录(jsonl)", "结果分析", "根因分析"]
+              + ["工具调用数", "格式准确率", "执行成功率", "不确定占比"])
     ws.append(header)
     # 自动换行列：按是否有多轮列动态偏移（多轮列占 3 列，之后的列右移 3）
     off = len(mr_cols)  # 0 或 3
@@ -1109,7 +1237,14 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
             truncate(read_transcript_raw(t.transcript)),
             truncate(item.get("result_analysis", "") or ""),
             truncate(item.get("root_cause_analysis", "") or item.get("root_cause", "") or ""),
+            t.tool_metrics.get("total", 0),
+            _pct_or_dash(_tm_format_accuracy(t.tool_metrics)),
+            _pct_or_dash(_tm_exec_success(t.tool_metrics)),
+            _pct_or_dash(_tm_unclear_ratio(t.tool_metrics)),
         ])
+        # 工具指标 3 个比率列（末尾 4 列的后 3 列）应用百分比格式
+        _tm_last = ws.max_column
+        apply_pct_format(ws, ws.max_row, [_tm_last - 2, _tm_last - 1, _tm_last])
         for col in wrap_cols:
             ws.cell(row=ws.max_row, column=col).alignment = WRAP_TOP
     style_header_row(ws)
@@ -1695,6 +1830,7 @@ def main() -> None:
     wb = Workbook()
     write_overview_sheet(wb, units, suites, suite_zh)
     write_matrix_sheet(wb, units)
+    write_tool_compare_sheet(wb, units)
     write_case_compare_sheet(wb, units, order, task_meta, suite_zh)
     cap_map = load_capability_map(args.capability_map)
     if cap_map:

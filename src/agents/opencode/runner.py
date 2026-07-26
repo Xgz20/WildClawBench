@@ -1033,7 +1033,16 @@ if __name__ == "__main__":
                 records.append(
                     self._openclaw_message(
                         "user",
-                        [{"type": "tool_result", "tool_use_id": call_id, "content": str(output_text)}],
+                        [{
+                            # status 保留 OpenCode 原始 state.status（completed/error），
+                            # 供 tool_metrics 高保真判定工具调用成败（见
+                            # docs/local/design/Harness工具调用指标设计.md §4.2）。
+                            # content 正文保持原样，status 仅作结构化旁注。
+                            "type": "tool_result",
+                            "tool_use_id": call_id,
+                            "content": str(output_text),
+                            "status": status,
+                        }],
                     )
                 )
             return records
