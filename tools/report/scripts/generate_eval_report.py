@@ -905,31 +905,13 @@ def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
               f"示例：{sorted(unmapped)[:5]}", file=sys.stderr)
 
 
-def write_dimension_sheet(wb, title: str, dim_label: str, units: list[UnitResult],
-                          groups: list[tuple[str, set[str]]]) -> None:
-    """通用维度对比：行=维度取值，列=各 unit 均分 + 最佳 + 分差。"""
-    ws = wb.create_sheet(title)
-    ws.append([dim_label, "用例数"] + [f"{u.unit} 平均分" for u in units] + ["最佳单元", "最高-最低分差"])
-    for label, task_ids in groups:
-        if not task_ids:
-            continue
-        vals = {u.unit: u.avg_pct(task_ids) for u in units}
-        valid = {k: v for k, v in vals.items() if v is not None}
-        best = max(valid, key=valid.get) if valid else "-"
-        spread = round(max(valid.values()) - min(valid.values()), 1) if len(valid) > 1 else "-"
-        ws.append([label, len(task_ids)]
-                  + [round(vals[u.unit], 1) if vals[u.unit] is not None else "-" for u in units]
-                  + [best, spread])
-        apply_pct_format(ws, ws.max_row, list(range(3, 3 + len(units))) + [4 + len(units)])
-    style_header_row(ws)
-    set_widths(ws, {1: 30, 2: 10, 3 + len(units): 26}, default=20)
-    ws.freeze_panes = "B2"
-    add_color_scale(ws, 2, ws.max_row, 3, 2 + len(units))
-
-
 def write_dimension_sheet_transposed(wb, title: str, units: list[UnitResult],
                                      groups: list[tuple[str, set[str]]]) -> None:
-    """转置维度对比：行=unit（按总平均分降序），列=维度取值（表头带用例数）。"""
+    """转置维度对比：行=unit（按总平均分降序），列=维度取值（表头带用例数）。
+
+    分类/难度/模态三张对比表统一用此布局：第 1 列模型@Harness、第 2 列总平均分，
+    其后每个维度取值一列，列头形如 `<取值>平均分(N例)`。
+    """
     ws = wb.create_sheet(title)
     groups = [(label, ids) for label, ids in groups if ids]
     ws.append(["模型@Harness", "总平均分"]
@@ -1850,9 +1832,10 @@ def main() -> None:
     cap_map = load_capability_map(args.capability_map)
     if cap_map:
         write_capability_sheet(wb, units, cap_map)
-    write_dimension_sheet(wb, "分类对比", "分类", units,
-                          [(suite_zh.get(s, s), {tid for su, tid in order if su == s})
-                           for s in suites])
+    write_dimension_sheet_transposed(
+        wb, "分类对比", units,
+        [(suite_zh.get(s, s), {tid for su, tid in order if su == s})
+         for s in suites])
 
     def meta_groups(field: str, known_order: list[str],
                     label_map: dict[str, str] | None = None) -> list[tuple[str, set[str]]]:
