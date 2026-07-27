@@ -996,8 +996,10 @@ def _append_tool_row(ws, model: str, tool_name: str, m: dict, bold: bool = False
         _pct_or_dash(_tm_format_accuracy(m)),
     ])
     apply_pct_format(ws, ws.max_row, [8, 9])
-    if bold:
-        for cell in ws[ws.max_row]:
+    # 统一居中对齐(否则文本列左对齐、数字列右对齐，参差不齐)
+    for cell in ws[ws.max_row]:
+        cell.alignment = CENTER
+        if bold:
             cell.font = Font(bold=True)
 
 
