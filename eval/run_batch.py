@@ -326,7 +326,8 @@ def run_single_task(
     finally:
         grading_transcript_path = backend.transcript_container_path
         grade_on_error = isinstance(backend, (CodexAgent, ClaudeCodeAgent, AstronCodeAgent, OpenCodeAgent))
-        should_grade = task.get("automated_checks") and (
+        # v2: gradable if rule checks OR declarative rubric present.
+        should_grade = (task.get("automated_checks") or task.get("rubric_criteria")) and (
             not result.get("error") or grade_on_error
         )
         if should_grade:

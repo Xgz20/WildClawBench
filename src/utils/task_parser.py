@@ -107,7 +107,15 @@ def parse_task_md(task_file: Path) -> dict:
         sections[current_section] = "\n".join(lines).strip()
 
     def strip_codeblock(raw: str) -> str:
-        s = re.sub(r"^```[^\n]*\n?", "", raw.strip())
+        # Extract the first fenced block if present, so trailing content after
+        # the closing ``` (e.g. a `---` horizontal rule separating sections, as
+        # used in v2 task templates) does not leak into the code. Falls back to
+        # the plain opening/closing-fence strip when no full fence pair exists.
+        s = raw.strip()
+        m = re.search(r"```[^\n]*\n(.*?)\n```", s, re.DOTALL)
+        if m:
+            return m.group(1).strip()
+        s = re.sub(r"^```[^\n]*\n?", "", s)
         s = re.sub(r"\n?```$", "", s).strip()
         return s
 
