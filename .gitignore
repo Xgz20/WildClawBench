@@ -27,7 +27,16 @@ local
 
 Images/
 _workspace/
-workspace/
+# 用 workspace/* 而非 workspace/（后者会让 git 停止下探，子目录例外无法生效）
+workspace/*
+# 扩展集 workspace 结构入库（仅 6 大类占位目录），实际任务数据仍靠外部数据集分发
+!workspace/extension/
+workspace/extension/*
+!workspace/extension/*/
+workspace/extension/*/*
+!workspace/extension/**/.gitkeep
+# 本地测试任务，不入库
+tasks/extension/04_Search_Retrieval/04_Search_Retrieval_task_101_csv_gdp_regions.md
 script/
 output/
 wcb-output
