@@ -146,7 +146,14 @@ def is_unit_dir(path: Path) -> bool:
 
 
 def discover_units(result_root: Path) -> list[tuple[str, str, Path]]:
-    """返回 [(model, harness, unit_dir)]，result_root 可为 round 根 / 模型目录 / unit 目录。"""
+    """返回 [(model, harness, unit_dir)]，result_root 可为 round 根 / 模型目录 / unit 目录。
+
+    支持两种 round 布局：
+    - 双层 `<round>/<model>/<harness>`（单 harness 汇总，历史默认）；
+    - 三层 `<round>/<harness>/<model>/<harness>`（多 harness 汇总，同一
+      模型集在多个 harness 各跑一遍时使用）。
+    自动向下探测，遇到 unit 目录（含 summary_all_*.json 或套件子目录）即停。
+    """
     if is_unit_dir(result_root):
         return [(result_root.parent.name, result_root.name, result_root)]
     units: list[tuple[str, str, Path]] = []
@@ -157,8 +164,16 @@ def discover_units(result_root: Path) -> list[tuple[str, str, Path]]:
             units.append((result_root.name, child.name, child))
             continue
         for grand in sorted(child.iterdir()):
-            if grand.is_dir() and is_unit_dir(grand):
+            if not grand.is_dir() or grand.name in ("report-workspace", "output"):
+                continue
+            if is_unit_dir(grand):
+                # 双层：child=model, grand=harness
                 units.append((child.name, grand.name, grand))
+                continue
+            # 三层：child=harness, grand=model，再下探一层找 unit
+            for ggrand in sorted(grand.iterdir()):
+                if ggrand.is_dir() and is_unit_dir(ggrand):
+                    units.append((grand.name, ggrand.name, ggrand))
     return units
 
 
@@ -1858,10 +1873,16 @@ def main() -> None:
         write_detail_sheet(wb, u, order, task_meta, analysis, suite_zh, has_multirun)
 
     # 即使 --result-root 传入 model 或 unit，报告仍集中到 round 工作区。
-    round_roots = {round_root_from_unit_dir(u.unit_dir) for u in units}
-    if len(round_roots) != 1:
-        sys.exit(f"错误：加载的 unit 不属于同一个 round：{sorted(map(str, round_roots))}")
-    round_root = next(iter(round_roots))
+    # 若 --result-root 本身就是 round 根（非 unit 目录、下辖多 unit），直接用它，
+    # 兼容双层 <round>/<model>/<harness> 与三层 <round>/<harness>/<model>/<harness>；
+    # 仅当传入的是 unit / model 子目录时，才从 unit 反推（旧双层布局）。
+    if not is_unit_dir(result_root) and len(units) > 1:
+        round_root = result_root
+    else:
+        round_roots = {round_root_from_unit_dir(u.unit_dir) for u in units}
+        if len(round_roots) != 1:
+            sys.exit(f"错误：加载的 unit 不属于同一个 round：{sorted(map(str, round_roots))}")
+        round_root = next(iter(round_roots))
     out_dir = Path(args.output_dir) if args.output_dir else round_root / "report-workspace" / "output"
     out_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
