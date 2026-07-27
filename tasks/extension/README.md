@@ -47,9 +47,11 @@ python3 eval/run_batch.py --task tasks/extension/<cat>/<file>.md ...
 
 ## Workspace 文件
 
-`workspace/extension/<category>/` 的 **6 大类占位目录纳入 git**（保结构），
-但**实际任务数据（`exec/` 输入、`gt/` 真值）不入库**——靠外部数据集分发
-（`.gitignore` 仅放行 `.gitkeep`）。
+`workspace/extension/` **纳入 git 管理**——自建扩展任务的 `exec/` 输入与 `gt/`
+真值随任务一起入库（前期无大文件，用 git 足够；后期若出现大文件再单独管理）。
+唯一例外是本地测试任务的 workspace 数据（`.gitignore` 显式排除）。
+
+> 对比：官方任务的 `workspace/<category>/` 仍整体忽略，靠外部数据集分发。
 
 按 task.md 的 `## Workspace Path` 段准备目录，结构与任务分类对齐：
 

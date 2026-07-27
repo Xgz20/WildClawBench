@@ -29,13 +29,12 @@ Images/
 _workspace/
 # 用 workspace/* 而非 workspace/（后者会让 git 停止下探，子目录例外无法生效）
 workspace/*
-# 扩展集 workspace 结构入库（仅 6 大类占位目录），实际任务数据仍靠外部数据集分发
+# 扩展集 workspace 全量入库：自建扩展任务的 exec/gt 数据用 git 管理
+# （前期无大文件；后期若出现大文件再单独管理）
 !workspace/extension/
-workspace/extension/*
-!workspace/extension/*/
-workspace/extension/*/*
-!workspace/extension/**/.gitkeep
-# 本地测试任务，不入库
+# 例外：本地测试任务的 workspace 数据不入库
+workspace/extension/04_Search_Retrieval/task_101_csv_gdp_regions/
+# 本地测试任务 md，不入库
 tasks/extension/04_Search_Retrieval/04_Search_Retrieval_task_101_csv_gdp_regions.md
 script/
 output/

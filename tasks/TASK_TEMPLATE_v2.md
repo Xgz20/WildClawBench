@@ -6,33 +6,22 @@
 # 参考：docs/local/design/混合评分拆分设计.md
 # ============================================================================
 
-id: task_example_hybrid                 # 全局唯一任务标识，snake_case
-name: 示例混合任务                        # 中文任务名（报告展示）
-category: example_category               # 分类（用于汇总统计）
-scene: deep_research                     # 场景标签
-sub_scene: data_analysis                 # 子场景
-difficulty: L2                           # 难度：L1(简单) / L2(中等) / L3(困难)
-capabilities:                            # Agent 能力维度标注（可选）
-  - tool_use
-  - data_processing
-  - reasoning_planning
-
-grading_type: hybrid                     # 必填：automated | llm_judge | hybrid
-                                         # automated：仅规则评分
-                                         # llm_judge：仅 LLM 评分（无规则检查）
-                                         # hybrid：规则 + LLM 混合（推荐）
-
-grading_weights:                         # hybrid 生效；框架消费（不再埋在 grade 内）
-  automated: 0.6                         # 规则权重（建议 0.5~0.7，视规则覆盖度）
-  llm_judge: 0.4                         # LLM 权重（补充规则难量化的维度）
-                                         # 两者相加归一到 1.0（框架自动归一，不写死也行）
-
-timeout_seconds: 180                     # 执行超时（秒）
-modality: pure-text                      # 模态：pure-text | multimodal
-
-workspace_files: []                      # 预置文件（可选）
-  # - dest: "data.csv"
-  #   source: "datasets/sample.csv"
+# 字段与顺序对齐 WildClawBench 官方任务；category 实际以父目录名为准（frontmatter 仅说明）
+id: 04_Search_Retrieval_task_101_example    # 任务标识；扩展集格式 <Category>_task_<N≥101>_<slug>
+name: 示例混合任务                            # 任务名（报告展示）
+category: 04_Search_Retrieval                # 所属大类（须与父目录名一致）
+timeout_seconds: 180                         # 执行超时（秒）
+modality: pure-text                          # 模态：pure-text | multimodal
+difficulty: L2                               # 难度：L1 / L2 / L3 / L4
+grading_type: hybrid                         # 必填：automated | llm_judge | hybrid
+                                             #   automated：仅规则评分
+                                             #   llm_judge：仅 LLM 评分（无规则检查）
+                                             #   hybrid：规则 + LLM 混合（推荐）
+grading_weights:                             # 仅 hybrid 生效；框架消费（不再埋在 grade 内）
+  automated: 0.6                             # 规则权重（建议 0.5~0.7，视规则覆盖度）
+  llm_judge: 0.4                             # LLM 权重（补充规则难量化的维度，与上者相加归一到 1.0）
+tags:                                        # 可选：筛选标签（parser 会小写去重），官方任务多不填
+  - custom
 ---
 
 # 任务标题（与 name 一致或更详细）
@@ -163,7 +152,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
 ## Workspace Path
 
 ```
-workspace/example_category/task_example_hybrid
+workspace/extension/04_Search_Retrieval/task_101_example
 ```
 
 ## Skills
