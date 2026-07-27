@@ -1299,6 +1299,7 @@ if __name__ == "__main__":
             return totals
 
         cumulative: dict[str, int] | None = None
+        cumulative_totals: list[int] = []  # running total_tokens per cumulative event
         per_turn: list[dict[str, int]] = []
         assistant_message_count = 0
         cost_sum = 0.0
@@ -1324,6 +1325,7 @@ if __name__ == "__main__":
             cost_sum += extracted.pop("_cost", 0.0)
             if is_cumulative:
                 cumulative = extracted
+                cumulative_totals.append(int(extracted.get("total_tokens", 0)))
             else:
                 per_turn.append(extracted)
 
@@ -1346,7 +1348,14 @@ if __name__ == "__main__":
                 "total_tokens",
             ):
                 totals[key] = cumulative.get(key, 0)
-            totals["request_count"] = assistant_message_count or 1
+            # request_count = number of model round-trips. AstronCode emits one
+            # cumulative token_count event per model reply, but the session log
+            # can duplicate the final event several times (running total frozen).
+            # Count events where the cumulative total actually advanced, so each
+            # real round-trip is counted once and duplicates are ignored. Falls
+            # back to assistant_message_count when no cumulative totals exist.
+            advancing = _count_advancing(cumulative_totals)
+            totals["request_count"] = advancing or assistant_message_count or 1
 
         if totals["total_tokens"] == 0:
             totals["total_tokens"] = (
@@ -1582,3 +1591,21 @@ _USAGE_KEYS = {
     "reasoningOutputTokens",
     "reasoning_tokens",
 }
+
+
+def _count_advancing(totals: list[int]) -> int:
+    """Count how many times a monotonically-growing running total advanced.
+
+    AstronCode/Codex emits one cumulative token_count event per model reply,
+    but the session log may repeat the final event verbatim (frozen total).
+    Each strictly-increasing step is one real model round-trip; the first
+    non-zero reading counts as the first round-trip. Returns 0 for an empty or
+    all-zero list so callers can fall back to another estimate.
+    """
+    count = 0
+    prev = 0
+    for value in totals:
+        if value > prev:
+            count += 1
+            prev = value
+    return count
