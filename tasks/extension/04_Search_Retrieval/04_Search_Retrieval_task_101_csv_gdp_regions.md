@@ -1,7 +1,7 @@
 ---
-id: extension_task_1_csv_gdp_regions
+id: 04_Search_Retrieval_task_101_csv_gdp_regions
 name: World GDP Regional Analysis
-category: extension
+category: 04_Search_Retrieval
 modality: pure-text
 difficulty: L2
 timeout_seconds: 180
@@ -218,5 +218,5 @@ def grade(transcript: list, workspace_path: str) -> dict:
 ## Workspace Path
 
 ```
-workspace/extension/task_1_csv_gdp_regions
+workspace/extension/04_Search_Retrieval/task_101_csv_gdp_regions
 ```

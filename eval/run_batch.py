@@ -559,17 +559,24 @@ def main() -> None:
     resume_enabled = args.resume or args.rerun_error or args.rerun_anomalous
 
     for category in categories:
+        # Scan both official tasks/<category>/ and extension tasks/extension/<category>/
+        # so --category X and --category all can pick up extension tasks that share
+        # the same logical category (output_dir/reports group by category).
         category_dir = TASKS_DIR / category
-        if not category_dir.exists():
-            logger.error("Category directory not found: %s", category_dir)
-            continue
+        extension_dir = TASKS_DIR / "extension" / category
 
-        task_files = sorted(category_dir.glob("*task_*.md"))
+        task_files = []
+        if category_dir.exists():
+            task_files.extend(sorted(category_dir.glob("*task_*.md")))
+        if extension_dir.exists():
+            task_files.extend(sorted(extension_dir.glob("*task_*.md")))
+
         if not task_files:
-            logger.error("No task_*.md files found in: %s", category_dir)
+            logger.error("No task_*.md files found in: %s (or %s)",
+                         category_dir, extension_dir)
             continue
 
-        logger.info("Category: %s, %d tasks, parallelism: %d",
+        logger.info("Category: %s, %d tasks (official + extension), parallelism: %d",
                     category, len(task_files), args.parallel)
 
         tasks = []
