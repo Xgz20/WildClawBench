@@ -15,6 +15,8 @@ REPORT_DIR = Path(__file__).resolve().parents[1]
 MANIFEST_SCRIPT = REPORT_DIR / "skills/low-score-analysis/scripts/generate_failed_tasks_manifest.py"
 UTILS_SCRIPT = REPORT_DIR / "skills/low-score-analysis/scripts/utils.py"
 EXCEL_SCRIPT = REPORT_DIR / "scripts/generate_eval_report.py"
+VALIDITY_SCRIPT = REPORT_DIR / "skills/validate-eval-results/scripts/validate_eval_results.py"
+AUDIT_SCRIPT = REPORT_DIR / "skills/audit-eval-report/scripts/audit_eval_report.py"
 
 
 def load_module(name: str, path: Path):
@@ -28,6 +30,8 @@ def load_module(name: str, path: Path):
 manifest = load_module("analysis_manifest", MANIFEST_SCRIPT)
 analysis_utils = load_module("analysis_utils", UTILS_SCRIPT)
 excel_report = load_module("excel_report", EXCEL_SCRIPT)
+validity_check = load_module("validity_check", VALIDITY_SCRIPT)
+report_audit = load_module("report_audit", AUDIT_SCRIPT)
 
 
 class AnalysisPipelineTest(unittest.TestCase):
@@ -59,6 +63,23 @@ class AnalysisPipelineTest(unittest.TestCase):
             )
             (run_dir / "chat_openclaw.jsonl").write_text("", encoding="utf-8")
             self.paths[task_id] = run_dir
+
+        self.tasks_dir = Path(self.temp_dir.name) / "tasks"
+        task_suite = self.tasks_dir / "01_suite"
+        task_suite.mkdir(parents=True)
+        for task_id in self.paths:
+            (task_suite / f"{task_id}.md").write_text(
+                "---\n"
+                f"id: {task_id}\n"
+                "name: Test task\n"
+                "category: 01_suite\n"
+                "difficulty: L2\n"
+                "modality: pure-text\n"
+                "timeout_seconds: 300\n"
+                "grading_type: automated\n"
+                "---\n\n## Prompt\nTest\n",
+                encoding="utf-8",
+            )
 
         self.records = manifest.scan_unit("model-x", "harness-y", self.unit_dir, None)
 
@@ -141,6 +162,86 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertIn(f"ANALYSIS_PATH={workspace / 'analysis_model-x@harness-y__lt60.json'}",
                       result.stdout)
 
+    def test_validity_cli_places_output_in_round_workspace(self) -> None:
+        subprocess.run(
+            [sys.executable, str(VALIDITY_SCRIPT), "--result-root", str(self.unit_dir),
+             "--tasks-dir", str(self.tasks_dir)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        expected = self.round_dir / "report-workspace/validity/eval_result_validity.json"
+        self.assertTrue(expected.is_file())
+        self.assertFalse((self.unit_dir / "report-workspace/validity").exists())
+        self.assertEqual(
+            validity_check.round_root_from_units(self.unit_dir, validity_check.discover_units(self.unit_dir)),
+            self.round_dir.resolve(),
+        )
+
+    def test_validity_round_root_supports_three_level_layout(self) -> None:
+        unit_dir = self.round_dir / "opencode" / "model-z" / "opencode"
+        unit_dir.mkdir(parents=True)
+        specs = [("model-z", "opencode", unit_dir)]
+        self.assertEqual(
+            validity_check.round_root_from_units(unit_dir, specs),
+            self.round_dir.resolve(),
+        )
+
+    def test_validity_log_signal_ignores_prompt_and_title_model(self) -> None:
+        run_dir = self.suite_dir / "task_50/run_001"
+        (run_dir / "agent.log").write_text(
+            'level=INFO message="task says rate limit and 500"\n'
+            'level=ERROR small=true agent=title error="service unavailable"\n',
+            encoding="utf-8",
+        )
+        signals, lines = validity_check.confirmed_log_signals(run_dir)
+        self.assertEqual(signals, set())
+        self.assertEqual(lines, [])
+
+        (run_dir / "agent.log").write_text(
+            'level=ERROR small=false agent=build error="HTTP 429 too many requests"\n',
+            encoding="utf-8",
+        )
+        signals, _ = validity_check.confirmed_log_signals(run_dir)
+        self.assertEqual(signals, {"RATE_LIMIT"})
+
+    def test_validity_findings_redact_credentials(self) -> None:
+        item = validity_check.finding(
+            "TEST", "error",
+            'request failed: AK="ak-ba7df6029dd8d8baae7b62983221a940" password=hunter2',
+            evidence={"authorization": "Bearer secret-token-value"},
+        )
+        serialized = json.dumps(item)
+        self.assertNotIn("ba7df6029dd8d8baae7b62983221a940", serialized)
+        self.assertNotIn("hunter2", serialized)
+        self.assertNotIn("secret-token-value", serialized)
+        self.assertIn("REDACTED", serialized)
+
+    def test_validity_gate_distinguishes_harness_outcomes_from_framework_errors(self) -> None:
+        for item, status in (
+            ({"id": "TASK_TIMED_OUT", "severity": "error"}, {"timed_out": True}),
+            ({"id": "TOOL_CALLS_ALL_REJECTED", "severity": "error"}, {}),
+            ({"id": "EXECUTION_ERROR", "severity": "error"},
+             {"error": "AstronCode run failed (rc=1): model interaction stopped"}),
+        ):
+            severity, attribution, _ = validity_check.classify_run_anomaly(item, status)
+            self.assertEqual(severity, "info")
+            self.assertEqual(attribution, "model_or_harness")
+
+        severity, attribution, _ = validity_check.classify_run_anomaly(
+            {"id": "EXECUTION_ERROR", "severity": "error"},
+            {"error": "cannot connect to the Docker daemon"},
+        )
+        self.assertEqual(severity, "error")
+        self.assertEqual(attribution, "evaluation_framework")
+
+        severity, attribution, _ = validity_check.classify_run_anomaly(
+            {"id": "EXECUTION_ERROR", "severity": "error"},
+            {"error": "unclassified runtime exception"},
+        )
+        self.assertEqual(severity, "warning")
+        self.assertEqual(attribution, "undetermined")
+
     def test_scoped_batches_are_isolated_and_merge_without_overwrite(self) -> None:
         workspace = self.round_dir / "report-workspace"
         analysis_utils.save_batch_result(
@@ -180,6 +281,10 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertEqual(loaded["model-x@harness-y::task_50"]["result_analysis"], "结果")
         self.assertEqual(excel_report.round_root_from_unit_dir(self.unit_dir), self.round_dir.resolve())
 
+        three_level_unit = self.round_dir / "opencode" / "model-z" / "opencode"
+        three_level_unit.mkdir(parents=True)
+        self.assertEqual(excel_report.round_root_from_unit_dir(three_level_unit), self.round_dir.resolve())
+
     def test_excel_cli_backfills_scoped_analysis_in_detail_sheet(self) -> None:
         workspace = self.round_dir / "report-workspace"
         workspace.mkdir(parents=True, exist_ok=True)
@@ -209,6 +314,68 @@ class AnalysisPipelineTest(unittest.TestCase):
                    if sheet.cell(row, task_id_col).value == "task_50")
         self.assertEqual(sheet.cell(row, result_col).value, "结果证据")
         self.assertEqual(sheet.cell(row, root_col).value, "根因证据")
+
+    def generate_auditable_excel(self) -> Path:
+        output_dir = self.round_dir / "audit-fixture-output"
+        subprocess.run(
+            [sys.executable, str(EXCEL_SCRIPT), "--result-root", str(self.unit_dir),
+             "--tasks-dir", str(self.tasks_dir), "--output-dir", str(output_dir)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return next(output_dir.glob("report_1units_*.xlsx"))
+
+    def test_audit_reconciles_generated_workbook(self) -> None:
+        excel_path = self.generate_auditable_excel()
+        report = report_audit.audit_report(self.unit_dir, excel_path, self.tasks_dir, None)
+        self.assertFalse([item for item in report["findings"] if item["severity"] == "error"])
+        self.assertEqual(report["verdict"], "REVIEW")  # 缺少可选 validity，仅需人工复核。
+
+    def test_audit_detects_request_count_regression(self) -> None:
+        excel_path = self.generate_auditable_excel()
+        workbook = load_workbook(excel_path)
+        sheet = workbook["总览"]
+        headers = [cell.value for cell in sheet[1]]
+        request_column = headers.index("总请求数") + 1
+        sheet.cell(2, request_column).value = 999
+        workbook.save(excel_path)
+
+        report = report_audit.audit_report(self.unit_dir, excel_path, self.tasks_dir, None)
+        errors = [item for item in report["findings"] if item["severity"] == "error"]
+        self.assertTrue(any(item["id"] == "OVERVIEW_VALUE_MISMATCH" for item in errors))
+
+    def test_audit_propagates_upstream_validity_failure(self) -> None:
+        excel_path = self.generate_auditable_excel()
+        validity_path = self.round_dir / "report-workspace/validity/eval_result_validity.json"
+        validity_path.parent.mkdir(parents=True, exist_ok=True)
+        validity_path.write_text(json.dumps({
+            "verdict": "FAIL", "summary": {"errors": 1, "warnings": 0}
+        }), encoding="utf-8")
+        report = report_audit.audit_report(
+            self.unit_dir, excel_path, self.tasks_dir, validity_path
+        )
+        self.assertEqual(report["verdict"], "FAIL")
+        self.assertTrue(any(item["id"] == "UPSTREAM_VALIDITY_FAILED"
+                            for item in report["findings"]))
+
+    def test_difficulty_inversion_is_review_not_failure(self) -> None:
+        units = {}
+        for index in range(5):
+            tasks = {}
+            for task_index in range(3):
+                tasks[f"easy_{task_index}"] = {"score": 0.2}
+                tasks[f"hard_{task_index}"] = {"score": 0.8}
+            units[f"model-{index}@harness"] = {"tasks": tasks}
+        groups = {
+            "L2": {f"easy_{index}" for index in range(3)},
+            "L3": {f"hard_{index}" for index in range(3)},
+        }
+        findings = []
+        report_audit.audit_difficulty_inversion(units, groups, findings)
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]["id"], "DIFFICULTY_INVERSION")
+        self.assertEqual(findings[0]["severity"], "warning")
 
 
 if __name__ == "__main__":

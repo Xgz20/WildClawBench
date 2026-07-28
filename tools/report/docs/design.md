@@ -1,15 +1,17 @@
-# WildClawBench 报告三件套设计文档
+# WildClawBench 评测质量与报告链路设计文档
 
 > 状态：已评审通过（2026-07-15）
 > 参考实现：PinchBench（astronclaw-eval/eval-framework 的 low-score-analysis / low-score-report Skill 与 generate_eval_report.py）
 
 ## 1. 背景与目标
 
-WildClawBench 评测完成后，需要与 PinchBench 同等级的三类产出能力：
+WildClawBench 评测完成后，需要三类报告产出能力和两道质量门禁：
 
 1. **低分任务根因分析**（LLM 结合判分明细 + transcript 找失分证据）
 2. **低分任务根因分析报告**（Markdown，四层归因 + 深度代码级分析）
 3. **评测报告 Excel**（多单元对比 + 用例详情 + 根因回填）
+4. **评测结果有效性检查**（报告前识别环境失真、数据缺失和不可比范围）
+5. **评测报告审核**（发布前独立复算指标并检查反常统计与结论）
 
 移植策略为**原生适配重写**：按 WildClawBench 的结果结构重写数据加载层，复用 PinchBench 的分析流程设计（Workflow 分批并发、断点续传）与报告框架（四层归因）。
 
@@ -45,7 +47,22 @@ eval_out/all_suite/round1/<model>/<harness>/          ← 模型×Harness 多对
 
 **数据源策略**：以目录扫描为主数据源（score.json 等四件 + transcript），`summary_all_*.json` 仅用于校验 global_avg 与元信息。原因：summary 里 task_id 带时间戳后缀（`01_task_10_gpt-5.5-pro_20260713_2140_094b6c`），解析脆弱；目录名才是规范 task_id，且能直接对应任务定义文件。
 
-## 3. 三件套设计
+## 3. 组件设计
+
+### 3.0 两道独立门禁
+
+采用“独立 Skill + `eval-report` 编排”而不是把检查逻辑全部内嵌到报告生成 Skill：
+
+| 方案 | 优势 | 代价 |
+|---|---|---|
+| 全部内嵌 `eval-report` | 用户入口少，顺序天然固定 | 无法在补跑决策、单独排障、已有报告复核时复用；上下文过大；检查与生成耦合，容易用同一逻辑自证 |
+| 两个独立 Skill，由 `eval-report` 编排 | 可单独运行、职责和证据边界清楚；自动脚本可测试；报告审核能独立复算 | 组件和产物增加，需要明确门禁协议 |
+
+最终采用后者。`validate-eval-results` 只依赖原始结果和任务定义，不依赖 Excel；`audit-eval-report` 依赖原始结果与 Excel，可选读取 validity、Markdown 和 analysis。`eval-report` 在生成前、生成后依次调用。统一结论为 `PASS / REVIEW / FAIL`：确定性错误判 `FAIL`，统计异常和环境信号判 `REVIEW`。
+
+**有效性检查范围**：结果/轨迹完整性、得分与 summary 可复算、任务集与轮数可比性、状态与耗时一致性、usage 独立解析、认证/限流/服务/网络/磁盘/容器/视觉故障、版本与 timeout 配置、跨 unit 共因故障、重复 transcript，以及人工核查的资源隔离、运行时段、缓存/重试和 grader 可重复性。
+
+**报告审核范围**：必需 Sheet/表头/unit/任务集合，总览与详情对账，分类/难度/模态样本数和均值，模型×Harness 与分差矩阵，工具调用/请求数口径，难度倒挂等反常统计，以及 Markdown 的数字来源、排序、因果、环境归因、案例证据和异常披露。
 
 ### 3.1 low-score-analysis Skill（`skills/low-score-analysis/`）
 
@@ -107,7 +124,7 @@ eval_out/all_suite/round1/<model>/<harness>/          ← 模型×Harness 多对
 
 **排序规则**：unit 全局按总平均分降序——决定总览行序及分类对比/用例对比明细的 unit 列序（最高分在最前）；模型×Harness 矩阵行按模型最高总均分降序、列按 harness 均分降序；难度/模态对比行按总平均分降序；分类对比与用例对比明细的行序保持固定（按分类/用例编号）。
 
-不移植 PinchBench 的场景（S1~S8）与 7 维能力 Sheet（WildClawBench 无对应元数据体系）。样式复用：蓝底白字表头、冻结窗格、自动筛选、色阶、wrap_text、单元格 32000 字符截断。
+不移植 PinchBench 的场景（S1~S8）；7 维能力使用 WildClawBench 自有的检查点映射文件实现。样式复用：蓝底白字表头、冻结窗格、自动筛选、色阶、wrap_text、单元格 32000 字符截断。
 
 **--analysis 回填**：key `<model>@<harness>::<task_id>`；兼容 `{task_id: {...}}` 单 unit 格式（unit 从 `UNIT=PATH` 显式绑定或文件名 `analysis_<unit>*.json` 推断），写入对应详情 Sheet 的「结果分析」「根因分析」两列。
 
@@ -125,6 +142,8 @@ WildClawBench/tools/report/          ← 工具（本目录，未来可平级扩
 <round>/report-workspace/            ← 产物集中在 round 层
 ├── _failed_tasks_<unit>__<scope>.json
 ├── analysis_<unit>__<scope>.json
+├── validity/eval_result_validity.{json,md}
+├── audit/report_audit_<xlsx-stem>.{json,md}
 └── output/report_<N>units_<ts>.xlsx
 
 <result-root>/低分任务根因分析报告_<unit>.md
@@ -136,6 +155,8 @@ WildClawBench/tools/report/          ← 工具（本目录，未来可平级扩
 mkdir -p .claude/skills
 ln -snf ../../tools/report/skills/low-score-analysis .claude/skills/low-score-analysis
 ln -snf ../../tools/report/skills/low-score-report .claude/skills/low-score-report
+ln -snf ../../tools/report/skills/validate-eval-results .claude/skills/validate-eval-results
+ln -snf ../../tools/report/skills/audit-eval-report .claude/skills/audit-eval-report
 ```
 
 ## 5. 依赖

@@ -1,0 +1,4 @@
+interface:
+  display_name: "评测结果有效性检查"
+  short_description: "检查 WildClawBench 原始评测结果是否可信可比"
+  default_prompt: "使用 $validate-eval-results 检查这一轮 WildClawBench 评测结果的完整性、环境异常与可比性，并给出发布门禁结论。"

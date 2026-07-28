@@ -1,0 +1,673 @@
+#!/usr/bin/env python3
+"""检查 WildClawBench 一轮原始评测结果的完整性、环境异常与可比性。"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import math
+import re
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+from statistics import fmean
+
+REPO_ROOT = Path(__file__).resolve().parents[5]
+sys.path.insert(0, str(REPO_ROOT))
+
+from src.utils.anomalies import scan_run_dir  # noqa: E402
+from src.utils.tool_metrics import parse_tool_metrics  # noqa: E402
+try:
+    from src.agents.codex.runner import CodexAgent  # noqa: E402
+except ImportError:  # 非 Codex 部署环境仍可执行其它检查
+    CodexAgent = None
+
+SUITE_RE = re.compile(r"^\d{2}_")
+SEVERITY_ORDER = {"error": 0, "warning": 1, "info": 2}
+ENV_PATTERNS = {
+    "AUTH_FAILURE": re.compile(r"unauthorized|invalid (?:api )?(?:key|token)|authentication failed|http[^\n]{0,30}\b401\b", re.I),
+    "RATE_LIMIT": re.compile(r"rate.?limit|too many requests|http[^\n]{0,30}\b429\b", re.I),
+    "SERVER_FAILURE": re.compile(r"bad gateway|service unavailable|internal server error|http[^\n]{0,30}\b50[023]\b", re.I),
+    "NETWORK_FAILURE": re.compile(r"name or service not known|temporary failure in name resolution|connection (?:refused|reset)|dns", re.I),
+    "DISK_OR_PERMISSION": re.compile(r"no space left on device|read-only file system|permission denied", re.I),
+    "CONTAINER_FAILURE": re.compile(r"docker:|container .*not found|cannot connect to the docker daemon", re.I),
+    "VISION_CHANNEL_FAILURE": re.compile(r"wildclaw_image.*(?:ok.?false|unauthorized)|image helper.*(?:failed|error)", re.I),
+}
+ANOMALY_ENV_IDS = {"API_RATE_LIMIT": "RATE_LIMIT", "API_SERVER_ERROR": "SERVER_FAILURE"}
+MODEL_HARNESS_OUTCOME_IDS = {
+    "TASK_TIMED_OUT",
+    "SHORT_TRANSCRIPT",
+    "QUICK_EXIT_SUSPICIOUS",
+    "TOOL_CALLS_ALL_REJECTED",
+}
+AMBIGUOUS_RUNTIME_IDS = {"EXIT_CODE_OOM", "EMPTY_TRANSCRIPT"}
+HARNESS_RUN_FAILED_RE = re.compile(
+    r"\b(?:AstronCode|OpenCode|OpenClaw|HermesAgent)\s+run failed\s*\(rc=\d+\)", re.I
+)
+FRAMEWORK_EXECUTION_ERROR_RE = re.compile(
+    r"(?:cannot connect to the docker daemon|docker daemon|container .*not found|"
+    r"failed to (?:start|create|prepare|copy|mount) (?:the )?(?:container|workspace)|"
+    r"workspace (?:missing|not found)|grader (?:failed|error)|grading (?:failed|error))",
+    re.I,
+)
+ERROR_LOG_LINE_RE = re.compile(r"(?:\blevel=(?:error|fatal)\b|\"level\":\"(?:error|fatal)\")", re.I)
+SECRET_PATTERNS = (
+    re.compile(r"\b(?:sk|ak)-[A-Za-z0-9_-]{8,}", re.I),
+    re.compile(r"\bBearer\s+[A-Za-z0-9._~+/-]{8,}", re.I),
+    re.compile(r"(?i)(\b(?:api[_-]?key|access[_-]?token|password|passwd|secret)\b\s*[:=]\s*[\"']?)[^\s\"']+"),
+)
+
+
+def load_json(path: Path) -> tuple[dict | None, str | None]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        return None, f"无法读取：{exc}"
+    except json.JSONDecodeError as exc:
+        return None, f"JSON 解析失败：{exc}"
+    return (data, None) if isinstance(data, dict) else (None, "顶层不是 JSON object")
+
+
+def read_text(path: Path, max_bytes: int = 4_000_000) -> str:
+    try:
+        with path.open("rb") as stream:
+            return stream.read(max_bytes).decode("utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+def confirmed_log_signals(run_dir: Path) -> tuple[set[str], list[str]]:
+    """仅扫描日志中明确标为 error/fatal 的行，排除 prompt 和成功工具输出。"""
+    error_lines = [line for line in read_text(run_dir / "agent.log").splitlines()
+                   if ERROR_LOG_LINE_RE.search(line)
+                   and "small=true" not in line and "agent=title" not in line]
+    signals = {env_id for env_id, pattern in ENV_PATTERNS.items()
+               if any(pattern.search(line) for line in error_lines)}
+    return signals, error_lines
+
+
+def is_unit_dir(path: Path) -> bool:
+    if not path.is_dir():
+        return False
+    if any(path.glob("summary_all_*.json")):
+        return True
+    for suite in path.iterdir():
+        if suite.is_dir() and SUITE_RE.match(suite.name):
+            return any(task.is_dir() for task in suite.iterdir())
+    return False
+
+
+def discover_units(root: Path) -> list[tuple[str, str, Path]]:
+    """发现双层或三层布局的 (model, harness, unit_dir)。"""
+    units: list[tuple[str, str, Path]] = []
+
+    def walk(path: Path, depth: int) -> None:
+        if is_unit_dir(path):
+            units.append((path.parent.name, path.name, path))
+            return
+        if depth >= 3:
+            return
+        for child in sorted(path.iterdir()):
+            if child.is_dir() and child.name not in {"report-workspace", "output"}:
+                walk(child, depth + 1)
+
+    walk(root, 0)
+    dedup = {str(path.resolve()): (model, harness, path) for model, harness, path in units}
+    return sorted(dedup.values(), key=lambda item: (item[0], item[1], str(item[2])))
+
+
+def round_root_from_units(result_root: Path, units: list[tuple[str, str, Path]]) -> Path:
+    """从双层或三层 unit 反推 round 根，保证产物集中到 round 工作区。"""
+    roots = set()
+    for _, _, unit_dir in units:
+        # 三层布局：<round>/<harness>/<model>/<harness>，首尾 harness 重复。
+        if unit_dir.parent.parent.name == unit_dir.name:
+            roots.add(unit_dir.parents[2].resolve())
+        else:
+            roots.add(unit_dir.parents[1].resolve())
+    return next(iter(roots)) if len(roots) == 1 else result_root.resolve()
+
+
+def find_tasks_dir(explicit: str | None) -> Path | None:
+    if explicit:
+        path = Path(explicit).expanduser().resolve()
+        return path if path.is_dir() else None
+    candidate = REPO_ROOT / "tasks"
+    return candidate if candidate.is_dir() else None
+
+
+def expected_tasks(tasks_dir: Path | None) -> dict[str, set[str]]:
+    result: dict[str, set[str]] = {}
+    if tasks_dir is None:
+        return result
+    for suite in sorted(tasks_dir.iterdir()):
+        if suite.is_dir() and SUITE_RE.match(suite.name):
+            result[suite.name] = {path.stem for path in suite.glob("*.md")}
+    return result
+
+
+def iter_json_objects(raw: str):
+    decoder = json.JSONDecoder()
+    index = 0
+    while index < len(raw):
+        while index < len(raw) and raw[index].isspace():
+            index += 1
+        if index >= len(raw):
+            return
+        try:
+            value, end = decoder.raw_decode(raw, index)
+        except json.JSONDecodeError:
+            next_line = raw.find("\n", index)
+            if next_line < 0:
+                return
+            index = next_line + 1
+            continue
+        yield value
+        index = end
+
+
+def transcript_path(run_dir: Path) -> Path | None:
+    for name in ("chat_openclaw.jsonl", "chat.jsonl"):
+        path = run_dir / name
+        if path.is_file():
+            return path
+    return None
+
+
+def fallback_request_count(run_dir: Path) -> int | None:
+    """runner 不可导入时，从原始 usage 事件保守估算模型往返次数。"""
+    path = run_dir / "chat.jsonl"
+    if not path.is_file():
+        return None
+    per_turn = 0
+    assistant_messages = 0
+    cumulative_totals: list[int] = []
+    for entry in iter_json_objects(read_text(path)):
+        if not isinstance(entry, dict):
+            continue
+        payload = entry.get("payload") or entry.get("item") or entry.get("message")
+        candidates = [entry]
+        if isinstance(payload, dict):
+            candidates.append(payload)
+        if any(obj.get("role") == "assistant" for obj in candidates):
+            assistant_messages += 1
+        found_per_turn = False
+        for obj in candidates:
+            for key in ("last_token_usage", "lastTokenUsage", "usage", "token_usage", "tokenUsage"):
+                value = obj.get(key)
+                if isinstance(value, dict) and any(k in value for k in ("total_tokens", "totalTokens", "input_tokens")):
+                    found_per_turn = True
+            info = obj.get("info")
+            if isinstance(info, dict):
+                last = info.get("last_token_usage") or info.get("lastTokenUsage")
+                if isinstance(last, dict):
+                    found_per_turn = True
+                total = info.get("total_token_usage") or info.get("totalTokenUsage")
+                if isinstance(total, dict):
+                    raw_total = total.get("total_tokens", total.get("totalTokens", 0))
+                    if isinstance(raw_total, (int, float)):
+                        cumulative_totals.append(int(raw_total))
+        if found_per_turn:
+            per_turn += 1
+        if str(entry.get("type", "")).lower() in {"token_count", "tokencount"}:
+            for value in entry.values():
+                if isinstance(value, dict):
+                    raw_total = value.get("total_tokens", value.get("totalTokens"))
+                    if isinstance(raw_total, (int, float)):
+                        cumulative_totals.append(int(raw_total))
+    if per_turn:
+        return per_turn
+    if cumulative_totals:
+        advancing = sum(1 for index, value in enumerate(cumulative_totals)
+                        if index == 0 or value > cumulative_totals[index - 1])
+        return advancing or assistant_messages or 1
+    return assistant_messages or None
+
+
+def independent_request_count(run_dir: Path) -> int | None:
+    """按 runner 当前权威解析逻辑从原始事件重算请求数。"""
+    if CodexAgent is None:
+        return fallback_request_count(run_dir)
+    agent = CodexAgent.__new__(CodexAgent)
+    parsed = agent._extract_usage_from_jsonl(run_dir / "chat.jsonl")
+    if parsed["total_tokens"] == 0 and parsed["input_tokens"] == 0:
+        session_dir = run_dir / "astroncode_sessions"
+        if session_dir.is_dir():
+            parsed = agent._extract_usage_from_session_dir(session_dir)
+    value = parsed.get("request_count")
+    return int(value) if isinstance(value, (int, float)) and value > 0 else None
+
+
+def redact(value):
+    """递归清理日志和错误文本中的常见凭证，路径与普通结构保持不变。"""
+    if isinstance(value, str):
+        result = value
+        for pattern in SECRET_PATTERNS:
+            result = pattern.sub(lambda match: (match.group(1) if match.lastindex else "") + "[REDACTED]", result)
+        return result
+    if isinstance(value, dict):
+        return {key: redact(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [redact(item) for item in value]
+    return value
+
+
+def finding(rule_id: str, severity: str, message: str, *, unit: str = "",
+            task_id: str = "", run_dir: str = "", attribution: str = "evaluation_framework",
+            evidence=None,
+            recommendation: str = "") -> dict:
+    return {
+        "id": rule_id,
+        "severity": severity,
+        "unit": unit,
+        "task_id": task_id,
+        "run_dir": run_dir,
+        "attribution": attribution,
+        "message": redact(message),
+        "evidence": redact(evidence if evidence is not None else {}),
+        "recommendation": redact(recommendation),
+    }
+
+
+def classify_run_anomaly(item: dict, status: dict) -> tuple[str, str, str]:
+    """把补跑异常语义转换为评测有效性门禁语义。"""
+    rule_id = item.get("id", "RUN_ANOMALY")
+    if rule_id in MODEL_HARNESS_OUTCOME_IDS:
+        return (
+            "info",
+            "model_or_harness",
+            "作为模型/Harness 运行结果保留并在报告中披露，不触发有效性门禁。",
+        )
+    if rule_id in AMBIGUOUS_RUNTIME_IDS:
+        return (
+            "warning",
+            "undetermined",
+            "人工区分资源配置、轨迹采集问题与模型/Harness 行为；确认是评测框架问题才重跑。",
+        )
+    if rule_id == "EXECUTION_ERROR":
+        error_text = str(status.get("error") or item.get("description") or "")
+        if HARNESS_RUN_FAILED_RE.search(error_text):
+            return (
+                "info",
+                "model_or_harness",
+                "Harness 进程退出作为该组合的运行结果保留，不触发有效性门禁。",
+            )
+        if FRAMEWORK_EXECUTION_ERROR_RE.search(error_text):
+            return (
+                "error",
+                "evaluation_framework",
+                "修复评测框架或运行环境后重跑受影响用例。",
+            )
+        return (
+            "warning",
+            "undetermined",
+            "当前证据无法区分评测框架与 Harness；完成责任归因后再决定是否重跑。",
+        )
+    if rule_id in {"API_RATE_LIMIT", "API_SERVER_ERROR"}:
+        return (
+            "warning",
+            "external_environment",
+            "确认外部服务异常是否影响产物；只有评测环境污染时才重跑。",
+        )
+    if rule_id in {"GRADING_SCRIPT_ERROR", "SCORE_MISSING", "ZERO_TOKEN_RUN"}:
+        return (
+            "error",
+            "evaluation_framework",
+            "修复评测或数据管道后重跑或重新解析。",
+        )
+    return (
+        item.get("severity", "warning"),
+        "undetermined",
+        "结合原始轨迹完成责任归因。",
+    )
+
+
+def scan_round(result_root: Path, tasks_dir: Path | None) -> dict:
+    units = discover_units(result_root)
+    findings: list[dict] = []
+    expected = expected_tasks(tasks_dir)
+    expected_flat = {(suite, task) for suite, tasks in expected.items() for task in tasks}
+    unit_data: dict[str, dict] = {}
+    env_hits_by_task: dict[tuple[str, str], list[tuple[str, str, bool]]] = defaultdict(list)
+    transcript_hashes: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
+
+    if not units:
+        findings.append(finding("NO_UNITS", "error", "未发现任何评测结果 unit",
+                                recommendation="检查 --result-root 是否指向 round/model/unit 目录。"))
+
+    for model, harness, unit_dir in units:
+        unit = f"{model}@{harness}"
+        if unit in unit_data:
+            findings.append(finding("DUPLICATE_UNIT", "error", f"unit 标签重复：{unit}", unit=unit,
+                                    evidence={"paths": [unit_data[unit]["path"], str(unit_dir)]}))
+            unit = f"{unit}#{len(unit_data) + 1}"
+        actual: set[tuple[str, str]] = set()
+        task_records: dict[str, dict] = {}
+        versions: Counter[str] = Counter()
+        images: Counter[str] = Counter()
+        scores_for_summary: list[float] = []
+
+        for suite_dir in sorted(unit_dir.iterdir()):
+            if not suite_dir.is_dir() or not SUITE_RE.match(suite_dir.name):
+                continue
+            for task_dir in sorted(path for path in suite_dir.iterdir() if path.is_dir()):
+                task_id = task_dir.name
+                task_key = f"{suite_dir.name}/{task_id}"
+                actual.add((suite_dir.name, task_id))
+                run_dirs = sorted(path for path in task_dir.iterdir() if path.is_dir())
+                if not run_dirs:
+                    findings.append(finding("NO_RUN", "error", "任务目录下没有 run", unit=unit,
+                                            task_id=task_id, run_dir=str(task_dir)))
+                    continue
+                run_scores: list[float] = []
+                task_records[task_key] = {"run_count": len(run_dirs), "timeouts": [], "runs": []}
+                for run_dir in run_dirs:
+                    status, status_error = load_json(run_dir / "execution_status.json")
+                    usage, usage_error = load_json(run_dir / "usage.json")
+                    score, score_error = load_json(run_dir / "score.json")
+                    status = status or {}
+                    usage = usage or {}
+                    score = score or {}
+                    path_text = str(run_dir)
+                    for filename, error in (("execution_status.json", status_error),
+                                            ("usage.json", usage_error), ("score.json", score_error)):
+                        if error:
+                            findings.append(finding("RESULT_FILE_INVALID", "error",
+                                                    f"{filename} 缺失或不可解析：{error}", unit=unit,
+                                                    task_id=task_id, run_dir=path_text))
+                    transcript = transcript_path(run_dir)
+                    if transcript is None or transcript.stat().st_size == 0:
+                        findings.append(finding("TRANSCRIPT_MISSING", "error", "执行轨迹缺失或为空",
+                                                unit=unit, task_id=task_id, run_dir=path_text))
+                    elif transcript.stat().st_size > 0:
+                        digest = hashlib.sha256(transcript.read_bytes()).hexdigest()
+                        transcript_hashes[digest].append((unit, task_key, path_text))
+
+                    anomaly = scan_run_dir(run_dir)
+                    confirmed_signals, error_log_lines = confirmed_log_signals(run_dir)
+                    for item in anomaly.get("items", []):
+                        env_id = ANOMALY_ENV_IDS.get(item.get("id"))
+                        # 共享 anomalies 模块会扫描完整 agent.log；其中含 prompt 和
+                        # 成功工具输出。API 类告警必须再经明确错误行确认。
+                        if env_id and env_id not in confirmed_signals:
+                            continue
+                        severity, attribution, recommendation = classify_run_anomaly(item, status)
+                        findings.append(finding(item.get("id", "RUN_ANOMALY"), severity,
+                                                item.get("description", "run 异常"), unit=unit,
+                                                task_id=task_id, run_dir=path_text,
+                                                attribution=attribution,
+                                                recommendation=recommendation))
+                        if env_id:
+                            env_hits_by_task[(task_key, env_id)].append(
+                                (unit, path_text, bool(anomaly.get("has_error")))
+                            )
+                    if error_log_lines:
+                        findings.append(finding("AGENT_LOG_ERROR", "info",
+                                                f"agent.log 含 {len(error_log_lines)} 条 error/fatal 事件",
+                                                unit=unit, task_id=task_id, run_dir=path_text,
+                                                attribution="diagnostic",
+                                                evidence={"sample": error_log_lines[0][:300]},
+                                                recommendation="作为诊断证据保留；单独出现不影响有效性门禁。"))
+
+                    raw_score = score.get("overall_score")
+                    if isinstance(raw_score, (int, float)) and math.isfinite(float(raw_score)):
+                        run_scores.append(float(raw_score))
+                        if not 0 <= float(raw_score) <= 1:
+                            findings.append(finding("SCORE_OUT_OF_RANGE", "error",
+                                                    f"overall_score={raw_score} 不在 [0,1]", unit=unit,
+                                                    task_id=task_id, run_dir=path_text))
+                    elif score and not score.get("error"):
+                        findings.append(finding("OVERALL_SCORE_INVALID", "error", "overall_score 缺失或非有限数",
+                                                unit=unit, task_id=task_id, run_dir=path_text))
+
+                    if status.get("harness") and status.get("harness") != harness:
+                        findings.append(finding("HARNESS_ID_MISMATCH", "error",
+                                                "目录 harness 与 execution_status.harness 不一致", unit=unit,
+                                                task_id=task_id, run_dir=path_text,
+                                                evidence={"path": harness, "status": status.get("harness")}))
+                    if status.get("timed_out") and status.get("status") == "finished":
+                        findings.append(finding("STATUS_CONTRADICTION", "error",
+                                                "timed_out=true 但 status=finished", unit=unit,
+                                                task_id=task_id, run_dir=path_text))
+                    if status.get("harness_version"):
+                        versions[str(status["harness_version"])] += 1
+                    if status.get("image"):
+                        images[str(status["image"])] += 1
+                    task_records[task_key]["timeouts"].append(status.get("timeout_seconds"))
+
+                    for key in ("total_tokens", "input_tokens", "output_tokens", "request_count",
+                                "elapsed_time", "cost_usd"):
+                        value = usage.get(key)
+                        if value is not None and (not isinstance(value, (int, float)) or value < 0):
+                            findings.append(finding("USAGE_VALUE_INVALID", "error",
+                                                    f"usage.{key}={value!r} 非法", unit=unit,
+                                                    task_id=task_id, run_dir=path_text))
+                    independent = independent_request_count(run_dir) if harness in {"codex", "astroncode"} else None
+                    recorded = usage.get("request_count")
+                    if independent and isinstance(recorded, (int, float)) and recorded != independent:
+                        ratio = max(independent, recorded) / max(1, min(independent, recorded))
+                        severity = "error" if ratio >= 2 else "warning"
+                        findings.append(finding("REQUEST_COUNT_DRIFT", severity,
+                                                "usage.request_count 与原始 usage 事件重算不一致", unit=unit,
+                                                task_id=task_id, run_dir=path_text,
+                                                evidence={"recorded": recorded, "recomputed": independent,
+                                                          "ratio": round(ratio, 2)},
+                                                recommendation="先 dry-run reparse_codex_usage.py，确认后修正并重生成报告。"))
+                    metrics = parse_tool_metrics(transcript, harness)
+                    tool_total = metrics.get("total", 0)
+                    if isinstance(recorded, (int, float)) and recorded > 0 and tool_total / recorded > 5:
+                        findings.append(finding("TOOL_REQUEST_RATIO_HIGH", "warning",
+                                                "工具调用数显著高于模型请求数，需核对 request_count 口径",
+                                                unit=unit, task_id=task_id, run_dir=path_text,
+                                                evidence={"tool_calls": tool_total, "requests": recorded,
+                                                          "ratio": round(tool_total / recorded, 2)}))
+
+                    status_elapsed = status.get("elapsed_time")
+                    usage_elapsed = usage.get("elapsed_time")
+                    if isinstance(status_elapsed, (int, float)) and isinstance(usage_elapsed, (int, float)):
+                        delta = abs(status_elapsed - usage_elapsed)
+                        if delta > max(60, status_elapsed * 0.2):
+                            findings.append(finding("ELAPSED_TIME_DRIFT", "warning",
+                                                    "execution_status 与 usage 的耗时差异较大", unit=unit,
+                                                    task_id=task_id, run_dir=path_text,
+                                                    evidence={"status": status_elapsed, "usage": usage_elapsed}))
+
+                    # 只在明确的执行/判分错误字段中分类环境信号。完整 transcript
+                    # 含任务提示和示例代码，对其做关键词全文搜索会把“401/500”示例误判为故障。
+                    log_text = "\n".join(str(value) for value in
+                                         (status.get("error"), score.get("error")) if value)
+                    hit_ids = set()
+                    for env_id, pattern in ENV_PATTERNS.items():
+                        if pattern.search(log_text):
+                            hit_ids.add(env_id)
+                            env_hits_by_task[(task_key, env_id)].append((unit, path_text, True))
+                    task_records[task_key]["runs"].append({
+                        "run_dir": path_text,
+                        "score": raw_score,
+                        "status": status.get("status"),
+                        "timed_out": bool(status.get("timed_out")),
+                        "environment_signals": sorted(hit_ids),
+                    })
+                if run_scores:
+                    scores_for_summary.append(fmean(run_scores))
+
+        if expected_flat:
+            for suite, task_id in sorted(expected_flat - actual):
+                findings.append(finding("TASK_MISSING", "error", f"缺少任务 {suite}/{task_id}",
+                                        unit=unit, task_id=task_id,
+                                        recommendation="补跑缺失任务后再比较或出报告。"))
+            for suite, task_id in sorted(actual - expected_flat):
+                findings.append(finding("TASK_UNEXPECTED", "warning", f"出现任务定义外的结果 {suite}/{task_id}",
+                                        unit=unit, task_id=task_id))
+
+        summary_files = sorted(unit_dir.glob("summary_all_*.json"))
+        if not summary_files:
+            findings.append(finding("SUMMARY_MISSING", "warning", "缺少 summary_all_*.json", unit=unit))
+        else:
+            summary, summary_error = load_json(summary_files[0])
+            if summary_error:
+                findings.append(finding("SUMMARY_INVALID", "error", summary_error, unit=unit))
+            else:
+                summary = summary or {}
+                if summary.get("task_count") is not None and summary.get("task_count") != len(actual):
+                    findings.append(finding("SUMMARY_TASK_COUNT_MISMATCH", "error",
+                                            "summary.task_count 与目录扫描数不一致", unit=unit,
+                                            evidence={"summary": summary.get("task_count"), "scanned": len(actual)}))
+                recomputed = sum(scores_for_summary) / len(actual) if actual else 0.0
+                if isinstance(summary.get("global_avg"), (int, float)) and abs(summary["global_avg"] - recomputed) > 0.005:
+                    findings.append(finding("SUMMARY_SCORE_MISMATCH", "error",
+                                            "summary.global_avg 与 run 分数重算不一致", unit=unit,
+                                            evidence={"summary": summary["global_avg"],
+                                                      "recomputed": round(recomputed, 6)}))
+        if len(versions) > 1:
+            findings.append(finding("HARNESS_VERSION_MIXED", "error", "同一 unit 混用了多个 harness 版本",
+                                    unit=unit, evidence=dict(versions)))
+        if len(images) > 1:
+            findings.append(finding("CONTAINER_IMAGE_MIXED", "warning", "同一 unit 混用了多个容器镜像",
+                                    unit=unit, evidence=dict(images)))
+
+        unit_data[unit] = {
+            "path": str(unit_dir),
+            "model": model,
+            "harness": harness,
+            "task_count": len(actual),
+            "tasks": task_records,
+            "harness_versions": dict(versions),
+            "images": dict(images),
+        }
+
+    # 跨 unit 公平性与共因检查。
+    task_sets = {unit: set(data["tasks"]) for unit, data in unit_data.items()}
+    if task_sets:
+        union = set().union(*task_sets.values())
+        intersection = set.intersection(*task_sets.values())
+        if union != intersection:
+            findings.append(finding("UNIT_TASK_SET_MISMATCH", "error", "各 unit 任务集合不一致",
+                                    evidence={unit: len(tasks) for unit, tasks in task_sets.items()},
+                                    recommendation="只在共同任务集上临时比较，并补跑缺失任务。"))
+        for task_key in sorted(intersection):
+            run_counts = {unit: data["tasks"][task_key]["run_count"] for unit, data in unit_data.items()}
+            if len(set(run_counts.values())) > 1:
+                findings.append(finding("RUN_COUNT_MISMATCH", "error", f"{task_key} 的评测轮数不一致",
+                                        evidence=run_counts))
+            timeouts = {}
+            for unit, data in unit_data.items():
+                values = {value for value in data["tasks"][task_key]["timeouts"] if value is not None}
+                timeouts[unit] = sorted(values)
+            normalized = {tuple(values) for values in timeouts.values()}
+            if len(normalized) > 1:
+                findings.append(finding("TIMEOUT_CONFIG_MISMATCH", "warning",
+                                        f"{task_key} 在各 unit 的 timeout 配置不一致", evidence=timeouts))
+
+    unit_count = len(unit_data)
+    for (task_key, env_id), hits in sorted(env_hits_by_task.items()):
+        affected_units = sorted({unit for unit, _, _ in hits})
+        fatal_units = sorted({unit for unit, _, fatal in hits if fatal})
+        if unit_count >= 2 and len(affected_units) >= max(2, math.ceil(unit_count * 0.5)):
+            threshold = max(2, math.ceil(unit_count * 0.5))
+            severity = "error" if len(fatal_units) >= threshold else "warning"
+            findings.append(finding("COMMON_MODE_ENV_FAILURE", severity,
+                                    f"{task_key} 在多数 unit 同时出现 {env_id} 信号",
+                                    attribution="evaluation_environment",
+                                    evidence={"affected_units": affected_units,
+                                              "fatal_units": fatal_units,
+                                              "unit_count": unit_count, "signal": env_id},
+                                    recommendation="核对失败时间与原始错误上下文；确认共因后修复环境并重跑。"))
+
+    for digest, occurrences in transcript_hashes.items():
+        task_keys = {task_key for _, task_key, _ in occurrences}
+        if len(task_keys) > 1:
+            findings.append(finding("DUPLICATE_TRANSCRIPT", "error", "不同任务共享完全相同的执行轨迹",
+                                    evidence={"sha256": digest[:12], "occurrences": occurrences}))
+
+    counts = Counter(item["severity"] for item in findings)
+    verdict = "FAIL" if counts["error"] else ("REVIEW" if counts["warning"] else "PASS")
+    findings.sort(key=lambda item: (SEVERITY_ORDER[item["severity"]], item["id"],
+                                    item["unit"], item["task_id"], item["run_dir"]))
+    return {
+        "schema_version": 2,
+        "check_type": "eval_result_validity",
+        "result_root": str(result_root),
+        "tasks_dir": str(tasks_dir) if tasks_dir else "",
+        "verdict": verdict,
+        "summary": {"units": len(unit_data), "errors": counts["error"],
+                    "warnings": counts["warning"], "info": counts["info"],
+                    "findings": len(findings)},
+        "units": unit_data,
+        "findings": findings,
+    }
+
+
+def render_markdown(report: dict) -> str:
+    summary = report["summary"]
+    lines = [
+        "# WildClawBench 评测结果有效性检查",
+        "",
+        f"- 结论：**{report['verdict']}**",
+        f"- 结果根目录：`{report['result_root']}`",
+        f"- 单元数：{summary['units']}",
+        f"- 问题：error {summary['errors']} / warning {summary['warnings']} / info {summary['info']}",
+        "",
+        "## 门禁解释",
+        "",
+        "- `PASS`：未发现评测框架、数据或共因环境问题；可包含不影响门禁的模型/Harness 运行结果。",
+        "- `REVIEW`：存在无法自动区分责任层的运行或环境信号；归因完成前不应直接发布结论。",
+        "- `FAIL`：存在确定的评测框架、数据完整性、口径或共因环境故障；修复后再出报告。",
+        "",
+        "## 检查结果",
+        "",
+        "| 级别 | 归因 | 规则 | Unit | 用例 | 说明 | 处置 |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for item in report["findings"]:
+        clean = lambda value: str(value or "-").replace("|", "\\|").replace("\n", " ")
+        lines.append("| " + " | ".join([
+            clean(item["severity"]), clean(item.get("attribution")), clean(item["id"]), clean(item["unit"]),
+            clean(item["task_id"]), clean(item["message"]), clean(item["recommendation"]),
+        ]) + " |")
+    if not report["findings"]:
+        lines.append("| info | - | NONE | - | - | 未发现异常 | - |")
+    lines += ["", "## Unit 概览", "", "| Unit | 任务数 | Harness版本 | 容器镜像 |",
+              "|---|---:|---|---|"]
+    for unit, data in sorted(report["units"].items()):
+        lines.append(f"| {unit} | {data['task_count']} | {', '.join(data['harness_versions']) or '-'} "
+                     f"| {', '.join(data['images']) or '-'} |")
+    return "\n".join(lines) + "\n"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="检查 WildClawBench 评测结果有效性")
+    parser.add_argument("--result-root", required=True, help="round/model/unit 结果目录")
+    parser.add_argument("--tasks-dir", help="任务定义目录（默认仓库 tasks/）")
+    parser.add_argument("--output-dir", help="默认 <round>/report-workspace/validity")
+    parser.add_argument("--fail-on", choices=("never", "fail", "review"), default="never",
+                        help="控制非零退出：never（默认）/fail/任意 review")
+    args = parser.parse_args()
+
+    result_root = Path(args.result_root).expanduser().resolve()
+    if not result_root.is_dir():
+        parser.error(f"结果目录不存在：{result_root}")
+    tasks_dir = find_tasks_dir(args.tasks_dir)
+    report = scan_round(result_root, tasks_dir)
+    round_root = round_root_from_units(result_root, discover_units(result_root))
+    output_dir = (Path(args.output_dir).expanduser() if args.output_dir else
+                  round_root / "report-workspace" / "validity")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_path = output_dir / "eval_result_validity.json"
+    md_path = output_dir / "eval_result_validity.md"
+    json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    md_path.write_text(render_markdown(report), encoding="utf-8")
+    print(f"结论: {report['verdict']} | error={report['summary']['errors']} "
+          f"warning={report['summary']['warnings']} | units={report['summary']['units']}")
+    print(f"VALIDITY_JSON={json_path.resolve()}")
+    print(f"VALIDITY_REPORT={md_path.resolve()}")
+    if args.fail_on == "review" and report["verdict"] in {"REVIEW", "FAIL"}:
+        return 2
+    if args.fail_on == "fail" and report["verdict"] == "FAIL":
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

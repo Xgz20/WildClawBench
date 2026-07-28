@@ -1,17 +1,22 @@
 # WildClawBench 报告工具（tools/report）
 
-评测完成后的**分析与报告链路**三件套（本目录只放工具，产物一律写到评测结果侧的 `report-workspace/`）：
+评测完成后的**检查、分析、生成、审核链路**（本目录只放工具，产物一律写到评测结果侧的 `report-workspace/`）：
 
 | 组件 | 位置 | 用途 |
 |---|---|---|
+| 评测结果有效性检查 Skill | `skills/validate-eval-results/` | 报告生成前检查完整性、环境异常、指标完整性和跨 unit 可比性 |
 | 评测用例/低分根因分析 Skill | `skills/low-score-analysis/` | 支持阈值、区间、未满分、全量对照及指定任务分析，产出 scoped analysis JSON |
 | 根因分析报告 Skill | `skills/low-score-report/` | 基于分析结果生成 Markdown 根因共性分析报告（四层归因 + 环境失效专项） |
 | 评测报告 Excel 脚本 | `scripts/generate_eval_report.py` | 多单元（`model@harness`）对比 Excel，支持把根因分析回填到详情 Sheet |
+| 评测报告审核 Skill | `skills/audit-eval-report/` | 从 raw 独立复算 Excel 指标，检查反常统计和发布结论 |
 
 ## 工作流
 
 ```
 eval_out/all_suite/round1/<model>/<harness>/           ← 评测结果
+        │
+        ▼ ⓪ skills/validate-eval-results（前置门禁）
+<round>/report-workspace/validity/eval_result_validity.{json,md}
         │
         ▼ ① skills/low-score-analysis（筛选 + LLM 分析）
 <round>/report-workspace/_failed_tasks_<model>@<harness>__lt60.json
@@ -21,6 +26,9 @@ eval_out/all_suite/round1/<model>/<harness>/           ← 评测结果
         │  <result-root>/低分任务根因分析报告_<model>@<harness>.md
         └─▼ ③ scripts/generate_eval_report.py --analysis ...
            report-workspace/output/report_<N>units_<ts>.xlsx
+                │
+                ▼ ④ skills/audit-eval-report（发布前门禁）
+                   report-workspace/audit/report_audit_<xlsx-stem>.{json,md}
 ```
 
 分析单元统一为 `(模型, harness)` 二元组，全链路命名 `<model>@<harness>`（如 `gpt-5.5-pro@codex`）。
@@ -28,6 +36,10 @@ eval_out/all_suite/round1/<model>/<harness>/           ← 评测结果
 ## 快速开始
 
 ```bash
+# 0. 检查原始评测结果
+python3 tools/report/skills/validate-eval-results/scripts/validate_eval_results.py \
+  --result-root /path/to/eval_out/all_suite/round1
+
 # 1. 生成低分任务清单（默认阈值 60 分）
 python3 tools/report/skills/low-score-analysis/scripts/generate_failed_tasks_manifest.py \
   --result-root /path/to/eval_out/all_suite/round1 \
@@ -41,6 +53,11 @@ python3 tools/report/skills/low-score-analysis/scripts/generate_failed_tasks_man
 python3 tools/report/scripts/generate_eval_report.py \
   --result-root /path/to/eval_out/all_suite/round1 \
   --analysis "gpt-5.5-pro@codex=/path/to/round1/report-workspace/analysis_gpt-5.5-pro@codex__lt60.json"
+
+# 4. 独立复算并审核报告
+python3 tools/report/skills/audit-eval-report/scripts/audit_eval_report.py \
+  --result-root /path/to/eval_out/all_suite/round1 \
+  --excel /path/to/round1/report-workspace/output/report_1units_<ts>.xlsx
 ```
 
 ## 安装 Skill（软链到 .claude/skills）
@@ -49,6 +66,8 @@ python3 tools/report/scripts/generate_eval_report.py \
 mkdir -p .claude/skills
 ln -snf ../../tools/report/skills/low-score-analysis .claude/skills/low-score-analysis
 ln -snf ../../tools/report/skills/low-score-report .claude/skills/low-score-report
+ln -snf ../../tools/report/skills/validate-eval-results .claude/skills/validate-eval-results
+ln -snf ../../tools/report/skills/audit-eval-report .claude/skills/audit-eval-report
 ```
 
 ## 依赖

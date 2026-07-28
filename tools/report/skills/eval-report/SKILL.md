@@ -1,17 +1,17 @@
 ---
 name: eval-report
-description: End-to-end WildClawBench evaluation report pipeline for a target model - runs low-score root-cause analysis, generates the Excel report with analysis backfill, and produces a leader-facing 6-dimension Markdown report (总览/Agent能力/难度/分类/模态/典型案例). Triggers on "生成评测报告""评测报告生成""完整评测报告""领导版报告". Covers data extraction from Excel sheets, metric caveats (执行错误口径/llm_judge检查点/请求数信号), and business-report writing style rules.
+description: End-to-end WildClawBench evaluation report pipeline for a target model - validates raw results, runs scoped root-cause analysis, generates Excel with analysis backfill, produces a leader-facing Markdown report, and audits metrics and conclusions before publication. Triggers on "生成评测报告""评测报告生成""完整评测报告""领导版报告". Covers validity and publication gates, Excel extraction, metric caveats, and business-report writing rules.
 ---
 
 # 评测报告生成 Skill（WildClawBench 端到端版）
 
-针对一轮评测结果（round 目录）与一个目标模型，一条龙产出三件产物：
+针对一轮评测结果（round 目录）与一个目标模型，一条龙产出三件报告产物，并执行前后两道质量门禁：
 
 1. **根因分析 JSON**（默认 `analysis_<model>@<harness>__lt60.json`，逐低分任务的结果分析+根因）
 2. **Excel 评测报告**（多 Sheet 对比 + 根因回填到详情 Sheet）
 3. **领导版 Markdown 评测报告**（六维度、评语+表格+备注版式，商务文风）
 
-三步各自幂等，可单独重跑。分析单元命名 `<model>@<harness>`（如 `xsparkx2agent@astroncode`）。
+前置门禁调用 `validate-eval-results`，发布前门禁调用 `audit-eval-report`。两个检查 Skill 均可独立运行；`eval-report` 只编排依赖顺序。各步幂等，可单独重跑。分析单元命名 `<model>@<harness>`（如 `xsparkx2agent@astroncode`）。
 
 ## 输入
 
@@ -23,6 +23,19 @@ description: End-to-end WildClawBench evaluation report pipeline for a target mo
 - 第 1 步按 unit 独立执行，目标模型有几个就循环几次（互不依赖，Workflow 可并行发）；
 - 第 2 步 Excel 天然覆盖 round 下全部模型，`--models` 可过滤参评子集，`--analysis` 接受任意多个 `UNIT=path` 同时回填；
 - 第 3 步领导版报告为**单目标聚焦**版式（对比表含全部参评模型，评语/案例/结论围绕一个目标模型），多个目标模型时**每个模型各生成一份** `评测报告_<模型>_<round>.md`，共用同一份 Excel 数据源。
+
+## 第 0 步：评测结果有效性门禁
+
+先调用 `validate-eval-results`，对原始结果的完整性、环境故障、指标完整性和跨 unit 可比性做检查：
+
+```bash
+python3 tools/report/skills/validate-eval-results/scripts/validate_eval_results.py \
+  --result-root <round> --fail-on never
+```
+
+- `PASS`：继续生成报告。
+- `REVIEW`：逐项完成人工归因并在最终报告披露；未闭环前不发布。
+- `FAIL`：默认阻断。修复环境/数据并补跑后重新检查；只有用户明确接受风险时才可继续，且报告首页必须披露无效范围和影响。
 
 ## 第 1 步：低分根因分析（每个需要回填的模型跑一次）
 
@@ -59,6 +72,8 @@ python3 tools/report/scripts/generate_eval_report.py \
 ```
 
 回填校验：打开生成的 xlsx，`评分详情_<unit>` Sheet 的「结果分析」「根因分析」列非空行数 == 分析 JSON 条数。
+
+生成 Excel 后立即运行 `audit-eval-report` 的自动对账。发现 `FAIL` 时先修复生成脚本或原始数据并重新生成，不要继续基于错误 Excel 写 Markdown。
 
 ## 第 3 步：领导版 Markdown 评测报告（本 Skill 核心增量）
 
@@ -147,6 +162,20 @@ python3 tools/report/scripts/generate_eval_report.py \
 5. **判分误判要点名**（把没执行的命令当成已执行、把无害模板文本当成恶意实现等，如 exec_command heredoc 写文件时正文引用恶意串被正则当作执行），归 L4 并建议评测方修复，不计入模型短板。措辞用"判分误判"，避免"假阳性"这类术语。
 6. 报告落盘后**逐数自检**：所有表格数值 diff 一遍最新 Excel（尤其换过脚本重新生成后，旧文件仍在 output/ 目录，认准最新时间戳）。
 
+## 第 4 步：发布前报告审核门禁
+
+调用 `audit-eval-report` 对 Excel 做独立复算，并按其 checklist 审核 Markdown 的数字、排序、强弱判断、因果表述和案例证据：
+
+```bash
+python3 tools/report/skills/audit-eval-report/scripts/audit_eval_report.py \
+  --result-root <round> \
+  --excel <round>/report-workspace/output/report_<N>units_<ts>.xlsx \
+  --validity <round>/report-workspace/validity/eval_result_validity.json \
+  --fail-on never
+```
+
+只有审核结论为 `PASS` 且 Markdown 人工检查项全部闭环才可发布。`REVIEW` 必须记录解释、证据和接受风险的人；`FAIL` 必须修复并重生成。
+
 ## 产物落位
 
 ```
@@ -154,6 +183,8 @@ python3 tools/report/scripts/generate_eval_report.py \
 ├── report-workspace/
 │   ├── _failed_tasks_<unit>__lt60.json
 │   ├── analysis_<unit>__lt60.json
+│   ├── validity/eval_result_validity.{json,md}
+│   ├── audit/report_audit_<xlsx-stem>.{json,md}
 │   └── output/report_<N>units_<ts>.xlsx
 ├── <model>/<harness>/低分任务根因分析报告_<unit>.md   # 可选（low-score-report skill）
 └── 评测报告_<目标模型>_<round>.md                      # 领导版

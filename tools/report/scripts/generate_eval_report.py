@@ -178,8 +178,12 @@ def discover_units(result_root: Path) -> list[tuple[str, str, Path]]:
 
 
 def round_root_from_unit_dir(unit_dir: Path) -> Path:
-    """按 <round>/<model>/<harness> 结构从 unit 反推 round 根目录。"""
-    return unit_dir.resolve().parent.parent
+    """按双层或三层结果结构从 unit 反推 round 根目录。"""
+    unit_dir = unit_dir.resolve()
+    # 三层：<round>/<harness>/<model>/<harness>，首尾 harness 重复。
+    if unit_dir.parent.parent.name == unit_dir.name:
+        return unit_dir.parents[2]
+    return unit_dir.parents[1]
 
 
 def _load_json(path: Path) -> dict:
@@ -1860,7 +1864,7 @@ def main() -> None:
     # 即使 --result-root 传入 model 或 unit，报告仍集中到 round 工作区。
     # 若 --result-root 本身就是 round 根（非 unit 目录、下辖多 unit），直接用它，
     # 兼容双层 <round>/<model>/<harness> 与三层 <round>/<harness>/<model>/<harness>；
-    # 仅当传入的是 unit / model 子目录时，才从 unit 反推（旧双层布局）。
+    # 仅当传入的是 unit / model 子目录时，才从 unit 反推（支持双层/三层布局）。
     if not is_unit_dir(result_root) and len(units) > 1:
         round_root = result_root
     else:

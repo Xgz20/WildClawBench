@@ -27,6 +27,10 @@ _SERVER_ERROR_TEXT = (
 _RATE_LIMIT_CODES = ("429",)
 _SERVER_ERROR_CODES = ("500", "502", "503")
 _HTTP_CONTEXT = ("error", "http", "status", "code", "exception", "failed", "request")
+_RUNTIME_ERROR_LINE_RE = re.compile(
+    r'(?:\blevel=(?:error|fatal)\b|"level"\s*:\s*"(?:error|fatal)"|^\s*(?:ERROR|FATAL)(?::|\b))',
+    re.I,
+)
 
 
 def _log_hits(agent_log: str, text_keywords: tuple[str, ...], codes: tuple[str, ...]) -> bool:
@@ -38,6 +42,13 @@ def _log_hits(agent_log: str, text_keywords: tuple[str, ...], codes: tuple[str, 
         ):
             return True
     return False
+
+
+def _runtime_error_text(status: dict, score: dict | None, agent_log: str) -> str:
+    """仅保留明确的运行时错误，排除 prompt 和普通工具输出中的错误关键词。"""
+    parts = [str(status.get("error") or ""), str((score or {}).get("error") or "")]
+    parts.extend(line for line in agent_log.splitlines() if _RUNTIME_ERROR_LINE_RE.search(line))
+    return "\n".join(part for part in parts if part).lower()
 _TOOL_REJECT_KEYWORDS = ("unsupported call", "unknown tool")
 _FATAL_IDS = {"EXECUTION_ERROR", "EXIT_CODE_OOM", "EMPTY_TRANSCRIPT", "ZERO_TOKEN_RUN"}
 _API_WARNING_IDS = {"API_RATE_LIMIT", "API_SERVER_ERROR"}
@@ -100,7 +111,8 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
     usage = _load_json(run_dir / "usage.json") or {}
     score = _load_json(run_dir / "score.json")
     events = _transcript_lines(run_dir)
-    agent_log = _read_text(run_dir / "agent.log").lower()
+    agent_log = _read_text(run_dir / "agent.log")
+    runtime_error_text = _runtime_error_text(status, score, agent_log)
 
     items: list[dict[str, str]] = []
 
@@ -138,9 +150,9 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
         hit("TOOL_CALLS_ALL_REJECTED", ERROR,
             f"{len(rejected)}/{len(tool_results)} tool calls rejected "
             "(unsupported/unknown tool) — tool-name protocol failure")
-    if _log_hits(agent_log, _RATE_LIMIT_TEXT, _RATE_LIMIT_CODES):
+    if _log_hits(runtime_error_text, _RATE_LIMIT_TEXT, _RATE_LIMIT_CODES):
         hit("API_RATE_LIMIT", WARNING, "rate-limit markers found in agent.log")
-    if _log_hits(agent_log, _SERVER_ERROR_TEXT, _SERVER_ERROR_CODES):
+    if _log_hits(runtime_error_text, _SERVER_ERROR_TEXT, _SERVER_ERROR_CODES):
         hit("API_SERVER_ERROR", WARNING, "server-error markers found in agent.log")
 
     triggered = {i["id"] for i in items}
