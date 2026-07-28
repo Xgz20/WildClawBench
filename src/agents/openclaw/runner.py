@@ -68,16 +68,30 @@ class OpenClawAgent(BaseAgent):
                 inject_lobster_workspace(spec.task_id, spec.lobster["workspace"])
 
             setup_workspace(spec.task_id, thinking=spec.thinking)
-            setup_skills(spec.task_id, spec.task.get("skills", ""), spec.task.get("skills_path", ""))
+            # OpenClaw 从 ~/.openclaw/skills/<name>/ 发现 skill（不是 codex 用的 /root/skills）。
+            setup_skills(
+                spec.task_id,
+                spec.task.get("skills", ""),
+                spec.task.get("skills_path", ""),
+                container_skills_root="/root/.openclaw/skills",
+            )
             run_warmup(spec.task_id, spec.task.get("warmup", ""))
 
+            # 注册自定义 provider（openai-completions + 讯飞 baseUrl）到 models 段。
+            # 若外部显式传入 models_config，则以它为准（信任外部完整配置）。
             if spec.models_config:
                 inject_openclaw_models(spec.task_id, spec.models_config)
+            else:
+                self._register_provider(spec.task_id, spec.model)
 
             self._set_model(spec.task_id, spec.model)
             self._inject_openrouter_key(spec.task_id)
             image_model = self.image_model or spec.model
             self._set_image_model(spec.task_id, image_model)
+
+            # AstronClaw 镜像默认配置缺 gateway 段，gateway 启动会被 block
+            # （"missing gateway.mode"）。显式设置为 local；对原版 OpenClaw 幂等无害。
+            self._ensure_gateway_mode(spec.task_id)
 
             gateway_proc = run_background(
                 spec.task_id,
@@ -199,15 +213,68 @@ class OpenClawAgent(BaseAgent):
         out = (r.stdout or "").strip()
         return out.splitlines()[0].strip().split()[-1] if out else ""
 
-    def _set_model(self, task_id: str, model: str) -> None:
+    # 内部自定义 provider 名。OpenClaw 内建的 openrouter provider 把 baseURL 硬编码为
+    # https://openrouter.ai/api/v1（无环境变量覆盖点），无法连讯飞 maas endpoint。
+    # 因此注册一个 openai-completions 兼容的自定义 provider，用 self.openrouter_base_url。
+    PROVIDER = "wildclaw"
+
+    @staticmethod
+    def _bare_model_id(model: str) -> str:
+        """把 openrouter/xopglm52 这样的模型 id 去掉 provider 前缀 → xopglm52。"""
+        return model.split("/", 1)[-1] if "/" in model else model
+
+    def _register_provider(self, task_id: str, model: str) -> None:
+        """
+        在 openclaw.json 的 models 段注册自定义 provider（openai-completions +
+        讯飞 baseUrl），并把模型注册进去。mode=merge 保留内建 provider。
+        """
+        model_id = self._bare_model_id(model)
+        image_id = self._bare_model_id(self.image_model) if self.image_model else model_id
+        model_entries = [{"id": model_id, "name": model_id}]
+        if image_id != model_id:
+            model_entries.append({"id": image_id, "name": image_id})
+        models_config = {
+            "mode": "merge",
+            "providers": {
+                self.PROVIDER: {
+                    "api": "openai-completions",
+                    "baseUrl": self.openrouter_base_url,
+                    "models": model_entries,
+                }
+            },
+        }
+        inject_cmd = f"""python3 - <<'PY'
+import json
+import pathlib
+
+p = pathlib.Path("/root/.openclaw/openclaw.json")
+d = json.loads(p.read_text()) if p.exists() else {{}}
+d["models"] = json.loads({json.dumps(json.dumps(models_config))})
+p.write_text(json.dumps(d, indent=2))
+PY"""
         r = subprocess.run(
-            ["docker", "exec", task_id, "/bin/bash", "-c", f"openclaw models set '{model}'"],
+            ["docker", "exec", task_id, "/bin/bash", "-c", inject_cmd],
+            capture_output=True,
+            text=True,
+        )
+        if r.returncode != 0:
+            raise RuntimeError(f"Provider registration failed:\n{r.stderr}")
+        logger.info(
+            "[%s] Registered provider '%s' → %s (models: %s)",
+            task_id, self.PROVIDER, self.openrouter_base_url,
+            ", ".join(m["id"] for m in model_entries),
+        )
+
+    def _set_model(self, task_id: str, model: str) -> None:
+        target = f"{self.PROVIDER}/{self._bare_model_id(model)}"
+        r = subprocess.run(
+            ["docker", "exec", task_id, "/bin/bash", "-c", f"openclaw models set '{target}'"],
             capture_output=True,
             text=True,
         )
         if r.returncode != 0:
             raise RuntimeError(f"Model setup failed:\n{r.stderr}")
-        logger.info("[%s] Model set: %s", task_id, model)
+        logger.info("[%s] Model set: %s", task_id, target)
 
     def _inject_openrouter_key(self, task_id: str) -> None:
         if not self.openrouter_api_key:
@@ -219,10 +286,11 @@ import json
 import pathlib
 
 p = pathlib.Path("{auth_profile_path}")
+p.parent.mkdir(parents=True, exist_ok=True)
 d = json.loads(p.read_text()) if p.exists() else {{"version": 1, "profiles": {{}}}}
-d.setdefault("profiles", {{}})["openrouter:default"] = {{
+d.setdefault("profiles", {{}})[{json.dumps(self.PROVIDER + ":default")}] = {{
     "type": "api_key",
-    "provider": "openrouter",
+    "provider": {json.dumps(self.PROVIDER)},
     "key": {json.dumps(self.openrouter_api_key)}
 }}
 p.write_text(json.dumps(d, indent=2))
@@ -232,12 +300,30 @@ PY"""
             capture_output=True,
             text=True,
         )
-        logger.info("[%s] Injected OPENROUTER_API_KEY into auth-profiles.json", task_id)
+        logger.info("[%s] Injected API key into auth-profiles.json (provider=%s)", task_id, self.PROVIDER)
 
     def _set_image_model(self, task_id: str, model: str) -> None:
+        target = f"{self.PROVIDER}/{self._bare_model_id(model)}"
         subprocess.run(
-            ["docker", "exec", task_id, "/bin/bash", "-c", f"openclaw config set agents.defaults.imageModel.primary '{model}'"],
+            ["docker", "exec", task_id, "/bin/bash", "-c", f"openclaw config set agents.defaults.imageModel.primary '{target}'"],
             capture_output=True,
             text=True,
         )
-        logger.info("[%s] imageModel set: %s", task_id, model)
+        logger.info("[%s] imageModel set: %s", task_id, target)
+
+    def _ensure_gateway_mode(self, task_id: str) -> None:
+        """
+        AstronClaw 镜像默认 openclaw.json 只有 plugins/meta 段，缺 gateway 段，
+        导致 gateway 启动被 block（"existing config is missing gateway.mode"），
+        agent 随后 fallback 到 embedded 模式且认证头缺失（401）。
+        显式设置 gateway.mode=local。对原版 OpenClaw（已有该值）幂等无害。
+        """
+        r = subprocess.run(
+            ["docker", "exec", task_id, "/bin/bash", "-c", "openclaw config set gateway.mode local"],
+            capture_output=True,
+            text=True,
+        )
+        if r.returncode != 0:
+            logger.warning("[%s] Failed to set gateway.mode=local: %s", task_id, r.stderr.strip()[:200])
+        else:
+            logger.info("[%s] gateway.mode set: local", task_id)

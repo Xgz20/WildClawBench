@@ -15,6 +15,11 @@ logger = logging.getLogger(__name__)
 DOCKER_IMAGE  = os.environ.get("DOCKER_IMAGE",   "wildclawbench-ubuntu:v1.3")
 TMP_WORKSPACE = os.environ.get("TMP_WORKSPACE",  "/tmp_workspace")
 WORKSPACE_BASELINE_PATH = "/tmp/wildclaw_workspace_baseline.json"
+# workspace 只读挂载点。历史上用 /app，但 AstronClaw/OpenClaw 镜像的程序装在 /app
+# （openclaw.mjs + node_modules），挂载会覆盖导致 openclaw 不可用。改用 /mnt/wildclaw_src
+# 避开：agent 实际工作目录是 TMP_WORKSPACE（由 /app→拷贝），此挂载点仅作只读中转，
+# 换路径对所有 harness 无副作用（其他镜像该路径本就为空）。可用 SRC_MOUNT 环境变量覆盖。
+SRC_MOUNT = os.environ.get("SRC_MOUNT", "/mnt/wildclaw_src")
 
 BRAVE_API_KEY = os.environ.get("BRAVE_API_KEY", "")
 
@@ -71,6 +76,11 @@ def start_container(task_id: str, workspace_path: str, extra_env: str = "",
         masked = (value[:4] + "***") if value else "(empty)"
         logger.info("[%s] Injecting env var: %s=%s", task_id, key, masked)
 
+    # PEP 668: 兼容 Python 3.14+ 的 externally-managed-environment（pip install 受限）
+    # 该环境变量让 pip 忽略 EXTERNALLY-MANAGED 标记；旧版 Python 或未启用 PEP 668 的
+    # 发行版无该标记文件，pip 会忽略此变量，因此完全向后兼容（3.9/3.10/3.11 无影响）
+    env_args += ["-e", "PIP_BREAK_SYSTEM_PACKAGES=1"]
+
     for key in (lobster_env or []):
         value = os.environ.get(key, "")
         if not value:
@@ -85,11 +95,11 @@ def start_container(task_id: str, workspace_path: str, extra_env: str = "",
         "--name", task_id,
         *container_resource_args(),
         *env_args,
-        "-v", f"{workspace}:/app:ro",
+        "-v", f"{workspace}:{SRC_MOUNT}:ro",
         DOCKER_IMAGE,
         "/bin/bash", "-c", "tail -f /dev/null",
     ]
-    logger.info("[%s] Starting container, mounting %s → /app (ro)", task_id, workspace)
+    logger.info("[%s] Starting container, mounting %s → %s (ro)", task_id, workspace, SRC_MOUNT)
     r = subprocess.run(cmd, capture_output=True, text=True)
     if r.returncode != 0:
         raise RuntimeError(f"Container startup failed:\n{r.stderr}")
@@ -110,10 +120,10 @@ def start_container(task_id: str, workspace_path: str, extra_env: str = "",
             logger.info("[%s] Temp file copy complete", task_id)
 
 def setup_workspace(task_id: str, thinking: str | None = None) -> None:
-    logger.info("[%s] Copying /app → %s", task_id, TMP_WORKSPACE)
+    logger.info("[%s] Copying %s → %s", task_id, SRC_MOUNT, TMP_WORKSPACE)
     r = subprocess.run(
         ["docker", "exec", task_id, "/bin/bash", "-c",
-         f"cp -r /app/. {TMP_WORKSPACE} && chmod -R u+w {TMP_WORKSPACE}"],
+         f"mkdir -p {TMP_WORKSPACE} && cp -r {SRC_MOUNT}/. {TMP_WORKSPACE} && chmod -R u+w {TMP_WORKSPACE}"],
         capture_output=True, text=True,
     )
     if r.returncode != 0:
