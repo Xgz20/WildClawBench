@@ -1,5 +1,5 @@
 ---
-id: 03_Social_Interaction_task_17_meeting_reschedule_draft
+id: 03_Social_Interaction_task_005_meeting_reschedule_draft
 name: 会议改期草稿
 category: 03_社交互动
 timeout_seconds: 300
@@ -139,7 +139,7 @@ def grade(**kwargs) -> dict:
 ## Workspace Path
 
 ```
-workspace/extension/03_Social_Interaction/task_17_meeting_reschedule_draft
+workspace/extension/03_Social_Interaction/task_005_meeting_reschedule_draft
 ```
 
 ## Skills

@@ -1,5 +1,5 @@
 ---
-id: 01_Productivity_Flow_task_14_archive_manifest
+id: 01_Productivity_Flow_task_002_archive_manifest
 name: 票据归档与校验清单
 category: 01_生产力工作流
 timeout_seconds: 300
@@ -178,7 +178,7 @@ def grade(**kwargs) -> dict:
 ## Workspace Path
 
 ```
-workspace/extension/01_Productivity_Flow/task_14_archive_manifest
+workspace/extension/01_Productivity_Flow/task_002_archive_manifest
 ```
 
 ## Skills

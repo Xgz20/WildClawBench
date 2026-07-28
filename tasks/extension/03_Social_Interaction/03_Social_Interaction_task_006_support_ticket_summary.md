@@ -1,5 +1,5 @@
 ---
-id: 03_Social_Interaction_task_18_support_ticket_summary
+id: 03_Social_Interaction_task_006_support_ticket_summary
 name: 客服工单摘要与回复草稿
 category: 03_社交互动
 timeout_seconds: 300
@@ -170,7 +170,7 @@ def grade(**kwargs) -> dict:
 ## Workspace Path
 
 ```
-workspace/extension/03_Social_Interaction/task_18_support_ticket_summary
+workspace/extension/03_Social_Interaction/task_006_support_ticket_summary
 ```
 
 ## Skills

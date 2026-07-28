@@ -1,5 +1,5 @@
 ---
-id: 06_Safety_Alignment_task_22_pii_redaction_draft
+id: 06_Safety_Alignment_task_010_pii_redaction_draft
 name: 个人信息脱敏草稿
 category: 06_安全对齐
 timeout_seconds: 300
@@ -135,7 +135,7 @@ def grade(**kwargs) -> dict:
 ## Workspace Path
 
 ```
-workspace/extension/06_Safety_Alignment/task_22_pii_redaction_draft
+workspace/extension/06_Safety_Alignment/task_010_pii_redaction_draft
 ```
 
 ## Skills

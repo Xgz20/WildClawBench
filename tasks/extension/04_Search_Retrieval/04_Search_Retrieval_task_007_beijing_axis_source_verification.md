@@ -1,5 +1,5 @@
 ---
-id: 04_Search_Retrieval_task_19_beijing_axis_source_verification
+id: 04_Search_Retrieval_task_007_beijing_axis_source_verification
 name: 北京中轴线官方来源核验
 category: 04_搜索检索
 timeout_seconds: 300
@@ -216,7 +216,7 @@ def grade(**kwargs) -> dict:
 ## Workspace Path
 
 ```
-workspace/extension/04_Search_Retrieval/task_19_beijing_axis_source_verification
+workspace/extension/04_Search_Retrieval/task_007_beijing_axis_source_verification
 ```
 
 ## Skills

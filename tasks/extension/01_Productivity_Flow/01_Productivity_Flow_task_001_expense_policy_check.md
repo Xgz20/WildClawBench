@@ -1,5 +1,5 @@
 ---
-id: 01_Productivity_Flow_task_13_expense_policy_check
+id: 01_Productivity_Flow_task_001_expense_policy_check
 name: 报销政策选择与费用审核
 category: 01_生产力工作流
 timeout_seconds: 300
@@ -170,7 +170,7 @@ def grade(**kwargs) -> dict:
 ## Workspace Path
 
 ```
-workspace/extension/01_Productivity_Flow/task_13_expense_policy_check
+workspace/extension/01_Productivity_Flow/task_001_expense_policy_check
 ```
 
 ## Skills

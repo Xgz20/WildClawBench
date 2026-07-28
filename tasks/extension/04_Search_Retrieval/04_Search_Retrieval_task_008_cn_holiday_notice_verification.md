@@ -1,5 +1,5 @@
 ---
-id: 04_Search_Retrieval_task_20_cn_holiday_notice_verification
+id: 04_Search_Retrieval_task_008_cn_holiday_notice_verification
 name: 中国2025年春节放假通知核验
 category: 04_搜索检索
 timeout_seconds: 300
@@ -237,7 +237,7 @@ def grade(**kwargs) -> dict:
 ## Workspace Path
 
 ```
-workspace/extension/04_Search_Retrieval/task_20_cn_holiday_notice_verification
+workspace/extension/04_Search_Retrieval/task_008_cn_holiday_notice_verification
 ```
 
 ## Skills
