@@ -13,6 +13,7 @@
 #   bash docs/local/deploy/stop-eval.sh --codex      # 只清 Codex 镜像的容器
 #   bash docs/local/deploy/stop-eval.sh --openclaw   # 只清 OpenClaw 镜像的容器
 #   bash docs/local/deploy/stop-eval.sh --astroncode # 只清 AstronCode 镜像的容器
+#   bash docs/local/deploy/stop-eval.sh --opencode   # 只清 OpenCode 镜像的容器
 #   IMAGES="img1 img2" bash docs/local/deploy/stop-eval.sh   # 自定义镜像列表
 #
 # 镜像匹配：按 repo 枚举所有本地 tag（如 astroncode 的 v0.0 与 v0.1-test.8
@@ -28,6 +29,7 @@ set -uo pipefail
 CODEX_REPO="wildclawbench-codex-ubuntu"
 OPENCLAW_REPO="wildclawbench-ubuntu"
 ASTRONCODE_REPO="wildclawbench-astroncode-ubuntu"
+OPENCODE_REPO="wildclawbench-opencode-ubuntu"
 
 # 输出：repo 的全部本地 tag + env 显式指定的镜像（可能未加载），去重
 repo_images() {
@@ -51,6 +53,7 @@ for arg in "$@"; do
     --codex)    SELECTED="codex" ;;
     --openclaw) SELECTED="openclaw" ;;
     --astroncode) SELECTED="astroncode" ;;
+    --opencode) SELECTED="opencode" ;;
     -h|--help)  sed -n '2,23p' "$0"; exit 0 ;;
     *) echo "未知参数: $arg（-h 查看用法）"; exit 1 ;;
   esac
@@ -65,10 +68,13 @@ elif [ "$SELECTED" = "openclaw" ]; then
   IMG_LIST=($(repo_images "$OPENCLAW_REPO" "${DOCKER_IMAGE:-}"))
 elif [ "$SELECTED" = "astroncode" ]; then
   IMG_LIST=($(repo_images "$ASTRONCODE_REPO" "${DOCKER_IMAGE_ASTRONCODE:-}"))
+elif [ "$SELECTED" = "opencode" ]; then
+  IMG_LIST=($(repo_images "$OPENCODE_REPO" "${DOCKER_IMAGE_OPENCODE:-}"))
 else
   IMG_LIST=($(repo_images "$CODEX_REPO" "${DOCKER_IMAGE_CODEX:-}") \
             $(repo_images "$OPENCLAW_REPO" "${DOCKER_IMAGE:-}") \
-            $(repo_images "$ASTRONCODE_REPO" "${DOCKER_IMAGE_ASTRONCODE:-}"))
+            $(repo_images "$ASTRONCODE_REPO" "${DOCKER_IMAGE_ASTRONCODE:-}") \
+            $(repo_images "$OPENCODE_REPO" "${DOCKER_IMAGE_OPENCODE:-}"))
 fi
 if [ "${#IMG_LIST[@]}" -eq 0 ]; then
   echo "未发现任何评测镜像（本地无相关 repo，且未通过 env 指定），无事可做。"
