@@ -1,0 +1,20 @@
+{
+  "task_id": "04_Search_Retrieval_task_19_beijing_axis_source_verification",
+  "language": "zh-CN",
+  "candidates": [
+    {
+      "source_id": "source_a",
+      "title": "北京中轴线（北京城市东西对称布局建筑物的轴线）_百度百科",
+      "url": "https://baike.baidu.com/item/%E5%8C%97%E4%BA%AC%E4%B8%AD%E8%BD%B4%E7%BA%BF/5315908",
+      "archive_path": "/tmp_workspace/snapshots/source_a/rendered.html",
+      "archive_manifest": "/tmp_workspace/snapshots/source_a/manifest.json"
+    },
+    {
+      "source_id": "source_b",
+      "title": "“北京中轴线——中国理想都城秩序的杰作”成功列入《世界遗产名录》__中国政府网",
+      "url": "https://www.gov.cn/yaowen/liebiao/202407/content_6964753.htm",
+      "archive_path": "/tmp_workspace/snapshots/source_b/rendered.html",
+      "archive_manifest": "/tmp_workspace/snapshots/source_b/manifest.json"
+    }
+  ]
+}

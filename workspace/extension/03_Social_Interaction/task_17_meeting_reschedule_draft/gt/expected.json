@@ -1,0 +1,12 @@
+{
+  "meeting_id": "MTG-CN-204",
+  "title": "Q3渠道预算复盘",
+  "original_start": "2026-08-12T14:00:00+08:00",
+  "proposed_start": "2026-08-12T15:00:00+08:00",
+  "proposed_end": "2026-08-12T15:30:00+08:00",
+  "duration_minutes": 30,
+  "required_body_times": ["14:00", "15:00", "15:30"],
+  "exec_file_sha256": {
+    "meeting_request.json": "d37aef8dcc9a6c757a4d589a64d0dbf2bbdca9bda1e40e98aa77f5687912b76c"
+  }
+}

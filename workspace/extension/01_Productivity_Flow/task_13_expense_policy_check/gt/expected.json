@@ -1,0 +1,24 @@
+{
+  "policy_id": "TP-2026-v2",
+  "applied_rules": {
+    "taxi": {"limit": 100.0, "receipt_required": true},
+    "meal": {"limit": 100.0, "receipt_required": true},
+    "hotel": {"limit": 600.0, "receipt_required": true},
+    "office": {"limit": 300.0, "receipt_required": true}
+  },
+  "expenses": [
+    {"expense_id": "E001", "decision": "approved", "approved_amount": 86.5, "reason_code": "eligible"},
+    {"expense_id": "E002", "decision": "rejected", "approved_amount": 0.0, "reason_code": "over_limit"},
+    {"expense_id": "E003", "decision": "rejected", "approved_amount": 0.0, "reason_code": "over_limit"},
+    {"expense_id": "E004", "decision": "rejected", "approved_amount": 0.0, "reason_code": "missing_receipt"},
+    {"expense_id": "E005", "decision": "approved", "approved_amount": 75.0, "reason_code": "eligible"},
+    {"expense_id": "E006", "decision": "approved", "approved_amount": 210.0, "reason_code": "eligible"}
+  ],
+  "approved_total": 371.5,
+  "rejected_total": 845.0,
+  "exec_file_sha256": {
+    "expenses.csv": "a71a92c11e69625d06f14c6d739d609cf74031705c3126af2e87b6141abf1128",
+    "policies/TP-2025-v1.json": "77261732cb39d03ca85ff5c7ebee5d846b44058ee32e13e95e5a3375bf37d96b",
+    "policies/TP-2026-v2.json": "288f2579156d196ec7283c99a79260e3a203eeca46932221cb71a93b1b495900"
+  }
+}

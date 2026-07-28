@@ -1,0 +1,7 @@
+expense_id,employee,date,category,amount,receipt
+E001,Chen,2026-06-02,taxi,86.50,true
+E002,Chen,2026-06-02,meal,120.00,true
+E003,Li,2026-06-03,hotel,680.00,true
+E004,Li,2026-06-03,taxi,45.00,false
+E005,Wang,2026-06-04,meal,75.00,true
+E006,Wang,2026-06-04,office,210.00,true

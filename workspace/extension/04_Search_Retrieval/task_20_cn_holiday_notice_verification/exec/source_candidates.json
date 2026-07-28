@@ -1,0 +1,20 @@
+{
+  "task_id": "04_Search_Retrieval_task_20_cn_holiday_notice_verification",
+  "language": "zh-CN",
+  "candidates": [
+    {
+      "source_id": "source_a",
+      "title": "连续8天，费用全免！_搜狐网",
+      "url": "https://news.sohu.com/a/851546853_121124602",
+      "archive_path": "/tmp_workspace/snapshots/source_a/rendered.html",
+      "archive_manifest": "/tmp_workspace/snapshots/source_a/manifest.json"
+    },
+    {
+      "source_id": "source_b",
+      "title": "国务院办公厅关于2025年部分节假日安排的通知_中国政府网",
+      "url": "https://www.gov.cn/zhengce/zhengceku/202411/content_6986383.htm",
+      "archive_path": "/tmp_workspace/snapshots/source_b/rendered.html",
+      "archive_manifest": "/tmp_workspace/snapshots/source_b/manifest.json"
+    }
+  ]
+}

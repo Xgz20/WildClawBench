@@ -1,0 +1,57 @@
+{
+  "public_cases": [
+    {
+      "rows": [
+        {"sku": "B200", "quantity": "1"},
+        {"sku": "A100", "quantity": "2"},
+        {"sku": "B200", "quantity": "4"}
+      ],
+      "expected": [
+        {"sku": "A100", "quantity": 2},
+        {"sku": "B200", "quantity": 5}
+      ]
+    },
+    {
+      "rows": [],
+      "expected": []
+    }
+  ],
+  "hidden_cases": [
+    {
+      "rows": [
+        {"sku": "Z900", "quantity": "7"},
+        {"sku": "Z900", "quantity": "-2"},
+        {"sku": "A010", "quantity": "3"}
+      ],
+      "expected": [
+        {"sku": "A010", "quantity": 3},
+        {"sku": "Z900", "quantity": 5}
+      ]
+    },
+    {
+      "rows": [
+        {"sku": "C300", "quantity": "0"},
+        {"sku": "A100", "quantity": "10"},
+        {"sku": "B200", "quantity": "2"},
+        {"sku": "A100", "quantity": "-4"}
+      ],
+      "expected": [
+        {"sku": "A100", "quantity": 6},
+        {"sku": "B200", "quantity": 2},
+        {"sku": "C300", "quantity": 0}
+      ]
+    }
+  ],
+  "sample_output": {
+    "inventory": [
+      {"sku": "A100", "quantity": 5},
+      {"sku": "B200", "quantity": 5},
+      {"sku": "C300", "quantity": 0}
+    ]
+  },
+  "exec_file_sha256": {
+    "inventory.csv": "7a53e811b41f6dfcc034403b0640da7f2c260a4217c79d8b25f6433570a591af"
+  },
+  "public_test_sha256": "43124882a06b74f5c4e2c0df139c000fdfc4f7dac279765544d5bd086831c399",
+  "module_skeleton_sha256": "45e74ea5329dc294deb6a7eb7e998b1993b0faf1551dd53f7481de2071e26cd9"
+}
