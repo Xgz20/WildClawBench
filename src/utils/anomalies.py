@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 SCHEMA_VERSION = 2
-RULESET_VERSION = "2026-07-29.1"
+RULESET_VERSION = "2026-07-29.2"
 
 ERROR = "error"
 WARNING = "warning"
@@ -642,10 +642,14 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
             evidence=[{"file": "score.json", "state": "missing_or_invalid"}],
         ))
     else:
-        grading_error = str(score.get("error") or "")
+        grading_error_field = "error" if score.get("error") else "llm_error"
+        grading_error = str(
+            score.get("error") or score.get("llm_error") or ""
+        )
         grading_timed_out = bool(_GRADING_TIMEOUT_RE.search(grading_error))
         if (
-            grading_timed_out
+            (grading_error_field == "llm_error" and bool(grading_error))
+            or grading_timed_out
             or "Grading failed" in grading_error
             or "Traceback" in grading_error
         ):
@@ -659,7 +663,7 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
                 stage="grading", attribution="evaluation_framework", confidence="high",
                 validity_impact="fail", score_reliability="unreliable",
                 rerun_action="required_after_fix",
-                evidence=[{"file": "score.json", "field": "error"}],
+                evidence=[{"file": "score.json", "field": grading_error_field}],
             ))
 
     tool_results = _tool_result_texts(events)

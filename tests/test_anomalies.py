@@ -202,6 +202,26 @@ class AnomalyDetectionTest(unittest.TestCase):
         finally:
             temp_dir.cleanup()
 
+    def test_llm_judge_parse_error_is_framework_failure_and_requires_rerun(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            self.write_json(run_dir / "score.json", {
+                "overall_score": 0.0,
+                "llm_error": "Extra data: line 6 column 1 (char 89)",
+            })
+
+            report = scan_run_dir(run_dir)
+
+            item = self.item(report, "GRADING_SCRIPT_ERROR")
+            self.assertIsNotNone(item)
+            self.assertEqual(item["attribution"], "evaluation_framework")
+            self.assertEqual(item["validity_impact"], "fail")
+            self.assertEqual(item["evidence"][0]["field"], "llm_error")
+            self.assertEqual(report["validity_verdict"], "FAIL")
+            self.assertTrue(report["needs_rerun"])
+        finally:
+            temp_dir.cleanup()
+
     def test_legacy_harness_exit_prefix_is_capability_outcome(self) -> None:
         temp_dir, run_dir = self.make_run()
         try:
