@@ -62,6 +62,7 @@ def write_execution_status(output_dir: Path, **updates: Any) -> dict[str, Any]:
 class OpenClawAgent(BaseAgent):
     harness_name = "openclaw"
     harness_display_name = "OpenClaw"
+    supports_provider_timeout_seconds = False
 
     def __init__(
         self,
@@ -158,8 +159,7 @@ class OpenClawAgent(BaseAgent):
             self._configure_harness(spec.task_id)
 
             # 设置 agents.defaults.timeoutSeconds，让 LLM idle timeout 动态跟随任务超时。
-            # 配合 provider.timeoutSeconds 一起工作，突破 120s 默认 idle timeout 上限
-            # （慢模型如 gpt-5.5 大 context 请求首 token 延迟可能超 120s）。
+            # 慢模型的大 context 请求首 token 延迟可能超过默认上限。
             self._set_agent_timeout(spec.task_id, spec.timeout_seconds)
 
             write_execution_status(spec.output_dir, status="launching_harness")
@@ -326,8 +326,35 @@ class OpenClawAgent(BaseAgent):
         return out.splitlines()[0].strip().split()[-1] if out else ""
 
     def _configure_harness(self, task_id: str) -> None:
-        """Apply backend-specific configuration before starting the CLI."""
-        _ = task_id
+        """Keep OpenClaw bootable when the optional Brave key is absent."""
+        if os.environ.get("BRAVE_API_KEY", "").strip():
+            return
+
+        configure_cmd = """python3 - <<'PY'
+import json
+import pathlib
+
+p = pathlib.Path("/root/.openclaw/openclaw.json")
+d = json.loads(p.read_text()) if p.exists() else {}
+search = d.setdefault("tools", {}).setdefault("web", {}).setdefault("search", {})
+search["enabled"] = False
+search.pop("apiKey", None)
+p.write_text(json.dumps(d, indent=2))
+PY"""
+        result = subprocess.run(
+            ["docker", "exec", task_id, "/bin/bash", "-c", configure_cmd],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(
+                "Failed to disable OpenClaw web search without BRAVE_API_KEY:\n"
+                f"{result.stderr}"
+            )
+        logger.info(
+            "[%s] Disabled tools.web.search because BRAVE_API_KEY is not configured",
+            task_id,
+        )
 
     # 内部自定义 provider 名。OpenClaw 内建的 openrouter provider 把 baseURL 硬编码为
     # https://openrouter.ai/api/v1（无环境变量覆盖点），无法连讯飞 maas endpoint。
@@ -343,23 +370,25 @@ class OpenClawAgent(BaseAgent):
         """
         在 openclaw.json 的 models 段注册自定义 provider（openai-completions +
         讯飞 baseUrl），并把模型注册进去。mode=merge 保留内建 provider。
-        timeout_seconds 传入任务超时，设为 provider.timeoutSeconds，让 LLM idle
-        timeout 动态跟随（避免慢模型如 gpt-5.5 单次请求被 120s 默认值中断）。
+        AstronClaw 的 provider schema 支持 timeoutSeconds，可通过子类能力开关
+        写入任务超时；OpenClaw 2026.3.11 不接受该 provider 字段。
         """
         model_id = self._bare_model_id(model)
         image_id = self._bare_model_id(self.image_model) if self.image_model else model_id
         model_entries = [{"id": model_id, "name": model_id}]
         if image_id != model_id:
             model_entries.append({"id": image_id, "name": image_id})
+        provider_config = {
+            "api": "openai-completions",
+            "baseUrl": self.openrouter_base_url,
+            "models": model_entries,
+        }
+        if self.supports_provider_timeout_seconds:
+            provider_config["timeoutSeconds"] = timeout_seconds
         models_config = {
             "mode": "merge",
             "providers": {
-                self.PROVIDER: {
-                    "api": "openai-completions",
-                    "baseUrl": self.openrouter_base_url,
-                    "timeoutSeconds": timeout_seconds,
-                    "models": model_entries,
-                }
+                self.PROVIDER: provider_config,
             },
         }
         inject_cmd = f"""python3 - <<'PY'
@@ -433,9 +462,8 @@ PY"""
     def _set_agent_timeout(self, task_id: str, timeout_seconds: int) -> None:
         """
         设置 agents.defaults.timeoutSeconds，让 LLM idle timeout 动态跟随任务超时。
-        openclaw 的 resolveLlmIdleTimeoutMs 会从该值推导 idle 阈值（与 provider
-        timeoutSeconds 配合，突破 120s 默认上限）。慢模型如 gpt-5.5 单次大 context
-        请求首 token 延迟可能超 120s，需要此配置避免被 idle timeout 中断。
+        openclaw 的 resolveLlmIdleTimeoutMs 会从该值推导 idle 阈值。慢模型的单次
+        大 context 请求首 token 延迟可能超过默认上限，需要此配置避免中断。
         """
         r = subprocess.run(
             ["docker", "exec", task_id, "/bin/bash", "-c", f"openclaw config set agents.defaults.timeoutSeconds {timeout_seconds}"],

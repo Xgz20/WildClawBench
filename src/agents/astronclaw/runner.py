@@ -19,6 +19,7 @@ class AstronClawAgent(OpenClawAgent):
 
     harness_name = "astronclaw"
     harness_display_name = "AstronClaw"
+    supports_provider_timeout_seconds = True
 
     def __init__(
         self,

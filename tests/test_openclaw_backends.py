@@ -71,12 +71,43 @@ class OpenClawBackendTests(unittest.TestCase):
     @patch("src.agents.astronclaw.runner.subprocess.run")
     def test_gateway_mode_fix_is_astronclaw_only(self, run_mock) -> None:
         run_mock.return_value = subprocess.CompletedProcess([], 0, "", "")
-        self.make_openclaw()._configure_harness("openclaw-task")
-        run_mock.assert_not_called()
-
         self.make_astronclaw()._configure_harness("astronclaw-task")
         run_mock.assert_called_once()
         self.assertIn("gateway.mode local", run_mock.call_args.args[0][-1])
+
+    @patch("src.agents.openclaw.runner.subprocess.run")
+    def test_openclaw_disables_web_search_without_brave_key(self, run_mock) -> None:
+        run_mock.return_value = subprocess.CompletedProcess([], 0, "", "")
+        with patch.dict("os.environ", {"BRAVE_API_KEY": ""}, clear=False):
+            self.make_openclaw()._configure_harness("openclaw-task")
+
+        run_mock.assert_called_once()
+        configure_cmd = run_mock.call_args.args[0][-1]
+        self.assertIn('search["enabled"] = False', configure_cmd)
+        self.assertIn('search.pop("apiKey", None)', configure_cmd)
+
+    @patch("src.agents.openclaw.runner.subprocess.run")
+    def test_openclaw_keeps_web_search_with_brave_key(self, run_mock) -> None:
+        with patch.dict(
+            "os.environ", {"BRAVE_API_KEY": "configured-key"}, clear=False
+        ):
+            self.make_openclaw()._configure_harness("openclaw-task")
+
+        run_mock.assert_not_called()
+
+    @patch("src.agents.openclaw.runner.subprocess.run")
+    def test_provider_timeout_is_astronclaw_only(self, run_mock) -> None:
+        run_mock.return_value = subprocess.CompletedProcess([], 0, "", "")
+
+        self.make_openclaw()._register_provider("openclaw-task", "openrouter/model", 900)
+        openclaw_config = run_mock.call_args.args[0][-1]
+        self.assertNotIn("timeoutSeconds", openclaw_config)
+
+        self.make_astronclaw()._register_provider(
+            "astronclaw-task", "openrouter/model", 900
+        )
+        astronclaw_config = run_mock.call_args.args[0][-1]
+        self.assertIn('\\"timeoutSeconds\\": 900', astronclaw_config)
 
     def test_astronclaw_running_error_is_a_harness_outcome(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
