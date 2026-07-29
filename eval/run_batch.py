@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from src.agents.base import AgentTaskSpec, BaseAgent
 from src.agents.astroncode import AstronCodeAgent
+from src.agents.astronclaw import AstronClawAgent
 from src.agents.claudecode import ClaudeCodeAgent
 from src.agents.codex import CodexAgent
 from src.agents.opencode import OpenCodeAgent
@@ -359,7 +360,10 @@ def run_single_task(
 
     finally:
         grading_transcript_path = backend.transcript_container_path
-        grade_on_error = isinstance(backend, (CodexAgent, ClaudeCodeAgent, AstronCodeAgent, OpenCodeAgent))
+        grade_on_error = isinstance(
+            backend,
+            (CodexAgent, ClaudeCodeAgent, AstronCodeAgent, OpenCodeAgent, OpenClawAgent),
+        )
         # v2: gradable if rule checks OR declarative rubric present.
         should_grade = (task.get("automated_checks") or task.get("rubric_criteria")) and (
             not result.get("error") or grade_on_error
@@ -516,6 +520,13 @@ def main() -> None:
         backend = CodexAgent()
     elif args.agent_backend == "astroncode":
         backend = AstronCodeAgent()
+    elif args.agent_backend == "astronclaw":
+        backend = AstronClawAgent(
+            gateway_port=GATEWAY_PORT,
+            openrouter_api_key=OPENROUTER_API_KEY,
+            openrouter_base_url=OPENROUTER_BASE_URL_OPENCLAW,
+            image_model=args.openclaw_image_model,
+        )
     elif args.agent_backend == "opencode":
         backend = OpenCodeAgent()
     elif args.agent_backend == "hermesagent":

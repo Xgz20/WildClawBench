@@ -5,6 +5,7 @@ if [[ $# -lt 1 ]]; then
   cat <<'EOF'
 Usage:
   bash script/run.sh openclaw    [run_batch args...]
+  bash script/run.sh astronclaw  [run_batch args...]
   bash script/run.sh claudecode  [run_batch args...]
   bash script/run.sh codex       [run_batch args...]
   bash script/run.sh hermesagent [run_batch args...]
@@ -13,6 +14,7 @@ Usage:
 
 Examples:
   bash script/run.sh openclaw --category all --parallel 4 --model openrouter/openai/gpt-5.5
+  bash script/run.sh astronclaw --category all --parallel 4 --model openrouter/openai/gpt-5.5
   bash script/run.sh claudecode --category all --parallel 4 --model openai/gpt-5.5
   bash script/run.sh codex --category all --parallel 4 --model openrouter/openai/gpt-5.5
   bash script/run.sh hermesagent --category all --parallel 4 --model openai/gpt-5.5
@@ -31,6 +33,9 @@ case "$backend" in
   openclaw)
     exec python3 eval/run_batch.py --agent-backend openclaw "$@"
     ;;
+  astronclaw)
+    exec python3 eval/run_batch.py --agent-backend astronclaw "$@"
+    ;;
   claudecode)
     exec python3 eval/run_batch.py --agent-backend claudecode "$@"
     ;;
@@ -48,7 +53,7 @@ case "$backend" in
     ;;
   *)
     echo "Unknown backend: $backend"
-    echo "Expected one of: openclaw, claudecode, codex, hermesagent, astroncode, opencode"
+    echo "Expected one of: openclaw, astronclaw, claudecode, codex, hermesagent, astroncode, opencode"
     exit 1
     ;;
 esac

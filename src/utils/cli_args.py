@@ -47,7 +47,10 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
     parser.add_argument(
         "--agent-backend",
         default="openclaw",
-        choices=["openclaw", "claudecode", "codex", "hermesagent", "astroncode", "opencode"],
+        choices=[
+            "openclaw", "astronclaw", "claudecode", "codex",
+            "hermesagent", "astroncode", "opencode",
+        ],
         help="Agent backend implementation (default: openclaw)",
     )
     parser.add_argument(
@@ -140,8 +143,9 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
     )
     parser.add_argument(
         "--openclaw-image-model",
+        "--astronclaw-image-model",
         default=None,
-        help="Optional OpenClaw image tool model. If unset, falls back to the chat --model.",
+        help="Optional OpenClaw/AstronClaw image tool model. If unset, falls back to the chat --model.",
     )
     parser.add_argument(
         "--runs",

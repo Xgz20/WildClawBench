@@ -5,13 +5,16 @@ import logging
 import os
 import subprocess
 import time
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from dotenv import load_dotenv
 
 from src.agents.base import AgentExecution, AgentTaskSpec, BaseAgent
 from src.utils.grading import extract_usage_from_jsonl
 from src.utils.docker_utils import (
+    DOCKER_IMAGE,
     inject_lobster_workspace,
     inject_openclaw_models,
     run_background,
@@ -26,18 +29,57 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def write_execution_status(output_dir: Path, **updates: Any) -> dict[str, Any]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    status_path = output_dir / "execution_status.json"
+    status: dict[str, Any] = {}
+    if status_path.exists():
+        try:
+            status = json.loads(status_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            status = {}
+    previous_stage = str(status.get("status") or "")
+    next_status = str(updates.get("status") or "")
+    if (
+        next_status in {"error", "timed_out"}
+        and "failure_stage" not in updates
+        and previous_stage
+        and previous_stage not in {"error", "timed_out", "finished"}
+    ):
+        updates["failure_stage"] = previous_stage
+    status.update(updates)
+    status["updated_at"] = _now_iso()
+    status_path.write_text(
+        json.dumps(status, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    return status
+
+
 class OpenClawAgent(BaseAgent):
+    harness_name = "openclaw"
+    harness_display_name = "OpenClaw"
+
     def __init__(
         self,
         gateway_port: int,
         openrouter_api_key: str = "",
         openrouter_base_url: str = "https://openrouter.ai/api/v1",
         image_model: str | None = None,
+        image: str | None = None,
     ) -> None:
         self.gateway_port = gateway_port
         self.openrouter_api_key = openrouter_api_key
         self.openrouter_base_url = openrouter_base_url
-        self.image_model = image_model if image_model is not None else os.environ.get("OPENCLAW_IMAGE_MODEL", "").strip()
+        self.image_model = (
+            image_model
+            if image_model is not None
+            else os.environ.get("OPENCLAW_IMAGE_MODEL", "").strip()
+        )
+        self.image = image or DOCKER_IMAGE
 
     @property
     def expects_gateway(self) -> bool:
@@ -51,22 +93,45 @@ class OpenClawAgent(BaseAgent):
         gateway_proc = None
         agent_proc = None
         elapsed_time = float(spec.timeout_seconds)
+        start_time = time.perf_counter()
+
+        write_execution_status(
+            spec.output_dir,
+            task_id=spec.task_id,
+            model=spec.model,
+            timeout_seconds=spec.timeout_seconds,
+            status="created",
+            started_at=_now_iso(),
+            timed_out=False,
+            exit_code=None,
+            error=None,
+        )
 
         try:
             exec_path = os.path.join(spec.workspace_path, "exec")
             tmp_path = os.path.join(spec.workspace_path, "tmp")
             os.makedirs(exec_path, exist_ok=True)
 
+            write_execution_status(spec.output_dir, status="starting_container")
             start_container(
                 spec.task_id,
                 exec_path,
                 extra_env=spec.task.get("env", ""),
                 tmp_path=tmp_path,
                 lobster_env=spec.lobster.get("env") if spec.lobster else None,
+                docker_image=self.image,
+            )
+            write_execution_status(
+                spec.output_dir,
+                status="container_started",
+                harness=self.harness_name,
+                harness_version=self._probe_harness_version(spec.task_id),
+                image=self.image,
             )
             if spec.lobster:
                 inject_lobster_workspace(spec.task_id, spec.lobster["workspace"])
 
+            write_execution_status(spec.output_dir, status="preparing_workspace")
             setup_workspace(spec.task_id, thinking=spec.thinking)
             # OpenClaw 从 ~/.openclaw/skills/<name>/ 发现 skill（不是 codex 用的 /root/skills）。
             setup_skills(
@@ -77,6 +142,7 @@ class OpenClawAgent(BaseAgent):
             )
             run_warmup(spec.task_id, spec.task.get("warmup", ""))
 
+            write_execution_status(spec.output_dir, status="preparing_harness_input")
             # 注册自定义 provider（openai-completions + 讯飞 baseUrl）到 models 段。
             # 若外部显式传入 models_config，则以它为准（信任外部完整配置）。
             if spec.models_config:
@@ -89,15 +155,14 @@ class OpenClawAgent(BaseAgent):
             image_model = self.image_model or spec.model
             self._set_image_model(spec.task_id, image_model)
 
-            # AstronClaw 镜像默认配置缺 gateway 段，gateway 启动会被 block
-            # （"missing gateway.mode"）。显式设置为 local；对原版 OpenClaw 幂等无害。
-            self._ensure_gateway_mode(spec.task_id)
+            self._configure_harness(spec.task_id)
 
             # 设置 agents.defaults.timeoutSeconds，让 LLM idle timeout 动态跟随任务超时。
             # 配合 provider.timeoutSeconds 一起工作，突破 120s 默认 idle timeout 上限
             # （慢模型如 gpt-5.5 大 context 请求首 token 延迟可能超 120s）。
             self._set_agent_timeout(spec.task_id, spec.timeout_seconds)
 
+            write_execution_status(spec.output_dir, status="launching_harness")
             gateway_proc = run_background(
                 spec.task_id,
                 bash_cmd=(
@@ -117,6 +182,10 @@ class OpenClawAgent(BaseAgent):
                 bash_cmd=f"openclaw agent --session-id chat --timeout {spec.timeout_seconds} --message '{safe_prompt}'",
                 log_path=spec.output_dir / "agent.log",
             )
+            write_execution_status(
+                spec.output_dir,
+                status=f"{self.harness_name}_running",
+            )
 
             logger.info("[%s] Waiting for agent to finish...", spec.task_id)
             try:
@@ -132,8 +201,49 @@ class OpenClawAgent(BaseAgent):
                 elapsed_time = float(spec.timeout_seconds)
                 agent_proc.kill()
                 agent_proc.wait()
+                error = f"{self.harness_display_name} run timed out"
+                write_execution_status(
+                    spec.output_dir,
+                    status="timed_out",
+                    timed_out=True,
+                    exit_code=agent_proc.returncode,
+                    elapsed_time=round(elapsed_time, 2),
+                    error=error,
+                )
+                return AgentExecution(
+                    elapsed_time=elapsed_time,
+                    error=error,
+                    gateway_proc=gateway_proc,
+                    agent_proc=agent_proc,
+                )
 
             logger.info("[%s] Agent exit code: %s", spec.task_id, agent_proc.returncode)
+            if agent_proc.returncode not in (0, None):
+                error = (
+                    f"{self.harness_display_name} run failed "
+                    f"(rc={agent_proc.returncode})"
+                )
+                write_execution_status(
+                    spec.output_dir,
+                    status="error",
+                    exit_code=agent_proc.returncode,
+                    elapsed_time=round(elapsed_time, 2),
+                    error=error,
+                )
+                return AgentExecution(
+                    elapsed_time=elapsed_time,
+                    error=error,
+                    gateway_proc=gateway_proc,
+                    agent_proc=agent_proc,
+                )
+            write_execution_status(
+                spec.output_dir,
+                status="finished",
+                finished_at=_now_iso(),
+                exit_code=agent_proc.returncode,
+                elapsed_time=round(elapsed_time, 2),
+                error=None,
+            )
             return AgentExecution(
                 elapsed_time=elapsed_time,
                 error=None,
@@ -142,8 +252,16 @@ class OpenClawAgent(BaseAgent):
             )
         except Exception as exc:
             logger.error("[%s] Execution error: %s", spec.task_id, exc)
+            elapsed_time = time.perf_counter() - start_time
+            write_execution_status(
+                spec.output_dir,
+                status="error",
+                exit_code=agent_proc.returncode if agent_proc is not None else None,
+                elapsed_time=round(elapsed_time, 2),
+                error=str(exc),
+            )
             return AgentExecution(
-                elapsed_time=float(spec.timeout_seconds),
+                elapsed_time=elapsed_time,
                 error=str(exc),
                 gateway_proc=gateway_proc,
                 agent_proc=agent_proc,
@@ -171,30 +289,19 @@ class OpenClawAgent(BaseAgent):
                 "request_count": 0,
             }
         usage["elapsed_time"] = round(elapsed_time, 2)
-        # Record harness identity/version for traceability. OpenClaw has no
-        # execution_status.json flow, so write a minimal one here (container
-        # still alive at collect_usage time — see transcript docker cp above).
+        # Refresh version metadata while the container is still alive.
         self._write_harness_metadata(task_id, output_dir)
         return usage
 
     def _write_harness_metadata(self, task_id: str, output_dir: Path) -> None:
+        updates = {
+            "harness": self.harness_name,
+            "image": self.image,
+        }
         version = self._probe_harness_version(task_id)
-        status_path = output_dir / "execution_status.json"
-        status: dict = {}
-        if status_path.exists():
-            try:
-                status = json.loads(status_path.read_text(encoding="utf-8"))
-            except json.JSONDecodeError:
-                status = {}
-        status.update({
-            "harness": "openclaw",
-            "harness_version": version,
-            "image": os.environ.get("DOCKER_IMAGE", "wildclawbench-ubuntu:v1.3"),
-        })
-        output_dir.mkdir(parents=True, exist_ok=True)
-        status_path.write_text(
-            json.dumps(status, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
+        if version:
+            updates["harness_version"] = version
+        write_execution_status(output_dir, **updates)
 
     @staticmethod
     def _probe_harness_version(task_id: str) -> str:
@@ -217,6 +324,10 @@ class OpenClawAgent(BaseAgent):
             return ""
         out = (r.stdout or "").strip()
         return out.splitlines()[0].strip().split()[-1] if out else ""
+
+    def _configure_harness(self, task_id: str) -> None:
+        """Apply backend-specific configuration before starting the CLI."""
+        _ = task_id
 
     # 内部自定义 provider 名。OpenClaw 内建的 openrouter provider 把 baseURL 硬编码为
     # https://openrouter.ai/api/v1（无环境变量覆盖点），无法连讯飞 maas endpoint。
@@ -319,23 +430,6 @@ PY"""
         )
         logger.info("[%s] imageModel set: %s", task_id, target)
 
-    def _ensure_gateway_mode(self, task_id: str) -> None:
-        """
-        AstronClaw 镜像默认 openclaw.json 只有 plugins/meta 段，缺 gateway 段，
-        导致 gateway 启动被 block（"existing config is missing gateway.mode"），
-        agent 随后 fallback 到 embedded 模式且认证头缺失（401）。
-        显式设置 gateway.mode=local。对原版 OpenClaw（已有该值）幂等无害。
-        """
-        r = subprocess.run(
-            ["docker", "exec", task_id, "/bin/bash", "-c", "openclaw config set gateway.mode local"],
-            capture_output=True,
-            text=True,
-        )
-        if r.returncode != 0:
-            logger.warning("[%s] Failed to set gateway.mode=local: %s", task_id, r.stderr.strip()[:200])
-        else:
-            logger.info("[%s] gateway.mode set: local", task_id)
-
     def _set_agent_timeout(self, task_id: str, timeout_seconds: int) -> None:
         """
         设置 agents.defaults.timeoutSeconds，让 LLM idle timeout 动态跟随任务超时。
@@ -352,4 +446,3 @@ PY"""
             logger.warning("[%s] Failed to set agents.defaults.timeoutSeconds=%d: %s", task_id, timeout_seconds, r.stderr.strip()[:200])
         else:
             logger.info("[%s] agents.defaults.timeoutSeconds set: %d", task_id, timeout_seconds)
-

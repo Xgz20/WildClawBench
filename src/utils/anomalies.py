@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 SCHEMA_VERSION = 2
-RULESET_VERSION = "2026-07-28"
+RULESET_VERSION = "2026-07-29"
 
 ERROR = "error"
 WARNING = "warning"
@@ -23,13 +23,14 @@ _RATE_LIMIT_RE = re.compile(r"rate.?limit|too many requests|\b429\b", re.I)
 _SERVER_ERROR_RE = re.compile(
     r"bad gateway|service unavailable|internal server error|\b50[0234]\b", re.I
 )
+_HTTP_STATUS_RE = re.compile(r"(?<!\d)([45]\d\d)(?!\d)")
 _ENVIRONMENT_ERROR_RE = re.compile(
     r"cannot connect to the docker daemon|docker daemon|no space left on device|"
     r"read-only file system|container .*not found|host network|dns resolution",
     re.I,
 )
 _HARNESS_RUN_FAILED_RE = re.compile(
-    r"^(?:AstronCode|OpenCode|Codex|OpenClaw|HermesAgent|ClaudeCode)\s+run failed\s*\(rc=\d+\)",
+    r"^(?:AstronCode|AstronClaw|OpenCode|Codex|OpenClaw|HermesAgent|ClaudeCode)\s+run failed\s*\(rc=\d+\)",
     re.I,
 )
 _SECRET_PATTERNS = (
@@ -57,6 +58,7 @@ _HARNESS_STAGES = {
     "codex_running",
     "opencode_running",
     "openclaw_running",
+    "astronclaw_running",
     "hermesagent_running",
     "claudecode_running",
     "harness_running",
@@ -409,12 +411,59 @@ def _structured_model_errors(run_dir: Path, status: dict) -> list[dict[str, Any]
                 })
         except sqlite3.Error:
             pass
+
+    # OpenClaw/AstronClaw emit one machine-shaped completion line for each
+    # embedded model run. Parse only that exact event instead of searching
+    # arbitrary gateway/tool log text for error keywords.
+    gateway_path = run_dir / "gateway.log"
+    try:
+        gateway_lines = gateway_path.open(encoding="utf-8", errors="replace")
+    except OSError:
+        gateway_lines = None
+    if gateway_lines is not None:
+        with gateway_lines:
+            for line_no, line in enumerate(gateway_lines, 1):
+                marker = "[agent/embedded] embedded run agent end:"
+                if marker not in line or " isError=true " not in line:
+                    continue
+                suffix = line.split(marker, 1)[1].strip()
+                model_match = re.search(r"(?:^|\s)model=([^\s]+)", suffix)
+                provider_match = re.search(r"(?:^|\s)provider=([^\s]+)", suffix)
+                error_match = re.search(
+                    r"(?:^|\s)error=(.*?)(?:\s+rawError=|$)", suffix
+                )
+                event_model = model_match.group(1) if model_match else ""
+                if (
+                    current_model and event_model
+                    and event_model.rsplit("/", 1)[-1] != current_model.rsplit("/", 1)[-1]
+                ):
+                    continue
+                message = (
+                    error_match.group(1).strip()
+                    if error_match else "model request failed"
+                )
+                status_match = _HTTP_STATUS_RE.search(message)
+                errors.append({
+                    "message": message,
+                    "http_status": int(status_match.group(1)) if status_match else None,
+                    "recovered": False,
+                    "evidence": {
+                        "file": "gateway.log",
+                        "line": line_no,
+                        "event_type": "embedded_run_end",
+                        "provider": provider_match.group(1) if provider_match else "",
+                        "model": event_model,
+                        "is_error": True,
+                    },
+                })
     return errors
 
 
-def _api_items(run_dir: Path, status: dict) -> list[dict[str, Any]]:
-    grouped: dict[str, list[dict[str, Any]]] = {"rate": [], "server": []}
-    for error in _structured_model_errors(run_dir, status):
+def _api_items(errors: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+    grouped: dict[str, list[dict[str, Any]]] = {
+        "rate": [], "server": [], "other": [],
+    }
+    for error in errors:
         message = str(error.get("message") or "")
         raw_code = error.get("http_status")
         try:
@@ -425,6 +474,8 @@ def _api_items(run_dir: Path, status: dict) -> list[dict[str, Any]]:
             grouped["rate"].append(error)
         elif (isinstance(code, int) and 500 <= code < 600) or _SERVER_ERROR_RE.search(message):
             grouped["server"].append(error)
+        else:
+            grouped["other"].append(error)
     result: list[dict[str, Any]] = []
     for kind, rule_id, description in (
         ("rate", "MODEL_API_RATE_LIMIT", "当前被测模型推理请求出现限流"),
@@ -442,6 +493,16 @@ def _api_items(run_dir: Path, status: dict) -> list[dict[str, Any]]:
             rerun_action="review_first",
             evidence=[hit["evidence"] for hit in hits[:5]],
         ))
+    other_hits = grouped["other"]
+    if other_hits:
+        result.append(_item(
+            "MODEL_API_ERROR",
+            f"当前被测模型推理请求出现结构化错误（{len(other_hits)} 个事件）",
+            stage="model_inference", attribution="external_service", confidence="high",
+            validity_impact="review", score_reliability="requires_review",
+            rerun_action="review_first",
+            evidence=[hit["evidence"] for hit in other_hits[:5]],
+        ))
     return result
 
 
@@ -455,7 +516,8 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
     raw_sessions = [path for path in _raw_session_files(run_dir) if path.stat().st_size > 0]
     model_turns, tool_attempts = _interaction_counts(events, usage)
     items: list[dict[str, Any]] = []
-    api_items = _api_items(run_dir, status)
+    structured_model_errors = _structured_model_errors(run_dir, status)
+    api_items = _api_items(structured_model_errors)
 
     execution_item: dict[str, Any] | None = None
     if str(status.get("status") or "") == "error":
@@ -539,7 +601,7 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
 
     request_count = usage.get("request_count", 0)
     total_tokens = usage.get("total_tokens", 0)
-    if events and (request_count == 0 or total_tokens == 0):
+    if events and (request_count == 0 or total_tokens == 0) and not structured_model_errors:
         has_model_response = model_turns > 0
         items.append(_item(
             "ZERO_TOKEN_RUN", "存在模型轨迹但 usage 请求数或 token 为 0",

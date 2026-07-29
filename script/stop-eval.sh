@@ -12,6 +12,7 @@
 #   bash docs/local/deploy/stop-eval.sh --dry-run    # 只预览，不动手
 #   bash docs/local/deploy/stop-eval.sh --codex      # 只清 Codex 镜像的容器
 #   bash docs/local/deploy/stop-eval.sh --openclaw   # 只清 OpenClaw 镜像的容器
+#   bash docs/local/deploy/stop-eval.sh --astronclaw # 只清 AstronClaw 镜像的容器
 #   bash docs/local/deploy/stop-eval.sh --astroncode # 只清 AstronCode 镜像的容器
 #   bash docs/local/deploy/stop-eval.sh --opencode   # 只清 OpenCode 镜像的容器
 #   IMAGES="img1 img2" bash docs/local/deploy/stop-eval.sh   # 自定义镜像列表
@@ -28,6 +29,7 @@ set -uo pipefail
 # ancestor 过滤不带 tag 时只匹配 :latest，所以必须逐 tag 枚举）
 CODEX_REPO="wildclawbench-codex-ubuntu"
 OPENCLAW_REPO="wildclawbench-ubuntu"
+ASTRONCLAW_REPO="artifacts.iflytek.com/docker-private/hy-spark-agent-builder/astronclaw-core-cicd"
 ASTRONCODE_REPO="wildclawbench-astroncode-ubuntu"
 OPENCODE_REPO="wildclawbench-opencode-ubuntu"
 
@@ -52,6 +54,7 @@ for arg in "$@"; do
     --dry-run)  DRY_RUN=1 ;;
     --codex)    SELECTED="codex" ;;
     --openclaw) SELECTED="openclaw" ;;
+    --astronclaw) SELECTED="astronclaw" ;;
     --astroncode) SELECTED="astroncode" ;;
     --opencode) SELECTED="opencode" ;;
     -h|--help)  sed -n '2,23p' "$0"; exit 0 ;;
@@ -66,6 +69,8 @@ elif [ "$SELECTED" = "codex" ]; then
   IMG_LIST=($(repo_images "$CODEX_REPO" "${DOCKER_IMAGE_CODEX:-}"))
 elif [ "$SELECTED" = "openclaw" ]; then
   IMG_LIST=($(repo_images "$OPENCLAW_REPO" "${DOCKER_IMAGE:-}"))
+elif [ "$SELECTED" = "astronclaw" ]; then
+  IMG_LIST=($(repo_images "$ASTRONCLAW_REPO" "${DOCKER_IMAGE_ASTRONCLAW:-}"))
 elif [ "$SELECTED" = "astroncode" ]; then
   IMG_LIST=($(repo_images "$ASTRONCODE_REPO" "${DOCKER_IMAGE_ASTRONCODE:-}"))
 elif [ "$SELECTED" = "opencode" ]; then
@@ -73,6 +78,7 @@ elif [ "$SELECTED" = "opencode" ]; then
 else
   IMG_LIST=($(repo_images "$CODEX_REPO" "${DOCKER_IMAGE_CODEX:-}") \
             $(repo_images "$OPENCLAW_REPO" "${DOCKER_IMAGE:-}") \
+            $(repo_images "$ASTRONCLAW_REPO" "${DOCKER_IMAGE_ASTRONCLAW:-}") \
             $(repo_images "$ASTRONCODE_REPO" "${DOCKER_IMAGE_ASTRONCODE:-}") \
             $(repo_images "$OPENCODE_REPO" "${DOCKER_IMAGE_OPENCODE:-}"))
 fi

@@ -247,10 +247,11 @@ BRAVE_API_KEY=your_brave_key_here  # required for search tasks
 - **Brave Search API Key** — Required for Search & Retrieval tasks. Get one (with free monthly credits) at [brave.com/search/api](https://brave.com/search/api/).
 - **Judge model** (optional) — `JUDGE_MODEL` controls the LLM used by judge-based grading metrics. Defaults to `openai/gpt-5.4`.
 
-Then run one of the four harnesses:
+Then run one of the available harnesses:
 
 ```bash
 bash script/run.sh openclaw     --category all --parallel 4 --model openrouter/openai/gpt-5.5
+bash script/run.sh astronclaw   --category all --parallel 4 --model openrouter/openai/gpt-5.5
 bash script/run.sh claudecode   --category all --parallel 4 --model openai/gpt-5.5
 bash script/run.sh codex        --category all --parallel 4 --model openrouter/openai/gpt-5.5
 bash script/run.sh hermesagent  --category all --parallel 4 --model openai/gpt-5.5
@@ -264,12 +265,12 @@ bash script/run.sh openclaw --task tasks/06_Safety_Alignment/06_Safety_Alignment
 ```
 
 > Model-name conventions differ per harness:
-> - **OpenClaw / Codex** expect `openrouter/<provider>/<model>` (since they hit OpenRouter directly).
+> - **OpenClaw / AstronClaw / Codex** expect `openrouter/<provider>/<model>` (since they hit OpenRouter directly).
 > - **Claude Code / Hermes Agent** expect `<provider>/<model>` (the `openrouter/` prefix is added internally).
 
 ### Using a Custom Model Endpoint (Without OpenRouter)
 
-This option currently applies to the **OpenClaw harness** only. If you prefer to use your own API endpoint instead of OpenRouter, you can provide a JSON file and WildClawBench will inject it into `~/.openclaw/openclaw.json` before each task starts.
+This option applies to the **OpenClaw and AstronClaw harnesses**. If you prefer to use your own API endpoint instead of OpenRouter, you can provide a JSON file and WildClawBench will inject it into `~/.openclaw/openclaw.json` before each task starts.
 
 ⚠️ Important: Some task prompts and evaluation scripts currently have OpenRouter explicitly mentioned or hardcoded (e.g., https://openrouter.ai/api/v1). If you bypass OpenRouter, you will need to adjust these references in the respective files manually.
 

@@ -43,7 +43,8 @@ def container_resource_args() -> list[str]:
     return args
 
 def start_container(task_id: str, workspace_path: str, extra_env: str = "",
-                    tmp_path: str = "", lobster_env: list[str] | None = None) -> None:
+                    tmp_path: str = "", lobster_env: list[str] | None = None,
+                    docker_image: str | None = None) -> None:
     workspace = Path(workspace_path).expanduser()
     if not workspace.is_dir():
         # Some tasks ship no input files, so the HF dataset has no workspace dir
@@ -96,7 +97,7 @@ def start_container(task_id: str, workspace_path: str, extra_env: str = "",
         *container_resource_args(),
         *env_args,
         "-v", f"{workspace}:{SRC_MOUNT}:ro",
-        DOCKER_IMAGE,
+        docker_image or DOCKER_IMAGE,
         "/bin/bash", "-c", "tail -f /dev/null",
     ]
     logger.info("[%s] Starting container, mounting %s → %s (ro)", task_id, workspace, SRC_MOUNT)
