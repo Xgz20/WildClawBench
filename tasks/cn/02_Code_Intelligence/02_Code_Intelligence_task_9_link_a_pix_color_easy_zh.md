@@ -4,6 +4,8 @@ name: Link-a-Pix 彩色（简单）：求解并识别图案
 category: 02_代码智能
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L2
 grading_type: llm_judge
 ---

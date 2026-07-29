@@ -4,6 +4,8 @@ name: 讲座视频学习笔记生成
 category: 05_创意合成
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L2
 grading_type: llm_judge
 ---

@@ -4,6 +4,8 @@ name: Design a Product Poster for a Leather Briefcase
 category: 05_Creative_Synthesis
 timeout_seconds: 900
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L2
 grading_type: hybrid
 ---

@@ -4,6 +4,8 @@ name: Confirm the location of an artwork.
 category: 04_Search_Retrieval
 timeout_seconds: 600
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L3
 grading_type: llm_judge
 ---
@@ -164,4 +166,3 @@ JUDGE_MODEL
 ```
 npm install -g agent-browser
 ```
-

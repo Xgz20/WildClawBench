@@ -4,6 +4,8 @@ name: 视频英文语音转中文配音
 category: 05_创意合成
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L4
 grading_type: hybrid
 grading_weights:

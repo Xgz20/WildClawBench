@@ -4,6 +4,8 @@ name: 皮质公文包产品海报设计
 category: 05_创意合成
 timeout_seconds: 900
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L2
 grading_type: hybrid
 ---

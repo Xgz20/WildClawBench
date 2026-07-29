@@ -4,6 +4,8 @@ name: 发布会视频转结构化 JSON 与宣传物料
 category: 05_创意合成
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L4
 grading_type: hybrid
 grading_weights:

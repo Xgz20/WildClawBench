@@ -4,6 +4,8 @@ name: Social Media Poster Smart Crop for Multi-Platform
 category: 05_Creative_Synthesis
 timeout_seconds: 300
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L2
 grading_type: hybrid
 ---

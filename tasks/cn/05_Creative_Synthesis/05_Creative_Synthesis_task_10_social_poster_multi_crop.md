@@ -4,6 +4,8 @@ name: 社媒海报多平台智能裁切
 category: 05_创意合成
 timeout_seconds: 300
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L2
 grading_type: hybrid
 ---

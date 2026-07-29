@@ -4,6 +4,8 @@ name: Video Lecture Notes Generation
 category: 05_Creative_Synthesis
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L2
 grading_type: llm_judge
 ---

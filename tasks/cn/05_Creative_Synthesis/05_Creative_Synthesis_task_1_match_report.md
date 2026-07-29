@@ -4,6 +4,8 @@ name: 含视频片段的足球半场比赛报告
 category: 05_创意合成
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L3
 grading_type: llm_judge
 ---

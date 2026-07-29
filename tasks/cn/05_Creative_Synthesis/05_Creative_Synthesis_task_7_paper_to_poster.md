@@ -4,6 +4,8 @@ name: 学术论文转会议海报
 category: 05_创意合成
 timeout_seconds: 600
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L3
 grading_type: hybrid
 ---

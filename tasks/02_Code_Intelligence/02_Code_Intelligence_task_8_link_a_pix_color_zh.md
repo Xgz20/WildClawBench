@@ -4,6 +4,8 @@ name: Link-a-Pix Color — Solve Puzzle and Recognize Filled Pattern
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L3
 grading_type: llm_judge
 ---

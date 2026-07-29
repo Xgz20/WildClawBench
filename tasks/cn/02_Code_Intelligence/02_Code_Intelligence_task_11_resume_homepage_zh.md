@@ -4,6 +4,8 @@ name: 简历转学术主页
 category: 02_代码智能
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L4
 grading_type: llm_judge
 ---

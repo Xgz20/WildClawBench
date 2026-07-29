@@ -4,6 +4,8 @@ name: 混合图片五类分类
 category: 01_生产力工作流
 timeout_seconds: 600
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L3
 grading_type: automated
 ---
@@ -199,4 +201,3 @@ OPENROUTER_BASE_URL
 
 ```
 ```
-

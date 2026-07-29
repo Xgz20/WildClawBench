@@ -4,6 +4,8 @@ name: Video English Speech Extraction, Translation & Chinese Dubbing
 category: 05_Creative_Synthesis
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L4
 grading_type: hybrid
 grading_weights:

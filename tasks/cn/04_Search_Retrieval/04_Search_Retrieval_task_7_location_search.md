@@ -4,6 +4,8 @@ name: 根据图片检索位置信息
 category: 04_搜索检索
 timeout_seconds: 600
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L3
 grading_type: llm_judge
 ---
@@ -170,4 +172,3 @@ JUDGE_MODEL
 ```
 npm install -g agent-browser
 ```
-

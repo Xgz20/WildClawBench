@@ -4,6 +4,8 @@ name: 进球集锦剪辑
 category: 05_创意合成
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L3
 grading_type: hybrid
 grading_weights:

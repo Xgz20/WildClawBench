@@ -4,6 +4,8 @@ name: 连点成图（中等）：仅凭图片
 category: 02_代码智能
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L2
 grading_type: hybrid
 grading_weights:

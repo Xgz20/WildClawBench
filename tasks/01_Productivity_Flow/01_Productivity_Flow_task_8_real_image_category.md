@@ -4,6 +4,8 @@ name: Classify Mixed Images into 5 Categories
 category: 01_Productivity_Flow
 timeout_seconds: 600
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L3
 grading_type: automated
 ---
@@ -199,4 +201,3 @@ OPENROUTER_BASE_URL
 
 ```
 ```
-

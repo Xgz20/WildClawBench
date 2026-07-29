@@ -4,6 +4,8 @@ name: Connect the Dots (Medium) — Only Image
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L2
 grading_type: hybrid
 grading_weights:

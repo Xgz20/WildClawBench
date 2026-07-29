@@ -4,6 +4,8 @@ name: Connect the Dots (Hard) — Recognize Pattern After Connecting
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L3
 grading_type: hybrid
 grading_weights:

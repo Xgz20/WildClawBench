@@ -4,6 +4,8 @@ name: Academic Homepage Style Transfer
 category: 02_Code_Intelligence
 timeout_seconds: 1200
 modality: multimodal
+tags:
+  - requires-native-multimodal
 difficulty: L4
 grading_type: llm_judge
 ---
