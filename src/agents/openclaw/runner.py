@@ -82,7 +82,7 @@ class OpenClawAgent(BaseAgent):
             if spec.models_config:
                 inject_openclaw_models(spec.task_id, spec.models_config)
             else:
-                self._register_provider(spec.task_id, spec.model)
+                self._register_provider(spec.task_id, spec.model, spec.timeout_seconds)
 
             self._set_model(spec.task_id, spec.model)
             self._inject_openrouter_key(spec.task_id)
@@ -92,6 +92,11 @@ class OpenClawAgent(BaseAgent):
             # AstronClaw 镜像默认配置缺 gateway 段，gateway 启动会被 block
             # （"missing gateway.mode"）。显式设置为 local；对原版 OpenClaw 幂等无害。
             self._ensure_gateway_mode(spec.task_id)
+
+            # 设置 agents.defaults.timeoutSeconds，让 LLM idle timeout 动态跟随任务超时。
+            # 配合 provider.timeoutSeconds 一起工作，突破 120s 默认 idle timeout 上限
+            # （慢模型如 gpt-5.5 大 context 请求首 token 延迟可能超 120s）。
+            self._set_agent_timeout(spec.task_id, spec.timeout_seconds)
 
             gateway_proc = run_background(
                 spec.task_id,
@@ -223,10 +228,12 @@ class OpenClawAgent(BaseAgent):
         """把 openrouter/xopglm52 这样的模型 id 去掉 provider 前缀 → xopglm52。"""
         return model.split("/", 1)[-1] if "/" in model else model
 
-    def _register_provider(self, task_id: str, model: str) -> None:
+    def _register_provider(self, task_id: str, model: str, timeout_seconds: int) -> None:
         """
         在 openclaw.json 的 models 段注册自定义 provider（openai-completions +
         讯飞 baseUrl），并把模型注册进去。mode=merge 保留内建 provider。
+        timeout_seconds 传入任务超时，设为 provider.timeoutSeconds，让 LLM idle
+        timeout 动态跟随（避免慢模型如 gpt-5.5 单次请求被 120s 默认值中断）。
         """
         model_id = self._bare_model_id(model)
         image_id = self._bare_model_id(self.image_model) if self.image_model else model_id
@@ -239,6 +246,7 @@ class OpenClawAgent(BaseAgent):
                 self.PROVIDER: {
                     "api": "openai-completions",
                     "baseUrl": self.openrouter_base_url,
+                    "timeoutSeconds": timeout_seconds,
                     "models": model_entries,
                 }
             },
@@ -327,3 +335,21 @@ PY"""
             logger.warning("[%s] Failed to set gateway.mode=local: %s", task_id, r.stderr.strip()[:200])
         else:
             logger.info("[%s] gateway.mode set: local", task_id)
+
+    def _set_agent_timeout(self, task_id: str, timeout_seconds: int) -> None:
+        """
+        设置 agents.defaults.timeoutSeconds，让 LLM idle timeout 动态跟随任务超时。
+        openclaw 的 resolveLlmIdleTimeoutMs 会从该值推导 idle 阈值（与 provider
+        timeoutSeconds 配合，突破 120s 默认上限）。慢模型如 gpt-5.5 单次大 context
+        请求首 token 延迟可能超 120s，需要此配置避免被 idle timeout 中断。
+        """
+        r = subprocess.run(
+            ["docker", "exec", task_id, "/bin/bash", "-c", f"openclaw config set agents.defaults.timeoutSeconds {timeout_seconds}"],
+            capture_output=True,
+            text=True,
+        )
+        if r.returncode != 0:
+            logger.warning("[%s] Failed to set agents.defaults.timeoutSeconds=%d: %s", task_id, timeout_seconds, r.stderr.strip()[:200])
+        else:
+            logger.info("[%s] agents.defaults.timeoutSeconds set: %d", task_id, timeout_seconds)
+
