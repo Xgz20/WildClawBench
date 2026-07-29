@@ -40,7 +40,7 @@ from src.utils.grading import (
     write_error_score as write_error_score_file,
 )
 
-from src.utils.anomalies import scan_run_dir
+from src.utils.anomalies import RULESET_VERSION, SCHEMA_VERSION, scan_run_dir
 from src.utils.log_format import configure_console_logging, attach_file_logging
 
 load_dotenv()
@@ -223,17 +223,28 @@ def _load_resume_result(
             anomalies = json.loads(anomalies_file.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             anomalies = None
-    if anomalies is None:
-        # 旧产物没有 anomalies.json，现场补算
+    if (
+        anomalies is None
+        or anomalies.get("schema_version") != SCHEMA_VERSION
+        or anomalies.get("ruleset_version") != RULESET_VERSION
+    ):
+        # 旧快照缺失或规则版本不一致时，从原始产物重算，避免错误补跑。
         anomalies = scan_run_dir(latest)
+        try:
+            anomalies_file.write_text(
+                json.dumps(anomalies, indent=2, ensure_ascii=False), encoding="utf-8"
+            )
+        except OSError as exc:
+            logger.warning("[resume] 无法刷新 %s: %s", anomalies_file, exc)
     if rerun_anomalous and anomalies.get("is_anomalous"):
         logger.info("[resume] %s 最新 run 有异常，将重跑: %s",
                     task["task_id"], [i["id"] for i in anomalies["items"]])
         return None
-    if rerun_error and anomalies.get("has_error"):
-        logger.info("[resume] %s 最新 run 有 ERROR 级异常，将重跑: %s",
+    if rerun_error and anomalies.get("needs_rerun"):
+        logger.info("[resume] %s 最新 run 存在需修复后重跑的有效性故障，将重跑: %s",
                     task["task_id"],
-                    [i["id"] for i in anomalies["items"] if i["severity"] == "error"])
+                    [i["id"] for i in anomalies["items"]
+                     if i.get("rerun_action") == "required_after_fix"])
         return None
     usage = {}
     try:
@@ -374,11 +385,19 @@ def run_single_task(
             (output_dir / "anomalies.json").write_text(
                 json.dumps(anomalies, indent=2, ensure_ascii=False), encoding="utf-8"
             )
-            if anomalies["has_error"]:
+            if anomalies["has_validity_failure"]:
                 logger.warning(
-                    "[%s] Anomalies detected (score unreliable): %s",
+                    "[%s] Evaluation validity failure detected: %s",
                     task_id,
-                    ", ".join(i["id"] for i in anomalies["items"] if i["severity"] == "error"),
+                    ", ".join(i["id"] for i in anomalies["items"]
+                              if i.get("validity_impact") == "fail"),
+                )
+            elif anomalies["needs_review"]:
+                logger.warning(
+                    "[%s] Evaluation anomalies require review: %s",
+                    task_id,
+                    ", ".join(i["id"] for i in anomalies["items"]
+                              if i.get("validity_impact") == "review"),
                 )
             result["anomalies"] = anomalies
         except Exception as exc:
@@ -684,16 +703,18 @@ def main() -> None:
         (output_root / "anomaly_report.json").write_text(
             json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
         )
-        if report["error_runs"]:
+        if report["validity_failure_runs"]:
             logger.warning(
-                "Anomaly summary: %d/%d runs have ERROR-level anomalies — "
-                "consider --resume --rerun-error (report: %s)",
-                report["error_runs"], report["total_runs"],
+                "Anomaly summary: %d/%d runs have evaluation validity failures; "
+                "%d runs require review (report: %s)",
+                report["validity_failure_runs"], report["total_runs"], report["review_runs"],
                 output_root / "anomaly_report.json",
             )
         else:
-            logger.info("Anomaly summary: %d runs scanned, no ERROR-level anomalies",
-                        report["total_runs"])
+            logger.info(
+                "Anomaly summary: %d runs scanned, no validity failures; %d require review",
+                report["total_runs"], report["review_runs"],
+            )
     except Exception as exc:
         logger.warning("Batch anomaly scan failed: %s", exc)
 

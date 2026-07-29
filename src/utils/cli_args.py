@@ -104,14 +104,14 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
     parser.add_argument(
         "--rerun-error",
         action="store_true",
-        help="With --resume (implied): also rerun tasks whose latest run has "
-             "ERROR-level anomalies (timeout/crash/empty transcript/...)",
+        help="With --resume (implied): rerun tasks whose latest run has an evaluation "
+             "validity failure and needs_rerun=true",
     )
     parser.add_argument(
         "--rerun-anomalous",
         action="store_true",
         help="With --resume (implied): also rerun tasks whose latest run has ANY "
-             "anomaly (including WARNING-level, e.g. transient rate limits)",
+             "anomaly, including model/Harness outcomes and REVIEW signals",
     )
     parser.add_argument(
         "--lobster-name",

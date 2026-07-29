@@ -58,6 +58,15 @@ def write_execution_status(output_dir: Path, **updates: Any) -> dict[str, Any]:
             status = json.loads(status_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             status = {}
+    previous_stage = str(status.get("status") or "")
+    next_status = str(updates.get("status") or "")
+    if (
+        next_status in {"error", "timed_out"}
+        and "failure_stage" not in updates
+        and previous_stage
+        and previous_stage not in {"error", "timed_out", "finished"}
+    ):
+        updates["failure_stage"] = previous_stage
     status.update(updates)
     status["updated_at"] = _now_iso()
     status_path.write_text(

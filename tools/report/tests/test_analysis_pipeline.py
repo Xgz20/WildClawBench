@@ -187,23 +187,19 @@ class AnalysisPipelineTest(unittest.TestCase):
             self.round_dir.resolve(),
         )
 
-    def test_validity_log_signal_ignores_prompt_and_title_model(self) -> None:
+    def test_validity_ignores_api_keywords_in_agent_log(self) -> None:
         run_dir = self.suite_dir / "task_50/run_001"
         (run_dir / "agent.log").write_text(
             'level=INFO message="task says rate limit and 500"\n'
-            'level=ERROR small=true agent=title error="service unavailable"\n',
-            encoding="utf-8",
-        )
-        signals, lines = validity_check.confirmed_log_signals(run_dir)
-        self.assertEqual(signals, set())
-        self.assertEqual(lines, [])
-
-        (run_dir / "agent.log").write_text(
+            'level=ERROR small=true agent=title error="service unavailable"\n'
             'level=ERROR small=false agent=build error="HTTP 429 too many requests"\n',
             encoding="utf-8",
         )
-        signals, _ = validity_check.confirmed_log_signals(run_dir)
-        self.assertEqual(signals, {"RATE_LIMIT"})
+        report = validity_check.scan_round(self.unit_dir, self.tasks_dir)
+        ids = {item["id"] for item in report["findings"]}
+        self.assertNotIn("MODEL_API_RATE_LIMIT", ids)
+        self.assertNotIn("MODEL_API_SERVER_ERROR", ids)
+        self.assertNotIn("AGENT_LOG_ERROR", ids)
 
     def test_validity_findings_redact_credentials(self) -> None:
         item = validity_check.finding(
@@ -218,29 +214,77 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertIn("REDACTED", serialized)
 
     def test_validity_gate_distinguishes_harness_outcomes_from_framework_errors(self) -> None:
-        for item, status in (
-            ({"id": "TASK_TIMED_OUT", "severity": "error"}, {"timed_out": True}),
-            ({"id": "TOOL_CALLS_ALL_REJECTED", "severity": "error"}, {}),
-            ({"id": "EXECUTION_ERROR", "severity": "error"},
-             {"error": "AstronCode run failed (rc=1): model interaction stopped"}),
+        for item, attribution in (
+            ({"id": "TASK_TIMED_OUT", "attribution": "model"}, "model"),
+            ({"id": "TOOL_CALLS_ALL_REJECTED", "attribution": "model"}, "model"),
+            ({"id": "EXECUTION_ERROR", "attribution": "harness"}, "harness"),
         ):
-            severity, attribution, _ = validity_check.classify_run_anomaly(item, status)
+            item.update({"validity_impact": "none", "rerun_action": "do_not_rerun"})
+            severity, actual_attribution, _ = validity_check.classify_run_anomaly(item, {})
             self.assertEqual(severity, "info")
-            self.assertEqual(attribution, "model_or_harness")
+            self.assertEqual(actual_attribution, attribution)
 
         severity, attribution, _ = validity_check.classify_run_anomaly(
-            {"id": "EXECUTION_ERROR", "severity": "error"},
-            {"error": "cannot connect to the Docker daemon"},
+            {"id": "EXECUTION_ERROR", "severity": "error",
+             "attribution": "evaluation_framework", "validity_impact": "fail",
+             "rerun_action": "required_after_fix"},
+            {},
         )
         self.assertEqual(severity, "error")
         self.assertEqual(attribution, "evaluation_framework")
 
         severity, attribution, _ = validity_check.classify_run_anomaly(
             {"id": "EXECUTION_ERROR", "severity": "error"},
-            {"error": "unclassified runtime exception"},
+            {},
         )
         self.assertEqual(severity, "warning")
         self.assertEqual(attribution, "undetermined")
+
+        severity, attribution, recommendation = validity_check.classify_run_anomaly(
+            {
+                "id": "MODEL_API_RATE_LIMIT",
+                "severity": "warning",
+                "attribution": "external_service",
+                "validity_impact": "review",
+                "rerun_action": "review_first",
+            },
+            {},
+        )
+        self.assertEqual(severity, "warning")
+        self.assertEqual(attribution, "external_service")
+        self.assertIn("人工归因", recommendation)
+
+    def test_model_api_errors_across_units_do_not_become_common_mode_failure(self) -> None:
+        result_root = Path(self.temp_dir.name) / "api-review-round"
+        for model in ("model-a", "model-b"):
+            run_dir = result_root / model / "harness-y/01_suite/task_api/run_001"
+            run_dir.mkdir(parents=True)
+            (run_dir / "execution_status.json").write_text(json.dumps({
+                "status": "finished", "timed_out": False, "elapsed_time": 30,
+                "model": model, "harness": "harness-y",
+            }), encoding="utf-8")
+            (run_dir / "usage.json").write_text(json.dumps({
+                "request_count": 1, "total_tokens": 100,
+            }), encoding="utf-8")
+            (run_dir / "score.json").write_text(
+                json.dumps({"overall_score": 0.5}), encoding="utf-8"
+            )
+            events = [{"type": "event", "payload": {"index": index}} for index in range(5)]
+            (run_dir / "chat.jsonl").write_text(
+                "\n".join(json.dumps(event) for event in events), encoding="utf-8"
+            )
+            (run_dir / "runtime_events.jsonl").write_text(json.dumps({
+                "stage": "model_inference", "model": model,
+                "event_type": "request_failed", "http_status": 429,
+            }) + "\n", encoding="utf-8")
+
+        report = validity_check.scan_round(result_root, None)
+        ids = [item["id"] for item in report["findings"]]
+        self.assertEqual(ids.count("MODEL_API_RATE_LIMIT"), 2)
+        self.assertNotIn("COMMON_MODE_ENV_FAILURE", ids)
+        api_findings = [item for item in report["findings"]
+                        if item["id"] == "MODEL_API_RATE_LIMIT"]
+        self.assertTrue(all(item["severity"] == "warning" for item in api_findings))
 
     def test_scoped_batches_are_isolated_and_merge_without_overwrite(self) -> None:
         workspace = self.round_dir / "report-workspace"

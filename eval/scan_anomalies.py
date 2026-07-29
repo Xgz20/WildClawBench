@@ -28,11 +28,12 @@ def main() -> int:
     report = scan_batch(root)
     out = root / "anomaly_report.json"
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"扫描 {report['total_runs']} runs："
-          f"异常 {report['anomalous_runs']}（error 级 {report['error_runs']}）")
+    print(f"扫描 {report['total_runs']} runs：异常 {report['anomalous_runs']}，"
+          f"有效性失败 {report['validity_failure_runs']}，待复核 {report['review_runs']}，"
+          f"模型/Harness 问题 {report['model_or_harness_issue_runs']}")
     for rel, info in sorted(report["runs"].items()):
         flags = ",".join(i["id"] for i in info["items"])
-        level = "❌" if info["has_error"] else "⚠️"
+        level = "❌" if info["has_validity_failure"] else "⚠️"
         print(f"  {level} {rel}: {flags}")
     print(f"报告已写入 {out}")
     return 0

@@ -25,33 +25,6 @@ except ImportError:  # 非 Codex 部署环境仍可执行其它检查
 
 SUITE_RE = re.compile(r"^\d{2}_")
 SEVERITY_ORDER = {"error": 0, "warning": 1, "info": 2}
-ENV_PATTERNS = {
-    "AUTH_FAILURE": re.compile(r"unauthorized|invalid (?:api )?(?:key|token)|authentication failed|http[^\n]{0,30}\b401\b", re.I),
-    "RATE_LIMIT": re.compile(r"rate.?limit|too many requests|http[^\n]{0,30}\b429\b", re.I),
-    "SERVER_FAILURE": re.compile(r"bad gateway|service unavailable|internal server error|http[^\n]{0,30}\b50[023]\b", re.I),
-    "NETWORK_FAILURE": re.compile(r"name or service not known|temporary failure in name resolution|connection (?:refused|reset)|dns", re.I),
-    "DISK_OR_PERMISSION": re.compile(r"no space left on device|read-only file system|permission denied", re.I),
-    "CONTAINER_FAILURE": re.compile(r"docker:|container .*not found|cannot connect to the docker daemon", re.I),
-    "VISION_CHANNEL_FAILURE": re.compile(r"wildclaw_image.*(?:ok.?false|unauthorized)|image helper.*(?:failed|error)", re.I),
-}
-ANOMALY_ENV_IDS = {"API_RATE_LIMIT": "RATE_LIMIT", "API_SERVER_ERROR": "SERVER_FAILURE"}
-MODEL_HARNESS_OUTCOME_IDS = {
-    "TASK_TIMED_OUT",
-    "SHORT_TRANSCRIPT",
-    "QUICK_EXIT_SUSPICIOUS",
-    "TOOL_CALLS_ALL_REJECTED",
-}
-AMBIGUOUS_RUNTIME_IDS = {"EXIT_CODE_OOM", "EMPTY_TRANSCRIPT"}
-HARNESS_RUN_FAILED_RE = re.compile(
-    r"\b(?:AstronCode|OpenCode|OpenClaw|HermesAgent)\s+run failed\s*\(rc=\d+\)", re.I
-)
-FRAMEWORK_EXECUTION_ERROR_RE = re.compile(
-    r"(?:cannot connect to the docker daemon|docker daemon|container .*not found|"
-    r"failed to (?:start|create|prepare|copy|mount) (?:the )?(?:container|workspace)|"
-    r"workspace (?:missing|not found)|grader (?:failed|error)|grading (?:failed|error))",
-    re.I,
-)
-ERROR_LOG_LINE_RE = re.compile(r"(?:\blevel=(?:error|fatal)\b|\"level\":\"(?:error|fatal)\")", re.I)
 SECRET_PATTERNS = (
     re.compile(r"\b(?:sk|ak)-[A-Za-z0-9_-]{8,}", re.I),
     re.compile(r"\bBearer\s+[A-Za-z0-9._~+/-]{8,}", re.I),
@@ -75,16 +48,6 @@ def read_text(path: Path, max_bytes: int = 4_000_000) -> str:
             return stream.read(max_bytes).decode("utf-8", errors="replace")
     except OSError:
         return ""
-
-
-def confirmed_log_signals(run_dir: Path) -> tuple[set[str], list[str]]:
-    """仅扫描日志中明确标为 error/fatal 的行，排除 prompt 和成功工具输出。"""
-    error_lines = [line for line in read_text(run_dir / "agent.log").splitlines()
-                   if ERROR_LOG_LINE_RE.search(line)
-                   and "small=true" not in line and "agent=title" not in line]
-    signals = {env_id for env_id, pattern in ENV_PATTERNS.items()
-               if any(pattern.search(line) for line in error_lines)}
-    return signals, error_lines
 
 
 def is_unit_dir(path: Path) -> bool:
@@ -168,11 +131,14 @@ def iter_json_objects(raw: str):
 
 
 def transcript_path(run_dir: Path) -> Path | None:
+    existing = None
     for name in ("chat_openclaw.jsonl", "chat.jsonl"):
         path = run_dir / name
         if path.is_file():
-            return path
-    return None
+            existing = existing or path
+            if path.stat().st_size > 0:
+                return path
+    return existing
 
 
 def fallback_request_count(run_dir: Path) -> int | None:
@@ -271,55 +237,23 @@ def finding(rule_id: str, severity: str, message: str, *, unit: str = "",
 
 
 def classify_run_anomaly(item: dict, status: dict) -> tuple[str, str, str]:
-    """把补跑异常语义转换为评测有效性门禁语义。"""
-    rule_id = item.get("id", "RUN_ANOMALY")
-    if rule_id in MODEL_HARNESS_OUTCOME_IDS:
-        return (
-            "info",
-            "model_or_harness",
-            "作为模型/Harness 运行结果保留并在报告中披露，不触发有效性门禁。",
-        )
-    if rule_id in AMBIGUOUS_RUNTIME_IDS:
-        return (
-            "warning",
-            "undetermined",
-            "人工区分资源配置、轨迹采集问题与模型/Harness 行为；确认是评测框架问题才重跑。",
-        )
-    if rule_id == "EXECUTION_ERROR":
-        error_text = str(status.get("error") or item.get("description") or "")
-        if HARNESS_RUN_FAILED_RE.search(error_text):
-            return (
-                "info",
-                "model_or_harness",
-                "Harness 进程退出作为该组合的运行结果保留，不触发有效性门禁。",
-            )
-        if FRAMEWORK_EXECUTION_ERROR_RE.search(error_text):
-            return (
-                "error",
-                "evaluation_framework",
-                "修复评测框架或运行环境后重跑受影响用例。",
-            )
-        return (
-            "warning",
-            "undetermined",
-            "当前证据无法区分评测框架与 Harness；完成责任归因后再决定是否重跑。",
-        )
-    if rule_id in {"API_RATE_LIMIT", "API_SERVER_ERROR"}:
-        return (
-            "warning",
-            "external_environment",
-            "确认外部服务异常是否影响产物；只有评测环境污染时才重跑。",
-        )
-    if rule_id in {"GRADING_SCRIPT_ERROR", "SCORE_MISSING", "ZERO_TOKEN_RUN"}:
-        return (
-            "error",
-            "evaluation_framework",
-            "修复评测或数据管道后重跑或重新解析。",
-        )
+    """直接消费 anomalies v2 结论；旧 item 统一要求按当前规则重扫。"""
+    validity_impact = item.get("validity_impact")
+    if validity_impact in {"fail", "review", "none"}:
+        severity = {"fail": "error", "review": "warning", "none": "info"}[validity_impact]
+        attribution = str(item.get("attribution") or "undetermined")
+        action = item.get("rerun_action")
+        if action == "required_after_fix":
+            recommendation = "修复评测框架或运行环境后重跑受影响用例。"
+        elif action == "review_first":
+            recommendation = "先依据结构化证据完成人工归因，再决定是否重跑。"
+        else:
+            recommendation = "作为模型/Harness 运行结果保留并在报告中披露。"
+        return severity, attribution, recommendation
     return (
-        item.get("severity", "warning"),
+        "warning",
         "undetermined",
-        "结合原始轨迹完成责任归因。",
+        "该 item 缺少 anomalies v2 归因字段；从原始产物按当前 ruleset 重新扫描。",
     )
 
 
@@ -370,45 +304,45 @@ def scan_round(result_root: Path, tasks_dir: Path | None) -> dict:
                     usage = usage or {}
                     score = score or {}
                     path_text = str(run_dir)
+                    anomaly = scan_run_dir(run_dir)
+                    anomaly_attributions = {
+                        item.get("attribution") for item in anomaly.get("items", [])
+                    }
                     for filename, error in (("execution_status.json", status_error),
                                             ("usage.json", usage_error), ("score.json", score_error)):
-                        if error:
+                        if not error or filename == "score.json":
+                            continue
+                        if filename == "usage.json" and anomaly_attributions & {"model", "harness"}:
+                            findings.append(finding(
+                                "RESULT_FILE_INVALID", "warning",
+                                f"{filename} 缺失或不可解析：{error}", unit=unit,
+                                task_id=task_id, run_dir=path_text, attribution="undetermined",
+                                recommendation="被测组合已前置失败；确认 usage 缺失是否符合 Harness 退出路径。",
+                            ))
+                        else:
                             findings.append(finding("RESULT_FILE_INVALID", "error",
                                                     f"{filename} 缺失或不可解析：{error}", unit=unit,
                                                     task_id=task_id, run_dir=path_text))
                     transcript = transcript_path(run_dir)
-                    if transcript is None or transcript.stat().st_size == 0:
-                        findings.append(finding("TRANSCRIPT_MISSING", "error", "执行轨迹缺失或为空",
-                                                unit=unit, task_id=task_id, run_dir=path_text))
-                    elif transcript.stat().st_size > 0:
+                    if transcript is not None and transcript.stat().st_size > 0:
                         digest = hashlib.sha256(transcript.read_bytes()).hexdigest()
                         transcript_hashes[digest].append((unit, task_key, path_text))
 
-                    anomaly = scan_run_dir(run_dir)
-                    confirmed_signals, error_log_lines = confirmed_log_signals(run_dir)
                     for item in anomaly.get("items", []):
-                        env_id = ANOMALY_ENV_IDS.get(item.get("id"))
-                        # 共享 anomalies 模块会扫描完整 agent.log；其中含 prompt 和
-                        # 成功工具输出。API 类告警必须再经明确错误行确认。
-                        if env_id and env_id not in confirmed_signals:
-                            continue
                         severity, attribution, recommendation = classify_run_anomaly(item, status)
                         findings.append(finding(item.get("id", "RUN_ANOMALY"), severity,
                                                 item.get("description", "run 异常"), unit=unit,
                                                 task_id=task_id, run_dir=path_text,
                                                 attribution=attribution,
+                                                evidence=item.get("evidence"),
                                                 recommendation=recommendation))
-                        if env_id:
-                            env_hits_by_task[(task_key, env_id)].append(
-                                (unit, path_text, bool(anomaly.get("has_error")))
+                        if (
+                            item.get("attribution") == "evaluation_environment"
+                            and item.get("validity_impact") == "fail"
+                        ):
+                            env_hits_by_task[(task_key, item.get("id", "ENVIRONMENT_FAILURE"))].append(
+                                (unit, path_text, True)
                             )
-                    if error_log_lines:
-                        findings.append(finding("AGENT_LOG_ERROR", "info",
-                                                f"agent.log 含 {len(error_log_lines)} 条 error/fatal 事件",
-                                                unit=unit, task_id=task_id, run_dir=path_text,
-                                                attribution="diagnostic",
-                                                evidence={"sample": error_log_lines[0][:300]},
-                                                recommendation="作为诊断证据保留；单独出现不影响有效性门禁。"))
 
                     raw_score = score.get("overall_score")
                     if isinstance(raw_score, (int, float)) and math.isfinite(float(raw_score)):
@@ -473,15 +407,11 @@ def scan_round(result_root: Path, tasks_dir: Path | None) -> dict:
                                                     task_id=task_id, run_dir=path_text,
                                                     evidence={"status": status_elapsed, "usage": usage_elapsed}))
 
-                    # 只在明确的执行/判分错误字段中分类环境信号。完整 transcript
-                    # 含任务提示和示例代码，对其做关键词全文搜索会把“401/500”示例误判为故障。
-                    log_text = "\n".join(str(value) for value in
-                                         (status.get("error"), score.get("error")) if value)
-                    hit_ids = set()
-                    for env_id, pattern in ENV_PATTERNS.items():
-                        if pattern.search(log_text):
-                            hit_ids.add(env_id)
-                            env_hits_by_task[(task_key, env_id)].append((unit, path_text, True))
+                    hit_ids = {
+                        item.get("id") for item in anomaly.get("items", [])
+                        if item.get("attribution") == "evaluation_environment"
+                        and item.get("validity_impact") == "fail"
+                    }
                     task_records[task_key]["runs"].append({
                         "run_dir": path_text,
                         "score": raw_score,
