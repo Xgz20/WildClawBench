@@ -12,6 +12,31 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 TMP_WORKSPACE = os.environ.get("TMP_WORKSPACE", "/tmp_workspace")
+DEFAULT_GRADING_TIMEOUT_SECONDS = 600.0
+
+
+def _grading_timeout_seconds() -> float:
+    raw = os.environ.get("WILDCLAW_GRADING_TIMEOUT_SECONDS", "").strip()
+    if not raw:
+        return DEFAULT_GRADING_TIMEOUT_SECONDS
+    try:
+        value = float(raw)
+    except ValueError:
+        logger.warning(
+            "Invalid WILDCLAW_GRADING_TIMEOUT_SECONDS=%r; using %.0fs",
+            raw,
+            DEFAULT_GRADING_TIMEOUT_SECONDS,
+        )
+        return DEFAULT_GRADING_TIMEOUT_SECONDS
+    if value <= 0:
+        logger.warning(
+            "WILDCLAW_GRADING_TIMEOUT_SECONDS must be > 0, got %r; using %.0fs",
+            raw,
+            DEFAULT_GRADING_TIMEOUT_SECONDS,
+        )
+        return DEFAULT_GRADING_TIMEOUT_SECONDS
+    return value
+
 
 def _write_score(output_dir: Path, task_id: str, scores: dict) -> None:
     score_path = output_dir / "score.json"
@@ -202,7 +227,13 @@ def _run_grading_legacy(
         # part of a task's `## Env` section, so inject them explicitly whenever
         # set on the host. JUDGE_MODEL is re-injected here as a safety net in
         # case a task omits it from its `## Env` list.
-        for key in ("ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL", "ANTHROPIC_MODEL", "JUDGE_MODEL"):
+        for key in (
+            "ANTHROPIC_API_KEY",
+            "ANTHROPIC_BASE_URL",
+            "ANTHROPIC_MODEL",
+            "JUDGE_MODEL",
+            "WILDCLAW_JUDGE_TIMEOUT_SECONDS",
+        ):
             value = os.environ.get(key, "").strip()
             if not value:
                 continue
@@ -214,7 +245,7 @@ def _run_grading_legacy(
             ["docker", "exec", *env_args, task_id, "python3", "/tmp/_grade_runner.py"],
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=_grading_timeout_seconds(),
         )
         if r.returncode != 0:
             logger.error("[%s] Grading script execution failed: %s", task_id, r.stderr)
@@ -318,7 +349,7 @@ def _exec_container_grade(
         env_args = _build_grading_env_args(task_id, extra_env, lobster_env)
         r = subprocess.run(
             ["docker", "exec", *env_args, task_id, "python3", "/tmp/_grade_runner.py"],
-            capture_output=True, text=True, timeout=120,
+            capture_output=True, text=True, timeout=_grading_timeout_seconds(),
         )
         if r.returncode != 0:
             return None, f"grade script failed: {r.stderr}"
@@ -348,8 +379,15 @@ def _build_grading_env_args(
         if not value:
             continue
         env_args += ["-e", f"{key}={value}"]
-    for key in ("ANTHROPIC_API_KEY", "ANTHROPIC_BASE_URL", "ANTHROPIC_MODEL",
-                "JUDGE_MODEL", "OPENROUTER_API_KEY", "OPENROUTER_BASE_URL"):
+    for key in (
+        "ANTHROPIC_API_KEY",
+        "ANTHROPIC_BASE_URL",
+        "ANTHROPIC_MODEL",
+        "JUDGE_MODEL",
+        "OPENROUTER_API_KEY",
+        "OPENROUTER_BASE_URL",
+        "WILDCLAW_JUDGE_TIMEOUT_SECONDS",
+    ):
         value = os.environ.get(key, "").strip()
         if value:
             env_args += ["-e", f"{key}={value}"]
@@ -450,7 +488,7 @@ def _exec_container_python(
         env_args = _build_grading_env_args(task_id, "", None)
         r = subprocess.run(
             ["docker", "exec", *env_args, task_id, "python3", "/tmp/_judge_runner.py"],
-            capture_output=True, text=True, timeout=180,
+            capture_output=True, text=True, timeout=_grading_timeout_seconds(),
         )
         if r.returncode != 0:
             return None, f"judge runner failed: {r.stderr}"

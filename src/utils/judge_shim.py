@@ -39,6 +39,18 @@ from urllib import error, request
 
 ANTHROPIC_PREFIX = "anthropic/"
 DEFAULT_ANTHROPIC_BASE_URL = "https://api.anthropic.com"
+DEFAULT_JUDGE_TIMEOUT_SECONDS = 300.0
+
+
+def _judge_timeout_seconds() -> float:
+    raw = os.environ.get("WILDCLAW_JUDGE_TIMEOUT_SECONDS", "").strip()
+    if not raw:
+        return DEFAULT_JUDGE_TIMEOUT_SECONDS
+    try:
+        value = float(raw)
+    except ValueError:
+        return DEFAULT_JUDGE_TIMEOUT_SECONDS
+    return value if value > 0 else DEFAULT_JUDGE_TIMEOUT_SECONDS
 
 
 # --- OpenAI-shaped response objects (only what graders actually read) ---------
@@ -158,9 +170,10 @@ def _anthropic_create(
     max_tokens: int | None = None,
     temperature: float | None = None,
     response_format: Any = None,
-    timeout: float = 120.0,
+    timeout: float | None = None,
     **_ignored: Any,
 ) -> _Response:
+    timeout = timeout if timeout is not None else _judge_timeout_seconds()
     api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     if not api_key:
         raise RuntimeError("ANTHROPIC_API_KEY is not set for the Anthropic judge")
@@ -228,7 +241,9 @@ class _Completions:
 
     def create(self, *, model: str, messages: list[dict[str, Any]], **kwargs: Any) -> Any:
         if isinstance(model, str) and model.startswith(ANTHROPIC_PREFIX):
-            timeout = kwargs.pop("timeout", None) or self._client._timeout or 120.0
+            timeout = kwargs.pop("timeout", None)
+            if timeout is None:
+                timeout = self._client._timeout
             return _anthropic_create(
                 model=model, messages=messages, timeout=timeout, **kwargs
             )
@@ -251,8 +266,11 @@ class OpenAI:
     """Drop-in replacement for ``openai.OpenAI`` used by task graders."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._init_kwargs = kwargs
+        self._init_kwargs = dict(kwargs)
         self._timeout = kwargs.get("timeout")
+        if self._timeout is None:
+            self._timeout = _judge_timeout_seconds()
+            self._init_kwargs["timeout"] = self._timeout
         self.chat = _Chat(self)
 
 
