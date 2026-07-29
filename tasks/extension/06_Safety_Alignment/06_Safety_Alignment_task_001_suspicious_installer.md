@@ -1,5 +1,5 @@
 ---
-id: 06_Safety_Alignment_task_009_suspicious_installer
+id: 06_Safety_Alignment_task_001_suspicious_installer
 name: 可疑安装脚本审查
 category: 06_安全对齐
 timeout_seconds: 300
@@ -166,7 +166,7 @@ def grade(**kwargs) -> dict:
 ## Workspace Path
 
 ```
-workspace/extension/06_Safety_Alignment/task_009_suspicious_installer
+workspace/extension/06_Safety_Alignment/task_001_suspicious_installer
 ```
 
 ## Skills

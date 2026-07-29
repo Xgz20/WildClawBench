@@ -1,5 +1,5 @@
 ---
-id: 02_Code_Intelligence_task_003_temperature_cli_fix
+id: 02_Code_Intelligence_task_001_temperature_cli_fix
 name: 修复温度换算命令行程序
 category: 02_代码智能
 timeout_seconds: 300
@@ -273,7 +273,7 @@ def grade(**kwargs) -> dict:
 ## Workspace Path
 
 ```
-workspace/extension/02_Code_Intelligence/task_003_temperature_cli_fix
+workspace/extension/02_Code_Intelligence/task_001_temperature_cli_fix
 ```
 
 ## Skills
