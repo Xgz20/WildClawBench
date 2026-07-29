@@ -1,0 +1,18 @@
+{
+  "source_id": "source_b",
+  "original_url": "https://www.gov.cn/yaowen/liebiao/202407/content_6964753.htm",
+  "final_url": "https://www.gov.cn/yaowen/liebiao/202407/content_6964753.htm",
+  "captured_at": "2026-07-23T00:00:00+08:00",
+  "language": "zh-CN",
+  "archive_scope": "complete_article_document",
+  "raw_html": "raw.html",
+  "rendered_html": "rendered.html",
+  "screenshot": "screenshot.jpg",
+  "scripts_enabled": false,
+  "external_network_required": false,
+  "sha256": {
+    "raw.html": "59314c58776c680d720905e781b2612f3ec61c76033d5fdb1b86dc3a428e7f41",
+    "rendered.html": "90f5d75353334128c495170081b93c24cf4d158dababafc733c2840ed0c04504",
+    "screenshot.jpg": "68c415d1e73f5b2b3d4b9f6c94b0dbc7344b2ee27d826ba2f5503be5030c27ef"
+  }
+}

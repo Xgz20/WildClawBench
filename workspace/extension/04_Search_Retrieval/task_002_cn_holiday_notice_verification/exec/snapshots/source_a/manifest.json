@@ -1,0 +1,18 @@
+{
+  "source_id": "source_a",
+  "original_url": "https://news.sohu.com/a/851546853_121124602",
+  "final_url": "https://news.sohu.com/a/851546853_121124602",
+  "captured_at": "2026-07-23T00:00:00+08:00",
+  "language": "zh-CN",
+  "archive_scope": "complete_article_document",
+  "raw_html": "raw.html",
+  "rendered_html": "rendered.html",
+  "screenshot": "screenshot.jpg",
+  "scripts_enabled": false,
+  "external_network_required": false,
+  "sha256": {
+    "raw.html": "678c3b93ca96de5e1faa4c7704ead27ebf5724635004045a6e7f2e8e4fcbb7c4",
+    "rendered.html": "5bd85f7ba9283b99fe049d93e3a36c20170d148af7c0adbb11dd116b167595f1",
+    "screenshot.jpg": "1ae0824a5d385dc8592fe71ea37eff42147f596d6443a3719c8ddd65c5ba1c2b"
+  }
+}

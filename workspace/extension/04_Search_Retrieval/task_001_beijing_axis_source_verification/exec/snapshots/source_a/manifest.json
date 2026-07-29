@@ -1,0 +1,18 @@
+{
+  "source_id": "source_a",
+  "original_url": "https://baike.baidu.com/item/%E5%8C%97%E4%BA%AC%E4%B8%AD%E8%BD%B4%E7%BA%BF/5315908",
+  "final_url": "https://baike.baidu.com/item/%E5%8C%97%E4%BA%AC%E4%B8%AD%E8%BD%B4%E7%BA%BF/5315908",
+  "captured_at": "2026-07-23T00:00:00+08:00",
+  "language": "zh-CN",
+  "archive_scope": "complete_article_document",
+  "raw_html": "raw.html",
+  "rendered_html": "rendered.html",
+  "screenshot": "screenshot.jpg",
+  "scripts_enabled": false,
+  "external_network_required": false,
+  "sha256": {
+    "raw.html": "f9c90152df682eddbf5967bd7329460e7768d597c0714b98365e3f5b0c12fa9d",
+    "rendered.html": "d749b61d90e307239077249fa81d4d80729844fe82fe17b9bdb912a62efc214e",
+    "screenshot.jpg": "a0e984f48fff5671d743f137ce984d269e9cd396ee07d1edace87ef86ee693c5"
+  }
+}

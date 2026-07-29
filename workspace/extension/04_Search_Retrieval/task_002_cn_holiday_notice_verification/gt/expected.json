@@ -1,0 +1,32 @@
+{
+  "start_date": "2025-01-28",
+  "end_date": "2025-02-04",
+  "days": 8,
+  "adjusted_workdays": [
+    "2025-01-26",
+    "2025-02-08"
+  ],
+  "official_source_id": "source_b",
+  "official_source_url": "https://www.gov.cn/zhengce/zhengceku/202411/content_6986383.htm",
+  "official_snapshot": "snapshots/source_b/rendered.html",
+  "exec_file_sha256": {
+    "source_candidates.json": "a3e4086bced0d40c66eaed6f2de21fdce8d9c4c31ece80b4b78c831f8e4c0447",
+    "snapshots/source_a/assets/README.txt": "5aef8ffc51584e712cea99329256efd84e61c9e9eaed322cdd6ac0564182a673",
+    "snapshots/source_a/manifest.json": "db35272857b4fa960604234e934e3b87343b6a1f406348f75ad116b353223701",
+    "snapshots/source_a/raw.html": "678c3b93ca96de5e1faa4c7704ead27ebf5724635004045a6e7f2e8e4fcbb7c4",
+    "snapshots/source_a/rendered.html": "5bd85f7ba9283b99fe049d93e3a36c20170d148af7c0adbb11dd116b167595f1",
+    "snapshots/source_a/screenshot.jpg": "1ae0824a5d385dc8592fe71ea37eff42147f596d6443a3719c8ddd65c5ba1c2b",
+    "snapshots/source_b/assets/README.txt": "5aef8ffc51584e712cea99329256efd84e61c9e9eaed322cdd6ac0564182a673",
+    "snapshots/source_b/manifest.json": "94abdc13b363e6f6c373cb71b0f0bd570f2606eabe3687957a6b4c4d982929ec",
+    "snapshots/source_b/raw.html": "8ee6f601dd44f30cd2257b5bb6ef1fd5996984e124fe9ecd13e2c2947f43bc39",
+    "snapshots/source_b/rendered.html": "7bf10cf6c45f59a8673d33d1ab2df755bab954a4a3584967ee0484435cd9a3e2",
+    "snapshots/source_b/screenshot.jpg": "c7f30a71159c401f457b67199d54a818ff49d3a761b98853db1b2c83dc041249"
+  },
+  "required_evidence_fragments": [
+    "1月28日",
+    "2月4日",
+    "共8天",
+    "1月26日",
+    "2月8日"
+  ]
+}

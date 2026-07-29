@@ -1,0 +1,14 @@
+{
+  "policy_id": "TP-2025-v1",
+  "status": "superseded",
+  "effective_from": "2025-01-01",
+  "effective_to": "2025-12-31",
+  "currency": "CNY",
+  "rule": "Reject the full expense when a receipt is required but missing, or when the amount exceeds the per-expense limit.",
+  "categories": {
+    "taxi": {"limit": 80.0, "receipt_required": true},
+    "meal": {"limit": 80.0, "receipt_required": true},
+    "hotel": {"limit": 500.0, "receipt_required": true},
+    "office": {"limit": 200.0, "receipt_required": true}
+  }
+}

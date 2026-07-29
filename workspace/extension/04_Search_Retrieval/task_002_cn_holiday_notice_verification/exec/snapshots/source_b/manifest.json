@@ -1,0 +1,18 @@
+{
+  "source_id": "source_b",
+  "original_url": "https://www.gov.cn/zhengce/zhengceku/202411/content_6986383.htm",
+  "final_url": "https://www.gov.cn/zhengce/zhengceku/202411/content_6986383.htm",
+  "captured_at": "2026-07-23T00:00:00+08:00",
+  "language": "zh-CN",
+  "archive_scope": "complete_article_document",
+  "raw_html": "raw.html",
+  "rendered_html": "rendered.html",
+  "screenshot": "screenshot.jpg",
+  "scripts_enabled": false,
+  "external_network_required": false,
+  "sha256": {
+    "raw.html": "8ee6f601dd44f30cd2257b5bb6ef1fd5996984e124fe9ecd13e2c2947f43bc39",
+    "rendered.html": "7bf10cf6c45f59a8673d33d1ab2df755bab954a4a3584967ee0484435cd9a3e2",
+    "screenshot.jpg": "c7f30a71159c401f457b67199d54a818ff49d3a761b98853db1b2c83dc041249"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "file_count": 3,
+  "files": [
+    {
+      "source_name": "scan_001.txt",
+      "archive_name": "2026-06-01_taxi_R-001.txt",
+      "sha256": "7c4a8e5dc9f6db2b7bb7d43fc36146b6a759cdc7cff20f9affd4d5fc4927e0e2",
+      "size_bytes": 30
+    },
+    {
+      "source_name": "scan_002.txt",
+      "archive_name": "2026-06-02_hotel_R-002.txt",
+      "sha256": "a17fb7375ea1425d3c9a0643889bbb9001e98caaf0e5d4cd9e350fd5364f9ce6",
+      "size_bytes": 31
+    },
+    {
+      "source_name": "scan_003.txt",
+      "archive_name": "2026-06-03_meal_R-003.txt",
+      "sha256": "57b3bc48ae4397bf93703b1ce853386c88494a73559295392a102f2378ecc439",
+      "size_bytes": 30
+    }
+  ],
+  "exec_file_sha256": {
+    "inbox.zip.b64": "6afe46d904602a4b3c084f8a05d49a818e4e265190e0c80b84141338190cf19c",
+    "rename_map.csv": "3ef90975d945d7b3bb00feb32dc121d00375636d0ff680dc13373dd1159cda2f"
+  }
+}
