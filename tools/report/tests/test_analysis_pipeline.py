@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 
 from openpyxl import load_workbook
+from src.utils.run_selection import write_rerun_metadata
 
 
 REPORT_DIR = Path(__file__).resolve().parents[1]
@@ -59,9 +60,13 @@ class AnalysisPipelineTest(unittest.TestCase):
                 json.dumps({"status": "completed"}), encoding="utf-8"
             )
             (run_dir / "usage.json").write_text(
-                json.dumps({"request_count": 1}), encoding="utf-8"
+                json.dumps({"request_count": 1, "total_tokens": 100}), encoding="utf-8"
             )
-            (run_dir / "chat_openclaw.jsonl").write_text("", encoding="utf-8")
+            (run_dir / "chat_openclaw.jsonl").write_text(
+                "\n".join(json.dumps({"type": "event", "payload": {"index": index}})
+                          for index in range(5)),
+                encoding="utf-8",
+            )
             self.paths[task_id] = run_dir
 
         self.tasks_dir = Path(self.temp_dir.name) / "tasks"
@@ -98,6 +103,25 @@ class AnalysisPipelineTest(unittest.TestCase):
         }
         values.update(overrides)
         return manifest.build_selection(**values)
+
+    def add_valid_run(self, task_id: str, name: str, score: float) -> Path:
+        run_dir = self.suite_dir / task_id / name
+        run_dir.mkdir()
+        (run_dir / "score.json").write_text(
+            json.dumps({"overall_score": score, "check": score}), encoding="utf-8"
+        )
+        (run_dir / "execution_status.json").write_text(
+            json.dumps({"status": "completed"}), encoding="utf-8"
+        )
+        (run_dir / "usage.json").write_text(
+            json.dumps({"request_count": 1, "total_tokens": 100}), encoding="utf-8"
+        )
+        (run_dir / "chat_openclaw.jsonl").write_text(
+            "\n".join(json.dumps({"type": "event", "payload": {"index": index}})
+                      for index in range(5)),
+            encoding="utf-8",
+        )
+        return run_dir
 
     def selected_ids(self, selection, task_ids=None, task_paths=None):
         records = [dict(record) for record in self.records]
@@ -375,6 +399,97 @@ class AnalysisPipelineTest(unittest.TestCase):
         report = report_audit.audit_report(self.unit_dir, excel_path, self.tasks_dir, None)
         self.assertFalse([item for item in report["findings"] if item["severity"] == "error"])
         self.assertEqual(report["verdict"], "REVIEW")  # 缺少可选 validity，仅需人工复核。
+
+    def test_audit_normalizes_nested_harness_version_label(self) -> None:
+        self.assertEqual(report_audit.normalize_harness("openclaw ((9f68ba9))"), "openclaw")
+        self.assertEqual(report_audit.normalize_harness("opencode (1.18.4)"), "opencode")
+
+    def test_excel_execution_errors_exclude_evaluation_failures(self) -> None:
+        harness_run = self.paths["task_50"]
+        framework_run = self.paths["task_70"]
+        timeout_run = self.paths["task_almost_full"]
+        (harness_run / "execution_status.json").write_text(json.dumps({
+            "status": "error", "failure_stage": "astroncode_running",
+            "error": "AstronCode run failed (rc=1)",
+        }), encoding="utf-8")
+        (framework_run / "execution_status.json").write_text(json.dumps({
+            "status": "error", "failure_stage": "preparing_workspace",
+            "error": "workspace preparation failed",
+        }), encoding="utf-8")
+        (timeout_run / "execution_status.json").write_text(json.dumps({
+            "status": "timed_out", "timed_out": True, "error": "timed out",
+        }), encoding="utf-8")
+
+        excel_path = self.generate_auditable_excel()
+        workbook = load_workbook(excel_path, read_only=True)
+        sheet = workbook["总览"]
+        headers = [cell.value for cell in sheet[1]]
+        values = {header: sheet.cell(2, index + 1).value
+                  for index, header in enumerate(headers)}
+        self.assertEqual(values["正常完成数"], 2)
+        self.assertEqual(values["执行错误数"], 1)
+        self.assertEqual(values["超时数"], 1)
+        # task_70 框架错误 + task_unscored 缺少 score.json。
+        self.assertEqual(values["评测异常数"], 2)
+        self.assertEqual(
+            values["正常完成数"] + values["执行错误数"]
+            + values["超时数"] + values["评测异常数"],
+            values["用例数"],
+        )
+
+        report = report_audit.audit_report(self.unit_dir, excel_path, self.tasks_dir, None)
+        self.assertFalse([item for item in report["findings"] if item["severity"] == "error"])
+
+    def test_reliability_rerun_replaces_old_run_without_increasing_case_count(self) -> None:
+        old_run = self.paths["task_50"]
+        (old_run / "execution_status.json").write_text(json.dumps({
+            "status": "error", "failure_stage": "astroncode_running",
+            "error": "AstronCode run failed (rc=1)",
+        }), encoding="utf-8")
+        new_run = self.add_valid_run("task_50", "run_002", 0.9)
+        write_rerun_metadata(
+            new_run,
+            supersedes_run=str(old_run),
+            trigger="rerun_anomalous",
+            task_id="task_50",
+            model="model-x",
+        )
+
+        record = excel_report.TaskRecord("01_suite", old_run.parent, "harness-y")
+        self.assertEqual(record.runs, 1)
+        self.assertAlmostEqual(record.score, 0.9)
+        manifest_record = next(
+            item for item in manifest.scan_unit(
+                "model-x", "harness-y", self.unit_dir, self.tasks_dir
+            )
+            if item["task_id"] == "task_50"
+        )
+        self.assertEqual(Path(manifest_record["run_dir"]), new_run)
+        self.assertAlmostEqual(manifest_record["overall_score"], 0.9)
+
+        excel_path = self.generate_auditable_excel()
+        workbook = load_workbook(excel_path, read_only=True)
+        overview = workbook["总览"]
+        headers = [cell.value for cell in overview[1]]
+        values = {header: overview.cell(2, index + 1).value
+                  for index, header in enumerate(headers)}
+        self.assertEqual(values["用例数"], 6)
+
+        validity = validity_check.scan_round(self.unit_dir, self.tasks_dir)
+        task = validity["units"]["model-x@harness-y"]["tasks"]["01_suite/task_50"]
+        self.assertEqual(task["run_count"], 1)
+        self.assertEqual(task["all_run_count"], 2)
+        self.assertEqual(task["ignored_run_count"], 1)
+        self.assertFalse(any(item["run_dir"] == str(old_run)
+                             for item in validity["findings"]))
+
+    def test_formal_valid_multirun_still_uses_all_runs(self) -> None:
+        old_run = self.paths["task_50"]
+        self.add_valid_run("task_50", "run_002", 0.9)
+
+        record = excel_report.TaskRecord("01_suite", old_run.parent, "harness-y")
+        self.assertEqual(record.runs, 2)
+        self.assertAlmostEqual(record.score, 0.7)
 
     def test_audit_detects_request_count_regression(self) -> None:
         excel_path = self.generate_auditable_excel()

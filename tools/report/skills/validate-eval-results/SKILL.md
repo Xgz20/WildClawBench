@@ -28,6 +28,10 @@ python3 tools/report/skills/validate-eval-results/scripts/validate_eval_results.
 4. 对环境故障定位影响范围：单模型、单 Harness、单任务，还是有直接证据的共享环境共因。多 unit 同时出现相同文字只能作为辅助证据。
 5. 记录每个 `REVIEW` 的人工结论。修复确定性问题并重跑后再次检查。
 
+可靠性重跑会保留旧目录，并在新 run 的 `run_metadata.json` 中记录
+`supersedes_run`。检查时只对有效 run 做门禁，被替换的旧 run 作为审计历史保留，
+不得继续令当前轮次 `FAIL`；没有替换关系的多个有效 run 仍按正式多轮检查。
+
 ## 门禁规则
 
 - `PASS`：未发现评测框架、数据或共因环境问题，可进入报告生成；允许存在已归因为模型/Harness 的运行结果记录。

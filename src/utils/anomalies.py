@@ -48,6 +48,9 @@ _FRAMEWORK_STAGES = {
     "collecting_artifacts",
     "grading",
     "parsing_metrics",
+    "preparing_harness_input",
+    "launching_harness",
+    "harness_launch_failed",
 }
 _HARNESS_STAGES = {
     "astroncode_running",
@@ -246,7 +249,8 @@ def _finalize(items: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _execution_error_item(status: dict) -> dict[str, Any]:
+def classify_execution_error(status: dict) -> dict[str, Any]:
+    """按结构化阶段归因非超时执行错误，供异常、报告和审核共享。"""
     error = str(status.get("error") or "execution_status=error")
     stage = str(status.get("failure_stage") or status.get("stage") or "unknown")
     evidence = [{"file": "execution_status.json", "field": "failure_stage", "value": stage}]
@@ -286,6 +290,29 @@ def _execution_error_item(status: dict) -> dict[str, Any]:
         validity_impact="review", score_reliability="requires_review",
         rerun_action="review_first", evidence=evidence,
     )
+
+
+def classify_report_outcome(
+    status: dict,
+    grading_error: str = "",
+    anomaly_items: Iterable[dict[str, Any]] | None = None,
+) -> str:
+    """返回报告互斥状态：finished/execution_error/timeout/evaluation_anomaly。"""
+    if grading_error:
+        return "evaluation_anomaly"
+    if any(
+        item.get("validity_impact") in {"fail", "review"}
+        for item in (anomaly_items or [])
+    ):
+        return "evaluation_anomaly"
+    if bool(status.get("timed_out")):
+        return "timeout"
+    if status.get("error") or str(status.get("status") or "") == "error":
+        item = classify_execution_error(status)
+        if item.get("attribution") in {"model", "harness"}:
+            return "execution_error"
+        return "evaluation_anomaly"
+    return "finished"
 
 
 def _structured_model_errors(run_dir: Path, status: dict) -> list[dict[str, Any]]:
@@ -432,7 +459,7 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
 
     execution_item: dict[str, Any] | None = None
     if str(status.get("status") or "") == "error":
-        execution_item = _execution_error_item(status)
+        execution_item = classify_execution_error(status)
         items.append(execution_item)
 
     timed_out = bool(status.get("timed_out"))

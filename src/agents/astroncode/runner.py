@@ -214,7 +214,7 @@ class AstronCodeAgent(BaseAgent):
                 if image_helper_enabled:
                     self._install_image_helper(task_id, spec.model)
                 snapshot_workspace_state(task_id)
-                write_execution_status(spec.output_dir, status="astroncode_running")
+                write_execution_status(spec.output_dir, status="preparing_harness_input")
                 self._run_prompt(
                     task_id=task_id,
                     prompt=self._build_task_prompt(
@@ -861,10 +861,14 @@ if __name__ == "__main__":
         output_dir.mkdir(parents=True, exist_ok=True)
         prompt_path = prepare_codex_prompt(task_id, prompt, CODEX_PROMPT_PATH)
         log_path = output_dir / "agent.log"
+        write_execution_status(output_dir, status="launching_harness")
         r = self._run_codex_exec(task_id, prompt_path, timeout_seconds, log_path)
 
         if r.returncode == 0:
             return
+
+        if r.returncode in {125, 126, 127}:
+            write_execution_status(output_dir, status="harness_launch_failed")
 
         raise RuntimeError(
             f"AstronCode run failed (rc={r.returncode}):\n{r.stderr or r.stdout}"
@@ -883,6 +887,7 @@ if __name__ == "__main__":
                 stderr=subprocess.STDOUT,
                 text=True,
             )
+            write_execution_status(log_path.parent, status="astroncode_running")
             try:
                 returncode = proc.wait(timeout=timeout_seconds)
             except subprocess.TimeoutExpired:

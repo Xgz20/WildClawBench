@@ -98,7 +98,10 @@ except Exception:  # 独立分发/路径异常时降级：不统计工具调用�
         return {"total": 0, "success": 0, "failure": 0, "format_error": 0,
                 "unclear": 0, "by_tool": {}}
     _tm_format_accuracy = _tm_exec_success = _tm_overall_success = \
-        _tm_unclear_ratio = lambda m: None
+    _tm_unclear_ratio = lambda m: None
+
+from src.utils.anomalies import classify_execution_error, classify_report_outcome, scan_run_dir
+from src.utils.run_selection import select_effective_run_dirs
 
 # 7 维能力口径（与 PinchBench cap7 对齐）；映射文件见 tools/report/data/checkpoint_capability_map7.yaml
 CAP7_ORDER = ["code_generation", "tool_use", "data_processing", "retrieval_verification",
@@ -223,7 +226,8 @@ class TaskRecord:
         self.task_id = task_dir.name
         self.suite = suite
         self.harness = harness
-        run_dirs = sorted(p for p in task_dir.iterdir() if p.is_dir())
+        all_run_dirs = sorted(p for p in task_dir.iterdir() if p.is_dir())
+        run_dirs = select_effective_run_dirs(all_run_dirs, scan_run_dir)
 
         # 多轮支持：收集全部 run 的 overall_score，取 mean 作为代表分
         all_scores = []
@@ -283,6 +287,22 @@ class TaskRecord:
         self.error_execution = status.get("error") or ""
         self.timed_out = bool(status.get("timed_out"))
         self.status = status.get("status") or ""
+        self.run_anomalies = scan_run_dir(self.run_dir) if self.run_dir else {"items": []}
+        self.outcome = classify_report_outcome(
+            status, self.error_grading, self.run_anomalies.get("items", [])
+        )
+        self.execution_attribution = ""
+        if self.error_execution or self.status == "error":
+            material_attributions = sorted({
+                str(item.get("attribution"))
+                for item in self.run_anomalies.get("items", [])
+                if item.get("validity_impact") in {"fail", "review"}
+                and item.get("attribution")
+            })
+            self.execution_attribution = (
+                ",".join(material_attributions)
+                or classify_execution_error(status).get("attribution", "")
+            )
         self.elapsed = status.get("elapsed_time")
         # Harness build version (runner writes it to execution_status.json).
         self.harness_version = status.get("harness_version") or ""
@@ -619,7 +639,8 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
     # 仅当存在任一已注册 harness 的有效指标时才追加，避免全 N/A 空列。
     has_tool_metrics = any(u.tool_metrics_total().get("total", 0) for u in units)
     tool_cols = ["工具调用数", "格式准确率", "执行成功率", "不确定占比"] if has_tool_metrics else []
-    header = (["模型", "Harness", "总平均分", "用例数", "正常完成数", "执行错误数", "超时数", "完成率"]
+    header = (["模型", "Harness", "总平均分", "用例数", "正常完成数", "执行错误数", "超时数",
+               "评测异常数", "完成率"]
               + multirun_cols
               + ["总tokens", "总请求数", "总耗时(s)", "总成本(USD)"]
               + tool_cols)
@@ -627,16 +648,16 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
     for u in units:
         suite_ids = {s: {t.task_id for t in u.tasks if t.suite == s} for s in suites}
         n_total = len(u.tasks)
-        # 三态互斥且完备（finished + 非超时执行错误 + 超时 = 用例数）：
-        # 超时任务的 execution_status 同时写了 error 字段（"...timed out"），
-        # 故执行错误数排除 timed_out，使三列互斥不重复计数。
-        n_error = sum(1 for t in u.tasks if t.error_execution and not t.timed_out)
-        n_timeout = sum(1 for t in u.tasks if t.timed_out)
-        n_finished = n_total - n_error - n_timeout
+        # 四态互斥且完备。执行错误只保留模型/Harness 组合错误；评测框架、
+        # 环境、外部服务、未定执行错误及判分错误归入“评测异常数”。
+        n_finished = sum(1 for t in u.tasks if t.outcome == "finished")
+        n_error = sum(1 for t in u.tasks if t.outcome == "execution_error")
+        n_timeout = sum(1 for t in u.tasks if t.outcome == "timeout")
+        n_evaluation_anomaly = sum(1 for t in u.tasks if t.outcome == "evaluation_anomaly")
         finish_rate = round(n_finished / n_total * 100, 1) if n_total else 0.0
         row = [
             u.model, u.harness_label, round(u.total_pct, 1), n_total,
-            n_finished, n_error, n_timeout, finish_rate,
+            n_finished, n_error, n_timeout, n_evaluation_anomaly, finish_rate,
         ]
         if has_multirun:
             # 仅平均轮数（跨题平均 std 无统计意义，不展示）
@@ -658,12 +679,10 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
                 _pct_or_dash(_tm_unclear_ratio(tm)),
             ]
         ws.append(row)
-        # 百分比列：总平均分(3)、完成率(8)
-        pct_cols = [3, 8]
+        pct_cols = [header.index("总平均分") + 1, header.index("完成率") + 1]
         if tool_cols:
-            # 工具指标 3 个比率列（资源列之后，从 tokens/请求数/耗时/成本 再 +1）
-            tool_start = 9 + len(multirun_cols) + 4  # 完成率后+multirun+4资源
-            pct_cols += [tool_start + 1, tool_start + 2, tool_start + 3]  # 格式/成功/不确定
+            pct_cols += [header.index(name) + 1 for name in
+                         ("格式准确率", "执行成功率", "不确定占比")]
         apply_pct_format(ws, ws.max_row, pct_cols)
         g_avg = u.summary.get("global_avg")
         if g_avg is not None and abs(u.total_pct / 100 - g_avg) > 0.005:
@@ -1205,7 +1224,8 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
         meta = task_meta.get(tid, {})
         item = analysis.get(f"{u.unit}::{tid}", {})
         err = "\n".join(x for x in (
-            f"执行层: {t.error_execution}" if t.error_execution else "",
+            (f"执行层[{t.execution_attribution or 'undetermined'}]: {t.error_execution}"
+             if t.error_execution else ""),
             f"判分层: {t.error_grading}" if t.error_grading else "",
         ) if x) or "-"
 
@@ -1356,13 +1376,12 @@ def build_summary(
             "cost_usd": round(u.usage_total("cost_usd"), 4),
             "elapsed_time": round(u.usage_total("elapsed_time"), 1),
             "request_count": int(u.usage_total("request_count")),
-            # 与总览 Sheet 一致：排除超时（超时任务也写了 execution error 字段），
-            # 使 error_count 与 timeout_count 互斥。
-            "error_count": sum(
-                1 for t in u.tasks
-                if (t.error_grading or t.error_execution) and not t.timed_out
+            "finished_count": sum(1 for t in u.tasks if t.outcome == "finished"),
+            "error_count": sum(1 for t in u.tasks if t.outcome == "execution_error"),
+            "timeout_count": sum(1 for t in u.tasks if t.outcome == "timeout"),
+            "evaluation_anomaly_count": sum(
+                1 for t in u.tasks if t.outcome == "evaluation_anomaly"
             ),
-            "timeout_count": sum(1 for t in u.tasks if t.timed_out),
             "max_runs": max_runs,
             "avg_pass_at_k": (
                 round(sum(pass_at_k_vals) / len(pass_at_k_vals), 4)
@@ -1551,13 +1570,14 @@ def render_markdown(summary: dict) -> str:
     # 单元汇总
     lines.append("## 单元汇总")
     lines.append("")
-    lines.append("| 单元 | 平均分 | Tokens | 成本($) | 错误 | 超时 |")
-    lines.append("|------|--------|--------|---------|------|------|")
+    lines.append("| 单元 | 平均分 | Tokens | 成本($) | 执行错误 | 超时 | 评测异常 |")
+    lines.append("|------|--------|--------|---------|----------|------|----------|")
     for item in summary["run_summaries"]:
         lines.append(
             f"| {item['run_label']} | {item['average_score']*100:.1f}% | "
             f"{item['total_tokens']:,} | {item['cost_usd']:.4f} | "
-            f"{item['error_count']} | {item['timeout_count']} |"
+            f"{item['error_count']} | {item['timeout_count']} | "
+            f"{item['evaluation_anomaly_count']} |"
         )
     lines.append("")
 
@@ -1659,7 +1679,8 @@ def render_html(summary: dict) -> str:
     unit_rows = "".join(
         f"<tr><td>{item['run_label']}</td><td>{pct01(item['average_score'])}</td>"
         f"<td>{item['total_tokens']:,}</td><td>{item['cost_usd']:.4f}</td>"
-        f"<td>{item['error_count']}</td><td>{item['timeout_count']}</td></tr>"
+        f"<td>{item['error_count']}</td><td>{item['timeout_count']}</td>"
+        f"<td>{item['evaluation_anomaly_count']}</td></tr>"
         for item in summary["run_summaries"]
     )
 
@@ -1757,7 +1778,7 @@ th{{background:#f3f4f6;font-weight:600}}
 <strong>总任务数</strong>: {summary['overview']['total_tasks']} |
 <strong>平均分</strong>: {summary['overview']['average_score']*100:.1f}%</p>
 <h2>单元汇总</h2>
-<table><thead><tr><th>单元</th><th>平均分</th><th>Tokens</th><th>成本($)</th><th>错误</th><th>超时</th></tr></thead>
+<table><thead><tr><th>单元</th><th>平均分</th><th>Tokens</th><th>成本($)</th><th>执行错误</th><th>超时</th><th>评测异常</th></tr></thead>
 <tbody>{unit_rows}</tbody></table>
 <h2>用例对比明细</h2>
 <table><thead><tr><th>用例ID</th><th>难度</th><th>最优分</th><th>分差</th>{units_th}</tr></thead>

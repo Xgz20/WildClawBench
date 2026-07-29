@@ -5,7 +5,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from src.utils.anomalies import RULESET_VERSION, SCHEMA_VERSION, scan_run_dir
+from src.utils.anomalies import (
+    RULESET_VERSION,
+    SCHEMA_VERSION,
+    classify_report_outcome,
+    scan_run_dir,
+)
 
 
 class AnomalyDetectionTest(unittest.TestCase):
@@ -204,6 +209,39 @@ class AnomalyDetectionTest(unittest.TestCase):
         finally:
             temp_dir.cleanup()
 
+    def test_report_outcome_excludes_framework_errors_from_execution_errors(self) -> None:
+        self.assertEqual(classify_report_outcome({
+            "status": "error", "failure_stage": "astroncode_running",
+            "error": "AstronCode run failed (rc=1)",
+        }), "execution_error")
+        for stage in ("preparing_workspace", "preparing_harness_input",
+                      "launching_harness", "harness_launch_failed"):
+            self.assertEqual(classify_report_outcome({
+                "status": "error", "failure_stage": stage, "error": "launch failed",
+            }), "evaluation_anomaly")
+        self.assertEqual(classify_report_outcome({
+            "status": "timed_out", "timed_out": True, "error": "timed out",
+        }), "timeout")
+        self.assertEqual(classify_report_outcome({"status": "finished"}, "grading failed"),
+                         "evaluation_anomaly")
+
+    def test_report_outcome_prioritizes_structured_model_api_anomaly(self) -> None:
+        status = {
+            "status": "error",
+            "failure_stage": "astroncode_running",
+            "error": "AstronCode run failed (rc=1)",
+        }
+        anomaly_items = [{
+            "code": "MODEL_API_RATE_LIMIT",
+            "attribution": "external_service",
+            "validity_impact": "review",
+        }]
+
+        self.assertEqual(
+            classify_report_outcome(status, anomaly_items=anomaly_items),
+            "evaluation_anomaly",
+        )
+
     def test_error_text_without_failure_stage_cannot_prove_environment_failure(self) -> None:
         temp_dir, run_dir = self.make_run()
         try:
@@ -310,6 +348,58 @@ class AnomalyDetectionTest(unittest.TestCase):
             refreshed = json.loads((run_dir / "anomalies.json").read_text(encoding="utf-8"))
             self.assertEqual(refreshed["schema_version"], SCHEMA_VERSION)
             self.assertFalse(refreshed["needs_rerun"])
+
+    def test_resume_marks_reliability_rerun_as_replacement(self) -> None:
+        from eval.run_batch import _load_resume_result
+
+        with tempfile.TemporaryDirectory() as temp:
+            output_root = Path(temp)
+            run_dir = output_root / "01_suite/task_1/model-x_20260728_1200_abc123"
+            run_dir.mkdir(parents=True)
+            self.write_json(run_dir / "execution_status.json", {
+                "status": "error", "failure_stage": "preparing_workspace",
+                "error": "workspace preparation failed", "model": "model-x",
+            })
+            self.write_json(run_dir / "usage.json", {
+                "request_count": 1, "total_tokens": 100,
+            })
+            self.write_json(run_dir / "score.json", {"overall_score": 0.0})
+            events = [{"type": "event", "payload": {"index": index}} for index in range(5)]
+            (run_dir / "chat.jsonl").write_text(
+                "\n".join(json.dumps(event) for event in events), encoding="utf-8"
+            )
+            task = {"category": "01_suite", "task_id": "task_1"}
+
+            result = _load_resume_result(
+                output_root, task, "model-x",
+                rerun_error=True, rerun_anomalous=False,
+            )
+
+            self.assertIsNone(result)
+            self.assertEqual(task["_reliability_rerun"], {
+                "supersedes_run": str(run_dir),
+                "trigger": "rerun_error",
+            })
+
+    def test_resume_marks_missing_score_run_as_replaced(self) -> None:
+        from eval.run_batch import _load_resume_result
+
+        with tempfile.TemporaryDirectory() as temp:
+            output_root = Path(temp)
+            run_dir = output_root / "01_suite/task_1/model-x_20260728_1200_abc123"
+            run_dir.mkdir(parents=True)
+            task = {"category": "01_suite", "task_id": "task_1"}
+
+            result = _load_resume_result(
+                output_root, task, "model-x",
+                rerun_error=False, rerun_anomalous=False,
+            )
+
+            self.assertIsNone(result)
+            self.assertEqual(task["_reliability_rerun"], {
+                "supersedes_run": str(run_dir),
+                "trigger": "missing_or_invalid_score",
+            })
 
     def test_harness_adapters_preserve_failure_stage(self) -> None:
         from src.agents.astroncode.runner import write_execution_status as write_astroncode

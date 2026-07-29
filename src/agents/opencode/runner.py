@@ -183,7 +183,7 @@ class OpenCodeAgent(BaseAgent):
                 if image_helper_enabled:
                     self._install_image_helper(task_id, spec.model)
                 snapshot_workspace_state(task_id)
-                write_execution_status(spec.output_dir, status="opencode_running")
+                write_execution_status(spec.output_dir, status="preparing_harness_input")
                 self._run_prompt(
                     task_id=task_id,
                     model=spec.model,
@@ -522,11 +522,14 @@ class OpenCodeAgent(BaseAgent):
 
         prompt_path = prepare_opencode_prompt(task_id, prompt, OPENCODE_PROMPT_PATH)
         log_path = output_dir / "agent.log"
+        write_execution_status(output_dir, status="launching_harness")
         r = self._run_opencode_exec(
             task_id, model, prompt_path, config_content, timeout_seconds, log_path
         )
         if r.returncode == 0:
             return
+        if r.returncode in {125, 126, 127}:
+            write_execution_status(output_dir, status="harness_launch_failed")
         raise RuntimeError(
             f"OpenCode run failed (rc={r.returncode}):\n{r.stderr or r.stdout}"
         )
@@ -562,6 +565,7 @@ class OpenCodeAgent(BaseAgent):
                 stderr=subprocess.STDOUT,
                 text=True,
             )
+            write_execution_status(log_path.parent, status="opencode_running")
             try:
                 returncode = proc.wait(timeout=timeout_seconds)
             except subprocess.TimeoutExpired:

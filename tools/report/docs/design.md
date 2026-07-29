@@ -24,7 +24,7 @@ eval_out/all_suite/round1/<model>/<harness>/          ← 模型×Harness 多对
   <suite>/                                            ← 01_Productivity_Flow ... 06_Safety_Alignment
     summary_<provider>_<model>.json                   ← 套件级 results[]（数组）
     <suite>_task_N_<名称>/                             ← 规范 task_id 即此目录名
-      <model>_<YYYYMMDD>_<HHMM>_<hash>/               ← 运行目录（可能多个，取最新）
+      <model>_<YYYYMMDD>_<HHMM>_<hash>/               ← 运行目录（历史保留，按有效 run 规则选择）
         score.json            ← {检查点: 0~1, ..., overall_score}（或含 error）
         execution_status.json ← status/timed_out/error/elapsed_time
         usage.json            ← tokens/cost/request_count/elapsed_time
@@ -104,7 +104,7 @@ eval_out/all_suite/round1/<model>/<harness>/          ← 模型×Harness 多对
 
 | # | Sheet | 内容 |
 |---|---|---|
-| 1 | 总览 | 每 unit 一行：模型 \| Harness \| 总平均分 \| 用例数 \| 执行错误数 \| 超时数 \| 各分类均分（中文分类名） \| 总tokens \| 请求数 \| 总耗时 \| 成本 |
+| 1 | 总览 | 每 unit 一行：模型 \| Harness \| 总平均分 \| 用例数 \| 正常完成数 \| 执行错误数 \| 超时数 \| 评测异常数 \| 完成率 \| 总tokens \| 请求数 \| 总耗时 \| 成本 |
 | 2 | 模型×Harness矩阵 | 行=模型，列=harness，格=总均分 |
 | 3 | 用例对比明细 | 分类（中文） \| 用例ID \| 名称 \| 难度 \| 模态 \| Prompt \| 预期行为 \| 评分标准 \| 检查点（定义驱动：从任务 md 判分代码提取、保持定义序，动态键名由实测键补全；文本型键如 judge_reason 排除） \| 每 unit 一列「总分 + 检查点得分明细」（富文本，检查点按得分着色：满分绿 / 部分黄 / 零分红，语义同能力 Sheet 色阶；单分制任务只显示总分） \| 最优 \| 最大分差 |
 | 3.5 | Agent能力对比 | 行=unit：总平均分 \| 7 维能力得分 \| 3 列去落盘污染口径 \| 模型强项/短板（Top3/Bottom3，涉及用例数以单元格批注标注） |
@@ -148,6 +148,11 @@ WildClawBench/tools/report/          ← 工具（本目录，未来可平级扩
 
 <result-root>/低分任务根因分析报告_<unit>.md
 ```
+
+可靠性重跑不覆盖旧 run。新 run 的 `run_metadata.json` 通过 `supersedes_run`
+记录替换关系；被替换 run 仅作为审计历史保留，不进入 Excel、根因分析默认输入或
+有效性门禁。没有替换关系的多个有效 run 视为正式多轮，继续参与 mean/std/pass@k
+统计。所有下游统一使用 `src/utils/run_selection.py`，不得各自按目录数量推断。
 
 安装（Claude Code 调用 Skill）：
 

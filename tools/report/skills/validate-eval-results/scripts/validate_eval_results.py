@@ -17,6 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(REPO_ROOT))
 
 from src.utils.anomalies import scan_run_dir  # noqa: E402
+from src.utils.run_selection import select_effective_run_dirs  # noqa: E402
 from src.utils.tool_metrics import parse_tool_metrics  # noqa: E402
 try:
     from src.agents.codex.runner import CodexAgent  # noqa: E402
@@ -289,13 +290,20 @@ def scan_round(result_root: Path, tasks_dir: Path | None) -> dict:
                 task_id = task_dir.name
                 task_key = f"{suite_dir.name}/{task_id}"
                 actual.add((suite_dir.name, task_id))
-                run_dirs = sorted(path for path in task_dir.iterdir() if path.is_dir())
-                if not run_dirs:
+                all_run_dirs = sorted(path for path in task_dir.iterdir() if path.is_dir())
+                if not all_run_dirs:
                     findings.append(finding("NO_RUN", "error", "任务目录下没有 run", unit=unit,
                                             task_id=task_id, run_dir=str(task_dir)))
                     continue
+                run_dirs = select_effective_run_dirs(all_run_dirs, scan_run_dir)
                 run_scores: list[float] = []
-                task_records[task_key] = {"run_count": len(run_dirs), "timeouts": [], "runs": []}
+                task_records[task_key] = {
+                    "run_count": len(run_dirs),
+                    "all_run_count": len(all_run_dirs),
+                    "ignored_run_count": len(all_run_dirs) - len(run_dirs),
+                    "timeouts": [],
+                    "runs": [],
+                }
                 for run_dir in run_dirs:
                     status, status_error = load_json(run_dir / "execution_status.json")
                     usage, usage_error = load_json(run_dir / "usage.json")

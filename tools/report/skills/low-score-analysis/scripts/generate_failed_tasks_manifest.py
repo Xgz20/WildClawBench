@@ -26,6 +26,12 @@ import re
 import sys
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[5]
+sys.path.insert(0, str(REPO_ROOT))
+
+from src.utils.anomalies import scan_run_dir  # noqa: E402
+from src.utils.run_selection import select_effective_run_dirs  # noqa: E402
+
 SUITE_DIR_RE = re.compile(r"^\d{2}_")
 
 
@@ -68,14 +74,15 @@ def discover_units(result_root: Path) -> list[tuple[str, str, Path]]:
 
 
 def find_latest_run_dir(task_dir: Path) -> tuple[Path | None, list[str]]:
-    """任务目录下可能有多个运行目录（重跑），取名称排序最新的一个。
+    """任务目录下可能有多个运行目录，取统一选择规则中的最新有效 run。
 
     运行目录名形如 <model>_<YYYYMMDD>_<HHMM>_<hash>，字典序即时间序。
     """
     run_dirs = sorted(p for p in task_dir.iterdir() if p.is_dir())
     if not run_dirs:
         return None, []
-    return run_dirs[-1], [str(p) for p in run_dirs]
+    effective_run_dirs = select_effective_run_dirs(run_dirs, scan_run_dir)
+    return effective_run_dirs[-1], [str(p) for p in run_dirs]
 
 
 # ---------------------------------------------------------------------------

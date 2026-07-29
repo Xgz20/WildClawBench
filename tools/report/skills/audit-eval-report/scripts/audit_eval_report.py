@@ -21,6 +21,8 @@ REPO_ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(REPO_ROOT))
 
 from src.utils.tool_metrics import parse_tool_metrics  # noqa: E402
+from src.utils.anomalies import classify_report_outcome, scan_run_dir  # noqa: E402
+from src.utils.run_selection import select_effective_run_dirs  # noqa: E402
 
 SUITE_RE = re.compile(r"^\d{2}_")
 DIMENSION_HEADER_RE = re.compile(r"^(.*?)平均分\((\d+)例\)$")
@@ -32,6 +34,7 @@ OVERVIEW_FIELDS = {
     "正常完成数": ("finished", 0),
     "执行错误数": ("errors", 0),
     "超时数": ("timeouts", 0),
+    "评测异常数": ("evaluation_anomalies", 0),
     "完成率": ("finish_rate", 0.11),
     "总tokens": ("total_tokens", 0),
     "总请求数": ("request_count", 0),
@@ -160,7 +163,8 @@ def scan_raw_units(specs: list[tuple[str, str, Path]]) -> dict[str, dict]:
             if not suite_dir.is_dir() or not SUITE_RE.match(suite_dir.name):
                 continue
             for task_dir in sorted(path for path in suite_dir.iterdir() if path.is_dir()):
-                run_dirs = sorted(path for path in task_dir.iterdir() if path.is_dir())
+                all_run_dirs = sorted(path for path in task_dir.iterdir() if path.is_dir())
+                run_dirs = select_effective_run_dirs(all_run_dirs, scan_run_dir)
                 scores = []
                 for run_dir in run_dirs:
                     value = load_json(run_dir / "score.json").get("overall_score")
@@ -170,6 +174,9 @@ def scan_raw_units(specs: list[tuple[str, str, Path]]) -> dict[str, dict]:
                 status = load_json(latest / "execution_status.json") if latest else {}
                 usage = load_json(latest / "usage.json") if latest else {}
                 latest_score = load_json(latest / "score.json") if latest else {}
+                grading_error = latest_score.get("error") or ("" if latest_score else "score.json 缺失")
+                anomaly_items = scan_run_dir(latest).get("items", []) if latest else []
+                outcome = classify_report_outcome(status, grading_error, anomaly_items)
                 transcript = transcript_path(latest) if latest else None
                 metrics = parse_tool_metrics(transcript, harness)
                 tasks[task_dir.name] = {
@@ -181,6 +188,8 @@ def scan_raw_units(specs: list[tuple[str, str, Path]]) -> dict[str, dict]:
                     "status": status.get("status") or "",
                     "timed_out": bool(status.get("timed_out")),
                     "error": status.get("error") or "",
+                    "grading_error": grading_error,
+                    "outcome": outcome,
                     "elapsed": status.get("elapsed_time"),
                     "usage": usage,
                     "tool_calls": metrics.get("total", 0),
@@ -188,8 +197,12 @@ def scan_raw_units(specs: list[tuple[str, str, Path]]) -> dict[str, dict]:
         unit = f"{model}@{harness}"
         score_pct = fmean([(task["score"] if task["score"] is not None else 0.0)
                            for task in tasks.values()]) * 100 if tasks else 0.0
-        errors = sum(1 for task in tasks.values() if task["error"] and not task["timed_out"])
-        timeouts = sum(1 for task in tasks.values() if task["timed_out"])
+        errors = sum(1 for task in tasks.values() if task["outcome"] == "execution_error")
+        timeouts = sum(1 for task in tasks.values() if task["outcome"] == "timeout")
+        evaluation_anomalies = sum(
+            1 for task in tasks.values() if task["outcome"] == "evaluation_anomaly"
+        )
+        finished = sum(1 for task in tasks.values() if task["outcome"] == "finished")
         task_count = len(tasks)
         def usage_total(key: str) -> float:
             return sum((task["usage"].get(key, 0) or 0) for task in tasks.values())
@@ -200,10 +213,11 @@ def scan_raw_units(specs: list[tuple[str, str, Path]]) -> dict[str, dict]:
             "tasks": tasks,
             "score_pct": score_pct,
             "task_count": task_count,
-            "finished": task_count - errors - timeouts,
+            "finished": finished,
             "errors": errors,
             "timeouts": timeouts,
-            "finish_rate": (task_count - errors - timeouts) / task_count * 100 if task_count else 0.0,
+            "evaluation_anomalies": evaluation_anomalies,
+            "finish_rate": finished / task_count * 100 if task_count else 0.0,
             "total_tokens": usage_total("total_tokens"),
             "request_count": usage_total("request_count"),
             "elapsed_time": usage_total("elapsed_time"),
@@ -213,10 +227,12 @@ def scan_raw_units(specs: list[tuple[str, str, Path]]) -> dict[str, dict]:
     return units
 
 
-def row_dict(ws, row_number: int) -> dict:
-    headers = [cell.value for cell in ws[1]]
-    values = [ws.cell(row_number, index + 1).value for index in range(len(headers))]
-    return dict(zip(headers, values))
+def iter_row_dicts(ws):
+    """流式读取只读 worksheet，避免 ws.cell() 每次从头解析 XML。"""
+    rows = ws.iter_rows(values_only=True)
+    headers = list(next(rows, ()))
+    for row_number, values in enumerate(rows, 2):
+        yield row_number, dict(zip(headers, values))
 
 
 def as_number(value) -> float | None:
@@ -229,7 +245,8 @@ def mismatch(actual, expected, tolerance: float) -> bool:
 
 
 def normalize_harness(label: str) -> str:
-    return re.sub(r"\s*\([^)]*\)\s*$", "", str(label or "")).strip()
+    value = str(label or "").strip()
+    return value.split(" (", 1)[0].strip()
 
 
 def audit_overview(wb, units: dict[str, dict], findings: list[dict]) -> None:
@@ -239,8 +256,7 @@ def audit_overview(wb, units: dict[str, dict], findings: list[dict]) -> None:
         if required not in headers:
             findings.append(finding("OVERVIEW_COLUMN_MISSING", "error", f"总览缺少列：{required}", sheet="总览"))
     reported = {}
-    for row_number in range(2, ws.max_row + 1):
-        row = row_dict(ws, row_number)
+    for row_number, row in iter_row_dicts(ws):
         if not row.get("模型"):
             continue
         unit = f"{row['模型']}@{normalize_harness(row.get('Harness'))}"
@@ -257,10 +273,12 @@ def audit_overview(wb, units: dict[str, dict], findings: list[dict]) -> None:
                 findings.append(finding("OVERVIEW_VALUE_MISMATCH", "error",
                                         f"{column} 与原始结果独立复算不一致", sheet="总览", unit=unit,
                                         evidence={"excel": row.get(column), "recomputed": round(raw[key], 6)}))
-        total = sum(as_number(row.get(key)) or 0 for key in ("正常完成数", "执行错误数", "超时数"))
+        total = sum(as_number(row.get(key)) or 0 for key in
+                    ("正常完成数", "执行错误数", "超时数", "评测异常数"))
         if as_number(row.get("用例数")) is not None and total != as_number(row.get("用例数")):
             findings.append(finding("STATUS_TOTAL_CONTRADICTION", "error",
-                                    "正常完成数+执行错误数+超时数不等于用例数", sheet="总览", unit=unit,
+                                    "正常完成数+执行错误数+超时数+评测异常数不等于用例数",
+                                    sheet="总览", unit=unit,
                                     evidence={"status_total": total, "tasks": row.get("用例数")}))
         requests = raw["request_count"]
         tools = raw["tool_calls"]
@@ -318,8 +336,7 @@ def audit_case_compare(wb, units: dict[str, dict], findings: list[dict]) -> None
                                 sheet=ws.title))
     expected_tasks = set().union(*(set(data["tasks"]) for data in units.values())) if units else set()
     rows = {}
-    for row_number in range(2, ws.max_row + 1):
-        row = row_dict(ws, row_number)
+    for row_number, row in iter_row_dicts(ws):
         if row.get("用例ID"):
             rows[row["用例ID"]] = row
     if set(rows) != expected_tasks:
@@ -558,8 +575,7 @@ def audit_detail_sheets(wb, units: dict[str, dict], findings: list[dict]) -> Non
                 findings.append(finding("DETAIL_COLUMN_MISSING", "error", f"详情缺少列：{column}",
                                         sheet=title, unit=unit))
         rows = {}
-        for row_number in range(2, ws.max_row + 1):
-            row = row_dict(ws, row_number)
+        for row_number, row in iter_row_dicts(ws):
             if row.get("用例ID"):
                 rows[row["用例ID"]] = row
         if set(rows) != set(data["tasks"]):

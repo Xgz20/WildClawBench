@@ -32,7 +32,9 @@ description: Analyze WildClawBench evaluation cases using score.json, task gradi
   - `--task-id` / `--task-path`（均可重复、支持 `@file.txt`；task_id 支持子串匹配）
 - **任务定义目录**（`--tasks-dir`）：默认从脚本位置向上自动找 `<repo>/tasks`
 
-`--task-path` 指向具体 run 或其中的文件时，必须分析该 run；指向 task 目录时才选择名称排序最新的 run。同一任务一次不得指定多个不同 run。
+`--task-path` 指向具体 run 或其中的文件时，必须分析该 run；指向 task 目录或按
+task ID 批量选择时，使用统一有效 run 规则：忽略被可靠性重跑替换的历史 run，
+默认分析最新有效 run。同一任务一次不得指定多个不同 run。
 
 ## 输出
 

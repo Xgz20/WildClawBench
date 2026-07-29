@@ -42,6 +42,7 @@ from src.utils.grading import (
 
 from src.utils.anomalies import RULESET_VERSION, SCHEMA_VERSION, scan_run_dir
 from src.utils.log_format import configure_console_logging, attach_file_logging
+from src.utils.run_selection import write_rerun_metadata
 
 load_dotenv()
 # 终端：颜色 + emoji（stdout）。文件日志在 main() 里按 output_root 追加（纯文本 + emoji）。
@@ -209,12 +210,17 @@ def _load_resume_result(
     rerun_error: bool, rerun_anomalous: bool,
 ) -> dict | None:
     """已完成且无需重跑 → 返回重建的 result dict；否则返回 None（需执行）。"""
+    task.pop("_reliability_rerun", None)
     latest = _find_latest_run(output_root, task, model)
     if latest is None:
         return None
     try:
         scores = json.loads((latest / "score.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
+        task["_reliability_rerun"] = {
+            "supersedes_run": str(latest),
+            "trigger": "missing_or_invalid_score",
+        }
         return None
     anomalies = None
     anomalies_file = latest / "anomalies.json"
@@ -239,12 +245,20 @@ def _load_resume_result(
     if rerun_anomalous and anomalies.get("is_anomalous"):
         logger.info("[resume] %s 最新 run 有异常，将重跑: %s",
                     task["task_id"], [i["id"] for i in anomalies["items"]])
+        task["_reliability_rerun"] = {
+            "supersedes_run": str(latest),
+            "trigger": "rerun_anomalous",
+        }
         return None
     if rerun_error and anomalies.get("needs_rerun"):
         logger.info("[resume] %s 最新 run 存在需修复后重跑的有效性故障，将重跑: %s",
                     task["task_id"],
                     [i["id"] for i in anomalies["items"]
                      if i.get("rerun_action") == "required_after_fix"])
+        task["_reliability_rerun"] = {
+            "supersedes_run": str(latest),
+            "trigger": "rerun_error",
+        }
         return None
     usage = {}
     try:
@@ -303,6 +317,15 @@ def run_single_task(
 
     output_dir = output_root / task["category"] / f"{task_id_ori}" / f"{suffix}"
     output_dir.mkdir(parents=True, exist_ok=True)
+    rerun_metadata = task.get("_reliability_rerun")
+    if isinstance(rerun_metadata, dict) and rerun_metadata.get("supersedes_run"):
+        write_rerun_metadata(
+            output_dir,
+            supersedes_run=str(rerun_metadata["supersedes_run"]),
+            trigger=str(rerun_metadata.get("trigger") or "reliability_rerun"),
+            task_id=task_id_ori,
+            model=model,
+        )
 
     result = {"task_id": task_id, "task_id_ori": task_id_ori, "scores": {}, "error": None}
 
