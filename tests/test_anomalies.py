@@ -178,6 +178,30 @@ class AnomalyDetectionTest(unittest.TestCase):
         finally:
             temp_dir.cleanup()
 
+    def test_grading_timeout_is_framework_failure_and_requires_rerun(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            self.write_json(run_dir / "score.json", {
+                "overall_score": 0.0,
+                "error": (
+                    "Command ['docker', 'exec', 'task', 'python3', "
+                    "'/tmp/_grade_runner.py'] timed out after 120 seconds"
+                ),
+            })
+
+            report = scan_run_dir(run_dir)
+
+            item = self.item(report, "GRADING_SCRIPT_ERROR")
+            self.assertIsNotNone(item)
+            self.assertEqual(item["stage"], "grading")
+            self.assertEqual(item["attribution"], "evaluation_framework")
+            self.assertEqual(item["validity_impact"], "fail")
+            self.assertEqual(item["rerun_action"], "required_after_fix")
+            self.assertEqual(report["validity_verdict"], "FAIL")
+            self.assertTrue(report["needs_rerun"])
+        finally:
+            temp_dir.cleanup()
+
     def test_legacy_harness_exit_prefix_is_capability_outcome(self) -> None:
         temp_dir, run_dir = self.make_run()
         try:

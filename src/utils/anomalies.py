@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 SCHEMA_VERSION = 2
-RULESET_VERSION = "2026-07-29"
+RULESET_VERSION = "2026-07-29.1"
 
 ERROR = "error"
 WARNING = "warning"
@@ -22,6 +22,9 @@ _TOOL_REJECT_KEYWORDS = ("unsupported call", "unknown tool")
 _RATE_LIMIT_RE = re.compile(r"rate.?limit|too many requests|\b429\b", re.I)
 _SERVER_ERROR_RE = re.compile(
     r"bad gateway|service unavailable|internal server error|\b50[0234]\b", re.I
+)
+_GRADING_TIMEOUT_RE = re.compile(
+    r"\btimed out after\s+\d+(?:\.\d+)?\s+seconds?\b", re.I
 )
 _HTTP_STATUS_RE = re.compile(r"(?<!\d)([45]\d\d)(?!\d)")
 _ENVIRONMENT_ERROR_RE = re.compile(
@@ -640,9 +643,19 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
         ))
     else:
         grading_error = str(score.get("error") or "")
-        if "Grading failed" in grading_error or "Traceback" in grading_error:
+        grading_timed_out = bool(_GRADING_TIMEOUT_RE.search(grading_error))
+        if (
+            grading_timed_out
+            or "Grading failed" in grading_error
+            or "Traceback" in grading_error
+        ):
+            description = (
+                f"判分进程超时：{grading_error[:180]}"
+                if grading_timed_out
+                else f"判分失败：{grading_error[:180]}"
+            )
             items.append(_item(
-                "GRADING_SCRIPT_ERROR", f"判分失败：{grading_error[:180]}",
+                "GRADING_SCRIPT_ERROR", description,
                 stage="grading", attribution="evaluation_framework", confidence="high",
                 validity_impact="fail", score_reliability="unreliable",
                 rerun_action="required_after_fix",
