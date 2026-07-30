@@ -722,10 +722,24 @@ def append_controlled_views(
         header_row = title_row + 1
         ws.append([first_header] + value_headers)
         style_header_row_at(ws, header_row)
+        ws.row_dimensions[header_row].height = 42
+        for cell in ws[header_row]:
+            cell.alignment = Alignment(
+                horizontal="center", vertical="center", wrap_text=True
+            )
         data_start = header_row + 1
         for unit in selected:
             ws.append([label_getter(unit)] + list(values_by_raw_unit[unit.unit]))
             current_row = ws.max_row
+            multiline_cells = [
+                cell
+                for cell in ws[current_row]
+                if isinstance(cell.value, str) and "\n" in cell.value
+            ]
+            if multiline_cells:
+                ws.row_dimensions[current_row].height = 48
+                for cell in multiline_cells:
+                    cell.alignment = WRAP_TOP
             if id_getter(unit) == target_id:
                 for cell in ws[current_row]:
                     cell.font = Font(bold=True)

@@ -9,8 +9,9 @@ import tempfile
 import unittest
 from datetime import date
 from pathlib import Path
+from types import SimpleNamespace
 
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
 from src.utils.run_selection import write_rerun_metadata
 
 
@@ -413,6 +414,78 @@ class AnalysisPipelineTest(unittest.TestCase):
             self.assertTrue(target_harness_cell.font.bold)
             self.assertEqual(target_harness_cell.fill.fill_type, "solid")
             self.assertGreaterEqual(len(sheet.conditional_formatting), 3)
+
+    def test_controlled_views_wrap_headers_and_multiline_values(self) -> None:
+        workbook = load_workbook(self.generate_comparison_excel())
+        for title in (
+            "分类对比",
+            "Agent能力对比",
+            "Agent能力对比·去污染",
+            "难度对比",
+            "模态对比",
+        ):
+            sheet = workbook[title]
+            first_column = [
+                sheet.cell(row, 1).value for row in range(1, sheet.max_row + 1)
+            ]
+            for view_title in (
+                "固定 AstronCode：模型对比",
+                "固定 Spark-X2-300B：Harness 对比",
+            ):
+                header_row = first_column.index(view_title) + 2
+                self.assertGreaterEqual(
+                    sheet.row_dimensions[header_row].height or 0, 36
+                )
+                self.assertTrue(
+                    all(
+                        sheet.cell(header_row, column).alignment.wrap_text
+                        for column in range(1, sheet.max_column + 1)
+                    )
+                )
+
+        controlled_workbook = Workbook()
+        agent_sheet = controlled_workbook.active
+        units = [
+            SimpleNamespace(
+                unit="model-a@harness-a", model="model-a", harness="harness-a",
+                model_display="Model A", harness_display="Harness A",
+            ),
+            SimpleNamespace(
+                unit="model-b@harness-a", model="model-b", harness="harness-a",
+                model_display="Model B", harness_display="Harness A",
+            ),
+            SimpleNamespace(
+                unit="model-a@harness-b", model="model-a", harness="harness-b",
+                model_display="Model A", harness_display="Harness B",
+            ),
+        ]
+        values = {
+            "model-a@harness-a": [50.0, "验证交付 50%\n工具调用 40%\n代码生成 30%"],
+            "model-b@harness-a": [60.0, "验证交付 60%\n工具调用 50%\n代码生成 40%"],
+            "model-a@harness-b": [55.0, "验证交付 55%\n工具调用 45%\n代码生成 35%"],
+        }
+        excel_report.append_controlled_views(
+            agent_sheet,
+            units,
+            ["总平均分", "模型强项"],
+            values,
+            "model-a",
+            "harness-a",
+        )
+        multiline_cells = [
+            cell
+            for row in agent_sheet.iter_rows()
+            for cell in row
+            if isinstance(cell.value, str) and "\n" in cell.value
+        ]
+        self.assertTrue(multiline_cells)
+        self.assertTrue(all(cell.alignment.wrap_text for cell in multiline_cells))
+        self.assertTrue(
+            all(
+                (agent_sheet.row_dimensions[cell.row].height or 0) >= 45
+                for cell in multiline_cells
+            )
+        )
 
     def add_valid_run(self, task_id: str, name: str, score: float) -> Path:
         run_dir = self.suite_dir / task_id / name
