@@ -32,7 +32,8 @@ import argparse
 import json
 import re
 import sys
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
 
 try:
@@ -102,6 +103,12 @@ except Exception:  # 独立分发/路径异常时降级：不统计工具调用�
 
 from src.utils.anomalies import classify_execution_error, classify_report_outcome, scan_run_dir
 from src.utils.run_selection import select_effective_run_dirs
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR))
+import report_entities  # noqa: E402
+
+DEFAULT_ENTITIES_PATH = SCRIPT_DIR.parent / "data/entities.yaml"
 
 # 7 维能力口径（与 PinchBench cap7 对齐）；映射文件见 tools/report/data/checkpoint_capability_map7.yaml
 CAP7_ORDER = ["code_generation", "tool_use", "data_processing", "retrieval_verification",
@@ -222,7 +229,8 @@ def extract_judge_notes(score: dict) -> str:
 
 
 class TaskRecord:
-    def __init__(self, suite: str, task_dir: Path, harness: str = ""):
+    def __init__(self, suite: str, task_dir: Path, harness: str = "",
+                 model: str = "", registry=None, pricing_date: date | None = None):
         self.task_id = task_dir.name
         self.suite = suite
         self.harness = harness
@@ -243,6 +251,7 @@ class TaskRecord:
         score = _load_json(self.run_dir / "score.json") if self.run_dir else {}
         status = _load_json(self.run_dir / "execution_status.json") if self.run_dir else {}
         self.usage = _load_json(self.run_dir / "usage.json") if self.run_dir else {}
+        self.cost_estimate = self._estimate_cost(model, harness, registry, pricing_date)
 
         self.checkpoints = {
             k: v for k, v in score.items()
@@ -318,6 +327,34 @@ class TaskRecord:
         # 工具调用指标（基于最新一轮的归一化轨迹）。未注册 harness / 无轨迹 → 空指标。
         self.tool_metrics = _parse_tool_metrics(self.transcript, self.harness)
 
+    def _estimate_cost(self, model: str, harness: str, registry, pricing_date):
+        if registry is None or pricing_date is None:
+            return report_entities.CostEstimate(
+                Decimal(str((self.usage or {}).get("cost_usd") or 0)),
+                None,
+                "reported",
+            )
+        try:
+            usage = report_entities.normalize_billable_usage(self.usage or {})
+            profile = registry.pricing_profile(model, pricing_date)
+            if len(profile.tiers) == 1:
+                return report_entities.estimate_cost_usd(
+                    registry, model, pricing_date, usage, request_input_tokens=None
+                )
+            if not self.run_dir:
+                raise ValueError("缺少有效 run 目录")
+            if harness == "astroncode":
+                requests = report_entities.extract_astroncode_requests(self.run_dir)
+            elif harness == "opencode":
+                requests = report_entities.extract_opencode_requests(self.run_dir)
+            else:
+                raise ValueError(f"分档定价不支持 Harness: {harness}")
+            return report_entities.estimate_request_costs_usd(
+                registry, model, pricing_date, requests
+            )
+        except (OSError, ValueError) as exc:
+            return report_entities.CostEstimate(None, None, "unavailable", str(exc))
+
     @property
     def effective_score(self) -> float:
         """聚合口径：无有效得分按 0 计（与 summary global_avg 口径一致）。"""
@@ -325,10 +362,16 @@ class TaskRecord:
 
 
 class UnitResult:
-    def __init__(self, model: str, harness: str, unit_dir: Path):
+    def __init__(self, model: str, harness: str, unit_dir: Path,
+                 registry=None, pricing_date: date | None = None):
         self.model = model
         self.harness = harness
         self.unit = f"{model}@{harness}"
+        self.registry = registry
+        self.pricing_date = pricing_date
+        self.model_display = registry.model_display(model) if registry else model
+        self.harness_display = registry.harness_display(harness) if registry else harness
+        self.unit_display = f"{self.model_display}@{self.harness_display}"
         self.unit_dir = unit_dir
         self.tasks: list[TaskRecord] = []
         for suite_dir in sorted(unit_dir.iterdir()):
@@ -336,7 +379,9 @@ class UnitResult:
                 continue
             for task_dir in sorted(suite_dir.iterdir()):
                 if task_dir.is_dir() and any(p.is_dir() for p in task_dir.iterdir()):
-                    self.tasks.append(TaskRecord(suite_dir.name, task_dir, harness))
+                    self.tasks.append(TaskRecord(
+                        suite_dir.name, task_dir, harness, model, registry, pricing_date
+                    ))
         self.task_map = {t.task_id: t for t in self.tasks}
         self.summary = self._load_summary()
 
@@ -359,6 +404,33 @@ class UnitResult:
     def usage_total(self, key: str) -> float:
         return sum((t.usage or {}).get(key, 0) or 0 for t in self.tasks)
 
+    def estimated_cost_total(self) -> Decimal | None:
+        estimates = [task.cost_estimate for task in self.tasks]
+        if any(item.usd is None for item in estimates):
+            return None
+        return sum((item.usd for item in estimates if item.usd is not None), Decimal(0))
+
+    @property
+    def cost_status(self) -> str:
+        statuses = {task.cost_estimate.status for task in self.tasks}
+        return ",".join(sorted(statuses)) if statuses else "unavailable"
+
+    @property
+    def cost_profile_ids(self) -> list[str]:
+        return sorted({
+            task.cost_estimate.profile_id
+            for task in self.tasks
+            if task.cost_estimate.profile_id
+        })
+
+    @property
+    def cost_reasons(self) -> list[str]:
+        return sorted({
+            task.cost_estimate.reason
+            for task in self.tasks
+            if task.cost_estimate.reason
+        })
+
     def tool_metrics_total(self) -> dict:
         """聚合该 unit 全部用例的工具调用指标（含 by_tool 明细）。"""
         return _merge_tool_metrics([t.tool_metrics for t in self.tasks])
@@ -376,8 +448,9 @@ class UnitResult:
 
     @property
     def harness_label(self) -> str:
-        """带版本的 harness 展示名，如 "opencode (1.18.4)"；无版本则退化为 "opencode"。"""
-        return f"{self.harness} ({self.harness_version})" if self.harness_version else self.harness
+        """带版本的 Harness 展示名；无版本时退化为友好名称。"""
+        return (f"{self.harness_display} ({self.harness_version})"
+                if self.harness_version else self.harness_display)
 
 
 # ===========================================================================
@@ -656,7 +729,7 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
         n_evaluation_anomaly = sum(1 for t in u.tasks if t.outcome == "evaluation_anomaly")
         finish_rate = round(n_finished / n_total * 100, 1) if n_total else 0.0
         row = [
-            u.model, u.harness_label, round(u.total_pct, 1), n_total,
+            u.model_display, u.harness_label, round(u.total_pct, 1), n_total,
             n_finished, n_error, n_timeout, n_evaluation_anomaly, finish_rate,
         ]
         if has_multirun:
@@ -664,11 +737,12 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
             valid_tasks = [t for t in u.tasks if t.runs > 0]
             avg_runs = sum(t.runs for t in valid_tasks) / len(valid_tasks) if valid_tasks else 0
             row += [round(avg_runs, 1)]
+        estimated_cost = u.estimated_cost_total()
         row += [
             int(u.usage_total("total_tokens")),
             int(u.usage_total("request_count")),
             round(u.usage_total("elapsed_time"), 1),
-            round(u.usage_total("cost_usd"), 4),
+            round(float(estimated_cost), 4) if estimated_cost is not None else "-",
         ]
         if tool_cols:
             tm = u.tool_metrics_total()
@@ -704,9 +778,11 @@ def write_matrix_sheet(wb, units: list[UnitResult]) -> None:
                        key=lambda h: (sum(v for (_, hh), v in lookup.items() if hh == h)
                                       / max(1, sum(1 for (_, hh) in lookup if hh == h))),
                        reverse=True)
-    ws.append(["模型 \\ Harness"] + harnesses)
+    model_displays = {u.model: u.model_display for u in units}
+    harness_displays = {u.harness: u.harness_display for u in units}
+    ws.append(["模型 \\ Harness"] + [harness_displays[h] for h in harnesses])
     for m in models:
-        row = [m]
+        row = [model_displays[m]]
         for h in harnesses:
             v = lookup.get((m, h))
             row.append(round(v, 1) if v is not None else "-")
@@ -766,7 +842,7 @@ def write_case_compare_sheet(wb, units: list[UnitResult], order: list[tuple[str,
                              task_meta: dict[str, dict], suite_zh: dict[str, str]) -> None:
     ws = wb.create_sheet("用例对比明细")
     header = (["分类", "用例ID", "用例名称", "难度", "模态", "输入(Prompt)", "预期行为", "评分标准", "检查点"]
-              + [f"{u.unit} 得分" for u in units]
+              + [f"{u.unit_display} 得分" for u in units]
               + ["最优单元", "最大分差"])
     ws.append(header)
     n_meta_cols = 9
@@ -774,7 +850,8 @@ def write_case_compare_sheet(wb, units: list[UnitResult], order: list[tuple[str,
         meta = task_meta.get(tid, {})
         scores = {u.unit: u.task_map[tid].score for u in units if tid in u.task_map}
         valid = {k: v for k, v in scores.items() if v is not None}
-        best = max(valid, key=valid.get) if valid else "-"
+        best_raw = max(valid, key=valid.get) if valid else ""
+        best = next((u.unit_display for u in units if u.unit == best_raw), "-")
         spread = round(max(valid.values()) - min(valid.values()), 3) if len(valid) > 1 else "-"
         # 检查点列表由任务定义决定（md 判分代码提取，定义序）；
         # 动态键名（如 f"ordered_match_{i}"）静态解析不到，用各 unit 实测键补全
@@ -874,7 +951,7 @@ def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
     n_dims = len(CAP7_ORDER)
     for u in units:
         scores = unit_scores[u.unit]
-        row = [u.unit, round(u.total_pct, 1)]
+        row = [u.unit_display, round(u.total_pct, 1)]
         row += [round(scores[d][0], 1) if scores[d][0] is not None else "-" for d in CAP7_ORDER]
         ranked = sorted((d for d in CAP7_ORDER
                          if scores[d][0] is not None and scores[d][1] >= CAP_RANK_MIN_COUNT),
@@ -901,7 +978,7 @@ def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
     n_decon = len(CAP7_DECON)
     for u in units:
         decon = unit_decon[u.unit]
-        row = [u.unit, round(u.total_pct, 1)]
+        row = [u.unit_display, round(u.total_pct, 1)]
         row += [round(decon[d][0], 1) if decon[d][0] is not None else "-" for d in CAP7_DECON]
         ws2.append(row)
         r = ws2.max_row
@@ -940,7 +1017,7 @@ def write_dimension_sheet_transposed(wb, title: str, units: list[UnitResult],
     ws.append(["模型@Harness", "总平均分"]
               + [f"{label}平均分({len(ids)}例)" for label, ids in groups])
     for u in units:  # units 已按总平均分降序
-        row = [u.unit, round(u.total_pct, 1)]
+        row = [u.unit_display, round(u.total_pct, 1)]
         for _, ids in groups:
             v = u.avg_pct(ids)
             row.append(round(v, 1) if v is not None else "-")
@@ -982,7 +1059,8 @@ def write_tool_compare_sheet(wb, units: list[UnitResult]) -> None:
 
     for harness, hunits in by_harness.items():
         # harness 分节标题行（合并首列展示）
-        ws.append([f"【Harness: {harness}】"] + [""] * (len(header) - 1))
+        harness_display = hunits[0].harness_display
+        ws.append([f"【Harness: {harness_display}】"] + [""] * (len(header) - 1))
         sec_row = ws.max_row
         for cell in ws[sec_row]:
             cell.fill = section_fill
@@ -996,10 +1074,10 @@ def write_tool_compare_sheet(wb, units: list[UnitResult]) -> None:
             fill = model_fills[idx % len(model_fills)]
             tm = u.tool_metrics_total()
             start_row = ws.max_row + 1
-            _append_tool_row(ws, u.model, "（全部工具）", tm, bold=True)
+            _append_tool_row(ws, u.model_display, "（全部工具）", tm, bold=True)
             by_tool = tm.get("by_tool", {})
             for tool_name in sorted(by_tool, key=lambda k: -by_tool[k]["total"]):
-                _append_tool_row(ws, u.model, tool_name, by_tool[tool_name])
+                _append_tool_row(ws, u.model_display, tool_name, by_tool[tool_name])
             # 给这个模型的所有行（总计+各工具）加底色
             for row_idx in range(start_row, ws.max_row + 1):
                 for cell in ws[row_idx]:
@@ -1036,9 +1114,9 @@ def style_header_row_at(ws, row: int) -> None:
 
 def write_diff_matrix_sheet(wb, units: list[UnitResult]) -> None:
     ws = wb.create_sheet("分差矩阵")
-    ws.append(["行单元 - 列单元"] + [u.unit for u in units])
+    ws.append(["行单元 - 列单元"] + [u.unit_display for u in units])
     for a in units:
-        row = [a.unit]
+        row = [a.unit_display]
         for b in units:
             row.append(0 if a is b else round(a.total_pct - b.total_pct, 1))
         ws.append(row)
@@ -1047,6 +1125,59 @@ def write_diff_matrix_sheet(wb, units: list[UnitResult]) -> None:
     style_header_row(ws)
     set_widths(ws, {1: 28}, default=22)
     ws.freeze_panes = "B2"
+
+
+def write_report_metadata_sheet(
+    wb,
+    units: list[UnitResult],
+    registry,
+    entities_path: Path,
+    pricing_date: date | None,
+    target_model: str | None,
+    target_harness: str | None,
+) -> None:
+    ws = wb.create_sheet("_报告元数据")
+    ws.append(["类型", "原始ID", "展示名称", "属性", "值"])
+    for model in sorted({u.model for u in units}):
+        display = next(u.model_display for u in units if u.model == model)
+        ws.append(["模型", model, display, "display_name", display])
+    for harness in sorted({u.harness for u in units}):
+        display = next(u.harness_display for u in units if u.harness == harness)
+        ws.append(["Harness", harness, display, "display_name", display])
+    for unit in sorted(units, key=lambda item: item.unit):
+        ws.append(["单元", unit.unit, unit.unit_display, "model_id", unit.model])
+        ws.append(["单元", unit.unit, unit.unit_display, "harness_id", unit.harness])
+        ws.append([
+            "成本", unit.unit, unit.unit_display, "pricing_profile_id",
+            ",".join(unit.cost_profile_ids) or "-",
+        ])
+        ws.append(["成本", unit.unit, unit.unit_display, "status", unit.cost_status])
+        if unit.cost_reasons:
+            ws.append([
+                "成本", unit.unit, unit.unit_display, "reason",
+                "；".join(unit.cost_reasons),
+            ])
+    ws.append(["配置", "entities", str(entities_path), "schema_version", 1])
+    if pricing_date is not None:
+        ws.append([
+            "配置", "pricing_date", pricing_date.isoformat(), "pricing_date",
+            pricing_date.isoformat(),
+        ])
+        try:
+            cny_per_usd = registry.cny_per_usd(pricing_date)
+            ws.append([
+                "汇率", "CNY", "CNY/USD", "cny_per_usd", float(cny_per_usd),
+            ])
+        except ValueError as exc:
+            ws.append(["汇率", "CNY", "CNY/USD", "status", str(exc)])
+    if target_model and target_harness:
+        target_unit = f"{target_model}@{target_harness}"
+        target = next(u for u in units if u.unit == target_unit)
+        ws.append(["目标", target.unit, target.unit_display, "model_id", target.model])
+        ws.append(["目标", target.unit, target.unit_display, "harness_id", target.harness])
+    style_header_row(ws)
+    set_widths(ws, {1: 12, 2: 32, 3: 38, 4: 24, 5: 72}, default=20)
+    ws.sheet_state = "hidden"
 
 
 def format_breakdown(t: TaskRecord) -> str:
@@ -1092,7 +1223,7 @@ def _write_stability_distributions(ws, units, mtasks, high_std: float) -> None:
             continue
         b = dist_row([t.std or 0 for t in mt], [0, 0.05, high_std, 1.01])
         n = len(mt)
-        ws.append([u.unit] + [f"{c} ({c/n*100:.0f}%)" for c in b])
+        ws.append([u.unit_display] + [f"{c} ({c/n*100:.0f}%)" for c in b])
     style_row(ws, hdr)
 
     ws.append([])
@@ -1106,7 +1237,7 @@ def _write_stability_distributions(ws, units, mtasks, high_std: float) -> None:
         b = dist_row([t.pass_at_k for t in mt], [0, 0.8, 0.95, 1.01])
         n = len(mt)
         # 注意桶顺序：[0,0.8)/[0.8,0.95)/[0.95,1]，展示时倒序为 优/良/弱
-        ws.append([u.unit, f"{b[2]} ({b[2]/n*100:.0f}%)",
+        ws.append([u.unit_display, f"{b[2]} ({b[2]/n*100:.0f}%)",
                    f"{b[1]} ({b[1]/n*100:.0f}%)", f"{b[0]} ({b[0]/n*100:.0f}%)"])
     style_row(ws, hdr)
 
@@ -1120,7 +1251,7 @@ def _write_stability_distributions(ws, units, mtasks, high_std: float) -> None:
             continue
         b = dist_row([t.pass_hat_k for t in mt], [0, 0.5, 0.8, 1.01])
         n = len(mt)
-        ws.append([u.unit, f"{b[2]} ({b[2]/n*100:.0f}%)",
+        ws.append([u.unit_display, f"{b[2]} ({b[2]/n*100:.0f}%)",
                    f"{b[1]} ({b[1]/n*100:.0f}%)", f"{b[0]} ({b[0]/n*100:.0f}%)"])
     style_row(ws, hdr)
 
@@ -1138,7 +1269,7 @@ def _write_stability_high_std_detail(ws, units, mtasks, task_meta, suite_zh, hig
             if (t.std or 0) > high_std:
                 meta = task_meta.get(t.task_id, {})
                 rows.append((
-                    (t.std or 0), u.unit, suite_zh.get(t.suite, t.suite), t.task_id,
+                    (t.std or 0), u.unit_display, suite_zh.get(t.suite, t.suite), t.task_id,
                     meta.get("difficulty", "-"), t.runs, round(t.score, 3), round(t.std, 3),
                     ", ".join(str(round(s, 3)) for s in t.all_scores),
                     round(t.pass_at_k, 3) if t.pass_at_k is not None else "-",
@@ -1184,7 +1315,7 @@ def write_stability_sheet(wb, units: list[UnitResult],
         pak_good = sum(1 for t in mt if t.pass_at_k is not None and t.pass_at_k >= 0.95)
         phk_good = sum(1 for t in mt if t.pass_hat_k is not None and t.pass_hat_k >= 0.8)
         ws.append([
-            u.unit, runs, n, high_std, round(high_std / n * 100, 1),
+            u.unit_display, runs, n, high_std, round(high_std / n * 100, 1),
             pak_good, round(pak_good / n * 100, 1),
             phk_good, round(phk_good / n * 100, 1),
         ])
@@ -1318,7 +1449,7 @@ def _build_dim_comparison(
         for u in units:
             avg = u.avg_pct(task_ids)
             if avg is not None:
-                row["scores"][u.unit] = round(avg, 1)
+                row["scores"][u.unit_display] = round(avg, 1)
         rows.append(row)
     return rows
 
@@ -1362,9 +1493,12 @@ def build_summary(
         pass_hat_k_vals = [t.pass_hat_k for t in u.tasks if t.pass_hat_k is not None]
         max_runs = max((t.runs for t in u.tasks), default=0)
         run_summaries.append({
-            "run_label": u.unit,  # 前端期望 run_label
+            "run_label": u.unit_display,
+            "unit_id": u.unit,
             "model": u.model,
             "harness": u.harness,
+            "model_display": u.model_display,
+            "harness_display": u.harness_display,
             "average_score": round(u.total_pct / 100, 4),  # 前端期望 0-1 范围
             "category_scores": {
                 suite_zh.get(suite, suite): round(score / 100, 4) if score is not None else None
@@ -1373,7 +1507,10 @@ def build_summary(
                 if unit == u.unit
             },
             "total_tokens": int(u.usage_total("total_tokens")),
-            "cost_usd": round(u.usage_total("cost_usd"), 4),
+            "cost_usd": (
+                round(float(u.estimated_cost_total()), 4)
+                if u.estimated_cost_total() is not None else None
+            ),
             "elapsed_time": round(u.usage_total("elapsed_time"), 1),
             "request_count": int(u.usage_total("request_count")),
             "finished_count": sum(1 for t in u.tasks if t.outcome == "finished"),
@@ -1410,7 +1547,8 @@ def build_summary(
             score = scores_by_unit[i]
             t = u.task_map.get(tid)
             results.append({
-                "run_label": u.unit,
+                "run_label": u.unit_display,
+                "unit_id": u.unit,
                 "average_score": score,
                 "runs": t.runs if t else 0,
                 "std": t.std if t else None,
@@ -1443,7 +1581,8 @@ def build_summary(
             scores = _cap_task_scores(u, cap_map, dim, delivered_only=False)
             dim_scores[dim] = round(sum(scores) / len(scores), 4) if scores else None
         capability_comparison["rows"].append({
-            "run_label": u.unit,
+            "run_label": u.unit_display,
+            "unit_id": u.unit,
             "dim_scores": dim_scores,
         })
 
@@ -1504,7 +1643,8 @@ def build_summary(
         rc_items.append({
             "task_run_id": unit,  # 无数值 run_id，用 unit 标签作稳定 key
             "case_task_id": task_id,
-            "run_label": unit,
+            "run_label": unit_map[unit].unit_display if unit in unit_map else unit,
+            "unit_id": unit,
             "average_score": score,
             "summary": result_analysis,
             "root_causes": root_causes,
@@ -1537,7 +1677,10 @@ def build_summary(
         "score_matrix": score_matrix,
         "diff_matrix": diff_matrix,
         "alignment": {
-            "runs": [{"label": u.unit, "case_count": len(u.task_map)} for u in units],
+            "runs": [
+                {"label": u.unit_display, "unit_id": u.unit, "case_count": len(u.task_map)}
+                for u in units
+            ],
             "intersection_count": len(intersection),
             "aligned": aligned,
         },
@@ -1798,6 +1941,12 @@ def main() -> None:
     ap.add_argument("--result-root", required=True, help="round 根目录 / 模型目录 / unit 目录")
     ap.add_argument("--models", nargs="+", help="按模型目录名过滤")
     ap.add_argument("--harnesses", nargs="+", help="按 harness 目录名过滤")
+    ap.add_argument("--target-model", help="控制变量视图的目标模型原始 ID")
+    ap.add_argument("--target-harness", help="控制变量视图的目标 Harness 原始 ID")
+    ap.add_argument("--entities", default=str(DEFAULT_ENTITIES_PATH),
+                    help="实体注册表 YAML")
+    ap.add_argument("--pricing-date", type=date.fromisoformat,
+                    help="成本重算使用的定价快照日期 YYYY-MM-DD")
     ap.add_argument("--analysis", nargs="+", default=[], metavar="[UNIT=]PATH",
                     help="根因分析 JSON（可多个），回填到详情 Sheet")
     ap.add_argument("-o", "--output-dir", help="输出目录（默认 <round>/report-workspace/output）")
@@ -1811,6 +1960,14 @@ def main() -> None:
         help="pass@k/pass^k 判定阈值：overall_score >= T 记为 pass（默认 0.99 满分）",
     )
     args = ap.parse_args()
+
+    if bool(args.target_model) != bool(args.target_harness):
+        ap.error("--target-model 与 --target-harness 必须同时提供")
+    entities_path = Path(args.entities).resolve()
+    try:
+        registry = report_entities.load_registry(entities_path)
+    except (OSError, ValueError) as exc:
+        ap.error(f"实体注册表加载失败: {exc}")
 
     # 展示层 pass@k 阈值可由 CLI 覆盖（默认 PASS_THRESHOLD_DISPLAY=0.99）；
     # 须在创建 UnitResult/TaskRecord 之前设置，因为 TaskRecord 构造时即计算 pass@k。
@@ -1831,10 +1988,15 @@ def main() -> None:
         unit_specs = [u for u in unit_specs if u[1] in args.harnesses]
     if not unit_specs:
         sys.exit("错误：未发现任何 (model, harness) 结果单元")
+    if args.target_model and args.target_harness:
+        target_unit = f"{args.target_model}@{args.target_harness}"
+        available_units = {f"{model}@{harness}" for model, harness, _ in unit_specs}
+        if target_unit not in available_units:
+            ap.error(f"目标单元不在过滤后的评测范围内: {target_unit}")
 
     units = []
     for model, harness, unit_dir in unit_specs:
-        u = UnitResult(model, harness, unit_dir)
+        u = UnitResult(model, harness, unit_dir, registry, args.pricing_date)
         print(f"已加载 {u.unit}：{len(u.tasks)} 个任务，总均分 {u.total_pct:.1f}%")
         units.append(u)
     # 全局按总平均分降序：决定总览行序与各对比 Sheet 的 unit 列序（最高分在前）
@@ -1881,6 +2043,10 @@ def main() -> None:
     write_stability_sheet(wb, units, task_meta, suite_zh)  # 内部同样判定，无多轮则跳过
     for u in units:
         write_detail_sheet(wb, u, order, task_meta, analysis, suite_zh, has_multirun)
+    write_report_metadata_sheet(
+        wb, units, registry, entities_path, args.pricing_date,
+        args.target_model, args.target_harness,
+    )
 
     # 即使 --result-root 传入 model 或 unit，报告仍集中到 round 工作区。
     # 若 --result-root 本身就是 round 根（非 unit 目录、下辖多 unit），直接用它，

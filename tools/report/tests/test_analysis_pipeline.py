@@ -284,6 +284,43 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertEqual(report_entities.extract_astroncode_requests(astron_dir), expected)
         self.assertEqual(report_entities.extract_opencode_requests(opencode_dir), expected)
 
+    def test_excel_uses_display_names_and_preserves_raw_identity(self) -> None:
+        workbook = load_workbook(self.generate_comparison_excel(), data_only=True)
+        overview = workbook["总览"]
+        headers = [cell.value for cell in overview[1]]
+        models = {
+            overview.cell(row, headers.index("模型") + 1).value
+            for row in range(2, overview.max_row + 1)
+        }
+        harnesses = {
+            str(overview.cell(row, headers.index("Harness") + 1).value).split(" (", 1)[0]
+            for row in range(2, overview.max_row + 1)
+        }
+
+        self.assertEqual(models, {"GPT-5.5", "Spark-X2-300B"})
+        self.assertEqual(harnesses, {"AstronCode", "OpenCode"})
+        self.assertEqual(workbook["_报告元数据"].sheet_state, "hidden")
+        self.assertIn(
+            "xsparkx2agent@astroncode",
+            {
+                workbook["_报告元数据"].cell(row, 2).value
+                for row in range(2, workbook["_报告元数据"].max_row + 1)
+            },
+        )
+
+    def test_excel_recomputes_nonzero_costs(self) -> None:
+        workbook = load_workbook(self.generate_comparison_excel(), data_only=True)
+        overview = workbook["总览"]
+        headers = [cell.value for cell in overview[1]]
+        cost_column = headers.index("总成本(USD)") + 1
+
+        self.assertTrue(
+            all(
+                overview.cell(row, cost_column).value > 0
+                for row in range(2, overview.max_row + 1)
+            )
+        )
+
     def add_valid_run(self, task_id: str, name: str, score: float) -> Path:
         run_dir = self.suite_dir / task_id / name
         run_dir.mkdir()
@@ -302,6 +339,121 @@ class AnalysisPipelineTest(unittest.TestCase):
             encoding="utf-8",
         )
         return run_dir
+
+    def create_comparison_fixture(self) -> Path:
+        result_root = Path(self.temp_dir.name) / "comparison-round"
+        for model in ("gpt-5.5", "xsparkx2agent"):
+            for harness in ("astroncode", "opencode"):
+                run_dir = result_root / model / harness / "01_suite/task_cost/run_001"
+                run_dir.mkdir(parents=True)
+                (run_dir / "score.json").write_text(
+                    json.dumps({"overall_score": 0.8}), encoding="utf-8"
+                )
+                (run_dir / "execution_status.json").write_text(
+                    json.dumps({
+                        "status": "completed",
+                        "elapsed_time": 10,
+                        "harness_version": "1.0.0",
+                    }),
+                    encoding="utf-8",
+                )
+                usage = {
+                    "input_tokens": 1000 if harness == "astroncode" else 400,
+                    "cache_read_tokens": 600,
+                    "cache_write_tokens": 0,
+                    "output_tokens": 100,
+                    "total_tokens": 1100,
+                    "request_count": 1,
+                    "elapsed_time": 10,
+                    "cost_usd": 0,
+                }
+                (run_dir / "usage.json").write_text(json.dumps(usage), encoding="utf-8")
+                if model == "gpt-5.5" and harness == "astroncode":
+                    event = {
+                        "type": "event_msg",
+                        "payload": {
+                            "type": "token_count",
+                            "info": {
+                                "total_token_usage": {
+                                    "input_tokens": 1000,
+                                    "output_tokens": 100,
+                                },
+                                "last_token_usage": {
+                                    "input_tokens": 1000,
+                                    "cached_input_tokens": 600,
+                                    "output_tokens": 100,
+                                },
+                            },
+                        },
+                    }
+                    (run_dir / "chat.jsonl").write_text(
+                        json.dumps(event) + "\n", encoding="utf-8"
+                    )
+                elif model == "gpt-5.5":
+                    database_dir = run_dir / "opencode_data"
+                    database_dir.mkdir()
+                    with sqlite3.connect(database_dir / "opencode.db") as connection:
+                        connection.execute(
+                            "CREATE TABLE part (id TEXT PRIMARY KEY, data TEXT NOT NULL)"
+                        )
+                        connection.execute(
+                            "INSERT INTO part (id, data) VALUES (?, ?)",
+                            (
+                                "1",
+                                json.dumps({
+                                    "type": "step-finish",
+                                    "tokens": {
+                                        "input": 400,
+                                        "output": 100,
+                                        "reasoning": 0,
+                                        "cache": {"read": 600, "write": 0},
+                                    },
+                                }),
+                            ),
+                        )
+                else:
+                    (run_dir / "chat_openclaw.jsonl").write_text(
+                        "\n".join(
+                            json.dumps({"type": "event", "payload": {"index": index}})
+                            for index in range(5)
+                        ),
+                        encoding="utf-8",
+                    )
+        return result_root
+
+    def generate_comparison_excel(self) -> Path:
+        result_root = self.create_comparison_fixture()
+        output_dir = result_root / "comparison-output"
+        subprocess.run(
+            [
+                sys.executable,
+                str(EXCEL_SCRIPT),
+                "--result-root",
+                str(result_root),
+                "--models",
+                "gpt-5.5",
+                "xsparkx2agent",
+                "--harnesses",
+                "astroncode",
+                "opencode",
+                "--target-model",
+                "xsparkx2agent",
+                "--target-harness",
+                "astroncode",
+                "--entities",
+                str(REPORT_DIR / "data/entities.yaml"),
+                "--pricing-date",
+                "2026-07-30",
+                "--tasks-dir",
+                str(Path(self.temp_dir.name) / "missing-tasks"),
+                "--output-dir",
+                str(output_dir),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return next(output_dir.glob("report_4units_*.xlsx"))
 
     def selected_ids(self, selection, task_ids=None, task_paths=None):
         records = [dict(record) for record in self.records]
