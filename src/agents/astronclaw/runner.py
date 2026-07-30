@@ -8,10 +8,7 @@ from src.agents.openclaw import OpenClawAgent
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_ASTRONCLAW_IMAGE = (
-    "artifacts.iflytek.com/docker-private/"
-    "hy-spark-agent-builder/astronclaw-core-cicd:v0.2.9"
-)
+DEFAULT_ASTRONCLAW_IMAGE = "wildclawbench-astronclaw-ubuntu:v0.2.9-eval.1"
 
 
 class AstronClawAgent(OpenClawAgent):

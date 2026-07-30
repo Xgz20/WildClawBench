@@ -48,6 +48,15 @@ class OpenClawBackendTests(unittest.TestCase):
         self.assertEqual(openclaw.image, "openclaw:test")
         self.assertEqual(astronclaw.image, "astronclaw:test")
 
+    def test_astronclaw_defaults_to_evaluation_image(self) -> None:
+        with patch.dict("os.environ", {"DOCKER_IMAGE_ASTRONCLAW": ""}, clear=False):
+            astronclaw = self.make_astronclaw()
+
+        self.assertEqual(
+            astronclaw.image,
+            "wildclawbench-astronclaw-ubuntu:v0.2.9-eval.1",
+        )
+
     def test_metadata_records_distinct_harness_identity(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
