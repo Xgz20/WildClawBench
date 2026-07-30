@@ -21,6 +21,7 @@ EXCEL_SCRIPT = REPORT_DIR / "scripts/generate_eval_report.py"
 REPORT_ENTITIES_SCRIPT = REPORT_DIR / "scripts/report_entities.py"
 VALIDITY_SCRIPT = REPORT_DIR / "skills/validate-eval-results/scripts/validate_eval_results.py"
 AUDIT_SCRIPT = REPORT_DIR / "skills/audit-eval-report/scripts/audit_eval_report.py"
+LEADER_EXTRACT_SCRIPT = REPORT_DIR / "skills/eval-report/scripts/extract_leader_report_data.py"
 
 
 def load_module(name: str, path: Path):
@@ -434,6 +435,21 @@ class AnalysisPipelineTest(unittest.TestCase):
 
     def create_comparison_fixture(self) -> Path:
         result_root = Path(self.temp_dir.name) / "comparison-round"
+        self.comparison_tasks_dir = Path(self.temp_dir.name) / "comparison-tasks"
+        comparison_suite = self.comparison_tasks_dir / "01_suite"
+        comparison_suite.mkdir(parents=True)
+        (comparison_suite / "task_cost.md").write_text(
+            "---\n"
+            "id: task_cost\n"
+            "name: Cost task\n"
+            "category: 01_suite\n"
+            "difficulty: L2\n"
+            "modality: pure-text\n"
+            "timeout_seconds: 300\n"
+            "grading_type: automated\n"
+            "---\n\n## Prompt\nTest\n",
+            encoding="utf-8",
+        )
         for model in ("gpt-5.5", "xsparkx2agent"):
             for harness in ("astroncode", "opencode"):
                 run_dir = result_root / model / harness / "01_suite/task_cost/run_001"
@@ -513,8 +529,8 @@ class AnalysisPipelineTest(unittest.TestCase):
                     )
         return result_root
 
-    def generate_comparison_excel(self) -> Path:
-        result_root = self.create_comparison_fixture()
+    def generate_comparison_excel(self, result_root: Path | None = None) -> Path:
+        result_root = result_root or self.create_comparison_fixture()
         output_dir = result_root / "comparison-output"
         subprocess.run(
             [
@@ -537,7 +553,7 @@ class AnalysisPipelineTest(unittest.TestCase):
                 "--pricing-date",
                 "2026-07-30",
                 "--tasks-dir",
-                str(Path(self.temp_dir.name) / "missing-tasks"),
+                str(self.comparison_tasks_dir),
                 "--output-dir",
                 str(output_dir),
             ],
@@ -546,6 +562,77 @@ class AnalysisPipelineTest(unittest.TestCase):
             text=True,
         )
         return next(output_dir.glob("report_4units_*.xlsx"))
+
+    def test_validity_and_audit_support_selected_scope(self) -> None:
+        result_root = self.create_comparison_fixture()
+        validity = validity_check.scan_round(
+            result_root,
+            self.comparison_tasks_dir,
+            models={"gpt-5.5"},
+            harnesses={"astroncode"},
+        )
+        self.assertEqual(set(validity["units"]), {"gpt-5.5@astroncode"})
+        self.assertEqual(validity["scope"]["models"], ["gpt-5.5"])
+        self.assertEqual(validity["scope"]["harnesses"], ["astroncode"])
+
+        excel_path = self.generate_comparison_excel(result_root)
+        audit = report_audit.audit_report(
+            result_root,
+            excel_path,
+            self.comparison_tasks_dir,
+            models={"gpt-5.5", "xsparkx2agent"},
+            harnesses={"astroncode", "opencode"},
+            entities_path=REPORT_DIR / "data/entities.yaml",
+            pricing_date=date(2026, 7, 30),
+        )
+        self.assertFalse(
+            [item for item in audit["findings"] if item["severity"] == "error"]
+        )
+
+    def test_audit_detects_recomputed_cost_regression(self) -> None:
+        excel_path = self.generate_comparison_excel()
+        workbook = load_workbook(excel_path)
+        overview = workbook["总览"]
+        headers = [cell.value for cell in overview[1]]
+        overview.cell(2, headers.index("总成本(USD)") + 1).value = 99
+        workbook.save(excel_path)
+
+        report = report_audit.audit_report(
+            excel_path.parent.parent,
+            excel_path,
+            self.comparison_tasks_dir,
+            models={"gpt-5.5", "xsparkx2agent"},
+            harnesses={"astroncode", "opencode"},
+            entities_path=REPORT_DIR / "data/entities.yaml",
+            pricing_date=date(2026, 7, 30),
+        )
+        self.assertTrue(any(
+            item["id"] == "OVERVIEW_COST_MISMATCH"
+            for item in report["findings"]
+        ))
+
+    def test_leader_extractor_reads_controlled_views(self) -> None:
+        leader_extract = load_module("leader_extract", LEADER_EXTRACT_SCRIPT)
+        payload = leader_extract.extract_workbook(self.generate_comparison_excel())
+
+        self.assertEqual(
+            payload["target"]["unit_display"], "Spark-X2-300B@AstronCode"
+        )
+        self.assertEqual(payload["overview"][0]["模型"], "GPT-5.5")
+        self.assertEqual(
+            {
+                row["模型"]
+                for row in payload["dimensions"]["分类对比"]["model_view"]
+            },
+            {"GPT-5.5", "Spark-X2-300B"},
+        )
+        self.assertEqual(
+            {
+                row["Harness"]
+                for row in payload["dimensions"]["Agent能力对比"]["harness_view"]
+            },
+            {"AstronCode", "OpenCode"},
+        )
 
     def selected_ids(self, selection, task_ids=None, task_paths=None):
         records = [dict(record) for record in self.records]

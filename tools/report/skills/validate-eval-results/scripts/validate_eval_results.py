@@ -288,8 +288,14 @@ def classify_run_anomaly(item: dict, status: dict) -> tuple[str, str, str]:
     )
 
 
-def scan_round(result_root: Path, tasks_dir: Path | None) -> dict:
+def scan_round(result_root: Path, tasks_dir: Path | None,
+               models: set[str] | None = None,
+               harnesses: set[str] | None = None) -> dict:
     units = discover_units(result_root)
+    if models:
+        units = [unit for unit in units if unit[0] in models]
+    if harnesses:
+        units = [unit for unit in units if unit[1] in harnesses]
     findings: list[dict] = []
     expected = expected_tasks(tasks_dir)
     expected_flat = {(suite, task) for suite, tasks in expected.items() for task in tasks}
@@ -563,6 +569,10 @@ def scan_round(result_root: Path, tasks_dir: Path | None) -> dict:
         "check_type": "eval_result_validity",
         "result_root": str(result_root),
         "tasks_dir": str(tasks_dir) if tasks_dir else "",
+        "scope": {
+            "models": sorted(models or {model for model, _, _ in units}),
+            "harnesses": sorted(harnesses or {harness for _, harness, _ in units}),
+        },
         "verdict": verdict,
         "summary": {"units": len(unit_data), "errors": counts["error"],
                     "warnings": counts["warning"], "info": counts["info"],
@@ -613,6 +623,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="检查 WildClawBench 评测结果有效性")
     parser.add_argument("--result-root", required=True, help="round/model/unit 结果目录")
     parser.add_argument("--tasks-dir", help="任务定义目录（默认仓库 tasks/）")
+    parser.add_argument("--models", nargs="+", help="仅检查指定模型原始 ID")
+    parser.add_argument("--harnesses", nargs="+", help="仅检查指定 Harness 原始 ID")
     parser.add_argument("--output-dir", help="默认 <round>/report-workspace/validity")
     parser.add_argument("--fail-on", choices=("never", "fail", "review"), default="never",
                         help="控制非零退出：never（默认）/fail/任意 review")
@@ -622,8 +634,15 @@ def main() -> int:
     if not result_root.is_dir():
         parser.error(f"结果目录不存在：{result_root}")
     tasks_dir = find_tasks_dir(args.tasks_dir)
-    report = scan_round(result_root, tasks_dir)
-    round_root = round_root_from_units(result_root, discover_units(result_root))
+    models = set(args.models or [])
+    harnesses = set(args.harnesses or [])
+    report = scan_round(result_root, tasks_dir, models or None, harnesses or None)
+    scoped_units = discover_units(result_root)
+    if models:
+        scoped_units = [unit for unit in scoped_units if unit[0] in models]
+    if harnesses:
+        scoped_units = [unit for unit in scoped_units if unit[1] in harnesses]
+    round_root = round_root_from_units(result_root, scoped_units)
     output_dir = (Path(args.output_dir).expanduser() if args.output_dir else
                   round_root / "report-workspace" / "validity")
     output_dir.mkdir(parents=True, exist_ok=True)

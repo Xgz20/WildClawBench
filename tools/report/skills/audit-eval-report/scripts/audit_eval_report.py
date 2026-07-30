@@ -11,6 +11,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 from statistics import fmean
+from datetime import date
+from decimal import Decimal
 
 try:
     from openpyxl import load_workbook
@@ -23,6 +25,10 @@ sys.path.insert(0, str(REPO_ROOT))
 from src.utils.tool_metrics import parse_tool_metrics  # noqa: E402
 from src.utils.anomalies import classify_report_outcome, scan_run_dir  # noqa: E402
 from src.utils.run_selection import select_effective_run_dirs  # noqa: E402
+
+REPORT_SCRIPTS_DIR = REPO_ROOT / "tools/report/scripts"
+sys.path.insert(0, str(REPORT_SCRIPTS_DIR))
+import report_entities  # noqa: E402
 
 SUITE_RE = re.compile(r"^\d{2}_")
 DIMENSION_HEADER_RE = re.compile(r"^(.*?)平均分\((\d+)例\)$")
@@ -249,7 +255,56 @@ def normalize_harness(label: str) -> str:
     return value.split(" (", 1)[0].strip()
 
 
-def audit_overview(wb, units: dict[str, dict], findings: list[dict]) -> None:
+def load_identity_maps(wb) -> dict[str, dict[str, str]]:
+    result = {
+        "model_display_to_raw": {},
+        "harness_display_to_raw": {},
+        "unit_display_to_raw": {},
+        "unit_raw_to_display": {},
+    }
+    if "_报告元数据" not in wb.sheetnames:
+        return result
+    ws = wb["_报告元数据"]
+    for _, row in iter_row_dicts(ws):
+        entity_type = row.get("类型")
+        raw_id = str(row.get("原始ID") or "")
+        display = str(row.get("展示名称") or "")
+        if not raw_id or not display:
+            continue
+        if entity_type == "模型":
+            result["model_display_to_raw"][display] = raw_id
+        elif entity_type == "Harness":
+            result["harness_display_to_raw"][display] = raw_id
+        elif entity_type == "单元":
+            result["unit_display_to_raw"][display] = raw_id
+            result["unit_raw_to_display"][raw_id] = display
+    return result
+
+
+def resolve_model(label, identities: dict[str, dict[str, str]]) -> str:
+    value = str(label or "").strip()
+    return identities["model_display_to_raw"].get(value, value)
+
+
+def resolve_harness(label, identities: dict[str, dict[str, str]]) -> str:
+    value = normalize_harness(label)
+    return identities["harness_display_to_raw"].get(value, value)
+
+
+def resolve_unit(label, identities: dict[str, dict[str, str]]) -> str:
+    value = str(label or "").strip()
+    return identities["unit_display_to_raw"].get(value, value)
+
+
+def original_table_rows(ws):
+    for row in range(2, ws.max_row + 1):
+        if ws.cell(row, 1).value in (None, ""):
+            break
+        yield row
+
+
+def audit_overview(wb, units: dict[str, dict], findings: list[dict], identities,
+                   recomputed_costs: dict[str, dict] | None = None) -> None:
     ws = wb["总览"]
     headers = [cell.value for cell in ws[1]]
     for required in ("模型", "Harness", *REQUIRED_OVERVIEW_FIELDS):
@@ -259,7 +314,10 @@ def audit_overview(wb, units: dict[str, dict], findings: list[dict]) -> None:
     for row_number, row in iter_row_dicts(ws):
         if not row.get("模型"):
             continue
-        unit = f"{row['模型']}@{normalize_harness(row.get('Harness'))}"
+        unit = (
+            f"{resolve_model(row['模型'], identities)}@"
+            f"{resolve_harness(row.get('Harness'), identities)}"
+        )
         reported[unit] = row
     if set(reported) != set(units):
         findings.append(finding("OVERVIEW_UNIT_SET_MISMATCH", "error", "总览 unit 集合与原始结果不一致",
@@ -269,10 +327,36 @@ def audit_overview(wb, units: dict[str, dict], findings: list[dict]) -> None:
         for column, (key, tolerance) in OVERVIEW_FIELDS.items():
             if column not in headers:
                 continue
+            if column == "总成本(USD)" and recomputed_costs is not None:
+                continue
             if mismatch(row.get(column), raw[key], tolerance):
                 findings.append(finding("OVERVIEW_VALUE_MISMATCH", "error",
                                         f"{column} 与原始结果独立复算不一致", sheet="总览", unit=unit,
                                         evidence={"excel": row.get(column), "recomputed": round(raw[key], 6)}))
+        if recomputed_costs is not None:
+            estimate = recomputed_costs.get(unit, {})
+            expected_cost = estimate.get("usd")
+            actual_cost = row.get("总成本(USD)")
+            differs = (
+                expected_cost is None and actual_cost not in (None, "-")
+            ) or (
+                expected_cost is not None and mismatch(actual_cost, expected_cost, 0.00011)
+            )
+            if differs:
+                findings.append(finding(
+                    "OVERVIEW_COST_MISMATCH",
+                    "error",
+                    "总成本与定价快照独立复算不一致",
+                    sheet="总览",
+                    unit=unit,
+                    evidence={
+                        "excel": actual_cost,
+                        "recomputed": expected_cost,
+                        "profile_ids": estimate.get("profile_ids", []),
+                        "status": estimate.get("status", ""),
+                        "reason": estimate.get("reason", ""),
+                    },
+                ))
         total = sum(as_number(row.get(key)) or 0 for key in
                     ("正常完成数", "执行错误数", "超时数", "评测异常数"))
         if as_number(row.get("用例数")) is not None and total != as_number(row.get("用例数")):
@@ -292,15 +376,16 @@ def audit_overview(wb, units: dict[str, dict], findings: list[dict]) -> None:
                                               "ratio": round(tools / requests, 2)}))
 
 
-def audit_matrix(wb, units: dict[str, dict], findings: list[dict]) -> None:
+def audit_matrix(wb, units: dict[str, dict], findings: list[dict], identities) -> None:
     ws = wb["模型×Harness矩阵"]
     harnesses = [value for value in next(ws.iter_rows(min_row=1, max_row=1, values_only=True))[1:] if value]
     seen = set()
     for values in ws.iter_rows(min_row=2, values_only=True):
-        model = values[0]
+        model = resolve_model(values[0], identities)
         if not model:
             continue
-        for index, harness in enumerate(harnesses, start=1):
+        for index, harness_display in enumerate(harnesses, start=1):
+            harness = resolve_harness(harness_display, identities)
             unit = f"{model}@{harness}"
             value = values[index] if index < len(values) else None
             if unit not in units:
@@ -324,12 +409,12 @@ def score_from_compare_cell(value) -> float | None:
     return float(match.group(1)) if match and match.group(1) != "-" else None
 
 
-def audit_case_compare(wb, units: dict[str, dict], findings: list[dict]) -> None:
+def audit_case_compare(wb, units: dict[str, dict], findings: list[dict], identities) -> None:
     ws = wb["用例对比明细"]
     headers = [cell.value for cell in ws[1]]
     required = {"用例ID", "最优单元", "最大分差"}
     for unit in units:
-        required.add(f"{unit} 得分")
+        required.add(f"{identities['unit_raw_to_display'].get(unit, unit)} 得分")
     missing = required - set(headers)
     for column in sorted(missing):
         findings.append(finding("CASE_COMPARE_COLUMN_MISSING", "error", f"用例对比缺少列：{column}",
@@ -352,7 +437,7 @@ def audit_case_compare(wb, units: dict[str, dict], findings: list[dict]) -> None
             if task is None:
                 continue
             expected = task["score"]
-            column = f"{unit} 得分"
+            column = f"{identities['unit_raw_to_display'].get(unit, unit)} 得分"
             if column not in headers:
                 continue
             actual = score_from_compare_cell(row.get(column))
@@ -369,7 +454,8 @@ def audit_case_compare(wb, units: dict[str, dict], findings: list[dict]) -> None
         if valid_scores:
             maximum = max(valid_scores.values())
             best_units = {unit for unit, score in valid_scores.items() if abs(score - maximum) <= 1e-12}
-            if row.get("最优单元") not in best_units:
+            reported_best = resolve_unit(row.get("最优单元"), identities)
+            if reported_best not in best_units:
                 findings.append(finding("CASE_COMPARE_BEST_MISMATCH", "error", "最优单元计算错误",
                                         sheet=ws.title, task_id=task_id,
                                         evidence={"excel": row.get("最优单元"),
@@ -426,7 +512,7 @@ def capability_score(data: dict, mapping: dict, dimension: str, delivered_only: 
 
 
 def audit_capabilities(wb, units: dict[str, dict], capability_map: dict,
-                       findings: list[dict]) -> None:
+                       findings: list[dict], identities) -> None:
     if not capability_map:
         findings.append(finding("CAPABILITY_MAP_MISSING", "warning", "能力映射缺失，无法独立审核能力指标"))
         return
@@ -441,7 +527,10 @@ def audit_capabilities(wb, units: dict[str, dict], capability_map: dict,
             continue
         ws = wb[title]
         headers = [cell.value for cell in ws[1]]
-        rows = {ws.cell(row, 1).value: row for row in range(2, ws.max_row + 1) if ws.cell(row, 1).value}
+        rows = {
+            resolve_unit(ws.cell(row, 1).value, identities): row
+            for row in original_table_rows(ws)
+        }
         if set(rows) != set(units):
             findings.append(finding("CAPABILITY_UNIT_SET_MISMATCH", "error", "能力 Sheet 的 unit 集合不一致",
                                     sheet=title, evidence={"excel": sorted(rows), "raw": sorted(units)}))
@@ -478,7 +567,7 @@ def build_groups(meta: dict[str, dict], units: dict[str, dict], field: str) -> d
 
 
 def audit_dimension_sheet(wb, title: str, units: dict[str, dict], groups: dict[str, set[str]],
-                          findings: list[dict]) -> None:
+                          findings: list[dict], identities) -> None:
     ws = wb[title]
     headers = [cell.value for cell in ws[1]]
     reported_groups = {}
@@ -497,7 +586,10 @@ def audit_dimension_sheet(wb, title: str, units: dict[str, dict], groups: dict[s
     if set(reported_groups) != set(groups):
         findings.append(finding("DIMENSION_SET_MISMATCH", "error", "维度集合与任务定义不一致", sheet=title,
                                 evidence={"excel": sorted(reported_groups), "raw": sorted(groups)}))
-    rows = {ws.cell(row, 1).value: row for row in range(2, ws.max_row + 1) if ws.cell(row, 1).value}
+    rows = {
+        resolve_unit(ws.cell(row, 1).value, identities): row
+        for row in original_table_rows(ws)
+    }
     if set(rows) != set(units):
         findings.append(finding("DIMENSION_UNIT_SET_MISMATCH", "error", "维度 Sheet 的 unit 集合不一致",
                                 sheet=title, evidence={"excel": sorted(rows), "raw": sorted(units)}))
@@ -540,10 +632,17 @@ def audit_difficulty_inversion(units: dict[str, dict], groups: dict[str, set[str
                                     recommendation="复核难度标签、样本构成和评分标准；不能直接推断模型更擅长难题。"))
 
 
-def audit_diff_matrix(wb, units: dict[str, dict], findings: list[dict]) -> None:
+def audit_diff_matrix(wb, units: dict[str, dict], findings: list[dict], identities) -> None:
     ws = wb["分差矩阵"]
-    columns = [value for value in next(ws.iter_rows(min_row=1, max_row=1, values_only=True))[1:] if value]
-    rows = {ws.cell(row, 1).value: row for row in range(2, ws.max_row + 1) if ws.cell(row, 1).value}
+    columns = [
+        resolve_unit(value, identities)
+        for value in next(ws.iter_rows(min_row=1, max_row=1, values_only=True))[1:]
+        if value
+    ]
+    rows = {
+        resolve_unit(ws.cell(row, 1).value, identities): row
+        for row in range(2, ws.max_row + 1) if ws.cell(row, 1).value
+    }
     if set(columns) != set(units) or set(rows) != set(units):
         findings.append(finding("DIFF_MATRIX_UNIT_SET_MISMATCH", "error", "分差矩阵行列 unit 集合不一致",
                                 sheet=ws.title, evidence={"columns": columns, "rows": sorted(rows),
@@ -630,31 +729,113 @@ def load_validity(path: Path | None, findings: list[dict]) -> dict | None:
     return report
 
 
+def recompute_unit_costs(specs, registry, pricing_date: date) -> dict[str, dict]:
+    result = {}
+    for model, harness, unit_dir in specs:
+        total = Decimal(0)
+        profile_ids = set()
+        status = "estimated"
+        reason = ""
+        for suite_dir in sorted(unit_dir.iterdir()):
+            if not suite_dir.is_dir() or not SUITE_RE.match(suite_dir.name):
+                continue
+            for task_dir in sorted(path for path in suite_dir.iterdir() if path.is_dir()):
+                run_dirs = select_effective_run_dirs(
+                    sorted(path for path in task_dir.iterdir() if path.is_dir()),
+                    scan_run_dir,
+                )
+                if not run_dirs:
+                    continue
+                run_dir = run_dirs[-1]
+                try:
+                    usage = report_entities.normalize_billable_usage(
+                        load_json(run_dir / "usage.json")
+                    )
+                    profile = registry.pricing_profile(model, pricing_date)
+                    if len(profile.tiers) == 1:
+                        estimate = report_entities.estimate_cost_usd(
+                            registry, model, pricing_date, usage,
+                            request_input_tokens=None,
+                        )
+                    else:
+                        requests = (
+                            report_entities.extract_astroncode_requests(run_dir)
+                            if harness == "astroncode"
+                            else report_entities.extract_opencode_requests(run_dir)
+                        )
+                        estimate = report_entities.estimate_request_costs_usd(
+                            registry, model, pricing_date, requests
+                        )
+                except (OSError, ValueError) as exc:
+                    estimate = report_entities.CostEstimate(
+                        None, None, "unavailable", str(exc)
+                    )
+                if estimate.profile_id:
+                    profile_ids.add(estimate.profile_id)
+                if estimate.usd is None:
+                    status = "unavailable"
+                    reason = estimate.reason
+                    break
+                total += estimate.usd
+            if status == "unavailable":
+                break
+        unit = f"{model}@{harness}"
+        result[unit] = {
+            "usd": float(total) if status == "estimated" else None,
+            "profile_ids": sorted(profile_ids),
+            "status": status,
+            "reason": reason,
+        }
+    return result
+
+
 def audit_report(result_root: Path, excel_path: Path, tasks_dir: Path,
-                 validity_path: Path | None = None, capability_map_path: Path | None = None) -> dict:
+                 validity_path: Path | None = None, capability_map_path: Path | None = None,
+                 models: set[str] | None = None,
+                 harnesses: set[str] | None = None,
+                 entities_path: Path | None = None,
+                 pricing_date: date | None = None) -> dict:
     findings: list[dict] = []
     specs = discover_units(result_root)
+    if models:
+        specs = [spec for spec in specs if spec[0] in models]
+    if harnesses:
+        specs = [spec for spec in specs if spec[1] in harnesses]
+    if not specs:
+        findings.append(finding(
+            "NO_UNITS", "error", "过滤后未发现任何评测结果 unit"
+        ))
     units = scan_raw_units(specs)
     meta = load_task_meta(tasks_dir)
     capability_map_path = capability_map_path or REPO_ROOT / "tools/report/data/checkpoint_capability_map7.yaml"
     capability_map = load_capability_map(capability_map_path)
     validity = load_validity(validity_path, findings)
+    recomputed_costs = None
+    if entities_path is not None and pricing_date is not None:
+        try:
+            registry = report_entities.load_registry(entities_path)
+            recomputed_costs = recompute_unit_costs(specs, registry, pricing_date)
+        except (OSError, ValueError) as exc:
+            findings.append(finding(
+                "PRICING_CONFIG_INVALID", "error", f"成本配置无法加载：{exc}"
+            ))
     try:
         wb = load_workbook(excel_path, read_only=True, data_only=True)
     except Exception as exc:
         findings.append(finding("WORKBOOK_INVALID", "error", f"Excel 无法打开：{exc}"))
         wb = None
     if wb is not None:
+        identities = load_identity_maps(wb)
         missing_sheets = CORE_SHEETS - set(wb.sheetnames)
         for title in sorted(missing_sheets):
             findings.append(finding("SHEET_MISSING", "error", f"缺少必需 Sheet：{title}", sheet=title))
         if "总览" in wb.sheetnames:
-            audit_overview(wb, units, findings)
+            audit_overview(wb, units, findings, identities, recomputed_costs)
         if "模型×Harness矩阵" in wb.sheetnames:
-            audit_matrix(wb, units, findings)
+            audit_matrix(wb, units, findings, identities)
         if "用例对比明细" in wb.sheetnames:
-            audit_case_compare(wb, units, findings)
-        audit_capabilities(wb, units, capability_map, findings)
+            audit_case_compare(wb, units, findings, identities)
+        audit_capabilities(wb, units, capability_map, findings, identities)
         dimension_specs = {
             "分类对比": build_groups(meta, units, "category"),
             "难度对比": build_groups(meta, units, "difficulty"),
@@ -662,10 +843,10 @@ def audit_report(result_root: Path, excel_path: Path, tasks_dir: Path,
         }
         for title, groups in dimension_specs.items():
             if title in wb.sheetnames:
-                audit_dimension_sheet(wb, title, units, groups, findings)
+                audit_dimension_sheet(wb, title, units, groups, findings, identities)
         audit_difficulty_inversion(units, dimension_specs["难度对比"], findings)
         if "分差矩阵" in wb.sheetnames:
-            audit_diff_matrix(wb, units, findings)
+            audit_diff_matrix(wb, units, findings, identities)
         audit_detail_sheets(wb, units, findings)
         wb.close()
     counts = Counter(item["severity"] for item in findings)
@@ -680,6 +861,12 @@ def audit_report(result_root: Path, excel_path: Path, tasks_dir: Path,
         "tasks_dir": str(tasks_dir),
         "validity_path": str(validity_path) if validity_path else "",
         "capability_map_path": str(capability_map_path),
+        "scope": {
+            "models": sorted(models or {model for model, _, _ in specs}),
+            "harnesses": sorted(harnesses or {harness for _, harness, _ in specs}),
+        },
+        "entities_path": str(entities_path) if entities_path else "",
+        "pricing_date": pricing_date.isoformat() if pricing_date else "",
         "upstream_validity": validity.get("verdict") if validity else "UNKNOWN",
         "verdict": verdict,
         "summary": {"units": len(units), "errors": counts["error"],
@@ -728,6 +915,11 @@ def main() -> int:
     parser.add_argument("--result-root", required=True, help="round/model/unit 原始结果目录")
     parser.add_argument("--excel", required=True, help="待审核 Excel")
     parser.add_argument("--tasks-dir", default=str(REPO_ROOT / "tasks"), help="任务定义目录")
+    parser.add_argument("--models", nargs="+", help="仅审核指定模型原始 ID")
+    parser.add_argument("--harnesses", nargs="+", help="仅审核指定 Harness 原始 ID")
+    parser.add_argument("--entities", help="实体注册表 YAML，用于独立复算成本")
+    parser.add_argument("--pricing-date", type=date.fromisoformat,
+                        help="成本复算使用的定价快照日期 YYYY-MM-DD")
     parser.add_argument("--validity", help="有效性检查 JSON；默认从 round 工作区发现")
     parser.add_argument("--capability-map", help="能力映射 YAML")
     parser.add_argument("--output-dir", help="默认 <round>/report-workspace/audit")
@@ -742,15 +934,25 @@ def main() -> int:
     if not excel_path.is_file():
         parser.error(f"Excel 不存在：{excel_path}")
     specs = discover_units(result_root)
+    models = set(args.models or [])
+    harnesses = set(args.harnesses or [])
+    if models:
+        specs = [spec for spec in specs if spec[0] in models]
+    if harnesses:
+        specs = [spec for spec in specs if spec[1] in harnesses]
     round_root = round_root_from_units(result_root, specs)
     default_validity = round_root / "report-workspace/validity/eval_result_validity.json"
     validity_path = Path(args.validity).expanduser().resolve() if args.validity else default_validity
     capability_map_path = (Path(args.capability_map).expanduser().resolve() if args.capability_map else
                            REPO_ROOT / "tools/report/data/checkpoint_capability_map7.yaml")
+    entities_path = Path(args.entities).expanduser().resolve() if args.entities else None
     output_dir = (Path(args.output_dir).expanduser().resolve() if args.output_dir else
                   round_root / "report-workspace/audit")
     output_dir.mkdir(parents=True, exist_ok=True)
-    report = audit_report(result_root, excel_path, tasks_dir, validity_path, capability_map_path)
+    report = audit_report(
+        result_root, excel_path, tasks_dir, validity_path, capability_map_path,
+        models or None, harnesses or None, entities_path, args.pricing_date,
+    )
     stem = f"report_audit_{excel_path.stem}"
     json_path = output_dir / f"{stem}.json"
     md_path = output_dir / f"{stem}.md"
