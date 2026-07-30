@@ -38,9 +38,10 @@ Markdown 表格复制到飞书后不带 Excel 条件配色。现有人工流程�
 
 ### 非目标
 
-- 不改变任务得分、能力映射、异常分类和聚合公式。
+- 不改变任务得分、能力映射、异常分类和得分聚合公式。
 - 不改变 analysis JSON 的 unit 主键和 Excel 根因回填匹配规则。
 - 不删除或重排总览中的现有列。
+- 不回写历史 `usage.json`，不修改各 Harness runner 的在线计费逻辑。
 - 不覆盖验证目录中的历史报告。
 - 不把领导版 Markdown 完全改造成固定模板生成器；需要判断的评语和建议仍由 Skill 基于数据与证据撰写。
 
@@ -51,14 +52,69 @@ Markdown 表格复制到飞书后不带 Excel 条件配色。现有人工流程�
 ```yaml
 schema_version: 1
 
+exchange_rates:
+  CNY:
+    cny_per_usd: 6.77
+    effective_date: 2026-07-30
+    source: Morningstar via Google
+
 models:
+  gpt-5.5:
+    display_name: GPT-5.5
+    vendor: OpenAI
+    aliases: []
+    capabilities:
+      supported_reasoning_efforts: []
+    pricing_profiles:
+      - id: 2026-07-30-openai
+        effective_from: 2026-07-30
+        currency: USD
+        unit_tokens: 1000000
+        tiers:
+          - id: short-context
+            max_input_tokens_per_request: 272000
+            input_uncached: 5
+            input_cached: 0.5
+            output: 30
+          - id: long-context
+            min_input_tokens_per_request: 272001
+            input_uncached: 10
+            input_cached: 1
+            output: 45
+
+  xopglm52:
+    display_name: GLM-5.2
+    vendor: Zhipu AI
+    aliases: []
+    capabilities:
+      supported_reasoning_efforts: []
+    pricing_profiles:
+      - id: 2026-07-30-default
+        effective_from: 2026-07-30
+        currency: CNY
+        unit_tokens: 1000000
+        tiers:
+          - id: default
+            input_uncached: 8
+            input_cached: 2
+            output: 28
+
   xsparkx2agent:
     display_name: Spark-X2-300B
     vendor: Spark
     aliases: []
     capabilities:
       supported_reasoning_efforts: []
-    pricing_profiles: []
+    pricing_profiles:
+      - id: 2026-07-30-default
+        effective_from: 2026-07-30
+        currency: CNY
+        unit_tokens: 1000000
+        tiers:
+          - id: default
+            input_uncached: 4
+            input_cached: 0.8
+            output: 15
 
 harnesses:
   astroncode:
@@ -66,13 +122,18 @@ harnesses:
     family: Codex
     aliases: []
     capabilities: {}
+  opencode:
+    display_name: OpenCode
+    family: OpenCode
+    aliases: []
+    capabilities: {}
 ```
 
-本次报告脚本只读取 `schema_version` 和 `display_name`，其他字段允许缺省，不迁移现有成本计算和思考强度逻辑。后续扩展遵循以下边界：
+本次报告脚本读取 `schema_version`、`display_name`、`pricing_profiles` 和 `exchange_rates`。其他字段允许缺省，不迁移各 Harness runner 的在线成本计算和思考强度逻辑。后续扩展遵循以下边界：
 
 - `vendor`、别名、模型支持的思考强度等稳定描述可放实体注册表。
 - 本轮实际使用的思考强度属于运行时事实，必须记录在 `execution_status.json` 或 run 元数据中，不能从静态注册表推断。
-- Token 单价可能随供应商、路由和时间变化。未来使用 `pricing_profiles` 时，每个档案必须包含 `provider`、`effective_from`、`currency`、计价单位及输入、输出、缓存读写单价，禁止维护无生效时间的单一固定价格。
+- Token 单价可能随供应商、路由和时间变化。每个定价档案必须包含稳定 ID、`effective_from`、`currency`、计价单位及输入、输出、缓存单价；已知供应商时补充 `provider`。禁止维护无生效时间的单一固定价格。
 - Harness 的家族、别名和稳定能力可放注册表；Harness 版本仍以运行结果中的 `harness_version` 为准。
 
 脚本启动时加载实体注册表。模型、Harness 和 unit 均提供原始标识与展示标识：
@@ -82,6 +143,23 @@ harnesses:
 - Harness 版本继续追加在友好名称后，例如 `OpenCode (1.18.4)`。
 
 实体缺失、实体没有 `display_name` 或注册表版本不受支持时执行明确校验。未知实体回退原始 ID 并打印警告，报告生成不中断；未知 ID 不允许被自动格式化或猜测名称。Schema 版本不受支持时直接报错，避免静默误读新结构。
+
+### 本轮定价快照
+
+本轮使用以下单价，单位均为每百万 tokens：
+
+| 模型 | 币种 | 未缓存输入 | 缓存输入 | 输出 | 上下文档位 |
+|---|---|---:|---:|---:|---|
+| GPT-5.5 | USD | 5 | 0.5 | 30 | Short context，单请求输入不超过 272K |
+| GPT-5.5 | USD | 10 | 1 | 45 | Long context，单请求输入超过 272K |
+| GLM-5.2 | CNY | 8 | 2 | 28 | 单档 |
+| Spark-X2-300B | CNY | 4 | 0.8 | 15 | 单档 |
+
+人民币成本按 `1 USD = 6.77 CNY` 转换，汇率日期为 `2026-07-30`，来源为用户提供的 Morningstar/Google 汇率截图。换算结果保留完整精度参与汇总，只在 Excel 展示时四舍五入。
+
+GPT-5.5 必须按请求选择上下文档位，不能根据单任务或整轮聚合 token 选择。验证数据中 AstronCode 单请求最大输入为 121,445 tokens，OpenCode 为 202,449 tokens，均使用 Short context 单价。
+
+验证范围 360 份 `usage.json` 的 `cache_write_tokens` 均为 0。本轮定价没有缓存写入单价；未来出现非零缓存写入且配置未提供价格时，该 run 成本标记为不可计算并给出警告，不得按 0 处理。
 
 新增隐藏 Sheet `_报告元数据`，记录类型、原始 ID、展示名称、unit 原始键和 unit 展示标签，供审计和问题追踪。Sheet 中的数据匹配、排序和 analysis 回填始终使用原始键，避免展示名变更破坏兼容性。
 
@@ -93,9 +171,12 @@ Excel 脚本新增：
 --target-model <raw-model-id>
 --target-harness <raw-harness-id>
 --entities <yaml-path>        # 可选，默认 tools/report/data/entities.yaml
+--pricing-date <YYYY-MM-DD>   # 成本重算必填；本轮为 2026-07-30
 ```
 
 `--models` 和 `--harnesses` 继续限定参评范围；目标参数只决定目标组合与控制变量视图。
+
+定价档案选择 `effective_from <= pricing_date` 的最新版本；汇率同样选择不晚于 `pricing_date` 的最新版本。新增未来价格后，使用相同 `--pricing-date` 重生成历史报告仍应得到相同成本。存在多个同日档案、没有可用档案或日期格式非法时直接报错，不静默选择。
 
 生成前执行以下校验：
 
@@ -112,9 +193,27 @@ Excel 脚本新增：
 
 - 模型和 Harness 改用友好名称。
 - 目标组合所在行使用一致的强调样式。
+- `总成本(USD)` 使用报告侧重算结果；原始 `usage.json.cost_usd` 为 0 时不再直接汇总为 0。
 - 领导版 Markdown 总览逐列复制该表，不删减列。
 
 总览不追加控制变量表，避免与现有全量总览重复。
+
+### 成本计算
+
+报告侧成本计算不修改原始结果文件。每个有效 run 先规范化为 `input_uncached_tokens`、`input_cached_tokens`、`cache_write_tokens` 和 `output_tokens`，再按模型定价档案计算：
+
+```text
+原币成本 = 未缓存输入 / 1M × 未缓存输入价
+         + 缓存输入 / 1M × 缓存输入价
+         + 输出 / 1M × 输出价
+美元成本 = 原币成本 / cny_per_usd  # 仅 CNY
+```
+
+现有 Harness 的 `usage.json` 语义不同：AstronCode 的 `input_tokens` 包含缓存读取，OpenCode 的 `input_tokens` 不包含缓存读取。规范化逻辑必须依据总 token 恒等式和 Harness 原始逐请求数据校验，禁止对两个 Harness 直接套同一减法公式。
+
+GPT-5.5 的上下文档位使用逐请求数据判定：AstronCode 读取 `chat.jsonl` 中的 `last_token_usage`，OpenCode 读取数据库 `part` 表中的 `step-finish.tokens`。如果 tiered pricing 模型缺少逐请求数据，成本显示 `-` 并警告，不能用聚合 token 猜测档位。
+
+隐藏 `_报告元数据` Sheet 增加本次使用的定价档案 ID、汇率、汇率日期和成本计算状态，确保 Excel 中的美元金额可复算。Markdown 总览备注说明成本为按配置快照重算的估算值，不代表供应商最终账单。
 
 ### 维度 Sheet
 
@@ -196,6 +295,7 @@ L3（评测环境/共享基础设施）和 L4（任务、Grader、统计或评�
 
 - 输入增加目标模型、目标 Harness 和实体注册表说明。
 - Excel 命令示例必须传目标参数。
+- 总览取数规则增加报告侧成本重算、定价快照和汇率备注。
 - Sheet 列名权威表说明原始表仍在第 1 行，控制变量视图位于下方。
 - Markdown 章节顺序改为总览、分类、Agent 能力、难度、模态。
 - 各维度只提取两张控制变量表；总览保留全部列。
@@ -208,6 +308,10 @@ L3（评测环境/共享基础设施）和 L4（任务、Grader、统计或评�
 ### 自动测试
 
 - 实体注册表加载：Schema 版本、已知实体、缺失 `display_name`、未知 ID 回退、警告和自定义配置路径。
+- 定价配置：计价日期、档案选择、生效日期、币种、上下文档位、汇率和缺失缓存写入价格的失败路径。
+- 成本规范化：AstronCode 输入包含缓存、OpenCode 输入不含缓存，两种语义均不重复计费。
+- 成本计算：GPT-5.5 逐请求档位、GLM/Spark 人民币换算、任务到 unit 汇总和 Excel 四舍五入。
+- 成本缺失：无价格、无逐请求 tier 证据或未知 token 语义时显示 `-` 而不是 0。
 - 身份隔离：内部 `unit` 仍使用原始 ID，展示标签使用友好名称。
 - 参数校验：目标 unit 缺失、模型参照不足、Harness 参照不足。
 - 总览兼容：表头仍位于第 1 行，列名、顺序和数值与改造前一致。
@@ -237,6 +341,7 @@ target: xsparkx2agent@astroncode
 - 新时间戳 Excel，包含 6 个 unit，不覆盖已有文件。
 - 新领导版 Markdown，以 `Spark-X2-300B@AstronCode` 为目标组合。
 - Markdown 总览包含 Excel 总览全部列。
+- 6 个 unit 的 `总成本(USD)` 为非零可复算值，人民币模型按 6.77 汇率转换；GPT-5.5 本轮全部使用 Short context 单价。
 - 分类位于总览之后、Agent 能力之前。
 - 四个分析维度均包含模型侧和 Harness 侧控制变量总结与表格。
 - 典型低分案例不包含 L3/L4；有效性问题按门禁规则处理。
@@ -252,7 +357,9 @@ L3/L4 不从内部分类中删除，因为删除会掩盖无效评测；它们�
 
 ## 风险与回退
 
-- 展示名遗漏会回退原始 ID并告警，不影响数据生成；补充 YAML 后可重新生成。
+- 展示名遗漏会回退原始 ID 并告警，不影响数据生成；补充 YAML 后可重新生成。
+- 定价或汇率缺失时成本显示 `-` 并阻止报告将其描述为零成本；补充实体注册表后可重新生成。
+- 事后估算成本依赖价格快照，不等于供应商结算金额；Excel 元数据和 Markdown 备注必须披露单价、汇率与日期。
 - 控制变量表追加逻辑若影响原始表读取，可临时关闭目标参数，恢复只生成全量表的兼容模式。
 - Excel 条件格式复制到飞书的实际效果依赖飞书导入行为，验收时需人工复制至少一张宽表确认颜色和边框保留。
 - 如果目标筛选后缺少完整的模型或 Harness 参照，不生成误导性结论，并在报告中说明对比范围不足。
