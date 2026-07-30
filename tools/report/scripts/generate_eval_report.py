@@ -52,6 +52,8 @@ CELL_MAX_LEN = 32000
 
 HEADER_FONT = Font(bold=True, color="FFFFFF")
 HEADER_FILL = PatternFill("solid", fgColor="4472C4")
+SECTION_FILL = PatternFill("solid", fgColor="D9EAF7")
+TARGET_FILL = PatternFill("solid", fgColor="FFF2CC")
 CENTER = Alignment(horizontal="center", vertical="center")
 WRAP_TOP = Alignment(wrap_text=True, vertical="top")
 
@@ -695,12 +697,99 @@ def add_color_scale(ws, first_row: int, last_row: int, first_col: int, last_col:
     ))
 
 
+def append_controlled_views(
+    ws,
+    units: list[UnitResult],
+    value_headers: list[str],
+    values_by_raw_unit: dict[str, list],
+    target_model: str | None,
+    target_harness: str | None,
+) -> None:
+    if not target_model or not target_harness:
+        return
+
+    def append_view(title: str, first_header: str, selected: list[UnitResult],
+                    label_getter, target_id: str, id_getter) -> None:
+        if len(selected) < 2:
+            print(f"[警告] {title} 参照少于 2 个，跳过控制变量视图", file=sys.stderr)
+            return
+        title_row = ws.max_row + 3
+        ws.cell(title_row, 1, title)
+        for column in range(1, 2 + len(value_headers)):
+            cell = ws.cell(title_row, column)
+            cell.fill = SECTION_FILL
+            cell.font = Font(bold=True, color="1F4E78")
+        header_row = title_row + 1
+        ws.append([first_header] + value_headers)
+        style_header_row_at(ws, header_row)
+        data_start = header_row + 1
+        for unit in selected:
+            ws.append([label_getter(unit)] + list(values_by_raw_unit[unit.unit]))
+            current_row = ws.max_row
+            if id_getter(unit) == target_id:
+                for cell in ws[current_row]:
+                    cell.font = Font(bold=True)
+                ws.cell(current_row, 1).fill = TARGET_FILL
+        data_end = ws.max_row
+
+        numeric_offsets = [
+            index
+            for index in range(len(value_headers))
+            if any(
+                isinstance(values_by_raw_unit[unit.unit][index], (int, float))
+                for unit in selected
+            )
+        ]
+        for row in range(data_start, data_end + 1):
+            apply_pct_format(ws, row, [2 + offset for offset in numeric_offsets])
+        groups: list[list[int]] = []
+        for offset in numeric_offsets:
+            if not groups or offset != groups[-1][-1] + 1:
+                groups.append([offset])
+            else:
+                groups[-1].append(offset)
+        for group in groups:
+            add_color_scale(
+                ws, data_start, data_end, 2 + group[0], 2 + group[-1]
+            )
+
+    model_units = [unit for unit in units if unit.harness == target_harness]
+    target_harness_display = next(
+        (unit.harness_display for unit in units if unit.harness == target_harness),
+        target_harness,
+    )
+    append_view(
+        f"固定 {target_harness_display}：模型对比",
+        "模型",
+        model_units,
+        lambda unit: unit.model_display,
+        target_model,
+        lambda unit: unit.model,
+    )
+
+    harness_units = [unit for unit in units if unit.model == target_model]
+    target_model_display = next(
+        (unit.model_display for unit in units if unit.model == target_model),
+        target_model,
+    )
+    append_view(
+        f"固定 {target_model_display}：Harness 对比",
+        "Harness",
+        harness_units,
+        lambda unit: unit.harness_display,
+        target_harness,
+        lambda unit: unit.harness,
+    )
+
+
 # ===========================================================================
 # Sheet 写入
 # ===========================================================================
 
 def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
-                         suite_zh: dict[str, str]) -> None:
+                         suite_zh: dict[str, str],
+                         target_model: str | None = None,
+                         target_harness: str | None = None) -> None:
     ws = wb.active
     ws.title = "总览"
     # 检测是否有多轮数据（任一 task.runs > 1）
@@ -753,6 +842,11 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
                 _pct_or_dash(_tm_unclear_ratio(tm)),
             ]
         ws.append(row)
+        if u.model == target_model and u.harness == target_harness:
+            for cell in ws[ws.max_row]:
+                cell.font = Font(bold=True)
+            ws.cell(ws.max_row, 1).fill = TARGET_FILL
+            ws.cell(ws.max_row, 2).fill = TARGET_FILL
         pct_cols = [header.index("总平均分") + 1, header.index("完成率") + 1]
         if tool_cols:
             pct_cols += [header.index(name) + 1 for name in
@@ -924,7 +1018,9 @@ def _cap_task_scores(u: UnitResult, cap_map: dict, dim: str, delivered_only: boo
     return out
 
 
-def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
+def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict,
+                           target_model: str | None = None,
+                           target_harness: str | None = None) -> None:
     from openpyxl.comments import Comment
 
     # 预先计算每个 unit 的 7 项原始能力分与 3 项去污染分（供两个 Sheet 复用）
@@ -949,6 +1045,7 @@ def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
               + ["模型强项", "模型短板"])
     ws.append(header)
     n_dims = len(CAP7_ORDER)
+    view_values: dict[str, list] = {}
     for u in units:
         scores = unit_scores[u.unit]
         row = [u.unit_display, round(u.total_pct, 1)]
@@ -958,6 +1055,7 @@ def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
                         key=lambda d: scores[d][0], reverse=True)
         fmt_rank = lambda ds: "\n".join(f"{CAP7_ZH[d]} {scores[d][0]:.1f}%" for d in ds) or "-"
         row += [fmt_rank(ranked[:3]), fmt_rank(list(reversed(ranked[-3:])))]
+        view_values[u.unit] = row[1:]
         ws.append(row)
         r = ws.max_row
         apply_pct_format(ws, r, range(2, 3 + n_dims))
@@ -969,6 +1067,9 @@ def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
     set_widths(ws, {1: 28, 2: 12, 3 + n_dims: 24, 4 + n_dims: 24}, default=17)
     ws.freeze_panes = "C2"
     add_color_scale(ws, 2, ws.max_row, 2, 2 + n_dims)
+    append_controlled_views(
+        ws, units, header[1:], view_values, target_model, target_harness
+    )
 
     # ---- Sheet 2：仅 3 项去落盘污染能力 ----
     ws2 = wb.create_sheet("Agent能力对比·去污染", index=4)
@@ -976,10 +1077,12 @@ def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
                + [f"{CAP7_ZH[d]}·去落盘污染" for d in CAP7_DECON])
     ws2.append(header2)
     n_decon = len(CAP7_DECON)
+    decon_view_values: dict[str, list] = {}
     for u in units:
         decon = unit_decon[u.unit]
         row = [u.unit_display, round(u.total_pct, 1)]
         row += [round(decon[d][0], 1) if decon[d][0] is not None else "-" for d in CAP7_DECON]
+        decon_view_values[u.unit] = row[1:]
         ws2.append(row)
         r = ws2.max_row
         apply_pct_format(ws2, r, range(2, 3 + n_decon))
@@ -990,6 +1093,9 @@ def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
     set_widths(ws2, {1: 28, 2: 12}, default=20)
     ws2.freeze_panes = "C2"
     add_color_scale(ws2, 2, ws2.max_row, 2, 2 + n_decon)
+    append_controlled_views(
+        ws2, units, header2[1:], decon_view_values, target_model, target_harness
+    )
 
     # 覆盖率告警：实测检查点未被映射的
     unmapped = set()
@@ -1006,7 +1112,9 @@ def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict) -> None:
 
 
 def write_dimension_sheet_transposed(wb, title: str, units: list[UnitResult],
-                                     groups: list[tuple[str, set[str]]]) -> None:
+                                     groups: list[tuple[str, set[str]]],
+                                     target_model: str | None = None,
+                                     target_harness: str | None = None) -> None:
     """转置维度对比：行=unit（按总平均分降序），列=维度取值（表头带用例数）。
 
     分类/难度/模态三张对比表统一用此布局：第 1 列模型@Harness、第 2 列总平均分，
@@ -1014,19 +1122,41 @@ def write_dimension_sheet_transposed(wb, title: str, units: list[UnitResult],
     """
     ws = wb.create_sheet(title)
     groups = [(label, ids) for label, ids in groups if ids]
-    ws.append(["模型@Harness", "总平均分"]
+    header = (["模型@Harness", "总平均分"]
               + [f"{label}平均分({len(ids)}例)" for label, ids in groups])
+    ws.append(header)
+    view_values: dict[str, list] = {}
     for u in units:  # units 已按总平均分降序
         row = [u.unit_display, round(u.total_pct, 1)]
         for _, ids in groups:
             v = u.avg_pct(ids)
             row.append(round(v, 1) if v is not None else "-")
+        view_values[u.unit] = row[1:]
         ws.append(row)
         apply_pct_format(ws, ws.max_row, range(2, 3 + len(groups)))
     style_header_row(ws)
     set_widths(ws, {1: 28, 2: 12}, default=22)
     ws.freeze_panes = "B2"
     add_color_scale(ws, 2, ws.max_row, 2, 2 + len(groups))
+    append_controlled_views(
+        ws, units, header[1:], view_values, target_model, target_harness
+    )
+
+
+REPORT_SHEET_ORDER = [
+    "总览",
+    "分类对比",
+    "Agent能力对比",
+    "Agent能力对比·去污染",
+    "难度对比",
+    "模态对比",
+]
+
+
+def reorder_report_sheets(wb) -> None:
+    prefix = [wb[name] for name in REPORT_SHEET_ORDER if name in wb.sheetnames]
+    prefix_names = {sheet.title for sheet in prefix}
+    wb._sheets = prefix + [sheet for sheet in wb.worksheets if sheet.title not in prefix_names]
 
 
 def write_tool_compare_sheet(wb, units: list[UnitResult]) -> None:
@@ -2014,17 +2144,23 @@ def main() -> None:
     suite_zh = build_suite_zh_map(task_meta)
 
     wb = Workbook()
-    write_overview_sheet(wb, units, suites, suite_zh)
+    write_overview_sheet(
+        wb, units, suites, suite_zh, args.target_model, args.target_harness
+    )
     write_matrix_sheet(wb, units)
     write_tool_compare_sheet(wb, units)
     write_case_compare_sheet(wb, units, order, task_meta, suite_zh)
     cap_map = load_capability_map(args.capability_map)
     if cap_map:
-        write_capability_sheet(wb, units, cap_map)
+        write_capability_sheet(
+            wb, units, cap_map, args.target_model, args.target_harness
+        )
     write_dimension_sheet_transposed(
         wb, "分类对比", units,
         [(suite_zh.get(s, s), {tid for su, tid in order if su == s})
-         for s in suites])
+         for s in suites],
+        args.target_model, args.target_harness,
+    )
 
     def meta_groups(field: str, known_order: list[str],
                     label_map: dict[str, str] | None = None) -> list[tuple[str, set[str]]]:
@@ -2035,8 +2171,14 @@ def main() -> None:
                  {tid for _, tid in order if task_meta.get(tid, {}).get(field) == v})
                 for v in ordered]
 
-    write_dimension_sheet_transposed(wb, "难度对比", units, meta_groups("difficulty", DIFFICULTY_ORDER))
-    write_dimension_sheet_transposed(wb, "模态对比", units, meta_groups("modality", MODALITY_ORDER, MODALITY_ZH))
+    write_dimension_sheet_transposed(
+        wb, "难度对比", units, meta_groups("difficulty", DIFFICULTY_ORDER),
+        args.target_model, args.target_harness,
+    )
+    write_dimension_sheet_transposed(
+        wb, "模态对比", units, meta_groups("modality", MODALITY_ORDER, MODALITY_ZH),
+        args.target_model, args.target_harness,
+    )
     write_diff_matrix_sheet(wb, units)
     # 全局多轮判定：任一 unit 任一 task 跑了多轮才启用多轮列/Sheet（单轮报告零变化）
     has_multirun = any(t.runs > 1 for u in units for t in u.tasks)
@@ -2047,6 +2189,7 @@ def main() -> None:
         wb, units, registry, entities_path, args.pricing_date,
         args.target_model, args.target_harness,
     )
+    reorder_report_sheets(wb)
 
     # 即使 --result-root 传入 model 或 unit，报告仍集中到 round 工作区。
     # 若 --result-root 本身就是 round 根（非 unit 目录、下辖多 unit），直接用它，

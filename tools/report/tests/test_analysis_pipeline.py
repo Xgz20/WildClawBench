@@ -321,6 +321,98 @@ class AnalysisPipelineTest(unittest.TestCase):
             )
         )
 
+    def test_dimension_sheets_append_two_controlled_views(self) -> None:
+        workbook = load_workbook(self.generate_comparison_excel())
+        expected_sheets = (
+            "分类对比",
+            "Agent能力对比",
+            "Agent能力对比·去污染",
+            "难度对比",
+            "模态对比",
+        )
+        for title in expected_sheets:
+            sheet = workbook[title]
+            first_column = [
+                sheet.cell(row, 1).value for row in range(1, sheet.max_row + 1)
+            ]
+            self.assertEqual(sheet["A1"].value, "模型@Harness")
+            self.assertIn("固定 AstronCode：模型对比", first_column)
+            self.assertIn("固定 Spark-X2-300B：Harness 对比", first_column)
+
+            model_title_row = first_column.index("固定 AstronCode：模型对比") + 1
+            harness_title_row = first_column.index(
+                "固定 Spark-X2-300B：Harness 对比"
+            ) + 1
+            self.assertEqual(sheet.cell(model_title_row + 1, 1).value, "模型")
+            self.assertEqual(sheet.cell(harness_title_row + 1, 1).value, "Harness")
+            self.assertEqual(
+                {
+                    sheet.cell(row, 1).value
+                    for row in range(model_title_row + 2, harness_title_row - 2)
+                    if sheet.cell(row, 1).value
+                },
+                {"GPT-5.5", "Spark-X2-300B"},
+            )
+            self.assertEqual(
+                {
+                    sheet.cell(row, 1).value
+                    for row in range(harness_title_row + 2, sheet.max_row + 1)
+                    if sheet.cell(row, 1).value
+                },
+                {"AstronCode", "OpenCode"},
+            )
+
+    def test_controlled_views_preserve_overview_and_apply_styles(self) -> None:
+        workbook = load_workbook(self.generate_comparison_excel())
+        self.assertEqual(
+            [cell.value for cell in workbook["总览"][1]],
+            [
+                "模型", "Harness", "总平均分", "用例数", "正常完成数",
+                "执行错误数", "超时数", "评测异常数", "完成率", "总tokens",
+                "总请求数", "总耗时(s)", "总成本(USD)",
+            ],
+        )
+        self.assertEqual(
+            workbook.sheetnames[:6],
+            [
+                "总览", "分类对比", "Agent能力对比", "Agent能力对比·去污染",
+                "难度对比", "模态对比",
+            ],
+        )
+        overview = workbook["总览"]
+        target_overview_cell = next(
+            overview.cell(row, 1)
+            for row in range(2, overview.max_row + 1)
+            if overview.cell(row, 1).value == "Spark-X2-300B"
+            and str(overview.cell(row, 2).value).startswith("AstronCode")
+        )
+        self.assertTrue(target_overview_cell.font.bold)
+        self.assertEqual(target_overview_cell.fill.fill_type, "solid")
+        for title in workbook.sheetnames[1:6]:
+            sheet = workbook[title]
+            first_column = [
+                sheet.cell(row, 1).value for row in range(1, sheet.max_row + 1)
+            ]
+            model_title_row = first_column.index("固定 AstronCode：模型对比") + 1
+            harness_title_row = first_column.index(
+                "固定 Spark-X2-300B：Harness 对比"
+            ) + 1
+            target_model_cell = next(
+                sheet.cell(row, 1)
+                for row in range(model_title_row + 2, harness_title_row)
+                if sheet.cell(row, 1).value == "Spark-X2-300B"
+            )
+            target_harness_cell = next(
+                sheet.cell(row, 1)
+                for row in range(harness_title_row + 2, sheet.max_row + 1)
+                if sheet.cell(row, 1).value == "AstronCode"
+            )
+            self.assertTrue(target_model_cell.font.bold)
+            self.assertEqual(target_model_cell.fill.fill_type, "solid")
+            self.assertTrue(target_harness_cell.font.bold)
+            self.assertEqual(target_harness_cell.fill.fill_type, "solid")
+            self.assertGreaterEqual(len(sheet.conditional_formatting), 3)
+
     def add_valid_run(self, task_id: str, name: str, score: float) -> Path:
         run_dir = self.suite_dir / task_id / name
         run_dir.mkdir()
