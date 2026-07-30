@@ -1139,6 +1139,10 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertIn("优先排查", skill)
         self.assertIn("L3/L4", skill)
         self.assertIn("不得进入典型低分案例", skill)
+        self.assertIn("先说明已有优势", skill)
+        self.assertIn("数字用于支撑判断", skill)
+        self.assertIn("对 Harness 选择较敏感", skill)
+        self.assertIn("避免使用", skill)
 
         self.assertLess(template.index("## 二、分类维度分析"),
                         template.index("## 三、Agent 能力维度分析"))
@@ -1146,6 +1150,8 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertGreaterEqual(template.count("固定目标模型"), 4)
         self.assertIn("全部 Excel 总览列", template)
         self.assertIn("评测有效性与剔除说明", template)
+        self.assertIn("先写已有基础或接近项", template)
+        self.assertIn("分差均在 5 分以内", template)
 
         for option in (
             "--target-model", "--target-harness", "--models", "--harnesses",
