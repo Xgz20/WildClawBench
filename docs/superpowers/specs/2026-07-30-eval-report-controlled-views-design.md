@@ -54,9 +54,9 @@ schema_version: 1
 
 exchange_rates:
   CNY:
-    cny_per_usd: 6.77
-    effective_date: 2026-07-30
-    source: Morningstar via Google
+    - effective_from: 2026-07-30
+      cny_per_usd: 6.77
+      source: Morningstar via Google
 
 models:
   gpt-5.5:
