@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -136,6 +137,152 @@ class AnalysisPipelineTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "schema_version"):
             report_entities.load_registry(path)
+
+    def test_cost_normalizes_astroncode_and_opencode_usage(self) -> None:
+        report_entities = load_module("report_entities_usage", REPORT_ENTITIES_SCRIPT)
+        astron = report_entities.normalize_billable_usage({
+            "input_tokens": 1000,
+            "cache_read_tokens": 600,
+            "cache_write_tokens": 0,
+            "output_tokens": 100,
+            "total_tokens": 1100,
+        })
+        opencode = report_entities.normalize_billable_usage({
+            "input_tokens": 400,
+            "cache_read_tokens": 600,
+            "cache_write_tokens": 0,
+            "output_tokens": 100,
+            "total_tokens": 1100,
+        })
+
+        self.assertEqual(astron, report_entities.BillableUsage(400, 600, 0, 100))
+        self.assertEqual(opencode, report_entities.BillableUsage(400, 600, 0, 100))
+
+    def test_cost_converts_glm_and_spark_from_cny(self) -> None:
+        report_entities = load_module("report_entities_cny", REPORT_ENTITIES_SCRIPT)
+        registry = report_entities.load_registry(REPORT_DIR / "data/entities.yaml")
+        usage = report_entities.BillableUsage(400, 600, 0, 100)
+
+        glm = report_entities.estimate_cost_usd(
+            registry, "xopglm52", date(2026, 7, 30), usage,
+            request_input_tokens=None,
+        )
+        spark = report_entities.estimate_cost_usd(
+            registry, "xsparkx2agent", date(2026, 7, 30), usage,
+            request_input_tokens=None,
+        )
+
+        self.assertAlmostEqual(float(glm.usd), 0.0072 / 6.77, places=10)
+        self.assertAlmostEqual(float(spark.usd), 0.00358 / 6.77, places=10)
+
+    def test_gpt_cost_uses_each_request_context_tier(self) -> None:
+        report_entities = load_module("report_entities_gpt", REPORT_ENTITIES_SCRIPT)
+        registry = report_entities.load_registry(REPORT_DIR / "data/entities.yaml")
+        requests = [
+            report_entities.RequestUsage(100000, 100000, 1000),
+            report_entities.RequestUsage(200000, 100000, 1000),
+        ]
+
+        result = report_entities.estimate_request_costs_usd(
+            registry, "gpt-5.5", date(2026, 7, 30), requests
+        )
+        expected = (
+            100000 * 5 + 100000 * 0.5 + 1000 * 30
+            + 200000 * 10 + 100000 * 1 + 1000 * 45
+        ) / 1_000_000
+        self.assertAlmostEqual(float(result.usd), expected)
+
+    def test_cost_is_unavailable_without_cache_write_price(self) -> None:
+        report_entities = load_module("report_entities_cache_write", REPORT_ENTITIES_SCRIPT)
+        registry = report_entities.load_registry(REPORT_DIR / "data/entities.yaml")
+
+        result = report_entities.estimate_cost_usd(
+            registry,
+            "xopglm52",
+            date(2026, 7, 30),
+            report_entities.BillableUsage(400, 600, 1, 100),
+            request_input_tokens=None,
+        )
+
+        self.assertIsNone(result.usd)
+        self.assertEqual(result.status, "unavailable")
+        self.assertIn("缓存写入", result.reason)
+
+    def test_request_readers_normalize_astroncode_and_opencode(self) -> None:
+        report_entities = load_module("report_entities_readers", REPORT_ENTITIES_SCRIPT)
+        astron_dir = Path(self.temp_dir.name) / "astron-run"
+        astron_dir.mkdir()
+        astron_events = [
+            {
+                "type": "event_msg",
+                "payload": {
+                    "type": "token_count",
+                    "info": {
+                        "total_token_usage": {"input_tokens": 100, "output_tokens": 10},
+                        "last_token_usage": {
+                            "input_tokens": 100,
+                            "cached_input_tokens": 20,
+                            "output_tokens": 10,
+                        },
+                    },
+                },
+            },
+            {
+                "type": "event_msg",
+                "payload": {
+                    "type": "token_count",
+                    "info": {
+                        "total_token_usage": {"input_tokens": 100, "output_tokens": 10},
+                        "last_token_usage": {
+                            "input_tokens": 100,
+                            "cached_input_tokens": 20,
+                            "output_tokens": 10,
+                        },
+                    },
+                },
+            },
+            {
+                "type": "event_msg",
+                "payload": {
+                    "type": "token_count",
+                    "info": {
+                        "total_token_usage": {"input_tokens": 220, "output_tokens": 22},
+                        "last_token_usage": {
+                            "input_tokens": 120,
+                            "cached_input_tokens": 30,
+                            "output_tokens": 12,
+                        },
+                    },
+                },
+            },
+        ]
+        (astron_dir / "chat.jsonl").write_text(
+            "\n".join(json.dumps(event) for event in astron_events),
+            encoding="utf-8",
+        )
+
+        opencode_dir = Path(self.temp_dir.name) / "opencode-run"
+        database_dir = opencode_dir / "opencode_data"
+        database_dir.mkdir(parents=True)
+        with sqlite3.connect(database_dir / "opencode.db") as connection:
+            connection.execute("CREATE TABLE part (id TEXT PRIMARY KEY, data TEXT NOT NULL)")
+            for index, tokens in enumerate((
+                {"input": 80, "output": 7, "reasoning": 3,
+                 "cache": {"read": 20, "write": 0}},
+                {"input": 90, "output": 10, "reasoning": 2,
+                 "cache": {"read": 30, "write": 0}},
+            )):
+                connection.execute(
+                    "INSERT INTO part (id, data) VALUES (?, ?)",
+                    (str(index), json.dumps({"type": "step-finish", "tokens": tokens})),
+                )
+
+        expected = [
+            report_entities.RequestUsage(80, 20, 10),
+            report_entities.RequestUsage(90, 30, 12),
+        ]
+        self.assertEqual(report_entities.extract_astroncode_requests(astron_dir), expected)
+        self.assertEqual(report_entities.extract_opencode_requests(opencode_dir), expected)
 
     def add_valid_run(self, task_id: str, name: str, score: float) -> Path:
         run_dir = self.suite_dir / task_id / name

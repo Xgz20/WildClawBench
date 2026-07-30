@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import logging
+import json
+import sqlite3
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -35,6 +37,38 @@ class PricingProfile:
     currency: str
     unit_tokens: int
     tiers: tuple[PricingTier, ...]
+
+
+@dataclass(frozen=True)
+class BillableUsage:
+    input_uncached_tokens: int
+    input_cached_tokens: int
+    cache_write_tokens: int
+    output_tokens: int
+
+
+@dataclass(frozen=True)
+class RequestUsage:
+    input_uncached_tokens: int
+    input_cached_tokens: int
+    output_tokens: int
+    cache_write_tokens: int = 0
+
+    @property
+    def total_input_tokens(self) -> int:
+        return (
+            self.input_uncached_tokens
+            + self.input_cached_tokens
+            + self.cache_write_tokens
+        )
+
+
+@dataclass(frozen=True)
+class CostEstimate:
+    usd: Decimal | None
+    profile_id: str | None
+    status: str
+    reason: str = ""
 
 
 def _parse_date(value: Any, field_name: str) -> date:
@@ -157,3 +191,253 @@ def load_registry(path: Path) -> EntityRegistry:
             for currency, records in (data.get("exchange_rates") or {}).items()
         },
     )
+
+
+def normalize_billable_usage(usage: Mapping[str, Any]) -> BillableUsage:
+    input_tokens = int(usage.get("input_tokens") or 0)
+    cached = int(usage.get("cache_read_tokens") or 0)
+    cache_write = int(usage.get("cache_write_tokens") or 0)
+    output = int(usage.get("output_tokens") or 0)
+    total = int(usage.get("total_tokens") or 0)
+    values = (input_tokens, cached, cache_write, output, total)
+    if any(value < 0 for value in values):
+        raise ValueError("usage.json 包含负数 token")
+    if total == input_tokens + output:
+        uncached = input_tokens - cached - cache_write
+    elif total == input_tokens + cached + cache_write + output:
+        uncached = input_tokens
+    else:
+        raise ValueError("无法判断 usage.json 的 input_tokens 缓存语义")
+    if uncached < 0:
+        raise ValueError("缓存 token 超过输入 token")
+    return BillableUsage(uncached, cached, cache_write, output)
+
+
+def _select_tier(profile: PricingProfile, request_input_tokens: int) -> PricingTier:
+    matches = []
+    for tier in profile.tiers:
+        if (
+            tier.min_input_tokens_per_request is not None
+            and request_input_tokens < tier.min_input_tokens_per_request
+        ):
+            continue
+        if (
+            tier.max_input_tokens_per_request is not None
+            and request_input_tokens > tier.max_input_tokens_per_request
+        ):
+            continue
+        matches.append(tier)
+    if len(matches) != 1:
+        raise ValueError(
+            f"定价档案 {profile.profile_id} 无法为单请求输入 "
+            f"{request_input_tokens} 唯一选择档位"
+        )
+    return matches[0]
+
+
+def _cost_in_profile_currency(
+    profile: PricingProfile,
+    tier: PricingTier,
+    usage: BillableUsage,
+) -> Decimal | None:
+    if usage.cache_write_tokens and tier.cache_write is None:
+        return None
+    numerator = (
+        Decimal(usage.input_uncached_tokens) * tier.input_uncached
+        + Decimal(usage.input_cached_tokens) * tier.input_cached
+        + Decimal(usage.output_tokens) * tier.output
+    )
+    if usage.cache_write_tokens:
+        numerator += Decimal(usage.cache_write_tokens) * tier.cache_write
+    return numerator / Decimal(profile.unit_tokens)
+
+
+def _to_usd(
+    registry: EntityRegistry,
+    pricing_date: date,
+    currency: str,
+    amount: Decimal,
+) -> Decimal:
+    if currency == "USD":
+        return amount
+    if currency == "CNY":
+        return amount / registry.cny_per_usd(pricing_date)
+    raise ValueError(f"不支持的定价币种: {currency}")
+
+
+def estimate_cost_usd(
+    registry: EntityRegistry,
+    model_id: str,
+    pricing_date: date,
+    usage: BillableUsage,
+    request_input_tokens: int | None,
+) -> CostEstimate:
+    try:
+        profile = registry.pricing_profile(model_id, pricing_date)
+    except ValueError as exc:
+        return CostEstimate(None, None, "unavailable", str(exc))
+    if len(profile.tiers) == 1:
+        tier = profile.tiers[0]
+    elif request_input_tokens is None:
+        return CostEstimate(
+            None,
+            profile.profile_id,
+            "unavailable",
+            "分档定价缺少逐请求输入 token",
+        )
+    else:
+        try:
+            tier = _select_tier(profile, request_input_tokens)
+        except ValueError as exc:
+            return CostEstimate(None, profile.profile_id, "unavailable", str(exc))
+    amount = _cost_in_profile_currency(profile, tier, usage)
+    if amount is None:
+        return CostEstimate(
+            None,
+            profile.profile_id,
+            "unavailable",
+            "存在缓存写入 token，但定价档位缺少缓存写入单价",
+        )
+    try:
+        usd = _to_usd(registry, pricing_date, profile.currency, amount)
+    except ValueError as exc:
+        return CostEstimate(None, profile.profile_id, "unavailable", str(exc))
+    return CostEstimate(usd, profile.profile_id, "estimated")
+
+
+def estimate_request_costs_usd(
+    registry: EntityRegistry,
+    model_id: str,
+    pricing_date: date,
+    requests: Sequence[RequestUsage],
+) -> CostEstimate:
+    try:
+        profile = registry.pricing_profile(model_id, pricing_date)
+    except ValueError as exc:
+        return CostEstimate(None, None, "unavailable", str(exc))
+    total = Decimal(0)
+    for request in requests:
+        try:
+            tier = (
+                profile.tiers[0]
+                if len(profile.tiers) == 1
+                else _select_tier(profile, request.total_input_tokens)
+            )
+        except ValueError as exc:
+            return CostEstimate(None, profile.profile_id, "unavailable", str(exc))
+        usage = BillableUsage(
+            request.input_uncached_tokens,
+            request.input_cached_tokens,
+            request.cache_write_tokens,
+            request.output_tokens,
+        )
+        amount = _cost_in_profile_currency(profile, tier, usage)
+        if amount is None:
+            return CostEstimate(
+                None,
+                profile.profile_id,
+                "unavailable",
+                "存在缓存写入 token，但定价档位缺少缓存写入单价",
+            )
+        total += amount
+    try:
+        usd = _to_usd(registry, pricing_date, profile.currency, total)
+    except ValueError as exc:
+        return CostEstimate(None, profile.profile_id, "unavailable", str(exc))
+    return CostEstimate(usd, profile.profile_id, "estimated")
+
+
+def _require_nonnegative(values: Mapping[str, int], source: str) -> None:
+    negative = {key: value for key, value in values.items() if value < 0}
+    if negative:
+        raise ValueError(f"{source} 包含负数 token: {negative}")
+
+
+def extract_astroncode_requests(run_dir: Path) -> list[RequestUsage]:
+    transcript = next(
+        (path for path in (run_dir / "chat.jsonl", run_dir / "chat_openclaw.jsonl")
+         if path.is_file()),
+        None,
+    )
+    if transcript is None:
+        raise FileNotFoundError(f"AstronCode run 缺少 chat.jsonl: {run_dir}")
+    requests: list[RequestUsage] = []
+    seen_cumulative: set[str] = set()
+    for line_number, line in enumerate(
+        transcript.read_text(encoding="utf-8", errors="replace").splitlines(), start=1
+    ):
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        payload = event.get("payload") or {}
+        if payload.get("type") != "token_count":
+            continue
+        info = payload.get("info") or {}
+        last = info.get("last_token_usage") or {}
+        if not last:
+            continue
+        cumulative = info.get("total_token_usage") or last
+        cumulative_key = json.dumps(cumulative, sort_keys=True, ensure_ascii=False)
+        if cumulative_key in seen_cumulative:
+            continue
+        seen_cumulative.add(cumulative_key)
+        input_tokens = int(last.get("input_tokens") or 0)
+        cached = int(last.get("cached_input_tokens") or 0)
+        output = int(last.get("output_tokens") or 0)
+        cache_write = int(last.get("cache_write_tokens") or 0)
+        values = {
+            "input_tokens": input_tokens,
+            "cached_input_tokens": cached,
+            "cache_write_tokens": cache_write,
+            "output_tokens": output,
+        }
+        _require_nonnegative(values, f"{transcript}:{line_number}")
+        uncached = input_tokens - cached - cache_write
+        if uncached < 0:
+            raise ValueError(f"{transcript}:{line_number} 缓存 token 超过输入 token")
+        requests.append(RequestUsage(uncached, cached, output, cache_write))
+    return requests
+
+
+def extract_opencode_requests(run_dir: Path) -> list[RequestUsage]:
+    database = next(
+        (path for path in (run_dir / "opencode.db", run_dir / "opencode_data/opencode.db")
+         if path.is_file()),
+        None,
+    )
+    if database is None:
+        raise FileNotFoundError(f"OpenCode run 缺少 opencode.db: {run_dir}")
+    requests: list[RequestUsage] = []
+    with sqlite3.connect(database) as connection:
+        columns = {
+            str(row[1]) for row in connection.execute("PRAGMA table_info(part)").fetchall()
+        }
+        order_by = "time_created, id" if "time_created" in columns else "id"
+        rows = connection.execute(f"SELECT data FROM part ORDER BY {order_by}").fetchall()
+    for row_number, (raw_data,) in enumerate(rows, start=1):
+        try:
+            data = json.loads(raw_data)
+        except (TypeError, json.JSONDecodeError):
+            continue
+        if data.get("type") != "step-finish":
+            continue
+        tokens = data.get("tokens") or {}
+        cache = tokens.get("cache") or {}
+        values = {
+            "input": int(tokens.get("input") or 0),
+            "cache_read": int(cache.get("read") or 0),
+            "cache_write": int(cache.get("write") or 0),
+            "output": int(tokens.get("output") or 0),
+            "reasoning": int(tokens.get("reasoning") or 0),
+        }
+        _require_nonnegative(values, f"{database}:part row {row_number}")
+        requests.append(RequestUsage(
+            values["input"],
+            values["cache_read"],
+            values["output"] + values["reasoning"],
+            values["cache_write"],
+        ))
+    return requests
