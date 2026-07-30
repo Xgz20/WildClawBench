@@ -1047,6 +1047,37 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertEqual(findings[0]["id"], "DIFFICULTY_INVERSION")
         self.assertEqual(findings[0]["severity"], "warning")
 
+    def test_eval_report_skill_contract_for_controlled_views(self) -> None:
+        skill = (REPORT_DIR / "skills/eval-report/SKILL.md").read_text(encoding="utf-8")
+        template = (REPORT_DIR / "skills/eval-report/references/report_template.md").read_text(
+            encoding="utf-8"
+        )
+        readme = (REPORT_DIR / "README.md").read_text(encoding="utf-8")
+
+        self.assertLess(skill.index("二、分类维度"), skill.index("三、Agent能力"))
+        self.assertIn("固定目标 Harness", skill)
+        self.assertIn("固定目标模型", skill)
+        self.assertIn("总览保留全部列", skill)
+        self.assertIn("extract_leader_report_data.py", skill)
+        self.assertIn("最多 2 句话", skill)
+        self.assertIn("3 个关键数字", skill)
+        self.assertIn("优先排查", skill)
+        self.assertIn("L3/L4", skill)
+        self.assertIn("不得进入典型低分案例", skill)
+
+        self.assertLess(template.index("## 二、分类维度分析"),
+                        template.index("## 三、Agent 能力维度分析"))
+        self.assertGreaterEqual(template.count("固定目标 Harness"), 4)
+        self.assertGreaterEqual(template.count("固定目标模型"), 4)
+        self.assertIn("全部 Excel 总览列", template)
+        self.assertIn("评测有效性与剔除说明", template)
+
+        for option in (
+            "--target-model", "--target-harness", "--models", "--harnesses",
+            "--entities", "--pricing-date",
+        ):
+            self.assertIn(option, readme)
+
 
 if __name__ == "__main__":
     unittest.main()
