@@ -30,6 +30,10 @@ SEVERITY_ORDER = {"error": 0, "warning": 1, "info": 2}
 SECRET_PATTERNS = (
     re.compile(r"\b(?:sk|ak)-[A-Za-z0-9_-]{8,}", re.I),
     re.compile(r"\bBearer\s+[A-Za-z0-9._~+/-]{8,}", re.I),
+    re.compile(
+        r"(?i)(\b(?:[A-Z0-9]+_)*(?:API[_-]?KEY|ACCESS[_-]?TOKEN|PASSWORD|PASSWD|SECRET)"
+        r"\b\s*[:=]\s*[\"']?)[^\s\"',\]]+"
+    ),
     re.compile(r"(?i)(\b(?:api[_-]?key|access[_-]?token|password|passwd|secret)\b\s*[:=]\s*[\"']?)[^\s\"']+"),
 )
 

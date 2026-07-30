@@ -739,13 +739,15 @@ class AnalysisPipelineTest(unittest.TestCase):
     def test_validity_findings_redact_credentials(self) -> None:
         item = validity_check.finding(
             "TEST", "error",
-            'request failed: AK="ak-ba7df6029dd8d8baae7b62983221a940" password=hunter2',
+            'request failed: AK="ak-ba7df6029dd8d8baae7b62983221a940" password=hunter2 '
+            'OPENROUTER_API_KEY=fake-id:fake-secret',
             evidence={"authorization": "Bearer secret-token-value"},
         )
         serialized = json.dumps(item)
         self.assertNotIn("ba7df6029dd8d8baae7b62983221a940", serialized)
         self.assertNotIn("hunter2", serialized)
         self.assertNotIn("secret-token-value", serialized)
+        self.assertNotIn("fake-id:fake-secret", serialized)
         self.assertIn("REDACTED", serialized)
 
     def test_validity_gate_distinguishes_harness_outcomes_from_framework_errors(self) -> None:
