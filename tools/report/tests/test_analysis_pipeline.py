@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 
 from openpyxl import load_workbook
@@ -16,6 +17,7 @@ REPORT_DIR = Path(__file__).resolve().parents[1]
 MANIFEST_SCRIPT = REPORT_DIR / "skills/low-score-analysis/scripts/generate_failed_tasks_manifest.py"
 UTILS_SCRIPT = REPORT_DIR / "skills/low-score-analysis/scripts/utils.py"
 EXCEL_SCRIPT = REPORT_DIR / "scripts/generate_eval_report.py"
+REPORT_ENTITIES_SCRIPT = REPORT_DIR / "scripts/report_entities.py"
 VALIDITY_SCRIPT = REPORT_DIR / "skills/validate-eval-results/scripts/validate_eval_results.py"
 AUDIT_SCRIPT = REPORT_DIR / "skills/audit-eval-report/scripts/audit_eval_report.py"
 
@@ -24,6 +26,7 @@ def load_module(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
+    sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
 
@@ -103,6 +106,36 @@ class AnalysisPipelineTest(unittest.TestCase):
         }
         values.update(overrides)
         return manifest.build_selection(**values)
+
+    def test_entity_registry_loads_names_and_dated_pricing(self) -> None:
+        report_entities = load_module("report_entities_registry", REPORT_ENTITIES_SCRIPT)
+        registry = report_entities.load_registry(REPORT_DIR / "data/entities.yaml")
+
+        self.assertEqual(registry.model_display("xopglm52"), "GLM-5.2")
+        self.assertEqual(registry.harness_display("astroncode"), "AstronCode")
+        self.assertEqual(
+            registry.pricing_profile("gpt-5.5", date(2026, 7, 30)).profile_id,
+            "2026-07-30-openai",
+        )
+        self.assertAlmostEqual(float(registry.cny_per_usd(date(2026, 7, 30))), 6.77)
+
+    def test_entity_registry_unknown_id_falls_back_with_warning(self) -> None:
+        report_entities = load_module("report_entities_fallback", REPORT_ENTITIES_SCRIPT)
+        registry = report_entities.load_registry(REPORT_DIR / "data/entities.yaml")
+
+        with self.assertLogs(level="WARNING"):
+            self.assertEqual(registry.model_display("model-new"), "model-new")
+
+    def test_entity_registry_rejects_unknown_schema_version(self) -> None:
+        report_entities = load_module("report_entities_schema", REPORT_ENTITIES_SCRIPT)
+        path = Path(self.temp_dir.name) / "entities.yaml"
+        path.write_text(
+            "schema_version: 99\nmodels: {}\nharnesses: {}\n",
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(ValueError, "schema_version"):
+            report_entities.load_registry(path)
 
     def add_valid_run(self, task_id: str, name: str, score: float) -> Path:
         run_dir = self.suite_dir / task_id / name
