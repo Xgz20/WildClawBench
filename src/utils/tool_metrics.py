@@ -123,7 +123,7 @@ def _load_tool_pairs(transcript_path: Path | None) -> list[tuple[str, str, str]]
             if not isinstance(block, dict):
                 continue
             btype = block.get("type")
-            if btype == "tool_use":
+            if btype in {"tool_use", "toolCall"}:
                 call_id = str(block.get("id") or "")
                 tool_names[call_id] = str(block.get("name") or "unknown")
             elif btype == "tool_result":
@@ -135,6 +135,21 @@ def _load_tool_pairs(transcript_path: Path | None) -> list[tuple[str, str, str]]
                 )
                 status = str(block.get("status") or "")
                 pairs.append((name, content_text, status))
+
+        # OpenClaw/AstronClaw 原生轨迹把 toolResult 放在 message 本身，
+        # details.status 才是工具执行状态；外层 isError 在业务错误时仍可能为 false。
+        if str(message.get("role") or "") == "toolResult":
+            call_id = str(message.get("toolCallId") or "")
+            name = str(message.get("toolName") or tool_names.get(call_id) or "unknown")
+            details = message.get("details")
+            details = details if isinstance(details, dict) else {}
+            content_text = json.dumps(content_blocks, ensure_ascii=False)
+            if details.get("error"):
+                content_text = f"{content_text}\n{details['error']}"
+            status = str(details.get("status") or "")
+            if not status and message.get("isError") is True:
+                status = "error"
+            pairs.append((name, content_text, status))
 
     return pairs
 
@@ -259,8 +274,29 @@ def classify_opencode(tool_name: str, content: str, status: str = "") -> str:
     return "unclear"
 
 
+def classify_openclaw(tool_name: str, content: str, status: str = "") -> str:
+    """OpenClaw/AstronClaw 判定：以 details.status 为权威状态。"""
+    st = (status or "").lower()
+    text = content or ""
+    low = text.lower()
+    if st == "error":
+        if "unknown tool" in low or "unsupported call" in low or "invalid arguments" in low:
+            return "format_error"
+        return "failure"
+    if st == "completed":
+        return "success"
+    if st in {"running", "pending"}:
+        return "unclear"
+    if '"status": "error"' in low or '"status":"error"' in low:
+        return "failure"
+    if text:
+        return "success"
+    return "unclear"
+
+
 register_classifier(("codex", "astroncode"), classify_codex)
 register_classifier(("opencode",), classify_opencode)
+register_classifier(("openclaw", "astronclaw"), classify_openclaw)
 
 
 # ---------------------------------------------------------------------------

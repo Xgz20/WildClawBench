@@ -8,6 +8,7 @@ import hashlib
 import json
 import math
 import re
+import subprocess
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -105,10 +106,39 @@ def expected_tasks(tasks_dir: Path | None) -> dict[str, set[str]]:
     result: dict[str, set[str]] = {}
     if tasks_dir is None:
         return result
-    for suite in sorted(tasks_dir.iterdir()):
-        if suite.is_dir() and SUITE_RE.match(suite.name):
-            result[suite.name] = {path.stem for path in suite.glob("*.md")}
+    roots = [tasks_dir]
+    extension_root = tasks_dir / "extension"
+    if extension_root.is_dir():
+        roots.append(extension_root)
+    task_files: list[Path] = []
+    for root in roots:
+        for suite in sorted(root.iterdir()):
+            if suite.is_dir() and SUITE_RE.match(suite.name):
+                task_files.extend(suite.glob("*.md"))
+    ignored: set[str] = set()
+    if task_files:
+        try:
+            check = subprocess.run(
+                ["git", "check-ignore", "--stdin"], cwd=REPO_ROOT,
+                input="\n".join(str(path.resolve()) for path in task_files) + "\n",
+                capture_output=True, text=True, timeout=10,
+            )
+            if check.returncode in {0, 1}:
+                ignored = {line.strip() for line in check.stdout.splitlines() if line.strip()}
+        except (OSError, subprocess.SubprocessError):
+            pass
+    for path in task_files:
+        if str(path.resolve()) in ignored:
+            continue
+        result.setdefault(path.parent.name, set()).add(path.stem)
     return result
+
+
+def extension_tasks(tasks_dir: Path | None) -> set[tuple[str, str]]:
+    if tasks_dir is None or not (tasks_dir / "extension").is_dir():
+        return set()
+    expected = expected_tasks(tasks_dir / "extension")
+    return {(suite, task) for suite, tasks in expected.items() for task in tasks}
 
 
 def iter_json_objects(raw: str):
@@ -263,6 +293,7 @@ def scan_round(result_root: Path, tasks_dir: Path | None) -> dict:
     findings: list[dict] = []
     expected = expected_tasks(tasks_dir)
     expected_flat = {(suite, task) for suite, tasks in expected.items() for task in tasks}
+    extension_flat = extension_tasks(tasks_dir)
     unit_data: dict[str, dict] = {}
     env_hits_by_task: dict[tuple[str, str], list[tuple[str, str, bool]]] = defaultdict(list)
     transcript_hashes: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
@@ -430,12 +461,16 @@ def scan_round(result_root: Path, tasks_dir: Path | None) -> dict:
                 if run_scores:
                     scores_for_summary.append(fmean(run_scores))
 
-        if expected_flat:
-            for suite, task_id in sorted(expected_flat - actual):
+        unit_expected = expected_flat
+        declares_extension = "official + extension" in read_text(unit_dir / "run.log").lower()
+        if extension_flat and not declares_extension and not (actual & extension_flat):
+            unit_expected = expected_flat - extension_flat
+        if unit_expected:
+            for suite, task_id in sorted(unit_expected - actual):
                 findings.append(finding("TASK_MISSING", "error", f"缺少任务 {suite}/{task_id}",
                                         unit=unit, task_id=task_id,
                                         recommendation="补跑缺失任务后再比较或出报告。"))
-            for suite, task_id in sorted(actual - expected_flat):
+            for suite, task_id in sorted(actual - unit_expected):
                 findings.append(finding("TASK_UNEXPECTED", "warning", f"出现任务定义外的结果 {suite}/{task_id}",
                                         unit=unit, task_id=task_id))
 

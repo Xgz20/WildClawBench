@@ -177,6 +177,65 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(m["failure"], 1)
         self.assertEqual(m["format_error"], 0)
 
+    def test_astronclaw_native_tool_calls_use_details_status(self):
+        events = [
+            {
+                "type": "message",
+                "message": {
+                    "role": "assistant",
+                    "content": [{
+                        "type": "toolCall", "id": "a1", "name": "web_search",
+                        "arguments": {"query": "example"},
+                    }],
+                },
+            },
+            {
+                "type": "message",
+                "message": {
+                    "role": "toolResult",
+                    "toolCallId": "a1",
+                    "toolName": "web_search",
+                    "content": [{"type": "text", "text": "search unavailable"}],
+                    "details": {
+                        "status": "error",
+                        "error": "SearXNG base URL is not configured",
+                    },
+                    "isError": False,
+                },
+            },
+            {
+                "type": "message",
+                "message": {
+                    "role": "assistant",
+                    "content": [{
+                        "type": "toolCall", "id": "a2", "name": "exec",
+                        "arguments": {"command": "true"},
+                    }],
+                },
+            },
+            {
+                "type": "message",
+                "message": {
+                    "role": "toolResult",
+                    "toolCallId": "a2",
+                    "toolName": "exec",
+                    "content": [{"type": "text", "text": "ok"}],
+                    "details": {"status": "completed", "exitCode": 0},
+                    "isError": False,
+                },
+            },
+        ]
+        path = self._write(
+            "chat.jsonl", "\n".join(json.dumps(event) for event in events) + "\n"
+        )
+
+        metrics = parse_tool_metrics(path, "astronclaw")
+
+        self.assertEqual(metrics["total"], 2)
+        self.assertEqual(metrics["success"], 1)
+        self.assertEqual(metrics["failure"], 1)
+        self.assertEqual(metrics["by_tool"]["web_search"]["failure"], 1)
+
     def test_unregistered_harness_returns_empty(self):
         path = self._write("chat.jsonl", _codex_line("assistant", _tool_use("x", "foo")))
         m = parse_tool_metrics(path, "openclaw")

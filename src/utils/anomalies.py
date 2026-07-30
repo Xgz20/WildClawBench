@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 SCHEMA_VERSION = 2
-RULESET_VERSION = "2026-07-29.2"
+RULESET_VERSION = "2026-07-30.1"
 
 ERROR = "error"
 WARNING = "warning"
@@ -22,6 +22,9 @@ _TOOL_REJECT_KEYWORDS = ("unsupported call", "unknown tool")
 _RATE_LIMIT_RE = re.compile(r"rate.?limit|too many requests|\b429\b", re.I)
 _SERVER_ERROR_RE = re.compile(
     r"bad gateway|service unavailable|internal server error|\b50[0234]\b", re.I
+)
+_CONTENT_POLICY_RE = re.compile(
+    r"(?:code\s*[:=]\s*10013\b|根据相关法律法规|content policy)", re.I
 )
 _GRADING_TIMEOUT_RE = re.compile(
     r"\btimed out after\s+\d+(?:\.\d+)?\s+seconds?\b", re.I
@@ -164,7 +167,11 @@ def _interaction_counts(events: Iterable[dict[str, Any]], usage: dict) -> tuple[
     model_turns = 0
     tool_attempts = 0
     for event in events:
-        payload = event.get("payload") if isinstance(event.get("payload"), dict) else event
+        payload = event.get("payload") if isinstance(event.get("payload"), dict) else None
+        if payload is None and isinstance(event.get("message"), dict):
+            payload = event["message"]
+        if payload is None:
+            payload = event
         event_type = str(event.get("type") or "").lower()
         payload_type = str(payload.get("type") or "").lower()
         role = str(payload.get("role") or "").lower()
@@ -180,12 +187,60 @@ def _interaction_counts(events: Iterable[dict[str, Any]], usage: dict) -> tuple[
         if isinstance(content, list):
             tool_attempts += sum(
                 1 for block in content
-                if isinstance(block, dict) and block.get("type") in {"tool_use", "tool_call"}
+                if isinstance(block, dict)
+                and block.get("type") in {"tool_use", "tool_call", "toolCall"}
             )
     request_count = usage.get("request_count")
     if isinstance(request_count, (int, float)) and request_count > model_turns:
         model_turns = int(request_count)
     return model_turns, tool_attempts
+
+
+def _structured_tool_configuration_items(
+    events: Iterable[dict[str, Any]], transcript_path: Path | None,
+) -> list[dict[str, Any]]:
+    service_hits: list[dict[str, Any]] = []
+    model_hits: list[dict[str, Any]] = []
+    for event in events:
+        message = event.get("message")
+        if not isinstance(message, dict) or message.get("role") != "toolResult":
+            continue
+        details = message.get("details")
+        if not isinstance(details, dict) or str(details.get("status") or "").lower() != "error":
+            continue
+        error = str(details.get("error") or "")
+        evidence = {
+            "file": transcript_path.name if transcript_path else "chat.jsonl",
+            "tool": message.get("toolName"),
+            "tool_call_id": message.get("toolCallId"),
+            "error": error[:300],
+        }
+        if "SearXNG base URL is not configured" in error:
+            service_hits.append(evidence)
+        elif (
+            "Model does not support images:" in error
+            or ("Unknown model: wildclaw/" in error and message.get("toolName") in {"image", "pdf"})
+        ):
+            model_hits.append(evidence)
+
+    items: list[dict[str, Any]] = []
+    if service_hits:
+        items.append(_item(
+            "TOOL_SERVICE_NOT_CONFIGURED",
+            f"搜索工具服务未配置（{len(service_hits)} 次结构化失败）",
+            stage="tool_execution", attribution="evaluation_environment",
+            confidence="high", validity_impact="fail", score_reliability="unreliable",
+            rerun_action="required_after_fix", evidence=service_hits[:5],
+        ))
+    if model_hits:
+        items.append(_item(
+            "TOOL_MODEL_CONFIGURATION_ERROR",
+            f"图片/PDF 工具模型配置不可用（{len(model_hits)} 次结构化失败）",
+            stage="tool_execution", attribution="evaluation_framework",
+            confidence="high", validity_impact="fail", score_reliability="unreliable",
+            rerun_action="required_after_fix", evidence=model_hits[:5],
+        ))
+    return items
 
 
 def _item(
@@ -464,7 +519,7 @@ def _structured_model_errors(run_dir: Path, status: dict) -> list[dict[str, Any]
 
 def _api_items(errors: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     grouped: dict[str, list[dict[str, Any]]] = {
-        "rate": [], "server": [], "other": [],
+        "policy": [], "rate": [], "server": [], "other": [],
     }
     for error in errors:
         message = str(error.get("message") or "")
@@ -473,13 +528,25 @@ def _api_items(errors: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
             code = int(raw_code) if raw_code is not None else None
         except (TypeError, ValueError):
             code = None
-        if code == 429 or _RATE_LIMIT_RE.search(message):
+        if _CONTENT_POLICY_RE.search(message):
+            grouped["policy"].append(error)
+        elif code == 429 or _RATE_LIMIT_RE.search(message):
             grouped["rate"].append(error)
         elif (isinstance(code, int) and 500 <= code < 600) or _SERVER_ERROR_RE.search(message):
             grouped["server"].append(error)
         else:
             grouped["other"].append(error)
     result: list[dict[str, Any]] = []
+    policy_hits = grouped["policy"]
+    if policy_hits:
+        result.append(_item(
+            "MODEL_CONTENT_POLICY_REJECTION",
+            f"模型内容安全策略拒答（{len(policy_hits)} 个结构化事件）",
+            stage="model_inference", attribution="model", confidence="high",
+            validity_impact="none", score_reliability="valid_capability_outcome",
+            rerun_action="do_not_rerun",
+            evidence=[hit["evidence"] for hit in policy_hits[:5]],
+        ))
     for kind, rule_id, description in (
         ("rate", "MODEL_API_RATE_LIMIT", "当前被测模型推理请求出现限流"),
         ("server", "MODEL_API_SERVER_ERROR", "当前被测模型推理请求出现服务端错误"),
@@ -526,6 +593,15 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
     if str(status.get("status") or "") == "error":
         execution_item = classify_execution_error(status)
         items.append(execution_item)
+    failure_stage = str(status.get("failure_stage") or "")
+    pre_grading_failure = bool(
+        execution_item
+        and execution_item["attribution"] == "evaluation_framework"
+        and failure_stage in {
+            "created", "starting_container", "container_started", "preparing_workspace",
+            "preparing_harness_input", "launching_harness", "harness_launch_failed",
+        }
+    )
 
     timed_out = bool(status.get("timed_out"))
     if timed_out:
@@ -559,7 +635,7 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
             evidence=[{"file": "execution_status.json", "field": "exit_code", "value": 137}],
         ))
 
-    if not events and not timed_out:
+    if not events and not timed_out and not pre_grading_failure:
         if raw_sessions:
             attribution, impact, reliability, action, confidence = (
                 "evaluation_framework", "fail", "unreliable", "required_after_fix", "high"
@@ -618,7 +694,7 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
                        "total_tokens": total_tokens, "observed_model_turns": model_turns}],
         ))
 
-    if score is None:
+    if score is None and not pre_grading_failure:
         if execution_item and execution_item["attribution"] in {"model", "harness"}:
             attribution, impact, reliability, action = (
                 execution_item["attribution"], "none", "valid_capability_outcome", "do_not_rerun"
@@ -647,7 +723,7 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
             score.get("error") or score.get("llm_error") or ""
         )
         grading_timed_out = bool(_GRADING_TIMEOUT_RE.search(grading_error))
-        if (
+        if not pre_grading_failure and (
             (grading_error_field == "llm_error" and bool(grading_error))
             or grading_timed_out
             or "Grading failed" in grading_error
@@ -680,6 +756,7 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
                        "rejected": len(rejected), "total": len(tool_results)}],
         ))
 
+    items.extend(_structured_tool_configuration_items(events, transcript_path))
     items.extend(api_items)
     return _finalize(items)
 

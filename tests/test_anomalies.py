@@ -253,6 +253,128 @@ class AnomalyDetectionTest(unittest.TestCase):
         finally:
             temp_dir.cleanup()
 
+    def test_framework_stage_failure_suppresses_derived_empty_and_grading_errors(self) -> None:
+        temp_dir, run_dir = self.make_run(events=[])
+        try:
+            self.write_json(run_dir / "execution_status.json", {
+                "status": "error", "failure_stage": "preparing_workspace",
+                "error": "warmup failed", "model": "model-x",
+            })
+            self.write_json(run_dir / "score.json", {
+                "overall_score": 0.0,
+                "error": "Grading failed: Traceback: No module named PIL",
+            })
+
+            report = scan_run_dir(run_dir)
+            ids = [item["id"] for item in report["items"]]
+
+            self.assertEqual(ids.count("EXECUTION_ERROR"), 1)
+            self.assertNotIn("EMPTY_TRANSCRIPT", ids)
+            self.assertNotIn("GRADING_SCRIPT_ERROR", ids)
+        finally:
+            temp_dir.cleanup()
+
+    def test_astronclaw_timeout_counts_native_tool_calls(self) -> None:
+        events = [
+            {"type": "message", "message": {
+                "role": "assistant",
+                "content": [{"type": "toolCall", "id": "c1", "name": "exec"}],
+            }},
+            {"type": "message", "message": {
+                "role": "toolResult", "toolCallId": "c1", "toolName": "exec",
+                "content": [{"type": "text", "text": "ok"}],
+                "details": {"status": "completed"},
+            }},
+        ]
+        temp_dir, run_dir = self.make_run(events=events)
+        try:
+            self.write_json(run_dir / "execution_status.json", {
+                "status": "timed_out", "timed_out": True, "timeout_seconds": 3600,
+                "failure_stage": "astronclaw_running", "model": "model-x",
+            })
+
+            item = self.item(scan_run_dir(run_dir), "TASK_TIMED_OUT")
+
+            self.assertIn("1 次工具尝试", item["description"])
+            self.assertIn("1 次模型交互", item["description"])
+        finally:
+            temp_dir.cleanup()
+
+    def test_astronclaw_searxng_configuration_error_requires_rerun(self) -> None:
+        events = [
+            {"type": "message", "message": {
+                "role": "assistant",
+                "content": [{"type": "toolCall", "id": "c1", "name": "web_search"}],
+            }},
+            {"type": "message", "message": {
+                "role": "toolResult", "toolCallId": "c1", "toolName": "web_search",
+                "content": [{"type": "text", "text": '{"status":"error"}'}],
+                "details": {
+                    "status": "error",
+                    "error": "SearXNG base URL is not configured. Set SEARXNG_BASE_URL",
+                },
+                "isError": False,
+            }},
+        ]
+        temp_dir, run_dir = self.make_run(events=events)
+        try:
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "TOOL_SERVICE_NOT_CONFIGURED")
+            self.assertIsNotNone(item)
+            self.assertEqual(item["attribution"], "evaluation_environment")
+            self.assertEqual(item["validity_impact"], "fail")
+            self.assertTrue(report["needs_rerun"])
+        finally:
+            temp_dir.cleanup()
+
+    def test_astronclaw_image_model_configuration_error_requires_rerun(self) -> None:
+        events = [
+            {"type": "message", "message": {
+                "role": "assistant",
+                "content": [{"type": "toolCall", "id": "c1", "name": "image"}],
+            }},
+            {"type": "message", "message": {
+                "role": "toolResult", "toolCallId": "c1", "toolName": "image",
+                "content": [{"type": "text", "text": '{"status":"error"}'}],
+                "details": {
+                    "status": "error",
+                    "error": "Model does not support images: wildclaw/model-x (resolved input: text)",
+                },
+                "isError": False,
+            }},
+        ]
+        temp_dir, run_dir = self.make_run(events=events)
+        try:
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "TOOL_MODEL_CONFIGURATION_ERROR")
+            self.assertIsNotNone(item)
+            self.assertEqual(item["attribution"], "evaluation_framework")
+            self.assertEqual(item["validity_impact"], "fail")
+        finally:
+            temp_dir.cleanup()
+
+    def test_xunfei_content_policy_rejection_is_model_outcome(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            (run_dir / "gateway.log").write_text(
+                "2026-07-29 [agent/embedded] embedded run agent end: "
+                "runId=1 isError=true model=model-x provider=wildclaw "
+                "error=Xunfei request failed code: 10013, msg: 根据相关法律法规，无法提供答案 "
+                "rawError=content policy\n",
+                encoding="utf-8",
+            )
+
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "MODEL_CONTENT_POLICY_REJECTION")
+
+            self.assertIsNotNone(item)
+            self.assertEqual(item["attribution"], "model")
+            self.assertEqual(item["validity_impact"], "none")
+            self.assertIsNone(self.item(report, "MODEL_API_ERROR"))
+            self.assertFalse(report["needs_rerun"])
+        finally:
+            temp_dir.cleanup()
+
     def test_report_outcome_excludes_framework_errors_from_execution_errors(self) -> None:
         self.assertEqual(classify_report_outcome({
             "status": "error", "failure_stage": "astroncode_running",
