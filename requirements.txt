@@ -5,3 +5,4 @@ yt-dlp
 modelscope
 python-dotenv
 pyyaml
+openpyxl>=3.1
