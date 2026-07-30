@@ -44,28 +44,44 @@ Markdown 表格复制到飞书后不带 Excel 条件配色。现有人工流程�
 - 不覆盖验证目录中的历史报告。
 - 不把领导版 Markdown 完全改造成固定模板生成器；需要判断的评语和建议仍由 Skill 基于数据与证据撰写。
 
-## 展示名设计
+## 实体元数据与展示名设计
 
-新增 `tools/report/data/display_names.yaml`：
+新增版本化实体注册表 `tools/report/data/entities.yaml`。YAML 不是限制，注册表使用嵌套结构避免 `id -> name` 扁平映射在新增属性时发生破坏性升级：
 
 ```yaml
+schema_version: 1
+
 models:
-  xsparkx2agent: Spark-X2-300B
-  xopglm52: GLM-5.2
-  gpt-5.5: GPT-5.5
+  xsparkx2agent:
+    display_name: Spark-X2-300B
+    vendor: Spark
+    aliases: []
+    capabilities:
+      supported_reasoning_efforts: []
+    pricing_profiles: []
 
 harnesses:
-  astroncode: AstronCode
-  opencode: OpenCode
+  astroncode:
+    display_name: AstronCode
+    family: Codex
+    aliases: []
+    capabilities: {}
 ```
 
-脚本启动时加载映射。模型、Harness 和 unit 均提供原始标识与展示标识：
+本次报告脚本只读取 `schema_version` 和 `display_name`，其他字段允许缺省，不迁移现有成本计算和思考强度逻辑。后续扩展遵循以下边界：
+
+- `vendor`、别名、模型支持的思考强度等稳定描述可放实体注册表。
+- 本轮实际使用的思考强度属于运行时事实，必须记录在 `execution_status.json` 或 run 元数据中，不能从静态注册表推断。
+- Token 单价可能随供应商、路由和时间变化。未来使用 `pricing_profiles` 时，每个档案必须包含 `provider`、`effective_from`、`currency`、计价单位及输入、输出、缓存读写单价，禁止维护无生效时间的单一固定价格。
+- Harness 的家族、别名和稳定能力可放注册表；Harness 版本仍以运行结果中的 `harness_version` 为准。
+
+脚本启动时加载实体注册表。模型、Harness 和 unit 均提供原始标识与展示标识：
 
 - `model`、`harness`、`unit`：内部主键，保持原值。
 - `model_display`、`harness_display`、`unit_display`：写入对外单元格。
 - Harness 版本继续追加在友好名称后，例如 `OpenCode (1.18.4)`。
 
-映射缺失时回退原始 ID 并打印警告，报告生成不中断。未知 ID 不允许被自动格式化或猜测名称。
+实体缺失、实体没有 `display_name` 或注册表版本不受支持时执行明确校验。未知实体回退原始 ID 并打印警告，报告生成不中断；未知 ID 不允许被自动格式化或猜测名称。Schema 版本不受支持时直接报错，避免静默误读新结构。
 
 新增隐藏 Sheet `_报告元数据`，记录类型、原始 ID、展示名称、unit 原始键和 unit 展示标签，供审计和问题追踪。Sheet 中的数据匹配、排序和 analysis 回填始终使用原始键，避免展示名变更破坏兼容性。
 
@@ -76,7 +92,7 @@ Excel 脚本新增：
 ```text
 --target-model <raw-model-id>
 --target-harness <raw-harness-id>
---display-names <yaml-path>   # 可选，默认 tools/report/data/display_names.yaml
+--entities <yaml-path>        # 可选，默认 tools/report/data/entities.yaml
 ```
 
 `--models` 和 `--harnesses` 继续限定参评范围；目标参数只决定目标组合与控制变量视图。
@@ -178,7 +194,7 @@ L3（评测环境/共享基础设施）和 L4（任务、Grader、统计或评�
 
 `tools/report/skills/eval-report/SKILL.md` 和 `references/report_template.md` 需要同步：
 
-- 输入增加目标模型、目标 Harness 和展示名映射说明。
+- 输入增加目标模型、目标 Harness 和实体注册表说明。
 - Excel 命令示例必须传目标参数。
 - Sheet 列名权威表说明原始表仍在第 1 行，控制变量视图位于下方。
 - Markdown 章节顺序改为总览、分类、Agent 能力、难度、模态。
@@ -191,7 +207,7 @@ L3（评测环境/共享基础设施）和 L4（任务、Grader、统计或评�
 
 ### 自动测试
 
-- 映射加载：已知 ID、未知 ID 回退、警告和自定义配置路径。
+- 实体注册表加载：Schema 版本、已知实体、缺失 `display_name`、未知 ID 回退、警告和自定义配置路径。
 - 身份隔离：内部 `unit` 仍使用原始 ID，展示标签使用友好名称。
 - 参数校验：目标 unit 缺失、模型参照不足、Harness 参照不足。
 - 总览兼容：表头仍位于第 1 行，列名、顺序和数值与改造前一致。
