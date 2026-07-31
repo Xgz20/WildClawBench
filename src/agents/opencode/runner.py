@@ -534,15 +534,27 @@ class OpenCodeAgent(BaseAgent):
             f"OpenCode run failed (rc={r.returncode}):\n{r.stderr or r.stdout}"
         )
 
-    def _build_exec_command(self, model: str, prompt_path: str, config_content: str) -> str:
+    def _build_exec_command(
+        self,
+        model: str,
+        prompt_path: str,
+        config_content: str,
+        thinking: str | None = None,
+    ) -> str:
         model_arg = self._model_arg(model)
+        normalized_thinking = thinking.strip() if thinking else ""
+        variant_arg = (
+            f" --variant {shlex.quote(normalized_thinking)}"
+            if normalized_thinking
+            else ""
+        )
         # OPENCODE_CONFIG_CONTENT carries the inline JSON config (provider + perms).
         # `opencode run` reads the message from argv; we pass the prompt file body.
         return (
             f"export OPENCODE_CONFIG_CONTENT={shlex.quote(config_content)} && "
             "cd /tmp_workspace && "
             f"opencode run \"$(cat {shlex.quote(prompt_path)})\" "
-            f"--model {shlex.quote(model_arg)} "
+            f"--model {shlex.quote(model_arg)}{variant_arg} "
             "--format json --yolo --print-logs"
         )
 
