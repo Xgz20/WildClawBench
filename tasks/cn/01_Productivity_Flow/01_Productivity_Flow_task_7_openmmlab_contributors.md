@@ -264,6 +264,6 @@ agent-browser
 ## Warmup
 
 ```
-npm install -g agent-browser
+command -v agent-browser >/dev/null 2>&1 || npm install -g agent-browser
 ```
 

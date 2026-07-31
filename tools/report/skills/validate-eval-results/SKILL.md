@@ -28,6 +28,11 @@ python3 tools/report/skills/validate-eval-results/scripts/validate_eval_results.
 4. 对环境故障定位影响范围：单模型、单 Harness、单任务，还是有直接证据的共享环境共因。多 unit 同时出现相同文字只能作为辅助证据。
 5. 记录每个 `REVIEW` 的人工结论。修复确定性问题并重跑后再次检查。
 
+任务完整性以实际执行范围为准。批量日志包含 modality/tag 过滤记录时，检查器会结合任务
+frontmatter 还原过滤后的预期集合；被 `--exclude-tag` 等条件明确排除的 extension 用例不计为
+`TASK_MISSING`。多数 unit 共现相同环境信号只生成 `COMMON_MODE_ENV_SIGNAL` 调查线索，不自动
+升级为共享环境故障。
+
 可靠性重跑会保留旧目录，并在新 run 的 `run_metadata.json` 中记录
 `supersedes_run`。检查时只对有效 run 做门禁，被替换的旧 run 作为审计历史保留，
 不得继续令当前轮次 `FAIL`；没有替换关系的多个有效 run 仍按正式多轮检查。

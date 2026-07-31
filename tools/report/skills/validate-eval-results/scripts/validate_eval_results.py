@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import hashlib
 import json
 import math
@@ -13,6 +14,8 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from statistics import fmean
+
+import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(REPO_ROOT))
@@ -143,6 +146,102 @@ def extension_tasks(tasks_dir: Path | None) -> set[tuple[str, str]]:
         return set()
     expected = expected_tasks(tasks_dir / "extension")
     return {(suite, task) for suite, tasks in expected.items() for task in tasks}
+
+
+def task_filter_metadata(
+    tasks_dir: Path | None,
+    expected: set[tuple[str, str]],
+) -> dict[tuple[str, str], dict[str, object]]:
+    """读取完整性检查需要的任务筛选字段，不解析任务正文。"""
+    if tasks_dir is None:
+        return {}
+    result: dict[tuple[str, str], dict[str, object]] = {}
+    for root in (tasks_dir, tasks_dir / "extension"):
+        if not root.is_dir():
+            continue
+        for suite_dir in sorted(root.iterdir()):
+            if not suite_dir.is_dir() or not SUITE_RE.match(suite_dir.name):
+                continue
+            for path in suite_dir.glob("*.md"):
+                key = (suite_dir.name, path.stem)
+                if key not in expected:
+                    continue
+                content = read_text(path)
+                frontmatter = re.match(r"^---\s*\n(.*?)\n---", content, re.DOTALL)
+                if not frontmatter:
+                    continue
+                try:
+                    metadata = yaml.safe_load(frontmatter.group(1)) or {}
+                except yaml.YAMLError:
+                    continue
+                if not isinstance(metadata, dict):
+                    continue
+                raw_tags = metadata.get("tags") or []
+                if isinstance(raw_tags, str):
+                    raw_tags = raw_tags.split(",")
+                elif not isinstance(raw_tags, (list, tuple, set)):
+                    raw_tags = [raw_tags]
+                result[key] = {
+                    "modality": str(metadata.get("modality") or "").strip(),
+                    "tags": {str(tag).strip().lower() for tag in raw_tags if str(tag).strip()},
+                }
+    return result
+
+
+def _parse_logged_tags(raw: str) -> set[str]:
+    try:
+        values = ast.literal_eval(raw)
+    except (SyntaxError, ValueError):
+        return set()
+    if not isinstance(values, (list, tuple, set)):
+        return set()
+    return {str(value).strip().lower() for value in values if str(value).strip()}
+
+
+def expected_tasks_for_unit(
+    expected: set[tuple[str, str]],
+    metadata: dict[tuple[str, str], dict[str, object]],
+    run_log: str,
+) -> tuple[set[tuple[str, str]], bool]:
+    """按 run.log 中实际执行的 modality/tag 条件还原每个分类的预期集合。"""
+    filters: dict[str, dict[str, object]] = defaultdict(dict)
+    for match in re.finditer(
+        r"Modality filter '([^']+)'\s*:\s*\d+/\d+ tasks kept in (\S+)", run_log,
+    ):
+        filters[match.group(2)]["modality"] = match.group(1)
+    for match in re.finditer(
+        r"Tag filter \(any of (\[[^\]]*\])\)\s*:\s*\d+/\d+ tasks kept in (\S+)",
+        run_log,
+    ):
+        filters[match.group(2)]["include_tags"] = _parse_logged_tags(match.group(1))
+    for match in re.finditer(
+        r"Exclude-tag filter \(none of (\[[^\]]*\])\)\s*:\s*\d+/\d+ tasks kept in (\S+)",
+        run_log,
+    ):
+        filters[match.group(2)]["exclude_tags"] = _parse_logged_tags(match.group(1))
+
+    if not filters:
+        return set(expected), False
+
+    filtered: set[tuple[str, str]] = set()
+    for key in expected:
+        suite_filter = filters.get(key[0])
+        task = metadata.get(key)
+        if not suite_filter or task is None:
+            filtered.add(key)
+            continue
+        modality = suite_filter.get("modality")
+        tags = task.get("tags") if isinstance(task.get("tags"), set) else set()
+        include_tags = suite_filter.get("include_tags")
+        exclude_tags = suite_filter.get("exclude_tags")
+        if modality and task.get("modality") != modality:
+            continue
+        if isinstance(include_tags, set) and include_tags and not (include_tags & tags):
+            continue
+        if isinstance(exclude_tags, set) and exclude_tags & tags:
+            continue
+        filtered.add(key)
+    return filtered, True
 
 
 def iter_json_objects(raw: str):
@@ -304,6 +403,7 @@ def scan_round(result_root: Path, tasks_dir: Path | None,
     expected = expected_tasks(tasks_dir)
     expected_flat = {(suite, task) for suite, tasks in expected.items() for task in tasks}
     extension_flat = extension_tasks(tasks_dir)
+    filter_metadata = task_filter_metadata(tasks_dir, expected_flat)
     unit_data: dict[str, dict] = {}
     env_hits_by_task: dict[tuple[str, str], list[tuple[str, str, bool]]] = defaultdict(list)
     transcript_hashes: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
@@ -471,9 +571,17 @@ def scan_round(result_root: Path, tasks_dir: Path | None,
                 if run_scores:
                     scores_for_summary.append(fmean(run_scores))
 
-        unit_expected = expected_flat
-        declares_extension = "official + extension" in read_text(unit_dir / "run.log").lower()
-        if extension_flat and not declares_extension and not (actual & extension_flat):
+        run_log = read_text(unit_dir / "run.log")
+        unit_expected, has_logged_filters = expected_tasks_for_unit(
+            expected_flat, filter_metadata, run_log,
+        )
+        declares_extension = "official + extension" in run_log.lower()
+        if (
+            extension_flat
+            and not has_logged_filters
+            and not declares_extension
+            and not (actual & extension_flat)
+        ):
             unit_expected = expected_flat - extension_flat
         if unit_expected:
             for suite, task_id in sorted(unit_expected - actual):
@@ -546,17 +654,15 @@ def scan_round(result_root: Path, tasks_dir: Path | None,
     unit_count = len(unit_data)
     for (task_key, env_id), hits in sorted(env_hits_by_task.items()):
         affected_units = sorted({unit for unit, _, _ in hits})
-        fatal_units = sorted({unit for unit, _, fatal in hits if fatal})
         if unit_count >= 2 and len(affected_units) >= max(2, math.ceil(unit_count * 0.5)):
-            threshold = max(2, math.ceil(unit_count * 0.5))
-            severity = "error" if len(fatal_units) >= threshold else "warning"
-            findings.append(finding("COMMON_MODE_ENV_FAILURE", severity,
-                                    f"{task_key} 在多数 unit 同时出现 {env_id} 信号",
-                                    attribution="evaluation_environment",
+            findings.append(finding("COMMON_MODE_ENV_SIGNAL", "warning",
+                                    f"{task_key} 在多数 unit 出现相同的 {env_id} 信号，仅作为共因调查线索",
+                                    task_id=task_key.split("/", 1)[-1],
+                                    attribution="undetermined",
                                     evidence={"affected_units": affected_units,
-                                              "fatal_units": fatal_units,
+                                              "affected_runs": sorted({path for _, path, _ in hits}),
                                               "unit_count": unit_count, "signal": env_id},
-                                    recommendation="核对失败时间与原始错误上下文；确认共因后修复环境并重跑。"))
+                                    recommendation="结合代理、网关或宿主机直接证据确认是否属于共享环境共因。"))
 
     for digest, occurrences in transcript_hashes.items():
         task_keys = {task_key for _, task_key, _ in occurrences}

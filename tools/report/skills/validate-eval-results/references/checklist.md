@@ -14,6 +14,9 @@
 | 版本配置 | 同 unit 是否混用 harness 版本、镜像 | execution_status 字段 | FAIL/REVIEW |
 | 数据污染 | 不同任务是否共享完全相同 transcript | SHA-256 与路径 | FAIL |
 
+完整性检查必须应用运行日志中实际生效的 modality、include-tag 和 exclude-tag 条件。日志明确
+过滤掉的任务不属于当前批次预期集合，不能报 `TASK_MISSING`。
+
 ## 人工复核
 
 1. 评测前置资源是否一致：容器镜像、CPU/内存/磁盘、网络策略、代理、API endpoint、密钥权限、预置文件和时钟。
