@@ -78,6 +78,12 @@ def grade(**kwargs) -> dict:
         "design_impact": 0.0,
         "overall_score": 0.0,
     }
+    llm_zero_scores = {
+        "content_completeness": 0.0,
+        "feature_highlighting": 0.0,
+        "design_impact": 0.0,
+        "overall_score": 0.0,
+    }
 
     if scores["poster_exists"] == 0.0:
         scores.update(zero_scores)
@@ -85,12 +91,13 @@ def grade(**kwargs) -> dict:
 
     try:
         from PIL import Image
-        img = Image.open(poster_path)
-        w, h = img.size
+        with Image.open(poster_path) as img:
+            w, h = img.size
         scores["dimensions_correct"] = 1.0 if (w == 1080 and h == 1440) else 0.0
     except Exception:
         scores["dimensions_correct"] = 0.0
 
+    raw = ""
     try:
         from openai import OpenAI
         client = OpenAI(api_key=os.environ["OPENROUTER_API_KEY"], base_url=os.environ["OPENROUTER_BASE_URL"])
@@ -159,15 +166,30 @@ def grade(**kwargs) -> dict:
         )
 
         raw = resp.choices[0].message.content.strip()
-        raw = raw.strip("`").removeprefix("json").strip()
-        llm_scores = json.loads(raw)
+        required_keys = {"content_completeness", "feature_highlighting", "design_impact"}
+        candidates = []
+        decoder = json.JSONDecoder()
+        for index, char in enumerate(raw):
+            if char != "{":
+                continue
+            try:
+                value, _ = decoder.raw_decode(raw[index:])
+            except json.JSONDecodeError:
+                continue
+            if isinstance(value, dict) and required_keys <= set(value):
+                candidates.append(value)
+        if not candidates:
+            raise ValueError("Judge response does not contain the required score JSON object")
+        llm_scores = candidates[-1]
 
         for key in ["content_completeness", "feature_highlighting", "design_impact"]:
             scores[key] = round(min(max(float(llm_scores.get(key, 0.0)), 0.0), 1.0), 4)
 
     except Exception as e:
-        scores.update(zero_scores)
+        scores.update(llm_zero_scores)
         scores["llm_error"] = str(e)
+        if raw:
+            scores["llm_raw_excerpt"] = raw[:1000]
         return scores
 
     raw_score = (
