@@ -27,9 +27,9 @@ ASTRONCODE_HOME = "/root/.acode"
 ASTRONCODE_SESSIONS_DIR = f"{ASTRONCODE_HOME}/sessions"
 ASTRONCODE_CONFIG_PATH = f"{ASTRONCODE_HOME}/config.toml"
 ASTRONCODE_SKILLS_DIR = f"{ASTRONCODE_HOME}/skills"
-DEFAULT_ASTRON_MODELS_BASE_URL = (
-    "https://astroncode-api-pre.xf-yun.com/astroncode-backend/v1"
-)
+DEFAULT_ONE_IFLYTEK_BASE_URL = "https://one.iflytek.com/api/llm/console/chat/v1"
+VALID_ASTRONCODE_PROVIDERS = ("astron-spark", "one-iflytek", "openrouter")
+ASTRON_MODEL_PREFIXES = ("xminimax", "xop", "xspark", "astronclaw-")
 OPENCLAW_TRANSCRIPT_DIR = "/root/.openclaw/agents/main/sessions"
 OPENCLAW_TRANSCRIPT_PATH = f"{OPENCLAW_TRANSCRIPT_DIR}/chat.jsonl"
 DEFAULT_REASONING_EFFORT = "medium" #"high"
@@ -138,14 +138,48 @@ class AstronCodeAgent(BaseAgent):
         openrouter_base_url: str = "",
         reasoning_effort_default: str = DEFAULT_REASONING_EFFORT,
     ) -> None:
-        resolved_image = image or os.environ.get("DOCKER_IMAGE_ASTRONCODE") or "wildclawbench-astroncode-ubuntu:v0.2"
+        resolved_image = (
+            image
+            or os.environ.get("DOCKER_IMAGE_ASTRONCODE")
+            or "wildclawbench-astroncode-ubuntu:v0.3"
+        )
         self.image: str = resolved_image
         self.openrouter_api_key = (
             openrouter_api_key or os.environ.get("OPENROUTER_API_KEY", "")
         ).strip()
-        self.openrouter_base_url = normalize_openrouter_base_url_for_openclaw(
+        configured_openrouter_base_url = (
             openrouter_base_url or os.environ.get("OPENROUTER_BASE_URL", "")
+        ).strip()
+        self.openrouter_base_url = normalize_openrouter_base_url_for_openclaw(
+            configured_openrouter_base_url
         )
+        self.astron_primary_api_key = os.environ.get("ASTRON_API_KEY", "").strip()
+        self.astron_spark_api_key = os.environ.get(
+            "ASTRON_SPARK_API_KEY", ""
+        ).strip()
+        self.astron_api_key = (
+            self.astron_primary_api_key
+            or self.astron_spark_api_key
+            or self.openrouter_api_key
+        )
+        self.one_iflytek_api_key = (
+            os.environ.get("ONE_IFLYTEK_API_KEY", "").strip()
+            or self.openrouter_api_key
+        )
+        self.one_iflytek_base_url = (
+            os.environ.get("ONE_IFLYTEK_BASE_URL", "").strip()
+            or configured_openrouter_base_url
+            or DEFAULT_ONE_IFLYTEK_BASE_URL
+        )
+        provider_override = (
+            os.environ.get("ASTRONCODE_MODEL_PROVIDER", "").strip().lower()
+        )
+        if provider_override and provider_override not in VALID_ASTRONCODE_PROVIDERS:
+            allowed = ", ".join(VALID_ASTRONCODE_PROVIDERS)
+            raise ValueError(
+                "ASTRONCODE_MODEL_PROVIDER must be one of: " + allowed
+            )
+        self.model_provider_override = provider_override or None
         self.reasoning_effort_default = reasoning_effort_default
 
     @property
@@ -355,10 +389,9 @@ class AstronCodeAgent(BaseAgent):
         no_proxy = "" if not proxy_http else os.environ.get("NO_PROXY_INNER", "").strip()
         env_map: dict[str, str] = {
             "OPENROUTER_API_KEY": self.openrouter_api_key,
-            "ASTRON_API_KEY": os.environ.get("ASTRON_API_KEY", "").strip(),
+            "ASTRON_API_KEY": self.astron_primary_api_key,
             "ASTRON_SPARK_API_KEY": (
-                os.environ.get("ASTRON_SPARK_API_KEY", "").strip()
-                or self.openrouter_api_key
+                self.astron_spark_api_key or self.openrouter_api_key
             ),
             "OPENROUTER_BASE_URL": self.openrouter_base_url,
             "OPENROUTER_IMAGE_MODEL": os.environ.get("OPENROUTER_IMAGE_MODEL", "").strip(),
@@ -372,9 +405,11 @@ class AstronCodeAgent(BaseAgent):
         }
 
         env_args: list[str] = []
+        docker_environment = os.environ.copy()
         for key, value in env_map.items():
             if value:
-                env_args += ["-e", f"{key}={value}"]
+                env_args += ["-e", key]
+                docker_environment[key] = value
 
         extra_env = task.get("env", "") if task else ""
         for line in extra_env.splitlines():
@@ -382,7 +417,8 @@ class AstronCodeAgent(BaseAgent):
             if not key or key.startswith("#"):
                 continue
             value = os.environ.get(key, "").strip()
-            env_args += ["-e", f"{key}={value}"]
+            env_args += ["-e", key]
+            docker_environment[key] = value
             masked = (value[:4] + "***") if value else "(empty)"
             logger.info("[%s] Injecting env var: %s=%s", task_id, key, masked)
 
@@ -393,7 +429,8 @@ class AstronCodeAgent(BaseAgent):
                     "[%s] Lobster env key %s not found, skipping", task_id, key
                 )
                 continue
-            env_args += ["-e", f"{key}={value}"]
+            env_args += ["-e", key]
+            docker_environment[key] = value
             logger.info("[%s] Injecting lobster env: %s=%s***", task_id, key, value[:4])
 
         cmd = [
@@ -412,7 +449,12 @@ class AstronCodeAgent(BaseAgent):
             "tail -f /dev/null",
         ]
         logger.info("[%s] Starting AstronCode container (%s)", task_id, self.image)
-        r = subprocess.run(cmd, capture_output=True, text=True)
+        r = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            env=docker_environment,
+        )
         if r.returncode != 0:
             raise RuntimeError(f"AstronCode container startup failed:\n{r.stderr}")
         logger.info("[%s] Container ID: %s", task_id, r.stdout.strip()[:12])
@@ -525,28 +567,30 @@ class AstronCodeAgent(BaseAgent):
     ) -> None:
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
         provider = self._provider_for_model(model)
-        astron_api_key = self._resolve_astron_api_key()
-        if provider == "astron-spark" and not astron_api_key:
+        provider_api_key = self._resolve_provider_api_key(provider)
+        if not provider_api_key:
+            key_hints = {
+                "astron-spark": (
+                    "ASTRON_API_KEY, ASTRON_SPARK_API_KEY, or OPENROUTER_API_KEY"
+                ),
+                "one-iflytek": "ONE_IFLYTEK_API_KEY or OPENROUTER_API_KEY",
+                "openrouter": "OPENROUTER_API_KEY",
+            }
             raise RuntimeError(
-                "AstronCode 0.0.6 requires an Astron API key. "
-                "Set ASTRON_API_KEY, ASTRON_SPARK_API_KEY, or OPENROUTER_API_KEY."
-            )
-        if provider == "openrouter" and not self.openrouter_api_key:
-            raise RuntimeError(
-                "AstronCode external models require OPENROUTER_API_KEY."
+                f"AstronCode provider {provider} requires {key_hints[provider]}."
             )
         config_toml = self._render_codex_config(
             model=model,
             reasoning_effort=reasoning_effort,
             wire_api=wire_api,
-            astron_api_key=astron_api_key,
+            provider_api_key=provider_api_key,
             redact_secrets=False,
         )
         debug_config_toml = self._render_codex_config(
             model=model,
             reasoning_effort=reasoning_effort,
             wire_api=wire_api,
-            astron_api_key=astron_api_key,
+            provider_api_key=provider_api_key,
             redact_secrets=True,
         )
 
@@ -554,14 +598,23 @@ class AstronCodeAgent(BaseAgent):
         output_dir.mkdir(parents=True, exist_ok=True)
         (output_dir / "config.toml").write_text(debug_config_toml, encoding="utf-8")
 
-        heredoc = (
-            f"mkdir -p {ASTRONCODE_HOME} && "
-            f"cat > {ASTRONCODE_CONFIG_PATH} <<'CODEX_EOF'\n"
-            f"{config_toml}"
-            f"CODEX_EOF\n"
+        config_write_command = (
+            f"umask 077; mkdir -p {shlex.quote(ASTRONCODE_HOME)} "
+            f"&& : > {shlex.quote(ASTRONCODE_CONFIG_PATH)} "
+            f"&& chmod 600 {shlex.quote(ASTRONCODE_CONFIG_PATH)} "
+            f"&& cat > {shlex.quote(ASTRONCODE_CONFIG_PATH)}"
         )
         r = subprocess.run(
-            ["docker", "exec", task_id, "/bin/bash", "-c", heredoc],
+            [
+                "docker",
+                "exec",
+                "-i",
+                task_id,
+                "/bin/sh",
+                "-c",
+                config_write_command,
+            ],
+            input=config_toml,
             capture_output=True,
             text=True,
         )
@@ -582,23 +635,23 @@ class AstronCodeAgent(BaseAgent):
         model: str,
         reasoning_effort: str | None,
         wire_api: str | None,
-        astron_api_key: str,
+        provider_api_key: str,
         redact_secrets: bool,
     ) -> str:
-        """Render the AstronCode 0.0.6+ config for the selected model.
+        """Render the AstronCode 0.0.13 config for the selected model.
 
         Astron-native models use the CLI's built-in astron-spark provider.
-        External models use the benchmark's OpenRouter-compatible endpoint.
+        GPT models use iFlytek One, and other external models use OpenRouter.
         """
         _ = wire_api
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
         provider = self._provider_for_model(model)
         reasoning_line = (
-            f'model_reasoning_effort = "{reasoning_effort}"\n'
+            f"model_reasoning_effort = {toml_basic_string(reasoning_effort)}\n"
             if reasoning_effort
             else ""
         )
-        token = "***" if redact_secrets else astron_api_key
+        token = "***" if redact_secrets else provider_api_key
         common_config = (
             f"model_provider = {toml_basic_string(provider)}\n"
             f"{reasoning_line}"
@@ -617,36 +670,48 @@ class AstronCodeAgent(BaseAgent):
                 f"base_url = {toml_basic_string(self.openrouter_base_url)}\n"
                 'env_key = "OPENROUTER_API_KEY"\n'
             )
+        if provider == "one-iflytek":
+            return common_config + (
+                '\n'
+                '[model_providers.one-iflytek]\n'
+                'name = "Codex via iFlytek One"\n'
+                f"base_url = {toml_basic_string(self._resolve_one_iflytek_base_url())}\n"
+                f"experimental_bearer_token = {toml_basic_string(token)}\n"
+                'wire_api = "responses"\n'
+                'requires_openai_auth = false\n'
+                'stream_idle_timeout_ms = 300000\n'
+            )
 
-        models_base_url = self._resolve_astron_models_base_url()
         return common_config + (
             '\n'
             '[model_providers.astron-spark]\n'
             'name = "Astron Spark"\n'
             f"experimental_bearer_token = {toml_basic_string(token)}\n"
-            f"models_base_url = {toml_basic_string(models_base_url)}\n"
         )
 
-    def _resolve_astron_api_key(self) -> str:
-        return (
-            os.environ.get("ASTRON_API_KEY", "").strip()
-            or os.environ.get("ASTRON_SPARK_API_KEY", "").strip()
-            or self.openrouter_api_key
-        )
+    def _resolve_provider_api_key(self, provider: str) -> str:
+        if provider == "astron-spark":
+            return self.astron_api_key
+        if provider == "one-iflytek":
+            return self.one_iflytek_api_key
+        if provider == "openrouter":
+            return self.openrouter_api_key
+        raise ValueError(f"Unsupported AstronCode provider: {provider}")
 
-    @staticmethod
-    def _provider_for_model(model: str) -> str:
+    def _resolve_one_iflytek_base_url(self) -> str:
+        return self.one_iflytek_base_url
+
+    def _provider_for_model(self, model: str) -> str:
+        if self.model_provider_override:
+            return self.model_provider_override
+
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
-        if bare_model.lower().startswith(("xspark", "xop")):
+        normalized_model = bare_model.lower()
+        if normalized_model.startswith("gpt-"):
+            return "one-iflytek"
+        if normalized_model.startswith(ASTRON_MODEL_PREFIXES):
             return "astron-spark"
         return "openrouter"
-
-    @staticmethod
-    def _resolve_astron_models_base_url() -> str:
-        return (
-            os.environ.get("ASTRON_MODELS_BASE_URL", "").strip()
-            or DEFAULT_ASTRON_MODELS_BASE_URL
-        )
 
     def _install_image_helper(self, task_id: str, model: str) -> None:
         """Install a recoverable OpenRouter chat-completions image helper.

@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 # 构建 AstronCode 评测镜像并导出离线 tar 到 Images/。
 # 用法：bash script/build-astroncode-image.sh
-# 默认构建 v2（AstronCode 0.0.6+ 安装方式，按 registry latest 安装）。
-# 可选：ASTRON_CODE_VERSION=0.0.6 IMAGE_TAG=v0.2 bash script/build-astroncode-image.sh
-# 可选：ASTRONCODE_DOCKER_VARIANT=v1 IMAGE_TAG=v0.1-test.8 bash script/build-astroncode-image.sh
+# 默认构建 v3（固定安装 AstronCode 0.0.13）。
+# v2 覆盖：ASTRONCODE_DOCKER_VARIANT=v2 ASTRON_CODE_VERSION=0.0.6 IMAGE_TAG=v0.2 bash script/build-astroncode-image.sh
+# v1 覆盖：ASTRONCODE_DOCKER_VARIANT=v1 IMAGE_TAG=v0.1-test.8 bash script/build-astroncode-image.sh
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IMAGE_NAME="wildclawbench-astroncode-ubuntu"
-IMAGE_TAG="${IMAGE_TAG:-v0.2}"
-ASTRONCODE_DOCKER_VARIANT="${ASTRONCODE_DOCKER_VARIANT:-v2}"
+IMAGE_TAG="${IMAGE_TAG:-v0.3}"
+ASTRONCODE_DOCKER_VARIANT="${ASTRONCODE_DOCKER_VARIANT:-v3}"
+
+case "${ASTRONCODE_DOCKER_VARIANT}" in
+  v1|v2|v3) ;;
+  *)
+    echo "Unknown AstronCode docker variant: ${ASTRONCODE_DOCKER_VARIANT}" >&2
+    exit 1
+    ;;
+esac
+
 BUILD_CONTEXT="${REPO_ROOT}/docker/astroncode/${ASTRONCODE_DOCKER_VARIANT}"
 DOCKERFILE="${BUILD_CONTEXT}/Dockerfile"
 # gzip 压缩导出（docker load 直接支持 .tar.gz）；镜像 ~11.8GB，压缩后 ~4-5GB
