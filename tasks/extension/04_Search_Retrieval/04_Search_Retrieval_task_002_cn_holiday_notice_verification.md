@@ -7,7 +7,7 @@ modality: pure-text
 difficulty: L1
 grading_type: automated
 tags:
-  - custom
+  - invalid
 ---
 
 ## Prompt
