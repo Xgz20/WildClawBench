@@ -39,6 +39,16 @@ _HARNESS_RUN_FAILED_RE = re.compile(
     r"^(?:AstronCode|AstronClaw|OpenCode|Codex|OpenClaw|HermesAgent|ClaudeCode)\s+run failed\s*\(rc=\d+\)",
     re.I,
 )
+# Auth / quota exhaustion on the evaluation's own LLM endpoint is an infrastructure
+# failure of the eval account, NOT a model capability outcome. It typically surfaces as
+# a harness "run failed (rc=1)" wrapping a 401/403 + quota message, so it must be checked
+# BEFORE _HARNESS_RUN_FAILED_RE — otherwise a zero-output crash is recorded as a real 0.0.
+_AUTH_QUOTA_ERROR_RE = re.compile(
+    r"401\s+unauthorized|403\s+forbidden|invalid\s+api\s*key|invalid\s+access\s+token|"
+    r"authentication\s+fail|insufficient[_\s]*quota|exceeded\s+your\s+quota|"
+    r"额度已用尽|余额不足|令牌.*额度|remainquota\s*=\s*-?\d",
+    re.I,
+)
 _SECRET_PATTERNS = (
     re.compile(r"\b(?:sk|ak)-[A-Za-z0-9_-]{8,}", re.I),
     re.compile(r"\bBearer\s+[A-Za-z0-9._~+/-]{8,}", re.I),
@@ -314,6 +324,17 @@ def classify_execution_error(status: dict) -> dict[str, Any]:
     error = str(status.get("error") or "execution_status=error")
     stage = str(status.get("failure_stage") or status.get("stage") or "unknown")
     evidence = [{"file": "execution_status.json", "field": "failure_stage", "value": stage}]
+    # Auth/quota exhaustion on the eval endpoint is an environment failure regardless of
+    # stage or harness wrapping — must win over the harness "run failed (rc=N)" rule below,
+    # so a zero-output 401 crash is excluded from scoring instead of counting as a real 0.0.
+    if _AUTH_QUOTA_ERROR_RE.search(error):
+        return _item(
+            "EXECUTION_ERROR",
+            f"评测端点鉴权/额度失败（基础设施），非模型能力结果：{error[:180]}",
+            stage=stage, attribution="evaluation_environment", confidence="high",
+            validity_impact="fail", score_reliability="unreliable",
+            rerun_action="required_after_fix", evidence=evidence,
+        )
     if stage in _FRAMEWORK_STAGES:
         if _ENVIRONMENT_ERROR_RE.search(error):
             return _item(
