@@ -11,6 +11,12 @@ from unittest.mock import patch
 from src.agents.astroncode.runner import AstronCodeAgent
 
 
+DEFAULT_MODELS_BASE_URL = (
+    "https://astroncode-api-prod.xf-yun.com/"
+    "api/v1/astroncode_webserver/config-v1"
+)
+
+
 class AstronCodeConfigTests(unittest.TestCase):
     def make_agent(
         self,
@@ -90,6 +96,7 @@ class AstronCodeConfigTests(unittest.TestCase):
                 "ASTRON_SPARK_API_KEY": "initial-legacy-key",
                 "ONE_IFLYTEK_API_KEY": "initial-one-key",
                 "ONE_IFLYTEK_BASE_URL": "https://initial.one/v1",
+                "ASTRON_MODELS_BASE_URL": "https://initial.catalog/config-v1",
                 "OPENROUTER_API_KEY": "environment-openrouter-key",
                 "OPENROUTER_BASE_URL": "https://environment-openrouter/v1",
             },
@@ -108,6 +115,7 @@ class AstronCodeConfigTests(unittest.TestCase):
                 "ASTRON_SPARK_API_KEY": "changed-legacy-key",
                 "ONE_IFLYTEK_API_KEY": "changed-one-key",
                 "ONE_IFLYTEK_BASE_URL": "https://changed.one/v1",
+                "ASTRON_MODELS_BASE_URL": "https://changed.catalog/config-v1",
             },
             clear=False,
         ):
@@ -127,6 +135,10 @@ class AstronCodeConfigTests(unittest.TestCase):
             )
             self.assertEqual(
                 agent._resolve_one_iflytek_base_url(), "https://initial.one/v1"
+            )
+            self.assertEqual(
+                getattr(agent, "models_base_url", None),
+                "https://initial.catalog/config-v1",
             )
 
     @patch("src.agents.astroncode.runner.subprocess.run")
@@ -291,7 +303,7 @@ class AstronCodeConfigTests(unittest.TestCase):
         self.assertIs(config["hide_agent_reasoning"], True)
         provider = config["model_providers"]["astron-spark"]
         self.assertEqual(provider["experimental_bearer_token"], "astron-secret")
-        self.assertNotIn("models_base_url", provider)
+        self.assertEqual(provider.get("models_base_url"), DEFAULT_MODELS_BASE_URL)
 
     def test_one_iflytek_config_uses_responses_contract_and_native_types(self) -> None:
         with patch.dict(
@@ -314,6 +326,7 @@ class AstronCodeConfigTests(unittest.TestCase):
         provider = config["model_providers"]["one-iflytek"]
         self.assertEqual(provider["name"], "Codex via iFlytek One")
         self.assertEqual(provider["base_url"], "https://one.example/v1")
+        self.assertEqual(provider.get("models_base_url"), DEFAULT_MODELS_BASE_URL)
         self.assertEqual(provider["experimental_bearer_token"], "one-secret")
         self.assertEqual(provider["wire_api"], "responses")
         self.assertIs(provider["requires_openai_auth"], False)
@@ -344,7 +357,32 @@ class AstronCodeConfigTests(unittest.TestCase):
         self.assertEqual(config["model_provider"], "openrouter")
         provider = config["model_providers"]["openrouter"]
         self.assertEqual(provider["env_key"], "OPENROUTER_API_KEY")
+        self.assertEqual(provider.get("models_base_url"), DEFAULT_MODELS_BASE_URL)
         self.assertNotIn("experimental_bearer_token", provider)
+
+    def test_models_base_url_override_applies_to_all_providers(self) -> None:
+        models = (
+            "openrouter/xopglm52",
+            "openrouter/gpt-5.5",
+            "openrouter/claude-4",
+        )
+        with patch.dict(
+            os.environ,
+            {
+                "ASTRON_MODELS_BASE_URL": "https://catalog.example/config-v1",
+                "ASTRONCODE_MODEL_PROVIDER": "",
+            },
+            clear=False,
+        ):
+            agent = self.make_agent()
+            for model in models:
+                with self.subTest(model=model):
+                    config = self.parse_config(agent, model)
+                    provider = config["model_provider"]
+                    self.assertEqual(
+                        config["model_providers"][provider].get("models_base_url"),
+                        "https://catalog.example/config-v1",
+                    )
 
     @patch("src.agents.astroncode.runner.subprocess.run")
     def test_config_write_streams_real_token_and_redacts_host_artifact(

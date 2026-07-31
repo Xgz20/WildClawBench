@@ -28,6 +28,10 @@ ASTRONCODE_SESSIONS_DIR = f"{ASTRONCODE_HOME}/sessions"
 ASTRONCODE_CONFIG_PATH = f"{ASTRONCODE_HOME}/config.toml"
 ASTRONCODE_SKILLS_DIR = f"{ASTRONCODE_HOME}/skills"
 DEFAULT_ONE_IFLYTEK_BASE_URL = "https://one.iflytek.com/api/llm/console/chat/v1"
+DEFAULT_ASTRON_MODELS_BASE_URL = (
+    "https://astroncode-api-prod.xf-yun.com/"
+    "api/v1/astroncode_webserver/config-v1"
+)
 VALID_ASTRONCODE_PROVIDERS = ("astron-spark", "one-iflytek", "openrouter")
 ASTRON_MODEL_PREFIXES = ("xminimax", "xop", "xspark", "astronclaw-")
 OPENCLAW_TRANSCRIPT_DIR = "/root/.openclaw/agents/main/sessions"
@@ -170,6 +174,10 @@ class AstronCodeAgent(BaseAgent):
             os.environ.get("ONE_IFLYTEK_BASE_URL", "").strip()
             or configured_openrouter_base_url
             or DEFAULT_ONE_IFLYTEK_BASE_URL
+        )
+        self.models_base_url = (
+            os.environ.get("ASTRON_MODELS_BASE_URL", "").strip()
+            or DEFAULT_ASTRON_MODELS_BASE_URL
         )
         provider_override = (
             os.environ.get("ASTRONCODE_MODEL_PROVIDER", "").strip().lower()
@@ -668,6 +676,7 @@ class AstronCodeAgent(BaseAgent):
                 '[model_providers.openrouter]\n'
                 'name = "openrouter"\n'
                 f"base_url = {toml_basic_string(self.openrouter_base_url)}\n"
+                f"models_base_url = {toml_basic_string(self.models_base_url)}\n"
                 'env_key = "OPENROUTER_API_KEY"\n'
             )
         if provider == "one-iflytek":
@@ -676,6 +685,7 @@ class AstronCodeAgent(BaseAgent):
                 '[model_providers.one-iflytek]\n'
                 'name = "Codex via iFlytek One"\n'
                 f"base_url = {toml_basic_string(self._resolve_one_iflytek_base_url())}\n"
+                f"models_base_url = {toml_basic_string(self.models_base_url)}\n"
                 f"experimental_bearer_token = {toml_basic_string(token)}\n"
                 'wire_api = "responses"\n'
                 'requires_openai_auth = false\n'
@@ -686,6 +696,7 @@ class AstronCodeAgent(BaseAgent):
             '\n'
             '[model_providers.astron-spark]\n'
             'name = "Astron Spark"\n'
+            f"models_base_url = {toml_basic_string(self.models_base_url)}\n"
             f"experimental_bearer_token = {toml_basic_string(token)}\n"
         )
 
