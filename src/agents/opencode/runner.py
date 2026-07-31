@@ -194,6 +194,7 @@ class OpenCodeAgent(BaseAgent):
                     ),
                     timeout_seconds=spec.timeout_seconds,
                     output_dir=spec.output_dir,
+                    thinking=spec.thinking,
                 )
                 elapsed_time = time.perf_counter() - start_time
                 write_execution_status(
@@ -510,6 +511,7 @@ class OpenCodeAgent(BaseAgent):
         prompt: str,
         timeout_seconds: int,
         output_dir: Path,
+        thinking: str | None = None,
     ) -> None:
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -524,7 +526,13 @@ class OpenCodeAgent(BaseAgent):
         log_path = output_dir / "agent.log"
         write_execution_status(output_dir, status="launching_harness")
         r = self._run_opencode_exec(
-            task_id, model, prompt_path, config_content, timeout_seconds, log_path
+            task_id,
+            model,
+            prompt_path,
+            config_content,
+            timeout_seconds,
+            log_path,
+            thinking=thinking,
         )
         if r.returncode == 0:
             return
@@ -566,8 +574,11 @@ class OpenCodeAgent(BaseAgent):
         config_content: str,
         timeout_seconds: int,
         log_path: Path,
+        thinking: str | None = None,
     ) -> subprocess.CompletedProcess[str]:
-        cmd = self._build_exec_command(model, prompt_path, config_content)
+        cmd = self._build_exec_command(
+            model, prompt_path, config_content, thinking=thinking
+        )
         full_cmd = ["docker", "exec", task_id, "/bin/bash", "-c", cmd]
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with log_path.open("w", encoding="utf-8", errors="replace") as log:
