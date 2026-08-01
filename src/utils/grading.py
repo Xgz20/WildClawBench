@@ -796,7 +796,9 @@ def extract_usage_from_jsonl(jsonl_path: Path) -> dict:
     totals["cost_usd"] = round(totals["cost_usd"], 6)
     return totals
 
-def print_global_summary(results: list[dict], output_dir: Path, model_name: str) -> None:
+def print_global_summary(
+    results: list[dict], output_dir: Path, model_name: str, timing: dict | None = None
+) -> None:
     from src.utils.multirun_stats import aggregate_runs
     from eval.run_batch import PASS_THRESHOLD
 
@@ -876,6 +878,10 @@ def print_global_summary(results: list[dict], output_dir: Path, model_name: str)
         "missing_score_task_count": missing_score_tasks,
         "results": results,
     }
+
+    # 计时段（跑批总耗时 vs 用例执行总耗时；由 run_batch 传入，缺省不写）
+    if timing:
+        summary_data["timing"] = timing
 
     # 多轮时追加 multirun 段
     if runs_per_task > 1 and per_task_stats:

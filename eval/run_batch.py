@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import json
+import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -448,11 +449,15 @@ def run_single_task(
         remove_container(task_id)
         logger.info("[%s] Container cleaned up", task_id)
 
+    # 用例执行耗时（agent 执行时长，来自 execution），供批级"用例执行总耗时"累加。
+    # 只有本次实际执行的 run 带此字段；resume 复用的 result 不带，天然不计入 B。
+    result["elapsed_time"] = elapsed_time
     return result
 
 
 def main() -> None:
     global PASS_THRESHOLD
+    _batch_start = time.perf_counter()  # 跑批总耗时(墙钟)起点：命令进入 main 即计时
     args = parse_run_batch_args(
         default_model=DEFAULT_MODEL,
         default_parallel=DEFAULT_PARALLEL,
@@ -728,7 +733,34 @@ def main() -> None:
     # 批级汇总（单分类也产出，含多轮 multirun 段）
     if all_results:
         summary_label = f"{lobster['name']}_{safe_model_name}" if lobster else safe_model_name
-        print_global_summary(all_results, output_root, summary_label)
+        # 计时：跑批总耗时(墙钟 C) vs 用例执行总耗时(Σ 本次执行 run 的 elapsed_time, B)。
+        # B 只累加带 elapsed_time 的 result（resume 复用的不带，不计入）。
+        batch_total_seconds = round(time.perf_counter() - _batch_start, 1)
+        task_exec_sum_seconds = round(
+            sum(r.get("elapsed_time", 0.0) or 0.0 for r in all_results), 1
+        )
+        executed_count = sum(1 for r in all_results if "elapsed_time" in r)
+        avg_exec_seconds = round(task_exec_sum_seconds / executed_count, 1) if executed_count else 0.0
+        timing = {
+            "batch_total_seconds": batch_total_seconds,
+            "task_exec_sum_seconds": task_exec_sum_seconds,
+            "parallelism": args.parallel,
+            "task_count": len(all_results),
+            "executed_run_count": executed_count,
+            "avg_exec_seconds": avg_exec_seconds,
+            "effective_parallelism": (
+                round(task_exec_sum_seconds / batch_total_seconds, 2)
+                if batch_total_seconds > 0 else None
+            ),
+        }
+        logger.info(
+            "📊 跑批完成: 跑批总耗时=%.0fs (~%.1fmin) | 用例执行总耗时=%.0fs (~%.1fmin) "
+            "| 并发=%d | %d 题 | 平均执行=%.0fs/题",
+            batch_total_seconds, batch_total_seconds / 60,
+            task_exec_sum_seconds, task_exec_sum_seconds / 60,
+            args.parallel, len(all_results), avg_exec_seconds,
+        )
+        print_global_summary(all_results, output_root, summary_label, timing=timing)
 
     # 批级异常汇总（含跨 run 规则），供出数前把关与 --rerun-error 决策
     try:
