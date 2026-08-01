@@ -57,3 +57,11 @@ class AstronClawAgent(OpenClawAgent):
             )
         else:
             logger.info("[%s] gateway.mode set: local", task_id)
+
+        # The AstronClaw image enables the OpenClaw web-search plugin by default.
+        # Select the configured backend explicitly, or disable the plugin when no
+        # search service is available so an unusable tool is not exposed to models.
+        self._configure_web_search(
+            task_id,
+            os.environ.get("SEARXNG_BASE_URL", "").strip(),
+        )

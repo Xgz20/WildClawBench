@@ -22,6 +22,7 @@ WORKSPACE_BASELINE_PATH = "/tmp/wildclaw_workspace_baseline.json"
 SRC_MOUNT = os.environ.get("SRC_MOUNT", "/mnt/wildclaw_src")
 
 BRAVE_API_KEY = os.environ.get("BRAVE_API_KEY", "")
+SEARXNG_BASE_URL = os.environ.get("SEARXNG_BASE_URL", "").strip()
 
 def remove_container(name: str) -> None:
     subprocess.run(["docker", "rm", "-f", name], capture_output=True)
@@ -68,6 +69,9 @@ def start_container(task_id: str, workspace_path: str, extra_env: str = "",
         "-e", f"BRAVE_API_KEY={BRAVE_API_KEY}",
         "-e", f"no_proxy={'' if not proxy_http else os.environ.get('NO_PROXY_INNER', '')}",
     ]
+    if SEARXNG_BASE_URL:
+        env_args += ["-e", f"SEARXNG_BASE_URL={SEARXNG_BASE_URL}"]
+        logger.info("[%s] Injecting env var: SEARXNG_BASE_URL=%s", task_id, SEARXNG_BASE_URL)
     for line in extra_env.splitlines():
         key = line.strip()
         if not key or key.startswith("#"):

@@ -326,8 +326,55 @@ class OpenClawAgent(BaseAgent):
         return out.splitlines()[0].strip().split()[-1] if out else ""
 
     def _configure_harness(self, task_id: str) -> None:
-        """Keep OpenClaw bootable when the optional Brave key is absent."""
+        """Configure the optional web search backend before starting the gateway."""
+        searxng_base_url = os.environ.get("SEARXNG_BASE_URL", "").strip()
+        if searxng_base_url:
+            self._configure_web_search(task_id, searxng_base_url)
+            return
         if os.environ.get("BRAVE_API_KEY", "").strip():
+            return
+
+        self._configure_web_search(task_id, "")
+
+    @staticmethod
+    def _configure_web_search(task_id: str, searxng_base_url: str) -> None:
+        """Select SearXNG explicitly, or disable an unusable default search plugin."""
+        if searxng_base_url:
+            configure_cmd = """python3 - <<'PY'
+import json
+import pathlib
+
+p = pathlib.Path("/root/.openclaw/openclaw.json")
+d = json.loads(p.read_text()) if p.exists() else {}
+search = d.setdefault("tools", {}).setdefault("web", {}).setdefault("search", {})
+search["enabled"] = True
+search["provider"] = "searxng"
+search.pop("apiKey", None)
+searxng = (
+    d.setdefault("plugins", {})
+    .setdefault("entries", {})
+    .setdefault("searxng", {})
+)
+searxng["enabled"] = True
+web_search = searxng.setdefault("config", {}).setdefault("webSearch", {})
+web_search["baseUrl"] = """ + json.dumps(searxng_base_url) + """
+p.write_text(json.dumps(d, indent=2))
+PY"""
+            result = subprocess.run(
+                ["docker", "exec", task_id, "/bin/bash", "-c", configure_cmd],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(
+                    "Failed to configure OpenClaw web search for SearXNG:\n"
+                    f"{result.stderr}"
+                )
+            logger.info(
+                "[%s] Enabled SearXNG web search via SEARXNG_BASE_URL=%s",
+                task_id,
+                searxng_base_url,
+            )
             return
 
         configure_cmd = """python3 - <<'PY'

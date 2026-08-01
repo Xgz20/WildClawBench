@@ -10,6 +10,7 @@ from unittest.mock import patch
 from src.agents.astronclaw import AstronClawAgent
 from src.agents.openclaw import OpenClawAgent
 from src.agents.openclaw.runner import write_execution_status
+from src.utils import docker_utils
 from src.utils.anomalies import classify_execution_error, scan_run_dir
 from src.utils.cli_args import build_run_batch_parser
 
@@ -80,9 +81,11 @@ class OpenClawBackendTests(unittest.TestCase):
     @patch("src.agents.astronclaw.runner.subprocess.run")
     def test_gateway_mode_fix_is_astronclaw_only(self, run_mock) -> None:
         run_mock.return_value = subprocess.CompletedProcess([], 0, "", "")
-        self.make_astronclaw()._configure_harness("astronclaw-task")
-        run_mock.assert_called_once()
-        self.assertIn("gateway.mode local", run_mock.call_args.args[0][-1])
+        with patch.dict("os.environ", {"BRAVE_API_KEY": "", "SEARXNG_BASE_URL": ""}, clear=False):
+            self.make_astronclaw()._configure_harness("astronclaw-task")
+        self.assertEqual(run_mock.call_count, 2)
+        self.assertIn("gateway.mode local", run_mock.call_args_list[0].args[0][-1])
+        self.assertIn('search["enabled"] = False', run_mock.call_args_list[1].args[0][-1])
 
     @patch("src.agents.openclaw.runner.subprocess.run")
     def test_openclaw_disables_web_search_without_brave_key(self, run_mock) -> None:
@@ -103,6 +106,51 @@ class OpenClawBackendTests(unittest.TestCase):
             self.make_openclaw()._configure_harness("openclaw-task")
 
         run_mock.assert_not_called()
+
+    @patch("src.agents.openclaw.runner.subprocess.run")
+    def test_openclaw_selects_searxng_when_configured(self, run_mock) -> None:
+        run_mock.return_value = subprocess.CompletedProcess([], 0, "", "")
+        with patch.dict(
+            "os.environ",
+            {"BRAVE_API_KEY": "", "SEARXNG_BASE_URL": "http://host.docker.internal:8888"},
+            clear=False,
+        ):
+            self.make_openclaw()._configure_harness("openclaw-task")
+
+        run_mock.assert_called_once()
+        configure_cmd = run_mock.call_args.args[0][-1]
+        self.assertIn('search["enabled"] = True', configure_cmd)
+        self.assertIn('search["provider"] = "searxng"', configure_cmd)
+        self.assertIn('searxng["enabled"] = True', configure_cmd)
+        self.assertIn('web_search["baseUrl"] = "http://host.docker.internal:8888"', configure_cmd)
+
+    @patch("src.agents.astronclaw.runner.subprocess.run")
+    def test_astronclaw_selects_searxng_when_configured(self, run_mock) -> None:
+        run_mock.return_value = subprocess.CompletedProcess([], 0, "", "")
+        with patch.dict(
+            "os.environ",
+            {"BRAVE_API_KEY": "", "SEARXNG_BASE_URL": "http://host.docker.internal:8888"},
+            clear=False,
+        ):
+            self.make_astronclaw()._configure_harness("astronclaw-task")
+
+        self.assertEqual(run_mock.call_count, 2)
+        configure_cmd = run_mock.call_args_list[1].args[0][-1]
+        self.assertIn('search["enabled"] = True', configure_cmd)
+        self.assertIn('search["provider"] = "searxng"', configure_cmd)
+        self.assertIn('searxng["enabled"] = True', configure_cmd)
+        self.assertIn('web_search["baseUrl"] = "http://host.docker.internal:8888"', configure_cmd)
+
+    @patch("src.utils.docker_utils.subprocess.run")
+    def test_task_container_receives_searxng_base_url(self, run_mock) -> None:
+        run_mock.return_value = subprocess.CompletedProcess([], 0, "", "")
+        with tempfile.TemporaryDirectory() as tmp, patch.object(
+            docker_utils, "SEARXNG_BASE_URL", "http://host.docker.internal:8888"
+        ):
+            docker_utils.start_container("searxng-task", tmp)
+
+        docker_cmd = run_mock.call_args.args[0]
+        self.assertIn("SEARXNG_BASE_URL=http://host.docker.internal:8888", docker_cmd)
 
     @patch("src.agents.openclaw.runner.subprocess.run")
     def test_provider_timeout_is_astronclaw_only(self, run_mock) -> None:
