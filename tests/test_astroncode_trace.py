@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import stat
 import subprocess
 import tarfile
 import tempfile
@@ -817,8 +818,13 @@ class AstronCodeTraceTests(unittest.TestCase):
                 self.wrapped.flush()
                 raise OSError("temporary status write failed")
 
-        real_named_temporary_file = tempfile.NamedTemporaryFile
-        for failure_boundary in ("temporary-write", "replace"):
+        real_fdopen = os.fdopen
+        for failure_boundary in (
+            "temporary-write",
+            "mode-apply",
+            "fsync",
+            "replace",
+        ):
             with self.subTest(failure_boundary=failure_boundary), patch.dict(
                 os.environ,
                 {"ASTRONCODE_TRACE_ENABLED": "0"},
@@ -834,14 +840,24 @@ class AstronCodeTraceTests(unittest.TestCase):
                 agent = self.make_agent()
 
                 if failure_boundary == "temporary-write":
-                    def partial_named_temporary_file(*args, **kwargs):
+                    def partial_fdopen(file_descriptor, *args, **kwargs):
                         return PartialWriteFile(
-                            real_named_temporary_file(*args, **kwargs)
+                            real_fdopen(file_descriptor, *args, **kwargs)
                         )
 
                     failure_patch = patch(
-                        "src.agents.astroncode.runner.tempfile.NamedTemporaryFile",
-                        side_effect=partial_named_temporary_file,
+                        "src.agents.astroncode.runner.os.fdopen",
+                        side_effect=partial_fdopen,
+                    )
+                elif failure_boundary == "mode-apply":
+                    failure_patch = patch(
+                        "src.agents.astroncode.runner.os.fchmod",
+                        side_effect=PermissionError("status mode apply failed"),
+                    )
+                elif failure_boundary == "fsync":
+                    failure_patch = patch(
+                        "src.agents.astroncode.runner.os.fsync",
+                        side_effect=OSError("status fsync failed"),
                     )
                 else:
                     failure_patch = patch(
@@ -865,6 +881,45 @@ class AstronCodeTraceTests(unittest.TestCase):
                     list(output_dir.glob(".execution_status.json.*.tmp")),
                     [],
                 )
+
+    def test_new_execution_status_matches_path_write_text_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            baseline_path = output_dir / "write-text-baseline.json"
+            baseline_path.write_text("{}", encoding="utf-8")
+            baseline_mode = stat.S_IMODE(baseline_path.stat().st_mode)
+
+            runner.write_execution_status(output_dir, status="created")
+
+            status_path = output_dir / "execution_status.json"
+            self.assertEqual(
+                stat.S_IMODE(status_path.stat().st_mode),
+                baseline_mode,
+            )
+
+    def test_existing_execution_status_preserves_mode_and_ownership(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            status_path = output_dir / "execution_status.json"
+            status_path.write_text(
+                json.dumps({"status": "created", "task_id": "mode-test"}),
+                encoding="utf-8",
+            )
+            status_path.chmod(0o640)
+            historical_mtime_ns = 946684800_000_000_000
+            os.utime(
+                status_path,
+                ns=(historical_mtime_ns, historical_mtime_ns),
+            )
+            original_stat = status_path.stat()
+
+            runner.write_execution_status(output_dir, status="finished")
+
+            updated_stat = status_path.stat()
+            self.assertEqual(stat.S_IMODE(updated_stat.st_mode), 0o640)
+            self.assertEqual(updated_stat.st_uid, original_stat.st_uid)
+            self.assertEqual(updated_stat.st_gid, original_stat.st_gid)
+            self.assertNotEqual(updated_stat.st_mtime_ns, historical_mtime_ns)
 
     def test_execution_status_atomic_success_merges_existing_fields(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

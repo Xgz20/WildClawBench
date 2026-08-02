@@ -5,6 +5,7 @@ import logging
 import os
 import shlex
 import shutil
+import stat
 import subprocess
 import tempfile
 import time
@@ -95,17 +96,40 @@ def write_execution_status(output_dir: Path, **updates: Any) -> dict[str, Any]:
     status.update(updates)
     status["updated_at"] = _now_iso()
     serialized = json.dumps(status, indent=2, ensure_ascii=False)
-    temporary_path: Path | None = None
+    existing_stat = None
     try:
-        with tempfile.NamedTemporaryFile(
-            "w",
-            encoding="utf-8",
-            dir=output_dir,
-            prefix=f".{status_path.name}.",
-            suffix=".tmp",
-            delete=False,
-        ) as temporary_file:
-            temporary_path = Path(temporary_file.name)
+        existing_stat = status_path.stat()
+    except FileNotFoundError:
+        pass
+
+    temporary_path: Path | None = None
+    temporary_fd = -1
+    try:
+        open_flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        if hasattr(os, "O_CLOEXEC"):
+            open_flags |= os.O_CLOEXEC
+        for _ in range(100):
+            candidate = output_dir / (
+                f".{status_path.name}.{os.urandom(12).hex()}.tmp"
+            )
+            try:
+                temporary_fd = os.open(candidate, open_flags, 0o666)
+            except FileExistsError:
+                continue
+            temporary_path = candidate
+            break
+        else:
+            raise FileExistsError(
+                f"could not allocate temporary status file in {output_dir}"
+            )
+
+        if existing_stat is not None:
+            os.fchown(temporary_fd, existing_stat.st_uid, existing_stat.st_gid)
+            os.fchmod(temporary_fd, stat.S_IMODE(existing_stat.st_mode))
+
+        temporary_file = os.fdopen(temporary_fd, "w", encoding="utf-8")
+        temporary_fd = -1
+        with temporary_file:
             written = temporary_file.write(serialized)
             if written != len(serialized):
                 raise OSError(
@@ -116,6 +140,11 @@ def write_execution_status(output_dir: Path, **updates: Any) -> dict[str, Any]:
         os.replace(temporary_path, status_path)
         temporary_path = None
     finally:
+        if temporary_fd >= 0:
+            try:
+                os.close(temporary_fd)
+            except OSError:
+                pass
         if temporary_path is not None:
             try:
                 temporary_path.unlink(missing_ok=True)
