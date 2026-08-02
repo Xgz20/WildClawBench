@@ -353,8 +353,13 @@ class AstronCodeTraceTests(unittest.TestCase):
                 )
                 if command[:2] == ["docker", "exec"]:
                     archive_command = command[-1]
-                    self.assertIn("-mindepth 1 -maxdepth 1", archive_command)
-                    self.assertIn("-type d -name 'trace-*'", archive_command)
+                    self.assertNotIn("find ", archive_command)
+                    self.assertNotIn("wc -l", archive_command)
+                    self.assertIn(
+                        "for trace_dir in /tmp/rollout-traces/trace-*",
+                        archive_command,
+                    )
+                    self.assertIn('[ -d "$trace_dir" ]', archive_command)
                     self.assertIn("tar -C /tmp -czf", archive_command)
                     self.assertIn("rollout-traces", archive_command)
                     return subprocess.CompletedProcess(command, 0, "3", "")
@@ -793,6 +798,107 @@ class AstronCodeTraceTests(unittest.TestCase):
                     else:
                         self.assertEqual(status["trace_export"]["status"], outcome)
 
+    def test_execution_status_atomic_failures_preserve_original_bytes(self) -> None:
+        class PartialWriteFile:
+            def __init__(self, wrapped):
+                self.wrapped = wrapped
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, traceback):
+                return self.wrapped.__exit__(exc_type, exc, traceback)
+
+            def __getattr__(self, name):
+                return getattr(self.wrapped, name)
+
+            def write(self, content):
+                self.wrapped.write(content[: max(1, len(content) // 2)])
+                self.wrapped.flush()
+                raise OSError("temporary status write failed")
+
+        real_named_temporary_file = tempfile.NamedTemporaryFile
+        for failure_boundary in ("temporary-write", "replace"):
+            with self.subTest(failure_boundary=failure_boundary), patch.dict(
+                os.environ,
+                {"ASTRONCODE_TRACE_ENABLED": "0"},
+                clear=True,
+            ), tempfile.TemporaryDirectory() as temp_dir:
+                output_dir = Path(temp_dir)
+                status_path = output_dir / "execution_status.json"
+                original_bytes = (
+                    b'{"status":"timed_out","exit_code":124,'
+                    b'"error":"model timed out"}\n'
+                )
+                status_path.write_bytes(original_bytes)
+                agent = self.make_agent()
+
+                if failure_boundary == "temporary-write":
+                    def partial_named_temporary_file(*args, **kwargs):
+                        return PartialWriteFile(
+                            real_named_temporary_file(*args, **kwargs)
+                        )
+
+                    failure_patch = patch(
+                        "src.agents.astroncode.runner.tempfile.NamedTemporaryFile",
+                        side_effect=partial_named_temporary_file,
+                    )
+                else:
+                    failure_patch = patch(
+                        "src.agents.astroncode.runner.os.replace",
+                        side_effect=OSError("status replace failed"),
+                    )
+
+                with failure_patch, self.assertLogs(
+                    "src.agents.astroncode.runner",
+                    level="WARNING",
+                ):
+                    self.collect_usage_with_parsed_usage(
+                        agent,
+                        f"atomic-{failure_boundary}",
+                        output_dir,
+                    )
+
+                self.assertEqual(status_path.read_bytes(), original_bytes)
+                self.assertEqual(json.loads(original_bytes)["status"], "timed_out")
+                self.assertEqual(
+                    list(output_dir.glob(".execution_status.json.*.tmp")),
+                    [],
+                )
+
+    def test_execution_status_atomic_success_merges_existing_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            status_path = output_dir / "execution_status.json"
+            status_path.write_text(
+                json.dumps(
+                    {
+                        "status": "preparing_workspace",
+                        "task_id": "merge-status",
+                        "exit_code": None,
+                        "error": None,
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            merged = runner.write_execution_status(
+                output_dir,
+                status="error",
+                error="workspace preparation failed",
+            )
+
+            on_disk = json.loads(status_path.read_text(encoding="utf-8"))
+            self.assertEqual(on_disk, merged)
+            self.assertEqual(on_disk["task_id"], "merge-status")
+            self.assertIsNone(on_disk["exit_code"])
+            self.assertEqual(on_disk["status"], "error")
+            self.assertEqual(on_disk["failure_stage"], "preparing_workspace")
+            self.assertEqual(
+                list(output_dir.glob(".execution_status.json.*.tmp")),
+                [],
+            )
+
     def test_real_shell_exports_all_trace_files_in_one_secure_archive(self) -> None:
         with patch.dict(
             os.environ,
@@ -815,6 +921,13 @@ class AstronCodeTraceTests(unittest.TestCase):
                     json.dumps({"event": trace_name}) + "\n",
                     encoding="utf-8",
                 )
+            (trace_root / "trace-file").write_text("not a directory", encoding="utf-8")
+            nested_trace = trace_root / "not-a-trace" / "trace-nested"
+            nested_trace.mkdir(parents=True)
+            (trace_root / "trace-link").symlink_to(
+                trace_root / "trace-one",
+                target_is_directory=True,
+            )
             container_archive = container_dir / "astroncode_traces.tar.gz"
 
             commands = self.run_export_with_real_shell(

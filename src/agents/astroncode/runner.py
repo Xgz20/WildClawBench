@@ -94,10 +94,33 @@ def write_execution_status(output_dir: Path, **updates: Any) -> dict[str, Any]:
         updates["failure_stage"] = previous_stage
     status.update(updates)
     status["updated_at"] = _now_iso()
-    status_path.write_text(
-        json.dumps(status, indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
+    serialized = json.dumps(status, indent=2, ensure_ascii=False)
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            "w",
+            encoding="utf-8",
+            dir=output_dir,
+            prefix=f".{status_path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as temporary_file:
+            temporary_path = Path(temporary_file.name)
+            written = temporary_file.write(serialized)
+            if written != len(serialized):
+                raise OSError(
+                    f"short execution status write: {written}/{len(serialized)}"
+                )
+            temporary_file.flush()
+            os.fsync(temporary_file.fileno())
+        os.replace(temporary_path, status_path)
+        temporary_path = None
+    finally:
+        if temporary_path is not None:
+            try:
+                temporary_path.unlink(missing_ok=True)
+            except OSError:
+                pass
     return status
 
 
@@ -472,10 +495,12 @@ class AstronCodeAgent(BaseAgent):
             "set -e; "
             "umask 077; "
             f"mkdir -p {shlex.quote(str(trace_root))}; "
-            "trace_count=$(find "
-            f"{shlex.quote(str(trace_root))} "
-            "-mindepth 1 -maxdepth 1 -type d -name 'trace-*' "
-            "2>/dev/null | wc -l); "
+            "trace_count=0; "
+            f"for trace_dir in {shlex.quote(str(trace_root))}/trace-*; do "
+            'if [ -d "$trace_dir" ] && [ ! -L "$trace_dir" ]; then '
+            "trace_count=$((trace_count + 1)); "
+            "fi; "
+            "done; "
             f"rm -f {shlex.quote(ASTRONCODE_TRACE_ARCHIVE_CONTAINER_PATH)}; "
             f"tar -C {shlex.quote(str(trace_root.parent))} -czf "
             f"{shlex.quote(ASTRONCODE_TRACE_ARCHIVE_CONTAINER_PATH)} "
