@@ -399,18 +399,31 @@ class AstronCodeAgent(BaseAgent):
 
     @staticmethod
     def _record_trace_export(output_dir: Path, result: dict[str, Any]) -> None:
-        write_execution_status(output_dir, trace_export=result)
-        append_agent_log_event(
-            output_dir,
-            {"type": "runner.trace_export", **result},
-        )
+        try:
+            write_execution_status(output_dir, trace_export=result)
+        except Exception as exc:
+            logger.warning(
+                "AstronCode trace export status recording failed: %s",
+                AstronCodeAgent._trace_export_error("status recording", exc),
+            )
+        try:
+            append_agent_log_event(
+                output_dir,
+                {"type": "runner.trace_export", **result},
+            )
+        except Exception as exc:
+            logger.warning(
+                "AstronCode trace export event recording failed: %s",
+                AstronCodeAgent._trace_export_error("event recording", exc),
+            )
 
     @staticmethod
-    def _remove_partial_trace_archive(archive_path: Path) -> None:
+    def _remove_partial_trace_archive(archive_path: Path) -> OSError | None:
         try:
             archive_path.unlink(missing_ok=True)
-        except OSError:
-            pass
+        except OSError as exc:
+            return exc
+        return None
 
     @staticmethod
     def _trace_export_error(stage: str, exc: Exception) -> str:
@@ -426,7 +439,21 @@ class AstronCodeAgent(BaseAgent):
         output_dir: Path,
     ) -> None:
         archive_path = output_dir / ASTRONCODE_TRACE_ARCHIVE_NAME
-        self._remove_partial_trace_archive(archive_path)
+        cleanup_error = self._remove_partial_trace_archive(archive_path)
+        if cleanup_error is not None:
+            error = self._trace_export_error("host archive cleanup", cleanup_error)
+            self._record_trace_export(
+                output_dir,
+                {
+                    "enabled": self.trace_enabled,
+                    "status": "failed",
+                    "archive": None,
+                    "trace_count": 0,
+                    "error": error,
+                },
+            )
+            logger.warning("[%s] AstronCode trace export failed: %s", task_id, error)
+            return
         if not self.trace_enabled:
             self._record_trace_export(
                 output_dir,
@@ -442,6 +469,7 @@ class AstronCodeAgent(BaseAgent):
 
         trace_root = Path(ASTRONCODE_TRACE_ROOT)
         archive_command = (
+            "set -e; "
             "umask 077; "
             f"mkdir -p {shlex.quote(str(trace_root))}; "
             "trace_count=$(find "
@@ -501,8 +529,14 @@ class AstronCodeAgent(BaseAgent):
                 archive_path,
             )
         except Exception as exc:
-            self._remove_partial_trace_archive(archive_path)
             error = self._trace_export_error(stage, exc)
+            cleanup_error = self._remove_partial_trace_archive(archive_path)
+            if cleanup_error is not None:
+                cleanup_message = self._trace_export_error(
+                    "host archive cleanup",
+                    cleanup_error,
+                )
+                error = f"{error}; {cleanup_message}"[:1000]
             self._record_trace_export(
                 output_dir,
                 {

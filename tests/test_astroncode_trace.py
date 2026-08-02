@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
+import tarfile
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from eval import run_batch
+from src.agents.base import AgentExecution
 from src.agents.astroncode import runner
 from src.agents.astroncode.runner import AstronCodeAgent
 
@@ -77,6 +81,76 @@ class AstronCodeTraceTests(unittest.TestCase):
     @staticmethod
     def trace_export_field_names() -> tuple[str, ...]:
         return ("enabled", "status", "archive", "trace_count", "error")
+
+    def collect_usage_with_parsed_usage(
+        self,
+        agent: AstronCodeAgent,
+        task_id: str,
+        output_dir: Path,
+    ) -> dict:
+        parsed_usage = {
+            "input_tokens": 5,
+            "output_tokens": 4,
+            "cache_read_tokens": 0,
+            "cache_write_tokens": 0,
+            "total_tokens": 9,
+            "cost_usd": 0.5,
+            "request_count": 1,
+        }
+        with patch.object(
+            agent,
+            "_copy_dir_from_container",
+        ), patch.object(
+            agent,
+            "_find_latest_session",
+            return_value=None,
+        ), patch.object(
+            agent,
+            "_extract_usage_from_jsonl",
+            return_value=parsed_usage,
+        ):
+            usage = agent.collect_usage(task_id, output_dir, 2.0)
+        self.assertEqual(usage, {**parsed_usage, "elapsed_time": 2.0})
+        return usage
+
+    def run_export_with_real_shell(
+        self,
+        agent: AstronCodeAgent,
+        task_id: str,
+        trace_root: Path,
+        container_archive: Path,
+        output_dir: Path,
+        *,
+        shell_environment: dict[str, str] | None = None,
+    ) -> list[list[str]]:
+        real_run = subprocess.run
+        commands: list[list[str]] = []
+
+        def fake_run(command, **kwargs):
+            commands.append(command)
+            if command[:2] == ["docker", "exec"]:
+                if shell_environment is not None:
+                    kwargs["env"] = shell_environment
+                return real_run(command[3:], **kwargs)
+            if command[:2] == ["docker", "cp"]:
+                shutil.copyfile(container_archive, Path(command[-1]))
+                return subprocess.CompletedProcess(command, 0, "", "")
+            self.fail(f"unexpected command: {command}")
+
+        with patch.object(
+            runner,
+            "ASTRONCODE_TRACE_ROOT",
+            str(trace_root),
+        ), patch.object(
+            runner,
+            "ASTRONCODE_TRACE_ARCHIVE_CONTAINER_PATH",
+            str(container_archive),
+        ), patch(
+            "src.agents.astroncode.runner.subprocess.run",
+            side_effect=fake_run,
+        ):
+            agent._collect_rollout_trace_archive(task_id, output_dir)
+        return commands
 
     def test_trace_constants_match_export_contract(self) -> None:
         self.assertEqual(runner.ASTRONCODE_TRACE_ROOT, "/tmp/rollout-traces")
@@ -646,6 +720,394 @@ class AstronCodeTraceTests(unittest.TestCase):
                 self.read_trace_export_status(output_dir)["status"],
                 "failed",
             )
+
+    def test_trace_recording_failures_are_independent_and_non_blocking(self) -> None:
+        outcomes = ("disabled", "exported", "failed")
+        recorders = ("write_execution_status", "append_agent_log_event")
+        for outcome in outcomes:
+            for failing_recorder in recorders:
+                environment = (
+                    {"ASTRONCODE_TRACE_ENABLED": "0"}
+                    if outcome == "disabled"
+                    else {}
+                )
+                with self.subTest(
+                    outcome=outcome,
+                    failing_recorder=failing_recorder,
+                ), patch.dict(
+                    os.environ,
+                    environment,
+                    clear=True,
+                ), tempfile.TemporaryDirectory() as temp_dir:
+                    output_dir = Path(temp_dir)
+                    original_status = {
+                        "status": "timed_out",
+                        "exit_code": 124,
+                        "error": "model timed out",
+                    }
+                    status_path = output_dir / "execution_status.json"
+                    status_path.write_text(
+                        json.dumps(original_status),
+                        encoding="utf-8",
+                    )
+                    agent = self.make_agent()
+
+                    def fake_run(command, **kwargs):
+                        if outcome == "failed":
+                            return subprocess.CompletedProcess(
+                                command,
+                                1,
+                                "",
+                                "archive unavailable",
+                            )
+                        if command[:2] == ["docker", "exec"]:
+                            return subprocess.CompletedProcess(command, 0, "1", "")
+                        Path(command[-1]).write_bytes(b"archive")
+                        return subprocess.CompletedProcess(command, 0, "", "")
+
+                    recorder_patch = patch(
+                        f"src.agents.astroncode.runner.{failing_recorder}",
+                        side_effect=OSError(f"{failing_recorder} denied"),
+                    )
+                    with patch(
+                        "src.agents.astroncode.runner.subprocess.run",
+                        side_effect=fake_run,
+                    ), recorder_patch as recorder_mock, self.assertLogs(
+                        "src.agents.astroncode.runner",
+                        level="WARNING",
+                    ):
+                        self.collect_usage_with_parsed_usage(
+                            agent,
+                            f"record-{outcome}",
+                            output_dir,
+                        )
+
+                    recorder_mock.assert_called_once()
+                    status = json.loads(status_path.read_text(encoding="utf-8"))
+                    for key, value in original_status.items():
+                        self.assertEqual(status[key], value)
+                    if failing_recorder == "write_execution_status":
+                        self.assertNotIn("trace_export", status)
+                        event = self.read_trace_export_event(output_dir)
+                        self.assertEqual(event["status"], outcome)
+                    else:
+                        self.assertEqual(status["trace_export"]["status"], outcome)
+
+    def test_real_shell_exports_all_trace_files_in_one_secure_archive(self) -> None:
+        with patch.dict(
+            os.environ,
+            {},
+            clear=True,
+        ), tempfile.TemporaryDirectory() as temp_dir:
+            base_dir = Path(temp_dir)
+            container_dir = base_dir / "container-tmp"
+            trace_root = container_dir / "rollout-traces"
+            output_dir = base_dir / "output"
+            output_dir.mkdir()
+            for trace_name in ("trace-one", "trace-two"):
+                trace_dir = trace_root / trace_name
+                trace_dir.mkdir(parents=True)
+                (trace_dir / "manifest.json").write_text(
+                    json.dumps({"trace": trace_name}),
+                    encoding="utf-8",
+                )
+                (trace_dir / "trace.jsonl").write_text(
+                    json.dumps({"event": trace_name}) + "\n",
+                    encoding="utf-8",
+                )
+            container_archive = container_dir / "astroncode_traces.tar.gz"
+
+            commands = self.run_export_with_real_shell(
+                self.make_agent(),
+                "real-shell-traces",
+                trace_root,
+                container_archive,
+                output_dir,
+            )
+
+            archive = output_dir / runner.ASTRONCODE_TRACE_ARCHIVE_NAME
+            with tarfile.open(archive, "r:gz") as tar_file:
+                members = {member.name.rstrip("/") for member in tar_file.getmembers()}
+            self.assertIn("rollout-traces", members)
+            for trace_name in ("trace-one", "trace-two"):
+                self.assertIn(f"rollout-traces/{trace_name}/manifest.json", members)
+                self.assertIn(f"rollout-traces/{trace_name}/trace.jsonl", members)
+            self.assertEqual(
+                {path.name for path in output_dir.iterdir()},
+                {
+                    runner.ASTRONCODE_TRACE_ARCHIVE_NAME,
+                    "execution_status.json",
+                    "agent.log",
+                },
+            )
+            self.assertEqual(archive.stat().st_mode & 0o777, 0o600)
+            self.assertEqual(self.read_trace_export_status(output_dir)["trace_count"], 2)
+            self.assertEqual([command[:2] for command in commands].count(["docker", "cp"]), 1)
+
+    def test_real_shell_exports_a_valid_empty_trace_archive(self) -> None:
+        with patch.dict(
+            os.environ,
+            {},
+            clear=True,
+        ), tempfile.TemporaryDirectory() as temp_dir:
+            base_dir = Path(temp_dir)
+            container_dir = base_dir / "container-tmp"
+            container_dir.mkdir()
+            trace_root = container_dir / "rollout-traces"
+            output_dir = base_dir / "output"
+            output_dir.mkdir()
+            container_archive = container_dir / "astroncode_traces.tar.gz"
+
+            self.run_export_with_real_shell(
+                self.make_agent(),
+                "real-shell-empty",
+                trace_root,
+                container_archive,
+                output_dir,
+            )
+
+            archive = output_dir / runner.ASTRONCODE_TRACE_ARCHIVE_NAME
+            with tarfile.open(archive, "r:gz") as tar_file:
+                members = {member.name.rstrip("/") for member in tar_file.getmembers()}
+            self.assertEqual(members, {"rollout-traces"})
+            self.assertEqual(self.read_trace_export_status(output_dir)["trace_count"], 0)
+
+    def test_real_shell_tar_failure_does_not_copy_or_export(self) -> None:
+        with patch.dict(
+            os.environ,
+            {},
+            clear=True,
+        ), tempfile.TemporaryDirectory() as temp_dir:
+            base_dir = Path(temp_dir)
+            container_dir = base_dir / "container-tmp"
+            trace_root = container_dir / "rollout-traces"
+            trace_root.mkdir(parents=True)
+            fake_bin = base_dir / "bin"
+            fake_bin.mkdir()
+            fake_tar = fake_bin / "tar"
+            fake_tar.write_text("#!/bin/sh\nexit 23\n", encoding="utf-8")
+            fake_tar.chmod(0o700)
+            output_dir = base_dir / "output"
+            output_dir.mkdir()
+            container_archive = container_dir / "astroncode_traces.tar.gz"
+            shell_environment = {
+                **os.environ,
+                "PATH": f"{fake_bin}:{os.environ.get('PATH', '')}",
+            }
+
+            with self.assertLogs(
+                "src.agents.astroncode.runner",
+                level="WARNING",
+            ):
+                commands = self.run_export_with_real_shell(
+                    self.make_agent(),
+                    "real-shell-tar-failure",
+                    trace_root,
+                    container_archive,
+                    output_dir,
+                    shell_environment=shell_environment,
+                )
+
+            self.assertEqual(
+                [command[:2] for command in commands].count(["docker", "cp"]),
+                0,
+            )
+            self.assertFalse(
+                (output_dir / runner.ASTRONCODE_TRACE_ARCHIVE_NAME).exists()
+            )
+            self.assertEqual(
+                self.read_trace_export_status(output_dir)["status"],
+                "failed",
+            )
+
+    def test_existing_archive_directory_records_failed_without_recursive_delete(
+        self,
+    ) -> None:
+        for trace_value in (None, "0"):
+            environment = {}
+            if trace_value is not None:
+                environment["ASTRONCODE_TRACE_ENABLED"] = trace_value
+            with self.subTest(trace_value=trace_value), patch.dict(
+                os.environ,
+                environment,
+                clear=True,
+            ), tempfile.TemporaryDirectory() as temp_dir:
+                output_dir = Path(temp_dir)
+                archive_target = output_dir / runner.ASTRONCODE_TRACE_ARCHIVE_NAME
+                archive_target.mkdir()
+                marker = archive_target / "must-not-be-deleted"
+                marker.write_text("preserve", encoding="utf-8")
+                with patch(
+                    "src.agents.astroncode.runner.subprocess.run"
+                ) as run_mock, self.assertLogs(
+                    "src.agents.astroncode.runner",
+                    level="WARNING",
+                ):
+                    self.make_agent()._collect_rollout_trace_archive(
+                        "directory-archive",
+                        output_dir,
+                    )
+
+                run_mock.assert_not_called()
+                self.assertEqual(marker.read_text(encoding="utf-8"), "preserve")
+                status = self.read_trace_export_status(output_dir)
+                self.assertEqual(status["status"], "failed")
+                self.assertEqual(status["enabled"], trace_value is None)
+                self.assertIn("cleanup", status["error"])
+
+    def test_unremovable_existing_archive_records_failed_without_docker(self) -> None:
+        with patch.dict(
+            os.environ,
+            {},
+            clear=True,
+        ), tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            archive = output_dir / runner.ASTRONCODE_TRACE_ARCHIVE_NAME
+            archive.write_bytes(b"existing")
+            with patch.object(
+                Path,
+                "unlink",
+                side_effect=PermissionError("unlink denied"),
+            ), patch(
+                "src.agents.astroncode.runner.subprocess.run"
+            ) as run_mock, self.assertLogs(
+                "src.agents.astroncode.runner",
+                level="WARNING",
+            ):
+                self.make_agent()._collect_rollout_trace_archive(
+                    "unremovable-archive",
+                    output_dir,
+                )
+
+            run_mock.assert_not_called()
+            self.assertEqual(archive.read_bytes(), b"existing")
+            status = self.read_trace_export_status(output_dir)
+            self.assertEqual(status["status"], "failed")
+            self.assertIn("unlink denied", status["error"])
+
+    def test_run_batch_collects_usage_before_cleanup_for_all_execution_outcomes(
+        self,
+    ) -> None:
+        cases = {
+            "success": AgentExecution(1.0, None, None, None),
+            "agent-error": AgentExecution(1.0, "model failed", None, None),
+            "raised-timeout": subprocess.TimeoutExpired(["astroncode"], 30),
+        }
+        parsed_usage = {
+            "input_tokens": 5,
+            "output_tokens": 4,
+            "cache_read_tokens": 0,
+            "cache_write_tokens": 0,
+            "total_tokens": 9,
+            "cost_usd": 0.5,
+            "request_count": 1,
+        }
+        task = {
+            "task_id": "01_example_task_1",
+            "workspace_path": "/nonexistent-workspace",
+            "prompt": "test prompt",
+            "timeout_seconds": 30,
+            "category": "01_Productivity_Flow",
+        }
+        anomaly_result = {
+            "has_validity_failure": False,
+            "needs_review": False,
+            "items": [],
+        }
+
+        for name, execution_or_error in cases.items():
+            with self.subTest(name=name), patch.dict(
+                os.environ,
+                {},
+                clear=True,
+            ), tempfile.TemporaryDirectory() as temp_dir:
+                events: list[str] = []
+                agent = self.make_agent()
+                if isinstance(execution_or_error, Exception):
+                    run_task_patch = patch.object(
+                        agent,
+                        "run_task",
+                        side_effect=execution_or_error,
+                    )
+                else:
+                    run_task_patch = patch.object(
+                        agent,
+                        "run_task",
+                        return_value=execution_or_error,
+                    )
+                original_collect_usage = agent.collect_usage
+                original_save_usage = run_batch.save_usage
+
+                def tracked_collect_usage(**kwargs):
+                    events.append("collect_usage")
+                    return original_collect_usage(**kwargs)
+
+                def tracked_save_usage(output_dir, result, usage, task_id):
+                    events.append("save_usage")
+                    return original_save_usage(output_dir, result, usage, task_id)
+
+                def tracked_remove_container(task_id):
+                    events.append("remove_container")
+
+                with run_task_patch, patch.object(
+                    agent,
+                    "collect_usage",
+                    side_effect=tracked_collect_usage,
+                ), patch.object(
+                    agent,
+                    "_copy_dir_from_container",
+                ), patch.object(
+                    agent,
+                    "_find_latest_session",
+                    return_value=None,
+                ), patch.object(
+                    agent,
+                    "_extract_usage_from_jsonl",
+                    return_value=parsed_usage,
+                ), patch(
+                    "src.agents.astroncode.runner.subprocess.run",
+                    side_effect=OSError("trace docker unavailable"),
+                ), patch.object(
+                    run_batch,
+                    "grade_the_task",
+                    side_effect=lambda *args, **kwargs: args[4],
+                ), patch.object(
+                    run_batch,
+                    "save_usage",
+                    side_effect=tracked_save_usage,
+                ), patch.object(
+                    run_batch,
+                    "collect_task_output",
+                ), patch.object(
+                    run_batch,
+                    "scan_run_dir",
+                    return_value=anomaly_result,
+                ), patch.object(
+                    run_batch,
+                    "remove_container",
+                    side_effect=tracked_remove_container,
+                ), self.assertLogs(
+                    "src.agents.astroncode.runner",
+                    level="WARNING",
+                ):
+                    result = run_batch.run_single_task(
+                        task,
+                        "test-model",
+                        agent,
+                        Path(temp_dir),
+                    )
+
+                self.assertEqual(
+                    events,
+                    ["collect_usage", "save_usage", "remove_container"],
+                )
+                self.assertEqual(result["usage"]["total_tokens"], 9)
+                usage_files = list(Path(temp_dir).rglob("usage.json"))
+                self.assertEqual(len(usage_files), 1)
+                status_files = list(Path(temp_dir).rglob("execution_status.json"))
+                self.assertEqual(len(status_files), 1)
+                status = json.loads(status_files[0].read_text(encoding="utf-8"))
+                self.assertEqual(status["trace_export"]["status"], "failed")
 
 
 if __name__ == "__main__":
