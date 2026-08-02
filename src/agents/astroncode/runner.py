@@ -27,6 +27,12 @@ ASTRONCODE_HOME = "/root/.acode"
 ASTRONCODE_SESSIONS_DIR = f"{ASTRONCODE_HOME}/sessions"
 ASTRONCODE_CONFIG_PATH = f"{ASTRONCODE_HOME}/config.toml"
 ASTRONCODE_SKILLS_DIR = f"{ASTRONCODE_HOME}/skills"
+ASTRONCODE_TRACE_ROOT = "/tmp/rollout-traces"
+ASTRONCODE_TRACE_ARCHIVE_CONTAINER_PATH = "/tmp/astroncode_traces.tar.gz"
+ASTRONCODE_TRACE_ARCHIVE_NAME = "astroncode_traces.tar.gz"
+ASTRONCODE_TRACE_EXPORT_TIMEOUT_SECONDS = 300
+_TRUE_ENV_VALUES = {"1", "true", "yes", "on"}
+_FALSE_ENV_VALUES = {"0", "false", "no", "off"}
 DEFAULT_ONE_IFLYTEK_BASE_URL = "https://one.iflytek.com/api/llm/console/chat/v1"
 DEFAULT_ASTRON_MODELS_BASE_URL = (
     "https://astroncode-api-prod.xf-yun.com/"
@@ -40,6 +46,20 @@ DEFAULT_REASONING_EFFORT = "medium" #"high"
 ASTRONCODE_LOG_NOISE_MARKERS = (
     "ReasoningRawContentDelta without active item",
 )
+
+
+def parse_env_flag(name: str, *, default: bool) -> bool:
+    raw_value = os.environ.get(name)
+    if raw_value is None or not raw_value.strip():
+        return default
+    normalized = raw_value.strip().lower()
+    if normalized in _TRUE_ENV_VALUES:
+        return True
+    if normalized in _FALSE_ENV_VALUES:
+        return False
+    raise ValueError(
+        f"{name} must be one of: 1, true, yes, on, 0, false, no, off"
+    )
 
 
 def _now_iso() -> str:
@@ -178,6 +198,10 @@ class AstronCodeAgent(BaseAgent):
         self.models_base_url = (
             os.environ.get("ASTRON_MODELS_BASE_URL", "").strip()
             or DEFAULT_ASTRON_MODELS_BASE_URL
+        )
+        self.trace_enabled = parse_env_flag(
+            "ASTRONCODE_TRACE_ENABLED",
+            default=True,
         )
         provider_override = (
             os.environ.get("ASTRONCODE_MODEL_PROVIDER", "").strip().lower()
@@ -405,6 +429,9 @@ class AstronCodeAgent(BaseAgent):
             "OPENROUTER_IMAGE_MODEL": os.environ.get("OPENROUTER_IMAGE_MODEL", "").strip(),
             "WILDCLAW_IMAGE_MODEL": os.environ.get("WILDCLAW_IMAGE_MODEL", "").strip(),
             "BRAVE_API_KEY": os.environ.get("BRAVE_API_KEY", ""),
+            "CODEX_ROLLOUT_TRACE_ROOT": (
+                ASTRONCODE_TRACE_ROOT if self.trace_enabled else ""
+            ),
             "http_proxy": proxy_http,
             "https_proxy": proxy_https,
             "HTTP_PROXY": proxy_http,
@@ -496,6 +523,11 @@ class AstronCodeAgent(BaseAgent):
         return out.splitlines()[0].strip().split()[-1] if out else ""
 
     def _prepare_workspace(self, task_id: str, workspace_path: str) -> None:
+        trace_directory_command = (
+            f"&& mkdir -p {shlex.quote(ASTRONCODE_TRACE_ROOT)} "
+            if self.trace_enabled
+            else ""
+        )
         r = subprocess.run(
             [
                 "docker",
@@ -506,6 +538,7 @@ class AstronCodeAgent(BaseAgent):
                 (
                     "mkdir -p /tmp_workspace "
                     f"&& mkdir -p {ASTRONCODE_HOME} {ASTRONCODE_SESSIONS_DIR} "
+                    f"{trace_directory_command}"
                     "&& cp -r /workspace/. /tmp_workspace "
                     "&& chmod -R u+w /tmp_workspace"
                 ),
