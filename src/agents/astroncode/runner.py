@@ -373,6 +373,7 @@ class AstronCodeAgent(BaseAgent):
             "elapsed_time": round(elapsed_time, 2),
         }
         output_dir.mkdir(parents=True, exist_ok=True)
+        self._collect_rollout_trace_archive(task_id, output_dir)
 
         sessions_dest = output_dir / "astroncode_sessions"
         sessions_dest.mkdir(parents=True, exist_ok=True)
@@ -395,6 +396,124 @@ class AstronCodeAgent(BaseAgent):
         usage.update(parsed)
         usage["elapsed_time"] = round(elapsed_time, 2)
         return usage
+
+    @staticmethod
+    def _record_trace_export(output_dir: Path, result: dict[str, Any]) -> None:
+        write_execution_status(output_dir, trace_export=result)
+        append_agent_log_event(
+            output_dir,
+            {"type": "runner.trace_export", **result},
+        )
+
+    @staticmethod
+    def _remove_partial_trace_archive(archive_path: Path) -> None:
+        try:
+            archive_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    @staticmethod
+    def _trace_export_error(stage: str, exc: Exception) -> str:
+        detail = str(exc).strip()
+        message = f"{stage} failed"
+        if detail:
+            message += f": {detail}"
+        return message[:1000]
+
+    def _collect_rollout_trace_archive(
+        self,
+        task_id: str,
+        output_dir: Path,
+    ) -> None:
+        archive_path = output_dir / ASTRONCODE_TRACE_ARCHIVE_NAME
+        self._remove_partial_trace_archive(archive_path)
+        if not self.trace_enabled:
+            self._record_trace_export(
+                output_dir,
+                {
+                    "enabled": False,
+                    "status": "disabled",
+                    "archive": None,
+                    "trace_count": 0,
+                    "error": None,
+                },
+            )
+            return
+
+        trace_root = Path(ASTRONCODE_TRACE_ROOT)
+        archive_command = (
+            "umask 077; "
+            f"mkdir -p {shlex.quote(str(trace_root))}; "
+            "trace_count=$(find "
+            f"{shlex.quote(str(trace_root))} "
+            "-mindepth 1 -maxdepth 1 -type d -name 'trace-*' "
+            "2>/dev/null | wc -l); "
+            f"rm -f {shlex.quote(ASTRONCODE_TRACE_ARCHIVE_CONTAINER_PATH)}; "
+            f"tar -C {shlex.quote(str(trace_root.parent))} -czf "
+            f"{shlex.quote(ASTRONCODE_TRACE_ARCHIVE_CONTAINER_PATH)} "
+            f"{shlex.quote(trace_root.name)}; "
+            'printf "%s" "$trace_count"'
+        )
+        stage = "archive command"
+
+        try:
+            archived = subprocess.run(
+                ["docker", "exec", task_id, "/bin/sh", "-c", archive_command],
+                capture_output=True,
+                text=True,
+                timeout=ASTRONCODE_TRACE_EXPORT_TIMEOUT_SECONDS,
+            )
+            if archived.returncode != 0:
+                raise RuntimeError((archived.stderr or "").strip())
+
+            stage = "trace count parsing"
+            trace_count = int((archived.stdout or "0").strip() or "0")
+
+            stage = "archive copy"
+            copied = subprocess.run(
+                [
+                    "docker",
+                    "cp",
+                    f"{task_id}:{ASTRONCODE_TRACE_ARCHIVE_CONTAINER_PATH}",
+                    str(archive_path),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=ASTRONCODE_TRACE_EXPORT_TIMEOUT_SECONDS,
+            )
+            if copied.returncode != 0:
+                raise RuntimeError((copied.stderr or "").strip())
+
+            stage = "archive chmod"
+            archive_path.chmod(0o600)
+            result = {
+                "enabled": True,
+                "status": "exported",
+                "archive": ASTRONCODE_TRACE_ARCHIVE_NAME,
+                "trace_count": trace_count,
+                "error": None,
+            }
+            self._record_trace_export(output_dir, result)
+            logger.info(
+                "[%s] AstronCode trace archive exported (%d traces): %s",
+                task_id,
+                trace_count,
+                archive_path,
+            )
+        except Exception as exc:
+            self._remove_partial_trace_archive(archive_path)
+            error = self._trace_export_error(stage, exc)
+            self._record_trace_export(
+                output_dir,
+                {
+                    "enabled": True,
+                    "status": "failed",
+                    "archive": None,
+                    "trace_count": 0,
+                    "error": error,
+                },
+            )
+            logger.warning("[%s] AstronCode trace export failed: %s", task_id, error)
 
     def _start_container(
         self,
