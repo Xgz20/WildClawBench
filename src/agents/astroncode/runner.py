@@ -33,6 +33,7 @@ ASTRONCODE_TRACE_ARCHIVE_NAME = "astroncode_traces.tar.gz"
 ASTRONCODE_TRACE_EXPORT_TIMEOUT_SECONDS = 300
 _TRUE_ENV_VALUES = {"1", "true", "yes", "on"}
 _FALSE_ENV_VALUES = {"0", "false", "no", "off"}
+_RESERVED_CONTAINER_ENV_KEYS = frozenset({"CODEX_ROLLOUT_TRACE_ROOT"})
 DEFAULT_ONE_IFLYTEK_BASE_URL = "https://one.iflytek.com/api/llm/console/chat/v1"
 DEFAULT_ASTRON_MODELS_BASE_URL = (
     "https://astroncode-api-prod.xf-yun.com/"
@@ -451,6 +452,11 @@ class AstronCodeAgent(BaseAgent):
             key = line.strip()
             if not key or key.startswith("#"):
                 continue
+            declared_key = key.partition("=")[0].strip()
+            if declared_key in _RESERVED_CONTAINER_ENV_KEYS:
+                raise ValueError(
+                    f"Task environment variable {declared_key} is reserved for AstronCode"
+                )
             value = os.environ.get(key, "").strip()
             env_args += ["-e", key]
             docker_environment[key] = value
@@ -458,6 +464,11 @@ class AstronCodeAgent(BaseAgent):
             logger.info("[%s] Injecting env var: %s=%s", task_id, key, masked)
 
         for key in (lobster or {}).get("env", []) or []:
+            declared_key = key.partition("=")[0].strip()
+            if declared_key in _RESERVED_CONTAINER_ENV_KEYS:
+                raise ValueError(
+                    f"Lobster environment variable {declared_key} is reserved for AstronCode"
+                )
             value = os.environ.get(key, "").strip()
             if not value:
                 logger.warning(

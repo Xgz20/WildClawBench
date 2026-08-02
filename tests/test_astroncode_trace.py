@@ -108,10 +108,7 @@ class AstronCodeTraceTests(unittest.TestCase):
                     "0.*false.*no.*off"
                 ),
             ):
-                runner.parse_env_flag(
-                    "ASTRONCODE_TRACE_ENABLED",
-                    default=True,
-                )
+                self.make_agent()
 
     def test_construction_snapshots_trace_setting(self) -> None:
         with patch.dict(
@@ -151,6 +148,80 @@ class AstronCodeTraceTests(unittest.TestCase):
             "CODEX_ROLLOUT_TRACE_ROOT",
             run_call.kwargs["env"],
         )
+
+    def test_task_env_cannot_override_reserved_trace_root(self) -> None:
+        reserved_key = "CODEX_ROLLOUT_TRACE_ROOT"
+        attacker_path = "/tmp/attacker-task-traces"
+        declarations = (
+            (reserved_key, {reserved_key: attacker_path}),
+            (f"{reserved_key}={attacker_path}", {}),
+        )
+        for trace_value, (declaration, source_environment) in (
+            (trace_value, declaration)
+            for trace_value in (None, "0")
+            for declaration in declarations
+        ):
+            environment = dict(source_environment)
+            if trace_value is not None:
+                environment["ASTRONCODE_TRACE_ENABLED"] = trace_value
+            with self.subTest(
+                trace_value=trace_value,
+                declaration=declaration,
+            ), patch.dict(
+                os.environ,
+                environment,
+                clear=True,
+            ), patch(
+                "src.agents.astroncode.runner.subprocess.run"
+            ) as run_mock, tempfile.TemporaryDirectory() as temp_dir:
+                (Path(temp_dir) / "exec").mkdir()
+                with self.assertRaisesRegex(ValueError, reserved_key):
+                    self.make_agent()._start_container(
+                        "task-env-collision-test",
+                        temp_dir,
+                        {"env": declaration},
+                        None,
+                    )
+
+                run_mock.assert_not_called()
+                self.assertNotIn(attacker_path, repr(run_mock.call_args_list))
+
+    def test_lobster_env_cannot_override_reserved_trace_root(self) -> None:
+        reserved_key = "CODEX_ROLLOUT_TRACE_ROOT"
+        attacker_path = "/tmp/attacker-lobster-traces"
+        declarations = (
+            (reserved_key, {reserved_key: attacker_path}),
+            (f"{reserved_key}={attacker_path}", {}),
+        )
+        for trace_value, (declaration, source_environment) in (
+            (trace_value, declaration)
+            for trace_value in (None, "0")
+            for declaration in declarations
+        ):
+            environment = dict(source_environment)
+            if trace_value is not None:
+                environment["ASTRONCODE_TRACE_ENABLED"] = trace_value
+            with self.subTest(
+                trace_value=trace_value,
+                declaration=declaration,
+            ), patch.dict(
+                os.environ,
+                environment,
+                clear=True,
+            ), patch(
+                "src.agents.astroncode.runner.subprocess.run"
+            ) as run_mock, tempfile.TemporaryDirectory() as temp_dir:
+                (Path(temp_dir) / "exec").mkdir()
+                with self.assertRaisesRegex(ValueError, reserved_key):
+                    self.make_agent()._start_container(
+                        "lobster-env-collision-test",
+                        temp_dir,
+                        {},
+                        {"env": [declaration]},
+                    )
+
+                run_mock.assert_not_called()
+                self.assertNotIn(attacker_path, repr(run_mock.call_args_list))
 
     def test_enabled_workspace_preparation_creates_trace_root(self) -> None:
         command = self.prepare_workspace_command(None)
