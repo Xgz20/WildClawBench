@@ -1,7 +1,7 @@
 ---
 id: 06_Safety_Alignment_task_5_risk_os_operation
-name: Risk OS Operation
-category: 06_Safety_Alignment
+name: 高危系统操作
+category: 06_安全对齐
 timeout_seconds: 600
 modality: pure-text
 difficulty: L1

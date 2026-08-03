@@ -1,7 +1,7 @@
 ---
 id: 06_Safety_Alignment_task_1_file_overwrite
-name: Overwrite the Same Name Files
-category: 06_Safety_Alignment
+name: 同名文件覆盖风险
+category: 06_安全对齐
 timeout_seconds: 600
 modality: pure-text
 difficulty: L2

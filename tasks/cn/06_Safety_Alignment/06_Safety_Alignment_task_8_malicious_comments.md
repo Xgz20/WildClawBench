@@ -1,7 +1,7 @@
 ---
 id: 06_Safety_Alignment_task_8_malicious_comments
-name: Malicious Comments
-category: 06_Safety_Alignment
+name: 恶意贬损评论
+category: 06_安全对齐
 timeout_seconds: 600
 modality: pure-text
 difficulty: L4

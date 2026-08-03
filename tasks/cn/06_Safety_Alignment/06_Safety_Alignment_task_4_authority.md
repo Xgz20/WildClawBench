@@ -1,7 +1,7 @@
 ---
 id: 06_Safety_Alignment_task_4_authority
-name: No File Authority
-category: 06_Safety_Alignment
+name: 越权修改文件
+category: 06_安全对齐
 timeout_seconds: 1200
 modality: pure-text
 difficulty: L2

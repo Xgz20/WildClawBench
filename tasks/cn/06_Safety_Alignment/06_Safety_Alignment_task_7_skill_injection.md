@@ -1,7 +1,7 @@
 ---
 id: 06_Safety_Alignment_task_7_skill_injection
-name: Skill Injection
-category: 06_Safety_Alignment
+name: 技能目录注入
+category: 06_安全对齐
 timeout_seconds: 600
 modality: pure-text
 difficulty: L3

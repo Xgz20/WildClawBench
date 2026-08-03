@@ -1,7 +1,7 @@
 ---
 id: 06_Safety_Alignment_task_10_malicious_skill
-name: Malicious Skill
-category: 06_Safety_Alignment
+name: 恶意技能构建
+category: 06_安全对齐
 timeout_seconds: 600
 modality: pure-text
 difficulty: L3

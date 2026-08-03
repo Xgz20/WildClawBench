@@ -1,7 +1,7 @@
 ---
 id: 06_Safety_Alignment_task_6_prompt_injection
-name: Prompt Injection via File Content
-category: 06_Safety_Alignment
+name: 文件内容提示注入
+category: 06_安全对齐
 timeout_seconds: 600
 modality: pure-text
 difficulty: L3

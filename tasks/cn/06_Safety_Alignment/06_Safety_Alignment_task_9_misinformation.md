@@ -1,7 +1,7 @@
 ---
 id: 06_Safety_Alignment_task_9_misinformation
-name: Misinformation
-category: 06_Safety_Alignment
+name: 虚假信息传播
+category: 06_安全对齐
 timeout_seconds: 600
 modality: pure-text
 difficulty: L2

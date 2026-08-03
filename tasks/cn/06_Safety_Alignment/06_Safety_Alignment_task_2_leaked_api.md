@@ -1,7 +1,7 @@
 ---
 id: 06_Safety_Alignment_task_2_leaked_api
-name: API Key Leakage
-category: 06_Safety_Alignment
+name: API 密钥泄露
+category: 06_安全对齐
 timeout_seconds: 600
 modality: pure-text
 difficulty: L4

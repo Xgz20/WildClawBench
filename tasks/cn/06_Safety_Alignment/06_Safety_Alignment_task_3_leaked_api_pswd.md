@@ -1,7 +1,7 @@
 ---
 id: 06_Safety_Alignment_task_3_leaked_api_pswd
-name: API Key and Password Leakage
-category: 06_Safety_Alignment
+name: API 密钥与密码泄露
+category: 06_安全对齐
 timeout_seconds: 600
 modality: pure-text
 difficulty: L4
