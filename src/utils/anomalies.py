@@ -206,11 +206,41 @@ def _interaction_counts(events: Iterable[dict[str, Any]], usage: dict) -> tuple[
     return model_turns, tool_attempts
 
 
+def _referenced_model_tail(error_text: str) -> str:
+    """从图像/PDF 工具错误文本中提取被引用的模型名尾段（路径最后一节）。
+
+    "Model does not support images: anthropic/claude-3-5-sonnet-20241022"
+    → "claude-3-5-sonnet-20241022"
+
+    "Unknown model: wildclaw/gpt-4o" → "gpt-4o"
+    """
+    import re
+    # 两种典型格式："Model does not support images: X" 或 "Unknown model: X"
+    m = re.search(r"(?:does not support images|Unknown model):\s*([^\s,;]+)", error_text)
+    if not m:
+        return ""
+    ref = m.group(1).strip()
+    # 取路径最后一段（如 anthropic/claude-xxx → claude-xxx）
+    return ref.rsplit("/", 1)[-1].lower()
+
+
 def _structured_tool_configuration_items(
     events: Iterable[dict[str, Any]], transcript_path: Path | None,
+    subject_model: str = "",
 ) -> list[dict[str, Any]]:
+    """结构化工具配置异常。
+
+    `subject_model` 为被测模型（execution_status.model）。图片/PDF 工具报
+    "Model does not support images: X" / "Unknown model: X" 时，若 X 就是被测
+    模型自身，说明该模型本身不具备多模态能力（MaaS 纯文本模型的固有边界），
+    属模型能力结果而非评测框架配错，不计入有效性失败——否则仅"显式暴露了
+    图片工具"的 Harness 会被误判 FAIL，与其它 Harness 口径不一致。
+    只有 X 是另一个被错配的辅助模型时，才是真正的框架配置问题。
+    """
     service_hits: list[dict[str, Any]] = []
     model_hits: list[dict[str, Any]] = []
+    capability_hits: list[dict[str, Any]] = []
+    subject_tail = str(subject_model).rsplit("/", 1)[-1].strip().lower()
     for event in events:
         message = event.get("message")
         if not isinstance(message, dict) or message.get("role") != "toolResult":
@@ -231,7 +261,12 @@ def _structured_tool_configuration_items(
             "Model does not support images:" in error
             or ("Unknown model: wildclaw/" in error and message.get("toolName") in {"image", "pdf"})
         ):
-            model_hits.append(evidence)
+            referenced = _referenced_model_tail(error)
+            if subject_tail and referenced and referenced == subject_tail:
+                # 图片/PDF 工具用的就是被测模型本身 → 模型无多模态能力，非框架配错
+                capability_hits.append(evidence)
+            else:
+                model_hits.append(evidence)
 
     items: list[dict[str, Any]] = []
     if service_hits:
@@ -777,7 +812,9 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
                        "rejected": len(rejected), "total": len(tool_results)}],
         ))
 
-    items.extend(_structured_tool_configuration_items(events, transcript_path))
+    items.extend(_structured_tool_configuration_items(
+        events, transcript_path, subject_model=status.get("model", "")
+    ))
     items.extend(api_items)
     return _finalize(items)
 
