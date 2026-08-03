@@ -683,7 +683,9 @@ def audit_diff_matrix(wb, units: dict[str, dict], findings: list[dict], identiti
                                                   "recomputed": round(expected, 6)}))
 
 
-def audit_detail_sheets(wb, units: dict[str, dict], findings: list[dict]) -> None:
+def audit_detail_sheets(wb, units: dict[str, dict], findings: list[dict],
+                        skip_root_cause_check: bool = False) -> None:
+    """审核评分详情 Sheet，skip_root_cause_check=True 时不检查根因列内容（preview 模式）。"""
     for unit, data in units.items():
         title = f"评分详情_{unit}"[:31]
         if title not in wb.sheetnames:
@@ -733,7 +735,10 @@ def audit_detail_sheets(wb, units: dict[str, dict], findings: list[dict]) -> Non
                                         sheet=title, unit=unit, task_id=task_id))
 
 
-def load_validity(path: Path | None, findings: list[dict]) -> dict | None:
+def load_validity(path: Path | None, findings: list[dict], skip: bool = False) -> dict | None:
+    """加载有效性检查结果，skip=True 时跳过检查（preview 模式）。"""
+    if skip:
+        return None
     if path is None or not path.is_file():
         findings.append(finding("VALIDITY_RESULT_MISSING", "warning", "未提供前置评测结果有效性检查结论",
                                 recommendation="先运行 validate-eval-results，再确认报告可发布。"))
@@ -818,7 +823,10 @@ def audit_report(result_root: Path, excel_path: Path, tasks_dir: Path,
                  models: set[str] | None = None,
                  harnesses: set[str] | None = None,
                  entities_path: Path | None = None,
-                 pricing_date: date | None = None) -> dict:
+                 pricing_date: date | None = None,
+                 skip_checks: set[str] | None = None) -> dict:
+    """审核报告，skip_checks 可包含 'validity_gate', 'root_cause_coverage'。"""
+    skip_checks = skip_checks or set()
     findings: list[dict] = []
     specs = discover_units(result_root)
     if models:
@@ -833,7 +841,7 @@ def audit_report(result_root: Path, excel_path: Path, tasks_dir: Path,
     meta = load_task_meta(tasks_dir)
     capability_map_path = capability_map_path or REPO_ROOT / "tools/report/data/checkpoint_capability_map7.yaml"
     capability_map = load_capability_map(capability_map_path)
-    validity = load_validity(validity_path, findings)
+    validity = load_validity(validity_path, findings, skip="validity_gate" in skip_checks)
     recomputed_costs = None
     if entities_path is not None and pricing_date is not None:
         try:
@@ -871,7 +879,7 @@ def audit_report(result_root: Path, excel_path: Path, tasks_dir: Path,
         audit_difficulty_inversion(units, dimension_specs["难度对比"], findings)
         if "分差矩阵" in wb.sheetnames:
             audit_diff_matrix(wb, units, findings, identities)
-        audit_detail_sheets(wb, units, findings)
+        audit_detail_sheets(wb, units, findings, skip_root_cause_check="root_cause_coverage" in skip_checks)
         wb.close()
     counts = Counter(item["severity"] for item in findings)
     verdict = "FAIL" if counts["error"] else ("REVIEW" if counts["warning"] else "PASS")
@@ -946,6 +954,9 @@ def main() -> int:
                         help="成本复算使用的定价快照日期 YYYY-MM-DD")
     parser.add_argument("--validity", help="有效性检查 JSON；默认从 round 工作区发现")
     parser.add_argument("--capability-map", help="能力映射 YAML")
+    parser.add_argument("--skip-checks", nargs="+", default=[],
+                        choices=["validity_gate", "root_cause_coverage"],
+                        help="跳过指定检查项（preview 模式用）")
     parser.add_argument("--output-dir", help="默认 <round>/report-workspace/audit")
     parser.add_argument("--fail-on", choices=("never", "fail", "review"), default="never")
     args = parser.parse_args()
@@ -973,9 +984,11 @@ def main() -> int:
     output_dir = (Path(args.output_dir).expanduser().resolve() if args.output_dir else
                   round_root / "report-workspace/audit")
     output_dir.mkdir(parents=True, exist_ok=True)
+    skip_checks = set(args.skip_checks)
     report = audit_report(
         result_root, excel_path, tasks_dir, validity_path, capability_map_path,
         models or None, harnesses or None, entities_path, args.pricing_date,
+        skip_checks,
     )
     stem = f"report_audit_{excel_path.stem}"
     json_path = output_dir / f"{stem}.json"

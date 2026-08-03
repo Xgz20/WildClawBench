@@ -16,6 +16,18 @@ description: Use when generating or regenerating WildClawBench Excel reports, le
 
 内部匹配始终使用模型 ID、Harness ID 和 `<model>@<harness>`。对外只使用实体注册表中的展示名称。
 
+## 模式
+
+- **`preview`（预览模式）**：评测完成后快速发布，含各维度得分与对比分析，**不含**低分任务根因分析与典型案例。用于快速决策下一步动作（如是否需要重跑、优先分析哪些单元）。产物文件名带 `_preview` 后缀。
+
+- **`full`（完整模式，默认）**：含根因分析、典型案例、有效性检查与改进建议，用于正式归档与对外发布。
+
+**典型工作流**：
+1. 评测完成 → 生成 **preview** 报告 → 相关方快速查看维度表现 → 决策是否需要补测/重跑；
+2. 根因分析完成 → 生成 **full** 报告 → 补充典型案例与改进建议 → 正式发布与归档。
+
+Preview 与 full 的维度数据完全一致（同样的 Excel 维度 Sheet、同样的控制变量表），差异仅在根因列与典型案例节的有无。
+
 ## 必需输入
 
 - round 根目录；
@@ -24,7 +36,8 @@ description: Use when generating or regenerating WildClawBench Excel reports, le
 - 目标 Harness ID；
 - 实体注册表，默认 `tools/report/data/entities.yaml`；
 - 定价日期 `YYYY-MM-DD`；
-- 需要回填的 scoped analysis JSON。
+- **报告模式**：`preview` 或 `full`（默认 `full`）；
+- 需要回填的 scoped analysis JSON（仅 full 模式需要）。
 
 目标模型和目标 Harness 是变量，禁止把 `xsparkx2agent`、`astroncode` 等当前验证值写死在流程或结论中。
 
@@ -49,11 +62,27 @@ python3 tools/report/skills/validate-eval-results/scripts/validate_eval_results.
 L3 评测环境和 L4 评测系统/任务/Grader 保留在内部根因数据中，用于有效性治理，不是模型或 Harness 能力分类。
 
 - 确认影响得分的 L3/L4 必须修复并重跑或重新判分；旧 run 通过 `supersedes_run` 退出正式统计。
-- 未闭环 L3/L4 阻断 `PASS`。用户明确接受风险时，只能进入独立的“评测有效性与剔除说明”。
+- 未闭环 L3/L4 阻断 `PASS`。用户明确接受风险时，只能进入独立的”评测有效性与剔除说明”。
 - L3/L4 不得进入典型低分案例，不得写入模型侧或 Harness 侧能力结论。
 - 模型 API、模型专属视觉通道、Harness 工具协议或 Harness 进程异常按实际责任归属，不能因表面像环境错误就自动归入 L3/L4。
 
-## 1. scoped 根因分析
+## 流程
+
+### Preview 模式
+
+1. ~~scoped 根因分析~~（跳过）
+2. 生成 Excel（不传 `--analysis`，评分详情表根因列为空）
+3. ~~有效性检查~~（跳过）
+4. 领导版 Markdown（只含总览与各维度分析，不含典型案例节）
+5. 发布前审计（只检查显示名反查、成本复算、表头完整性，跳过有效性门禁与根因覆盖率检查）
+
+产物文件名带 `_preview` 后缀，如 `report_7units_20260803_preview.xlsx`、`评测报告_GLM-5.1_AstronCode_round4_preview.md`。
+
+### Full 模式（默认）
+
+完整五步流程（有效性检查 → 根因分析 → Excel → 领导报告 → 审计），产物不带后缀。
+
+## 1. scoped 根因分析（仅 full 模式）
 
 按需要回填的 unit 调用 `low-score-analysis`。清单、批次和合并结果统一放在 `<round>/report-workspace`。
 
@@ -66,6 +95,10 @@ python3 tools/report/skills/low-score-analysis/scripts/generate_failed_tasks_man
 
 ## 2. 生成 Excel
 
+**Preview 模式**：不传 `--analysis`，评分详情表的”结果分析”与”根因分析”列为空。
+
+**Full 模式**：传入所有 unit 的 `--analysis` 参数。
+
 ```bash
 python3 tools/report/scripts/generate_eval_report.py \
   --result-root <round> \
@@ -75,7 +108,7 @@ python3 tools/report/scripts/generate_eval_report.py \
   --target-harness <target-harness-id> \
   --entities tools/report/data/entities.yaml \
   --pricing-date <YYYY-MM-DD> \
-  --analysis "<unit>=<analysis-json>" ...
+  --analysis “<unit>=<analysis-json>” ...  # 仅 full 模式传入
 ```
 
 必须生成新文件，不覆盖历史报告。生成后检查：
@@ -84,8 +117,8 @@ python3 tools/report/scripts/generate_eval_report.py \
 - 所有可见模型、Harness 和 unit 使用展示名称；
 - `_报告元数据` 为隐藏 Sheet，能反查 raw ID、目标组合、定价档案、汇率与成本状态；
 - `分类对比`、`Agent能力对比`、`Agent能力对比·去污染`、`难度对比`、`模态对比` 顶部保留全量原表；
-- 五个维度 Sheet 下方均有“固定目标 Harness：模型对比”和“固定目标模型：Harness 对比”两张连续、带配色、可直接复制的表；
-- 评分详情仍使用 raw unit 命名，analysis 回填条数与 JSON 一致。
+- 五个维度 Sheet 下方均有”固定目标 Harness：模型对比”和”固定目标模型：Harness 对比”两张连续、带配色、可直接复制的表；
+- 评分详情仍使用 raw unit 命名，analysis 回填条数与 JSON 一致（preview 模式下为 0）。
 
 ### 成本口径
 
@@ -105,7 +138,17 @@ python3 tools/report/skills/eval-report/scripts/extract_leader_report_data.py \
 
 ## 4. 领导版 Markdown
 
-章节顺序固定：
+**Preview 模式章节顺序**：
+
+1. 总览；
+2. 二、分类维度；
+3. 三、Agent能力；
+4. 四、难度等级；
+5. 五、模态对比；
+6. ~~六、典型低分案例~~（跳过）；
+7. 总结与改进建议（仅基于维度分差，不含案例证据）。
+
+**Full 模式章节顺序**（包含典型案例）：
 
 1. 总览；
 2. 二、分类维度；
@@ -147,25 +190,37 @@ Agent 原始 7 维必须进入报告。去污染 3 维只有在会改变强弱�
 - Harness 侧建议落到提示组装、工具参数、结果解析、错误恢复、状态管理和产物校验。
 - 不逐项复述表格，不用无证据因果。
 
-### 典型低分案例
+### 典型低分案例（仅 full 模式）
 
 选 5–6 个证据完整、机制不重复的 L1a、L1b 或 Harness 责任案例。案例必须包含任务、得分、实际执行证据、失分机制、责任归属和可执行改进。默认不选环境、任务、Grader 或统计框架问题。
 
-若有效性门禁要求披露 L3/L4，在典型案例之前增加独立的“评测有效性与剔除说明”，只写影响范围、处置与是否计入统计。
+若有效性门禁要求披露 L3/L4，在典型案例之前增加独立的”评测有效性与剔除说明”，只写影响范围、处置与是否计入统计。
+
+**Preview 模式跳过本节**。
 
 ### 文风
 
 - 结论前置，通俗、短句、陈述句。
-- 能力结论优先使用“已有一定基础”“与参照对象处于同一水平区间”“整体较为接近”“差距主要集中在”“仍处于追赶阶段”“对 Harness 选择较敏感”“可优先补充或优先排查”。
-- 避免使用“排名末位”“全面落后”“均未达到”“整体偏弱”“明显落后”“短板覆盖全部场景”“不具竞争力”等硬评价。
+- 能力结论优先使用”已有一定基础””与参照对象处于同一水平区间””整体较为接近””差距主要集中在””仍处于追赶阶段””对 Harness 选择较敏感””可优先补充或优先排查”。
+- 避免使用”排名末位””全面落后””均未达到””整体偏弱””明显落后””短板覆盖全部场景””不具竞争力”等硬评价。
 - 有效性门禁、已确认故障和发布阻断保持准确、直接，不因语气要求弱化事实。
-- 禁用“持续优化”“进一步提升”“全面加强”“值得注意的是”“综上所述”等空话。
+- 禁用”持续优化””进一步提升””全面加强””值得注意的是””综上所述”等空话。
 - 禁用反问、排比、夸张比喻和无依据判断。
 - 每条建议必须对应表格分差或案例证据，并明确模型侧或 Harness 侧责任。
+- **Preview 模式**：总结与改进建议仅基于维度分差，不依赖案例证据；改进方向更概括，如”代码智能场景优先补充/优先排查”而非具体到某个失败模式。
 
 模板见 `references/report_template.md`。
 
 ## 5. 发布前审计
+
+**Preview 模式审计范围**：
+- 显示名反查（模型/Harness 展示名能否反查到注册表）；
+- 成本复算（独立重算 `总成本(USD)` 列，与 Excel 值对比）；
+- 表头完整性（`总览` 列名、顺序与预期一致）；
+- ~~有效性门禁~~（跳过）；
+- ~~根因覆盖率~~（跳过）。
+
+**Full 模式审计范围**：全部检查项。
 
 ```bash
 python3 tools/report/skills/audit-eval-report/scripts/audit_eval_report.py \
@@ -175,7 +230,7 @@ python3 tools/report/skills/audit-eval-report/scripts/audit_eval_report.py \
   --harnesses <harness-id...> \
   --entities tools/report/data/entities.yaml \
   --pricing-date <YYYY-MM-DD> \
-  --validity <round>/report-workspace/validity/eval_result_validity.json \
+  --validity <round>/report-workspace/validity/eval_result_validity.json \  # preview 模式不传
   --fail-on never
 ```
 
