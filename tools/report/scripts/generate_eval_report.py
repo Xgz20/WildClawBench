@@ -543,24 +543,37 @@ def load_all_task_meta(tasks_dir: Path | None) -> dict[str, dict]:
     if tasks_dir is None:
         return {}
     out: dict[str, dict] = {}
-    for base in (tasks_dir, tasks_dir / "cn"):  # 先英文打底，再中文覆盖
+    # extension/ 下是扩展任务（task_00N 系列），同样参与评测，其难度/模态元数据
+    # 必须纳入，否则难度与模态维度会漏掉这批用例（合计小于总用例数）。
+    for base in (tasks_dir, tasks_dir / "extension",
+                 tasks_dir / "cn", tasks_dir / "extension" / "cn"):  # 先英文打底，再中文覆盖
         if not base.is_dir():
             continue
+        is_ext = "extension" in base.relative_to(tasks_dir).parts if base != tasks_dir else False
         for suite_dir in sorted(base.iterdir()):
             if not suite_dir.is_dir() or not SUITE_DIR_RE.match(suite_dir.name):
                 continue
             for md in sorted(suite_dir.glob("*.md")):
                 meta = parse_task_md(md)
                 meta["suite"] = suite_dir.name
+                if is_ext:
+                    meta["meta_source"] = "extension"
                 merged = out.setdefault(md.stem, {})
                 merged.update({k: v for k, v in meta.items() if v})
     return out
 
 
 def build_suite_zh_map(task_meta: dict[str, dict]) -> dict[str, str]:
-    """套件目录名 → 中文分类名（取自中文 md frontmatter 的 category 字段）。"""
+    """套件目录名 → 中文分类名（取自中文 md frontmatter 的 category 字段）。
+
+    展示标签只认 tasks/cn/（`meta_source != "extension"`）：extension 下的扩展任务
+    自带另一套中文 category（如 06_安全对齐），若参与取名会与主任务标签（06_Safety_
+    Alignment）分裂成两个分类列。扩展任务只贡献难度/模态等度量元数据，不参与命名。
+    """
     mapping: dict[str, str] = {}
     for meta in task_meta.values():
+        if meta.get("meta_source") == "extension":
+            continue
         suite, category = meta.get("suite"), meta.get("category", "")
         if suite and category and re.search(r"[一-鿿]", category):
             mapping.setdefault(suite, category)

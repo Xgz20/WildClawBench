@@ -30,6 +30,33 @@ models:
             input_cached: 1
             output: 45
 
+  xopglm51:
+    display_name: GLM-5.1
+    vendor: Zhipu AI
+    aliases: []
+    capabilities:
+      supported_reasoning_efforts: []
+    pricing_profiles:
+      # 官方分档定价（CNY / 百万 token），按单请求输入长度切档；
+      # 缓存存储限时免费，故 cache_write 记 0。
+      - id: 2026-07-30-default
+        effective_from: 2026-07-30
+        currency: CNY
+        unit_tokens: 1000000
+        tiers:
+          - id: short-context
+            max_input_tokens_per_request: 31999
+            input_uncached: 6
+            input_cached: 1.3
+            output: 24
+            cache_write: 0
+          - id: long-context
+            min_input_tokens_per_request: 32000
+            input_uncached: 8
+            input_cached: 2
+            output: 28
+            cache_write: 0
+
   xopglm52:
     display_name: GLM-5.2
     vendor: Zhipu AI
@@ -65,6 +92,11 @@ models:
             output: 15
 
 harnesses:
+  astronclaw:
+    display_name: AstronClaw
+    family: Claude Code
+    aliases: []
+    capabilities: {}
   astroncode:
     display_name: AstronCode
     family: Codex

@@ -133,16 +133,40 @@ def parse_frontmatter(path: Path) -> dict:
 
 def load_task_meta(tasks_dir: Path) -> dict[str, dict]:
     result: dict[str, dict] = {}
-    for base in (tasks_dir, tasks_dir / "cn"):
+    # 与 generate_eval_report.load_all_task_meta 保持同一口径：extension/ 下的
+    # 扩展任务（task_00N 系列）同样参与评测，须纳入元数据。
+    for base in (tasks_dir, tasks_dir / "extension",
+                 tasks_dir / "cn", tasks_dir / "extension" / "cn"):
         if not base.is_dir():
             continue
+        is_ext = base != tasks_dir and "extension" in base.relative_to(tasks_dir).parts
         for suite in sorted(base.iterdir()):
             if not suite.is_dir() or not SUITE_RE.match(suite.name):
                 continue
             for path in suite.glob("*.md"):
                 meta = parse_frontmatter(path)
                 meta["suite"] = suite.name
+                if is_ext:
+                    meta["meta_source"] = "extension"
                 result.setdefault(path.stem, {}).update({key: value for key, value in meta.items() if value})
+
+    # 扩展任务自带另一套中文 category（如 06_安全对齐），与主任务标签
+    # （06_Safety_Alignment）不一致，会把同一套件拆成两个分类列。统一改用
+    # 主任务（非 extension）为该套件确立的规范标签，扩展任务只贡献难度/模态
+    # 等度量元数据，不参与分类命名。
+    canonical: dict[str, str] = {}
+    for meta in result.values():
+        if meta.get("meta_source") == "extension":
+            continue
+        suite, category = meta.get("suite"), meta.get("category")
+        if suite and category:
+            canonical.setdefault(suite, category)
+    for meta in result.values():
+        if meta.get("meta_source") != "extension":
+            continue
+        label = canonical.get(meta.get("suite", ""))
+        if label:
+            meta["category"] = label
     return result
 
 
