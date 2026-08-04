@@ -9,6 +9,7 @@ import stat
 import subprocess
 import tempfile
 import time
+import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -27,6 +28,7 @@ logger = logging.getLogger(__name__)
 ASTRONCODE_HOME = "/root/.acode"
 ASTRONCODE_SESSIONS_DIR = f"{ASTRONCODE_HOME}/sessions"
 ASTRONCODE_CONFIG_PATH = f"{ASTRONCODE_HOME}/config.toml"
+ASTRONCODE_SEARCH_AGENT_CONFIG_PATH = "/opt/astroncode/search-agent.config.toml"
 ASTRONCODE_SKILLS_DIR = f"{ASTRONCODE_HOME}/skills"
 ASTRONCODE_TRACE_ROOT = "/tmp/rollout-traces"
 ASTRONCODE_TRACE_ARCHIVE_CONTAINER_PATH = "/tmp/astroncode_traces.tar.gz"
@@ -838,6 +840,7 @@ class AstronCodeAgent(BaseAgent):
             raise RuntimeError(
                 f"AstronCode provider {provider} requires {key_hints[provider]}."
             )
+        search_agent_config = self._read_search_agent_config_fragment(task_id)
         config_toml = self._render_codex_config(
             model=model,
             reasoning_effort=reasoning_effort,
@@ -852,6 +855,9 @@ class AstronCodeAgent(BaseAgent):
             provider_api_key=provider_api_key,
             redact_secrets=True,
         )
+        if search_agent_config:
+            config_toml += "\n" + search_agent_config
+            debug_config_toml += "\n" + search_agent_config
 
         # Mirror a redacted config host-side so future debugging is trivial.
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -878,7 +884,9 @@ class AstronCodeAgent(BaseAgent):
             text=True,
         )
         if r.returncode != 0:
-            raise RuntimeError(f"AstronCode config write failed:\n{r.stderr}")
+            raise RuntimeError(
+                f"AstronCode config write failed (stage=write, rc={r.returncode})"
+            )
         logger.info(
             "[%s] AstronCode config written "
             "(model=%s, provider=%s, reasoning=%s, wire_api=%s)",
@@ -888,6 +896,58 @@ class AstronCodeAgent(BaseAgent):
             reasoning_effort or "model-default",
             wire_api or "default",
         )
+
+    def _read_search_agent_config_fragment(self, task_id: str) -> str:
+        path = shlex.quote(ASTRONCODE_SEARCH_AGENT_CONFIG_PATH)
+        read_command = (
+            f"path={path}; "
+            'if [ -L "$path" ]; then exit 45; fi; '
+            'if [ ! -e "$path" ]; then exit 44; fi; '
+            'if [ ! -f "$path" ]; then exit 45; fi; '
+            'cat "$path"'
+        )
+        result = subprocess.run(
+            ["docker", "exec", task_id, "/bin/sh", "-c", read_command],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 44:
+            return ""
+        if result.returncode != 0:
+            raise RuntimeError(
+                "AstronCode SearchAgent config read failed "
+                f"(path={ASTRONCODE_SEARCH_AGENT_CONFIG_PATH}, "
+                f"stage=read, rc={result.returncode})"
+            )
+
+        fragment = result.stdout
+        try:
+            parsed = tomllib.loads(fragment)
+        except tomllib.TOMLDecodeError:
+            raise RuntimeError(
+                "AstronCode SearchAgent config invalid "
+                f"(path={ASTRONCODE_SEARCH_AGENT_CONFIG_PATH}, stage=parse)"
+            ) from None
+        if set(parsed) != {"mcp_servers"}:
+            raise RuntimeError(
+                "AstronCode SearchAgent config invalid "
+                f"(path={ASTRONCODE_SEARCH_AGENT_CONFIG_PATH}, "
+                "stage=validate-top-level)"
+            )
+        mcp_servers = parsed["mcp_servers"]
+        if not isinstance(mcp_servers, dict) or not mcp_servers:
+            raise RuntimeError(
+                "AstronCode SearchAgent config invalid "
+                f"(path={ASTRONCODE_SEARCH_AGENT_CONFIG_PATH}, "
+                "stage=validate-mcp-servers)"
+            )
+        if any(not isinstance(server, dict) for server in mcp_servers.values()):
+            raise RuntimeError(
+                "AstronCode SearchAgent config invalid "
+                f"(path={ASTRONCODE_SEARCH_AGENT_CONFIG_PATH}, "
+                "stage=validate-mcp-server-tables)"
+            )
+        return fragment.rstrip("\r\n") + "\n"
 
     def _render_codex_config(
         self,
