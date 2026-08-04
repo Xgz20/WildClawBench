@@ -200,13 +200,26 @@ def sanitize_agent_log(log_path: Path) -> None:
 
 
 def toml_basic_string(value: str) -> str:
-    escaped = (
-        value.replace("\\", "\\\\")
-        .replace('"', '\\"')
-        .replace("\r", "\\r")
-        .replace("\n", "\\n")
-    )
-    return f'"{escaped}"'
+    escapes = {
+        '"': '\\"',
+        "\\": "\\\\",
+        "\b": "\\b",
+        "\t": "\\t",
+        "\n": "\\n",
+        "\f": "\\f",
+        "\r": "\\r",
+    }
+    escaped: list[str] = []
+    for character in value:
+        if character in escapes:
+            escaped.append(escapes[character])
+            continue
+        codepoint = ord(character)
+        if codepoint <= 0x1F or codepoint == 0x7F:
+            escaped.append(f"\\u{codepoint:04X}")
+        else:
+            escaped.append(character)
+    return f'"{"".join(escaped)}"'
 
 
 class AstronCodeAgent(BaseAgent):
@@ -840,7 +853,9 @@ class AstronCodeAgent(BaseAgent):
             raise RuntimeError(
                 f"AstronCode provider {provider} requires {key_hints[provider]}."
             )
-        search_agent_config = self._read_search_agent_config_fragment(task_id)
+        search_agent_config, search_agent_server_names = (
+            self._read_search_agent_config_fragment(task_id)
+        )
         config_toml = self._render_codex_config(
             model=model,
             reasoning_effort=reasoning_effort,
@@ -857,7 +872,10 @@ class AstronCodeAgent(BaseAgent):
         )
         if search_agent_config:
             config_toml += "\n" + search_agent_config
-            debug_config_toml += "\n" + search_agent_config
+            debug_config_toml += "\n" + "".join(
+                f"[mcp_servers.{toml_basic_string(server_name)}]\n"
+                for server_name in search_agent_server_names
+            )
 
         # Mirror a redacted config host-side so future debugging is trivial.
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -897,7 +915,9 @@ class AstronCodeAgent(BaseAgent):
             wire_api or "default",
         )
 
-    def _read_search_agent_config_fragment(self, task_id: str) -> str:
+    def _read_search_agent_config_fragment(
+        self, task_id: str
+    ) -> tuple[str, tuple[str, ...]]:
         path = shlex.quote(ASTRONCODE_SEARCH_AGENT_CONFIG_PATH)
         read_command = (
             f"path={path}; "
@@ -912,7 +932,7 @@ class AstronCodeAgent(BaseAgent):
             text=True,
         )
         if result.returncode == 44:
-            return ""
+            return "", ()
         if result.returncode != 0:
             raise RuntimeError(
                 "AstronCode SearchAgent config read failed "
@@ -947,7 +967,7 @@ class AstronCodeAgent(BaseAgent):
                 f"(path={ASTRONCODE_SEARCH_AGENT_CONFIG_PATH}, "
                 "stage=validate-mcp-server-tables)"
             )
-        return fragment.rstrip("\r\n") + "\n"
+        return fragment.rstrip("\r\n") + "\n", tuple(mcp_servers)
 
     def _render_codex_config(
         self,

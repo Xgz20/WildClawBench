@@ -97,6 +97,28 @@ class AstronCodeConfigTests(unittest.TestCase):
             and SEARCH_AGENT_CONFIG_PATH in call.args[0][-1]
         ]
 
+    def test_toml_basic_string_round_trips_control_characters(self) -> None:
+        value = (
+            "普通 Unicode "
+            + "".join(chr(codepoint) for codepoint in range(0x20))
+            + '\x7f"\\'
+        )
+
+        rendered = astroncode_runner.toml_basic_string(value)
+
+        try:
+            parsed = tomllib.loads(f"value = {rendered}")
+        except tomllib.TOMLDecodeError as error:
+            self.fail(f"rendered basic string is invalid TOML: {error}")
+        self.assertEqual(parsed["value"], value)
+        for escape in (r"\b", r"\t", r"\n", r"\f", r"\r"):
+            with self.subTest(escape=escape):
+                self.assertIn(escape, rendered)
+        for codepoint in (*range(0x08), 0x0B, *range(0x0E, 0x20), 0x7F):
+            with self.subTest(codepoint=codepoint):
+                self.assertIn(f"\\u{codepoint:04X}", rendered)
+        self.assertIn("普通 Unicode ", rendered)
+
     def test_provider_auto_detection_uses_three_routes(self) -> None:
         with patch.dict(os.environ, {"ASTRONCODE_MODEL_PROVIDER": ""}, clear=False):
             agent = self.make_agent()
@@ -489,16 +511,21 @@ class AstronCodeConfigTests(unittest.TestCase):
                     self.assertNotIn(secret, repr(value))
 
     @patch("src.agents.astroncode.runner.subprocess.run")
-    def test_valid_search_agent_fragment_is_appended_to_both_configs_once(
+    def test_valid_search_agent_fragment_is_redacted_from_host_config(
         self, run_mock
     ) -> None:
+        special_server_name = 'web-\b\f\x00\x7f"\\\nagent'
+        encoded_special_server_name = r'web-\b\f\u0000\u007F\"\\\nagent'
         fragment = (
+            "# fragment-comment-secret\n"
             "[mcp_servers.search]\n"
-            'command = "/usr/local/bin/search-agent"\n'
-            'args = ["--mode", "web"]\n'
+            'command = "/private/bin/search-command"\n'
+            'args = ["--token", "fragment-args-secret"]\n'
+            "[mcp_servers.search.env]\n"
+            'SEARCH_API_KEY = "fragment-env-secret"\n'
             "\n"
-            "[mcp_servers.browser]\n"
-            'command = "/usr/local/bin/browser-agent"\n\n\n'
+            f'[mcp_servers."{encoded_special_server_name}"]\n'
+            'command = "/private/bin/special-command"\n\n\n'
         )
         normalized_fragment = fragment.rstrip("\n") + "\n"
         run_mock.side_effect = self.config_run_side_effect(fragment=fragment)
@@ -519,17 +546,34 @@ class AstronCodeConfigTests(unittest.TestCase):
         self.assertEqual(len(read_calls), 1)
         self.assertEqual(len(write_calls), 1)
         container_config = write_calls[0].kwargs["input"]
-        for target, rendered in (
-            ("container", container_config),
-            ("host", host_config),
+        parsed_container = tomllib.loads(container_config)
+        self.assertEqual(
+            set(parsed_container["mcp_servers"]),
+            {"search", special_server_name},
+        )
+        self.assertEqual(
+            parsed_container["mcp_servers"]["search"]["env"]["SEARCH_API_KEY"],
+            "fragment-env-secret",
+        )
+        self.assertTrue(container_config.endswith("\n\n" + normalized_fragment))
+
+        try:
+            parsed_host = tomllib.loads(host_config)
+        except tomllib.TOMLDecodeError as error:
+            self.fail(f"host config is invalid TOML: {error}")
+        self.assertEqual(
+            parsed_host["mcp_servers"],
+            {"search": {}, special_server_name: {}},
+        )
+        for leaked_value in (
+            "fragment-env-secret",
+            "fragment-args-secret",
+            "fragment-comment-secret",
+            "/private/bin/search-command",
+            "/private/bin/special-command",
         ):
-            with self.subTest(target=target):
-                parsed = tomllib.loads(rendered)
-                self.assertEqual(
-                    set(parsed["mcp_servers"]),
-                    {"search", "browser"},
-                )
-                self.assertTrue(rendered.endswith("\n\n" + normalized_fragment))
+            with self.subTest(leaked_value=leaked_value):
+                self.assertNotIn(leaked_value, host_config)
 
     @patch("src.agents.astroncode.runner.subprocess.run")
     def test_missing_search_agent_fragment_preserves_legacy_config(
