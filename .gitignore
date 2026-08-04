@@ -36,7 +36,6 @@ workspace/*
 workspace/extension/04_Search_Retrieval/task_101_csv_gdp_regions/
 # 本地测试任务 md，不入库
 tasks/extension/04_Search_Retrieval/04_Search_Retrieval_task_101_csv_gdp_regions.md
-script/
 output/
 wcb-output
 output_sum/
