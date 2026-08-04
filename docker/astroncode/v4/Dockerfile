@@ -6,6 +6,8 @@ ARG ASTRON_CODE_VERSION=0.0.13
 ARG SEARCH_UPDATER_VERSION=latest
 ARG NPM_REGISTRY=https://depend.iflytek.com/artifactory/api/npm/npm-repo/
 
+ENV PATH="/root/.local/bin:${PATH}"
+
 RUN npm uninstall -g @iflytek/astron-code >/dev/null 2>&1 || true \
     && npm install -g "@iflytek/astron-code@${ASTRON_CODE_VERSION}" \
       --registry="${NPM_REGISTRY}" \

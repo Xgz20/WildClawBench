@@ -76,6 +76,18 @@ class AstronCodeV4DockerfileTest(unittest.TestCase):
             with self.subTest(expected_arg=expected_arg):
                 self.assertIn(expected_arg, self.instructions)
 
+    def test_persists_uv_bin_at_path_front_before_search_agent_installation(self):
+        path_instruction = 'ENV PATH="/root/.local/bin:${PATH}"'
+        self.assertIn(path_instruction, self.instructions)
+        path_index = self.instructions.index(path_instruction)
+        last_arg_index = self.instructions.index(
+            "ARG NPM_REGISTRY=https://depend.iflytek.com/artifactory/api/npm/npm-repo/"
+        )
+        install_index = self.instructions.index(self._single_run_instruction())
+
+        self.assertLess(last_arg_index, path_index)
+        self.assertLess(path_index, install_index)
+
     def test_installs_and_verifies_astroncode_then_resets_private_home(self):
         install_instruction = self._single_run_instruction()
         expected_fragments = (
