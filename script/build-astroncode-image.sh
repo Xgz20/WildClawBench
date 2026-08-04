@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 # 构建 AstronCode 评测镜像并导出离线 tar 到 Images/。
 # 用法：bash script/build-astroncode-image.sh
-# 默认构建 v3（固定安装 AstronCode 0.0.13）。
+# 默认构建 v4（AstronCode 0.0.13 + SearchAgent）。
+# v3 覆盖：ASTRONCODE_DOCKER_VARIANT=v3 IMAGE_TAG=v0.3 bash script/build-astroncode-image.sh
 # v2 覆盖：ASTRONCODE_DOCKER_VARIANT=v2 ASTRON_CODE_VERSION=0.0.6 IMAGE_TAG=v0.2 bash script/build-astroncode-image.sh
 # v1 覆盖：ASTRONCODE_DOCKER_VARIANT=v1 IMAGE_TAG=v0.1-test.8 bash script/build-astroncode-image.sh
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IMAGE_NAME="wildclawbench-astroncode-ubuntu"
-IMAGE_TAG="${IMAGE_TAG:-v0.3}"
-ASTRONCODE_DOCKER_VARIANT="${ASTRONCODE_DOCKER_VARIANT:-v3}"
+IMAGE_TAG="${IMAGE_TAG:-v0.4}"
+ASTRONCODE_DOCKER_VARIANT="${ASTRONCODE_DOCKER_VARIANT:-v4}"
 
 case "${ASTRONCODE_DOCKER_VARIANT}" in
-  v1|v2|v3) ;;
+  v1|v2|v3|v4) ;;
   *)
     echo "Unknown AstronCode docker variant: ${ASTRONCODE_DOCKER_VARIANT}" >&2
     exit 1
@@ -33,6 +34,9 @@ fi
 BUILD_ARGS=()
 if [[ -n "${ASTRON_CODE_VERSION:-}" ]]; then
   BUILD_ARGS+=(--build-arg "ASTRON_CODE_VERSION=${ASTRON_CODE_VERSION}")
+fi
+if [[ -n "${SEARCH_UPDATER_VERSION:-}" ]]; then
+  BUILD_ARGS+=(--build-arg "SEARCH_UPDATER_VERSION=${SEARCH_UPDATER_VERSION}")
 fi
 if [[ -n "${NPM_REGISTRY:-}" ]]; then
   BUILD_ARGS+=(--build-arg "NPM_REGISTRY=${NPM_REGISTRY}")
