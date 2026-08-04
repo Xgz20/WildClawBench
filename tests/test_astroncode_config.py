@@ -790,11 +790,11 @@ class AstronCodeConfigTests(unittest.TestCase):
                 self.assertIn(accepted_name, message)
             self.assertNotIn(unrelated_secret, message)
 
-    def test_default_image_is_v0_3(self) -> None:
+    def test_default_image_is_v0_4(self) -> None:
         with patch.dict(os.environ, {"DOCKER_IMAGE_ASTRONCODE": ""}, clear=False):
             self.assertEqual(
                 self.make_agent().image,
-                "wildclawbench-astroncode-ubuntu:v0.3",
+                "wildclawbench-astroncode-ubuntu:v0.4",
             )
 
 

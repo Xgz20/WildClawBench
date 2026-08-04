@@ -220,7 +220,7 @@ class AstronCodeAgent(BaseAgent):
         resolved_image = (
             image
             or os.environ.get("DOCKER_IMAGE_ASTRONCODE")
-            or "wildclawbench-astroncode-ubuntu:v0.3"
+            or "wildclawbench-astroncode-ubuntu:v0.4"
         )
         self.image: str = resolved_image
         self.openrouter_api_key = (
