@@ -125,7 +125,9 @@ class CodexAgent(BaseAgent):
         openrouter_base_url: str = "",
         reasoning_effort_default: str = DEFAULT_REASONING_EFFORT,
     ) -> None:
-        resolved_image = image or os.environ.get("DOCKER_IMAGE_CODEX") or "wildclawbench-codex-ubuntu:v0.0"
+        # v0.1 = 官方底座 v0.0 + Codex CLI 0.146.0（docker/codex/Dockerfile）。
+        # 需先 bash script/build-codex-image.sh 构建；未构建时用 DOCKER_IMAGE_CODEX 指回 v0.0。
+        resolved_image = image or os.environ.get("DOCKER_IMAGE_CODEX") or "wildclawbench-codex-ubuntu:v0.1"
         self.image: str = resolved_image
         self.openrouter_api_key = (
             openrouter_api_key or os.environ.get("OPENROUTER_API_KEY", "")
@@ -484,8 +486,9 @@ class CodexAgent(BaseAgent):
     def _default_wire_api_for_model(self, model: str) -> str | None:
         """Return an explicit wire API override.
 
-        Codex v0.121 rejects provider-level ``wire_api = "chat"``. Keep this
-        as an emergency knob only; do not default MiniMax to chat here.
+        Codex CLI rejects provider-level ``wire_api = "chat"`` (0.121 起如此，
+        0.146.0 实测仍然如此)。Keep this as an emergency knob only; do not
+        default MiniMax to chat here.
         """
         _ = model
         override = os.environ.get("CODEX_WIRE_API", "").strip().lower()
