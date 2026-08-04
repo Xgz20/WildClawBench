@@ -522,10 +522,36 @@ def parse_task_md(path: Path) -> dict:
     if text.startswith("---"):
         end = text.find("\n---", 3)
         if end != -1:
+            pending_list_key: str | None = None
+            list_items: list[str] = []
+
+            def _flush_list() -> None:
+                # YAML 列表块（如 tags:\n  - custom）归一为逗号分隔字符串
+                nonlocal pending_list_key, list_items
+                if pending_list_key and list_items:
+                    meta[pending_list_key] = ", ".join(list_items)
+                pending_list_key, list_items = None, []
+
             for line in text[3:end].splitlines():
+                stripped = line.strip()
+                # 缩进的 `- item` 行：归属于上一个空值键（YAML 列表块）
+                if pending_list_key and line.startswith((" ", "\t")) and stripped.startswith("- "):
+                    list_items.append(stripped[2:].strip().strip('"').strip("'"))
+                    continue
                 if ":" in line and not line.startswith((" ", "\t", "#")):
+                    _flush_list()
                     key, _, val = line.partition(":")
-                    meta[key.strip()] = val.strip().strip('"').strip("'")
+                    key, val = key.strip(), val.strip().strip('"').strip("'")
+                    # 内联数组 tags: [a, b] 直接展开；空值键可能是列表块的开头
+                    if val.startswith("[") and val.endswith("]"):
+                        items = [x.strip().strip('"').strip("'") for x in val[1:-1].split(",")]
+                        meta[key] = ", ".join(x for x in items if x)
+                    elif val:
+                        meta[key] = val
+                    else:
+                        meta[key] = ""
+                        pending_list_key = key
+            _flush_list()
             body = text[end + 4:]
     for m in re.finditer(r"^##\s*(.+?)\s*$(.*?)(?=^##\s|\Z)", body, re.M | re.S):
         key = SECTION_KEYS.get(m.group(1).strip())
@@ -962,11 +988,12 @@ def build_unit_score_cell(t: TaskRecord | None):
 def write_case_compare_sheet(wb, units: list[UnitResult], order: list[tuple[str, str]],
                              task_meta: dict[str, dict], suite_zh: dict[str, str]) -> None:
     ws = wb.create_sheet("用例对比明细")
-    header = (["分类", "用例ID", "用例名称", "难度", "模态", "输入(Prompt)", "预期行为", "评分标准", "检查点"]
+    header = (["分类", "用例ID", "用例名称", "难度", "模态", "标签",
+               "输入(Prompt)", "预期行为", "评分标准", "检查点"]
               + [f"{u.unit_display} 得分" for u in units]
               + ["最优单元", "最大分差"])
     ws.append(header)
-    n_meta_cols = 9
+    n_meta_cols = 10
     for suite, tid in order:
         meta = task_meta.get(tid, {})
         scores = {u.unit: u.task_map[tid].score for u in units if tid in u.task_map}
@@ -989,17 +1016,18 @@ def write_case_compare_sheet(wb, units: list[UnitResult], order: list[tuple[str,
         else:
             ckpt_cell = "-"
         row = [suite_zh.get(suite, suite), tid, meta.get("name", "-"), meta.get("difficulty", "-"),
-               meta.get("modality", "-"), truncate(meta.get("prompt", "")),
+               meta.get("modality", "-"), meta.get("tags") or "-",
+               truncate(meta.get("prompt", "")),
                truncate(meta.get("expected", "")), truncate(meta.get("criteria", "")),
                ckpt_cell]
         row += [build_unit_score_cell(u.task_map.get(tid)) for u in units]
         row += [best, spread]
         ws.append(row)
         r = ws.max_row
-        for col in list(range(6, n_meta_cols + 1)) + list(range(n_meta_cols + 1, n_meta_cols + 1 + len(units))):
+        for col in list(range(7, n_meta_cols + 1)) + list(range(n_meta_cols + 1, n_meta_cols + 1 + len(units))):
             ws.cell(row=r, column=col).alignment = WRAP_TOP
     style_header_row(ws)
-    set_widths(ws, {1: 22, 2: 40, 3: 30, 4: 8, 5: 12, 6: 45, 7: 45, 8: 45, 9: 35,
+    set_widths(ws, {1: 22, 2: 40, 3: 30, 4: 8, 5: 12, 6: 24, 7: 45, 8: 45, 9: 45, 10: 35,
                     n_meta_cols + 1 + len(units): 26, n_meta_cols + 2 + len(units): 10}, default=34)
     ws.freeze_panes = "C2"
     ws.auto_filter.ref = f"A1:{get_column_letter(ws.max_column)}1"
@@ -1490,7 +1518,7 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
     ws = wb.create_sheet(f"评分详情_{u.unit}"[:31])
     # 多轮列仅在存在多轮数据时插入（单轮评测报告结构与改造前完全一致）
     mr_cols = ["轮数", "Std", "各轮分数"] if has_multirun else []
-    header = (["分类", "用例ID", "用例名称", "难度", "超时时间(秒)", "模态",
+    header = (["分类", "用例ID", "用例名称", "难度", "超时时间(秒)", "模态", "标签",
                "输入(Prompt)", "预期行为", "评分标准", "Automated Checks",
                "工作目录(Workspace)", "预置技能(Skills)", "环境变量(Env)", "预热(Warmup)",
                "状态", "总得分"]
@@ -1500,11 +1528,12 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
               + ["工具调用数", "格式准确率", "执行成功率", "不确定占比"])
     ws.append(header)
     # 自动换行列：按是否有多轮列动态偏移（多轮列占 3 列，之后的列右移 3）
+    # 新增"标签"列后，原第 7 列起整体右移 1（故下方基准列号 +1）
     off = len(mr_cols)  # 0 或 3
-    wrap_cols = {7, 8, 9, 10, 12, 14}
+    wrap_cols = {8, 9, 10, 11, 13, 15}
     if has_multirun:
-        wrap_cols.add(19)  # 各轮分数列
-    wrap_cols |= {17 + off, 18 + off, 19 + off, 20 + off, 24 + off, 25 + off, 26 + off}
+        wrap_cols.add(20)  # 各轮分数列
+    wrap_cols |= {18 + off, 19 + off, 20 + off, 21 + off, 25 + off, 26 + off, 27 + off}
     for suite, tid in order:
         t = u.task_map.get(tid)
         if t is None:
@@ -1530,7 +1559,7 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
         ws.append([
             suite_zh.get(suite, suite), tid, meta.get("name", "-"),
             meta.get("difficulty", "-"), meta.get("timeout_seconds", "-"),
-            meta.get("modality", "-"),
+            meta.get("modality", "-"), meta.get("tags") or "-",
             truncate(meta.get("prompt", "")), truncate(meta.get("expected", "")),
             truncate(meta.get("criteria", "")), truncate(meta.get("checks", "")),
             strip_code_fence(meta.get("workspace", "")) or "-",
@@ -1559,15 +1588,16 @@ def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
         for col in wrap_cols:
             ws.cell(row=ws.max_row, column=col).alignment = WRAP_TOP
     style_header_row(ws)
-    # 列宽：前 16 列固定；多轮 3 列（17/18/19）仅 has_multirun 时存在；其后列按 off 偏移
-    widths = {1: 18, 2: 40, 3: 30, 4: 8, 5: 12, 6: 12,
-              7: 45, 8: 45, 9: 45, 10: 45,
-              11: 38, 12: 20, 13: 20, 14: 30,
-              15: 14, 16: 8}  # 状态、总得分
+    # 列宽：前 17 列固定（含新增"标签"列）；多轮 3 列（18/19/20）仅 has_multirun 时存在；
+    # 其后列按 off 偏移
+    widths = {1: 18, 2: 40, 3: 30, 4: 8, 5: 12, 6: 12, 7: 24,
+              8: 45, 9: 45, 10: 45, 11: 45,
+              12: 38, 13: 20, 14: 20, 15: 30,
+              16: 14, 17: 8}  # 状态、总得分
     if has_multirun:
-        widths.update({17: 6, 18: 8, 19: 20})  # 轮数、Std、各轮分数
+        widths.update({18: 6, 19: 8, 20: 20})  # 轮数、Std、各轮分数
     # 检查点明细、失分点、判词、执行错误、tokens、请求数、耗时、执行记录、结果分析、根因分析
-    for base, w in {17: 40, 18: 40, 19: 45, 20: 40, 21: 12, 22: 8, 23: 8, 24: 60, 25: 45, 26: 40}.items():
+    for base, w in {18: 40, 19: 40, 20: 45, 21: 40, 22: 12, 23: 8, 24: 8, 25: 60, 26: 45, 27: 40}.items():
         widths[base + off] = w
     set_widths(ws, widths)
     ws.freeze_panes = "C2"
