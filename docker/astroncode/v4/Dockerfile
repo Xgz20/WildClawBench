@@ -17,6 +17,6 @@ RUN npm uninstall -g @iflytek/astron-code >/dev/null 2>&1 || true \
       --registry="${NPM_REGISTRY}" \
     && install-search \
     && install-search doctor --full \
-    && python3 -c 'import tomllib, sys; config = tomllib.load(open(sys.argv[1], "rb")); sys.exit(0 if set(config) == {"mcp_servers"} and isinstance(config["mcp_servers"], dict) and config["mcp_servers"] else "invalid SearchAgent config")' /root/.acode/config.toml \
+    && python3 -c 'import tomllib, sys; config = tomllib.load(open(sys.argv[1], "rb")); sys.exit(0 if set(config) == {"mcp_servers"} and isinstance(config["mcp_servers"], dict) and config["mcp_servers"] and all(isinstance(server, dict) for server in config["mcp_servers"].values()) else "invalid SearchAgent config")' /root/.acode/config.toml \
     && install -d -o root -g root -m 755 /opt/astroncode \
     && install -o root -g root -m 644 /root/.acode/config.toml /opt/astroncode/search-agent.config.toml

@@ -2,6 +2,7 @@ import gzip
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -125,6 +126,36 @@ class AstronCodeV4DockerfileTest(unittest.TestCase):
             install_instruction,
         )
 
+    def test_toml_validation_requires_each_mcp_server_table(self):
+        validation_script = self._toml_validation_script()
+        self.assertIn(
+            'all(isinstance(server, dict) for server in '
+            'config[\"mcp_servers\"].values())',
+            validation_script,
+        )
+
+    def test_toml_validation_rejects_non_table_mcp_server(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.toml"
+            config_path.write_text(
+                'mcp_servers = { search = "not-a-table" }\n',
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-c",
+                    self._toml_validation_script(),
+                    str(config_path),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("invalid SearchAgent config", result.stderr)
+
     def test_search_agent_fragment_is_root_owned_and_not_user_writable(self):
         install_instruction = self._single_run_instruction()
         expected_fragments = (
@@ -147,6 +178,14 @@ class AstronCodeV4DockerfileTest(unittest.TestCase):
     def _single_run_instruction(self):
         self.assertEqual(1, len(self.run_instructions), self.run_instructions)
         return self.run_instructions[0]
+
+    def _toml_validation_script(self):
+        match = re.search(
+            r"python3 -c '([^']+)' /root/\.acode/config\.toml",
+            self._single_run_instruction(),
+        )
+        self.assertIsNotNone(match, "missing Python TOML validation command")
+        return match.group(1)
 
     def _assert_fragments_in_order(self, content, fragments):
         previous_index = -1
