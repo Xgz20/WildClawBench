@@ -79,7 +79,7 @@ def find_latest_run_dir(task_dir: Path) -> tuple[Path | None, list[str]]:
 
 
 # ---------------------------------------------------------------------------
-# 任务定义（tasks/<套件>/ 或 tasks/extension/<套件>/）
+# 任务定义（tasks/<套件>/<task_id>.md）
 # ---------------------------------------------------------------------------
 
 def find_tasks_dir(explicit: str | None) -> Path | None:
@@ -99,11 +99,8 @@ def find_tasks_dir(explicit: str | None) -> Path | None:
 def locate_task_file(tasks_dir: Path | None, suite: str, task_id: str) -> str:
     if tasks_dir is None:
         return ""
-    for base in (tasks_dir, tasks_dir / "extension"):
-        cand = base / suite / f"{task_id}.md"
-        if cand.is_file():
-            return str(cand)
-    return ""
+    cand = tasks_dir / suite / f"{task_id}.md"
+    return str(cand) if cand.is_file() else ""
 
 
 # ---------------------------------------------------------------------------
@@ -462,10 +459,7 @@ def main() -> None:
                     help="指定评测 task/run 目录或其中的结果文件（可重复，支持 @file.txt）")
     ap.add_argument("--workspace-dir", help="工作区目录（默认 <round>/report-workspace）")
     ap.add_argument("--output", help="输出文件路径（默认按 unit 命名）")
-    ap.add_argument(
-        "--tasks-dir",
-        help="任务定义根目录（默认找 <repo>/tasks，同时检索其 extension/ 子目录）",
-    )
+    ap.add_argument("--tasks-dir", help="任务定义目录（默认从脚本位置向上找 <repo>/tasks）")
     args = ap.parse_args()
 
     task_ids = parse_list_values(args.task_id, "任务 ID")

@@ -24,8 +24,6 @@ eval_out/all_suite/round1/<model>/<harness>/           ← 评测结果
 ```
 
 分析单元统一为 `(模型, harness)` 二元组，全链路命名 `<model>@<harness>`（如 `gpt-5.5-pro@codex`）。
-任务定义同时从 `tasks/<分类>/` 和 `tasks/extension/<分类>/` 读取，
-扩展任务会进入同一份低分分析与评测报告。
 
 ## 快速开始
 

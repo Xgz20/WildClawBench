@@ -30,7 +30,7 @@ description: Analyze WildClawBench evaluation cases using score.json, task gradi
   - `--score-min A --score-max B`（`A <= score < B`）
   - `--imperfect` / `--all`
   - `--task-id` / `--task-path`（均可重复、支持 `@file.txt`；task_id 支持子串匹配）
-- **任务定义目录**（`--tasks-dir`）：默认从脚本位置向上自动找 `<repo>/tasks`，并同时在 `tasks/<套件>/` 与 `tasks/extension/<套件>/` 定位任务定义
+- **任务定义目录**（`--tasks-dir`）：默认从脚本位置向上自动找 `<repo>/tasks`
 
 `--task-path` 指向具体 run 或其中的文件时，必须分析该 run；指向 task 目录时才选择名称排序最新的 run。同一任务一次不得指定多个不同 run。
 
@@ -79,7 +79,7 @@ python3 .../generate_failed_tasks_manifest.py \
 
 记录脚本输出的 `WORKSPACE_DIR`、`SELECTION_SCOPE`、`ANALYSIS_PATH` 和 `MANIFEST_PATH`，后续步骤必须原样使用，禁止自行退回 unit 下的 `report-workspace`。
 
-清单条目关键字段：`task_id`（即任务目录名，等于 `tasks/<套件>/` 或 `tasks/extension/<套件>/` 中的任务文件名）、`score_pct`、`checkpoints` / `failed_checkpoints`、`error_execution` / `error_grading` / `timed_out` / `status`、`usage`（tokens/请求数）、`task_file`、`transcript`（chat_openclaw.jsonl）、`agent_log`。
+清单条目关键字段：`task_id`（即任务目录名，等于 `tasks/<套件>/<task_id>.md` 的文件名）、`score_pct`、`checkpoints` / `failed_checkpoints`、`error_execution` / `error_grading` / `timed_out` / `status`、`usage`（tokens/请求数）、`task_file`、`transcript`（chat_openclaw.jsonl）、`agent_log`。
 
 ### 第 2 步：数据精简与分批（必须）
 

@@ -17,9 +17,8 @@ Sheet 布局（7 + N）：
     8+ 评分详情_<unit>       每 unit 一个（含预期行为/评分标准/Automated Checks），
                             支持 --analysis 回填结果分析/根因分析
 
-任务元数据同时扫描官方任务（tasks/）、扩展任务（tasks/extension/）和官方
-中文版（tasks/cn/）。官方任务以中文版非空字段覆盖展示元数据；扩展任务直接
-使用其任务定义。
+任务元数据展示以中文版（tasks/cn/）为准，缺失字段回退英文版（tasks/）；
+分类名取中文 md frontmatter 的 category（如 01_生产力工作流）。
 
 用法示例：
     python3 generate_eval_report.py --result-root eval_out/all_suite/round1
@@ -358,7 +357,7 @@ class UnitResult:
 
 
 # ===========================================================================
-# 任务元数据（tasks/<套件>/ 或 tasks/extension/<套件>/）
+# 任务元数据（tasks/<套件>/<task_id>.md）
 # ===========================================================================
 
 def find_tasks_dir(explicit: str | None) -> Path | None:
@@ -441,16 +440,11 @@ def parse_task_md(path: Path) -> dict:
 
 
 def load_all_task_meta(tasks_dir: Path | None) -> dict[str, dict]:
-    """加载官方与扩展任务元数据。
-
-    扫描 ``tasks/<suite>`` 和 ``tasks/extension/<suite>``；官方任务如有
-    ``tasks/cn/<suite>`` 中文版，以中文版非空字段覆盖展示元数据。
-    """
+    """加载任务元数据：以中文版（tasks/cn/）为准展示，缺失字段回退英文版。"""
     if tasks_dir is None:
         return {}
     out: dict[str, dict] = {}
-    # 先加载官方和扩展任务，再用官方中文版覆盖同 ID 字段。
-    for base in (tasks_dir, tasks_dir / "extension", tasks_dir / "cn"):
+    for base in (tasks_dir, tasks_dir / "cn"):  # 先英文打底，再中文覆盖
         if not base.is_dir():
             continue
         for suite_dir in sorted(base.iterdir()):
@@ -1782,10 +1776,7 @@ def main() -> None:
     ap.add_argument("--analysis", nargs="+", default=[], metavar="[UNIT=]PATH",
                     help="根因分析 JSON（可多个），回填到详情 Sheet")
     ap.add_argument("-o", "--output-dir", help="输出目录（默认 <round>/report-workspace/output）")
-    ap.add_argument(
-        "--tasks-dir",
-        help="任务定义根目录（默认找 <repo>/tasks，同时扫描其 extension/ 子目录）",
-    )
+    ap.add_argument("--tasks-dir", help="任务定义目录（默认从脚本位置向上找 <repo>/tasks）")
     ap.add_argument("--capability-map", help="检查点能力映射 YAML（默认 tools/report/data/checkpoint_capability_map7.yaml）")
     ap.add_argument("--emit", type=str, help="额外产出，逗号分隔：summary_json,md,html（默认仅 Excel）")
     ap.add_argument(
