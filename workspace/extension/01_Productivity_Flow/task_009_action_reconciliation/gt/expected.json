@@ -1,0 +1,21 @@
+{
+  "task_id": "01_Productivity_Flow_task_009_action_reconciliation",
+  "identity_chain_header": ["order_id", "job_id", "case_serial", "label_id", "evidence_state"],
+  "identity_chain_rows": [
+    {"order_id": "ORD-1001", "job_id": "PJ-501", "case_serial": "CS-1001", "label_id": "LB-9001", "evidence_state": "verified"},
+    {"order_id": "ORD-1002", "job_id": "PJ-502-B", "case_serial": "CS-2002-B", "label_id": "LB-9002", "evidence_state": "verified"}
+  ],
+  "exceptions_header": ["order_id", "conflict_field", "evidence_state", "blocker", "next_owner", "next_action"],
+  "exception_rows": [
+    {"order_id": "ORD-1003", "conflict_field": "quantity", "evidence_state": "insufficient_evidence", "blocker": "Second case serial and shipping label are missing", "next_owner": "Production Lead", "next_action": "Record the second passed case and matching label or correct the order quantity"},
+    {"order_id": "ORD-1004", "conflict_field": "order_status", "evidence_state": "canceled", "blocker": "Order was canceled before printing", "next_owner": "Order Operations", "next_action": "Confirm downstream print and label queues remain voided"},
+    {"order_id": "ORD-1005", "conflict_field": "case_serial", "evidence_state": "conflict", "blocker": "Passed print serial CS-5005-A conflicts with label serial CS-9999", "next_owner": "Fulfillment Lead", "next_action": "Reconcile the physical serial and replace or void the incorrect label"}
+  ],
+  "exec_file_sha256": {
+    "order_export.csv": "a005fee9be57415271a7ee33149ab207f01b16ade8cd8af852a6f7cfb3720556",
+    "print_jobs.csv": "44a7472bb74dc70fe5e93bfae1924304ae2376f7f75c45e237ca032e7cdb1c73",
+    "shipping_labels.csv": "294044a2547e86645a660d42a15a4686d96986f92083b4d21f410efa8cb8de89",
+    "operator_notes.md": "c94377946d0beed3285e130921551e1da946fe0b52f08cef82c0c5412b1d2522",
+    "evidence_policy.md": "047f8b812b8571f60bac2e70affd7aa88406954739527c67ab70344d5c076806"
+  }
+}

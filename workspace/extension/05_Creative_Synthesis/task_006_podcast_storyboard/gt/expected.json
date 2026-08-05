@@ -1,0 +1,24 @@
+{
+  "exec_file_sha256": {
+    "transcript.txt": "19c65f5a81a6938decc178b3aab449fad3cd9b418a2d7c1d319993f88be68760",
+    "audience_notes.md": "bcb1d115e0ccac63b1dc6d688336b68485683958330158a8a3b43dbda5c24212"
+  },
+  "columns": ["shot", "start_sec", "end_sec", "source_timecode", "spoken_quote", "subtitle", "visual_note"],
+  "min_duration_sec": 80,
+  "max_duration_sec": 100,
+  "min_shots": 6,
+  "max_shots": 9,
+  "quotes": {
+    "00:00-00:12": {"speaker": "主持人", "text": "很多人把整理桌面当成一次大扫除，你更愿意把它理解成什么？"},
+    "00:12-00:25": {"speaker": "嘉宾", "text": "我更愿意把整理看成给下一次工作留一条清楚的起跑线。"},
+    "00:25-00:38": {"speaker": "嘉宾", "text": "桌面上只留下当前任务需要的东西，重新开始时就少做一次选择。"},
+    "00:38-00:50": {"speaker": "主持人", "text": "你会要求每天结束前都整理好吗？"},
+    "00:50-01:03": {"speaker": "嘉宾", "text": "不会，我只在任务切换时花两分钟归位，忙的时候允许它暂时乱着。"},
+    "01:03-01:16": {"speaker": "嘉宾", "text": "最有用的不是收纳盒，而是给常用文件和待处理物各留一个固定位置。"},
+    "01:16-01:29": {"speaker": "主持人", "text": "如果听众今天只试一件事，你建议从哪里开始？"},
+    "01:29-01:43": {"speaker": "嘉宾", "text": "先移走一件与当前任务无关的东西，再给明天要用的材料留出位置。"},
+    "01:43-01:55": {"speaker": "嘉宾", "text": "空间不用看起来完美，只要下一步更容易开始就够了。"}
+  },
+  "allowed_visuals": ["普通办公室", "桌面近景", "屏幕录制", "简单文字动画"],
+  "result_files": ["storyboard.csv"]
+}

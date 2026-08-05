@@ -1,0 +1,17 @@
+{
+  "task_id": "01_Productivity_Flow_task_005_support_handoff",
+  "csv_header": ["ticket_id", "customer", "owner", "priority", "due_at_utc", "status", "blocker", "next_action"],
+  "active_rows": [
+    {"ticket_id": "T-1002", "customer": "Orion", "owner": "UNASSIGNED", "priority": "P1", "due_at_utc": "2026-09-18T20:30:00Z", "status": "investigating", "blocker": "No incident owner is assigned", "next_action": "Assign an incident owner and begin production triage immediately"},
+    {"ticket_id": "T-1001", "customer": "Northwind", "owner": "Alice", "priority": "P2", "due_at_utc": "2026-09-18T21:00:00Z", "status": "pending_internal", "blocker": "Backend log review is pending", "next_action": "Alice compares the supplied authentication traces by 2026-09-18T22:00:00Z"},
+    {"ticket_id": "T-1004", "customer": "Fabrikam", "owner": "Ben", "priority": "P3", "due_at_utc": "2026-09-19T00:00:00Z", "status": "open", "blocker": "The sample export still fails on column mapping", "next_action": "Ben reproduces with the attached sample before 2026-09-19T00:00:00Z"},
+    {"ticket_id": "T-1005", "customer": "Adventure Works", "owner": "Chen", "priority": "P4", "due_at_utc": "2026-09-19T10:00:00Z", "status": "open", "blocker": "None", "next_action": "Chen sends the documented configuration steps by 2026-09-19T10:00:00Z"}
+  ],
+  "excluded_ticket_ids": ["T-1003"],
+  "high_priority_ticket_ids": ["T-1002", "T-1001"],
+  "exec_file_sha256": {
+    "tickets.csv": "2cf180b84e4019b07e3a90c2a6670e898d29b274310aadde9cf6195ae31353c6",
+    "comments.json": "ef44b4e829b1aa35fd87ec729ff7ad70074a7ff43d78a5235e8eb07a3585ca66",
+    "priority_rules.md": "63496e0889ced13ee2c690ba301e67eb01ef77d219e3ea2994c480c3f48fd9a8"
+  }
+}

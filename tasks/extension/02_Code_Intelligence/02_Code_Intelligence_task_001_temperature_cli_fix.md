@@ -1,7 +1,7 @@
 ---
 id: 02_Code_Intelligence_task_001_temperature_cli_fix
 name: 修复温度换算命令行程序
-category: 02_代码智能
+category: 02_Code_Intelligence
 timeout_seconds: 300
 modality: pure-text
 difficulty: L1

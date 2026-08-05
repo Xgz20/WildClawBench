@@ -1,0 +1,4 @@
+document_id,document_type,published_date,effective_date,replaces,affected_clause
+PROC-2025.1,base_policy,2025-06-18,2025-07-01,,all
+PROC-2025.1-A1,amendment,2026-03-10,2026-03-15,PROC-2025.1 clause 6.3,6.3
+PROC-2026.1,base_policy,2026-03-01,2026-04-01,PROC-2025.1 and PROC-2025.1-A1,all

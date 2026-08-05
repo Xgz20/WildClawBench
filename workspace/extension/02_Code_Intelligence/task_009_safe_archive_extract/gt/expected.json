@@ -1,0 +1,25 @@
+{
+  "public_api": {
+    "function": "extract_plugin",
+    "exception": "ExtractionError",
+    "parameters": [
+      "archive_path",
+      "install_dir",
+      "max_entries",
+      "max_uncompressed_bytes"
+    ]
+  },
+  "required_policies": [
+    "reject POSIX and Windows traversal",
+    "reject absolute and drive-qualified paths",
+    "reject archive symbolic links",
+    "reject existing symbolic-link path components",
+    "reject normalized and case-folded name collisions",
+    "enforce entry-count and total uncompressed-size limits",
+    "stage extraction and leave no partial installation on failure"
+  ],
+  "exec_file_sha256": {
+    "project/extractor.py": "c00f857a5881e1452cf916cf459c4ad62ad8f8e0645849f81848985e45f86338",
+    "project/test_extractor.py": "524a49d7be76cc9e1899d5604c6dfbb4c2ccba536e41cc8b7961a5fa296c9c5f"
+  }
+}

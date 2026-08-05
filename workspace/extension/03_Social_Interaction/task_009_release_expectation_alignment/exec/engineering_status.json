@@ -1,0 +1,12 @@
+{
+  "account_id": "ACCT-39",
+  "code_complete": true,
+  "previous_working_target": "2026-09-18",
+  "earliest_conditional_window": "2026-09-24T20:00:00+08:00",
+  "gates": [
+    {"gate_id": "security_review", "status": "pending"},
+    {"gate_id": "load_test_4x", "status": "pending"},
+    {"gate_id": "rollback_rehearsal", "status": "pending"}
+  ],
+  "release_manager_written_approval": false
+}

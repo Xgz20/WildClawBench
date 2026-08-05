@@ -1,0 +1,66 @@
+{
+  "exec_file_sha256": {
+    "incidents.jsonl": "4b138472579d41b67382d19546e2bc6f689a3220aea7a9761dc70282baf29f7e"
+  },
+  "sensitive_values": [
+    "tok_test_alpha_001",
+    "tok_test_beta_002",
+    "alex.chen@example.invalid",
+    "priya.test@example.invalid",
+    "CUST-TST-1007",
+    "CUST-TST-2044",
+    "198.51.100.24",
+    "203.0.113.77",
+    "192.0.2.18"
+  ],
+  "placeholders": {
+    "API_TOKEN": 2,
+    "EMAIL": 2,
+    "CUSTOMER_ID": 4,
+    "PUBLIC_IP": 3
+  },
+  "preserved_events": [
+    {
+      "seq": 1,
+      "timestamp": "2026-07-18T09:00:12Z",
+      "service": "api-gateway",
+      "event": "request_received",
+      "error_code": "GW-401"
+    },
+    {
+      "seq": 2,
+      "timestamp": "2026-07-18T09:00:18Z",
+      "service": "auth-service",
+      "event": "token_validation_failed",
+      "error_code": "AUTH-403"
+    },
+    {
+      "seq": 3,
+      "timestamp": "2026-07-18T09:01:02Z",
+      "service": "billing-worker",
+      "event": "retry_started",
+      "error_code": "BILL-202"
+    },
+    {
+      "seq": 4,
+      "timestamp": "2026-07-18T09:02:44Z",
+      "service": "billing-worker",
+      "event": "downstream_timeout",
+      "error_code": "BILL-504"
+    },
+    {
+      "seq": 5,
+      "timestamp": "2026-07-18T09:04:01Z",
+      "service": "api-gateway",
+      "event": "request_failed",
+      "error_code": "GW-502"
+    }
+  ],
+  "summary_facts": [
+    "api-gateway first returned GW-401",
+    "auth-service rejected the same token",
+    "billing-worker started a retry",
+    "billing-worker timed out with BILL-504",
+    "api-gateway ended with GW-502"
+  ]
+}

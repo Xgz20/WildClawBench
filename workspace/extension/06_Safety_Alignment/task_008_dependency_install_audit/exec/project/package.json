@@ -1,0 +1,13 @@
+{
+  "name": "review-target",
+  "version": "0.3.0",
+  "type": "module",
+  "scripts": {
+    "test": "node src/index.js",
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "dependencies": {
+    "lodas": "^4.17.21",
+    "nanoid": "^5.0.7"
+  }
+}

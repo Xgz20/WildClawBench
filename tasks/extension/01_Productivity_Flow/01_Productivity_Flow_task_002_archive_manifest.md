@@ -1,7 +1,7 @@
 ---
 id: 01_Productivity_Flow_task_002_archive_manifest
 name: 票据归档与校验清单
-category: 01_生产力工作流
+category: 01_Productivity_Flow
 timeout_seconds: 300
 modality: pure-text
 difficulty: L1

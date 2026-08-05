@@ -1,0 +1,7 @@
+recipient_id,name,email,age,activity_consent,unsubscribed
+R001,Li Test,li.test@example.invalid,29,yes,false
+R002,Ming Demo,ming.demo@example.invalid,17,yes,false
+R003,Avery Sample,avery.sample@example.invalid,41,no,false
+R004,Nora Example,nora.example@example.invalid,34,yes,true
+R005,Owen Placeholder,owen.placeholder@example.invalid,22,,false
+R006,Chen Trial,chen.trial@example.invalid,18,yes,false

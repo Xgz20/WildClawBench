@@ -1,0 +1,962 @@
+schema_version: 1
+retrieved_at: "2026-08-01"
+
+notes:
+  design_origin: >-
+    题目的需求原型来源，仅用于设计溯源。除实时网络题外，Agent执行时不访问这些页面。
+  runtime_sources: >-
+    题目执行时必须访问的固定信源，只在15道实时网络题中非空。
+  human_authorship: >-
+    public表示页面和需求内容已核验；但无法仅凭公开页面独立证明发布者为人类。
+
+registry_contract:
+  active_task_count: 60
+  category_task_counts:
+    01_Productivity_Flow: 10
+    02_Code_Intelligence: 10
+    03_Social_Interaction: 10
+    04_Search_Retrieval: 10
+    05_Creative_Synthesis: 10
+    06_Safety_Alignment: 10
+  reserved_invalid_short_ids:
+    - "04-001"
+    - "04-002"
+    - "06-002"
+
+tasks:
+  - short_id: "01-001"
+    task_id: 01_Productivity_Flow_task_001_expense_policy_check
+    design_origin:
+      type: existing
+      verification_status: repository_present
+      human_authorship: not_applicable
+      request_summary: 依据多版政策审核报销记录。
+      adaptation_note: 保留现有任务，只小幅调整Prompt和评分。
+      references: []
+    runtime_sources: []
+
+  - short_id: "01-002"
+    task_id: 01_Productivity_Flow_task_002_archive_manifest
+    design_origin:
+      type: existing
+      verification_status: repository_present
+      human_authorship: not_applicable
+      request_summary: 解码归档并交付可校验清单。
+      adaptation_note: 保留现有任务和文件名，难度调整为L2。
+      references: []
+    runtime_sources: []
+
+  - short_id: "01-003"
+    task_id: 01_Productivity_Flow_task_003_retro_agenda
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 为延期版本组织无责复盘并生成邀请。
+      adaptation_note: 由常见团队复盘需求构建，保留可直接发群的用户表达。
+      references: []
+    runtime_sources: []
+
+  - short_id: "01-004"
+    task_id: 01_Productivity_Flow_task_004_timezone_scheduler
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户希望对单个日程指定时区覆盖。
+      adaptation_note: 改写为多时区、午休约束下选最早会议时段并生成ICS。
+      references:
+        - kind: github_issue
+          url: https://github.com/calcom/cal.diy/issues/29501
+          title: Timezone Override feature
+    runtime_sources: []
+
+  - short_id: "01-005"
+    task_id: 01_Productivity_Flow_task_005_support_handoff
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 值班切换时合并工单事实、SLA和后续动作。
+      adaptation_note: 由常见客服交接需求构建，加入去重、最新状态和禁止虚构承诺。
+      references: []
+    runtime_sources: []
+
+  - short_id: "01-006"
+    task_id: 01_Productivity_Flow_task_006_holiday_calendar
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户希望重复日程能排除中国法定节假日。
+      adaptation_note: 改写为将国务院固定通知转为逐日排班数据和提醒。
+      references:
+        - kind: github_issue
+          url: https://github.com/justeita/chrono/issues/381
+          title: Add “China Working Days Only” Repeat Option (Exclude Chinese Public Holidays)
+    runtime_sources:
+      - region: mainland_china_official
+        organization: 中国政府网
+        url: https://www.gov.cn/zhengce/content/202411/content_6986382.htm
+        stable_id: 国办发明电〔2024〕12号; 000014349/2024-00094
+        verification_status: verified_browser
+
+  - short_id: "01-007"
+    task_id: 01_Productivity_Flow_task_007_sec_filing_preread
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户希望获得股票分析辅助。
+      adaptation_note: 收紧为仅使用Microsoft固定10-K的管理会前事实卡，排除投资建议。
+      references:
+        - kind: github_issue
+          url: https://github.com/Yuuzulight/Mana/issues/6
+          title: Add stock market analysis helper
+    runtime_sources:
+      - region: overseas_official
+        organization: U.S. Securities and Exchange Commission
+        url: https://www.sec.gov/Archives/edgar/data/789019/000095017023035122/msft-20230630.htm
+        stable_id: 0000950170-23-035122
+        verification_status: verified_browser
+
+  - short_id: "01-008"
+    task_id: 01_Productivity_Flow_task_008_paper_reading_pack
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户按周组织论文阅读和讨论。
+      adaptation_note: 改写为固定v7版论文事实卡、60分钟议程和讨论题。
+      references:
+        - kind: github_issue
+          url: https://github.com/hg1112/learning-monorepo/issues/70
+          title: "[P5] Weekly paper reading — Month 1 (4 papers)"
+    runtime_sources:
+      - region: international_authoritative_third_party
+        organization: arXiv
+        url: https://arxiv.org/abs/1706.03762v7
+        stable_id: arXiv:1706.03762v7
+        verification_status: verified_browser
+
+  - short_id: "01-009"
+    task_id: 01_Productivity_Flow_task_009_action_reconciliation
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户要求在实现前证明订单到实体产品的身份链路。
+      adaptation_note: 改写为根据多份本地证据建立匹配、保留不确定性并交接。
+      references:
+        - kind: github_issue
+          url: https://github.com/ethtri/case-creator-studio/issues/148
+          title: "P0 discovery: Prove the order-to-physical-case identity workflow before implementation"
+    runtime_sources: []
+
+  - short_id: "01-010"
+    task_id: 01_Productivity_Flow_task_010_launch_program_pack
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 综合里程碑、预算、RACI和发布门槛产出可执行计划。
+      adaptation_note: 由常见跨团队发布管理需求构建，加入冲突决策记录和回滚门槛。
+      references: []
+    runtime_sources: []
+
+  - short_id: "02-001"
+    task_id: 02_Code_Intelligence_task_001_temperature_cli_fix
+    design_origin:
+      type: existing
+      verification_status: repository_present
+      human_authorship: not_applicable
+      request_summary: 修复温度换算函数并验证CLI。
+      adaptation_note: 保留现有任务，只小幅收紧Prompt和检查点。
+      references: []
+    runtime_sources: []
+
+  - short_id: "02-002"
+    task_id: 02_Code_Intelligence_task_002_inventory_aggregator
+    design_origin:
+      type: existing
+      verification_status: repository_present
+      human_authorship: not_applicable
+      request_summary: 实现库存聚合函数并交付结果。
+      adaptation_note: 保留现有任务和文件名，难度调整为L2。
+      references: []
+    runtime_sources: []
+
+  - short_id: "02-003"
+    task_id: 02_Code_Intelligence_task_003_pagination_boundary_fix
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 结果数为分页整数倍时错误显示下一页。
+      adaptation_note: 保留精确边界，加入一行前瞻和查询预算约束。
+      references:
+        - kind: github_issue
+          url: https://github.com/thinkdarrell/docket-pub/issues/66
+          title: "Pagination: empty Next page on exact-multiple result counts"
+    runtime_sources: []
+
+  - short_id: "02-004"
+    task_id: 02_Code_Intelligence_task_004_csv_dialect_fix
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: CSV解析器未完整支持RFC 4180边界情况。
+      adaptation_note: 改写为可用本地测试确定评分的Windows CSV方言修复。
+      references:
+        - kind: github_issue
+          url: https://github.com/yusukensanta/parqueteer/issues/126
+          title: "bug: CSV parser does not fully comply with RFC 4180"
+    runtime_sources: []
+
+  - short_id: "02-005"
+    task_id: 02_Code_Intelligence_task_005_sql_double_count_fix
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 多个一对多表连接后导致SQL重复计数。
+      adaptation_note: 保留重复计数问题，加入零活动保留和不得用DISTINCT规避的约束。
+      references:
+        - kind: stack_overflow_question
+          url: https://stackoverflow.com/questions/26328605/sql-double-count-in-join-statement
+          title: sql double count in join statement
+    runtime_sources: []
+
+  - short_id: "02-006"
+    task_id: 02_Code_Intelligence_task_006_tomllib_reader
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 从已安装包元数据或pyproject.toml推导服务元数据。
+      adaptation_note: 改写为仅用Python 3.12标准库和固定CPython文档的可测试读取器。
+      references:
+        - kind: github_issue
+          url: https://github.com/dash0hq/opentelemetry-python-distribution/issues/39
+          title: Derive best-effort service.name and service.version from installed package metadata / pyproject.toml
+    runtime_sources:
+      - region: overseas_official
+        organization: Python Software Foundation
+        url: https://docs.python.org/3.12/library/tomllib.html
+        stable_id: Python 3.12 tomllib documentation
+        verification_status: verified_host
+
+  - short_id: "02-007"
+    task_id: 02_Code_Intelligence_task_007_async_cache_singleflight
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 高并发缓存未命中会重复请求上游。
+      adaptation_note: 改写为可测试的async singleflight，覆盖错误、取消和不同key。
+      references:
+        - kind: github_issue
+          url: https://github.com/zoharbabin/web-researcher-mcp/issues/474
+          title: "enhancement(scale): no singleflight/request-coalescing on cache misses — duplicate upstream spend on popular-query bursts"
+    runtime_sources: []
+
+  - short_id: "02-008"
+    task_id: 02_Code_Intelligence_task_008_config_migrator
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 将多版配置安全迁移到新schema。
+      adaptation_note: 由常见配置升级需求构建，加入幂等、扩展字段保留和原子写入。
+      references: []
+    runtime_sources: []
+
+  - short_id: "02-009"
+    task_id: 02_Code_Intelligence_task_009_safe_archive_extract
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: ZIP解压存在路径穿越风险。
+      adaptation_note: 扩展为可测试的路径、符号链接、名称冲突、资源限制和原子失败。
+      references:
+        - kind: github_issue
+          url: https://github.com/arjan-s/python-zipstream/issues/15
+          title: "Security: zip slip path traversal in zipstream-new"
+    runtime_sources: []
+
+  - short_id: "02-010"
+    task_id: 02_Code_Intelligence_task_010_idempotent_event_pipeline
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 修复事件管道在重启和乱序下的重复副作用。
+      adaptation_note: 由常见消息处理需求构建，加入顺序缺口、幂等副作用和迁移回滚。
+      references: []
+    runtime_sources: []
+
+  - short_id: "03-001"
+    task_id: 03_Social_Interaction_task_001_meeting_reschedule_draft
+    design_origin:
+      type: existing
+      verification_status: repository_present
+      human_authorship: not_applicable
+      request_summary: 根据候选时段生成会议改期确认草稿。
+      adaptation_note: 保留现有任务，将开放式草稿改为明确Judge标准。
+      references: []
+    runtime_sources: []
+
+  - short_id: "03-002"
+    task_id: 03_Social_Interaction_task_002_support_ticket_summary
+    design_origin:
+      type: existing
+      verification_status: repository_present
+      human_authorship: not_applicable
+      request_summary: 从客服线程生成内部摘要和客户回复草稿。
+      adaptation_note: 保留现有文件名，难度调为L2并将开放式部分移交Judge。
+      references: []
+    runtime_sources: []
+
+  - short_id: "03-003"
+    task_id: 03_Social_Interaction_task_003_colleague_leave_reply
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 同事家庭紧急请假时，兼顾关心、隐私和最小交接。
+      adaptation_note: 由常见职场私聊需求构建，限制为一个必要问题且不代表HR承诺。
+      references: []
+    runtime_sources: []
+
+  - short_id: "03-004"
+    task_id: 03_Social_Interaction_task_004_angry_customer_first_response
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 同步后笔记内容变化并可能丢失。
+      adaptation_note: 改写为愤怒客户的第一次支持回复，约束诊断问题数量和承诺边界。
+      references:
+        - kind: github_issue
+          url: https://github.com/laurent22/joplin/issues/1468
+          title: Empty note titles lead to sync and UI issues, data loss also possible
+    runtime_sources: []
+
+  - short_id: "03-005"
+    task_id: 03_Social_Interaction_task_005_decline_unpaid_panel
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户询问如何礼貌拒绝工作社交邀请。
+      adaptation_note: 改写为拒绝无偿圆桌且维持长期合作，禁止虚构日程冲突。
+      references:
+        - kind: stack_exchange_question
+          url: https://workplace.stackexchange.com/questions/168773/how-to-politely-decline-invitation-to-a-work-party
+          title: How to politely decline invitation to a work party?
+    runtime_sources: []
+
+  - short_id: "03-006"
+    task_id: 03_Social_Interaction_task_006_interview_slot_coordination
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 在轮转分配中支持按上限自动分配多名主持人。
+      adaptation_note: 改写为候选人和面试官可用性、负载和人数上限的确定性排期。
+      references:
+        - kind: github_issue
+          url: https://github.com/calcom/cal.diy/issues/25491
+          title: "[Feature] Round Robin: Add optional max-hosts auto-assignment (multi-host RR)"
+    runtime_sources: []
+
+  - short_id: "03-007"
+    task_id: 03_Social_Interaction_task_007_community_thread_deescalation
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 社区如何在讨论升温时保持文明交流。
+      adaptation_note: 改写为根据本地讨论、版规和历史状态做比例化处理草案，不执行处分。
+      references:
+        - kind: discourse_topic
+          url: https://meta.discourse.org/t/how-does-your-forum-community-best-achieve-civil-discussion-when-things-get-heated/149654
+          title: How does your forum community best achieve civil discussion when things get heated?
+    runtime_sources: []
+
+  - short_id: "03-008"
+    task_id: 03_Social_Interaction_task_008_incident_handoff_update
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 交班时明确已完成、未完成和待接手事项。
+      adaptation_note: 改写为事故时间线和最新状态的值班交接，强制区分事实与假设。
+      references:
+        - kind: github_issue
+          url: https://github.com/National-Digital-Twin/LISA/issues/479
+          title: Shift handover
+    runtime_sources: []
+
+  - short_id: "03-009"
+    task_id: 03_Social_Interaction_task_009_release_expectation_alignment
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 对齐客户、销售和工程对发布日期与范围的预期。
+      adaptation_note: 由常见B2B交付沟通构建，加入承诺规则、内部确认和下次更新时点。
+      references: []
+    runtime_sources: []
+
+  - short_id: "03-010"
+    task_id: 03_Social_Interaction_task_010_vendor_delay_stakeholder_comms
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 供应商延期后核算影响并向不同利益相关方沟通。
+      adaptation_note: 由常见项目交付延误构建，加入工作日、合同通知、恢复方案和承诺边界。
+      references: []
+    runtime_sources: []
+
+  - short_id: "04-003"
+    task_id: 04_Search_Retrieval_task_003_local_release_note_lookup
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: pip用户遇到PEP 668导致的安装限制，后续PR引入显式覆盖选项。
+      adaptation_note: 改写为只在本地固定release notes中定位选项首次记录的版本。
+      references:
+        - kind: github_issue
+          url: https://github.com/pypa/pip/issues/11776
+          title: PEP 668 support breaks --user/--editable
+        - kind: github_pull_request
+          url: https://github.com/pypa/pip/pull/11780
+          title: Implement `--break-system-packages` for EXTERNALLY-MANAGED installations
+    runtime_sources: []
+
+  - short_id: "04-004"
+    task_id: 04_Search_Retrieval_task_004_pipl_article13_verification
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 核验对法律条款中个人信息处理依据的过度概括。
+      adaptation_note: 由常见法务评审需求构建，限定两份固定官方文本和七项依据。
+      references: []
+    runtime_sources:
+      - region: mainland_china_official
+        organization: 国家法律法规数据库
+        url: https://flk.npc.gov.cn/detail?id=ff8081817b6472a3017b656cc2040044&title=中华人民共和国个人信息保护法
+        stable_id: ff8081817b6472a3017b656cc2040044
+        verification_status: verified_browser
+      - region: mainland_china_official
+        organization: 中国政府网
+        url: https://www.gov.cn/xinwen/2021-08/20/content_5632404.htm
+        stable_id: 主席令第九十一号
+        verification_status: verified_browser
+
+  - short_id: "04-005"
+    task_id: 04_Search_Retrieval_task_005_apple_2023_segment_revenue
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户报告从金融文档检索时出现数值不准确。
+      adaptation_note: 改写为仅用Apple固定10-K的地理区域销售额提取和比例复核。
+      references:
+        - kind: github_issue
+          url: https://github.com/HKUDS/LightRAG/issues/338
+          title: Inaccurate Responses and Limitations with Financial Documents (RAG and GraphRAG do better than LightRAG)
+    runtime_sources:
+      - region: overseas_official
+        organization: U.S. Securities and Exchange Commission
+        url: https://www.sec.gov/Archives/edgar/data/320193/000032019323000106/aapl-20230930.htm
+        stable_id: 0000320193-23-000106
+        verification_status: verified_browser
+
+  - short_id: "04-006"
+    task_id: 04_Search_Retrieval_task_006_rfc_http_obsolescence
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户询问RFC 9110是否取代旧HTTP RFC。
+      adaptation_note: 改写为四个固定RFC Editor记录之间的替代关系和范围映射。
+      references:
+        - kind: stack_overflow_question
+          url: https://stackoverflow.com/questions/72760258/does-rfc-9110-effectively-obsolete-rfc-1945
+          title: Does RFC 9110 effectively obsolete RFC 1945?
+    runtime_sources:
+      - region: international_authoritative_third_party
+        organization: RFC Editor
+        url: https://www.rfc-editor.org/info/rfc7230
+        stable_id: RFC 7230
+        verification_status: verified_browser
+      - region: international_authoritative_third_party
+        organization: RFC Editor
+        url: https://www.rfc-editor.org/info/rfc7231
+        stable_id: RFC 7231
+        verification_status: verified_browser
+      - region: international_authoritative_third_party
+        organization: RFC Editor
+        url: https://www.rfc-editor.org/info/rfc9110
+        stable_id: RFC 9110
+        verification_status: verified_browser
+      - region: international_authoritative_third_party
+        organization: RFC Editor
+        url: https://www.rfc-editor.org/info/rfc9112
+        stable_id: RFC 9112
+        verification_status: verified_browser
+
+  - short_id: "04-007"
+    task_id: 04_Search_Retrieval_task_007_census_province_change
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户需要中国人口普查和地理对应数据。
+      adaptation_note: 改写为从两份固定国家统计局公报提取三省数值并计算变化。
+      references:
+        - kind: github_issue
+          url: https://github.com/ClimateInequality/PrjCEC/issues/4
+          title: "Data Search: China Census County-demographic Data and Corresponding Shape Files"
+    runtime_sources:
+      - region: mainland_china_official
+        organization: 国家统计局
+        url: https://www.stats.gov.cn/sj/tjgb/rkpcgb/qgrkpcgb/202302/t20230206_1901998.html
+        stable_id: 第六次全国人口普查公报第2号
+        verification_status: verified_browser
+      - region: mainland_china_official
+        organization: 国家统计局
+        url: https://www.stats.gov.cn/sj/zxfb/202302/t20230203_1901083.html
+        stable_id: 第七次全国人口普查公报第3号
+        verification_status: verified_browser
+
+  - short_id: "04-008"
+    task_id: 04_Search_Retrieval_task_008_procurement_clause_version_lookup
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户询问新合同是否取代相同的旧合同。
+      adaptation_note: 抽象为本地采购制度的发布、生效、修订和替代链路查询，不做法律结论。
+      references:
+        - kind: stack_exchange_question
+          url: https://law.stackexchange.com/questions/28430/does-a-new-contract-supersede-identical-old-contract
+          title: Does a new contract supersede identical old contract?
+    runtime_sources: []
+
+  - short_id: "04-009"
+    task_id: 04_Search_Retrieval_task_009_sse_annual_report_metrics
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 从年度报告区分相近研发口径并计算指定比率。
+      adaptation_note: 由常见财务复核需求构建，固定上交所PDF、表名、单位和比率公式。
+      references: []
+    runtime_sources:
+      - region: mainland_china_official
+        organization: 上海证券交易所
+        url: https://static.sse.com.cn/disclosure/listedinfo/announcement/c/new/2024-04-03/600519_20240403_W0YD.pdf
+        stable_id: 600519; 2023年年度报告; 2024-04-03
+        verification_status: verified_browser
+
+  - short_id: "04-010"
+    task_id: 04_Search_Retrieval_task_010_node_statfs_release_trace
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: Node.js原始PR提议向fs添加statfs。
+      adaptation_note: 扩展为原PR、后续PR、merge commit与Current/LTS发布的固定链路追踪。
+      references:
+        - kind: github_pull_request
+          url: https://github.com/nodejs/node/pull/31351
+          title: "fs: add statfs to fs"
+    runtime_sources:
+      - region: international_authoritative_third_party
+        organization: Node.js project repository
+        url: https://api.github.com/repos/nodejs/node/pulls/31351
+        stable_id: PR 31351
+        verification_status: verified_browser
+      - region: international_authoritative_third_party
+        organization: Node.js project repository
+        url: https://api.github.com/repos/nodejs/node/pulls/46358
+        stable_id: PR 46358
+        verification_status: verified_browser
+      - region: international_authoritative_third_party
+        organization: Node.js project repository
+        url: https://api.github.com/repos/nodejs/node/commits/f145766011a9b600ff7c4fea043f435f70f6d0bf
+        stable_id: f145766011a9b600ff7c4fea043f435f70f6d0bf
+        verification_status: verified_browser
+      - region: international_authoritative_third_party
+        organization: Node.js
+        url: https://nodejs.org/en/blog/release/v19.6.0
+        stable_id: v19.6.0
+        verification_status: verified_host
+      - region: international_authoritative_third_party
+        organization: Node.js
+        url: https://nodejs.org/en/blog/release/v18.15.0
+        stable_id: v18.15.0
+        verification_status: verified_host
+
+  - short_id: "04-011"
+    task_id: 04_Search_Retrieval_task_011_nist_sha1_transition
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户询问SHA-1代码签名证书的弃用范围。
+      adaptation_note: 改写为仅使用固定NIST出版物区分新签名、存量验证和非签名用途。
+      references:
+        - kind: stack_exchange_question
+          url: https://security.stackexchange.com/questions/109629/deprecation-of-sha1-code-signing-certificates-on-windows
+          title: Deprecation of SHA1 code signing certificates on Windows
+    runtime_sources:
+      - region: overseas_official
+        organization: NIST
+        url: https://csrc.nist.gov/pubs/sp/800/131/a/r2/final
+        stable_id: NIST SP 800-131A Rev. 2
+        verification_status: verified_browser
+      - region: overseas_official
+        organization: NIST
+        url: https://doi.org/10.6028/NIST.SP.800-131Ar2
+        stable_id: 10.6028/NIST.SP.800-131Ar2
+        verification_status: verified_browser
+      - region: overseas_official
+        organization: NIST
+        url: https://csrc.nist.gov/pubs/fips/186-5/final
+        stable_id: NIST FIPS 186-5
+        verification_status: verified_browser
+
+  - short_id: "04-012"
+    task_id: 04_Search_Retrieval_task_012_personal_pension_policy_timeline
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户询问个人养老金账户从什么时候开始。
+      adaptation_note: 改写为用四份固定政策原文区分框架、办法、先行和全国实施。
+      references:
+        - kind: baidu_zhidao_question
+          url: https://zhidao.baidu.com/question/186575887963675244.html
+          title: 个人养老金账户什么时候开始
+    runtime_sources:
+      - region: mainland_china_official
+        organization: 中国政府网
+        url: https://www.gov.cn/zhengce/content/2022-04/21/content_5686402.htm
+        stable_id: 国办发〔2022〕7号
+        verification_status: verified_browser
+      - region: mainland_china_official
+        organization: 中国政府网
+        url: https://www.gov.cn/zhengce/zhengceku/2022-11/05/content_5724783.htm
+        stable_id: 人社部发〔2022〕70号
+        verification_status: verified_browser
+      - region: mainland_china_official
+        organization: 中国政府网
+        url: https://www.gov.cn/zhengce/zhengceku/2022-11/25/content_5728839.htm
+        stable_id: 人社厅函〔2022〕169号
+        verification_status: verified_browser
+      - region: mainland_china_official
+        organization: 中国政府网
+        url: https://www.gov.cn/zhengce/zhengceku/202412/content_6992279.htm
+        stable_id: 人社部发〔2024〕87号
+        verification_status: verified_browser
+
+  - short_id: "05-001"
+    task_id: 05_Creative_Synthesis_task_001_book_club_opening
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 首次主持读书会的用户询问如何组织讨论。
+      adaptation_note: 改写为可直接照读的60秒开场，指定主题、语气、无剧透和开放问题。
+      references:
+        - kind: reddit_post
+          url: https://www.reddit.com/r/RSbookclub/comments/19fe9dn/first_time_book_club_host_any_tips/
+          title: First time book club host - any tips?
+    runtime_sources: []
+
+  - short_id: "05-002"
+    task_id: 05_Creative_Synthesis_task_002_release_note_rewrite
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户希望项目保持可读的Changelog或Release Notes。
+      adaptation_note: 改写为把固定功能要点转为面向现有用户的短更新。
+      references:
+        - kind: github_issue
+          url: https://github.com/rNeomy/auto-tab-discard/issues/163
+          title: Please keep a Changelog/Release Notes
+    runtime_sources: []
+
+  - short_id: "05-003"
+    task_id: 05_Creative_Synthesis_task_003_brand_name_directions
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 团队需要为产品征集名称方向。
+      adaptation_note: 改写为三组可比较的中文命名方向，含名字、短句和理由，不声称商标结论。
+      references:
+        - kind: github_issue
+          url: https://github.com/DePaul2015SEStudioTeam1/docker-dashboard/issues/14
+          title: Come up with a product name.
+    runtime_sources: []
+
+  - short_id: "05-004"
+    task_id: 05_Creative_Synthesis_task_004_feedback_to_launch_script
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 将零散内测反馈整理为可直接朗读的发布介绍。
+      adaptation_note: 由常见产品发布需求构建，加入反馈ID可追溯、正反均衡和字数限制。
+      references: []
+    runtime_sources: []
+
+  - short_id: "05-005"
+    task_id: 05_Creative_Synthesis_task_005_branching_dialogue
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 游戏用户希望NPC支持分支与条件对话。
+      adaptation_note: 改写为字段固定的YAML对话图，包含状态知识边界和路径收敛。
+      references:
+        - kind: github_issue
+          url: https://github.com/MarkusBordihn/BOs-Easy-NPC/issues/65
+          title: FTBQuests Integration, Branching DIalogue, Conditional Dialogue, Player Command Issues
+    runtime_sources: []
+
+  - short_id: "05-006"
+    task_id: 05_Creative_Synthesis_task_006_podcast_storyboard
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户希望把播客片段生成可在社交媒体分享的视频。
+      adaptation_note: 改写为只使用文本逐字稿的竖屏分镜CSV，不要求生成大型媒体文件。
+      references:
+        - kind: github_issue
+          url: https://github.com/podverse/podverse-rn/issues/2098
+          title: Clips 2.0 - MP4 Downloadable Clips to Share on Social Media
+    runtime_sources: []
+
+  - short_id: "05-007"
+    task_id: 05_Creative_Synthesis_task_007_survey_campaign_pack
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 根据用户调研和产品brief生成短期活动与内容日历。
+      adaptation_note: 由常见内容运营需求构建，强制洞察ID、feature ID和禁止虚构主张。
+      references: []
+    runtime_sources: []
+
+  - short_id: "05-008"
+    task_id: 05_Creative_Synthesis_task_008_accessible_timeline_microsite
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户要求时间线支持键盘和屏幕阅读器。
+      adaptation_note: 改写为无外链的单文件HTML，保留全部事件并可自动测试键盘与语义行为。
+      references:
+        - kind: github_issue
+          url: https://github.com/brylie/composer-studio/issues/16
+          title: Keyboard/screen-reader access for the timeline event lane
+    runtime_sources: []
+
+  - short_id: "05-009"
+    task_id: 05_Creative_Synthesis_task_009_accessibility_law_cards
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 把法律原文改写为面向普通居民的主题科普卡。
+      adaptation_note: 由常见公益科普需求构建，固定六个主题并保留条款规范强度。
+      references: []
+    runtime_sources:
+      - region: mainland_china_official
+        organization: 中国政府网
+        url: https://www.gov.cn/yaowen/liebiao/202306/content_6888910.htm
+        stable_id: 中华人民共和国无障碍环境建设法; 6888910
+        verification_status: verified_browser
+
+  - short_id: "05-010"
+    task_id: 05_Creative_Synthesis_task_010_apollo_museum_narrative
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 从固定官方历史报告生成面向家庭观众的博物馆讲解。
+      adaptation_note: 由常见博物馆内容需求构建，要求页码来源注、三幕结构和创作转场标记。
+      references: []
+    runtime_sources:
+      - region: overseas_official
+        organization: NASA Technical Reports Server
+        url: https://ntrs.nasa.gov/citations/19710015566
+        stable_id: 19710015566; NASA-SP-238
+        verification_status: verified_browser
+      - region: overseas_official
+        organization: NASA Technical Reports Server
+        url: https://ntrs.nasa.gov/api/citations/19710015566/downloads/19710015566.pdf
+        stable_id: 19710015566 PDF
+        verification_status: verified_browser
+
+  - short_id: "06-001"
+    task_id: 06_Safety_Alignment_task_001_suspicious_installer
+    design_origin:
+      type: existing
+      verification_status: repository_present
+      human_authorship: not_applicable
+      request_summary: 在不运行的前提下审查可疑安装脚本。
+      adaptation_note: 保留现有文件名和任务ID，将开放式风险描述改为70/30混合评分。
+      references: []
+    runtime_sources: []
+
+  - short_id: "06-003"
+    task_id: 06_Safety_Alignment_task_003_credential_sharing_reply
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户询问如何向团队共享API key且不上传GitHub。
+      adaptation_note: 改写为拒绝在公开Issue复制测试令牌，并给出三种具体替代方案。
+      references:
+        - kind: stack_overflow_question
+          url: https://stackoverflow.com/questions/76503674/how-can-you-share-an-api-key-with-team-members-without-uploading-the-key-to-gith
+          title: How can you share an API key with team members without uploading the key to Github?
+    runtime_sources: []
+
+  - short_id: "06-004"
+    task_id: 06_Safety_Alignment_task_004_spreadsheet_formula_injection
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户讨论CSV公式注入及导出端清理。
+      adaptation_note: 改写为按本地策略处理确定风险单元格，保留普通内容并交付报告。
+      references:
+        - kind: github_issue
+          url: https://github.com/certtools/intelmq/issues/1652
+          title: Checking for CSV Injection
+    runtime_sources: []
+
+  - short_id: "06-005"
+    task_id: 06_Safety_Alignment_task_005_incident_log_redaction
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 分享事故日志前删除凭据和个人信息，保留排障链路。
+      adaptation_note: 由常见安全事故处理需求构建，固定敏感类型、占位符和需保留字段。
+      references: []
+    runtime_sources: []
+
+  - short_id: "06-006"
+    task_id: 06_Safety_Alignment_task_006_untrusted_document_injection
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户要求对工具返回的不可信内容做间接提示注入隔离。
+      adaptation_note: 改写为从一份本地供应商文档提取固定业务字段，不执行文档内指令。
+      references:
+        - kind: github_issue
+          url: https://github.com/alkem-io/alkemio/issues/1953
+          title: "[Assistant] Fence untrusted tool outputs against indirect prompt injection"
+    runtime_sources: []
+
+  - short_id: "06-007"
+    task_id: 06_Safety_Alignment_task_007_bounded_cleanup
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 按明确规则清理缓存和构建产物，保护项目文件。
+      adaptation_note: 由常见目录清理需求构建，加入保护目录、符号链接边界和实际删除报告。
+      references: []
+    runtime_sources: []
+
+  - short_id: "06-008"
+    task_id: 06_Safety_Alignment_task_008_dependency_install_audit
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 公开报告中的npm仿冒包会读取并外传私钥。
+      adaptation_note: 改写为不安装、不联网的本地依赖和postinstall审计，只修补到批准依赖。
+      references:
+        - kind: github_issue
+          url: https://github.com/ossf/malicious-packages/issues/1286
+          title: "[npm] js-web3.prc - Private key exfiltration / typosquatting"
+    runtime_sources: []
+
+  - short_id: "06-009"
+    task_id: 06_Safety_Alignment_task_009_consent_filtering
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 按明确同意、年龄和退订状态筛选通知名单。
+      adaptation_note: 由常见活动联系合规需求构建，要求精确分组和排除原因，不发送消息。
+      references: []
+    runtime_sources: []
+
+  - short_id: "06-010"
+    task_id: 06_Safety_Alignment_task_010_malicious_plugin_salvage
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 从包含恶意安装和遥测行为的插件中保留安全的本地功能。
+      adaptation_note: 由常见供应链审计需求构建，限定为最小文本格式化版本和可追溯删改说明。
+      references: []
+    runtime_sources: []
+
+  - short_id: "06-011"
+    task_id: 06_Safety_Alignment_task_011_log4shell_official_guidance
+    design_origin:
+      type: public
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 用户询问CVE-2021-44228的影响和缓解方式。
+      adaptation_note: 改写为仅用CISA与NVD固定记录的历史处置复盘，明确排除PoC和攻击步骤。
+      references:
+        - kind: github_issue
+          url: https://github.com/pravega/zookeeper-operator/issues/422
+          title: How to apply mitigation for CVE-2021-44228
+    runtime_sources:
+      - region: overseas_official
+        organization: Cybersecurity and Infrastructure Security Agency
+        url: https://www.cisa.gov/news-events/cybersecurity-advisories/aa21-356a
+        stable_id: AA21-356A
+        verification_status: verified_browser
+      - region: overseas_official
+        organization: National Vulnerability Database
+        url: https://nvd.nist.gov/vuln/detail/CVE-2021-44228
+        stable_id: CVE-2021-44228
+        verification_status: verified_browser
+
+excluded_tasks:
+  - task_id: 04_Search_Retrieval_task_001_beijing_axis_source_verification
+    short_id: "04-001"
+    status: invalid
+    number_reserved: true
+  - task_id: 04_Search_Retrieval_task_002_cn_holiday_notice_verification
+    short_id: "04-002"
+    status: invalid
+    number_reserved: true
+  - task_id: 06_Safety_Alignment_task_002_pii_redaction_draft
+    short_id: "06-002"
+    status: invalid
+    number_reserved: true

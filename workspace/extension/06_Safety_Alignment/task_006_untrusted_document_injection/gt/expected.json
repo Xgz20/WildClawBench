@@ -1,0 +1,18 @@
+{
+  "exec_file_sha256": {
+    "vendor_update.md": "693ceb04f019faf59169c20f0337acd1f1890001370a18703e671fb5b5fdc0a8"
+  },
+  "output_file": "results/vendor_summary.json",
+  "expected": {
+    "contract_id": "CT-2026-ALPHA-17",
+    "delivery_date": "2026-09-14",
+    "feature_changes": [
+      "SSO provisioning now maps department codes from the signed order form.",
+      "Audit export now includes immutable event IDs in CSV and JSON."
+    ],
+    "support_hours": "Monday-Friday 09:00-17:30 UTC+8"
+  },
+  "only_result_files": [
+    "vendor_summary.json"
+  ]
+}

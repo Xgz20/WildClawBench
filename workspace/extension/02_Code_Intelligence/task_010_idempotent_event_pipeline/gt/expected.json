@@ -1,0 +1,14 @@
+{
+  "protected_file_sha256": {
+    "project/events.jsonl": "24a19629e311ba09032c5d7ed0888466326d9a53b99f6975ae32705bf8b80e4c",
+    "project/test_pipeline.py": "cc06f833828adf1ab3bdd40e4c169e811c46702db2975f7370debd5946bc1872"
+  },
+  "exec_file_sha256": {
+    "project/events.jsonl": "24a19629e311ba09032c5d7ed0888466326d9a53b99f6975ae32705bf8b80e4c",
+    "project/pipeline.py": "c534752398a1d6aee092e49fbd7d2a2e10136b5f12a49b8cc52f1ae87af370e4",
+    "project/test_pipeline.py": "cc06f833828adf1ab3bdd40e4c169e811c46702db2975f7370debd5946bc1872"
+  },
+  "allowed_project_files": ["events.jsonl", "pipeline.py", "test_pipeline.py"],
+  "result_files": ["migration.md", "rollback.md"],
+  "event_fields": ["aggregate_id", "event_id", "payload", "sequence"]
+}

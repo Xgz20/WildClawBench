@@ -1,0 +1,28 @@
+{
+  "exec_file_sha256": {
+    "account_thread.md": "549ea76f785e7e2325febdde67263e5656e71f7946a0b3d0f0dc67a9aab35fc8",
+    "engineering_status.json": "52ea6277dbdb059011ac2ac9cb5937543ccf928c8b48c0a5ebcde7b6c10ea0c5",
+    "owners.csv": "d26d230fd1ddfd5c9cde3633717aa22da13a8d4a84c7f8e45bbfb32dde11e5c7",
+    "release_policy.md": "749caca2bbadd7fd58b4d58f5a7bc14ffb7babf0f81a2e3a3b76a4d02c3b9434"
+  },
+  "result_files": ["customer_update.md", "internal_alignment.md", "release_alignment.json"],
+  "alignment_fields": [
+    "account_id",
+    "commitment_status_code",
+    "previous_target_date",
+    "conditional_internal_window",
+    "next_customer_update_at",
+    "blocking_gates"
+  ],
+  "account_id": "ACCT-39",
+  "commitment_status_code": "date_not_committed",
+  "previous_target_date": "2026-09-18",
+  "conditional_internal_window": "2026-09-24T20:00:00+08:00",
+  "next_customer_update_at": "2026-09-18T17:00:00+08:00",
+  "blocking_gates": [
+    {"gate_id": "security_review", "status": "pending", "owner": "SEC-LEAD", "due_at": "2026-09-20T17:00:00+08:00"},
+    {"gate_id": "load_test_4x", "status": "pending", "owner": "PERF-LEAD", "due_at": "2026-09-21T18:00:00+08:00"},
+    {"gate_id": "rollback_rehearsal", "status": "pending", "owner": "SRE-LEAD", "due_at": "2026-09-22T18:00:00+08:00"}
+  ],
+  "release_manager_written_approval": false
+}

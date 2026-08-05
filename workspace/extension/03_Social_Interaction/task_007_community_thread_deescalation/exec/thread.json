@@ -1,0 +1,11 @@
+{
+  "thread_id": "COMM-184",
+  "topic": "Whether release notes should include experimental flags",
+  "window_started_at": "2026-09-11T14:00:00Z",
+  "posts": [
+    {"post_id": "P01", "author_id": "U01", "created_at": "2026-09-11T14:02:00Z", "flags": 0, "body": "I prefer a separate experimental section because the flags can change."},
+    {"post_id": "P02", "author_id": "U02", "created_at": "2026-09-11T14:08:00Z", "flags": 3, "body": "Only an idiot would hide these flags. Your proposal is lazy and useless."},
+    {"post_id": "P03", "author_id": "U03", "created_at": "2026-09-11T14:13:00Z", "flags": 2, "body": "You are the useless one. Stop pretending you understand releases."},
+    {"post_id": "P04", "author_id": "U04", "created_at": "2026-09-11T14:18:00Z", "flags": 0, "body": "Can we compare the two layouts against last month's notes?"}
+  ]
+}

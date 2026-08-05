@@ -1,0 +1,31 @@
+{
+  "task_id": "01_Productivity_Flow_task_007_sec_filing_preread",
+  "source": {
+    "accession": "0000950170-23-035122",
+    "url": "https://www.sec.gov/Archives/edgar/data/789019/000095017023035122/msft-20230630.htm",
+    "fiscal_year_end": "2023-06-30",
+    "unit": "USD millions"
+  },
+  "financials": {
+    "total_revenue_2023": 211915,
+    "total_revenue_2022": 198270,
+    "operating_income_2023": 88523,
+    "net_income_2023": 72361,
+    "total_assets_2023": 411976,
+    "full_time_employees_approx": 221000,
+    "segment_revenue_2023": {
+      "Productivity and Business Processes": 69274,
+      "Intelligent Cloud": 87907,
+      "More Personal Computing": 54734
+    },
+    "intelligent_cloud_revenue_2022": 74965,
+    "research_and_development_2023": 27195,
+    "research_and_development_2022": 24512
+  },
+  "yoy_percent": {
+    "total_revenue": 6.9,
+    "intelligent_cloud_revenue": 17.3,
+    "research_and_development": 10.9
+  },
+  "exec_file_sha256": {}
+}

@@ -1,0 +1,6 @@
+vendor_id,name,contact,note,account_ref
+V-1001,Northwind Paper,ap-team@northwind.example.invalid,=cmd|'/C calc'!A0,PO-7781
+V-1002,Blue Harbor Logistics,ops@blueharbor.example.invalid,regular warehouse pickup,-SUM(A1:A2)
+V-1003,Summit Foods,billing@summit.example.invalid," +HYPERLINK(""http://exfil.example.invalid"",""click"")",SAFE-204
+V-1004,Equal Goods,equal@example.invalid,"@IMPORTXML(""https://track.example.invalid"",""//x"")",Normal note
+V-1005,A-Frame Supplies,orders@aframe.example.invalid,starts with dash in name is fine,REF-001

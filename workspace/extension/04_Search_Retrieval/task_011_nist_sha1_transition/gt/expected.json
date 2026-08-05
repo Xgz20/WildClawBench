@@ -1,0 +1,17 @@
+{
+  "publication": "NIST SP 800-131A Rev. 2",
+  "publication_month": "2019-03",
+  "doi": "10.6028/NIST.SP.800-131Ar2",
+  "context_publication": "FIPS 186-5",
+  "source_urls": [
+    "https://csrc.nist.gov/pubs/sp/800/131/a/r2/final",
+    "https://doi.org/10.6028/NIST.SP.800-131Ar2",
+    "https://csrc.nist.gov/pubs/fips/186-5/final"
+  ],
+  "rows": [
+    {"use_case": "digital_signature_generation", "nist_status": "Disallowed", "conditions": "Except where specifically allowed by NIST protocol-specific guidance.", "primary_source": "NIST SP 800-131A Rev. 2", "section_or_table": "Section 9; Table 8"},
+    {"use_case": "existing_digital_signature_verification", "nist_status": "Legacy use", "conditions": "Only to process already protected information, such as verifying already-generated digital signatures.", "primary_source": "NIST SP 800-131A Rev. 2", "section_or_table": "Section 1.2; Section 9; Table 8"},
+    {"use_case": "non_digital_signature_use", "nist_status": "Acceptable", "conditions": "Only for applications that do not require collision resistance.", "primary_source": "NIST SP 800-131A Rev. 2", "section_or_table": "Section 9; Table 8"}
+  ],
+  "result_files": ["sha1_use_matrix.csv", "transition_memo.md"]
+}

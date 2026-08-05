@@ -1,0 +1,7 @@
+ticket_id,created_at,updated_at,status,owner,customer,severity,subject
+T-1001,2026-09-18T17:00:00Z,2026-09-18T18:00:00Z,open,Alice,Northwind,high,Intermittent SSO failures
+T-1001,2026-09-18T17:00:00Z,2026-09-18T20:30:00Z,pending_internal,Alice,Northwind,high,Intermittent SSO failures
+T-1002,2026-09-18T19:30:00Z,2026-09-18T21:00:00Z,investigating,,Orion,critical,Production login outage
+T-1003,2026-09-18T13:00:00Z,2026-09-18T20:00:00Z,resolved,Dana,Contoso,medium,Webhook retries
+T-1004,2026-09-18T12:00:00Z,2026-09-18T21:00:00Z,open,Ben,Fabrikam,medium,Invoice export fails
+T-1005,2026-09-18T10:00:00Z,2026-09-18T20:00:00Z,open,Chen,Adventure Works,low,Feature configuration question

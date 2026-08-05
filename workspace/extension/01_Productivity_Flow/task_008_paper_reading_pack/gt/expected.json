@@ -1,0 +1,34 @@
+{
+  "task_id": "01_Productivity_Flow_task_008_paper_reading_pack",
+  "source": {
+    "arxiv_id": "1706.03762",
+    "version": "v7",
+    "versioned_id": "arXiv:1706.03762v7",
+    "url": "https://arxiv.org/abs/1706.03762v7"
+  },
+  "title": "Attention Is All You Need",
+  "authors": [
+    "Ashish Vaswani",
+    "Noam Shazeer",
+    "Niki Parmar",
+    "Jakob Uszkoreit",
+    "Llion Jones",
+    "Aidan N. Gomez",
+    "Lukasz Kaiser",
+    "Illia Polosukhin"
+  ],
+  "first_submitted": "2017-06-12",
+  "version_revised": "2023-08-02",
+  "reported_results": {
+    "wmt2014_english_german_bleu": 28.4,
+    "wmt2014_english_french_bleu": 41.8,
+    "english_french_training_days": 3.5,
+    "english_french_training_gpus": 8
+  },
+  "reading_pack": {
+    "agenda_total_minutes": 60,
+    "discussion_question_count": 3,
+    "language": "zh-CN"
+  },
+  "exec_file_sha256": {}
+}

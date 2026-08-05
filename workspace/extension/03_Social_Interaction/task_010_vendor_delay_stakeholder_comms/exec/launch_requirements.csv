@@ -1,0 +1,4 @@
+milestone_id,date,cumulative_units_required,qa_required
+pilot,2026-10-12,300,true
+regional_launch,2026-10-16,800,true
+general_availability,2026-10-23,1200,true

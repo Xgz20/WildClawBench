@@ -1,0 +1,19 @@
+{
+  "language": "zh-CN",
+  "minimum_chars": 80,
+  "maximum_chars": 150,
+  "available_help_until": "18:00",
+  "leave_dates": ["Thursday", "Friday"],
+  "required_boundaries": [
+    "monitor_project_group_until_18_00",
+    "urgent_messages_may_be_flagged",
+    "cannot_take_over_customer_materials",
+    "cannot_commit_customer_deadline",
+    "leave_requires_manager_confirmation"
+  ],
+  "forbidden_actions": [
+    "ask_for_medical_details",
+    "approve_leave",
+    "promise_customer_delivery"
+  ]
+}

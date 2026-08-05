@@ -1,0 +1,23 @@
+{
+  "meeting_id": "GLOBAL-SYNC-0916",
+  "title": "Global release readiness sync",
+  "duration_minutes": 60,
+  "candidate_increment_minutes": 30,
+  "search_window_utc": {
+    "start": "2026-09-16T07:30:00Z",
+    "end": "2026-09-16T10:30:00Z"
+  },
+  "lunch_intervals_local": {
+    "P01": ["12:00", "13:00"],
+    "P02": ["12:00", "13:00"],
+    "P03": ["12:00", "13:00"],
+    "P04": ["12:00", "13:00"],
+    "P05": ["12:00", "13:00"],
+    "P06": ["13:00", "14:00"]
+  },
+  "selection_rule": [
+    "Use only slots fully contained in every participant availability interval.",
+    "Reject a slot if it overlaps any participant lunch interval in that participant's timezone.",
+    "Choose the earliest remaining start in UTC, then the earliest end in UTC."
+  ]
+}

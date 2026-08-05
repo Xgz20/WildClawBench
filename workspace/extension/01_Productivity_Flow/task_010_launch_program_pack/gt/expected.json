@@ -1,0 +1,37 @@
+{
+  "task_id": "01_Productivity_Flow_task_010_launch_program_pack",
+  "launch_plan_header": ["phase", "milestone_id", "milestone_name", "start_date", "end_date", "owner", "dependencies", "planned_cost_usd", "acceptance_gate", "status"],
+  "required_milestones": ["M1", "M2", "M3", "M4", "M5", "M6", "M7"],
+  "milestones": {
+    "M1": {"start_date": "2026-10-01", "end_date": "2026-10-05", "cost": 10000},
+    "M2": {"start_date": "2026-10-06", "end_date": "2026-10-12", "cost": 25000},
+    "M3": {"start_date": "2026-10-19", "end_date": "2026-10-23", "cost": 35000},
+    "M4": {"start_date": "2026-10-13", "end_date": "2026-10-18", "cost": 30000},
+    "M5": {"start_date": "2026-10-26", "end_date": "2026-10-30", "cost": 25000},
+    "M6": {"start_date": "2026-11-02", "end_date": "2026-11-06", "cost": 30000},
+    "M7": {"start_date": "2026-11-09", "end_date": "2026-11-09", "cost": 20000}
+  },
+  "required_dependencies": {
+    "M1": [],
+    "M2": ["M1"],
+    "M3": ["M2"],
+    "M4": ["M2"],
+    "M5": ["M4"],
+    "M6": ["M3", "M5"],
+    "M7": ["M6"]
+  },
+  "hard_budget": 180000,
+  "planned_total_cost": 175000,
+  "production_deadline": "2026-11-20",
+  "unapproved_requested_date": "2026-11-06",
+  "rejected_optional_request": "OPT-ANALYTICS",
+  "required_output_files": ["launch_plan.csv", "risk_register.csv", "decision_log.md", "comms_draft.md"],
+  "risk_register_header": ["risk_id", "risk", "trigger", "owner", "response", "severity"],
+  "exec_file_sha256": {
+    "milestone_plan.csv": "4187751e94d0c25a626a62b4750655d774661fd564cecc5ad69b5e569d19fcff",
+    "budget_limits.json": "f3daa3f0b9335beef13e4d668ce4c6364c8fd4daaa8295fcd4a55ab7d53aec45",
+    "raci.csv": "7f9f19dd745f352bb319c2c3450a4cbbb3e6f06ed9bdacd87d2775217c42e4ed",
+    "stakeholder_notes.md": "4e66af7fd1ac79a8d3c75616b6d11b7d933e74a09701e338e12558c8452676a6",
+    "release_policy.md": "fba9eb993be90d546f5a928d1202dc745f2409ed36bab4c22c00e627a874bbe9"
+  }
+}

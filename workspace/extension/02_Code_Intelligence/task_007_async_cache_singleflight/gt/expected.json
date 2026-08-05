@@ -1,0 +1,12 @@
+{
+  "protected_file_sha256": {
+    "project/test_cache.py": "5bd8ae57e65c93a43844f46c492da0a379105729410f7617f4c4acd1757dd2f2"
+  },
+  "exec_file_sha256": {
+    "project/cache.py": "bb89974f3bf41a17f23b25eebb4d145e969d413db1c46c433e7b15770785a47d",
+    "project/test_cache.py": "5bd8ae57e65c93a43844f46c492da0a379105729410f7617f4c4acd1757dd2f2"
+  },
+  "allowed_project_files": ["cache.py", "test_cache.py"],
+  "class_name": "AsyncTTLCache",
+  "method_name": "get"
+}

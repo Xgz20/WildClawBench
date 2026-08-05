@@ -1,0 +1,11 @@
+{
+  "top_level": "list",
+  "node_fields": ["id", "speaker", "text", "condition", "choices"],
+  "choice_fields": ["text", "next"],
+  "entry_id": "start",
+  "exit_id": "exit",
+  "speaker": "Mara",
+  "state": "has_archive_key",
+  "required_conditions": ["has_archive_key == true", "has_archive_key == false"],
+  "knowledge_boundary": "The no-key branch must not imply that the player opened or passed the archive door."
+}

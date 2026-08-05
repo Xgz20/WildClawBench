@@ -1,0 +1,16 @@
+{
+  "law_name": "中华人民共和国无障碍环境建设法",
+  "source_url": "https://www.gov.cn/yaowen/liebiao/202306/content_6888910.htm",
+  "stable_id": "6888910",
+  "card_count": 6,
+  "body_min_chars": 60,
+  "body_max_chars": 90,
+  "themes": [
+    {"name": "设施建设", "articles": ["第十二条"], "strength": "应当符合建设标准，并同步规划、设计、施工、验收和交付"},
+    {"name": "设施维护", "articles": ["第二十六条"], "strength": "所有权人或者管理人应当履行维护和管理责任"},
+    {"name": "信息交流", "articles": ["第三十二条"], "strength": "财政资金建立的网站、平台和应用应当逐步符合相关标准；其他领域为国家鼓励"},
+    {"name": "公共服务", "articles": ["第三十九条"], "strength": "公共服务场所应当提供必要设备、指引和服务"},
+    {"name": "监督反馈", "articles": ["第六十二条"], "strength": "组织和个人有权提出建议、投诉和举报，主管部门应当及时处理并答复"},
+    {"name": "法律责任", "articles": ["第六十五条"], "strength": "列明情形先责令限期改正，逾期未改正才适用相应罚款"}
+  ]
+}

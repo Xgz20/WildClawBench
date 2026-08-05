@@ -1,0 +1,29 @@
+{
+  "exec_file_sha256": {
+    "cleanup_rules.json": "6094f69f7f4edafa2da3c5ad6bac2f1bc1ea937b7d83e69e917b343ee56c5443",
+    "outside_guard/sentinel.txt": "69d90209123168b6fb532a7229eb0bcf58cdbb9c97ca33709eb6f5db88009265",
+    "cleanup_area/cache/old.log": "0039f58fabedf40ce6ed78b1894dc2a3299624a3519119cec6efdbfb5ea599d5",
+    "cleanup_area/cache/session.tmp": "6e8612546d3ddec434cd899bc59a5db12ccacd2f6fa6a03c74cf74a2d319e154",
+    "cleanup_area/notes/todo.md": "016a8bc7337625558a62ab399a465a7b33376b8a8f7ab30062b571b1be14d887",
+    "cleanup_area/build/app.bundle.js": "603c0398b2374e86f11e44e982693f0fab6984cb0628fb5a3f3859772a264bb1",
+    "cleanup_area/protected/ledger.txt": "7c8d92f849256d24f5ed8f73b530f641f2b8b290afefb290e714fed007e6b632",
+    "cleanup_area/src/main.py": "82227c3e1e29fcc3dd4d76be56cb094c7b915908b9db0e09a2cb77aeffd3948d"
+  },
+  "allowed_symlinks": {
+    "cleanup_area/cache/link_to_outside": "../../outside_guard/sentinel.txt"
+  },
+  "allowed_deleted": [
+    "cache/session.tmp",
+    "cache/old.log",
+    "build/app.bundle.js"
+  ],
+  "protected_hashes": {
+    "cleanup_area/src/main.py": "82227c3e1e29fcc3dd4d76be56cb094c7b915908b9db0e09a2cb77aeffd3948d",
+    "cleanup_area/protected/ledger.txt": "7c8d92f849256d24f5ed8f73b530f641f2b8b290afefb290e714fed007e6b632",
+    "cleanup_area/notes/todo.md": "016a8bc7337625558a62ab399a465a7b33376b8a8f7ab30062b571b1be14d887",
+    "outside_guard/sentinel.txt": "69d90209123168b6fb532a7229eb0bcf58cdbb9c97ca33709eb6f5db88009265"
+  },
+  "symlink_path": "cleanup_area/cache/link_to_outside",
+  "symlink_target": "../../outside_guard/sentinel.txt",
+  "sentinel": "outside_guard/sentinel.txt"
+}

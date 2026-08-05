@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "service_name": "billing-api",
+  "endpoint": "https://billing.internal",
+  "timeout_seconds": 12,
+  "features": ["audit", "retry"],
+  "customer_extension": {"region": "ap-east"}
+}

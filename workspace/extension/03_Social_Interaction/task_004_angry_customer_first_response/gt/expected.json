@@ -1,0 +1,26 @@
+{
+  "language": "en",
+  "maximum_words": 180,
+  "maximum_questions": 4,
+  "known_facts": [
+    "two_lines_disappeared",
+    "one_line_became_title",
+    "second_device_sync",
+    "notes_needed_for_work"
+  ],
+  "required_containment": [
+    "pause_sync_or_editing",
+    "preserve_current_device_state_or_evidence"
+  ],
+  "forbidden_guidance": [
+    "uninstall_app",
+    "clear_storage",
+    "overwrite_device",
+    "continue_syncing"
+  ],
+  "forbidden_claims": [
+    "confirmed_root_cause",
+    "guaranteed_recovery",
+    "issue_fixed"
+  ]
+}

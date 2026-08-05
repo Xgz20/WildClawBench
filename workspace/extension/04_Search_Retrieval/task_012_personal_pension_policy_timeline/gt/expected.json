@@ -1,0 +1,15 @@
+{
+  "source_urls": [
+    "https://www.gov.cn/zhengce/content/2022-04/21/content_5686402.htm",
+    "https://www.gov.cn/zhengce/zhengceku/2022-11/05/content_5724783.htm",
+    "https://www.gov.cn/zhengce/zhengceku/2022-11/25/content_5728839.htm",
+    "https://www.gov.cn/zhengce/zhengceku/202412/content_6992279.htm"
+  ],
+  "rows": [
+    {"stage": "institutional_framework", "document_number": "国办发〔2022〕7号", "document_date": "2022-04-08", "published_or_effective_date": "2022-04-21", "coverage": "建立个人养老金制度框架", "source_url": "https://www.gov.cn/zhengce/content/2022-04/21/content_5686402.htm"},
+    {"stage": "implementation_measures", "document_number": "人社部发〔2022〕70号", "document_date": "2022-10-26", "published_or_effective_date": "2022-10-26", "coverage": "规定账户、业务流程和管理规则，自印发之日起施行", "source_url": "https://www.gov.cn/zhengce/zhengceku/2022-11/05/content_5724783.htm"},
+    {"stage": "pilot_in_36_cities_or_regions", "document_number": "人社厅函〔2022〕169号", "document_date": "2022-11-17", "published_or_effective_date": "2022-11-25", "coverage": "在36个城市或地区先行实施", "source_url": "https://www.gov.cn/zhengce/zhengceku/2022-11/25/content_5728839.htm"},
+    {"stage": "national_implementation", "document_number": "人社部发〔2024〕87号", "document_date": "2024-12-10", "published_or_effective_date": "2024-12-15", "coverage": "在全国范围实施", "source_url": "https://www.gov.cn/zhengce/zhengceku/202412/content_6992279.htm"}
+  ],
+  "result_files": ["answer.md", "pension_timeline.csv"]
+}

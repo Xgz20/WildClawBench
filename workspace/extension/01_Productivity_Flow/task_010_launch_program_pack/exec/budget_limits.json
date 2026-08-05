@@ -1,0 +1,13 @@
+{
+  "program": "Atlas customer launch",
+  "currency": "USD",
+  "hard_budget": 180000,
+  "production_deadline": "2026-11-20",
+  "optional_requests": [
+    {
+      "id": "OPT-ANALYTICS",
+      "description": "Expanded launch-event analytics package",
+      "cost_usd": 25000
+    }
+  ]
+}

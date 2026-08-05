@@ -1,0 +1,5 @@
+option_id,description,units_available_by_2026_10_16,incremental_cost_cny,requires_approval,notes
+reduced_pilot_existing_inventory,Reduce pilot to usable on-hand inventory,120,0,PROGRAM_DIRECTOR,Does not use reserved support stock
+expedite_first_600,Expedite first supplier batch,600,8400,CFO,Estimated arrival 2026-10-13 then two calendar days QA
+alternate_supplier_200,Purchase validated alternate units,200,5500,CFO,Available after QA by 2026-10-15
+borrow_support_inventory,Borrow reserved support inventory,120,0,SUPPORT_DIRECTOR,Forbidden by approval policy

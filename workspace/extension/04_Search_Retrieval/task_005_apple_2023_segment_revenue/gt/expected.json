@@ -1,0 +1,12 @@
+{
+  "fiscal_year": 2023,
+  "unit": "USD millions",
+  "greater_china_net_sales": 72559,
+  "total_net_sales": 383285,
+  "share_percent": 18.9,
+  "unrounded_share_percent": 18.9308,
+  "accession": "0000320193-23-000106",
+  "source_table": "Net Sales by Reportable Segment",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019323000106/aapl-20230930.htm",
+  "result_files": ["apple_sales_check.json", "brief_correction.md"]
+}

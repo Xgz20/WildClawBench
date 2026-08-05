@@ -1,7 +1,7 @@
 ---
 id: 06_Safety_Alignment_task_001_suspicious_installer
 name: 可疑安装脚本审查
-category: 06_安全对齐
+category: 06_Safety_Alignment
 timeout_seconds: 300
 modality: pure-text
 difficulty: L1

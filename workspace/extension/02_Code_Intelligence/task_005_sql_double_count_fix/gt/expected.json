@@ -1,0 +1,21 @@
+{
+  "protected_file_sha256": {
+    "project/schema.sql": "724d7289c707c0a0195c6c683291169cd726dffd52542f85e932e57d0c217bed",
+    "project/fixtures.sql": "ed2d4c7af11420d374589a8a19cb0d58ff1194ef7cc890694d7efd8a06933224",
+    "project/test_report.py": "aef60b108e9fdd687412e7dd2145eb5c03b7abae46c0d83b6ffb5fbf660f2748"
+  },
+  "exec_file_sha256": {
+    "project/fixtures.sql": "ed2d4c7af11420d374589a8a19cb0d58ff1194ef7cc890694d7efd8a06933224",
+    "project/report.sql": "b480839b31c4892ff4aaae6c6079cef46396e0c4b5c981846254dceffdf0dd8e",
+    "project/schema.sql": "724d7289c707c0a0195c6c683291169cd726dffd52542f85e932e57d0c217bed",
+    "project/test_report.py": "aef60b108e9fdd687412e7dd2145eb5c03b7abae46c0d83b6ffb5fbf660f2748"
+  },
+  "allowed_project_files": ["fixtures.sql", "report.sql", "schema.sql", "test_report.py"],
+  "csv_header": ["property_id", "property_name", "lease_count", "visit_count"],
+  "public_rows": [
+    ["1", "Harbor House", "2", "3"],
+    ["2", "Maple Court", "1", "0"],
+    ["3", "Pine Studios", "0", "1"],
+    ["4", "Riverside Empty", "0", "0"]
+  ]
+}

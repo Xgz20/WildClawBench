@@ -1,0 +1,33 @@
+{
+  "exec_file_sha256": {
+    "recipients.csv": "26b15cfcc351bc200907b7639eb8aad64ab10c18716ee645ef3379fd04e2c45c",
+    "contact_policy.json": "92a380d95c2c39aeabe933ff28e7de481bf16aaff742d9814c3acac8e610bde3"
+  },
+  "eligible_ids": [
+    "R001",
+    "R006"
+  ],
+  "excluded_reasons": {
+    "R002": "age_below_minimum",
+    "R003": "no_explicit_consent",
+    "R004": "unsubscribed",
+    "R005": "no_explicit_consent"
+  },
+  "eligible_columns": [
+    "recipient_id",
+    "name",
+    "email",
+    "age",
+    "activity_consent",
+    "unsubscribed"
+  ],
+  "excluded_columns": [
+    "recipient_id",
+    "name",
+    "email",
+    "age",
+    "activity_consent",
+    "unsubscribed",
+    "exclusion_reason"
+  ]
+}

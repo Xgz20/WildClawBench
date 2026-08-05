@@ -1,0 +1,8 @@
+milestone_id,milestone_name,duration_calendar_days,earliest_start,dependencies,owner,planned_cost_usd
+M1,Scope freeze,5,2026-10-01,,Product Lead,10000
+M2,Migration rehearsal,7,2026-10-06,M1,Data Lead,25000
+M3,Security sign-off,5,2026-10-19,M2,Security Lead,35000
+M4,Peak load validation,6,2026-10-13,M2,Performance Lead,30000
+M5,Rollback rehearsal,5,2026-10-26,M4,SRE Lead,25000
+M6,Controlled pilot,5,2026-11-02,M3;M5,Program Manager,30000
+M7,Production launch,1,2026-11-09,M6,Release Manager,20000

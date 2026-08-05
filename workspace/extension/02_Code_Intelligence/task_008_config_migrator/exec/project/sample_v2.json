@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "service": {
+    "name": "search-api",
+    "endpoint": "https://search.internal",
+    "owner": "search-platform"
+  },
+  "request_timeout_seconds": 8,
+  "features": ["suggestions"],
+  "deployment_hint": "blue"
+}

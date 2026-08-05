@@ -1,0 +1,2 @@
+{"at":"2026-09-28T09:00:00+08:00","status":"confirmed","detail":"PO-8841 planned to ship 2026-10-06 and arrive 2026-10-09"}
+{"at":"2026-10-02T16:30:00+08:00","status":"latest_written_update","first_batch_quantity":600,"first_batch_ship_date":"2026-10-10","first_batch_estimated_arrival":"2026-10-13","remaining_quantity":600,"remaining_ship_window_start":"2026-10-19","remaining_ship_window_end":"2026-10-21","remaining_arrival_date":null}

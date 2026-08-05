@@ -1,0 +1,13 @@
+{
+  "exec_file_sha256": {},
+  "source": {
+    "url": "https://docs.python.org/3.12/library/tomllib.html",
+    "version": "3.12"
+  },
+  "result_files": ["pyproject_reader.py", "source.json"],
+  "valid_metadata": {
+    "name": "sample-service",
+    "version": "2.4.1",
+    "dependencies": ["httpx>=0.27", "orjson; python_version >= '3.12'"]
+  }
+}

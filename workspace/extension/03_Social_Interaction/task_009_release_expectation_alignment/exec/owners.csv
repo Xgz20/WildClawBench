@@ -1,0 +1,4 @@
+gate_id,owner,due_at
+security_review,SEC-LEAD,2026-09-20T17:00:00+08:00
+load_test_4x,PERF-LEAD,2026-09-21T18:00:00+08:00
+rollback_rehearsal,SRE-LEAD,2026-09-22T18:00:00+08:00

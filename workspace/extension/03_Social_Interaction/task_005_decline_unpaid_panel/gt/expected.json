@@ -1,0 +1,17 @@
+{
+  "language": "zh-CN",
+  "recipient": "Amy",
+  "sender": "林岚",
+  "body_length_min_chars": 120,
+  "body_length_max_chars": 220,
+  "required_decision": "decline_current_unpaid_panel",
+  "required_future_conditions": [
+    "suitable_topic",
+    "speaker_budget"
+  ],
+  "forbidden_claims": [
+    "fabricated_schedule_conflict",
+    "criticism_of_event_value",
+    "acceptance_of_current_invitation"
+  ]
+}

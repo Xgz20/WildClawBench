@@ -1,0 +1,4 @@
+{"event_id":"evt-a-2","aggregate_id":"acct-a","sequence":2,"payload":{"delta":5}}
+{"event_id":"evt-b-1","aggregate_id":"acct-b","sequence":1,"payload":{"delta":3}}
+{"event_id":"evt-a-1","aggregate_id":"acct-a","sequence":1,"payload":{"delta":7}}
+{"event_id":"evt-a-2","aggregate_id":"acct-a","sequence":2,"payload":{"delta":5}}

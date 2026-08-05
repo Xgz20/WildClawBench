@@ -1,7 +1,7 @@
 ---
 id: 01_Productivity_Flow_task_001_expense_policy_check
 name: 报销政策选择与费用审核
-category: 01_生产力工作流
+category: 01_Productivity_Flow
 timeout_seconds: 300
 modality: pure-text
 difficulty: L1

