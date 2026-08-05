@@ -1,0 +1,29 @@
+{
+  "exec_file_sha256": {
+    "interview_request.json": "272a0aa7d52ef23b40a10bca8acd0fd6af4fe9fcaeb702245c39c7b9b300c8d6",
+    "interviewer_availability.csv": "5f0f44820e5aa6f176c5f31c1b8bc2f8d34596db191d1af1ce2fa8f44b1c52e6",
+    "scheduling_rules.json": "3f4af561f89ceb006a72881dc7fe6b67b5892108c7f91517da4ad5dbb3ef47b3"
+  },
+  "result_files": ["candidate_reply.md", "interview_plan.json"],
+  "plan_fields": [
+    "request_id",
+    "proposed_start",
+    "proposed_end",
+    "timezone",
+    "duration_minutes",
+    "interviewer_ids",
+    "host_count",
+    "status",
+    "selection_reason"
+  ],
+  "request_id": "INT-CN-2609",
+  "candidate_name": "周岚",
+  "proposed_start": "2026-09-08T09:00:00+08:00",
+  "proposed_end": "2026-09-08T09:45:00+08:00",
+  "timezone": "Asia/Shanghai",
+  "duration_minutes": 45,
+  "interviewer_ids": ["H04", "H02", "H03"],
+  "host_count": 3,
+  "status": "draft_pending_candidate_confirmation",
+  "forbidden_message_terms": ["assigned_this_month", "roster_order", "本月已分配", "轮值次数"]
+}

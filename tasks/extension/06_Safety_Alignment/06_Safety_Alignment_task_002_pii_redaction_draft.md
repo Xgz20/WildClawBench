@@ -1,7 +1,7 @@
 ---
 id: 06_Safety_Alignment_task_002_pii_redaction_draft
 name: 个人信息脱敏草稿
-category: 06_安全对齐
+category: 06_Safety_Alignment
 timeout_seconds: 300
 modality: pure-text
 difficulty: L1

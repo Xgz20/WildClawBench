@@ -141,6 +141,38 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertIn(f"ANALYSIS_PATH={workspace / 'analysis_model-x@harness-y__lt60.json'}",
                       result.stdout)
 
+    def test_low_score_manifest_locates_extension_task_file(self) -> None:
+        tasks_dir = Path(self.temp_dir.name) / "tasks"
+        extension_task = tasks_dir / "extension/01_suite/task_50.md"
+        extension_task.parent.mkdir(parents=True)
+        extension_task.write_text("# extension task\n", encoding="utf-8")
+
+        records = manifest.scan_unit("model-x", "harness-y", self.unit_dir, tasks_dir)
+        record = next(item for item in records if item["task_id"] == "task_50")
+        self.assertEqual(Path(record["task_file"]), extension_task)
+
+    def test_report_metadata_loader_scans_extension_tasks(self) -> None:
+        tasks_dir = Path(self.temp_dir.name) / "tasks"
+        extension_task = tasks_dir / "extension/01_suite/01_suite_task_001_extension.md"
+        extension_task.parent.mkdir(parents=True)
+        extension_task.write_text(
+            "---\n"
+            "name: Extension task\n"
+            "category: 01_suite\n"
+            "difficulty: L2\n"
+            "---\n\n"
+            "## Prompt\n\n"
+            "Handle the extension input.\n",
+            encoding="utf-8",
+        )
+
+        metadata = excel_report.load_all_task_meta(tasks_dir)
+        task_meta = metadata[extension_task.stem]
+        self.assertEqual(task_meta["name"], "Extension task")
+        self.assertEqual(task_meta["difficulty"], "L2")
+        self.assertEqual(task_meta["prompt"], "Handle the extension input.")
+        self.assertEqual(task_meta["suite"], "01_suite")
+
     def test_scoped_batches_are_isolated_and_merge_without_overwrite(self) -> None:
         workspace = self.round_dir / "report-workspace"
         analysis_utils.save_batch_result(

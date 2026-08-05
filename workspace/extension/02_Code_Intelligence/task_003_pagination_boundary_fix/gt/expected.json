@@ -1,0 +1,12 @@
+{
+  "protected_file_sha256": {
+    "project/test_pagination.py": "4b17ab354aa0b1f561e8438a4d8a01e2e4754a417db82b38d89748821de1846a"
+  },
+  "exec_file_sha256": {
+    "project/pagination.py": "d12ca6c9e92a78b300bbdad7f46385a2fbd112419c708296d652a7cb9c50f394",
+    "project/test_pagination.py": "4b17ab354aa0b1f561e8438a4d8a01e2e4754a417db82b38d89748821de1846a"
+  },
+  "allowed_project_files": ["pagination.py", "test_pagination.py"],
+  "function_name": "paginate",
+  "return_keys": ["has_next", "items"]
+}

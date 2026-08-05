@@ -1,0 +1,26 @@
+{
+  "task_id": "01_Productivity_Flow_task_004_timezone_scheduler",
+  "meeting_id": "GLOBAL-SYNC-0916",
+  "title": "Global release readiness sync",
+  "duration_minutes": 60,
+  "start_utc": "2026-09-16T09:00:00Z",
+  "end_utc": "2026-09-16T10:00:00Z",
+  "participant_local_times": [
+    {"participant_id": "P01", "timezone": "Asia/Shanghai", "start": "2026-09-16T17:00:00+08:00", "end": "2026-09-16T18:00:00+08:00"},
+    {"participant_id": "P02", "timezone": "Asia/Tokyo", "start": "2026-09-16T18:00:00+09:00", "end": "2026-09-16T19:00:00+09:00"},
+    {"participant_id": "P03", "timezone": "Europe/Berlin", "start": "2026-09-16T11:00:00+02:00", "end": "2026-09-16T12:00:00+02:00"},
+    {"participant_id": "P04", "timezone": "Europe/London", "start": "2026-09-16T10:00:00+01:00", "end": "2026-09-16T11:00:00+01:00"},
+    {"participant_id": "P05", "timezone": "Asia/Dubai", "start": "2026-09-16T13:00:00+04:00", "end": "2026-09-16T14:00:00+04:00"},
+    {"participant_id": "P06", "timezone": "Asia/Kolkata", "start": "2026-09-16T14:30:00+05:30", "end": "2026-09-16T15:30:00+05:30"}
+  ],
+  "meeting_json_fields": ["meeting_id", "title", "start_utc", "end_utc", "duration_minutes", "participant_local_times"],
+  "ics": {
+    "dtstart": "20260916T090000Z",
+    "dtend": "20260916T100000Z",
+    "summary": "Global release readiness sync"
+  },
+  "exec_file_sha256": {
+    "availability.csv": "95bbb4a40fd595bd142624e76885c2bf0225c5394fe1b68388bd196cd8ae39c2",
+    "constraints.json": "356459bc1dda3fe93335f28fd64c32efa30c19593c0b9751c4062fdfb617949f"
+  }
+}

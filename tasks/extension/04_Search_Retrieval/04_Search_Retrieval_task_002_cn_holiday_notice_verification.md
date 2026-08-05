@@ -1,7 +1,7 @@
 ---
 id: 04_Search_Retrieval_task_002_cn_holiday_notice_verification
 name: 中国2025年春节放假通知核验
-category: 04_搜索检索
+category: 04_Search_Retrieval
 timeout_seconds: 300
 modality: pure-text
 difficulty: L1

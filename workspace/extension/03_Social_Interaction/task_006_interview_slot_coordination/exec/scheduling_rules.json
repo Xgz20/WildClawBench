@@ -1,0 +1,8 @@
+{
+  "min_hosts": 1,
+  "max_hosts": 3,
+  "slot_order": "candidate_order",
+  "host_sort": ["assigned_this_month_ascending", "roster_order_ascending"],
+  "required_status": "draft_pending_candidate_confirmation",
+  "external_actions_allowed": false
+}

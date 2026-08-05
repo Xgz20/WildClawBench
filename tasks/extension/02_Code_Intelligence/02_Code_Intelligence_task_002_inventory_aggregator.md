@@ -1,7 +1,7 @@
 ---
 id: 02_Code_Intelligence_task_002_inventory_aggregator
 name: 实现库存聚合函数
-category: 02_代码智能
+category: 02_Code_Intelligence
 timeout_seconds: 300
 modality: pure-text
 difficulty: L1

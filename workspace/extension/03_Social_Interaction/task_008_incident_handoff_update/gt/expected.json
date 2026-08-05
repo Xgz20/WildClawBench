@@ -1,0 +1,42 @@
+{
+  "exec_file_sha256": {
+    "handoff_policy.md": "cccd1cd5d54bdfbfed55db66c70dc5ab33fbb4e2b219c8b2a8d3c0284c942518",
+    "incident_timeline.jsonl": "2bcd269ddc7467029712997fae537141ebfda3001d863016e7477425caadc190",
+    "monitor_snapshot.json": "6ecb62714b2d6dfb95562b59276b92e341d99db143e40055b2be7d54950403a0",
+    "shift_notes.md": "fb6180b8ef5ad9ceec33faa32b6635d477f4869cb488ee874e8a00d6258c5709"
+  },
+  "result_files": ["handoff.json", "handoff_message.md"],
+  "handoff_fields": [
+    "incident_id",
+    "severity",
+    "status_code",
+    "resolved",
+    "latest_monitoring",
+    "completed_actions",
+    "pending_actions",
+    "active_risks",
+    "unconfirmed_hypotheses"
+  ],
+  "incident_id": "INC-742",
+  "severity": "SEV-2",
+  "status_code": "mitigated_monitoring",
+  "resolved": false,
+  "latest_monitoring": {
+    "captured_at": "2026-09-15T21:48:00Z",
+    "checkout_error_rate_percent": 1.3,
+    "baseline_error_rate_percent": 0.4,
+    "cache_pool_saturated": true,
+    "qualifying_windows_below_gate": 0,
+    "payment_reconciliation_complete": false
+  },
+  "completed_actions": [
+    {"action_code": "rollback_release", "owner": "SRE-CUR", "completed_at": "2026-09-15T21:26:00Z"}
+  ],
+  "pending_actions": [
+    {"action_code": "inspect_cache_pool", "owner": "CACHE-SRE", "due_at": "2026-09-15T22:15:00Z"},
+    {"action_code": "watch_error_gate", "owner": "SRE-NEXT", "due_at": "2026-09-15T22:20:00Z"},
+    {"action_code": "reconcile_payments", "owner": "PAY-ONCALL", "due_at": "2026-09-15T22:30:00Z"}
+  ],
+  "active_risks": ["elevated_error_rate", "cache_pool_saturation", "payment_reconciliation_pending"],
+  "unconfirmed_hypotheses": ["release_4_18_0_regression"]
+}

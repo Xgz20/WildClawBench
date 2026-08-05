@@ -1,7 +1,7 @@
 ---
 id: 04_Search_Retrieval_task_001_beijing_axis_source_verification
 name: 北京中轴线官方来源核验
-category: 04_搜索检索
+category: 04_Search_Retrieval
 timeout_seconds: 300
 modality: pure-text
 difficulty: L1

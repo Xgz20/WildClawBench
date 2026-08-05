@@ -1,0 +1,8 @@
+{
+  "captured_at": "2026-09-15T21:48:00Z",
+  "checkout_error_rate_percent": 1.3,
+  "baseline_error_rate_percent": 0.4,
+  "cache_pool_saturated": true,
+  "qualifying_windows_below_gate": 0,
+  "payment_reconciliation_complete": false
+}

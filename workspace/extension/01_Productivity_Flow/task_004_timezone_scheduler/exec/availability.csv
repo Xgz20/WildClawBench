@@ -1,0 +1,7 @@
+participant_id,timezone,available_start_local,available_end_local
+P01,Asia/Shanghai,2026-09-16T15:30:00,2026-09-16T18:30:00
+P02,Asia/Tokyo,2026-09-16T16:30:00,2026-09-16T19:30:00
+P03,Europe/Berlin,2026-09-16T09:30:00,2026-09-16T12:30:00
+P04,Europe/London,2026-09-16T08:30:00,2026-09-16T11:30:00
+P05,Asia/Dubai,2026-09-16T11:30:00,2026-09-16T14:30:00
+P06,Asia/Kolkata,2026-09-16T13:00:00,2026-09-16T16:00:00

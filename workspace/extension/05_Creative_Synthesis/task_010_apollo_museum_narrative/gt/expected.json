@@ -1,0 +1,21 @@
+{
+  "record_url": "https://ntrs.nasa.gov/citations/19710015566",
+  "pdf_url": "https://ntrs.nasa.gov/api/citations/19710015566/downloads/19710015566.pdf",
+  "document_id": "19710015566",
+  "report_number": "NASA-SP-238",
+  "title": "Apollo 11 mission report",
+  "publication_date": "1970-01-01",
+  "pdf_size_bytes": 12485794,
+  "facts": [
+    {"id": "F1", "report_page": 1, "fact": "Apollo 11 launched from Kennedy Space Center at 8:32 a.m. EST on July 16, 1969."},
+    {"id": "F2", "report_page": 1, "fact": "The spacecraft entered lunar orbit at approximately 76 hours ground elapsed time."},
+    {"id": "F3", "report_page": 1, "fact": "The lunar module landed in the Sea of Tranquility at 102:45:40 ground elapsed time."},
+    {"id": "F4", "report_page": 1, "fact": "Armstrong first contacted the lunar surface at 109:24:15 ground elapsed time, 9:56:15 p.m. EST on July 20, 1969."},
+    {"id": "F5", "report_page": 1, "fact": "The ascent stage lifted off at about 124.25 hours and the spacecraft docked at 128 hours ground elapsed time."},
+    {"id": "F6", "report_page": 2, "fact": "The command module landed in the Pacific at about 195.25 hours, and the crew was recovered to USS Hornet."}
+  ],
+  "min_words": 600,
+  "max_words": 750,
+  "required_parts": ["opening", "act 1", "act 2", "act 3", "closing question"],
+  "source_notes": 3
+}

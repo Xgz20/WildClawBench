@@ -1,0 +1,24 @@
+{
+  "source_urls": [
+    "https://www.rfc-editor.org/info/rfc7230",
+    "https://www.rfc-editor.org/info/rfc7231",
+    "https://www.rfc-editor.org/info/rfc9110",
+    "https://www.rfc-editor.org/info/rfc9112"
+  ],
+  "records": [
+    {
+      "old_rfc": "RFC 7230",
+      "replacements": [
+        {"rfc": "RFC 9110", "publication_month": "2022-06", "scope": "HTTP semantics", "source_url": "https://www.rfc-editor.org/info/rfc9110"},
+        {"rfc": "RFC 9112", "publication_month": "2022-06", "scope": "HTTP/1.1 message syntax", "source_url": "https://www.rfc-editor.org/info/rfc9112"}
+      ]
+    },
+    {
+      "old_rfc": "RFC 7231",
+      "replacements": [
+        {"rfc": "RFC 9110", "publication_month": "2022-06", "scope": "HTTP semantics", "source_url": "https://www.rfc-editor.org/info/rfc9110"}
+      ]
+    }
+  ],
+  "result_files": ["migration_note.md", "rfc_replacement_map.json"]
+}

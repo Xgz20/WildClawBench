@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "service": {
+    "name": "identity-api",
+    "endpoint": "https://identity.internal"
+  },
+  "timeouts": {"request_seconds": 5},
+  "features": {"enabled": ["mfa"]},
+  "extension": {"tenant_mode": "isolated"}
+}

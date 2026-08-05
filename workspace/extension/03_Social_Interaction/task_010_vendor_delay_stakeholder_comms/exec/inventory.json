@@ -1,0 +1,6 @@
+{
+  "on_hand_units": 240,
+  "reserved_support_units": 120,
+  "usable_launch_units": 120,
+  "qa_duration_calendar_days_after_arrival": 2
+}

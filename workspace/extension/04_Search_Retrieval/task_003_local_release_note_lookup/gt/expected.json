@@ -1,0 +1,21 @@
+{
+  "version": "23.0.1",
+  "release_date": "2023-02-17",
+  "option": "--break-system-packages",
+  "purpose": "permit installing packages into EXTERNALLY-MANAGED Python installations",
+  "reference": "#11780",
+  "evidence_quote": "Implement ``--break-system-packages`` to permit installing packages into ``EXTERNALLY-MANAGED`` Python installations.",
+  "evidence_file": "pip_news/NEWS_excerpt.rst",
+  "candidate_releases": [
+    "22.3.1",
+    "23.0",
+    "23.0.1",
+    "23.1"
+  ],
+  "source_url": "https://raw.githubusercontent.com/pypa/pip/23.1/NEWS.rst",
+  "source_tag": "23.1",
+  "source_verified_at": "2026-08-02",
+  "exec_file_sha256": {
+    "pip_news/NEWS_excerpt.rst": "b03f73012dc9260ed924e1471fd79d52633825d7ff2b90d35f53a61b96ebb7b0"
+  }
+}

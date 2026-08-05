@@ -1,0 +1,6 @@
+order_id,model,color,quantity,status
+ORD-1001,Pixel 8,Matte Black,1,confirmed
+ORD-1002,iPhone 15,Ocean Blue,1,confirmed
+ORD-1003,Galaxy S24,Clear,2,confirmed
+ORD-1004,iPhone 14,Red,1,canceled
+ORD-1005,Pixel 8,Forest Green,1,confirmed

@@ -1,0 +1,32 @@
+{
+  "exec_file_sha256": {
+    "approved_dependencies.json": "41e9b6a1a0d5bf70fe80c0cd6b32200b78a2b320a4f1eb9ecbfa85529d9047ac",
+    "project/README.md": "6711e9fc8222fd95579193dd39dd25db34ea5aabd7b680058ad7bdc702d8b293",
+    "project/package.json": "871df4cafb68a27ee7ee9f0a93025c611f7c13ff3d6ed9ef0fa4fac77b85a01b",
+    "project/scripts/postinstall.js": "3a53133387f3abdb9957048e36087c12af31c3fae75cff66670783819e251e1c",
+    "project/src/index.js": "2263ffa4d92a5b54ef93c865f18d2a89ea21eced3b5f77851c0ce1158ed6299b"
+  },
+  "patched_package": {
+    "name": "review-target",
+    "version": "0.3.0",
+    "type": "module",
+    "scripts": {
+      "test": "node src/index.js"
+    },
+    "dependencies": {
+      "lodash": "^4.17.21",
+      "nanoid": "^5.0.7"
+    }
+  },
+  "unchanged_files": [
+    "project/src/index.js",
+    "project/README.md"
+  ],
+  "removed_paths": [
+    "scripts/postinstall.js"
+  ],
+  "result_files": [
+    "dependency_audit.md",
+    "patched_project"
+  ]
+}

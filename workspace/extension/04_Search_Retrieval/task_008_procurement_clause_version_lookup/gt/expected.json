@@ -1,0 +1,26 @@
+{
+  "request_id": "PR-2026-041",
+  "submission_date": "2026-03-20",
+  "applicable_base_version": "PROC-2025.1",
+  "applicable_amendment": "PROC-2025.1-A1",
+  "clause_id": "6.3",
+  "effective_clause_text": "第6.3条 数据处理服务采购，无论金额多少，均须取得部门负责人、采购负责人和隐私负责人的书面批准。",
+  "required_approvals": ["部门负责人", "采购负责人", "隐私负责人"],
+  "excluded_version": "PROC-2026.1",
+  "exclusion_reason": "PROC-2026.1于2026-04-01才生效，晚于申请提交日2026-03-20。",
+  "evidence_paths": [
+    "document_register.csv",
+    "policies/PROC-2025.1.md",
+    "policies/PROC-2025.1-A1.md",
+    "policies/version_rules.md"
+  ],
+  "result_files": ["clause_lookup.json"],
+  "exec_file_sha256": {
+    "document_register.csv": "3870c78a9ee675e8d1530b588f856c9a9f8a1f8312195727efff0913e249bef7",
+    "policies/PROC-2025.1-A1.md": "63750885a04abf5edeb6a64c604a8f4ab1eae21af376c7e610bad40b9c6860b5",
+    "policies/PROC-2025.1.md": "d337e246fa953f4aac570e502c6eb7d0491f94defa9a64efc42d3728e76fcf98",
+    "policies/PROC-2026.1.md": "6180e821d4d72af782c9fcb2e97940e41b740f8cc4ba64795bcd47fc4ab069f2",
+    "policies/version_rules.md": "8e93a50826e64b4bcd923d284b530c83d1a4fe951e2695010f20f796201e2e02",
+    "purchase_request.json": "3d32e224da2de63ff5e95711c114f9edba7933e97b4acbf19e12f4dd2d07eefe"
+  }
+}

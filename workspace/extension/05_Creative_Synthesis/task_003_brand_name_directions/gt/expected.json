@@ -1,0 +1,10 @@
+{
+  "language": "zh-CN",
+  "direction_count": 3,
+  "names_per_direction": 2,
+  "tagline_min_chars": 8,
+  "tagline_max_chars": 16,
+  "audience": "25～40岁的上班族",
+  "product_attributes": ["适合通勤", "轻", "容易清洗", "外观克制"],
+  "boundaries": ["不使用夸张性能词", "不声称已完成商标检索", "只做命名方向草案"]
+}

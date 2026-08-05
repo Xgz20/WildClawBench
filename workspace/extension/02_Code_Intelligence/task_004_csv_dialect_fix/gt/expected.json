@@ -1,0 +1,11 @@
+{
+  "protected_file_sha256": {
+    "project/test_csv_parser.py": "e0ef0459625e7b7a64eb6fff8ba063d8c45ed02752e67d972eca40e1a5f638de"
+  },
+  "exec_file_sha256": {
+    "project/csv_parser.py": "1f9b8b346cc4ba1f7273ae72e0f69416df4da3e1a80c2857fb23e73d5c517eee",
+    "project/test_csv_parser.py": "e0ef0459625e7b7a64eb6fff8ba063d8c45ed02752e67d972eca40e1a5f638de"
+  },
+  "allowed_project_files": ["csv_parser.py", "test_csv_parser.py"],
+  "function_name": "parse_csv"
+}

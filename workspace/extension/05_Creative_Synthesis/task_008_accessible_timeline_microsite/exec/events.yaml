@@ -1,0 +1,24 @@
+- id: EVT-2019-01
+  date: 2019-02-14
+  title: Prototype approved
+  description: The team approved the first working prototype for internal trials.
+- id: EVT-2020-02
+  date: 2020-09-03
+  title: Pilot opened
+  description: A twelve-week pilot began with three community partners.
+- id: EVT-2021-03
+  date: 2021-06-18
+  title: Keyboard review completed
+  description: Independent reviewers documented keyboard navigation gaps and priorities.
+- id: EVT-2022-04
+  date: 2022-11-07
+  title: Public beta released
+  description: The public beta added saved views and plain-language status labels.
+- id: EVT-2024-05
+  date: 2024-04-22
+  title: Accessibility update shipped
+  description: The update added visible focus, reduced motion, and screen-reader announcements.
+- id: EVT-2025-06
+  date: 2025-10-09
+  title: Community archive launched
+  description: The archive published the project history with downloadable open data.

@@ -1,0 +1,12 @@
+{
+  "language": "en",
+  "max_words": 90,
+  "feature_names": ["Focus Mode", "CSV Export", "Sync"],
+  "feature_facts": [
+    "Focus Mode now keeps pinned tabs active",
+    "CSV Export preserves local timestamps",
+    "Sync can retry interrupted uploads"
+  ],
+  "required_blocks": 2,
+  "forbidden_claims": ["version number", "performance metric", "unsupported promise"]
+}

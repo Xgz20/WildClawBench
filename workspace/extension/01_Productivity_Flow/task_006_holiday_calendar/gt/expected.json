@@ -1,0 +1,52 @@
+{
+  "source": {
+    "title": "国务院办公厅关于2025年部分节假日安排的通知",
+    "document_number": "国办发明电〔2024〕12号",
+    "index_number": "000014349/2024-00094",
+    "issuing_organization": "国务院办公厅",
+    "publication_date": "2024-11-12",
+    "url": "https://www.gov.cn/zhengce/content/202411/content_6986382.htm"
+  },
+  "csv_header": [
+    "date",
+    "type",
+    "holiday_name",
+    "source_document"
+  ],
+  "rows": [
+    {"date": "2025-01-01", "type": "holiday", "holiday_name": "元旦", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-01-26", "type": "workday", "holiday_name": "春节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-01-28", "type": "holiday", "holiday_name": "春节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-01-29", "type": "holiday", "holiday_name": "春节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-01-30", "type": "holiday", "holiday_name": "春节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-01-31", "type": "holiday", "holiday_name": "春节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-02-01", "type": "holiday", "holiday_name": "春节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-02-02", "type": "holiday", "holiday_name": "春节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-02-03", "type": "holiday", "holiday_name": "春节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-02-04", "type": "holiday", "holiday_name": "春节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-02-08", "type": "workday", "holiday_name": "春节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-04-04", "type": "holiday", "holiday_name": "清明节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-04-05", "type": "holiday", "holiday_name": "清明节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-04-06", "type": "holiday", "holiday_name": "清明节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-04-27", "type": "workday", "holiday_name": "劳动节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-05-01", "type": "holiday", "holiday_name": "劳动节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-05-02", "type": "holiday", "holiday_name": "劳动节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-05-03", "type": "holiday", "holiday_name": "劳动节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-05-04", "type": "holiday", "holiday_name": "劳动节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-05-05", "type": "holiday", "holiday_name": "劳动节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-05-31", "type": "holiday", "holiday_name": "端午节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-06-01", "type": "holiday", "holiday_name": "端午节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-06-02", "type": "holiday", "holiday_name": "端午节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-09-28", "type": "workday", "holiday_name": "国庆节、中秋节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-10-01", "type": "holiday", "holiday_name": "国庆节、中秋节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-10-02", "type": "holiday", "holiday_name": "国庆节、中秋节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-10-03", "type": "holiday", "holiday_name": "国庆节、中秋节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-10-04", "type": "holiday", "holiday_name": "国庆节、中秋节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-10-05", "type": "holiday", "holiday_name": "国庆节、中秋节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-10-06", "type": "holiday", "holiday_name": "国庆节、中秋节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-10-07", "type": "holiday", "holiday_name": "国庆节、中秋节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-10-08", "type": "holiday", "holiday_name": "国庆节、中秋节", "source_document": "国办发明电〔2024〕12号"},
+    {"date": "2025-10-11", "type": "workday", "holiday_name": "国庆节、中秋节", "source_document": "国办发明电〔2024〕12号"}
+  ],
+  "exec_file_sha256": {}
+}

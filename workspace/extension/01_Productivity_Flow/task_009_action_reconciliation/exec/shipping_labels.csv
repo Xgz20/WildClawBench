@@ -1,0 +1,5 @@
+label_id,order_id,case_serial,status
+LB-9001,ORD-1001,CS-1001,ready
+LB-9002,ORD-1002,CS-2002-B,ready
+LB-9003,ORD-1003,CS-3003-A,ready
+LB-9005,ORD-1005,CS-9999,ready

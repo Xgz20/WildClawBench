@@ -7,19 +7,20 @@
 # ============================================================================
 
 # 字段与顺序对齐 WildClawBench 官方任务；category 实际以父目录名为准（frontmatter 仅说明）
-id: 04_Search_Retrieval_task_101_example    # 任务标识；扩展集格式 <Category>_task_<N≥101>_<slug>
+id: 04_Search_Retrieval_task_003_example    # 任务标识；各大类内使用从 001 起的三位连续编号
 name: 示例混合任务                            # 任务名（报告展示）
 category: 04_Search_Retrieval                # 所属大类（须与父目录名一致）
 timeout_seconds: 180                         # 执行超时（秒）
 modality: pure-text                          # 模态：pure-text | multimodal
+attachment_size_limit_mb: 5                 # 可选；默认5，确有必要的特殊任务可设为20
 difficulty: L2                               # 难度：L1 / L2 / L3 / L4
 grading_type: hybrid                         # 必填：automated | llm_judge | hybrid
                                              #   automated：仅规则评分
                                              #   llm_judge：仅 LLM 评分（无规则检查）
                                              #   hybrid：规则 + LLM 混合（推荐）
 grading_weights:                             # 仅 hybrid 生效；框架消费（不再埋在 grade 内）
-  automated: 0.6                             # 规则权重（建议 0.5~0.7，视规则覆盖度）
-  llm_judge: 0.4                             # LLM 权重（补充规则难量化的维度，与上者相加归一到 1.0）
+  automated: 0.7                             # 扩展集只使用 0.7/0.3 或 0.4/0.6
+  llm_judge: 0.3                             # 与 automated 相加必须为 1.0
 tags:                                        # 可选：筛选标签（parser 会小写去重），官方任务多不填
   - custom
 ---
@@ -28,8 +29,8 @@ tags:                                        # 可选：筛选标签（parser �
 
 ## Prompt
 
-请分析 `/workspace/sales_data.csv` 中的销售数据，找出 2024 年 Q1 销售额最高的前 3 个产品，
-将结果保存到 `/workspace/top_products.md`，格式为：
+请分析 `/tmp_workspace/sales_data.csv` 中的销售数据，找出 2024 年 Q1 销售额最高的前 3 个产品，
+将结果保存到 `/tmp_workspace/results/top_products.md`，格式为：
 
 ```
 # 2024 Q1 销售 Top 3
@@ -65,18 +66,19 @@ Agent 应该：
 - 函数签名：`def grade(transcript: list, workspace_path: str) -> dict`
 - 返回：`{stable_key: 0~1 浮点分}`，key 名稳定（任务内唯一），供能力映射引用。
 - `transcript` 为 agent 执行记录列表（每项是 `{type, message, ...}`），可用于工具调用审计。
-- 所有规则检查点**独立计分**，不在此段内做加权（权重由 `grading_weights.automated` 统一控制）。
+- `grading_weights.automated` 只控制Auto组占整题的权重。Auto组内各检查点等权时，框架直接取平均值。
+- Auto检查点不等权时，仍返回全部稳定key，并额外返回按题目蓝图计算的 `overall_score`；框架会用它作为Auto组分数。
 
 ```python
 def grade(transcript: list, workspace_path: str) -> dict:
     """规则检查点：文件、格式、数据准确性。"""
     from pathlib import Path
     import re
-    
+
     scores = {}
     workspace = Path(workspace_path)
-    output_file = workspace / "top_products.md"
-    
+    output_file = workspace / "results" / "top_products.md"
+
     # 检查点 1：文件生成
     if not output_file.exists():
         return {
@@ -85,20 +87,20 @@ def grade(transcript: list, workspace_path: str) -> dict:
             "data_accuracy": 0.0,
         }
     scores["file_created"] = 1.0
-    
+
     content = output_file.read_text(encoding="utf-8", errors="ignore")
-    
+
     # 检查点 2：格式正确性
     has_title = "# 2024 Q1 销售 Top 3" in content or "2024 Q1" in content
     list_items = re.findall(r"^\d+\.\s+", content, re.MULTILINE)
     scores["format_valid"] = 1.0 if has_title and len(list_items) >= 3 else 0.5 if has_title or list_items else 0.0
-    
+
     # 检查点 3：数据准确性（Top 3 产品 ID 匹配参考答案）
     # 参考答案（由任务作者预先计算或标注）：P_001, P_042, P_018
     expected = ["P_001", "P_042", "P_018"]
     found = [pid for pid in expected if pid in content]
     scores["data_accuracy"] = len(found) / 3.0  # 匹配 3 个得满分，2 个得 0.67，依此类推
-    
+
     return scores
 ```
 
@@ -110,7 +112,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
 - `key` 任务内唯一（kebab-case 或 snake_case），供能力映射与 breakdown 稳定引用。
 - `weight` 在 rubric 内归一（如 3 个 criterion 权重 0.5/0.3/0.2，相加为 1.0），
   rubric 段整体权重由 frontmatter `grading_weights.llm_judge` 决定。
-- 每个 criterion 提供**离散档位**（推荐 1.0 / 0.75 / 0.5 / 0.25 / 0.0，或 1.0 / 0.5 / 0.0），
+- 本扩展评测集的每个 criterion 必须提供**五个离散档位**：1.0 / 0.75 / 0.5 / 0.25 / 0.0，
   档位描述需**具体可判**（avoid "大致正确"等模糊表述）。
 
 ### Criterion 1: 时间筛选正确性 (key: time_filtering, weight: 0.4)
@@ -137,6 +139,8 @@ def grade(transcript: list, workspace_path: str) -> dict:
 
 **Score 0.5**: 尝试聚合但方法不当（如只取每个产品的第一条记录）。
 
+**Score 0.25**: 只做了去重或局部汇总，大多数产品无法得到正确合计。
+
 **Score 0.0**: 未做聚合，直接按单条记录排序（数据准确性必然错误）。
 
 ### Criterion 3: 鲁棒性 (key: robustness, weight: 0.25)
@@ -145,30 +149,33 @@ def grade(transcript: list, workspace_path: str) -> dict:
 
 **Score 1.0**: 明确处理了至少 2 种异常（如 `dropna()`、`try-except`、编码声明），transcript 或代码中可见。
 
-**Score 0.5**: 处理了部分异常（如只处理缺失值，未处理编码），或异常处理覆盖不全。
+**Score 0.75**: 处理了2种异常，但其中1种只覆盖了部分输入。
+
+**Score 0.5**: 完整处理了1种异常，其他已声明异常未处理。
+
+**Score 0.25**: 只泛化提到数据可能异常，但代码或执行中没有可验证的保护。
 
 **Score 0.0**: 未做任何异常处理，遇到脏数据时执行报错或结果异常。
 
 ## Workspace Path
 
 ```
-workspace/extension/04_Search_Retrieval/task_101_example
+workspace/extension/04_Search_Retrieval/task_003_example
 ```
 
 ## Skills
 
+如任务不依赖仓库中实际存在的skill，本段留空；不要把能力维度名称写在这里。
+
 ```
-data_analysis
-csv_processing
 ```
 
 ## Env
 
 ```
 # 可选：任务所需环境变量（agent 执行时可见）
-# 示例：
+# 只填环境变量名，不填 KEY=value。示例：
 # OPENROUTER_API_KEY
-# REFERENCE_DATA_PATH=/tmp/reference.json
 ```
 
 ## Warmup

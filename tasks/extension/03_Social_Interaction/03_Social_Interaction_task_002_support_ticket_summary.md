@@ -1,7 +1,7 @@
 ---
 id: 03_Social_Interaction_task_002_support_ticket_summary
 name: 客服工单摘要与回复草稿
-category: 03_社交互动
+category: 03_Social_Interaction
 timeout_seconds: 300
 modality: pure-text
 difficulty: L1

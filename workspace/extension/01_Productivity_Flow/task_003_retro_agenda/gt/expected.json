@@ -1,0 +1,21 @@
+{
+  "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+  "meeting": {
+    "date": "2026-09-14",
+    "start": "10:00",
+    "end": "10:45",
+    "timezone": "Asia/Shanghai",
+    "duration_minutes": 45,
+    "participants": ["产品", "前端", "后端", "QA", "设计", "项目经理"]
+  },
+  "required_context": [
+    "版本延期3天",
+    "接口定义临时变更",
+    "QA介入偏晚",
+    "灰度发布顺利",
+    "无责复盘",
+    "形成后续动作"
+  ],
+  "invitation_max_chars": 160,
+  "exec_file_sha256": {}
+}

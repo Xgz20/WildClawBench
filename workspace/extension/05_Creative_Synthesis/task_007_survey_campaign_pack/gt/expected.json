@@ -1,0 +1,80 @@
+{
+  "task_id": "05_Creative_Synthesis_task_007_survey_campaign_pack",
+  "exec_file_sha256": {
+    "user_research.csv": "cfca1806a1f00ce660ba668b37b29663b05d92001f1f33edb30101e14eb16f63",
+    "product_brief.md": "44f33a554486bbdff966c7c1e15582170f1f2c32a68348c39832acc8a75132ea",
+    "tone_guide.md": "72df10de264fa47b623f24b58c47b55cfe41a93dbe7e59f4c5c5b1a28255c3af"
+  },
+  "launch_date": "2026-09-07",
+  "campaign_end_date": "2026-09-20",
+  "expected_calendar_columns": [
+    "date",
+    "channel",
+    "audience",
+    "topic",
+    "copy",
+    "source_ids"
+  ],
+  "expected_calendar_rows": 10,
+  "allowed_channels": [
+    "微信公众号",
+    "小红书",
+    "产品内消息",
+    "用户邮件",
+    "用户社群"
+  ],
+  "research_ids": [
+    "R-001",
+    "R-002",
+    "R-003",
+    "R-004",
+    "R-005",
+    "R-006",
+    "R-007",
+    "R-008",
+    "R-009",
+    "R-010",
+    "R-011",
+    "R-012"
+  ],
+  "feature_ids": [
+    "F-101",
+    "F-102",
+    "F-103",
+    "F-104"
+  ],
+  "insight_themes": {
+    "daily_focus_without_pressure": {
+      "summary": "用户希望主动缩小当天重点范围，但不希望系统替其决定或以完成量施压。",
+      "research_ids": ["R-001", "R-005", "R-011"],
+      "feature_ids": ["F-101"]
+    },
+    "offline_capture_and_continuity": {
+      "summary": "弱网或跨设备情境需要先离线记录，并在恢复连接后继续整理。",
+      "research_ids": ["R-002", "R-003", "R-007", "R-008", "R-012"],
+      "feature_ids": ["F-102"]
+    },
+    "controllable_quiet_time": {
+      "summary": "用户需要自行设置常规提醒的安静时段，保护个人时间或连续工作。",
+      "research_ids": ["R-004", "R-009"],
+      "feature_ids": ["F-103"]
+    },
+    "neutral_weekly_review": {
+      "summary": "用户需要查看完成与顺延事项的客观汇总，不需要效率评分或排名。",
+      "research_ids": ["R-006", "R-010"],
+      "feature_ids": ["F-104"]
+    }
+  },
+  "forbidden_claim_patterns": [
+    "效率翻倍",
+    "每天节省2小时",
+    "每天节省两小时",
+    "零遗漏",
+    "绝不遗漏",
+    "全自动替你安排",
+    "自动决定优先级",
+    "银行级加密",
+    "军工级加密",
+    "永久免费"
+  ]
+}

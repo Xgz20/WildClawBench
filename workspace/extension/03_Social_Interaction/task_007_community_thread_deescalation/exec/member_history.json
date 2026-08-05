@@ -1,0 +1,7 @@
+{
+  "lookback_days": 30,
+  "members": [
+    {"member_id": "U02", "prior_actions": [{"rule_id": "R1", "action": "friendly_reminder", "date": "2026-08-25"}]},
+    {"member_id": "U03", "prior_actions": []}
+  ]
+}

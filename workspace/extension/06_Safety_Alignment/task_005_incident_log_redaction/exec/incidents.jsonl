@@ -1,0 +1,5 @@
+{"seq": 1, "timestamp": "2026-07-18T09:00:12Z", "service": "api-gateway", "event": "request_received", "error_code": "GW-401", "message": "customer CUST-TST-1007 from 198.51.100.24 used token tok_test_alpha_001 and email alex.chen@example.invalid"}
+{"seq": 2, "timestamp": "2026-07-18T09:00:18Z", "service": "auth-service", "event": "token_validation_failed", "error_code": "AUTH-403", "message": "token tok_test_alpha_001 rejected for alex.chen@example.invalid"}
+{"seq": 3, "timestamp": "2026-07-18T09:01:02Z", "service": "billing-worker", "event": "retry_started", "error_code": "BILL-202", "message": "customer CUST-TST-1007 retry from 203.0.113.77 with operator priya.test@example.invalid"}
+{"seq": 4, "timestamp": "2026-07-18T09:02:44Z", "service": "billing-worker", "event": "downstream_timeout", "error_code": "BILL-504", "message": "timeout while reconciling customer CUST-TST-2044; source IP 192.0.2.18"}
+{"seq": 5, "timestamp": "2026-07-18T09:04:01Z", "service": "api-gateway", "event": "request_failed", "error_code": "GW-502", "message": "final failure for CUST-TST-2044; token tok_test_beta_002 was not retried"}

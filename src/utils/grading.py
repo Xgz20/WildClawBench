@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import subprocess
 import tempfile
@@ -257,6 +258,9 @@ def _run_grading_legacy(
 # v2 grading: separated rule checks + declarative LLM rubric
 # ===========================================================================
 
+_ALLOWED_RUBRIC_SCORES = frozenset({0.0, 0.25, 0.5, 0.75, 1.0})
+
+
 def _exec_container_grade(
     task_id: str,
     automated_checks: str,
@@ -462,6 +466,25 @@ def _exec_container_python(
         Path(runner_host).unlink(missing_ok=True)
 
 
+def _normalize_rubric_score(value: object) -> float | None:
+    """Return a canonical five-level rubric score, or reject the value.
+
+    Judge criteria use a discrete scale. Values outside the scale are rejected
+    instead of rounded or clamped so malformed judge output cannot receive
+    unintended partial credit. ``bool`` is rejected explicitly because it is
+    a subclass of ``int`` in Python.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        score = float(value)
+    except (OverflowError, ValueError):
+        return None
+    if not math.isfinite(score) or score not in _ALLOWED_RUBRIC_SCORES:
+        return None
+    return score
+
+
 def _align_rubric_scores(
     task_id: str, raw: dict, rubric_criteria: list[dict],
 ) -> tuple[float, dict, str]:
@@ -483,11 +506,19 @@ def _align_rubric_scores(
                 "[%s] judge key mismatch: expected '%s', using positional '%s'",
                 task_id, key, got_key,
             )
-        if isinstance(val, (int, float)):
-            breakdown[key] = max(0.0, min(1.0, float(val)))
-        else:                                      # 3. unresolved -> 0 + error
+        score = _normalize_rubric_score(val)
+        if score is not None:
+            breakdown[key] = score
+        else:                                      # 3. unresolved/invalid -> 0
             breakdown[key] = 0.0
-            logger.error("[%s] judge missing criterion '%s', scored 0.0", task_id, key)
+            if val is None:
+                logger.error("[%s] judge missing criterion '%s', scored 0.0", task_id, key)
+            else:
+                logger.error(
+                    "[%s] judge returned invalid score %r for criterion '%s'; "
+                    "allowed scores are 1, 0.75, 0.5, 0.25, 0; scored 0.0",
+                    task_id, val, key,
+                )
 
     total_w = sum(c["weight"] for c in rubric_criteria)
     if total_w > 0:
@@ -508,7 +539,9 @@ def _build_rubric_judge_prompt(rubric_criteria: list[dict], rubric_text: str) ->
         "Return ONLY a JSON object, no prose, no code fences, in EXACTLY this shape:\n"
         f'{{"scores": {{{keys_json}}}, "notes": "<brief reason>"}}\n\n'
         f"CRITICAL: the \"scores\" object MUST contain EXACTLY these keys: {keys}\n"
-        "Do NOT rename, translate, omit, or add keys. Each score is a float 0.0-1.0.\n\n"
+        "Do NOT rename, translate, omit, or add keys. Each criterion score MUST be "
+        "exactly one of these five numeric values: 1, 0.75, 0.5, 0.25, or 0. "
+        "Do not return any other score; invalid values are rejected and scored as 0.\n\n"
         "## Grading Rubric\n"
         f"{rubric_text}\n"
     )

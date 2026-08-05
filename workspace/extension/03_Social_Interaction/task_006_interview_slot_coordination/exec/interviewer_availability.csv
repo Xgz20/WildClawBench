@@ -1,0 +1,6 @@
+interviewer_id,timezone,available_start,available_end,assigned_this_month,roster_order
+H01,Asia/Shanghai,2026-09-08T08:30:00+08:00,2026-09-08T10:00:00+08:00,3,1
+H02,Asia/Shanghai,2026-09-08T09:00:00+08:00,2026-09-08T10:30:00+08:00,1,2
+H03,Asia/Shanghai,2026-09-08T08:45:00+08:00,2026-09-08T09:45:00+08:00,1,3
+H04,Asia/Shanghai,2026-09-08T09:00:00+08:00,2026-09-08T11:00:00+08:00,0,4
+H05,Asia/Shanghai,2026-09-08T14:00:00+08:00,2026-09-08T15:30:00+08:00,0,5

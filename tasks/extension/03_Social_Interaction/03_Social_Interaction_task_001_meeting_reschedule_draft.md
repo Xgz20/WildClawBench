@@ -1,7 +1,7 @@
 ---
 id: 03_Social_Interaction_task_001_meeting_reschedule_draft
 name: 会议改期草稿
-category: 03_社交互动
+category: 03_Social_Interaction
 timeout_seconds: 300
 modality: pure-text
 difficulty: L1

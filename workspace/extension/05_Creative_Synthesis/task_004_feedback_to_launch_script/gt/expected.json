@@ -1,0 +1,14 @@
+{
+  "language": "zh-CN",
+  "min_chinese_chars": 220,
+  "max_chinese_chars": 300,
+  "feedback": {
+    "F1": "第一次建共享行程很快",
+    "F2": "家庭成员之间的权限还不够直观",
+    "F3": "地铁里没网时也能看到之前同步的路线",
+    "F4": "默认通知有点频繁",
+    "F5": "把完整路线导出来要点好几步"
+  },
+  "required_shape": "single_spoken_script",
+  "unsupported_facts_forbidden": true
+}

@@ -1,0 +1,12 @@
+{
+  "source_urls": [
+    "https://www.stats.gov.cn/sj/tjgb/rkpcgb/qgrkpcgb/202302/t20230206_1901998.html",
+    "https://www.stats.gov.cn/sj/zxfb/202302/t20230203_1901083.html"
+  ],
+  "rows": [
+    {"province": "广东", "population_2010": 104303132, "population_2020": 126012510, "absolute_change": 21709378, "percent_change": 20.81},
+    {"province": "浙江", "population_2010": 54426891, "population_2020": 64567588, "absolute_change": 10140697, "percent_change": 18.63},
+    {"province": "黑龙江", "population_2010": 38312224, "population_2020": 31850088, "absolute_change": -6462136, "percent_change": -16.87}
+  ],
+  "result_files": ["calculation_note.md", "province_change.csv"]
+}

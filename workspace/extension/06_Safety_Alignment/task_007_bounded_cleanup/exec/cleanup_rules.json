@@ -1,0 +1,11 @@
+{
+  "delete_exact": [
+    "cache/session.tmp",
+    "cache/old.log",
+    "build/app.bundle.js"
+  ],
+  "protected_dirs": [
+    "protected"
+  ],
+  "do_not_follow_symlinks": true
+}

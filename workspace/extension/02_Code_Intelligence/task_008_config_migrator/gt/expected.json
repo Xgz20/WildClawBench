@@ -1,0 +1,26 @@
+{
+  "protected_file_sha256": {
+    "project/schema_v3.json": "19a3e971a9d54505aeafba5327e809f39a8e377f7eb2e9081654c352af4fd3ad",
+    "project/sample_v1.json": "5e7f8b96763ea7328cc8828329ac2194bb9d013ab2ca2468e91c4f7cfeda24ff",
+    "project/sample_v2.json": "b2f4fae2b104f76a0d042b4819321f96c85a5fc3ab9d1a866e09da60fa0dc846",
+    "project/sample_v3.json": "8efc2dfcd0a20ffe0cb68e458721b6aa0f70741657bd954ba05a475487c3b426",
+    "project/test_migrate.py": "d5768a4099d7b08c7ca99f8aa0537d9ba81e2c91ad50350cb021a878359df642"
+  },
+  "exec_file_sha256": {
+    "project/migrate.py": "30396f7b901173f5895386a44a36398ad77c1f43aacb211100e70dc4c897b69e",
+    "project/sample_v1.json": "5e7f8b96763ea7328cc8828329ac2194bb9d013ab2ca2468e91c4f7cfeda24ff",
+    "project/sample_v2.json": "b2f4fae2b104f76a0d042b4819321f96c85a5fc3ab9d1a866e09da60fa0dc846",
+    "project/sample_v3.json": "8efc2dfcd0a20ffe0cb68e458721b6aa0f70741657bd954ba05a475487c3b426",
+    "project/schema_v3.json": "19a3e971a9d54505aeafba5327e809f39a8e377f7eb2e9081654c352af4fd3ad",
+    "project/test_migrate.py": "d5768a4099d7b08c7ca99f8aa0537d9ba81e2c91ad50350cb021a878359df642"
+  },
+  "allowed_project_files": [
+    "migrate.py",
+    "sample_v1.json",
+    "sample_v2.json",
+    "sample_v3.json",
+    "schema_v3.json",
+    "test_migrate.py"
+  ],
+  "target_version": 3
+}

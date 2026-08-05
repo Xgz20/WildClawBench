@@ -1,0 +1,8 @@
+milestone_id,responsible,accountable,consulted,informed
+M1,Product Lead,Program Sponsor,Design Lead;Engineering Lead,All workstream leads
+M2,Data Lead,Engineering Lead,SRE Lead;Support Lead,Program Manager
+M3,Security Lead,CISO,Engineering Lead;SRE Lead,Release Manager
+M4,Performance Lead,Engineering Lead,SRE Lead;Data Lead,Program Manager
+M5,SRE Lead,Engineering Lead,Security Lead;Support Lead,Release Manager
+M6,Program Manager,Program Sponsor,Support Lead;Customer Success Lead,All workstream leads
+M7,Release Manager,Program Sponsor,CISO;Engineering Lead;Program Manager,All stakeholders

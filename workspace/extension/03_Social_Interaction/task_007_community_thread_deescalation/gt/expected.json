@@ -1,0 +1,31 @@
+{
+  "exec_file_sha256": {
+    "community_guidelines.md": "e378fe3073f3dfb1109388a6c746adbe0ab0bf58ea0c364e6f65efebbddbcf38",
+    "member_history.json": "04907aafe3ad6bb6ad471061147958b6b11517d4980cba999e303b4d319c829c",
+    "thread.json": "e025e91e9284bc0bf2c33641bf3f7c80e589e536065f3d4daedf220b4befe94b"
+  },
+  "result_files": ["moderation_plan.json", "private_messages.md", "public_notice.md"],
+  "plan_fields": [
+    "thread_id",
+    "thread_action",
+    "closure_hours",
+    "reopen_conditions",
+    "post_actions"
+  ],
+  "post_action_fields": ["post_id", "rule_id", "content_action", "user_action"],
+  "thread_id": "COMM-184",
+  "thread_action": "temporarily_close",
+  "closure_hours": 4,
+  "reopen_conditions": [
+    "flagged_posts_reviewed",
+    "content_actions_complete",
+    "flags_cleared",
+    "staff_notice_published"
+  ],
+  "post_actions": [
+    {"post_id": "P01", "rule_id": null, "content_action": "keep", "user_action": "none"},
+    {"post_id": "P02", "rule_id": "R1", "content_action": "remove", "user_action": "formal_warning"},
+    {"post_id": "P03", "rule_id": "R1", "content_action": "remove", "user_action": "friendly_reminder"},
+    {"post_id": "P04", "rule_id": null, "content_action": "keep", "user_action": "none"}
+  ]
+}

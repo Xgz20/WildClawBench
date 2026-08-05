@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["version", "service", "timeouts", "features"],
+  "properties": {
+    "version": {"const": 3},
+    "service": {
+      "type": "object",
+      "required": ["name", "endpoint"]
+    },
+    "timeouts": {
+      "type": "object",
+      "required": ["request_seconds"]
+    },
+    "features": {
+      "type": "object",
+      "required": ["enabled"]
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "exec_file_sha256": {
+    "communication_and_approval_policy.md": "24d150645843d0b0cb88148b74d0e80feda4757e3823dfd73bfed87d442f927c",
+    "contingency_options.csv": "3ae6a7dcc9f53740bada0e18d4d599d040bd19038e690fc502fd8bf5f413226d",
+    "inventory.json": "9695eaeb02b63f32cd513b5db2117c886a6c83d6c96cebdfdb87aaf84b676f1f",
+    "launch_requirements.csv": "222c477e9d7d2f381f735ad4dcb9a202a02719e3c7829a7bc12a38739545ef47",
+    "purchase_order.json": "08c5587171cc4931b93ea7f00e81b0ce0f722916f6ac90b5bd6d01e655d475dd",
+    "vendor_updates.jsonl": "e846c005c08402db65880faab260690805564c14970e2f9132090d7e20d91925"
+  },
+  "result_files": [
+    "customer_update.md",
+    "decision_brief.md",
+    "impact_plan.json",
+    "internal_update.md",
+    "vendor_escalation_draft.md"
+  ],
+  "plan_fields": [
+    "purchase_order_id",
+    "source_timeline",
+    "recommended_options",
+    "total_incremental_cost_cny",
+    "available_by_regional_launch",
+    "required_approvals",
+    "trigger_conditions",
+    "milestones"
+  ],
+  "purchase_order_id": "PO-8841",
+  "source_timeline": {
+    "first_batch_quantity": 600,
+    "first_batch_ship_date": "2026-10-10",
+    "first_batch_estimated_arrival": "2026-10-13",
+    "remaining_quantity": 600,
+    "remaining_ship_window": ["2026-10-19", "2026-10-21"],
+    "remaining_arrival_date": null,
+    "usable_launch_inventory": 120,
+    "reserved_support_inventory": 120,
+    "qa_duration_calendar_days": 2,
+    "milestone_requirements": {
+      "pilot": 300,
+      "regional_launch": 800,
+      "general_availability": 1200
+    }
+  },
+  "recommended_options": [
+    "reduced_pilot_existing_inventory",
+    "expedite_first_600",
+    "alternate_supplier_200"
+  ],
+  "total_incremental_cost_cny": 13900,
+  "available_by_regional_launch": 920,
+  "required_approvals": ["PROGRAM_DIRECTOR", "CFO"],
+  "trigger_conditions": [
+    "first_batch_ship_after_2026_10_10",
+    "first_batch_arrival_after_2026_10_13",
+    "first_batch_qa_after_2026_10_15",
+    "remaining_arrival_uncommitted_by_2026_10_16"
+  ],
+  "milestones": [
+    {"milestone_id": "pilot", "date": "2026-10-12", "status": "reduced_to_120", "available_units": 120},
+    {"milestone_id": "regional_launch", "date": "2026-10-16", "status": "conditional_pending_approvals", "available_units": 920},
+    {"milestone_id": "general_availability", "date": "2026-10-23", "status": "date_not_committed", "available_units": null}
+  ]
+}
