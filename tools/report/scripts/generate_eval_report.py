@@ -345,7 +345,9 @@ class TaskRecord:
                 )
             if not self.run_dir:
                 raise ValueError("缺少有效 run 目录")
-            if harness == "astroncode":
+            # codex 与 astroncode 同属 Codex 系，chat.jsonl 的 token_count 事件
+            # 结构一致（total_token_usage/last_token_usage），复用同一抽取器。
+            if harness in ("astroncode", "codex"):
                 requests = report_entities.extract_astroncode_requests(self.run_dir)
             elif harness == "opencode":
                 requests = report_entities.extract_opencode_requests(self.run_dir)

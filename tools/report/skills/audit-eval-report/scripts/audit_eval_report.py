@@ -789,7 +789,7 @@ def recompute_unit_costs(specs, registry, pricing_date: date) -> dict[str, dict]
                     else:
                         requests = (
                             report_entities.extract_astroncode_requests(run_dir)
-                            if harness == "astroncode"
+                            if harness in ("astroncode", "codex")
                             else report_entities.extract_opencode_requests(run_dir)
                         )
                         estimate = report_entities.estimate_request_costs_usd(

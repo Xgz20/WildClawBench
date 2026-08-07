@@ -5,6 +5,7 @@ import os
 import subprocess
 
 from src.agents.openclaw import OpenClawAgent
+from . import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,11 @@ class AstronClawAgent(OpenClawAgent):
                 or DEFAULT_ASTRONCLAW_IMAGE
             ),
         )
+
+    @staticmethod
+    def _probe_harness_version(task_id: str) -> str:
+        """Return the AstronClaw package version."""
+        return __version__
 
     def _configure_harness(self, task_id: str) -> None:
         # AstronClaw's default config lacks gateway.mode, so its gateway refuses
