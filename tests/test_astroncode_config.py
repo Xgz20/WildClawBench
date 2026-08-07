@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from src.agents.astroncode import runner as astroncode_runner
 from src.agents.astroncode.runner import AstronCodeAgent
 
 
@@ -15,6 +16,7 @@ DEFAULT_MODELS_BASE_URL = (
     "https://astroncode-api-prod.xf-yun.com/"
     "api/v1/astroncode_webserver/config-v1"
 )
+SEARCH_AGENT_CONFIG_PATH = "/opt/astroncode/search-agent.config.toml"
 
 
 class AstronCodeConfigTests(unittest.TestCase):
@@ -46,6 +48,76 @@ class AstronCodeConfigTests(unittest.TestCase):
             redact_secrets=redact_secrets,
         )
         return tomllib.loads(rendered)
+
+    def config_run_side_effect(
+        self,
+        *,
+        fragment: str = "",
+        fragment_returncode: int = 0,
+        fragment_stderr: str = "",
+        write_returncode: int = 0,
+        write_stdout: str = "",
+        write_stderr: str = "",
+    ):
+        def run(command, **kwargs):
+            if command[:3] == ["docker", "exec", "-i"]:
+                return subprocess.CompletedProcess(
+                    command,
+                    write_returncode,
+                    write_stdout,
+                    write_stderr,
+                )
+            if (
+                command[:2] == ["docker", "exec"]
+                and SEARCH_AGENT_CONFIG_PATH in command[-1]
+            ):
+                return subprocess.CompletedProcess(
+                    command,
+                    fragment_returncode,
+                    fragment,
+                    fragment_stderr,
+                )
+            self.fail(f"Unexpected subprocess command: {command!r}")
+
+        return run
+
+    def config_write_calls(self, run_mock):
+        return [
+            call
+            for call in run_mock.call_args_list
+            if call.args[0][:3] == ["docker", "exec", "-i"]
+        ]
+
+    def search_agent_config_read_calls(self, run_mock):
+        return [
+            call
+            for call in run_mock.call_args_list
+            if call.args[0][:2] == ["docker", "exec"]
+            and call.args[0][:3] != ["docker", "exec", "-i"]
+            and SEARCH_AGENT_CONFIG_PATH in call.args[0][-1]
+        ]
+
+    def test_toml_basic_string_round_trips_control_characters(self) -> None:
+        value = (
+            "普通 Unicode "
+            + "".join(chr(codepoint) for codepoint in range(0x20))
+            + '\x7f"\\'
+        )
+
+        rendered = astroncode_runner.toml_basic_string(value)
+
+        try:
+            parsed = tomllib.loads(f"value = {rendered}")
+        except tomllib.TOMLDecodeError as error:
+            self.fail(f"rendered basic string is invalid TOML: {error}")
+        self.assertEqual(parsed["value"], value)
+        for escape in (r"\b", r"\t", r"\n", r"\f", r"\r"):
+            with self.subTest(escape=escape):
+                self.assertIn(escape, rendered)
+        for codepoint in (*range(0x08), 0x0B, *range(0x0E, 0x20), 0x7F):
+            with self.subTest(codepoint=codepoint):
+                self.assertIn(f"\\u{codepoint:04X}", rendered)
+        self.assertIn("普通 Unicode ", rendered)
 
     def test_provider_auto_detection_uses_three_routes(self) -> None:
         with patch.dict(os.environ, {"ASTRONCODE_MODEL_PROVIDER": ""}, clear=False):
@@ -388,7 +460,11 @@ class AstronCodeConfigTests(unittest.TestCase):
     def test_config_write_streams_real_token_and_redacts_host_artifact(
         self, run_mock
     ) -> None:
-        run_mock.return_value = subprocess.CompletedProcess([], 0, "", "")
+        fragment = (
+            "[mcp_servers.search]\n"
+            'command = "search-agent"\n'
+        )
+        run_mock.side_effect = self.config_run_side_effect(fragment=fragment)
         cases = (
             ("openrouter/xopglm52", "ASTRON_API_KEY", "host-astron-secret"),
             ("openrouter/gpt-5.5", "ONE_IFLYTEK_API_KEY", "host-one-secret"),
@@ -414,7 +490,9 @@ class AstronCodeConfigTests(unittest.TestCase):
                 host_config = (output_dir / "config.toml").read_text(
                     encoding="utf-8"
                 )
-                run_call = run_mock.call_args
+                write_calls = self.config_write_calls(run_mock)
+                self.assertEqual(len(write_calls), 1)
+                run_call = write_calls[0]
 
             self.assertNotIn(secret, host_config)
             self.assertIn('experimental_bearer_token = "***"', host_config)
@@ -433,11 +511,250 @@ class AstronCodeConfigTests(unittest.TestCase):
                     self.assertNotIn(secret, repr(value))
 
     @patch("src.agents.astroncode.runner.subprocess.run")
+    def test_valid_search_agent_fragment_is_redacted_from_host_config(
+        self, run_mock
+    ) -> None:
+        special_server_name = 'web-\b\f\x00\x7f"\\\nagent'
+        encoded_special_server_name = r'web-\b\f\u0000\u007F\"\\\nagent'
+        fragment = (
+            "# fragment-comment-secret\n"
+            "[mcp_servers.search]\n"
+            'command = "/private/bin/search-command"\n'
+            'args = ["--token", "fragment-args-secret"]\n'
+            "[mcp_servers.search.env]\n"
+            'SEARCH_API_KEY = "fragment-env-secret"\n'
+            "\n"
+            f'[mcp_servers."{encoded_special_server_name}"]\n'
+            'command = "/private/bin/special-command"\n\n\n'
+        )
+        normalized_fragment = fragment.rstrip("\n") + "\n"
+        run_mock.side_effect = self.config_run_side_effect(fragment=fragment)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp)
+            self.make_agent()._write_codex_config(
+                task_id="search-agent-config",
+                model="openrouter/xopglm52",
+                reasoning_effort=None,
+                wire_api=None,
+                output_dir=output_dir,
+            )
+            host_config = (output_dir / "config.toml").read_text(encoding="utf-8")
+
+        read_calls = self.search_agent_config_read_calls(run_mock)
+        write_calls = self.config_write_calls(run_mock)
+        self.assertEqual(len(read_calls), 1)
+        self.assertEqual(len(write_calls), 1)
+        container_config = write_calls[0].kwargs["input"]
+        parsed_container = tomllib.loads(container_config)
+        self.assertEqual(
+            set(parsed_container["mcp_servers"]),
+            {"search", special_server_name},
+        )
+        self.assertEqual(
+            parsed_container["mcp_servers"]["search"]["env"]["SEARCH_API_KEY"],
+            "fragment-env-secret",
+        )
+        self.assertTrue(container_config.endswith("\n\n" + normalized_fragment))
+
+        try:
+            parsed_host = tomllib.loads(host_config)
+        except tomllib.TOMLDecodeError as error:
+            self.fail(f"host config is invalid TOML: {error}")
+        self.assertEqual(
+            parsed_host["mcp_servers"],
+            {"search": {}, special_server_name: {}},
+        )
+        for leaked_value in (
+            "fragment-env-secret",
+            "fragment-args-secret",
+            "fragment-comment-secret",
+            "/private/bin/search-command",
+            "/private/bin/special-command",
+        ):
+            with self.subTest(leaked_value=leaked_value):
+                self.assertNotIn(leaked_value, host_config)
+
+    @patch("src.agents.astroncode.runner.subprocess.run")
+    def test_missing_search_agent_fragment_preserves_legacy_config(
+        self, run_mock
+    ) -> None:
+        run_mock.side_effect = self.config_run_side_effect(fragment_returncode=44)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp)
+            self.make_agent()._write_codex_config(
+                task_id="legacy-config",
+                model="openrouter/xopglm52",
+                reasoning_effort=None,
+                wire_api=None,
+                output_dir=output_dir,
+            )
+            host_config = (output_dir / "config.toml").read_text(encoding="utf-8")
+
+        self.assertNotIn("mcp_servers", tomllib.loads(host_config))
+        write_calls = self.config_write_calls(run_mock)
+        self.assertEqual(len(write_calls), 1)
+        self.assertNotIn(
+            "mcp_servers",
+            tomllib.loads(write_calls[0].kwargs["input"]),
+        )
+
+    @patch("src.agents.astroncode.runner.subprocess.run")
+    def test_invalid_search_agent_fragments_fail_before_any_config_write(
+        self, run_mock
+    ) -> None:
+        secret = "invalid-mcp-structure-secret"
+        cases = {
+            "empty": "",
+            "invalid syntax": "mcp_servers = [\n",
+            "extra top-level key": (
+                "[mcp_servers.search]\n"
+                'command = "search-agent"\n'
+                "[unexpected]\n"
+                "enabled = true\n"
+            ),
+            "wrong top-level key": "[search]\nenabled = true\n",
+            "mcp_servers string": 'mcp_servers = "search-agent"\n',
+            "empty mcp_servers table": "[mcp_servers]\n",
+            "inline server string": (
+                'mcp_servers = { search = "not-a-table" }\n'
+                f"# {secret}\n"
+            ),
+            "inline server array": (
+                'mcp_servers = { search = ["bad"] }\n'
+                f"# {secret}\n"
+            ),
+            "scalar in mcp_servers table": (
+                "[mcp_servers]\n"
+                "enabled = true\n"
+                f"# {secret}\n"
+            ),
+        }
+        for name, fragment in cases.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                output_dir = Path(tmp)
+                run_mock.reset_mock()
+                run_mock.side_effect = self.config_run_side_effect(fragment=fragment)
+
+                with self.assertRaises(RuntimeError) as raised:
+                    self.make_agent()._write_codex_config(
+                        task_id="invalid-search-config",
+                        model="openrouter/xopglm52",
+                        reasoning_effort=None,
+                        wire_api=None,
+                        output_dir=output_dir,
+                    )
+
+                self.assertFalse((output_dir / "config.toml").exists())
+                self.assertEqual(self.config_write_calls(run_mock), [])
+                self.assertEqual(
+                    len(self.search_agent_config_read_calls(run_mock)),
+                    1,
+                )
+                self.assertEqual(run_mock.call_count, 1)
+                if fragment:
+                    self.assertNotIn(fragment, str(raised.exception))
+                self.assertNotIn(secret, str(raised.exception))
+                self.assertIsNone(raised.exception.__cause__)
+
+    @patch("src.agents.astroncode.runner.subprocess.run")
+    def test_search_agent_fragment_read_failure_does_not_leak_output(
+        self, run_mock
+    ) -> None:
+        secret = "fake-search-agent-secret"
+        run_mock.side_effect = self.config_run_side_effect(
+            fragment=secret,
+            fragment_returncode=5,
+            fragment_stderr=f"read failed: {secret}",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp)
+            with self.assertRaises(RuntimeError) as raised:
+                self.make_agent()._write_codex_config(
+                    task_id="search-config-read-failure",
+                    model="openrouter/xopglm52",
+                    reasoning_effort=None,
+                    wire_api=None,
+                    output_dir=output_dir,
+                )
+
+            self.assertFalse((output_dir / "config.toml").exists())
+
+        message = str(raised.exception)
+        self.assertIn(SEARCH_AGENT_CONFIG_PATH, message)
+        self.assertIn("read", message)
+        self.assertIn("rc=5", message)
+        self.assertNotIn(secret, message)
+        self.assertEqual(self.config_write_calls(run_mock), [])
+
+    def test_search_agent_config_path_is_fixed(self) -> None:
+        self.assertEqual(
+            getattr(astroncode_runner, "ASTRONCODE_SEARCH_AGENT_CONFIG_PATH", None),
+            SEARCH_AGENT_CONFIG_PATH,
+        )
+
+    @patch("src.agents.astroncode.runner.subprocess.run")
+    def test_merged_config_keeps_bearer_token_only_in_container_stdin(
+        self, run_mock
+    ) -> None:
+        secret = "merged-provider-secret"
+        fragment = "[mcp_servers.search]\ncommand = \"search-agent\"\n"
+        run_mock.side_effect = self.config_run_side_effect(
+            fragment=fragment,
+            write_returncode=5,
+            write_stdout=f"write output: {secret}",
+            write_stderr=f"write error: {secret}",
+        )
+
+        with patch.dict(
+            os.environ,
+            {
+                "ASTRONCODE_MODEL_PROVIDER": "astron-spark",
+                "ASTRON_API_KEY": secret,
+            },
+            clear=False,
+        ), tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp)
+            with self.assertRaises(RuntimeError) as raised:
+                self.make_agent()._write_codex_config(
+                    task_id="merged-secret-isolation",
+                    model="openrouter/xopglm52",
+                    reasoning_effort=None,
+                    wire_api=None,
+                    output_dir=output_dir,
+                )
+            host_config = (output_dir / "config.toml").read_text(encoding="utf-8")
+
+        write_calls = self.config_write_calls(run_mock)
+        self.assertEqual(len(write_calls), 1)
+        container_config = write_calls[0].kwargs["input"]
+        parsed_container_config = tomllib.loads(container_config)
+        self.assertEqual(
+            parsed_container_config["model_providers"]["astron-spark"][
+                "experimental_bearer_token"
+            ],
+            secret,
+        )
+        self.assertIn("search", parsed_container_config["mcp_servers"])
+        self.assertNotIn(secret, host_config)
+        self.assertNotIn(secret, str(raised.exception))
+        for call in run_mock.call_args_list:
+            for argument in call.args[0]:
+                self.assertNotIn(secret, argument)
+            for key, value in call.kwargs.items():
+                if key != "input":
+                    self.assertNotIn(secret, repr(value))
+
+    @patch("src.agents.astroncode.runner.subprocess.run")
     def test_successful_config_write_logs_do_not_leak_credentials(
         self, run_mock
     ) -> None:
         secret = "successful-write-secret-never-log"
-        run_mock.return_value = subprocess.CompletedProcess([], 0, "", "")
+        run_mock.side_effect = self.config_run_side_effect(
+            fragment='[mcp_servers.search]\ncommand = "search-agent"\n'
+        )
         with patch.dict(
             os.environ,
             {
@@ -517,11 +834,11 @@ class AstronCodeConfigTests(unittest.TestCase):
                 self.assertIn(accepted_name, message)
             self.assertNotIn(unrelated_secret, message)
 
-    def test_default_image_is_v0_3(self) -> None:
+    def test_default_image_is_v0_4(self) -> None:
         with patch.dict(os.environ, {"DOCKER_IMAGE_ASTRONCODE": ""}, clear=False):
             self.assertEqual(
                 self.make_agent().image,
-                "wildclawbench-astroncode-ubuntu:v0.3",
+                "wildclawbench-astroncode-ubuntu:v0.4",
             )
 
 
