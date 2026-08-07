@@ -57,6 +57,7 @@ def grade(**kwargs) -> dict:
         "invalid_quote_behavior",
         "public_tests_passed",
         "scope_api_preserved",
+        "overall_score",
     ]
     scores = {key: 0.0 for key in keys}
     root = Path(kwargs.get("workspace_path") or "/tmp_workspace")
@@ -164,6 +165,15 @@ print("__RESULT__" + json.dumps(result, sort_keys=True))
         scores["scope_api_preserved"] = sum(scope_flags) / len(scope_flags)
     except OSError:
         pass
+    scores["overall_score"] = round(
+        0.20 * scores["quoted_escaped_fields"]
+        + 0.20 * scores["crlf_multiline_fields"]
+        + 0.20 * scores["empty_trailing_fields"]
+        + 0.20 * scores["invalid_quote_behavior"]
+        + 0.10 * scores["public_tests_passed"]
+        + 0.10 * scores["scope_api_preserved"],
+        6,
+    )
     return {key: round(value, 6) for key, value in scores.items()}
 ```
 

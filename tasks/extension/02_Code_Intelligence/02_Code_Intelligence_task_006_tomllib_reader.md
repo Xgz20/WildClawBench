@@ -57,6 +57,7 @@ def grade(**kwargs) -> dict:
         "cli_json_correct",
         "stdlib_scope_only",
         "source_delivery_correct",
+        "overall_score",
     ]
     scores = {key: 0.0 for key in keys}
     root = Path(kwargs.get("workspace_path") or "/tmp_workspace")
@@ -213,6 +214,15 @@ print("__RESULT__" + json.dumps(result, sort_keys=True))
         scores["source_delivery_correct"] = sum(delivery_flags) / len(delivery_flags)
     except (OSError, UnicodeError, SyntaxError, KeyError):
         pass
+    scores["overall_score"] = round(
+        0.15 * scores["fixed_source_identity"]
+        + 0.25 * scores["valid_metadata_api"]
+        + 0.25 * scores["error_contract_correct"]
+        + 0.15 * scores["cli_json_correct"]
+        + 0.10 * scores["stdlib_scope_only"]
+        + 0.10 * scores["source_delivery_correct"],
+        6,
+    )
     return {key: round(value, 6) for key, value in scores.items()}
 ```
 

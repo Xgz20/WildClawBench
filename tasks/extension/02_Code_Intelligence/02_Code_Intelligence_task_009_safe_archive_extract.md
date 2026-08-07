@@ -67,6 +67,7 @@ def grade(**kwargs) -> dict:
         "limits_malformed_archives",
         "atomic_no_partial_delivery",
         "valid_bundles_api_preserved",
+        "overall_score",
     ]
     scores = {key: 0.0 for key in keys}
     workspace = Path(kwargs.get("workspace_path") or "/tmp_workspace")
@@ -403,6 +404,14 @@ def grade(**kwargs) -> dict:
             [value is True for value in valid_components]
             + [payload.get("api") is True, scope_ok]
         ) / 5.0
+    scores["overall_score"] = round(
+        0.25 * scores["path_traversal_blocked"]
+        + 0.20 * scores["symlink_collision_blocked"]
+        + 0.20 * scores["limits_malformed_archives"]
+        + 0.20 * scores["atomic_no_partial_delivery"]
+        + 0.15 * scores["valid_bundles_api_preserved"],
+        6,
+    )
     return scores
 ```
 

@@ -61,6 +61,7 @@ def grade(**kwargs) -> dict:
         "query_shape_order_correct",
         "public_regression_passed",
         "scope_result_delivery",
+        "overall_score",
     ]
     scores = {key: 0.0 for key in keys}
     root = Path(kwargs.get("workspace_path") or "/tmp_workspace")
@@ -227,6 +228,15 @@ print("__RESULT__" + json.dumps(result, sort_keys=True))
         scores["scope_result_delivery"] = sum(delivery_flags) / len(delivery_flags)
     except (OSError, UnicodeError, csv.Error):
         pass
+    scores["overall_score"] = round(
+        0.25 * scores["per_property_counts_correct"]
+        + 0.15 * scores["zero_activity_preserved"]
+        + 0.20 * scores["legitimate_duplicates_preserved"]
+        + 0.20 * scores["query_shape_order_correct"]
+        + 0.10 * scores["public_regression_passed"]
+        + 0.10 * scores["scope_result_delivery"],
+        6,
+    )
     return {key: round(value, 6) for key, value in scores.items()}
 ```
 
