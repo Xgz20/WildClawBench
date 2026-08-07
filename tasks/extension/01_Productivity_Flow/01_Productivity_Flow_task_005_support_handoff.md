@@ -55,6 +55,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
         "dedupe_and_status_correct",
         "priority_and_sla_correct",
         "delivery_correct",
+        "overall_score",
     ]
     scores = {key: 0.0 for key in keys}
     root = Path(workspace_path)
@@ -115,6 +116,13 @@ def grade(transcript: list, workspace_path: str) -> dict:
         regular(csv_path),
         regular(note_path),
     ])
+    scores["overall_score"] = round(
+        0.30 * scores["ticket_facts_normalized"]
+        + 0.25 * scores["dedupe_and_status_correct"]
+        + 0.30 * scores["priority_and_sla_correct"]
+        + 0.15 * scores["delivery_correct"],
+        6,
+    )
     return {key: round(value, 6) for key, value in scores.items()}
 ```
 

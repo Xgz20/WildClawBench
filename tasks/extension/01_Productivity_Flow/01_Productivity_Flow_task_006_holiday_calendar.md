@@ -55,6 +55,7 @@ def grade(**kwargs) -> dict:
         "holiday_rows_correct",
         "makeup_workdays_correct",
         "csv_delivery_correct",
+        "overall_score",
     ]
     scores = {key: 0.0 for key in keys}
     workspace = Path(kwargs.get("workspace_path") or "/tmp_workspace")
@@ -173,6 +174,13 @@ def grade(**kwargs) -> dict:
     )
     delivery += 0.1 * (not saved_web_copy)
     scores["csv_delivery_correct"] = round(delivery, 6)
+    scores["overall_score"] = round(
+        0.20 * scores["source_identity_correct"]
+        + 0.35 * scores["holiday_rows_correct"]
+        + 0.25 * scores["makeup_workdays_correct"]
+        + 0.20 * scores["csv_delivery_correct"],
+        6,
+    )
     return scores
 ```
 

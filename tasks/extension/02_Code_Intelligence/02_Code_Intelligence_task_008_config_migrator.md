@@ -60,6 +60,7 @@ def grade(**kwargs) -> dict:
         "validation_errors_correct",
         "atomic_failure_behavior",
         "tests_scope_delivery",
+        "overall_score",
     ]
     scores = {key: 0.0 for key in keys}
     root = Path(kwargs.get("workspace_path") or "/tmp_workspace")
@@ -254,6 +255,15 @@ print("__RESULT__" + json.dumps(result, sort_keys=True))
         scores["tests_scope_delivery"] = sum(delivery_flags) / len(delivery_flags)
     except (OSError, subprocess.SubprocessError):
         pass
+    scores["overall_score"] = round(
+        0.20 * scores["v1_to_v3_correct"]
+        + 0.20 * scores["v2_idempotence_correct"]
+        + 0.15 * scores["unknown_fields_preserved"]
+        + 0.20 * scores["validation_errors_correct"]
+        + 0.15 * scores["atomic_failure_behavior"]
+        + 0.10 * scores["tests_scope_delivery"],
+        6,
+    )
     return {key: round(value, 6) for key, value in scores.items()}
 ```
 

@@ -58,6 +58,7 @@ def grade(**kwargs) -> dict:
         "different_keys_independent",
         "deterministic_tests_passed",
         "scope_api_preserved",
+        "overall_score",
     ]
     scores = {key: 0.0 for key in keys}
     root = Path(kwargs.get("workspace_path") or "/tmp_workspace")
@@ -253,6 +254,15 @@ print("__RESULT__" + json.dumps(asyncio.run(checks()), sort_keys=True))
         scores["scope_api_preserved"] = sum(scope_flags) / len(scope_flags)
     except (OSError, UnicodeError, SyntaxError):
         pass
+    scores["overall_score"] = round(
+        0.25 * scores["same_key_coalesced"]
+        + 0.20 * scores["ttl_cache_hits_correct"]
+        + 0.25 * scores["errors_cancellation_recover"]
+        + 0.10 * scores["different_keys_independent"]
+        + 0.10 * scores["deterministic_tests_passed"]
+        + 0.10 * scores["scope_api_preserved"],
+        6,
+    )
     return {key: round(value, 6) for key, value in scores.items()}
 ```
 
