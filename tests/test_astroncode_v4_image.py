@@ -10,6 +10,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DOCKERFILE = REPO_ROOT / "docker" / "astroncode" / "v4" / "Dockerfile"
+SEARCH_AGENT_VERIFIER = (
+    REPO_ROOT / "docker" / "astroncode" / "v4" / "verify_search_agent.py"
+)
 BUILD_SCRIPT = REPO_ROOT / "script" / "build-astroncode-image.sh"
 CREDENTIAL_AND_RUNTIME_ENV_NAMES = (
     "ASTRON_API_KEY",
@@ -55,6 +58,7 @@ class AstronCodeV4DockerfileTest(unittest.TestCase):
             for instruction in cls.instructions
             if instruction.startswith("RUN ")
         ]
+        cls.run_content = "\n".join(cls.run_instructions)
 
     def test_dockerfile_exists(self):
         self.assertTrue(DOCKERFILE.is_file(), f"missing {DOCKERFILE}")
@@ -83,13 +87,12 @@ class AstronCodeV4DockerfileTest(unittest.TestCase):
         last_arg_index = self.instructions.index(
             "ARG NPM_REGISTRY=https://depend.iflytek.com/artifactory/api/npm/npm-repo/"
         )
-        install_index = self.instructions.index(self._single_run_instruction())
+        install_index = self.instructions.index(self.run_instructions[0])
 
         self.assertLess(last_arg_index, path_index)
         self.assertLess(path_index, install_index)
 
     def test_installs_and_verifies_astroncode_then_resets_private_home(self):
-        install_instruction = self._single_run_instruction()
         expected_fragments = (
             "npm uninstall -g @iflytek/astron-code >/dev/null 2>&1 || true",
             'npm install -g "@iflytek/astron-code@${ASTRON_CODE_VERSION}"',
@@ -98,28 +101,26 @@ class AstronCodeV4DockerfileTest(unittest.TestCase):
             "rm -rf /root/.acode",
             "install -d -m 700 /root/.acode",
         )
-        self._assert_fragments_in_order(install_instruction, expected_fragments)
+        self._assert_fragments_in_order(self.run_content, expected_fragments)
 
     def test_resets_acode_once_before_search_agent_installation(self):
-        self._assert_acode_cleanup_precedes_search_agent(
-            self._single_run_instruction()
-        )
+        self._assert_acode_cleanup_precedes_search_agent(self.run_content)
 
     def test_cleanup_guard_rejects_cleanup_after_fragment_copy(self):
         mutated_instruction = (
-            f"{self._single_run_instruction()} && rm -rf /root/.acode"
+            f"{self.run_content} && rm -rf /root/.acode"
         )
         with self.assertRaises(AssertionError):
             self._assert_acode_cleanup_precedes_search_agent(mutated_instruction)
 
-    def test_installs_search_agent_runs_doctor_and_validates_generated_toml(self):
-        install_instruction = self._single_run_instruction()
+    def test_bootstraps_search_agent_browser_runs_fetch_smoke_and_doctor(self):
+        install_instruction = self.run_content
         expected_fragments = (
             "install -d -m 700 /root/.acode",
             'npm install -g "@iflytek/install-search-updater@${SEARCH_UPDATER_VERSION}"',
             "--foreground-scripts",
             '--registry="${NPM_REGISTRY}"',
-            "install-search",
+            "/tmp/verify_search_agent.py",
             "install-search doctor --full",
             "python3 -c",
             "import tomllib",
@@ -130,12 +131,61 @@ class AstronCodeV4DockerfileTest(unittest.TestCase):
             "/opt/astroncode/search-agent.config.toml",
         )
         self._assert_fragments_in_order(install_instruction, expected_fragments)
+        self.assertNotIn("install-search bootstrap", install_instruction)
+        self.assertNotIn("--skip-browser-install", install_instruction)
+        self.assertNotIn("--skip-prewarm", install_instruction)
+
+    def test_pins_scrapling_playwright_browser_path_in_runtime_fragment(self):
+        expected_fragments = (
+            'Path("/root/.acode/config.toml")',
+            'marker = "[mcp_servers.scrapling.env]\\n"',
+            'PLAYWRIGHT_BROWSERS_PATH',
+            '\\"/ms-playwright\\"',
+            'p.write_text(s, encoding="utf-8")',
+        )
+        self._assert_fragments_in_order(self.run_content, expected_fragments)
+
+    def test_fetch_verifier_checks_browser_and_real_scrapling_tool(self):
+        self.assertTrue(
+            SEARCH_AGENT_VERIFIER.is_file(),
+            f"missing {SEARCH_AGENT_VERIFIER}",
+        )
+        content = SEARCH_AGENT_VERIFIER.read_text(encoding="utf-8")
+        expected_fragments = (
+            'os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "/root/.cache/ms-playwright")',
+            'glob("chromium-*/chrome-linux*/chrome")',
+            "os.access(candidate, os.X_OK)",
+            'Path("/root/.acode/config.toml")',
+            '["mcp_servers"][name]',
+            "StdioServerParameters",
+            "stdio_client",
+            "ClientSession",
+            'session.list_tools()',
+            'server_parameters("scrapling")',
+            'call_tool("fetch"',
+            'require_tool("web-search", "web-search")',
+        )
+        self._assert_fragments_in_order(content, expected_fragments)
+        self.assertIn("SEARCH_AGENT_FETCH_OK", content)
+        self.assertIn("127.0.0.1", content)
+        self.assertEqual(1, content.count("http://"))
+        self.assertNotIn("https://", content)
+
+    def test_copies_only_build_time_fetch_verifier(self):
+        copy_instructions = [
+            instruction
+            for instruction in self.instructions
+            if instruction.startswith(("COPY ", "ADD "))
+        ]
+        self.assertEqual(
+            ["COPY verify_search_agent.py /tmp/verify_search_agent.py"],
+            copy_instructions,
+        )
 
     def test_toml_validation_requires_mcp_servers_table(self):
-        install_instruction = self._single_run_instruction()
         self.assertIn(
             'isinstance(config[\"mcp_servers\"], dict)',
-            install_instruction,
+            self.run_content,
         )
 
     def test_toml_validation_requires_each_mcp_server_table(self):
@@ -169,17 +219,15 @@ class AstronCodeV4DockerfileTest(unittest.TestCase):
         self.assertIn("invalid SearchAgent config", result.stderr)
 
     def test_search_agent_fragment_is_root_owned_and_not_user_writable(self):
-        install_instruction = self._single_run_instruction()
         expected_fragments = (
             "install -d -o root -g root -m 755 /opt/astroncode",
             "install -o root -g root -m 644 /root/.acode/config.toml "
             "/opt/astroncode/search-agent.config.toml",
         )
-        self._assert_fragments_in_order(install_instruction, expected_fragments)
+        self._assert_fragments_in_order(self.run_content, expected_fragments)
 
     def test_contains_no_credentials_or_runtime_model_configuration(self):
         self.assertTrue(DOCKERFILE.is_file(), f"missing {DOCKERFILE}")
-        self.assertNotRegex(self.instruction_content, r"(?im)^\s*(COPY|ADD)\s")
         for name in CREDENTIAL_AND_RUNTIME_ENV_NAMES:
             with self.subTest(name=name):
                 self.assertNotRegex(
@@ -187,14 +235,10 @@ class AstronCodeV4DockerfileTest(unittest.TestCase):
                     rf"(?i)\b{re.escape(name)}\b",
                 )
 
-    def _single_run_instruction(self):
-        self.assertEqual(1, len(self.run_instructions), self.run_instructions)
-        return self.run_instructions[0]
-
     def _toml_validation_script(self):
         match = re.search(
             r"python3 -c '([^']+)' /root/\.acode/config\.toml",
-            self._single_run_instruction(),
+            self.run_content,
         )
         self.assertIsNotNone(match, "missing Python TOML validation command")
         return match.group(1)
@@ -214,17 +258,10 @@ class AstronCodeV4DockerfileTest(unittest.TestCase):
             'npm install -g "@iflytek/install-search-updater@'
             '${SEARCH_UPDATER_VERSION}"'
         )
-        install_search = re.search(
-            r"\s&&\s+install-search\s+&&",
-            install_instruction,
-        )
-
         self.assertEqual(1, install_instruction.count(cleanup))
         cleanup_index = install_instruction.index(cleanup)
         updater_index = install_instruction.index(updater)
-        self.assertIsNotNone(install_search)
         self.assertLess(cleanup_index, updater_index)
-        self.assertLess(cleanup_index, install_search.start())
         self.assertNotIn(
             cleanup,
             install_instruction[cleanup_index + len(cleanup) :],
