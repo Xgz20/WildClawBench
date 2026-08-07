@@ -201,6 +201,12 @@ def classify_codex(tool_name: str, content: str, status: str = "") -> str:
     if "Process running with session ID" in text:
         return "unclear"  # 后台进程，最终结果未知
 
+    # 2b. Codex GPT-5.6-sol 格式（Script completed/failed）
+    if "Script completed" in text:
+        return "success"
+    if "Script failed" in text:
+        return "failure"
+
     # 3. 运行时异常
     if any(kw in text for kw in _CODEX_RUNTIME_ERRORS):
         return "failure"

@@ -1176,9 +1176,30 @@ if __name__ == "__main__":
                 )
             ]
 
-        # Tool output 鈫?openclaw tool_result inside a user message (Anthropic
+        # custom_tool_call → openclaw tool_use (GPT-5.6-sol format)
+        if ptype == "custom_tool_call":
+            call_id = payload.get("call_id") or payload.get("id") or ""
+            name = payload.get("name") or "unknown"
+            raw_input = payload.get("input", "")
+            # input is JS code string, keep as-is for graders
+            parsed_input = {"code": raw_input} if isinstance(raw_input, str) else raw_input
+            return [
+                self._openclaw_message(
+                    "assistant",
+                    [
+                        {
+                            "type": "tool_use",
+                            "id": str(call_id),
+                            "name": str(name),
+                            "input": parsed_input,
+                        }
+                    ],
+                )
+            ]
+
+        # Tool output → openclaw tool_result inside a user message (Anthropic
         # convention that openclaw graders mirror).
-        if ptype in ("function_call_output", "tool_result", "function-call-output"):
+        if ptype in ("function_call_output", "tool_result", "function-call-output", "custom_tool_call_output"):
             call_id = (
                 payload.get("call_id")
                 or payload.get("callId")
@@ -1186,7 +1207,25 @@ if __name__ == "__main__":
                 or ""
             )
             output = payload.get("output") or payload.get("result") or ""
-            if isinstance(output, (dict, list)):
+
+            # custom_tool_call_output: output is list of {type, text} objects
+            # Extract and concatenate all text content
+            if isinstance(output, list):
+                chunks = []
+                for item in output:
+                    if isinstance(item, dict):
+                        # Try common text keys
+                        text = (
+                            item.get("text")
+                            or item.get("content")
+                            or item.get("value")
+                            or ""
+                        )
+                        chunks.append(str(text))
+                    elif isinstance(item, str):
+                        chunks.append(item)
+                output_text = "".join(chunks) if chunks else json.dumps(output, ensure_ascii=False)
+            elif isinstance(output, dict):
                 try:
                     output_text = json.dumps(output, ensure_ascii=False)
                 except Exception:
