@@ -56,6 +56,16 @@ models:
             output: 45
             cache_write: 12.5
 
+  xopdeepseekv4flash0731:
+    display_name: DeepSeek-V4-Flash
+    vendor: DeepSeek
+    aliases: []
+    capabilities:
+      supported_reasoning_efforts: []
+    # 经内部 openrouter 代理调用，暂无定价档案；
+    # 按成本口径缺价格时显示 "-"，不按 0 处理。
+    pricing_profiles: []
+
   xopglm51:
     display_name: GLM-5.1
     vendor: Zhipu AI
