@@ -160,6 +160,7 @@ class ClaudeCodeAgent(BaseAgent):
                 spec.model,
                 spec.timeout_seconds,
                 spec.output_dir,
+                thinking=spec.thinking,
             )
             elapsed_time = time.perf_counter() - start_time
             return AgentExecution(elapsed_time=elapsed_time, error=None, gateway_proc=None, agent_proc=None)
@@ -462,15 +463,38 @@ PY"""
         if r_cp.returncode != 0:
             raise RuntimeError(f"ClaudeCode tmp copy failed:\n{r_cp.stderr}")
 
-    def _run_prompt(self, task_id: str, prompt: str, model: str, timeout_seconds: int, output_dir: Path) -> None:
-        output_dir.mkdir(parents=True, exist_ok=True)
-        cmd = (
-            f"cd /claude_code && "
-            f"IS_SANDBOX=1 ./start.sh "
-            f"--add-dir /tmp_workspace "
-            f"-p {shlex.quote(prompt)} "
-            f"--model {shlex.quote(model)}"
+    @staticmethod
+    def _build_prompt_command(
+        prompt: str,
+        model: str,
+        thinking: str | None = None,
+    ) -> str:
+        normalized_thinking = thinking.strip() if thinking else ""
+        effort_arg = (
+            f" --effort {shlex.quote(normalized_thinking)}"
+            if normalized_thinking
+            else ""
         )
+        return (
+            "cd /claude_code && "
+            "IS_SANDBOX=1 ./start.sh "
+            "--add-dir /tmp_workspace "
+            f"--model {shlex.quote(model)}"
+            f"{effort_arg} "
+            f"-p {shlex.quote(prompt)}"
+        )
+
+    def _run_prompt(
+        self,
+        task_id: str,
+        prompt: str,
+        model: str,
+        timeout_seconds: int,
+        output_dir: Path,
+        thinking: str | None = None,
+    ) -> None:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        cmd = self._build_prompt_command(prompt, model, thinking=thinking)
         r = subprocess.run(
             ["docker", "exec", task_id, "/bin/bash", "-c", cmd],
             capture_output=True,
