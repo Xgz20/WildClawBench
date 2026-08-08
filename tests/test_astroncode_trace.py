@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import os
 import shutil
@@ -73,6 +74,7 @@ class AstronCodeTraceTests(unittest.TestCase):
                 "status",
                 "archive",
                 "trace_count",
+                "interaction_jsonl",
                 "error",
             },
         )
@@ -81,7 +83,39 @@ class AstronCodeTraceTests(unittest.TestCase):
 
     @staticmethod
     def trace_export_field_names() -> tuple[str, ...]:
-        return ("enabled", "status", "archive", "trace_count", "error")
+        return (
+            "enabled",
+            "status",
+            "archive",
+            "trace_count",
+            "interaction_jsonl",
+            "error",
+        )
+
+    @staticmethod
+    def write_trace_archive(path: Path, trace_names: tuple[str, ...]) -> None:
+        with tarfile.open(path, "w:gz") as archive:
+            if not trace_names:
+                root = tarfile.TarInfo("rollout-traces")
+                root.type = tarfile.DIRTYPE
+                archive.addfile(root)
+                return
+            for trace_name in trace_names:
+                prefix = f"rollout-traces/{trace_name}"
+                manifest = json.dumps({"trace_id": trace_name}).encode()
+                manifest_info = tarfile.TarInfo(f"{prefix}/manifest.json")
+                manifest_info.size = len(manifest)
+                archive.addfile(manifest_info, io.BytesIO(manifest))
+                trace = json.dumps(
+                    {
+                        "seq": 1,
+                        "wall_time_unix_ms": 1,
+                        "payload": {"type": "rollout_started"},
+                    }
+                ).encode() + b"\n"
+                trace_info = tarfile.TarInfo(f"{prefix}/trace.jsonl")
+                trace_info.size = len(trace)
+                archive.addfile(trace_info, io.BytesIO(trace))
 
     def collect_usage_with_parsed_usage(
         self,
@@ -372,7 +406,10 @@ class AstronCodeTraceTests(unittest.TestCase):
                             + runner.ASTRONCODE_TRACE_ARCHIVE_CONTAINER_PATH
                         ),
                     )
-                    Path(command[-1]).write_bytes(b"tar-gzip-content")
+                    self.write_trace_archive(
+                        Path(command[-1]),
+                        ("trace-one", "trace-two", "trace-three"),
+                    )
                     return subprocess.CompletedProcess(command, 0, "", "")
                 self.fail(f"unexpected command: {command}")
 
@@ -392,6 +429,7 @@ class AstronCodeTraceTests(unittest.TestCase):
                     "agent.log",
                     "execution_status.json",
                     runner.ASTRONCODE_TRACE_ARCHIVE_NAME,
+                    runner.ASTRONCODE_INTERACTION_JSONL_NAME,
                 },
             )
             expected = {
@@ -399,10 +437,146 @@ class AstronCodeTraceTests(unittest.TestCase):
                 "status": "exported",
                 "archive": runner.ASTRONCODE_TRACE_ARCHIVE_NAME,
                 "trace_count": 3,
+                "interaction_jsonl": runner.ASTRONCODE_INTERACTION_JSONL_NAME,
                 "error": None,
             }
             self.assertEqual(self.read_trace_export_status(output_dir), expected)
             self.assertEqual(self.read_trace_export_event(output_dir), expected)
+
+    def test_interaction_jsonl_reconstructs_user_model_tool_and_final_events(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            base_dir = Path(temp_dir)
+            archive_path = base_dir / "traces.tar.gz"
+            output_path = base_dir / runner.ASTRONCODE_INTERACTION_JSONL_NAME
+            prefix = "rollout-traces/trace-one"
+
+            with tarfile.open(archive_path, "w:gz") as archive:
+                def add_json(name: str, value: object) -> None:
+                    content = json.dumps(value).encode()
+                    info = tarfile.TarInfo(name)
+                    info.size = len(content)
+                    archive.addfile(info, io.BytesIO(content))
+
+                add_json(f"{prefix}/manifest.json", {"trace_id": "trace-one"})
+                add_json(
+                    f"{prefix}/payloads/1.json",
+                    {
+                        "input": [{"role": "user", "content": "hello"}],
+                        "model": "xopglm52",
+                    },
+                )
+                add_json(
+                    f"{prefix}/payloads/2.json",
+                    {"tool_name": "exec_command", "payload": {"cmd": "echo hi"}},
+                )
+                add_json(
+                    f"{prefix}/payloads/3.json",
+                    {
+                        "call_id": "call-1",
+                        "stdout": "hi\n",
+                        "stderr": "",
+                        "exit_code": 0,
+                        "duration": 1.25,
+                    },
+                )
+                add_json(
+                    f"{prefix}/payloads/4.json",
+                    {
+                        "output_items": [
+                            {
+                                "type": "message",
+                                "role": "assistant",
+                                "content": [{"text": "done"}],
+                            }
+                        ],
+                        "token_usage": {"total_tokens": 3},
+                    },
+                )
+                trace_events = [
+                    {
+                        "seq": 1,
+                        "wall_time_unix_ms": 1,
+                        "payload": {"type": "rollout_started"},
+                    },
+                    {
+                        "seq": 2,
+                        "wall_time_unix_ms": 2,
+                        "thread_id": "thread-1",
+                        "payload": {
+                            "type": "inference_started",
+                            "inference_call_id": "inference-1",
+                            "request_payload": {
+                                "path": "payloads/1.json",
+                                "kind": {"type": "inference_request"},
+                            },
+                        },
+                    },
+                    {
+                        "seq": 3,
+                        "wall_time_unix_ms": 3,
+                        "payload": {
+                            "type": "tool_call_started",
+                            "tool_call_id": "call-1",
+                            "invocation_payload": {
+                                "path": "payloads/2.json",
+                                "kind": {"type": "tool_invocation"},
+                            },
+                        },
+                    },
+                    {
+                        "seq": 4,
+                        "wall_time_unix_ms": 4,
+                        "payload": {
+                            "type": "tool_call_runtime_ended",
+                            "tool_call_id": "call-1",
+                            "runtime_payload": {
+                                "path": "payloads/3.json",
+                                "kind": {"type": "tool_runtime_event"},
+                            },
+                        },
+                    },
+                    {
+                        "seq": 5,
+                        "wall_time_unix_ms": 5,
+                        "payload": {
+                            "type": "inference_completed",
+                            "inference_call_id": "inference-1",
+                            "response_id": "response-1",
+                            "response_payload": {
+                                "path": "payloads/4.json",
+                                "kind": {"type": "inference_response"},
+                            },
+                        },
+                    },
+                ]
+                trace_content = "".join(
+                    json.dumps(event) + "\n" for event in trace_events
+                ).encode()
+                trace_info = tarfile.TarInfo(f"{prefix}/trace.jsonl")
+                trace_info.size = len(trace_content)
+                archive.addfile(trace_info, io.BytesIO(trace_content))
+
+            runner.AstronCodeAgent._export_agent_interaction_jsonl(
+                archive_path,
+                output_path,
+            )
+            records = [json.loads(line) for line in output_path.read_text().splitlines()]
+            by_type = {record["record_type"]: record for record in records}
+            self.assertEqual(by_type["user_input"]["user_items"][0]["content"], "hello")
+            self.assertEqual(
+                by_type["model_request"]["raw_payloads"]["request_payload"]["data"]["model"],
+                "xopglm52",
+            )
+            self.assertEqual(
+                by_type["tool_call_runtime_ended"]["raw_payloads"]["runtime_payload"]["data"]["stdout"],
+                "hi\n",
+            )
+            self.assertEqual(
+                by_type["tool_call_runtime_ended"]["raw_payloads"]["runtime_payload"]["data"]["duration"],
+                1.25,
+            )
+            self.assertEqual(by_type["final_output"]["text"], "done")
+            self.assertEqual(output_path.stat().st_mode & 0o777, 0o600)
 
     def test_collect_usage_triggers_trace_export_and_preserves_usage(self) -> None:
         with patch.dict(
@@ -464,6 +638,7 @@ class AstronCodeTraceTests(unittest.TestCase):
                 "status": "disabled",
                 "archive": None,
                 "trace_count": 0,
+                "interaction_jsonl": None,
                 "error": None,
             }
             self.assertEqual(self.read_trace_export_status(output_dir), expected)
@@ -483,7 +658,7 @@ class AstronCodeTraceTests(unittest.TestCase):
             def fake_run(command, **kwargs):
                 if command[:2] == ["docker", "exec"]:
                     return subprocess.CompletedProcess(command, 0, "0", "")
-                Path(command[-1]).write_bytes(b"empty-root-archive")
+                self.write_trace_archive(Path(command[-1]), ())
                 return subprocess.CompletedProcess(command, 0, "", "")
 
             with patch(
@@ -500,6 +675,9 @@ class AstronCodeTraceTests(unittest.TestCase):
             self.assertEqual(status["trace_count"], 0)
             self.assertTrue(
                 (output_dir / runner.ASTRONCODE_TRACE_ARCHIVE_NAME).is_file()
+            )
+            self.assertTrue(
+                (output_dir / runner.ASTRONCODE_INTERACTION_JSONL_NAME).is_file()
             )
 
     def test_trace_exec_failure_is_non_blocking_and_removes_partial_archive(
@@ -768,7 +946,7 @@ class AstronCodeTraceTests(unittest.TestCase):
                             )
                         if command[:2] == ["docker", "exec"]:
                             return subprocess.CompletedProcess(command, 0, "1", "")
-                        Path(command[-1]).write_bytes(b"archive")
+                        self.write_trace_archive(Path(command[-1]), ("trace-one",))
                         return subprocess.CompletedProcess(command, 0, "", "")
 
                     recorder_patch = patch(
@@ -1004,6 +1182,7 @@ class AstronCodeTraceTests(unittest.TestCase):
                 {path.name for path in output_dir.iterdir()},
                 {
                     runner.ASTRONCODE_TRACE_ARCHIVE_NAME,
+                    runner.ASTRONCODE_INTERACTION_JSONL_NAME,
                     "execution_status.json",
                     "agent.log",
                 },
@@ -1039,6 +1218,9 @@ class AstronCodeTraceTests(unittest.TestCase):
                 members = {member.name.rstrip("/") for member in tar_file.getmembers()}
             self.assertEqual(members, {"rollout-traces"})
             self.assertEqual(self.read_trace_export_status(output_dir)["trace_count"], 0)
+            self.assertTrue(
+                (output_dir / runner.ASTRONCODE_INTERACTION_JSONL_NAME).is_file()
+            )
 
     def test_real_shell_tar_failure_does_not_copy_or_export(self) -> None:
         with patch.dict(

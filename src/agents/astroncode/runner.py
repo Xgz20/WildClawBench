@@ -9,9 +9,11 @@ import stat
 import subprocess
 import tempfile
 import time
+import tarfile
 import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
+from pathlib import PurePosixPath
 from typing import Any
 
 from src.agents.base import AgentExecution, AgentTaskSpec, BaseAgent
@@ -33,6 +35,7 @@ ASTRONCODE_SKILLS_DIR = f"{ASTRONCODE_HOME}/skills"
 ASTRONCODE_TRACE_ROOT = "/tmp/rollout-traces"
 ASTRONCODE_TRACE_ARCHIVE_CONTAINER_PATH = "/tmp/astroncode_traces.tar.gz"
 ASTRONCODE_TRACE_ARCHIVE_NAME = "astroncode_traces.tar.gz"
+ASTRONCODE_INTERACTION_JSONL_NAME = "agent_interaction.jsonl"
 ASTRONCODE_TRACE_EXPORT_TIMEOUT_SECONDS = 300
 _TRUE_ENV_VALUES = {"1", "true", "yes", "on"}
 _FALSE_ENV_VALUES = {"0", "false", "no", "off"}
@@ -500,15 +503,265 @@ class AstronCodeAgent(BaseAgent):
             message += f": {detail}"
         return message[:1000]
 
+    @staticmethod
+    def _load_trace_archive_json(
+        archive: tarfile.TarFile,
+        member_name: str,
+    ) -> Any:
+        member = archive.getmember(member_name)
+        if not member.isfile():
+            raise ValueError(f"trace archive member is not a file: {member_name}")
+        stream = archive.extractfile(member)
+        if stream is None:
+            raise ValueError(f"trace archive member cannot be read: {member_name}")
+        with stream:
+            return json.load(stream)
+
+    @staticmethod
+    def _load_trace_archive_jsonl(
+        archive: tarfile.TarFile,
+        member_name: str,
+    ) -> list[dict[str, Any]]:
+        member = archive.getmember(member_name)
+        if not member.isfile():
+            raise ValueError(f"trace archive member is not a file: {member_name}")
+        stream = archive.extractfile(member)
+        if stream is None:
+            raise ValueError(f"trace archive member cannot be read: {member_name}")
+        with stream:
+            return [
+                json.loads(line)
+                for line in stream.read().decode("utf-8").splitlines()
+                if line.strip()
+            ]
+
+    @classmethod
+    def _load_trace_payload(
+        cls,
+        archive: tarfile.TarFile,
+        trace_dir: str,
+        reference: dict[str, Any],
+        payload_cache: dict[str, Any],
+    ) -> Any:
+        relative_path = PurePosixPath(str(reference.get("path", "")))
+        if relative_path.is_absolute() or ".." in relative_path.parts:
+            raise ValueError(f"invalid trace payload path: {relative_path}")
+        member_name = str(PurePosixPath(trace_dir) / relative_path)
+        if member_name not in payload_cache:
+            payload_cache[member_name] = cls._load_trace_archive_json(
+                archive,
+                member_name,
+            )
+        return payload_cache[member_name]
+
+    @staticmethod
+    def _extract_response_text(output_items: Any) -> str:
+        text_parts: list[str] = []
+        if not isinstance(output_items, list):
+            return ""
+        for item in output_items:
+            if not isinstance(item, dict):
+                continue
+            if item.get("type") not in {"message", "output_text"} and item.get(
+                "role"
+            ) != "assistant":
+                continue
+            content = item.get("content")
+            if isinstance(content, str):
+                text_parts.append(content)
+            elif isinstance(content, list):
+                for block in content:
+                    if isinstance(block, dict) and isinstance(block.get("text"), str):
+                        text_parts.append(block["text"])
+        return "\n".join(part for part in text_parts if part).strip()
+
+    @classmethod
+    def _build_agent_interaction_records(
+        cls,
+        archive: tarfile.TarFile,
+    ) -> list[dict[str, Any]]:
+        trace_dirs = sorted(
+            {
+                str(PurePosixPath(member.name).parent)
+                for member in archive.getmembers()
+                if member.isfile() and member.name.endswith("/trace.jsonl")
+            }
+        )
+        ordered_records: list[tuple[int, int, int, str, dict[str, Any]]] = []
+        event_type_names = {
+            "inference_started": "model_request",
+            "inference_completed": "model_response",
+        }
+
+        for trace_dir in trace_dirs:
+            manifest = cls._load_trace_archive_json(
+                archive,
+                f"{trace_dir}/manifest.json",
+            )
+            trace_events = cls._load_trace_archive_jsonl(
+                archive,
+                f"{trace_dir}/trace.jsonl",
+            )
+            trace_events = sorted(trace_events, key=lambda event: event.get("seq", 0))
+            payload_cache: dict[str, Any] = {}
+            trace_id = manifest.get("trace_id")
+            first_request: tuple[dict[str, Any], dict[str, Any], Any] | None = None
+            last_response: tuple[dict[str, Any], dict[str, Any], Any] | None = None
+            last_event_wall_time = 0
+            last_event_seq = 0
+
+            for event in trace_events:
+                event_payload = event.get("payload", {})
+                if not isinstance(event_payload, dict):
+                    event_payload = {}
+                event_type = event_payload.get("type", "unknown")
+                raw_payloads: dict[str, Any] = {}
+                for key, reference in event_payload.items():
+                    if not key.endswith("_payload") or not isinstance(reference, dict):
+                        continue
+                    if "path" not in reference:
+                        continue
+                    raw_payloads[key] = {
+                        **reference,
+                        "data": cls._load_trace_payload(
+                            archive,
+                            trace_dir,
+                            reference,
+                            payload_cache,
+                        ),
+                    }
+
+                record = {
+                    "record_type": event_type_names.get(event_type, event_type),
+                    "event_type": event_type,
+                    "trace_id": trace_id,
+                    "seq": event.get("seq"),
+                    "wall_time_unix_ms": event.get("wall_time_unix_ms"),
+                    "rollout_id": event.get("rollout_id"),
+                    "thread_id": event.get("thread_id"),
+                    "codex_turn_id": event.get("codex_turn_id"),
+                    "inference_call_id": event_payload.get("inference_call_id"),
+                    "tool_call_id": event_payload.get("tool_call_id"),
+                    "response_id": event_payload.get("response_id"),
+                    "event": event_payload,
+                    "raw_payloads": raw_payloads,
+                }
+                wall_time = int(event.get("wall_time_unix_ms") or 0)
+                seq = int(event.get("seq") or 0)
+                last_event_wall_time = max(last_event_wall_time, wall_time)
+                last_event_seq = max(last_event_seq, seq)
+                ordered_records.append((wall_time, seq, 0, str(trace_id), record))
+
+                if (
+                    first_request is None
+                    and event_type == "inference_started"
+                    and raw_payloads.get("request_payload")
+                ):
+                    first_request = (event, raw_payloads["request_payload"], event_payload)
+                if event_type == "inference_completed" and raw_payloads.get(
+                    "response_payload"
+                ):
+                    last_response = (event, raw_payloads["response_payload"], event_payload)
+
+            if first_request is not None:
+                event, request_ref, request_event = first_request
+                request_data = request_ref["data"]
+                request_input = request_data.get("input") if isinstance(request_data, dict) else None
+                if isinstance(request_input, list):
+                    user_items = [
+                        item
+                        for item in request_input
+                        if isinstance(item, dict) and item.get("role") == "user"
+                    ]
+                else:
+                    user_items = request_input
+                user_record = {
+                    "record_type": "user_input",
+                    "trace_id": trace_id,
+                    "seq": event.get("seq"),
+                    "wall_time_unix_ms": event.get("wall_time_unix_ms"),
+                    "inference_call_id": request_event.get("inference_call_id"),
+                    "request_payload": request_ref,
+                    "input": request_input,
+                    "user_items": user_items,
+                }
+                ordered_records.append(
+                    (
+                        int(event.get("wall_time_unix_ms") or 0),
+                        int(event.get("seq") or 0),
+                        -1,
+                        str(trace_id),
+                        user_record,
+                    )
+                )
+
+            if last_response is not None:
+                event, response_ref, response_event = last_response
+                response_data = response_ref["data"]
+                output_items = (
+                    response_data.get("output_items")
+                    if isinstance(response_data, dict)
+                    else None
+                )
+                final_record = {
+                    "record_type": "final_output",
+                    "trace_id": trace_id,
+                    "seq": event.get("seq"),
+                    "wall_time_unix_ms": event.get("wall_time_unix_ms"),
+                    "inference_call_id": response_event.get("inference_call_id"),
+                    "response_id": response_event.get("response_id"),
+                    "text": cls._extract_response_text(output_items),
+                    "output_items": output_items,
+                    "response_payload": response_ref,
+                }
+                ordered_records.append(
+                    (
+                        last_event_wall_time + 1,
+                        last_event_seq + 1,
+                        1,
+                        str(trace_id),
+                        final_record,
+                    )
+                )
+
+        ordered_records.sort(key=lambda item: item[:4])
+        return [record for _, _, _, _, record in ordered_records]
+
+    @classmethod
+    def _export_agent_interaction_jsonl(
+        cls,
+        archive_path: Path,
+        output_path: Path,
+    ) -> None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        temporary_path = output_path.with_name(
+            f".{output_path.name}.{os.urandom(12).hex()}.tmp"
+        )
+        try:
+            with tarfile.open(archive_path, "r:gz") as archive:
+                records = cls._build_agent_interaction_records(archive)
+            with temporary_path.open("w", encoding="utf-8") as output:
+                for record in records:
+                    output.write(json.dumps(record, ensure_ascii=False) + "\n")
+                output.flush()
+                os.fsync(output.fileno())
+            temporary_path.chmod(0o600)
+            os.replace(temporary_path, output_path)
+        finally:
+            temporary_path.unlink(missing_ok=True)
+
     def _collect_rollout_trace_archive(
         self,
         task_id: str,
         output_dir: Path,
     ) -> None:
         archive_path = output_dir / ASTRONCODE_TRACE_ARCHIVE_NAME
+        interaction_path = output_dir / ASTRONCODE_INTERACTION_JSONL_NAME
         cleanup_error = self._remove_partial_trace_archive(archive_path)
+        if cleanup_error is None:
+            cleanup_error = self._remove_partial_trace_archive(interaction_path)
         if cleanup_error is not None:
-            error = self._trace_export_error("host archive cleanup", cleanup_error)
+            error = self._trace_export_error("host trace artifact cleanup", cleanup_error)
             self._record_trace_export(
                 output_dir,
                 {
@@ -516,6 +769,7 @@ class AstronCodeAgent(BaseAgent):
                     "status": "failed",
                     "archive": None,
                     "trace_count": 0,
+                    "interaction_jsonl": None,
                     "error": error,
                 },
             )
@@ -529,6 +783,7 @@ class AstronCodeAgent(BaseAgent):
                     "status": "disabled",
                     "archive": None,
                     "trace_count": 0,
+                    "interaction_jsonl": None,
                     "error": None,
                 },
             )
@@ -583,11 +838,19 @@ class AstronCodeAgent(BaseAgent):
 
             stage = "archive chmod"
             archive_path.chmod(0o600)
+            stage = "interaction JSONL export"
+            self._export_agent_interaction_jsonl(archive_path, interaction_path)
+            logger.info(
+                "[%s] AstronCode agent interaction JSONL exported: %s",
+                task_id,
+                interaction_path,
+            )
             result = {
                 "enabled": True,
                 "status": "exported",
                 "archive": ASTRONCODE_TRACE_ARCHIVE_NAME,
                 "trace_count": trace_count,
+                "interaction_jsonl": ASTRONCODE_INTERACTION_JSONL_NAME,
                 "error": None,
             }
             self._record_trace_export(output_dir, result)
@@ -613,6 +876,7 @@ class AstronCodeAgent(BaseAgent):
                     "status": "failed",
                     "archive": None,
                     "trace_count": 0,
+                    "interaction_jsonl": None,
                     "error": error,
                 },
             )
