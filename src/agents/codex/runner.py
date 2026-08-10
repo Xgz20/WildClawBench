@@ -1359,6 +1359,10 @@ if __name__ == "__main__":
         per_turn: list[dict[str, int]] = []
         assistant_message_count = 0
         cost_sum = 0.0
+        # request_count 的权威口径：一次模型 API 往返 = 一条 token_count 事件。
+        # 按累积用量去重，避免会话日志重复写入末条事件时重复计数。
+        round_trips = 0
+        seen_cumulative: set[str] = set()
 
         for raw in jsonl_path.read_text(encoding="utf-8", errors="ignore").splitlines():
             line = raw.strip()
@@ -1373,6 +1377,16 @@ if __name__ == "__main__":
             # request_count when explicit usage events are absent.
             if self._is_assistant_message(entry):
                 assistant_message_count += 1
+
+            if self._is_token_count_event(entry):
+                info = self._token_count_info(entry)
+                marker = info.get("total_token_usage") or info.get("totalTokenUsage") \
+                    or info.get("last_token_usage") or info.get("lastTokenUsage")
+                if isinstance(marker, dict):
+                    key = json.dumps(marker, sort_keys=True, ensure_ascii=False)
+                    if key not in seen_cumulative:
+                        seen_cumulative.add(key)
+                        round_trips += 1
 
             extracted, is_cumulative = self._extract_usage_fields(entry)
             if extracted is None:
@@ -1394,7 +1408,6 @@ if __name__ == "__main__":
                 "total_tokens",
             ):
                 totals[key] = sum(turn.get(key, 0) for turn in per_turn)
-            totals["request_count"] = len(per_turn)
         elif cumulative is not None:
             for key in (
                 "input_tokens",
@@ -1404,12 +1417,16 @@ if __name__ == "__main__":
                 "total_tokens",
             ):
                 totals[key] = cumulative.get(key, 0)
-            # request_count = number of model round-trips. AstronCode emits one
-            # cumulative token_count event per model reply, but the session log
-            # can duplicate the final event several times (running total frozen).
-            # Count events where the cumulative total actually advanced, so each
-            # real round-trip is counted once and duplicates are ignored. Falls
-            # back to assistant_message_count when no cumulative totals exist.
+
+        # token_count 事件数是请求数的权威来源，与 token 取值路径无关。
+        # 不依赖累积值单调递增——任务内会话重启会使累积值回退，
+        # 按事件去重计数不受影响。无 token_count 事件时（旧格式或异常
+        # 日志）才依次退回逐轮计数、累积值推进次数、助手消息数。
+        if round_trips:
+            totals["request_count"] = round_trips
+        elif per_turn:
+            totals["request_count"] = len(per_turn)
+        elif cumulative is not None:
             advancing = _count_advancing(cumulative_totals)
             totals["request_count"] = advancing or assistant_message_count or 1
 
@@ -1434,6 +1451,33 @@ if __name__ == "__main__":
             if payload.get("role") == "assistant":
                 return True
         return False
+
+    @staticmethod
+    def _is_token_count_event(entry: dict[str, Any]) -> bool:
+        """判断是否为 token_count 事件（一次模型 API 往返）。
+
+        兼容两种落盘形态：顶层 `type=token_count`，以及包在
+        `event_msg` 里的 `payload.type=token_count`。
+        """
+        if str(entry.get("type", "")).lower() in ("token_count", "tokencount"):
+            return True
+        payload = entry.get("payload")
+        if isinstance(payload, dict):
+            return str(payload.get("type", "")).lower() in ("token_count", "tokencount")
+        return False
+
+    @staticmethod
+    def _token_count_info(entry: dict[str, Any]) -> dict[str, Any]:
+        """取出 token_count 事件的 info 块（顶层或 payload 下）。"""
+        info = entry.get("info")
+        if isinstance(info, dict):
+            return info
+        payload = entry.get("payload")
+        if isinstance(payload, dict):
+            nested = payload.get("info")
+            if isinstance(nested, dict):
+                return nested
+        return {}
 
     def _extract_usage_fields(
         self, entry: dict[str, Any]

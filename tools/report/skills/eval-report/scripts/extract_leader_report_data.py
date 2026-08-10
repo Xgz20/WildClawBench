@@ -36,15 +36,19 @@ def _metadata_rows(wb) -> list[dict]:
     return list(_row_dicts(ws, 1, 2))
 
 
-def _find_title_row(ws, title: str) -> int:
+def _find_title_row(ws, title: str) -> int | None:
+    """找到控制变量视图标题所在行，找不到时返回 None（单 Harness/单模型场景）。"""
     for row in range(1, ws.max_row + 1):
         if ws.cell(row, 1).value == title:
             return row
-    raise ValueError(f"{ws.title} 缺少控制变量视图：{title}")
+    return None
 
 
 def _extract_controlled_view(ws, title: str) -> list[dict]:
+    """提取控制变量视图，找不到时返回空列表。"""
     title_row = _find_title_row(ws, title)
+    if title_row is None:
+        return []
     return list(_row_dicts(ws, title_row + 1, title_row + 2))
 
 

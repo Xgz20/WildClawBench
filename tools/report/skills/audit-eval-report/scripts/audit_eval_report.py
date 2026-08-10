@@ -113,6 +113,45 @@ def transcript_path(run_dir: Path) -> Path | None:
     return None
 
 
+def count_assistant_turns(transcript: Path | None) -> int:
+    """统计含工具调用的助手轮次数，作为 request_count 的独立下界基准。
+
+    不能直接数全部 `role=assistant` 记录：openclaw 归一化会把一次模型
+    往返拆成多条 assistant 记录（如 reasoning 文本一条、工具调用一条），
+    实测 11 条记录只对应 5 次往返。而**含工具调用的**记录与往返一一对应
+    （实测每轮最多 1 次工具调用），因此它是 request_count 的可靠下界：
+    每次工具调用都必然由一次模型往返发起，请求数不应低于该值。
+
+    与 runner 计算 request_count 的路径完全无关，可交叉校验 usage.json
+    是否失真。四个 Harness 的块命名差异（tool_use / toolCall）在此兼容。
+    """
+    if transcript is None or not transcript.is_file():
+        return 0
+    turns = 0
+    try:
+        raw = transcript.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return 0
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        message = entry.get("message") if isinstance(entry.get("message"), dict) else entry
+        if message.get("role") != "assistant":
+            continue
+        content = message.get("content")
+        if isinstance(content, list) and any(
+            isinstance(block, dict) and block.get("type") in ("tool_use", "toolCall")
+            for block in content
+        ):
+            turns += 1
+    return turns
+
+
 def parse_frontmatter(path: Path) -> dict:
     try:
         text = path.read_text(encoding="utf-8")
@@ -223,6 +262,7 @@ def scan_raw_units(specs: list[tuple[str, str, Path]]) -> dict[str, dict]:
                     "elapsed": status.get("elapsed_time"),
                     "usage": usage,
                     "tool_calls": metrics.get("total", 0),
+                    "assistant_turns": count_assistant_turns(transcript),
                 }
         unit = f"{model}@{harness}"
         score_pct = fmean([(task["score"] if task["score"] is not None else 0.0)
@@ -253,6 +293,7 @@ def scan_raw_units(specs: list[tuple[str, str, Path]]) -> dict[str, dict]:
             "elapsed_time": usage_total("elapsed_time"),
             "cost_usd": usage_total("cost_usd"),
             "tool_calls": sum(task["tool_calls"] for task in tasks.values()),
+            "assistant_turns": sum(task["assistant_turns"] for task in tasks.values()),
         }
     return units
 
@@ -398,6 +439,51 @@ def audit_overview(wb, units: dict[str, dict], findings: list[dict], identities,
                                     "工具调用数显著高于请求数，需确认请求数解析口径", sheet="总览", unit=unit,
                                     evidence={"tool_calls": tools, "requests": requests,
                                               "ratio": round(tools / requests, 2)}))
+        audit_request_count_consistency(unit, raw, findings)
+
+
+# request_count 与"含工具调用的助手轮次"的比值判别边界。
+# 实测正常区间 0.75–1.04（四个 Harness、round4 十单元 + custom/round1 修复后）；
+# 已知故障态（runner 把 token_count 事件误判为累积值、请求数退化为助手消息数）
+# 落在 0.16–0.44。0.60 取在两个区间的空档中部，留足 Harness 差异余量。
+# 上界 1.25 允许少量"纯文本往返"（模型回复不带工具调用）抬高比值。
+REQ_TURN_RATIO_MIN = 0.60
+REQ_TURN_RATIO_MAX = 1.25
+
+
+def audit_request_count_consistency(unit: str, raw: dict, findings: list[dict]) -> None:
+    """以 transcript 的含工具调用轮次为独立基准，校验 request_count 是否失真。
+
+    request_count 由各 Harness 的 runner 各自实现（四套独立逻辑），而该基准
+    直接数 transcript 记录，两者路径无关，因此可交叉校验。历史上
+    astroncode/codex 的 request_count 曾因 runner 缺陷低估 1.25x–5.74x，
+    当时仅靠 TOOL_REQUEST_RATIO_HIGH 这一间接信号，跨了数轮报告才被发现。
+    """
+    requests = raw.get("request_count") or 0
+    turns = raw.get("assistant_turns") or 0
+    if not turns or not requests:
+        return  # 无工具调用轮次无从校验；请求数为 0 已由 REQUESTS_ZERO_WITH_TOOLS 覆盖
+
+    ratio = requests / turns
+    evidence = {"requests": requests, "tool_call_turns": turns,
+                "tool_calls": raw.get("tool_calls") or 0, "ratio": round(ratio, 2)}
+
+    if ratio < REQ_TURN_RATIO_MIN:
+        findings.append(finding(
+            "REQUEST_COUNT_UNDERCOUNT", "error",
+            f"总请求数低于发起工具调用的模型轮次（比值 {ratio:.2f} < {REQ_TURN_RATIO_MIN}），"
+            "疑似 runner 请求计数缺陷",
+            sheet="总览", unit=unit, evidence=evidence,
+            recommendation="Codex 系 Harness 用 tools/report/scripts/reparse_codex_usage.py "
+                           "重解析该 unit 的 usage.json 后重新生成报告；其他 Harness 核对其 "
+                           "runner 的 request_count 口径。"))
+    elif ratio > REQ_TURN_RATIO_MAX:
+        findings.append(finding(
+            "REQUEST_COUNT_OVERCOUNT", "warning",
+            f"总请求数明显高于发起工具调用的模型轮次（比值 {ratio:.2f} > {REQ_TURN_RATIO_MAX}），"
+            "需确认是否重复计数",
+            sheet="总览", unit=unit, evidence=evidence,
+            recommendation="核对该 Harness 的 runner 是否把重复写入的 token_count 事件计入请求数。"))
 
 
 def audit_matrix(wb, units: dict[str, dict], findings: list[dict], identities) -> None:
