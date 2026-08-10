@@ -752,7 +752,10 @@ def append_controlled_views(
     def append_view(title: str, first_header: str, selected: list[UnitResult],
                     label_getter, target_id: str, id_getter) -> None:
         if len(selected) < 2:
-            print(f"[警告] {title} 参照少于 2 个，跳过控制变量视图", file=sys.stderr)
+            # 该维度只有 1 个参评对象，控制变量对比不成立（无参照），整表省略。
+            # 报告撰写端据 leader_data 的 *_view_applicable 判断是否省略对应章节。
+            print(f"[提示] {title} 仅 1 个参评对象，该维度无对比意义，跳过此表",
+                  file=sys.stderr)
             return
         title_row = ws.max_row + 3
         ws.cell(title_row, 1, title)

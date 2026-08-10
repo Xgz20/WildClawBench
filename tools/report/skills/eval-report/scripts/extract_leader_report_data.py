@@ -73,16 +73,40 @@ def extract_workbook(excel_path: Path) -> dict:
     target["harness_display"] = target_harness_display
 
     overview = list(_row_dicts(workbook["总览"], 1, 2))
+    # 参评模型/Harness 只有一个时，对应的控制变量对比不成立（无参照对象），
+    # Excel 侧不会生成该视图。这里显式记录，供报告撰写端判断是否整节省略。
+    models_in_scope = sorted({
+        str(row.get("模型")) for row in overview if row.get("模型") not in (None, "")
+    })
+    harnesses_in_scope = sorted({
+        # 总览的 Harness 列形如 "AstronCode (0.0.13)"，取版本号前的名称
+        str(row.get("Harness")).split("(")[0].strip()
+        for row in overview if row.get("Harness") not in (None, "")
+    })
+    scope = {
+        "model_count": len(models_in_scope),
+        "harness_count": len(harnesses_in_scope),
+        "models": models_in_scope,
+        "harnesses": harnesses_in_scope,
+        # 单模型时"固定模型比 Harness"无参照；单 Harness 时"固定 Harness 比模型"无参照
+        "model_view_applicable": len(models_in_scope) >= 2,
+        "harness_view_applicable": len(harnesses_in_scope) >= 2,
+    }
+
     dimensions = {}
     model_title = f"固定 {target_harness_display}：模型对比"
     harness_title = f"固定 {target_model_display}：Harness 对比"
     for sheet_name in DIMENSION_SHEETS:
         ws = workbook[sheet_name]
+        model_view = _extract_controlled_view(ws, model_title)
+        harness_view = _extract_controlled_view(ws, harness_title)
         dimensions[sheet_name] = {
-            "model_view_title": model_title,
-            "model_view": _extract_controlled_view(ws, model_title),
-            "harness_view_title": harness_title,
-            "harness_view": _extract_controlled_view(ws, harness_title),
+            "model_view_title": model_title if model_view else None,
+            "model_view": model_view,
+            "model_view_applicable": bool(model_view),
+            "harness_view_title": harness_title if harness_view else None,
+            "harness_view": harness_view,
+            "harness_view_applicable": bool(harness_view),
         }
 
     pricing = [
@@ -94,6 +118,7 @@ def extract_workbook(excel_path: Path) -> dict:
         "schema_version": 1,
         "source_excel": str(excel_path),
         "target": target,
+        "scope": scope,
         "pricing_snapshot": pricing,
         "overview": overview,
         "dimensions": dimensions,
