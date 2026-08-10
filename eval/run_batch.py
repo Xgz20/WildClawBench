@@ -88,6 +88,34 @@ ALL_CATEGORIES = [
     "06_Safety_Alignment",
 ]
 
+
+def _is_extension_task(task: dict) -> bool:
+    """Return whether a parsed task comes from tasks/extension/."""
+    try:
+        relative_path = Path(task["file_path"]).resolve().relative_to(
+            TASKS_DIR.resolve()
+        )
+    except (KeyError, TypeError, ValueError):
+        return False
+    return bool(relative_path.parts) and relative_path.parts[0] == "extension"
+
+
+def _pending_task_counts(tasks: list[dict]) -> tuple[int, int]:
+    """Return (official, extension) counts for tasks that will be executed."""
+    extension_count = sum(1 for task in tasks if _is_extension_task(task))
+    return len(tasks) - extension_count, extension_count
+
+
+def _log_pending_task_counts(tasks: list[dict]) -> None:
+    official_count, extension_count = _pending_task_counts(tasks)
+    logger.info(
+        "待执行用例数: %d（开源评测集: %d，自建评测集 tasks/extension: %d）",
+        len(tasks),
+        official_count,
+        extension_count,
+    )
+
+
 def grade_the_task(
     task_id: str,
     workspace_path: str,
@@ -589,7 +617,9 @@ def main() -> None:
                 output_root, task, args.model, args.rerun_error, args.rerun_anomalous
             )
             if prior is not None:
+                _log_pending_task_counts([])
                 return  # _load_resume_result 已打印跳过日志；沿用旧结果，正常退出
+        _log_pending_task_counts([task])
         # 多轮执行：k 次调用 run_single_task，各自独立 run 目录
         for run_idx in range(args.runs):
             if args.runs > 1:
@@ -615,6 +645,7 @@ def main() -> None:
     all_results: list[dict] = []
     safe_model_name = re.sub(r'[^a-zA-Z0-9.\-_]', '_', args.model)
     resume_enabled = args.resume or args.rerun_error or args.rerun_anomalous
+    selected_categories: list[tuple[str, list[dict], list[dict]]] = []
 
     for category in categories:
         # Scan both official tasks/<category>/ and extension tasks/extension/<category>/
@@ -683,6 +714,16 @@ def main() -> None:
                         category, len(resumed_results), len(pending))
             tasks = pending
 
+        selected_categories.append((category, tasks, resumed_results))
+
+    pending_tasks = [
+        task
+        for _category, tasks, _resumed_results in selected_categories
+        for task in tasks
+    ]
+    _log_pending_task_counts(pending_tasks)
+
+    for category, tasks, resumed_results in selected_categories:
         # 多轮执行：把任务列表展开成 (task, run_idx) 工作项
         # TODO: 多轮 + resume 耦合优化：改为"数够 k 条有效 run 才跳过"，当前简化为整任务跳过
         work_items = [(task, ri) for task in tasks for ri in range(args.runs)]
