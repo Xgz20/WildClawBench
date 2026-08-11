@@ -103,8 +103,8 @@ class GradeOneTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root, e2e_root, proj = _setup(tmp)
             out_root = root / "out"
-            run_dir = out_root / "round-1" / "xopglm52" / "astroncode-desktop" \
-                / "02_Code" / "02_Code_task_001" / "slug1"
+            run_dir = out_root / "results" / "astronstudio" / "round-1" \
+                / "xopglm52" / "02_Code" / "02_Code_task_001" / "slug1"
             run_dir.mkdir(parents=True)
 
             def mock_run_grading(**kwargs):
@@ -122,7 +122,8 @@ class GradeOneTest(unittest.TestCase):
                             side_effect=mock_run_grading) as grading:
                 docker_cp.return_value = mock.Mock(returncode=0, stderr="")
                 got = grade_one(_entry(), root, e2e_root, out_root,
-                                DEFAULT_DOCKER_IMAGE, "round-1", run_dir=run_dir)
+                                DEFAULT_DOCKER_IMAGE, "astronstudio", "round-1",
+                                run_dir=run_dir)
             score = json.loads((run_dir / "score.json").read_text(encoding="utf-8"))
         self.assertEqual(got["status"], "graded")
         self.assertEqual(score["overall_score"], 0.75)
@@ -164,7 +165,8 @@ class GradeOneTest(unittest.TestCase):
                             side_effect=mock_write_error):
                 docker_cp.return_value = mock.Mock(returncode=0, stderr="")
                 got = grade_one(_entry(), root, e2e_root, out_root,
-                                DEFAULT_DOCKER_IMAGE, "round-1", run_dir=run_dir)
+                                DEFAULT_DOCKER_IMAGE, "astronstudio", "round-1",
+                                run_dir=run_dir)
             self.assertEqual(got["status"], "error")
             self.assertTrue((run_dir / "score.json").is_file())
             remove.assert_called()  # 异常路径也要清理容器
@@ -188,7 +190,8 @@ class GradeOneTest(unittest.TestCase):
                             side_effect=mock_write_error):
                 docker_cp.return_value = mock.Mock(returncode=0, stderr="")
                 got = grade_one(_entry(), root, e2e_root, root / "out",
-                                DEFAULT_DOCKER_IMAGE, "round-1", run_dir=run_dir)
+                                DEFAULT_DOCKER_IMAGE, "astronstudio", "round-1",
+                                run_dir=run_dir)
             self.assertEqual(got["status"], "error")
             remove.assert_called()
 
@@ -196,17 +199,17 @@ class GradeOneTest(unittest.TestCase):
 class FindRunDirTest(unittest.TestCase):
     def test_picks_latest_slug_dir(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            base = Path(tmp) / "round-1" / "xopglm52" / "astroncode-desktop" \
+            base = Path(tmp) / "results" / "astronstudio" / "round-1" / "xopglm52" \
                 / "02_Code" / "02_Code_task_001"
             (base / "xopglm52_20260810_1200_aaaaaa").mkdir(parents=True)
             latest = base / "xopglm52_20260810_1634_bbbbbb"
             latest.mkdir(parents=True)
-            got = find_existing_run_dir(Path(tmp), _entry(), "round-1")
+            got = find_existing_run_dir(Path(tmp), _entry(), "astronstudio", "round-1")
         self.assertEqual(got, latest)
 
     def test_returns_none_when_absent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            self.assertIsNone(find_existing_run_dir(Path(tmp), _entry(), "round-1"))
+            self.assertIsNone(find_existing_run_dir(Path(tmp), _entry(), "astronstudio", "round-1"))
 
 
 if __name__ == "__main__":

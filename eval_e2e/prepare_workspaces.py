@@ -15,7 +15,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from eval_e2e.e2e_manifest import (  # noqa: E402
-    HARNESS_NAME,
     STATUS_PENDING,
     Manifest,
     RunEntry,
@@ -111,12 +110,13 @@ def prepare_one(
 
 
 def render_checklist(manifest: Manifest, e2e_root: Path) -> str:
-    """渲染人工执行清单：每个用例一段，含项目路径、模型、Prompt 位置与打勾位。"""
+    """渲染人工执行清单:每个用例一段，含项目路径、模型、Prompt 位置与打勾位。"""
     lines = [
         "# AstronCode 桌面端人工执行清单",
         "",
         f"生成时间：{manifest.created_at}",
         f"用例数：{len(manifest.runs)}",
+        f"Harness：{manifest.harness}",
         "",
         "每个用例：在桌面端新建项目并选择下方「项目目录」，选好模型与推理强度，",
         "把 `prompt_desktop.txt` 全文粘贴进对话框触发执行；执行完在本行打勾。",
@@ -131,7 +131,6 @@ def render_checklist(manifest: Manifest, e2e_root: Path) -> str:
             f"- 项目目录：`{project_dir}`",
             f"- 模型：`{entry.model}`　推理强度：`{entry.reasoning_effort}`",
             f"- Prompt：`{project_dir.parent / 'prompt_desktop.txt'}`",
-            f"- Harness：`{HARNESS_NAME}`",
             "",
         ]
     return "\n".join(lines)
@@ -146,6 +145,8 @@ def main() -> None:
     parser.add_argument("--model", required=True, help="要评测的模型名")
     parser.add_argument("--reasoning-effort", default="medium",
                         help="推理强度（仅记录进清单，供人工在界面选择）")
+    parser.add_argument("--harness", default="astronstudio",
+                        help="桌面客户端类型（如 astronstudio, codex-desktop）")
     parser.add_argument("--round", default="round-1",
                         help="轮次标识（如 round-1, round-2），用于多轮实验区分")
     parser.add_argument("--e2e-root", default=DEFAULT_E2E_ROOT,
@@ -193,6 +194,7 @@ def main() -> None:
     manifest = Manifest(
         e2e_root=args.e2e_root,
         created_at=datetime.now(timezone.utc).astimezone().isoformat(),
+        harness=args.harness,
         round=args.round,
         runs=entries,
     )

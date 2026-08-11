@@ -9,8 +9,6 @@ import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-HARNESS_NAME = "astroncode-desktop"
-
 STATUS_PENDING = "pending"
 STATUS_COLLECTED = "collected"
 STATUS_GRADED = "graded"
@@ -45,6 +43,7 @@ class RunEntry:
 class Manifest:
     e2e_root: str
     created_at: str
+    harness: str = "astronstudio"  # 桌面客户端类型（astronstudio, codex-desktop 等）
     round: str = "round-1"  # 轮次标识（如 round-1, round-2）
     runs: list[RunEntry] = field(default_factory=list)
 
@@ -52,6 +51,7 @@ class Manifest:
         return {
             "e2e_root": self.e2e_root,
             "created_at": self.created_at,
+            "harness": self.harness,
             "round": self.round,
             "runs": [r.to_dict() for r in self.runs],
         }
@@ -61,6 +61,7 @@ class Manifest:
         return cls(
             e2e_root=data.get("e2e_root", ""),
             created_at=data.get("created_at", ""),
+            harness=data.get("harness", "astronstudio"),  # 兼容旧 manifest
             round=data.get("round", "round-1"),  # 兼容旧 manifest（无 round 字段）
             runs=[RunEntry.from_dict(r) for r in data.get("runs", [])],
         )

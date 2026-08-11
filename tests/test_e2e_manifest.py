@@ -6,7 +6,6 @@ import unittest
 from pathlib import Path
 
 from eval_e2e.e2e_manifest import (
-    HARNESS_NAME,
     Manifest,
     RunEntry,
     load_manifest,
@@ -34,8 +33,35 @@ def _entry(**over) -> RunEntry:
 
 
 class ManifestTest(unittest.TestCase):
-    def test_harness_name_is_astroncode_desktop(self) -> None:
-        self.assertEqual(HARNESS_NAME, "astroncode-desktop")
+    def test_harness_defaults_to_astronstudio(self) -> None:
+        manifest = Manifest(e2e_root="eval_out_e2e", created_at="x")
+        self.assertEqual(manifest.harness, "astronstudio")
+
+    def test_harness_is_configurable(self) -> None:
+        """harness 可指定为其它桌面客户端，便于后续扩展。"""
+        manifest = Manifest(e2e_root="eval_out_e2e", created_at="x",
+                            harness="codex-desktop")
+        self.assertEqual(manifest.harness, "codex-desktop")
+
+    def test_harness_roundtrips_through_disk(self) -> None:
+        manifest = Manifest(e2e_root="eval_out_e2e", created_at="x",
+                            harness="codex-desktop", round="round-2")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "m.json"
+            save_manifest(manifest, path)
+            loaded = load_manifest(path)
+        self.assertEqual(loaded.harness, "codex-desktop")
+        self.assertEqual(loaded.round, "round-2")
+
+    def test_legacy_manifest_without_harness_defaults(self) -> None:
+        """旧 manifest 无 harness/round 字段时回落到默认值。"""
+        legacy = {"e2e_root": "eval_out_e2e", "created_at": "x", "runs": []}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "legacy.json"
+            path.write_text(json.dumps(legacy), encoding="utf-8")
+            loaded = load_manifest(path)
+        self.assertEqual(loaded.harness, "astronstudio")
+        self.assertEqual(loaded.round, "round-1")
 
     def test_roundtrip_preserves_all_fields(self) -> None:
         manifest = Manifest(

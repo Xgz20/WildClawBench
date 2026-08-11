@@ -1,7 +1,7 @@
 """阶段②：匹配桌面端轨迹，落成与 CLI 同构的结果目录。
 
 结果目录布局与 CLI 侧一致：
-    <out>/round-1/<model>/astroncode-desktop/<category>/<task_id>/<run_slug>/
+    <out>/results/<harness>/<round>/<model>/<category>/<task_id>/<run_slug>/
 """
 from __future__ import annotations
 
@@ -19,7 +19,6 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from eval_e2e.e2e_manifest import (  # noqa: E402
-    HARNESS_NAME,
     STATUS_COLLECTED,
     STATUS_TRACE_MISSING,
     Manifest,
@@ -44,9 +43,9 @@ def make_run_slug(entry: RunEntry, now: datetime) -> str:
     return f"{entry.model}_{now:%Y%m%d_%H%M}_{digest}"
 
 
-def run_dir_for(out_root: Path, entry: RunEntry, run_slug: str, round: str) -> Path:
+def run_dir_for(out_root: Path, entry: RunEntry, run_slug: str, harness: str, round: str) -> Path:
     return (
-        out_root / round / entry.model / HARNESS_NAME
+        out_root / "results" / harness / round / entry.model
         / entry.category / entry.task_id / run_slug
     )
 
@@ -67,12 +66,13 @@ def collect_one(
     out_root: Path,
     trace_root: Path,
     now: datetime,
+    harness: str,
     round: str,
 ) -> dict:
     """采集单个 run。任何失败都记录状态并返回，不向上抛异常。"""
     project_dir = resolve_project_dir(entry, e2e_root)
     run_slug = make_run_slug(entry, now)
-    run_dir = run_dir_for(out_root, entry, run_slug, round)
+    run_dir = run_dir_for(out_root, entry, run_slug, harness, round)
     run_dir.mkdir(parents=True, exist_ok=True)
 
     (run_dir / "manifest_entry.json").write_text(
@@ -102,7 +102,7 @@ def collect_one(
         "task_id": entry.task_id,
         "status": status,
         "note": note,
-        "harness": HARNESS_NAME,
+        "harness": harness,
         "model": entry.model,
         "reasoning_effort": entry.reasoning_effort,
         "trace_path": str(trace_path) if trace_path else "",
@@ -158,7 +158,7 @@ def main() -> None:
         if args.resume and entry.status in (STATUS_COLLECTED, STATUS_GRADED):
             skipped += 1
             continue
-        result = collect_one(entry, e2e_root, out_root, trace_root, now, manifest.round)
+        result = collect_one(entry, e2e_root, out_root, trace_root, now, manifest.harness, manifest.round)
         if result["status"] == STATUS_COLLECTED:
             collected += 1
         else:

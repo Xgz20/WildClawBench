@@ -21,6 +21,7 @@ python3 eval_e2e/prepare_workspaces.py \
   --task-list my_e2e_tasks.txt \
   --model xopglm52 \
   --reasoning-effort medium \
+  --harness astronstudio \
   --round round-1 \
   --e2e-root eval_out_e2e
 ```
@@ -35,7 +36,8 @@ tasks/extension/02_Code_Intelligence/02_Code_Intelligence_task_002_inventory_agg
 
 **参数说明**：
 - `--reasoning-effort`：记录到 manifest 和人工执行清单，**需操作者在桌面端手动设置对应的推理强度**（不会自动应用）
-- `--round`：轮次标识（默认 `round-1`），用于多轮实验。不同轮次的结果会输出到不同目录（如 `<out>/round-1/`、`<out>/round-2/`），互不覆盖
+- `--harness`：桌面客户端类型（默认 `astronstudio`，即 AstronCode 的桌面端应用）。后续接入其它客户端（如 `codex-desktop`）时改这个参数即可，结果落在独立目录，便于横向对比
+- `--round`：轮次标识（默认 `round-1`），用于多轮实验。不同轮次的结果会输出到不同目录，互不覆盖
 
 产出：
 
@@ -83,20 +85,27 @@ python3 eval_e2e/grade_runs.py \
 
 ## ⑤ 出报告
 
-结果目录与 CLI 侧同构，harness 名为 `astroncode-desktop`：
+结果目录按 `<harness>/<round>` 分层，便于扩展多个桌面客户端：
 
 ```
-eval_out_e2e/results/round-1/<model>/astroncode-desktop/<category>/<task_id>/<run-slug>/
+eval_out_e2e/results/<harness>/<round>/<model>/<category>/<task_id>/<run-slug>/
     score.json  usage.json  chat.jsonl  task_output/  manifest_entry.json  execution_status.json
+```
+
+例如：
+
+```
+eval_out_e2e/results/astronstudio/round-1/xopglm52/02_Code_Intelligence/<task_id>/<run-slug>/
+eval_out_e2e/results/codex-desktop/round-1/xopglm52/02_Code_Intelligence/<task_id>/<run-slug>/
 ```
 
 可直接交给 `tools/report`，与 CLI 侧 `astroncode` 并列对比：
 
 ```bash
 python3 tools/report/scripts/generate_eval_report.py \
-  --result-root eval_out_e2e/results/round-1 \
+  --result-root eval_out_e2e/results/astronstudio/round-1 \
   --models xopglm52 \
-  --harnesses astroncode astroncode-desktop \
+  --harnesses astroncode astronstudio \
   --target-model xopglm52
 ```
 
@@ -119,9 +128,9 @@ python3 tools/report/scripts/generate_eval_report.py \
 ## 已知报告侧适配点
 
 `tools/report/scripts/generate_eval_report.py:350` 按 harness 名选 request 抽取器，
-`astroncode-desktop` 未在白名单内，else 分支会 `raise ValueError`。该分支**仅对分档定价模型触发**
+桌面端 harness（`astronstudio` 等）未在白名单内，else 分支会 `raise ValueError`。该分支**仅对分档定价模型触发**
 （单档定价在 342 行提前返回）。本链路在 collect 阶段已把 `usage.json` 写全，报告无需回退解析。
-若后续要对分档定价模型出成本对比，在报告侧把 `astroncode-desktop` 并入 Codex 系分支即可。
+若后续要对分档定价模型出成本对比，在报告侧把桌面端 harness 并入 Codex 系分支即可。
 
 ## 跨机器/跨平台评分
 
@@ -174,6 +183,7 @@ python3 eval_e2e/grade_runs.py \
 python3 eval_e2e/prepare_workspaces.py \
   --task-list task_list.txt \
   --model claude-opus-5 \
+  --harness astronstudio \
   --round round-1 \
   --e2e-root eval_out_e2e
 
