@@ -70,6 +70,13 @@ class ManifestTest(unittest.TestCase):
         )
         self.assertTrue(got.is_absolute())
 
+    def test_resolve_project_dir_keeps_absolute_input(self) -> None:
+        """project_dir 已是绝对路径时原样返回，不拼接 e2e_root。"""
+        entry = _entry(project_dir="/abs/out/xopglm52/task_001/tmp_workspace")
+        got = resolve_project_dir(entry, Path("/data1/out"))
+        self.assertEqual(got, Path("/abs/out/xopglm52/task_001/tmp_workspace"))
+        self.assertTrue(got.is_absolute())
+
     def test_resolve_repo_path_joins_repo_root(self) -> None:
         got = resolve_repo_path("workspace/extension/x", Path("/repo"))
         self.assertEqual(got, Path("/repo/workspace/extension/x"))
