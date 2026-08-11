@@ -322,7 +322,9 @@ class PromptRewriteTest(unittest.TestCase):
         out, _ = rewrite_prompt(
             "读 /tmp_workspace/input/a.png 写 /tmp_workspace/results/r.md", PROJECT
         )
-        self.assertNotIn("/tmp_workspace/", out)
+        # PROJECT 尾部本身命名 tmp_workspace，改写后 out 必然仍含子串
+        # "/tmp_workspace/"，故不能用 assertNotIn；改判前缀出现次数。
+        self.assertEqual(out.count(f"{PROJECT}/"), 2)
         self.assertIn(f"{PROJECT}/input/a.png", out)
         self.assertIn(f"{PROJECT}/results/r.md", out)
 
