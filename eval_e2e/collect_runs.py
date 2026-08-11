@@ -44,9 +44,9 @@ def make_run_slug(entry: RunEntry, now: datetime) -> str:
     return f"{entry.model}_{now:%Y%m%d_%H%M}_{digest}"
 
 
-def run_dir_for(out_root: Path, entry: RunEntry, run_slug: str) -> Path:
+def run_dir_for(out_root: Path, entry: RunEntry, run_slug: str, round: str) -> Path:
     return (
-        out_root / "round-1" / entry.model / HARNESS_NAME
+        out_root / round / entry.model / HARNESS_NAME
         / entry.category / entry.task_id / run_slug
     )
 
@@ -67,11 +67,12 @@ def collect_one(
     out_root: Path,
     trace_root: Path,
     now: datetime,
+    round: str,
 ) -> dict:
     """采集单个 run。任何失败都记录状态并返回，不向上抛异常。"""
     project_dir = resolve_project_dir(entry, e2e_root)
     run_slug = make_run_slug(entry, now)
-    run_dir = run_dir_for(out_root, entry, run_slug)
+    run_dir = run_dir_for(out_root, entry, run_slug, round)
     run_dir.mkdir(parents=True, exist_ok=True)
 
     (run_dir / "manifest_entry.json").write_text(
@@ -157,7 +158,7 @@ def main() -> None:
         if args.resume and entry.status in (STATUS_COLLECTED, STATUS_GRADED):
             skipped += 1
             continue
-        result = collect_one(entry, e2e_root, out_root, trace_root, now)
+        result = collect_one(entry, e2e_root, out_root, trace_root, now, manifest.round)
         if result["status"] == STATUS_COLLECTED:
             collected += 1
         else:

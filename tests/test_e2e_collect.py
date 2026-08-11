@@ -43,7 +43,7 @@ def _write_trace(root: Path, name: str, cwd: str, ts: str) -> Path:
 
 class RunDirTest(unittest.TestCase):
     def test_layout_matches_cli_side_structure(self) -> None:
-        got = run_dir_for(Path("/out"), _entry(), "slug1")
+        got = run_dir_for(Path("/out"), _entry(), "slug1", "round-1")
         self.assertEqual(
             got,
             Path("/out/round-1/xopglm52/astroncode-desktop/02_Code/"
@@ -84,7 +84,7 @@ class CollectOneTest(unittest.TestCase):
             root, e2e_root, entry, proj = self._setup(tmp)
             trace_root = root / "sessions"
             _write_trace(trace_root, "hit.jsonl", str(proj), "2026-08-10T12:05:00Z")
-            got = collect_one(entry, e2e_root, root / "out", trace_root, NOW)
+            got = collect_one(entry, e2e_root, root / "out", trace_root, NOW, "round-1")
             run_dir = Path(got["run_dir"])
             usage = json.loads((run_dir / "usage.json").read_text(encoding="utf-8"))
             self.assertEqual(got["status"], "collected")
@@ -98,7 +98,7 @@ class CollectOneTest(unittest.TestCase):
             root, e2e_root, entry, _ = self._setup(tmp)
             trace_root = root / "sessions"
             trace_root.mkdir()
-            got = collect_one(entry, e2e_root, root / "out", trace_root, NOW)
+            got = collect_one(entry, e2e_root, root / "out", trace_root, NOW, "round-1")
             run_dir = Path(got["run_dir"])
             status = json.loads(
                 (run_dir / "execution_status.json").read_text(encoding="utf-8"))
@@ -112,7 +112,7 @@ class CollectOneTest(unittest.TestCase):
             entry.prompt_rewrite_map = {"/tmp_workspace": str(proj)}
             trace_root = root / "sessions"
             _write_trace(trace_root, "h.jsonl", str(proj), "2026-08-10T12:05:00Z")
-            got = collect_one(entry, e2e_root, root / "out", trace_root, NOW)
+            got = collect_one(entry, e2e_root, root / "out", trace_root, NOW, "round-1")
             saved = json.loads((Path(got["run_dir"]) / "manifest_entry.json")
                                .read_text(encoding="utf-8"))
             self.assertTrue(saved["prompt_rewritten"])

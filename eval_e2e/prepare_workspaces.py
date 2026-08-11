@@ -146,6 +146,8 @@ def main() -> None:
     parser.add_argument("--model", required=True, help="要评测的模型名")
     parser.add_argument("--reasoning-effort", default="medium",
                         help="推理强度（仅记录进清单，供人工在界面选择）")
+    parser.add_argument("--round", default="round-1",
+                        help="轮次标识（如 round-1, round-2），用于多轮实验区分")
     parser.add_argument("--e2e-root", default=DEFAULT_E2E_ROOT,
                         help=f"端到端输出根目录（默认 {DEFAULT_E2E_ROOT}）")
     parser.add_argument("--repo-root", default="",
@@ -191,6 +193,7 @@ def main() -> None:
     manifest = Manifest(
         e2e_root=args.e2e_root,
         created_at=datetime.now(timezone.utc).astimezone().isoformat(),
+        round=args.round,
         runs=entries,
     )
     e2e_root.mkdir(parents=True, exist_ok=True)

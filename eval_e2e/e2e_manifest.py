@@ -45,12 +45,14 @@ class RunEntry:
 class Manifest:
     e2e_root: str
     created_at: str
+    round: str = "round-1"  # 轮次标识（如 round-1, round-2）
     runs: list[RunEntry] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
             "e2e_root": self.e2e_root,
             "created_at": self.created_at,
+            "round": self.round,
             "runs": [r.to_dict() for r in self.runs],
         }
 
@@ -59,6 +61,7 @@ class Manifest:
         return cls(
             e2e_root=data.get("e2e_root", ""),
             created_at=data.get("created_at", ""),
+            round=data.get("round", "round-1"),  # 兼容旧 manifest（无 round 字段）
             runs=[RunEntry.from_dict(r) for r in data.get("runs", [])],
         )
 

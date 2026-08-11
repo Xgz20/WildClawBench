@@ -122,7 +122,7 @@ class GradeOneTest(unittest.TestCase):
                             side_effect=mock_run_grading) as grading:
                 docker_cp.return_value = mock.Mock(returncode=0, stderr="")
                 got = grade_one(_entry(), root, e2e_root, out_root,
-                                DEFAULT_DOCKER_IMAGE, run_dir=run_dir)
+                                DEFAULT_DOCKER_IMAGE, "round-1", run_dir=run_dir)
             score = json.loads((run_dir / "score.json").read_text(encoding="utf-8"))
         self.assertEqual(got["status"], "graded")
         self.assertEqual(score["overall_score"], 0.75)
@@ -164,7 +164,7 @@ class GradeOneTest(unittest.TestCase):
                             side_effect=mock_write_error):
                 docker_cp.return_value = mock.Mock(returncode=0, stderr="")
                 got = grade_one(_entry(), root, e2e_root, out_root,
-                                DEFAULT_DOCKER_IMAGE, run_dir=run_dir)
+                                DEFAULT_DOCKER_IMAGE, "round-1", run_dir=run_dir)
             self.assertEqual(got["status"], "error")
             self.assertTrue((run_dir / "score.json").is_file())
             remove.assert_called()  # 异常路径也要清理容器
@@ -188,7 +188,7 @@ class GradeOneTest(unittest.TestCase):
                             side_effect=mock_write_error):
                 docker_cp.return_value = mock.Mock(returncode=0, stderr="")
                 got = grade_one(_entry(), root, e2e_root, root / "out",
-                                DEFAULT_DOCKER_IMAGE, run_dir=run_dir)
+                                DEFAULT_DOCKER_IMAGE, "round-1", run_dir=run_dir)
             self.assertEqual(got["status"], "error")
             remove.assert_called()
 
@@ -201,12 +201,12 @@ class FindRunDirTest(unittest.TestCase):
             (base / "xopglm52_20260810_1200_aaaaaa").mkdir(parents=True)
             latest = base / "xopglm52_20260810_1634_bbbbbb"
             latest.mkdir(parents=True)
-            got = find_existing_run_dir(Path(tmp), _entry())
+            got = find_existing_run_dir(Path(tmp), _entry(), "round-1")
         self.assertEqual(got, latest)
 
     def test_returns_none_when_absent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            self.assertIsNone(find_existing_run_dir(Path(tmp), _entry()))
+            self.assertIsNone(find_existing_run_dir(Path(tmp), _entry(), "round-1"))
 
 
 if __name__ == "__main__":

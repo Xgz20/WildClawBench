@@ -21,6 +21,7 @@ python3 eval_e2e/prepare_workspaces.py \
   --task-list my_e2e_tasks.txt \
   --model xopglm52 \
   --reasoning-effort medium \
+  --round round-1 \
   --e2e-root eval_out_e2e
 ```
 
@@ -34,7 +35,7 @@ tasks/extension/02_Code_Intelligence/02_Code_Intelligence_task_002_inventory_agg
 
 **参数说明**：
 - `--reasoning-effort`：记录到 manifest 和人工执行清单，**需操作者在桌面端手动设置对应的推理强度**（不会自动应用）
-- 多轮次实验建议创建多个清单文件（如 `task_list_round1.txt`、`task_list_round2.txt`），当前代码固定输出到 `round-1/`，多轮次参数支持见"未纳入"章节
+- `--round`：轮次标识（默认 `round-1`），用于多轮实验。不同轮次的结果会输出到不同目录（如 `<out>/round-1/`、`<out>/round-2/`），互不覆盖
 
 产出：
 
@@ -124,6 +125,10 @@ python3 tools/report/scripts/generate_eval_report.py \
 
 ## 跨机器/跨平台评分
 
+支持两种场景：
+
+### 场景 1：Windows prepare → macOS grade
+
 **场景**：用户 A 在 Windows 上准备工作空间并执行评测，用户 B 在 macOS 上评分。
 
 **操作流程**：
@@ -156,8 +161,68 @@ python3 eval_e2e/grade_runs.py \
 - 用户 B 本地仓库版本应与用户 A 一致（GT 文件内容可能因版本不同而变化）
 - manifest 中的相对路径设计保证了跨平台兼容（Windows `\` 与 Unix `/` 由 Python `Path` 自动处理）
 
+---
+
+### 场景 2：macOS prepare → Windows execute → macOS grade
+
+**场景**：用户 A 在 macOS 上准备工作空间，打包给用户 B 在 Windows 上执行，产物回传给用户 A 评分。
+
+**操作流程**：
+
+**用户 A（准备）**：
+```bash
+python3 eval_e2e/prepare_workspaces.py \
+  --task-list task_list.txt \
+  --model claude-opus-5 \
+  --round round-1 \
+  --e2e-root eval_out_e2e
+
+tar czf eval_out_e2e.tar.gz eval_out_e2e/
+# 发给用户 B
+```
+
+**用户 B（执行 + 采集轨迹）**：
+```powershell
+# Windows PowerShell
+# 1. 解压到任意位置（如 C:\eval_work\）
+Expand-Archive eval_out_e2e.zip -DestinationPath C:\eval_work\
+
+# 2. 在 AstronCode 桌面端逐个执行
+#    - 打开项目：C:\eval_work\eval_out_e2e\<model>\<task_id>\tmp_workspace
+#    - 粘贴对应的 prompt_desktop.txt 内容
+#    - 执行完成后记录开始/结束时间到人工执行清单
+
+# 3. 打包轨迹
+Compress-Archive -Path "$env:USERPROFILE\.acode\sessions" -DestinationPath sessions.zip
+# 发回给用户 A
+```
+
+**用户 A（采集 + 评分）**：
+```bash
+# 1. 解压轨迹到临时目录
+mkdir -p /tmp/userB_sessions
+unzip sessions.zip -d /tmp/userB_sessions
+
+# 2. 采集（轨迹中的 Windows 路径会被自动识别）
+python3 eval_e2e/collect_runs.py \
+  --manifest eval_out_e2e/manifest.json \
+  --out-root eval_out_e2e/results \
+  --trace-root /tmp/userB_sessions
+
+# 3. 评分
+python3 eval_e2e/grade_runs.py \
+  --manifest eval_out_e2e/manifest.json \
+  --out-root eval_out_e2e/results \
+  --repo-root /Users/userA/WildClawBench \
+  --docker-image wildclawbench-astroncode-ubuntu:v0.4
+```
+
+**技术说明**：
+- ✅ **轨迹 cwd 匹配已支持跨平台**：`collect_runs.py` 会比较路径的尾部（最后 3 层），自动处理 Windows 路径（`C:\Users\...`）与 Unix 路径（`/Users/...`）的差异
+- ⚠️ **Prompt 路径前缀**：`prompt_desktop.txt` 中的路径已被改写为相对路径（如 `/tmp_workspace/src/main.py`），需确认 AstronCode 桌面端能正确解析（取决于桌面端的路径映射机制）
+- 📦 **打包内容**：用户 A 只需打包 `eval_out_e2e/`；用户 B 只需打包 `sessions/`（轨迹目录）
+
 ## 未纳入
 
 - Codex Computer Use 自动化驱动桌面端（执行环节已可替换，补自动化不需改采集与评分）
-- 多轮 round-N 统计（当前固定 `round-1`）
 - 异常检测（`src/utils/anomalies.py` 面向容器内 `agent.log`，桌面端无对应日志源）

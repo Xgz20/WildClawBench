@@ -50,14 +50,65 @@ def _cwd_matches(cwd: str, project_dir: Path) -> bool:
 
     只保留相等与后代方向：用户在项目目录里打开客户端后 cd 到子目录仍能匹配，
     但在工作区根打开的会话（cwd 为项目目录的祖先）不会被错算给任意用例。
+
+    跨平台支持：当绝对路径不匹配时，回退到尾部路径比较（取最后 3 层），
+    以支持 macOS prepare → Windows execute → macOS collect 场景。
     """
     try:
         candidate = Path(cwd)
     except (TypeError, ValueError):
         return False
+
+    # 快速路径：绝对路径完全匹配（同机器场景）
     if candidate == project_dir:
         return True
-    return project_dir in candidate.parents
+    if project_dir in candidate.parents:
+        return True
+
+    # 跨平台回退：规范化路径组件后比较尾部
+    # 在 Unix 上解析 Windows 路径会得到单个组件，需要手动拆分
+    def normalize_parts(p: Path) -> tuple:
+        """将路径转为规范化的组件元组（处理跨平台路径格式）。"""
+        parts = p.parts
+        # 如果只有一个组件且包含反斜杠或盘符，按 Windows 路径拆分
+        if len(parts) == 1 and ('\\' in parts[0] or ':' in parts[0]):
+            # 替换反斜杠为正斜杠，去掉盘符
+            normalized = parts[0].replace('\\', '/').split(':', 1)[-1]
+            parts = tuple(seg for seg in normalized.split('/') if seg)
+        return parts
+
+    cand_parts = normalize_parts(candidate)
+    proj_parts = normalize_parts(project_dir)
+
+    # 比较尾部 3 层（典型结构：model/task_id/tmp_workspace）
+    # 如果候选路径更长，可能是子目录
+    MIN_DEPTH = 3
+
+    if len(proj_parts) < MIN_DEPTH or len(cand_parts) < MIN_DEPTH:
+        return False
+
+    proj_tail = proj_parts[-MIN_DEPTH:]
+
+    # 情况 1：候选路径的最后 3 层与项目路径的最后 3 层相同（相等）
+    cand_tail = cand_parts[-MIN_DEPTH:]
+    if cand_tail == proj_tail:
+        return True
+
+    # 情况 2：候选路径是项目路径的子目录
+    # 检查候选路径是否以项目路径的最后 3 层结尾（在倒数第 4+ 位置）
+    # 例如：cand = .../model/task/tmp_workspace/src, proj = .../model/task/tmp_workspace
+    if len(cand_parts) > MIN_DEPTH:
+        # 从候选路径中找项目尾部的位置
+        for i in range(len(cand_parts) - MIN_DEPTH + 1):
+            if cand_parts[i:i+MIN_DEPTH] == proj_tail:
+                # 找到了，且候选路径在这之后还有组件（子目录）
+                if i + MIN_DEPTH < len(cand_parts):
+                    return True
+                # 或者完全匹配（i + MIN_DEPTH == len(cand_parts)）
+                if i + MIN_DEPTH == len(cand_parts):
+                    return True
+
+    return False
 
 
 def _parse_ts(timestamp: str) -> datetime | None:

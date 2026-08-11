@@ -49,8 +49,8 @@ def copy_gt_into_container(task_id: str, workspace_src: Path) -> bool:
     return True
 
 
-def find_existing_run_dir(out_root: Path, entry: RunEntry) -> Path | None:
-    base = (out_root / "round-1" / entry.model / HARNESS_NAME
+def find_existing_run_dir(out_root: Path, entry: RunEntry, round: str) -> Path | None:
+    base = (out_root / round / entry.model / HARNESS_NAME
             / entry.category / entry.task_id)
     if not base.is_dir():
         return None
@@ -64,11 +64,12 @@ def grade_one(
     e2e_root: Path,
     out_root: Path,
     docker_image: str,
+    round: str,
     run_dir: Path | None = None,
 ) -> dict:
     """单例评分：起容器 → 送 gt → run_grading → 写 score.json。异常不外抛。"""
     if run_dir is None:
-        run_dir = find_existing_run_dir(out_root, entry)
+        run_dir = find_existing_run_dir(out_root, entry, round)
     if run_dir is None:
         return {"status": "error", "note": "结果目录不存在，请先运行 collect_runs.py"}
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -147,7 +148,7 @@ def main() -> None:
         if args.resume and entry.status == STATUS_GRADED:
             skipped += 1
             continue
-        result = grade_one(entry, repo_root, e2e_root, out_root, args.docker_image)
+        result = grade_one(entry, repo_root, e2e_root, out_root, args.docker_image, manifest.round)
         if result["status"] == STATUS_GRADED:
             graded += 1
             logger.info("[%s] 评分完成", entry.task_id)
