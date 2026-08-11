@@ -140,14 +140,21 @@ def find_trace(
 
 
 def _empty_usage() -> dict:
+    """用量骨架。
+
+    request_count 与 cost_usd 是**占位，parse_usage 永不填充，恒为 0**：桌面端
+    轨迹拿不到与 CLI 侧可比的 request 计数（CLI 侧本身也已确认低估约 18x，见
+    memory: astroncode-request-count-underestimate）。下游一律以 tool_calls
+    为主口径，勿依赖这两个键做任何判断或换算。
+    """
     return {
         "input_tokens": 0,
         "output_tokens": 0,
         "cache_read_tokens": 0,
         "total_tokens": 0,
         "tool_calls": 0,
-        "request_count": 0,
-        "cost_usd": 0.0,
+        "request_count": 0,  # 占位，恒 0
+        "cost_usd": 0.0,  # 占位，恒 0
     }
 
 
