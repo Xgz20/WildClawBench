@@ -413,7 +413,7 @@ git commit -m "feat(e2e): 新增 Prompt 工作区路径改写"
     返回 `(命中路径或 None, 状态说明)`；多命中取 `timestamp` 最新
   - `parse_usage(trace_path: Path) -> dict`，返回键 `input_tokens`/`output_tokens`/`cache_read_tokens`/`total_tokens`/`tool_calls`/`request_count`/`cost_usd`
 
-轨迹匹配以 `session_meta.payload.cwd` 等于项目目录（或为其祖先/后代）且 `timestamp`
+轨迹匹配以 `session_meta.payload.cwd` 等于项目目录（或为其后代）且 `timestamp`
 落在 `[started_at, finished_at]` 为准。时间窗任一端为空时该端不设限。
 
 - [ ] **Step 1: 写失败测试**
@@ -572,6 +572,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 DEFAULT_TRACE_ROOT = "~/.acode/sessions"
@@ -615,14 +616,33 @@ def _cwd_matches(cwd: str, project_dir: Path) -> bool:
         return False
     if candidate == project_dir:
         return True
-    return project_dir in candidate.parents or candidate in project_dir.parents
+    # 只认相等与后代：祖先方向会把用户在工作区根打开的一次会话
+    # 同时算给该根下所有用例，且不报错。
+    return project_dir in candidate.parents
+
+
+def _parse_ts(value: str) -> datetime | None:
+    """ISO 时间戳 -> 带时区 datetime；Z 后缀在 3.10 需转 +00:00，无时区按 UTC。"""
+    if not value:
+        return None
+    text = value[:-1] + "+00:00" if value.endswith("Z") else value
+    try:
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
 
 
 def _in_window(timestamp: str, started_at: str, finished_at: str) -> bool:
-    """空端不设限；时间戳按 ISO 字符串字典序比较（同格式下与时序一致）。"""
-    if started_at and timestamp and timestamp < started_at:
+    """空端不设限。必须解析为 datetime 比较：字符串字典序在时区偏移
+    与毫秒精度不一致时与真实时序不符（+08:00 会被误判早于同刻 UTC）。"""
+    ts = _parse_ts(timestamp)
+    if ts is None:
         return False
-    if finished_at and timestamp and timestamp > finished_at:
+    start, finish = _parse_ts(started_at), _parse_ts(finished_at)
+    if start is not None and ts < start:
+        return False
+    if finish is not None and ts > finish:
         return False
     return True
 
@@ -653,7 +673,9 @@ def find_trace(
 
     if not matched:
         return None, "trace_missing"
-    matched.sort(key=lambda c: (c.timestamp, c.path.name))
+    # 按解析后的真实时刻排序：字符串序会把 +08:00 的较早时刻排到 Z 的较晚时刻之后。
+    epoch = datetime.min.replace(tzinfo=timezone.utc)
+    matched.sort(key=lambda c: (_parse_ts(c.timestamp) or epoch, c.path.name))
     note = "matched" if len(matched) == 1 else "matched_multiple"
     return matched[-1].path, note
 
