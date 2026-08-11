@@ -154,7 +154,7 @@ def main() -> None:
     for entry in manifest.runs:
         if args.only and entry.task_id != args.only:
             continue
-        if args.resume and entry.status in (STATUS_COLLECTED, "graded"):
+        if args.resume and entry.status in (STATUS_COLLECTED, STATUS_GRADED):
             skipped += 1
             continue
         result = collect_one(entry, e2e_root, out_root, trace_root, now)
