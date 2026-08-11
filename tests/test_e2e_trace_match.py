@@ -100,6 +100,69 @@ class FindTraceTest(unittest.TestCase):
             got, _ = find_trace(root, proj, "", "")
         self.assertEqual(got, want)
 
+    def test_offset_timestamp_inside_utc_window_matches(self) -> None:
+        # +08:00 的 20:05 即 12:05Z，落在 UTC 窗 [12:00Z, 12:10Z] 内，应匹配。
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "sessions"
+            proj = Path("/x/tmp_workspace")
+            want = _write_trace(root, "hit.jsonl", str(proj),
+                                "2026-08-10T20:05:00+08:00")
+            got, note = find_trace(root, proj,
+                                   "2026-08-10T12:00:00.000Z",
+                                   "2026-08-10T12:10:00.000Z")
+        self.assertEqual(got, want)
+        self.assertEqual(note, "matched")
+
+    def test_mixed_precision_timestamp_and_bounds(self) -> None:
+        # 带毫秒事件与不带毫秒的窗口边界比较，行为正确。
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "sessions"
+            proj = Path("/x/tmp_workspace")
+            inside = _write_trace(root, "inside.jsonl", str(proj),
+                                  "2026-08-10T12:05:00.500Z")
+            _write_trace(root, "before.jsonl", str(proj),
+                         "2026-08-10T11:59:59.999Z")
+            got, note = find_trace(root, proj,
+                                   "2026-08-10T12:00:00Z",
+                                   "2026-08-10T12:10:00Z")
+        self.assertEqual(got, inside)
+        self.assertEqual(note, "matched")
+
+    def test_latest_across_offset_and_z_uses_real_instant(self) -> None:
+        # 一个写 +08:00 一个写 Z，取最新须按真实时刻：
+        # 19:00+08:00 = 11:00Z（较早），12:00Z（较晚）→ 应取后者。
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "sessions"
+            proj = Path("/x/tmp_workspace")
+            _write_trace(root, "offset_early.jsonl", str(proj),
+                         "2026-08-10T19:00:00+08:00")
+            later = _write_trace(root, "utc_late.jsonl", str(proj),
+                                 "2026-08-10T12:00:00Z")
+            got, note = find_trace(root, proj, "", "")
+        self.assertEqual(got, later)
+        self.assertEqual(note, "matched_multiple")
+
+    def test_ancestor_cwd_does_not_match(self) -> None:
+        # 会话开在项目目录上层（工作区根），不应被错算给用例。
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "sessions"
+            _write_trace(root, "root_open.jsonl", "/work/eval",
+                         "2026-08-10T12:05:00.000Z")
+            got, note = find_trace(root, Path("/work/eval/task_alpha"), "", "")
+        self.assertIsNone(got)
+        self.assertEqual(note, "trace_missing")
+
+    def test_descendant_cwd_matches(self) -> None:
+        # 会话 cwd 在项目目录子目录内（打开后 cd 进子目录），应匹配。
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "sessions"
+            proj = Path("/work/eval/task_alpha")
+            want = _write_trace(root, "sub.jsonl", "/work/eval/task_alpha/src",
+                                "2026-08-10T12:05:00.000Z")
+            got, note = find_trace(root, proj, "", "")
+        self.assertEqual(got, want)
+        self.assertEqual(note, "matched")
+
 
 class ParseUsageTest(unittest.TestCase):
     def test_counts_tool_calls_and_tokens(self) -> None:

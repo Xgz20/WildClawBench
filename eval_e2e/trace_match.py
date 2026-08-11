@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 DEFAULT_TRACE_ROOT = "~/.acode/sessions"
@@ -45,20 +46,58 @@ def read_session_meta(path: Path) -> TraceCandidate | None:
 
 
 def _cwd_matches(cwd: str, project_dir: Path) -> bool:
+    """cwd 等于项目目录、或位于项目目录之内（后代）才算命中。
+
+    只保留相等与后代方向：用户在项目目录里打开客户端后 cd 到子目录仍能匹配，
+    但在工作区根打开的会话（cwd 为项目目录的祖先）不会被错算给任意用例。
+    """
     try:
         candidate = Path(cwd)
     except (TypeError, ValueError):
         return False
     if candidate == project_dir:
         return True
-    return project_dir in candidate.parents or candidate in project_dir.parents
+    return project_dir in candidate.parents
+
+
+def _parse_ts(timestamp: str) -> datetime | None:
+    """把 ISO 时间戳解析为带时区的 datetime；无法解析返回 None。
+
+    - 结尾 `Z` 先替换为 `+00:00`（Python 3.10 的 fromisoformat 不接受 `Z`）。
+    - 无时区信息的时间戳按 UTC 处理，不报错。
+    """
+    if not timestamp:
+        return None
+    text = timestamp.strip()
+    if not text:
+        return None
+    if text.endswith(("Z", "z")):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
 
 def _in_window(timestamp: str, started_at: str, finished_at: str) -> bool:
-    """空端不设限；时间戳按 ISO 字符串字典序比较（同格式下与时序一致）。"""
-    if started_at and timestamp and timestamp < started_at:
+    """空端不设限；时间戳解析为带时区 datetime 后比较。
+
+    时间戳解析失败时该候选不匹配（返回 False），与"零命中返回 trace_missing"
+    的容错风格一致，绝不抛异常。
+    """
+    started = _parse_ts(started_at)
+    finished = _parse_ts(finished_at)
+    if started is None and finished is None:
+        return True
+    event = _parse_ts(timestamp)
+    if event is None:
         return False
-    if finished_at and timestamp and timestamp > finished_at:
+    if started is not None and event < started:
+        return False
+    if finished is not None and event > finished:
         return False
     return True
 
@@ -89,7 +128,13 @@ def find_trace(
 
     if not matched:
         return None, "trace_missing"
-    matched.sort(key=lambda c: (c.timestamp, c.path.name))
+    _EPOCH = datetime.min.replace(tzinfo=timezone.utc)
+
+    def _sort_key(c: TraceCandidate) -> tuple[datetime, str]:
+        # 按真实时刻（带时区 datetime）排序；无法解析的按最早处理，稳定回退到文件名。
+        return (_parse_ts(c.timestamp) or _EPOCH, c.path.name)
+
+    matched.sort(key=_sort_key)
     note = "matched" if len(matched) == 1 else "matched_multiple"
     return matched[-1].path, note
 
