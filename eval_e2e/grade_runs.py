@@ -15,7 +15,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from eval_e2e.collect_runs import run_dir_for  # noqa: E402
 from eval_e2e.e2e_manifest import (  # noqa: E402
     HARNESS_NAME,
     STATUS_GRADED,
@@ -92,6 +91,14 @@ def grade_one(
             extra_env=task.get("env", ""),
             docker_image=docker_image,
         )
+        # 桌面端评测：把项目目录（含 agent 产物）复制到容器工作区
+        logger.info("[%s] 复制项目目录到容器: %s → /tmp_workspace", task_id, project_dir)
+        cp_proc = subprocess.run(
+            ["docker", "cp", f"{project_dir}/.", f"{task_id}:/tmp_workspace/"],
+            capture_output=True, text=True,
+        )
+        if cp_proc.returncode != 0:
+            raise RuntimeError(f"项目目录复制失败: {cp_proc.stderr}")
         copy_gt_into_container(task_id, workspace_src)
         scores = run_grading(
             task_id=task_id,

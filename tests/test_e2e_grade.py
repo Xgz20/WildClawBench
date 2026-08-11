@@ -115,10 +115,12 @@ class GradeOneTest(unittest.TestCase):
 
             with mock.patch("eval_e2e.grade_runs.start_container") as start, \
                  mock.patch("eval_e2e.grade_runs.remove_container") as remove, \
+                 mock.patch("eval_e2e.grade_runs.subprocess.run") as docker_cp, \
                  mock.patch("eval_e2e.grade_runs.copy_gt_into_container",
                             return_value=True), \
                  mock.patch("eval_e2e.grade_runs.run_grading",
                             side_effect=mock_run_grading) as grading:
+                docker_cp.return_value = mock.Mock(returncode=0, stderr="")
                 got = grade_one(_entry(), root, e2e_root, out_root,
                                 DEFAULT_DOCKER_IMAGE, run_dir=run_dir)
             score = json.loads((run_dir / "score.json").read_text(encoding="utf-8"))
@@ -128,6 +130,13 @@ class GradeOneTest(unittest.TestCase):
         self.assertEqual(start.call_args.args[1], str(proj))
         self.assertEqual(start.call_args.kwargs["docker_image"], DEFAULT_DOCKER_IMAGE)
         remove.assert_called()
+        # 验证 docker cp 调用：项目目录复制到容器
+        docker_cp.assert_called_once()
+        cp_args = docker_cp.call_args[0][0]
+        self.assertIn("docker", cp_args)
+        self.assertIn("cp", cp_args)
+        self.assertIn(f"{proj}/.", cp_args)
+        self.assertIn("02_Code_task_001:/tmp_workspace/", cp_args)
         # grade 参数由 parse_task_md 原样透传
         self.assertIn("def grade", grading.call_args.kwargs["automated_checks"])
 
@@ -146,12 +155,14 @@ class GradeOneTest(unittest.TestCase):
 
             with mock.patch("eval_e2e.grade_runs.start_container"), \
                  mock.patch("eval_e2e.grade_runs.remove_container") as remove, \
+                 mock.patch("eval_e2e.grade_runs.subprocess.run") as docker_cp, \
                  mock.patch("eval_e2e.grade_runs.copy_gt_into_container",
                             return_value=True), \
                  mock.patch("eval_e2e.grade_runs.run_grading",
                             side_effect=RuntimeError("boom")), \
                  mock.patch("eval_e2e.grade_runs.write_error_score",
                             side_effect=mock_write_error):
+                docker_cp.return_value = mock.Mock(returncode=0, stderr="")
                 got = grade_one(_entry(), root, e2e_root, out_root,
                                 DEFAULT_DOCKER_IMAGE, run_dir=run_dir)
             self.assertEqual(got["status"], "error")
@@ -172,8 +183,10 @@ class GradeOneTest(unittest.TestCase):
             with mock.patch("eval_e2e.grade_runs.start_container",
                             side_effect=RuntimeError("no docker")), \
                  mock.patch("eval_e2e.grade_runs.remove_container") as remove, \
+                 mock.patch("eval_e2e.grade_runs.subprocess.run") as docker_cp, \
                  mock.patch("eval_e2e.grade_runs.write_error_score",
                             side_effect=mock_write_error):
+                docker_cp.return_value = mock.Mock(returncode=0, stderr="")
                 got = grade_one(_entry(), root, e2e_root, root / "out",
                                 DEFAULT_DOCKER_IMAGE, run_dir=run_dir)
             self.assertEqual(got["status"], "error")
