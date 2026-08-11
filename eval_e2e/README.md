@@ -52,7 +52,7 @@ tasks/extension/02_Code_Intelligence/02_Code_Intelligence_task_002_inventory_agg
 
 ```bash
 python3 eval_e2e/collect_runs.py \
-  --e2e-root eval_out_e2e \
+  --manifest eval_out_e2e/manifest.json \
   --out-root eval_out_e2e/results \
   --trace-root ~/.acode/sessions
 ```
@@ -67,7 +67,7 @@ python3 eval_e2e/collect_runs.py \
 
 ```bash
 python3 eval_e2e/grade_runs.py \
-  --e2e-root eval_out_e2e \
+  --manifest eval_out_e2e/manifest.json \
   --out-root eval_out_e2e/results \
   --docker-image wildclawbench-astroncode-ubuntu:v0.4
 ```
