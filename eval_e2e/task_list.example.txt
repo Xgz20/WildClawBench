@@ -1,0 +1,23 @@
+# AstronCode 桌面端端到端评测 - 用例清单示例
+#
+# 格式：每行一个用例 md 的仓库相对路径
+# 以 # 开头的行为注释，会被跳过
+#
+# 建议：
+# - 复制本文件为 task_list.txt 并修改内容
+# - 或创建多个清单文件用于不同批次（如 task_list_round1.txt、task_list_round2.txt）
+# - 路径相对于仓库根目录
+
+# 代码智能类用例（简单，适合冒烟验证）
+tasks/extension/02_Code_Intelligence/02_Code_Intelligence_task_001_temperature_cli_fix.md
+tasks/extension/02_Code_Intelligence/02_Code_Intelligence_task_002_inventory_aggregator.md
+
+# 更复杂的用例
+# tasks/extension/03_Testing/03_Testing_task_001_unit_test_coverage.md
+# tasks/extension/04_Debugging/04_Debugging_task_001_memory_leak.md
+
+# 使用示例：
+# python3 eval_e2e/prepare_workspaces.py \
+#   --task-list eval_e2e/task_list.txt \
+#   --model claude-opus-5 \
+#   --e2e-root eval_out_e2e

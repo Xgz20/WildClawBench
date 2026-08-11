@@ -24,12 +24,17 @@ python3 eval_e2e/prepare_workspaces.py \
   --e2e-root eval_out_e2e
 ```
 
-`--task-list` 是纯文本文件，每行一个用例 md 的仓库相对路径，`#` 开头为注释：
+`--task-list` 是纯文本文件，每行一个用例 md 的仓库相对路径，`#` 开头为注释。
+可以放任意位置（只要路径可达），建议放 `eval_e2e/` 或仓库根目录。示例见 `eval_e2e/task_list.example.txt`。
 
 ```
 tasks/extension/02_Code_Intelligence/02_Code_Intelligence_task_001_temperature_cli_fix.md
 tasks/extension/02_Code_Intelligence/02_Code_Intelligence_task_002_inventory_aggregator.md
 ```
+
+**参数说明**：
+- `--reasoning-effort`：记录到 manifest 和人工执行清单，**需操作者在桌面端手动设置对应的推理强度**（不会自动应用）
+- 多轮次实验建议创建多个清单文件（如 `task_list_round1.txt`、`task_list_round2.txt`），当前代码固定输出到 `round-1/`，多轮次参数支持见"未纳入"章节
 
 产出：
 
@@ -116,6 +121,40 @@ python3 tools/report/scripts/generate_eval_report.py \
 `astroncode-desktop` 未在白名单内，else 分支会 `raise ValueError`。该分支**仅对分档定价模型触发**
 （单档定价在 342 行提前返回）。本链路在 collect 阶段已把 `usage.json` 写全，报告无需回退解析。
 若后续要对分档定价模型出成本对比，在报告侧把 `astroncode-desktop` 并入 Codex 系分支即可。
+
+## 跨机器/跨平台评分
+
+**场景**：用户 A 在 Windows 上准备工作空间并执行评测，用户 B 在 macOS 上评分。
+
+**操作流程**：
+
+**用户 A（准备 + 执行 + 采集）**：
+```bash
+# 1-3 阶段同上，采集完成后打包
+tar czf eval_out_e2e.tar.gz eval_out_e2e/
+# 或 Windows: 7z a eval_out_e2e.7z eval_out_e2e\
+```
+
+**用户 B（评分）**：
+```bash
+# 1. 解压
+tar xzf eval_out_e2e.tar.gz
+
+# 2. 确保本地有完整仓库（评分需读取 GT）
+cd /path/to/WildClawBench
+
+# 3. 评分（调整 --repo-root 和 --e2e-root 为本地路径）
+python3 eval_e2e/grade_runs.py \
+  --manifest eval_out_e2e/manifest.json \
+  --out-root eval_out_e2e/results \
+  --repo-root /path/to/WildClawBench \
+  --docker-image wildclawbench-astroncode-ubuntu:v0.4
+```
+
+**前提条件**：
+- 用户 B 的机器需要 Docker 和评分镜像（`docker pull ...`）
+- 用户 B 本地仓库版本应与用户 A 一致（GT 文件内容可能因版本不同而变化）
+- manifest 中的相对路径设计保证了跨平台兼容（Windows `\` 与 Unix `/` 由 Python `Path` 自动处理）
 
 ## 未纳入
 
