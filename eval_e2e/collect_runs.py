@@ -147,6 +147,7 @@ def main() -> None:
             "轨迹根目录不存在：%s（用 --trace-root 指定桌面端实际轨迹目录）",
             trace_root,
         )
+        sys.exit(1)
 
     now = datetime.now()
     collected = missing = skipped = 0
