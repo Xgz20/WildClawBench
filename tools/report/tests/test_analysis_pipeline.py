@@ -1489,11 +1489,69 @@ class AnalysisPipelineTest(unittest.TestCase):
         )
 
         self.assertTrue(written)
-        rows = list(workbook["站点评测指标"].iter_rows(values_only=True))
-        self.assertTrue(any(row[2] == "得分率" and row[3] == 0.0 for row in rows))
-        self.assertTrue(any(
-            row[2] == "运行耗时平均值" and row[3] == 30.0 for row in rows
+        sheet = workbook["站点评测指标"]
+        headers = [sheet.cell(4, column).value for column in range(2, 16)]
+        self.assertEqual(sheet.cell(5, headers.index("得分率") + 2).value, 0.0)
+        self.assertEqual(
+            sheet.cell(5, headers.index("运行耗时平均值") + 2).value, 30.0
+        )
+
+    def test_website_metrics_sheet_uses_horizontal_grouped_headers(self) -> None:
+        task = self._create_website_task("website_l1", [{
+            "score": 1.0,
+            "elapsed_time": 12,
+            "input_tokens": 120,
+            "output_tokens": 30,
+        }])
+        unit = SimpleNamespace(
+            model="xopglm52",
+            harness="astroncode",
+            unit="xopglm52@astroncode",
+            unit_display="GLM-5.2@AstronCode",
+            registry=task.registry,
+            pricing_date=date(2026, 8, 12),
+            tasks=[task],
+        )
+        workbook = Workbook()
+        workbook.remove(workbook.active)
+
+        self.assertTrue(excel_report.write_website_metrics_sheet(
+            workbook, [unit], {"website_l1": {"difficulty": "L1"}}
         ))
+
+        sheet = workbook["站点评测指标"]
+        merged = {str(item) for item in sheet.merged_cells.ranges}
+        self.assertTrue({"A3:A4", "B3:C3", "D3:H3", "I3:O3"}.issubset(merged))
+        self.assertEqual(sheet["A3"].value, "模型@Harness")
+        self.assertEqual(sheet["B3"].value, "结果指标")
+        self.assertEqual(sheet["D3"].value, "分层分析")
+        self.assertEqual(sheet["I3"].value, "效率指标")
+        self.assertEqual(
+            [sheet.cell(4, column).value for column in range(1, 16)],
+            [
+                None, "得分率", "满分率", "L1 题目得分率", "L2 题目得分率",
+                "内容与结构得分率", "交互与功能得分率", "视觉与布局得分率",
+                "运行耗时平均值", "运行耗时 P50", "运行耗时 P90", "单次运行平均成本",
+                "单次运行平均总 Token", "单次运行平均输入 Token", "单次运行平均输出 Token",
+            ],
+        )
+        self.assertEqual(sheet.cell(5, 1).value, "GLM-5.2@AstronCode")
+        self.assertEqual(sheet.cell(5, 2).value, 100.0)
+        self.assertAlmostEqual(
+            sheet.cell(5, 12).value,
+            (120 * 8 + 30 * 28) / 1_000_000 / 6.77,
+        )
+        self.assertTrue(all(
+            isinstance(sheet.cell(5, column).value, (int, float))
+            or sheet.cell(5, column).value == "-"
+            for column in range(2, 16)
+        ))
+        self.assertEqual(sheet.cell(5, 5).value, "-")
+        self.assertEqual(sheet.freeze_panes, "B5")
+
+        self.assertIn("_站点评测指标口径", workbook.sheetnames)
+        self.assertEqual(workbook["_站点评测指标口径"].sheet_state, "hidden")
+        self.assertEqual(workbook["_站点评测指标口径"].max_row, 15)
 
     def test_website_metrics_sheet_writes_complete_summary(self) -> None:
         task = self._create_website_task("website_l1", [{
@@ -1520,17 +1578,7 @@ class AnalysisPipelineTest(unittest.TestCase):
 
         sheet = workbook["站点评测指标"]
         values = list(sheet.iter_rows(values_only=True))
-        self.assertIn(("结果与效率指标汇总", None, None, None, None, None, None), values)
-        summary_header = (
-            "模型@Harness", "指标分类", "指标名称", "数值", "样本数", "计算方法",
-        )
-        header_row = next(index for index, row in enumerate(values) if row[:6] == summary_header)
-        summary_rows = []
-        for row in values[header_row + 1:]:
-            if not row[0]:
-                break
-            summary_rows.append(row[:6])
-        metric_names = [row[2] for row in summary_rows]
+        metric_names = [sheet.cell(4, column).value for column in range(2, 16)]
         self.assertEqual(len(metric_names), 14)
         self.assertNotIn("美观度", metric_names)
         self.assertIn("满分率", metric_names)
@@ -1538,12 +1586,13 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertIn("单次运行平均输入 Token", metric_names)
         self.assertIn("单次运行平均输出 Token", metric_names)
         self.assertTrue(all(
-            isinstance(row[3], (int, float)) or row[3] == "-"
-            for row in summary_rows
+            isinstance(sheet.cell(5, column).value, (int, float))
+            or sheet.cell(5, column).value == "-"
+            for column in range(2, 16)
         ))
         self.assertTrue(any(row[0] == "一级维度汇总：内容与结构" for row in values))
 
-    def test_leader_extractor_reads_website_metrics(self) -> None:
+    def test_leader_extractor_reads_horizontal_website_metrics(self) -> None:
         task = self._create_website_task("website_l1", [{
             "score": 1.0,
             "elapsed_time": 12,
@@ -1575,10 +1624,49 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertEqual(
             web_metrics["GLM-5.2@AstronCode"]["满分率"]["value"], 100.0
         )
+        self.assertEqual(
+            web_metrics["GLM-5.2@AstronCode"]["满分率"]["category"], "结果指标"
+        )
+        self.assertEqual(
+            web_metrics["GLM-5.2@AstronCode"]["满分率"]["sample"], 1
+        )
+        self.assertIn(
+            "overall_score = 1.0",
+            web_metrics["GLM-5.2@AstronCode"]["满分率"]["method"],
+        )
         self.assertEqual(len(web_metrics["GLM-5.2@AstronCode"]), 14)
         self.assertNotIn("美观度", web_metrics["GLM-5.2@AstronCode"])
         self.assertEqual(
             leader_extract._extract_website_metrics(Workbook()), {}
+        )
+
+    def test_leader_extractor_keeps_legacy_vertical_website_compatibility(self) -> None:
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = "站点评测指标"
+        sheet.append(["结果与效率指标汇总"])
+        sheet.append([
+            "模型@Harness", "指标分类", "指标名称", "数值", "样本数", "计算方法",
+        ])
+        sheet.append([
+            "GLM-5.2@AstronCode", "结果指标", "得分率", 82.5, 6,
+            "各任务 overall_score 按任务等权平均",
+        ])
+
+        leader_extract = load_module("leader_extract_legacy_website", LEADER_EXTRACT_SCRIPT)
+
+        self.assertEqual(
+            leader_extract._extract_website_metrics(workbook),
+            {
+                "GLM-5.2@AstronCode": {
+                    "得分率": {
+                        "category": "结果指标",
+                        "value": 82.5,
+                        "sample": 6,
+                        "method": "各任务 overall_score 按任务等权平均",
+                    }
+                }
+            },
         )
 
     def test_report_skill_documents_website_metrics(self) -> None:
@@ -1592,6 +1680,8 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertIn("无 Web 指标时整节省略", template)
         self.assertIn("结果与效率指标汇总", skill)
         self.assertIn("不展示美观度", skill)
+        self.assertIn("_站点评测指标口径", skill)
+        self.assertIn("正式表只展示", skill)
 
     def test_audit_detects_request_count_regression(self) -> None:
         excel_path = self.generate_auditable_excel()

@@ -1438,37 +1438,85 @@ def write_website_metrics_sheet(
         "一期口径：源码语义评测；仅判断提交源码中的实现证据，不代表站点启动、"
         "浏览器渲染、动态点击或真实运行结果。跨任务统计先计算任务内维度分，再按任务等权平均。"
     ])
-    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=6)
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=15)
     ws.cell(1, 1).alignment = WRAP_TOP
     ws.cell(1, 1).fill = SECTION_FILL
     ws.cell(1, 1).font = Font(bold=True, color="1F4E78")
 
     ws.append([])
-    ws.append(["结果与效率指标汇总"])
-    ws.cell(ws.max_row, 1).fill = SECTION_FILL
-    ws.cell(ws.max_row, 1).font = Font(bold=True, color="1F4E78")
-    ws.append(["模型@Harness", "指标分类", "指标名称", "数值", "样本数", "计算方法"])
-    style_header_row_at(ws, ws.max_row)
-    for unit in units:
-        for metric in _website_unit_metrics(unit, task_meta).values():
-            value = metric.value if metric.value is not None else "-"
-            ws.append([
+    metric_groups = (
+        ("结果指标", 2),
+        ("分层分析", 5),
+        ("效率指标", 7),
+    )
+    ws.append(["模型@Harness", "结果指标", None, "分层分析", None, None, None, None,
+               "效率指标"])
+    ws.append([None])
+    metrics_by_unit = [
+        (unit, list(_website_unit_metrics(unit, task_meta).values()))
+        for unit in units
+    ]
+    metric_names = [metric.name for metric in metrics_by_unit[0][1]]
+    for column, name in enumerate(metric_names, start=2):
+        ws.cell(4, column).value = name
+    ws.merge_cells("A3:A4")
+    start_column = 2
+    for group_name, width in metric_groups:
+        end_column = start_column + width - 1
+        ws.merge_cells(
+            start_row=3, start_column=start_column,
+            end_row=3, end_column=end_column,
+        )
+        ws.cell(3, start_column).value = group_name
+        start_column = end_column + 1
+    for row in (3, 4):
+        style_header_row_at(ws, row)
+        for cell in ws[row][:15]:
+            cell.alignment = Alignment(
+                horizontal="center", vertical="center", wrap_text=True
+            )
+
+    glossary = wb.create_sheet("_站点评测指标口径")
+    glossary.append([
+        "模型@Harness", "指标分类", "指标名称", "单位", "样本数", "计算方法",
+    ])
+    style_header_row_at(glossary, 1)
+    for unit, unit_metrics in metrics_by_unit:
+        metrics = {metric.name: metric for metric in unit_metrics}
+        ws.append([
+            unit.unit_display,
+            *[
+                metrics[name].value if metrics[name].value is not None else "-"
+                for name in metric_names
+            ],
+        ])
+        row = ws.max_row
+        for column, name in enumerate(metric_names, start=2):
+            metric = metrics[name]
+            if metric.value_type == "percent":
+                apply_pct_format(ws, row, [column])
+            elif metric.value_type == "usd":
+                ws.cell(row, column).number_format = '$0.0000'
+            elif metric.value_type == "tokens":
+                ws.cell(row, column).number_format = '#,##0.0'
+            elif metric.value_type == "seconds":
+                ws.cell(row, column).number_format = '0.0'
+            glossary.append([
                 unit.unit_display,
                 metric.category,
                 metric.name,
-                value,
+                {
+                    "percent": "%",
+                    "seconds": "秒",
+                    "usd": "USD",
+                    "tokens": "Token",
+                }[metric.value_type],
                 metric.sample,
                 metric.method,
             ])
-            row = ws.max_row
-            if metric.value_type == "percent":
-                apply_pct_format(ws, row, [4])
-            elif metric.value_type == "usd":
-                ws.cell(row, 4).number_format = '$0.0000'
-            elif metric.value_type == "tokens":
-                ws.cell(row, 4).number_format = '#,##0.0'
-            elif metric.value_type == "seconds":
-                ws.cell(row, 4).number_format = '0.0'
+    glossary.sheet_state = "hidden"
+    set_widths(glossary, {1: 30, 2: 14, 3: 30, 4: 12, 5: 14, 6: 62}, default=18)
+    glossary.freeze_panes = "A2"
 
     for level, title, labels in (
         ("primary", "一级维度汇总", WEBSITE_PRIMARY_ZH),
@@ -1522,8 +1570,30 @@ def write_website_metrics_sheet(
                 ])
                 apply_pct_format(ws, ws.max_row, [5, 6])
 
-    set_widths(ws, {1: 30, 2: 46, 3: 28, 4: 16, 5: 14, 6: 62, 7: 14}, default=18)
-    ws.freeze_panes = "A2"
+    set_widths(
+        ws,
+        {
+            1: 30,
+            2: 13,
+            3: 13,
+            4: 16,
+            5: 16,
+            6: 20,
+            7: 20,
+            8: 20,
+            9: 18,
+            10: 16,
+            11: 16,
+            12: 20,
+            13: 22,
+            14: 22,
+            15: 22,
+        },
+        default=18,
+    )
+    ws.row_dimensions[3].height = 24
+    ws.row_dimensions[4].height = 42
+    ws.freeze_panes = "B5"
     return True
 
 

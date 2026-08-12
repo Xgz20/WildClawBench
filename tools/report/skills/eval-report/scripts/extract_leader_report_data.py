@@ -56,6 +56,34 @@ def _extract_website_metrics(workbook) -> dict[str, dict[str, dict]]:
     if "站点评测指标" not in workbook.sheetnames:
         return {}
     ws = workbook["站点评测指标"]
+
+    if "_站点评测指标口径" in workbook.sheetnames:
+        glossary = workbook["_站点评测指标口径"]
+        glossary_rows = {
+            (str(row["模型@Harness"]), str(row["指标名称"])): row
+            for row in _row_dicts(glossary, 1, 2)
+            if row.get("模型@Harness") not in (None, "")
+            and row.get("指标名称") not in (None, "")
+        }
+        metric_names = [ws.cell(4, column).value for column in range(2, 16)]
+        if all(metric_names):
+            metrics: dict[str, dict[str, dict]] = {}
+            for row_number in range(5, ws.max_row + 1):
+                unit = ws.cell(row_number, 1).value
+                if unit in (None, ""):
+                    break
+                unit_metrics = metrics.setdefault(str(unit), {})
+                for column, name in enumerate(metric_names, start=2):
+                    glossary_row = glossary_rows.get((str(unit), str(name)), {})
+                    unit_metrics[str(name)] = {
+                        "category": glossary_row.get("指标分类"),
+                        "value": ws.cell(row_number, column).value,
+                        "sample": glossary_row.get("样本数"),
+                        "method": glossary_row.get("计算方法"),
+                    }
+            return metrics
+
+    # 兼容改造前的纵向六列表报告。
     title_row = _find_title_row(ws, "结果与效率指标汇总")
     if title_row is None:
         return {}

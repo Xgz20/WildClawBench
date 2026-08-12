@@ -163,3 +163,87 @@ Expected: 有效性门禁 `PASS`，报告审计 0 error。
 Run: `git diff --check && git status --short`
 
 Commit: `feat(report): 补齐站点评测结果与效率指标`
+
+---
+
+## 横向表头改造（方案 A）
+
+### Task 5: 横向双层表头与隐藏口径 Sheet
+
+**Files:**
+- Modify: `tools/report/scripts/generate_eval_report.py`
+- Test: `tools/report/tests/test_analysis_pipeline.py`
+
+- [x] **Step 1: 写失败测试**
+
+断言 Web Sheet 的 `A3:A4`、`B3:C3`、`D3:H3`、`I3:O3` 合并；第 4 行包含 14 个指标名；第 5 行起每个 unit 一行且指标值为纯数值；`B5` 冻结；隐藏 `_站点评测指标口径` 存在并包含 14 项口径。
+
+- [x] **Step 2: 运行测试确认旧纵向布局失败**
+
+Run: `uv run python -m unittest tools.report.tests.test_analysis_pipeline.AnalysisPipelineTest.test_website_metrics_sheet_uses_horizontal_grouped_headers -v`
+
+Expected: `FAIL`，旧实现不存在指定合并区域或隐藏口径 Sheet。
+
+- [x] **Step 3: 实现横向写表**
+
+正式 Sheet 只写 `模型@Harness` 和 14 个指标值，使用两层表头和 `merge_cells`；隐藏 Sheet 写 `模型@Harness、指标分类、指标名称、单位、样本数、计算方法`，并设置 `sheet_state="hidden"`。原一级、二级和逐任务明细下移保留。
+
+- [x] **Step 4: 运行布局测试和旧 Web 聚合测试**
+
+Run: `uv run python -m unittest tools.report.tests.test_analysis_pipeline.AnalysisPipelineTest.test_website_metrics_sheet_uses_horizontal_grouped_headers tools.report.tests.test_analysis_pipeline.AnalysisPipelineTest.test_website_unit_metrics_include_result_and_run_efficiency -v`
+
+Expected: `OK`。
+
+### Task 6: leader data 横表提取兼容
+
+**Files:**
+- Modify: `tools/report/skills/eval-report/scripts/extract_leader_report_data.py`
+- Modify: `tools/report/skills/eval-report/SKILL.md`
+- Modify: `tools/report/skills/eval-report/references/report_template.md`
+- Test: `tools/report/tests/test_analysis_pipeline.py`
+
+- [x] **Step 1: 写失败测试**
+
+生成横向 Web Sheet 和隐藏口径 Sheet，断言提取出的 `website_metrics[unit][指标]` 仍包含 `category/value/sample/method`，并断言隐藏 Sheet 不影响非 Web Excel 提取。
+
+- [x] **Step 2: 运行测试确认提取器仍按旧纵向表读取**
+
+Run: `uv run python -m unittest tools.report.tests.test_analysis_pipeline.AnalysisPipelineTest.test_leader_extractor_reads_horizontal_website_metrics -v`
+
+Expected: `FAIL`，无法从第 3/4 行双层表头提取指标或无法读取隐藏口径。
+
+- [x] **Step 3: 实现双层表头和隐藏口径拼接提取**
+
+解析第 4 行具体指标名与第 5 行起 unit 行；从隐藏 Sheet 以 `(unit, metric_name)` 关联样本、分类、单位和方法，输出既有 JSON 结构。更新 Skill 和模板说明正式表只展示纯数值、口径来自隐藏 Sheet。
+
+- [x] **Step 4: 运行提取器和报告契约测试**
+
+Run: `uv run python -m unittest tools.report.tests.test_analysis_pipeline.AnalysisPipelineTest.test_leader_extractor_reads_horizontal_website_metrics tools.report.tests.test_analysis_pipeline.AnalysisPipelineTest.test_eval_report_skill_contract_for_controlled_views -v`
+
+Expected: `OK`。
+
+### Task 7: round1 重生成和视觉审计
+
+**Files:**
+- Generated: `eval_out_debug/website-e2e/round1/report-workspace/output-website-metrics-horizontal-*/`
+- Generated: `eval_out_debug/website-e2e/round1/评测报告_GLM-5.2_AstronCode_round1_*_website_metrics.md`
+
+- [x] **Step 1: 运行完整测试**
+
+Run: `uv run python -m unittest tools.report.tests.test_analysis_pipeline -q`
+
+Expected: 所有测试通过。
+
+- [x] **Step 2: 生成最终 Excel 与 leader data**
+
+使用 `generate_eval_report.py` 和 `extract_leader_report_data.py` 生成新目录，不覆盖已提交的上一版报告；确认正式 Sheet 横向 14 列，隐藏 Sheet 状态为 hidden。
+
+- [x] **Step 3: 执行有效性门禁、报告审计和工作簿检查**
+
+执行 validate、audit；扫描公式错误；渲染 `站点评测指标`，核对列宽、双层表头合并、数字格式和冻结窗格；确认 Markdown 仍从 leader data 取值。
+
+- [x] **Step 4: 提交布局改造**
+
+Run: `git diff --check && git status --short`
+
+Commit: `fix(report): 调整站点评测指标横向对比布局`
