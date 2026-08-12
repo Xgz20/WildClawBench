@@ -41,6 +41,7 @@ wcb-output
 output_sum/
 output_qwen/
 output*/
+eval_out_debug
 .cache/
 .hfd/
 hfd.sh
