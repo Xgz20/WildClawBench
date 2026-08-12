@@ -1262,6 +1262,337 @@ class AnalysisPipelineTest(unittest.TestCase):
         ))
         self.assertNotIn("站点评测指标", untyped_workbook.sheetnames)
 
+    def _create_website_task(
+        self,
+        task_id: str,
+        runs: list[dict],
+    ):
+        task_dir = self.unit_dir / "07_Website_Generation" / task_id
+        for index, run in enumerate(runs, 1):
+            run_dir = task_dir / f"run_{index:03d}"
+            run_dir.mkdir(parents=True)
+            (run_dir / "score.json").write_text(json.dumps({
+                "overall_score": run["score"],
+                "_dimensions": {
+                    "metric_profile": "web-site-gen",
+                    "evidence_mode": "source_semantic",
+                    "primary": {
+                        "content_structure": {"score": run["score"]},
+                        "interaction_function": {"score": run["score"]},
+                        "visual_layout": {"score": run["score"]},
+                    },
+                    "secondary": {},
+                },
+            }), encoding="utf-8")
+            (run_dir / "execution_status.json").write_text(json.dumps({
+                "status": run.get("status", "completed"),
+                "elapsed_time": run["elapsed_time"],
+                "error": run.get("error", ""),
+            }), encoding="utf-8")
+            (run_dir / "usage.json").write_text(json.dumps({
+                "input_tokens": run["input_tokens"],
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "output_tokens": run["output_tokens"],
+                "total_tokens": run["input_tokens"] + run["output_tokens"],
+                "request_count": 1,
+            }), encoding="utf-8")
+        registry = excel_report.report_entities.load_registry(
+            REPORT_DIR / "data/entities.yaml"
+        )
+        task = excel_report.TaskRecord(
+            "07_Website_Generation",
+            task_dir,
+            "astroncode",
+            "xopglm52",
+            registry,
+            date(2026, 8, 12),
+        )
+        task.registry = registry
+        return task
+
+    def test_website_unit_metrics_include_result_and_run_efficiency(self) -> None:
+        full_task = self._create_website_task("website_l1", [{
+            "score": 1.0,
+            "elapsed_time": 10,
+            "input_tokens": 100,
+            "output_tokens": 50,
+        }])
+        partial_task = self._create_website_task("website_l2", [{
+            "score": 0.5,
+            "status": "error",
+            "error": "harness failed after producing output",
+            "elapsed_time": 20,
+            "input_tokens": 200,
+            "output_tokens": 100,
+        }])
+        unit = SimpleNamespace(
+            model="xopglm52",
+            harness="astroncode",
+            unit_display="GLM-5.2@AstronCode",
+            registry=full_task.registry,
+            pricing_date=date(2026, 8, 12),
+            tasks=[full_task, partial_task],
+        )
+
+        metrics = excel_report._website_unit_metrics(unit, {
+            "website_l1": {"difficulty": "L1"},
+            "website_l2": {"difficulty": "L2"},
+        })
+
+        self.assertEqual(metrics["得分率"].value, 75.0)
+        self.assertEqual(metrics["满分率"].value, 50.0)
+        self.assertEqual(metrics["L1 题目得分率"].value, 100.0)
+        self.assertEqual(metrics["L2 题目得分率"].value, 50.0)
+        self.assertEqual(metrics["运行耗时平均值"].value, 15.0)
+        self.assertEqual(metrics["运行耗时 P50"].value, 15.0)
+        self.assertEqual(metrics["运行耗时 P90"].value, 19.0)
+        self.assertEqual(metrics["单次运行平均总 Token"].value, 225.0)
+        self.assertEqual(metrics["单次运行平均输入 Token"].value, 150.0)
+        self.assertEqual(metrics["单次运行平均输出 Token"].value, 75.0)
+        expected_cost = ((100 * 8 + 50 * 28) + (200 * 8 + 100 * 28)) \
+            / 1_000_000 / 6.77 / 2
+        self.assertAlmostEqual(metrics["单次运行平均成本"].value, expected_cost)
+        self.assertEqual(metrics["单次运行平均成本"].sample, "2/2")
+
+    def test_website_unit_metrics_exclude_superseded_runs(self) -> None:
+        task = self._create_website_task("website_rerun", [
+            {
+                "score": 0.0,
+                "elapsed_time": 100,
+                "input_tokens": 900,
+                "output_tokens": 100,
+            },
+            {
+                "score": 1.0,
+                "elapsed_time": 20,
+                "input_tokens": 80,
+                "output_tokens": 20,
+            },
+        ])
+        write_rerun_metadata(
+            task.run_dir,
+            supersedes_run=str(task.run_dir.parent / "run_001"),
+            trigger="regrade",
+            task_id=task.task_id,
+            model="xopglm52",
+        )
+        registry = excel_report.report_entities.load_registry(
+            REPORT_DIR / "data/entities.yaml"
+        )
+        task = excel_report.TaskRecord(
+            "07_Website_Generation",
+            task.run_dir.parent,
+            "astroncode",
+            "xopglm52",
+            registry,
+            date(2026, 8, 12),
+        )
+        unit = SimpleNamespace(
+            model="xopglm52",
+            harness="astroncode",
+            unit_display="GLM-5.2@AstronCode",
+            registry=registry,
+            pricing_date=date(2026, 8, 12),
+            tasks=[task],
+        )
+
+        metrics = excel_report._website_unit_metrics(
+            unit, {task.task_id: {"difficulty": "L1"}}
+        )
+
+        self.assertEqual(metrics["得分率"].value, 100.0)
+        self.assertEqual(metrics["运行耗时平均值"].value, 20.0)
+        self.assertEqual(metrics["单次运行平均总 Token"].value, 100.0)
+        self.assertEqual(metrics["运行耗时平均值"].sample, 1)
+
+    def test_website_unit_metrics_count_unscored_tagged_task_as_zero(self) -> None:
+        full_task = self._create_website_task("website_full", [{
+            "score": 1.0,
+            "elapsed_time": 10,
+            "input_tokens": 100,
+            "output_tokens": 20,
+        }])
+        invalid_task = self._create_website_task("website_invalid", [{
+            "score": 0.0,
+            "status": "error",
+            "error": "framework error before grading",
+            "elapsed_time": 30,
+            "input_tokens": 200,
+            "output_tokens": 40,
+        }])
+        (invalid_task.run_dir / "score.json").unlink()
+        registry = full_task.registry
+        invalid_task = excel_report.TaskRecord(
+            "07_Website_Generation",
+            invalid_task.run_dir.parent,
+            "astroncode",
+            "xopglm52",
+            registry,
+            date(2026, 8, 12),
+        )
+        unit = SimpleNamespace(
+            model="xopglm52",
+            harness="astroncode",
+            unit_display="GLM-5.2@AstronCode",
+            registry=registry,
+            pricing_date=date(2026, 8, 12),
+            tasks=[full_task, invalid_task],
+        )
+
+        metrics = excel_report._website_unit_metrics(unit, {
+            "website_full": {"difficulty": "L1", "tags": "web-site-gen"},
+            "website_invalid": {"difficulty": "L2", "tags": "web-site-gen"},
+        })
+
+        self.assertEqual(metrics["得分率"].value, 50.0)
+        self.assertEqual(metrics["满分率"].value, 50.0)
+        self.assertEqual(metrics["L2 题目得分率"].value, 0.0)
+        self.assertEqual(metrics["运行耗时平均值"].value, 20.0)
+        self.assertEqual(metrics["单次运行平均总 Token"].value, 180.0)
+        self.assertEqual(metrics["运行耗时平均值"].sample, 2)
+
+    def test_website_metrics_sheet_keeps_all_unscored_tagged_tasks(self) -> None:
+        task = self._create_website_task("website_invalid", [{
+            "score": 0.0,
+            "status": "error",
+            "error": "framework error before grading",
+            "elapsed_time": 30,
+            "input_tokens": 200,
+            "output_tokens": 40,
+        }])
+        (task.run_dir / "score.json").unlink()
+        registry = task.registry
+        task = excel_report.TaskRecord(
+            "07_Website_Generation",
+            task.run_dir.parent,
+            "astroncode",
+            "xopglm52",
+            registry,
+            date(2026, 8, 12),
+        )
+        unit = SimpleNamespace(
+            model="xopglm52",
+            harness="astroncode",
+            unit_display="GLM-5.2@AstronCode",
+            registry=registry,
+            pricing_date=date(2026, 8, 12),
+            tasks=[task],
+        )
+        workbook = Workbook()
+        workbook.remove(workbook.active)
+
+        written = excel_report.write_website_metrics_sheet(
+            workbook,
+            [unit],
+            {"website_invalid": {"difficulty": "L1", "tags": "web-site-gen"}},
+        )
+
+        self.assertTrue(written)
+        rows = list(workbook["站点评测指标"].iter_rows(values_only=True))
+        self.assertTrue(any(row[2] == "得分率" and row[3] == 0.0 for row in rows))
+        self.assertTrue(any(
+            row[2] == "运行耗时平均值" and row[3] == 30.0 for row in rows
+        ))
+
+    def test_website_metrics_sheet_writes_complete_summary(self) -> None:
+        task = self._create_website_task("website_l1", [{
+            "score": 1.0,
+            "elapsed_time": 12,
+            "input_tokens": 120,
+            "output_tokens": 30,
+        }])
+        unit = SimpleNamespace(
+            model="xopglm52",
+            harness="astroncode",
+            unit="xopglm52@astroncode",
+            unit_display="GLM-5.2@AstronCode",
+            registry=task.registry,
+            pricing_date=date(2026, 8, 12),
+            tasks=[task],
+        )
+        workbook = Workbook()
+        workbook.remove(workbook.active)
+
+        self.assertTrue(excel_report.write_website_metrics_sheet(
+            workbook, [unit], {"website_l1": {"difficulty": "L1"}}
+        ))
+
+        sheet = workbook["站点评测指标"]
+        values = list(sheet.iter_rows(values_only=True))
+        self.assertIn(("结果与效率指标汇总", None, None, None, None, None, None), values)
+        summary_header = (
+            "模型@Harness", "指标分类", "指标名称", "数值", "样本数", "计算方法",
+        )
+        header_row = next(index for index, row in enumerate(values) if row[:6] == summary_header)
+        summary_rows = []
+        for row in values[header_row + 1:]:
+            if not row[0]:
+                break
+            summary_rows.append(row[:6])
+        metric_names = [row[2] for row in summary_rows]
+        self.assertEqual(len(metric_names), 14)
+        self.assertNotIn("美观度", metric_names)
+        self.assertIn("满分率", metric_names)
+        self.assertIn("单次运行平均总 Token", metric_names)
+        self.assertIn("单次运行平均输入 Token", metric_names)
+        self.assertIn("单次运行平均输出 Token", metric_names)
+        self.assertTrue(all(
+            isinstance(row[3], (int, float)) or row[3] == "-"
+            for row in summary_rows
+        ))
+        self.assertTrue(any(row[0] == "一级维度汇总：内容与结构" for row in values))
+
+    def test_leader_extractor_reads_website_metrics(self) -> None:
+        task = self._create_website_task("website_l1", [{
+            "score": 1.0,
+            "elapsed_time": 12,
+            "input_tokens": 120,
+            "output_tokens": 30,
+        }])
+        unit = SimpleNamespace(
+            model="xopglm52",
+            harness="astroncode",
+            unit="xopglm52@astroncode",
+            unit_display="GLM-5.2@AstronCode",
+            registry=task.registry,
+            pricing_date=date(2026, 8, 12),
+            tasks=[task],
+        )
+        workbook = Workbook()
+        workbook.remove(workbook.active)
+        excel_report.write_website_metrics_sheet(
+            workbook, [unit], {"website_l1": {"difficulty": "L1"}}
+        )
+        web_path = Path(self.temp_dir.name) / "website.xlsx"
+        workbook.save(web_path)
+
+        leader_extract = load_module("leader_extract_website", LEADER_EXTRACT_SCRIPT)
+        web_metrics = leader_extract._extract_website_metrics(
+            load_workbook(web_path, data_only=True)
+        )
+
+        self.assertEqual(
+            web_metrics["GLM-5.2@AstronCode"]["满分率"]["value"], 100.0
+        )
+        self.assertEqual(len(web_metrics["GLM-5.2@AstronCode"]), 14)
+        self.assertNotIn("美观度", web_metrics["GLM-5.2@AstronCode"])
+        self.assertEqual(
+            leader_extract._extract_website_metrics(Workbook()), {}
+        )
+
+    def test_report_skill_documents_website_metrics(self) -> None:
+        template = (REPORT_DIR / "skills/eval-report/references/report_template.md").read_text(
+            encoding="utf-8"
+        )
+        skill = (REPORT_DIR / "skills/eval-report/SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("站点评测指标", template)
+        self.assertIn("leader_data.website_metrics", template)
+        self.assertIn("无 Web 指标时整节省略", template)
+        self.assertIn("结果与效率指标汇总", skill)
+        self.assertIn("不展示美观度", skill)
+
     def test_audit_detects_request_count_regression(self) -> None:
         excel_path = self.generate_auditable_excel()
         workbook = load_workbook(excel_path)

@@ -32,6 +32,7 @@ import argparse
 import json
 import re
 import sys
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -236,8 +237,12 @@ class TaskRecord:
         self.task_id = task_dir.name
         self.suite = suite
         self.harness = harness
+        self.model = model
+        self.registry = registry
+        self.pricing_date = pricing_date
         all_run_dirs = sorted(p for p in task_dir.iterdir() if p.is_dir())
         run_dirs = select_effective_run_dirs(all_run_dirs, scan_run_dir)
+        self.effective_run_dirs = run_dirs
 
         # 多轮支持：收集全部 run 的 overall_score，取 mean 作为代表分
         all_scores = []
@@ -334,39 +339,55 @@ class TaskRecord:
         self.tool_metrics = _parse_tool_metrics(self.transcript, self.harness)
 
     def _estimate_cost(self, model: str, harness: str, registry, pricing_date):
-        if registry is None or pricing_date is None:
-            return report_entities.CostEstimate(
-                Decimal(str((self.usage or {}).get("cost_usd") or 0)),
-                None,
-                "reported",
-            )
-        try:
-            usage = report_entities.normalize_billable_usage(self.usage or {})
-            profile = registry.pricing_profile(model, pricing_date)
-            if len(profile.tiers) == 1:
-                return report_entities.estimate_cost_usd(
-                    registry, model, pricing_date, usage, request_input_tokens=None
-                )
-            if not self.run_dir:
-                raise ValueError("缺少有效 run 目录")
-            # codex 与 astroncode 同属 Codex 系，chat.jsonl 的 token_count 事件
-            # 结构一致（total_token_usage/last_token_usage），复用同一抽取器。
-            if harness in ("astroncode", "codex"):
-                requests = report_entities.extract_astroncode_requests(self.run_dir)
-            elif harness == "opencode":
-                requests = report_entities.extract_opencode_requests(self.run_dir)
-            else:
-                raise ValueError(f"分档定价不支持 Harness: {harness}")
-            return report_entities.estimate_request_costs_usd(
-                registry, model, pricing_date, requests
-            )
-        except (OSError, ValueError) as exc:
-            return report_entities.CostEstimate(None, None, "unavailable", str(exc))
+        return _estimate_run_cost(
+            model, harness, self.run_dir, self.usage, registry, pricing_date
+        )
 
     @property
     def effective_score(self) -> float:
         """聚合口径：无有效得分按 0 计（与 summary global_avg 口径一致）。"""
         return self.score if self.score is not None else 0.0
+
+
+def _estimate_run_cost(
+    model: str,
+    harness: str,
+    run_dir: Path | None,
+    usage: dict,
+    registry,
+    pricing_date: date | None,
+):
+    """Recompute one run cost using the report entity registry."""
+    if registry is None or pricing_date is None:
+        return report_entities.CostEstimate(
+            Decimal(str((usage or {}).get("cost_usd") or 0)),
+            None,
+            "reported",
+        )
+    try:
+        billable_usage = report_entities.normalize_billable_usage(usage or {})
+        profile = registry.pricing_profile(model, pricing_date)
+        if len(profile.tiers) == 1:
+            return report_entities.estimate_cost_usd(
+                registry,
+                model,
+                pricing_date,
+                billable_usage,
+                request_input_tokens=None,
+            )
+        if not run_dir:
+            raise ValueError("缺少有效 run 目录")
+        if harness in ("astroncode", "codex"):
+            requests = report_entities.extract_astroncode_requests(run_dir)
+        elif harness == "opencode":
+            requests = report_entities.extract_opencode_requests(run_dir)
+        else:
+            raise ValueError(f"分档定价不支持 Harness: {harness}")
+        return report_entities.estimate_request_costs_usd(
+            registry, model, pricing_date, requests
+        )
+    except (OSError, ValueError) as exc:
+        return report_entities.CostEstimate(None, None, "unavailable", str(exc))
 
 
 class UnitResult:
@@ -1203,6 +1224,178 @@ WEBSITE_SECONDARY_ZH = {
 }
 
 
+@dataclass(frozen=True)
+class WebsiteMetric:
+    category: str
+    name: str
+    value: float | None
+    sample: int | str
+    method: str
+    value_type: str
+
+
+def _is_website_semantic_task(task) -> bool:
+    dimensions = getattr(task, "metric_dimensions", {})
+    return (
+        dimensions.get("metric_profile") == "web-site-gen"
+        and dimensions.get("evidence_mode") == "source_semantic"
+    )
+
+
+def _has_website_tag(task, task_meta: dict[str, dict]) -> bool:
+    tags = str(task_meta.get(task.task_id, {}).get("tags") or "")
+    return "web-site-gen" in {
+        item.strip() for item in tags.split(",") if item.strip()
+    }
+
+
+def _linear_percentile(values: list[float], percentile: float) -> float | None:
+    ordered = sorted(values)
+    if not ordered:
+        return None
+    position = (len(ordered) - 1) * percentile
+    lower = int(position)
+    upper = min(lower + 1, len(ordered) - 1)
+    return ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower)
+
+
+def _numeric_usage_value(usage: dict, key: str) -> float | None:
+    value = usage.get(key)
+    if isinstance(value, (int, float)) and not isinstance(value, bool) and value >= 0:
+        return float(value)
+    return None
+
+
+def _website_unit_metrics(unit, task_meta: dict[str, dict]) -> dict[str, WebsiteMetric]:
+    tasks = [
+        task for task in unit.tasks
+        if _is_website_semantic_task(task) or _has_website_tag(task, task_meta)
+    ]
+
+    def _score_average(selected: list) -> float | None:
+        if not selected:
+            return None
+        scores = [
+            getattr(task, "effective_score", None)
+            if getattr(task, "effective_score", None) is not None
+            else getattr(task, "score", 0.0)
+            for task in selected
+        ]
+        return round(
+            sum(float(score or 0.0) for score in scores) / len(selected) * 100, 1
+        )
+
+    metrics: dict[str, WebsiteMetric] = {}
+
+    def add(category, name, value, sample, method, value_type):
+        metrics[name] = WebsiteMetric(
+            category, name, value, sample, method, value_type
+        )
+
+    add(
+        "结果指标", "得分率", _score_average(tasks), len(tasks),
+        "各任务 overall_score 按任务等权平均", "percent",
+    )
+    full_count = sum(getattr(task, "score", None) == 1.0 for task in tasks)
+    full_rate = round(full_count / len(tasks) * 100, 1) if tasks else None
+    add(
+        "结果指标", "满分率", full_rate, len(tasks),
+        "overall_score = 1.0 的任务数 / Web 任务数", "percent",
+    )
+
+    for difficulty in ("L1", "L2"):
+        selected = [
+            task for task in tasks
+            if task_meta.get(task.task_id, {}).get("difficulty") == difficulty
+        ]
+        add(
+            "分层分析", f"{difficulty} 题目得分率", _score_average(selected), len(selected),
+            f"difficulty={difficulty} 的任务按任务等权平均", "percent",
+        )
+
+    for key, label in WEBSITE_PRIMARY_ZH.items():
+        values = []
+        for task in tasks:
+            dimensions = getattr(task, "metric_dimensions", {})
+            item = dimensions.get("primary", {}).get(key, {})
+            score = item.get("score") if isinstance(item, dict) else None
+            if isinstance(score, (int, float)) and not isinstance(score, bool):
+                values.append(float(score))
+        value = round(sum(values) / len(values) * 100, 1) if values else None
+        add(
+            "分层分析", f"{label}得分率", value, len(values),
+            f"一级维度 {key} 按任务等权平均", "percent",
+        )
+
+    elapsed_values: list[float] = []
+    token_values = {key: [] for key in ("total_tokens", "input_tokens", "output_tokens")}
+    cost_estimates = []
+    cost_expected = 0
+    for task in tasks:
+        for run_dir in getattr(task, "effective_run_dirs", []):
+            status = _load_json(run_dir / "execution_status.json")
+            elapsed = status.get("elapsed_time")
+            if isinstance(elapsed, (int, float)) and not isinstance(elapsed, bool) and elapsed >= 0:
+                elapsed_values.append(float(elapsed))
+            usage = _load_json(run_dir / "usage.json")
+            has_usage = any(
+                _numeric_usage_value(usage, key) is not None for key in token_values
+            )
+            for key in token_values:
+                value = _numeric_usage_value(usage, key)
+                if value is not None:
+                    token_values[key].append(value)
+            if has_usage:
+                cost_expected += 1
+                cost_estimates.append(_estimate_run_cost(
+                    getattr(unit, "model", ""),
+                    getattr(unit, "harness", ""),
+                    run_dir,
+                    usage,
+                    getattr(unit, "registry", None),
+                    getattr(unit, "pricing_date", None),
+                ))
+
+    elapsed_average = (
+        round(sum(elapsed_values) / len(elapsed_values), 1) if elapsed_values else None
+    )
+    add(
+        "效率指标", "运行耗时平均值", elapsed_average, len(elapsed_values),
+        "未被替代 run 的 elapsed_time 算术平均", "seconds",
+    )
+    for name, percentile in (("运行耗时 P50", 0.5), ("运行耗时 P90", 0.9)):
+        value = _linear_percentile(elapsed_values, percentile)
+        add(
+            "效率指标", name, round(value, 1) if value is not None else None,
+            len(elapsed_values),
+            f"未被替代 run 耗时的第 {int(percentile * 100)} 百分位",
+            "seconds",
+        )
+
+    available_costs = [item.usd for item in cost_estimates if item.usd is not None]
+    average_cost = None
+    if cost_expected and len(available_costs) == cost_expected:
+        average_cost = float(sum(available_costs, Decimal(0)) / cost_expected)
+    add(
+        "效率指标", "单次运行平均成本", average_cost,
+        f"{len(available_costs)}/{cost_expected}",
+        "按 entities.yaml 模型单价逐 run 复算后求平均", "usd",
+    )
+
+    for key, name in (
+        ("total_tokens", "单次运行平均总 Token"),
+        ("input_tokens", "单次运行平均输入 Token"),
+        ("output_tokens", "单次运行平均输出 Token"),
+    ):
+        values = token_values[key]
+        add(
+            "效率指标", name,
+            round(sum(values) / len(values), 1) if values else None,
+            len(values), f"未被替代 run 的 {key} 算术平均", "tokens",
+        )
+    return metrics
+
+
 def _website_dimension_unit_scores(unit, level: str) -> dict[str, tuple[float, int]]:
     """Return task-equal website dimension averages as percentage + task count."""
     values: dict[str, list[float]] = {}
@@ -1226,20 +1419,18 @@ def _website_dimension_unit_scores(unit, level: str) -> dict[str, tuple[float, i
     }
 
 
-def write_website_metrics_sheet(wb, units: list[UnitResult]) -> bool:
+def write_website_metrics_sheet(
+    wb, units: list[UnitResult], task_meta: dict[str, dict] | None = None
+) -> bool:
     """Write source-semantic website metrics; omit the sheet when unavailable."""
-    semantic_tasks = [
+    task_meta = task_meta or {}
+    website_tasks = [
         (unit, task)
         for unit in units
         for task in unit.tasks
-        if (
-            getattr(task, "metric_dimensions", {}).get("metric_profile")
-            == "web-site-gen"
-            and getattr(task, "metric_dimensions", {}).get("evidence_mode")
-            == "source_semantic"
-        )
+        if _is_website_semantic_task(task) or _has_website_tag(task, task_meta)
     ]
-    if not semantic_tasks:
+    if not website_tasks:
         return False
 
     ws = wb.create_sheet("站点评测指标")
@@ -1251,6 +1442,33 @@ def write_website_metrics_sheet(wb, units: list[UnitResult]) -> bool:
     ws.cell(1, 1).alignment = WRAP_TOP
     ws.cell(1, 1).fill = SECTION_FILL
     ws.cell(1, 1).font = Font(bold=True, color="1F4E78")
+
+    ws.append([])
+    ws.append(["结果与效率指标汇总"])
+    ws.cell(ws.max_row, 1).fill = SECTION_FILL
+    ws.cell(ws.max_row, 1).font = Font(bold=True, color="1F4E78")
+    ws.append(["模型@Harness", "指标分类", "指标名称", "数值", "样本数", "计算方法"])
+    style_header_row_at(ws, ws.max_row)
+    for unit in units:
+        for metric in _website_unit_metrics(unit, task_meta).values():
+            value = metric.value if metric.value is not None else "-"
+            ws.append([
+                unit.unit_display,
+                metric.category,
+                metric.name,
+                value,
+                metric.sample,
+                metric.method,
+            ])
+            row = ws.max_row
+            if metric.value_type == "percent":
+                apply_pct_format(ws, row, [4])
+            elif metric.value_type == "usd":
+                ws.cell(row, 4).number_format = '$0.0000'
+            elif metric.value_type == "tokens":
+                ws.cell(row, 4).number_format = '#,##0.0'
+            elif metric.value_type == "seconds":
+                ws.cell(row, 4).number_format = '0.0'
 
     for level, title, labels in (
         ("primary", "一级维度汇总", WEBSITE_PRIMARY_ZH),
@@ -1286,8 +1504,8 @@ def write_website_metrics_sheet(wb, units: list[UnitResult]) -> bool:
         "Criterion 数",
     ])
     style_header_row_at(ws, ws.max_row)
-    for unit, task in semantic_tasks:
-        dimensions = task.metric_dimensions
+    for unit, task in website_tasks:
+        dimensions = getattr(task, "metric_dimensions", {})
         for level, labels in (
             ("primary", WEBSITE_PRIMARY_ZH),
             ("secondary", WEBSITE_SECONDARY_ZH),
@@ -1304,7 +1522,7 @@ def write_website_metrics_sheet(wb, units: list[UnitResult]) -> bool:
                 ])
                 apply_pct_format(ws, ws.max_row, [5, 6])
 
-    set_widths(ws, {1: 30, 2: 46, 3: 10, 4: 24, 5: 14, 6: 14, 7: 14}, default=18)
+    set_widths(ws, {1: 30, 2: 46, 3: 28, 4: 16, 5: 14, 6: 62, 7: 14}, default=18)
     ws.freeze_panes = "A2"
     return True
 
@@ -2351,7 +2569,7 @@ def main() -> None:
     write_matrix_sheet(wb, units)
     write_tool_compare_sheet(wb, units)
     write_case_compare_sheet(wb, units, order, task_meta, suite_zh)
-    write_website_metrics_sheet(wb, units)
+    write_website_metrics_sheet(wb, units, task_meta)
     cap_map = load_capability_map(args.capability_map)
     if cap_map:
         write_capability_sheet(

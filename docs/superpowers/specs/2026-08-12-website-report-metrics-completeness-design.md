@@ -13,7 +13,7 @@
 - `metric_profile == "web-site-gen"`
 - `evidence_mode == "source_semantic"`
 
-任务得分和分层指标以任务为统计单位；效率指标以这些任务下未被替代的实际 run 为统计单位。run 选择统一复用 `src/utils/run_selection.py::select_effective_run_dirs()`，确保 `run_metadata.json.supersedes_run` 指向的旧 run 不再参与报告。
+任务得分和分层指标以任务为统计单位；效率指标以这些任务下未被替代的实际 run 为统计单位。任务已经通过 frontmatter `web-site-gen` tag 识别、但因执行或评分异常没有 `score.json._dimensions` 时仍属于 Web 范围，得分按框架 `effective_score=0` 纳入分母。run 选择统一复用 `src/utils/run_selection.py::select_effective_run_dirs()`，确保 `run_metadata.json.supersedes_run` 指向的旧 run 不再参与报告。
 
 ## 3. Excel 展示
 
@@ -73,7 +73,7 @@ P50/P90 使用与 Python `statistics.quantiles` 无关的确定性线性插值�
 - 非 Web 任务不参与 Web 汇总；混合评测报告中 Web Sheet 只反映 Web 子集。
 - 某个分组或指标无样本时显示 `-` 和样本数 0，不制造 0 分或 0 成本。
 - 被替代 run 不参与得分、耗时、成本或 Token 统计。
-- 失败或无效 run 若缺少 score，不进入任务得分；其有效耗时和 usage 仍进入效率指标。
+- 失败或无效 Web 任务若缺少 score，按 0 分进入得分率、满分率和 L1/L2 分母；其有效耗时和 usage 同时进入效率指标。
 
 ## 7. 验证
 

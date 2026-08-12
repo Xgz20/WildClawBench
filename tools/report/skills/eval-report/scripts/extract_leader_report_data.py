@@ -52,6 +52,29 @@ def _extract_controlled_view(ws, title: str) -> list[dict]:
     return list(_row_dicts(ws, title_row + 1, title_row + 2))
 
 
+def _extract_website_metrics(workbook) -> dict[str, dict[str, dict]]:
+    if "站点评测指标" not in workbook.sheetnames:
+        return {}
+    ws = workbook["站点评测指标"]
+    title_row = _find_title_row(ws, "结果与效率指标汇总")
+    if title_row is None:
+        return {}
+    rows = _row_dicts(ws, title_row + 1, title_row + 2)
+    metrics: dict[str, dict[str, dict]] = {}
+    for row in rows:
+        unit = row.get("模型@Harness")
+        name = row.get("指标名称")
+        if unit in (None, "") or name in (None, ""):
+            continue
+        metrics.setdefault(str(unit), {})[str(name)] = {
+            "category": row.get("指标分类"),
+            "value": row.get("数值"),
+            "sample": row.get("样本数"),
+            "method": row.get("计算方法"),
+        }
+    return metrics
+
+
 def extract_workbook(excel_path: Path) -> dict:
     workbook = load_workbook(excel_path, data_only=True)
     metadata = _metadata_rows(workbook)
@@ -113,6 +136,7 @@ def extract_workbook(excel_path: Path) -> dict:
         row for row in metadata
         if row.get("类型") in {"成本", "汇率", "配置"}
     ]
+    website_metrics = _extract_website_metrics(workbook)
     workbook.close()
     return {
         "schema_version": 1,
@@ -122,6 +146,7 @@ def extract_workbook(excel_path: Path) -> dict:
         "pricing_snapshot": pricing,
         "overview": overview,
         "dimensions": dimensions,
+        "website_metrics": website_metrics,
     }
 
 

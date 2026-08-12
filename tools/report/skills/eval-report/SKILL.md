@@ -117,6 +117,7 @@ python3 tools/report/scripts/generate_eval_report.py \
 - 所有可见模型、Harness 和 unit 使用展示名称；
 - `_报告元数据` 为隐藏 Sheet，能反查 raw ID、目标组合、定价档案、汇率与成本状态；
 - `分类对比`、`Agent能力对比`、`Agent能力对比·去污染`、`难度对比`、`模态对比` 顶部保留全量原表；
+- 存在 `web-site-gen` 源码语义任务时，`站点评测指标` 包含“结果与效率指标汇总”：得分率、严格满分率、L1/L2、三个一级能力维度、耗时平均/P50/P90、平均成本以及平均总/输入/输出 Token；不展示美观度；
 - 五个维度 Sheet 下方有”固定目标 Harness：模型对比”和”固定目标模型：Harness 对比”两张连续、带配色、可直接复制的表；被固定的一侧只有 1 个参评对象时该表不生成（无参照，对比不成立），脚本会打印”仅 1 个参评对象”提示，属预期行为；
 - 评分详情仍使用 raw unit 命名，analysis 回填条数与 JSON 一致（preview 模式下为 0）。
 
@@ -135,6 +136,8 @@ python3 tools/report/skills/eval-report/scripts/extract_leader_report_data.py \
 ```
 
 提取器按列名和控制变量视图标题读取。领导版报告的每个数字都来自该 JSON；出稿后逐格对照最新 Excel。
+
+存在 Web 指标时，提取结果的 `website_metrics` 按展示名 unit 和指标名组织；领导版 Markdown 增加“站点评测指标”章节并逐项使用该字段。无 Web 指标时整节省略。
 
 ## 4. 领导版 Markdown
 
