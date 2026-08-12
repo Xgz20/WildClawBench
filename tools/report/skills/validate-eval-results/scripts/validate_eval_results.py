@@ -202,9 +202,31 @@ def expected_tasks_for_unit(
     expected: set[tuple[str, str]],
     metadata: dict[tuple[str, str], dict[str, object]],
     run_log: str,
+    evaluation_scope: dict | None = None,
 ) -> tuple[set[tuple[str, str]], bool]:
-    """按 run.log 中实际执行的 modality/tag 条件还原每个分类的预期集合。"""
+    """按结构化计划范围或历史 run.log 还原 unit 的预期任务集合。"""
+    if (
+        isinstance(evaluation_scope, dict)
+        and evaluation_scope.get("schema_version") == 1
+    ):
+        planned = evaluation_scope.get("planned_tasks")
+        if isinstance(planned, list):
+            scoped = {
+                (str(item.get("category") or ""), str(item.get("task_id") or ""))
+                for item in planned
+                if isinstance(item, dict)
+                and str(item.get("category") or "")
+                and str(item.get("task_id") or "")
+            }
+            return scoped, True
+
     filters: dict[str, dict[str, object]] = defaultdict(dict)
+    selected_categories = {
+        match.group(1)
+        for match in re.finditer(
+            r"Category:\s*(\S+),\s*\d+\s+tasks(?:\s|$)", run_log
+        )
+    }
     for match in re.finditer(
         r"Modality filter '([^']+)'\s*:\s*\d+/\d+ tasks kept in (\S+)", run_log,
     ):
@@ -220,11 +242,13 @@ def expected_tasks_for_unit(
     ):
         filters[match.group(2)]["exclude_tags"] = _parse_logged_tags(match.group(1))
 
-    if not filters:
+    if not filters and not selected_categories:
         return set(expected), False
 
     filtered: set[tuple[str, str]] = set()
     for key in expected:
+        if selected_categories and key[0] not in selected_categories:
+            continue
         suite_filter = filters.get(key[0])
         task = metadata.get(key)
         if not suite_filter or task is None:
@@ -572,8 +596,9 @@ def scan_round(result_root: Path, tasks_dir: Path | None,
                     scores_for_summary.append(fmean(run_scores))
 
         run_log = read_text(unit_dir / "run.log")
+        evaluation_scope, _scope_error = load_json(unit_dir / "evaluation_scope.json")
         unit_expected, has_logged_filters = expected_tasks_for_unit(
-            expected_flat, filter_metadata, run_log,
+            expected_flat, filter_metadata, run_log, evaluation_scope,
         )
         declares_extension = "official + extension" in run_log.lower()
         if (

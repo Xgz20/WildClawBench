@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 TMP_WORKSPACE = os.environ.get("TMP_WORKSPACE", "/tmp_workspace")
 DEFAULT_GRADING_TIMEOUT_SECONDS = 600.0
+DEFAULT_JUDGE_MAX_TOKENS = 1000
 WEBSITE_METRIC_PROFILE = "web-site-gen"
 
 
@@ -36,6 +37,29 @@ def _grading_timeout_seconds() -> float:
             DEFAULT_GRADING_TIMEOUT_SECONDS,
         )
         return DEFAULT_GRADING_TIMEOUT_SECONDS
+    return value
+
+
+def _judge_max_tokens() -> int:
+    raw = os.environ.get("JUDGE_MAX_TOKENS", "").strip()
+    if not raw:
+        return DEFAULT_JUDGE_MAX_TOKENS
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.warning(
+            "Invalid JUDGE_MAX_TOKENS=%r; using %d",
+            raw,
+            DEFAULT_JUDGE_MAX_TOKENS,
+        )
+        return DEFAULT_JUDGE_MAX_TOKENS
+    if value <= 0:
+        logger.warning(
+            "JUDGE_MAX_TOKENS must be > 0, got %r; using %d",
+            raw,
+            DEFAULT_JUDGE_MAX_TOKENS,
+        )
+        return DEFAULT_JUDGE_MAX_TOKENS
     return value
 
 
@@ -701,6 +725,7 @@ def _grade_llm_rubric(
         rubric_criteria, rubric_text, metric_profile=metric_profile
     )
     judge_model = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
+    judge_max_tokens = _judge_max_tokens()
 
     is_website_profile = metric_profile == WEBSITE_METRIC_PROFILE
     ws_reader = (
@@ -728,7 +753,7 @@ def _grade_llm_rubric(
         " + '\\n\\n## Agent Transcript (JSON)\\n' + _summary\n"
         "try:\n"
         f"    resp = client.chat.completions.create(model={json.dumps(judge_model)},"
-        " max_tokens=800, messages=[{'role':'user','content':_msg}],"
+        f" max_tokens={judge_max_tokens}, messages=[{{'role':'user','content':_msg}}],"
         " response_format={'type':'json_object'})\n"
         "    print(resp.choices[0].message.content)\n"
         "except Exception as _e:\n"

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,6 +10,9 @@ from eval import run_batch
 
 
 class PendingTaskCountTests(unittest.TestCase):
+    def test_all_categories_includes_website_generation(self) -> None:
+        self.assertIn("07_Website_Generation", run_batch.ALL_CATEGORIES)
+
     def test_counts_official_and_extension_tasks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tasks_dir = Path(tmp) / "tasks"
@@ -70,6 +74,51 @@ class PendingTaskCountTests(unittest.TestCase):
 
         self.assertEqual(
             grading.call_args.kwargs["metric_profile"], "web-site-gen"
+        )
+
+    def test_write_evaluation_scope_records_planned_tasks_and_filters(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tasks_dir = Path(tmp) / "tasks"
+            official = tasks_dir / "07_Website_Generation" / "task_official.md"
+            extension = (
+                tasks_dir / "extension" / "07_Website_Generation" / "task_extension.md"
+            )
+            tasks = [
+                {"task_id": "task_official", "file_path": str(official)},
+                {"task_id": "task_extension", "file_path": str(extension)},
+            ]
+            output_root = Path(tmp) / "output" / "astroncode"
+
+            with patch.object(run_batch, "TASKS_DIR", tasks_dir):
+                run_batch._write_evaluation_scope(
+                    output_root,
+                    tasks,
+                    mode="category",
+                    categories=["07_Website_Generation"],
+                    modality="pure-text",
+                    include_tags={"web-site-gen"},
+                    exclude_tags={"skip"},
+                    runs=1,
+                )
+
+            payload = json.loads(
+                (output_root / "evaluation_scope.json").read_text(encoding="utf-8")
+            )
+
+        self.assertEqual(payload["schema_version"], 1)
+        self.assertEqual(payload["categories"], ["07_Website_Generation"])
+        self.assertEqual(payload["include_tags"], ["web-site-gen"])
+        self.assertEqual(payload["planned_task_count"], 2)
+        self.assertEqual(
+            {(item["category"], item["task_id"]) for item in payload["planned_tasks"]},
+            {
+                ("07_Website_Generation", "task_official"),
+                ("07_Website_Generation", "task_extension"),
+            },
+        )
+        self.assertEqual(
+            {item["source"] for item in payload["planned_tasks"]},
+            {"official", "extension"},
         )
 
 

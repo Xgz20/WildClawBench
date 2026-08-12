@@ -662,6 +662,89 @@ class AnalysisPipelineTest(unittest.TestCase):
             [item for item in audit["findings"] if item["severity"] == "error"]
         )
 
+    def test_expected_tasks_prefers_structured_evaluation_scope(self) -> None:
+        expected = {
+            ("01_suite", "task_1"),
+            ("07_Website_Generation", "task_web_1"),
+            ("07_Website_Generation", "task_web_2"),
+        }
+        scope = {
+            "schema_version": 1,
+            "planned_tasks": [
+                {"category": "07_Website_Generation", "task_id": "task_web_1"},
+                {"category": "07_Website_Generation", "task_id": "task_web_2"},
+            ],
+        }
+
+        selected, scoped = validity_check.expected_tasks_for_unit(
+            expected, {}, "Category: 01_suite, 1 tasks", scope
+        )
+
+        self.assertTrue(scoped)
+        self.assertEqual(selected, {
+            ("07_Website_Generation", "task_web_1"),
+            ("07_Website_Generation", "task_web_2"),
+        })
+
+    def test_expected_tasks_historical_log_limits_category_before_tag_filter(self) -> None:
+        expected = {
+            ("01_suite", "task_1"),
+            ("07_Website_Generation", "task_web_1"),
+            ("07_Website_Generation", "task_web_2"),
+        }
+        metadata = {
+            ("01_suite", "task_1"): {"modality": "pure-text", "tags": {"common"}},
+            ("07_Website_Generation", "task_web_1"): {
+                "modality": "pure-text", "tags": {"web-site-gen"},
+            },
+            ("07_Website_Generation", "task_web_2"): {
+                "modality": "pure-text", "tags": {"other"},
+            },
+        }
+        run_log = (
+            "Category: 07_Website_Generation, 2 tasks (official + extension), parallelism: 1\n"
+            "Tag filter (any of ['web-site-gen']): 1/2 tasks kept in 07_Website_Generation\n"
+        )
+
+        selected, scoped = validity_check.expected_tasks_for_unit(
+            expected, metadata, run_log, None
+        )
+
+        self.assertTrue(scoped)
+        self.assertEqual(selected, {("07_Website_Generation", "task_web_1")})
+
+    def test_structured_scope_still_detects_missing_planned_task(self) -> None:
+        missing_task = self.tasks_dir / "01_suite" / "task_selected_but_missing.md"
+        missing_task.write_text(
+            "---\n"
+            "id: task_selected_but_missing\n"
+            "name: Missing selected task\n"
+            "category: 01_suite\n"
+            "difficulty: L2\n"
+            "modality: pure-text\n"
+            "timeout_seconds: 300\n"
+            "grading_type: automated\n"
+            "---\n\n## Prompt\nTest\n",
+            encoding="utf-8",
+        )
+        (self.unit_dir / "evaluation_scope.json").write_text(json.dumps({
+            "schema_version": 1,
+            "planned_task_count": 2,
+            "planned_tasks": [
+                {"category": "01_suite", "task_id": "task_50"},
+                {"category": "01_suite", "task_id": "task_selected_but_missing"},
+            ],
+        }), encoding="utf-8")
+
+        report = validity_check.scan_round(self.round_dir, self.tasks_dir)
+        missing = [
+            item for item in report["findings"]
+            if item["id"] == "TASK_MISSING"
+        ]
+
+        self.assertEqual(len(missing), 1)
+        self.assertEqual(missing[0]["task_id"], "task_selected_but_missing")
+
     def test_audit_detects_recomputed_cost_regression(self) -> None:
         excel_path = self.generate_comparison_excel()
         workbook = load_workbook(excel_path)

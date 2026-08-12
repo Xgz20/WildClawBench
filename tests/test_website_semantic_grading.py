@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import patch
 
 from src.utils.grading import (
     _aggregate_rubric_dimensions,
     _build_rubric_judge_prompt,
     _combine_v2,
+    _grade_llm_rubric,
+    _judge_max_tokens,
     _legacy_workspace_reader_code,
     _semantic_workspace_reader_code,
 )
@@ -136,6 +139,41 @@ class WebsiteSemanticGradingTest(unittest.TestCase):
         )
 
         self.assertEqual(dimensions, {})
+
+    def test_judge_max_tokens_defaults_to_1000(self) -> None:
+        with patch.dict("os.environ", {}, clear=False):
+            with patch.dict("os.environ", {"JUDGE_MAX_TOKENS": ""}):
+                self.assertEqual(_judge_max_tokens(), 1000)
+
+    def test_judge_max_tokens_accepts_positive_integer(self) -> None:
+        with patch.dict("os.environ", {"JUDGE_MAX_TOKENS": "2400"}):
+            self.assertEqual(_judge_max_tokens(), 2400)
+
+    def test_judge_max_tokens_invalid_values_fall_back_to_default(self) -> None:
+        for raw in ("invalid", "0", "-1", "1.5"):
+            with self.subTest(raw=raw), patch.dict(
+                "os.environ", {"JUDGE_MAX_TOKENS": raw}
+            ), self.assertLogs("src.utils.grading", level="WARNING"):
+                self.assertEqual(_judge_max_tokens(), 1000)
+
+    def test_v2_rubric_judge_request_uses_configured_max_tokens(self) -> None:
+        captured = {}
+
+        def fake_exec(_task_id, runner_code, _transcript_path):
+            captured["runner_code"] = runner_code
+            return {"scores": {"hero_content": 1.0}, "notes": "ok"}, ""
+
+        with patch.dict("os.environ", {"JUDGE_MAX_TOKENS": "2400"}), patch(
+            "src.utils.grading._exec_container_python", side_effect=fake_exec
+        ):
+            _grade_llm_rubric(
+                "task",
+                "rubric",
+                [{"key": "hero_content", "weight": 1.0}],
+                "/tmp/chat.jsonl",
+            )
+
+        self.assertIn("max_tokens=2400", captured["runner_code"])
 
 
 if __name__ == "__main__":

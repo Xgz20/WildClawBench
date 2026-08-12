@@ -86,6 +86,7 @@ ALL_CATEGORIES = [
     "04_Search_Retrieval",
     "05_Creative_Synthesis",
     "06_Safety_Alignment",
+    "07_Website_Generation",
 ]
 
 
@@ -114,6 +115,67 @@ def _log_pending_task_counts(tasks: list[dict]) -> None:
         official_count,
         extension_count,
     )
+
+
+def _task_scope_entry(task: dict) -> dict[str, str]:
+    path = Path(str(task.get("file_path") or ""))
+    source = "official"
+    category = str(task.get("category") or "").strip()
+    try:
+        relative = path.resolve().relative_to(TASKS_DIR.resolve())
+        if relative.parts and relative.parts[0] == "extension":
+            source = "extension"
+            if len(relative.parts) > 1:
+                category = relative.parts[1]
+        elif relative.parts:
+            category = relative.parts[0]
+    except ValueError:
+        pass
+    return {
+        "category": category,
+        "task_id": str(task.get("task_id") or path.stem),
+        "source": source,
+    }
+
+
+def _write_evaluation_scope(
+    output_root: Path,
+    tasks: list[dict],
+    *,
+    mode: str,
+    categories: list[str],
+    modality: str | None,
+    include_tags: set[str],
+    exclude_tags: set[str],
+    runs: int,
+) -> Path:
+    planned_tasks = sorted(
+        (_task_scope_entry(task) for task in tasks),
+        key=lambda item: (item["category"], item["task_id"]),
+    )
+    payload = {
+        "schema_version": 1,
+        "mode": mode,
+        "categories": sorted(set(categories)),
+        "modality": modality or "",
+        "include_tags": sorted(include_tags),
+        "exclude_tags": sorted(exclude_tags),
+        "runs": runs,
+        "planned_task_count": len(planned_tasks),
+        "planned_tasks": planned_tasks,
+    }
+    output_root.mkdir(parents=True, exist_ok=True)
+    path = output_root / "evaluation_scope.json"
+    temporary_path = output_root / f".{path.name}.{uuid.uuid4().hex}.tmp"
+    try:
+        temporary_path.write_text(
+            json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        os.replace(temporary_path, path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+    logger.info("Evaluation scope written: %s (%d planned tasks)", path, len(planned_tasks))
+    return path
 
 
 def grade_the_task(
@@ -613,6 +675,16 @@ def main() -> None:
             sys.exit(1)
         task = parse_task_md(task_file)
         logger.info("Single task mode: %s", task["task_id"])
+        _write_evaluation_scope(
+            output_root,
+            [task],
+            mode="task",
+            categories=[str(task.get("category") or "")],
+            modality=args.modality,
+            include_tags={t.strip().lower() for t in (args.tags or []) if t.strip()},
+            exclude_tags={t.strip().lower() for t in (args.exclude_tags or []) if t.strip()},
+            runs=args.runs,
+        )
         if args.resume or args.rerun_error or args.rerun_anomalous:
             prior = _load_resume_result(
                 output_root, task, args.model, args.rerun_error, args.rerun_anomalous
@@ -647,6 +719,7 @@ def main() -> None:
     safe_model_name = re.sub(r'[^a-zA-Z0-9.\-_]', '_', args.model)
     resume_enabled = args.resume or args.rerun_error or args.rerun_anomalous
     selected_categories: list[tuple[str, list[dict], list[dict]]] = []
+    planned_tasks: list[dict] = []
 
     for category in categories:
         # Scan both official tasks/<category>/ and extension tasks/extension/<category>/
@@ -700,6 +773,8 @@ def main() -> None:
         if not tasks:
             continue
 
+        planned_tasks.extend(tasks)
+
         resumed_results: list[dict] = []
         if resume_enabled:
             pending = []
@@ -716,6 +791,17 @@ def main() -> None:
             tasks = pending
 
         selected_categories.append((category, tasks, resumed_results))
+
+    _write_evaluation_scope(
+        output_root,
+        planned_tasks,
+        mode="category",
+        categories=categories,
+        modality=args.modality,
+        include_tags={t.strip().lower() for t in (args.tags or []) if t.strip()},
+        exclude_tags={t.strip().lower() for t in (args.exclude_tags or []) if t.strip()},
+        runs=args.runs,
+    )
 
     pending_tasks = [
         task

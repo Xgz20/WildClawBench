@@ -222,6 +222,45 @@ class AnomalyDetectionTest(unittest.TestCase):
         finally:
             temp_dir.cleanup()
 
+    def test_nested_judge_failure_note_is_framework_failure(self) -> None:
+        for notes in (
+            "judge failed: judge returned no valid JSON",
+            "judge_call_failed: upstream response timed out",
+        ):
+            with self.subTest(notes=notes):
+                temp_dir, run_dir = self.make_run()
+                try:
+                    self.write_json(run_dir / "score.json", {
+                        "overall_score": 0.0,
+                        "_grading": {"llm_notes": notes},
+                    })
+
+                    report = scan_run_dir(run_dir)
+                    item = self.item(report, "GRADING_SCRIPT_ERROR")
+
+                    self.assertIsNotNone(item)
+                    self.assertEqual(item["validity_impact"], "fail")
+                    self.assertEqual(
+                        item["evidence"][0]["field"], "_grading.llm_notes"
+                    )
+                finally:
+                    temp_dir.cleanup()
+
+    def test_normal_nested_judge_note_is_not_an_anomaly(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            self.write_json(run_dir / "score.json", {
+                "overall_score": 1.0,
+                "_grading": {"llm_notes": "All rubric criteria are satisfied."},
+            })
+
+            report = scan_run_dir(run_dir)
+
+            self.assertIsNone(self.item(report, "GRADING_SCRIPT_ERROR"))
+            self.assertEqual(report["validity_verdict"], "PASS")
+        finally:
+            temp_dir.cleanup()
+
     def test_legacy_harness_exit_prefix_is_capability_outcome(self) -> None:
         temp_dir, run_dir = self.make_run()
         try:

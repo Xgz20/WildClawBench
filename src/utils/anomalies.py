@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 SCHEMA_VERSION = 2
-RULESET_VERSION = "2026-07-30.1"
+RULESET_VERSION = "2026-08-12.1"
 
 ERROR = "error"
 WARNING = "warning"
@@ -28,6 +28,12 @@ _CONTENT_POLICY_RE = re.compile(
 )
 _GRADING_TIMEOUT_RE = re.compile(
     r"\btimed out after\s+\d+(?:\.\d+)?\s+seconds?\b", re.I
+)
+_JUDGE_OUTPUT_ERROR_RE = re.compile(
+    r"judge failed:|judge_call_failed:|judge returned no valid json|"
+    r"json parse failed|no valid json in (?:stdout|response)|"
+    r"judge (?:output|response) (?:was )?truncated",
+    re.I,
 )
 _HTTP_STATUS_RE = re.compile(r"(?<!\d)([45]\d\d)(?!\d)")
 _ENVIRONMENT_ERROR_RE = re.compile(
@@ -774,13 +780,27 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
             evidence=[{"file": "score.json", "state": "missing_or_invalid"}],
         ))
     else:
-        grading_error_field = "error" if score.get("error") else "llm_error"
-        grading_error = str(
-            score.get("error") or score.get("llm_error") or ""
-        )
+        grading_error_field = ""
+        grading_error = ""
+        if score.get("error"):
+            grading_error_field = "error"
+            grading_error = str(score["error"])
+        elif score.get("llm_error"):
+            grading_error_field = "llm_error"
+            grading_error = str(score["llm_error"])
+        else:
+            grading_metadata = score.get("_grading")
+            judge_notes = (
+                grading_metadata.get("llm_notes")
+                if isinstance(grading_metadata, dict)
+                else ""
+            )
+            if isinstance(judge_notes, str) and _JUDGE_OUTPUT_ERROR_RE.search(judge_notes):
+                grading_error_field = "_grading.llm_notes"
+                grading_error = judge_notes
         grading_timed_out = bool(_GRADING_TIMEOUT_RE.search(grading_error))
         if not pre_grading_failure and (
-            (grading_error_field == "llm_error" and bool(grading_error))
+            grading_error_field in {"llm_error", "_grading.llm_notes"}
             or grading_timed_out
             or "Grading failed" in grading_error
             or "Traceback" in grading_error
