@@ -1,15 +1,17 @@
+---
 id: 07_Website_Generation_task_001_daymark_product_website
 name: 昼航 Daymark 产品官网
 category: 07_Website_Generation
-sub_scene: 自然语言页面构建
+sub_category: 自然语言页面构建
 task_type: 企业／产品官网
 timeout_seconds: 900
 modality: pure-text
 difficulty: L1
 grading_type: llm_judge
 tags:
-
-- custom
+  - custom
+  - web-site-gen
+---
 
 # 昼航 Daymark 产品官网
 
@@ -175,7 +177,7 @@ Score 0.0: 不符合预设状态、操作要求或期望结果。
 
 ## Workspace Path
 
-workspace/07_Website_Generation/task_001_daymark_product_website
+workspace/extension/07_Website_Generation/task_001_daymark_product_website
 
 ## Skills
 

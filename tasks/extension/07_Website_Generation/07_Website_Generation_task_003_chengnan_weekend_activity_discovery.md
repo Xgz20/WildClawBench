@@ -1,15 +1,17 @@
+---
 id: 07_Website_Generation_task_003_chengnan_weekend_activity_discovery
 name: 城南周末活动发现页
 category: 07_Website_Generation
-sub_scene: 自然语言页面构建
+sub_category: 自然语言页面构建
 task_type: 生活服务／活动发现
 timeout_seconds: 900
 modality: pure-text
 difficulty: L1
 grading_type: llm_judge
 tags:
-
-- custom
+  - custom
+  - web-site-gen
+---
 
 # 城南周末活动发现页
 
@@ -175,7 +177,7 @@ Score 0.0: 不符合预设状态、操作要求或期望结果。
 
 ## Workspace Path
 
-workspace/07_Website_Generation/task_003_chengnan_weekend_activity_discovery
+workspace/extension/07_Website_Generation/task_003_chengnan_weekend_activity_discovery
 
 ## Skills
 
