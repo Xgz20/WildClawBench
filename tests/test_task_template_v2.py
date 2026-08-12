@@ -21,6 +21,17 @@ class TaskTemplateV2Test(unittest.TestCase):
 
         self.assertIn("禁止填写 `无`、`N/A`、说明文字、注释或空代码块", content)
 
+    def test_grouped_rubric_dimensions_are_documented_as_optional_stable_keys(self) -> None:
+        content = TEMPLATE.read_text(encoding="utf-8")
+
+        self.assertIn("`primary`、`secondary`", content)
+        self.assertIn(
+            "(key: stable_key, primary: primary_key, secondary: secondary_key, weight: 0.X)",
+            content,
+        )
+        self.assertIn("专项指标协议由 frontmatter `tags` 显式选择", content)
+        self.assertIn("不会根据 `primary` 名称自动推断", content)
+
 
 if __name__ == "__main__":
     unittest.main()

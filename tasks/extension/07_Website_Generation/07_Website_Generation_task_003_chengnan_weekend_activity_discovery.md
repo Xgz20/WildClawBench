@@ -53,7 +53,7 @@ Agent 应该从空目录生成完整前端项目，安装、构建、启动流�
 - `Score 1.0` 表示符合预设状态、操作要求，且结果与期望结果一致。
 - `Score 0.0` 表示任一部分不符合。
 
-### Criterion 1: 顶部导航与首屏内容 (Primary label: Content and Structure, Secondary label: Basic Content, weight: 0.1)
+### Criterion 1: 顶部导航与首屏内容 (key: header_hero_content, primary: content_structure, secondary: basic_content, weight: 0.1)
 
 预设状态：首页已在 1440×900 视口打开。
 
@@ -65,7 +65,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 本周活动列表与订阅区域 (Primary label: Content and Structure, Secondary label: List and Tables, weight: 0.1)
+### Criterion 2: 本周活动列表与订阅区域 (key: activity_list_subscription, primary: content_structure, secondary: lists_tables, weight: 0.1)
 
 预设状态：首页已打开，活动分类处于默认的“全部”状态。
 
@@ -77,7 +77,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 分类筛选 (Primary label: Interaction and Function, Secondary label: Filtering and Sorting, weight: 0.1)
+### Criterion 3: 分类筛选 (key: category_filter, primary: interaction_function, secondary: filtering_sorting, weight: 0.1)
 
 预设状态：本周活动区域默认选中“全部”，六项活动均可见。
 
@@ -89,7 +89,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 活动详情对话框 (Primary label: Interaction and Function, Secondary label: Popup and Overlay, weight: 0.1)
+### Criterion 4: 活动详情对话框 (key: activity_detail_dialog, primary: interaction_function, secondary: popup_overlay, weight: 0.1)
 
 预设状态：“天台落日音乐会”活动卡片可见，详情对话框未打开。
 
@@ -101,7 +101,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 收藏数量联动 (Primary label: Interaction and Function, Secondary label: Cross-region Linkage, weight: 0.1)
+### Criterion 5: 收藏数量联动 (key: favorite_count_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.1)
 
 预设状态：页面没有已收藏活动，顶部显示“已收藏 0 项”。
 
@@ -113,7 +113,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 订阅邮箱校验 (Primary label: Interaction and Function, Secondary label: Form Filling and Validation, weight: 0.1)
+### Criterion 6: 订阅邮箱校验 (key: subscription_email_validation, primary: interaction_function, secondary: form_validation, weight: 0.1)
 
 预设状态：订阅区域的邮箱输入框为空。
 
@@ -125,7 +125,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 订阅成功反馈 (Primary label: Interaction and Function, Secondary label: Form Filling and Validation, weight: 0.1)
+### Criterion 7: 订阅成功反馈 (key: subscription_success_feedback, primary: interaction_function, secondary: form_validation, weight: 0.1)
 
 预设状态：订阅区域可见。
 
@@ -137,7 +137,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 配色与主标题 (Primary label: Visual and Layout, Secondary label: Visual Style, weight: 0.1)
+### Criterion 8: 配色与主标题 (key: color_main_heading, primary: visual_layout, secondary: visual_style, weight: 0.1)
 
 预设状态：首页已在 1440×900 视口打开。
 
@@ -149,7 +149,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 桌面布局与页面边界 (Primary label: Visual and Layout, Secondary label: Page Layout, weight: 0.1)
+### Criterion 9: 桌面布局与页面边界 (key: desktop_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.1)
 
 预设状态：首页已在 1440×900 视口打开。
 
@@ -161,7 +161,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 卡片与对话框样式 (Primary label: Visual and Layout, Secondary label: Component Style, weight: 0.1)
+### Criterion 10: 卡片与对话框样式 (key: card_dialog_style, primary: visual_layout, secondary: component_style, weight: 0.1)
 
 预设状态：首页活动列表处于“全部”状态。
 

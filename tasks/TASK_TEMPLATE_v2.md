@@ -114,6 +114,11 @@ def grade(transcript: list, workspace_path: str) -> dict:
 - 本段**纯声明式 Markdown**，无 Python 代码；judge 调用由框架统一负责。
 - 每个 criterion **必须显式声明 `key` 和 `weight`**（标题格式：`### Criterion N: 名称 (key: stable_key, weight: 0.X)`）。
 - `key` 任务内唯一（kebab-case 或 snake_case），供能力映射与 breakdown 稳定引用。
+- 需要按一级、二级指标聚合时，可增加稳定英文键 `primary`、`secondary`，标题格式为
+  `### Criterion N: 名称 (key: stable_key, primary: primary_key, secondary: secondary_key, weight: 0.X)`；
+  不需要分组的现有任务继续使用 `key + weight` 即可。
+- 专项指标协议由 frontmatter `tags` 显式选择（例如网站生成使用 `web-site-gen`）；框架不会根据 `primary` 名称自动推断任务场景。
+  新增 PPT、图片生成等专项协议时，需要先在框架中注册对应 tag 和维度契约。
 - `weight` 在 rubric 内归一（如 3 个 criterion 权重 0.5/0.3/0.2，相加为 1.0），
   rubric 段整体权重由 frontmatter `grading_weights.llm_judge` 决定。
 - 每个 criterion 提供**离散档位**（推荐 1.0 / 0.75 / 0.5 / 0.25 / 0.0，或 1.0 / 0.5 / 0.0），

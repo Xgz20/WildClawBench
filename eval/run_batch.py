@@ -156,6 +156,7 @@ def grade_the_task(
                 llm_judge_rubric=task.get("llm_judge_rubric", ""),
                 rubric_criteria=task.get("rubric_criteria") or [],
                 grading_weights=task.get("grading_weights") or {},
+                metric_profile=task.get("metric_profile", ""),
             )
             result["scores"] = scores
             print(format_scores(task_id, scores))

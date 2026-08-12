@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 TMP_WORKSPACE = os.environ.get("TMP_WORKSPACE", "/tmp_workspace")
 DEFAULT_GRADING_TIMEOUT_SECONDS = 600.0
+WEBSITE_METRIC_PROFILE = "web-site-gen"
 
 
 def _grading_timeout_seconds() -> float:
@@ -80,6 +81,7 @@ def run_grading(
     llm_judge_rubric: str = "",
     rubric_criteria: list[dict] | None = None,
     grading_weights: dict | None = None,
+    metric_profile: str = "",
 ) -> dict:
     """Dispatch grading by task format.
 
@@ -102,6 +104,7 @@ def run_grading(
             llm_judge_rubric=llm_judge_rubric,
             rubric_criteria=rubric_criteria,
             grading_weights=grading_weights or {},
+            metric_profile=metric_profile,
         )
     return _run_grading_legacy(
         task_id,
@@ -416,6 +419,8 @@ def _combine_v2(
     llm_breakdown: dict,
     llm_notes: str,
     grading_weights: dict,
+    rubric_criteria: list[dict] | None = None,
+    metric_profile: str = "",
 ) -> dict:
     """Weight-combine rule and LLM sub-scores into a v2 score.json dict.
 
@@ -449,8 +454,121 @@ def _combine_v2(
     }
     if llm_notes:
         scores["_grading"]["llm_notes"] = llm_notes
+    dimensions = _aggregate_rubric_dimensions(
+        rubric_criteria or [], llm_breakdown, metric_profile=metric_profile
+    )
+    if dimensions:
+        scores["_dimensions"] = dimensions
     scores["overall_score"] = round(max(0.0, min(1.0, overall)), 4)
     return scores
+
+
+def _aggregate_rubric_dimensions(
+    rubric_criteria: list[dict], llm_breakdown: dict, *, metric_profile: str = "",
+) -> dict:
+    """Aggregate canonical criterion scores within primary/secondary groups."""
+    if metric_profile != WEBSITE_METRIC_PROFILE:
+        return {}
+    groups: dict[str, dict[str, dict]] = {"primary": {}, "secondary": {}}
+    for criterion in rubric_criteria:
+        key = criterion.get("key", "")
+        score = llm_breakdown.get(key)
+        weight = criterion.get("weight")
+        if not isinstance(score, (int, float)) or not isinstance(weight, (int, float)):
+            continue
+        primary = str(criterion.get("primary", "")).strip()
+        secondary = str(criterion.get("secondary", "")).strip()
+        for level, dimension in (("primary", primary), ("secondary", secondary)):
+            if not dimension:
+                continue
+            entry = groups[level].setdefault(
+                dimension,
+                {"weighted_score": 0.0, "weight": 0.0, "criterion_count": 0},
+            )
+            entry["weighted_score"] += float(score) * float(weight)
+            entry["weight"] += float(weight)
+            entry["criterion_count"] += 1
+            if level == "secondary" and primary:
+                entry.setdefault("primary", primary)
+
+    result: dict = {
+        "metric_profile": metric_profile,
+        "evidence_mode": "source_semantic",
+        "primary": {},
+        "secondary": {},
+    }
+    for level, dimensions in groups.items():
+        for key, raw in dimensions.items():
+            weight = raw["weight"]
+            item = {
+                "score": round(raw["weighted_score"] / weight, 5) if weight > 0 else 0.0,
+                "weight": round(weight, 5),
+                "criterion_count": raw["criterion_count"],
+            }
+            if level == "secondary" and raw.get("primary"):
+                item["primary"] = raw["primary"]
+            result[level][key] = item
+    return result
+
+
+def _semantic_workspace_reader_code(workspace_path: str) -> str:
+    """Build in-container source collection code for semantic website review."""
+    return (
+        "_ws = Path(%s)\n"
+        "_files = []\n"
+        "_max_source_chars = 80000\n"
+        "_total_source_chars = 0\n"
+        "_exts = ('.md','.txt','.json','.csv','.py','.yaml','.yml','.html',"
+        "'.css','.js','.jsx','.ts','.tsx','.vue','.svelte')\n"
+        "_excluded_dirs = {'node_modules','dist','build','coverage','.git','.next','.nuxt'}\n"
+        "_excluded_files = {'package-lock.json','pnpm-lock.yaml','yarn.lock','bun.lockb'}\n"
+        "if _ws.is_dir():\n"
+        "    for _p in sorted(_ws.rglob('*')):\n"
+        "        _rel = _p.relative_to(_ws)\n"
+        "        if any(_part in _excluded_dirs for _part in _rel.parts):\n"
+        "            continue\n"
+        "        if _p.name in _excluded_files:\n"
+        "            continue\n"
+        "        if not (_p.is_file() and _p.suffix.lower() in _exts):\n"
+        "            continue\n"
+        "        if 'gt' in _rel.parts:\n"
+        "            continue\n"
+        "        try:\n"
+        "            _remaining = _max_source_chars - _total_source_chars\n"
+        "            if _remaining <= 0:\n"
+        "                break\n"
+        "            _c = _p.read_text(encoding='utf-8', errors='ignore')[:min(12000, _remaining)]\n"
+        "        except Exception:\n"
+        "            continue\n"
+        "        _files.append('### ' + str(_rel) + '\\n' + _c)\n"
+        "        _total_source_chars += len(_c)\n"
+        "        if len(_files) >= 24:\n"
+        "            break\n"
+        "_ws_text = '\\n\\n'.join(_files)\n"
+    ) % json.dumps(workspace_path)
+
+
+def _legacy_workspace_reader_code(workspace_path: str) -> str:
+    """Preserve the existing v2 workspace evidence scope for non-website tasks."""
+    return (
+        "_ws = Path(%s)\n"
+        "_files = []\n"
+        "_exts = ('.md','.txt','.json','.csv','.py','.yaml','.yml','.html')\n"
+        "if _ws.is_dir():\n"
+        "    for _p in sorted(_ws.rglob('*')):\n"
+        "        if not (_p.is_file() and _p.suffix.lower() in _exts):\n"
+        "            continue\n"
+        "        if 'gt' in _p.relative_to(_ws).parts:\n"
+        "            continue\n"
+        "        try:\n"
+        "            _c = _p.read_text(encoding='utf-8', errors='ignore')[:8000]\n"
+        "        except Exception:\n"
+        "            continue\n"
+        "        _files.append('### ' + str(_p.relative_to(_ws)) + '\\n' + _c)\n"
+        "        if len(_files) >= 12:\n"
+        "            break\n"
+        "_ws_text = '\\n\\n'.join(_files)\n"
+    ) % json.dumps(workspace_path)
 
 
 def _exec_container_python(
@@ -536,13 +654,26 @@ def _align_rubric_scores(
     return score, breakdown, notes
 
 
-def _build_rubric_judge_prompt(rubric_criteria: list[dict], rubric_text: str) -> str:
+def _build_rubric_judge_prompt(
+    rubric_criteria: list[dict], rubric_text: str, *, metric_profile: str = "",
+) -> str:
     """Judge prompt that forces scores under the author-defined canonical keys."""
     keys = [c["key"] for c in rubric_criteria]
     keys_json = ", ".join(f'"{k}": 0.0' for k in keys)
+    source_semantic_scope = ""
+    if metric_profile == WEBSITE_METRIC_PROFILE:
+        source_semantic_scope = (
+            " This is a source-semantic review only: the website is not started "
+            "or rendered and no browser interaction is run. For visual and "
+            "interaction criteria, score whether the submitted source provides "
+            "complete, coherent implementation evidence. Never claim that "
+            "rendering, layout, startup, clicking, persistence, or runtime behavior "
+            "was actually verified."
+        )
     return (
         "You are a strict grading assistant. Score the agent's performance "
-        "against the rubric below, using the agent transcript as evidence.\n\n"
+        "against the rubric below, using the agent transcript and workspace "
+        f"source files as evidence.{source_semantic_scope}\n\n"
         "Return ONLY a JSON object, no prose, no code fences, in EXACTLY this shape:\n"
         f'{{"scores": {{{keys_json}}}, "notes": "<brief reason>"}}\n\n'
         f"CRITICAL: the \"scores\" object MUST contain EXACTLY these keys: {keys}\n"
@@ -557,6 +688,7 @@ def _grade_llm_rubric(
     rubric_text: str,
     rubric_criteria: list[dict],
     transcript_container_path: str,
+    metric_profile: str = "",
 ) -> tuple[float, dict, str]:
     """Run the declarative LLM rubric in-container; align to canonical keys.
 
@@ -565,31 +697,17 @@ def _grade_llm_rubric(
     exact match -> positional fallback (warn) -> 0.0 + error, never silently
     dropping a criterion.
     """
-    prompt = _build_rubric_judge_prompt(rubric_criteria, rubric_text)
+    prompt = _build_rubric_judge_prompt(
+        rubric_criteria, rubric_text, metric_profile=metric_profile
+    )
     judge_model = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
 
-    # In-container judge runner: reads transcript + agent-produced text
-    # artifacts (rubrics commonly grade output files like results.md, not just
-    # the transcript), calls the judge via the OpenAI shim, prints raw JSON.
+    is_website_profile = metric_profile == WEBSITE_METRIC_PROFILE
     ws_reader = (
-        "_ws = Path(%s)\n"
-        "_files = []\n"
-        "_exts = ('.md','.txt','.json','.csv','.py','.yaml','.yml','.html')\n"
-        "if _ws.is_dir():\n"
-        "    for _p in sorted(_ws.rglob('*')):\n"
-        "        if not (_p.is_file() and _p.suffix.lower() in _exts):\n"
-        "            continue\n"
-        "        if 'gt' in _p.relative_to(_ws).parts:\n"  # skip ground-truth
-        "            continue\n"
-        "        try:\n"
-        "            _c = _p.read_text(encoding='utf-8', errors='ignore')[:8000]\n"
-        "        except Exception:\n"
-        "            continue\n"
-        "        _files.append('### ' + str(_p.relative_to(_ws)) + '\\n' + _c)\n"
-        "        if len(_files) >= 12:\n"
-        "            break\n"
-        "_ws_text = '\\n\\n'.join(_files)\n"
-    ) % json.dumps(TMP_WORKSPACE)
+        _semantic_workspace_reader_code(TMP_WORKSPACE)
+        if is_website_profile
+        else _legacy_workspace_reader_code(TMP_WORKSPACE)
+    )
 
     runner_code = (
         "import json, os, sys\n"
@@ -638,6 +756,7 @@ def _run_grading_v2(
     llm_judge_rubric: str,
     rubric_criteria: list[dict],
     grading_weights: dict,
+    metric_profile: str,
 ) -> dict:
     """v2 path: rule checks + declarative LLM rubric, weight-combined.
 
@@ -668,12 +787,14 @@ def _run_grading_v2(
     # ---- LLM rubric part ----
     llm_score, llm_breakdown, llm_notes = _grade_llm_rubric(
         task_id, llm_judge_rubric, rubric_criteria, transcript_container_path,
+        metric_profile,
     )
 
     # ---- combine ----
     scores = _combine_v2(
         auto_score if has_rules else None, auto_breakdown,
-        llm_score, llm_breakdown, llm_notes, grading_weights,
+        llm_score, llm_breakdown, llm_notes, grading_weights, rubric_criteria,
+        metric_profile,
     )
     _write_score(output_dir, task_id, scores)
     return scores

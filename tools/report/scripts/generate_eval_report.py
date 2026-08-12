@@ -259,6 +259,10 @@ class TaskRecord:
             k: v for k, v in score.items()
             if k != "overall_score" and isinstance(v, (int, float))
         }
+        raw_dimensions = score.get("_dimensions", {})
+        self.metric_dimensions = (
+            raw_dimensions if isinstance(raw_dimensions, dict) else {}
+        )
 
         # 多轮聚合：score 取 mean（单轮时 mean == 单值）
         # pass@k/pass^k 按默认阈值 0.99（满分算 pass）计算——展示层用默认即可，
@@ -1171,6 +1175,140 @@ def write_capability_sheet(wb, units: list[UnitResult], cap_map: dict,
               f"示例：{sorted(unmapped)[:5]}", file=sys.stderr)
 
 
+WEBSITE_PRIMARY_ZH = {
+    "content_structure": "内容与结构",
+    "interaction_function": "交互与功能",
+    "visual_layout": "视觉与布局",
+}
+
+WEBSITE_SECONDARY_ZH = {
+    "basic_content": "基础内容",
+    "information_organization": "信息组织",
+    "lists_tables": "列表与表格",
+    "detail_display": "详情展示",
+    "data_visualization": "数据可视化",
+    "page_navigation": "页面导航",
+    "content_switching": "内容切换",
+    "form_validation": "表单填写与校验",
+    "operation_feedback": "操作反馈",
+    "state_persistence": "状态持久化",
+    "cross_region_linkage": "跨区域联动",
+    "filtering_sorting": "筛选与排序",
+    "popup_overlay": "弹窗与浮层",
+    "search": "搜索",
+    "content_editing": "内容创建与编辑",
+    "visual_style": "视觉风格",
+    "page_layout": "页面布局",
+    "component_style": "组件样式",
+}
+
+
+def _website_dimension_unit_scores(unit, level: str) -> dict[str, tuple[float, int]]:
+    """Return task-equal website dimension averages as percentage + task count."""
+    values: dict[str, list[float]] = {}
+    for task in unit.tasks:
+        dimensions = getattr(task, "metric_dimensions", {})
+        if (
+            dimensions.get("metric_profile") != "web-site-gen"
+            or dimensions.get("evidence_mode") != "source_semantic"
+        ):
+            continue
+        groups = dimensions.get(level, {})
+        if not isinstance(groups, dict):
+            continue
+        for key, item in groups.items():
+            score = item.get("score") if isinstance(item, dict) else None
+            if isinstance(score, (int, float)):
+                values.setdefault(key, []).append(float(score))
+    return {
+        key: (round(sum(scores) / len(scores) * 100, 1), len(scores))
+        for key, scores in values.items()
+    }
+
+
+def write_website_metrics_sheet(wb, units: list[UnitResult]) -> bool:
+    """Write source-semantic website metrics; omit the sheet when unavailable."""
+    semantic_tasks = [
+        (unit, task)
+        for unit in units
+        for task in unit.tasks
+        if (
+            getattr(task, "metric_dimensions", {}).get("metric_profile")
+            == "web-site-gen"
+            and getattr(task, "metric_dimensions", {}).get("evidence_mode")
+            == "source_semantic"
+        )
+    ]
+    if not semantic_tasks:
+        return False
+
+    ws = wb.create_sheet("站点评测指标")
+    ws.append([
+        "一期口径：源码语义评测；仅判断提交源码中的实现证据，不代表站点启动、"
+        "浏览器渲染、动态点击或真实运行结果。跨任务统计先计算任务内维度分，再按任务等权平均。"
+    ])
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=6)
+    ws.cell(1, 1).alignment = WRAP_TOP
+    ws.cell(1, 1).fill = SECTION_FILL
+    ws.cell(1, 1).font = Font(bold=True, color="1F4E78")
+
+    for level, title, labels in (
+        ("primary", "一级维度汇总", WEBSITE_PRIMARY_ZH),
+        ("secondary", "二级维度汇总", WEBSITE_SECONDARY_ZH),
+    ):
+        dimensions = sorted({
+            key
+            for unit in units
+            for key in _website_dimension_unit_scores(unit, level)
+        }, key=lambda key: (list(labels).index(key) if key in labels else 999, key))
+        for dimension in dimensions:
+            ws.append([])
+            ws.append([f"{title}：{labels.get(dimension, dimension)}"])
+            section_row = ws.max_row
+            ws.cell(section_row, 1).fill = SECTION_FILL
+            ws.cell(section_row, 1).font = Font(bold=True, color="1F4E78")
+            ws.append(["模型@Harness", "平均分", "任务数"])
+            style_header_row_at(ws, ws.max_row)
+            for unit in units:
+                result = _website_dimension_unit_scores(unit, level).get(dimension)
+                if result is None:
+                    continue
+                score, count = result
+                ws.append([unit.unit_display, score, count])
+                apply_pct_format(ws, ws.max_row, [2])
+
+    ws.append([])
+    ws.append(["逐任务维度明细"])
+    ws.cell(ws.max_row, 1).fill = SECTION_FILL
+    ws.cell(ws.max_row, 1).font = Font(bold=True, color="1F4E78")
+    ws.append([
+        "模型@Harness", "任务ID", "层级", "维度", "维度得分", "任务内权重",
+        "Criterion 数",
+    ])
+    style_header_row_at(ws, ws.max_row)
+    for unit, task in semantic_tasks:
+        dimensions = task.metric_dimensions
+        for level, labels in (
+            ("primary", WEBSITE_PRIMARY_ZH),
+            ("secondary", WEBSITE_SECONDARY_ZH),
+        ):
+            for key, item in dimensions.get(level, {}).items():
+                ws.append([
+                    unit.unit_display,
+                    task.task_id,
+                    "一级" if level == "primary" else "二级",
+                    labels.get(key, key),
+                    round(float(item.get("score", 0)) * 100, 1),
+                    round(float(item.get("weight", 0)) * 100, 2),
+                    item.get("criterion_count", 0),
+                ])
+                apply_pct_format(ws, ws.max_row, [5, 6])
+
+    set_widths(ws, {1: 30, 2: 46, 3: 10, 4: 24, 5: 14, 6: 14, 7: 14}, default=18)
+    ws.freeze_panes = "A2"
+    return True
+
+
 def write_dimension_sheet_transposed(wb, title: str, units: list[UnitResult],
                                      groups: list[tuple[str, set[str]]],
                                      target_model: str | None = None,
@@ -1206,6 +1344,7 @@ def write_dimension_sheet_transposed(wb, title: str, units: list[UnitResult],
 REPORT_SHEET_ORDER = [
     "总览",
     "分类对比",
+    "站点评测指标",
     "Agent能力对比",
     "Agent能力对比·去污染",
     "难度对比",
@@ -2212,6 +2351,7 @@ def main() -> None:
     write_matrix_sheet(wb, units)
     write_tool_compare_sheet(wb, units)
     write_case_compare_sheet(wb, units, order, task_meta, suite_zh)
+    write_website_metrics_sheet(wb, units)
     cap_map = load_capability_map(args.capability_map)
     if cap_map:
         write_capability_sheet(

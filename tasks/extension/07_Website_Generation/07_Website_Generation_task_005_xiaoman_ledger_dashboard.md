@@ -84,7 +84,7 @@ Agent 应该从空目录生成完整前端项目，安装、构建、启动流�
 - `Score 1.0` 表示符合预设状态、操作要求，且结果与期望结果一致。
 - `Score 0.0` 表示任一部分不符合。
 
-### Criterion 1: 顶部与默认状态 (Primary label: Content and Structure, Secondary label: Basic Content, weight: 0.0435)
+### Criterion 1: 顶部与默认状态 (key: header_default_state, primary: content_structure, secondary: basic_content, weight: 0.0435)
 
 预设状态：首次打开页面，浏览器本地没有保存过本题数据。
 
@@ -96,7 +96,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 8 月明细统计与列表 (Primary label: Content and Structure, Secondary label: List and Tables, weight: 0.0435)
+### Criterion 2: 8 月明细统计与列表 (key: august_summary_list, primary: content_structure, secondary: lists_tables, weight: 0.0435)
 
 预设状态：默认按月查看 2026年8月，并停留在“明细”页，没有使用搜索或筛选。
 
@@ -108,7 +108,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 切换到 7 月明细 (Primary label: Interaction and Function, Secondary label: Content Switching, weight: 0.0435)
+### Criterion 3: 切换到 7 月明细 (key: july_period_switch, primary: interaction_function, secondary: content_switching, weight: 0.0435)
 
 预设状态：页面默认按月查看 2026年8月并停留在“明细”页。
 
@@ -120,7 +120,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 切换为按周 (Primary label: Interaction and Function, Secondary label: Content Switching, weight: 0.0435)
+### Criterion 4: 切换为按周 (key: weekly_period_switch, primary: interaction_function, secondary: content_switching, weight: 0.0435)
 
 预设状态：页面处于按月查看状态。
 
@@ -132,7 +132,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 搜索名称或备注 (Primary label: Interaction and Function, Secondary label: Search, weight: 0.0435)
+### Criterion 5: 搜索名称或备注 (key: search_name_notes, primary: interaction_function, secondary: search, weight: 0.0435)
 
 预设状态：按月查看 2026年8月，停留在“明细”页且列表显示 8 月 6 条记录。
 
@@ -144,7 +144,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 类型、分类与排序筛选 (Primary label: Interaction and Function, Secondary label: Filtering and Sorting, weight: 0.0435)
+### Criterion 6: 类型、分类与排序筛选 (key: type_category_sort_filter, primary: interaction_function, secondary: filtering_sorting, weight: 0.0435)
 
 预设状态：按月查看 2026年8月，停留在“明细”页且搜索框为空。
 
@@ -156,7 +156,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 详情抽屉 (Primary label: Content and Structure, Secondary label: Detail Display, weight: 0.0435)
+### Criterion 7: 详情抽屉 (key: record_detail_drawer, primary: content_structure, secondary: detail_display, weight: 0.0435)
 
 预设状态：按月查看 2026年8月，停留在“明细”页，详情抽屉未打开。
 
@@ -168,7 +168,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 明细与分析切换 (Primary label: Interaction and Function, Secondary label: Content Switching, weight: 0.0435)
+### Criterion 8: 明细与分析切换 (key: details_analysis_switch, primary: interaction_function, secondary: content_switching, weight: 0.0435)
 
 预设状态：页面停留在“明细”页。
 
@@ -180,7 +180,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 分析页概览 (Primary label: Content and Structure, Secondary label: Data Visualization, weight: 0.0435)
+### Criterion 9: 分析页概览 (key: analysis_overview, primary: content_structure, secondary: data_visualization, weight: 0.0435)
 
 预设状态：按月查看 2026年8月，并停留在“分析”页。
 
@@ -192,7 +192,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 收入与支出环形图 (Primary label: Content and Structure, Secondary label: Data Visualization, weight: 0.0435)
+### Criterion 10: 收入与支出环形图 (key: income_expense_donuts, primary: content_structure, secondary: data_visualization, weight: 0.0435)
 
 预设状态：按月查看 2026年8月，并停留在“分析”页。
 
@@ -204,7 +204,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 默认趋势曲线 (Primary label: Content and Structure, Secondary label: Data Visualization, weight: 0.0435)
+### Criterion 11: 默认趋势曲线 (key: default_trend_chart, primary: content_structure, secondary: data_visualization, weight: 0.0435)
 
 预设状态：按月查看 2026年8月，并停留在“分析”页，趋势指标默认选中“支出”。
 
@@ -216,7 +216,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 切换趋势指标 (Primary label: Interaction and Function, Secondary label: Content Switching, weight: 0.0435)
+### Criterion 12: 切换趋势指标 (key: trend_metric_switch, primary: interaction_function, secondary: content_switching, weight: 0.0435)
 
 预设状态：按月查看 2026年8月，并停留在“分析”页。
 
@@ -228,7 +228,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 13: 按月转按周后的分析联动 (Primary label: Interaction and Function, Secondary label: Cross-region Linkage, weight: 0.0435)
+### Criterion 13: 按月转按周后的分析联动 (key: monthly_weekly_analysis_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0435)
 
 预设状态：页面停留在“分析”页，周期类型为“按月”。
 
@@ -240,7 +240,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 14: 按周趋势图 (Primary label: Content and Structure, Secondary label: Data Visualization, weight: 0.0435)
+### Criterion 14: 按周趋势图 (key: weekly_trend_chart, primary: content_structure, secondary: data_visualization, weight: 0.0435)
 
 预设状态：按周查看 2026年8月第2周，并停留在“分析”页，趋势指标为“支出”。
 
@@ -252,7 +252,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 15: 月度 Top3 排行榜 (Primary label: Content and Structure, Secondary label: List and Tables, weight: 0.0435)
+### Criterion 15: 月度 Top3 排行榜 (key: monthly_top3_ranking, primary: content_structure, secondary: lists_tables, weight: 0.0435)
 
 预设状态：按月查看 2026年8月，并停留在“分析”页。
 
@@ -264,7 +264,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 16: 周度 Top3 排行榜 (Primary label: Content and Structure, Secondary label: List and Tables, weight: 0.0435)
+### Criterion 16: 周度 Top3 排行榜 (key: weekly_top3_ranking, primary: content_structure, secondary: lists_tables, weight: 0.0435)
 
 预设状态：按周查看 2026年8月第2周，并停留在“分析”页。
 
@@ -276,7 +276,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 17: 新增记录校验 (Primary label: Interaction and Function, Secondary label: Form Filling and Validation, weight: 0.0435)
+### Criterion 17: 新增记录校验 (key: new_record_validation, primary: interaction_function, secondary: form_validation, weight: 0.0435)
 
 预设状态：页面处于初始状态，新增弹窗未打开。
 
@@ -288,7 +288,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 18: 新增有效记录 (Primary label: Interaction and Function, Secondary label: Content Creation and Editing, weight: 0.0435)
+### Criterion 18: 新增有效记录 (key: create_record, primary: interaction_function, secondary: content_editing, weight: 0.0435)
 
 预设状态：按月查看 2026年8月，页面处于十八条初始记录状态。
 
@@ -300,7 +300,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 19: 编辑记录跨周期移动 (Primary label: Interaction and Function, Secondary label: Content Creation and Editing, weight: 0.0435)
+### Criterion 19: 编辑记录跨周期移动 (key: edit_record_period_move, primary: interaction_function, secondary: content_editing, weight: 0.0435)
 
 预设状态：已经新增支出“书店购书”¥88.00。
 
@@ -312,7 +312,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 20: 删除确认与删除结果 (Primary label: Interaction and Function, Secondary label: Popup and Overlay, weight: 0.0435)
+### Criterion 20: 删除确认与删除结果 (key: delete_confirmation, primary: interaction_function, secondary: popup_overlay, weight: 0.0435)
 
 预设状态：按月查看 2026年8月，停留在“明细”页，已打开“咖啡豆”详情。
 
@@ -324,7 +324,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 21: 本地持久化与刷新恢复 (Primary label: Interaction and Function, Secondary label: State Persistence, weight: 0.0435)
+### Criterion 21: 本地持久化与刷新恢复 (key: local_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0435)
 
 预设状态：已经新增支出“书店购书”¥88.00并确认列表和统计更新。
 
@@ -336,7 +336,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 22: 页面整体布局 (Primary label: Visual and Layout, Secondary label: Page Layout, weight: 0.0435)
+### Criterion 22: 页面整体布局 (key: overall_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0435)
 
 预设状态：页面在 1440×900 视口打开，并分别查看“明细”和“分析”页。
 
@@ -348,7 +348,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 23: 组件样式与视觉统一 (Primary label: Visual and Layout, Secondary label: Component Style, weight: 0.043)
+### Criterion 23: 组件样式与视觉统一 (key: component_visual_consistency, primary: visual_layout, secondary: component_style, weight: 0.043)
 
 预设状态：页面显示初始列表，并已先后打开分析页、详情抽屉和新增弹窗。
 

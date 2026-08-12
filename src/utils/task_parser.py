@@ -10,6 +10,13 @@ import yaml
 load_dotenv()
 # Resolve task-relative paths from repository root, not src/.
 ROOT_DIR = Path(__file__).resolve().parents[2]
+METRIC_PROFILE_PRIMARY_DIMENSIONS = {
+    "web-site-gen": {
+        "content_structure",
+        "interaction_function",
+        "visual_layout",
+    },
+}
 
 
 def normalize_tags(raw) -> list[str]:
@@ -34,15 +41,26 @@ def normalize_tags(raw) -> list[str]:
     return list(seen.keys())
 
 
+def resolve_metric_profile(tags: list[str]) -> str:
+    """Resolve the single specialized metric protocol selected by task tags."""
+    profiles = [tag for tag in tags if tag in METRIC_PROFILE_PRIMARY_DIMENSIONS]
+    if len(profiles) > 1:
+        raise ValueError(f"Task declares multiple metric profiles: {profiles}")
+    return profiles[0] if profiles else ""
+
+
 def parse_rubric_criteria(rubric_text: str) -> list[dict]:
     """Parse `## LLM Judge Rubric` into an ordered list of criteria.
 
-    Each criterion heading follows the v2 format:
+    Each criterion heading follows the v2 format. Website tasks may add stable
+    dimension keys while existing tasks keep the original two-field form:
         ### Criterion N: <名称> (key: <stable_key>, weight: <0.X>)
+        ### Criterion N: <名称> (key: <stable_key>, primary: <key>, secondary: <key>, weight: <0.X>)
     followed by `**Score 1.0**: ...` band descriptions.
 
     Returns a list preserving document order; each item is:
-        {"key": str, "weight": float, "name": str, "rubric": str}
+        {"key": str, "primary": str, "secondary": str,
+         "weight": float, "name": str, "rubric": str}
     `rubric` is the full band-description text belonging to that criterion,
     used verbatim in the judge prompt. Headings that don't match the format
     are skipped (so free-form rubrics degrade gracefully to an empty list,
@@ -50,25 +68,39 @@ def parse_rubric_criteria(rubric_text: str) -> list[dict]:
     """
     if not rubric_text:
         return []
-    heading_re = re.compile(
-        r"^###\s+.*?\(key:\s*([A-Za-z0-9_\-]+)\s*,\s*weight:\s*([\d.]+)\s*\)\s*$"
+    heading_re = re.compile(r"^###\s+(.*?)\s*\((.*?)\)\s*$")
+    metadata_re = re.compile(
+        r"(?:^|,)\s*(key|primary|secondary|weight)\s*:\s*([^,]+)\s*"
     )
-    # Capture the human name, stripping an optional "Criterion N:" prefix.
-    name_re = re.compile(r"^###\s+(?:Criterion\s+\d+\s*[:：]\s*)?(.*?)\s*\(key:")
+    stable_key_re = re.compile(r"^[A-Za-z0-9_\-]+$")
     criteria: list[dict] = []
     cur: Optional[dict] = None
     body: list[str] = []
     for line in rubric_text.split("\n"):
         m = heading_re.match(line.strip())
-        if m:
+        metadata = {
+            key: value.strip()
+            for key, value in metadata_re.findall(m.group(2))
+        } if m else {}
+        key = metadata.get("key", "")
+        weight = metadata.get("weight", "")
+        try:
+            parsed_weight = float(weight)
+        except ValueError:
+            parsed_weight = None
+        if m and stable_key_re.fullmatch(key) and parsed_weight is not None:
             if cur is not None:
                 cur["rubric"] = "\n".join(body).strip()
                 criteria.append(cur)
-            nm = name_re.match(line.strip())
+            name = re.sub(
+                r"^(?:Criterion\s+\d+\s*[:：]\s*)?", "", m.group(1)
+            ).strip()
             cur = {
-                "key": m.group(1),
-                "weight": float(m.group(2)),
-                "name": nm.group(1).strip() if nm else m.group(1),
+                "key": key,
+                "primary": metadata.get("primary", ""),
+                "secondary": metadata.get("secondary", ""),
+                "weight": parsed_weight,
+                "name": name,
                 "rubric": "",
             }
             body = [line]
@@ -138,6 +170,38 @@ def parse_task_md(task_file: Path) -> dict:
     llm_judge_rubric = sections.get("LLM Judge Rubric", "").strip()
     rubric_criteria = parse_rubric_criteria(llm_judge_rubric)
     grading_type = str(metadata.get("grading_type", "")).strip()
+    tags = normalize_tags(metadata.get("tags"))
+    metric_profile = resolve_metric_profile(tags)
+    if metric_profile == "web-site-gen":
+        declared_criteria = len(re.findall(
+            r"^###\s+Criterion\s+\d+\s*[:：]", llm_judge_rubric, re.MULTILINE
+        ))
+        if declared_criteria != len(rubric_criteria):
+            raise ValueError(
+                f"Website task rubric declares {declared_criteria} criteria but "
+                f"parsed {len(rubric_criteria)}: {task_file}"
+            )
+        keys = [criterion["key"] for criterion in rubric_criteria]
+        if len(keys) != len(set(keys)):
+            raise ValueError(f"Website task rubric contains duplicate keys: {task_file}")
+        if any(
+            not criterion.get("primary") or not criterion.get("secondary")
+            for criterion in rubric_criteria
+        ):
+            raise ValueError(
+                f"Website task rubric criteria require primary and secondary: {task_file}"
+            )
+        invalid_primary = sorted({
+            criterion["primary"]
+            for criterion in rubric_criteria
+            if criterion["primary"]
+            not in METRIC_PROFILE_PRIMARY_DIMENSIONS[metric_profile]
+        })
+        if invalid_primary:
+            raise ValueError(
+                f"Website task rubric contains unsupported primary dimensions "
+                f"{invalid_primary}: {task_file}"
+            )
     grading_weights = metadata.get("grading_weights") or {}
     if not isinstance(grading_weights, dict):
         grading_weights = {}
@@ -168,7 +232,8 @@ def parse_task_md(task_file: Path) -> dict:
         "file_path":        str(task_file.resolve()),
         "category":         task_file.parent.name,
         "modality":         str(metadata.get("modality", "")).strip(),
-        "tags":             normalize_tags(metadata.get("tags")),
+        "tags":             tags,
+        "metric_profile":   metric_profile,
         # v2 fields for hybrid grading separation
         "grading_type":     grading_type,
         "grading_weights":  grading_weights,

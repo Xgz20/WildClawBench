@@ -53,7 +53,7 @@ Agent 应该从空目录生成完整前端项目，安装、构建、启动流�
 - `Score 1.0` 表示符合预设状态、操作要求，且结果与期望结果一致。
 - `Score 0.0` 表示任一部分不符合。
 
-### Criterion 1: 首屏内容与效果数据 (Primary label: Content and Structure, Secondary label: Basic Content, weight: 0.1)
+### Criterion 1: 首屏内容与效果数据 (key: hero_content, primary: content_structure, secondary: basic_content, weight: 0.1)
 
 预设状态：首页已在 1440×900 视口打开。
 
@@ -65,7 +65,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 工作流、定价和 FAQ 内容完整性 (Primary label: Content and Structure, Secondary label: Information Organization, weight: 0.1)
+### Criterion 2: 工作流、定价和 FAQ 内容完整性 (key: workflow_pricing_faq, primary: content_structure, secondary: information_organization, weight: 0.1)
 
 预设状态：首页已打开。
 
@@ -77,7 +77,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 页面内导航可用性 (Primary label: Interaction and Function, Secondary label: Page Navigation, weight: 0.1)
+### Criterion 3: 页面内导航可用性 (key: in_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.1)
 
 预设状态：页面位于顶部。
 
@@ -89,7 +89,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 定价切换正确性 (Primary label: Interaction and Function, Secondary label: Content Switching, weight: 0.1)
+### Criterion 4: 定价切换正确性 (key: pricing_switch, primary: interaction_function, secondary: content_switching, weight: 0.1)
 
 预设状态：定价区默认显示按月价格。
 
@@ -101,7 +101,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: FAQ 手风琴交互 (Primary label: Interaction and Function, Secondary label: Content Switching, weight: 0.1)
+### Criterion 5: FAQ 手风琴交互 (key: faq_accordion, primary: interaction_function, secondary: content_switching, weight: 0.1)
 
 预设状态：常见问题均未展开。
 
@@ -113,7 +113,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 免费试用空表单校验 (Primary label: Interaction and Function, Secondary label: Form Filling and Validation, weight: 0.1)
+### Criterion 6: 免费试用空表单校验 (key: trial_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.1)
 
 预设状态：免费试用对话框已打开，姓名和工作邮箱为空。
 
@@ -125,7 +125,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 免费试用成功反馈与关闭 (Primary label: Interaction and Function, Secondary label: Operation Feedback, weight: 0.1)
+### Criterion 7: 免费试用成功反馈与关闭 (key: trial_success_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.1)
 
 预设状态：免费试用对话框已打开。
 
@@ -137,7 +137,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 配色与标题字体 (Primary label: Visual and Layout, Secondary label: Visual Style, weight: 0.1)
+### Criterion 8: 配色与标题字体 (key: color_typography, primary: visual_layout, secondary: visual_style, weight: 0.1)
 
 预设状态：首页已在 1440×900 视口打开。
 
@@ -149,7 +149,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 桌面首屏布局与页面边界 (Primary label: Visual and Layout, Secondary label: Page Layout, weight: 0.1)
+### Criterion 9: 桌面首屏布局与页面边界 (key: desktop_hero_layout, primary: visual_layout, secondary: page_layout, weight: 0.1)
 
 预设状态：首页已在 1440×900 视口打开。
 
@@ -161,7 +161,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 会议时间线卡片样式 (Primary label: Visual and Layout, Secondary label: Component Style, weight: 0.1)
+### Criterion 10: 会议时间线卡片样式 (key: timeline_card_style, primary: visual_layout, secondary: component_style, weight: 0.1)
 
 预设状态：首页已在 1440×900 视口打开。
 

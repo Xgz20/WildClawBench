@@ -3,7 +3,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from eval import run_batch
 
@@ -51,6 +51,25 @@ class PendingTaskCountTests(unittest.TestCase):
         self.assertIn(
             "待执行用例数: 2（开源评测集: 1，自建评测集 tasks/extension: 1）",
             "\n".join(logs.output),
+        )
+
+    def test_grade_forwards_metric_profile(self) -> None:
+        task = {
+            "automated_checks": "",
+            "rubric_criteria": [{"key": "hero", "weight": 1.0}],
+            "metric_profile": "web-site-gen",
+        }
+        grading = Mock(return_value={"overall_score": 1.0})
+
+        with patch.object(run_batch, "run_grading", grading), patch.object(
+            run_batch, "format_scores", return_value=""
+        ):
+            run_batch.grade_the_task(
+                "website", "/missing", Path("/tmp/result"), task, {}
+            )
+
+        self.assertEqual(
+            grading.call_args.kwargs["metric_profile"], "web-site-gen"
         )
 
 

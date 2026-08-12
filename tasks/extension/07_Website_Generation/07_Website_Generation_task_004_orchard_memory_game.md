@@ -51,7 +51,7 @@ Agent 应该从空目录生成完整前端项目，安装、构建、启动流�
 - `Score 1.0` 表示符合预设状态、操作要求，且结果与期望结果一致。
 - `Score 0.0` 表示任一部分不符合。
 
-### Criterion 1: 顶部与玩法说明 (Primary label: Content and Structure, Secondary label: Basic Content, weight: 0.0909)
+### Criterion 1: 顶部与玩法说明 (key: header_game_instructions, primary: content_structure, secondary: basic_content, weight: 0.0909)
 
 预设状态：首页已在 1440×900 视口打开。
 
@@ -63,7 +63,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 卡片初始状态 (Primary label: Content and Structure, Secondary label: Information Organization, weight: 0.0909)
+### Criterion 2: 卡片初始状态 (key: card_initial_state, primary: content_structure, secondary: information_organization, weight: 0.0909)
 
 预设状态：游戏处于尚未翻牌的初始状态。
 
@@ -75,7 +75,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 单张翻开反馈 (Primary label: Interaction and Function, Secondary label: Operation Feedback, weight: 0.0909)
+### Criterion 3: 单张翻开反馈 (key: single_card_flip, primary: interaction_function, secondary: operation_feedback, weight: 0.0909)
 
 预设状态：六张卡片均处于背面，统计为“尝试 0 次”“已配对 0/3”。
 
@@ -87,7 +87,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 不同卡片翻回 (Primary label: Interaction and Function, Secondary label: Operation Feedback, weight: 0.0909)
+### Criterion 4: 不同卡片翻回 (key: mismatch_flip_back, primary: interaction_function, secondary: operation_feedback, weight: 0.0909)
 
 预设状态：游戏处于初始状态。
 
@@ -99,7 +99,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 相同卡片配对 (Primary label: Interaction and Function, Secondary label: Cross-region Linkage, weight: 0.0909)
+### Criterion 5: 相同卡片配对 (key: matching_pair, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0909)
 
 预设状态：游戏处于初始状态。
 
@@ -111,7 +111,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 完成整局配对 (Primary label: Interaction and Function, Secondary label: Operation Feedback, weight: 0.0909)
+### Criterion 6: 完成整局配对 (key: game_completion, primary: interaction_function, secondary: operation_feedback, weight: 0.0909)
 
 预设状态：游戏处于初始状态。
 
@@ -123,7 +123,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 重新开始重置与随机化 (Primary label: Interaction and Function, Secondary label: Content Switching, weight: 0.0909)
+### Criterion 7: 重新开始重置与随机化 (key: restart_randomization, primary: interaction_function, secondary: content_switching, weight: 0.0909)
 
 预设状态：已通过翻牌记住本局六张水果的位置，至少完成一组配对，并记录当前统计。
 
@@ -135,7 +135,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 配色与标题层级 (Primary label: Visual and Layout, Secondary label: Visual Style, weight: 0.0909)
+### Criterion 8: 配色与标题层级 (key: color_heading_hierarchy, primary: visual_layout, secondary: visual_style, weight: 0.0909)
 
 预设状态：首页已在 1440×900 视口打开。
 
@@ -147,7 +147,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 桌面布局与页面边界 (Primary label: Visual and Layout, Secondary label: Page Layout, weight: 0.0909)
+### Criterion 9: 桌面布局与页面边界 (key: desktop_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0909)
 
 预设状态：首页已在 1440×900 视口打开。
 
@@ -159,7 +159,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 卡片与成功样式 (Primary label: Visual and Layout, Secondary label: Component Style, weight: 0.0909)
+### Criterion 10: 卡片与成功样式 (key: card_success_style, primary: visual_layout, secondary: component_style, weight: 0.0909)
 
 预设状态：游戏处于初始状态。
 
@@ -171,7 +171,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 再玩一次重开 (Primary label: Interaction and Function, Secondary label: Content Switching, weight: 0.0909)
+### Criterion 11: 再玩一次重开 (key: play_again_restart, primary: interaction_function, secondary: content_switching, weight: 0.0909)
 
 预设状态：三组水果已经全部配对，六张卡片均处于完成状态，页面显示“全部配对完成！”和“再玩一次”按钮；已记录本局六张水果的位置。
 

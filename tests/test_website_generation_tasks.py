@@ -18,22 +18,27 @@ EXPECTED_TASKS = {
     "task_001_daymark_product_website": {
         "task_type": "企业／产品官网",
         "difficulty": "L1",
+        "criterion_count": 10,
     },
     "task_002_focus_pomodoro_clock": {
         "task_type": "效率工具／番茄钟",
         "difficulty": "L1",
+        "criterion_count": 12,
     },
     "task_003_chengnan_weekend_activity_discovery": {
         "task_type": "生活服务／活动发现",
         "difficulty": "L1",
+        "criterion_count": 10,
     },
     "task_004_orchard_memory_game": {
         "task_type": "休闲娱乐／翻牌配对游戏",
         "difficulty": "L1",
+        "criterion_count": 11,
     },
     "task_005_xiaoman_ledger_dashboard": {
         "task_type": "个人财务／本地记账仪表盘",
         "difficulty": "L2",
+        "criterion_count": 23,
     },
 }
 
@@ -90,6 +95,32 @@ class WebsiteGenerationTaskContractTest(unittest.TestCase):
                 self.assertEqual(task["automated_checks"], "")
                 self.assertEqual(task["warmup"], "")
                 self.assertEqual(task["skills"], "")
+
+    def test_web_task_rubrics_expose_stable_metric_dimensions(self) -> None:
+        allowed_primary = {
+            "content_structure",
+            "interaction_function",
+            "visual_layout",
+        }
+
+        for path in sorted(TASKS_DIR.glob("*.md")):
+            task = parse_task_md(path)
+            short_id = task["task_id"].removeprefix(f"{CATEGORY}_")
+            criteria = task["rubric_criteria"]
+
+            with self.subTest(task_id=task["task_id"]):
+                self.assertEqual(
+                    len(criteria), EXPECTED_TASKS[short_id]["criterion_count"]
+                )
+                keys = [criterion["key"] for criterion in criteria]
+                self.assertEqual(len(keys), len(set(keys)))
+                self.assertTrue(
+                    all(criterion["primary"] in allowed_primary for criterion in criteria)
+                )
+                self.assertTrue(all(criterion["secondary"] for criterion in criteria))
+                self.assertAlmostEqual(
+                    sum(criterion["weight"] for criterion in criteria), 1.0, places=3
+                )
 
 
 if __name__ == "__main__":

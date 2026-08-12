@@ -1077,6 +1077,108 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertEqual(record.runs, 2)
         self.assertAlmostEqual(record.score, 0.7)
 
+    def test_task_record_reads_source_semantic_dimensions(self) -> None:
+        run_dir = self.paths["task_50"]
+        (run_dir / "score.json").write_text(json.dumps({
+            "overall_score": 0.8,
+            "_dimensions": {
+                "metric_profile": "web-site-gen",
+                "evidence_mode": "source_semantic",
+                "primary": {
+                    "content_structure": {
+                        "score": 0.8, "weight": 0.2, "criterion_count": 2,
+                    }
+                },
+                "secondary": {},
+            },
+        }), encoding="utf-8")
+
+        record = excel_report.TaskRecord("01_suite", run_dir.parent, "harness-y")
+
+        self.assertEqual(record.metric_dimensions["evidence_mode"], "source_semantic")
+        self.assertEqual(
+            record.metric_dimensions["primary"]["content_structure"]["score"], 0.8
+        )
+
+    def test_website_metrics_average_tasks_equally_and_write_semantic_scope(self) -> None:
+        task_many_criteria = SimpleNamespace(
+            task_id="website_many",
+            metric_dimensions={
+                "metric_profile": "web-site-gen",
+                "evidence_mode": "source_semantic",
+                "primary": {
+                    "content_structure": {
+                        "score": 1.0, "weight": 0.8, "criterion_count": 8,
+                    }
+                },
+                "secondary": {
+                    "basic_content": {
+                        "score": 1.0, "weight": 0.8, "criterion_count": 8,
+                        "primary": "content_structure",
+                    }
+                },
+            },
+        )
+        task_one_criterion = SimpleNamespace(
+            task_id="website_one",
+            metric_dimensions={
+                "metric_profile": "web-site-gen",
+                "evidence_mode": "source_semantic",
+                "primary": {
+                    "content_structure": {
+                        "score": 0.0, "weight": 0.2, "criterion_count": 1,
+                    }
+                },
+                "secondary": {
+                    "basic_content": {
+                        "score": 0.0, "weight": 0.2, "criterion_count": 1,
+                        "primary": "content_structure",
+                    }
+                },
+            },
+        )
+        unit = SimpleNamespace(
+            unit="model@harness",
+            unit_display="Model@Harness",
+            tasks=[task_many_criteria, task_one_criterion],
+        )
+
+        scores = excel_report._website_dimension_unit_scores(unit, "primary")
+        self.assertEqual(scores["content_structure"], (50.0, 2))
+
+        workbook = Workbook()
+        workbook.remove(workbook.active)
+        self.assertTrue(excel_report.write_website_metrics_sheet(workbook, [unit]))
+        sheet = workbook["站点评测指标"]
+        self.assertIn("源码语义评测", sheet[1][0].value)
+        self.assertIn("不代表站点启动", sheet[1][0].value)
+        rows = [row[:3] for row in sheet.iter_rows(values_only=True)]
+        self.assertIn(("Model@Harness", 50.0, 2), rows)
+
+        empty_workbook = Workbook()
+        self.assertFalse(excel_report.write_website_metrics_sheet(
+            empty_workbook,
+            [SimpleNamespace(unit="plain", unit_display="Plain", tasks=[])],
+        ))
+        self.assertNotIn("站点评测指标", empty_workbook.sheetnames)
+
+        untyped_workbook = Workbook()
+        self.assertFalse(excel_report.write_website_metrics_sheet(
+            untyped_workbook,
+            [SimpleNamespace(
+                unit="untyped",
+                unit_display="Untyped",
+                tasks=[SimpleNamespace(
+                    task_id="same_dimension_names",
+                    metric_dimensions={
+                        "evidence_mode": "source_semantic",
+                        "primary": {"content_structure": {"score": 1.0}},
+                    },
+                )],
+            )],
+        ))
+        self.assertNotIn("站点评测指标", untyped_workbook.sheetnames)
+
     def test_audit_detects_request_count_regression(self) -> None:
         excel_path = self.generate_auditable_excel()
         workbook = load_workbook(excel_path)

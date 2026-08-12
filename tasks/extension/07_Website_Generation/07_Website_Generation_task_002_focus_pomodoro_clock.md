@@ -51,7 +51,7 @@ Agent 应该从空目录生成完整前端项目，安装、构建、启动流�
 - `Score 1.0` 表示符合预设状态、操作要求，且结果与期望结果一致。
 - `Score 0.0` 表示任一部分不符合。
 
-### Criterion 1: 页面顶部与今日概览 (Primary label: Content and Structure, Secondary label: Basic Content, weight: 0.0833)
+### Criterion 1: 页面顶部与今日概览 (key: header_daily_overview, primary: content_structure, secondary: basic_content, weight: 0.0833)
 
 预设状态：首页已在 1440×900 视口打开，且没有历史任务数据。
 
@@ -63,7 +63,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 今日任务与专注建议 (Primary label: Content and Structure, Secondary label: Information Organization, weight: 0.0833)
+### Criterion 2: 今日任务与专注建议 (key: tasks_focus_tips, primary: content_structure, secondary: information_organization, weight: 0.0833)
 
 预设状态：首页已打开，且没有历史任务数据。
 
@@ -75,7 +75,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 模式切换 (Primary label: Interaction and Function, Secondary label: Content Switching, weight: 0.0833)
+### Criterion 3: 模式切换 (key: timer_mode_switch, primary: interaction_function, secondary: content_switching, weight: 0.0833)
 
 预设状态：番茄钟处于默认专注模式且未开始计时。
 
@@ -87,7 +87,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 开始、暂停、继续与重置 (Primary label: Interaction and Function, Secondary label: Operation Feedback, weight: 0.0833)
+### Criterion 4: 开始、暂停、继续与重置 (key: timer_controls, primary: interaction_function, secondary: operation_feedback, weight: 0.0833)
 
 预设状态：番茄钟处于 25:00 的专注模式且未开始计时。
 
@@ -99,7 +99,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 今日专注累计与持久化 (Primary label: Interaction and Function, Secondary label: State Persistence, weight: 0.0833)
+### Criterion 5: 今日专注累计与持久化 (key: focus_total_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0833)
 
 预设状态：首页处于默认专注模式，顶部显示“今日专注 0 分钟”。
 
@@ -111,7 +111,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 任务添加与空名称校验 (Primary label: Interaction and Function, Secondary label: Form Filling and Validation, weight: 0.0833)
+### Criterion 6: 任务添加与空名称校验 (key: task_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0833)
 
 预设状态：今日任务列表为空，任务名称也为空。
 
@@ -123,7 +123,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 任务完成联动 (Primary label: Interaction and Function, Secondary label: Cross-region Linkage, weight: 0.0833)
+### Criterion 7: 任务完成联动 (key: task_completion_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0833)
 
 预设状态：今日任务中存在一项未完成的“整理周会结论”，顶部显示“完成任务 0 项”。
 
@@ -135,7 +135,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 任务与完成状态持久化 (Primary label: Interaction and Function, Secondary label: State Persistence, weight: 0.0833)
+### Criterion 8: 任务与完成状态持久化 (key: task_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0833)
 
 预设状态：“整理周会结论”已经添加并标记为完成。
 
@@ -147,7 +147,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 倒计时结束反馈 (Primary label: Interaction and Function, Secondary label: Operation Feedback, weight: 0.0833)
+### Criterion 9: 倒计时结束反馈 (key: timer_completion_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.0833)
 
 预设状态：首页处于 25:00 的默认专注模式。
 
@@ -159,7 +159,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 配色与标题字体 (Primary label: Visual and Layout, Secondary label: Visual Style, weight: 0.0833)
+### Criterion 10: 配色与标题字体 (key: color_typography, primary: visual_layout, secondary: visual_style, weight: 0.0833)
 
 预设状态：首页已在 1440×900 视口打开。
 
@@ -171,7 +171,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 桌面双栏布局 (Primary label: Visual and Layout, Secondary label: Page Layout, weight: 0.0833)
+### Criterion 11: 桌面双栏布局 (key: desktop_two_column_layout, primary: visual_layout, secondary: page_layout, weight: 0.0833)
 
 预设状态：首页已在 1440×900 视口打开。
 
@@ -183,7 +183,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 计时环和卡片样式 (Primary label: Visual and Layout, Secondary label: Component Style, weight: 0.0833)
+### Criterion 12: 计时环和卡片样式 (key: timer_card_style, primary: visual_layout, secondary: component_style, weight: 0.0833)
 
 预设状态：首页已在 1440×900 视口打开。
 
