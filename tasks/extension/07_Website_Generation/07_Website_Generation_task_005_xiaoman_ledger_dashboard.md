@@ -76,8 +76,6 @@ Agent 应该从空目录生成完整前端项目，安装、构建、启动流�
 
 ## Automated Checks
 
-无。本题为 `llm_judge` 类型，不使用规则评分函数。
-
 ## LLM Judge Rubric
 
 说明：
@@ -368,13 +366,8 @@ workspace/extension/07_Website_Generation/task_005_xiaoman_ledger_dashboard
 
 ## Skills
 
-frontend_development
-web_ui_implementation
-
 ## Env
 
 无
 
 ## Warmup
-
-无

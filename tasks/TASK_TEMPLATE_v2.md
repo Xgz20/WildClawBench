@@ -58,6 +58,12 @@ Agent 应该：
 - **聚合准确性**：是否正确处理同产品多条记录的汇总
 - **鲁棒性**：是否处理了 CSV 脏数据（缺失值、异常格式）
 
+> **可选执行章节填写规则**
+> - `## Automated Checks` 不涉及时必须保留标题并将正文置空；仅 `automated`、`hybrid` 任务填写可执行的 Python `grade()`。
+> - `## Skills` 不涉及时必须保留标题并将正文置空；仅填写仓库中实际存在且任务确实需要预置的 Skill。
+> - `## Warmup` 不涉及时必须保留标题并将正文置空；仅填写可直接成功执行的 shell 命令。
+> - “正文置空”是指章节标题后直接出现下一个 `##` 标题；禁止填写 `无`、`N/A`、说明文字、注释或空代码块，否则这些内容仍会被解析为真实配置或可执行内容。
+
 ## Automated Checks
 
 **约定**：
@@ -157,11 +163,6 @@ workspace/extension/04_Search_Retrieval/task_101_example
 
 ## Skills
 
-```
-data_analysis
-csv_processing
-```
-
 ## Env
 
 ```
@@ -173,14 +174,10 @@ csv_processing
 
 ## Warmup
 
-```bash
-# 可选：容器启动后的预热脚本（在 agent 执行前运行）
-# 示例：启动 mock 服务、生成测试数据
-# python3 /tmp_workspace/setup_mock_db.py
-```
-
 ## Additional Notes
 
 - 选择混合评分的理由：规则可精确验证数据准确性（Top 3 产品 ID），LLM 补充评估过程质量（筛选/聚合逻辑、鲁棒性）。
 - 参考答案生成方式：用 pandas 预处理 `sales_data.csv` 得到 ground truth Top 3。
 - 常见失败模式：agent 未正确解析 CSV 列名、日期格式识别错误、聚合时漏掉部分记录。
+- `Skills` 示例（仅在对应 Skill 已存在时填写）：`data_analysis`、`csv_processing`。
+- `Warmup` 示例（仅在任务确实需要预热时填写）：`python3 /tmp_workspace/setup_mock_db.py`。

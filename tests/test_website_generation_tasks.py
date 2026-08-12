@@ -82,6 +82,15 @@ class WebsiteGenerationTaskContractTest(unittest.TestCase):
                 self.assertTrue((expected_workspace / "exec").is_dir())
                 self.assertFalse((expected_workspace / "gt").exists())
 
+    def test_web_tasks_do_not_declare_unused_checks_warmup_or_skills(self) -> None:
+        for path in sorted(TASKS_DIR.glob("*.md")):
+            task = parse_task_md(path)
+
+            with self.subTest(task_id=task["task_id"]):
+                self.assertEqual(task["automated_checks"], "")
+                self.assertEqual(task["warmup"], "")
+                self.assertEqual(task["skills"], "")
+
 
 if __name__ == "__main__":
     unittest.main()
