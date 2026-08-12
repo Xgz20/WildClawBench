@@ -1,0 +1,42 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "source_identity",
+    "source_fidelity",
+    "claim_evidence_alignment",
+    "output_package_complete"
+  ],
+  "output": "census_regions.pptx",
+  "companions": [
+    "sources.md"
+  ],
+  "required": [
+    "第七次全国人口普查公报",
+    "2021-05-11",
+    "563717119",
+    "35.09%"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 5,
+  "ordered_terms": [
+    "地区人口",
+    "区域",
+    "来源"
+  ],
+  "source_url": "https://www.stats.gov.cn/sj/zxfb/202302/t20230203_1901083.html",
+  "source_file": "sources.md",
+  "official_domains": [
+    "stats.gov.cn"
+  ],
+  "official_organizations": [
+    "国家统计局"
+  ],
+  "source_markers": [
+    "第七次全国人口普查公报（第三号）",
+    "2021-05-11"
+  ],
+  "evidence_quotes": [
+    "分区域看，东部地区人口为563717119人，占39.93%"
+  ]
+}

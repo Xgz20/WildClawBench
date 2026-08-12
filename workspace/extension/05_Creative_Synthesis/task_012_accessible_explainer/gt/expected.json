@@ -1,0 +1,29 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "editable_objects_preserved",
+    "output_package_complete",
+    "input_files_unchanged"
+  ],
+  "output": "accessibility_explainer.pptx",
+  "companions": [
+    "accessibility_checklist.md"
+  ],
+  "required": [
+    "替代文字",
+    "颜色",
+    "标题层级",
+    "链接目的"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 4,
+  "ordered_terms": [
+    "为什么重要",
+    "页面要求",
+    "检查清单"
+  ],
+  "input_hashes": {
+    "accessibility_brief.md": "9369b1792044487d904f5cc265591e505536f512f8f8b1df0bf6342a4d0b83dc"
+  }
+}

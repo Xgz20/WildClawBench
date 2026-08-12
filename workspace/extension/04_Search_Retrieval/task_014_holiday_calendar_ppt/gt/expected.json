@@ -1,0 +1,44 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "source_identity",
+    "source_fidelity",
+    "claim_evidence_alignment",
+    "output_package_complete"
+  ],
+  "output": "holiday_2025.pptx",
+  "companions": [
+    "sources.md"
+  ],
+  "required": [
+    "国办发明电",
+    "1月28日",
+    "2月4日",
+    "10月1日",
+    "10月8日"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 5,
+  "ordered_terms": [
+    "安排说明",
+    "节日安排",
+    "总表"
+  ],
+  "source_url": "https://www.gov.cn/zhengce/content/202411/content_6986382.htm",
+  "source_file": "sources.md",
+  "official_domains": [
+    "gov.cn"
+  ],
+  "official_organizations": [
+    "中国政府网",
+    "国务院办公厅"
+  ],
+  "source_markers": [
+    "国办发明电〔2024〕12号",
+    "2024-11-12"
+  ],
+  "evidence_quotes": [
+    "春节：1月28日（农历除夕、周二）至2月4日（农历正月初七、周二）放假调休，共8天。"
+  ]
+}

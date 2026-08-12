@@ -75,7 +75,7 @@ Prompt 明确授权的 `/tmp_workspace/project/` 文件，但额外报告仍放�
 `task_sources.yaml` 集中记录每题的 `design_origin` 和 `runtime_sources`。
 `design_origin` 只用于说明题目需求原型，不会让非联网题依赖该页面；
 `runtime_sources` 只在实时网络题中非空。不保存网页或快照。
-其中 `registry_contract` 锁定60道有效题的分类数量和三个 `invalid` 保留编号，
+其中 `registry_contract` 锁定80道有效题的分类数量和三个 `invalid` 保留编号，
 防止误删来源记录后静态校验仍然通过。
 
 ## 新增扩展任务步骤

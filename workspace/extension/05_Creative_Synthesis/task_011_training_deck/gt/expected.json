@@ -1,0 +1,40 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "editable_objects_preserved",
+    "source_fidelity",
+    "chart_data_correct",
+    "output_package_complete",
+    "input_files_unchanged"
+  ],
+  "output": "warehouse_training.pptx",
+  "companions": [],
+  "required": [
+    "入库",
+    "拣货",
+    "盘点",
+    "异常上报",
+    "96",
+    "93",
+    "91"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 4,
+  "ordered_terms": [
+    "入库",
+    "拣货",
+    "盘点",
+    "检查清单"
+  ],
+  "chart_terms": [
+    "96",
+    "93",
+    "91"
+  ],
+  "min_charts": 1,
+  "input_hashes": {
+    "training_brief.md": "3f8120b1487af65c41a396afc87060708359617a330f63ed5df9cd1a32fceb24",
+    "training_data.csv": "d4ef65b61838deb6f3492b83df7f667cf20efdaeb63e11a0176eadeb654c7a6b"
+  }
+}

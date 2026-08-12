@@ -1,0 +1,90 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "source_identity",
+    "source_fidelity",
+    "population_values",
+    "change_calculations",
+    "claim_evidence_alignment",
+    "chart_data_correct",
+    "output_package_complete"
+  ],
+  "output": "census_compare.pptx",
+  "companions": [
+    "sources.md"
+  ],
+  "required": [
+    "北京",
+    "上海",
+    "广东",
+    "2010",
+    "2020",
+    "常住人口",
+    "19612368",
+    "23019148",
+    "104303132",
+    "21893095",
+    "24870895",
+    "126012510",
+    "2280727",
+    "1851747",
+    "21709378"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 5,
+  "ordered_terms": [
+    "比较问题",
+    "地区对比",
+    "计算方法"
+  ],
+  "chart_terms": [
+    "北京",
+    "上海",
+    "广东",
+    "19612368",
+    "23019148",
+    "104303132",
+    "21893095",
+    "24870895",
+    "126012510",
+    "2280727",
+    "1851747",
+    "21709378"
+  ],
+  "min_charts": 1,
+  "source_url": "https://www.stats.gov.cn/sj/zxfb/202302/t20230203_1901083.html",
+  "source_file": "sources.md",
+  "official_domains": [
+    "stats.gov.cn"
+  ],
+  "official_organizations": [
+    "国家统计局"
+  ],
+  "source_markers": [
+    "第六次全国人口普查主要数据公报（第2号）",
+    "2011-04-29",
+    "第七次全国人口普查公报（第三号）",
+    "2021-05-11"
+  ],
+  "evidence_quotes": [
+    "现将2010年第六次全国人口普查分地区的常住人口有关数据公布如下：",
+    "根据第七次全国人口普查结果，现将2020年11月1日零时我国大陆31个省、自治区、直辖市（以下简称省份）的常住人口有关数据公布如下："
+  ],
+  "population_values": {
+    "北京2010": 19612368,
+    "上海2010": 23019148,
+    "广东2010": 104303132,
+    "北京2020": 21893095,
+    "上海2020": 24870895,
+    "广东2020": 126012510
+  },
+  "change_calculation_groups": [
+    ["2280727"],
+    ["11.63%", "11.6%"],
+    ["1851747"],
+    ["8.04%", "8.0%"],
+    ["21709378"],
+    ["20.81%", "20.8%"]
+  ]
+}

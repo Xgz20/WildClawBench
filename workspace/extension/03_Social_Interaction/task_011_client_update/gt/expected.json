@@ -1,0 +1,31 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "editable_objects_preserved",
+    "source_fidelity",
+    "output_package_complete",
+    "input_files_unchanged"
+  ],
+  "output": "client_update.pptx",
+  "companions": [
+    "email_draft.md"
+  ],
+  "required": [
+    "黄灯",
+    "压测",
+    "30 分钟",
+    "客户"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 3,
+  "ordered_terms": [
+    "当前进展",
+    "风险",
+    "需要客户确认"
+  ],
+  "input_hashes": {
+    "internal_update.pptx": "74fa621beebf2d4b9dc5f38edc8d28671ca918ee51d72359b2e7c6012e45509e",
+    "client_profile.md": "892d7d9eac390db14736d23a72f6389470bd5383c60495d8687da934848cd51d"
+  }
+}

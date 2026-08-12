@@ -1,0 +1,42 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "generator_tests_pass",
+    "output_package_complete",
+    "input_files_unchanged"
+  ],
+  "output": "pptx_audit_summary.pptx",
+  "companions": [
+    "pptx_audit.py",
+    "audit_report.json"
+  ],
+  "report_file": "audit_report.json",
+  "report_required_terms": [
+    "pass",
+    "fail"
+  ],
+  "required": [
+    "审计",
+    "页数",
+    "备注",
+    "可编辑"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 2,
+  "ordered_terms": [
+    "结构审计",
+    "逐页结果"
+  ],
+  "input_hashes": {
+    "audit_fixture.pptx": "1ffcedb564f145b41382c71b2b62025f6e27aca7e471aec7ce4ec291158bde72"
+  },
+  "generator_files": [
+    "pptx_audit.py"
+  ],
+  "generator_required_terms": [
+    "audit_fixture.pptx",
+    "audit_report.json",
+    "pptx_audit_summary.pptx"
+  ]
+}

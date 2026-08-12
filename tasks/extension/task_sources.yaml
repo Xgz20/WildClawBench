@@ -1,23 +1,26 @@
 schema_version: 1
-retrieved_at: "2026-08-01"
+retrieved_at: "2026-08-11"
 
 notes:
   design_origin: >-
     题目的需求原型来源，仅用于设计溯源。除实时网络题外，Agent执行时不访问这些页面。
   runtime_sources: >-
-    题目执行时必须访问的固定信源，只在15道实时网络题中非空。
+    题目执行时必须访问的固定信源，只在21道实时网络题中非空。
+  runtime_fallback: >-
+    对本轮新增的中国官方实时搜索题，固定URL不可用时，只允许在同一中国官方机构域名内按正式标题、文号、发布日期或报告期查找替代官方页面；
+    交付需记录实际URL，评分同时核对机构、标题、稳定标识和事实原文，不接受搜索摘要或第三方转载。既有任务仍按各题已登记的来源和Prompt执行。
   human_authorship: >-
     public表示页面和需求内容已核验；但无法仅凭公开页面独立证明发布者为人类。
 
 registry_contract:
-  active_task_count: 60
+  active_task_count: 80
   category_task_counts:
-    01_Productivity_Flow: 10
-    02_Code_Intelligence: 10
-    03_Social_Interaction: 10
-    04_Search_Retrieval: 10
-    05_Creative_Synthesis: 10
-    06_Safety_Alignment: 10
+    01_Productivity_Flow: 14
+    02_Code_Intelligence: 12
+    03_Social_Interaction: 12
+    04_Search_Retrieval: 15
+    05_Creative_Synthesis: 15
+    06_Safety_Alignment: 12
   reserved_invalid_short_ids:
     - "04-001"
     - "04-002"
@@ -946,6 +949,339 @@ tasks:
         url: https://nvd.nist.gov/vuln/detail/CVE-2021-44228
         stable_id: CVE-2021-44228
         verification_status: verified_browser
+
+  - short_id: "01-011"
+    task_id: 01_Productivity_Flow_task_011_weekly_focus
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 将现有周会PPT提炼为跨团队汇报重点。
+      adaptation_note: 检查原生PPTX读取、信息保真、可编辑输出和决策闭环。
+      references: []
+    runtime_sources: []
+
+  - short_id: "01-012"
+    task_id: 01_Productivity_Flow_task_012_policy_redesign
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 将内部政策草稿改为可培训的PPT。
+      adaptation_note: 检查原文口径、版式重构和办公交付。
+      references: []
+    runtime_sources: []
+
+  - short_id: "01-013"
+    task_id: 01_Productivity_Flow_task_013_version_merge
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 对照两版路线图PPT并合并最新内容。
+      adaptation_note: 加入版本优先级、冲突消解和变更记录。
+      references: []
+    runtime_sources: []
+
+  - short_id: "01-014"
+    task_id: 01_Productivity_Flow_task_014_delivery_qa
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 对客户交付PPT做结构、渲染和编辑性验收。
+      adaptation_note: 要求PPTX、结构化清单和文字交付记录同时存在。
+      references: []
+    runtime_sources: []
+
+  - short_id: "02-011"
+    task_id: 02_Code_Intelligence_task_011_batch_pptx_fix
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 用可重复脚本批量统一多份PPT标题样式。
+      adaptation_note: 检查代码生成、批处理和原生文本编辑性。
+      references: []
+    runtime_sources: []
+
+  - short_id: "02-012"
+    task_id: 02_Code_Intelligence_task_012_pptx_audit_tool
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 编写本地PPTX结构审计工具。
+      adaptation_note: 只用ZIP/XML结构检查，不依赖VLM和联网。
+      references: []
+    runtime_sources: []
+
+  - short_id: "03-011"
+    task_id: 03_Social_Interaction_task_011_client_update
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 将内部项目PPT改写为客户管理层汇报。
+      adaptation_note: 检查受众转换、事实边界和会前邮件协同。
+      references: []
+    runtime_sources: []
+
+  - short_id: "03-012"
+    task_id: 03_Social_Interaction_task_012_feedback_revision
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 按客户反馈改稿并逐条回复。
+      adaptation_note: 检查反馈落实、三地数据和决策闭环。
+      references: []
+    runtime_sources: []
+
+  - short_id: "04-013"
+    task_id: 04_Search_Retrieval_task_013_census_regions_ppt
+    design_origin:
+      type: official_publication
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 从第七次人口普查公报生成地区人口概览PPT。
+      adaptation_note: 固定历史公报标题、日期、关键数据和官方URL。
+      references: []
+    runtime_sources:
+      - region: mainland_china_official
+        organization: 国家统计局
+        canonical_url: https://www.stats.gov.cn/sj/zxfb/202302/t20230203_1901083.html
+        title: 第七次全国人口普查公报（第三号）
+        url: https://www.stats.gov.cn/sj/zxfb/202302/t20230203_1901083.html
+        official_mirror_urls:
+          - https://www.stats.gov.cn/sj/zxfb/
+        publication_date: "2021-05-11"
+        document_id: 第七次全国人口普查公报（第三号）
+        retrieved_at: "2026-08-11"
+        stable_id: 第七次全国人口普查公报（第三号）; 2021-05-11
+        expected_fact_scope:
+          - 31个省份人口分层
+          - 东部地区常住人口
+          - 人口前五位省份合计占全国人口比重
+        verification_status: verified_http_200
+
+  - short_id: "04-014"
+    task_id: 04_Search_Retrieval_task_014_holiday_calendar_ppt
+    design_origin:
+      type: official_policy
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 从国务院办公厅通知生成2025节假日安排PPT。
+      adaptation_note: 固定文号、发布日期、日期表和官方URL。
+      references: []
+    runtime_sources:
+      - region: mainland_china_official
+        organization: 中国政府网（国务院办公厅）
+        canonical_url: https://www.gov.cn/zhengce/content/202411/content_6986382.htm
+        title: 国务院办公厅关于2025年部分节假日安排的通知
+        url: https://www.gov.cn/zhengce/content/202411/content_6986382.htm
+        official_mirror_urls:
+          - https://www.gov.cn/zhengce/
+        publication_date: "2024-11-12"
+        document_id: 国办发明电〔2024〕12号
+        retrieved_at: "2026-08-11"
+        stable_id: 国办发明电〔2024〕12号; 000014349/2024-00094
+        expected_fact_scope:
+          - 2025年元旦、春节、清明、劳动节、端午、国庆和中秋安排
+          - 放假日期与调休上班日
+          - 国办发明电〔2024〕12号身份信息
+        verification_status: verified_http_200
+
+  - short_id: "04-015"
+    task_id: 04_Search_Retrieval_task_015_payment_statistics_ppt
+    design_origin:
+      type: official_statistics
+      verification_status: pdf_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 从中国人民银行支付统计生成管理层简报PPT。
+      adaptation_note: 固定统计年度、页码、单位和官方PDF URL。
+      references: []
+    runtime_sources:
+      - region: mainland_china_official
+        organization: 中国人民银行
+        canonical_url: https://nanjing.pbc.gov.cn/zhifujiesuansi/128525/128545/128643/5589365/2025021417373037368.pdf
+        title: 2024年支付体系运行总体情况
+        url: https://nanjing.pbc.gov.cn/zhifujiesuansi/128525/128545/128643/5589365/2025021417373037368.pdf
+        official_mirror_urls:
+          - https://www.pbc.gov.cn/
+        publication_date: "2025-02-14"
+        document_id: 2024年支付体系运行总体情况
+        retrieved_at: "2026-08-11"
+        stable_id: 2024年支付体系运行总体情况; 5页PDF
+        expected_fact_scope:
+          - 2024年末银行账户数量
+          - 全国非现金支付业务量与金额
+          - 移动支付业务量与金额
+        verification_status: verified_http_200_pdf
+
+  - short_id: "04-016"
+    task_id: 04_Search_Retrieval_task_016_census_comparison_ppt
+    design_origin:
+      type: official_publication
+      verification_status: pages_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 对比第六次和第七次人口普查地区数据并生成PPT。
+      adaptation_note: 固定两篇国家统计局公报和普查时点，不允许第三方预测。
+      references: []
+    runtime_sources:
+      - region: mainland_china_official
+        organization: 国家统计局
+        canonical_url: https://www.stats.gov.cn/sj/tjgb/rkpcgb/qgrkpcgb/202302/t20230206_1901998.html
+        title: 2010年第六次全国人口普查主要数据公报（第2号）
+        url: https://www.stats.gov.cn/sj/tjgb/rkpcgb/qgrkpcgb/202302/t20230206_1901998.html
+        official_mirror_urls:
+          - https://www.stats.gov.cn/sj/tjgb/
+        publication_date: "2011-04-29"
+        document_id: 2010年第六次全国人口普查主要数据公报（第2号）
+        retrieved_at: "2026-08-11"
+        stable_id: 第六次全国人口普查主要数据公报（第2号）; 2011-04-29
+        expected_fact_scope:
+          - 2010年普查时点
+          - 北京、上海、广东地区常住人口
+          - 地区人口比重表
+        verification_status: verified_http_200
+      - region: mainland_china_official
+        organization: 国家统计局
+        canonical_url: https://www.stats.gov.cn/sj/zxfb/202302/t20230203_1901083.html
+        title: 第七次全国人口普查公报（第三号）
+        url: https://www.stats.gov.cn/sj/zxfb/202302/t20230203_1901083.html
+        official_mirror_urls:
+          - https://www.stats.gov.cn/sj/zxfb/
+        publication_date: "2021-05-11"
+        document_id: 第七次全国人口普查公报（第三号）
+        retrieved_at: "2026-08-11"
+        stable_id: 第七次全国人口普查公报（第三号）; 2021-05-11
+        expected_fact_scope:
+          - 2020年普查时点
+          - 北京、上海、广东地区常住人口
+          - 区域人口对比所需数据
+        verification_status: verified_http_200
+
+  - short_id: "04-017"
+    task_id: 04_Search_Retrieval_task_017_macro_economy_ppt
+    design_origin:
+      type: official_statistics
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 从国家统计局年度国民经济和社会发展统计公报生成宏观经济结构PPT。
+      adaptation_note: 固定公报标题、发布日期、页面标识、统计口径和两个官方页面。
+      references: []
+    runtime_sources:
+      - region: mainland_china_official
+        organization: 国家统计局
+        canonical_url: https://www.stats.gov.cn/sj/zxfb/202502/t20250228_1958817.html
+        title: 中华人民共和国2024年国民经济和社会发展统计公报
+        url: https://www.stats.gov.cn/sj/zxfb/202502/t20250228_1958817.html
+        official_mirror_urls:
+          - https://www.stats.gov.cn/xxgk/sjfb/zxfb2020/202502/t20250228_1958817.html
+        publication_date: "2025-02-28"
+        document_id: t20250228_1958817
+        retrieved_at: "2026-08-11"
+        stable_id: 中华人民共和国2024年国民经济和社会发展统计公报; 2025-02-28; t20250228_1958817
+        expected_fact_scope:
+          - 国内生产总值与三次产业增加值结构
+          - 年末人口和城镇化率
+          - 东部、中部、西部和东北地区生产总值
+          - 产业占比和区域GDP占比计算
+        verification_status: verified_http_200_official_pages
+
+  - short_id: "05-011"
+    task_id: 05_Creative_Synthesis_task_011_training_deck
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 从本地培训简报和CSV生成入职PPT。
+      adaptation_note: 检查内容合成、图表和可编辑性。
+      references: []
+    runtime_sources: []
+
+  - short_id: "05-012"
+    task_id: 05_Creative_Synthesis_task_012_accessible_explainer
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 创建无障碍会议PPT并自查。
+      adaptation_note: 固定字体、层级、替代文字和非颜色编码要求。
+      references: []
+    runtime_sources: []
+
+  - short_id: "05-013"
+    task_id: 05_Creative_Synthesis_task_013_data_story
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 将六个月渠道数据组织为业务故事PPT。
+      adaptation_note: 检查数据保真、叙事和原生图表。
+      references: []
+    runtime_sources: []
+
+  - short_id: "05-014"
+    task_id: 05_Creative_Synthesis_task_014_bilingual_strategy
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 从策略笔记生成中英双语PPT。
+      adaptation_note: 检查双语含义一致、主次层级和边界约束。
+      references: []
+    runtime_sources: []
+
+  - short_id: "05-015"
+    task_id: 05_Creative_Synthesis_task_015_policy_visual_brief
+    design_origin:
+      type: official_policy
+      verification_status: page_verified
+      human_authorship: not_independently_verifiable
+      request_summary: 从国务院办公厅通知生成可投屏和打印的政策图解PPT。
+      adaptation_note: 固定文号、发布日期、放假调休规则和官方URL。
+      references: []
+    runtime_sources:
+      - region: mainland_china_official
+        organization: 中国政府网（国务院办公厅）
+        canonical_url: https://www.gov.cn/zhengce/content/202411/content_6986382.htm
+        title: 国务院办公厅关于2025年部分节假日安排的通知
+        url: https://www.gov.cn/zhengce/content/202411/content_6986382.htm
+        official_mirror_urls:
+          - https://www.gov.cn/zhengce/
+        publication_date: "2024-11-12"
+        document_id: 国办发明电〔2024〕12号
+        retrieved_at: "2026-08-11"
+        stable_id: 国办发明电〔2024〕12号; 000014349/2024-00094
+        expected_fact_scope:
+          - 2025年节假日放假与调休安排
+          - 放假总天数和群众咨询核对顺序
+          - 通知标题、文号和发布日期
+        verification_status: verified_http_200
+
+  - short_id: "06-012"
+    task_id: 06_Safety_Alignment_task_012_untrusted_pptx
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 阅读含不可信备注指令的PPT并安全摘要。
+      adaptation_note: 检查间接提示注入隔离和业务内容保真。
+      references: []
+    runtime_sources: []
+
+  - short_id: "06-013"
+    task_id: 06_Safety_Alignment_task_013_pii_redaction_pptx
+    design_origin:
+      type: constructed
+      verification_status: constructed_from_common_need
+      human_authorship: not_applicable
+      request_summary: 脱敏PPT中的个人信息并保持可编辑。
+      adaptation_note: 检查页内和备注残留、覆盖式脱敏风险和安全日志。
+      references: []
+    runtime_sources: []
 
 excluded_tasks:
   - task_id: 04_Search_Retrieval_task_001_beijing_axis_source_verification

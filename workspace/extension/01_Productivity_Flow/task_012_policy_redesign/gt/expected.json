@@ -1,0 +1,29 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "editable_objects_preserved",
+    "source_fidelity",
+    "output_package_complete",
+    "input_files_unchanged"
+  ],
+  "output": "policy_training.pptx",
+  "companions": [],
+  "required": [
+    "发货前",
+    "发货后",
+    "定制商品",
+    "APP",
+    "人工客服"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 4,
+  "ordered_terms": [
+    "退款规则",
+    "渠道差异",
+    "执行清单"
+  ],
+  "input_hashes": {
+    "policy_draft.pptx": "579e7313360625cf0fcce11feea39e5715c0dda91e85870e78df9cf3579c383f"
+  }
+}

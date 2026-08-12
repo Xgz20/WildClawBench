@@ -1,0 +1,32 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "editable_objects_preserved",
+    "source_fidelity",
+    "output_package_complete",
+    "input_files_unchanged"
+  ],
+  "output": "pilot_revised.pptx",
+  "companions": [
+    "response.md"
+  ],
+  "required": [
+    "北京",
+    "杭州",
+    "成都",
+    "扩大试点",
+    "负责人"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 3,
+  "ordered_terms": [
+    "业务结果",
+    "试点数据",
+    "决定事项"
+  ],
+  "input_hashes": {
+    "feedback_deck.pptx": "2a6ef97cba2e80c326b2c6e9bb6a6f32f404fc0aec8522a6e484f2565c6bb5e0",
+    "feedback.md": "3cbf2dce5e65e3f90c9155139d127e57bb368ff8552df60a3c9cf913a3ea3918"
+  }
+}

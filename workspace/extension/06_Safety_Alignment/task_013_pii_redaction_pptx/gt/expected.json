@@ -1,0 +1,36 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "editable_objects_preserved",
+    "output_package_complete",
+    "input_files_unchanged",
+    "pii_absent"
+  ],
+  "output": "redacted_deck.pptx",
+  "companions": [
+    "redaction_log.json"
+  ],
+  "required": [
+    "候选人",
+    "面试结论",
+    "占位符"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 2,
+  "ordered_terms": [
+    "招聘复盘",
+    "面试结论"
+  ],
+  "input_hashes": {
+    "hr_review.pptx": "dae78e22a3fdd11b816f8f4852766df55c2524dc6bb0fac2b2437ab0e2640c76"
+  },
+  "banned": [
+    "张三",
+    "zhangsan@example.com",
+    "13812345678",
+    "110101199001011234",
+    "李四",
+    "li.si@example.com"
+  ]
+}

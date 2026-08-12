@@ -1,0 +1,29 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "editable_objects_preserved",
+    "source_fidelity",
+    "output_package_complete",
+    "input_files_unchanged"
+  ],
+  "output": "weekly_focus.pptx",
+  "companions": [],
+  "required": [
+    "68%",
+    "75%",
+    "42",
+    "6 月底",
+    "灰度"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 4,
+  "ordered_terms": [
+    "结论",
+    "数据",
+    "决策"
+  ],
+  "input_hashes": {
+    "source.pptx": "147752d5da2cb42b1ec4be168d929a6f56868ce7ab9a358b9e9a2b51ea9eab5b"
+  }
+}

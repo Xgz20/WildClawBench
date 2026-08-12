@@ -1,0 +1,29 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "editable_objects_preserved",
+    "output_package_complete",
+    "pdf_correspondence",
+    "input_files_unchanged"
+  ],
+  "output": "final_delivery.pptx",
+  "companions": [
+    "final_delivery.pdf",
+    "delivery_checklist.json",
+    "delivery_notes.md"
+  ],
+  "required": [],
+  "min_text_nodes": 3,
+  "min_slides": 4,
+  "ordered_terms": [
+    "连锁门店",
+    "实施节奏",
+    "成功指标",
+    "下一步"
+  ],
+  "input_hashes": {
+    "candidate.pptx": "9dd3461c0dfa9d83f3a6dacc2aaea4b9f37fddadf2e431fb963d13f55913ceb2"
+  },
+  "pdf_output": "final_delivery.pdf"
+}

@@ -1,0 +1,30 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "editable_objects_preserved",
+    "source_fidelity",
+    "output_package_complete",
+    "input_files_unchanged"
+  ],
+  "output": "bilingual_strategy.pptx",
+  "companions": [],
+  "required": [
+    "8 小时",
+    "2 小时",
+    "90%",
+    "知识库",
+    "SLA"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 4,
+  "ordered_terms": [
+    "目标",
+    "措施",
+    "边界",
+    "行动"
+  ],
+  "input_hashes": {
+    "strategy_notes.md": "2a0198b0012460a3941c0fcec7f3fe2fe271e00c1376c3af03c4b417aca341a6"
+  }
+}

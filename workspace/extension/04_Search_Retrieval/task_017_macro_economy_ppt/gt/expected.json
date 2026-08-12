@@ -1,0 +1,58 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "source_identity",
+    "source_fidelity",
+    "claim_evidence_alignment",
+    "chart_data_correct",
+    "output_package_complete"
+  ],
+  "output": "macro_2024_review.pptx",
+  "companions": [
+    "metric_note.md"
+  ],
+  "required": [
+    "中华人民共和国2024年国民经济和社会发展统计公报",
+    "1349084亿元",
+    "6.8%",
+    "36.5%",
+    "56.7%",
+    "67.00%",
+    "702356亿元"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 5,
+  "ordered_terms": [
+    "公报身份",
+    "GDP构成",
+    "人口城镇化",
+    "区域经济"
+  ],
+  "chart_terms": [
+    "1349084",
+    "56.7%",
+    "67.00%",
+    "702356",
+    "52.1%",
+    "20.2个百分点"
+  ],
+  "min_charts": 1,
+  "source_url": "https://www.stats.gov.cn/sj/zxfb/202502/t20250228_1958817.html",
+  "source_file": "metric_note.md",
+  "official_domains": [
+    "stats.gov.cn"
+  ],
+  "official_organizations": [
+    "国家统计局"
+  ],
+  "source_markers": [
+    "中华人民共和国2024年国民经济和社会发展统计公报",
+    "2025-02-28",
+    "t20250228_1958817"
+  ],
+  "evidence_quotes": [
+    "初步核算，全年国内生产总值1349084亿元，比上年增长5.0%。",
+    "年末全国常住人口城镇化率为67.00%，比上年末提高0.84个百分点。"
+  ]
+}

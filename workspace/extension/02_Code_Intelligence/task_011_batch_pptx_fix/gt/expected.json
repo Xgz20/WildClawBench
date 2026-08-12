@@ -1,0 +1,46 @@
+{
+  "keys": [
+    "generator_tests_pass",
+    "editable_objects_preserved",
+    "output_package_complete",
+    "input_files_unchanged"
+  ],
+  "output": "fixed_decks",
+  "companions": [
+    "fix_titles.py"
+  ],
+  "required": [],
+  "min_text_nodes": 3,
+  "input_hashes": {
+    "deck_a.pptx": "716e3eedfb5202a0dd95175a3aa4f437e0f3e5fab03c19c0fcf09f67dabdf26e",
+    "deck_b.pptx": "95e2c5a0d30c395629b6c5902ecf7cb906588abdd9119dfa50929f7bb2a6bf8e",
+    "deck_c.pptx": "435a7d3d2d61b463258c7a3933107d3c5833a9fde9ba5dcff8a5aa030fabc5c6"
+  },
+  "generated_decks": 3,
+  "generator_files": [
+    "fix_titles.py"
+  ],
+  "generator_required_terms": [
+    "deck_a.pptx",
+    "deck_b.pptx",
+    "deck_c.pptx",
+    "fixed_decks"
+  ],
+  "generated_deck_terms": {
+    "deck_a.pptx": [
+      "门店 A｜周报",
+      "订单 1200",
+      "库存准确率 98%"
+    ],
+    "deck_b.pptx": [
+      "门店 B｜周报",
+      "订单 980",
+      "库存准确率 96%"
+    ],
+    "deck_c.pptx": [
+      "门店 C｜周报",
+      "订单 1430",
+      "库存准确率 99%"
+    ]
+  }
+}

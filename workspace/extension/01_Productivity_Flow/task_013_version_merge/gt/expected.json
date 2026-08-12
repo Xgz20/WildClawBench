@@ -1,0 +1,31 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "editable_objects_preserved",
+    "source_fidelity",
+    "output_package_complete",
+    "input_files_unchanged"
+  ],
+  "output": "roadmap_merged.pptx",
+  "companions": [
+    "change_log.md"
+  ],
+  "required": [
+    "20%",
+    "75%",
+    "95 万元",
+    "隐私"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 3,
+  "ordered_terms": [
+    "路线图",
+    "资源",
+    "里程碑"
+  ],
+  "input_hashes": {
+    "roadmap_v1.pptx": "e2140416144e8e206f1124b13a683a1b00ef9eade000c1480757ea36e021f363",
+    "roadmap_v2.pptx": "4ed5b34434314ba93a0d737b7ad7989904805369df39236fb563643b94192bf4"
+  }
+}

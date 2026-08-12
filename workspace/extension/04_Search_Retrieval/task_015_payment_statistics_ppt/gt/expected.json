@@ -1,0 +1,54 @@
+{
+  "keys": [
+    "pptx_openable",
+    "slide_count_and_order",
+    "source_identity",
+    "source_fidelity",
+    "claim_evidence_alignment",
+    "chart_data_correct",
+    "output_package_complete"
+  ],
+  "output": "payment_2024.pptx",
+  "companions": [
+    "metric_note.md"
+  ],
+  "required": [
+    "2024年支付体系运行总体情况",
+    "149.51亿户",
+    "5763.29亿笔",
+    "5443.29万亿元",
+    "2109.80亿笔",
+    "563.70万亿元"
+  ],
+  "min_text_nodes": 3,
+  "min_slides": 5,
+  "ordered_terms": [
+    "总体情况",
+    "非现金支付",
+    "移动支付"
+  ],
+  "chart_terms": [
+    "149.51",
+    "5763.29",
+    "5443.29",
+    "2109.80",
+    "563.70"
+  ],
+  "min_charts": 1,
+  "source_url": "https://nanjing.pbc.gov.cn/zhifujiesuansi/128525/128545/128643/5589365/2025021417373037368.pdf",
+  "source_file": "metric_note.md",
+  "official_domains": [
+    "pbc.gov.cn"
+  ],
+  "official_organizations": [
+    "中国人民银行"
+  ],
+  "source_markers": [
+    "2024年支付体系运行总体情况",
+    "2025-02-14"
+  ],
+  "evidence_quotes": [
+    "截至2024年末，全国共开立银行账户149.51亿户。",
+    "2024年，全国银行共办理非现金支付业务5763.29亿笔"
+  ]
+}
