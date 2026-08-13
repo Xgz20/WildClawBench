@@ -7,6 +7,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 from dotenv import load_dotenv
+from .judge_audit import write_attempt, write_summary
+from .ppt_evidence import build_ppt_evidence_code
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +16,9 @@ load_dotenv()
 TMP_WORKSPACE = os.environ.get("TMP_WORKSPACE", "/tmp_workspace")
 DEFAULT_GRADING_TIMEOUT_SECONDS = 600.0
 DEFAULT_JUDGE_MAX_TOKENS = 1000
+DEFAULT_JUDGE_TIMEOUT_SECONDS = 300.0
 WEBSITE_METRIC_PROFILE = "web-site-gen"
+PPT_METRIC_PROFILE = "ppt"
 
 
 def _grading_timeout_seconds() -> float:
@@ -61,6 +65,32 @@ def _judge_max_tokens() -> int:
         )
         return DEFAULT_JUDGE_MAX_TOKENS
     return value
+
+
+def _judge_retries() -> int:
+    raw = os.environ.get("WILDCLAW_JUDGE_RETRIES", "").strip()
+    if not raw:
+        return 2
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.warning("Invalid WILDCLAW_JUDGE_RETRIES=%r; using 2", raw)
+        return 2
+    if value < 0:
+        logger.warning("WILDCLAW_JUDGE_RETRIES must be >= 0, got %r; using 2", raw)
+        return 2
+    return value
+
+
+def _judge_timeout_seconds() -> float:
+    raw = os.environ.get("WILDCLAW_JUDGE_TIMEOUT_SECONDS", "").strip()
+    if not raw:
+        return DEFAULT_JUDGE_TIMEOUT_SECONDS
+    try:
+        value = float(raw)
+    except ValueError:
+        return DEFAULT_JUDGE_TIMEOUT_SECONDS
+    return value if value > 0 else DEFAULT_JUDGE_TIMEOUT_SECONDS
 
 
 def _write_score(output_dir: Path, task_id: str, scores: dict) -> None:
@@ -597,6 +627,7 @@ def _legacy_workspace_reader_code(workspace_path: str) -> str:
 
 def _exec_container_python(
     task_id: str, runner_code: str, transcript_container_path: str,
+    audit_dir: Path | None = None,
 ) -> tuple[dict | None, str]:
     """Copy loader+shim+runner into the container, exec, return parsed JSON.
 
@@ -632,6 +663,14 @@ def _exec_container_python(
             ["docker", "exec", *env_args, task_id, "python3", "/tmp/_judge_runner.py"],
             capture_output=True, text=True, timeout=_grading_timeout_seconds(),
         )
+        if audit_dir is not None:
+            audit_dir.mkdir(parents=True, exist_ok=True)
+            # Rendered PPT evidence is produced inside the container. Copy it
+            # after every attempt so failed attempts remain inspectable too.
+            subprocess.run(
+                ["docker", "cp", f"{task_id}:{TMP_WORKSPACE}/.grading/judge/.", str(audit_dir)],
+                capture_output=True, text=True,
+            )
         if r.returncode != 0:
             return None, f"judge runner failed: {r.stderr}"
         parsed = _parse_grade_stdout(r.stdout)
@@ -694,6 +733,13 @@ def _build_rubric_judge_prompt(
             "rendering, layout, startup, clicking, persistence, or runtime behavior "
             "was actually verified."
         )
+    elif metric_profile == PPT_METRIC_PROFILE:
+        source_semantic_scope = (
+            " This is a PPT visual review. Judge visible slide content only from "
+            "the rendered slide images supplied below. Do not infer visual quality "
+            "from source code or XML; automated checks cover file validity and "
+            "machine-verifiable structure."
+        )
     return (
         "You are a strict grading assistant. Score the agent's performance "
         "against the rubric below, using the agent transcript and workspace "
@@ -713,6 +759,8 @@ def _grade_llm_rubric(
     rubric_criteria: list[dict],
     transcript_container_path: str,
     metric_profile: str = "",
+    *,
+    output_dir: Path | None = None,
 ) -> tuple[float, dict, str]:
     """Run the declarative LLM rubric in-container; align to canonical keys.
 
@@ -728,11 +776,13 @@ def _grade_llm_rubric(
     judge_max_tokens = _judge_max_tokens()
 
     is_website_profile = metric_profile == WEBSITE_METRIC_PROFILE
+    is_ppt_profile = metric_profile == PPT_METRIC_PROFILE
     ws_reader = (
         _semantic_workspace_reader_code(TMP_WORKSPACE)
         if is_website_profile
         else _legacy_workspace_reader_code(TMP_WORKSPACE)
     )
+    ppt_evidence_code = build_ppt_evidence_code(TMP_WORKSPACE) if is_ppt_profile else "_ppt_evidence = {'blocks': [], 'manifest': []}\n"
 
     runner_code = (
         "import json, os, sys\n"
@@ -745,28 +795,100 @@ def _grade_llm_rubric(
         f"_t = load_transcript({json.dumps(transcript_container_path)})\n"
         "_summary = json.dumps(_t, ensure_ascii=False)[:20000]\n"
         + ws_reader +
+        ppt_evidence_code +
         "from openai import OpenAI\n"
         "client = OpenAI(api_key=os.environ.get('OPENROUTER_API_KEY',''),"
         " base_url=os.environ.get('OPENROUTER_BASE_URL',''))\n"
         f"_prompt = {json.dumps(prompt)}\n"
-        "_msg = _prompt + '\\n\\n## Agent Workspace Files\\n' + _ws_text"
+        "_msg_text = _prompt + '\\n\\n## Agent Workspace Files\\n' + _ws_text"
         " + '\\n\\n## Agent Transcript (JSON)\\n' + _summary\n"
+        "_msg = ([{'type': 'text', 'text': _msg_text}] + _ppt_evidence['blocks']) if _ppt_evidence['blocks'] else _msg_text\n"
         "try:\n"
         f"    resp = client.chat.completions.create(model={json.dumps(judge_model)},"
         f" max_tokens={judge_max_tokens}, messages=[{{'role':'user','content':_msg}}],"
         " response_format={'type':'json_object'})\n"
-        "    print(resp.choices[0].message.content)\n"
+        "    _choice = resp.choices[0]\n"
+        "    _raw_response = getattr(resp, '_raw_response', None)\n"
+        "    if _raw_response is None and callable(getattr(resp, 'model_dump', None)):\n"
+        "        _raw_response = resp.model_dump()\n"
+        "    if _raw_response is None:\n"
+        "        _raw_response = {}\n"
+        "    _audit_content = [{'type': 'text', 'text': _msg_text}]\n"
+        "    _audit_content.extend({'type': 'image_ref', **_item} for _item in _ppt_evidence.get('manifest', []))\n"
+        "    _envelope = {'candidate_text': _choice.message.content,"
+        " 'request': {'model': " + json.dumps(judge_model) + ", 'max_tokens': " + str(judge_max_tokens) + ", 'timeout_seconds': " + repr(_judge_timeout_seconds()) + ", 'response_format': {'type': 'json_object'}, 'endpoint_type': ('anthropic_messages' if str(" + json.dumps(judge_model) + ").startswith('anthropic/') else 'openai_chat_completions'), 'messages': [{'role': 'user', 'content': _audit_content}], 'ppt_manifest': _ppt_evidence.get('manifest', [])},"
+        " 'response': {'raw': _raw_response, 'raw_text': _choice.message.content,"
+        " 'finish_reason': getattr(_choice, 'finish_reason', ''),"
+        " 'usage': getattr(resp, 'usage', None).__dict__ if getattr(resp, 'usage', None) else {}}}\n"
+        "    print(json.dumps(_envelope, ensure_ascii=False, default=str))\n"
         "except Exception as _e:\n"
-        "    print(json.dumps({'scores': {}, 'notes': 'judge_call_failed: ' + str(_e)}))\n"
+        "    print(json.dumps({'judge_error': str(_e), 'candidate_text': '', 'request': {'model': " + json.dumps(judge_model) + "}, 'response': {}}))\n"
     )
 
-    raw, err = _exec_container_python(task_id, runner_code, transcript_container_path)
-    if err:
-        logger.error("[%s] LLM rubric judge failed: %s", task_id, err)
-        # all criteria -> 0, so failure is visible (and score-impacting)
-        return 0.0, {c["key"]: 0.0 for c in rubric_criteria}, f"judge failed: {err}"
-
-    return _align_rubric_scores(task_id, raw, rubric_criteria)
+    retries = _judge_retries()
+    judge_dir = (output_dir / "judge") if output_dir else None
+    last_error = "judge returned no valid JSON"
+    attempt_count = 0
+    for attempt in range(1, retries + 2):
+        attempt_count = attempt
+        attempt_code = runner_code
+        if attempt > 1:
+            repair = (
+                "\n\nYour previous response was invalid. Return ONLY one valid JSON object "
+                "with keys scores and notes. Do not use Markdown, prose, or tool-call text."
+            )
+            attempt_code = runner_code.replace(
+                "_prompt = " + json.dumps(prompt),
+                "_prompt = " + json.dumps(prompt + repair),
+            )
+        if judge_dir is None:
+            raw, err = _exec_container_python(
+                task_id, attempt_code, transcript_container_path,
+            )
+        else:
+            raw, err = _exec_container_python(
+                task_id, attempt_code, transcript_container_path,
+                audit_dir=judge_dir,
+            )
+        envelope = raw if isinstance(raw, dict) else {}
+        candidate_text = envelope.get("candidate_text", "") if "candidate_text" in envelope else ""
+        if not candidate_text and isinstance(envelope.get("scores"), dict):
+            candidate_text = json.dumps(envelope, ensure_ascii=False)
+        parsed = None
+        parse_error = ""
+        if candidate_text:
+            try:
+                parsed = json.loads(candidate_text)
+            except (TypeError, json.JSONDecodeError) as exc:
+                parse_error = str(exc)
+        if judge_dir:
+            request_data = envelope.get("request", {}) if envelope else {}
+            if not request_data:
+                request_data = {
+                    "model": judge_model,
+                    "max_tokens": judge_max_tokens,
+                    "metric_profile": metric_profile,
+                }
+            response_data = envelope.get("response", {}) if envelope else {}
+            if err:
+                response_data = {**response_data, "runner_error": err}
+            write_attempt(
+                judge_dir, attempt, request_data, response_data,
+                parsed if isinstance(parsed, dict) else {"parse_error": parse_error, "candidate_text": candidate_text},
+            )
+        if isinstance(parsed, dict) and isinstance(parsed.get("scores"), dict):
+            score, breakdown, notes = _align_rubric_scores(task_id, parsed, rubric_criteria)
+            if judge_dir:
+                write_summary(judge_dir, {"status": "success", "attempt_count": attempt, "selected_attempt": attempt})
+            return score, breakdown, notes
+        last_error = err or envelope.get("judge_error") or parse_error or "judge returned no valid JSON"
+        logger.warning("[%s] Judge attempt %d/%d invalid: %s", task_id, attempt, retries + 1, last_error)
+        if "PPT_RENDER_FAILED" in last_error:
+            break
+    if judge_dir:
+        write_summary(judge_dir, {"status": "failed", "attempt_count": attempt_count, "selected_attempt": None, "error": last_error})
+    logger.error("[%s] LLM rubric judge failed: %s", task_id, last_error)
+    return 0.0, {c["key"]: 0.0 for c in rubric_criteria}, f"judge failed: {last_error}"
 
 
 def _run_grading_v2(
@@ -813,6 +935,7 @@ def _run_grading_v2(
     llm_score, llm_breakdown, llm_notes = _grade_llm_rubric(
         task_id, llm_judge_rubric, rubric_criteria, transcript_container_path,
         metric_profile,
+        output_dir=output_dir,
     )
 
     # ---- combine ----

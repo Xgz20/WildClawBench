@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 构建 AstronCode 评测镜像并导出离线 tar 到 Images/。
 # 用法：bash script/build-astroncode-image.sh
-# 默认构建 v4（AstronCode 0.0.13 + SearchAgent）。
+# 默认构建 v4-ppt（AstronCode 0.0.13 + SearchAgent + PPT 渲染依赖）。
 # v3 覆盖：ASTRONCODE_DOCKER_VARIANT=v3 IMAGE_TAG=v0.3 bash script/build-astroncode-image.sh
 # v2 覆盖：ASTRONCODE_DOCKER_VARIANT=v2 ASTRON_CODE_VERSION=0.0.6 IMAGE_TAG=v0.2 bash script/build-astroncode-image.sh
 # v1 覆盖：ASTRONCODE_DOCKER_VARIANT=v1 IMAGE_TAG=v0.1-test.8 bash script/build-astroncode-image.sh
@@ -9,7 +9,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IMAGE_NAME="wildclawbench-astroncode-ubuntu"
-IMAGE_TAG="${IMAGE_TAG:-v0.4}"
+IMAGE_TAG="${IMAGE_TAG:-v0.4-ppt}"
 ASTRONCODE_DOCKER_VARIANT="${ASTRONCODE_DOCKER_VARIANT:-v4}"
 
 case "${ASTRONCODE_DOCKER_VARIANT}" in
@@ -22,7 +22,8 @@ esac
 
 BUILD_CONTEXT="${REPO_ROOT}/docker/astroncode/${ASTRONCODE_DOCKER_VARIANT}"
 DOCKERFILE="${BUILD_CONTEXT}/Dockerfile"
-# gzip 压缩导出（docker load 直接支持 .tar.gz）；镜像 ~11.8GB，压缩后 ~4-5GB
+# gzip 压缩导出（docker load 直接支持 .tar.gz）；包含 LibreOffice 的镜像更大，
+# 需要构建机保留足够的 Docker 临时空间和 Images 输出空间。
 TAR_PATH="${REPO_ROOT}/Images/${IMAGE_NAME}_${IMAGE_TAG}.tar.gz"
 
 if [[ ! -f "${DOCKERFILE}" ]]; then

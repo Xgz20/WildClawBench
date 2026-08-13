@@ -36,3 +36,13 @@ RUN /root/.local/bin/uv run --no-project \
     && install -d -o root -g root -m 755 /opt/astroncode \
     && install -o root -g root -m 644 /root/.acode/config.toml /opt/astroncode/search-agent.config.toml \
     && rm -f /tmp/verify_search_agent.py
+
+# PPT rubric grading runs inside this same task container. LibreOffice renders
+# final PPTX deliverables to PDF; the base eval environment already provides
+# PyMuPDF (fitz) for converting PDF pages to PNG evidence.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libreoffice-impress \
+    && rm -rf /var/lib/apt/lists/* \
+    && command -v soffice \
+    && soffice --version \
+    && python3 -c 'import fitz; print(fitz.__version__)'

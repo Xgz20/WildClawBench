@@ -20,6 +20,7 @@
 #   bash docs/local/deploy/pack-results.sh --no-results         # 只出轻量包，跳过 results 包
 #   bash docs/local/deploy/pack-results.sh --out /tmp           # 指定输出目录
 #   bash docs/local/deploy/pack-results.sh --prune              # 打包后删除 task_output 里的大媒体/权重
+#   bash script/pack-results.sh --max-result-file-mb 50 # results 中单文件超过 50 MiB 不导出
 #   bash docs/local/deploy/pack-results.sh --dry-run            # 只看体积分布，不打包
 #   EVAL_OUT=/path/to/eval_out bash docs/local/deploy/pack-results.sh
 # ============================================================
@@ -31,6 +32,7 @@ SCOPE=""
 DRY_RUN=0
 PRUNE=0
 NO_RESULTS=0
+MAX_RESULT_FILE_MB=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -39,6 +41,13 @@ while [ $# -gt 0 ]; do
     --dir)        EVAL_OUT="${2:-}"; shift 2 ;;
     --prune)      PRUNE=1; shift ;;
     --no-results) NO_RESULTS=1; shift ;;
+    --max-result-file-mb)
+      MAX_RESULT_FILE_MB="${2:-}"
+      if ! [[ "$MAX_RESULT_FILE_MB" =~ ^[1-9][0-9]*$ ]]; then
+        echo "--max-result-file-mb 必须是正整数（单位 MiB）"; exit 1
+      fi
+      shift 2
+      ;;
     --dry-run)    DRY_RUN=1; shift ;;
     -h|--help)    sed -n '2,32p' "$0"; exit 0 ;;
     *) echo "未知参数: $1（-h 查看用法）"; exit 1 ;;
@@ -48,6 +57,7 @@ done
 GRN=$'\e[32m'; RED=$'\e[31m'; YEL=$'\e[33m'; DIM=$'\e[2m'; RST=$'\e[0m'
 hdr(){ echo; echo "${YEL}==== $1 ====${RST}"; }
 human(){ awk -v b="$1" 'BEGIN{s="B KB MB GB TB";split(s,a," ");i=1;while(b>=1024&&i<5){b/=1024;i++}printf "%.1f%s", b, a[i]}'; }
+stat_bytes(){ stat -c%s "$1" 2>/dev/null || stat -f%z "$1"; }
 
 # 解析目标目录 TDIR：--scope 支持「相对 eval_out 的子路径」或「绝对路径」，留空则整个 eval_out
 case "${SCOPE:-}" in
@@ -100,6 +110,22 @@ echo "${DIM}   最大的 5 个文件：${RST}"
 find "$LEAF" -type f -size +50M -exec du -sk {} + 2>/dev/null | sort -rn | head -5 \
   | while read -r kb p; do echo "     $(human "$((kb * 1024))")  $p"; done
 
+if [ -n "$MAX_RESULT_FILE_MB" ]; then
+  max_result_file_bytes=$((MAX_RESULT_FILE_MB * 1024 * 1024))
+  preview_filtered_files=0
+  preview_filtered_bytes=0
+  while IFS= read -r preview_result_dir; do
+    while IFS= read -r preview_result_file; do
+      preview_result_size="$(stat_bytes "$preview_result_file")"
+      if [ "$preview_result_size" -gt "$max_result_file_bytes" ]; then
+        preview_filtered_files=$((preview_filtered_files + 1))
+        preview_filtered_bytes=$((preview_filtered_bytes + preview_result_size))
+      fi
+    done < <(find "$preview_result_dir" -type f -print 2>/dev/null)
+  done < <(find "$LEAF" -type d -path '*task_output*' -name results -print 2>/dev/null)
+  echo "   results 大小限制: ${MAX_RESULT_FILE_MB} MiB；预计过滤 ${preview_filtered_files} 个超过 ${MAX_RESULT_FILE_MB} MiB 的 results 文件（$(human "$preview_filtered_bytes")）"
+fi
+
 if [ "$DRY_RUN" = "1" ]; then
   hdr "DRY-RUN"; echo "${DIM}   仅盘点，未打包。去掉 --dry-run 才会生成压缩包。${RST}"; exit 0
 fi
@@ -130,6 +156,36 @@ else
   res_dirs="$(find "$LEAF" -type d -path '*task_output*' -name results 2>/dev/null)"
   if [ -z "$res_dirs" ]; then
     echo "${DIM}         （未找到 results 目录，跳过）${RST}"; RESULTS=""
+  elif [ -n "$MAX_RESULT_FILE_MB" ]; then
+    max_result_file_bytes=$((MAX_RESULT_FILE_MB * 1024 * 1024))
+    result_file_list="$(mktemp "${TMPDIR:-/tmp}/wcb-results.XXXXXX")"
+    result_files=0
+    filtered_result_files=0
+    filtered_result_bytes=0
+
+    # 只把大小不超过阈值的文件写入 tar 清单；源文件保持不变。
+    while IFS= read -r result_dir; do
+      while IFS= read -r result_file; do
+        result_size="$(stat_bytes "$result_file")"
+        result_files=$((result_files + 1))
+        if [ "$result_size" -le "$max_result_file_bytes" ]; then
+          printf '%s\n' "$result_file" >> "$result_file_list"
+        else
+          filtered_result_files=$((filtered_result_files + 1))
+          filtered_result_bytes=$((filtered_result_bytes + result_size))
+        fi
+      done < <(find "$result_dir" -type f -print 2>/dev/null)
+    done <<< "$res_dirs"
+
+    if [ "$result_files" -eq 0 ] || [ ! -s "$result_file_list" ]; then
+      echo "${DIM}         （results 中没有符合大小限制的文件，跳过）${RST}"
+      RESULTS=""
+    else
+      cat "$result_file_list" | tar -cf - -T - 2>/dev/null | "${ZIP[@]}" > "$RESULTS"
+      echo "${GRN}         ✓ $RESULTS  ($(human "$(stat -c%s "$RESULTS" 2>/dev/null || stat -f%z "$RESULTS")"))  共 ${result_files} 个文件${RST}"
+    fi
+    echo "         大小限制: ${MAX_RESULT_FILE_MB} MiB；过滤 ${filtered_result_files} 个超过 ${MAX_RESULT_FILE_MB} MiB 的文件（$(human "$filtered_result_bytes")）"
+    rm -f "$result_file_list"
   else
     echo "$res_dirs" | tar -cf - -T - 2>/dev/null | "${ZIP[@]}" > "$RESULTS"
     echo "${GRN}         ✓ $RESULTS  ($(human "$(stat -c%s "$RESULTS" 2>/dev/null || stat -f%z "$RESULTS")"))  共 $(echo "$res_dirs" | grep -c .) 个 results 目录${RST}"

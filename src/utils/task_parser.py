@@ -16,6 +16,7 @@ METRIC_PROFILE_PRIMARY_DIMENSIONS = {
         "interaction_function",
         "visual_layout",
     },
+    "ppt": set(),
 }
 
 

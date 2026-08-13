@@ -69,18 +69,28 @@ class _Message:
 
 
 class _Choice:
-    def __init__(self, content: str) -> None:
+    def __init__(self, content: str, finish_reason: str = "stop") -> None:
         self.index = 0
-        self.finish_reason = "stop"
+        self.finish_reason = finish_reason
         self.message = _Message(content)
 
 
 class _Response:
-    def __init__(self, content: str, model: str, usage: _Usage | None) -> None:
-        self.id = "judge-shim"
+    def __init__(
+        self,
+        content: str,
+        model: str,
+        usage: _Usage | None,
+        *,
+        response_id: str = "judge-shim",
+        finish_reason: str = "stop",
+        raw_response: dict[str, Any] | None = None,
+    ) -> None:
+        self.id = response_id
         self.model = model
-        self.choices = [_Choice(content)]
+        self.choices = [_Choice(content, finish_reason)]
         self.usage = usage
+        self._raw_response = raw_response or {}
 
 
 # --- OpenAI -> Anthropic request translation ----------------------------------
@@ -191,6 +201,26 @@ def _anthropic_create(
     if temperature is not None:
         payload["temperature"] = float(temperature)
 
+    wants_json = isinstance(response_format, dict) and response_format.get("type") == "json_object"
+    if wants_json:
+        payload["tools"] = [{
+            "name": "submit_grading",
+            "description": "Submit the final rubric scores and concise grading notes.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "scores": {
+                        "type": "object",
+                        "additionalProperties": {"type": "number"},
+                    },
+                    "notes": {"type": "string"},
+                },
+                "required": ["scores", "notes"],
+                "additionalProperties": False,
+            },
+        }]
+        payload["tool_choice"] = {"type": "tool", "name": "submit_grading"}
+
     base_url = os.environ.get("ANTHROPIC_BASE_URL", "").strip() or DEFAULT_ANTHROPIC_BASE_URL
     endpoint = base_url.rstrip("/") + "/v1/messages"
     req = request.Request(
@@ -215,14 +245,23 @@ def _anthropic_create(
             pass
         raise RuntimeError(f"Anthropic judge HTTP {exc.code}: {body}") from exc
 
+    tool_inputs = [
+        block.get("input")
+        for block in data.get("content", [])
+        if isinstance(block, dict)
+        and block.get("type") == "tool_use"
+        and block.get("name") == "submit_grading"
+        and isinstance(block.get("input"), dict)
+    ]
     text = "".join(
         block.get("text", "")
         for block in data.get("content", [])
         if isinstance(block, dict) and block.get("type") == "text"
     )
 
-    wants_json = isinstance(response_format, dict) and response_format.get("type") == "json_object"
-    if wants_json:
+    if wants_json and tool_inputs:
+        text = json.dumps(tool_inputs[-1], ensure_ascii=False)
+    elif wants_json:
         text = _strip_json_fences(text)
 
     usage_raw = data.get("usage") or {}
@@ -230,7 +269,14 @@ def _anthropic_create(
         prompt_tokens=int(usage_raw.get("input_tokens", 0) or 0),
         completion_tokens=int(usage_raw.get("output_tokens", 0) or 0),
     )
-    return _Response(text, data.get("model", send_model), usage)
+    return _Response(
+        text,
+        data.get("model", send_model),
+        usage,
+        response_id=data.get("id", "judge-shim"),
+        finish_reason=data.get("stop_reason", "stop") or "stop",
+        raw_response=data,
+    )
 
 
 # --- Drop-in OpenAI client ----------------------------------------------------

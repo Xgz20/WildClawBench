@@ -77,6 +77,21 @@ Score 0.0: 结果错误。
 
         self.assertEqual(task["metric_profile"], "web-site-gen")
 
+    def test_ppt_tag_selects_metric_profile(self) -> None:
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "ppt.md"
+            path.write_text(
+                "---\n"
+                "id: ppt\n"
+                "tags: [ppt]\n"
+                "---\n\n"
+                "## Prompt\nTest\n\n"
+                "## Workspace Path\nworkspace/example\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(parse_task_md(path)["metric_profile"], "ppt")
+
     def test_non_specialized_task_has_no_metric_profile(self) -> None:
         with TemporaryDirectory() as tmp:
             path = Path(tmp) / "plain.md"

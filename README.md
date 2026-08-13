@@ -124,6 +124,33 @@ Same 60 tasks, same grading, four different agent scaffolds. Time and cost are p
 
 To create new tasks, see the annotated template at [`tasks/task0_template.md`](tasks/task0_template.md).
 
+### Judge 审计与 PPT 评测
+
+带有 `ppt` 标签且使用 v2 LLM Rubric 的任务会先在评分容器中把
+`results/` 下的最终 PPTX 转换为 PDF 和逐页 PNG，再将渲染图作为多模态证据交给
+Judge。自动检查仍负责文件可打开性、页数、XML 和伴随产物；渲染失败会标记为评测
+有效性故障，不会退回到只看脚本的猜测评分。
+
+每次 v2 Judge 调用都会保存到该任务 run 目录的 `judge/`：每次尝试包含
+`request.json`、`response.json`、`parsed.json`，并由 `summary.json` 记录重试和最终
+采用的尝试。凭证会脱敏，图片不重复写入 JSON，而是在 `judge/rendered/` 保存并以
+路径、MIME、尺寸和 SHA-256 摘要引用。`WILDCLAW_JUDGE_RETRIES` 控制无效 JSON
+后的重试次数，默认 2 次；耗尽后仍按评测框架故障处理，不能当作真实 0 分。
+
+PPT 视觉评测依赖评分镜像提供 `soffice` 或 `libreoffice` 以及 Python `fitz`
+（PyMuPDF）。AstronCode v4 的 Dockerfile 已加入 `libreoffice-impress` 和构建期门禁；
+重新构建/发布 v0.4 后可检查：
+
+```bash
+docker run --rm --entrypoint bash wildclawbench-astroncode-ubuntu:v0.4 \
+  -lc 'command -v soffice && soffice --version && python3 -c "import fitz; print(fitz.__version__)"'
+```
+
+当前本机已有的旧 `wildclawbench-astroncode-ubuntu:v0.4` 创建于依赖层加入之前，
+因此仍缺少 LibreOffice；本次已用临时镜像完成真实 PPTX → PDF → PNG 验证，并将
+正式 tag 约定为 `wildclawbench-astroncode-ubuntu:v0.4-ppt`。正式使用前需用更新后的
+Dockerfile 重建并重新分发该 tag。
+
 ## Quick Start
 
 ### Install Docker

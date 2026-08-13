@@ -174,6 +174,25 @@ class WebsiteSemanticGradingTest(unittest.TestCase):
             )
 
         self.assertIn("max_tokens=2400", captured["runner_code"])
+        self.assertIn("response_format", captured["runner_code"])
+        self.assertIn("endpoint_type", captured["runner_code"])
+
+    def test_ppt_profile_builds_rendered_image_evidence(self) -> None:
+        captured = {}
+
+        def fake_exec(_task_id, runner_code, _transcript_path):
+            captured["runner_code"] = runner_code
+            return {"scores": {"quality": 1.0}, "notes": "ok"}, ""
+
+        with patch("src.utils.grading._exec_container_python", side_effect=fake_exec):
+            _grade_llm_rubric(
+                "task", "rubric", [{"key": "quality", "weight": 1.0}], "",
+                metric_profile="ppt",
+            )
+
+        self.assertIn("rglob('*.pptx')", captured["runner_code"])
+        self.assertIn("image_url", captured["runner_code"])
+        self.assertIn("PPT_RENDER_FAILED", captured["runner_code"])
 
 
 if __name__ == "__main__":
