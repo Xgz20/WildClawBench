@@ -202,10 +202,15 @@ def _run_grading_legacy(
 
     runner_code = "\n".join([
         "import json",
+        "import os",
         # Route inline `openai` judge calls whose model is `anthropic/*` to the
         # Anthropic Messages API (judge endpoint). Non-fatal if unavailable.
+        # Only install shim when JUDGE_MODEL starts with 'anthropic/' to avoid
+        # shadowing the real openai package for non-Anthropic judges.
         "try:",
-        "    import _judge_shim; _judge_shim.install()",
+        "    _judge_model = os.environ.get('JUDGE_MODEL', '')",
+        "    if _judge_model.startswith('anthropic/'):",
+        "        import _judge_shim; _judge_shim.install()",
         "except Exception as _shim_exc:",
         "    import sys as _sys; print('judge_shim install failed:', _shim_exc, file=_sys.stderr)",
         "from _transcript_loader import load_transcript",
@@ -365,8 +370,11 @@ def _exec_container_grade(
 
     runner_code = "\n".join([
         "import json",
+        "import os",
         "try:",
-        "    import _judge_shim; _judge_shim.install()",
+        "    _judge_model = os.environ.get('JUDGE_MODEL', '')",
+        "    if _judge_model.startswith('anthropic/'):",
+        "        import _judge_shim; _judge_shim.install()",
         "except Exception as _shim_exc:",
         "    import sys as _sys; print('judge_shim install failed:', _shim_exc, file=_sys.stderr)",
         "from _transcript_loader import load_transcript",
