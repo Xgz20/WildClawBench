@@ -114,7 +114,12 @@ if [ -n "$MAX_RESULT_FILE_MB" ]; then
   max_result_file_bytes=$((MAX_RESULT_FILE_MB * 1024 * 1024))
   preview_filtered_files=0
   preview_filtered_bytes=0
+  # 收集两种模式的产物目录
+  preview_dirs_with_subdir="$(find "$LEAF" -type d -path '*/task_output/workspace/results' 2>/dev/null)"
+  preview_dirs_flat="$(find "$LEAF" -type d -path '*/task_output/workspace' ! -exec test -d '{}/results' \; -print 2>/dev/null)"
+  preview_dirs="$(printf '%s\n%s' "$preview_dirs_with_subdir" "$preview_dirs_flat" | grep -v '^$')"
   while IFS= read -r preview_result_dir; do
+    [ -z "$preview_result_dir" ] && continue
     while IFS= read -r preview_result_file; do
       preview_result_size="$(stat_bytes "$preview_result_file")"
       if [ "$preview_result_size" -gt "$max_result_file_bytes" ]; then
@@ -122,8 +127,8 @@ if [ -n "$MAX_RESULT_FILE_MB" ]; then
         preview_filtered_bytes=$((preview_filtered_bytes + preview_result_size))
       fi
     done < <(find "$preview_result_dir" -type f -print 2>/dev/null)
-  done < <(find "$LEAF" -type d -path '*task_output*' -name results -print 2>/dev/null)
-  echo "   results 大小限制: ${MAX_RESULT_FILE_MB} MiB；预计过滤 ${preview_filtered_files} 个超过 ${MAX_RESULT_FILE_MB} MiB 的 results 文件（$(human "$preview_filtered_bytes")）"
+  done <<< "$preview_dirs"
+  echo "   workspace 大小限制: ${MAX_RESULT_FILE_MB} MiB；预计过滤 ${preview_filtered_files} 个超过 ${MAX_RESULT_FILE_MB} MiB 的文件（$(human "$preview_filtered_bytes")）"
 fi
 
 if [ "$DRY_RUN" = "1" ]; then
@@ -152,10 +157,15 @@ if [ "$NO_RESULTS" = "1" ]; then
   echo "   [2/2] Agent 交付物包：${DIM}已按 --no-results 跳过（只出轻量包）${RST}"
 else
   RESULTS="$OUT_DIR/eval_out_results_${TAG}_${TS}.tar.gz"
-  echo "   [2/2] 打包 Agent 交付物（task_output/**/results）..."
-  res_dirs="$(find "$LEAF" -type d -path '*task_output*' -name results 2>/dev/null)"
+  echo "   [2/2] 打包 Agent 交付物（task_output/workspace 或 task_output/workspace/results）..."
+  # 收集两种模式:
+  #   1. OpenClaw系: task_output/workspace/results/
+  #   2. AstronCode系: task_output/workspace/ (排除已有 results/ 子目录的,避免重复打包)
+  res_dirs_with_subdir="$(find "$LEAF" -type d -path '*/task_output/workspace/results' 2>/dev/null)"
+  res_dirs_flat="$(find "$LEAF" -type d -path '*/task_output/workspace' ! -exec test -d '{}/results' \; -print 2>/dev/null)"
+  res_dirs="$(printf '%s\n%s' "$res_dirs_with_subdir" "$res_dirs_flat" | grep -v '^$')"
   if [ -z "$res_dirs" ]; then
-    echo "${DIM}         （未找到 results 目录，跳过）${RST}"; RESULTS=""
+    echo "${DIM}         （未找到 workspace 或 results 目录，跳过）${RST}"; RESULTS=""
   elif [ -n "$MAX_RESULT_FILE_MB" ]; then
     max_result_file_bytes=$((MAX_RESULT_FILE_MB * 1024 * 1024))
     result_file_list="$(mktemp "${TMPDIR:-/tmp}/wcb-results.XXXXXX")"
@@ -178,7 +188,7 @@ else
     done <<< "$res_dirs"
 
     if [ "$result_files" -eq 0 ] || [ ! -s "$result_file_list" ]; then
-      echo "${DIM}         （results 中没有符合大小限制的文件，跳过）${RST}"
+      echo "${DIM}         （workspace 中没有符合大小限制的文件，跳过）${RST}"
       RESULTS=""
     else
       cat "$result_file_list" | tar -cf - -T - 2>/dev/null | "${ZIP[@]}" > "$RESULTS"
@@ -188,7 +198,7 @@ else
     rm -f "$result_file_list"
   else
     echo "$res_dirs" | tar -cf - -T - 2>/dev/null | "${ZIP[@]}" > "$RESULTS"
-    echo "${GRN}         ✓ $RESULTS  ($(human "$(stat -c%s "$RESULTS" 2>/dev/null || stat -f%z "$RESULTS")"))  共 $(echo "$res_dirs" | grep -c .) 个 results 目录${RST}"
+    echo "${GRN}         ✓ $RESULTS  ($(human "$(stat -c%s "$RESULTS" 2>/dev/null || stat -f%z "$RESULTS")"))  共 $(echo "$res_dirs" | grep -c .) 个 workspace 目录${RST}"
   fi
 fi
 
