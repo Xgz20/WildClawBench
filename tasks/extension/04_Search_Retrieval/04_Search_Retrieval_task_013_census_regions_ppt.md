@@ -272,7 +272,6 @@ workspace/extension/04_Search_Retrieval/task_013_census_regions_ppt
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

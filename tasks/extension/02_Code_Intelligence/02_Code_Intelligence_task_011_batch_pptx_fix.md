@@ -287,7 +287,6 @@ workspace/extension/02_Code_Intelligence/task_011_batch_pptx_fix
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

@@ -272,7 +272,6 @@ workspace/extension/05_Creative_Synthesis/task_013_data_story
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

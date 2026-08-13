@@ -263,7 +263,6 @@ workspace/extension/01_Productivity_Flow/task_013_version_merge
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

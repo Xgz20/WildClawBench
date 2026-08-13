@@ -263,7 +263,6 @@ workspace/extension/01_Productivity_Flow/task_012_policy_redesign
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

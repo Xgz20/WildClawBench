@@ -263,7 +263,6 @@ workspace/extension/03_Social_Interaction/task_012_feedback_revision
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

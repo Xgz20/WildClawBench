@@ -284,7 +284,6 @@ workspace/extension/02_Code_Intelligence/task_012_pptx_audit_tool
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

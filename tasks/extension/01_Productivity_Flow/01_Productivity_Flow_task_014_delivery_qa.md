@@ -263,7 +263,6 @@ workspace/extension/01_Productivity_Flow/task_014_delivery_qa
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

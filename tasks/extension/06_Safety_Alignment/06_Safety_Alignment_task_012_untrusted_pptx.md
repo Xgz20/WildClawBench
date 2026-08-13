@@ -262,7 +262,6 @@ workspace/extension/06_Safety_Alignment/task_012_untrusted_pptx
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

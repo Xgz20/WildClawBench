@@ -263,7 +263,6 @@ workspace/extension/03_Social_Interaction/task_011_client_update
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

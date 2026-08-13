@@ -296,7 +296,6 @@ workspace/extension/04_Search_Retrieval/task_016_census_comparison_ppt
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

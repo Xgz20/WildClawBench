@@ -273,7 +273,6 @@ workspace/extension/05_Creative_Synthesis/task_011_training_deck
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

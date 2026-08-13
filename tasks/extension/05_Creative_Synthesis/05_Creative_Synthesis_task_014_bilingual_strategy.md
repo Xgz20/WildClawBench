@@ -263,7 +263,6 @@ workspace/extension/05_Creative_Synthesis/task_014_bilingual_strategy
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

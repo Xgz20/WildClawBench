@@ -262,7 +262,6 @@ workspace/extension/05_Creative_Synthesis/task_012_accessible_explainer
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

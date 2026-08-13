@@ -263,7 +263,6 @@ workspace/extension/06_Safety_Alignment/task_013_pii_redaction_pptx
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

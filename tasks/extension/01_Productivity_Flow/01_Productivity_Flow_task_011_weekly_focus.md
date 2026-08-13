@@ -263,7 +263,6 @@ workspace/extension/01_Productivity_Flow/task_011_weekly_focus
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

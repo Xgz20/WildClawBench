@@ -282,7 +282,6 @@ workspace/extension/04_Search_Retrieval/task_015_payment_statistics_ppt
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

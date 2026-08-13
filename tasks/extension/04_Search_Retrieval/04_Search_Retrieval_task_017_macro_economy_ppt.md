@@ -282,7 +282,6 @@ workspace/extension/04_Search_Retrieval/task_017_macro_economy_ppt
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env

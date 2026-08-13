@@ -272,7 +272,6 @@ workspace/extension/04_Search_Retrieval/task_014_holiday_calendar_ppt
 ## Skills
 
 ```
-presentations
 ```
 
 ## Env
