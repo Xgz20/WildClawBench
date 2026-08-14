@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 from src.agents.base import AgentExecution, AgentTaskSpec, BaseAgent
+from src.agents.deepseek_harness.transcript import DshSessionFormatError, write_conversion
 from src.utils.docker_utils import (
     container_resource_args,
     run_warmup,
@@ -20,6 +21,15 @@ from src.utils.docker_utils import (
 
 
 logger = logging.getLogger(__name__)
+
+_USAGE_INTEGER_FIELDS = (
+    "input_tokens",
+    "output_tokens",
+    "cache_read_tokens",
+    "cache_write_tokens",
+    "total_tokens",
+    "request_count",
+)
 
 
 SUPPORTED_DSH_APIS = ("openai-completions", "openai-responses")
@@ -286,8 +296,8 @@ class DeepSeekHarnessAgent(BaseAgent):
         output_dir: Path,
         elapsed_time: float,
     ) -> dict[str, Any]:
-        _ = task_id, output_dir
-        return {
+        _ = task_id
+        usage: dict[str, Any] = {
             "input_tokens": 0,
             "output_tokens": 0,
             "cache_read_tokens": 0,
@@ -297,6 +307,22 @@ class DeepSeekHarnessAgent(BaseAgent):
             "request_count": 0,
             "elapsed_time": round(elapsed_time, 2),
         }
+        usage_path = Path(output_dir) / "usage.json"
+        try:
+            loaded = json.loads(usage_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return usage
+        if not isinstance(loaded, dict):
+            return usage
+        for field in _USAGE_INTEGER_FIELDS:
+            value = loaded.get(field)
+            if isinstance(value, (int, float)) and not isinstance(value, bool) and value >= 0:
+                usage[field] = int(value)
+        cost = loaded.get("cost_usd")
+        if isinstance(cost, (int, float)) and not isinstance(cost, bool) and cost >= 0:
+            usage["cost_usd"] = float(cost)
+        usage["elapsed_time"] = round(elapsed_time, 2)
+        return usage
 
     def run_task(self, spec: AgentTaskSpec) -> AgentExecution:
         start_time = time.perf_counter()
@@ -576,7 +602,8 @@ class DeepSeekHarnessAgent(BaseAgent):
 
     @staticmethod
     def _export_sessions(task_id: str, output_dir: Path) -> None:
-        destination = Path(output_dir) / "dsh_sessions"
+        output_dir = Path(output_dir)
+        destination = output_dir / "dsh_sessions"
         destination.mkdir(parents=True, exist_ok=True)
         completed = subprocess.run(
             ["docker", "cp", f"{task_id}:{DSH_SESSIONS_DIR}/.", str(destination)],
@@ -584,11 +611,55 @@ class DeepSeekHarnessAgent(BaseAgent):
             text=True,
         )
         if completed.returncode != 0:
-            logger.warning(
-                "[%s] DSH session directory is unavailable: %s",
-                task_id,
-                completed.stderr.strip(),
+            DeepSeekHarnessAgent._write_zero_usage(output_dir)
+            raise DshSessionFormatError(
+                f"DSH session export failed: {completed.stderr.strip()}"
             )
+
+        if not any(destination.rglob("session.jsonl")):
+            DeepSeekHarnessAgent._write_zero_usage(output_dir)
+            raise DshSessionFormatError(
+                f"no session.jsonl found below {destination}"
+            )
+
+        try:
+            write_conversion(destination, output_dir)
+        except Exception:
+            DeepSeekHarnessAgent._write_zero_usage(output_dir)
+            raise
+
+        transcript_dir = str(Path(OPENCLAW_TRANSCRIPT_PATH).parent)
+        mkdir_result = subprocess.run(
+            ["docker", "exec", task_id, "mkdir", "-p", transcript_dir],
+            capture_output=True,
+            text=True,
+        )
+        if mkdir_result.returncode != 0:
+            raise RuntimeError(
+                f"Transcript directory creation failed: {mkdir_result.stderr.strip()}"
+            )
+        copy_result = subprocess.run(
+            ["docker", "cp", str(output_dir / "chat.jsonl"), f"{task_id}:{OPENCLAW_TRANSCRIPT_PATH}"],
+            capture_output=True,
+            text=True,
+        )
+        if copy_result.returncode != 0:
+            raise RuntimeError(f"Transcript install failed: {copy_result.stderr.strip()}")
+
+    @staticmethod
+    def _write_zero_usage(output_dir: Path) -> None:
+        _atomic_json_write(
+            Path(output_dir) / "usage.json",
+            {
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "total_tokens": 0,
+                "cost_usd": 0.0,
+                "request_count": 0,
+            },
+        )
 
     @staticmethod
     def _read_text_tail(path: Path, max_chars: int = 20000) -> str:

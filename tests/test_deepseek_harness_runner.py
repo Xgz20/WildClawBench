@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -9,6 +10,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
 from src.agents.base import AgentTaskSpec
+from src.agents.deepseek_harness.transcript import DshSessionFormatError
 
 from src.agents.deepseek_harness.runner import (
     DEFAULT_DSH_API,
@@ -435,6 +437,185 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
 
         self.assertEqual(len(copied_host_paths), 1)
         self.assertFalse(copied_host_paths[0].exists())
+
+
+class DeepSeekHarnessArtifactTests(unittest.TestCase):
+    FIXTURE_ROOT = Path(__file__).parent / "fixtures" / "deepseek_harness"
+
+    def _agent(self) -> DeepSeekHarnessAgent:
+        return DeepSeekHarnessAgent(
+            image="dsh:test",
+            openrouter_api_key="test-key",
+            openrouter_base_url="https://maas.example/v2",
+        )
+
+    def test_export_sessions_preserves_raw_converts_and_installs_transcript(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            commands: list[list[str]] = []
+
+            def fake_run(
+                command: list[str],
+                **_kwargs: object,
+            ) -> subprocess.CompletedProcess[str]:
+                commands.append(command)
+                if command[:2] == ["docker", "cp"] and command[2].endswith(
+                    ":/root/.dsh/sessions/."
+                ):
+                    shutil.copytree(
+                        self.FIXTURE_ROOT,
+                        Path(command[3]),
+                        dirs_exist_ok=True,
+                    )
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with patch(
+                "src.agents.deepseek_harness.runner.subprocess.run",
+                side_effect=fake_run,
+            ):
+                self._agent()._export_sessions("dsh-task", output_dir)
+
+            self.assertTrue((output_dir / "dsh_sessions" / "session.jsonl").is_file())
+            self.assertTrue(
+                (output_dir / "dsh_sessions" / "child" / "session.jsonl").is_file()
+            )
+            self.assertTrue((output_dir / "chat.jsonl").is_file())
+            self.assertTrue((output_dir / "usage.json").is_file())
+            self.assertTrue((output_dir / "conversion_manifest.json").is_file())
+            self.assertIn(
+                [
+                    "docker",
+                    "exec",
+                    "dsh-task",
+                    "mkdir",
+                    "-p",
+                    "/root/.openclaw/agents/main/sessions",
+                ],
+                commands,
+            )
+            self.assertIn(
+                [
+                    "docker",
+                    "cp",
+                    str(output_dir / "chat.jsonl"),
+                    "dsh-task:/root/.openclaw/agents/main/sessions/chat.jsonl",
+                ],
+                commands,
+            )
+
+    def test_collect_usage_reads_conversion_output_and_sets_elapsed_time(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            shutil.copytree(self.FIXTURE_ROOT, output_dir / "dsh_sessions")
+            from src.agents.deepseek_harness.transcript import write_conversion
+
+            write_conversion(output_dir / "dsh_sessions", output_dir)
+
+            usage = self._agent().collect_usage("dsh-task", output_dir, 12.5)
+
+            self.assertEqual(
+                usage,
+                {
+                    "input_tokens": 18,
+                    "output_tokens": 7,
+                    "cache_read_tokens": 2,
+                    "cache_write_tokens": 4,
+                    "total_tokens": 31,
+                    "cost_usd": 0.0,
+                    "request_count": 3,
+                    "elapsed_time": 12.5,
+                },
+            )
+
+    def test_collect_usage_returns_zero_defaults_when_file_is_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            usage = self._agent().collect_usage("dsh-task", Path(temp_dir), 3.456)
+
+        self.assertEqual(usage["request_count"], 0)
+        self.assertEqual(usage["total_tokens"], 0)
+        self.assertEqual(usage["cost_usd"], 0.0)
+        self.assertEqual(usage["elapsed_time"], 3.46)
+
+    def test_export_conversion_failure_preserves_raw_session_and_zero_usage(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+
+            def fake_run(
+                command: list[str],
+                **_kwargs: object,
+            ) -> subprocess.CompletedProcess[str]:
+                if command[:2] == ["docker", "cp"] and command[2].endswith(
+                    ":/root/.dsh/sessions/."
+                ):
+                    destination = Path(command[3])
+                    destination.mkdir(parents=True, exist_ok=True)
+                    (destination / "session.jsonl").write_text(
+                        "{not-json}\n",
+                        encoding="utf-8",
+                    )
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with patch(
+                "src.agents.deepseek_harness.runner.subprocess.run",
+                side_effect=fake_run,
+            ):
+                with self.assertRaises(DshSessionFormatError):
+                    self._agent()._export_sessions("dsh-task", output_dir)
+
+            self.assertEqual(
+                (output_dir / "dsh_sessions" / "session.jsonl").read_text(
+                    encoding="utf-8"
+                ),
+                "{not-json}\n",
+            )
+            usage = json.loads((output_dir / "usage.json").read_text(encoding="utf-8"))
+            self.assertEqual(usage["request_count"], 0)
+            self.assertEqual(usage["total_tokens"], 0)
+
+    def test_run_task_surfaces_conversion_failure_when_harness_succeeds(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            workspace = root / "workspace"
+            (workspace / "exec").mkdir(parents=True)
+            spec = AgentTaskSpec(
+                task_id="dsh-task",
+                task={},
+                workspace_path=str(workspace),
+                prompt="Do the task",
+                timeout_seconds=30,
+                output_dir=root / "output",
+                model="openrouter/xopglm52",
+            )
+            agent = self._agent()
+            with (
+                patch.object(agent, "_start_container"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_prepare_workspace"),
+                patch("src.agents.deepseek_harness.runner.setup_skills"),
+                patch("src.agents.deepseek_harness.runner.run_warmup"),
+                patch("src.agents.deepseek_harness.runner.snapshot_workspace_state"),
+                patch.object(agent, "_copy_prompt"),
+                patch.object(
+                    agent,
+                    "_run_dsh",
+                    return_value=subprocess.CompletedProcess([], 0, "", ""),
+                ),
+                patch.object(
+                    agent,
+                    "_export_sessions",
+                    side_effect=DshSessionFormatError("invalid session"),
+                ),
+            ):
+                execution = agent.run_task(spec)
+
+            self.assertEqual(
+                execution.error,
+                "DeepSeek Harness session export failed: invalid session",
+            )
+            status = json.loads(
+                (spec.output_dir / "execution_status.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(status["failure_stage"], "exporting_sessions")
 
 
 if __name__ == "__main__":
