@@ -1223,6 +1223,27 @@ WEBSITE_SECONDARY_ZH = {
     "component_style": "组件样式",
 }
 
+WEBSITE_SECONDARY_PRIMARY = {
+    "basic_content": "content_structure",
+    "information_organization": "content_structure",
+    "lists_tables": "content_structure",
+    "detail_display": "content_structure",
+    "data_visualization": "content_structure",
+    "page_navigation": "interaction_function",
+    "content_switching": "interaction_function",
+    "form_validation": "interaction_function",
+    "operation_feedback": "interaction_function",
+    "state_persistence": "interaction_function",
+    "cross_region_linkage": "interaction_function",
+    "filtering_sorting": "interaction_function",
+    "popup_overlay": "interaction_function",
+    "search": "interaction_function",
+    "content_editing": "interaction_function",
+    "visual_style": "visual_layout",
+    "page_layout": "visual_layout",
+    "component_style": "visual_layout",
+}
+
 
 @dataclass(frozen=True)
 class WebsiteMetric:
@@ -1419,6 +1440,111 @@ def _website_dimension_unit_scores(unit, level: str) -> dict[str, tuple[float, i
     }
 
 
+def _website_dimension_keys(
+    units: list[UnitResult], level: str, labels: dict[str, str]
+) -> list[str]:
+    dimensions = {
+        key
+        for unit in units
+        for key in _website_dimension_unit_scores(unit, level)
+    }
+    known = [key for key in labels if key in dimensions]
+    unknown = sorted(dimensions.difference(labels))
+    return known + unknown
+
+
+def _website_secondary_primary_map(units: list[UnitResult]) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for unit in units:
+        for task in unit.tasks:
+            if not _is_website_semantic_task(task):
+                continue
+            secondary = getattr(task, "metric_dimensions", {}).get("secondary", {})
+            if not isinstance(secondary, dict):
+                continue
+            for key, item in secondary.items():
+                primary = item.get("primary") if isinstance(item, dict) else None
+                if isinstance(primary, str) and primary.strip():
+                    mapping.setdefault(key, primary.strip())
+    for key, primary in WEBSITE_SECONDARY_PRIMARY.items():
+        mapping.setdefault(key, primary)
+    return mapping
+
+
+def _style_website_header_range(ws, row: int, last_column: int) -> None:
+    for column in range(1, last_column + 1):
+        cell = ws.cell(row, column)
+        cell.font = HEADER_FONT
+        cell.fill = HEADER_FILL
+        cell.alignment = CENTER
+
+
+def _append_website_dimension_summary(
+    ws,
+    units: list[UnitResult],
+    *,
+    title: str,
+    level: str,
+    dimensions: list[str],
+    labels: dict[str, str],
+    groups: list[tuple[str, list[str]]] | None = None,
+) -> None:
+    if not dimensions:
+        return
+
+    last_column = 1 + len(dimensions)
+    ws.append([])
+    ws.append([title])
+    title_row = ws.max_row
+    for column in range(1, last_column + 1):
+        cell = ws.cell(title_row, column)
+        cell.fill = SECTION_FILL
+        cell.font = Font(bold=True, color="1F4E78")
+
+    if groups is None:
+        ws.append(["模型@Harness"] + [labels.get(key, key) for key in dimensions])
+        _style_website_header_range(ws, ws.max_row, last_column)
+        ws.row_dimensions[ws.max_row].height = 32
+    else:
+        group_row = ws.max_row + 1
+        label_row = group_row + 1
+        ws.cell(group_row, 1, "模型@Harness")
+        ws.merge_cells(
+            start_row=group_row, start_column=1,
+            end_row=label_row, end_column=1,
+        )
+        column = 2
+        for group_label, group_dimensions in groups:
+            group_start = column
+            for dimension in group_dimensions:
+                ws.cell(label_row, column, labels.get(dimension, dimension))
+                column += 1
+            group_end = column - 1
+            ws.cell(group_row, group_start, group_label)
+            if group_end > group_start:
+                ws.merge_cells(
+                    start_row=group_row, start_column=group_start,
+                    end_row=group_row, end_column=group_end,
+                )
+        _style_website_header_range(ws, group_row, last_column)
+        _style_website_header_range(ws, label_row, last_column)
+        ws.row_dimensions[group_row].height = 24
+        ws.row_dimensions[label_row].height = 36
+
+    data_start = ws.max_row + 1
+    for unit in units:
+        unit_scores = _website_dimension_unit_scores(unit, level)
+        ws.append([
+            unit.unit_display,
+            *[
+                unit_scores[dimension][0] if dimension in unit_scores else "-"
+                for dimension in dimensions
+            ],
+        ])
+        apply_pct_format(ws, ws.max_row, range(2, last_column + 1))
+    add_color_scale(ws, data_start, ws.max_row, 2, last_column)
+
+
 def write_website_metrics_sheet(
     wb, units: list[UnitResult], task_meta: dict[str, dict] | None = None
 ) -> bool:
@@ -1518,30 +1644,58 @@ def write_website_metrics_sheet(
     set_widths(glossary, {1: 30, 2: 14, 3: 30, 4: 12, 5: 14, 6: 62}, default=18)
     glossary.freeze_panes = "A2"
 
-    for level, title, labels in (
-        ("primary", "一级维度汇总", WEBSITE_PRIMARY_ZH),
-        ("secondary", "二级维度汇总", WEBSITE_SECONDARY_ZH),
-    ):
-        dimensions = sorted({
-            key
-            for unit in units
-            for key in _website_dimension_unit_scores(unit, level)
-        }, key=lambda key: (list(labels).index(key) if key in labels else 999, key))
-        for dimension in dimensions:
-            ws.append([])
-            ws.append([f"{title}：{labels.get(dimension, dimension)}"])
-            section_row = ws.max_row
-            ws.cell(section_row, 1).fill = SECTION_FILL
-            ws.cell(section_row, 1).font = Font(bold=True, color="1F4E78")
-            ws.append(["模型@Harness", "平均分", "任务数"])
-            style_header_row_at(ws, ws.max_row)
-            for unit in units:
-                result = _website_dimension_unit_scores(unit, level).get(dimension)
-                if result is None:
-                    continue
-                score, count = result
-                ws.append([unit.unit_display, score, count])
-                apply_pct_format(ws, ws.max_row, [2])
+    actual_primary_dimensions = _website_dimension_keys(
+        units, "primary", WEBSITE_PRIMARY_ZH
+    )
+    primary_dimensions = list(WEBSITE_PRIMARY_ZH) + [
+        key for key in actual_primary_dimensions if key not in WEBSITE_PRIMARY_ZH
+    ]
+    _append_website_dimension_summary(
+        ws,
+        units,
+        title="一级维度汇总",
+        level="primary",
+        dimensions=primary_dimensions,
+        labels=WEBSITE_PRIMARY_ZH,
+    )
+
+    secondary_dimensions = _website_dimension_keys(
+        units, "secondary", WEBSITE_SECONDARY_ZH
+    )
+    secondary_primary = _website_secondary_primary_map(units)
+    secondary_groups = [
+        (
+            primary_label,
+            [
+                key for key in secondary_dimensions
+                if secondary_primary.get(key) == primary_key
+            ],
+        )
+        for primary_key, primary_label in WEBSITE_PRIMARY_ZH.items()
+    ]
+    secondary_groups = [group for group in secondary_groups if group[1]]
+    grouped_dimensions = {
+        dimension for _, dimensions in secondary_groups for dimension in dimensions
+    }
+    other_dimensions = [
+        key for key in secondary_dimensions if key not in grouped_dimensions
+    ]
+    if other_dimensions:
+        secondary_groups.append(("其他", other_dimensions))
+    ordered_secondary_dimensions = [
+        dimension
+        for _, dimensions in secondary_groups
+        for dimension in dimensions
+    ]
+    _append_website_dimension_summary(
+        ws,
+        units,
+        title="二级维度汇总",
+        level="secondary",
+        dimensions=ordered_secondary_dimensions,
+        labels=WEBSITE_SECONDARY_ZH,
+        groups=secondary_groups,
+    )
 
     ws.append([])
     ws.append(["逐任务维度明细"])

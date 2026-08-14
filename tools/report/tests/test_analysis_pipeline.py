@@ -1235,8 +1235,16 @@ class AnalysisPipelineTest(unittest.TestCase):
         sheet = workbook["站点评测指标"]
         self.assertIn("源码语义评测", sheet[1][0].value)
         self.assertIn("不代表站点启动", sheet[1][0].value)
-        rows = [row[:3] for row in sheet.iter_rows(values_only=True)]
-        self.assertIn(("Model@Harness", 50.0, 2), rows)
+        first_column = [cell.value for cell in sheet["A"]]
+        primary_title_row = first_column.index("一级维度汇总") + 1
+        self.assertEqual(
+            [sheet.cell(primary_title_row + 1, column).value for column in range(1, 5)],
+            ["模型@Harness", "内容与结构", "交互与功能", "视觉与布局"],
+        )
+        self.assertEqual(
+            [sheet.cell(primary_title_row + 2, column).value for column in range(1, 5)],
+            ["Model@Harness", 50.0, "-", "-"],
+        )
 
         empty_workbook = Workbook()
         self.assertFalse(excel_report.write_website_metrics_sheet(
@@ -1553,6 +1561,93 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertEqual(workbook["_站点评测指标口径"].sheet_state, "hidden")
         self.assertEqual(workbook["_站点评测指标口径"].max_row, 15)
 
+    def test_website_dimension_summaries_use_horizontal_grouped_tables(self) -> None:
+        task = SimpleNamespace(
+            task_id="website_dimensions",
+            score=0.9,
+            effective_score=0.9,
+            effective_run_dirs=[],
+            metric_dimensions={
+                "metric_profile": "web-site-gen",
+                "evidence_mode": "source_semantic",
+                "primary": {
+                    "content_structure": {"score": 0.9},
+                    "interaction_function": {"score": 0.8},
+                    "visual_layout": {"score": 0.7},
+                },
+                "secondary": {
+                    "basic_content": {"score": 0.9, "primary": "content_structure"},
+                    "information_organization": {
+                        "score": 0.8, "primary": "content_structure"
+                    },
+                    "page_navigation": {
+                        "score": 0.7, "primary": "interaction_function"
+                    },
+                    "operation_feedback": {
+                        "score": 0.6, "primary": "interaction_function"
+                    },
+                    "visual_style": {"score": 0.95, "primary": "visual_layout"},
+                    "page_layout": {"score": 0.85, "primary": "visual_layout"},
+                    "future_metric": {"score": 0.5, "primary": "future_primary"},
+                },
+            },
+        )
+        unit = SimpleNamespace(
+            unit="model@harness",
+            unit_display="Model@Harness",
+            tasks=[task],
+        )
+        workbook = Workbook()
+        workbook.remove(workbook.active)
+
+        self.assertTrue(excel_report.write_website_metrics_sheet(workbook, [unit]))
+
+        sheet = workbook["站点评测指标"]
+        first_column = [cell.value for cell in sheet["A"]]
+        primary_title_row = first_column.index("一级维度汇总") + 1
+        self.assertEqual(
+            [sheet.cell(primary_title_row + 1, column).value for column in range(1, 5)],
+            ["模型@Harness", "内容与结构", "交互与功能", "视觉与布局"],
+        )
+        self.assertEqual(
+            [sheet.cell(primary_title_row + 2, column).value for column in range(1, 5)],
+            ["Model@Harness", 90.0, 80.0, 70.0],
+        )
+
+        secondary_title_row = first_column.index("二级维度汇总") + 1
+        group_row = secondary_title_row + 1
+        label_row = secondary_title_row + 2
+        self.assertEqual(sheet.cell(group_row, 1).value, "模型@Harness")
+        merged = {str(item) for item in sheet.merged_cells.ranges}
+        self.assertIn(f"A{group_row}:A{label_row}", merged)
+        self.assertIn(f"B{group_row}:C{group_row}", merged)
+        self.assertIn(f"D{group_row}:E{group_row}", merged)
+        self.assertIn(f"F{group_row}:G{group_row}", merged)
+        self.assertEqual(
+            [sheet.cell(group_row, column).value for column in (2, 4, 6, 8)],
+            ["内容与结构", "交互与功能", "视觉与布局", "其他"],
+        )
+        self.assertEqual(
+            [sheet.cell(label_row, column).value for column in range(2, 9)],
+            [
+                "基础内容", "信息组织", "页面导航", "操作反馈",
+                "视觉风格", "页面布局", "future_metric",
+            ],
+        )
+        self.assertEqual(
+            [sheet.cell(label_row + 1, column).value for column in range(1, 9)],
+            ["Model@Harness", 90.0, 80.0, 70.0, 60.0, 95.0, 85.0, 50.0],
+        )
+        conditional_ranges = {str(item.sqref) for item in sheet.conditional_formatting}
+        self.assertIn(
+            f"B{primary_title_row + 2}:D{primary_title_row + 2}",
+            conditional_ranges,
+        )
+        self.assertIn(
+            f"B{label_row + 1}:H{label_row + 1}",
+            conditional_ranges,
+        )
+
     def test_website_metrics_sheet_writes_complete_summary(self) -> None:
         task = self._create_website_task("website_l1", [{
             "score": 1.0,
@@ -1590,7 +1685,15 @@ class AnalysisPipelineTest(unittest.TestCase):
             or sheet.cell(5, column).value == "-"
             for column in range(2, 16)
         ))
-        self.assertTrue(any(row[0] == "一级维度汇总：内容与结构" for row in values))
+        self.assertTrue(any(row[0] == "一级维度汇总" for row in values))
+        primary_title_row = next(
+            index for index, row in enumerate(values, 1)
+            if row[0] == "一级维度汇总"
+        )
+        self.assertEqual(
+            [sheet.cell(primary_title_row + 1, column).value for column in range(1, 5)],
+            ["模型@Harness", "内容与结构", "交互与功能", "视觉与布局"],
+        )
 
     def test_leader_extractor_reads_horizontal_website_metrics(self) -> None:
         task = self._create_website_task("website_l1", [{
