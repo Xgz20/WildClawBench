@@ -148,3 +148,8 @@ harnesses:
     family: OpenCode
     aliases: []
     capabilities: {}
+  deepseek-harness:
+    display_name: DeepSeek Harness
+    family: DeepSeek Harness
+    aliases: []
+    capabilities: {}
