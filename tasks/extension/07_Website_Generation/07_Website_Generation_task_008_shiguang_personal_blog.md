@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_008_shiguang_personal_blog
 name: 拾光札记博客
 category: 07_Website_Generation
-sub_scene: 个人表达与生涯
+sub_category: 自然语言页面构建
 task_type: 个人博客
 timeout_seconds: 900
 modality: pure-text
@@ -10,11 +10,14 @@ difficulty: L2
 grading_type: llm_judge
 tags:
   - custom
+  - web-site-gen
 ---
 
 # 拾光札记博客
 
 ## Prompt
+
+请在 /tmp_workspace 下从空目录创建一个可运行的中文个人博客网页项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。不要接入真实网络请求，也不要使用需要联网才能显示的图片、字体或外部数据。
 
 请帮我做一个名为“拾光札记”的中文个人博客。我想用它记录生活、阅读、城市和工作中的见闻，访客可以浏览文章，我也能直接写文章、修改和删除已有内容，不需要登录。
 
@@ -40,13 +43,15 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 
 ## Automated Checks
 
-无。本题不使用规则评分函数。
-
 ## LLM Judge Rubric
 
-说明：每个评分点都按“预设状态 → 操作 → 期望结果”统一描述；Judge 只根据实际页面和操作结果判断是否符合预期。
+说明：
 
-### Criterion 1: 页面显示品牌名“拾光札记”、导航“文章”“关于作者”和“ (key: criterion_01_basic_content, primary: content_structure, secondary: basic_content, weight: 0.1)
+- 每个 Criterion 都按同一结构书写：`预设状态`、`操作`、`期望结果`。
+- `Score 1.0` 表示符合预设状态、操作要求，且结果与期望结果一致。
+- `Score 0.0` 表示任一部分不符合。
+
+### Criterion 1: 页面显示品牌名“拾光札记”、导航“文章”“关于作者”和“ (key: criterion_01_basic_content, primary: content_structure, secondary: basic_content, weight: 0.043)
 
 预设状态：首次打开页面。
 
@@ -58,7 +63,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 2: 首页已有至少三篇示例文章，内容覆盖生活、阅读和城市主题； (key: criterion_02_lists_and_tables, primary: content_structure, secondary: lists_and_tables, weight: 0.1)
+### Criterion 2: 首页已有至少三篇示例文章，内容覆盖生活、阅读和城市主题； (key: criterion_02_lists_and_tables, primary: content_structure, secondary: lists_tables, weight: 0.043)
 
 预设状态：首次打开首页，尚未新增或删除文章。
 
@@ -70,7 +75,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 3: 文章列表下方有独立的“关于作者”区域，并显示文字“一个记 (key: criterion_03_detail_display, primary: content_structure, secondary: detail_display, weight: 0.1)
+### Criterion 3: 文章列表下方有独立的“关于作者”区域，并显示文字“一个记 (key: criterion_03_detail_display, primary: content_structure, secondary: detail_display, weight: 0.043)
 
 预设状态：首页已显示文章列表。
 
@@ -82,7 +87,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 4: 列表只保留标题、摘要或标签中包含该关键词的文章，不匹配的 (key: criterion_04_search, primary: interaction_and_function, secondary: search, weight: 0.1)
+### Criterion 4: 列表只保留标题、摘要或标签中包含该关键词的文章，不匹配的 (key: criterion_04_search, primary: interaction_function, secondary: search, weight: 0.043)
 
 预设状态：首页有多篇标题、摘要或标签不同的文章。
 
@@ -94,7 +99,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 5: 选择分类后只显示该分类的文章，切回全部分类后恢复完整文章 (key: criterion_05_filtering_and_sorting, primary: interaction_and_function, secondary: filtering_and_sorting, weight: 0.1)
+### Criterion 5: 选择分类后只显示该分类的文章，切回全部分类后恢复完整文章 (key: criterion_05_filtering_and_sorting, primary: interaction_function, secondary: filtering_sorting, weight: 0.043)
 
 预设状态：首页至少有两个不同分类的文章。
 
@@ -106,7 +111,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 6: 列表只显示同时符合搜索词和所选分类的文章，不会忽略其中任 (key: criterion_06_filtering_and_sorting, primary: interaction_and_function, secondary: filtering_and_sorting, weight: 0.1)
+### Criterion 6: 列表只显示同时符合搜索词和所选分类的文章，不会忽略其中任 (key: criterion_06_filtering_and_sorting, primary: interaction_function, secondary: filtering_sorting, weight: 0.043)
 
 预设状态：页面已有两篇含有相同关键词但分类不同的文章。
 
@@ -118,7 +123,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 7: 无匹配内容时出现清楚的空状态和清除入口；清除后搜索与分类 (key: criterion_07_operation_feedback, primary: interaction_and_function, secondary: operation_feedback, weight: 0.1)
+### Criterion 7: 无匹配内容时出现清楚的空状态和清除入口；清除后搜索与分类 (key: criterion_07_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.043)
 
 预设状态：停留在首页文章列表。
 
@@ -130,7 +135,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 8: 页面进入对应文章详情，显示返回文章列表的入口、标题、分类 (key: criterion_08_page_navigation, primary: interaction_and_function, secondary: page_navigation, weight: 0.1)
+### Criterion 8: 页面进入对应文章详情，显示返回文章列表的入口、标题、分类 (key: criterion_08_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.043)
 
 预设状态：首页显示至少一张文章卡片。
 
@@ -142,7 +147,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 9: 打开文章编辑窗口，包含标题、分类、摘要、标签、发布日期和 (key: criterion_09_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 9: 打开文章编辑窗口，包含标题、分类、摘要、标签、发布日期和 (key: criterion_09_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.043)
 
 预设状态：停留在首页。
 
@@ -154,7 +159,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 10: 选中的文字立即在同一个编辑区呈现粗体或下划线效果，正文中 (key: criterion_10_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 10: 选中的文字立即在同一个编辑区呈现粗体或下划线效果，正文中 (key: criterion_10_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.043)
 
 预设状态：正文编辑区已有一段普通文字，并选中了其中一部分。
 
@@ -166,7 +171,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 11: 当前段落能在同一个编辑区切换为标题、引用块或无序列表，之 (key: criterion_11_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 11: 当前段落能在同一个编辑区切换为标题、引用块或无序列表，之 (key: criterion_11_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.043)
 
 预设状态：光标位于正文编辑区中的普通段落。
 
@@ -178,7 +183,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 12: 输入空格后，当前段落分别转换为标题、引用块或无序列表，快 (key: criterion_12_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 12: 输入空格后，当前段落分别转换为标题、引用块或无序列表，快 (key: criterion_12_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.043)
 
 预设状态：光标位于正文编辑区的空段落开头。
 
@@ -190,7 +195,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 13: 编辑窗口保持打开，标题和正文附近分别出现明确的必填提示， (key: criterion_13_form_filling_and_validation, primary: interaction_and_function, secondary: form_filling_and_validation, weight: 0.1)
+### Criterion 13: 编辑窗口保持打开，标题和正文附近分别出现明确的必填提示， (key: criterion_13_form_filling_and_validation, primary: interaction_function, secondary: form_validation, weight: 0.043)
 
 预设状态：文章编辑窗口已打开，标题和正文都为空。
 
@@ -202,7 +207,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 14: 新文章出现在首页列表中；打开详情后，标题、分类、日期、标 (key: criterion_14_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 14: 新文章出现在首页列表中；打开详情后，标题、分类、日期、标 (key: criterion_14_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.043)
 
 预设状态：文章编辑窗口已打开。
 
@@ -214,7 +219,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 15: 编辑窗口预填原文章的内容和富文本排版；保存后仍是同一篇文 (key: criterion_15_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 15: 编辑窗口预填原文章的内容和富文本排版；保存后仍是同一篇文 (key: criterion_15_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.043)
 
 预设状态：已经打开一篇带有富文本排版的文章详情。
 
@@ -226,7 +231,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 16: 删除确认层关闭，当前文章没有被删除，仍可在详情和首页列表 (key: criterion_16_modal_and_overlay, primary: interaction_and_function, secondary: modal_and_overlay, weight: 0.1)
+### Criterion 16: 删除确认层关闭，当前文章没有被删除，仍可在详情和首页列表 (key: criterion_16_modal_and_overlay, primary: interaction_function, secondary: popup_overlay, weight: 0.043)
 
 预设状态：已经打开一篇文章详情。
 
@@ -238,7 +243,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 17: 文章被移出列表，页面返回文章列表；再次搜索或浏览时不再出 (key: criterion_17_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 17: 文章被移出列表，页面返回文章列表；再次搜索或浏览时不再出 (key: criterion_17_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.043)
 
 预设状态：已经打开一篇文章详情。
 
@@ -250,7 +255,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 18: 文章仍然存在，详情和编辑窗口都保留保存过的文字、字段信息 (key: criterion_18_state_persistence, primary: interaction_and_function, secondary: state_persistence, weight: 0.1)
+### Criterion 18: 文章仍然存在，详情和编辑窗口都保留保存过的文字、字段信息 (key: criterion_18_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.043)
 
 预设状态：已经新建或修改一篇带有富文本排版的文章。
 
@@ -262,7 +267,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 19: 点击标签后只显示带有该标签的相关文章，并提供清除当前标签 (key: criterion_19_filtering_and_sorting, primary: interaction_and_function, secondary: filtering_and_sorting, weight: 0.1)
+### Criterion 19: 点击标签后只显示带有该标签的相关文章，并提供清除当前标签 (key: criterion_19_filtering_and_sorting, primary: interaction_function, secondary: filtering_sorting, weight: 0.043)
 
 预设状态：文章筛选区域显示热门标签，并且列表中有使用这些标签的文章。
 
@@ -274,7 +279,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 20: 首页按开场、文章筛选、文章列表、关于作者的顺序组织，各区 (key: criterion_20_page_layout, primary: visual_and_layout, secondary: page_layout, weight: 0.1)
+### Criterion 20: 首页按开场、文章筛选、文章列表、关于作者的顺序组织，各区 (key: criterion_20_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.043)
 
 预设状态：在 1440×900 桌面视口打开首页和文章编辑窗口。
 
@@ -286,7 +291,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 21: 页面呈现安静、清爽的纸张阅读感，标题与正文有明显的文字层 (key: criterion_21_visual_style, primary: visual_and_layout, secondary: visual_style, weight: 0.1)
+### Criterion 21: 页面呈现安静、清爽的纸张阅读感，标题与正文有明显的文字层 (key: criterion_21_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.043)
 
 预设状态：首页、文章详情或编辑窗口已打开。
 
@@ -298,7 +303,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 22: 导航、文章卡片、关于作者、详情正文、编辑工具栏和主要操作 (key: criterion_22_responsive_layout, primary: visual_and_layout, secondary: responsive_layout, weight: 0.1)
+### Criterion 22: 导航、文章卡片、关于作者、详情正文、编辑工具栏和主要操作 (key: criterion_22_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.043)
 
 预设状态：在较窄的移动视口打开首页、文章详情和编辑窗口。
 
@@ -310,7 +315,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 23: 点击“文章”会定位到文章筛选与列表区域；点击“关于作者” (key: criterion_23_page_navigation, primary: interaction_and_function, secondary: page_navigation, weight: 0.1)
+### Criterion 23: 点击“文章”会定位到文章筛选与列表区域；点击“关于作者” (key: criterion_23_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.054)
 
 预设状态：停留在首页顶部。
 
@@ -324,23 +329,12 @@ Score 0.0: 预设状态、操作或期望结果任一不满足。
 
 ## Workspace Path
 
-```
 workspace/extension/07_Website_Generation/task_008_shiguang_personal_blog
-```
-
-附件映射：`workspace/extension/07_Website_Generation/task_008_shiguang_personal_blog/exec/` 的内容在执行时对应 `/tmp_workspace/`；`workspace/extension/07_Website_Generation/task_008_shiguang_personal_blog/eval/` 对应预留的 `/tmp_workspace_eval/`。
 
 ## Skills
 
-```
-```
-
 ## Env
 
-```
-```
+无
 
 ## Warmup
-
-```bash
-```

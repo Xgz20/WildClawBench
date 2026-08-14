@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_006_xingji_travel_planner
 name: 行迹旅行规划
 category: 07_Website_Generation
-sub_scene: 旅行与消费决策
+sub_category: 自然语言页面构建
 task_type: 旅行行程规划器
 timeout_seconds: 900
 modality: pure-text
@@ -10,11 +10,14 @@ difficulty: L2
 grading_type: llm_judge
 tags:
   - custom
+  - web-site-gen
 ---
 
 # 行迹旅行规划
 
 ## Prompt
+
+请在 /tmp_workspace 下从空目录创建一个可运行的中文旅行行程规划器网页项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。不要接入真实网络请求，也不要使用需要联网才能显示的图片、字体或外部数据。
 
 我想做一个叫“行迹 Planner”的中文旅行行程规划器，方便把一次旅行按天整理清楚。不需要登录，保存过的行程直接留在浏览器里，下次打开还能从历史行程继续编辑。
 
@@ -38,13 +41,15 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 
 ## Automated Checks
 
-无。本题不使用规则评分函数。
-
 ## LLM Judge Rubric
 
-说明：每个评分点都按“预设状态 → 操作 → 期望结果”统一描述；Judge 只根据实际页面和操作结果判断是否符合预期。
+说明：
 
-### Criterion 1: 首页显示品牌名“行迹 Planner”和旅行规划用途说明 (key: criterion_01_basic_content, primary: content_structure, secondary: basic_content, weight: 0.1)
+- 每个 Criterion 都按同一结构书写：`预设状态`、`操作`、`期望结果`。
+- `Score 1.0` 表示符合预设状态、操作要求，且结果与期望结果一致。
+- `Score 0.0` 表示任一部分不符合。
+
+### Criterion 1: 首页显示品牌名“行迹 Planner”和旅行规划用途说明 (key: criterion_01_basic_content, primary: content_structure, secondary: basic_content, weight: 0.050)
 
 预设状态：首次打开首页，浏览器中没有保存过本题数据。
 
@@ -56,7 +61,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 2: 首页有清楚的历史行程区域，并显示“还没有保存的行程”等真 (key: criterion_02_lists_and_tables, primary: content_structure, secondary: lists_and_tables, weight: 0.1)
+### Criterion 2: 首页有清楚的历史行程区域，并显示“还没有保存的行程”等真 (key: criterion_02_lists_and_tables, primary: content_structure, secondary: lists_tables, weight: 0.050)
 
 预设状态：首次打开首页，尚未保存任何行程。
 
@@ -68,7 +73,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 3: 页面进入规划界面，自动生成“成都市3日游”或意思相同的行 (key: criterion_03_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 3: 页面进入规划界面，自动生成“成都市3日游”或意思相同的行 (key: criterion_03_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.050)
 
 预设状态：首页创建区已选择“成都市”，开始日期为 2026-10-03，结束日期为 2026-10-05。
 
@@ -80,7 +85,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 4: 创建区提示用户选择目的地城市，页面仍停留在首页，不会创建 (key: criterion_04_form_filling_and_validation, primary: interaction_and_function, secondary: form_filling_and_validation, weight: 0.1)
+### Criterion 4: 创建区提示用户选择目的地城市，页面仍停留在首页，不会创建 (key: criterion_04_form_filling_and_validation, primary: interaction_function, secondary: form_validation, weight: 0.050)
 
 预设状态：停留在首页创建区。
 
@@ -92,7 +97,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 5: 创建区说明结束日期不能早于开始日期，页面仍停留在首页，不 (key: criterion_05_form_filling_and_validation, primary: interaction_and_function, secondary: form_filling_and_validation, weight: 0.1)
+### Criterion 5: 创建区说明结束日期不能早于开始日期，页面仍停留在首页，不 (key: criterion_05_form_filling_and_validation, primary: interaction_function, secondary: form_validation, weight: 0.050)
 
 预设状态：停留在首页创建区并已选择城市。
 
@@ -104,7 +109,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 6: 规划界面显示 2026-10-03、2026-10-04 (key: criterion_06_content_switching, primary: interaction_and_function, secondary: content_switching, weight: 0.1)
+### Criterion 6: 规划界面显示 2026-10-03、2026-10-04 (key: criterion_06_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.050)
 
 预设状态：已创建 2026-10-03 至 2026-10-05 的三日行程。
 
@@ -116,7 +121,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 7: 当前日期新增一张目的地卡片，显示序号 1、“宽窄巷子”、 (key: criterion_07_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 7: 当前日期新增一张目的地卡片，显示序号 1、“宽窄巷子”、 (key: criterion_07_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.050)
 
 预设状态：规划界面当前日期为空，添加目的地表单可用。
 
@@ -128,7 +133,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 8: 表单提示用户输入目的地名称，当前日期不会新增空白目的地。 (key: criterion_08_form_filling_and_validation, primary: interaction_and_function, secondary: form_filling_and_validation, weight: 0.1)
+### Criterion 8: 表单提示用户输入目的地名称，当前日期不会新增空白目的地。 (key: criterion_08_form_filling_and_validation, primary: interaction_function, secondary: form_validation, weight: 0.050)
 
 预设状态：规划界面的添加目的地表单可用。
 
@@ -140,7 +145,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 9: 类型可以选择住宿、交通、景点、吃饭、购物和其他；添加后的 (key: criterion_09_information_organization, primary: content_structure, secondary: information_organization, weight: 0.1)
+### Criterion 9: 类型可以选择住宿、交通、景点、吃饭、购物和其他；添加后的 (key: criterion_09_information_organization, primary: content_structure, secondary: information_organization, weight: 0.050)
 
 预设状态：规划界面的添加目的地表单可见。
 
@@ -152,7 +157,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 10: 拖动后“酒店入住”排在第一位并显示序号 1，“宽窄巷子” (key: criterion_10_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 10: 拖动后“酒店入住”排在第一位并显示序号 1，“宽窄巷子” (key: criterion_10_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.050)
 
 预设状态：当前日期依次已有“宽窄巷子”和“酒店入住”两个目的地。
 
@@ -164,7 +169,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 11: 原目的地更新为“人民公园”，并显示类型“吃饭”、时间 1 (key: criterion_11_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 11: 原目的地更新为“人民公园”，并显示类型“吃饭”、时间 1 (key: criterion_11_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.050)
 
 预设状态：当前日期已有“宽窄巷子”目的地。
 
@@ -176,7 +181,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 12: “宽窄巷子”从当天行程中移除，只剩“酒店入住”，且剩余项 (key: criterion_12_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 12: “宽窄巷子”从当天行程中移除，只剩“酒店入住”，且剩余项 (key: criterion_12_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.050)
 
 预设状态：当前日期依次已有“宽窄巷子”和“酒店入住”两个目的地。
 
@@ -188,7 +193,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 13: “春熙路”只出现在第 2 天；切回第 1 天后仍显示第  (key: criterion_13_content_switching, primary: interaction_and_function, secondary: content_switching, weight: 0.1)
+### Criterion 13: “春熙路”只出现在第 2 天；切回第 1 天后仍显示第  (key: criterion_13_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.050)
 
 预设状态：第 1 天已有一个目的地，第 2 天仍为空。
 
@@ -200,7 +205,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 14: 页面给出保存成功的反馈，顶部继续显示“成都亲子慢游”，保 (key: criterion_14_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 14: 页面给出保存成功的反馈，顶部继续显示“成都亲子慢游”，保 (key: criterion_14_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.050)
 
 预设状态：规划界面已有一个尚未保存的行程。
 
@@ -212,7 +217,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 15: 历史记录中出现“成都亲子慢游”，并显示对应城市、日期范围 (key: criterion_15_state_persistence, primary: interaction_and_function, secondary: state_persistence, weight: 0.1)
+### Criterion 15: 历史记录中出现“成都亲子慢游”，并显示对应城市、日期范围 (key: criterion_15_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.050)
 
 预设状态：已经保存名为“成都亲子慢游”的行程。
 
@@ -224,7 +229,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 16: 原有内容会被带回规划界面；再次保存后更新原来的历史记录， (key: criterion_16_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 16: 原有内容会被带回规划界面；再次保存后更新原来的历史记录， (key: criterion_16_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.050)
 
 预设状态：首页历史记录中已有“成都亲子慢游”。
 
@@ -236,7 +241,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 17: 日期增加后出现 2026-10-06，并且这一天从空白行 (key: criterion_17_content_switching, primary: interaction_and_function, secondary: content_switching, weight: 0.1)
+### Criterion 17: 日期增加后出现 2026-10-06，并且这一天从空白行 (key: criterion_17_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.050)
 
 预设状态：规划界面的日期范围为 2026-10-03 至 2026-10-05。
 
@@ -248,7 +253,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 18: 页面显示一张可见的行程图预览，预览包含行程名、日期范围和 (key: criterion_18_file_upload_and_download, primary: interaction_and_function, secondary: file_upload_and_download, weight: 0.1)
+### Criterion 18: 页面显示一张可见的行程图预览，预览包含行程名、日期范围和 (key: criterion_18_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.050)
 
 预设状态：规划界面已有一个命名完成的行程，并在不同日期添加了至少两个目的地。
 
@@ -260,7 +265,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 19: 刷新后历史记录仍然存在；继续编辑时，行程名称、日期和各天 (key: criterion_19_state_persistence, primary: interaction_and_function, secondary: state_persistence, weight: 0.1)
+### Criterion 19: 刷新后历史记录仍然存在；继续编辑时，行程名称、日期和各天 (key: criterion_19_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.050)
 
 预设状态：首页历史记录中已有保存过的“成都亲子慢游”行程。
 
@@ -272,7 +277,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 20: 页面使用浅色背景和白色卡片，主要操作采用蓝绿色，并有暖橙 (key: criterion_20_page_layout, primary: visual_and_layout, secondary: page_layout, weight: 0.1)
+### Criterion 20: 页面使用浅色背景和白色卡片，主要操作采用蓝绿色，并有暖橙 (key: criterion_20_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.050)
 
 预设状态：在桌面视口分别打开首页和规划界面。
 
@@ -286,23 +291,12 @@ Score 0.0: 预设状态、操作或期望结果任一不满足。
 
 ## Workspace Path
 
-```
 workspace/extension/07_Website_Generation/task_006_xingji_travel_planner
-```
-
-附件映射：`workspace/extension/07_Website_Generation/task_006_xingji_travel_planner/exec/` 的内容在执行时对应 `/tmp_workspace/`；`workspace/extension/07_Website_Generation/task_006_xingji_travel_planner/eval/` 对应预留的 `/tmp_workspace_eval/`。
 
 ## Skills
 
-```
-```
-
 ## Env
 
-```
-```
+无
 
 ## Warmup
-
-```bash
-```
