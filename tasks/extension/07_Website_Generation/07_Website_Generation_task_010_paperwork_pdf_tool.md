@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_010_paperwork_pdf_tool
 name: 文页工坊PDF工具
 category: 07_Website_Generation
-sub_scene: 内容与知识生产
+sub_category: 自然语言页面构建
 task_type: 本地文档处理工具
 timeout_seconds: 900
 modality: pure-text
@@ -10,11 +10,14 @@ difficulty: L2
 grading_type: llm_judge
 tags:
   - custom
+  - web-site-gen
 ---
 
 # 文页工坊PDF工具
 
 ## Prompt
+
+请在 /tmp_workspace 下从空目录创建一个可运行的中文本地 PDF 工具网页项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。不要接入真实网络请求，也不要使用需要联网才能显示的图片、字体或外部数据。
 
 我想做一个叫“文页工坊”的中文本地文档处理网页，帮助办公用户把图片整理成 PDF，也能处理已有 PDF。打开页面即可使用，不需要登录，文件只在浏览器本地处理，不上传服务器。
 
@@ -38,13 +41,15 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 
 ## Automated Checks
 
-无。本题不使用规则评分函数。
-
 ## LLM Judge Rubric
 
-说明：每个评分点都按“预设状态 → 操作 → 期望结果”统一描述；Judge 只根据实际页面和操作结果判断是否符合预期。
+说明：
 
-### Criterion 1: 显示“文页工坊”“把文件整理成一份好用的 PDF”，并能 (key: criterion_01_basic_content, primary: content_structure, secondary: basic_content, weight: 0.1)
+- 每个 Criterion 都按同一结构书写：`预设状态`、`操作`、`期望结果`。
+- `Score 1.0` 表示符合预设状态、操作要求，且结果与期望结果一致。
+- `Score 0.0` 表示任一部分不符合。
+
+### Criterion 1: 显示“文页工坊”“把文件整理成一份好用的 PDF”，并能 (key: criterion_01_basic_content, primary: content_structure, secondary: basic_content, weight: 0.059)
 
 预设状态：首次打开页面。
 
@@ -56,7 +61,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 2: 图片转 PDF、图片合并 PDF、PDF 合并、PDF  (key: criterion_02_information_organization, primary: content_structure, secondary: information_organization, weight: 0.1)
+### Criterion 2: 图片转 PDF、图片合并 PDF、PDF 合并、PDF  (key: criterion_02_information_organization, primary: content_structure, secondary: information_organization, weight: 0.059)
 
 预设状态：页面已打开。
 
@@ -68,7 +73,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 3: 每次只展示当前功能的文件格式提示、参数和主按钮，切换后不 (key: criterion_03_content_switching, primary: interaction_and_function, secondary: content_switching, weight: 0.1)
+### Criterion 3: 每次只展示当前功能的文件格式提示、参数和主按钮，切换后不 (key: criterion_03_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.059)
 
 预设状态：页面已打开。
 
@@ -80,7 +85,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 4: 进入当前单流程的文件步骤，显示 sample-image (key: criterion_04_file_upload_and_download, primary: interaction_and_function, secondary: file_upload_and_download, weight: 0.1)
+### Criterion 4: 进入当前单流程的文件步骤，显示 sample-image (key: criterion_04_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.059)
 
 预设状态：已选择图片转 PDF。
 
@@ -92,7 +97,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 5: 分别显示格式不支持、文件为空和文件过大的中文提示，错误文 (key: criterion_05_form_filling_and_validation, primary: interaction_and_function, secondary: form_filling_and_validation, weight: 0.1)
+### Criterion 5: 分别显示格式不支持、文件为空和文件过大的中文提示，错误文 (key: criterion_05_form_filling_and_validation, primary: interaction_function, secondary: form_validation, weight: 0.059)
 
 预设状态：已选择一个功能。
 
@@ -104,7 +109,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 6: 当前流程显示处理中和进度，完成后展示实际生成的 PDF  (key: criterion_06_file_upload_and_download, primary: interaction_and_function, secondary: file_upload_and_download, weight: 0.1)
+### Criterion 6: 当前流程显示处理中和进度，完成后展示实际生成的 PDF  (key: criterion_06_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.059)
 
 预设状态：已选择图片转 PDF功能。
 
@@ -116,7 +121,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 7: 两个文件可以调整顺序；处理完成后结果显示总页数为 2，且 (key: criterion_07_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 7: 两个文件可以调整顺序；处理完成后结果显示总页数为 2，且 (key: criterion_07_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.059)
 
 预设状态：已选择图片合并 PDF功能。
 
@@ -128,7 +133,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 8: 文件顺序可调整，合并作为一次单独操作完成，结果显示合并后 (key: criterion_08_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 8: 文件顺序可调整，合并作为一次单独操作完成，结果显示合并后 (key: criterion_08_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.059)
 
 预设状态：已选择 PDF 合并功能。
 
@@ -140,7 +145,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 9: 每种非法页码范围都显示清楚的中文提示，不能开始拆分。 (key: criterion_09_form_filling_and_validation, primary: interaction_and_function, secondary: form_filling_and_validation, weight: 0.1)
+### Criterion 9: 每种非法页码范围都显示清楚的中文提示，不能开始拆分。 (key: criterion_09_form_filling_and_validation, primary: interaction_function, secondary: form_validation, weight: 0.059)
 
 预设状态：已选择 PDF 拆分功能并载入 PDF。
 
@@ -152,7 +157,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 10: 前者得到 4 个结果，后者得到 2 页结果，结果数量与选 (key: criterion_10_content_switching, primary: interaction_and_function, secondary: content_switching, weight: 0.1)
+### Criterion 10: 前者得到 4 个结果，后者得到 2 页结果，结果数量与选 (key: criterion_10_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.059)
 
 预设状态：已选择 PDF 拆分功能并载入 /tmp_workspace_eval/sample-4-pages.pdf。
 
@@ -164,7 +169,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 11: 目标格式随选择变化，结果扩展名与目标格式一致，结果数量为 (key: criterion_11_content_switching, primary: interaction_and_function, secondary: content_switching, weight: 0.1)
+### Criterion 11: 目标格式随选择变化，结果扩展名与目标格式一致，结果数量为 (key: criterion_11_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.059)
 
 预设状态：已选择 PDF 转图片功能并载入 /tmp_workspace_eval/sample-2-pages.pdf。
 
@@ -176,7 +181,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 12: 预览中能看到文字签名，颜色、大小和位置随操作更新，删除后 (key: criterion_12_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 12: 预览中能看到文字签名，颜色、大小和位置随操作更新，删除后 (key: criterion_12_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.059)
 
 预设状态：已选择 PDF 签名功能并载入 PDF。
 
@@ -188,7 +193,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 13: 显示签名不能为空的中文提示，不生成空签名结果。 (key: criterion_13_form_filling_and_validation, primary: interaction_and_function, secondary: form_filling_and_validation, weight: 0.1)
+### Criterion 13: 显示签名不能为空的中文提示，不生成空签名结果。 (key: criterion_13_form_filling_and_validation, primary: interaction_function, secondary: form_validation, weight: 0.059)
 
 预设状态：已选择 PDF 签名功能。
 
@@ -200,7 +205,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 14: 结果卡片中的名称同步更新，点击下载有明确反馈，下载文件名 (key: criterion_14_file_upload_and_download, primary: interaction_and_function, secondary: file_upload_and_download, weight: 0.1)
+### Criterion 14: 结果卡片中的名称同步更新，点击下载有明确反馈，下载文件名 (key: criterion_14_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.059)
 
 预设状态：当前流程已完成并显示结果。
 
@@ -212,7 +217,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 15: 当前结果被安全收尾，页面回到功能选择或空的文件步骤，不残 (key: criterion_15_page_navigation, primary: interaction_and_function, secondary: page_navigation, weight: 0.1)
+### Criterion 15: 当前结果被安全收尾，页面回到功能选择或空的文件步骤，不残 (key: criterion_15_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.059)
 
 预设状态：当前流程已完成。
 
@@ -224,7 +229,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 16: 桌面端流程层级清楚，当前步骤和主操作明显，文件名、状态和 (key: criterion_16_page_layout, primary: visual_and_layout, secondary: page_layout, weight: 0.1)
+### Criterion 16: 桌面端流程层级清楚，当前步骤和主操作明显，文件名、状态和 (key: criterion_16_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.059)
 
 预设状态：页面在 1440×900 视口打开并进入处理步骤。
 
@@ -236,7 +241,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 17: 页面变为单栏且无横向滚动，文件名、状态和主要按钮仍可读可 (key: criterion_17_responsive_layout, primary: visual_and_layout, secondary: responsive_layout, weight: 0.1)
+### Criterion 17: 页面变为单栏且无横向滚动，文件名、状态和主要按钮仍可读可 (key: criterion_17_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.056)
 
 预设状态：页面在 375×812 视口打开并进入文件步骤。
 
@@ -250,23 +255,12 @@ Score 0.0: 预设状态、操作或期望结果任一不满足。
 
 ## Workspace Path
 
-```
 workspace/extension/07_Website_Generation/task_010_paperwork_pdf_tool
-```
-
-附件映射：`workspace/extension/07_Website_Generation/task_010_paperwork_pdf_tool/exec/` 的内容在执行时对应 `/tmp_workspace/`；`workspace/extension/07_Website_Generation/task_010_paperwork_pdf_tool/eval/` 对应预留的 `/tmp_workspace_eval/`。
 
 ## Skills
 
-```
-```
-
 ## Env
 
-```
-```
+无
 
 ## Warmup
-
-```bash
-```

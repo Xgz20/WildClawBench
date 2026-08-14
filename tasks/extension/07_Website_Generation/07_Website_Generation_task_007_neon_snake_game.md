@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_007_neon_snake_game
 name: 霓虹贪吃蛇
 category: 07_Website_Generation
-sub_scene: 创意与娱乐
+sub_category: 自然语言页面构建
 task_type: 双人街机小游戏
 timeout_seconds: 900
 modality: pure-text
@@ -10,11 +10,14 @@ difficulty: L2
 grading_type: llm_judge
 tags:
   - custom
+  - web-site-gen
 ---
 
 # 霓虹贪吃蛇
 
 ## Prompt
+
+请在 /tmp_workspace 下从空目录创建一个可运行的中文双人贪吃蛇网页游戏项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。不要接入真实网络请求，也不要使用需要联网才能显示的图片、字体或外部数据。
 
 我想把“霓虹贪吃蛇”做成一个适合两个人共用一台电脑玩的对战小游戏。打开页面先看到游戏名、简单的胜负规则和两位玩家的操作方式，中间放一个醒目的“开始游戏”按钮。左边玩家用 W、A、S、D 控制，右边玩家用键盘的上下左右键控制。
 
@@ -36,13 +39,15 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 
 ## Automated Checks
 
-无。本题不使用规则评分函数。
-
 ## LLM Judge Rubric
 
-说明：每个评分点都按“预设状态 → 操作 → 期望结果”统一描述；Judge 只根据实际页面和操作结果判断是否符合预期。
+说明：
 
-### Criterion 1: 页面显示“霓虹贪吃蛇”的双人对战主题，说明一方出局后另一 (key: criterion_01_basic_content, primary: content_structure, secondary: basic_content, weight: 0.1)
+- 每个 Criterion 都按同一结构书写：`预设状态`、`操作`、`期望结果`。
+- `Score 1.0` 表示符合预设状态、操作要求，且结果与期望结果一致。
+- `Score 0.0` 表示任一部分不符合。
+
+### Criterion 1: 页面显示“霓虹贪吃蛇”的双人对战主题，说明一方出局后另一 (key: criterion_01_basic_content, primary: content_structure, secondary: basic_content, weight: 0.071)
 
 预设状态：首次打开页面，尚未开始游戏。
 
@@ -54,7 +59,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 2: 开始前以准备信息为主，没有提前展示正在进行的棋盘；点击后 (key: criterion_02_information_organization, primary: content_structure, secondary: information_organization, weight: 0.1)
+### Criterion 2: 开始前以准备信息为主，没有提前展示正在进行的棋盘；点击后 (key: criterion_02_information_organization, primary: content_structure, secondary: information_organization, weight: 0.071)
 
 预设状态：页面停留在尚未开始的准备状态。
 
@@ -66,7 +71,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 3: 两条蛇都处于进行中状态，并在各自棋盘里同时自动前进；两边 (key: criterion_03_operation_feedback, primary: interaction_and_function, secondary: operation_feedback, weight: 0.1)
+### Criterion 3: 两条蛇都处于进行中状态，并在各自棋盘里同时自动前进；两边 (key: criterion_03_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.071)
 
 预设状态：刚刚点击“开始游戏”，两位玩家均未改变方向。
 
@@ -78,7 +83,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 4: 左边玩家的蛇转向上方，左侧方向提示同步变化；右边玩家的方 (key: criterion_04_cross_section_coordination, primary: interaction_and_function, secondary: cross_section_coordination, weight: 0.1)
+### Criterion 4: 左边玩家的蛇转向上方，左侧方向提示同步变化；右边玩家的方 (key: criterion_04_cross_section_coordination, primary: interaction_function, secondary: cross_region_linkage, weight: 0.071)
 
 预设状态：游戏正在进行，两条蛇均朝右移动。
 
@@ -90,7 +95,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 5: 右边玩家的蛇转向上方，右侧方向提示同步变化；左边玩家的方 (key: criterion_05_cross_section_coordination, primary: interaction_and_function, secondary: cross_section_coordination, weight: 0.1)
+### Criterion 5: 右边玩家的蛇转向上方，右侧方向提示同步变化；左边玩家的方 (key: criterion_05_cross_section_coordination, primary: interaction_function, secondary: cross_region_linkage, weight: 0.071)
 
 预设状态：重新开始一局，游戏正在进行，两条蛇均朝右移动。
 
@@ -102,7 +107,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 6: 这条蛇不会直接反向掉头，也不会因为一次相反方向输入立刻撞 (key: criterion_06_operation_feedback, primary: interaction_and_function, secondary: operation_feedback, weight: 0.1)
+### Criterion 6: 这条蛇不会直接反向掉头，也不会因为一次相反方向输入立刻撞 (key: criterion_06_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.071)
 
 预设状态：任意一位玩家的蛇正在朝右移动。
 
@@ -114,7 +119,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 7: 该玩家的分数增加、蛇身变长，并且新能量果出现在同一棋盘未 (key: criterion_07_operation_feedback, primary: interaction_and_function, secondary: operation_feedback, weight: 0.1)
+### Criterion 7: 该玩家的分数增加、蛇身变长，并且新能量果出现在同一棋盘未 (key: criterion_07_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.071)
 
 预设状态：游戏正在进行，其中一位玩家的蛇即将吃到自己棋盘里的能量果。
 
@@ -126,7 +131,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 8: 爆炸果的外观与普通能量果容易区分；蛇吃到后立即炸死并显示 (key: criterion_08_operation_feedback, primary: interaction_and_function, secondary: operation_feedback, weight: 0.1)
+### Criterion 8: 爆炸果的外观与普通能量果容易区分；蛇吃到后立即炸死并显示 (key: criterion_08_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.071)
 
 预设状态：游戏正在进行，其中一位玩家的蛇可以移动到自己棋盘里的爆炸果。
 
@@ -138,7 +143,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 9: 先碰撞的玩家显示为已出局并停止移动，但本局不会立刻结算； (key: criterion_09_operation_feedback, primary: interaction_and_function, secondary: operation_feedback, weight: 0.1)
+### Criterion 9: 先碰撞的玩家显示为已出局并停止移动，但本局不会立刻结算； (key: criterion_09_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.071)
 
 预设状态：游戏正在进行，两位玩家均未出局。
 
@@ -150,7 +155,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 10: 两边都结束后才显示结算结果；分数更高的一方获胜，页面展示 (key: criterion_10_modal_and_overlay, primary: interaction_and_function, secondary: modal_and_overlay, weight: 0.1)
+### Criterion 10: 两边都结束后才显示结算结果；分数更高的一方获胜，页面展示 (key: criterion_10_modal_and_overlay, primary: interaction_function, secondary: popup_overlay, weight: 0.071)
 
 预设状态：一位玩家已经出局，另一位玩家的本局分数更高且仍在游戏中。
 
@@ -162,7 +167,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 11: 页面将存活时间更长的玩家判为获胜方，并据此更新双方胜场和 (key: criterion_11_operation_feedback, primary: interaction_and_function, secondary: operation_feedback, weight: 0.1)
+### Criterion 11: 页面将存活时间更长的玩家判为获胜方，并据此更新双方胜场和 (key: criterion_11_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.071)
 
 预设状态：新一局中双方最终分数相同，其中一位玩家比另一位更早出局。
 
@@ -174,7 +179,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 12: 结算提示消失，左右两个棋盘都重置并开始新一局；双方本局分 (key: criterion_12_content_switching, primary: interaction_and_function, secondary: content_switching, weight: 0.1)
+### Criterion 12: 结算提示消失，左右两个棋盘都重置并开始新一局；双方本局分 (key: criterion_12_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.071)
 
 预设状态：至少完成一局，页面正在显示结算结果和双方累计胜率。
 
@@ -186,7 +191,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 13: 整体呈现深色霓虹街机风，棋盘网格清楚，蛇、能量果和爆炸果 (key: criterion_13_visual_style, primary: visual_and_layout, secondary: visual_style, weight: 0.1)
+### Criterion 13: 整体呈现深色霓虹街机风，棋盘网格清楚，蛇、能量果和爆炸果 (key: criterion_13_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.071)
 
 预设状态：已经点击“开始游戏”，两个棋盘正在显示。
 
@@ -198,7 +203,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 14: 两个棋盘在桌面端左右并排且大小接近，双方信息各自贴近对应 (key: criterion_14_page_layout, primary: visual_and_layout, secondary: page_layout, weight: 0.1)
+### Criterion 14: 两个棋盘在桌面端左右并排且大小接近，双方信息各自贴近对应 (key: criterion_14_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.077)
 
 预设状态：页面已在 1440×900 视口打开并开始游戏。
 
@@ -212,23 +217,12 @@ Score 0.0: 预设状态、操作或期望结果任一不满足。
 
 ## Workspace Path
 
-```
 workspace/extension/07_Website_Generation/task_007_neon_snake_game
-```
-
-附件映射：`workspace/extension/07_Website_Generation/task_007_neon_snake_game/exec/` 的内容在执行时对应 `/tmp_workspace/`；`workspace/extension/07_Website_Generation/task_007_neon_snake_game/eval/` 对应预留的 `/tmp_workspace_eval/`。
 
 ## Skills
 
-```
-```
-
 ## Env
 
-```
-```
+无
 
 ## Warmup
-
-```bash
-```

@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_011_love_anniversary_site
 name: 双人恋爱纪念站
 category: 07_Website_Generation
-sub_scene: 关系与纪念
+sub_category: 自然语言页面构建
 task_type: 恋爱纪念与生活记录网站
 timeout_seconds: 900
 modality: pure-text
@@ -10,11 +10,14 @@ difficulty: L2
 grading_type: llm_judge
 tags:
   - custom
+  - web-site-gen
 ---
 
 # 双人恋爱纪念站
 
 ## Prompt
+
+请在 /tmp_workspace 下从空目录创建一个可运行的中文双人恋爱纪念网站项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。不要接入真实网络请求，也不要使用需要联网才能显示的图片、字体或外部数据。
 
 我想做一个只属于两个人的恋爱纪念网站，把我们一起经历的重要日子、旅行照片、心愿和日常都收在一个地方。网站要能区分两个人：两个人都可以设置自己的名字和头像。页面右上角可以随时切换当前记录者，新增纪念日、上传照片、添加心愿和发布日常都会记在当前记录者名下。
 
@@ -40,13 +43,15 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 
 ## Automated Checks
 
-无。本题不使用规则评分函数。
-
 ## LLM Judge Rubric
 
-说明：每个评分点都按“预设状态 → 操作 → 期望结果”统一描述；Judge 只根据实际页面和操作结果判断是否符合预期。
+说明：
 
-### Criterion 1: 先显示双人建档引导，可以填写恋爱开始日期和两个人的名字， (key: criterion_01_basic_content, primary: content_structure, secondary: basic_content, weight: 0.1)
+- 每个 Criterion 都按同一结构书写：`预设状态`、`操作`、`期望结果`。
+- `Score 1.0` 表示符合预设状态、操作要求，且结果与期望结果一致。
+- `Score 0.0` 表示任一部分不符合。
+
+### Criterion 1: 先显示双人建档引导，可以填写恋爱开始日期和两个人的名字， (key: criterion_01_basic_content, primary: content_structure, secondary: basic_content, weight: 0.040)
 
 预设状态：浏览器中没有保存过该网站的数据。
 
@@ -58,7 +63,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 2: 进入首页并同时显示小满和阿序的名字与各自头像；两个人的资 (key: criterion_02_personalization_settings, primary: interaction_and_function, secondary: personalization_settings, weight: 0.1)
+### Criterion 2: 进入首页并同时显示小满和阿序的名字与各自头像；两个人的资 (key: criterion_02_personalization_settings, primary: interaction_function, secondary: personalization_settings, weight: 0.040)
 
 预设状态：停留在首次建档引导。
 
@@ -70,7 +75,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 3: 首页并排或成对展示两个人的头像和名字，中间醒目显示“已恋 (key: criterion_03_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.1)
+### Criterion 3: 首页并排或成对展示两个人的头像和名字，中间醒目显示“已恋 (key: criterion_03_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.040)
 
 预设状态：已用一个早于今天的日期完成建档。
 
@@ -82,7 +87,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 4: 顶部能找到五个页签，每次切换都显示对应页面的独立内容，页 (key: criterion_04_page_navigation, primary: interaction_and_function, secondary: page_navigation, weight: 0.1)
+### Criterion 4: 顶部能找到五个页签，每次切换都显示对应页面的独立内容，页 (key: criterion_04_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.040)
 
 预设状态：已完成建档并位于首页。
 
@@ -94,7 +99,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 5: 今天的日期格按 4 条新增记录显示最深一级颜色，点击后详 (key: criterion_05_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.1)
+### Criterion 5: 今天的日期格按 4 条新增记录显示最深一级颜色，点击后详 (key: criterion_05_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.040)
 
 预设状态：已用“小满”和“阿序”完成建档，纪念日、旅行照片、心愿和日常均为空。
 
@@ -106,7 +111,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 6: 每张卡片显示事件名称、日期和重复规则；过去事件显示已过去 (key: criterion_06_lists_and_tables, primary: content_structure, secondary: lists_and_tables, weight: 0.1)
+### Criterion 6: 每张卡片显示事件名称、日期和重复规则；过去事件显示已过去 (key: criterion_06_lists_and_tables, primary: content_structure, secondary: lists_tables, weight: 0.040)
 
 预设状态：已存在一个过去的不重复纪念日和一个未来或每年重复的纪念日。
 
@@ -118,7 +123,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 7: 新增成功后出现“第一次旅行”卡片，显示所选日期、每周重复 (key: criterion_07_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 7: 新增成功后出现“第一次旅行”卡片，显示所选日期、每周重复 (key: criterion_07_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.040)
 
 预设状态：已打开纪念日页面。
 
@@ -130,7 +135,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 8: 页面显示完整、可辨认的标准中国省级行政区地图，省级边界和 (key: criterion_08_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.1)
+### Criterion 8: 页面显示完整、可辨认的标准中国省级行政区地图，省级边界和 (key: criterion_08_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.040)
 
 预设状态：已完成建档但还没有旅行照片。
 
@@ -142,7 +147,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 9: 上传后浙江省真实行政区轮廓本身被点亮，不是只点亮旁边的标 (key: criterion_09_file_upload_and_download, primary: interaction_and_function, secondary: file_upload_and_download, weight: 0.1)
+### Criterion 9: 上传后浙江省真实行政区轮廓本身被点亮，不是只点亮旁边的标 (key: criterion_09_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.040)
 
 预设状态：旅行足迹还没有照片。
 
@@ -154,7 +159,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 10: 两张图片作为两条独立照片记录加入照片墙，均保留阿序、所选 (key: criterion_10_file_upload_and_download, primary: interaction_and_function, secondary: file_upload_and_download, weight: 0.1)
+### Criterion 10: 两张图片作为两条独立照片记录加入照片墙，均保留阿序、所选 (key: criterion_10_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.040)
 
 预设状态：旅行足迹中已有一张浙江省照片。
 
@@ -166,7 +171,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 11: 点击浙江省轮廓后照片墙只显示浙江省照片，并清楚提示当前筛 (key: criterion_11_cross_section_coordination, primary: interaction_and_function, secondary: cross_section_coordination, weight: 0.1)
+### Criterion 11: 点击浙江省轮廓后照片墙只显示浙江省照片，并清楚提示当前筛 (key: criterion_11_cross_section_coordination, primary: interaction_function, secondary: cross_region_linkage, weight: 0.040)
 
 预设状态：浙江省和上海市都已有旅行照片。
 
@@ -178,7 +183,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 12: 出现可关闭的大图详情，清楚显示放大的图片、拍摄日期、浙江 (key: criterion_12_modal_and_overlay, primary: interaction_and_function, secondary: modal_and_overlay, weight: 0.1)
+### Criterion 12: 出现可关闭的大图详情，清楚显示放大的图片、拍摄日期、浙江 (key: criterion_12_modal_and_overlay, primary: interaction_function, secondary: popup_overlay, weight: 0.040)
 
 预设状态：照片墙中已有一张由小满上传的杭州照片。
 
@@ -190,7 +195,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 13: 页面分别显示待实现和已实现数量，心愿卡片能区分两种状态， (key: criterion_13_information_organization, primary: content_structure, secondary: information_organization, weight: 0.1)
+### Criterion 13: 页面分别显示待实现和已实现数量，心愿卡片能区分两种状态， (key: criterion_13_information_organization, primary: content_structure, secondary: information_organization, weight: 0.040)
 
 预设状态：心愿中同时存在待实现和已实现项目。
 
@@ -202,7 +207,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 14: 列表新增待实现的“去看极光”，显示当前记录者阿序，待实现 (key: criterion_14_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 14: 列表新增待实现的“去看极光”，显示当前记录者阿序，待实现 (key: criterion_14_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.040)
 
 预设状态：已打开心愿页面。
 
@@ -214,7 +219,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 15: 详情中完整显示标题、描述“冬天一起出发”、记录者和当前实 (key: criterion_15_modal_and_overlay, primary: interaction_and_function, secondary: modal_and_overlay, weight: 0.1)
+### Criterion 15: 详情中完整显示标题、描述“冬天一起出发”、记录者和当前实 (key: criterion_15_modal_and_overlay, primary: interaction_function, secondary: popup_overlay, weight: 0.040)
 
 预设状态：已存在带描述的心愿“去看极光”。
 
@@ -226,7 +231,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 16: 心愿状态立即变为已实现，待实现数量减少 1、已实现数量增 (key: criterion_16_operation_feedback, primary: interaction_and_function, secondary: operation_feedback, weight: 0.1)
+### Criterion 16: 心愿状态立即变为已实现，待实现数量减少 1、已实现数量增 (key: criterion_16_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.040)
 
 预设状态：“去看极光”处于待实现状态。
 
@@ -238,7 +243,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 17: 时间线顶部出现这条完整文字，同时显示小满的名字或头像和发 (key: criterion_17_content_creation_and_editing, primary: interaction_and_function, secondary: content_creation_and_editing, weight: 0.1)
+### Criterion 17: 时间线顶部出现这条完整文字，同时显示小满的名字或头像和发 (key: criterion_17_content_creation_and_editing, primary: interaction_function, secondary: content_editing, weight: 0.040)
 
 预设状态：已打开日常页面。
 
@@ -250,7 +255,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 18: 日常按时间串流排列，较新的内容在前；每条都显示正文（如果 (key: criterion_18_lists_and_tables, primary: content_structure, secondary: lists_and_tables, weight: 0.1)
+### Criterion 18: 日常按时间串流排列，较新的内容在前；每条都显示正文（如果 (key: criterion_18_lists_and_tables, primary: content_structure, secondary: lists_tables, weight: 0.040)
 
 预设状态：两个人先后发布了多条日常。
 
@@ -262,7 +267,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 19: 三个表单都沿用右上角当前记录者，不再要求重复选择作者；旅 (key: criterion_19_form_filling_and_validation, primary: interaction_and_function, secondary: form_filling_and_validation, weight: 0.1)
+### Criterion 19: 三个表单都沿用右上角当前记录者，不再要求重复选择作者；旅 (key: criterion_19_form_filling_and_validation, primary: interaction_function, secondary: form_validation, weight: 0.040)
 
 预设状态：已完成双人建档。
 
@@ -274,7 +279,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 20: 不再要求重新建档；两个人的资料、恋爱开始日期以及新增的纪 (key: criterion_20_state_persistence, primary: interaction_and_function, secondary: state_persistence, weight: 0.1)
+### Criterion 20: 不再要求重新建档；两个人的资料、恋爱开始日期以及新增的纪 (key: criterion_20_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.040)
 
 预设状态：已设置双人资料，并新增纪念日、旅行照片、心愿和日常各至少一条。
 
@@ -286,7 +291,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 21: 整体呈现可爱甜蜜但不过分幼稚的风格，柔和粉色与奶油色、圆 (key: criterion_21_visual_style, primary: visual_and_layout, secondary: visual_style, weight: 0.1)
+### Criterion 21: 整体呈现可爱甜蜜但不过分幼稚的风格，柔和粉色与奶油色、圆 (key: criterion_21_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.040)
 
 预设状态：在 1440×900 桌面视口打开已建档的网站。
 
@@ -298,7 +303,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 22: 页面适配窄屏且无横向滚动，五个页签仍可操作，表单控件、照 (key: criterion_22_responsive_layout, primary: visual_and_layout, secondary: responsive_layout, weight: 0.1)
+### Criterion 22: 页面适配窄屏且无横向滚动，五个页签仍可操作，表单控件、照 (key: criterion_22_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.040)
 
 预设状态：在 375×812 手机视口打开已建档的网站。
 
@@ -310,7 +315,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 23: 右上角以紧凑的双人头像/姓名组合明确显示当前记录者，两个 (key: criterion_23_personalization_settings, primary: interaction_and_function, secondary: personalization_settings, weight: 0.1)
+### Criterion 23: 右上角以紧凑的双人头像/姓名组合明确显示当前记录者，两个 (key: criterion_23_personalization_settings, primary: interaction_function, secondary: personalization_settings, weight: 0.040)
 
 预设状态：已完成双人建档并停留在任一新增内容页面。
 
@@ -322,7 +327,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 24: 日常发布成功，时间线中的这条记录显示小满、正文和 9 张 (key: criterion_24_file_upload_and_download, primary: interaction_and_function, secondary: file_upload_and_download, weight: 0.1)
+### Criterion 24: 日常发布成功，时间线中的这条记录显示小满、正文和 9 张 (key: criterion_24_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.040)
 
 预设状态：已完成双人建档并打开日常页面。
 
@@ -334,7 +339,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 25: 1 月至 12 月的月份标题分别对齐该月 1 日所在的周 (key: criterion_25_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.1)
+### Criterion 25: 1 月至 12 月的月份标题分别对齐该月 1 日所在的周 (key: criterion_25_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.040)
 
 预设状态：已完成建档并进入首页，年度贡献日历完整可见。
 
@@ -348,23 +353,12 @@ Score 0.0: 预设状态、操作或期望结果任一不满足。
 
 ## Workspace Path
 
-```
 workspace/extension/07_Website_Generation/task_011_love_anniversary_site
-```
-
-附件映射：`workspace/extension/07_Website_Generation/task_011_love_anniversary_site/exec/` 的内容在执行时对应 `/tmp_workspace/`；`workspace/extension/07_Website_Generation/task_011_love_anniversary_site/eval/` 对应预留的 `/tmp_workspace_eval/`。
 
 ## Skills
 
-```
-```
-
 ## Env
 
-```
-```
+无
 
 ## Warmup
-
-```bash
-```

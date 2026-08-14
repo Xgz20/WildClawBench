@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_009_smart_teaching_dashboard
 name: 智慧教学数据看板
 category: 07_Website_Generation
-sub_scene: 数据分析与决策
+sub_category: 自然语言页面构建
 task_type: 数据分析看板
 timeout_seconds: 900
 modality: pure-text
@@ -10,11 +10,14 @@ difficulty: L2
 grading_type: llm_judge
 tags:
   - custom
+  - web-site-gen
 ---
 
 # 智慧教学数据看板
 
 ## Prompt
+
+请在 /tmp_workspace 下从空目录创建一个可运行的中文智慧教学数据看板项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。不要接入真实网络请求，也不要使用需要联网才能显示的图片、字体或外部数据。
 
 请帮我做一个智慧教学产品的数据分析看板，主要给运营和管理人员查看各地学校的产品授权和使用情况，也方便及时找到需要跟进的学校。
 
@@ -42,13 +45,15 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 
 ## Automated Checks
 
-无。本题不使用规则评分函数。
-
 ## LLM Judge Rubric
 
-说明：每个评分点都按“预设状态 → 操作 → 期望结果”统一描述；Judge 只根据实际页面和操作结果判断是否符合预期。
+说明：
 
-### Criterion 1: 页面清楚展示智慧教学产品数据分析看板，并包含学期、省、市 (key: criterion_01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.1)
+- 每个 Criterion 都按同一结构书写：`预设状态`、`操作`、`期望结果`。
+- `Score 1.0` 表示符合预设状态、操作要求，且结果与期望结果一致。
+- `Score 0.0` 表示任一部分不符合。
+
+### Criterion 1: 页面清楚展示智慧教学产品数据分析看板，并包含学期、省、市 (key: criterion_01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.041)
 
 预设状态：首次打开看板。
 
@@ -60,7 +65,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 2: 概览显示授权学校 32 所、活跃学校 28 所、活跃用户 (key: criterion_02_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.1)
+### Criterion 2: 概览显示授权学校 32 所、活跃学校 28 所、活跃用户 (key: criterion_02_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.041)
 
 预设状态：选择“2025-2026学年第二学期”，地域保持全国范围。
 
@@ -72,7 +77,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 3: 趋势图覆盖所选学期的时间范围，能同时辨认总体、教师和学生 (key: criterion_03_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.1)
+### Criterion 3: 趋势图覆盖所选学期的时间范围，能同时辨认总体、教师和学生 (key: criterion_03_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.041)
 
 预设状态：选择任一有活跃数据的学期。
 
@@ -84,7 +89,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 4: 区域分布展示各省的授权学校、活跃学校、活跃用户和应用率， (key: criterion_04_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.1)
+### Criterion 4: 区域分布展示各省的授权学校、活跃学校、活跃用户和应用率， (key: criterion_04_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.041)
 
 预设状态：地域保持全国范围。
 
@@ -96,7 +101,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 5: 学校明细包含学校名称、所属省市区、授权或到期信息、活跃用 (key: criterion_05_lists_and_tables, primary: content_structure, secondary: lists_and_tables, weight: 0.1)
+### Criterion 5: 学校明细包含学校名称、所属省市区、授权或到期信息、活跃用 (key: criterion_05_lists_and_tables, primary: content_structure, secondary: lists_tables, weight: 0.041)
 
 预设状态：选择“2025-2026学年第二学期”并查看学校明细。
 
@@ -108,7 +113,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 6: 页面显示当前到期预警学校数量，明细包含学校名称、所属地区 (key: criterion_06_lists_and_tables, primary: content_structure, secondary: lists_and_tables, weight: 0.1)
+### Criterion 6: 页面显示当前到期预警学校数量，明细包含学校名称、所属地区 (key: criterion_06_lists_and_tables, primary: content_structure, secondary: lists_tables, weight: 0.041)
 
 预设状态：打开产品到期预警。
 
@@ -120,7 +125,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 7: 页面显示当前未应用学校数量，明细包含学校名称、所属地区、 (key: criterion_07_lists_and_tables, primary: content_structure, secondary: lists_and_tables, weight: 0.1)
+### Criterion 7: 页面显示当前未应用学校数量，明细包含学校名称、所属地区、 (key: criterion_07_lists_and_tables, primary: content_structure, secondary: lists_tables, weight: 0.041)
 
 预设状态：打开产品未应用预警。
 
@@ -132,7 +137,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 8: 概览更新为活跃学校 32 所、活跃用户 252 人、教师 (key: criterion_08_filtering_and_sorting, primary: interaction_and_function, secondary: filtering_and_sorting, weight: 0.1)
+### Criterion 8: 概览更新为活跃学校 32 所、活跃用户 252 人、教师 (key: criterion_08_filtering_and_sorting, primary: interaction_function, secondary: filtering_sorting, weight: 0.041)
 
 预设状态：地域保持全国范围。
 
@@ -144,7 +149,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 9: 市级选项只出现杭州市和宁波市，区级筛选等待选择城市；选择 (key: criterion_09_cross_section_coordination, primary: interaction_and_function, secondary: cross_section_coordination, weight: 0.1)
+### Criterion 9: 市级选项只出现杭州市和宁波市，区级筛选等待选择城市；选择 (key: criterion_09_cross_section_coordination, primary: interaction_function, secondary: cross_region_linkage, weight: 0.041)
 
 预设状态：省、市、区都未选择。
 
@@ -156,7 +161,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 10: 区级选项只出现西湖区和余杭区，概览更新为授权学校 4 所 (key: criterion_10_cross_section_coordination, primary: interaction_and_function, secondary: cross_section_coordination, weight: 0.1)
+### Criterion 10: 区级选项只出现西湖区和余杭区，概览更新为授权学校 4 所 (key: criterion_10_cross_section_coordination, primary: interaction_function, secondary: cross_region_linkage, weight: 0.041)
 
 预设状态：已选择浙江省和最新学期。
 
@@ -168,7 +173,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 11: 概览更新为授权学校 2 所、活跃学校 1 所、活跃用户  (key: criterion_11_cross_section_coordination, primary: interaction_and_function, secondary: cross_section_coordination, weight: 0.1)
+### Criterion 11: 概览更新为授权学校 2 所、活跃学校 1 所、活跃用户  (key: criterion_11_cross_section_coordination, primary: interaction_function, secondary: cross_region_linkage, weight: 0.041)
 
 预设状态：已选择浙江省、杭州市和最新学期。
 
@@ -180,7 +185,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 12: 原来的杭州市和西湖区选择被清除，市级选项改为南京市和苏州 (key: criterion_12_cross_section_coordination, primary: interaction_and_function, secondary: cross_section_coordination, weight: 0.1)
+### Criterion 12: 原来的杭州市和西湖区选择被清除，市级选项改为南京市和苏州 (key: criterion_12_cross_section_coordination, primary: interaction_function, secondary: cross_region_linkage, weight: 0.041)
 
 预设状态：已经选择浙江省、杭州市和西湖区。
 
@@ -192,7 +197,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 13: 所有区域都使用同一组学期和地域条件：概览为浙江省统计，趋 (key: criterion_13_filtering_and_sorting, primary: interaction_and_function, secondary: filtering_and_sorting, weight: 0.1)
+### Criterion 13: 所有区域都使用同一组学期和地域条件：概览为浙江省统计，趋 (key: criterion_13_filtering_and_sorting, primary: interaction_function, secondary: filtering_sorting, weight: 0.041)
 
 预设状态：选择“2025-2026学年第二学期”和“浙江省”。
 
@@ -204,7 +209,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 14: 趋势图的时间范围和各时间点数据随学期更新，不继续显示最新 (key: criterion_14_content_switching, primary: interaction_and_function, secondary: content_switching, weight: 0.1)
+### Criterion 14: 趋势图的时间范围和各时间点数据随学期更新，不继续显示最新 (key: criterion_14_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.041)
 
 预设状态：先查看最新学期的活跃趋势。
 
@@ -216,7 +221,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 15: 全国范围比较省份，选择浙江省后比较其下城市，选择杭州市后 (key: criterion_15_cross_section_coordination, primary: interaction_and_function, secondary: cross_section_coordination, weight: 0.1)
+### Criterion 15: 全国范围比较省份，选择浙江省后比较其下城市，选择杭州市后 (key: criterion_15_cross_section_coordination, primary: interaction_function, secondary: cross_region_linkage, weight: 0.041)
 
 预设状态：先后处于全国、浙江省、杭州市三个地域层级。
 
@@ -228,7 +233,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 16: 看板进入对应的下一级地域范围，顶部筛选和当前范围同步变化 (key: criterion_16_page_navigation, primary: interaction_and_function, secondary: page_navigation, weight: 0.1)
+### Criterion 16: 看板进入对应的下一级地域范围，顶部筛选和当前范围同步变化 (key: criterion_16_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.041)
 
 预设状态：区域分布处于全国、省或市层级。
 
@@ -240,7 +245,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 17: 预警数量、说明和学校明细随类型切换，两类预警不会混在同一 (key: criterion_17_content_switching, primary: interaction_and_function, secondary: content_switching, weight: 0.1)
+### Criterion 17: 预警数量、说明和学校明细随类型切换，两类预警不会混在同一 (key: criterion_17_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.041)
 
 预设状态：停留在预警分析区域。
 
@@ -252,7 +257,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 18: 未应用预警显示 4 所学校，分别为文澜实验学校、鄞州新城 (key: criterion_18_filtering_and_sorting, primary: interaction_and_function, secondary: filtering_and_sorting, weight: 0.1)
+### Criterion 18: 未应用预警显示 4 所学校，分别为文澜实验学校、鄞州新城 (key: criterion_18_filtering_and_sorting, primary: interaction_function, secondary: filtering_sorting, weight: 0.041)
 
 预设状态：选择最新学期和全国范围。
 
@@ -264,7 +269,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 19: 未应用预警数量变为 0，并显示当前筛选范围内没有未应用学 (key: criterion_19_filtering_and_sorting, primary: interaction_and_function, secondary: filtering_and_sorting, weight: 0.1)
+### Criterion 19: 未应用预警数量变为 0，并显示当前筛选范围内没有未应用学 (key: criterion_19_filtering_and_sorting, primary: interaction_function, secondary: filtering_sorting, weight: 0.041)
 
 预设状态：产品未应用预警已打开，地域为全国范围。
 
@@ -276,7 +281,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 20: 到期预警和明细只计算广东省学校；当前数据中没有已到期或  (key: criterion_20_filtering_and_sorting, primary: interaction_and_function, secondary: filtering_and_sorting, weight: 0.1)
+### Criterion 20: 到期预警和明细只计算广东省学校；当前数据中没有已到期或  (key: criterion_20_filtering_and_sorting, primary: interaction_function, secondary: filtering_sorting, weight: 0.041)
 
 预设状态：打开产品到期预警并保持全国范围。
 
@@ -288,7 +293,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 21: 页面按照筛选、概览、趋势与区域分析、学校明细和预警的阅读 (key: criterion_21_page_layout, primary: visual_and_layout, secondary: page_layout, weight: 0.1)
+### Criterion 21: 页面按照筛选、概览、趋势与区域分析、学校明细和预警的阅读 (key: criterion_21_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.041)
 
 预设状态：在 1440×900 桌面视口打开看板。
 
@@ -300,7 +305,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 22: 页面呈现清爽、稳重的教育产品后台风格；总体、教师和学生趋 (key: criterion_22_visual_style, primary: visual_and_layout, secondary: visual_style, weight: 0.1)
+### Criterion 22: 页面呈现清爽、稳重的教育产品后台风格；总体、教师和学生趋 (key: criterion_22_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.041)
 
 预设状态：页面同时显示普通数据和预警状态。
 
@@ -312,7 +317,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 23: 学校明细每页最多显示 10 条，页面提供清楚的页码或前后 (key: criterion_23_page_navigation, primary: interaction_and_function, secondary: page_navigation, weight: 0.1)
+### Criterion 23: 学校明细每页最多显示 10 条，页面提供清楚的页码或前后 (key: criterion_23_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.041)
 
 预设状态：选择最新学期和全国范围，学校明细共有 32 所学校。
 
@@ -324,7 +329,7 @@ Score 1.0: 预设状态、操作和期望结果均满足，页面行为与题目
 
 Score 0.0: 预设状态、操作或期望结果任一不满足。
 
-### Criterion 24: 预警明细第一页最多显示 10 条，并提供分页操作；切换到 (key: criterion_24_page_navigation, primary: interaction_and_function, secondary: page_navigation, weight: 0.1)
+### Criterion 24: 预警明细第一页最多显示 10 条，并提供分页操作；切换到 (key: criterion_24_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.057)
 
 预设状态：保持全国范围并打开产品到期预警，当前共有 16 所预警学校。
 
@@ -338,23 +343,12 @@ Score 0.0: 预设状态、操作或期望结果任一不满足。
 
 ## Workspace Path
 
-```
 workspace/extension/07_Website_Generation/task_009_smart_teaching_dashboard
-```
-
-附件映射：`workspace/extension/07_Website_Generation/task_009_smart_teaching_dashboard/exec/` 的内容在执行时对应 `/tmp_workspace/`；`workspace/extension/07_Website_Generation/task_009_smart_teaching_dashboard/eval/` 对应预留的 `/tmp_workspace_eval/`。
 
 ## Skills
 
-```
-```
-
 ## Env
 
-```
-```
+无
 
 ## Warmup
-
-```bash
-```

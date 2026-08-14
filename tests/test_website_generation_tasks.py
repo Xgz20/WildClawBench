@@ -40,6 +40,49 @@ EXPECTED_TASKS = {
         "difficulty": "L2",
         "criterion_count": 23,
     },
+    "task_006_xingji_travel_planner": {
+        "task_type": "旅行行程规划器",
+        "difficulty": "L2",
+        "criterion_count": 20,
+    },
+    "task_007_neon_snake_game": {
+        "task_type": "双人街机小游戏",
+        "difficulty": "L2",
+        "criterion_count": 14,
+    },
+    "task_008_shiguang_personal_blog": {
+        "task_type": "个人博客",
+        "difficulty": "L2",
+        "criterion_count": 23,
+    },
+    "task_009_smart_teaching_dashboard": {
+        "task_type": "数据分析看板",
+        "difficulty": "L2",
+        "criterion_count": 24,
+    },
+    "task_010_paperwork_pdf_tool": {
+        "task_type": "本地文档处理工具",
+        "difficulty": "L2",
+        "criterion_count": 17,
+    },
+    "task_011_love_anniversary_site": {
+        "task_type": "恋爱纪念与生活记录网站",
+        "difficulty": "L2",
+        "criterion_count": 25,
+    },
+}
+
+EXPECTED_FRONTMATTER_KEYS = {
+    "id",
+    "name",
+    "category",
+    "sub_category",
+    "task_type",
+    "timeout_seconds",
+    "modality",
+    "difficulty",
+    "grading_type",
+    "tags",
 }
 
 
@@ -54,6 +97,26 @@ def load_frontmatter(path: Path) -> dict:
     return metadata
 
 
+def load_sections(path: Path) -> dict[str, str]:
+    content = path.read_text(encoding="utf-8")
+    body = re.split(r"^---\s*$", content, maxsplit=2, flags=re.MULTILINE)[2]
+    sections: dict[str, str] = {}
+    current: str | None = None
+    lines: list[str] = []
+    for line in body.splitlines():
+        heading = re.match(r"^##\s+(.+)$", line)
+        if heading:
+            if current is not None:
+                sections[current] = "\n".join(lines).strip()
+            current = heading.group(1)
+            lines = []
+        else:
+            lines.append(line)
+    if current is not None:
+        sections[current] = "\n".join(lines).strip()
+    return sections
+
+
 class WebsiteGenerationTaskContractTest(unittest.TestCase):
     def test_web_task_frontmatter_matches_the_website_metadata_contract(self) -> None:
         task_files = sorted(TASKS_DIR.glob("*.md"))
@@ -66,6 +129,7 @@ class WebsiteGenerationTaskContractTest(unittest.TestCase):
             expected = EXPECTED_TASKS[short_id]
 
             with self.subTest(task_id=task_id):
+                self.assertEqual(set(metadata), EXPECTED_FRONTMATTER_KEYS)
                 self.assertEqual(metadata["category"], CATEGORY)
                 self.assertEqual(metadata["sub_category"], "自然语言页面构建")
                 self.assertEqual(metadata["task_type"], expected["task_type"])
@@ -87,14 +151,42 @@ class WebsiteGenerationTaskContractTest(unittest.TestCase):
                 self.assertTrue((expected_workspace / "exec").is_dir())
                 self.assertFalse((expected_workspace / "gt").exists())
 
+    def test_web_tasks_declare_the_standard_node_startup_contract(self) -> None:
+        required_fragments = (
+            "package.json",
+            "npm install",
+            "npm run build",
+            "npm run start -- --host 127.0.0.1 --port 4173",
+        )
+        for path in sorted(TASKS_DIR.glob("*.md")):
+            task = parse_task_md(path)
+
+            with self.subTest(task_id=task["task_id"]):
+                for fragment in required_fragments:
+                    self.assertIn(fragment, task["prompt"])
+
     def test_web_tasks_do_not_declare_unused_checks_warmup_or_skills(self) -> None:
         for path in sorted(TASKS_DIR.glob("*.md")):
             task = parse_task_md(path)
+            sections = load_sections(path)
 
             with self.subTest(task_id=task["task_id"]):
                 self.assertEqual(task["automated_checks"], "")
                 self.assertEqual(task["warmup"], "")
                 self.assertEqual(task["skills"], "")
+                for section in ("Automated Checks", "Skills", "Warmup"):
+                    self.assertEqual(sections.get(section), "")
+
+    def test_web_task_workspace_section_contains_only_the_workspace_path(self) -> None:
+        for path in sorted(TASKS_DIR.glob("*.md")):
+            task = parse_task_md(path)
+            short_id = task["task_id"].removeprefix(f"{CATEGORY}_")
+
+            with self.subTest(task_id=task["task_id"]):
+                self.assertEqual(
+                    load_sections(path).get("Workspace Path"),
+                    f"workspace/extension/{CATEGORY}/{short_id}",
+                )
 
     def test_web_task_rubrics_expose_stable_metric_dimensions(self) -> None:
         allowed_primary = {
@@ -109,17 +201,40 @@ class WebsiteGenerationTaskContractTest(unittest.TestCase):
             criteria = task["rubric_criteria"]
 
             with self.subTest(task_id=task["task_id"]):
+                self.assertEqual(task["metric_profile"], "web-site-gen")
                 self.assertEqual(
                     len(criteria), EXPECTED_TASKS[short_id]["criterion_count"]
                 )
                 keys = [criterion["key"] for criterion in criteria]
                 self.assertEqual(len(keys), len(set(keys)))
                 self.assertTrue(
+                    all(re.fullmatch(r"[a-z][a-z0-9_]*", key) for key in keys)
+                )
+                self.assertTrue(
                     all(criterion["primary"] in allowed_primary for criterion in criteria)
                 )
                 self.assertTrue(all(criterion["secondary"] for criterion in criteria))
+                self.assertTrue(all(criterion["weight"] > 0 for criterion in criteria))
                 self.assertAlmostEqual(
                     sum(criterion["weight"] for criterion in criteria), 1.0, places=3
+                )
+                self.assertEqual(
+                    [
+                        int(number)
+                        for number in re.findall(
+                            r"^###\s+Criterion\s+(\d+)\s*[:：]",
+                            task["llm_judge_rubric"],
+                            re.MULTILINE,
+                        )
+                    ],
+                    list(range(1, len(criteria) + 1)),
+                )
+                for criterion in criteria:
+                    self.assertIn("Score 1.0:", criterion["rubric"])
+                    self.assertIn("Score 0.0:", criterion["rubric"])
+                self.assertNotIn(
+                    "Judge 只根据实际页面和操作结果判断",
+                    task["llm_judge_rubric"],
                 )
 
 
