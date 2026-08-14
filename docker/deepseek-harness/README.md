@@ -112,8 +112,26 @@ The formal backend has offline unit coverage for container construction,
 workspace/skills/warmup, skill-name normalization and native gestures, timeout
 handling, transcript conversion, usage, grading policy, metrics, and report
 identity. An initial real `run_batch.py` run exposed the invalid underscore
-skill name and completed with `results.md not found`; the repaired flow still
-requires a fresh successful scoring run before the formal integration can be
-called end-to-end verified.
-Live DeepSeek Search, native multimodal tasks, the full benchmark, and inferred
+skill name and completed with `results.md not found`.
+
+After the skill discovery repair, a fresh single-task Chat `/v2` evaluation on
+2026-08-14 completed through the formal `run_batch.py` path with exit code 0:
+
+- `execution_status.json` recorded `finished`, DSH `0.1.0-rc.6`,
+  `openai-completions`, model `xopglm52`, and Harness exit code 0.
+- The real grader produced `overall_score = 0.6218` with no error, and
+  `task_output/workspace/results/results.md` contained 11,209 bytes.
+- Usage recorded 11 requests and 134,664 total tokens. Conversion produced 25
+  messages; `chat.jsonl` contained 11 assistant messages, 10 tool calls, and 10
+  tool results.
+- The native session contained one skill catalog and one direct skill
+  invocation, with no `skill` tool call. This confirms that the prefixed
+  `/<name>` gesture loaded the task skill directly.
+- `anomalies.json` reported `validity_verdict = PASS` and no validity failure.
+  The separate scoped validity checker reported `REVIEW` with zero errors and
+  one `SUMMARY_MISSING` warning because a single-task run has no
+  `summary_all_*.json`; it did not report a task validity failure.
+
+This evidence verifies one text/tool task, not the full benchmark. Live
+DeepSeek Search, native multimodal tasks, full-benchmark behavior, and inferred
 USD cost remain outside this verification boundary.

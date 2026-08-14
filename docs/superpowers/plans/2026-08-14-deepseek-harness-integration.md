@@ -463,9 +463,9 @@ git commit -m "test(deepseek-harness): 记录正式集成验证"
 - [x] Prefix the task prompt with ordered `/<normalized-name>` gestures so DSH performs native
   direct skill invocation without concatenating skill bodies in the runner.
 - [x] Verify the repair through RED/GREEN unit and lifecycle tests.
-- [ ] Repeat the real evaluation below and require `results/results.md` plus a successful score.
+- [x] Repeat the real evaluation below and require `results/results.md` plus a successful score.
 
-- [ ] **Step 1: Run the real Chat `/v2` task**
+- [x] **Step 1: Run the real Chat `/v2` task**
 
 Load credentials from the ignored root `.env`; do not put their values in commands or tracked files:
 
@@ -475,7 +475,7 @@ set -a
 set +a
 export OPENROUTER_BASE_URL='https://maas-api.cn-huabei-1.xf-yun.com/v2'
 export DOCKER_IMAGE_DEEPSEEK_HARNESS='wildclawbench-deepseek-harness-ubuntu:v0.0'
-export OUTPUT_SUBDIR='/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/eval_out_debug/smoke/deepseek-harness-integration/xopglm52'
+export OUTPUT_SUBDIR='/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/eval_out_debug/smoke/deepseek-harness-integration-skillfix/xopglm52'
 
 uv run eval/run_batch.py \
   --agent-backend deepseek-harness \
@@ -485,7 +485,11 @@ uv run eval/run_batch.py \
   --model openrouter/xopglm52
 ```
 
-- [ ] **Step 2: Validate evaluation artifacts**
+Actual result: `run_batch.py` exited 0. `execution_status.json` recorded
+`finished`, DSH `0.1.0-rc.6`, `openai-completions`, `xopglm52`, and Harness
+exit code 0.
+
+- [x] **Step 2: Validate evaluation artifacts**
 
 Locate the one run directory and assert:
 
@@ -514,11 +518,24 @@ uv run python \
   --output-dir "$OUTPUT_SUBDIR/validity"
 ```
 
-Expected: the selected single-task smoke has no upstream validity failure.
+Actual result: the grader produced `overall_score = 0.6218` with no error and
+`task_output/workspace/results/results.md` was 11,209 bytes. Usage recorded 11
+requests and 134,664 total tokens; conversion recorded 25 messages. The
+converted transcript contained 11 assistant messages, 10 tool calls, and 10
+tool results. The native session contained one skill catalog and one direct
+skill invocation, with no `skill` tool call. `anomalies.json` reported `PASS`
+and no validity failure.
 
-- [ ] **Step 3: Review logs and secret safety**
+The scoped validity checker reported `REVIEW`, not `PASS`: zero errors and one
+`SUMMARY_MISSING` warning because this single-task run has no
+`summary_all_*.json`. It reported no task validity failure.
+
+- [x] **Step 3: Review logs and secret safety**
 
 Inspect agent/runner logs, execution status, transcript, conversion manifest, usage, score and anomalies. Compare `.env` secrets against generated text artifacts without printing them; fail on any full-value match.
+
+Actual result: the generated artifacts were inspected and a full-value scan of
+configured model/judge credentials found no match.
 
 - [ ] **Step 4: Request independent code review**
 

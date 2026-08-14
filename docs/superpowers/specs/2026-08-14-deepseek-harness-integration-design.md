@@ -193,25 +193,31 @@ token 计数继续保留。
 和归档链路，但 transcript 中没有 skill catalog 或 skill 加载记录。模型最终写入
 `results/action_list.md`，评分器因此按既有契约报告 `results.md not found`。DSH 源码确认
 `skill-filesystem` 仅接受 `^[a-z0-9]+(?:-[a-z0-9]+)*$`，原始 `name: 03_task2`
-会在发现阶段被忽略。上述专用暂存和 `/<name>` gesture 修复该接入缺陷；修复后的真实
-评分仍须按以下门槛重跑，不能把首次运行记为端到端通过。
+会在发现阶段被忽略。上述专用暂存和 `/<name>` gesture 修复了该接入缺陷。
 
-构建正式镜像 tag 后，使用 Chat `/v2`、`xopglm52`、`--thinking high` 运行：
+修复后已使用正式镜像、Chat `/v2`、`xopglm52`、`--thinking high` 重新运行：
 
 `tasks/03_Social_Interaction/03_Social_Interaction_task_2_chat_action_extraction.md`
 
-必须通过以下门槛：
+`eval/run_batch.py` 退出 0，本次单任务真实评测通过以下门槛：
 
-- `eval/run_batch.py` 接受 `--agent-backend deepseek-harness` 并退出 0。
-- `execution_status.json` 为 finished，记录 DSH 版本、镜像和 API。
-- `score.json` 由真实评分流程生成，不是手写或复制。
-- `task_output/workspace/results/results.md` 存在且非空；宿主输入 workspace 保持只读，
-  不作为输出正确性的依据。
-- 原生 `dsh_sessions`、`chat.jsonl`、`conversion_manifest.json` 和 `usage.json` 存在。
-- transcript 包含 assistant、tool use 和 tool result；usage 的 `request_count > 0`。
-- anomalies 不包含由接入缺陷导致的 validity failure。
-- 产物和 Git 变更中不含模型或 judge 的完整凭据。
+- `execution_status.json` 为 `finished`，记录 DSH `0.1.0-rc.6`、
+  `openai-completions`、模型 `xopglm52` 和 Harness exit code 0。
+- `score.json` 由真实评分流程生成，`overall_score = 0.6218`、`error = null`。
+- `task_output/workspace/results/results.md` 存在且为 11,209 bytes；宿主输入 workspace
+  保持只读，不作为输出正确性的依据。
+- 原生 `dsh_sessions`、`chat.jsonl`、`conversion_manifest.json` 和 `usage.json` 均存在。
+  conversion message count 为 25；转换 transcript 含 11 条 assistant、10 个 tool use 和
+  10 个 tool result。
+- usage 的 `request_count = 11`、`total_tokens = 134664`。
+- 原生 session 含 1 个 skill catalog 和 1 个 direct skill invocation，未调用 `skill`
+  tool，证明 `/<name>` gesture 已直接加载完整 skill 内容。
+- `anomalies.json` 的 `validity_verdict = PASS`，且无 validity failure。
+- scoped validity checker 为 `REVIEW`：error 0、warning 1；唯一
+  `SUMMARY_MISSING` 是单任务结果没有 `summary_all_*.json`，不能写成 checker 全 PASS，
+  也不是任务 validity failure。
+- 对生成产物执行了完整凭据值扫描，未发现配置的模型或 judge 凭据。
 
 Responses `/v1` 的 runner 配置由单元测试覆盖，并保留此前 PoC 的真实 E2E 证据；本轮
-无需重复跑正式评分。live DeepSeek Search、native multimodal、全量任务和分档成本估算
-作为后续独立验收项。
+无需重复跑正式评分。本次只证明该文本/工具单任务的正式评测闭环；live DeepSeek
+Search、native multimodal、全量 benchmark 和分档成本估算作为后续独立验收项。
