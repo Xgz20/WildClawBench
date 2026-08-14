@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
+from yaml.nodes import MappingNode, ScalarNode
 
 
 DSH_SKILLS_DIR = "/root/.dsh/skills"
@@ -25,6 +26,14 @@ class _SkillBundle:
     normalized_name: str
 
 
+@dataclass(frozen=True)
+class _ParsedSkill:
+    raw: str
+    name: str
+    name_start: int
+    name_end: int
+
+
 def normalize_dsh_skill_name(name: str) -> str:
     normalized = _NON_ALPHANUMERIC.sub("-", name.strip().lower()).strip("-")
     if not normalized or not _DSH_SKILL_NAME.fullmatch(normalized):
@@ -39,7 +48,7 @@ def build_dsh_prompt(base_prompt: str, skill_names: list[str]) -> str:
     return f"{gestures}\n\n{base_prompt}"
 
 
-def _parse_skill(path: Path) -> tuple[dict[str, object], str]:
+def _parse_skill(path: Path) -> _ParsedSkill:
     try:
         raw = path.read_text(encoding="utf-8")
     except OSError as exc:
@@ -55,35 +64,52 @@ def _parse_skill(path: Path) -> tuple[dict[str, object], str]:
     if closing_index is None:
         raise DshSkillError(f"skill file {path} has unterminated YAML frontmatter")
 
+    frontmatter_offset = len(lines[0])
+    frontmatter = "".join(lines[1:closing_index])
     try:
-        metadata = yaml.safe_load("".join(lines[1:closing_index]))
+        # DSH uses YAML 1.2, where plain on/yes scalars remain strings. BaseLoader
+        # avoids PyYAML's YAML 1.1 coercion while compose retains source marks.
+        document = yaml.compose(frontmatter, Loader=yaml.BaseLoader)
     except yaml.YAMLError as exc:
         raise DshSkillError(f"skill file {path} has invalid YAML frontmatter: {exc}") from exc
-    if not isinstance(metadata, dict):
+    if not isinstance(document, MappingNode):
         raise DshSkillError(f"skill file {path} frontmatter must be a YAML mapping")
-    name = metadata.get("name")
-    description = metadata.get("description")
-    if not isinstance(name, str) or not name.strip():
+
+    fields: dict[str, ScalarNode] = {}
+    for key_node, value_node in document.value:
+        if not isinstance(key_node, ScalarNode):
+            continue
+        if key_node.value in {"name", "description"}:
+            if not isinstance(value_node, ScalarNode):
+                raise DshSkillError(
+                    f"skill file {path} frontmatter requires a string {key_node.value}"
+                )
+            fields[key_node.value] = value_node
+
+    name_node = fields.get("name")
+    description_node = fields.get("description")
+    if name_node is None or not name_node.value.strip():
         raise DshSkillError(f"skill file {path} frontmatter requires a string name")
-    if not isinstance(description, str) or not description.strip():
+    if description_node is None or not description_node.value.strip():
         raise DshSkillError(f"skill file {path} frontmatter requires a string description")
-    return metadata, "".join(lines[closing_index + 1 :])
+    return _ParsedSkill(
+        raw=raw,
+        name=name_node.value,
+        name_start=frontmatter_offset + name_node.start_mark.index,
+        name_end=frontmatter_offset + name_node.end_mark.index,
+    )
 
 
 def _render_staged_skill(
-    metadata: dict[str, object],
-    body: str,
+    parsed: _ParsedSkill,
     normalized_name: str,
     container_bundle_dir: str,
 ) -> str:
-    staged_metadata = dict(metadata)
-    staged_metadata["name"] = normalized_name
-    frontmatter = yaml.safe_dump(
-        staged_metadata,
-        allow_unicode=True,
-        sort_keys=False,
-    ).rstrip()
-    staged = f"---\n{frontmatter}\n---\n{body}"
+    staged = (
+        parsed.raw[: parsed.name_start]
+        + normalized_name
+        + parsed.raw[parsed.name_end :]
+    )
     return staged.replace("{baseDir}", container_bundle_dir)
 
 
@@ -99,6 +125,8 @@ def _resolve_bundle(skills_root: Path, declaration: str) -> tuple[Path, Path]:
             f"skill declaration {declaration!r} escapes skills root {skills_root}"
         ) from exc
     skill_file = source / "SKILL.md"
+    if skill_file.is_symlink():
+        raise DshSkillError(f"skill file {skill_file}: SKILL.md must not be a symlink")
     if not source.is_dir() or not skill_file.is_file():
         raise DshSkillError(f"declared skill bundle not found: {source}")
     return source, skill_file
@@ -127,9 +155,8 @@ def install_dsh_skills(
         if not declaration:
             continue
         source, skill_file = _resolve_bundle(skills_root, declaration)
-        metadata, _ = _parse_skill(skill_file)
-        declared_name = str(metadata["name"])
-        normalized_name = normalize_dsh_skill_name(declared_name)
+        parsed = _parse_skill(skill_file)
+        normalized_name = normalize_dsh_skill_name(parsed.name)
         previous = seen.get(normalized_name)
         if previous is not None:
             raise DshSkillError(
@@ -152,12 +179,11 @@ def install_dsh_skills(
         for bundle in bundles:
             staged_bundle = staging_root / bundle.normalized_name
             shutil.copytree(bundle.source, staged_bundle, symlinks=True)
-            metadata, body = _parse_skill(staged_bundle / "SKILL.md")
+            parsed = _parse_skill(staged_bundle / "SKILL.md")
             container_bundle_dir = f"{container_root}/{bundle.normalized_name}"
             (staged_bundle / "SKILL.md").write_text(
                 _render_staged_skill(
-                    metadata,
-                    body,
+                    parsed,
                     bundle.normalized_name,
                     container_bundle_dir,
                 ),

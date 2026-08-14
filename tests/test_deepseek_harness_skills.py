@@ -125,6 +125,86 @@ class DeepSeekHarnessSkillTests(unittest.TestCase):
 
             run_mock.assert_not_called()
 
+    def test_install_rejects_symlinked_skill_file_without_modifying_target(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            skills_root = root / "skills"
+            bundle = skills_root / "linked"
+            bundle.mkdir(parents=True)
+            target = root / "shared-skill.md"
+            original = (
+                "---\n"
+                "name: linked_skill\n"
+                "description: Linked skill\n"
+                "---\n\n"
+                "Keep this source unchanged.\n"
+            )
+            target.write_text(original, encoding="utf-8")
+            (bundle / "SKILL.md").symlink_to(target)
+            caught: DshSkillError | None = None
+
+            with patch(
+                "src.agents.deepseek_harness.skills.subprocess.run",
+                return_value=subprocess.CompletedProcess([], 0, "", ""),
+            ) as run_mock:
+                try:
+                    install_dsh_skills("dsh-task", "linked\n", str(skills_root))
+                except DshSkillError as exc:
+                    caught = exc
+
+            self.assertEqual(target.read_text(encoding="utf-8"), original)
+            self.assertIsNotNone(caught)
+            self.assertRegex(str(caught), "SKILL.md must not be a symlink")
+            run_mock.assert_not_called()
+
+    def test_install_preserves_yaml_12_scalars_and_frontmatter_source(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            skills_root = Path(temp_dir) / "skills"
+            bundle = skills_root / "yaml_12"
+            bundle.mkdir(parents=True)
+            source = (
+                "---\n"
+                "name: yaml_12\n"
+                "description: on\n"
+                "metadata:\n"
+                "  enabled: yes\n"
+                "  mode: on\n"
+                "---\n\n"
+                "Run {baseDir}/scripts/run.sh\n"
+            )
+            (bundle / "SKILL.md").write_text(source, encoding="utf-8")
+            staged_text = ""
+
+            def fake_run(
+                command: list[str],
+                **_kwargs: object,
+            ) -> subprocess.CompletedProcess[str]:
+                nonlocal staged_text
+                if command[:2] == ["docker", "cp"]:
+                    staged = Path(command[2].removesuffix("/."))
+                    staged_text = (staged / "SKILL.md").read_text(encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with patch(
+                "src.agents.deepseek_harness.skills.subprocess.run",
+                side_effect=fake_run,
+            ):
+                names = install_dsh_skills(
+                    "dsh-task",
+                    "yaml_12\n",
+                    str(skills_root),
+                )
+
+            self.assertEqual(names, ["yaml-12"])
+            self.assertEqual(
+                staged_text,
+                source.replace("name: yaml_12", "name: yaml-12").replace(
+                    "{baseDir}",
+                    "/root/.dsh/skills/yaml-12",
+                ),
+            )
+            self.assertEqual((bundle / "SKILL.md").read_text(encoding="utf-8"), source)
+
 
 if __name__ == "__main__":
     unittest.main()
