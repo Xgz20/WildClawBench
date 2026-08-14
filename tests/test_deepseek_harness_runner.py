@@ -117,7 +117,8 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
         self.assertIn("DEEPSEEK_API_KEY=search-key", command)
         self.assertIn("SLACK_TOKEN=slack-secret", command)
         self.assertIn("LOBSTER_TOKEN=lobster-secret", command)
-        self.assertEqual(command[-3:], ["/bin/bash", "-c", "tail -f /dev/null"])
+        image_index = command.index("dsh:test")
+        self.assertEqual(command[image_index + 1 :], ["-c", "tail -f /dev/null"])
 
     def test_build_container_command_omits_empty_optional_values(self) -> None:
         config = resolve_dsh_config(

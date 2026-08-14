@@ -165,7 +165,6 @@ def build_container_command(
         "--entrypoint",
         "/bin/bash",
         config.image,
-        "/bin/bash",
         "-c",
         "tail -f /dev/null",
     ]
