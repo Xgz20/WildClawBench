@@ -380,7 +380,7 @@ class DeepSeekHarnessAgent(BaseAgent):
 
             failure_stage = "preparing_workspace"
             write_execution_status(spec.output_dir, status=failure_stage)
-            self._prepare_workspace(task_id)
+            self._prepare_workspace(task_id, spec.workspace_path)
             setup_skills(
                 task_id,
                 str(spec.task.get("skills", "")) if spec.task else "",
@@ -499,7 +499,7 @@ class DeepSeekHarnessAgent(BaseAgent):
         return (completed.stdout or completed.stderr).strip() or "unknown"
 
     @staticmethod
-    def _prepare_workspace(task_id: str) -> None:
+    def _prepare_workspace(task_id: str, workspace_path: str | Path) -> None:
         command = (
             f"mkdir -p /tmp_workspace && cp -r {SRC_MOUNT}/. /tmp_workspace "
             "&& chmod -R u+w /tmp_workspace"
@@ -511,6 +511,24 @@ class DeepSeekHarnessAgent(BaseAgent):
         )
         if completed.returncode != 0:
             raise RuntimeError(f"Workspace copy failed: {completed.stderr.strip()}")
+
+        task_tmp = Path(workspace_path).expanduser() / "tmp"
+        if not task_tmp.exists():
+            return
+        mkdir_tmp = subprocess.run(
+            ["docker", "exec", task_id, "mkdir", "-p", "/tmp_workspace/tmp"],
+            capture_output=True,
+            text=True,
+        )
+        if mkdir_tmp.returncode != 0:
+            raise RuntimeError(f"Task tmp directory creation failed: {mkdir_tmp.stderr.strip()}")
+        copied = subprocess.run(
+            ["docker", "cp", f"{task_tmp}/.", f"{task_id}:/tmp_workspace/tmp/"],
+            capture_output=True,
+            text=True,
+        )
+        if copied.returncode != 0:
+            raise RuntimeError(f"Task tmp input copy failed: {copied.stderr.strip()}")
 
     @staticmethod
     def _copy_prompt(task_id: str, prompt: str) -> None:

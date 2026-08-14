@@ -439,6 +439,35 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
         self.assertEqual(len(copied_host_paths), 1)
         self.assertFalse(copied_host_paths[0].exists())
 
+    def test_prepare_workspace_copies_task_tmp_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir) / "workspace"
+            task_tmp = workspace / "tmp"
+            task_tmp.mkdir(parents=True)
+            (task_tmp / "messages.json").write_text("[]", encoding="utf-8")
+            completed = subprocess.CompletedProcess([], 0, "", "")
+
+            with patch(
+                "src.agents.deepseek_harness.runner.subprocess.run",
+                return_value=completed,
+            ) as run_mock:
+                self._agent()._prepare_workspace("dsh-task", workspace)
+
+            self.assertEqual(run_mock.call_count, 3)
+            self.assertEqual(
+                run_mock.call_args_list[1].args[0],
+                ["docker", "exec", "dsh-task", "mkdir", "-p", "/tmp_workspace/tmp"],
+            )
+            self.assertEqual(
+                run_mock.call_args_list[2].args[0],
+                [
+                    "docker",
+                    "cp",
+                    f"{task_tmp}/.",
+                    "dsh-task:/tmp_workspace/tmp/",
+                ],
+            )
+
 
 class DeepSeekHarnessArtifactTests(unittest.TestCase):
     FIXTURE_ROOT = Path(__file__).parent / "fixtures" / "deepseek_harness"
