@@ -336,9 +336,25 @@ class DeepSeekHarnessAgent(BaseAgent):
         timed_out = False
         failure_stage: str | None = None
         container_started = False
+        missing_skills: list[str] = []
 
         spec.output_dir.mkdir(parents=True, exist_ok=True)
         (spec.output_dir / "agent.log").touch(exist_ok=True)
+
+        def record_missing_skill(declaration: str) -> None:
+            if declaration in missing_skills:
+                return
+            missing_skills.append(declaration)
+            append_agent_log_event(
+                spec.output_dir,
+                {
+                    "type": "runner.skill_missing",
+                    "stage": "preparing_skills",
+                    "skills": list(missing_skills),
+                },
+            )
+            write_execution_status(spec.output_dir, missing_skills=list(missing_skills))
+
         write_execution_status(
             spec.output_dir,
             task_id=task_id,
@@ -360,6 +376,8 @@ class DeepSeekHarnessAgent(BaseAgent):
                 failure_stage = "validating_configuration"
                 raise ValueError("OPENROUTER_API_KEY must be set for DeepSeek Harness")
 
+            failure_stage = "preparing_workspace"
+            write_execution_status(spec.output_dir, status=failure_stage)
             exec_path = Path(spec.workspace_path).expanduser() / "exec"
             if not exec_path.is_dir():
                 logger.warning(
@@ -384,16 +402,26 @@ class DeepSeekHarnessAgent(BaseAgent):
             failure_stage = "preparing_workspace"
             write_execution_status(spec.output_dir, status=failure_stage)
             self._prepare_workspace(task_id, spec.workspace_path)
+
+            failure_stage = "preparing_skills"
+            write_execution_status(spec.output_dir, status=failure_stage)
             skill_names = install_dsh_skills(
                 task_id,
                 str(spec.task.get("skills", "")) if spec.task else "",
                 str(spec.task.get("skills_path", "")) if spec.task else "",
+                on_missing=record_missing_skill,
             )
+
+            failure_stage = "preparing_warmup"
+            write_execution_status(spec.output_dir, status=failure_stage)
             run_warmup(
                 task_id,
                 str(spec.task.get("warmup", "")) if spec.task else "",
                 detach_background=True,
             )
+
+            failure_stage = "snapshotting_workspace"
+            write_execution_status(spec.output_dir, status=failure_stage)
             snapshot_workspace_state(task_id)
 
             failure_stage = "preparing_harness_input"
@@ -462,6 +490,7 @@ class DeepSeekHarnessAgent(BaseAgent):
                 exit_code=exit_code,
                 error=error,
                 failure_stage=failure_stage,
+                missing_skills=missing_skills,
             )
 
         return AgentExecution(

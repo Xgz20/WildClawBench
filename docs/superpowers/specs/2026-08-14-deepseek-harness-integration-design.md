@@ -57,12 +57,19 @@ DSH 的 skill 名称约束和调用方式与其他 Harness 不同，因此由
    保持容器运行，直到 `run_batch.py` 完成评分和产物采集。
 4. 将 `<workspace>/exec` 只读挂载到 `/mnt/wildclaw_src`，再复制到可写的
    `/tmp_workspace`。不存在 `exec` 时创建空目录并记录 warning。
-5. 用 PyYAML 读取每个任务 skill 的 frontmatter，将名称规范化为 DSH 要求的小写
-   kebab-case（例如 `03_task2` 转为 `03-task2`）。若多个声明归一到同一名称，则在
-   Docker 操作前明确失败。
+5. 使用与 DSH `yaml.parse` core schema 对齐的 YAML 1.2 标量解析读取每个任务 skill 的
+   frontmatter：`on/yes` 和日期保持字符串，`true/false`、`0o` 八进制和无小数点指数
+   等数字按非字符串处理；重复 mapping key 在 Docker 操作前明确失败。将名称规范化为
+   DSH 要求的小写 kebab-case（例如 `03_task2` 转为 `03-task2`）。若多个声明归一到同一
+   名称，则在 Docker 操作前明确失败。
 6. 将完整 bundle 暂存到宿主临时目录，保留 `references`、`scripts`、`assets` 等资源；
-   只修改暂存副本的 `SKILL.md`，更新 `name` 并将 `{baseDir}` 替换为
+   只修改暂存副本的 `SKILL.md`，按顶层 mapping pair 的词法 token 更新 `name` 值；支持
+   带 tag/anchor、alias 和 block scalar 的输入定位，输出规范化的普通字符串 `name`，并
+   保留未修改内容的原始换行（包括 CRLF）。同时将 `{baseDir}` 替换为
    `/root/.dsh/skills/<normalized-name>`，再复制到容器同名目录。原始 task skill 不变。
+   为兼容其他 backend 的既有行为，声明的 bundle 不存在时记录 warning 并跳过，不为其
+   生成调用 gesture；路径越界、YAML 非法、字段类型不符、符号链接 `SKILL.md` 或名称
+   冲突仍在 `preparing_skills` 阶段明确失败。
 7. 在原任务 prompt 前按声明顺序加入 `/<normalized-name>`。这是 DSH 原生 direct skill
    invocation gesture，会由 `dsh-tool-skill` 注入完整 skill 内容；runner 不拼接正文。
 8. 运行任务 warmup，保存 workspace baseline，再执行 DSH。
@@ -134,7 +141,15 @@ DSH 原生事件没有可信 USD 成本时保持 `cost_usd = 0.0`，本次不根
 
 - 缺少 `OPENROUTER_API_KEY` 或 API 类型非法时，在模型请求前返回明确错误；未设置
   endpoint 时使用 OpenRouter 默认地址。
-- 容器启动、workspace、skills、warmup 和 DSH 执行分别记录 failure stage。
+- 容器启动、workspace、skills、warmup、workspace baseline、DSH 执行和 session export
+  分别记录 failure stage；skills、warmup、baseline 分别使用 `preparing_skills`、
+  `preparing_warmup`、`snapshotting_workspace`。
+- 已知框架/Harness 阶段中的 Docker daemon、容器缺失、只读文件系统、磁盘耗尽和 DNS
+  等基础设施错误优先归因 `evaluation_environment` 并要求重跑；没有结构化阶段时不因
+  错误文本单独升级归因。
+- 声明的 skill bundle 缺失时继续执行以保持既有 backend 兼容性，但同时把声明名写入
+  `execution_status.json.missing_skills` 和 `runner.log` 的结构化事件；anomalies 生成
+  `DECLARED_SKILL_MISSING`，按确定性的评测依赖缺失判为 validity `FAIL` 并要求修复后重跑。
 - DSH 非零退出或 timeout 后仍导出已有 session，并尝试转换 transcript/usage。
 - session 转换失败时保留 `dsh_sessions`，记录转换错误，并让 backend 返回 error。
 - backend 加入 `grade_on_error` 范围；已有自动检查或 rubric 时，即使 Harness 执行失败也
@@ -220,4 +235,6 @@ token 计数继续保留。
 
 Responses `/v1` 的 runner 配置由单元测试覆盖，并保留此前 PoC 的真实 E2E 证据；本轮
 无需重复跑正式评分。本次只证明该文本/工具单任务的正式评测闭环；live DeepSeek
-Search、native multimodal、全量 benchmark 和分档成本估算作为后续独立验收项。
+Search、native multimodal、全量 benchmark 和分档成本估算作为后续独立验收项。额外的
+invocation frontmatter（例如 `disable-model-invocation`、`user-invocable`）校验与
+策略组合未在本轮覆盖；当前纳入的任务 skill 未声明这些字段。

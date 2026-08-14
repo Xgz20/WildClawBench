@@ -400,7 +400,7 @@ git commit -m "docs(deepseek-harness): 发布正式评测镜像用法"
 **Files:**
 - Modify: `docs/superpowers/plans/2026-08-14-deepseek-harness-integration.md`
 
-- [ ] **Step 1: Run focused and adjacent tests**
+- [x] **Step 1: Run focused and adjacent tests**
 
 ```bash
 uv run python -m unittest \
@@ -416,9 +416,9 @@ uv run python -m unittest \
   tools/report/tests/test_analysis_pipeline.py -v
 ```
 
-Expected: zero failures and errors.
+Actual result: `161/161` tests passed with zero failures and errors.
 
-- [ ] **Step 2: Run source, diff and secret checks**
+- [x] **Step 2: Run source, diff and secret checks**
 
 ```bash
 uv run python -m compileall -q \
@@ -427,17 +427,27 @@ uv run python -m compileall -q \
 git diff --check
 ```
 
-Load the ignored root `.env`, compare configured model/judge secret values against the Git diff, and fail if a full value is present. Never print secret values.
+Loaded the ignored root `.env` without printing values; no configured model/judge credential
+matched tracked or untracked generated text. `compileall` and `git diff --check` exited 0.
 
-- [ ] **Step 3: Verify a real detached container without network**
+- [x] **Step 3: Verify a real detached container without network**
 
-Start the formal image with `--entrypoint /bin/bash`, copy a fixture into `/tmp_workspace`, verify `/root/.dsh/skills` is writable, confirm the container stays alive, then remove only the explicitly named smoke container.
+The formal image reported DSH `0.1.0-rc.6`; `wcb-dsh --dump-config` exited 0 for
+`openai-responses` with dummy credentials. A detached `wcb-dsh-skill-smoke-final` container
+accepted the staged `03-task2` bundle, kept `/root/.dsh/skills` writable, and after an expected
+unreachable-endpoint exit (`rc=1`) exported one native `session.jsonl` containing one
+`skill-catalog` and one `skill-invocation`. The explicitly named smoke container and its temporary
+output were removed.
 
-- [ ] **Step 4: Record executed checks**
+- [x] **Step 4: Record executed checks**
 
-Mark only commands actually run as complete. Record a pre-existing failure separately rather than changing unrelated code.
+The full `tests/test_anomalies.py` file retains one pre-existing AstronClaw image-model fixture
+failure (`test_astronclaw_image_model_configuration_error_requires_rerun`); it reproduces the
+committed baseline and is unrelated to DeepSeek Harness. DeepSeek Harness and new anomaly
+regressions pass independently (`47/47` and `4/4`). A fresh DSH scalar parity matrix covered
+32 name/description cases with no mismatch.
 
-- [ ] **Step 5: Commit plan evidence if changed**
+- [x] **Step 5: Commit plan evidence if changed**
 
 ```bash
 git add docs/superpowers/plans/2026-08-14-deepseek-harness-integration.md
@@ -537,18 +547,38 @@ Inspect agent/runner logs, execution status, transcript, conversion manifest, us
 Actual result: the generated artifacts were inspected and a full-value scan of
 configured model/judge credentials found no match.
 
-- [ ] **Step 4: Request independent code review**
+- [x] **Step 4: Request independent code review**
 
-Review `f26029a..HEAD` against the design. Fix every Critical or Important finding, rerun affected tests, and document residual boundaries.
+Independent reviews completed. No Critical findings remained; five Important findings were fixed
+and covered by regression tests: CRLF preservation, DSH scalar-value duplicate keys, host workspace
+preparation attribution, Docker environment errors during `running_harness`, and
+`exporting_sessions` anomaly de-duplication. Strict DSH frontmatter delimiters were also aligned.
 
-- [ ] **Step 5: Run final verification and commit evidence updates**
+**Post-review hardening (2026-08-14):**
 
-Repeat Task 7 tests, compileall, Docker version, `git diff --check`, worktree status and secret scan. Commit only evidence files if they changed:
+- [x] Fix YAML 1.2 core scalar parity with DSH (`on/yes`, dates, `true/false`, `0o`, exponent,
+  `inf/nan`), reject duplicate mapping keys by parsed scalar identity, enforce strict DSH
+  frontmatter delimiters, and preserve CRLF/other line endings when staging `name`.
+- [x] Preserve missing-skill compatibility while recording structured `missing_skills` status,
+  runner log evidence, and `DECLARED_SKILL_MISSING` validity failure.
+- [x] Add `validating_configuration`, `preparing_skills`, `preparing_warmup`,
+  `snapshotting_workspace`, `running_harness` and `exporting_sessions` attribution coverage;
+  classify known Docker failures before Harness outcomes; bump anomaly ruleset to `2026-08-14.1`.
+- [x] Re-run the focused/adjacent suite (`161/161`), YAML scalar cross-check (`32/32`), and
+  offline container skill-catalog/direct-invocation smoke.
+
+- [x] **Step 5: Run final verification and commit all related hardening**
+
+Repeat Task 7 tests, compileall, Docker version, `git diff --check`, worktree status and secret scan.
+Stage only the related source, tests and evidence files:
 
 ```bash
-git add docker/deepseek-harness/README.md \
-  docs/superpowers/specs/2026-08-14-deepseek-harness-integration-design.md
-git commit -m "test(deepseek-harness): 记录正式评测闭环"
+git add src/agents/deepseek_harness/skills.py \
+  src/agents/deepseek_harness/runner.py src/utils/anomalies.py \
+  tests/test_deepseek_harness_skills.py tests/test_deepseek_harness_runner.py \
+  tests/test_anomalies.py docs/superpowers/specs/2026-08-14-deepseek-harness-integration-design.md \
+  docs/superpowers/plans/2026-08-14-deepseek-harness-integration.md
+git commit -m "fix(deepseek-harness): 完善技能解析与异常归因"
 ```
 
 Expected final state: Chinese Conventional Commits only, clean worktree, and no live Search/native multimodal claim without a separate successful test.

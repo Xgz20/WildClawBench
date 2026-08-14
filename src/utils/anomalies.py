@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 SCHEMA_VERSION = 2
-RULESET_VERSION = "2026-08-12.1"
+RULESET_VERSION = "2026-08-14.1"
 
 ERROR = "error"
 WARNING = "warning"
@@ -38,11 +38,12 @@ _JUDGE_OUTPUT_ERROR_RE = re.compile(
 _HTTP_STATUS_RE = re.compile(r"(?<!\d)([45]\d\d)(?!\d)")
 _ENVIRONMENT_ERROR_RE = re.compile(
     r"cannot connect to the docker daemon|docker daemon|no space left on device|"
-    r"read-only file system|container .*not found|host network|dns resolution",
+    r"read-only file system|container .*not found|no such container|host network|dns resolution",
     re.I,
 )
 _HARNESS_RUN_FAILED_RE = re.compile(
-    r"^(?:AstronCode|AstronClaw|OpenCode|Codex|OpenClaw|HermesAgent|ClaudeCode)\s+run failed\s*\(rc=\d+\)",
+    r"^(?:AstronCode|AstronClaw|OpenCode|Codex|OpenClaw|HermesAgent|ClaudeCode|"
+    r"DeepSeek Harness)\s+run failed\s*\(rc=\d+\)",
     re.I,
 )
 # Auth / quota exhaustion on the evaluation's own LLM endpoint is an infrastructure
@@ -65,9 +66,14 @@ _SECRET_PATTERNS = (
 )
 _FRAMEWORK_STAGES = {
     "created",
+    "validating_configuration",
     "starting_container",
     "container_started",
     "preparing_workspace",
+    "preparing_skills",
+    "preparing_warmup",
+    "snapshotting_workspace",
+    "exporting_sessions",
     "collecting_artifacts",
     "grading",
     "parsing_metrics",
@@ -84,6 +90,7 @@ _HARNESS_STAGES = {
     "hermesagent_running",
     "claudecode_running",
     "harness_running",
+    "running_harness",
     "model_execution",
 }
 
@@ -376,14 +383,14 @@ def classify_execution_error(status: dict) -> dict[str, Any]:
             validity_impact="fail", score_reliability="unreliable",
             rerun_action="required_after_fix", evidence=evidence,
         )
+    if stage in (_FRAMEWORK_STAGES | _HARNESS_STAGES) and _ENVIRONMENT_ERROR_RE.search(error):
+        return _item(
+            "EXECUTION_ERROR", f"评测运行环境在 {stage} 阶段失败：{error[:180]}",
+            stage=stage, attribution="evaluation_environment", confidence="high",
+            validity_impact="fail", score_reliability="unreliable",
+            rerun_action="required_after_fix", evidence=evidence,
+        )
     if stage in _FRAMEWORK_STAGES:
-        if _ENVIRONMENT_ERROR_RE.search(error):
-            return _item(
-                "EXECUTION_ERROR", f"评测运行环境在 {stage} 阶段失败：{error[:180]}",
-                stage=stage, attribution="evaluation_environment", confidence="high",
-                validity_impact="fail", score_reliability="unreliable",
-                rerun_action="required_after_fix", evidence=evidence,
-            )
         return _item(
             "EXECUTION_ERROR", f"评测框架在 {stage} 阶段失败：{error[:180]}",
             stage=stage, attribution="evaluation_framework", confidence="high",
@@ -655,14 +662,41 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
     if str(status.get("status") or "") == "error":
         execution_item = classify_execution_error(status)
         items.append(execution_item)
+    missing_skills = status.get("missing_skills")
+    if isinstance(missing_skills, list):
+        missing_names = [
+            str(name).strip()
+            for name in missing_skills
+            if str(name).strip()
+        ]
+        if missing_names:
+            items.append(_item(
+                "DECLARED_SKILL_MISSING",
+                f"任务声明的 skill bundle 缺失：{', '.join(missing_names[:10])}",
+                stage="preparing_skills", attribution="evaluation_framework",
+                confidence="high", validity_impact="fail", score_reliability="unreliable",
+                rerun_action="required_after_fix",
+                evidence=[{
+                    "file": "execution_status.json",
+                    "field": "missing_skills",
+                    "value": missing_names[:20],
+                }],
+            ))
     failure_stage = str(status.get("failure_stage") or "")
     pre_grading_failure = bool(
         execution_item
-        and execution_item["attribution"] == "evaluation_framework"
-        and failure_stage in {
-            "created", "starting_container", "container_started", "preparing_workspace",
-            "preparing_harness_input", "launching_harness", "harness_launch_failed",
-        }
+        and (
+            execution_item["attribution"] == "evaluation_environment"
+            or (
+                execution_item["attribution"] == "evaluation_framework"
+                and failure_stage in {
+                    "created", "validating_configuration", "starting_container", "container_started",
+                    "preparing_workspace", "preparing_skills", "preparing_warmup",
+                    "snapshotting_workspace", "preparing_harness_input", "launching_harness",
+                    "harness_launch_failed", "exporting_sessions",
+                }
+            )
+        )
     )
 
     timed_out = bool(status.get("timed_out"))

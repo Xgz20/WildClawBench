@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import ANY, MagicMock, call, patch
 
 from src.agents.base import AgentTaskSpec
 from src.agents.deepseek_harness.transcript import DshSessionFormatError
@@ -305,6 +305,7 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
                 "dsh-task",
                 "slack\n",
                 str(Path(temp_dir) / "skills"),
+                on_missing=ANY,
             )
             prompt_mock.assert_called_once_with(
                 "dsh-task",
@@ -338,6 +339,174 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
             )
             self.assertEqual(status["status"], "error")
             self.assertEqual(status["failure_stage"], "validating_configuration")
+
+    def test_run_task_attributes_host_exec_directory_failure_to_workspace_preparation(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            spec = self._spec(Path(temp_dir))
+            exec_path = Path(spec.workspace_path) / "exec"
+            exec_path.rmdir()
+            exec_path.write_text("not a directory", encoding="utf-8")
+            agent = self._agent()
+
+            with patch.object(agent, "_start_container") as start_mock:
+                execution = agent.run_task(spec)
+
+            self.assertIsNotNone(execution.error)
+            start_mock.assert_not_called()
+            status = json.loads(
+                (spec.output_dir / "execution_status.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(status["failure_stage"], "preparing_workspace")
+
+    def test_run_task_reports_skill_preparation_failure_stage(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            spec = self._spec(Path(temp_dir))
+            agent = self._agent()
+            with (
+                patch.object(agent, "_start_container"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_prepare_workspace"),
+                patch(
+                    "src.agents.deepseek_harness.runner.install_dsh_skills",
+                    side_effect=RuntimeError("skill preparation failed"),
+                ),
+                patch.object(agent, "_export_sessions"),
+            ):
+                execution = agent.run_task(spec)
+
+            self.assertIn("skill preparation failed", execution.error or "")
+            status = json.loads(
+                (spec.output_dir / "execution_status.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(status["failure_stage"], "preparing_skills")
+
+    def test_run_task_reports_warmup_preparation_failure_stage(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            spec = self._spec(Path(temp_dir))
+            agent = self._agent()
+            with (
+                patch.object(agent, "_start_container"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_prepare_workspace"),
+                patch(
+                    "src.agents.deepseek_harness.runner.install_dsh_skills",
+                    return_value=["slack"],
+                ),
+                patch(
+                    "src.agents.deepseek_harness.runner.run_warmup",
+                    side_effect=RuntimeError("warmup preparation failed"),
+                ),
+                patch.object(agent, "_export_sessions"),
+            ):
+                execution = agent.run_task(spec)
+
+            self.assertIn("warmup preparation failed", execution.error or "")
+            status = json.loads(
+                (spec.output_dir / "execution_status.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(status["failure_stage"], "preparing_warmup")
+
+    def test_run_task_reports_workspace_snapshot_failure_stage(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            spec = self._spec(Path(temp_dir))
+            agent = self._agent()
+            with (
+                patch.object(agent, "_start_container"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_prepare_workspace"),
+                patch(
+                    "src.agents.deepseek_harness.runner.install_dsh_skills",
+                    return_value=["slack"],
+                ),
+                patch("src.agents.deepseek_harness.runner.run_warmup"),
+                patch(
+                    "src.agents.deepseek_harness.runner.snapshot_workspace_state",
+                    side_effect=RuntimeError("workspace snapshot failed"),
+                ),
+                patch.object(agent, "_export_sessions"),
+            ):
+                execution = agent.run_task(spec)
+
+            self.assertIn("workspace snapshot failed", execution.error or "")
+            status = json.loads(
+                (spec.output_dir / "execution_status.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(status["failure_stage"], "snapshotting_workspace")
+
+    def test_run_task_records_missing_skills_in_execution_status(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            spec = self._spec(Path(temp_dir))
+            agent = self._agent()
+
+            def install_with_missing(*_args: object, on_missing: object) -> list[str]:
+                assert callable(on_missing)
+                on_missing("edge-tts")
+                return ["slack"]
+
+            with (
+                patch.object(agent, "_start_container"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_prepare_workspace"),
+                patch(
+                    "src.agents.deepseek_harness.runner.install_dsh_skills",
+                    side_effect=install_with_missing,
+                ),
+                patch("src.agents.deepseek_harness.runner.run_warmup"),
+                patch("src.agents.deepseek_harness.runner.snapshot_workspace_state"),
+                patch.object(agent, "_copy_prompt"),
+                patch.object(
+                    agent,
+                    "_run_dsh",
+                    return_value=subprocess.CompletedProcess([], 0, "", ""),
+                ),
+                patch.object(agent, "_export_sessions"),
+            ):
+                execution = agent.run_task(spec)
+
+            self.assertIsNone(execution.error)
+            status = json.loads(
+                (spec.output_dir / "execution_status.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(status["missing_skills"], ["edge-tts"])
+
+    def test_run_task_persists_missing_skill_before_later_skill_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            spec = self._spec(Path(temp_dir))
+            agent = self._agent()
+
+            def install_with_missing_then_error(*_args: object, on_missing: object) -> list[str]:
+                assert callable(on_missing)
+                on_missing("edge-tts")
+                raise ValueError("invalid YAML frontmatter")
+
+            with (
+                patch.object(agent, "_start_container"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_prepare_workspace"),
+                patch(
+                    "src.agents.deepseek_harness.runner.install_dsh_skills",
+                    side_effect=install_with_missing_then_error,
+                ),
+                patch.object(agent, "_export_sessions"),
+            ):
+                execution = agent.run_task(spec)
+
+            self.assertIn("invalid YAML frontmatter", execution.error or "")
+            status = json.loads(
+                (spec.output_dir / "execution_status.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(status["missing_skills"], ["edge-tts"])
+            events = [
+                json.loads(line)
+                for line in (spec.output_dir / "runner.log").read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertTrue(
+                any(
+                    event.get("type") == "runner.skill_missing"
+                    and event.get("skills") == ["edge-tts"]
+                    for event in events
+                )
+            )
 
     def test_run_task_exports_sessions_after_nonzero_exit(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
