@@ -20,6 +20,7 @@ from src.agents.astroncode import AstronCodeAgent
 from src.agents.astronclaw import AstronClawAgent
 from src.agents.claudecode import ClaudeCodeAgent
 from src.agents.codex import CodexAgent
+from src.agents.deepseek_harness import DeepSeekHarnessAgent
 from src.agents.opencode import OpenCodeAgent
 from src.agents.openclaw import OpenClawAgent
 from src.utils.cli_args import parse_run_batch_args
@@ -88,6 +89,59 @@ ALL_CATEGORIES = [
     "06_Safety_Alignment",
     "07_Website_Generation",
 ]
+
+GRADE_ON_ERROR_BACKENDS = (
+    CodexAgent,
+    ClaudeCodeAgent,
+    AstronCodeAgent,
+    OpenCodeAgent,
+    OpenClawAgent,
+    DeepSeekHarnessAgent,
+)
+
+WORKSPACE_CHANGE_BACKENDS = (
+    CodexAgent,
+    ClaudeCodeAgent,
+    AstronCodeAgent,
+    OpenCodeAgent,
+    DeepSeekHarnessAgent,
+)
+
+
+def _build_agent_backend(args) -> BaseAgent:
+    if args.agent_backend == "claudecode":
+        return ClaudeCodeAgent(
+            anthropic_api_key=OPENROUTER_API_KEY,
+            openrouter_base_url=OPENROUTER_BASE_URL_CLAUDECODE,
+        )
+    if args.agent_backend == "codex":
+        return CodexAgent()
+    if args.agent_backend == "astroncode":
+        return AstronCodeAgent()
+    if args.agent_backend == "astronclaw":
+        return AstronClawAgent(
+            gateway_port=GATEWAY_PORT,
+            openrouter_api_key=OPENROUTER_API_KEY,
+            openrouter_base_url=OPENROUTER_BASE_URL_OPENCLAW,
+            image_model=args.openclaw_image_model,
+        )
+    if args.agent_backend == "opencode":
+        return OpenCodeAgent()
+    if args.agent_backend == "deepseek-harness":
+        return DeepSeekHarnessAgent(api=args.dsh_api)
+    if args.agent_backend == "hermesagent":
+        from src.agents.hermesagent import HermesAgentAgent
+
+        return HermesAgentAgent(
+            openrouter_api_key=OPENROUTER_API_KEY,
+            openrouter_base_url=OPENROUTER_BASE_URL_OPENCLAW,
+        )
+    return OpenClawAgent(
+        gateway_port=GATEWAY_PORT,
+        openrouter_api_key=OPENROUTER_API_KEY,
+        openrouter_base_url=OPENROUTER_BASE_URL_OPENCLAW,
+        image_model=args.openclaw_image_model,
+    )
 
 
 def _is_extension_task(task: dict) -> bool:
@@ -452,10 +506,7 @@ def run_single_task(
 
     finally:
         grading_transcript_path = backend.transcript_container_path
-        grade_on_error = isinstance(
-            backend,
-            (CodexAgent, ClaudeCodeAgent, AstronCodeAgent, OpenCodeAgent, OpenClawAgent),
-        )
+        grade_on_error = isinstance(backend, GRADE_ON_ERROR_BACKENDS)
         # v2: gradable if rule checks OR declarative rubric present.
         should_grade = (task.get("automated_checks") or task.get("rubric_criteria")) and (
             not result.get("error") or grade_on_error
@@ -493,7 +544,10 @@ def run_single_task(
             collect_task_output(
                 task_id,
                 output_dir,
-                include_workspace_changes=isinstance(backend, (CodexAgent, ClaudeCodeAgent, AstronCodeAgent, OpenCodeAgent)),
+                include_workspace_changes=isinstance(
+                    backend,
+                    WORKSPACE_CHANGE_BACKENDS,
+                ),
             )
         except Exception as exc:
             logger.warning("[%s] Failed to collect task output: %s", task_id, exc)
@@ -607,37 +661,7 @@ def main() -> None:
 
     global PASS_THRESHOLD
     PASS_THRESHOLD = args.pass_threshold  # 全局阈值供 summary 聚合使用
-    if args.agent_backend == "claudecode":
-        backend: BaseAgent = ClaudeCodeAgent(
-            anthropic_api_key=OPENROUTER_API_KEY,
-            openrouter_base_url=OPENROUTER_BASE_URL_CLAUDECODE
-        )
-    elif args.agent_backend == "codex":
-        backend = CodexAgent()
-    elif args.agent_backend == "astroncode":
-        backend = AstronCodeAgent()
-    elif args.agent_backend == "astronclaw":
-        backend = AstronClawAgent(
-            gateway_port=GATEWAY_PORT,
-            openrouter_api_key=OPENROUTER_API_KEY,
-            openrouter_base_url=OPENROUTER_BASE_URL_OPENCLAW,
-            image_model=args.openclaw_image_model,
-        )
-    elif args.agent_backend == "opencode":
-        backend = OpenCodeAgent()
-    elif args.agent_backend == "hermesagent":
-        from src.agents.hermesagent import HermesAgentAgent
-        backend = HermesAgentAgent(
-            openrouter_api_key=OPENROUTER_API_KEY,
-            openrouter_base_url=OPENROUTER_BASE_URL_OPENCLAW,
-        )
-    else:
-        backend = OpenClawAgent(
-            gateway_port=GATEWAY_PORT,
-            openrouter_api_key=OPENROUTER_API_KEY,
-            openrouter_base_url=OPENROUTER_BASE_URL_OPENCLAW,
-            image_model=args.openclaw_image_model,
-        )
+    backend = _build_agent_backend(args)
     models_config = None
     if args.models_config:
         models_config_path = Path(args.models_config).expanduser()
