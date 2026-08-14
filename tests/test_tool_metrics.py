@@ -236,6 +236,27 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(metrics["failure"], 1)
         self.assertEqual(metrics["by_tool"]["web_search"]["failure"], 1)
 
+    def test_deepseek_harness_uses_native_result_status(self):
+        lines = []
+        cases = [
+            ("d1", "bash", "ok", "completed"),
+            ("d2", "bash", "boom", "error"),
+            ("d3", "web_search", "waiting", "pending"),
+            ("d4", "read", "content", ""),
+        ]
+        for call_id, name, content, status in cases:
+            lines.append(_codex_line("assistant", _tool_use(call_id, name)))
+            lines.append(_codex_line("user", _tool_result(call_id, content, status)))
+        path = self._write("chat.jsonl", "\n".join(lines) + "\n")
+
+        metrics = parse_tool_metrics(path, "deepseek-harness")
+
+        self.assertEqual(metrics["total"], 4)
+        self.assertEqual(metrics["success"], 2)
+        self.assertEqual(metrics["failure"], 1)
+        self.assertEqual(metrics["unclear"], 1)
+        self.assertEqual(metrics["format_error"], 0)
+
     def test_unregistered_harness_returns_empty(self):
         path = self._write("chat.jsonl", _codex_line("assistant", _tool_use("x", "foo")))
         m = parse_tool_metrics(path, "openclaw")

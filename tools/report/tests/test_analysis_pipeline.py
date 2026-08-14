@@ -117,6 +117,10 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertEqual(registry.model_display("xopglm52"), "GLM-5.2")
         self.assertEqual(registry.harness_display("astroncode"), "AstronCode")
         self.assertEqual(
+            registry.harness_display("deepseek-harness"),
+            "DeepSeek Harness",
+        )
+        self.assertEqual(
             registry.pricing_profile("gpt-5.5", date(2026, 7, 30)).profile_id,
             "2026-07-30-openai",
         )

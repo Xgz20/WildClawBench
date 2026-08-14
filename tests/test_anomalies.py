@@ -419,7 +419,8 @@ class AnomalyDetectionTest(unittest.TestCase):
             "status": "error", "failure_stage": "astroncode_running",
             "error": "AstronCode run failed (rc=1)",
         }), "execution_error")
-        for stage in ("preparing_workspace", "preparing_harness_input",
+        for stage in ("preparing_workspace", "preparing_skills", "preparing_warmup",
+                      "preparing_harness_input",
                       "launching_harness", "harness_launch_failed"):
             self.assertEqual(classify_report_outcome({
                 "status": "error", "failure_stage": stage, "error": "launch failed",
@@ -429,6 +430,55 @@ class AnomalyDetectionTest(unittest.TestCase):
         }), "timeout")
         self.assertEqual(classify_report_outcome({"status": "finished"}, "grading failed"),
                          "evaluation_anomaly")
+
+    def test_deepseek_harness_failure_stages_have_structured_attribution(self) -> None:
+        for stage in ("validating_configuration", "preparing_skills", "preparing_warmup",
+                      "snapshotting_workspace"):
+            outcome = classify_report_outcome({
+                "status": "error", "failure_stage": stage, "error": "setup failed",
+            })
+            self.assertEqual(outcome, "evaluation_anomaly")
+
+        self.assertEqual(classify_report_outcome({
+            "status": "error", "failure_stage": "running_harness",
+            "error": "DeepSeek Harness run failed (rc=1)",
+        }), "execution_error")
+        self.assertEqual(classify_report_outcome({
+            "status": "error", "failure_stage": "exporting_sessions",
+            "error": "session export failed",
+        }), "evaluation_anomaly")
+
+    def test_docker_failure_while_running_harness_requires_rerun(self) -> None:
+        temp_dir, run_dir = self.make_run(events=[])
+        try:
+            self.write_json(run_dir / "execution_status.json", {
+                "status": "error",
+                "failure_stage": "running_harness",
+                "error": "Cannot connect to the Docker daemon",
+            })
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "EXECUTION_ERROR")
+            self.assertEqual(item["attribution"], "evaluation_environment")
+            self.assertEqual(item["validity_impact"], "fail")
+            self.assertTrue(report["needs_rerun"])
+            self.assertIsNone(self.item(report, "EMPTY_TRANSCRIPT"))
+        finally:
+            temp_dir.cleanup()
+
+    def test_missing_declared_skill_is_a_validity_failure(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            status = json.loads((run_dir / "execution_status.json").read_text(encoding="utf-8"))
+            status["missing_skills"] = ["edge-tts"]
+            self.write_json(run_dir / "execution_status.json", status)
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "DECLARED_SKILL_MISSING")
+            self.assertIsNotNone(item)
+            self.assertEqual(item["attribution"], "evaluation_framework")
+            self.assertEqual(item["validity_impact"], "fail")
+            self.assertTrue(report["needs_rerun"])
+        finally:
+            temp_dir.cleanup()
 
     def test_report_outcome_prioritizes_structured_model_api_anomaly(self) -> None:
         status = {
@@ -484,6 +534,20 @@ class AnomalyDetectionTest(unittest.TestCase):
             item = self.item(report, "EMPTY_TRANSCRIPT")
             self.assertEqual(item["attribution"], "evaluation_framework")
             self.assertEqual(item["validity_impact"], "fail")
+        finally:
+            temp_dir.cleanup()
+
+    def test_session_export_failure_does_not_duplicate_empty_transcript(self) -> None:
+        temp_dir, run_dir = self.make_run(events=[])
+        try:
+            self.write_json(run_dir / "execution_status.json", {
+                "status": "error",
+                "failure_stage": "exporting_sessions",
+                "error": "DeepSeek Harness session export failed",
+            })
+            report = scan_run_dir(run_dir)
+            self.assertIsNotNone(self.item(report, "EXECUTION_ERROR"))
+            self.assertIsNone(self.item(report, "EMPTY_TRANSCRIPT"))
         finally:
             temp_dir.cleanup()
 

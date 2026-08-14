@@ -300,9 +300,23 @@ def classify_openclaw(tool_name: str, content: str, status: str = "") -> str:
     return "unclear"
 
 
+def classify_deepseek_harness(tool_name: str, content: str, status: str = "") -> str:
+    """DeepSeek Harness：以 DSH tool_result.status 为权威状态。"""
+    _ = tool_name
+    st = (status or "").lower()
+    if st == "completed":
+        return "success"
+    if st == "error":
+        return "failure"
+    if st in {"running", "pending"}:
+        return "unclear"
+    return "success" if content else "unclear"
+
+
 register_classifier(("codex", "astroncode"), classify_codex)
 register_classifier(("opencode",), classify_opencode)
 register_classifier(("openclaw", "astronclaw"), classify_openclaw)
+register_classifier(("deepseek-harness",), classify_deepseek_harness)
 
 
 # ---------------------------------------------------------------------------
