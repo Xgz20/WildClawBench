@@ -1,0 +1,200 @@
+# DeepSeek Harness 正式集成设计
+
+## 决策摘要
+
+在已验证的独立 Docker 与 transcript/usage 转换 PoC 之上，新增原生
+`DeepSeekHarnessAgent(BaseAgent)`，通过
+`eval/run_batch.py --agent-backend deepseek-harness` 进入 WildClawBench 的任务解析、
+容器执行、评分、usage、异常检测和产物归档生命周期。
+
+正式 backend 默认使用 OpenAI Chat Completions，并允许显式选择 OpenAI Responses。
+协议与 endpoint 必须由调用方成对配置；实现不根据 `/v1`、`/v2` 后缀猜测协议。
+首轮验收以文本/工具任务的真实评分闭环为准，不把 live DeepSeek Search 或 native
+multimodal 纳入本次完成条件。
+
+## 方案选择
+
+采用原生 `BaseAgent` backend，而不是从 `run_batch.py` 包装
+`tools/deepseek_harness_poc.py`。PoC runner 会在 DSH 退出后删除容器，不能满足评分器
+后续复制 ground truth、读取容器内 transcript 和收集 workspace changes 的要求。
+
+不抽取跨 Harness 的通用 CLI backend 基类。OpenCode、Codex 和 DSH 的 session、usage、
+协议及工具行为不同，本次为追求复用而改造其他 backend 会扩大回归面。
+
+## 工作树与分支
+
+实现位于项目根目录的
+`.agents/deepseek-harness-integration` worktree，分支为
+`feat/deepseek-harness-integration`。该分支从已提交的
+`feat/deepseek-harness-poc` 创建，因此直接复用 Dockerfile、`wcb-dsh` 和
+`src/agents/deepseek_harness/transcript.py`。
+
+## Backend 结构
+
+新增 `src/agents/deepseek_harness/runner.py`，并由
+`src/agents/deepseek_harness/__init__.py` 导出 `DeepSeekHarnessAgent`。
+
+`DeepSeekHarnessAgent` 实现以下 `BaseAgent` 契约：
+
+- `expects_gateway = False`。
+- `transcript_container_path` 指向
+  `/root/.openclaw/agents/main/sessions/chat.jsonl`，兼容现有评分器。
+- `run_task()` 管理常驻容器、workspace、skills、warmup、DSH 执行、session 导出和
+  transcript 转换。
+- `prepare_grading_transcript()` 返回已回灌容器的归一化 transcript 路径。
+- `collect_usage()` 读取转换器产生的 usage，补充 elapsed time，并在缺失时返回零值结构。
+
+runner 复用 `src.utils.docker_utils` 中的资源限制、skill 安装、warmup 和 workspace
+baseline 工具，不复制这些通用实现。
+
+## 容器生命周期
+
+1. 校验模型凭据和 API 类型，并解析 endpoint。
+2. 使用 `DOCKER_IMAGE_DEEPSEEK_HARNESS` 指定的镜像启动 detached 容器；默认镜像为
+   `wildclawbench-deepseek-harness-ubuntu:v0.0`。
+3. 使用 `--entrypoint /bin/bash` 覆盖镜像的任务 entrypoint，以 `tail -f /dev/null`
+   保持容器运行，直到 `run_batch.py` 完成评分和产物采集。
+4. 将 `<workspace>/exec` 只读挂载到 `/mnt/wildclaw_src`，再复制到可写的
+   `/tmp_workspace`。不存在 `exec` 时创建空目录并记录 warning。
+5. 将任务声明的 skills 复制到 `/root/.dsh/skills/<skill-name>`。DSH 原生
+   `skill-filesystem` 会发现 `$DSH_HOME/skills`，无需把 skill 正文拼入 prompt。
+6. 运行任务 warmup，保存 workspace baseline，再执行 DSH。
+7. DSH 结束或失败后，在容器仍存活时导出 session、转换 transcript，并把
+   `chat.jsonl` 复制回评分器固定路径。
+8. `run_batch.py` 在评分、usage、task output 和 anomalies 完成后统一删除容器。
+
+## 模型与协议配置
+
+新增 CLI 参数：
+
+- `--agent-backend deepseek-harness`
+- `--dsh-api {openai-completions,openai-responses}`
+
+`--dsh-api` 未提供时依次读取 `DSH_API`，最终默认
+`openai-completions`。runner 将选择结果作为 `DSH_API` 传入容器。
+
+模型通过现有 `--model` 指定。WildClawBench 路由形式
+`openrouter/xopglm52` 在交给 DSH 前只移除第一个 `openrouter/` 前缀，得到
+`xopglm52`；`openrouter/anthropic/model` 对应 `anthropic/model`。不含该前缀的模型 ID
+保持原样。
+
+`OPENROUTER_BASE_URL` 原样传入 DSH，不调用 OpenClaw endpoint normalizer：
+
+- 本次已验证 MaaS 的 Chat 配置为 `openai-completions` + `/v2`。
+- 本次已验证 MaaS 的 Responses 配置为 `openai-responses` + `/v1`。
+
+URL 后缀不是跨 provider 的协议标识，因此 runner 不自动重写或推断。
+未设置 `OPENROUTER_BASE_URL` 时沿用 `wcb-dsh` 的 OpenRouter 默认地址
+`https://openrouter.ai/api/v1`。
+
+## 凭据与环境变量
+
+模型调用要求非空 `OPENROUTER_API_KEY`。可选 `DEEPSEEK_API_KEY` 继续供 DSH 原生
+DeepSeek Search 使用，但缺少该 Key 不阻止普通文本/工具任务启动。
+
+runner 还传递容器代理变量、任务 frontmatter `env` 和 lobster env。日志只记录环境变量
+名称或掩码，不记录完整值。host 侧 `execution_status.json`、runner log、转换 manifest
+和 transcript 不写入模型凭据。
+
+## DSH 执行
+
+任务 prompt 先写入容器内临时文件，再由
+`/usr/local/bin/wcb-dsh "$(cat <prompt-file>)"` 执行，避免把完整任务文本和 shell
+元字符拼入 host 命令。`AgentTaskSpec.thinking` 映射到 `DSH_REASONING`；现有
+`wcb-dsh` 会为 hand-declared 模型同步声明相同 `reasoningEfforts`。
+
+runner 捕获 DSH stdout/stderr 到 host `agent.log`，并把退出码、timeout、Harness 版本、
+镜像、API 类型和失败阶段写入 `execution_status.json`。timeout 后必须停止容器内 DSH
+进程，避免评分期间继续修改 workspace。
+
+## Session、Transcript 与 Usage
+
+原生 session 从 `/root/.dsh/sessions` 复制到
+`<output_dir>/dsh_sessions`，不压缩、不修改。复用
+`write_conversion()` 生成：
+
+- `<output_dir>/chat.jsonl`
+- `<output_dir>/usage.json`
+- `<output_dir>/conversion_manifest.json`
+
+`chat.jsonl` 复制到容器内
+`/root/.openclaw/agents/main/sessions/chat.jsonl`，供安全类和 LLM judge 评分器读取。
+
+`collect_usage()` 读取 token、cache 和 request count；`elapsed_time` 使用 runner 实测值。
+DSH 原生事件没有可信 USD 成本时保持 `cost_usd = 0.0`，本次不根据未知价格编造成本。
+
+## 错误与降级
+
+- 缺少 `OPENROUTER_API_KEY` 或 API 类型非法时，在模型请求前返回明确错误；未设置
+  endpoint 时使用 OpenRouter 默认地址。
+- 容器启动、workspace、skills、warmup 和 DSH 执行分别记录 failure stage。
+- DSH 非零退出或 timeout 后仍导出已有 session，并尝试转换 transcript/usage。
+- session 转换失败时保留 `dsh_sessions`，记录转换错误，并让 backend 返回 error。
+- backend 加入 `grade_on_error` 范围；已有自动检查或 rubric 时，即使 Harness 执行失败也
+  尝试评分已产生的 workspace 结果。
+- backend 加入 workspace changes 收集范围，确保失败前生成的文件仍进入归档。
+- `run_batch.py` 继续在 finally 中负责容器清理，runner 不提前删除容器。
+
+## 工具指标与报告实体
+
+`src.utils.tool_metrics` 注册 `deepseek-harness` classifier。转换器保留 DSH
+`tool_result.status`：`completed` 计为成功，`error` 计为失败，`running/pending` 计为
+不确定；缺少状态但有结果内容时计为成功。该口径与 DSH 转换产物一致，不借用其他
+Harness 名称伪装统计。
+
+`tools/report/data/entities.yaml` 注册：
+
+- ID：`deepseek-harness`
+- 展示名：`DeepSeek Harness`
+- family：`DeepSeek Harness`
+
+本次保证报告发现、展示和工具指标可用；分档成本估算不在本次范围，usage 中的真实
+token 计数继续保留。
+
+## 代码与测试范围
+
+新增或修改：
+
+- `src/agents/deepseek_harness/runner.py`
+- `src/agents/deepseek_harness/__init__.py`
+- `src/utils/cli_args.py`
+- `eval/run_batch.py`
+- `src/utils/tool_metrics.py`
+- `tools/report/data/entities.yaml`
+- `docker/deepseek-harness/README.md`
+- `tests/test_deepseek_harness_runner.py`
+- `tests/test_deepseek_harness_integration.py`
+- `tests/test_tool_metrics.py`
+- 相关 CLI、run_batch 和报告实体测试
+
+实现遵循测试驱动：先验证失败测试，再实现最小行为。单元测试覆盖：
+
+- CLI backend 与 API choices。
+- 模型 ID 规范化和 base URL 不重写。
+- detached 容器命令、环境变量掩码和缺凭据失败。
+- workspace、skills、warmup、thinking 与 prompt 文件传递。
+- 正常、非零退出、timeout、转换失败的状态和产物。
+- transcript 回灌、usage 与 workspace changes/grade-on-error 注册。
+- DSH 工具指标和报告实体。
+
+## 真实验收
+
+构建正式镜像 tag 后，使用 Chat `/v2`、`xopglm52`、`--thinking high` 运行：
+
+`tasks/03_Social_Interaction/03_Social_Interaction_task_2_chat_action_extraction.md`
+
+必须通过以下门槛：
+
+- `eval/run_batch.py` 接受 `--agent-backend deepseek-harness` 并退出 0。
+- `execution_status.json` 为 finished，记录 DSH 版本、镜像和 API。
+- `score.json` 由真实评分流程生成，不是手写或复制。
+- `task_output/workspace` 中存在容器工作区结果或 workspace changes；宿主输入 workspace
+  保持只读，不作为输出正确性的依据。
+- 原生 `dsh_sessions`、`chat.jsonl`、`conversion_manifest.json` 和 `usage.json` 存在。
+- transcript 包含 assistant、tool use 和 tool result；usage 的 `request_count > 0`。
+- anomalies 不包含由接入缺陷导致的 validity failure。
+- 产物和 Git 变更中不含模型或 judge 的完整凭据。
+
+Responses `/v1` 的 runner 配置由单元测试覆盖，并保留此前 PoC 的真实 E2E 证据；本轮
+无需重复跑正式评分。live DeepSeek Search、native multimodal、全量任务和分档成本估算
+作为后续独立验收项。
