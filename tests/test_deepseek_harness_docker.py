@@ -11,7 +11,11 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
     def test_dockerfile_pins_node_and_dsh_and_checks_version(self) -> None:
         dockerfile = (DOCKER_ROOT / "Dockerfile").read_text(encoding="utf-8")
 
-        self.assertRegex(dockerfile, r"FROM\s+node:24(?:[-\w.]*)")
+        self.assertIn("ARG EVAL_BASE_IMAGE=wildclawbench-codex-ubuntu:v0.0", dockerfile)
+        self.assertIn("ARG NODE_RUNTIME_IMAGE=node:24-bookworm-slim", dockerfile)
+        self.assertIn("FROM ${NODE_RUNTIME_IMAGE} AS node-runtime", dockerfile)
+        self.assertIn("FROM ${EVAL_BASE_IMAGE}", dockerfile)
+        self.assertIn("COPY --from=node-runtime /usr/local/bin/node", dockerfile)
         self.assertIn("ARG DSH_VERSION=0.1.0-rc.6", dockerfile)
         self.assertIn("npm install -g", dockerfile)
         self.assertIn("@deepseek-ai/dsh@${DSH_VERSION}", dockerfile)
@@ -39,6 +43,13 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
         self.assertIn("search: true", entrypoint)
         self.assertIn("fetch: false", entrypoint)
         self.assertNotIn("sk-", entrypoint)
+
+    def test_entrypoint_declares_requested_reasoning_effort_on_custom_model(self) -> None:
+        entrypoint = (DOCKER_ROOT / "wcb-dsh").read_text(encoding="utf-8")
+
+        self.assertIn("reasoning: !!js process.env.DSH_REASONING || undefined", entrypoint)
+        self.assertIn("reasoningEfforts: !!js", entrypoint)
+        self.assertIn("[process.env.DSH_REASONING]", entrypoint)
 
     def test_entrypoint_applies_patch_before_forwarding_task(self) -> None:
         entrypoint = (DOCKER_ROOT / "wcb-dsh").read_text(encoding="utf-8")

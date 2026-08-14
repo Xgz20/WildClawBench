@@ -25,10 +25,20 @@
 
 ## Docker 设计
 
-镜像基于 Node 24 Debian slim，使用以下构建参数：
+最终运行镜像基于 `wildclawbench-codex-ubuntu:v0.0`，以保持与 Codex、
+OpenCode 和 AstronCode 一致的 Python、Playwright/浏览器、媒体及文档工具链。
+该底座与 Node 官方镜像均默认以 root 运行，因此切换底座不改变 Unix 用户权限；
+DSH 内部工具授权仍由 `DSH_PERMISSION_MODE=danger-full-access` 独立控制。
+
+WCB 底座当前提供 Node 20，低于 DSH 上游声明的
+`^22.19.0 || >=24.0.0`。Dockerfile 使用多阶段构建，从
+`node:24-bookworm-slim` 复制 Node 24 与 npm/corepack 到最终 WCB 镜像，
+而不是用 Node slim 替换评测环境。使用以下构建参数：
 
 - `DSH_VERSION`，默认 `0.1.0-rc.6`。
 - `NPM_REGISTRY`，默认 `https://registry.npmmirror.com`。
+- `EVAL_BASE_IMAGE`，默认 `wildclawbench-codex-ubuntu:v0.0`。
+- `NODE_RUNTIME_IMAGE`，默认 `node:24-bookworm-slim`。
 
 镜像安装 `@deepseek-ai/dsh@${DSH_VERSION}`，并在构建阶段执行 `dsh --version`。由于发布包中的 `node-pty` 在 Node 24/Linux x64 会回退到 `node-gyp rebuild`，镜像同时安装 `python3`、`make` 和 `g++`。运行时使用 `/tmp_workspace` 作为工作目录，`/root/.dsh` 作为 `DSH_HOME`，通过 `/usr/local/bin/wcb-dsh` 生成固定 patch 后启动 headless profile。
 
@@ -47,6 +57,10 @@ patch 固定以下行为：
 - session persistence 使用 `$DSH_HOME/sessions`、`compression: none`、`packChunks: false`。
 - 禁用自动 session title LLM，避免无关辅助请求污染 usage。
 - 设置 `DSH_PERMISSION_MODE=danger-full-access` 和 `DSH_TELEMETRY_DISABLED=1`。
+- 设置 `DSH_REASONING` 时，自定义模型条目同步声明同名
+  `reasoningEfforts`；否则 pi-ai 会在网络请求前将 hand-declared 模型判定为
+  不支持该 reasoning level。AstronCode 的 `--thinking high` 不能只靠 provider
+  级默认值直接映射。
 
 ## 转换契约
 
@@ -102,6 +116,12 @@ patch 固定以下行为：
 - Docker 镜像构建后 `dsh --version` 输出固定版本。
 - 无密钥配置检查不会发起模型请求。
 - 真实模型 smoke 只有在外部提供凭据且实际执行成功时才标记通过。
+
+本次镜像对齐后的 credentialed smoke 使用 AstronCode 同一模型路由信息：
+`OPENROUTER_BASE_URL` 的 MaaS endpoint，以及 `openrouter/xopglm52` 对应的
+裸模型 ID `xopglm52`。reasoning 元数据修复后，请求已到达 endpoint，但本机
+忽略的 `.env` token 返回 HTTP 401。因此真实模型质量、任务修改和 live Search
+仍未验证。
 
 ## 已知基线
 

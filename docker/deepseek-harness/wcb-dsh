@@ -25,6 +25,7 @@ cat >"${patch_path}" <<'PATCH'
         reasoning: !!js process.env.DSH_REASONING || undefined
         models:
           - id: !!js process.env.DSH_MODEL_ID
+            reasoningEfforts: !!js "process.env.DSH_REASONING ? { [process.env.DSH_REASONING]: process.env.DSH_REASONING } : undefined"
 
 - id: agent-default-model
   name: '@deepseek-ai/dsh-agent-default-model'

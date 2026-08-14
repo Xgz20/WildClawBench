@@ -94,7 +94,7 @@ Expected: missing Docker files cause assertion failures.
 
 - [x] **Step 3: Implement Docker and entrypoint files**
 
-Install the pinned npm package in Node 24 slim. Generate a Cordis patch from environment expressions without embedding credentials. Persist sessions below `$DSH_HOME/sessions`, disable session-title LLM and telemetry, and run from `/tmp_workspace`.
+Install the pinned npm package with Node 24 in the WCB evaluation base. Generate a Cordis patch from environment expressions without embedding credentials. Persist sessions below `$DSH_HOME/sessions`, disable session-title LLM and telemetry, and run from `/tmp_workspace`.
 
 - [x] **Step 4: Run static tests and build smoke**
 
@@ -169,3 +169,15 @@ git add docs/superpowers/specs/2026-08-14-deepseek-harness-poc-design.md \
   tests/test_deepseek_harness_docker.py
 git commit -m "feat(deepseek-harness): 增加 Docker 与轨迹转换 PoC"
 ```
+
+### Follow-up: Align Evaluation Base and Reasoning Metadata
+
+- [x] Use `wildclawbench-codex-ubuntu:v0.0` as the final image while copying
+  the Node 24 runtime required by DSH.
+- [x] Verify base-layer inheritance, root execution, WCB dependency retention,
+  and `node-pty` process spawning.
+- [x] Declare `DSH_REASONING` in the hand-declared model's
+  `reasoningEfforts` before selecting that effort.
+- [x] Run a credentialed `xopglm52` smoke without persisting credentials. The
+  request reached MaaS but returned HTTP 401, so no successful real-model task
+  is claimed.
