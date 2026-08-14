@@ -1,126 +1,109 @@
-# DeepSeek Harness Docker PoC
+# DeepSeek Harness Evaluation Image
 
-This image uses `wildclawbench-codex-ubuntu:v0.0` as its final evaluation base,
-adds a Node 24 runtime from `node:24-bookworm-slim`, installs the published
-`@deepseek-ai/dsh@0.1.0-rc.6` package, and runs one
-`dsh --profile headless` task. It is intentionally independent from the
-production `eval/run_batch.py` backend registry.
+This image is the runtime for the WildClawBench `deepseek-harness` backend. It
+uses `wildclawbench-codex-ubuntu:v0.0` as the final evaluation base, adds Node
+24 from `node:24-bookworm-slim`, and installs the published
+`@deepseek-ai/dsh@0.1.0-rc.6` package.
 
-The shared WCB base keeps the Python, Playwright/browser, media, and document
-toolchain aligned with the other Harness images. Both bases run as root, so
-this change is about task-environment parity rather than granting additional
-Docker filesystem permissions. DSH still uses its explicit
-`DSH_PERMISSION_MODE=danger-full-access` setting inside the container.
+The shared WCB base keeps the Python, browser, media, and document toolchain
+aligned with the other Harness images. Both bases run as root, so this is task
+environment parity rather than an additional Docker permission grant. DSH
+still uses `DSH_PERMISSION_MODE=danger-full-access` inside the task container.
 
 ## Build
 
 ```bash
 docker build \
-  -t wildclawbench-deepseek-harness-poc:0.1.0-rc.6 \
+  -t wildclawbench-deepseek-harness-ubuntu:v0.0 \
   docker/deepseek-harness
+
+docker run --rm --entrypoint dsh \
+  wildclawbench-deepseek-harness-ubuntu:v0.0 --version
 ```
 
-The local Docker daemon must already contain
-`wildclawbench-codex-ubuntu:v0.0`. `EVAL_BASE_IMAGE` and `NODE_RUNTIME_IMAGE`
-are build arguments when compatible mirrored tags are required. The WCB base
-currently contains Node 20, which is below DSH's supported
-`^22.19.0 || >=24.0.0` range; the build therefore copies Node 24 without
-discarding the rest of the WCB environment.
+The expected version is `0.1.0-rc.6`. The local Docker daemon must already
+contain `wildclawbench-codex-ubuntu:v0.0`. `EVAL_BASE_IMAGE` and
+`NODE_RUNTIME_IMAGE` are build arguments when compatible mirrored tags are
+required. The default npm registry is `https://registry.npmmirror.com`; use
+`--build-arg NPM_REGISTRY=<registry>` when necessary.
 
-The default npm registry is `https://registry.npmmirror.com`. Override it with
-`--build-arg NPM_REGISTRY=<registry>` when necessary. The build runs
-`dsh --version`, so an unavailable package or invalid published artifact fails
-the image build.
-
-## Convert existing sessions
-
-```bash
-python tools/deepseek_harness_poc.py convert \
-  --sessions /path/to/sessions \
-  --output /path/to/output
-```
-
-The converter writes `chat.jsonl`, `usage.json`, and
-`conversion_manifest.json`. It recursively includes root and child
-`session.jsonl` files, while the native files remain unchanged.
-
-## Run one task
+## Run Through WildClawBench
 
 Export credentials in the host environment. Do not put secret values in the
-command line or a tracked configuration file.
+command line or a tracked configuration file. `DEEPSEEK_API_KEY` is optional
+and is used only by DSH-native DeepSeek Search.
 
 ```bash
 export OPENROUTER_API_KEY='<redacted>'
-export OPENROUTER_BASE_URL='https://openrouter.ai/api/v1'
-# Optional: enables the DSH-native DeepSeek Search provider.
-export DEEPSEEK_API_KEY='<redacted>'
+export OPENROUTER_BASE_URL='https://provider.example/v2'
+export DOCKER_IMAGE_DEEPSEEK_HARNESS='wildclawbench-deepseek-harness-ubuntu:v0.0'
 
-python tools/deepseek_harness_poc.py run \
-  --image wildclawbench-deepseek-harness-poc:0.1.0-rc.6 \
+uv run eval/run_batch.py \
+  --agent-backend deepseek-harness \
+  --dsh-api openai-completions \
+  --thinking high \
+  --task tasks/03_Social_Interaction/03_Social_Interaction_task_2_chat_action_extraction.md \
+  --model openrouter/xopglm52
+```
+
+`--dsh-api` accepts `openai-completions` and `openai-responses`. If omitted,
+the runner reads `DSH_API` and then defaults to `openai-completions`.
+`OPENROUTER_BASE_URL` is passed through unchanged: the runner neither infers a
+protocol from the URL suffix nor rewrites the endpoint.
+
+For the MaaS route used by the PoC verification, the tested pairs are:
+
+- Chat Completions: `openai-completions` with the provider's `/v2` endpoint.
+- OpenAI Responses: `openai-responses` with the provider's `/v1` endpoint.
+
+Those suffixes are provider-specific and are not a general protocol rule.
+
+The formal backend starts a detached container, read-only mounts the task
+input, copies it to `/tmp_workspace`, installs task skills below
+`/root/.dsh/skills`, and leaves the container alive for grading. It exports raw
+sessions to `dsh_sessions`, converts them into `chat.jsonl`, `usage.json`, and
+`conversion_manifest.json`, then installs the normalized transcript at the
+OpenClaw-compatible path expected by WCB graders. `run_batch.py` removes the
+container after grading and output collection.
+
+## Standalone Diagnostics
+
+The original PoC entry point remains useful for conversion and image-level
+diagnostics independent of `run_batch.py`:
+
+```bash
+uv run python tools/deepseek_harness_poc.py convert \
+  --sessions /path/to/sessions \
+  --output /path/to/output
+
+uv run python tools/deepseek_harness_poc.py run \
+  --image wildclawbench-deepseek-harness-ubuntu:v0.0 \
   --workspace /path/to/task-workspace \
-  --model deepseek/deepseek-chat-v3.1 \
-  --api openai-completions \
+  --model xopglm52 \
+  --api openai-responses \
   --output /path/to/output \
   --prompt 'Complete the task and verify the result.'
 ```
 
-`--api` accepts `openai-completions` and `openai-responses`; it defaults to
-`openai-completions` for backward compatibility. Select the API and base URL as
-one explicit pair. Do not infer the API from a `/v1` or `/v2` suffix because
-those paths are provider-specific. For the tested MaaS route, Chat Completions
-uses `--api openai-completions` with a `/v2` base URL, while Responses uses
-`--api openai-responses` with a `/v1` base URL.
+The converter recursively includes root and child `session.jsonl` files while
+leaving native files unchanged. The diagnostic runner writes redacted stdout,
+stderr, and a manifest that stores only a prompt digest.
 
-The Docker command inherits credential environment variable names. The
-generated Cordis patch contains `apiKeyEnv` references, not credential values.
-The PoC disables telemetry and auxiliary LLM title generation, stores raw JSONL
-below `output/sessions`, and leaves DSH-native DeepSeek Search enabled.
+## Verification Boundary
 
-Additional run artifacts are `dsh.stdout.log`, `dsh.stderr.log`, and
-`run_manifest.json`. Known credential values are redacted before stdout or
-stderr is persisted; the prompt is represented in the manifest only by its
-SHA-256 digest.
+Verified by the preceding PoC work on 2026-08-14:
 
-## Verification boundary
+- The image built from the WCB Codex base and reported DSH `0.1.0-rc.6`.
+- The final image preserved root execution, Node 24.19.0, Python 3.11, browser,
+  media, and document dependencies from the shared evaluation base.
+- Chat with the tested MaaS `/v2` endpoint and Responses with `/v1` both exited
+  successfully, executed file tools, and converted 7 messages with usage for 3
+  model requests.
+- Missing `DSH_MODEL_ID` or `OPENROUTER_API_KEY` failed before a model request.
 
-Verified in this branch on 2026-08-14:
-
-- The offline converter, WCB usage/tool parser compatibility, Docker static
-  contract, and CLI cleanup/redaction tests pass.
-- The image built successfully as
-  `wildclawbench-deepseek-harness-poc:0.1.0-rc.6`; npm installed the pinned
-  package and the build-stage `dsh --version` returned `0.1.0-rc.6`.
-- The final image's root filesystem starts with the same 11 layers as
-  `wildclawbench-codex-ubuntu:v0.0`; runtime smoke preserved root execution,
-  Node 24.19.0, Python 3.11, Playwright/PyMuPDF/Pillow/openpyxl/pandas, and
-  ffmpeg.
-- A container `dsh --version` smoke returned `0.1.0-rc.6`. The image's
-  `node-pty` native spawn smoke returned `NODE_PTY_OK exit=0`.
-- `--dump-config` with a dummy key parsed the generated patch and showed the
-  OpenRouter route, raw session persistence, disabled title LLM, and enabled
-  DeepSeek Search. The dummy credential value was absent from the dump.
-- Missing `DSH_MODEL_ID` and missing `OPENROUTER_API_KEY` both fail before a
-  model request with exit code 2.
-- For the AstronCode spelling `openrouter/xopglm52`, pass the bare DSH model ID
-  `xopglm52`; AstronCode strips the Harness route prefix before writing its
-  provider config. When `--reasoning high` is set, the entrypoint declares
-  that level in the hand-declared model metadata before selecting it.
-- A credentialed `xopglm52` Chat Completions smoke against the tested MaaS
-  `/v2` endpoint exited 0. The model created and read back the requested file;
-  raw session conversion emitted 7 messages and usage for 3 model requests.
-  The same Chat configuration against `/v1` returned HTTP 401, confirming that
-  the earlier authentication-looking error was caused by an API/endpoint
-  mismatch for this provider.
-- A second credentialed smoke used `openai-responses` against the same MaaS
-  provider's `/v1` endpoint. It also exited 0, created/read the requested file,
-  and emitted 7 converted messages with usage for 3 model requests. The raw
-  session replay state records `api: openai-responses`.
-
-The first build attempt could not fetch Docker Hub's anonymous token. For the
-successful local build, the same Node 24 base image was pulled from a local
-mirror and tagged as `node:24-bookworm-slim`; the Dockerfile itself still uses
-the standard image reference. A credentialed `xopglm52` smoke loaded secrets
-only from the ignored repository `.env`. The successful smoke verifies Chat
-model calls, tool execution, task mutation, raw session persistence, and
-transcript/usage conversion for both supported OpenAI wire APIs. Live DeepSeek
-Search remains unverified.
+The formal backend has offline unit coverage for container construction,
+workspace/skills/warmup, timeout handling, transcript conversion, usage,
+grading policy, metrics, and report identity. A real `run_batch.py` scoring run
+is still required before calling the formal integration end-to-end verified.
+Live DeepSeek Search, native multimodal tasks, the full benchmark, and inferred
+USD cost remain outside this verification boundary.

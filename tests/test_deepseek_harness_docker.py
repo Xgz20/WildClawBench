@@ -64,6 +64,17 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
         forwarded_args = entrypoint.index('"$@"', patch)
         self.assertLess(patch, forwarded_args)
 
+    def test_readme_documents_formal_backend_image_and_command(self) -> None:
+        readme = (DOCKER_ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn("wildclawbench-deepseek-harness-ubuntu:v0.0", readme)
+        self.assertIn("DOCKER_IMAGE_DEEPSEEK_HARNESS", readme)
+        self.assertIn("eval/run_batch.py", readme)
+        self.assertIn("--agent-backend deepseek-harness", readme)
+        self.assertIn("--dsh-api openai-completions", readme)
+        self.assertIn("openai-completions", readme)
+        self.assertIn("openai-responses", readme)
+
 
 if __name__ == "__main__":
     unittest.main()

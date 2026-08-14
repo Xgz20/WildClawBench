@@ -188,8 +188,8 @@ token 计数继续保留。
 - `eval/run_batch.py` 接受 `--agent-backend deepseek-harness` 并退出 0。
 - `execution_status.json` 为 finished，记录 DSH 版本、镜像和 API。
 - `score.json` 由真实评分流程生成，不是手写或复制。
-- `task_output/workspace` 中存在容器工作区结果或 workspace changes；宿主输入 workspace
-  保持只读，不作为输出正确性的依据。
+- `task_output/workspace/results/results.md` 存在且非空；宿主输入 workspace 保持只读，
+  不作为输出正确性的依据。
 - 原生 `dsh_sessions`、`chat.jsonl`、`conversion_manifest.json` 和 `usage.json` 存在。
 - transcript 包含 assistant、tool use 和 tool result；usage 的 `request_count > 0`。
 - anomalies 不包含由接入缺陷导致的 validity failure。
