@@ -2,14 +2,20 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, call, patch
+
+from src.agents.base import AgentTaskSpec
 
 from src.agents.deepseek_harness.runner import (
     DEFAULT_DSH_API,
     DEFAULT_IMAGE,
+    DSH_SKILLS_DIR,
+    PROMPT_PATH,
+    DeepSeekHarnessAgent,
     append_agent_log_event,
     build_container_command,
     normalize_dsh_model_id,
@@ -180,6 +186,255 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
                     {"event": "finished", "exit_code": 0},
                 ],
             )
+
+
+class DeepSeekHarnessLifecycleTests(unittest.TestCase):
+    def _spec(self, root: Path, *, thinking: str | None = "high") -> AgentTaskSpec:
+        workspace = root / "workspace"
+        (workspace / "exec").mkdir(parents=True)
+        return AgentTaskSpec(
+            task_id="dsh-task",
+            task={
+                "env": "SLACK_TOKEN\n",
+                "skills": "slack\n",
+                "skills_path": str(root / "skills"),
+                "warmup": "echo ready",
+            },
+            workspace_path=str(workspace),
+            prompt="Read messages; don't expose $(secrets).",
+            timeout_seconds=30,
+            output_dir=root / "output",
+            model="openrouter/xopglm52",
+            thinking=thinking,
+            lobster={"env": ["LOBSTER_TOKEN"]},
+        )
+
+    def _agent(self, *, key: str = "test-key") -> DeepSeekHarnessAgent:
+        return DeepSeekHarnessAgent(
+            image="dsh:test",
+            openrouter_api_key=key,
+            openrouter_base_url="https://maas.example/v2",
+            api="openai-completions",
+        )
+
+    def test_agent_properties_match_grading_contract(self) -> None:
+        agent = self._agent()
+        self.assertFalse(agent.expects_gateway)
+        self.assertEqual(
+            agent.transcript_container_path,
+            "/root/.openclaw/agents/main/sessions/chat.jsonl",
+        )
+
+    def test_run_task_executes_lifecycle_in_order(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            spec = self._spec(Path(temp_dir))
+            agent = self._agent()
+            events: list[str] = []
+
+            with (
+                patch.object(
+                    agent,
+                    "_start_container",
+                    side_effect=lambda *_args, **_kwargs: events.append("start"),
+                ) as start_mock,
+                patch.object(
+                    agent,
+                    "_probe_harness_version",
+                    side_effect=lambda *_args: events.append("version") or "0.1.0-rc.6",
+                ),
+                patch.object(
+                    agent,
+                    "_prepare_workspace",
+                    side_effect=lambda *_args: events.append("workspace"),
+                ),
+                patch(
+                    "src.agents.deepseek_harness.runner.setup_skills",
+                    side_effect=lambda *_args, **_kwargs: events.append("skills"),
+                ) as skills_mock,
+                patch(
+                    "src.agents.deepseek_harness.runner.run_warmup",
+                    side_effect=lambda *_args, **_kwargs: events.append("warmup"),
+                ) as warmup_mock,
+                patch(
+                    "src.agents.deepseek_harness.runner.snapshot_workspace_state",
+                    side_effect=lambda *_args: events.append("snapshot"),
+                ),
+                patch.object(
+                    agent,
+                    "_copy_prompt",
+                    side_effect=lambda *_args: events.append("prompt"),
+                ),
+                patch.object(
+                    agent,
+                    "_run_dsh",
+                    side_effect=lambda *_args, **_kwargs: events.append("run")
+                    or subprocess.CompletedProcess([], 0, "", ""),
+                ),
+                patch.object(
+                    agent,
+                    "_export_sessions",
+                    side_effect=lambda *_args: events.append("export"),
+                ),
+            ):
+                execution = agent.run_task(spec)
+
+            self.assertIsNone(execution.error)
+            self.assertEqual(
+                events,
+                [
+                    "start",
+                    "version",
+                    "workspace",
+                    "skills",
+                    "warmup",
+                    "snapshot",
+                    "prompt",
+                    "run",
+                    "export",
+                ],
+            )
+            start_mock.assert_called_once_with(
+                "dsh-task",
+                Path(spec.workspace_path) / "exec",
+                spec,
+            )
+            skills_mock.assert_called_once_with(
+                "dsh-task",
+                "slack\n",
+                str(Path(temp_dir) / "skills"),
+                container_skills_root=DSH_SKILLS_DIR,
+            )
+            warmup_mock.assert_called_once_with(
+                "dsh-task",
+                "echo ready",
+                detach_background=True,
+            )
+            status = json.loads(
+                (spec.output_dir / "execution_status.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(status["status"], "finished")
+            self.assertEqual(status["harness"], "deepseek-harness")
+            self.assertEqual(status["harness_version"], "0.1.0-rc.6")
+            self.assertEqual(status["api"], "openai-completions")
+            self.assertEqual(status["model"], "xopglm52")
+
+    def test_run_task_returns_error_before_docker_when_key_is_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            spec = self._spec(Path(temp_dir))
+            agent = self._agent(key="")
+            with patch.object(agent, "_start_container") as start_mock:
+                execution = agent.run_task(spec)
+
+            self.assertIn("OPENROUTER_API_KEY", execution.error or "")
+            start_mock.assert_not_called()
+            status = json.loads(
+                (spec.output_dir / "execution_status.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(status["status"], "error")
+            self.assertEqual(status["failure_stage"], "validating_configuration")
+
+    def test_run_task_exports_sessions_after_nonzero_exit(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            spec = self._spec(Path(temp_dir))
+            agent = self._agent()
+            with (
+                patch.object(agent, "_start_container"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_prepare_workspace"),
+                patch("src.agents.deepseek_harness.runner.setup_skills"),
+                patch("src.agents.deepseek_harness.runner.run_warmup"),
+                patch("src.agents.deepseek_harness.runner.snapshot_workspace_state"),
+                patch.object(agent, "_copy_prompt"),
+                patch.object(
+                    agent,
+                    "_run_dsh",
+                    return_value=subprocess.CompletedProcess([], 7, "", "failed"),
+                ),
+                patch.object(agent, "_export_sessions") as export_mock,
+            ):
+                execution = agent.run_task(spec)
+
+            self.assertIn("rc=7", execution.error or "")
+            export_mock.assert_called_once_with("dsh-task", spec.output_dir)
+            status = json.loads(
+                (spec.output_dir / "execution_status.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(status["exit_code"], 7)
+            self.assertEqual(status["failure_stage"], "running_harness")
+
+    def test_run_task_reports_timeout_and_exports_sessions(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            spec = self._spec(Path(temp_dir))
+            agent = self._agent()
+            with (
+                patch.object(agent, "_start_container"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_prepare_workspace"),
+                patch("src.agents.deepseek_harness.runner.setup_skills"),
+                patch("src.agents.deepseek_harness.runner.run_warmup"),
+                patch("src.agents.deepseek_harness.runner.snapshot_workspace_state"),
+                patch.object(agent, "_copy_prompt"),
+                patch.object(
+                    agent,
+                    "_run_dsh",
+                    side_effect=subprocess.TimeoutExpired(["docker", "exec"], 30),
+                ),
+                patch.object(agent, "_export_sessions") as export_mock,
+            ):
+                execution = agent.run_task(spec)
+
+            self.assertEqual(execution.error, "DeepSeek Harness run timed out")
+            self.assertEqual(execution.elapsed_time, 30.0)
+            export_mock.assert_called_once_with("dsh-task", spec.output_dir)
+            status = json.loads(
+                (spec.output_dir / "execution_status.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(status["status"], "timed_out")
+            self.assertTrue(status["timed_out"])
+
+    def test_exec_command_reads_prompt_file_without_prompt_text(self) -> None:
+        command = self._agent()._build_exec_command()
+        self.assertIn(PROMPT_PATH, command)
+        self.assertIn("$(cat", command)
+        self.assertNotIn("Read messages", command)
+
+    def test_run_dsh_terminates_container_process_on_timeout(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            agent = self._agent()
+            proc = MagicMock()
+            proc.pid = 1234
+            proc.wait.side_effect = [subprocess.TimeoutExpired(["docker", "exec"], 1), 0]
+
+            with (
+                patch("src.agents.deepseek_harness.runner.subprocess.Popen", return_value=proc),
+                patch.object(agent, "_terminate_dsh_processes") as terminate_mock,
+            ):
+                with self.assertRaises(subprocess.TimeoutExpired):
+                    agent._run_dsh("dsh-task", 1, output_dir)
+
+            terminate_mock.assert_called_once_with("dsh-task")
+            proc.kill.assert_called_once_with()
+            self.assertEqual(proc.wait.call_args_list, [call(timeout=1), call(timeout=10)])
+
+    def test_copy_prompt_uses_docker_cp_and_removes_host_temp_file(self) -> None:
+        agent = self._agent()
+        copied_host_paths: list[Path] = []
+
+        def record_copy(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+            copied_host_paths.append(Path(command[2]))
+            self.assertEqual(command[3], f"dsh-task:{PROMPT_PATH}")
+            self.assertEqual(Path(command[2]).read_text(encoding="utf-8"), "prompt text")
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        with patch(
+            "src.agents.deepseek_harness.runner.subprocess.run",
+            side_effect=record_copy,
+        ):
+            agent._copy_prompt("dsh-task", "prompt text")
+
+        self.assertEqual(len(copied_host_paths), 1)
+        self.assertFalse(copied_host_paths[0].exists())
 
 
 if __name__ == "__main__":

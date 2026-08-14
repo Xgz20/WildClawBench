@@ -1,4 +1,6 @@
-"""DeepSeek Harness evaluation PoC helpers."""
+"""DeepSeek Harness evaluation backend and transcript helpers."""
+
+from .runner import DeepSeekHarnessAgent
 
 from .transcript import (
     ConversionResult,
@@ -9,6 +11,7 @@ from .transcript import (
 
 __all__ = [
     "ConversionResult",
+    "DeepSeekHarnessAgent",
     "DshSessionFormatError",
     "convert_sessions",
     "write_conversion",

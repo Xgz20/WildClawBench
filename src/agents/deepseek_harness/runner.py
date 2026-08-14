@@ -1,14 +1,25 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import subprocess
 import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from src.utils.docker_utils import container_resource_args
+from src.agents.base import AgentExecution, AgentTaskSpec, BaseAgent
+from src.utils.docker_utils import (
+    container_resource_args,
+    run_warmup,
+    setup_skills,
+    snapshot_workspace_state,
+)
+
+
+logger = logging.getLogger(__name__)
 
 
 SUPPORTED_DSH_APIS = ("openai-completions", "openai-responses")
@@ -219,3 +230,370 @@ def append_agent_log_event(output_dir: Path, event: dict[str, Any]) -> None:
     with (output_dir / "runner.log").open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(event, ensure_ascii=False, separators=(",", ":")))
         handle.write("\n")
+
+
+def _env_names(raw: object) -> tuple[str, ...]:
+    if isinstance(raw, str):
+        values = raw.splitlines()
+    elif isinstance(raw, (list, tuple, set)):
+        values = [str(value) for value in raw]
+    else:
+        values = []
+    return tuple(
+        value.strip()
+        for value in values
+        if value.strip() and not value.strip().startswith("#")
+    )
+
+
+class DeepSeekHarnessAgent(BaseAgent):
+    def __init__(
+        self,
+        image: str | None = None,
+        openrouter_api_key: str | None = None,
+        openrouter_base_url: str | None = None,
+        deepseek_api_key: str | None = None,
+        api: str | None = None,
+    ) -> None:
+        self.config = resolve_dsh_config(
+            image=image,
+            openrouter_api_key=openrouter_api_key,
+            openrouter_base_url=openrouter_base_url,
+            deepseek_api_key=deepseek_api_key,
+            api=api,
+        )
+        self.image = self.config.image
+        self.openrouter_api_key = self.config.openrouter_api_key
+        self.openrouter_base_url = self.config.openrouter_base_url
+        self.deepseek_api_key = self.config.deepseek_api_key
+        self.api = self.config.api
+
+    @property
+    def expects_gateway(self) -> bool:
+        return False
+
+    @property
+    def transcript_container_path(self) -> str:
+        return OPENCLAW_TRANSCRIPT_PATH
+
+    def prepare_grading_transcript(self, task_id: str) -> str:
+        _ = task_id
+        return OPENCLAW_TRANSCRIPT_PATH
+
+    def collect_usage(
+        self,
+        task_id: str,
+        output_dir: Path,
+        elapsed_time: float,
+    ) -> dict[str, Any]:
+        _ = task_id, output_dir
+        return {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cache_read_tokens": 0,
+            "cache_write_tokens": 0,
+            "total_tokens": 0,
+            "cost_usd": 0.0,
+            "request_count": 0,
+            "elapsed_time": round(elapsed_time, 2),
+        }
+
+    def run_task(self, spec: AgentTaskSpec) -> AgentExecution:
+        start_time = time.perf_counter()
+        task_id = spec.task_id
+        normalized_model = normalize_dsh_model_id(spec.model)
+        elapsed_time = 0.0
+        error: str | None = None
+        exit_code: int | None = None
+        timed_out = False
+        failure_stage: str | None = None
+        container_started = False
+
+        spec.output_dir.mkdir(parents=True, exist_ok=True)
+        (spec.output_dir / "agent.log").touch(exist_ok=True)
+        write_execution_status(
+            spec.output_dir,
+            task_id=task_id,
+            harness="deepseek-harness",
+            harness_version=None,
+            image=self.image,
+            api=self.api,
+            model=normalized_model,
+            timeout_seconds=spec.timeout_seconds,
+            status="validating_configuration",
+            timed_out=False,
+            exit_code=None,
+            error=None,
+            failure_stage=None,
+        )
+
+        try:
+            if not self.openrouter_api_key:
+                failure_stage = "validating_configuration"
+                raise ValueError("OPENROUTER_API_KEY must be set for DeepSeek Harness")
+
+            exec_path = Path(spec.workspace_path).expanduser() / "exec"
+            if not exec_path.is_dir():
+                logger.warning(
+                    "[%s] Workspace exec dir missing, auto-creating empty directory: %s",
+                    task_id,
+                    exec_path,
+                )
+                exec_path.mkdir(parents=True, exist_ok=True)
+
+            failure_stage = "starting_container"
+            write_execution_status(spec.output_dir, status=failure_stage)
+            self._start_container(task_id, exec_path, spec)
+            container_started = True
+
+            harness_version = self._probe_harness_version(task_id)
+            write_execution_status(
+                spec.output_dir,
+                status="container_started",
+                harness_version=harness_version,
+            )
+
+            failure_stage = "preparing_workspace"
+            write_execution_status(spec.output_dir, status=failure_stage)
+            self._prepare_workspace(task_id)
+            setup_skills(
+                task_id,
+                str(spec.task.get("skills", "")) if spec.task else "",
+                str(spec.task.get("skills_path", "")) if spec.task else "",
+                container_skills_root=DSH_SKILLS_DIR,
+            )
+            run_warmup(
+                task_id,
+                str(spec.task.get("warmup", "")) if spec.task else "",
+                detach_background=True,
+            )
+            snapshot_workspace_state(task_id)
+
+            failure_stage = "preparing_harness_input"
+            write_execution_status(spec.output_dir, status=failure_stage)
+            self._copy_prompt(task_id, spec.prompt)
+
+            failure_stage = "running_harness"
+            write_execution_status(spec.output_dir, status=failure_stage)
+            completed = self._run_dsh(
+                task_id,
+                spec.timeout_seconds,
+                spec.output_dir,
+            )
+            exit_code = completed.returncode
+            if exit_code != 0:
+                detail = (completed.stderr or completed.stdout or "").strip()
+                suffix = f": {detail}" if detail else ""
+                raise RuntimeError(f"DeepSeek Harness run failed (rc={exit_code}){suffix}")
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            elapsed_time = float(spec.timeout_seconds)
+            error = "DeepSeek Harness run timed out"
+            append_agent_log_event(
+                spec.output_dir,
+                {
+                    "type": "runner.timeout",
+                    "timeout_seconds": spec.timeout_seconds,
+                    "message": error,
+                },
+            )
+        except Exception as exc:
+            elapsed_time = time.perf_counter() - start_time
+            error = str(exc)
+            append_agent_log_event(
+                spec.output_dir,
+                {
+                    "type": "runner.error",
+                    "stage": failure_stage,
+                    "message": error,
+                },
+            )
+        finally:
+            if container_started:
+                try:
+                    self._export_sessions(task_id, spec.output_dir)
+                except Exception as exc:
+                    logger.warning("[%s] Failed to export DSH sessions: %s", task_id, exc)
+                    if error is None:
+                        error = f"DeepSeek Harness session export failed: {exc}"
+                        failure_stage = "exporting_sessions"
+            if not timed_out:
+                elapsed_time = time.perf_counter() - start_time
+
+            if timed_out:
+                status = "timed_out"
+            elif error is not None:
+                status = "error"
+            else:
+                status = "finished"
+                failure_stage = None
+            write_execution_status(
+                spec.output_dir,
+                status=status,
+                timed_out=timed_out,
+                elapsed_time=round(elapsed_time, 2),
+                exit_code=exit_code,
+                error=error,
+                failure_stage=failure_stage,
+            )
+
+        return AgentExecution(
+            elapsed_time=elapsed_time,
+            error=error,
+            gateway_proc=None,
+            agent_proc=None,
+        )
+
+    def _start_container(
+        self,
+        task_id: str,
+        exec_path: Path,
+        spec: AgentTaskSpec,
+    ) -> None:
+        task_env_names = _env_names(spec.task.get("env", "") if spec.task else "")
+        lobster_env_names = _env_names(spec.lobster.get("env", ()) if spec.lobster else ())
+        start_dsh_container(
+            self.config,
+            task_id=task_id,
+            workspace_exec=exec_path,
+            model=spec.model,
+            thinking=spec.thinking,
+            task_env_names=task_env_names,
+            lobster_env_names=lobster_env_names,
+        )
+
+    @staticmethod
+    def _probe_harness_version(task_id: str) -> str:
+        completed = subprocess.run(
+            ["docker", "exec", task_id, "dsh", "--version"],
+            capture_output=True,
+            text=True,
+        )
+        if completed.returncode != 0:
+            return "unknown"
+        return (completed.stdout or completed.stderr).strip() or "unknown"
+
+    @staticmethod
+    def _prepare_workspace(task_id: str) -> None:
+        command = (
+            f"mkdir -p /tmp_workspace && cp -r {SRC_MOUNT}/. /tmp_workspace "
+            "&& chmod -R u+w /tmp_workspace"
+        )
+        completed = subprocess.run(
+            ["docker", "exec", task_id, "/bin/bash", "-c", command],
+            capture_output=True,
+            text=True,
+        )
+        if completed.returncode != 0:
+            raise RuntimeError(f"Workspace copy failed: {completed.stderr.strip()}")
+
+    @staticmethod
+    def _copy_prompt(task_id: str, prompt: str) -> None:
+        with tempfile.NamedTemporaryFile(
+            "w",
+            encoding="utf-8",
+            prefix="wildclaw-dsh-prompt-",
+            suffix=".txt",
+            delete=False,
+        ) as handle:
+            handle.write(prompt)
+            host_path = Path(handle.name)
+        try:
+            completed = subprocess.run(
+                ["docker", "cp", str(host_path), f"{task_id}:{PROMPT_PATH}"],
+                capture_output=True,
+                text=True,
+            )
+            if completed.returncode != 0:
+                raise RuntimeError(f"Prompt copy failed: {completed.stderr.strip()}")
+        finally:
+            host_path.unlink(missing_ok=True)
+
+    @staticmethod
+    def _build_exec_command() -> str:
+        return (
+            "cd /tmp_workspace && "
+            "echo $$ > /tmp/wildclaw_dsh.pid && "
+            f'exec /usr/local/bin/wcb-dsh "$(cat {PROMPT_PATH})"'
+        )
+
+    def _run_dsh(
+        self,
+        task_id: str,
+        timeout_seconds: int,
+        output_dir: Path,
+    ) -> subprocess.CompletedProcess[str]:
+        command = [
+            "docker",
+            "exec",
+            task_id,
+            "/bin/bash",
+            "-lc",
+            self._build_exec_command(),
+        ]
+        log_path = Path(output_dir) / "agent.log"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        with log_path.open("w", encoding="utf-8", errors="replace") as log:
+            proc = subprocess.Popen(
+                command,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+            try:
+                return_code = proc.wait(timeout=timeout_seconds)
+            except subprocess.TimeoutExpired:
+                self._terminate_dsh_processes(task_id)
+                proc.kill()
+                try:
+                    proc.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    logger.warning("[%s] docker exec did not exit after kill", task_id)
+                raise
+        tail = self._read_text_tail(log_path)
+        return subprocess.CompletedProcess(command, return_code, tail, tail)
+
+    @staticmethod
+    def _terminate_dsh_processes(task_id: str) -> None:
+        subprocess.run(
+            [
+                "docker",
+                "exec",
+                task_id,
+                "/bin/bash",
+                "-lc",
+                (
+                    "if [ -s /tmp/wildclaw_dsh.pid ]; then "
+                    "pid=$(cat /tmp/wildclaw_dsh.pid); "
+                    "kill -TERM \"$pid\" 2>/dev/null || true; "
+                    "sleep 2; kill -KILL \"$pid\" 2>/dev/null || true; fi"
+                ),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=8,
+        )
+
+    @staticmethod
+    def _export_sessions(task_id: str, output_dir: Path) -> None:
+        destination = Path(output_dir) / "dsh_sessions"
+        destination.mkdir(parents=True, exist_ok=True)
+        completed = subprocess.run(
+            ["docker", "cp", f"{task_id}:{DSH_SESSIONS_DIR}/.", str(destination)],
+            capture_output=True,
+            text=True,
+        )
+        if completed.returncode != 0:
+            logger.warning(
+                "[%s] DSH session directory is unavailable: %s",
+                task_id,
+                completed.stderr.strip(),
+            )
+
+    @staticmethod
+    def _read_text_tail(path: Path, max_chars: int = 20000) -> str:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return ""
+        return text if len(text) <= max_chars else text[-max_chars:]
