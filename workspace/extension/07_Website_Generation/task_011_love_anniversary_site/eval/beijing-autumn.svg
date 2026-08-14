@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600">
+  <rect width="900" height="600" fill="#f4dfc8"/><circle cx="740" cy="110" r="58" fill="#f6bb70"/>
+  <path d="M0 410 Q120 320 240 390 T500 365 T760 380 T900 350V600H0Z" fill="#b56c53" opacity=".65"/>
+  <path d="M225 430H680V535H225Z" fill="#944a42"/><path d="M180 430 450 310 725 430Z" fill="#6d3940"/><path d="M390 365H510V535H390Z" fill="#c77857"/><circle cx="450" cy="430" r="22" fill="#d9aa70"/>
+  <g fill="#bd704b"><circle cx="100" cy="250" r="55"/><circle cx="145" cy="280" r="42"/><circle cx="790" cy="270" r="65"/></g>
+  <text x="48" y="82" fill="#753d43" font-family="sans-serif" font-size="40" font-weight="700">北京 · 秋日约会</text>
+</svg>

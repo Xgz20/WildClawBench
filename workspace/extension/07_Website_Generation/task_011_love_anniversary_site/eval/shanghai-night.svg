@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600">
+  <defs><linearGradient id="night" x2="0" y2="1"><stop stop-color="#2f3254"/><stop offset="1" stop-color="#8b6381"/></linearGradient></defs>
+  <rect width="900" height="600" fill="url(#night)"/><circle cx="720" cy="90" r="42" fill="#ffe8a9"/>
+  <g fill="#f8cdd7"><circle cx="90" cy="95" r="3"/><circle cx="180" cy="70" r="2"/><circle cx="610" cy="135" r="3"/></g>
+  <path d="M0 420H90V290H155V420H210V225H280V420H360V315H430V420H490V180H565V420H630V260H700V420H770V330H835V420H900V600H0Z" fill="#252843"/>
+  <path d="M520 180 528 92 538 180M502 245H584" fill="none" stroke="#f3b8c8" stroke-width="8"/>
+  <g fill="#ffd998"><rect x="110" y="315" width="12" height="18"/><rect x="235" y="255" width="12" height="18"/><rect x="650" y="286" width="12" height="18"/><rect x="795" y="350" width="12" height="18"/></g>
+  <text x="48" y="82" fill="#fff4ef" font-family="sans-serif" font-size="40" font-weight="700">上海 · 夜色散步</text>
+</svg>
