@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600">
+  <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#f9d9db"/><stop offset="1" stop-color="#dcecf0"/></linearGradient></defs>
+  <rect width="900" height="600" fill="url(#sky)"/><circle cx="710" cy="120" r="65" fill="#fff5cf"/>
+  <path d="M0 360 Q180 300 340 355 T680 330 T900 350 V600 H0Z" fill="#a9ced0"/><path d="M0 430 Q220 365 450 425 T900 395 V600 H0Z" fill="#78b3bb" opacity=".65"/>
+  <path d="M0 300 Q160 175 320 305 Q470 160 620 300 Q760 205 900 305 V380 H0Z" fill="#769b81" opacity=".75"/>
+  <path d="M340 370 Q450 300 560 370" fill="none" stroke="#f1ede2" stroke-width="18"/><path d="M370 368 V415 M530 368 V415" stroke="#f1ede2" stroke-width="12"/>
+  <text x="48" y="82" fill="#754a58" font-family="sans-serif" font-size="40" font-weight="700">杭州 · 湖畔晚风</text>
+</svg>
