@@ -15,7 +15,6 @@ from src.agents.deepseek_harness.transcript import DshSessionFormatError
 from src.agents.deepseek_harness.runner import (
     DEFAULT_DSH_API,
     DEFAULT_IMAGE,
-    DSH_SKILLS_DIR,
     PROMPT_PATH,
     DeepSeekHarnessAgent,
     append_agent_log_event,
@@ -251,8 +250,9 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
                     side_effect=lambda *_args: events.append("workspace"),
                 ),
                 patch(
-                    "src.agents.deepseek_harness.runner.setup_skills",
-                    side_effect=lambda *_args, **_kwargs: events.append("skills"),
+                    "src.agents.deepseek_harness.runner.install_dsh_skills",
+                    side_effect=lambda *_args, **_kwargs: events.append("skills")
+                    or ["03-task2"],
                 ) as skills_mock,
                 patch(
                     "src.agents.deepseek_harness.runner.run_warmup",
@@ -266,7 +266,7 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
                     agent,
                     "_copy_prompt",
                     side_effect=lambda *_args: events.append("prompt"),
-                ),
+                ) as prompt_mock,
                 patch.object(
                     agent,
                     "_run_dsh",
@@ -305,7 +305,10 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
                 "dsh-task",
                 "slack\n",
                 str(Path(temp_dir) / "skills"),
-                container_skills_root=DSH_SKILLS_DIR,
+            )
+            prompt_mock.assert_called_once_with(
+                "dsh-task",
+                "/03-task2\n\nRead messages; don't expose $(secrets).",
             )
             warmup_mock.assert_called_once_with(
                 "dsh-task",
@@ -344,7 +347,10 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
                 patch.object(agent, "_start_container"),
                 patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
                 patch.object(agent, "_prepare_workspace"),
-                patch("src.agents.deepseek_harness.runner.setup_skills"),
+                patch(
+                    "src.agents.deepseek_harness.runner.install_dsh_skills",
+                    return_value=[],
+                ),
                 patch("src.agents.deepseek_harness.runner.run_warmup"),
                 patch("src.agents.deepseek_harness.runner.snapshot_workspace_state"),
                 patch.object(agent, "_copy_prompt"),
@@ -373,7 +379,10 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
                 patch.object(agent, "_start_container"),
                 patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
                 patch.object(agent, "_prepare_workspace"),
-                patch("src.agents.deepseek_harness.runner.setup_skills"),
+                patch(
+                    "src.agents.deepseek_harness.runner.install_dsh_skills",
+                    return_value=[],
+                ),
                 patch("src.agents.deepseek_harness.runner.run_warmup"),
                 patch("src.agents.deepseek_harness.runner.snapshot_workspace_state"),
                 patch.object(agent, "_copy_prompt"),
@@ -621,7 +630,10 @@ class DeepSeekHarnessArtifactTests(unittest.TestCase):
                 patch.object(agent, "_start_container"),
                 patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
                 patch.object(agent, "_prepare_workspace"),
-                patch("src.agents.deepseek_harness.runner.setup_skills"),
+                patch(
+                    "src.agents.deepseek_harness.runner.install_dsh_skills",
+                    return_value=[],
+                ),
                 patch("src.agents.deepseek_harness.runner.run_warmup"),
                 patch("src.agents.deepseek_harness.runner.snapshot_workspace_state"),
                 patch.object(agent, "_copy_prompt"),

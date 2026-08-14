@@ -60,11 +60,18 @@ Those suffixes are provider-specific and are not a general protocol rule.
 
 The formal backend starts a detached container, read-only mounts the task
 input, copies it to `/tmp_workspace`, installs task skills below
-`/root/.dsh/skills`, and leaves the container alive for grading. It exports raw
-sessions to `dsh_sessions`, converts them into `chat.jsonl`, `usage.json`, and
-`conversion_manifest.json`, then installs the normalized transcript at the
-OpenClaw-compatible path expected by WCB graders. `run_batch.py` removes the
-container after grading and output collection.
+`/root/.dsh/skills`, and leaves the container alive for grading. Because DSH
+accepts only lowercase kebab-case skill names, the runner stages each complete
+bundle, normalizes its frontmatter name (for example `03_task2` to
+`03-task2`), updates staged `{baseDir}` references, and rejects normalized-name
+collisions. The original task skill is never modified. Ordered `/<name>`
+gestures are prepended to the task prompt so DSH performs native direct skill
+invocation; the runner does not concatenate skill bodies into the prompt.
+
+The backend exports raw sessions to `dsh_sessions`, converts them into
+`chat.jsonl`, `usage.json`, and `conversion_manifest.json`, then installs the
+normalized transcript at the OpenClaw-compatible path expected by WCB graders.
+`run_batch.py` removes the container after grading and output collection.
 
 ## Standalone Diagnostics
 
@@ -102,8 +109,11 @@ Verified by the preceding PoC work on 2026-08-14:
 - Missing `DSH_MODEL_ID` or `OPENROUTER_API_KEY` failed before a model request.
 
 The formal backend has offline unit coverage for container construction,
-workspace/skills/warmup, timeout handling, transcript conversion, usage,
-grading policy, metrics, and report identity. A real `run_batch.py` scoring run
-is still required before calling the formal integration end-to-end verified.
+workspace/skills/warmup, skill-name normalization and native gestures, timeout
+handling, transcript conversion, usage, grading policy, metrics, and report
+identity. An initial real `run_batch.py` run exposed the invalid underscore
+skill name and completed with `results.md not found`; the repaired flow still
+requires a fresh successful scoring run before the formal integration can be
+called end-to-end verified.
 Live DeepSeek Search, native multimodal tasks, the full benchmark, and inferred
 USD cost remain outside this verification boundary.

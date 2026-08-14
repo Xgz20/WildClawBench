@@ -44,8 +44,9 @@ multimodal 纳入本次完成条件。
 - `prepare_grading_transcript()` 返回已回灌容器的归一化 transcript 路径。
 - `collect_usage()` 读取转换器产生的 usage，补充 elapsed time，并在缺失时返回零值结构。
 
-runner 复用 `src.utils.docker_utils` 中的资源限制、skill 安装、warmup 和 workspace
-baseline 工具，不复制这些通用实现。
+runner 复用 `src.utils.docker_utils` 中的资源限制、warmup 和 workspace baseline 工具。
+DSH 的 skill 名称约束和调用方式与其他 Harness 不同，因此由
+`src.agents.deepseek_harness.skills` 提供专用暂存、安装和 prompt 构造逻辑。
 
 ## 容器生命周期
 
@@ -56,12 +57,18 @@ baseline 工具，不复制这些通用实现。
    保持容器运行，直到 `run_batch.py` 完成评分和产物采集。
 4. 将 `<workspace>/exec` 只读挂载到 `/mnt/wildclaw_src`，再复制到可写的
    `/tmp_workspace`。不存在 `exec` 时创建空目录并记录 warning。
-5. 将任务声明的 skills 复制到 `/root/.dsh/skills/<skill-name>`。DSH 原生
-   `skill-filesystem` 会发现 `$DSH_HOME/skills`，无需把 skill 正文拼入 prompt。
-6. 运行任务 warmup，保存 workspace baseline，再执行 DSH。
-7. DSH 结束或失败后，在容器仍存活时导出 session、转换 transcript，并把
+5. 用 PyYAML 读取每个任务 skill 的 frontmatter，将名称规范化为 DSH 要求的小写
+   kebab-case（例如 `03_task2` 转为 `03-task2`）。若多个声明归一到同一名称，则在
+   Docker 操作前明确失败。
+6. 将完整 bundle 暂存到宿主临时目录，保留 `references`、`scripts`、`assets` 等资源；
+   只修改暂存副本的 `SKILL.md`，更新 `name` 并将 `{baseDir}` 替换为
+   `/root/.dsh/skills/<normalized-name>`，再复制到容器同名目录。原始 task skill 不变。
+7. 在原任务 prompt 前按声明顺序加入 `/<normalized-name>`。这是 DSH 原生 direct skill
+   invocation gesture，会由 `dsh-tool-skill` 注入完整 skill 内容；runner 不拼接正文。
+8. 运行任务 warmup，保存 workspace baseline，再执行 DSH。
+9. DSH 结束或失败后，在容器仍存活时导出 session、转换 transcript，并把
    `chat.jsonl` 复制回评分器固定路径。
-8. `run_batch.py` 在评分、usage、task output 和 anomalies 完成后统一删除容器。
+10. `run_batch.py` 在评分、usage、task output 和 anomalies 完成后统一删除容器。
 
 ## 模型与协议配置
 
@@ -156,6 +163,7 @@ token 计数继续保留。
 新增或修改：
 
 - `src/agents/deepseek_harness/runner.py`
+- `src/agents/deepseek_harness/skills.py`
 - `src/agents/deepseek_harness/__init__.py`
 - `src/utils/cli_args.py`
 - `eval/run_batch.py`
@@ -163,6 +171,7 @@ token 计数继续保留。
 - `tools/report/data/entities.yaml`
 - `docker/deepseek-harness/README.md`
 - `tests/test_deepseek_harness_runner.py`
+- `tests/test_deepseek_harness_skills.py`
 - `tests/test_deepseek_harness_integration.py`
 - `tests/test_tool_metrics.py`
 - 相关 CLI、run_batch 和报告实体测试
@@ -172,12 +181,20 @@ token 计数继续保留。
 - CLI backend 与 API choices。
 - 模型 ID 规范化和 base URL 不重写。
 - detached 容器命令、环境变量掩码和缺凭据失败。
-- workspace、skills、warmup、thinking 与 prompt 文件传递。
+- workspace、skill 名称规范化、完整 bundle 暂存、原生 gesture、warmup、thinking 与
+  prompt 文件传递。
 - 正常、非零退出、timeout、转换失败的状态和产物。
 - transcript 回灌、usage 与 workspace changes/grade-on-error 注册。
 - DSH 工具指标和报告实体。
 
 ## 真实验收
+
+首次使用完整 task workspace 的真实评测已经跑通容器、工具调用、session、usage、评分
+和归档链路，但 transcript 中没有 skill catalog 或 skill 加载记录。模型最终写入
+`results/action_list.md`，评分器因此按既有契约报告 `results.md not found`。DSH 源码确认
+`skill-filesystem` 仅接受 `^[a-z0-9]+(?:-[a-z0-9]+)*$`，原始 `name: 03_task2`
+会在发现阶段被忽略。上述专用暂存和 `/<name>` gesture 修复该接入缺陷；修复后的真实
+评分仍须按以下门槛重跑，不能把首次运行记为端到端通过。
 
 构建正式镜像 tag 后，使用 Chat `/v2`、`xopglm52`、`--thinking high` 运行：
 

@@ -11,11 +11,15 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 from src.agents.base import AgentExecution, AgentTaskSpec, BaseAgent
+from src.agents.deepseek_harness.skills import (
+    DSH_SKILLS_DIR,
+    build_dsh_prompt,
+    install_dsh_skills,
+)
 from src.agents.deepseek_harness.transcript import DshSessionFormatError, write_conversion
 from src.utils.docker_utils import (
     container_resource_args,
     run_warmup,
-    setup_skills,
     snapshot_workspace_state,
 )
 
@@ -37,7 +41,6 @@ DEFAULT_DSH_API = "openai-completions"
 DEFAULT_IMAGE = "wildclawbench-deepseek-harness-ubuntu:v0.0"
 DSH_HOME = "/root/.dsh"
 DSH_SESSIONS_DIR = f"{DSH_HOME}/sessions"
-DSH_SKILLS_DIR = f"{DSH_HOME}/skills"
 OPENCLAW_TRANSCRIPT_PATH = "/root/.openclaw/agents/main/sessions/chat.jsonl"
 SRC_MOUNT = "/mnt/wildclaw_src"
 PROMPT_PATH = "/tmp/wildclaw_dsh_prompt.txt"
@@ -381,11 +384,10 @@ class DeepSeekHarnessAgent(BaseAgent):
             failure_stage = "preparing_workspace"
             write_execution_status(spec.output_dir, status=failure_stage)
             self._prepare_workspace(task_id, spec.workspace_path)
-            setup_skills(
+            skill_names = install_dsh_skills(
                 task_id,
                 str(spec.task.get("skills", "")) if spec.task else "",
                 str(spec.task.get("skills_path", "")) if spec.task else "",
-                container_skills_root=DSH_SKILLS_DIR,
             )
             run_warmup(
                 task_id,
@@ -396,7 +398,7 @@ class DeepSeekHarnessAgent(BaseAgent):
 
             failure_stage = "preparing_harness_input"
             write_execution_status(spec.output_dir, status=failure_stage)
-            self._copy_prompt(task_id, spec.prompt)
+            self._copy_prompt(task_id, build_dsh_prompt(spec.prompt, skill_names))
 
             failure_stage = "running_harness"
             write_execution_status(spec.output_dir, status=failure_stage)

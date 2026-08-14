@@ -407,6 +407,7 @@ uv run python -m unittest \
   tests/test_deepseek_harness_transcript.py \
   tests/test_deepseek_harness_poc.py \
   tests/test_deepseek_harness_docker.py \
+  tests/test_deepseek_harness_skills.py \
   tests/test_deepseek_harness_runner.py \
   tests/test_deepseek_harness_integration.py \
   tests/test_tool_metrics.py \
@@ -449,6 +450,20 @@ git commit -m "test(deepseek-harness): 记录正式集成验证"
 - Generated, ignored: `/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/eval_out_debug/smoke/deepseek-harness-integration/`
 - Modify when evidence changes: `docker/deepseek-harness/README.md`
 - Modify when evidence changes: `docs/superpowers/specs/2026-08-14-deepseek-harness-integration-design.md`
+
+**Skill discovery repair record (2026-08-14):**
+
+- [x] A full-workspace run reached DSH, tools, session export, usage, grading and archival, but
+  wrote `results/action_list.md`; `score.json` reported `results.md not found`.
+- [x] The native session contained no skill catalog or skill load. DSH source confirmed skill
+  names must match `^[a-z0-9]+(?:-[a-z0-9]+)*$`, while the task declares `name: 03_task2`.
+- [x] Add a DSH-only staging installer that parses YAML frontmatter, normalizes names, rejects
+  collisions, preserves complete bundles, rewrites staged `{baseDir}`, and installs to the
+  normalized directory without changing original skills.
+- [x] Prefix the task prompt with ordered `/<normalized-name>` gestures so DSH performs native
+  direct skill invocation without concatenating skill bodies in the runner.
+- [x] Verify the repair through RED/GREEN unit and lifecycle tests.
+- [ ] Repeat the real evaluation below and require `results/results.md` plus a successful score.
 
 - [ ] **Step 1: Run the real Chat `/v2` task**
 
