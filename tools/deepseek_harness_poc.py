@@ -6,15 +6,21 @@ import hashlib
 import json
 import os
 import subprocess
+import sys
 import uuid
 from pathlib import Path
 from typing import Any, Sequence
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.agents.deepseek_harness.transcript import DshSessionFormatError, write_conversion
 
 
 CREDENTIAL_ENV_NAMES = ("OPENROUTER_API_KEY", "DEEPSEEK_API_KEY")
 OPTIONAL_ENV_NAMES = ("OPENROUTER_BASE_URL",)
+SUPPORTED_APIS = ("openai-completions", "openai-responses")
+DEFAULT_API = "openai-completions"
 
 
 def build_docker_command(
@@ -26,6 +32,7 @@ def build_docker_command(
     prompt: str,
     container_name: str,
     reasoning: str = "",
+    api: str = DEFAULT_API,
 ) -> list[str]:
     command = [
         "docker",
@@ -40,6 +47,8 @@ def build_docker_command(
         f"{sessions_dir}:/root/.dsh/sessions",
         "--env",
         f"DSH_MODEL_ID={model}",
+        "--env",
+        f"DSH_API={api}",
     ]
     if reasoning:
         command.extend(["--env", f"DSH_REASONING={reasoning}"])
@@ -60,6 +69,7 @@ def build_run_manifest(
     timeout_seconds: float,
     exit_code: int,
     timed_out: bool,
+    api: str = DEFAULT_API,
 ) -> dict[str, Any]:
     return {
         "format": "wildclawbench-deepseek-harness-poc-run-v1",
@@ -67,6 +77,7 @@ def build_run_manifest(
         "workspace": str(workspace),
         "sessions_dir": str(sessions_dir),
         "model": model,
+        "api": api,
         "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
         "container_name": container_name,
         "timeout_seconds": timeout_seconds,
@@ -114,6 +125,7 @@ def _run_docker(args: argparse.Namespace) -> int:
         prompt=args.prompt,
         container_name=container_name,
         reasoning=args.reasoning,
+        api=args.api,
     )
 
     exit_code = 127
@@ -169,6 +181,7 @@ def _run_docker(args: argparse.Namespace) -> int:
         timeout_seconds=args.timeout,
         exit_code=exit_code,
         timed_out=timed_out,
+        api=args.api,
     )
     if cleanup_error:
         manifest["cleanup_error"] = _redact_secrets(cleanup_error)
@@ -211,6 +224,7 @@ def _build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--model", required=True)
     run_parser.add_argument("--output", type=Path, required=True)
     run_parser.add_argument("--prompt", required=True)
+    run_parser.add_argument("--api", choices=SUPPORTED_APIS, default=DEFAULT_API)
     run_parser.add_argument("--reasoning", default="")
     run_parser.add_argument("--timeout", type=_positive_float, default=1800.0)
     run_parser.add_argument("--container-name", default="")

@@ -179,5 +179,15 @@ git commit -m "feat(deepseek-harness): 增加 Docker 与轨迹转换 PoC"
 - [x] Declare `DSH_REASONING` in the hand-declared model's
   `reasoningEfforts` before selecting that effort.
 - [x] Run a credentialed `xopglm52` smoke without persisting credentials. The
-  request reached MaaS but returned HTTP 401, so no successful real-model task
-  is claimed.
+  initial Chat request against `/v1` returned HTTP 401; the follow-up below
+  identifies and verifies the protocol/endpoint mismatch.
+
+### Follow-up: Select OpenAI Wire API Explicitly
+
+- [x] Re-run the same Chat request against the MaaS `/v2` endpoint and verify
+  model response, tool execution, workspace mutation, transcript, and usage.
+- [x] Add `--api openai-completions|openai-responses`, preserving Chat as the
+  default and recording the selected API in the run manifest.
+- [x] Fix direct `python tools/deepseek_harness_poc.py` execution without a
+  caller-provided `PYTHONPATH`.
+- [x] Rebuild the image and smoke both explicit API routes.

@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -17,9 +18,26 @@ from tools.deepseek_harness_poc import (
 
 
 FIXTURE_ROOT = Path(__file__).parent / "fixtures" / "deepseek_harness"
+REPO_ROOT = Path(__file__).parents[1]
 
 
 class DeepSeekHarnessPocCliTests(unittest.TestCase):
+    def test_script_entrypoint_runs_without_pythonpath(self) -> None:
+        env = os.environ.copy()
+        env.pop("PYTHONPATH", None)
+
+        completed = subprocess.run(
+            [sys.executable, "tools/deepseek_harness_poc.py", "--help"],
+            cwd=REPO_ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("Run or convert a standalone DeepSeek Harness PoC task", completed.stdout)
+
     def test_convert_command_writes_all_conversion_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir) / "converted"
@@ -48,6 +66,7 @@ class DeepSeekHarnessPocCliTests(unittest.TestCase):
             prompt="Finish the task",
             container_name="wcb-dsh-test",
             reasoning="high",
+            api="openai-responses",
         )
 
         self.assertEqual(command[:3], ["docker", "run", "--name"])
@@ -56,6 +75,7 @@ class DeepSeekHarnessPocCliTests(unittest.TestCase):
         self.assertIn("/out/sessions:/root/.dsh/sessions", command)
         self.assertIn("DSH_MODEL_ID=deepseek/deepseek-chat-v3.1", command)
         self.assertIn("DSH_REASONING=high", command)
+        self.assertIn("DSH_API=openai-responses", command)
         self.assertIn("OPENROUTER_API_KEY", command)
         self.assertIn("DEEPSEEK_API_KEY", command)
         self.assertEqual(command[-2:], ["wildclawbench-deepseek-harness-poc:test", "Finish the task"])
@@ -176,6 +196,7 @@ class DeepSeekHarnessPocCliTests(unittest.TestCase):
             timeout_seconds=60.0,
             exit_code=0,
             timed_out=False,
+            api="openai-completions",
         )
 
         serialized = json.dumps(manifest)
@@ -184,6 +205,7 @@ class DeepSeekHarnessPocCliTests(unittest.TestCase):
         self.assertNotIn("Do the task", serialized)
         self.assertIn("OPENROUTER_API_KEY", manifest["credential_env_names"])
         self.assertIn("prompt_sha256", manifest)
+        self.assertEqual(manifest["api"], "openai-completions")
 
 
 if __name__ == "__main__":

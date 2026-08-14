@@ -20,7 +20,7 @@ cat >"${patch_path}" <<'PATCH'
       openrouter:
         displayName: OpenRouter
         apiKeyEnv: OPENROUTER_API_KEY
-        api: openai-completions
+        api: !!js process.env.DSH_API || 'openai-completions'
         baseURL: !!js process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1'
         reasoning: !!js process.env.DSH_REASONING || undefined
         models:

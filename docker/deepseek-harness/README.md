@@ -51,6 +51,7 @@ command line or a tracked configuration file.
 
 ```bash
 export OPENROUTER_API_KEY='<redacted>'
+export OPENROUTER_BASE_URL='https://openrouter.ai/api/v1'
 # Optional: enables the DSH-native DeepSeek Search provider.
 export DEEPSEEK_API_KEY='<redacted>'
 
@@ -58,9 +59,17 @@ python tools/deepseek_harness_poc.py run \
   --image wildclawbench-deepseek-harness-poc:0.1.0-rc.6 \
   --workspace /path/to/task-workspace \
   --model deepseek/deepseek-chat-v3.1 \
+  --api openai-completions \
   --output /path/to/output \
   --prompt 'Complete the task and verify the result.'
 ```
+
+`--api` accepts `openai-completions` and `openai-responses`; it defaults to
+`openai-completions` for backward compatibility. Select the API and base URL as
+one explicit pair. Do not infer the API from a `/v1` or `/v2` suffix because
+those paths are provider-specific. For the tested MaaS route, Chat Completions
+uses `--api openai-completions` with a `/v2` base URL, while Responses uses
+`--api openai-responses` with a `/v1` base URL.
 
 The Docker command inherits credential environment variable names. The
 generated Cordis patch contains `apiKeyEnv` references, not credential values.
@@ -96,13 +105,22 @@ Verified in this branch on 2026-08-14:
   `xopglm52`; AstronCode strips the Harness route prefix before writing its
   provider config. When `--reasoning high` is set, the entrypoint declares
   that level in the hand-declared model metadata before selecting it.
+- A credentialed `xopglm52` Chat Completions smoke against the tested MaaS
+  `/v2` endpoint exited 0. The model created and read back the requested file;
+  raw session conversion emitted 7 messages and usage for 3 model requests.
+  The same Chat configuration against `/v1` returned HTTP 401, confirming that
+  the earlier authentication-looking error was caused by an API/endpoint
+  mismatch for this provider.
+- A second credentialed smoke used `openai-responses` against the same MaaS
+  provider's `/v1` endpoint. It also exited 0, created/read the requested file,
+  and emitted 7 converted messages with usage for 3 model requests. The raw
+  session replay state records `api: openai-responses`.
 
 The first build attempt could not fetch Docker Hub's anonymous token. For the
 successful local build, the same Node 24 base image was pulled from a local
 mirror and tagged as `node:24-bookworm-slim`; the Dockerfile itself still uses
 the standard image reference. A credentialed `xopglm52` smoke loaded secrets
-only from the ignored repository `.env`. The first run rejected the previously
-missing reasoning capability before network I/O; after the model metadata fix,
-the request reached the MaaS endpoint but returned HTTP 401 (`无效的令牌`). No
-successful model response, task mutation, or live DeepSeek Search result was
-observed, so those boundaries remain unverified.
+only from the ignored repository `.env`. The successful smoke verifies Chat
+model calls, tool execution, task mutation, raw session persistence, and
+transcript/usage conversion for both supported OpenAI wire APIs. Live DeepSeek
+Search remains unverified.

@@ -47,13 +47,16 @@ WCB 底座当前提供 Node 20，低于 DSH 上游声明的
 - `DSH_MODEL_ID`：OpenRouter 模型 ID，必填，例如 `deepseek/deepseek-chat-v3.1`。
 - `OPENROUTER_API_KEY`：模型凭据，必填，只通过环境变量传递。
 - `OPENROUTER_BASE_URL`：默认 `https://openrouter.ai/api/v1`。
+- `DSH_API`：`openai-completions` 或 `openai-responses`，默认
+  `openai-completions`。
 - `DSH_REASONING`：可选 reasoning level。
 - `DEEPSEEK_API_KEY`：可选，供 DSH 原生 DeepSeek Search 使用。
 
 patch 固定以下行为：
 
 - 模型 provider 为 `openrouter`，模型 ID 来自环境变量。
-- `llm-pi-ai` 使用 OpenAI-compatible 协议和环境变量凭据引用。
+- `llm-pi-ai` 使用 `DSH_API` 显式选择 OpenAI Chat Completions 或 OpenAI
+  Responses，并通过环境变量引用凭据。协议不根据 base URL 后缀自动推断。
 - session persistence 使用 `$DSH_HOME/sessions`、`compression: none`、`packChunks: false`。
 - 禁用自动 session title LLM，避免无关辅助请求污染 usage。
 - 设置 `DSH_PERMISSION_MODE=danger-full-access` 和 `DSH_TELEMETRY_DISABLED=1`。
@@ -97,7 +100,7 @@ patch 固定以下行为：
 `tools/deepseek_harness_poc.py` 提供两个子命令：
 
 - `convert --sessions <dir> --output <dir>`：离线生成 `chat.jsonl`、`usage.json` 和 `conversion_manifest.json`。
-- `run --image <tag> --workspace <dir> --model <id> --output <dir> --prompt <text>`：启动临时容器、挂载工作区和 session 输出、等待退出，然后调用同一转换器。
+- `run --image <tag> --workspace <dir> --model <id> --api <api> --output <dir> --prompt <text>`：启动临时容器、挂载工作区和 session 输出、等待退出，然后调用同一转换器。`--api` 默认 `openai-completions`。
 
 运行命令不把密钥写入命令日志、manifest 或 patch；Docker 通过 `--env OPENROUTER_API_KEY` 继承宿主同名环境变量。
 
@@ -119,9 +122,13 @@ patch 固定以下行为：
 
 本次镜像对齐后的 credentialed smoke 使用 AstronCode 同一模型路由信息：
 `OPENROUTER_BASE_URL` 的 MaaS endpoint，以及 `openrouter/xopglm52` 对应的
-裸模型 ID `xopglm52`。reasoning 元数据修复后，请求已到达 endpoint，但本机
-忽略的 `.env` token 返回 HTTP 401。因此真实模型质量、任务修改和 live Search
-仍未验证。
+裸模型 ID `xopglm52`。reasoning 元数据修复后，固定 Chat 协议请求 `/v1`
+返回 HTTP 401；保持其他参数不变切换到该 MaaS 的 Chat `/v2` endpoint 后成功
+退出，模型完成文件写入与回读，原生 session 转换得到 7 条消息、3 次请求的
+usage。该对照确认此前是协议/endpoint 不匹配。显式切换为
+`openai-responses` 并使用 `/v1` 后也成功完成同一任务，原生 session 的 replay
+state 确认使用 Responses adapter，同样转换得到 7 条消息、3 次请求的 usage。
+live Search 仍未验证。
 
 ## 已知基线
 

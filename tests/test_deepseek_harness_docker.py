@@ -51,6 +51,11 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
         self.assertIn("reasoningEfforts: !!js", entrypoint)
         self.assertIn("[process.env.DSH_REASONING]", entrypoint)
 
+    def test_entrypoint_selects_api_from_environment_with_chat_default(self) -> None:
+        entrypoint = (DOCKER_ROOT / "wcb-dsh").read_text(encoding="utf-8")
+
+        self.assertIn("process.env.DSH_API || 'openai-completions'", entrypoint)
+
     def test_entrypoint_applies_patch_before_forwarding_task(self) -> None:
         entrypoint = (DOCKER_ROOT / "wcb-dsh").read_text(encoding="utf-8")
 
