@@ -61,10 +61,23 @@ def _judge_timeout_seconds() -> float:
 # --- OpenAI-shaped response objects (only what graders actually read) ---------
 
 class _Usage:
-    def __init__(self, prompt_tokens: int = 0, completion_tokens: int = 0) -> None:
+    def __init__(
+        self,
+        prompt_tokens: int = 0,
+        completion_tokens: int = 0,
+        cache_read_tokens: int = 0,
+        cache_write_tokens: int = 0,
+    ) -> None:
         self.prompt_tokens = prompt_tokens
         self.completion_tokens = completion_tokens
-        self.total_tokens = prompt_tokens + completion_tokens
+        self.cache_read_tokens = cache_read_tokens
+        self.cache_write_tokens = cache_write_tokens
+        self.total_tokens = (
+            prompt_tokens
+            + completion_tokens
+            + cache_read_tokens
+            + cache_write_tokens
+        )
 
 
 class _Message:
@@ -107,7 +120,13 @@ def _usage_dict(usage: Any) -> dict[str, Any]:
             return value
     return {
         key: getattr(usage, key)
-        for key in ("prompt_tokens", "completion_tokens", "total_tokens")
+        for key in (
+            "prompt_tokens",
+            "completion_tokens",
+            "cache_read_tokens",
+            "cache_write_tokens",
+            "total_tokens",
+        )
         if isinstance(getattr(usage, key, None), (int, float))
     }
 
@@ -411,6 +430,10 @@ def _anthropic_create(
     usage = _Usage(
         prompt_tokens=int(usage_raw.get("input_tokens", 0) or 0),
         completion_tokens=int(usage_raw.get("output_tokens", 0) or 0),
+        cache_read_tokens=int(usage_raw.get("cache_read_input_tokens", 0) or 0),
+        cache_write_tokens=int(
+            usage_raw.get("cache_creation_input_tokens", 0) or 0
+        ),
     )
     return _Response(
         text,

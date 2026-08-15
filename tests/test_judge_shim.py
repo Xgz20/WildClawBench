@@ -89,7 +89,12 @@ class JudgeShimTest(unittest.TestCase):
             "model": "claude-returned",
             "stop_reason": "end_turn",
             "content": [{"type": "text", "text": '{"score": 1, "reason": "ok"}'}],
-            "usage": {"input_tokens": 12, "output_tokens": 4},
+            "usage": {
+                "input_tokens": 12,
+                "output_tokens": 4,
+                "cache_creation_input_tokens": 5,
+                "cache_read_input_tokens": 7,
+            },
         }).encode()
         urlopen.return_value.__enter__.return_value = response
 
@@ -128,7 +133,13 @@ class JudgeShimTest(unittest.TestCase):
         self.assertEqual(response_data["model"], "claude-returned")
         self.assertEqual(response_data["returned_model"], "claude-returned")
         self.assertEqual(response_data["response_id"], "msg_audit")
-        self.assertEqual(response_data["usage"]["total_tokens"], 16)
+        self.assertEqual(response_data["usage"], {
+            "prompt_tokens": 12,
+            "completion_tokens": 4,
+            "cache_read_tokens": 7,
+            "cache_write_tokens": 5,
+            "total_tokens": 28,
+        })
         self.assertEqual(summary["status"], "success")
         serialized = json.dumps({"request": request_data, "response": response_data})
         self.assertNotIn("must-not-be-persisted", serialized)
