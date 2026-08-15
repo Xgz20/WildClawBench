@@ -873,11 +873,14 @@ def recompute_unit_costs(specs, registry, pricing_date: date) -> dict[str, dict]
                             request_input_tokens=None,
                         )
                     else:
-                        requests = (
-                            report_entities.extract_astroncode_requests(run_dir)
-                            if harness in ("astroncode", "codex")
-                            else report_entities.extract_opencode_requests(run_dir)
-                        )
+                        if harness in ("astroncode", "codex"):
+                            requests = report_entities.extract_astroncode_requests(run_dir)
+                        elif harness == "opencode":
+                            requests = report_entities.extract_opencode_requests(run_dir)
+                        elif harness == "deepseek-harness":
+                            requests = report_entities.extract_deepseek_harness_requests(run_dir)
+                        else:
+                            raise ValueError(f"分档定价不支持 Harness: {harness}")
                         estimate = report_entities.estimate_request_costs_usd(
                             registry, model, pricing_date, requests
                         )

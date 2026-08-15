@@ -23,6 +23,7 @@ REPORT_ENTITIES_SCRIPT = REPORT_DIR / "scripts/report_entities.py"
 VALIDITY_SCRIPT = REPORT_DIR / "skills/validate-eval-results/scripts/validate_eval_results.py"
 AUDIT_SCRIPT = REPORT_DIR / "skills/audit-eval-report/scripts/audit_eval_report.py"
 LEADER_EXTRACT_SCRIPT = REPORT_DIR / "skills/eval-report/scripts/extract_leader_report_data.py"
+DEEPSEEK_FIXTURE = REPORT_DIR.parent.parent / "tests/fixtures/deepseek_harness"
 
 
 def load_module(name: str, path: Path):
@@ -180,6 +181,85 @@ class AnalysisPipelineTest(unittest.TestCase):
 
         self.assertAlmostEqual(float(glm.usd), 0.0072 / 6.77, places=10)
         self.assertAlmostEqual(float(spark.usd), 0.00358 / 6.77, places=10)
+
+    def test_raw_usage_cost_status_prevents_unavailable_cost_from_becoming_zero(self) -> None:
+        result = excel_report._estimate_run_cost(
+            "xopdeepseekv4flash0731",
+            "deepseek-harness",
+            None,
+            {
+                "cost_usd": 0.0,
+                "cost_status": "unavailable",
+                "cost_reason": "DSH sessions do not include provider cost",
+            },
+            registry=None,
+            pricing_date=None,
+        )
+
+        self.assertIsNone(result.usd)
+        self.assertEqual(result.status, "unavailable")
+        self.assertEqual(result.reason, "DSH sessions do not include provider cost")
+
+    def test_not_applicable_cost_does_not_require_registry_price(self) -> None:
+        report_entities = load_module("report_entities_not_applicable", REPORT_ENTITIES_SCRIPT)
+        registry = report_entities.load_registry(REPORT_DIR / "data/entities.yaml")
+        result = excel_report._estimate_run_cost(
+            "xopdeepseekv4flash0731",
+            "deepseek-harness",
+            None,
+            {"cost_usd": 0.0, "cost_status": "not_applicable"},
+            registry=registry,
+            pricing_date=date(2026, 8, 15),
+        )
+
+        self.assertEqual(float(result.usd), 0.0)
+        self.assertEqual(result.status, "not_applicable")
+
+    def test_deepseek_harness_extractor_reads_each_request_usage(self) -> None:
+        report_entities = load_module("report_entities_deepseek_requests", REPORT_ENTITIES_SCRIPT)
+
+        requests = report_entities.extract_deepseek_harness_requests(DEEPSEEK_FIXTURE)
+
+        self.assertCountEqual(
+            requests,
+            [
+                report_entities.RequestUsage(10, 2, 4, 1),
+                report_entities.RequestUsage(3, 0, 2, 0),
+                report_entities.RequestUsage(5, 0, 1, 3),
+            ],
+        )
+
+    def test_deepseek_harness_report_cost_uses_model_tiers(self) -> None:
+        report_entities = load_module("report_entities_deepseek_cost", REPORT_ENTITIES_SCRIPT)
+        registry = report_entities.load_registry(REPORT_DIR / "data/entities.yaml")
+        result = excel_report._estimate_run_cost(
+            "gpt-5.6-sol",
+            "deepseek-harness",
+            DEEPSEEK_FIXTURE,
+            {"cost_status": "unavailable", "cost_usd": 0.0},
+            registry=registry,
+            pricing_date=date(2026, 8, 15),
+        )
+
+        expected = (177.25 + 75 + 73.75) / 1_000_000
+        self.assertAlmostEqual(float(result.usd), expected)
+        self.assertEqual(result.status, "estimated")
+
+    def test_deepseek_harness_report_cost_is_unavailable_without_model_price(self) -> None:
+        report_entities = load_module("report_entities_deepseek_unpriced", REPORT_ENTITIES_SCRIPT)
+        registry = report_entities.load_registry(REPORT_DIR / "data/entities.yaml")
+        result = excel_report._estimate_run_cost(
+            "xopdeepseekv4flash0731",
+            "deepseek-harness",
+            DEEPSEEK_FIXTURE,
+            {"cost_status": "unavailable", "cost_usd": 0.0},
+            registry=registry,
+            pricing_date=date(2026, 8, 15),
+        )
+
+        self.assertIsNone(result.usd)
+        self.assertEqual(result.status, "unavailable")
+        self.assertIn("定价档案", result.reason)
 
     def test_gpt_cost_uses_each_request_context_tier(self) -> None:
         report_entities = load_module("report_entities_gpt", REPORT_ENTITIES_SCRIPT)

@@ -17,7 +17,7 @@ class ConversionResult:
     """Converted transcript plus source metadata and aggregate usage."""
 
     messages: list[dict[str, Any]]
-    usage: dict[str, int | float]
+    usage: dict[str, Any]
     sessions: list[dict[str, Any]]
 
 
@@ -29,7 +29,7 @@ _USAGE_FIELDS = (
 )
 
 
-def _empty_usage() -> dict[str, int | float]:
+def _empty_usage() -> dict[str, Any]:
     return {
         "input_tokens": 0,
         "output_tokens": 0,
@@ -38,6 +38,10 @@ def _empty_usage() -> dict[str, int | float]:
         "total_tokens": 0,
         "cost_usd": 0.0,
         "request_count": 0,
+        "cost_status": "not_applicable",
+        "cost_source": "none",
+        "cost_scope": "none",
+        "cost_reason": "",
     }
 
 
@@ -232,7 +236,10 @@ def _read_session(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     return header, rows[1:]
 
 
-def _convert_events(events: Iterable[dict[str, Any]], usage: dict[str, int | float]) -> list[dict[str, Any]]:
+def _convert_events(
+    events: Iterable[dict[str, Any]],
+    usage: dict[str, Any],
+) -> list[dict[str, Any]]:
     output: list[dict[str, Any]] = []
     seen_tool_ids: set[str] = set()
     for event in events:
@@ -245,7 +252,10 @@ def _convert_events(events: Iterable[dict[str, Any]], usage: dict[str, int | flo
             output.append(_message_entry("user", message.get("content", [])))
         elif event_type == "assistant/message":
             message = data.get("message") if isinstance(data.get("message"), dict) else {}
-            row = _assistant_entry(message, data.get("usage") if isinstance(data.get("usage"), dict) else None)
+            row = _assistant_entry(
+                message,
+                data.get("usage") if isinstance(data.get("usage"), dict) else None,
+            )
             seen_tool_ids.update(_assistant_tool_ids(row))
             if isinstance(data.get("usage"), dict):
                 for dsh_name, aggregate_name, _ in _USAGE_FIELDS:
@@ -296,6 +306,18 @@ def convert_sessions(session_root: Path) -> ConversionResult:
         int(aggregate[field])
         for field in ("input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens")
     )
+    if aggregate["request_count"]:
+        aggregate.update(
+            {
+                "cost_status": "unavailable",
+                "cost_source": "none",
+                "cost_scope": "model_tokens_only",
+                "cost_reason": (
+                    "DSH sessions expose token usage but not provider cost; "
+                    "calculate cost from the model pricing registry when generating the report"
+                ),
+            }
+        )
     return ConversionResult(messages=messages, usage=aggregate, sessions=sessions)
 
 

@@ -29,6 +29,10 @@ class DeepSeekHarnessTranscriptTests(unittest.TestCase):
                 "total_tokens": 31,
                 "cost_usd": 0.0,
                 "request_count": 3,
+                "cost_status": "unavailable",
+                "cost_source": "none",
+                "cost_scope": "model_tokens_only",
+                "cost_reason": "DSH sessions expose token usage but not provider cost; calculate cost from the model pricing registry when generating the report",
             },
         )
         self.assertEqual(
@@ -100,7 +104,17 @@ class DeepSeekHarnessTranscriptTests(unittest.TestCase):
             result = write_conversion(FIXTURE_ROOT, output_dir)
             chat_path = output_dir / "chat.jsonl"
 
-            self.assertEqual(extract_usage_from_jsonl(chat_path), result.usage)
+            parsed_usage = extract_usage_from_jsonl(chat_path)
+            for field in (
+                "input_tokens",
+                "output_tokens",
+                "cache_read_tokens",
+                "cache_write_tokens",
+                "total_tokens",
+                "cost_usd",
+                "request_count",
+            ):
+                self.assertEqual(parsed_usage[field], result.usage[field])
             self.assertEqual(
                 [(name, status) for name, _content, status in _load_tool_pairs(chat_path)],
                 [

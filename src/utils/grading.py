@@ -1226,18 +1226,37 @@ def print_summary(results: list[dict], category: str, output_dir: Path, model_na
             print(f"    {bar} {score:.2f}  {k}")
 
     print(f"\n  Token usage and cost per task:")
-    print(f"    {'Task ID':<55} {'Output Tokens':>12} {'Cost(USD)':>12}")
-    print(f"    {'-'*55} {'-'*12} {'-'*12}")
+    print(f"    {'Task ID':<55} {'Output Tokens':>12} {'Cost(USD)':>22}")
+    print(f"    {'-'*55} {'-'*12} {'-'*22}")
     total_output_tokens = 0
     total_cost_usd = 0.0
+    cost_statuses: set[str] = set()
     for r in sorted(results, key=lambda x: x["task_id"]):
         usage = r.get("usage", {})
         out_tok = usage.get("output_tokens", 0)
         cost = usage.get("cost_usd", 0.0)
         total_output_tokens += out_tok
-        total_cost_usd += cost
-        print(f"    {r['task_id']:<55} {out_tok:>12} {cost:>11.4f}$")
-    print(f"    {'Total':<55} {total_output_tokens:>12} {total_cost_usd:>11.4f}$")
+        status = str(usage.get("cost_status") or "reported")
+        cost_statuses.add(status)
+        if status == "unavailable":
+            cost_display = "unavailable"
+        elif status == "not_applicable":
+            cost_display = "not_applicable"
+        else:
+            total_cost_usd += cost
+            cost_display = f"{cost:.4f}$"
+            if status != "reported":
+                cost_display += f" ({status})"
+        print(f"    {r['task_id']:<55} {out_tok:>12} {cost_display:>22}")
+    if "unavailable" in cost_statuses:
+        total_cost_display = "unavailable"
+    elif cost_statuses and cost_statuses <= {"not_applicable"}:
+        total_cost_display = "not_applicable"
+    else:
+        total_cost_display = f"{total_cost_usd:.4f}$"
+        if "estimated" in cost_statuses:
+            total_cost_display += " (estimated)"
+    print(f"    {'Total':<55} {total_output_tokens:>12} {total_cost_display:>22}")
 
     summary_path = output_dir / category / f"summary_{model_name}.json"
     summary_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1356,8 +1375,25 @@ def print_global_summary(
         print("  No tasks found")
 
     total_out_tok = sum(r.get("usage", {}).get("output_tokens", 0) for r in results)
-    total_cost    = sum(r.get("usage", {}).get("cost_usd",      0.0) for r in results)
-    print(f"  Total output tokens: {total_out_tok}   Total cost: ${total_cost:.4f}")
+    usage_statuses = {
+        str(r.get("usage", {}).get("cost_status") or "reported")
+        for r in results
+    }
+    if "unavailable" in usage_statuses:
+        total_cost_display = "unavailable"
+    elif usage_statuses and usage_statuses <= {"not_applicable"}:
+        total_cost_display = "not_applicable"
+    else:
+        total_cost = sum(
+            r.get("usage", {}).get("cost_usd", 0.0)
+            for r in results
+            if str(r.get("usage", {}).get("cost_status") or "reported")
+            != "unavailable"
+        )
+        total_cost_display = f"${total_cost:.4f}"
+        if "estimated" in usage_statuses:
+            total_cost_display += " (estimated)"
+    print(f"  Total output tokens: {total_out_tok}   Total cost: {total_cost_display}")
 
     # 构建 summary JSON
     summary_data = {

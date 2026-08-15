@@ -732,6 +732,10 @@ class DeepSeekHarnessArtifactTests(unittest.TestCase):
                     "cost_usd": 0.0,
                     "request_count": 3,
                     "elapsed_time": 12.5,
+                    "cost_status": "unavailable",
+                    "cost_source": "none",
+                    "cost_scope": "model_tokens_only",
+                    "cost_reason": "DSH sessions expose token usage but not provider cost; calculate cost from the model pricing registry when generating the report",
                 },
             )
 
@@ -742,6 +746,7 @@ class DeepSeekHarnessArtifactTests(unittest.TestCase):
         self.assertEqual(usage["request_count"], 0)
         self.assertEqual(usage["total_tokens"], 0)
         self.assertEqual(usage["cost_usd"], 0.0)
+        self.assertEqual(usage["cost_status"], "not_applicable")
         self.assertEqual(usage["elapsed_time"], 3.46)
 
     def test_export_conversion_failure_preserves_raw_session_and_zero_usage(self) -> None:
@@ -779,6 +784,7 @@ class DeepSeekHarnessArtifactTests(unittest.TestCase):
             usage = json.loads((output_dir / "usage.json").read_text(encoding="utf-8"))
             self.assertEqual(usage["request_count"], 0)
             self.assertEqual(usage["total_tokens"], 0)
+            self.assertEqual(usage["cost_status"], "unavailable")
 
     def test_run_task_surfaces_conversion_failure_when_harness_succeeds(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

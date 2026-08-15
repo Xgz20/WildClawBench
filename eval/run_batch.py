@@ -290,12 +290,19 @@ def grade_the_task(
 def save_usage(output_dir: Path, result: dict, usage: dict, task_id: str) -> dict:
     result["usage"] = usage
     if usage["request_count"] > 0:
+        cost_status = str(usage.get("cost_status") or "reported")
+        if cost_status in {"unavailable", "not_applicable"}:
+            cost_display = cost_status
+        else:
+            cost_display = f"${float(usage.get('cost_usd', 0.0)):.4f}"
+            if cost_status != "reported":
+                cost_display += f" ({cost_status})"
         logger.info(
-            "[%s] Token usage - input:%d output:%d cache_read:%d total:%d cost:$%.4f",
+            "[%s] Token usage - input:%d output:%d cache_read:%d total:%d cost:%s",
             task_id,
             usage["input_tokens"], usage["output_tokens"],
             usage["cache_read_tokens"], usage["total_tokens"],
-            usage["cost_usd"],
+            cost_display,
         )
     usage_path = output_dir / "usage.json"
     usage_path.write_text(

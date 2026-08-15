@@ -73,6 +73,43 @@ The backend exports raw sessions to `dsh_sessions`, converts them into
 normalized transcript at the OpenClaw-compatible path expected by WCB graders.
 `run_batch.py` removes the container after grading and output collection.
 
+## Cost Observation
+
+DSH session events expose uncached input, output, cache-read, and cache-write
+token counts, but they do not expose a trustworthy provider cost. The Harness
+therefore only writes raw usage and an explicit cost status. Cost is calculated
+when generating the report, using the evaluated model, `--pricing-date`, and
+the versioned `tools/report/data/entities.yaml` pricing registry. This keeps
+different models and Harnesses on one pricing path.
+
+The report command must provide the pricing snapshot date, for example:
+
+```bash
+uv run python tools/report/scripts/generate_eval_report.py \
+  --result-root <round-result-root> \
+  --entities tools/report/data/entities.yaml \
+  --pricing-date 2026-08-15
+```
+
+`usage.json` and `conversion_manifest.json` record token usage plus
+`cost_status`, `cost_source`, `cost_scope`, and a reason when cost is
+unavailable. The status values are:
+
+- `estimated`: the report applied a valid model pricing profile to the recorded
+  token usage.
+- `unavailable`: DSH did not provide a provider cost, the model has no pricing
+  profile, or session usage could not be exported/converted; `cost_usd` remains
+  `0.0` for compatibility and must not be interpreted as free usage. The
+  report will replace this status with a model-registry estimate when possible.
+- `not_applicable`: no model tokens were recorded.
+
+DSH reports `inputTokens` separately from `cacheReadTokens` and
+`cacheWriteTokens`, so the estimator does not subtract cache tokens from input.
+`cost_scope` is `model_tokens_only`: external Search/tool-provider charges are
+not inferred from DSH session events and remain outside this estimate. If an
+internal gateway model has no public price, add a dated model pricing profile
+to the report registry rather than setting a Harness-global price.
+
 ## Standalone Diagnostics
 
 The original PoC entry point remains useful for conversion and image-level
@@ -133,5 +170,6 @@ After the skill discovery repair, a fresh single-task Chat `/v2` evaluation on
   `summary_all_*.json`; it did not report a task validity failure.
 
 This evidence verifies one text/tool task, not the full benchmark. Live
-DeepSeek Search, native multimodal tasks, full-benchmark behavior, and inferred
-USD cost remain outside this verification boundary.
+DeepSeek Search, native multimodal tasks, full-benchmark behavior, and report
+cost recalculation against a real priced model remain outside this verification
+boundary.

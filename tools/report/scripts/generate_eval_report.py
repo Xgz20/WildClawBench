@@ -358,11 +358,22 @@ def _estimate_run_cost(
     pricing_date: date | None,
 ):
     """Recompute one run cost using the report entity registry."""
+    raw_usage = usage or {}
+    raw_status = str(raw_usage.get("cost_status") or "reported")
+    if raw_status == "not_applicable":
+        return report_entities.CostEstimate(Decimal(0), None, raw_status)
     if registry is None or pricing_date is None:
+        if raw_status == "unavailable":
+            return report_entities.CostEstimate(
+                None,
+                None,
+                "unavailable",
+                str(raw_usage.get("cost_reason") or "cost unavailable"),
+            )
         return report_entities.CostEstimate(
-            Decimal(str((usage or {}).get("cost_usd") or 0)),
+            Decimal(str(raw_usage.get("cost_usd") or 0)),
             None,
-            "reported",
+            raw_status,
         )
     try:
         billable_usage = report_entities.normalize_billable_usage(usage or {})
@@ -381,6 +392,8 @@ def _estimate_run_cost(
             requests = report_entities.extract_astroncode_requests(run_dir)
         elif harness == "opencode":
             requests = report_entities.extract_opencode_requests(run_dir)
+        elif harness == "deepseek-harness":
+            requests = report_entities.extract_deepseek_harness_requests(run_dir)
         else:
             raise ValueError(f"分档定价不支持 Harness: {harness}")
         return report_entities.estimate_request_costs_usd(

@@ -308,6 +308,10 @@ class DeepSeekHarnessAgent(BaseAgent):
             "cost_usd": 0.0,
             "request_count": 0,
             "elapsed_time": round(elapsed_time, 2),
+            "cost_status": "not_applicable",
+            "cost_source": "none",
+            "cost_scope": "none",
+            "cost_reason": "",
         }
         usage_path = Path(output_dir) / "usage.json"
         try:
@@ -323,6 +327,18 @@ class DeepSeekHarnessAgent(BaseAgent):
         cost = loaded.get("cost_usd")
         if isinstance(cost, (int, float)) and not isinstance(cost, bool) and cost >= 0:
             usage["cost_usd"] = float(cost)
+        cost_status = loaded.get("cost_status")
+        if isinstance(cost_status, str) and cost_status:
+            usage["cost_status"] = cost_status
+        cost_source = loaded.get("cost_source")
+        if isinstance(cost_source, str) and cost_source:
+            usage["cost_source"] = cost_source
+        cost_scope = loaded.get("cost_scope")
+        if isinstance(cost_scope, str) and cost_scope:
+            usage["cost_scope"] = cost_scope
+        cost_reason = loaded.get("cost_reason")
+        if isinstance(cost_reason, str):
+            usage["cost_reason"] = cost_reason
         usage["elapsed_time"] = round(elapsed_time, 2)
         return usage
 
@@ -706,6 +722,10 @@ class DeepSeekHarnessAgent(BaseAgent):
                 "total_tokens": 0,
                 "cost_usd": 0.0,
                 "request_count": 0,
+                "cost_status": "unavailable",
+                "cost_source": "none",
+                "cost_scope": "model_tokens_only",
+                "cost_reason": "DSH session usage unavailable after export or conversion failure",
             },
         )
 

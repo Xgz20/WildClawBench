@@ -402,6 +402,58 @@ def extract_astroncode_requests(run_dir: Path) -> list[RequestUsage]:
     return requests
 
 
+def _dsh_usage_int(value: Any, source: str) -> int:
+    if value is None:
+        return 0
+    if isinstance(value, bool):
+        raise ValueError(f"{source} token 必须是非负整数")
+    try:
+        number = int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{source} token 必须是非负整数") from exc
+    if number < 0 or (isinstance(value, float) and not value.is_integer()):
+        raise ValueError(f"{source} token 必须是非负整数")
+    return number
+
+
+def extract_deepseek_harness_requests(run_dir: Path) -> list[RequestUsage]:
+    session_root = run_dir / "dsh_sessions"
+    if not session_root.is_dir() and (run_dir / "session.jsonl").is_file():
+        session_root = run_dir
+    session_files = sorted(session_root.rglob("session.jsonl"))
+    if not session_files:
+        raise FileNotFoundError(f"DeepSeek Harness run 缺少 dsh_sessions/session.jsonl: {run_dir}")
+
+    requests: list[RequestUsage] = []
+    for session_file in session_files:
+        for line_number, line in enumerate(
+            session_file.read_text(encoding="utf-8", errors="replace").splitlines(),
+            start=1,
+        ):
+            if not line.strip():
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"{session_file}:{line_number} 不是合法 JSON") from exc
+            if not isinstance(event, dict) or event.get("type") != "assistant/message":
+                continue
+            data = event.get("data")
+            usage = data.get("usage") if isinstance(data, dict) else None
+            if not isinstance(usage, dict):
+                continue
+            source = f"{session_file}:{line_number}"
+            requests.append(RequestUsage(
+                _dsh_usage_int(usage.get("inputTokens"), f"{source}.inputTokens"),
+                _dsh_usage_int(usage.get("cacheReadTokens"), f"{source}.cacheReadTokens"),
+                _dsh_usage_int(usage.get("outputTokens"), f"{source}.outputTokens"),
+                _dsh_usage_int(usage.get("cacheWriteTokens"), f"{source}.cacheWriteTokens"),
+            ))
+    if not requests:
+        raise ValueError(f"DeepSeek Harness run 没有逐请求 token usage: {run_dir}")
+    return requests
+
+
 def extract_opencode_requests(run_dir: Path) -> list[RequestUsage]:
     database = next(
         (path for path in (run_dir / "opencode.db", run_dir / "opencode_data/opencode.db")
