@@ -31,12 +31,21 @@ required. The default npm registry is `https://registry.npmmirror.com`; use
 
 Export credentials in the host environment. Do not put secret values in the
 command line or a tracked configuration file. `DEEPSEEK_API_KEY` is optional
-and is used only by DSH-native DeepSeek Search.
+and is used only by DSH-native DeepSeek Search. The runner also passes through
+`DEEPSEEK_SEARCH_BASE_URL` and `DEEPSEEK_SEARCH_MODEL_ID` when set. The base
+URL must expose an Anthropic-compatible Messages endpoint; DSH appends
+`/messages`. The Search model defaults to `deepseek-v4-flash` when the model ID
+is omitted. Native Search is enabled by default for backward compatibility.
+Set `DEEPSEEK_SEARCH_ENABLED=false` to remove both the DeepSeek Search provider
+and the model-facing `web_search` tool. In that mode the Search key, base URL,
+and model ID are unnecessary; task-provided alternatives such as
+`agent-browser` remain available.
 
 ```bash
 export OPENROUTER_API_KEY='<redacted>'
 export OPENROUTER_BASE_URL='https://provider.example/v2'
 export DOCKER_IMAGE_DEEPSEEK_HARNESS='wildclawbench-deepseek-harness-ubuntu:v0.0'
+export DEEPSEEK_SEARCH_ENABLED=false
 
 uv run eval/run_batch.py \
   --agent-backend deepseek-harness \

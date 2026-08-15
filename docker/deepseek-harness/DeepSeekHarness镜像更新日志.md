@@ -6,6 +6,7 @@
 
 | 日期 | 完整镜像 tag | DSH | Node | 基础镜像 | 主要变更 |
 | --- | --- | --- | --- | --- | --- |
+| 2026-08-15 | `wildclawbench-deepseek-harness-ubuntu:v0.0` | `0.1.0-rc.6` | `24.19.0` | `wildclawbench-codex-ubuntu:v0.0` | 增加 `DEEPSEEK_SEARCH_ENABLED` 开关，可同时移除 DeepSeek Search provider 和 `web_search` 工具 |
 | 2026-08-14 | `wildclawbench-deepseek-harness-ubuntu:v0.0` | `0.1.0-rc.6` | `24.19.0` | `wildclawbench-codex-ubuntu:v0.0` | 首次正式评测镜像，增加协议选择、技能规范化和轨迹入口 |
 | 2026-08-14 | `wildclawbench-deepseek-harness-poc:0.1.0-rc.6` | `0.1.0-rc.6` | `24.19.0` | 同上 | 与正式镜像内容相同的 PoC 兼容 tag（本机 metadata） |
 
@@ -26,6 +27,9 @@
 
 ### 更新内容
 
+- 增加可选环境变量 `DEEPSEEK_SEARCH_ENABLED`，默认值为 `true`；设置为
+  `false` 时同时禁用 DeepSeek Search provider 和模型侧 `web_search` 工具，
+  `agent-browser` 等任务内搜索方式不受影响。
 - 将 Node 24 runtime 复制到评测底座，满足 DSH 对 Node `^22.19` 或 `>=24` 的要求。
 - 安装 `@deepseek-ai/dsh@0.1.0-rc.6`，构建时执行 `dsh --version`。
 - 设置 `DSH_HOME=/root/.dsh`、`DSH_PERMISSION_MODE=danger-full-access` 和 `DSH_TELEMETRY_DISABLED=1`。

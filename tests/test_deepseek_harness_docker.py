@@ -28,7 +28,7 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
         self.assertRegex(dockerfile, r"apt-get install[^\n]*make")
         self.assertRegex(dockerfile, r"apt-get install[^\n]*g\+\+")
 
-    def test_entrypoint_contract_requires_model_and_chat_key_without_disabling_native_search(self) -> None:
+    def test_entrypoint_contract_supports_optional_native_search(self) -> None:
         entrypoint = (DOCKER_ROOT / "wcb-dsh").read_text(encoding="utf-8")
 
         self.assertIn(': "${DSH_MODEL_ID:', entrypoint)
@@ -40,7 +40,18 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
         self.assertIn("packChunks: false", entrypoint)
         self.assertIn("web-search-deepseek", entrypoint)
         self.assertIn("DEEPSEEK_API_KEY", entrypoint)
-        self.assertIn("search: true", entrypoint)
+        self.assertIn("process.env.DEEPSEEK_SEARCH_BASE_URL || undefined", entrypoint)
+        self.assertIn("process.env.DEEPSEEK_SEARCH_MODEL_ID || undefined", entrypoint)
+        self.assertIn('DEEPSEEK_SEARCH_ENABLED="${DEEPSEEK_SEARCH_ENABLED:-true}"', entrypoint)
+        self.assertIn("DEEPSEEK_SEARCH_ENABLED must be true or false", entrypoint)
+        self.assertIn(
+            'disabled: !!js "process.env.DEEPSEEK_SEARCH_ENABLED === \'false\'"',
+            entrypoint,
+        )
+        self.assertIn(
+            'search: !!js "process.env.DEEPSEEK_SEARCH_ENABLED !== \'false\'"',
+            entrypoint,
+        )
         self.assertIn("fetch: false", entrypoint)
         self.assertNotIn("sk-", entrypoint)
 
@@ -74,6 +85,7 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
         self.assertIn("--dsh-api openai-completions", readme)
         self.assertIn("openai-completions", readme)
         self.assertIn("openai-responses", readme)
+        self.assertIn("DEEPSEEK_SEARCH_ENABLED=false", readme)
 
 
 if __name__ == "__main__":

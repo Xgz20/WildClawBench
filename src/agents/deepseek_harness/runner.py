@@ -140,6 +140,18 @@ def build_container_command(
         ("OPENROUTER_API_KEY", config.openrouter_api_key),
         ("OPENROUTER_BASE_URL", config.openrouter_base_url),
         ("DEEPSEEK_API_KEY", config.deepseek_api_key),
+        (
+            "DEEPSEEK_SEARCH_BASE_URL",
+            str(env.get("DEEPSEEK_SEARCH_BASE_URL", "")).strip(),
+        ),
+        (
+            "DEEPSEEK_SEARCH_MODEL_ID",
+            str(env.get("DEEPSEEK_SEARCH_MODEL_ID", "")).strip(),
+        ),
+        (
+            "DEEPSEEK_SEARCH_ENABLED",
+            str(env.get("DEEPSEEK_SEARCH_ENABLED", "")).strip(),
+        ),
         ("DSH_REASONING", (thinking or "").strip()),
         ("http_proxy", proxy_http),
         ("https_proxy", proxy_https),

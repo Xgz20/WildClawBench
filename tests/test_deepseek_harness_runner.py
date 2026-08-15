@@ -95,6 +95,9 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
                 environ={
                     "SLACK_TOKEN": "slack-secret",
                     "LOBSTER_TOKEN": "lobster-secret",
+                    "DEEPSEEK_SEARCH_BASE_URL": "https://search.example/anthropic/v1",
+                    "DEEPSEEK_SEARCH_MODEL_ID": "deepseek-search-model",
+                    "DEEPSEEK_SEARCH_ENABLED": "false",
                     "HTTP_PROXY_INNER": "http://proxy:8080",
                     "HTTPS_PROXY_INNER": "http://proxy:8443",
                     "NO_PROXY_INNER": "localhost,127.0.0.1",
@@ -114,6 +117,12 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
         self.assertIn("OPENROUTER_API_KEY=test-key", command)
         self.assertIn("OPENROUTER_BASE_URL=https://maas.example/v2", command)
         self.assertIn("DEEPSEEK_API_KEY=search-key", command)
+        self.assertIn(
+            "DEEPSEEK_SEARCH_BASE_URL=https://search.example/anthropic/v1",
+            command,
+        )
+        self.assertIn("DEEPSEEK_SEARCH_MODEL_ID=deepseek-search-model", command)
+        self.assertIn("DEEPSEEK_SEARCH_ENABLED=false", command)
         self.assertIn("SLACK_TOKEN=slack-secret", command)
         self.assertIn("LOBSTER_TOKEN=lobster-secret", command)
         image_index = command.index("dsh:test")
@@ -137,6 +146,9 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
 
         self.assertNotIn("OPENROUTER_BASE_URL=", joined)
         self.assertNotIn("DEEPSEEK_API_KEY=", joined)
+        self.assertNotIn("DEEPSEEK_SEARCH_BASE_URL=", joined)
+        self.assertNotIn("DEEPSEEK_SEARCH_MODEL_ID=", joined)
+        self.assertNotIn("DEEPSEEK_SEARCH_ENABLED=", joined)
         self.assertNotIn("DSH_REASONING=", joined)
 
     def test_start_container_rejects_missing_key_before_docker(self) -> None:
