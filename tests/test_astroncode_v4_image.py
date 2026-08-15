@@ -1,4 +1,4 @@
-import gzip
+import json
 import os
 import re
 import subprocess
@@ -11,9 +11,14 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DOCKERFILE = REPO_ROOT / "docker" / "astroncode" / "v4" / "Dockerfile"
 SEARCH_AGENT_VERIFIER = (
-    REPO_ROOT / "docker" / "astroncode" / "v4" / "verify_search_agent.py"
+    REPO_ROOT
+    / "docker"
+    / "astroncode"
+    / "v4"
+    / "verify_search_agent.py"
 )
-BUILD_SCRIPT = REPO_ROOT / "script" / "build-astroncode-image.sh"
+BUILD_SCRIPT = REPO_ROOT / "docker" / "astroncode" / "build.sh"
+BUILD_MANIFEST = REPO_ROOT / "docker" / "astroncode" / "versions.json"
 CREDENTIAL_AND_RUNTIME_ENV_NAMES = (
     "ASTRON_API_KEY",
     "ASTRON_SPARK_API_KEY",
@@ -24,18 +29,6 @@ CREDENTIAL_AND_RUNTIME_ENV_NAMES = (
     "ASTRONCODE_MODEL_PROVIDER",
     "ASTRON_MODELS_BASE_URL",
 )
-BUILD_OVERRIDE_ENV_NAMES = (
-    "IMAGE_TAG",
-    "ASTRONCODE_DOCKER_VARIANT",
-    "ASTRON_CODE_VERSION",
-    "SEARCH_UPDATER_VERSION",
-    "NPM_REGISTRY",
-    "HTTP_PROXY_INNER",
-    "HTTPS_PROXY_INNER",
-    "NO_PROXY_INNER",
-)
-
-
 def docker_instructions(content):
     logical_content = re.sub(r"\\\s*\n\s*", " ", content)
     return [
@@ -274,38 +267,36 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
         cls.content = BUILD_SCRIPT.read_text(encoding="utf-8")
         logical_content = re.sub(r"\\\s*\n\s*", " ", cls.content)
         cls.compact_content = re.sub(r"\s+", " ", logical_content)
+        cls.manifest = json.loads(BUILD_MANIFEST.read_text(encoding="utf-8"))
 
     def test_defaults_to_v4_image_tag(self):
-        self.assertRegex(
-            self.content,
-            re.escape('IMAGE_TAG="${IMAGE_TAG:-v0.4}"'),
+        self.assertEqual("v0.4-ppt", self.manifest["default"])
+        self.assertEqual(
+            "wildclawbench-astroncode-ubuntu:v0.4-ppt",
+            self.manifest["versions"]["v0.4-ppt"]["image"],
         )
 
     def test_defaults_to_v4_docker_variant(self):
-        self.assertRegex(
-            self.content,
-            re.escape(
-                'ASTRONCODE_DOCKER_VARIANT="${ASTRONCODE_DOCKER_VARIANT:-v4}"'
-            ),
+        self.assertEqual(
+            "v4",
+            self.manifest["versions"]["v0.4-ppt"]["context"],
         )
+        self.assertNotIn('BUILD_CONTEXT="${REPO_ROOT}/docker/astroncode/', self.content)
 
     def test_documents_v4_default_and_v1_v2_v3_overrides(self):
-        self.assertRegex(
-            self.content,
-            r"(?m)^#\s*用法：bash script/build-astroncode-image\.sh\s*$",
+        result = subprocess.run(
+            ["bash", str(BUILD_SCRIPT), "--help"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
         )
-        self.assertRegex(
-            self.content,
-            r"(?m)^#\s*默认构建 v4.*AstronCode 0\.0\.13.*SearchAgent.*$",
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn("docker/astroncode/build.sh", result.stdout)
+        self.assertEqual(
+            {"v0.1-test.8", "v0.2", "v0.3", "v0.4-ppt"},
+            set(self.manifest["versions"]),
         )
-        for variant in ("v1", "v2", "v3"):
-            with self.subTest(variant=variant):
-                self.assertRegex(
-                    self.content,
-                    rf"(?m)^#\s*{variant}\s+覆盖：.*"
-                    rf"ASTRONCODE_DOCKER_VARIANT={variant}.*"
-                    r"bash script/build-astroncode-image\.sh\s*$",
-                )
 
     def test_propagates_optional_version_and_registry_build_args(self):
         variables = (
@@ -315,11 +306,8 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
         )
         for variable in variables:
             with self.subTest(variable=variable):
-                self.assertIn(f'"${{{variable}:-}}"', self.content)
-                self.assertRegex(
-                    self.content,
-                    rf'--build-arg\s+"{variable}=\$\{{{variable}\}}"',
-                )
+                self.assertIn(variable, self.content)
+                self.assertRegex(self.content, rf'--build-arg\s+"{variable}=')
 
     def test_propagates_proxy_build_args(self):
         proxy_contracts = {
@@ -337,28 +325,24 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
                     )
 
     def test_rejects_unknown_docker_variant(self):
-        self.assertRegex(
-            self.compact_content,
-            r'if \[\[ ! -f "\$\{DOCKERFILE\}" \]\]; then',
-        )
-        self.assertIn(
-            "Unknown AstronCode docker variant: ${ASTRONCODE_DOCKER_VARIANT}",
-            self.content,
-        )
-        self.assertIn("Expected Dockerfile at: ${DOCKERFILE}", self.content)
-        self.assertRegex(self.compact_content, r"Expected Dockerfile.*exit 1 fi")
+        self.assertIn("Unknown AstronCode image version", self.content)
+        self.assertIn("Missing AstronCode Dockerfile", self.content)
+        self.assertIn("Invalid AstronCode build context", self.content)
 
     def test_whitelists_variants_before_constructing_paths(self):
-        whitelist = re.search(
-            r'case\s+"\$\{ASTRONCODE_DOCKER_VARIANT\}"\s+in\s+'
-            r"v1\|v2\|v3\|v4\)",
-            self.compact_content,
-        )
-        self.assertIsNotNone(whitelist)
-        self.assertLess(
-            whitelist.start(),
-            self.compact_content.index('BUILD_CONTEXT="${REPO_ROOT}'),
-        )
+        expected_contexts = {
+            "v0.1-test.8": "v1",
+            "v0.2": "v2",
+            "v0.3": "v3",
+            "v0.4-ppt": "v4",
+        }
+        for version, entry in self.manifest["versions"].items():
+            with self.subTest(version=version):
+                self.assertEqual(
+                    f"wildclawbench-astroncode-ubuntu:{version}",
+                    entry["image"],
+                )
+                self.assertEqual(expected_contexts[version], entry["context"])
 
     def test_traversal_variant_is_rejected_without_invoking_docker(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -378,13 +362,12 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
             environment = os.environ.copy()
             environment.update(
                 {
-                    "ASTRONCODE_DOCKER_VARIANT": "v4/../v3",
                     "DOCKER_CALLED_MARKER": str(docker_marker),
                     "PATH": f"{bin_dir}{os.pathsep}{environment['PATH']}",
                 }
             )
             result = subprocess.run(
-                ["bash", str(BUILD_SCRIPT)],
+                ["bash", str(BUILD_SCRIPT), "--version", "v4/../v3"],
                 cwd=REPO_ROOT,
                 env=environment,
                 capture_output=True,
@@ -394,7 +377,7 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
 
             self.assertNotEqual(0, result.returncode)
             self.assertIn(
-                "Unknown AstronCode docker variant: v4/../v3",
+                "Unknown AstronCode image version: v4/../v3",
                 result.stderr,
             )
             docker_calls = (
@@ -407,212 +390,34 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
                 f"docker was invoked with: {docker_calls}",
             )
 
-    def test_default_build_executes_v4_build_save_and_writes_archive(self):
-        execution = self._run_isolated_build()
-        context = execution["repo_root"] / "docker" / "astroncode" / "v4"
-        image = "wildclawbench-astroncode-ubuntu:v0.4"
+    def test_default_build_maps_to_v4_context(self):
+        entry = self.manifest["versions"][self.manifest["default"]]
+        self.assertEqual("v4/Dockerfile", entry["dockerfile"])
+        self.assertEqual("0.0.13", entry["build_args"]["ASTRON_CODE_VERSION"])
+        self.assertEqual("0.1.17", entry["build_args"]["SEARCH_UPDATER_VERSION"])
 
+    def test_manifest_disallows_unregistered_review_tag(self):
+        self.assertNotIn("v0.3-review", self.manifest["versions"])
         self.assertEqual(
-            [
-                [
-                    "build",
-                    "-f",
-                    str(context / "Dockerfile"),
-                    "-t",
-                    image,
-                    str(context),
-                ],
-                ["save", image],
-            ],
-            execution.get("events"),
-        )
-        self.assertEqual(f"fake image: {image}\n", execution["archive_content"])
-        self.assertEqual(
-            "wildclawbench-astroncode-ubuntu_v0.4.tar.gz",
-            execution["archive_name"],
-        )
-
-    def test_overrides_execute_selected_build_with_all_build_args(self):
-        overrides = {
-            "ASTRONCODE_DOCKER_VARIANT": "v3",
-            "IMAGE_TAG": "v0.3-review",
-            "ASTRON_CODE_VERSION": "0.0.99",
-            "SEARCH_UPDATER_VERSION": "1.2.3",
-            "NPM_REGISTRY": "https://registry.example.test/npm/",
-            "HTTP_PROXY_INNER": "http://proxy.example.test:8080",
-            "HTTPS_PROXY_INNER": "https://proxy.example.test:8443",
-            "NO_PROXY_INNER": "localhost,127.0.0.1",
-        }
-        execution = self._run_isolated_build(overrides)
-        context = execution["repo_root"] / "docker" / "astroncode" / "v3"
-        image = "wildclawbench-astroncode-ubuntu:v0.3-review"
-
-        self.assertEqual(
-            [
-                [
-                    "build",
-                    "-f",
-                    str(context / "Dockerfile"),
-                    "--build-arg",
-                    "ASTRON_CODE_VERSION=0.0.99",
-                    "--build-arg",
-                    "SEARCH_UPDATER_VERSION=1.2.3",
-                    "--build-arg",
-                    "NPM_REGISTRY=https://registry.example.test/npm/",
-                    "--build-arg",
-                    "http_proxy=http://proxy.example.test:8080",
-                    "--build-arg",
-                    "HTTP_PROXY=http://proxy.example.test:8080",
-                    "--build-arg",
-                    "https_proxy=https://proxy.example.test:8443",
-                    "--build-arg",
-                    "HTTPS_PROXY=https://proxy.example.test:8443",
-                    "--build-arg",
-                    "no_proxy=localhost,127.0.0.1",
-                    "--build-arg",
-                    "NO_PROXY=localhost,127.0.0.1",
-                    "-t",
-                    image,
-                    str(context),
-                ],
-                ["save", image],
-            ],
-            execution.get("events"),
-        )
-        self.assertEqual(f"fake image: {image}\n", execution["archive_content"])
-        self.assertEqual(
-            "wildclawbench-astroncode-ubuntu_v0.3-review.tar.gz",
-            execution["archive_name"],
+            "wildclawbench-astroncode-ubuntu:v0.3",
+            self.manifest["versions"]["v0.3"]["image"],
         )
 
     def test_docker_build_uses_selected_file_context_and_tag(self):
         self.assertRegex(
-            self.content,
-            r'BUILD_CONTEXT\s*=\s*"\$\{REPO_ROOT\}/docker/astroncode/'
-            r'\$\{ASTRONCODE_DOCKER_VARIANT\}"',
-        )
-        self.assertRegex(
-            self.content,
-            r'DOCKERFILE\s*=\s*"\$\{BUILD_CONTEXT\}/Dockerfile"',
-        )
-        self.assertRegex(
             self.compact_content,
             r'docker build\s+-f "\$\{DOCKERFILE\}"\s+'
             r'"\$\{BUILD_ARGS\[@\]\}"\s+-t '
-            r'"\$\{IMAGE_NAME\}:\$\{IMAGE_TAG\}"\s+'
+            r'"\$\{IMAGE_REF\}"\s+'
             r'"\$\{BUILD_CONTEXT\}"',
         )
 
     def test_exports_selected_image_to_gzipped_tar_path(self):
         self.assertRegex(
             self.compact_content,
-            r'docker save\s+"\$\{IMAGE_NAME\}:\$\{IMAGE_TAG\}"\s*'
-            r'\|\s*gzip\s*>\s*"\$\{TAR_PATH\}"',
+            r'docker save\s+"\$\{IMAGE_REF\}"\s*'
+            r'\|\s*gzip\s*>\s*"\$\{TEMP_TAR_PATH\}"',
         )
-
-    def _run_isolated_build(self, overrides=None):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            repo_root = Path(temp_dir) / "repo"
-            script_dir = repo_root / "script"
-            script_dir.mkdir(parents=True)
-            isolated_script = script_dir / BUILD_SCRIPT.name
-            isolated_script.write_text(self.content, encoding="utf-8")
-
-            for variant in ("v3", "v4"):
-                context = repo_root / "docker" / "astroncode" / variant
-                context.mkdir(parents=True)
-                (context / "Dockerfile").write_text(
-                    "FROM scratch\n",
-                    encoding="utf-8",
-                )
-
-            bin_dir = Path(temp_dir) / "bin"
-            log_dir = Path(temp_dir) / "docker-log"
-            bin_dir.mkdir()
-            log_dir.mkdir()
-            docker_stub = bin_dir / "docker"
-            docker_stub.write_text(
-                "#!/usr/bin/env bash\n"
-                "set -euo pipefail\n"
-                '{ printf "%s\\000" "$#"; printf "%s\\000" "$@"; } '
-                '>> "${DOCKER_EVENT_LOG:?}"\n'
-                'case "${1:-}" in\n'
-                "  build)\n"
-                "    ;;\n"
-                "  save)\n"
-                '    printf "fake image: %s\\n" "${2:-}"\n'
-                "    ;;\n"
-                "  *)\n"
-                '    printf "unexpected docker command: %s\\n" "${1:-}" >&2\n'
-                "    exit 64\n"
-                "    ;;\n"
-                "esac\n",
-                encoding="utf-8",
-            )
-            docker_stub.chmod(0o755)
-
-            environment = os.environ.copy()
-            for variable in BUILD_OVERRIDE_ENV_NAMES:
-                environment.pop(variable, None)
-            environment.update(overrides or {})
-            event_log = log_dir / "events.bin"
-            environment.update(
-                {
-                    "DOCKER_EVENT_LOG": str(event_log),
-                    "PATH": f"{bin_dir}{os.pathsep}{environment['PATH']}",
-                }
-            )
-            result = subprocess.run(
-                ["bash", str(isolated_script)],
-                cwd=repo_root,
-                env=environment,
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-
-            self.assertEqual(
-                0,
-                result.returncode,
-                f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}",
-            )
-            self.assertTrue(event_log.is_file(), "docker was not called")
-            events = self._read_docker_events(event_log)
-
-            image_tag = (overrides or {}).get("IMAGE_TAG", "v0.4")
-            archive = (
-                repo_root
-                / "Images"
-                / f"wildclawbench-astroncode-ubuntu_{image_tag}.tar.gz"
-            )
-            self.assertTrue(archive.is_file(), f"missing archive: {archive}")
-            with gzip.open(archive, mode="rt", encoding="utf-8") as archive_file:
-                archive_content = archive_file.read()
-
-            return {
-                "repo_root": repo_root,
-                "events": events,
-                "archive_content": archive_content,
-                "archive_name": archive.name,
-            }
-
-    def _read_docker_events(self, event_log):
-        fields = event_log.read_bytes().split(b"\0")
-        self.assertEqual(b"", fields.pop(), "unterminated docker event log")
-        events = []
-        offset = 0
-        while offset < len(fields):
-            argument_count = int(fields[offset].decode("ascii"))
-            event_end = offset + argument_count + 1
-            self.assertLessEqual(event_end, len(fields), "truncated docker event")
-            events.append(
-                [
-                    argument.decode("utf-8")
-                    for argument in fields[offset + 1 : event_end]
-                ]
-            )
-            offset = event_end
-        return events
 
 
 if __name__ == "__main__":

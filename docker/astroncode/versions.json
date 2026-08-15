@@ -1,0 +1,38 @@
+{
+  "default": "v0.4-ppt",
+  "versions": {
+    "v0.1-test.8": {
+      "image": "wildclawbench-astroncode-ubuntu:v0.1-test.8",
+      "context": "v1",
+      "dockerfile": "v1/Dockerfile",
+      "build_args": {
+        "ASTRON_CODE_VERSION": "0.0.5-test.8"
+      }
+    },
+    "v0.2": {
+      "image": "wildclawbench-astroncode-ubuntu:v0.2",
+      "context": "v2",
+      "dockerfile": "v2/Dockerfile",
+      "build_args": {
+        "ASTRON_CODE_VERSION": "0.0.6"
+      }
+    },
+    "v0.3": {
+      "image": "wildclawbench-astroncode-ubuntu:v0.3",
+      "context": "v3",
+      "dockerfile": "v3/Dockerfile",
+      "build_args": {
+        "ASTRON_CODE_VERSION": "0.0.13"
+      }
+    },
+    "v0.4-ppt": {
+      "image": "wildclawbench-astroncode-ubuntu:v0.4-ppt",
+      "context": "v4",
+      "dockerfile": "v4/Dockerfile",
+      "build_args": {
+        "ASTRON_CODE_VERSION": "0.0.13",
+        "SEARCH_UPDATER_VERSION": "0.1.17"
+      }
+    }
+  }
+}

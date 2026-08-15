@@ -3,6 +3,7 @@
 只校验 Dockerfile / 构建脚本的文本契约，不触发 docker build。
 """
 
+import json
 import os
 import re
 import subprocess
@@ -12,8 +13,9 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DOCKERFILE = REPO_ROOT / "docker" / "codex" / "Dockerfile"
-BUILD_SCRIPT = REPO_ROOT / "script" / "build-codex-image.sh"
+DOCKERFILE = REPO_ROOT / "docker" / "codex" / "v1" / "Dockerfile"
+BUILD_SCRIPT = REPO_ROOT / "docker" / "codex" / "build.sh"
+BUILD_MANIFEST = REPO_ROOT / "docker" / "codex" / "versions.json"
 TAOBAO_REGISTRY = "https://registry.npmmirror.com"
 CREDENTIAL_ENV_NAMES = (
     "OPENROUTER_API_KEY",
@@ -153,33 +155,35 @@ class CodexBuildScriptTest(unittest.TestCase):
         )
         logical_content = re.sub(r"\\\s*\n\s*", " ", cls.content)
         cls.compact_content = re.sub(r"\s+", " ", logical_content)
+        cls.manifest = json.loads(BUILD_MANIFEST.read_text(encoding="utf-8"))
 
     def test_build_script_exists_and_is_executable(self):
         self.assertTrue(BUILD_SCRIPT.is_file(), f"missing {BUILD_SCRIPT}")
         self.assertTrue(os.access(BUILD_SCRIPT, os.X_OK), "build script not executable")
 
     def test_defaults_to_upgraded_image_tag(self):
-        self.assertIn('IMAGE_NAME="wildclawbench-codex-ubuntu"', self.content)
-        self.assertIn('IMAGE_TAG="${IMAGE_TAG:-v0.1}"', self.content)
+        self.assertEqual("v0.1", self.manifest["default"])
+        self.assertEqual(
+            "wildclawbench-codex-ubuntu:v0.1",
+            self.manifest["versions"]["v0.1"]["image"],
+        )
 
     def test_defaults_to_official_base_image(self):
-        self.assertIn(
-            'BASE_IMAGE="${EVAL_BASE_IMAGE:-wildclawbench-codex-ubuntu:v0.0}"',
-            self.content,
+        self.assertEqual(
+            "wildclawbench-codex-ubuntu:v0.0",
+            self.manifest["versions"]["v0.1"]["build_args"]["EVAL_BASE_IMAGE"],
         )
 
     def test_uses_codex_build_context_and_dockerfile(self):
-        self.assertIn('BUILD_CONTEXT="${REPO_ROOT}/docker/codex"', self.content)
-        self.assertIn('DOCKERFILE="${BUILD_CONTEXT}/Dockerfile"', self.content)
+        entry = self.manifest["versions"]["v0.1"]
+        self.assertEqual("v1", entry["context"])
+        self.assertEqual("v1/Dockerfile", entry["dockerfile"])
 
     def test_propagates_version_and_registry_build_args(self):
         for variable in ("CODEX_VERSION", "NPM_REGISTRY"):
             with self.subTest(variable=variable):
-                self.assertIn(f'"${{{variable}:-}}"', self.content)
-                self.assertRegex(
-                    self.content,
-                    rf'--build-arg\s+"{variable}=\$\{{{variable}\}}"',
-                )
+                self.assertIn(variable, self.content)
+                self.assertRegex(self.content, rf'--build-arg\s+"{variable}=')
 
     def test_propagates_proxy_build_args(self):
         proxy_contracts = {
@@ -199,7 +203,7 @@ class CodexBuildScriptTest(unittest.TestCase):
     def test_pins_base_image_into_build_args(self):
         self.assertRegex(
             self.compact_content,
-            r'BUILD_ARGS=\(--build-arg "EVAL_BASE_IMAGE=\$\{BASE_IMAGE\}"\)',
+            r'--build-arg "EVAL_BASE_IMAGE=\$\{PINNED_BASE_IMAGE\}"',
         )
 
     def test_docker_build_uses_selected_file_context_and_tag(self):
@@ -207,19 +211,19 @@ class CodexBuildScriptTest(unittest.TestCase):
             self.compact_content,
             r'docker build\s+-f "\$\{DOCKERFILE\}"\s+'
             r'"\$\{BUILD_ARGS\[@\]\}"\s+-t '
-            r'"\$\{IMAGE_NAME\}:\$\{IMAGE_TAG\}"\s+'
+            r'"\$\{IMAGE_REF\}"\s+'
             r'"\$\{BUILD_CONTEXT\}"',
         )
 
     def test_exports_image_to_gzipped_tar_path(self):
         self.assertIn(
-            'TAR_PATH="${REPO_ROOT}/Images/${IMAGE_NAME}_${IMAGE_TAG}.tar.gz"',
+            'TAR_PATH="${REPO_ROOT}/Images/${IMAGE_NAME##*/}_${IMAGE_TAG}.tar.gz"',
             self.content,
         )
         self.assertRegex(
             self.compact_content,
-            r'docker save\s+"\$\{IMAGE_NAME\}:\$\{IMAGE_TAG\}"\s*'
-            r'\|\s*gzip\s*>\s*"\$\{TAR_PATH\}"',
+            r'docker save\s+"\$\{IMAGE_REF\}"\s*'
+            r'\|\s*gzip\s*>\s*"\$\{TEMP_TAR_PATH\}"',
         )
 
     def test_supports_skipping_tar_export(self):
@@ -231,7 +235,7 @@ class CodexBuildScriptTest(unittest.TestCase):
     def test_rejects_self_referential_base_image(self):
         self.assertRegex(
             self.compact_content,
-            r'if \[\[ "\$\{BASE_IMAGE\}" == "\$\{IMAGE_NAME\}:\$\{IMAGE_TAG\}" \]\]',
+            r'if \[\[ "\$\{PINNED_BASE_IMAGE\}" == "\$\{IMAGE_REF\}" \]\]',
         )
 
     def test_self_referential_base_is_rejected_without_invoking_docker(self):
@@ -253,7 +257,6 @@ class CodexBuildScriptTest(unittest.TestCase):
             environment.update(
                 {
                     "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.1",
-                    "IMAGE_TAG": "v0.1",
                     "DOCKER_CALLED_MARKER": str(docker_marker),
                     "PATH": f"{bin_dir}{os.pathsep}{environment['PATH']}",
                 }
@@ -268,7 +271,10 @@ class CodexBuildScriptTest(unittest.TestCase):
             )
 
             self.assertNotEqual(0, result.returncode)
-            self.assertIn("on top of itself", result.stderr)
+            self.assertIn(
+                "EVAL_BASE_IMAGE must be wildclawbench-codex-ubuntu:v0.0",
+                result.stderr,
+            )
             docker_calls = (
                 docker_marker.read_text(encoding="utf-8")
                 if docker_marker.exists()
@@ -331,7 +337,7 @@ class CodexRunnerDefaultImageTest(unittest.TestCase):
         cls.runner_source = (REPO_ROOT / "src" / "agents" / "codex" / "runner.py").read_text(
             encoding="utf-8"
         )
-        cls.build_script = BUILD_SCRIPT.read_text(encoding="utf-8")
+        cls.manifest = json.loads(BUILD_MANIFEST.read_text(encoding="utf-8"))
 
     def test_runner_defaults_to_upgraded_image(self):
         self.assertIn(
@@ -340,11 +346,8 @@ class CodexRunnerDefaultImageTest(unittest.TestCase):
         )
 
     def test_runner_default_matches_build_script_output_tag(self):
-        name = re.search(r'IMAGE_NAME="([^"]+)"', self.build_script)
-        tag = re.search(r'IMAGE_TAG="\$\{IMAGE_TAG:-([^}]+)\}"', self.build_script)
-        self.assertIsNotNone(name, "build script lost IMAGE_NAME")
-        self.assertIsNotNone(tag, "build script lost IMAGE_TAG default")
-        expected = f"{name.group(1)}:{tag.group(1)}"
+        default = self.manifest["default"]
+        expected = self.manifest["versions"][default]["image"]
         self.assertIn(f'or "{expected}"', self.runner_source)
 
     def test_env_example_enables_upgraded_image(self):

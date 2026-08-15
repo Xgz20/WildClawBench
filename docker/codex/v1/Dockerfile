@@ -9,7 +9,7 @@
 ARG EVAL_BASE_IMAGE=wildclawbench-codex-ubuntu:v0.0
 FROM ${EVAL_BASE_IMAGE}
 
-# 锁定版本以保证镜像可复现（当前 npm latest 0.146.0）；升级只需改此默认值或传 --build-arg。
+# 锁定版本以保证镜像可复现（当前 npm latest 0.146.0）；升级时新增镜像版本目录。
 ARG CODEX_VERSION=0.146.0
 # 淘宝镜像源：公共 registry 在内网/国内直连不稳定，且已验证它同时提供主包与
 # @openai/codex-linux-x64 平台包（optionalDependencies 用 npm: 别名指向
