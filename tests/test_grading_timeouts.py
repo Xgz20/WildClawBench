@@ -47,7 +47,12 @@ class GradingTimeoutTest(unittest.TestCase):
         timeouts = [
             call.kwargs["timeout"]
             for call in run.call_args_list
-            if "timeout" in call.kwargs
+            if (
+                "timeout" in call.kwargs
+                and call.args
+                and call.args[0][:2] == ["docker", "exec"]
+                and "python3" in call.args[0]
+            )
         ]
         self.assertEqual(timeouts, [725.0, 725.0, 725.0])
 

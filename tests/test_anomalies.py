@@ -261,6 +261,190 @@ class AnomalyDetectionTest(unittest.TestCase):
         finally:
             temp_dir.cleanup()
 
+    def test_structured_judge_failure_is_framework_failure(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            attempt_dir = run_dir / "judge/attempt-001"
+            attempt_dir.mkdir(parents=True)
+            self.write_json(attempt_dir / "request.json", {
+                "mode": "legacy", "model": "anthropic/claude-test",
+            })
+            self.write_json(attempt_dir / "response.json", {
+                "status": "failed", "error": "upstream unavailable",
+            })
+            self.write_json(attempt_dir / "parsed.json", {
+                "schema_status": "not_available",
+            })
+            self.write_json(run_dir / "judge/summary.json", {
+                "mode": "legacy", "status": "failed", "attempt_count": 1,
+            })
+
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "JUDGE_AUDIT_FAILURE")
+
+            self.assertIsNotNone(item)
+            self.assertEqual(item["validity_impact"], "fail")
+            self.assertEqual(item["rerun_action"], "required_after_fix")
+            self.assertEqual(report["validity_verdict"], "FAIL")
+        finally:
+            temp_dir.cleanup()
+
+    def test_in_progress_judge_audit_is_framework_failure(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            attempt_dir = run_dir / "judge/attempt-001"
+            attempt_dir.mkdir(parents=True)
+            self.write_json(attempt_dir / "request.json", {
+                "mode": "legacy", "model": "anthropic/claude-test",
+            })
+            self.write_json(attempt_dir / "response.json", {"status": "in_progress"})
+            self.write_json(attempt_dir / "parsed.json", {
+                "schema_status": "not_available",
+            })
+            self.write_json(run_dir / "judge/summary.json", {
+                "mode": "legacy", "status": "in_progress", "attempt_count": 1,
+            })
+
+            report = scan_run_dir(run_dir)
+
+            self.assertIsNotNone(self.item(report, "JUDGE_AUDIT_FAILURE"))
+            self.assertEqual(report["validity_verdict"], "FAIL")
+            self.assertTrue(report["needs_rerun"])
+        finally:
+            temp_dir.cleanup()
+
+    def test_structured_judge_schema_mismatch_is_framework_failure(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            attempt_dir = run_dir / "judge/attempt-001"
+            attempt_dir.mkdir(parents=True)
+            self.write_json(attempt_dir / "request.json", {
+                "mode": "v2", "model": "anthropic/claude-test",
+            })
+            self.write_json(attempt_dir / "response.json", {
+                "status": "success", "model": "claude-test",
+            })
+            self.write_json(attempt_dir / "parsed.json", {
+                "schema_status": "mismatch",
+                "schema_error": "scores must be an object",
+            })
+            self.write_json(run_dir / "judge/summary.json", {
+                "mode": "v2", "status": "failed", "attempt_count": 1,
+            })
+
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "JUDGE_SCHEMA_MISMATCH")
+
+            self.assertIsNotNone(item)
+            self.assertEqual(item["validity_impact"], "fail")
+            self.assertTrue(report["needs_rerun"])
+        finally:
+            temp_dir.cleanup()
+
+    def test_requested_and_returned_judge_model_mismatch_requires_review(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            attempt_dir = run_dir / "judge/attempt-001"
+            attempt_dir.mkdir(parents=True)
+            self.write_json(attempt_dir / "request.json", {
+                "mode": "legacy", "model": "anthropic/claude-requested",
+            })
+            self.write_json(attempt_dir / "response.json", {
+                "status": "success", "model": "claude-returned",
+            })
+            self.write_json(attempt_dir / "parsed.json", {
+                "schema_status": "not_enforced", "value": {"score": 1.0},
+            })
+            self.write_json(run_dir / "judge/summary.json", {
+                "mode": "legacy", "status": "success", "attempt_count": 1,
+            })
+
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "JUDGE_MODEL_MISMATCH")
+
+            self.assertIsNotNone(item)
+            self.assertEqual(item["validity_impact"], "review")
+            self.assertEqual(report["validity_verdict"], "REVIEW")
+            self.assertFalse(report["needs_rerun"])
+        finally:
+            temp_dir.cleanup()
+
+    def test_v2_raw_returned_judge_model_mismatch_requires_review(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            attempt_dir = run_dir / "judge/attempt-001"
+            attempt_dir.mkdir(parents=True)
+            self.write_json(attempt_dir / "request.json", {
+                "mode": "v2", "model": "anthropic/claude-requested",
+            })
+            self.write_json(attempt_dir / "response.json", {
+                "raw": {"model": "claude-returned"},
+            })
+            self.write_json(attempt_dir / "parsed.json", {
+                "scores": {"quality": 1.0}, "notes": "ok",
+            })
+            self.write_json(run_dir / "judge/summary.json", {
+                "mode": "v2", "status": "success", "attempt_count": 1,
+            })
+
+            report = scan_run_dir(run_dir)
+
+            self.assertIsNotNone(self.item(report, "JUDGE_MODEL_MISMATCH"))
+            self.assertEqual(report["validity_verdict"], "REVIEW")
+        finally:
+            temp_dir.cleanup()
+
+    def test_success_summary_with_incomplete_attempt_is_framework_failure(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            attempt_dir = run_dir / "judge/attempt-001"
+            attempt_dir.mkdir(parents=True)
+            self.write_json(attempt_dir / "request.json", {
+                "mode": "legacy", "model": "anthropic/claude-test",
+            })
+            self.write_json(attempt_dir / "response.json", {
+                "status": "success", "model": "claude-test",
+            })
+            self.write_json(run_dir / "judge/summary.json", {
+                "mode": "legacy", "status": "success", "attempt_count": 1,
+            })
+
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "JUDGE_AUDIT_FAILURE")
+
+            self.assertIsNotNone(item)
+            self.assertEqual(item["validity_impact"], "fail")
+            self.assertEqual(report["validity_verdict"], "FAIL")
+        finally:
+            temp_dir.cleanup()
+
+    def test_old_legacy_zero_llm_items_without_audit_requires_review(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            self.write_json(run_dir / "score.json", {
+                "overall_score": 0.7,
+                "llm_items": {
+                    "criterion_a": {
+                        "raw_score": 0.0, "earned": 0.0, "max": 0.1, "reason": "",
+                    },
+                    "criterion_b": {
+                        "raw_score": 0.0, "earned": 0.0, "max": 0.2, "reason": "",
+                    },
+                },
+                "llm_items_earned": 0.0,
+                "llm_items_max": None,
+            })
+
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "LEGACY_JUDGE_AUDIT_MISSING")
+
+            self.assertIsNotNone(item)
+            self.assertEqual(item["validity_impact"], "review")
+            self.assertEqual(report["validity_verdict"], "REVIEW")
+            self.assertFalse(report["needs_rerun"])
+        finally:
+            temp_dir.cleanup()
+
     def test_legacy_harness_exit_prefix_is_capability_outcome(self) -> None:
         temp_dir, run_dir = self.make_run()
         try:

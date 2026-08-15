@@ -69,6 +69,31 @@ class JudgeRetryTest(unittest.TestCase):
             summary = json.loads((Path(tmp) / "judge/summary.json").read_text())
             self.assertEqual(summary["attempt_count"], 1)
 
+    def test_v2_rubric_explicitly_requests_scores_notes_schema(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp, patch(
+            "src.utils.grading._exec_container_python",
+            return_value=(
+                {
+                    "candidate_text": json.dumps({
+                        "scores": {"quality": 1.0}, "notes": "ok",
+                    }),
+                    "request": {"model": "judge"},
+                    "response": {},
+                },
+                "",
+            ),
+        ) as execute:
+            _grade_llm_rubric(
+                "task", "rubric", [{"key": "quality", "weight": 1.0}],
+                "/tmp/chat.jsonl", output_dir=Path(tmp),
+            )
+
+        runner_code = execute.call_args.args[1]
+        self.assertIn(
+            "os.environ['WILDCLAW_JUDGE_SCHEMA'] = 'scores_notes'", runner_code
+        )
+        self.assertNotIn("wildclaw_judge_schema='scores_notes'", runner_code)
+
 
 if __name__ == "__main__":
     unittest.main()

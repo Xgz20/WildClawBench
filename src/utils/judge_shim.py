@@ -26,6 +26,10 @@ a single task file. Model routing / endpoint are driven purely by env:
     ANTHROPIC_BASE_URL judge gateway base, endpoint = <base>/v1/messages
     ANTHROPIC_MODEL   (optional) exact model string to send; defaults to the
                       JUDGE_MODEL value with the ``anthropic/`` prefix stripped.
+
+Legacy graders keep their task-defined JSON response shape. The declarative v2
+grader opts into the fixed ``scores``/``notes`` tool schema with an internal
+runner environment marker.
 """
 
 from __future__ import annotations
@@ -34,6 +38,7 @@ import json
 import os
 import sys
 import types
+from pathlib import Path
 from typing import Any
 from urllib import error, request
 
@@ -91,6 +96,142 @@ class _Response:
         self.choices = [_Choice(content, finish_reason)]
         self.usage = usage
         self._raw_response = raw_response or {}
+
+
+def _usage_dict(usage: Any) -> dict[str, Any]:
+    if usage is None:
+        return {}
+    if callable(getattr(usage, "model_dump", None)):
+        value = usage.model_dump()
+        if isinstance(value, dict):
+            return value
+    return {
+        key: getattr(usage, key)
+        for key in ("prompt_tokens", "completion_tokens", "total_tokens")
+        if isinstance(getattr(usage, key, None), (int, float))
+    }
+
+
+def _response_audit_data(
+    response: Any, *, parse_json: bool = True
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    choice = response.choices[0]
+    raw_text = str(getattr(choice.message, "content", "") or "")
+    raw_response = getattr(response, "_raw_response", None)
+    if raw_response is None and callable(getattr(response, "model_dump", None)):
+        raw_response = response.model_dump()
+    if not isinstance(raw_response, dict):
+        raw_response = {}
+    response_data = {
+        "status": "success",
+        "model": str(getattr(response, "model", "") or ""),
+        "returned_model": str(getattr(response, "model", "") or ""),
+        "response_id": str(getattr(response, "id", "") or ""),
+        "raw_text": raw_text,
+        "finish_reason": str(getattr(choice, "finish_reason", "") or ""),
+        "usage": _usage_dict(getattr(response, "usage", None)),
+        "raw": raw_response,
+    }
+    if not parse_json:
+        return response_data, {
+            "schema_status": "not_requested",
+            "candidate_text": raw_text,
+        }
+    return response_data, _parse_audit_candidate(raw_text)
+
+
+def _parse_audit_candidate(
+    raw_text: str, wildclaw_judge_schema: str = ""
+) -> dict[str, Any]:
+    try:
+        value = json.loads(_strip_json_fences(raw_text))
+    except (TypeError, json.JSONDecodeError) as exc:
+        return {
+            "schema_status": "parse_error",
+            "schema_error": str(exc),
+            "candidate_text": raw_text,
+        }
+    if wildclaw_judge_schema == "scores_notes":
+        if not isinstance(value, dict) or not isinstance(value.get("scores"), dict):
+            return {
+                "schema_status": "mismatch",
+                "schema_error": "scores must be an object",
+                "value": value,
+            }
+        if not isinstance(value.get("notes"), str):
+            return {
+                "schema_status": "mismatch",
+                "schema_error": "notes must be a string",
+                "value": value,
+            }
+        schema_status = "valid"
+    else:
+        schema_status = "not_enforced"
+    return {"schema_status": schema_status, "value": value}
+
+
+def _messages_expect_json(messages: list[dict[str, Any]]) -> bool:
+    chunks: list[str] = []
+    for message in messages:
+        content = message.get("content")
+        if isinstance(content, str):
+            chunks.append(content)
+        elif isinstance(content, list):
+            for item in content:
+                if isinstance(item, str):
+                    chunks.append(item)
+                elif isinstance(item, dict) and isinstance(item.get("text"), str):
+                    chunks.append(item["text"])
+    text = "\n".join(chunks).lower()
+    if "json" not in text:
+        return False
+    return any(marker in text for marker in (
+        "return only",
+        "respond strictly",
+        "respond with exactly",
+        "json object",
+        "请严格",
+        "请仅返回",
+        "仅返回",
+        "只返回",
+        "json 对象",
+        "json格式",
+        "json 格式",
+    ))
+
+
+def _audit_functions():
+    try:
+        from _judge_audit import begin_attempt, finish_attempt
+    except ImportError:
+        from src.utils.judge_audit import begin_attempt, finish_attempt
+    return begin_attempt, finish_attempt
+
+
+def _begin_judge_audit(request_data: dict[str, Any]) -> tuple[Path, int] | None:
+    audit_dir_raw = os.environ.get("WILDCLAW_JUDGE_AUDIT_DIR", "").strip()
+    if not audit_dir_raw:
+        return None
+    try:
+        begin_attempt, _ = _audit_functions()
+        judge_dir = Path(audit_dir_raw)
+        return judge_dir, begin_attempt(judge_dir, request_data)
+    except Exception as exc:
+        raise RuntimeError(f"judge audit initialization failed: {exc}") from exc
+
+
+def _finish_judge_audit(
+    audit_context: tuple[Path, int] | None,
+    response_data: dict[str, Any],
+    parsed_data: dict[str, Any],
+) -> None:
+    if audit_context is None:
+        return
+    try:
+        _, finish_attempt = _audit_functions()
+        finish_attempt(audit_context[0], audit_context[1], response_data, parsed_data)
+    except Exception as exc:
+        raise RuntimeError(f"judge audit write failed: {exc}") from exc
 
 
 # --- OpenAI -> Anthropic request translation ----------------------------------
@@ -181,6 +322,7 @@ def _anthropic_create(
     temperature: float | None = None,
     response_format: Any = None,
     timeout: float | None = None,
+    wildclaw_judge_schema: str = "",
     **_ignored: Any,
 ) -> _Response:
     timeout = timeout if timeout is not None else _judge_timeout_seconds()
@@ -202,7 +344,8 @@ def _anthropic_create(
         payload["temperature"] = float(temperature)
 
     wants_json = isinstance(response_format, dict) and response_format.get("type") == "json_object"
-    if wants_json:
+    force_scores_notes = wants_json and wildclaw_judge_schema == "scores_notes"
+    if force_scores_notes:
         payload["tools"] = [{
             "name": "submit_grading",
             "description": "Submit the final rubric scores and concise grading notes.",
@@ -259,7 +402,7 @@ def _anthropic_create(
         if isinstance(block, dict) and block.get("type") == "text"
     )
 
-    if wants_json and tool_inputs:
+    if force_scores_notes and tool_inputs:
         text = json.dumps(tool_inputs[-1], ensure_ascii=False)
     elif wants_json:
         text = _strip_json_fences(text)
@@ -286,21 +429,102 @@ class _Completions:
         self._client = client
 
     def create(self, *, model: str, messages: list[dict[str, Any]], **kwargs: Any) -> Any:
-        if isinstance(model, str) and model.startswith(ANTHROPIC_PREFIX):
-            timeout = kwargs.pop("timeout", None)
-            if timeout is None:
-                timeout = self._client._timeout
-            return _anthropic_create(
-                model=model, messages=messages, timeout=timeout, **kwargs
+        wildclaw_judge_schema = str(
+            kwargs.pop("wildclaw_judge_schema", "")
+            or os.environ.get("WILDCLAW_JUDGE_SCHEMA", "")
+        )
+        is_anthropic = isinstance(model, str) and model.startswith(ANTHROPIC_PREFIX)
+        if is_anthropic:
+            base_url = (
+                os.environ.get("ANTHROPIC_BASE_URL", "").strip()
+                or DEFAULT_ANTHROPIC_BASE_URL
             )
-        real = _REAL_OPENAI
-        if real is None:
-            raise RuntimeError(
-                f"judge_shim: non-anthropic model {model!r} requested but the real "
-                "openai package is not available in the grading container"
+            endpoint_type = "anthropic_messages"
+            endpoint = base_url.rstrip("/") + "/v1/messages"
+        else:
+            base_url = str(
+                self._client._init_kwargs.get("base_url")
+                or os.environ.get("OPENROUTER_BASE_URL", "").strip()
+                or "https://api.openai.com/v1"
             )
-        real_client = real.OpenAI(**self._client._init_kwargs)
-        return real_client.chat.completions.create(model=model, messages=messages, **kwargs)
+            endpoint_type = "openai_chat_completions"
+            endpoint = base_url.rstrip("/") + "/chat/completions"
+        effective_requested_model = model
+        if is_anthropic:
+            effective_requested_model = (
+                os.environ.get("ANTHROPIC_MODEL", "").strip()
+                or model[len(ANTHROPIC_PREFIX):]
+            )
+        request_data = {
+            "mode": "v2" if wildclaw_judge_schema else "legacy",
+            "model": model,
+            "input_model": model,
+            "requested_model": effective_requested_model,
+            "effective_requested_model": effective_requested_model,
+            "endpoint_type": endpoint_type,
+            "endpoint": endpoint,
+            "timeout_seconds": self._client._timeout,
+            "messages": messages,
+            "max_tokens": kwargs.get("max_tokens"),
+            "temperature": kwargs.get("temperature"),
+            "response_format": kwargs.get("response_format"),
+            "schema": wildclaw_judge_schema or None,
+        }
+        audit_context = _begin_judge_audit(request_data)
+        try:
+            if is_anthropic:
+                timeout = kwargs.pop("timeout", None)
+                if timeout is None:
+                    timeout = self._client._timeout
+                response = _anthropic_create(
+                    model=model,
+                    messages=messages,
+                    timeout=timeout,
+                    wildclaw_judge_schema=wildclaw_judge_schema,
+                    **kwargs,
+                )
+            else:
+                real = _REAL_OPENAI
+                if real is None:
+                    raise RuntimeError(
+                        f"judge_shim: non-anthropic model {model!r} requested but the real "
+                        "openai package is not available in the grading container"
+                    )
+                real_client = real.OpenAI(**self._client._init_kwargs)
+                response = real_client.chat.completions.create(
+                    model=model, messages=messages, **kwargs
+                )
+        except Exception as exc:
+            _finish_judge_audit(
+                audit_context,
+                {
+                    "status": "failed",
+                    "model": "",
+                    "returned_model": "",
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                    "usage": {},
+                },
+                {"schema_status": "not_available"},
+            )
+            raise
+        wants_json = (
+            isinstance(kwargs.get("response_format"), dict)
+            and kwargs["response_format"].get("type") == "json_object"
+        ) or _messages_expect_json(messages)
+        response_data, parsed_data = _response_audit_data(
+            response, parse_json=wants_json
+        )
+        if wildclaw_judge_schema:
+            parsed_data = _parse_audit_candidate(
+                response_data["raw_text"], wildclaw_judge_schema
+            )
+        _finish_judge_audit(
+            audit_context,
+            response_data,
+            parsed_data,
+        )
+        return response
 
 
 class _Chat:

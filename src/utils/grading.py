@@ -5,6 +5,8 @@ import logging
 import os
 import subprocess
 import tempfile
+import time
+import uuid
 from pathlib import Path
 from dotenv import load_dotenv
 from .judge_audit import write_attempt, write_summary
@@ -17,6 +19,7 @@ TMP_WORKSPACE = os.environ.get("TMP_WORKSPACE", "/tmp_workspace")
 DEFAULT_GRADING_TIMEOUT_SECONDS = 600.0
 DEFAULT_JUDGE_MAX_TOKENS = 1000
 DEFAULT_JUDGE_TIMEOUT_SECONDS = 300.0
+JUDGE_AUDIT_COPY_TIMEOUT_SECONDS = 30.0
 WEBSITE_METRIC_PROFILE = "web-site-gen"
 PPT_METRIC_PROFILE = "ppt"
 
@@ -123,6 +126,111 @@ def write_error_score(output_dir: Path, task_id: str, message: str) -> dict:
     return _error_score(output_dir, task_id, message)
 
 
+def _finalize_legacy_audit_failure(
+    judge_dir: Path,
+    error_message: str,
+    *,
+    error_type: str,
+) -> None:
+    attempt_dirs = sorted(path for path in judge_dir.glob("attempt-*") if path.is_dir())
+    failed_attempts = 0
+    for attempt_dir in attempt_dirs:
+        try:
+            request_data = json.loads(
+                (attempt_dir / "request.json").read_text(encoding="utf-8")
+            )
+            response_data = json.loads(
+                (attempt_dir / "response.json").read_text(encoding="utf-8")
+            )
+        except (OSError, json.JSONDecodeError):
+            continue
+        if response_data.get("status") == "in_progress":
+            try:
+                attempt = int(attempt_dir.name.rsplit("-", 1)[-1])
+                write_attempt(
+                    judge_dir,
+                    attempt,
+                    request_data,
+                    {
+                        "status": "failed",
+                        "previous_status": "in_progress",
+                        "model": "",
+                        "returned_model": "",
+                        "error_type": error_type,
+                        "error": error_message,
+                        "usage": {},
+                    },
+                    {
+                        "schema_status": "not_available",
+                        "error": error_message,
+                    },
+                )
+            except (OSError, ValueError, json.JSONDecodeError) as exc:
+                logger.warning(
+                    "Failed to finalize judge audit attempt %s: %s",
+                    attempt_dir.name,
+                    exc,
+                )
+            failed_attempts += 1
+        elif response_data.get("status") == "failed":
+            failed_attempts += 1
+
+    write_summary(judge_dir, {
+        "schema_version": 1,
+        "mode": "legacy",
+        "status": "failed",
+        "attempt_count": len(attempt_dirs),
+        "failed_attempt_count": failed_attempts,
+        "error_type": error_type,
+        "error": error_message,
+    })
+
+
+def _stop_timed_out_grading(task_id: str) -> str:
+    command_tail = ["-f", "/tmp/_grade_runner.py"]
+    try:
+        terminate = subprocess.run(
+            ["docker", "exec", task_id, "pkill", "-TERM", *command_tail],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return f"failed to terminate grading process: {exc}"
+    if terminate.returncode == 1:
+        return ""
+
+    for _ in range(5):
+        try:
+            probe = subprocess.run(
+                ["docker", "exec", task_id, "pgrep", *command_tail],
+                capture_output=True,
+                text=True,
+                timeout=2,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return f"failed to confirm grading process exit: {exc}"
+        if probe.returncode == 1:
+            return ""
+        if probe.returncode not in (0, 1):
+            break
+        time.sleep(0.1)
+
+    try:
+        force_kill = subprocess.run(
+            ["docker", "exec", task_id, "pkill", "-KILL", *command_tail],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return f"failed to kill grading process: {exc}"
+    if force_kill.returncode not in (0, 1):
+        detail = force_kill.stderr.strip() or f"exit {force_kill.returncode}"
+        return f"failed to kill grading process: {detail}"
+    return ""
+
+
 def run_grading(
     task_id: str,
     automated_checks: str,
@@ -182,9 +290,10 @@ def _run_grading_legacy(
 ) -> dict:
     """Legacy grading path: exec the task's single grade() function verbatim.
 
-    Behaviour is byte-for-byte the pre-v2 run_grading. Tasks with no
-    `## LLM Judge Rubric` section route here (see run_grading dispatcher),
-    so all 60 existing tasks are unaffected.
+    Tasks with no `## LLM Judge Rubric` section route here (see run_grading
+    dispatcher). Their task-defined judge response shapes and score semantics
+    remain unchanged; the wrapper additionally records per-call judge audit
+    artifacts.
     """
     logger.info("[%s] Starting in-container grading...", task_id)
 
@@ -199,20 +308,19 @@ def _run_grading_legacy(
         )
 
     shim_src = Path(__file__).with_name("judge_shim.py")
+    audit_src = Path(__file__).with_name("judge_audit.py")
+    audit_container_dir = f"/tmp/wildclaw-judge-audit-{uuid.uuid4().hex}"
 
     runner_code = "\n".join([
         "import json",
         "import os",
-        # Route inline `openai` judge calls whose model is `anthropic/*` to the
-        # Anthropic Messages API (judge endpoint). Non-fatal if unavailable.
-        # Only install shim when JUDGE_MODEL starts with 'anthropic/' to avoid
-        # shadowing the real openai package for non-Anthropic judges.
-        "try:",
-        "    _judge_model = os.environ.get('JUDGE_MODEL', '')",
-        "    if _judge_model.startswith('anthropic/'):",
-        "        import _judge_shim; _judge_shim.install()",
-        "except Exception as _shim_exc:",
-        "    import sys as _sys; print('judge_shim install failed:', _shim_exc, file=_sys.stderr)",
+        # Install for every legacy judge provider: Anthropic requests are
+        # translated and OpenAI Chat requests are delegated after auditing.
+        "import _judge_shim",
+        "_judge_shim.install()",
+        "from pathlib import Path as _Path",
+        "from _judge_audit import write_summary as _write_judge_summary",
+        f"_write_judge_summary(_Path({json.dumps(audit_container_dir)}), {{'schema_version': 1, 'mode': 'legacy', 'status': 'not_called', 'attempt_count': 0}})",
         "from _transcript_loader import load_transcript",
         f"_transcript = load_transcript({json.dumps(transcript_container_path)})",
         "",
@@ -242,15 +350,46 @@ def _run_grading_legacy(
                 write_error_score,
             )
 
-        if shim_src.exists():
-            r_shim = subprocess.run(
-                ["docker", "cp", str(shim_src), f"{task_id}:/tmp/_judge_shim.py"],
-                capture_output=True, text=True,
+        if not shim_src.exists():
+            return _grading_error(
+                output_dir, task_id, f"judge shim module not found: {shim_src}",
+                write_error_score,
             )
-            if r_shim.returncode != 0:
-                logger.warning("[%s] docker cp judge shim failed: %s", task_id, r_shim.stderr)
-        else:
-            logger.warning("[%s] judge shim module not found: %s", task_id, shim_src)
+        r_shim = subprocess.run(
+            ["docker", "cp", str(shim_src), f"{task_id}:/tmp/_judge_shim.py"],
+            capture_output=True, text=True,
+        )
+        if r_shim.returncode != 0:
+            return _grading_error(
+                output_dir, task_id,
+                f"docker cp judge shim failed: {r_shim.stderr}", write_error_score,
+            )
+
+        if not audit_src.exists():
+            return _grading_error(
+                output_dir, task_id, f"judge audit module not found: {audit_src}",
+                write_error_score,
+            )
+        try:
+            r_audit = subprocess.run(
+                ["docker", "cp", str(audit_src), f"{task_id}:/tmp/_judge_audit.py"],
+                capture_output=True,
+                text=True,
+                timeout=JUDGE_AUDIT_COPY_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            return _grading_error(
+                output_dir,
+                task_id,
+                "docker cp judge audit timed out after "
+                f"{JUDGE_AUDIT_COPY_TIMEOUT_SECONDS:g} seconds",
+                write_error_score,
+            )
+        if r_audit.returncode != 0:
+            return _grading_error(
+                output_dir, task_id,
+                f"docker cp judge audit failed: {r_audit.stderr}", write_error_score,
+            )
 
         r = subprocess.run(
             ["docker", "cp", runner_host, f"{task_id}:/tmp/_grade_runner.py"],
@@ -303,12 +442,77 @@ def _run_grading_legacy(
             masked = (value[:4] + "***") if key.endswith("KEY") else value
             logger.info("[%s] Injecting grading judge env: %s=%s", task_id, key, masked)
 
-        r = subprocess.run(
-            ["docker", "exec", *env_args, task_id, "python3", "/tmp/_grade_runner.py"],
-            capture_output=True,
-            text=True,
-            timeout=_grading_timeout_seconds(),
-        )
+        env_args += ["-e", f"WILDCLAW_JUDGE_AUDIT_DIR={audit_container_dir}"]
+
+        grading_timeout_error = ""
+        judge_audit_error = ""
+        grading_timeout_seconds = _grading_timeout_seconds()
+        try:
+            r = subprocess.run(
+                ["docker", "exec", *env_args, task_id, "python3", "/tmp/_grade_runner.py"],
+                capture_output=True,
+                text=True,
+                timeout=grading_timeout_seconds,
+            )
+        except subprocess.TimeoutExpired:
+            r = None
+            grading_timeout_error = f"exceeded {grading_timeout_seconds:g} seconds"
+            stop_error = _stop_timed_out_grading(task_id)
+            if stop_error:
+                logger.warning(
+                    "[%s] %s",
+                    task_id,
+                    stop_error,
+                )
+                grading_timeout_error += f"; {stop_error}"
+        finally:
+            judge_dir = output_dir / "judge"
+            judge_dir.mkdir(parents=True, exist_ok=True)
+            audit_copy = None
+            try:
+                audit_copy = subprocess.run(
+                    ["docker", "cp", f"{task_id}:{audit_container_dir}/.", str(judge_dir)],
+                    capture_output=True,
+                    text=True,
+                    timeout=JUDGE_AUDIT_COPY_TIMEOUT_SECONDS,
+                )
+            except subprocess.TimeoutExpired:
+                judge_audit_error = (
+                    "judge audit copy timed out after "
+                    f"{JUDGE_AUDIT_COPY_TIMEOUT_SECONDS:g} seconds"
+                )
+            if audit_copy is not None and audit_copy.returncode != 0:
+                judge_audit_error = (
+                    "judge audit copy failed: "
+                    + (audit_copy.stderr.strip() or f"exit {audit_copy.returncode}")
+                )
+            if judge_audit_error:
+                logger.error("[%s] %s", task_id, judge_audit_error)
+            summary_path = judge_dir / "summary.json"
+            if grading_timeout_error:
+                _finalize_legacy_audit_failure(
+                    judge_dir,
+                    f"grading timeout: {grading_timeout_error}",
+                    error_type="GradingTimeout",
+                )
+            elif judge_audit_error or not summary_path.exists():
+                if not judge_audit_error:
+                    judge_audit_error = "judge audit missing after grading"
+                _finalize_legacy_audit_failure(
+                    judge_dir,
+                    judge_audit_error,
+                    error_type="AuditCollectionError",
+                )
+        if grading_timeout_error:
+            return _grading_error(
+                output_dir, task_id,
+                f"grading timed out: {grading_timeout_error}", write_error_score,
+            )
+        if judge_audit_error:
+            return _grading_error(
+                output_dir, task_id, judge_audit_error, write_error_score,
+            )
+        assert r is not None
         if r.returncode != 0:
             logger.error("[%s] Grading script execution failed: %s", task_id, r.stderr)
             return _grading_error(
@@ -650,16 +854,22 @@ def _exec_container_python(
         f.write(runner_code)
         runner_host = f.name
     try:
-        if loader_src.exists():
-            subprocess.run(
-                ["docker", "cp", str(loader_src), f"{task_id}:/tmp/_transcript_loader.py"],
-                capture_output=True, text=True,
-            )
-        if shim_src.exists():
-            subprocess.run(
-                ["docker", "cp", str(shim_src), f"{task_id}:/tmp/_judge_shim.py"],
-                capture_output=True, text=True,
-            )
+        if not loader_src.exists():
+            return None, f"transcript loader module not found: {loader_src}"
+        r_loader = subprocess.run(
+            ["docker", "cp", str(loader_src), f"{task_id}:/tmp/_transcript_loader.py"],
+            capture_output=True, text=True,
+        )
+        if r_loader.returncode != 0:
+            return None, f"docker cp transcript loader failed: {r_loader.stderr}"
+        if not shim_src.exists():
+            return None, f"judge shim module not found: {shim_src}"
+        r_shim = subprocess.run(
+            ["docker", "cp", str(shim_src), f"{task_id}:/tmp/_judge_shim.py"],
+            capture_output=True, text=True,
+        )
+        if r_shim.returncode != 0:
+            return None, f"docker cp judge shim failed: {r_shim.stderr}"
         r = subprocess.run(
             ["docker", "cp", runner_host, f"{task_id}:/tmp/_judge_runner.py"],
             capture_output=True, text=True,
@@ -795,10 +1005,9 @@ def _grade_llm_rubric(
     runner_code = (
         "import json, os, sys\n"
         "from pathlib import Path\n"
-        "try:\n"
-        "    import _judge_shim; _judge_shim.install()\n"
-        "except Exception as _e:\n"
-        "    print('judge_shim install failed:', _e, file=sys.stderr)\n"
+        "os.environ['WILDCLAW_JUDGE_SCHEMA'] = 'scores_notes'\n"
+        "import _judge_shim\n"
+        "_judge_shim.install()\n"
         "from _transcript_loader import load_transcript\n"
         f"_t = load_transcript({json.dumps(transcript_container_path)})\n"
         "_summary = json.dumps(_t, ensure_ascii=False)[:20000]\n"
@@ -807,6 +1016,8 @@ def _grade_llm_rubric(
         "from openai import OpenAI\n"
         "client = OpenAI(api_key=os.environ.get('OPENROUTER_API_KEY',''),"
         " base_url=os.environ.get('OPENROUTER_BASE_URL',''))\n"
+        f"_judge_model = {json.dumps(judge_model)}\n"
+        "_effective_judge_model = ((os.environ.get('ANTHROPIC_MODEL', '').strip() or _judge_model.split('/', 1)[-1]) if _judge_model.startswith('anthropic/') else _judge_model)\n"
         f"_prompt = {json.dumps(prompt)}\n"
         "_msg_text = _prompt + '\\n\\n## Agent Workspace Files\\n' + _ws_text"
         " + '\\n\\n## Agent Transcript (JSON)\\n' + _summary\n"
@@ -824,8 +1035,9 @@ def _grade_llm_rubric(
         "    _audit_content = [{'type': 'text', 'text': _msg_text}]\n"
         "    _audit_content.extend({'type': 'image_ref', **_item} for _item in _ppt_evidence.get('manifest', []))\n"
         "    _envelope = {'candidate_text': _choice.message.content,"
-        " 'request': {'model': " + json.dumps(judge_model) + ", 'max_tokens': " + str(judge_max_tokens) + ", 'timeout_seconds': " + repr(_judge_timeout_seconds()) + ", 'response_format': {'type': 'json_object'}, 'endpoint_type': ('anthropic_messages' if str(" + json.dumps(judge_model) + ").startswith('anthropic/') else 'openai_chat_completions'), 'messages': [{'role': 'user', 'content': _audit_content}], 'ppt_manifest': _ppt_evidence.get('manifest', [])},"
+        " 'request': {'model': _judge_model, 'input_model': _judge_model, 'requested_model': _effective_judge_model, 'effective_requested_model': _effective_judge_model, 'max_tokens': " + str(judge_max_tokens) + ", 'timeout_seconds': " + repr(_judge_timeout_seconds()) + ", 'response_format': {'type': 'json_object'}, 'endpoint_type': ('anthropic_messages' if _judge_model.startswith('anthropic/') else 'openai_chat_completions'), 'messages': [{'role': 'user', 'content': _audit_content}], 'ppt_manifest': _ppt_evidence.get('manifest', [])},"
         " 'response': {'raw': _raw_response, 'raw_text': _choice.message.content,"
+        " 'model': getattr(resp, 'model', ''), 'returned_model': getattr(resp, 'model', ''),"
         " 'finish_reason': getattr(_choice, 'finish_reason', ''),"
         " 'usage': getattr(resp, 'usage', None).__dict__ if getattr(resp, 'usage', None) else {}}}\n"
         "    print(json.dumps(_envelope, ensure_ascii=False, default=str))\n"

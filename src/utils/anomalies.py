@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 SCHEMA_VERSION = 2
-RULESET_VERSION = "2026-08-14.1"
+RULESET_VERSION = "2026-08-15.1"
 
 ERROR = "error"
 WARNING = "warning"
@@ -645,6 +645,164 @@ def _api_items(errors: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     return result
 
 
+def _judge_model_name(value: Any) -> str:
+    return str(value or "").strip().lower().rsplit("/", 1)[-1]
+
+
+def _legacy_zero_llm_items(score: dict | None) -> bool:
+    if not isinstance(score, dict):
+        return False
+    llm_items = score.get("llm_items")
+    if not isinstance(llm_items, dict) or not llm_items:
+        return False
+    for detail in llm_items.values():
+        if not isinstance(detail, dict):
+            return False
+        raw_score = detail.get("raw_score")
+        if not isinstance(raw_score, (int, float)) or raw_score != 0:
+            return False
+        if str(detail.get("reason") or "").strip():
+            return False
+    return True
+
+
+def _judge_audit_items(run_dir: Path, score: dict | None) -> list[dict[str, Any]]:
+    judge_dir = run_dir / "judge"
+    summary = _load_json(judge_dir / "summary.json")
+    attempt_dirs = sorted(path for path in judge_dir.glob("attempt-*") if path.is_dir())
+    if summary is None and not attempt_dirs:
+        if not _legacy_zero_llm_items(score):
+            return []
+        return [_item(
+            "LEGACY_JUDGE_AUDIT_MISSING",
+            "legacy LLM 子项全部为 0 且理由为空，但该历史运行没有逐次裁判审计产物",
+            stage="grading", attribution="evaluation_framework", confidence="medium",
+            validity_impact="review", score_reliability="requires_review",
+            rerun_action="review_first",
+            evidence=[{
+                "file": "score.json",
+                "fields": ["llm_items", "llm_items_earned", "llm_items_max"],
+                "judge_audit": "missing",
+            }],
+        )]
+
+    schema_hits: list[dict[str, Any]] = []
+    failure_hits: list[dict[str, Any]] = []
+    integrity_hits: list[dict[str, Any]] = []
+    model_hits: list[dict[str, Any]] = []
+    for attempt_dir in attempt_dirs:
+        rel_dir = str(attempt_dir.relative_to(run_dir))
+        attempt_artifacts: dict[str, dict[str, Any]] = {}
+        for filename in ("request.json", "response.json", "parsed.json"):
+            artifact = _load_json(attempt_dir / filename)
+            if artifact is None:
+                integrity_hits.append({
+                    "file": f"{rel_dir}/{filename}",
+                    "status": "missing_or_invalid",
+                    "error": "required judge audit artifact is missing or invalid JSON",
+                })
+                artifact = {}
+            attempt_artifacts[filename] = artifact
+        request_data = attempt_artifacts["request.json"]
+        response_data = attempt_artifacts["response.json"]
+        parsed_data = attempt_artifacts["parsed.json"]
+
+        schema_status = str(parsed_data.get("schema_status") or "")
+        if schema_status in {"mismatch", "parse_error"} or "parse_error" in parsed_data:
+            schema_hits.append({
+                "file": f"{rel_dir}/parsed.json",
+                "schema_status": schema_status or "parse_error",
+                "error": str(
+                    parsed_data.get("schema_error")
+                    or parsed_data.get("parse_error")
+                    or "invalid judge response"
+                )[:300],
+            })
+
+        if (
+            response_data.get("status") in {"failed", "in_progress"}
+            or response_data.get("error")
+            or response_data.get("runner_error")
+        ):
+            failure_hits.append({
+                "file": f"{rel_dir}/response.json",
+                "status": response_data.get("status") or "failed",
+                "error_type": response_data.get("error_type") or "",
+                "error": str(
+                    response_data.get("error")
+                    or response_data.get("runner_error")
+                    or "judge call failed"
+                )[:300],
+            })
+
+        requested_model = str(
+            request_data.get("effective_requested_model")
+            or request_data.get("requested_model")
+            or request_data.get("model")
+            or ""
+        )
+        raw_response = response_data.get("raw")
+        if not isinstance(raw_response, dict):
+            raw_response = {}
+        returned_model = str(
+            response_data.get("returned_model")
+            or response_data.get("model")
+            or raw_response.get("model")
+            or ""
+        )
+        if (
+            requested_model
+            and returned_model
+            and _judge_model_name(requested_model) != _judge_model_name(returned_model)
+        ):
+            model_hits.append({
+                "file": f"{rel_dir}/response.json",
+                "requested_model": requested_model,
+                "returned_model": returned_model,
+                "endpoint_type": request_data.get("endpoint_type") or "",
+            })
+
+    result: list[dict[str, Any]] = []
+    final_failed = bool(
+        summary and summary.get("status") in {"failed", "in_progress"}
+    )
+    if schema_hits and (final_failed or summary is None):
+        result.append(_item(
+            "JUDGE_SCHEMA_MISMATCH",
+            f"裁判最终响应不符合请求的 JSON schema（{len(schema_hits)} 次）",
+            stage="grading", attribution="evaluation_framework", confidence="high",
+            validity_impact="fail", score_reliability="unreliable",
+            rerun_action="required_after_fix", evidence=schema_hits[:5],
+        ))
+    if integrity_hits or (failure_hits and (final_failed or summary is None)):
+        failure_evidence = (integrity_hits + failure_hits)[:5]
+        result.append(_item(
+            "JUDGE_AUDIT_FAILURE",
+            f"裁判审计产物不完整或调用失败（{len(integrity_hits) + len(failure_hits)} 处）",
+            stage="grading", attribution="evaluation_framework", confidence="high",
+            validity_impact="fail", score_reliability="unreliable",
+            rerun_action="required_after_fix", evidence=failure_evidence,
+        ))
+    if final_failed and not schema_hits and not failure_hits and not integrity_hits:
+        result.append(_item(
+            "JUDGE_AUDIT_FAILURE",
+            "裁判审计汇总标记为失败，但没有可用的成功结果",
+            stage="grading", attribution="evaluation_framework", confidence="high",
+            validity_impact="fail", score_reliability="unreliable",
+            rerun_action="required_after_fix",
+            evidence=[{"file": "judge/summary.json", "field": "status", "value": "failed"}],
+        ))
+    if model_hits:
+        result.append(_item(
+            "JUDGE_MODEL_MISMATCH",
+            f"裁判请求模型与服务返回模型不一致（{len(model_hits)} 次）",
+            stage="grading", attribution="external_service", confidence="medium",
+            validity_impact="review", score_reliability="requires_review",
+            rerun_action="review_first", evidence=model_hits[:5],
+        ))
+    return result
+
+
 def scan_run_dir(run_dir: Path) -> dict[str, Any]:
     """检测单个 run 目录，返回 anomalies v2 dict（不落盘）。"""
     run_dir = Path(run_dir)
@@ -851,6 +1009,9 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
                 rerun_action="required_after_fix",
                 evidence=[{"file": "score.json", "field": grading_error_field}],
             ))
+
+    if not pre_grading_failure:
+        items.extend(_judge_audit_items(run_dir, score))
 
     tool_results = _tool_result_texts(events)
     rejected = [text for text in tool_results
