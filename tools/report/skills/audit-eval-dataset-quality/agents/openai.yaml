@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit Eval Dataset Quality"
+  short_description: "用多模型多 Harness 结果反向检查评测集质量"
+  default_prompt: "使用指定评测结果目录审计题目难度梯度、模型区分度、稳定性和 Harness 敏感性。"

@@ -52,7 +52,18 @@ output.rar
 output_qwen.rar
 *.rar
 
-.claude
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/validate-eval-dataset
+!.claude/skills/audit-eval-dataset-quality
 .codex
-.agents
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/validate-eval-dataset
+!.agents/skills/audit-eval-dataset-quality
+
+# 评测集校验 Skill 的运行产物
+report-workspace/eval-dataset/
 .superpowers
