@@ -12,6 +12,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from openpyxl import Workbook, load_workbook
+from src.utils.cli_args import build_run_batch_parser
 from src.utils.run_selection import write_rerun_metadata
 
 
@@ -126,6 +127,39 @@ class AnalysisPipelineTest(unittest.TestCase):
             "2026-07-30-openai",
         )
         self.assertAlmostEqual(float(registry.cny_per_usd(date(2026, 7, 30))), 6.77)
+
+    def test_entity_registry_covers_all_cli_harnesses(self) -> None:
+        report_entities = load_module("report_entities_harnesses", REPORT_ENTITIES_SCRIPT)
+        registry = report_entities.load_registry(REPORT_DIR / "data/entities.yaml")
+        parser = build_run_batch_parser(default_model="test-model", default_parallel=1)
+        backend_action = next(
+            action for action in parser._actions if action.dest == "agent_backend"
+        )
+        expected_displays = {
+            "openclaw": "OpenClaw",
+            "astronclaw": "AstronClaw",
+            "claudecode": "Claude Code",
+            "codex": "Codex",
+            "hermesagent": "Hermes Agent",
+            "astroncode": "AstronCode",
+            "opencode": "OpenCode",
+            "deepseek-harness": "DeepSeek Harness",
+        }
+
+        self.assertTrue(set(backend_action.choices).issubset(registry.harnesses))
+        self.assertEqual(
+            {
+                harness_id: registry.harness_display(harness_id)
+                for harness_id in backend_action.choices
+            },
+            expected_displays,
+        )
+        self.assertTrue(
+            all(
+                registry.harnesses[harness_id].get("family")
+                for harness_id in backend_action.choices
+            )
+        )
 
     def test_entity_registry_unknown_id_falls_back_with_warning(self) -> None:
         report_entities = load_module("report_entities_fallback", REPORT_ENTITIES_SCRIPT)

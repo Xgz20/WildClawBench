@@ -207,7 +207,7 @@ WildClawBench ships **four** Docker images, one per harness. They are all hosted
 | Harness | Image tarball | Loaded tag |
 |---|---|---|
 | OpenClaw     | `wildclawbench-ubuntu_v1.3.tar`                       | `wildclawbench-ubuntu:v1.3` |
-| Claude Code  | `wildclawbench-claudecode-ubuntu_v0.2-patched.tar`    | `wildclawbench-claudecode-ubuntu:v0.2` |
+| Claude Code  | `wildclawbench-claudecode-ubuntu_v0.2-patched.tar`    | `wildclawbench-claudecode-ubuntu:v0.2-patched` |
 | Codex CLI    | `wildclawbench-codex-ubuntu_v0.0.tar`                 | `wildclawbench-codex-ubuntu:v0.0` |
 | Hermes Agent | `wildclawbench-hermes-agent-v0.5.tar.gz`              | `wildclawbench-hermes-agent:v0.5` |
 
@@ -492,7 +492,7 @@ If a run is interrupted (e.g. `Ctrl+C`, terminal closed), some Docker containers
 ```bash
 for img in \
     wildclawbench-ubuntu:v1.3 \
-    wildclawbench-claudecode-ubuntu:v0.2 \
+    wildclawbench-claudecode-ubuntu:v0.2-patched \
     wildclawbench-codex-ubuntu:v0.0 \
     wildclawbench-hermes-agent:v0.5; do
   docker ps -a --filter "ancestor=$img" -q | xargs -r docker rm -f

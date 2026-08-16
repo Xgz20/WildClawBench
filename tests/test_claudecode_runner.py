@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -18,6 +19,41 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
             anthropic_api_key="test-key",
             anthropic_base_url="https://anthropic.example/v1",
         )
+
+    def test_default_image_uses_formal_patched_tag(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"DOCKER_IMAGE_CLAUDECODE": "", "CLAUDECODE_DOCKER_IMAGE": ""},
+        ):
+            agent = ClaudeCodeAgent()
+
+        self.assertEqual(
+            agent.image,
+            "wildclawbench-claudecode-ubuntu:v0.2-patched",
+        )
+
+    def test_image_override_precedence_remains_compatible(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "DOCKER_IMAGE_CLAUDECODE": "primary:image",
+                "CLAUDECODE_DOCKER_IMAGE": "legacy:image",
+            },
+        ):
+            self.assertEqual(ClaudeCodeAgent().image, "primary:image")
+            self.assertEqual(
+                ClaudeCodeAgent(image="explicit:image").image,
+                "explicit:image",
+            )
+
+        with patch.dict(
+            os.environ,
+            {
+                "DOCKER_IMAGE_CLAUDECODE": "",
+                "CLAUDECODE_DOCKER_IMAGE": "legacy:image",
+            },
+        ):
+            self.assertEqual(ClaudeCodeAgent().image, "legacy:image")
 
     def test_build_prompt_command_maps_thinking_to_effort(self) -> None:
         command = self.agent._build_prompt_command(

@@ -128,8 +128,18 @@ models:
             output: 15
 
 harnesses:
+  openclaw:
+    display_name: OpenClaw
+    family: OpenClaw
+    aliases: []
+    capabilities: {}
   astronclaw:
     display_name: AstronClaw
+    family: Claude Code
+    aliases: []
+    capabilities: {}
+  claudecode:
+    display_name: Claude Code
     family: Claude Code
     aliases: []
     capabilities: {}
@@ -141,6 +151,11 @@ harnesses:
   codex:
     display_name: Codex
     family: Codex
+    aliases: []
+    capabilities: {}
+  hermesagent:
+    display_name: Hermes Agent
+    family: Hermes Agent
     aliases: []
     capabilities: {}
   opencode:
