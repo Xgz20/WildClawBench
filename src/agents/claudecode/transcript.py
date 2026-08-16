@@ -143,6 +143,51 @@ def _normalize_claude_message_item(item: Any) -> dict[str, Any] | None:
     )
 
 
+def _merge_assistant_message_fragments(
+    normalized: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    last_assistant_id: str | None = None
+    last_assistant: dict[str, Any] | None = None
+
+    for item in normalized:
+        message = item.get("message")
+        if not isinstance(message, dict) or message.get("role") != "assistant":
+            merged.append(item)
+            last_assistant_id = None
+            last_assistant = None
+            continue
+
+        content = message.get("content")
+        blocks = content if isinstance(content, list) else []
+        message_id = message.get("id")
+        if message_id is None:
+            if blocks:
+                merged.append(item)
+            last_assistant_id = None
+            last_assistant = None
+            continue
+
+        key = str(message_id)
+        if last_assistant is not None and key == last_assistant_id:
+            existing_message = last_assistant["message"]
+            existing_message["content"].extend(blocks)
+            for metadata_key, value in message.items():
+                if metadata_key not in {"role", "content", "id"} and value is not None:
+                    existing_message[metadata_key] = value
+            continue
+
+        last_assistant_id = None
+        last_assistant = None
+        if not blocks:
+            continue
+        merged.append(item)
+        last_assistant_id = key
+        last_assistant = item
+
+    return merged
+
+
 def _last_model_request_context(rows: list[Any]) -> tuple[int, list[dict[str, Any]]] | None:
     last_index = -1
     last_messages: list[Any] | None = None
@@ -163,7 +208,7 @@ def _last_model_request_context(rows: list[Any]) -> tuple[int, list[dict[str, An
         message = _normalize_claude_message_item(item)
         if message is not None:
             normalized.append(message)
-    return last_index, normalized
+    return last_index, _merge_assistant_message_fragments(normalized)
 
 
 def _complete_message_from_row(row: Any) -> dict[str, Any] | None:
