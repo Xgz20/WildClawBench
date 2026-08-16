@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable
 
 from .contracts import Issue, REVIEW
-from .result_files import ResultRecord, effective_records
+from .result_files import ResultRecord
 
 
 @dataclass(frozen=True)
@@ -26,9 +26,15 @@ def _mean(values: list[float]) -> float | None:
     return statistics.fmean(values) if values else None
 
 
+def _usable_records(records: Iterable[ResultRecord] | Any) -> list[ResultRecord]:
+    if hasattr(records, "records"):
+        records = records.records
+    return [record for record in records if record.usable and record.score is not None]
+
+
 def aggregate_task_scores(records: Iterable[ResultRecord]) -> dict[str, dict[str, Any]]:
     grouped: dict[str, list[float]] = defaultdict(list)
-    for record in effective_records(type("D", (), {"records": list(records)})()):
+    for record in _usable_records(records):
         grouped_key = f"{record.unit}::{record.task_id}"
         grouped[grouped_key].append(float(record.score))
     result: dict[str, dict[str, Any]] = {}
@@ -40,7 +46,7 @@ def aggregate_task_scores(records: Iterable[ResultRecord]) -> dict[str, dict[str
 
 def _task_unit_means(records: Iterable[ResultRecord]) -> dict[tuple[str, str], float]:
     grouped: dict[tuple[str, str], list[float]] = defaultdict(list)
-    for record in effective_records(type("D", (), {"records": list(records)})()):
+    for record in _usable_records(records):
         grouped[(record.unit, record.task_id)].append(float(record.score))
     return {key: statistics.fmean(values) for key, values in grouped.items()}
 
@@ -67,6 +73,8 @@ def compare_models(records: Iterable[ResultRecord], thresholds: MetricThresholds
         issues.append(Issue(REVIEW, "MODEL_SAMPLE_INSUFFICIENT", "少于两个模型，无法评估模型区分度", evidence={"models": models}))
     elif not pairwise:
         issues.append(Issue(REVIEW, "MODEL_COMMON_TASKS_INSUFFICIENT", "模型之间没有共同有效任务", evidence={"models": models}))
+    elif all(item["mean_abs_gap"] < thresholds.model_gap / 2 for item in pairwise):
+        issues.append(Issue(REVIEW, "MODEL_DISCRIMINATION_LOW", "模型共同任务的分差整体较小，区分度需要人工复核", evidence={"pairwise_count": len(pairwise), "model_gap_threshold": thresholds.model_gap}))
     return {"models": models, "pairwise": pairwise}, issues
 
 
@@ -116,12 +124,18 @@ def difficulty_summary(records: Iterable[ResultRecord], task_metadata: dict[str,
         difficulty = (task_metadata or {}).get(task_id, {}).get("difficulty")
         if difficulty:
             groups[str(difficulty)].append(float(item["mean"]))
-    return {"tasks": tasks, "difficulty_groups": {key: {"mean": statistics.fmean(vals), "task_count": len(vals)} for key, vals in sorted(groups.items())}}, issues
+    difficulty_groups = {key: {"mean": statistics.fmean(vals), "task_count": len(vals)} for key, vals in sorted(groups.items())}
+    ordered = [(key, value["mean"]) for key, value in difficulty_groups.items() if key[:1].upper() == "L" and key[1:].isdigit()]
+    ordered.sort(key=lambda item: int(item[0][1:]))
+    inversions = [{"easier": left[0], "harder": right[0], "easier_mean": left[1], "harder_mean": right[1]} for left, right in zip(ordered, ordered[1:]) if right[1] > left[1]]
+    if inversions:
+        issues.append(Issue(REVIEW, "DIFFICULTY_GRADIENT_INVERTED", "difficulty 标签与分数梯度出现倒挂，需要复核题目构成", evidence={"inversions": inversions}))
+    return {"tasks": tasks, "difficulty_groups": difficulty_groups, "inversions": inversions}, issues
 
 
 def stability_summary(records: Iterable[ResultRecord], thresholds: MetricThresholds = MetricThresholds()) -> tuple[dict[str, Any], list[Issue]]:
     grouped: dict[tuple[str, str], list[float]] = defaultdict(list)
-    for record in effective_records(type("D", (), {"records": list(records)})()):
+    for record in _usable_records(records):
         grouped[(record.unit, record.task_id)].append(float(record.score))
     summary: dict[str, Any] = {}
     issues: list[Issue] = []

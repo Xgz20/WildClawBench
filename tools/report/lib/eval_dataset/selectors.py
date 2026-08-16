@@ -99,7 +99,19 @@ def select_task_files(
             selected.append(candidate)
 
     if ids:
-        all_files = _markdown_files(repo_root / default_root) if (repo_root / default_root).is_dir() else []
+        search_files: list[Path] = []
+        default_candidate = repo_root / default_root
+        if default_candidate.is_dir():
+            search_files.extend(_markdown_files(default_candidate))
+        for directory in dirs:
+            candidate = directory if directory.is_absolute() else repo_root / directory
+            if candidate.is_dir():
+                search_files.extend(_markdown_files(candidate))
+        for path in paths:
+            candidate = path if path.is_absolute() else repo_root / path
+            if candidate.is_file():
+                search_files.append(candidate)
+        all_files = list({str(path.resolve()): path.resolve() for path in search_files}.values())
         for raw_id in ids:
             value = Path(raw_id).expanduser()
             if value.suffix.lower() == ".md" or value.exists() or "/" in raw_id:

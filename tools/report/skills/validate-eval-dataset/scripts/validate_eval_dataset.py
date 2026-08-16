@@ -8,6 +8,7 @@ import os
 import re
 import shlex
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -145,7 +146,10 @@ def validate_document(doc: TaskDocument, repo_root: Path, *, smoke: bool = False
                 if not path.exists():
                     issues.append(_issue("WARMUP_REFERENCE_MISSING", f"Warmup 引用文件不存在: {token}", doc, evidence={"path": str(path)}))
     if smoke and warmup["commands"]:
-        smoke_results = run_warmup_smoke(warmup["commands"], image=warmup_image or metadata.get("warmup_image") or os.environ.get("WCB_WARMUP_IMAGE"), workspace=workspace if workspace.exists() else repo_root, timeout_seconds=min(int(metadata.get("timeout_seconds", 120)), 300))
+        # Never mount the repository or a product workspace read-write for a
+        # smoke check. The disposable container gets an empty temporary root.
+        with tempfile.TemporaryDirectory(prefix="wcb-warmup-") as smoke_workspace:
+            smoke_results = run_warmup_smoke(warmup["commands"], image=warmup_image or metadata.get("warmup_image") or os.environ.get("WCB_WARMUP_IMAGE"), workspace=smoke_workspace, timeout_seconds=min(int(metadata.get("timeout_seconds", 120)), 300))
         for result in smoke_results:
             if result.get("code") == "SMOKE_UNAVAILABLE":
                 issues.append(_issue("SMOKE_UNAVAILABLE", result.get("message", "Warmup smoke 不可用"), doc, severity=REVIEW))
@@ -158,7 +162,14 @@ def validate_document(doc: TaskDocument, repo_root: Path, *, smoke: bool = False
 def validate_extension_registry(repo_root: Path, selected: list[Path]) -> list[Issue]:
     extension = repo_root / "tasks" / "extension"
     registry = extension / "task_sources.yaml"
-    if not any(path.is_relative_to(extension) for path in selected if hasattr(path, "is_relative_to")):
+    def is_under_extension(path: Path) -> bool:
+        try:
+            path.resolve().relative_to(extension.resolve())
+            return True
+        except ValueError:
+            return False
+
+    if not any(is_under_extension(path) for path in selected):
         return []
     if not registry.is_file():
         return [Issue(FAIL, "EXTENSION_REGISTRY_MISSING", "扩展集缺少 tasks/extension/task_sources.yaml", location=str(registry))]

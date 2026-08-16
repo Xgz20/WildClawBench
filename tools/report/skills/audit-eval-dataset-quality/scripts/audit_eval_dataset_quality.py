@@ -93,6 +93,8 @@ def main(argv: list[str] | None = None) -> int:
     stability_stats, stability_issues = stability_summary(usable, thresholds)
     issues.extend(model_issues + harness_issues + difficulty_issues + stability_issues)
     validity = _load_validity(args.validity)
+    if args.validity and not validity:
+        issues.append(Issue(FAIL, "VALIDITY_INPUT_INVALID", f"无法读取或解析 validity JSON: {args.validity}", location=str(Path(args.validity).expanduser())))
     validity_summary = {
         key: validity.get(key)
         for key in ("schema_version", "validity_verdict", "summary", "has_validity_failure", "needs_review")

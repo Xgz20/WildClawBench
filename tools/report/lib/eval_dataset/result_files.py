@@ -128,7 +128,7 @@ def discover_results(result_roots: Iterable[str | Path]) -> ResultDiscovery:
             discovery.records.append(record)
             if score is None:
                 discovery.issues.append(Issue(FAIL, "RESULT_SCORE_MISSING", f"结果缺少可解析分数: {run_dir}", task_id=task_id, location=str(run_dir)))
-            elif not usable_execution:
+            if not usable_execution:
                 discovery.issues.append(Issue(FAIL, "RESULT_EXECUTION_INVALID", f"结果执行状态不可用于能力比较: {run_dir}", task_id=task_id, location=str(run_dir), evidence={"status": execution_status, "exit_code": exit_code}))
     return discovery
 
