@@ -22,6 +22,7 @@ from src.agents.astronclaw import AstronClawAgent
 from src.agents.claudecode import ClaudeCodeAgent
 from src.agents.codex import CodexAgent
 from src.agents.deepseek_harness import DeepSeekHarnessAgent
+from src.agents.hermesagent import HermesAgentAgent
 from src.agents.opencode import OpenCodeAgent
 from src.agents.openclaw import OpenClawAgent
 from src.utils.cli_args import parse_run_batch_args
@@ -98,6 +99,7 @@ GRADE_ON_ERROR_BACKENDS = (
     OpenCodeAgent,
     OpenClawAgent,
     DeepSeekHarnessAgent,
+    HermesAgentAgent,
 )
 
 WORKSPACE_CHANGE_BACKENDS = (
@@ -131,8 +133,6 @@ def _build_agent_backend(args) -> BaseAgent:
     if args.agent_backend == "deepseek-harness":
         return DeepSeekHarnessAgent(api=args.dsh_api)
     if args.agent_backend == "hermesagent":
-        from src.agents.hermesagent import HermesAgentAgent
-
         return HermesAgentAgent(
             openrouter_api_key=OPENROUTER_API_KEY,
             openrouter_base_url=OPENROUTER_BASE_URL_OPENCLAW,

@@ -257,6 +257,28 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(metrics["unclear"], 1)
         self.assertEqual(metrics["format_error"], 0)
 
+    def test_hermesagent_uses_standard_tool_results_and_structured_status(self):
+        lines = [
+            _codex_line("assistant", _tool_use("h1", "execute_code")),
+            _codex_line(
+                "user",
+                _tool_result("h1", '{"status":"success","output":"ok"}'),
+            ),
+            _codex_line("assistant", _tool_use("h2", "session_search")),
+            _codex_line(
+                "user",
+                _tool_result("h2", '{"success":false,"error":"database unavailable"}'),
+            ),
+        ]
+        path = self._write("chat.jsonl", "\n".join(lines) + "\n")
+
+        metrics = parse_tool_metrics(path, "hermesagent")
+
+        self.assertEqual(metrics["total"], 2)
+        self.assertEqual(metrics["success"], 1)
+        self.assertEqual(metrics["failure"], 1)
+        self.assertEqual(metrics["format_error"], 0)
+
     def test_unregistered_harness_returns_empty(self):
         path = self._write("chat.jsonl", _codex_line("assistant", _tool_use("x", "foo")))
         m = parse_tool_metrics(path, "openclaw")
