@@ -12,7 +12,7 @@ class TaskTemplateV2Test(unittest.TestCase):
     def test_optional_executable_sections_require_an_empty_body_when_unused(self) -> None:
         content = TEMPLATE.read_text(encoding="utf-8")
 
-        for section in ("Automated Checks", "Skills", "Warmup"):
+        for section in ("Automated Checks", "Skills", "Env", "Warmup"):
             with self.subTest(section=section):
                 self.assertIn(
                     f"`## {section}` 不涉及时必须保留标题并将正文置空",

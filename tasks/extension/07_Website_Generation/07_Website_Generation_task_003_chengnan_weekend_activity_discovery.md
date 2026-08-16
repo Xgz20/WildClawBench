@@ -181,6 +181,4 @@ workspace/extension/07_Website_Generation/task_003_chengnan_weekend_activity_dis
 
 ## Env
 
-无
-
 ## Warmup

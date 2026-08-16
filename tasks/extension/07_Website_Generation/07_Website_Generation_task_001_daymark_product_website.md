@@ -181,6 +181,4 @@ workspace/extension/07_Website_Generation/task_001_daymark_product_website
 
 ## Env
 
-无
-
 ## Warmup

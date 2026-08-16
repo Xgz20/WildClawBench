@@ -165,16 +165,17 @@ class WebsiteGenerationTaskContractTest(unittest.TestCase):
                 for fragment in required_fragments:
                     self.assertIn(fragment, task["prompt"])
 
-    def test_web_tasks_do_not_declare_unused_checks_warmup_or_skills(self) -> None:
+    def test_web_tasks_leave_unused_execution_sections_empty(self) -> None:
         for path in sorted(TASKS_DIR.glob("*.md")):
             task = parse_task_md(path)
             sections = load_sections(path)
 
             with self.subTest(task_id=task["task_id"]):
                 self.assertEqual(task["automated_checks"], "")
+                self.assertEqual(task["env"], "")
                 self.assertEqual(task["warmup"], "")
                 self.assertEqual(task["skills"], "")
-                for section in ("Automated Checks", "Skills", "Warmup"):
+                for section in ("Automated Checks", "Skills", "Env", "Warmup"):
                     self.assertEqual(sections.get(section), "")
 
     def test_web_task_workspace_section_contains_only_the_workspace_path(self) -> None:

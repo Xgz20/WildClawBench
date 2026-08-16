@@ -191,6 +191,4 @@ workspace/extension/07_Website_Generation/task_004_orchard_memory_game
 
 ## Env
 
-无
-
 ## Warmup

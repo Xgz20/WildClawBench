@@ -359,6 +359,4 @@ workspace/extension/07_Website_Generation/task_011_love_anniversary_site
 
 ## Env
 
-无
-
 ## Warmup
