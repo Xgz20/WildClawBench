@@ -61,8 +61,16 @@ def _normalize_role_content_message(item: Any) -> dict[str, Any] | None:
         return None
 
     normalized = _message(role)
+    normalized_message = normalized["message"]
+    for key in ("id", "model", "stop_reason", "stop_sequence"):
+        value = item.get(key)
+        if value is not None:
+            normalized_message[key] = value
+    if isinstance(item.get("usage"), dict):
+        normalized_message["usage"] = _to_openclaw_usage(item["usage"])
+
     content = item.get("content", "")
-    blocks = normalized["message"]["content"]
+    blocks = normalized_message["content"]
 
     if isinstance(content, str):
         if content:
@@ -83,14 +91,131 @@ def _normalize_role_content_message(item: Any) -> dict[str, Any] | None:
                     parsed = _safe_json_loads(tool_input)
                     if parsed is not None:
                         tool_input = parsed
-                blocks.append(
-                    {
-                        "type": "tool_use",
-                        "name": str(block.get("name", block.get("tool_name", ""))),
-                        "input": tool_input,
-                    }
-                )
+                tool_use = {
+                    "type": "tool_use",
+                    "name": str(block.get("name", block.get("tool_name", ""))),
+                    "input": tool_input,
+                }
+                tool_id = block.get("id", block.get("tool_use_id"))
+                if tool_id is not None:
+                    tool_use["id"] = str(tool_id)
+                blocks.append(tool_use)
+                continue
+            if block_type == "tool_result":
+                tool_result = {
+                    "type": "tool_result",
+                    "tool_use_id": str(block.get("tool_use_id", "")),
+                    "content": block.get("content", ""),
+                }
+                if "is_error" in block:
+                    tool_result["is_error"] = bool(block.get("is_error"))
+                blocks.append(tool_result)
     return normalized
+
+
+def _normalize_claude_message_item(item: Any) -> dict[str, Any] | None:
+    if not isinstance(item, dict):
+        return None
+
+    nested_message = item.get("message")
+    if isinstance(nested_message, dict):
+        normalized = _normalize_role_content_message(nested_message)
+        if normalized is not None:
+            wrapper_id = item.get("uuid")
+            if wrapper_id is not None and "id" not in normalized["message"]:
+                normalized["message"]["id"] = str(wrapper_id)
+        return normalized
+
+    if isinstance(item.get("role"), str):
+        return _normalize_role_content_message(item)
+
+    wrapper_role = item.get("type")
+    if wrapper_role not in {"user", "assistant"}:
+        return None
+    if not isinstance(nested_message, (str, list)):
+        return None
+    return _normalize_role_content_message(
+        {
+            "role": wrapper_role,
+            "content": nested_message,
+            "id": item.get("uuid"),
+        }
+    )
+
+
+def _last_model_request_context(rows: list[Any]) -> tuple[int, list[dict[str, Any]]] | None:
+    last_index = -1
+    last_messages: list[Any] | None = None
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict) or row.get("event") != "model_request":
+            continue
+        payload = row.get("payload")
+        if not isinstance(payload, dict) or not isinstance(payload.get("messages"), list):
+            continue
+        last_index = index
+        last_messages = payload["messages"]
+
+    if last_messages is None:
+        return None
+
+    normalized = []
+    for item in last_messages:
+        message = _normalize_claude_message_item(item)
+        if message is not None:
+            normalized.append(message)
+    return last_index, normalized
+
+
+def _complete_message_from_row(row: Any) -> dict[str, Any] | None:
+    if not isinstance(row, dict):
+        return None
+
+    candidate: Any = row
+    if row.get("event") == "query_yield":
+        payload = row.get("payload")
+        if not isinstance(payload, dict):
+            return None
+        candidate = payload.get("message")
+
+    if not isinstance(candidate, dict) or candidate.get("type") == "stream_event":
+        return None
+    return _normalize_claude_message_item(candidate)
+
+
+def _message_signature(item: dict[str, Any]) -> str:
+    message = item.get("message")
+    if not isinstance(message, dict):
+        return ""
+    return json.dumps(
+        {
+            "role": message.get("role"),
+            "content": message.get("content"),
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+
+
+def _append_unique_message(
+    normalized: list[dict[str, Any]],
+    candidate: dict[str, Any],
+) -> None:
+    candidate_message = candidate.get("message")
+    candidate_id = candidate_message.get("id") if isinstance(candidate_message, dict) else None
+    candidate_signature = _message_signature(candidate)
+
+    for existing in normalized:
+        existing_message = existing.get("message")
+        if not isinstance(existing_message, dict):
+            continue
+        existing_id = existing_message.get("id")
+        if candidate_id is not None and existing_id is not None:
+            if existing_id == candidate_id:
+                return
+            continue
+        if candidate_signature and _message_signature(existing) == candidate_signature:
+            return
+    normalized.append(candidate)
 
 
 def _extract_stream_event(row: dict[str, Any]) -> dict[str, Any] | None:
@@ -150,21 +275,23 @@ def _normalize_claude_event_rows(rows: list[Any]) -> list[dict[str, Any]]:
                 if isinstance(text, str) and text:
                     content.append({"type": "text", "text": text})
             elif block_type in ("tool_use", "toolCall"):
-                content.append(
-                    {
-                        "type": "tool_use",
-                        "name": str(block.get("name", "")),
-                        "input": block.get("input", {}),
-                    }
-                )
+                tool_use = {
+                    "type": "tool_use",
+                    "name": str(block.get("name", "")),
+                    "input": block.get("input", {}),
+                }
+                if block.get("id") is not None:
+                    tool_use["id"] = str(block["id"])
+                content.append(tool_use)
             elif block_type == "tool_result":
-                content.append(
-                    {
-                        "type": "tool_result",
-                        "tool_use_id": str(block.get("tool_use_id", "")),
-                        "content": block.get("content", ""),
-                    }
-                )
+                tool_result = {
+                    "type": "tool_result",
+                    "tool_use_id": str(block.get("tool_use_id", "")),
+                    "content": block.get("content", ""),
+                }
+                if "is_error" in block:
+                    tool_result["is_error"] = bool(block.get("is_error"))
+                content.append(tool_result)
 
         if content:
             normalized.append(message)
@@ -217,6 +344,7 @@ def _normalize_claude_event_rows(rows: list[Any]) -> list[dict[str, Any]]:
             elif block_type == "tool_use":
                 blocks_by_index[index] = {
                     "type": "tool_use",
+                    "id": content_block.get("id"),
                     "name": str(content_block.get("name", "")),
                     "input": content_block.get("input", {}),
                 }
@@ -227,6 +355,7 @@ def _normalize_claude_event_rows(rows: list[Any]) -> list[dict[str, Any]]:
                     "type": "tool_result",
                     "tool_use_id": str(content_block.get("tool_use_id", "")),
                     "content": content_block.get("content", ""),
+                    "is_error": content_block.get("is_error", False),
                 }
             continue
 
@@ -283,11 +412,32 @@ def convert_claudecode_chat_to_openclaw_jsonl(chat_path: Path, output_path: Path
     if openclaw_rows:
         normalized = openclaw_rows
     else:
-        normalized = _normalize_claude_event_rows(rows)
+        request_context = _last_model_request_context(rows)
+        if request_context is not None:
+            request_index, normalized = request_context
+            complete_assistants: list[dict[str, Any]] = []
+            for row in rows[request_index + 1 :]:
+                candidate = _complete_message_from_row(row)
+                if (
+                    candidate is not None
+                    and candidate["message"].get("role") == "assistant"
+                ):
+                    complete_assistants.append(candidate)
+
+            if complete_assistants:
+                for candidate in complete_assistants:
+                    _append_unique_message(normalized, candidate)
+            else:
+                for candidate in _normalize_claude_event_rows(rows[request_index + 1 :]):
+                    if candidate["message"].get("role") == "assistant":
+                        _append_unique_message(normalized, candidate)
+        else:
+            normalized = _normalize_claude_event_rows(rows)
+
         if not normalized:
             role_messages: list[dict[str, Any]] = []
             for row in rows:
-                normalized_row = _normalize_role_content_message(row)
+                normalized_row = _normalize_claude_message_item(row)
                 if normalized_row is not None:
                     role_messages.append(normalized_row)
             normalized = role_messages

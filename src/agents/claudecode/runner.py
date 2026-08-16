@@ -7,6 +7,7 @@ import shlex
 import subprocess
 import tempfile
 import time
+from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -23,6 +24,79 @@ logger = logging.getLogger(__name__)
 CLAUDECODE_SKILLS_DIR = "/root/.claude/skills"
 CLAUDECODE_COMPAT_TRANSCRIPT_PATH = "/tmp/claudecode/openclaw_chat.jsonl"
 OPENCLAW_COMPAT_TRANSCRIPT_PATH = "/root/.openclaw/agents/main/sessions/chat.jsonl"
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def append_agent_log_event(output_dir: Path, event: dict[str, Any]) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    enriched = {"timestamp": _now_iso(), **event}
+    with (output_dir / "agent.log").open("a", encoding="utf-8") as log_file:
+        log_file.write(json.dumps(enriched, ensure_ascii=False) + "\n")
+
+
+def write_execution_status(output_dir: Path, **updates: Any) -> dict[str, Any]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    status_path = output_dir / "execution_status.json"
+    status: dict[str, Any] = {}
+    if status_path.exists():
+        try:
+            status = json.loads(status_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            status = {}
+
+    previous_stage = str(status.get("status") or "")
+    next_status = str(updates.get("status") or "")
+    if (
+        next_status in {"error", "timed_out"}
+        and "failure_stage" not in updates
+        and previous_stage
+        and previous_stage not in {"error", "timed_out", "finished"}
+    ):
+        updates["failure_stage"] = previous_stage
+
+    status.update(updates)
+    status["updated_at"] = _now_iso()
+    status_path.write_text(
+        json.dumps(status, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    return status
+
+
+def initialize_host_run_artifacts(
+    output_dir: Path,
+    task_id: str,
+    model: str,
+    timeout_seconds: int,
+    *,
+    image: str,
+) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "agent.log").touch(exist_ok=True)
+    write_execution_status(
+        output_dir,
+        task_id=task_id,
+        harness="claudecode",
+        image=image,
+        model=model,
+        timeout_seconds=timeout_seconds,
+        status="created",
+        started_at=_now_iso(),
+        timed_out=False,
+        exit_code=None,
+        error=None,
+    )
+    append_agent_log_event(
+        output_dir,
+        {
+            "type": "runner.status",
+            "stage": "created",
+            "message": "Host-side run artifacts initialized before container startup.",
+        },
+    )
 
 
 class ClaudeCodeAgent(BaseAgent):
@@ -141,19 +215,38 @@ class ClaudeCodeAgent(BaseAgent):
         elapsed_time = float(spec.timeout_seconds)
         start_time = time.perf_counter()
         task_id = spec.task_id
+        initialize_host_run_artifacts(
+            output_dir=spec.output_dir,
+            task_id=task_id,
+            model=spec.model,
+            timeout_seconds=spec.timeout_seconds,
+            image=self.image,
+        )
 
         try:
+            write_execution_status(spec.output_dir, status="starting_container")
             self._start_container(task_id, spec.workspace_path)
+            write_execution_status(
+                spec.output_dir,
+                status="container_started",
+                harness_version=self._probe_harness_version(task_id),
+            )
+            write_execution_status(spec.output_dir, status="preparing_workspace")
             self._prepare_workspace(task_id)
             self._copy_tmp_files(task_id, spec.workspace_path)
+            write_execution_status(spec.output_dir, status="preparing_skills")
             setup_skills(
                 task_id,
                 spec.task.get("skills", ""),
                 spec.task.get("skills_path", ""),
                 container_skills_root=CLAUDECODE_SKILLS_DIR,
             )
+            write_execution_status(spec.output_dir, status="preparing_warmup")
             run_warmup(task_id, spec.task.get("warmup", ""))
+            write_execution_status(spec.output_dir, status="snapshotting_workspace")
             snapshot_workspace_state(task_id)
+            write_execution_status(spec.output_dir, status="preparing_harness_input")
+            write_execution_status(spec.output_dir, status="claudecode_running")
             self._run_prompt(
                 task_id,
                 spec.prompt,
@@ -163,17 +256,57 @@ class ClaudeCodeAgent(BaseAgent):
                 thinking=spec.thinking,
             )
             elapsed_time = time.perf_counter() - start_time
+            write_execution_status(
+                spec.output_dir,
+                status="finished",
+                timed_out=False,
+                elapsed_time=round(elapsed_time, 2),
+                exit_code=0,
+            )
             return AgentExecution(elapsed_time=elapsed_time, error=None, gateway_proc=None, agent_proc=None)
         except subprocess.TimeoutExpired:
             logger.info("[%s] ClaudeCode timed out...", task_id)
+            elapsed_time = float(spec.timeout_seconds)
+            append_agent_log_event(
+                spec.output_dir,
+                {
+                    "type": "runner.timeout",
+                    "message": f"ClaudeCode timed out after {spec.timeout_seconds} seconds.",
+                    "timeout_seconds": spec.timeout_seconds,
+                    "elapsed_time": elapsed_time,
+                },
+            )
+            write_execution_status(
+                spec.output_dir,
+                status="timed_out",
+                timed_out=True,
+                elapsed_time=round(elapsed_time, 2),
+                error="ClaudeCode run timed out",
+            )
             return AgentExecution(
-                elapsed_time=float(spec.timeout_seconds),
+                elapsed_time=elapsed_time,
                 error="ClaudeCode run timed out",
                 gateway_proc=None,
                 agent_proc=None,
             )
         except Exception as exc:
             logger.error("[%s] ClaudeCode execution error: %s", task_id, exc)
+            elapsed_time = time.perf_counter() - start_time
+            append_agent_log_event(
+                spec.output_dir,
+                {
+                    "type": "runner.error",
+                    "stage": "claudecode_execution",
+                    "message": str(exc),
+                    "elapsed_time": round(elapsed_time, 2),
+                },
+            )
+            write_execution_status(
+                spec.output_dir,
+                status="error",
+                error=str(exc),
+                elapsed_time=round(elapsed_time, 2),
+            )
             return AgentExecution(
                 elapsed_time=elapsed_time,
                 error=str(exc),
@@ -201,12 +334,45 @@ class ClaudeCodeAgent(BaseAgent):
         self._copy_dir_from_container(task_id, "/claude_code/log/.", log_dest)
         self._sync_agent_log_from_claude_logs(task_id, output_dir, log_dest)
 
-        parsed = self._extract_usage_from_chat_json(log_dest / "chat.json")
-        if parsed["request_count"] == 0:
+        # Keep the native JSONL log under claude_code_log and expose the
+        # normalized OpenClaw-shaped transcript at the run root for graders,
+        # anomaly scanning, replay, and report generation.
+        convert_claudecode_chat_to_openclaw_jsonl(
+            log_dest / "chat.json",
+            output_dir / "chat.jsonl",
+        )
+
+        chat_parsed = self._extract_usage_from_chat_json(log_dest / "chat.json")
+        if any(
+            chat_parsed.get(key, 0) > 0
+            for key in (
+                "input_tokens",
+                "output_tokens",
+                "cache_read_tokens",
+                "cache_write_tokens",
+                "cost_usd",
+            )
+        ):
+            parsed = chat_parsed
+        else:
             parsed = self._extract_usage_from_usage_json(log_dest / "usage.json")
-        if parsed["request_count"] == 0:
-            parsed["request_count"] = self._extract_request_count_from_chat_json(log_dest / "chat.json")
-        if parsed["request_count"] == 0:
+
+        authoritative_request_count = self._extract_request_count_from_chat_json(
+            log_dest / "chat.json"
+        )
+        if authoritative_request_count > 0:
+            parsed["request_count"] = authoritative_request_count
+
+        if not any(
+            parsed.get(key, 0) > 0
+            for key in (
+                "input_tokens",
+                "output_tokens",
+                "cache_read_tokens",
+                "cache_write_tokens",
+                "cost_usd",
+            )
+        ):
             fallback = self._extract_usage_from_logs(log_dest)
             for key in (
                 "input_tokens",
@@ -221,6 +387,8 @@ class ClaudeCodeAgent(BaseAgent):
                 fallback_value = fallback.get(key, 0)
                 if (parsed_value is None or parsed_value <= 0) and fallback_value > 0:
                     parsed[key] = fallback_value
+            if authoritative_request_count > 0:
+                parsed["request_count"] = authoritative_request_count
 
         usage.update(parsed)
         usage["elapsed_time"] = round(elapsed_time, 2)
@@ -638,39 +806,81 @@ PY"""
         except Exception:
             return 0
 
+        rows: list[Any] = []
         try:
             payload = json.loads(content)
         except Exception:
             payload = None
 
         if isinstance(payload, list):
-            assistant_messages = [
-                m
-                for m in payload
-                if isinstance(m, dict)
-                and str(m.get("role", "")).lower() == "assistant"
-            ]
-            return len(assistant_messages)
+            rows = payload
+        elif isinstance(payload, dict):
+            rows = [payload]
+        else:
+            for line in content.splitlines():
+                line = line.strip()
+                if not line.startswith("{"):
+                    continue
+                try:
+                    row = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                rows.append(row)
 
-        if isinstance(payload, dict):
-            if str(payload.get("event", "")).lower() == "query_start":
-                return 1
-            return 0
+        model_requests = sum(
+            1
+            for row in rows
+            if isinstance(row, dict)
+            and str(row.get("event", "")).lower() == "model_request"
+        )
+        if model_requests > 0:
+            return model_requests
 
-        count = 0
-        for line in content.splitlines():
-            line = line.strip()
-            if not line.startswith("{"):
-                continue
-            try:
-                row = json.loads(line)
-            except Exception:
-                continue
-            if isinstance(row, dict) and str(row.get("event", "")).lower() == "query_start":
-                count += 1
-        if count > 0:
-            return count
-        return 0
+        query_starts = sum(
+            1
+            for row in rows
+            if isinstance(row, dict)
+            and str(row.get("event", "")).lower() == "query_start"
+        )
+        if query_starts > 0:
+            return query_starts
+
+        return sum(
+            1
+            for row in rows
+            if isinstance(row, dict)
+            and str(row.get("role", "")).lower() == "assistant"
+        )
+
+    @staticmethod
+    def _probe_harness_version(task_id: str) -> str:
+        try:
+            result = subprocess.run(
+                [
+                    "docker",
+                    "exec",
+                    task_id,
+                    "node",
+                    "-p",
+                    "require('/claude_code/package.json').version",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            logger.warning("[%s] ClaudeCode version probe failed: %s", task_id, exc)
+            return ""
+        if result.returncode != 0:
+            logger.warning(
+                "[%s] ClaudeCode package version probe returned %s: %s",
+                task_id,
+                result.returncode,
+                (result.stderr or result.stdout).strip(),
+            )
+            return ""
+        first_line = (result.stdout or "").strip().splitlines()
+        return first_line[0].split()[-1] if first_line else ""
 
     def _num(self, value: Any, default: float = 0.0) -> float:
         if value is None:

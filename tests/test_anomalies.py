@@ -856,11 +856,13 @@ class AnomalyDetectionTest(unittest.TestCase):
 
     def test_harness_adapters_preserve_failure_stage(self) -> None:
         from src.agents.astroncode.runner import write_execution_status as write_astroncode
+        from src.agents.claudecode.runner import write_execution_status as write_claudecode
         from src.agents.codex.runner import write_execution_status as write_codex
         from src.agents.opencode.runner import write_execution_status as write_opencode
 
         with tempfile.TemporaryDirectory() as temp:
-            for index, writer in enumerate((write_astroncode, write_codex, write_opencode)):
+            writers = (write_astroncode, write_claudecode, write_codex, write_opencode)
+            for index, writer in enumerate(writers):
                 run_dir = Path(temp) / str(index)
                 writer(run_dir, status="preparing_workspace")
                 status = writer(run_dir, status="error", error="preparation failed")
