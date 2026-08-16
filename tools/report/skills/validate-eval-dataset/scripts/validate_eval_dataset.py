@@ -183,6 +183,74 @@ def validate_extension_registry(repo_root: Path, selected: list[Path]) -> list[I
     return []
 
 
+_ISSUE_ACTIONS = {
+    "FRONTMATTER_INVALID": "修正 YAML frontmatter，并重新运行静态校验",
+    "FRONTMATTER_FIELD_MISSING": "补齐框架必需的 frontmatter 字段",
+    "FRONTMATTER_FIELD_TYPE": "修正 frontmatter 字段类型",
+    "CATEGORY_MISMATCH": "统一 frontmatter category、目录和任务 ID",
+    "TASK_ID_FILENAME_MISMATCH": "让文件名包含 frontmatter 中的 task ID",
+    "SECTION_MISSING": "补齐任务必需章节",
+    "AUTOMATED_CHECKS_INVALID": "补齐可静态解析的 grade()，不要依赖不可执行的作者代码",
+    "AUTOMATED_SCORE_KEYS_MISSING": "在 grade() 中返回稳定评分 key",
+    "RUBRIC_INVALID": "修正 rubric key、weight 或重复定义",
+    "RUBRIC_MISSING": "补齐与 grading_type 匹配的 LLM Judge Rubric",
+    "GRADING_WEIGHTS_INVALID": "补齐 hybrid 任务的 grading_weights",
+    "WORKSPACE_OUTSIDE_REPO": "将 Workspace Path 收敛到允许的仓库/运行时范围",
+    "WORKSPACE_NOT_FOUND": "创建 Workspace 或修正 Workspace Path",
+    "WORKSPACE_RESOURCE_MISSING": "补齐任务引用的 exec、gt、附件或输入文件",
+    "SKILL_NOT_FOUND": "补齐声明的 Skill/SKILL.md 或修正 Skill 名称",
+    "ENV_NAME_INVALID": "使用合法的 POSIX 环境变量名",
+    "ENV_DUPLICATE": "删除重复 Env 声明",
+    "ENV_MISSING": "在评测运行环境注入声明的 Env（报告不会显示变量值）",
+    "WARMUP_EMPTY": "补齐 Warmup，或删除不需要的 Warmup 章节",
+    "WARMUP_REFERENCE_MISSING": "补齐 Warmup 引用脚本/文件",
+    "WARMUP_SHELL_INVALID": "修正 Warmup shell 语法",
+    "EXTENSION_REGISTRY_MISSING": "补齐 tasks/extension/task_sources.yaml",
+    "EXTENSION_REGISTRY_INVALID": "修正扩展集任务注册表",
+}
+
+
+def build_action_summary(task_ids: list[str], issues: list[Issue]) -> dict[str, Any]:
+    grouped: dict[str, list[Issue]] = {}
+    global_actions: list[str] = []
+    for issue in issues:
+        if issue.task_id:
+            grouped.setdefault(issue.task_id, []).append(issue)
+        else:
+            action = _ISSUE_ACTIONS.get(issue.code, issue.message)
+            if action not in global_actions:
+                global_actions.append(action)
+    to_fix: list[dict[str, Any]] = []
+    to_review: list[dict[str, Any]] = []
+    for task_id in sorted(set(task_ids) | set(grouped)):
+        task_issues = grouped.get(task_id, [])
+        if not task_issues:
+            continue
+        fail_issues = [issue for issue in task_issues if issue.severity in {FAIL, "error"}]
+        review_issues = [issue for issue in task_issues if issue.severity in {REVIEW, "warning"}]
+        codes = sorted({issue.code for issue in task_issues})
+        actions = list(dict.fromkeys(_ISSUE_ACTIONS.get(code, "检查该用例对应的校验问题") for code in codes))
+        item = {"task_id": task_id, "issue_codes": codes, "recommendations": actions, "locations": sorted({issue.location for issue in task_issues if issue.location})}
+        if fail_issues:
+            to_fix.append(item)
+        elif review_issues:
+            to_review.append({"task_id": task_id, "reasons": codes, "recommendation": "人工确认该预置条件或安全边界是否符合实际评测环境"})
+    if to_fix:
+        decision = "先修复需要修改的用例，再重新运行静态校验。"
+    elif to_review:
+        decision = "静态契约未发现确定性错误，但需要人工确认 REVIEW 用例。"
+    else:
+        decision = "选定范围内未发现静态校验问题。"
+    return {
+        "decision": decision,
+        "counts": {"tasks_to_fix": len(to_fix), "tasks_for_review": len(to_review), "tasks_pass": max(0, len(set(task_ids)) - len(to_fix) - len(to_review))},
+        "tasks_to_fix": to_fix,
+        "tasks_for_review": to_review,
+        "tasks_pass": sorted(set(task_ids) - {item["task_id"] for item in to_fix} - {item["task_id"] for item in to_review}),
+        "global_actions": global_actions,
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--task-dir", action="append", default=[])
@@ -200,14 +268,17 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     selection = select_task_files(REPO_ROOT, task_dirs=args.task_dir, task_paths=args.task_path, task_ids=args.task_id, default_root="tasks")
     issues = list(selection.issues)
+    task_ids: list[str] = []
     for path in selection.files:
         try:
-            issues.extend(validate_document(parse_task_document(path), REPO_ROOT, smoke=args.smoke, warmup_image=args.warmup_image))
+            document = parse_task_document(path)
+            task_ids.append(document.task_id)
+            issues.extend(validate_document(document, REPO_ROOT, smoke=args.smoke, warmup_image=args.warmup_image))
         except (OSError, UnicodeError) as exc:
             issues.append(Issue(FAIL, "TASK_READ_ERROR", str(exc), location=str(path)))
     issues.extend(validate_extension_registry(REPO_ROOT, selection.files))
     status = status_for_issues(issues)
-    report = Report(1, status, {"repo": str(REPO_ROOT), "tasks": [str(path) for path in selection.files], "selectors": selection.selectors, "smoke": args.smoke}, {"task_count": len(selection.files), "issue_count": len(issues)}, issues)
+    report = Report(1, status, {"repo": str(REPO_ROOT), "tasks": [str(path) for path in selection.files], "selectors": selection.selectors, "smoke": args.smoke}, {"task_count": len(selection.files), "issue_count": len(issues), "action_summary": build_action_summary(task_ids, issues)}, issues)
     target = write_report(report, repo_root=REPO_ROOT, kind="static", output_dir=args.output_dir)
     print(target)
     return exit_code(status, fail_on_review=args.fail_on == "review")

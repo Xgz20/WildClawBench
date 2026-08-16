@@ -24,7 +24,86 @@ def default_output_dir(repo_root: Path, kind: str) -> Path:
 def _markdown(report: Report) -> str:
     lines = [f"# Eval Dataset {report.status}", "", f"- Schema: `{report.schema_version}`", f"- Scope: `{json.dumps(sanitize_evidence(report.scope), ensure_ascii=False, sort_keys=True)}`", "", "## Summary", ""]
     if report.summary:
-        lines.extend(f"- {key}: {json.dumps(sanitize_evidence(value), ensure_ascii=False)}" for key, value in report.summary.items())
+        verbose_keys = {"action_summary", "common_zero_candidates", "model_comparison", "harness_comparison", "difficulty", "stability", "task_scores"}
+        for key, value in report.summary.items():
+            if key in verbose_keys:
+                continue
+            lines.append(f"- {key}: {json.dumps(sanitize_evidence(value), ensure_ascii=False)}")
+    action_summary = report.summary.get("action_summary") if isinstance(report.summary, dict) else None
+    if isinstance(action_summary, dict):
+        lines.extend(["", "## 结论摘要", ""])
+        if action_summary.get("decision"):
+            lines.append(f"**处理建议：** {sanitize_evidence(action_summary['decision'])}")
+            lines.append("")
+        counts = action_summary.get("counts", {})
+        if counts:
+            lines.append("| 类别 | 用例数 |")
+            lines.append("|---|---:|")
+            for key, label in (("tasks_to_fix", "需要修改"), ("tasks_for_review", "需要人工审核"), ("tasks_pass", "未发现问题")):
+                lines.append(f"| {label} | {counts.get(key, 0)} |")
+        for key, heading, columns in (
+            ("tasks_to_fix", "需要修改的用例", ("task_id", "issue_codes", "recommendations")),
+            ("tasks_for_review", "需要人工审核的用例", ("task_id", "reasons", "recommendation")),
+        ):
+            items = action_summary.get(key) or []
+            lines.extend(["", f"### {heading}", ""])
+            if not items:
+                lines.append("- 无")
+                continue
+            lines.append("| 用例 | 问题/原因 | 建议 |")
+            lines.append("|---|---|---|")
+            for item in items:
+                task_id = sanitize_evidence(item.get("task_id", ""))
+                reason = item.get("issue_codes") or item.get("reasons") or []
+                recommendation = item.get("recommendations") or item.get("recommendation") or ""
+                if isinstance(reason, list):
+                    reason = "、".join(str(value) for value in reason)
+                if isinstance(recommendation, list):
+                    recommendation = "；".join(str(value) for value in recommendation)
+                lines.append(f"| `{task_id}` | {sanitize_evidence(reason)} | {sanitize_evidence(recommendation)} |")
+        if action_summary.get("global_actions"):
+            lines.extend(["", "### 全局问题", ""])
+            lines.extend(f"- {sanitize_evidence(item)}" for item in action_summary["global_actions"])
+
+    model_comparison = report.summary.get("model_comparison") if isinstance(report.summary, dict) else None
+    if isinstance(model_comparison, dict):
+        lines.extend(["", "## 模型区分度", ""])
+        lines.append("| 模型 A | 模型 B | 共同任务数 | 平均分差 | 平均绝对分差 | 可区分比例 |")
+        lines.append("|---|---|---:|---:|---:|---:|")
+        for item in model_comparison.get("pairwise", []):
+            lines.append(f"| `{item.get('left', '')}` | `{item.get('right', '')}` | {item.get('common_tasks', 0)} | {item.get('mean_gap', 0):.4f} | {item.get('mean_abs_gap', 0):.4f} | {item.get('separable_rate', 0):.1%} |")
+        if not model_comparison.get("pairwise"):
+            lines.append("- 无共同模型任务可比较。")
+
+    harness_comparison = report.summary.get("harness_comparison") if isinstance(report.summary, dict) else None
+    if isinstance(harness_comparison, dict):
+        lines.extend(["", "## Harness 敏感性", ""])
+        harnesses = harness_comparison.get("harnesses", [])
+        lines.append(f"- Harness 数量：{len(harnesses)}（{', '.join(f'`{item}`' for item in harnesses)}）")
+        if len(harnesses) < 2:
+            lines.append("- 当前无法评估 Harness 敏感性：至少需要两个 Harness 的控制变量结果。")
+        else:
+            lines.append(f"- 可比较 Harness 对数：{len(harness_comparison.get('pairwise', []))}")
+
+    difficulty = report.summary.get("difficulty") if isinstance(report.summary, dict) else None
+    if isinstance(difficulty, dict):
+        lines.extend(["", "## 难度与梯度", ""])
+        lines.append(f"- 已统计任务数：{len(difficulty.get('tasks', {}))}")
+        lines.append(f"- 难度倒挂对数：{len(difficulty.get('inversions', []))}")
+
+    candidates = report.summary.get("common_zero_candidates") if isinstance(report.summary, dict) else None
+    if isinstance(candidates, list):
+        lines.extend(["", "## 多模型共同低分候选", ""])
+        if not candidates:
+            lines.append("- 当前没有满足共同低分候选阈值的任务。")
+        else:
+            lines.append("| 用例 | model@harness 数 | 轨迹假设 | 轨迹信号 |")
+            lines.append("|---|---:|---|---|")
+            for item in candidates:
+                signals = item.get("trace_signal_counts", {})
+                signal_text = ", ".join(f"{key}={value}" for key, value in signals.items() if value)
+                lines.append(f"| `{sanitize_evidence(item.get('task_id', ''))}` | {item.get('unit_count', 0)} | {sanitize_evidence(item.get('hypothesis', ''))} | `{sanitize_evidence(signal_text)}` |")
+
     lines.extend(["", "## Issues", ""])
     if not report.issues:
         lines.append("- None")

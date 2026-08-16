@@ -8,3 +8,5 @@
 6. Env 每行只解析变量名，检查 POSIX 名称、重复声明和当前进程存在性；报告永远只包含 `present/missing`。
 7. Warmup 默认只做 shell 语法可读性、引用文件和危险模式检查；空的已声明 Warmup、不可解析脚本和宿主机删除/提权/网络/daemon 命令均须显式报告。`--smoke` 的运行边界见脚本与 `smoke.py`。
 8. `tasks/extension/task_sources.yaml` 存在时校验 YAML 可读和 `tasks` 映射；缺失或任务 ID 无法追溯为 `FAIL`。
+
+报告解读：`summary.action_summary.tasks_to_fix` 是确定性问题清单，应修复后重跑；`tasks_for_review` 是需要人工确认的边界问题；`tasks_pass` 只表示当前规则下未发现问题，不等于质量已被统计证明。

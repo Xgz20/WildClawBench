@@ -9,7 +9,9 @@ from typing import Any
 SECRET_NAME_RE = re.compile(r"(?i)(?:key|token|secret|password|credential)")
 ENV_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 SECRET_VALUE_RE = re.compile(
-    r"(?i)(?:bearer\s+|sk-)[A-Za-z0-9._~+/-]{8,}|(?:api[_-]?key|token|secret|password)\s*[=:]\s*[^\s,;]+"
+    # Require a token boundary before sk-/Bearer so ordinary task IDs such
+    # as `task-common-zero` are not mistaken for API keys.
+    r"(?i)(?<![A-Za-z0-9])(?:bearer\s+|sk-)[A-Za-z0-9._~+/-]{8,}|(?:api[_-]?key|token|secret|password)\s*[=:]\s*[^\s,;]+"
 )
 
 

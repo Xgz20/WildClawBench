@@ -35,3 +35,4 @@ def test_status_and_secret_safe_evidence():
     assert status_for_issues([Issue(FAIL, "X", "fail")]) == FAIL
     assert exit_code(PASS) == 0 and exit_code(REVIEW) == 0 and exit_code(FAIL) == 1 and exit_code(PASS, argument_error=True) == 2
     assert sanitize_evidence({"OPENROUTER_API_KEY": "sk-secret-value", "message": "Bearer abcdefghijk"}) == {"OPENROUTER_API_KEY": "[REDACTED]", "message": "[REDACTED]"}
+    assert sanitize_evidence({"task_id": "task-common-zero"}) == {"task_id": "task-common-zero"}

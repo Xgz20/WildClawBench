@@ -11,6 +11,7 @@ _SPEC = importlib.util.spec_from_file_location(
 _MODULE = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_MODULE)
 validate_document = _MODULE.validate_document
+build_action_summary = _MODULE.build_action_summary
 
 
 def _write(path: Path, body: str) -> Path:
@@ -88,3 +89,18 @@ Do it
     assert not any(issue.code == "SKILL_NOT_FOUND" for issue in issues)
     assert not any(issue.code == "ENV_NAME_INVALID" for issue in issues)
     assert any(issue.code == "WARMUP_EMPTY" for issue in issues)
+
+
+def test_static_action_summary_groups_fix_and_review_tasks():
+    from tools.report.lib.eval_dataset.contracts import Issue, FAIL, REVIEW
+
+    summary = build_action_summary(
+        ["task-fix", "task-review", "task-pass"],
+        [
+            Issue(FAIL, "ENV_MISSING", "missing", task_id="task-fix"),
+            Issue(REVIEW, "WARMUP_DANGEROUS", "review", task_id="task-review"),
+        ],
+    )
+    assert summary["counts"] == {"tasks_to_fix": 1, "tasks_for_review": 1, "tasks_pass": 1}
+    assert summary["tasks_to_fix"][0]["task_id"] == "task-fix"
+    assert summary["tasks_for_review"][0]["task_id"] == "task-review"

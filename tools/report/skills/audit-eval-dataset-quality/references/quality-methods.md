@@ -6,3 +6,5 @@
 - Harness 敏感性要求至少两个 Harness，并固定同一模型与任务交集。单 Harness 只报告样本不足，不把模型差异改写成 Harness 结论。
 - 多 run 才计算总体标准差；单 run 标记稳定性证据不足。`run_metadata.json.supersedes_run` 通过 `src.utils.run_selection.select_effective_run_dirs()` 排除被替代 run。
 - `difficulty` 是标签而非等距量。分组均值倒挂只产生 `REVIEW`，报告样本量和任务构成，不自动修改标签或发布门禁。
+- 多个有效 model@harness 在同一任务共同接近 0 分时，报告会有限扫描轨迹中的完成/错误/评分契约信号；这只能形成“疑似检查点过严”候选，必须人工对照轨迹、`Automated Checks`、`LLM Judge Rubric` 和 ground truth。
+- `report.json.summary.action_summary` 和 Markdown 的“结论摘要”按 task ID 聚合为需要修改、需要人工审核和未发现问题三类，不应用问题数量代替质量分。
