@@ -64,6 +64,6 @@ output_qwen.rar
 !.agents/skills/validate-eval-dataset
 !.agents/skills/audit-eval-dataset-quality
 
-# 评测集校验 Skill 的运行产物
-report-workspace/eval-dataset/
+# 评测集校验 Skill 及报告工具的运行产物
+report-workspace/
 .superpowers
