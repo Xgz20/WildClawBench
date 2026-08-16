@@ -8,6 +8,7 @@ import shlex
 import subprocess
 import tempfile
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -35,7 +36,98 @@ HERMES_VENV_PYTHON = "/opt/hermes/.venv/bin/python3"
 OPENCLAW_COMPAT_TRANSCRIPT_PATH = "/root/.openclaw/agents/main/sessions/chat.jsonl"
 BENCH_RUNNER_HOST_PATH = Path(__file__).with_name("bench_runner.py")
 BENCH_CONFIG_CONTAINER_PATH = "/tmp/hermes_bench_config.json"
+BENCH_RESULT_CONTAINER_PATH = "/tmp/hermes_bench_result.json"
 COMPAT_TRANSCRIPT_HOST_PATH = Path(__file__).with_name("compat_transcript.py")
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def write_execution_status(output_dir: Path, **updates: Any) -> dict[str, Any]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    status_path = output_dir / "execution_status.json"
+    status: dict[str, Any] = {}
+    if status_path.exists():
+        try:
+            loaded = json.loads(status_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                status = loaded
+        except (OSError, json.JSONDecodeError):
+            status = {}
+
+    previous_stage = str(status.get("status") or "")
+    next_status = str(updates.get("status") or "")
+    if (
+        next_status in {"error", "timed_out"}
+        and "failure_stage" not in updates
+        and previous_stage
+        and previous_stage not in {"error", "timed_out", "finished"}
+    ):
+        updates["failure_stage"] = previous_stage
+
+    status.update(updates)
+    status["updated_at"] = _now_iso()
+    serialized = json.dumps(status, indent=2, ensure_ascii=False)
+    fd, temporary_name = tempfile.mkstemp(
+        prefix=f".{status_path.name}.", suffix=".tmp", dir=output_dir
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(serialized)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary_name, status_path)
+    finally:
+        Path(temporary_name).unlink(missing_ok=True)
+    return status
+
+
+def initialize_host_run_artifacts(
+    output_dir: Path,
+    task_id: str,
+    model: str,
+    timeout_seconds: int,
+    *,
+    image: str,
+    max_tokens: int | None,
+) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "agent.log").touch(exist_ok=True)
+    write_execution_status(
+        output_dir,
+        task_id=task_id,
+        harness="hermesagent",
+        image=image,
+        model=model,
+        timeout_seconds=timeout_seconds,
+        max_tokens=max_tokens,
+        status="created",
+        started_at=_now_iso(),
+        timed_out=False,
+        exit_code=None,
+        error=None,
+        task_completed=None,
+        partial=False,
+        termination_reason=None,
+        completion_error=None,
+        api_calls=0,
+    )
+
+
+def _optional_positive_int_env(name: str) -> int | None:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return None
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.warning("Ignoring invalid %s=%r; using provider default", name, raw)
+        return None
+    if value <= 0:
+        logger.warning("Ignoring non-positive %s=%r; using provider default", name, raw)
+        return None
+    return value
 
 
 class HermesAgentAgent(BaseAgent):
@@ -50,6 +142,7 @@ class HermesAgentAgent(BaseAgent):
         self.openrouter_api_key = openrouter_api_key or os.environ.get("OPENROUTER_API_KEY", "")
         self.openrouter_base_url = openrouter_base_url
         self.brave_api_key = brave_api_key or os.environ.get("BRAVE_API_KEY", "")
+        self.max_tokens = _optional_positive_int_env("HERMES_MAX_TOKENS")
 
     @property
     def expects_gateway(self) -> bool:
@@ -65,7 +158,16 @@ class HermesAgentAgent(BaseAgent):
 
     def run_task(self, spec: AgentTaskSpec) -> AgentExecution:
         elapsed_time = float(spec.timeout_seconds)
-        agent_proc = None
+        start_time = time.perf_counter()
+        agent_proc: subprocess.Popen[str] | None = None
+        initialize_host_run_artifacts(
+            spec.output_dir,
+            spec.task_id,
+            spec.model,
+            spec.timeout_seconds,
+            image=self.image,
+            max_tokens=self.max_tokens,
+        )
 
         try:
             api_key, base_url = self._resolve_runtime_provider(spec.model, spec.models_config)
@@ -74,6 +176,7 @@ class HermesAgentAgent(BaseAgent):
             tmp_path = os.path.join(spec.workspace_path, "tmp")
             os.makedirs(exec_path, exist_ok=True)
 
+            write_execution_status(spec.output_dir, status="starting_container")
             self._start_container(
                 spec.task_id,
                 exec_path,
@@ -83,28 +186,36 @@ class HermesAgentAgent(BaseAgent):
                 tmp_path=tmp_path,
                 lobster_env=spec.lobster.get("env") if spec.lobster else None,
             )
+            write_execution_status(
+                spec.output_dir,
+                status="container_started",
+                harness_version=self._probe_harness_version(spec.task_id),
+            )
             if spec.lobster:
                 inject_lobster_workspace(spec.task_id, spec.lobster["workspace"])
 
+            write_execution_status(spec.output_dir, status="preparing_workspace")
             self._prepare_workspace(spec.task_id)
+            write_execution_status(spec.output_dir, status="preparing_skills")
             setup_skills(
                 spec.task_id,
                 spec.task.get("skills", ""),
                 spec.task.get("skills_path", ""),
                 container_skills_root=f"{HERMES_HOME}/skills",
             )
+            write_execution_status(spec.output_dir, status="preparing_warmup")
             run_warmup(spec.task_id, spec.task.get("warmup", ""))
 
+            write_execution_status(spec.output_dir, status="preparing_harness_input")
             self._configure_hermes(spec.task_id, api_key, base_url)
 
             reasoning_config = self._map_thinking(spec.thinking)
             self._write_bench_runner(
                 spec.task_id, spec.prompt, spec.model,
-                api_key, base_url, reasoning_config,
+                api_key, base_url, reasoning_config, self.max_tokens,
             )
 
-            start_time = time.perf_counter()
-
+            write_execution_status(spec.output_dir, status="hermesagent_running")
             agent_proc = self._run_bench_runner_background(
                 task_id=spec.task_id,
                 log_path=spec.output_dir / "agent.log",
@@ -124,10 +235,74 @@ class HermesAgentAgent(BaseAgent):
                 elapsed_time = float(spec.timeout_seconds)
                 agent_proc.kill()
                 agent_proc.wait()
-            self._close_runner_streams(agent_proc)
+                error = "HermesAgent run timed out"
+                write_execution_status(
+                    spec.output_dir,
+                    status="timed_out",
+                    timed_out=True,
+                    elapsed_time=round(elapsed_time, 2),
+                    exit_code=agent_proc.returncode,
+                    error=error,
+                    termination_reason="timeout",
+                )
+                return AgentExecution(
+                    elapsed_time=elapsed_time,
+                    error=error,
+                    gateway_proc=None,
+                    agent_proc=agent_proc,
+                )
 
             logger.info("[%s] hermes-agent exit code: %s", spec.task_id, agent_proc.returncode)
-            self._cleanup_bench_config(spec.task_id)
+            if agent_proc.returncode != 0:
+                error = self._process_error(
+                    agent_proc.returncode,
+                    spec.output_dir / "agent.log",
+                )
+                write_execution_status(
+                    spec.output_dir,
+                    status="error",
+                    timed_out=False,
+                    elapsed_time=round(elapsed_time, 2),
+                    exit_code=agent_proc.returncode,
+                    error=error,
+                    termination_reason="process_exit",
+                )
+                return AgentExecution(
+                    elapsed_time=elapsed_time,
+                    error=error,
+                    gateway_proc=None,
+                    agent_proc=agent_proc,
+                )
+
+            write_execution_status(spec.output_dir, status="collecting_artifacts")
+            bench_result = self._read_bench_result(spec.task_id)
+            completed = bool(bench_result.get("completed"))
+            partial = bool(bench_result.get("partial"))
+            completion_error = bench_result.get("error")
+            if completion_error is not None:
+                completion_error = str(completion_error)
+            # Hermes excludes some continuation/retry calls from this loop count.
+            # Report request_count remains derived from response logs in collect_usage().
+            api_calls = int(bench_result.get("api_calls") or 0)
+            termination_reason = self._termination_reason(
+                completed=completed,
+                partial=partial,
+                completion_error=completion_error,
+            )
+            write_execution_status(
+                spec.output_dir,
+                status="finished",
+                timed_out=False,
+                elapsed_time=round(elapsed_time, 2),
+                exit_code=0,
+                error=None,
+                task_completed=completed,
+                partial=partial,
+                termination_reason=termination_reason,
+                completion_error=completion_error,
+                api_calls=api_calls,
+                finished_at=_now_iso(),
+            )
 
             return AgentExecution(
                 elapsed_time=elapsed_time,
@@ -136,16 +311,25 @@ class HermesAgentAgent(BaseAgent):
                 agent_proc=agent_proc,
             )
         except Exception as exc:
-            if agent_proc is not None:
-                self._close_runner_streams(agent_proc)
-            self._cleanup_bench_config(spec.task_id)
+            elapsed_time = time.perf_counter() - start_time
             logger.error("[%s] hermes-agent execution error: %s", spec.task_id, exc)
+            write_execution_status(
+                spec.output_dir,
+                status="error",
+                timed_out=False,
+                elapsed_time=round(elapsed_time, 2),
+                exit_code=getattr(agent_proc, "returncode", None),
+                error=str(exc),
+            )
             return AgentExecution(
-                elapsed_time=float(spec.timeout_seconds),
+                elapsed_time=elapsed_time,
                 error=str(exc),
                 gateway_proc=None,
                 agent_proc=agent_proc,
             )
+        finally:
+            self._close_runner_streams(agent_proc)
+            self._cleanup_bench_config(spec.task_id)
 
     def collect_usage(self, task_id: str, output_dir: Path, elapsed_time: float) -> dict[str, Any]:
         transcript_host = output_dir / "chat.jsonl"
@@ -168,31 +352,36 @@ class HermesAgentAgent(BaseAgent):
 
         self._copy_session_log(task_id, output_dir)
 
+        usage.setdefault(
+            "cost_status",
+            "reported" if float(usage.get("cost_usd") or 0.0) > 0 else "unavailable",
+        )
         usage["elapsed_time"] = round(elapsed_time, 2)
-        # Record harness identity/version for traceability. HermesAgent has no
-        # execution_status.json flow, so write a minimal one here (container
-        # still alive at collect_usage time — see transcript docker cp above).
         self._write_harness_metadata(task_id, output_dir)
         return usage
 
     def _write_harness_metadata(self, task_id: str, output_dir: Path) -> None:
-        version = self._probe_harness_version(task_id)
-        status_path = output_dir / "execution_status.json"
-        status: dict[str, Any] = {}
-        if status_path.exists():
-            try:
-                status = json.loads(status_path.read_text(encoding="utf-8"))
-            except json.JSONDecodeError:
-                status = {}
-        status.update({
-            "harness": "hermesagent",
-            "harness_version": version,
-            "image": self.image,
-        })
-        output_dir.mkdir(parents=True, exist_ok=True)
-        status_path.write_text(
-            json.dumps(status, indent=2, ensure_ascii=False), encoding="utf-8"
+        status = self._load_execution_status(output_dir)
+        version = str(status.get("harness_version") or "")
+        if not version:
+            version = self._probe_harness_version(task_id)
+        write_execution_status(
+            output_dir,
+            harness="hermesagent",
+            harness_version=version,
+            image=self.image,
         )
+
+    @staticmethod
+    def _load_execution_status(output_dir: Path) -> dict[str, Any]:
+        status_path = output_dir / "execution_status.json"
+        if not status_path.exists():
+            return {}
+        try:
+            payload = json.loads(status_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return {}
+        return payload if isinstance(payload, dict) else {}
 
     @staticmethod
     def _probe_harness_version(task_id: str) -> str:
@@ -430,6 +619,7 @@ class HermesAgentAgent(BaseAgent):
         api_key: str,
         base_url: str,
         reasoning_config: dict | None,
+        max_tokens: int | None,
     ) -> None:
         """Write the bench runner config into the container."""
         config_payload = {
@@ -438,6 +628,7 @@ class HermesAgentAgent(BaseAgent):
                 "api_key": api_key,
                 "base_url": base_url,
                 "max_iterations": 90,
+                "max_tokens": max_tokens,
                 "reasoning_config": reasoning_config,
             },
             "prompt": prompt,
@@ -469,22 +660,27 @@ class HermesAgentAgent(BaseAgent):
         log_path.parent.mkdir(parents=True, exist_ok=True)
         log_file = log_path.open("w", encoding="utf-8")
         script_file = BENCH_RUNNER_HOST_PATH.open("r", encoding="utf-8")
-        proc = subprocess.Popen(
-            [
-                "docker",
-                "exec",
-                "-i",
-                task_id,
-                "/bin/bash",
-                "-c",
-                f"cd {HERMES_INSTALL_DIR} && {HERMES_VENV_PYTHON} -",
-            ],
-            stdin=script_file,
-            stdout=log_file,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-        )
+        try:
+            proc = subprocess.Popen(
+                [
+                    "docker",
+                    "exec",
+                    "-i",
+                    task_id,
+                    "/bin/bash",
+                    "-c",
+                    f"cd {HERMES_INSTALL_DIR} && {HERMES_VENV_PYTHON} -",
+                ],
+                stdin=script_file,
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+            )
+        except Exception:
+            script_file.close()
+            log_file.close()
+            raise
         proc._log_file = log_file  # type: ignore[attr-defined]
         proc._script_file = script_file  # type: ignore[attr-defined]
         logger.info("[%s] Started Hermes bench runner PID=%s -> %s", task_id, proc.pid, log_path)
@@ -494,8 +690,10 @@ class HermesAgentAgent(BaseAgent):
     def _close_runner_streams(proc: subprocess.Popen[str] | None) -> None:
         if proc is None:
             return
-        stream = getattr(proc, "_script_file", None)
-        if stream is not None:
+        for attribute in ("_script_file", "_log_file"):
+            stream = getattr(proc, attribute, None)
+            if stream is None:
+                continue
             try:
                 stream.close()
             except Exception:
@@ -504,10 +702,62 @@ class HermesAgentAgent(BaseAgent):
     @staticmethod
     def _cleanup_bench_config(task_id: str) -> None:
         subprocess.run(
-            ["docker", "exec", task_id, "rm", "-f", BENCH_CONFIG_CONTAINER_PATH],
+            [
+                "docker", "exec", task_id, "rm", "-f",
+                BENCH_CONFIG_CONTAINER_PATH, BENCH_RESULT_CONTAINER_PATH,
+            ],
             capture_output=True,
             text=True,
         )
+
+    @staticmethod
+    def _read_bench_result(task_id: str) -> dict[str, Any]:
+        result = subprocess.run(
+            ["docker", "exec", task_id, "cat", BENCH_RESULT_CONTAINER_PATH],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            detail = (result.stderr or "").strip()
+            suffix = f": {detail}" if detail else ""
+            raise RuntimeError(f"HermesAgent bench result not found{suffix}")
+        try:
+            payload = json.loads(result.stdout)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(f"HermesAgent bench result is invalid JSON: {exc}") from exc
+        if not isinstance(payload, dict):
+            raise RuntimeError("HermesAgent bench result must be a JSON object")
+        return payload
+
+    @staticmethod
+    def _termination_reason(
+        *,
+        completed: bool,
+        partial: bool,
+        completion_error: str | None,
+    ) -> str:
+        if completed:
+            return "completed"
+        error_text = (completion_error or "").lower()
+        if any(marker in error_text for marker in ("truncated", "output length", "max_tokens")):
+            return "output_length_limit"
+        if partial:
+            return "partial"
+        return "incomplete"
+
+    @staticmethod
+    def _process_error(returncode: int, log_path: Path, max_chars: int = 4000) -> str:
+        detail = ""
+        try:
+            with log_path.open("rb") as stream:
+                stream.seek(0, os.SEEK_END)
+                size = stream.tell()
+                stream.seek(max(0, size - max_chars), os.SEEK_SET)
+                detail = stream.read().decode("utf-8", errors="replace").strip()
+        except OSError:
+            pass
+        suffix = f":\n{detail}" if detail else ""
+        return f"HermesAgent run failed (rc={returncode}){suffix}"
 
     # ------------------------------------------------------------------
     # Transcript conversion (all sessions merged)

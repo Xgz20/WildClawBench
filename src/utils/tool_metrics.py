@@ -313,10 +313,39 @@ def classify_deepseek_harness(tool_name: str, content: str, status: str = "") ->
     return "success" if content else "unclear"
 
 
+def classify_hermesagent(tool_name: str, content: str, status: str = "") -> str:
+    """HermesAgent：优先读取工具结果 JSON 中的 status/success 字段。"""
+    _ = tool_name
+    st = (status or "").strip().lower()
+    payload = None
+    if content:
+        try:
+            payload = json.loads(content)
+        except (TypeError, json.JSONDecodeError):
+            payload = None
+
+    if isinstance(payload, dict):
+        payload_status = str(payload.get("status") or "").strip().lower()
+        st = payload_status or st
+        if payload.get("success") is False:
+            return "failure"
+        if payload.get("success") is True:
+            return "success"
+
+    if st in {"error", "failed", "failure"}:
+        return "failure"
+    if st in {"success", "completed", "ok"}:
+        return "success"
+    if st in {"running", "pending"}:
+        return "unclear"
+    return "success" if content else "unclear"
+
+
 register_classifier(("codex", "astroncode"), classify_codex)
 register_classifier(("opencode",), classify_opencode)
 register_classifier(("openclaw", "astronclaw"), classify_openclaw)
 register_classifier(("deepseek-harness",), classify_deepseek_harness)
+register_classifier(("hermesagent",), classify_hermesagent)
 
 
 # ---------------------------------------------------------------------------

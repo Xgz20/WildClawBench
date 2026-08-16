@@ -115,10 +115,16 @@ def _tool_entry(message: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(content, str):
         content = json.dumps(content, ensure_ascii=False)
     return {
-        "type": "toolResult",
-        "toolResult": {
-            "content": content,
-            "tool_call_id": str(message.get("tool_call_id", "")),
+        "type": "message",
+        "message": {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": str(message.get("tool_call_id", "")),
+                    "content": content,
+                }
+            ],
         },
     }
 

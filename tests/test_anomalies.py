@@ -615,6 +615,69 @@ class AnomalyDetectionTest(unittest.TestCase):
         self.assertEqual(classify_report_outcome({"status": "finished"}, "grading failed"),
                          "evaluation_anomaly")
 
+    def test_report_outcome_keeps_missing_expected_output_as_valid_capability_result(self) -> None:
+        finished = {"status": "finished", "timed_out": False, "exit_code": 0}
+
+        for grading_error in (
+            "results.md not found",
+            "results.md is empty",
+            "results directory not found",
+            "screenshot.png not found",
+            "screenshot.png too small, likely invalid",
+        ):
+            with self.subTest(grading_error=grading_error):
+                self.assertEqual(
+                    classify_report_outcome(finished, grading_error),
+                    "finished",
+                )
+
+        self.assertEqual(
+            classify_report_outcome(
+                {**finished, "task_completed": False},
+                "required deliverable was not produced",
+            ),
+            "finished",
+        )
+
+    def test_report_outcome_preserves_execution_result_before_capability_score_error(self) -> None:
+        self.assertEqual(
+            classify_report_outcome(
+                {
+                    "status": "timed_out",
+                    "timed_out": True,
+                    "failure_stage": "astroncode_running",
+                    "error": "AstronCode run timed out",
+                },
+                "results.md not found",
+            ),
+            "timeout",
+        )
+        self.assertEqual(
+            classify_report_outcome(
+                {
+                    "status": "error",
+                    "failure_stage": "hermesagent_running",
+                    "error": "HermesAgent run failed (rc=1)",
+                },
+                "results.md not found",
+            ),
+            "execution_error",
+        )
+
+    def test_report_outcome_keeps_real_grading_failures_as_evaluation_anomalies(self) -> None:
+        finished = {"status": "finished", "timed_out": False, "exit_code": 0}
+        for grading_error in (
+            "judge returned no valid JSON",
+            "Command ['/tmp/_grade_runner.py'] timed out after 120 seconds",
+            "Traceback: grader dependency failed",
+            "score.json missing",
+        ):
+            with self.subTest(grading_error=grading_error):
+                self.assertEqual(
+                    classify_report_outcome(finished, grading_error),
+                    "evaluation_anomaly",
+                )
+
     def test_deepseek_harness_failure_stages_have_structured_attribution(self) -> None:
         for stage in ("validating_configuration", "preparing_skills", "preparing_warmup",
                       "snapshotting_workspace"):

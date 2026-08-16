@@ -56,6 +56,14 @@ _AUTH_QUOTA_ERROR_RE = re.compile(
     r"额度已用尽|余额不足|令牌.*额度|remainquota\s*=\s*-?\d",
     re.I,
 )
+_CAPABILITY_GRADING_ERRORS = frozenset({
+    "results.md not found",
+    "results.md is empty",
+    "results directory not found",
+    "screenshot.png not found",
+    "screenshot.png too small, likely invalid",
+    "required deliverable was not produced",
+})
 _SECRET_PATTERNS = (
     re.compile(r"\b(?:sk|ak)-[A-Za-z0-9_-]{8,}", re.I),
     re.compile(r"\bBearer\s+[A-Za-z0-9._~+/-]{8,}", re.I),
@@ -427,19 +435,22 @@ def classify_report_outcome(
     anomaly_items: Iterable[dict[str, Any]] | None = None,
 ) -> str:
     """返回报告互斥状态：finished/execution_error/timeout/evaluation_anomaly。"""
-    if grading_error:
-        return "evaluation_anomaly"
     if any(
         item.get("validity_impact") in {"fail", "review"}
         for item in (anomaly_items or [])
     ):
         return "evaluation_anomaly"
-    if bool(status.get("timed_out")):
+    if bool(status.get("timed_out")) or str(status.get("status") or "") == "timed_out":
         return "timeout"
     if status.get("error") or str(status.get("status") or "") == "error":
         item = classify_execution_error(status)
         if item.get("attribution") in {"model", "harness"}:
             return "execution_error"
+        return "evaluation_anomaly"
+    if grading_error:
+        normalized_error = str(grading_error).strip().lower()
+        if normalized_error in _CAPABILITY_GRADING_ERRORS:
+            return "finished"
         return "evaluation_anomaly"
     return "finished"
 
