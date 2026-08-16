@@ -88,7 +88,35 @@ Do it
     issues = validate_document(parse_task_document(task), repo)
     assert not any(issue.code == "SKILL_NOT_FOUND" for issue in issues)
     assert not any(issue.code == "ENV_NAME_INVALID" for issue in issues)
-    assert any(issue.code == "WARMUP_EMPTY" for issue in issues)
+    assert not any(issue.code == "WARMUP_EMPTY" for issue in issues)
+    assert not any(issue.code == "SECTION_MISSING" and "Warmup" in issue.message for issue in issues)
+
+
+def test_missing_warmup_section_is_a_format_failure(tmp_path):
+    repo = tmp_path / "repo"
+    task = _write(
+        repo / "tasks/c/c.md",
+        """---
+id: c
+category: c
+difficulty: L1
+modality: pure-text
+timeout_seconds: 30
+grading_type: llm_judge
+---
+## Prompt
+Do it
+## Workspace Path
+/tmp_workspace
+## Skills
+## Env
+## LLM Judge Rubric
+### Criterion 1: quality (key: quality, weight: 1.0)
+**Score 1.0**: good
+""",
+    )
+    issues = validate_document(parse_task_document(task), repo)
+    assert any(issue.code == "SECTION_MISSING" and "Warmup" in issue.message for issue in issues)
 
 
 def test_static_action_summary_groups_fix_and_review_tasks():

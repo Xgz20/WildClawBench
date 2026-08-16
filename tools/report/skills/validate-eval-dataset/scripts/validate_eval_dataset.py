@@ -70,6 +70,13 @@ def validate_document(doc: TaskDocument, repo_root: Path, *, smoke: bool = False
     for section in ("Prompt", "Workspace Path"):
         if not doc.section(section):
             issues.append(_issue("SECTION_MISSING", f"缺少必需章节: {section}", doc))
+    # TASK_TEMPLATE_v2 requires the optional executable sections to remain in
+    # every task document, even when their bodies are intentionally empty.
+    # Check presence separately from content: an empty Warmup is a valid
+    # no-op, while omitting the section is a format violation.
+    for section in ("Skills", "Env", "Warmup"):
+        if section not in doc.sections:
+            issues.append(_issue("SECTION_MISSING", f"缺少模板章节: {section}", doc))
 
     grading_type = str(metadata.get("grading_type", ""))
     automated = strip_codeblock(doc.section("Automated Checks"))
@@ -129,8 +136,6 @@ def validate_document(doc: TaskDocument, repo_root: Path, *, smoke: bool = False
         issues.append(_issue("ENV_MISSING", "运行环境缺少任务声明的 Env", doc, evidence={"env": env_evidence(env_names, dict(os.environ))}))
 
     warmup = warmup_info(doc.section("Warmup"))
-    if "Warmup" in doc.sections and not warmup["commands"]:
-        issues.append(_issue("WARMUP_EMPTY", "Warmup 章节已声明但为空", doc))
     if warmup["dangerous_codes"]:
         issues.append(_issue("WARMUP_DANGEROUS", "Warmup 含宿主机危险命令模式", doc, severity=REVIEW, evidence={"codes": warmup["dangerous_codes"]}))
     for command in warmup["commands"]:
@@ -202,7 +207,6 @@ _ISSUE_ACTIONS = {
     "ENV_NAME_INVALID": "使用合法的 POSIX 环境变量名",
     "ENV_DUPLICATE": "删除重复 Env 声明",
     "ENV_MISSING": "在评测运行环境注入声明的 Env（报告不会显示变量值）",
-    "WARMUP_EMPTY": "补齐 Warmup，或删除不需要的 Warmup 章节",
     "WARMUP_REFERENCE_MISSING": "补齐 Warmup 引用脚本/文件",
     "WARMUP_SHELL_INVALID": "修正 Warmup shell 语法",
     "EXTENSION_REGISTRY_MISSING": "补齐 tasks/extension/task_sources.yaml",
