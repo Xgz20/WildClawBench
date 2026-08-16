@@ -5,7 +5,7 @@ description: 使用一个或多个外部 WildClawBench 评测结果目录，审�
 
 # Audit Eval Dataset Quality
 
-结果目录可以在仓库外、任意解压目录，并可重复指定。任务选择参数与静态 Skill 相同；未指定时扫描 `<repo>/tasks`。
+结果目录可以在仓库外、任意解压目录，并可重复指定。任务选择参数与静态 Skill 相同；未指定时扫描 `<repo>/tasks`，排除仅供阅读的 `tasks/cn` 副本。需要把中文副本纳入元数据检查时显式加 `--include-doc-copies`；它们没有独立评测结果时不应作为审计覆盖范围。
 
 ```bash
 python3 .agents/skills/audit-eval-dataset-quality/scripts/audit_eval_dataset_quality.py \

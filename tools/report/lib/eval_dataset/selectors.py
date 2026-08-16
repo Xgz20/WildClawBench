@@ -35,9 +35,25 @@ def _task_id(path: Path) -> str:
     return path.stem
 
 
-def _markdown_files(directory: Path) -> list[Path]:
+def _is_doc_copy(path: Path, repo_root: Path) -> bool:
+    """判断是否为仅供阅读的中文任务副本。"""
+    resolved = path.resolve()
+    for copy_root in (repo_root / "tasks" / "cn", repo_root / "tasks" / "extension" / "cn"):
+        try:
+            resolved.relative_to(copy_root.resolve())
+            return True
+        except ValueError:
+            continue
+    return False
+
+
+def _markdown_files(directory: Path, *, repo_root: Path, include_doc_copies: bool = False) -> list[Path]:
     return sorted(
-        (path for path in directory.rglob("*.md") if path.is_file()),
+        (
+            path
+            for path in directory.rglob("*.md")
+            if path.is_file() and (include_doc_copies or not _is_doc_copy(path, repo_root))
+        ),
         key=lambda path: str(path.resolve()),
     )
 
@@ -65,8 +81,9 @@ def select_task_files(
     task_paths: Iterable[str | Path] = (),
     task_ids: Iterable[str] = (),
     default_root: str | Path = "tasks",
+    include_doc_copies: bool = False,
 ) -> SelectionResult:
-    """选择任务文件；ID 多义时不静默合并。"""
+    """选择任务文件；默认排除 tasks/cn 阅读副本，ID 多义时不静默合并。"""
     repo_root = Path(repo_root).resolve()
     dirs = [Path(item).expanduser() for item in task_dirs]
     paths = [Path(item).expanduser() for item in task_paths]
@@ -86,7 +103,7 @@ def select_task_files(
         if not candidate.exists() or not candidate.is_dir():
             issues.append(Issue(FAIL, "TASK_DIR_NOT_FOUND", f"任务目录不存在: {candidate}", location=str(candidate)))
             continue
-        selected.extend(_markdown_files(candidate))
+        selected.extend(_markdown_files(candidate, repo_root=repo_root, include_doc_copies=include_doc_copies))
 
     for item in paths:
         candidate = item if item.is_absolute() else repo_root / item
@@ -102,11 +119,11 @@ def select_task_files(
         search_files: list[Path] = []
         default_candidate = repo_root / default_root
         if default_candidate.is_dir():
-            search_files.extend(_markdown_files(default_candidate))
+            search_files.extend(_markdown_files(default_candidate, repo_root=repo_root, include_doc_copies=include_doc_copies))
         for directory in dirs:
             candidate = directory if directory.is_absolute() else repo_root / directory
             if candidate.is_dir():
-                search_files.extend(_markdown_files(candidate))
+                search_files.extend(_markdown_files(candidate, repo_root=repo_root, include_doc_copies=include_doc_copies))
         for path in paths:
             candidate = path if path.is_absolute() else repo_root / path
             if candidate.is_file():

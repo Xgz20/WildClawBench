@@ -38,6 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--task-dir", action="append", default=[])
     parser.add_argument("--task-path", action="append", default=[])
     parser.add_argument("--task-id", action="append", default=[])
+    parser.add_argument("--include-doc-copies", action="store_true", help="显式包含 tasks/cn 等仅供阅读的中文副本")
     parser.add_argument("--validity")
     parser.add_argument("--output-dir")
     parser.add_argument("--fail-on", choices=("fail", "review"), default="fail")
@@ -137,7 +138,7 @@ def build_quality_action_summary(records: list[ResultRecord], issues: list[Issue
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    selection = select_task_files(REPO_ROOT, task_dirs=args.task_dir, task_paths=args.task_path, task_ids=args.task_id, default_root="tasks")
+    selection = select_task_files(REPO_ROOT, task_dirs=args.task_dir, task_paths=args.task_path, task_ids=args.task_id, default_root="tasks", include_doc_copies=args.include_doc_copies)
     selected_ids, metadata, task_issues = _selected_metadata(selection.files)
     discovery = discover_results(args.result_root)
     records = discovery.records
@@ -184,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
         "action_summary": build_quality_action_summary(records, issues, common_zero_candidates),
     }
     status = status_for_issues(issues)
-    report = Report(1, status, {"repo": str(REPO_ROOT), "result_roots": [str(Path(item).expanduser().resolve()) for item in args.result_root], "tasks": [str(path) for path in selection.files], "selectors": selection.selectors}, summary, issues)
+    report = Report(1, status, {"repo": str(REPO_ROOT), "result_roots": [str(Path(item).expanduser().resolve()) for item in args.result_root], "tasks": [str(path) for path in selection.files], "selectors": selection.selectors, "include_doc_copies": args.include_doc_copies}, summary, issues)
     target = write_report(report, repo_root=REPO_ROOT, kind="quality", output_dir=args.output_dir)
     print(target)
     return exit_code(status, fail_on_review=args.fail_on == "review")

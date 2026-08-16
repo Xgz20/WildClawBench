@@ -29,6 +29,23 @@ def test_selector_reports_ambiguous_id(tmp_path):
     assert any(issue.code == "TASK_ID_AMBIGUOUS" for issue in result.issues)
 
 
+def test_selectors_exclude_document_copies_by_default_and_allow_opt_in(tmp_path):
+    repo = tmp_path / "repo"
+    _task(repo / "tasks/01_Productivity_Flow/real.md", "real-task")
+    _task(repo / "tasks/cn/01_Productivity_Flow/copy.md", "copy-task", "01_生产力工作流")
+
+    result = select_task_files(repo)
+    assert [path.name for path in result.files] == ["real.md"]
+
+    included = select_task_files(repo, include_doc_copies=True)
+    assert [path.name for path in included.files] == ["real.md", "copy.md"]
+
+    by_id = select_task_files(repo, task_ids=["copy-task"])
+    assert any(issue.code == "TASK_ID_NOT_FOUND" for issue in by_id.issues)
+    by_id_included = select_task_files(repo, task_ids=["copy-task"], include_doc_copies=True)
+    assert [path.name for path in by_id_included.files] == ["copy.md"]
+
+
 def test_status_and_secret_safe_evidence():
     assert status_for_issues([]) == PASS
     assert status_for_issues([Issue(REVIEW, "X", "review")]) == REVIEW

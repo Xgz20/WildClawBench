@@ -260,6 +260,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--task-dir", action="append", default=[])
     parser.add_argument("--task-path", action="append", default=[])
     parser.add_argument("--task-id", action="append", default=[])
+    parser.add_argument("--include-doc-copies", action="store_true", help="显式包含 tasks/cn 等仅供阅读的中文副本")
     parser.add_argument("--output-dir")
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--warmup-image")
@@ -270,7 +271,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    selection = select_task_files(REPO_ROOT, task_dirs=args.task_dir, task_paths=args.task_path, task_ids=args.task_id, default_root="tasks")
+    selection = select_task_files(REPO_ROOT, task_dirs=args.task_dir, task_paths=args.task_path, task_ids=args.task_id, default_root="tasks", include_doc_copies=args.include_doc_copies)
     issues = list(selection.issues)
     task_ids: list[str] = []
     for path in selection.files:
@@ -282,7 +283,7 @@ def main(argv: list[str] | None = None) -> int:
             issues.append(Issue(FAIL, "TASK_READ_ERROR", str(exc), location=str(path)))
     issues.extend(validate_extension_registry(REPO_ROOT, selection.files))
     status = status_for_issues(issues)
-    report = Report(1, status, {"repo": str(REPO_ROOT), "tasks": [str(path) for path in selection.files], "selectors": selection.selectors, "smoke": args.smoke}, {"task_count": len(selection.files), "issue_count": len(issues), "action_summary": build_action_summary(task_ids, issues)}, issues)
+    report = Report(1, status, {"repo": str(REPO_ROOT), "tasks": [str(path) for path in selection.files], "selectors": selection.selectors, "include_doc_copies": args.include_doc_copies, "smoke": args.smoke}, {"task_count": len(selection.files), "issue_count": len(issues), "action_summary": build_action_summary(task_ids, issues)}, issues)
     target = write_report(report, repo_root=REPO_ROOT, kind="static", output_dir=args.output_dir)
     print(target)
     return exit_code(status, fail_on_review=args.fail_on == "review")

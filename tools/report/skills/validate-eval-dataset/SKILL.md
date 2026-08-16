@@ -5,7 +5,7 @@ description: 校验 WildClawBench 评测任务的 Markdown/frontmatter、评分�
 
 # Validate Eval Dataset
 
-使用仓库内脚本做确定性静态校验。默认扫描 `<repo>/tasks`（包含 `tasks/extension`），也可重复指定 `--task-dir`、`--task-path`、`--task-id`；`--task-id @file` 按行读取 ID 清单。
+使用仓库内脚本做确定性静态校验。默认扫描 `<repo>/tasks`（包含 `tasks/extension`，排除仅供阅读的 `tasks/cn` 副本），也可重复指定 `--task-dir`、`--task-path`、`--task-id`；`--task-id @file` 按行读取 ID 清单。需要专门检查中文副本时显式加 `--include-doc-copies`。
 
 ```bash
 python3 .agents/skills/validate-eval-dataset/scripts/validate_eval_dataset.py
