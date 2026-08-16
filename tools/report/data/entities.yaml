@@ -62,9 +62,16 @@ models:
     aliases: []
     capabilities:
       supported_reasoning_efforts: []
-    # 经内部 openrouter 代理调用，暂无定价档案；
-    # 按成本口径缺价格时显示 "-"，不按 0 处理。
-    pricing_profiles: []
+    pricing_profiles:
+      - id: 2026-08-16-default
+        effective_from: 2026-08-16
+        currency: CNY
+        unit_tokens: 1000000
+        tiers:
+          - id: default
+            input_uncached: 0.5
+            input_cached: 0.1
+            output: 1.6
 
   xopglm51:
     display_name: GLM-5.1
