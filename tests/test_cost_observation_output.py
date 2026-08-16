@@ -62,13 +62,15 @@ class CostObservationOutputTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             output = io.StringIO()
             with redirect_stdout(output):
-                print_global_summary(
+                summary = print_global_summary(
                     [_result_with_unavailable_cost()],
                     Path(temp_dir),
                     "model",
                 )
 
         self.assertIn("Total cost: unavailable", output.getvalue())
+        self.assertEqual(summary["global_avg"], 1.0)
+        self.assertEqual(summary["scored_task_count"], 1)
 
 
 if __name__ == "__main__":

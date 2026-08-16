@@ -1306,7 +1306,7 @@ def extract_usage_from_jsonl(jsonl_path: Path) -> dict:
 
 def print_global_summary(
     results: list[dict], output_dir: Path, model_name: str, timing: dict | None = None
-) -> None:
+) -> dict:
     from src.utils.multirun_stats import aggregate_runs
     from eval.run_batch import PASS_THRESHOLD
 
@@ -1431,3 +1431,4 @@ def print_global_summary(
     )
     print(f"\n  Global summary written to → {summary_path}")
     print("#" * 60)
+    return summary_data

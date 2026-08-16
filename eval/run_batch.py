@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 import re
 import subprocess
@@ -433,6 +434,67 @@ def _load_resume_result(
         "anomalies": anomalies,
         "_resumed_from": str(latest),
     }
+
+
+def _generate_global_summary_safely(
+    results: list[dict],
+    output_root: Path,
+    summary_label: str,
+    *,
+    timing: dict,
+) -> float | None:
+    try:
+        summary = print_global_summary(
+            results,
+            output_root,
+            summary_label,
+            timing=timing,
+        )
+    except Exception as exc:
+        logger.warning("跑批总平均结果生成失败，继续主流程: %s", exc)
+        return None
+
+    if not isinstance(summary, dict):
+        return None
+    scored_task_count = summary.get("scored_task_count")
+    global_average = summary.get("global_avg")
+    if (
+        not isinstance(scored_task_count, (int, float))
+        or isinstance(scored_task_count, bool)
+        or scored_task_count <= 0
+        or not isinstance(global_average, (int, float))
+        or isinstance(global_average, bool)
+        or not math.isfinite(float(global_average))
+    ):
+        return None
+    return float(global_average)
+
+
+def _log_batch_completion(
+    timing: dict,
+    *,
+    task_count: int,
+    global_average: float | None,
+) -> None:
+    global_average_display = (
+        f"{global_average:.4f}" if global_average is not None else "不可用"
+    )
+    batch_total_seconds = float(timing.get("batch_total_seconds", 0.0) or 0.0)
+    task_exec_sum_seconds = float(timing.get("task_exec_sum_seconds", 0.0) or 0.0)
+    avg_exec_seconds = float(timing.get("avg_exec_seconds", 0.0) or 0.0)
+    parallelism = int(timing.get("parallelism", 0) or 0)
+    logger.info(
+        "📊 跑批完成: 跑批总耗时=%.0fs (~%.1fmin) | 用例执行总耗时=%.0fs (~%.1fmin) "
+        "| 并发=%d | %d 题 | 平均执行=%.0fs/题 | 总平均结果=%s",
+        batch_total_seconds,
+        batch_total_seconds / 60,
+        task_exec_sum_seconds,
+        task_exec_sum_seconds / 60,
+        parallelism,
+        task_count,
+        avg_exec_seconds,
+        global_average_display,
+    )
 
 
 def run_single_task(
@@ -912,14 +974,17 @@ def main() -> None:
                 if batch_total_seconds > 0 else None
             ),
         }
-        logger.info(
-            "📊 跑批完成: 跑批总耗时=%.0fs (~%.1fmin) | 用例执行总耗时=%.0fs (~%.1fmin) "
-            "| 并发=%d | %d 题 | 平均执行=%.0fs/题",
-            batch_total_seconds, batch_total_seconds / 60,
-            task_exec_sum_seconds, task_exec_sum_seconds / 60,
-            args.parallel, len(all_results), avg_exec_seconds,
+        global_average = _generate_global_summary_safely(
+            all_results,
+            output_root,
+            summary_label,
+            timing=timing,
         )
-        print_global_summary(all_results, output_root, summary_label, timing=timing)
+        _log_batch_completion(
+            timing,
+            task_count=len(all_results),
+            global_average=global_average,
+        )
 
     # 批级异常汇总（含跨 run 规则），供出数前把关与 --rerun-error 决策
     try:
