@@ -223,6 +223,4 @@ workspace/extension/07_Website_Generation/task_007_neon_snake_game
 
 ## Env
 
-无
-
 ## Warmup

@@ -335,6 +335,4 @@ workspace/extension/07_Website_Generation/task_008_shiguang_personal_blog
 
 ## Env
 
-无
-
 ## Warmup
