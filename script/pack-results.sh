@@ -7,9 +7,10 @@
 # sam3.pt 权重等）。60 题 × N 模型 → eval_out 轻松涨到几十 G，
 # 但真正有价值的只有评分/用量/日志/轨迹 + Agent 的交付物。
 #
-# 本脚本产出两个包：
+# 本脚本默认产出两个包：
 #   1) *_light_*.tar.gz    —— 排除 task_output（评分/用量/日志/轨迹/汇总），通常几十 MB
 #   2) *_results_*.tar.gz  —— 只含 task_output/**/results（Agent 真实交付物）
+# 也可用 --combined 将以上内容合并为一个包。
 #
 # 用法：
 #   bash docs/local/deploy/pack-results.sh                      # 打包整个 eval_out
@@ -18,6 +19,9 @@
 #   # 只打某一轮下「指定模型」的轻量结果（不含 Agent 交付物）：
 #   bash docs/local/deploy/pack-results.sh --scope all_suite/round1/xopglm52 --no-results
 #   bash docs/local/deploy/pack-results.sh --no-results         # 只出轻量包，跳过 results 包
+#   bash script/pack-results.sh --combined                     # light + results 合并为一个包
+#   bash script/pack-results.sh --combined --include-node-modules
+#   bash script/pack-results.sh --only-results                 # 只打 Agent 交付物包
 #   bash docs/local/deploy/pack-results.sh --out /tmp           # 指定输出目录
 #   bash docs/local/deploy/pack-results.sh --prune              # 打包后删除 task_output 里的大媒体/权重
 #   bash script/pack-results.sh --max-result-file-mb 50 # results 中单文件超过 50 MiB 不导出
@@ -32,6 +36,9 @@ SCOPE=""
 DRY_RUN=0
 PRUNE=0
 NO_RESULTS=0
+ONLY_RESULTS=0
+COMBINED=0
+INCLUDE_NODE_MODULES=0
 MAX_RESULT_FILE_MB=""
 
 while [ $# -gt 0 ]; do
@@ -40,7 +47,10 @@ while [ $# -gt 0 ]; do
     --out)        OUT_DIR="${2:-}"; shift 2 ;;
     --dir)        EVAL_OUT="${2:-}"; shift 2 ;;
     --prune)      PRUNE=1; shift ;;
-    --no-results) NO_RESULTS=1; shift ;;
+    --no-results|--no-result) NO_RESULTS=1; shift ;;
+    --only-results|--results-only) ONLY_RESULTS=1; shift ;;
+    --combined|--combine|--merge|--single-file|--single-package|--one-package|--merge-results) COMBINED=1; shift ;;
+    --include-node-modules|--with-node-modules|--pack-node-modules) INCLUDE_NODE_MODULES=1; shift ;;
     --max-result-file-mb)
       MAX_RESULT_FILE_MB="${2:-}"
       if ! [[ "$MAX_RESULT_FILE_MB" =~ ^[1-9][0-9]*$ ]]; then
@@ -54,10 +64,30 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+if [ "$COMBINED" = "1" ] && [ "$NO_RESULTS" = "1" ]; then
+  echo "--combined 不能与 --no-results 同时使用"; exit 1
+fi
+if [ "$ONLY_RESULTS" = "1" ] && [ "$NO_RESULTS" = "1" ]; then
+  echo "--only-results 不能与 --no-results 同时使用"; exit 1
+fi
+if [ "$ONLY_RESULTS" = "1" ] && [ "$COMBINED" = "1" ]; then
+  echo "--only-results 不能与 --combined 同时使用"; exit 1
+fi
+
 GRN=$'\e[32m'; RED=$'\e[31m'; YEL=$'\e[33m'; DIM=$'\e[2m'; RST=$'\e[0m'
 hdr(){ echo; echo "${YEL}==== $1 ====${RST}"; }
 human(){ awk -v b="$1" 'BEGIN{s="B KB MB GB TB";split(s,a," ");i=1;while(b>=1024&&i<5){b/=1024;i++}printf "%.1f%s", b, a[i]}'; }
 stat_bytes(){ stat -c%s "$1" 2>/dev/null || stat -f%z "$1"; }
+
+# 结果目录可能是 workspace/results（OpenClaw）或 workspace 本身（AstronCode）。
+# 默认排除网站项目依赖；--include-node-modules 才将其纳入归档。
+result_files_for_dir(){
+  if [ "$INCLUDE_NODE_MODULES" = "1" ]; then
+    find "$1" -type f -print 2>/dev/null
+  else
+    find "$1" -type f ! -path '*/node_modules/*' -print 2>/dev/null
+  fi
+}
 
 # 解析目标目录 TDIR：--scope 支持「相对 eval_out 的子路径」或「绝对路径」，留空则整个 eval_out
 case "${SCOPE:-}" in
@@ -126,9 +156,9 @@ if [ -n "$MAX_RESULT_FILE_MB" ]; then
         preview_filtered_files=$((preview_filtered_files + 1))
         preview_filtered_bytes=$((preview_filtered_bytes + preview_result_size))
       fi
-    done < <(find "$preview_result_dir" -type f -print 2>/dev/null)
+    done < <(result_files_for_dir "$preview_result_dir")
   done <<< "$preview_dirs"
-  echo "   workspace 大小限制: ${MAX_RESULT_FILE_MB} MiB；预计过滤 ${preview_filtered_files} 个超过 ${MAX_RESULT_FILE_MB} MiB 的文件（$(human "$preview_filtered_bytes")）"
+  echo "   workspace 大小限制: ${MAX_RESULT_FILE_MB} MiB；预计过滤 ${preview_filtered_files} 个超过 ${MAX_RESULT_FILE_MB} MiB 的 results 文件（$(human "$preview_filtered_bytes")）"
 fi
 
 if [ "$DRY_RUN" = "1" ]; then
@@ -146,60 +176,102 @@ else
 fi
 echo "${DIM}   压缩器: $ZNAME${RST}"
 
-LIGHT="$OUT_DIR/eval_out_light_${TAG}_${TS}.tar.gz"
-echo "   [1/2] 打包评分/日志/轨迹（排除 task_output；归档顶层 = ${LEAF}/）..."
-tar -cf - --exclude='task_output' "$LEAF" 2>/dev/null | "${ZIP[@]}" > "$LIGHT"
-[ -s "$LIGHT" ] && echo "${GRN}         ✓ $LIGHT  ($(human "$(stat -c%s "$LIGHT" 2>/dev/null || stat -f%z "$LIGHT")"))${RST}" \
-                || { echo "${RED}         ✗ 打包失败${RST}"; exit 1; }
+# 收集两种模式:
+#   1. OpenClaw系: task_output/workspace/results/
+#   2. AstronCode系: task_output/workspace/ (排除已有 results/ 子目录的,避免重复打包)
+res_dirs_with_subdir="$(find "$LEAF" -type d -path '*/task_output/workspace/results' 2>/dev/null)"
+res_dirs_flat="$(find "$LEAF" -type d -path '*/task_output/workspace' ! -exec test -d '{}/results' \; -print 2>/dev/null)"
+res_dirs="$(printf '%s\n%s' "$res_dirs_with_subdir" "$res_dirs_flat" | grep -v '^$')"
 
-RESULTS=""
-if [ "$NO_RESULTS" = "1" ]; then
-  echo "   [2/2] Agent 交付物包：${DIM}已按 --no-results 跳过（只出轻量包）${RST}"
-else
-  RESULTS="$OUT_DIR/eval_out_results_${TAG}_${TS}.tar.gz"
-  echo "   [2/2] 打包 Agent 交付物（task_output/workspace 或 task_output/workspace/results）..."
-  # 收集两种模式:
-  #   1. OpenClaw系: task_output/workspace/results/
-  #   2. AstronCode系: task_output/workspace/ (排除已有 results/ 子目录的,避免重复打包)
-  res_dirs_with_subdir="$(find "$LEAF" -type d -path '*/task_output/workspace/results' 2>/dev/null)"
-  res_dirs_flat="$(find "$LEAF" -type d -path '*/task_output/workspace' ! -exec test -d '{}/results' \; -print 2>/dev/null)"
-  res_dirs="$(printf '%s\n%s' "$res_dirs_with_subdir" "$res_dirs_flat" | grep -v '^$')"
+# 将待导出的结果文件写入 tar 清单，同时应用 node_modules 和单文件大小过滤。
+build_result_file_list(){
+  result_file_list="$1"
+  : > "$result_file_list"
+  result_files=0
+  filtered_result_files=0
+  filtered_result_bytes=0
+  max_result_file_bytes=0
+  [ -n "$MAX_RESULT_FILE_MB" ] && max_result_file_bytes=$((MAX_RESULT_FILE_MB * 1024 * 1024))
+
+  while IFS= read -r result_dir; do
+    [ -z "$result_dir" ] && continue
+    while IFS= read -r result_file; do
+      result_size="$(stat_bytes "$result_file")"
+      result_files=$((result_files + 1))
+      if [ "$max_result_file_bytes" -gt 0 ] && [ "$result_size" -gt "$max_result_file_bytes" ]; then
+        filtered_result_files=$((filtered_result_files + 1))
+        filtered_result_bytes=$((filtered_result_bytes + result_size))
+      else
+        printf '%s\n' "$result_file" >> "$result_file_list"
+      fi
+    done < <(result_files_for_dir "$result_dir")
+  done <<< "$res_dirs"
+}
+
+create_results_archive(){
+  RESULTS="$1"
+  node_modules_mode="排除 node_modules"
+  [ "$INCLUDE_NODE_MODULES" = "1" ] && node_modules_mode="包含 node_modules"
+  echo "${2:-   打包 Agent 交付物}（${node_modules_mode}）..."
   if [ -z "$res_dirs" ]; then
     echo "${DIM}         （未找到 workspace 或 results 目录，跳过）${RST}"; RESULTS=""
-  elif [ -n "$MAX_RESULT_FILE_MB" ]; then
-    max_result_file_bytes=$((MAX_RESULT_FILE_MB * 1024 * 1024))
-    result_file_list="$(mktemp "${TMPDIR:-/tmp}/wcb-results.XXXXXX")"
-    result_files=0
-    filtered_result_files=0
-    filtered_result_bytes=0
-
-    # 只把大小不超过阈值的文件写入 tar 清单；源文件保持不变。
-    while IFS= read -r result_dir; do
-      while IFS= read -r result_file; do
-        result_size="$(stat_bytes "$result_file")"
-        result_files=$((result_files + 1))
-        if [ "$result_size" -le "$max_result_file_bytes" ]; then
-          printf '%s\n' "$result_file" >> "$result_file_list"
-        else
-          filtered_result_files=$((filtered_result_files + 1))
-          filtered_result_bytes=$((filtered_result_bytes + result_size))
-        fi
-      done < <(find "$result_dir" -type f -print 2>/dev/null)
-    done <<< "$res_dirs"
-
-    if [ "$result_files" -eq 0 ] || [ ! -s "$result_file_list" ]; then
-      echo "${DIM}         （workspace 中没有符合大小限制的文件，跳过）${RST}"
-      RESULTS=""
-    else
-      cat "$result_file_list" | tar -cf - -T - 2>/dev/null | "${ZIP[@]}" > "$RESULTS"
-      echo "${GRN}         ✓ $RESULTS  ($(human "$(stat -c%s "$RESULTS" 2>/dev/null || stat -f%z "$RESULTS")"))  共 ${result_files} 个文件${RST}"
-    fi
-    echo "         大小限制: ${MAX_RESULT_FILE_MB} MiB；过滤 ${filtered_result_files} 个超过 ${MAX_RESULT_FILE_MB} MiB 的文件（$(human "$filtered_result_bytes")）"
-    rm -f "$result_file_list"
-  else
-    echo "$res_dirs" | tar -cf - -T - 2>/dev/null | "${ZIP[@]}" > "$RESULTS"
-    echo "${GRN}         ✓ $RESULTS  ($(human "$(stat -c%s "$RESULTS" 2>/dev/null || stat -f%z "$RESULTS")"))  共 $(echo "$res_dirs" | grep -c .) 个 workspace 目录${RST}"
+    return 0
   fi
+
+  result_file_list="$(mktemp "${TMPDIR:-/tmp}/wcb-results.XXXXXX")"
+  build_result_file_list "$result_file_list"
+  if [ "$result_files" -eq 0 ] || [ ! -s "$result_file_list" ]; then
+    echo "${DIM}         （workspace 中没有符合过滤条件的文件，跳过）${RST}"
+    RESULTS=""
+  else
+    tar -cf - -T "$result_file_list" 2>/dev/null | "${ZIP[@]}" > "$RESULTS"
+    echo "${GRN}         ✓ $RESULTS  ($(human "$(stat -c%s "$RESULTS" 2>/dev/null || stat -f%z "$RESULTS")"))  共 ${result_files} 个文件${RST}"
+  fi
+  [ -n "$MAX_RESULT_FILE_MB" ] && echo "         大小限制: ${MAX_RESULT_FILE_MB} MiB；过滤 ${filtered_result_files} 个超过 ${MAX_RESULT_FILE_MB} MiB 的文件（$(human "$filtered_result_bytes")）"
+  rm -f "$result_file_list"
+}
+
+LIGHT=""
+RESULTS=""
+COMBINED_ARCHIVE=""
+if [ "$COMBINED" = "1" ]; then
+  COMBINED_ARCHIVE="$OUT_DIR/eval_out_combined_${TAG}_${TS}.tar.gz"
+  echo "   [1/1] 打包评分/日志/轨迹与 Agent 交付物（合并为一个包，归档顶层 = ${LEAF}/）..."
+  combined_tar="$(mktemp "${TMPDIR:-/tmp}/wcb-combined.XXXXXX.tar")"
+  result_file_list="$(mktemp "${TMPDIR:-/tmp}/wcb-results.XXXXXX")"
+  build_result_file_list "$result_file_list"
+  tar -cf "$combined_tar" --exclude='task_output' "$LEAF" 2>/dev/null || {
+    rm -f "$combined_tar" "$result_file_list"; echo "${RED}         ✗ 打包失败${RST}"; exit 1;
+  }
+  if [ -s "$result_file_list" ]; then
+    tar -rf "$combined_tar" -T "$result_file_list" 2>/dev/null || {
+      rm -f "$combined_tar" "$result_file_list"; echo "${RED}         ✗ 追加 Agent 交付物失败${RST}"; exit 1;
+    }
+  elif [ -n "$res_dirs" ]; then
+    echo "${DIM}         （workspace 中没有符合过滤条件的文件）${RST}"
+  fi
+  "${ZIP[@]}" -c "$combined_tar" > "$COMBINED_ARCHIVE"
+  rm -f "$combined_tar" "$result_file_list"
+  [ -s "$COMBINED_ARCHIVE" ] && echo "${GRN}         ✓ $COMBINED_ARCHIVE  ($(human "$(stat -c%s "$COMBINED_ARCHIVE" 2>/dev/null || stat -f%z "$COMBINED_ARCHIVE")"))  共 ${result_files} 个交付文件${RST}" \
+    || { echo "${RED}         ✗ 打包失败${RST}"; exit 1; }
+elif [ "$ONLY_RESULTS" = "1" ]; then
+  RESULTS="$OUT_DIR/eval_out_results_${TAG}_${TS}.tar.gz"
+  create_results_archive "$RESULTS" "   [1/1] 打包 Agent 交付物"
+elif [ "$NO_RESULTS" = "1" ]; then
+  LIGHT="$OUT_DIR/eval_out_light_${TAG}_${TS}.tar.gz"
+  echo "   [1/1] 打包评分/日志/轨迹（排除 task_output；归档顶层 = ${LEAF}/）..."
+  tar -cf - --exclude='task_output' "$LEAF" 2>/dev/null | "${ZIP[@]}" > "$LIGHT"
+  [ -s "$LIGHT" ] && echo "${GRN}         ✓ $LIGHT  ($(human "$(stat -c%s "$LIGHT" 2>/dev/null || stat -f%z "$LIGHT")"))${RST}" \
+                  || { echo "${RED}         ✗ 打包失败${RST}"; exit 1; }
+else
+  LIGHT="$OUT_DIR/eval_out_light_${TAG}_${TS}.tar.gz"
+  echo "   [1/2] 打包评分/日志/轨迹（排除 task_output；归档顶层 = ${LEAF}/）..."
+  tar -cf - --exclude='task_output' "$LEAF" 2>/dev/null | "${ZIP[@]}" > "$LIGHT"
+  [ -s "$LIGHT" ] && echo "${GRN}         ✓ $LIGHT  ($(human "$(stat -c%s "$LIGHT" 2>/dev/null || stat -f%z "$LIGHT")"))${RST}" \
+                  || { echo "${RED}         ✗ 打包失败${RST}"; exit 1; }
+
+  RESULTS="$OUT_DIR/eval_out_results_${TAG}_${TS}.tar.gz"
+  create_results_archive "$RESULTS" "   [2/2] 打包 Agent 交付物"
 fi
 
 # ── 3. 可选：清理大媒体 ───────────────────────────────────────
@@ -225,13 +297,19 @@ fi
 # ── 汇总 ─────────────────────────────────────────────────────
 hdr "完成"
 echo "   产物："
-echo "     $LIGHT"
+[ -n "$COMBINED_ARCHIVE" ] && echo "     $COMBINED_ARCHIVE"
+[ -n "$LIGHT" ] && echo "     $LIGHT"
 [ -n "$RESULTS" ] && echo "     $RESULTS"
+inspect_archive="${COMBINED_ARCHIVE:-${LIGHT:-$RESULTS}}"
 cat <<EOF
 
 ${DIM}下载到本地（在你的 Mac 上执行）：
   scp root@172.31.101.44:${OUT_DIR}/eval_out_*_${TS}.tar.gz .
 
 抽查内容：
-  tar -tzf ${LIGHT} | head${RST}
 EOF
+if [ -n "$inspect_archive" ]; then
+  echo "  tar -tzf ${inspect_archive} | head${RST}"
+else
+  echo "  （没有生成可抽查的归档）${RST}"
+fi
