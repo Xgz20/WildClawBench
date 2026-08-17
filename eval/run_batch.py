@@ -12,6 +12,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -497,6 +498,176 @@ def _log_batch_completion(
     )
 
 
+def _load_anomaly_snapshot(run_dir: Path | None) -> dict[str, Any] | None:
+    """Load a run's anomaly snapshot without making rerun reporting fatal."""
+    if run_dir is None or not run_dir.is_dir():
+        return None
+    path = run_dir / "anomalies.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _anomaly_ids(anomalies: dict[str, Any] | None) -> list[str]:
+    if not isinstance(anomalies, dict):
+        return []
+    return [
+        str(item.get("id"))
+        for item in anomalies.get("items", [])
+        if isinstance(item, dict) and item.get("id")
+    ]
+
+
+def _build_rerun_record(
+    *,
+    task_id: str,
+    output_dir: Path,
+    rerun_metadata: dict[str, Any],
+    anomalies: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Classify the current run against the run it superseded.
+
+    The batch anomaly report intentionally retains historical runs.  This
+    record is the current rerun outcome and therefore answers whether this
+    particular retry resolved the previous validity failure.
+    """
+    supersedes_raw = str(rerun_metadata.get("supersedes_run") or "")
+    supersedes_path = Path(supersedes_raw) if supersedes_raw else None
+    previous = _load_anomaly_snapshot(supersedes_path)
+    current_ids = _anomaly_ids(anomalies)
+    previous_ids = _anomaly_ids(previous)
+
+    score_path = output_dir / "score.json"
+    score_available = score_path.is_file()
+    judge_summary: dict[str, Any] = {}
+    judge_summary_path = output_dir / "judge" / "summary.json"
+    try:
+        loaded_judge_summary = json.loads(
+            judge_summary_path.read_text(encoding="utf-8")
+        )
+        if isinstance(loaded_judge_summary, dict):
+            judge_summary = loaded_judge_summary
+    except (OSError, json.JSONDecodeError):
+        pass
+    if anomalies is None or not score_available:
+        status = "failed"
+    elif anomalies.get("has_validity_failure") or anomalies.get("needs_rerun"):
+        status = "failed"
+    elif anomalies.get("needs_review"):
+        status = "review"
+    else:
+        status = "success"
+
+    record = {
+        "schema_version": 1,
+        "status": status,
+        "task_id": task_id,
+        "new_run": output_dir.name,
+        "supersedes_run": supersedes_path.name if supersedes_path else supersedes_raw,
+        "trigger": str(rerun_metadata.get("trigger") or "reliability_rerun"),
+        "previous_anomalies": previous_ids,
+        "current_anomalies": current_ids,
+        "resolved_anomalies": [item for item in previous_ids if item not in current_ids],
+        "remaining_anomalies": current_ids,
+        "score_available": score_available,
+        "needs_rerun": bool(anomalies and anomalies.get("needs_rerun")),
+        "needs_review": bool(anomalies and anomalies.get("needs_review")),
+        "judge_status": judge_summary.get("status"),
+        "judge_attempt_count": judge_summary.get("attempt_count"),
+        "judge_selected_attempt": judge_summary.get("selected_attempt"),
+        "judge_failed_attempt_count": judge_summary.get("failed_attempt_count"),
+        "judge_schema_mismatch_count": judge_summary.get("schema_mismatch_count"),
+    }
+    return record
+
+
+def _record_rerun_outcome(
+    *,
+    task_id: str,
+    output_dir: Path,
+    rerun_metadata: dict[str, Any] | None,
+    anomalies: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if not isinstance(rerun_metadata, dict) or not rerun_metadata.get("supersedes_run"):
+        return None
+    record = _build_rerun_record(
+        task_id=task_id,
+        output_dir=output_dir,
+        rerun_metadata=rerun_metadata,
+        anomalies=anomalies,
+    )
+    try:
+        (output_dir / "rerun_result.json").write_text(
+            json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+    except OSError as exc:
+        logger.warning("[%s] 无法写入 rerun_result.json: %s", task_id, exc)
+
+    resolved = ",".join(record["resolved_anomalies"]) or "none"
+    remaining = ",".join(record["remaining_anomalies"]) or "none"
+    judge_status = record["judge_status"] or "unknown"
+    judge_attempts = record["judge_attempt_count"] or "unknown"
+    judge_failures = record["judge_failed_attempt_count"]
+    judge_schema_errors = record["judge_schema_mismatch_count"]
+    judge_detail = (
+        f"{judge_status} attempts={judge_attempts} "
+        f"selected={record['judge_selected_attempt'] or 'none'} "
+        f"failed={judge_failures if judge_failures is not None else 'unknown'} "
+        f"schema_errors={judge_schema_errors if judge_schema_errors is not None else 'unknown'}"
+    )
+    if record["status"] == "success":
+        logger.info(
+            "[%s] RERUN SUCCESS 重跑成功: old_run=%s new_run=%s resolved=%s judge={%s}",
+            task_id, record["supersedes_run"], record["new_run"], resolved,
+            judge_detail,
+        )
+    elif record["status"] == "failed":
+        logger.warning(
+            "[%s] RERUN FAILED 重跑仍失败: old_run=%s new_run=%s remaining=%s judge={%s}",
+            task_id, record["supersedes_run"], record["new_run"], remaining,
+            judge_detail,
+        )
+    else:
+        logger.warning(
+            "[%s] RERUN REVIEW 重跑无有效性失败但需要复核: old_run=%s new_run=%s remaining=%s judge={%s}",
+            task_id, record["supersedes_run"], record["new_run"], remaining,
+            judge_detail,
+        )
+    return record
+
+
+def _write_rerun_summary(results: list[dict], output_root: Path) -> None:
+    records = [
+        result["rerun"]
+        for result in results
+        if isinstance(result.get("rerun"), dict)
+    ]
+    summary = {
+        "schema_version": 1,
+        "total": len(records),
+        "success": sum(1 for record in records if record.get("status") == "success"),
+        "failed": sum(1 for record in records if record.get("status") == "failed"),
+        "review": sum(1 for record in records if record.get("status") == "review"),
+        "records": records,
+    }
+    path = output_root / "rerun_summary.json"
+    try:
+        path.write_text(
+            json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+    except OSError as exc:
+        logger.warning("无法写入重跑汇总 %s: %s", path, exc)
+        return
+    if records:
+        logger.info(
+            "Rerun summary: total=%d success=%d failed=%d review=%d (report: %s)",
+            summary["total"], summary["success"], summary["failed"],
+            summary["review"], path,
+        )
+
+
 def run_single_task(
     task: dict,
     model: str,
@@ -548,6 +719,7 @@ def run_single_task(
     gateway_proc = None
     agent_proc = None
     elapsed_time = float(timeout_seconds)
+    anomalies: dict[str, Any] | None = None
 
     try:
         execution = backend.run_task(
@@ -644,6 +816,21 @@ def run_single_task(
             result["anomalies"] = anomalies
         except Exception as exc:
             logger.warning("[%s] Anomaly scan failed: %s", task_id, exc)
+
+        try:
+            rerun_record = _record_rerun_outcome(
+                task_id=task_id,
+                output_dir=output_dir,
+                rerun_metadata=rerun_metadata,
+                anomalies=anomalies,
+            )
+        except Exception as exc:
+            # Rerun observability must never turn a completed scoring run into
+            # a failed evaluation.
+            logger.warning("[%s] Rerun outcome recording failed: %s", task_id, exc)
+            rerun_record = None
+        if rerun_record is not None:
+            result["rerun"] = rerun_record
 
         if gateway_proc is not None:
             try:
@@ -985,6 +1172,7 @@ def main() -> None:
             task_count=len(all_results),
             global_average=global_average,
         )
+        _write_rerun_summary(all_results, output_root)
 
     # 批级异常汇总（含跨 run 规则），供出数前把关与 --rerun-error 决策
     try:

@@ -99,6 +99,8 @@ def _refresh_summary(judge_dir: Path, mode: str) -> None:
     requested_models: list[str] = []
     returned_models: list[str] = []
     endpoint_types: list[str] = []
+    last_response: dict[str, Any] = {}
+    last_parsed: dict[str, Any] = {}
     for existing_dir in attempts:
         request_item = json.loads(
             (existing_dir / "request.json").read_text(encoding="utf-8")
@@ -109,6 +111,8 @@ def _refresh_summary(judge_dir: Path, mode: str) -> None:
         parsed_item = json.loads(
             (existing_dir / "parsed.json").read_text(encoding="utf-8")
         )
+        last_response = response_item
+        last_parsed = parsed_item
         if response_item.get("status") == "failed":
             failed_attempts += 1
         elif response_item.get("status") == "in_progress":
@@ -131,10 +135,17 @@ def _refresh_summary(judge_dir: Path, mode: str) -> None:
             if value and value not in target:
                 target.append(value)
 
-    if failed_attempts or schema_mismatches:
-        status = "failed"
-    elif pending_attempts:
+    # Retry history is retained in failed_attempt_count/schema_mismatch_count,
+    # but the final status must describe the selected (latest) attempt.  A
+    # transient parse failure followed by a valid response is a successful
+    # judge call, not a failed audit.
+    if last_response.get("status") == "in_progress":
         status = "in_progress"
+    elif (
+        last_response.get("status") == "failed"
+        or last_parsed.get("schema_status") in {"mismatch", "parse_error"}
+    ):
+        status = "failed"
     else:
         status = "success"
     write_summary(judge_dir, {
@@ -142,9 +153,12 @@ def _refresh_summary(judge_dir: Path, mode: str) -> None:
         "mode": mode,
         "status": status,
         "attempt_count": len(attempts),
+        "selected_attempt": len(attempts) if status == "success" else None,
         "failed_attempt_count": failed_attempts,
         "pending_attempt_count": pending_attempts,
         "schema_mismatch_count": schema_mismatches,
+        "final_attempt_status": last_response.get("status") if attempts else None,
+        "final_schema_status": last_parsed.get("schema_status") if attempts else None,
         "requested_models": requested_models,
         "returned_models": returned_models,
         "endpoint_types": endpoint_types,

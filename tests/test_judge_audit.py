@@ -8,10 +8,42 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from src.utils import grading
-from src.utils.judge_audit import write_attempt
+from src.utils.judge_audit import begin_attempt, finish_attempt, write_attempt
 
 
 class JudgeAuditTest(unittest.TestCase):
+    def test_retry_summary_uses_final_attempt_and_retains_history_counts(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            judge_dir = Path(temp)
+            request = {
+                "mode": "v2",
+                "model": "anthropic/claude-test",
+                "endpoint_type": "anthropic_messages",
+            }
+            first = begin_attempt(judge_dir, request)
+            finish_attempt(
+                judge_dir,
+                first,
+                {"status": "success", "model": "claude-test"},
+                {"schema_status": "parse_error", "schema_error": "empty"},
+            )
+            second = begin_attempt(judge_dir, request)
+            finish_attempt(
+                judge_dir,
+                second,
+                {"status": "success", "model": "claude-test"},
+                {"schema_status": "valid", "value": {"scores": {}, "notes": "ok"}},
+            )
+
+            summary = json.loads(
+                (judge_dir / "summary.json").read_text(encoding="utf-8")
+            )
+
+        self.assertEqual(summary["status"], "success")
+        self.assertEqual(summary["attempt_count"], 2)
+        self.assertEqual(summary["schema_mismatch_count"], 1)
+        self.assertEqual(summary["final_schema_status"], "valid")
+
     def test_write_attempt_redacts_credentials_and_image_data(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             write_attempt(

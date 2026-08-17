@@ -972,6 +972,35 @@ def _build_rubric_judge_prompt(
     )
 
 
+def _finalize_judge_summary(
+    judge_dir: Path,
+    *,
+    status: str,
+    attempt_count: int,
+    selected_attempt: int | None,
+    error: str | None = None,
+) -> None:
+    """Persist final judge status while retaining per-attempt retry counts."""
+    summary: dict = {}
+    summary_path = judge_dir / "summary.json"
+    try:
+        value = json.loads(summary_path.read_text(encoding="utf-8"))
+        if isinstance(value, dict):
+            summary = value
+    except (OSError, json.JSONDecodeError):
+        pass
+    summary.update({
+        "status": status,
+        "attempt_count": attempt_count,
+        "selected_attempt": selected_attempt,
+        "final_attempt_status": "success" if status == "success" else "failed",
+        "final_schema_status": "valid" if status == "success" else "parse_error",
+    })
+    if error:
+        summary["error"] = error
+    write_summary(judge_dir, summary)
+
+
 def _grade_llm_rubric(
     task_id: str,
     rubric_text: str,
@@ -1100,14 +1129,25 @@ def _grade_llm_rubric(
         if isinstance(parsed, dict) and isinstance(parsed.get("scores"), dict):
             score, breakdown, notes = _align_rubric_scores(task_id, parsed, rubric_criteria)
             if judge_dir:
-                write_summary(judge_dir, {"status": "success", "attempt_count": attempt, "selected_attempt": attempt})
+                _finalize_judge_summary(
+                    judge_dir,
+                    status="success",
+                    attempt_count=attempt,
+                    selected_attempt=attempt,
+                )
             return score, breakdown, notes
         last_error = err or envelope.get("judge_error") or parse_error or "judge returned no valid JSON"
         logger.warning("[%s] Judge attempt %d/%d invalid: %s", task_id, attempt, retries + 1, last_error)
         if "PPT_RENDER_FAILED" in last_error:
             break
     if judge_dir:
-        write_summary(judge_dir, {"status": "failed", "attempt_count": attempt_count, "selected_attempt": None, "error": last_error})
+        _finalize_judge_summary(
+            judge_dir,
+            status="failed",
+            attempt_count=attempt_count,
+            selected_attempt=None,
+            error=last_error,
+        )
     logger.error("[%s] LLM rubric judge failed: %s", task_id, last_error)
     return 0.0, {c["key"]: 0.0 for c in rubric_criteria}, f"judge failed: {last_error}"
 
