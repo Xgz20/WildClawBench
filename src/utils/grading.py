@@ -10,6 +10,7 @@ import uuid
 from pathlib import Path
 from dotenv import load_dotenv
 from .judge_audit import write_attempt, write_summary
+from .judge_shim import parse_json_candidate
 from .ppt_evidence import build_ppt_evidence_code
 
 logger = logging.getLogger(__name__)
@@ -1078,8 +1079,8 @@ def _grade_llm_rubric(
         parse_error = ""
         if candidate_text:
             try:
-                parsed = json.loads(candidate_text)
-            except (TypeError, json.JSONDecodeError) as exc:
+                parsed = parse_json_candidate(candidate_text)
+            except (TypeError, ValueError) as exc:
                 parse_error = str(exc)
         if judge_dir:
             request_data = envelope.get("request", {}) if envelope else {}

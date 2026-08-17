@@ -38,6 +38,25 @@ class JudgeRetryTest(unittest.TestCase):
             self.assertEqual(summary["selected_attempt"], 2)
             self.assertEqual(summary["status"], "success")
 
+    def test_default_two_retries_make_three_total_attempts(self) -> None:
+        envelope = {
+            "candidate_text": "not-json",
+            "request": {"model": "judge"},
+            "response": {"raw_text": "not-json"},
+        }
+        with tempfile.TemporaryDirectory() as tmp, patch(
+            "src.utils.grading._exec_container_python", return_value=(envelope, "")
+        ) as execute, patch.dict("os.environ", {"WILDCLAW_JUDGE_RETRIES": ""}):
+            _grade_llm_rubric(
+                "task", "rubric", [{"key": "quality", "weight": 1.0}], "",
+                output_dir=Path(tmp),
+            )
+            summary = json.loads((Path(tmp) / "judge/summary.json").read_text())
+
+        self.assertEqual(execute.call_count, 3)
+        self.assertEqual(summary["attempt_count"], 3)
+        self.assertEqual(summary["status"], "failed")
+
     def test_exhausted_invalid_json_retains_failure_semantics(self) -> None:
         envelope = {"candidate_text": "not-json", "request": {}, "response": {"raw_text": "not-json"}}
         with tempfile.TemporaryDirectory() as tmp, patch(

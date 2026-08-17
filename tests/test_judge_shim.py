@@ -11,16 +11,17 @@ from src.utils import judge_shim
 
 class JudgeShimTest(unittest.TestCase):
     @patch("src.utils.judge_shim.request.urlopen")
-    def test_anthropic_json_request_forces_submit_grading_tool(self, urlopen: Mock) -> None:
+    def test_anthropic_json_request_is_non_streaming_text_without_tools(
+        self, urlopen: Mock
+    ) -> None:
         response = Mock()
         response.read.return_value = json.dumps({
             "id": "msg_1",
             "model": "claude-test",
-            "stop_reason": "tool_use",
+            "stop_reason": "end_turn",
             "content": [{
-                "type": "tool_use",
-                "name": "submit_grading",
-                "input": {"scores": {"quality": 0.8}, "notes": "ok"},
+                "type": "text",
+                "text": "评分结果如下：\n```JSON\n{\"scores\": {\"quality\": 0.8}, \"notes\": \"ok\"}\n```",
             }],
             "usage": {"input_tokens": 10, "output_tokens": 8},
         }).encode()
@@ -38,14 +39,38 @@ class JudgeShimTest(unittest.TestCase):
             )
 
         payload = json.loads(urlopen.call_args.args[0].data)
-        self.assertEqual(payload["tool_choice"], {"type": "tool", "name": "submit_grading"})
-        self.assertEqual(payload["tools"][0]["name"], "submit_grading")
+        self.assertNotIn("tools", payload)
+        self.assertNotIn("tool_choice", payload)
+        self.assertNotIn("stream", payload)
         self.assertEqual(
             json.loads(result.choices[0].message.content),
             {"scores": {"quality": 0.8}, "notes": "ok"},
         )
-        self.assertEqual(result.choices[0].finish_reason, "tool_use")
+        self.assertEqual(result.choices[0].finish_reason, "end_turn")
         self.assertEqual(result._raw_response["id"], "msg_1")
+
+    def test_parse_json_candidate_accepts_plain_fenced_and_explanatory_json(self) -> None:
+        cases = {
+            '{"scores": {"quality": 0.8}, "notes": "ok"}': {
+                "scores": {"quality": 0.8}, "notes": "ok"
+            },
+            "```json\n{\"scores\": {\"quality\": 0.8}, \"notes\": \"ok\"}\n```": {
+                "scores": {"quality": 0.8}, "notes": "ok"
+            },
+            "评分结果如下：\n```JSON\n{\"scores\": {\"quality\": 0.8}, \"notes\": \"ok\"}\n```\n以上。": {
+                "scores": {"quality": 0.8}, "notes": "ok"
+            },
+            '前缀 {"outer": {"inner": [1, 2]}, "note": "大括号 {不会截断}"} 后缀': {
+                "outer": {"inner": [1, 2]}, "note": "大括号 {不会截断}"
+            },
+        }
+        for raw, expected in cases.items():
+            with self.subTest(raw=raw):
+                self.assertEqual(judge_shim.parse_json_candidate(raw), expected)
+
+    def test_parse_json_candidate_reports_invalid_output(self) -> None:
+        with self.assertRaisesRegex(ValueError, "unable to parse judge JSON"):
+            judge_shim.parse_json_candidate("模型无法给出评分")
 
     @patch("src.utils.judge_shim.request.urlopen")
     def test_legacy_json_request_preserves_task_defined_schema(self, urlopen: Mock) -> None:

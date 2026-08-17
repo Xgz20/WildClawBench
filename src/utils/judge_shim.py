@@ -28,14 +28,16 @@ a single task file. Model routing / endpoint are driven purely by env:
                       JUDGE_MODEL value with the ``anthropic/`` prefix stripped.
 
 Legacy graders keep their task-defined JSON response shape. The declarative v2
-grader opts into the fixed ``scores``/``notes`` tool schema with an internal
-runner environment marker.
+grader marks its expected ``scores``/``notes`` shape with an internal runner
+environment marker; the Anthropic request itself remains a plain text request
+without tools.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import types
 from pathlib import Path
@@ -163,8 +165,8 @@ def _parse_audit_candidate(
     raw_text: str, wildclaw_judge_schema: str = ""
 ) -> dict[str, Any]:
     try:
-        value = json.loads(_strip_json_fences(raw_text))
-    except (TypeError, json.JSONDecodeError) as exc:
+        value = parse_json_candidate(raw_text)
+    except (TypeError, ValueError) as exc:
         return {
             "schema_status": "parse_error",
             "schema_error": str(exc),
@@ -323,14 +325,113 @@ def _split_messages(messages: list[dict[str, Any]]) -> tuple[str, list[dict[str,
 
 
 def _strip_json_fences(text: str) -> str:
-    stripped = text.strip()
-    if stripped.startswith("```"):
-        stripped = stripped[3:]
-        if stripped[:4].lower() == "json":
-            stripped = stripped[4:]
-        if stripped.endswith("```"):
-            stripped = stripped[:-3]
-    return stripped.strip()
+    """Remove one complete Markdown code fence, if present.
+
+    This helper intentionally does not try to parse JSON.  The judge can put
+    prose before/after a fenced block, so callers that need a value should use
+    :func:`parse_json_candidate` instead.
+    """
+    stripped = str(text or "").strip()
+    match = re.fullmatch(
+        r"```[ \t]*(?:json|jsonc)?[ \t]*\r?\n?(.*?)\r?\n?```",
+        stripped,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    return match.group(1).strip() if match else stripped
+
+
+def _iter_json_candidates(text: str):
+    """Yield balanced JSON object/array substrings from arbitrary text.
+
+    A bracket scanner is used instead of a greedy regular expression so that
+    braces in JSON strings (for example ``"note": "use {x}"``) do not truncate
+    the candidate.  Invalid prose-shaped candidates are yielded too; the
+    caller can try the next candidate after ``json.loads`` rejects one.
+    """
+    for start, opening in enumerate(text):
+        if opening not in "[{":
+            continue
+        stack = [opening]
+        in_string = False
+        escaped = False
+        for index in range(start + 1, len(text)):
+            char = text[index]
+            if in_string:
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == '"':
+                    in_string = False
+                continue
+            if char == '"':
+                in_string = True
+                continue
+            if char in "[{":
+                stack.append(char)
+                continue
+            if char not in "]}":
+                continue
+            if not stack or (char == "]" and stack[-1] != "[") or (
+                char == "}" and stack[-1] != "{"
+            ):
+                break
+            stack.pop()
+            if not stack:
+                yield text[start : index + 1]
+                break
+
+
+def parse_json_candidate(raw_text: str) -> Any:
+    """Parse JSON returned by an unstable judge model.
+
+    Accepted forms include a plain JSON value, a Markdown ``json`` fence, and
+    JSON surrounded by explanatory prose.  The first complete valid object or
+    array is selected using a string-aware balanced-bracket scan.
+    """
+    if not isinstance(raw_text, str):
+        raise TypeError("judge response must be text")
+    text = raw_text.strip()
+    if not text:
+        raise ValueError("judge response is empty")
+
+    attempts: list[str] = [text]
+    stripped = _strip_json_fences(text)
+    if stripped != text:
+        attempts.append(stripped)
+
+    # Handle prose surrounding one or more fenced blocks.  The fence language
+    # is deliberately permissive because providers vary in capitalization and
+    # sometimes omit it altogether.
+    for match in re.finditer(
+        r"```[ \t]*(?:json|jsonc)?[ \t]*\r?\n?(.*?)\r?\n?```",
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    ):
+        attempts.append(match.group(1).strip())
+
+    last_error: Exception | None = None
+    seen: set[str] = set()
+    for candidate in attempts:
+        if not candidate or candidate in seen:
+            continue
+        seen.add(candidate)
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError as exc:
+            last_error = exc
+
+    for candidate in _iter_json_candidates(text):
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError as exc:
+            last_error = exc
+
+    detail = str(last_error) if last_error else "no complete JSON object or array found"
+    raise ValueError(f"unable to parse judge JSON: {detail}") from last_error
 
 
 def _anthropic_create(
@@ -363,25 +464,6 @@ def _anthropic_create(
         payload["temperature"] = float(temperature)
 
     wants_json = isinstance(response_format, dict) and response_format.get("type") == "json_object"
-    force_scores_notes = wants_json and wildclaw_judge_schema == "scores_notes"
-    if force_scores_notes:
-        payload["tools"] = [{
-            "name": "submit_grading",
-            "description": "Submit the final rubric scores and concise grading notes.",
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "scores": {
-                        "type": "object",
-                        "additionalProperties": {"type": "number"},
-                    },
-                    "notes": {"type": "string"},
-                },
-                "required": ["scores", "notes"],
-                "additionalProperties": False,
-            },
-        }]
-        payload["tool_choice"] = {"type": "tool", "name": "submit_grading"}
 
     base_url = os.environ.get("ANTHROPIC_BASE_URL", "").strip() or DEFAULT_ANTHROPIC_BASE_URL
     endpoint = base_url.rstrip("/") + "/v1/messages"
@@ -407,24 +489,23 @@ def _anthropic_create(
             pass
         raise RuntimeError(f"Anthropic judge HTTP {exc.code}: {body}") from exc
 
-    tool_inputs = [
-        block.get("input")
-        for block in data.get("content", [])
-        if isinstance(block, dict)
-        and block.get("type") == "tool_use"
-        and block.get("name") == "submit_grading"
-        and isinstance(block.get("input"), dict)
-    ]
     text = "".join(
         block.get("text", "")
         for block in data.get("content", [])
         if isinstance(block, dict) and block.get("type") == "text"
     )
 
-    if force_scores_notes and tool_inputs:
-        text = json.dumps(tool_inputs[-1], ensure_ascii=False)
-    elif wants_json:
-        text = _strip_json_fences(text)
+    # Anthropic Messages is intentionally called as a normal, non-streaming
+    # text completion.  If the caller requested JSON, canonicalize the common
+    # unstable forms to one JSON string for OpenAI-shaped graders; the original
+    # provider response remains available in ``_raw_response`` for audit.
+    if wants_json:
+        try:
+            text = json.dumps(parse_json_candidate(text), ensure_ascii=False)
+        except (TypeError, ValueError):
+            # Let the existing grader retry path handle malformed output while
+            # preserving the raw text for diagnostics.
+            text = text.strip()
 
     usage_raw = data.get("usage") or {}
     usage = _Usage(

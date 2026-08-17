@@ -441,6 +441,33 @@ class AnalysisPipelineTest(unittest.TestCase):
             )
         )
 
+    def test_summary_dimensions_use_only_active_tasks(self) -> None:
+        class FakeUnit:
+            def __init__(self, label, scores):
+                self.unit_display = label
+                self.tasks = [SimpleNamespace(task_id=task_id) for task_id in scores]
+                self.scores = scores
+
+            def avg_pct(self, task_ids):
+                values = [self.scores[task_id] for task_id in task_ids
+                          if task_id in self.scores]
+                return sum(values) / len(values) * 100 if values else None
+
+        units = [FakeUnit("model@harness", {"active_l1": 0.8, "active_l2": 0.6})]
+        task_meta = {
+            "active_l1": {"difficulty": "L1"},
+            "active_l2": {"difficulty": "L2"},
+            "unrelated_l3": {"difficulty": "L3"},
+        }
+
+        rows = excel_report._build_dim_comparison(
+            units, task_meta, "difficulty", ["L1", "L2", "L3"]
+        )
+
+        self.assertEqual([(row["name"], row["task_count"]) for row in rows],
+                         [("L1", 1), ("L2", 1)])
+        self.assertEqual(rows[0]["scores"]["model@harness"], 80.0)
+
     def test_dimension_sheets_append_two_controlled_views(self) -> None:
         workbook = load_workbook(self.generate_comparison_excel())
         expected_sheets = (

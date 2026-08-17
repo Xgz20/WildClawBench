@@ -2213,8 +2213,15 @@ def _build_dim_comparison(
     order: list[str],
 ) -> list[dict]:
     """按某维度（category/difficulty/modality）聚合各 unit 的平均分。"""
+    active_task_ids = {
+        task.task_id
+        for unit in units
+        for task in unit.tasks
+    }
     dim_to_tasks: dict[str, set[str]] = {}
     for tid, meta in task_meta.items():
+        if tid not in active_task_ids:
+            continue
         val = meta.get(dim_field)
         if val:
             dim_to_tasks.setdefault(val, set()).add(tid)
