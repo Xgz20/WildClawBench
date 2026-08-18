@@ -59,6 +59,25 @@ class AnomalyDetectionTest(unittest.TestCase):
         finally:
             temp_dir.cleanup()
 
+    def test_website_evaluator_error_is_validity_failure(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            self.write_json(run_dir / "score.json", {
+                "overall_score": 0.0,
+                "_grading": {
+                    "status": "evaluator_failed",
+                    "website_runtime_error": "EVALUATOR_CHECK_FAILED: criterion_07",
+                },
+            })
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "WEBSITE_EVALUATOR_ERROR")
+            self.assertIsNotNone(item)
+            self.assertEqual(item["attribution"], "evaluation_framework")
+            self.assertEqual(report["validity_verdict"], "FAIL")
+            self.assertTrue(report["needs_rerun"])
+        finally:
+            temp_dir.cleanup()
+
     def test_agent_log_api_keywords_never_trigger_model_api_failure(self) -> None:
         temp_dir, run_dir = self.make_run(
             'level=ERROR agent=build error="HTTP 429 too many requests"\n'

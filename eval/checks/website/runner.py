@@ -50,6 +50,14 @@ def canvas_text_capture_script() -> str:
     })();"""
 
 
+def evaluator_errors(checks: dict) -> list[dict[str, str]]:
+    return [
+        {"key": key, "error": str(value.get("error", ""))}
+        for key, value in checks.items()
+        if isinstance(value, dict) and value.get("status") == "evaluator_error"
+    ]
+
+
 def _run_command(command: list[str], cwd: Path, log_path: Path, timeout: float) -> None:
     with log_path.open("w", encoding="utf-8") as log:
         result = subprocess.run(
@@ -127,9 +135,11 @@ async def _run_browser(module, output_dir: Path) -> dict:
     (output_dir / "console.json").write_text(json.dumps(console_events, ensure_ascii=False, indent=2), encoding="utf-8")
     (output_dir / "network.json").write_text(json.dumps(network_events, ensure_ascii=False, indent=2), encoding="utf-8")
     (output_dir / "page-errors.json").write_text(json.dumps(page_errors, ensure_ascii=False, indent=2), encoding="utf-8")
+    check_errors = evaluator_errors(checks)
     return {
         "checks": checks,
         "screenshots": visual_manifest,
+        "evaluator_errors": check_errors,
         "console_error_count": sum(item["type"] == "error" for item in console_events),
         "page_error_count": len(page_errors),
         "blocked_network_count": len(network_events),
@@ -188,7 +198,12 @@ def main() -> int:
         module = importlib.import_module(f"tasks.{args.task_module}")
         result = asyncio.run(_run_browser(module, output_dir))
         payload.update(result)
-        payload["status"] = "success"
+        if result.get("evaluator_errors"):
+            payload["status"] = "evaluator_failed"
+            keys = ", ".join(item["key"] for item in result["evaluator_errors"])
+            payload["error"] = f"EVALUATOR_CHECK_FAILED: {keys}"
+        else:
+            payload["status"] = "success"
     except Exception as exc:
         error = f"{type(exc).__name__}: {exc}"
         payload["error"] = error

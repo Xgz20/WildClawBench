@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 try:
-    from ..common import CheckRecorder, capture, click_named, contains_texts, reset_page
+    from ..common import (
+        CheckRecorder, capture, click_named_any, contains_any_texts,
+        contains_texts, reset_page,
+    )
 except ImportError:
-    from common import CheckRecorder, capture, click_named, contains_texts, reset_page
+    from common import (
+        CheckRecorder, capture, click_named_any, contains_any_texts,
+        contains_texts, reset_page,
+    )
 
 
 RUNTIME_KEYS = [
@@ -25,13 +31,13 @@ VISUAL_KEYS = ["criterion_21_page_layout", "criterion_22_visual_style"]
 async def _select_value(page, value: str) -> bool:
     selects = page.locator("select")
     for index in range(await selects.count()):
-        options = await selects.nth(index).locator("option").all_text_contents()
-        if value in options:
+        options = [option.strip() for option in await selects.nth(index).locator("option").all_text_contents()]
+        if any(opt == value for opt in options):
             await selects.nth(index).select_option(label=value)
             await page.wait_for_timeout(100)
             return True
     try:
-        await click_named(page, value)
+        await click_named_any(page, [value, f"{value}（", f"切换{value}", f"选择{value}"])
         return True
     except Exception:
         return False
@@ -39,10 +45,22 @@ async def _select_value(page, value: str) -> bool:
 
 async def _open_alert(page, label: str) -> bool:
     try:
-        await click_named(page, label)
+        await click_named_any(page, [label, f"{label}项", f"{label}状态"])
         return True
     except Exception:
         return False
+
+
+async def _contains_chart(page) -> bool:
+    return (
+        await page.locator("canvas").count() > 0
+        or await page.locator("svg").count() > 0
+        or await page.locator("[role='img'], .recharts-wrapper, .chart-container").count() > 0
+    )
+
+
+def _contains_any_terms(text: str, terms: list[str]) -> bool:
+    return any(term in text for term in terms)
 
 
 async def run(page, screenshot_dir):
@@ -61,7 +79,9 @@ async def run(page, screenshot_dir):
 
     async def trend():
         await reset_page(page)
-        return await contains_texts(page, ["产品活跃趋势", "总体", "教师", "学生"]) and (await page.locator("canvas").count() > 0 or await page.locator("svg").count() > 0)
+        return await contains_texts(
+            page, ["产品活跃趋势", "总体", "教师", "学生"]
+        ) and await _contains_chart(page)
     await recorder.check("criterion_03_data_visualization", trend)
 
     async def regional_distribution():
@@ -71,7 +91,10 @@ async def run(page, screenshot_dir):
 
     async def school_table():
         await reset_page(page)
-        return await contains_texts(page, ["学校明细", "学校名称", "省", "市", "区", "授权", "活跃用户", "应用状态"])
+        return await contains_texts(
+            page,
+            ["学校明细", "学校名称", "省", "市", "区", "授权", "活跃用户", "应用状态"],
+        )
     await recorder.check("criterion_05_lists_and_tables", school_table)
 
     async def expiry_table():
@@ -95,8 +118,7 @@ async def run(page, screenshot_dir):
     async def province_city_options():
         await reset_page(page)
         await _select_value(page, "浙江省")
-        text = await page.locator("body").inner_text()
-        return "杭州市" in text and "宁波市" in text and await contains_texts(page, ["8", "6", "47", "75%"])
+        return await contains_texts(page, ["杭州市", "宁波市", "8", "6", "47", "75%"])
     await recorder.check("criterion_09_cross_section_coordination", province_city_options)
 
     async def city_district_options():
@@ -121,7 +143,11 @@ async def run(page, screenshot_dir):
         await _select_value(page, "西湖区")
         await _select_value(page, "江苏省")
         text = await page.locator("body").inner_text()
-        return "南京市" in text and "苏州市" in text and "杭州市" not in text
+        return (
+            "南京市" in text
+            and "苏州市" in text
+            and not _contains_any_terms(text, ["杭州市", "西湖区", "余杭区"])
+        )
     await recorder.check("criterion_12_cross_section_coordination", province_change_resets)
 
     async def all_sections_share_filter():
@@ -129,7 +155,10 @@ async def run(page, screenshot_dir):
         await _select_value(page, "2025-2026学年第二学期")
         await _select_value(page, "浙江省")
         text = await page.locator("body").inner_text()
-        return all(token in text for token in ["整体概览", "产品活跃趋势", "区域分布", "学校明细", "未应用"]) and "广东省" not in text
+        return all(
+            token in text
+            for token in ["整体概览", "产品活跃趋势", "区域分布", "学校明细", "未应用"]
+        ) and "广东省" not in text
     await recorder.check("criterion_13_filtering_and_sorting", all_sections_share_filter)
 
     async def trend_switches():
@@ -153,10 +182,14 @@ async def run(page, screenshot_dir):
     async def drill_down():
         await reset_page(page)
         region = page.get_by_text("浙江省", exact=True)
-        if await region.count():
-            await region.first.click()
-        else:
-            await _select_value(page, "浙江省")
+        visible_regions = [
+            region.nth(index)
+            for index in range(await region.count())
+            if await region.nth(index).is_visible()
+        ]
+        if not visible_regions:
+            return False
+        await visible_regions[-1].click()
         return await contains_texts(page, ["浙江省", "杭州市", "宁波市"])
     await recorder.check("criterion_16_page_navigation", drill_down)
 
@@ -172,44 +205,68 @@ async def run(page, screenshot_dir):
     async def unused_latest():
         await reset_page(page)
         await _open_alert(page, "产品未应用预警")
-        return await contains_texts(page, ["文澜实验学校", "鄞州新城学校", "金陵汇文学校", "海珠实验学校"])
+        return await contains_texts(
+            page, ["4", "文澜实验学校", "鄞州新城学校", "金陵汇文学校", "海珠实验学校"]
+        )
     await recorder.check("criterion_18_filtering_and_sorting", unused_latest)
 
     async def unused_first_semester_empty():
         await reset_page(page)
         await _open_alert(page, "产品未应用预警")
         await _select_value(page, "2025-2026学年第一学期")
-        return await contains_texts(page, ["没有未应用学校", "暂无", "0"])
+        return await contains_texts(page, ["0"]) and await contains_any_texts(
+            page, ["没有未应用学校", "暂无未应用学校", "无未应用学校"]
+        )
     await recorder.check("criterion_19_filtering_and_sorting", unused_first_semester_empty)
 
     async def guangdong_expiry_empty():
         await reset_page(page)
         await _open_alert(page, "产品到期预警")
         await _select_value(page, "广东省")
-        return await contains_texts(page, ["没有", "暂无", "0"]) and not await contains_texts(page, ["文澜实验学校"])
+        return (
+            await contains_texts(page, ["0"])
+            and await contains_any_texts(page, ["没有到期", "暂无到期", "无到期"])
+            and not await contains_texts(page, ["文澜实验学校"])
+        )
     await recorder.check("criterion_20_filtering_and_sorting", guangdong_expiry_empty)
 
     async def pagination_school():
         await reset_page(page)
-        next_button = page.get_by_role("button", name="下一页", exact=True)
+        heading = page.get_by_text("学校明细", exact=False).first
+        region = heading.locator(
+            "xpath=ancestor::*[.//tbody and .//button[contains(normalize-space(.), '下一页')]][1]"
+        )
+        if not await region.count():
+            return False
+        next_button = region.locator("button", has_text="下一页").first
         if not await next_button.count():
-            return await contains_texts(page, ["学校明细", "32", "10"])
-        before = await page.locator("tbody tr").all_text_contents()
+            return False
+        before = await region.locator("tbody tr").all_text_contents()
+        if await next_button.first.is_disabled():
+            return False
         await next_button.first.click()
-        after = await page.locator("tbody tr").all_text_contents()
-        return len(before) <= 10 and len(after) <= 10 and before != after
+        after = await region.locator("tbody tr").all_text_contents()
+        return len(before) == 10 and 1 <= len(after) <= 10 and before != after and await contains_texts(page, ["32"])
     await recorder.check("criterion_23_page_navigation", pagination_school)
 
     async def pagination_alert():
         await reset_page(page)
         await _open_alert(page, "产品到期预警")
-        next_button = page.get_by_role("button", name="下一页", exact=True)
+        heading = page.get_by_text("产品到期预警", exact=False).last
+        region = heading.locator(
+            "xpath=ancestor::*[.//tbody and .//button[contains(normalize-space(.), '下一页')]][1]"
+        )
+        if not await region.count():
+            return False
+        next_button = region.locator("button", has_text="下一页").first
         if not await next_button.count():
-            return await contains_texts(page, ["16", "10"])
-        before = await page.locator("tbody tr").all_text_contents()
+            return False
+        before = await region.locator("tbody tr").all_text_contents()
+        if await next_button.first.is_disabled():
+            return False
         await next_button.first.click()
-        after = await page.locator("tbody tr").all_text_contents()
-        return len(before) <= 10 and len(after) <= 10 and before != after and await contains_texts(page, ["16"])
+        after = await region.locator("tbody tr").all_text_contents()
+        return len(before) == 10 and len(after) == 6 and before != after and await contains_texts(page, ["16"])
     await recorder.check("criterion_24_page_navigation", pagination_alert)
     return recorder.results
 

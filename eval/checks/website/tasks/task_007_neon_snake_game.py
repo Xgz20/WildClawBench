@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 try:
-    from ..common import CheckRecorder, capture, click_named, contains_texts, reset_page
+    from ..common import (
+        CheckRecorder, capture, click_named, contains_any_texts,
+        contains_each_any_texts, contains_texts, reset_page,
+    )
 except ImportError:
-    from common import CheckRecorder, capture, click_named, contains_texts, reset_page
+    from common import (
+        CheckRecorder, capture, click_named, contains_any_texts,
+        contains_each_any_texts, contains_texts, reset_page,
+    )
 
 
 RUNTIME_KEYS = [
@@ -38,13 +44,76 @@ async def _board_count(page) -> int:
     return 0
 
 
-async def _force_end(page) -> None:
-    # Keep the interaction deterministic without depending on a particular
-    # board implementation: repeated edge turns eventually end both snakes.
-    for _ in range(18):
-        await page.keyboard.press("ArrowLeft")
-        await page.keyboard.press("KeyA")
-        await page.wait_for_timeout(80)
+async def _player_panel_text(page, side: str) -> str:
+    labels = ["左侧玩家", "左边玩家", "玩家一"] if side == "left" else ["右侧玩家", "右边玩家", "玩家二"]
+    for label in labels:
+        anchors = page.get_by_text(label, exact=True)
+        for index in range(await anchors.count()):
+            anchor = anchors.nth(index)
+            if not await anchor.is_visible():
+                continue
+            text = await anchor.evaluate(
+                """(node) => {
+                    let current = node;
+                    for (let depth = 0; current && depth < 7; depth += 1) {
+                        const text = current.innerText || '';
+                        if (text.includes('分数') && text.includes('长度')) return text;
+                        current = current.parentElement;
+                    }
+                    return node.parentElement?.innerText || node.innerText || '';
+                }"""
+            )
+            return str(text or "")
+    return ""
+
+
+async def _player_is_out(page, side: str) -> bool:
+    text = await _player_panel_text(page, side)
+    return "出局" in text or "淘汰" in text or "结束" in text
+
+
+async def _force_out(page, side: str, timeout_ms: int = 5000) -> bool:
+    await page.keyboard.press("KeyW" if side == "left" else "ArrowUp")
+    deadline = timeout_ms
+    while deadline > 0:
+        if await _player_is_out(page, side):
+            return True
+        await page.wait_for_timeout(100)
+        deadline -= 100
+    return False
+
+
+async def _force_end(page) -> bool:
+    # Drive both snakes toward a boundary and poll the actual per-player state.
+    # This is independent of the board dimensions and avoids fixed-duration
+    # key spam being mistaken for a completed round.
+    await page.keyboard.press("KeyW")
+    await page.keyboard.press("ArrowUp")
+    for _ in range(60):
+        left_out = await _player_is_out(page, "left")
+        right_out = await _player_is_out(page, "right")
+        if left_out and right_out:
+            return True
+        await page.wait_for_timeout(100)
+    left_out = await _player_is_out(page, "left") or await _force_out(page, "left")
+    right_out = await _player_is_out(page, "right") or await _force_out(page, "right")
+    return left_out and right_out
+
+
+async def _force_left_out_while_right_continues(page, timeout_ms: int = 3000) -> bool:
+    await page.keyboard.press("KeyW")
+    right_turns = ("ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft")
+    elapsed = 0
+    turn_index = 0
+    while elapsed < timeout_ms:
+        if await _player_is_out(page, "left"):
+            return not await _player_is_out(page, "right")
+        if elapsed % 300 == 0:
+            await page.keyboard.press(right_turns[turn_index % len(right_turns)])
+            turn_index += 1
+        await page.wait_for_timeout(100)
+        elapsed += 100
+    return False
 
 
 async def run(page, screenshot_dir):
@@ -52,21 +121,36 @@ async def run(page, screenshot_dir):
 
     async def basic():
         await reset_page(page)
-        return await contains_texts(page, ["霓虹贪吃蛇", "W", "A", "S", "D", "上", "下", "左", "右", "开始游戏"])
+        return (
+            await contains_texts(page, ["霓虹贪吃蛇", "W", "A", "S", "D", "开始游戏"])
+            and await contains_each_any_texts(
+                page, [["上", "↑"], ["下", "↓"], ["左", "←"], ["右", "→"]]
+            )
+        )
     await recorder.check("criterion_01_basic_content", basic)
 
     async def preparation_and_start():
         await reset_page(page)
         before = await _board_count(page) == 0
         started = await _start_game(page)
-        return before and started and await _board_count(page) >= 2 and await contains_texts(page, ["分数", "长度", "胜场", "胜率"])
+        return (
+            before
+            and started
+            and await _board_count(page) >= 2
+            and await contains_texts(page, ["左", "右", "分数", "长度", "胜率"])
+            and await contains_any_texts(page, ["胜场", "玩家胜"])
+        )
     await recorder.check("criterion_02_information_organization", preparation_and_start)
 
     async def both_running():
         if not await _start_game(page):
             return False
         await page.wait_for_timeout(500)
-        return await contains_texts(page, ["能量果", "爆炸果"]) and await contains_texts(page, ["进行中", "游戏中"])
+        return (
+            await page.get_by_text("能量果", exact=True).count() >= 2
+            and await page.get_by_text("爆炸果", exact=True).count() >= 2
+            and await contains_any_texts(page, ["进行中", "游戏中", "前进中"])
+        )
     await recorder.check("criterion_03_operation_feedback", both_running)
 
     async def left_controls():
@@ -90,7 +174,7 @@ async def run(page, screenshot_dir):
             return False
         await page.keyboard.press("ArrowLeft")
         await page.wait_for_timeout(150)
-        return await contains_texts(page, ["进行中", "游戏中"]) and not await contains_texts(page, ["立即出局"])
+        return await contains_any_texts(page, ["进行中", "游戏中"]) and not await contains_texts(page, ["立即出局"])
     await recorder.check("criterion_06_operation_feedback", no_reverse)
 
     async def energy_feedback():
@@ -116,35 +200,51 @@ async def run(page, screenshot_dir):
     async def one_side_continues():
         if not await _start_game(page):
             return False
-        await page.keyboard.press("KeyA")
-        await page.wait_for_timeout(250)
-        return await contains_texts(page, ["出局", "等待", "另一方", "进行中", "游戏中"])
+        if not await _force_left_out_while_right_continues(page):
+            return False
+        return (
+            await _player_is_out(page, "left")
+            and not await _player_is_out(page, "right")
+            and await contains_any_texts(page, ["等待", "另一方", "继续"])
+        )
     await recorder.check("criterion_09_operation_feedback", one_side_continues)
 
     async def result_modal():
         if not await _start_game(page):
             return False
-        await _force_end(page)
-        return await contains_texts(page, ["得分", "存活时间"]) and await contains_texts(page, ["再来一局", "获胜", "平局"])
+        if not await _force_end(page):
+            return False
+        return (
+            await contains_texts(page, ["存活时间", "再来一局"])
+            and await contains_any_texts(page, ["得分", "分数"])
+            and await contains_any_texts(page, ["获胜", "平局"])
+        )
     await recorder.check("criterion_10_modal_and_overlay", result_modal)
 
     async def survival_tiebreak():
         if not await _start_game(page):
             return False
-        await _force_end(page)
+        if not await _force_left_out_while_right_continues(page):
+            return False
+        await page.wait_for_timeout(300)
+        if not await _force_out(page, "right", timeout_ms=3000):
+            return False
         text = await page.locator("body").inner_text()
-        return ("存活时间" in text and ("获胜" in text or "平局" in text))
+        return "存活时间" in text and "右" in text and "获胜" in text
     await recorder.check("criterion_11_operation_feedback", survival_tiebreak)
 
     async def replay():
         if not await _start_game(page):
             return False
-        await _force_end(page)
+        if not await _force_end(page):
+            return False
         try:
             await click_named(page, "再来一局")
         except Exception:
             return False
-        return await _board_count(page) >= 2 and await contains_texts(page, ["分数", "长度", "进行中", "游戏中"])
+        return await _board_count(page) >= 2 and await contains_texts(page, ["分数", "长度", "0"]) and await contains_any_texts(
+            page, ["进行中", "游戏中", "前进中"]
+        )
     await recorder.check("criterion_12_content_switching", replay)
     return recorder.results
 

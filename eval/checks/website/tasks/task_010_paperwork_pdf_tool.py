@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 try:
-    from ..common import CheckRecorder, capture, click_named, contains_texts, fill_any_named, reset_page
+    from ..common import (
+        CheckRecorder, capture, click_named, contains_any_texts, contains_texts,
+        fill_any_named, reset_page,
+    )
 except ImportError:
-    from common import CheckRecorder, capture, click_named, contains_texts, fill_any_named, reset_page
+    from common import (
+        CheckRecorder, capture, click_named, contains_any_texts, contains_texts,
+        fill_any_named, reset_page,
+    )
 
 
 RUNTIME_KEYS = [
@@ -101,7 +107,12 @@ async def run(page, screenshot_dir):
             ({"name": "large.png", "mimeType": "image/png", "buffer": b"0" * (51 * 1024 * 1024)}, "过大"),
         ]:
             await inputs.first.set_input_files(payload)
-            if not await contains_texts(page, [expected, "不能", "无效"]):
+            if not (
+                await contains_texts(page, [expected])
+                and await contains_any_texts(
+                    page, ["不支持", "为空", "过大", "无效", "不能", "错误"]
+                )
+            ):
                 return False
         return True
     await recorder.check("criterion_05_form_filling_and_validation", file_validation)
@@ -144,11 +155,16 @@ async def run(page, screenshot_dir):
         inputs = page.locator('input[type="number"], input[placeholder*="页"], input[placeholder*="范围"]')
         if await inputs.count() < 2:
             return await contains_texts(page, ["页码范围", "请输入"])
-        for values in [("", ""), ("3", "2"), ("1", "9")]:
+        cases = [
+            (("", ""), ["请输入", "不能为空", "必填"]),
+            (("3", "2"), ["起始页不能大于结束页", "开始页不能大于结束页", "范围无效"]),
+            (("1", "9"), ["超出", "不能超过", "总页数", "范围无效"]),
+        ]
+        for values, messages in cases:
             await inputs.nth(0).fill(values[0])
             await inputs.nth(1).fill(values[1])
             await _start_process(page)
-            if not await contains_texts(page, ["范围", "页数", "不能", "请输入"]):
+            if not await contains_any_texts(page, messages):
                 return False
         return True
     await recorder.check("criterion_09_form_filling_and_validation", invalid_ranges)
@@ -199,7 +215,7 @@ async def run(page, screenshot_dir):
         if not await _choose_function(page, "PDF 签名"):
             return False
         await _start_process(page)
-        return await contains_texts(page, ["签名不能为空", "请输入签名"])
+        return await contains_any_texts(page, ["签名不能为空", "请输入签名"])
     await recorder.check("criterion_13_form_filling_and_validation", empty_signature)
 
     async def download_feedback():
@@ -213,7 +229,9 @@ async def run(page, screenshot_dir):
             await click_named(page, "下载")
         except Exception:
             return False
-        return await contains_texts(page, ["我的文档", "下载", "已下载", "下载成功"])
+        return await contains_texts(page, ["我的文档"]) and await contains_any_texts(
+            page, ["已下载", "下载成功", "开始下载"]
+        )
     await recorder.check("criterion_14_file_upload_and_download", download_feedback)
 
     async def restart():
@@ -239,6 +257,15 @@ async def capture_visual(page, screenshot_dir):
         await _choose_function(page, "图片转 PDF")
         await _set_files(page, ["sample-image-a.png"])
         manifest.append(await capture(page, screenshot_dir, "desktop-file-step", full_page=False))
+    except Exception:
+        pass
+    await page.set_viewport_size({"width": 375, "height": 812})
+    await reset_page(page, clear_storage=False)
+    manifest.append(await capture(page, screenshot_dir, "mobile-functions", full_page=False))
+    try:
+        await _choose_function(page, "图片转 PDF")
+        await _set_files(page, ["sample-image-a.png"])
+        manifest.append(await capture(page, screenshot_dir, "mobile-file-step", full_page=False))
     except Exception:
         pass
     return manifest

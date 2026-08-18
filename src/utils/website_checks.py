@@ -135,8 +135,18 @@ def merge_website_evidence(
     visual_scores: dict,
     *,
     llm_notes: str = "",
+    runtime_status: str = "success",
+    runtime_error: str = "",
 ) -> dict:
-    """Merge runtime and visual evidence using the rubric's original weights."""
+    """Merge runtime and visual evidence using the rubric's original weights.
+
+    Build/start failures are candidate outcomes. Evaluator failures are
+    framework validity failures. Both receive a placeholder zero without
+    semantic fallback, while grading metadata keeps the attribution explicit.
+    """
+    candidate_failed = runtime_status == "candidate_failed"
+    evaluator_failed = runtime_status == "evaluator_failed"
+    runtime_unusable = candidate_failed or evaluator_failed
     criterion_scores: dict[str, float] = {}
     runtime_breakdown: dict[str, float] = {}
     visual_breakdown: dict[str, float] = {}
@@ -152,6 +162,9 @@ def merge_website_evidence(
                 value = 0.0
                 missing_visual.append(key)
             value = max(0.0, min(1.0, float(value)))
+            if runtime_unusable:
+                value = 0.0
+                missing_visual.append(key)
             visual_breakdown[key] = value
         else:
             raw = runtime_checks.get(key)
@@ -160,8 +173,14 @@ def merge_website_evidence(
                 value = 0.0
                 missing_runtime.append(key)
             value = max(0.0, min(1.0, float(value)))
+            if runtime_unusable:
+                value = 0.0
+                missing_runtime.append(key)
             runtime_breakdown[key] = value
         criterion_scores[key] = value
+
+    missing_runtime = list(dict.fromkeys(missing_runtime))
+    missing_visual = list(dict.fromkeys(missing_visual))
 
     total_weight = sum(
         float(c.get("weight", 0.0))
@@ -180,6 +199,16 @@ def merge_website_evidence(
         **{f"llm_judge.{key}": value for key, value in visual_breakdown.items()},
         "_grading": {
             "mode": "v2_website_dynamic",
+            "status": runtime_status,
+            "score_policy": (
+                "candidate_failed_zero"
+                if candidate_failed
+                else "evaluator_failed_zero"
+                if runtime_status == "evaluator_failed"
+                else "runtime_evidence"
+            ),
+            "semantic_fallback": False,
+            "runtime_error": runtime_error,
             "automated_score": (
                 round(sum(runtime_breakdown.values()) / len(runtime_breakdown), 5)
                 if runtime_breakdown else None

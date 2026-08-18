@@ -63,6 +63,35 @@ class WebsiteTaskChecksTest(unittest.TestCase):
         self.assertGreaterEqual(source.count('click_named(page, "分析")'), 10)
         self.assertIn('["学习", "¥88.00"]', source)
 
+    def test_travel_checker_keeps_exact_brand_and_passes_destination_name(self) -> None:
+        source = inspect.getsource(importlib.import_module(TASK_MODULES[5]))
+
+        self.assertIn('contains_texts(page, ["行迹 Planner"', source)
+        self.assertNotIn("await _add_destination(page)\n", source)
+        self.assertIn('await _add_destination(page, "宽窄巷子")', source)
+        self.assertIn("_select_day(page, 2", source)
+
+    def test_dashboard_checker_awaits_text_helpers_and_scopes_pagination(self) -> None:
+        source = inspect.getsource(importlib.import_module(TASK_MODULES[8]))
+
+        self.assertNotIn("return contains_any_texts(", source)
+        self.assertIn("ancestor::*[.//tbody", source)
+        self.assertIn('len(after) == 6', source)
+
+    def test_responsive_tasks_capture_mobile_evidence(self) -> None:
+        for module_name in (TASK_MODULES[7], TASK_MODULES[9], TASK_MODULES[10]):
+            with self.subTest(module_name=module_name):
+                source = inspect.getsource(importlib.import_module(module_name).capture_visual)
+                self.assertIn('{"width": 375, "height": 812}', source)
+                self.assertIn('"mobile-', source)
+
+    def test_pdf_validation_uses_alternative_error_messages(self) -> None:
+        source = inspect.getsource(importlib.import_module(TASK_MODULES[9]))
+
+        self.assertIn("contains_any_texts", source)
+        self.assertNotIn('[expected, "不能", "无效"]', source)
+        self.assertNotIn('contains_texts(page, ["签名不能为空", "请输入签名"])', source)
+
 
 if __name__ == "__main__":
     unittest.main()

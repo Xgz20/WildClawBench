@@ -52,6 +52,43 @@ class WebsiteDynamicGradingTest(unittest.TestCase):
         self.assertEqual(scores["automated.content"], 0.0)
         self.assertIn("content", scores["_grading"]["missing_runtime_keys"])
 
+    def test_candidate_build_failure_forces_all_criteria_to_zero(self) -> None:
+        scores = merge_website_evidence(
+            [
+                {"key": "content", "primary": "content_structure", "weight": 0.5},
+                {"key": "visual", "primary": "visual_layout", "weight": 0.5},
+            ],
+            {"content": {"score": 1.0}},
+            {"visual": 1.0},
+            runtime_status="candidate_failed",
+            runtime_error="WEB_BUILD_FAILED: missing App.tsx",
+        )
+        self.assertEqual(scores["automated.content"], 0.0)
+        self.assertEqual(scores["llm_judge.visual"], 0.0)
+        self.assertEqual(scores["overall_score"], 0.0)
+        self.assertEqual(scores["_grading"]["score_policy"], "candidate_failed_zero")
+        self.assertFalse(scores["_grading"]["semantic_fallback"])
+
+    def test_evaluator_failure_is_marked_unreliable(self) -> None:
+        scores = merge_website_evidence(
+            [
+                {"key": "content", "primary": "content_structure", "weight": 0.5},
+                {"key": "other", "primary": "interaction_function", "weight": 0.5},
+            ],
+            {
+                "content": {"status": "evaluator_error", "score": None},
+                "other": {"status": "passed", "score": 1.0},
+            },
+            {},
+            runtime_status="evaluator_failed",
+            runtime_error="EVALUATOR_CHECK_FAILED: content",
+        )
+        self.assertEqual(scores["overall_score"], 0.0)
+        self.assertEqual(scores["_grading"]["status"], "evaluator_failed")
+        self.assertEqual(scores["_grading"]["score_policy"], "evaluator_failed_zero")
+        self.assertIn("content", scores["_grading"]["missing_runtime_keys"])
+        self.assertEqual(scores["automated.other"], 0.0)
+
     def test_runtime_checker_cleans_evaluator_directories_before_copy(self) -> None:
         completed = SimpleNamespace(
             returncode=0,
@@ -224,6 +261,9 @@ class WebsiteDynamicGradingTest(unittest.TestCase):
         judge.assert_not_called()
         self.assertEqual(scores["overall_score"], 0.0)
         self.assertEqual(scores["_grading"]["website_runtime_error"], runtime_error)
+        self.assertEqual(scores["_grading"]["status"], "candidate_failed")
+        self.assertEqual(scores["_grading"]["score_policy"], "candidate_failed_zero")
+        self.assertFalse(scores["_grading"]["semantic_fallback"])
 
     def test_dynamic_visual_judge_does_not_receive_source_or_transcript(self) -> None:
         criteria = [

@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
+from unittest.mock import AsyncMock
 
 from eval.checks.website.common import (
+    CheckRecorder,
     ancestor_contains_texts,
+    contains_any_texts,
+    contains_each_any_texts,
     element_contains_texts,
     fill_any_named,
     visualization_contains_texts,
@@ -12,6 +17,7 @@ from eval.checks.website.runner import (
     browser_context_options,
     build_start_command,
     canvas_text_capture_script,
+    evaluator_errors,
 )
 
 
@@ -36,6 +42,8 @@ class WebsiteCheckRunnerTest(unittest.TestCase):
 
     def test_common_helpers_support_scoped_dom_and_visualization_assertions(self) -> None:
         self.assertTrue(callable(ancestor_contains_texts))
+        self.assertTrue(callable(contains_any_texts))
+        self.assertTrue(callable(contains_each_any_texts))
         self.assertTrue(callable(element_contains_texts))
         self.assertTrue(callable(fill_any_named))
         self.assertTrue(callable(visualization_contains_texts))
@@ -87,6 +95,32 @@ class WebsiteCommonAsyncTest(unittest.IsolatedAsyncioTestCase):
             page.filled,
             [("placeholder:输入名称:True", "书店购书")],
         )
+
+    async def test_false_assertion_is_candidate_failure(self) -> None:
+        page = AsyncMock()
+        recorder = CheckRecorder(page, Path("/tmp"))
+
+        async def check():
+            return False
+
+        await recorder.check("criterion", check)
+
+        self.assertEqual(recorder.results["criterion"]["status"], "failed")
+        self.assertEqual(recorder.results["criterion"]["score"], 0.0)
+        self.assertEqual(evaluator_errors(recorder.results), [])
+
+    async def test_checker_exception_is_evaluator_error(self) -> None:
+        page = AsyncMock()
+        recorder = CheckRecorder(page, Path("/tmp"))
+
+        async def check():
+            raise TypeError("missing required argument: name")
+
+        await recorder.check("criterion", check)
+
+        self.assertEqual(recorder.results["criterion"]["status"], "evaluator_error")
+        self.assertIsNone(recorder.results["criterion"]["score"])
+        self.assertEqual(evaluator_errors(recorder.results)[0]["key"], "criterion")
 
 
 if __name__ == "__main__":

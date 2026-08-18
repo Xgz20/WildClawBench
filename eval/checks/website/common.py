@@ -25,6 +25,28 @@ async def contains_texts(page, expected: list[str]) -> bool:
     return all(normalized(item) in actual for item in expected)
 
 
+async def contains_any_texts(page, expected: list[str]) -> bool:
+    """Return true when at least one acceptable text variant is present.
+
+    ``contains_texts`` intentionally has AND semantics for a checklist of
+    required labels.  Website checkers also need OR semantics for UI copy
+    variants (for example ``进行中``/``游戏中``); keeping this helper
+    explicit prevents alternative phrases from becoming accidental AND
+    requirements.
+    """
+    actual = normalized(await body_text(page))
+    return any(normalized(item) in actual for item in expected)
+
+
+async def contains_each_any_texts(page, groups: list[list[str]]) -> bool:
+    """Require one text variant from each group."""
+    actual = normalized(await body_text(page))
+    return all(
+        any(normalized(item) in actual for item in group)
+        for group in groups
+    )
+
+
 async def element_contains_texts(page, anchor: str, expected: list[str]) -> bool:
     locator = page.get_by_text(anchor, exact=False)
     if not await locator.count():
@@ -98,18 +120,37 @@ async def text_absent(page, expected: list[str]) -> bool:
 async def click_named(page, name: str) -> None:
     for role in ("button", "link", "tab", "checkbox", "radio"):
         locator = page.get_by_role(role, name=name, exact=True)
-        if await locator.count():
-            await locator.first.click()
-            return
+        for index in range(await locator.count()):
+            candidate = locator.nth(index)
+            if await candidate.is_visible():
+                await candidate.click()
+                return
     exact_text = page.get_by_text(name, exact=True)
-    if await exact_text.count():
-        await exact_text.first.click()
-        return
+    for index in range(await exact_text.count()):
+        candidate = exact_text.nth(index)
+        if await candidate.is_visible():
+            await candidate.click()
+            return
     partial_text = page.get_by_text(name, exact=False)
-    if await partial_text.count():
-        await partial_text.first.click()
-        return
-    raise AssertionError(f"EVALUATOR_AMBIGUOUS_LOCATOR: no control named {name!r}")
+    for index in range(await partial_text.count()):
+        candidate = partial_text.nth(index)
+        if await candidate.is_visible():
+            await candidate.click()
+            return
+    raise AssertionError(f"required visible control not found: {name!r}")
+
+
+async def click_named_any(page, names: list[str]) -> None:
+    """Click the first available semantic label from a list of variants."""
+    for name in names:
+        try:
+            await click_named(page, name)
+            return
+        except AssertionError:
+            continue
+    raise AssertionError(
+        f"required visible control not found: any of {names!r}"
+    )
 
 
 async def fill_named(page, name: str, value: str) -> None:
@@ -181,23 +222,41 @@ class CheckRecorder:
             raw = await body()
             passed = bool(raw)
             evidence = raw if isinstance(raw, dict) else {"assertion": passed}
-            self.results[key] = {"score": 1.0 if passed else 0.0, "evidence": evidence}
-            if not passed:
-                raise AssertionError("assertion returned false")
-        except Exception as exc:
-            screenshot = self.screenshot_dir / f"failure-{key}.png"
-            try:
-                await self.page.screenshot(path=str(screenshot), full_page=True)
-            except Exception:
-                screenshot = None
             self.results[key] = {
-                "score": 0.0,
+                "status": "passed" if passed else "failed",
+                "score": 1.0 if passed else 0.0,
+                "evidence": evidence,
+            }
+            if passed:
+                return
+            await self._capture_failure(key)
+        except Exception as exc:
+            screenshot = await self._capture_failure(key)
+            evaluator_error = not isinstance(exc, AssertionError) or str(exc).startswith(
+                "EVALUATOR_"
+            )
+            self.results[key] = {
+                "status": "evaluator_error" if evaluator_error else "failed",
+                "score": None if evaluator_error else 0.0,
                 "error": f"{type(exc).__name__}: {exc}",
                 "evidence": {"screenshot": screenshot.name if screenshot else ""},
             }
+
+    async def _capture_failure(self, key: str) -> Path | None:
+        screenshot = self.screenshot_dir / f"failure-{key}.png"
+        try:
+            await self.page.screenshot(path=str(screenshot), full_page=True)
+            return screenshot
+        except Exception:
+            return None
 
 
 async def capture(page, screenshot_dir: Path, name: str, *, full_page: bool = True) -> dict:
     path = screenshot_dir / f"{name}.png"
     await page.screenshot(path=str(path), full_page=full_page)
-    return {"name": name, "path": f"screenshots/{path.name}", "mime_type": "image/png"}
+    return {
+        "name": name,
+        "path": f"screenshots/{path.name}",
+        "mime_type": "image/png",
+        "viewport": page.viewport_size,
+    }

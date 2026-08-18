@@ -2,12 +2,14 @@ from __future__ import annotations
 
 try:
     from ..common import (
-        CheckRecorder, capture, click_named, contains_texts, fill_any_named,
+        CheckRecorder, capture, click_named, contains_any_texts,
+        contains_each_any_texts, contains_texts, fill_any_named,
         fill_named, reset_page,
     )
 except ImportError:
     from common import (
-        CheckRecorder, capture, click_named, contains_texts, fill_any_named,
+        CheckRecorder, capture, click_named, contains_any_texts,
+        contains_each_any_texts, contains_texts, fill_any_named,
         fill_named, reset_page,
     )
 
@@ -45,20 +47,43 @@ async def _clear(page) -> bool:
     return False
 
 
-async def _open_first_article(page) -> bool:
-    cards = page.locator("article")
-    if await cards.count():
-        try:
-            await cards.first.click()
+async def _article_count(page) -> int:
+    article_count = await page.locator("article").count()
+    entry_count = 0
+    for label in ("阅读全文", "查看全文"):
+        entry_count += await page.get_by_text(label, exact=True).count()
+    return max(article_count, entry_count)
+
+
+async def _select_category(page, value: str) -> bool:
+    selects = page.locator("select")
+    for index in range(await selects.count()):
+        select = selects.nth(index)
+        options = [item.strip() for item in await select.locator("option").all_text_contents()]
+        if value in options:
+            await select.select_option(label=value)
             return True
-        except Exception:
-            pass
+    try:
+        await click_named(page, value)
+        return True
+    except AssertionError:
+        return False
+
+
+async def _open_first_article(page) -> bool:
     for label in ("阅读全文", "查看全文"):
         try:
             await click_named(page, label)
             return True
         except Exception:
             continue
+    cards = page.locator("article")
+    if await cards.count():
+        try:
+            await cards.first.click()
+            return await contains_any_texts(page, ["返回文章列表", "返回文章"])
+        except Exception:
+            pass
     return False
 
 
@@ -104,55 +129,66 @@ async def run(page, screenshot_dir):
 
     async def seeded_articles():
         await reset_page(page)
-        return await page.locator("article").count() >= 3 and await contains_texts(page, ["生活", "阅读", "城市", "阅读全文", "阅读时长"])
+        return await _article_count(page) >= 3 and await contains_texts(
+            page, ["生活", "阅读", "城市", "阅读全文", "标签"]
+        ) and await contains_any_texts(page, ["分钟", "阅读时长"])
     await recorder.check("criterion_02_lists_and_tables", seeded_articles)
 
     async def author_footer():
         await reset_page(page)
-        return await contains_texts(page, ["关于作者", "一个记录日常、阅读和城市漫游的个人角落。", "©", "版权"])
+        return await contains_texts(
+            page, ["关于作者", "一个记录日常、阅读和城市漫游的个人角落。"]
+        ) and await contains_any_texts(page, ["©", "版权", "版权所有", "Copyright"])
     await recorder.check("criterion_03_detail_display", author_footer)
 
     async def search():
         await reset_page(page)
-        before = await page.locator("article").count()
+        before = await _article_count(page)
         ok = await _search(page, "散步")
-        after = await page.locator("article").count()
+        after = await _article_count(page)
         return ok and before >= 3 and after >= 1 and after < before and await contains_texts(page, ["散步"])
     await recorder.check("criterion_04_search", search)
 
     async def category():
         await reset_page(page)
-        before = await page.locator("article").count()
-        await click_named(page, "生活")
-        filtered = await page.locator("article").count()
-        await click_named(page, "全部")
-        return filtered >= 1 and filtered <= before and await page.locator("article").count() == before
+        before = await _article_count(page)
+        if not await _select_category(page, "阅读"):
+            return False
+        filtered = await _article_count(page)
+        if not await _select_category(page, "全部"):
+            return False
+        return filtered >= 1 and filtered < before and await _article_count(page) == before
     await recorder.check("criterion_05_filtering_and_sorting", category)
 
     async def combined_filter():
         await reset_page(page)
         ok = await _search(page, "城市")
         try:
-            await click_named(page, "城市")
+            selected = await _select_category(page, "城市")
         except Exception:
             return False
-        return ok and await page.locator("article").count() >= 1 and await contains_texts(page, ["城市"])
+        return ok and selected and await _article_count(page) >= 1 and await contains_texts(page, ["城市"])
     await recorder.check("criterion_06_filtering_and_sorting", combined_filter)
 
     async def empty_and_clear():
         await reset_page(page)
         if not await _search(page, "不存在的文章关键词"):
             return False
-        empty = await contains_texts(page, ["没有找到", "暂无匹配", "没有匹配", "清除"])
+        empty = await contains_any_texts(page, ["没有找到", "暂无匹配", "没有匹配"]) and await contains_texts(page, ["清除"])
         cleared = await _clear(page)
-        return empty and cleared and await page.locator("article").count() >= 3
+        return empty and cleared and await _article_count(page) >= 3
     await recorder.check("criterion_07_operation_feedback", empty_and_clear)
 
     async def detail():
         await reset_page(page)
         if not await _open_first_article(page):
             return False
-        return await contains_texts(page, ["返回文章", "编辑文章", "删除文章", "标签", "阅读时长"])
+        return (
+            await contains_texts(page, ["返回文章", "编辑文章", "删除文章"])
+            and await contains_any_texts(page, ["分钟", "阅读时长"])
+            and await page.locator("article h1, article h2, article h3, .detail-card h2").count() > 0
+            and await page.locator("article p, article blockquote, article li, .prose").count() > 0
+        )
     await recorder.check("criterion_08_page_navigation", detail)
 
     async def editor():
@@ -208,7 +244,13 @@ async def run(page, screenshot_dir):
         await reset_page(page)
         await click_named(page, "写一篇")
         await _save_editor(page)
-        return await contains_texts(page, ["请输入标题", "请输入正文", "标题不能为空", "正文不能为空"])
+        return await contains_each_any_texts(
+            page,
+            [
+                ["请输入标题", "标题不能为空", "标题必填"],
+                ["请输入正文", "正文不能为空", "正文必填"],
+            ],
+        )
     await recorder.check("criterion_13_form_filling_and_validation", empty_validation)
 
     async def create_article():
@@ -302,6 +344,14 @@ async def capture_visual(page, screenshot_dir):
     try:
         await click_named(page, "写一篇")
         manifest.append(await capture(page, screenshot_dir, "editor", full_page=False))
+    except Exception:
+        pass
+    await page.set_viewport_size({"width": 375, "height": 812})
+    await reset_page(page, clear_storage=False)
+    manifest.append(await capture(page, screenshot_dir, "mobile-home", full_page=False))
+    try:
+        await click_named(page, "写一篇")
+        manifest.append(await capture(page, screenshot_dir, "mobile-editor", full_page=False))
     except Exception:
         pass
     return manifest

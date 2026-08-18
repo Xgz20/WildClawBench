@@ -994,6 +994,11 @@ def _run_grading_v2(
         )
         if website_runtime is None:
             website_runtime = {}
+        if (
+            not website_runtime_error
+            and website_runtime.get("status") in {"candidate_failed", "evaluator_failed"}
+        ):
+            website_runtime_error = str(website_runtime.get("error") or "")
         if website_runtime_error:
             logger.warning("[%s] Website runtime checks failed: %s", task_id, website_runtime_error)
 
@@ -1039,6 +1044,8 @@ def _run_grading_v2(
             (website_runtime or {}).get("checks", {}),
             visual_breakdown,
             llm_notes=llm_notes,
+            runtime_status=str((website_runtime or {}).get("status") or "evaluator_failed"),
+            runtime_error=website_runtime_error,
         )
         if website_runtime_error:
             scores["_grading"]["website_runtime_error"] = website_runtime_error
