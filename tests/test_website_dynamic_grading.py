@@ -10,6 +10,7 @@ from src.utils.grading import _grade_llm_rubric, _run_grading_v2
 from src.utils.website_checks import (
     CONTAINER_AUDIT_DIR,
     CONTAINER_CHECKS_DIR,
+    CONTAINER_EVAL_DIR,
     merge_website_evidence,
     run_website_checks,
     website_check_module_name,
@@ -75,6 +76,42 @@ class WebsiteDynamicGradingTest(unittest.TestCase):
                 "docker", "exec", "container", "rm", "-rf",
                 CONTAINER_CHECKS_DIR, CONTAINER_AUDIT_DIR,
             ],
+        )
+
+    def test_runtime_checker_copies_eval_fixtures_after_agent_execution(self) -> None:
+        completed = SimpleNamespace(
+            returncode=0,
+            stdout='{"status":"success","checks":{},"screenshots":[]}\n',
+            stderr="",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            task_root = Path(tmp) / "task_010_paperwork_pdf_tool" / "eval"
+            task_root.mkdir(parents=True)
+            (task_root / "fixture.pdf").write_bytes(b"fixture")
+            with patch(
+                "src.utils.website_checks.WEBSITE_TASK_WORKSPACE_DIR", Path(tmp),
+            ), patch(
+                "src.utils.website_checks.subprocess.run", return_value=completed,
+            ) as run:
+                payload, error = run_website_checks(
+                    "container",
+                    "07_Website_Generation_task_010_paperwork_pdf_tool",
+                    Path(tmp) / "out",
+                    timeout_seconds=30,
+                )
+        self.assertEqual(payload["status"], "success")
+        self.assertEqual(error, "")
+        commands = [call.args[0] for call in run.call_args_list]
+        self.assertIn(
+            ["docker", "exec", "container", "rm", "-rf", CONTAINER_EVAL_DIR],
+            commands,
+        )
+        self.assertIn(
+            [
+                "docker", "cp", f"{task_root}/.",
+                f"container:{CONTAINER_EVAL_DIR}/",
+            ],
+            commands,
         )
 
     def test_web_grading_routes_runtime_and_visual_criteria_separately(self) -> None:

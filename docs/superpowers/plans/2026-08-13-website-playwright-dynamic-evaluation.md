@@ -36,7 +36,7 @@
 - [x] **Step 4: Implement browser lifecycle:** Python Playwright Chromium, 1440x900 context, storage reset, console/network/page errors, screenshot and trace capture, guaranteed `finally` cleanup.
 - [x] **Step 5: Implement JSON output:** `{task_id, checks, screenshots, errors, status}` to `.grading/website/summary.json`, with one result per criterion key.
 
-### Task 3: Add five task-specific check scripts
+### Task 3: Add eleven task-specific check scripts
 
 **Files:**
 - Create: `eval/checks/website/tasks/task_001_daymark_product_website.py`
@@ -44,6 +44,12 @@
 - Create: `eval/checks/website/tasks/task_003_chengnan_weekend_activity_discovery.py`
 - Create: `eval/checks/website/tasks/task_004_orchard_memory_game.py`
 - Create: `eval/checks/website/tasks/task_005_xiaoman_ledger_dashboard.py`
+- Create: `eval/checks/website/tasks/task_006_xingji_travel_planner.py`
+- Create: `eval/checks/website/tasks/task_007_neon_snake_game.py`
+- Create: `eval/checks/website/tasks/task_008_shiguang_personal_blog.py`
+- Create: `eval/checks/website/tasks/task_009_smart_teaching_dashboard.py`
+- Create: `eval/checks/website/tasks/task_010_paperwork_pdf_tool.py`
+- Create: `eval/checks/website/tasks/task_011_love_anniversary_site.py`
 - Test: `tests/test_website_task_checks.py`
 
 - [x] **Step 1: Write contract tests** that every script exports `run(page)`, covers every non-visual criterion key, and uses semantic locators before stable attributes.
@@ -75,6 +81,6 @@
 
 - [x] **Step 1: Document the Web task contract:** semantic HTML/accessibility names, local-only data, deterministic states, and no evaluator code in `/tmp_workspace`.
 - [x] **Step 2: Run a real smoke task in `wildclawbench-astroncode-ubuntu:v0.4-ppt`** with the Web profile and capture build/start/browser/Judge artifacts.
-- [ ] **Step 3: Run the five-task Web batch if the smoke passes.**
+- [ ] **Step 3: Run the eleven-task Web batch if the smoke passes.**
 - [x] **Step 4: Confirm non-Web regression tests pass and inspect generated `score.json`, `website/summary.json`, screenshots, traces, and Judge audit.
 - [ ] **Step 5: Commit only related implementation and docs with a Chinese Conventional Commit title.**

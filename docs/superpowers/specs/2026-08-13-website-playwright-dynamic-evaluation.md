@@ -39,13 +39,14 @@
 
 1. Agent 在 `/tmp_workspace` 生成站点并结束执行。
 2. 评分阶段将 `eval/checks/website` 复制到同一容器的 `/tmp/_wildclaw_website_checks`。复制发生在 Agent 结束之后，检查器代码不进入 Agent 工作目录。
-3. `runner.py` 在 `/tmp_workspace` 中检查 `package.json`，缺少 `node_modules` 时执行 `npm install`，随后执行 `npm run build`。
-4. Runner 使用 `npm run start -- --host 127.0.0.1 --port 4173` 启动站点并轮询就绪状态。
-5. Playwright 使用 Chromium、`1440x900` 视口和新建 browser context。浏览器只允许访问 `127.0.0.1:4173`、`localhost:4173`、`data:`、`blob:` 和 `about:`。
-6. 任务脚本的 `run(page, screenshot_dir)` 按固定操作序列执行非视觉检查，并按 canonical key 返回 0 或 1。
-7. `capture_visual(page, screenshot_dir)` 截取正式视觉证据，并将白名单写入 `website/summary.json.screenshots`。
-8. 视觉 Judge 的每次 attempt 只包含视觉 Rubric 和全部白名单截图。源码、transcript、动态评分结果和 `failure-*.png` 不进入请求。
-9. `merge_website_evidence()` 按原始 Criterion 权重合并动态与视觉结果，写入 `score.json`。
+3. 只有在 Agent 执行完成后，任务声明的 `workspace/.../eval` 素材才复制到容器的 `/tmp_workspace_eval`；它不进入被测 Agent 的 `/tmp_workspace`。
+4. `runner.py` 在 `/tmp_workspace` 中检查 `package.json`，缺少 `node_modules` 时执行 `npm install`，随后执行 `npm run build`。
+5. Runner 使用 `npm run start -- --host 127.0.0.1 --port 4173` 启动站点并轮询就绪状态。
+6. Playwright 使用 Chromium、`1440x900` 视口和新建 browser context。浏览器只允许访问 `127.0.0.1:4173`、`localhost:4173`、`data:`、`blob:` 和 `about:`。
+7. 任务脚本的 `run(page, screenshot_dir)` 按固定操作序列执行非视觉检查，并按 canonical key 返回 0 或 1。
+8. `capture_visual(page, screenshot_dir)` 截取正式视觉证据，并将白名单写入 `website/summary.json.screenshots`。
+9. 视觉 Judge 的每次 attempt 只包含视觉 Rubric 和全部白名单截图。源码、transcript、动态评分结果和 `failure-*.png` 不进入请求。
+10. `merge_website_evidence()` 按原始 Criterion 权重合并动态与视觉结果，写入 `score.json`。
 
 ## 5. 任务级检查脚本契约
 
@@ -125,4 +126,4 @@ score.json
 - task 005 动态检查执行 21 个 Criterion，15 个通过、6 个按站点实际行为失分；构建、启动和浏览器流程成功，console/page/network 异常均为 0。收紧后的“最大支出分类及金额”检查为 0，未再被页面其他区域文本误判。
 - task 001 完整动态加 Claude Judge 流程一次成功，`overall_score=0.90`；内容、交互、视觉一级维度分别为 1.00、0.80、1.00。Judge 请求只包含 `desktop-home.png` 和 `faq-section.png`，未包含诊断截图、源码、transcript、动态结果、base64 或凭据。
 
-上述记录证明两条关键链路可用，不代表五个 Web 任务已在本次代码上重新完成整批评测。正式发布前仍应按目标模型和 Harness 重跑完整 Web 范围并执行报告有效性门禁。
+上述记录证明两条关键链路可用，不代表 11 个 Web 任务已在本次代码上重新完成整批评测。当前 11 个任务均已注册对应的 Playwright 检查模块；正式发布前仍应按目标模型和 Harness 重跑完整 Web 范围并执行报告有效性门禁。

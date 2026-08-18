@@ -14,6 +14,12 @@ TASK_MODULES = [
     "eval.checks.website.tasks.task_003_chengnan_weekend_activity_discovery",
     "eval.checks.website.tasks.task_004_orchard_memory_game",
     "eval.checks.website.tasks.task_005_xiaoman_ledger_dashboard",
+    "eval.checks.website.tasks.task_006_xingji_travel_planner",
+    "eval.checks.website.tasks.task_007_neon_snake_game",
+    "eval.checks.website.tasks.task_008_shiguang_personal_blog",
+    "eval.checks.website.tasks.task_009_smart_teaching_dashboard",
+    "eval.checks.website.tasks.task_010_paperwork_pdf_tool",
+    "eval.checks.website.tasks.task_011_love_anniversary_site",
 ]
 
 
@@ -24,6 +30,7 @@ class WebsiteTaskChecksTest(unittest.TestCase):
                 module = importlib.import_module(module_name)
                 self.assertTrue(module.RUNTIME_KEYS)
                 self.assertTrue(callable(module.run))
+                self.assertTrue(callable(module.capture_visual))
                 self.assertTrue(set(module.RUNTIME_KEYS).isdisjoint(module.VISUAL_KEYS))
 
     def test_declared_keys_exactly_cover_each_task_rubric(self) -> None:
@@ -44,7 +51,7 @@ class WebsiteTaskChecksTest(unittest.TestCase):
                 self.assertEqual(set(module.VISUAL_KEYS), expected_visual)
 
     def test_ledger_checks_use_scoped_chart_and_post_mutation_assertions(self) -> None:
-        module = importlib.import_module(TASK_MODULES[-1])
+        module = importlib.import_module(TASK_MODULES[4])
         source = inspect.getsource(module)
 
         self.assertIn("ancestor_contains_texts", source)

@@ -12,6 +12,11 @@ logger = logging.getLogger(__name__)
 WEBSITE_CHECKS_DIR = Path(__file__).resolve().parents[2] / "eval" / "checks" / "website"
 CONTAINER_CHECKS_DIR = "/tmp/_wildclaw_website_checks"
 CONTAINER_AUDIT_DIR = "/tmp_workspace/.grading/website"
+CONTAINER_EVAL_DIR = "/tmp_workspace_eval"
+WEBSITE_TASK_WORKSPACE_DIR = (
+    Path(__file__).resolve().parents[2]
+    / "workspace" / "extension" / "07_Website_Generation"
+)
 
 
 def website_check_module_name(task_definition_id: str) -> str:
@@ -51,6 +56,28 @@ def run_website_checks(
     )
     if cleanup_result.returncode != 0:
         return None, f"EVALUATOR_CLEANUP_FAILED: {cleanup_result.stderr.strip()}"
+    # Copy evaluation-only fixtures only after the agent has finished.  They
+    # stay outside /tmp_workspace, so the agent cannot inspect answer assets
+    # during generation.
+    eval_dir = WEBSITE_TASK_WORKSPACE_DIR / module_name / "eval"
+    eval_cleanup = subprocess.run(
+        ["docker", "exec", container_name, "rm", "-rf", CONTAINER_EVAL_DIR],
+        capture_output=True,
+        text=True,
+    )
+    if eval_cleanup.returncode != 0:
+        return None, f"EVALUATOR_EVAL_CLEANUP_FAILED: {eval_cleanup.stderr.strip()}"
+    if eval_dir.is_dir():
+        eval_copy = subprocess.run(
+            [
+                "docker", "cp", f"{eval_dir}/.",
+                f"{container_name}:{CONTAINER_EVAL_DIR}/",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        if eval_copy.returncode != 0:
+            return None, f"EVALUATOR_EVAL_COPY_FAILED: {eval_copy.stderr.strip()}"
     copy_result = subprocess.run(
         ["docker", "cp", str(WEBSITE_CHECKS_DIR), f"{container_name}:{CONTAINER_CHECKS_DIR}"],
         capture_output=True,
