@@ -8,12 +8,12 @@
 WildClawBench 评测完成后，需要三类报告产出能力和两道质量门禁：
 
 1. **低分任务根因分析**（LLM 结合判分明细 + transcript 找失分证据）
-2. **低分任务根因分析报告**（Markdown，四层归因 + 深度代码级分析）
+2. **低分任务根因分析报告**（Markdown，五层归因 + 深度代码级分析）
 3. **评测报告 Excel**（多单元对比 + 用例详情 + 根因回填）
 4. **评测结果有效性检查**（报告前识别环境失真、数据缺失和不可比范围）
 5. **评测报告审核**（发布前独立复算指标并检查反常统计与结论）
 
-移植策略为**原生适配重写**：按 WildClawBench 的结果结构重写数据加载层，复用 PinchBench 的分析流程设计（Workflow 分批并发、断点续传）与报告框架（四层归因）。
+移植策略为**原生适配重写**：按 WildClawBench 的结果结构重写数据加载层，复用 PinchBench 的分析流程设计（Workflow 分批并发、断点续传），并保留模型、Harness、环境和评测系统的分层边界。
 
 ## 2. WildClawBench 评测结果结构（数据源）
 
@@ -30,6 +30,7 @@ eval_out/all_suite/round1/<model>/<harness>/          ← 模型×Harness 多对
         usage.json            ← tokens/cost/request_count/elapsed_time
         agent.log
         chat_openclaw.jsonl   ← 规范化 transcript（message.content[]: text/tool_use/tool_result）
+        agent_interaction.jsonl ← AstronCode Harness↔模型原始请求/响应轨迹（可选）
         chat.jsonl            ← harness 原生日志（codex 事件流）
         codex_sessions/       ← harness 原生会话
 ```
@@ -72,27 +73,41 @@ eval_out/all_suite/round1/<model>/<harness>/          ← 模型×Harness 多对
 - 未满分/全量：`--imperfect` 选择所有未满分与无有效分数任务；`--all` 加入满分成功对照
 - 指定任务 `specified`：`--task-id` 或 `--task-path`（可重复、支持 `@file.txt`），不限分数
 - 每次选择生成稳定 scope（如 `lt60`、`gte60_lt80`、`all`），用于隔离增量产物
-- 每条记录附加双层错误信号：`error_execution` / `error_grading` / `timed_out` / `status`，供下游区分「模型能力问题」与「环境/基础设施失效」
+- 每条记录附加双层错误信号：`error_execution` / `error_grading` / `timed_out` / `status`，供下游区分「模型能力问题」与「执行失效」；执行失效可能进一步归 L3 外部服务或 L4 评测框架
 
-**manifest 条目**：`task_id`、`suite`、`model`、`harness`、`unit`、`overall_score`、`score_pct`、`analysis_type`、`selection_scope`、`selection_label`、`checkpoints`、`failed_checkpoints`、错误/用量字段及 task/run/transcript 路径。
+**manifest 条目**：`task_id`、`suite`、`model`、`harness`、`unit`、`overall_score`、`score_pct`、`analysis_type`、`selection_scope`、`selection_label`、`checkpoints`、`failed_checkpoints`、错误/用量字段及 task/run/transcript 路径；若运行目录存在 `agent_interaction.jsonl`，另传 `agent_interaction` 及文件大小；同时记录 `source_fingerprints` 锁定 score、任务定义和轨迹输入。该字段可选，不影响旧结果包。
 
-**分析流程**：manifest → `simplify_task` 精简 → 分批（≤10/批）调用 Workflow → 每任务返回 `{task_id, analysis_type, result_analysis, root_cause_analysis}` → 按 unit + scope 保存/合并为 `analysis_<unit>__<scope>.json`。满分任务输出成功路径对照，`root_cause_analysis` 明确“无失分根因”。
+**分析流程**：manifest → `simplify_task` 精简 → 分批（≤10/批）调用 Workflow → 每任务返回 `{task_id, analysis_type, checkpoint_analysis, result_analysis, root_cause_analysis}` → 按 unit + scope 保存/合并为 `analysis_<unit>__<scope>.json` → `validate_analysis.py` 校验。分析结果允许是 manifest 的子集，质量状态记录为 `partial/REVIEW`；未分析任务不进入下游结论。满分任务输出成功路径对照，`root_cause_analysis` 明确“无失分根因”。
+
+质量校验至少检查：分析任务是否越界、结果字段是否为空、归因字段是否自洽、逐检查点是否完整且分数与 `score.json` 一致、证据引用是否有来源和定位、manifest 与原始输入文件指纹是否一致。`FAIL` 阻断正式报告，`REVIEW` 允许增量回填但必须保留覆盖范围和未分析状态。
 
 **分析 prompt 适配要点**：
 1. 读 `task_file`（.md 内含判分代码，等价于 PinchBench 的"判决书"）
-2. 逐个失分检查点到 `chat_openclaw.jsonl` 找证据（工具名如 `exec_command`）
-3. 单轮语义；双层 error 优先判断（执行层错误 → 标注"非模型能力问题"）；`agent.log` 作补充
+2. 逐个失分检查点到 `chat_openclaw.jsonl` 找证据（工具名如 `exec_command`）；AstronCode 另读 `agent_interaction.jsonl`，核对模型请求体/响应体、可见工具清单和 Harness 返回的协议错误
+3. 单轮语义；双层 error 优先判断（执行层错误 → 标注"非模型能力问题"）；`agent.log` 作补充。`agent_interaction.jsonl` 只补充协议层证据，不能替代 transcript 对实际执行和交付结果的核对
 4. 根因分类清单（WildClawBench 版 10 类）：工具调用协议不兼容、超时/循环不收敛、API 额度/认证故障、视觉通道失效、产物未落盘、代码错误、幻觉/编造、任务理解偏离、判分脚本刚性/评测系统问题、能力短板
 
 ### 3.2 low-score-report Skill（`skills/low-score-report/`）
 
 标题：`# WildClawBench <model>@<harness> 低分任务根因分析报告`。结构沿用 PinchBench 框架，两处适配：
 
-- 「高波动/稳定性专项」→「**环境/基础设施失效专项**」：分桶规则（`split_tasks_by_bucket`）：
+- 「高波动/稳定性专项」→「**执行失效专项**」：分桶规则（`split_tasks_by_bucket`）：
   - `infra`：`usage.request_count == 0`（一次都没跑起来），或 `error_execution` 非空且非超时（超时保留在主口径，因为超时可能是模型收敛问题，由 LLM 分析定性）
   - `low`：其余主口径低分任务
-- 四层归因保留：L1a（底层推理）/ L1b（长程执行）/ L3（环境基础设施）/ L4（评测系统）
+  - `infra` 只是执行失效筛选桶，不等于 L3；其中的 Runner/容器/Workspace 框架问题按 L4 归因，外部服务/流控/网络问题按 L3 归因
+- 五层归因是正式口径：L1a（模型基础推理能力）/ L1b（模型 Agent 能力）/ L2（Harness 运行与工具编排）/ L3（评测环境与推理服务基础设施）/ L4（评测系统、任务与 Grader）。每个任务选择一个主导层，协同因素写在根因和证据中。
+- L1a 处理单步理解、事实判断、代码/内容生成和逻辑正确性；L1b 处理工具选择、任务拆解、多步规划、状态保持、循环收敛、验证和结果交付。
+- L2 只归因于 Harness 违反已声明工具契约或编排失效：工具已在模型可见清单/契约中但未注册、映射、调度、回传，或会话状态、重试/超时控制异常。若模型调用请求体/响应体中未提供的 `bash`、`read` 等工具，根因归 L1b；Harness 增加拒绝、替代工具或其他兜底只能作为改进建议，不改变根因归属。
+- L3 只覆盖评测系统之外的外部执行依赖：大模型服务调不通、服务认证失败、流控/限流、网络不通和模型专属视觉服务故障；L4 覆盖评测 Runner、容器生命周期、框架创建/挂载 Workspace、框架控制的进程终止、任务定义、判分代码和 Grader。两者都不写入模型或 Harness 能力结论，除非问题已经修复并重跑/重判。
+- 统一任务 deadline 到期不自动归 L4：如果模型在截止时间前持续循环、反复报错或没有完成交付，归 L1b；Runner/容器在 deadline 前异常终止、timeout 配置错误或违反框架生命周期契约，归 L4。Harness 自身会话截断或产物回收失败归 L2。
+- `unsupported call` 只能证明调用失败，不能单独证明 Harness 未暴露工具；缺少工具清单、Harness 契约或调度日志时，归因层写 `uncertain`，并说明“缺少什么证据，无法区分具体是模型问题还是 Harness 问题”。`uncertain` 是待确认状态，不是第六层，也不参与五层统计。
+- 置信度统一为：`confirmed` 需直接证据充分且排除主要替代解释；`probable` 允许一个未闭环因素但现有证据支持当前判断；`unconfirmed` 表示关键证据缺失、无法可靠归因，通常与 `uncertain` 配套。满分成功对照使用 `none`。
+
 - 深度根因分析要求保留：必须从 transcript 提取失败的 `exec_command` 代码片段，分析到具体代码逻辑，给修复方向
+
+### 3.2.1 是否保留五层归因
+
+建议保留五层，但限制为内部诊断和评测有效性治理，不作为对外能力排名维度。保留的直接收益是：模型/Harness 对比时可以区分能力问题与执行问题，L3/L4 也能从正式能力结论中剥离。主要副作用是日志不完整时容易产生责任错觉，且新增字段会增加 Workflow 兼容成本；因此采用证据字段、置信度和 `uncertain` 兜底，旧 JSON 保持兼容，Excel 暂不新增审计列，也不继续增加更多归因层。
 
 ### 3.3 generate_eval_report.py（`scripts/`）
 

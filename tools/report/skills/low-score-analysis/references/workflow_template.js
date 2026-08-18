@@ -41,10 +41,52 @@ const SCHEMA = {
     },
     root_cause_analysis: {
       type: 'string',
-      description: '失分根因总结；满分任务明确写明无失分根因并总结成功关键',
+      description: '失分根因总结；满分任务明确写明无失分根因并总结成功关键。失分任务必须写明 L1a/L1b/L2/L3/L4 主导层',
+    },
+    checkpoint_analysis: {
+      type: 'array',
+      description: '逐个数值检查点的结构化结论和证据引用；必须覆盖 score.json 中所有检查点，不能只列失分项',
+      items: {
+        type: 'object',
+        properties: {
+          checkpoint: { type: 'string' },
+          score: { type: 'number' },
+          conclusion: { type: 'string' },
+          evidence_refs: {
+            type: 'array',
+            minItems: 1,
+            items: {
+              type: 'object',
+              properties: {
+                source: { type: 'string' },
+                locator: { type: 'string' },
+                excerpt: { type: 'string' },
+              },
+              required: ['source', 'locator'],
+              additionalProperties: false,
+            },
+          },
+        },
+        required: ['checkpoint', 'score', 'conclusion', 'evidence_refs'],
+        additionalProperties: false,
+      },
+    },
+    attribution_layer: {
+      type: 'string',
+      enum: ['L1a', 'L1b', 'L2', 'L3', 'L4', 'uncertain', 'none'],
+      description: '正式五层中的主导归属层：L1a/L1b/L2/L3/L4；uncertain 是待确认状态，不是第六层；证据不足无法区分时使用 uncertain，success_control 使用 none。模型调用未提供的工具使用 L1b，只有 Harness 违反已声明工具契约才使用 L2',
+    },
+    attribution_confidence: {
+      type: 'string',
+      enum: ['confirmed', 'probable', 'unconfirmed', 'none'],
+      description: '归因置信度；confirmed 需直接证据充分并排除主要替代解释，probable 允许一个未闭环因素，unconfirmed 表示关键证据缺失；success_control 使用 none',
+    },
+    attribution_evidence: {
+      type: 'string',
+      description: '归因证据（中文，至少说明证据来源、关键事实及其如何支持该层；confirmed 还要说明主要替代解释为何不成立；证据不足时明确写出缺失的工具清单、Harness日志或其他材料，并说明无法区分模型与Harness）',
     },
   },
-  required: ['task_id', 'analysis_type', 'result_analysis', 'root_cause_analysis'],
+  required: ['task_id', 'analysis_type', 'result_analysis', 'root_cause_analysis', 'checkpoint_analysis', 'attribution_layer', 'attribution_confidence', 'attribution_evidence'],
   additionalProperties: false,
 }
 
@@ -84,12 +126,20 @@ ${failed}
    该 .md 文件包含任务 Prompt 与**判分代码**（automated checks）。先弄清每个检查点具体检查什么（文件路径、内容格式、阈值）。失分任务逐项定位扣分要求；满分对照逐项确认成功证据。
 
 2. **判断错误层级（优先）**：
-   - 若执行层错误表明任务根本没跑起来（如 workspace 缺失、API 额度耗尽、认证 401、request_count=0），直接定性为**环境/基础设施问题，非模型能力问题**，并在根因中明确标注；
-   - 若是超时（timed_out=true），必须进一步读 transcript 区分：是"环境慢/没机会跑完"还是"模型陷入循环不收敛"。
+   - 若外部大模型服务调不通、服务认证失败、流控/限流、网络不通或模型专属视觉服务返回 401，定性为 **L3 评测环境与推理服务基础设施问题，非模型能力问题**；
+   - 若评测 Runner、容器生命周期、框架创建/挂载 Workspace、框架异常终止进程、任务定义或 Grader 导致任务无法执行/得分失真，定性为 **L4 评测系统问题，非模型能力问题**；Runner 创建 Workspace 失败不能直接归 L3；
+   - 若 Harness 自身会话、工具调度、超时截断或产物回收异常，定性为 **L2 Harness 问题**；只有契约和 Harness 日志都能证明时才这样归因；
+   - 若模型在请求体/响应体的可用工具清单中看不到 bash、read 等工具，却主动调用这些工具，定性为 **L1b 模型 Agent 能力问题**；Harness 是否增加拒绝、替代工具或其他兜底，只能作为改进方向，不能改变根因归属；
+   - 只有当工具已在模型可见清单或 Harness 明确工具契约中，模型调用格式也符合契约，但 Harness 没有正确注册、映射、调度、回传结果，或会话状态/重试/超时控制异常时，才定性为 **L2 Harness 问题**；必须以工具清单、Harness 日志或明确的调度结果为证据；
+   - 工具已正确暴露且调用已被 Harness 正常执行，但模型没有正确选择工具、规划多步链路、验证结果或完成交付，定性为 **L1b 模型 Agent 能力问题**；单步代码/逻辑/理解错误归 **L1a**；
+   - 若判分代码、任务定义、Grader 或评测框架的逻辑导致得分失真，定性为 **L4 评测系统问题**；
+   - unsupported call 只能证明调用失败：缺少模型可见工具清单、Harness 契约或调度日志时填写 uncertain，不能直接把问题归到 Harness；uncertain 不参与五层统计；
+   - 若是超时（timed_out=true），必须区分：统一任务 deadline 到期且模型持续循环、反复报错或没有完成交付，归 **L1b**；Harness 在 deadline 前错误截断归 **L2**；Runner/容器在 deadline 前异常终止或 timeout 配置错误归 **L4**；外部模型服务/网络没有给模型执行机会归 **L3**。不能因为最终由 Runner/容器结束进程，就把正常任务超时归为 L3 或 L4。
 
 3. **读执行全过程找证据**：Read ${t.transcript || '（transcript 缺失）'}
    - JSONL 格式，每行一个事件：message.content[] 含 type=text（模型输出）、type=tool_use（实际执行的操作，name 如 exec_command，input 里是命令/代码）、type=tool_result（工具返回）。
    - 文件约 ${t.transcript_kb} KB，超过 100KB 请用 Read 的 offset/limit 分页读完关键部分，禁止只读开头就下结论。
+   ${t.agent_interaction ? `- AstronCode 原始 Harness↔模型交互轨迹：Read ${t.agent_interaction}（约 ${t.agent_interaction_kb} KB）。重点查找模型请求体中的 tools 清单、响应体中的 tool call 和 unsupported call；它用于协议层核对，不能替代 transcript 对实际执行和交付结果的核对。` : '- 若这是 AstronCode 但 agent_interaction.jsonl 缺失，明确记录“缺少模型请求/响应轨迹”，不要仅凭 unsupported call 判断是模型还是 Harness。'}
    - ${isControl ? '逐个检查点找成功证据：模型做了哪些关键操作、如何验证、产物为何满足判分代码；同时记录可复用的高质量执行行为。' : '带着第 1 步弄清的每一个失分检查点去找证据：模型是否做了对应操作？做错在哪一步？产物是否落盘到判分代码检查的路径？'}
    - 常见失分信号：工具调用协议不兼容（tool_result 里大量 unsupported call 报错）、只读不写、产物写错路径、代码反复报同一个错、伪造结果文本但无对应 tool_use、过早结束。
    - 对代码类失败，必须**提取失败的具体代码/命令片段**，分析到具体逻辑错误（如键名错、路径错、格式串错），不许止步于"报错了"。
@@ -97,7 +147,11 @@ ${failed}
 
 4. **输出**（中文，结构化）：
    - result_analysis：任务概述（1-2句）→ 执行过程还原（模型实际做了什么）→ ${isControl ? '逐检查点说明要求、transcript 成功证据（含关键片段或行号）及有效做法。' : '逐失分检查点分析要求、transcript 证据（含关键片段或行号）及扣分原因。'}
-   - root_cause_analysis：${isControl ? '写成“满分对照，无失分根因；成功关键在于……”，用 1-2 句话总结最关键的正确行为，不标能力问题归属层。' : '用 1-2 句话总结根本原因，落到以下类别之一或组合，并注明主导归属层（L1a 底层推理 / L1b 长程执行 / L3 环境基础设施 / L4 评测系统）：工具调用协议不兼容 / 超时或循环不收敛 / API额度或认证故障 / 视觉通道失效 / 产物未落盘或路径错误 / 代码错误 / 幻觉或编造 / 任务理解偏离 / 判分脚本刚性或评测系统问题 / 能力短板。'}
+   - checkpoint_analysis：${isControl ? '逐个列出 score.json 中所有数值检查点，checkpoint 名称必须原样保留，score 填实际分数，conclusion 说明为何通过，evidence_refs 至少引用 task_file、score.json 或 transcript 中的具体字段/行号；禁止编造证据位置。' : '逐个列出 score.json 中所有数值检查点，不得只列失分项；checkpoint 名称必须原样保留，score 填实际分数，conclusion 说明要求、实际结果和扣分原因，evidence_refs 至少引用一个具体来源和定位（如 chat_openclaw.jsonl 行号、agent_interaction.jsonl 请求/响应字段、task_file 判分代码、产物路径或执行错误字段）。'}
+   - root_cause_analysis：${isControl ? '写成“满分对照，无失分根因；成功关键在于……”，用 1-2 句话总结最关键的正确行为，不标能力问题归属层。' : '用 1-2 句话总结根本原因，落到以下类别之一或组合，并注明主导归属层（L1a 模型基础推理能力 / L1b 模型 Agent 能力 / L2 Harness 运行与工具编排 / L3 评测环境与推理服务基础设施 / L4 评测系统、任务与 Grader）：工具调用协议不兼容 / 超时或循环不收敛 / API额度或认证故障 / 视觉通道失效 / 产物未落盘或路径错误 / 代码错误 / 幻觉或编造 / 任务理解偏离 / 判分脚本刚性或评测系统问题 / 能力短板。模型调用未出现在可用工具清单中的工具归 L1b；只有 Harness 违反已声明工具契约时才归 L2；若确有双方共同因素，说明协同因素。'}
+   - attribution_layer：${isControl ? '填写 none' : '填写主导层 L1a/L1b/L2/L3/L4；如果缺少关键证据、无法区分模型与 Harness，填写 uncertain。uncertain 是待确认状态，不是第六层，也不参与五层统计。模型调用未出现在可用工具清单中的工具填写 L1b，只有 Harness 违反已声明工具契约或编排失效才填写 L2。'}
+   - attribution_confidence：${isControl ? '填写 none' : '直接证据充分且排除主要替代解释填写 confirmed；允许一个未闭环因素但现有证据支持当前判断填写 probable；关键证据缺失、无法可靠归因填写 unconfirmed。'}
+   - attribution_evidence：${isControl ? '填写成功操作、工具调用和判分通过证据。' : '必须写明证据来源（模型请求体/响应体、transcript、工具调用日志、Harness日志、任务判分代码等）、关键原文或事实，以及它如何支持归因；AstronCode 优先引用 agent_interaction.jsonl 核对工具清单和请求/响应，chat_openclaw.jsonl 用于核对实际执行。confirmed 还要说明主要替代解释为何不成立。只有 unsupported call 时，不能写成“Harness未暴露工具”；应继续核对工具清单和 Harness 调度日志。证据缺失时明确写“缺少……证据，无法区分具体是模型问题还是 Harness 问题”。'}
    - 环境/基础设施问题必须标注「非模型能力问题」；得分 > 85 的任务标注「本质高分，非能力短板」。
 
 返回 JSON（task_id 填 "${t.task_id}"，analysis_type 填 "${analysisType}"）。`

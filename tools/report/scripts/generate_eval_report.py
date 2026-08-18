@@ -111,6 +111,11 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 import report_entities  # noqa: E402
 
+ANALYSIS_SCRIPTS_DIR = SCRIPT_DIR.parent / "skills/low-score-analysis/scripts"
+sys.path.insert(0, str(ANALYSIS_SCRIPTS_DIR))
+from analysis_quality import load_manifest as load_analysis_manifest  # noqa: E402
+from analysis_quality import validate_analysis as validate_analysis_quality  # noqa: E402
+
 DEFAULT_ENTITIES_PATH = SCRIPT_DIR.parent / "data/entities.yaml"
 
 # 7 维能力口径（与 PinchBench cap7 对齐）；映射文件见 tools/report/data/checkpoint_capability_map7.yaml
@@ -665,7 +670,11 @@ def read_transcript_raw(path: Path | None) -> str:
 # 分析结果加载（--analysis 回填）
 # ===========================================================================
 
-def load_analysis(specs: list[str], units: list[UnitResult]) -> dict[str, dict]:
+def load_analysis(
+    specs: list[str],
+    units: list[UnitResult],
+    quality_out: dict | None = None,
+) -> dict[str, dict]:
     """返回 {"<unit>::<task_id>": {result_analysis, root_cause_analysis}}。
 
     spec 形式：PATH 或 UNIT=PATH。文件内容两种格式：
@@ -674,6 +683,10 @@ def load_analysis(specs: list[str], units: list[UnitResult]) -> dict[str, dict]:
     """
     unit_ids = [u.unit for u in units]
     merged: dict[str, dict] = {}
+    duplicate_count = 0
+    malformed_entries: list[str] = []
+    out_of_scope_keys: list[str] = []
+    manifest_by_unit: dict[str, list[dict]] = {}
     for spec in specs:
         bound = None
         path_str = spec
@@ -688,23 +701,49 @@ def load_analysis(specs: list[str], units: list[UnitResult]) -> dict[str, dict]:
             print(f"[警告] 分析文件格式不是字典，跳过：{path}", file=sys.stderr)
             continue
         count = 0
+        inferred_unit = bound
+        if inferred_unit is None:
+            matches = [u for u in unit_ids if u in path.name]
+            inferred_unit = max(matches, key=len) if matches else None
+        if path.name.startswith("analysis_") and path.name.endswith(".json"):
+            stem = path.name[len("analysis_"):-len(".json")]
+            candidate = path.with_name(f"_failed_tasks_{stem}.json")
+            if candidate.is_file():
+                try:
+                    manifest_records = load_analysis_manifest(candidate)
+                    manifest_units = {str(item.get("unit") or "") for item in manifest_records}
+                    for manifest_unit in manifest_units:
+                        if manifest_unit:
+                            manifest_by_unit.setdefault(manifest_unit, []).extend(
+                                item for item in manifest_records
+                                if item.get("unit") == manifest_unit
+                            )
+                except (OSError, ValueError, json.JSONDecodeError) as exc:
+                    raise ValueError(f"manifest 无法读取：{candidate}: {exc}") from exc
         for key, val in data.items():
             if not isinstance(val, dict):
+                malformed_entries.append(str(key))
                 continue
             if "::" in key:
+                key_unit, _, _ = key.partition("::")
+                if key_unit not in unit_ids:
+                    out_of_scope_keys.append(key)
+                    continue
+                if key in merged:
+                    duplicate_count += 1
                 merged[key] = val
                 count += 1
                 continue
             unit = bound
             if unit is None:
-                matches = [u for u in unit_ids if u in path.name]
-                unit = max(matches, key=len) if matches else None
+                unit = inferred_unit
             if unit is None:
                 print(f"[警告] 无法从文件名 {path.name} 匹配到已加载 unit，"
                       f"请用 UNIT=PATH 显式绑定（已加载：{unit_ids}）", file=sys.stderr)
                 break
             merged_key = f"{unit}::{key}"
             if merged_key in merged:
+                duplicate_count += 1
                 print(f"[警告] 分析项重复，后加载文件覆盖前值：{merged_key}（{path.name}）",
                       file=sys.stderr)
             merged[merged_key] = val
@@ -712,6 +751,71 @@ def load_analysis(specs: list[str], units: list[UnitResult]) -> dict[str, dict]:
         if count:
             print(f"已加载分析 {count} 条：{path.name}")
     print(f"已加载分析回填合计 {len(merged)} 条（来自 {len(specs)} 个文件）")
+    quality = {
+        "schema_version": 1,
+        "status": "PASS",
+        "files": len(specs),
+        "duplicate_overrides": duplicate_count,
+        "malformed_entries": malformed_entries,
+        "out_of_scope_keys": out_of_scope_keys,
+        "units": {},
+    }
+    if duplicate_count:
+        quality["status"] = "REVIEW"
+    if malformed_entries or out_of_scope_keys:
+        quality["status"] = "FAIL"
+    for current_unit in unit_ids:
+        prefix = f"{current_unit}::"
+        entries = {
+            key[len(prefix):]: value
+            for key, value in merged.items()
+            if key.startswith(prefix)
+        }
+        manifest_records = manifest_by_unit.get(current_unit)
+        if manifest_records is not None:
+            expected_records = {
+                str(item.get("task_id")): item
+                for item in manifest_records
+                if item.get("task_id")
+            }
+        else:
+            current_unit_obj = next(u for u in units if u.unit == current_unit)
+            task_map = getattr(current_unit_obj, "task_map", {})
+            expected_records = {task_id: {} for task_id in task_map}
+        unit_quality = validate_analysis_quality(
+            entries,
+            expected=expected_records,
+            allow_partial=True,
+            source_records=manifest_records,
+        )
+        quality["units"][current_unit] = unit_quality
+        if unit_quality["status"] == "FAIL":
+            quality["status"] = "FAIL"
+        elif unit_quality["status"] == "REVIEW" and quality["status"] == "PASS":
+            quality["status"] = "REVIEW"
+    if quality_out is not None:
+        quality_out.update(quality)
+    if quality["status"] == "FAIL":
+        failed = (
+            [f"analysis 文件包含非法条目：{key}" for key in malformed_entries]
+            + [f"analysis 文件包含越界任务：{key}" for key in out_of_scope_keys]
+            + [
+                f"{unit}: {issue['code']} {issue['message']}"
+                for unit, unit_quality in quality["units"].items()
+                for issue in unit_quality["issues"]
+                if issue["severity"] == "error"
+            ]
+        )
+        raise ValueError("；".join(failed[:8]))
+    for current_unit, unit_quality in quality["units"].items():
+        coverage = unit_quality["coverage"]
+        if unit_quality["status"] == "REVIEW":
+            print(
+                f"[提示] {current_unit} 分析质量为 REVIEW："
+                f"已覆盖 {coverage['analyzed']}/{coverage['expected']} 个任务，"
+                "未分析任务不会被当作已分析",
+                file=sys.stderr,
+            )
     return merged
 
 
@@ -2800,7 +2904,14 @@ def main() -> None:
         print("[警告] 未找到任务定义目录（tasks/），名称/难度/模态/Prompt 列将为空；"
               "可用 --tasks-dir 指定", file=sys.stderr)
     task_meta = load_all_task_meta(tasks_dir)
-    analysis = load_analysis(args.analysis, units) if args.analysis else {}
+    analysis_quality: dict = {}
+    try:
+        analysis = (
+            load_analysis(args.analysis, units, analysis_quality)
+            if args.analysis else {}
+        )
+    except ValueError as exc:
+        ap.error(f"分析结果质量校验失败：{exc}")
 
     order = build_task_order(units)
     suites = sorted({s for s, _ in order})
@@ -2872,6 +2983,13 @@ def main() -> None:
     out_path = out_dir / f"report_{len(units)}units_{ts}.xlsx"
     wb.save(out_path)
     print(f"\n✅ Excel 报告已生成：{out_path}")
+    if args.analysis:
+        quality_path = out_dir / f"report_{len(units)}units_{ts}.analysis_quality.json"
+        quality_path.write_text(
+            json.dumps(analysis_quality, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"✓ 分析质量报告已生成：{quality_path}")
 
     # --emit 额外产出
     if args.emit:

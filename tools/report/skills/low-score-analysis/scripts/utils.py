@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 
 NOTE_MAX_LEN = 500
+ANALYSIS_TEXT_FIELDS = ("result_analysis", "root_cause_analysis")
 
 
 def simplify_task(task: dict) -> dict:
@@ -34,6 +35,8 @@ def simplify_task(task: dict) -> dict:
         "transcript": task.get("transcript", ""),
         "agent_log": task.get("agent_log", ""),
         "transcript_kb": task.get("transcript_kb", 0.0),
+        "agent_interaction": task.get("agent_interaction", ""),
+        "agent_interaction_kb": task.get("agent_interaction_kb", 0.0),
     }
 
 
@@ -105,13 +108,45 @@ def save_batch_result(
             pass
     for item in results or []:
         if not isinstance(item, dict) or not item.get("task_id"):
-            continue
-        out[item["task_id"]] = {
+            raise ValueError("Workflow 返回了缺少 task_id 的分析项")
+        missing = [field for field in ANALYSIS_TEXT_FIELDS
+                   if not isinstance(item.get(field), str) or not item[field].strip()]
+        if missing:
+            raise ValueError(
+                f"任务 {item['task_id']} 缺少非空分析字段：{', '.join(missing)}"
+            )
+        candidate = {
             "result_analysis": item.get("result_analysis", ""),
             "root_cause_analysis": item.get("root_cause_analysis", ""),
             "analysis_type": item.get("analysis_type", "failure"),
         }
-    path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+        if "checkpoint_analysis" in item:
+            candidate["checkpoint_analysis"] = item["checkpoint_analysis"]
+        if item.get("attribution_layer"):
+            candidate["attribution_layer"] = item["attribution_layer"]
+        for field in ("attribution_confidence", "attribution_evidence"):
+            if item.get(field):
+                candidate[field] = item[field]
+        task_id = item["task_id"]
+        existing = out.get(task_id)
+        if isinstance(existing, dict):
+            conflicts = [
+                field for field in set(existing) & set(candidate)
+                if existing.get(field) and candidate.get(field)
+                and existing[field] != candidate[field]
+            ]
+            if conflicts:
+                raise ValueError(
+                    f"任务 {task_id} 的批次结果与已有结果冲突：{', '.join(sorted(conflicts))}"
+                )
+            merged = dict(existing)
+            merged.update({key: value for key, value in candidate.items() if value})
+            out[task_id] = merged
+        else:
+            out[task_id] = candidate
+    temp_path = path.with_name(f".{path.name}.tmp")
+    temp_path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+    temp_path.replace(path)
     return path
 
 
@@ -124,7 +159,18 @@ def merge_all_batches(
     workspace = Path(workspace_dir)
     merged = load_completed_tasks(workspace, unit, selection_scope)
     final_path = workspace / f"{analysis_stem(unit, selection_scope)}.json"
-    final_path.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
+    for task_id, item in merged.items():
+        if not isinstance(item, dict):
+            raise ValueError(f"任务 {task_id} 的分析结果不是对象")
+        missing = [field for field in ANALYSIS_TEXT_FIELDS
+                   if not isinstance(item.get(field), str) or not item[field].strip()]
+        if missing:
+            raise ValueError(
+                f"任务 {task_id} 缺少非空分析字段：{', '.join(missing)}"
+            )
+    temp_path = final_path.with_name(f".{final_path.name}.tmp")
+    temp_path.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
+    temp_path.replace(final_path)
     return final_path
 
 

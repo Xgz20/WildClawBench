@@ -64,7 +64,7 @@ L3 评测环境和 L4 评测系统/任务/Grader 保留在内部根因数据中�
 - 确认影响得分的 L3/L4 必须修复并重跑或重新判分；旧 run 通过 `supersedes_run` 退出正式统计。
 - 未闭环 L3/L4 阻断 `PASS`。用户明确接受风险时，只能进入独立的”评测有效性与剔除说明”。
 - L3/L4 不得进入典型低分案例，不得写入模型侧或 Harness 侧能力结论。
-- 模型 API、模型专属视觉通道、Harness 工具协议或 Harness 进程异常按实际责任归属，不能因表面像环境错误就自动归入 L3/L4。
+- 外部大模型 API、模型专属视觉端点认证/流控/网络故障归 L3；评测 Runner、容器生命周期、框架创建/挂载 Workspace、框架异常杀进程或 Grader 故障归 L4；Harness 工具协议、会话截断或 Harness 自身产物回收异常归 L2。统一任务 deadline 到期且模型未完成归 L1b，不因 Runner/容器最终结束进程而改变归因；模型调用请求体/响应体中未提供的工具归 L1b，Harness 兜底只作为改进方向。
 
 ## 流程
 
@@ -91,7 +91,7 @@ python3 tools/report/skills/low-score-analysis/scripts/generate_failed_tasks_man
   --result-root <unit-dir> --threshold 60
 ```
 
-分析时先读任务 Markdown 的判分代码，再读完整 transcript。输出必须包含 `task_id`、`result_analysis`、`root_cause_analysis`，并标记 L1a/L1b/L3/L4 或 Harness 责任。合并后校验任务集合 1:1 对齐且两个分析字段非空。
+分析时先读任务 Markdown 的判分代码，再读完整 `chat_openclaw.jsonl`；如果是 AstronCode 且存在 `agent_interaction.jsonl`，必须再读该 Harness↔模型原始请求/响应轨迹，尤其核对请求体中的工具清单和响应体中的实际工具调用。输出必须包含 `task_id`、`result_analysis`、`root_cause_analysis`、`attribution_layer`、`attribution_confidence` 和 `attribution_evidence`，并标记 L1a（模型基础推理能力）/ L1b（模型 Agent 能力）/ L2（Harness 运行与工具编排）/ L3（评测环境与推理服务基础设施）/ L4（评测系统、任务与 Grader）中的主导层。`uncertain` 是待确认状态，不是第六层，也不参与五层统计；满分成功对照使用 `none`。任何归因都必须给证据；`unsupported call` 不能单独证明 Harness 未暴露工具。证据不足时使用 `uncertain`/`unconfirmed`，明确缺少什么证据、无法区分模型与 Harness。`confirmed` 需排除主要替代解释，`probable` 允许一个未闭环因素，`unconfirmed` 表示关键证据缺失。合并后执行 `validate_analysis.py`：部分覆盖是合法的 `partial/REVIEW`，Excel 和领导版报告仍可生成并回填已分析用例；未分析用例的分析列必须保持空白，不能解释为“无失分”或“未发现问题”。越界任务、空字段、归因字段矛盾或来源快照变化为 `FAIL`，禁止正式发布。
 
 ## 2. 生成 Excel
 
@@ -120,7 +120,7 @@ python3 tools/report/scripts/generate_eval_report.py \
 - 存在 `web-site-gen` 源码语义任务时，`站点评测指标` 的“结果与效率指标汇总”区域使用“结果指标 / 分层分析 / 效率指标”双层合并表头，每个模型与 Harness 组合一行；正式表只展示得分率、严格满分率、L1/L2、三个一级能力维度、耗时平均/P50/P90、平均成本以及平均总/输入/输出 Token 的纯数值，不展示美观度、样本数和计算方法；
 - `_站点评测指标口径` 为隐藏 Sheet，按模型与 Harness 组合、指标保存分类、单位、样本数和计算方法；无 Web 指标时不生成这两个 Sheet；
 - 五个维度 Sheet 下方有”固定目标 Harness：模型对比”和”固定目标模型：Harness 对比”两张连续、带配色、可直接复制的表；被固定的一侧只有 1 个参评对象时该表不生成（无参照，对比不成立），脚本会打印”仅 1 个参评对象”提示，属预期行为；
-- 评分详情仍使用 raw unit 命名，analysis 回填条数与 JSON 一致（preview 模式下为 0）。
+- 评分详情仍使用 raw unit 命名，analysis 回填条数与 JSON 一致（preview 模式下为 0）；生成 Excel 时同时产出 `*.analysis_quality.json`，记录每个 unit 的 `complete/partial` 覆盖状态和质量结论。
 
 ### 成本口径
 
@@ -249,7 +249,7 @@ Agent 原始 7 维必须进入报告。去污染 3 维只有在会改变强弱�
 
 ### 典型低分案例（仅 full 模式）
 
-选 5–6 个证据完整、机制不重复的 L1a、L1b 或 Harness 责任案例。案例必须包含任务、得分、实际执行证据、失分机制、责任归属和可执行改进。默认不选环境、任务、Grader 或统计框架问题。
+选 5–6 个证据完整、机制不重复的 L1a、L1b 或 L2 案例。案例必须包含任务、得分、实际执行证据、失分机制、责任归属和可执行改进。默认不选 L3/L4；L2 必须有已声明工具契约、Harness 日志或调度结果证据，模型调用未提供工具的案例归 L1b。
 
 **案例格式**：标题必须带序号，格式为 `### 案例N：<机制概括>（<task_id>，<得分>）`，例如 `### 案例1：代码调试误诊，掩盖症状而非修复根因（02_Code_Intelligence_task_2_sam3_debug，0 分）`。序号从 1 连续递增，便于正文与会上引用。每个案例用表格展示项目与内容：
 
@@ -258,7 +258,7 @@ Agent 原始 7 维必须进入报告。去污染 3 维只有在会改变强弱�
 | 任务 | 简要描述 |
 | 执行证据 | transcript 中的关键行为（含关键行号、命令或报错原文） |
 | 失分机制 | 判分为何归零或扣分（对应到具体检查点） |
-| 责任归属 | 模型能力（L1a 底层推理 / L1b 长程执行）或 Harness 责任 |
+| 责任归属 | L1a 模型基础推理能力 / L1b 模型 Agent 能力 / L2 Harness 运行与工具编排 |
 
 案例只陈述"做了什么、为何失分、责任在哪"，不写"改进方向"或"复测指标"——如何修复由责任方决定。
 

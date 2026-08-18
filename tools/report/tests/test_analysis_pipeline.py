@@ -19,11 +19,14 @@ from src.utils.run_selection import write_rerun_metadata
 REPORT_DIR = Path(__file__).resolve().parents[1]
 MANIFEST_SCRIPT = REPORT_DIR / "skills/low-score-analysis/scripts/generate_failed_tasks_manifest.py"
 UTILS_SCRIPT = REPORT_DIR / "skills/low-score-analysis/scripts/utils.py"
+ANALYSIS_QUALITY_SCRIPT = REPORT_DIR / "skills/low-score-analysis/scripts/analysis_quality.py"
+VALIDATE_ANALYSIS_SCRIPT = REPORT_DIR / "skills/low-score-analysis/scripts/validate_analysis.py"
 EXCEL_SCRIPT = REPORT_DIR / "scripts/generate_eval_report.py"
 REPORT_ENTITIES_SCRIPT = REPORT_DIR / "scripts/report_entities.py"
 VALIDITY_SCRIPT = REPORT_DIR / "skills/validate-eval-results/scripts/validate_eval_results.py"
 AUDIT_SCRIPT = REPORT_DIR / "skills/audit-eval-report/scripts/audit_eval_report.py"
 LEADER_EXTRACT_SCRIPT = REPORT_DIR / "skills/eval-report/scripts/extract_leader_report_data.py"
+ROOT_CAUSE_UTILS_SCRIPT = REPORT_DIR / "skills/low-score-report/scripts/report_utils.py"
 DEEPSEEK_FIXTURE = REPORT_DIR.parent.parent / "tests/fixtures/deepseek_harness"
 
 
@@ -38,9 +41,11 @@ def load_module(name: str, path: Path):
 
 manifest = load_module("analysis_manifest", MANIFEST_SCRIPT)
 analysis_utils = load_module("analysis_utils", UTILS_SCRIPT)
+analysis_quality = load_module("analysis_quality", ANALYSIS_QUALITY_SCRIPT)
 excel_report = load_module("excel_report", EXCEL_SCRIPT)
 validity_check = load_module("validity_check", VALIDITY_SCRIPT)
 report_audit = load_module("report_audit", AUDIT_SCRIPT)
+root_cause_utils = load_module("root_cause_utils", ROOT_CAUSE_UTILS_SCRIPT)
 
 
 class AnalysisPipelineTest(unittest.TestCase):
@@ -956,6 +961,32 @@ class AnalysisPipelineTest(unittest.TestCase):
         full = next(item for item in selected if item["task_id"] == "task_full")
         self.assertEqual(full["analysis_type"], "success_control")
 
+    def test_manifest_includes_optional_astroncode_interaction_trace(self) -> None:
+        run_dir = self.paths["task_50"]
+        interaction_path = run_dir / "agent_interaction.jsonl"
+        interaction_path.write_text(
+            json.dumps({"event_type": "model_request", "request": {"tools": []}}),
+            encoding="utf-8",
+        )
+
+        record = manifest.build_task_record(
+            "model-x", "astroncode", "01_suite", run_dir.parent.parent,
+            None, selected_run_dir=run_dir,
+        )
+        self.assertIsNotNone(record)
+        self.assertEqual(record["agent_interaction"], str(interaction_path))
+        self.assertGreater(record["agent_interaction_kb"], 0)
+
+        simplified = analysis_utils.simplify_task(record)
+        self.assertEqual(simplified["agent_interaction"], str(interaction_path))
+        self.assertIn("score.json", record["source_fingerprints"])
+        self.assertTrue(record["source_fingerprints"]["score.json"]["sha256"])
+
+    def test_manifest_keeps_optional_interaction_trace_empty_for_legacy_runs(self) -> None:
+        record = next(item for item in self.records if item["task_id"] == "task_50")
+        self.assertEqual(record["agent_interaction"], "")
+        self.assertEqual(record["agent_interaction_kb"], 0.0)
+
     def test_score_range_and_result_path_selection(self) -> None:
         selection = self.selection(score_min=60, score_max=80)
         self.assertEqual(selection["scope"], "gte60_lt80")
@@ -1150,6 +1181,153 @@ class AnalysisPipelineTest(unittest.TestCase):
         final_path = analysis_utils.merge_all_batches(workspace, "model-x@harness-y", "lt60")
         self.assertEqual(final_path.name, "analysis_model-x@harness-y__lt60.json")
 
+    def test_analysis_quality_allows_partial_coverage_without_filling_missing_tasks(self) -> None:
+        expected = {
+            "task_50": {"analysis_type": "failure"},
+            "task_70": {"analysis_type": "failure"},
+        }
+        quality = analysis_quality.validate_analysis(
+            {
+                "task_50": {
+                    "result_analysis": "已核对任务定义和执行轨迹。",
+                    "root_cause_analysis": "主导归属层：L1a。",
+                    "analysis_type": "failure",
+                    "attribution_layer": "L1a",
+                    "attribution_confidence": "confirmed",
+                    "attribution_evidence": "任务定义与 transcript 已核对。",
+                }
+            },
+            expected=expected,
+            allow_partial=True,
+        )
+        self.assertEqual(quality["status"], "REVIEW")
+        self.assertEqual(quality["coverage"], {
+            "expected": 2, "analyzed": 1, "missing": 1, "ratio": 0.5, "state": "partial"
+        })
+        self.assertEqual(quality["missing_task_ids"], ["task_70"])
+
+    def test_analysis_quality_rejects_checkpoint_score_mismatch(self) -> None:
+        quality = analysis_quality.validate_analysis(
+            {
+                "task_50": {
+                    "result_analysis": "结果",
+                    "root_cause_analysis": "根因",
+                    "analysis_type": "failure",
+                    "attribution_layer": "L1a",
+                    "attribution_confidence": "confirmed",
+                    "attribution_evidence": "已核对来源。",
+                    "checkpoint_analysis": [{
+                        "checkpoint": "check_a",
+                        "score": 0.5,
+                        "conclusion": "未满足",
+                        "evidence_refs": [{"source": "score.json", "locator": "check_a"}],
+                    }],
+                }
+            },
+            expected={"task_50": {"checkpoints": {"check_a": 0.0}}},
+        )
+        self.assertEqual(quality["status"], "FAIL")
+        self.assertTrue(any(
+            item["code"] == "CHECKPOINT_SCORE_MISMATCH"
+            for item in quality["issues"]
+        ))
+
+    def test_analysis_quality_rejects_invalid_success_control_attribution(self) -> None:
+        quality = analysis_quality.validate_analysis(
+            {
+                "task_full": {
+                    "result_analysis": "成功",
+                    "root_cause_analysis": "成功路径",
+                    "analysis_type": "success_control",
+                    "attribution_layer": "L1b",
+                    "attribution_confidence": "confirmed",
+                    "attribution_evidence": "已核对来源。",
+                    "checkpoint_analysis": [],
+                }
+            },
+            expected={"task_full": {"analysis_type": "success_control"}},
+        )
+        self.assertEqual(quality["status"], "FAIL")
+        self.assertTrue(any(
+            item["code"] == "SUCCESS_CONTROL_ATTRIBUTION_INVALID"
+            for item in quality["issues"]
+        ))
+
+    def test_analysis_quality_rejects_changed_source_snapshot(self) -> None:
+        record = next(item for item in self.records if item["task_id"] == "task_50")
+        quality = analysis_quality.validate_analysis(
+            {
+                "task_50": {
+                    "result_analysis": "结果",
+                    "root_cause_analysis": "根因",
+                }
+            },
+            expected={"task_50": {}},
+            source_records=[record],
+        )
+        self.assertEqual(quality["source_snapshot"], "verified")
+
+        score_path = Path(record["run_dir"]) / "score.json"
+        score_path.write_text(json.dumps({"overall_score": 0.4, "check": 0.4}), encoding="utf-8")
+        changed = analysis_quality.validate_analysis(
+            {
+                "task_50": {
+                    "result_analysis": "结果",
+                    "root_cause_analysis": "根因",
+                }
+            },
+            expected={"task_50": {}},
+            source_records=[record],
+        )
+        self.assertEqual(changed["status"], "FAIL")
+        self.assertTrue(any(item["code"] == "SOURCE_FILE_CHANGED" for item in changed["issues"]))
+
+    def test_analysis_quality_rejects_incomplete_checkpoint_evidence(self) -> None:
+        quality = analysis_quality.validate_analysis(
+            {
+                "task_50": {
+                    "result_analysis": "结果",
+                    "root_cause_analysis": "根因",
+                    "analysis_type": "failure",
+                    "attribution_layer": "L1a",
+                    "attribution_confidence": "confirmed",
+                    "attribution_evidence": "已核对来源。",
+                    "checkpoint_analysis": [{
+                        "checkpoint": "check_a",
+                        "score": 0.0,
+                        "conclusion": "未满足",
+                        "evidence_refs": [],
+                    }],
+                }
+            },
+            expected={"task_50": {"checkpoints": {"check_a": 0.0, "check_b": 1.0}}},
+        )
+        self.assertEqual(quality["status"], "FAIL")
+        self.assertTrue(any(
+            item["code"] in {"CHECKPOINT_EVIDENCE_MISSING", "CHECKPOINT_COVERAGE_INCOMPLETE"}
+            for item in quality["issues"]
+        ))
+
+    def test_low_score_report_loader_accepts_partial_analysis_with_quality_status(self) -> None:
+        workspace = self.round_dir / "report-workspace"
+        workspace.mkdir(parents=True, exist_ok=True)
+        manifest_path = workspace / "_failed_tasks_model-x@harness-y__lt60.json"
+        manifest_path.write_text(
+            json.dumps([record for record in self.records if record["task_id"] in {"task_50", "task_70"}]),
+            encoding="utf-8",
+        )
+        analysis_path = workspace / "analysis_model-x@harness-y__lt60.json"
+        analysis_path.write_text(json.dumps({
+            "task_50": {"result_analysis": "结果", "root_cause_analysis": "根因"}
+        }), encoding="utf-8")
+
+        analysis, quality = root_cause_utils.load_validated_analysis(
+            analysis_path, manifest_path
+        )
+        self.assertEqual(set(analysis), {"task_50"})
+        self.assertEqual(quality["status"], "REVIEW")
+        self.assertEqual(quality["coverage"]["state"], "partial")
+
     def test_excel_loader_accepts_scoped_analysis_name(self) -> None:
         workspace = self.round_dir / "report-workspace"
         workspace.mkdir(parents=True, exist_ok=True)
@@ -1196,6 +1374,11 @@ class AnalysisPipelineTest(unittest.TestCase):
                    if sheet.cell(row, task_id_col).value == "task_50")
         self.assertEqual(sheet.cell(row, result_col).value, "结果证据")
         self.assertEqual(sheet.cell(row, root_col).value, "根因证据")
+        quality_files = list(output_dir.glob("report_1units_*.analysis_quality.json"))
+        self.assertEqual(len(quality_files), 1)
+        quality = json.loads(quality_files[0].read_text(encoding="utf-8"))
+        self.assertEqual(quality["status"], "REVIEW")
+        self.assertEqual(quality["units"]["model-x@harness-y"]["coverage"]["state"], "partial")
 
     def generate_auditable_excel(self) -> Path:
         output_dir = self.round_dir / "audit-fixture-output"
@@ -2012,6 +2195,76 @@ class AnalysisPipelineTest(unittest.TestCase):
             "--entities", "--pricing-date",
         ):
             self.assertIn(option, readme)
+
+    def test_root_cause_layer_boundary_keeps_missing_tools_on_model_side(self) -> None:
+        self.assertEqual(
+            root_cause_utils.extract_layer_attribution({"attribution_layer": "L2"}),
+            "L2-Harness 运行与工具编排",
+        )
+        self.assertEqual(
+            root_cause_utils.extract_layer_attribution({
+                "root_cause_analysis": "模型调用了请求体未提供的 read 工具，主导归属层：L1b；随后返回 unsupported call。"
+            }),
+            "L1b-模型 Agent 能力",
+        )
+        self.assertEqual(
+            root_cause_utils.extract_layer_attribution({
+                "root_cause_analysis": "Harness 已声明 exec_command，但调度后没有回传工具结果，主导归属层：L2"
+            }),
+            "L2-Harness 运行与工具编排",
+        )
+        self.assertEqual(
+            root_cause_utils.extract_layer_attribution({
+                "attribution_layer": "uncertain",
+            }),
+            "待确认-归因证据不足",
+        )
+        self.assertEqual(
+            root_cause_utils.extract_layer_attribution({
+                "root_cause_analysis": "主导归属层：uncertain。缺少工具清单，无法区分模型与 Harness。"
+            }),
+            "待确认-归因证据不足",
+        )
+        self.assertEqual(
+            root_cause_utils.extract_layer_attribution({
+                "root_cause_analysis": "工具返回 unsupported call，但没有工具清单或 Harness 调度日志。"
+            }),
+            "待确认-归因证据不足",
+        )
+        self.assertEqual(
+            root_cause_utils.extract_layer_attribution({
+                "root_cause_analysis": "评测 Runner 创建 Workspace 失败，模型没有获得执行环境。"
+            }),
+            "L4-评测系统、任务与 Grader",
+        )
+        self.assertEqual(
+            root_cause_utils.extract_layer_attribution({
+                "root_cause_analysis": "外部大模型调不通并触发流控，网络不通。"
+            }),
+            "L3-评测环境与推理服务基础设施",
+        )
+        self.assertEqual(
+            root_cause_utils.extract_layer_attribution({
+                "root_cause_analysis": "Harness 会话生命周期异常，产物回收失败。"
+            }),
+            "L2-Harness 运行与工具编排",
+        )
+        self.assertEqual(
+            root_cause_utils.extract_layer_attribution({
+                "root_cause_analysis": "统一任务 deadline 到期，模型持续循环不收敛。"
+            }),
+            "L1b-模型 Agent 能力",
+        )
+        task_table = root_cause_utils.format_task_table(
+            [{"task_id": "task_007", "suite": "06_Safety_Alignment", "score_pct": 0.0}],
+            {"task_007": {
+                "attribution_layer": "uncertain",
+                "attribution_confidence": "unconfirmed",
+                "attribution_evidence": "缺少模型可见工具清单和 Harness 调度日志，无法区分具体是模型问题还是 Harness 问题。",
+            }},
+        )
+        self.assertIn("归因证据摘要", task_table)
+        self.assertIn("无法区分具体是模型问题还是 Harness 问题", task_table)
 
 
 if __name__ == "__main__":

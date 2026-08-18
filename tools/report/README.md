@@ -6,7 +6,7 @@
 |---|---|---|
 | 评测结果有效性检查 Skill | `skills/validate-eval-results/` | 报告生成前检查完整性、环境异常、指标完整性和跨 unit 可比性 |
 | 评测用例/低分根因分析 Skill | `skills/low-score-analysis/` | 支持阈值、区间、未满分、全量对照及指定任务分析，产出 scoped analysis JSON |
-| 根因分析报告 Skill | `skills/low-score-report/` | 基于分析结果生成 Markdown 根因共性分析报告（四层归因 + 环境失效专项） |
+| 根因分析报告 Skill | `skills/low-score-report/` | 基于分析结果生成 Markdown 根因共性分析报告（五层归因 + 执行失效专项） |
 | 评测报告 Excel 脚本 | `scripts/generate_eval_report.py` | 多单元对比 Excel，提供实体展示名、成本重算、根因回填和控制变量复制视图 |
 | 领导版数据提取脚本 | `skills/eval-report/scripts/extract_leader_report_data.py` | 从 Excel 全量总览和控制变量视图提取稳定 JSON |
 | 评测报告审核 Skill | `skills/audit-eval-report/` | 从 raw 独立复算 Excel 指标，检查反常统计和发布结论 |
@@ -22,11 +22,13 @@ eval_out/all_suite/round1/<model>/<harness>/           ← 评测结果
         ▼ ① skills/low-score-analysis（筛选 + LLM 分析）
 <round>/report-workspace/_failed_tasks_<model>@<harness>__lt60.json
 <round>/report-workspace/analysis_<model>@<harness>__lt60.json
+<round>/report-workspace/analysis_<model>@<harness>__lt60.quality.json
         │
         ├─▼ ② skills/low-score-report
         │  <result-root>/低分任务根因分析报告_<model>@<harness>.md
         └─▼ ③ scripts/generate_eval_report.py --analysis ...
            report-workspace/output/report_<N>units_<ts>.xlsx
+           report-workspace/output/report_<N>units_<ts>.analysis_quality.json
                 │
                 ▼ ④ skills/audit-eval-report（发布前门禁）
                    report-workspace/audit/report_audit_<xlsx-stem>.{json,md}

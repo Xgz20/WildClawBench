@@ -4,7 +4,8 @@
 数据源为 WildClawBench 评测结果目录（目录扫描为主，summary_all_*.json 仅校验）：
 
     <result-root>/<model>/<harness>/<suite>/<task_id>/<run_dir>/
-        score.json / execution_status.json / usage.json / chat_openclaw.jsonl / agent.log
+        score.json / execution_status.json / usage.json / chat_openclaw.jsonl /
+        agent_interaction.jsonl（AstronCode，可选）/ agent.log
 
 筛选口径（单轮）：
 - threshold/range：按原始 overall_score 筛选分数区间（默认 <60）
@@ -121,6 +122,21 @@ def _load_json(path: Path) -> dict:
         return {}
 
 
+def _fingerprint_file(path: Path) -> dict | None:
+    """记录分析输入快照；缺失文件不伪造哈希。"""
+    if not path.is_file():
+        return None
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return {
+        "path": str(path),
+        "size": path.stat().st_size,
+        "sha256": digest.hexdigest(),
+    }
+
+
 def build_task_record(
     model: str,
     harness: str,
@@ -154,11 +170,32 @@ def build_task_record(
             transcript = str(cand)
             break
     transcript_kb = round(Path(transcript).stat().st_size / 1024, 1) if transcript else 0.0
+    agent_interaction = ""
+    agent_interaction_path = run_dir / "agent_interaction.jsonl"
+    if agent_interaction_path.is_file():
+        agent_interaction = str(agent_interaction_path)
+    agent_interaction_kb = (
+        round(agent_interaction_path.stat().st_size / 1024, 1)
+        if agent_interaction else 0.0
+    )
     agent_log = str(run_dir / "agent.log") if (run_dir / "agent.log").is_file() else ""
 
     error_grading = score.get("error") or ""
     if not score:
         error_grading = "score.json 缺失或不可解析"
+
+    source_fingerprints = {}
+    for source_name, source_path in (
+        ("score.json", run_dir / "score.json"),
+        ("execution_status.json", run_dir / "execution_status.json"),
+        ("usage.json", run_dir / "usage.json"),
+        ("task_file", Path(locate_task_file(tasks_dir, suite, task_dir.name))),
+        ("transcript", Path(transcript) if transcript else Path()),
+        ("agent_interaction", Path(agent_interaction) if agent_interaction else Path()),
+    ):
+        fingerprint = _fingerprint_file(source_path) if str(source_path) else None
+        if fingerprint:
+            source_fingerprints[source_name] = fingerprint
 
     return {
         "task_id": task_dir.name,
@@ -189,6 +226,9 @@ def build_task_record(
         "transcript": transcript,
         "agent_log": agent_log,
         "transcript_kb": transcript_kb,
+        "agent_interaction": agent_interaction,
+        "agent_interaction_kb": agent_interaction_kb,
+        "source_fingerprints": source_fingerprints,
         "all_run_dirs": all_run_dirs,
     }
 
