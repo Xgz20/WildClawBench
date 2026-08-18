@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cross-Eval Analysis"
+  short_description: "按控制变量比较模型与 Harness 的逐用例差异"
+  default_prompt: "使用 $cross-eval-analysis 对指定模型或 Harness 做逐用例证据对比分析。"

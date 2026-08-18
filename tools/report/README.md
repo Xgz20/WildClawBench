@@ -5,6 +5,7 @@
 | 组件 | 位置 | 用途 |
 |---|---|---|
 | 评测结果有效性检查 Skill | `skills/validate-eval-results/` | 报告生成前检查完整性、环境异常、指标完整性和跨 unit 可比性 |
+| 跨单元逐用例分析 Skill | `skills/cross-eval-analysis/` | 固定模型或 Harness 对齐共同有效任务，结合两侧轨迹分析分差机制并生成证据化 Markdown |
 | 评测用例/低分根因分析 Skill | `skills/low-score-analysis/` | 支持阈值、区间、未满分、全量对照及指定任务分析，产出 scoped analysis JSON |
 | 根因分析报告 Skill | `skills/low-score-report/` | 基于分析结果生成 Markdown 根因共性分析报告（五层归因 + 执行失效专项） |
 | 评测报告 Excel 脚本 | `scripts/generate_eval_report.py` | 多单元对比 Excel，提供实体展示名、成本重算、根因回填和控制变量复制视图 |
@@ -35,6 +36,38 @@ eval_out/all_suite/round1/<model>/<harness>/           ← 评测结果
 ```
 
 分析单元统一为 `(模型, harness)` 二元组，全链路命名 `<model>@<harness>`（如 `gpt-5.5-pro@codex`）。
+
+跨单元逐用例分析使用共同有效任务交集，不能把不同模型和不同 Harness 混在同一个控制变量结论中：
+
+```bash
+uv run python tools/report/skills/cross-eval-analysis/scripts/build_cross_eval_manifest.py \
+  --result-root /path/to/eval_out/all_suite/round1 \
+  --axis model \
+  --fixed-harness astroncode \
+  --models xsparkx2agent xopglm52 gpt-5.5 \
+  --target-model xsparkx2agent \
+  --tasks-dir /path/to/WildClawBench/tasks \
+  --output /path/to/round1/report-workspace/cross_eval_model_manifest.json
+
+# Workflow 读取 manifest 和两侧原始轨迹，输出 cross_eval_model_analysis.json 后：
+uv run python tools/report/skills/cross-eval-analysis/scripts/validate_cross_eval.py \
+  --manifest /path/to/round1/report-workspace/cross_eval_model_manifest.json \
+  --analysis /path/to/round1/report-workspace/cross_eval_model_analysis.json
+uv run python tools/report/skills/cross-eval-analysis/scripts/render_cross_eval_report.py \
+  --manifest /path/to/round1/report-workspace/cross_eval_model_manifest.json \
+  --analysis /path/to/round1/report-workspace/cross_eval_model_analysis.json \
+  --output /path/to/round1/report-workspace/cross_eval_model_report.md
+
+# 固定模型比较 Harness 时，将 --axis 改为 harness：
+uv run python tools/report/skills/cross-eval-analysis/scripts/build_cross_eval_manifest.py \
+  --result-root /path/to/eval_out/all_suite/round1 \
+  --axis harness \
+  --fixed-model xsparkx2agent \
+  --harnesses astroncode opencode \
+  --target-harness astroncode \
+  --tasks-dir /path/to/WildClawBench/tasks \
+  --output /path/to/round1/report-workspace/cross_eval_harness_manifest.json
+```
 
 ## 快速开始
 
@@ -94,6 +127,7 @@ ln -snf ../../tools/report/skills/low-score-analysis .claude/skills/low-score-an
 ln -snf ../../tools/report/skills/low-score-report .claude/skills/low-score-report
 ln -snf ../../tools/report/skills/validate-eval-results .claude/skills/validate-eval-results
 ln -snf ../../tools/report/skills/audit-eval-report .claude/skills/audit-eval-report
+ln -snf ../../tools/report/skills/cross-eval-analysis .claude/skills/cross-eval-analysis
 ```
 
 ## 依赖
