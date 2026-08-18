@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 SCHEMA_VERSION = 2
-RULESET_VERSION = "2026-08-15.1"
+RULESET_VERSION = "2026-08-18.1"
 
 ERROR = "error"
 WARNING = "warning"
@@ -993,6 +993,27 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
             grading_error = str(score["llm_error"])
         else:
             grading_metadata = score.get("_grading")
+            if (
+                isinstance(grading_metadata, dict)
+                and grading_metadata.get("status") == "evaluator_failed"
+            ):
+                website_error = str(
+                    grading_metadata.get("website_runtime_error")
+                    or grading_metadata.get("runtime_error")
+                    or "website evaluator failed"
+                )
+                items.append(_item(
+                    "WEBSITE_EVALUATOR_ERROR",
+                    f"网站动态检查器异常：{website_error[:180]}",
+                    stage="grading", attribution="evaluation_framework", confidence="high",
+                    validity_impact="fail", score_reliability="unreliable",
+                    rerun_action="required_after_fix",
+                    evidence=[{
+                        "file": "score.json",
+                        "field": "_grading.status",
+                        "value": "evaluator_failed",
+                    }],
+                ))
             judge_notes = (
                 grading_metadata.get("llm_notes")
                 if isinstance(grading_metadata, dict)

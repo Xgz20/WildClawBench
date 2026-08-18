@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from .judge_audit import write_attempt, write_summary
 from .judge_shim import parse_json_candidate
 from .ppt_evidence import build_ppt_evidence_code
+from .website_evidence import build_website_evidence_code
 
 logger = logging.getLogger(__name__)
 
@@ -245,6 +246,7 @@ def run_grading(
     rubric_criteria: list[dict] | None = None,
     grading_weights: dict | None = None,
     metric_profile: str = "",
+    task_definition_id: str = "",
 ) -> dict:
     """Dispatch grading by task format.
 
@@ -268,6 +270,7 @@ def run_grading(
             rubric_criteria=rubric_criteria,
             grading_weights=grading_weights or {},
             metric_profile=metric_profile,
+            task_definition_id=task_definition_id,
         )
     return _run_grading_legacy(
         task_id,
@@ -732,6 +735,7 @@ def _combine_v2(
 
 def _aggregate_rubric_dimensions(
     rubric_criteria: list[dict], llm_breakdown: dict, *, metric_profile: str = "",
+    evidence_mode: str = "source_semantic",
 ) -> dict:
     """Aggregate canonical criterion scores within primary/secondary groups."""
     if metric_profile != WEBSITE_METRIC_PROFILE:
@@ -760,7 +764,7 @@ def _aggregate_rubric_dimensions(
 
     result: dict = {
         "metric_profile": metric_profile,
-        "evidence_mode": "source_semantic",
+        "evidence_mode": evidence_mode,
         "primary": {},
         "secondary": {},
     }
@@ -938,20 +942,31 @@ def _align_rubric_scores(
 
 def _build_rubric_judge_prompt(
     rubric_criteria: list[dict], rubric_text: str, *, metric_profile: str = "",
+    evidence_mode: str = "source_semantic",
 ) -> str:
     """Judge prompt that forces scores under the author-defined canonical keys."""
     keys = [c["key"] for c in rubric_criteria]
     keys_json = ", ".join(f'"{k}": 0.0' for k in keys)
     source_semantic_scope = ""
+    evidence_clause = "the agent transcript and workspace source files as evidence"
     if metric_profile == WEBSITE_METRIC_PROFILE:
-        source_semantic_scope = (
-            " This is a source-semantic review only: the website is not started "
-            "or rendered and no browser interaction is run. For visual and "
-            "interaction criteria, score whether the submitted source provides "
-            "complete, coherent implementation evidence. Never claim that "
-            "rendering, layout, startup, clicking, persistence, or runtime behavior "
-            "was actually verified."
-        )
+        if evidence_mode == "browser_runtime+visual_llm":
+            evidence_clause = "the supplied evaluation evidence"
+            source_semantic_scope = (
+                " This is a visual review of browser screenshots captured by a "
+                "deterministic framework checker. Score only the visual criteria "
+                "represented by the supplied screenshots. Do not infer unseen "
+                "interaction, persistence, source-code quality, or runtime behavior."
+            )
+        else:
+            source_semantic_scope = (
+                " This is a source-semantic review only: the website is not started "
+                "or rendered and no browser interaction is run. For visual and "
+                "interaction criteria, score whether the submitted source provides "
+                "complete, coherent implementation evidence. Never claim that "
+                "rendering, layout, startup, clicking, persistence, or runtime behavior "
+                "was actually verified."
+            )
     elif metric_profile == PPT_METRIC_PROFILE:
         source_semantic_scope = (
             " This is a PPT visual review. Judge visible slide content only from "
@@ -961,8 +976,8 @@ def _build_rubric_judge_prompt(
         )
     return (
         "You are a strict grading assistant. Score the agent's performance "
-        "against the rubric below, using the agent transcript and workspace "
-        f"source files as evidence.{source_semantic_scope}\n\n"
+        f"against the rubric below, using {evidence_clause}."
+        f"{source_semantic_scope}\n\n"
         "Return ONLY a JSON object, no prose, no code fences, in EXACTLY this shape:\n"
         f'{{"scores": {{{keys_json}}}, "notes": "<brief reason>"}}\n\n'
         f"CRITICAL: the \"scores\" object MUST contain EXACTLY these keys: {keys}\n"
@@ -1009,6 +1024,7 @@ def _grade_llm_rubric(
     metric_profile: str = "",
     *,
     output_dir: Path | None = None,
+    evidence_mode: str = "source_semantic",
 ) -> tuple[float, dict, str]:
     """Run the declarative LLM rubric in-container; align to canonical keys.
 
@@ -1017,8 +1033,24 @@ def _grade_llm_rubric(
     exact match -> positional fallback (warn) -> 0.0 + error, never silently
     dropping a criterion.
     """
+    dynamic_website_visual = (
+        metric_profile == WEBSITE_METRIC_PROFILE
+        and evidence_mode == "browser_runtime+visual_llm"
+    )
+    judge_rubric_text = rubric_text
+    if dynamic_website_visual and rubric_criteria:
+        criterion_rubrics = [
+            str(criterion.get("rubric", "")).strip()
+            for criterion in rubric_criteria
+        ]
+        if all(criterion_rubrics):
+            judge_rubric_text = "\n\n".join(criterion_rubrics)
+
     prompt = _build_rubric_judge_prompt(
-        rubric_criteria, rubric_text, metric_profile=metric_profile
+        rubric_criteria,
+        judge_rubric_text,
+        metric_profile=metric_profile,
+        evidence_mode=evidence_mode,
     )
     judge_model = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
     judge_max_tokens = _judge_max_tokens()
@@ -1026,11 +1058,37 @@ def _grade_llm_rubric(
     is_website_profile = metric_profile == WEBSITE_METRIC_PROFILE
     is_ppt_profile = metric_profile == PPT_METRIC_PROFILE
     ws_reader = (
-        _semantic_workspace_reader_code(TMP_WORKSPACE)
-        if is_website_profile
-        else _legacy_workspace_reader_code(TMP_WORKSPACE)
+        "_ws_text = ''\n"
+        if dynamic_website_visual
+        else (
+            _semantic_workspace_reader_code(TMP_WORKSPACE)
+            if is_website_profile
+            else _legacy_workspace_reader_code(TMP_WORKSPACE)
+        )
+    )
+    transcript_reader = (
+        "_summary = ''\n"
+        if dynamic_website_visual
+        else (
+            "from _transcript_loader import load_transcript\n"
+            f"_t = load_transcript({json.dumps(transcript_container_path)})\n"
+            "_summary = json.dumps(_t, ensure_ascii=False)[:20000]\n"
+        )
+    )
+    message_builder = (
+        "_msg_text = _prompt + '\\n\\n## Formal Website Screenshots\\n'\n"
+        if dynamic_website_visual
+        else (
+            "_msg_text = _prompt + '\\n\\n## Agent Workspace Files\\n' + _ws_text"
+            " + '\\n\\n## Agent Transcript (JSON)\\n' + _summary\n"
+        )
     )
     ppt_evidence_code = build_ppt_evidence_code(TMP_WORKSPACE) if is_ppt_profile else "_ppt_evidence = {'blocks': [], 'manifest': []}\n"
+    website_evidence_code = (
+        build_website_evidence_code(TMP_WORKSPACE)
+        if is_website_profile and evidence_mode == "browser_runtime+visual_llm"
+        else "_website_evidence = {'blocks': [], 'manifest': []}\n"
+    )
 
     runner_code = (
         "import json, os, sys\n"
@@ -1038,20 +1096,19 @@ def _grade_llm_rubric(
         "os.environ['WILDCLAW_JUDGE_SCHEMA'] = 'scores_notes'\n"
         "import _judge_shim\n"
         "_judge_shim.install()\n"
-        "from _transcript_loader import load_transcript\n"
-        f"_t = load_transcript({json.dumps(transcript_container_path)})\n"
-        "_summary = json.dumps(_t, ensure_ascii=False)[:20000]\n"
+        + transcript_reader
         + ws_reader +
         ppt_evidence_code +
+        website_evidence_code +
         "from openai import OpenAI\n"
         "client = OpenAI(api_key=os.environ.get('OPENROUTER_API_KEY',''),"
         " base_url=os.environ.get('OPENROUTER_BASE_URL',''))\n"
         f"_judge_model = {json.dumps(judge_model)}\n"
         "_effective_judge_model = ((os.environ.get('ANTHROPIC_MODEL', '').strip() or _judge_model.split('/', 1)[-1]) if _judge_model.startswith('anthropic/') else _judge_model)\n"
         f"_prompt = {json.dumps(prompt)}\n"
-        "_msg_text = _prompt + '\\n\\n## Agent Workspace Files\\n' + _ws_text"
-        " + '\\n\\n## Agent Transcript (JSON)\\n' + _summary\n"
-        "_msg = ([{'type': 'text', 'text': _msg_text}] + _ppt_evidence['blocks']) if _ppt_evidence['blocks'] else _msg_text\n"
+        + message_builder +
+        "_visual_blocks = _ppt_evidence['blocks'] or _website_evidence['blocks']\n"
+        "_msg = ([{'type': 'text', 'text': _msg_text}] + _visual_blocks) if _visual_blocks else _msg_text\n"
         "try:\n"
         f"    resp = client.chat.completions.create(model={json.dumps(judge_model)},"
         f" max_tokens={judge_max_tokens}, messages=[{{'role':'user','content':_msg}}],"
@@ -1063,9 +1120,10 @@ def _grade_llm_rubric(
         "    if _raw_response is None:\n"
         "        _raw_response = {}\n"
         "    _audit_content = [{'type': 'text', 'text': _msg_text}]\n"
-        "    _audit_content.extend({'type': 'image_ref', **_item} for _item in _ppt_evidence.get('manifest', []))\n"
+        "    _visual_manifest = _ppt_evidence.get('manifest', []) or _website_evidence.get('manifest', [])\n"
+        "    _audit_content.extend({'type': 'image_ref', **_item} for _item in _visual_manifest)\n"
         "    _envelope = {'candidate_text': _choice.message.content,"
-        " 'request': {'model': _judge_model, 'input_model': _judge_model, 'requested_model': _effective_judge_model, 'effective_requested_model': _effective_judge_model, 'max_tokens': " + str(judge_max_tokens) + ", 'timeout_seconds': " + repr(_judge_timeout_seconds()) + ", 'response_format': {'type': 'json_object'}, 'endpoint_type': ('anthropic_messages' if _judge_model.startswith('anthropic/') else 'openai_chat_completions'), 'messages': [{'role': 'user', 'content': _audit_content}], 'ppt_manifest': _ppt_evidence.get('manifest', [])},"
+        " 'request': {'model': _judge_model, 'input_model': _judge_model, 'requested_model': _effective_judge_model, 'effective_requested_model': _effective_judge_model, 'max_tokens': " + str(judge_max_tokens) + ", 'timeout_seconds': " + repr(_judge_timeout_seconds()) + ", 'response_format': {'type': 'json_object'}, 'endpoint_type': ('anthropic_messages' if _judge_model.startswith('anthropic/') else 'openai_chat_completions'), 'messages': [{'role': 'user', 'content': _audit_content}], 'ppt_manifest': _ppt_evidence.get('manifest', []), 'website_manifest': _website_evidence.get('manifest', [])},"
         " 'response': {'raw': _raw_response, 'raw_text': _choice.message.content,"
         " 'model': getattr(resp, 'model', ''), 'returned_model': getattr(resp, 'model', ''),"
         " 'finish_reason': getattr(_choice, 'finish_reason', ''),"
@@ -1138,7 +1196,7 @@ def _grade_llm_rubric(
             return score, breakdown, notes
         last_error = err or envelope.get("judge_error") or parse_error or "judge returned no valid JSON"
         logger.warning("[%s] Judge attempt %d/%d invalid: %s", task_id, attempt, retries + 1, last_error)
-        if "PPT_RENDER_FAILED" in last_error:
+        if "PPT_RENDER_FAILED" in last_error or "WEB_VISUAL_EVIDENCE_FAILED" in last_error:
             break
     if judge_dir:
         _finalize_judge_summary(
@@ -1165,6 +1223,7 @@ def _run_grading_v2(
     rubric_criteria: list[dict],
     grading_weights: dict,
     metric_profile: str,
+    task_definition_id: str = "",
 ) -> dict:
     """v2 path: rule checks + declarative LLM rubric, weight-combined.
 
@@ -1173,6 +1232,28 @@ def _run_grading_v2(
     recording sub-scores and weights. overall_score is the weighted mean.
     """
     logger.info("[%s] Starting v2 grading (rules + rubric)...", task_id)
+
+    # ---- website runtime part: deterministic browser evidence ----
+    website_runtime: dict = {}
+    website_runtime_error = ""
+    if metric_profile == WEBSITE_METRIC_PROFILE:
+        from .website_checks import merge_website_evidence, run_website_checks
+
+        website_runtime, website_runtime_error = run_website_checks(
+            task_id,
+            task_definition_id or task_id,
+            output_dir,
+            timeout_seconds=_grading_timeout_seconds(),
+        )
+        if website_runtime is None:
+            website_runtime = {}
+        if (
+            not website_runtime_error
+            and website_runtime.get("status") in {"candidate_failed", "evaluator_failed"}
+        ):
+            website_runtime_error = str(website_runtime.get("error") or "")
+        if website_runtime_error:
+            logger.warning("[%s] Website runtime checks failed: %s", task_id, website_runtime_error)
 
     # ---- rule part (optional; may be empty for pure-LLM tasks) ----
     auto_score, auto_breakdown = 0.0, {}
@@ -1193,6 +1274,37 @@ def _run_grading_v2(
                           if auto_breakdown else 0.0)
 
     # ---- LLM rubric part ----
+    if metric_profile == WEBSITE_METRIC_PROFILE:
+        visual_criteria = [
+            criterion for criterion in rubric_criteria
+            if criterion.get("primary") == "visual_layout"
+        ]
+        visual_breakdown: dict = {}
+        llm_notes = ""
+        runtime_succeeded = (
+            not website_runtime_error
+            and website_runtime.get("status") == "success"
+        )
+        if visual_criteria and runtime_succeeded:
+            _, visual_breakdown, llm_notes = _grade_llm_rubric(
+                task_id, llm_judge_rubric, visual_criteria, transcript_container_path,
+                metric_profile,
+                output_dir=output_dir,
+                evidence_mode="browser_runtime+visual_llm",
+            )
+        scores = merge_website_evidence(
+            rubric_criteria,
+            (website_runtime or {}).get("checks", {}),
+            visual_breakdown,
+            llm_notes=llm_notes,
+            runtime_status=str((website_runtime or {}).get("status") or "evaluator_failed"),
+            runtime_error=website_runtime_error,
+        )
+        if website_runtime_error:
+            scores["_grading"]["website_runtime_error"] = website_runtime_error
+        _write_score(output_dir, task_id, scores)
+        return scores
+
     llm_score, llm_breakdown, llm_notes = _grade_llm_rubric(
         task_id, llm_judge_rubric, rubric_criteria, transcript_container_path,
         metric_profile,

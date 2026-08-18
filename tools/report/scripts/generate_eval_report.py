@@ -1372,12 +1372,22 @@ class WebsiteMetric:
     value_type: str
 
 
-def _is_website_semantic_task(task) -> bool:
+WEBSITE_EVIDENCE_MODES = {
+    "source_semantic",
+    "browser_runtime+visual_llm",
+}
+
+
+def _is_website_metric_task(task) -> bool:
     dimensions = getattr(task, "metric_dimensions", {})
     return (
         dimensions.get("metric_profile") == "web-site-gen"
-        and dimensions.get("evidence_mode") == "source_semantic"
+        and dimensions.get("evidence_mode") in WEBSITE_EVIDENCE_MODES
     )
+
+
+# Kept as a compatibility alias for report extensions importing the old helper.
+_is_website_semantic_task = _is_website_metric_task
 
 
 def _has_website_tag(task, task_meta: dict[str, dict]) -> bool:
@@ -1407,7 +1417,7 @@ def _numeric_usage_value(usage: dict, key: str) -> float | None:
 def _website_unit_metrics(unit, task_meta: dict[str, dict]) -> dict[str, WebsiteMetric]:
     tasks = [
         task for task in unit.tasks
-        if _is_website_semantic_task(task) or _has_website_tag(task, task_meta)
+        if _is_website_metric_task(task) or _has_website_tag(task, task_meta)
     ]
 
     def _score_average(selected: list) -> float | None:
@@ -1541,7 +1551,7 @@ def _website_dimension_unit_scores(unit, level: str) -> dict[str, tuple[float, i
         dimensions = getattr(task, "metric_dimensions", {})
         if (
             dimensions.get("metric_profile") != "web-site-gen"
-            or dimensions.get("evidence_mode") != "source_semantic"
+            or dimensions.get("evidence_mode") not in WEBSITE_EVIDENCE_MODES
         ):
             continue
         groups = dimensions.get(level, {})
@@ -1665,22 +1675,39 @@ def _append_website_dimension_summary(
 def write_website_metrics_sheet(
     wb, units: list[UnitResult], task_meta: dict[str, dict] | None = None
 ) -> bool:
-    """Write source-semantic website metrics; omit the sheet when unavailable."""
+    """Write website metrics for legacy source and browser-runtime evidence."""
     task_meta = task_meta or {}
     website_tasks = [
         (unit, task)
         for unit in units
         for task in unit.tasks
-        if _is_website_semantic_task(task) or _has_website_tag(task, task_meta)
+        if _is_website_metric_task(task) or _has_website_tag(task, task_meta)
     ]
     if not website_tasks:
         return False
 
     ws = wb.create_sheet("站点评测指标")
-    ws.append([
-        "一期口径：源码语义评测；仅判断提交源码中的实现证据，不代表站点启动、"
-        "浏览器渲染、动态点击或真实运行结果。跨任务统计先计算任务内维度分，再按任务等权平均。"
-    ])
+    evidence_modes = {
+        getattr(task, "metric_dimensions", {}).get("evidence_mode")
+        for _, task in website_tasks
+        if getattr(task, "metric_dimensions", {}).get("evidence_mode")
+    }
+    if evidence_modes == {"browser_runtime+visual_llm"}:
+        scope_note = (
+            "一期口径：浏览器动态检查 + 视觉大模型；内容与交互指标由确定性运行时检查，"
+            "视觉与布局指标由视觉大模型基于浏览器截图评测。跨任务统计先计算任务内维度分，再按任务等权平均。"
+        )
+    elif evidence_modes == {"source_semantic"} or not evidence_modes:
+        scope_note = (
+            "一期口径：源码语义评测；仅判断提交源码中的实现证据，不代表站点启动、"
+            "浏览器渲染、动态点击或真实运行结果。跨任务统计先计算任务内维度分，再按任务等权平均。"
+        )
+    else:
+        scope_note = (
+            "评测口径包含源码语义评测与浏览器动态检查 + 视觉大模型两类证据；"
+            "具体以各任务 score.json 的 _dimensions.evidence_mode 为准。跨任务统计先计算任务内维度分，再按任务等权平均。"
+        )
+    ws.append([scope_note])
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=15)
     ws.cell(1, 1).alignment = WRAP_TOP
     ws.cell(1, 1).fill = SECTION_FILL

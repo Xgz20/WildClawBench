@@ -1598,6 +1598,37 @@ class AnalysisPipelineTest(unittest.TestCase):
         ))
         self.assertNotIn("站点评测指标", untyped_workbook.sheetnames)
 
+    def test_website_metrics_accept_dynamic_dimensions_and_describe_runtime_scope(self) -> None:
+        dynamic_task = SimpleNamespace(
+            task_id="website_dynamic",
+            metric_dimensions={
+                "metric_profile": "web-site-gen",
+                "evidence_mode": "browser_runtime+visual_llm",
+                "primary": {
+                    "content_structure": {
+                        "score": 0.75, "weight": 0.4, "criterion_count": 4,
+                    }
+                },
+                "secondary": {},
+            },
+        )
+        unit = SimpleNamespace(
+            unit="model@harness",
+            unit_display="Model@Harness",
+            tasks=[dynamic_task],
+        )
+
+        scores = excel_report._website_dimension_unit_scores(unit, "primary")
+        self.assertEqual(scores["content_structure"], (75.0, 1))
+
+        workbook = Workbook()
+        workbook.remove(workbook.active)
+        self.assertTrue(excel_report.write_website_metrics_sheet(workbook, [unit]))
+        scope = workbook["站点评测指标"][1][0].value
+        self.assertIn("浏览器动态检查", scope)
+        self.assertIn("视觉大模型", scope)
+        self.assertNotIn("不代表站点启动", scope)
+
     def _create_website_task(
         self,
         task_id: str,

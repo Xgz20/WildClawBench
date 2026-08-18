@@ -275,6 +275,7 @@ def grade_the_task(
                 rubric_criteria=task.get("rubric_criteria") or [],
                 grading_weights=task.get("grading_weights") or {},
                 metric_profile=task.get("metric_profile", ""),
+                task_definition_id=task.get("task_id", ""),
             )
             result["scores"] = scores
             print(format_scores(task_id, scores))
