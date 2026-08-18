@@ -33,6 +33,22 @@ class BatchSummaryLoggingTests(unittest.TestCase):
 
         self.assertIn("总平均结果=不可用", "\n".join(captured.output))
 
+    def test_batch_completion_log_keeps_invalid_scores_in_total(self) -> None:
+        with self.assertLogs(run_batch.logger, level="INFO") as captured:
+            run_batch._log_batch_completion(
+                self.timing(),
+                task_count=2,
+                global_average=0.4,
+                valid_global_average=0.8,
+                validity_failure_count=1,
+                validity_failure_task_count=1,
+            )
+
+        rendered = "\n".join(captured.output)
+        self.assertIn("总平均结果=0.4000", rendered)
+        self.assertIn("有效结果平均=0.8000", rendered)
+        self.assertIn("有效性失败=1次/1题", rendered)
+
     def test_rerun_outcome_logs_success_and_writes_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir, self.assertLogs(
             run_batch.logger, level="INFO"

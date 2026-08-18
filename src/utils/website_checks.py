@@ -140,13 +140,15 @@ def merge_website_evidence(
 ) -> dict:
     """Merge runtime and visual evidence using the rubric's original weights.
 
-    Build/start failures are candidate outcomes. Evaluator failures are
-    framework validity failures. Both receive a placeholder zero without
-    semantic fallback, while grading metadata keeps the attribution explicit.
+    Build/start failures are candidate outcomes and receive a zero because no
+    browser evidence exists. Evaluator failures are framework validity
+    failures: completed checkpoints are retained for diagnosis and the
+    partial weighted score is recorded, while the public overall score remains
+    zero so the invalid run is visible in the batch total without being
+    mistaken for a valid capability score.
     """
     candidate_failed = runtime_status == "candidate_failed"
     evaluator_failed = runtime_status == "evaluator_failed"
-    runtime_unusable = candidate_failed or evaluator_failed
     criterion_scores: dict[str, float] = {}
     runtime_breakdown: dict[str, float] = {}
     visual_breakdown: dict[str, float] = {}
@@ -162,7 +164,7 @@ def merge_website_evidence(
                 value = 0.0
                 missing_visual.append(key)
             value = max(0.0, min(1.0, float(value)))
-            if runtime_unusable:
+            if candidate_failed:
                 value = 0.0
                 missing_visual.append(key)
             visual_breakdown[key] = value
@@ -173,7 +175,7 @@ def merge_website_evidence(
                 value = 0.0
                 missing_runtime.append(key)
             value = max(0.0, min(1.0, float(value)))
-            if runtime_unusable:
+            if candidate_failed:
                 value = 0.0
                 missing_runtime.append(key)
             runtime_breakdown[key] = value
@@ -194,6 +196,11 @@ def merge_website_evidence(
     )
     overall = weighted / total_weight if total_weight > 0 else 0.0
 
+    # Candidate build/start failures have no usable browser evidence and are
+    # a genuine zero. Evaluator failures retain checkpoints that did run so
+    # the invalid run remains inspectable; its public score stays zero for
+    # the batch total and the partial value is recorded below.
+    public_overall = 0.0 if candidate_failed or evaluator_failed else round(overall, 4)
     scores: dict = {
         **{f"automated.{key}": value for key, value in runtime_breakdown.items()},
         **{f"llm_judge.{key}": value for key, value in visual_breakdown.items()},
@@ -209,6 +216,14 @@ def merge_website_evidence(
             ),
             "semantic_fallback": False,
             "runtime_error": runtime_error,
+            "score_reliability": (
+                "candidate_outcome"
+                if candidate_failed
+                else "unreliable_evaluator_failure"
+                if evaluator_failed
+                else "valid_capability_outcome"
+            ),
+            "partial_overall_score": round(overall, 4) if evaluator_failed else None,
             "automated_score": (
                 round(sum(runtime_breakdown.values()) / len(runtime_breakdown), 5)
                 if runtime_breakdown else None
@@ -221,7 +236,7 @@ def merge_website_evidence(
             "missing_runtime_keys": missing_runtime,
             "missing_visual_keys": missing_visual,
         },
-        "overall_score": round(overall, 4),
+        "overall_score": public_overall,
     }
     if llm_notes:
         scores["_grading"]["llm_notes"] = llm_notes

@@ -122,6 +122,19 @@ class WebsiteCommonAsyncTest(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(recorder.results["criterion"]["score"])
         self.assertEqual(evaluator_errors(recorder.results)[0]["key"], "criterion")
 
+    async def test_timeout_is_a_candidate_checkpoint_failure(self) -> None:
+        page = AsyncMock()
+        recorder = CheckRecorder(page, Path("/tmp"))
+
+        async def check():
+            raise TimeoutError("locator timed out")
+
+        await recorder.check("criterion", check)
+
+        self.assertEqual(recorder.results["criterion"]["status"], "failed")
+        self.assertEqual(recorder.results["criterion"]["score"], 0.0)
+        self.assertEqual(evaluator_errors(recorder.results), [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -72,6 +72,35 @@ class CostObservationOutputTests(unittest.TestCase):
         self.assertEqual(summary["global_avg"], 1.0)
         self.assertEqual(summary["scored_task_count"], 1)
 
+    def test_global_summary_includes_invalid_zero_and_exposes_valid_average(self) -> None:
+        results = [
+            {
+                "task_id": "invalid-task",
+                "scores": {"overall_score": 0.0},
+                "anomalies": {
+                    "validity_verdict": "FAIL",
+                    "has_validity_failure": True,
+                },
+            },
+            {
+                "task_id": "valid-task",
+                "scores": {"overall_score": 0.8},
+                "anomalies": {"validity_verdict": "PASS"},
+            },
+        ]
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = io.StringIO()
+            with redirect_stdout(output):
+                summary = print_global_summary(
+                    results, Path(temp_dir), "model"
+                )
+
+        self.assertEqual(summary["global_avg"], 0.4)
+        self.assertEqual(summary["valid_global_avg"], 0.8)
+        self.assertEqual(summary["validity_failure_run_count"], 1)
+        self.assertTrue(summary["invalid_scores_included_in_global_avg"])
+        self.assertIn("validity failures included", output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

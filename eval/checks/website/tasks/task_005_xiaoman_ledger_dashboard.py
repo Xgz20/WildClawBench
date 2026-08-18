@@ -78,7 +78,7 @@ async def _close_detail(page):
         if await button.count():
             await button.first.click()
             return
-    raise AssertionError("EVALUATOR_AMBIGUOUS_LOCATOR: no detail close control")
+    raise AssertionError("required detail close control not found")
 
 
 async def run(page, screenshot_dir):

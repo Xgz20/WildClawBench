@@ -158,7 +158,7 @@ async def fill_named(page, name: str, value: str) -> None:
     if not await locator.count():
         locator = page.get_by_placeholder(name, exact=False)
     if not await locator.count():
-        raise AssertionError(f"EVALUATOR_AMBIGUOUS_LOCATOR: no field named {name!r}")
+        raise AssertionError(f"required field not found: {name!r}")
     await locator.first.fill(value)
 
 
@@ -177,7 +177,7 @@ async def fill_any_named(page, names: list[str], value: str) -> None:
                 await locator.first.fill(value)
                 return
     raise AssertionError(
-        f"EVALUATOR_AMBIGUOUS_LOCATOR: no field matching {names!r}"
+        f"required field not found: any of {names!r}"
     )
 
 
@@ -232,9 +232,15 @@ class CheckRecorder:
             await self._capture_failure(key)
         except Exception as exc:
             screenshot = await self._capture_failure(key)
-            evaluator_error = not isinstance(exc, AssertionError) or str(exc).startswith(
-                "EVALUATOR_"
+            # A missing candidate control is a failed checkpoint, not a
+            # broken evaluator.  Playwright TimeoutError is the usual signal
+            # for the same condition.  Unexpected exceptions still invalidate
+            # the evaluator run and are retained for framework diagnostics.
+            is_timeout = (
+                isinstance(exc, TimeoutError)
+                or exc.__class__.__name__ == "TimeoutError"
             )
+            evaluator_error = not isinstance(exc, AssertionError) and not is_timeout
             self.results[key] = {
                 "status": "evaluator_error" if evaluator_error else "failed",
                 "score": None if evaluator_error else 0.0,

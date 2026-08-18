@@ -87,7 +87,52 @@ class WebsiteDynamicGradingTest(unittest.TestCase):
         self.assertEqual(scores["_grading"]["status"], "evaluator_failed")
         self.assertEqual(scores["_grading"]["score_policy"], "evaluator_failed_zero")
         self.assertIn("content", scores["_grading"]["missing_runtime_keys"])
-        self.assertEqual(scores["automated.other"], 0.0)
+        self.assertEqual(scores["automated.other"], 1.0)
+        self.assertEqual(scores["_grading"]["partial_overall_score"], 0.5)
+        self.assertEqual(
+            scores["_grading"]["score_reliability"],
+            "unreliable_evaluator_failure",
+        )
+
+    def test_evaluator_failure_still_runs_visual_judge(self) -> None:
+        criteria = [
+            {"key": "content", "primary": "content_structure", "weight": 0.5},
+            {"key": "visual", "primary": "visual_layout", "weight": 0.5},
+        ]
+        with tempfile.TemporaryDirectory() as tmp, patch(
+            "src.utils.website_checks.run_website_checks",
+            return_value=(
+                {
+                    "status": "evaluator_failed",
+                    "checks": {"content": {"score": 1.0}},
+                    "error": "EVALUATOR_CHECK_FAILED: visual_capture",
+                },
+                "EVALUATOR_CHECK_FAILED: visual_capture",
+            ),
+        ), patch(
+            "src.utils.grading._grade_llm_rubric",
+            return_value=(0.8, {"visual": 0.8}, "visual evidence"),
+        ) as judge:
+            scores = _run_grading_v2(
+                task_id="container",
+                automated_checks="",
+                output_dir=Path(tmp),
+                extra_env="",
+                lobster_env=None,
+                transcript_container_path="",
+                write_error_score=True,
+                llm_judge_rubric="rubric",
+                rubric_criteria=criteria,
+                grading_weights={},
+                metric_profile="web-site-gen",
+                task_definition_id="07_Website_Generation_task_001_example",
+            )
+
+        judge.assert_called_once()
+        self.assertEqual(scores["automated.content"], 1.0)
+        self.assertEqual(scores["llm_judge.visual"], 0.8)
+        self.assertEqual(scores["overall_score"], 0.0)
+        self.assertEqual(scores["_grading"]["partial_overall_score"], 0.9)
 
     def test_runtime_checker_cleans_evaluator_directories_before_copy(self) -> None:
         completed = SimpleNamespace(

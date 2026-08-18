@@ -60,7 +60,7 @@ async def _create_trip(page, *, start: str = "2026-10-03", end: str = "2026-10-0
             pass
     if city_ok and date_ok:
         try:
-            await click_named_any(page, ["进入规划", "创建行程"])
+            await click_named_any(page, ["进入规划", "创建行程", "创建新行程"])
         except Exception:
             return False
     return city_ok and date_ok
@@ -110,7 +110,7 @@ async def run(page, screenshot_dir):
         return (
             await contains_texts(page, ["行迹 Planner", "目的地", "开始日期", "结束日期"])
             and await contains_any_texts(page, ["旅行", "行程"])
-            and await contains_any_texts(page, ["进入规划", "创建行程"])
+            and await contains_any_texts(page, ["进入规划", "创建行程", "创建新行程"])
         )
     await recorder.check("criterion_01_basic_content", basic_content)
 
@@ -131,7 +131,7 @@ async def run(page, screenshot_dir):
         selects = page.locator("select")
         if await selects.count():
             await selects.first.select_option(index=0)
-        await click_named_any(page, ["进入规划", "创建行程"])
+        await click_named_any(page, ["进入规划", "创建行程", "创建新行程"])
         return await contains_texts(page, ["选择目的地城市"]) and not await page.get_by_text("行程规划", exact=True).count()
     await recorder.check("criterion_04_form_filling_and_validation", missing_city)
 
@@ -145,7 +145,7 @@ async def run(page, screenshot_dir):
             except AssertionError:
                 pass
         await _fill_date_inputs(page, "2026-10-05", "2026-10-03")
-        await click_named_any(page, ["进入规划", "创建行程"])
+        await click_named_any(page, ["进入规划", "创建行程", "创建新行程"])
         return city_ok and await contains_texts(page, ["结束日期不能早于开始日期"])
     await recorder.check("criterion_05_form_filling_and_validation", invalid_date)
 

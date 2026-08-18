@@ -1229,7 +1229,10 @@ def _run_grading_v2(
 
     Produces a score.json where rule checkpoints are prefixed `automated.`
     and LLM criteria `llm_judge.` (canonical keys), plus a `_grading` block
-    recording sub-scores and weights. overall_score is the weighted mean.
+    recording sub-scores and weights. For a valid run, overall_score is the
+    weighted mean; an evaluator-invalid run keeps its partial weighted value
+    in `_grading.partial_overall_score` but exposes overall_score=0 so the
+    batch total includes the invalid outcome.
     """
     logger.info("[%s] Starting v2 grading (rules + rubric)...", task_id)
 
@@ -1282,8 +1285,8 @@ def _run_grading_v2(
         visual_breakdown: dict = {}
         llm_notes = ""
         runtime_succeeded = (
-            not website_runtime_error
-            and website_runtime.get("status") == "success"
+            website_runtime.get("status") in {"success", "evaluator_failed"}
+            and website_runtime.get("status") != "candidate_failed"
         )
         if visual_criteria and runtime_succeeded:
             _, visual_breakdown, llm_notes = _grade_llm_rubric(
@@ -1458,10 +1461,17 @@ def extract_usage_from_jsonl(jsonl_path: Path) -> dict:
     return totals
 
 def print_global_summary(
-    results: list[dict], output_dir: Path, model_name: str, timing: dict | None = None
+    results: list[dict],
+    output_dir: Path,
+    model_name: str,
+    timing: dict | None = None,
+    pass_threshold: float | None = None,
 ) -> dict:
-    from src.utils.multirun_stats import aggregate_runs
-    from eval.run_batch import PASS_THRESHOLD
+    from src.utils.multirun_stats import DEFAULT_PASS_THRESHOLD, aggregate_runs
+
+    effective_pass_threshold = (
+        DEFAULT_PASS_THRESHOLD if pass_threshold is None else pass_threshold
+    )
 
     print(f"\n{'#'*60}")
     print(f"  Global Summary Report — ALL CATEGORIES")
@@ -1477,14 +1487,19 @@ def print_global_summary(
     scored_tasks = 0
     missing_score_tasks = 0
     total_score = 0.0
+    valid_total_score = 0.0
+    valid_scored_tasks = 0
+    validity_failure_runs = 0
+    validity_failure_tasks: set[str] = set()
 
     # 多轮统计（runs > 1 时）
     per_task_stats: dict[str, dict] = {}
     runs_per_task = max((len(runs) for runs in grouped.values()), default=1)
 
     for tid_ori, runs in grouped.items():
-        # 收集有效 overall_score
+        # 收集可解析的 overall_score；validity 失败分数仍保留在总平均中。
         scores_list = []
+        valid_scores_list = []
         for r in runs:
             scores = r.get("scores", {})
             numeric = {
@@ -1497,6 +1512,21 @@ def print_global_summary(
             # 提取 overall_score
             final = numeric.get("overall_score", sum(numeric.values()) / len(numeric) if numeric else 0)
             scores_list.append(final)
+            anomalies = r.get("anomalies")
+            is_valid = True
+            if isinstance(anomalies, dict):
+                if "validity_verdict" in anomalies:
+                    is_valid = str(anomalies.get("validity_verdict")).upper() == "PASS"
+                else:
+                    is_valid = not bool(
+                        anomalies.get("has_validity_failure")
+                        or anomalies.get("needs_review")
+                    )
+            if is_valid:
+                valid_scores_list.append(final)
+            else:
+                validity_failure_runs += 1
+                validity_failure_tasks.add(tid_ori)
 
         if not scores_list:
             missing_score_tasks += 1
@@ -1504,14 +1534,21 @@ def print_global_summary(
 
         # 单轮/多轮分支
         if runs_per_task > 1:
-            stats = aggregate_runs(scores_list, PASS_THRESHOLD)
+            stats = aggregate_runs(scores_list, effective_pass_threshold)
             per_task_stats[tid_ori] = stats
             total_score += stats["mean"]
             scored_tasks += 1
+            if valid_scores_list:
+                valid_stats = aggregate_runs(valid_scores_list, effective_pass_threshold)
+                valid_total_score += valid_stats["mean"]
+                valid_scored_tasks += 1
         else:
             # 单轮：直接取值（保持现有逻辑）
             total_score += scores_list[0]
             scored_tasks += 1
+            if valid_scores_list:
+                valid_total_score += valid_scores_list[0]
+                valid_scored_tasks += 1
 
     global_avg = 0.0
     if total_tasks > 0:
@@ -1521,7 +1558,18 @@ def print_global_summary(
         print(f"  Tasks without a valid score.json: {missing_score_tasks}")
         if missing_score_tasks > 0:
             print("  Possible causes: task execution failed, such as OOM, or grading failed.")
-        print(f"  Global average: {bar} {global_avg:.4f}")
+        print(f"  Global average (all tasks, validity failures included): {bar} {global_avg:.4f}")
+        valid_global_avg = (
+            valid_total_score / valid_scored_tasks if valid_scored_tasks else None
+        )
+        if valid_global_avg is None:
+            print("  Valid-result average (PASS only): unavailable")
+        else:
+            print(f"  Valid-result average (PASS only): {valid_global_avg:.4f}")
+        print(
+            "  Validity failures included in total: "
+            f"{validity_failure_runs} runs / {len(validity_failure_tasks)} tasks"
+        )
         if runs_per_task > 1:
             print(f"  Runs per task: {runs_per_task}")
     else:
@@ -1551,9 +1599,16 @@ def print_global_summary(
     # 构建 summary JSON
     summary_data = {
         "global_avg": global_avg if total_tasks else None,
+        "valid_global_avg": (
+            valid_total_score / valid_scored_tasks if valid_scored_tasks else None
+        ),
         "task_count": total_tasks,
         "scored_task_count": scored_tasks,
         "missing_score_task_count": missing_score_tasks,
+        "valid_scored_task_count": valid_scored_tasks,
+        "validity_failure_run_count": validity_failure_runs,
+        "validity_failure_task_count": len(validity_failure_tasks),
+        "invalid_scores_included_in_global_avg": True,
         "results": results,
     }
 
@@ -1568,7 +1623,7 @@ def print_global_summary(
         mean_pass_hat_k = sum(s["pass_hat_k"] for s in per_task_stats.values()) / len(per_task_stats)
         summary_data["multirun"] = {
             "runs_per_task": runs_per_task,
-            "pass_threshold": PASS_THRESHOLD,
+            "pass_threshold": effective_pass_threshold,
             "per_task": per_task_stats,
             "macro": {
                 "mean_of_means": global_avg,  # 已经是跨 task 的 mean

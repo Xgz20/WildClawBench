@@ -32,6 +32,53 @@ def _load_validity(path: str | None) -> dict[str, Any]:
         return {}
 
 
+def _validity_run_entry(validity: dict[str, Any], record: ResultRecord) -> dict[str, Any]:
+    runs = validity.get("runs")
+    if not isinstance(runs, dict):
+        return {}
+    try:
+        relative = str(record.run_dir.relative_to(record.result_root))
+    except ValueError:
+        relative = record.run_dir.name
+    entry = runs.get(relative)
+    if isinstance(entry, dict):
+        return entry
+    # Keep compatibility with reports written on a Windows host.
+    entry = runs.get(relative.replace("/", "\\"))
+    return entry if isinstance(entry, dict) else {}
+
+
+def _filter_validity_records(
+    records: list[ResultRecord], validity: dict[str, Any]
+) -> tuple[list[ResultRecord], list[Issue]]:
+    """Exclude validity-failed runs from capability statistics, not from inventory."""
+    if not validity or not isinstance(validity.get("runs"), dict):
+        return records, []
+    usable: list[ResultRecord] = []
+    issues: list[Issue] = []
+    for record in records:
+        entry = _validity_run_entry(validity, record)
+        failed = bool(
+            entry.get("has_validity_failure")
+            or str(entry.get("validity_verdict") or "").upper() in {"FAIL", "REVIEW"}
+        )
+        if failed:
+            issues.append(Issue(
+                FAIL,
+                "RESULT_VALIDITY_FAILED",
+                "该 run 存在评测有效性失败，不纳入能力统计",
+                task_id=record.task_id,
+                location=str(record.run_dir),
+                evidence={
+                    "unit": record.unit,
+                    "validity_verdict": entry.get("validity_verdict"),
+                },
+            ))
+            continue
+        usable.append(record)
+    return usable, issues
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--result-root", action="append", required=True)
@@ -79,6 +126,7 @@ def _coverage(records: list[ResultRecord], selected_ids: set[str]) -> list[Issue
 _QUALITY_ACTIONS = {
     "RESULT_EXECUTION_INVALID": "先排除 timed-out/执行失败结果，重新运行后再解释模型能力",
     "RESULT_SCORE_MISSING": "补齐 score.json 或从统计范围中移除该 run",
+    "RESULT_VALIDITY_FAILED": "修复评测框架或重新运行该任务后，再解释模型能力",
     "RESULT_TASK_MISSING": "补齐选定任务在该 model@harness 下的结果",
     "TASK_TOO_EASY": "检查任务是否缺少梯度或输出要求过于宽松",
     "TASK_TOO_HARD": "检查任务是否不可达、输入是否缺失或评分标准过严",
@@ -148,7 +196,13 @@ def main(argv: list[str] | None = None) -> int:
     # deterministic coverage FAIL for an explicitly requested task scope.
     explicit_scope = bool(args.task_dir or args.task_path or args.task_id)
     issues.extend(_coverage(records, selected_ids if explicit_scope else set()))
-    usable = effective_records(discovery)
+    validity = _load_validity(args.validity)
+    if args.validity and not validity:
+        issues.append(Issue(FAIL, "VALIDITY_INPUT_INVALID", f"无法读取或解析 validity JSON: {args.validity}", location=str(Path(args.validity).expanduser())))
+    usable, validity_issues = _filter_validity_records(
+        effective_records(discovery), validity
+    )
+    issues.extend(validity_issues)
     thresholds = MetricThresholds(ceiling_rate=args.ceiling_rate, floor_rate=args.floor_rate, model_gap=args.model_gap)
     model_stats, model_issues = compare_models(usable, thresholds)
     harness_stats, harness_issues = compare_harnesses(usable, thresholds)
@@ -159,9 +213,6 @@ def main(argv: list[str] | None = None) -> int:
     if not args.no_trace_analysis:
         common_zero_candidates, trace_issues = analyze_common_zero_scores(usable)
         issues.extend(trace_issues)
-    validity = _load_validity(args.validity)
-    if args.validity and not validity:
-        issues.append(Issue(FAIL, "VALIDITY_INPUT_INVALID", f"无法读取或解析 validity JSON: {args.validity}", location=str(Path(args.validity).expanduser())))
     validity_summary = {
         key: validity.get(key)
         for key in ("schema_version", "validity_verdict", "summary", "has_validity_failure", "needs_review")
@@ -176,6 +227,7 @@ def main(argv: list[str] | None = None) -> int:
         "harness_count": len(harness_stats["harnesses"]),
         "validity_loaded": bool(validity),
         "validity_evidence": validity_summary,
+        "validity_filtered_score_count": len(validity_issues),
         "model_comparison": model_stats,
         "harness_comparison": harness_stats,
         "difficulty": difficulty_stats,

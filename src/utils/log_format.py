@@ -115,7 +115,14 @@ def configure_console_logging(level: int = logging.INFO) -> None:
     """根 logger 装一个 stdout 彩色+emoji handler（替代 basicConfig）。"""
     root = logging.getLogger()
     root.setLevel(level)
+    # ``eval.run_batch`` is imported by grading helpers.  Re-importing it must
+    # not attach another stdout handler and duplicate every console line.
+    for existing in root.handlers:
+        if getattr(existing, "_wildclaw_console_handler", False):
+            existing.setLevel(level)
+            return
     handler = logging.StreamHandler(sys.stdout)
+    handler._wildclaw_console_handler = True
     handler.setFormatter(ColorEmojiFormatter())
     root.addHandler(handler)
 

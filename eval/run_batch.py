@@ -444,6 +444,7 @@ def _generate_global_summary_safely(
     summary_label: str,
     *,
     timing: dict,
+    summary_sink: dict | None = None,
 ) -> float | None:
     try:
         summary = print_global_summary(
@@ -451,6 +452,7 @@ def _generate_global_summary_safely(
             output_root,
             summary_label,
             timing=timing,
+            pass_threshold=PASS_THRESHOLD,
         )
     except Exception as exc:
         logger.warning("跑批总平均结果生成失败，继续主流程: %s", exc)
@@ -458,6 +460,8 @@ def _generate_global_summary_safely(
 
     if not isinstance(summary, dict):
         return None
+    if summary_sink is not None:
+        summary_sink.update(summary)
     scored_task_count = summary.get("scored_task_count")
     global_average = summary.get("global_avg")
     if (
@@ -477,6 +481,9 @@ def _log_batch_completion(
     *,
     task_count: int,
     global_average: float | None,
+    valid_global_average: float | None = None,
+    validity_failure_count: int = 0,
+    validity_failure_task_count: int = 0,
 ) -> None:
     global_average_display = (
         f"{global_average:.4f}" if global_average is not None else "不可用"
@@ -487,7 +494,8 @@ def _log_batch_completion(
     parallelism = int(timing.get("parallelism", 0) or 0)
     logger.info(
         "📊 跑批完成: 跑批总耗时=%.0fs (~%.1fmin) | 用例执行总耗时=%.0fs (~%.1fmin) "
-        "| 并发=%d | %d 题 | 平均执行=%.0fs/题 | 总平均结果=%s",
+        "| 并发=%d | %d 题 | 平均执行=%.0fs/题 | 总平均结果=%s "
+        "| 有效结果平均=%s | 有效性失败=%d次/%d题",
         batch_total_seconds,
         batch_total_seconds / 60,
         task_exec_sum_seconds,
@@ -496,6 +504,9 @@ def _log_batch_completion(
         task_count,
         avg_exec_seconds,
         global_average_display,
+        f"{valid_global_average:.4f}" if valid_global_average is not None else "不可用",
+        validity_failure_count,
+        validity_failure_task_count,
     )
 
 
@@ -1162,16 +1173,25 @@ def main() -> None:
                 if batch_total_seconds > 0 else None
             ),
         }
+        summary_snapshot: dict = {}
         global_average = _generate_global_summary_safely(
             all_results,
             output_root,
             summary_label,
             timing=timing,
+            summary_sink=summary_snapshot,
         )
         _log_batch_completion(
             timing,
             task_count=len(all_results),
             global_average=global_average,
+            valid_global_average=summary_snapshot.get("valid_global_avg"),
+            validity_failure_count=int(
+                summary_snapshot.get("validity_failure_run_count", 0) or 0
+            ),
+            validity_failure_task_count=int(
+                summary_snapshot.get("validity_failure_task_count", 0) or 0
+            ),
         )
         _write_rerun_summary(all_results, output_root)
 
