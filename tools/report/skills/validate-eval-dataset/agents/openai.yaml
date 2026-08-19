@@ -1,4 +1,4 @@
 interface:
   display_name: "Validate Eval Dataset"
-  short_description: "检查 WildClawBench 任务格式与运行前置条件"
-  default_prompt: "校验 tasks/extension 或指定任务的框架契约、workspace、Skill、Env 和 Warmup。"
+  short_description: "检查 WildClawBench 任务、前置条件与 Web 评分契约"
+  default_prompt: "使用 $validate-eval-dataset 校验指定任务的框架契约、运行前置条件和 Web Playwright 静态协议。"

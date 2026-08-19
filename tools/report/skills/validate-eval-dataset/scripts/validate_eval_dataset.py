@@ -31,6 +31,10 @@ from tools.report.lib.eval_dataset.task_files import (
     strip_codeblock,
     warmup_info,
 )
+from tools.report.lib.eval_dataset.website_contracts import (
+    is_website_task,
+    validate_website_contract,
+)
 
 
 def _issue(code: str, message: str, doc: TaskDocument, *, severity: str = FAIL, evidence: dict[str, Any] | None = None) -> Issue:
@@ -161,6 +165,9 @@ def validate_document(doc: TaskDocument, repo_root: Path, *, smoke: bool = False
             elif result.get("status") != "passed":
                 issues.append(_issue(result.get("code", "WARMUP_SMOKE_FAILED"), "Warmup 容器 smoke 执行失败", doc, evidence={"returncode": result.get("returncode"), "stderr": result.get("stderr", "")}))
 
+    if is_website_task(doc):
+        issues.extend(validate_website_contract(doc, repo_root, workspace))
+
     return issues
 
 
@@ -211,6 +218,17 @@ _ISSUE_ACTIONS = {
     "WARMUP_SHELL_INVALID": "修正 Warmup shell 语法",
     "EXTENSION_REGISTRY_MISSING": "补齐 tasks/extension/task_sources.yaml",
     "EXTENSION_REGISTRY_INVALID": "修正扩展集任务注册表",
+    "WEBSITE_CHECKER_MISSING": "按任务 ID 补齐 eval/checks/website/tasks 下的 Playwright 检查器",
+    "WEBSITE_CHECKER_SYNTAX_INVALID": "修正 Playwright 检查器的 Python 语法",
+    "WEBSITE_CHECKER_ENTRYPOINT_MISSING": "补齐 async run(page, screenshot_dir) 和视觉截图入口",
+    "WEBSITE_RUNTIME_KEYS_MISMATCH": "让 RUNTIME_KEYS 精确覆盖所有非视觉 Rubric key",
+    "WEBSITE_VISUAL_KEYS_MISMATCH": "让 VISUAL_KEYS 精确覆盖所有 visual_layout Rubric key",
+    "WEBSITE_RUBRIC_DIMENSION_INVALID": "修正 Web Rubric 的 key、primary 和 secondary 维度",
+    "WEBSITE_RUBRIC_FORMAT_INVALID": "修正 Criterion 编号、标题和 1.0/0.0 评分档",
+    "WEBSITE_RUBRIC_WEIGHT_INVALID": "将 Web Rubric 权重设为正数并确保总和为 1",
+    "WEBSITE_STARTUP_CONTRACT_MISSING": "在 Prompt 中补齐标准 npm 安装、构建和启动协议",
+    "WEBSITE_WORKSPACE_LAYOUT_INVALID": "使用规定的 Web workspace 路径并补齐 exec/ 目录",
+    "WEBSITE_EVAL_FIXTURE_MISSING": "为 /tmp_workspace_eval 引用补齐 workspace/eval 评测素材",
 }
 
 
@@ -274,16 +292,19 @@ def main(argv: list[str] | None = None) -> int:
     selection = select_task_files(REPO_ROOT, task_dirs=args.task_dir, task_paths=args.task_path, task_ids=args.task_id, default_root="tasks", include_doc_copies=args.include_doc_copies)
     issues = list(selection.issues)
     task_ids: list[str] = []
+    website_task_ids: list[str] = []
     for path in selection.files:
         try:
             document = parse_task_document(path)
             task_ids.append(document.task_id)
+            if is_website_task(document):
+                website_task_ids.append(document.task_id)
             issues.extend(validate_document(document, REPO_ROOT, smoke=args.smoke, warmup_image=args.warmup_image))
         except (OSError, UnicodeError) as exc:
             issues.append(Issue(FAIL, "TASK_READ_ERROR", str(exc), location=str(path)))
     issues.extend(validate_extension_registry(REPO_ROOT, selection.files))
     status = status_for_issues(issues)
-    report = Report(1, status, {"repo": str(REPO_ROOT), "tasks": [str(path) for path in selection.files], "selectors": selection.selectors, "include_doc_copies": args.include_doc_copies, "smoke": args.smoke}, {"task_count": len(selection.files), "issue_count": len(issues), "action_summary": build_action_summary(task_ids, issues)}, issues)
+    report = Report(1, status, {"repo": str(REPO_ROOT), "tasks": [str(path) for path in selection.files], "selectors": selection.selectors, "include_doc_copies": args.include_doc_copies, "smoke": args.smoke}, {"task_count": len(selection.files), "website_task_count": len(website_task_ids), "issue_count": len(issues), "action_summary": build_action_summary(task_ids, issues)}, issues)
     target = write_report(report, repo_root=REPO_ROOT, kind="static", output_dir=args.output_dir)
     print(target)
     return exit_code(status, fail_on_review=args.fail_on == "review")
