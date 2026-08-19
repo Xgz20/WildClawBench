@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import re
+
 try:
     from ..common import (
         CheckRecorder, capture, click_named_any, contains_any_texts,
-        contains_texts, reset_page,
+        contains_each_any_texts, contains_texts, reset_page,
     )
 except ImportError:
     from common import (
         CheckRecorder, capture, click_named_any, contains_any_texts,
-        contains_texts, reset_page,
+        contains_each_any_texts, contains_texts, reset_page,
     )
 
 
@@ -63,12 +65,83 @@ def _contains_any_terms(text: str, terms: list[str]) -> bool:
     return any(term in text for term in terms)
 
 
+async def _data_item_count(region) -> int:
+    selectors = (
+        "tr", "[role='row']", "[data-row]", ".table-row",
+        ".school-row", ".warning-row", ".list-item",
+    )
+    for selector in selectors:
+        items = region.locator(selector)
+        visible = 0
+        for index in range(await items.count()):
+            item = items.nth(index)
+            if not await item.is_visible() or await item.locator("th").count():
+                continue
+            visible += 1
+        if visible:
+            return visible
+    return 0
+
+
+async def _paginate_section(
+    page,
+    headings: list[str],
+    *,
+    expected_total: int,
+    expected_after_count: int | tuple[int, int],
+    prefer_last_heading: bool = False,
+) -> bool:
+    heading = None
+    for text in headings:
+        locator = page.get_by_text(text, exact=False)
+        if await locator.count():
+            heading = locator.last if prefer_last_heading else locator.first
+            break
+    if heading is None:
+        return False
+    region = heading.locator(
+        "xpath=ancestor::*[.//*[self::button or @role='button']"
+        "[contains(normalize-space(.), '下一页') or contains(normalize-space(.), '下页')"
+        " or contains(@aria-label, '下一页') or contains(@aria-label, 'Next')]][1]"
+    )
+    if not await region.count():
+        return False
+    next_buttons = region.get_by_role(
+        "button", name=re.compile(r"下一页|下页|后一页|next", re.IGNORECASE)
+    )
+    if not await next_buttons.count():
+        return False
+    next_button = next_buttons.first
+    before_text = await region.inner_text()
+    before_count = await _data_item_count(region)
+    if await next_button.is_disabled():
+        return False
+    await next_button.click()
+    await page.wait_for_timeout(100)
+    after_text = await region.inner_text()
+    after_count = await _data_item_count(region)
+    if isinstance(expected_after_count, tuple):
+        after_count_ok = expected_after_count[0] <= after_count <= expected_after_count[1]
+    else:
+        after_count_ok = after_count == expected_after_count
+    return (
+        before_count == 10
+        and after_count_ok
+        and before_text != after_text
+        and str(expected_total) in before_text + after_text
+    )
+
+
 async def run(page, screenshot_dir):
     recorder = CheckRecorder(page, screenshot_dir)
 
     async def basic():
         await reset_page(page)
-        return await contains_texts(page, ["智慧教学", "学期", "省", "市", "区", "整体概览", "产品活跃趋势", "区域分布", "学校明细", "预警"])
+        return await contains_each_any_texts(page, [
+            ["智慧教学"], ["学期"], ["省", "省份"], ["市", "城市"],
+            ["区", "区县"], ["整体概览"], ["产品活跃趋势"], ["区域分布"],
+            ["学校明细", "学校使用明细"], ["预警"],
+        ])
     await recorder.check("criterion_01_information_organization", basic)
 
     async def overview_latest():
@@ -91,10 +164,11 @@ async def run(page, screenshot_dir):
 
     async def school_table():
         await reset_page(page)
-        return await contains_texts(
-            page,
-            ["学校明细", "学校名称", "省", "市", "区", "授权", "活跃用户", "应用状态"],
-        )
+        return await contains_each_any_texts(page, [
+            ["学校明细", "学校使用明细"], ["学校名称", "学校"],
+            ["省", "省份"], ["市", "城市"], ["区", "区县"], ["授权"],
+            ["活跃用户"], ["应用状态", "授权状态", "学期有效"],
+        ])
     await recorder.check("criterion_05_lists_and_tables", school_table)
 
     async def expiry_table():
@@ -232,41 +306,24 @@ async def run(page, screenshot_dir):
 
     async def pagination_school():
         await reset_page(page)
-        heading = page.get_by_text("学校明细", exact=False).first
-        region = heading.locator(
-            "xpath=ancestor::*[.//tbody and .//button[contains(normalize-space(.), '下一页')]][1]"
+        return await _paginate_section(
+            page,
+            ["学校明细", "学校使用明细"],
+            expected_total=32,
+            expected_after_count=(1, 10),
         )
-        if not await region.count():
-            return False
-        next_button = region.locator("button", has_text="下一页").first
-        if not await next_button.count():
-            return False
-        before = await region.locator("tbody tr").all_text_contents()
-        if await next_button.first.is_disabled():
-            return False
-        await next_button.first.click()
-        after = await region.locator("tbody tr").all_text_contents()
-        return len(before) == 10 and 1 <= len(after) <= 10 and before != after and await contains_texts(page, ["32"])
     await recorder.check("criterion_23_page_navigation", pagination_school)
 
     async def pagination_alert():
         await reset_page(page)
         await _open_alert(page, "产品到期预警")
-        heading = page.get_by_text("产品到期预警", exact=False).last
-        region = heading.locator(
-            "xpath=ancestor::*[.//tbody and .//button[contains(normalize-space(.), '下一页')]][1]"
+        return await _paginate_section(
+            page,
+            ["产品到期预警", "到期预警"],
+            expected_total=16,
+            expected_after_count=6,
+            prefer_last_heading=True,
         )
-        if not await region.count():
-            return False
-        next_button = region.locator("button", has_text="下一页").first
-        if not await next_button.count():
-            return False
-        before = await region.locator("tbody tr").all_text_contents()
-        if await next_button.first.is_disabled():
-            return False
-        await next_button.first.click()
-        after = await region.locator("tbody tr").all_text_contents()
-        return len(before) == 10 and len(after) == 6 and before != after and await contains_texts(page, ["16"])
     await recorder.check("criterion_24_page_navigation", pagination_alert)
     return recorder.results
 

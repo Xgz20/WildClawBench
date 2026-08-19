@@ -75,6 +75,18 @@ def _metadata_for_run(run_dir: Path) -> dict[str, Any]:
     return _load_json(run_dir / "run_metadata.json")
 
 
+def _is_capability_outcome(anomalies: dict[str, Any]) -> bool:
+    if not isinstance(anomalies, dict) or anomalies.get("has_validity_failure"):
+        return False
+    return any(
+        isinstance(item, dict)
+        and item.get("attribution") in {"model", "harness"}
+        and item.get("validity_impact") == "none"
+        and item.get("score_reliability") == "valid_capability_outcome"
+        for item in anomalies.get("items", [])
+    )
+
+
 def _infer_identity(run_dir: Path, execution: dict[str, Any]) -> tuple[str, str, str, str]:
     task_dir = run_dir.parent
     category_dir = task_dir.parent
@@ -122,13 +134,74 @@ def discover_results(result_roots: Iterable[str | Path]) -> ResultDiscovery:
             execution_status = str(execution.get("status") or "unknown").lower()
             exit_code = execution.get("exit_code")
             usable_execution = execution_status in {"finished", "success", "succeeded", "completed"} and exit_code in (None, 0)
-            usable = score is not None and usable_execution
-            validity = "valid" if usable else ("execution_error" if not usable_execution else "missing_score")
+            grading = score_data.get("_grading")
+            grading = grading if isinstance(grading, dict) else {}
+            grading_status = str(grading.get("status") or "").lower()
+            score_reliability = str(grading.get("score_reliability") or "").lower()
+            usable_grading = (
+                grading_status not in {"evaluator_failed", "judge_failed"}
+                and not score_reliability.startswith("unreliable")
+            )
+            anomaly_validity_failure = bool(anomalies.get("has_validity_failure"))
+            capability_outcome = (
+                score is not None
+                and usable_grading
+                and not anomaly_validity_failure
+                and not usable_execution
+                and _is_capability_outcome(anomalies)
+            )
+            usable = score is not None and usable_grading and not anomaly_validity_failure and (
+                usable_execution or capability_outcome
+            )
+            validity = (
+                "evaluator_error"
+                if not usable_grading
+                else "validity_failure"
+                if anomaly_validity_failure
+                else "valid"
+                if usable_execution and score is not None
+                else "capability_outcome"
+                if capability_outcome
+                else "execution_error"
+                if not usable_execution
+                else "missing_score"
+            )
             record = ResultRecord(root, run_dir, score_path if score_path.is_file() else None, model, harness, category, task_id, run_dir.name, score, score_data, execution, usage, anomalies, usable, validity)
             discovery.records.append(record)
             if score is None:
                 discovery.issues.append(Issue(FAIL, "RESULT_SCORE_MISSING", f"结果缺少可解析分数: {run_dir}", task_id=task_id, location=str(run_dir)))
-            if not usable_execution:
+            if not usable_grading:
+                discovery.issues.append(Issue(
+                    FAIL,
+                    "RESULT_EVALUATOR_INVALID",
+                    f"结果评分器状态不可用于能力比较: {run_dir}",
+                    task_id=task_id,
+                    location=str(run_dir),
+                    evidence={
+                        "grading_status": grading_status,
+                        "score_reliability": score_reliability,
+                        "partial_overall_score": grading.get("partial_overall_score"),
+                    },
+                ))
+            elif anomaly_validity_failure:
+                anomaly_ids = [
+                    str(item.get("id") or item.get("code"))
+                    for item in anomalies.get("items", [])
+                    if isinstance(item, dict) and (item.get("id") or item.get("code"))
+                ]
+                discovery.issues.append(Issue(
+                    FAIL,
+                    "RESULT_VALIDITY_INVALID",
+                    f"结果异常检测判定为有效性失败: {run_dir}",
+                    task_id=task_id,
+                    location=str(run_dir),
+                    evidence={
+                        "validity_verdict": anomalies.get("validity_verdict"),
+                        "needs_rerun": anomalies.get("needs_rerun"),
+                        "anomaly_ids": anomaly_ids,
+                    },
+                ))
+            elif not usable_execution and not capability_outcome:
                 discovery.issues.append(Issue(FAIL, "RESULT_EXECUTION_INVALID", f"结果执行状态不可用于能力比较: {run_dir}", task_id=task_id, location=str(run_dir), evidence={"status": execution_status, "exit_code": exit_code}))
     return discovery
 

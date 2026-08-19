@@ -14,19 +14,76 @@ RUNTIME_KEYS = [
     "restart_randomization", "play_again_restart",
 ]
 VISUAL_KEYS = ["color_heading_hierarchy", "desktop_page_layout", "card_success_style"]
+FRUITS = ("橙子", "草莓", "蓝莓")
 
 
 async def _cards(page):
-    return page.get_by_role(
-        "button", name=re.compile(r"^(背面朝上的卡片|橙子|草莓|蓝莓)$")
-    )
+    candidates = [
+        page.get_by_role(
+            "button",
+            name=re.compile(r"卡片|翻开|橙子|草莓|蓝莓"),
+        ),
+        page.locator("button").filter(has_text=re.compile(r"橙子|草莓|蓝莓")),
+        page.locator(".card"),
+    ]
+    for locator in candidates:
+        if await locator.count() == 6:
+            return locator
+    raise AssertionError("six interactive memory cards not found")
 
 
-async def _all_cards_have_label(cards, expected: str) -> bool:
+async def _card_fruit(card) -> str:
+    values = [
+        await card.get_attribute("aria-label") or "",
+        await card.get_attribute("data-fruit") or "",
+        await card.get_attribute("data-name") or "",
+        await card.text_content() or "",
+    ]
+    for fruit in FRUITS:
+        if any(fruit in value for value in values):
+            return fruit
+    return ""
+
+
+async def _card_is_hidden(card) -> bool:
+    label = await card.get_attribute("aria-label") or ""
+    classes = await card.get_attribute("class") or ""
+    if any(token in label for token in ("背面", "未翻", "翻开卡片")):
+        return True
+    if any(token in label for token in (*FRUITS, "已翻", "已配对")):
+        return False
+    state_classes = ("flipped", "is-flipped", "face-up", "matched", "is-matched")
+    return not any(token in classes.split() for token in state_classes)
+
+
+async def _card_is_matched(card) -> bool:
+    label = await card.get_attribute("aria-label") or ""
+    classes = await card.get_attribute("class") or ""
+    if "已配对" in label or any(token in classes.split() for token in ("matched", "is-matched")):
+        return True
+    try:
+        return await card.is_disabled()
+    except Exception:
+        return False
+
+
+async def _all_cards_hidden(cards) -> bool:
     for index in range(await cards.count()):
-        if await cards.nth(index).get_attribute("aria-label") != expected:
+        if not await _card_is_hidden(cards.nth(index)):
             return False
     return True
+
+
+async def _visible_card_count(cards) -> int:
+    visible = 0
+    for index in range(await cards.count()):
+        if not await _card_is_hidden(cards.nth(index)):
+            visible += 1
+    return visible
+
+
+async def _deck_order(cards) -> list[str]:
+    return [await _card_fruit(cards.nth(index)) for index in range(await cards.count())]
 
 
 async def _reveal_deck(page):
@@ -34,10 +91,13 @@ async def _reveal_deck(page):
     names = []
     for index in range(await cards.count()):
         card = cards.nth(index)
-        if await card.get_attribute("aria-label") == "背面朝上的卡片":
+        if await _card_is_matched(card):
+            names.append(await _card_fruit(card))
+            continue
+        if await _card_is_hidden(card):
             await card.click()
             await page.wait_for_timeout(50)
-        names.append(await card.get_attribute("aria-label"))
+        names.append(await _card_fruit(card))
         if index % 2 == 1:
             await page.wait_for_timeout(1000)
     return names
@@ -46,26 +106,15 @@ async def _reveal_deck(page):
 async def _solve(page):
     cards = await _cards(page)
     known: dict[str, list[int]] = {}
-    pending_index = None
-    pending_name = None
-    for index in range(await cards.count()):
-        if await cards.nth(index).is_disabled():
-            continue
-        await cards.nth(index).click()
-        name = await cards.nth(index).get_attribute("aria-label")
+    for index, name in enumerate(await _deck_order(cards)):
         known.setdefault(name, []).append(index)
-        if pending_index is None:
-            pending_index, pending_name = index, name
-        else:
-            await page.wait_for_timeout(1000)
-            pending_index = pending_name = None
     for indices in known.values():
         if len(indices) == 2:
             first, second = indices
-            if not await cards.nth(first).is_disabled():
+            if not await _card_is_matched(cards.nth(first)):
                 await cards.nth(first).click()
                 await cards.nth(second).click()
-                await page.wait_for_timeout(500)
+                await page.wait_for_timeout(1000)
     return await contains_texts(page, ["已配对 3/3", "全部配对完成！", "再玩一次"])
 
 
@@ -84,65 +133,58 @@ async def run(page, screenshot_dir):
     async def initial():
         await reset_page(page)
         cards = await _cards(page)
-        labels = [await cards.nth(i).get_attribute("aria-label") for i in range(await cards.count())]
-        return len(labels) == 6 and labels == ["背面朝上的卡片"] * 6
+        return await cards.count() == 6 and await _all_cards_hidden(cards)
     await recorder.check("card_initial_state", initial)
 
     async def single_flip():
         await reset_page(page)
         cards = await _cards(page)
         await cards.nth(0).click()
-        labels = [await cards.nth(i).get_attribute("aria-label") for i in range(6)]
-        return labels[0] in {"橙子", "草莓", "蓝莓"} and labels.count("背面朝上的卡片") == 5 and await contains_texts(page, ["尝试 0 次", "已配对 0/3"])
+        visible_count = await _visible_card_count(cards)
+        return (
+            await _card_fruit(cards.nth(0)) in FRUITS
+            and visible_count == 1
+            and await contains_texts(page, ["尝试 0 次", "已配对 0/3"])
+        )
     await recorder.check("single_card_flip", single_flip)
 
     async def mismatch():
         await reset_page(page)
         cards = await _cards(page)
+        order = await _deck_order(cards)
+        second_index = next(
+            index for index in range(1, 6) if order[index] != order[0]
+        )
         await cards.nth(0).click()
-        first = await cards.nth(0).get_attribute("aria-label")
-        second_index = 1
-        while second_index < 6:
-            await cards.nth(second_index).click()
-            second = await cards.nth(second_index).get_attribute("aria-label")
-            if second != first:
-                break
-            await page.wait_for_timeout(500)
-            await click_named(page, "重新开始")
-            await cards.nth(0).click()
-            first = await cards.nth(0).get_attribute("aria-label")
-            second_index += 1
+        await cards.nth(second_index).click()
         await page.wait_for_timeout(1000)
-        return await contains_texts(page, ["尝试 1 次", "已配对 0/3"]) and await cards.nth(0).get_attribute("aria-label") == "背面朝上的卡片"
+        return (
+            await contains_texts(page, ["尝试 1 次", "已配对 0/3"])
+            and await _card_is_hidden(cards.nth(0))
+            and await _card_is_hidden(cards.nth(second_index))
+        )
     await recorder.check("mismatch_flip_back", mismatch)
 
     async def match_pair():
         await reset_page(page)
         cards = await _cards(page)
+        order = await _deck_order(cards)
+        second_index = order.index(order[0], 1)
+        before_text = await page.locator("body").inner_text()
+        before_match = re.search(r"尝试\s*(\d+)\s*次", before_text)
+        before_attempts = int(before_match.group(1)) if before_match else -1
         await cards.nth(0).click()
-        first_name = await cards.nth(0).get_attribute("aria-label")
-        for index in range(1, 6):
-            before_text = await page.locator("body").inner_text()
-            before_match = re.search(r"尝试\s*(\d+)\s*次", before_text)
-            before_attempts = int(before_match.group(1)) if before_match else -1
-            await cards.nth(index).click()
-            name = await cards.nth(index).get_attribute("aria-label")
-            if name == first_name:
-                await page.wait_for_timeout(600)
-                after_text = await page.locator("body").inner_text()
-                after_match = re.search(r"尝试\s*(\d+)\s*次", after_text)
-                after_attempts = int(after_match.group(1)) if after_match else -1
-                return (
-                    await contains_texts(page, ["已配对 1/3"])
-                    and after_attempts == before_attempts + 1
-                    and await cards.nth(0).get_attribute("aria-label") == first_name
-                    and await cards.nth(index).get_attribute("aria-label") == first_name
-                )
-            await page.wait_for_timeout(1000)
-            if index < 5:
-                await cards.nth(0).click()
-                first_name = await cards.nth(0).get_attribute("aria-label")
-        return False
+        await cards.nth(second_index).click()
+        await page.wait_for_timeout(600)
+        after_text = await page.locator("body").inner_text()
+        after_match = re.search(r"尝试\s*(\d+)\s*次", after_text)
+        after_attempts = int(after_match.group(1)) if after_match else -1
+        return (
+            await contains_texts(page, ["已配对 1/3"])
+            and after_attempts == before_attempts + 1
+            and await _card_is_matched(cards.nth(0))
+            and await _card_is_matched(cards.nth(second_index))
+        )
     await recorder.check("matching_pair", match_pair)
 
     async def completion():
@@ -152,11 +194,12 @@ async def run(page, screenshot_dir):
 
     async def restart():
         await reset_page(page)
-        old = await _reveal_deck(page)
+        cards = await _cards(page)
+        old = await _deck_order(cards)
         await click_named(page, "重新开始")
         cards = await _cards(page)
-        initial_ok = await _all_cards_have_label(cards, "背面朝上的卡片")
-        new = await _reveal_deck(page)
+        initial_ok = await _all_cards_hidden(cards)
+        new = await _deck_order(cards)
         return initial_ok and old != new and sorted(old) == sorted(new)
     await recorder.check("restart_randomization", restart)
 
@@ -165,7 +208,7 @@ async def run(page, screenshot_dir):
         solved = await _solve(page)
         await click_named(page, "再玩一次")
         cards = await _cards(page)
-        return solved and await contains_texts(page, ["尝试 0 次", "已配对 0/3"]) and await _all_cards_have_label(cards, "背面朝上的卡片")
+        return solved and await contains_texts(page, ["尝试 0 次", "已配对 0/3"]) and await _all_cards_hidden(cards)
     await recorder.check("play_again_restart", play_again)
     return recorder.results
 

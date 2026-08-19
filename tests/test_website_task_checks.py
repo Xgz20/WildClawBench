@@ -87,12 +87,48 @@ class WebsiteTaskChecksTest(unittest.TestCase):
         self.assertIn('await _add_destination(page, "宽窄巷子")', source)
         self.assertIn("_select_day(page, 2", source)
 
-    def test_dashboard_checker_awaits_text_helpers_and_scopes_pagination(self) -> None:
+    def test_daymark_checker_uses_prompt_semantics_instead_of_hidden_copy_contracts(self) -> None:
+        source = inspect.getsource(importlib.import_module(TASK_MODULE_BY_SUFFIX["task_001_daymark_product_website"]))
+
+        self.assertIn("click_named_any", source)
+        self.assertIn("text_absent", source)
+        self.assertNotIn("按团队规模，透明付费", source)
+        self.assertNotIn("你可能想知道的", source)
+        self.assertNotIn("aria-expanded", source)
+
+    def test_focus_checker_does_not_require_candidate_css_or_aria_implementation(self) -> None:
+        source = inspect.getsource(importlib.import_module(TASK_MODULE_BY_SUFFIX["task_002_focus_pomodoro_clock"]))
+
+        self.assertIn("_read_timer_text", source)
+        self.assertIn("_is_checked", source)
+        self.assertIn("fill_any_named", source)
+        self.assertIn("_task_completion_control", source)
+        self.assertIn("await control.is_checked()", source)
+        self.assertIn('get_attribute("aria-pressed")', source)
+        self.assertNotIn(".ring-time", source)
+        self.assertIn("clock.run_for", source)
+        self.assertNotIn("clock.fast_forward", source)
+        self.assertNotIn('page.get_by_role("checkbox").get_attribute("aria-checked")', source)
+
+    def test_activity_checker_accepts_equivalent_dialog_close_labels(self) -> None:
+        source = inspect.getsource(importlib.import_module(TASK_MODULE_BY_SUFFIX["task_003_chengnan_weekend_activity_discovery"]))
+
+        self.assertIn('click_named_any(dialog, ["关闭详情", "关闭对话框", "关闭"])', source)
+
+    def test_memory_game_checker_does_not_require_exact_card_aria_labels(self) -> None:
+        source = inspect.getsource(importlib.import_module(TASK_MODULE_BY_SUFFIX["task_004_orchard_memory_game"]))
+
+        self.assertIn("_card_fruit", source)
+        self.assertIn("_card_is_hidden", source)
+        self.assertNotIn('name=re.compile(r"^(背面朝上的卡片|橙子|草莓|蓝莓)$")', source)
+
+    def test_dashboard_checker_awaits_text_helpers_and_uses_dom_agnostic_pagination(self) -> None:
         source = inspect.getsource(importlib.import_module(TASK_MODULE_BY_SUFFIX["task_009_smart_teaching_dashboard"]))
 
         self.assertNotIn("return contains_any_texts(", source)
-        self.assertIn("ancestor::*[.//tbody", source)
-        self.assertIn('len(after) == 6', source)
+        self.assertIn("_paginate_section", source)
+        self.assertNotIn("ancestor::*[.//tbody", source)
+        self.assertNotIn('locator("tbody tr")', source)
 
     def test_responsive_tasks_capture_mobile_evidence(self) -> None:
         for suffix in (

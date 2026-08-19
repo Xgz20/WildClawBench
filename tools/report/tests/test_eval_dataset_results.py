@@ -25,3 +25,96 @@ def test_discovery_normalizes_and_excludes_superseded(tmp_path):
     assert any(record.score == 1.0 and record.usable for record in result.records)
     assert any(record.score is None and not record.usable for record in result.records)
     assert any(issue.code == "RESULT_SCORE_MISSING" for issue in result.issues)
+
+
+def test_discovery_rejects_evaluator_failed_score_even_when_execution_finished(tmp_path):
+    root = tmp_path / "results"
+    run = _run(root, "model-a", "harness-a", "task-a", "run-1", 0.0)
+    (run / "score.json").write_text(
+        json.dumps({
+            "overall_score": 0.0,
+            "_grading": {
+                "status": "evaluator_failed",
+                "score_reliability": "unreliable",
+                "partial_overall_score": 0.5,
+            },
+        }),
+        encoding="utf-8",
+    )
+
+    result = discover_results([root])
+
+    assert len(result.records) == 1
+    assert not result.records[0].usable
+    assert result.records[0].validity == "evaluator_error"
+    assert any(issue.code == "RESULT_EVALUATOR_INVALID" for issue in result.issues)
+
+
+def test_discovery_rejects_unreliable_score_without_failure_status(tmp_path):
+    root = tmp_path / "results"
+    run = _run(root, "model-a", "harness-a", "task-a", "run-1", 0.0)
+    (run / "score.json").write_text(
+        json.dumps({
+            "overall_score": 0.0,
+            "_grading": {
+                "status": "completed",
+                "score_reliability": "unreliable_evaluator_failure",
+            },
+        }),
+        encoding="utf-8",
+    )
+
+    result = discover_results([root])
+
+    assert not result.records[0].usable
+    assert result.records[0].validity == "evaluator_error"
+    assert any(issue.code == "RESULT_EVALUATOR_INVALID" for issue in result.issues)
+
+
+def test_discovery_includes_anomaly_confirmed_harness_capability_outcome(tmp_path):
+    root = tmp_path / "results"
+    run = _run(
+        root, "model-a", "harness-a", "task-a", "run-1", 0.0, status="error"
+    )
+    (run / "anomalies.json").write_text(
+        json.dumps({
+            "validity_verdict": "PASS",
+            "has_validity_failure": False,
+            "items": [{
+                "attribution": "harness",
+                "validity_impact": "none",
+                "score_reliability": "valid_capability_outcome",
+            }],
+        }),
+        encoding="utf-8",
+    )
+
+    result = discover_results([root])
+
+    assert result.records[0].usable
+    assert result.records[0].validity == "capability_outcome"
+    assert not any(issue.code == "RESULT_EXECUTION_INVALID" for issue in result.issues)
+
+
+def test_discovery_rejects_anomaly_validity_failure(tmp_path):
+    root = tmp_path / "results"
+    run = _run(root, "model-a", "harness-a", "task-a", "run-1", 0.5)
+    (run / "anomalies.json").write_text(
+        json.dumps({
+            "validity_verdict": "FAIL",
+            "has_validity_failure": True,
+            "items": [{
+                "id": "EXECUTION_ERROR",
+                "attribution": "evaluation_framework",
+                "validity_impact": "fail",
+                "score_reliability": "unreliable",
+            }],
+        }),
+        encoding="utf-8",
+    )
+
+    result = discover_results([root])
+
+    assert not result.records[0].usable
+    assert result.records[0].validity == "validity_failure"
+    assert any(issue.code == "RESULT_VALIDITY_INVALID" for issue in result.issues)

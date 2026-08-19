@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 try:
-    from ..common import CheckRecorder, capture, click_named, contains_texts, fill_named, reset_page
+    from ..common import (
+        CheckRecorder, capture, click_named, click_named_any, contains_texts,
+        fill_named, reset_page, text_absent,
+    )
 except ImportError:
-    from common import CheckRecorder, capture, click_named, contains_texts, fill_named, reset_page
+    from common import (
+        CheckRecorder, capture, click_named, click_named_any, contains_texts,
+        fill_named, reset_page, text_absent,
+    )
 
 
 RUNTIME_KEYS = [
@@ -38,8 +44,8 @@ async def run(page, screenshot_dir):
         await reset_page(page)
         targets = [
             ("工作流", "从议题到行动，只走三步"),
-            ("定价", "按团队规模，透明付费"),
-            ("常见问题", "你可能想知道的"),
+            ("定价", "轻帆"),
+            ("常见问题", "可以导入已有会议记录吗？"),
         ]
         for control, heading in targets:
             await click_named(page, control)
@@ -56,9 +62,9 @@ async def run(page, screenshot_dir):
     async def pricing_switch():
         await reset_page(page)
         monthly = await contains_texts(page, ["¥39", "¥89"])
-        await click_named(page, "切换按年付费")
+        await click_named_any(page, ["按年", "切换按年付费", "按年付费"])
         yearly = await contains_texts(page, ["¥31", "¥71", "按年付费，约省 20%"])
-        await click_named(page, "切换按年付费")
+        await click_named_any(page, ["按月", "切换按月付费", "切换按年付费", "按月付费"])
         restored = await contains_texts(page, ["¥39", "¥89"])
         return monthly and yearly and restored
     await recorder.check("pricing_switch", pricing_switch)
@@ -67,14 +73,18 @@ async def run(page, screenshot_dir):
         await reset_page(page)
         first = page.get_by_role("button", name="可以导入已有会议记录吗？")
         second = page.get_by_role("button", name="没有管理员也能开始吗？")
-        initial_closed = (
-            await first.get_attribute("aria-expanded") == "false"
-            and await second.get_attribute("aria-expanded") == "false"
-        )
+        first_answer = "可以，支持粘贴文本或导入 Markdown，原有标题和待办会被保留。"
+        second_answer = "可以，任何成员都能创建第一个工作区，之后再邀请同事加入。"
+        initial_closed = await text_absent(page, [first_answer, second_answer])
         await first.click()
-        first_open = await first.get_attribute("aria-expanded") == "true"
+        first_open = await contains_texts(page, [first_answer])
         await second.click()
-        return initial_closed and first_open and await first.get_attribute("aria-expanded") == "false" and await second.get_attribute("aria-expanded") == "true"
+        return (
+            initial_closed
+            and first_open
+            and await text_absent(page, [first_answer])
+            and await contains_texts(page, [second_answer])
+        )
     await recorder.check("faq_accordion", faq_accordion)
 
     async def trial_validation():
@@ -100,6 +110,9 @@ async def run(page, screenshot_dir):
 async def capture_visual(page, screenshot_dir):
     await reset_page(page)
     manifest = [await capture(page, screenshot_dir, "desktop-home")]
-    await click_named(page, "常见问题")
-    manifest.append(await capture(page, screenshot_dir, "faq-section", full_page=False))
+    try:
+        await click_named(page, "常见问题")
+        manifest.append(await capture(page, screenshot_dir, "faq-section", full_page=False))
+    except Exception:
+        pass
     return manifest

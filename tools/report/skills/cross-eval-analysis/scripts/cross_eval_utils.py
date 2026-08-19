@@ -164,6 +164,11 @@ def _capability_usable(record: ResultRecord) -> bool:
 
 def _record_snapshot(record: ResultRecord) -> dict[str, Any]:
     execution = record.execution or {}
+    execution_status = str(execution.get("status") or "").lower()
+    execution_usable = (
+        execution_status in {"finished", "success", "succeeded", "completed"}
+        and execution.get("exit_code") in (None, 0)
+    )
     return {
         "run_name": record.run_name,
         "run_dir": str(record.run_dir),
@@ -184,7 +189,7 @@ def _record_snapshot(record: ResultRecord) -> dict[str, Any]:
         "timed_out": bool(execution.get("timed_out")),
         "execution_error": str(execution.get("error") or ""),
         "validity": record.validity,
-        "execution_usable": bool(record.usable and record.score is not None),
+        "execution_usable": execution_usable,
         "usable": _capability_usable(record),
     }
 
@@ -377,7 +382,11 @@ def build_manifest(
         )
     ]
     for record in selected_records:
-        if _capability_usable(record) and not record.usable and record.execution.get("timed_out"):
+        if (
+            _capability_usable(record)
+            and record.validity == "capability_outcome"
+            and record.execution.get("timed_out")
+        ):
             issues.append({
                 "code": "CAPABILITY_TIMEOUT_INCLUDED",
                 "severity": "warning",

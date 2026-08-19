@@ -58,6 +58,19 @@ def evaluator_errors(checks: dict) -> list[dict[str, str]]:
     ]
 
 
+async def capture_visual_evidence(module, page, screenshot_dir: Path) -> tuple[list[dict], list[dict[str, str]]]:
+    capture_visual = getattr(module, "capture_visual", None)
+    if not callable(capture_visual):
+        return [], []
+    try:
+        return await capture_visual(page, screenshot_dir), []
+    except Exception as exc:
+        return [], [{
+            "key": "__visual_capture__",
+            "error": f"{type(exc).__name__}: {exc}",
+        }]
+
+
 def _run_command(command: list[str], cwd: Path, log_path: Path, timeout: float) -> None:
     with log_path.open("w", encoding="utf-8") as log:
         result = subprocess.run(
@@ -98,6 +111,7 @@ async def _run_browser(module, output_dir: Path) -> dict:
     network_events: list[dict] = []
     page_errors: list[str] = []
     visual_manifest: list[dict] = []
+    visual_errors: list[dict[str, str]] = []
 
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True)
@@ -124,9 +138,9 @@ async def _run_browser(module, output_dir: Path) -> dict:
         page.on("pageerror", lambda error: page_errors.append(str(error)))
         try:
             checks = await module.run(page, screenshots)
-            capture_visual = getattr(module, "capture_visual", None)
-            if callable(capture_visual):
-                visual_manifest = await capture_visual(page, screenshots)
+            visual_manifest, visual_errors = await capture_visual_evidence(
+                module, page, screenshots
+            )
         finally:
             await context.tracing.stop(path=str(output_dir / "trace.zip"))
             await context.close()
@@ -135,7 +149,7 @@ async def _run_browser(module, output_dir: Path) -> dict:
     (output_dir / "console.json").write_text(json.dumps(console_events, ensure_ascii=False, indent=2), encoding="utf-8")
     (output_dir / "network.json").write_text(json.dumps(network_events, ensure_ascii=False, indent=2), encoding="utf-8")
     (output_dir / "page-errors.json").write_text(json.dumps(page_errors, ensure_ascii=False, indent=2), encoding="utf-8")
-    check_errors = evaluator_errors(checks)
+    check_errors = evaluator_errors(checks) + visual_errors
     return {
         "checks": checks,
         "screenshots": visual_manifest,

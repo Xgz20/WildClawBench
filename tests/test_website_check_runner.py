@@ -17,6 +17,7 @@ from eval.checks.website.runner import (
     browser_context_options,
     build_start_command,
     canvas_text_capture_script,
+    capture_visual_evidence,
     evaluator_errors,
 )
 
@@ -86,6 +87,18 @@ class _FakeFormPage:
 
 
 class WebsiteCommonAsyncTest(unittest.IsolatedAsyncioTestCase):
+    async def test_visual_capture_failure_is_reported_without_losing_runtime_checks(self) -> None:
+        class Module:
+            @staticmethod
+            async def capture_visual(page, screenshot_dir):
+                raise AssertionError("dialog blocked screenshot setup")
+
+        manifest, errors = await capture_visual_evidence(Module, object(), Path("/tmp"))
+
+        self.assertEqual(manifest, [])
+        self.assertEqual(errors[0]["key"], "__visual_capture__")
+        self.assertIn("dialog blocked screenshot setup", errors[0]["error"])
+
     async def test_fill_any_named_does_not_match_generic_search_placeholder_first(self) -> None:
         page = _FakeFormPage()
 

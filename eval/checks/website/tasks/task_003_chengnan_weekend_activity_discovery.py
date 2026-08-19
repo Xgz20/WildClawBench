@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 try:
-    from ..common import CheckRecorder, capture, click_named, contains_texts, fill_named, reset_page, text_absent
+    from ..common import (
+        CheckRecorder, capture, click_named, click_named_any, contains_texts,
+        fill_named, reset_page, text_absent,
+    )
 except ImportError:
-    from common import CheckRecorder, capture, click_named, contains_texts, fill_named, reset_page, text_absent
+    from common import (
+        CheckRecorder, capture, click_named, click_named_any, contains_texts,
+        fill_named, reset_page, text_absent,
+    )
 
 
 RUNTIME_KEYS = [
@@ -49,7 +55,7 @@ async def run(page, screenshot_dir):
         await card.get_by_role("button", name="查看详情").click()
         dialog = page.get_by_role("dialog")
         visible = await dialog.is_visible() and await contains_texts(dialog, ["天台落日音乐会", "音乐", "周六 18:30", "云顶剧场", "¥88", "在城南最高的天台"])
-        await dialog.get_by_role("button", name="关闭详情").click()
+        await click_named_any(dialog, ["关闭详情", "关闭对话框", "关闭"])
         return visible and await page.get_by_role("dialog").count() == 0
     await recorder.check("activity_detail_dialog", detail_dialog)
 
@@ -80,7 +86,10 @@ async def run(page, screenshot_dir):
 async def capture_visual(page, screenshot_dir):
     await reset_page(page)
     manifest = [await capture(page, screenshot_dir, "desktop-home")]
-    card = page.locator("article", has_text="天台落日音乐会").last
-    await card.get_by_role("button", name="查看详情").click()
-    manifest.append(await capture(page, screenshot_dir, "activity-dialog", full_page=False))
+    try:
+        card = page.locator("article", has_text="天台落日音乐会").last
+        await card.get_by_role("button", name="查看详情").click()
+        manifest.append(await capture(page, screenshot_dir, "activity-dialog", full_page=False))
+    except Exception:
+        pass
     return manifest
