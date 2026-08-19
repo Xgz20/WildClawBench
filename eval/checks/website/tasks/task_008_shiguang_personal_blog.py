@@ -15,16 +15,15 @@ except ImportError:
 
 
 RUNTIME_KEYS = [
-    "criterion_01_basic_content", "criterion_02_lists_and_tables", "criterion_03_detail_display",
-    "criterion_04_search", "criterion_05_filtering_and_sorting", "criterion_06_filtering_and_sorting",
-    "criterion_07_operation_feedback", "criterion_08_page_navigation", "criterion_09_content_creation_and_editing",
-    "criterion_10_content_creation_and_editing", "criterion_11_content_creation_and_editing",
-    "criterion_12_content_creation_and_editing", "criterion_13_form_filling_and_validation",
-    "criterion_14_content_creation_and_editing", "criterion_15_content_creation_and_editing",
-    "criterion_16_modal_and_overlay", "criterion_17_content_creation_and_editing",
-    "criterion_18_state_persistence", "criterion_19_filtering_and_sorting", "criterion_23_page_navigation",
+    "c01_information_organization", "c02_lists_tables", "c03_information_organization",
+    "c04_search_filtering", "c05_search_filtering", "c06_search_filtering",
+    "c07_search_filtering", "c08_page_navigation", "c09_content_editing",
+    "c10_content_editing", "c11_content_editing", "c12_content_editing",
+    "c13_form_validation", "c14_content_editing", "c15_content_editing",
+    "c16_popup_overlay", "c17_content_editing", "c18_state_persistence",
+    "c19_search_filtering", "c23_page_navigation",
 ]
-VISUAL_KEYS = ["criterion_20_page_layout", "criterion_21_visual_style", "criterion_22_responsive_layout"]
+VISUAL_KEYS = ["c20_page_layout", "c21_visual_style", "c22_responsive_layout"]
 
 
 async def _search(page, value: str) -> bool:
@@ -125,21 +124,21 @@ async def run(page, screenshot_dir):
     async def basic():
         await reset_page(page)
         return await contains_texts(page, ["拾光札记", "文章", "关于作者", "写一篇", "把日子写成自己的风景", "记录阅读、散步与工作里那些值得留下的片段。"])
-    await recorder.check("criterion_01_basic_content", basic)
+    await recorder.check("c01_information_organization", basic)
 
     async def seeded_articles():
         await reset_page(page)
         return await _article_count(page) >= 3 and await contains_texts(
             page, ["生活", "阅读", "城市", "阅读全文", "标签"]
         ) and await contains_any_texts(page, ["分钟", "阅读时长"])
-    await recorder.check("criterion_02_lists_and_tables", seeded_articles)
+    await recorder.check("c02_lists_tables", seeded_articles)
 
     async def author_footer():
         await reset_page(page)
         return await contains_texts(
             page, ["关于作者", "一个记录日常、阅读和城市漫游的个人角落。"]
         ) and await contains_any_texts(page, ["©", "版权", "版权所有", "Copyright"])
-    await recorder.check("criterion_03_detail_display", author_footer)
+    await recorder.check("c03_information_organization", author_footer)
 
     async def search():
         await reset_page(page)
@@ -147,7 +146,7 @@ async def run(page, screenshot_dir):
         ok = await _search(page, "散步")
         after = await _article_count(page)
         return ok and before >= 3 and after >= 1 and after < before and await contains_texts(page, ["散步"])
-    await recorder.check("criterion_04_search", search)
+    await recorder.check("c04_search_filtering", search)
 
     async def category():
         await reset_page(page)
@@ -158,7 +157,7 @@ async def run(page, screenshot_dir):
         if not await _select_category(page, "全部"):
             return False
         return filtered >= 1 and filtered < before and await _article_count(page) == before
-    await recorder.check("criterion_05_filtering_and_sorting", category)
+    await recorder.check("c05_search_filtering", category)
 
     async def combined_filter():
         await reset_page(page)
@@ -168,7 +167,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return ok and selected and await _article_count(page) >= 1 and await contains_texts(page, ["城市"])
-    await recorder.check("criterion_06_filtering_and_sorting", combined_filter)
+    await recorder.check("c06_search_filtering", combined_filter)
 
     async def empty_and_clear():
         await reset_page(page)
@@ -177,7 +176,7 @@ async def run(page, screenshot_dir):
         empty = await contains_any_texts(page, ["没有找到", "暂无匹配", "没有匹配"]) and await contains_texts(page, ["清除"])
         cleared = await _clear(page)
         return empty and cleared and await _article_count(page) >= 3
-    await recorder.check("criterion_07_operation_feedback", empty_and_clear)
+    await recorder.check("c07_search_filtering", empty_and_clear)
 
     async def detail():
         await reset_page(page)
@@ -189,13 +188,13 @@ async def run(page, screenshot_dir):
             and await page.locator("article h1, article h2, article h3, .detail-card h2").count() > 0
             and await page.locator("article p, article blockquote, article li, .prose").count() > 0
         )
-    await recorder.check("criterion_08_page_navigation", detail)
+    await recorder.check("c08_page_navigation", detail)
 
     async def editor():
         await reset_page(page)
         await click_named(page, "写一篇")
         return await contains_texts(page, ["标题", "分类", "摘要", "标签", "发布日期", "正文", "加粗", "下划线", "引用", "列表"])
-    await recorder.check("criterion_09_content_creation_and_editing", editor)
+    await recorder.check("c09_content_editing", editor)
 
     async def inline_format():
         await reset_page(page)
@@ -211,7 +210,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return await page.locator("strong, b, u").count() > 0
-    await recorder.check("criterion_10_content_creation_and_editing", inline_format)
+    await recorder.check("c10_content_editing", inline_format)
 
     async def block_format():
         await reset_page(page)
@@ -225,7 +224,7 @@ async def run(page, screenshot_dir):
             except Exception:
                 continue
         return await page.locator("h1, h2, h3, blockquote, ul").count() > 0 or await contains_texts(page, ["标题", "引用"])
-    await recorder.check("criterion_11_content_creation_and_editing", block_format)
+    await recorder.check("c11_content_editing", block_format)
 
     async def markdown_shortcuts():
         await reset_page(page)
@@ -238,7 +237,7 @@ async def run(page, screenshot_dir):
         await body.type("标题段落")
         text = await body.inner_text() if await body.get_attribute("contenteditable") == "true" else await body.input_value()
         return "标题段落" in text and "# " not in text
-    await recorder.check("criterion_12_content_creation_and_editing", markdown_shortcuts)
+    await recorder.check("c12_content_editing", markdown_shortcuts)
 
     async def empty_validation():
         await reset_page(page)
@@ -251,7 +250,7 @@ async def run(page, screenshot_dir):
                 ["请输入正文", "正文不能为空", "正文必填"],
             ],
         )
-    await recorder.check("criterion_13_form_filling_and_validation", empty_validation)
+    await recorder.check("c13_form_validation", empty_validation)
 
     async def create_article():
         await reset_page(page)
@@ -261,7 +260,7 @@ async def run(page, screenshot_dir):
         if not await _save_editor(page):
             return False
         return await contains_texts(page, ["雨后的城市", "一段关于生活和城市的记录"])
-    await recorder.check("criterion_14_content_creation_and_editing", create_article)
+    await recorder.check("c14_content_editing", create_article)
 
     async def edit_article():
         await reset_page(page)
@@ -277,7 +276,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return await contains_texts(page, ["修改后的文章"])
-    await recorder.check("criterion_15_content_creation_and_editing", edit_article)
+    await recorder.check("c15_content_editing", edit_article)
 
     async def delete_cancel():
         await reset_page(page)
@@ -290,7 +289,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return dialog and await contains_texts(page, ["编辑文章", "删除文章"])
-    await recorder.check("criterion_16_modal_and_overlay", delete_cancel)
+    await recorder.check("c16_popup_overlay", delete_cancel)
 
     async def delete_confirm():
         await reset_page(page)
@@ -305,7 +304,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return not await page.get_by_text("待删除文章", exact=True).count()
-    await recorder.check("criterion_17_content_creation_and_editing", delete_confirm)
+    await recorder.check("c17_content_editing", delete_confirm)
 
     async def persistence():
         await reset_page(page)
@@ -314,7 +313,7 @@ async def run(page, screenshot_dir):
             return False
         await page.reload(wait_until="domcontentloaded")
         return await contains_texts(page, ["持久化文章"])
-    await recorder.check("criterion_18_state_persistence", persistence)
+    await recorder.check("c18_state_persistence", persistence)
 
     async def tag_filter():
         await reset_page(page)
@@ -325,7 +324,7 @@ async def run(page, screenshot_dir):
         filtered = await page.locator("article").count()
         cleared = await _clear(page)
         return filtered >= 1 and cleared and await page.locator("article").count() >= filtered
-    await recorder.check("criterion_19_filtering_and_sorting", tag_filter)
+    await recorder.check("c19_search_filtering", tag_filter)
 
     async def navigation():
         await reset_page(page)
@@ -334,7 +333,7 @@ async def run(page, screenshot_dir):
         await click_named(page, "关于作者")
         author = await contains_texts(page, ["一个记录日常、阅读和城市漫游的个人角落。"])
         return article_anchor and author
-    await recorder.check("criterion_23_page_navigation", navigation)
+    await recorder.check("c23_page_navigation", navigation)
     return recorder.results
 
 

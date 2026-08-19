@@ -1,0 +1,2065 @@
+{
+  "metrics": [
+    {
+      "key": "avgTemp",
+      "name": "月均气温",
+      "unit": "℃"
+    },
+    {
+      "key": "precipitation",
+      "name": "月降水量",
+      "unit": "毫米"
+    },
+    {
+      "key": "sunnyDays",
+      "name": "晴天数",
+      "unit": "天"
+    },
+    {
+      "key": "humidity",
+      "name": "平均相对湿度",
+      "unit": "%"
+    },
+    {
+      "key": "windSpeed",
+      "name": "平均风力",
+      "unit": "米/秒"
+    }
+  ],
+  "months": [
+    "1月",
+    "2月",
+    "3月",
+    "4月",
+    "5月",
+    "6月",
+    "7月",
+    "8月",
+    "9月",
+    "10月",
+    "11月",
+    "12月"
+  ],
+  "cities": [
+    {
+      "name": "北京",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": -3.1,
+          "precipitation": 11,
+          "sunnyDays": 17,
+          "humidity": 45,
+          "windSpeed": 2.8
+        },
+        {
+          "month": "2月",
+          "avgTemp": -1.1,
+          "precipitation": 11,
+          "sunnyDays": 17,
+          "humidity": 47,
+          "windSpeed": 2.7
+        },
+        {
+          "month": "3月",
+          "avgTemp": 4.3,
+          "precipitation": 11,
+          "sunnyDays": 15,
+          "humidity": 52,
+          "windSpeed": 2.6
+        },
+        {
+          "month": "4月",
+          "avgTemp": 11.8,
+          "precipitation": 22,
+          "sunnyDays": 14,
+          "humidity": 60,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "5月",
+          "avgTemp": 19.2,
+          "precipitation": 34,
+          "sunnyDays": 12,
+          "humidity": 67,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "6月",
+          "avgTemp": 24.7,
+          "precipitation": 73,
+          "sunnyDays": 10,
+          "humidity": 72,
+          "windSpeed": 2.1
+        },
+        {
+          "month": "7月",
+          "avgTemp": 26.7,
+          "precipitation": 168,
+          "sunnyDays": 10,
+          "humidity": 74,
+          "windSpeed": 2.0
+        },
+        {
+          "month": "8月",
+          "avgTemp": 24.7,
+          "precipitation": 123,
+          "sunnyDays": 10,
+          "humidity": 72,
+          "windSpeed": 2.1
+        },
+        {
+          "month": "9月",
+          "avgTemp": 19.3,
+          "precipitation": 50,
+          "sunnyDays": 12,
+          "humidity": 67,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "10月",
+          "avgTemp": 11.8,
+          "precipitation": 28,
+          "sunnyDays": 14,
+          "humidity": 60,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "11月",
+          "avgTemp": 4.3,
+          "precipitation": 17,
+          "sunnyDays": 15,
+          "humidity": 52,
+          "windSpeed": 2.6
+        },
+        {
+          "month": "12月",
+          "avgTemp": -1.1,
+          "precipitation": 11,
+          "sunnyDays": 17,
+          "humidity": 47,
+          "windSpeed": 2.7
+        }
+      ]
+    },
+    {
+      "name": "上海",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 4.8,
+          "precipitation": 59,
+          "sunnyDays": 8,
+          "humidity": 74,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "2月",
+          "avgTemp": 6.4,
+          "precipitation": 71,
+          "sunnyDays": 8,
+          "humidity": 75,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "3月",
+          "avgTemp": 10.8,
+          "precipitation": 83,
+          "sunnyDays": 9,
+          "humidity": 76,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "4月",
+          "avgTemp": 16.7,
+          "precipitation": 83,
+          "sunnyDays": 10,
+          "humidity": 78,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "5月",
+          "avgTemp": 22.6,
+          "precipitation": 106,
+          "sunnyDays": 12,
+          "humidity": 80,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "6月",
+          "avgTemp": 27.0,
+          "precipitation": 177,
+          "sunnyDays": 13,
+          "humidity": 81,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "7月",
+          "avgTemp": 28.6,
+          "precipitation": 153,
+          "sunnyDays": 13,
+          "humidity": 82,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "8月",
+          "avgTemp": 27.0,
+          "precipitation": 153,
+          "sunnyDays": 13,
+          "humidity": 81,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "9月",
+          "avgTemp": 22.7,
+          "precipitation": 118,
+          "sunnyDays": 12,
+          "humidity": 80,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "10月",
+          "avgTemp": 16.7,
+          "precipitation": 71,
+          "sunnyDays": 10,
+          "humidity": 78,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "11月",
+          "avgTemp": 10.8,
+          "precipitation": 59,
+          "sunnyDays": 9,
+          "humidity": 76,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "12月",
+          "avgTemp": 6.4,
+          "precipitation": 47,
+          "sunnyDays": 8,
+          "humidity": 75,
+          "windSpeed": 3.0
+        }
+      ]
+    },
+    {
+      "name": "广州",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 13.9,
+          "precipitation": 40,
+          "sunnyDays": 6,
+          "humidity": 72,
+          "windSpeed": 2.0
+        },
+        {
+          "month": "2月",
+          "avgTemp": 15.2,
+          "precipitation": 68,
+          "sunnyDays": 5,
+          "humidity": 78,
+          "windSpeed": 2.1
+        },
+        {
+          "month": "3月",
+          "avgTemp": 18.4,
+          "precipitation": 85,
+          "sunnyDays": 6,
+          "humidity": 82,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "4月",
+          "avgTemp": 22.6,
+          "precipitation": 180,
+          "sunnyDays": 8,
+          "humidity": 84,
+          "windSpeed": 2.3
+        },
+        {
+          "month": "5月",
+          "avgTemp": 26.1,
+          "precipitation": 285,
+          "sunnyDays": 10,
+          "humidity": 84,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "6月",
+          "avgTemp": 27.8,
+          "precipitation": 310,
+          "sunnyDays": 11,
+          "humidity": 85,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "7月",
+          "avgTemp": 28.9,
+          "precipitation": 286,
+          "sunnyDays": 16,
+          "humidity": 82,
+          "windSpeed": 2.5
+        },
+        {
+          "month": "8月",
+          "avgTemp": 28.6,
+          "precipitation": 250,
+          "sunnyDays": 15,
+          "humidity": 82,
+          "windSpeed": 2.3
+        },
+        {
+          "month": "9月",
+          "avgTemp": 27.3,
+          "precipitation": 165,
+          "sunnyDays": 17,
+          "humidity": 78,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "10月",
+          "avgTemp": 24.4,
+          "precipitation": 55,
+          "sunnyDays": 20,
+          "humidity": 70,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "11月",
+          "avgTemp": 19.8,
+          "precipitation": 38,
+          "sunnyDays": 17,
+          "humidity": 68,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "12月",
+          "avgTemp": 15.4,
+          "precipitation": 25,
+          "sunnyDays": 12,
+          "humidity": 66,
+          "windSpeed": 2.1
+        }
+      ]
+    },
+    {
+      "name": "深圳",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 15.4,
+          "precipitation": 38,
+          "sunnyDays": 9,
+          "humidity": 70,
+          "windSpeed": 2.3
+        },
+        {
+          "month": "2月",
+          "avgTemp": 16.3,
+          "precipitation": 57,
+          "sunnyDays": 9,
+          "humidity": 71,
+          "windSpeed": 2.3
+        },
+        {
+          "month": "3月",
+          "avgTemp": 18.8,
+          "precipitation": 76,
+          "sunnyDays": 10,
+          "humidity": 72,
+          "windSpeed": 2.3
+        },
+        {
+          "month": "4月",
+          "avgTemp": 22.1,
+          "precipitation": 171,
+          "sunnyDays": 12,
+          "humidity": 75,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "5月",
+          "avgTemp": 25.5,
+          "precipitation": 285,
+          "sunnyDays": 14,
+          "humidity": 78,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "6月",
+          "avgTemp": 28.0,
+          "precipitation": 361,
+          "sunnyDays": 15,
+          "humidity": 79,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "7月",
+          "avgTemp": 28.9,
+          "precipitation": 323,
+          "sunnyDays": 15,
+          "humidity": 80,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "8月",
+          "avgTemp": 28.0,
+          "precipitation": 285,
+          "sunnyDays": 15,
+          "humidity": 79,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "9月",
+          "avgTemp": 25.5,
+          "precipitation": 171,
+          "sunnyDays": 14,
+          "humidity": 78,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "10月",
+          "avgTemp": 22.2,
+          "precipitation": 57,
+          "sunnyDays": 12,
+          "humidity": 75,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "11月",
+          "avgTemp": 18.8,
+          "precipitation": 38,
+          "sunnyDays": 10,
+          "humidity": 72,
+          "windSpeed": 2.3
+        },
+        {
+          "month": "12月",
+          "avgTemp": 16.3,
+          "precipitation": 38,
+          "sunnyDays": 9,
+          "humidity": 71,
+          "windSpeed": 2.3
+        }
+      ]
+    },
+    {
+      "name": "杭州",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 4.6,
+          "precipitation": 72,
+          "sunnyDays": 7,
+          "humidity": 75,
+          "windSpeed": 2.1
+        },
+        {
+          "month": "2月",
+          "avgTemp": 6.2,
+          "precipitation": 87,
+          "sunnyDays": 7,
+          "humidity": 75,
+          "windSpeed": 2.1
+        },
+        {
+          "month": "3月",
+          "avgTemp": 10.6,
+          "precipitation": 130,
+          "sunnyDays": 9,
+          "humidity": 75,
+          "windSpeed": 2.1
+        },
+        {
+          "month": "4月",
+          "avgTemp": 16.5,
+          "precipitation": 130,
+          "sunnyDays": 10,
+          "humidity": 76,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "5月",
+          "avgTemp": 22.5,
+          "precipitation": 160,
+          "sunnyDays": 12,
+          "humidity": 76,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "6月",
+          "avgTemp": 26.9,
+          "precipitation": 232,
+          "sunnyDays": 14,
+          "humidity": 76,
+          "windSpeed": 2.3
+        },
+        {
+          "month": "7月",
+          "avgTemp": 28.5,
+          "precipitation": 160,
+          "sunnyDays": 14,
+          "humidity": 76,
+          "windSpeed": 2.3
+        },
+        {
+          "month": "8月",
+          "avgTemp": 26.9,
+          "precipitation": 160,
+          "sunnyDays": 14,
+          "humidity": 76,
+          "windSpeed": 2.3
+        },
+        {
+          "month": "9月",
+          "avgTemp": 22.5,
+          "precipitation": 130,
+          "sunnyDays": 12,
+          "humidity": 76,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "10月",
+          "avgTemp": 16.6,
+          "precipitation": 87,
+          "sunnyDays": 10,
+          "humidity": 76,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "11月",
+          "avgTemp": 10.6,
+          "precipitation": 58,
+          "sunnyDays": 9,
+          "humidity": 75,
+          "windSpeed": 2.1
+        },
+        {
+          "month": "12月",
+          "avgTemp": 6.2,
+          "precipitation": 44,
+          "sunnyDays": 7,
+          "humidity": 75,
+          "windSpeed": 2.1
+        }
+      ]
+    },
+    {
+      "name": "南京",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 2.7,
+          "precipitation": 33,
+          "sunnyDays": 10,
+          "humidity": 72,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "2月",
+          "avgTemp": 4.4,
+          "precipitation": 44,
+          "sunnyDays": 10,
+          "humidity": 72,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "3月",
+          "avgTemp": 9.0,
+          "precipitation": 76,
+          "sunnyDays": 10,
+          "humidity": 74,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "4月",
+          "avgTemp": 15.4,
+          "precipitation": 76,
+          "sunnyDays": 11,
+          "humidity": 76,
+          "windSpeed": 2.5
+        },
+        {
+          "month": "5月",
+          "avgTemp": 21.7,
+          "precipitation": 98,
+          "sunnyDays": 12,
+          "humidity": 77,
+          "windSpeed": 2.5
+        },
+        {
+          "month": "6月",
+          "avgTemp": 26.4,
+          "precipitation": 185,
+          "sunnyDays": 12,
+          "humidity": 79,
+          "windSpeed": 2.6
+        },
+        {
+          "month": "7月",
+          "avgTemp": 28.1,
+          "precipitation": 207,
+          "sunnyDays": 12,
+          "humidity": 79,
+          "windSpeed": 2.6
+        },
+        {
+          "month": "8月",
+          "avgTemp": 26.4,
+          "precipitation": 142,
+          "sunnyDays": 12,
+          "humidity": 79,
+          "windSpeed": 2.6
+        },
+        {
+          "month": "9月",
+          "avgTemp": 21.8,
+          "precipitation": 87,
+          "sunnyDays": 12,
+          "humidity": 77,
+          "windSpeed": 2.6
+        },
+        {
+          "month": "10月",
+          "avgTemp": 15.4,
+          "precipitation": 54,
+          "sunnyDays": 11,
+          "humidity": 76,
+          "windSpeed": 2.5
+        },
+        {
+          "month": "11月",
+          "avgTemp": 9.0,
+          "precipitation": 44,
+          "sunnyDays": 10,
+          "humidity": 74,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "12月",
+          "avgTemp": 4.4,
+          "precipitation": 33,
+          "sunnyDays": 10,
+          "humidity": 72,
+          "windSpeed": 2.4
+        }
+      ]
+    },
+    {
+      "name": "武汉",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 4.0,
+          "precipitation": 39,
+          "sunnyDays": 6,
+          "humidity": 75,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "2月",
+          "avgTemp": 5.7,
+          "precipitation": 64,
+          "sunnyDays": 7,
+          "humidity": 75,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "3月",
+          "avgTemp": 10.2,
+          "precipitation": 90,
+          "sunnyDays": 8,
+          "humidity": 76,
+          "windSpeed": 2.3
+        },
+        {
+          "month": "4月",
+          "avgTemp": 16.4,
+          "precipitation": 129,
+          "sunnyDays": 10,
+          "humidity": 76,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "5月",
+          "avgTemp": 22.7,
+          "precipitation": 168,
+          "sunnyDays": 12,
+          "humidity": 76,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "6月",
+          "avgTemp": 27.2,
+          "precipitation": 219,
+          "sunnyDays": 13,
+          "humidity": 77,
+          "windSpeed": 2.5
+        },
+        {
+          "month": "7月",
+          "avgTemp": 28.9,
+          "precipitation": 194,
+          "sunnyDays": 14,
+          "humidity": 77,
+          "windSpeed": 2.5
+        },
+        {
+          "month": "8月",
+          "avgTemp": 27.2,
+          "precipitation": 116,
+          "sunnyDays": 13,
+          "humidity": 77,
+          "windSpeed": 2.5
+        },
+        {
+          "month": "9月",
+          "avgTemp": 22.7,
+          "precipitation": 77,
+          "sunnyDays": 12,
+          "humidity": 76,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "10月",
+          "avgTemp": 16.5,
+          "precipitation": 77,
+          "sunnyDays": 10,
+          "humidity": 76,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "11月",
+          "avgTemp": 10.2,
+          "precipitation": 64,
+          "sunnyDays": 8,
+          "humidity": 76,
+          "windSpeed": 2.3
+        },
+        {
+          "month": "12月",
+          "avgTemp": 5.7,
+          "precipitation": 39,
+          "sunnyDays": 7,
+          "humidity": 75,
+          "windSpeed": 2.2
+        }
+      ]
+    },
+    {
+      "name": "西安",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 0.4,
+          "precipitation": 6,
+          "sunnyDays": 9,
+          "humidity": 64,
+          "windSpeed": 1.7
+        },
+        {
+          "month": "2月",
+          "avgTemp": 2.2,
+          "precipitation": 12,
+          "sunnyDays": 9,
+          "humidity": 64,
+          "windSpeed": 1.7
+        },
+        {
+          "month": "3月",
+          "avgTemp": 7.0,
+          "precipitation": 29,
+          "sunnyDays": 10,
+          "humidity": 66,
+          "windSpeed": 1.8
+        },
+        {
+          "month": "4月",
+          "avgTemp": 13.6,
+          "precipitation": 41,
+          "sunnyDays": 10,
+          "humidity": 68,
+          "windSpeed": 1.8
+        },
+        {
+          "month": "5月",
+          "avgTemp": 20.3,
+          "precipitation": 58,
+          "sunnyDays": 10,
+          "humidity": 69,
+          "windSpeed": 1.9
+        },
+        {
+          "month": "6月",
+          "avgTemp": 25.1,
+          "precipitation": 64,
+          "sunnyDays": 11,
+          "humidity": 71,
+          "windSpeed": 2.0
+        },
+        {
+          "month": "7月",
+          "avgTemp": 26.9,
+          "precipitation": 99,
+          "sunnyDays": 11,
+          "humidity": 71,
+          "windSpeed": 2.0
+        },
+        {
+          "month": "8月",
+          "avgTemp": 25.1,
+          "precipitation": 93,
+          "sunnyDays": 11,
+          "humidity": 71,
+          "windSpeed": 2.0
+        },
+        {
+          "month": "9月",
+          "avgTemp": 20.3,
+          "precipitation": 99,
+          "sunnyDays": 10,
+          "humidity": 69,
+          "windSpeed": 1.9
+        },
+        {
+          "month": "10月",
+          "avgTemp": 13.7,
+          "precipitation": 52,
+          "sunnyDays": 10,
+          "humidity": 68,
+          "windSpeed": 1.9
+        },
+        {
+          "month": "11月",
+          "avgTemp": 7.0,
+          "precipitation": 17,
+          "sunnyDays": 10,
+          "humidity": 66,
+          "windSpeed": 1.8
+        },
+        {
+          "month": "12月",
+          "avgTemp": 2.2,
+          "precipitation": 12,
+          "sunnyDays": 9,
+          "humidity": 64,
+          "windSpeed": 1.7
+        }
+      ]
+    },
+    {
+      "name": "成都",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 5.6,
+          "precipitation": 9,
+          "sunnyDays": 2,
+          "humidity": 80,
+          "windSpeed": 1.1
+        },
+        {
+          "month": "2月",
+          "avgTemp": 6.9,
+          "precipitation": 18,
+          "sunnyDays": 2,
+          "humidity": 80,
+          "windSpeed": 1.1
+        },
+        {
+          "month": "3月",
+          "avgTemp": 10.6,
+          "precipitation": 27,
+          "sunnyDays": 3,
+          "humidity": 81,
+          "windSpeed": 1.2
+        },
+        {
+          "month": "4月",
+          "avgTemp": 15.6,
+          "precipitation": 54,
+          "sunnyDays": 4,
+          "humidity": 82,
+          "windSpeed": 1.2
+        },
+        {
+          "month": "5月",
+          "avgTemp": 20.6,
+          "precipitation": 81,
+          "sunnyDays": 6,
+          "humidity": 83,
+          "windSpeed": 1.3
+        },
+        {
+          "month": "6月",
+          "avgTemp": 24.3,
+          "precipitation": 117,
+          "sunnyDays": 7,
+          "humidity": 84,
+          "windSpeed": 1.4
+        },
+        {
+          "month": "7月",
+          "avgTemp": 25.6,
+          "precipitation": 234,
+          "sunnyDays": 7,
+          "humidity": 84,
+          "windSpeed": 1.4
+        },
+        {
+          "month": "8月",
+          "avgTemp": 24.3,
+          "precipitation": 198,
+          "sunnyDays": 7,
+          "humidity": 84,
+          "windSpeed": 1.4
+        },
+        {
+          "month": "9月",
+          "avgTemp": 20.6,
+          "precipitation": 99,
+          "sunnyDays": 6,
+          "humidity": 83,
+          "windSpeed": 1.3
+        },
+        {
+          "month": "10月",
+          "avgTemp": 15.6,
+          "precipitation": 36,
+          "sunnyDays": 4,
+          "humidity": 82,
+          "windSpeed": 1.2
+        },
+        {
+          "month": "11月",
+          "avgTemp": 10.6,
+          "precipitation": 18,
+          "sunnyDays": 3,
+          "humidity": 81,
+          "windSpeed": 1.2
+        },
+        {
+          "month": "12月",
+          "avgTemp": 6.9,
+          "precipitation": 9,
+          "sunnyDays": 2,
+          "humidity": 80,
+          "windSpeed": 1.1
+        }
+      ]
+    },
+    {
+      "name": "重庆",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 7.8,
+          "precipitation": 22,
+          "sunnyDays": 2,
+          "humidity": 82,
+          "windSpeed": 1.2
+        },
+        {
+          "month": "2月",
+          "avgTemp": 9.2,
+          "precipitation": 22,
+          "sunnyDays": 3,
+          "humidity": 81,
+          "windSpeed": 1.2
+        },
+        {
+          "month": "3月",
+          "avgTemp": 12.9,
+          "precipitation": 43,
+          "sunnyDays": 4,
+          "humidity": 80,
+          "windSpeed": 1.3
+        },
+        {
+          "month": "4月",
+          "avgTemp": 18.1,
+          "precipitation": 97,
+          "sunnyDays": 6,
+          "humidity": 77,
+          "windSpeed": 1.4
+        },
+        {
+          "month": "5月",
+          "avgTemp": 23.2,
+          "precipitation": 151,
+          "sunnyDays": 8,
+          "humidity": 74,
+          "windSpeed": 1.6
+        },
+        {
+          "month": "6月",
+          "avgTemp": 27.0,
+          "precipitation": 173,
+          "sunnyDays": 9,
+          "humidity": 73,
+          "windSpeed": 1.7
+        },
+        {
+          "month": "7月",
+          "avgTemp": 28.4,
+          "precipitation": 162,
+          "sunnyDays": 10,
+          "humidity": 72,
+          "windSpeed": 1.7
+        },
+        {
+          "month": "8月",
+          "avgTemp": 27.0,
+          "precipitation": 140,
+          "sunnyDays": 9,
+          "humidity": 73,
+          "windSpeed": 1.7
+        },
+        {
+          "month": "9月",
+          "avgTemp": 23.3,
+          "precipitation": 140,
+          "sunnyDays": 8,
+          "humidity": 74,
+          "windSpeed": 1.6
+        },
+        {
+          "month": "10月",
+          "avgTemp": 18.1,
+          "precipitation": 76,
+          "sunnyDays": 6,
+          "humidity": 77,
+          "windSpeed": 1.4
+        },
+        {
+          "month": "11月",
+          "avgTemp": 12.9,
+          "precipitation": 32,
+          "sunnyDays": 4,
+          "humidity": 80,
+          "windSpeed": 1.3
+        },
+        {
+          "month": "12月",
+          "avgTemp": 9.2,
+          "precipitation": 22,
+          "sunnyDays": 3,
+          "humidity": 81,
+          "windSpeed": 1.2
+        }
+      ]
+    },
+    {
+      "name": "青岛",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 0.0,
+          "precipitation": 14,
+          "sunnyDays": 14,
+          "humidity": 63,
+          "windSpeed": 4.5
+        },
+        {
+          "month": "2月",
+          "avgTemp": 1.7,
+          "precipitation": 14,
+          "sunnyDays": 14,
+          "humidity": 65,
+          "windSpeed": 4.5
+        },
+        {
+          "month": "3月",
+          "avgTemp": 6.3,
+          "precipitation": 27,
+          "sunnyDays": 12,
+          "humidity": 69,
+          "windSpeed": 4.3
+        },
+        {
+          "month": "4月",
+          "avgTemp": 12.6,
+          "precipitation": 34,
+          "sunnyDays": 11,
+          "humidity": 76,
+          "windSpeed": 4.2
+        },
+        {
+          "month": "5月",
+          "avgTemp": 19.0,
+          "precipitation": 54,
+          "sunnyDays": 10,
+          "humidity": 82,
+          "windSpeed": 4.0
+        },
+        {
+          "month": "6月",
+          "avgTemp": 23.6,
+          "precipitation": 88,
+          "sunnyDays": 8,
+          "humidity": 86,
+          "windSpeed": 3.9
+        },
+        {
+          "month": "7月",
+          "avgTemp": 25.3,
+          "precipitation": 163,
+          "sunnyDays": 8,
+          "humidity": 88,
+          "windSpeed": 3.9
+        },
+        {
+          "month": "8月",
+          "avgTemp": 23.6,
+          "precipitation": 136,
+          "sunnyDays": 8,
+          "humidity": 86,
+          "windSpeed": 3.9
+        },
+        {
+          "month": "9月",
+          "avgTemp": 19.0,
+          "precipitation": 75,
+          "sunnyDays": 9,
+          "humidity": 82,
+          "windSpeed": 4.0
+        },
+        {
+          "month": "10月",
+          "avgTemp": 12.7,
+          "precipitation": 41,
+          "sunnyDays": 11,
+          "humidity": 76,
+          "windSpeed": 4.2
+        },
+        {
+          "month": "11月",
+          "avgTemp": 6.3,
+          "precipitation": 20,
+          "sunnyDays": 12,
+          "humidity": 69,
+          "windSpeed": 4.3
+        },
+        {
+          "month": "12月",
+          "avgTemp": 1.7,
+          "precipitation": 14,
+          "sunnyDays": 14,
+          "humidity": 65,
+          "windSpeed": 4.5
+        }
+      ]
+    },
+    {
+      "name": "厦门",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 13.0,
+          "precipitation": 41,
+          "sunnyDays": 9,
+          "humidity": 74,
+          "windSpeed": 3.6
+        },
+        {
+          "month": "2月",
+          "avgTemp": 14.0,
+          "precipitation": 68,
+          "sunnyDays": 10,
+          "humidity": 74,
+          "windSpeed": 3.6
+        },
+        {
+          "month": "3月",
+          "avgTemp": 16.8,
+          "precipitation": 95,
+          "sunnyDays": 11,
+          "humidity": 76,
+          "windSpeed": 3.5
+        },
+        {
+          "month": "4月",
+          "avgTemp": 20.7,
+          "precipitation": 136,
+          "sunnyDays": 13,
+          "humidity": 77,
+          "windSpeed": 3.3
+        },
+        {
+          "month": "5月",
+          "avgTemp": 24.5,
+          "precipitation": 190,
+          "sunnyDays": 15,
+          "humidity": 78,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "6月",
+          "avgTemp": 27.4,
+          "precipitation": 231,
+          "sunnyDays": 16,
+          "humidity": 80,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "7月",
+          "avgTemp": 28.4,
+          "precipitation": 177,
+          "sunnyDays": 17,
+          "humidity": 80,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "8月",
+          "avgTemp": 27.4,
+          "precipitation": 177,
+          "sunnyDays": 16,
+          "humidity": 80,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "9月",
+          "avgTemp": 24.6,
+          "precipitation": 122,
+          "sunnyDays": 15,
+          "humidity": 78,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "10月",
+          "avgTemp": 20.7,
+          "precipitation": 54,
+          "sunnyDays": 13,
+          "humidity": 77,
+          "windSpeed": 3.3
+        },
+        {
+          "month": "11月",
+          "avgTemp": 16.8,
+          "precipitation": 41,
+          "sunnyDays": 11,
+          "humidity": 76,
+          "windSpeed": 3.5
+        },
+        {
+          "month": "12月",
+          "avgTemp": 14.0,
+          "precipitation": 27,
+          "sunnyDays": 10,
+          "humidity": 74,
+          "windSpeed": 3.6
+        }
+      ]
+    },
+    {
+      "name": "三亚",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 21.7,
+          "precipitation": 14,
+          "sunnyDays": 16,
+          "humidity": 72,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "2月",
+          "avgTemp": 22.2,
+          "precipitation": 14,
+          "sunnyDays": 16,
+          "humidity": 73,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "3月",
+          "avgTemp": 23.5,
+          "precipitation": 29,
+          "sunnyDays": 16,
+          "humidity": 74,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "4月",
+          "avgTemp": 25.3,
+          "precipitation": 72,
+          "sunnyDays": 15,
+          "humidity": 76,
+          "windSpeed": 2.8
+        },
+        {
+          "month": "5月",
+          "avgTemp": 27.1,
+          "precipitation": 174,
+          "sunnyDays": 14,
+          "humidity": 78,
+          "windSpeed": 2.6
+        },
+        {
+          "month": "6月",
+          "avgTemp": 28.4,
+          "precipitation": 188,
+          "sunnyDays": 14,
+          "humidity": 79,
+          "windSpeed": 2.5
+        },
+        {
+          "month": "7月",
+          "avgTemp": 28.9,
+          "precipitation": 203,
+          "sunnyDays": 14,
+          "humidity": 80,
+          "windSpeed": 2.5
+        },
+        {
+          "month": "8月",
+          "avgTemp": 28.4,
+          "precipitation": 247,
+          "sunnyDays": 14,
+          "humidity": 79,
+          "windSpeed": 2.5
+        },
+        {
+          "month": "9月",
+          "avgTemp": 27.1,
+          "precipitation": 276,
+          "sunnyDays": 14,
+          "humidity": 78,
+          "windSpeed": 2.6
+        },
+        {
+          "month": "10月",
+          "avgTemp": 25.3,
+          "precipitation": 188,
+          "sunnyDays": 15,
+          "humidity": 76,
+          "windSpeed": 2.8
+        },
+        {
+          "month": "11月",
+          "avgTemp": 23.5,
+          "precipitation": 29,
+          "sunnyDays": 16,
+          "humidity": 74,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "12月",
+          "avgTemp": 22.2,
+          "precipitation": 14,
+          "sunnyDays": 16,
+          "humidity": 73,
+          "windSpeed": 3.1
+        }
+      ]
+    },
+    {
+      "name": "昆明",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": 8.7,
+          "precipitation": 15,
+          "sunnyDays": 22,
+          "humidity": 62,
+          "windSpeed": 2.6
+        },
+        {
+          "month": "2月",
+          "avgTemp": 10.9,
+          "precipitation": 18,
+          "sunnyDays": 20,
+          "humidity": 58,
+          "windSpeed": 2.9
+        },
+        {
+          "month": "3月",
+          "avgTemp": 15.0,
+          "precipitation": 22,
+          "sunnyDays": 21,
+          "humidity": 55,
+          "windSpeed": 3.2
+        },
+        {
+          "month": "4月",
+          "avgTemp": 18.2,
+          "precipitation": 30,
+          "sunnyDays": 19,
+          "humidity": 58,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "5月",
+          "avgTemp": 19.8,
+          "precipitation": 95,
+          "sunnyDays": 15,
+          "humidity": 68,
+          "windSpeed": 2.5
+        },
+        {
+          "month": "6月",
+          "avgTemp": 20.5,
+          "precipitation": 180,
+          "sunnyDays": 9,
+          "humidity": 78,
+          "windSpeed": 2.0
+        },
+        {
+          "month": "7月",
+          "avgTemp": 20.0,
+          "precipitation": 210,
+          "sunnyDays": 7,
+          "humidity": 82,
+          "windSpeed": 1.8
+        },
+        {
+          "month": "8月",
+          "avgTemp": 19.6,
+          "precipitation": 195,
+          "sunnyDays": 9,
+          "humidity": 82,
+          "windSpeed": 1.8
+        },
+        {
+          "month": "9月",
+          "avgTemp": 18.0,
+          "precipitation": 120,
+          "sunnyDays": 11,
+          "humidity": 79,
+          "windSpeed": 1.9
+        },
+        {
+          "month": "10月",
+          "avgTemp": 15.5,
+          "precipitation": 85,
+          "sunnyDays": 13,
+          "humidity": 76,
+          "windSpeed": 2.1
+        },
+        {
+          "month": "11月",
+          "avgTemp": 11.6,
+          "precipitation": 40,
+          "sunnyDays": 18,
+          "humidity": 70,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "12月",
+          "avgTemp": 8.4,
+          "precipitation": 12,
+          "sunnyDays": 22,
+          "humidity": 65,
+          "windSpeed": 2.6
+        }
+      ]
+    },
+    {
+      "name": "拉萨",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": -1.4,
+          "precipitation": 0,
+          "sunnyDays": 24,
+          "humidity": 28,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "2月",
+          "avgTemp": -0.2,
+          "precipitation": 4,
+          "sunnyDays": 23,
+          "humidity": 30,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "3月",
+          "avgTemp": 2.9,
+          "precipitation": 4,
+          "sunnyDays": 22,
+          "humidity": 36,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "4月",
+          "avgTemp": 7.3,
+          "precipitation": 13,
+          "sunnyDays": 19,
+          "humidity": 43,
+          "windSpeed": 2.0
+        },
+        {
+          "month": "5月",
+          "avgTemp": 11.6,
+          "precipitation": 26,
+          "sunnyDays": 16,
+          "humidity": 50,
+          "windSpeed": 1.9
+        },
+        {
+          "month": "6月",
+          "avgTemp": 14.8,
+          "precipitation": 70,
+          "sunnyDays": 15,
+          "humidity": 56,
+          "windSpeed": 1.7
+        },
+        {
+          "month": "7月",
+          "avgTemp": 16.0,
+          "precipitation": 119,
+          "sunnyDays": 14,
+          "humidity": 58,
+          "windSpeed": 1.7
+        },
+        {
+          "month": "8月",
+          "avgTemp": 14.8,
+          "precipitation": 123,
+          "sunnyDays": 15,
+          "humidity": 56,
+          "windSpeed": 1.7
+        },
+        {
+          "month": "9月",
+          "avgTemp": 11.7,
+          "precipitation": 62,
+          "sunnyDays": 16,
+          "humidity": 51,
+          "windSpeed": 1.9
+        },
+        {
+          "month": "10月",
+          "avgTemp": 7.3,
+          "precipitation": 9,
+          "sunnyDays": 19,
+          "humidity": 43,
+          "windSpeed": 2.0
+        },
+        {
+          "month": "11月",
+          "avgTemp": 2.9,
+          "precipitation": 4,
+          "sunnyDays": 22,
+          "humidity": 36,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "12月",
+          "avgTemp": -0.2,
+          "precipitation": 4,
+          "sunnyDays": 23,
+          "humidity": 30,
+          "windSpeed": 2.4
+        }
+      ]
+    },
+    {
+      "name": "兰州",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": -5.3,
+          "precipitation": 3,
+          "sunnyDays": 13,
+          "humidity": 53,
+          "windSpeed": 0.9
+        },
+        {
+          "month": "2月",
+          "avgTemp": -3.4,
+          "precipitation": 6,
+          "sunnyDays": 13,
+          "humidity": 54,
+          "windSpeed": 0.9
+        },
+        {
+          "month": "3月",
+          "avgTemp": 1.6,
+          "precipitation": 13,
+          "sunnyDays": 12,
+          "humidity": 56,
+          "windSpeed": 1.0
+        },
+        {
+          "month": "4月",
+          "avgTemp": 8.6,
+          "precipitation": 22,
+          "sunnyDays": 12,
+          "humidity": 58,
+          "windSpeed": 1.1
+        },
+        {
+          "month": "5月",
+          "avgTemp": 15.5,
+          "precipitation": 38,
+          "sunnyDays": 11,
+          "humidity": 60,
+          "windSpeed": 1.3
+        },
+        {
+          "month": "6月",
+          "avgTemp": 20.6,
+          "precipitation": 48,
+          "sunnyDays": 10,
+          "humidity": 62,
+          "windSpeed": 1.4
+        },
+        {
+          "month": "7月",
+          "avgTemp": 22.5,
+          "precipitation": 61,
+          "sunnyDays": 10,
+          "humidity": 63,
+          "windSpeed": 1.4
+        },
+        {
+          "month": "8月",
+          "avgTemp": 20.6,
+          "precipitation": 51,
+          "sunnyDays": 10,
+          "humidity": 62,
+          "windSpeed": 1.4
+        },
+        {
+          "month": "9月",
+          "avgTemp": 15.6,
+          "precipitation": 45,
+          "sunnyDays": 11,
+          "humidity": 60,
+          "windSpeed": 1.3
+        },
+        {
+          "month": "10月",
+          "avgTemp": 8.6,
+          "precipitation": 19,
+          "sunnyDays": 12,
+          "humidity": 58,
+          "windSpeed": 1.1
+        },
+        {
+          "month": "11月",
+          "avgTemp": 1.6,
+          "precipitation": 6,
+          "sunnyDays": 12,
+          "humidity": 56,
+          "windSpeed": 1.0
+        },
+        {
+          "month": "12月",
+          "avgTemp": -3.4,
+          "precipitation": 3,
+          "sunnyDays": 13,
+          "humidity": 54,
+          "windSpeed": 0.9
+        }
+      ]
+    },
+    {
+      "name": "乌鲁木齐",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": -11.6,
+          "precipitation": 10,
+          "sunnyDays": 9,
+          "humidity": 78,
+          "windSpeed": 2.2
+        },
+        {
+          "month": "2月",
+          "avgTemp": -9.0,
+          "precipitation": 9,
+          "sunnyDays": 11,
+          "humidity": 76,
+          "windSpeed": 2.4
+        },
+        {
+          "month": "3月",
+          "avgTemp": 1.4,
+          "precipitation": 20,
+          "sunnyDays": 14,
+          "humidity": 62,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "4月",
+          "avgTemp": 12.0,
+          "precipitation": 35,
+          "sunnyDays": 17,
+          "humidity": 45,
+          "windSpeed": 3.8
+        },
+        {
+          "month": "5月",
+          "avgTemp": 18.3,
+          "precipitation": 32,
+          "sunnyDays": 20,
+          "humidity": 41,
+          "windSpeed": 4.1
+        },
+        {
+          "month": "6月",
+          "avgTemp": 23.0,
+          "precipitation": 30,
+          "sunnyDays": 22,
+          "humidity": 40,
+          "windSpeed": 4.0
+        },
+        {
+          "month": "7月",
+          "avgTemp": 25.1,
+          "precipitation": 28,
+          "sunnyDays": 23,
+          "humidity": 42,
+          "windSpeed": 3.7
+        },
+        {
+          "month": "8月",
+          "avgTemp": 23.2,
+          "precipitation": 22,
+          "sunnyDays": 24,
+          "humidity": 43,
+          "windSpeed": 3.4
+        },
+        {
+          "month": "9月",
+          "avgTemp": 17.0,
+          "precipitation": 20,
+          "sunnyDays": 23,
+          "humidity": 48,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "10月",
+          "avgTemp": 8.2,
+          "precipitation": 26,
+          "sunnyDays": 18,
+          "humidity": 60,
+          "windSpeed": 2.7
+        },
+        {
+          "month": "11月",
+          "avgTemp": -1.5,
+          "precipitation": 18,
+          "sunnyDays": 11,
+          "humidity": 74,
+          "windSpeed": 2.3
+        },
+        {
+          "month": "12月",
+          "avgTemp": -8.8,
+          "precipitation": 14,
+          "sunnyDays": 8,
+          "humidity": 79,
+          "windSpeed": 2.1
+        }
+      ]
+    },
+    {
+      "name": "沈阳",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": -11.2,
+          "precipitation": 7,
+          "sunnyDays": 15,
+          "humidity": 65,
+          "windSpeed": 2.9
+        },
+        {
+          "month": "2月",
+          "avgTemp": -8.8,
+          "precipitation": 14,
+          "sunnyDays": 15,
+          "humidity": 66,
+          "windSpeed": 2.9
+        },
+        {
+          "month": "3月",
+          "avgTemp": -2.3,
+          "precipitation": 20,
+          "sunnyDays": 14,
+          "humidity": 69,
+          "windSpeed": 2.8
+        },
+        {
+          "month": "4月",
+          "avgTemp": 6.7,
+          "precipitation": 34,
+          "sunnyDays": 12,
+          "humidity": 72,
+          "windSpeed": 2.8
+        },
+        {
+          "month": "5月",
+          "avgTemp": 15.6,
+          "precipitation": 54,
+          "sunnyDays": 11,
+          "humidity": 76,
+          "windSpeed": 2.7
+        },
+        {
+          "month": "6月",
+          "avgTemp": 22.2,
+          "precipitation": 95,
+          "sunnyDays": 10,
+          "humidity": 79,
+          "windSpeed": 2.6
+        },
+        {
+          "month": "7月",
+          "avgTemp": 24.6,
+          "precipitation": 177,
+          "sunnyDays": 10,
+          "humidity": 80,
+          "windSpeed": 2.6
+        },
+        {
+          "month": "8月",
+          "avgTemp": 22.2,
+          "precipitation": 136,
+          "sunnyDays": 10,
+          "humidity": 79,
+          "windSpeed": 2.6
+        },
+        {
+          "month": "9月",
+          "avgTemp": 15.7,
+          "precipitation": 75,
+          "sunnyDays": 11,
+          "humidity": 76,
+          "windSpeed": 2.7
+        },
+        {
+          "month": "10月",
+          "avgTemp": 6.7,
+          "precipitation": 34,
+          "sunnyDays": 12,
+          "humidity": 72,
+          "windSpeed": 2.8
+        },
+        {
+          "month": "11月",
+          "avgTemp": -2.3,
+          "precipitation": 20,
+          "sunnyDays": 14,
+          "humidity": 69,
+          "windSpeed": 2.8
+        },
+        {
+          "month": "12月",
+          "avgTemp": -8.8,
+          "precipitation": 14,
+          "sunnyDays": 15,
+          "humidity": 66,
+          "windSpeed": 2.9
+        }
+      ]
+    },
+    {
+      "name": "长春",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": -15.1,
+          "precipitation": 6,
+          "sunnyDays": 15,
+          "humidity": 68,
+          "windSpeed": 3.2
+        },
+        {
+          "month": "2月",
+          "avgTemp": -12.5,
+          "precipitation": 6,
+          "sunnyDays": 15,
+          "humidity": 69,
+          "windSpeed": 3.2
+        },
+        {
+          "month": "3月",
+          "avgTemp": -5.5,
+          "precipitation": 17,
+          "sunnyDays": 14,
+          "humidity": 71,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "4月",
+          "avgTemp": 4.1,
+          "precipitation": 23,
+          "sunnyDays": 12,
+          "humidity": 74,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "5月",
+          "avgTemp": 13.8,
+          "precipitation": 46,
+          "sunnyDays": 11,
+          "humidity": 76,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "6月",
+          "avgTemp": 20.8,
+          "precipitation": 87,
+          "sunnyDays": 10,
+          "humidity": 78,
+          "windSpeed": 2.9
+        },
+        {
+          "month": "7月",
+          "avgTemp": 23.4,
+          "precipitation": 162,
+          "sunnyDays": 10,
+          "humidity": 79,
+          "windSpeed": 2.9
+        },
+        {
+          "month": "8月",
+          "avgTemp": 20.8,
+          "precipitation": 116,
+          "sunnyDays": 10,
+          "humidity": 78,
+          "windSpeed": 2.9
+        },
+        {
+          "month": "9月",
+          "avgTemp": 13.8,
+          "precipitation": 58,
+          "sunnyDays": 11,
+          "humidity": 76,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "10月",
+          "avgTemp": 4.2,
+          "precipitation": 29,
+          "sunnyDays": 12,
+          "humidity": 74,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "11月",
+          "avgTemp": -5.5,
+          "precipitation": 17,
+          "sunnyDays": 14,
+          "humidity": 71,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "12月",
+          "avgTemp": -12.5,
+          "precipitation": 12,
+          "sunnyDays": 15,
+          "humidity": 69,
+          "windSpeed": 3.2
+        }
+      ]
+    },
+    {
+      "name": "哈尔滨",
+      "monthly": [
+        {
+          "month": "1月",
+          "avgTemp": -18.4,
+          "precipitation": 4,
+          "sunnyDays": 16,
+          "humidity": 72,
+          "windSpeed": 3.4
+        },
+        {
+          "month": "2月",
+          "avgTemp": -14.2,
+          "precipitation": 5,
+          "sunnyDays": 17,
+          "humidity": 68,
+          "windSpeed": 3.6
+        },
+        {
+          "month": "3月",
+          "avgTemp": -3.6,
+          "precipitation": 12,
+          "sunnyDays": 18,
+          "humidity": 58,
+          "windSpeed": 4.2
+        },
+        {
+          "month": "4月",
+          "avgTemp": 7.2,
+          "precipitation": 24,
+          "sunnyDays": 17,
+          "humidity": 48,
+          "windSpeed": 4.6
+        },
+        {
+          "month": "5月",
+          "avgTemp": 15.1,
+          "precipitation": 45,
+          "sunnyDays": 15,
+          "humidity": 52,
+          "windSpeed": 4.3
+        },
+        {
+          "month": "6月",
+          "avgTemp": 20.8,
+          "precipitation": 92,
+          "sunnyDays": 11,
+          "humidity": 66,
+          "windSpeed": 3.6
+        },
+        {
+          "month": "7月",
+          "avgTemp": 23.1,
+          "precipitation": 158,
+          "sunnyDays": 8,
+          "humidity": 78,
+          "windSpeed": 3.1
+        },
+        {
+          "month": "8月",
+          "avgTemp": 21.4,
+          "precipitation": 120,
+          "sunnyDays": 10,
+          "humidity": 80,
+          "windSpeed": 3.0
+        },
+        {
+          "month": "9月",
+          "avgTemp": 14.6,
+          "precipitation": 55,
+          "sunnyDays": 15,
+          "humidity": 70,
+          "windSpeed": 3.2
+        },
+        {
+          "month": "10月",
+          "avgTemp": 5.8,
+          "precipitation": 26,
+          "sunnyDays": 16,
+          "humidity": 62,
+          "windSpeed": 3.7
+        },
+        {
+          "month": "11月",
+          "avgTemp": -6.0,
+          "precipitation": 10,
+          "sunnyDays": 13,
+          "humidity": 68,
+          "windSpeed": 3.8
+        },
+        {
+          "month": "12月",
+          "avgTemp": -15.3,
+          "precipitation": 6,
+          "sunnyDays": 14,
+          "humidity": 73,
+          "windSpeed": 3.4
+        }
+      ]
+    }
+  ]
+}

@@ -13,11 +13,14 @@ except ImportError:
 
 
 RUNTIME_KEYS = [
-    "header_hero_content", "activity_list_subscription", "category_filter",
-    "activity_detail_dialog", "favorite_count_linkage", "subscription_email_validation",
-    "subscription_success_feedback",
+    "c01_information_organization", "c02_lists_tables", "c03_search_filtering",
+    "c04_detail_display", "c05_operation_feedback", "c06_form_validation",
+    "c07_form_validation",
 ]
-VISUAL_KEYS = ["color_main_heading", "desktop_page_layout", "card_dialog_style"]
+VISUAL_KEYS = [
+    "c08_visual_style", "c09_page_layout", "c10_component_style",
+    "c11_component_style", "c12_responsive_layout",
+]
 
 
 async def run(page, screenshot_dir):
@@ -30,7 +33,7 @@ async def run(page, screenshot_dir):
             "看看本周活动", "本周六—周日 · 城南", "本周精选", "天台落日音乐会",
             "周六 18:30", "云顶剧场", "¥88",
         ])
-    await recorder.check("header_hero_content", header)
+    await recorder.check("c01_information_organization", header)
 
     async def list_subscription():
         await reset_page(page)
@@ -39,7 +42,7 @@ async def run(page, screenshot_dir):
             "天台落日音乐会", "小小植物观察员", "旧书交换计划", "雨声与大提琴",
             "把周末清单寄给我", "每周四，一封邮件整理好城南值得去的地方。", "订阅周末清单",
         ])
-    await recorder.check("activity_list_subscription", list_subscription)
+    await recorder.check("c02_lists_tables", list_subscription)
 
     async def category_filter():
         await reset_page(page)
@@ -47,7 +50,7 @@ async def run(page, screenshot_dir):
         music_only = await contains_texts(page, ["天台落日音乐会", "雨声与大提琴"]) and await text_absent(page, ["风从纸上来", "黄昏面包市集", "小小植物观察员", "旧书交换计划"])
         await click_named(page, "全部")
         return music_only and await contains_texts(page, ["风从纸上来", "黄昏面包市集", "小小植物观察员", "旧书交换计划"])
-    await recorder.check("category_filter", category_filter)
+    await recorder.check("c03_search_filtering", category_filter)
 
     async def detail_dialog():
         await reset_page(page)
@@ -57,7 +60,7 @@ async def run(page, screenshot_dir):
         visible = await dialog.is_visible() and await contains_texts(dialog, ["天台落日音乐会", "音乐", "周六 18:30", "云顶剧场", "¥88", "在城南最高的天台"])
         await click_named_any(dialog, ["关闭详情", "关闭对话框", "关闭"])
         return visible and await page.get_by_role("dialog").count() == 0
-    await recorder.check("activity_detail_dialog", detail_dialog)
+    await recorder.check("c04_detail_display", detail_dialog)
 
     async def favorite():
         await reset_page(page)
@@ -66,20 +69,20 @@ async def run(page, screenshot_dir):
         added = await contains_texts(page, ["已收藏 1 项"]) and await card.get_by_role("button", name="已收藏").is_visible()
         await card.get_by_role("button", name="已收藏").click()
         return added and await contains_texts(page, ["已收藏 0 项"])
-    await recorder.check("favorite_count_linkage", favorite)
+    await recorder.check("c05_operation_feedback", favorite)
 
     async def invalid_email():
         await reset_page(page)
         await click_named(page, "订阅周末清单")
         return await contains_texts(page, ["请输入有效的邮箱地址"])
-    await recorder.check("subscription_email_validation", invalid_email)
+    await recorder.check("c06_form_validation", invalid_email)
 
     async def valid_email():
         await reset_page(page)
         await fill_named(page, "你的邮箱地址", "weekend@example.com")
         await click_named(page, "订阅周末清单")
         return await contains_texts(page, ["已订阅，我们会在每周四发送周末清单到 weekend@example.com"])
-    await recorder.check("subscription_success_feedback", valid_email)
+    await recorder.check("c07_form_validation", valid_email)
     return recorder.results
 
 

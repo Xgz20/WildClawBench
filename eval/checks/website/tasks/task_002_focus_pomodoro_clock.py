@@ -15,11 +15,14 @@ except ImportError:
 
 
 RUNTIME_KEYS = [
-    "header_daily_overview", "tasks_focus_tips", "timer_mode_switch", "timer_controls",
-    "focus_total_persistence", "task_form_validation", "task_completion_linkage",
-    "task_state_persistence", "timer_completion_feedback",
+    "c01_information_organization", "c02_content_switching",
+    "c03_realtime_auto_progress", "c04_rule_settlement", "c05_form_validation",
+    "c06_operation_feedback", "c07_state_persistence", "c08_realtime_auto_progress",
 ]
-VISUAL_KEYS = ["color_typography", "desktop_two_column_layout", "timer_card_style"]
+VISUAL_KEYS = [
+    "c09_visual_style", "c10_page_layout", "c11_component_style",
+    "c12_responsive_layout",
+]
 
 
 async def _install_clock(page):
@@ -92,25 +95,25 @@ async def run(page, screenshot_dir):
         return await contains_texts(page, [
             "一刻专注", "把这一刻，留给最重要的事", "用一段专注、一次休息，把大任务慢慢变小。",
             "今日专注", "0分钟", "完成任务", "0项", "25:00", "专注", "短休息", "长休息", "开始", "重置",
-        ])
-    await recorder.check("header_daily_overview", header)
-
-    async def tasks_tips():
-        await reset_page(page)
-        return await contains_texts(page, [
             "今日任务", "还没有任务，先写下今天最重要的一件事。", "添加任务", "专注建议",
             "一次只做一件事", "铃响后离开座位休息", "连续完成四轮后进行长休息",
         ])
-    await recorder.check("tasks_focus_tips", tasks_tips)
+    await recorder.check("c01_information_organization", header)
 
     async def mode_switch():
         await reset_page(page)
+        await _install_clock(page)
+        await click_named(page, "专注")
+        await click_named(page, "开始")
+        await page.clock.run_for(2000)
+        if await _read_timer_text(page) == "25:00":
+            return False
         for mode, expected in [("短休息", "05:00"), ("长休息", "15:00"), ("专注", "25:00")]:
             await click_named(page, mode)
             if not await contains_texts(page, [expected, "开始"]):
                 return False
         return True
-    await recorder.check("timer_mode_switch", mode_switch)
+    await recorder.check("c02_content_switching", mode_switch)
 
     async def controls():
         await reset_page(page)
@@ -135,21 +138,21 @@ async def run(page, screenshot_dir):
                 f"continued_time={continued_time}, continued={continued}, reset={reset}"
             )
         return True
-    await recorder.check("timer_controls", controls)
+    await recorder.check("c03_realtime_auto_progress", controls)
 
     async def focus_persistence():
         await reset_page(page)
         await _install_clock(page)
         await click_named(page, "开始")
-        await page.clock.run_for(61000)
-        focused = await contains_texts(page, ["今日专注", "1分钟"])
+        await page.clock.run_for(1501000)
+        focused = await contains_texts(page, ["今日专注", "25分钟"])
         await click_named(page, "短休息")
         await click_named(page, "开始")
-        await page.clock.run_for(61000)
-        no_increment = await contains_texts(page, ["今日专注", "1分钟"])
+        await page.clock.run_for(301000)
+        no_increment = await contains_texts(page, ["今日专注", "25分钟"])
         await page.reload(wait_until="domcontentloaded")
-        return focused and no_increment and await contains_texts(page, ["今日专注", "1分钟"])
-    await recorder.check("focus_total_persistence", focus_persistence)
+        return focused and no_increment and await contains_texts(page, ["今日专注", "25分钟"])
+    await recorder.check("c04_rule_settlement", focus_persistence)
 
     async def task_validation():
         await reset_page(page)
@@ -158,7 +161,7 @@ async def run(page, screenshot_dir):
         await _add_task(page)
         value = await (await _task_input(page)).input_value()
         return invalid and value == "" and await contains_texts(page, ["整理周会结论"])
-    await recorder.check("task_form_validation", task_validation)
+    await recorder.check("c05_form_validation", task_validation)
 
     async def task_completion():
         await reset_page(page)
@@ -166,7 +169,7 @@ async def run(page, screenshot_dir):
         await (await _task_completion_control(page)).click()
         decoration = await page.get_by_text("整理周会结论", exact=True).evaluate("el => getComputedStyle(el).textDecorationLine")
         return "line-through" in decoration and await contains_texts(page, ["完成任务", "1项"])
-    await recorder.check("task_completion_linkage", task_completion)
+    await recorder.check("c06_operation_feedback", task_completion)
 
     async def task_persistence():
         await reset_page(page)
@@ -178,7 +181,7 @@ async def run(page, screenshot_dir):
             await contains_texts(page, ["整理周会结论", "完成任务", "1项"])
             and await _is_checked(checkbox)
         )
-    await recorder.check("task_state_persistence", task_persistence)
+    await recorder.check("c07_state_persistence", task_persistence)
 
     async def completion_feedback():
         await reset_page(page)
@@ -186,7 +189,7 @@ async def run(page, screenshot_dir):
         await click_named(page, "开始")
         await page.clock.run_for(1501000)
         return await contains_texts(page, ["00:00", "本轮专注结束，起来休息一下"])
-    await recorder.check("timer_completion_feedback", completion_feedback)
+    await recorder.check("c08_realtime_auto_progress", completion_feedback)
     return recorder.results
 
 

@@ -9,11 +9,14 @@ except ImportError:
 
 
 RUNTIME_KEYS = [
-    "header_game_instructions", "card_initial_state", "single_card_flip",
-    "mismatch_flip_back", "matching_pair", "game_completion",
-    "restart_randomization", "play_again_restart",
+    "c01_information_organization", "c02_information_organization",
+    "c03_operation_feedback", "c04_realtime_auto_progress", "c05_rule_settlement",
+    "c06_rule_settlement", "c07_rule_settlement", "c11_rule_settlement",
 ]
-VISUAL_KEYS = ["color_heading_hierarchy", "desktop_page_layout", "card_success_style"]
+VISUAL_KEYS = [
+    "c08_visual_style", "c09_page_layout", "c10_component_style",
+    "c12_responsive_layout",
+]
 FRUITS = ("橙子", "草莓", "蓝莓")
 
 
@@ -128,13 +131,13 @@ async def run(page, screenshot_dir):
             "用最少的尝试，找出三组藏在果园里的水果。", "每次翻开两张",
             "相同保留，不同翻回", "找齐三组完成挑战", "尝试 0 次", "已配对 0/3", "重新开始",
         ])
-    await recorder.check("header_game_instructions", header)
+    await recorder.check("c01_information_organization", header)
 
     async def initial():
         await reset_page(page)
         cards = await _cards(page)
         return await cards.count() == 6 and await _all_cards_hidden(cards)
-    await recorder.check("card_initial_state", initial)
+    await recorder.check("c02_information_organization", initial)
 
     async def single_flip():
         await reset_page(page)
@@ -146,7 +149,7 @@ async def run(page, screenshot_dir):
             and visible_count == 1
             and await contains_texts(page, ["尝试 0 次", "已配对 0/3"])
         )
-    await recorder.check("single_card_flip", single_flip)
+    await recorder.check("c03_operation_feedback", single_flip)
 
     async def mismatch():
         await reset_page(page)
@@ -163,7 +166,7 @@ async def run(page, screenshot_dir):
             and await _card_is_hidden(cards.nth(0))
             and await _card_is_hidden(cards.nth(second_index))
         )
-    await recorder.check("mismatch_flip_back", mismatch)
+    await recorder.check("c04_realtime_auto_progress", mismatch)
 
     async def match_pair():
         await reset_page(page)
@@ -185,12 +188,12 @@ async def run(page, screenshot_dir):
             and await _card_is_matched(cards.nth(0))
             and await _card_is_matched(cards.nth(second_index))
         )
-    await recorder.check("matching_pair", match_pair)
+    await recorder.check("c05_rule_settlement", match_pair)
 
     async def completion():
         await reset_page(page)
         return await _solve(page)
-    await recorder.check("game_completion", completion)
+    await recorder.check("c06_rule_settlement", completion)
 
     async def restart():
         await reset_page(page)
@@ -201,7 +204,7 @@ async def run(page, screenshot_dir):
         initial_ok = await _all_cards_hidden(cards)
         new = await _deck_order(cards)
         return initial_ok and old != new and sorted(old) == sorted(new)
-    await recorder.check("restart_randomization", restart)
+    await recorder.check("c07_rule_settlement", restart)
 
     async def play_again():
         await reset_page(page)
@@ -209,7 +212,7 @@ async def run(page, screenshot_dir):
         await click_named(page, "再玩一次")
         cards = await _cards(page)
         return solved and await contains_texts(page, ["尝试 0 次", "已配对 0/3"]) and await _all_cards_hidden(cards)
-    await recorder.check("play_again_restart", play_again)
+    await recorder.check("c11_rule_settlement", play_again)
     return recorder.results
 
 

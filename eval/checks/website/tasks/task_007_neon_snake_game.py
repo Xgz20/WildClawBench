@@ -13,14 +13,13 @@ except ImportError:
 
 
 RUNTIME_KEYS = [
-    "criterion_01_basic_content", "criterion_02_information_organization",
-    "criterion_03_operation_feedback", "criterion_04_cross_section_coordination",
-    "criterion_05_cross_section_coordination", "criterion_06_operation_feedback",
-    "criterion_07_operation_feedback", "criterion_08_operation_feedback",
-    "criterion_09_operation_feedback", "criterion_10_modal_and_overlay",
-    "criterion_11_operation_feedback", "criterion_12_content_switching",
+    "c01_information_organization", "c02_information_organization",
+    "c03_realtime_auto_progress", "c04_operation_feedback", "c05_operation_feedback",
+    "c06_rule_settlement", "c07_rule_settlement", "c08_rule_settlement",
+    "c09_rule_settlement", "c10_rule_settlement", "c11_rule_settlement",
+    "c12_rule_settlement",
 ]
-VISUAL_KEYS = ["criterion_13_visual_style", "criterion_14_page_layout"]
+VISUAL_KEYS = ["c13_visual_style", "c14_page_layout", "c15_responsive_layout"]
 
 
 async def _start_game(page) -> bool:
@@ -127,7 +126,7 @@ async def run(page, screenshot_dir):
                 page, [["上", "↑"], ["下", "↓"], ["左", "←"], ["右", "→"]]
             )
         )
-    await recorder.check("criterion_01_basic_content", basic)
+    await recorder.check("c01_information_organization", basic)
 
     async def preparation_and_start():
         await reset_page(page)
@@ -140,7 +139,7 @@ async def run(page, screenshot_dir):
             and await contains_texts(page, ["左", "右", "分数", "长度", "胜率"])
             and await contains_any_texts(page, ["胜场", "玩家胜"])
         )
-    await recorder.check("criterion_02_information_organization", preparation_and_start)
+    await recorder.check("c02_information_organization", preparation_and_start)
 
     async def both_running():
         if not await _start_game(page):
@@ -151,7 +150,7 @@ async def run(page, screenshot_dir):
             and await page.get_by_text("爆炸果", exact=True).count() >= 2
             and await contains_any_texts(page, ["进行中", "游戏中", "前进中"])
         )
-    await recorder.check("criterion_03_operation_feedback", both_running)
+    await recorder.check("c03_realtime_auto_progress", both_running)
 
     async def left_controls():
         if not await _start_game(page):
@@ -159,7 +158,7 @@ async def run(page, screenshot_dir):
         await page.keyboard.press("KeyW")
         await page.wait_for_timeout(120)
         return await contains_texts(page, ["左", "W"]) and not await contains_texts(page, ["右侧已出局"])
-    await recorder.check("criterion_04_cross_section_coordination", left_controls)
+    await recorder.check("c04_operation_feedback", left_controls)
 
     async def right_controls():
         if not await _start_game(page):
@@ -167,7 +166,7 @@ async def run(page, screenshot_dir):
         await page.keyboard.press("ArrowUp")
         await page.wait_for_timeout(120)
         return await contains_texts(page, ["右", "上"]) and not await contains_texts(page, ["左侧已出局"])
-    await recorder.check("criterion_05_cross_section_coordination", right_controls)
+    await recorder.check("c05_operation_feedback", right_controls)
 
     async def no_reverse():
         if not await _start_game(page):
@@ -175,7 +174,7 @@ async def run(page, screenshot_dir):
         await page.keyboard.press("ArrowLeft")
         await page.wait_for_timeout(150)
         return await contains_any_texts(page, ["进行中", "游戏中"]) and not await contains_texts(page, ["立即出局"])
-    await recorder.check("criterion_06_operation_feedback", no_reverse)
+    await recorder.check("c06_rule_settlement", no_reverse)
 
     async def energy_feedback():
         if not await _start_game(page):
@@ -186,7 +185,7 @@ async def run(page, screenshot_dir):
             await page.wait_for_timeout(150)
         after = await page.locator("body").inner_text()
         return "能量果" in before and "能量果" in after and any(token in after for token in ("分数 1", "+1", "得分"))
-    await recorder.check("criterion_07_operation_feedback", energy_feedback)
+    await recorder.check("c07_rule_settlement", energy_feedback)
 
     async def explosion_feedback():
         if not await _start_game(page):
@@ -195,7 +194,7 @@ async def run(page, screenshot_dir):
         await page.keyboard.press("KeyD")
         await page.wait_for_timeout(200)
         return has_explosion and await contains_texts(page, ["出局", "爆炸果"])
-    await recorder.check("criterion_08_operation_feedback", explosion_feedback)
+    await recorder.check("c08_rule_settlement", explosion_feedback)
 
     async def one_side_continues():
         if not await _start_game(page):
@@ -207,7 +206,7 @@ async def run(page, screenshot_dir):
             and not await _player_is_out(page, "right")
             and await contains_any_texts(page, ["等待", "另一方", "继续"])
         )
-    await recorder.check("criterion_09_operation_feedback", one_side_continues)
+    await recorder.check("c09_rule_settlement", one_side_continues)
 
     async def result_modal():
         if not await _start_game(page):
@@ -219,7 +218,7 @@ async def run(page, screenshot_dir):
             and await contains_any_texts(page, ["得分", "分数"])
             and await contains_any_texts(page, ["获胜", "平局"])
         )
-    await recorder.check("criterion_10_modal_and_overlay", result_modal)
+    await recorder.check("c10_rule_settlement", result_modal)
 
     async def survival_tiebreak():
         if not await _start_game(page):
@@ -231,7 +230,7 @@ async def run(page, screenshot_dir):
             return False
         text = await page.locator("body").inner_text()
         return "存活时间" in text and "右" in text and "获胜" in text
-    await recorder.check("criterion_11_operation_feedback", survival_tiebreak)
+    await recorder.check("c11_rule_settlement", survival_tiebreak)
 
     async def replay():
         if not await _start_game(page):
@@ -245,7 +244,7 @@ async def run(page, screenshot_dir):
         return await _board_count(page) >= 2 and await contains_texts(page, ["分数", "长度", "0"]) and await contains_any_texts(
             page, ["进行中", "游戏中", "前进中"]
         )
-    await recorder.check("criterion_12_content_switching", replay)
+    await recorder.check("c12_rule_settlement", replay)
     return recorder.results
 
 
