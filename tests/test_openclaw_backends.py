@@ -166,6 +166,23 @@ class OpenClawBackendTests(unittest.TestCase):
         astronclaw_config = run_mock.call_args.args[0][-1]
         self.assertIn('\\"timeoutSeconds\\": 900', astronclaw_config)
 
+    @patch("src.agents.openclaw.runner.subprocess.run")
+    def test_maas_provider_uses_max_tokens_compatibility_field(self, run_mock) -> None:
+        run_mock.return_value = subprocess.CompletedProcess([], 0, "", "")
+        agent = self.make_openclaw(
+            openrouter_base_url="https://maas-api.example/v1"
+        )
+
+        agent._register_provider(
+            "openclaw-task", "openrouter/xopglm52", 900
+        )
+
+        provider_config = run_mock.call_args.args[0][-1]
+        self.assertIn('\\"maxTokens\\": 4096', provider_config)
+        self.assertIn(
+            '\\"maxTokensField\\": \\"max_tokens\\"', provider_config
+        )
+
     def test_astronclaw_running_error_is_a_harness_outcome(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             output_dir = Path(tmp)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -51,6 +52,21 @@ class OpenCodeRunnerTests(unittest.TestCase):
         )
 
         self.assertIn("--variant 'high; echo injected'", command)
+
+    def test_maas_model_config_uses_common_output_limit(self) -> None:
+        agent = OpenCodeAgent(
+            openrouter_api_key="test-key",
+            openrouter_base_url="https://maas-api.example/v1",
+        )
+        with patch.dict("os.environ", {"MAAS_MAX_TOKENS": "3072"}, clear=False):
+            config = json.loads(
+                agent._render_opencode_config(
+                    "openrouter/xopglm52", redact_secrets=True
+                )
+            )
+
+        model = config["provider"]["openrouter"]["models"]["xopglm52"]
+        self.assertEqual(model["limit"]["output"], 3072)
 
     def test_run_task_forwards_thinking_to_prompt_runner(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

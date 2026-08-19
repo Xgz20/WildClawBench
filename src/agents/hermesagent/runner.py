@@ -23,6 +23,7 @@ from src.utils.docker_utils import (
     TMP_WORKSPACE,
 )
 from src.utils.grading import extract_usage_from_jsonl
+from src.utils.model_limits import resolve_maas_max_tokens
 
 load_dotenv()
 
@@ -144,6 +145,12 @@ class HermesAgentAgent(BaseAgent):
         self.brave_api_key = brave_api_key or os.environ.get("BRAVE_API_KEY", "")
         self.max_tokens = _optional_positive_int_env("HERMES_MAX_TOKENS")
 
+    def _resolve_max_tokens(self, model: str, base_url: str) -> int | None:
+        """Keep the legacy override, defaulting MaaS candidates to 4096."""
+        if self.max_tokens is not None:
+            return self.max_tokens
+        return resolve_maas_max_tokens(model, base_url)
+
     @property
     def expects_gateway(self) -> bool:
         return False
@@ -171,6 +178,8 @@ class HermesAgentAgent(BaseAgent):
 
         try:
             api_key, base_url = self._resolve_runtime_provider(spec.model, spec.models_config)
+            max_tokens = self._resolve_max_tokens(spec.model, base_url)
+            write_execution_status(spec.output_dir, max_tokens=max_tokens)
 
             exec_path = os.path.join(spec.workspace_path, "exec")
             tmp_path = os.path.join(spec.workspace_path, "tmp")
@@ -212,7 +221,7 @@ class HermesAgentAgent(BaseAgent):
             reasoning_config = self._map_thinking(spec.thinking)
             self._write_bench_runner(
                 spec.task_id, spec.prompt, spec.model,
-                api_key, base_url, reasoning_config, self.max_tokens,
+                api_key, base_url, reasoning_config, max_tokens,
             )
 
             write_execution_status(spec.output_dir, status="hermesagent_running")

@@ -62,6 +62,12 @@ class DeepSeekHarnessDockerContractTests(unittest.TestCase):
         self.assertIn("reasoningEfforts: !!js", entrypoint)
         self.assertIn("[process.env.DSH_REASONING]", entrypoint)
 
+    def test_entrypoint_uses_maas_max_tokens_request_field(self) -> None:
+        entrypoint = (DOCKER_ROOT / "wcb-dsh").read_text(encoding="utf-8")
+
+        self.assertIn("process.env.DSH_MAX_TOKENS", entrypoint)
+        self.assertIn("maxTokensField: 'max_tokens'", entrypoint)
+
     def test_entrypoint_selects_api_from_environment_with_chat_default(self) -> None:
         entrypoint = (DOCKER_ROOT / "wcb-dsh").read_text(encoding="utf-8")
 

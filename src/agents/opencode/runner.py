@@ -20,6 +20,7 @@ from src.agents.opencode.backend import (
 )
 from src.utils.docker_utils import container_resource_args, run_warmup, setup_skills, snapshot_workspace_state
 from src.utils.endpoint_utils import normalize_openrouter_base_url_for_openclaw
+from src.utils.model_limits import resolve_maas_max_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -479,6 +480,12 @@ class OpenCodeAgent(BaseAgent):
         """
         bare_model = self._bare_model(model)
         api_key = "***" if redact_secrets else self.openrouter_api_key
+        maas_max_tokens = resolve_maas_max_tokens(model, self.openrouter_base_url)
+        model_config: dict[str, Any] = {"name": bare_model}
+        if maas_max_tokens is not None:
+            # OpenCode maps provider model limit.output to the OpenAI
+            # compatible max_tokens request field.
+            model_config["limit"] = {"output": maas_max_tokens}
         config = {
             "$schema": "https://opencode.ai/config.json",
             "permission": {
@@ -497,7 +504,7 @@ class OpenCodeAgent(BaseAgent):
                         "apiKey": api_key,
                     },
                     "models": {
-                        bare_model: {"name": bare_model},
+                        bare_model: model_config,
                     },
                 }
             },

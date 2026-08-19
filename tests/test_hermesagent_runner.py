@@ -113,6 +113,19 @@ class HermesAgentRunnerTest(unittest.TestCase):
                     agent = HermesAgentAgent()
                 self.assertIsNone(agent.max_tokens)
 
+    def test_maas_model_uses_common_output_limit(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"HERMES_MAX_TOKENS": "", "MAAS_MAX_TOKENS": "3072"},
+            clear=False,
+        ):
+            agent = HermesAgentAgent()
+            max_tokens = agent._resolve_max_tokens(
+                "xopglm52", "https://maas-api.example/v2"
+            )
+
+        self.assertEqual(max_tokens, 3072)
+
     def test_incomplete_harness_result_is_valid_finished_capability_result(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -163,7 +176,7 @@ class HermesAgentRunnerTest(unittest.TestCase):
                 status["completion_error"],
                 "Response truncated due to output length limit",
             )
-            self.assertEqual(status["max_tokens"], None)
+            self.assertEqual(status["max_tokens"], 4096)
 
     def test_nonzero_harness_exit_is_recorded_as_execution_error(self) -> None:
         execution, status = self._run_with_process(_FailedProcess())

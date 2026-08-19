@@ -273,6 +273,7 @@ BRAVE_API_KEY=your_brave_key_here  # required for search tasks
 - **OpenRouter API Key** — Any model available on [OpenRouter](https://openrouter.ai/models) is supported. The default model is defined in the `.env` file as `DEFAULT_MODEL=openrouter/stepfun/step-3.5-flash:free` — replace it with any model you want to evaluate.
 - **Brave Search API Key** — Required for Search & Retrieval tasks. Get one (with free monthly credits) at [brave.com/search/api](https://brave.com/search/api/).
 - **Judge model** (optional) — `JUDGE_MODEL` controls the LLM used by judge-based grading metrics. Defaults to `openai/gpt-5.4`. `JUDGE_MAX_TOKENS` controls the shared v2 Rubric Judge response limit for every Harness and defaults to `1000`.
+- **MaaS candidate model limit** (optional) — `MAAS_MAX_TOKENS` controls the candidate model request output limit for MaaS-routed models across Harnesses and defaults to `4096`. It is independent of the Judge limit.
 
 Then run one of the available harnesses:
 

@@ -17,6 +17,7 @@ from src.agents.base import AgentExecution, AgentTaskSpec, BaseAgent
 from src.agents.claudecode.transcript import convert_claudecode_chat_to_openclaw_jsonl
 from src.utils.docker_utils import container_resource_args, run_warmup, setup_skills, snapshot_workspace_state
 from src.utils.endpoint_utils import normalize_openrouter_base_url_for_claudecode
+from src.utils.model_limits import resolve_maas_max_tokens
 
 load_dotenv()
 
@@ -225,7 +226,7 @@ class ClaudeCodeAgent(BaseAgent):
 
         try:
             write_execution_status(spec.output_dir, status="starting_container")
-            self._start_container(task_id, spec.workspace_path)
+            self._start_container(task_id, spec.workspace_path, spec.model)
             write_execution_status(
                 spec.output_dir,
                 status="container_started",
@@ -525,7 +526,7 @@ class ClaudeCodeAgent(BaseAgent):
         if r.returncode != 0:
             logger.warning("[%s] ClaudeCode log dir copy failed: %s", task_id, r.stderr.strip())
 
-    def _start_container(self, task_id: str, workspace_path: str) -> None:
+    def _start_container(self, task_id: str, workspace_path: str, model: str = "") -> None:
         proxy_http = os.environ.get("HTTP_PROXY_INNER", "")
         proxy_https = os.environ.get("HTTPS_PROXY_INNER", "")
         env_map = {
@@ -543,6 +544,11 @@ class ClaudeCodeAgent(BaseAgent):
             "HTTP_PROXY": proxy_http,
             "HTTPS_PROXY": proxy_https,
         }
+        maas_max_tokens = resolve_maas_max_tokens(model, self.api_base_url)
+        if maas_max_tokens is not None:
+            # Claude Code exposes this setting for the Anthropic Messages
+            # max_tokens field.  It is injected only for MaaS candidates.
+            env_map["CLAUDE_CODE_MAX_OUTPUT_TOKENS"] = str(maas_max_tokens)
         env_args: list[str] = []
         for key, value in env_map.items():
             if value:

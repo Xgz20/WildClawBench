@@ -114,6 +114,7 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
         self.assertIn("DSH_MODEL_ID=xopglm52", command)
         self.assertIn("DSH_API=openai-completions", command)
         self.assertIn("DSH_REASONING=high", command)
+        self.assertIn("DSH_MAX_TOKENS=4096", command)
         self.assertIn("OPENROUTER_API_KEY=test-key", command)
         self.assertIn("OPENROUTER_BASE_URL=https://maas.example/v2", command)
         self.assertIn("DEEPSEEK_API_KEY=search-key", command)

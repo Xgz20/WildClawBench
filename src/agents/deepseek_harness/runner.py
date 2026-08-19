@@ -22,6 +22,7 @@ from src.utils.docker_utils import (
     run_warmup,
     snapshot_workspace_state,
 )
+from src.utils.model_limits import resolve_maas_max_tokens
 
 
 logger = logging.getLogger(__name__)
@@ -153,6 +154,15 @@ def build_container_command(
             str(env.get("DEEPSEEK_SEARCH_ENABLED", "")).strip(),
         ),
         ("DSH_REASONING", (thinking or "").strip()),
+        (
+            "DSH_MAX_TOKENS",
+            str(
+                resolve_maas_max_tokens(
+                    model, config.openrouter_base_url, environ=env
+                )
+                or ""
+            ),
+        ),
         ("http_proxy", proxy_http),
         ("https_proxy", proxy_https),
         ("HTTP_PROXY", proxy_http),

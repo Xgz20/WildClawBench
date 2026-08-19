@@ -60,6 +60,15 @@ class AstronCodeConfigTests(unittest.TestCase):
         write_stderr: str = "",
     ):
         def run(command, **kwargs):
+            if command[:2] == ["docker", "cp"]:
+                return subprocess.CompletedProcess(command, 0, "", "")
+            if command[:3] == ["docker", "exec", "-d"]:
+                return subprocess.CompletedProcess(command, 0, "", "")
+            if (
+                command[:2] == ["docker", "exec"]
+                and command[-3:-1] == ["python3", "-c"]
+            ):
+                return subprocess.CompletedProcess(command, 0, "", "")
             if command[:3] == ["docker", "exec", "-i"]:
                 return subprocess.CompletedProcess(
                     command,
@@ -80,6 +89,31 @@ class AstronCodeConfigTests(unittest.TestCase):
             self.fail(f"Unexpected subprocess command: {command!r}")
 
         return run
+
+    def test_maas_proxy_base_url_is_used_only_when_requested(self) -> None:
+        agent = self.make_agent(base_url="https://maas-api.example/v1")
+        provider = agent._provider_for_model("openrouter/xopglm52")
+
+        proxied = tomllib.loads(
+            agent._render_codex_config(
+                model="openrouter/xopglm52",
+                reasoning_effort="high",
+                wire_api=None,
+                provider_api_key=agent._resolve_provider_api_key(provider),
+                redact_secrets=True,
+                request_base_url="http://127.0.0.1:18080",
+            )
+        )
+        direct = self.parse_config(agent, "openrouter/gpt-5.5")
+
+        self.assertEqual(
+            proxied["model_providers"]["astron-spark"]["base_url"],
+            "http://127.0.0.1:18080",
+        )
+        self.assertEqual(
+            direct["model_providers"]["one-iflytek"]["base_url"],
+            "https://maas-api.example/v1",
+        )
 
     def config_write_calls(self, run_mock):
         return [

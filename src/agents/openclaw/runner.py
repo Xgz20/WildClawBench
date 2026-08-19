@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 from src.agents.base import AgentExecution, AgentTaskSpec, BaseAgent
 from src.utils.grading import extract_usage_from_jsonl
+from src.utils.model_limits import resolve_maas_max_tokens
 from src.utils.docker_utils import (
     DOCKER_IMAGE,
     inject_lobster_workspace,
@@ -422,9 +423,20 @@ PY"""
         """
         model_id = self._bare_model_id(model)
         image_id = self._bare_model_id(self.image_model) if self.image_model else model_id
-        model_entries = [{"id": model_id, "name": model_id}]
+        maas_max_tokens = resolve_maas_max_tokens(model, self.openrouter_base_url)
+        model_entry: dict[str, Any] = {"id": model_id, "name": model_id}
+        if maas_max_tokens is not None:
+            # Pi defaults unknown OpenAI-compatible models to
+            # max_completion_tokens. MaaS explicitly requires max_tokens.
+            model_entry["maxTokens"] = maas_max_tokens
+            model_entry["compat"] = {"maxTokensField": "max_tokens"}
+        model_entries = [model_entry]
         if image_id != model_id:
-            model_entries.append({"id": image_id, "name": image_id})
+            image_entry: dict[str, Any] = {"id": image_id, "name": image_id}
+            if maas_max_tokens is not None:
+                image_entry["maxTokens"] = maas_max_tokens
+                image_entry["compat"] = {"maxTokensField": "max_tokens"}
+            model_entries.append(image_entry)
         provider_config = {
             "api": "openai-completions",
             "baseUrl": self.openrouter_base_url,

@@ -107,6 +107,25 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
             timeout=30,
         )
 
+    def test_maas_model_injects_common_output_limit_environment(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
+            os.environ, {"MAAS_MAX_TOKENS": "3072"}, clear=False
+        ), patch("src.agents.claudecode.runner.subprocess.run") as run:
+            run.return_value = subprocess.CompletedProcess([], 0, "container-id", "")
+            agent = ClaudeCodeAgent(
+                anthropic_api_key="test-key",
+                anthropic_base_url="https://maas-api.example/anthropic",
+            )
+
+            agent._start_container("claudecode-maas", temp_dir, "xopglm52")
+
+        command = next(
+            call.args[0]
+            for call in run.call_args_list
+            if call.args[0][:2] == ["docker", "run"]
+        )
+        self.assertIn("CLAUDE_CODE_MAX_OUTPUT_TOKENS=3072", command)
+
     def test_run_task_forwards_thinking_to_prompt_runner(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)

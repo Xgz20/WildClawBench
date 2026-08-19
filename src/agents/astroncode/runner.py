@@ -24,6 +24,11 @@ from src.agents.astroncode.backend import (
 )
 from src.utils.docker_utils import container_resource_args, run_warmup, setup_skills, snapshot_workspace_state
 from src.utils.endpoint_utils import normalize_openrouter_base_url_for_openclaw
+from src.utils.model_limits import resolve_maas_max_tokens
+from src.utils.maas_proxy import (
+    collect_maas_request_audit,
+    start_maas_request_proxy,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -443,6 +448,7 @@ class AstronCodeAgent(BaseAgent):
             "elapsed_time": round(elapsed_time, 2),
         }
         output_dir.mkdir(parents=True, exist_ok=True)
+        collect_maas_request_audit(task_id, output_dir)
         self._collect_rollout_trace_archive(task_id, output_dir)
 
         sessions_dest = output_dir / "astroncode_sessions"
@@ -1120,12 +1126,21 @@ class AstronCodeAgent(BaseAgent):
         search_agent_config, search_agent_server_names = (
             self._read_search_agent_config_fragment(task_id)
         )
+        maas_max_tokens = resolve_maas_max_tokens(model, self.openrouter_base_url)
+        request_base_url = None
+        if maas_max_tokens is not None:
+            request_base_url = start_maas_request_proxy(
+                task_id,
+                upstream_base_url=self.openrouter_base_url,
+                max_tokens=maas_max_tokens,
+            )
         config_toml = self._render_codex_config(
             model=model,
             reasoning_effort=reasoning_effort,
             wire_api=wire_api,
             provider_api_key=provider_api_key,
             redact_secrets=False,
+            request_base_url=request_base_url,
         )
         debug_config_toml = self._render_codex_config(
             model=model,
@@ -1133,6 +1148,7 @@ class AstronCodeAgent(BaseAgent):
             wire_api=wire_api,
             provider_api_key=provider_api_key,
             redact_secrets=True,
+            request_base_url=request_base_url,
         )
         if search_agent_config:
             config_toml += "\n" + search_agent_config
@@ -1240,6 +1256,7 @@ class AstronCodeAgent(BaseAgent):
         wire_api: str | None,
         provider_api_key: str,
         redact_secrets: bool,
+        request_base_url: str | None = None,
     ) -> str:
         """Render the AstronCode 0.0.13 config for the selected model.
 
@@ -1270,7 +1287,7 @@ class AstronCodeAgent(BaseAgent):
                 '\n'
                 '[model_providers.openrouter]\n'
                 'name = "openrouter"\n'
-                f"base_url = {toml_basic_string(self.openrouter_base_url)}\n"
+                f"base_url = {toml_basic_string(request_base_url or self.openrouter_base_url)}\n"
                 f"models_base_url = {toml_basic_string(self.models_base_url)}\n"
                 'env_key = "OPENROUTER_API_KEY"\n'
             )
@@ -1279,7 +1296,7 @@ class AstronCodeAgent(BaseAgent):
                 '\n'
                 '[model_providers.one-iflytek]\n'
                 'name = "Codex via iFlytek One"\n'
-                f"base_url = {toml_basic_string(self._resolve_one_iflytek_base_url())}\n"
+                f"base_url = {toml_basic_string(request_base_url or self._resolve_one_iflytek_base_url())}\n"
                 f"models_base_url = {toml_basic_string(self.models_base_url)}\n"
                 f"experimental_bearer_token = {toml_basic_string(token)}\n"
                 'wire_api = "responses"\n'
@@ -1291,7 +1308,12 @@ class AstronCodeAgent(BaseAgent):
             '\n'
             '[model_providers.astron-spark]\n'
             'name = "Astron Spark"\n'
-            f"models_base_url = {toml_basic_string(self.models_base_url)}\n"
+            + (
+                f"base_url = {toml_basic_string(request_base_url)}\n"
+                if request_base_url
+                else ""
+            )
+            + f"models_base_url = {toml_basic_string(self.models_base_url)}\n"
             f"experimental_bearer_token = {toml_basic_string(token)}\n"
         )
 
@@ -1328,7 +1350,10 @@ class AstronCodeAgent(BaseAgent):
         failures as JSON so the agent can continue with other methods.
         """
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
-        helper = self._render_image_helper(default_model=bare_model)
+        helper = self._render_image_helper(
+            default_model=bare_model,
+            max_tokens=resolve_maas_max_tokens(model, self.openrouter_base_url),
+        )
 
         helper_tmp = None
         try:
@@ -1358,7 +1383,8 @@ class AstronCodeAgent(BaseAgent):
                 Path(helper_tmp).unlink(missing_ok=True)
 
     @staticmethod
-    def _render_image_helper(default_model: str) -> str:
+    def _render_image_helper(default_model: str, max_tokens: int | None = None) -> str:
+        helper_max_tokens = max_tokens or 800
         return f'''#!/usr/bin/env python3
 from __future__ import annotations
 
@@ -1473,7 +1499,7 @@ def main() -> int:
                 ],
             }}
         ],
-        "max_tokens": 800,
+        "max_tokens": {helper_max_tokens},
         "temperature": 0,
     }}
     request = urllib.request.Request(

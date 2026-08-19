@@ -35,6 +35,8 @@ cat >"${patch_path}" <<'PATCH'
         reasoning: !!js process.env.DSH_REASONING || undefined
         models:
           - id: !!js process.env.DSH_MODEL_ID
+            maxTokens: !!js "process.env.DSH_MAX_TOKENS ? Number(process.env.DSH_MAX_TOKENS) : undefined"
+            compat: !!js "process.env.DSH_MAX_TOKENS ? { maxTokensField: 'max_tokens' } : undefined"
             reasoningEfforts: !!js "process.env.DSH_REASONING ? { [process.env.DSH_REASONING]: process.env.DSH_REASONING } : undefined"
 
 - id: agent-default-model

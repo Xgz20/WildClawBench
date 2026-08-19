@@ -20,6 +20,11 @@ from src.agents.codex.backend import (
 )
 from src.utils.docker_utils import container_resource_args, run_warmup, setup_skills, snapshot_workspace_state
 from src.utils.endpoint_utils import normalize_openrouter_base_url_for_openclaw
+from src.utils.model_limits import resolve_maas_max_tokens
+from src.utils.maas_proxy import (
+    collect_maas_request_audit,
+    start_maas_request_proxy,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -295,6 +300,7 @@ class CodexAgent(BaseAgent):
             "elapsed_time": round(elapsed_time, 2),
         }
         output_dir.mkdir(parents=True, exist_ok=True)
+        collect_maas_request_audit(task_id, output_dir)
 
         sessions_dest = output_dir / "codex_sessions"
         sessions_dest.mkdir(parents=True, exist_ok=True)
@@ -511,10 +517,19 @@ class CodexAgent(BaseAgent):
         output_dir: Path,
     ) -> None:
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
+        maas_max_tokens = resolve_maas_max_tokens(model, self.openrouter_base_url)
+        request_base_url = None
+        if maas_max_tokens is not None:
+            request_base_url = start_maas_request_proxy(
+                task_id,
+                upstream_base_url=self.openrouter_base_url,
+                max_tokens=maas_max_tokens,
+            )
         config_toml = self._render_codex_config(
             model=model,
             reasoning_effort=reasoning_effort,
             wire_api=wire_api,
+            request_base_url=request_base_url,
         )
 
         # Mirror the rendered config host-side so future debugging is trivial.
@@ -547,9 +562,10 @@ class CodexAgent(BaseAgent):
         model: str,
         reasoning_effort: str | None,
         wire_api: str | None,
+        request_base_url: str | None = None,
     ) -> str:
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
-        safe_base_url = self.openrouter_base_url.replace('"', '\\"')
+        safe_base_url = (request_base_url or self.openrouter_base_url).replace('"', '\\"')
         reasoning_line = (
             f'model_reasoning_effort = "{reasoning_effort}"\n'
             if reasoning_effort
@@ -582,7 +598,10 @@ class CodexAgent(BaseAgent):
         failures as JSON so the agent can continue with other methods.
         """
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
-        helper = self._render_image_helper(default_model=bare_model)
+        helper = self._render_image_helper(
+            default_model=bare_model,
+            max_tokens=resolve_maas_max_tokens(model, self.openrouter_base_url),
+        )
 
         helper_tmp = None
         try:
@@ -612,7 +631,8 @@ class CodexAgent(BaseAgent):
                 Path(helper_tmp).unlink(missing_ok=True)
 
     @staticmethod
-    def _render_image_helper(default_model: str) -> str:
+    def _render_image_helper(default_model: str, max_tokens: int | None = None) -> str:
+        helper_max_tokens = max_tokens or 800
         return f'''#!/usr/bin/env python3
 from __future__ import annotations
 
@@ -727,7 +747,7 @@ def main() -> int:
                 ],
             }}
         ],
-        "max_tokens": 800,
+        "max_tokens": {helper_max_tokens},
         "temperature": 0,
     }}
     request = urllib.request.Request(
