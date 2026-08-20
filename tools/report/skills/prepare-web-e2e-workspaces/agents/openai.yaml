@@ -1,0 +1,4 @@
+interface:
+  display_name: "准备 Web E2E 工作空间"
+  short_description: "按用例和 Harness 生成隔离评测包"
+  default_prompt: "使用 $prepare-web-e2e-workspaces 为指定用例和 Harness 生成独立 Web 端到端评测包。"

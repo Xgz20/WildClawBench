@@ -1,0 +1,4 @@
+interface:
+  display_name: "Web E2E 浏览器评分"
+  short_description: "由桌面评分 Agent 逐项操作站点并输出 JSON"
+  default_prompt: "使用 $score-web-e2e 对指定 Web 站点产物进行浏览器端到端评分并生成回传包。"
