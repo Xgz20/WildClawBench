@@ -26,7 +26,10 @@ except ImportError:
 
 
 SCHEMA_VERSION = "wildclawbench.web-e2e-batch/v3"
-SKILL_VERSION = "3.0.1"
+SKILL_VERSION = "3.2.0"
+AESTHETIC_RUBRIC_ID = "web-aesthetic-v1"
+AESTHETIC_RUBRIC_VERSION = "1.1.0"
+AESTHETIC_RUBRIC_SOURCE = "https://yf2ljykclb.xfchat.iflytek.com/docx/doxrz05uveZshD5b81aHYY2HIb3"
 KNOWN_HARNESSES = {
     "astronstudio": "AstronStudio",
     "codex": "Codex",
@@ -331,8 +334,12 @@ def task_contract(
         "aesthetic_metric": {
             "max_score": 100,
             "included_in_total": False,
-            "status": "defined" if aesthetic_rubric else "pending_definition",
-            "definition": aesthetic_rubric,
+            "status": "defined",
+            "rubric_id": AESTHETIC_RUBRIC_ID,
+            "rubric_version": AESTHETIC_RUBRIC_VERSION,
+            "scoring_mode": "joint_screenshot_set",
+            "source_url": AESTHETIC_RUBRIC_SOURCE,
+            "additional_instructions": aesthetic_rubric,
         },
         "source": {
             "task_file": task["task_source"],
@@ -615,7 +622,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="可选：在每个执行工作空间生成 execution_record.json；默认不生成",
     )
-    parser.add_argument("--aesthetic-rubric", default="", help="可选：统一页面美观度评分定义 Markdown")
+    parser.add_argument("--aesthetic-rubric", default="", help="可选：内置美观度标准之外的批次补充说明 Markdown")
     parser.add_argument("--repo-root", default=str(find_repo_root(Path(__file__))))
     return parser
 

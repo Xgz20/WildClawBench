@@ -31,7 +31,7 @@
 - 不自动批量创建桌面工作空间或会话。
 - 不复用 `eval_e2e/` 的执行、轨迹匹配、容器评分或结果目录。
 - 不复用 WildClawBench 的 `run_grading()`、LLM Judge 或网站 Playwright checker。
-- 本期不定义页面美观度的具体 rubric；只保留 0–100 的独立字段和报告列。
+- 页面美观度采用产品定义的 `web-aesthetic-v1`：6 个加权一级维度和 32 个二级检查项，对同一用例的代表性截图集合统一判定，独立于功能总分。
 
 ## 分包与目录契约
 
@@ -157,18 +157,33 @@ Expected Behavior 和 Rubric 只存在评分契约中，另加：
 
 一级和二级维度在题目内按该维度 criterion 权重归一，再跨题目等权平均。若站点无法启动或浏览器不可用，未判断 criterion 保持 `null`，不伪造动作或证据；汇总用的总分和各维度强制为 0。
 
-页面美观度使用独立结构：
+页面美观度使用独立结构，评分 Agent 填写六维分数和检查项状态，确定性脚本计算总分：
 
 ```json
 {
-  "score": null,
+  "score": 77.5,
   "max_score": 100,
   "included_in_total": false,
-  "status": "pending_definition"
+  "status": "completed",
+  "rubric_id": "web-aesthetic-v1",
+  "primary_dimensions": {
+    "render_integrity": 90,
+    "layout_hierarchy": 80
+  },
+  "secondary_dimensions": {
+    "v-01": "MET",
+    "p-01": "MET"
+  },
+  "secondary_dimension_scores": {
+    "v-01": 100,
+    "p-01": 100
+  }
 }
 ```
 
-正式定义提供前，报告显示 `-`；它永远不参与总分、得分率或满分率。
+美观度检查点按 `MET=100`、`PARTIAL=50`、`UNMET=0` 固化百分制分值，`NA` 为 `null` 且不进入分子和分母。每个一级维度按所属适用护栏项与加分项等权平均，加分项同样增加分子和分母；再按产品权重计算美观度总分。评分 Agent 只填写检查点状态以及维度理由和证据，不填写一级维度分数。
+
+美观度从本次操作过程选择带标签的代表性截图集合，至少覆盖两个桌面状态和一个窄屏状态，并对整个集合一次统一判断，不逐图给总分后平均。它永远不参与功能总分、得分率或满分率；单独取证失败时记录 `aesthetic.status=evaluation_error` 和空分，不影响功能总分。
 
 ## 回传与报告配置
 
@@ -195,7 +210,7 @@ tools/report/config/web-e2e/<batch_id>.yaml
 
 Excel 只生成：
 
-1. `站点评测指标`：结果/效率指标、一级维度、二级维度；维度表均增加总平均分；
+1. `站点评测指标`：结果/效率指标、站点一级/二级维度、美观度一级/二级维度；结果表在得分率、满分率后增加美观度总分；
 2. `难度对比`；
 3. `用例对比明细`。
 
@@ -217,6 +232,6 @@ Excel 只生成：
 - 人工复制 `execution/tasks` 到 `score/` 后可用普通 ZIP 工具合并；Python 双击兜底也能生成相同结构并拒绝覆盖已有评分结果。
 - 每个 Agent 可见工作空间只有一个有效 Prompt 或一个有效评分契约；评分 Agent 每题只看到一个用例。
 - 正常评分缺项、重项、越界分数或空证据不能 finalize；异常评分允许 criterion 保持未判断但总分和维度必须为 0。
-- 页面美观度待定义时拒绝填写分数。
+- 美观度正常评分必须完整提供 6 个维度理由、32 个检查点和桌面/窄屏截图证据；一级维度与美观度总分必须由检查点分值确定性推导。
 - 回传包可被报告 Skill 读取，批次 YAML 映射和排序生效。
 - 两个以上回传包能生成指定章节 Markdown、报告数据 JSON 和恰好三张 Excel Sheet，并通过数值与视觉校验。

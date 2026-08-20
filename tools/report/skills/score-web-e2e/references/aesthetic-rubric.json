@@ -1,0 +1,92 @@
+{
+  "schema_version": "wildclawbench.web-e2e-aesthetic-rubric/v1",
+  "rubric_id": "web-aesthetic-v1",
+  "rubric_version": "1.1.0",
+  "source": {
+    "title": "web生成产物美观度评分标准",
+    "url": "https://yf2ljykclb.xfchat.iflytek.com/docx/doxrz05uveZshD5b81aHYY2HIb3",
+    "local_path": "docs/local/scene/web站点端到端评测/Web站点美观度指标.md",
+    "spreadsheet_revision": 11,
+    "clarification": "2026-08-20 产品确认：MET/PARTIAL/UNMET 分别为 100/50/0；一级维度由所属护栏项与加分项等权计算。"
+  },
+  "scoring_mode": "joint_screenshot_set",
+  "max_score": 100,
+  "included_in_total": false,
+  "dimension_score_type": "derived_percentage_0_100",
+  "dimension_score_formula": "sum(applicable_checklist_scores) / (applicable_checklist_count * 100) * 100",
+  "checklist_statuses": ["MET", "PARTIAL", "UNMET", "NA"],
+  "checklist_score_values": {"MET": 100, "PARTIAL": 50, "UNMET": 0, "NA": null},
+  "defect_severities": ["blocking", "major", "minor"],
+  "dimensions": [
+    {
+      "id": "render_integrity",
+      "label": "渲染与完整性",
+      "weight": 15,
+      "description": "是否完整渲染，有无破版、错位、遮挡、文字截断、破图、未替换的占位内容。"
+    },
+    {
+      "id": "layout_hierarchy",
+      "label": "页面布局与信息层级",
+      "weight": 25,
+      "description": "栅格与对齐是否成立，留白是否有节奏，主次是否分明，重要信息是否在该在的位置。"
+    },
+    {
+      "id": "color_typography",
+      "label": "视觉风格：配色与排版",
+      "weight": 20,
+      "description": "色板是否收敛且有语义，字号字重是否成层级，对比度是否够读，行高字间距是否舒适。"
+    },
+    {
+      "id": "component_state",
+      "label": "组件精细度与状态",
+      "weight": 15,
+      "description": "圆角、阴影、边框和控件尺寸是否一致成体系，是否还是浏览器默认控件样式，空状态、错误态、选中态、禁用态是否有打磨。"
+    },
+    {
+      "id": "responsive",
+      "label": "响应式表现",
+      "weight": 10,
+      "description": "窄屏是重新排布还是等比挤压，有无横向滚动、元素重叠、内容裁切，可点区域和字号是否够用。"
+    },
+    {
+      "id": "tone_fit",
+      "label": "调性契合",
+      "weight": 15,
+      "description": "视觉气质是否贴合网站业务场景，装饰是否克制；只看视觉调性，不判功能是否完整。"
+    }
+  ],
+  "checklist": [
+    {"id": "v-01", "type": "guardrail", "dimension": "render_integrity", "label": "完整渲染", "description": "完整渲染，无破版、错位、元素互相遮挡。"},
+    {"id": "v-02", "type": "guardrail", "dimension": "render_integrity", "label": "无占位内容", "description": "无未替换的占位内容：lorem ipsum、TODO、示例文本、灰色占位方块。"},
+    {"id": "v-03", "type": "guardrail", "dimension": "render_integrity", "label": "文字与图片完整", "description": "文字无截断溢出；图片图标正常显示，无破图裂图标。"},
+    {"id": "v-04", "type": "guardrail", "dimension": "render_integrity", "label": "桌面无横向滚动", "description": "桌面视口无意外的横向滚动。"},
+    {"id": "v-05", "type": "guardrail", "dimension": "layout_hierarchy", "label": "统一栅格与边距", "description": "元素沿统一栅格对齐，边距取值成体系。"},
+    {"id": "v-06", "type": "guardrail", "dimension": "layout_hierarchy", "label": "留白有节奏", "description": "留白有节奏，内容不贴边也不空旷失衡。"},
+    {"id": "v-07", "type": "guardrail", "dimension": "layout_hierarchy", "label": "首屏主次明确", "description": "首屏一眼能看出页面用途和主要操作位置。"},
+    {"id": "v-08", "type": "guardrail", "dimension": "layout_hierarchy", "label": "分组分隔清晰", "description": "分组与分隔清晰，同级内容视觉权重一致。"},
+    {"id": "v-09", "type": "guardrail", "dimension": "color_typography", "label": "色板收敛", "description": "色板收敛，强调色只出现在需要强调的地方。"},
+    {"id": "v-10", "type": "guardrail", "dimension": "color_typography", "label": "字体层级", "description": "字号字重成层级；字体族不超过 2–3 种。"},
+    {"id": "v-11", "type": "guardrail", "dimension": "color_typography", "label": "正文对比度", "description": "正文对比度足够读，无成片低对比浅灰字。"},
+    {"id": "v-12", "type": "guardrail", "dimension": "color_typography", "label": "行高字距舒适", "description": "行高与字间距舒适，长段落长列表不拥挤。"},
+    {"id": "v-13", "type": "guardrail", "dimension": "component_state", "label": "组件样式一致", "description": "圆角、阴影、边框、控件高度全站一致。"},
+    {"id": "v-14", "type": "guardrail", "dimension": "component_state", "label": "非默认控件", "description": "按钮、输入框、下拉不是浏览器默认样式直出。"},
+    {"id": "v-15", "type": "guardrail", "dimension": "component_state", "label": "空状态设计", "description": "空状态有专门处理，不是一行灰字或纯空白。"},
+    {"id": "v-16", "type": "guardrail", "dimension": "component_state", "label": "组件状态可辨", "description": "选中、禁用、校验错误等状态有可辨识的视觉区分。"},
+    {"id": "v-17", "type": "guardrail", "dimension": "responsive", "label": "窄屏无溢出", "description": "窄屏无横向滚动、元素重叠、内容裁切。"},
+    {"id": "v-18", "type": "guardrail", "dimension": "responsive", "label": "窄屏合理重排", "description": "窄屏是重新排布而非等比挤压，导航、表格、卡片有合理降级。"},
+    {"id": "v-19", "type": "guardrail", "dimension": "responsive", "label": "窄屏可读可点", "description": "窄屏可点区域足够大，文字没有小到读不了。"},
+    {"id": "v-20", "type": "guardrail", "dimension": "tone_fit", "label": "契合业务场景", "description": "视觉气质贴合业务场景，不是与内容无关的通用模板。"},
+    {"id": "v-21", "type": "guardrail", "dimension": "tone_fit", "label": "装饰克制", "description": "渐变、阴影、动效、插画没有堆到干扰阅读。"},
+    {"id": "v-22", "type": "guardrail", "dimension": "tone_fit", "label": "中文排版", "description": "中文标点、断行、数字与单位、中英混排间距处理得当。"},
+    {"id": "p-01", "type": "bonus", "dimension": "layout_hierarchy", "label": "首屏视觉焦点", "description": "首屏有明确视觉焦点，元素权重不是均等铺开。"},
+    {"id": "p-02", "type": "bonus", "dimension": "layout_hierarchy", "label": "间距序列", "description": "间距成序列，例如 4/8/16/24/32 的倍数体系，不是每处随手取值。"},
+    {"id": "p-03", "type": "bonus", "dimension": "color_typography", "label": "语义色阶", "description": "同色相有深浅层级并按语义使用，不是几个孤立颜色。"},
+    {"id": "p-04", "type": "bonus", "dimension": "color_typography", "label": "字号序列与行长", "description": "字号成比例序列，正文行长控制在约 40–75 字的舒适区间。"},
+    {"id": "p-05", "type": "bonus", "dimension": "component_state", "label": "多类状态设计", "description": "空状态、错误态、加载态中至少两种被单独设计过。"},
+    {"id": "p-06", "type": "bonus", "dimension": "component_state", "label": "一致交互反馈", "description": "hover、选中、禁用有明确但不喧宾夺主的视觉变化。"},
+    {"id": "p-07", "type": "bonus", "dimension": "responsive", "label": "窄屏布局重构", "description": "窄屏有导航折叠、表格转卡片、多栏转单栏等真正的布局重构。"},
+    {"id": "p-08", "type": "bonus", "dimension": "responsive", "label": "窄屏优先级重排", "description": "窄屏下信息优先级被重新排过，重要操作仍在拇指可达区。"},
+    {"id": "p-09", "type": "bonus", "dimension": "tone_fit", "label": "业务定制细节", "description": "有针对业务场景的图标、插画、配色隐喻或文案语气。"},
+    {"id": "p-10", "type": "bonus", "dimension": "tone_fit", "label": "视觉语言一致", "description": "视觉语言前后一致，整站像一个人做的，不像拼来的组件。"}
+  ]
+}

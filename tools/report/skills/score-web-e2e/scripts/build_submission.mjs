@@ -82,6 +82,16 @@ export function buildSubmission(packageRoot) {
         if (!fs.existsSync(path.join(scoringDir, ...parts))) throw new Error(`评分证据文件不存在: ${entry.task_id}: ${raw}`);
       }
     }
+    for (const screenshot of score.evaluation?.aesthetic?.screenshots ?? []) {
+      const raw = String(screenshot?.path ?? "");
+      const parts = raw.split(/[\\/]+/);
+      if (!raw || path.isAbsolute(raw) || parts.includes("..") || parts[0] !== "evidence") {
+        throw new Error(`美观度截图必须位于 private-scoring/evidence 下: ${entry.task_id}: ${raw}`);
+      }
+      if (!fs.existsSync(path.join(scoringDir, ...parts))) {
+        throw new Error(`美观度截图文件不存在: ${entry.task_id}: ${raw}`);
+      }
+    }
     tasks.push(score);
   }
   const harnessIds = new Set(tasks.map((task) => String(task.identity?.harness?.id ?? "")));

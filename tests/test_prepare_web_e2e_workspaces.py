@@ -125,6 +125,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertFalse(any(name.endswith(("PROMPT.md", "execution_record.json", "task_manifest.json")) for name in scoring_names))
             self.assertIn("score-web-e2e/SKILL.md", skill_names)
             self.assertTrue(any(name.startswith("score-web-e2e/scripts/") for name in skill_names))
+            self.assertIn("score-web-e2e/references/aesthetic-rubric.json", skill_names)
             self.assertTrue((command_info.external_attr >> 16) & 0o100)
 
             contract = json.loads((score_task / "private-scoring/task_contract.json").read_text(encoding="utf-8"))
@@ -132,6 +133,10 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertEqual(contract["identity"]["task_id"], self.TASK_ID)
             self.assertEqual(contract["identity"]["harness"]["id"], "codex")
             self.assertNotIn("model", contract["identity"])
+            self.assertEqual(contract["aesthetic_metric"]["status"], "defined")
+            self.assertEqual(contract["aesthetic_metric"]["rubric_id"], "web-aesthetic-v1")
+            self.assertEqual(contract["aesthetic_metric"]["rubric_version"], "1.1.0")
+            self.assertEqual(contract["aesthetic_metric"]["scoring_mode"], "joint_screenshot_set")
 
     def test_execution_record_requires_explicit_opt_in(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

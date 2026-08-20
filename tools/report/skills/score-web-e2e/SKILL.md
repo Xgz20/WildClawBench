@@ -38,7 +38,8 @@ private-scoring/task_contract.json
    只监听 `127.0.0.1`，不得使用真实凭证。每题开始前关闭上一题服务并清理相同 Origin 的浏览器存储。
 3. 实际点击、输入、切换、刷新、改变视口或上传文件验证检查点；不得只看源码、静态 DOM 或截图推断交互成功。
 4. 逐 criterion 记录动作、观察、理由和证据。视觉检查点必须有视口截图；交互检查点必须写明动作前后状态。
-5. 使用评分智能体必有的 Node.js 执行确定性辅助脚本，测试人员不手工运行命令。先从当前已安装 Skill 的实际位置解析 `<score-web-e2e-skill-dir>`，不能假设题目内存在 `.agents/skills/`：
+5. 读取 [美观度评分标准](references/aesthetic-scoring.md) 和 [结构化定义](references/aesthetic-rubric.json)。复用功能评分截图，并补齐桌面主状态、桌面代表性交互状态和不大于 480px 的窄屏状态。对带标签的代表性截图集合做一次统一判定，不得逐图给总分后平均，也不得用大量重复截图改变分数。
+6. 使用评分智能体必有的 Node.js 执行确定性辅助脚本，测试人员不手工运行命令。先从当前已安装 Skill 的实际位置解析 `<score-web-e2e-skill-dir>`，不能假设题目内存在 `.agents/skills/`：
 
    ```bash
    node <score-web-e2e-skill-dir>/scripts/init_score.mjs \
@@ -53,7 +54,9 @@ private-scoring/task_contract.json
 
 若当前题目确实带有可选的 `execution_record.json`，在 finalize 命令中增加 `--execution-record execution_record.json`。旧包仍可继续同时传入 `--manifest task_manifest.json`，但新包不生成该文件。
 
-脚本只校验字段和计算分数，不替 Agent 判断。criterion 为 0–1；页面美观度是独立 0–100 指标，`included_in_total=false`。定义为 `pending_definition` 时必须是 `null`。
+脚本只校验字段和计算分数，不替 Agent 判断。criterion 为 0–1。页面美观度是独立 0–100 指标，`included_in_total=false`：评分 Agent 填写 32 个检查点状态和证据，以及 6 个一级维度的理由和证据，不填写一级维度分数。脚本将 `MET/PARTIAL/UNMET/NA` 固化为 `100/50/0/null`；每个一级维度按所属适用护栏项与加分项等权平均，再按 `15/25/20/15/10/15` 加权计算唯一美观度总分。`NA` 排除分子和分母，某个一级维度全部为 `NA` 时拒绝出分。
+
+美观度标准内置于独立评分 Skill。旧评分包中的 `aesthetic_metric.status=pending_definition` 不影响使用新版 Skill，但旧的单一 `aesthetic_score` 输入不再有效，必须按当前结构重新填写。美观度取证自身失败时使用 `aesthetic.status=evaluation_error` 并填写错误；它不改变功能总分。
 
 证据不足、浏览器不可用、站点无法启动或评分异常时，使用 `evaluation_status=evaluation_error` 并保留错误事实，不伪造成功。
 
@@ -71,4 +74,4 @@ node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
 
 脚本校验全部 `task_score.json`、证据路径、身份和敏感文件，并阻止把残留的 `node_modules`、`.git` 打入回传包，然后生成根目录 `submission.json`。随后测试人员使用 ZIP 工具压缩整个 Harness 根目录回传；报告 Skill 会从 ZIP 中定位唯一 `submission.json`。
 
-详细字段见 [references/scoring-contract.md](references/scoring-contract.md)。
+详细字段见 [评分 JSON 契约](references/scoring-contract.md)。

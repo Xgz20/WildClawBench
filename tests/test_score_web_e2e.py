@@ -12,6 +12,55 @@ INIT = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/init_score.mjs"
 FINALIZE = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/finalize_score.mjs"
 SUBMISSION = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/build_submission.mjs"
 
+AESTHETIC_DIMENSIONS = [
+    ("render_integrity", "桌面和窄屏均完整渲染"),
+    ("layout_hierarchy", "首屏焦点与间距层级已按检查点判断"),
+    ("color_typography", "配色和字号层级已按检查点判断"),
+    ("component_state", "组件和状态已按检查点判断"),
+    ("responsive", "窄屏表现已按检查点判断"),
+    ("tone_fit", "业务调性已按检查点判断"),
+]
+AESTHETIC_CHECKLIST_IDS = [
+    *(f"v-{index:02d}" for index in range(1, 23)),
+    *(f"p-{index:02d}" for index in range(1, 11)),
+]
+
+
+def aesthetic_input() -> dict:
+    return {
+        "status": "completed",
+        "error": None,
+        "screenshots": [
+            {
+                "label": "desktop-main", "path": "evidence/aesthetic-desktop-main.png",
+                "viewport": {"width": 1440, "height": 900}, "state": "首页", "description": "桌面首屏",
+            },
+            {
+                "label": "desktop-state", "path": "evidence/aesthetic-desktop-state.png",
+                "viewport": {"width": 1440, "height": 900}, "state": "交互后", "description": "桌面交互状态",
+            },
+            {
+                "label": "mobile-main", "path": "evidence/aesthetic-mobile-main.png",
+                "viewport": {"width": 390, "height": 844}, "state": "窄屏首页", "description": "移动端首屏",
+            },
+        ],
+        "dimensions": [
+            {"id": dimension_id, "score": None, "rationale": rationale, "evidence": ["mobile-main" if dimension_id == "responsive" else "desktop-main"]}
+            for dimension_id, rationale in AESTHETIC_DIMENSIONS
+        ],
+        "checklist": [
+            {
+                "id": checklist_id,
+                "status": "MET",
+                "rationale": "截图中可见对应视觉表现",
+                "evidence": ["mobile-main" if checklist_id in {"v-17", "v-18", "v-19", "p-07", "p-08"} else "desktop-main"],
+            }
+            for checklist_id in AESTHETIC_CHECKLIST_IDS
+        ],
+        "strengths": ["整体视觉语言一致"],
+        "defects": [{"severity": "minor", "description": "窄屏信息略密", "where": "mobile-main"}],
+    }
+
 
 def fixtures():
     manifest = {
@@ -58,8 +107,7 @@ def fixtures():
             {"key": "content", "score": 1.0, "reason": "满足", "actions": ["打开首页"], "evidence": [{"type": "screenshot", "path": "evidence/a.png"}]},
             {"key": "action", "score": 0.5, "reason": "部分满足", "actions": ["点击按钮"], "evidence": [{"type": "observation", "path": "evidence/actions.md"}]},
         ],
-        "aesthetic_score": None,
-        "aesthetic_reason": None,
+        "aesthetic": aesthetic_input(),
         "scorer": {"agent": "Codex"},
     }
     return manifest, contract, execution, score_input
@@ -114,6 +162,8 @@ class FinalizeWebE2EScoreTest(unittest.TestCase):
             score_input = json.loads((root / "score_input.json").read_text(encoding="utf-8"))
         self.assertEqual([item["key"] for item in score_input["criteria"]], ["content", "action"])
         self.assertEqual([item["score"] for item in score_input["criteria"]], [None, None])
+        self.assertEqual(len(score_input["aesthetic"]["dimensions"]), 6)
+        self.assertEqual(len(score_input["aesthetic"]["checklist"]), 32)
 
     def test_calculates_weighted_total_and_dimensions(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -125,6 +175,11 @@ class FinalizeWebE2EScoreTest(unittest.TestCase):
         self.assertEqual(score["metrics"]["primary_dimensions"]["content_structure"], 100)
         self.assertEqual(score["metrics"]["primary_dimensions"]["interaction_function"], 50)
         self.assertFalse(score["metrics"]["aesthetic"]["included_in_total"])
+        self.assertEqual(score["metrics"]["aesthetic"]["score"], 100)
+        self.assertEqual(score["metrics"]["aesthetic"]["primary_dimensions"]["layout_hierarchy"], 100)
+        self.assertEqual(score["metrics"]["aesthetic"]["secondary_dimensions"]["v-01"], "MET")
+        self.assertEqual(score["metrics"]["aesthetic"]["secondary_dimension_scores"]["v-01"], 100)
+        self.assertEqual(len(score["evaluation"]["aesthetic"]["screenshots"]), 3)
         self.assertEqual(score["execution"]["status"], "not_recorded")
         self.assertIsNone(score["usage"]["total_tokens"])
 
@@ -137,13 +192,73 @@ class FinalizeWebE2EScoreTest(unittest.TestCase):
         self.assertEqual(score["execution"]["status"], "completed")
         self.assertEqual(score["usage"]["total_tokens"], 100)
 
-    def test_rejects_aesthetic_score_before_definition(self) -> None:
+    def test_rejects_legacy_scalar_aesthetic_score(self) -> None:
         values = list(fixtures())
+        values[3].pop("aesthetic")
         values[3]["aesthetic_score"] = 88
         with tempfile.TemporaryDirectory() as tmp:
             result = run_finalize(Path(tmp), values)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("美观度定义", result.stderr)
+        self.assertIn("不再接受单一 aesthetic_score", result.stderr)
+
+    def test_derives_dimension_and_total_from_guardrails_and_bonus_items(self) -> None:
+        values = list(fixtures())
+        status_by_id = {
+            "v-01": "MET", "v-02": "PARTIAL", "v-03": "UNMET", "v-04": "MET",
+            "p-01": "PARTIAL", "p-02": "UNMET",
+        }
+        for item in values[3]["aesthetic"]["checklist"]:
+            if item["id"] in status_by_id:
+                item["status"] = status_by_id[item["id"]]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = run_finalize(root, values)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            score = json.loads((root / "private-scoring/task_score.json").read_text(encoding="utf-8"))
+        self.assertEqual(score["metrics"]["aesthetic"]["primary_dimensions"]["render_integrity"], 62.5)
+        self.assertEqual(score["metrics"]["aesthetic"]["primary_dimensions"]["layout_hierarchy"], 75)
+        self.assertEqual(score["metrics"]["aesthetic"]["score"], 88.13)
+        layout = next(item for item in score["evaluation"]["aesthetic"]["dimensions"] if item["id"] == "layout_hierarchy")
+        self.assertEqual(layout["score_sum"], 450)
+        self.assertEqual(layout["max_score"], 600)
+        self.assertEqual(layout["applicable_checklist_count"], 6)
+
+    def test_maps_aesthetic_checklist_statuses_to_scores(self) -> None:
+        values = list(fixtures())
+        status_by_id = {"v-01": "PARTIAL", "v-02": "UNMET", "v-03": "NA"}
+        for item in values[3]["aesthetic"]["checklist"]:
+            if item["id"] in status_by_id:
+                item["status"] = status_by_id[item["id"]]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = run_finalize(root, values)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            score = json.loads((root / "private-scoring/task_score.json").read_text(encoding="utf-8"))
+        scores = score["metrics"]["aesthetic"]["secondary_dimension_scores"]
+        self.assertEqual(scores["v-01"], 50)
+        self.assertEqual(scores["v-02"], 0)
+        self.assertIsNone(scores["v-03"])
+        self.assertEqual(score["metrics"]["aesthetic"]["primary_dimensions"]["render_integrity"], 50)
+        checklist = {item["id"]: item for item in score["evaluation"]["aesthetic"]["checklist"]}
+        self.assertEqual(checklist["v-01"]["score"], 50)
+
+    def test_rejects_dimension_when_all_checkpoints_are_na(self) -> None:
+        values = list(fixtures())
+        for item in values[3]["aesthetic"]["checklist"]:
+            if item["id"] in {"v-01", "v-02", "v-03", "v-04"}:
+                item["status"] = "NA"
+        with tempfile.TemporaryDirectory() as tmp:
+            result = run_finalize(Path(tmp), values)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("不能全部为 NA", result.stderr)
+
+    def test_rejects_manually_entered_aesthetic_dimension_score(self) -> None:
+        values = list(fixtures())
+        values[3]["aesthetic"]["dimensions"][0]["score"] = 88
+        with tempfile.TemporaryDirectory() as tmp:
+            result = run_finalize(Path(tmp), values)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("自动计算", result.stderr)
 
     def test_error_status_forces_total_and_dimensions_to_zero(self) -> None:
         values = list(fixtures())
@@ -162,6 +277,7 @@ class FinalizeWebE2EScoreTest(unittest.TestCase):
         values[3]["evaluation_error"] = "浏览器工具不可用"
         for criterion in values[3]["criteria"]:
             criterion.update({"score": None, "reason": "", "actions": [], "evidence": []})
+        values[3]["aesthetic"]["screenshots"] = []
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             result = run_finalize(root, values)
@@ -169,9 +285,33 @@ class FinalizeWebE2EScoreTest(unittest.TestCase):
             score = json.loads((root / "private-scoring/task_score.json").read_text(encoding="utf-8"))
         self.assertEqual(score["metrics"]["total_score"], 0)
         self.assertEqual([item["score"] for item in score["evaluation"]["criteria"]], [None, None])
+        self.assertEqual(score["metrics"]["aesthetic"]["status"], "evaluation_error")
+        self.assertIsNone(score["metrics"]["aesthetic"]["score"])
+
+    def test_function_evaluation_error_keeps_completed_aesthetic_result(self) -> None:
+        values = list(fixtures())
+        values[3]["evaluation_status"] = "evaluation_error"
+        values[3]["evaluation_error"] = "功能检查异常"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = run_finalize(root, values)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            score = json.loads((root / "private-scoring/task_score.json").read_text(encoding="utf-8"))
+        self.assertEqual(score["metrics"]["total_score"], 0)
+        self.assertEqual(score["metrics"]["aesthetic"]["status"], "completed")
+        self.assertEqual(score["metrics"]["aesthetic"]["score"], 100)
 
 
 class BuildSubmissionTest(unittest.TestCase):
+    @staticmethod
+    def materialize_evidence(task_root: Path) -> None:
+        evidence = task_root / "private-scoring/evidence"
+        evidence.mkdir(exist_ok=True)
+        (evidence / "a.png").write_bytes(b"png")
+        (evidence / "actions.md").write_text("actions", encoding="utf-8")
+        for name in ("aesthetic-desktop-main.png", "aesthetic-desktop-state.png", "aesthetic-mobile-main.png"):
+            (evidence / name).write_bytes(b"png")
+
     def test_allows_report_config_to_supply_missing_model_id(self) -> None:
         values = list(fixtures())
         values[0]["model"] = {"id": "", "display_name": ""}
@@ -181,9 +321,7 @@ class BuildSubmissionTest(unittest.TestCase):
             task_root = root / "score/tasks/task-1"
             result = run_finalize(task_root, values)
             self.assertEqual(result.returncode, 0, result.stderr)
-            (task_root / "private-scoring/evidence").mkdir(exist_ok=True)
-            (task_root / "private-scoring/evidence/a.png").write_bytes(b"png")
-            (task_root / "private-scoring/evidence/actions.md").write_text("actions", encoding="utf-8")
+            self.materialize_evidence(task_root)
             write_json(root / "manifest.json", {
                 "batch_id": "batch-1",
                 "source_revision": "abc",
@@ -206,9 +344,7 @@ class BuildSubmissionTest(unittest.TestCase):
             task_root = root / "score/tasks/task-1"
             finalize_result = run_finalize(task_root)
             self.assertEqual(finalize_result.returncode, 0, finalize_result.stderr)
-            (task_root / "private-scoring/evidence").mkdir(exist_ok=True)
-            (task_root / "private-scoring/evidence/a.png").write_bytes(b"png")
-            (task_root / "private-scoring/evidence/actions.md").write_text("actions", encoding="utf-8")
+            self.materialize_evidence(task_root)
             (task_root / "workspace").mkdir()
             (task_root / "workspace/index.html").write_text("ok", encoding="utf-8")
             (task_root / "workspace/.env").write_text("SECRET=x", encoding="utf-8")

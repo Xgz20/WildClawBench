@@ -25,7 +25,30 @@ def load_module():
 report_module = load_module()
 
 
-def task(task_id: str, score: float, difficulty: str, *, execution="completed", evaluation="completed"):
+def task(
+    task_id: str,
+    score: float,
+    difficulty: str,
+    *,
+    execution="completed",
+    evaluation="completed",
+    aesthetic_score: float | None = None,
+):
+    aesthetic = {
+        "score": aesthetic_score,
+        "max_score": 100,
+        "included_in_total": False,
+        "status": "completed" if aesthetic_score is not None else "pending_definition",
+        "primary_dimensions": {
+            key: aesthetic_score for key in report_module.AESTHETIC_PRIMARY_LABELS
+        } if aesthetic_score is not None else {},
+        "secondary_dimensions": {
+            key: "MET" for key in report_module.AESTHETIC_SECONDARY_LABELS
+        } if aesthetic_score is not None else {},
+        "secondary_dimension_scores": {
+            key: 100 for key in report_module.AESTHETIC_SECONDARY_LABELS
+        } if aesthetic_score is not None else {},
+    }
     return {
         "identity": {
             "task_id": task_id,
@@ -38,7 +61,7 @@ def task(task_id: str, score: float, difficulty: str, *, execution="completed", 
         "tools": {"call_count": 4, "format_accuracy": 1.0},
         "metrics": {
             "total_score": score,
-            "aesthetic": {"score": None, "max_score": 100, "included_in_total": False, "status": "pending_definition"},
+            "aesthetic": aesthetic,
             "primary_dimensions": {
                 "content_structure": score,
                 "interaction_function": score,
@@ -49,8 +72,12 @@ def task(task_id: str, score: float, difficulty: str, *, execution="completed", 
     }
 
 
-def submission(model: str, harness: str, scores: list[float]):
-    tasks = [task("task-1", scores[0], "L1"), task("task-2", scores[1], "L2")]
+def submission(model: str, harness: str, scores: list[float], aesthetic_scores: list[float] | None = None):
+    aesthetic_scores = aesthetic_scores or [None, None]
+    tasks = [
+        task("task-1", scores[0], "L1", aesthetic_score=aesthetic_scores[0]),
+        task("task-2", scores[1], "L2", aesthetic_score=aesthetic_scores[1]),
+    ]
     return {
         "schema_version": report_module.SUBMISSION_SCHEMA,
         "batch_id": "batch-1",
@@ -119,7 +146,7 @@ class ReportWebE2ETest(unittest.TestCase):
         for heading in ("## 结论", "## 总览", "## 难度等级", "## 一级维度", "## 二级维度"):
             self.assertIn(heading, markdown)
         self.assertIn("评测异常数", markdown)
-        self.assertIn("页面美观度尚未提供正式指标定义", markdown)
+        self.assertIn("没有可用的页面美观度结果", markdown)
 
     def test_loads_and_validates_report_config(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -139,6 +166,39 @@ units:
             )
             config = report_module.load_report_config(path)
         self.assertEqual(config["units"][0]["reasoning_effort"], "high")
+
+    def test_aggregates_aesthetic_total_primary_and_secondary_metrics(self) -> None:
+        item = submission("m1", "codex", [100, 50], [80, 60])
+        item["tasks"][1]["metrics"]["aesthetic"]["secondary_dimensions"]["v-01"] = "PARTIAL"
+        item["tasks"][1]["metrics"]["aesthetic"]["secondary_dimensions"]["v-02"] = "NA"
+        data = report_module.build_report_data([item])
+        unit = data["units"][0]
+        self.assertEqual(unit["aesthetic_score"], 70.0)
+        self.assertEqual(unit["aesthetic_primary_dimensions"]["render_integrity"], 70.0)
+        self.assertEqual(unit["aesthetic_secondary_dimensions"]["v-01"]["met_count"], 1)
+        self.assertEqual(unit["aesthetic_secondary_dimensions"]["v-01"]["partial_count"], 1)
+        self.assertEqual(unit["aesthetic_secondary_dimensions"]["v-01"]["met_rate"], 50.0)
+        self.assertEqual(unit["aesthetic_secondary_dimensions"]["v-01"]["score_sum"], 150)
+        self.assertEqual(unit["aesthetic_secondary_dimensions"]["v-01"]["average_score"], 75.0)
+        self.assertEqual(unit["aesthetic_secondary_dimensions"]["v-01"]["score_rate"], 75.0)
+        self.assertEqual(unit["aesthetic_secondary_dimensions"]["v-02"]["na_count"], 1)
+        self.assertEqual(unit["aesthetic_secondary_dimensions"]["v-02"]["met_rate"], 100.0)
+        self.assertEqual(unit["aesthetic_secondary_dimensions"]["v-02"]["score_rate"], 100.0)
+        markdown = report_module.render_markdown(data)
+        self.assertIn("### 美观度一级维度", markdown)
+        self.assertIn("### 美观度二级维度", markdown)
+        self.assertIn("美观度总分", markdown)
+        self.assertIn("v-01 完整渲染 平均分", markdown)
+
+    def test_excludes_non_completed_aesthetic_payloads(self) -> None:
+        item = submission("m1", "codex", [100, 50], [80, 60])
+        item["tasks"][1]["metrics"]["aesthetic"]["status"] = "evaluation_error"
+        data = report_module.build_report_data([item])
+        unit = data["units"][0]
+        self.assertEqual(unit["aesthetic_score"], 80.0)
+        self.assertEqual(unit["aesthetic_sample_count"], 1)
+        self.assertEqual(unit["aesthetic_secondary_dimensions"]["v-01"]["met_count"], 1)
+        self.assertIsNone(data["detail_rows"][1]["aesthetic_score"])
 
     def test_rejects_report_config_unit_mismatch(self) -> None:
         with self.assertRaisesRegex(ValueError, "范围不一致"):

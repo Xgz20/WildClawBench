@@ -142,13 +142,18 @@ function buildWebsiteSheet(workbook, data) {
   const sheet = workbook.worksheets.add("站点评测指标");
   sheet.showGridLines = false;
   const summaryHeaders = [
-    "模型", "Harness", "推理强度", "总平均分", "得分率", "满分率", "页面美观度",
+    "模型", "Harness", "推理强度", "总平均分", "得分率", "满分率", "美观度总分",
     "用例数", "正常完成数", "执行错误数", "超时数", "评测异常数", "完成率",
     "总tokens", "总请求数", "总耗时(s)", "总成本(USD)", "工具调用数", "格式准确率",
     "平均耗时(s)", "耗时P50(s)", "耗时P90(s)", "平均成本(USD)",
     "平均总Token", "平均输入Token", "平均输出Token",
   ];
-  styleTitle(sheet, 1, summaryHeaders.length, `Web 站点端到端评测指标 · ${data.batch_id}`);
+  const primaryEntries = Object.entries(data.labels.primary);
+  const secondaryEntries = Object.entries(data.labels.secondary);
+  const aestheticPrimaryEntries = Object.entries(data.labels.aesthetic_primary ?? {});
+  const aestheticSecondaryEntries = Object.entries(data.labels.aesthetic_secondary ?? {});
+  const widestTable = Math.max(summaryHeaders.length, secondaryEntries.length + 2, aestheticSecondaryEntries.length + 2);
+  styleTitle(sheet, 1, widestTable, `Web 站点端到端评测指标 · ${data.batch_id}`);
   styleSection(sheet, 3, summaryHeaders.length, "结果与效率指标");
   const summaryRows = data.units.map(unit => [
     unit.model, unit.harness, unit.reasoning_effort, unit.total_average_score, unit.score_rate,
@@ -178,26 +183,49 @@ function buildWebsiteSheet(workbook, data) {
     addScoreScale(sheet, `M${summaryStart}:M${summaryEnd}`);
   }
 
-  const primaryEntries = Object.entries(data.labels.primary);
   let sectionRow = lastRow + 2;
   const primaryHeaders = ["模型@Harness", "总平均分", ...primaryEntries.map(([, label]) => label)];
-  styleSection(sheet, sectionRow, primaryHeaders.length, "一级维度汇总");
+  styleSection(sheet, sectionRow, primaryHeaders.length, "站点评测一级维度汇总");
   const primaryRows = data.units.map(unit => [
     unit.unit, unit.total_average_score,
     ...primaryEntries.map(([key]) => unit.primary_dimensions[key]),
   ]);
   lastRow = writeTable(sheet, sectionRow + 1, primaryHeaders, primaryRows, { scoreStartColumn: 2 });
 
-  const secondaryEntries = Object.entries(data.labels.secondary);
   sectionRow = lastRow + 2;
   const secondaryHeaders = ["模型@Harness", "总平均分", ...secondaryEntries.map(([, label]) => label)];
-  styleSection(sheet, sectionRow, secondaryHeaders.length, "二级维度汇总");
+  styleSection(sheet, sectionRow, secondaryHeaders.length, "站点评测二级维度汇总");
   const secondaryRows = data.units.map(unit => [
     unit.unit, unit.total_average_score,
     ...secondaryEntries.map(([key]) => unit.secondary_dimensions[key]),
   ]);
-  writeTable(sheet, sectionRow + 1, secondaryHeaders, secondaryRows, { scoreStartColumn: 2 });
+  lastRow = writeTable(sheet, sectionRow + 1, secondaryHeaders, secondaryRows, { scoreStartColumn: 2 });
+
+  sectionRow = lastRow + 2;
+  const aestheticPrimaryHeaders = ["模型@Harness", "美观度总分", ...aestheticPrimaryEntries.map(([, label]) => label)];
+  styleSection(sheet, sectionRow, aestheticPrimaryHeaders.length, "美观度一级维度汇总");
+  const aestheticPrimaryRows = data.units.map(unit => [
+    unit.unit, unit.aesthetic_score,
+    ...aestheticPrimaryEntries.map(([key]) => unit.aesthetic_primary_dimensions[key]),
+  ]);
+  lastRow = writeTable(sheet, sectionRow + 1, aestheticPrimaryHeaders, aestheticPrimaryRows, { scoreStartColumn: 2 });
+
+  sectionRow = lastRow + 2;
+  const aestheticSecondaryHeaders = [
+    "模型@Harness", "美观度总分", ...aestheticSecondaryEntries.map(([, label]) => `${label} 平均分`),
+  ];
+  styleSection(sheet, sectionRow, aestheticSecondaryHeaders.length, "美观度二级维度汇总（MET=100、PARTIAL=50、UNMET=0，NA 不计入分母）");
+  const aestheticSecondaryRows = data.units.map(unit => [
+    unit.unit, unit.aesthetic_score,
+    ...aestheticSecondaryEntries.map(([key]) => unit.aesthetic_secondary_dimensions[key]?.average_score),
+  ]);
+  writeTable(sheet, sectionRow + 1, aestheticSecondaryHeaders, aestheticSecondaryRows, { scoreStartColumn: 2 });
+  sheet.getRange(`A${sectionRow + 1}:${columnName(aestheticSecondaryHeaders.length)}${sectionRow + 1}`).format.rowHeight = 58;
   applyWidths(sheet, { A: 24, B: 18, C: 14, D: 13, E: 12, F: 12, G: 14, H: 11, I: 13, J: 13, K: 11, L: 13, M: 12, N: 14, O: 14, P: 14, Q: 16, R: 14, S: 14, T: 14, U: 14, V: 14, W: 16, X: 16, Y: 16, Z: 16 });
+  for (let column = 27; column <= widestTable; column += 1) {
+    const name = columnName(column);
+    sheet.getRange(`${name}:${name}`).format.columnWidth = 18;
+  }
   sheet.freezePanes.freezeRows(4);
   sheet.freezePanes.freezeColumns(2);
   return sheet;
@@ -228,7 +256,7 @@ function buildDetailSheet(workbook, data) {
   const secondaryEntries = Object.entries(data.labels.secondary);
   const headers = [
     "用例ID", "用例名称", "难度", "模型", "Harness", "推理强度", "模型@Harness", "执行状态", "评测状态",
-    "总分", "页面美观度", "耗时(s)", "总tokens", "请求数", "成本(USD)", "工具调用数", "格式准确率",
+    "总分", "美观度总分", "耗时(s)", "总tokens", "请求数", "成本(USD)", "工具调用数", "格式准确率",
     "输入tokens", "输出tokens",
     ...primaryEntries.map(([, label]) => label),
     ...secondaryEntries.map(([, label]) => label),
@@ -302,7 +330,7 @@ const errors = await workbook.inspect({
   summary: "final formula error scan",
 });
 const keyRanges = [
-  ["站点评测指标", `A1:${columnName(Math.max(26, 2 + Object.keys(data.labels.secondary).length))}${10 + 3 * data.units.length}`],
+  ["站点评测指标", `A1:${columnName(Math.max(26, 2 + Object.keys(data.labels.secondary).length, 2 + Object.keys(data.labels.aesthetic_secondary ?? {}).length))}${16 + 5 * data.units.length}`],
   ["难度对比", `A1:${columnName(2 + data.difficulty_values.length)}${3 + data.difficulty_rows.length}`],
   ["用例对比明细", `A1:${columnName(19 + Object.keys(data.labels.primary).length + Object.keys(data.labels.secondary).length)}${3 + data.detail_rows.length}`],
 ];

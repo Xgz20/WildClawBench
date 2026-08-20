@@ -46,6 +46,48 @@ SECONDARY_LABELS = {
     "component_style": "组件样式",
     "responsive_layout": "响应式布局",
 }
+AESTHETIC_PRIMARY_LABELS = {
+    "render_integrity": "渲染与完整性(15%)",
+    "layout_hierarchy": "页面布局与信息层级(25%)",
+    "color_typography": "视觉风格：配色与排版(20%)",
+    "component_state": "组件精细度与状态(15%)",
+    "responsive": "响应式表现(10%)",
+    "tone_fit": "调性契合(15%)",
+}
+AESTHETIC_SECONDARY_LABELS = {
+    "v-01": "v-01 完整渲染",
+    "v-02": "v-02 无占位内容",
+    "v-03": "v-03 文字与图片完整",
+    "v-04": "v-04 桌面无横向滚动",
+    "v-05": "v-05 统一栅格与边距",
+    "v-06": "v-06 留白有节奏",
+    "v-07": "v-07 首屏主次明确",
+    "v-08": "v-08 分组分隔清晰",
+    "v-09": "v-09 色板收敛",
+    "v-10": "v-10 字体层级",
+    "v-11": "v-11 正文对比度",
+    "v-12": "v-12 行高字距舒适",
+    "v-13": "v-13 组件样式一致",
+    "v-14": "v-14 非默认控件",
+    "v-15": "v-15 空状态设计",
+    "v-16": "v-16 组件状态可辨",
+    "v-17": "v-17 窄屏无溢出",
+    "v-18": "v-18 窄屏合理重排",
+    "v-19": "v-19 窄屏可读可点",
+    "v-20": "v-20 契合业务场景",
+    "v-21": "v-21 装饰克制",
+    "v-22": "v-22 中文排版",
+    "p-01": "p-01 首屏视觉焦点",
+    "p-02": "p-02 间距序列",
+    "p-03": "p-03 语义色阶",
+    "p-04": "p-04 字号序列与行长",
+    "p-05": "p-05 多类状态设计",
+    "p-06": "p-06 一致交互反馈",
+    "p-07": "p-07 窄屏布局重构",
+    "p-08": "p-08 窄屏优先级重排",
+    "p-09": "p-09 业务定制细节",
+    "p-10": "p-10 视觉语言一致",
+}
 
 
 def load_submission(path: Path) -> dict:
@@ -197,6 +239,43 @@ def dimension_average(tasks: list[dict], key: str, level: str) -> float | None:
     return average(values)
 
 
+def completed_aesthetic(task: dict) -> dict:
+    aesthetic = task.get("metrics", {}).get("aesthetic", {}) or {}
+    return aesthetic if aesthetic.get("status") == "completed" else {}
+
+
+def aesthetic_primary_average(tasks: list[dict], key: str) -> float | None:
+    values = [
+        numeric((completed_aesthetic(task).get("primary_dimensions") or {}).get(key))
+        for task in tasks
+    ]
+    return average([value for value in values if value is not None])
+
+
+def aesthetic_checklist_summary(tasks: list[dict], key: str) -> dict:
+    counts = {status: 0 for status in ("MET", "PARTIAL", "UNMET", "NA")}
+    for task in tasks:
+        status = str(
+            (completed_aesthetic(task).get("secondary_dimensions") or {}).get(key) or ""
+        )
+        if status in counts:
+            counts[status] += 1
+    applicable_count = counts["MET"] + counts["PARTIAL"] + counts["UNMET"]
+    score_sum = counts["MET"] * 100 + counts["PARTIAL"] * 50
+    average_score = round(score_sum / applicable_count, 2) if applicable_count else None
+    return {
+        "met_count": counts["MET"],
+        "partial_count": counts["PARTIAL"],
+        "unmet_count": counts["UNMET"],
+        "na_count": counts["NA"],
+        "applicable_count": applicable_count,
+        "met_rate": round(counts["MET"] / applicable_count * 100, 2) if applicable_count else None,
+        "score_sum": score_sum,
+        "average_score": average_score,
+        "score_rate": average_score,
+    }
+
+
 def format_accuracy(tasks: list[dict]) -> float | None:
     rows = []
     for task in tasks:
@@ -232,7 +311,7 @@ def unit_summary(submission: dict, primary_keys: list[str], secondary_keys: list
         for execution_status, evaluation_status in zip(execution_statuses, evaluation_statuses)
     )
     aesthetic_values = [
-        numeric(task.get("metrics", {}).get("aesthetic", {}).get("score"))
+        numeric(completed_aesthetic(task).get("score"))
         for task in tasks
     ]
     aesthetic_scored = [value for value in aesthetic_values if value is not None]
@@ -276,6 +355,12 @@ def unit_summary(submission: dict, primary_keys: list[str], secondary_keys: list
         "format_accuracy": format_accuracy(tasks),
         "primary_dimensions": {key: dimension_average(tasks, key, "primary_dimensions") for key in primary_keys},
         "secondary_dimensions": {key: dimension_average(tasks, key, "secondary_dimensions") for key in secondary_keys},
+        "aesthetic_primary_dimensions": {
+            key: aesthetic_primary_average(tasks, key) for key in AESTHETIC_PRIMARY_LABELS
+        },
+        "aesthetic_secondary_dimensions": {
+            key: aesthetic_checklist_summary(tasks, key) for key in AESTHETIC_SECONDARY_LABELS
+        },
     }
 
 
@@ -356,7 +441,7 @@ def build_report_data(submissions: list[dict], config: dict | None = None) -> di
                 "execution_status": task.get("execution", {}).get("status"),
                 "evaluation_status": task.get("evaluation", {}).get("status"),
                 "total_score": numeric(task.get("metrics", {}).get("total_score")) or 0.0,
-                "aesthetic_score": numeric(task.get("metrics", {}).get("aesthetic", {}).get("score")),
+                "aesthetic_score": numeric(completed_aesthetic(task).get("score")),
                 "duration_seconds": numeric(task.get("execution", {}).get("duration_seconds")),
                 "total_tokens": numeric(task.get("usage", {}).get("total_tokens")),
                 "input_tokens": numeric(task.get("usage", {}).get("input_tokens")),
@@ -367,6 +452,9 @@ def build_report_data(submissions: list[dict], config: dict | None = None) -> di
                 "format_accuracy": numeric(task.get("tools", {}).get("format_accuracy")),
                 "primary_dimensions": task.get("metrics", {}).get("primary_dimensions") or {},
                 "secondary_dimensions": task.get("metrics", {}).get("secondary_dimensions") or {},
+                "aesthetic_primary_dimensions": completed_aesthetic(task).get("primary_dimensions") or {},
+                "aesthetic_secondary_dimensions": completed_aesthetic(task).get("secondary_dimensions") or {},
+                "aesthetic_secondary_dimension_scores": completed_aesthetic(task).get("secondary_dimension_scores") or {},
             })
     return {
         "schema_version": "wildclawbench.web-e2e-report-data/v1",
@@ -376,6 +464,8 @@ def build_report_data(submissions: list[dict], config: dict | None = None) -> di
         "labels": {
             "primary": {key: PRIMARY_LABELS.get(key, key) for key in primary_keys},
             "secondary": {key: SECONDARY_LABELS.get(key, key) for key in secondary_keys},
+            "aesthetic_primary": AESTHETIC_PRIMARY_LABELS,
+            "aesthetic_secondary": AESTHETIC_SECONDARY_LABELS,
         },
         "difficulty_values": difficulty_values,
         "units": summaries,
@@ -428,7 +518,7 @@ def render_markdown(data: dict) -> str:
         f"- {leader['unit']} 的总平均分最高，为 {leader['total_average_score']:.2f} 分。",
         f"- 各单元完成率区间为 {min(item['completion_rate'] for item in units):.2f}%–{max(item['completion_rate'] for item in units):.2f}%。",
         f"- 共 {execution_not_recorded} 个用例结果未采集执行状态与资源数据；执行错误数和超时数只反映显式记录。" if execution_not_recorded else "- 全部用例均提供执行状态记录。",
-        "- 页面美观度尚未提供正式指标定义，本批次显示为 `-`，不参与总分。" if all_aesthetic_missing else "- 页面美观度按独立 100 分制展示，不参与总分、得分率或满分率。",
+        "- 本批次没有可用的页面美观度结果，可能来自旧版评分结果或美观度取证异常；显示为 `-`，不参与总分。" if all_aesthetic_missing else f"- 页面美观度按独立 100 分制展示，共取得 {sum(item['aesthetic_sample_count'] for item in units)} 个用例样本，不参与总分、得分率或满分率。",
         "",
         "## 总览",
         "",
@@ -436,11 +526,11 @@ def render_markdown(data: dict) -> str:
         "",
     ]
     overview_headers = [
-        "模型", "Harness", "推理强度", "总平均分", "用例数", "正常完成数", "执行错误数", "超时数", "评测异常数",
+        "模型", "Harness", "推理强度", "总平均分", "美观度总分", "用例数", "正常完成数", "执行错误数", "超时数", "评测异常数",
         "完成率", "总tokens", "总请求数", "总耗时(s)", "总成本(USD)", "工具调用数", "格式准确率",
     ]
     overview_rows = [[
-        item["model"], item["harness"], item["reasoning_effort"], item["total_average_score"], item["case_count"],
+        item["model"], item["harness"], item["reasoning_effort"], item["total_average_score"], item["aesthetic_score"], item["case_count"],
         item["completed_count"], item["execution_error_count"], item["timeout_count"],
         item["evaluation_error_count"], item["completion_rate"], item["total_tokens"],
         item["total_requests"], item["total_duration_seconds"], item["total_cost_usd"],
@@ -466,7 +556,7 @@ def render_markdown(data: dict) -> str:
     lines.extend(markdown_table(difficulty_headers, difficulty_table))
 
     primary_labels = data["labels"]["primary"]
-    lines.extend(["", "## 一级维度", ""])
+    lines.extend(["", "## 一级维度", "", "### 站点评测一级维度", ""])
     lines.append(spread_statement(
         units,
         lambda row, label: row["primary_dimensions"].get(label),
@@ -478,8 +568,21 @@ def render_markdown(data: dict) -> str:
         [[item["unit"], item["total_average_score"], *[item["primary_dimensions"].get(key) for key in primary_labels]] for item in units],
     ))
 
+    aesthetic_primary_labels = data["labels"]["aesthetic_primary"]
+    lines.extend(["", "### 美观度一级维度", ""])
+    lines.append(spread_statement(
+        units,
+        lambda row, label: row["aesthetic_primary_dimensions"].get(label),
+        aesthetic_primary_labels,
+    ))
+    lines.append("")
+    lines.extend(markdown_table(
+        ["模型@Harness", "美观度总分"] + list(aesthetic_primary_labels.values()),
+        [[item["unit"], item["aesthetic_score"], *[item["aesthetic_primary_dimensions"].get(key) for key in aesthetic_primary_labels]] for item in units],
+    ))
+
     secondary_labels = data["labels"]["secondary"]
-    lines.extend(["", "## 二级维度", ""])
+    lines.extend(["", "## 二级维度", "", "### 站点评测二级维度", ""])
     lines.append(spread_statement(
         units,
         lambda row, label: row["secondary_dimensions"].get(label),
@@ -489,6 +592,23 @@ def render_markdown(data: dict) -> str:
     lines.extend(markdown_table(
         ["模型@Harness", "总平均分"] + list(secondary_labels.values()),
         [[item["unit"], item["total_average_score"], *[item["secondary_dimensions"].get(key) for key in secondary_labels]] for item in units],
+    ))
+
+    aesthetic_secondary_labels = data["labels"]["aesthetic_secondary"]
+    lines.extend([
+        "",
+        "### 美观度二级维度",
+        "",
+        "表中展示每个检查点在适用用例中的百分制平均分：`(MET×100 + PARTIAL×50 + UNMET×0) / (MET + PARTIAL + UNMET)`；`NA` 不计入分母。得分合计和四种状态计数保留在报告数据 JSON 中。",
+        "",
+    ])
+    lines.extend(markdown_table(
+        ["模型@Harness", "美观度总分"] + [f"{label} 平均分" for label in aesthetic_secondary_labels.values()],
+        [[
+            item["unit"],
+            item["aesthetic_score"],
+            *[item["aesthetic_secondary_dimensions"].get(key, {}).get("average_score") for key in aesthetic_secondary_labels],
+        ] for item in units],
     ))
     lines.append("")
     return "\n".join(lines)

@@ -3,6 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+const AESTHETIC_RUBRIC_PATH = fileURLToPath(
+  new URL("../references/aesthetic-rubric.json", import.meta.url),
+);
+
 function parseArgs(argv) {
   const result = {};
   for (let index = 0; index < argv.length; index += 2) {
@@ -24,6 +28,8 @@ function loadJson(filename) {
   return value;
 }
 
+const AESTHETIC_RUBRIC = loadJson(AESTHETIC_RUBRIC_PATH);
+
 export function buildScoreInput(contract) {
   return {
     evaluation_status: "completed",
@@ -37,8 +43,25 @@ export function buildScoreInput(contract) {
       actions: [],
       evidence: [],
     })),
-    aesthetic_score: null,
-    aesthetic_reason: null,
+    aesthetic: {
+      status: "completed",
+      error: null,
+      screenshots: [],
+      dimensions: AESTHETIC_RUBRIC.dimensions.map((item) => ({
+        id: item.id,
+        score: null,
+        rationale: "",
+        evidence: [],
+      })),
+      checklist: AESTHETIC_RUBRIC.checklist.map((item) => ({
+        id: item.id,
+        status: null,
+        rationale: "",
+        evidence: [],
+      })),
+      strengths: [],
+      defects: [],
+    },
     scorer: { agent: "", model: "", session_id: "" },
   };
 }

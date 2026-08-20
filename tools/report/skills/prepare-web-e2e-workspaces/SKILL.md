@@ -52,6 +52,6 @@ python3 .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_worksp
 - 评分契约中 `/tmp_workspace` 改写为 `./workspace`，`/tmp_workspace_eval` 改写为 `./private-scoring/fixtures`。
 - 每个评分工作空间只含一个用例；评分 Agent 选择 `score/tasks/<task_id>/`，不能选择 Harness 根目录。
 
-页面美观度正式定义提供后可使用 `--aesthetic-rubric`；未提供时只保留 0–100 待定义字段，不实际赋分。
+页面美观度默认使用评分 Skill 内置的 `web-aesthetic-v1` 标准，并在 task contract 中记录版本、来源和 `joint_screenshot_set` 判定方式。`--aesthetic-rubric` 仅用于增加批次补充说明，不能替换内置的 6 个维度、权重和 32 个检查项。
 
 验收 `batch_manifest.json`、每个 Harness staging 根、每 Harness 两个 ZIP、批次级评分 Skill ZIP 及其 SHA-256。execution ZIP 不得含私有评分材料，scoring ZIP 不得含候选 Workspace或评分 Skill 副本。
