@@ -41,7 +41,7 @@ python3 .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_worksp
 3. 将 `__scoring.zip` 解压到 Harness 根目录，选择合并目录，不能替换整个 `score/`；
 4. 检查每题同时存在 `workspace/`、`private-scoring/` 和 `.web-e2e-scoring-ready`；评分 Skill 从客户端已安装位置加载，不在题目目录内。
 
-若 ZIP 工具不能合并，把 `__scoring.zip` 放在 Harness 根目录同级或根目录内，保持预置的 `score/` 为空，再双击根目录中的 `准备评分工作空间.command`（macOS）或 `准备评分工作空间.cmd`（Windows）。封装会调用标准库脚本 `tools/prepare_scoring_workspace.py`，从 `execution/tasks` 创建临时副本、安全解压评分包并在全部校验通过后填充 `score/`；本机没有 Python 时回退人工 ZIP 流程。
+若 ZIP 工具不能合并，把 `__scoring.zip` 放在 Harness 根目录同级或根目录内，保持预置的 `score/` 没有真实内容，再双击根目录中的 `准备评分工作空间.command`（macOS）或 `准备评分工作空间.cmd`（Windows）。封装会调用标准库脚本 `tools/prepare_scoring_workspace.py`，从 `execution/tasks` 创建临时副本、安全解压评分包并在全部校验通过后填充 `score/`；空目录以及 `.DS_Store`、`Thumbs.db` 等系统元数据会被安全清理，真实文件、评分结果和符号链接仍会触发拒绝覆盖。本机没有 Python 时回退人工 ZIP 流程。
 
 ## 隔离与路径
 

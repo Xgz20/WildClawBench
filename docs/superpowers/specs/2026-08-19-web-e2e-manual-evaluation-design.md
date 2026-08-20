@@ -114,7 +114,7 @@ Harness 全部执行完成后：
     └── .web-e2e-scoring-ready
 ```
 
-如果 ZIP 工具不能可靠合并，用户把 scoring ZIP 放在 Harness 根目录同级或根目录内，保持预置 `score/` 为空，再双击 macOS 或 Windows 封装文件。Python 兜底只依赖标准库：先在临时目录复制 `execution/tasks`，安全解压 scoring ZIP，拒绝路径穿越、符号链接和候选产物覆盖，使用根目录 `manifest.json` 与私有 `task_contract.json` 校验任务范围、身份、哈希和 marker，全部通过后再生成 `score/`。若本机没有 Python，则回退上述人工 ZIP 流程。
+如果 ZIP 工具不能可靠合并，用户把 scoring ZIP 放在 Harness 根目录同级或根目录内，保持预置 `score/` 没有真实内容，再双击 macOS 或 Windows 封装文件。Python 兜底只依赖标准库：先在临时目录复制 `execution/tasks`，安全解压 scoring ZIP，拒绝路径穿越、符号链接和候选产物覆盖，使用根目录 `manifest.json` 与私有 `task_contract.json` 校验任务范围、身份、哈希和 marker，全部通过后再生成 `score/`。已有 `score/` 仅含空目录或 `.DS_Store`、`.localized`、`Thumbs.db`、`desktop.ini`、`._*` 等系统元数据时允许安全清理并重新生成；存在任何真实文件、评分结果、符号链接或未知特殊文件时仍拒绝覆盖。若本机没有 Python，则回退上述人工 ZIP 流程。
 
 ## 路径改写与信息隔离
 

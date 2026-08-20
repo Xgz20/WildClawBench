@@ -26,7 +26,7 @@ except ImportError:
 
 
 SCHEMA_VERSION = "wildclawbench.web-e2e-batch/v3"
-SKILL_VERSION = "3.0.0"
+SKILL_VERSION = "3.0.1"
 KNOWN_HARNESSES = {
     "astronstudio": "AstronStudio",
     "codex": "Codex",
@@ -391,7 +391,7 @@ def render_checklist(batch_id: str, harness: str, tasks: list[dict], include_exe
         "1. 把整个 Harness 根目录压缩为 execution 备份并移到根目录外。",
         "2. 将 `execution/tasks/` 整个复制到根目录已有的 `score/` 下，得到 `score/tasks/`。",
         "3. 把对应 `__scoring.zip` 解压到 Harness 根目录，选择合并目录，不能替换整个 `score/`。",
-        "4. 若 ZIP 工具不能正确合并，请把 scoring ZIP 放在 Harness 根目录同级或根目录内，保持 `score/` 为空，再双击 `准备评分工作空间.command`（macOS）或 `准备评分工作空间.cmd`（Windows）；兜底要求本机有 Python。",
+        "4. 若 ZIP 工具不能正确合并，请把 scoring ZIP 放在 Harness 根目录同级或根目录内，保持 `score/` 没有真实内容，再双击 `准备评分工作空间.command`（macOS）或 `准备评分工作空间.cmd`（Windows）；空目录和常见系统元数据可自动清理，兜底要求本机有 Python。",
         "5. 在评分智能体中导入管理员另行提供的 `score-web-e2e` 离线 Skill ZIP，每台评分客户端只安装一次。",
         "6. 每题在评分智能体中选择 `score/tasks/<task_id>/`，新建会话并触发 `$score-web-e2e`。",
         "7. 全部评分后按评分 Skill 的回传准备流程关闭服务、清理可重建的 `node_modules`，生成根目录 `submission.json` 再压缩回传。",

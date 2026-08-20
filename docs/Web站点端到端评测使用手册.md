@@ -133,7 +133,7 @@ Windows 文件资源管理器示例：选中 `<harness-package-root>`，右键�
 └── <batch_id>__<harness>__scoring.zip # 放在 manifest.json 同级
 ```
 
-若 `score/` 已有评分结果，不要清空或覆盖；先停止操作并确认是否已经执行过评分准备。
+若 `score/` 已有评分结果，不要清空或覆盖；先停止操作并确认是否已经执行过评分准备。只有空目录以及 `.DS_Store`、`Thumbs.db` 等系统元数据可由兜底脚本自动清理。
 
 ### 3.1 macOS 推荐操作
 
@@ -164,7 +164,7 @@ PASS: 评分工作空间已生成：.../web-e2e-20260820-105921__codex/score
 
 ### 3.2 Windows 推荐操作
 
-将 scoring ZIP 放在 `manifest.json` 同级，并保持 `score/` 为空。可以直接双击：
+将 scoring ZIP 放在 `manifest.json` 同级，并保持 `score/` 没有真实内容。空目录以及 `.DS_Store`、`.localized`、`Thumbs.db`、`desktop.ini`、`._*` 等系统元数据不影响重复准备；可以直接双击：
 
 ```text
 准备评分工作空间.cmd

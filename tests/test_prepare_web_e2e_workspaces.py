@@ -207,6 +207,45 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             with self.assertRaisesRegex(FileExistsError, "拒绝覆盖"):
                 fallback_module.prepare_scoring_workspace(package_root, scoring_package)
 
+    def test_python_fallback_accepts_system_metadata_and_empty_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))
+            execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
+            scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
+            extracted = Path(tmp) / "tester"
+            with zipfile.ZipFile(execution_package) as archive:
+                archive.extractall(extracted)
+            package_root = extracted / "web-smoke__codex"
+            score_root = package_root / "score"
+            (score_root / ".DS_Store").write_bytes(b"finder metadata")
+            (score_root / "tasks/nested-empty").mkdir(parents=True)
+            (score_root / "tasks/._temporary").write_bytes(b"appledouble metadata")
+
+            prepared = fallback_module.prepare_scoring_workspace(package_root, scoring_package)
+
+            task_root = prepared / "tasks" / self.TASK_ID
+            self.assertTrue((task_root / "workspace/.gitkeep").is_file())
+            self.assertTrue((task_root / "private-scoring/task_contract.json").is_file())
+            self.assertFalse((prepared / ".DS_Store").exists())
+            self.assertFalse((prepared / "tasks/nested-empty").exists())
+            self.assertFalse((prepared / "tasks/._temporary").exists())
+
+    def test_python_fallback_rejects_existing_scoring_result(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))
+            execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
+            scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
+            extracted = Path(tmp) / "tester"
+            with zipfile.ZipFile(execution_package) as archive:
+                archive.extractall(extracted)
+            package_root = extracted / "web-smoke__codex"
+            result_path = package_root / "score/tasks" / self.TASK_ID / "private-scoring/task_score.json"
+            result_path.parent.mkdir(parents=True)
+            result_path.write_text("{}\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(FileExistsError, "拒绝覆盖"):
+                fallback_module.prepare_scoring_workspace(package_root, scoring_package)
+
     def test_python_fallback_rejects_traversal_and_candidate_overwrite(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

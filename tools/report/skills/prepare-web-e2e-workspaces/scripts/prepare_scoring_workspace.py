@@ -23,6 +23,12 @@ FORBIDDEN_OVERLAY_NAMES = {
     "workspace",
 }
 ALLOWED_TASK_OVERLAY_NAMES = {"private-scoring", ".web-e2e-scoring-ready"}
+IGNORABLE_SCORE_FILE_NAMES = {
+    ".DS_Store",
+    ".localized",
+    "Thumbs.db",
+    "desktop.ini",
+}
 
 
 def load_json(path: Path) -> dict:
@@ -133,6 +139,41 @@ def validate_prepared_score(score_root: Path, manifest: dict) -> None:
             raise ValueError(f"评分就绪标记身份不一致: {task_id}")
 
 
+def meaningful_score_entries(score_root: Path) -> list[Path]:
+    """Return entries that make an existing score directory unsafe to replace."""
+    if score_root.is_symlink() or not score_root.is_dir():
+        return [score_root]
+
+    meaningful: list[Path] = []
+    pending = [score_root]
+    while pending:
+        directory = pending.pop()
+        for entry in directory.iterdir():
+            if entry.is_symlink():
+                meaningful.append(entry)
+            elif entry.is_dir():
+                pending.append(entry)
+            elif entry.is_file() and (
+                entry.name in IGNORABLE_SCORE_FILE_NAMES or entry.name.startswith("._")
+            ):
+                continue
+            else:
+                meaningful.append(entry)
+    return meaningful
+
+
+def ensure_score_root_replaceable(score_root: Path) -> None:
+    if not score_root.exists() and not score_root.is_symlink():
+        return
+    meaningful = meaningful_score_entries(score_root)
+    if meaningful:
+        first = meaningful[0]
+        raise FileExistsError(
+            f"目标已包含内容，拒绝覆盖: {score_root}（例如 {first}）。"
+            "请先确认其中没有评分结果，再将已有内容移走。"
+        )
+
+
 def prepare_scoring_workspace(package_root: Path, archive_path: Path) -> Path:
     manifest = load_json(package_root / "manifest.json")
     execution_tasks = package_root / "execution" / "tasks"
@@ -142,10 +183,7 @@ def prepare_scoring_workspace(package_root: Path, archive_path: Path) -> Path:
     task_ids = [str(item.get("task_id") or "") for item in manifest.get("tasks") or []]
     if not task_ids or any(not task_id for task_id in task_ids):
         raise ValueError("manifest.tasks 为空或 task_id 非法")
-    if score_root.exists() and (not score_root.is_dir() or any(score_root.iterdir())):
-        raise FileExistsError(
-            f"目标已包含内容，拒绝覆盖: {score_root}。请先确认其中没有评分结果，再将已有内容移走。"
-        )
+    ensure_score_root_replaceable(score_root)
 
     with tempfile.TemporaryDirectory(prefix=".web-e2e-score-", dir=package_root) as temporary:
         staging = Path(temporary)
@@ -153,8 +191,9 @@ def prepare_scoring_workspace(package_root: Path, archive_path: Path) -> Path:
         shutil.copytree(execution_tasks, prepared_score / "tasks", symlinks=True)
         extract_overlay(archive_path, staging)
         validate_prepared_score(prepared_score, manifest)
-        if score_root.exists():
-            score_root.rmdir()
+        ensure_score_root_replaceable(score_root)
+        if score_root.exists() or score_root.is_symlink():
+            shutil.rmtree(score_root)
         prepared_score.replace(score_root)
     return score_root
 
