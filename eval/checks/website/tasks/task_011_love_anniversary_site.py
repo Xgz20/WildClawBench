@@ -17,16 +17,15 @@ except ImportError:
 
 
 RUNTIME_KEYS = [
-    "criterion_01_basic_content", "criterion_02_personalization_settings", "criterion_03_data_visualization",
-    "criterion_04_page_navigation", "criterion_05_data_visualization", "criterion_06_lists_and_tables",
-    "criterion_07_content_creation_and_editing", "criterion_08_data_visualization", "criterion_09_file_upload_and_download",
-    "criterion_10_file_upload_and_download", "criterion_11_cross_section_coordination", "criterion_12_modal_and_overlay",
-    "criterion_13_information_organization", "criterion_14_content_creation_and_editing", "criterion_15_modal_and_overlay",
-    "criterion_16_operation_feedback", "criterion_17_content_creation_and_editing", "criterion_18_lists_and_tables",
-    "criterion_19_form_filling_and_validation", "criterion_20_state_persistence", "criterion_23_personalization_settings",
-    "criterion_24_file_upload_and_download", "criterion_25_data_visualization",
+    "c01_information_organization", "c02_file_upload_and_download", "c03_information_organization",
+    "c04_page_navigation", "c05_rule_settlement", "c06_lists_tables", "c07_content_editing",
+    "c08_data_visualization", "c09_file_upload_and_download", "c10_file_upload_and_download",
+    "c11_cross_region_linkage", "c12_detail_display", "c13_information_organization",
+    "c14_content_editing", "c15_detail_display", "c16_operation_feedback",
+    "c17_content_editing", "c18_lists_tables", "c19_form_validation", "c20_state_persistence",
+    "c23_cross_region_linkage", "c24_file_upload_and_download", "c25_data_visualization",
 ]
-VISUAL_KEYS = ["criterion_21_visual_style", "criterion_22_responsive_layout"]
+VISUAL_KEYS = ["c21_visual_style", "c22_responsive_layout"]
 
 EVAL = "/tmp_workspace_eval"
 
@@ -224,7 +223,7 @@ async def run(page, screenshot_dir):
             and await page.locator('input[type="file"]').count() >= 2
             and not await contains_texts(page, ["首页", "纪念日", "旅行足迹", "心愿", "日常"])
         )
-    await recorder.check("criterion_01_basic_content", guide)
+    await recorder.check("c01_information_organization", guide)
 
     async def profile():
         if not await _setup(page):
@@ -234,7 +233,7 @@ async def run(page, screenshot_dir):
             await contains_texts(page, ["小满", "阿序"])
             and await imgs.count() >= 2
         )
-    await recorder.check("criterion_02_personalization_settings", profile)
+    await recorder.check("c02_file_upload_and_download", profile)
 
     async def days():
         if not await _setup(page):
@@ -243,7 +242,7 @@ async def run(page, screenshot_dir):
         return await contains_texts(page, ["已恋爱", "小满", "阿序"]) and bool(
             re.search(r"已恋爱[^0-9]{0,12}[1-9][0-9]*[^0-9]{0,4}天", text)
         )
-    await recorder.check("criterion_03_data_visualization", days)
+    await recorder.check("c03_information_organization", days)
 
     async def tabs():
         if not await _setup(page):
@@ -252,7 +251,7 @@ async def run(page, screenshot_dir):
             if not await _tab(page, label):
                 return False
         return True
-    await recorder.check("criterion_04_page_navigation", tabs)
+    await recorder.check("c04_page_navigation", tabs)
 
     async def calendar_records():
         if not await _setup(page):
@@ -270,7 +269,7 @@ async def run(page, screenshot_dir):
             page,
             ["4", "照片", "纪念日", "心愿", "日常", "小满", "阿序", "看一场日出", "今天也要好好生活"],
         )
-    await recorder.check("criterion_05_data_visualization", calendar_records)
+    await recorder.check("c05_rule_settlement", calendar_records)
 
     async def anniversary_list():
         if not await _setup(page):
@@ -279,14 +278,14 @@ async def run(page, screenshot_dir):
         return await contains_texts(page, ["过去的纪念日", "日期", "不重复"]) and await contains_any_texts(
             page, ["已过去", "还有", "即将"]
         )
-    await recorder.check("criterion_06_lists_and_tables", anniversary_list)
+    await recorder.check("c06_lists_tables", anniversary_list)
 
     async def weekly_anniversary():
         if not await _setup(page):
             return False
         ok = await _add_anniversary(page, "第一次旅行", "每周重复")
         return ok and await contains_texts(page, ["第一次旅行", "每周", "天"])
-    await recorder.check("criterion_07_content_creation_and_editing", weekly_anniversary)
+    await recorder.check("c07_content_editing", weekly_anniversary)
 
     async def map_structure():
         if not await _setup(page) or not await _tab(page, "旅行足迹"):
@@ -300,13 +299,13 @@ async def run(page, screenshot_dir):
             and paths >= 30
             and named_provinces >= 30
         )
-    await recorder.check("criterion_08_data_visualization", map_structure)
+    await recorder.check("c08_data_visualization", map_structure)
 
     async def zhejiang_upload():
         if not await _setup(page) or not await _travel_upload(page, "travel-hangzhou-west-lake.jpg"):
             return False
         return await contains_texts(page, ["浙江", "杭州", "小满", "1"])
-    await recorder.check("criterion_09_file_upload_and_download", zhejiang_upload)
+    await recorder.check("c09_file_upload_and_download", zhejiang_upload)
 
     async def shanghai_uploads():
         if not await _setup(page) or not await _tab(page, "旅行足迹"):
@@ -323,7 +322,7 @@ async def run(page, screenshot_dir):
         return await contains_texts(page, ["上海", "阿序"]) and await page.locator(
             "img[src^='blob:'], img[src^='data:']"
         ).count() >= 2
-    await recorder.check("criterion_10_file_upload_and_download", shanghai_uploads)
+    await recorder.check("c10_file_upload_and_download", shanghai_uploads)
 
     async def map_filter():
         if not await _setup(page):
@@ -341,7 +340,7 @@ async def run(page, screenshot_dir):
         except Exception:
             pass
         return filtered and await contains_texts(page, ["浙江", "杭州"])
-    await recorder.check("criterion_11_cross_section_coordination", map_filter)
+    await recorder.check("c11_cross_region_linkage", map_filter)
 
     async def photo_modal():
         if not await _setup(page) or not await _travel_upload(page, "travel-hangzhou-west-lake.jpg"):
@@ -353,14 +352,14 @@ async def run(page, screenshot_dir):
         return await contains_texts(page, ["杭州", "浙江", "小满"]) and await contains_any_texts(
             page, ["关闭", "×"]
         )
-    await recorder.check("criterion_12_modal_and_overlay", photo_modal)
+    await recorder.check("c12_detail_display", photo_modal)
 
     async def wishes_status():
         if not await _setup(page):
             return False
         await _add_wish(page, "已实现愿望")
         return await contains_texts(page, ["心愿", "待实现", "已实现"])
-    await recorder.check("criterion_13_information_organization", wishes_status)
+    await recorder.check("c13_information_organization", wishes_status)
 
     async def create_wish():
         if not await _setup(page):
@@ -370,7 +369,7 @@ async def run(page, screenshot_dir):
         return await _add_wish(page, "去看极光", "冬天一起出发") and await contains_texts(
             page, ["去看极光", "阿序", "待实现"]
         )
-    await recorder.check("criterion_14_content_creation_and_editing", create_wish)
+    await recorder.check("c14_content_editing", create_wish)
 
     async def wish_detail():
         if not await _setup(page):
@@ -385,7 +384,7 @@ async def run(page, screenshot_dir):
         return await contains_texts(page, ["去看极光", "冬天一起出发", "阿序", "待实现"]) and await contains_any_texts(
             page, ["关闭", "返回"]
         )
-    await recorder.check("criterion_15_modal_and_overlay", wish_detail)
+    await recorder.check("c15_detail_display", wish_detail)
 
     async def complete_wish():
         if not await _setup(page):
@@ -398,7 +397,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return await contains_texts(page, ["已实现"]) and not await contains_texts(page, ["待实现 1"])
-    await recorder.check("criterion_16_operation_feedback", complete_wish)
+    await recorder.check("c16_operation_feedback", complete_wish)
 
     async def daily_publish():
         if not await _setup(page):
@@ -410,7 +409,7 @@ async def run(page, screenshot_dir):
             and await contains_texts(page, ["今天一起做了晚饭", "小满"])
             and await contains_any_texts(page, ["刚刚", "分钟前", "发布时间", "发布成功"])
         )
-    await recorder.check("criterion_17_content_creation_and_editing", daily_publish)
+    await recorder.check("c17_content_editing", daily_publish)
 
     async def daily_timeline():
         if not await _setup(page):
@@ -424,7 +423,7 @@ async def run(page, screenshot_dir):
             await contains_texts(page, ["小满的日常", "阿序的日常", "小满", "阿序"])
             and body.find("阿序的日常") < body.find("小满的日常")
         )
-    await recorder.check("criterion_18_lists_and_tables", daily_timeline)
+    await recorder.check("c18_lists_tables", daily_timeline)
 
     async def validations():
         if not await _setup(page):
@@ -451,7 +450,7 @@ async def run(page, screenshot_dir):
             pass
         daily_error = await contains_any_texts(page, ["正文和照片不能都为空", "请输入内容或选择照片", "至少填写正文或选择照片"])
         return travel_error and wish_error and daily_error
-    await recorder.check("criterion_19_form_filling_and_validation", validations)
+    await recorder.check("c19_form_validation", validations)
 
     async def persistence():
         if not await _setup(page):
@@ -464,7 +463,7 @@ async def run(page, screenshot_dir):
             and await _tab(page, "纪念日")
             and await contains_any_texts(page, ["持久化纪念日"])
         )
-    await recorder.check("criterion_20_state_persistence", persistence)
+    await recorder.check("c20_state_persistence", persistence)
 
     async def person_switch():
         if not await _setup(page):
@@ -472,7 +471,7 @@ async def run(page, screenshot_dir):
         first = await _person(page, "小满")
         second = await _person(page, "阿序")
         return first and second and await contains_any_texts(page, ["小满", "阿序"])
-    await recorder.check("criterion_23_personalization_settings", person_switch)
+    await recorder.check("c23_cross_region_linkage", person_switch)
 
     async def nine_photos():
         if not await _setup(page) or not await _tab(page, "日常"):
@@ -500,7 +499,7 @@ async def run(page, screenshot_dir):
             page, ["最多9张", "最多上传9张", "不能超过9张", "最多选择9张"]
         )
         return nine_visible and too_many_rejected
-    await recorder.check("criterion_24_file_upload_and_download", nine_photos)
+    await recorder.check("c24_file_upload_and_download", nine_photos)
 
     async def month_alignment():
         if not await _setup(page):
@@ -512,7 +511,7 @@ async def run(page, screenshot_dir):
             and await contains_any_texts(page, ["年度", "贡献日历"])
             and await page.locator("[data-date], [role='gridcell'], .calendar-cell").count() >= 365
         )
-    await recorder.check("criterion_25_data_visualization", month_alignment)
+    await recorder.check("c25_data_visualization", month_alignment)
     return recorder.results
 
 

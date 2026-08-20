@@ -15,18 +15,15 @@ except ImportError:
 
 
 RUNTIME_KEYS = [
-    "criterion_01_basic_content", "criterion_02_lists_and_tables",
-    "criterion_03_content_creation_and_editing", "criterion_04_form_filling_and_validation",
-    "criterion_05_form_filling_and_validation", "criterion_06_content_switching",
-    "criterion_07_content_creation_and_editing", "criterion_08_form_filling_and_validation",
-    "criterion_09_information_organization", "criterion_10_content_creation_and_editing",
-    "criterion_11_content_creation_and_editing", "criterion_12_content_creation_and_editing",
-    "criterion_13_content_switching", "criterion_14_content_creation_and_editing",
-    "criterion_15_state_persistence", "criterion_16_content_creation_and_editing",
-    "criterion_17_content_switching", "criterion_18_file_upload_and_download",
-    "criterion_19_state_persistence",
+    "c01_information_organization", "c02_information_organization",
+    "c03_content_editing", "c04_form_validation", "c05_form_validation",
+    "c06_content_switching", "c07_content_editing", "c08_form_validation",
+    "c09_information_organization", "c10_content_editing", "c11_content_editing",
+    "c12_content_editing", "c13_content_switching", "c14_content_editing",
+    "c15_lists_tables", "c16_content_editing", "c17_content_switching",
+    "c18_file_upload_and_download", "c19_state_persistence",
 ]
-VISUAL_KEYS = ["criterion_20_page_layout"]
+VISUAL_KEYS = ["c20_page_layout", "c21_responsive_layout"]
 
 
 async def _select_value(page, value: str) -> bool:
@@ -112,19 +109,19 @@ async def run(page, screenshot_dir):
             and await contains_any_texts(page, ["旅行", "行程"])
             and await contains_any_texts(page, ["进入规划", "创建行程", "创建新行程"])
         )
-    await recorder.check("criterion_01_basic_content", basic_content)
+    await recorder.check("c01_information_organization", basic_content)
 
     async def history_empty():
         await reset_page(page)
         return await contains_texts(page, ["历史行程"]) and await contains_any_texts(
             page, ["还没有保存的行程", "还没有保存过行程", "暂无保存的行程", "暂无行程"]
         )
-    await recorder.check("criterion_02_lists_and_tables", history_empty)
+    await recorder.check("c02_information_organization", history_empty)
 
     async def enter_planner():
         ok = await _create_trip(page)
         return ok and await contains_texts(page, ["成都市", "2026-10-03", "2026-10-05", "保存", "导出"])
-    await recorder.check("criterion_03_content_creation_and_editing", enter_planner)
+    await recorder.check("c03_content_editing", enter_planner)
 
     async def missing_city():
         await reset_page(page)
@@ -133,7 +130,7 @@ async def run(page, screenshot_dir):
             await selects.first.select_option(index=0)
         await click_named_any(page, ["进入规划", "创建行程", "创建新行程"])
         return await contains_texts(page, ["选择目的地城市"]) and not await page.get_by_text("行程规划", exact=True).count()
-    await recorder.check("criterion_04_form_filling_and_validation", missing_city)
+    await recorder.check("c04_form_validation", missing_city)
 
     async def invalid_date():
         await reset_page(page)
@@ -147,14 +144,14 @@ async def run(page, screenshot_dir):
         await _fill_date_inputs(page, "2026-10-05", "2026-10-03")
         await click_named_any(page, ["进入规划", "创建行程", "创建新行程"])
         return city_ok and await contains_texts(page, ["结束日期不能早于开始日期"])
-    await recorder.check("criterion_05_form_filling_and_validation", invalid_date)
+    await recorder.check("c05_form_validation", invalid_date)
 
     async def day_switch():
         ok = await _create_trip(page)
         dates = await contains_texts(page, ["2026-10-03", "2026-10-04", "2026-10-05"])
         empty = await contains_texts(page, ["这一天还没有目的地"])
         return ok and dates and empty
-    await recorder.check("criterion_06_content_switching", day_switch)
+    await recorder.check("c06_content_switching", day_switch)
 
     async def add_card():
         if not await _create_trip(page):
@@ -164,14 +161,14 @@ async def run(page, screenshot_dir):
             await contains_texts(page, ["1", "宽窄巷子", "景点", "09:30", "上午拍照"])
             and not await contains_any_texts(page, ["这一天还没有目的地", "暂无目的地"])
         )
-    await recorder.check("criterion_07_content_creation_and_editing", add_card)
+    await recorder.check("c07_content_editing", add_card)
 
     async def empty_destination():
         if not await _create_trip(page):
             return False
         await click_named(page, "添加到当天")
         return await contains_texts(page, ["请输入目的地名称"])
-    await recorder.check("criterion_08_form_filling_and_validation", empty_destination)
+    await recorder.check("c08_form_validation", empty_destination)
 
     async def destination_types():
         if not await _create_trip(page):
@@ -180,7 +177,7 @@ async def run(page, screenshot_dir):
             if not await _select_value(page, value):
                 return False
         return True
-    await recorder.check("criterion_09_information_organization", destination_types)
+    await recorder.check("c09_information_organization", destination_types)
 
     async def reorder():
         if not await _create_trip(page):
@@ -194,7 +191,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return await contains_texts(page, ["酒店入住", "宽窄巷子"])
-    await recorder.check("criterion_10_content_creation_and_editing", reorder)
+    await recorder.check("c10_content_editing", reorder)
 
     async def edit_destination():
         if not await _create_trip(page):
@@ -213,7 +210,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return await contains_texts(page, ["人民公园", "吃饭", "12:00", "午饭后散步"])
-    await recorder.check("criterion_11_content_creation_and_editing", edit_destination)
+    await recorder.check("c11_content_editing", edit_destination)
 
     async def delete_destination():
         if not await _create_trip(page):
@@ -232,7 +229,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return await page.get_by_text("宽窄巷子", exact=True).count() == 0 and await contains_texts(page, ["酒店入住"])
-    await recorder.check("criterion_12_content_creation_and_editing", delete_destination)
+    await recorder.check("c12_content_editing", delete_destination)
 
     async def date_isolation():
         if not await _create_trip(page):
@@ -248,7 +245,7 @@ async def run(page, screenshot_dir):
         if not await _select_day(page, 1, "2026-10-03"):
             return False
         return second_day_only and await contains_texts(page, ["第一天安排"]) and not await page.get_by_text("春熙路", exact=True).count()
-    await recorder.check("criterion_13_content_switching", date_isolation)
+    await recorder.check("c13_content_switching", date_isolation)
 
     async def save_feedback():
         if not await _create_trip(page):
@@ -259,7 +256,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return await contains_texts(page, ["成都亲子慢游"]) and await contains_texts(page, ["保存成功", "已保存"])
-    await recorder.check("criterion_14_content_creation_and_editing", save_feedback)
+    await recorder.check("c14_content_editing", save_feedback)
 
     async def history_record():
         if not await _create_trip(page):
@@ -271,7 +268,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return await contains_texts(page, ["成都亲子慢游", "成都市", "2026-10-03", "2026-10-05"])
-    await recorder.check("criterion_15_state_persistence", history_record)
+    await recorder.check("c15_lists_tables", history_record)
 
     async def update_existing():
         if not await _create_trip(page):
@@ -287,7 +284,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return await page.get_by_text("成都亲子慢游", exact=True).count() == 1
-    await recorder.check("criterion_16_content_creation_and_editing", update_existing)
+    await recorder.check("c16_content_editing", update_existing)
 
     async def extend_dates():
         if not await _create_trip(page):
@@ -301,7 +298,7 @@ async def run(page, screenshot_dir):
         await dates.nth(1).fill("2026-10-04")
         await page.keyboard.press("Tab")
         return added and await contains_texts(page, ["2026-10-03", "2026-10-04"]) and not await page.get_by_text("2026-10-05", exact=True).count()
-    await recorder.check("criterion_17_content_switching", extend_dates)
+    await recorder.check("c17_content_switching", extend_dates)
 
     async def export_preview():
         if not await _create_trip(page):
@@ -312,7 +309,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return await contains_texts(page, ["行程图", "成都市", "下载"])
-    await recorder.check("criterion_18_file_upload_and_download", export_preview)
+    await recorder.check("c18_file_upload_and_download", export_preview)
 
     async def persistence():
         if not await _create_trip(page):
@@ -326,7 +323,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return await contains_texts(page, ["成都亲子慢游", "宽窄巷子"])
-    await recorder.check("criterion_19_state_persistence", persistence)
+    await recorder.check("c19_state_persistence", persistence)
     return recorder.results
 
 

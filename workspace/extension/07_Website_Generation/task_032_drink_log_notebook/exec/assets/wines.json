@@ -1,0 +1,84 @@
+{
+  "wines": [
+    {
+      "id": "wine-01",
+      "type": "啤酒",
+      "brand": "鹭岛",
+      "name": "鹭岛小麦白啤",
+      "abvPercent": 5,
+      "spec": "500ml/瓶"
+    },
+    {
+      "id": "wine-02",
+      "type": "啤酒",
+      "brand": "青野",
+      "name": "青野经典拉格",
+      "abvPercent": 4,
+      "spec": "330ml/罐"
+    },
+    {
+      "id": "wine-03",
+      "type": "啤酒",
+      "brand": "黑塔",
+      "name": "黑塔燕麦世涛",
+      "abvPercent": 6,
+      "spec": "330ml/瓶"
+    },
+    {
+      "id": "wine-04",
+      "type": "白酒",
+      "brand": "汾溪",
+      "name": "汾溪清香二十年",
+      "abvPercent": 52,
+      "spec": "500ml/瓶"
+    },
+    {
+      "id": "wine-05",
+      "type": "白酒",
+      "brand": "云窖",
+      "name": "云窖头曲",
+      "abvPercent": 45,
+      "spec": "250ml/瓶"
+    },
+    {
+      "id": "wine-06",
+      "type": "红酒",
+      "brand": "黎山",
+      "name": "黎山赤霞珠2019",
+      "abvPercent": 13,
+      "spec": "750ml/瓶"
+    },
+    {
+      "id": "wine-07",
+      "type": "红酒",
+      "brand": "南坡",
+      "name": "南坡梅洛干红",
+      "abvPercent": 12,
+      "spec": "750ml/瓶"
+    },
+    {
+      "id": "wine-08",
+      "type": "清酒",
+      "brand": "松原",
+      "name": "松原纯米吟酿",
+      "abvPercent": 15,
+      "spec": "720ml/瓶"
+    },
+    {
+      "id": "wine-09",
+      "type": "威士忌",
+      "brand": "北岭",
+      "name": "北岭十二年单一麦芽",
+      "abvPercent": 40,
+      "spec": "700ml/瓶"
+    },
+    {
+      "id": "wine-10",
+      "type": "米酒",
+      "brand": "稻乡",
+      "name": "稻乡桂花米酒",
+      "abvPercent": 8,
+      "spec": "500ml/瓶"
+    }
+  ]
+}

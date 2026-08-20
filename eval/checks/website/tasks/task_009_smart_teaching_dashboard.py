@@ -15,19 +15,15 @@ except ImportError:
 
 
 RUNTIME_KEYS = [
-    "criterion_01_information_organization", "criterion_02_data_visualization",
-    "criterion_03_data_visualization", "criterion_04_data_visualization",
-    "criterion_05_lists_and_tables", "criterion_06_lists_and_tables",
-    "criterion_07_lists_and_tables", "criterion_08_filtering_and_sorting",
-    "criterion_09_cross_section_coordination", "criterion_10_cross_section_coordination",
-    "criterion_11_cross_section_coordination", "criterion_12_cross_section_coordination",
-    "criterion_13_filtering_and_sorting", "criterion_14_content_switching",
-    "criterion_15_cross_section_coordination", "criterion_16_page_navigation",
-    "criterion_17_content_switching", "criterion_18_filtering_and_sorting",
-    "criterion_19_filtering_and_sorting", "criterion_20_filtering_and_sorting",
-    "criterion_23_page_navigation", "criterion_24_page_navigation",
+    "c01_information_organization", "c02_detail_display", "c03_data_visualization",
+    "c04_data_visualization", "c05_lists_tables", "c06_lists_tables", "c07_lists_tables",
+    "c08_search_filtering", "c09_cross_region_linkage", "c10_cross_region_linkage",
+    "c11_cross_region_linkage", "c12_cross_region_linkage", "c13_cross_region_linkage",
+    "c14_search_filtering", "c15_cross_region_linkage", "c16_cross_region_linkage",
+    "c17_content_switching", "c18_search_filtering", "c19_search_filtering",
+    "c20_search_filtering", "c23_page_navigation", "c24_page_navigation",
 ]
-VISUAL_KEYS = ["criterion_21_page_layout", "criterion_22_visual_style"]
+VISUAL_KEYS = ["c21_page_layout", "c22_visual_style", "c25_responsive_layout"]
 
 
 async def _select_value(page, value: str) -> bool:
@@ -142,25 +138,25 @@ async def run(page, screenshot_dir):
             ["区", "区县"], ["整体概览"], ["产品活跃趋势"], ["区域分布"],
             ["学校明细", "学校使用明细"], ["预警"],
         ])
-    await recorder.check("criterion_01_information_organization", basic)
+    await recorder.check("c01_information_organization", basic)
 
     async def overview_latest():
         await reset_page(page)
         await _select_value(page, "2025-2026学年第二学期")
         return await contains_texts(page, ["32", "28", "220", "87.5%", "80", "140"])
-    await recorder.check("criterion_02_data_visualization", overview_latest)
+    await recorder.check("c02_detail_display", overview_latest)
 
     async def trend():
         await reset_page(page)
         return await contains_texts(
             page, ["产品活跃趋势", "总体", "教师", "学生"]
         ) and await _contains_chart(page)
-    await recorder.check("criterion_03_data_visualization", trend)
+    await recorder.check("c03_data_visualization", trend)
 
     async def regional_distribution():
         await reset_page(page)
         return await contains_texts(page, ["区域分布", "授权学校", "活跃学校", "活跃用户", "应用率"])
-    await recorder.check("criterion_04_data_visualization", regional_distribution)
+    await recorder.check("c04_data_visualization", regional_distribution)
 
     async def school_table():
         await reset_page(page)
@@ -169,38 +165,38 @@ async def run(page, screenshot_dir):
             ["省", "省份"], ["市", "城市"], ["区", "区县"], ["授权"],
             ["活跃用户"], ["应用状态", "授权状态", "学期有效"],
         ])
-    await recorder.check("criterion_05_lists_and_tables", school_table)
+    await recorder.check("c05_lists_tables", school_table)
 
     async def expiry_table():
         await reset_page(page)
         await _open_alert(page, "产品到期预警")
         return await contains_texts(page, ["到期预警", "授权时间", "到期时间", "剩余", "逾期"])
-    await recorder.check("criterion_06_lists_and_tables", expiry_table)
+    await recorder.check("c06_lists_tables", expiry_table)
 
     async def unused_table():
         await reset_page(page)
         await _open_alert(page, "产品未应用预警")
         return await contains_texts(page, ["未应用", "最近一次活跃", "授权"])
-    await recorder.check("criterion_07_lists_and_tables", unused_table)
+    await recorder.check("c07_lists_tables", unused_table)
 
     async def semester_switch():
         await reset_page(page)
         await _select_value(page, "2024-2025学年第一学期")
         return await contains_texts(page, ["252", "96", "156", "100%", "2024-2025学年第一学期"])
-    await recorder.check("criterion_08_filtering_and_sorting", semester_switch)
+    await recorder.check("c08_search_filtering", semester_switch)
 
     async def province_city_options():
         await reset_page(page)
         await _select_value(page, "浙江省")
         return await contains_texts(page, ["杭州市", "宁波市", "8", "6", "47", "75%"])
-    await recorder.check("criterion_09_cross_section_coordination", province_city_options)
+    await recorder.check("c09_cross_region_linkage", province_city_options)
 
     async def city_district_options():
         await reset_page(page)
         await _select_value(page, "浙江省")
         await _select_value(page, "杭州市")
         return await contains_texts(page, ["西湖区", "余杭区", "4", "3", "23"])
-    await recorder.check("criterion_10_cross_section_coordination", city_district_options)
+    await recorder.check("c10_cross_region_linkage", city_district_options)
 
     async def district_filter():
         await reset_page(page)
@@ -208,7 +204,7 @@ async def run(page, screenshot_dir):
         await _select_value(page, "杭州市")
         await _select_value(page, "西湖区")
         return await contains_texts(page, ["2", "1", "8", "文澜实验学校", "翠苑中学"])
-    await recorder.check("criterion_11_cross_section_coordination", district_filter)
+    await recorder.check("c11_cross_region_linkage", district_filter)
 
     async def province_change_resets():
         await reset_page(page)
@@ -222,7 +218,7 @@ async def run(page, screenshot_dir):
             and "苏州市" in text
             and not _contains_any_terms(text, ["杭州市", "西湖区", "余杭区"])
         )
-    await recorder.check("criterion_12_cross_section_coordination", province_change_resets)
+    await recorder.check("c12_cross_region_linkage", province_change_resets)
 
     async def all_sections_share_filter():
         await reset_page(page)
@@ -233,7 +229,7 @@ async def run(page, screenshot_dir):
             token in text
             for token in ["整体概览", "产品活跃趋势", "区域分布", "学校明细", "未应用"]
         ) and "广东省" not in text
-    await recorder.check("criterion_13_filtering_and_sorting", all_sections_share_filter)
+    await recorder.check("c13_cross_region_linkage", all_sections_share_filter)
 
     async def trend_switches():
         await reset_page(page)
@@ -241,7 +237,7 @@ async def run(page, screenshot_dir):
         await _select_value(page, "2024-2025学年第一学期")
         after = await page.locator("body").inner_text()
         return before != after and "2024-2025学年第一学期" in after
-    await recorder.check("criterion_14_content_switching", trend_switches)
+    await recorder.check("c14_search_filtering", trend_switches)
 
     async def region_levels():
         await reset_page(page)
@@ -251,7 +247,7 @@ async def run(page, screenshot_dir):
         await _select_value(page, "杭州市")
         city = await contains_texts(page, ["西湖区", "余杭区"])
         return national and provincial and city
-    await recorder.check("criterion_15_cross_section_coordination", region_levels)
+    await recorder.check("c15_cross_region_linkage", region_levels)
 
     async def drill_down():
         await reset_page(page)
@@ -265,7 +261,7 @@ async def run(page, screenshot_dir):
             return False
         await visible_regions[-1].click()
         return await contains_texts(page, ["浙江省", "杭州市", "宁波市"])
-    await recorder.check("criterion_16_page_navigation", drill_down)
+    await recorder.check("c16_cross_region_linkage", drill_down)
 
     async def alert_switch():
         await reset_page(page)
@@ -274,7 +270,7 @@ async def run(page, screenshot_dir):
         await _open_alert(page, "产品未应用预警")
         unused = await contains_texts(page, ["未应用"])
         return expiry and unused
-    await recorder.check("criterion_17_content_switching", alert_switch)
+    await recorder.check("c17_content_switching", alert_switch)
 
     async def unused_latest():
         await reset_page(page)
@@ -282,7 +278,7 @@ async def run(page, screenshot_dir):
         return await contains_texts(
             page, ["4", "文澜实验学校", "鄞州新城学校", "金陵汇文学校", "海珠实验学校"]
         )
-    await recorder.check("criterion_18_filtering_and_sorting", unused_latest)
+    await recorder.check("c18_search_filtering", unused_latest)
 
     async def unused_first_semester_empty():
         await reset_page(page)
@@ -291,7 +287,7 @@ async def run(page, screenshot_dir):
         return await contains_texts(page, ["0"]) and await contains_any_texts(
             page, ["没有未应用学校", "暂无未应用学校", "无未应用学校"]
         )
-    await recorder.check("criterion_19_filtering_and_sorting", unused_first_semester_empty)
+    await recorder.check("c19_search_filtering", unused_first_semester_empty)
 
     async def guangdong_expiry_empty():
         await reset_page(page)
@@ -302,7 +298,7 @@ async def run(page, screenshot_dir):
             and await contains_any_texts(page, ["没有到期", "暂无到期", "无到期"])
             and not await contains_texts(page, ["文澜实验学校"])
         )
-    await recorder.check("criterion_20_filtering_and_sorting", guangdong_expiry_empty)
+    await recorder.check("c20_search_filtering", guangdong_expiry_empty)
 
     async def pagination_school():
         await reset_page(page)
@@ -312,7 +308,7 @@ async def run(page, screenshot_dir):
             expected_total=32,
             expected_after_count=(1, 10),
         )
-    await recorder.check("criterion_23_page_navigation", pagination_school)
+    await recorder.check("c23_page_navigation", pagination_school)
 
     async def pagination_alert():
         await reset_page(page)
@@ -324,7 +320,7 @@ async def run(page, screenshot_dir):
             expected_after_count=6,
             prefer_last_heading=True,
         )
-    await recorder.check("criterion_24_page_navigation", pagination_alert)
+    await recorder.check("c24_page_navigation", pagination_alert)
     return recorder.results
 
 

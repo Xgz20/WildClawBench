@@ -1,0 +1,453 @@
+{
+  "title": "二次元萌王大赛 参赛名单",
+  "characters": [
+    {
+      "id": "c01",
+      "seed": 1,
+      "name": "千早爱音",
+      "series": "元祖！BanG Dream Chan",
+      "avatar": "avatars/c01.jpg"
+    },
+    {
+      "id": "c02",
+      "seed": 2,
+      "name": "阿米娅",
+      "series": "明日方舟：焰烬曙明",
+      "avatar": "avatars/c02.jpg"
+    },
+    {
+      "id": "c03",
+      "seed": 3,
+      "name": "芙莉莲",
+      "series": "葬送的芙莉莲 第二季",
+      "avatar": "avatars/c03.jpg"
+    },
+    {
+      "id": "c04",
+      "seed": 4,
+      "name": "藤丸立香",
+      "series": "藤丸立香想不明白 第3季",
+      "avatar": "avatars/c04.jpg"
+    },
+    {
+      "id": "c05",
+      "seed": 5,
+      "name": "樱岛麻衣",
+      "series": "青春猪头少年不会梦到圣诞服女郎",
+      "avatar": "avatars/c05.jpg"
+    },
+    {
+      "id": "c06",
+      "seed": 6,
+      "name": "星野瑠美衣",
+      "series": "【我推的孩子】第三季",
+      "avatar": "avatars/c06.jpg"
+    },
+    {
+      "id": "c07",
+      "seed": 7,
+      "name": "小栗帽",
+      "series": "赛马娘 芦毛灰姑娘 第二部分",
+      "avatar": "avatars/c07.jpg"
+    },
+    {
+      "id": "c08",
+      "seed": 8,
+      "name": "菲伦",
+      "series": "葬送的芙莉莲 第二季",
+      "avatar": "avatars/c08.jpg"
+    },
+    {
+      "id": "c09",
+      "seed": 9,
+      "name": "蝴蝶忍",
+      "series": "剧场版 鬼灭之刃 无限城篇 第一章 猗窝座再袭",
+      "avatar": "avatars/c09.jpg"
+    },
+    {
+      "id": "c10",
+      "seed": 10,
+      "name": "晓美焰",
+      "series": "魔法少女小圆 起始的物语&永远的物语",
+      "avatar": "avatars/c10.jpg"
+    },
+    {
+      "id": "c11",
+      "seed": 11,
+      "name": "辉夜",
+      "series": "超时空辉夜姬！",
+      "avatar": "avatars/c11.jpg"
+    },
+    {
+      "id": "c12",
+      "seed": 12,
+      "name": "梅莉·波特鲁特",
+      "series": "Re：从零开始的异世界生活 第四季 丧失篇",
+      "avatar": "avatars/c12.jpg"
+    },
+    {
+      "id": "c13",
+      "seed": 13,
+      "name": "星野爱",
+      "series": "【我推的孩子】第三季",
+      "avatar": "avatars/c13.jpg"
+    },
+    {
+      "id": "c14",
+      "seed": 14,
+      "name": "伊什塔尔",
+      "series": "命运／奇异赝品",
+      "avatar": "avatars/c14.jpg"
+    },
+    {
+      "id": "c15",
+      "seed": 15,
+      "name": "毛利兰",
+      "series": "名侦探柯南",
+      "avatar": "avatars/c15.jpg"
+    },
+    {
+      "id": "c16",
+      "seed": 16,
+      "name": "山田",
+      "series": "在超市后门吸烟的两人 先行版",
+      "avatar": "avatars/c16.jpg"
+    },
+    {
+      "id": "c17",
+      "seed": 17,
+      "name": "初音未来",
+      "series": "呜莓猫猫",
+      "avatar": "avatars/c17.jpg"
+    },
+    {
+      "id": "c18",
+      "seed": 18,
+      "name": "丰川祥子",
+      "series": "元祖！BanG Dream Chan",
+      "avatar": "avatars/c18.jpg"
+    },
+    {
+      "id": "c19",
+      "seed": 19,
+      "name": "月见八千代",
+      "series": "超时空辉夜姬！",
+      "avatar": "avatars/c19.jpg"
+    },
+    {
+      "id": "c20",
+      "seed": 20,
+      "name": "拉姆",
+      "series": "Re：从零开始的异世界生活 第四季 丧失篇",
+      "avatar": "avatars/c20.jpg"
+    },
+    {
+      "id": "c21",
+      "seed": 21,
+      "name": "蕾塞",
+      "series": "剧场版 链锯人 蕾塞篇",
+      "avatar": "avatars/c21.jpg"
+    },
+    {
+      "id": "c22",
+      "seed": 22,
+      "name": "猫猫",
+      "series": "药屋少女的呢喃 第二季",
+      "avatar": "avatars/c22.jpg"
+    },
+    {
+      "id": "c23",
+      "seed": 23,
+      "name": "利姆露·坦派斯特",
+      "series": "关于我转生变成史莱姆这档事 第四季",
+      "avatar": "avatars/c23.jpg"
+    },
+    {
+      "id": "c24",
+      "seed": 24,
+      "name": "祐天寺若麦",
+      "series": "元祖！BanG Dream Chan",
+      "avatar": "avatars/c24.jpg"
+    },
+    {
+      "id": "c25",
+      "seed": 25,
+      "name": "鹿目圆",
+      "series": "魔法少女小圆 起始的物语&永远的物语",
+      "avatar": "avatars/c25.jpg"
+    },
+    {
+      "id": "c26",
+      "seed": 26,
+      "name": "摩根",
+      "series": "藤丸立香想不明白 第3季",
+      "avatar": "avatars/c26.jpg"
+    },
+    {
+      "id": "c27",
+      "seed": 27,
+      "name": "若叶睦",
+      "series": "元祖！BanG Dream Chan",
+      "avatar": "avatars/c27.jpg"
+    },
+    {
+      "id": "c28",
+      "seed": 28,
+      "name": "阿尼亚·福杰",
+      "series": "间谍过家家 第三季",
+      "avatar": "avatars/c28.jpg"
+    },
+    {
+      "id": "c29",
+      "seed": 29,
+      "name": "约尔·福杰",
+      "series": "间谍过家家 第三季",
+      "avatar": "avatars/c29.jpg"
+    },
+    {
+      "id": "c30",
+      "seed": 30,
+      "name": "伊井野弥子",
+      "series": "辉夜大小姐想让我告白 通往大人的阶梯",
+      "avatar": "avatars/c30.jpg"
+    },
+    {
+      "id": "c31",
+      "seed": 31,
+      "name": "美树沙耶香",
+      "series": "魔法少女小圆 起始的物语&永远的物语",
+      "avatar": "avatars/c31.jpg"
+    },
+    {
+      "id": "c32",
+      "seed": 32,
+      "name": "巴麻美",
+      "series": "魔法少女小圆 起始的物语&永远的物语",
+      "avatar": "avatars/c32.jpg"
+    },
+    {
+      "id": "c33",
+      "seed": 33,
+      "name": "尼禄·克劳狄乌斯",
+      "series": "藤丸立香想不明白 第3季",
+      "avatar": "avatars/c33.jpg"
+    },
+    {
+      "id": "c34",
+      "seed": 34,
+      "name": "灰原哀",
+      "series": "名侦探柯南",
+      "avatar": "avatars/c34.jpg"
+    },
+    {
+      "id": "c35",
+      "seed": 35,
+      "name": "碧翠丝",
+      "series": "Re：从零开始的异世界生活 第四季 丧失篇",
+      "avatar": "avatars/c35.jpg"
+    },
+    {
+      "id": "c36",
+      "seed": 36,
+      "name": "凯尔希",
+      "series": "明日方舟：焰烬曙明",
+      "avatar": "avatars/c36.jpg"
+    },
+    {
+      "id": "c37",
+      "seed": 37,
+      "name": "要乐奈",
+      "series": "元祖！BanG Dream Chan",
+      "avatar": "avatars/c37.jpg"
+    },
+    {
+      "id": "c38",
+      "seed": 38,
+      "name": "夏乌拉",
+      "series": "Re：从零开始的异世界生活 第四季 丧失篇",
+      "avatar": "avatars/c38.jpg"
+    },
+    {
+      "id": "c39",
+      "seed": 39,
+      "name": "藤原千花",
+      "series": "辉夜大小姐想让我告白 通往大人的阶梯",
+      "avatar": "avatars/c39.jpg"
+    },
+    {
+      "id": "c40",
+      "seed": 40,
+      "name": "灶门祢豆子",
+      "series": "剧场版 鬼灭之刃 无限城篇 第一章 猗窝座再袭",
+      "avatar": "avatars/c40.jpg"
+    },
+    {
+      "id": "c41",
+      "seed": 41,
+      "name": "三角初华",
+      "series": "元祖！BanG Dream Chan",
+      "avatar": "avatars/c41.jpg"
+    },
+    {
+      "id": "c42",
+      "seed": 42,
+      "name": "四宫辉夜",
+      "series": "辉夜大小姐想让我告白 通往大人的阶梯",
+      "avatar": "avatars/c42.jpg"
+    },
+    {
+      "id": "c43",
+      "seed": 43,
+      "name": "神乐",
+      "series": "银魂 －吉原大炎上－",
+      "avatar": "avatars/c43.jpg"
+    },
+    {
+      "id": "c44",
+      "seed": 44,
+      "name": "高松灯",
+      "series": "元祖！BanG Dream Chan",
+      "avatar": "avatars/c44.jpg"
+    },
+    {
+      "id": "c45",
+      "seed": 45,
+      "name": "狼嵜光",
+      "series": "金牌得主 第二季",
+      "avatar": "avatars/c45.jpg"
+    },
+    {
+      "id": "c46",
+      "seed": 46,
+      "name": "玛奇玛",
+      "series": "剧场版 链锯人 蕾塞篇",
+      "avatar": "avatars/c46.jpg"
+    },
+    {
+      "id": "c47",
+      "seed": 47,
+      "name": "和栗薰子",
+      "series": "薰香花朵凛然绽放",
+      "avatar": "avatars/c47.jpg"
+    },
+    {
+      "id": "c48",
+      "seed": 48,
+      "name": "糖糖",
+      "series": "主播女孩重度依赖",
+      "avatar": "avatars/c48.jpg"
+    },
+    {
+      "id": "c49",
+      "seed": 49,
+      "name": "爱蜜莉雅",
+      "series": "Re：从零开始的异世界生活 第四季 丧失篇",
+      "avatar": "avatars/c49.jpg"
+    },
+    {
+      "id": "c50",
+      "seed": 50,
+      "name": "恋雪",
+      "series": "剧场版 鬼灭之刃 无限城篇 第一章 猗窝座再袭",
+      "avatar": "avatars/c50.jpg"
+    },
+    {
+      "id": "c51",
+      "seed": 51,
+      "name": "酒寄彩叶",
+      "series": "超时空辉夜姬！",
+      "avatar": "avatars/c51.jpg"
+    },
+    {
+      "id": "c52",
+      "seed": 52,
+      "name": "明日香·兰格雷",
+      "series": "“EVANGELION:30+;”特别放映",
+      "avatar": "avatars/c52.jpg"
+    },
+    {
+      "id": "c53",
+      "seed": 53,
+      "name": "佩特拉·雷蒂",
+      "series": "Re：从零开始的异世界生活 第四季 丧失篇",
+      "avatar": "avatars/c53.jpg"
+    },
+    {
+      "id": "c54",
+      "seed": 54,
+      "name": "黄前久美子",
+      "series": "最终乐章 吹响吧！上低音号 前篇",
+      "avatar": "avatars/c54.jpg"
+    },
+    {
+      "id": "c55",
+      "seed": 55,
+      "name": "椎名立希",
+      "series": "元祖！BanG Dream Chan",
+      "avatar": "avatars/c55.jpg"
+    },
+    {
+      "id": "c56",
+      "seed": 56,
+      "name": "优木雪菜",
+      "series": "Love Live! 虹咲学园校园偶像同好会 完结篇 第2章",
+      "avatar": "avatars/c56.jpg"
+    },
+    {
+      "id": "c57",
+      "seed": 57,
+      "name": "恩奇都",
+      "series": "命运／奇异赝品",
+      "avatar": "avatars/c57.jpg"
+    },
+    {
+      "id": "c58",
+      "seed": 58,
+      "name": "长崎爽世",
+      "series": "元祖！BanG Dream Chan",
+      "avatar": "avatars/c58.jpg"
+    },
+    {
+      "id": "c59",
+      "seed": 59,
+      "name": "有马加奈",
+      "series": "【我推的孩子】第三季",
+      "avatar": "avatars/c59.jpg"
+    },
+    {
+      "id": "c60",
+      "seed": 60,
+      "name": "结束祈",
+      "series": "金牌得主 第二季",
+      "avatar": "avatars/c60.jpg"
+    },
+    {
+      "id": "c61",
+      "seed": 61,
+      "name": "森亚露露卡",
+      "series": "名侦探光之美少女！",
+      "avatar": "avatars/c61.jpg"
+    },
+    {
+      "id": "c62",
+      "seed": 62,
+      "name": "佐仓杏子",
+      "series": "魔法少女小圆 起始的物语&永远的物语",
+      "avatar": "avatars/c62.jpg"
+    },
+    {
+      "id": "c63",
+      "seed": 63,
+      "name": "甘织玲奈子",
+      "series": "我们不可能成为恋人！绝对不行。",
+      "avatar": "avatars/c63.jpg"
+    },
+    {
+      "id": "c64",
+      "seed": 64,
+      "name": "户山香澄",
+      "series": "元祖！BanG Dream Chan",
+      "avatar": "avatars/c64.jpg"
+    }
+  ]
+}

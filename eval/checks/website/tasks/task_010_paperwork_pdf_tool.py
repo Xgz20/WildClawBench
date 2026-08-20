@@ -13,14 +13,13 @@ except ImportError:
 
 
 RUNTIME_KEYS = [
-    "criterion_01_basic_content", "criterion_02_information_organization", "criterion_03_content_switching",
-    "criterion_04_file_upload_and_download", "criterion_05_form_filling_and_validation",
-    "criterion_06_file_upload_and_download", "criterion_07_content_creation_and_editing",
-    "criterion_08_content_creation_and_editing", "criterion_09_form_filling_and_validation",
-    "criterion_10_content_switching", "criterion_11_content_switching", "criterion_12_content_creation_and_editing",
-    "criterion_13_form_filling_and_validation", "criterion_14_file_upload_and_download", "criterion_15_page_navigation",
+    "c01_information_organization", "c02_information_organization", "c03_content_switching",
+    "c04_file_upload_and_download", "c05_form_validation", "c06_file_upload_and_download",
+    "c07_content_editing", "c08_content_editing", "c09_form_validation",
+    "c10_content_switching", "c11_content_switching", "c12_content_editing",
+    "c13_form_validation", "c14_file_upload_and_download", "c15_page_navigation",
 ]
-VISUAL_KEYS = ["criterion_16_page_layout", "criterion_17_responsive_layout"]
+VISUAL_KEYS = ["c16_page_layout", "c17_responsive_layout"]
 
 EVAL = "/tmp_workspace_eval"
 
@@ -68,13 +67,13 @@ async def run(page, screenshot_dir):
     async def basic():
         await reset_page(page)
         return await contains_texts(page, ["文页工坊", "把文件整理成一份好用的 PDF", "开始使用"])
-    await recorder.check("criterion_01_basic_content", basic)
+    await recorder.check("c01_information_organization", basic)
 
     async def functions():
         await reset_page(page)
         text = await page.locator("body").inner_text()
         return all(label in text for label in ["图片转 PDF", "图片合并 PDF", "PDF 合并", "PDF 拆分", "PDF 转图片", "PDF 签名"])
-    await recorder.check("criterion_02_information_organization", functions)
+    await recorder.check("c02_information_organization", functions)
 
     async def switch_function():
         await reset_page(page)
@@ -85,14 +84,14 @@ async def run(page, screenshot_dir):
         ok = await _choose_function(page, "PDF 签名") and ok
         third = await contains_texts(page, ["签名", "颜色", "大小"])
         return ok and first and second and third
-    await recorder.check("criterion_03_content_switching", switch_function)
+    await recorder.check("c03_content_switching", switch_function)
 
     async def upload_image():
         await reset_page(page)
         if not await _choose_function(page, "图片转 PDF") or not await _set_files(page, ["sample-image-a.png"]):
             return False
         return await contains_texts(page, ["sample-image-a.png", "PNG", "大小", "移除"])
-    await recorder.check("criterion_04_file_upload_and_download", upload_image)
+    await recorder.check("c04_file_upload_and_download", upload_image)
 
     async def file_validation():
         await reset_page(page)
@@ -115,7 +114,7 @@ async def run(page, screenshot_dir):
             ):
                 return False
         return True
-    await recorder.check("criterion_05_form_filling_and_validation", file_validation)
+    await recorder.check("c05_form_validation", file_validation)
 
     async def convert_pdf():
         await reset_page(page)
@@ -125,7 +124,7 @@ async def run(page, screenshot_dir):
             return False
         text = await _result_text(page)
         return "PDF" in text and "下载" in text and any(token in text for token in ("完成", "页", "结果"))
-    await recorder.check("criterion_06_file_upload_and_download", convert_pdf)
+    await recorder.check("c06_file_upload_and_download", convert_pdf)
 
     async def merge_images():
         await reset_page(page)
@@ -136,7 +135,7 @@ async def run(page, screenshot_dir):
             return False
         text = await _result_text(page)
         return "sample-image-a.png" in before and "sample-image-b.png" in before and "2" in text and "PDF" in text
-    await recorder.check("criterion_07_content_creation_and_editing", merge_images)
+    await recorder.check("c07_content_editing", merge_images)
 
     async def merge_pdfs():
         await reset_page(page)
@@ -146,7 +145,7 @@ async def run(page, screenshot_dir):
             return False
         text = await _result_text(page)
         return "6" in text and "PDF" in text and await contains_texts(page, ["输出名称", "下载"])
-    await recorder.check("criterion_08_content_creation_and_editing", merge_pdfs)
+    await recorder.check("c08_content_editing", merge_pdfs)
 
     async def invalid_ranges():
         await reset_page(page)
@@ -167,7 +166,7 @@ async def run(page, screenshot_dir):
             if not await contains_any_texts(page, messages):
                 return False
         return True
-    await recorder.check("criterion_09_form_filling_and_validation", invalid_ranges)
+    await recorder.check("c09_form_validation", invalid_ranges)
 
     async def split_modes():
         await reset_page(page)
@@ -176,7 +175,7 @@ async def run(page, screenshot_dir):
         await _start_process(page)
         first = await _result_text(page)
         return ("4" in first and "结果" in first) or await contains_texts(page, ["每页一个文件", "页码范围"])
-    await recorder.check("criterion_10_content_switching", split_modes)
+    await recorder.check("c10_content_switching", split_modes)
 
     async def pdf_to_image():
         await reset_page(page)
@@ -192,7 +191,7 @@ async def run(page, screenshot_dir):
             if fmt not in text and fmt.lower() not in text.lower():
                 return False
         return True
-    await recorder.check("criterion_11_content_switching", pdf_to_image)
+    await recorder.check("c11_content_switching", pdf_to_image)
 
     async def signature_preview():
         await reset_page(page)
@@ -208,7 +207,7 @@ async def run(page, screenshot_dir):
         except Exception:
             return False
         return await contains_texts(page, ["小满", "预览"])
-    await recorder.check("criterion_12_content_creation_and_editing", signature_preview)
+    await recorder.check("c12_content_editing", signature_preview)
 
     async def empty_signature():
         await reset_page(page)
@@ -216,7 +215,7 @@ async def run(page, screenshot_dir):
             return False
         await _start_process(page)
         return await contains_any_texts(page, ["签名不能为空", "请输入签名"])
-    await recorder.check("criterion_13_form_filling_and_validation", empty_signature)
+    await recorder.check("c13_form_validation", empty_signature)
 
     async def download_feedback():
         await reset_page(page)
@@ -232,7 +231,7 @@ async def run(page, screenshot_dir):
         return await contains_texts(page, ["我的文档"]) and await contains_any_texts(
             page, ["已下载", "下载成功", "开始下载"]
         )
-    await recorder.check("criterion_14_file_upload_and_download", download_feedback)
+    await recorder.check("c14_file_upload_and_download", download_feedback)
 
     async def restart():
         await reset_page(page)
@@ -246,7 +245,7 @@ async def run(page, screenshot_dir):
             except Exception:
                 continue
         return False
-    await recorder.check("criterion_15_page_navigation", restart)
+    await recorder.check("c15_page_navigation", restart)
     return recorder.results
 
 
