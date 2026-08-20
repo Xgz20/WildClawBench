@@ -18,6 +18,17 @@ python3 .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_worksp
 
 默认不生成执行状态和资源记录。确实需要记录 Token、耗时或执行错误时，显式增加 `--include-execution-record`；只有此时每题才生成 `execution_record.json`，并可配合 `--model` 或 `--model-map` 预填原始模型 ID。
 
+只需重新发布最新版评分 Skill 时，不必重复准备用例和 Harness 工作空间：
+
+```bash
+python3 .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_workspaces.py \
+  --score-skill-only \
+  --batch-id web-e2e-20260820-105921 \
+  --output-dir /absolute/output/path
+```
+
+此模式不需要 `--task-id` 或 `--harness`，直接生成 `<output-dir>/<batch_id>__score-web-e2e-skill.zip`，并输出文件数和 SHA-256；不会创建批次子目录、execution/scoring 包或 manifest。目标 ZIP 已存在时拒绝覆盖。
+
 ## 分包契约
 
 每个 Harness 生成两个 ZIP，整个批次另生成一份评分 Skill ZIP：

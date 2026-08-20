@@ -190,6 +190,32 @@ units:
         self.assertIn("美观度总分", markdown)
         self.assertIn("v-01 完整渲染 平均分", markdown)
 
+    def test_translates_new_secondary_dimensions_and_exposes_primary_groups(self) -> None:
+        item = submission("m1", "codex", [100, 50], [80, 60])
+        for task_item in item["tasks"]:
+            task_item["metrics"]["secondary_dimensions"] = {
+                "realtime_auto_progress": 100,
+                "rule_settlement": 50,
+            }
+        data = report_module.build_report_data([item])
+        self.assertEqual(data["labels"]["secondary"]["realtime_auto_progress"], "实时自动推进")
+        self.assertEqual(data["labels"]["secondary"]["rule_settlement"], "规则结算")
+        self.assertEqual(
+            data["labels"]["secondary_primary"]["realtime_auto_progress"],
+            "interaction_function",
+        )
+        self.assertEqual(
+            data["labels"]["aesthetic_secondary_primary"]["p-01"],
+            "layout_hierarchy",
+        )
+        aesthetic_keys = list(data["labels"]["aesthetic_secondary"])
+        self.assertLess(aesthetic_keys.index("p-01"), aesthetic_keys.index("v-09"))
+        markdown = report_module.render_markdown(data)
+        self.assertIn("实时自动推进", markdown)
+        self.assertIn("规则结算", markdown)
+        self.assertNotIn("realtime_auto_progress", markdown)
+        self.assertNotIn("rule_settlement", markdown)
+
     def test_excludes_non_completed_aesthetic_payloads(self) -> None:
         item = submission("m1", "codex", [100, 50], [80, 60])
         item["tasks"][1]["metrics"]["aesthetic"]["status"] = "evaluation_error"

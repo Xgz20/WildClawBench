@@ -163,6 +163,35 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 "packages/web-smoke__score-web-e2e-skill.zip",
             )
 
+    def test_score_skill_only_builds_direct_archive_without_batch_workspace(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            args = prepare_module.build_parser().parse_args([
+                "--score-skill-only",
+                "--batch-id", "web-skill-only",
+                "--output-dir", tmp,
+                "--repo-root", str(REPO_ROOT),
+            ])
+            result = prepare_module.package_score_skill(args)
+            package_path = Path(tmp).resolve() / "web-skill-only__score-web-e2e-skill.zip"
+            self.assertEqual(result["path"], package_path)
+            self.assertEqual(result["file_count"], 8)
+            self.assertEqual(result["sha256"], prepare_module.sha256_file(package_path))
+            self.assertFalse((Path(tmp) / "web-skill-only").exists())
+            self.assertFalse(any(Path(tmp).glob("**/batch_manifest.json")))
+            with zipfile.ZipFile(package_path) as archive:
+                self.assertEqual(len([name for name in archive.namelist() if not name.endswith("/")]), 8)
+
+    def test_score_skill_only_rejects_existing_archive(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            args = argparse.Namespace(
+                repo_root=str(REPO_ROOT),
+                output_dir=tmp,
+                batch_id="web-skill-only",
+            )
+            prepare_module.package_score_skill(args)
+            with self.assertRaisesRegex(FileExistsError, "拒绝覆盖"):
+                prepare_module.package_score_skill(args)
+
     def test_manual_copy_then_scoring_zip_merge_materializes_score_tasks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))

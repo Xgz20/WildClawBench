@@ -26,7 +26,7 @@ except ImportError:
 
 
 SCHEMA_VERSION = "wildclawbench.web-e2e-batch/v3"
-SKILL_VERSION = "3.2.0"
+SKILL_VERSION = "3.3.0"
 AESTHETIC_RUBRIC_ID = "web-aesthetic-v1"
 AESTHETIC_RUBRIC_VERSION = "1.1.0"
 AESTHETIC_RUBRIC_SOURCE = "https://yf2ljykclb.xfchat.iflytek.com/docx/doxrz05uveZshD5b81aHYY2HIb3"
@@ -426,15 +426,39 @@ def zip_selected(
                 archive.write(path, archived)
 
 
-def zip_skill(source: Path, destination: Path) -> None:
+def zip_skill(source: Path, destination: Path) -> int:
     """Package one independently installable Skill, once per batch."""
     destination.parent.mkdir(parents=True, exist_ok=True)
+    file_count = 0
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(item for item in source.rglob("*") if item.is_file()):
             if "__pycache__" in path.parts or path.suffix == ".pyc" or path.name == ".DS_Store":
                 continue
             archived = PurePosixPath(source.name, path.relative_to(source).as_posix()).as_posix()
             archive.write(path, archived)
+            file_count += 1
+    return file_count
+
+
+def package_score_skill(args: argparse.Namespace) -> dict:
+    """Build only the independently installable scoring Skill ZIP."""
+    repo_root = Path(args.repo_root).expanduser().resolve()
+    output_root = Path(args.output_dir).expanduser().resolve()
+    batch_id = str(getattr(args, "batch_id", "") or default_batch_id()).strip()
+    if not SLUG_RE.fullmatch(batch_id):
+        raise ValueError(f"批次 ID 不是安全 slug: {batch_id}")
+    scoring_skill = repo_root / "tools/report/skills/score-web-e2e"
+    if not (scoring_skill / "SKILL.md").is_file():
+        raise FileNotFoundError(f"缺少评分 Skill: {scoring_skill}")
+    package_path = output_root / f"{batch_id}__score-web-e2e-skill.zip"
+    if package_path.exists():
+        raise FileExistsError(f"评分 Skill 包已存在，拒绝覆盖: {package_path}")
+    file_count = zip_skill(scoring_skill, package_path)
+    return {
+        "path": package_path,
+        "file_count": file_count,
+        "sha256": sha256_file(package_path),
+    }
 
 
 def prepare(args: argparse.Namespace) -> Path:
@@ -610,6 +634,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--task-id", action="append", default=[], help="用例 ID；可重复，或传 @文件")
     parser.add_argument("--harness", action="append", default=[], help="Harness ID；可重复")
     parser.add_argument(
+        "--score-skill-only",
+        action="store_true",
+        help="只在 output-dir 生成独立评分 Skill ZIP；不需要 task-id 或 harness",
+    )
+    parser.add_argument(
         "--batch-id",
         default="",
         help="批次 ID；不传时按本机时间生成 web-e2e-YYYYMMDD-HHMMSS",
@@ -628,11 +657,23 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    args = build_parser().parse_args()
     try:
-        batch_root = prepare(build_parser().parse_args())
+        if args.score_skill_only:
+            result = package_score_skill(args)
+        else:
+            batch_root = prepare(args)
     except (OSError, ValueError) as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc
+    if args.score_skill_only:
+        print(json.dumps({
+            "status": "PASS",
+            "path": str(result["path"]),
+            "file_count": result["file_count"],
+            "sha256": result["sha256"],
+        }, ensure_ascii=False))
+        return
     print(f"PASS: {batch_root}")
 
 

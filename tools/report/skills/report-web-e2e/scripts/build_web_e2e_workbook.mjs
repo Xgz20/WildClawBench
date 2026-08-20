@@ -46,6 +46,18 @@ const COLORS = {
   text: "#1F2937",
   border: "#D8DEE8",
 };
+const GROUP_COLORS = {
+  content_structure: "#2F75B5",
+  interaction_function: "#548235",
+  visual_layout: "#8064A2",
+  render_integrity: "#2F75B5",
+  layout_hierarchy: "#548235",
+  color_typography: "#C55A11",
+  component_state: "#8064A2",
+  responsive: "#008C95",
+  tone_fit: "#A64D79",
+  other: "#6B7280",
+};
 
 
 function styleTitle(sheet, row, lastColumn, title) {
@@ -114,6 +126,93 @@ function writeTable(sheet, startRow, headers, rows, options = {}) {
     }
   }
   return startRow + rows.length;
+}
+
+
+function groupedColumns(entries, secondaryPrimary, primaryLabels) {
+  const groups = [];
+  entries.forEach(([key], index) => {
+    const primaryKey = secondaryPrimary[key] ?? "other";
+    const previous = groups.at(-1);
+    if (previous?.key === primaryKey) {
+      previous.endColumn = index + 3;
+      return;
+    }
+    groups.push({
+      key: primaryKey,
+      label: primaryLabels[primaryKey] ?? "其他",
+      startColumn: index + 3,
+      endColumn: index + 3,
+      color: GROUP_COLORS[primaryKey] ?? GROUP_COLORS.other,
+    });
+  });
+  return groups;
+}
+
+
+function groupedHeaderStyle(color) {
+  return {
+    fill: color,
+    font: { bold: true, color: COLORS.white },
+    wrapText: true,
+    horizontalAlignment: "center",
+    verticalAlignment: "center",
+    borders: { preset: "all", style: "thin", color: COLORS.border },
+  };
+}
+
+
+function writeGroupedTable(sheet, startRow, headers, rows, groups, options = {}) {
+  const fixedColumnCount = options.fixedColumnCount ?? 2;
+  for (let column = 1; column <= fixedColumnCount; column += 1) {
+    const name = columnName(column);
+    sheet.mergeCells(`${name}${startRow}:${name}${startRow + 1}`);
+    const range = sheet.getRange(`${name}${startRow}:${name}${startRow + 1}`);
+    range.values = [[headers[column - 1]]];
+    range.format = groupedHeaderStyle(COLORS.blue);
+  }
+  for (const group of groups) {
+    const start = columnName(group.startColumn);
+    const end = columnName(group.endColumn);
+    if (group.startColumn < group.endColumn) {
+      sheet.mergeCells(`${start}${startRow}:${end}${startRow}`);
+    }
+    const groupRange = sheet.getRange(`${start}${startRow}:${end}${startRow}`);
+    groupRange.values = [[group.label]];
+    groupRange.format = groupedHeaderStyle(group.color);
+    const metricRange = sheet.getRange(`${start}${startRow + 1}:${end}${startRow + 1}`);
+    metricRange.values = [headers.slice(group.startColumn - 1, group.endColumn)];
+    metricRange.format = groupedHeaderStyle(group.color);
+  }
+  sheet.getRange(`A${startRow}:${columnName(headers.length)}${startRow}`).format.rowHeight = 24;
+  sheet.getRange(`A${startRow + 1}:${columnName(headers.length)}${startRow + 1}`).format.rowHeight = options.headerRowHeight ?? 42;
+
+  if (rows.length) {
+    const dataStart = startRow + 2;
+    const dataEnd = dataStart + rows.length - 1;
+    const endColumn = columnName(headers.length);
+    sheet.getRange(`A${dataStart}:${endColumn}${dataEnd}`).values = rows.map(row => row.map(shown));
+    const dataRange = sheet.getRange(`A${dataStart}:${endColumn}${dataEnd}`);
+    dataRange.format = {
+      font: { color: COLORS.text },
+      verticalAlignment: "center",
+      borders: {
+        insideHorizontal: { style: "thin", color: COLORS.border },
+        bottom: { style: "thin", color: COLORS.border },
+      },
+    };
+    if (options.scoreStartColumn) {
+      const scoreStart = columnName(options.scoreStartColumn);
+      const scoreEnd = columnName(options.scoreEndColumn ?? headers.length);
+      const scoreRange = sheet.getRange(`${scoreStart}${dataStart}:${scoreEnd}${dataEnd}`);
+      scoreRange.format.numberFormat = "0.00";
+      scoreRange.conditionalFormats.add("colorScale", {
+        thresholds: [0, 50, 100],
+        colors: ["#F8696B", "#FFEB84", "#63BE7B"],
+      });
+    }
+  }
+  return startRow + 1 + rows.length;
 }
 
 
@@ -199,7 +298,19 @@ function buildWebsiteSheet(workbook, data) {
     unit.unit, unit.total_average_score,
     ...secondaryEntries.map(([key]) => unit.secondary_dimensions[key]),
   ]);
-  lastRow = writeTable(sheet, sectionRow + 1, secondaryHeaders, secondaryRows, { scoreStartColumn: 2 });
+  const secondaryGroups = groupedColumns(
+    secondaryEntries,
+    data.labels.secondary_primary ?? {},
+    data.labels.primary ?? {},
+  );
+  lastRow = writeGroupedTable(
+    sheet,
+    sectionRow + 1,
+    secondaryHeaders,
+    secondaryRows,
+    secondaryGroups,
+    { scoreStartColumn: 2 },
+  );
 
   sectionRow = lastRow + 2;
   const aestheticPrimaryHeaders = ["模型@Harness", "美观度总分", ...aestheticPrimaryEntries.map(([, label]) => label)];
@@ -219,8 +330,19 @@ function buildWebsiteSheet(workbook, data) {
     unit.unit, unit.aesthetic_score,
     ...aestheticSecondaryEntries.map(([key]) => unit.aesthetic_secondary_dimensions[key]?.average_score),
   ]);
-  writeTable(sheet, sectionRow + 1, aestheticSecondaryHeaders, aestheticSecondaryRows, { scoreStartColumn: 2 });
-  sheet.getRange(`A${sectionRow + 1}:${columnName(aestheticSecondaryHeaders.length)}${sectionRow + 1}`).format.rowHeight = 58;
+  const aestheticSecondaryGroups = groupedColumns(
+    aestheticSecondaryEntries,
+    data.labels.aesthetic_secondary_primary ?? {},
+    data.labels.aesthetic_primary ?? {},
+  );
+  writeGroupedTable(
+    sheet,
+    sectionRow + 1,
+    aestheticSecondaryHeaders,
+    aestheticSecondaryRows,
+    aestheticSecondaryGroups,
+    { scoreStartColumn: 2, headerRowHeight: 58 },
+  );
   applyWidths(sheet, { A: 24, B: 18, C: 14, D: 13, E: 12, F: 12, G: 14, H: 11, I: 13, J: 13, K: 11, L: 13, M: 12, N: 14, O: 14, P: 14, Q: 16, R: 14, S: 14, T: 14, U: 14, V: 14, W: 16, X: 16, Y: 16, Z: 16 });
   for (let column = 27; column <= widestTable; column += 1) {
     const name = columnName(column);
@@ -330,7 +452,7 @@ const errors = await workbook.inspect({
   summary: "final formula error scan",
 });
 const keyRanges = [
-  ["站点评测指标", `A1:${columnName(Math.max(26, 2 + Object.keys(data.labels.secondary).length, 2 + Object.keys(data.labels.aesthetic_secondary ?? {}).length))}${16 + 5 * data.units.length}`],
+  ["站点评测指标", `A1:${columnName(Math.max(26, 2 + Object.keys(data.labels.secondary).length, 2 + Object.keys(data.labels.aesthetic_secondary ?? {}).length))}${18 + 5 * data.units.length}`],
   ["难度对比", `A1:${columnName(2 + data.difficulty_values.length)}${3 + data.difficulty_rows.length}`],
   ["用例对比明细", `A1:${columnName(19 + Object.keys(data.labels.primary).length + Object.keys(data.labels.secondary).length)}${3 + data.detail_rows.length}`],
 ];

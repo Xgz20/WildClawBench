@@ -60,7 +60,7 @@
 
 `init_score.mjs` 会按内置标准自动生成全部 6 个 `aesthetic.dimensions` 和 32 个 `aesthetic.checklist` 项，不得调整 ID 或顺序。评分 Agent 填写检查点状态、理由和证据，以及一级维度的汇总理由和证据；`aesthetic.dimensions[].score` 必须保持 `null`，由脚本推导。`aesthetic.status` 允许 `completed` 或 `evaluation_error`：
 
-- `completed`：至少提供 2 张桌面截图和 1 张不大于 480px 的窄屏截图；每张填写唯一标签、`evidence/` 相对路径、数值视口、状态和说明。每个维度与检查项必须引用已有截图标签。
+- `completed`：硬门禁仍是至少 2 张桌面截图和 1 张不大于 480px 的窄屏截图；每张填写唯一标签、`evidence/` 相对路径、数值视口、状态和说明。常规推荐 4–6 张不重复截图，覆盖桌面主状态、桌面交互状态、适用的空/错误/加载/选中/禁用状态、窄屏主状态和窄屏交互状态；简单页面可只满足最低 3 张，复杂页面按需增加。每个维度与检查项必须引用已有截图标签。
 - `evaluation_error`：填写 `error`，美观度总分和维度保持空；不影响功能总分。
 
 美观度对整个截图集合统一判断，不对单张截图分别计算总分。检查点状态为 `MET/PARTIAL/UNMET/NA`，脚本分别固化为 `100/50/0/null`。`NA` 不参与分子和分母；护栏项与加分项等权进入所属一级维度，一级维度分数允许两位小数并由脚本自动计算。`defects.severity` 为 `blocking/major/minor`，`where` 必须是截图标签。正式标准见 [aesthetic-scoring.md](aesthetic-scoring.md) 和 [aesthetic-rubric.json](aesthetic-rubric.json)。
