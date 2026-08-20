@@ -22,6 +22,7 @@ FORBIDDEN_OVERLAY_NAMES = {
     "task_manifest.json",
     "workspace",
 }
+ALLOWED_TASK_OVERLAY_NAMES = {"private-scoring", ".web-e2e-scoring-ready"}
 
 
 def load_json(path: Path) -> dict:
@@ -62,6 +63,8 @@ def safe_member_path(info: zipfile.ZipInfo) -> PurePosixPath:
         task_relative = relative.parts[3:]
         if task_relative and task_relative[0] in FORBIDDEN_OVERLAY_NAMES:
             raise ValueError(f"评分包试图覆盖执行产物: {info.filename}")
+        if task_relative and task_relative[0] not in ALLOWED_TASK_OVERLAY_NAMES:
+            raise ValueError(f"评分包包含非评分材料: {info.filename}")
     return relative
 
 
@@ -92,37 +95,39 @@ def validate_prepared_score(score_root: Path, manifest: dict) -> None:
         required = (
             task_root / "workspace",
             task_root / "PROMPT.md",
-            task_root / "execution_record.json",
-            task_root / "task_manifest.json",
             task_root / "private-scoring/task_contract.json",
-            task_root / ".agents/skills/score-web-e2e/SKILL.md",
             task_root / ".web-e2e-scoring-ready",
         )
         missing = [path.relative_to(score_root).as_posix() for path in required if not path.exists()]
         if missing:
             raise ValueError(f"评分工作空间缺少文件: {task_id}: {missing}")
-        task_manifest = load_json(task_root / "task_manifest.json")
         contract = load_json(task_root / "private-scoring/task_contract.json")
         expected = expected_entries[task_id]
-        identities = (
-            ("task manifest", task_manifest.get("batch_id"), task_manifest.get("task_id")),
-            ("task contract", contract.get("batch_id"), contract.get("task_id")),
-        )
-        for label, batch_id, actual_task_id in identities:
-            if batch_id != manifest.get("batch_id") or actual_task_id != task_id:
-                raise ValueError(f"{label} 身份不一致: {task_id}")
-        if task_manifest.get("source_revision") != manifest.get("source_revision"):
-            raise ValueError(f"task manifest source_revision 不一致: {task_id}")
+        identity = contract.get("identity") or {}
+        if identity.get("batch_id") != manifest.get("batch_id") or identity.get("task_id") != task_id:
+            raise ValueError(f"task contract 身份不一致: {task_id}")
+        if identity.get("source_revision") != manifest.get("source_revision"):
+            raise ValueError(f"task contract source_revision 不一致: {task_id}")
+        manifest_harness = (manifest.get("harness") or {}).get("id")
+        contract_harness = (identity.get("harness") or {}).get("id")
+        if manifest_harness != contract_harness:
+            raise ValueError(f"task contract harness 不一致: {task_id}")
         expected_task_hash = expected.get("task_sha256")
         expected_workspace_hash = expected.get("workspace_exec_sha256")
-        for label, source in (
-            ("task manifest", task_manifest.get("source") or {}),
-            ("task contract", contract.get("source") or {}),
-        ):
-            if source.get("task_sha256") != expected_task_hash:
-                raise ValueError(f"{label} task_sha256 不一致: {task_id}")
-            if source.get("workspace_exec_sha256") != expected_workspace_hash:
-                raise ValueError(f"{label} workspace_exec_sha256 不一致: {task_id}")
+        source = contract.get("source") or {}
+        if source.get("task_sha256") != expected_task_hash:
+            raise ValueError(f"task contract task_sha256 不一致: {task_id}")
+        if source.get("workspace_exec_sha256") != expected_workspace_hash:
+            raise ValueError(f"task contract workspace_exec_sha256 不一致: {task_id}")
+        execution_record_path = task_root / "execution_record.json"
+        if execution_record_path.is_file():
+            execution_record = load_json(execution_record_path)
+            if (
+                execution_record.get("batch_id") != manifest.get("batch_id")
+                or execution_record.get("task_id") != task_id
+                or (execution_record.get("harness") or {}).get("id") != manifest_harness
+            ):
+                raise ValueError(f"execution record 身份不一致: {task_id}")
         marker = (task_root / ".web-e2e-scoring-ready").read_text(encoding="utf-8").splitlines()
         if marker != [str(manifest.get("batch_id")), task_id]:
             raise ValueError(f"评分就绪标记身份不一致: {task_id}")

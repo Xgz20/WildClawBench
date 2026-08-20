@@ -44,7 +44,8 @@ node .agents/skills/report-web-e2e/scripts/build_web_e2e_workbook.mjs \
 ## 统计边界
 
 - 总平均分：全部声明用例等权平均；执行错误、超时和评测异常按标准 task score 的 0 分纳入。
-- 正常完成：执行状态和评测状态均为 `completed`。
+- 正常完成：评测状态为 `completed`，且执行状态为 `completed` 或默认的 `not_recorded`；后者只表示未采集 Token、耗时等执行记录。
+- 执行错误数与超时数：只统计显式 `execution_record.json` 中的状态；存在 `not_recorded` 时必须在结论中说明未采集范围，不能把 0 解读为已验证没有错误。
 - 完成率：正常完成数 / 用例数。
 - 资源总量：只有该 unit 所有题目都提供该字段时才展示总和；缺失显示 `-`，不把未知量当 0。
 - 格式准确率：优先按工具调用数加权；缺调用数但全部题目都有准确率时取题目等权平均。

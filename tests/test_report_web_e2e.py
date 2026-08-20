@@ -173,6 +173,28 @@ units:
         self.assertEqual(unit["evaluation_error_count"], 1)
         self.assertEqual(unit["completed_count"], 0)
 
+    def test_not_recorded_execution_is_normally_completed_after_scoring(self) -> None:
+        item = submission("m1", "codex", [100, 50])
+        for task_item in item["tasks"]:
+            task_item["execution"] = {"status": "not_recorded", "duration_seconds": None}
+            task_item["usage"] = {
+                "input_tokens": None,
+                "output_tokens": None,
+                "total_tokens": None,
+                "request_count": None,
+                "cost_usd": None,
+            }
+            task_item["tools"] = {"call_count": None, "format_accuracy": None}
+        data = report_module.build_report_data([item])
+        unit = data["units"][0]
+        self.assertEqual(unit["completed_count"], 2)
+        self.assertEqual(unit["completion_rate"], 100.0)
+        self.assertEqual(unit["execution_not_recorded_count"], 2)
+        self.assertIsNone(unit["total_tokens"])
+        self.assertEqual(unit["execution_error_count"], 0)
+        self.assertEqual(unit["timeout_count"], 0)
+        self.assertIn("执行错误数和超时数只反映显式记录", report_module.render_markdown(data))
+
 
 if __name__ == "__main__":
     unittest.main()

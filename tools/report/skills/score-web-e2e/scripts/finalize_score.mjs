@@ -4,8 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SCHEMA_VERSION = "wildclawbench.web-e2e-task-score/v1";
-const SKILL_VERSION = "2.0.0";
-const EXECUTION_STATUSES = new Set(["completed", "execution_error", "timeout", "pending"]);
+const SKILL_VERSION = "3.0.0";
+const EXECUTION_STATUSES = new Set(["completed", "execution_error", "timeout", "pending", "not_recorded"]);
 const EVALUATION_STATUSES = new Set(["completed", "evaluation_error"]);
 
 function parseArgs(argv) {
@@ -50,23 +50,72 @@ function weightedDimensions(criteria, byKey, dimension) {
   }));
 }
 
-export function finalize(manifest, contract, execution, scoreInput) {
-  const batchIds = new Set([manifest.batch_id, contract.batch_id, execution.batch_id]);
-  if (batchIds.size !== 1) throw new Error(`batch_id 不一致: ${[...batchIds].join(", ")}`);
-  const taskId = contract.task_id;
-  if (manifest.task_id !== taskId || execution.task_id !== taskId) throw new Error("task_id 不一致");
-  if (manifest.source?.task_sha256 !== contract.source?.task_sha256) throw new Error("task_sha256 不一致");
+function contractIdentity(contract) {
+  const identity = contract.identity ?? {};
+  return {
+    batch_id: identity.batch_id ?? contract.batch_id,
+    source_revision: identity.source_revision ?? contract.source_revision ?? null,
+    task_id: identity.task_id ?? contract.task_id,
+    task_name: identity.task_name ?? contract.task_name,
+    difficulty: identity.difficulty ?? contract.difficulty,
+    model: identity.model ?? contract.model ?? {},
+    harness: identity.harness ?? contract.harness ?? {},
+  };
+}
 
-  const executionStatus = execution.execution?.status;
+function effectiveExecution(identity, execution) {
+  if (execution) return execution;
+  return {
+    batch_id: identity.batch_id,
+    task_id: identity.task_id,
+    model: identity.model ?? {},
+    harness: identity.harness ?? {},
+    execution: {
+      status: "not_recorded",
+      started_at: null,
+      finished_at: null,
+      duration_seconds: null,
+      error: null,
+    },
+    usage: {
+      input_tokens: null,
+      output_tokens: null,
+      total_tokens: null,
+      request_count: null,
+      cost_usd: null,
+    },
+    tools: { call_count: null, format_accuracy: null },
+    artifacts: {},
+  };
+}
+
+export function finalize(manifest, contract, execution, scoreInput) {
+  const identity = contractIdentity(contract);
+  if (!identity.batch_id || !identity.task_id) throw new Error("task contract 缺少 batch_id 或 task_id");
+  const effective = effectiveExecution(identity, execution);
+  const batchIds = [identity.batch_id, manifest?.batch_id, effective.batch_id].filter(Boolean);
+  if (new Set(batchIds).size !== 1) throw new Error(`batch_id 不一致: ${batchIds.join(", ")}`);
+  const taskId = identity.task_id;
+  if ((manifest?.task_id && manifest.task_id !== taskId) || effective.task_id !== taskId) throw new Error("task_id 不一致");
+  if (manifest?.source?.task_sha256 && manifest.source.task_sha256 !== contract.source?.task_sha256) {
+    throw new Error("task_sha256 不一致");
+  }
+
+  const executionStatus = effective.execution?.status;
   const evaluationStatus = scoreInput.evaluation_status;
   if (!EXECUTION_STATUSES.has(executionStatus)) throw new Error(`非法 execution.status: ${executionStatus}`);
   if (!EVALUATION_STATUSES.has(evaluationStatus)) throw new Error(`非法 evaluation_status: ${evaluationStatus}`);
-  const manifestModel = String(manifest.model?.id ?? "");
-  const executionModel = String(execution.model?.id ?? "");
-  const manifestHarness = String(manifest.harness?.id ?? "");
-  const executionHarness = String(execution.harness?.id ?? "");
-  if (manifestModel && executionModel !== manifestModel) throw new Error("execution_record.model.id 与 task manifest 不一致");
-  if (executionHarness !== manifestHarness) throw new Error("execution_record.harness.id 与 task manifest 不一致");
+  const identityModel = String(identity.model?.id ?? "");
+  const manifestModel = String(manifest?.model?.id ?? "");
+  const executionModel = String(effective.model?.id ?? "");
+  const identityHarness = String(identity.harness?.id ?? "");
+  const manifestHarness = String(manifest?.harness?.id ?? "");
+  const executionHarness = String(effective.harness?.id ?? "");
+  const modelIds = [identityModel, manifestModel, executionModel].filter(Boolean);
+  const harnessIds = [identityHarness, manifestHarness, executionHarness].filter(Boolean);
+  if (new Set(modelIds).size > 1) throw new Error("model.id 不一致");
+  if (new Set(harnessIds).size > 1) throw new Error("harness.id 不一致");
+  if (harnessIds.length === 0) throw new Error("task contract 缺少 harness.id");
   if (evaluationStatus === "evaluation_error" && !String(scoreInput.evaluation_error ?? "").trim()) {
     throw new Error("evaluation_error 状态必须填写 evaluation_error");
   }
@@ -93,7 +142,7 @@ export function finalize(manifest, contract, execution, scoreInput) {
     calculationByKey.set(item.key, { score: hasScore ? item.score : 0 });
   }
 
-  const successfulEvaluation = executionStatus === "completed" && evaluationStatus === "completed";
+  const successfulEvaluation = ["completed", "not_recorded"].includes(executionStatus) && evaluationStatus === "completed";
   if (successfulEvaluation) {
     for (const criterion of criteria.filter((item) => item.primary === "visual_layout")) {
       if (!byKey.get(criterion.key).evidence.some((item) => item && item.type === "screenshot")) {
@@ -124,16 +173,16 @@ export function finalize(manifest, contract, execution, scoreInput) {
   return {
     schema_version: SCHEMA_VERSION,
     identity: {
-      batch_id: manifest.batch_id,
+      batch_id: identity.batch_id,
       task_id: taskId,
-      task_name: contract.task_name ?? taskId,
-      difficulty: contract.difficulty ?? "unknown",
-      model: execution.model ?? manifest.model ?? {},
-      harness: execution.harness ?? manifest.harness ?? {},
+      task_name: identity.task_name ?? taskId,
+      difficulty: identity.difficulty ?? "unknown",
+      model: effective.model ?? identity.model ?? manifest?.model ?? {},
+      harness: effective.harness ?? identity.harness ?? manifest?.harness ?? {},
     },
-    execution: execution.execution ?? {},
-    usage: execution.usage ?? {},
-    tools: execution.tools ?? {},
+    execution: effective.execution ?? {},
+    usage: effective.usage ?? {},
+    tools: effective.tools ?? {},
     evaluation: {
       status: evaluationStatus,
       error: scoreInput.evaluation_error ?? null,
@@ -170,10 +219,11 @@ export function finalize(manifest, contract, execution, scoreInput) {
         reason: scoreInput.aesthetic_reason ?? null,
       },
     },
-    artifacts: execution.artifacts ?? {},
+    artifacts: effective.artifacts ?? {},
     provenance: {
       skill_version: SKILL_VERSION,
       scored_at: new Date().toISOString(),
+      source_revision: identity.source_revision,
       task_sha256: contract.source?.task_sha256 ?? null,
       workspace_exec_sha256: contract.source?.workspace_exec_sha256 ?? null,
     },
@@ -182,13 +232,13 @@ export function finalize(manifest, contract, execution, scoreInput) {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  for (const key of ["manifest", "task-contract", "execution-record", "score-input", "output"]) {
+  for (const key of ["task-contract", "score-input", "output"]) {
     if (!args[key]) throw new Error(`必须提供 --${key}`);
   }
   const result = finalize(
-    loadJson(args.manifest),
+    args.manifest ? loadJson(args.manifest) : null,
     loadJson(args["task-contract"]),
-    loadJson(args["execution-record"]),
+    args["execution-record"] ? loadJson(args["execution-record"]) : null,
     loadJson(args["score-input"]),
   );
   fs.mkdirSync(path.dirname(path.resolve(args.output)), { recursive: true });

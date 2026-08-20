@@ -57,6 +57,19 @@ export function buildSubmission(packageRoot) {
     if (score.identity?.batch_id !== manifest.batch_id || score.identity?.task_id !== entry.task_id) {
       throw new Error(`task_score 身份与 manifest 不一致: ${entry.task_id}`);
     }
+    if (
+      score.provenance?.source_revision
+      && manifest.source_revision
+      && score.provenance.source_revision !== manifest.source_revision
+    ) {
+      throw new Error(`task_score source_revision 与 manifest 不一致: ${entry.task_id}`);
+    }
+    if (entry.task_sha256 && score.provenance?.task_sha256 !== entry.task_sha256) {
+      throw new Error(`task_score task_sha256 与 manifest 不一致: ${entry.task_id}`);
+    }
+    if (entry.workspace_exec_sha256 && score.provenance?.workspace_exec_sha256 !== entry.workspace_exec_sha256) {
+      throw new Error(`task_score workspace_exec_sha256 与 manifest 不一致: ${entry.task_id}`);
+    }
     if (score.execution?.status === "pending") throw new Error(`执行状态仍为 pending: ${entry.task_id}`);
     const scoringDir = path.dirname(scorePath);
     for (const criterion of score.evaluation?.criteria ?? []) {
@@ -77,6 +90,8 @@ export function buildSubmission(packageRoot) {
   const harnessId = [...harnessIds][0];
   const modelId = [...modelIds][0];
   if (!harnessId) throw new Error("回传前必须填写 harness.id");
+  const manifestHarnessId = String(manifest.harness?.id ?? "");
+  if (manifestHarnessId && harnessId !== manifestHarnessId) throw new Error("task_score harness.id 与 manifest 不一致");
 
   const audit = auditTree(packageRoot);
   const sensitive = [];

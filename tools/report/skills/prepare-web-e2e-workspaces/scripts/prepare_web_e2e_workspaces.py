@@ -25,8 +25,8 @@ except ImportError:
     sys.exit("缺少 pyyaml，请先安装：pip install pyyaml")
 
 
-SCHEMA_VERSION = "wildclawbench.web-e2e-batch/v2"
-SKILL_VERSION = "2.0.0"
+SCHEMA_VERSION = "wildclawbench.web-e2e-batch/v3"
+SKILL_VERSION = "3.0.0"
 KNOWN_HARNESSES = {
     "astronstudio": "AstronStudio",
     "codex": "Codex",
@@ -106,6 +106,11 @@ def git_revision(repo_root: Path) -> str:
         capture_output=True, text=True,
     )
     return proc.stdout.strip() if proc.returncode == 0 else "unknown"
+
+
+def default_batch_id(now: datetime | None = None) -> str:
+    current = now or datetime.now().astimezone()
+    return f"web-e2e-{current.strftime('%Y%m%d-%H%M%S')}"
 
 
 def read_ids(values: list[str]) -> list[str]:
@@ -294,16 +299,27 @@ def execution_record(batch_id: str, harness: str, harness_display: str, model: s
     }
 
 
-def task_contract(batch_id: str, task: dict, aesthetic_rubric: str | None = None) -> dict:
+def task_contract(
+    batch_id: str,
+    revision: str,
+    harness: str,
+    harness_display: str,
+    task: dict,
+    aesthetic_rubric: str | None = None,
+) -> dict:
     criteria = copy.deepcopy(task["criteria"])
     for criterion in criteria:
         criterion["rubric"] = rewrite_scoring_text(criterion["rubric"])
     return {
-        "schema_version": "wildclawbench.web-e2e-task-contract/v1",
-        "batch_id": batch_id,
-        "task_id": task["task_id"],
-        "task_name": task["name"],
-        "difficulty": task["difficulty"],
+        "schema_version": "wildclawbench.web-e2e-task-contract/v2",
+        "identity": {
+            "batch_id": batch_id,
+            "source_revision": revision,
+            "task_id": task["task_id"],
+            "task_name": task["name"],
+            "difficulty": task["difficulty"],
+            "harness": {"id": harness, "display_name": harness_display},
+        },
         "prompt": rewrite_scoring_text(task["prompt"]),
         "expected_behavior": rewrite_scoring_text(task["expected_behavior"]),
         "llm_judge_rubric": rewrite_scoring_text(task["llm_judge_rubric"]),
@@ -339,68 +355,36 @@ def copy_referenced_fixtures(task: dict, destination: Path) -> list[str]:
     return copied
 
 
-def task_manifest(
-    batch_id: str,
-    revision: str,
-    harness: str,
-    harness_display: str,
-    model: str,
-    task: dict,
-) -> dict:
-    return {
-        "schema_version": "wildclawbench.web-e2e-task-manifest/v1",
-        "batch_id": batch_id,
-        "source_revision": revision,
-        "task_id": task["task_id"],
-        "task_name": task["name"],
-        "difficulty": task["difficulty"],
-        "model": {"id": model, "display_name": model},
-        "harness": {"id": harness, "display_name": harness_display},
-        "paths": {
-            "prompt": "PROMPT.md",
-            "execution_record": "execution_record.json",
-            "workspace": "workspace",
-            "task_contract": "private-scoring/task_contract.json",
-            "fixtures": "private-scoring/fixtures",
-            "score_input": "private-scoring/score_input.json",
-            "task_score": "private-scoring/task_score.json",
-            "evidence": "private-scoring/evidence",
-        },
-        "prompt_rewrite_map": {"/tmp_workspace": "./workspace"},
-        "source": {
-            "task_sha256": task["task_sha256"],
-            "workspace_exec_sha256": task["workspace_sha256"],
-        },
-    }
-
-
 def write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def render_checklist(batch_id: str, harness: str, model: str, tasks: list[dict]) -> str:
+def render_checklist(batch_id: str, harness: str, tasks: list[dict], include_execution_record: bool) -> str:
     rows = [
         f"# Web E2E 执行清单：{batch_id} / {KNOWN_HARNESSES.get(harness, harness)}",
         "",
         "> 被评 Harness 选择 `execution/tasks/<task_id>/`；评分 Agent 选择 `score/tasks/<task_id>/`。每题分别新建工作空间和会话。",
         "",
-        f"- 模型：{model or '待执行人员填写'}",
         f"- Harness：{KNOWN_HARNESSES.get(harness, harness)} (`{harness}`)",
         f"- 用例数：{len(tasks)}",
         "",
     ]
     for task in tasks:
         task_id = task["task_id"]
-        rows.extend([
+        task_rows = [
             f"## {task_id} · {task['name']}",
             "",
             f"- [ ] 选择项目目录：`execution/tasks/{task_id}`",
             f"- [ ] 粘贴唯一 Prompt：`execution/tasks/{task_id}/PROMPT.md`",
             f"- [ ] 确认产物位于：`execution/tasks/{task_id}/workspace/`",
-            f"- [ ] 填写执行记录：`execution/tasks/{task_id}/execution_record.json`",
-            "",
-        ])
+        ]
+        if include_execution_record:
+            task_rows.append(
+                f"- [ ] 更新执行状态：`execution/tasks/{task_id}/execution_record.json`；未知资源字段保留 `null`"
+            )
+        task_rows.append("")
+        rows.extend(task_rows)
     rows.extend([
         "## 评分阶段",
         "",
@@ -408,8 +392,9 @@ def render_checklist(batch_id: str, harness: str, model: str, tasks: list[dict])
         "2. 将 `execution/tasks/` 整个复制到根目录已有的 `score/` 下，得到 `score/tasks/`。",
         "3. 把对应 `__scoring.zip` 解压到 Harness 根目录，选择合并目录，不能替换整个 `score/`。",
         "4. 若 ZIP 工具不能正确合并，请把 scoring ZIP 放在 Harness 根目录同级或根目录内，保持 `score/` 为空，再双击 `准备评分工作空间.command`（macOS）或 `准备评分工作空间.cmd`（Windows）；兜底要求本机有 Python。",
-        "5. 每题在评分智能体中选择 `score/tasks/<task_id>/`，新建会话并触发 `$score-web-e2e`。",
-        "6. 全部评分后按评分 Skill 的回传准备流程关闭服务、清理可重建的 `node_modules`，生成根目录 `submission.json` 再压缩回传。",
+        "5. 在评分智能体中导入管理员另行提供的 `score-web-e2e` 离线 Skill ZIP，每台评分客户端只安装一次。",
+        "6. 每题在评分智能体中选择 `score/tasks/<task_id>/`，新建会话并触发 `$score-web-e2e`。",
+        "7. 全部评分后按评分 Skill 的回传准备流程关闭服务、清理可重建的 `node_modules`，生成根目录 `submission.json` 再压缩回传。",
         "",
     ])
     return "\n".join(rows)
@@ -434,10 +419,25 @@ def zip_selected(
                 archive.write(path, archived)
 
 
+def zip_skill(source: Path, destination: Path) -> None:
+    """Package one independently installable Skill, once per batch."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for path in sorted(item for item in source.rglob("*") if item.is_file()):
+            if "__pycache__" in path.parts or path.suffix == ".pyc" or path.name == ".DS_Store":
+                continue
+            archived = PurePosixPath(source.name, path.relative_to(source).as_posix()).as_posix()
+            archive.write(path, archived)
+
+
 def prepare(args: argparse.Namespace) -> Path:
     repo_root = Path(args.repo_root).expanduser().resolve()
     output_root = Path(args.output_dir).expanduser().resolve()
-    batch_root = output_root / args.batch_id
+    batch_id = str(getattr(args, "batch_id", "") or default_batch_id()).strip()
+    if not SLUG_RE.fullmatch(batch_id):
+        raise ValueError(f"批次 ID 不是安全 slug: {batch_id}")
+    args.batch_id = batch_id
+    batch_root = output_root / batch_id
     if batch_root.exists():
         raise FileExistsError(f"批次目录已存在，拒绝覆盖: {batch_root}")
     task_ids = read_ids(args.task_id)
@@ -470,8 +470,17 @@ def prepare(args: argparse.Namespace) -> Path:
         raise FileNotFoundError(f"缺少评分 Skill: {scoring_skill}")
     created_at = datetime.now(timezone.utc).isoformat()
     revision = git_revision(repo_root)
+    include_execution_record = bool(getattr(args, "include_execution_record", False))
     package_rows = []
     batch_root.mkdir(parents=True)
+    skill_package = batch_root / "packages" / f"{args.batch_id}__score-web-e2e-skill.zip"
+    zip_skill(scoring_skill, skill_package)
+    package_rows.append({
+        "harness": None,
+        "package_type": "score_skill",
+        "path": skill_package.relative_to(batch_root).as_posix(),
+        "sha256": sha256_file(skill_package),
+    })
 
     for harness in harnesses:
         harness_dir = batch_root / "harnesses" / harness
@@ -486,26 +495,25 @@ def prepare(args: argparse.Namespace) -> Path:
             safe_copy_exec(task["exec_dir"], execution_dir / "workspace")
             effective_prompt, prompt_rewrite_map = rewrite_execution_text(task["prompt"])
             (execution_dir / "PROMPT.md").write_text(effective_prompt + "\n", encoding="utf-8")
-            write_json(
-                execution_dir / "execution_record.json",
-                execution_record(args.batch_id, harness, harness_display, model, task_id),
-            )
-            write_json(
-                execution_dir / "task_manifest.json",
-                task_manifest(args.batch_id, revision, harness, harness_display, model, task),
-            )
+            if include_execution_record:
+                write_json(
+                    execution_dir / "execution_record.json",
+                    execution_record(args.batch_id, harness, harness_display, model, task_id),
+                )
             write_json(
                 score_dir / "private-scoring" / "task_contract.json",
-                task_contract(args.batch_id, task, aesthetic_rubric),
+                task_contract(
+                    args.batch_id,
+                    revision,
+                    harness,
+                    harness_display,
+                    task,
+                    aesthetic_rubric,
+                ),
             )
-            fixtures = copy_referenced_fixtures(
+            copy_referenced_fixtures(
                 task,
                 score_dir / "private-scoring" / "fixtures",
-            )
-            shutil.copytree(
-                scoring_skill,
-                score_dir / ".agents/skills/score-web-e2e",
-                ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
             )
             (score_dir / ".web-e2e-scoring-ready").write_text(
                 f"{args.batch_id}\n{task_id}\n", encoding="utf-8"
@@ -515,10 +523,8 @@ def prepare(args: argparse.Namespace) -> Path:
                 "task_name": task["name"],
                 "difficulty": task["difficulty"],
                 "execution_dir": f"execution/tasks/{task_id}",
-                "scoring_dir": f"score/tasks/{task_id}",
                 "prompt_file": f"execution/tasks/{task_id}/PROMPT.md",
                 "prompt_rewrite_map": prompt_rewrite_map,
-                "scoring_fixture_files": fixtures,
                 "task_sha256": task["task_sha256"],
                 "workspace_exec_sha256": task["workspace_sha256"],
             })
@@ -530,13 +536,13 @@ def prepare(args: argparse.Namespace) -> Path:
             "source_revision": revision,
             "package_root": package_root_name,
             "scoring_archive": f"{args.batch_id}__{harness}__scoring.zip",
-            "model": {"id": model, "display_name": model},
+            "execution_record_included": include_execution_record,
             "harness": {"id": harness, "display_name": harness_display},
             "tasks": entries,
         }
         write_json(harness_dir / "manifest.json", manifest)
         (harness_dir / "执行清单.md").write_text(
-            render_checklist(args.batch_id, harness, model, tasks), encoding="utf-8"
+            render_checklist(args.batch_id, harness, tasks, include_execution_record), encoding="utf-8"
         )
         helper_source = repo_root / "tools/report/skills/prepare-web-e2e-workspaces/scripts/prepare_scoring_workspace.py"
         helper_dir = harness_dir / "tools"
@@ -585,6 +591,8 @@ def prepare(args: argparse.Namespace) -> Path:
         "source_revision": revision,
         "task_ids": task_ids,
         "harnesses": harnesses,
+        "score_skill_archive": skill_package.relative_to(batch_root).as_posix(),
+        "execution_record_included": include_execution_record,
         "packages": package_rows,
     })
     return batch_root
@@ -594,10 +602,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="准备独立 Web 站点端到端评测工作空间")
     parser.add_argument("--task-id", action="append", default=[], help="用例 ID；可重复，或传 @文件")
     parser.add_argument("--harness", action="append", default=[], help="Harness ID；可重复")
-    parser.add_argument("--batch-id", required=True)
+    parser.add_argument(
+        "--batch-id",
+        default="",
+        help="批次 ID；不传时按本机时间生成 web-e2e-YYYYMMDD-HHMMSS",
+    )
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--model", default="", help="全部 Harness 默认模型 ID")
     parser.add_argument("--model-map", action="append", default=[], help="按 Harness 覆盖模型：harness=model")
+    parser.add_argument(
+        "--include-execution-record",
+        action="store_true",
+        help="可选：在每个执行工作空间生成 execution_record.json；默认不生成",
+    )
     parser.add_argument("--aesthetic-rubric", default="", help="可选：统一页面美观度评分定义 Markdown")
     parser.add_argument("--repo-root", default=str(find_repo_root(Path(__file__))))
     return parser

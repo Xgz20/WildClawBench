@@ -222,11 +222,13 @@ def unit_summary(submission: dict, primary_keys: list[str], secondary_keys: list
     scores = [numeric(task.get("metrics", {}).get("total_score")) or 0.0 for task in tasks]
     execution_statuses = [str(task.get("execution", {}).get("status") or "") for task in tasks]
     evaluation_statuses = [str(task.get("evaluation", {}).get("status") or "") for task in tasks]
-    completed = sum(e == "completed" and v == "completed" for e, v in zip(execution_statuses, evaluation_statuses))
+    scorable_execution_statuses = {"completed", "not_recorded"}
+    completed = sum(e in scorable_execution_statuses and v == "completed" for e, v in zip(execution_statuses, evaluation_statuses))
     execution_errors = sum(status == "execution_error" for status in execution_statuses)
     timeouts = sum(status == "timeout" for status in execution_statuses)
+    execution_not_recorded = sum(status == "not_recorded" for status in execution_statuses)
     evaluation_errors = sum(
-        execution_status == "completed" and evaluation_status == "evaluation_error"
+        execution_status in scorable_execution_statuses and evaluation_status == "evaluation_error"
         for execution_status, evaluation_status in zip(execution_statuses, evaluation_statuses)
     )
     aesthetic_values = [
@@ -253,6 +255,7 @@ def unit_summary(submission: dict, primary_keys: list[str], secondary_keys: list
         "completed_count": completed,
         "execution_error_count": execution_errors,
         "timeout_count": timeouts,
+        "execution_not_recorded_count": execution_not_recorded,
         "evaluation_error_count": evaluation_errors,
         "completion_rate": round(completed / len(tasks) * 100, 2) if tasks else 0.0,
         "strict_full_score_rate": round(sum(score == 100 for score in scores) / len(tasks) * 100, 2) if tasks else 0.0,
@@ -412,6 +415,7 @@ def render_markdown(data: dict) -> str:
     units = data["units"]
     leader = max(units, key=lambda item: (item["total_average_score"], item["unit"]))
     all_aesthetic_missing = all(item["aesthetic_score"] is None for item in units)
+    execution_not_recorded = sum(item.get("execution_not_recorded_count", 0) for item in units)
     lines = [
         "# Web 站点端到端评测领导版报告",
         "",
@@ -423,6 +427,7 @@ def render_markdown(data: dict) -> str:
         "",
         f"- {leader['unit']} 的总平均分最高，为 {leader['total_average_score']:.2f} 分。",
         f"- 各单元完成率区间为 {min(item['completion_rate'] for item in units):.2f}%–{max(item['completion_rate'] for item in units):.2f}%。",
+        f"- 共 {execution_not_recorded} 个用例结果未采集执行状态与资源数据；执行错误数和超时数只反映显式记录。" if execution_not_recorded else "- 全部用例均提供执行状态记录。",
         "- 页面美观度尚未提供正式指标定义，本批次显示为 `-`，不参与总分。" if all_aesthetic_missing else "- 页面美观度按独立 100 分制展示，不参与总分、得分率或满分率。",
         "",
         "## 总览",

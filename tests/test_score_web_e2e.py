@@ -23,10 +23,15 @@ def fixtures():
         "source": {"task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"},
     }
     contract = {
-        "batch_id": "batch-1",
-        "task_id": "task-1",
-        "task_name": "站点任务",
-        "difficulty": "L1",
+        "schema_version": "wildclawbench.web-e2e-task-contract/v2",
+        "identity": {
+            "batch_id": "batch-1",
+            "source_revision": "abc",
+            "task_id": "task-1",
+            "task_name": "站点任务",
+            "difficulty": "L1",
+            "harness": {"id": "codex", "display_name": "Codex"},
+        },
         "criteria": [
             {"index": 1, "key": "content", "name": "内容", "primary": "content_structure", "secondary": "basic_content", "weight": 0.4},
             {"index": 2, "key": "action", "name": "交互", "primary": "interaction_function", "secondary": "operation_feedback", "weight": 0.6},
@@ -65,21 +70,30 @@ def write_json(path: Path, value: dict) -> None:
     path.write_text(json.dumps(value, ensure_ascii=False), encoding="utf-8")
 
 
-def run_finalize(root: Path, values=None) -> subprocess.CompletedProcess:
+def run_finalize(
+    root: Path,
+    values=None,
+    *,
+    include_manifest: bool = False,
+    include_execution: bool = False,
+) -> subprocess.CompletedProcess:
     manifest, contract, execution, score_input = values or fixtures()
-    write_json(root / "task_manifest.json", manifest)
     write_json(root / "private-scoring/task_contract.json", contract)
-    write_json(root / "execution_record.json", execution)
     write_json(root / "private-scoring/score_input.json", score_input)
+    command = [
+        "node", str(FINALIZE),
+        "--task-contract", str(root / "private-scoring/task_contract.json"),
+        "--score-input", str(root / "private-scoring/score_input.json"),
+        "--output", str(root / "private-scoring/task_score.json"),
+    ]
+    if include_manifest:
+        write_json(root / "task_manifest.json", manifest)
+        command.extend(["--manifest", str(root / "task_manifest.json")])
+    if include_execution:
+        write_json(root / "execution_record.json", execution)
+        command.extend(["--execution-record", str(root / "execution_record.json")])
     return subprocess.run(
-        [
-            "node", str(FINALIZE),
-            "--manifest", str(root / "task_manifest.json"),
-            "--task-contract", str(root / "private-scoring/task_contract.json"),
-            "--execution-record", str(root / "execution_record.json"),
-            "--score-input", str(root / "private-scoring/score_input.json"),
-            "--output", str(root / "private-scoring/task_score.json"),
-        ],
+        command,
         capture_output=True,
         text=True,
     )
@@ -111,6 +125,17 @@ class FinalizeWebE2EScoreTest(unittest.TestCase):
         self.assertEqual(score["metrics"]["primary_dimensions"]["content_structure"], 100)
         self.assertEqual(score["metrics"]["primary_dimensions"]["interaction_function"], 50)
         self.assertFalse(score["metrics"]["aesthetic"]["included_in_total"])
+        self.assertEqual(score["execution"]["status"], "not_recorded")
+        self.assertIsNone(score["usage"]["total_tokens"])
+
+    def test_legacy_manifest_and_execution_record_arguments_remain_supported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = run_finalize(root, include_manifest=True, include_execution=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            score = json.loads((root / "private-scoring/task_score.json").read_text(encoding="utf-8"))
+        self.assertEqual(score["execution"]["status"], "completed")
+        self.assertEqual(score["usage"]["total_tokens"], 100)
 
     def test_rejects_aesthetic_score_before_definition(self) -> None:
         values = list(fixtures())
@@ -125,7 +150,7 @@ class FinalizeWebE2EScoreTest(unittest.TestCase):
         values[2]["execution"]["status"] = "timeout"
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            result = run_finalize(root, values)
+            result = run_finalize(root, values, include_execution=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             score = json.loads((root / "private-scoring/task_score.json").read_text(encoding="utf-8"))
         self.assertEqual(score["metrics"]["total_score"], 0)
@@ -160,7 +185,10 @@ class BuildSubmissionTest(unittest.TestCase):
             (task_root / "private-scoring/evidence/a.png").write_bytes(b"png")
             (task_root / "private-scoring/evidence/actions.md").write_text("actions", encoding="utf-8")
             write_json(root / "manifest.json", {
-                "batch_id": "batch-1", "source_revision": "abc", "tasks": [{"task_id": "task-1"}],
+                "batch_id": "batch-1",
+                "source_revision": "abc",
+                "harness": {"id": "codex", "display_name": "Codex"},
+                "tasks": [{"task_id": "task-1", "task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"}],
             })
             result = subprocess.run(
                 ["node", str(SUBMISSION), "--package-root", str(root), "--output", str(root / "submission.json")],
@@ -187,7 +215,8 @@ class BuildSubmissionTest(unittest.TestCase):
             root_manifest = {
                 "batch_id": "batch-1",
                 "source_revision": "abc",
-                "tasks": [{"task_id": "task-1"}],
+                "harness": {"id": "codex", "display_name": "Codex"},
+                "tasks": [{"task_id": "task-1", "task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"}],
             }
             write_json(root / "manifest.json", root_manifest)
             command = ["node", str(SUBMISSION), "--package-root", str(root), "--output", str(root / "submission.json")]
