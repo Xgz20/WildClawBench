@@ -108,7 +108,7 @@ function writeTable(sheet, startRow, headers, rows, options = {}) {
       const scoreRange = sheet.getRange(`${scoreStart}${startRow + 1}:${scoreEnd}${startRow + rows.length}`);
       scoreRange.format.numberFormat = "0.00";
       scoreRange.conditionalFormats.add("colorScale", {
-        thresholds: ["min", "50%", "max"],
+        thresholds: [0, 50, 100],
         colors: ["#F8696B", "#FFEB84", "#63BE7B"],
       });
     }
@@ -132,7 +132,7 @@ function normalizeAccuracy(value) {
 
 function addScoreScale(sheet, rangeAddress) {
   sheet.getRange(rangeAddress).conditionalFormats.add("colorScale", {
-    thresholds: ["min", "50%", "max"],
+    thresholds: [0, 50, 100],
     colors: ["#F8696B", "#FFEB84", "#63BE7B"],
   });
 }
