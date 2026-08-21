@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 CLAUDECODE_SKILLS_DIR = "/root/.claude/skills"
 CLAUDECODE_COMPAT_TRANSCRIPT_PATH = "/tmp/claudecode/openclaw_chat.jsonl"
 OPENCLAW_COMPAT_TRANSCRIPT_PATH = "/root/.openclaw/agents/main/sessions/chat.jsonl"
+DEFAULT_PROGRESS_LOG_INTERVAL_SECONDS = 30.0
 
 
 def _now_iso() -> str:
@@ -571,9 +572,11 @@ class ClaudeCodeAgent(BaseAgent):
             "-c",
             "tail -f /dev/null",
         ]
+        logger.info("[%s] Starting ClaudeCode container (%s)", task_id, self.image)
         r = subprocess.run(cmd, capture_output=True, text=True)
         if r.returncode != 0:
             raise RuntimeError(f"ClaudeCode container startup failed:\n{r.stderr}")
+        logger.info("[%s] Container ID: %s", task_id, r.stdout.strip()[:12])
         self._patch_claudecode_runtime(task_id)
 
     def _patch_claudecode_runtime(self, task_id: str) -> None:
@@ -669,18 +672,140 @@ PY"""
     ) -> None:
         output_dir.mkdir(parents=True, exist_ok=True)
         cmd = self._build_prompt_command(prompt, model, thinking=thinking)
-        r = subprocess.run(
-            ["docker", "exec", task_id, "/bin/bash", "-c", cmd],
-            capture_output=True,
-            text=True,
-            timeout=timeout_seconds,
-        )
-        (output_dir / "agent.log").write_text(
-            (r.stdout or "") + ("\n" if r.stdout else "") + (r.stderr or ""),
-            encoding="utf-8",
-        )
-        if r.returncode != 0:
-            raise RuntimeError(f"ClaudeCode run failed (rc={r.returncode}):\n{r.stderr}")
+        full_cmd = ["docker", "exec", task_id, "/bin/bash", "-c", cmd]
+        log_path = output_dir / "agent.log"
+        progress_interval = self._progress_log_interval_seconds()
+        start_time = time.perf_counter()
+        deadline = start_time + timeout_seconds
+
+        with log_path.open("w", encoding="utf-8", errors="replace") as log_file:
+            proc = subprocess.Popen(
+                full_cmd,
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+            logger.info(
+                "[%s] Started ClaudeCode process PID=%s → %s",
+                task_id,
+                proc.pid,
+                log_path,
+            )
+            logger.info("[%s] Waiting for ClaudeCode to finish...", task_id)
+            write_execution_status(
+                output_dir,
+                status="claudecode_running",
+                pid=proc.pid,
+                progress_log_interval_seconds=progress_interval,
+            )
+
+            while True:
+                remaining = deadline - time.perf_counter()
+                if remaining <= 0:
+                    self._terminate_prompt_process(task_id, proc)
+                    raise subprocess.TimeoutExpired(full_cmd, timeout_seconds)
+
+                try:
+                    returncode = proc.wait(timeout=min(progress_interval, remaining))
+                    break
+                except subprocess.TimeoutExpired:
+                    elapsed = time.perf_counter() - start_time
+                    if elapsed >= timeout_seconds:
+                        self._terminate_prompt_process(task_id, proc)
+                        raise subprocess.TimeoutExpired(full_cmd, timeout_seconds)
+
+                    log_file.flush()
+                    try:
+                        log_bytes = log_path.stat().st_size
+                    except OSError:
+                        log_bytes = 0
+                    write_execution_status(
+                        output_dir,
+                        status="claudecode_running",
+                        pid=proc.pid,
+                        elapsed_time=round(elapsed, 2),
+                        agent_log_bytes=log_bytes,
+                    )
+                    logger.info(
+                        "[%s] ClaudeCode still running, elapsed: %.0fs/%ds, agent.log: %d bytes",
+                        task_id,
+                        elapsed,
+                        timeout_seconds,
+                        log_bytes,
+                    )
+
+        elapsed = time.perf_counter() - start_time
+        if returncode == 0:
+            logger.info(
+                "[%s] ClaudeCode finished successfully, elapsed: %.2f seconds",
+                task_id,
+                elapsed,
+            )
+        logger.info("[%s] ClaudeCode exit code: %s", task_id, returncode)
+        if returncode != 0:
+            raise RuntimeError(
+                f"ClaudeCode run failed (rc={returncode}); see {log_path}"
+            )
+
+    @staticmethod
+    def _progress_log_interval_seconds() -> float:
+        raw = os.environ.get("WILDCLAW_PROGRESS_LOG_INTERVAL_SECONDS", "").strip()
+        if not raw:
+            return DEFAULT_PROGRESS_LOG_INTERVAL_SECONDS
+        try:
+            interval = float(raw)
+        except ValueError:
+            logger.warning(
+                "Invalid WILDCLAW_PROGRESS_LOG_INTERVAL_SECONDS=%r; using %.0fs",
+                raw,
+                DEFAULT_PROGRESS_LOG_INTERVAL_SECONDS,
+            )
+            return DEFAULT_PROGRESS_LOG_INTERVAL_SECONDS
+        if interval <= 0:
+            logger.warning(
+                "WILDCLAW_PROGRESS_LOG_INTERVAL_SECONDS must be > 0, got %r; using %.0fs",
+                raw,
+                DEFAULT_PROGRESS_LOG_INTERVAL_SECONDS,
+            )
+            return DEFAULT_PROGRESS_LOG_INTERVAL_SECONDS
+        return interval
+
+    @staticmethod
+    def _terminate_prompt_process(
+        task_id: str,
+        proc: subprocess.Popen[str],
+    ) -> None:
+        try:
+            subprocess.run(
+                [
+                    "docker",
+                    "exec",
+                    task_id,
+                    "/bin/bash",
+                    "-lc",
+                    (
+                        "pkill -TERM -f '[s]tart.sh' 2>/dev/null || true; "
+                        "pkill -TERM -f '[c]laude' 2>/dev/null || true"
+                    ),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            logger.warning(
+                "[%s] Failed to stop ClaudeCode processes in container: %s",
+                task_id,
+                exc,
+            )
+        proc.kill()
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            logger.warning(
+                "[%s] ClaudeCode docker exec did not exit after kill",
+                task_id,
+            )
 
     def _extract_usage_from_logs(self, log_dir: Path) -> dict[str, Any]:
         totals = {

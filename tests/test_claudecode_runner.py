@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from src.agents.base import AgentTaskSpec
 from src.agents.claudecode.runner import ClaudeCodeAgent, write_execution_status
 from src.utils.anomalies import scan_run_dir
+from src.utils.log_format import ColorEmojiFormatter, EmojiFormatter
 
 
 class ClaudeCodeRunnerTests(unittest.TestCase):
@@ -110,7 +112,9 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
     def test_maas_model_injects_common_output_limit_environment(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
             os.environ, {"MAAS_MAX_TOKENS": "3072"}, clear=False
-        ), patch("src.agents.claudecode.runner.subprocess.run") as run:
+        ), patch("src.agents.claudecode.runner.subprocess.run") as run, self.assertLogs(
+            "src.agents.claudecode.runner", level="INFO"
+        ) as logs:
             run.return_value = subprocess.CompletedProcess([], 0, "container-id", "")
             agent = ClaudeCodeAgent(
                 anthropic_api_key="test-key",
@@ -125,6 +129,9 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
             if call.args[0][:2] == ["docker", "run"]
         )
         self.assertIn("CLAUDE_CODE_MAX_OUTPUT_TOKENS=3072", command)
+        messages = "\n".join(logs.output)
+        self.assertIn("Starting ClaudeCode container", messages)
+        self.assertIn("Container ID: container-id", messages)
 
     def test_run_task_forwards_thinking_to_prompt_runner(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -168,6 +175,130 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
             self.assertEqual(status["harness"], "claudecode")
             self.assertEqual(status["harness_version"], "test-version")
             self.assertEqual(status["exit_code"], 0)
+
+    def test_run_prompt_streams_output_and_logs_lifecycle(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            process = MagicMock()
+            process.pid = 1234
+            process.returncode = 0
+            process.wait.return_value = 0
+
+            with patch(
+                "src.agents.claudecode.runner.subprocess.Popen",
+                return_value=process,
+            ) as popen, self.assertLogs(
+                "src.agents.claudecode.runner", level="INFO"
+            ) as logs:
+                self.agent._run_prompt(
+                    "claudecode-progress-test",
+                    "test prompt",
+                    "claude-sonnet",
+                    30,
+                    output_dir,
+                    thinking="high",
+                )
+
+            command = popen.call_args.args[0]
+            self.assertEqual(command[:3], ["docker", "exec", "claudecode-progress-test"])
+            self.assertIs(popen.call_args.kwargs["stderr"], subprocess.STDOUT)
+            self.assertNotIn("capture_output", popen.call_args.kwargs)
+            process.wait.assert_called_once()
+            messages = "\n".join(logs.output)
+            self.assertIn("Started ClaudeCode process PID=1234", messages)
+            self.assertIn("Waiting for ClaudeCode to finish", messages)
+            self.assertIn("ClaudeCode finished successfully", messages)
+            self.assertIn("ClaudeCode exit code: 0", messages)
+
+    def test_run_prompt_logs_periodic_progress_while_process_is_running(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            process = MagicMock()
+            process.pid = 5678
+            process.returncode = 0
+            process.wait.side_effect = [
+                subprocess.TimeoutExpired("docker exec", 1),
+                0,
+            ]
+
+            with patch.dict(
+                os.environ,
+                {"WILDCLAW_PROGRESS_LOG_INTERVAL_SECONDS": "1"},
+            ), patch(
+                "src.agents.claudecode.runner.subprocess.Popen",
+                return_value=process,
+            ), self.assertLogs(
+                "src.agents.claudecode.runner", level="INFO"
+            ) as logs:
+                self.agent._run_prompt(
+                    "claudecode-heartbeat-test",
+                    "test prompt",
+                    "claude-sonnet",
+                    30,
+                    output_dir,
+                )
+
+            messages = "\n".join(logs.output)
+            self.assertIn("ClaudeCode still running", messages)
+            self.assertIn("agent.log:", messages)
+            status = json.loads(
+                (output_dir / "execution_status.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(status["status"], "claudecode_running")
+            self.assertEqual(status["pid"], 5678)
+
+    def test_run_prompt_terminates_process_after_total_timeout(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            process = MagicMock()
+            process.pid = 9012
+            process.wait.side_effect = subprocess.TimeoutExpired("docker exec", 1)
+
+            with patch.dict(
+                os.environ,
+                {"WILDCLAW_PROGRESS_LOG_INTERVAL_SECONDS": "1"},
+            ), patch(
+                "src.agents.claudecode.runner.subprocess.Popen",
+                return_value=process,
+            ), patch(
+                "src.agents.claudecode.runner.time.perf_counter",
+                side_effect=[100.0, 100.0, 102.0],
+            ), patch.object(
+                self.agent,
+                "_terminate_prompt_process",
+            ) as terminate:
+                with self.assertRaises(subprocess.TimeoutExpired):
+                    self.agent._run_prompt(
+                        "claudecode-timeout-process-test",
+                        "test prompt",
+                        "claude-sonnet",
+                        1,
+                        output_dir,
+                    )
+
+            terminate.assert_called_once_with(
+                "claudecode-timeout-process-test",
+                process,
+            )
+
+    def test_progress_log_has_console_highlight_and_file_emoji(self) -> None:
+        record = logging.LogRecord(
+            name="src.agents.claudecode.runner",
+            level=logging.INFO,
+            pathname=__file__,
+            lineno=1,
+            msg="[task] ClaudeCode still running, elapsed: 30s/3600s",
+            args=(),
+            exc_info=None,
+        )
+
+        file_line = EmojiFormatter().format(record)
+        console_line = ColorEmojiFormatter().format(record)
+
+        self.assertIn("⏳", file_line)
+        self.assertNotIn("\033[", file_line)
+        self.assertIn("⏳", console_line)
+        self.assertIn("\033[", console_line)
 
     def test_collect_usage_exports_transcript_and_counts_model_requests(self) -> None:
         chat_rows = [

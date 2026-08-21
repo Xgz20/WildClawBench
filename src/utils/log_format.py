@@ -32,6 +32,8 @@ _KEYWORD_EMOJI: tuple[tuple[str, str], ...] = (
     ("timed out", "⏱️"),
     ("timeout", "⏱️"),
     ("timed_out", "⏱️"),
+    ("still running", "⏳"),
+    ("waiting for", "⏳"),
     ("cleaned up", "✅"),
     ("finished", "✅"),
     ("complete", "✅"),
