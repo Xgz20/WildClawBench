@@ -851,12 +851,12 @@ def truncate(text: str) -> str:
     return text
 
 
-PCT_FMT = '0.0"%"'            # 数值单元格显示为 41.6%，排序/色阶仍按数值生效
-PCT_SIGNED_FMT = '+0.0"%";-0.0"%";0.0"%"'
+PCT_FMT = "0.0"               # 保留 0~100 分值，避免 QuickLook/Numbers 将字面百分号再放大 100 倍
+PCT_SIGNED_FMT = "+0.0;-0.0;0.0"
 
 
 def _pct_or_dash(frac: float | None):
-    """比率(0~1)转百分比数值(如 68.3)供 PCT_FMT 展示；None → "-"。"""
+    """比率(0~1)转百分制数值（如 68.3）供 PCT_FMT 展示；None → "-"。"""
     return round(frac * 100, 1) if frac is not None else "-"
 
 

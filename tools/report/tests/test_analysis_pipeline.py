@@ -565,6 +565,15 @@ class AnalysisPipelineTest(unittest.TestCase):
             self.assertEqual(target_harness_cell.fill.fill_type, "solid")
             self.assertGreaterEqual(len(sheet.conditional_formatting), 3)
 
+            numeric_cells = [
+                cell
+                for row in sheet.iter_rows()
+                for cell in row
+                if isinstance(cell.value, (int, float))
+            ]
+            self.assertTrue(numeric_cells)
+            self.assertTrue(all(cell.number_format == "0.0" for cell in numeric_cells))
+
     def test_controlled_views_wrap_headers_and_multiline_values(self) -> None:
         workbook = load_workbook(self.generate_comparison_excel())
         for title in (
