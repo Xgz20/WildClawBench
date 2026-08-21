@@ -160,6 +160,11 @@ EXPECTED_TASKS = {
         "difficulty": "L1",
         "criterion_count": 12,
     },
+    "task_030_waste_sorting_guardian": {
+        "task_type": "儿童科普／垃圾分类拖放游戏",
+        "difficulty": "L1",
+        "criterion_count": 10,
+    },
     "task_031_linzhiyuan_photo_portfolio": {
         "task_type": "个人作品集／摄影图集",
         "difficulty": "L1",
