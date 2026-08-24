@@ -17,11 +17,28 @@ OPENCLAW_TRANSCRIPT_PATH = "/root/.openclaw/agents/main/sessions/chat.jsonl"
 CODEX_PROMPT_PATH = "/tmp/codex_prompt.txt"
 CODEX_LAST_MESSAGE_PATH = "/tmp/codex_last_message.txt"
 CONTAINER_ASTRONCODE_HOME = "/root/.acode"
+ASTRONCODE_CLI_COMMAND_ENV = "ASTRONCODE_CLI_COMMAND"
+DEFAULT_ASTRONCODE_CLI_COMMAND = "astron-code"
 DEFAULT_CODEX_NPM_PACKAGE = os.environ.get("ASTRONCODE_NPM_PACKAGE", "@iflytek/astron-code")
 DEFAULT_CODEX_NPM_VERSION = os.environ.get("ASTRONCODE_NPM_VERSION", "")
 CODEX_BOOTSTRAP_RETRIES = int(os.environ.get("ASTRONCODE_BOOTSTRAP_RETRIES", "2"))
 CODEX_BOOTSTRAP_RETRY_BASE_DELAY = float(os.environ.get("ASTRONCODE_BOOTSTRAP_RETRY_BASE_DELAY", "3"))
 DEFAULT_OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+
+
+def resolve_astroncode_cli_command(raw_value: str | None = None) -> str:
+    configured = (
+        os.environ.get(ASTRONCODE_CLI_COMMAND_ENV, "")
+        if raw_value is None
+        else raw_value
+    )
+    command = str(configured or "").strip() or DEFAULT_ASTRONCODE_CLI_COMMAND
+    if "\x00" in command or any(character.isspace() for character in command):
+        raise ValueError(
+            f"{ASTRONCODE_CLI_COMMAND_ENV} must be one executable name or path "
+            "without arguments"
+        )
+    return command
 
 
 def _copy_text_to_container(task_id: str, container_path: str, text: str) -> None:
@@ -139,10 +156,12 @@ def setup_codex_config(task_id: str, model: str) -> None:
 def build_codex_bootstrap_command(
     package: str = DEFAULT_CODEX_NPM_PACKAGE,
     version: str | None = DEFAULT_CODEX_NPM_VERSION,
+    cli_command: str | None = None,
 ) -> str:
     package_spec = package if not version else f"{package}@{version}"
+    executable = shlex.quote(resolve_astroncode_cli_command(cli_command))
     return (
-        "if ! command -v astron-code >/dev/null 2>&1; then "
+        f"if ! command -v {executable} >/dev/null 2>&1; then "
         f"npm install -g {shlex.quote(package_spec)}; "
         "fi"
     )
@@ -247,15 +266,17 @@ def build_codex_exec_command(
     model: str,
     prompt_path: str = CODEX_PROMPT_PATH,
     env_vars: dict[str, str] | None = None,
+    cli_command: str | None = None,
 ) -> str:
     normalized_model = normalize_codex_model(model)
     model_arg = f"--model {shlex.quote(normalized_model)} " if normalized_model else ""
+    executable = shlex.quote(resolve_astroncode_cli_command(cli_command))
     env_prefix = ""
     for key, value in (env_vars or {}).items():
         env_prefix += f"export {key}={shlex.quote(value)} && "
     return (
         f"{env_prefix}cat {shlex.quote(prompt_path)} | "
-        f"astron-code exec --json --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "
+        f"{executable} exec --json --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "
         f"--cd {shlex.quote(TMP_WORKSPACE)} "
         f"{model_arg}"
         f"--output-last-message {shlex.quote(CODEX_LAST_MESSAGE_PATH)} -"

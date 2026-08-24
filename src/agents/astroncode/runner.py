@@ -21,6 +21,7 @@ from src.agents.astroncode.backend import (
     CODEX_PROMPT_PATH,
     load_skill_documents,
     prepare_codex_prompt,
+    resolve_astroncode_cli_command,
 )
 from src.utils.docker_utils import container_resource_args, run_warmup, setup_skills, snapshot_workspace_state
 from src.utils.endpoint_utils import normalize_openrouter_base_url_for_openclaw
@@ -259,6 +260,7 @@ class AstronCodeAgent(BaseAgent):
         openrouter_api_key: str = "",
         openrouter_base_url: str = "",
         reasoning_effort_default: str = DEFAULT_REASONING_EFFORT,
+        cli_command: str | None = None,
     ) -> None:
         resolved_image = (
             image
@@ -266,6 +268,7 @@ class AstronCodeAgent(BaseAgent):
             or "wildclawbench-astroncode-ubuntu:v0.5"
         )
         self.image: str = resolved_image
+        self.cli_command = resolve_astroncode_cli_command(cli_command)
         self.openrouter_api_key = (
             openrouter_api_key or os.environ.get("OPENROUTER_API_KEY", "")
         ).strip()
@@ -1020,8 +1023,7 @@ class AstronCodeAgent(BaseAgent):
             raise RuntimeError(f"AstronCode container startup failed:\n{r.stderr}")
         logger.info("[%s] Container ID: %s", task_id, r.stdout.strip()[:12])
 
-    @staticmethod
-    def _probe_harness_version(task_id: str) -> str:
+    def _probe_harness_version(self, task_id: str) -> str:
         """Read the AstronCode CLI version from inside the running container.
 
         Returns the version string or "" if it can't be read. Non-fatal:
@@ -1029,18 +1031,24 @@ class AstronCodeAgent(BaseAgent):
         """
         try:
             r = subprocess.run(
-                ["docker", "exec", task_id, "astron-code", "--version"],
+                ["docker", "exec", task_id, self.cli_command, "--version"],
                 capture_output=True,
                 text=True,
                 timeout=30,
             )
         except (subprocess.SubprocessError, OSError) as exc:
-            logger.warning("[%s] astron-code --version probe failed: %s", task_id, exc)
+            logger.warning(
+                "[%s] %s --version probe failed: %s",
+                task_id,
+                self.cli_command,
+                exc,
+            )
             return ""
         if r.returncode != 0:
             logger.warning(
-                "[%s] astron-code --version returned %s: %s",
+                "[%s] %s --version returned %s: %s",
                 task_id,
+                self.cli_command,
                 r.returncode,
                 (r.stderr or r.stdout).strip(),
             )
@@ -1639,8 +1647,10 @@ if __name__ == "__main__":
             stderr="",
         )
 
-    @staticmethod
-    def _terminate_codex_processes(task_id: str) -> None:
+    def _terminate_codex_processes(self, task_id: str) -> None:
+        process_pattern = shlex.quote(
+            f"{PurePosixPath(self.cli_command).name} exec"
+        )
         subprocess.run(
             [
                 "docker",
@@ -1649,9 +1659,9 @@ if __name__ == "__main__":
                 "/bin/bash",
                 "-lc",
                 (
-                    "pkill -TERM -f 'astron-code exec' 2>/dev/null || true; "
+                    f"pkill -TERM -f -- {process_pattern} 2>/dev/null || true; "
                     "sleep 2; "
-                    "pkill -KILL -f 'astron-code exec' 2>/dev/null || true"
+                    f"pkill -KILL -f -- {process_pattern} 2>/dev/null || true"
                 ),
             ],
             capture_output=True,
@@ -1747,7 +1757,8 @@ if __name__ == "__main__":
         return (
             "cd /tmp_workspace && "
             f"cat {shlex.quote(prompt_path)} | "
-            "astron-code exec --skip-git-repo-check --cd /tmp_workspace -"
+            f"{shlex.quote(self.cli_command)} exec "
+            "--skip-git-repo-check --cd /tmp_workspace -"
         )
 
     def _build_find_latest_session_command(self) -> str:
