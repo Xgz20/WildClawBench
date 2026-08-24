@@ -70,9 +70,9 @@ def _setup(tmp: str):
 
 
 class DefaultsTest(unittest.TestCase):
-    def test_default_image_is_astroncode_v04(self) -> None:
+    def test_default_image_is_astroncode_v05(self) -> None:
         self.assertEqual(DEFAULT_DOCKER_IMAGE,
-                         "wildclawbench-astroncode-ubuntu:v0.4")
+                         "wildclawbench-astroncode-ubuntu:v0.5")
 
 
 class CopyGtTest(unittest.TestCase):

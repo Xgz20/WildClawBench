@@ -1,5 +1,5 @@
 {
-  "default": "v0.4-ppt",
+  "default": "v0.5",
   "versions": {
     "v0.1-test.8": {
       "image": "wildclawbench-astroncode-ubuntu:v0.1-test.8",
@@ -31,6 +31,16 @@
       "dockerfile": "v4/Dockerfile",
       "build_args": {
         "ASTRON_CODE_VERSION": "0.0.13",
+        "SEARCH_UPDATER_VERSION": "0.1.17"
+      }
+    },
+    "v0.5": {
+      "image": "wildclawbench-astroncode-ubuntu:v0.5",
+      "context": "v5",
+      "dockerfile": "v5/Dockerfile",
+      "build_args": {
+        "ASTRON_CODE_VERSION": "0.0.34",
+        "NODEJS_VERSION": "22.23.2-1nodesource1",
         "SEARCH_UPDATER_VERSION": "0.1.17"
       }
     }

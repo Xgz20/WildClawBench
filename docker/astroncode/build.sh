@@ -50,6 +50,7 @@ if [[ "${WCB_LEGACY_BUILD_WRAPPER:-}" == "1" ]]; then
     v2) LEGACY_VARIANT_VERSION="v0.2" ;;
     v3) LEGACY_VARIANT_VERSION="v0.3" ;;
     v4) LEGACY_VARIANT_VERSION="v0.4-ppt" ;;
+    v5) LEGACY_VARIANT_VERSION="v0.5" ;;
     *)
       echo "Unsupported legacy AstronCode build mapping: variant=${ASTRONCODE_DOCKER_VARIANT} tag=${IMAGE_TAG:-<default>}" >&2
       exit 2
@@ -92,6 +93,7 @@ values = (
     entry["dockerfile"],
     args.get("ASTRON_CODE_VERSION", ""),
     args.get("SEARCH_UPDATER_VERSION", ""),
+    args.get("NODEJS_VERSION", ""),
 )
 if any("\t" in value or "\n" in value for value in values):
     raise SystemExit("Invalid control character in AstronCode versions.json")
@@ -101,7 +103,7 @@ PY
   exit 2
 fi
 
-IFS=$'\t' read -r VERSION IMAGE_REF CONTEXT_REL DOCKERFILE_REL PINNED_ASTRON_CODE_VERSION PINNED_SEARCH_UPDATER_VERSION <<< "${VERSION_RECORD}"
+IFS=$'\t' read -r VERSION IMAGE_REF CONTEXT_REL DOCKERFILE_REL PINNED_ASTRON_CODE_VERSION PINNED_SEARCH_UPDATER_VERSION PINNED_NODEJS_VERSION <<< "${VERSION_RECORD}"
 BUILD_CONTEXT="${HARNESS_DIR}/${CONTEXT_REL}"
 DOCKERFILE="${HARNESS_DIR}/${DOCKERFILE_REL}"
 
@@ -130,12 +132,19 @@ if [[ -n "${ASTRON_CODE_VERSION:-}" && "${ASTRON_CODE_VERSION}" != "${PINNED_AST
   echo "ASTRON_CODE_VERSION must be ${PINNED_ASTRON_CODE_VERSION} for ${IMAGE_REF}" >&2
   exit 2
 fi
+if [[ -n "${NODEJS_VERSION:-}" && "${NODEJS_VERSION}" != "${PINNED_NODEJS_VERSION}" ]]; then
+  echo "NODEJS_VERSION must be ${PINNED_NODEJS_VERSION:-unset} for ${IMAGE_REF}" >&2
+  exit 2
+fi
 if [[ -n "${SEARCH_UPDATER_VERSION:-}" && "${SEARCH_UPDATER_VERSION}" != "${PINNED_SEARCH_UPDATER_VERSION}" ]]; then
   echo "SEARCH_UPDATER_VERSION must be ${PINNED_SEARCH_UPDATER_VERSION:-unset} for ${IMAGE_REF}" >&2
   exit 2
 fi
 
 BUILD_ARGS=(--build-arg "ASTRON_CODE_VERSION=${PINNED_ASTRON_CODE_VERSION}")
+if [[ -n "${PINNED_NODEJS_VERSION}" ]]; then
+  BUILD_ARGS+=(--build-arg "NODEJS_VERSION=${PINNED_NODEJS_VERSION}")
+fi
 if [[ -n "${PINNED_SEARCH_UPDATER_VERSION}" ]]; then
   BUILD_ARGS+=(--build-arg "SEARCH_UPDATER_VERSION=${PINNED_SEARCH_UPDATER_VERSION}")
 fi

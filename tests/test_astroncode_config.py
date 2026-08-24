@@ -13,8 +13,8 @@ from src.agents.astroncode.runner import AstronCodeAgent
 
 
 DEFAULT_MODELS_BASE_URL = (
-    "https://astroncode-api-prod.xf-yun.com/"
-    "api/v1/astroncode_webserver/config-v1"
+    "https://astronstudio-api-volces-prod.xf-yun.com/"
+    "api/v1/astroncode_webserver/config-v4"
 )
 SEARCH_AGENT_CONFIG_PATH = "/opt/astroncode/search-agent.config.toml"
 
@@ -958,11 +958,11 @@ class AstronCodeConfigTests(unittest.TestCase):
                 self.assertIn(accepted_name, message)
             self.assertNotIn(unrelated_secret, message)
 
-    def test_default_image_is_v0_4(self) -> None:
+    def test_default_image_is_v0_5(self) -> None:
         with patch.dict(os.environ, {"DOCKER_IMAGE_ASTRONCODE": ""}, clear=False):
             self.assertEqual(
                 self.make_agent().image,
-                "wildclawbench-astroncode-ubuntu:v0.4",
+                "wildclawbench-astroncode-ubuntu:v0.5",
             )
 
 

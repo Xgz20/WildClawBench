@@ -47,8 +47,8 @@ _FALSE_ENV_VALUES = {"0", "false", "no", "off"}
 _RESERVED_CONTAINER_ENV_KEYS = frozenset({"CODEX_ROLLOUT_TRACE_ROOT"})
 DEFAULT_ONE_IFLYTEK_BASE_URL = "https://one.iflytek.com/api/llm/console/chat/v1"
 DEFAULT_ASTRON_MODELS_BASE_URL = (
-    "https://astroncode-api-prod.xf-yun.com/"
-    "api/v1/astroncode_webserver/config-v1"
+    "https://astronstudio-api-volces-prod.xf-yun.com/"
+    "api/v1/astroncode_webserver/config-v4"
 )
 VALID_ASTRONCODE_PROVIDERS = ("astron-spark", "one-iflytek", "openrouter")
 ASTRON_MODEL_PREFIXES = ("xminimax", "xop", "xspark", "astronclaw-")
@@ -263,7 +263,7 @@ class AstronCodeAgent(BaseAgent):
         resolved_image = (
             image
             or os.environ.get("DOCKER_IMAGE_ASTRONCODE")
-            or "wildclawbench-astroncode-ubuntu:v0.4"
+            or "wildclawbench-astroncode-ubuntu:v0.5"
         )
         self.image: str = resolved_image
         self.openrouter_api_key = (
@@ -1281,7 +1281,7 @@ class AstronCodeAgent(BaseAgent):
         redact_secrets: bool,
         request_base_url: str | None = None,
     ) -> str:
-        """Render the AstronCode 0.0.13 config for the selected model.
+        """Render the AstronCode config for the selected model.
 
         Astron-native models use the CLI's built-in astron-spark provider.
         GPT models use iFlytek One, and other external models use OpenRouter.

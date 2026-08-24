@@ -77,7 +77,7 @@ python3 eval_e2e/collect_runs.py \
 python3 eval_e2e/grade_runs.py \
   --manifest eval_out_e2e/manifest.json \
   --out-root eval_out_e2e/results \
-  --docker-image wildclawbench-astroncode-ubuntu:v0.4
+  --docker-image wildclawbench-astroncode-ubuntu:v0.5
 ```
 
 把项目目录挂为容器 `/tmp_workspace`，单独 `docker cp` 送入 `gt/`，再调 `run_grading()`。
@@ -162,7 +162,7 @@ python3 eval_e2e/grade_runs.py \
   --manifest eval_out_e2e/manifest.json \
   --out-root eval_out_e2e/results \
   --repo-root /path/to/WildClawBench \
-  --docker-image wildclawbench-astroncode-ubuntu:v0.4
+  --docker-image wildclawbench-astroncode-ubuntu:v0.5
 ```
 
 **前提条件**：
@@ -224,7 +224,7 @@ python3 eval_e2e/grade_runs.py \
   --manifest eval_out_e2e/manifest.json \
   --out-root eval_out_e2e/results \
   --repo-root /Users/userA/WildClawBench \
-  --docker-image wildclawbench-astroncode-ubuntu:v0.4
+  --docker-image wildclawbench-astroncode-ubuntu:v0.5
 ```
 
 **技术说明**：

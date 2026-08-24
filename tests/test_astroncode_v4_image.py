@@ -269,21 +269,21 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
         cls.compact_content = re.sub(r"\s+", " ", logical_content)
         cls.manifest = json.loads(BUILD_MANIFEST.read_text(encoding="utf-8"))
 
-    def test_defaults_to_v4_image_tag(self):
-        self.assertEqual("v0.4-ppt", self.manifest["default"])
+    def test_defaults_to_v5_image_tag(self):
+        self.assertEqual("v0.5", self.manifest["default"])
         self.assertEqual(
-            "wildclawbench-astroncode-ubuntu:v0.4-ppt",
-            self.manifest["versions"]["v0.4-ppt"]["image"],
+            "wildclawbench-astroncode-ubuntu:v0.5",
+            self.manifest["versions"]["v0.5"]["image"],
         )
 
-    def test_defaults_to_v4_docker_variant(self):
+    def test_defaults_to_v5_docker_variant(self):
         self.assertEqual(
-            "v4",
-            self.manifest["versions"]["v0.4-ppt"]["context"],
+            "v5",
+            self.manifest["versions"]["v0.5"]["context"],
         )
         self.assertNotIn('BUILD_CONTEXT="${REPO_ROOT}/docker/astroncode/', self.content)
 
-    def test_documents_v4_default_and_v1_v2_v3_overrides(self):
+    def test_documents_v5_default_and_historical_overrides(self):
         result = subprocess.run(
             ["bash", str(BUILD_SCRIPT), "--help"],
             cwd=REPO_ROOT,
@@ -294,13 +294,14 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertIn("docker/astroncode/build.sh", result.stdout)
         self.assertEqual(
-            {"v0.1-test.8", "v0.2", "v0.3", "v0.4-ppt"},
+            {"v0.1-test.8", "v0.2", "v0.3", "v0.4-ppt", "v0.5"},
             set(self.manifest["versions"]),
         )
 
     def test_propagates_optional_version_and_registry_build_args(self):
         variables = (
             "ASTRON_CODE_VERSION",
+            "NODEJS_VERSION",
             "SEARCH_UPDATER_VERSION",
             "NPM_REGISTRY",
         )
@@ -335,6 +336,7 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
             "v0.2": "v2",
             "v0.3": "v3",
             "v0.4-ppt": "v4",
+            "v0.5": "v5",
         }
         for version, entry in self.manifest["versions"].items():
             with self.subTest(version=version):
@@ -390,10 +392,14 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
                 f"docker was invoked with: {docker_calls}",
             )
 
-    def test_default_build_maps_to_v4_context(self):
+    def test_default_build_maps_to_v5_context(self):
         entry = self.manifest["versions"][self.manifest["default"]]
-        self.assertEqual("v4/Dockerfile", entry["dockerfile"])
-        self.assertEqual("0.0.13", entry["build_args"]["ASTRON_CODE_VERSION"])
+        self.assertEqual("v5/Dockerfile", entry["dockerfile"])
+        self.assertEqual("0.0.34", entry["build_args"]["ASTRON_CODE_VERSION"])
+        self.assertEqual(
+            "22.23.2-1nodesource1",
+            entry["build_args"]["NODEJS_VERSION"],
+        )
         self.assertEqual("0.1.17", entry["build_args"]["SEARCH_UPDATER_VERSION"])
 
     def test_manifest_disallows_unregistered_review_tag(self):

@@ -20,6 +20,7 @@ CODEX_WRAPPER = REPO_ROOT / "script" / "build-codex-image.sh"
 BUILD_ENV_NAMES = (
     "ASTRONCODE_DOCKER_VARIANT",
     "ASTRON_CODE_VERSION",
+    "NODEJS_VERSION",
     "SEARCH_UPDATER_VERSION",
     "CODEX_VERSION",
     "EVAL_BASE_IMAGE",
@@ -36,12 +37,13 @@ BUILD_ENV_NAMES = (
 class ImageVersionManifestTest(unittest.TestCase):
     def test_astroncode_manifest_binds_official_tags_to_version_contexts(self):
         manifest = self._load_manifest(ASTRONCODE_MANIFEST)
-        self.assertEqual("v0.4-ppt", manifest["default"])
+        self.assertEqual("v0.5", manifest["default"])
         expected_contexts = {
             "v0.1-test.8": "v1",
             "v0.2": "v2",
             "v0.3": "v3",
             "v0.4-ppt": "v4",
+            "v0.5": "v5",
         }
         expected_args = {
             "v0.1-test.8": {"ASTRON_CODE_VERSION": "0.0.5-test.8"},
@@ -49,6 +51,11 @@ class ImageVersionManifestTest(unittest.TestCase):
             "v0.3": {"ASTRON_CODE_VERSION": "0.0.13"},
             "v0.4-ppt": {
                 "ASTRON_CODE_VERSION": "0.0.13",
+                "SEARCH_UPDATER_VERSION": "0.1.17",
+            },
+            "v0.5": {
+                "ASTRON_CODE_VERSION": "0.0.34",
+                "NODEJS_VERSION": "22.23.2-1nodesource1",
                 "SEARCH_UPDATER_VERSION": "0.1.17",
             },
         }
@@ -118,20 +125,21 @@ class ImageVersionManifestTest(unittest.TestCase):
 
 
 class CanonicalBuildCliTest(unittest.TestCase):
-    def test_astroncode_default_build_uses_v4_context_and_pinned_versions(self):
+    def test_astroncode_default_build_uses_v5_context_and_pinned_versions(self):
         result, events = self._run_with_docker_stub(
             ["bash", str(ASTRONCODE_BUILD)],
             {"SKIP_SAVE": "1"},
         )
         self.assertEqual(0, result.returncode, result.stderr)
         build = self._event(events, "build")
-        context = ASTRONCODE_DIR / "v4"
+        context = ASTRONCODE_DIR / "v5"
         self.assertEqual(str(context / "Dockerfile"), build[build.index("-f") + 1])
         self.assertEqual(
-            "wildclawbench-astroncode-ubuntu:v0.4-ppt",
+            "wildclawbench-astroncode-ubuntu:v0.5",
             build[build.index("-t") + 1],
         )
-        self.assertIn("ASTRON_CODE_VERSION=0.0.13", build)
+        self.assertIn("ASTRON_CODE_VERSION=0.0.34", build)
+        self.assertIn("NODEJS_VERSION=22.23.2-1nodesource1", build)
         self.assertIn("SEARCH_UPDATER_VERSION=0.1.17", build)
         self.assertEqual(str(context), build[-1])
         self.assertNotIn("save", [event[0] for event in events])
@@ -193,6 +201,18 @@ class CanonicalBuildCliTest(unittest.TestCase):
         )
         self.assertNotEqual(0, result.returncode)
         self.assertIn("ASTRON_CODE_VERSION must be 0.0.13", result.stderr)
+        self.assertEqual([], events)
+
+    def test_pinned_astroncode_node_version_cannot_be_overridden(self):
+        result, events = self._run_with_docker_stub(
+            ["bash", str(ASTRONCODE_BUILD), "--version", "v0.5"],
+            {"NODEJS_VERSION": "22.0.0", "SKIP_SAVE": "1"},
+        )
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn(
+            "NODEJS_VERSION must be 22.23.2-1nodesource1",
+            result.stderr,
+        )
         self.assertEqual([], events)
 
     def test_codex_default_build_uses_pinned_tag_cli_and_base(self):
