@@ -549,6 +549,13 @@ def validate_analysis(manifest: dict[str, Any], analysis: dict[str, Any]) -> dic
             confidence = case.get("confidence")
             if not isinstance(confidence, str) or confidence not in CONFIDENCES:
                 issues.append({"code": "CASE_CONFIDENCE_INVALID", "severity": "error", "message": f"典型案例置信度无效：{confidence}", "task_id": case.get("task_id", "")})
+    comparability_analysis = analysis.get("comparability_analysis")
+    if comparability_analysis is not None and not isinstance(comparability_analysis, dict):
+        issues.append({"code": "COMPARABILITY_ANALYSIS_INVALID", "severity": "error", "message": "comparability_analysis 必须是对象"})
+    elif isinstance(comparability_analysis, dict):
+        impact_rows = comparability_analysis.get("impact_rows", [])
+        if not isinstance(impact_rows, list) or not all(isinstance(item, dict) for item in impact_rows):
+            issues.append({"code": "COMPARABILITY_IMPACT_INVALID", "severity": "error", "message": "comparability_analysis.impact_rows 必须是对象数组"})
     if not isinstance(analysis.get("unconfirmed_items"), list):
         issues.append({"code": "UNCONFIRMED_ITEMS_INVALID", "severity": "error", "message": "unconfirmed_items 必须是数组"})
     for pair in sorted(expected_pairs - actual_pairs):
@@ -572,11 +579,18 @@ def render_markdown(manifest: dict[str, Any], analysis: dict[str, Any]) -> str:
     def evidence_text(item: dict[str, Any]) -> str:
         refs = []
         for ref in item.get("evidence_refs", []):
+            source = str(ref.get("source", ""))
+            source_name = source.replace("\\", "/").rsplit("/", 1)[-1]
             refs.append(
-                f"{ref.get('source', '')}（{ref.get('locator', '')}）：{ref.get('excerpt', '')}"
+                f"{source_name}（{ref.get('locator', '')}）：{ref.get('excerpt', '')}"
             )
         summary = item.get("evidence_summary", "")
         return cell(summary) + ("<br>" + "<br>".join(cell(ref) for ref in refs) if refs else "")
+
+    def score_cell(value: Any) -> str:
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return f"{value:.2f}"
+        return cell(value)
 
     units = {item["unit"]: item for item in manifest.get("units", [])}
     target = manifest.get("target_unit", "")
@@ -636,6 +650,49 @@ def render_markdown(manifest: dict[str, Any], analysis: dict[str, Any]) -> str:
                 f"| 问题点 | {cell(case.get('problem', ''))} |",
                 f"| 证据 | {evidence_text(case)} |",
                 f"| 结论置信度 | {cell(case.get('confidence', ''))} |",
+                "",
+            ])
+    comparability_analysis = analysis.get("comparability_analysis") or {}
+    unconfirmed_items = analysis.get("unconfirmed_items") or []
+    if comparability_analysis or unconfirmed_items:
+        lines.extend([
+            "## 附录：异常与不可比结果",
+            "",
+        ])
+        summary = str(comparability_analysis.get("summary", "")).strip()
+        if summary:
+            lines.extend([summary, ""])
+        impact_rows = comparability_analysis.get("impact_rows", [])
+        if impact_rows:
+            lines.extend([
+                "### 排除口径对均分的影响",
+                "",
+                f"| 口径 | 用例数 | {cell(target_name)} | {cell(reference_name)} | 分差 | 说明 |",
+                "|---|---:|---:|---:|---:|---|",
+            ])
+            for row in impact_rows:
+                lines.append(
+                    f"| {cell(row.get('scope', ''))} | {cell(row.get('task_count', ''))} | "
+                    f"{score_cell(row.get('target_score', ''))} | {score_cell(row.get('reference_score', ''))} | "
+                    f"{score_cell(row.get('delta_pct_points', ''))} | {cell(row.get('note', ''))} |"
+                )
+            lines.append("")
+        scope_note = str(comparability_analysis.get("scope_note", "")).strip()
+        if scope_note:
+            lines.extend([scope_note, ""])
+        for item_index, item in enumerate(unconfirmed_items, 1):
+            task_id = item.get("task_id", "")
+            task_name = item.get("task_name") or task_id
+            lines.extend([
+                f"### A{item_index}. {task_name}（{task_id}）",
+                "",
+                "| 项目 | 内容 |",
+                "|---|---|",
+                f"| 归类 | {cell(item.get('label', item.get('status', '待确认')))} |",
+                f"| 得分对比 | {cell(item.get('score_summary', ''))} |",
+                f"| 判定依据 | {cell(item.get('reason', ''))} |",
+                f"| 处理结论 | {cell(item.get('conclusion', ''))} |",
+                f"| 证据 | {evidence_text(item)} |",
                 "",
             ])
     return "\n".join(lines).rstrip() + "\n"

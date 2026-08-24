@@ -203,7 +203,32 @@ class CrossEvalAnalysisTest(unittest.TestCase):
                     }],
                 }],
             }],
-            "unconfirmed_items": [],
+            "comparability_analysis": {
+                "summary": "原始分差包含一项时限不可比结果，正文只保留提示。",
+                "scope_note": "该项需统一时限重跑后再归因。",
+                "impact_rows": [{
+                    "scope": "原始结果",
+                    "task_count": 2,
+                    "target_score": 65.0,
+                    "reference_score": 70.0,
+                    "delta_pct_points": -5.0,
+                    "note": "未排除异常。",
+                }],
+            },
+            "unconfirmed_items": [{
+                "label": "时限不可比",
+                "task_id": "01_Suite_task_beta",
+                "task_name": "Beta task",
+                "score_summary": "目标 40.0，参照 60.0。",
+                "reason": "两侧有效时限不同。",
+                "conclusion": "不进入能力归因。",
+                "evidence_summary": "execution_status.json 显示时限不同。",
+                "evidence_refs": [{
+                    "source": "model-a/execution_status.json",
+                    "locator": "timeout_seconds",
+                    "excerpt": "timeout_seconds=300",
+                }],
+            }],
         }
         quality = cross_eval.validate_analysis(manifest, analysis)
         self.assertEqual(quality["status"], "PASS")
@@ -211,6 +236,12 @@ class CrossEvalAnalysisTest(unittest.TestCase):
         self.assertIn("01_Suite_task_alpha", report)
         self.assertIn("Alpha task", report)
         self.assertIn("考察文件整理并验证结果", report)
+        self.assertIn("附录：异常与不可比结果", report)
+        self.assertIn("排除口径对均分的影响", report)
+        self.assertIn("01_Suite_task_beta", report)
+        self.assertIn("execution_status.json", report)
+        self.assertNotIn("model-a/execution_status.json", report)
+        self.assertNotIn("model-a/chat_openclaw.jsonl", report)
 
         analysis["pair_reports"][0]["strengths"].append({
             "task_id": manifest["scope"]["task_ids"][1],

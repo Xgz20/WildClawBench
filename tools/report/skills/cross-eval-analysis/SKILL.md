@@ -91,6 +91,7 @@ uv run python tools/report/skills/cross-eval-analysis/scripts/build_cross_eval_m
 - 典型案例：至少包含完整用例 ID、用例名称、题目简述/考察点、两侧得分、问题点和原始证据；
 - 每条发现和每个案例都带 `evidence_refs`，至少写 `source`、`locator`、`excerpt`；
 - 证据不足时写 `unconfirmed`，不能把“分数更低”直接写成“某侧导致”。
+- 正文对异常和不可比结果只作一句提示；详细排除口径、均分变化和逐项证据写入 `comparability_analysis`、`unconfirmed_items`，由渲染器放到“附录：异常与不可比结果”。
 
 ### 5. 校验与渲染
 
@@ -117,6 +118,7 @@ uv run python tools/report/skills/cross-eval-analysis/scripts/render_cross_eval_
 - **共同低分**：多个单元在同一任务都低分，优先写“共同困难/可能存在任务或环境因素”，不能用来证明目标模型或 Harness 的特有短板。
 - **只在一侧缺失**：没有共同有效结果的任务不进入主分差；如必须说明，列为“不可比/覆盖缺口”，不能填 0 分。
 - **L3/L4**：外部模型服务、网络、流控等 L3，以及 Runner、容器、Workspace、Grader 等 L4，不能直接归入模型或 Harness 优劣；影响结果有效性时排除并单列。任务时限内模型未完成，若异常报告确认是 `valid_capability_outcome`，按模型/Harness 能力结果保留，不归为 L3。
+- **排除可审计**：正文中的排除后均分必须能由附录复算；附录逐步列出排除项、剩余样本数、两侧均分和分差，每个异常都要有完整任务 ID、明确处理结论和原始证据。
 - **unsupported call**：只有 AstronCode 原始请求/响应、可见工具清单和 Harness 调度证据齐全时，才讨论模型侧或 Harness 侧责任；缺材料就标 `unconfirmed`。
 
 ## 文风与证据红线
