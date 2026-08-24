@@ -176,7 +176,7 @@ class HermesAgentRunnerTest(unittest.TestCase):
                 status["completion_error"],
                 "Response truncated due to output length limit",
             )
-            self.assertEqual(status["max_tokens"], 4096)
+            self.assertEqual(status["max_tokens"], 16384)
 
     def test_nonzero_harness_exit_is_recorded_as_execution_error(self) -> None:
         execution, status = self._run_with_process(_FailedProcess())

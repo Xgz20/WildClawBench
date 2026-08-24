@@ -10,8 +10,9 @@ from src.utils.model_limits import (
 
 
 class ModelLimitTests(unittest.TestCase):
-    def test_maas_model_defaults_to_4096(self) -> None:
+    def test_maas_model_defaults_to_16384(self) -> None:
         self.assertTrue(is_maas_model("openrouter/xopglm52", "https://openrouter.ai/api/v1"))
+        self.assertEqual(DEFAULT_MAAS_MAX_TOKENS, 16384)
         self.assertEqual(
             resolve_maas_max_tokens(
                 "openrouter/xopglm52",

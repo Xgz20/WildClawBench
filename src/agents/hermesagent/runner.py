@@ -146,7 +146,7 @@ class HermesAgentAgent(BaseAgent):
         self.max_tokens = _optional_positive_int_env("HERMES_MAX_TOKENS")
 
     def _resolve_max_tokens(self, model: str, base_url: str) -> int | None:
-        """Keep the legacy override, defaulting MaaS candidates to 4096."""
+        """Keep the legacy override, defaulting MaaS candidates to 16384."""
         if self.max_tokens is not None:
             return self.max_tokens
         return resolve_maas_max_tokens(model, base_url)

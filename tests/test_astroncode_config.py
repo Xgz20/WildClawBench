@@ -115,6 +115,96 @@ class AstronCodeConfigTests(unittest.TestCase):
             "https://maas-api.example/v1",
         )
 
+    def test_maas_max_tokens_mode_defaults_to_native(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"ASTRONCODE_MAAS_MAX_TOKENS_MODE": ""},
+            clear=False,
+        ):
+            agent = self.make_agent(base_url="https://maas-api.example/v1")
+
+        self.assertEqual(agent.maas_max_tokens_mode, "native")
+
+    def test_invalid_maas_max_tokens_mode_fails_fast(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"ASTRONCODE_MAAS_MAX_TOKENS_MODE": "automatic"},
+            clear=False,
+        ):
+            with self.assertRaisesRegex(
+                ValueError,
+                "ASTRONCODE_MAAS_MAX_TOKENS_MODE must be one of: native, proxy",
+            ):
+                self.make_agent(base_url="https://maas-api.example/v1")
+
+    def test_native_maas_mode_does_not_start_compatibility_proxy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp, patch.dict(
+            os.environ,
+            {
+                "ASTRONCODE_MAAS_MAX_TOKENS_MODE": "native",
+                "MAAS_MAX_TOKENS": "8192",
+            },
+            clear=False,
+        ), patch(
+            "src.agents.astroncode.runner.start_maas_request_proxy"
+        ) as start_proxy, patch(
+            "src.agents.astroncode.runner.subprocess.run"
+        ) as run_mock:
+            run_mock.side_effect = self.config_run_side_effect(fragment_returncode=44)
+            output_dir = Path(tmp)
+            self.make_agent(base_url="https://maas-api.example/v1")._write_codex_config(
+                task_id="native-maas",
+                model="openrouter/xopglm52",
+                reasoning_effort=None,
+                wire_api=None,
+                output_dir=output_dir,
+            )
+            config = tomllib.loads(
+                (output_dir / "config.toml").read_text(encoding="utf-8")
+            )
+
+        start_proxy.assert_not_called()
+        self.assertNotIn("base_url", config["model_providers"]["astron-spark"])
+
+    def test_proxy_maas_mode_starts_compatibility_proxy_with_common_default(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp, patch.dict(
+            os.environ,
+            {
+                "ASTRONCODE_MAAS_MAX_TOKENS_MODE": "proxy",
+                "MAAS_MAX_TOKENS": "",
+            },
+            clear=False,
+        ), patch(
+            "src.agents.astroncode.runner.start_maas_request_proxy",
+            return_value="http://127.0.0.1:18080",
+        ) as start_proxy, patch(
+            "src.agents.astroncode.runner.subprocess.run"
+        ) as run_mock:
+            run_mock.side_effect = self.config_run_side_effect(fragment_returncode=44)
+            output_dir = Path(tmp)
+            self.make_agent(base_url="https://maas-api.example/v1")._write_codex_config(
+                task_id="proxy-maas",
+                model="openrouter/xopglm52",
+                reasoning_effort=None,
+                wire_api=None,
+                output_dir=output_dir,
+            )
+            config = tomllib.loads(
+                (output_dir / "config.toml").read_text(encoding="utf-8")
+            )
+
+        start_proxy.assert_called_once_with(
+            "proxy-maas",
+            upstream_base_url="https://maas-api.example/v1",
+            max_tokens=16384,
+        )
+        self.assertEqual(
+            config["model_providers"]["astron-spark"]["base_url"],
+            "http://127.0.0.1:18080",
+        )
+
     def config_write_calls(self, run_mock):
         return [
             call

@@ -178,7 +178,7 @@ class OpenClawBackendTests(unittest.TestCase):
         )
 
         provider_config = run_mock.call_args.args[0][-1]
-        self.assertIn('\\"maxTokens\\": 4096', provider_config)
+        self.assertIn('\\"maxTokens\\": 16384', provider_config)
         self.assertIn(
             '\\"maxTokensField\\": \\"max_tokens\\"', provider_config
         )

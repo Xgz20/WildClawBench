@@ -52,6 +52,9 @@ DEFAULT_ASTRON_MODELS_BASE_URL = (
 )
 VALID_ASTRONCODE_PROVIDERS = ("astron-spark", "one-iflytek", "openrouter")
 ASTRON_MODEL_PREFIXES = ("xminimax", "xop", "xspark", "astronclaw-")
+ASTRONCODE_MAAS_MAX_TOKENS_MODE_ENV = "ASTRONCODE_MAAS_MAX_TOKENS_MODE"
+DEFAULT_ASTRONCODE_MAAS_MAX_TOKENS_MODE = "native"
+VALID_ASTRONCODE_MAAS_MAX_TOKENS_MODES = ("native", "proxy")
 OPENCLAW_TRANSCRIPT_DIR = "/root/.openclaw/agents/main/sessions"
 OPENCLAW_TRANSCRIPT_PATH = f"{OPENCLAW_TRANSCRIPT_DIR}/chat.jsonl"
 DEFAULT_REASONING_EFFORT = "medium" #"high"
@@ -72,6 +75,25 @@ def parse_env_flag(name: str, *, default: bool) -> bool:
     raise ValueError(
         f"{name} must be one of: 1, true, yes, on, 0, false, no, off"
     )
+
+
+def resolve_astroncode_maas_max_tokens_mode(raw_value: str | None = None) -> str:
+    """Resolve whether AstronCode uses its native limit or the legacy proxy."""
+
+    configured = (
+        os.environ.get(ASTRONCODE_MAAS_MAX_TOKENS_MODE_ENV, "")
+        if raw_value is None
+        else raw_value
+    )
+    mode = str(configured or "").strip().lower()
+    if not mode:
+        return DEFAULT_ASTRONCODE_MAAS_MAX_TOKENS_MODE
+    if mode not in VALID_ASTRONCODE_MAAS_MAX_TOKENS_MODES:
+        allowed = ", ".join(VALID_ASTRONCODE_MAAS_MAX_TOKENS_MODES)
+        raise ValueError(
+            f"{ASTRONCODE_MAAS_MAX_TOKENS_MODE_ENV} must be one of: {allowed}"
+        )
+    return mode
 
 
 def _now_iso() -> str:
@@ -279,6 +301,7 @@ class AstronCodeAgent(BaseAgent):
             "ASTRONCODE_TRACE_ENABLED",
             default=True,
         )
+        self.maas_max_tokens_mode = resolve_astroncode_maas_max_tokens_mode()
         provider_override = (
             os.environ.get("ASTRONCODE_MODEL_PROVIDER", "").strip().lower()
         )
@@ -1128,7 +1151,7 @@ class AstronCodeAgent(BaseAgent):
         )
         maas_max_tokens = resolve_maas_max_tokens(model, self.openrouter_base_url)
         request_base_url = None
-        if maas_max_tokens is not None:
+        if maas_max_tokens is not None and self.maas_max_tokens_mode == "proxy":
             request_base_url = start_maas_request_proxy(
                 task_id,
                 upstream_base_url=self.openrouter_base_url,

@@ -12,7 +12,7 @@ import os
 from collections.abc import Mapping
 from urllib.parse import urlparse
 
-DEFAULT_MAAS_MAX_TOKENS = 4096
+DEFAULT_MAAS_MAX_TOKENS = 16384
 MAAS_MAX_TOKENS_ENV = "MAAS_MAX_TOKENS"
 
 # MaaS model IDs used by the benchmark.  The endpoint check below also covers
@@ -70,7 +70,7 @@ def resolve_maas_max_tokens(
 ) -> int | None:
     """Resolve the MaaS candidate output limit, or ``None`` for non-MaaS.
 
-    ``MAAS_MAX_TOKENS`` is optional.  MaaS requests default to 4096 when it is
+    ``MAAS_MAX_TOKENS`` is optional.  MaaS requests default to 16384 when it is
     absent, empty, invalid, or non-positive, as required by the evaluation
     contract.
     """
