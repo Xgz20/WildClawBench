@@ -1978,29 +1978,11 @@ if __name__ == "__main__":
                 )
             ]
 
-        # Reasoning summaries surface as assistant text so any grader that
-        # keyword-scans assistant output also sees the model's deliberation.
+        # Internal reasoning remains in the raw Codex session and exported
+        # interaction trace.  The grading transcript contains only user-visible
+        # messages and tool activity.
         if ptype == "reasoning":
-            summary = payload.get("summary") or payload.get("content") or []
-            chunks: list[str] = []
-            if isinstance(summary, list):
-                for item in summary:
-                    if isinstance(item, str):
-                        chunks.append(item)
-                    elif isinstance(item, dict):
-                        chunks.append(
-                            str(item.get("text") or item.get("summary_text") or "")
-                        )
-            elif isinstance(summary, str):
-                chunks.append(summary)
-            text = "\n".join(c for c in chunks if c).strip()
-            if not text:
-                return []
-            return [
-                self._openclaw_message(
-                    "assistant", [{"type": "text", "text": text}]
-                )
-            ]
+            return []
 
         return []
 
