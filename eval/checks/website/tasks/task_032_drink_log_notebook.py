@@ -14,6 +14,7 @@ RUNTIME_KEYS = [
     "c14_state_persistence", "c15_cross_region_linkage", "c16_rule_settlement", "c17_rule_settlement",
     "c18_information_organization", "c19_content_switching", "c20_data_visualization",
     "c21_data_visualization", "c22_rule_settlement", "c25_rule_settlement",
+    "c26_rule_settlement",
 ]
 VISUAL_KEYS = ["c06_component_style", "c23_visual_style", "c24_responsive_layout"]
 EVAL = "/tmp_workspace_eval"
@@ -314,6 +315,19 @@ async def run(page, screenshot_dir):
         await _stats(page)
         return await contains_any_texts(page, ["早晨", "清晨", "上午", "06:00-09:00", "6:00–9:00"])
     await r.check("c25_rule_settlement", morning)
+
+    async def all_metrics_reconcile():
+        await _fresh(page)
+        await _record(page, "餐厅", "鹭岛小麦白啤", 500, companion="老陈", price=120)
+        home_ok = await contains_texts(page, ["本月饮酒天数", "1", "本月摄入酒精量", "25"])
+        await _stats(page)
+        body = await page.locator("body").inner_text()
+        stats_ok = await contains_texts(page, [
+            "饮酒天数", "1", "饮酒花费", "120", "酒款数", "1", "摄入酒精量", "25",
+            "餐厅", "鹭岛小麦白啤", "老陈",
+        ])
+        return home_ok and stats_ok and not any(value in body for value in ["NaN", "Infinity", "undefined"])
+    await r.check("c26_rule_settlement", all_metrics_reconcile)
     return r.results
 
 

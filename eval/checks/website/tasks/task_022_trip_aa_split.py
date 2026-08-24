@@ -10,6 +10,7 @@ RUNTIME_KEYS = [
     "c01_information_organization", "c02_content_editing", "c03_content_editing",
     "c04_content_editing", "c05_rule_settlement", "c06_rule_settlement",
     "c07_content_editing", "c08_form_validation", "c09_form_validation",
+    "c12_rule_settlement",
 ]
 VISUAL_KEYS = ["c10_page_layout", "c11_responsive_layout"]
 PEOPLE = ["阿明", "小林", "阿德", "晓晓"]
@@ -120,6 +121,18 @@ async def run(page, screenshot_dir):
         body = await page.locator("body").inner_text()
         return "至少" in body and "一个人" in body and "无人分摊" not in body
     await r.check("c09_form_validation", sharer_validation)
+
+    async def all_amounts_reconcile():
+        await _seed(page)
+        body = await page.locator("body").inner_text()
+        return (
+            await contains_texts(page, [
+                "1260", "阿明", "应摊 300", "小林", "应摊 300",
+                "阿德", "应摊 330", "晓晓", "应摊 330", "240", "330",
+            ])
+            and not any(value in body for value in ["NaN", "Infinity", "undefined"])
+        )
+    await r.check("c12_rule_settlement", all_amounts_reconcile)
     return r.results
 
 

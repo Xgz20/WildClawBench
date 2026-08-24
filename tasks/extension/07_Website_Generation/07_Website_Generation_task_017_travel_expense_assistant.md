@@ -56,7 +56,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 检查页面的主要区域和初始状态 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0526)
+### Criterion 1: 检查页面的主要区域和初始状态 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.05)
 
 预设状态：首页已在 1440×900 视口打开，尚未填写任何内容
 
@@ -68,7 +68,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 检查明细列表中这两条记录显示的信息 (key: c02_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0526)
+### Criterion 2: 检查明细列表中这两条记录显示的信息 (key: c02_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.05)
 
 预设状态：行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00；已添加住宿明细 2026-03-09「酒店住宿」720 元，以及交通明细 2026-03-09「高铁往返」553 元
 
@@ -80,7 +80,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 先查看三项为空时页面给出的提示 (key: c03_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0526)
+### Criterion 3: 先查看三项为空时页面给出的提示 (key: c03_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.05)
 
 预设状态：首页已打开，目的地城市、出发时间和返程时间三项都为空
 
@@ -92,7 +92,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 添加一条住宿明细 (key: c04_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0526)
+### Criterion 4: 添加一条住宿明细 (key: c04_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.05)
 
 预设状态：行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00；明细列表为空
 
@@ -104,7 +104,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 填写目的地上海、职级普通员工、出发时间 2026-03-09 09:30、返程时… (key: c05_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0526)
+### Criterion 5: 填写目的地上海、职级普通员工、出发时间 2026-03-09 09:30、返程时… (key: c05_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
 
 预设状态：行程信息为空
 
@@ -116,7 +116,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 把出发时间改为 2026-03-09 14:00 (key: c06_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0526)
+### Criterion 6: 把出发时间改为 2026-03-09 14:00 (key: c06_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
 
 预设状态：行程已填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00，页面显示 3 天、补贴 450 元
 
@@ -128,7 +128,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 填写目的地上海、职级普通员工、出发时间 2026-03-09 08:00、返程时… (key: c07_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0526)
+### Criterion 7: 填写目的地上海、职级普通员工、出发时间 2026-03-09 08:00、返程时… (key: c07_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
 
 预设状态：行程信息为空
 
@@ -140,7 +140,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 检查这两条住宿明细各自的可报金额和超标金额 (key: c08_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0526)
+### Criterion 8: 检查这两条住宿明细各自的可报金额和超标金额 (key: c08_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
 
 预设状态：行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00；明细中已有住宿 2026-03-09「酒店住宿」720 元和住宿 2026-03-10「酒店住宿」550 元
 
@@ -152,7 +152,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 先检查这条明细 (key: c09_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0526)
+### Criterion 9: 先检查这条明细 (key: c09_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
 
 预设状态：行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00；明细中已有一条 2026-03-10 的交通明细，金额 128 元，并已按页面提供的方式标识为出租车，且尚未标明已附支付凭证。页面用什么形态标识出租车不限，下拉选择交通方式、单独的勾选项、或在说明里写“出租车”由实现自行决定，任一形态都算成立
 
@@ -164,7 +164,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 把这条明细标记为个人事项 (key: c10_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0526)
+### Criterion 10: 把这条明细标记为个人事项 (key: c10_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
 
 预设状态：行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00；明细中已有交通 2026-03-11「出租车」45 元，可报金额为 45 元
 
@@ -176,7 +176,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 依次添加五条明细 (key: c11_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0526)
+### Criterion 11: 依次添加五条明细 (key: c11_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
 
 预设状态：行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00
 
@@ -188,7 +188,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 把出差人职级改为管理岗 (key: c12_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0526)
+### Criterion 12: 把出差人职级改为管理岗 (key: c12_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
 
 预设状态：行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00；明细中只有两条住宿：2026-03-09「酒店住宿」720 元和 2026-03-10「酒店住宿」550 元。此时汇总显示申报合计 1270 元、不可报合计 120 元、实际可报 1600 元
 
@@ -200,7 +200,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 13: 把目的地城市改为合肥（通过输入或选择 (key: c13_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0526)
+### Criterion 13: 把目的地城市改为合肥（通过输入或选择 (key: c13_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
 
 预设状态：行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00；明细中只有两条住宿：2026-03-09「酒店住宿」720 元和 2026-03-10「酒店住宿」550 元。此时汇总显示不可报合计 120 元、实际可报 1600 元
 
@@ -212,7 +212,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 14: 点击删除「高铁往返」这条 (key: c14_popup_overlay, primary: interaction_function, secondary: popup_overlay, weight: 0.0526)
+### Criterion 14: 点击删除「高铁往返」这条 (key: c14_popup_overlay, primary: interaction_function, secondary: popup_overlay, weight: 0.05)
 
 预设状态：明细中已有交通 2026-03-09「高铁往返」553 元和住宿 2026-03-09「酒店住宿」720 元两条记录
 
@@ -224,7 +224,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 15: 刷新页面 (key: c15_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0526)
+### Criterion 15: 刷新页面 (key: c15_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.05)
 
 预设状态：已填写目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00，并添加住宿 2026-03-09「酒店住宿」720 元和交通 2026-03-09「高铁往返」553 元两条明细
 
@@ -236,7 +236,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 16: 检查行程信息、票据明细和汇总三个区域的排布 (key: c16_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0526)
+### Criterion 16: 检查行程信息、票据明细和汇总三个区域的排布 (key: c16_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.05)
 
 预设状态：首页已在 1440×900 视口打开；行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00；明细中有住宿 2026-03-09「酒店住宿」720 元和交通 2026-03-09「高铁往返」553 元两条
 
@@ -248,7 +248,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 17: 检查页面整体配色和三个汇总金额的呈现 (key: c17_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.0526)
+### Criterion 17: 检查页面整体配色和三个汇总金额的呈现 (key: c17_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.05)
 
 预设状态：首页已在 1440×900 视口打开；行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00；明细中有住宿 2026-03-09「酒店住宿」720 元和交通 2026-03-09「高铁往返」553 元两条，汇总显示不可报合计 120 元、实际可报 1603 元
 
@@ -260,7 +260,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 18: 查看行程输入、票据明细和汇总 (key: c18_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0526)
+### Criterion 18: 查看行程输入、票据明细和汇总 (key: c18_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.05)
 
 预设状态：行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00；明细中有住宿 2026-03-09「酒店住宿」720 元和交通 2026-03-09「高铁往返」553 元两条；视口切换为 375×812（视口 375×812）
 
@@ -272,13 +272,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 19: 先不填写任何内容直接添加明细 (key: c19_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0532)
+### Criterion 19: 先不填写任何内容直接添加明细 (key: c19_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.05)
 
 预设状态：行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00；明细列表为空
 
 操作：先不填写任何内容直接添加明细；随后只填日期 2026-03-09、说明留空、金额 88 再次添加；最后填日期 2026-03-09、说明「酒店住宿」、金额 0 再添加一次
 
 期望结果：三次都没有新增明细，明细区域始终保持空状态。每次都在页面上给出清楚的中文提示说明缺少或填错了什么：缺日期、缺说明、以及金额必须大于 0。汇总的申报合计始终为 0。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 20: 通读行程信息、票据明细和汇总区域 (key: c20_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
+
+预设状态：行程填写为目的地上海、职级普通员工、出发 2026-03-09 09:30、返程 2026-03-11 15:00；明细中有住宿 2026-03-09「酒店住宿」720 元和交通 2026-03-09「高铁往返」553 元两条
+
+操作：通读行程信息、票据明细和汇总区域，把页面展示的每一个金额和天数连同名目记下来
+
+期望结果：页面展示哪些中间量不作要求；但凡展示出来的金额和天数，都必须与行程、明细和题面给定的标准（限额、每天 150 元补贴、半天折半）推算一致，页面各处的数字之间也不得互相矛盾（例如某条明细的可报与超标之和不等于申报金额，或汇总与各条明细加总对不上）。出现任何一处矛盾，本条不通过。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 

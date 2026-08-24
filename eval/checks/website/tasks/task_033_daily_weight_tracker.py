@@ -3,7 +3,7 @@ try:
     from ..common import CheckRecorder,capture,click_named_any,contains_any_texts,contains_texts,fill_any_named,reset_page
 except ImportError:
     from common import CheckRecorder,capture,click_named_any,contains_any_texts,contains_texts,fill_any_named,reset_page
-RUNTIME_KEYS=["c01_information_organization","c02_information_organization","c03_content_editing","c04_data_visualization","c05_data_visualization","c06_cross_region_linkage","c07_state_persistence","c08_form_validation","c11_lists_tables","c12_information_organization"]
+RUNTIME_KEYS=["c01_information_organization","c02_information_organization","c03_content_editing","c04_data_visualization","c05_data_visualization","c06_cross_region_linkage","c07_state_persistence","c08_form_validation","c11_lists_tables","c12_information_organization","c13_rule_settlement"]
 VISUAL_KEYS=["c09_page_layout","c10_responsive_layout"]
 async def _fresh(page): await reset_page(page)
 async def _add(page,weight,date=None):
@@ -42,6 +42,10 @@ async def run(page,screenshot_dir):
     async def c11(): await seed3(); return await contains_texts(page,["2025-12-28","68.0","2025-12-29","70.5","2025-12-30","69.0"])
     await r.check("c11_lists_tables",c11)
     async def c12(): await _fresh(page); await _add(page,"70.5","2025-12-28"); await _add(page,"69.0","2025-12-29"); await _add(page,"68.0","2025-12-30"); return await contains_any_texts(page,["下降","减少","变轻","↓","-2.5"])
-    await r.check("c12_information_organization",c12); return r.results
+    await r.check("c12_information_organization",c12)
+    async def c13():
+        await seed3(); body=await page.locator("body").inner_text()
+        return await contains_texts(page,["2025-12-28","68.0","2025-12-29","70.5","2025-12-30","69.0"]) and await contains_any_texts(page,["2.5","+2.5","-1.5","69.2","69.17"]) and not any(x in body for x in ["NaN","Infinity","undefined"])
+    await r.check("c13_rule_settlement",c13); return r.results
 async def capture_visual(page,screenshot_dir):
     await _fresh(page); await _add(page,"70.5","2025-12-29"); await _add(page,"69.0","2025-12-30"); shots=[await capture(page,screenshot_dir,"desktop")]; await page.set_viewport_size({"width":375,"height":812}); shots.append(await capture(page,screenshot_dir,"mobile")); return shots

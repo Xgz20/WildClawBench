@@ -60,7 +60,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 检查页面主要区域和筛选项 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0384)
+### Criterion 1: 检查页面主要区域和筛选项 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.037)
 
 预设状态：首次打开看板
 
@@ -72,7 +72,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 查看整体概览 (key: c02_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0384)
+### Criterion 2: 查看整体概览 (key: c02_detail_display, primary: content_structure, secondary: detail_display, weight: 0.037)
 
 预设状态：选择“2025-2026学年第二学期”，地域保持全国范围
 
@@ -84,7 +84,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 查看产品活跃趋势 (key: c03_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0384)
+### Criterion 3: 查看产品活跃趋势 (key: c03_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.037)
 
 预设状态：选择任一有活跃数据的学期
 
@@ -96,7 +96,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 查看区域分布 (key: c04_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0384)
+### Criterion 4: 查看区域分布 (key: c04_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.037)
 
 预设状态：地域保持全国范围
 
@@ -108,7 +108,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 检查学校明细字段 (key: c05_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0384)
+### Criterion 5: 检查学校明细字段 (key: c05_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.037)
 
 预设状态：选择“2025-2026学年第二学期”并查看学校明细
 
@@ -120,7 +120,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 检查预警统计和学校明细 (key: c06_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0384)
+### Criterion 6: 检查预警统计和学校明细 (key: c06_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.037)
 
 预设状态：打开产品到期预警
 
@@ -132,7 +132,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 检查预警统计和学校明细 (key: c07_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0384)
+### Criterion 7: 检查预警统计和学校明细 (key: c07_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.037)
 
 预设状态：打开产品未应用预警
 
@@ -144,7 +144,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 选择“2024-2025学年第一学期” (key: c08_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.0384)
+### Criterion 8: 选择“2024-2025学年第一学期” (key: c08_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.037)
 
 预设状态：地域保持全国范围
 
@@ -156,7 +156,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 选择省份“浙江省” (key: c09_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0384)
+### Criterion 9: 选择省份“浙江省” (key: c09_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.037)
 
 预设状态：已选择“2025-2026学年第二学期”（最新学期），省、市、区都未选择
 
@@ -168,7 +168,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 选择城市“杭州市” (key: c10_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0384)
+### Criterion 10: 选择城市“杭州市” (key: c10_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.037)
 
 预设状态：已选择浙江省和最新学期
 
@@ -180,7 +180,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 选择“西湖区” (key: c11_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0384)
+### Criterion 11: 选择“西湖区” (key: c11_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.037)
 
 预设状态：已选择浙江省、杭州市和最新学期
 
@@ -192,7 +192,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 将省份改为“江苏省” (key: c12_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0384)
+### Criterion 12: 将省份改为“江苏省” (key: c12_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.037)
 
 预设状态：已经选择浙江省、杭州市和西湖区
 
@@ -204,7 +204,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 13: 同时观察概览、趋势、区域分布、学校明细和未应用预警 (key: c13_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0384)
+### Criterion 13: 同时观察概览、趋势、区域分布、学校明细和未应用预警 (key: c13_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.037)
 
 预设状态：选择“2025-2026学年第二学期”和“浙江省”
 
@@ -216,7 +216,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 14: 切换到“2024-2025学年第一学期” (key: c14_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.0384)
+### Criterion 14: 切换到“2024-2025学年第一学期” (key: c14_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.037)
 
 预设状态：先查看最新学期的活跃趋势
 
@@ -228,7 +228,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 15: 依次查看区域分布的统计对象 (key: c15_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0384)
+### Criterion 15: 依次查看区域分布的统计对象 (key: c15_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.037)
 
 预设状态：先后处于全国、浙江省、杭州市三个地域层级
 
@@ -240,7 +240,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 16: 点击一个可继续查看的地区 (key: c16_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0384)
+### Criterion 16: 点击一个可继续查看的地区 (key: c16_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.037)
 
 预设状态：区域分布处于全国、省或市层级
 
@@ -252,7 +252,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 17: 在“产品到期预警”和“产品未应用预警”之间切换 (key: c17_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0384)
+### Criterion 17: 在“产品到期预警”和“产品未应用预警”之间切换 (key: c17_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.037)
 
 预设状态：停留在预警分析区域
 
@@ -264,7 +264,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 18: 打开产品未应用预警 (key: c18_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.0384)
+### Criterion 18: 打开产品未应用预警 (key: c18_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.037)
 
 预设状态：选择最新学期和全国范围
 
@@ -276,7 +276,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 19: 将学期切换为“2025-2026学年第一学期” (key: c19_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.0384)
+### Criterion 19: 将学期切换为“2025-2026学年第一学期” (key: c19_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.037)
 
 预设状态：产品未应用预警已打开，地域为全国范围
 
@@ -288,7 +288,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 20: 选择省份“广东省” (key: c20_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.0384)
+### Criterion 20: 选择省份“广东省” (key: c20_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.037)
 
 预设状态：打开产品到期预警并保持全国范围
 
@@ -300,7 +300,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 21: 观察筛选区、概览、图表、表格和预警区域的层级与留白 (key: c21_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0384)
+### Criterion 21: 观察筛选区、概览、图表、表格和预警区域的层级与留白 (key: c21_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.037)
 
 预设状态：在 1440×900 桌面视口打开看板
 
@@ -312,7 +312,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 22: 观察整体风格、图表系列和风险标记 (key: c22_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.0384)
+### Criterion 22: 观察整体风格、图表系列和风险标记 (key: c22_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.037)
 
 预设状态：页面同时显示普通数据和预警状态
 
@@ -324,7 +324,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 23: 查看学校明细第一页并切换到下一页 (key: c23_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.0384)
+### Criterion 23: 查看学校明细第一页并切换到下一页 (key: c23_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.037)
 
 预设状态：选择最新学期和全国范围，学校明细共有 32 所学校
 
@@ -336,7 +336,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 24: 查看预警明细第一页并切换到下一页 (key: c24_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.0384)
+### Criterion 24: 查看预警明细第一页并切换到下一页 (key: c24_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.037)
 
 预设状态：保持全国范围并打开产品到期预警，当前共有 16 所预警学校
 
@@ -348,7 +348,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 25: 从页面顶部滚动到底部 (key: c25_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0384)
+### Criterion 25: 从页面顶部滚动到底部 (key: c25_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.037)
 
 预设状态：浏览器视口已调整为 375×812 并打开看板首页（视口 375×812）
 
@@ -360,13 +360,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 26: 从页面顶部滚动到底部 (key: c26_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.04)
+### Criterion 26: 从页面顶部滚动到底部 (key: c26_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.037)
 
 预设状态：在 1440×900 桌面视口打开看板
 
 操作：从页面顶部滚动到底部，记下筛选、概览、趋势与区域分析、学校明细、预警五块内容出现的先后
 
 期望结果：页面按照筛选、概览、趋势与区域分析、学校明细和预警的阅读顺序自上而下组织，先总览后细节；学校明细自成一块排在区域分析之后、预警之前，不与其它区块交错。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 27: 通读概览、趋势、区域分布、学校明细和预警各区域 (key: c27_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.038)
+
+预设状态：首次打开看板，保持默认的全国范围和最新学期
+
+操作：通读概览、趋势、区域分布、学校明细和预警各区域，把页面展示的每一个数字和比率连同名目记下来
+
+期望结果：页面展示哪些数字不作要求；但凡展示出来的，都必须与素材快照数据推算一致，页面各处的数字之间也不得互相矛盾（例如学校应用率与授权、活跃学校数算不上，或预警区显示的学校数量与对应明细的条数对不上）。出现任何一处矛盾，本条不通过。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 

@@ -19,7 +19,7 @@ RUNTIME_KEYS = [
     "c04_content_switching", "c05_content_switching", "c06_search_filtering",
     "c07_search_filtering", "c08_detail_display", "c09_content_editing",
     "c10_popup_overlay", "c11_data_visualization", "c12_content_switching",
-    "c13_state_persistence",
+    "c13_state_persistence", "c16_rule_settlement",
 ]
 VISUAL_KEYS = ["c14_page_layout", "c15_responsive_layout"]
 
@@ -293,6 +293,32 @@ async def run(page, screenshot_dir):
         )
         return restored and no_overlay and analysis_restored
     await recorder.check("c13_state_persistence", persistence)
+
+    async def figures_are_consistent():
+        await _reset_records(page)
+        for name in ["咖啡豆", "地铁充值", "项目奖金", "房租", "超市采购", "工资"]:
+            await _open_record(page, name)
+            await click_named(page, "删除记录")
+            await click_named(page, "确认删除")
+        for name, amount, category, note in [
+            ("早餐", "28", "餐饮", "早餐"),
+            ("地铁充值", "50", "交通", "交通卡充值"),
+            ("朋友聚餐", "188", "餐饮", "聚餐"),
+        ]:
+            await _open_add(page)
+            await _fill_record_modal(page, name, amount, category, "2026-08-11", note)
+            await _save_record(page)
+        detail = await contains_texts(page, [
+            "收入", "¥0.00", "支出", "¥266.00", "结余", "-¥266.00", "3 笔",
+            "早餐", "¥28.00", "地铁充值", "¥50.00", "朋友聚餐", "¥188.00",
+        ])
+        await click_named(page, "分析")
+        analysis = await contains_texts(page, [
+            "¥0.00", "¥266.00", "-¥266.00", "3 笔",
+            "餐饮", "¥216.00", "交通", "¥50.00",
+        ])
+        return detail and analysis
+    await recorder.check("c16_rule_settlement", figures_are_consistent)
     return recorder.results
 
 

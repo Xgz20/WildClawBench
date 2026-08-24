@@ -12,7 +12,7 @@ RUNTIME_KEYS = [
     "c07_rule_settlement", "c08_rule_settlement", "c09_rule_settlement",
     "c10_rule_settlement", "c11_rule_settlement", "c12_rule_settlement",
     "c13_rule_settlement", "c14_popup_overlay", "c15_state_persistence",
-    "c19_form_validation",
+    "c19_form_validation", "c20_rule_settlement",
 ]
 VISUAL_KEYS = ["c16_page_layout", "c17_visual_style", "c18_responsive_layout"]
 
@@ -190,6 +190,18 @@ async def run(page, screenshot_dir):
         await click_named_any(page, ["添加明细", "添加票据", "记一笔"])
         return missing_date and missing_note and await contains_texts(page, ["金额必须大于 0", "还没有"])
     await r.check("c19_form_validation", entry_validation)
+
+    async def all_amounts_reconcile():
+        await _seed_two(page)
+        body = await page.locator("body").inner_text()
+        return (
+            await contains_texts(page, [
+                "3 天", "450", "酒店住宿", "720", "可报", "600", "超标", "120",
+                "高铁往返", "553", "申报合计", "1273", "实际可报", "1603",
+            ])
+            and not any(value in body for value in ["NaN", "Infinity", "undefined"])
+        )
+    await r.check("c20_rule_settlement", all_amounts_reconcile)
     return r.results
 
 

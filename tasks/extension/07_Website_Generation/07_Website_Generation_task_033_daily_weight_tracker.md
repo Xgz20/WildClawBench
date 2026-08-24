@@ -42,7 +42,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 通览整页，找出用于新增一条体重记录的入口、用于逐条查看已录入记录的地方，以及用于… (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0833)
+### Criterion 1: 通览整页，找出用于新增一条体重记录的入口、用于逐条查看已录入记录的地方，以及用于… (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0769)
 
 预设状态：首页已在 1440×900 视口打开，页面上还没有任何体重记录
 
@@ -54,7 +54,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 通览整页可见文字 (key: c02_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0833)
+### Criterion 2: 通览整页可见文字 (key: c02_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0769)
 
 预设状态：首页首次打开，还没有录入过任何体重记录
 
@@ -66,7 +66,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 通过页面的录入入口新增一条记录 (key: c03_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0833)
+### Criterion 3: 通过页面的录入入口新增一条记录 (key: c03_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0769)
 
 预设状态：首页已打开，还没有录入过任何体重记录
 
@@ -78,7 +78,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 故意打乱先后顺序录入三条记录 (key: c04_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0833)
+### Criterion 4: 故意打乱先后顺序录入三条记录 (key: c04_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0769)
 
 预设状态：首页已打开，还没有录入过任何体重记录
 
@@ -90,7 +90,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 录入两条记录 (key: c05_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0833)
+### Criterion 5: 录入两条记录 (key: c05_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0769)
 
 预设状态：首页已打开，还没有录入过任何体重记录
 
@@ -102,7 +102,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 先记下趋势区域当前的数据点数量或图形形状 (key: c06_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0833)
+### Criterion 6: 先记下趋势区域当前的数据点数量或图形形状 (key: c06_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0769)
 
 预设状态：首页已打开，并已通过页面的录入入口新增了一条记录：2025-12-29、70.5
 
@@ -114,7 +114,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 新增一条记录 (key: c07_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0833)
+### Criterion 7: 新增一条记录 (key: c07_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0769)
 
 预设状态：首页已打开，还没有录入过任何体重记录
 
@@ -126,7 +126,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 把体重输入框留空（日期字段有默认值就保持默认） (key: c08_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0833)
+### Criterion 8: 把体重输入框留空（日期字段有默认值就保持默认） (key: c08_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0769)
 
 预设状态：首页已打开，还没有录入过任何体重记录
 
@@ -138,7 +138,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 先不滚动页面 (key: c09_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0833)
+### Criterion 9: 先不滚动页面 (key: c09_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0769)
 
 预设状态：首页已在 1440×900 视口打开，还没有录入过任何体重记录
 
@@ -150,7 +150,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 检查整页是否出现横向滚动 (key: c10_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0833)
+### Criterion 10: 检查整页是否出现横向滚动 (key: c10_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0769)
 
 预设状态：浏览器视口已调整为 375×812 并打开首页，还没有录入过任何体重记录（视口 375×812）
 
@@ -162,7 +162,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 依次录入三条记录 (key: c11_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0833)
+### Criterion 11: 依次录入三条记录 (key: c11_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0769)
 
 预设状态：首页已打开，还没有录入过任何体重记录
 
@@ -174,13 +174,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 依次录入三条一路下降的记录 (key: c12_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0837)
+### Criterion 12: 依次录入三条一路下降的记录 (key: c12_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0769)
 
 预设状态：首页已打开，还没有录入过任何体重记录
 
 操作：依次录入三条一路下降的记录：2025-12-28、70.5；2025-12-29、69.0；2025-12-30、68.0。若页面按周期分组，切到能同时看到这三天的视图，然后查看整页，判断能不能看出这几天体重在往下走
 
 期望结果：页面把“在变轻”这个走向表达出来了，下列任意一种形式都算通过：趋势图形从早到晚整体走低；页面出现表示下降的数值或符号（例如 ↓1.5、-2.5 公斤、减少 2.5）；或者有文字说明体重在下降。方向必须正确，不能把这组下降的数据表达成上升；三种形式一种都没有则不通过。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 13: 通读记录列表和趋势区域 (key: c13_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0772)
+
+预设状态：已依次录入三条记录：2025-12-28 的 68.0、2025-12-29 的 70.5、2025-12-30 的 69.0
+
+操作：通读记录列表和趋势区域，把页面展示的每一个数字（体重、变化量、均值等）连同名目记下来
+
+期望结果：页面展示哪些数字不作要求；但凡展示出来的，都必须与这三条记录推算一致，页面各处的数字之间也不得互相矛盾（例如标注的变化量与相邻两条记录之差不是同一个数）。出现任何一处矛盾，本条不通过。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 

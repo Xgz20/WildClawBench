@@ -52,7 +52,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 查看左边图形的画法 (key: c01_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0833)
+### Criterion 1: 查看左边图形的画法 (key: c01_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0769)
 
 预设状态：在 1440×900 视口打开首页，把挑中的城市调整为恰好广州、昆明、乌鲁木齐三座，月份切到 7 月。
 
@@ -64,7 +64,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 把挑中的城市调整为恰好广州、哈尔滨、拉萨三座 (key: c02_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.0833)
+### Criterion 2: 把挑中的城市调整为恰好广州、哈尔滨、拉萨三座 (key: c02_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.0769)
 
 预设状态：在 1440×900 视口打开首页，先看清楚当前挑中的是哪几座城市。
 
@@ -76,7 +76,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 再去挑第五座还没被挑中的城市 (key: c03_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0833)
+### Criterion 3: 再去挑第五座还没被挑中的城市 (key: c03_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0769)
 
 预设状态：在 1440×900 视口打开首页，把挑中的城市调整为恰好四座，任意四座都可以，记下是哪四座。
 
@@ -88,7 +88,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 在右边表格里找到广州 (key: c04_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0833)
+### Criterion 4: 在右边表格里找到广州 (key: c04_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0769)
 
 预设状态：在 1440×900 视口打开首页，把挑中的城市调整为包含广州，月份切到 7 月。
 
@@ -100,7 +100,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 只看雷达图上「月降水量」这一个方向 (key: c05_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0833)
+### Criterion 5: 只看雷达图上「月降水量」这一个方向 (key: c05_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0769)
 
 预设状态：在 1440×900 视口打开首页，把挑中的城市调整为恰好广州、昆明、乌鲁木齐三座，月份切到 7 月。
 
@@ -112,7 +112,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 只看雷达图上「晴天数」这一个方向 (key: c06_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0833)
+### Criterion 6: 只看雷达图上「晴天数」这一个方向 (key: c06_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0769)
 
 预设状态：在 1440×900 视口打开首页，把挑中的城市调整为恰好广州、昆明、乌鲁木齐三座，月份切到 7 月。
 
@@ -124,7 +124,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 只看雷达图上「月均气温」这一个方向 (key: c07_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0833)
+### Criterion 7: 只看雷达图上「月均气温」这一个方向 (key: c07_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0769)
 
 预设状态：在 1440×900 视口打开首页，把挑中的城市调整为包含广州和哈尔滨，月份切到 1 月。
 
@@ -136,7 +136,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 把月份切到 1 月 (key: c08_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0833)
+### Criterion 8: 把月份切到 1 月 (key: c08_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0769)
 
 预设状态：在 1440×900 视口打开首页，把挑中的城市调整为包含广州，月份切到 7 月，先在表格里确认广州的月降水量是 286 毫米。
 
@@ -148,7 +148,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 取消挑中乌鲁木齐 (key: c09_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0833)
+### Criterion 9: 取消挑中乌鲁木齐 (key: c09_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0769)
 
 预设状态：在 1440×900 视口打开首页，把挑中的城市调整为恰好广州、昆明、乌鲁木齐三座。
 
@@ -160,7 +160,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 查看雷达图和数值表格在页面上的位置关系 (key: c10_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0833)
+### Criterion 10: 查看雷达图和数值表格在页面上的位置关系 (key: c10_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0769)
 
 预设状态：在 1440×900 视口打开首页，把挑中的城市调整为恰好四座。
 
@@ -172,7 +172,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 对比雷达图上四圈图形所用的颜色 (key: c11_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.0833)
+### Criterion 11: 对比雷达图上四圈图形所用的颜色 (key: c11_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.0769)
 
 预设状态：在 1440×900 视口打开首页，把挑中的城市调整为恰好四座。
 
@@ -184,13 +184,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 从页面顶部滚动到底部 (key: c12_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0837)
+### Criterion 12: 从页面顶部滚动到底部 (key: c12_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0769)
 
 预设状态：把视口调成 375×812 后打开首页，把挑中的城市调整为恰好三座。（视口 375×812）
 
 操作：从页面顶部滚动到底部，途中把月份切到 1 月。
 
 期望结果：整页没有横向滚动条，城市挑选区、月份切换和雷达图都没有被视口右边缘切掉；雷达图完整可见，五个方向上的项目名没有被裁掉或叠成一团；三座城市在表格里的五项数值都能读到——表格列多，把它做成可以左右滑动的区域算通过，只要整页本身不横向滚动；城市挑选和月份切换都能点中并生效。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 13: 对照雷达图和数值表格 (key: c13_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0772)
+
+预设状态：在 1440×900 视口打开首页，把挑中的城市调整为恰好广州、昆明、乌鲁木齐三座，月份切到 7 月
+
+操作：对照雷达图和数值表格，把两处展示的每一个数值连同城市和维度记下来
+
+期望结果：页面展示哪些数字不作要求；但凡展示出来的，都必须与素材数据一致，雷达图与表格之间也不得互相矛盾（例如同一城市同一项在雷达图上的取值与表格里的数值明显对不上）。出现任何一处矛盾，本条不通过。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 

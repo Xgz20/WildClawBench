@@ -54,7 +54,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 首次打开网站 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.04)
+### Criterion 1: 首次打开网站 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0384)
 
 预设状态：浏览器中没有保存过该网站的数据
 
@@ -66,7 +66,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 填写开始日期 (key: c02_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.04)
+### Criterion 2: 填写开始日期 (key: c02_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.0384)
 
 预设状态：停留在首次建档引导
 
@@ -78,7 +78,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 查看首页主视觉区 (key: c03_information_organization, primary: content_structure, secondary: information_organization, weight: 0.04)
+### Criterion 3: 查看首页主视觉区 (key: c03_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0384)
 
 预设状态：已用一个早于今天的日期完成建档
 
@@ -90,7 +90,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 依次切换首页、纪念日、旅行足迹、心愿和日常 (key: c04_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.04)
+### Criterion 4: 依次切换首页、纪念日、旅行足迹、心愿和日常 (key: c04_page_navigation, primary: interaction_function, secondary: page_navigation, weight: 0.0384)
 
 预设状态：已完成建档并位于首页
 
@@ -102,7 +102,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 在同一天完成以下操作 (key: c05_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.04)
+### Criterion 5: 在同一天完成以下操作 (key: c05_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0384)
 
 预设状态：已用“小满”和“阿序”完成建档，纪念日、旅行照片、心愿和日常均为空
 
@@ -114,7 +114,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 打开纪念日页面查看卡片 (key: c06_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.04)
+### Criterion 6: 打开纪念日页面查看卡片 (key: c06_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0384)
 
 预设状态：已存在一个过去的不重复纪念日和一个未来或每年重复的纪念日
 
@@ -126,7 +126,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 新增名为“第一次旅行”的纪念日 (key: c07_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.04)
+### Criterion 7: 新增名为“第一次旅行”的纪念日 (key: c07_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0384)
 
 预设状态：已打开纪念日页面
 
@@ -138,7 +138,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 打开旅行足迹页面 (key: c08_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.04)
+### Criterion 8: 打开旅行足迹页面 (key: c08_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0384)
 
 预设状态：已完成建档但还没有旅行照片
 
@@ -150,7 +150,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 先在右上角切换当前记录者为“小满” (key: c09_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.04)
+### Criterion 9: 先在右上角切换当前记录者为“小满” (key: c09_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.0384)
 
 预设状态：旅行足迹还没有照片
 
@@ -162,7 +162,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 先在右上角切换当前记录者为“阿序” (key: c10_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.04)
+### Criterion 10: 先在右上角切换当前记录者为“阿序” (key: c10_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.0384)
 
 预设状态：旅行足迹中已有一张浙江省照片
 
@@ -174,7 +174,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 点击中国地图中浙江省的真实行政区地图块 (key: c11_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.04)
+### Criterion 11: 点击中国地图中浙江省的真实行政区地图块 (key: c11_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0384)
 
 预设状态：当前记录者任意，已分别上传 /tmp_workspace_eval/travel-hangzhou-west-lake.jpg（拍摄日期任填，浙江省杭州市）和 /tmp_workspace_eval/travel-shanghai-bund.jpg（拍摄日期任填，上海市）各一张
 
@@ -186,7 +186,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 点击该照片 (key: c12_detail_display, primary: content_structure, secondary: detail_display, weight: 0.04)
+### Criterion 12: 点击该照片 (key: c12_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0384)
 
 预设状态：当前记录者为小满，已填写拍摄日期、浙江省杭州市并上传 /tmp_workspace_eval/travel-hangzhou-west-lake.jpg
 
@@ -198,7 +198,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 13: 打开心愿页面 (key: c13_information_organization, primary: content_structure, secondary: information_organization, weight: 0.04)
+### Criterion 13: 打开心愿页面 (key: c13_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0384)
 
 预设状态：心愿中同时存在待实现和已实现项目
 
@@ -210,7 +210,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 14: 先在右上角切换当前记录者为“阿序” (key: c14_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.04)
+### Criterion 14: 先在右上角切换当前记录者为“阿序” (key: c14_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0384)
 
 预设状态：已打开心愿页面
 
@@ -222,7 +222,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 15: 打开该心愿的详情 (key: c15_detail_display, primary: content_structure, secondary: detail_display, weight: 0.04)
+### Criterion 15: 打开该心愿的详情 (key: c15_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0384)
 
 预设状态：已存在带描述的心愿“去看极光”
 
@@ -234,7 +234,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 16: 将该心愿标记为已实现 (key: c16_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.04)
+### Criterion 16: 将该心愿标记为已实现 (key: c16_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.0384)
 
 预设状态：“去看极光”处于待实现状态
 
@@ -246,7 +246,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 17: 先在右上角切换当前记录者为“小满” (key: c17_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.04)
+### Criterion 17: 先在右上角切换当前记录者为“小满” (key: c17_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0384)
 
 预设状态：已打开日常页面
 
@@ -258,7 +258,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 18: 浏览日常时间线 (key: c18_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.04)
+### Criterion 18: 浏览日常时间线 (key: c18_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0384)
 
 预设状态：已完成双人建档；当前记录者为小满，发布一条正文“周末小记”并附 /tmp_workspace_eval/daily-01-coffee.jpg、/tmp_workspace_eval/daily-02-dinner.jpg、/tmp_workspace_eval/daily-03-flowers.jpg、/tmp_workspace_eval/daily-04-sunset.jpg、/tmp_workspace_eval/daily-05-plant.jpg、/tmp_workspace_eval/daily-06-books.jpg、/tmp_workspace_eval/daily-07-lake.jpg、/tmp_workspace_eval/daily-08-picnic.jpg、/tmp_workspace_eval/daily-09-cat.jpg 九张照片的日常；随后切换为阿序，发布一条仅正文“今天也要好好生活”的日常
 
@@ -270,7 +270,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 19: 分别打开旅行照片、心愿和日常的新增表单 (key: c19_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.04)
+### Criterion 19: 分别打开旅行照片、心愿和日常的新增表单 (key: c19_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0384)
 
 预设状态：已完成双人建档
 
@@ -282,7 +282,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 20: 刷新页面后重新查看五个页签 (key: c20_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.04)
+### Criterion 20: 刷新页面后重新查看五个页签 (key: c20_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0384)
 
 预设状态：已设置双人资料，并新增纪念日、旅行照片、心愿和日常各至少一条
 
@@ -294,7 +294,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 21: 观察首页及旅行足迹页面 (key: c21_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.04)
+### Criterion 21: 观察首页及旅行足迹页面 (key: c21_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.0384)
 
 预设状态：在 1440×900 桌面视口打开已建档的网站
 
@@ -306,7 +306,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 22: 切换页签并查看旅行上传表单、照片墙和详情 (key: c22_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.04)
+### Criterion 22: 切换页签并查看旅行上传表单、照片墙和详情 (key: c22_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0384)
 
 预设状态：在 375×812 手机视口打开已建档的网站；已填写拍摄日期、浙江省杭州市并上传 /tmp_workspace_eval/travel-hangzhou-west-lake.jpg 一张（视口 375×812）
 
@@ -318,7 +318,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 23: 点击右上角两个人的头像或名字 (key: c23_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.04)
+### Criterion 23: 点击右上角两个人的头像或名字 (key: c23_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0384)
 
 预设状态：已完成双人建档并停留在任一新增内容页面
 
@@ -330,7 +330,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 24: 切换右上角当前记录者为小满 (key: c24_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.04)
+### Criterion 24: 切换右上角当前记录者为小满 (key: c24_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.0384)
 
 预设状态：已完成双人建档并打开日常页面
 
@@ -342,13 +342,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 25: 对照每个月份标题与下方日期格 (key: c25_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.04)
+### Criterion 25: 对照每个月份标题与下方日期格 (key: c25_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0384)
 
 预设状态：已完成建档并进入首页，年度贡献日历完整可见
 
 操作：对照每个月份标题与下方日期格，重点查看 1 月 1 日以及相邻月份交界处
 
 期望结果：1 月至 12 月的月份标题分别对齐该月 1 日所在的周列，月份位置由真实日期计算；标题不会脱离日期格后被简单等距均分，也不会明显错位到前一个或后一个月份。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 26: 通读首页和地图、照片墙、心愿等各区域 (key: c26_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.04)
+
+预设状态：已完成双人建档，首页可见已恋爱天数；已分别上传 /tmp_workspace_eval/travel-hangzhou-west-lake.jpg（浙江省杭州市）和 /tmp_workspace_eval/travel-shanghai-bund.jpg（上海市）各一张
+
+操作：通读首页和地图、照片墙、心愿等各区域，把页面展示的每一个数字连同名目记下来
+
+期望结果：页面展示哪些数字不作要求；但凡展示出来的，都必须与建档信息和已有记录推算一致——已恋爱天数必须与开始日期和当天日期算得上，走过的省份、城市数必须与照片记录对得上——页面各处的数字之间也不得互相矛盾。出现任何一处矛盾，本条不通过。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 

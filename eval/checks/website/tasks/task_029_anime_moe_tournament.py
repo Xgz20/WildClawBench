@@ -48,9 +48,33 @@ async def run(page, screenshot_dir):
         return await contains_texts(page, ["16 强"]) and await duel.count() == 2
     await r.check("c05_rule_settlement", sixteen)
     async def persistence():
-        if not await auto_advance(): return False
+        await _fresh(page)
+        if not await _advance_groups(page): return False
+        before_matches = []
+        for _ in range(2):
+            duel = page.locator(".duel button, button[data-action='pick']")
+            if await duel.count() < 2: return False
+            before_matches.append(tuple([await duel.nth(i).inner_text() for i in range(2)]))
+            await duel.first.click(); await page.wait_for_timeout(60)
+        current = page.locator(".duel button, button[data-action='pick']")
+        if await current.count() < 2: return False
+        current_pair = tuple([await current.nth(i).inner_text() for i in range(2)])
         await page.reload(wait_until="domcontentloaded")
-        return await contains_any_texts(page, ["B 组", "B组", "小组赛 2/8", "第 2 组"])
+        restored = page.locator(".duel button, button[data-action='pick']")
+        restored_pair = tuple([
+            await restored.nth(i).inner_text()
+            for i in range(min(2, await restored.count()))
+        ])
+        text = await page.locator("body").inner_text()
+        history = page.locator(".match, [data-match], .history, .bracket")
+        history_ok = not await history.count() or all(
+            all(name in text for name in match) for match in before_matches
+        )
+        return (
+            restored_pair == current_pair
+            and await contains_any_texts(page, ["16 强 3/8", "16强 3/8", "16 强第 3 场", "第 3 场"])
+            and history_ok
+        )
     await r.check("c06_state_persistence", persistence)
     async def restart():
         if not await auto_advance(): return False

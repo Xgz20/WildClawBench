@@ -10,7 +10,7 @@ RUNTIME_KEYS = [
     "c01_information_organization", "c02_content_editing", "c03_detail_display", "c04_form_validation",
     "c05_form_validation", "c06_rule_settlement", "c07_data_visualization", "c08_data_visualization",
     "c09_content_editing", "c10_rule_settlement", "c11_content_editing", "c12_state_persistence",
-    "c16_lists_tables",
+    "c16_lists_tables", "c17_rule_settlement",
 ]
 VISUAL_KEYS = ["c13_page_layout", "c14_component_style", "c15_responsive_layout"]
 
@@ -213,6 +213,26 @@ async def run(page, screenshot_dir):
         headers = ["公司名称", "岗位名称", "投递状态", "base 地", "投递日期", "更新日期", "优先级", "投递链接", "备注"]
         return await contains_texts(page, headers)
     await recorder.check("c16_lists_tables", list_fields)
+
+    async def dashboard_numbers_reconcile():
+        await _fresh(page)
+        await _add(page, "字节跳动", "前端工程师", status="已offer")
+        await _add(page, "美团", "前端工程师", status="已终止")
+        await _add(page, "网易", "测试开发")
+        try:
+            await click_named_any(page, ["统计看板", "看板"])
+        except Exception:
+            pass
+        body = await page.locator("body").inner_text()
+        return (
+            await contains_texts(page, [
+                "总投递次数", "3", "还在流程中", "1", "已 offer", "1", "已终止", "1",
+                "前端工程师", "2", "测试开发", "1",
+            ])
+            and await page.locator("svg, canvas, [role='img']").count() >= 2
+            and not any(value in body for value in ["NaN", "Infinity", "undefined"])
+        )
+    await recorder.check("c17_rule_settlement", dashboard_numbers_reconcile)
     return recorder.results
 
 

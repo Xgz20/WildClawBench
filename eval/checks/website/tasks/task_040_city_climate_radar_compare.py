@@ -3,7 +3,7 @@ try:
     from ..common import CheckRecorder,capture,click_named_any,contains_texts,reset_page
 except ImportError:
     from common import CheckRecorder,capture,click_named_any,contains_texts,reset_page
-RUNTIME_KEYS=["c01_data_visualization","c02_search_filtering","c03_rule_settlement","c04_lists_tables","c05_data_visualization","c06_data_visualization","c07_data_visualization","c08_content_switching","c09_cross_region_linkage"]
+RUNTIME_KEYS=["c01_data_visualization","c02_search_filtering","c03_rule_settlement","c04_lists_tables","c05_data_visualization","c06_data_visualization","c07_data_visualization","c08_content_switching","c09_cross_region_linkage","c13_rule_settlement"]
 VISUAL_KEYS=["c10_page_layout","c11_visual_style","c12_responsive_layout"]
 async def _fresh(page): await reset_page(page)
 async def _toggle(page,name): await click_named_any(page,[name,f"选择{name}"]); await page.wait_for_timeout(60)
@@ -53,6 +53,10 @@ async def run(page,screenshot_dir):
     await r.check("c08_content_switching",c8)
     async def c9():
         await _fresh(page); await _toggle(page,"乌鲁木齐"); before=await page.get_by_text("乌鲁木齐",exact=True).count(); await _toggle(page,"乌鲁木齐"); table=page.locator("table"); return before>0 and (not await table.count() or "乌鲁木齐" not in await table.inner_text())
-    await r.check("c09_cross_region_linkage",c9); return r.results
+    await r.check("c09_cross_region_linkage",c9)
+    async def c13():
+        await _fresh(page); body=await page.locator("body").inner_text(); visual=page.locator("svg,canvas,[role=img]")
+        return await visual.count()>0 and await contains_texts(page,["广州","28.9","286","16","82","2.5","昆明","210","乌鲁木齐","28","23"]) and not any(x in body for x in ["NaN","Infinity","undefined"])
+    await r.check("c13_rule_settlement",c13); return r.results
 async def capture_visual(page,screenshot_dir):
     await _fresh(page); shots=[await capture(page,screenshot_dir,"desktop-radar",full_page=False)]; await page.set_viewport_size({"width":375,"height":812}); shots.append(await capture(page,screenshot_dir,"mobile-radar")); return shots

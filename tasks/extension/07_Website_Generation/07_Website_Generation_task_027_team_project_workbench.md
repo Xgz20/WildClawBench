@@ -52,7 +52,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 查看工作台呈现的内容 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.05)
+### Criterion 1: 查看工作台呈现的内容 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0476)
 
 预设状态：首页已在 1440×900 视口打开，尚未建立任何项目、需求和任务
 
@@ -64,7 +64,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 依次切换到项目、需求、任务三块 (key: c02_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.05)
+### Criterion 2: 依次切换到项目、需求、任务三块 (key: c02_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0476)
 
 预设状态：首页已打开，尚未建立任何项目、需求和任务
 
@@ -76,7 +76,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 新建一个名为「客服系统重构」的项目 (key: c03_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.05)
+### Criterion 3: 新建一个名为「客服系统重构」的项目 (key: c03_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0476)
 
 预设状态：首页已打开，尚未建立任何项目、需求和任务
 
@@ -88,7 +88,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 新建一条需求「工单列表改版」 (key: c04_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.05)
+### Criterion 4: 新建一条需求「工单列表改版」 (key: c04_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」，尚未创建任何需求
 
@@ -100,7 +100,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 新建任务「梳理工单字段」 (key: c05_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.05)
+### Criterion 5: 新建任务「梳理工单字段」 (key: c05_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」以及属于它的需求「工单列表改版」，尚未创建任何任务
 
@@ -112,7 +112,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 把「梳理工单字段」从待开始拖到已完成一列 (key: c06_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
+### Criterion 6: 把「梳理工单字段」从待开始拖到已完成一列 (key: c06_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」、属于它的需求「工单列表改版」，以及挂在该需求下的两个任务「梳理工单字段」和「联调工单接口」，两个任务的负责人任意、截止日期都填从今天往后约 30 天的同一个日期，当前都处于待开始
 
@@ -124,7 +124,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 把两个任务都拖到已完成一列 (key: c07_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
+### Criterion 7: 把两个任务都拖到已完成一列 (key: c07_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」、属于它的需求「工单列表改版」，以及挂在该需求下的两个任务「梳理工单字段」和「联调工单接口」，两个任务截止日期都填从今天往后约 30 天的同一个日期，当前都处于待开始
 
@@ -136,7 +136,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 先在工作台读出任务状态分布图上各状态的数目 (key: c08_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.05)
+### Criterion 8: 先在工作台读出任务状态分布图上各状态的数目 (key: c08_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」、属于它的需求「工单列表改版」，以及挂在该需求下的两个任务「梳理工单字段」和「联调工单接口」，截止日期都填从今天往后约 30 天的同一个日期，当前都处于待开始
 
@@ -148,7 +148,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 新建任务「导出历史工单」 (key: c09_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
+### Criterion 9: 新建任务「导出历史工单」 (key: c09_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」以及属于它的需求「工单列表改版」，尚未创建任何任务
 
@@ -160,7 +160,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 在工作台的到期提醒区域里点击「导出历史工单」这一条 (key: c10_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.05)
+### Criterion 10: 在工作台的到期提醒区域里点击「导出历史工单」这一条 (key: c10_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」、属于它的需求「工单列表改版」，以及挂在该需求下的任务「导出历史工单」（负责人周越，截止日期 2025-11-28），当前停留在工作台
 
@@ -172,7 +172,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 新建两个任务挂在「工单列表改版」下 (key: c11_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.05)
+### Criterion 11: 新建两个任务挂在「工单列表改版」下 (key: c11_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」以及属于它的需求「工单列表改版」，尚未创建任何任务
 
@@ -184,7 +184,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 在看板上把负责人筛成林薇 (key: c12_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.05)
+### Criterion 12: 在看板上把负责人筛成林薇 (key: c12_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」、属于它的需求「工单列表改版」，以及挂在该需求下的两个任务：「梳理工单字段」负责人林薇、「联调工单接口」负责人周越，截止日期都填从今天往后约 30 天的同一个日期，当前都处于待开始
 
@@ -196,7 +196,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 13: 删除「工单列表改版」这条需求 (key: c13_popup_overlay, primary: interaction_function, secondary: popup_overlay, weight: 0.05)
+### Criterion 13: 删除「工单列表改版」这条需求 (key: c13_popup_overlay, primary: interaction_function, secondary: popup_overlay, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」、属于它的需求「工单列表改版」，以及挂在该需求下的任务「梳理工单字段」（截止日期为从今天往后约 30 天的一个日期）
 
@@ -208,7 +208,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 14: 刷新页面，然后依次查看项目、需求和任务三块 (key: c14_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.05)
+### Criterion 14: 刷新页面，然后依次查看项目、需求和任务三块 (key: c14_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」、属于它的需求「工单列表改版」，以及挂在该需求下的任务「梳理工单字段」（负责人林薇，截止日期为从今天往后约 30 天的一个日期），并已把该任务拖到进行中一列
 
@@ -220,7 +220,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 15: 在工作台查看按人统计未完成任务的那张图 (key: c15_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.05)
+### Criterion 15: 在工作台查看按人统计未完成任务的那张图 (key: c15_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」、属于它的需求「工单列表改版」，以及挂在该需求下的两个任务：「梳理工单字段」负责人林薇、「联调工单接口」负责人周越，截止日期都填从今天往后约 30 天的同一个日期，当前都处于待开始
 
@@ -232,7 +232,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 16: 新建「客服系统重构」和「数据看板升级」两个项目 (key: c16_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.05)
+### Criterion 16: 新建「客服系统重构」和「数据看板升级」两个项目 (key: c16_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0476)
 
 预设状态：首页已打开，尚未建立任何项目、需求和任务
 
@@ -244,7 +244,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 17: 在需求模块打开「工单列表改版」的详情 (key: c17_detail_display, primary: content_structure, secondary: detail_display, weight: 0.05)
+### Criterion 17: 在需求模块打开「工单列表改版」的详情 (key: c17_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」、属于它的需求「工单列表改版」，以及挂在该需求下的两个任务「梳理工单字段」和「联调工单接口」（截止日期都填从今天往后约 30 天的同一个日期，都处于待开始）
 
@@ -256,7 +256,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 18: 在 1440×900 视口下查看看板的配色 (key: c18_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.05)
+### Criterion 18: 在 1440×900 视口下查看看板的配色 (key: c18_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」、属于它的需求「工单列表改版」，以及挂在该需求下的三个任务：「梳理工单字段」截止日期为从今天往后约 30 天的一个日期 且已拖到已完成一列、「联调工单接口」截止日期为从今天往后约 30 天的一个日期 且已拖到进行中一列、「导出历史工单」截止日期 2025-12-20 仍留在待开始一列
 
@@ -268,7 +268,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 19: 查看整页布局 (key: c19_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.05)
+### Criterion 19: 查看整页布局 (key: c19_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0476)
 
 预设状态：首页已在 1440×900 视口打开，尚未建立任何项目、需求和任务
 
@@ -280,13 +280,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 20: 把视口切换到 375×812 (key: c20_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.05)
+### Criterion 20: 把视口切换到 375×812 (key: c20_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0476)
 
 预设状态：已创建项目「客服系统重构」、属于它的需求「工单列表改版」，以及挂在该需求下的任务「梳理工单字段」（负责人林薇，截止日期为从今天往后约 30 天的一个日期）（视口 375×812）
 
 操作：把视口切换到 375×812，查看工作台和任务看板
 
 期望结果：两块页面的整页都不出现横向滚动，内容不需要左右拖动整个页面才能看全。四块导航在窄屏下仍然可以到达。工作台的关键数字、图和任务列表纵向排开，内容不互相重叠、不被裁切到无法阅读。看板在窄屏下改为纵向排列，或保留三列但把横向滑动限制在看板区域内部（整页仍不横移），两种都算达成。任务卡片上的文字完整可读。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 21: 通读工作台、看板和需求详情 (key: c21_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.048)
+
+预设状态：已创建项目「客服系统重构」、属于它的需求「工单列表改版」，以及挂在该需求下的三个任务：一个已拖到已完成一列、一个已拖到进行中一列、一个截止日期已过且仍留在待开始一列
+
+操作：通读工作台、看板和需求详情，把页面展示的每一个数字（各列计数、进度、百分比、逾期数等）连同名目记下来
+
+期望结果：页面展示哪些数字不作要求；但凡展示出来的，都必须与已建的项目、需求和任务推算一致，页面各处的数字之间也不得互相矛盾（例如需求进度写 1/3 却被标成已完成，或工作台的计数与看板各列的实际卡片数对不上）。出现任何一处矛盾，本条不通过。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 

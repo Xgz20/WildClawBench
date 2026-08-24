@@ -22,6 +22,7 @@ RUNTIME_KEYS = [
     "c14_search_filtering", "c15_cross_region_linkage", "c16_cross_region_linkage",
     "c17_content_switching", "c18_search_filtering", "c19_search_filtering",
     "c20_search_filtering", "c23_page_navigation", "c24_page_navigation",
+    "c27_rule_settlement",
 ]
 VISUAL_KEYS = ["c21_page_layout", "c22_visual_style", "c25_responsive_layout", "c26_page_layout"]
 
@@ -321,6 +322,18 @@ async def run(page, screenshot_dir):
             prefer_last_heading=True,
         )
     await recorder.check("c24_page_navigation", pagination_alert)
+
+    async def snapshot_numbers_are_consistent():
+        await reset_page(page)
+        await _select_value(page, "2025-2026学年第二学期")
+        overview = await contains_texts(page, ["32", "28", "220", "87.5%", "80", "140"])
+        regions = await contains_texts(page, ["浙江省", "江苏省", "广东省"])
+        await _open_alert(page, "产品未应用预警")
+        warnings = await contains_texts(
+            page, ["4", "文澜实验学校", "鄞州新城学校", "金陵汇文学校", "海珠实验学校"]
+        )
+        return overview and regions and warnings
+    await recorder.check("c27_rule_settlement", snapshot_numbers_are_consistent)
     return recorder.results
 
 

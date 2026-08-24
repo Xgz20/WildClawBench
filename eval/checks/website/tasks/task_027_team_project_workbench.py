@@ -13,7 +13,7 @@ RUNTIME_KEYS = [
     "c05_content_editing", "c06_rule_settlement", "c07_rule_settlement", "c08_cross_region_linkage",
     "c09_rule_settlement", "c10_cross_region_linkage", "c11_rule_settlement", "c12_search_filtering",
     "c13_popup_overlay", "c14_state_persistence", "c15_data_visualization", "c16_lists_tables",
-    "c17_detail_display",
+    "c17_detail_display", "c21_rule_settlement",
 ]
 VISUAL_KEYS = ["c18_visual_style", "c19_page_layout", "c20_responsive_layout"]
 
@@ -261,6 +261,28 @@ async def run(page, screenshot_dir):
         await click_named_any(page, ["工单列表改版"])
         return await contains_texts(page, ["客服系统重构", "梳理工单字段", "联调工单接口"])
     await recorder.check("c17_detail_display", detail)
+
+    async def dashboard_numbers_reconcile():
+        if not await _seed(page):
+            return False
+        await _create_task(page, "逾期回归测试", "周越", "2025-11-28")
+        await _drag(page, "梳理工单字段", "已完成")
+        await _drag(page, "联调工单接口", "进行中")
+        await click_named_any(page, ["工作台"])
+        dashboard_body = await page.locator("body").inner_text()
+        dashboard_ok = (
+            await contains_texts(page, ["客服系统重构", "工单列表改版"])
+            and await contains_any_texts(page, ["逾期 1", "逾期1", "1 个逾期", "逾期任务"])
+            and not any(value in dashboard_body for value in ["NaN", "Infinity", "undefined"])
+        )
+        await click_named_any(page, ["需求", "需求管理"])
+        await click_named_any(page, ["工单列表改版"])
+        detail_ok = (
+            await contains_texts(page, ["梳理工单字段", "联调工单接口", "逾期回归测试"])
+            and await contains_any_texts(page, ["1/3", "1 / 3", "33%", "33.3%"])
+        )
+        return dashboard_ok and detail_ok
+    await recorder.check("c21_rule_settlement", dashboard_numbers_reconcile)
     return recorder.results
 
 
