@@ -23,7 +23,7 @@ RUNTIME_KEYS = [
     "c17_content_switching", "c18_search_filtering", "c19_search_filtering",
     "c20_search_filtering", "c23_page_navigation", "c24_page_navigation",
 ]
-VISUAL_KEYS = ["c21_page_layout", "c22_visual_style", "c25_responsive_layout"]
+VISUAL_KEYS = ["c21_page_layout", "c22_visual_style", "c25_responsive_layout", "c26_page_layout"]
 
 
 async def _select_value(page, value: str) -> bool:
@@ -326,7 +326,10 @@ async def run(page, screenshot_dir):
 
 async def capture_visual(page, screenshot_dir):
     await reset_page(page)
-    manifest = [await capture(page, screenshot_dir, "desktop-dashboard", full_page=False)]
+    manifest = [
+        await capture(page, screenshot_dir, "desktop-dashboard", full_page=False),
+        await capture(page, screenshot_dir, "desktop-dashboard-order", full_page=True),
+    ]
     try:
         await _open_alert(page, "产品到期预警")
         manifest.append(await capture(page, screenshot_dir, "desktop-alert", full_page=False))
