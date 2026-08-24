@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Any
 
 OPENCLAW_FALLBACK_PATH = "/root/.openclaw/agents/main/sessions/chat.jsonl"
+JUDGE_EVIDENCE_FORMAT = "wildclaw_judge_evidence_v1"
+COMPACT_EVENT_STRING_CHARS = 1200
 
 
 def _safe_json_loads(text: str) -> Any | None:
@@ -63,3 +65,317 @@ def load_transcript(path_str: str = "") -> list[Any]:
         if loaded:
             return loaded
     return []
+
+
+def _event_role(event: Any) -> str:
+    if not isinstance(event, dict):
+        return ""
+    candidates = [event]
+    for key in ("message", "payload"):
+        nested = event.get(key)
+        if isinstance(nested, dict):
+            candidates.append(nested)
+    for candidate in candidates:
+        role = str(candidate.get("role") or "").strip().lower()
+        if role:
+            return role
+    return ""
+
+
+def _event_has_visible_text(event: Any) -> bool:
+    if not isinstance(event, dict):
+        return False
+    candidates = [event]
+    for key in ("message", "payload"):
+        nested = event.get(key)
+        if isinstance(nested, dict):
+            candidates.append(nested)
+    for candidate in candidates:
+        content = candidate.get("content")
+        if isinstance(content, str) and content.strip():
+            return True
+        if not isinstance(content, list):
+            continue
+        for block in content:
+            if isinstance(block, str) and block.strip():
+                return True
+            if not isinstance(block, dict):
+                continue
+            block_type = str(block.get("type") or "").lower()
+            text = block.get("text") or block.get("content")
+            if block_type in {"text", "output_text", "input_text"} and str(text or "").strip():
+                return True
+    return False
+
+
+def _first_role_index(transcript: list[Any], role: str) -> int | None:
+    for index, event in enumerate(transcript):
+        if _event_role(event) == role:
+            return index
+    return None
+
+
+def _final_assistant_index(transcript: list[Any]) -> int | None:
+    final_assistant: int | None = None
+    final_visible_assistant: int | None = None
+    for index, event in enumerate(transcript):
+        if _event_role(event) != "assistant":
+            continue
+        final_assistant = index
+        if _event_has_visible_text(event):
+            final_visible_assistant = index
+    return (
+        final_visible_assistant
+        if final_visible_assistant is not None
+        else final_assistant
+    )
+
+
+def _head_tail(value: str, max_chars: int) -> str:
+    if len(value) <= max_chars:
+        return value
+    marker = f"\n...[{len(value) - max_chars} chars omitted]...\n"
+    if max_chars <= len(marker) + 2:
+        return value[:max_chars]
+    remaining = max_chars - len(marker)
+    head_chars = remaining // 2
+    tail_chars = remaining - head_chars
+    return value[:head_chars] + marker + value[-tail_chars:]
+
+
+def _compact_value(value: Any, string_limit: int) -> Any:
+    if isinstance(value, dict):
+        return {
+            str(key): _compact_value(item, string_limit)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_compact_value(item, string_limit) for item in value]
+    if isinstance(value, str):
+        return _head_tail(value, string_limit)
+    return value
+
+
+def _index_ranges(indices: list[int]) -> list[str]:
+    if not indices:
+        return []
+    ranges: list[str] = []
+    start = previous = indices[0]
+    for index in indices[1:]:
+        if index == previous + 1:
+            previous = index
+            continue
+        ranges.append(str(start) if start == previous else f"{start}-{previous}")
+        start = previous = index
+    ranges.append(str(start) if start == previous else f"{start}-{previous}")
+    return ranges
+
+
+def _event_outline(index: int, event: Any) -> dict[str, Any]:
+    outline: dict[str, Any] = {"event_index": index}
+    role = _event_role(event)
+    if role:
+        outline["role"] = role
+    if not isinstance(event, dict):
+        outline["value_type"] = type(event).__name__
+        return outline
+
+    candidates = [event]
+    for key in ("message", "payload"):
+        nested = event.get(key)
+        if isinstance(nested, dict):
+            candidates.append(nested)
+    event_types: list[str] = []
+    statuses: list[str] = []
+    tools: list[dict[str, str]] = []
+    for candidate in candidates:
+        event_type = str(candidate.get("type") or "").strip()
+        if event_type and event_type not in event_types:
+            event_types.append(event_type)
+        status = str(candidate.get("status") or "").strip()
+        if status and status not in statuses:
+            statuses.append(status)
+        content = candidate.get("content")
+        if not isinstance(content, list):
+            continue
+        for block in content:
+            if not isinstance(block, dict):
+                continue
+            block_type = str(block.get("type") or "").strip()
+            if block_type not in {"tool_use", "toolCall", "tool_call", "tool_result"}:
+                continue
+            tool = {"type": block_type}
+            for source_key, target_key in (
+                ("name", "name"),
+                ("tool_name", "name"),
+                ("toolName", "name"),
+                ("id", "id"),
+                ("tool_use_id", "tool_use_id"),
+                ("status", "status"),
+            ):
+                value = str(block.get(source_key) or "").strip()
+                if value and target_key not in tool:
+                    tool[target_key] = value
+            tools.append(tool)
+    if event_types:
+        outline["types"] = event_types
+    if statuses:
+        outline["statuses"] = statuses
+    if tools:
+        outline["tools"] = tools
+    return outline
+
+
+def _render_compacted_evidence(
+    transcript: list[Any],
+    selected: dict[int, Any],
+) -> str:
+    included_indices = set(selected)
+    omitted_indices = [
+        index for index in range(len(transcript))
+        if index not in included_indices
+    ]
+    payload = {
+        "format": JUDGE_EVIDENCE_FORMAT,
+        "omitted_event_ranges": _index_ranges(omitted_indices),
+        "omitted_event_outlines": [
+            _event_outline(index, transcript[index])
+            for index in omitted_indices
+        ],
+        "events": [
+            {"event_index": index, "event": selected[index]}
+            for index in sorted(selected)
+        ],
+    }
+    return json.dumps(payload, ensure_ascii=False)
+
+
+def build_judge_evidence(
+    transcript: list[Any],
+    *,
+    max_chars: int,
+) -> dict[str, Any]:
+    if max_chars <= 0:
+        raise ValueError("max_chars must be greater than zero")
+
+    full_text = json.dumps(transcript, ensure_ascii=False)
+    first_user_index = _first_role_index(transcript, "user")
+    final_assistant_index = _final_assistant_index(transcript)
+    if len(full_text) <= max_chars:
+        return {
+            "text": full_text,
+            "metadata": {
+                "policy": "complete",
+                "max_chars": max_chars,
+                "original_chars": len(full_text),
+                "included_chars": len(full_text),
+                "original_event_count": len(transcript),
+                "included_event_count": len(transcript),
+                "omitted_event_count": 0,
+                "omitted_event_ranges": [],
+                "truncated_event_count": 0,
+                "truncated_event_ranges": [],
+                "compacted": False,
+                "first_user_event_index": first_user_index,
+                "final_answer_event_index": final_assistant_index,
+                "final_answer_included": final_assistant_index is not None,
+                "final_answer_truncated": False,
+            },
+        }
+
+    mandatory_indices = {
+        index for index in (first_user_index, final_assistant_index)
+        if index is not None
+    }
+    if not mandatory_indices and transcript:
+        mandatory_indices.add(len(transcript) - 1)
+
+    selected = {index: transcript[index] for index in mandatory_indices}
+    evidence_text = _render_compacted_evidence(transcript, selected)
+    string_limit = min(
+        COMPACT_EVENT_STRING_CHARS,
+        max(128, max_chars // max(2, len(mandatory_indices) * 2)),
+    )
+    while len(evidence_text) > max_chars and string_limit >= 128:
+        selected = {
+            index: _compact_value(transcript[index], string_limit)
+            for index in mandatory_indices
+        }
+        evidence_text = _render_compacted_evidence(transcript, selected)
+        string_limit //= 2
+
+    if len(evidence_text) > max_chars:
+        excerpt_limit = max(64, max_chars // max(4, len(mandatory_indices) * 3))
+        while True:
+            selected = {
+                index: {
+                    "event_excerpt": _head_tail(
+                        json.dumps(transcript[index], ensure_ascii=False),
+                        excerpt_limit,
+                    )
+                }
+                for index in mandatory_indices
+            }
+            evidence_text = _render_compacted_evidence(transcript, selected)
+            if len(evidence_text) <= max_chars or excerpt_limit <= 32:
+                break
+            excerpt_limit //= 2
+
+    candidate_indices = [
+        index for index in range(len(transcript) - 1, -1, -1)
+        if index not in mandatory_indices
+    ]
+    for index in candidate_indices:
+        trial = {**selected, index: transcript[index]}
+        trial_text = _render_compacted_evidence(transcript, trial)
+        if len(trial_text) <= max_chars:
+            selected = trial
+            evidence_text = trial_text
+            continue
+        candidate = _compact_value(
+            transcript[index], COMPACT_EVENT_STRING_CHARS
+        )
+        trial = {**selected, index: candidate}
+        trial_text = _render_compacted_evidence(transcript, trial)
+        if len(trial_text) <= max_chars:
+            selected = trial
+            evidence_text = trial_text
+
+    final_answer_truncated = False
+    if final_assistant_index is not None and final_assistant_index in selected:
+        final_answer_truncated = (
+            json.dumps(selected[final_assistant_index], ensure_ascii=False)
+            != json.dumps(transcript[final_assistant_index], ensure_ascii=False)
+        )
+    omitted_indices = [
+        index for index in range(len(transcript))
+        if index not in selected
+    ]
+    truncated_indices = sorted(
+        index for index in selected
+        if json.dumps(selected[index], ensure_ascii=False)
+        != json.dumps(transcript[index], ensure_ascii=False)
+    )
+    return {
+        "text": evidence_text,
+        "metadata": {
+            "policy": "deterministic_compaction_v1",
+            "max_chars": max_chars,
+            "original_chars": len(full_text),
+            "included_chars": len(evidence_text),
+            "original_event_count": len(transcript),
+            "included_event_count": len(selected),
+            "omitted_event_count": len(omitted_indices),
+            "omitted_event_ranges": _index_ranges(omitted_indices),
+            "truncated_event_count": len(truncated_indices),
+            "truncated_event_ranges": _index_ranges(truncated_indices),
+            "compacted": True,
+            "first_user_event_index": first_user_index,
+            "final_answer_event_index": final_assistant_index,
+            "final_answer_included": (
+                final_assistant_index is not None
+                and final_assistant_index in selected
+            ),
+            "final_answer_truncated": final_answer_truncated,
+        },
+    }

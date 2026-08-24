@@ -6,7 +6,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from src.utils.grading import _grade_llm_rubric, _judge_retries
+from src.utils.grading import (
+    _grade_llm_rubric,
+    _judge_retries,
+    _judge_transcript_max_chars,
+)
 
 
 class JudgeRetryTest(unittest.TestCase):
@@ -15,6 +19,16 @@ class JudgeRetryTest(unittest.TestCase):
             self.assertEqual(_judge_retries(), 2)
         with patch.dict("os.environ", {"WILDCLAW_JUDGE_RETRIES": "1"}):
             self.assertEqual(_judge_retries(), 1)
+
+    def test_judge_transcript_limit_defaults_to_80000_and_is_configurable(self) -> None:
+        with patch.dict(
+            "os.environ", {"WILDCLAW_JUDGE_TRANSCRIPT_MAX_CHARS": ""}
+        ):
+            self.assertEqual(_judge_transcript_max_chars(), 80000)
+        with patch.dict(
+            "os.environ", {"WILDCLAW_JUDGE_TRANSCRIPT_MAX_CHARS": "120000"}
+        ):
+            self.assertEqual(_judge_transcript_max_chars(), 120000)
 
     def test_invalid_json_is_retried_and_every_attempt_is_audited(self) -> None:
         attempts = iter([
@@ -111,6 +125,9 @@ class JudgeRetryTest(unittest.TestCase):
         self.assertIn(
             "os.environ['WILDCLAW_JUDGE_SCHEMA'] = 'scores_notes'", runner_code
         )
+        self.assertIn("build_judge_evidence", runner_code)
+        self.assertIn("max_chars=80000", runner_code)
+        self.assertIn("'transcript_evidence': _transcript_evidence", runner_code)
         self.assertNotIn("wildclaw_judge_schema='scores_notes'", runner_code)
 
 

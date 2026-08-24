@@ -134,8 +134,11 @@ Judge。自动检查仍负责文件可打开性、页数、XML 和伴随产物�
 每次 v2 Judge 调用都会保存到该任务 run 目录的 `judge/`：每次尝试包含
 `request.json`、`response.json`、`parsed.json`，并由 `summary.json` 记录重试和最终
 采用的尝试。凭证会脱敏，图片不重复写入 JSON，而是在 `judge/rendered/` 保存并以
-路径、MIME、尺寸和 SHA-256 摘要引用。`WILDCLAW_JUDGE_RETRIES` 控制无效 JSON
-后的重试次数，默认 2 次；耗尽后仍按评测框架故障处理，不能当作真实 0 分。
+路径、MIME、尺寸和 SHA-256 摘要引用。评分轨迹不超过
+`WILDCLAW_JUDGE_TRANSCRIPT_MAX_CHARS`（默认 80000）时完整发送；超过后按事件确定性
+压缩，保留首个用户请求和最终回复，并在 `request.json.transcript_evidence` 记录压缩
+元数据。`WILDCLAW_JUDGE_RETRIES` 控制无效 JSON 后的重试次数，默认 2 次；耗尽后仍
+按评测框架故障处理，不能当作真实 0 分。
 
 PPT 视觉评测依赖评分镜像提供 `soffice` 或 `libreoffice` 以及 Python `fitz`
 （PyMuPDF）。AstronCode v4 的 Dockerfile 已加入 `libreoffice-impress` 和构建期门禁；
@@ -272,7 +275,7 @@ BRAVE_API_KEY=your_brave_key_here  # required for search tasks
 
 - **OpenRouter API Key** — Any model available on [OpenRouter](https://openrouter.ai/models) is supported. The default model is defined in the `.env` file as `DEFAULT_MODEL=openrouter/stepfun/step-3.5-flash:free` — replace it with any model you want to evaluate.
 - **Brave Search API Key** — Required for Search & Retrieval tasks. Get one (with free monthly credits) at [brave.com/search/api](https://brave.com/search/api/).
-- **Judge model** (optional) — `JUDGE_MODEL` controls the LLM used by judge-based grading metrics. Defaults to `openai/gpt-5.4`. `JUDGE_MAX_TOKENS` controls the shared v2 Rubric Judge response limit for every Harness and defaults to `1000`.
+- **Judge model** (optional) — `JUDGE_MODEL` controls the LLM used by judge-based grading metrics. Defaults to `openai/gpt-5.4`. `JUDGE_MAX_TOKENS` controls the shared v2 Rubric Judge response limit for every Harness and defaults to `1000`. `WILDCLAW_JUDGE_TRANSCRIPT_MAX_CHARS` controls the grading-transcript evidence limit and defaults to `80000`; shorter transcripts are sent unchanged, while longer transcripts are deterministically compacted around the task request, final answer, and recent events.
 - **MaaS candidate model limit** (optional) — `MAAS_MAX_TOKENS` controls the candidate model request output limit for MaaS-routed models across Harnesses and defaults to `16384`. It is independent of the Judge limit. AstronCode defaults to its native MaaS limit handling; set `ASTRONCODE_MAAS_MAX_TOKENS_MODE=proxy` only for legacy images that still need the request-rewrite compatibility proxy.
 
 Then run one of the available harnesses:

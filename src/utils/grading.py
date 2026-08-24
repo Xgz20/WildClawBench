@@ -21,6 +21,7 @@ TMP_WORKSPACE = os.environ.get("TMP_WORKSPACE", "/tmp_workspace")
 DEFAULT_GRADING_TIMEOUT_SECONDS = 600.0
 DEFAULT_JUDGE_MAX_TOKENS = 1000
 DEFAULT_JUDGE_TIMEOUT_SECONDS = 300.0
+DEFAULT_JUDGE_TRANSCRIPT_MAX_CHARS = 80000
 JUDGE_AUDIT_COPY_TIMEOUT_SECONDS = 30.0
 WEBSITE_METRIC_PROFILE = "web-site-gen"
 PPT_METRIC_PROFILE = "ppt"
@@ -96,6 +97,29 @@ def _judge_timeout_seconds() -> float:
     except ValueError:
         return DEFAULT_JUDGE_TIMEOUT_SECONDS
     return value if value > 0 else DEFAULT_JUDGE_TIMEOUT_SECONDS
+
+
+def _judge_transcript_max_chars() -> int:
+    raw = os.environ.get("WILDCLAW_JUDGE_TRANSCRIPT_MAX_CHARS", "").strip()
+    if not raw:
+        return DEFAULT_JUDGE_TRANSCRIPT_MAX_CHARS
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.warning(
+            "Invalid WILDCLAW_JUDGE_TRANSCRIPT_MAX_CHARS=%r; using %d",
+            raw,
+            DEFAULT_JUDGE_TRANSCRIPT_MAX_CHARS,
+        )
+        return DEFAULT_JUDGE_TRANSCRIPT_MAX_CHARS
+    if value < 2000:
+        logger.warning(
+            "WILDCLAW_JUDGE_TRANSCRIPT_MAX_CHARS must be >= 2000, got %r; using %d",
+            raw,
+            DEFAULT_JUDGE_TRANSCRIPT_MAX_CHARS,
+        )
+        return DEFAULT_JUDGE_TRANSCRIPT_MAX_CHARS
+    return value
 
 
 def _write_score(output_dir: Path, task_id: str, scores: dict) -> None:
@@ -1054,6 +1078,7 @@ def _grade_llm_rubric(
     )
     judge_model = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
     judge_max_tokens = _judge_max_tokens()
+    judge_transcript_max_chars = _judge_transcript_max_chars()
 
     is_website_profile = metric_profile == WEBSITE_METRIC_PROFILE
     is_ppt_profile = metric_profile == PPT_METRIC_PROFILE
@@ -1068,11 +1093,14 @@ def _grade_llm_rubric(
     )
     transcript_reader = (
         "_summary = ''\n"
+        "_transcript_evidence = {'policy': 'not_used', 'compacted': False}\n"
         if dynamic_website_visual
         else (
-            "from _transcript_loader import load_transcript\n"
+            "from _transcript_loader import build_judge_evidence, load_transcript\n"
             f"_t = load_transcript({json.dumps(transcript_container_path)})\n"
-            "_summary = json.dumps(_t, ensure_ascii=False)[:20000]\n"
+            f"_evidence = build_judge_evidence(_t, max_chars={judge_transcript_max_chars})\n"
+            "_summary = _evidence['text']\n"
+            "_transcript_evidence = _evidence['metadata']\n"
         )
     )
     message_builder = (
@@ -1123,7 +1151,7 @@ def _grade_llm_rubric(
         "    _visual_manifest = _ppt_evidence.get('manifest', []) or _website_evidence.get('manifest', [])\n"
         "    _audit_content.extend({'type': 'image_ref', **_item} for _item in _visual_manifest)\n"
         "    _envelope = {'candidate_text': _choice.message.content,"
-        " 'request': {'model': _judge_model, 'input_model': _judge_model, 'requested_model': _effective_judge_model, 'effective_requested_model': _effective_judge_model, 'max_tokens': " + str(judge_max_tokens) + ", 'timeout_seconds': " + repr(_judge_timeout_seconds()) + ", 'response_format': {'type': 'json_object'}, 'endpoint_type': ('anthropic_messages' if _judge_model.startswith('anthropic/') else 'openai_chat_completions'), 'messages': [{'role': 'user', 'content': _audit_content}], 'ppt_manifest': _ppt_evidence.get('manifest', []), 'website_manifest': _website_evidence.get('manifest', [])},"
+        " 'request': {'model': _judge_model, 'input_model': _judge_model, 'requested_model': _effective_judge_model, 'effective_requested_model': _effective_judge_model, 'max_tokens': " + str(judge_max_tokens) + ", 'timeout_seconds': " + repr(_judge_timeout_seconds()) + ", 'response_format': {'type': 'json_object'}, 'endpoint_type': ('anthropic_messages' if _judge_model.startswith('anthropic/') else 'openai_chat_completions'), 'messages': [{'role': 'user', 'content': _audit_content}], 'transcript_evidence': _transcript_evidence, 'ppt_manifest': _ppt_evidence.get('manifest', []), 'website_manifest': _website_evidence.get('manifest', [])},"
         " 'response': {'raw': _raw_response, 'raw_text': _choice.message.content,"
         " 'model': getattr(resp, 'model', ''), 'returned_model': getattr(resp, 'model', ''),"
         " 'finish_reason': getattr(_choice, 'finish_reason', ''),"
