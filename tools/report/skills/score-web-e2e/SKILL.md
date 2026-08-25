@@ -26,16 +26,22 @@ private-scoring/task_contract.json
 ## 评分流程
 
 1. 读取 `private-scoring/task_contract.json` 和 `.web-e2e-scoring-ready`，校验批次、题目、Harness 和哈希。`execution_record.json` 默认不存在；存在时再读取并校验执行状态和资源字段。
-2. 在 `workspace/` 检查 `package.json`，由评分 Agent 执行：
+2. 不预设候选站点的前端框架、包管理器、构建工具或启动命令。先只读检查 `workspace/` 中的 README、`package.json`、`packageManager`、锁文件、scripts、框架配置、`index.html` 和已有构建目录，再按实际产物选择启动方式：
 
-   ```bash
-   cd workspace
-   npm install
-   npm run build
-   npm run start -- --host 127.0.0.1 --port 4173
-   ```
+   - Node 工程：优先遵循项目自己的启动说明；根据 `packageManager` 和锁文件选择 npm、pnpm、yarn 或 bun，不混用包管理器。只在依赖缺失且启动确实需要时安装依赖；只在项目声明的预览或生产启动方式需要构建时执行 build。启动前读取 scripts 的真实内容，不得默认项目一定存在 `build`、`start`，也不得把 Vite 参数盲目传给其他服务器。
+   - 原生 HTML/CSS/JavaScript 或已有静态构建产物：不得为了适配评分流程而创建 `package.json` 或安装前端依赖。使用评分 Skill 内置的零依赖静态服务器，例如：
 
-   只监听 `127.0.0.1`，不得使用真实凭证。每题开始前关闭上一题服务并清理相同 Origin 的浏览器存储。
+     ```bash
+     node <score-web-e2e-skill-dir>/scripts/serve_static.mjs \
+       --root workspace \
+       --host 127.0.0.1 \
+       --port 4173
+     ```
+
+     单页应用需要 history fallback 时增加 `--spa-fallback`。若入口位于 `dist/`、`build/` 等目录，`--root` 指向实际可发布目录。
+   - 其他技术栈：遵循仓库内可验证的启动说明和配置；不要改写候选源码或脚本来迎合固定命令。无法确定安全、可重复的启动方式时记录 `evaluation_error`，不要猜测。
+
+   无论采用哪种方式，都只监听 `127.0.0.1`；启动后先访问实际 URL，确认页面和静态资源可加载，再开始评分，并把实际 URL 写入 `score_input.json.site_url`。不得使用真实凭证。每题开始前关闭上一题服务并清理相同 Origin 的浏览器存储。
 3. 实际点击、输入、切换、刷新、改变视口或上传文件验证检查点；不得只看源码、静态 DOM 或截图推断交互成功。
 4. 逐 criterion 记录动作、观察、理由和证据。视觉检查点必须有视口截图；交互检查点必须写明动作前后状态。
 5. 读取 [美观度评分标准](references/aesthetic-scoring.md) 和 [结构化定义](references/aesthetic-rubric.json)。复用功能评分截图，常规选择 4–6 张不重复的代表性截图，覆盖桌面主状态、桌面交互状态、适用的空/错误/加载/选中/禁用状态，以及窄屏主状态和窄屏交互状态。简单页面允许只提供最低 2 张桌面图和 1 张不大于 480px 的窄屏图；复杂页面按实际状态增加。对带标签的截图集合做一次统一判定，不得逐图给总分后平均，也不得用重复截图改变分数。
@@ -70,7 +76,7 @@ node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
   --output submission.json
 ```
 
-运行前先关闭所有站点进程；由管理 Agent 只删除本次 `npm install` 生成、可重新安装的 `execution/tasks/*/workspace/node_modules` 和 `score/tasks/*/workspace/node_modules`，以及候选过程意外生成的 `.git`，不得删除源文件或评分证据。
+运行前先关闭所有站点进程；由管理 Agent 只删除本次依赖安装生成、可重新安装的 `execution/tasks/*/workspace/node_modules` 和 `score/tasks/*/workspace/node_modules`，以及候选过程意外生成的 `.git`，不得删除源文件或评分证据。
 
 脚本校验全部 `task_score.json`、证据路径、身份和敏感文件，并阻止把残留的 `node_modules`、`.git` 打入回传包，然后生成根目录 `submission.json`。随后测试人员使用 ZIP 工具压缩整个 Harness 根目录回传；报告 Skill 会从 ZIP 中定位唯一 `submission.json`。
 

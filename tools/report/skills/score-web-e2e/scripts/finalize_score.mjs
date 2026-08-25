@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SCHEMA_VERSION = "wildclawbench.web-e2e-task-score/v1";
-const SKILL_VERSION = "3.2.0";
+const SKILL_VERSION = "3.3.0";
 const EXECUTION_STATUSES = new Set(["completed", "execution_error", "timeout", "pending", "not_recorded"]);
 const EVALUATION_STATUSES = new Set(["completed", "evaluation_error"]);
 const AESTHETIC_EVALUATION_STATUSES = new Set(["completed", "evaluation_error"]);

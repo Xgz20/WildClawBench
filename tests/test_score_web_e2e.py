@@ -5,12 +5,14 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from urllib.request import urlopen
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 INIT = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/init_score.mjs"
 FINALIZE = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/finalize_score.mjs"
 SUBMISSION = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/build_submission.mjs"
+STATIC_SERVER = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/serve_static.mjs"
 
 AESTHETIC_DIMENSIONS = [
     ("render_integrity", "桌面和窄屏均完整渲染"),
@@ -370,6 +372,60 @@ class BuildSubmissionTest(unittest.TestCase):
             submission = json.loads((root / "submission.json").read_text(encoding="utf-8"))
         self.assertEqual(submission["unit"]["harness_id"], "codex")
         self.assertEqual(submission["task_ids"], ["task-1"])
+
+
+class StaticSiteServerTest(unittest.TestCase):
+    def test_serves_plain_html_without_package_json(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "index.html").write_text(
+                '<!doctype html><script src="/app.js"></script><main>静态站点</main>',
+                encoding="utf-8",
+            )
+            (root / "app.js").write_text("document.body.dataset.ready = 'yes';", encoding="utf-8")
+            process = subprocess.Popen(
+                [
+                    "node", str(STATIC_SERVER),
+                    "--root", str(root),
+                    "--host", "127.0.0.1",
+                    "--port", "0",
+                    "--spa-fallback",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            try:
+                ready = process.stdout.readline().strip()
+                self.assertTrue(ready.startswith("PASS: http://127.0.0.1:"), ready)
+                site_url = ready.removeprefix("PASS: ").split(" ", 1)[0]
+                with urlopen(site_url, timeout=5) as response:
+                    self.assertEqual(response.status, 200)
+                    self.assertIn("静态站点", response.read().decode("utf-8"))
+                with urlopen(f"{site_url}app.js", timeout=5) as response:
+                    self.assertEqual(response.headers.get_content_type(), "text/javascript")
+                with urlopen(f"{site_url}nested/route", timeout=5) as response:
+                    self.assertIn("静态站点", response.read().decode("utf-8"))
+            finally:
+                process.terminate()
+                process.communicate(timeout=5)
+
+    def test_rejects_non_loopback_host(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "index.html").write_text("ok", encoding="utf-8")
+            result = subprocess.run(
+                [
+                    "node", str(STATIC_SERVER),
+                    "--root", str(root),
+                    "--host", "0.0.0.0",
+                    "--port", "4173",
+                ],
+                capture_output=True,
+                text=True,
+            )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("只允许监听 127.0.0.1", result.stderr)
 
 
 if __name__ == "__main__":

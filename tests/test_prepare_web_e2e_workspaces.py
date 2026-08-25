@@ -174,12 +174,14 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             result = prepare_module.package_score_skill(args)
             package_path = Path(tmp).resolve() / "web-skill-only__score-web-e2e-skill.zip"
             self.assertEqual(result["path"], package_path)
-            self.assertEqual(result["file_count"], 8)
+            self.assertEqual(result["file_count"], 9)
             self.assertEqual(result["sha256"], prepare_module.sha256_file(package_path))
             self.assertFalse((Path(tmp) / "web-skill-only").exists())
             self.assertFalse(any(Path(tmp).glob("**/batch_manifest.json")))
             with zipfile.ZipFile(package_path) as archive:
-                self.assertEqual(len([name for name in archive.namelist() if not name.endswith("/")]), 8)
+                names = [name for name in archive.namelist() if not name.endswith("/")]
+                self.assertEqual(len(names), 9)
+                self.assertIn("score-web-e2e/scripts/serve_static.mjs", names)
 
     def test_score_skill_only_rejects_existing_archive(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

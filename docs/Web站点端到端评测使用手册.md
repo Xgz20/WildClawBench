@@ -102,13 +102,13 @@ D:\WebE2E\web-e2e-20260820-105921__codex\execution\tasks\07_Website_Generation_t
 <task_id>/
 ├── PROMPT.md
 └── workspace/
-    ├── package.json
+    ├── index.html 或 package.json
     └── ...站点源文件
 ```
 
 至少确认：
 
-- `workspace/package.json` 存在；
+- `workspace/` 中存在可运行的站点入口、项目启动说明或构建配置；原生 HTML/CSS/JavaScript 产物不要求提供 `package.json`；
 - Harness 的最终回复没有报告未处理的执行错误；
 - 站点源文件位于 `workspace/`，没有写到题目目录或其他用例目录；
 - 未删除初始 Workspace 中的必要素材。
@@ -251,7 +251,7 @@ score/tasks/<task_id>/
 评分 Agent 将：
 
 1. 读取 `private-scoring/task_contract.json` 中的 Prompt、Expected Behavior 和 Rubric。
-2. 在 `workspace/` 安装依赖、构建并启动站点。
+2. 检查产物的启动说明、包管理器、锁文件、scripts、框架配置和静态入口，按实际技术栈选择启动方式；只有产物确实需要时才安装依赖或构建，原生静态站点直接通过本地 HTTP 服务启动。
 3. 使用浏览器实际点击、输入、切换、刷新、改变视口或上传文件。
 4. 按 criterion 记录动作、观察、理由和证据；视觉检查点保存截图。
 5. 复用功能评分截图并补充桌面主状态、桌面代表性交互状态和不大于 480px 的窄屏状态，将带标签的代表性截图集合统一用于美观度评分；不要对单张截图分别给总分后平均。
