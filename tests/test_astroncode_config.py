@@ -477,11 +477,12 @@ class AstronCodeConfigTests(unittest.TestCase):
                 agent = self.make_agent(base_url=constructor_url)
                 self.assertEqual(agent._resolve_one_iflytek_base_url(), expected)
 
-    def test_astron_spark_config_matches_0_0_13(self) -> None:
+    def test_astron_spark_config_matches_current_contract(self) -> None:
         with patch.dict(
             os.environ,
             {
                 "ASTRON_API_KEY": "astron-secret",
+                "ASTRON_UID": "test-astron-uid",
                 "ASTRONCODE_MODEL_PROVIDER": "",
             },
             clear=False,
@@ -499,6 +500,7 @@ class AstronCodeConfigTests(unittest.TestCase):
         self.assertIs(config["hide_agent_reasoning"], True)
         provider = config["model_providers"]["astron-spark"]
         self.assertEqual(provider["experimental_bearer_token"], "astron-secret")
+        self.assertEqual(provider["uid"], "test-astron-uid")
         self.assertEqual(provider.get("models_base_url"), DEFAULT_MODELS_BASE_URL)
 
     def test_one_iflytek_config_uses_responses_contract_and_native_types(self) -> None:
@@ -580,6 +582,30 @@ class AstronCodeConfigTests(unittest.TestCase):
                         "https://catalog.example/config-v1",
                     )
 
+    def test_astron_uid_is_scoped_to_astron_spark_and_snapshotted(self) -> None:
+        uid = 'test-astron-uid"\n# attempted_toml_injection'
+        with patch.dict(
+            os.environ,
+            {
+                "ASTRON_UID": uid,
+                "ASTRONCODE_MODEL_PROVIDER": "",
+            },
+            clear=False,
+        ):
+            agent = self.make_agent()
+
+        with patch.dict(os.environ, {"ASTRON_UID": "changed"}, clear=False):
+            maas_config = self.parse_config(agent, "openrouter/xopglm52")
+            gpt_config = self.parse_config(agent, "openrouter/gpt-5.5")
+            openrouter_config = self.parse_config(agent, "openrouter/claude-4")
+
+        self.assertEqual(
+            maas_config["model_providers"]["astron-spark"]["uid"],
+            uid,
+        )
+        self.assertNotIn("uid", gpt_config["model_providers"]["one-iflytek"])
+        self.assertNotIn("uid", openrouter_config["model_providers"]["openrouter"])
+
     @patch("src.agents.astroncode.runner.subprocess.run")
     def test_config_write_streams_real_token_and_redacts_host_artifact(
         self, run_mock
@@ -590,14 +616,25 @@ class AstronCodeConfigTests(unittest.TestCase):
         )
         run_mock.side_effect = self.config_run_side_effect(fragment=fragment)
         cases = (
-            ("openrouter/xopglm52", "ASTRON_API_KEY", "host-astron-secret"),
-            ("openrouter/gpt-5.5", "ONE_IFLYTEK_API_KEY", "host-one-secret"),
+            (
+                "openrouter/xopglm52",
+                "ASTRON_API_KEY",
+                "host-astron-secret",
+                "host-astron-uid",
+            ),
+            (
+                "openrouter/gpt-5.5",
+                "ONE_IFLYTEK_API_KEY",
+                "host-one-secret",
+                "",
+            ),
         )
-        for model, env_key, secret in cases:
+        for model, env_key, secret, uid in cases:
             with self.subTest(model=model), patch.dict(
                 os.environ,
                 {
                     env_key: secret,
+                    "ASTRON_UID": uid,
                     "ASTRONCODE_MODEL_PROVIDER": "",
                 },
                 clear=False,
@@ -630,9 +667,26 @@ class AstronCodeConfigTests(unittest.TestCase):
             self.assertNotIn(
                 'experimental_bearer_token = "***"', run_call.kwargs["input"]
             )
+            if uid:
+                self.assertNotIn(uid, host_config)
+                self.assertIn('uid = "***"', host_config)
+                self.assertIn(uid, run_call.kwargs["input"])
             for key, value in run_call.kwargs.items():
                 if key != "input":
                     self.assertNotIn(secret, repr(value))
+                    if uid:
+                        self.assertNotIn(uid, repr(value))
+
+    def test_env_example_documents_astron_uid(self) -> None:
+        env_example = (Path(__file__).resolve().parents[1] / ".env.example").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("ASTRON_UID=\n", env_example)
+        self.assertIn(
+            "Required by AstronCode 0.0.34 when using Astron Spark/MaaS models",
+            env_example,
+        )
 
     @patch("src.agents.astroncode.runner.subprocess.run")
     def test_valid_search_agent_fragment_is_redacted_from_host_config(

@@ -287,6 +287,7 @@ class AstronCodeAgent(BaseAgent):
             or self.astron_spark_api_key
             or self.openrouter_api_key
         )
+        self.astron_uid = os.environ.get("ASTRON_UID", "").strip()
         self.one_iflytek_api_key = (
             os.environ.get("ONE_IFLYTEK_API_KEY", "").strip()
             or self.openrouter_api_key
@@ -1303,6 +1304,7 @@ class AstronCodeAgent(BaseAgent):
             else ""
         )
         token = "***" if redact_secrets else provider_api_key
+        uid = "***" if redact_secrets and self.astron_uid else self.astron_uid
         common_config = (
             f"model_provider = {toml_basic_string(provider)}\n"
             f"{reasoning_line}"
@@ -1344,8 +1346,13 @@ class AstronCodeAgent(BaseAgent):
                 if request_base_url
                 else ""
             )
+            + f"experimental_bearer_token = {toml_basic_string(token)}\n"
+            + (
+                f"uid = {toml_basic_string(uid)}\n"
+                if uid
+                else ""
+            )
             + f"models_base_url = {toml_basic_string(self.models_base_url)}\n"
-            f"experimental_bearer_token = {toml_basic_string(token)}\n"
         )
 
     def _resolve_provider_api_key(self, provider: str) -> str:
