@@ -43,6 +43,15 @@
         "NODEJS_VERSION": "22.23.2-1nodesource1",
         "SEARCH_UPDATER_VERSION": "0.1.17"
       }
+    },
+    "v0.5-dev": {
+      "image": "wildclawbench-astroncode-ubuntu:v0.5-dev",
+      "context": "v5-dev",
+      "dockerfile": "v5-dev/Dockerfile",
+      "cli_command": "astron-code-dev",
+      "build_args": {
+        "ASTRON_CODE_DEV_VERSION": "0.0.35"
+      }
     }
   }
 }

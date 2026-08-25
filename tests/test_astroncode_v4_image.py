@@ -294,13 +294,21 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertIn("docker/astroncode/build.sh", result.stdout)
         self.assertEqual(
-            {"v0.1-test.8", "v0.2", "v0.3", "v0.4-ppt", "v0.5"},
+            {
+                "v0.1-test.8",
+                "v0.2",
+                "v0.3",
+                "v0.4-ppt",
+                "v0.5",
+                "v0.5-dev",
+            },
             set(self.manifest["versions"]),
         )
 
     def test_propagates_optional_version_and_registry_build_args(self):
         variables = (
             "ASTRON_CODE_VERSION",
+            "ASTRON_CODE_DEV_VERSION",
             "NODEJS_VERSION",
             "SEARCH_UPDATER_VERSION",
             "NPM_REGISTRY",
@@ -337,6 +345,7 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
             "v0.3": "v3",
             "v0.4-ppt": "v4",
             "v0.5": "v5",
+            "v0.5-dev": "v5-dev",
         }
         for version, entry in self.manifest["versions"].items():
             with self.subTest(version=version):

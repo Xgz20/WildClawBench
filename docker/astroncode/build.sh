@@ -92,18 +92,22 @@ values = (
     entry["context"],
     entry["dockerfile"],
     args.get("ASTRON_CODE_VERSION", ""),
+    args.get("ASTRON_CODE_DEV_VERSION", ""),
     args.get("SEARCH_UPDATER_VERSION", ""),
     args.get("NODEJS_VERSION", ""),
+    entry.get("cli_command", "astron-code"),
 )
-if any("\t" in value or "\n" in value for value in values):
+if any("\x1f" in value or "\n" in value for value in values):
     raise SystemExit("Invalid control character in AstronCode versions.json")
-print("\t".join(values))
+if not values[-1] or any(character.isspace() for character in values[-1]):
+    raise SystemExit("Invalid AstronCode CLI command in versions.json")
+print("\x1f".join(values))
 PY
 )"; then
   exit 2
 fi
 
-IFS=$'\t' read -r VERSION IMAGE_REF CONTEXT_REL DOCKERFILE_REL PINNED_ASTRON_CODE_VERSION PINNED_SEARCH_UPDATER_VERSION PINNED_NODEJS_VERSION <<< "${VERSION_RECORD}"
+IFS=$'\x1f' read -r VERSION IMAGE_REF CONTEXT_REL DOCKERFILE_REL PINNED_ASTRON_CODE_VERSION PINNED_ASTRON_CODE_DEV_VERSION PINNED_SEARCH_UPDATER_VERSION PINNED_NODEJS_VERSION CLI_COMMAND <<< "${VERSION_RECORD}"
 BUILD_CONTEXT="${HARNESS_DIR}/${CONTEXT_REL}"
 DOCKERFILE="${HARNESS_DIR}/${DOCKERFILE_REL}"
 
@@ -119,7 +123,7 @@ BUILD_CONTEXT="$(cd "${BUILD_CONTEXT}" && pwd -P)"
 DOCKERFILE="$(cd "$(dirname "${DOCKERFILE}")" && pwd -P)/$(basename "${DOCKERFILE}")"
 CONTEXT_PARENT="$(dirname "${BUILD_CONTEXT}")"
 CONTEXT_NAME="$(basename "${BUILD_CONTEXT}")"
-if [[ "${CONTEXT_PARENT}" != "${HARNESS_DIR}" || ! "${CONTEXT_NAME}" =~ ^v[0-9]+$ ]]; then
+if [[ "${CONTEXT_PARENT}" != "${HARNESS_DIR}" || ! "${CONTEXT_NAME}" =~ ^v[0-9]+(-dev)?$ ]]; then
   echo "Invalid AstronCode build context: ${BUILD_CONTEXT}" >&2
   exit 2
 fi
@@ -132,6 +136,10 @@ if [[ -n "${ASTRON_CODE_VERSION:-}" && "${ASTRON_CODE_VERSION}" != "${PINNED_AST
   echo "ASTRON_CODE_VERSION must be ${PINNED_ASTRON_CODE_VERSION} for ${IMAGE_REF}" >&2
   exit 2
 fi
+if [[ -n "${ASTRON_CODE_DEV_VERSION:-}" && "${ASTRON_CODE_DEV_VERSION}" != "${PINNED_ASTRON_CODE_DEV_VERSION}" ]]; then
+  echo "ASTRON_CODE_DEV_VERSION must be ${PINNED_ASTRON_CODE_DEV_VERSION} for ${IMAGE_REF}" >&2
+  exit 2
+fi
 if [[ -n "${NODEJS_VERSION:-}" && "${NODEJS_VERSION}" != "${PINNED_NODEJS_VERSION}" ]]; then
   echo "NODEJS_VERSION must be ${PINNED_NODEJS_VERSION:-unset} for ${IMAGE_REF}" >&2
   exit 2
@@ -141,7 +149,13 @@ if [[ -n "${SEARCH_UPDATER_VERSION:-}" && "${SEARCH_UPDATER_VERSION}" != "${PINN
   exit 2
 fi
 
-BUILD_ARGS=(--build-arg "ASTRON_CODE_VERSION=${PINNED_ASTRON_CODE_VERSION}")
+BUILD_ARGS=()
+if [[ -n "${PINNED_ASTRON_CODE_VERSION}" ]]; then
+  BUILD_ARGS+=(--build-arg "ASTRON_CODE_VERSION=${PINNED_ASTRON_CODE_VERSION}")
+fi
+if [[ -n "${PINNED_ASTRON_CODE_DEV_VERSION}" ]]; then
+  BUILD_ARGS+=(--build-arg "ASTRON_CODE_DEV_VERSION=${PINNED_ASTRON_CODE_DEV_VERSION}")
+fi
 if [[ -n "${PINNED_NODEJS_VERSION}" ]]; then
   BUILD_ARGS+=(--build-arg "NODEJS_VERSION=${PINNED_NODEJS_VERSION}")
 fi
@@ -167,8 +181,8 @@ docker build \
   -t "${IMAGE_REF}" \
   "${BUILD_CONTEXT}"
 
-INSTALLED_VERSION="$(docker run --rm --entrypoint astron-code "${IMAGE_REF}" --version 2>/dev/null | head -1 || true)"
-echo "Installed AstronCode: ${INSTALLED_VERSION:-unknown}"
+INSTALLED_VERSION="$(docker run --rm --entrypoint "${CLI_COMMAND}" "${IMAGE_REF}" --version 2>/dev/null | head -1 || true)"
+echo "Installed AstronCode (${CLI_COMMAND}): ${INSTALLED_VERSION:-unknown}"
 
 if [[ "${SKIP_SAVE:-}" == "1" ]]; then
   echo "OK: ${IMAGE_REF} (SKIP_SAVE=1, no archive exported)"
@@ -187,3 +201,4 @@ else
 fi
 
 echo "Enable: export DOCKER_IMAGE_ASTRONCODE='${IMAGE_REF}'"
+echo "Enable CLI: export ASTRONCODE_CLI_COMMAND='${CLI_COMMAND}'"

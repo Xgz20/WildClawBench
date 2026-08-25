@@ -115,7 +115,8 @@ class AstronCodeCliCommandTest(unittest.TestCase):
     def test_env_example_documents_production_default(self) -> None:
         env_example = (REPO_ROOT / ".env.example").read_text(encoding="utf-8")
         self.assertIn("ASTRONCODE_CLI_COMMAND=astron-code\n", env_example)
-        self.assertIn("test builds can set astron-code-test", env_example)
+        self.assertIn("development builds use astron-code-dev", env_example)
+        self.assertIn("Test builds can still set astron-code-test", env_example)
 
 
 if __name__ == "__main__":

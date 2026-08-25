@@ -20,6 +20,7 @@ CODEX_WRAPPER = REPO_ROOT / "script" / "build-codex-image.sh"
 BUILD_ENV_NAMES = (
     "ASTRONCODE_DOCKER_VARIANT",
     "ASTRON_CODE_VERSION",
+    "ASTRON_CODE_DEV_VERSION",
     "NODEJS_VERSION",
     "SEARCH_UPDATER_VERSION",
     "CODEX_VERSION",
@@ -44,6 +45,7 @@ class ImageVersionManifestTest(unittest.TestCase):
             "v0.3": "v3",
             "v0.4-ppt": "v4",
             "v0.5": "v5",
+            "v0.5-dev": "v5-dev",
         }
         expected_args = {
             "v0.1-test.8": {"ASTRON_CODE_VERSION": "0.0.5-test.8"},
@@ -57,6 +59,9 @@ class ImageVersionManifestTest(unittest.TestCase):
                 "ASTRON_CODE_VERSION": "0.0.34",
                 "NODEJS_VERSION": "22.23.2-1nodesource1",
                 "SEARCH_UPDATER_VERSION": "0.1.17",
+            },
+            "v0.5-dev": {
+                "ASTRON_CODE_DEV_VERSION": "0.0.35",
             },
         }
         self.assertEqual(set(expected_args), set(manifest["versions"]))
@@ -72,6 +77,10 @@ class ImageVersionManifestTest(unittest.TestCase):
                 self.assertEqual(context, entry["context"])
                 self.assertEqual(f"{context}/Dockerfile", entry["dockerfile"])
                 self.assertEqual(build_args, entry["build_args"])
+                self.assertEqual(
+                    "astron-code-dev" if version == "v0.5-dev" else "astron-code",
+                    entry.get("cli_command", "astron-code"),
+                )
                 self.assertTrue((ASTRONCODE_DIR / entry["dockerfile"]).is_file())
 
     def test_codex_manifest_binds_v01_to_pinned_cli_and_base(self):
@@ -157,6 +166,29 @@ class CanonicalBuildCliTest(unittest.TestCase):
         )
         self.assertIn("ASTRON_CODE_VERSION=0.0.13", build)
 
+    def test_astroncode_dev_build_uses_pinned_package_and_dev_cli(self):
+        result, events = self._run_with_docker_stub(
+            ["bash", str(ASTRONCODE_BUILD), "--version", "v0.5-dev"],
+            {"SKIP_SAVE": "1"},
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
+        build = self._event(events, "build")
+        context = ASTRONCODE_DIR / "v5-dev"
+        self.assertEqual(str(context / "Dockerfile"), build[build.index("-f") + 1])
+        self.assertEqual(
+            "wildclawbench-astroncode-ubuntu:v0.5-dev",
+            build[build.index("-t") + 1],
+        )
+        self.assertIn("ASTRON_CODE_DEV_VERSION=0.0.35", build)
+        self.assertNotIn("ASTRON_CODE_VERSION=", build)
+        self.assertEqual(str(context), build[-1])
+        run = self._event(events, "run")
+        self.assertEqual("astron-code-dev", run[run.index("--entrypoint") + 1])
+        self.assertIn(
+            "export ASTRONCODE_CLI_COMMAND='astron-code-dev'",
+            result.stdout,
+        )
+
     def test_unknown_version_fails_before_docker(self):
         result, events = self._run_with_docker_stub(
             ["bash", str(ASTRONCODE_BUILD), "--version", "v4/../v3"],
@@ -211,6 +243,18 @@ class CanonicalBuildCliTest(unittest.TestCase):
         self.assertNotEqual(0, result.returncode)
         self.assertIn(
             "NODEJS_VERSION must be 22.23.2-1nodesource1",
+            result.stderr,
+        )
+        self.assertEqual([], events)
+
+    def test_pinned_astroncode_dev_version_cannot_be_overridden(self):
+        result, events = self._run_with_docker_stub(
+            ["bash", str(ASTRONCODE_BUILD), "--version", "v0.5-dev"],
+            {"ASTRON_CODE_DEV_VERSION": "0.0.99", "SKIP_SAVE": "1"},
+        )
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn(
+            "ASTRON_CODE_DEV_VERSION must be 0.0.35",
             result.stderr,
         )
         self.assertEqual([], events)

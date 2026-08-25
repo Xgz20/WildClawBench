@@ -6,6 +6,7 @@
 
 | 日期 | 完整镜像 tag | Docker variant | AstronCode 版本 | 主要变更 | 当前定位 |
 | --- | --- | --- | --- | --- | --- |
+| 2026-08-25 | `wildclawbench-astroncode-ubuntu:v0.5-dev` | `v5-dev` | `0.0.35` 开发包 | 在 v0.5 能力底座上替换为 `@iflytek/astron-code-dev` 和 `astron-code-dev` | 开发调试包评测 |
 | 2026-08-24 | `wildclawbench-astroncode-ubuntu:v0.5` | `v5` | `0.0.34` | 升级 CLI 和模型目录，继承 SearchAgent 与 PPT 渲染能力 | 当前默认版本 |
 | 2026-08-13 | `wildclawbench-astroncode-ubuntu:v0.4-ppt` | `v4` | `0.0.13` | 在 v0.4 基础上增加 LibreOffice 和 PPT 渲染门禁 | PPT 评测推荐版本 |
 | 2026-08-04 | `wildclawbench-astroncode-ubuntu:v0.4` | `v4` | `0.0.13` | 内置 SearchAgent 配置片段及构建期验证 | 通用评测历史版本 |
@@ -15,6 +16,46 @@
 | 2026-07-15 | `wildclawbench-astroncode-ubuntu:v0.0` | 历史默认 Dockerfile | `0.0.5-benchmark-adapt.10` | 首次在 Codex 评测镜像上安装 AstronCode CLI | 初始版本 |
 
 > `v0.4` 和 `v0.4-ppt` 的镜像 tag 不能互换使用。早于 2026-08-13 构建的 `v0.4` 镜像不包含 LibreOffice，且历史 `v0.4` 不再注册为可构建版本。新评测默认使用 `v0.5`；需要复现 0.0.13 环境时再显式选择 `v0.4-ppt`。
+
+## v0.5-dev
+
+### 版本信息
+
+- 完整镜像 tag：`wildclawbench-astroncode-ubuntu:v0.5-dev`
+- 版本 Dockerfile：`docker/astroncode/v5-dev/Dockerfile`
+- 基础镜像：`wildclawbench-astroncode-ubuntu:v0.5`
+- npm 包：`@iflytek/astron-code-dev@0.0.35`
+- CLI：`astron-code-dev`
+- 默认模型目录仍由 Harness 写入 `config-v4`，镜像不烘焙模型地址或凭据
+- 默认离线包名：`Images/wildclawbench-astroncode-ubuntu_v0.5-dev.tar.gz`
+
+### 构建与使用
+
+服务器需先存在生产镜像 `wildclawbench-astroncode-ubuntu:v0.5`，再执行：
+
+```bash
+bash docker/astroncode/build.sh --version v0.5-dev
+```
+
+评测开发调试包时同时切换镜像和 CLI：
+
+```bash
+export DOCKER_IMAGE_ASTRONCODE='wildclawbench-astroncode-ubuntu:v0.5-dev'
+export ASTRONCODE_CLI_COMMAND='astron-code-dev'
+```
+
+生产包仍使用 `v0.5` 和默认 CLI `astron-code`，两类评测结果应按镜像 tag 和 Harness 版本分别归档，不应混为同一运行环境。
+
+### 验证记录
+
+2026-08-25 完成 `wildclawbench-astroncode-ubuntu:v0.5-dev` 真实构建和容器内检查：
+
+- `astron-code-dev --version` 输出 `astron-code 0.0.35`
+- `astron-code-dev exec --help` 正常，支持 Harness 使用的无头执行入口
+- 生产命令 `astron-code` 不存在，避免误用生产 CLI
+- `LibreOffice 7.3.7.2`、`fitz 1.27.2.2` 和 `install-search` 均可用
+- `/opt/astroncode/search-agent.config.toml` 存在
+- 镜像环境中未发现 Astron、One、OpenRouter 凭据、UID 或模型目录变量
 
 ## v0.5
 
@@ -193,6 +234,9 @@ bash docker/astroncode/build.sh
 # v0.5
 bash docker/astroncode/build.sh --version v0.5
 
+# v0.5-dev，评测 @iflytek/astron-code-dev@0.0.35
+bash docker/astroncode/build.sh --version v0.5-dev
+
 # v0.4-ppt，复现 AstronCode 0.0.13 + Search/PPT 环境
 bash docker/astroncode/build.sh --version v0.4-ppt
 
@@ -229,6 +273,7 @@ docker image inspect wildclawbench-astroncode-ubuntu:v0.5 >/dev/null
 - `docker/astroncode/v3/Dockerfile`
 - `docker/astroncode/v4/Dockerfile`
 - `docker/astroncode/v5/Dockerfile`
+- `docker/astroncode/v5-dev/Dockerfile`
 - `script/build-astroncode-image.sh`（兼容包装）
 - `src/utils/ppt_evidence.py`
 - `tests/test_astroncode_ppt_image.py`
