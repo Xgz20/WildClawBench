@@ -12,7 +12,8 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
+from urllib.parse import urlsplit, urlunsplit
 from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -39,6 +40,8 @@ from src.utils.docker_utils import (
     TMP_WORKSPACE,
 )
 from src.utils.grading import (
+    DEFAULT_GRADING_TIMEOUT_SECONDS,
+    DEFAULT_JUDGE_TIMEOUT_SECONDS,
     run_grading,
     format_scores,
     print_summary,
@@ -110,6 +113,185 @@ WORKSPACE_CHANGE_BACKENDS = (
     OpenCodeAgent,
     DeepSeekHarnessAgent,
 )
+
+_RUN_CONFIG_CREDENTIAL_ENV_NAMES = (
+    "OPENROUTER_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "ASTRON_API_KEY",
+    "ASTRON_SPARK_API_KEY",
+    "ONE_IFLYTEK_API_KEY",
+    "DEEPSEEK_API_KEY",
+    "BRAVE_API_KEY",
+    "MY_PROXY_API_KEY",
+)
+
+_RUN_CONFIG_ENDPOINT_ENV_NAMES = (
+    "OPENROUTER_BASE_URL",
+    "ANTHROPIC_BASE_URL",
+    "DEEPSEEK_SEARCH_BASE_URL",
+    "SEARXNG_BASE_URL",
+)
+
+
+def _sanitize_endpoint_for_log(value: object) -> str | None:
+    """Return a useful endpoint without persisting URL credentials or tokens."""
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    try:
+        parsed = urlsplit(raw)
+        if not parsed.scheme or not parsed.hostname:
+            return "[configured; invalid or relative URL redacted]"
+        hostname = parsed.hostname
+        if ":" in hostname and not hostname.startswith("["):
+            hostname = f"[{hostname}]"
+        netloc = hostname
+        if parsed.port is not None:
+            netloc = f"{netloc}:{parsed.port}"
+        sanitized = urlunsplit((parsed.scheme, netloc, parsed.path, "", ""))
+        if parsed.query:
+            sanitized += "?[REDACTED]"
+        if parsed.fragment:
+            sanitized += "#[REDACTED]"
+        return sanitized
+    except (TypeError, ValueError):
+        return "[configured; malformed URL redacted]"
+
+
+def _current_working_directory_for_log() -> str | None:
+    try:
+        return str(Path.cwd())
+    except OSError:
+        return None
+
+
+def _effective_positive_float(
+    environ: Mapping[str, str], env_name: str, default: float
+) -> float:
+    raw = str(environ.get(env_name, "")).strip()
+    if not raw:
+        return default
+    try:
+        value = float(raw)
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
+
+def _build_run_configuration(
+    args: Any,
+    backend: BaseAgent,
+    output_root: Path,
+    *,
+    environ: Mapping[str, str] | None = None,
+) -> dict[str, Any]:
+    """Build the non-secret effective run configuration written to ``run.log``."""
+    env = os.environ if environ is None else environ
+    endpoint_env = {
+        name: _sanitize_endpoint_for_log(env.get(name, ""))
+        for name in _RUN_CONFIG_ENDPOINT_ENV_NAMES
+    }
+    backend_endpoints = {
+        name: _sanitize_endpoint_for_log(getattr(backend, name, None))
+        for name in (
+            "openrouter_base_url",
+            "api_base_url",
+            "one_iflytek_base_url",
+            "models_base_url",
+        )
+        if getattr(backend, name, None)
+    }
+    credential_names = set(_RUN_CONFIG_CREDENTIAL_ENV_NAMES)
+    for raw_names in (getattr(args, "lobster_env", None),):
+        credential_names.update(
+            name.strip()
+            for name in str(raw_names or "").split(",")
+            if name.strip()
+        )
+
+    mode = "task" if getattr(args, "task", None) else "category"
+    selection_value = getattr(args, "task", None) or getattr(args, "category", None)
+    return {
+        "schema_version": 1,
+        "invocation": {
+            "id": uuid.uuid4().hex,
+            "started_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+            "cwd": _current_working_directory_for_log(),
+            "pid": os.getpid(),
+        },
+        "selection": {
+            "mode": mode,
+            "value": selection_value,
+            "modality": getattr(args, "modality", None),
+            "include_tags": sorted(getattr(args, "tags", None) or []),
+            "exclude_tags": sorted(getattr(args, "exclude_tags", None) or []),
+        },
+        "execution": {
+            "agent_backend": getattr(args, "agent_backend", None),
+            "backend_class": type(backend).__name__,
+            "model": getattr(args, "model", None),
+            "thinking": getattr(args, "thinking", None),
+            "parallel": getattr(args, "parallel", None),
+            "runs": getattr(args, "runs", None),
+            "resume": bool(getattr(args, "resume", False)),
+            "rerun_error": bool(getattr(args, "rerun_error", False)),
+            "rerun_anomalous": bool(getattr(args, "rerun_anomalous", False)),
+            "pass_threshold": getattr(args, "pass_threshold", None),
+            "requested_api": getattr(args, "dsh_api", None),
+            "api": getattr(backend, "api", None),
+            "image": getattr(backend, "image", None),
+            "image_model": getattr(args, "openclaw_image_model", None),
+            "lobster_name": getattr(args, "lobster_name", None),
+        },
+        "timeout": {
+            "override_seconds": TIMEOUT_OVERRIDE,
+            "multiplier": TIMEOUT_MULTIPLIER,
+            "grading_seconds": _effective_positive_float(
+                env,
+                "WILDCLAW_GRADING_TIMEOUT_SECONDS",
+                DEFAULT_GRADING_TIMEOUT_SECONDS,
+            ),
+            "judge_seconds": _effective_positive_float(
+                env,
+                "WILDCLAW_JUDGE_TIMEOUT_SECONDS",
+                DEFAULT_JUDGE_TIMEOUT_SECONDS,
+            ),
+        },
+        "resources": {
+            "memory": str(env.get("WILDCLAW_DOCKER_MEMORY", "")).strip() or None,
+            "cpus": str(env.get("WILDCLAW_DOCKER_CPUS", "")).strip() or None,
+        },
+        "paths": {
+            "tasks_root": str(TASKS_DIR),
+            "output_root": str(output_root),
+            "models_config": getattr(args, "models_config", None),
+            "lobster_workspace": getattr(args, "lobster_workspace", None),
+        },
+        "backend_endpoints": backend_endpoints,
+        "environment_endpoints": endpoint_env,
+        "judge": {
+            "model": str(env.get("JUDGE_MODEL", "")).strip() or "openai/gpt-5.4",
+            "anthropic_base_url": endpoint_env["ANTHROPIC_BASE_URL"],
+        },
+        "model_limits": {
+            "maas_max_tokens": str(env.get("MAAS_MAX_TOKENS", "")).strip() or None,
+            "astroncode_maas_max_tokens_mode": str(
+                env.get("ASTRONCODE_MAAS_MAX_TOKENS_MODE", "")
+            ).strip() or None,
+        },
+        "credentials": {
+            name: "configured" if str(env.get(name, "")).strip() else "unset"
+            for name in sorted(credential_names)
+        },
+    }
+
+
+def _log_run_configuration(args: Any, backend: BaseAgent, output_root: Path) -> None:
+    config = _build_run_configuration(args, backend, output_root)
+    logger.info(
+        "Run configuration:\n%s",
+        json.dumps(config, ensure_ascii=False, indent=2),
+    )
 
 
 def _build_agent_backend(args) -> BaseAgent:
@@ -930,6 +1112,7 @@ def main() -> None:
     global PASS_THRESHOLD
     PASS_THRESHOLD = args.pass_threshold  # 全局阈值供 summary 聚合使用
     backend = _build_agent_backend(args)
+    _log_run_configuration(args, backend, output_root)
     models_config = None
     if args.models_config:
         models_config_path = Path(args.models_config).expanduser()

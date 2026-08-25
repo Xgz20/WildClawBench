@@ -29,6 +29,7 @@ _COLOR_BY_LEVEL = {
 # 以免 warning 里含 "failed" 显示成和 error 相同的 ❌。
 # 顺序：具体语义词在前，通用词（starting/start）在后。
 _KEYWORD_EMOJI: tuple[tuple[str, str], ...] = (
+    ("run configuration", "🔧"),
     ("timed out", "⏱️"),
     ("timeout", "⏱️"),
     ("timed_out", "⏱️"),
