@@ -33,7 +33,7 @@ Agent应运行或检查测试，定位错误的运算符号，进行最小源码
 - [ ] 未修改的公开测试通过 — 15%
 - [ ] 命令行输出与预期完全一致 — 15%
 
-前两个检查点映射到`code_generation`，后两个映射到`tool_use`。
+前两个检查点映射到`code_generation`，后两个映射到`code_generation`和`verification_delivery`。测试结果与CLI输出验证的是代码正确性和最终交付，不单独证明Agent是否正确调用了工具。
 
 ## Automated Checks
 

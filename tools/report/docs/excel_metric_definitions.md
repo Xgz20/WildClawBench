@@ -83,9 +83,9 @@ CNY 定价再除以定价日 `CNY/USD`；分档模型按逐请求输入 token �
 | 模型强项 | 涉及任务数不少于 5 的维度中取 Top 3 | 仅作相对描述；不同维度题集不同 |
 | 模型短板 | 同一集合中取 Bottom 3 | 仅作相对描述；候选维度为 5 个时会与强项重叠 |
 
-**当前结果存在实现错误**：函数先跳过 `checkpoints` 为空的任务，之后才加入 `overall_score`。映射文件中的单分制任务因此全部失效。源码见 [`_cap_task_scores`](../scripts/generate_eval_report.py#L1011)，映射文件明确配置了单分制任务的 [`overall_score`](../data/checkpoint_capability_map7.yaml#L8)。
+**单分制任务口径**：即使 `checkpoints` 为空，只要任务存在有效 `overall_score` 且映射文件显式引用该键，仍会进入对应能力维度；不会再因缺少检查点明细而被跳过。
 
-**当前映射存在重复计权**：同一任务同时映射汇总项和组成项，例如 `classify_score` 与五个 `classify_*`。任务内简单平均后，同一评分事实被重复使用，维度权重由映射键数量决定。示例见 [`checkpoint_capability_map7.yaml`](../data/checkpoint_capability_map7.yaml#L27)。
+**重复计权边界**：已有组成项进入映射时，其 `classify_score`、`metadata_score`、`points_earned` 等汇总项不再映射；单分制任务仅使用 `overall_score`。不同能力维度仍基于各自实际覆盖的任务和检查点，不是可互换的独立量表。
 
 ### 4. Agent能力对比·去污染
 

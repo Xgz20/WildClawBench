@@ -131,7 +131,7 @@ eval_out/all_suite/round1/<model>/<harness>/          ← 模型×Harness 多对
 
 任务元数据展示以中文版 `tasks/cn/<套件>/<task_id>.md` 为准（name/prompt/expected/criteria/checks 等），缺失字段回退英文版 `tasks/`；中文分类名取中文 md frontmatter 的 `category`（如 `01_生产力工作流`）。
 
-**Agent能力对比（7 维）**：依赖 `tools/report/data/checkpoint_capability_map7.yaml`（{task_id: {checkpoint: [维度]}}，LLM 逐任务阅读判分代码标注、与实测检查点全集校验后生成）。7 维与 PinchBench cap7 对齐：代码生成/工具调用/数据处理/检索验证/推理规划/内容生成/验证交付。聚合口径：检查点值归一（`normalize_ckpt_value`：0~1 直取；`X_earned/X_max` 对按比值；`*_max/*_calls/*_attempts` 等诊断计量键排除）→ 任务内映射检查点均值 → 跨任务均值。单分制任务（04 套件、02_task_6、02 拼图）映射键为 `overall_score`。去落盘污染列：仅统计落盘类检查点（exist/created/... 命名）均值 ≥0.5 的用例。映射文件在新增/修改任务后需同步维护，脚本对未映射的实测检查点打覆盖率告警。
+**Agent能力对比（7 维）**：依赖 `tools/report/data/checkpoint_capability_map7.yaml`（{task_id: {checkpoint: [维度]}}，逐任务阅读判分代码标注、与实测检查点全集校验后生成）。7 维与 PinchBench cap7 对齐：代码生成/工具调用/数据处理/检索验证/推理规划/内容生成/验证交付。映射以检查点实际可观测信号为准，不按任务分类或可能使用的手段推断；检索验证只覆盖信息搜索/检索、来源核实和证据追溯，验证交付只覆盖最终产物的结构、格式、完整性、可运行性和交付可用性，两者不得共用同一检查点。聚合口径：检查点值归一（`normalize_ckpt_value`：0~1 直取；`X_earned/X_max` 对按比值；`*_max/*_calls/*_attempts` 等诊断计量键排除）→ 任务内映射检查点均值 → 跨任务均值。组成项已映射时不再映射其汇总分，避免同一评分事实重复计权；单分制任务（04 套件、02_task_6、02 拼图）映射键为 `overall_score`。去落盘污染列：仅统计落盘类检查点（exist/created/... 命名）均值 ≥0.5 的用例。映射文件在新增/修改任务后需同步维护，脚本对未映射的实测检查点打覆盖率告警。
 
 **裁判判词列**：从 score.json 递归提取所有裁判判词类字段——键名含 `reason`（覆盖 04 `judge_reason`、02 `image/desc_judge_reason`、03 `llm_judge_reasoning` 与嵌套 `llm_judge.reasoning`/`llm_items.*.reason`、06 `recognized_*_reason`），另以 ⚠ 标注裁判异常（`*_judge_error`/`llm_error`）。已知上游缺口：05 套件与 02 homepage 任务的判分代码只存裁判分数、不存判词文本，如需判词须改任务 md 的判分代码。
 

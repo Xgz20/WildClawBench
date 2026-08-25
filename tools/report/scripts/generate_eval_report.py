@@ -1200,8 +1200,6 @@ def _cap_task_scores(u: UnitResult, cap_map: dict, dim: str, delivered_only: boo
     """该 unit 在某维度上的任务级得分列表（任务内映射检查点均值）。"""
     out = []
     for t in u.tasks:
-        if not t.checkpoints:
-            continue
         if delivered_only:
             file_scores = [v for k, v in t.checkpoints.items() if FILE_CKPT_RE.search(k)]
             if file_scores and sum(file_scores) / len(file_scores) < 0.5:

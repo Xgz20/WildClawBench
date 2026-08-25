@@ -42,7 +42,7 @@ Agent searches the four fixed pip release-note excerpts locally, identifies pip 
 
 - [ ] `first_matching_release`：版本和发布日期正确 — 35%（`retrieval_verification`、`reasoning_planning`）
 - [ ] `feature_details`：选项、用途和引用正确 — 25%（`retrieval_verification`、`data_processing`）
-- [ ] `evidence_traceable`：连续原文可在指定附件中定位 — 25%（`retrieval_verification`、`verification_delivery`）
+- [ ] `evidence_traceable`：连续原文可在指定附件中定位 — 25%（`retrieval_verification`）
 - [ ] `delivery_and_input_integrity`：JSON结构、路径和输入完整性正确 — 15%（`verification_delivery`）
 
 The exact schema, regular-file requirement, and input hashes are output-validity requirements. A schema error, symlink, unreadable result, or modified input makes every checkpoint zero and does not create an additional checkpoint.
