@@ -68,7 +68,7 @@ const prompt = `你是 WildClawBench 跨单元评测分析人员。${axisText}
 3. 每个 strengths/weaknesses 项必须有完整 task_id、与 manifest 一致的 task_name、mechanism、delta_pct_points 和 evidence_refs；每个 evidence_ref 必须写 source、locator、excerpt。
 4. 每个典型案例必须写完整 task_id、task_name、what_tested（题目简述/考察点）、score_summary、problem、evidence_summary、confidence 和 evidence_refs。优先选约 3 个机制不同且证据充分的案例；样本不足时说明原因，不要凑数。
 5. 文风务实、克制，不写“模型不行”“Harness 很差”等评价。写“差异集中在……”“两侧均完成……”“目标侧在……环节未闭环”。
-6. L3/L4 只能作为可比性和未闭环因素说明，不能直接写成模型或 Harness 能力短板。任务超时仅在 manifest 已标记 `valid_capability_outcome` 时作为能力结果分析；unsupported call 不能单独判定 Harness 问题，缺少工具清单或调度证据时使用 unconfirmed。
+6. L3/L4 只能作为可比性和未闭环因素说明，不能直接写成模型或 Harness 能力短板。任务超时仅在 manifest 已标记 \`valid_capability_outcome\` 时作为能力结果分析；unsupported call 不能单独判定 Harness 问题，缺少工具清单或调度证据时使用 unconfirmed。
 7. 不编造行号。只能引用实际读到的文件、JSON 字段、行号、命令或产物路径；如果证据不足，放入 unconfirmed_items。
 8. 正文只简要提及异常和不可比结果。详细内容写入 comparability_analysis 与 unconfirmed_items：逐步给出排除后的样本数、两侧均分、分差，并为每个排除项补齐完整 task_id、task_name、得分、判定依据、处理结论和 evidence_refs。没有排除项时返回空 impact_rows 和空 unconfirmed_items，并在 summary 说明未发现影响可比性的异常。
 
