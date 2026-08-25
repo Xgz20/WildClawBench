@@ -52,7 +52,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 检查页面顶部、今日概览 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0833)
+### Criterion 1: 检查页面顶部、今日概览 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0769)
 
 预设状态：已清除该页面保存的任务和今日专注数据，首页在 1440×900 视口打开
 
@@ -64,7 +64,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 点击“专注”并启动计时 (key: c02_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0833)
+### Criterion 2: 点击“专注”并启动计时 (key: c02_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0769)
 
 预设状态：番茄钟当前已停止
 
@@ -76,7 +76,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 点击开始并推进测试时钟 2 秒 (key: c03_realtime_auto_progress, primary: interaction_function, secondary: realtime_auto_progress, weight: 0.0833)
+### Criterion 3: 点击开始并推进测试时钟 2 秒 (key: c03_realtime_auto_progress, primary: interaction_function, secondary: realtime_auto_progress, weight: 0.0769)
 
 预设状态：已点击“专注”并重置，番茄钟显示 25:00 且未开始
 
@@ -88,7 +88,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 点击“专注”并启动 (key: c04_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0833)
+### Criterion 4: 点击“专注”并启动 (key: c04_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0769)
 
 预设状态：已清除今日专注数据，顶部今日累计专注显示为 0 分钟，番茄钟当前已停止
 
@@ -100,7 +100,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 点击添加任务 (key: c05_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0833)
+### Criterion 5: 点击添加任务 (key: c05_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0769)
 
 预设状态：已清除任务数据，今日任务列表为空，任务名称输入框也为空
 
@@ -112,7 +112,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 将“整理周会结论”标记为完成 (key: c06_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.0833)
+### Criterion 6: 将“整理周会结论”标记为完成 (key: c06_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.0769)
 
 预设状态：已通过页面添加一项未完成的“整理周会结论”，顶部已完成任务数显示为 0
 
@@ -124,7 +124,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 刷新页面 (key: c07_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0833)
+### Criterion 7: 刷新页面 (key: c07_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0769)
 
 预设状态：已通过页面添加“整理周会结论”并将它标记为完成
 
@@ -136,7 +136,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 启动计时，并用测试时钟将倒计时推进到 00:00 (key: c08_realtime_auto_progress, primary: interaction_function, secondary: realtime_auto_progress, weight: 0.0833)
+### Criterion 8: 启动计时，并用测试时钟将倒计时推进到 00:00 (key: c08_realtime_auto_progress, primary: interaction_function, secondary: realtime_auto_progress, weight: 0.0769)
 
 预设状态：已点击“专注”并重置，番茄钟显示 25:00 且未开始
 
@@ -148,7 +148,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 检查页面整体配色、主标题和计时数字 (key: c09_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.0833)
+### Criterion 9: 检查页面整体配色、主标题和计时数字 (key: c09_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.0769)
 
 预设状态：首页已在 1440×900 视口打开
 
@@ -160,7 +160,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 检查番茄钟和今日任务的位置 (key: c10_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0833)
+### Criterion 10: 检查番茄钟和今日任务的位置 (key: c10_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0769)
 
 预设状态：首页已在 1440×900 视口打开
 
@@ -172,7 +172,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 检查计时器和今日任务卡片 (key: c11_component_style, primary: visual_layout, secondary: component_style, weight: 0.0833)
+### Criterion 11: 检查计时器和今日任务卡片 (key: c11_component_style, primary: visual_layout, secondary: component_style, weight: 0.0769)
 
 预设状态：已点击“专注”并重置，番茄钟显示 25:00 且未开始；首页在 1440×900 视口打开
 
@@ -184,13 +184,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 检查番茄钟和今日任务的呈现 (key: c12_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0837)
+### Criterion 12: 检查番茄钟和今日任务的呈现 (key: c12_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0769)
 
 预设状态：浏览器视口已调整为 375×812 并打开首页，本地没有保存过任务和今日专注数据（视口 375×812）
 
 操作：检查番茄钟和今日任务的呈现，然后在窄屏下添加一条任务“整理周会结论”并启动计时
 
 期望结果：页面没有横向滚动，没有元素宽度超出视口。计时数字和圆形进度环完整可见、没有被裁切，三个模式和开始操作都能正常点击；今日任务的输入框和“添加任务”能正常填写提交，添加后的任务文字完整可读，没有被截断或与其他内容重叠。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 13: 点击开始，记录此刻页面显示的剩余时间；把当前标签页切到后台（切到另一个标签页或最… (key: c13_realtime_auto_progress, primary: interaction_function, secondary: realtime_auto_progress, weight: 0.0772)
+
+预设状态：已点击“专注”并重置，番茄钟显示 25:00 且未开始，页面在 1440×900 视口打开
+
+操作：点击开始，记录此刻页面显示的剩余时间；把当前标签页切到后台（切到另一个标签页或最小化窗口，需确认页面确实进入隐藏状态），保持 6 分钟真实时间后切回，重新读取剩余时间。本条不使用测试时钟，必须真实等待
+
+期望结果：切回后显示的剩余时间比切走时减少约 360 秒（允许 ±15 秒误差），即倒计时按真实流逝的时间推进，不会出现只走了一两百秒或几乎停住的情况；计时仍处于运行中，主操作显示为“暂停”。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
