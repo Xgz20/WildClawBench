@@ -26,7 +26,7 @@ except ImportError:
 
 
 SCHEMA_VERSION = "wildclawbench.web-e2e-batch/v3"
-SKILL_VERSION = "3.3.0"
+SKILL_VERSION = "3.4.0"
 AESTHETIC_RUBRIC_ID = "web-aesthetic-v1"
 AESTHETIC_RUBRIC_VERSION = "1.1.0"
 AESTHETIC_RUBRIC_SOURCE = "https://yf2ljykclb.xfchat.iflytek.com/docx/doxrz05uveZshD5b81aHYY2HIb3"

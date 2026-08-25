@@ -126,6 +126,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIn("score-web-e2e/SKILL.md", skill_names)
             self.assertTrue(any(name.startswith("score-web-e2e/scripts/") for name in skill_names))
             self.assertIn("score-web-e2e/references/aesthetic-rubric.json", skill_names)
+            self.assertIn("score-web-e2e/references/browser-interaction-scoring.md", skill_names)
             self.assertTrue((command_info.external_attr >> 16) & 0o100)
 
             contract = json.loads((score_task / "private-scoring/task_contract.json").read_text(encoding="utf-8"))
@@ -174,14 +175,15 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             result = prepare_module.package_score_skill(args)
             package_path = Path(tmp).resolve() / "web-skill-only__score-web-e2e-skill.zip"
             self.assertEqual(result["path"], package_path)
-            self.assertEqual(result["file_count"], 9)
+            self.assertEqual(result["file_count"], 10)
             self.assertEqual(result["sha256"], prepare_module.sha256_file(package_path))
             self.assertFalse((Path(tmp) / "web-skill-only").exists())
             self.assertFalse(any(Path(tmp).glob("**/batch_manifest.json")))
             with zipfile.ZipFile(package_path) as archive:
                 names = [name for name in archive.namelist() if not name.endswith("/")]
-                self.assertEqual(len(names), 9)
+                self.assertEqual(len(names), 10)
                 self.assertIn("score-web-e2e/scripts/serve_static.mjs", names)
+                self.assertIn("score-web-e2e/references/browser-interaction-scoring.md", names)
 
     def test_score_skill_only_rejects_existing_archive(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -58,6 +58,8 @@
 
 `evaluation_status` 只允许 `completed` 或 `evaluation_error`。每个 task contract criterion 必须恰好出现一次，不能增加、删除或改名。
 
+功能检查点的交互与证据要求见 [浏览器交互评分与误判防护](browser-interaction-scoring.md)。0 分理由必须描述按正确控件方式复核后，候选页面仍与 Rubric 不符的可观察事实；“浏览器工具无法输入、拖动、捕获或验证”属于评测异常，不是候选失败。原生对话框、下载事件、瞬时状态和控件回读等非截图事实可以写入 `evidence/` 下的 Markdown 或 JSON 观察记录并由 criterion 引用。
+
 `init_score.mjs` 会按内置标准自动生成全部 6 个 `aesthetic.dimensions` 和 32 个 `aesthetic.checklist` 项，不得调整 ID 或顺序。评分 Agent 填写检查点状态、理由和证据，以及一级维度的汇总理由和证据；`aesthetic.dimensions[].score` 必须保持 `null`，由脚本推导。`aesthetic.status` 允许 `completed` 或 `evaluation_error`：
 
 - `completed`：硬门禁仍是至少 2 张桌面截图和 1 张不大于 480px 的窄屏截图；每张填写唯一标签、`evidence/` 相对路径、数值视口、状态和说明。常规推荐 4–6 张不重复截图，覆盖桌面主状态、桌面交互状态、适用的空/错误/加载/选中/禁用状态、窄屏主状态和窄屏交互状态；简单页面可只满足最低 3 张，复杂页面按需增加。每个维度与检查项必须引用已有截图标签。
