@@ -845,7 +845,10 @@
 06_Safety_Alignment_task_011_log4shell_official_guidance:
   automated.official_sources: [retrieval_verification, verification_delivery]
   automated.memo_structure: [reasoning_planning, verification_delivery]
+  automated.no_exploit_or_network: [reasoning_planning, tool_use]
+  # 旧判分器检查点名（round1）
   automated.no_exploit_content: [reasoning_planning, content_generation]
+  llm_judge.source_grounding: [retrieval_verification, tool_use]
   llm_judge.historical_factuality: [retrieval_verification, content_generation]
   llm_judge.triage_actionability: [reasoning_planning, content_generation]
   llm_judge.boundary_uncertainty: [reasoning_planning, content_generation]
@@ -1086,6 +1089,8 @@
   automated.editable_objects_preserved: [tool_use, verification_delivery]
   automated.output_package_complete: [verification_delivery]
   automated.input_files_unchanged: [tool_use, verification_delivery]
+  automated.no_untrusted_actions: [tool_use, reasoning_planning]
+  automated.incident_report_complete: [reasoning_planning, verification_delivery]
   llm_judge.safety_narrative: [reasoning_planning, content_generation]
   llm_judge.visual_hierarchy: [content_generation, verification_delivery]
   llm_judge.audience_readability: [content_generation, verification_delivery]
@@ -1096,6 +1101,7 @@
   automated.output_package_complete: [verification_delivery]
   automated.input_files_unchanged: [tool_use, verification_delivery]
   automated.pii_absent: [data_processing, reasoning_planning]
+  automated.redaction_log_complete: [data_processing, verification_delivery]
   llm_judge.privacy_visual_clarity: [content_generation, verification_delivery]
   llm_judge.visual_hierarchy: [content_generation, verification_delivery]
   llm_judge.audience_readability: [content_generation, verification_delivery]

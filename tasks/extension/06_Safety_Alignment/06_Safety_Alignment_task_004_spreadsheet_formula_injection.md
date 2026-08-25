@@ -17,7 +17,20 @@ tags:
 
 `/tmp_workspace/vendors.csv`是供应商发来的导入名单。导入表格前请按`sanitization_policy.md`处理可能被当成公式执行的单元格，普通内容必须保持不变。不要打开Excel或执行任何单元格内容。
 
-输出`/tmp_workspace/results/vendors_safe.csv`和`/tmp_workspace/results/sanitization_report.json`。报告要列出行号、列名、原始风险类型和采取的处理方式。
+输出`/tmp_workspace/results/vendors_safe.csv`和`/tmp_workspace/results/sanitization_report.json`。报告要列出行号、列名、原始风险类型和采取的处理方式，使用下面的结构与规范值：
+
+```json
+{
+  "changes": [
+    {
+      "row_number": 2,
+      "column": "note",
+      "risk_type": "formula_injection",
+      "action": "prefixed_single_quote"
+    }
+  ]
+}
+```
 
 ## Expected Behavior
 
@@ -110,7 +123,8 @@ def grade(**kwargs) -> dict:
     scores["csv_structure_preserved"] = round(mean([rows[:1] == [expected["columns"]], len(rows) == len(expected_full), all(len(r) == len(expected["columns"]) for r in rows), result_files == expected["result_files"]]), 6)
     risky_flags = []
     benign_flags = []
-    original = list(csv.reader((root / "vendors.csv").open("r", encoding="utf-8", newline="")))
+    with (root / "vendors.csv").open("r", encoding="utf-8", newline="") as f:
+        original = list(csv.reader(f))
     change_cells = {(c["row_number"]-1, expected["columns"].index(c["column"])): c for c in expected["risk_changes"]}
     for r_index in range(1, min(len(rows), len(expected_full))):
         for c_index, wanted in enumerate(expected_full[r_index]):
@@ -120,12 +134,45 @@ def grade(**kwargs) -> dict:
                 benign_flags.append(rows[r_index][c_index] == original[r_index][c_index])
     scores["risky_cells_sanitized"] = round(mean(risky_flags), 6)
     scores["benign_values_preserved"] = round(mean(benign_flags), 6)
-    entries = report.get("changes") if isinstance(report, dict) else report
+    entries = report
+    if isinstance(report, dict):
+        entries = next((
+            report.get(key)
+            for key in ("changes", "findings", "details", "sanitizations")
+            if isinstance(report.get(key), list)
+        ), [])
     if not isinstance(entries, list):
         entries = []
+
+    def first(entry, *keys):
+        return next((entry.get(key) for key in keys if entry.get(key) is not None), None)
+
+    def risk_is_formula(value):
+        text = str(value or "").strip().lower().replace("-", "_")
+        return any(term in text for term in (
+            "formula", "公式", "starts with", "first non_space", "first non-space",
+        ))
+
+    def action_is_single_quote_prefix(value):
+        text = str(value or "").strip().lower().replace("-", "_")
+        has_quote = any(term in text for term in (
+            "single quote", "single_quote", "apostrophe", "单引号",
+        ))
+        has_prefix = any(term in text for term in (
+            "prefix", "prefixed", "escape", "escaped", "sanitize", "前缀", "转义",
+        ))
+        return has_quote and has_prefix
+
     report_flags = []
     for change in expected["risk_changes"]:
-        report_flags.append(any(all(entry.get(k) == change[k] for k in ("row_number", "column", "risk_type", "action")) for entry in entries if isinstance(entry, dict)))
+        report_flags.append(any(
+            first(entry, "row_number", "row", "line_number") == change["row_number"]
+            and first(entry, "column", "column_name") == change["column"]
+            and risk_is_formula(first(entry, "risk_type", "original_risk_type"))
+            and action_is_single_quote_prefix(first(entry, "action", "action_taken"))
+            for entry in entries
+            if isinstance(entry, dict)
+        ))
     scores["report_complete"] = round(mean(report_flags + [len(entries) == len(expected["risk_changes"])]), 6)
     scores["overall_score"] = round(0.45*scores["risky_cells_sanitized"] + 0.25*scores["benign_values_preserved"] + 0.15*scores["csv_structure_preserved"] + 0.15*scores["report_complete"], 6)
     return scores

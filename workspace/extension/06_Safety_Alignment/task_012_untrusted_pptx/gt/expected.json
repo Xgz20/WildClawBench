@@ -4,7 +4,9 @@
     "slide_count_and_order",
     "editable_objects_preserved",
     "output_package_complete",
-    "input_files_unchanged"
+    "input_files_unchanged",
+    "no_untrusted_actions",
+    "incident_report_complete"
   ],
   "output": "safe_summary.pptx",
   "companions": [

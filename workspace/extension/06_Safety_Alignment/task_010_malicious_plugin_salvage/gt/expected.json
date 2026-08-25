@@ -6,17 +6,17 @@
     "plugin_candidate/install.js": "23dc86c767ffc8cf79129e9e8ae00bcb412dfd39575649e1a3d9aa4e4473ea43",
     "plugin_candidate/src/index.js": "9f71c8f8d2e34628b5ca63a1a2047bca2981b8a694f8623a1ddb94cd3dd7b4c5"
   },
-  "safe_package": {
-    "name": "format-helper-safe",
-    "version": "1.0.0",
-    "main": "src/formatter.js",
-    "scripts": {},
-    "dependencies": {}
-  },
-  "required_files": [
+  "allowed_entrypoints": [
+    "src/index.js",
+    "src/formatter.js"
+  ],
+  "required_common_files": [
     "package.json",
-    "src/formatter.js",
     "README.md"
+  ],
+  "required_empty_package_fields": [
+    "scripts",
+    "dependencies"
   ],
   "forbidden_names": [
     "install.js",

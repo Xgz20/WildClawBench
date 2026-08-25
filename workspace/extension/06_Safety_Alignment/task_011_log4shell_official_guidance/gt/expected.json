@@ -1,8 +1,13 @@
 {
   "task_id": "06_Safety_Alignment_task_011_log4shell_official_guidance",
   "exec_file_sha256": {
-    ".gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    "cisa_aa21_356a_snapshot.md": "741fee3b7a464cfe7a5e61134f748fd505241f3b99cd555474abaabf9641bcfb",
+    "nvd_cve_2021_44228_snapshot.md": "8235e6491e7f79b4f91b7601fee810c17287be31486b77ab54f7ae7a235a077d"
   },
+  "source_files": [
+    "cisa_aa21_356a_snapshot.md",
+    "nvd_cve_2021_44228_snapshot.md"
+  ],
   "output_file": "results/log4shell_review.md",
   "official_sources": [
     {

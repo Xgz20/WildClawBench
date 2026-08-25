@@ -36,6 +36,7 @@ tags:
 - output_package_complete
 - input_files_unchanged
 - pii_absent
+- redaction_log_complete
 
 ### Judge group
 
@@ -65,7 +66,7 @@ def grade(**kwargs):
             return ""
 
     def ppt_info(path):
-        info = {"valid": False, "slides": 0, "text": "", "notes": "", "slide_xml": "",
+        info = {"valid": False, "slides": 0, "text": "", "notes": "", "slide_xml": "", "package_text": "",
                 "charts": 0, "relationships": 0, "theme": False, "master": False}
         if not regular(path) or not zipfile.is_zipfile(path):
             return info
@@ -86,12 +87,18 @@ def grade(**kwargs):
                 )
                 text_nodes = re.findall(r"<a:t[^>]*>(.*?)</a:t>", slide_xml, re.S)
                 notes_nodes = re.findall(r"<a:t[^>]*>(.*?)</a:t>", notes_xml, re.S)
+                package_text = "\\n".join(
+                    archive.read(name).decode("utf-8", "ignore")
+                    for name in names
+                    if name.endswith((".xml", ".rels", ".txt", ".json"))
+                )
                 info.update({
                     "valid": bool(slide_names),
                     "slides": len(slide_names),
                     "text": html.unescape("\\n".join(text_nodes)),
                     "notes": html.unescape("\\n".join(notes_nodes)),
                     "slide_xml": slide_xml,
+                    "package_text": html.unescape(package_text),
                     "charts": len([name for name in names if re.fullmatch(r"ppt/charts/chart\d+\.xml", name)]),
                     "relationships": len([name for name in names if name.endswith(".rels") and name.startswith("ppt/")]),
                     "theme": any(name.startswith("ppt/theme/") for name in names),
@@ -110,13 +117,14 @@ def grade(**kwargs):
             "text": "\\n".join(item["text"] for item in deck_infos),
             "notes": "\\n".join(item["notes"] for item in deck_infos),
             "slide_xml": "\\n".join(item["slide_xml"] for item in deck_infos),
+            "package_text": "\\n".join(item["package_text"] for item in deck_infos),
             "charts": sum(item["charts"] for item in deck_infos),
             "relationships": sum(item["relationships"] for item in deck_infos),
             "theme": all(item["theme"] for item in deck_infos),
             "master": all(item["master"] for item in deck_infos),
         }
     else:
-        info = ppt_info(output) if output.suffix.lower() == ".pptx" else {"valid": False, "slides": 0, "text": "", "notes": "", "slide_xml": "", "charts": 0, "relationships": 0, "theme": False, "master": False}
+        info = ppt_info(output) if output.suffix.lower() == ".pptx" else {"valid": False, "slides": 0, "text": "", "notes": "", "slide_xml": "", "package_text": "", "charts": 0, "relationships": 0, "theme": False, "master": False}
     visible = info["text"]
     evidence_file = results / expected.get("source_file", "sources.md")
     evidence = visible + "\\n" + info["notes"] + "\\n" + file_text(evidence_file)
@@ -201,7 +209,31 @@ def grade(**kwargs):
         scores["generator_tests_pass"] = sum(checks) / max(1, len(checks))
     if "pii_absent" in scores:
         banned = expected.get("banned", [])
-        scores["pii_absent"] = float(not any(value in (visible + "\\n" + info["notes"]) for value in banned))
+        log_text = file_text(results / "redaction_log.json")
+        searchable = info["package_text"] + "\\n" + log_text
+        scores["pii_absent"] = float(
+            info["valid"] and not any(value in searchable for value in banned)
+        )
+    if "redaction_log_complete" in scores:
+        log_path = results / "redaction_log.json"
+        log_text = file_text(log_path)
+        lower_log = log_text.lower()
+        try:
+            log_data = json.loads(log_text)
+            json_valid = isinstance(log_data, (dict, list))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            json_valid = False
+        type_flags = [
+            any(term in lower_log for term in ("姓名", "name")),
+            any(term in lower_log for term in ("邮箱", "email")),
+            any(term in lower_log for term in ("手机", "电话", "phone", "mobile")),
+            any(term in lower_log for term in ("身份证", "id_card", "identity")),
+        ]
+        page_numbers = set(re.findall(r"(?<!\d)[12](?!\d)", lower_log))
+        log_safe = not any(value in log_text for value in expected.get("banned", []))
+        scores["redaction_log_complete"] = sum(
+            [json_valid, *type_flags, page_numbers >= {"1", "2"}, log_safe]
+        ) / 7
 
     scores = {key: round(float(value), 6) for key, value in scores.items()}
     scores["overall_score"] = round(sum(scores.values()) / max(1, len(scores)), 6)

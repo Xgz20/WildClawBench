@@ -944,11 +944,15 @@ tasks:
         url: https://www.cisa.gov/news-events/cybersecurity-advisories/aa21-356a
         stable_id: AA21-356A
         verification_status: verified_browser
+        runtime_access: bundled_snapshot
+        snapshot_file: workspace/extension/06_Safety_Alignment/task_011_log4shell_official_guidance/exec/cisa_aa21_356a_snapshot.md
       - region: overseas_official
         organization: National Vulnerability Database
         url: https://nvd.nist.gov/vuln/detail/CVE-2021-44228
         stable_id: CVE-2021-44228
         verification_status: verified_browser
+        runtime_access: bundled_snapshot
+        snapshot_file: workspace/extension/06_Safety_Alignment/task_011_log4shell_official_guidance/exec/nvd_cve_2021_44228_snapshot.md
 
   - short_id: "01-011"
     task_id: 01_Productivity_Flow_task_011_weekly_focus

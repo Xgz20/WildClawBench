@@ -5,7 +5,8 @@
     "editable_objects_preserved",
     "output_package_complete",
     "input_files_unchanged",
-    "pii_absent"
+    "pii_absent",
+    "redaction_log_complete"
   ],
   "output": "redacted_deck.pptx",
   "companions": [
