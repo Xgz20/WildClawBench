@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import re
@@ -33,6 +34,7 @@ import report_entities  # noqa: E402
 SUITE_RE = re.compile(r"^\d{2}_")
 DIMENSION_HEADER_RE = re.compile(r"^(.*?)平均分\((\d+)例\)$")
 SEVERITY_ORDER = {"error": 0, "warning": 1, "info": 2}
+EXCEL_SHEET_TITLE_MAX_LEN = 31
 CORE_SHEETS = {"总览", "模型×Harness矩阵", "用例对比明细", "分类对比", "难度对比", "模态对比", "分差矩阵"}
 OVERVIEW_FIELDS = {
     "总平均分": ("score_pct", 0.11),
@@ -59,6 +61,15 @@ CAP7_ZH = {
 CAP7_DECON = ["data_processing", "reasoning_planning", "content_generation"]
 FILE_CKPT_RE = re.compile(r"exist|created|saved|written|parseable", re.I)
 METRIC_CKPT_RE = re.compile(r"(_max$|_calls$|_attempts$|_triggered$|^penalty)")
+
+
+def detail_sheet_title(unit: str) -> str:
+    base = f"评分详情_{unit}"
+    if len(base) <= EXCEL_SHEET_TITLE_MAX_LEN:
+        return base
+    digest = hashlib.sha1(unit.encode("utf-8")).hexdigest()[:8]
+    prefix_len = EXCEL_SHEET_TITLE_MAX_LEN - len(digest) - 1
+    return f"{base[:prefix_len]}~{digest}"
 
 
 def load_json(path: Path) -> dict:
@@ -224,9 +235,15 @@ def finding(rule_id: str, severity: str, message: str, *, sheet: str = "",
     }
 
 
-def scan_raw_units(specs: list[tuple[str, str, Path]]) -> dict[str, dict]:
+def scan_raw_units(
+    specs: list[tuple[str, str, Path]],
+    registry=None,
+) -> dict[str, dict]:
     units: dict[str, dict] = {}
     for model, harness, unit_dir in specs:
+        canonical_harness = (
+            registry.harness_canonical(harness) if registry else harness
+        )
         tasks: dict[str, dict] = {}
         for suite_dir in sorted(unit_dir.iterdir()):
             if not suite_dir.is_dir() or not SUITE_RE.match(suite_dir.name):
@@ -247,7 +264,7 @@ def scan_raw_units(specs: list[tuple[str, str, Path]]) -> dict[str, dict]:
                 anomaly_items = scan_run_dir(latest).get("items", []) if latest else []
                 outcome = classify_report_outcome(status, grading_error, anomaly_items)
                 transcript = transcript_path(latest) if latest else None
-                metrics = parse_tool_metrics(transcript, harness)
+                metrics = parse_tool_metrics(transcript, canonical_harness)
                 tasks[task_dir.name] = {
                     "suite": suite_dir.name,
                     "score": fmean(scores) if scores else None,
@@ -326,6 +343,7 @@ def load_identity_maps(wb) -> dict[str, dict[str, str]]:
         "harness_display_to_raw": {},
         "unit_display_to_raw": {},
         "unit_raw_to_display": {},
+        "unit_raw_to_detail_sheet": {},
     }
     if "_报告元数据" not in wb.sheetnames:
         return result
@@ -343,6 +361,8 @@ def load_identity_maps(wb) -> dict[str, dict[str, str]]:
         elif entity_type == "单元":
             result["unit_display_to_raw"][display] = raw_id
             result["unit_raw_to_display"][raw_id] = display
+            if row.get("属性") == "detail_sheet" and row.get("值"):
+                result["unit_raw_to_detail_sheet"][raw_id] = str(row["值"])
     return result
 
 
@@ -769,11 +789,11 @@ def audit_diff_matrix(wb, units: dict[str, dict], findings: list[dict], identiti
                                                   "recomputed": round(expected, 6)}))
 
 
-def audit_detail_sheets(wb, units: dict[str, dict], findings: list[dict],
+def audit_detail_sheets(wb, units: dict[str, dict], findings: list[dict], identities,
                         skip_root_cause_check: bool = False) -> None:
     """审核评分详情 Sheet，skip_root_cause_check=True 时不检查根因列内容（preview 模式）。"""
     for unit, data in units.items():
-        title = f"评分详情_{unit}"[:31]
+        title = identities["unit_raw_to_detail_sheet"].get(unit, detail_sheet_title(unit))
         if title not in wb.sheetnames:
             findings.append(finding("DETAIL_SHEET_MISSING", "error", "缺少 unit 评分详情 Sheet",
                                     sheet=title, unit=unit))
@@ -847,6 +867,7 @@ def load_validity(path: Path | None, findings: list[dict], skip: bool = False) -
 def recompute_unit_costs(specs, registry, pricing_date: date) -> dict[str, dict]:
     result = {}
     for model, harness, unit_dir in specs:
+        canonical_harness = registry.harness_canonical(harness)
         total = Decimal(0)
         profile_ids = set()
         status = "estimated"
@@ -873,14 +894,16 @@ def recompute_unit_costs(specs, registry, pricing_date: date) -> dict[str, dict]
                             request_input_tokens=None,
                         )
                     else:
-                        if harness in ("astroncode", "codex"):
+                        if canonical_harness in ("astroncode", "codex"):
                             requests = report_entities.extract_astroncode_requests(run_dir)
-                        elif harness == "opencode":
+                        elif canonical_harness == "opencode":
                             requests = report_entities.extract_opencode_requests(run_dir)
-                        elif harness == "deepseek-harness":
+                        elif canonical_harness == "deepseek-harness":
                             requests = report_entities.extract_deepseek_harness_requests(run_dir)
                         else:
-                            raise ValueError(f"分档定价不支持 Harness: {harness}")
+                            raise ValueError(
+                                f"分档定价不支持 Harness: {canonical_harness}"
+                            )
                         estimate = report_entities.estimate_request_costs_usd(
                             registry, model, pricing_date, requests
                         )
@@ -926,15 +949,22 @@ def audit_report(result_root: Path, excel_path: Path, tasks_dir: Path,
         findings.append(finding(
             "NO_UNITS", "error", "过滤后未发现任何评测结果 unit"
         ))
-    units = scan_raw_units(specs)
+    registry = None
+    if entities_path is not None:
+        try:
+            registry = report_entities.load_registry(entities_path)
+        except (OSError, ValueError) as exc:
+            findings.append(finding(
+                "PRICING_CONFIG_INVALID", "error", f"成本配置无法加载：{exc}"
+            ))
+    units = scan_raw_units(specs, registry)
     meta = load_task_meta(tasks_dir)
     capability_map_path = capability_map_path or REPO_ROOT / "tools/report/data/checkpoint_capability_map7.yaml"
     capability_map = load_capability_map(capability_map_path)
     validity = load_validity(validity_path, findings, skip="validity_gate" in skip_checks)
     recomputed_costs = None
-    if entities_path is not None and pricing_date is not None:
+    if registry is not None and pricing_date is not None:
         try:
-            registry = report_entities.load_registry(entities_path)
             recomputed_costs = recompute_unit_costs(specs, registry, pricing_date)
         except (OSError, ValueError) as exc:
             findings.append(finding(
@@ -968,7 +998,13 @@ def audit_report(result_root: Path, excel_path: Path, tasks_dir: Path,
         audit_difficulty_inversion(units, dimension_specs["难度对比"], findings)
         if "分差矩阵" in wb.sheetnames:
             audit_diff_matrix(wb, units, findings, identities)
-        audit_detail_sheets(wb, units, findings, skip_root_cause_check="root_cause_coverage" in skip_checks)
+        audit_detail_sheets(
+            wb,
+            units,
+            findings,
+            identities,
+            skip_root_cause_check="root_cause_coverage" in skip_checks,
+        )
         wb.close()
     counts = Counter(item["severity"] for item in findings)
     verdict = "FAIL" if counts["error"] else ("REVIEW" if counts["warning"] else "PASS")

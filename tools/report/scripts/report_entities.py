@@ -116,6 +116,10 @@ class EntityRegistry:
     def harness_display(self, harness_id: str) -> str:
         return self._display(self.harnesses, "harness", harness_id)
 
+    def harness_canonical(self, harness_id: str) -> str:
+        item = self.harnesses.get(harness_id) or {}
+        return str(item.get("canonical_id") or harness_id).strip()
+
     @staticmethod
     def _display(
         entities: Mapping[str, Mapping[str, Any]],

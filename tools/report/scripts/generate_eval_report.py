@@ -29,6 +29,7 @@ Sheet 布局（7 + N）：
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -50,6 +51,7 @@ except ImportError:
 
 SUITE_DIR_RE = re.compile(r"^\d{2}_")
 CELL_MAX_LEN = 32000
+EXCEL_SHEET_TITLE_MAX_LEN = 31
 
 HEADER_FONT = Font(bold=True, color="FFFFFF")
 HEADER_FILL = PatternFill("solid", fgColor="4472C4")
@@ -61,6 +63,15 @@ WRAP_TOP = Alignment(wrap_text=True, vertical="top")
 DIFFICULTY_ORDER = ["L1", "L2", "L3", "L4", "L5"]
 MODALITY_ORDER = ["pure-text", "multimodal"]
 MODALITY_ZH = {"pure-text": "纯文本", "multimodal": "多模态"}
+
+
+def detail_sheet_title(unit: str) -> str:
+    base = f"评分详情_{unit}"
+    if len(base) <= EXCEL_SHEET_TITLE_MAX_LEN:
+        return base
+    digest = hashlib.sha1(unit.encode("utf-8")).hexdigest()[:8]
+    prefix_len = EXCEL_SHEET_TITLE_MAX_LEN - len(digest) - 1
+    return f"{base[:prefix_len]}~{digest}"
 
 # 多轮 pass@k/pass^k：复用评测框架的无偏估计公式，避免口径漂移。
 # 展示层默认阈值 0.99（满分算 pass），与 summary 默认口径一致。
@@ -242,6 +253,9 @@ class TaskRecord:
         self.task_id = task_dir.name
         self.suite = suite
         self.harness = harness
+        self.canonical_harness = (
+            registry.harness_canonical(harness) if registry else harness
+        )
         self.model = model
         self.registry = registry
         self.pricing_date = pricing_date
@@ -263,7 +277,9 @@ class TaskRecord:
         score = _load_json(self.run_dir / "score.json") if self.run_dir else {}
         status = _load_json(self.run_dir / "execution_status.json") if self.run_dir else {}
         self.usage = _load_json(self.run_dir / "usage.json") if self.run_dir else {}
-        self.cost_estimate = self._estimate_cost(model, harness, registry, pricing_date)
+        self.cost_estimate = self._estimate_cost(
+            model, self.canonical_harness, registry, pricing_date
+        )
 
         self.checkpoints = {
             k: v for k, v in score.items()
@@ -341,7 +357,9 @@ class TaskRecord:
                     break
 
         # 工具调用指标（基于最新一轮的归一化轨迹）。未注册 harness / 无轨迹 → 空指标。
-        self.tool_metrics = _parse_tool_metrics(self.transcript, self.harness)
+        self.tool_metrics = _parse_tool_metrics(
+            self.transcript, self.canonical_harness
+        )
 
     def _estimate_cost(self, model: str, harness: str, registry, pricing_date):
         return _estimate_run_cost(
@@ -2061,6 +2079,10 @@ def write_report_metadata_sheet(
         ws.append(["单元", unit.unit, unit.unit_display, "model_id", unit.model])
         ws.append(["单元", unit.unit, unit.unit_display, "harness_id", unit.harness])
         ws.append([
+            "单元", unit.unit, unit.unit_display, "detail_sheet",
+            detail_sheet_title(unit.unit),
+        ])
+        ws.append([
             "成本", unit.unit, unit.unit_display, "pricing_profile_id",
             ",".join(unit.cost_profile_ids) or "-",
         ])
@@ -2243,7 +2265,7 @@ def write_stability_sheet(wb, units: list[UnitResult],
 def write_detail_sheet(wb, u: UnitResult, order: list[tuple[str, str]],
                        task_meta: dict[str, dict], analysis: dict[str, dict],
                        suite_zh: dict[str, str], has_multirun: bool = False) -> None:
-    ws = wb.create_sheet(f"评分详情_{u.unit}"[:31])
+    ws = wb.create_sheet(detail_sheet_title(u.unit))
     # 多轮列仅在存在多轮数据时插入（单轮评测报告结构与改造前完全一致）
     mr_cols = ["轮数", "Std", "各轮分数"] if has_multirun else []
     header = (["分类", "用例ID", "用例名称", "难度", "超时时间(秒)", "模态", "标签",

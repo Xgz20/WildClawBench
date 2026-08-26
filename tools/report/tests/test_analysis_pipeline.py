@@ -124,6 +124,15 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertEqual(registry.model_display("xopglm52"), "GLM-5.2")
         self.assertEqual(registry.harness_display("astroncode"), "AstronCode")
         self.assertEqual(
+            registry.harness_display("astroncode-0.0.35"),
+            "AstronCode（新版本）",
+        )
+        self.assertEqual(
+            registry.harness_canonical("astroncode-0.0.35"),
+            "astroncode",
+        )
+        self.assertEqual(registry.harness_canonical("claudecode"), "claudecode")
+        self.assertEqual(
             registry.harness_display("deepseek-harness"),
             "DeepSeek Harness",
         )
@@ -165,6 +174,19 @@ class AnalysisPipelineTest(unittest.TestCase):
                 for harness_id in backend_action.choices
             )
         )
+
+    def test_detail_sheet_title_is_excel_safe_and_stable(self) -> None:
+        old_unit = "xopdeepseekv4flash0731@astroncode-0.0.13"
+        new_unit = "xopdeepseekv4flash0731@astroncode-0.0.35"
+
+        old_title = excel_report.detail_sheet_title(old_unit)
+        new_title = excel_report.detail_sheet_title(new_unit)
+
+        self.assertLessEqual(len(old_title), 31)
+        self.assertLessEqual(len(new_title), 31)
+        self.assertNotEqual(old_title, new_title)
+        self.assertEqual(old_title, report_audit.detail_sheet_title(old_unit))
+        self.assertEqual(new_title, report_audit.detail_sheet_title(new_unit))
 
     def test_entity_registry_unknown_id_falls_back_with_warning(self) -> None:
         report_entities = load_module("report_entities_fallback", REPORT_ENTITIES_SCRIPT)

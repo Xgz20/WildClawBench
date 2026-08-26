@@ -155,6 +155,18 @@ harnesses:
     family: Codex
     aliases: []
     capabilities: {}
+  astroncode-0.0.13:
+    display_name: AstronCode（历史版本）
+    canonical_id: astroncode
+    family: Codex
+    aliases: []
+    capabilities: {}
+  astroncode-0.0.35:
+    display_name: AstronCode（新版本）
+    canonical_id: astroncode
+    family: Codex
+    aliases: []
+    capabilities: {}
   codex:
     display_name: Codex
     family: Codex
