@@ -7,7 +7,7 @@ description: 汇总多个独立 Web E2E 评分回传包，校验批次与用例�
 
 本 Skill 处理 `score-web-e2e` 生成的 `submission.json`，或测试人员用 ZIP 工具压缩的完整 Harness 根目录。ZIP 内必须恰好存在一个 `submission.json`。默认要求全部回传包具有相同 `batch_id`、`source_revision` 和完整一致的 `task_ids`；不一致时停止，不能静默混算。
 
-模型、Harness 友好名称和推理强度映射只从 WildClawBench 工程内的 `tools/report/config/web-e2e/<batch_id>.yaml` 读取，不进入 execution/scoring ZIP。回传保留 `harness_id`；原始 `model_id` 可留空，由本批次唯一的 Harness 映射补全。配置格式与完整性门禁见 [references/report-config.md](references/report-config.md)。
+模型、Harness 友好名称和推理强度映射只从显式报告配置读取，不进入 execution/scoring ZIP。准备工作空间 Skill 默认在批次根生成 `<batch_id>__report-config.yaml`；WildClawBench 工程内的 `tools/report/config/web-e2e/<batch_id>.yaml` 仅是省略 `--config` 时的兼容默认位置。回传保留 `harness_id`；原始 `model_id` 可留空，由本批次唯一的 Harness 映射补全。配置格式与完整性门禁见 [references/report-config.md](references/report-config.md)。
 
 ## 产物
 
@@ -23,21 +23,22 @@ description: 汇总多个独立 Web E2E 评分回传包，校验批次与用例�
 
 ## 运行
 
-先生成统一数据和 Markdown：
+安装独立 ZIP 后，先确定客户端中的 `report-web-e2e` Skill 实际目录并填写绝对路径。使用批次根配置显式生成统一数据和 Markdown：
 
 ```bash
-python3 .agents/skills/report-web-e2e/scripts/aggregate_web_e2e_results.py \
+REPORT_SKILL_DIR="/absolute/path/to/report-web-e2e"
+python3 "$REPORT_SKILL_DIR/scripts/aggregate_web_e2e_results.py" \
   --input /path/a.zip --input /path/b.tar.gz \
-  --config tools/report/config/web-e2e/<batch_id>.yaml \
+  --config /path/<batch_id>/<batch_id>__report-config.yaml \
   --output-dir /absolute/report-output
 ```
 
-在 WildClawBench 工程根目录运行时可省略 `--config`，脚本按回传包的 `batch_id` 读取上述默认路径。
+独立使用时必须显式传 `--config`，聚合脚本本身不导入 WildClawBench 模块。在 WildClawBench 工程根目录运行时可省略 `--config`，脚本才会按回传包的 `batch_id` 读取兼容默认路径。
 
 再使用当前 Codex 工作区提供的 Node.js 和 `@oai/artifact-tool` 生成 Excel。必须先按 `spreadsheets` Skill 要求加载工作区依赖、创建临时 `node_modules` 链接，并执行一次 artifact operation 标记；不得改用系统 `openpyxl`。
 
 ```bash
-node .agents/skills/report-web-e2e/scripts/build_web_e2e_workbook.mjs \
+node "$REPORT_SKILL_DIR/scripts/build_web_e2e_workbook.mjs" \
   --input /absolute/report-output/web_e2e_report_data.json \
   --output /absolute/report-output/Web站点端到端评测报告.xlsx \
   --preview-dir /tmp/web-e2e-report-preview

@@ -37,12 +37,20 @@ def args_for(tmp: str, task_id: str) -> argparse.Namespace:
         harness=["codex"],
         model="gpt-5.5",
         model_map=[],
+        reasoning_effort="high",
+        reasoning_effort_map=[],
         aesthetic_rubric="",
         include_execution_record=False,
     )
 
 
 class PrepareWebE2EWorkspacesTest(unittest.TestCase):
+    def test_known_harness_display_names_include_current_desktop_clients(self) -> None:
+        self.assertEqual(prepare_module.KNOWN_HARNESSES["astronstudio"], "AstronStudio")
+        self.assertEqual(prepare_module.KNOWN_HARNESSES["qwenwork"], "QwenWork")
+        self.assertEqual(prepare_module.KNOWN_HARNESSES["workbuddy"], "WorkBuddy")
+        self.assertEqual(prepare_module.KNOWN_HARNESSES["doubaowork"], "DoubaoWork")
+
     TASK_ID = "07_Website_Generation_task_001_daymark_product_website"
     FIXTURE_TASK_ID = "07_Website_Generation_task_010_paperwork_pdf_tool"
 
@@ -58,7 +66,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
     def test_parses_real_web_task_contract(self) -> None:
         task = prepare_module.parse_task(REPO_ROOT, self.TASK_ID)
         self.assertEqual(task["task_id"], self.TASK_ID)
-        self.assertIn("package.json", task["prompt"])
+        self.assertIn("/tmp_workspace", task["prompt"])
         self.assertTrue(task["expected_behavior"])
         self.assertGreater(len(task["criteria"]), 0)
         self.assertAlmostEqual(sum(item["weight"] for item in task["criteria"]), 1.0, places=3)
@@ -82,7 +90,9 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             score_task = harness_root / "score/tasks" / self.TASK_ID
             execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
             scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
-            skill_package = batch_root / "packages/web-smoke__score-web-e2e-skill.zip"
+            score_skill_package = batch_root / "packages/web-smoke__score-web-e2e-skill.zip"
+            report_skill_package = batch_root / "packages/web-smoke__report-web-e2e-skill.zip"
+            report_config_path = batch_root / "web-smoke__report-config.yaml"
 
             self.assertTrue((execution_task / "workspace/.gitkeep").is_file())
             self.assertTrue((execution_task / "PROMPT.md").is_file())
@@ -93,7 +103,9 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertFalse((execution_task / "execution_record.json").exists())
             self.assertTrue((score_task / "private-scoring/task_contract.json").is_file())
             self.assertFalse((score_task / ".agents").exists())
-            self.assertTrue(skill_package.is_file())
+            self.assertTrue(score_skill_package.is_file())
+            self.assertTrue(report_skill_package.is_file())
+            self.assertTrue(report_config_path.is_file())
             self.assertTrue((harness_root / "tools/prepare_scoring_workspace.py").is_file())
             self.assertTrue((harness_root / "准备评分工作空间.command").is_file())
             self.assertTrue((harness_root / "准备评分工作空间.cmd").is_file())
@@ -113,8 +125,10 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 command_info = archive.getinfo(f"{prefix}准备评分工作空间.command")
             with zipfile.ZipFile(scoring_package) as archive:
                 scoring_names = archive.namelist()
-            with zipfile.ZipFile(skill_package) as archive:
-                skill_names = archive.namelist()
+            with zipfile.ZipFile(score_skill_package) as archive:
+                score_skill_names = archive.namelist()
+            with zipfile.ZipFile(report_skill_package) as archive:
+                report_skill_names = archive.namelist()
             self.assertTrue(all(name.startswith(prefix) for name in execution_names))
             self.assertIn(f"{prefix}score/", execution_names)
             self.assertTrue(any(name.endswith(f"execution/tasks/{self.TASK_ID}/PROMPT.md") for name in execution_names))
@@ -123,11 +137,29 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertFalse(any(".agents/skills/score-web-e2e" in name for name in scoring_names))
             self.assertFalse(any("/workspace/" in name for name in scoring_names))
             self.assertFalse(any(name.endswith(("PROMPT.md", "execution_record.json", "task_manifest.json")) for name in scoring_names))
-            self.assertIn("score-web-e2e/SKILL.md", skill_names)
-            self.assertTrue(any(name.startswith("score-web-e2e/scripts/") for name in skill_names))
-            self.assertIn("score-web-e2e/references/aesthetic-rubric.json", skill_names)
-            self.assertIn("score-web-e2e/references/browser-interaction-scoring.md", skill_names)
+            self.assertFalse(any(name.endswith("__report-config.yaml") for name in execution_names))
+            self.assertFalse(any(name.endswith("__report-config.yaml") for name in scoring_names))
+            self.assertIn("score-web-e2e/SKILL.md", score_skill_names)
+            self.assertTrue(any(name.startswith("score-web-e2e/scripts/") for name in score_skill_names))
+            self.assertIn("score-web-e2e/references/aesthetic-rubric.json", score_skill_names)
+            self.assertIn("score-web-e2e/references/browser-interaction-scoring.md", score_skill_names)
+            self.assertIn("report-web-e2e/SKILL.md", report_skill_names)
+            self.assertIn("report-web-e2e/scripts/aggregate_web_e2e_results.py", report_skill_names)
+            self.assertIn("report-web-e2e/scripts/build_web_e2e_workbook.mjs", report_skill_names)
+            self.assertFalse(any("__pycache__" in name or name.endswith(".pyc") or name.endswith(".DS_Store") for name in report_skill_names))
             self.assertTrue((command_info.external_attr >> 16) & 0o100)
+
+            report_config = prepare_module.yaml.safe_load(report_config_path.read_text(encoding="utf-8"))
+            self.assertEqual(report_config["schema_version"], prepare_module.REPORT_CONFIG_SCHEMA)
+            self.assertEqual(report_config["configuration_status"], "ready")
+            self.assertEqual(report_config["units"], [{
+                "model_id": "gpt-5.5",
+                "model_display_name": "gpt-5.5",
+                "harness_id": "codex",
+                "harness_display_name": "Codex",
+                "reasoning_effort": "high",
+                "order": 1,
+            }])
 
             contract = json.loads((score_task / "private-scoring/task_contract.json").read_text(encoding="utf-8"))
             self.assertFalse(Path(contract["source"]["task_file"]).is_absolute())
@@ -150,19 +182,62 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             manifest = json.loads((batch_root / "harnesses/codex/manifest.json").read_text(encoding="utf-8"))
             self.assertTrue(manifest["execution_record_included"])
 
-    def test_generates_one_independent_score_skill_zip_per_batch(self) -> None:
+    def test_generates_one_independent_score_and_report_skill_zip_per_batch(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             args = args_for(tmp, self.TASK_ID)
             args.harness = ["codex", "trae"]
             batch_root = prepare_module.prepare(args)
             manifest = json.loads((batch_root / "batch_manifest.json").read_text(encoding="utf-8"))
             skill_packages = [item for item in manifest["packages"] if item["package_type"] == "score_skill"]
+            report_skill_packages = [item for item in manifest["packages"] if item["package_type"] == "report_skill"]
             self.assertEqual(len(skill_packages), 1)
+            self.assertEqual(len(report_skill_packages), 1)
             self.assertIsNone(skill_packages[0]["harness"])
+            self.assertIsNone(report_skill_packages[0]["harness"])
             self.assertEqual(
                 manifest["score_skill_archive"],
                 "packages/web-smoke__score-web-e2e-skill.zip",
             )
+            self.assertEqual(
+                manifest["report_skill_archive"],
+                "packages/web-smoke__report-web-e2e-skill.zip",
+            )
+            self.assertEqual(manifest["report_config"], "web-smoke__report-config.yaml")
+            self.assertTrue(manifest["report_config_ready"])
+
+    def test_report_config_supports_per_harness_model_and_reasoning_maps(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            args = args_for(tmp, self.TASK_ID)
+            args.harness = ["astronstudio", "qwenwork"]
+            args.model = "default-model"
+            args.model_map = ["qwenwork=qwen3-coder"]
+            args.reasoning_effort = "high"
+            args.reasoning_effort_map = ["qwenwork=max"]
+            batch_root = prepare_module.prepare(args)
+            config = prepare_module.yaml.safe_load(
+                (batch_root / "web-smoke__report-config.yaml").read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                [(item["model_id"], item["harness_id"], item["reasoning_effort"], item["order"]) for item in config["units"]],
+                [
+                    ("default-model", "astronstudio", "high", 1),
+                    ("qwen3-coder", "qwenwork", "max", 2),
+                ],
+            )
+
+    def test_report_config_without_model_is_explicit_incomplete_template(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            args = args_for(tmp, self.TASK_ID)
+            args.model = ""
+            args.reasoning_effort = ""
+            batch_root = prepare_module.prepare(args)
+            config = prepare_module.yaml.safe_load(
+                (batch_root / "web-smoke__report-config.yaml").read_text(encoding="utf-8")
+            )
+            manifest = json.loads((batch_root / "batch_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(config["configuration_status"], "requires_model_mapping")
+            self.assertEqual(config["units"][0]["model_id"], "")
+            self.assertFalse(manifest["report_config_ready"])
 
     def test_score_skill_only_builds_direct_archive_without_batch_workspace(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

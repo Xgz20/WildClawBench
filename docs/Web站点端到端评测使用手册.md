@@ -12,13 +12,15 @@
 
 ## 1. 领取文件
 
-每个 Harness 对应两个任务包，整个批次另有一个评分 Skill 包：
+每个 Harness 对应两个任务包，整个批次另有评分 Skill、报告 Skill 和一份批次报告配置。测试人员通常只会收到与自己有关的前三类文件；报告 Skill 和报告配置由管理员在汇总阶段使用。
 
 | 文件 | 使用阶段 | 用途 |
 | --- | --- | --- |
 | `<batch_id>__<harness>__execution.zip` | 执行 | 包含 Prompt、初始 Workspace、执行清单和评分工作空间准备工具 |
 | `<batch_id>__<harness>__scoring.zip` | 评分准备 | 向评分副本中增加私有评分契约和评分素材 |
 | `<batch_id>__score-web-e2e-skill.zip` | 评分 | 导入评分智能体，每台评分客户端安装一次 |
+| `<batch_id>__report-web-e2e-skill.zip` | 管理员汇总 | 导入报告生成智能体，汇总全部 Harness 回传包 |
+| `<batch_id>__report-config.yaml` | 管理员汇总 | 维护模型、Harness、推理强度和展示顺序；不会进入 execution/scoring ZIP |
 
 不要把 scoring ZIP 当作评分 Skill 导入，也不要把评分 Skill ZIP 解压到某个用例目录。
 

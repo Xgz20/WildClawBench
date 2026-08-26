@@ -26,6 +26,7 @@ except ImportError:
 
 
 SCHEMA_VERSION = "wildclawbench.web-e2e-batch/v3"
+REPORT_CONFIG_SCHEMA = "wildclawbench.web-e2e-report-config/v1"
 SKILL_VERSION = "3.4.0"
 AESTHETIC_RUBRIC_ID = "web-aesthetic-v1"
 AESTHETIC_RUBRIC_VERSION = "1.1.0"
@@ -33,6 +34,8 @@ AESTHETIC_RUBRIC_SOURCE = "https://yf2ljykclb.xfchat.iflytek.com/docx/doxrz05uve
 KNOWN_HARNESSES = {
     "astronstudio": "AstronStudio",
     "codex": "Codex",
+    "doubaowork": "DoubaoWork",
+    "qwenwork": "QwenWork",
     "workbuddy": "WorkBuddy",
     "trae": "Trae",
 }
@@ -228,10 +231,8 @@ def parse_task(repo_root: Path, task_id: str) -> dict:
     missing = [name for name in required if not sections.get(name, "").strip()]
     if missing:
         raise ValueError(f"用例缺少章节 {missing}: {task_id}")
-    prompt_requirements = ("package.json", "npm install", "npm run build", "npm run start")
-    missing_prompt_contract = [item for item in prompt_requirements if item not in sections["Prompt"]]
-    if missing_prompt_contract:
-        raise ValueError(f"Prompt 缺少标准站点协议 {missing_prompt_contract}: {task_id}")
+    if not re.search(r"/tmp_workspace\b", sections["Prompt"]):
+        raise ValueError(f"Prompt 缺少 /tmp_workspace 工作目录约束: {task_id}")
     workspace_raw = Path(strip_fence(sections["Workspace Path"]))
     workspace = workspace_raw if workspace_raw.is_absolute() else repo_root / workspace_raw
     workspace = workspace.resolve()
@@ -269,6 +270,57 @@ def safe_copy_exec(source: Path, destination: Path) -> None:
 
 def model_for_harness(harness: str, default_model: str, model_map: dict[str, str]) -> str:
     return model_map.get(harness, default_model)
+
+
+def parse_harness_map(values: list[str], option_name: str) -> dict[str, str]:
+    result = {}
+    for raw in values:
+        if "=" not in raw:
+            raise ValueError(f"{option_name} 必须是 harness=value: {raw}")
+        key, value = (item.strip() for item in raw.split("=", 1))
+        if not key or not value:
+            raise ValueError(f"{option_name} 必须是非空 harness=value: {raw}")
+        result[key] = value
+    return result
+
+
+def build_report_config(
+    batch_id: str,
+    harnesses: list[str],
+    default_model: str,
+    model_map: dict[str, str],
+    default_reasoning_effort: str,
+    reasoning_effort_map: dict[str, str],
+) -> dict:
+    units = []
+    for order, harness in enumerate(harnesses, start=1):
+        model = model_for_harness(harness, default_model, model_map)
+        units.append({
+            "model_id": model,
+            "model_display_name": model,
+            "harness_id": harness,
+            "harness_display_name": KNOWN_HARNESSES.get(harness, harness),
+            "reasoning_effort": reasoning_effort_map.get(harness, default_reasoning_effort),
+            "order": order,
+        })
+    return {
+        "schema_version": REPORT_CONFIG_SCHEMA,
+        "batch_id": batch_id,
+        "configuration_status": "ready" if all(item["model_id"] for item in units) else "requires_model_mapping",
+        "units": units,
+    }
+
+
+def write_report_config(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    header = (
+        "# Web E2E 批次报告配置。此文件不进入 execution/scoring 分发包。\n"
+        "# 生成报告前必须补全空的 model_id；model_display_name 和 reasoning_effort 可按实际配置修改。\n"
+    )
+    path.write_text(
+        header + yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
 
 
 def execution_record(batch_id: str, harness: str, harness_display: str, model: str, task_id: str) -> dict:
@@ -480,12 +532,13 @@ def prepare(args: argparse.Namespace) -> Path:
     for harness in harnesses:
         if not SLUG_RE.fullmatch(harness):
             raise ValueError(f"Harness ID 不是安全 slug: {harness}")
-    model_map = {}
-    for raw in args.model_map:
-        if "=" not in raw:
-            raise ValueError(f"--model-map 必须是 harness=model: {raw}")
-        key, value = raw.split("=", 1)
-        model_map[key.strip()] = value.strip()
+    model_map = parse_harness_map(getattr(args, "model_map", []), "--model-map")
+    reasoning_effort_map = parse_harness_map(
+        getattr(args, "reasoning_effort_map", []),
+        "--reasoning-effort-map",
+    )
+    default_model = str(getattr(args, "model", "") or "").strip()
+    default_reasoning_effort = str(getattr(args, "reasoning_effort", "") or "").strip()
     aesthetic_rubric = None
     if args.aesthetic_rubric:
         aesthetic_rubric = Path(args.aesthetic_rubric).expanduser().read_text(encoding="utf-8").strip()
@@ -499,25 +552,46 @@ def prepare(args: argparse.Namespace) -> Path:
     scoring_skill = repo_root / "tools/report/skills/score-web-e2e"
     if not (scoring_skill / "SKILL.md").is_file():
         raise FileNotFoundError(f"缺少评分 Skill: {scoring_skill}")
+    report_skill = repo_root / "tools/report/skills/report-web-e2e"
+    if not (report_skill / "SKILL.md").is_file():
+        raise FileNotFoundError(f"缺少报告 Skill: {report_skill}")
     created_at = datetime.now(timezone.utc).isoformat()
     revision = git_revision(repo_root)
     include_execution_record = bool(getattr(args, "include_execution_record", False))
     package_rows = []
     batch_root.mkdir(parents=True)
-    skill_package = batch_root / "packages" / f"{args.batch_id}__score-web-e2e-skill.zip"
-    zip_skill(scoring_skill, skill_package)
+    score_skill_package = batch_root / "packages" / f"{args.batch_id}__score-web-e2e-skill.zip"
+    zip_skill(scoring_skill, score_skill_package)
     package_rows.append({
         "harness": None,
         "package_type": "score_skill",
-        "path": skill_package.relative_to(batch_root).as_posix(),
-        "sha256": sha256_file(skill_package),
+        "path": score_skill_package.relative_to(batch_root).as_posix(),
+        "sha256": sha256_file(score_skill_package),
     })
+    report_skill_package = batch_root / "packages" / f"{args.batch_id}__report-web-e2e-skill.zip"
+    zip_skill(report_skill, report_skill_package)
+    package_rows.append({
+        "harness": None,
+        "package_type": "report_skill",
+        "path": report_skill_package.relative_to(batch_root).as_posix(),
+        "sha256": sha256_file(report_skill_package),
+    })
+    report_config_path = batch_root / f"{args.batch_id}__report-config.yaml"
+    report_config = build_report_config(
+        args.batch_id,
+        harnesses,
+        default_model,
+        model_map,
+        default_reasoning_effort,
+        reasoning_effort_map,
+    )
+    write_report_config(report_config_path, report_config)
 
     for harness in harnesses:
         harness_dir = batch_root / "harnesses" / harness
         package_root_name = f"{args.batch_id}__{harness}"
         harness_display = KNOWN_HARNESSES.get(harness, harness)
-        model = model_for_harness(harness, args.model, model_map)
+        model = model_for_harness(harness, default_model, model_map)
         entries = []
         for task in tasks:
             task_id = task["task_id"]
@@ -622,7 +696,10 @@ def prepare(args: argparse.Namespace) -> Path:
         "source_revision": revision,
         "task_ids": task_ids,
         "harnesses": harnesses,
-        "score_skill_archive": skill_package.relative_to(batch_root).as_posix(),
+        "score_skill_archive": score_skill_package.relative_to(batch_root).as_posix(),
+        "report_skill_archive": report_skill_package.relative_to(batch_root).as_posix(),
+        "report_config": report_config_path.relative_to(batch_root).as_posix(),
+        "report_config_ready": report_config["configuration_status"] == "ready",
         "execution_record_included": include_execution_record,
         "packages": package_rows,
     })
@@ -646,6 +723,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--model", default="", help="全部 Harness 默认模型 ID")
     parser.add_argument("--model-map", action="append", default=[], help="按 Harness 覆盖模型：harness=model")
+    parser.add_argument("--reasoning-effort", default="", help="全部 Harness 默认推理强度，仅写入批次报告配置")
+    parser.add_argument(
+        "--reasoning-effort-map",
+        action="append",
+        default=[],
+        help="按 Harness 覆盖推理强度：harness=effort，仅写入批次报告配置",
+    )
     parser.add_argument(
         "--include-execution-record",
         action="store_true",
