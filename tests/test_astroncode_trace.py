@@ -264,46 +264,46 @@ class AstronCodeTraceTests(unittest.TestCase):
         ):
             self.assertIs(agent.trace_enabled, False)
 
-    def test_default_trace_is_injected_without_inline_docker_value(self) -> None:
+    def test_default_trace_envs_are_injected_without_inline_docker_values(self) -> None:
         run_call = self.start_container_call(None)
         command = run_call.args[0]
         child_environment = run_call.kwargs["env"]
 
-        trace_env_index = command.index("CODEX_ROLLOUT_TRACE_ROOT")
-        self.assertEqual(command[trace_env_index - 1], "-e")
-        self.assertEqual(
-            child_environment["CODEX_ROLLOUT_TRACE_ROOT"],
-            runner.ASTRONCODE_TRACE_ROOT,
-        )
+        for trace_env_key in runner.ASTRONCODE_TRACE_ROOT_ENV_KEYS:
+            trace_env_index = command.index(trace_env_key)
+            self.assertEqual(command[trace_env_index - 1], "-e")
+            self.assertEqual(
+                child_environment[trace_env_key],
+                runner.ASTRONCODE_TRACE_ROOT,
+            )
         for argument in command:
             self.assertNotIn(runner.ASTRONCODE_TRACE_ROOT, argument)
-            self.assertNotIn("CODEX_ROLLOUT_TRACE_ROOT=", argument)
+            for trace_env_key in runner.ASTRONCODE_TRACE_ROOT_ENV_KEYS:
+                self.assertNotIn(f"{trace_env_key}=", argument)
 
     def test_disabled_trace_is_absent_from_docker_environment(self) -> None:
         run_call = self.start_container_call("0")
 
-        self.assertNotIn("CODEX_ROLLOUT_TRACE_ROOT", run_call.args[0])
-        self.assertNotIn(
-            "CODEX_ROLLOUT_TRACE_ROOT",
-            run_call.kwargs["env"],
-        )
+        for trace_env_key in runner.ASTRONCODE_TRACE_ROOT_ENV_KEYS:
+            self.assertNotIn(trace_env_key, run_call.args[0])
+            self.assertNotIn(trace_env_key, run_call.kwargs["env"])
 
     def test_task_env_cannot_override_reserved_trace_root(self) -> None:
-        reserved_key = "CODEX_ROLLOUT_TRACE_ROOT"
         attacker_path = "/tmp/attacker-task-traces"
-        declarations = (
-            (reserved_key, {reserved_key: attacker_path}),
-            (f"{reserved_key}={attacker_path}", {}),
-        )
-        for trace_value, (declaration, source_environment) in (
-            (trace_value, declaration)
+        for reserved_key, trace_value, (declaration, source_environment) in (
+            (reserved_key, trace_value, declaration)
+            for reserved_key in runner.ASTRONCODE_TRACE_ROOT_ENV_KEYS
             for trace_value in (None, "0")
-            for declaration in declarations
+            for declaration in (
+                (reserved_key, {reserved_key: attacker_path}),
+                (f"{reserved_key}={attacker_path}", {}),
+            )
         ):
             environment = dict(source_environment)
             if trace_value is not None:
                 environment["ASTRONCODE_TRACE_ENABLED"] = trace_value
             with self.subTest(
+                reserved_key=reserved_key,
                 trace_value=trace_value,
                 declaration=declaration,
             ), patch.dict(
@@ -326,21 +326,21 @@ class AstronCodeTraceTests(unittest.TestCase):
                 self.assertNotIn(attacker_path, repr(run_mock.call_args_list))
 
     def test_lobster_env_cannot_override_reserved_trace_root(self) -> None:
-        reserved_key = "CODEX_ROLLOUT_TRACE_ROOT"
         attacker_path = "/tmp/attacker-lobster-traces"
-        declarations = (
-            (reserved_key, {reserved_key: attacker_path}),
-            (f"{reserved_key}={attacker_path}", {}),
-        )
-        for trace_value, (declaration, source_environment) in (
-            (trace_value, declaration)
+        for reserved_key, trace_value, (declaration, source_environment) in (
+            (reserved_key, trace_value, declaration)
+            for reserved_key in runner.ASTRONCODE_TRACE_ROOT_ENV_KEYS
             for trace_value in (None, "0")
-            for declaration in declarations
+            for declaration in (
+                (reserved_key, {reserved_key: attacker_path}),
+                (f"{reserved_key}={attacker_path}", {}),
+            )
         ):
             environment = dict(source_environment)
             if trace_value is not None:
                 environment["ASTRONCODE_TRACE_ENABLED"] = trace_value
             with self.subTest(
+                reserved_key=reserved_key,
                 trace_value=trace_value,
                 declaration=declaration,
             ), patch.dict(
@@ -673,6 +673,7 @@ class AstronCodeTraceTests(unittest.TestCase):
             status = self.read_trace_export_status(output_dir)
             self.assertEqual(status["status"], "exported")
             self.assertEqual(status["trace_count"], 0)
+            self.assertIn("no rollout traces found", status["warning"])
             self.assertTrue(
                 (output_dir / runner.ASTRONCODE_TRACE_ARCHIVE_NAME).is_file()
             )

@@ -43,9 +43,13 @@ ASTRONCODE_TRACE_ARCHIVE_CONTAINER_PATH = "/tmp/astroncode_traces.tar.gz"
 ASTRONCODE_TRACE_ARCHIVE_NAME = "astroncode_traces.tar.gz"
 ASTRONCODE_INTERACTION_JSONL_NAME = "agent_interaction.jsonl"
 ASTRONCODE_TRACE_EXPORT_TIMEOUT_SECONDS = 300
+ASTRONCODE_TRACE_ROOT_ENV_KEYS = (
+    "CODEX_ROLLOUT_TRACE_ROOT",
+    "ACODE_ROLLOUT_TRACE_ROOT",
+)
 _TRUE_ENV_VALUES = {"1", "true", "yes", "on"}
 _FALSE_ENV_VALUES = {"0", "false", "no", "off"}
-_RESERVED_CONTAINER_ENV_KEYS = frozenset({"CODEX_ROLLOUT_TRACE_ROOT"})
+_RESERVED_CONTAINER_ENV_KEYS = frozenset(ASTRONCODE_TRACE_ROOT_ENV_KEYS)
 DEFAULT_ONE_IFLYTEK_BASE_URL = "https://one.iflytek.com/api/llm/console/chat/v1"
 DEFAULT_ASTRON_MODELS_BASE_URL = (
     "https://astronstudio-api-volces-prod.xf-yun.com/"
@@ -886,6 +890,13 @@ class AstronCodeAgent(BaseAgent):
                 "interaction_jsonl": ASTRONCODE_INTERACTION_JSONL_NAME,
                 "error": None,
             }
+            if trace_count == 0:
+                warning = (
+                    "no rollout traces found; verify AstronCode trace environment "
+                    "variable compatibility"
+                )
+                result["warning"] = warning
+                logger.warning("[%s] AstronCode trace export warning: %s", task_id, warning)
             self._record_trace_export(output_dir, result)
             logger.info(
                 "[%s] AstronCode trace archive exported (%d traces): %s",
@@ -939,6 +950,7 @@ class AstronCodeAgent(BaseAgent):
         proxy_http = os.environ.get("HTTP_PROXY_INNER", "").strip()
         proxy_https = os.environ.get("HTTPS_PROXY_INNER", "").strip()
         no_proxy = "" if not proxy_http else os.environ.get("NO_PROXY_INNER", "").strip()
+        trace_root_value = ASTRONCODE_TRACE_ROOT if self.trace_enabled else ""
         env_map: dict[str, str] = {
             "OPENROUTER_API_KEY": self.openrouter_api_key,
             "ASTRON_API_KEY": self.astron_primary_api_key,
@@ -949,9 +961,10 @@ class AstronCodeAgent(BaseAgent):
             "OPENROUTER_IMAGE_MODEL": os.environ.get("OPENROUTER_IMAGE_MODEL", "").strip(),
             "WILDCLAW_IMAGE_MODEL": os.environ.get("WILDCLAW_IMAGE_MODEL", "").strip(),
             "BRAVE_API_KEY": os.environ.get("BRAVE_API_KEY", ""),
-            "CODEX_ROLLOUT_TRACE_ROOT": (
-                ASTRONCODE_TRACE_ROOT if self.trace_enabled else ""
-            ),
+            **{
+                trace_env_key: trace_root_value
+                for trace_env_key in ASTRONCODE_TRACE_ROOT_ENV_KEYS
+            },
             "http_proxy": proxy_http,
             "https_proxy": proxy_https,
             "HTTP_PROXY": proxy_http,
