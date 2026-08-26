@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Callable
 
@@ -155,7 +156,7 @@ def _load_tool_pairs(transcript_path: Path | None) -> list[tuple[str, str, str]]
 
 
 # ---------------------------------------------------------------------------
-# Codex / AstronCode classifier（AstronCode 基于 Codex 二开，同口径）
+# Codex classifier（同时供 AstronCode 旧轨迹兜底）
 # ---------------------------------------------------------------------------
 
 _CODEX_RUNTIME_ERRORS = (
@@ -238,6 +239,175 @@ def classify_codex(tool_name: str, content: str, status: str = "") -> str:
         return "failure"
 
     return "unclear"
+
+
+# ---------------------------------------------------------------------------
+# AstronCode classifier（兼容 Codex 旧轨迹与新版原生工具返回）
+# ---------------------------------------------------------------------------
+
+_ASTRONCODE_FETCH_TOOLS = {
+    "fetch",
+    "get",
+    "stealthy_fetch",
+    "bulk_fetch",
+    "bulk_get",
+    "bulk_stealthy_fetch",
+    "web_search",
+}
+_ASTRONCODE_PLAIN_RESULT_TOOLS = {"web-search"}
+_ASTRONCODE_DISCOVERY_TOOLS = {"glob", "grep"}
+_ASTRONCODE_JSON_TOOLS = {
+    "close_session",
+    "list_mcp_resources",
+    "list_mcp_resource_templates",
+    "open_session",
+    "screenshot",
+}
+_ASTRONCODE_FILE_SUCCESS_MARKERS = (
+    "Created file",
+    "Updated file",
+    "Deleted file",
+)
+_ASTRONCODE_FAILURE_PREFIXES = (
+    "cannot read ",
+    "cannot write ",
+    "cannot edit ",
+    "error reading ",
+    "error writing ",
+    "error editing ",
+    "failed to read ",
+    "failed to write ",
+    "failed to edit ",
+    "error executing tool ",
+    "tool error:",
+    "view_image is not allowed",
+)
+
+
+def _is_format_error(text: str) -> bool:
+    stripped = text.lstrip()
+    return (
+        stripped.startswith("unsupported call:")
+        or stripped.startswith("failed to parse function arguments:")
+        or stripped.startswith("approval policy is Never; reject command")
+    )
+
+
+def _astroncode_failure_prefix(text: str) -> bool:
+    low = text.lstrip().lower()
+    return low.startswith(_ASTRONCODE_FAILURE_PREFIXES)
+
+
+def _astroncode_json_payload(text: str):
+    candidate = (
+        text.split("Output:", 1)[1].strip()
+        if "Output:" in text
+        else text.strip()
+    )
+    if not candidate:
+        return None
+    try:
+        return json.loads(candidate)
+    except (TypeError, json.JSONDecodeError):
+        return None
+
+
+def _astroncode_structured_result(payload) -> str:
+    if isinstance(payload, dict):
+        status = payload.get("status")
+        if isinstance(status, int):
+            return "success" if 200 <= status < 400 else "failure"
+        if isinstance(status, str):
+            normalized = status.strip().lower()
+            if normalized in {"success", "completed", "ok"}:
+                return "success"
+            if normalized in {"error", "failed", "failure"}:
+                return "failure"
+            if normalized in {"running", "pending"}:
+                return "unclear"
+        if payload.get("error"):
+            return "failure"
+        if "result" in payload:
+            return _astroncode_structured_result(payload["result"])
+        if "resources" in payload or "content" in payload:
+            return "success"
+        return "success"
+
+    if isinstance(payload, list):
+        categories = []
+        for item in payload:
+            if isinstance(item, dict) and item.get("type") == "text":
+                text = str(item.get("text") or "")
+                categories.append(
+                    "failure" if _astroncode_failure_prefix(text) else "success"
+                )
+            else:
+                categories.append(_astroncode_structured_result(item))
+        if "failure" in categories:
+            return "failure"
+        if "unclear" in categories:
+            return "unclear"
+        return "success"
+
+    if payload is None:
+        return "unclear"
+    return "success"
+
+
+def classify_astroncode(tool_name: str, content: str, status: str = "") -> str:
+    """AstronCode 判定：优先使用结构化状态和新版工具返回契约。"""
+    text = content or ""
+    normalized_status = (status or "").strip().lower()
+
+    if normalized_status in {"completed", "success", "ok"}:
+        return "success"
+    if normalized_status in {"error", "failed", "failure"}:
+        return "format_error" if _is_format_error(text) else "failure"
+    if normalized_status in {"running", "pending"}:
+        return "unclear"
+
+    if _is_format_error(text):
+        return "format_error"
+
+    stripped = text.lstrip()
+    if _astroncode_failure_prefix(stripped):
+        return "failure"
+
+    if tool_name == "bash":
+        match = re.match(r"Exit code:\s*(-?\d+)", stripped)
+        if match:
+            return "success" if int(match.group(1)) == 0 else "failure"
+
+    if tool_name == "read":
+        if all(marker in text for marker in ("<path>", "<type>", "<content>")):
+            return "success"
+
+    if tool_name in {"write", "edit"}:
+        if "<path>" in text and any(
+            marker in text for marker in _ASTRONCODE_FILE_SUCCESS_MARKERS
+        ):
+            return "success"
+
+    if tool_name in _ASTRONCODE_DISCOVERY_TOOLS:
+        return "success" if stripped else "unclear"
+
+    if tool_name in _ASTRONCODE_FETCH_TOOLS:
+        payload = _astroncode_json_payload(text)
+        if payload is not None:
+            return _astroncode_structured_result(payload)
+        http_status = re.search(r'\{\s*"status"\s*:\s*(\d+)', stripped)
+        if http_status:
+            return "success" if 200 <= int(http_status.group(1)) < 400 else "failure"
+
+    if tool_name in _ASTRONCODE_PLAIN_RESULT_TOOLS:
+        return "success" if stripped else "unclear"
+
+    if tool_name in _ASTRONCODE_JSON_TOOLS:
+        payload = _astroncode_json_payload(text)
+        if payload is not None:
+            return _astroncode_structured_result(payload)
+
+    return classify_codex(tool_name, text, status)
 
 
 # ---------------------------------------------------------------------------
@@ -341,7 +511,8 @@ def classify_hermesagent(tool_name: str, content: str, status: str = "") -> str:
     return "success" if content else "unclear"
 
 
-register_classifier(("codex", "astroncode"), classify_codex)
+register_classifier(("codex",), classify_codex)
+register_classifier(("astroncode",), classify_astroncode)
 register_classifier(("opencode",), classify_opencode)
 register_classifier(("openclaw", "astronclaw"), classify_openclaw)
 register_classifier(("deepseek-harness",), classify_deepseek_harness)

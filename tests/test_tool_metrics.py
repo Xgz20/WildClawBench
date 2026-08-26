@@ -15,6 +15,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from utils.tool_metrics import (  # noqa: E402
+    classify_astroncode,
     classify_codex,
     classify_opencode,
     execution_success_rate,
@@ -84,6 +85,138 @@ class CodexClassifierTest(unittest.TestCase):
             classify_codex("request_user_input", "request_user_input is unavailable in Default mode"),
             "failure",
         )
+
+
+class AstronCodeClassifierTest(unittest.TestCase):
+    def test_bash_uses_exit_code_before_output_keywords(self):
+        self.assertEqual(
+            classify_astroncode(
+                "bash",
+                "Exit code: 0\nWall time: 0.1 seconds\nOutput:\nTraceback example",
+            ),
+            "success",
+        )
+        self.assertEqual(
+            classify_astroncode("bash", "Exit code: 127\nOutput:\ncommand not found"),
+            "failure",
+        )
+
+    def test_file_tools_use_structured_result_contracts(self):
+        source = (
+            "<path>/tmp/cache.py</path>\n<type>file</type>\n<content>\n"
+            "raise ValueError('example')\n</content>"
+        )
+        self.assertEqual(classify_astroncode("read", source), "success")
+        self.assertEqual(
+            classify_astroncode(
+                "read", "cannot read `/tmp/missing`: No such file or directory"
+            ),
+            "failure",
+        )
+        self.assertEqual(
+            classify_astroncode(
+                "write",
+                "<path>/tmp/output.txt</path>\n<type>file</type>\n"
+                "<content>\nCreated file\n</content>",
+            ),
+            "success",
+        )
+        self.assertEqual(
+            classify_astroncode(
+                "edit",
+                "<path>/tmp/output.txt</path>\n<type>file</type>\n"
+                "<content>\nUpdated file (1 replacement)\n</content>",
+            ),
+            "success",
+        )
+
+    def test_fetch_and_search_tools_use_structured_payloads(self):
+        for tool_name in ("fetch", "get", "stealthy_fetch"):
+            self.assertEqual(
+                classify_astroncode(
+                    tool_name,
+                    'Wall time: 0.1 seconds\nOutput:\n{"status":200,'
+                    '"content":["Exception: appears in page text"]}',
+                ),
+                "success",
+            )
+        self.assertEqual(
+            classify_astroncode(
+                "get", 'Wall time: 0.1 seconds\nOutput:\n{"status":404,"content":[]}'
+            ),
+            "failure",
+        )
+        self.assertEqual(
+            classify_astroncode(
+                "web_search", 'Wall time: 0.1 seconds\nOutput:\n{"result":"hit"}'
+            ),
+            "success",
+        )
+        for tool_name in ("bulk_fetch", "bulk_get", "bulk_stealthy_fetch"):
+            self.assertEqual(
+                classify_astroncode(
+                    tool_name,
+                    'Wall time: 0.1 seconds\nOutput:\n{"result":['
+                    '{"status":200,"content":["ok"]},{"status":500,"content":[]}]}',
+                ),
+                "failure",
+            )
+        self.assertEqual(
+            classify_astroncode("web-search", "# General result 1: Example"),
+            "success",
+        )
+
+    def test_discovery_and_resource_tools_treat_empty_results_as_success(self):
+        self.assertEqual(classify_astroncode("glob", "No files found"), "success")
+        self.assertEqual(classify_astroncode("grep", "No matches found"), "success")
+        self.assertEqual(
+            classify_astroncode("list_mcp_resources", '{"resources":[]}'),
+            "success",
+        )
+        self.assertEqual(
+            classify_astroncode(
+                "list_mcp_resource_templates", '{"resourceTemplates":[]}'
+            ),
+            "success",
+        )
+        self.assertEqual(
+            classify_astroncode(
+                "open_session",
+                'Wall time: 0.1 seconds\nOutput:\n{"session_id":"abc"}',
+            ),
+            "success",
+        )
+        self.assertEqual(
+            classify_astroncode(
+                "screenshot",
+                'Wall time: 0.1 seconds\nOutput:\n{"result":[{"type":"image"}]}',
+            ),
+            "success",
+        )
+        self.assertEqual(
+            classify_astroncode(
+                "view_image",
+                "view_image is not allowed because you do not support image inputs",
+            ),
+            "failure",
+        )
+
+    def test_status_wins_and_unknown_results_remain_unclear(self):
+        self.assertEqual(
+            classify_astroncode("custom_tool", "anything", "completed"), "success"
+        )
+        self.assertEqual(
+            classify_astroncode("custom_tool", "anything", "error"), "failure"
+        )
+        self.assertEqual(
+            classify_astroncode(
+                "exec_command",
+                "approval policy is Never; reject command — you cannot ask for "
+                "escalated permissions if the approval policy is Never",
+            ),
+            "format_error",
+        )
+        self.assertEqual(classify_astroncode("custom_tool", "anything"), "unclear")
 
 
 class OpenCodeClassifierTest(unittest.TestCase):
@@ -156,6 +289,28 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(m["success"], 2)  # exec_command + update_plan
         self.assertEqual(m["format_error"], 1)  # exec
         self.assertEqual(m["by_tool"]["exec_command"]["success"], 1)
+
+    def test_astroncode_jsonl_uses_new_tool_contracts(self):
+        lines = [
+            _codex_line("assistant", _tool_use("a1", "bash")),
+            _codex_line(
+                "user",
+                _tool_result("a1", "Exit code: 0\nOutput:\nTraceback in output"),
+            ),
+            _codex_line("assistant", _tool_use("a2", "glob")),
+            _codex_line("user", _tool_result("a2", "No files found")),
+            _codex_line("assistant", _tool_use("a3", "read")),
+            _codex_line(
+                "user",
+                _tool_result("a3", "cannot read `/tmp/nope`: No such file or directory"),
+            ),
+        ]
+        path = self._write("chat_astroncode.jsonl", "\n".join(lines) + "\n")
+        metrics = parse_tool_metrics(path, "astroncode")
+        self.assertEqual(metrics["total"], 3)
+        self.assertEqual(metrics["success"], 2)
+        self.assertEqual(metrics["failure"], 1)
+        self.assertEqual(metrics["unclear"], 0)
 
     def test_opencode_multiline_pretty_json(self):
         # OpenCode：多个 pretty-printed 对象直接拼接（对象跨多行）
