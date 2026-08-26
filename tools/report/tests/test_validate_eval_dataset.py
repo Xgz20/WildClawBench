@@ -30,8 +30,8 @@ def _website_task(
     workspace: str = "workspace/extension/07_Website_Generation/task_012_sample_site",
 ) -> Path:
     prompt = prompt or (
-        "Create the site with package.json, then run npm install and npm run build. "
-        "It must support npm run start -- --host 127.0.0.1 --port 4173."
+        "请在 `/tmp_workspace` 下创建项目。如果启动网站时遇到端口冲突，"
+        "请自行选择其他可用端口。"
     )
     rubric = rubric or """### Criterion 1: Runtime (key: runtime_key, primary: content_structure, secondary: basic_content, weight: 0.5)
 Score 1.0: pass

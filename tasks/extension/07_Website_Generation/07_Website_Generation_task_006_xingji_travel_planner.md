@@ -17,7 +17,7 @@ tags:
 
 ## Prompt
 
-请在 /tmp_workspace 下从空目录创建一个可运行的中文旅行行程规划器网页项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。页面运行时不要依赖外部图片、字体、接口或其他网络资源；不要接入真实支付或发送真实请求。
+请在 `/tmp_workspace` 下创建项目。如果启动网站时遇到端口冲突，请自行选择其他可用端口。
 
 我想做一个叫“行迹 Planner”的中文旅行行程规划器，方便把一次旅行按天整理清楚。不需要登录，保存过的行程直接留在浏览器里，下次打开还能从历史行程继续编辑。
 
@@ -33,7 +33,7 @@ tags:
 
 ## Expected Behavior
 
-Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内容、交互和视觉要求；项目应能在本地 npm install、npm run build 并通过 npm run start 启动，且不依赖外部网络资源。
+Agent 应按 Prompt 完成页面内容、交互和视觉要求。
 
 评分由 Playwright 运行时检查（内容与交互类评分点）和基于截图的视觉判分（视觉与布局类评分点）共同完成；每个评分点按“预设状态 → 操作 → 期望结果”独立判定。
 

@@ -7,7 +7,7 @@
 3. 检查器必须静态声明字符串序列 `RUNTIME_KEYS` 和 `VISUAL_KEYS`。前者精确覆盖 Rubric 中所有非 `visual_layout` key，后者精确覆盖所有 `visual_layout` key，均不得重复。
 4. 检查器必须声明 `async run(page, screenshot_dir)`；存在视觉 key 时必须声明 `async capture_visual(page, screenshot_dir)`。
 5. 每个 Rubric Criterion 必须有连续编号、合法且唯一的 key、必填 primary/secondary、正权重，以及 `Score 1.0` 和 `Score 0.0`。primary 只允许 `content_structure`、`interaction_function`、`visual_layout`，所有权重总和允许千分之一以内的十进制舍入误差。
-6. Prompt 必须明确 `package.json`、`npm install`、`npm run build` 和 `npm run start -- --host 127.0.0.1 --port 4173` 标准协议。
+6. Prompt 必须说明项目创建在 `/tmp_workspace` 下；启动网站遇到端口冲突时，应自行选择其他可用端口。具体 npm 安装、构建和启动协议属于评测框架的统一运行约定，不重复写入单题 Prompt。
 7. Workspace 必须为 `workspace/extension/07_Website_Generation/task_<序号>_<slug>` 且包含 `exec/`。这是当前 `src/utils/website_checks.py` 实际复制评测素材的固定契约。
 8. 检查器字符串常量引用 `/tmp_workspace_eval` 时，对应 Workspace 的 `eval/` 必须包含 `.gitkeep` 以外的评测素材。
 
