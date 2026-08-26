@@ -15,8 +15,35 @@ RUNTIME_KEYS = [
     "c11_rule_settlement", "c12_operation_feedback", "c13_information_organization",
     "c14_detail_display", "c15_rule_settlement", "c16_rule_settlement",
     "c17_lists_tables", "c18_lists_tables", "c19_state_persistence",
+    "c24_rule_settlement",
 ]
 VISUAL_KEYS = ["c20_page_layout", "c21_visual_style", "c22_component_style", "c23_responsive_layout"]
+
+UNIT_5_ANSWERS = [
+    ("billion", "num. 十亿"), ("native", "adj. 出生地的；本地的；土著的"),
+    ("attitude", "n. 态度；看法"), ("reference", "n. 指称关系；参考"),
+    ("refer", "vi. 提到；参考；查阅"), ("system", "n. 体系；制度；系统"),
+    ("despite", "prep. 即使；尽管"), ("factor", "n. 因素；要素"),
+    ("based", "adj. 以（某事）为基础的；以……为重要部分（或特征）的"),
+    ("base", "vt. 以……为据点；以……为基础"), ("bone", "n. 骨头；骨（质）"),
+    ("shell", "n. 壳；壳状物"), ("symbol", "n. 符号；象征"),
+    ("carve", "vt. & vi. 雕刻"), ("dynasty", "n. 王朝；朝代"),
+    ("variety", "n. （植物、语言等的）变体；异体；多样化"),
+    ("major", "adj. 主要的；重要的；大的"), ("dialect", "n. 地方话；方言"),
+    ("means", "n. 方式；方法；途径"), ("classic", "adj. 传统的；最优秀的；典型的"),
+    ("regard", "n. 尊重；关注"), ("character", "n. 文字；符号；角色；品质；特点"),
+    ("calligraphy", "n. 书法；书法艺术"), ("global", "adj. 全球的；全世界的"),
+    ("affair", "n. 公共事务；事件；关系"), ("appreciate", "vt. 欣赏；重视；感激；领会"),
+    ("specific", "adj. 特定的；明确的；具体的"), ("struggle", "n. & vi. 斗争；奋斗；搏斗"),
+    ("tongue", "n. 舌头；语言"), ("semester", "n. 学期"),
+    ("petrol", "n. （NAmE gas）汽油"), ("subway", "n. （BrE underground）地铁"),
+    ("apartment", "n. （especially NAmE）公寓套房"),
+    ("pants", "n. [pl.]（BrE）内裤；短裤；（especially NAmE）裤子"),
+    ("beg", "vt. 恳求；祈求；哀求"), ("equal", "n. 同等的人；相等物"),
+    ("gap", "n. 间隔；开口；差距"), ("demand", "n. 要求；需求"),
+    ("vocabulary", "n. 词汇"), ("description", "n. 描写（文字）；形容"),
+    ("relate", "vt. 联系；讲述"),
+]
 
 
 async def _select_with(page, text):
@@ -182,6 +209,36 @@ async def run(page, screenshot_dir):
         await page.reload(wait_until="domcontentloaded")
         return await contains_texts(page, ["课本单词本", "我的进度"])
     await r.check("c19_state_persistence", persistence)
+
+    async def progress_numbers_reconcile():
+        await reset_page(page)
+        await _start_learn(page, "必修一", "Unit 1")
+        await _answer(page, "认识", 10)
+        await click_named_any(page, ["回到首页", "返回首页"])
+        body = await page.locator("body").inner_text()
+        totals = [int(value) for value in re.findall(r"\b\d+\b", body)]
+        progress_ok = await contains_texts(page, ["已掌握", "学习中", "10", "待学习"])
+        await click_named_any(page, ["进入单词考察", "单词考察", "开始考察"])
+        await _select_with(page, "必修一")
+        await _select_with(page, "Unit 5")
+        if not await contains_texts(page, ["41", "考察"]):
+            return False
+        await click_named_any(page, ["开始考察"])
+        for headword, answer in UNIT_5_ANSWERS:
+            if not await contains_texts(page, [headword]):
+                return False
+            await click_named_any(page, [answer])
+        result_ok = await contains_texts(page, ["41", "41", "100 分", "全对"])
+        await click_named_any(page, ["回到首页", "返回首页"])
+        final_body = await page.locator("body").inner_text()
+        summary_ok = await contains_texts(page, [
+            "571", "已掌握", "41", "学习中", "10", "待学习", "520",
+            "考察记录", "41", "答对 41", "得分 100", "平均分", "100",
+        ])
+        return progress_ok and result_ok and summary_ok and any(value >= 500 for value in totals) and not any(
+            value in final_body for value in ["NaN", "Infinity", "undefined"]
+        )
+    await r.check("c24_rule_settlement", progress_numbers_reconcile)
     return r.results
 
 

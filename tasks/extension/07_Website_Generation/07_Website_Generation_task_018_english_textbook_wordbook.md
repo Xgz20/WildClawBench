@@ -17,7 +17,7 @@ tags:
 
 ## Prompt
 
-请在 /tmp_workspace 下从空目录创建一个可运行的中文英语单词记忆与自测工具网页项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。页面运行时不要依赖外部图片、字体、接口或其他网络资源；不要接入真实支付或发送真实请求。
+请在 `/tmp_workspace` 下创建项目。如果启动网站时遇到端口冲突，请自行选择其他可用端口。
 
 题目提供的输入素材已经放在 /tmp_workspace/assets 目录中，请直接使用这些文件，不要用自行编造的数据替代。
 
@@ -43,7 +43,7 @@ tags:
 
 ## Expected Behavior
 
-Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内容、交互和视觉要求；项目应能在本地 npm install、npm run build 并通过 npm run start 启动，且不依赖外部网络资源。
+Agent 应按 Prompt 完成页面内容、交互和视觉要求。
 
 题目素材位于 /tmp_workspace/assets，页面内容必须与素材一致，不得用编造数据替代。
 
@@ -64,7 +64,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 检查首页显示的进度信息和主要入口 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0434)
+### Criterion 1: 检查首页显示的进度信息和主要入口 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0416)
 
 预设状态：首页在 1440×900 视口首次打开，尚未学习或考察过任何单词
 
@@ -76,7 +76,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 先查看必修一可选的单元 (key: c02_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0434)
+### Criterion 2: 先查看必修一可选的单元 (key: c02_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0416)
 
 预设状态：已进入单词学习的选择环节，分册默认或已选为必修一
 
@@ -88,7 +88,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 按页面提供的方式点开“待学习”这一类 (key: c03_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0434)
+### Criterion 3: 按页面提供的方式点开“待学习”这一类 (key: c03_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0416)
 
 预设状态：首页已打开，尚未学习或考察过任何单词
 
@@ -100,7 +100,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 在词表中找到 teenager、architecture、heritage、ha… (key: c04_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0434)
+### Criterion 4: 在词表中找到 teenager、architecture、heritage、ha… (key: c04_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0416)
 
 预设状态：首页已打开，词库已按课本整理完毕
 
@@ -112,7 +112,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 在词表中找到 species、illegal、athlete、fluent 这四… (key: c05_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0434)
+### Criterion 5: 在词表中找到 species、illegal、athlete、fluent 这四… (key: c05_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0416)
 
 预设状态：首页已打开，词库已按课本整理完毕
 
@@ -124,7 +124,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 先查看卡片上显示的内容 (key: c06_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.0434)
+### Criterion 6: 先查看卡片上显示的内容 (key: c06_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.0416)
 
 预设状态：尚未学习过任何单词，已选择必修一 Unit 1 并开始学习，当前停在这一组第一个单词的卡片上
 
@@ -136,7 +136,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 核对卡片上显示的音标、词性与中文释义、例句和例句翻译 (key: c07_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0434)
+### Criterion 7: 核对卡片上显示的音标、词性与中文释义、例句和例句翻译 (key: c07_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0416)
 
 预设状态：已选择必修一 Unit 1 并开始学习，对当前出现的第一个单词点击了“认识”，卡片已显示这个词的详细信息
 
@@ -148,7 +148,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 选择必修一 Unit 1 开始学习 (key: c08_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0434)
+### Criterion 8: 选择必修一 Unit 1 开始学习 (key: c08_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0416)
 
 预设状态：尚未学习或考察过任何单词，首页显示已掌握 0 个、学习中 0 个
 
@@ -160,7 +160,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 再次选择必修一 Unit 1 开始学习 (key: c09_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0434)
+### Criterion 9: 再次选择必修一 Unit 1 开始学习 (key: c09_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0416)
 
 预设状态：尚未考察过任何单词，已完成一次必修一 Unit 1 的学习，那一组 10 个词都点了“认识”，首页显示学习中 10 个、已掌握 0 个
 
@@ -172,7 +172,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 对这一组第一个出现的单词点击“不认识” (key: c10_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0434)
+### Criterion 10: 对这一组第一个出现的单词点击“不认识” (key: c10_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0416)
 
 预设状态：尚未学习或考察过任何单词，已选择必修一 Unit 2 并开始学习
 
@@ -184,7 +184,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 对这一组第一个出现的单词点击“不认识” (key: c11_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0434)
+### Criterion 11: 对这一组第一个出现的单词点击“不认识” (key: c11_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0416)
 
 预设状态：尚未学习或考察过任何单词，已选择必修一 Unit 3 并开始学习
 
@@ -196,7 +196,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 对这一组 10 个单词都点击“认识” (key: c12_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.0434)
+### Criterion 12: 对这一组 10 个单词都点击“认识” (key: c12_operation_feedback, primary: interaction_function, secondary: operation_feedback, weight: 0.0416)
 
 预设状态：尚未学习或考察过任何单词，已选择必修一 Unit 1 并开始学习
 
@@ -208,7 +208,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 13: 查看开始考察前的说明 (key: c13_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0434)
+### Criterion 13: 查看开始考察前的说明 (key: c13_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0416)
 
 预设状态：尚未学习或考察过任何单词，已在单词考察里选择必修一 Unit 5（该单元共 41 个词，是两册里词数最少的单元）
 
@@ -220,7 +220,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 14: 查看这道题给出的信息和四个选项 (key: c14_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0434)
+### Criterion 14: 查看这道题给出的信息和四个选项 (key: c14_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0416)
 
 预设状态：尚未学习或考察过任何单词，已选择必修一 Unit 5 并进入单词考察，当前停在第一道题上
 
@@ -232,7 +232,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 15: 把 41 道题全部选择与词表一致的正确选项 (key: c15_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0434)
+### Criterion 15: 把 41 道题全部选择与词表一致的正确选项 (key: c15_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0416)
 
 预设状态：尚未学习或考察过任何单词，已选择必修一 Unit 5 并进入单词考察，这个单元共 41 个词
 
@@ -244,7 +244,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 16: 对前 3 道题选择与词表一致的正确选项 (key: c16_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0434)
+### Criterion 16: 对前 3 道题选择与词表一致的正确选项 (key: c16_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0416)
 
 预设状态：尚未学习或考察过任何单词，已选择必修一 Unit 5 并进入单词考察，这个单元共 41 个词
 
@@ -256,21 +256,21 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 17: 在首页查看考察记录和平均分 (key: c17_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0434)
+### Criterion 17: 查看考察记录 (key: c17_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0416)
 
 预设状态：尚未学习过任何单词，已完成一次必修一 Unit 5 的考察，41 道题全部答对
 
-操作：在首页查看考察记录和平均分
+操作：查看考察记录，并在首页查看平均分
 
-期望结果：考察记录里出现这一次的记录，能看出考的是必修一 Unit 5、共 41 题、得分 100 分。首页的历次平均分显示为 100 分，与这条记录的得分一致，原来的空状态提示消失。
+期望结果：考察记录里出现这一次的记录（记录放在首页或独立的记录页都可以），能看出考的是必修一 Unit 5、共 41 题、得分 100 分。首页的历次平均分显示为 100 分，与这条记录的得分一致。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 18: 按页面提供的方式打开这条记录的逐题明细 (key: c18_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0434)
+### Criterion 18: 按页面提供的方式打开这条记录的逐题明细 (key: c18_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0416)
 
-预设状态：尚未学习过任何单词，已完成一次必修一 Unit 5 的考察，其中前 3 题答对、剩下 38 题答错，首页已能看到这条考察记录
+预设状态：尚未学习过任何单词，已完成一次必修一 Unit 5 的考察，其中前 3 题答对、剩下 38 题答错，页面上已能看到这条考察记录
 
 操作：按页面提供的方式打开这条记录的逐题明细
 
@@ -280,7 +280,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 19: 刷新页面，再查看首页的进度、平均分和考察记录 (key: c19_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0434)
+### Criterion 19: 刷新页面，再查看首页的进度、平均分和考察记录 (key: c19_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0416)
 
 预设状态：已完成一次必修一 Unit 1 的学习（那一组 10 个词都点“认识”）和一次必修一 Unit 5 的考察（41 题全部答对），首页显示已掌握 41 个、学习中 10 个，平均分 100 分
 
@@ -292,19 +292,19 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 20: 检查首页各区域的排布 (key: c20_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0434)
+### Criterion 20: 检查首页各区域的排布 (key: c20_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0416)
 
 预设状态：首页在 1440×900 视口打开，已完成一次必修一 Unit 1 的学习和一次必修一 Unit 5 的考察
 
 操作：检查首页各区域的排布
 
-期望结果：桌面端进度概览、两个入口和考察记录三部分层次清楚、互不遮挡，三类进度数字在当前视口里不需要横向滚动就能读到，考察记录有足够的展示空间，整页没有横向滚动条。点开某一类单词后，长长的词表不会把页面撑破或遮住其他区域。
+期望结果：桌面端进度概览、平均分和两个入口层次清楚、互不遮挡，三类进度数字在当前视口里不需要横向滚动就能读到，整页没有横向滚动条。点开某一类单词后，长长的词表不会把页面撑破或遮住其他区域。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 21: 检查整体配色、文案语气和三类进度的呈现 (key: c21_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.0434)
+### Criterion 21: 检查整体配色、文案语气和三类进度的呈现 (key: c21_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.0416)
 
 预设状态：首页在 1440×900 视口打开，已完成一次必修一 Unit 1 的学习和一次必修一 Unit 5 的考察
 
@@ -316,7 +316,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 22: 检查卡片上单词、音标与释义、例句的字号和排布 (key: c22_component_style, primary: visual_layout, secondary: component_style, weight: 0.0434)
+### Criterion 22: 检查卡片上单词、音标与释义、例句的字号和排布 (key: c22_component_style, primary: visual_layout, secondary: component_style, weight: 0.0416)
 
 预设状态：已选择必修一 Unit 1 并开始学习，当前停在某个单词的卡片上，且已点击“认识”显示出释义与例句
 
@@ -328,13 +328,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 23: 在窄屏下查看首页进度与考察记录 (key: c23_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0452)
+### Criterion 23: 在窄屏下查看首页进度与考察记录 (key: c23_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0416)
 
 预设状态：视口切换为 375×812，已完成一次必修一 Unit 1 的学习和一次必修一 Unit 5 的考察（视口 375×812）
 
 操作：在窄屏下查看首页进度与考察记录，点开一类单词看列表，再进入一次单词学习并对一个词点击“认识”，然后进入单词考察查看一道题的选项
 
 期望结果：窄屏下页面变为单栏且没有横向滚动，三类进度数字、单词列表和考察记录完整可读不被截断。学习卡片的单词、音标、释义和例句都能完整显示，“认识”“不认识”按钮可以正常点击；考察题的四个选项完整可读、可以点选。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 24: 通读首页、进度、记录等各处 (key: c24_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0432)
+
+预设状态：已完成一次必修一 Unit 1 的学习（那一组 10 个词都点“认识”）和一次必修一 Unit 5 的考察（41 题全部答对）
+
+操作：通读首页、进度、记录等各处，把页面展示的每一个数字（词数、进度、题数、得分、平均分等）连同名目记下来
+
+期望结果：页面展示哪些数字不作要求；但凡展示出来的，都必须与词库和已发生的学习、考察记录推算一致，页面各处的数字之间也不得互相矛盾（例如三类进度之和不等于总词数，或平均分与历次记录的得分算不上）。出现任何一处矛盾，本条不通过。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 

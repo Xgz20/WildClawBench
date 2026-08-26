@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 
 try:
     from ..common import (
@@ -24,6 +25,7 @@ RUNTIME_KEYS = [
     "c14_content_editing", "c15_detail_display", "c16_operation_feedback",
     "c17_content_editing", "c18_lists_tables", "c19_form_validation", "c20_state_persistence",
     "c23_cross_region_linkage", "c24_file_upload_and_download", "c25_data_visualization",
+    "c26_rule_settlement",
 ]
 VISUAL_KEYS = ["c21_visual_style", "c22_responsive_layout"]
 
@@ -512,6 +514,23 @@ async def run(page, screenshot_dir):
             and await page.locator("[data-date], [role='gridcell'], .calendar-cell").count() >= 365
         )
     await recorder.check("c25_data_visualization", month_alignment)
+
+    async def figures_are_consistent():
+        if not await _setup(page, date="2025-01-01"):
+            return False
+        if not await _travel_upload(page, "travel-hangzhou-west-lake.jpg", "浙江省", "杭州市"):
+            return False
+        if not await _travel_upload(page, "travel-shanghai-bund.jpg", "上海市", "上海市"):
+            return False
+        await _tab(page, "首页")
+        expected_days = (date.today() - date(2025, 1, 1)).days
+        body = await page.locator("body").inner_text()
+        return (
+            str(expected_days) in body
+            and await contains_texts(page, ["已恋爱", "浙江", "杭州", "上海"])
+            and not any(value in body for value in ["NaN", "Infinity", "undefined", "Invalid Date"])
+        )
+    await recorder.check("c26_rule_settlement", figures_are_consistent)
     return recorder.results
 
 

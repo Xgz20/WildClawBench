@@ -17,7 +17,7 @@ tags:
 
 ## Prompt
 
-请在 /tmp_workspace 下从空目录创建一个可运行的中文求职管理/投递跟进工具网页项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。页面运行时不要依赖外部图片、字体、接口或其他网络资源；不要接入真实支付或发送真实请求。
+请在 `/tmp_workspace` 下创建项目。如果启动网站时遇到端口冲突，请自行选择其他可用端口。
 
 我最近在找工作，同时在投的公司有几十家，光靠聊天记录和收藏夹理不清哪家走到哪一步了，想做个网页专门管这件事。
 
@@ -29,7 +29,7 @@ tags:
 
 ## Expected Behavior
 
-Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内容、交互和视觉要求；项目应能在本地 npm install、npm run build 并通过 npm run start 启动，且不依赖外部网络资源。
+Agent 应按 Prompt 完成页面内容、交互和视觉要求。
 
 评分由 Playwright 运行时检查（内容与交互类评分点）和基于截图的视觉判分（视觉与布局类评分点）共同完成；每个评分点按“预设状态 → 操作 → 期望结果”独立判定。
 
@@ -48,7 +48,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 通览整页，找出统计看板上的四项数字、两张图所在的区域、能看到投递清单的地方，以及… (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0625)
+### Criterion 1: 通览整页，找出统计看板上的四项数字、两张图所在的区域、能看到投递清单的地方，以及… (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0588)
 
 预设状态：首页已在 1440×900 视口打开，浏览器本地还没有保存过任何投递记录
 
@@ -60,7 +60,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 通过新增入口添加一条投递记录 (key: c02_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0625)
+### Criterion 2: 通过新增入口添加一条投递记录 (key: c02_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录
 
@@ -72,7 +72,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 打开新增入口 (key: c03_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0625)
+### Criterion 3: 打开新增入口 (key: c03_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录
 
@@ -84,7 +84,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 再次打开新增入口 (key: c04_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0625)
+### Criterion 4: 再次打开新增入口 (key: c04_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录；先新增两条记录，第一条公司名称“字节跳动”、岗位名称“前端工程师”，第二条公司名称“美团”、岗位名称“后端工程师”，其余字段都不填
 
@@ -96,7 +96,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 再次打开新增入口 (key: c05_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0625)
+### Criterion 5: 再次打开新增入口 (key: c05_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录；先新增一条记录：公司名称“网易”、岗位名称“测试开发”、base 地“杭州”，其余字段不填
 
@@ -108,7 +108,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 回到统计看板 (key: c06_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0625)
+### Criterion 6: 回到统计看板 (key: c06_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录；先新增三条记录，公司与岗位分别是“字节跳动／前端工程师”“美团／前端工程师”“网易／测试开发”，其中“字节跳动”那条的投递状态设为“已offer”，“美团”那条设为“已终止”，“网易”那条保持默认状态不动，其余字段都不填
 
@@ -120,7 +120,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 回到统计看板 (key: c07_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0625)
+### Criterion 7: 回到统计看板 (key: c07_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录；先新增三条记录，公司与岗位分别是“字节跳动／前端工程师”“美团／前端工程师”“网易／测试开发”，前两条的投递状态保持默认不动，“网易”那条的投递状态设为“已一面”，其余字段都不填
 
@@ -132,7 +132,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 回到统计看板 (key: c08_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0625)
+### Criterion 8: 回到统计看板 (key: c08_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录；先新增三条记录，公司与岗位分别是“字节跳动／前端工程师”“美团／前端工程师”“网易／测试开发”，其余字段都不填，投递状态一律保持默认
 
@@ -144,7 +144,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 打开这条记录的修改入口 (key: c09_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0625)
+### Criterion 9: 打开这条记录的修改入口 (key: c09_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录；先新增一条记录：公司名称“字节跳动”、岗位名称“前端工程师”，其余字段不填，投递状态保持默认
 
@@ -156,7 +156,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 打开“字节跳动”那条的修改入口 (key: c10_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0625)
+### Criterion 10: 打开“字节跳动”那条的修改入口 (key: c10_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录；先按顺序新增两条记录，先加“字节跳动／前端工程师”，再加“美团／后端工程师”，其余字段都不填
 
@@ -168,7 +168,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 在投递清单里删除“美团／后端工程师”这一条（若页面弹出确认 (key: c11_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0625)
+### Criterion 11: 在投递清单里删除“美团／后端工程师”这一条（若页面弹出确认 (key: c11_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录；先新增两条记录：“字节跳动／前端工程师”和“美团／后端工程师”，其余字段都不填
 
@@ -180,7 +180,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 刷新页面，然后依次查看投递清单和统计看板 (key: c12_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0625)
+### Criterion 12: 刷新页面，然后依次查看投递清单和统计看板 (key: c12_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录；先新增两条记录：“字节跳动／前端工程师”（投递状态设为“已offer”）和“美团／后端工程师”（投递状态保持默认），其余字段都不填，并确认清单里两条都在
 
@@ -192,7 +192,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 13: 回到统计看板 (key: c13_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0625)
+### Criterion 13: 回到统计看板 (key: c13_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0588)
 
 预设状态：首页已在 1440×900 视口打开；先新增两条记录：“字节跳动／前端工程师”（投递状态设为“已offer”）和“美团／后端工程师”（投递状态保持默认），其余字段都不填
 
@@ -204,7 +204,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 14: 在投递清单里对比这三条记录的投递状态是怎么标出来的 (key: c14_component_style, primary: visual_layout, secondary: component_style, weight: 0.0625)
+### Criterion 14: 在投递清单里对比这三条记录的投递状态是怎么标出来的 (key: c14_component_style, primary: visual_layout, secondary: component_style, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录；先新增三条记录，公司与岗位分别是“字节跳动／前端工程师”“美团／前端工程师”“网易／测试开发”，其中“字节跳动”那条的投递状态设为“已offer”，“美团”那条设为“已终止”，“网易”那条保持默认状态，其余字段都不填
 
@@ -216,7 +216,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 15: 先检查整页是否出现横向滚动 (key: c15_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0625)
+### Criterion 15: 先检查整页是否出现横向滚动 (key: c15_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0588)
 
 预设状态：浏览器视口已调整为 375×812 并打开首页，还没有任何投递记录（视口 375×812）
 
@@ -228,13 +228,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 16: 到投递清单那一部分 (key: c16_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0625)
+### Criterion 16: 到投递清单那一部分 (key: c16_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0588)
 
 预设状态：首页已打开，还没有任何投递记录；先新增三条记录，公司与岗位分别是“字节跳动／前端工程师”“美团／后端工程师”“网易／测试开发”，其余字段都不填
 
 操作：到投递清单那一部分，通览这三条记录（若清单分组或分页，翻到能看全三条的位置）
 
 期望结果：三条记录一条不少地列在清单里，每条自己的公司名和岗位名都完整可读且配对正确：“字节跳动”配“前端工程师”、“美团”配“后端工程师”、“网易”配“测试开发”，没有串行、没有互相覆盖或截断。清单里也没有多出没录入过的记录。三条各自都带有投递状态，且都是默认的“已投递”。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 17: 通读统计看板、两张图和清单区域 (key: c17_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0592)
+
+预设状态：首页已打开，还没有任何投递记录；先新增三条记录，公司与岗位分别是“字节跳动／前端工程师”“美团／前端工程师”“网易／测试开发”，其中“字节跳动”那条投递状态设为“已offer”，“美团”那条设为“已终止”，“网易”那条保持默认，其余字段都不填
+
+操作：通读统计看板、两张图和清单区域，把页面展示的每一个数字连同名目记下来
+
+期望结果：页面展示哪些数字不作要求；但凡展示出来的，都必须与这三条记录推算一致，页面各处的数字之间也不得互相矛盾（例如环形图或条形图上标注的数量与四项统计数字对不上）。出现任何一处矛盾，本条不通过。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 

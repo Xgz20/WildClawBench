@@ -20,10 +20,9 @@ ALLOWED_PRIMARY_DIMENSIONS = {
 }
 WEBSITE_WORKSPACE_ROOT = Path("workspace/extension/07_Website_Generation")
 STARTUP_CONTRACT_FRAGMENTS = (
-    "package.json",
-    "npm install",
-    "npm run build",
-    "npm run start -- --host 127.0.0.1 --port 4173",
+    "/tmp_workspace",
+    "端口冲突",
+    "其他可用端口",
 )
 
 _MODULE_NAME_RE = re.compile(r"(task_\d+_[A-Za-z0-9_]+)$")
@@ -318,7 +317,7 @@ def validate_website_contract(
         issues.append(
             _issue(
                 "WEBSITE_STARTUP_CONTRACT_MISSING",
-                "Web Prompt 缺少标准 npm 构建或启动协议",
+                "Web Prompt 缺少项目目录或端口冲突处理说明",
                 doc,
                 evidence={"missing": missing_startup},
             )

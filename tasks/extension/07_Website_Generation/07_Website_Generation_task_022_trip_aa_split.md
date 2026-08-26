@@ -17,13 +17,13 @@ tags:
 
 ## Prompt
 
-请在 /tmp_workspace 下从空目录创建一个可运行的中文多人费用分摊结算工具网页项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。页面运行时不要依赖外部图片、字体、接口或其他网络资源；不要接入真实支付或发送真实请求。
+请在 `/tmp_workspace` 下创建项目。如果启动网站时遇到端口冲突，请自行选择其他可用端口。
 
 上次几个人出去玩，路上的钱都是这个垫一笔那个垫一笔，比如小王给我和小周买了冰淇淋，我给所有人付了酒店钱，想要个页面算清楚最后谁该给谁多少。
 
 ## Expected Behavior
 
-Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内容、交互和视觉要求；项目应能在本地 npm install、npm run build 并通过 npm run start 启动，且不依赖外部网络资源。
+Agent 应按 Prompt 完成页面内容、交互和视觉要求。
 
 评分由 Playwright 运行时检查（内容与交互类评分点）和基于截图的视觉判分（视觉与布局类评分点）共同完成；每个评分点按“预设状态 → 操作 → 期望结果”独立判定。
 
@@ -42,7 +42,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 检查页面提供的入口和分区 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0909)
+### Criterion 1: 检查页面提供的入口和分区 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0833)
 
 预设状态：首页已在 1440×900 视口打开
 
@@ -54,7 +54,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 按页面提供的方式把参与的人确定为四位 (key: c02_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0909)
+### Criterion 2: 按页面提供的方式把参与的人确定为四位 (key: c02_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0833)
 
 预设状态：首页已打开，尚未录入任何款项
 
@@ -66,7 +66,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 录入一笔由阿明垫付的酒店费 1200 元 (key: c03_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0909)
+### Criterion 3: 录入一笔由阿明垫付的酒店费 1200 元 (key: c03_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0833)
 
 预设状态：参与的人已设为阿明、小林、阿德、晓晓四位，尚未录入任何款项
 
@@ -78,7 +78,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 再录入一笔由小林垫付的冰淇淋 60 元 (key: c04_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0909)
+### Criterion 4: 再录入一笔由小林垫付的冰淇淋 60 元 (key: c04_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0833)
 
 预设状态：参与的人为阿明、小林、阿德、晓晓，已录入阿明垫付、四人分摊的 1200 元酒店费
 
@@ -90,7 +90,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 查看每个人各自应摊的金额 (key: c05_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0909)
+### Criterion 5: 查看每个人各自应摊的金额 (key: c05_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0833)
 
 预设状态：参与的人为阿明、小林、阿德、晓晓，已录入两笔：阿明垫付、四人分摊的 1200 元；小林垫付、只由阿德和晓晓分摊的 60 元
 
@@ -102,7 +102,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 查看页面给出的最终转账方案 (key: c06_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0909)
+### Criterion 6: 查看页面给出的最终转账方案 (key: c06_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0833)
 
 预设状态：参与的人为阿明、小林、阿德、晓晓，已录入两笔：阿明垫付、四人分摊的 1200 元；小林垫付、只由阿德和晓晓分摊的 60 元
 
@@ -114,7 +114,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 删除小林垫付的那笔 60 元冰淇淋 (key: c07_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0909)
+### Criterion 7: 删除小林垫付的那笔 60 元冰淇淋 (key: c07_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0833)
 
 预设状态：参与的人为阿明、小林、阿德、晓晓，已录入两笔：阿明垫付、四人分摊的 1200 元；小林垫付、只由阿德和晓晓分摊的 60 元，页面已给出结算结果
 
@@ -126,7 +126,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 先在金额留空的情况下提交一次 (key: c08_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0909)
+### Criterion 8: 先在金额留空的情况下提交一次 (key: c08_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0833)
 
 预设状态：参与的人已设好，页面处于可以录入款项的状态
 
@@ -138,7 +138,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 把分摊这笔钱的人全部取消 (key: c09_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0909)
+### Criterion 9: 把分摊这笔钱的人全部取消 (key: c09_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0833)
 
 预设状态：参与的人已设好，页面处于可以录入款项的状态，金额已填好一个正常数值
 
@@ -150,7 +150,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 检查录入区、款项列表和结算结果三部分的排布 (key: c10_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0909)
+### Criterion 10: 检查录入区、款项列表和结算结果三部分的排布 (key: c10_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0833)
 
 预设状态：参与的人已设好并录入了上述两笔款项，页面在 1440×900 视口打开
 
@@ -162,13 +162,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 在窄屏下确定参与的人、录入一笔只由其中两人分摊的垫付 (key: c11_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.091)
+### Criterion 11: 在窄屏下确定参与的人、录入一笔只由其中两人分摊的垫付 (key: c11_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0833)
 
 预设状态：浏览器视口已调整为 375×812 并打开首页（视口 375×812）
 
 操作：在窄屏下确定参与的人、录入一笔只由其中两人分摊的垫付，并查看款项列表和结算结果
 
 期望结果：页面没有横向滚动，没有任何元素宽度超出视口。录入表单的字段、分摊人选择和按钮都能正常操作，款项列表与结算结果中的姓名和金额完整可读，没有被截断或互相重叠。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 12: 通读款项列表和结算相关的所有区域 (key: c12_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0837)
+
+预设状态：参与的人为阿明、小林、阿德、晓晓，已录入两笔：阿明垫付、四人分摊的 1200 元；小林垫付、只由阿德和晓晓分摊的 60 元
+
+操作：通读款项列表和结算相关的所有区域，把页面展示的每一个金额连同它的名目记下来
+
+期望结果：页面展示哪些金额、用什么名目不作要求；但凡展示出来的——总额、应摊、净额、应收、应付等，以页面实际名目为准——都必须与这两笔录入推算一致，页面各处的金额之间也不得互相矛盾（例如把某人标为应收 0 元，转账方案却让别人付钱给他）。出现任何一处矛盾，本条不通过。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 

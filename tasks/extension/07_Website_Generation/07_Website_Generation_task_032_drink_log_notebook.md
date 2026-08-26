@@ -17,7 +17,7 @@ tags:
 
 ## Prompt
 
-请在 /tmp_workspace 下从空目录创建一个可运行的中文健康记录/饮酒记录与酒精摄入统计网页项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。页面运行时不要依赖外部图片、字体、接口或其他网络资源；不要接入真实支付或发送真实请求。
+请在 `/tmp_workspace` 下创建项目。如果启动网站时遇到端口冲突，请自行选择其他可用端口。
 
 题目提供的输入素材已经放在 /tmp_workspace/assets 目录中，请直接使用这些文件，不要用自行编造的数据替代。
 
@@ -37,7 +37,7 @@ tags:
 
 ## Expected Behavior
 
-Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内容、交互和视觉要求；项目应能在本地 npm install、npm run build 并通过 npm run start 启动，且不依赖外部网络资源。
+Agent 应按 Prompt 完成页面内容、交互和视觉要求。
 
 题目素材位于 /tmp_workspace/assets，页面内容必须与素材一致，不得用编造数据替代。
 
@@ -58,7 +58,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 打开首页 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.04)
+### Criterion 1: 打开首页 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0384)
 
 预设状态：浏览器中没有保存过该网站的数据
 
@@ -70,7 +70,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 在日历上点击今天的次日 (key: c02_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.04)
+### Criterion 2: 在日历上点击今天的次日 (key: c02_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0384)
 
 预设状态：打开首页，当月日历停在默认选中的今天
 
@@ -82,7 +82,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 点击日历上翻到上一个月的控件 (key: c03_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.04)
+### Criterion 3: 点击日历上翻到上一个月的控件 (key: c03_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0384)
 
 预设状态：打开首页，日历停在当前月
 
@@ -94,7 +94,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 点击“小酌一下” (key: c04_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.04)
+### Criterion 4: 点击“小酌一下” (key: c04_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0384)
 
 预设状态：浏览器中没有保存过该网站的数据，打开首页，日历停在默认选中的今天
 
@@ -106,7 +106,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 在首页给今天新增一条记录 (key: c05_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.04)
+### Criterion 5: 在首页给今天新增一条记录 (key: c05_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0384)
 
 预设状态：浏览器中没有保存过该网站的数据
 
@@ -118,7 +118,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 让日历停在上个月 (key: c06_component_style, primary: visual_layout, secondary: component_style, weight: 0.04)
+### Criterion 6: 让日历停在上个月 (key: c06_component_style, primary: visual_layout, secondary: component_style, weight: 0.0384)
 
 预设状态：浏览器中没有保存过该网站的数据；在首页把日历翻到上个月，给该月的某一天新增一条记录，场景“家中”，酒品“稻乡桂花米酒”，饮用量 500 毫升
 
@@ -130,7 +130,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 只把场景选成“酒吧” (key: c07_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.04)
+### Criterion 7: 只把场景选成“酒吧” (key: c07_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0384)
 
 预设状态：打开新增饮酒记录的表单
 
@@ -142,7 +142,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 从酒库中选择“鹭岛小麦白啤”（酒精度 5%）填写 500 毫升 (key: c08_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.04)
+### Criterion 8: 从酒库中选择“鹭岛小麦白啤”（酒精度 5%）填写 500 毫升 (key: c08_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0384)
 
 预设状态：打开新增饮酒记录的表单，场景选成“朋友家”
 
@@ -154,7 +154,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 在照片处依次选择 /tmp_workspace_eval/drink-photo-01.jpg、/tmp_workspace_eval/drink-photo-02.jpg、/tmp_workspace_eval/drink-photo-03.jpg (key: c09_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.04)
+### Criterion 9: 在照片处依次选择 /tmp_workspace_eval/drink-photo-01.jpg、/tmp_workspace_eval/drink-photo-02.jpg、/tmp_workspace_eval/drink-photo-03.jpg (key: c09_file_upload_and_download, primary: interaction_function, secondary: file_upload_and_download, weight: 0.0384)
 
 预设状态：打开新增饮酒记录的表单
 
@@ -166,7 +166,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 打开记录页查看列表 (key: c10_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.04)
+### Criterion 10: 打开记录页查看列表 (key: c10_lists_tables, primary: content_structure, secondary: lists_tables, weight: 0.0384)
 
 预设状态：已给今天新增两条记录：一条场景“餐厅”、酒品“鹭岛小麦白啤”500 毫升，一条场景“家中”、酒品“黎山赤霞珠2019”200 毫升
 
@@ -178,7 +178,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 在记录页打开这条记录的详情 (key: c11_detail_display, primary: content_structure, secondary: detail_display, weight: 0.04)
+### Criterion 11: 在记录页打开这条记录的详情 (key: c11_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0384)
 
 预设状态：已新增一条记录：场景“酒吧”，同饮人“老陈”，价格 180，备注“庆祝升职”，酒品“北岭十二年单一麦芽”，饮用量 50 毫升
 
@@ -190,7 +190,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 在记录页打开这条记录的编辑入口 (key: c12_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.04)
+### Criterion 12: 在记录页打开这条记录的编辑入口 (key: c12_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0384)
 
 预设状态：已新增一条记录：场景“家中”，酒品“鹭岛小麦白啤”（酒精度 5%），饮用量 500 毫升
 
@@ -202,7 +202,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 13: 在记录页点击这条记录的删除入口 (key: c13_popup_overlay, primary: interaction_function, secondary: popup_overlay, weight: 0.04)
+### Criterion 13: 在记录页点击这条记录的删除入口 (key: c13_popup_overlay, primary: interaction_function, secondary: popup_overlay, weight: 0.0384)
 
 预设状态：已新增一条场景为“餐厅”的记录，并且它是记录页里唯一的记录
 
@@ -214,7 +214,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 14: 刷新页面，再打开记录页 (key: c14_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.04)
+### Criterion 14: 刷新页面，再打开记录页 (key: c14_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0384)
 
 预设状态：已新增一条记录：场景“朋友家”，酒品“稻乡桂花米酒”，饮用量 500 毫升
 
@@ -226,7 +226,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 15: 在酒库中新增一款酒 (key: c15_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.04)
+### Criterion 15: 在酒库中新增一款酒 (key: c15_cross_region_linkage, primary: interaction_function, secondary: cross_region_linkage, weight: 0.0384)
 
 预设状态：打开维护酒库的入口
 
@@ -238,7 +238,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 16: 给今天新增两条记录 (key: c16_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.04)
+### Criterion 16: 给今天新增两条记录 (key: c16_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0384)
 
 预设状态：浏览器中没有保存过该网站的数据
 
@@ -250,7 +250,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 17: 先在首页把日历翻到上个月 (key: c17_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.04)
+### Criterion 17: 先在首页把日历翻到上个月 (key: c17_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0384)
 
 预设状态：浏览器中没有保存过该网站的数据
 
@@ -262,7 +262,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 18: 打开统计页并浏览整页 (key: c18_information_organization, primary: content_structure, secondary: information_organization, weight: 0.04)
+### Criterion 18: 打开统计页并浏览整页 (key: c18_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0384)
 
 预设状态：已给今天新增一条完整记录：场景“餐厅”，同饮人“老陈”，价格 120，酒品“鹭岛小麦白啤”500 毫升
 
@@ -274,7 +274,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 19: 把统计周期切换成年度 (key: c19_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.04)
+### Criterion 19: 把统计周期切换成年度 (key: c19_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0384)
 
 预设状态：已给今天新增一条饮酒记录，统计页停在月度周期
 
@@ -286,7 +286,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 20: 打开统计页，周期选月度，查看按酒的类型统计的环形图 (key: c20_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.04)
+### Criterion 20: 打开统计页，周期选月度，查看按酒的类型统计的环形图 (key: c20_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0384)
 
 预设状态：浏览器中没有保存过该网站的数据；已给今天新增两条记录，一条酒品“鹭岛小麦白啤”（啤酒）500 毫升，一条酒品“汾溪清香二十年”（白酒）50 毫升，两条的场景都选“家中”
 
@@ -298,7 +298,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 21: 打开统计页，周期选月度，查看摄入酒精量的趋势图 (key: c21_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.04)
+### Criterion 21: 打开统计页，周期选月度，查看摄入酒精量的趋势图 (key: c21_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0384)
 
 预设状态：浏览器中没有保存过该网站的数据；已给今天新增一条记录，酒品“鹭岛小麦白啤”（酒精度 5%）500 毫升，场景“家中”
 
@@ -310,7 +310,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 22: 给今天新增三条记录 (key: c22_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.04)
+### Criterion 22: 给今天新增三条记录 (key: c22_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0384)
 
 预设状态：浏览器中没有保存过该网站的数据
 
@@ -322,7 +322,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 23: 在 1440×900 的桌面视口下查看首页和统计页 (key: c23_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.04)
+### Criterion 23: 在 1440×900 的桌面视口下查看首页和统计页 (key: c23_visual_style, primary: visual_layout, secondary: visual_style, weight: 0.0384)
 
 预设状态：已新增一条饮酒记录
 
@@ -334,7 +334,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 24: 把视口调整为 375×812 (key: c24_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.04)
+### Criterion 24: 把视口调整为 375×812 (key: c24_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0384)
 
 预设状态：已新增一条饮酒记录（视口 375×812）
 
@@ -346,13 +346,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 25: 给今天新增两条记录 (key: c25_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.04)
+### Criterion 25: 给今天新增两条记录 (key: c25_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0384)
 
 预设状态：浏览器中没有保存过该网站的数据
 
 操作：给今天新增两条记录，用页面提供的时间控件把两条的饮酒时间都调到当天 07:00，场景都选“家中”，酒品都选“鹭岛小麦白啤”500 毫升。随后打开统计页，周期选月度，查看最常饮酒时间段
 
 期望结果：最常饮酒时间段落在 07:00 所属的那一段，可以是“早晨”“清晨”“上午”这类说法，也可以是一个包含 7 点的钟点区间；不会给出中午、下午、晚上或深夜这类不包含 7 点的时段。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 26: 通读首页汇总和统计页的各项指标、日历、趋势图和环形图 (key: c26_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.04)
+
+预设状态：浏览器中没有保存过该网站的数据；已给今天新增一条完整记录：场景“餐厅”，同饮人“老陈”，价格 120，酒品“鹭岛小麦白啤”500 毫升
+
+操作：通读首页汇总和统计页的各项指标、日历、趋势图和环形图，把页面展示的每一个数字连同名目记下来
+
+期望结果：页面展示哪些数字不作要求；但凡展示出来的，都必须与这条记录和题面的酒精换算规则推算一致，页面各处的数字之间也不得互相矛盾（例如环形图的占比与酒款数对不上，或趋势图上的酒精量与汇总数字不是同一个数）。出现任何一处矛盾，本条不通过。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 

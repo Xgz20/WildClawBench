@@ -17,13 +17,13 @@ tags:
 
 ## Prompt
 
-请在 /tmp_workspace 下从空目录创建一个可运行的中文纪念日倒数提醒页网页项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。页面运行时不要依赖外部图片、字体、接口或其他网络资源；不要接入真实支付或发送真实请求。
+请在 `/tmp_workspace` 下创建项目。如果启动网站时遇到端口冲突，请自行选择其他可用端口。
 
 有几个日子我总是记不住，想要个页面一眼看到离它们还有多少天。
 
 ## Expected Behavior
 
-Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内容、交互和视觉要求；项目应能在本地 npm install、npm run build 并通过 npm run start 启动，且不依赖外部网络资源。
+Agent 应按 Prompt 完成页面内容、交互和视觉要求。
 
 评分由 Playwright 运行时检查（内容与交互类评分点）和基于截图的视觉判分（视觉与布局类评分点）共同完成；每个评分点按“预设状态 → 操作 → 期望结果”独立判定。
 
@@ -42,7 +42,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 检查页面提供的入口和已有内容的呈现方式 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.1)
+### Criterion 1: 检查页面提供的入口和已有内容的呈现方式 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0909)
 
 预设状态：首页已在 1440×900 视口打开，已通过页面添加两个不同日期的日子
 
@@ -54,7 +54,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 添加一个名称为“体检”、日期为从今天算起第 30 天的日子 (key: c02_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.1)
+### Criterion 2: 添加一个名称为“体检”、日期为从今天算起第 30 天的日子 (key: c02_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0909)
 
 预设状态：首页已打开
 
@@ -66,7 +66,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 添加一个日期正好是今天的日子 (key: c03_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.1)
+### Criterion 3: 添加一个日期正好是今天的日子 (key: c03_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0909)
 
 预设状态：首页已打开
 
@@ -78,7 +78,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 分别添加日期为明天和从今天算起第 30 天的两个日子 (key: c04_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.1)
+### Criterion 4: 分别添加日期为明天和从今天算起第 30 天的两个日子 (key: c04_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0909)
 
 预设状态：首页已打开
 
@@ -90,7 +90,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 添加一个日期是昨天的日子 (key: c05_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.1)
+### Criterion 5: 添加一个日期是昨天的日子 (key: c05_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0909)
 
 预设状态：首页已打开
 
@@ -102,7 +102,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 添加一个日期为从今天算起第 400 天的日子 (key: c06_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.1)
+### Criterion 6: 添加一个日期为从今天算起第 400 天的日子 (key: c06_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0909)
 
 预设状态：首页已打开
 
@@ -114,7 +114,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 删除其中一个日子 (key: c07_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.1)
+### Criterion 7: 删除其中一个日子 (key: c07_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0909)
 
 预设状态：页面上已经添加了三个不同名称、不同日期的日子
 
@@ -126,7 +126,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 先在名称留空的情况下提交一次 (key: c08_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.1)
+### Criterion 8: 先在名称留空的情况下提交一次 (key: c08_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0909)
 
 预设状态：页面处于可以添加日子的状态
 
@@ -138,7 +138,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 检查每条日子的信息排布和剩余天数的呈现 (key: c09_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.1)
+### Criterion 9: 检查每条日子的信息排布和剩余天数的呈现 (key: c09_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0909)
 
 预设状态：页面上已经添加了三个日子，视口为 1440×900
 
@@ -150,13 +150,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 在窄屏下添加一个日子并查看列表 (key: c10_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.1)
+### Criterion 10: 在窄屏下添加一个日子并查看列表 (key: c10_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0909)
 
 预设状态：浏览器视口已调整为 375×812 并打开首页（视口 375×812）
 
 操作：在窄屏下添加一个日子并查看列表
 
 期望结果：页面没有横向滚动，没有任何元素宽度超出视口。添加表单的字段和按钮都能正常填写和点击，每条日子的名称、日期和剩余天数完整可读，没有被截断或互相重叠。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 11: 通读页面，把每条日子展示的天数和其它数字连同名目记下来 (key: c11_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.091)
+
+预设状态：首页已打开，已添加两个日子：一个在明天，一个在从今天起第 30 天
+
+操作：通读页面，把每条日子展示的天数和其它数字连同名目记下来
+
+期望结果：页面展示哪些数字不作要求；但凡展示出来的天数，都必须与所填日期和当天日期推算一致，页面各处的数字之间也不得互相矛盾（例如两条日子的剩余天数之差与它们的日期之差对不上）。出现任何一处矛盾，本条不通过。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 

@@ -18,6 +18,7 @@ RUNTIME_KEYS = [
     "c01_information_organization", "c02_content_switching",
     "c03_realtime_auto_progress", "c04_rule_settlement", "c05_form_validation",
     "c06_operation_feedback", "c07_state_persistence", "c08_realtime_auto_progress",
+    "c13_realtime_auto_progress",
 ]
 VISUAL_KEYS = [
     "c09_visual_style", "c10_page_layout", "c11_component_style",
@@ -71,6 +72,11 @@ async def _read_timer_text(page) -> str:
         if await timer.is_visible():
             return (await timer.inner_text()).strip()
     raise AssertionError("visible timer text not found")
+
+
+def _timer_seconds(value: str) -> int:
+    minutes, seconds = value.split(":", 1)
+    return int(minutes) * 60 + int(seconds)
 
 
 async def _is_checked(control) -> bool:
@@ -190,6 +196,41 @@ async def run(page, screenshot_dir):
         await page.clock.run_for(1501000)
         return await contains_texts(page, ["00:00", "本轮专注结束，起来休息一下"])
     await recorder.check("c08_realtime_auto_progress", completion_feedback)
+
+    async def background_wall_clock():
+        # Earlier criteria install Playwright's synthetic clock on ``page``.
+        # Use fresh pages so this criterion measures real wall-clock time.
+        timer_page = await page.context.new_page()
+        foreground = await page.context.new_page()
+        try:
+            await timer_page.set_viewport_size({"width": 1440, "height": 900})
+            await timer_page.goto(page.url, wait_until="domcontentloaded")
+            await timer_page.evaluate("localStorage.clear()")
+            await timer_page.reload(wait_until="domcontentloaded")
+            await click_named(timer_page, "专注")
+            await click_named(timer_page, "重置")
+            await click_named(timer_page, "开始")
+            before = _timer_seconds(await _read_timer_text(timer_page))
+
+            await foreground.set_content("<title>background timer check</title>")
+            await foreground.bring_to_front()
+            await foreground.wait_for_timeout(500)
+            hidden = await timer_page.evaluate("document.visibilityState === 'hidden'")
+            if not hidden:
+                return False
+            await foreground.wait_for_timeout(360_000)
+            await timer_page.bring_to_front()
+            await timer_page.wait_for_timeout(500)
+            after = _timer_seconds(await _read_timer_text(timer_page))
+            elapsed = before - after
+            return 345 <= elapsed <= 375 and await contains_texts(timer_page, ["暂停"])
+        finally:
+            if not foreground.is_closed():
+                await foreground.close()
+            if not timer_page.is_closed():
+                await timer_page.close()
+
+    await recorder.check("c13_realtime_auto_progress", background_wall_clock)
     return recorder.results
 
 

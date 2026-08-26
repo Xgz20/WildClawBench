@@ -11,7 +11,7 @@ except ImportError:
 RUNTIME_KEYS = [
     "c01_information_organization", "c02_content_editing", "c03_rule_settlement",
     "c04_rule_settlement", "c05_rule_settlement", "c06_rule_settlement",
-    "c07_content_editing", "c08_form_validation",
+    "c07_content_editing", "c08_form_validation", "c11_rule_settlement",
 ]
 VISUAL_KEYS = ["c09_page_layout", "c10_responsive_layout"]
 
@@ -82,6 +82,17 @@ async def run(page, screenshot_dir):
         body = await page.locator("body").inner_text()
         return missing_name and "日期" in body and "没有日期" not in body
     await r.check("c08_form_validation", validation)
+
+    async def countdowns_reconcile():
+        await reset_page(page)
+        tomorrow = await _add(page, "明天", 1)
+        later = await _add(page, "三十天后", 30)
+        body = await page.locator("body").inner_text()
+        return (
+            await contains_texts(page, ["明天", tomorrow, "1", "三十天后", later, "30"])
+            and not any(value in body for value in ["NaN", "Infinity", "undefined", "Invalid Date"])
+        )
+    await r.check("c11_rule_settlement", countdowns_reconcile)
     return r.results
 
 

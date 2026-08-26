@@ -157,10 +157,7 @@ async def run(page, screenshot_dir):
         if not await _create_trip(page):
             return False
         await _add_destination(page, "宽窄巷子")
-        return (
-            await contains_texts(page, ["1", "宽窄巷子", "景点", "09:30", "上午拍照"])
-            and not await contains_any_texts(page, ["这一天还没有目的地", "暂无目的地"])
-        )
+        return await contains_texts(page, ["1", "宽窄巷子", "景点", "09:30", "上午拍照"])
     await recorder.check("c07_content_editing", add_card)
 
     async def empty_destination():

@@ -17,7 +17,7 @@ tags:
 
 ## Prompt
 
-请在 /tmp_workspace 下从空目录创建一个可运行的中文个人财务/本地记账仪表盘网页项目。项目根目录需要提供 package.json，并支持 npm install、npm run build，以及 npm run start -- --host 127.0.0.1 --port 4173 启动网站。页面运行时不要依赖外部图片、字体、接口或其他网络资源；不要接入真实支付或发送真实请求。
+请在 `/tmp_workspace` 下创建项目。如果启动网站时遇到端口冲突，请自行选择其他可用端口。
 
 我想做一个叫“小满账簿”的中文个人记账网页，平时用来记录收入和支出，也能按月或按周回头看看钱都花到哪儿了。不需要登录账号，打开就能直接记账。
 
@@ -33,7 +33,7 @@ tags:
 
 ## Expected Behavior
 
-Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内容、交互和视觉要求；项目应能在本地 npm install、npm run build 并通过 npm run start 启动，且不依赖外部网络资源。
+Agent 应按 Prompt 完成页面内容、交互和视觉要求。
 
 评分由 Playwright 运行时检查（内容与交互类评分点）和基于截图的视觉判分（视觉与布局类评分点）共同完成；每个评分点按“预设状态 → 操作 → 期望结果”独立判定。
 
@@ -52,7 +52,7 @@ Agent 应从空目录生成可运行的前端网站，按 Prompt 完成页面内
 - `Score 0.0` 表示任一部分不符合。
 - 未特别说明时，页面在 1440×900 桌面视口打开；标注 375×812 的评分点在手机视口检查。
 
-### Criterion 1: 检查顶部、周期控件、页签、统计和空状态 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0666)
+### Criterion 1: 检查顶部、周期控件、页签、统计和空状态 (key: c01_information_organization, primary: content_structure, secondary: information_organization, weight: 0.0625)
 
 预设状态：首次打开页面，浏览器本地没有保存过账目
 
@@ -64,7 +64,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 2: 点击“记一笔” (key: c02_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0666)
+### Criterion 2: 点击“记一笔” (key: c02_form_validation, primary: interaction_function, secondary: form_validation, weight: 0.0625)
 
 预设状态：页面没有账目，新增弹窗尚未打开
 
@@ -76,7 +76,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 3: 新增一笔支出 (key: c03_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0666)
+### Criterion 3: 新增一笔支出 (key: c03_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0625)
 
 预设状态：页面没有账目
 
@@ -88,7 +88,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 4: 在按月模式下依次选择 2026年1月和 2026年2月 (key: c04_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0666)
+### Criterion 4: 在按月模式下依次选择 2026年1月和 2026年2月 (key: c04_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0625)
 
 预设状态：已经新增“早餐”支出 ¥28.00（2026-01-05）和“电影票”支出 ¥60.00（2026-02-05）
 
@@ -100,7 +100,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 5: 切换到按周查看 (key: c05_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0666)
+### Criterion 5: 切换到按周查看 (key: c05_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0625)
 
 预设状态：已经新增“早餐”支出 ¥28.00（2026-01-05）和“地铁充值”支出 ¥50.00（2026-01-20）
 
@@ -112,7 +112,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 6: 在名称或备注搜索框中输入“手冲” (key: c06_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.0666)
+### Criterion 6: 在名称或备注搜索框中输入“手冲” (key: c06_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.0625)
 
 预设状态：当前月份已有“咖啡豆”备注“给家里补手冲豆”和“地铁充值”备注“交通卡自动充值”两笔账目
 
@@ -124,7 +124,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 7: 选择支出类型和餐饮分类 (key: c07_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.0666)
+### Criterion 7: 选择支出类型和餐饮分类 (key: c07_search_filtering, primary: interaction_function, secondary: search_filtering, weight: 0.0625)
 
 预设状态：当前月份已有三笔支出：“早餐”¥28.00（餐饮）、“地铁充值”¥50.00（交通）、“朋友聚餐”¥188.00（餐饮）
 
@@ -136,7 +136,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 8: 点击这笔账目或它的查看入口 (key: c08_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0666)
+### Criterion 8: 点击这笔账目或它的查看入口 (key: c08_detail_display, primary: content_structure, secondary: detail_display, weight: 0.0625)
 
 预设状态：当前月份已有“地铁充值”支出 ¥50.00，分类“交通”，日期 2026-01-09，备注“交通卡自动充值”
 
@@ -148,7 +148,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 9: 打开这笔账的详情并编辑 (key: c09_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0666)
+### Criterion 9: 打开这笔账的详情并编辑 (key: c09_content_editing, primary: interaction_function, secondary: content_editing, weight: 0.0625)
 
 预设状态：2026年1月已有“书店购书”支出 ¥88.00
 
@@ -160,7 +160,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 10: 点击删除，先取消确认；再次删除并确认 (key: c10_popup_overlay, primary: interaction_function, secondary: popup_overlay, weight: 0.0666)
+### Criterion 10: 点击删除，先取消确认；再次删除并确认 (key: c10_popup_overlay, primary: interaction_function, secondary: popup_overlay, weight: 0.0625)
 
 预设状态：当前月份已有“早餐”支出 ¥28.00，并已打开它的详情
 
@@ -172,7 +172,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 11: 切换到 2026年1月的“分析”页 (key: c11_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0666)
+### Criterion 11: 切换到 2026年1月的“分析”页 (key: c11_data_visualization, primary: content_structure, secondary: data_visualization, weight: 0.0625)
 
 预设状态：2026年1月已有“工资”收入 ¥1,000.00（工资）和“房租”支出 ¥400.00（居住）
 
@@ -184,7 +184,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 12: 进入“分析”页 (key: c12_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0666)
+### Criterion 12: 进入“分析”页 (key: c12_content_switching, primary: interaction_function, secondary: content_switching, weight: 0.0625)
 
 预设状态：已经新增 2026年1月支出 ¥100.00 和 2026年2月支出 ¥200.00，当前按月查看 2026年2月
 
@@ -196,7 +196,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 13: 刷新页面并重新查看 2026年1月 (key: c13_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0666)
+### Criterion 13: 刷新页面并重新查看 2026年1月 (key: c13_state_persistence, primary: interaction_function, secondary: state_persistence, weight: 0.0625)
 
 预设状态：已经新增“图书”支出 ¥88.00（2026-01-05）并确认列表和统计更新
 
@@ -208,7 +208,7 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 14: 检查整体布局、配色、组件层级和页面边界 (key: c14_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0666)
+### Criterion 14: 检查整体布局、配色、组件层级和页面边界 (key: c14_page_layout, primary: visual_layout, secondary: page_layout, weight: 0.0625)
 
 预设状态：页面在 1440×900 桌面视口打开，先查看空账簿，再打开新增弹窗和分析页
 
@@ -220,13 +220,25 @@ Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
 Score 0.0: 不符合预设状态、操作要求或期望结果。
 
-### Criterion 15: 检查整页是否出现横向滚动 (key: c15_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0676)
+### Criterion 15: 检查整页是否出现横向滚动 (key: c15_responsive_layout, primary: visual_layout, secondary: responsive_layout, weight: 0.0625)
 
 预设状态：浏览器视口已调整为 375×812 并打开首页，浏览器本地没有保存过账目（视口 375×812）
 
 操作：检查整页是否出现横向滚动，然后在窄屏下点“记一笔”，新增一笔支出（名称“早餐”、金额 28、分类“餐饮”、日期 2026-01-05）并保存
 
 期望结果：页面没有横向滚动，没有元素把页面撑破。新增弹窗在窄屏下完整可见，各个字段都能正常填写并保存；保存后“早餐”这条记录的日期、名称、分类和金额完整可读，顶部的收入、支出、结余和记录数没有被截断或互相重叠。
+
+Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
+
+Score 0.0: 不符合预设状态、操作要求或期望结果。
+
+### Criterion 16: 通读明细页统计和分析页的图表 (key: c16_rule_settlement, primary: interaction_function, secondary: rule_settlement, weight: 0.0625)
+
+预设状态：当前月份已有三笔支出：“早餐”¥28.00（餐饮）、“地铁充值”¥50.00（交通）、“朋友聚餐”¥188.00（餐饮）
+
+操作：通读明细页统计和分析页的图表，把页面展示的每一个金额、笔数和百分比连同名目记下来
+
+期望结果：页面展示哪些数字不作要求；但凡展示出来的，都必须与这三笔账目推算一致，页面各处的数字之间也不得互相矛盾（例如环形图各分类之和与支出合计对不上，或某处百分比与对应金额的比例不符）。出现任何一处矛盾，本条不通过。
 
 Score 1.0: 符合预设状态、操作要求，且结果与期望结果一致。
 
