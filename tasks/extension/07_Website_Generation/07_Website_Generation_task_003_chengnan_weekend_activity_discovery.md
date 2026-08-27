@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_003_chengnan_weekend_activity_discovery
 name: 城南周末活动页
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 营销、品牌与商业展示
 task_type: 生活服务／活动发现
 timeout_seconds: 900
 modality: pure-text

@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_026_uk_census_commuting_explorer
 name: 英国普查通勤方式转移数据浏览
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 数据分析与决策
 task_type: 通勤调查数据浏览页
 timeout_seconds: 1200
 modality: pure-text

@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_011_love_anniversary_site
 name: 双人恋爱纪念站
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 关系与纪念
 task_type: 恋爱纪念与生活记录网站
 timeout_seconds: 1200
 modality: pure-text

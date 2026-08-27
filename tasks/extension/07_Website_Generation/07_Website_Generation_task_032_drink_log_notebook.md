@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_032_drink_log_notebook
 name: 小酌记录本
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 健康与身心
 task_type: 健康记录／饮酒记录与酒精摄入统计
 timeout_seconds: 1200
 modality: pure-text

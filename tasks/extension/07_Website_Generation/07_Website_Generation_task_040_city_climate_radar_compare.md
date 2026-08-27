@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_040_city_climate_radar_compare
 name: 城市气候对比雷达图
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 旅行与消费决策
 task_type: 旅行决策／城市气候对比图表页
 timeout_seconds: 900
 modality: pure-text

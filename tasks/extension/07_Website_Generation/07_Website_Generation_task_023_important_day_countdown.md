@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_023_important_day_countdown
 name: 重要日子倒数
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 关系与纪念
 task_type: 纪念日倒数提醒页
 timeout_seconds: 900
 modality: pure-text

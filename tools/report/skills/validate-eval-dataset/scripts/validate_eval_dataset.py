@@ -226,6 +226,7 @@ _ISSUE_ACTIONS = {
     "WEBSITE_RUBRIC_DIMENSION_INVALID": "修正 Web Rubric 的 key、primary 和 secondary 维度",
     "WEBSITE_RUBRIC_FORMAT_INVALID": "修正 Criterion 编号、标题和 1.0/0.0 评分档",
     "WEBSITE_RUBRIC_WEIGHT_INVALID": "将 Web Rubric 权重设为正数并确保总和为 1",
+    "WEBSITE_SUB_CATEGORY_INVALID": "将 sub_category 改为网站生成场景下登记的二级场景",
     "WEBSITE_STARTUP_CONTRACT_MISSING": "在 Prompt 中说明项目创建在 /tmp_workspace，并在端口冲突时选择其他可用端口",
     "WEBSITE_WORKSPACE_LAYOUT_INVALID": "使用规定的 Web workspace 路径并补齐 exec/ 目录",
     "WEBSITE_EVAL_FIXTURE_MISSING": "为 /tmp_workspace_eval 引用补齐 workspace/eval 评测素材",

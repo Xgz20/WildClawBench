@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_029_anime_moe_tournament
 name: 二次元萌王大赛淘汰赛
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 创意与娱乐
 task_type: 休闲娱乐／角色人气淘汰赛工具
 timeout_seconds: 900
 modality: pure-text

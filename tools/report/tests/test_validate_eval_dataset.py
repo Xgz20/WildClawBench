@@ -27,6 +27,7 @@ def _website_task(
     *,
     prompt: str | None = None,
     rubric: str | None = None,
+    sub_category: str = "数据分析与决策",
     workspace: str = "workspace/extension/07_Website_Generation/task_012_sample_site",
 ) -> Path:
     prompt = prompt or (
@@ -45,6 +46,7 @@ Score 0.0: fail"""
         f"""---
 id: 07_Website_Generation_task_012_sample_site
 category: 07_Website_Generation
+sub_category: {sub_category}
 difficulty: L1
 modality: pure-text
 timeout_seconds: 900
@@ -265,6 +267,7 @@ def test_website_contract_checks_rubric_startup_and_workspace_layout(tmp_path):
     task = _website_task(
         repo,
         prompt="Create a website.",
+        sub_category="自然语言页面构建",
         workspace="workspace/extension/07_Website_Generation/wrong_workspace",
         rubric="""### Criterion 2: Invalid (key: Bad-Key, primary: unsupported, secondary: , weight: 0)
 Score 1.0: pass""",
@@ -279,6 +282,7 @@ Score 1.0: pass""",
         "WEBSITE_RUBRIC_DIMENSION_INVALID",
         "WEBSITE_RUBRIC_FORMAT_INVALID",
         "WEBSITE_RUBRIC_WEIGHT_INVALID",
+        "WEBSITE_SUB_CATEGORY_INVALID",
         "WEBSITE_STARTUP_CONTRACT_MISSING",
         "WEBSITE_WORKSPACE_LAYOUT_INVALID",
     } <= codes

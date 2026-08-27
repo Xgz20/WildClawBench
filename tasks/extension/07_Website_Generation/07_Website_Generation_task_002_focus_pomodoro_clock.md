@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_002_focus_pomodoro_clock
 name: 一刻专注番茄钟
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 健康与身心
 task_type: 效率工具／番茄钟
 timeout_seconds: 900
 modality: pure-text

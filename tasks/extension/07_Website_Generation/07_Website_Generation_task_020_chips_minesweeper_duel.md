@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_020_chips_minesweeper_duel
 name: 薯片扫雷对决
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 创意与娱乐
 task_type: 双人回合制聚会小游戏
 timeout_seconds: 1200
 modality: pure-text

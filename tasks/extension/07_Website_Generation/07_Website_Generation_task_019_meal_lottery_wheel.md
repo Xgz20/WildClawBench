@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_019_meal_lottery_wheel
 name: 吃饭抽签转盘
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 日常管理与家庭事务
 task_type: 生活决策／抽签转盘
 timeout_seconds: 900
 modality: pure-text

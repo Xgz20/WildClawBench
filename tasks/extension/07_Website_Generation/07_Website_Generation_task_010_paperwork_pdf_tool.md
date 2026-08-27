@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_010_paperwork_pdf_tool
 name: 文页工坊PDF工具
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 行政与人员服务
 task_type: 本地文档处理工具
 timeout_seconds: 1200
 modality: pure-text

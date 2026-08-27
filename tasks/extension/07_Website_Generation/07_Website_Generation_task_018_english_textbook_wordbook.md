@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_018_english_textbook_wordbook
 name: 高中英语课本单词本
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 学习与知识
 task_type: 英语单词记忆与自测工具
 timeout_seconds: 1200
 modality: pure-text

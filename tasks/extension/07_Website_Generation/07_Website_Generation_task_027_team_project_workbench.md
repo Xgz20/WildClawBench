@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_027_team_project_workbench
 name: 团队项目管理工作台
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 任务与项目协作
 task_type: 团队协作／项目需求任务三层管理工具
 timeout_seconds: 1200
 modality: pure-text

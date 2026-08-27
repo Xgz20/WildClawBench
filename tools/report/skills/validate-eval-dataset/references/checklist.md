@@ -8,6 +8,6 @@
 6. Env 每行只解析变量名，检查 POSIX 名称、重复声明和当前进程存在性；报告永远只包含 `present/missing`。
 7. Warmup 章节必须存在；不需要预热时保留标题并置空正文，表示合法 no-op，不产生问题。只有非空 Warmup 才检查 shell 语法、引用文件和危险模式；不可解析脚本和宿主机删除/提权/网络/daemon 命令须显式报告。`--smoke` 的运行边界见脚本与 `smoke.py`。
 8. `tasks/extension/task_sources.yaml` 存在时校验 YAML 可读和 `tasks` 映射；缺失或任务 ID 无法追溯为 `FAIL`。
-9. `tags` 包含 `web-site-gen` 时自动启用 Web 专项静态协议；检查 Playwright 模块、Rubric 与 key 对齐、Prompt 中的项目目录与端口冲突说明，以及 workspace/eval 素材，详细规则见 [website-checklist.md](website-checklist.md)。
+9. `tags` 包含 `web-site-gen` 时自动启用 Web 专项静态协议；检查网站二级场景 `sub_category`、Playwright 模块、Rubric 与 key 对齐、Prompt 中的项目目录与端口冲突说明，以及 workspace/eval 素材，详细规则见 [website-checklist.md](website-checklist.md)。
 
 报告解读：`summary.action_summary.tasks_to_fix` 是确定性问题清单，应修复后重跑；`tasks_for_review` 是需要人工确认的边界问题；`tasks_pass` 只表示当前规则下未发现问题，不等于质量已被统计证明。

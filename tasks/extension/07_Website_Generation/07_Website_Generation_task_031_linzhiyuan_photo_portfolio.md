@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_031_linzhiyuan_photo_portfolio
 name: 林知远摄影作品集
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 个人表达与生涯
 task_type: 个人作品集／摄影图集
 timeout_seconds: 900
 modality: pure-text

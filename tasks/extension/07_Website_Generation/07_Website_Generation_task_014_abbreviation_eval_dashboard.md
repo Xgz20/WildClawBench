@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_014_abbreviation_eval_dashboard
 name: 缩写识别评测结果看板
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 数据分析与决策
 task_type: 论文评测结果看板
 timeout_seconds: 1200
 modality: pure-text

@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_012_interactive3d_paper_site
 name: Interactive3D论文探索站
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 内容与知识生产
 task_type: 交互式学术项目主页
 timeout_seconds: 1200
 modality: pure-text

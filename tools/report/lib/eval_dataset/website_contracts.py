@@ -18,6 +18,22 @@ ALLOWED_PRIMARY_DIMENSIONS = {
     "interaction_function",
     "visual_layout",
 }
+WEBSITE_SUB_CATEGORIES = {
+    "个人表达与生涯",
+    "日常管理与家庭事务",
+    "健康与身心",
+    "学习与知识",
+    "旅行与消费决策",
+    "关系与纪念",
+    "创意与娱乐",
+    "数据分析与决策",
+    "任务与项目协作",
+    "业务运营与流程管理",
+    "客户与服务运营",
+    "内容与知识生产",
+    "营销、品牌与商业展示",
+    "行政与人员服务",
+}
 WEBSITE_WORKSPACE_ROOT = Path("workspace/extension/07_Website_Generation")
 STARTUP_CONTRACT_FRAGMENTS = (
     "/tmp_workspace",
@@ -244,6 +260,17 @@ def validate_website_contract(
 ) -> list[Issue]:
     """Validate one ``web-site-gen`` task without importing task code."""
     issues: list[Issue] = []
+    sub_category = doc.metadata.get("sub_category")
+    if sub_category not in WEBSITE_SUB_CATEGORIES:
+        issues.append(
+            _issue(
+                "WEBSITE_SUB_CATEGORY_INVALID",
+                "Web 任务 sub_category 必须使用网站生成二级场景枚举",
+                doc,
+                evidence={"actual": sub_category},
+            )
+        )
+
     criteria, format_errors = _parse_criteria(doc.section("LLM Judge Rubric"))
     if format_errors:
         issues.append(

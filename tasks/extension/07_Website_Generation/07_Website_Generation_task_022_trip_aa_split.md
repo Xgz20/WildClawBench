@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_022_trip_aa_split
 name: 出行 AA 分账
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 日常管理与家庭事务
 task_type: 多人费用分摊结算工具
 timeout_seconds: 900
 modality: pure-text

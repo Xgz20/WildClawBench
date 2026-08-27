@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_025_aeo2022_energy_scenarios
 name: AEO2022 能源展望情景对比
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 数据分析与决策
 task_type: 能源展望情景对比页
 timeout_seconds: 1200
 modality: pure-text

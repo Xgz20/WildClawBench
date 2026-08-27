@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_009_smart_teaching_dashboard
 name: 智慧教学数据看板
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 数据分析与决策
 task_type: 数据分析看板
 timeout_seconds: 1200
 modality: pure-text

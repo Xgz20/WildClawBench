@@ -23,7 +23,7 @@ EXPECTED_TASKS = {
     "task_002_focus_pomodoro_clock": {
         "task_type": "效率工具／番茄钟",
         "difficulty": "L1",
-        "criterion_count": 12,
+        "criterion_count": 13,
     },
     "task_003_chengnan_weekend_activity_discovery": {
         "task_type": "生活服务／活动发现",
@@ -38,7 +38,7 @@ EXPECTED_TASKS = {
     "task_005_xiaoman_ledger_dashboard": {
         "task_type": "个人财务／本地记账仪表盘",
         "difficulty": "L2",
-        "criterion_count": 15,
+        "criterion_count": 16,
     },
     "task_006_xingji_travel_planner": {
         "task_type": "旅行行程规划器",
@@ -58,7 +58,7 @@ EXPECTED_TASKS = {
     "task_009_smart_teaching_dashboard": {
         "task_type": "数据分析看板",
         "difficulty": "L2",
-        "criterion_count": 25,
+        "criterion_count": 27,
     },
     "task_010_paperwork_pdf_tool": {
         "task_type": "本地文档处理工具",
@@ -68,7 +68,7 @@ EXPECTED_TASKS = {
     "task_011_love_anniversary_site": {
         "task_type": "恋爱纪念与生活记录网站",
         "difficulty": "L2",
-        "criterion_count": 25,
+        "criterion_count": 26,
     },
     "task_012_interactive3d_paper_site": {
         "task_type": "交互式学术项目主页",
@@ -98,12 +98,12 @@ EXPECTED_TASKS = {
     "task_017_travel_expense_assistant": {
         "task_type": "行政办公／差旅报销核算工具",
         "difficulty": "L2",
-        "criterion_count": 19,
+        "criterion_count": 20,
     },
     "task_018_english_textbook_wordbook": {
         "task_type": "英语单词记忆与自测工具",
         "difficulty": "L2",
-        "criterion_count": 23,
+        "criterion_count": 24,
     },
     "task_019_meal_lottery_wheel": {
         "task_type": "生活决策／抽签转盘",
@@ -123,12 +123,12 @@ EXPECTED_TASKS = {
     "task_022_trip_aa_split": {
         "task_type": "多人费用分摊结算工具",
         "difficulty": "L1",
-        "criterion_count": 11,
+        "criterion_count": 12,
     },
     "task_023_important_day_countdown": {
         "task_type": "纪念日倒数提醒页",
         "difficulty": "L1",
-        "criterion_count": 10,
+        "criterion_count": 11,
     },
     "task_024_kyrgyzstan_wage_gap_brief": {
         "task_type": "研究成果简报页",
@@ -148,12 +148,12 @@ EXPECTED_TASKS = {
     "task_027_team_project_workbench": {
         "task_type": "团队协作／项目需求任务三层管理工具",
         "difficulty": "L2",
-        "criterion_count": 20,
+        "criterion_count": 21,
     },
     "task_028_job_application_tracker": {
         "task_type": "求职管理／投递跟进工具",
         "difficulty": "L2",
-        "criterion_count": 16,
+        "criterion_count": 17,
     },
     "task_029_anime_moe_tournament": {
         "task_type": "休闲娱乐／角色人气淘汰赛工具",
@@ -173,12 +173,12 @@ EXPECTED_TASKS = {
     "task_032_drink_log_notebook": {
         "task_type": "健康记录／饮酒记录与酒精摄入统计",
         "difficulty": "L2",
-        "criterion_count": 25,
+        "criterion_count": 26,
     },
     "task_033_daily_weight_tracker": {
         "task_type": "健康记录／体重追踪",
         "difficulty": "L1",
-        "criterion_count": 12,
+        "criterion_count": 13,
     },
     "task_034_iphone17pro_product_page": {
         "task_type": "电商商品详情页",
@@ -213,8 +213,51 @@ EXPECTED_TASKS = {
     "task_040_city_climate_radar_compare": {
         "task_type": "旅行决策／城市气候对比图表页",
         "difficulty": "L1",
-        "criterion_count": 12,
+        "criterion_count": 13,
     },
+}
+
+EXPECTED_SUB_CATEGORIES = {
+    "task_001_daymark_product_website": "营销、品牌与商业展示",
+    "task_002_focus_pomodoro_clock": "健康与身心",
+    "task_003_chengnan_weekend_activity_discovery": "营销、品牌与商业展示",
+    "task_004_orchard_memory_game": "创意与娱乐",
+    "task_005_xiaoman_ledger_dashboard": "日常管理与家庭事务",
+    "task_006_xingji_travel_planner": "旅行与消费决策",
+    "task_007_neon_snake_game": "创意与娱乐",
+    "task_008_shiguang_personal_blog": "个人表达与生涯",
+    "task_009_smart_teaching_dashboard": "数据分析与决策",
+    "task_010_paperwork_pdf_tool": "行政与人员服务",
+    "task_011_love_anniversary_site": "关系与纪念",
+    "task_012_interactive3d_paper_site": "内容与知识生产",
+    "task_013_ai_literacy_course_page": "内容与知识生产",
+    "task_014_abbreviation_eval_dashboard": "数据分析与决策",
+    "task_015_glove_v_method_page": "内容与知识生产",
+    "task_016_commentator_tool_page": "营销、品牌与商业展示",
+    "task_017_travel_expense_assistant": "行政与人员服务",
+    "task_018_english_textbook_wordbook": "学习与知识",
+    "task_019_meal_lottery_wheel": "日常管理与家庭事务",
+    "task_020_chips_minesweeper_duel": "创意与娱乐",
+    "task_021_dorm_duty_roster": "日常管理与家庭事务",
+    "task_022_trip_aa_split": "日常管理与家庭事务",
+    "task_023_important_day_countdown": "关系与纪念",
+    "task_024_kyrgyzstan_wage_gap_brief": "内容与知识生产",
+    "task_025_aeo2022_energy_scenarios": "数据分析与决策",
+    "task_026_uk_census_commuting_explorer": "数据分析与决策",
+    "task_027_team_project_workbench": "任务与项目协作",
+    "task_028_job_application_tracker": "个人表达与生涯",
+    "task_029_anime_moe_tournament": "创意与娱乐",
+    "task_030_waste_sorting_guardian": "学习与知识",
+    "task_031_linzhiyuan_photo_portfolio": "个人表达与生涯",
+    "task_032_drink_log_notebook": "健康与身心",
+    "task_033_daily_weight_tracker": "健康与身心",
+    "task_034_iphone17pro_product_page": "营销、品牌与商业展示",
+    "task_035_today_and_all_todos": "日常管理与家庭事务",
+    "task_036_local_photo_collage_tool": "创意与娱乐",
+    "task_037_pixel_typing_speed_test": "学习与知识",
+    "task_038_blood_drop_text_adventure": "创意与娱乐",
+    "task_039_indie_musician_shenyu_homepage": "个人表达与生涯",
+    "task_040_city_climate_radar_compare": "旅行与消费决策",
 }
 
 EXPECTED_FRONTMATTER_KEYS = {
@@ -276,7 +319,9 @@ class WebsiteGenerationTaskContractTest(unittest.TestCase):
             with self.subTest(task_id=task_id):
                 self.assertEqual(set(metadata), EXPECTED_FRONTMATTER_KEYS)
                 self.assertEqual(metadata["category"], CATEGORY)
-                self.assertEqual(metadata["sub_category"], "自然语言页面构建")
+                self.assertEqual(
+                    metadata["sub_category"], EXPECTED_SUB_CATEGORIES[short_id]
+                )
                 self.assertEqual(metadata["task_type"], expected["task_type"])
                 self.assertEqual(metadata["difficulty"], expected["difficulty"])
                 self.assertEqual(metadata["grading_type"], "llm_judge")
@@ -296,12 +341,11 @@ class WebsiteGenerationTaskContractTest(unittest.TestCase):
                 self.assertTrue((expected_workspace / "exec").is_dir())
                 self.assertFalse((expected_workspace / "gt").exists())
 
-    def test_web_tasks_declare_the_standard_node_startup_contract(self) -> None:
+    def test_web_tasks_declare_workspace_and_port_conflict_guidance(self) -> None:
         required_fragments = (
-            "package.json",
-            "npm install",
-            "npm run build",
-            "npm run start -- --host 127.0.0.1 --port 4173",
+            "/tmp_workspace",
+            "端口冲突",
+            "其他可用端口",
         )
         for path in sorted(TASKS_DIR.glob("*.md")):
             task = parse_task_md(path)

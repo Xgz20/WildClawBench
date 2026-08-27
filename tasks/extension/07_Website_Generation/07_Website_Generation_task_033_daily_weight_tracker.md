@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_033_daily_weight_tracker
 name: 每日体重记录与变化趋势
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 健康与身心
 task_type: 健康记录／体重追踪
 timeout_seconds: 900
 modality: pure-text

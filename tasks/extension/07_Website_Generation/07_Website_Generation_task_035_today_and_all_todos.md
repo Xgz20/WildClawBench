@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_035_today_and_all_todos
 name: 今日与全部待办清单
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 日常管理与家庭事务
 task_type: 待办清单／任务管理工具
 timeout_seconds: 900
 modality: pure-text

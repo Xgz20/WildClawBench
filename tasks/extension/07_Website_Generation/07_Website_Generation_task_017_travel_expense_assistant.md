@@ -2,7 +2,7 @@
 id: 07_Website_Generation_task_017_travel_expense_assistant
 name: 差旅核算助手
 category: 07_Website_Generation
-sub_category: 自然语言页面构建
+sub_category: 行政与人员服务
 task_type: 行政办公／差旅报销核算工具
 timeout_seconds: 1200
 modality: pure-text
