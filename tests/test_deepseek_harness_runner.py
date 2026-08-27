@@ -65,6 +65,7 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             defaults = resolve_dsh_config()
         self.assertEqual(defaults.image, DEFAULT_IMAGE)
+        self.assertEqual(DEFAULT_IMAGE, "wildclawbench-deepseek-harness-ubuntu:v0.1")
         self.assertEqual(defaults.api, DEFAULT_DSH_API)
         self.assertEqual(defaults.openrouter_base_url, "")
 
@@ -255,7 +256,7 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
                 patch.object(
                     agent,
                     "_probe_harness_version",
-                    side_effect=lambda *_args: events.append("version") or "0.1.0-rc.6",
+                    side_effect=lambda *_args: events.append("version") or "0.1.1-rc.2",
                 ),
                 patch.object(
                     agent,
@@ -334,7 +335,7 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
             )
             self.assertEqual(status["status"], "finished")
             self.assertEqual(status["harness"], "deepseek-harness")
-            self.assertEqual(status["harness_version"], "0.1.0-rc.6")
+            self.assertEqual(status["harness_version"], "0.1.1-rc.2")
             self.assertEqual(status["api"], "openai-completions")
             self.assertEqual(status["model"], "xopglm52")
 
@@ -377,7 +378,7 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
             agent = self._agent()
             with (
                 patch.object(agent, "_start_container"),
-                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.1-rc.2"),
                 patch.object(agent, "_prepare_workspace"),
                 patch(
                     "src.agents.deepseek_harness.runner.install_dsh_skills",
@@ -399,7 +400,7 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
             agent = self._agent()
             with (
                 patch.object(agent, "_start_container"),
-                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.1-rc.2"),
                 patch.object(agent, "_prepare_workspace"),
                 patch(
                     "src.agents.deepseek_harness.runner.install_dsh_skills",
@@ -425,7 +426,7 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
             agent = self._agent()
             with (
                 patch.object(agent, "_start_container"),
-                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.1-rc.2"),
                 patch.object(agent, "_prepare_workspace"),
                 patch(
                     "src.agents.deepseek_harness.runner.install_dsh_skills",
@@ -458,7 +459,7 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
 
             with (
                 patch.object(agent, "_start_container"),
-                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.1-rc.2"),
                 patch.object(agent, "_prepare_workspace"),
                 patch(
                     "src.agents.deepseek_harness.runner.install_dsh_skills",
@@ -494,7 +495,7 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
 
             with (
                 patch.object(agent, "_start_container"),
-                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.1-rc.2"),
                 patch.object(agent, "_prepare_workspace"),
                 patch(
                     "src.agents.deepseek_harness.runner.install_dsh_skills",
@@ -527,7 +528,7 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
             agent = self._agent()
             with (
                 patch.object(agent, "_start_container"),
-                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.1-rc.2"),
                 patch.object(agent, "_prepare_workspace"),
                 patch(
                     "src.agents.deepseek_harness.runner.install_dsh_skills",
@@ -559,7 +560,7 @@ class DeepSeekHarnessLifecycleTests(unittest.TestCase):
             agent = self._agent()
             with (
                 patch.object(agent, "_start_container"),
-                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.1-rc.2"),
                 patch.object(agent, "_prepare_workspace"),
                 patch(
                     "src.agents.deepseek_harness.runner.install_dsh_skills",
@@ -816,7 +817,7 @@ class DeepSeekHarnessArtifactTests(unittest.TestCase):
             agent = self._agent()
             with (
                 patch.object(agent, "_start_container"),
-                patch.object(agent, "_probe_harness_version", return_value="0.1.0-rc.6"),
+                patch.object(agent, "_probe_harness_version", return_value="0.1.1-rc.2"),
                 patch.object(agent, "_prepare_workspace"),
                 patch(
                     "src.agents.deepseek_harness.runner.install_dsh_skills",

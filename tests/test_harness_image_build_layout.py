@@ -10,10 +10,13 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ASTRONCODE_DIR = REPO_ROOT / "docker" / "astroncode"
 CODEX_DIR = REPO_ROOT / "docker" / "codex"
+DEEPSEEK_HARNESS_DIR = REPO_ROOT / "docker" / "deepseek-harness"
 ASTRONCODE_BUILD = ASTRONCODE_DIR / "build.sh"
 CODEX_BUILD = CODEX_DIR / "build.sh"
+DEEPSEEK_HARNESS_BUILD = DEEPSEEK_HARNESS_DIR / "build.sh"
 ASTRONCODE_MANIFEST = ASTRONCODE_DIR / "versions.json"
 CODEX_MANIFEST = CODEX_DIR / "versions.json"
+DEEPSEEK_HARNESS_MANIFEST = DEEPSEEK_HARNESS_DIR / "versions.json"
 ASTRONCODE_WRAPPER = REPO_ROOT / "script" / "build-astroncode-image.sh"
 CODEX_WRAPPER = REPO_ROOT / "script" / "build-codex-image.sh"
 
@@ -24,7 +27,9 @@ BUILD_ENV_NAMES = (
     "NODEJS_VERSION",
     "SEARCH_UPDATER_VERSION",
     "CODEX_VERSION",
+    "DSH_VERSION",
     "EVAL_BASE_IMAGE",
+    "NODE_RUNTIME_IMAGE",
     "IMAGE_TAG",
     "NPM_REGISTRY",
     "HTTP_PROXY_INNER",
@@ -100,12 +105,47 @@ class ImageVersionManifestTest(unittest.TestCase):
         )
         self.assertTrue((CODEX_DIR / entry["dockerfile"]).is_file())
 
+    def test_deepseek_harness_manifest_preserves_v1_and_defaults_to_v2(self):
+        manifest = self._load_manifest(DEEPSEEK_HARNESS_MANIFEST)
+        self.assertEqual("v0.1", manifest["default"])
+        expected = {
+            "v0.0": ("v1", "0.1.0-rc.6"),
+            "v0.1": ("v2", "0.1.1-rc.2"),
+        }
+        self.assertEqual(set(expected), set(manifest["versions"]))
+        for version, (context, dsh_version) in expected.items():
+            with self.subTest(version=version):
+                entry = manifest["versions"][version]
+                self.assertEqual(
+                    f"wildclawbench-deepseek-harness-ubuntu:{version}",
+                    entry["image"],
+                )
+                self.assertEqual(context, entry["context"])
+                self.assertEqual(f"{context}/Dockerfile", entry["dockerfile"])
+                self.assertEqual(dsh_version, entry["build_args"]["DSH_VERSION"])
+                self.assertEqual(
+                    "wildclawbench-codex-ubuntu:v0.0",
+                    entry["build_args"]["EVAL_BASE_IMAGE"],
+                )
+                self.assertEqual(
+                    "node:24-bookworm-slim",
+                    entry["build_args"]["NODE_RUNTIME_IMAGE"],
+                )
+                self.assertTrue(
+                    (DEEPSEEK_HARNESS_DIR / entry["dockerfile"]).is_file()
+                )
+
     def test_harness_directories_do_not_duplicate_version_contexts_under_releases(self):
         self.assertFalse((ASTRONCODE_DIR / "releases").exists())
         self.assertFalse((CODEX_DIR / "releases").exists())
+        self.assertFalse((DEEPSEEK_HARNESS_DIR / "releases").exists())
 
     def test_canonical_builders_are_executable_and_export_capable(self):
-        for build_script in (ASTRONCODE_BUILD, CODEX_BUILD):
+        for build_script in (
+            ASTRONCODE_BUILD,
+            CODEX_BUILD,
+            DEEPSEEK_HARNESS_BUILD,
+        ):
             with self.subTest(build_script=build_script):
                 self.assertTrue(build_script.is_file())
                 self.assertTrue(os.access(build_script, os.X_OK))
@@ -277,6 +317,52 @@ class CanonicalBuildCliTest(unittest.TestCase):
         self.assertIn("EVAL_BASE_IMAGE=wildclawbench-codex-ubuntu:v0.0", build)
         self.assertEqual(str(context), build[-1])
         self.assertNotIn("save", [event[0] for event in events])
+
+    def test_deepseek_harness_default_build_uses_v2_and_pinned_dsh(self):
+        result, events = self._run_with_docker_stub(
+            ["bash", str(DEEPSEEK_HARNESS_BUILD)],
+            {"SKIP_SAVE": "1"},
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
+        build = self._event(events, "build")
+        context = DEEPSEEK_HARNESS_DIR / "v2"
+        self.assertEqual(str(context / "Dockerfile"), build[build.index("-f") + 1])
+        self.assertEqual(
+            "wildclawbench-deepseek-harness-ubuntu:v0.1",
+            build[build.index("-t") + 1],
+        )
+        self.assertIn("DSH_VERSION=0.1.1-rc.2", build)
+        self.assertEqual(str(context), build[-1])
+        self.assertNotIn("save", [event[0] for event in events])
+
+    def test_deepseek_harness_historical_build_uses_v1(self):
+        result, events = self._run_with_docker_stub(
+            [
+                "bash",
+                str(DEEPSEEK_HARNESS_BUILD),
+                "--version",
+                "v0.0",
+                "--skip-save",
+            ],
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
+        build = self._event(events, "build")
+        context = DEEPSEEK_HARNESS_DIR / "v1"
+        self.assertEqual(str(context / "Dockerfile"), build[build.index("-f") + 1])
+        self.assertEqual(
+            "wildclawbench-deepseek-harness-ubuntu:v0.0",
+            build[build.index("-t") + 1],
+        )
+        self.assertIn("DSH_VERSION=0.1.0-rc.6", build)
+
+    def test_pinned_deepseek_harness_version_cannot_be_overridden(self):
+        result, events = self._run_with_docker_stub(
+            ["bash", str(DEEPSEEK_HARNESS_BUILD)],
+            {"DSH_VERSION": "0.1.0-rc.6", "SKIP_SAVE": "1"},
+        )
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("DSH_VERSION must be 0.1.1-rc.2", result.stderr)
+        self.assertEqual([], events)
 
     def test_pinned_codex_base_cannot_be_overridden(self):
         result, events = self._run_with_docker_stub(

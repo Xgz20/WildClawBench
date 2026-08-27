@@ -1,0 +1,77 @@
+#!/bin/sh
+set -eu
+
+: "${DSH_MODEL_ID:?DSH_MODEL_ID is required}"
+: "${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required}"
+
+export DSH_HOME="${DSH_HOME:-/root/.dsh}"
+export DSH_PERMISSION_MODE="${DSH_PERMISSION_MODE:-danger-full-access}"
+export DSH_TELEMETRY_DISABLED=1
+
+DEEPSEEK_SEARCH_ENABLED="${DEEPSEEK_SEARCH_ENABLED:-true}"
+case "${DEEPSEEK_SEARCH_ENABLED}" in
+  true|false) ;;
+  *)
+    echo "DEEPSEEK_SEARCH_ENABLED must be true or false" >&2
+    exit 2
+    ;;
+esac
+export DEEPSEEK_SEARCH_ENABLED
+
+mkdir -p "${DSH_HOME}/sessions" /tmp_workspace
+patch_path="$(mktemp /tmp/wcb-dsh-patch.XXXXXX.yml)"
+trap 'rm -f "${patch_path}"' EXIT HUP INT TERM
+
+cat >"${patch_path}" <<'PATCH'
+- id: llm-pi-ai
+  name: '@deepseek-ai/dsh-llm-pi-ai'
+  config:
+    providers:
+      openrouter:
+        displayName: OpenRouter
+        apiKeyEnv: OPENROUTER_API_KEY
+        api: !!js process.env.DSH_API || 'openai-completions'
+        baseURL: !!js process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1'
+        reasoning: !!js process.env.DSH_REASONING || undefined
+        models:
+          - id: !!js process.env.DSH_MODEL_ID
+            maxTokens: !!js "process.env.DSH_MAX_TOKENS ? Number(process.env.DSH_MAX_TOKENS) : undefined"
+            compat: !!js "process.env.DSH_MAX_TOKENS ? { maxTokensField: 'max_tokens' } : undefined"
+            reasoningEfforts: !!js "process.env.DSH_REASONING ? { [process.env.DSH_REASONING]: process.env.DSH_REASONING } : undefined"
+
+- id: agent-default-model
+  name: '@deepseek-ai/dsh-agent-default-model'
+  config:
+    provider: openrouter
+    model: !!js process.env.DSH_MODEL_ID
+
+- id: session-persistence-jsonl
+  name: '@deepseek-ai/dsh-session-persistence-jsonl'
+  config:
+    root: !!js dshHomePath('sessions')
+    compression: none
+    packChunks: false
+
+# Keep deterministic fallback titles, but disable the auxiliary title LLM call.
+- id: session-title-llm
+  name: '@deepseek-ai/dsh-session-title-first-prompt-llm'
+  disabled: true
+
+# DSH-native DeepSeek Search remains part of this Harness capability surface.
+- id: web-search-deepseek
+  name: '@deepseek-ai/dsh-web-search-deepseek'
+  disabled: !!js "process.env.DEEPSEEK_SEARCH_ENABLED === 'false'"
+  config:
+    apiKeyEnv: DEEPSEEK_API_KEY
+    baseURL: !!js process.env.DEEPSEEK_SEARCH_BASE_URL || undefined
+    model: !!js process.env.DEEPSEEK_SEARCH_MODEL_ID || undefined
+
+- id: tool-web
+  name: '@deepseek-ai/dsh-tool-web'
+  config:
+    search: !!js "process.env.DEEPSEEK_SEARCH_ENABLED !== 'false'"
+    fetch: false
+    searchTimeoutMs: 60000
+PATCH
+
+exec dsh --profile headless --patch "${patch_path}" "$@"

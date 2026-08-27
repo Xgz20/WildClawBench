@@ -3,7 +3,9 @@
 This image is the runtime for the WildClawBench `deepseek-harness` backend. It
 uses `wildclawbench-codex-ubuntu:v0.0` as the final evaluation base, adds Node
 24 from `node:24-bookworm-slim`, and installs the published
-`@deepseek-ai/dsh@0.1.0-rc.6` package.
+`@deepseek-ai/dsh@0.1.1-rc.2` package. Versioned build contexts are immutable:
+`v1` preserves DSH `0.1.0-rc.6`, while `v2` contains DSH `0.1.1-rc.2`.
+`versions.json` maps image tags to those contexts and selects v0.1 by default.
 
 The shared WCB base keeps the Python, browser, media, and document toolchain
 aligned with the other Harness images. Both bases run as root, so this is task
@@ -13,19 +15,20 @@ still uses `DSH_PERMISSION_MODE=danger-full-access` inside the task container.
 ## Build
 
 ```bash
-docker build \
-  -t wildclawbench-deepseek-harness-ubuntu:v0.0 \
-  docker/deepseek-harness
+bash docker/deepseek-harness/build.sh --version v0.1 --skip-save
 
 docker run --rm --entrypoint dsh \
-  wildclawbench-deepseek-harness-ubuntu:v0.0 --version
+  wildclawbench-deepseek-harness-ubuntu:v0.1 --version
 ```
 
-The expected version is `0.1.0-rc.6`. The local Docker daemon must already
+The expected version is `0.1.1-rc.2`. The local Docker daemon must already
 contain `wildclawbench-codex-ubuntu:v0.0`. `EVAL_BASE_IMAGE` and
 `NODE_RUNTIME_IMAGE` are build arguments when compatible mirrored tags are
-required. The default npm registry is `https://registry.npmmirror.com`; use
-`--build-arg NPM_REGISTRY=<registry>` when necessary.
+required, but they must match the selected manifest entry. Set
+`NPM_REGISTRY=<registry>` when a compatible npm mirror is required. Omit
+`--version` to build the default v0.1 image, or use `--version v0.0` to
+rebuild the preserved historical image. Omit `--skip-save` to export the
+selected image below `Images/`.
 
 ## Run Through WildClawBench
 
@@ -44,7 +47,7 @@ and model ID are unnecessary; task-provided alternatives such as
 ```bash
 export OPENROUTER_API_KEY='<redacted>'
 export OPENROUTER_BASE_URL='https://provider.example/v2'
-export DOCKER_IMAGE_DEEPSEEK_HARNESS='wildclawbench-deepseek-harness-ubuntu:v0.0'
+export DOCKER_IMAGE_DEEPSEEK_HARNESS='wildclawbench-deepseek-harness-ubuntu:v0.1'
 export DEEPSEEK_SEARCH_ENABLED=false
 
 uv run eval/run_batch.py \
@@ -130,7 +133,7 @@ uv run python tools/deepseek_harness_poc.py convert \
   --output /path/to/output
 
 uv run python tools/deepseek_harness_poc.py run \
-  --image wildclawbench-deepseek-harness-ubuntu:v0.0 \
+  --image wildclawbench-deepseek-harness-ubuntu:v0.1 \
   --workspace /path/to/task-workspace \
   --model xopglm52 \
   --api openai-responses \
@@ -142,7 +145,27 @@ The converter recursively includes root and child `session.jsonl` files while
 leaving native files unchanged. The diagnostic runner writes redacted stdout,
 stderr, and a manifest that stores only a prompt digest.
 
-## Verification Boundary
+## v0.1 Upgrade Verification
+
+Verified on 2026-08-27 against the official `dsh-v0.1.1-rc.2` tag at commit
+`b150a551b8d465e31e418e1b2eaf5e79bbb7d28e`:
+
+- The image built successfully and reported DSH `0.1.1-rc.2` with Node
+  `v24.19.0`.
+- The launcher and headless help surfaces completed successfully, and the
+  existing WCB patch composed the custom model, JSONL persistence, optional
+  DeepSeek Search, and web-tool rows without errors.
+- A container-level Chat Completions smoke against a local mock endpoint
+  reached `/v1/chat/completions`, returned `mock-smoke-ok`, and persisted a
+  21-line `session.jsonl` file.
+- The existing transcript converter accepted that native session and generated
+  `chat.jsonl`, `usage.json`, and `conversion_manifest.json`.
+
+This verifies image construction, profile composition, one model request, raw
+session persistence, and conversion without exposing real credentials. It does
+not replace a real provider smoke or full benchmark run.
+
+## Historical v0.0 Verification
 
 Verified by the preceding PoC work on 2026-08-14:
 
