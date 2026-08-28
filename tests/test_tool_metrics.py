@@ -5,17 +5,13 @@
 from __future__ import annotations
 
 import json
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parents[1] / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
-
-from utils.tool_metrics import (  # noqa: E402
+from src.utils.tool_metrics import (
     classify_astroncode,
+    classify_claudecode,
     classify_codex,
     classify_opencode,
     execution_success_rate,
@@ -36,10 +32,17 @@ def _tool_use(call_id: str, name: str) -> dict:
     return {"type": "tool_use", "id": call_id, "name": name, "input": {}}
 
 
-def _tool_result(call_id: str, content: str, status: str = "") -> dict:
+def _tool_result(
+    call_id: str,
+    content: str,
+    status: str = "",
+    is_error: bool | None = None,
+) -> dict:
     block = {"type": "tool_result", "tool_use_id": call_id, "content": content}
     if status:
         block["status"] = status
+    if is_error is not None:
+        block["is_error"] = is_error
     return block
 
 
@@ -247,6 +250,22 @@ class OpenCodeClassifierTest(unittest.TestCase):
             self.assertNotEqual(classify_opencode("bash", content, "completed"), "format_error")
 
 
+class ClaudeCodeClassifierTest(unittest.TestCase):
+    def test_native_error_status_wins(self):
+        self.assertEqual(classify_claudecode("Bash", "ok"), "success")
+        self.assertEqual(classify_claudecode("Bash", "boom", "error"), "failure")
+        self.assertEqual(
+            classify_claudecode("Unknown", "unsupported call: Unknown", "error"),
+            "format_error",
+        )
+
+    def test_business_error_payload_is_completed_tool_execution(self):
+        self.assertEqual(
+            classify_claudecode("Bash", '{"error":"rate_limit_exceeded"}'),
+            "success",
+        )
+
+
 class RatioTest(unittest.TestCase):
     def test_ratios_and_none_guards(self):
         m = {"total": 10, "success": 6, "failure": 2, "format_error": 1, "unclear": 1}
@@ -411,6 +430,34 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(metrics["failure"], 1)
         self.assertEqual(metrics["unclear"], 1)
         self.assertEqual(metrics["format_error"], 0)
+
+    def test_claudecode_uses_normalized_is_error(self):
+        lines = [
+            _codex_line("assistant", _tool_use("c1", "Bash")),
+            _codex_line(
+                "user",
+                _tool_result("c1", '{"messages":[]}', is_error=False),
+            ),
+            _codex_line("assistant", _tool_use("c2", "Bash")),
+            _codex_line(
+                "user",
+                _tool_result("c2", "command failed", is_error=True),
+            ),
+            _codex_line("assistant", _tool_use("c3", "Unknown")),
+            _codex_line(
+                "user",
+                _tool_result("c3", "unsupported call: Unknown", is_error=True),
+            ),
+        ]
+        path = self._write("chat_claudecode.jsonl", "\n".join(lines) + "\n")
+
+        metrics = parse_tool_metrics(path, "claudecode")
+
+        self.assertEqual(metrics["total"], 3)
+        self.assertEqual(metrics["success"], 1)
+        self.assertEqual(metrics["failure"], 1)
+        self.assertEqual(metrics["format_error"], 1)
+        self.assertEqual(metrics["unclear"], 0)
 
     def test_hermesagent_uses_standard_tool_results_and_structured_status(self):
         lines = [

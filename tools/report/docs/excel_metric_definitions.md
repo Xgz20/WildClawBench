@@ -45,6 +45,8 @@
 | 执行成功率 | `success / (success + failure)` | 合理；排除 `unclear` 和 `format_error` |
 | 不确定占比 | `unclear / total` | 合理，建议与执行成功率同时看 |
 
+ClaudeCode 的 `request_count` 优先读取显式 `model_request`、`query_start` 或 `modelUsage.requestCount`；官方 `stream-json` 未提供这些字段时，按唯一 assistant `message.id` 统计模型响应次数，不使用包含工具轮次的 `result.num_turns`。
+
 四态分类见 [`classify_report_outcome`](../../../src/utils/anomalies.py#L376)；总览写表见 [`write_overview_sheet`](../scripts/generate_eval_report.py#L803)。
 
 成本公式：
@@ -137,7 +139,7 @@ CNY 定价再除以定价日 `CNY/USD`；分档模型按逐请求输入 token �
 | 成功率 | `success / total` | 与总览“执行成功率”的分母不同 |
 | 格式准确率 | `(total - format_error) / total` | OpenCode classifier 不产生 `format_error`，该值天然为 100% |
 
-OpenCode 的 `completed` 一律记为成功，包括业务错误 JSON；`running/pending` 记为不确定。工具指标适合单 Harness 内诊断，不适合直接跨 Harness 排名。源码见 [`tool_result` 配对](../../../src/utils/tool_metrics.py#L92)、[OpenCode 分类](../../../src/utils/tool_metrics.py#L253)、[派生比率](../../../src/utils/tool_metrics.py#L343)。
+OpenCode 的 `completed` 一律记为成功，包括业务错误 JSON；`running/pending` 记为不确定。ClaudeCode 优先使用归一化轨迹保留的 `tool_result.is_error`；命令成功返回业务错误 JSON 仍记为工具执行成功。工具指标适合单 Harness 内诊断，不适合直接跨 Harness 排名。源码见 [`tool_result` 配对](../../../src/utils/tool_metrics.py#L92)、[OpenCode 分类](../../../src/utils/tool_metrics.py#L253)、[派生比率](../../../src/utils/tool_metrics.py#L343)。
 
 ### 8. 用例对比明细
 

@@ -464,13 +464,7 @@ class ClaudeCodeAgent(BaseAgent):
             cache_write_tokens = int(
                 self._num(usage.get("cache_creation_input_tokens"))
             )
-            request_count = int(self._num(payload.get("num_turns")))
-            if request_count <= 0:
-                request_count = sum(
-                    1
-                    for row in payloads
-                    if isinstance(row, dict) and row.get("type") == "assistant"
-                )
+            request_count = self._request_count_from_rows(payloads)
             return {
                 "input_tokens": input_tokens,
                 "output_tokens": output_tokens,
@@ -1044,6 +1038,9 @@ PY"""
                     continue
                 rows.append(row)
 
+        return self._request_count_from_rows(rows)
+
+    def _request_count_from_rows(self, rows: list[Any]) -> int:
         model_requests = sum(
             1
             for row in rows
@@ -1065,24 +1062,33 @@ PY"""
         for row in reversed(rows):
             if not isinstance(row, dict) or row.get("type") != "result":
                 continue
-            num_turns = int(self._num(row.get("num_turns")))
-            if num_turns > 0:
-                return num_turns
+            model_usage_requests = self._request_count_from_model_usage(
+                row.get("modelUsage")
+            )
+            if model_usage_requests > 0:
+                return model_usage_requests
 
-        return sum(
-            1
-            for row in rows
-            if isinstance(row, dict)
-            and (
+        assistant_message_ids: set[str] = set()
+        anonymous_assistant_messages = 0
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            message = row.get("message")
+            message = message if isinstance(message, dict) else {}
+            is_assistant = (
                 str(row.get("role", "")).lower() == "assistant"
                 or str(row.get("type", "")).lower() == "assistant"
-                or (
-                    isinstance(row.get("message"), dict)
-                    and str(row["message"].get("role", "")).lower()
-                    == "assistant"
-                )
+                or str(message.get("role", "")).lower() == "assistant"
             )
-        )
+            if not is_assistant:
+                continue
+            message_id = message.get("id")
+            if message_id is None:
+                anonymous_assistant_messages += 1
+                continue
+            assistant_message_ids.add(str(message_id))
+
+        return len(assistant_message_ids) + anonymous_assistant_messages
 
     @staticmethod
     def _probe_harness_version(task_id: str) -> str:

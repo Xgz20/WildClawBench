@@ -168,6 +168,82 @@ class ClaudeCodeTranscriptTests(unittest.TestCase):
         )
         self.assertEqual(converted[-1]["message"]["content"][0]["text"], "Done.")
 
+    def test_official_stream_merges_interleaved_message_fragments(self) -> None:
+        rows = [
+            self.wrapped_message("user", "run the task", message_id="user-1"),
+            self.wrapped_message(
+                "assistant",
+                [{"type": "text", "text": "Reading both messages."}],
+                message_id="assistant-1",
+            ),
+            self.wrapped_message(
+                "assistant",
+                [
+                    {
+                        "type": "tool_use",
+                        "id": "call-1",
+                        "name": "Bash",
+                        "input": {"command": "read one"},
+                    }
+                ],
+                message_id="assistant-1",
+            ),
+            self.wrapped_message(
+                "user",
+                [
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": "call-1",
+                        "content": "one",
+                    }
+                ],
+                message_id="tool-result-1",
+            ),
+            self.wrapped_message(
+                "assistant",
+                [
+                    {
+                        "type": "tool_use",
+                        "id": "call-2",
+                        "name": "Bash",
+                        "input": {"command": "read two"},
+                    }
+                ],
+                message_id="assistant-1",
+            ),
+            self.wrapped_message(
+                "user",
+                [
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": "call-2",
+                        "content": "two",
+                    }
+                ],
+                message_id="tool-result-2",
+            ),
+            self.wrapped_message(
+                "assistant",
+                [{"type": "text", "text": "Done."}],
+                message_id="assistant-final",
+            ),
+        ]
+
+        converted = self.convert(rows)
+
+        self.assertEqual(
+            [row["message"]["role"] for row in converted],
+            ["user", "assistant", "user", "assistant"],
+        )
+        self.assertEqual(
+            [block["type"] for block in converted[1]["message"]["content"]],
+            ["text", "tool_use", "tool_use"],
+        )
+        self.assertEqual(
+            [block["tool_use_id"] for block in converted[2]["message"]["content"]],
+            ["call-1", "call-2"],
+        )
+
     def test_claude_fragments_merge_by_message_id_without_empty_thinking_message(self) -> None:
         rows = [
             {

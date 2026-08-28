@@ -154,6 +154,18 @@ def _merge_assistant_message_fragments(
         message = item.get("message")
         if not isinstance(message, dict) or message.get("role") != "assistant":
             merged.append(item)
+            content = message.get("content") if isinstance(message, dict) else None
+            is_tool_result_message = (
+                message.get("role") == "user"
+                and isinstance(content, list)
+                and bool(content)
+                and all(
+                    isinstance(block, dict) and block.get("type") == "tool_result"
+                    for block in content
+                )
+            )
+            if is_tool_result_message and last_assistant is not None:
+                continue
             last_assistant_id = None
             last_assistant = None
             continue
@@ -188,6 +200,61 @@ def _merge_assistant_message_fragments(
     return merged
 
 
+def _merge_user_tool_result_fragments(
+    normalized: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+
+    for item in normalized:
+        message = item.get("message")
+        content = message.get("content") if isinstance(message, dict) else None
+        is_tool_result_message = (
+            isinstance(message, dict)
+            and message.get("role") == "user"
+            and isinstance(content, list)
+            and bool(content)
+            and all(
+                isinstance(block, dict) and block.get("type") == "tool_result"
+                for block in content
+            )
+        )
+        if not is_tool_result_message or not merged:
+            merged.append(item)
+            continue
+
+        previous_message = merged[-1].get("message")
+        previous_content = (
+            previous_message.get("content")
+            if isinstance(previous_message, dict)
+            else None
+        )
+        previous_is_tool_result_message = (
+            isinstance(previous_message, dict)
+            and previous_message.get("role") == "user"
+            and isinstance(previous_content, list)
+            and bool(previous_content)
+            and all(
+                isinstance(block, dict) and block.get("type") == "tool_result"
+                for block in previous_content
+            )
+        )
+        if previous_is_tool_result_message:
+            previous_content.extend(content)
+            continue
+
+        merged.append(item)
+
+    return merged
+
+
+def _merge_message_fragments(
+    normalized: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    return _merge_user_tool_result_fragments(
+        _merge_assistant_message_fragments(normalized)
+    )
+
+
 def _last_model_request_context(rows: list[Any]) -> tuple[int, list[dict[str, Any]]] | None:
     last_index = -1
     last_messages: list[Any] | None = None
@@ -208,7 +275,7 @@ def _last_model_request_context(rows: list[Any]) -> tuple[int, list[dict[str, An
         message = _normalize_claude_message_item(item)
         if message is not None:
             normalized.append(message)
-    return last_index, _merge_assistant_message_fragments(normalized)
+    return last_index, _merge_message_fragments(normalized)
 
 
 def _complete_message_from_row(row: Any) -> dict[str, Any] | None:
@@ -486,6 +553,8 @@ def convert_claudecode_chat_to_openclaw_jsonl(chat_path: Path, output_path: Path
                 if normalized_row is not None:
                     role_messages.append(normalized_row)
             normalized = role_messages
+
+    normalized = _merge_message_fragments(normalized)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     payload = ""

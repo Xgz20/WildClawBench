@@ -403,6 +403,7 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
                 "type": "assistant",
                 "message": {
                     "role": "assistant",
+                    "id": "assistant-1",
                     "content": [{"type": "text", "text": "done"}],
                     "usage": {"input_tokens": 12, "output_tokens": 4},
                 },
@@ -443,7 +444,68 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
         self.assertEqual(usage["cache_write_tokens"], 10)
         self.assertEqual(usage["total_tokens"], 200)
         self.assertEqual(usage["cost_usd"], 0.42)
-        self.assertEqual(usage["request_count"], 3)
+        self.assertEqual(usage["request_count"], 1)
+
+    def test_request_count_deduplicates_official_assistant_fragments(self) -> None:
+        rows = [
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "id": "assistant-1",
+                    "content": [{"type": "text", "text": "working"}],
+                },
+            },
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "id": "assistant-1",
+                    "content": [
+                        {
+                            "type": "tool_use",
+                            "id": "call-1",
+                            "name": "Bash",
+                            "input": {"command": "pwd"},
+                        }
+                    ],
+                },
+            },
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "id": "assistant-final",
+                    "content": [{"type": "text", "text": "done"}],
+                },
+            },
+            {"type": "result", "num_turns": 26},
+        ]
+
+        self.assertEqual(self.agent._request_count_from_rows(rows), 2)
+
+    def test_request_count_prefers_model_usage_request_count(self) -> None:
+        rows = [
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "id": "assistant-1",
+                    "content": [{"type": "text", "text": "done"}],
+                },
+            },
+            {
+                "type": "result",
+                "num_turns": 26,
+                "modelUsage": {
+                    "claude-test": {
+                        "requestCount": 4,
+                    }
+                },
+            },
+        ]
+
+        self.assertEqual(self.agent._request_count_from_rows(rows), 4)
 
     def test_run_task_records_timeout_status_and_failure_stage(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

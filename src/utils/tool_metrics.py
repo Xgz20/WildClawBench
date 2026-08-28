@@ -95,7 +95,7 @@ def _load_tool_pairs(transcript_path: Path | None) -> list[tuple[str, str, str]]
 
     - 建立 call_id -> tool_name 映射（tool_use 块）
     - 每个 tool_result 块配对出工具名、结果文本、可选 status 字段
-    - status 仅 OpenCode 新轨迹有（runner 保留），其余为 ""
+    - status 优先保留原生字段；`is_error=true` 统一折算为 error
     """
     if transcript_path is None:
         return []
@@ -135,6 +135,8 @@ def _load_tool_pairs(transcript_path: Path | None) -> list[tuple[str, str, str]]
                     content, ensure_ascii=False
                 )
                 status = str(block.get("status") or "")
+                if not status and block.get("is_error") is True:
+                    status = "error"
                 pairs.append((name, content_text, status))
 
         # OpenClaw/AstronClaw 原生轨迹把 toolResult 放在 message 本身，
@@ -511,12 +513,30 @@ def classify_hermesagent(tool_name: str, content: str, status: str = "") -> str:
     return "success" if content else "unclear"
 
 
+def classify_claudecode(tool_name: str, content: str, status: str = "") -> str:
+    """ClaudeCode：优先使用转换轨迹保留的 tool_result.is_error。"""
+    _ = tool_name
+    st = (status or "").strip().lower()
+    text = content or ""
+
+    if st in {"error", "failed", "failure"}:
+        return "format_error" if _is_format_error(text) else "failure"
+    if st in {"success", "completed", "ok"}:
+        return "success"
+    if st in {"running", "pending"}:
+        return "unclear"
+    if _is_format_error(text):
+        return "format_error"
+    return "success" if text else "unclear"
+
+
 register_classifier(("codex",), classify_codex)
 register_classifier(("astroncode",), classify_astroncode)
 register_classifier(("opencode",), classify_opencode)
 register_classifier(("openclaw", "astronclaw"), classify_openclaw)
 register_classifier(("deepseek-harness",), classify_deepseek_harness)
 register_classifier(("hermesagent",), classify_hermesagent)
+register_classifier(("claudecode",), classify_claudecode)
 
 
 # ---------------------------------------------------------------------------
