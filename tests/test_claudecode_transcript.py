@@ -110,6 +110,64 @@ class ClaudeCodeTranscriptTests(unittest.TestCase):
         self.assertEqual(tool_result["tool_use_id"], "call-1")
         self.assertFalse(tool_result["is_error"])
 
+    def test_official_stream_json_preserves_user_tool_flow(self) -> None:
+        rows = [
+            {
+                "type": "system",
+                "subtype": "init",
+                "claude_code_version": "2.1.250",
+            },
+            self.wrapped_message("user", "run the task", message_id="user-1"),
+            self.wrapped_message(
+                "assistant",
+                [
+                    {
+                        "type": "tool_use",
+                        "id": "call-1",
+                        "name": "Bash",
+                        "input": {"command": "pwd"},
+                    }
+                ],
+                message_id="assistant-1",
+            ),
+            self.wrapped_message(
+                "user",
+                [
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": "call-1",
+                        "content": "/tmp_workspace",
+                        "is_error": False,
+                    }
+                ],
+                message_id="tool-result-1",
+            ),
+            self.wrapped_message(
+                "assistant",
+                [{"type": "text", "text": "Done."}],
+                message_id="assistant-2",
+            ),
+            {
+                "type": "result",
+                "subtype": "success",
+                "num_turns": 2,
+                "usage": {"input_tokens": 20, "output_tokens": 5},
+            },
+        ]
+
+        converted = self.convert(rows)
+
+        self.assertEqual(
+            [row["message"]["role"] for row in converted],
+            ["user", "assistant", "user", "assistant"],
+        )
+        self.assertEqual(converted[1]["message"]["content"][0]["id"], "call-1")
+        self.assertEqual(
+            converted[2]["message"]["content"][0]["tool_use_id"],
+            "call-1",
+        )
+        self.assertEqual(converted[-1]["message"]["content"][0]["text"], "Done.")
+
     def test_claude_fragments_merge_by_message_id_without_empty_thinking_message(self) -> None:
         rows = [
             {

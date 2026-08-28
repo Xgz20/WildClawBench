@@ -210,16 +210,18 @@ WildClawBench ships **four** Docker images, one per harness. They are all hosted
 | Harness | Image tarball | Loaded tag |
 |---|---|---|
 | OpenClaw     | `wildclawbench-ubuntu_v1.3.tar`                       | `wildclawbench-ubuntu:v1.3` |
-| Claude Code  | `wildclawbench-claudecode-ubuntu_v0.2-patched.tar`    | `wildclawbench-claudecode-ubuntu:v0.2-patched` |
+| Claude Code  | `wildclawbench-claudecode-ubuntu_v0.3.tar.gz`         | `wildclawbench-claudecode-ubuntu:v0.3` |
 | Codex CLI    | `wildclawbench-codex-ubuntu_v0.0.tar`                 | `wildclawbench-codex-ubuntu:v0.0` |
 | Hermes Agent | `wildclawbench-hermes-agent-v0.5.tar.gz`              | `wildclawbench-hermes-agent:v0.5` |
+
+Claude Code v0.3 也可从仓库构建；如果 Hugging Face 数据集尚未同步该归档，先加载 Codex v0.0 底座，再执行 `bash docker/claudecode/build.sh --version v0.3`。
 
 ```bash
 pip install -U "huggingface_hub[cli]"
 
 # Download the images you need (or all four)
 hf download internlm/WildClawBench Images/wildclawbench-ubuntu_v1.3.tar                    --repo-type dataset --local-dir .
-hf download internlm/WildClawBench Images/wildclawbench-claudecode-ubuntu_v0.2-patched.tar --repo-type dataset --local-dir .
+hf download internlm/WildClawBench Images/wildclawbench-claudecode-ubuntu_v0.3.tar.gz      --repo-type dataset --local-dir .
 hf download internlm/WildClawBench Images/wildclawbench-codex-ubuntu_v0.0.tar              --repo-type dataset --local-dir .
 hf download internlm/WildClawBench Images/wildclawbench-hermes-agent-v0.5.tar.gz           --repo-type dataset --local-dir .
 ```
@@ -228,7 +230,7 @@ Then load each image into Docker:
 
 ```bash
 docker load -i Images/wildclawbench-ubuntu_v1.3.tar
-docker load -i Images/wildclawbench-claudecode-ubuntu_v0.2-patched.tar
+docker load -i Images/wildclawbench-claudecode-ubuntu_v0.3.tar.gz
 docker load -i Images/wildclawbench-codex-ubuntu_v0.0.tar
 docker load -i Images/wildclawbench-hermes-agent-v0.5.tar.gz
 ```
@@ -496,7 +498,7 @@ If a run is interrupted (e.g. `Ctrl+C`, terminal closed), some Docker containers
 ```bash
 for img in \
     wildclawbench-ubuntu:v1.3 \
-    wildclawbench-claudecode-ubuntu:v0.2-patched \
+    wildclawbench-claudecode-ubuntu:v0.3 \
     wildclawbench-codex-ubuntu:v0.0 \
     wildclawbench-hermes-agent:v0.5; do
   docker ps -a --filter "ancestor=$img" -q | xargs -r docker rm -f

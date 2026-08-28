@@ -22,7 +22,7 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
             anthropic_base_url="https://anthropic.example/v1",
         )
 
-    def test_default_image_uses_formal_patched_tag(self) -> None:
+    def test_default_image_uses_official_global_cli_tag(self) -> None:
         with patch.dict(
             os.environ,
             {"DOCKER_IMAGE_CLAUDECODE": "", "CLAUDECODE_DOCKER_IMAGE": ""},
@@ -31,7 +31,7 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
 
         self.assertEqual(
             agent.image,
-            "wildclawbench-claudecode-ubuntu:v0.2-patched",
+            "wildclawbench-claudecode-ubuntu:v0.3",
         )
 
     def test_image_override_precedence_remains_compatible(self) -> None:
@@ -66,6 +66,11 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
 
         self.assertIn("--effort high", command)
         self.assertNotIn("--thinking", command)
+        self.assertIn("command -v claude", command)
+        self.assertIn("--output-format stream-json", command)
+        self.assertIn("--dangerously-skip-permissions", command)
+        self.assertIn("tee /claude_code/log/chat.json", command)
+        self.assertIn("/claude_code/start.sh", command)
 
     def test_build_prompt_command_omits_empty_effort(self) -> None:
         for thinking in (None, "", "   "):
@@ -89,20 +94,26 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
     def test_probe_harness_version_reads_claudecode_package_metadata(self) -> None:
         with patch("src.agents.claudecode.runner.subprocess.run") as run:
             run.return_value.returncode = 0
-            run.return_value.stdout = "2.1.233\n"
+            run.return_value.stdout = "2.1.250 (Claude Code)\n"
             run.return_value.stderr = ""
 
             version = self.agent._probe_harness_version("claudecode-version-test")
 
-        self.assertEqual(version, "2.1.233")
+        self.assertEqual(version, "2.1.250")
         run.assert_called_once_with(
             [
                 "docker",
                 "exec",
                 "claudecode-version-test",
-                "node",
-                "-p",
-                "require('/claude_code/package.json').version",
+                "/bin/bash",
+                "-lc",
+                (
+                    "if command -v claude >/dev/null 2>&1; then "
+                    "claude --version; "
+                    "elif [ -f /claude_code/package.json ]; then "
+                    "node -p \"require('/claude_code/package.json').version\"; "
+                    "else exit 127; fi"
+                ),
             ],
             capture_output=True,
             text=True,
@@ -129,6 +140,8 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
             if call.args[0][:2] == ["docker", "run"]
         )
         self.assertIn("CLAUDE_CODE_MAX_OUTPUT_TOKENS=3072", command)
+        self.assertIn("CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1", command)
+        self.assertIn("DISABLE_AUTOUPDATER=1", command)
         messages = "\n".join(logs.output)
         self.assertIn("Starting ClaudeCode container", messages)
         self.assertIn("Container ID: container-id", messages)
@@ -376,6 +389,61 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
             )
             report = scan_run_dir(output_dir)
             self.assertNotIn("EMPTY_TRANSCRIPT", {item["id"] for item in report["items"]})
+
+    def test_collect_usage_reads_official_stream_json_result(self) -> None:
+        chat_rows = [
+            {
+                "type": "user",
+                "message": {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "task"}],
+                },
+            },
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": "done"}],
+                    "usage": {"input_tokens": 12, "output_tokens": 4},
+                },
+            },
+            {
+                "type": "result",
+                "subtype": "success",
+                "num_turns": 3,
+                "total_cost_usd": 0.42,
+                "usage": {
+                    "input_tokens": 120,
+                    "output_tokens": 40,
+                    "cache_read_input_tokens": 30,
+                    "cache_creation_input_tokens": 10,
+                },
+            },
+        ]
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "run"
+
+            def copy_file(_task_id: str, _src: str, dest: Path) -> None:
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(
+                    "\n".join(json.dumps(row) for row in chat_rows) + "\n",
+                    encoding="utf-8",
+                )
+
+            with (
+                patch.object(self.agent, "_copy_file_from_container", side_effect=copy_file),
+                patch.object(self.agent, "_copy_dir_from_container"),
+            ):
+                usage = self.agent.collect_usage("claudecode-official", output_dir, 9.5)
+
+        self.assertEqual(usage["input_tokens"], 120)
+        self.assertEqual(usage["output_tokens"], 40)
+        self.assertEqual(usage["cache_read_tokens"], 30)
+        self.assertEqual(usage["cache_write_tokens"], 10)
+        self.assertEqual(usage["total_tokens"], 200)
+        self.assertEqual(usage["cost_usd"], 0.42)
+        self.assertEqual(usage["request_count"], 3)
 
     def test_run_task_records_timeout_status_and_failure_stage(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

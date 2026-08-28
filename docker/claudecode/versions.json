@@ -1,0 +1,23 @@
+{
+  "default": "v0.3",
+  "versions": {
+    "v0.3": {
+      "image": "wildclawbench-claudecode-ubuntu:v0.3",
+      "context": "v3",
+      "dockerfile": "v3/Dockerfile",
+      "build_args": {
+        "CLAUDE_CODE_VERSION": "2.1.250",
+        "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0",
+        "NODE_RUNTIME_IMAGE": "node:24-bookworm-slim"
+      }
+    }
+  },
+  "legacy_versions": {
+    "v0.2-patched": {
+      "image": "wildclawbench-claudecode-ubuntu:v0.2-patched",
+      "claude_code_version": "2.1.88",
+      "archive": "wildclawbench-claudecode-ubuntu_v0.2-patched.tar",
+      "buildable": false
+    }
+  }
+}
