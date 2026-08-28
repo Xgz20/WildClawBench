@@ -113,7 +113,7 @@ class ClaudeCodeAgent(BaseAgent):
             image
             or os.environ.get("DOCKER_IMAGE_CLAUDECODE")
             or os.environ.get("CLAUDECODE_DOCKER_IMAGE")
-            or "wildclawbench-claudecode-ubuntu:v0.2-patched"
+            or "wildclawbench-claudecode-ubuntu:v0.3"
         )
         explicit_api_key = anthropic_api_key.strip()
         self.api_key = explicit_api_key or os.environ.get("OPENROUTER_API_KEY", "")
@@ -331,7 +331,6 @@ class ClaudeCodeAgent(BaseAgent):
 
         log_dest = output_dir / "claude_code_log"
         log_dest.mkdir(parents=True, exist_ok=True)
-        self._copy_file_from_container(task_id, "/claude_code/log/usage.json", log_dest / "usage.json")
         self._copy_file_from_container(task_id, "/claude_code/log/chat.json", log_dest / "chat.json")
         self._copy_dir_from_container(task_id, "/claude_code/log/.", log_dest)
         self._sync_agent_log_from_claude_logs(task_id, output_dir, log_dest)
@@ -428,6 +427,10 @@ class ClaudeCodeAgent(BaseAgent):
                 except json.JSONDecodeError:
                     continue
 
+        official_usage = self._extract_official_result_usage(payloads)
+        if official_usage is not None:
+            return official_usage
+
         for payload in payloads:
             self._accumulate_costed_usage(payload, totals)
 
@@ -441,6 +444,51 @@ class ClaudeCodeAgent(BaseAgent):
             totals["cost_usd"] = self._estimate_cost(totals)
         totals["cost_usd"] = round(totals["cost_usd"], 6)
         return totals
+
+    def _extract_official_result_usage(
+        self,
+        payloads: list[Any],
+    ) -> dict[str, Any] | None:
+        for payload in reversed(payloads):
+            if not isinstance(payload, dict) or payload.get("type") != "result":
+                continue
+            usage = payload.get("usage")
+            if not isinstance(usage, dict):
+                continue
+
+            input_tokens = int(self._num(usage.get("input_tokens")))
+            output_tokens = int(self._num(usage.get("output_tokens")))
+            cache_read_tokens = int(
+                self._num(usage.get("cache_read_input_tokens"))
+            )
+            cache_write_tokens = int(
+                self._num(usage.get("cache_creation_input_tokens"))
+            )
+            request_count = int(self._num(payload.get("num_turns")))
+            if request_count <= 0:
+                request_count = sum(
+                    1
+                    for row in payloads
+                    if isinstance(row, dict) and row.get("type") == "assistant"
+                )
+            return {
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "cache_read_tokens": cache_read_tokens,
+                "cache_write_tokens": cache_write_tokens,
+                "total_tokens": (
+                    input_tokens
+                    + output_tokens
+                    + cache_read_tokens
+                    + cache_write_tokens
+                ),
+                "cost_usd": round(
+                    self._num(payload.get("total_cost_usd")),
+                    6,
+                ),
+                "request_count": request_count,
+            }
+        return None
 
     def _accumulate_costed_usage(self, payload: Any, totals: dict[str, Any]) -> None:
         if isinstance(payload, list):
@@ -538,6 +586,10 @@ class ClaudeCodeAgent(BaseAgent):
             "DISABLE_PROMPT_CACHING": os.environ.get("DISABLE_PROMPT_CACHING", "1"),
             "DISABLE_INTERLEAVED_THINKING": os.environ.get("DISABLE_INTERLEAVED_THINKING", "1"),
             "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": os.environ.get("CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS", "1"),
+            "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": os.environ.get(
+                "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC", "1"
+            ),
+            "DISABLE_AUTOUPDATER": os.environ.get("DISABLE_AUTOUPDATER", "1"),
             "IS_SANDBOX": os.environ.get("IS_SANDBOX", "1"),
             "CLAUDE_CODE_FULL_LOG_PATH": os.environ.get("CLAUDE_CODE_FULL_LOG_PATH", "./log"),
             "http_proxy": proxy_http,
@@ -584,6 +636,8 @@ class ClaudeCodeAgent(BaseAgent):
 from pathlib import Path
 
 path = Path("/claude_code/src/tasks/LocalAgentTask/LocalAgentTask.tsx")
+if not path.exists():
+    raise SystemExit(0)
 text = path.read_text(encoding="utf-8")
 old = "  const usage = message.message.usage;\n  // Keep latest input (it's cumulative in the API), sum outputs\n"
 new = '''  const usage = message.message.usage ?? {
@@ -652,13 +706,45 @@ PY"""
             if normalized_thinking
             else ""
         )
-        return (
+        prompt_event = json.dumps(
+            {
+                "type": "user",
+                "message": {
+                    "role": "user",
+                    "content": [{"type": "text", "text": prompt}],
+                },
+            },
+            ensure_ascii=False,
+        )
+        official_command = (
+            "mkdir -p /claude_code/log && "
+            "cd /tmp_workspace && "
+            "set -o pipefail && "
+            f"{{ printf '%s\\n' {shlex.quote(prompt_event)}; "
+            "IS_SANDBOX=1 claude "
+            "--print --verbose --output-format stream-json "
+            "--dangerously-skip-permissions "
+            "--no-session-persistence --no-chrome "
+            "--add-dir /tmp_workspace "
+            f"--model {shlex.quote(model)}"
+            f"{effort_arg} "
+            f"-- {shlex.quote(prompt)}; }} "
+            "| tee /claude_code/log/chat.json"
+        )
+        legacy_command = (
             "cd /claude_code && "
             "IS_SANDBOX=1 ./start.sh "
             "--add-dir /tmp_workspace "
             f"--model {shlex.quote(model)}"
             f"{effort_arg} "
             f"-p {shlex.quote(prompt)}"
+        )
+        return (
+            "if command -v claude >/dev/null 2>&1; then "
+            f"{official_command}; "
+            "elif [ -x /claude_code/start.sh ]; then "
+            f"{legacy_command}; "
+            "else echo 'Claude Code CLI is not installed' >&2; exit 127; fi"
         )
 
     def _run_prompt(
@@ -976,11 +1062,26 @@ PY"""
         if query_starts > 0:
             return query_starts
 
+        for row in reversed(rows):
+            if not isinstance(row, dict) or row.get("type") != "result":
+                continue
+            num_turns = int(self._num(row.get("num_turns")))
+            if num_turns > 0:
+                return num_turns
+
         return sum(
             1
             for row in rows
             if isinstance(row, dict)
-            and str(row.get("role", "")).lower() == "assistant"
+            and (
+                str(row.get("role", "")).lower() == "assistant"
+                or str(row.get("type", "")).lower() == "assistant"
+                or (
+                    isinstance(row.get("message"), dict)
+                    and str(row["message"].get("role", "")).lower()
+                    == "assistant"
+                )
+            )
         )
 
     @staticmethod
@@ -991,9 +1092,15 @@ PY"""
                     "docker",
                     "exec",
                     task_id,
-                    "node",
-                    "-p",
-                    "require('/claude_code/package.json').version",
+                    "/bin/bash",
+                    "-lc",
+                    (
+                        "if command -v claude >/dev/null 2>&1; then "
+                        "claude --version; "
+                        "elif [ -f /claude_code/package.json ]; then "
+                        "node -p \"require('/claude_code/package.json').version\"; "
+                        "else exit 127; fi"
+                    ),
                 ],
                 capture_output=True,
                 text=True,
@@ -1011,7 +1118,7 @@ PY"""
             )
             return ""
         first_line = (result.stdout or "").strip().splitlines()
-        return first_line[0].split()[-1] if first_line else ""
+        return first_line[0].split()[0] if first_line else ""
 
     def _num(self, value: Any, default: float = 0.0) -> float:
         if value is None:

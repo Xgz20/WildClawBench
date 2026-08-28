@@ -9,12 +9,15 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ASTRONCODE_DIR = REPO_ROOT / "docker" / "astroncode"
+CLAUDECODE_DIR = REPO_ROOT / "docker" / "claudecode"
 CODEX_DIR = REPO_ROOT / "docker" / "codex"
 DEEPSEEK_HARNESS_DIR = REPO_ROOT / "docker" / "deepseek-harness"
 ASTRONCODE_BUILD = ASTRONCODE_DIR / "build.sh"
+CLAUDECODE_BUILD = CLAUDECODE_DIR / "build.sh"
 CODEX_BUILD = CODEX_DIR / "build.sh"
 DEEPSEEK_HARNESS_BUILD = DEEPSEEK_HARNESS_DIR / "build.sh"
 ASTRONCODE_MANIFEST = ASTRONCODE_DIR / "versions.json"
+CLAUDECODE_MANIFEST = CLAUDECODE_DIR / "versions.json"
 CODEX_MANIFEST = CODEX_DIR / "versions.json"
 DEEPSEEK_HARNESS_MANIFEST = DEEPSEEK_HARNESS_DIR / "versions.json"
 ASTRONCODE_WRAPPER = REPO_ROOT / "script" / "build-astroncode-image.sh"
@@ -24,6 +27,7 @@ BUILD_ENV_NAMES = (
     "ASTRONCODE_DOCKER_VARIANT",
     "ASTRON_CODE_VERSION",
     "ASTRON_CODE_DEV_VERSION",
+    "CLAUDE_CODE_VERSION",
     "NODEJS_VERSION",
     "SEARCH_UPDATER_VERSION",
     "CODEX_VERSION",
@@ -105,6 +109,27 @@ class ImageVersionManifestTest(unittest.TestCase):
         )
         self.assertTrue((CODEX_DIR / entry["dockerfile"]).is_file())
 
+    def test_claudecode_manifest_defaults_to_official_global_cli(self):
+        manifest = self._load_manifest(CLAUDECODE_MANIFEST)
+        self.assertEqual("v0.3", manifest["default"])
+        self.assertEqual({"v0.3"}, set(manifest["versions"]))
+        entry = manifest["versions"]["v0.3"]
+        self.assertEqual("wildclawbench-claudecode-ubuntu:v0.3", entry["image"])
+        self.assertEqual("v3", entry["context"])
+        self.assertEqual("v3/Dockerfile", entry["dockerfile"])
+        self.assertEqual(
+            {
+                "CLAUDE_CODE_VERSION": "2.1.250",
+                "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0",
+                "NODE_RUNTIME_IMAGE": "node:24-bookworm-slim",
+            },
+            entry["build_args"],
+        )
+        legacy = manifest["legacy_versions"]["v0.2-patched"]
+        self.assertEqual("2.1.88", legacy["claude_code_version"])
+        self.assertFalse(legacy["buildable"])
+        self.assertTrue((CLAUDECODE_DIR / entry["dockerfile"]).is_file())
+
     def test_deepseek_harness_manifest_preserves_v1_and_defaults_to_v2(self):
         manifest = self._load_manifest(DEEPSEEK_HARNESS_MANIFEST)
         self.assertEqual("v0.1", manifest["default"])
@@ -137,12 +162,14 @@ class ImageVersionManifestTest(unittest.TestCase):
 
     def test_harness_directories_do_not_duplicate_version_contexts_under_releases(self):
         self.assertFalse((ASTRONCODE_DIR / "releases").exists())
+        self.assertFalse((CLAUDECODE_DIR / "releases").exists())
         self.assertFalse((CODEX_DIR / "releases").exists())
         self.assertFalse((DEEPSEEK_HARNESS_DIR / "releases").exists())
 
     def test_canonical_builders_are_executable_and_export_capable(self):
         for build_script in (
             ASTRONCODE_BUILD,
+            CLAUDECODE_BUILD,
             CODEX_BUILD,
             DEEPSEEK_HARNESS_BUILD,
         ):
@@ -335,6 +362,34 @@ class CanonicalBuildCliTest(unittest.TestCase):
         self.assertEqual(str(context), build[-1])
         self.assertNotIn("save", [event[0] for event in events])
 
+    def test_claudecode_default_build_uses_v3_and_pinned_cli(self):
+        result, events = self._run_with_docker_stub(
+            ["bash", str(CLAUDECODE_BUILD)],
+            {"SKIP_SAVE": "1"},
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
+        build = self._event(events, "build")
+        context = CLAUDECODE_DIR / "v3"
+        self.assertEqual(str(context / "Dockerfile"), build[build.index("-f") + 1])
+        self.assertEqual(
+            "wildclawbench-claudecode-ubuntu:v0.3",
+            build[build.index("-t") + 1],
+        )
+        self.assertIn("CLAUDE_CODE_VERSION=2.1.250", build)
+        self.assertIn("EVAL_BASE_IMAGE=wildclawbench-codex-ubuntu:v0.0", build)
+        self.assertIn("NODE_RUNTIME_IMAGE=node:24-bookworm-slim", build)
+        self.assertEqual(str(context), build[-1])
+        self.assertNotIn("save", [event[0] for event in events])
+
+    def test_pinned_claudecode_version_cannot_be_overridden(self):
+        result, events = self._run_with_docker_stub(
+            ["bash", str(CLAUDECODE_BUILD)],
+            {"CLAUDE_CODE_VERSION": "2.1.236", "SKIP_SAVE": "1"},
+        )
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("CLAUDE_CODE_VERSION must be 2.1.250", result.stderr)
+        self.assertEqual([], events)
+
     def test_deepseek_harness_historical_build_uses_v1(self):
         result, events = self._run_with_docker_stub(
             [
@@ -390,6 +445,11 @@ class CanonicalBuildCliTest(unittest.TestCase):
                 "codex",
                 "v0.1",
                 "wildclawbench-codex-ubuntu_v0.1.tar.gz",
+            ),
+            (
+                "claudecode",
+                "v0.3",
+                "wildclawbench-claudecode-ubuntu_v0.3.tar.gz",
             ),
         )
         for harness, version, archive_name in cases:
