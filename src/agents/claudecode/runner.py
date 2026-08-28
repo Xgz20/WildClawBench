@@ -325,6 +325,8 @@ class ClaudeCodeAgent(BaseAgent):
             "total_tokens": 0,
             "cost_usd": 0.0,
             "request_count": 0,
+            "usage_source": "unavailable",
+            "usage_complete": False,
             "elapsed_time": round(elapsed_time, 2),
         }
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -431,8 +433,7 @@ class ClaudeCodeAgent(BaseAgent):
         if official_usage is not None:
             return official_usage
 
-        for payload in payloads:
-            self._accumulate_costed_usage(payload, totals)
+        has_assistant_usage = self._accumulate_fallback_usage(payloads, totals)
 
         totals["total_tokens"] = (
             totals["input_tokens"]
@@ -443,6 +444,10 @@ class ClaudeCodeAgent(BaseAgent):
         if totals["request_count"] > 0 and totals["cost_usd"] == 0.0:
             totals["cost_usd"] = self._estimate_cost(totals)
         totals["cost_usd"] = round(totals["cost_usd"], 6)
+        totals["usage_source"] = (
+            "assistant_message_fallback" if has_assistant_usage else "event_fallback"
+        )
+        totals["usage_complete"] = False
         return totals
 
     def _extract_official_result_usage(
@@ -481,8 +486,48 @@ class ClaudeCodeAgent(BaseAgent):
                     6,
                 ),
                 "request_count": request_count,
+                "usage_source": "official_result",
+                "usage_complete": True,
             }
         return None
+
+    def _accumulate_fallback_usage(
+        self,
+        payloads: list[Any],
+        totals: dict[str, Any],
+    ) -> bool:
+        assistant_usage_by_id: dict[str, dict[str, Any]] = {}
+        has_assistant_usage = False
+
+        for payload in payloads:
+            if not isinstance(payload, dict):
+                self._accumulate_costed_usage(payload, totals)
+                continue
+
+            message = payload.get("message")
+            message = message if isinstance(message, dict) else {}
+            usage = message.get("usage")
+            is_assistant_usage = (
+                (
+                    str(payload.get("type", "")).lower() == "assistant"
+                    or str(message.get("role", "")).lower() == "assistant"
+                )
+                and isinstance(usage, dict)
+                and message.get("id") is not None
+            )
+            if not is_assistant_usage:
+                self._accumulate_costed_usage(payload, totals)
+                continue
+
+            has_assistant_usage = True
+            assistant_usage_by_id[str(message["id"])] = usage
+
+        for usage in assistant_usage_by_id.values():
+            usage_with_cost = dict(usage)
+            usage_with_cost.setdefault("cost", 0)
+            self._accumulate_costed_usage(usage_with_cost, totals)
+
+        return has_assistant_usage
 
     def _accumulate_costed_usage(self, payload: Any, totals: dict[str, Any]) -> None:
         if isinstance(payload, list):

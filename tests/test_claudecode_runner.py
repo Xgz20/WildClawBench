@@ -445,6 +445,83 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
         self.assertEqual(usage["total_tokens"], 200)
         self.assertEqual(usage["cost_usd"], 0.42)
         self.assertEqual(usage["request_count"], 1)
+        self.assertEqual(usage["usage_source"], "official_result")
+        self.assertTrue(usage["usage_complete"])
+
+    def test_chat_usage_deduplicates_assistant_stream_fragments(self) -> None:
+        chat_rows = [
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "id": "assistant-1",
+                    "content": [{"type": "text", "text": "working"}],
+                    "usage": {
+                        "input_tokens": 12,
+                        "output_tokens": 1,
+                        "cache_read_input_tokens": 30,
+                        "cache_creation_input_tokens": 4,
+                        "cost_details": {"upstream_inference_cost": 0.1},
+                    },
+                },
+            },
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "id": "assistant-1",
+                    "content": [
+                        {
+                            "type": "tool_use",
+                            "id": "call-1",
+                            "name": "Bash",
+                            "input": {"command": "pwd"},
+                        }
+                    ],
+                    "usage": {
+                        "input_tokens": 12,
+                        "output_tokens": 4,
+                        "cache_read_input_tokens": 30,
+                        "cache_creation_input_tokens": 4,
+                        "cost_details": {"upstream_inference_cost": 0.1},
+                    },
+                },
+            },
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "id": "assistant-2",
+                    "content": [{"type": "text", "text": "done"}],
+                    "usage": {
+                        "input_tokens": 20,
+                        "output_tokens": 5,
+                        "cache_read_input_tokens": 40,
+                        "cache_creation_input_tokens": 6,
+                        "cost_details": {"upstream_inference_cost": 0.2},
+                    },
+                },
+            },
+        ]
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            chat_path = Path(temp_dir) / "chat.json"
+            chat_path.write_text(
+                "\n".join(json.dumps(row) for row in chat_rows) + "\n",
+                encoding="utf-8",
+            )
+
+            usage = self.agent._extract_usage_from_chat_json(chat_path)
+
+        self.assertEqual(usage["input_tokens"], 32)
+        self.assertEqual(usage["output_tokens"], 9)
+        self.assertEqual(usage["cache_read_tokens"], 70)
+        self.assertEqual(usage["cache_write_tokens"], 10)
+        self.assertEqual(usage["total_tokens"], 121)
+        self.assertEqual(usage["cost_usd"], 0.3)
+        self.assertEqual(usage["request_count"], 2)
+        self.assertEqual(usage["usage_source"], "assistant_message_fallback")
+        self.assertFalse(usage["usage_complete"])
 
     def test_request_count_deduplicates_official_assistant_fragments(self) -> None:
         rows = [
