@@ -2643,6 +2643,11 @@ def _md_table(headers: list[str], rows: list[list]) -> str:
     return "\n".join(lines)
 
 
+def _format_cost_usd(value) -> str:
+    """格式化美元成本；成本不可用时保留缺失语义。"""
+    return f"{value:.4f}" if value is not None else "-"
+
+
 
 def render_markdown(summary: dict) -> str:
     """从 summary JSON 渲染 Markdown 报告。"""
@@ -2662,7 +2667,7 @@ def render_markdown(summary: dict) -> str:
     for item in summary["run_summaries"]:
         lines.append(
             f"| {item['run_label']} | {item['average_score']*100:.1f}% | "
-            f"{item['total_tokens']:,} | {item['cost_usd']:.4f} | "
+            f"{item['total_tokens']:,} | {_format_cost_usd(item['cost_usd'])} | "
             f"{item['error_count']} | {item['timeout_count']} | "
             f"{item['evaluation_anomaly_count']} |"
         )
@@ -2765,7 +2770,7 @@ def render_html(summary: dict) -> str:
     # 单元汇总表
     unit_rows = "".join(
         f"<tr><td>{item['run_label']}</td><td>{pct01(item['average_score'])}</td>"
-        f"<td>{item['total_tokens']:,}</td><td>{item['cost_usd']:.4f}</td>"
+        f"<td>{item['total_tokens']:,}</td><td>{_format_cost_usd(item['cost_usd'])}</td>"
         f"<td>{item['error_count']}</td><td>{item['timeout_count']}</td>"
         f"<td>{item['evaluation_anomaly_count']}</td></tr>"
         for item in summary["run_summaries"]
