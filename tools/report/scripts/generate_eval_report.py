@@ -1075,7 +1075,7 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
             print(f"[警告] {u.unit} 重算均分 {u.total_pct / 100:.4f} 与 summary "
                   f"global_avg {g_avg:.4f} 偏差过大", file=sys.stderr)
     style_header_row(ws)
-    set_widths(ws, {1: 22, 2: 12}, default=18)
+    set_widths(ws, {1: 22, 2: 34}, default=18)
     ws.freeze_panes = "C2"
 
 

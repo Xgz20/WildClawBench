@@ -134,6 +134,13 @@ models:
             input_cached: 0.8
             output: 15
 
+  spark-x2.5-harness:
+    display_name: Spark-X2.5-Harness
+    vendor: Spark
+    aliases: []
+    capabilities:
+      supported_reasoning_efforts: []
+
 harnesses:
   openclaw:
     display_name: OpenClaw
