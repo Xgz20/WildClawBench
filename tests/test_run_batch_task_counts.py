@@ -120,6 +120,15 @@ class PendingTaskCountTests(unittest.TestCase):
             {item["source"] for item in payload["planned_tasks"]},
             {"official", "extension"},
         )
+        for item in payload["planned_tasks"]:
+            provenance = item["provenance"]
+            self.assertEqual(provenance["provenance_status"], "complete")
+            for key in (
+                "task_sha256",
+                "execution_contract_sha256",
+                "scoring_contract_sha256",
+            ):
+                self.assertRegex(provenance[key], r"^[0-9a-f]{64}$")
 
 
 if __name__ == "__main__":

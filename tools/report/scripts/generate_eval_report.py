@@ -262,6 +262,22 @@ class TaskRecord:
         all_run_dirs = sorted(p for p in task_dir.iterdir() if p.is_dir())
         run_dirs = select_effective_run_dirs(all_run_dirs, scan_run_dir)
         self.effective_run_dirs = run_dirs
+        self.run_provenance = []
+        for run_dir in run_dirs:
+            provenance_path = run_dir / "provenance.json"
+            provenance = _load_json(provenance_path)
+            if not provenance:
+                provenance = {
+                    "schema_version": None,
+                    "provenance_status": "legacy_missing",
+                    "task_sha256": None,
+                    "execution_contract_sha256": None,
+                    "scoring_contract_sha256": None,
+                }
+            self.run_provenance.append({
+                "run_dir": run_dir.name,
+                **provenance,
+            })
 
         # 多轮支持：收集全部 run 的 overall_score，取 mean 作为代表分
         all_scores = []
@@ -516,6 +532,124 @@ class UnitResult:
         """带版本的 Harness 展示名；无版本时退化为友好名称。"""
         return (f"{self.harness_display} ({self.harness_version})"
                 if self.harness_version else self.harness_display)
+
+
+PROVENANCE_HASH_FIELDS = (
+    "task_sha256",
+    "execution_contract_sha256",
+    "scoring_contract_sha256",
+)
+
+
+def _short_hash(value: str | None) -> str:
+    return value[:12] if isinstance(value, str) and value else "-"
+
+
+def build_provenance_consistency(units: list[UnitResult]) -> dict:
+    """Inspect contract fingerprints without filtering scores or blocking reports."""
+    task_ids = sorted({task_id for unit in units for task_id in unit.task_map})
+    items = []
+    counts: dict[str, int] = {}
+    for task_id in task_ids:
+        observations = []
+        for unit in units:
+            task = unit.task_map.get(task_id)
+            if task is None:
+                continue
+            for provenance in task.run_provenance:
+                observations.append({
+                    "unit_id": unit.unit,
+                    "run_dir": provenance.get("run_dir"),
+                    "provenance_status": provenance.get("provenance_status") or "legacy_missing",
+                    **{
+                        field: provenance.get(field)
+                        if isinstance(provenance.get(field), str) and provenance.get(field)
+                        else None
+                        for field in PROVENANCE_HASH_FIELDS
+                    },
+                })
+
+        hashes = {
+            field: sorted({
+                observation[field]
+                for observation in observations
+                if observation.get(field)
+            })
+            for field in PROVENANCE_HASH_FIELDS
+        }
+        missing = [
+            observation for observation in observations
+            if any(not observation.get(field) for field in PROVENANCE_HASH_FIELDS)
+        ]
+        execution_mismatch = len(hashes["execution_contract_sha256"]) > 1
+        scoring_mismatch = len(hashes["scoring_contract_sha256"]) > 1
+        task_source_mismatch = len(hashes["task_sha256"]) > 1
+
+        if not observations:
+            status = "no_provenance_observation"
+            recommendation = "没有可检查的有效 run；本次报告仍正常生成"
+        elif execution_mismatch and scoring_mismatch:
+            status = "execution_and_scoring_mismatch"
+            recommendation = "执行与评分契约均不一致；如需同口径比较，通常需要重跑"
+        elif execution_mismatch:
+            status = "execution_mismatch"
+            recommendation = "执行契约不一致；如需同口径比较，应重跑不一致版本"
+        elif scoring_mismatch:
+            status = "scoring_mismatch"
+            recommendation = "评分契约不一致；优先判断能否基于现有产物重新评分"
+        elif missing and len(missing) == len(observations):
+            status = "legacy_missing"
+            recommendation = "历史结果缺少 hash，无法自动判断；本次报告仍正常生成"
+        elif missing:
+            status = "partial_legacy_missing"
+            recommendation = "部分结果缺少 hash；结合任务历史人工判断是否需要重评"
+        elif task_source_mismatch:
+            status = "task_source_only_changed"
+            recommendation = "原始任务文件不同，但执行与评分契约一致；通常无需重跑或重评"
+        else:
+            status = "consistent"
+            recommendation = "执行与评分契约一致"
+
+        counts[status] = counts.get(status, 0) + 1
+        items.append({
+            "task_id": task_id,
+            "status": status,
+            "report_blocked": False,
+            "observation_count": len(observations),
+            "missing_provenance_count": len(missing),
+            "task_sha256_values": hashes["task_sha256"],
+            "execution_contract_sha256_values": hashes["execution_contract_sha256"],
+            "scoring_contract_sha256_values": hashes["scoring_contract_sha256"],
+            "recommendation": recommendation,
+            "observations": observations,
+        })
+
+    mismatch_statuses = {
+        "execution_and_scoring_mismatch",
+        "execution_mismatch",
+        "scoring_mismatch",
+    }
+    return {
+        "schema_version": 1,
+        "mode": "informational_non_blocking",
+        "report_scores_unchanged": True,
+        "task_count": len(items),
+        "counts": counts,
+        "mismatch_task_count": sum(
+            count for status, count in counts.items() if status in mismatch_statuses
+        ),
+        "legacy_or_missing_task_count": (
+            counts.get("legacy_missing", 0)
+            + counts.get("partial_legacy_missing", 0)
+            + counts.get("no_provenance_observation", 0)
+        ),
+        "compatibility_hash_fields": [
+            "execution_contract_sha256",
+            "scoring_contract_sha256",
+        ],
+        "task_sha256_informational_only": True,
+        "items": items,
+    }
 
 
 # ===========================================================================
@@ -1951,6 +2085,7 @@ REPORT_SHEET_ORDER = [
     "Agent能力对比·去污染",
     "难度对比",
     "模态对比",
+    "评测契约一致性",
 ]
 
 
@@ -2056,6 +2191,69 @@ def write_diff_matrix_sheet(wb, units: list[UnitResult]) -> None:
     style_header_row(ws)
     set_widths(ws, {1: 28}, default=22)
     ws.freeze_panes = "B2"
+
+
+def write_provenance_consistency_sheet(wb, consistency: dict) -> None:
+    """Write informational contract-version diagnostics without changing scores."""
+    ws = wb.create_sheet("评测契约一致性")
+    ws.append([
+        "说明",
+        "非阻断检查；兼容性仅按 execution_contract_sha256 与 "
+        "scoring_contract_sha256 判断，task_sha256 只用于完整任务追溯。",
+    ])
+    ws.merge_cells(start_row=1, start_column=2, end_row=1, end_column=12)
+    ws["A1"].font = Font(bold=True)
+    ws["A1"].fill = SECTION_FILL
+    ws["B1"].fill = SECTION_FILL
+    ws["B1"].alignment = WRAP_TOP
+    ws.append([
+        "用例ID",
+        "检查状态",
+        "执行契约版本数",
+        "评分契约版本数",
+        "任务文件版本数",
+        "缺少hash的结果数",
+        "是否阻断报告",
+        "建议",
+        "执行契约hash",
+        "评分契约hash",
+        "任务hash",
+        "结果明细",
+    ])
+    for item in consistency.get("items", []):
+        details = []
+        for observation in item.get("observations", []):
+            details.append(
+                f"{observation.get('unit_id')}/{observation.get('run_dir')}: "
+                f"execution={_short_hash(observation.get('execution_contract_sha256'))}, "
+                f"scoring={_short_hash(observation.get('scoring_contract_sha256'))}, "
+                f"task={_short_hash(observation.get('task_sha256'))}, "
+                f"status={observation.get('provenance_status')}"
+            )
+        ws.append([
+            item["task_id"],
+            item["status"],
+            len(item.get("execution_contract_sha256_values", [])),
+            len(item.get("scoring_contract_sha256_values", [])),
+            len(item.get("task_sha256_values", [])),
+            item.get("missing_provenance_count", 0),
+            "否",
+            item.get("recommendation", ""),
+            "\n".join(item.get("execution_contract_sha256_values", [])) or "-",
+            "\n".join(item.get("scoring_contract_sha256_values", [])) or "-",
+            "\n".join(item.get("task_sha256_values", [])) or "-",
+            "\n".join(details) or "-",
+        ])
+        for cell in ws[ws.max_row]:
+            cell.alignment = WRAP_TOP
+    style_header_row_at(ws, 2)
+    set_widths(
+        ws,
+        {1: 52, 2: 34, 6: 18, 7: 16, 8: 54, 9: 68, 10: 68, 11: 68, 12: 100},
+        default=18,
+    )
+    ws.freeze_panes = "B3"
+    ws.auto_filter.ref = f"A2:L{ws.max_row}"
 
 
 def write_report_metadata_sheet(
@@ -2628,6 +2826,7 @@ def build_summary(
             "intersection_count": len(intersection),
             "aligned": aligned,
         },
+        "provenance_consistency": build_provenance_consistency(units),
         "root_cause_summary": root_cause_summary,
         "recommendations": recommendations,
     }
@@ -2672,6 +2871,46 @@ def render_markdown(summary: dict) -> str:
             f"{item['evaluation_anomaly_count']} |"
         )
     lines.append("")
+
+    provenance = summary.get("provenance_consistency", {})
+    if provenance:
+        lines.append("## 评测契约一致性（非阻断）")
+        lines.append("")
+        lines.append(
+            "该检查仅辅助判断是否需要重新运行或重新评分，不过滤分数，"
+            "也不影响本报告生成。"
+        )
+        lines.append(
+            "兼容性仅按 `execution_contract_sha256` 与 "
+            "`scoring_contract_sha256` 判断；`task_sha256` 只用于完整任务追溯。"
+        )
+        lines.append("")
+        counts = provenance.get("counts", {})
+        lines.append(
+            f"- 检查任务数：{provenance.get('task_count', 0)}；"
+            f"契约不一致：{provenance.get('mismatch_task_count', 0)}；"
+            f"历史或缺少 hash：{provenance.get('legacy_or_missing_task_count', 0)}；"
+            f"一致：{counts.get('consistent', 0)}。"
+        )
+        actionable = [
+            item for item in provenance.get("items", [])
+            if item.get("status") in {
+                "execution_and_scoring_mismatch",
+                "execution_mismatch",
+                "scoring_mismatch",
+                "task_source_only_changed",
+            }
+        ]
+        if actionable:
+            lines.append("")
+            lines.append("| 用例ID | 状态 | 建议 |")
+            lines.append("|---|---|---|")
+            for item in actionable:
+                lines.append(
+                    f"| {item['task_id']} | {item['status']} | "
+                    f"{item['recommendation']} |"
+                )
+        lines.append("")
 
     # 用例对比明细（简化版，仅展示部分列）
     lines.append("## 用例对比明细")
@@ -2853,6 +3092,24 @@ def render_html(summary: dict) -> str:
 <table><thead><tr><th>行单元 - 列单元</th>{diff_headers}</tr></thead>
 <tbody>{diff_rows}</tbody></table>"""
 
+    provenance = summary.get("provenance_consistency", {})
+    provenance_section = ""
+    if provenance:
+        counts = provenance.get("counts", {})
+        provenance_section = f"""
+<h2>评测契约一致性（非阻断）</h2>
+<p>该检查仅辅助判断是否需要重新运行或重新评分，不过滤分数，
+也不影响本报告生成。</p>
+<p>兼容性仅按 <code>execution_contract_sha256</code> 与
+<code>scoring_contract_sha256</code> 判断；<code>task_sha256</code>
+只用于完整任务追溯。</p>
+<ul>
+<li>检查任务数：{provenance.get('task_count', 0)}</li>
+<li>契约不一致：{provenance.get('mismatch_task_count', 0)}</li>
+<li>历史或缺少 hash：{provenance.get('legacy_or_missing_task_count', 0)}</li>
+<li>一致：{counts.get('consistent', 0)}</li>
+</ul>"""
+
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head><meta charset="UTF-8"><title>WildClawBench 评测报告</title>
@@ -2872,6 +3129,7 @@ th{{background:#f3f4f6;font-weight:600}}
 <h2>单元汇总</h2>
 <table><thead><tr><th>单元</th><th>平均分</th><th>Tokens</th><th>成本($)</th><th>执行错误</th><th>超时</th><th>评测异常</th></tr></thead>
 <tbody>{unit_rows}</tbody></table>
+{provenance_section}
 <h2>用例对比明细</h2>
 <table><thead><tr><th>用例ID</th><th>难度</th><th>最优分</th><th>分差</th>{units_th}</tr></thead>
 <tbody>{case_rows}</tbody></table>
@@ -2968,6 +3226,13 @@ def main() -> None:
     order = build_task_order(units)
     suites = sorted({s for s, _ in order})
     suite_zh = build_suite_zh_map(task_meta)
+    provenance_consistency = build_provenance_consistency(units)
+    print(
+        "评测契约一致性检查（非阻断）："
+        f"不一致 {provenance_consistency['mismatch_task_count']} 个任务，"
+        f"历史或缺少 hash {provenance_consistency['legacy_or_missing_task_count']} 个任务；"
+        "分数与报告生成不受影响"
+    )
 
     wb = Workbook()
     write_overview_sheet(
@@ -3007,6 +3272,7 @@ def main() -> None:
         args.target_model, args.target_harness,
     )
     write_diff_matrix_sheet(wb, units)
+    write_provenance_consistency_sheet(wb, provenance_consistency)
     # 全局多轮判定：任一 unit 任一 task 跑了多轮才启用多轮列/Sheet（单轮报告零变化）
     has_multirun = any(t.runs > 1 for u in units for t in u.tasks)
     write_stability_sheet(wb, units, task_meta, suite_zh)  # 内部同样判定，无多轮则跳过

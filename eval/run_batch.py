@@ -50,6 +50,11 @@ from src.utils.grading import (
 )
 
 from src.utils.anomalies import RULESET_VERSION, SCHEMA_VERSION, scan_run_dir
+from src.utils.eval_provenance import (
+    TASK_PROVENANCE_CACHE_KEY,
+    get_or_build_task_provenance,
+    write_provenance_file,
+)
 from src.utils.log_format import configure_console_logging, attach_file_logging
 from src.utils.run_selection import write_rerun_metadata
 
@@ -355,7 +360,29 @@ def _log_pending_task_counts(tasks: list[dict]) -> None:
     )
 
 
-def _task_scope_entry(task: dict) -> dict[str, str]:
+def _task_provenance_or_unavailable(task: dict) -> dict[str, Any]:
+    try:
+        return get_or_build_task_provenance(task)
+    except (OSError, UnicodeError, ValueError, TypeError) as exc:
+        logger.warning(
+            "[%s] 无法计算评测契约 hash，评测继续执行: %s",
+            task.get("task_id", "unknown"),
+            exc,
+        )
+        unavailable = {
+            "schema_version": 1,
+            "provenance_status": "unavailable",
+            "hash_algorithm": "sha256",
+            "task_id": str(task.get("task_id") or ""),
+            "task_sha256": None,
+            "execution_contract_sha256": None,
+            "scoring_contract_sha256": None,
+        }
+        task[TASK_PROVENANCE_CACHE_KEY] = unavailable
+        return unavailable
+
+
+def _task_scope_entry(task: dict) -> dict[str, Any]:
     path = Path(str(task.get("file_path") or ""))
     source = "official"
     category = str(task.get("category") or "").strip()
@@ -373,6 +400,7 @@ def _task_scope_entry(task: dict) -> dict[str, str]:
         "category": category,
         "task_id": str(task.get("task_id") or path.stem),
         "source": source,
+        "provenance": _task_provenance_or_unavailable(task),
     }
 
 
@@ -898,6 +926,13 @@ def run_single_task(
 
     output_dir = output_root / task["category"] / f"{task_id_ori}" / f"{suffix}"
     output_dir.mkdir(parents=True, exist_ok=True)
+    provenance = _task_provenance_or_unavailable(task)
+    try:
+        write_provenance_file(output_dir / "provenance.json", provenance)
+    except OSError as exc:
+        # Provenance is deliberately non-blocking in the first rollout.  The
+        # report records it as missing without changing scores or report output.
+        logger.warning("[%s] 无法写入 provenance.json，评测继续执行: %s", task_id, exc)
     rerun_metadata = task.get("_reliability_rerun")
     if isinstance(rerun_metadata, dict) and rerun_metadata.get("supersedes_run"):
         write_rerun_metadata(
