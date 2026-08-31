@@ -29,9 +29,11 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "tools/report/scripts"))
 
 from src.utils.anomalies import scan_run_dir  # noqa: E402
 from src.utils.run_selection import select_effective_run_dirs  # noqa: E402
+from report_workspace_paths import round_root_from_unit_dir  # noqa: E402
 
 SUITE_DIR_RE = re.compile(r"^\d{2}_")
 
@@ -69,8 +71,14 @@ def discover_units(result_root: Path) -> list[tuple[str, str, Path]]:
             units.append((result_root.name, child.name, child))
             continue
         for grand in sorted(child.iterdir()):
-            if grand.is_dir() and is_unit_dir(grand):
+            if not grand.is_dir() or grand.name in ("report-workspace", "output"):
+                continue
+            if is_unit_dir(grand):
                 units.append((child.name, grand.name, grand))
+                continue
+            for ggrand in sorted(grand.iterdir()):
+                if ggrand.is_dir() and is_unit_dir(ggrand):
+                    units.append((grand.name, ggrand.name, ggrand))
     return units
 
 
@@ -484,7 +492,7 @@ def cross_check_summary(unit_dir: Path, records: list[dict]) -> None:
 def default_workspace(result_root: Path, unit_dir: Path) -> Path:
     """分析产物始终集中到 <round>/report-workspace。"""
     del result_root  # 输入可以是 round/model/unit，落位只由已确认的 unit 反推。
-    return unit_dir.parent.parent / "report-workspace"
+    return round_root_from_unit_dir(unit_dir) / "report-workspace"
 
 
 def output_name(unit: str, selection_scope: str) -> str:

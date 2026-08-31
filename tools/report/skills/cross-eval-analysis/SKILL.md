@@ -12,7 +12,7 @@ description: 对 WildClawBench 中不同模型同一 Harness，或同一模型�
 - 固定 Harness，比较多个模型：`--axis model --fixed-harness <harness> --models <model...>`；
 - 固定模型，比较多个 Harness：`--axis harness --fixed-model <model> --harnesses <harness...>`。
 
-它回答的是“同一个任务换模型或 Harness 后，分数和执行行为哪里发生变化”。它不把单个单元的低分原因直接搬过来，也不把简单的平均分排名当成根因结论。单元必须来自同一个 round；跨 round 请使用现有跨轮比较脚本，避免评测集和配置差异混入结论。
+它回答的是“同一个任务换模型或 Harness 后，分数和执行行为哪里发生变化”。它不把单个单元的低分原因直接搬过来，也不把简单的平均分排名当成根因结论。默认只比较同一个 round。确需比较跨 round 的 Harness 版本或模型版本时，必须先构造带 `SOURCE_MAP.tsv` 的可审计合并结果集，并显式传 `--comparison-scope cross-round`；仅看同一 unit 的轮次趋势时仍使用 `generate_round_compare_report.py`。
 
 ## 输入与产物
 
@@ -31,6 +31,18 @@ cross_eval_<axis>_analysis.json       # Workflow 产出的事实与证据分析
 cross_eval_<axis>_analysis.quality.json
 cross_eval_<axis>_report.md            # 可导入飞书的 Markdown
 ```
+
+输出目录不再由调用方临时决定：
+
+```text
+# 同一 round 内跨单元
+<round>/report-workspace/cross-eval/<comparison-id>/
+
+# 跨 round 逐用例对比
+<round共同父目录>/reports/cross-round/cross-eval/<comparison-id>/
+```
+
+`comparison-id` 默认由比较轴、目标、参照、固定变量和时间生成，也可用 `--comparison-id` 指定。`build_cross_eval_manifest.py` 会打印 `WORKSPACE_DIR`、`MANIFEST_PATH`、`ANALYSIS_PATH`、`QUALITY_PATH` 和 `REPORT_PATH`，后续 Workflow、校验器和渲染器必须原样使用。只有兼容旧流程时才传 `--output`；不要再手工把跨 round 产物放进最新 round。
 
 `manifest` 的比较范围默认是所有参评单元的**共同有效任务交集**。无有效分数、影响结果有效性的执行异常、被重跑替换的 run 不进入分差；这些排除信息保留在 manifest 的 `issues` 和每个任务的 `records` 中，不能默默当成 0 分。若异常分析明确标记结果为 `valid_capability_outcome`，例如模型在任务时限内未完成而被超时截断，则保留其分数参与能力比较，同时在 `issues` 中标记为 `CAPABILITY_TIMEOUT_INCLUDED`。
 
@@ -53,7 +65,7 @@ uv run python tools/report/skills/cross-eval-analysis/scripts/build_cross_eval_m
   --target-model <target-model> \
   --tasks-dir <repo>/tasks \
   --entities tools/report/data/entities.yaml \
-  --output <workspace>/cross_eval_model_manifest.json
+  --comparison-id target_model_vs_references
 ```
 
 固定模型看 Harness：
@@ -67,8 +79,23 @@ uv run python tools/report/skills/cross-eval-analysis/scripts/build_cross_eval_m
   --target-harness <target-harness> \
   --tasks-dir <repo>/tasks \
   --entities tools/report/data/entities.yaml \
-  --output <workspace>/cross_eval_harness_manifest.json
+  --comparison-id target_harness_vs_references
 ```
+
+跨 round 的逐用例对比必须显式声明范围并提供来源映射：
+
+```bash
+uv run python tools/report/skills/cross-eval-analysis/scripts/build_cross_eval_manifest.py \
+  --result-root <combined-workspace>/results \
+  --comparison-scope cross-round \
+  --source-map <combined-workspace>/SOURCE_MAP.tsv \
+  --axis harness \
+  --fixed-model <model-id> \
+  --harnesses <target-harness-version> <reference-harness-version...> \
+  --target-harness <target-harness-version>
+```
+
+`SOURCE_MAP.tsv` 至少要覆盖两个 round；脚本据此把输出放到共同父目录的 `reports/cross-round/cross-eval/`。如果来源 round 不在同一父目录，必须显式传 `--reports-root`。
 
 只分析指定任务时重复传 `--task-id`，或传 `--task-file`。除非用户明确要求，否则不要用非交集范围做能力排名。manifest 中每个任务必须保留完整 `task_id`，不得截断为任务序号或套件简称。
 
@@ -103,8 +130,7 @@ uv run python tools/report/skills/cross-eval-analysis/scripts/validate_cross_eva
 
 uv run python tools/report/skills/cross-eval-analysis/scripts/render_cross_eval_report.py \
   --manifest <cross_eval_manifest.json> \
-  --analysis <cross_eval_analysis.json> \
-  --output <cross_eval_report.md>
+  --analysis <cross_eval_analysis.json>
 ```
 
 `FAIL` 禁止渲染正式报告；`REVIEW` 可以作为内部分析，但必须在报告中保留未闭环项。渲染脚本只接受结构化分析，不接受手工拼接的分数表。
@@ -137,5 +163,6 @@ uv run python tools/report/skills/cross-eval-analysis/scripts/render_cross_eval_
 - `scripts/build_cross_eval_manifest.py`：生成确定性输入 manifest。
 - `scripts/validate_cross_eval.py`：校验 Workflow 输出覆盖和证据字段。
 - `scripts/render_cross_eval_report.py`：渲染结构化分析 Markdown。
+- `tools/report/scripts/report_workspace_paths.py`：统一同 round 与跨 round 工作区路径。
 - `references/workflow_template.js`：跨单元分析 Workflow 模板。
 - `references/output_schema.md`：分析 JSON 字段和典型案例契约。

@@ -57,6 +57,7 @@ from generate_eval_report import (  # noqa: E402
     write_dimension_sheet_transposed,
 )
 import report_entities  # noqa: E402
+from report_workspace_paths import resolve_cross_round_trend_build_dir  # noqa: E402
 
 
 # ===========================================================================
@@ -279,7 +280,11 @@ def main() -> int:
                     help="定价快照日期 YYYY-MM-DD（对比报告不出成本列，可省略）")
     ap.add_argument("--tasks-dir", help="任务定义目录（默认自动查找 <repo>/tasks）")
     ap.add_argument("--capability-map", help="检查点能力映射 YAML")
-    ap.add_argument("-o", "--output-dir", help="输出目录（默认最后一轮的 report-workspace/output）")
+    ap.add_argument(
+        "-o", "--output-dir",
+        help="输出目录（默认 <round共同父目录>/reports/cross-round/trend/<report-id>/builds/<时间>）",
+    )
+    ap.add_argument("--report-id", help="跨轮趋势报告目录名；默认由 unit 和 round 范围生成")
     args = ap.parse_args()
 
     if len(args.rounds) < 2:
@@ -373,8 +378,17 @@ def main() -> int:
     write_round_diff_sheet(wb, units, dim_groups_for_diff, scope_note, units[0].round_label)
     write_compare_metadata_sheet(wb, units, round_roots, scope_note, keep, args)
 
-    out_dir = Path(args.output_dir) if args.output_dir else (
-        round_roots[-1] / "report-workspace" / "output")
+    try:
+        out_dir = (
+            Path(args.output_dir).expanduser().resolve()
+            if args.output_dir else resolve_cross_round_trend_build_dir(
+                round_roots,
+                unit=f"{model}@{harness}",
+                report_id=args.report_id,
+            )
+        )
+    except ValueError as exc:
+        ap.error(str(exc))
     out_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     safe_unit = f"{model}@{harness}".replace("/", "_")

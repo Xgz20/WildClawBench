@@ -121,6 +121,7 @@ from src.utils.run_selection import select_effective_run_dirs
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 import report_entities  # noqa: E402
+from report_workspace_paths import round_root_from_unit_dir  # noqa: E402
 
 ANALYSIS_SCRIPTS_DIR = SCRIPT_DIR.parent / "skills/low-score-analysis/scripts"
 sys.path.insert(0, str(ANALYSIS_SCRIPTS_DIR))
@@ -204,15 +205,6 @@ def discover_units(result_root: Path) -> list[tuple[str, str, Path]]:
                 if ggrand.is_dir() and is_unit_dir(ggrand):
                     units.append((grand.name, ggrand.name, ggrand))
     return units
-
-
-def round_root_from_unit_dir(unit_dir: Path) -> Path:
-    """按双层或三层结果结构从 unit 反推 round 根目录。"""
-    unit_dir = unit_dir.resolve()
-    # 三层：<round>/<harness>/<model>/<harness>，首尾 harness 重复。
-    if unit_dir.parent.parent.name == unit_dir.name:
-        return unit_dir.parents[2]
-    return unit_dir.parents[1]
 
 
 def _load_json(path: Path) -> dict:

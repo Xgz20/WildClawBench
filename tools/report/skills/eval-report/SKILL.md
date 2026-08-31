@@ -41,6 +41,48 @@ Preview 与 full 的维度数据完全一致（同样的 Excel 维度 Sheet、�
 
 目标模型和目标 Harness 是变量，禁止把 `xsparkx2agent`、`astroncode` 等当前验证值写死在流程或结论中。
 
+## 报告范围与目录
+
+### 单 round 正式报告
+
+单 round 报告仍归属于该 round：根因分析、有效性、Excel 和审计放在 `<round>/report-workspace`，领导版 Markdown 放在 `<round>/`。已有调用保持兼容。
+
+### 跨 round 多单元综合报告
+
+跨 round 综合报告不归属于“最新 round”，必须放在所有来源 round 的共同父目录：
+
+```text
+<round共同父目录>/reports/cross-round/aggregate/<report-id>/
+├── SOURCE_MAP.tsv
+├── workspace/
+│   ├── results/                 # 合并结果集，优先使用 unit 级相对软链
+│   └── analysis/                # 本次报告实际消费的分析快照或引用
+└── builds/
+    └── <timestamp>_<preview|full>/
+        ├── report_<N>units_<timestamp>.xlsx
+        ├── report_<N>units_<timestamp>_leader_data.json
+        ├── 评测报告_<目标模型>_<目标Harness>_<round范围>_<timestamp>.md
+        ├── report_<N>units_<timestamp>.analysis_quality.json
+        ├── validity/
+        └── audit/
+```
+
+- `SOURCE_MAP.tsv` 必须记录每个别名 unit 对应的原始结果目录；Harness 新旧版本必须使用可区分的实体 ID。
+- Preview 和 full 各自使用独立 build 目录，不覆盖历史文件。
+- Excel、leader data 和领导版 Markdown 必须放在同一个 build 目录，不再复制到某个 round 根目录。
+- `round1-round2` 等范围进入报告名和元数据；不得把跨 round 报告简称为 `round2`。
+- 原始根因分析仍归属于来源 round。跨 round 工作区只保存本次消费的快照或引用，并记录来源与质量状态。
+
+### 同一单元跨轮趋势
+
+同一 `<model>@<harness>` 的轮次趋势使用 `generate_round_compare_report.py`，默认输出到：
+
+```text
+<round共同父目录>/reports/cross-round/trend/<unit>__<round范围>/builds/<timestamp>/
+```
+
+逐用例跨模型/Harness 的证据分析属于 `cross-eval-analysis`，不要混入综合报告工作区；其跨 round 输出统一放在 `reports/cross-round/cross-eval/`。
+
 ## 0. 有效性门禁
 
 检查范围必须与 Excel 一致：
@@ -314,3 +356,5 @@ python3 tools/report/skills/audit-eval-report/scripts/audit_eval_report.py \
 <round>/report-workspace/audit/report_audit_<xlsx-stem>.{json,md}
 <round>/评测报告_<目标模型展示名>_<目标Harness展示名>_<round>_<ts>.md
 ```
+
+以上是单 round 产物。跨 round 产物使用“报告范围与目录”中的中立 `reports/cross-round/` 结构，禁止落到最后一个 round 的 `report-workspace` 或 round 根目录。

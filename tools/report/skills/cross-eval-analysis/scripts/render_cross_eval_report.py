@@ -18,7 +18,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="渲染跨单元逐用例分析 Markdown")
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--analysis", required=True)
-    parser.add_argument("--output", required=True)
+    parser.add_argument("--output", help="Markdown 输出；默认与 analysis 同目录并命名为 cross_eval_<axis>_report.md")
     args = parser.parse_args()
     try:
         manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
@@ -30,7 +30,16 @@ def main() -> int:
     if quality["status"] == "FAIL":
         print(f"错误：分析质量校验失败，共 {len(quality['issues'])} 个问题", file=sys.stderr)
         return 1
-    output = Path(args.output).expanduser().resolve()
+    if args.output:
+        output = Path(args.output).expanduser().resolve()
+    else:
+        analysis_path = Path(args.analysis).expanduser().resolve()
+        name = analysis_path.name
+        output_name = (
+            name[:-len("_analysis.json")] + "_report.md"
+            if name.endswith("_analysis.json") else analysis_path.stem + "_report.md"
+        )
+        output = analysis_path.with_name(output_name)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(render_markdown(manifest, analysis), encoding="utf-8")
     print(f"Markdown 已生成：{output}")

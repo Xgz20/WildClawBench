@@ -1060,6 +1060,20 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertIn(f"ANALYSIS_PATH={workspace / 'analysis_model-x@harness-y__lt60.json'}",
                       result.stdout)
 
+    def test_manifest_workspace_supports_three_level_layout(self) -> None:
+        unit_dir = self.round_dir / "opencode" / "model-z" / "opencode"
+        unit_dir.mkdir(parents=True)
+        (unit_dir / "01_Suite").mkdir()
+
+        self.assertEqual(
+            manifest.default_workspace(unit_dir, unit_dir),
+            self.round_dir.resolve() / "report-workspace",
+        )
+        self.assertIn(
+            ("model-z", "opencode", unit_dir),
+            manifest.discover_units(self.round_dir),
+        )
+
     def test_validity_cli_places_output_in_round_workspace(self) -> None:
         subprocess.run(
             [sys.executable, str(VALIDITY_SCRIPT), "--result-root", str(self.unit_dir),

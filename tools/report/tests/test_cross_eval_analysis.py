@@ -9,6 +9,7 @@ from pathlib import Path
 
 REPORT_DIR = Path(__file__).resolve().parents[1]
 SCRIPT_DIR = REPORT_DIR / "skills/cross-eval-analysis/scripts"
+REPORT_SCRIPTS_DIR = REPORT_DIR / "scripts"
 
 
 def load_module(name: str, path: Path):
@@ -20,6 +21,9 @@ def load_module(name: str, path: Path):
 
 
 cross_eval = load_module("cross_eval_utils_test", SCRIPT_DIR / "cross_eval_utils.py")
+workspace_paths = load_module(
+    "report_workspace_paths_test", REPORT_SCRIPTS_DIR / "report_workspace_paths.py"
+)
 
 
 class CrossEvalAnalysisTest(unittest.TestCase):
@@ -112,6 +116,97 @@ class CrossEvalAnalysisTest(unittest.TestCase):
         )
         self.assertEqual(manifest["target_unit"], "model-a@opencode")
         self.assertEqual(manifest["comparisons"][0]["pairwise"][0]["delta_pct_points"], -10.0)
+
+    def test_same_round_workspace_defaults_under_round(self) -> None:
+        comparison_id = workspace_paths.build_cross_eval_comparison_id(
+            axis="harness",
+            fixed_model="model-a",
+            fixed_harness=None,
+            models=None,
+            harnesses=["astroncode", "opencode"],
+            target_model=None,
+            target_harness="astroncode",
+            timestamp="20260831_120000",
+        )
+        workspace, source_map = workspace_paths.resolve_cross_eval_workspace(
+            result_root=self.root,
+            comparison_scope="same-round",
+            comparison_id=comparison_id,
+        )
+
+        self.assertIsNone(source_map)
+        self.assertEqual(
+            workspace,
+            self.root.resolve()
+            / "report-workspace"
+            / "cross-eval"
+            / "harness_astroncode_vs_opencode_on_model-a_20260831_120000",
+        )
+
+    def test_cross_round_workspace_uses_neutral_reports_root(self) -> None:
+        custom_root = Path(self.temp_dir.name) / "custom"
+        combined = custom_root / "round2" / "report-workspace" / "combined"
+        result_root = combined / "results"
+        result_root.mkdir(parents=True)
+        source_map = combined / "SOURCE_MAP.tsv"
+        source_map.write_text(
+            f"{custom_root / 'round1/model-a/astroncode'}\tmodel-a@astroncode-old\n"
+            f"{custom_root / 'round2/model-a/astroncode'}\tmodel-a@astroncode-new\n",
+            encoding="utf-8",
+        )
+
+        workspace, detected = workspace_paths.resolve_cross_eval_workspace(
+            result_root=result_root,
+            comparison_scope="cross-round",
+            comparison_id="astroncode-version-change",
+        )
+
+        self.assertEqual(detected, source_map.resolve())
+        self.assertEqual(
+            workspace,
+            custom_root.resolve()
+            / "reports"
+            / "cross-round"
+            / "cross-eval"
+            / "astroncode-version-change",
+        )
+
+    def test_synthetic_cross_round_root_requires_explicit_scope(self) -> None:
+        custom_root = Path(self.temp_dir.name) / "custom"
+        combined = custom_root / "round2" / "report-workspace" / "combined"
+        result_root = combined / "results"
+        result_root.mkdir(parents=True)
+        (combined / "SOURCE_MAP.tsv").write_text(
+            f"{custom_root / 'round1/model-a/astroncode'}\told\n"
+            f"{custom_root / 'round2/model-a/astroncode'}\tnew\n",
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(ValueError, "comparison-scope cross-round"):
+            workspace_paths.resolve_cross_eval_workspace(
+                result_root=result_root,
+                comparison_scope="same-round",
+                comparison_id="invalid",
+            )
+
+    def test_round_trend_output_uses_neutral_reports_root(self) -> None:
+        custom_root = Path(self.temp_dir.name) / "custom"
+        output = workspace_paths.resolve_cross_round_trend_build_dir(
+            [custom_root / "round1", custom_root / "round2"],
+            unit="model-a@astroncode",
+            timestamp="20260831_120000",
+        )
+
+        self.assertEqual(
+            output,
+            custom_root.resolve()
+            / "reports"
+            / "cross-round"
+            / "trend"
+            / "model-a@astroncode__round1_round2"
+            / "builds"
+            / "20260831_120000",
+        )
 
     def test_valid_model_timeout_is_included_in_capability_comparison(self) -> None:
         timeout_root = Path(self.temp_dir.name) / "timeout-round"
