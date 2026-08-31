@@ -26,9 +26,24 @@ Score 0.0: 内容缺失。
                     "weight": 0.2,
                     "name": "首屏内容",
                     "rubric": rubric.strip(),
+                    "allowed_scores": [0.0, 1.0],
                 }
             ],
         )
+
+    def test_parses_sorted_deduplicated_score_bands_across_formats(self) -> None:
+        rubric = """\
+### Criterion 1: 质量 (key: quality, weight: 1.0)
+
+Score 1.0: 完整。
+**Score 0.5**：部分完成。
+**Score 0.0**: 未完成。
+Score 1.0：重复声明。
+"""
+
+        criterion = parse_rubric_criteria(rubric)[0]
+
+        self.assertEqual(criterion["allowed_scores"], [0.0, 0.5, 1.0])
 
     def test_keeps_key_and_weight_only_format_compatible(self) -> None:
         rubric = """\
@@ -44,6 +59,7 @@ Score 0.0: 结果错误。
         self.assertEqual(criterion["weight"], 1.0)
         self.assertEqual(criterion["primary"], "")
         self.assertEqual(criterion["secondary"], "")
+        self.assertEqual(criterion["allowed_scores"], [0.0, 1.0])
 
     def test_website_task_rejects_any_unparseable_criterion(self) -> None:
         with TemporaryDirectory() as tmp:

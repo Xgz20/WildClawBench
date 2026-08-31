@@ -360,6 +360,45 @@ class AnomalyDetectionTest(unittest.TestCase):
         finally:
             temp_dir.cleanup()
 
+    def test_recovered_judge_schema_mismatch_does_not_require_rerun(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            for attempt, parsed in (
+                (1, {
+                    "schema_status": "mismatch",
+                    "schema_error": "score 'quality'=0.9; allowed values: [0.0,0.5,1.0]",
+                }),
+                (2, {
+                    "schema_status": "valid",
+                    "value": {"scores": {"quality": 1.0}, "notes": "ok"},
+                }),
+            ):
+                attempt_dir = run_dir / f"judge/attempt-{attempt:03d}"
+                attempt_dir.mkdir(parents=True)
+                self.write_json(attempt_dir / "request.json", {
+                    "mode": "v2", "model": "judge-test",
+                })
+                self.write_json(attempt_dir / "response.json", {
+                    "status": "success", "model": "judge-test",
+                })
+                self.write_json(attempt_dir / "parsed.json", parsed)
+            self.write_json(run_dir / "judge/summary.json", {
+                "mode": "v2",
+                "status": "success",
+                "attempt_count": 2,
+                "selected_attempt": 2,
+                "schema_mismatch_count": 1,
+                "final_schema_status": "valid",
+            })
+
+            report = scan_run_dir(run_dir)
+
+            self.assertIsNone(self.item(report, "JUDGE_SCHEMA_MISMATCH"))
+            self.assertFalse(report["needs_rerun"])
+            self.assertEqual(report["validity_verdict"], "PASS")
+        finally:
+            temp_dir.cleanup()
+
     def test_requested_and_returned_judge_model_mismatch_requires_review(self) -> None:
         temp_dir, run_dir = self.make_run()
         try:

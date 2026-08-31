@@ -19,6 +19,21 @@ METRIC_PROFILE_PRIMARY_DIMENSIONS = {
     "ppt": set(),
 }
 
+_RUBRIC_SCORE_RE = re.compile(
+    r"^\s*(?:\*\*\s*)?Score\s+"
+    r"([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*(?:\*\*)?\s*[:：]",
+    re.IGNORECASE,
+)
+
+
+def _parse_rubric_allowed_scores(rubric_text: str) -> list[float]:
+    """Return the sorted, deduplicated score bands declared by a criterion."""
+    return sorted({
+        float(match.group(1))
+        for line in rubric_text.splitlines()
+        if (match := _RUBRIC_SCORE_RE.match(line))
+    })
+
 
 def normalize_tags(raw) -> list[str]:
     """Coerce a frontmatter `tags` value into a clean, deduplicated str list.
@@ -61,7 +76,8 @@ def parse_rubric_criteria(rubric_text: str) -> list[dict]:
 
     Returns a list preserving document order; each item is:
         {"key": str, "primary": str, "secondary": str,
-         "weight": float, "name": str, "rubric": str}
+         "weight": float, "name": str, "rubric": str,
+         "allowed_scores": list[float]}
     `rubric` is the full band-description text belonging to that criterion,
     used verbatim in the judge prompt. Headings that don't match the format
     are skipped (so free-form rubrics degrade gracefully to an empty list,
@@ -92,6 +108,7 @@ def parse_rubric_criteria(rubric_text: str) -> list[dict]:
         if m and stable_key_re.fullmatch(key) and parsed_weight is not None:
             if cur is not None:
                 cur["rubric"] = "\n".join(body).strip()
+                cur["allowed_scores"] = _parse_rubric_allowed_scores(cur["rubric"])
                 criteria.append(cur)
             name = re.sub(
                 r"^(?:Criterion\s+\d+\s*[:：]\s*)?", "", m.group(1)
@@ -109,6 +126,7 @@ def parse_rubric_criteria(rubric_text: str) -> list[dict]:
             body.append(line)
     if cur is not None:
         cur["rubric"] = "\n".join(body).strip()
+        cur["allowed_scores"] = _parse_rubric_allowed_scores(cur["rubric"])
         criteria.append(cur)
     return criteria
 

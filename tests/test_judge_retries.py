@@ -10,6 +10,7 @@ from src.utils.grading import (
     _grade_llm_rubric,
     _judge_retries,
     _judge_transcript_max_chars,
+    _validate_rubric_scores,
 )
 
 
@@ -87,6 +88,123 @@ class JudgeRetryTest(unittest.TestCase):
             self.assertEqual(summary["attempt_count"], 2)
             self.assertEqual(summary["status"], "failed")
 
+    def test_out_of_band_score_is_retried_with_targeted_allowed_values(self) -> None:
+        attempts = iter([
+            ({
+                "candidate_text": json.dumps({
+                    "scores": {"quality": 0.9}, "notes": "interpolated",
+                }),
+                "request": {"model": "judge"},
+                "response": {"raw_text": "invalid band"},
+            }, ""),
+            ({
+                "candidate_text": json.dumps({
+                    "scores": {"quality": 0.75}, "notes": "corrected",
+                }),
+                "request": {"model": "judge"},
+                "response": {"raw_text": "valid band"},
+            }, ""),
+        ])
+        criteria = [{
+            "key": "quality",
+            "weight": 1.0,
+            "allowed_scores": [0.0, 0.5, 0.75, 1.0],
+        }]
+        with tempfile.TemporaryDirectory() as tmp, patch(
+            "src.utils.grading._exec_container_python",
+            side_effect=lambda *args, **kwargs: next(attempts),
+        ) as execute, patch.dict(
+            "os.environ", {"WILDCLAW_JUDGE_RETRIES": "1"}
+        ):
+            score, breakdown, notes = _grade_llm_rubric(
+                "task", "rubric", criteria, "", output_dir=Path(tmp),
+            )
+            first_parsed = json.loads(
+                (Path(tmp) / "judge/attempt-001/parsed.json").read_text()
+            )
+            summary = json.loads(
+                (Path(tmp) / "judge/summary.json").read_text()
+            )
+
+        first_runner = execute.call_args_list[0].args[1]
+        retry_runner = execute.call_args_list[1].args[1]
+        self.assertEqual(score, 0.75)
+        self.assertEqual(breakdown, {"quality": 0.75})
+        self.assertEqual(notes, "corrected")
+        self.assertNotIn("Validation errors:", first_runner)
+        self.assertIn("score 'quality'=0.9", retry_runner)
+        self.assertIn("allowed values: [0.0,0.5,0.75,1.0]", retry_runner)
+        self.assertEqual(first_parsed["schema_status"], "mismatch")
+        self.assertEqual(summary["schema_mismatch_count"], 1)
+        self.assertEqual(summary["final_schema_status"], "valid")
+        self.assertEqual(summary["status"], "success")
+
+    def test_exhausted_out_of_band_scores_are_a_judge_failure(self) -> None:
+        envelope = {
+            "candidate_text": json.dumps({
+                "scores": {"quality": 0.9}, "notes": "interpolated",
+            }),
+            "request": {"model": "judge"},
+            "response": {"raw_text": "invalid band"},
+        }
+        criteria = [{
+            "key": "quality",
+            "weight": 1.0,
+            "allowed_scores": [0.0, 0.5, 1.0],
+        }]
+        with tempfile.TemporaryDirectory() as tmp, patch(
+            "src.utils.grading._exec_container_python",
+            return_value=(envelope, ""),
+        ), patch.dict("os.environ", {"WILDCLAW_JUDGE_RETRIES": "1"}):
+            score, breakdown, notes = _grade_llm_rubric(
+                "task", "rubric", criteria, "", output_dir=Path(tmp),
+            )
+            summary = json.loads(
+                (Path(tmp) / "judge/summary.json").read_text()
+            )
+
+        self.assertEqual(score, 0.0)
+        self.assertEqual(breakdown, {"quality": 0.0})
+        self.assertIn("judge failed", notes)
+        self.assertEqual(summary["status"], "failed")
+        self.assertEqual(summary["final_schema_status"], "mismatch")
+        self.assertEqual(summary["schema_mismatch_count"], 2)
+
+    def test_strict_validation_rejects_key_and_numeric_schema_mismatches(self) -> None:
+        criteria = [{
+            "key": "quality",
+            "weight": 1.0,
+            "allowed_scores": [0.0, 0.5, 1.0],
+        }]
+        invalid_cases = [
+            ({"scores": {"renamed": 1.0}}, "missing score 'quality'"),
+            ({"scores": {"quality": 1.0, "extra": 0.0}}, "unexpected score 'extra'"),
+            ({"scores": {"quality": True}}, "must be a finite number"),
+            ({"scores": {"quality": float("nan")}}, "must be a finite number"),
+            ({"scores": {"quality": float("inf")}}, "must be a finite number"),
+        ]
+
+        for raw, expected_error in invalid_cases:
+            with self.subTest(raw=raw):
+                scores, error = _validate_rubric_scores(raw, criteria)
+                self.assertIsNone(scores)
+                self.assertIn(expected_error, error)
+
+    def test_criteria_without_allowed_scores_keep_range_compatibility(self) -> None:
+        criteria = [{"key": "quality", "weight": 1.0}]
+
+        scores, error = _validate_rubric_scores(
+            {"scores": {"quality": 0.37}}, criteria
+        )
+        invalid_scores, invalid_error = _validate_rubric_scores(
+            {"scores": {"quality": 1.1}}, criteria
+        )
+
+        self.assertEqual(scores, {"quality": 0.37})
+        self.assertEqual(error, "")
+        self.assertIsNone(invalid_scores)
+        self.assertIn("allowed range: [0.0,1.0]", invalid_error)
+
     def test_ppt_render_failure_is_not_retried(self) -> None:
         with tempfile.TemporaryDirectory() as tmp, patch(
             "src.utils.grading._exec_container_python",
@@ -128,6 +246,7 @@ class JudgeRetryTest(unittest.TestCase):
         self.assertIn("build_judge_evidence", runner_code)
         self.assertIn("max_chars=80000", runner_code)
         self.assertIn("'transcript_evidence': _transcript_evidence", runner_code)
+        self.assertIn("do not interpolate", runner_code)
         self.assertNotIn("wildclaw_judge_schema='scores_notes'", runner_code)
 
 

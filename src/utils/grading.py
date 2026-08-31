@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import subprocess
 import tempfile
@@ -928,32 +929,102 @@ def _exec_container_python(
         Path(runner_host).unlink(missing_ok=True)
 
 
+def _format_score_values(values: list[float]) -> str:
+    return json.dumps(values, ensure_ascii=False, separators=(",", ":"))
+
+
+def _format_received_score(value: object) -> str:
+    rendered = repr(value)
+    return rendered if len(rendered) <= 160 else rendered[:157] + "..."
+
+
+def _validate_rubric_scores(
+    raw: dict, rubric_criteria: list[dict],
+) -> tuple[dict[str, float] | None, str]:
+    """Validate and canonicalize judge scores against the rubric contract."""
+    raw_scores = raw.get("scores") if isinstance(raw, dict) else None
+    if not isinstance(raw_scores, dict):
+        return None, "scores must be a JSON object"
+
+    expected_keys = [str(criterion["key"]) for criterion in rubric_criteria]
+    if len(expected_keys) != len(set(expected_keys)):
+        return None, "rubric declares duplicate criterion keys"
+
+    actual_keys = set(raw_scores)
+    expected_key_set = set(expected_keys)
+    errors: list[str] = []
+    criteria_by_key = {
+        str(criterion["key"]): criterion for criterion in rubric_criteria
+    }
+    for key in expected_keys:
+        if key not in actual_keys:
+            allowed = criteria_by_key[key].get("allowed_scores")
+            suffix = (
+                f"; allowed values: {_format_score_values(allowed)}"
+                if isinstance(allowed, list) and allowed
+                else "; allowed range: [0.0,1.0]"
+            )
+            errors.append(f"missing score {key!r}{suffix}")
+    for key in sorted(actual_keys - expected_key_set, key=str):
+        errors.append(
+            f"unexpected score {key!r}={_format_received_score(raw_scores[key])}"
+        )
+
+    normalized: dict[str, float] = {}
+    for criterion in rubric_criteria:
+        key = str(criterion["key"])
+        if key not in raw_scores:
+            continue
+        value = raw_scores[key]
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            errors.append(
+                f"score {key!r}={_format_received_score(value)} must be a finite number"
+            )
+            continue
+        numeric = float(value)
+        if not math.isfinite(numeric):
+            errors.append(
+                f"score {key!r}={_format_received_score(value)} must be a finite number"
+            )
+            continue
+
+        allowed = criterion.get("allowed_scores")
+        if isinstance(allowed, list) and allowed:
+            match = next((
+                float(candidate)
+                for candidate in allowed
+                if isinstance(candidate, (int, float))
+                and not isinstance(candidate, bool)
+                and math.isfinite(float(candidate))
+                and math.isclose(numeric, float(candidate), rel_tol=0.0, abs_tol=1e-9)
+            ), None)
+            if match is None:
+                errors.append(
+                    f"score {key!r}={_format_received_score(value)}; allowed values: "
+                    f"{_format_score_values(allowed)}"
+                )
+                continue
+            normalized[key] = match
+        elif 0.0 <= numeric <= 1.0:
+            normalized[key] = numeric
+        else:
+            errors.append(
+                f"score {key!r}={_format_received_score(value)}; "
+                "allowed range: [0.0,1.0]"
+            )
+
+    if errors:
+        return None, "; ".join(errors)
+    return normalized, ""
+
+
 def _align_rubric_scores(
     task_id: str, raw: dict, rubric_criteria: list[dict],
 ) -> tuple[float, dict, str]:
-    """Map judge-returned scores onto canonical keys (defensive alignment)."""
-    raw_scores = raw.get("scores", {}) if isinstance(raw, dict) else {}
-    if not isinstance(raw_scores, dict):
-        raw_scores = {}
-    raw_items = list(raw_scores.items())
-    breakdown: dict = {}
-    for i, crit in enumerate(rubric_criteria):
-        key = crit["key"]
-        val = None
-        if key in raw_scores:                      # 1. exact match
-            val = raw_scores[key]
-        elif i < len(raw_items):                   # 2. positional fallback
-            got_key, got_val = raw_items[i]
-            val = got_val
-            logger.warning(
-                "[%s] judge key mismatch: expected '%s', using positional '%s'",
-                task_id, key, got_key,
-            )
-        if isinstance(val, (int, float)):
-            breakdown[key] = max(0.0, min(1.0, float(val)))
-        else:                                      # 3. unresolved -> 0 + error
-            breakdown[key] = 0.0
-            logger.error("[%s] judge missing criterion '%s', scored 0.0", task_id, key)
+    """Compute the weighted result after strict rubric-contract validation."""
+    breakdown, validation_error = _validate_rubric_scores(raw, rubric_criteria)
+    if breakdown is None:
+        raise ValueError(validation_error)
 
     total_w = sum(c["weight"] for c in rubric_criteria)
     if total_w > 0:
@@ -1005,7 +1076,9 @@ def _build_rubric_judge_prompt(
         "Return ONLY a JSON object, no prose, no code fences, in EXACTLY this shape:\n"
         f'{{"scores": {{{keys_json}}}, "notes": "<brief reason>"}}\n\n'
         f"CRITICAL: the \"scores\" object MUST contain EXACTLY these keys: {keys}\n"
-        "Do NOT rename, translate, omit, or add keys. Each score is a float 0.0-1.0.\n\n"
+        "Do NOT rename, translate, omit, or add keys. Each score is a float 0.0-1.0.\n"
+        "Each score must exactly match one of the Score values listed under that "
+        "criterion; do not interpolate.\n\n"
         "## Grading Rubric\n"
         f"{rubric_text}\n"
     )
@@ -1028,12 +1101,29 @@ def _finalize_judge_summary(
             summary = value
     except (OSError, json.JSONDecodeError):
         pass
+    parsed_attempts: list[dict] = []
+    for attempt_dir in sorted(judge_dir.glob("attempt-*")):
+        try:
+            parsed = json.loads(
+                (attempt_dir / "parsed.json").read_text(encoding="utf-8")
+            )
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(parsed, dict):
+            parsed_attempts.append(parsed)
+    final_schema_status = (
+        parsed_attempts[-1].get("schema_status") if parsed_attempts else None
+    )
     summary.update({
         "status": status,
         "attempt_count": attempt_count,
         "selected_attempt": selected_attempt,
         "final_attempt_status": "success" if status == "success" else "failed",
-        "final_schema_status": "valid" if status == "success" else "parse_error",
+        "final_schema_status": final_schema_status,
+        "schema_mismatch_count": sum(
+            item.get("schema_status") in {"mismatch", "parse_error"}
+            for item in parsed_attempts
+        ),
     })
     if error:
         summary["error"] = error
@@ -1050,12 +1140,11 @@ def _grade_llm_rubric(
     output_dir: Path | None = None,
     evidence_mode: str = "source_semantic",
 ) -> tuple[float, dict, str]:
-    """Run the declarative LLM rubric in-container; align to canonical keys.
+    """Run the declarative LLM rubric in-container and enforce its score contract.
 
     Returns (llm_score, breakdown_by_canonical_key, notes). llm_score is the
-    weight-normalised mean of criterion scores. Key alignment is defensive:
-    exact match -> positional fallback (warn) -> 0.0 + error, never silently
-    dropping a criterion.
+    weight-normalised mean of criterion scores. Invalid keys or score values are
+    retried and never aligned positionally or silently clamped.
     """
     dynamic_website_visual = (
         metric_profile == WEBSITE_METRIC_PROFILE
@@ -1164,13 +1253,21 @@ def _grade_llm_rubric(
     retries = _judge_retries()
     judge_dir = (output_dir / "judge") if output_dir else None
     last_error = "judge returned no valid JSON"
+    repair_error = ""
     attempt_count = 0
     for attempt in range(1, retries + 2):
         attempt_count = attempt
         attempt_code = runner_code
         if attempt > 1:
+            error_detail = (
+                f" Validation errors: {repair_error[:2000]}"
+                if repair_error
+                else ""
+            )
             repair = (
-                "\n\nYour previous response was invalid. Return ONLY one valid JSON object "
+                "\n\nYour previous response was invalid."
+                + error_detail
+                + " Return ONLY one valid JSON object "
                 "with keys scores and notes. Do not use Markdown, prose, or tool-call text."
             )
             attempt_code = runner_code.replace(
@@ -1197,6 +1294,19 @@ def _grade_llm_rubric(
                 parsed = parse_json_candidate(candidate_text)
             except (TypeError, ValueError) as exc:
                 parse_error = str(exc)
+        validated_scores = None
+        validation_error = ""
+        if isinstance(parsed, dict):
+            validated_scores, validation_error = _validate_rubric_scores(
+                parsed, rubric_criteria
+            )
+        attempt_error = (
+            validation_error
+            or err
+            or envelope.get("judge_error")
+            or parse_error
+            or "judge returned no valid JSON"
+        )
         if judge_dir:
             request_data = envelope.get("request", {}) if envelope else {}
             if not request_data:
@@ -1208,12 +1318,28 @@ def _grade_llm_rubric(
             response_data = envelope.get("response", {}) if envelope else {}
             if err:
                 response_data = {**response_data, "runner_error": err}
+            if validated_scores is not None:
+                parsed_data = {"schema_status": "valid", "value": parsed}
+            elif isinstance(parsed, dict):
+                parsed_data = {
+                    "schema_status": "mismatch",
+                    "schema_error": validation_error,
+                    "value": parsed,
+                }
+            else:
+                parsed_data = {
+                    "schema_status": "parse_error",
+                    "schema_error": attempt_error,
+                    "candidate_text": candidate_text,
+                }
             write_attempt(
-                judge_dir, attempt, request_data, response_data,
-                parsed if isinstance(parsed, dict) else {"parse_error": parse_error, "candidate_text": candidate_text},
+                judge_dir, attempt, request_data, response_data, parsed_data,
             )
-        if isinstance(parsed, dict) and isinstance(parsed.get("scores"), dict):
-            score, breakdown, notes = _align_rubric_scores(task_id, parsed, rubric_criteria)
+        if isinstance(parsed, dict) and validated_scores is not None:
+            canonical = {**parsed, "scores": validated_scores}
+            score, breakdown, notes = _align_rubric_scores(
+                task_id, canonical, rubric_criteria
+            )
             if judge_dir:
                 _finalize_judge_summary(
                     judge_dir,
@@ -1222,7 +1348,8 @@ def _grade_llm_rubric(
                     selected_attempt=attempt,
                 )
             return score, breakdown, notes
-        last_error = err or envelope.get("judge_error") or parse_error or "judge returned no valid JSON"
+        last_error = attempt_error
+        repair_error = validation_error
         logger.warning("[%s] Judge attempt %d/%d invalid: %s", task_id, attempt, retries + 1, last_error)
         if "PPT_RENDER_FAILED" in last_error or "WEB_VISUAL_EVIDENCE_FAILED" in last_error:
             break
