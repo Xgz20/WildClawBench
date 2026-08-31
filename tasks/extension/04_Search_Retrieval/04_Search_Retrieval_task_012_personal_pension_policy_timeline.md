@@ -25,7 +25,7 @@ tags:
 - https://www.gov.cn/zhengce/zhengceku/2022-11/25/content_5728839.htm
 - https://www.gov.cn/zhengce/zhengceku/202412/content_6992279.htm
 
-生成`/tmp_workspace/results/pension_timeline.csv`，列严格为`stage,document_number,document_date,published_or_effective_date,coverage,source_url`。按时间顺序使用`institutional_framework,implementation_measures,pilot_in_36_cities_or_regions,national_implementation`四个stage值，日期使用`YYYY-MM-DD`。
+生成`/tmp_workspace/results/pension_timeline.csv`，列严格为`stage,document_number,document_date,published_or_effective_date,coverage,source_url`。按时间顺序使用`institutional_framework,implementation_measures,pilot_in_36_cities_or_regions,national_implementation`四个stage值，日期使用`YYYY-MM-DD`。`coverage`使用简洁自然语言准确概括各阶段的覆盖范围与生效方式，不要求固定措辞。
 
 再写`/tmp_workspace/results/answer.md`，区分制度框架、实施办法、36个城市或地区先行实施、全国实施四个节点，并直接回答“到底从什么时候开始”。不要保存网页副本，不要使用媒体摘要或其他来源代替原文，也不要创建其他结果文件。
 
@@ -68,7 +68,41 @@ def grade(**kwargs) -> dict:
         return path.is_file() and not path.is_symlink() and not path.parent.is_symlink()
 
     def norm(value):
-        return re.sub(r"\s+", "", str(value or ""))
+        return re.sub(r"[\s，,。；;、：:（）()]", "", str(value or "")).lower()
+
+    def has_any(text, *tokens):
+        return any(token in text for token in tokens)
+
+    def coverage_matches(stage, value):
+        text = norm(value)
+        if stage == "institutional_framework":
+            return (
+                "个人养老金" in text
+                and has_any(text, "制度", "框架")
+                and has_any(text, "建立", "确立", "构建", "框架")
+            )
+        if stage == "implementation_measures":
+            return (
+                "账户" in text
+                and "流程" in text
+                and has_any(text, "管理规则", "管理规范", "管理办法", "监管规则")
+                and has_any(text, "印发之日", "印发日起", "发布后", "公布后")
+                and has_any(text, "施行", "实施", "生效")
+            )
+        if stage == "pilot_in_36_cities_or_regions":
+            return (
+                "36" in text
+                and has_any(text, "城市", "地区")
+                and has_any(text, "先行", "试点", "率先")
+                and not has_any(text, "非36", "不是36", "未在36", "不在36")
+            )
+        if stage == "national_implementation":
+            return (
+                "全国" in text
+                and has_any(text, "实施", "施行", "落地")
+                and not has_any(text, "非全国", "不是全国", "尚未全国", "未在全国", "不在全国")
+            )
+        return False
 
     try:
         expected = json.loads((root / "gt" / "expected.json").read_text(encoding="utf-8"))
@@ -102,7 +136,7 @@ def grade(**kwargs) -> dict:
             actual.get("document_date") == wanted["document_date"],
             actual.get("published_or_effective_date") == wanted["published_or_effective_date"],
         ])
-        coverage_flags.append(norm(actual.get("coverage")) == norm(wanted["coverage"]))
+        coverage_flags.append(coverage_matches(stage, actual.get("coverage")))
     scores["milestone_dates"] = mean(date_flags)
     scores["coverage_and_effect"] = mean(coverage_flags)
 

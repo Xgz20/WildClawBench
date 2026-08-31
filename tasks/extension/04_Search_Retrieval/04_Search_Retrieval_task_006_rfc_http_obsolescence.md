@@ -25,7 +25,7 @@ Our internal HTTP guide still cites RFC 7230 and RFC 7231. I need a precise repl
 - https://www.rfc-editor.org/info/rfc9110
 - https://www.rfc-editor.org/info/rfc9112
 
-Create `/tmp_workspace/results/rfc_replacement_map.json` with exactly two top-level fields: `records,source_urls`. `records` must contain one object for each old RFC with fields `old_rfc,replacements`; every item in `replacements` must use `rfc,publication_month,scope,source_url`. Use `YYYY-MM` for publication months and preserve the source URL spelling above. Keep the records in old-RFC order and replacement entries in RFC-number order.
+Create `/tmp_workspace/results/rfc_replacement_map.json` with exactly two top-level fields: `records,source_urls`. `records` must contain one object for each old RFC with fields `old_rfc,replacements`; every item in `replacements` must use `rfc,publication_month,scope,source_url`. Use `YYYY-MM` for publication months and preserve the source URL spelling above. The machine-readable `scope` value must be one of `HTTP semantics` or `HTTP/1.1 message syntax`; determine the correct value from each RFC record. Keep the records in old-RFC order and replacement entries in RFC-number order.
 
 Then write `/tmp_workspace/results/migration_note.md` explaining which new RFC our guide should cite for HTTP semantics and which it should cite for HTTP/1.1 message syntax. Do not save copies of the pages, use other sources, edit the guide, or create other result files.
 

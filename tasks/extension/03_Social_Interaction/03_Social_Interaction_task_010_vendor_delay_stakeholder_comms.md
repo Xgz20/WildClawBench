@@ -20,7 +20,7 @@ tags:
 
 供应商刚通知关键硬件会分批延期，10月12日试点、10月16日区域上线和10月23日全面上线都可能受影响。订单、最新供应商更新、上线用量、库存、备选方案和审批规则在`/tmp_workspace/purchase_order.json`、`/tmp_workspace/vendor_updates.jsonl`、`/tmp_workspace/launch_requirements.csv`、`/tmp_workspace/inventory.json`、`/tmp_workspace/contingency_options.csv`和`/tmp_workspace/communication_and_approval_policy.md`。
 
-请核对时间线、可用数量、QA时间、预算和审批条件，在`/tmp_workspace/results/impact_plan.json`中使用以下顶层字段：`purchase_order_id,source_timeline,recommended_options,total_incremental_cost_cny,available_by_regional_launch,required_approvals,trigger_conditions,milestones`。其中`source_timeline`记录两批供应商信息、可用与支持库存、QA时长和三个里程碑需求；`milestones`逐项记录`milestone_id,date,status,available_units`。
+请核对时间线、可用数量、QA时间、预算和审批条件，在`/tmp_workspace/results/impact_plan.json`中使用以下顶层字段：`purchase_order_id,source_timeline,recommended_options,total_incremental_cost_cny,available_by_regional_launch,required_approvals,trigger_conditions,milestones`。其中`source_timeline`记录两批供应商信息、可用与支持库存、QA时长和三个里程碑需求；`milestones`逐项记录`milestone_id,date,status,available_units`。`status`是机器可读枚举，只能使用`reduced_to_120`、`conditional_pending_approvals`或`date_not_committed`，请根据各里程碑的实际状态选择。
 
 再生成`/tmp_workspace/results/decision_brief.md`、`vendor_escalation_draft.md`、`internal_update.md`和`customer_update.md`。不要把发货窗口当作到货承诺，不要动用支持库存，不要提前承诺GA，也不要实际发消息、下单、审批或创建其他结果文件。
 
