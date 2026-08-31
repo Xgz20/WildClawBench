@@ -272,6 +272,7 @@ def run_grading(
     grading_weights: dict | None = None,
     metric_profile: str = "",
     task_definition_id: str = "",
+    judge_evidence: dict | None = None,
 ) -> dict:
     """Dispatch grading by task format.
 
@@ -296,6 +297,7 @@ def run_grading(
             grading_weights=grading_weights or {},
             metric_profile=metric_profile,
             task_definition_id=task_definition_id,
+            judge_evidence=judge_evidence or {},
         )
     return _run_grading_legacy(
         task_id,
@@ -844,27 +846,16 @@ def _semantic_workspace_reader_code(workspace_path: str) -> str:
     ) % json.dumps(workspace_path)
 
 
-def _legacy_workspace_reader_code(workspace_path: str) -> str:
-    """Preserve the existing v2 workspace evidence scope for non-website tasks."""
+def _legacy_workspace_reader_code(
+    workspace_path: str, judge_evidence: dict | None = None,
+) -> str:
+    """Build prioritized, auditable workspace evidence for non-website tasks."""
     return (
-        "_ws = Path(%s)\n"
-        "_files = []\n"
-        "_exts = ('.md','.txt','.json','.csv','.py','.yaml','.yml','.html')\n"
-        "if _ws.is_dir():\n"
-        "    for _p in sorted(_ws.rglob('*')):\n"
-        "        if not (_p.is_file() and _p.suffix.lower() in _exts):\n"
-        "            continue\n"
-        "        if 'gt' in _p.relative_to(_ws).parts:\n"
-        "            continue\n"
-        "        try:\n"
-        "            _c = _p.read_text(encoding='utf-8', errors='ignore')[:8000]\n"
-        "        except Exception:\n"
-        "            continue\n"
-        "        _files.append('### ' + str(_p.relative_to(_ws)) + '\\n' + _c)\n"
-        "        if len(_files) >= 12:\n"
-        "            break\n"
-        "_ws_text = '\\n\\n'.join(_files)\n"
-    ) % json.dumps(workspace_path)
+        "from _workspace_evidence import collect_workspace_evidence\n"
+        "_workspace_bundle = collect_workspace_evidence(%s, %s)\n"
+        "_ws_text = _workspace_bundle['text']\n"
+        "_workspace_evidence = _workspace_bundle['metadata']\n"
+    ) % (json.dumps(workspace_path), json.dumps(judge_evidence or {}))
 
 
 def _exec_container_python(
@@ -878,6 +869,7 @@ def _exec_container_python(
     """
     loader_src = Path(__file__).with_name("transcript_loader.py")
     shim_src = Path(__file__).with_name("judge_shim.py")
+    workspace_evidence_src = Path(__file__).with_name("workspace_evidence.py")
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".py", delete=False, encoding="utf-8"
     ) as f:
@@ -900,6 +892,20 @@ def _exec_container_python(
         )
         if r_shim.returncode != 0:
             return None, f"docker cp judge shim failed: {r_shim.stderr}"
+        if not workspace_evidence_src.exists():
+            return None, f"workspace evidence module not found: {workspace_evidence_src}"
+        r_workspace_evidence = subprocess.run(
+            [
+                "docker", "cp", str(workspace_evidence_src),
+                f"{task_id}:/tmp/_workspace_evidence.py",
+            ],
+            capture_output=True, text=True,
+        )
+        if r_workspace_evidence.returncode != 0:
+            return None, (
+                "docker cp workspace evidence module failed: "
+                f"{r_workspace_evidence.stderr}"
+            )
         r = subprocess.run(
             ["docker", "cp", runner_host, f"{task_id}:/tmp/_judge_runner.py"],
             capture_output=True, text=True,
@@ -1139,6 +1145,7 @@ def _grade_llm_rubric(
     *,
     output_dir: Path | None = None,
     evidence_mode: str = "source_semantic",
+    judge_evidence: dict | None = None,
 ) -> tuple[float, dict, str]:
     """Run the declarative LLM rubric in-container and enforce its score contract.
 
@@ -1173,11 +1180,13 @@ def _grade_llm_rubric(
     is_ppt_profile = metric_profile == PPT_METRIC_PROFILE
     ws_reader = (
         "_ws_text = ''\n"
+        "_workspace_evidence = {'policy': 'not_used'}\n"
         if dynamic_website_visual
         else (
             _semantic_workspace_reader_code(TMP_WORKSPACE)
+            + "_workspace_evidence = {'policy': 'website_source_semantic_v1'}\n"
             if is_website_profile
-            else _legacy_workspace_reader_code(TMP_WORKSPACE)
+            else _legacy_workspace_reader_code(TMP_WORKSPACE, judge_evidence)
         )
     )
     transcript_reader = (
@@ -1240,14 +1249,14 @@ def _grade_llm_rubric(
         "    _visual_manifest = _ppt_evidence.get('manifest', []) or _website_evidence.get('manifest', [])\n"
         "    _audit_content.extend({'type': 'image_ref', **_item} for _item in _visual_manifest)\n"
         "    _envelope = {'candidate_text': _choice.message.content,"
-        " 'request': {'model': _judge_model, 'input_model': _judge_model, 'requested_model': _effective_judge_model, 'effective_requested_model': _effective_judge_model, 'max_tokens': " + str(judge_max_tokens) + ", 'timeout_seconds': " + repr(_judge_timeout_seconds()) + ", 'response_format': {'type': 'json_object'}, 'endpoint_type': ('anthropic_messages' if _judge_model.startswith('anthropic/') else 'openai_chat_completions'), 'messages': [{'role': 'user', 'content': _audit_content}], 'transcript_evidence': _transcript_evidence, 'ppt_manifest': _ppt_evidence.get('manifest', []), 'website_manifest': _website_evidence.get('manifest', [])},"
+        " 'request': {'model': _judge_model, 'input_model': _judge_model, 'requested_model': _effective_judge_model, 'effective_requested_model': _effective_judge_model, 'max_tokens': " + str(judge_max_tokens) + ", 'timeout_seconds': " + repr(_judge_timeout_seconds()) + ", 'response_format': {'type': 'json_object'}, 'endpoint_type': ('anthropic_messages' if _judge_model.startswith('anthropic/') else 'openai_chat_completions'), 'messages': [{'role': 'user', 'content': _audit_content}], 'transcript_evidence': _transcript_evidence, 'workspace_evidence': _workspace_evidence, 'ppt_manifest': _ppt_evidence.get('manifest', []), 'website_manifest': _website_evidence.get('manifest', [])},"
         " 'response': {'raw': _raw_response, 'raw_text': _choice.message.content,"
         " 'model': getattr(resp, 'model', ''), 'returned_model': getattr(resp, 'model', ''),"
         " 'finish_reason': getattr(_choice, 'finish_reason', ''),"
         " 'usage': getattr(resp, 'usage', None).__dict__ if getattr(resp, 'usage', None) else {}}}\n"
         "    print(json.dumps(_envelope, ensure_ascii=False, default=str))\n"
         "except Exception as _e:\n"
-        "    print(json.dumps({'judge_error': str(_e), 'candidate_text': '', 'request': {'model': " + json.dumps(judge_model) + "}, 'response': {}}))\n"
+        "    print(json.dumps({'judge_error': str(_e), 'candidate_text': '', 'request': {'model': " + json.dumps(judge_model) + ", 'transcript_evidence': _transcript_evidence, 'workspace_evidence': _workspace_evidence}, 'response': {}}))\n"
     )
 
     retries = _judge_retries()
@@ -1379,6 +1388,7 @@ def _run_grading_v2(
     grading_weights: dict,
     metric_profile: str,
     task_definition_id: str = "",
+    judge_evidence: dict | None = None,
 ) -> dict:
     """v2 path: rule checks + declarative LLM rubric, weight-combined.
 
@@ -1467,6 +1477,7 @@ def _run_grading_v2(
         task_id, llm_judge_rubric, rubric_criteria, transcript_container_path,
         metric_profile,
         output_dir=output_dir,
+        judge_evidence=judge_evidence,
     )
 
     # ---- combine ----

@@ -141,6 +141,7 @@ class GradeOneTest(unittest.TestCase):
         # grade 参数由 parse_task_md 原样透传
         self.assertIn("def grade", grading.call_args.kwargs["automated_checks"])
         self.assertEqual(grading.call_args.kwargs["metric_profile"], "")
+        self.assertEqual(grading.call_args.kwargs["judge_evidence"], {})
 
     def test_writes_error_score_when_grading_raises(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

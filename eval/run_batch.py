@@ -486,6 +486,7 @@ def grade_the_task(
                 grading_weights=task.get("grading_weights") or {},
                 metric_profile=task.get("metric_profile", ""),
                 task_definition_id=task.get("task_id", ""),
+                judge_evidence=task.get("judge_evidence") or {},
             )
             result["scores"] = scores
             print(format_scores(task_id, scores))

@@ -4,10 +4,41 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from src.utils.task_parser import parse_rubric_criteria, parse_task_md
+from src.utils.task_parser import (
+    normalize_judge_evidence,
+    parse_rubric_criteria,
+    parse_task_md,
+)
 
 
 class RubricCriteriaParserTest(unittest.TestCase):
+    def test_normalizes_optional_judge_evidence_contract(self) -> None:
+        self.assertEqual(
+            normalize_judge_evidence({
+                "required": [
+                    "/tmp_workspace/results/answer.md",
+                    {"path": "project/fix.py", "role": "source_patch"},
+                ],
+                "references": "inputs/policy.md",
+            }),
+            {
+                "required": [
+                    {"path": "results/answer.md", "role": "deliverable"},
+                    {"path": "project/fix.py", "role": "source_patch"},
+                ],
+                "references": [
+                    {"path": "inputs/policy.md", "role": "reference"},
+                ],
+            },
+        )
+
+    def test_rejects_unsafe_judge_evidence_paths(self) -> None:
+        for path in ("../answer.md", "/etc/passwd", "gt/expected.json"):
+            with self.subTest(path=path), self.assertRaisesRegex(
+                ValueError, "judge_evidence"
+            ):
+                normalize_judge_evidence({"required": [path]})
+
     def test_parses_optional_website_dimension_keys(self) -> None:
         rubric = """\
 ### Criterion 1: 首屏内容 (key: hero_content, primary: content_structure, secondary: basic_content, weight: 0.2)

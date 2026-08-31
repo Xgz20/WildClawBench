@@ -113,6 +113,7 @@ def grade_one(
             grading_weights=task.get("grading_weights") or {},
             metric_profile=task.get("metric_profile", ""),
             task_definition_id=task.get("task_id", ""),
+            judge_evidence=task.get("judge_evidence") or {},
         )
     except Exception as exc:  # 容器/评分任何失败都落盘并继续
         logger.error("[%s] 评分失败: %s", task_id, exc)

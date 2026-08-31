@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
-from typing import Optional
+from pathlib import Path, PurePosixPath
+from typing import Any, Optional
 from dotenv import load_dotenv
 
 import yaml
@@ -63,6 +63,89 @@ def resolve_metric_profile(tags: list[str]) -> str:
     if len(profiles) > 1:
         raise ValueError(f"Task declares multiple metric profiles: {profiles}")
     return profiles[0] if profiles else ""
+
+
+def _normalize_judge_evidence_path(raw: Any) -> str:
+    """Normalize one task-declared Judge evidence path below /tmp_workspace."""
+    value = str(raw or "").strip().replace("\\", "/")
+    workspace_prefix = "/tmp_workspace/"
+    if value.startswith(workspace_prefix):
+        value = value[len(workspace_prefix):]
+    elif value == "/tmp_workspace":
+        raise ValueError("judge_evidence path must identify a workspace child")
+    elif value.startswith("/"):
+        raise ValueError(
+            f"judge_evidence path must be relative to /tmp_workspace: {raw!r}"
+        )
+    while value.startswith("./"):
+        value = value[2:]
+    value = value.rstrip("/")
+    if not value:
+        raise ValueError("judge_evidence path must not be empty")
+    parts = PurePosixPath(value).parts
+    if any(part in {"", ".", ".."} for part in parts):
+        raise ValueError(f"judge_evidence path is unsafe: {raw!r}")
+    if "gt" in parts or ".grading" in parts:
+        raise ValueError(
+            f"judge_evidence path cannot expose protected grading data: {raw!r}"
+        )
+    return value
+
+
+def _normalize_judge_evidence_items(raw: Any, *, default_role: str) -> list[dict]:
+    if raw is None:
+        return []
+    values = raw if isinstance(raw, list) else [raw]
+    normalized: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    for item in values:
+        if isinstance(item, str):
+            path = _normalize_judge_evidence_path(item)
+            role = default_role
+        elif isinstance(item, dict):
+            unknown = sorted(set(item) - {"path", "role"})
+            if unknown:
+                raise ValueError(
+                    f"judge_evidence item contains unsupported keys: {unknown}"
+                )
+            path = _normalize_judge_evidence_path(item.get("path"))
+            role = str(item.get("role") or default_role).strip()
+            if not role:
+                role = default_role
+        else:
+            raise ValueError(
+                "judge_evidence entries must be paths or mappings with path/role"
+            )
+        key = (path, role)
+        if key not in seen:
+            normalized.append({"path": path, "role": role})
+            seen.add(key)
+    return normalized
+
+
+def normalize_judge_evidence(raw: Any) -> dict:
+    """Validate the optional task-level workspace evidence contract.
+
+    The normalized contract deliberately contains only workspace paths. Transcript
+    evidence remains governed by the independent transcript compaction policy.
+    """
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise ValueError("judge_evidence must be a mapping")
+    unknown = sorted(set(raw) - {"required", "references"})
+    if unknown:
+        raise ValueError(f"judge_evidence contains unsupported keys: {unknown}")
+    required = _normalize_judge_evidence_items(
+        raw.get("required"), default_role="deliverable"
+    )
+    references = _normalize_judge_evidence_items(
+        raw.get("references"), default_role="reference"
+    )
+    return {
+        "required": required,
+        "references": references,
+    }
 
 
 def parse_rubric_criteria(rubric_text: str) -> list[dict]:
@@ -224,6 +307,7 @@ def parse_task_md(task_file: Path) -> dict:
     grading_weights = metadata.get("grading_weights") or {}
     if not isinstance(grading_weights, dict):
         grading_weights = {}
+    judge_evidence = normalize_judge_evidence(metadata.get("judge_evidence"))
 
     task_id         = metadata.get("id",             task_file.stem)
     timeout_seconds = int(metadata.get("timeout_seconds", 120))
@@ -258,4 +342,5 @@ def parse_task_md(task_file: Path) -> dict:
         "grading_weights":  grading_weights,
         "llm_judge_rubric": llm_judge_rubric,
         "rubric_criteria":  rubric_criteria,
+        "judge_evidence":   judge_evidence,
     }

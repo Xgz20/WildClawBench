@@ -52,14 +52,16 @@ class WebsiteSemanticGradingTest(unittest.TestCase):
         self.assertIn("_max_source_chars = 80000", code)
         self.assertIn("_total_source_chars", code)
 
-    def test_legacy_reader_does_not_collect_frontend_source_extensions(self) -> None:
-        code = _legacy_workspace_reader_code("/tmp_workspace")
+    def test_non_website_reader_uses_prioritized_workspace_evidence(self) -> None:
+        code = _legacy_workspace_reader_code(
+            "/tmp_workspace",
+            {"required": [{"path": "project/answer.py", "role": "deliverable"}]},
+        )
 
-        self.assertIn(repr(".html"), code)
-        for extension in (".css", ".js", ".jsx", ".ts", ".tsx"):
-            with self.subTest(extension=extension):
-                self.assertNotIn(repr(extension), code)
-        self.assertIn("if len(_files) >= 12", code)
+        self.assertIn("collect_workspace_evidence", code)
+        self.assertIn("project/answer.py", code)
+        self.assertIn("_workspace_evidence", code)
+        self.assertNotIn("if len(_files) >= 12", code)
 
     def test_dimension_scores_are_weighted_within_each_dimension(self) -> None:
         dimensions = _aggregate_rubric_dimensions(

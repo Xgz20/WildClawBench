@@ -49,6 +49,7 @@ class EvalProvenanceHashTests(unittest.TestCase):
             "grading_type": "hybrid",
             "grading_weights": {"automated": 0.5, "llm_judge": 0.5},
             "metric_profile": "",
+            "judge_evidence": {},
         }
 
     def tearDown(self) -> None:
@@ -162,6 +163,13 @@ class EvalProvenanceHashTests(unittest.TestCase):
                 lambda task: (self.workspace / "eval/input.txt").write_text(
                     "eval", encoding="utf-8"
                 ),
+            ),
+            (
+                lambda task: task.update(judge_evidence={
+                    "required": [{"path": "results/answer.md", "role": "deliverable"}],
+                    "references": [],
+                }),
+                lambda task: task.update(judge_evidence={}),
             ),
         )
         for mutate, restore in mutations:

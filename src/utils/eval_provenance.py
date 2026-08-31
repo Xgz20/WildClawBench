@@ -13,6 +13,8 @@ import os
 from pathlib import Path
 from typing import Any, Mapping
 
+from .workspace_evidence import JUDGE_WORKSPACE_EVIDENCE_POLICY_VERSION
+
 
 PROVENANCE_SCHEMA_VERSION = 1
 CONTRACT_HASH_SCHEMA_VERSION = 1
@@ -165,6 +167,8 @@ def build_task_provenance(task: Mapping[str, Any]) -> dict[str, Any]:
         "grading_type": str(task.get("grading_type") or ""),
         "grading_weights": task.get("grading_weights") or {},
         "metric_profile": str(task.get("metric_profile") or ""),
+        "judge_evidence": task.get("judge_evidence") or {},
+        "judge_workspace_evidence_policy": JUDGE_WORKSPACE_EVIDENCE_POLICY_VERSION,
         "ground_truth_sha256": ground_truth_sha256,
         "workspace_eval_sha256": eval_sha256,
     }

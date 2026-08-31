@@ -246,6 +246,7 @@ class JudgeRetryTest(unittest.TestCase):
         self.assertIn("build_judge_evidence", runner_code)
         self.assertIn("max_chars=80000", runner_code)
         self.assertIn("'transcript_evidence': _transcript_evidence", runner_code)
+        self.assertIn("'workspace_evidence': _workspace_evidence", runner_code)
         self.assertIn("do not interpolate", runner_code)
         self.assertNotIn("wildclaw_judge_schema='scores_notes'", runner_code)
 
