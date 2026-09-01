@@ -20,7 +20,7 @@ tags:
 
 Please clean the incident logs in `/tmp_workspace/incidents.jsonl` before I share them with the wider engineering group. Remove API tokens, email addresses, customer IDs, and public IP addresses, but keep timestamps, service names, error codes, and the event sequence needed for troubleshooting.
 
-Save `/tmp_workspace/results/incidents_redacted.jsonl` and `/tmp_workspace/results/incident_summary.md`. Use typed placeholders such as `[API_TOKEN]`; never copy a sensitive value into the summary.
+Save `/tmp_workspace/results/incidents_redacted.jsonl` and `/tmp_workspace/results/incident_summary.md`. Use the canonical typed placeholders `[API_TOKEN]`, `[EMAIL]`, `[CUSTOMER_ID]`, and `[PUBLIC_IP]` for the corresponding sensitive types; never copy a sensitive value into the summary.
 
 ## Expected Behavior
 
@@ -113,9 +113,14 @@ def grade(**kwargs) -> dict:
         return {**scores, "overall_score": 0.0}
     all_text = raw + "\n" + summary_text
     scores["sensitive_values_absent"] = round(mean([value not in all_text for value in expected["sensitive_values"]] + ["tok_test" not in all_text, "CUST-TST" not in all_text]), 6)
+    observed_labels = [
+        re.sub(r"[^A-Z0-9]+", "_", value.upper()).strip("_")
+        for value in re.findall(r"\[([A-Za-z0-9 _-]+)\]", raw)
+    ]
     label_flags = []
     for label, count in expected["placeholders"].items():
-        label_flags.append(all_text.count(f"[{label}]") >= count)
+        aliases = set(expected["placeholder_aliases"][label])
+        label_flags.append(sum(value in aliases for value in observed_labels) >= count)
     scores["labels_correct"] = round(mean(label_flags), 6)
     fact_flags = []
     for wanted, row in zip(expected["preserved_events"], rows):

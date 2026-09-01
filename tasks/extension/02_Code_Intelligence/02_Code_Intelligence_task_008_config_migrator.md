@@ -46,7 +46,6 @@ python3 -m unittest -v
 
 ```python
 def grade(**kwargs) -> dict:
-    import ast
     import hashlib
     import json
     from pathlib import Path
@@ -175,7 +174,8 @@ with tempfile.TemporaryDirectory() as temporary:
     config.write_text(json.dumps(v1), encoding="utf-8")
     before = config.read_bytes()
     try:
-        with mock.patch("os.replace", side_effect=OSError("simulated interruption")):
+        with mock.patch("os.replace", side_effect=OSError("simulated interruption")), \
+             mock.patch("os.rename", side_effect=OSError("simulated interruption")):
             module.migrate_file(config, project / "schema_v3.json")
     except OSError:
         result["crash_raised"] = True
@@ -215,21 +215,12 @@ print("__RESULT__" + json.dumps(result, sort_keys=True))
         bool(hidden.get(name)) for name in ("validation", "crash_preserved")
     ) / 2.0
 
-    try:
-        source_text = source.read_text(encoding="utf-8")
-        atomic_static = (
-            ("replace" in source_text)
-            and any(token in source_text for token in ("mkstemp", "NamedTemporaryFile", "TemporaryFile"))
-        )
-    except (OSError, UnicodeError):
-        atomic_static = False
     atomic_flags = [
         hidden.get("file_success"),
         hidden.get("success_clean"),
         hidden.get("crash_raised"),
         hidden.get("crash_preserved"),
         hidden.get("crash_clean"),
-        atomic_static,
     ]
     scores["atomic_failure_behavior"] = sum(bool(flag) for flag in atomic_flags) / len(atomic_flags)
 

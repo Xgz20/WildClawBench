@@ -11,6 +11,11 @@
     {"order_id": "ORD-1004", "conflict_field": "order_status", "evidence_state": "canceled", "blocker": "Order was canceled before printing", "next_owner": "Order Operations", "next_action": "Confirm downstream print and label queues remain voided"},
     {"order_id": "ORD-1005", "conflict_field": "case_serial", "evidence_state": "conflict", "blocker": "Passed print serial CS-5005-A conflicts with label serial CS-9999", "next_owner": "Fulfillment Lead", "next_action": "Reconcile the physical serial and replace or void the incorrect label"}
   ],
+  "acceptable_conflict_fields": {
+    "ORD-1003": ["quantity", "case_serial", "label_id"],
+    "ORD-1004": ["order_status"],
+    "ORD-1005": ["case_serial", "label_id"]
+  },
   "exec_file_sha256": {
     "order_export.csv": "a005fee9be57415271a7ee33149ab207f01b16ade8cd8af852a6f7cfb3720556",
     "print_jobs.csv": "44a7472bb74dc70fe5e93bfae1924304ae2376f7f75c45e237ca032e7cdb1c73",

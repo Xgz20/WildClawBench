@@ -22,7 +22,7 @@ tags:
 
 <https://arxiv.org/abs/1706.03762v7>
 
-在`/tmp_workspace/results/paper_card.json`中记录：`source,title,authors,first_submitted,version_revised,reported_results`。`source`包含`arxiv_id,version,versioned_id,url`；作者按页面顺序列全；`reported_results`使用字段`wmt2014_english_german_bleu,wmt2014_english_french_bleu,english_french_training_days,english_french_training_gpus`。
+在`/tmp_workspace/results/paper_card.json`中记录：`source,title,authors,first_submitted,version_revised,reported_results`。`source`包含`arxiv_id,version,versioned_id,url`，其中`versioned_id`规范写为`arXiv:1706.03762v7`；`first_submitted`和`version_revised`使用`YYYY-MM-DD`。作者按页面顺序列全；`reported_results`使用字段`wmt2014_english_german_bleu,wmt2014_english_french_bleu,english_french_training_days,english_french_training_gpus`。
 
 再写一份中文`/tmp_workspace/results/reading_pack.md`：先用一段话说明论文解决的问题和核心思路，再给出总计60分钟的组会议程和3个具体讨论问题。引用必须明确到v7。不要保存网页或PDF副本，不要使用其他来源或创建其他结果文件。
 
@@ -48,6 +48,7 @@ Agent应从固定arXiv版本核对标题、八位作者、首次提交和v7修�
 ```python
 def grade(transcript: list, workspace_path: str) -> dict:
     import json
+    import re
     from pathlib import Path
 
     keys = [
@@ -66,6 +67,15 @@ def grade(transcript: list, workspace_path: str) -> dict:
     def regular(path):
         return path.is_file() and not path.is_symlink() and not path.parent.is_symlink()
 
+    def versioned_id(value):
+        return re.sub(r"^arxiv\s*:\s*", "", str(value or "").strip(), flags=re.I)
+
+    def calendar_date(value):
+        text = str(value or "").strip()
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}(?:[T ][^\s]+)?", text):
+            return None
+        return text[:10]
+
     card_path = root / "results" / "paper_card.json"
     pack_path = root / "results" / "reading_pack.md"
     try:
@@ -80,15 +90,19 @@ def grade(transcript: list, workspace_path: str) -> dict:
 
     source = card.get("source") if isinstance(card.get("source"), dict) else {}
     scores["fixed_version_correct"] = mean([
-        source.get(key) == value for key, value in expected["source"].items()
+        source.get("arxiv_id") == expected["source"]["arxiv_id"],
+        source.get("version") == expected["source"]["version"],
+        versioned_id(source.get("versioned_id"))
+        == versioned_id(expected["source"]["versioned_id"]),
+        source.get("url") == expected["source"]["url"],
     ])
 
     authors = card.get("authors")
     scores["metadata_correct"] = mean([
         card.get("title") == expected["title"],
         authors == expected["authors"],
-        card.get("first_submitted") == expected["first_submitted"],
-        card.get("version_revised") == expected["version_revised"],
+        calendar_date(card.get("first_submitted")) == expected["first_submitted"],
+        calendar_date(card.get("version_revised")) == expected["version_revised"],
     ])
 
     actual_results = card.get("reported_results") if isinstance(card.get("reported_results"), dict) else {}
@@ -104,6 +118,11 @@ def grade(transcript: list, workspace_path: str) -> dict:
     exact_schema = set(card) == {"source", "title", "authors", "first_submitted", "version_revised", "reported_results"}
     exact_source = set(source) == set(expected["source"])
     exact_results = set(actual_results) == set(expected["reported_results"])
+    canonical_formats = (
+        source.get("versioned_id") == expected["source"]["versioned_id"]
+        and card.get("first_submitted") == expected["first_submitted"]
+        and card.get("version_revised") == expected["version_revised"]
+    )
     results = root / "results"
     result_files = sorted(path.name for path in results.iterdir() if path.is_file() or path.is_symlink()) if results.is_dir() else []
     web_suffixes = {".html", ".htm", ".mhtml", ".pdf"}
@@ -112,7 +131,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
         for path in root.rglob("*")
     )
     scores["structured_delivery_correct"] = mean([
-        exact_schema and exact_source and exact_results,
+        exact_schema and exact_source and exact_results and canonical_formats,
         result_files == ["paper_card.json", "reading_pack.md"],
         regular(card_path) and regular(pack_path),
         not saved_web_copy,

@@ -18,7 +18,7 @@ tags:
 
 ## Prompt
 
-Please harden `/tmp_workspace/project/extractor.py`, which installs plugin ZIP bundles. Reject POSIX and Windows path traversal, absolute paths, archive symlinks, pre-existing symlink path components, normalized-name collisions, and bundles that exceed the provided entry-count or uncompressed-size limits. Extraction must be staged so a malformed bundle leaves no partial installation.
+Please harden `/tmp_workspace/project/extractor.py`, which installs plugin ZIP bundles. Reject POSIX and Windows path traversal, absolute paths, archive symlinks, pre-existing symlink path components, normalized-name collisions, and bundles that exceed the provided entry-count or uncompressed-size limits. For collision detection, normalize both slash styles and `.` path segments, apply Unicode NFC and case-folding to path components, and compare the resulting names; for example, `pkg/./a.txt` conflicts with `pkg/a.txt`, and `Readme.txt` conflicts with `README.txt`. Extraction must be staged so a malformed bundle leaves no partial installation.
 
 Preserve valid bundle behavior, `ExtractionError`, and the existing `extract_plugin()` signature. The destination is a new installation directory and must remain absent after any rejection. Modify only `/tmp_workspace/project/extractor.py`; do not modify the tests. Run the tests, then add `/tmp_workspace/results/SECURITY_NOTES.md` explaining the rejection policy and any remaining assumptions. Do not execute anything from the test archives or use the network.
 

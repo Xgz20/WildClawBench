@@ -26,7 +26,7 @@ I’m documenting how Node.js added `statfs`. Trace the feature from the origina
 - https://nodejs.org/en/blog/release/v19.6.0
 - https://nodejs.org/en/blog/release/v18.15.0
 
-Save `/tmp_workspace/results/statfs_timeline.csv` with exactly `date,event,identifier,evidence_url`. Use these event codes in order: `original_pr_opened,replacement_pr_merged,merge_commit,current_release,lts_release`. Normalize GitHub event timestamps to calendar dates in `Asia/Shanghai`, and use release dates printed in the fixed Node.js release pages.
+Save `/tmp_workspace/results/statfs_timeline.csv` with exactly `date,event,identifier,evidence_url`. Use these event codes in order: `original_pr_opened,replacement_pr_merged,merge_commit,current_release,lts_release`. Write pull request identifiers canonically as `PR #31351` and `PR #46358`, the merge identifier as the full commit SHA, and releases with their leading `v`. Normalize GitHub event timestamps to calendar dates in `Asia/Shanghai`, and use release dates printed in the fixed Node.js release pages.
 
 Then write `/tmp_workspace/results/statfs_trace.md` listing `fs.statfs()`, `fs.statfsSync()`, and `fsPromises.statfs()` and explaining the relationship among both PRs, the merge commit, the Current release, and the LTS backport. Do not save webpage copies, infer dates from a mutable branch, use other sources, or create other result files.
 
@@ -54,6 +54,7 @@ Agent should trace PR #31351 from its 2020-01-14 opening and stalled closure to 
 def grade(**kwargs) -> dict:
     import csv
     import json
+    import re
     from pathlib import Path
 
     root = Path(kwargs.get("workspace_path", "/tmp_workspace"))
@@ -68,6 +69,10 @@ def grade(**kwargs) -> dict:
 
     def regular(path):
         return path.is_file() and not path.is_symlink() and not path.parent.is_symlink()
+
+    def pr_number(value):
+        match = re.fullmatch(r"\s*(?:pr\s*)?#?\s*(\d+)\s*", str(value or ""), re.I)
+        return match.group(1) if match else None
 
     try:
         expected = json.loads((root / "gt" / "expected.json").read_text(encoding="utf-8"))
@@ -88,8 +93,8 @@ def grade(**kwargs) -> dict:
     actual_by_event = {row.get("event"): row for row in rows if isinstance(row, dict)}
     scores["source_chain_identity"] = mean([
         set(row.get("evidence_url") for row in rows) == set(expected["source_urls"]),
-        actual_by_event.get("original_pr_opened", {}).get("identifier") == "PR #31351",
-        actual_by_event.get("replacement_pr_merged", {}).get("identifier") == "PR #46358",
+        pr_number(actual_by_event.get("original_pr_opened", {}).get("identifier")) == "31351",
+        pr_number(actual_by_event.get("replacement_pr_merged", {}).get("identifier")) == "46358",
         actual_by_event.get("merge_commit", {}).get("identifier") == "f145766011a9b600ff7c4fea043f435f70f6d0bf",
         actual_by_event.get("current_release", {}).get("identifier") == "v19.6.0",
         actual_by_event.get("lts_release", {}).get("identifier") == "v18.15.0",

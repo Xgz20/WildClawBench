@@ -20,7 +20,7 @@ tags:
 
 采购申请`/tmp_workspace/purchase_request.json`需要补审，我只想知道申请提交当天实际生效的是哪一版条款。版本登记表在`/tmp_workspace/document_register.csv`，旧版制度、修订单、新版制度和适用规则都在`/tmp_workspace/policies/`。
 
-请按生效日期和替代关系查找适用条款，将结果保存到`/tmp_workspace/results/clause_lookup.json`，字段严格为`request_id,submission_date,applicable_base_version,applicable_amendment,clause_id,effective_clause_text,required_approvals,excluded_version,exclusion_reason,evidence_paths`。`required_approvals`和`evidence_paths`使用数组；`effective_clause_text`必须逐字保留生效条款全文，`evidence_paths`使用相对于`/tmp_workspace`的路径。
+请按生效日期和替代关系查找适用条款，将结果保存到`/tmp_workspace/results/clause_lookup.json`，字段严格为`request_id,submission_date,applicable_base_version,applicable_amendment,clause_id,effective_clause_text,required_approvals,excluded_version,exclusion_reason,evidence_paths`。`required_approvals`和`evidence_paths`使用数组；`effective_clause_text`必须逐字保留生效条款全文。`evidence_paths`使用相对于`/tmp_workspace`的路径，至少包含登记表、适用基础制度、生效修订单和版本规则；也可以包含用于确认申请日期或排除新版的其他直接相关输入文件。
 
 不要根据文件名或发布日期猜测，不要修改输入、联网、创建符号链接或创建其他结果文件。这些材料是虚构的内部制度，只用于版本检索，不要求法律判断。
 
@@ -102,34 +102,52 @@ def grade(**kwargs) -> dict:
         and type(answer.get("evidence_paths")) is list
         and all(type(item) is str for item in answer.get("evidence_paths", []))
     )
-    if not exact_schema:
-        return {**scores, "overall_score": 0.0}
+    approvals = answer.get("required_approvals") if isinstance(answer.get("required_approvals"), list) else []
+    evidence_paths = answer.get("evidence_paths") if isinstance(answer.get("evidence_paths"), list) else []
+    approval_values = [item for item in approvals if isinstance(item, str)]
+    evidence_values = [item for item in evidence_paths if isinstance(item, str)]
 
     scores["applicable_document_chain"] = mean([
-        answer["request_id"] == expected["request_id"],
-        answer["submission_date"] == expected["submission_date"],
-        answer["applicable_base_version"] == expected["applicable_base_version"],
-        answer["applicable_amendment"] == expected["applicable_amendment"],
-        answer["clause_id"] == expected["clause_id"],
+        answer.get("request_id") == expected["request_id"],
+        answer.get("submission_date") == expected["submission_date"],
+        answer.get("applicable_base_version") == expected["applicable_base_version"],
+        answer.get("applicable_amendment") == expected["applicable_amendment"],
+        answer.get("clause_id") == expected["clause_id"],
     ])
     scores["effective_clause_and_approvals"] = mean([
-        norm(answer["effective_clause_text"]) == norm(expected["effective_clause_text"]),
-        answer["required_approvals"] == expected["required_approvals"],
-        len(answer["required_approvals"]) == 3,
+        norm(answer.get("effective_clause_text")) == norm(expected["effective_clause_text"]),
+        set(approval_values) == set(expected["required_approvals"]),
+        len(approval_values) == len(approvals) == len(expected["required_approvals"]),
     ])
-    reason = norm(answer["exclusion_reason"])
+    reason = norm(answer.get("exclusion_reason"))
     scores["excluded_version_reason"] = mean([
-        answer["excluded_version"] == expected["excluded_version"],
+        answer.get("excluded_version") == expected["excluded_version"],
         "2026-04-01" in reason,
         "2026-03-20" in reason,
         "生效" in reason and ("晚于" in reason or "尚未" in reason or "不适用" in reason),
     ])
     evidence_ok = []
     for relative in expected["evidence_paths"]:
-        referenced = relative in answer["evidence_paths"]
+        referenced = relative in evidence_values
         path = root / relative
         evidence_ok.append(referenced and regular(path))
     scores["evidence_paths"] = mean(evidence_ok)
+
+    def allowed_evidence_path(relative):
+        if not isinstance(relative, str):
+            return False
+        path = Path(relative)
+        if path.is_absolute() or ".." in path.parts or not path.parts:
+            return False
+        if path.parts[0] in {"gt", "results"}:
+            return False
+        return relative in expected["exec_file_sha256"] and regular(root / path)
+
+    evidence_paths_valid = (
+        len(evidence_values) == len(evidence_paths) == len(set(evidence_values))
+        and all(allowed_evidence_path(relative) for relative in evidence_values)
+        and set(expected["evidence_paths"]) <= set(evidence_values)
+    )
 
     try:
         files = sorted(p.name for p in (root / "results").iterdir() if p.is_file() or p.is_symlink())
@@ -139,7 +157,7 @@ def grade(**kwargs) -> dict:
         exact_schema,
         files == expected["result_files"],
         regular(result_path),
-        set(answer["evidence_paths"]) == set(expected["evidence_paths"]),
+        evidence_paths_valid,
         inputs_ok,
     ])
     scores = {key: round(value, 6) for key, value in scores.items()}

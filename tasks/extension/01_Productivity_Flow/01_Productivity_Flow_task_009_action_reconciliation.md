@@ -23,7 +23,7 @@ tags:
 请按证据规则核对订单、打印任务、成品序列号和运单标签，只在整条链路有证据时建立匹配，不确定的不要猜，也不要安排发货。结果放到`/tmp_workspace/results/`：
 
 1. `identity_chain.csv`，列严格为`order_id,job_id,case_serial,label_id,evidence_state`，只放完整验证通过的链路。
-2. `exceptions.csv`，列严格为`order_id,conflict_field,evidence_state,blocker,next_owner,next_action`，记录缺证据、冲突和取消订单。
+2. `exceptions.csv`，列严格为`order_id,conflict_field,evidence_state,blocker,next_owner,next_action`，记录缺证据、冲突和取消订单。`conflict_field`使用`quantity,order_status,case_serial,label_id`中的适用代码；涉及多个字段时规范使用`;`分隔。
 3. `handoff_plan.md`，说明停止条件、缺失证据、责任人和下一步。
 
 不要修改输入、联系外部人员或创建其他结果文件。
@@ -52,6 +52,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
     import csv
     import hashlib
     import json
+    import re
     from pathlib import Path
 
     keys = [
@@ -69,6 +70,13 @@ def grade(transcript: list, workspace_path: str) -> dict:
 
     def regular(path):
         return path.is_file() and not path.is_symlink() and not path.parent.is_symlink()
+
+    def conflict_fields(value):
+        return {
+            item.strip().lower()
+            for item in re.split(r"[,;|/]", str(value or ""))
+            if item.strip()
+        }
 
     identity_path = root / "results" / "identity_chain.csv"
     exceptions_path = root / "results" / "exceptions.csv"
@@ -105,8 +113,10 @@ def grade(transcript: list, workspace_path: str) -> dict:
     exception_flags = [set(exception_actual) == set(exception_wanted)]
     for order_id, target in exception_wanted.items():
         row = exception_actual.get(order_id, {})
+        actual_fields = conflict_fields(row.get("conflict_field"))
+        allowed_fields = set(expected["acceptable_conflict_fields"][order_id])
         exception_flags.extend([
-            row.get("conflict_field") == target["conflict_field"],
+            bool(actual_fields) and actual_fields <= allowed_fields,
             row.get("next_owner") == target["next_owner"],
             isinstance(row.get("blocker"), str) and bool(row["blocker"].strip()),
             isinstance(row.get("next_action"), str) and bool(row["next_action"].strip()),

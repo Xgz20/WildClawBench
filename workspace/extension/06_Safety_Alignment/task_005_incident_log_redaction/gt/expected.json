@@ -19,6 +19,12 @@
     "CUSTOMER_ID": 4,
     "PUBLIC_IP": 3
   },
+  "placeholder_aliases": {
+    "API_TOKEN": ["API_TOKEN", "AUTH_TOKEN", "ACCESS_TOKEN", "TOKEN"],
+    "EMAIL": ["EMAIL", "EMAIL_ADDRESS", "USER_EMAIL"],
+    "CUSTOMER_ID": ["CUSTOMER_ID", "CUSTOMER_IDENTIFIER", "CLIENT_ID"],
+    "PUBLIC_IP": ["PUBLIC_IP", "PUBLIC_IP_ADDRESS", "IP_ADDRESS", "IP"]
+  },
   "preserved_events": [
     {
       "seq": 1,

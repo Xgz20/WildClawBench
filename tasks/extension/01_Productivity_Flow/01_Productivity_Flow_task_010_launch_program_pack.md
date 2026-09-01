@@ -24,7 +24,7 @@ Build one workable phased launch plan. Respect the hard budget and deadline, pre
 
 Deliver these files under `/tmp_workspace/results/`:
 
-1. `launch_plan.csv` with exact columns `phase,milestone_id,milestone_name,start_date,end_date,owner,dependencies,planned_cost_usd,acceptance_gate,status`.
+1. `launch_plan.csv` with exact columns `phase,milestone_id,milestone_name,start_date,end_date,owner,dependencies,planned_cost_usd,acceptance_gate,status`. Use the seven source milestone rows M1 through M7; represent Release Manager approval after pilot acceptance in M7's `acceptance_gate`, not as an eighth scheduled milestone.
 2. `risk_register.csv` with exact columns `risk_id,risk,trigger,owner,response,severity` and at least three concrete risks.
 3. `decision_log.md` covering the requested launch date, optional spend and controlling gates.
 4. `comms_draft.md`, ready for stakeholders but explicit about what is still conditional.
@@ -112,11 +112,36 @@ def grade(transcript: list, workspace_path: str) -> dict:
         except (KeyError, TypeError, ValueError):
             pass
 
-    total_cost = sum(item["cost"] for item in parsed.values())
+    try:
+        total_cost = sum(int(row["planned_cost_usd"]) for row in plan_rows)
+    except (KeyError, TypeError, ValueError):
+        total_cost = None
     production = parsed.get("M7", {})
     gate_ids = ("M3", "M5", "M6")
+    approval_text = str(actual.get("M7", {}).get("acceptance_gate") or "").lower()
+    explicit_approval_rows = [
+        (milestone_id, row) for milestone_id, row in actual.items()
+        if milestone_id not in required
+        and any(term in str(milestone_id or "").lower() for term in ("approval", "signoff", "sign-off"))
+    ]
+    release_manager_approval = (
+        "release manager" in approval_text
+        and any(term in approval_text for term in ("approv", "sign-off", "signoff"))
+    ) or any(
+        "release manager" in str(row.get("owner") or "").lower()
+        and any(
+            term in " ".join(str(value or "").lower() for value in row.values())
+            for term in ("approv", "sign-off", "signoff")
+        )
+        and milestone_id in parsed
+        and "M6" in parsed
+        and isinstance(production.get("start"), date)
+        and parsed[milestone_id]["start"] > parsed["M6"]["end"]
+        and production["start"] > parsed[milestone_id]["end"]
+        for milestone_id, row in explicit_approval_rows
+    )
     scores["hard_constraints_satisfied"] = mean([
-        set(actual) == set(required) and len(plan_rows) == len(required),
+        all(milestone_id in actual for milestone_id in required),
         total_cost == expected["planned_total_cost"] and total_cost <= expected["hard_budget"],
         isinstance(production.get("end"), date) and production["end"] <= date.fromisoformat(expected["production_deadline"]),
         all(
@@ -125,6 +150,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
             and production["start"] > parsed[gate_id]["end"]
             for gate_id in gate_ids
         ),
+        release_manager_approval,
         expected["rejected_optional_request"] not in actual,
         all(actual.get(mid, {}).get("status") == "planned" for mid in required),
     ])
@@ -160,6 +186,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
     )
     scores["required_delivery_present"] = mean([
         plan_header == expected["launch_plan_header"],
+        set(actual) == set(required) and len(plan_rows) == len(required),
         risk_header == expected["risk_register_header"],
         risk_rows_valid,
         result_files == sorted(expected["required_output_files"]),

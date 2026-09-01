@@ -24,7 +24,7 @@ A reviewer wrote, “NIST disallows SHA-1 everywhere, so our archive must reject
 - https://doi.org/10.6028/NIST.SP.800-131Ar2
 - https://csrc.nist.gov/pubs/fips/186-5/final
 
-Create `/tmp_workspace/results/sha1_use_matrix.csv` with exactly `use_case,nist_status,conditions,primary_source,section_or_table`. Use the case codes `digital_signature_generation,existing_digital_signature_verification,non_digital_signature_use` in that order. Preserve NIST’s status terms and state the limiting condition for each row.
+Create `/tmp_workspace/results/sha1_use_matrix.csv` with exactly `use_case,nist_status,conditions,primary_source,section_or_table`. Use the case codes `digital_signature_generation,existing_digital_signature_verification,non_digital_signature_use` in that order. Write `primary_source` canonically as `NIST SP 800-131A Rev. 2`; preserve NIST’s status terms and state the limiting condition for each row.
 
 Then write `/tmp_workspace/results/transition_memo.md` for the archive team. Identify the primary publication, DOI and publication month, mention FIPS 186-5 only as context, and separate what must stop from what may remain for controlled legacy verification. Do not generalize the fixed documents into claims about every product or protocol, save the publications, use other sources, or create other result files.
 
@@ -69,6 +69,18 @@ def grade(**kwargs) -> dict:
     def norm(value):
         return re.sub(r"\s+", " ", str(value or "")).strip().lower()
 
+    def publication_id(value):
+        text = norm(value).replace("revision", "rev")
+        text = re.sub(r"^nist\s+", "", text)
+        return re.sub(r"[^a-z0-9]+", "", text)
+
+    def primary_publication_mentioned(value):
+        return bool(re.search(
+            r"\b(?:nist\s+)?sp\s*800[- ]131a\s+rev(?:ision)?\.?\s*2\b",
+            str(value or ""),
+            re.I,
+        ))
+
     try:
         expected = json.loads((root / "gt" / "expected.json").read_text(encoding="utf-8"))
         csv_path = root / "results" / "sha1_use_matrix.csv"
@@ -88,11 +100,10 @@ def grade(**kwargs) -> dict:
     actual_by_case = {row.get("use_case"): row for row in rows if isinstance(row, dict)}
     memo_lower = memo.lower()
     scores["publication_identity"] = mean([
-        "nist sp 800-131a rev. 2" in memo_lower or "nist sp 800-131a rev.2" in memo_lower,
+        primary_publication_mentioned(memo),
         expected["doi"].lower() in memo_lower,
         "2019-03" in memo or "march 2019" in memo_lower,
         "fips 186-5" in memo_lower,
-        all(url in memo for url in expected["source_urls"]),
     ])
     generation = actual_by_case.get("digital_signature_generation", {})
     verification = actual_by_case.get("existing_digital_signature_verification", {})
@@ -101,14 +112,14 @@ def grade(**kwargs) -> dict:
         "protocol-specific guidance" in norm(generation.get("conditions")),
         verification.get("nist_status") == "Legacy use",
         "already" in norm(verification.get("conditions")) and "signature" in norm(verification.get("conditions")),
-        generation.get("primary_source") == expected["publication"],
-        verification.get("primary_source") == expected["publication"],
+        publication_id(generation.get("primary_source")) == publication_id(expected["publication"]),
+        publication_id(verification.get("primary_source")) == publication_id(expected["publication"]),
     ])
     non_signature = actual_by_case.get("non_digital_signature_use", {})
     scores["non_signature_condition"] = mean([
         non_signature.get("nist_status") == "Acceptable",
         "do not require collision resistance" in norm(non_signature.get("conditions")),
-        non_signature.get("primary_source") == expected["publication"],
+        publication_id(non_signature.get("primary_source")) == publication_id(expected["publication"]),
         "section 9" in norm(non_signature.get("section_or_table")) or "table 8" in norm(non_signature.get("section_or_table")),
     ])
 
