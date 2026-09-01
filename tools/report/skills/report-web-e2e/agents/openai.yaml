@@ -1,4 +1,4 @@
 interface:
   display_name: "汇总 Web E2E 报告"
-  short_description: "汇总功能与美观度并生成 Markdown 和三 Sheet Excel"
+  short_description: "按 Web 指标 Profile 汇总 Markdown 和 Excel"
   default_prompt: "使用 $report-web-e2e 汇总多个 Harness 的 Web 端到端评分包并生成领导版报告。"

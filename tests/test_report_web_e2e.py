@@ -82,6 +82,7 @@ def submission(model: str, harness: str, scores: list[float], aesthetic_scores: 
         "schema_version": report_module.SUBMISSION_SCHEMA,
         "batch_id": "batch-1",
         "source_revision": "abc",
+        "metric_profile": report_module.DETAILED_PROFILE,
         "unit": {
             "model_id": model,
             "model_display_name": model.upper(),
@@ -93,10 +94,29 @@ def submission(model: str, harness: str, scores: list[float], aesthetic_scores: 
     }
 
 
+def artifactsbench_submission(model: str, harness: str, scores: list[float]):
+    item = submission(model, harness, scores)
+    item["metric_profile"] = report_module.ARTIFACTSBENCH_PROFILE
+    for task_item in item["tasks"]:
+        task_item["metric_profile"] = report_module.ARTIFACTSBENCH_PROFILE
+        task_item["metrics"]["primary_dimensions"] = {}
+        task_item["metrics"]["secondary_dimensions"] = {}
+        task_item["metrics"]["aesthetic"] = {
+            "score": None,
+            "included_in_total": False,
+            "status": "not_applicable",
+            "primary_dimensions": {},
+            "secondary_dimensions": {},
+            "secondary_dimension_scores": {},
+        }
+    return item
+
+
 def report_config():
     return {
         "schema_version": report_module.REPORT_CONFIG_SCHEMA,
         "batch_id": "batch-1",
+        "metric_profile": report_module.DETAILED_PROFILE,
         "units": [
             {
                 "model_id": "m1", "model_display_name": "模型一",
@@ -147,6 +167,40 @@ class ReportWebE2ETest(unittest.TestCase):
             self.assertIn(heading, markdown)
         self.assertIn("评测异常数", markdown)
         self.assertIn("没有可用的页面美观度结果", markdown)
+
+    def test_artifactsbench_report_only_renders_overall_and_difficulty(self) -> None:
+        config = report_config()
+        config["metric_profile"] = report_module.ARTIFACTSBENCH_PROFILE
+        data = report_module.build_report_data([
+            artifactsbench_submission("m1", "codex", [70, 90]),
+            artifactsbench_submission("m1", "trae", [60, 80]),
+        ], config)
+        self.assertEqual(data["metric_profile"], report_module.ARTIFACTSBENCH_PROFILE)
+        self.assertEqual(data["labels"]["primary"], {})
+        self.assertEqual(data["labels"]["secondary"], {})
+        self.assertEqual(data["labels"]["aesthetic_primary"], {})
+        self.assertIsNone(data["units"][0]["aesthetic_score"])
+        markdown = report_module.render_markdown(data)
+        for heading in ("## 结论", "## 总览", "## 难度等级"):
+            self.assertIn(heading, markdown)
+        for excluded in ("## 一级维度", "## 二级维度", "美观度总分"):
+            self.assertNotIn(excluded, markdown)
+        self.assertIn("原始 0–10 Criterion", markdown)
+
+    def test_rejects_mixed_metric_profiles(self) -> None:
+        with self.assertRaisesRegex(ValueError, "metric_profile 不一致"):
+            report_module.build_report_data([
+                submission("m1", "codex", [100, 50]),
+                artifactsbench_submission("m1", "trae", [80, 20]),
+            ])
+
+    def test_rejects_report_config_profile_mismatch(self) -> None:
+        config = report_config()
+        config["units"] = [config["units"][1]]
+        with self.assertRaisesRegex(ValueError, "metric_profile 与回传包不一致"):
+            report_module.build_report_data([
+                artifactsbench_submission("m1", "codex", [70, 90]),
+            ], config)
 
     def test_loads_and_validates_report_config(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

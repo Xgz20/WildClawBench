@@ -11,6 +11,7 @@
 ```yaml
 schema_version: wildclawbench.web-e2e-report-config/v1
 batch_id: web-e2e-20260820
+metric_profile: web-e2e-detailed-v1
 configuration_status: ready
 units:
   - model_id: gpt-5.5
@@ -29,6 +30,7 @@ units:
 
 约束：
 
+- `metric_profile` 必须是 `web-e2e-detailed-v1` 或 `artifactsbench-web-v1`，并与该批次全部 submission 一致；旧配置缺失时仅按详细 Profile 兼容；
 - 未提供模型映射时，准备 Skill 会生成 `configuration_status: requires_model_mapping` 且 `model_id` 为空的安全模板；生成报告前必须补全模型 ID，并将状态改为 `ready`；
 - `batch_id` 必须与全部回传包一致；
 - 每个 `model_id + harness_id` 和 `order` 必须唯一；若回传不填写 `model_id`，对应 `harness_id` 在配置中也必须唯一；

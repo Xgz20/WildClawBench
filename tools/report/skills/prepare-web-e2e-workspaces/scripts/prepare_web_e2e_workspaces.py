@@ -27,7 +27,10 @@ except ImportError:
 
 SCHEMA_VERSION = "wildclawbench.web-e2e-batch/v3"
 REPORT_CONFIG_SCHEMA = "wildclawbench.web-e2e-report-config/v1"
-SKILL_VERSION = "3.4.0"
+SKILL_VERSION = "4.0.0"
+DETAILED_PROFILE = "web-e2e-detailed-v1"
+ARTIFACTSBENCH_PROFILE = "artifactsbench-web-v1"
+SUPPORTED_METRIC_PROFILES = {DETAILED_PROFILE, ARTIFACTSBENCH_PROFILE}
 AESTHETIC_RUBRIC_ID = "web-aesthetic-v1"
 AESTHETIC_RUBRIC_VERSION = "1.1.0"
 AESTHETIC_RUBRIC_SOURCE = "https://yf2ljykclb.xfchat.iflytek.com/docx/doxrz05uveZshD5b81aHYY2HIb3"
@@ -43,6 +46,7 @@ SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 CRITERION_RE = re.compile(r"^###\s+Criterion\s+(\d+)\s*[:：]\s*(.*?)\s*\((.*?)\)\s*$")
 META_RE = re.compile(r"(?:^|,)\s*(key|primary|secondary|weight)\s*:\s*([^,]+)\s*")
 SCORING_FIXTURE_RE = re.compile(r"/tmp_workspace_eval/([A-Za-z0-9][A-Za-z0-9._/-]*)")
+EVIDENCE_METHOD_RE = re.compile(r"^采证方式[：:]\s*(.+?)\s*$", re.MULTILINE)
 
 
 def find_repo_root(start: Path) -> Path:
@@ -158,7 +162,41 @@ def strip_fence(value: str) -> str:
     return (match.group(1) if match else value).strip()
 
 
-def parse_criteria(rubric: str, path: Path) -> list[dict]:
+def resolve_metric_profile(metadata: dict, requested: str = "auto") -> str:
+    requested = str(requested or "auto").strip().lower()
+    if requested != "auto":
+        if requested not in SUPPORTED_METRIC_PROFILES:
+            raise ValueError(f"不支持的 metric profile: {requested}")
+        return requested
+    explicit = str(metadata.get("metric_profile") or "").strip().lower()
+    if explicit:
+        if explicit not in SUPPORTED_METRIC_PROFILES:
+            raise ValueError(f"题目声明了不支持的 metric_profile: {explicit}")
+        return explicit
+    source = metadata.get("source") or {}
+    benchmark = str(source.get("benchmark") or "") if isinstance(source, dict) else ""
+    if benchmark.strip().lower() == "artifactsbench":
+        return ARTIFACTSBENCH_PROFILE
+    return DETAILED_PROFILE
+
+
+def scoring_config(metric_profile: str) -> dict:
+    if metric_profile == ARTIFACTSBENCH_PROFILE:
+        return {
+            "input": "raw_score",
+            "raw_scale": {"minimum": 0, "maximum": 10, "step": 1},
+            "normalized_scale": {"minimum": 0, "maximum": 1},
+            "normalization": "raw_score / 10",
+            "aggregate": "weighted_mean",
+        }
+    return {
+        "input": "score",
+        "normalized_scale": {"minimum": 0, "maximum": 1},
+        "aggregate": "weighted_mean",
+    }
+
+
+def parse_criteria(rubric: str, path: Path, metric_profile: str = DETAILED_PROFILE) -> list[dict]:
     criteria: list[dict] = []
     current: dict | None = None
     body: list[str] = []
@@ -187,22 +225,31 @@ def parse_criteria(rubric: str, path: Path) -> list[dict]:
     if current is not None:
         current["rubric"] = "\n".join(body).strip()
         criteria.append(current)
+    for item in criteria:
+        method_match = EVIDENCE_METHOD_RE.search(item["rubric"])
+        item["evidence_method"] = method_match.group(1).strip() if method_match else ""
+        item["evidence_policy"] = {
+            "required_types": ["screenshot"] if "截图" in item["evidence_method"] else [],
+        }
     keys = [item["key"] for item in criteria]
     if not criteria or any(not key for key in keys) or len(keys) != len(set(keys)):
         raise ValueError(f"Rubric criterion key 缺失或重复: {path}")
     if [item["index"] for item in criteria] != list(range(1, len(criteria) + 1)):
         raise ValueError(f"Rubric criterion 编号不连续: {path}")
-    if any(not item["primary"] or not item["secondary"] or item["weight"] <= 0 for item in criteria):
-        raise ValueError(f"Rubric criterion 缺少维度或权重非法: {path}")
-    allowed_primary = {"content_structure", "interaction_function", "visual_layout"}
-    invalid_primary = sorted({item["primary"] for item in criteria if item["primary"] not in allowed_primary})
-    if invalid_primary:
-        raise ValueError(f"Rubric criterion 一级维度非法 {invalid_primary}: {path}")
-    for item in criteria:
-        if not re.search(r"Score\s+1\.0", item["rubric"], re.IGNORECASE):
-            raise ValueError(f"Rubric criterion 缺少 Score 1.0: {path}: {item['key']}")
-        if not re.search(r"Score\s+0\.0", item["rubric"], re.IGNORECASE):
-            raise ValueError(f"Rubric criterion 缺少 Score 0.0: {path}: {item['key']}")
+    if any(item["weight"] <= 0 for item in criteria):
+        raise ValueError(f"Rubric criterion 权重必须为正数: {path}")
+    if metric_profile == DETAILED_PROFILE:
+        if any(not item["primary"] or not item["secondary"] for item in criteria):
+            raise ValueError(f"Rubric criterion 缺少维度: {path}")
+        allowed_primary = {"content_structure", "interaction_function", "visual_layout"}
+        invalid_primary = sorted({item["primary"] for item in criteria if item["primary"] not in allowed_primary})
+        if invalid_primary:
+            raise ValueError(f"Rubric criterion 一级维度非法 {invalid_primary}: {path}")
+        for item in criteria:
+            if not re.search(r"Score\s+1\.0", item["rubric"], re.IGNORECASE):
+                raise ValueError(f"Rubric criterion 缺少 Score 1.0: {path}: {item['key']}")
+            if not re.search(r"Score\s+0\.0", item["rubric"], re.IGNORECASE):
+                raise ValueError(f"Rubric criterion 缺少 Score 0.0: {path}: {item['key']}")
     if abs(sum(item["weight"] for item in criteria) - 1.0) > 0.001:
         raise ValueError(f"Rubric criterion 权重之和不为 1: {path}")
     return criteria
@@ -218,10 +265,11 @@ def resolve_task_file(repo_root: Path, task_id: str) -> Path:
     return matches[0]
 
 
-def parse_task(repo_root: Path, task_id: str) -> dict:
+def parse_task(repo_root: Path, task_id: str, requested_profile: str = "auto") -> dict:
     path = resolve_task_file(repo_root, task_id)
     text = path.read_text(encoding="utf-8")
     metadata, body = split_frontmatter(text, path)
+    metric_profile = resolve_metric_profile(metadata, requested_profile)
     sections = split_sections(body)
     tags_raw = metadata.get("tags") or []
     tags = [item.strip().lower() for item in (tags_raw.split(",") if isinstance(tags_raw, str) else tags_raw)]
@@ -237,9 +285,12 @@ def parse_task(repo_root: Path, task_id: str) -> dict:
     workspace = workspace_raw if workspace_raw.is_absolute() else repo_root / workspace_raw
     workspace = workspace.resolve()
     exec_dir = workspace / "exec"
-    if not exec_dir.is_dir():
+    if metric_profile == DETAILED_PROFILE and not exec_dir.is_dir():
         raise ValueError(f"Workspace 缺少 exec/: {task_id}: {workspace}")
-    criteria = parse_criteria(sections["LLM Judge Rubric"], path)
+    if metric_profile == ARTIFACTSBENCH_PROFILE and exec_dir.exists() and not exec_dir.is_dir():
+        raise ValueError(f"Workspace exec 不是目录: {task_id}: {exec_dir}")
+    criteria = parse_criteria(sections["LLM Judge Rubric"], path, metric_profile)
+    workspace_seed = exec_dir if exec_dir.is_dir() else None
     return {
         "task_id": task_id,
         "name": str(metadata.get("name") or task_id),
@@ -248,13 +299,15 @@ def parse_task(repo_root: Path, task_id: str) -> dict:
         "expected_behavior": sections["Expected Behavior"],
         "llm_judge_rubric": sections["LLM Judge Rubric"],
         "criteria": criteria,
+        "metric_profile": metric_profile,
+        "scoring": scoring_config(metric_profile),
         "task_file": path,
         "task_source": path.relative_to(repo_root).as_posix(),
         "workspace": workspace,
-        "exec_dir": exec_dir,
+        "exec_dir": workspace_seed,
         "eval_dir": workspace / "eval",
         "task_sha256": sha256_file(path),
-        "workspace_sha256": sha256_tree(exec_dir),
+        "workspace_sha256": sha256_tree(exec_dir) if workspace_seed else synthetic_empty_workspace_sha256(),
     }
 
 
@@ -266,6 +319,24 @@ def safe_copy_exec(source: Path, destination: Path) -> None:
     leaks = [path for path in destination.rglob("*") if any(part in forbidden for part in path.relative_to(destination).parts)]
     if leaks:
         raise ValueError(f"执行 Workspace 含评分目录: {leaks[0]}")
+
+
+def synthetic_empty_workspace_sha256() -> str:
+    digest = hashlib.sha256()
+    digest.update(b".gitkeep\0")
+    digest.update(bytes.fromhex(hashlib.sha256(b"").hexdigest()))
+    return digest.hexdigest()
+
+
+def stage_execution_workspace(task: dict, destination: Path) -> None:
+    source = task.get("exec_dir")
+    if source is not None:
+        safe_copy_exec(source, destination)
+        return
+    if destination.exists():
+        raise FileExistsError(f"目标已存在，拒绝覆盖: {destination}")
+    destination.mkdir(parents=True)
+    (destination / ".gitkeep").write_bytes(b"")
 
 
 def model_for_harness(harness: str, default_model: str, model_map: dict[str, str]) -> str:
@@ -286,6 +357,7 @@ def parse_harness_map(values: list[str], option_name: str) -> dict[str, str]:
 
 def build_report_config(
     batch_id: str,
+    metric_profile: str,
     harnesses: list[str],
     default_model: str,
     model_map: dict[str, str],
@@ -306,6 +378,7 @@ def build_report_config(
     return {
         "schema_version": REPORT_CONFIG_SCHEMA,
         "batch_id": batch_id,
+        "metric_profile": metric_profile,
         "configuration_status": "ready" if all(item["model_id"] for item in units) else "requires_model_mapping",
         "units": units,
     }
@@ -366,7 +439,9 @@ def task_contract(
     for criterion in criteria:
         criterion["rubric"] = rewrite_scoring_text(criterion["rubric"])
     return {
-        "schema_version": "wildclawbench.web-e2e-task-contract/v2",
+        "schema_version": "wildclawbench.web-e2e-task-contract/v3",
+        "metric_profile": task["metric_profile"],
+        "scoring": copy.deepcopy(task["scoring"]),
         "identity": {
             "batch_id": batch_id,
             "source_revision": revision,
@@ -383,16 +458,25 @@ def task_contract(
             "/tmp_workspace": "./workspace",
             "/tmp_workspace_eval": "./private-scoring/fixtures",
         },
-        "aesthetic_metric": {
-            "max_score": 100,
-            "included_in_total": False,
-            "status": "defined",
-            "rubric_id": AESTHETIC_RUBRIC_ID,
-            "rubric_version": AESTHETIC_RUBRIC_VERSION,
-            "scoring_mode": "joint_screenshot_set",
-            "source_url": AESTHETIC_RUBRIC_SOURCE,
-            "additional_instructions": aesthetic_rubric,
-        },
+        "report_dimensions": (
+            ["overall", "difficulty"]
+            if task["metric_profile"] == ARTIFACTSBENCH_PROFILE
+            else ["overall", "difficulty", "primary", "secondary", "aesthetic"]
+        ),
+        "aesthetic_metric": (
+            {
+                "max_score": 100,
+                "included_in_total": False,
+                "status": "defined",
+                "rubric_id": AESTHETIC_RUBRIC_ID,
+                "rubric_version": AESTHETIC_RUBRIC_VERSION,
+                "scoring_mode": "joint_screenshot_set",
+                "source_url": AESTHETIC_RUBRIC_SOURCE,
+                "additional_instructions": aesthetic_rubric,
+            }
+            if task["metric_profile"] == DETAILED_PROFILE
+            else {"included_in_total": False, "status": "not_applicable"}
+        ),
         "source": {
             "task_file": task["task_source"],
             "task_sha256": task["task_sha256"],
@@ -545,7 +629,14 @@ def prepare(args: argparse.Namespace) -> Path:
         if not aesthetic_rubric:
             raise ValueError("--aesthetic-rubric 文件为空")
 
-    tasks = [parse_task(repo_root, task_id) for task_id in task_ids]
+    requested_profile = str(getattr(args, "metric_profile", "auto") or "auto").strip().lower()
+    tasks = [parse_task(repo_root, task_id, requested_profile) for task_id in task_ids]
+    metric_profiles = {task["metric_profile"] for task in tasks}
+    if len(metric_profiles) != 1:
+        raise ValueError(f"同一批次不能混合 metric profile: {sorted(metric_profiles)}")
+    metric_profile = next(iter(metric_profiles))
+    if aesthetic_rubric and metric_profile != DETAILED_PROFILE:
+        raise ValueError("artifactsbench-web-v1 不使用独立美观度指标，不能传 --aesthetic-rubric")
     for task in tasks:
         if "/tmp_workspace_eval" in task["prompt"]:
             raise ValueError(f"Prompt 不得暴露私有评分素材路径: {task['task_id']}")
@@ -579,6 +670,7 @@ def prepare(args: argparse.Namespace) -> Path:
     report_config_path = batch_root / f"{args.batch_id}__report-config.yaml"
     report_config = build_report_config(
         args.batch_id,
+        metric_profile,
         harnesses,
         default_model,
         model_map,
@@ -597,7 +689,7 @@ def prepare(args: argparse.Namespace) -> Path:
             task_id = task["task_id"]
             execution_dir = harness_dir / "execution" / "tasks" / task_id
             score_dir = harness_dir / "score" / "tasks" / task_id
-            safe_copy_exec(task["exec_dir"], execution_dir / "workspace")
+            stage_execution_workspace(task, execution_dir / "workspace")
             effective_prompt, prompt_rewrite_map = rewrite_execution_text(task["prompt"])
             (execution_dir / "PROMPT.md").write_text(effective_prompt + "\n", encoding="utf-8")
             if include_execution_record:
@@ -627,6 +719,7 @@ def prepare(args: argparse.Namespace) -> Path:
                 "task_id": task_id,
                 "task_name": task["name"],
                 "difficulty": task["difficulty"],
+                "metric_profile": task["metric_profile"],
                 "execution_dir": f"execution/tasks/{task_id}",
                 "prompt_file": f"execution/tasks/{task_id}/PROMPT.md",
                 "prompt_rewrite_map": prompt_rewrite_map,
@@ -639,6 +732,7 @@ def prepare(args: argparse.Namespace) -> Path:
             "batch_id": args.batch_id,
             "created_at": created_at,
             "source_revision": revision,
+            "metric_profile": metric_profile,
             "package_root": package_root_name,
             "scoring_archive": f"{args.batch_id}__{harness}__scoring.zip",
             "execution_record_included": include_execution_record,
@@ -694,6 +788,7 @@ def prepare(args: argparse.Namespace) -> Path:
         "batch_id": args.batch_id,
         "created_at": created_at,
         "source_revision": revision,
+        "metric_profile": metric_profile,
         "task_ids": task_ids,
         "harnesses": harnesses,
         "score_skill_archive": score_skill_package.relative_to(batch_root).as_posix(),
@@ -710,6 +805,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="准备独立 Web 站点端到端评测工作空间")
     parser.add_argument("--task-id", action="append", default=[], help="用例 ID；可重复，或传 @文件")
     parser.add_argument("--harness", action="append", default=[], help="Harness ID；可重复")
+    parser.add_argument(
+        "--metric-profile",
+        default="auto",
+        choices=("auto", DETAILED_PROFILE, ARTIFACTSBENCH_PROFILE),
+        help="评分指标 Profile；auto 根据题目 source.benchmark 识别",
+    )
     parser.add_argument(
         "--score-skill-only",
         action="store_true",

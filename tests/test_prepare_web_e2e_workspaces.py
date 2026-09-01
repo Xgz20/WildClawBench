@@ -39,6 +39,7 @@ def args_for(tmp: str, task_id: str) -> argparse.Namespace:
         model_map=[],
         reasoning_effort="high",
         reasoning_effort_map=[],
+        metric_profile="auto",
         aesthetic_rubric="",
         include_execution_record=False,
     )
@@ -53,6 +54,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
 
     TASK_ID = "07_Website_Generation_task_001_daymark_product_website"
     FIXTURE_TASK_ID = "07_Website_Generation_task_010_paperwork_pdf_tool"
+    ARTIFACTSBENCH_TASK_ID = "07_Website_Generation_task_ab020_magic_academy_game"
 
     def test_default_batch_id_includes_hours_minutes_and_seconds(self) -> None:
         fixed = datetime(2026, 8, 20, 14, 35, 42, tzinfo=timezone.utc)
@@ -69,6 +71,15 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
         self.assertIn("/tmp_workspace", task["prompt"])
         self.assertTrue(task["expected_behavior"])
         self.assertGreater(len(task["criteria"]), 0)
+        self.assertAlmostEqual(sum(item["weight"] for item in task["criteria"]), 1.0, places=3)
+
+    def test_parses_artifactsbench_profile_without_seed_workspace(self) -> None:
+        task = prepare_module.parse_task(REPO_ROOT, self.ARTIFACTSBENCH_TASK_ID)
+        self.assertEqual(task["metric_profile"], prepare_module.ARTIFACTSBENCH_PROFILE)
+        self.assertIsNone(task["exec_dir"])
+        self.assertEqual(len(task["criteria"]), 10)
+        self.assertEqual(task["scoring"]["raw_scale"], {"minimum": 0, "maximum": 10, "step": 1})
+        self.assertEqual(task["criteria"][8]["evidence_policy"]["required_types"], ["screenshot"])
         self.assertAlmostEqual(sum(item["weight"] for item in task["criteria"]), 1.0, places=3)
 
     def test_rewrites_execution_and_scoring_paths_without_prefix_collision(self) -> None:
@@ -170,6 +181,34 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertEqual(contract["aesthetic_metric"]["rubric_id"], "web-aesthetic-v1")
             self.assertEqual(contract["aesthetic_metric"]["rubric_version"], "1.1.0")
             self.assertEqual(contract["aesthetic_metric"]["scoring_mode"], "joint_screenshot_set")
+            self.assertEqual(contract["metric_profile"], prepare_module.DETAILED_PROFILE)
+            self.assertEqual(contract["schema_version"], "wildclawbench.web-e2e-task-contract/v3")
+
+    def test_builds_artifactsbench_empty_workspace_and_lightweight_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            batch_root = prepare_module.prepare(args_for(tmp, self.ARTIFACTSBENCH_TASK_ID))
+            task_root = batch_root / "harnesses/codex/execution/tasks" / self.ARTIFACTSBENCH_TASK_ID
+            score_root = batch_root / "harnesses/codex/score/tasks" / self.ARTIFACTSBENCH_TASK_ID
+            contract = json.loads((score_root / "private-scoring/task_contract.json").read_text(encoding="utf-8"))
+            manifest = json.loads((batch_root / "batch_manifest.json").read_text(encoding="utf-8"))
+            report_config = prepare_module.yaml.safe_load(
+                (batch_root / "web-smoke__report-config.yaml").read_text(encoding="utf-8")
+            )
+            self.assertTrue((task_root / "workspace/.gitkeep").is_file())
+            self.assertEqual(contract["metric_profile"], prepare_module.ARTIFACTSBENCH_PROFILE)
+            self.assertEqual(contract["scoring"]["input"], "raw_score")
+            self.assertEqual(contract["report_dimensions"], ["overall", "difficulty"])
+            self.assertEqual(contract["aesthetic_metric"]["status"], "not_applicable")
+            self.assertTrue(all(not item["primary"] and not item["secondary"] for item in contract["criteria"]))
+            self.assertEqual(manifest["metric_profile"], prepare_module.ARTIFACTSBENCH_PROFILE)
+            self.assertEqual(report_config["metric_profile"], prepare_module.ARTIFACTSBENCH_PROFILE)
+
+    def test_rejects_mixed_metric_profiles_in_one_batch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            args = args_for(tmp, self.TASK_ID)
+            args.task_id.append(self.ARTIFACTSBENCH_TASK_ID)
+            with self.assertRaisesRegex(ValueError, "不能混合 metric profile"):
+                prepare_module.prepare(args)
 
     def test_execution_record_requires_explicit_opt_in(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

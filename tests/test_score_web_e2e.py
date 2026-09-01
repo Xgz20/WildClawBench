@@ -115,6 +115,61 @@ def fixtures():
     return manifest, contract, execution, score_input
 
 
+def artifactsbench_fixtures():
+    manifest, _, execution, _ = fixtures()
+    manifest["metric_profile"] = "artifactsbench-web-v1"
+    contract = {
+        "schema_version": "wildclawbench.web-e2e-task-contract/v3",
+        "metric_profile": "artifactsbench-web-v1",
+        "scoring": {
+            "input": "raw_score",
+            "raw_scale": {"minimum": 0, "maximum": 10, "step": 1},
+            "normalized_scale": {"minimum": 0, "maximum": 1},
+            "normalization": "raw_score / 10",
+            "aggregate": "weighted_mean",
+        },
+        "identity": {
+            "batch_id": "batch-1",
+            "source_revision": "abc",
+            "task_id": "task-1",
+            "task_name": "ArtifactsBench 站点任务",
+            "difficulty": "L2",
+            "harness": {"id": "codex", "display_name": "Codex"},
+        },
+        "criteria": [
+            {
+                "index": 1, "key": "content", "name": "内容", "primary": "", "secondary": "", "weight": 0.4,
+                "evidence_policy": {"required_types": []},
+            },
+            {
+                "index": 2, "key": "visual", "name": "视觉", "primary": "", "secondary": "", "weight": 0.6,
+                "evidence_policy": {"required_types": ["screenshot"]},
+            },
+        ],
+        "aesthetic_metric": {"included_in_total": False, "status": "not_applicable"},
+        "source": {"task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"},
+    }
+    score_input = {
+        "metric_profile": "artifactsbench-web-v1",
+        "evaluation_status": "completed",
+        "evaluation_error": None,
+        "site_url": "http://127.0.0.1:4173",
+        "browser": {"name": "browser", "viewport": "1440x900"},
+        "criteria": [
+            {
+                "key": "content", "raw_score": 7, "reason": "达到七分锚点", "actions": ["检查内容"],
+                "evidence": [{"type": "observation", "path": "evidence/actions.md"}],
+            },
+            {
+                "key": "visual", "raw_score": 9, "reason": "达到九分锚点", "actions": ["检查页面"],
+                "evidence": [{"type": "screenshot", "path": "evidence/a.png"}],
+            },
+        ],
+        "scorer": {"agent": "Codex"},
+    }
+    return manifest, contract, execution, score_input
+
+
 def write_json(path: Path, value: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, ensure_ascii=False), encoding="utf-8")
@@ -178,13 +233,60 @@ class FinalizeWebE2EScoreTest(unittest.TestCase):
         self.assertEqual(score["metrics"]["primary_dimensions"]["interaction_function"], 50)
         self.assertFalse(score["metrics"]["aesthetic"]["included_in_total"])
         self.assertEqual(score["metrics"]["aesthetic"]["score"], 100)
-        self.assertEqual(score["provenance"]["skill_version"], "3.4.0")
+        self.assertEqual(score["provenance"]["skill_version"], "4.0.0")
         self.assertEqual(score["metrics"]["aesthetic"]["primary_dimensions"]["layout_hierarchy"], 100)
         self.assertEqual(score["metrics"]["aesthetic"]["secondary_dimensions"]["v-01"], "MET")
         self.assertEqual(score["metrics"]["aesthetic"]["secondary_dimension_scores"]["v-01"], 100)
         self.assertEqual(len(score["evaluation"]["aesthetic"]["screenshots"]), 3)
         self.assertEqual(score["execution"]["status"], "not_recorded")
         self.assertIsNone(score["usage"]["total_tokens"])
+
+    def test_artifactsbench_init_uses_raw_scores_without_aesthetic_payload(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _, contract, _, _ = artifactsbench_fixtures()
+            write_json(root / "contract.json", contract)
+            result = subprocess.run(
+                ["node", str(INIT), "--task-contract", str(root / "contract.json"), "--output", str(root / "score_input.json")],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            score_input = json.loads((root / "score_input.json").read_text(encoding="utf-8"))
+        self.assertEqual(score_input["metric_profile"], "artifactsbench-web-v1")
+        self.assertEqual([item["raw_score"] for item in score_input["criteria"]], [None, None])
+        self.assertTrue(all("score" not in item for item in score_input["criteria"]))
+        self.assertNotIn("aesthetic", score_input)
+
+    def test_artifactsbench_preserves_raw_score_and_derives_normalized_total(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = run_finalize(root, artifactsbench_fixtures())
+            self.assertEqual(result.returncode, 0, result.stderr)
+            score = json.loads((root / "private-scoring/task_score.json").read_text(encoding="utf-8"))
+        self.assertEqual(score["metric_profile"], "artifactsbench-web-v1")
+        self.assertEqual(score["metrics"]["total_score"], 82)
+        self.assertEqual(score["evaluation"]["criteria"][0]["raw_score"], 7)
+        self.assertEqual(score["evaluation"]["criteria"][0]["score"], 0.7)
+        self.assertEqual(score["metrics"]["primary_dimensions"], {})
+        self.assertEqual(score["metrics"]["secondary_dimensions"], {})
+        self.assertEqual(score["metrics"]["aesthetic"]["status"], "not_applicable")
+
+    def test_artifactsbench_rejects_fractional_raw_score(self) -> None:
+        values = list(artifactsbench_fixtures())
+        values[3]["criteria"][0]["raw_score"] = 7.5
+        with tempfile.TemporaryDirectory() as tmp:
+            result = run_finalize(Path(tmp), values)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("必须是 0..10 整数", result.stderr)
+
+    def test_artifactsbench_requires_declared_screenshot_evidence(self) -> None:
+        values = list(artifactsbench_fixtures())
+        values[3]["criteria"][1]["evidence"] = [{"type": "observation", "path": "evidence/actions.md"}]
+        with tempfile.TemporaryDirectory() as tmp:
+            result = run_finalize(Path(tmp), values)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("必须包含 screenshot 证据", result.stderr)
 
     def test_legacy_manifest_and_execution_record_arguments_remain_supported(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -340,6 +442,33 @@ class BuildSubmissionTest(unittest.TestCase):
             submission = json.loads((root / "submission.json").read_text(encoding="utf-8"))
         self.assertIsNone(submission["unit"]["model_id"])
         self.assertEqual(submission["unit"]["harness_id"], "codex")
+
+    def test_artifactsbench_submission_records_metric_profile(self) -> None:
+        values = artifactsbench_fixtures()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root = root / "score/tasks/task-1"
+            result = run_finalize(task_root, values)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            evidence = task_root / "private-scoring/evidence"
+            evidence.mkdir()
+            (evidence / "a.png").write_bytes(b"png")
+            (evidence / "actions.md").write_text("actions", encoding="utf-8")
+            write_json(root / "manifest.json", {
+                "batch_id": "batch-1",
+                "source_revision": "abc",
+                "metric_profile": "artifactsbench-web-v1",
+                "harness": {"id": "codex", "display_name": "Codex"},
+                "tasks": [{"task_id": "task-1", "task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"}],
+            })
+            result = subprocess.run(
+                ["node", str(SUBMISSION), "--package-root", str(root), "--output", str(root / "submission.json")],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            submission = json.loads((root / "submission.json").read_text(encoding="utf-8"))
+        self.assertEqual(submission["metric_profile"], "artifactsbench-web-v1")
 
     def test_rejects_secrets_and_builds_submission_after_cleanup(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

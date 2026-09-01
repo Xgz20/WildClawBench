@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 const SUBMISSION_SCHEMA = "wildclawbench.web-e2e-submission/v1";
 const SCORE_SCHEMA = "wildclawbench.web-e2e-task-score/v1";
+const DETAILED_PROFILE = "web-e2e-detailed-v1";
+const SUPPORTED_METRIC_PROFILES = new Set([DETAILED_PROFILE, "artifactsbench-web-v1"]);
 const SECRET_NAMES = new Set([".env", ".env.local", ".env.production", "id_rsa", "id_ed25519", "credentials.json", "secrets.json", "my_api.json"]);
 const SECRET_SUFFIXES = [".pem", ".key", ".p12", ".pfx"];
 const FORBIDDEN_DIR_NAMES = new Set(["node_modules", ".git"]);
@@ -54,6 +56,10 @@ export function buildSubmission(packageRoot) {
     if (!fs.existsSync(scorePath)) throw new Error(`缺少 task_score.json: ${entry.task_id}`);
     const score = loadJson(scorePath);
     if (score.schema_version !== SCORE_SCHEMA) throw new Error(`task_score schema 不兼容: ${entry.task_id}`);
+    const scoreProfile = String(score.metric_profile ?? DETAILED_PROFILE);
+    if (!SUPPORTED_METRIC_PROFILES.has(scoreProfile)) {
+      throw new Error(`task_score metric_profile 不兼容: ${entry.task_id}: ${scoreProfile}`);
+    }
     if (score.identity?.batch_id !== manifest.batch_id || score.identity?.task_id !== entry.task_id) {
       throw new Error(`task_score 身份与 manifest 不一致: ${entry.task_id}`);
     }
@@ -94,6 +100,11 @@ export function buildSubmission(packageRoot) {
     }
     tasks.push(score);
   }
+  const metricProfiles = new Set(tasks.map((task) => String(task.metric_profile ?? DETAILED_PROFILE)));
+  if (metricProfiles.size !== 1) throw new Error("一个回传包不能混合 metric_profile");
+  const metricProfile = [...metricProfiles][0];
+  const manifestProfile = String(manifest.metric_profile ?? DETAILED_PROFILE);
+  if (manifestProfile !== metricProfile) throw new Error("task_score metric_profile 与 manifest 不一致");
   const harnessIds = new Set(tasks.map((task) => String(task.identity?.harness?.id ?? "")));
   const modelIds = new Set(tasks.map((task) => String(task.identity?.model?.id ?? "")));
   if (harnessIds.size !== 1 || modelIds.size !== 1) throw new Error("一个回传包只能包含一个 model@harness");
@@ -120,6 +131,7 @@ export function buildSubmission(packageRoot) {
     schema_version: SUBMISSION_SCHEMA,
     batch_id: manifest.batch_id,
     source_revision: manifest.source_revision ?? null,
+    metric_profile: metricProfile,
     created_at: new Date().toISOString(),
     unit: {
       model_id: modelId || null,

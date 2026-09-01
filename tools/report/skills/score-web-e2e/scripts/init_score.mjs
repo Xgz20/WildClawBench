@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 const AESTHETIC_RUBRIC_PATH = fileURLToPath(
   new URL("../references/aesthetic-rubric.json", import.meta.url),
 );
+const DETAILED_PROFILE = "web-e2e-detailed-v1";
+const ARTIFACTSBENCH_PROFILE = "artifactsbench-web-v1";
 
 function parseArgs(argv) {
   const result = {};
@@ -30,20 +32,31 @@ function loadJson(filename) {
 
 const AESTHETIC_RUBRIC = loadJson(AESTHETIC_RUBRIC_PATH);
 
+function metricProfile(contract) {
+  const profile = String(contract.metric_profile ?? DETAILED_PROFILE);
+  if (![DETAILED_PROFILE, ARTIFACTSBENCH_PROFILE].includes(profile)) {
+    throw new Error(`不支持的 metric_profile: ${profile}`);
+  }
+  return profile;
+}
+
 export function buildScoreInput(contract) {
-  return {
+  const profile = metricProfile(contract);
+  const result = {
+    metric_profile: profile,
     evaluation_status: "completed",
     evaluation_error: null,
     site_url: "http://127.0.0.1:4173",
     browser: { name: "", viewport: "" },
-    criteria: (contract.criteria ?? []).map((item) => ({
-      key: item.key,
-      score: null,
-      reason: "",
-      actions: [],
-      evidence: [],
-    })),
-    aesthetic: {
+    criteria: (contract.criteria ?? []).map((item) => (
+      profile === ARTIFACTSBENCH_PROFILE
+        ? { key: item.key, raw_score: null, reason: "", actions: [], evidence: [] }
+        : { key: item.key, score: null, reason: "", actions: [], evidence: [] }
+    )),
+    scorer: { agent: "", model: "", session_id: "" },
+  };
+  if (profile === DETAILED_PROFILE) {
+    result.aesthetic = {
       status: "completed",
       error: null,
       screenshots: [],
@@ -61,9 +74,9 @@ export function buildScoreInput(contract) {
       })),
       strengths: [],
       defects: [],
-    },
-    scorer: { agent: "", model: "", session_id: "" },
-  };
+    };
+  }
+  return result;
 }
 
 function main() {

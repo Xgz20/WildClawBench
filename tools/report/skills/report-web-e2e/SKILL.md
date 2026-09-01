@@ -1,21 +1,26 @@
 ---
 name: report-web-e2e
-description: 汇总多个独立 Web E2E 评分回传包，校验批次与用例范围一致性，生成只包含 Web 指标的领导版 Markdown、报告数据 JSON 和三 Sheet Excel；不调用 WildClawBench 既有评分或 generate_eval_report.py。
+description: 汇总多个独立 Web E2E 评分回传包，校验批次、Profile 与用例范围，按自建详细指标或 ArtifactsBench 总分/难度 Profile 生成领导版 Markdown、报告 JSON 和三 Sheet Excel；不调用 WildClawBench 既有评分流程。
 ---
 
 # 汇总 Web E2E 报告
 
 本 Skill 处理 `score-web-e2e` 生成的 `submission.json`，或测试人员用 ZIP 工具压缩的完整 Harness 根目录。ZIP 内必须恰好存在一个 `submission.json`。默认要求全部回传包具有相同 `batch_id`、`source_revision` 和完整一致的 `task_ids`；不一致时停止，不能静默混算。
 
+全部回传包和报告配置还必须具有相同 `metric_profile`，一个批次不能混合：
+
+- `web-e2e-detailed-v1`：输出现有功能一级/二级维度和美观度指标。
+- `artifactsbench-web-v1`：只输出总分、执行概况和难度等级；不展示功能维度、美观度总分或美观度维度。原始 Criterion 分只保留在单题评分产物中供审计。
+
 模型、Harness 友好名称和推理强度映射只从显式报告配置读取，不进入 execution/scoring ZIP。准备工作空间 Skill 默认在批次根生成 `<batch_id>__report-config.yaml`；WildClawBench 工程内的 `tools/report/config/web-e2e/<batch_id>.yaml` 仅是省略 `--config` 时的兼容默认位置。回传保留 `harness_id`；原始 `model_id` 可留空，由本批次唯一的 Harness 映射补全。配置格式与完整性门禁见 [references/report-config.md](references/report-config.md)。
 
 ## 产物
 
 - `web_e2e_report_data.json`：可复算的统一数据源；
-- `Web站点端到端评测领导版.md`：仅含“结论、总览、难度等级、一级维度、二级维度”；
+- `Web站点端到端评测领导版.md`：详细 Profile 含“结论、总览、难度等级、一级维度、二级维度”；ArtifactsBench Profile 只含前三节；
 - `Web站点端到端评测报告.xlsx`：仅含 `站点评测指标`、`难度对比`、`用例对比明细`。
 
-页面美观度与总分并列展示，但永远不参与总分、得分率或满分率。`站点评测指标` 的结果与效率表在得分率、满分率之后展示“美观度总分”，并在站点一级/二级维度表之后增加“美观度一级维度汇总”和“美观度二级维度汇总”。
+以下功能与美观度规则仅适用于 `web-e2e-detailed-v1`。页面美观度与总分并列展示，但永远不参与总分、得分率或满分率。`站点评测指标` 的结果与效率表在得分率、满分率之后展示“美观度总分”，并在站点一级/二级维度表之后增加“美观度一级维度汇总”和“美观度二级维度汇总”。
 
 站点评测二级维度汇总和美观度二级维度汇总均使用两层表头：上层按一级维度连续合并分组，下层展示二级指标；不同一级维度使用不同且稳定的表头颜色，固定身份列纵向合并，不改变数据和评分口径。
 
@@ -54,7 +59,7 @@ node "$REPORT_SKILL_DIR/scripts/build_web_e2e_workbook.mjs" \
 - 完成率：正常完成数 / 用例数。
 - 资源总量：只有该 unit 所有题目都提供该字段时才展示总和；缺失显示 `-`，不把未知量当 0。
 - 格式准确率：优先按工具调用数加权；缺调用数但全部题目都有准确率时取题目等权平均。
-- 一级、二级维度：按题目等权平均；异常题目的维度分为 0。
-- 美观度总分：仅对 `metrics.aesthetic.status=completed` 的用例等权平均，独立于功能总分；美观度取证异常保留为空并计入样本数说明。
+- 一级、二级维度：仅详细 Profile 生成，按题目等权平均；异常题目的维度分为 0。
+- 美观度总分：仅详细 Profile 生成；对 `metrics.aesthetic.status=completed` 的用例等权平均，独立于功能总分；美观度取证异常保留为空并计入样本数说明。
 - 美观度一级维度：单题内按所属适用二级检查点的百分制分数等权平均，加分项同样增加分子和分母；再对有正式美观度结果的题目等权平均。
 - 美观度二级维度：按检查点汇总 `MET/PARTIAL/UNMET/NA`，`平均分=(MET×100+PARTIAL×50+UNMET×0)/(MET+PARTIAL+UNMET)`，`NA` 排除分母。

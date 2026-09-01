@@ -4,7 +4,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SCHEMA_VERSION = "wildclawbench.web-e2e-task-score/v1";
-const SKILL_VERSION = "3.4.0";
+const SKILL_VERSION = "4.0.0";
+const DETAILED_PROFILE = "web-e2e-detailed-v1";
+const ARTIFACTSBENCH_PROFILE = "artifactsbench-web-v1";
 const EXECUTION_STATUSES = new Set(["completed", "execution_error", "timeout", "pending", "not_recorded"]);
 const EVALUATION_STATUSES = new Set(["completed", "evaluation_error"]);
 const AESTHETIC_EVALUATION_STATUSES = new Set(["completed", "evaluation_error"]);
@@ -35,6 +37,32 @@ function number(value, label, minimum, maximum) {
   if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`${label} 必须是数字`);
   if (value < minimum || value > maximum) throw new Error(`${label} 必须位于 ${minimum}..${maximum}`);
   return value;
+}
+
+function metricProfile(contract) {
+  const profile = String(contract.metric_profile ?? DETAILED_PROFILE);
+  if (![DETAILED_PROFILE, ARTIFACTSBENCH_PROFILE].includes(profile)) {
+    throw new Error(`不支持的 metric_profile: ${profile}`);
+  }
+  return profile;
+}
+
+function criterionJudgment(item, profile) {
+  if (profile === ARTIFACTSBENCH_PROFILE) {
+    const rawScore = number(item.raw_score, `criteria.${item.key}.raw_score`, 0, 10);
+    if (!Number.isInteger(rawScore)) {
+      throw new Error(`criteria.${item.key}.raw_score 必须是 0..10 整数`);
+    }
+    const score = rawScore / 10;
+    if (item.score !== null && item.score !== undefined) {
+      const supplied = number(item.score, `criteria.${item.key}.score`, 0, 1);
+      if (Math.abs(supplied - score) > 1e-9) {
+        throw new Error(`criteria.${item.key}.score 必须等于 raw_score / 10`);
+      }
+    }
+    return { rawScore, score };
+  }
+  return { rawScore: null, score: number(item.score, `criteria.${item.key}.score`, 0, 1) };
 }
 
 function round(value) {
@@ -136,6 +164,20 @@ function aestheticErrorResult(message) {
       secondary_dimensions: {},
       secondary_dimension_scores: {},
       reason: message,
+    },
+  };
+}
+
+function aestheticNotApplicable() {
+  return {
+    evaluation: { status: "not_applicable" },
+    metrics: {
+      score: null,
+      included_in_total: false,
+      status: "not_applicable",
+      primary_dimensions: {},
+      secondary_dimensions: {},
+      secondary_dimension_scores: {},
     },
   };
 }
@@ -291,6 +333,10 @@ function finalizeAesthetic(scoreInput, successfulEvaluation) {
 
 export function finalize(manifest, contract, execution, scoreInput) {
   const identity = contractIdentity(contract);
+  const profile = metricProfile(contract);
+  if (scoreInput.metric_profile && scoreInput.metric_profile !== profile) {
+    throw new Error(`score_input metric_profile 不一致: ${scoreInput.metric_profile} vs ${profile}`);
+  }
   if (!identity.batch_id || !identity.task_id) throw new Error("task contract 缺少 batch_id 或 task_id");
   const effective = effectiveExecution(identity, execution);
   const batchIds = [identity.batch_id, manifest?.batch_id, effective.batch_id].filter(Boolean);
@@ -331,22 +377,29 @@ export function finalize(manifest, contract, execution, scoreInput) {
   const byKey = new Map();
   const calculationByKey = new Map();
   for (const item of observed) {
-    const hasScore = item.score !== null && item.score !== undefined;
-    if (!forcedZero || hasScore) item.score = number(item.score, `criteria.${item.key}.score`, 0, 1);
+    const rawValue = profile === ARTIFACTSBENCH_PROFILE ? item.raw_score : item.score;
+    const hasScore = rawValue !== null && rawValue !== undefined;
+    const judgment = (!forcedZero || hasScore)
+      ? criterionJudgment(item, profile)
+      : { rawScore: null, score: null };
     if (!forcedZero || hasScore) {
       if (!String(item.reason ?? "").trim()) throw new Error(`criteria.${item.key}.reason 不能为空`);
       if (!Array.isArray(item.actions) || item.actions.length === 0) throw new Error(`criteria.${item.key}.actions 至少记录一个操作或检查动作`);
       if (!Array.isArray(item.evidence) || item.evidence.length === 0) throw new Error(`criteria.${item.key}.evidence 至少记录一条证据`);
     }
-    byKey.set(item.key, item);
-    calculationByKey.set(item.key, { score: hasScore ? item.score : 0 });
+    byKey.set(item.key, { ...item, rawScore: judgment.rawScore, normalizedScore: judgment.score });
+    calculationByKey.set(item.key, { score: hasScore ? judgment.score : 0 });
   }
 
   const successfulEvaluation = ["completed", "not_recorded"].includes(executionStatus) && evaluationStatus === "completed";
   if (successfulEvaluation) {
-    for (const criterion of criteria.filter((item) => item.primary === "visual_layout")) {
-      if (!byKey.get(criterion.key).evidence.some((item) => item && item.type === "screenshot")) {
-        throw new Error(`视觉检查点必须包含 screenshot 证据: ${criterion.key}`);
+    for (const criterion of criteria) {
+      const requiredTypes = new Set(criterion.evidence_policy?.required_types ?? []);
+      if (criterion.primary === "visual_layout") requiredTypes.add("screenshot");
+      for (const requiredType of requiredTypes) {
+        if (!byKey.get(criterion.key).evidence.some((item) => item && item.type === requiredType)) {
+          throw new Error(`检查点必须包含 ${requiredType} 证据: ${criterion.key}`);
+        }
       }
     }
   }
@@ -358,9 +411,12 @@ export function finalize(manifest, contract, execution, scoreInput) {
   const primary = weightedDimensions(criteria, calculationByKey, "primary");
   const secondary = weightedDimensions(criteria, calculationByKey, "secondary");
   const zeroed = (value) => Object.fromEntries(Object.keys(value).map((key) => [key, 0]));
-  const aesthetic = finalizeAesthetic(scoreInput, successfulEvaluation);
+  const aesthetic = profile === DETAILED_PROFILE
+    ? finalizeAesthetic(scoreInput, successfulEvaluation)
+    : aestheticNotApplicable();
   return {
     schema_version: SCHEMA_VERSION,
+    metric_profile: profile,
     identity: {
       batch_id: identity.batch_id,
       task_id: taskId,
@@ -387,7 +443,8 @@ export function finalize(manifest, contract, execution, scoreInput) {
           primary: criterion.primary,
           secondary: criterion.secondary,
           weight: criterion.weight,
-          score: observation.score,
+          ...(profile === ARTIFACTSBENCH_PROFILE ? { raw_score: observation.rawScore } : {}),
+          score: observation.normalizedScore,
           reason: observation.reason,
           actions: observation.actions,
           evidence: observation.evidence,
@@ -399,8 +456,8 @@ export function finalize(manifest, contract, execution, scoreInput) {
       total_score: totalScore,
       score_rate: totalScore,
       strict_full_score: totalScore === 100 && !forcedZero,
-      primary_dimensions: forcedZero ? zeroed(primary) : primary,
-      secondary_dimensions: forcedZero ? zeroed(secondary) : secondary,
+      primary_dimensions: profile === DETAILED_PROFILE ? (forcedZero ? zeroed(primary) : primary) : {},
+      secondary_dimensions: profile === DETAILED_PROFILE ? (forcedZero ? zeroed(secondary) : secondary) : {},
       aesthetic: aesthetic.metrics,
     },
     artifacts: effective.artifacts ?? {},

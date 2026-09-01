@@ -19,6 +19,9 @@ except ImportError:
 
 SUBMISSION_SCHEMA = "wildclawbench.web-e2e-submission/v1"
 REPORT_CONFIG_SCHEMA = "wildclawbench.web-e2e-report-config/v1"
+DETAILED_PROFILE = "web-e2e-detailed-v1"
+ARTIFACTSBENCH_PROFILE = "artifactsbench-web-v1"
+SUPPORTED_METRIC_PROFILES = {DETAILED_PROFILE, ARTIFACTSBENCH_PROFILE}
 PRIMARY_LABELS = {
     "content_structure": "内容与结构",
     "interaction_function": "交互与功能",
@@ -148,6 +151,9 @@ def load_submission(path: Path) -> dict:
     payload = json.loads(raw.decode("utf-8"))
     if not isinstance(payload, dict) or payload.get("schema_version") != SUBMISSION_SCHEMA:
         raise ValueError(f"submission schema 不兼容: {path}")
+    profile = str(payload.get("metric_profile") or DETAILED_PROFILE)
+    if profile not in SUPPORTED_METRIC_PROFILES:
+        raise ValueError(f"submission metric_profile 不兼容: {path}: {profile}")
     return payload
 
 
@@ -156,6 +162,9 @@ def load_report_config(path: Path) -> dict:
     if not isinstance(payload, dict) or payload.get("schema_version") != REPORT_CONFIG_SCHEMA:
         raise ValueError(f"报告配置 schema 不兼容: {path}")
     batch_id = str(payload.get("batch_id") or "").strip()
+    metric_profile = str(payload.get("metric_profile") or DETAILED_PROFILE).strip()
+    if metric_profile not in SUPPORTED_METRIC_PROFILES:
+        raise ValueError(f"报告配置 metric_profile 不兼容: {path}: {metric_profile}")
     raw_units = payload.get("units") or []
     if not batch_id or not isinstance(raw_units, list) or not raw_units:
         raise ValueError(f"报告配置必须包含 batch_id 和非空 units: {path}")
@@ -185,7 +194,12 @@ def load_report_config(path: Path) -> dict:
         })
     if len({item["order"] for item in units}) != len(units):
         raise ValueError(f"报告配置 unit order 必须唯一: {path}")
-    return {"schema_version": REPORT_CONFIG_SCHEMA, "batch_id": batch_id, "units": units}
+    return {
+        "schema_version": REPORT_CONFIG_SCHEMA,
+        "batch_id": batch_id,
+        "metric_profile": metric_profile,
+        "units": units,
+    }
 
 
 def configured_submissions(submissions: list[dict], config: dict | None) -> list[dict]:
@@ -194,6 +208,14 @@ def configured_submissions(submissions: list[dict], config: dict | None) -> list
     batch_ids = {item.get("batch_id") for item in submissions}
     if batch_ids != {config.get("batch_id")}:
         raise ValueError(f"报告配置 batch_id 与回传包不一致: {config.get('batch_id')} vs {sorted(str(v) for v in batch_ids)}")
+    submission_profiles = {
+        str(item.get("metric_profile") or DETAILED_PROFILE) for item in submissions
+    }
+    if submission_profiles != {config.get("metric_profile", DETAILED_PROFILE)}:
+        raise ValueError(
+            f"报告配置 metric_profile 与回传包不一致: "
+            f"{config.get('metric_profile')} vs {sorted(submission_profiles)}"
+        )
     config_by_key = {
         (item["model_id"], item["harness_id"]): item
         for item in config.get("units") or []
@@ -331,7 +353,12 @@ def format_accuracy(tasks: list[dict]) -> float | None:
     return round(statistics.fmean(accuracy for accuracy, _ in rows), 2)
 
 
-def unit_summary(submission: dict, primary_keys: list[str], secondary_keys: list[str]) -> dict:
+def unit_summary(
+    submission: dict,
+    primary_keys: list[str],
+    secondary_keys: list[str],
+    metric_profile: str = DETAILED_PROFILE,
+) -> dict:
     tasks = submission.get("tasks") or []
     unit = submission["unit"]
     scores = [numeric(task.get("metrics", {}).get("total_score")) or 0.0 for task in tasks]
@@ -346,10 +373,11 @@ def unit_summary(submission: dict, primary_keys: list[str], secondary_keys: list
         execution_status in scorable_execution_statuses and evaluation_status == "evaluation_error"
         for execution_status, evaluation_status in zip(execution_statuses, evaluation_statuses)
     )
-    aesthetic_values = [
-        numeric(completed_aesthetic(task).get("score"))
-        for task in tasks
-    ]
+    aesthetic_values = (
+        [numeric(completed_aesthetic(task).get("score")) for task in tasks]
+        if metric_profile == DETAILED_PROFILE
+        else []
+    )
     aesthetic_scored = [value for value in aesthetic_values if value is not None]
     durations = complete_values([(task.get("execution") or {}).get("duration_seconds") for task in tasks])
     costs = complete_values([(task.get("usage") or {}).get("cost_usd") for task in tasks])
@@ -391,12 +419,14 @@ def unit_summary(submission: dict, primary_keys: list[str], secondary_keys: list
         "format_accuracy": format_accuracy(tasks),
         "primary_dimensions": {key: dimension_average(tasks, key, "primary_dimensions") for key in primary_keys},
         "secondary_dimensions": {key: dimension_average(tasks, key, "secondary_dimensions") for key in secondary_keys},
-        "aesthetic_primary_dimensions": {
-            key: aesthetic_primary_average(tasks, key) for key in AESTHETIC_PRIMARY_LABELS
-        },
-        "aesthetic_secondary_dimensions": {
-            key: aesthetic_checklist_summary(tasks, key) for key in AESTHETIC_SECONDARY_LABELS
-        },
+        "aesthetic_primary_dimensions": (
+            {key: aesthetic_primary_average(tasks, key) for key in AESTHETIC_PRIMARY_LABELS}
+            if metric_profile == DETAILED_PROFILE else {}
+        ),
+        "aesthetic_secondary_dimensions": (
+            {key: aesthetic_checklist_summary(tasks, key) for key in AESTHETIC_SECONDARY_LABELS}
+            if metric_profile == DETAILED_PROFILE else {}
+        ),
     }
 
 
@@ -407,12 +437,20 @@ def build_report_data(submissions: list[dict], config: dict | None = None) -> di
     batch_ids = {item.get("batch_id") for item in submissions}
     revisions = {item.get("source_revision") for item in submissions}
     task_sets = {tuple(item.get("task_ids") or []) for item in submissions}
+    metric_profiles = {
+        str(item.get("metric_profile") or DETAILED_PROFILE) for item in submissions
+    }
     if len(batch_ids) != 1:
         raise ValueError(f"batch_id 不一致: {sorted(str(v) for v in batch_ids)}")
     if len(revisions) != 1:
         raise ValueError(f"source_revision 不一致: {sorted(str(v) for v in revisions)}")
     if len(task_sets) != 1:
         raise ValueError("回传包 task_ids 或顺序不一致")
+    if len(metric_profiles) != 1:
+        raise ValueError(f"回传包 metric_profile 不一致: {sorted(metric_profiles)}")
+    metric_profile = next(iter(metric_profiles))
+    if metric_profile not in SUPPORTED_METRIC_PROFILES:
+        raise ValueError(f"不支持的 metric_profile: {metric_profile}")
     units = [
         (item["unit"]["model_id"], item["unit"]["harness_id"])
         for item in submissions
@@ -420,27 +458,33 @@ def build_report_data(submissions: list[dict], config: dict | None = None) -> di
     if len(units) != len(set(units)):
         raise ValueError("存在重复 model@harness 回传包")
 
-    primary_keys = list(PRIMARY_LABELS)
-    primary_keys.extend(sorted({
-        key for item in submissions for task in item.get("tasks", [])
-        for key in (task.get("metrics", {}).get("primary_dimensions") or {})
-        if key not in PRIMARY_LABELS
-    }))
-    secondary_keys = [
-        key for key in SECONDARY_LABELS
-        if any(key in (task.get("metrics", {}).get("secondary_dimensions") or {})
-               for item in submissions for task in item.get("tasks", []))
-    ]
-    secondary_keys.extend(sorted({
-        key for item in submissions for task in item.get("tasks", [])
-        for key in (task.get("metrics", {}).get("secondary_dimensions") or {})
-        if key not in SECONDARY_LABELS
-    }))
+    primary_keys = list(PRIMARY_LABELS) if metric_profile == DETAILED_PROFILE else []
+    if metric_profile == DETAILED_PROFILE:
+        primary_keys.extend(sorted({
+            key for item in submissions for task in item.get("tasks", [])
+            for key in (task.get("metrics", {}).get("primary_dimensions") or {})
+            if key not in PRIMARY_LABELS
+        }))
+        secondary_keys = [
+            key for key in SECONDARY_LABELS
+            if any(key in (task.get("metrics", {}).get("secondary_dimensions") or {})
+                   for item in submissions for task in item.get("tasks", []))
+        ]
+        secondary_keys.extend(sorted({
+            key for item in submissions for task in item.get("tasks", [])
+            for key in (task.get("metrics", {}).get("secondary_dimensions") or {})
+            if key not in SECONDARY_LABELS
+        }))
+    else:
+        secondary_keys = []
     difficulty_values = sorted({
         str(task.get("identity", {}).get("difficulty") or "unknown")
         for item in submissions for task in item.get("tasks", [])
     }, key=lambda value: (not value.startswith("L"), value))
-    summaries = [unit_summary(item, primary_keys, secondary_keys) for item in submissions]
+    summaries = [
+        unit_summary(item, primary_keys, secondary_keys, metric_profile)
+        for item in submissions
+    ]
     if config is None:
         summaries.sort(key=lambda item: (-item["total_average_score"], item["unit"]))
     else:
@@ -477,7 +521,10 @@ def build_report_data(submissions: list[dict], config: dict | None = None) -> di
                 "execution_status": task.get("execution", {}).get("status"),
                 "evaluation_status": task.get("evaluation", {}).get("status"),
                 "total_score": numeric(task.get("metrics", {}).get("total_score")) or 0.0,
-                "aesthetic_score": numeric(completed_aesthetic(task).get("score")),
+                "aesthetic_score": (
+                    numeric(completed_aesthetic(task).get("score"))
+                    if metric_profile == DETAILED_PROFILE else None
+                ),
                 "duration_seconds": numeric(task.get("execution", {}).get("duration_seconds")),
                 "total_tokens": numeric(task.get("usage", {}).get("total_tokens")),
                 "input_tokens": numeric(task.get("usage", {}).get("input_tokens")),
@@ -496,14 +543,15 @@ def build_report_data(submissions: list[dict], config: dict | None = None) -> di
         "schema_version": "wildclawbench.web-e2e-report-data/v1",
         "batch_id": next(iter(batch_ids)),
         "source_revision": next(iter(revisions)),
+        "metric_profile": metric_profile,
         "task_ids": list(next(iter(task_sets))),
         "labels": {
             "primary": {key: PRIMARY_LABELS.get(key, key) for key in primary_keys},
             "secondary": {key: SECONDARY_LABELS.get(key, key) for key in secondary_keys},
             "secondary_primary": {key: SECONDARY_PRIMARY.get(key, "other") for key in secondary_keys},
-            "aesthetic_primary": AESTHETIC_PRIMARY_LABELS,
-            "aesthetic_secondary": AESTHETIC_SECONDARY_LABELS,
-            "aesthetic_secondary_primary": AESTHETIC_SECONDARY_PRIMARY,
+            "aesthetic_primary": AESTHETIC_PRIMARY_LABELS if metric_profile == DETAILED_PROFILE else {},
+            "aesthetic_secondary": AESTHETIC_SECONDARY_LABELS if metric_profile == DETAILED_PROFILE else {},
+            "aesthetic_secondary_primary": AESTHETIC_SECONDARY_PRIMARY if metric_profile == DETAILED_PROFILE else {},
         },
         "difficulty_values": difficulty_values,
         "units": summaries,
@@ -539,7 +587,64 @@ def spread_statement(rows: list[dict], value_getter, labels: dict[str, str]) -> 
     return f"最大横向分差出现在“{label}”，分差为 {gap:.2f} 分。"
 
 
+def render_artifactsbench_markdown(data: dict) -> str:
+    units = data["units"]
+    leader = max(units, key=lambda item: (item["total_average_score"], item["unit"]))
+    execution_not_recorded = sum(item.get("execution_not_recorded_count", 0) for item in units)
+    lines = [
+        "# ArtifactsBench Web 站点端到端评测领导版报告",
+        "",
+        f"> 批次：{data['batch_id']}  ",
+        f"> 源版本：{data['source_revision']}  ",
+        f"> 参评范围：{len(units)} 个模型@Harness 单元 × {len(data['task_ids'])} 个 Web 用例",
+        "",
+        "## 结论",
+        "",
+        f"- {leader['unit']} 的总平均分最高，为 {leader['total_average_score']:.2f} 分。",
+        f"- 各单元完成率区间为 {min(item['completion_rate'] for item in units):.2f}%–{max(item['completion_rate'] for item in units):.2f}%。",
+        f"- 共 {execution_not_recorded} 个用例结果未采集执行状态与资源数据；执行错误数和超时数只反映显式记录。" if execution_not_recorded else "- 全部用例均提供执行状态记录。",
+        "- 本 Profile 按 ArtifactsBench 原始 0–10 Criterion 评分后归一化汇总，只分析总分和难度等级，不生成自建题的功能或美观度维度。",
+        "",
+        "## 总览",
+        "",
+        f"本批次共比较 {len(units)} 个模型@Harness 单元；总平均分范围为 {min(item['total_average_score'] for item in units):.2f}–{max(item['total_average_score'] for item in units):.2f} 分。资源字段只有在单元内全部用例均提供时才汇总，缺失显示 `-`。",
+        "",
+    ]
+    overview_headers = [
+        "模型", "Harness", "推理强度", "总平均分", "用例数", "正常完成数", "执行错误数", "超时数", "评测异常数",
+        "完成率", "总tokens", "总请求数", "总耗时(s)", "总成本(USD)", "工具调用数", "格式准确率",
+    ]
+    overview_rows = [[
+        item["model"], item["harness"], item["reasoning_effort"], item["total_average_score"], item["case_count"],
+        item["completed_count"], item["execution_error_count"], item["timeout_count"],
+        item["evaluation_error_count"], item["completion_rate"], item["total_tokens"],
+        item["total_requests"], item["total_duration_seconds"], item["total_cost_usd"],
+        item["tool_call_count"], item["format_accuracy"],
+    ] for item in units]
+    lines.extend(markdown_table(overview_headers, overview_rows))
+    lines.extend(["", "## 难度等级", ""])
+    lines.append(spread_statement(
+        data["difficulty_rows"],
+        lambda row, label: row["difficulties"].get(label, {}).get("score"),
+        {difficulty: difficulty for difficulty in data["difficulty_values"]},
+    ))
+    lines.append("")
+    difficulty_headers = ["模型@Harness", "总平均分"] + [
+        f"{difficulty}平均分({next((row['difficulties'][difficulty]['count'] for row in data['difficulty_rows'] if row['difficulties'][difficulty]['count']), 0)}例)"
+        for difficulty in data["difficulty_values"]
+    ]
+    difficulty_table = [[
+        row["unit"], row["total_average_score"],
+        *[row["difficulties"][difficulty]["score"] for difficulty in data["difficulty_values"]],
+    ] for row in data["difficulty_rows"]]
+    lines.extend(markdown_table(difficulty_headers, difficulty_table))
+    lines.append("")
+    return "\n".join(lines)
+
+
 def render_markdown(data: dict) -> str:
+    if data.get("metric_profile") == ARTIFACTSBENCH_PROFILE:
+        return render_artifactsbench_markdown(data)
     units = data["units"]
     leader = max(units, key=lambda item: (item["total_average_score"], item["unit"]))
     all_aesthetic_missing = all(item["aesthetic_score"] is None for item in units)

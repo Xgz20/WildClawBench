@@ -1,5 +1,32 @@
 # Web E2E 评分 JSON 契约
 
+## 指标 Profile 与兼容性
+
+`task_contract.json` v3 显式声明 `metric_profile`；旧 v2 契约缺失该字段时按 `web-e2e-detailed-v1` 兼容。
+
+- `web-e2e-detailed-v1`：`score_input.criteria[].score` 为 0–1，生成一级/二级维度和独立美观度。
+- `artifactsbench-web-v1`：`score_input.criteria[].raw_score` 必须是 0–10 整数；脚本输出时确定性增加 `score=raw_score/10`。不接受小数原始分，也不初始化 `aesthetic`。
+
+ArtifactsBench 输入示例：
+
+```json
+{
+  "metric_profile": "artifactsbench-web-v1",
+  "evaluation_status": "completed",
+  "criteria": [
+    {
+      "key": "c01_core_function",
+      "raw_score": 7,
+      "reason": "实现达到 7 分锚点，但缺少满分要求的进阶能力。",
+      "actions": ["完成核心流程并检查代码"],
+      "evidence": [{"type": "observation", "path": "evidence/c01.md", "description": "操作和代码观察"}]
+    }
+  ]
+}
+```
+
+若 Criterion 的 contract `evidence_policy.required_types` 包含 `screenshot`，必须提供 `type=screenshot` 的证据。该要求只服务原始 Criterion，不启用独立美观度指标。
+
 ## `score_input.json`
 
 评分 Agent 只填写判断和证据。文件位于当前单题工作空间的 `private-scoring/score_input.json`：
@@ -60,7 +87,7 @@
 
 功能检查点的交互与证据要求见 [浏览器交互评分与误判防护](browser-interaction-scoring.md)。0 分理由必须描述按正确控件方式复核后，候选页面仍与 Rubric 不符的可观察事实；“浏览器工具无法输入、拖动、捕获或验证”属于评测异常，不是候选失败。原生对话框、下载事件、瞬时状态和控件回读等非截图事实可以写入 `evidence/` 下的 Markdown 或 JSON 观察记录并由 criterion 引用。
 
-`init_score.mjs` 会按内置标准自动生成全部 6 个 `aesthetic.dimensions` 和 32 个 `aesthetic.checklist` 项，不得调整 ID 或顺序。评分 Agent 填写检查点状态、理由和证据，以及一级维度的汇总理由和证据；`aesthetic.dimensions[].score` 必须保持 `null`，由脚本推导。`aesthetic.status` 允许 `completed` 或 `evaluation_error`：
+仅详细 Profile 中，`init_score.mjs` 会按内置标准自动生成全部 6 个 `aesthetic.dimensions` 和 32 个 `aesthetic.checklist` 项，不得调整 ID 或顺序。评分 Agent 填写检查点状态、理由和证据，以及一级维度的汇总理由和证据；`aesthetic.dimensions[].score` 必须保持 `null`，由脚本推导。`aesthetic.status` 允许 `completed` 或 `evaluation_error`：
 
 - `completed`：硬门禁仍是至少 2 张桌面截图和 1 张不大于 480px 的窄屏截图；每张填写唯一标签、`evidence/` 相对路径、数值视口、状态和说明。常规推荐 4–6 张不重复截图，覆盖桌面主状态、桌面交互状态、适用的空/错误/加载/选中/禁用状态、窄屏主状态和窄屏交互状态；简单页面可只满足最低 3 张，复杂页面按需增加。每个维度与检查项必须引用已有截图标签。
 - `evaluation_error`：填写 `error`，美观度总分和维度保持空；不影响功能总分。
@@ -80,11 +107,11 @@
 - `identity`：批次、题目、模型、Harness；
 - `execution`：执行状态和资源数据；
 - `evaluation`：评分状态、浏览器、逐检查点分数与证据；
+- `metric_profile`：本题采用的稳定指标 Profile；
 - `metrics.total_score`：0–100，全部题目总平均分的输入；
-- `metrics.primary_dimensions`：一级维度 0–100；
-- `metrics.secondary_dimensions`：二级维度 0–100；
-- `evaluation.aesthetic`：美观度截图、六维判断、32 个检查项、优点和缺陷；
-- `metrics.aesthetic`：页面美观度总分、六个一级维度、32 个二级检查项状态和对应 `secondary_dimension_scores` 分值，独立于总分；
+- `evaluation.criteria[].raw_score`：仅 ArtifactsBench Profile 存在，保留 0–10 原始整数；同一项 `score` 为 0–1 归一化值；
+- `metrics.primary_dimensions`、`metrics.secondary_dimensions`：详细 Profile 为 0–100；ArtifactsBench Profile 为空对象；
+- `evaluation.aesthetic`、`metrics.aesthetic`：详细 Profile 保存美观度明细与汇总；ArtifactsBench Profile 只标记 `not_applicable`；
 - `provenance`：题目与 Workspace 哈希、Skill 版本和评分时间。
 
 执行错误、超时和评测异常仍应生成 `task_score.json`。它们的 `metrics.total_score` 为 0，状态字段保留异常类型；汇总报告才能同时计算完成率和全量平均分。`not_recorded + evaluation.completed` 视为正常完成，只表示本批次没有采集执行资源数据。
