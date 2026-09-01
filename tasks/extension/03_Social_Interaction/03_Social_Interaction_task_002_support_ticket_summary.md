@@ -118,20 +118,18 @@ def grade(**kwargs) -> dict:
 
     def makes_forbidden_resolution_claim(text):
         compact = re.sub(r"\s+", "", str(text or ""))
-        clauses = [
-            clause
-            for clause in re.split(r"[。！？!?；;，,\n]+", compact)
-            if clause
-        ]
+        clauses = re.findall(r"[^。！？!?；;，,\n]+[。！？!?；;，,]?", compact)
         for claim in expected["forbidden_resolution_claims"]:
             for clause in clauses:
+                clause_body = re.sub(r"[。！？!?；;，,]+$", "", clause)
+                clause_is_question = clause.endswith(("？", "?"))
                 start = 0
                 while True:
-                    index = clause.find(claim, start)
+                    index = clause_body.find(claim, start)
                     if index < 0:
                         break
-                    prefix = clause[max(0, index - 24):index]
-                    suffix = clause[index + len(claim):index + len(claim) + 16]
+                    prefix = clause_body[max(0, index - 24):index]
+                    suffix = clause_body[index + len(claim):index + len(claim) + 16]
                     prefix_negated = any(
                         term in prefix
                         for term in expected["resolution_negation_prefixes"]
@@ -140,19 +138,28 @@ def grade(**kwargs) -> dict:
                         suffix.startswith(term)
                         for term in expected["resolution_negation_suffixes"]
                     )
-                    if not prefix_negated and not suffix_negated:
+                    interrogative = clause_is_question or any(
+                        term in prefix
+                        for term in expected["resolution_interrogative_prefixes"]
+                    )
+                    if not prefix_negated and not suffix_negated and not interrogative:
                         return True
                     start = index + len(claim)
         return False
 
+    def requests_retest(text):
+        return any(term in text for term in (
+            "复测", "重新测试", "重新尝试", "再次尝试", "再试", "重新登录", "再次登录",
+        ))
+
     scores["summary_completeness"] = mean([
         all(term.lower() in summary.lower() for term in expected["issue_terms"]),
         "配置" in summary and ("修正" in summary or "调整" in summary),
-        "复测" in summary or "重新测试" in summary,
+        requests_retest(summary),
         not makes_forbidden_resolution_claim(summary),
     ])
     scores["reply_draft_quality"] = mean([
-        "复测" in reply or "重新测试" in reply,
+        requests_retest(reply),
         "回复" in reply or "跟进" in reply,
         not makes_forbidden_resolution_claim(reply),
         len(reply.strip()) >= 35,

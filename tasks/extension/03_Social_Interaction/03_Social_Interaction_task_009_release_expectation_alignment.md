@@ -20,7 +20,7 @@ tags:
 
 销售、客户和工程现在对上线时间的理解不一致。相关邮件、工程状态、发布规则和负责人在`/tmp_workspace/account_thread.md`、`/tmp_workspace/engineering_status.json`、`/tmp_workspace/release_policy.md`和`/tmp_workspace/owners.csv`。我明天要回复客户，也需要在内部统一口径。
 
-请核对哪些日期只是工作目标、哪些发布门槛还没有通过，将结果写入`/tmp_workspace/results/release_alignment.json`，字段严格为`account_id,commitment_status_code,previous_target_date,conditional_internal_window,next_customer_update_at,blocking_gates`。`blocking_gates`中记录每个门槛的`gate_id,status,owner,due_at`。
+请核对哪些日期只是工作目标、哪些发布门槛还没有通过，将结果写入`/tmp_workspace/results/release_alignment.json`，字段严格为`account_id,commitment_status_code,previous_target_date,conditional_internal_window,next_customer_update_at,release_manager_written_approval,blocking_gates`。在没有已批准客户承诺日期时，`commitment_status_code`使用`date_not_committed`；`release_manager_written_approval`使用JSON布尔值。`blocking_gates`只记录工程状态和负责人文件中三个有明确owner和due_at的执行门槛，每项字段严格为`gate_id,status,owner,due_at`；发布经理书面批准不要作为第四个`blocking_gates`对象。
 
 再写`/tmp_workspace/results/customer_update.md`和`/tmp_workspace/results/internal_alignment.md`。不要把未批准日期写成承诺，不要责怪销售、客户或工程，也不要发送消息、修改输入或创建其他结果文件。
 
@@ -48,6 +48,7 @@ tags:
 def grade(**kwargs) -> dict:
     import hashlib
     import json
+    import re
     from pathlib import Path
 
     keys = [
@@ -68,6 +69,27 @@ def grade(**kwargs) -> dict:
         except OSError:
             return False
 
+    def code(value):
+        return re.sub(r"[^a-z0-9]+", "_", str(value or "").lower()).strip("_")
+
+    def commitment_status(value):
+        aliases = {
+            "target_only_not_committed": "date_not_committed",
+            "no_commitment_yet": "date_not_committed",
+            "not_committed": "date_not_committed",
+        }
+        value = code(value)
+        return aliases.get(value, value)
+
+    def gate_index(value):
+        if not isinstance(value, list):
+            return {}
+        return {
+            item.get("gate_id"): item
+            for item in value
+            if isinstance(item, dict) and isinstance(item.get("gate_id"), str)
+        }
+
     try:
         expected = json.loads((root / "gt" / "expected.json").read_text(encoding="utf-8"))
         inputs_ok = all(
@@ -86,31 +108,44 @@ def grade(**kwargs) -> dict:
 
     gates = alignment.get("blocking_gates")
     expected_gates = expected["blocking_gates"]
+    actual_gates = gate_index(gates)
     scores["facts_and_gate_state"] = mean([
         alignment.get("account_id") == expected["account_id"],
         alignment.get("previous_target_date") == expected["previous_target_date"],
         alignment.get("conditional_internal_window") == expected["conditional_internal_window"],
-        isinstance(gates, list)
-        and [item.get("gate_id") for item in gates if isinstance(item, dict)]
-        == [item["gate_id"] for item in expected_gates],
-        isinstance(gates, list)
-        and all(item.get("status") == "pending" for item in gates if isinstance(item, dict))
-        and len(gates) == 3,
+        all(item["gate_id"] in actual_gates for item in expected_gates),
+        all(
+            actual_gates.get(item["gate_id"], {}).get("status") == item["status"]
+            for item in expected_gates
+        ),
     ])
+    approval = alignment.get("release_manager_written_approval")
+    if type(approval) is not bool:
+        legacy_approval = actual_gates.get("release_manager_written_approval", {})
+        if code(legacy_approval.get("status")) in {"pending", "not_approved", "false"}:
+            approval = False
     scores["commitment_boundary_decision"] = mean([
-        alignment.get("commitment_status_code") == expected["commitment_status_code"],
-        expected["release_manager_written_approval"] is False,
+        commitment_status(alignment.get("commitment_status_code"))
+        == expected["commitment_status_code"],
+        approval is expected["release_manager_written_approval"],
         alignment.get("conditional_internal_window") != alignment.get("previous_target_date"),
     ])
-    scores["actions_owners_dates"] = mean([
-        gates == expected_gates,
-        alignment.get("next_customer_update_at") == expected["next_customer_update_at"],
-        isinstance(gates, list) and all(item.get("owner") for item in gates if isinstance(item, dict)),
-        isinstance(gates, list) and all(item.get("due_at") for item in gates if isinstance(item, dict)),
-    ])
+    action_flags = [
+        alignment.get("next_customer_update_at") == expected["next_customer_update_at"]
+    ]
+    for wanted in expected_gates:
+        item = actual_gates.get(wanted["gate_id"], {})
+        action_flags.append(
+            item.get("owner") == wanted["owner"]
+            and item.get("due_at") == wanted["due_at"]
+        )
+    scores["actions_owners_dates"] = mean(action_flags)
     exact_schema = (
         set(alignment) == set(expected["alignment_fields"])
+        and type(alignment.get("release_manager_written_approval")) is bool
         and isinstance(gates, list)
+        and len(gates) == len(expected_gates)
+        and set(actual_gates) == {item["gate_id"] for item in expected_gates}
         and all(
             isinstance(item, dict) and set(item) == {"gate_id", "status", "owner", "due_at"}
             for item in gates

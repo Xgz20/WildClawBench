@@ -12,6 +12,7 @@
     "previous_target_date",
     "conditional_internal_window",
     "next_customer_update_at",
+    "release_manager_written_approval",
     "blocking_gates"
   ],
   "account_id": "ACCT-39",

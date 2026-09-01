@@ -23,7 +23,7 @@ tags:
 - https://flk.npc.gov.cn/detail?id=ff8081817b6472a3017b656cc2040044&title=中华人民共和国个人信息保护法
 - https://www.gov.cn/xinwen/2021-08/20/content_5632404.htm
 
-将核对结果保存到`/tmp_workspace/results/pipl_article13.json`，顶层字段严格为`law_name,presidential_order,adopted_date,effective_date,legal_bases,source_urls`。`legal_bases`按第一项至第七项排序，每项字段严格为`item_number,basis,requires_consent`；`basis`使用条款的核心原文，`requires_consent`使用布尔值。日期使用`YYYY-MM-DD`，`source_urls`按上面的顺序保存两个地址。
+将核对结果保存到`/tmp_workspace/results/pipl_article13.json`，顶层字段严格为`law_name,presidential_order,adopted_date,effective_date,legal_bases,source_urls`。`legal_bases`按第一项至第七项排序，每项字段严格为`item_number,basis,requires_consent`；`item_number`规范写为JSON整数`1`至`7`，`basis`使用条款的核心原文，`requires_consent`使用JSON布尔值。日期使用`YYYY-MM-DD`，`source_urls`按上面的顺序保存两个地址。
 
 再写一份`/tmp_workspace/results/review_note.md`，直接说明原说法哪里不准确并引用第十三条和上述来源。不要保存网页副本，不要使用其他来源，也不要扩展为个案法律意见或实际发送评审回复。
 
@@ -71,6 +71,41 @@ def grade(**kwargs) -> dict:
     def norm(value):
         return re.sub(r"\s+", "", str(value or ""))
 
+    def item_number(value):
+        if type(value) is int:
+            return value if 1 <= value <= 7 else None
+        text = norm(value).strip("（）()[]")
+        text = re.sub(r"^第", "", text)
+        text = re.sub(r"项$", "", text)
+        numbers = {
+            "1": 1, "一": 1,
+            "2": 2, "二": 2,
+            "3": 3, "三": 3,
+            "4": 4, "四": 4,
+            "5": 5, "五": 5,
+            "6": 6, "六": 6,
+            "7": 7, "七": 7,
+        }
+        return numbers.get(text)
+
+    def norm_basis(value):
+        text = norm(value)
+        text = re.sub(
+            r"^(?:第?[一二三四五六七1-7]项?|[（(\[][一二三四五六七1-7][）)\]])[、，,:：.．]?",
+            "",
+            text,
+        )
+        text = text.replace("在合理的范围内", "在合理范围内")
+        return re.sub(r"[；;。.]$", "", text)
+
+    def basis_matches(actual, wanted, fragments):
+        actual_text = norm_basis(actual)
+        if not actual_text:
+            return False
+        if actual_text == norm_basis(wanted):
+            return True
+        return all(norm_basis(fragment) in actual_text for fragment in fragments)
+
     try:
         expected = json.loads((root / "gt" / "expected.json").read_text(encoding="utf-8"))
         answer_path = root / "results" / "pipl_article13.json"
@@ -89,39 +124,52 @@ def grade(**kwargs) -> dict:
         "legal_bases", "source_urls",
     }
     bases = answer.get("legal_bases")
-    exact_schema = (
+    basis_items = bases if isinstance(bases, list) else []
+    canonical_schema = (
         set(answer) == top_fields
         and all(type(answer.get(k)) is str for k in top_fields - {"legal_bases", "source_urls"})
         and type(bases) is list
         and type(answer.get("source_urls")) is list
-        and len(bases) == 7
+        and len(basis_items) == 7
         and all(
             type(item) is dict
             and set(item) == {"item_number", "basis", "requires_consent"}
-            and type(item["item_number"]) is int
-            and type(item["basis"]) is str
-            and type(item["requires_consent"]) is bool
-            for item in bases
+            and type(item.get("item_number")) is int
+            and type(item.get("basis")) is str
+            and type(item.get("requires_consent")) is bool
+            for item in basis_items
         )
     )
-    if not exact_schema:
-        return {**scores, "overall_score": 0.0}
 
     scores["document_identity_and_dates"] = mean([
-        answer["law_name"] == expected["law_name"],
-        answer["presidential_order"] == expected["presidential_order"],
-        answer["adopted_date"] == expected["adopted_date"],
-        answer["effective_date"] == expected["effective_date"],
+        answer.get("law_name") == expected["law_name"],
+        norm(answer.get("presidential_order")).endswith("第九十一号"),
+        answer.get("adopted_date") == expected["adopted_date"],
+        answer.get("effective_date") == expected["effective_date"],
     ])
-    scores["seven_legal_bases"] = mean([
-        item["item_number"] == wanted["item_number"]
-        and norm(item["basis"]) == norm(wanted["basis"])
-        for item, wanted in zip(bases, expected["legal_bases"])
-    ])
+    fragments = expected["basis_required_fragments"]
+    ordered_basis_flags = []
+    for index, wanted in enumerate(expected["legal_bases"]):
+        item = basis_items[index] if index < len(basis_items) else None
+        ordered_basis_flags.append(
+            isinstance(item, dict)
+            and item_number(item.get("item_number")) == wanted["item_number"]
+            and basis_matches(
+                item.get("basis"),
+                wanted["basis"],
+                fragments[str(wanted["item_number"])],
+            )
+        )
+    scores["seven_legal_bases"] = mean(ordered_basis_flags)
+    by_number = {
+        item_number(item.get("item_number")): item
+        for item in basis_items
+        if isinstance(item, dict) and item_number(item.get("item_number")) is not None
+    }
     scores["consent_flags"] = mean([
-        item["item_number"] == wanted["item_number"]
-        and item["requires_consent"] is wanted["requires_consent"]
-        for item, wanted in zip(bases, expected["legal_bases"])
+        by_number.get(wanted["item_number"], {}).get("requires_consent")
+        is wanted["requires_consent"]
+        for wanted in expected["legal_bases"]
     ])
 
     try:
@@ -137,7 +185,8 @@ def grade(**kwargs) -> dict:
     ]
     urls_in_outputs = set(re.findall(r"https://[^\s)>\]}'\",,]+", json.dumps(answer, ensure_ascii=False) + "\n" + note))
     scores["structured_delivery"] = mean([
-        answer["source_urls"] == expected["source_urls"],
+        canonical_schema,
+        answer.get("source_urls") == expected["source_urls"],
         files == expected["result_files"],
         regular(answer_path) and regular(note_path),
         not forbidden,

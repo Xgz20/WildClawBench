@@ -57,6 +57,15 @@
     "不能确认",
     "无法确认"
   ],
+  "resolution_interrogative_prefixes": [
+    "是否",
+    "能否",
+    "可否",
+    "有没有",
+    "请确认",
+    "请您确认",
+    "烦请确认"
+  ],
   "exec_file_sha256": {
     "support_ticket.json": "4e0dad42e9b1aed38684fe78c17df86e02b6324416c66f32d5313ed36b6be67a"
   }

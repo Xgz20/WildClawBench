@@ -20,7 +20,7 @@ tags:
 
 I’m handing INC-742 to the 22:00 UTC shift. The timeline, latest monitoring snapshot, current shift note, and handoff policy are in `/tmp_workspace/incident_timeline.jsonl`, `/tmp_workspace/monitor_snapshot.json`, `/tmp_workspace/shift_notes.md`, and `/tmp_workspace/handoff_policy.md`. Reconcile them using the newest evidence; do not copy the earlier “resolved” statement if the policy gates are not met.
 
-Create `/tmp_workspace/results/handoff.json` with the exact top-level fields `incident_id,severity,status_code,resolved,latest_monitoring,completed_actions,pending_actions,active_risks,unconfirmed_hypotheses`. Preserve the action codes, owners, and UTC deadlines from the inputs. Also write a concise, channel-ready `/tmp_workspace/results/handoff_message.md` of no more than 220 words.
+Create `/tmp_workspace/results/handoff.json` with the exact top-level fields `incident_id,severity,status_code,resolved,latest_monitoring,completed_actions,pending_actions,active_risks,unconfirmed_hypotheses`. Copy `latest_monitoring` with the exact fields `captured_at,checkout_error_rate_percent,baseline_error_rate_percent,cache_pool_saturated,qualifying_windows_below_gate,payment_reconciliation_complete`. Each `completed_actions` item must use exactly `action_code,owner,completed_at`; each `pending_actions` item must use exactly `action_code,owner,due_at`. Preserve those values from the inputs. Use the controlled codes `elevated_error_rate,cache_pool_saturation,payment_reconciliation_pending` in `active_risks`, and `release_4_18_0_regression` in `unconfirmed_hypotheses` when supported by the evidence. Also write a concise, channel-ready `/tmp_workspace/results/handoff_message.md` of no more than 220 words.
 
 Do not change the incident status, page anyone, post the message, modify the inputs, or create other result files.
 
@@ -69,6 +69,23 @@ def grade(**kwargs) -> dict:
         except OSError:
             return False
 
+    def code_text(value):
+        return re.sub(r"[^a-z0-9]+", "_", str(value or "").lower()).strip("_")
+
+    def action_index(value):
+        if not isinstance(value, list):
+            return {}
+        return {
+            item.get("action_code"): item
+            for item in value
+            if isinstance(item, dict) and isinstance(item.get("action_code"), str)
+        }
+
+    def any_text(values, predicate):
+        return isinstance(values, list) and any(
+            predicate(str(value or "").lower()) for value in values
+        )
+
     try:
         expected = json.loads((root / "gt" / "expected.json").read_text(encoding="utf-8"))
         inputs_ok = all(
@@ -102,15 +119,54 @@ def grade(**kwargs) -> dict:
         handoff.get("resolved") is False,
         *monitoring_flags,
     ])
-    scores["completed_and_pending_actions"] = mean([
-        handoff.get("completed_actions") == expected["completed_actions"],
-        handoff.get("pending_actions") == expected["pending_actions"],
-        isinstance(handoff.get("pending_actions"), list)
-        and len(handoff.get("pending_actions")) == 3,
-    ])
+    completed = action_index(handoff.get("completed_actions"))
+    pending = action_index(handoff.get("pending_actions"))
+    wanted_completed = expected["completed_actions"][0]
+    completed_item = completed.get(wanted_completed["action_code"], {})
+    action_flags = [
+        completed_item.get("owner") == wanted_completed["owner"]
+        and completed_item.get("completed_at", completed_item.get("at"))
+        == wanted_completed["completed_at"]
+    ]
+    for wanted in expected["pending_actions"]:
+        item = pending.get(wanted["action_code"], {})
+        action_flags.append(
+            item.get("owner") == wanted["owner"]
+            and item.get("due_at", item.get("due")) == wanted["due_at"]
+        )
+    scores["completed_and_pending_actions"] = mean(action_flags)
+    risks = handoff.get("active_risks")
+    hypotheses = handoff.get("unconfirmed_hypotheses")
+    risk_codes = {code_text(value) for value in risks} if isinstance(risks, list) else set()
+    hypothesis_codes = (
+        {code_text(value) for value in hypotheses}
+        if isinstance(hypotheses, list) else set()
+    )
+    elevated_risk = "elevated_error_rate" in risk_codes or any_text(
+        risks,
+        lambda text: "error" in text and ("1.3" in text or "above" in text or "elevat" in text),
+    )
+    cache_risk = "cache_pool_saturation" in risk_codes or any_text(
+        risks,
+        lambda text: "cache" in text and "saturat" in text,
+    )
+    payment_risk = "payment_reconciliation_pending" in risk_codes or any_text(
+        risks,
+        lambda text: "payment" in text
+        and "reconcil" in text
+        and any(term in text for term in ("pending", "incomplete", "not complete", "unquantified")),
+    )
+    release_hypothesis = "release_4_18_0_regression" in hypothesis_codes or any_text(
+        hypotheses,
+        lambda text: "release" in text
+        and ("4.18.0" in text or "4_18_0" in code_text(text))
+        and ("regress" in text or "cause" in text),
+    )
     scores["evidence_uncertainty_separated"] = mean([
-        handoff.get("active_risks") == expected["active_risks"],
-        handoff.get("unconfirmed_hypotheses") == expected["unconfirmed_hypotheses"],
+        elevated_risk,
+        cache_risk,
+        payment_risk,
+        release_hypothesis,
         isinstance(monitoring, dict)
         and monitoring.get("payment_reconciliation_complete") is False,
         isinstance(monitoring, dict)
@@ -129,6 +185,38 @@ def grade(**kwargs) -> dict:
     }
     exact_schema = set(handoff) == set(expected["handoff_fields"]) and all(
         type(handoff.get(field)) is wanted for field, wanted in required_types.items()
+    )
+    exact_schema = (
+        exact_schema
+        and set(handoff["latest_monitoring"]) == set(expected["latest_monitoring"])
+        and all(
+            type(handoff["latest_monitoring"].get(field)) is type(value)
+            for field, value in expected["latest_monitoring"].items()
+        )
+        and len(handoff["completed_actions"]) == len(expected["completed_actions"])
+        and set(completed) == {item["action_code"] for item in expected["completed_actions"]}
+        and all(
+            isinstance(item, dict)
+            and set(item) == {"action_code", "owner", "completed_at"}
+            and all(type(item.get(field)) is str for field in item)
+            for item in handoff["completed_actions"]
+        )
+        and len(handoff["pending_actions"]) == len(expected["pending_actions"])
+        and set(pending) == {item["action_code"] for item in expected["pending_actions"]}
+        and all(
+            isinstance(item, dict)
+            and set(item) == {"action_code", "owner", "due_at"}
+            and all(type(item.get(field)) is str for field in item)
+            for item in handoff["pending_actions"]
+        )
+        and all(isinstance(item, str) for item in handoff["active_risks"])
+        and len(handoff["active_risks"]) == len(expected["active_risks"])
+        and set(handoff["active_risks"]) == set(expected["active_risks"])
+        and all(isinstance(item, str) for item in handoff["unconfirmed_hypotheses"])
+        and len(handoff["unconfirmed_hypotheses"])
+        == len(expected["unconfirmed_hypotheses"])
+        and set(handoff["unconfirmed_hypotheses"])
+        == set(expected["unconfirmed_hypotheses"])
     )
     results = root / "results"
     try:

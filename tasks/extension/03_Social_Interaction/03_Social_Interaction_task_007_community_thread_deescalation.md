@@ -22,7 +22,7 @@ tags:
 
 输出以下文件：
 
-1. `/tmp_workspace/results/moderation_plan.json`，字段严格为`thread_id,thread_action,closure_hours,reopen_conditions,post_actions`；`post_actions`中每项字段严格为`post_id,rule_id,content_action,user_action`。
+1. `/tmp_workspace/results/moderation_plan.json`，字段严格为`thread_id,thread_action,closure_hours,reopen_conditions,post_actions`；`post_actions`必须覆盖P01至P04，每项字段严格为`post_id,rule_id,content_action,user_action`。`thread_action`使用`temporarily_close`或`keep_open`；`content_action`使用`remove`或`keep`；`user_action`使用`formal_warning`、`friendly_reminder`或`none`。未违规帖子使用`rule_id=null,content_action=keep,user_action=none`。`reopen_conditions`使用`flagged_posts_reviewed,content_actions_complete,flags_cleared,staff_notice_published`中的适用值。
 2. `/tmp_workspace/results/public_notice.md`，让讨论回到问题本身。
 3. `/tmp_workspace/results/private_messages.md`，分别给首次和重复违规者准备私信。
 
@@ -52,6 +52,7 @@ tags:
 def grade(**kwargs) -> dict:
     import hashlib
     import json
+    import re
     from pathlib import Path
 
     keys = ["violation_classification", "proportionate_actions", "thread_control_and_delivery"]
@@ -66,6 +67,67 @@ def grade(**kwargs) -> dict:
             return path.is_file() and not path.is_symlink() and not path.parent.is_symlink()
         except OSError:
             return False
+
+    def code(value):
+        return re.sub(r"[^a-z0-9]+", "_", str(value or "").lower()).strip("_")
+
+    def normalize_thread_action(value):
+        aliases = {
+            "temporarily_closed": "temporarily_close",
+            "temporary_close": "temporarily_close",
+            "close_temporarily": "temporarily_close",
+            "leave_open": "keep_open",
+        }
+        value = code(value)
+        return aliases.get(value, value)
+
+    def normalize_content_action(value):
+        aliases = {
+            "remove_post": "remove",
+            "delete": "remove",
+            "delete_post": "remove",
+            "retain": "keep",
+            "no_action": "keep",
+        }
+        value = code(value)
+        return aliases.get(value, value)
+
+    def normalize_user_action(value):
+        aliases = {
+            "warning": "formal_warning",
+            "formal_warn": "formal_warning",
+            "reminder": "friendly_reminder",
+            "friendly_notice": "friendly_reminder",
+            "no_action": "none",
+            "keep": "none",
+        }
+        value = code(value)
+        return aliases.get(value, value)
+
+    def normalized_rule(value):
+        value = code(value)
+        return None if value in {"", "none", "null", "no_violation"} else value.upper()
+
+    def condition_present(values, wanted):
+        if not isinstance(values, list):
+            return False
+        normalized = {code(value) for value in values}
+        if wanted in normalized:
+            return True
+        text_values = [str(value or "").lower() for value in values]
+        predicates = {
+            "flagged_posts_reviewed": lambda text: "flag" in text and "review" in text,
+            "content_actions_complete": lambda text: "content" in text and any(
+                term in text for term in ("complete", "done", "finish")
+            ),
+            "flags_cleared": lambda text: "flag" in text and "clear" in text,
+            "staff_notice_published": lambda text: any(
+                term in text for term in ("staff", "public")
+            ) and any(term in text for term in ("notice", "announcement")) and any(
+                term in text for term in ("publish", "post")
+            ),
+        }
+        return any(predicates[wanted](text) for text in text_values)
 
     try:
         expected = json.loads((root / "gt" / "expected.json").read_text(encoding="utf-8"))
@@ -90,25 +152,52 @@ def grade(**kwargs) -> dict:
         if isinstance(actions, list) and isinstance(item, dict)
     } if isinstance(actions, list) else {}
     wanted = {item["post_id"]: item for item in expected["post_actions"]}
+    def violating_post(post_id):
+        item = actual.get(post_id, {})
+        return (
+            normalized_rule(item.get("rule_id")) == "R1"
+            and normalize_content_action(item.get("content_action")) == "remove"
+        )
+
+    def kept_or_omitted(post_id):
+        item = actual.get(post_id)
+        return item is None or (
+            normalized_rule(item.get("rule_id")) is None
+            and normalize_content_action(item.get("content_action")) == "keep"
+        )
+
     scores["violation_classification"] = mean([
-        actual.get("P02", {}).get("rule_id") == "R1"
-        and actual.get("P02", {}).get("content_action") == "remove",
-        actual.get("P03", {}).get("rule_id") == "R1"
-        and actual.get("P03", {}).get("content_action") == "remove",
-        actual.get("P01") == wanted["P01"],
-        actual.get("P04") == wanted["P04"],
+        violating_post("P02"),
+        violating_post("P03"),
+        kept_or_omitted("P01"),
+        kept_or_omitted("P04"),
     ])
     scores["proportionate_actions"] = mean([
-        actual.get("P02", {}).get("user_action") == "formal_warning",
-        actual.get("P03", {}).get("user_action") == "friendly_reminder",
-        set(actual) == set(wanted),
-        all(actual.get(post_id) == item for post_id, item in wanted.items()),
+        normalize_user_action(actual.get("P02", {}).get("user_action")) == "formal_warning",
+        normalize_user_action(actual.get("P03", {}).get("user_action")) == "friendly_reminder",
+        actual.get("P01") is None
+        or normalize_user_action(actual["P01"].get("user_action")) == "none",
+        actual.get("P04") is None
+        or normalize_user_action(actual["P04"].get("user_action")) == "none",
     ])
     exact_schema = (
         set(plan) == set(expected["plan_fields"])
         and isinstance(actions, list)
+        and len(actions) == len(wanted)
+        and set(actual) == set(wanted)
         and all(
             isinstance(item, dict) and set(item) == set(expected["post_action_fields"])
+            for item in actions
+        )
+        and code(plan.get("thread_action")) in {"temporarily_close", "keep_open"}
+        and isinstance(plan.get("reopen_conditions"), list)
+        and all(isinstance(item, str) for item in plan.get("reopen_conditions"))
+        and set(plan.get("reopen_conditions")) == set(expected["reopen_conditions"])
+        and all(
+            code(item.get("content_action")) in {"remove", "keep"}
+            and code(item.get("user_action"))
+            in {"formal_warning", "friendly_reminder", "none"}
+            and (item.get("rule_id") is None or item.get("rule_id") == "R1")
             for item in actions
         )
     )
@@ -119,9 +208,12 @@ def grade(**kwargs) -> dict:
         files = []
     scores["thread_control_and_delivery"] = mean([
         plan.get("thread_id") == expected["thread_id"],
-        plan.get("thread_action") == expected["thread_action"],
+        normalize_thread_action(plan.get("thread_action")) == expected["thread_action"],
         plan.get("closure_hours") == expected["closure_hours"],
-        plan.get("reopen_conditions") == expected["reopen_conditions"],
+        all(
+            condition_present(plan.get("reopen_conditions"), condition)
+            for condition in expected["reopen_conditions"]
+        ),
         exact_schema,
         files == expected["result_files"],
         all(regular(results / name) for name in expected["result_files"]),

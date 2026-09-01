@@ -46,7 +46,6 @@ The delivered HTML should be a self-contained, offline page containing all six e
 ```python
 def grade(**kwargs) -> dict:
     import hashlib
-    import html
     import json
     import re
     from pathlib import Path
@@ -66,6 +65,312 @@ def grade(**kwargs) -> dict:
 
     def regular(path):
         return path.is_file() and not path.is_symlink() and not path.parent.is_symlink()
+
+    def browser_probe(result_path, expected):
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError as exc:
+            raise RuntimeError("EVALUATOR_PLAYWRIGHT_UNAVAILABLE") from exc
+
+        network_urls = []
+        page_errors = []
+        try:
+            with sync_playwright() as playwright:
+                browser = playwright.chromium.launch(headless=True)
+                try:
+                    context = browser.new_context(
+                        viewport={
+                            "width": expected["mobile_width_px"],
+                            "height": 900,
+                        },
+                        reduced_motion="reduce",
+                    )
+                    page = context.new_page()
+                    page.on(
+                        "request",
+                        lambda request: network_urls.append(request.url)
+                        if re.match(r"^(?:https?|wss?):", request.url, re.I)
+                        else None,
+                    )
+                    page.on("pageerror", lambda error: page_errors.append(str(error)))
+                    page.on(
+                        "console",
+                        lambda message: page_errors.append(message.text)
+                        if message.type == "error" else None,
+                    )
+                    page.goto(result_path.resolve().as_uri(), wait_until="load", timeout=10_000)
+                    page.wait_for_timeout(100)
+
+                    setup = page.evaluate(
+                        r"""
+                        events => {
+                          const visible = element => {
+                            if (!element || element.hidden || element.getAttribute('aria-hidden') === 'true') return false;
+                            const style = getComputedStyle(element);
+                            const rect = element.getBoundingClientRect();
+                            return style.display !== 'none' && style.visibility !== 'hidden'
+                              && rect.width > 0 && rect.height > 0;
+                          };
+                          const focusable = element => {
+                            if (!visible(element) || element.matches(':disabled,[disabled]')) return false;
+                            return element.tabIndex >= 0;
+                          };
+                          const candidates = Array.from(document.querySelectorAll(
+                            'button, summary, [role="button"], [aria-expanded], [aria-controls]'
+                          )).filter(focusable);
+                          const used = new Set();
+                          const controls = [];
+
+                          for (const event of events) {
+                            let best = null;
+                            let bestSize = Infinity;
+                            for (const candidate of candidates) {
+                              if (used.has(candidate)) continue;
+                              let node = candidate;
+                              while (node && node !== document.body && node !== document.documentElement) {
+                                const text = node.innerText || node.textContent || '';
+                                if (text.includes(event.id) && text.includes(event.date)
+                                    && text.includes(event.title)) {
+                                  if (text.length < bestSize) {
+                                    best = candidate;
+                                    bestSize = text.length;
+                                  }
+                                  break;
+                                }
+                                node = node.parentElement;
+                              }
+                            }
+                            if (!best) {
+                              best = candidates.find(candidate => {
+                                if (used.has(candidate)) return false;
+                                const text = `${candidate.innerText || candidate.textContent || ''} ${candidate.getAttribute('aria-label') || ''}`;
+                                return text.includes(event.id) || text.includes(event.title);
+                              }) || null;
+                            }
+                            if (best) used.add(best);
+                            controls.push(best);
+                          }
+
+                          const targetFor = control => {
+                            if (!control) return {kind: 'missing', target: null};
+                            if (control.tagName.toLowerCase() === 'summary') {
+                              return {kind: 'details', target: control.closest('details')};
+                            }
+                            const ids = (control.getAttribute('aria-controls') || '').trim().split(/\s+/).filter(Boolean);
+                            return {kind: 'aria', target: ids.length === 1 ? document.getElementById(ids[0]) : null};
+                          };
+                          const visual = element => {
+                            const style = getComputedStyle(element);
+                            return {
+                              outlineStyle: style.outlineStyle,
+                              outlineWidth: style.outlineWidth,
+                              boxShadow: style.boxShadow,
+                              borderTopWidth: style.borderTopWidth,
+                              borderRightWidth: style.borderRightWidth,
+                              borderBottomWidth: style.borderBottomWidth,
+                              borderLeftWidth: style.borderLeftWidth,
+                            };
+                          };
+
+                          window.__wcbBaseFocus = {};
+                          window.__wcbEventCount = controls.length;
+                          const semantics = [];
+                          controls.forEach((control, index) => {
+                            if (!control) {
+                              semantics.push(false);
+                              return;
+                            }
+                            control.setAttribute('data-wcb-probe-index', String(index));
+                            control.blur();
+                            window.__wcbBaseFocus[String(index)] = visual(control);
+                            const association = targetFor(control);
+                            if (association.kind === 'details') {
+                              semantics.push(Boolean(association.target));
+                            } else {
+                              semantics.push(
+                                Boolean(association.target)
+                                && ['true', 'false'].includes(control.getAttribute('aria-expanded'))
+                              );
+                            }
+                          });
+
+                          const contentRoot = document.body.cloneNode(true);
+                          contentRoot.querySelectorAll('script, style, noscript, template')
+                            .forEach(element => element.remove());
+                          const bodyText = contentRoot.textContent || '';
+                          return {
+                            mapped: controls.map(Boolean),
+                            semantics,
+                            eventFlags: events.map(event =>
+                              [event.id, event.date, event.title, event.description]
+                                .every(value => bodyText.includes(value))
+                            ),
+                            positions: events.map(event => bodyText.indexOf(event.id)),
+                            eventCounts: events.map(event => bodyText.split(event.id).length - 1),
+                            semanticOutline: Boolean(document.querySelector('main'))
+                              && document.querySelectorAll('h1').length === 1,
+                          };
+                        }
+                        """,
+                        expected["events"],
+                    )
+
+                    def states():
+                        return page.evaluate(
+                            r"""
+                            () => Array.from({length: window.__wcbEventCount || 0}, (_, index) => {
+                              const control = document.querySelector(`[data-wcb-probe-index="${index}"]`);
+                              if (!control) return {expanded: null, visible: null};
+                              if (control.tagName.toLowerCase() === 'summary') {
+                                const details = control.closest('details');
+                                return {
+                                  expanded: details ? details.open : null,
+                                  visible: details ? details.open : null,
+                                };
+                              }
+                              const ids = (control.getAttribute('aria-controls') || '').trim().split(/\s+/).filter(Boolean);
+                              const target = ids.length === 1 ? document.getElementById(ids[0]) : null;
+                              const style = target ? getComputedStyle(target) : null;
+                              const rect = target ? target.getBoundingClientRect() : null;
+                              return {
+                                expanded: control.getAttribute('aria-expanded') === 'true',
+                                visible: Boolean(target && !target.hidden
+                                  && target.getAttribute('aria-hidden') !== 'true'
+                                  && style.display !== 'none' && style.visibility !== 'hidden'
+                                  && rect.width > 0 && rect.height > 0),
+                              };
+                            })
+                            """
+                        )
+
+                    initial_states = states()
+                    initial_collapsed = all(
+                        state["expanded"] is False and state["visible"] is False
+                        for state in initial_states
+                    )
+
+                    page.evaluate(
+                        """
+                        () => {
+                          if (document.activeElement && document.activeElement.blur) {
+                            document.activeElement.blur();
+                          }
+                        }
+                        """
+                    )
+                    tab_sequence = []
+                    focus_visible = [False] * len(expected["events"])
+                    for _ in range(40):
+                        page.keyboard.press("Tab")
+                        focused = page.evaluate(
+                            """
+                            () => {
+                              const element = document.activeElement;
+                              const rawIndex = element && element.getAttribute('data-wcb-probe-index');
+                              if (rawIndex === null || rawIndex === undefined) return null;
+                              const base = window.__wcbBaseFocus[rawIndex] || {};
+                              const style = getComputedStyle(element);
+                              const px = value => Number.parseFloat(value || '0') || 0;
+                              const outline = style.outlineStyle !== 'none' && px(style.outlineWidth) > 0;
+                              const shadow = style.boxShadow !== 'none' && style.boxShadow !== base.boxShadow;
+                              const border = ['Top', 'Right', 'Bottom', 'Left'].some(side =>
+                                style[`border${side}Width`] !== base[`border${side}Width`]
+                              );
+                              return {index: Number(rawIndex), visible: outline || shadow || border};
+                            }
+                            """
+                        )
+                        if isinstance(focused, dict):
+                            index = focused["index"]
+                            if index not in tab_sequence:
+                                tab_sequence.append(index)
+                            focus_visible[index] = focus_visible[index] or bool(focused["visible"])
+                        if len(tab_sequence) == len(expected["events"]):
+                            break
+
+                    def key_results(key):
+                        results = []
+                        for index in range(len(expected["events"])):
+                            locator = page.locator(f'[data-wcb-probe-index="{index}"]')
+                            if locator.count() != 1:
+                                results.append(False)
+                                continue
+                            before = states()
+                            locator.focus()
+                            locator.press(key)
+                            page.wait_for_timeout(20)
+                            opened = states()
+                            other_unchanged = all(
+                                opened[other] == before[other]
+                                for other in range(len(before))
+                                if other != index
+                            )
+                            opened_target = (
+                                opened[index]["expanded"] is True
+                                and opened[index]["visible"] is True
+                            )
+                            locator.press(key)
+                            page.wait_for_timeout(20)
+                            closed = states()
+                            returned = closed == before
+                            results.append(opened_target and other_unchanged and returned)
+                        return results
+
+                    enter_results = key_results("Enter")
+                    space_results = key_results("Space")
+                    motion_ok = page.evaluate(
+                        """
+                        () => {
+                          const milliseconds = value => value.split(',').map(part => {
+                            const item = part.trim();
+                            if (item.endsWith('ms')) return Number.parseFloat(item) || 0;
+                            if (item.endsWith('s')) return (Number.parseFloat(item) || 0) * 1000;
+                            return 0;
+                          });
+                          let maximum = 0;
+                          for (const element of document.querySelectorAll('body, body *')) {
+                            for (const pseudo of [null, '::before', '::after']) {
+                              let styles;
+                              try {
+                                styles = getComputedStyle(element, pseudo);
+                              } catch (_) {
+                                continue;
+                              }
+                              maximum = Math.max(
+                                maximum,
+                                ...milliseconds(styles.transitionDuration),
+                                ...milliseconds(styles.animationDuration),
+                              );
+                            }
+                          }
+                          return maximum <= 100;
+                        }
+                        """
+                    )
+                    mobile_fits = page.evaluate(
+                        """
+                        () => document.documentElement.scrollWidth <= window.innerWidth + 1
+                          && document.body.scrollWidth <= window.innerWidth + 1
+                        """
+                    )
+                    context.close()
+                finally:
+                    browser.close()
+        except Exception as exc:
+            raise RuntimeError(f"EVALUATOR_BROWSER_PROBE_FAILED: {exc}") from exc
+
+        return {
+            **setup,
+            "networkUrls": network_urls,
+            "pageErrors": page_errors,
+            "initialCollapsed": initial_collapsed,
+            "tabOrder": tab_sequence == list(range(len(expected["events"]))),
+            "focusVisible": focus_visible,
+            "enterResults": enter_results,
+            "spaceResults": space_results,
+            "reducedMotion": bool(motion_ok),
+            "mobileFits": bool(mobile_fits),
+        }
 
     try:
         expected = json.loads((root / "gt" / "expected.json").read_text(encoding="utf-8"))
@@ -103,69 +408,50 @@ def grade(**kwargs) -> dict:
         lower,
     )
     external_css = re.search(r"@import\b|url\s*\(\s*['\"]?(?!#)", lower)
+    probe = kwargs.get("_browser_probe")
+    observation = (
+        probe(result_path, expected)
+        if callable(probe)
+        else browser_probe(result_path, expected)
+    )
     scores["single_file_offline"] = round(mean([
         result_files == expected["result_files"],
         regular(result_path) and result_path.stat().st_size <= 500_000,
         external_attr is None and external_css is None,
-        network_api is None and "<iframe" not in lower and "<object" not in lower,
+        network_api is None and "<iframe" not in lower and "<object" not in lower
+        and not observation.get("networkUrls"),
     ]), 6)
 
-    visible = html.unescape(re.sub(r"<[^>]+>", " ", raw))
-    positions = []
-    event_flags = []
-    for event in expected["events"]:
-        values = [event["id"], event["date"], event["title"], event["description"]]
-        event_flags.append(all(value in visible for value in values))
-        positions.append(visible.find(event["id"]))
     scores["event_fidelity_order"] = round(mean([
-        all(event_flags),
-        all(visible.count(event["id"]) >= 1 for event in expected["events"]),
-        all(position >= 0 for position in positions) and positions == sorted(positions),
+        all(observation.get("eventFlags", []))
+        and len(observation.get("eventFlags", [])) == len(expected["events"]),
+        len(observation.get("eventCounts", [])) == len(expected["events"])
+        and all(count >= 1 for count in observation.get("eventCounts", [])),
+        all(position >= 0 for position in observation.get("positions", []))
+        and observation.get("positions") == sorted(observation.get("positions", []))
+        and len(observation.get("positions", [])) == len(expected["events"]),
         all(expected["events"][index]["date"] <= expected["events"][index + 1]["date"] for index in range(len(expected["events"]) - 1)),
     ]), 6)
 
-    toggle_flags = []
-    region_flags = []
-    for event in expected["events"]:
-        event_id = re.escape(event["id"])
-        toggle_flags.append(bool(re.search(
-            rf"<button\b(?=[^>]*\bdata-event-id=['\"]{event_id}['\"])(?=[^>]*\baria-expanded=['\"]false['\"])(?=[^>]*\baria-controls=['\"]details-{event_id}['\"])[^>]*>",
-            raw,
-            flags=re.I,
-        )))
-        region_flags.append(bool(re.search(
-            rf"<[^>]+\bid=['\"]details-{event_id}['\"][^>]*\bhidden\b[^>]*>",
-            raw,
-            flags=re.I,
-        )))
-    key_handler = (
-        "addeventlistener" in lower
-        and "keydown" in lower
-        and re.search(r"(?:event|e)\.key\s*={2,3}\s*['\"]enter['\"]", lower)
-        and re.search(r"(?:event|e)\.key\s*={2,3}\s*['\"](?: |space|spacebar)['\"]", lower)
-        and "preventdefault" in lower
-    )
-    toggle_code = (
-        "aria-expanded" in lower
-        and re.search(r"\.hidden\s*=|toggleattribute\s*\(\s*['\"]hidden", lower)
-    )
     scores["keyboard_behavior"] = round(mean([
-        all(toggle_flags),
-        all(region_flags),
-        bool(key_handler),
-        bool(toggle_code),
+        all(observation.get("mapped", []))
+        and len(observation.get("mapped", [])) == len(expected["events"]),
+        observation.get("tabOrder") is True,
+        all(observation.get("enterResults", []))
+        and len(observation.get("enterResults", [])) == len(expected["events"]),
+        all(observation.get("spaceResults", []))
+        and len(observation.get("spaceResults", [])) == len(expected["events"]),
     ]), 6)
 
-    semantic_outline = bool(re.search(r"<main\b", lower)) and len(re.findall(r"<h1\b", lower)) == 1
-    list_semantics = bool(re.search(r"<(?:ol|ul)\b", lower)) and len(re.findall(r"<li\b", lower)) >= len(expected["events"])
-    focus_visible = bool(re.search(r":focus-visible\b|:focus\b", lower)) and re.search(r"outline\s*:", lower)
-    reduced_motion = "prefers-reduced-motion" in lower and "reduce" in lower
     scores["semantic_accessibility"] = round(mean([
-        semantic_outline,
-        list_semantics,
-        all(toggle_flags) and all(region_flags),
-        bool(focus_visible),
-        reduced_motion,
+        observation.get("semanticOutline") is True,
+        all(observation.get("mapped", []))
+        and len(observation.get("mapped", [])) == len(expected["events"]),
+        all(observation.get("semantics", []))
+        and len(observation.get("semantics", [])) == len(expected["events"]),
+        all(observation.get("focusVisible", []))
+        and len(observation.get("focusVisible", [])) == len(expected["events"]),
+        observation.get("reducedMotion") is True,
     ]), 6)
 
     document_shape = (
@@ -173,14 +459,7 @@ def grade(**kwargs) -> dict:
         and "<html" in lower and "</html>" in lower
         and "<head" in lower and "</head>" in lower
         and "<body" in lower and "</body>" in lower
-        and "<script" in lower and "</script>" in lower
         and "<style" in lower and "</style>" in lower
-    )
-    mobile_rule = bool(re.search(r"@media[^\{]*max-width\s*:\s*420px", lower))
-    overflow_protection = (
-        "box-sizing" in lower
-        and ("overflow-wrap" in lower or "word-break" in lower)
-        and re.search(r"max-width\s*:\s*100%", lower)
     )
     no_dangerous_markup = not re.search(
         r"<base\b|<meta[^>]+http-equiv\s*=\s*['\"]?refresh|document\.write\s*\(",
@@ -189,7 +468,9 @@ def grade(**kwargs) -> dict:
     scores["runtime_integrity"] = round(mean([
         inputs_ok and result_files == expected["result_files"],
         document_shape,
-        mobile_rule and bool(overflow_protection),
+        observation.get("initialCollapsed") is True,
+        observation.get("mobileFits") is True,
+        not observation.get("pageErrors"),
         no_dangerous_markup,
     ]), 6)
 
