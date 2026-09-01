@@ -22,7 +22,7 @@ tags:
 
 https://www.sec.gov/Archives/edgar/data/320193/000032019323000106/aapl-20230930.htm
 
-将结果保存到`/tmp_workspace/results/apple_sales_check.json`，顶层字段严格为`fiscal_year,unit,greater_china_net_sales,total_net_sales,share_percent,formula,accession,source_table`。金额沿用年报的`USD millions`，比例按`greater_china_net_sales / total_net_sales * 100`计算并四舍五入到1位小数；`formula`保留实际数字和运算关系。
+将结果保存到`/tmp_workspace/results/apple_sales_check.json`，顶层字段严格为`fiscal_year,unit,greater_china_net_sales,total_net_sales,share_percent,formula,accession,source_table`。`fiscal_year`使用JSON整数`2023`，两个销售额和`share_percent`使用JSON数字；金额沿用年报的`USD millions`，比例按`greater_china_net_sales / total_net_sales * 100`计算并四舍五入到1位小数；`formula`保留实际数字和运算关系。
 
 再写一段`/tmp_workspace/results/brief_correction.md`，说明原句是否成立，并区分地理区域净销售额与产品类别。不要保存网页副本，不要使用其他来源，不要给出投资建议或实际修改简报。
 
@@ -66,14 +66,23 @@ def grade(**kwargs) -> dict:
     def number(value):
         return type(value) in (int, float) and math.isfinite(float(value))
 
+    def year(value):
+        if type(value) is int:
+            return value
+        if type(value) is str and re.fullmatch(r"\d{4}", value.strip()):
+            return int(value.strip())
+        return None
+
+    def same_number(value, wanted, tolerance=0.0):
+        return number(value) and abs(float(value) - float(wanted)) <= tolerance
+
     try:
         expected = json.loads((root / "gt" / "expected.json").read_text(encoding="utf-8"))
         json_path = root / "results" / "apple_sales_check.json"
         note_path = root / "results" / "brief_correction.md"
-        if not regular(json_path) or not regular(note_path):
-            raise ValueError("regular result files required")
+        if not regular(json_path):
+            raise ValueError("regular JSON result required")
         answer = json.loads(json_path.read_text(encoding="utf-8"))
-        note_path.read_text(encoding="utf-8")
         if not isinstance(answer, dict):
             raise ValueError("JSON object required")
     except (OSError, UnicodeError, ValueError, TypeError, json.JSONDecodeError):
@@ -89,26 +98,26 @@ def grade(**kwargs) -> dict:
         and all(type(answer.get(k)) is str for k in {"unit", "formula", "accession", "source_table"})
         and all(number(answer.get(k)) for k in {"greater_china_net_sales", "total_net_sales", "share_percent"})
     )
-    if not exact_schema:
-        return {**scores, "overall_score": 0.0}
 
-    table = answer["source_table"].lower()
+    table = str(answer.get("source_table", "")).lower()
     scores["filing_identity"] = mean([
-        answer["fiscal_year"] == expected["fiscal_year"],
-        answer["accession"] == expected["accession"],
+        year(answer.get("fiscal_year")) == expected["fiscal_year"],
+        answer.get("accession") == expected["accession"],
         "net sales" in table and "reportable segment" in table,
     ])
     scores["sales_values"] = mean([
-        float(answer["greater_china_net_sales"]) == expected["greater_china_net_sales"],
-        float(answer["total_net_sales"]) == expected["total_net_sales"],
-        answer["unit"] == expected["unit"],
+        same_number(answer.get("greater_china_net_sales"), expected["greater_china_net_sales"]),
+        same_number(answer.get("total_net_sales"), expected["total_net_sales"]),
+        answer.get("unit") == expected["unit"],
     ])
-    formula = re.sub(r"[\s,]", "", answer["formula"]).replace("÷", "/").replace("×", "*")
+    formula = re.sub(r"[\s,]", "", str(answer.get("formula", ""))).replace("÷", "/").replace("×", "*")
+    share = answer.get("share_percent")
     scores["share_calculation"] = mean([
         "72559" in formula and "383285" in formula and "/" in formula,
-        abs(float(answer["share_percent"]) - expected["share_percent"]) <= 0.05,
-        round(expected["greater_china_net_sales"] / expected["total_net_sales"] * 100, 1)
-        == round(float(answer["share_percent"]), 1),
+        same_number(share, expected["share_percent"], 0.05),
+        number(share)
+        and round(expected["greater_china_net_sales"] / expected["total_net_sales"] * 100, 1)
+        == round(float(share), 1),
     ])
 
     try:

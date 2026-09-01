@@ -22,7 +22,7 @@ tags:
 
 https://static.sse.com.cn/disclosure/listedinfo/announcement/c/new/2024-04-03/600519_20240403_W0YD.pdf
 
-将结果保存到`/tmp_workspace/results/moutai_metrics.json`，顶层字段严格为`security_code,report_year,disclosure_date,unit,total_operating_revenue,net_profit_attributable_to_listed_company_shareholders,research_and_development_expense,ratio_formula,ratio_percent,source_url`。金额单位使用人民币元并写为JSON数字；`ratio_percent`按`research_and_development_expense / total_operating_revenue * 100`计算并保留2位小数。
+将结果保存到`/tmp_workspace/results/moutai_metrics.json`，顶层字段严格为`security_code,report_year,disclosure_date,unit,total_operating_revenue,net_profit_attributable_to_listed_company_shareholders,research_and_development_expense,ratio_formula,ratio_percent,source_url`。`security_code`使用JSON字符串`"600519"`，`report_year`使用JSON整数`2023`，`unit`写为`"人民币元"`；三个金额和`ratio_percent`使用JSON数字。`ratio_percent`按`research_and_development_expense / total_operating_revenue * 100`计算并保留2位小数；`ratio_formula`可使用这两个字段名或实际金额表示同一运算关系。
 
 再写`/tmp_workspace/results/metric_note.md`，说明这里使用的是合并利润表“研发费用”，不是“研发投入合计”，并标注对应表名或年报页码。不要保存PDF副本，不要使用其他来源，不要给投资建议或创建其他结果文件。
 
@@ -66,14 +66,23 @@ def grade(**kwargs) -> dict:
     def number(value):
         return type(value) in (int, float) and math.isfinite(float(value))
 
+    def integer_like(value):
+        if type(value) is int:
+            return value
+        if type(value) is str and re.fullmatch(r"\d+", value.strip()):
+            return int(value.strip())
+        return None
+
+    def same_number(value, wanted, tolerance=0.0):
+        return number(value) and abs(float(value) - float(wanted)) <= tolerance
+
     try:
         expected = json.loads((root / "gt" / "expected.json").read_text(encoding="utf-8"))
         json_path = root / "results" / "moutai_metrics.json"
         note_path = root / "results" / "metric_note.md"
-        if not regular(json_path) or not regular(note_path):
-            raise ValueError("regular result files required")
+        if not regular(json_path):
+            raise ValueError("regular JSON result required")
         answer = json.loads(json_path.read_text(encoding="utf-8"))
-        note_path.read_text(encoding="utf-8")
         if not isinstance(answer, dict):
             raise ValueError("JSON object required")
     except (OSError, UnicodeError, ValueError, TypeError, json.JSONDecodeError):
@@ -94,26 +103,37 @@ def grade(**kwargs) -> dict:
             "research_and_development_expense", "ratio_percent",
         })
     )
-    if not exact_schema:
-        return {**scores, "overall_score": 0.0}
 
     scores["report_identity"] = mean([
-        answer["security_code"] == expected["security_code"],
-        answer["report_year"] == expected["report_year"],
-        answer["disclosure_date"] == expected["disclosure_date"],
-        answer["source_url"] == expected["source_url"],
+        str(answer.get("security_code", "")).strip() == expected["security_code"],
+        integer_like(answer.get("report_year")) == expected["report_year"],
+        answer.get("disclosure_date") == expected["disclosure_date"],
+        answer.get("source_url") == expected["source_url"],
     ])
     scores["reported_metrics"] = mean([
-        abs(float(answer["total_operating_revenue"]) - expected["total_operating_revenue"]) < 0.005,
-        abs(float(answer["net_profit_attributable_to_listed_company_shareholders"]) - expected["net_profit_attributable_to_listed_company_shareholders"]) < 0.005,
-        abs(float(answer["research_and_development_expense"]) - expected["research_and_development_expense"]) < 0.005,
+        same_number(answer.get("total_operating_revenue"), expected["total_operating_revenue"], 0.005),
+        same_number(
+            answer.get("net_profit_attributable_to_listed_company_shareholders"),
+            expected["net_profit_attributable_to_listed_company_shareholders"],
+            0.005,
+        ),
+        same_number(answer.get("research_and_development_expense"), expected["research_and_development_expense"], 0.005),
     ])
-    formula = re.sub(r"[\s,]", "", answer["ratio_formula"]).replace("÷", "/").replace("×", "*")
+    formula = re.sub(r"[\s,]", "", str(answer.get("ratio_formula", ""))).replace("÷", "/").replace("×", "*").lower()
+    formula_has_operands = (
+        ("157371873.01" in formula and "150560330316.45" in formula)
+        or (
+            "research_and_development_expense" in formula
+            and "total_operating_revenue" in formula
+        )
+    )
+    ratio = answer.get("ratio_percent")
     scores["ratio_calculation"] = mean([
-        "157371873.01" in formula and "150560330316.45" in formula and "/" in formula,
-        abs(float(answer["ratio_percent"]) - expected["ratio_percent"]) <= 0.005,
-        round(expected["research_and_development_expense"] / expected["total_operating_revenue"] * 100, 2)
-        == round(float(answer["ratio_percent"]), 2),
+        formula_has_operands and "/" in formula,
+        same_number(ratio, expected["ratio_percent"], 0.005),
+        number(ratio)
+        and round(expected["research_and_development_expense"] / expected["total_operating_revenue"] * 100, 2)
+        == round(float(ratio), 2),
     ])
 
     try:
@@ -129,7 +149,7 @@ def grade(**kwargs) -> dict:
     ]
     scores["structured_delivery"] = mean([
         exact_schema,
-        answer["unit"] == expected["unit"],
+        answer.get("unit") == expected["unit"],
         files == expected["result_files"],
         regular(json_path) and regular(note_path),
         not forbidden,
