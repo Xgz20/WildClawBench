@@ -65,7 +65,11 @@ def _extract_website_metrics(workbook) -> dict[str, dict[str, dict]]:
             if row.get("模型@Harness") not in (None, "")
             and row.get("指标名称") not in (None, "")
         }
-        metric_names = [ws.cell(4, column).value for column in range(2, 16)]
+        metric_names = []
+        column = 2
+        while ws.cell(4, column).value not in (None, ""):
+            metric_names.append(ws.cell(4, column).value)
+            column += 1
         if all(metric_names):
             metrics: dict[str, dict[str, dict]] = {}
             for row_number in range(5, ws.max_row + 1):

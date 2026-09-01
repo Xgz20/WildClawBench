@@ -40,6 +40,10 @@
 | 总请求数 | 各任务最新 run 的 `usage.json.request_count` 之和 | 名称过宽；仅被测模型请求，多轮时不是全轮总数 |
 | 总耗时(s) | 各任务最新 run 的 `usage.json.elapsed_time` 之和 | 不等于完整评测墙钟时间；与详情 Sheet 的耗时来源不同 |
 | 总成本(USD) | 各任务最新 run 的估算推理成本之和；任一任务不可估算则整项为 `-` | 保守但信息损失大；不含裁判、搜索、工具和外部 API 成本 |
+| 平均首 Token 响应时间 | 正常完成且 `usage.json.time_to_first_token_ms` 有效的未被替代 run 算术平均 | 单位为毫秒；缺失、超时和异常退出不按 0 计 |
+| 首 Token 响应时间 P50/P90 | 同一有效样本集合的线性插值第 50/90 百分位 | 是 AstronCode Core 收到首个有效模型事件的时间，不等于客户端首次可见上屏 |
+| 首 Token 指标覆盖率 | `有效首响样本数 / 未被替代 run 总数 × 100%` | 旧镜像缺字段、超时和异常退出会降低覆盖率 |
+| 首 Token 响应有效样本数 | 参与平均值及分位数计算的 run 数 | 与覆盖率一起展示，避免低覆盖率统计被误用 |
 | 工具调用数 | 最新 run 中成功配对到 `tool_result` 的记录数 | 不是所有 `tool_use` 请求数 |
 | 格式准确率 | `(total - format_error) / total` | 公式清楚；不同 Harness 的分类能力不同，不宜跨 Harness 排名 |
 | 执行成功率 | `success / (success + failure)` | 合理；排除 `unclear` 和 `format_error` |

@@ -1145,10 +1145,18 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
     # 仅当存在任一已注册 harness 的有效指标时才追加，避免全 N/A 空列。
     has_tool_metrics = any(u.tool_metrics_total().get("total", 0) for u in units)
     tool_cols = ["工具调用数", "格式准确率", "执行成功率", "不确定占比"] if has_tool_metrics else []
+    first_token_cols = [
+        "平均首 Token 响应时间",
+        "首 Token 响应时间 P50",
+        "首 Token 响应时间 P90",
+        "首 Token 指标覆盖率",
+        "首 Token 响应有效样本数",
+    ]
     header = (["模型", "Harness", "总平均分", "用例数", "正常完成数", "执行错误数", "超时数",
                "评测异常数", "完成率"]
               + multirun_cols
               + ["总tokens", "总请求数", "总耗时(s)", "总成本(USD)"]
+              + first_token_cols
               + tool_cols)
     ws.append(header)
     for u in units:
@@ -1171,11 +1179,21 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
             avg_runs = sum(t.runs for t in valid_tasks) / len(valid_tasks) if valid_tasks else 0
             row += [round(avg_runs, 1)]
         estimated_cost = u.estimated_cost_total()
+        first_token = _first_token_metrics(u.tasks)
         row += [
             int(u.usage_total("total_tokens")),
             int(u.usage_total("request_count")),
             round(u.usage_total("elapsed_time"), 1),
             round(float(estimated_cost), 4) if estimated_cost is not None else "-",
+            first_token.average_ms if first_token.average_ms is not None else "-",
+            first_token.p50_ms if first_token.p50_ms is not None else "-",
+            first_token.p90_ms if first_token.p90_ms is not None else "-",
+            (
+                first_token.coverage_pct
+                if first_token.coverage_pct is not None
+                else "-"
+            ),
+            first_token.valid_samples,
         ]
         if tool_cols:
             tm = u.tool_metrics_total()
@@ -1191,7 +1209,11 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
                 cell.font = Font(bold=True)
             ws.cell(ws.max_row, 1).fill = TARGET_FILL
             ws.cell(ws.max_row, 2).fill = TARGET_FILL
-        pct_cols = [header.index("总平均分") + 1, header.index("完成率") + 1]
+        pct_cols = [
+            header.index("总平均分") + 1,
+            header.index("完成率") + 1,
+            header.index("首 Token 指标覆盖率") + 1,
+        ]
         if tool_cols:
             pct_cols += [header.index(name) + 1 for name in
                          ("格式准确率", "执行成功率", "不确定占比")]
@@ -1201,7 +1223,18 @@ def write_overview_sheet(wb, units: list[UnitResult], suites: list[str],
             print(f"[警告] {u.unit} 重算均分 {u.total_pct / 100:.4f} 与 summary "
                   f"global_avg {g_avg:.4f} 偏差过大", file=sys.stderr)
     style_header_row(ws)
-    set_widths(ws, {1: 22, 2: 34}, default=18)
+    set_widths(
+        ws,
+        {
+            1: 22,
+            2: 34,
+            **{
+                header.index(name) + 1: 24
+                for name in first_token_cols
+            },
+        },
+        default=18,
+    )
     ws.freeze_panes = "C2"
 
 
@@ -1514,6 +1547,16 @@ class WebsiteMetric:
     value_type: str
 
 
+@dataclass(frozen=True)
+class FirstTokenMetrics:
+    average_ms: float | None
+    p50_ms: float | None
+    p90_ms: float | None
+    coverage_pct: float | None
+    valid_samples: int
+    total_samples: int
+
+
 WEBSITE_EVIDENCE_MODES = {
     "source_semantic",
     "browser_runtime+visual_llm",
@@ -1554,6 +1597,52 @@ def _numeric_usage_value(usage: dict, key: str) -> float | None:
     if isinstance(value, (int, float)) and not isinstance(value, bool) and value >= 0:
         return float(value)
     return None
+
+
+def _run_has_explicit_execution_failure(status: dict) -> bool:
+    if not isinstance(status, dict):
+        return False
+    normalized = str(status.get("status") or "").strip().lower()
+    return (
+        bool(status.get("timed_out"))
+        or status.get("task_completed") is False
+        or normalized
+        in {"error", "failed", "timed_out", "timeout", "cancelled", "aborted"}
+        or bool(str(status.get("error") or "").strip())
+    )
+
+
+def _first_token_metrics(tasks: list) -> FirstTokenMetrics:
+    """Aggregate native per-run TTFT without coercing missing values to zero."""
+
+    values: list[float] = []
+    total_samples = 0
+    for task in tasks:
+        for run_dir in getattr(task, "effective_run_dirs", []):
+            total_samples += 1
+            status = _load_json(run_dir / "execution_status.json")
+            if _run_has_explicit_execution_failure(status):
+                continue
+            usage = _load_json(run_dir / "usage.json")
+            value = _numeric_usage_value(usage, "time_to_first_token_ms")
+            if value is not None:
+                values.append(value)
+
+    valid_samples = len(values)
+    average = sum(values) / valid_samples if valid_samples else None
+    p50 = _linear_percentile(values, 0.5)
+    p90 = _linear_percentile(values, 0.9)
+    coverage = (
+        valid_samples / total_samples * 100 if total_samples else None
+    )
+    return FirstTokenMetrics(
+        average_ms=round(average, 1) if average is not None else None,
+        p50_ms=round(p50, 1) if p50 is not None else None,
+        p90_ms=round(p90, 1) if p90 is not None else None,
+        coverage_pct=round(coverage, 1) if coverage is not None else None,
+        valid_samples=valid_samples,
+        total_samples=total_samples,
+    )
 
 
 def _website_unit_metrics(unit, task_meta: dict[str, dict]) -> dict[str, WebsiteMetric]:
@@ -1661,6 +1750,47 @@ def _website_unit_metrics(unit, task_meta: dict[str, dict]) -> dict[str, Website
             f"未被替代 run 耗时的第 {int(percentile * 100)} 百分位",
             "seconds",
         )
+
+    first_token = _first_token_metrics(tasks)
+    first_token_sample = (
+        f"{first_token.valid_samples}/{first_token.total_samples}"
+    )
+    for name, value, method in (
+        (
+            "平均首 Token 响应时间",
+            first_token.average_ms,
+            "正常完成且 usage.json 含 time_to_first_token_ms 的 run 算术平均",
+        ),
+        (
+            "首 Token 响应时间 P50",
+            first_token.p50_ms,
+            "正常完成且含首 Token 指标的 run 第 50 百分位",
+        ),
+        (
+            "首 Token 响应时间 P90",
+            first_token.p90_ms,
+            "正常完成且含首 Token 指标的 run 第 90 百分位",
+        ),
+    ):
+        add(
+            "效率指标", name, value, first_token_sample, method, "milliseconds",
+        )
+    add(
+        "效率指标",
+        "首 Token 指标覆盖率",
+        first_token.coverage_pct,
+        first_token_sample,
+        "首 Token 有效样本数 / 未被替代 run 总数；超时、异常退出和缺失字段不计为有效样本",
+        "percent",
+    )
+    add(
+        "效率指标",
+        "首 Token 响应有效样本数",
+        first_token.valid_samples,
+        first_token_sample,
+        "正常完成且 usage.json 含有效 time_to_first_token_ms 的 run 数",
+        "count",
+    )
 
     available_costs = [item.usd for item in cost_estimates if item.usd is not None]
     average_cost = None
@@ -1829,6 +1959,12 @@ def write_website_metrics_sheet(
         return False
 
     ws = wb.create_sheet("站点评测指标")
+    metrics_by_unit = [
+        (unit, list(_website_unit_metrics(unit, task_meta).values()))
+        for unit in units
+    ]
+    metric_names = [metric.name for metric in metrics_by_unit[0][1]]
+    total_metric_columns = len(metric_names) + 1
     evidence_modes = {
         getattr(task, "metric_dimensions", {}).get("evidence_mode")
         for _, task in website_tasks
@@ -1850,25 +1986,26 @@ def write_website_metrics_sheet(
             "具体以各任务 score.json 的 _dimensions.evidence_mode 为准。跨任务统计先计算任务内维度分，再按任务等权平均。"
         )
     ws.append([scope_note])
-    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=15)
+    ws.merge_cells(
+        start_row=1,
+        start_column=1,
+        end_row=1,
+        end_column=total_metric_columns,
+    )
     ws.cell(1, 1).alignment = WRAP_TOP
     ws.cell(1, 1).fill = SECTION_FILL
     ws.cell(1, 1).font = Font(bold=True, color="1F4E78")
 
     ws.append([])
-    metric_groups = (
-        ("结果指标", 2),
-        ("分层分析", 5),
-        ("效率指标", 7),
+    metric_groups = tuple(
+        (
+            category,
+            sum(1 for metric in metrics_by_unit[0][1] if metric.category == category),
+        )
+        for category in ("结果指标", "分层分析", "效率指标")
     )
-    ws.append(["模型@Harness", "结果指标", None, "分层分析", None, None, None, None,
-               "效率指标"])
+    ws.append(["模型@Harness"])
     ws.append([None])
-    metrics_by_unit = [
-        (unit, list(_website_unit_metrics(unit, task_meta).values()))
-        for unit in units
-    ]
-    metric_names = [metric.name for metric in metrics_by_unit[0][1]]
     for column, name in enumerate(metric_names, start=2):
         ws.cell(4, column).value = name
     ws.merge_cells("A3:A4")
@@ -1883,7 +2020,7 @@ def write_website_metrics_sheet(
         start_column = end_column + 1
     for row in (3, 4):
         style_header_row_at(ws, row)
-        for cell in ws[row][:15]:
+        for cell in ws[row][:total_metric_columns]:
             cell.alignment = Alignment(
                 horizontal="center", vertical="center", wrap_text=True
             )
@@ -1913,6 +2050,10 @@ def write_website_metrics_sheet(
                 ws.cell(row, column).number_format = '#,##0.0'
             elif metric.value_type == "seconds":
                 ws.cell(row, column).number_format = '0.0'
+            elif metric.value_type == "milliseconds":
+                ws.cell(row, column).number_format = '#,##0.0'
+            elif metric.value_type == "count":
+                ws.cell(row, column).number_format = '#,##0'
             glossary.append([
                 unit.unit_display,
                 metric.category,
@@ -1922,6 +2063,8 @@ def write_website_metrics_sheet(
                     "seconds": "秒",
                     "usd": "USD",
                     "tokens": "Token",
+                    "milliseconds": "毫秒",
+                    "count": "个",
                 }[metric.value_type],
                 metric.sample,
                 metric.method,
@@ -2028,6 +2171,11 @@ def write_website_metrics_sheet(
             13: 22,
             14: 22,
             15: 22,
+            16: 24,
+            17: 24,
+            18: 22,
+            19: 22,
+            20: 24,
         },
         default=18,
     )
@@ -2626,6 +2774,7 @@ def build_summary(
         pass_at_k_vals = [t.pass_at_k for t in u.tasks if t.pass_at_k is not None]
         pass_hat_k_vals = [t.pass_hat_k for t in u.tasks if t.pass_hat_k is not None]
         max_runs = max((t.runs for t in u.tasks), default=0)
+        first_token = _first_token_metrics(u.tasks)
         run_summaries.append({
             "run_label": u.unit_display,
             "unit_id": u.unit,
@@ -2647,6 +2796,16 @@ def build_summary(
             ),
             "elapsed_time": round(u.usage_total("elapsed_time"), 1),
             "request_count": int(u.usage_total("request_count")),
+            "average_time_to_first_token_ms": first_token.average_ms,
+            "time_to_first_token_p50_ms": first_token.p50_ms,
+            "time_to_first_token_p90_ms": first_token.p90_ms,
+            "time_to_first_token_coverage": (
+                round(first_token.coverage_pct / 100, 4)
+                if first_token.coverage_pct is not None
+                else None
+            ),
+            "time_to_first_token_valid_samples": first_token.valid_samples,
+            "time_to_first_token_total_samples": first_token.total_samples,
             "finished_count": sum(1 for t in u.tasks if t.outcome == "finished"),
             "error_count": sum(1 for t in u.tasks if t.outcome == "execution_error"),
             "timeout_count": sum(1 for t in u.tasks if t.outcome == "timeout"),

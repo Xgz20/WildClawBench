@@ -145,8 +145,112 @@ class AstronCodeTraceTests(unittest.TestCase):
             return_value=parsed_usage,
         ):
             usage = agent.collect_usage(task_id, output_dir, 2.0)
-        self.assertEqual(usage, {**parsed_usage, "elapsed_time": 2.0})
+        self.assertEqual(
+            usage,
+            {
+                **parsed_usage,
+                "time_to_first_token_ms": None,
+                "elapsed_time": 2.0,
+            },
+        )
         return usage
+
+    def test_extract_usage_reads_ttft_from_task_complete(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            chat_path = Path(temp_dir) / "chat.jsonl"
+            chat_path.write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "type": "event_msg",
+                                "payload": {
+                                    "type": "task_complete",
+                                    "time_to_first_token_ms": 9517,
+                                },
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "type": "event_msg",
+                                "payload": {
+                                    "type": "task_complete",
+                                    "time_to_first_token_ms": None,
+                                },
+                            }
+                        ),
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            usage = self.make_agent()._extract_usage_from_jsonl(chat_path)
+
+            self.assertEqual(usage["time_to_first_token_ms"], 9517)
+
+    def test_extract_usage_keeps_missing_or_invalid_ttft_as_none(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            chat_path = Path(temp_dir) / "chat.jsonl"
+            chat_path.write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "type": "event_msg",
+                                "payload": {
+                                    "type": "task_complete",
+                                    "time_to_first_token_ms": True,
+                                },
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "type": "event_msg",
+                                "payload": {
+                                    "type": "task_complete",
+                                    "time_to_first_token_ms": -1,
+                                },
+                            }
+                        ),
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            usage = self.make_agent()._extract_usage_from_jsonl(chat_path)
+
+            self.assertIsNone(usage["time_to_first_token_ms"])
+
+    def test_collect_usage_clears_ttft_for_timed_out_run(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            (output_dir / "execution_status.json").write_text(
+                json.dumps({"status": "timed_out", "timed_out": True}),
+                encoding="utf-8",
+            )
+            agent = self.make_agent()
+            parsed_usage = {
+                "input_tokens": 5,
+                "output_tokens": 4,
+                "cache_read_tokens": 0,
+                "cache_write_tokens": 0,
+                "total_tokens": 9,
+                "cost_usd": 0.5,
+                "request_count": 1,
+                "time_to_first_token_ms": 1234,
+            }
+            with patch.object(
+                agent, "_collect_rollout_trace_archive"
+            ), patch.object(
+                agent, "_copy_dir_from_container"
+            ), patch.object(
+                agent, "_find_latest_session", return_value=None
+            ), patch.object(
+                agent, "_extract_usage_from_jsonl", return_value=parsed_usage
+            ):
+                usage = agent.collect_usage("ttft-timeout", output_dir, 30.0)
+
+            self.assertIsNone(usage["time_to_first_token_ms"])
 
     def run_export_with_real_shell(
         self,
@@ -615,7 +719,11 @@ class AstronCodeTraceTests(unittest.TestCase):
             export_mock.assert_called_once_with("trace-usage", output_dir)
             self.assertEqual(
                 usage,
-                {**parsed_usage, "elapsed_time": 1.5},
+                {
+                    **parsed_usage,
+                    "time_to_first_token_ms": None,
+                    "elapsed_time": 1.5,
+                },
             )
 
     def test_disabled_trace_records_status_without_calling_docker(self) -> None:
@@ -900,7 +1008,14 @@ class AstronCodeTraceTests(unittest.TestCase):
             ):
                 usage = agent.collect_usage("exception-trace", output_dir, 2.0)
 
-            self.assertEqual(usage, {**parsed_usage, "elapsed_time": 2.0})
+            self.assertEqual(
+                usage,
+                {
+                    **parsed_usage,
+                    "time_to_first_token_ms": None,
+                    "elapsed_time": 2.0,
+                },
+            )
             self.assertEqual(
                 self.read_trace_export_status(output_dir)["status"],
                 "failed",

@@ -48,6 +48,11 @@ OVERVIEW_FIELDS = {
     "总请求数": ("request_count", 0),
     "总耗时(s)": ("elapsed_time", 0.11),
     "总成本(USD)": ("cost_usd", 0.00011),
+    "平均首 Token 响应时间": ("average_time_to_first_token_ms", 0.11),
+    "首 Token 响应时间 P50": ("time_to_first_token_p50_ms", 0.11),
+    "首 Token 响应时间 P90": ("time_to_first_token_p90_ms", 0.11),
+    "首 Token 指标覆盖率": ("time_to_first_token_coverage_pct", 0.11),
+    "首 Token 响应有效样本数": ("time_to_first_token_valid_samples", 0),
     "工具调用数": ("tool_calls", 0),
 }
 REQUIRED_OVERVIEW_FIELDS = tuple(column for column in OVERVIEW_FIELDS if column != "工具调用数")
@@ -252,10 +257,33 @@ def scan_raw_units(
                 all_run_dirs = sorted(path for path in task_dir.iterdir() if path.is_dir())
                 run_dirs = select_effective_run_dirs(all_run_dirs, scan_run_dir)
                 scores = []
+                time_to_first_token_values: list[float] = []
                 for run_dir in run_dirs:
                     value = load_json(run_dir / "score.json").get("overall_score")
                     if isinstance(value, (int, float)) and math.isfinite(float(value)):
                         scores.append(float(value))
+                    run_status = load_json(run_dir / "execution_status.json")
+                    run_usage = load_json(run_dir / "usage.json")
+                    run_ttft = run_usage.get("time_to_first_token_ms")
+                    normalized_status = str(run_status.get("status") or "").lower()
+                    has_explicit_failure = (
+                        bool(run_status.get("timed_out"))
+                        or run_status.get("task_completed") is False
+                        or normalized_status
+                        in {
+                            "error", "failed", "timed_out", "timeout",
+                            "cancelled", "aborted",
+                        }
+                        or bool(str(run_status.get("error") or "").strip())
+                    )
+                    if (
+                        not has_explicit_failure
+                        and isinstance(run_ttft, (int, float))
+                        and not isinstance(run_ttft, bool)
+                        and math.isfinite(float(run_ttft))
+                        and float(run_ttft) >= 0
+                    ):
+                        time_to_first_token_values.append(float(run_ttft))
                 latest = run_dirs[-1] if run_dirs else None
                 status = load_json(latest / "execution_status.json") if latest else {}
                 usage = load_json(latest / "usage.json") if latest else {}
@@ -280,6 +308,8 @@ def scan_raw_units(
                     "usage": usage,
                     "tool_calls": metrics.get("total", 0),
                     "assistant_turns": count_assistant_turns(transcript),
+                    "time_to_first_token_values": time_to_first_token_values,
+                    "time_to_first_token_total_samples": len(run_dirs),
                 }
         unit = f"{model}@{harness}"
         score_pct = fmean([(task["score"] if task["score"] is not None else 0.0)
@@ -293,6 +323,26 @@ def scan_raw_units(
         task_count = len(tasks)
         def usage_total(key: str) -> float:
             return sum((task["usage"].get(key, 0) or 0) for task in tasks.values())
+        ttft_values = [
+            value
+            for task in tasks.values()
+            for value in task["time_to_first_token_values"]
+        ]
+        ttft_total_samples = sum(
+            task["time_to_first_token_total_samples"] for task in tasks.values()
+        )
+        ttft_values.sort()
+
+        def linear_percentile(percentile: float) -> float | None:
+            if not ttft_values:
+                return None
+            position = (len(ttft_values) - 1) * percentile
+            lower = int(position)
+            upper = min(lower + 1, len(ttft_values) - 1)
+            return ttft_values[lower] + (
+                ttft_values[upper] - ttft_values[lower]
+            ) * (position - lower)
+
         units[unit] = {
             "model": model,
             "harness": harness,
@@ -309,6 +359,17 @@ def scan_raw_units(
             "request_count": usage_total("request_count"),
             "elapsed_time": usage_total("elapsed_time"),
             "cost_usd": usage_total("cost_usd"),
+            "average_time_to_first_token_ms": (
+                fmean(ttft_values) if ttft_values else None
+            ),
+            "time_to_first_token_p50_ms": linear_percentile(0.5),
+            "time_to_first_token_p90_ms": linear_percentile(0.9),
+            "time_to_first_token_coverage_pct": (
+                len(ttft_values) / ttft_total_samples * 100
+                if ttft_total_samples
+                else None
+            ),
+            "time_to_first_token_valid_samples": len(ttft_values),
             "tool_calls": sum(task["tool_calls"] for task in tasks.values()),
             "assistant_turns": sum(task["assistant_turns"] for task in tasks.values()),
         }
@@ -414,10 +475,23 @@ def audit_overview(wb, units: dict[str, dict], findings: list[dict], identities,
                 continue
             if column == "总成本(USD)" and recomputed_costs is not None:
                 continue
-            if mismatch(row.get(column), raw[key], tolerance):
+            expected = raw[key]
+            differs = (
+                row.get(column) not in (None, "-")
+                if expected is None
+                else mismatch(row.get(column), expected, tolerance)
+            )
+            if differs:
                 findings.append(finding("OVERVIEW_VALUE_MISMATCH", "error",
                                         f"{column} 与原始结果独立复算不一致", sheet="总览", unit=unit,
-                                        evidence={"excel": row.get(column), "recomputed": round(raw[key], 6)}))
+                                        evidence={
+                                            "excel": row.get(column),
+                                            "recomputed": (
+                                                round(expected, 6)
+                                                if expected is not None
+                                                else None
+                                            ),
+                                        }))
         if recomputed_costs is not None:
             estimate = recomputed_costs.get(unit, {})
             expected_cost = estimate.get("usd")

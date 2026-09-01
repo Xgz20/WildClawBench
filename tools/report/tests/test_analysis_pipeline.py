@@ -544,6 +544,9 @@ class AnalysisPipelineTest(unittest.TestCase):
                 "模型", "Harness", "总平均分", "用例数", "正常完成数",
                 "执行错误数", "超时数", "评测异常数", "完成率", "总tokens",
                 "总请求数", "总耗时(s)", "总成本(USD)",
+                "平均首 Token 响应时间", "首 Token 响应时间 P50",
+                "首 Token 响应时间 P90", "首 Token 指标覆盖率",
+                "首 Token 响应有效样本数",
             ],
         )
         self.assertEqual(
@@ -1708,6 +1711,7 @@ class AnalysisPipelineTest(unittest.TestCase):
                 "output_tokens": run["output_tokens"],
                 "total_tokens": run["input_tokens"] + run["output_tokens"],
                 "request_count": 1,
+                "time_to_first_token_ms": run.get("time_to_first_token_ms"),
             }), encoding="utf-8")
         registry = excel_report.report_entities.load_registry(
             REPORT_DIR / "data/entities.yaml"
@@ -1729,6 +1733,7 @@ class AnalysisPipelineTest(unittest.TestCase):
             "elapsed_time": 10,
             "input_tokens": 100,
             "output_tokens": 50,
+            "time_to_first_token_ms": 1000,
         }])
         partial_task = self._create_website_task("website_l2", [{
             "score": 0.5,
@@ -1737,6 +1742,7 @@ class AnalysisPipelineTest(unittest.TestCase):
             "elapsed_time": 20,
             "input_tokens": 200,
             "output_tokens": 100,
+            "time_to_first_token_ms": 900,
         }])
         unit = SimpleNamespace(
             model="xopglm52",
@@ -1759,6 +1765,12 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertEqual(metrics["运行耗时平均值"].value, 15.0)
         self.assertEqual(metrics["运行耗时 P50"].value, 15.0)
         self.assertEqual(metrics["运行耗时 P90"].value, 19.0)
+        self.assertEqual(metrics["平均首 Token 响应时间"].value, 1000.0)
+        self.assertEqual(metrics["首 Token 响应时间 P50"].value, 1000.0)
+        self.assertEqual(metrics["首 Token 响应时间 P90"].value, 1000.0)
+        self.assertEqual(metrics["首 Token 指标覆盖率"].value, 50.0)
+        self.assertEqual(metrics["首 Token 响应有效样本数"].value, 1.0)
+        self.assertEqual(metrics["首 Token 指标覆盖率"].sample, "1/2")
         self.assertEqual(metrics["单次运行平均总 Token"].value, 225.0)
         self.assertEqual(metrics["单次运行平均输入 Token"].value, 150.0)
         self.assertEqual(metrics["单次运行平均输出 Token"].value, 75.0)
@@ -1774,12 +1786,14 @@ class AnalysisPipelineTest(unittest.TestCase):
                 "elapsed_time": 100,
                 "input_tokens": 900,
                 "output_tokens": 100,
+                "time_to_first_token_ms": 5000,
             },
             {
                 "score": 1.0,
                 "elapsed_time": 20,
                 "input_tokens": 80,
                 "output_tokens": 20,
+                "time_to_first_token_ms": 2000,
             },
         ])
         write_rerun_metadata(
@@ -1817,6 +1831,8 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertEqual(metrics["运行耗时平均值"].value, 20.0)
         self.assertEqual(metrics["单次运行平均总 Token"].value, 100.0)
         self.assertEqual(metrics["运行耗时平均值"].sample, 1)
+        self.assertEqual(metrics["平均首 Token 响应时间"].value, 2000.0)
+        self.assertEqual(metrics["首 Token 指标覆盖率"].value, 100.0)
 
     def test_website_unit_metrics_count_unscored_tagged_task_as_zero(self) -> None:
         full_task = self._create_website_task("website_full", [{
@@ -1902,7 +1918,7 @@ class AnalysisPipelineTest(unittest.TestCase):
 
         self.assertTrue(written)
         sheet = workbook["站点评测指标"]
-        headers = [sheet.cell(4, column).value for column in range(2, 16)]
+        headers = [sheet.cell(4, column).value for column in range(2, 21)]
         self.assertEqual(sheet.cell(5, headers.index("得分率") + 2).value, 0.0)
         self.assertEqual(
             sheet.cell(5, headers.index("运行耗时平均值") + 2).value, 30.0
@@ -1914,6 +1930,7 @@ class AnalysisPipelineTest(unittest.TestCase):
             "elapsed_time": 12,
             "input_tokens": 120,
             "output_tokens": 30,
+            "time_to_first_token_ms": 1234,
         }])
         unit = SimpleNamespace(
             model="xopglm52",
@@ -1933,37 +1950,43 @@ class AnalysisPipelineTest(unittest.TestCase):
 
         sheet = workbook["站点评测指标"]
         merged = {str(item) for item in sheet.merged_cells.ranges}
-        self.assertTrue({"A3:A4", "B3:C3", "D3:H3", "I3:O3"}.issubset(merged))
+        self.assertTrue({"A3:A4", "B3:C3", "D3:H3", "I3:T3"}.issubset(merged))
         self.assertEqual(sheet["A3"].value, "模型@Harness")
         self.assertEqual(sheet["B3"].value, "结果指标")
         self.assertEqual(sheet["D3"].value, "分层分析")
         self.assertEqual(sheet["I3"].value, "效率指标")
         self.assertEqual(
-            [sheet.cell(4, column).value for column in range(1, 16)],
+            [sheet.cell(4, column).value for column in range(1, 21)],
             [
                 None, "得分率", "满分率", "L1 题目得分率", "L2 题目得分率",
                 "内容与结构得分率", "交互与功能得分率", "视觉与布局得分率",
-                "运行耗时平均值", "运行耗时 P50", "运行耗时 P90", "单次运行平均成本",
+                "运行耗时平均值", "运行耗时 P50", "运行耗时 P90",
+                "平均首 Token 响应时间", "首 Token 响应时间 P50",
+                "首 Token 响应时间 P90", "首 Token 指标覆盖率",
+                "首 Token 响应有效样本数", "单次运行平均成本",
                 "单次运行平均总 Token", "单次运行平均输入 Token", "单次运行平均输出 Token",
             ],
         )
         self.assertEqual(sheet.cell(5, 1).value, "GLM-5.2@AstronCode")
         self.assertEqual(sheet.cell(5, 2).value, 100.0)
         self.assertAlmostEqual(
-            sheet.cell(5, 12).value,
+            sheet.cell(5, 17).value,
             (120 * 8 + 30 * 28) / 1_000_000 / 6.77,
         )
+        self.assertEqual(sheet.cell(5, 12).value, 1234.0)
+        self.assertEqual(sheet.cell(5, 15).value, 100.0)
+        self.assertEqual(sheet.cell(5, 16).value, 1.0)
         self.assertTrue(all(
             isinstance(sheet.cell(5, column).value, (int, float))
             or sheet.cell(5, column).value == "-"
-            for column in range(2, 16)
+            for column in range(2, 21)
         ))
         self.assertEqual(sheet.cell(5, 5).value, "-")
         self.assertEqual(sheet.freeze_panes, "B5")
 
         self.assertIn("_站点评测指标口径", workbook.sheetnames)
         self.assertEqual(workbook["_站点评测指标口径"].sheet_state, "hidden")
-        self.assertEqual(workbook["_站点评测指标口径"].max_row, 15)
+        self.assertEqual(workbook["_站点评测指标口径"].max_row, 20)
 
     def test_website_dimension_summaries_use_horizontal_grouped_tables(self) -> None:
         task = SimpleNamespace(
@@ -2077,17 +2100,34 @@ class AnalysisPipelineTest(unittest.TestCase):
 
         sheet = workbook["站点评测指标"]
         values = list(sheet.iter_rows(values_only=True))
-        metric_names = [sheet.cell(4, column).value for column in range(2, 16)]
-        self.assertEqual(len(metric_names), 14)
+        metric_names = [sheet.cell(4, column).value for column in range(2, 21)]
+        self.assertEqual(len(metric_names), 19)
         self.assertNotIn("美观度", metric_names)
         self.assertIn("满分率", metric_names)
         self.assertIn("单次运行平均总 Token", metric_names)
         self.assertIn("单次运行平均输入 Token", metric_names)
         self.assertIn("单次运行平均输出 Token", metric_names)
+        self.assertIn("平均首 Token 响应时间", metric_names)
+        self.assertIn("首 Token 响应时间 P50", metric_names)
+        self.assertIn("首 Token 响应时间 P90", metric_names)
+        self.assertIn("首 Token 指标覆盖率", metric_names)
+        self.assertIn("首 Token 响应有效样本数", metric_names)
+        self.assertEqual(
+            sheet.cell(5, metric_names.index("平均首 Token 响应时间") + 2).value,
+            "-",
+        )
+        self.assertEqual(
+            sheet.cell(5, metric_names.index("首 Token 指标覆盖率") + 2).value,
+            0.0,
+        )
+        self.assertEqual(
+            sheet.cell(5, metric_names.index("首 Token 响应有效样本数") + 2).value,
+            0.0,
+        )
         self.assertTrue(all(
             isinstance(sheet.cell(5, column).value, (int, float))
             or sheet.cell(5, column).value == "-"
-            for column in range(2, 16)
+            for column in range(2, 21)
         ))
         self.assertTrue(any(row[0] == "一级维度汇总" for row in values))
         primary_title_row = next(
@@ -2141,7 +2181,7 @@ class AnalysisPipelineTest(unittest.TestCase):
             "overall_score = 1.0",
             web_metrics["GLM-5.2@AstronCode"]["满分率"]["method"],
         )
-        self.assertEqual(len(web_metrics["GLM-5.2@AstronCode"]), 14)
+        self.assertEqual(len(web_metrics["GLM-5.2@AstronCode"]), 19)
         self.assertNotIn("美观度", web_metrics["GLM-5.2@AstronCode"])
         self.assertEqual(
             leader_extract._extract_website_metrics(Workbook()), {}
@@ -2188,7 +2228,7 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertIn("结果与效率指标汇总", skill)
         self.assertIn("不展示美观度", skill)
         self.assertIn("_站点评测指标口径", skill)
-        self.assertIn("正式表只展示", skill)
+        self.assertIn("首 Token 指标覆盖率及有效样本数", skill)
 
     def test_audit_detects_request_count_regression(self) -> None:
         excel_path = self.generate_auditable_excel()
@@ -2202,6 +2242,27 @@ class AnalysisPipelineTest(unittest.TestCase):
         report = report_audit.audit_report(self.unit_dir, excel_path, self.tasks_dir, None)
         errors = [item for item in report["findings"] if item["severity"] == "error"]
         self.assertTrue(any(item["id"] == "OVERVIEW_VALUE_MISMATCH" for item in errors))
+
+    def test_audit_detects_missing_ttft_coerced_to_zero_or_number(self) -> None:
+        excel_path = self.generate_auditable_excel()
+        workbook = load_workbook(excel_path)
+        sheet = workbook["总览"]
+        headers = [cell.value for cell in sheet[1]]
+        ttft_column = headers.index("平均首 Token 响应时间") + 1
+        sheet.cell(2, ttft_column).value = 0
+        workbook.save(excel_path)
+
+        report = report_audit.audit_report(
+            self.unit_dir, excel_path, self.tasks_dir, None
+        )
+        errors = [
+            item for item in report["findings"] if item["severity"] == "error"
+        ]
+        self.assertTrue(any(
+            item["id"] == "OVERVIEW_VALUE_MISMATCH"
+            and item["evidence"].get("recomputed") is None
+            for item in errors
+        ))
 
     def test_audit_propagates_upstream_validity_failure(self) -> None:
         excel_path = self.generate_auditable_excel()

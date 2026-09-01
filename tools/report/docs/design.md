@@ -27,7 +27,7 @@ eval_out/all_suite/round1/<model>/<harness>/          ← 模型×Harness 多对
       <model>_<YYYYMMDD>_<HHMM>_<hash>/               ← 运行目录（历史保留，按有效 run 规则选择）
         score.json            ← {检查点: 0~1, ..., overall_score}（或含 error）
         execution_status.json ← status/timed_out/error/elapsed_time
-        usage.json            ← tokens/cost/request_count/elapsed_time
+        usage.json            ← tokens/cost/request_count/elapsed_time/time_to_first_token_ms
         agent.log
         chat_openclaw.jsonl   ← 规范化 transcript（message.content[]: text/tool_use/tool_result）
         agent_interaction.jsonl ← AstronCode Harness↔模型原始请求/响应轨迹（可选）

@@ -481,6 +481,7 @@ class AstronCodeAgent(BaseAgent):
             "total_tokens": 0,
             "cost_usd": 0.0,
             "request_count": 0,
+            "time_to_first_token_ms": None,
             "elapsed_time": round(elapsed_time, 2),
         }
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -500,7 +501,13 @@ class AstronCodeAgent(BaseAgent):
 
         parsed = self._extract_usage_from_jsonl(chat_dest)
         if parsed["total_tokens"] == 0 and parsed["input_tokens"] == 0:
+            chat_ttft = parsed.get("time_to_first_token_ms")
             parsed = self._extract_usage_from_session_dir(sessions_dest)
+            if parsed.get("time_to_first_token_ms") is None:
+                parsed["time_to_first_token_ms"] = chat_ttft
+
+        if self._run_has_explicit_execution_failure(output_dir):
+            parsed["time_to_first_token_ms"] = None
 
         if parsed["cost_usd"] == 0.0:
             parsed["cost_usd"] = round(self._estimate_cost(parsed), 6)
@@ -2120,7 +2127,11 @@ if __name__ == "__main__":
         )
         for path in candidates:
             parsed = self._extract_usage_from_jsonl(path)
-            if parsed["total_tokens"] > 0 or parsed["input_tokens"] > 0:
+            if (
+                parsed["total_tokens"] > 0
+                or parsed["input_tokens"] > 0
+                or parsed.get("time_to_first_token_ms") is not None
+            ):
                 return parsed
         return totals
 
@@ -2137,6 +2148,7 @@ if __name__ == "__main__":
         # 按累积用量去重，避免会话日志重复写入末条事件时重复计数。
         round_trips = 0
         seen_cumulative: set[str] = set()
+        time_to_first_token_ms: int | float | None = None
 
         for raw in jsonl_path.read_text(encoding="utf-8", errors="ignore").splitlines():
             line = raw.strip()
@@ -2146,6 +2158,10 @@ if __name__ == "__main__":
                 entry = json.loads(line)
             except json.JSONDecodeError:
                 continue
+
+            parsed_ttft = self._extract_time_to_first_token_ms(entry)
+            if parsed_ttft is not None:
+                time_to_first_token_ms = parsed_ttft
 
             # AstronCode sessions include assistant message records; count them for
             # request_count when explicit usage events are absent.
@@ -2209,7 +2225,48 @@ if __name__ == "__main__":
             )
 
         totals["cost_usd"] = round(cost_sum, 6)
+        totals["time_to_first_token_ms"] = time_to_first_token_ms
         return totals
+
+    @staticmethod
+    def _extract_time_to_first_token_ms(entry: dict[str, Any]) -> int | float | None:
+        """Extract native AstronCode TTFT from a task_complete event."""
+
+        candidates = [entry]
+        payload = entry.get("payload")
+        if isinstance(payload, dict):
+            candidates.append(payload)
+        for candidate in candidates:
+            if str(candidate.get("type") or "").lower() != "task_complete":
+                continue
+            value = candidate.get("time_to_first_token_ms")
+            if (
+                isinstance(value, (int, float))
+                and not isinstance(value, bool)
+                and value >= 0
+            ):
+                return value
+        return None
+
+    @staticmethod
+    def _run_has_explicit_execution_failure(output_dir: Path) -> bool:
+        """Return true only for explicit timeout/abnormal-exit evidence."""
+
+        status_path = output_dir / "execution_status.json"
+        try:
+            status = json.loads(status_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return False
+        if not isinstance(status, dict):
+            return False
+        normalized = str(status.get("status") or "").strip().lower()
+        return (
+            bool(status.get("timed_out"))
+            or status.get("task_completed") is False
+            or normalized
+            in {"error", "failed", "timed_out", "timeout", "cancelled", "aborted"}
+            or bool(str(status.get("error") or "").strip())
+        )
 
     def _is_assistant_message(self, entry: dict[str, Any]) -> bool:
         if entry.get("type") == "message" and entry.get("role") == "assistant":
@@ -2409,6 +2466,7 @@ if __name__ == "__main__":
             "total_tokens": 0,
             "cost_usd": 0.0,
             "request_count": 0,
+            "time_to_first_token_ms": None,
         }
 
     def _num(self, value: Any, default: float = 0.0) -> float:
