@@ -576,13 +576,71 @@ def render_markdown(manifest: dict[str, Any], analysis: dict[str, Any]) -> str:
         text = "" if value is None else str(value)
         return " ".join(text.split()).replace("|", "\\|")
 
+    units = {item["unit"]: item for item in manifest.get("units", [])}
+
+    def unit_display(unit: str) -> str:
+        metadata = units.get(unit, {})
+        model = str(metadata.get("model_display") or metadata.get("model") or "")
+        harness = str(metadata.get("harness_display") or metadata.get("harness") or "")
+        return f"{model}@{harness}" if model and harness else unit
+
+    def normalized_path(value: Any) -> str:
+        return str(value or "").strip().replace("\\", "/").rstrip("/")
+
+    evidence_roots: list[tuple[str, str]] = []
+    evidence_files: list[tuple[str, str]] = []
+    for comparison in manifest.get("comparisons", []):
+        if not isinstance(comparison, dict):
+            continue
+        for unit, aggregate in (comparison.get("scores") or {}).items():
+            if unit not in units or not isinstance(aggregate, dict):
+                continue
+            for record in aggregate.get("records", []):
+                if not isinstance(record, dict):
+                    continue
+                run_dir = normalized_path(record.get("run_dir"))
+                if run_dir:
+                    evidence_roots.append((run_dir, unit))
+                for field in ("score_path", "transcript", "agent_interaction"):
+                    path = normalized_path(record.get(field))
+                    if path:
+                        evidence_files.append((path, unit))
+
+    def evidence_unit(source: str) -> str:
+        normalized = normalized_path(source)
+        if not normalized:
+            return ""
+        matches: list[tuple[int, str]] = []
+        for path, unit in evidence_files:
+            if normalized == path:
+                matches.append((len(path), unit))
+        for path, unit in evidence_roots:
+            if normalized == path or normalized.startswith(path + "/"):
+                matches.append((len(path), unit))
+        if not matches:
+            relative = normalized.lstrip("/")
+            if "/" in relative:
+                for path, unit in evidence_files:
+                    if path.endswith("/" + relative):
+                        matches.append((len(relative), unit))
+                for path, unit in evidence_roots:
+                    if path.endswith("/" + relative):
+                        matches.append((len(relative), unit))
+        if not matches:
+            return ""
+        longest = max(length for length, _ in matches)
+        matched_units = {unit for length, unit in matches if length == longest}
+        return next(iter(matched_units)) if len(matched_units) == 1 else ""
+
     def evidence_text(item: dict[str, Any]) -> str:
         refs = []
         for ref in item.get("evidence_refs", []):
             source = str(ref.get("source", ""))
-            source_name = source.replace("\\", "/").rsplit("/", 1)[-1]
+            source_name = normalized_path(source).rsplit("/", 1)[-1]
+            owner = evidence_unit(source)
+            source_label = f"{unit_display(owner)} / {source_name}" if owner else source_name
             refs.append(
-                f"{source_name}（{ref.get('locator', '')}）：{ref.get('excerpt', '')}"
+                f"{source_label}（{ref.get('locator', '')}）：{ref.get('excerpt', '')}"
             )
         summary = item.get("evidence_summary", "")
         return cell(summary) + ("<br>" + "<br>".join(cell(ref) for ref in refs) if refs else "")
@@ -592,7 +650,6 @@ def render_markdown(manifest: dict[str, Any], analysis: dict[str, Any]) -> str:
             return f"{value:.2f}"
         return cell(value)
 
-    units = {item["unit"]: item for item in manifest.get("units", [])}
     target = manifest.get("target_unit", "")
     target_display = units.get(target, {}).get("model_display", target)
     if units.get(target, {}).get("harness_display"):

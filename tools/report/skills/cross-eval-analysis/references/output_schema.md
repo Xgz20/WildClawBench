@@ -93,7 +93,7 @@ Workflow 必须返回一个 JSON 对象：
 - `strengths` / `weaknesses` 的 `task_id` 必须是完整 ID，`task_name` 必须沿用 manifest 中的任务名称；每一项至少有一条证据引用。
 - `typical_cases` 必须同时写 `task_id`、`task_name`、`what_tested`、`score_summary`、`problem`、`evidence_summary`、`confidence`、`evidence_refs`；不能只写分数和一句评价。
 - `evidence_refs.source` 写实际文件路径或文件名，`locator` 写行号、JSON 字段、命令或产物路径，`excerpt` 必须写短原文或事实摘要。
-- 结构化 JSON 中的 `evidence_refs.source` 可以保留完整路径用于审计；领导版 Markdown 只展示文件名，不输出本机绝对路径。
+- 结构化 JSON 中的 `evidence_refs.source` 可以保留完整路径用于审计；领导版 Markdown 根据 manifest 中的 run 路径反查来源，显示为“模型展示名@Harness 展示名 / 文件名”（例如 `Spark-X2.5-Harness@AstronCode / chat_openclaw.jsonl`），以区分不同评测单元的同名证据，但不输出本机绝对路径。无法唯一归属评测单元的任务定义或外部报告等证据仍只显示文件名。
 - `confirmed` 只能用于已核对两侧证据并排除主要替代解释的案例；尚有一个未闭环因素用 `probable`；关键材料缺失用 `unconfirmed`。
 - 不把 `L3/L4` 作为模型或 Harness 典型案例的责任方；如它影响可比性，放入 `unconfirmed_items` 并说明需要重跑/重判。
 - `comparability_analysis` 为可选附录结构；`impact_rows` 按逐步排除口径给出样本数、两侧均分和分差，不能只写“已排除异常”而不说明均分影响。

@@ -358,6 +358,88 @@ class CrossEvalAnalysisTest(unittest.TestCase):
         self.assertEqual(quality["status"], "FAIL")
         self.assertTrue(any(item["code"] == "FINDING_EVIDENCE_MISSING" for item in quality["issues"]))
 
+    def test_render_evidence_identifies_unit_without_leaking_absolute_path(self) -> None:
+        other_root = Path(self.temp_dir.name) / "harness-evidence-round"
+        task_id = "01_Suite_task_alpha"
+        for harness, score in (("astroncode", 0.9), ("deepseek-harness", 0.8)):
+            run_dir = other_root / "model-a" / harness / "01_Suite" / task_id / "run_001"
+            run_dir.mkdir(parents=True)
+            (run_dir / "score.json").write_text(
+                json.dumps({"overall_score": score}), encoding="utf-8"
+            )
+            (run_dir / "execution_status.json").write_text(
+                json.dumps({"status": "completed", "exit_code": 0}), encoding="utf-8"
+            )
+            (run_dir / "chat_openclaw.jsonl").write_text(
+                json.dumps({"message": {"content": [{"type": "text", "text": "完成"}]}})
+                + "\n",
+                encoding="utf-8",
+            )
+        manifest = cross_eval.build_manifest(
+            other_root,
+            axis="harness",
+            fixed_model="model-a",
+            harnesses=["astroncode", "deepseek-harness"],
+            target_harness="astroncode",
+            tasks_dir=self.tasks_dir,
+        )
+        for unit in manifest["units"]:
+            unit["model_display"] = "Model A"
+            unit["harness_display"] = {
+                "astroncode": "AstronCode",
+                "deepseek-harness": "DeepSeek Harness",
+            }[unit["harness"]]
+        comparison = manifest["comparisons"][0]
+        astron_record = comparison["scores"]["model-a@astroncode"]["records"][0]
+        deepseek_record = comparison["scores"]["model-a@deepseek-harness"]["records"][0]
+        analysis = {
+            "schema_version": 1,
+            "executive_summary": "两侧证据需要明确区分所属评测单元。",
+            "pair_reports": [{
+                "target_unit": "model-a@astroncode",
+                "reference_unit": "model-a@deepseek-harness",
+                "summary": "对比同一任务的两侧轨迹。",
+                "strengths": [],
+                "weaknesses": [],
+                "typical_cases": [{
+                    "task_id": task_id,
+                    "task_name": "Alpha task",
+                    "what_tested": "考察文件整理并验证结果。",
+                    "score_summary": "目标 90.0，参照 80.0。",
+                    "problem": "两侧完成路径不同。",
+                    "evidence_summary": "同名证据文件来自不同评测单元。",
+                    "confidence": "confirmed",
+                    "evidence_refs": [
+                        {
+                            "source": astron_record["transcript"],
+                            "locator": "line 1",
+                            "excerpt": "AstronCode 侧完成验证。",
+                        },
+                        {
+                            "source": deepseek_record["score_path"].replace("/", "\\"),
+                            "locator": "overall_score",
+                            "excerpt": "DeepSeek Harness 侧得分为 0.8。",
+                        },
+                        {
+                            "source": "/Users/example/external/task_definition.md",
+                            "locator": "Prompt",
+                            "excerpt": "外部任务定义。",
+                        },
+                    ],
+                }],
+            }],
+            "unconfirmed_items": [],
+        }
+
+        self.assertEqual(cross_eval.validate_analysis(manifest, analysis)["status"], "PASS")
+        report = cross_eval.render_markdown(manifest, analysis)
+
+        self.assertIn("Model A@AstronCode / chat_openclaw.jsonl", report)
+        self.assertIn("Model A@DeepSeek Harness / score.json", report)
+        self.assertIn("task_definition.md（Prompt）", report)
+        self.assertNotIn("/Users/example/external", report)
+        self.assertNotIn(str(other_root), report)
+
     def test_validation_rejects_out_of_scope_case(self) -> None:
         manifest = cross_eval.build_manifest(
             self.root,
