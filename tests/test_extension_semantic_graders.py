@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -45,6 +46,12 @@ MOUTAI_GT = (
     / "workspace/extension/04_Search_Retrieval"
     / "task_009_sse_annual_report_metrics/gt/expected.json"
 )
+VENDOR_GT = (
+    ROOT
+    / "workspace/extension/03_Social_Interaction"
+    / "task_010_vendor_delay_stakeholder_comms/gt/expected.json"
+)
+VENDOR_WORKSPACE = VENDOR_GT.parent.parent
 PENSION_GT = (
     ROOT
     / "workspace/extension/04_Search_Retrieval"
@@ -164,6 +171,224 @@ class ExtensionSemanticGraderTest(unittest.TestCase):
         )
         self.assertEqual(canonical_score["overall_score"], 1.0)
 
+    def test_vendor_rich_nested_plan_keeps_business_credit(self) -> None:
+        plan = {
+            "purchase_order_id": "PO-8841",
+            "source_timeline": {
+                "batches": [
+                    {
+                        "batch": "first_batch",
+                        "quantity": 600,
+                        "ship_date": "2026-10-10",
+                        "estimated_arrival": "2026-10-13",
+                    },
+                    {
+                        "batch": "remaining_batch",
+                        "quantity": 600,
+                        "ship_window": "2026-10-19 to 2026-10-21",
+                        "arrival_date": None,
+                        "arrival_committed": False,
+                    },
+                ],
+                "inventory": {
+                    "on_hand_units": 240,
+                    "usable_launch_units": 120,
+                    "reserved_support_units": 120,
+                    "qa_duration_calendar_days_after_arrival": 2,
+                },
+                "milestone_requirements": [
+                    {"milestone_id": "pilot", "cumulative_units_required": 300},
+                    {"milestone_id": "regional_launch", "cumulative_units_required": 800},
+                    {"milestone_id": "general_availability", "cumulative_units_required": 1200},
+                ],
+            },
+            "recommended_options": [
+                {"option_id": "reduced_pilot_existing_inventory", "selected": True},
+                {"option_id": "expedite_first_600", "selected": True},
+                {"option_id": "alternate_supplier_200", "selected": True},
+                {
+                    "option_id": "borrow_support_inventory",
+                    "selected": False,
+                    "reason": "forbidden",
+                },
+            ],
+            "total_incremental_cost_cny": 13900,
+            "available_by_regional_launch": {
+                "total_qa_cleared_units": 920,
+                "required": 800,
+                "conditional": True,
+            },
+            "required_approvals": [
+                {"role": "Program Director", "status": "pending"},
+                {"approver": "CFO", "status": "pending"},
+                {"approver": "Release Manager", "status": "blocked"},
+            ],
+            "trigger_conditions": [
+                {
+                    "condition": "First batch misses ship date 2026-10-10",
+                    "action": "escalate",
+                },
+                {
+                    "condition": "First batch does not arrive by estimated arrival 2026-10-13",
+                    "action": "escalate",
+                },
+                {
+                    "condition": "QA not completed for first batch by 2026-10-15",
+                    "action": "escalate",
+                },
+                {
+                    "condition": "Remaining batch has no committed arrival by 2026-10-16",
+                    "action": "escalate",
+                },
+            ],
+            "milestones": [
+                {
+                    "milestone_id": "pilot",
+                    "date": "2026-10-12",
+                    "status": "reduced_pending_approval",
+                    "available_units": 120,
+                    "note": "extra explanation",
+                },
+                {
+                    "milestone_id": "regional_launch",
+                    "date": "2026-10-16",
+                    "status": "conditional",
+                    "available_units": 920,
+                    "required_units": 800,
+                },
+                {
+                    "milestone_id": "general_availability",
+                    "date": "2026-10-23",
+                    "status": "cannot_commit",
+                    "available_units": 920,
+                    "required_units": 1200,
+                },
+            ],
+        }
+
+        score = self._grade_vendor(plan)
+
+        self.assertEqual(score["source_timeline_and_quantities"], 1.0)
+        self.assertEqual(score["critical_path_impact"], 1.0)
+        self.assertEqual(score["contingency_math_and_constraints"], 1.0)
+        self.assertEqual(score["structured_delivery"], 1.0)
+        self.assertEqual(score["overall_score"], 1.0)
+
+    def test_vendor_numeric_batch_map_and_demand_alias_keeps_timeline_credit(self) -> None:
+        expected = json.loads(VENDOR_GT.read_text(encoding="utf-8"))
+        plan = {key: expected[key] for key in expected["plan_fields"]}
+        plan["source_timeline"] = {
+            "vendor_batches": {
+                "batch_1": {
+                    "quantity": 600,
+                    "ship_date": "2026-10-10",
+                    "estimated_arrival": "2026-10-13",
+                },
+                "batch_2": {
+                    "quantity": 600,
+                    "ship_window_start": "2026-10-19",
+                    "ship_window_end": "2026-10-21",
+                    "arrival_committed": False,
+                },
+            },
+            "inventory": {
+                "usable_launch_units": 120,
+                "reserved_support_units": 120,
+                "qa_duration_calendar_days": 2,
+            },
+            "milestone_demands": [
+                {"milestone_id": "pilot", "units_required": 300},
+                {"milestone_id": "regional_launch", "units_required": 800},
+                {"milestone_id": "general_availability", "units_required": 1200},
+            ],
+        }
+        plan["milestones"] = [
+            {
+                "milestone_id": "pilot",
+                "date": "2026-10-12",
+                "status": "conditional_on_program_director_approval",
+                "available_units": 120,
+            },
+            {
+                "milestone_id": "regional_launch",
+                "date": "2026-10-16",
+                "status": "conditional_on_approvals_and_first_batch_arrival",
+                "available_units": 920,
+            },
+            {
+                "milestone_id": "general_availability",
+                "date": "2026-10-23",
+                "status": "uncertain_pending_second_batch_arrival",
+                "available_units": "dependent_on_second_batch",
+            },
+        ]
+
+        score = self._grade_vendor(plan)
+
+        self.assertEqual(score["source_timeline_and_quantities"], 1.0)
+
+    def test_vendor_latest_update_record_keeps_flat_batch_timeline_credit(self) -> None:
+        expected = json.loads(VENDOR_GT.read_text(encoding="utf-8"))
+        plan = {key: expected[key] for key in expected["plan_fields"]}
+        plan["source_timeline"] = {
+            "vendor_batches": [
+                {
+                    "batch": "latest_written_update",
+                    "first_batch_quantity": 600,
+                    "first_batch_ship_date": "2026-10-10",
+                    "first_batch_estimated_arrival": "2026-10-13",
+                    "remaining_quantity": 600,
+                    "remaining_ship_window_start": "2026-10-19",
+                    "remaining_ship_window_end": "2026-10-21",
+                    "remaining_arrival_date": None,
+                }
+            ],
+            "inventory": {
+                "usable_launch_units": 120,
+                "reserved_support_units": 120,
+                "qa_duration_calendar_days_after_arrival": 2,
+            },
+            "qa_duration_calendar_days": 2,
+            "milestone_requirements": expected["source_timeline"]["milestone_requirements"],
+        }
+
+        score = self._grade_vendor(plan)
+
+        self.assertEqual(score["source_timeline_and_quantities"], 1.0)
+
+    def test_vendor_missing_remaining_arrival_is_not_credited(self) -> None:
+        expected = json.loads(VENDOR_GT.read_text(encoding="utf-8"))
+        plan = {key: expected[key] for key in expected["plan_fields"]}
+        plan["source_timeline"] = dict(plan["source_timeline"])
+        plan["source_timeline"].pop("remaining_arrival_date")
+
+        score = self._grade_vendor(plan)
+
+        self.assertLess(score["source_timeline_and_quantities"], 1.0)
+
+    def test_vendor_selected_support_inventory_still_loses_constraint_credit(self) -> None:
+        expected = json.loads(VENDOR_GT.read_text(encoding="utf-8"))
+        plan = {key: expected[key] for key in expected["plan_fields"]}
+        plan["recommended_options"] = list(expected["recommended_options"]) + [
+            "borrow_support_inventory"
+        ]
+
+        score = self._grade_vendor(plan)
+
+        self.assertLess(score["contingency_math_and_constraints"], 1.0)
+
+    def test_vendor_trigger_conditions_do_not_cross_credit_between_entries(self) -> None:
+        expected = json.loads(VENDOR_GT.read_text(encoding="utf-8"))
+        plan = {key: expected[key] for key in expected["plan_fields"]}
+        plan["trigger_conditions"] = [
+            "First batch ship date is 2026-10-10.",
+            "Remaining batch has no committed arrival by 2026-10-16.",
+        ]
+
+        score = self._grade_vendor(plan)
+
+        self.assertLess(score["contingency_math_and_constraints"], 1.0)
+
     def test_pension_coverage_accepts_equivalent_natural_language(self) -> None:
         rows = json.loads(PENSION_GT.read_text(encoding="utf-8"))["rows"]
         equivalents = {
@@ -216,6 +441,26 @@ class ExtensionSemanticGraderTest(unittest.TestCase):
             (root / "results/answer.md").write_text("答案", encoding="utf-8")
 
             return load_grader(PENSION_TASK)(workspace_path=str(root))
+
+    def _grade_vendor(self, plan: dict) -> dict:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "gt").mkdir()
+            (root / "results").mkdir()
+            workspace = VENDOR_WORKSPACE
+            (root / "gt/expected.json").write_text(
+                VENDOR_GT.read_text(encoding="utf-8"), encoding="utf-8"
+            )
+            for source in (workspace / "exec").iterdir():
+                if source.is_file():
+                    shutil.copy2(source, root / source.name)
+            (root / "results/impact_plan.json").write_text(
+                json.dumps(plan, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            for name in json.loads(VENDOR_GT.read_text(encoding="utf-8"))["result_files"]:
+                if name != "impact_plan.json":
+                    (root / "results" / name).write_text("draft", encoding="utf-8")
+            return load_grader(VENDOR_TASK)(workspace_path=str(root))
 
     def _grade_json_task(
         self,
