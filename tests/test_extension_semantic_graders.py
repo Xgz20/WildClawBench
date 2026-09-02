@@ -56,6 +56,16 @@ CENSUS_GT = (
     / "workspace/extension/04_Search_Retrieval"
     / "task_007_census_province_change/gt/expected.json"
 )
+HOLIDAY_TASK = (
+    ROOT
+    / "tasks/extension/01_Productivity_Flow"
+    / "01_Productivity_Flow_task_006_holiday_calendar.md"
+)
+HOLIDAY_GT = (
+    ROOT
+    / "workspace/extension/01_Productivity_Flow"
+    / "task_006_holiday_calendar/gt/expected.json"
+)
 VENDOR_GT = (
     ROOT
     / "workspace/extension/03_Social_Interaction"
@@ -195,6 +205,45 @@ class ExtensionSemanticGraderTest(unittest.TestCase):
         self.assertEqual(score["change_calculations"], 1.0)
         self.assertEqual(score["structured_delivery"], 1.0)
         self.assertEqual(score["overall_score"], 1.0)
+
+    def test_holiday_accepts_joint_name_order_and_delimiters(self) -> None:
+        expected = json.loads(HOLIDAY_GT.read_text(encoding="utf-8"))
+        rows = []
+        for row in expected["rows"]:
+            if row["holiday_name"] == "国庆节、中秋节":
+                name = (
+                    "中秋节、国庆节"
+                    if row["type"] == "workday"
+                    else "国庆节/中秋节"
+                )
+                rows.append({**row, "holiday_name": name})
+            else:
+                rows.append(dict(row))
+
+        score = self._grade_holiday(rows)
+
+        self.assertEqual(score["holiday_rows_correct"], 1.0)
+        self.assertEqual(score["makeup_workdays_correct"], 1.0)
+        self.assertEqual(score["overall_score"], 1.0)
+
+    def test_holiday_does_not_accept_status_text_as_name(self) -> None:
+        expected = json.loads(HOLIDAY_GT.read_text(encoding="utf-8"))
+        rows = [
+            {
+                **row,
+                "holiday_name": (
+                    f"{row['holiday_name']}调休上班"
+                    if row["type"] == "workday"
+                    else row["holiday_name"]
+                ),
+            }
+            for row in expected["rows"]
+        ]
+
+        score = self._grade_holiday(rows)
+
+        self.assertLess(score["makeup_workdays_correct"], 1.0)
+        self.assertLess(score["overall_score"], 1.0)
 
     def test_vendor_rich_nested_plan_keeps_business_credit(self) -> None:
         plan = {
@@ -516,6 +565,27 @@ class ExtensionSemanticGraderTest(unittest.TestCase):
             )
 
             return load_grader(CENSUS_TASK)(workspace_path=str(root))
+
+    def _grade_holiday(self, rows: list[dict]) -> dict:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "gt").mkdir()
+            (root / "results").mkdir()
+            (root / "gt/expected.json").write_text(
+                HOLIDAY_GT.read_text(encoding="utf-8"), encoding="utf-8"
+            )
+            columns = ["date", "type", "holiday_name", "source_document"]
+            with (root / "results/holidays.csv").open(
+                "w", encoding="utf-8", newline=""
+            ) as stream:
+                writer = csv.DictWriter(stream, fieldnames=columns)
+                writer.writeheader()
+                writer.writerows(rows)
+            (root / "results/staffing_note.md").write_text(
+                "排班提醒", encoding="utf-8"
+            )
+
+            return load_grader(HOLIDAY_TASK)(workspace_path=str(root))
 
     def _grade_json_task(
         self,

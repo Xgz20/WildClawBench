@@ -47,6 +47,7 @@ Agent应读取指定的固定政府网原文，识别文号和2025年六组放�
 def grade(**kwargs) -> dict:
     import csv
     import json
+    import re
     from datetime import date
     from pathlib import Path
 
@@ -124,9 +125,17 @@ def grade(**kwargs) -> dict:
         )
         scores["source_identity_correct"] = source_hits / len(expected_by_date)
 
+    def canonical_holiday_name(value):
+        """Normalize only the observed equivalent spelling of the joint holiday."""
+        compact = "".join(str(value).split())
+        parts = re.split(r"[、,，/／+＋&＆]|和|及", compact)
+        if len(parts) == 2 and set(parts) == {"国庆节", "中秋节"}:
+            return "国庆节、中秋节"
+        return str(value).strip()
+
     def row_set(values, row_type):
         return {
-            (row.get("date"), row.get("holiday_name"))
+            (row.get("date"), canonical_holiday_name(row.get("holiday_name")))
             for row in values
             if isinstance(row, dict) and row.get("type") == row_type
         }
