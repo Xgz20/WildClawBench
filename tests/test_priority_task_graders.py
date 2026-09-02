@@ -56,6 +56,10 @@ TIMELINE_TASK = (
 TIMELINE_WORKSPACE = (
     WORKSPACE_ROOT / "05_Creative_Synthesis/task_008_accessible_timeline_microsite"
 )
+BRANCHING_TASK = (
+    TASK_ROOT
+    / "05_Creative_Synthesis/05_Creative_Synthesis_task_005_branching_dialogue.md"
+)
 
 
 def load_grader(task_file: Path):
@@ -352,8 +356,110 @@ class PriorityTaskGraderTest(unittest.TestCase):
         self.assertEqual(broken_score["keyboard_behavior"], 0.75)
         self.assertLess(broken_score["overall_score"], 1.0)
 
+    def test_branching_accepts_single_yaml_code_fence(self) -> None:
+        score = self._grade_branching(
+            '''```yaml
+- id: start
+  speaker: Mara
+  text: "档案室的门就在这里。"
+  condition: always
+  choices:
+    - text: "我有钥匙。"
+      next: with_key
+    - text: "我没有钥匙。"
+      next: no_key
+- id: with_key
+  speaker: Mara
+  text: "门后有易碎档案，小心行事。"
+  condition: has_archive_key == true
+  choices:
+    - text: "我会注意。"
+      next: exit
+- id: no_key
+  speaker: Mara
+  text: "先去找钥匙。"
+  condition: has_archive_key == false
+  choices:
+    - text: "我去找。"
+      next: exit
+- id: exit
+  speaker: Mara
+  text: "路上小心。"
+  condition: always
+  choices: []
+```'''
+        )
+
+        self.assertEqual(score["yaml_schema"], 1.0)
+        self.assertEqual(score["state_reachability"], 1.0)
+        self.assertEqual(score["condition_logic"], 1.0)
+        self.assertEqual(score["convergence"], 1.0)
+        self.assertEqual(score["overall_score"], 1.0)
+
+    def test_branching_accepts_empty_exit_sentinel(self) -> None:
+        score = self._grade_branching(
+            '''- id: start
+  speaker: Mara
+  text: "档案室的门就在这里。"
+  condition: always
+  choices:
+    - text: "我有钥匙。"
+      next: with_key
+    - text: "我没有钥匙。"
+      next: no_key
+- id: with_key
+  speaker: Mara
+  text: "门后有易碎档案，小心行事。"
+  condition: has_archive_key == true
+  choices:
+    - text: "我会注意。"
+      next: exit
+- id: no_key
+  speaker: Mara
+  text: "先去找钥匙。"
+  condition: has_archive_key == false
+  choices:
+    - text: "我去找。"
+      next: exit
+- id: exit
+  speaker: null
+  text: ""
+  condition: always
+  choices: []'''
+        )
+
+        self.assertEqual(score["yaml_schema"], 1.0)
+        self.assertEqual(score["overall_score"], 1.0)
+
+    def test_branching_rejects_text_outside_yaml_code_fence(self) -> None:
+        score = self._grade_branching(
+            '''下面是对话：
+```yaml
+- id: exit
+  speaker: Mara
+  text: "结束。"
+  condition: always
+  choices: []
+```'''
+        )
+
+        self.assertEqual(score["yaml_schema"], 0.0)
+        self.assertEqual(score["overall_score"], 0.0)
+
     def _expected(self, workspace: Path) -> dict:
         return json.loads((workspace / "gt/expected.json").read_text(encoding="utf-8"))
+
+    def _grade_branching(self, text: str) -> dict:
+        return load_grader(BRANCHING_TASK)(
+            transcript=[
+                {
+                    "message": {
+                        "role": "assistant",
+                        "content": [{"type": "text", "text": text}],
+                    }
+                }
+            ]
+        )
 
     def _grade(
         self,

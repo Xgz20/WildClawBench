@@ -20,11 +20,11 @@ tags:
 
 我在写一个小型解谜游戏，需要一段NPC分支对话。NPC叫Mara，守着档案室。玩家有或没有`has_archive_key`会走不同分支；有钥匙时Mara可以提醒门后的风险，没有钥匙时她只能给寻找线索的提示。两个分支最后都要到`exit`，但不能让没钥匙的玩家表现得像已经开过门。
 
-请直接给一个YAML节点列表。节点字段固定为`id`、`speaker`、`text`、`condition`、`choices`；choice字段固定为`text`和`next`。入口必须叫`start`，终点必须叫`exit`。`condition`只使用`always`、`has_archive_key == true`或`has_archive_key == false`。对话要像人在说话，不要补充YAML以外的说明。
+请直接给一个YAML节点列表。节点字段固定为`id`、`speaker`、`text`、`condition`、`choices`；choice字段固定为`text`和`next`。入口必须叫`start`，终点必须叫`exit`。`condition`只使用`always`、`has_archive_key == true`或`has_archive_key == false`。可选用一个完整的```yaml```或```yml```代码块包裹，代码块外不得有其他文字；`exit`终止节点允许使用`speaker: null`和`text: ""`作为空哨兵。对话要像人在说话，不要补充YAML以外的说明。
 
 ## Expected Behavior
 
-回复应为可解析的YAML节点列表，字段严格匹配且ID唯一。从start开始，有钥匙和无钥匙状态都存在可达分支并最终到达exit；条件互斥，所有next引用有效。Mara在有钥匙分支说明门后风险，在无钥匙分支只给寻找钥匙的线索，不暗示玩家已经开门。
+回复应为可解析的YAML节点列表，字段严格匹配且ID唯一。从start开始，有钥匙和无钥匙状态都存在可达分支并最终到达exit；条件互斥，所有next引用有效。除`exit`外，节点的`speaker`和`text`必须是非空字符串；`exit`可以用`speaker: null`和空字符串`text`作为终止哨兵。Mara在有钥匙分支说明门后风险，在无钥匙分支只给寻找钥匙的线索，不暗示玩家已经开门。
 
 ## Grading Criteria
 
@@ -79,7 +79,16 @@ def grade(**kwargs) -> dict:
         return candidates[-1] if candidates else ""
 
     text = final_text(kwargs.get("transcript", []))
-    if not text or "```" in text:
+    fenced = re.fullmatch(
+        r"```[ \t]*(?:yaml|yml)[ \t]*\r?\n(.*?)\r?\n```[ \t]*",
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if fenced:
+        text = fenced.group(1).strip()
+    elif "```" in text:
+        return {**scores, "overall_score": 0.0}
+    if not text:
         return {**scores, "overall_score": 0.0}
     try:
         nodes = yaml.safe_load(text)
@@ -89,18 +98,39 @@ def grade(**kwargs) -> dict:
     node_fields = {"id", "speaker", "text", "condition", "choices"}
     choice_fields = {"text", "next"}
     list_ok = isinstance(nodes, list) and bool(nodes)
-    nodes_ok = list_ok and all(
-        isinstance(node, dict)
-        and set(node) == node_fields
-        and all(isinstance(node[field], str) and node[field].strip() for field in ("id", "speaker", "text", "condition"))
-        and isinstance(node["choices"], list)
-        and all(
-            isinstance(choice, dict)
-            and set(choice) == choice_fields
-            and all(isinstance(choice[field], str) and choice[field].strip() for field in choice_fields)
-            for choice in node["choices"]
+    def node_ok(node):
+        if not isinstance(node, dict) or set(node) != node_fields:
+            return False
+        if not all(
+            isinstance(node[field], str) and node[field].strip()
+            for field in ("id", "condition")
+        ):
+            return False
+        if node["id"] == "exit":
+            speaker_ok = node["speaker"] is None or (
+                isinstance(node["speaker"], str) and node["speaker"].strip()
+            )
+            text_ok = isinstance(node["text"], str)
+        else:
+            speaker_ok = isinstance(node["speaker"], str) and node["speaker"].strip()
+            text_ok = isinstance(node["text"], str) and node["text"].strip()
+        return (
+            speaker_ok
+            and text_ok
+            and isinstance(node["choices"], list)
+            and all(
+                isinstance(choice, dict)
+                and set(choice) == choice_fields
+                and all(
+                    isinstance(choice[field], str) and choice[field].strip()
+                    for field in choice_fields
+                )
+                for choice in node["choices"]
+            )
         )
-        for node in (nodes if isinstance(nodes, list) else [])
+
+    nodes_ok = list_ok and all(
+        node_ok(node) for node in (nodes if isinstance(nodes, list) else [])
     )
     by_id = {
         node["id"]: node for node in nodes
@@ -186,7 +216,7 @@ def grade(**kwargs) -> dict:
 
 ## LLM Judge Rubric
 
-Judge只评价有效YAML中的对话内容，不增加整体印象分。不同节点数量和自然措辞均可接受。每项只能使用`1.0 / 0.75 / 0.5 / 0.25 / 0.0`。
+Judge只评价有效YAML中的对话内容，不增加整体印象分。不同节点数量和自然措辞均可接受。允许的单个```yaml```/```yml```包裹不影响有效性；`exit`使用`speaker: null`和空`text`作为终止哨兵时，不因缺少终止台词单独扣分。每项只能使用`1.0 / 0.75 / 0.5 / 0.25 / 0.0`。
 
 ### Criterion 1: 角色与世界设定一致性 (key: character_consistency, weight: 0.333333)
 
@@ -253,6 +283,6 @@ workspace/extension/05_Creative_Synthesis/task_005_branching_dialogue
 
 ## Additional Notes
 
-- 仅Prompt题，直接回复YAML。
+- 仅Prompt题，直接回复YAML；可选用单个```yaml```/```yml```代码块包裹。
 - Auto组内权重为25%、37.5%、25%、12.5%，整体占40%。
 - Judge组三项权重各约三分之一，整体占60%。
