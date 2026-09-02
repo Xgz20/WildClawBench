@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import tomllib
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -111,6 +112,22 @@ class AstronCodeCliCommandTest(unittest.TestCase):
         self.assertIn("command -v astron-code-test", bootstrap)
         self.assertIn("astron-code-test exec", command)
         self.assertNotIn("astron-code exec", command)
+
+    def test_legacy_backend_config_uses_top_level_native_web_search_mode(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED": "0"},
+            clear=False,
+        ):
+            config = tomllib.loads(
+                backend.build_codex_config_toml(
+                    "https://openrouter.example/api/v1",
+                    "openrouter/xopglm52",
+                )
+            )
+
+        self.assertEqual(config["web_search"], "disabled")
+        self.assertNotIn("tools", config)
 
     def test_env_example_documents_production_default(self) -> None:
         env_example = (REPO_ROOT / ".env.example").read_text(encoding="utf-8")

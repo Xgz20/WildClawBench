@@ -115,6 +115,67 @@ class AstronCodeConfigTests(unittest.TestCase):
             "https://maas-api.example/v1",
         )
 
+    def test_native_web_search_is_disabled_by_default(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED": ""},
+            clear=False,
+        ):
+            config = self.parse_config(self.make_agent(), "openrouter/xopglm52")
+
+        self.assertEqual(config["web_search"], "disabled")
+
+    def test_native_web_search_can_be_enabled(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED": "true"},
+            clear=False,
+        ):
+            config = self.parse_config(self.make_agent(), "openrouter/xopglm52")
+
+        self.assertEqual(config["web_search"], "live")
+
+    def test_native_web_search_setting_is_snapshotted_at_construction(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED": "1"},
+            clear=False,
+        ):
+            agent = self.make_agent()
+
+        with patch.dict(
+            os.environ,
+            {"ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED": "0"},
+            clear=False,
+        ):
+            config = self.parse_config(agent, "openrouter/xopglm52")
+
+        self.assertEqual(config["web_search"], "live")
+
+    def test_native_web_search_does_not_use_nested_tools_boolean(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED": "0"},
+            clear=False,
+        ):
+            config = self.parse_config(self.make_agent(), "openrouter/xopglm52")
+
+        self.assertNotIn("tools", config)
+        self.assertEqual(config["web_search"], "disabled")
+
+    def test_invalid_native_web_search_setting_fails_fast(self) -> None:
+        with patch.dict(
+            os.environ,
+            {"ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED": "sometimes"},
+            clear=False,
+        ):
+            with self.assertRaisesRegex(
+                ValueError,
+                "ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED.*1.*true.*yes.*on.*"
+                "0.*false.*no.*off",
+            ):
+                self.make_agent()
+
     def test_maas_max_tokens_mode_defaults_to_native(self) -> None:
         with patch.dict(
             os.environ,

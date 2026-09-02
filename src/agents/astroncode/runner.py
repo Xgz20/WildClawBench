@@ -21,6 +21,7 @@ from src.agents.astroncode.backend import (
     CODEX_PROMPT_PATH,
     load_skill_documents,
     prepare_codex_prompt,
+    resolve_astroncode_native_web_search_mode,
     resolve_astroncode_cli_command,
 )
 from src.utils.docker_utils import container_resource_args, run_warmup, setup_skills, snapshot_workspace_state
@@ -308,6 +309,10 @@ class AstronCodeAgent(BaseAgent):
         self.trace_enabled = parse_env_flag(
             "ASTRONCODE_TRACE_ENABLED",
             default=True,
+        )
+        self.native_web_search_mode = resolve_astroncode_native_web_search_mode()
+        self.native_web_search_enabled = (
+            self.native_web_search_mode == "live"
         )
         self.maas_max_tokens_mode = resolve_astroncode_maas_max_tokens_mode()
         provider_override = (
@@ -1325,6 +1330,7 @@ class AstronCodeAgent(BaseAgent):
             f'model_supports_reasoning_summaries = false\n'
             f'hide_agent_reasoning = true\n'
             f"model = {toml_basic_string(bare_model)}\n"
+            f"web_search = {toml_basic_string(self.native_web_search_mode)}\n"
             f'approval_policy = "never"\n'
             f'sandbox_mode = "danger-full-access"\n'
         )

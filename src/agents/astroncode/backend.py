@@ -24,6 +24,10 @@ DEFAULT_CODEX_NPM_VERSION = os.environ.get("ASTRONCODE_NPM_VERSION", "")
 CODEX_BOOTSTRAP_RETRIES = int(os.environ.get("ASTRONCODE_BOOTSTRAP_RETRIES", "2"))
 CODEX_BOOTSTRAP_RETRY_BASE_DELAY = float(os.environ.get("ASTRONCODE_BOOTSTRAP_RETRY_BASE_DELAY", "3"))
 DEFAULT_OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED_ENV = "ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED"
+DEFAULT_ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED = False
+_TRUE_ENV_VALUES = {"1", "true", "yes", "on"}
+_FALSE_ENV_VALUES = {"0", "false", "no", "off"}
 
 
 def resolve_astroncode_cli_command(raw_value: str | None = None) -> str:
@@ -125,22 +129,45 @@ def normalize_codex_model(model: str) -> str:
     return model
 
 
-def build_codex_config_toml(base_url: str, model: str) -> str:
+def resolve_astroncode_native_web_search_mode(raw_value: str | None = None) -> str:
+    configured = (
+        os.environ.get(ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED_ENV, "")
+        if raw_value is None
+        else raw_value
+    )
+    normalized = str(configured or "").strip().lower()
+    if not normalized:
+        return "live" if DEFAULT_ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED else "disabled"
+    if normalized in _TRUE_ENV_VALUES:
+        return "live"
+    if normalized in _FALSE_ENV_VALUES:
+        return "disabled"
+    raise ValueError(
+        f"{ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED_ENV} must be one of: "
+        "1, true, yes, on, 0, false, no, off"
+    )
+
+
+def build_codex_config_toml(
+    base_url: str,
+    model: str,
+    *,
+    web_search_mode: str | None = None,
+) -> str:
+    resolved_web_search_mode = (
+        resolve_astroncode_native_web_search_mode()
+        if web_search_mode is None
+        else web_search_mode
+    )
     return f"""\
 model_provider = "openrouter"
 model = "{normalize_codex_model(model)}"
+web_search = "{resolved_web_search_mode}"
 
 [model_providers.openrouter]
 name = "openrouter"
 base_url = "{base_url}"
 env_key = "OPENROUTER_API_KEY"
-
-[tools]
-apply_patch = true
-bash = true
-file_read = true
-file_write = true
-web_search = true
 """
 
 

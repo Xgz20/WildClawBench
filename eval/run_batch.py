@@ -284,6 +284,11 @@ def _build_run_configuration(
                 env.get("ASTRONCODE_MAAS_MAX_TOKENS_MODE", "")
             ).strip() or None,
         },
+        "astroncode": {
+            "native_web_search_enabled": getattr(
+                backend, "native_web_search_enabled", None
+            ),
+        },
         "credentials": {
             name: "configured" if str(env.get(name, "")).strip() else "unset"
             for name in sorted(credential_names)
