@@ -6,8 +6,9 @@
 
 | 日期 | 完整镜像 tag | Docker variant | AstronCode 版本 | 主要变更 | 当前定位 |
 | --- | --- | --- | --- | --- | --- |
+| 2026-09-02 | `wildclawbench-astroncode-ubuntu:v0.6` | `v6` | `0.0.42` | 升级生产 CLI 和模型目录，继承 SearchAgent 与 PPT 渲染能力 | 当前默认版本 |
 | 2026-08-25 | `wildclawbench-astroncode-ubuntu:v0.5-dev` | `v5-dev` | `0.0.35` 开发包 | 在 v0.5 能力底座上替换为 `@iflytek/astron-code-dev` 和 `astron-code-dev` | 开发调试包评测 |
-| 2026-08-24 | `wildclawbench-astroncode-ubuntu:v0.5` | `v5` | `0.0.34` | 升级 CLI 和模型目录，继承 SearchAgent 与 PPT 渲染能力 | 当前默认版本 |
+| 2026-08-24 | `wildclawbench-astroncode-ubuntu:v0.5` | `v5` | `0.0.34` | 升级 CLI 和模型目录，继承 SearchAgent 与 PPT 渲染能力 | 历史兼容版本 |
 | 2026-08-13 | `wildclawbench-astroncode-ubuntu:v0.4-ppt` | `v4` | `0.0.13` | 在 v0.4 基础上增加 LibreOffice 和 PPT 渲染门禁 | PPT 评测推荐版本 |
 | 2026-08-04 | `wildclawbench-astroncode-ubuntu:v0.4` | `v4` | `0.0.13` | 内置 SearchAgent 配置片段及构建期验证 | 通用评测历史版本 |
 | 2026-07-31 | `wildclawbench-astroncode-ubuntu:v0.3` | `v3` | `0.0.13` | 固定 AstronCode 0.0.13，配置和凭证改为运行时注入 | 0.0.13 基线版本 |
@@ -15,7 +16,41 @@
 | 2026-07-16 | `wildclawbench-astroncode-ubuntu:v0.1-test.8` | `v1` | `0.0.5-test.8` | 烘焙 astron-spark provider、model catalog 和 profile | 旧配置架构 |
 | 2026-07-15 | `wildclawbench-astroncode-ubuntu:v0.0` | 历史默认 Dockerfile | `0.0.5-benchmark-adapt.10` | 首次在 Codex 评测镜像上安装 AstronCode CLI | 初始版本 |
 
-> `v0.4` 和 `v0.4-ppt` 的镜像 tag 不能互换使用。早于 2026-08-13 构建的 `v0.4` 镜像不包含 LibreOffice，且历史 `v0.4` 不再注册为可构建版本。新评测默认使用 `v0.5`；需要复现 0.0.13 环境时再显式选择 `v0.4-ppt`。
+> `v0.4` 和 `v0.4-ppt` 的镜像 tag 不能互换使用。早于 2026-08-13 构建的 `v0.4` 镜像不包含 LibreOffice，且历史 `v0.4` 不再注册为可构建版本。新评测默认使用 `v0.6`；需要复现旧版本环境时再显式选择对应 tag。
+
+## v0.6
+
+### 版本信息
+
+- 完整镜像 tag：`wildclawbench-astroncode-ubuntu:v0.6`
+- 版本 Dockerfile：`docker/astroncode/v6/Dockerfile`
+- AstronCode：`0.0.42`
+- Node.js：`22.23.2`（AstronCode 0.0.42 要求 Node.js 22 或更高版本）
+- SearchAgent：`@iflytek/install-search-updater@0.1.17`
+- PPT 渲染：LibreOffice Impress + PyMuPDF (`fitz`)
+- 默认模型目录：`https://astronstudio-api-volces-prod.xf-yun.com/api/v1/model-manager`
+- 默认离线包名：`Images/wildclawbench-astroncode-ubuntu_v0.6.tar.gz`
+
+### 更新内容
+
+- 新增独立 `v6` 构建上下文，将 `@iflytek/astron-code` 固定为 `0.0.42`，构建阶段执行 `astron-code --version`。
+- 延续 v5 的 Node.js 22、SearchAgent Search/Fetch、SearchBetter、Scrapling Playwright 路径修正、LibreOffice 和 PyMuPDF 构建门禁。
+- Harness 默认模型目录从 `config-v4` 切换为生产 `model-manager` 地址，并继续允许通过 `ASTRON_MODELS_BASE_URL` 覆盖；该地址对 Astron Spark、GPT 和 OpenRouter provider 通用。
+- 默认评测镜像和 E2E 评分镜像切换为 `wildclawbench-astroncode-ubuntu:v0.6`。
+- 镜像不烘焙 API Key、UID、模型选择或模型目录地址；模型和凭据仍由 Harness 启动容器时写入。
+
+### 构建与验证
+
+```bash
+bash docker/astroncode/build.sh --version v0.6
+
+docker run --rm --entrypoint bash \
+  wildclawbench-astroncode-ubuntu:v0.6 \
+  -lc 'set -e; astron-code --version; node --version; soffice --version; python3 -c "import fitz; print(fitz.__version__)"; command -v install-search; test -s /opt/astroncode/search-agent.config.toml'
+```
+
+构建完成后应看到 `astron-code 0.0.42`，并通过 SearchAgent、Node.js 22、LibreOffice 和 PyMuPDF 检查。构建脚本同时导出：
+`Images/wildclawbench-astroncode-ubuntu_v0.6.tar.gz`。
 
 ## v0.5-dev
 
@@ -222,7 +257,7 @@ docker run --rm --entrypoint bash \
 
 ## 构建与发布约定
 
-当前默认构建 `v0.5`：
+当前默认构建 `v0.6`：
 
 ```bash
 bash docker/astroncode/build.sh
@@ -231,7 +266,10 @@ bash docker/astroncode/build.sh
 构建指定版本时只选择清单中的完整版本，不再分别指定 Docker variant 和镜像 tag：
 
 ```bash
-# v0.5
+# v0.6，AstronCode 0.0.42 生产镜像
+bash docker/astroncode/build.sh --version v0.6
+
+# v0.5，AstronCode 0.0.34 历史兼容镜像
 bash docker/astroncode/build.sh --version v0.5
 
 # v0.5-dev，评测 @iflytek/astron-code-dev@0.0.35
@@ -250,16 +288,16 @@ bash docker/astroncode/build.sh --version v0.2
 bash docker/astroncode/build.sh --version v0.1-test.8
 ```
 
-旧的 `script/build-astroncode-image.sh` 仍保留为兼容入口。它只接受清单中已有的 variant/tag 映射：`v1`、`v2`、`v3`、`v4`、`v5` 分别对应 `v0.1-test.8`、`v0.2`、`v0.3`、`v0.4-ppt`、`v0.5`；variant 与 tag 不匹配时会直接失败。
+旧的 `script/build-astroncode-image.sh` 仍保留为兼容入口。它只接受清单中已有的 variant/tag 映射：`v1`、`v2`、`v3`、`v4`、`v5`、`v6` 分别对应 `v0.1-test.8`、`v0.2`、`v0.3`、`v0.4-ppt`、`v0.5`、`v0.6`；variant 与 tag 不匹配时会直接失败。
 
 离线包发布前至少执行：
 
 ```bash
-gzip -t Images/wildclawbench-astroncode-ubuntu_v0.5.tar.gz
+gzip -t Images/wildclawbench-astroncode-ubuntu_v0.6.tar.gz
 
 # 建议在没有目标 tag 的独立 Docker 环境中验证
-docker load -i Images/wildclawbench-astroncode-ubuntu_v0.5.tar.gz
-docker image inspect wildclawbench-astroncode-ubuntu:v0.5 >/dev/null
+docker load -i Images/wildclawbench-astroncode-ubuntu_v0.6.tar.gz
+docker image inspect wildclawbench-astroncode-ubuntu:v0.6 >/dev/null
 ```
 
 `gzip -t` 只能验证 gzip 容器完整性，不能证明其中包含可加载的 Docker 镜像；离线包必须再通过 `docker load` 验证。

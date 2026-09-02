@@ -1,5 +1,5 @@
 {
-  "default": "v0.5",
+  "default": "v0.6",
   "versions": {
     "v0.1-test.8": {
       "image": "wildclawbench-astroncode-ubuntu:v0.1-test.8",
@@ -40,6 +40,16 @@
       "dockerfile": "v5/Dockerfile",
       "build_args": {
         "ASTRON_CODE_VERSION": "0.0.34",
+        "NODEJS_VERSION": "22.23.2-1nodesource1",
+        "SEARCH_UPDATER_VERSION": "0.1.17"
+      }
+    },
+    "v0.6": {
+      "image": "wildclawbench-astroncode-ubuntu:v0.6",
+      "context": "v6",
+      "dockerfile": "v6/Dockerfile",
+      "build_args": {
+        "ASTRON_CODE_VERSION": "0.0.42",
         "NODEJS_VERSION": "22.23.2-1nodesource1",
         "SEARCH_UPDATER_VERSION": "0.1.17"
       }

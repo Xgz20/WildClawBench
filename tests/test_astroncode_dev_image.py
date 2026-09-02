@@ -43,7 +43,7 @@ class AstronCodeDevImageTest(unittest.TestCase):
                 self.assertNotIn(fragment, self.content)
 
     def test_manifest_registers_v05_dev_without_changing_default(self) -> None:
-        self.assertEqual("v0.5", self.manifest["default"])
+        self.assertEqual("v0.6", self.manifest["default"])
         entry = self.manifest["versions"]["v0.5-dev"]
         self.assertEqual(
             "wildclawbench-astroncode-ubuntu:v0.5-dev",

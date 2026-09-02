@@ -63,8 +63,7 @@ class AstronCodeV5ImageTest(unittest.TestCase):
             with self.subTest(fragment=fragment):
                 self.assertNotIn(fragment, self.content)
 
-    def test_manifest_registers_v05_as_default(self) -> None:
-        self.assertEqual("v0.5", self.manifest["default"])
+    def test_manifest_preserves_v05_as_historical_version(self) -> None:
         entry = self.manifest["versions"]["v0.5"]
         self.assertEqual("wildclawbench-astroncode-ubuntu:v0.5", entry["image"])
         self.assertEqual("v5", entry["context"])

@@ -29,7 +29,7 @@ from src.utils.task_parser import parse_task_md  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_DOCKER_IMAGE = "wildclawbench-astroncode-ubuntu:v0.5"
+DEFAULT_DOCKER_IMAGE = "wildclawbench-astroncode-ubuntu:v0.6"
 TMP_WORKSPACE = "/tmp_workspace"
 
 

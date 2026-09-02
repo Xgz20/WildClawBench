@@ -47,13 +47,14 @@ BUILD_ENV_NAMES = (
 class ImageVersionManifestTest(unittest.TestCase):
     def test_astroncode_manifest_binds_official_tags_to_version_contexts(self):
         manifest = self._load_manifest(ASTRONCODE_MANIFEST)
-        self.assertEqual("v0.5", manifest["default"])
+        self.assertEqual("v0.6", manifest["default"])
         expected_contexts = {
             "v0.1-test.8": "v1",
             "v0.2": "v2",
             "v0.3": "v3",
             "v0.4-ppt": "v4",
             "v0.5": "v5",
+            "v0.6": "v6",
             "v0.5-dev": "v5-dev",
         }
         expected_args = {
@@ -66,6 +67,11 @@ class ImageVersionManifestTest(unittest.TestCase):
             },
             "v0.5": {
                 "ASTRON_CODE_VERSION": "0.0.34",
+                "NODEJS_VERSION": "22.23.2-1nodesource1",
+                "SEARCH_UPDATER_VERSION": "0.1.17",
+            },
+            "v0.6": {
+                "ASTRON_CODE_VERSION": "0.0.42",
                 "NODEJS_VERSION": "22.23.2-1nodesource1",
                 "SEARCH_UPDATER_VERSION": "0.1.17",
             },
@@ -201,20 +207,20 @@ class ImageVersionManifestTest(unittest.TestCase):
 
 
 class CanonicalBuildCliTest(unittest.TestCase):
-    def test_astroncode_default_build_uses_v5_context_and_pinned_versions(self):
+    def test_astroncode_default_build_uses_v6_context_and_pinned_versions(self):
         result, events = self._run_with_docker_stub(
             ["bash", str(ASTRONCODE_BUILD)],
             {"SKIP_SAVE": "1"},
         )
         self.assertEqual(0, result.returncode, result.stderr)
         build = self._event(events, "build")
-        context = ASTRONCODE_DIR / "v5"
+        context = ASTRONCODE_DIR / "v6"
         self.assertEqual(str(context / "Dockerfile"), build[build.index("-f") + 1])
         self.assertEqual(
-            "wildclawbench-astroncode-ubuntu:v0.5",
+            "wildclawbench-astroncode-ubuntu:v0.6",
             build[build.index("-t") + 1],
         )
-        self.assertIn("ASTRON_CODE_VERSION=0.0.34", build)
+        self.assertIn("ASTRON_CODE_VERSION=0.0.42", build)
         self.assertIn("NODEJS_VERSION=22.23.2-1nodesource1", build)
         self.assertIn("SEARCH_UPDATER_VERSION=0.1.17", build)
         self.assertEqual(str(context), build[-1])

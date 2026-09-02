@@ -269,21 +269,21 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
         cls.compact_content = re.sub(r"\s+", " ", logical_content)
         cls.manifest = json.loads(BUILD_MANIFEST.read_text(encoding="utf-8"))
 
-    def test_defaults_to_v5_image_tag(self):
-        self.assertEqual("v0.5", self.manifest["default"])
+    def test_defaults_to_v6_image_tag(self):
+        self.assertEqual("v0.6", self.manifest["default"])
         self.assertEqual(
-            "wildclawbench-astroncode-ubuntu:v0.5",
-            self.manifest["versions"]["v0.5"]["image"],
+            "wildclawbench-astroncode-ubuntu:v0.6",
+            self.manifest["versions"]["v0.6"]["image"],
         )
 
-    def test_defaults_to_v5_docker_variant(self):
+    def test_defaults_to_v6_docker_variant(self):
         self.assertEqual(
-            "v5",
-            self.manifest["versions"]["v0.5"]["context"],
+            "v6",
+            self.manifest["versions"]["v0.6"]["context"],
         )
         self.assertNotIn('BUILD_CONTEXT="${REPO_ROOT}/docker/astroncode/', self.content)
 
-    def test_documents_v5_default_and_historical_overrides(self):
+    def test_documents_v6_default_and_historical_overrides(self):
         result = subprocess.run(
             ["bash", str(BUILD_SCRIPT), "--help"],
             cwd=REPO_ROOT,
@@ -300,6 +300,7 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
                 "v0.3",
                 "v0.4-ppt",
                 "v0.5",
+                "v0.6",
                 "v0.5-dev",
             },
             set(self.manifest["versions"]),
@@ -345,6 +346,7 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
             "v0.3": "v3",
             "v0.4-ppt": "v4",
             "v0.5": "v5",
+            "v0.6": "v6",
             "v0.5-dev": "v5-dev",
         }
         for version, entry in self.manifest["versions"].items():
@@ -401,10 +403,10 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
                 f"docker was invoked with: {docker_calls}",
             )
 
-    def test_default_build_maps_to_v5_context(self):
+    def test_default_build_maps_to_v6_context(self):
         entry = self.manifest["versions"][self.manifest["default"]]
-        self.assertEqual("v5/Dockerfile", entry["dockerfile"])
-        self.assertEqual("0.0.34", entry["build_args"]["ASTRON_CODE_VERSION"])
+        self.assertEqual("v6/Dockerfile", entry["dockerfile"])
+        self.assertEqual("0.0.42", entry["build_args"]["ASTRON_CODE_VERSION"])
         self.assertEqual(
             "22.23.2-1nodesource1",
             entry["build_args"]["NODEJS_VERSION"],

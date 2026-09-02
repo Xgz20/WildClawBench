@@ -51,6 +51,7 @@ if [[ "${WCB_LEGACY_BUILD_WRAPPER:-}" == "1" ]]; then
     v3) LEGACY_VARIANT_VERSION="v0.3" ;;
     v4) LEGACY_VARIANT_VERSION="v0.4-ppt" ;;
     v5) LEGACY_VARIANT_VERSION="v0.5" ;;
+    v6) LEGACY_VARIANT_VERSION="v0.6" ;;
     *)
       echo "Unsupported legacy AstronCode build mapping: variant=${ASTRONCODE_DOCKER_VARIANT} tag=${IMAGE_TAG:-<default>}" >&2
       exit 2

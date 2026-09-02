@@ -53,7 +53,7 @@ _RESERVED_CONTAINER_ENV_KEYS = frozenset(ASTRONCODE_TRACE_ROOT_ENV_KEYS)
 DEFAULT_ONE_IFLYTEK_BASE_URL = "https://one.iflytek.com/api/llm/console/chat/v1"
 DEFAULT_ASTRON_MODELS_BASE_URL = (
     "https://astronstudio-api-volces-prod.xf-yun.com/"
-    "api/v1/astroncode_webserver/config-v4"
+    "api/v1/model-manager"
 )
 VALID_ASTRONCODE_PROVIDERS = ("astron-spark", "one-iflytek", "openrouter")
 ASTRON_MODEL_PREFIXES = ("xminimax", "xop", "xspark", "astronclaw-")
@@ -269,7 +269,7 @@ class AstronCodeAgent(BaseAgent):
         resolved_image = (
             image
             or os.environ.get("DOCKER_IMAGE_ASTRONCODE")
-            or "wildclawbench-astroncode-ubuntu:v0.5"
+            or "wildclawbench-astroncode-ubuntu:v0.6"
         )
         self.image: str = resolved_image
         self.cli_command = resolve_astroncode_cli_command(cli_command)
