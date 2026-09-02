@@ -46,6 +46,7 @@ def grade(**kwargs) -> dict:
     import json
     import math
     import sys
+    from collections import Counter, defaultdict
     from pathlib import Path
 
     keys = [
@@ -176,7 +177,9 @@ def grade(**kwargs) -> dict:
             target = None
 
     builtin_calls = {
+        "Counter": (0, 1),
         "dict": (0, 1),
+        "defaultdict": (1, 1),
         "int": (1, 1),
         "len": (1, 1),
         "list": (0, 1),
@@ -200,6 +203,8 @@ def grade(**kwargs) -> dict:
         "_method_setdefault",
         "_method_values",
         "_safe_add",
+        "_safe_counter",
+        "_safe_defaultdict",
         "_safe_dict",
         "_safe_int",
         "_safe_len",
@@ -224,10 +229,16 @@ def grade(**kwargs) -> dict:
         if isinstance(node, (ast.Tuple, ast.List)):
             return len(node.elts) <= 4 and all(valid_target(item) for item in node.elts)
         if isinstance(node, ast.Subscript):
+            slice_ok = isinstance(node.slice, (ast.Name, ast.Constant)) or (
+                isinstance(node.slice, ast.Subscript)
+                and isinstance(node.slice.value, ast.Name)
+                and valid_identifier(node.slice.value.id)
+                and isinstance(node.slice.slice, (ast.Name, ast.Constant))
+            )
             return (
                 isinstance(node.value, ast.Name)
                 and valid_identifier(node.value.id)
-                and isinstance(node.slice, (ast.Name, ast.Constant))
+                and slice_ok
             )
         return False
 
@@ -253,6 +264,7 @@ def grade(**kwargs) -> dict:
             ast.GtE,
             ast.If,
             ast.IfExp,
+            ast.ImportFrom,
             ast.In,
             ast.List,
             ast.ListComp,
@@ -273,6 +285,7 @@ def grade(**kwargs) -> dict:
             ast.UAdd,
             ast.USub,
             ast.UnaryOp,
+            ast.alias,
             ast.arg,
             ast.arguments,
             ast.comprehension,
@@ -294,6 +307,27 @@ def grade(**kwargs) -> dict:
                     return False
             if isinstance(node, ast.arg) and not valid_identifier(node.arg):
                 return False
+            if isinstance(node, ast.ImportFrom):
+                if (
+                    node.level != 0
+                    or node.module != "collections"
+                    or not node.names
+                    or any(
+                        item.name not in {"Counter", "defaultdict"}
+                        or item.asname is not None
+                        for item in node.names
+                    )
+                ):
+                    return False
+            if isinstance(node, ast.alias):
+                parent = parents.get(id(node))
+                if (
+                    not isinstance(parent, ast.ImportFrom)
+                    or parent.module != "collections"
+                    or node.name not in {"Counter", "defaultdict"}
+                    or node.asname is not None
+                ):
+                    return False
             if isinstance(node, ast.Constant):
                 value = node.value
                 if isinstance(value, str):
@@ -407,7 +441,7 @@ def grade(**kwargs) -> dict:
         return checked_number(int(value))
 
     def limited_sequence(value):
-        if type(value) not in (list, tuple, dict, str):
+        if not isinstance(value, (list, tuple, dict, str)):
             raise TypeError("bounded collection required")
         if len(value) > 512:
             raise ValueError("collection limit exceeded")
@@ -422,6 +456,17 @@ def grade(**kwargs) -> dict:
 
     def safe_dict(value=empty):
         result = {} if value is empty else dict(limited_sequence(value))
+        if len(result) > 512:
+            raise ValueError("collection limit exceeded")
+        return result
+
+    def safe_defaultdict(factory):
+        if factory is not int:
+            raise TypeError("only defaultdict(int) is supported")
+        return defaultdict(int)
+
+    def safe_counter(value=empty):
+        result = Counter() if value is empty else Counter(limited_sequence(value))
         if len(result) > 512:
             raise ValueError("collection limit exceeded")
         return result
@@ -447,31 +492,34 @@ def grade(**kwargs) -> dict:
         return None
 
     def method_get(value, key, default=None):
-        if type(value) is not dict or len(value) > 512:
+        if not isinstance(value, dict) or len(value) > 512:
             raise TypeError("bounded dict required")
         return value.get(key, default)
 
     def method_setdefault(value, key, default=None):
-        if type(value) is not dict or (key not in value and len(value) >= 512):
+        if not isinstance(value, dict) or (key not in value and len(value) >= 512):
             raise TypeError("bounded dict required")
         return value.setdefault(key, default)
 
     def method_items(value):
-        if type(value) is not dict or len(value) > 512:
+        if not isinstance(value, dict) or len(value) > 512:
             raise TypeError("bounded dict required")
         return list(value.items())
 
     def method_keys(value):
-        if type(value) is not dict or len(value) > 512:
+        if not isinstance(value, dict) or len(value) > 512:
             raise TypeError("bounded dict required")
         return list(value.keys())
 
     def method_values(value):
-        if type(value) is not dict or len(value) > 512:
+        if not isinstance(value, dict) or len(value) > 512:
             raise TypeError("bounded dict required")
         return list(value.values())
 
     class SafetyTransformer(ast.NodeTransformer):
+        def visit_ImportFrom(self, node):
+            return None
+
         def visit_BinOp(self, node):
             node = self.generic_visit(node)
             helper = "_safe_add" if isinstance(node.op, ast.Add) else "_safe_sub"
@@ -501,7 +549,9 @@ def grade(**kwargs) -> dict:
             node = self.generic_visit(node)
             if isinstance(node.func, ast.Name):
                 helper = {
+                    "Counter": "_safe_counter",
                     "dict": "_safe_dict",
+                    "defaultdict": "_safe_defaultdict",
                     "int": "_safe_int",
                     "len": "_safe_len",
                     "list": "_safe_list",
@@ -542,6 +592,8 @@ def grade(**kwargs) -> dict:
                 "_method_setdefault": method_setdefault,
                 "_method_values": method_values,
                 "_safe_add": safe_add,
+                "_safe_counter": safe_counter,
+                "_safe_defaultdict": safe_defaultdict,
                 "_safe_dict": safe_dict,
                 "_safe_int": safe_int,
                 "_safe_len": safe_len,
@@ -549,6 +601,7 @@ def grade(**kwargs) -> dict:
                 "_safe_sorted": safe_sorted,
                 "_safe_sub": safe_sub,
                 "_safe_sum": safe_sum,
+                "int": int,
             }
             exec(compile(safe_module, "<candidate>", "exec"), safe_globals)
             candidate = safe_globals["_candidate_function"]

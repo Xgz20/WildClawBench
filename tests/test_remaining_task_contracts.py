@@ -20,6 +20,7 @@ TASKS = {
     "paper": TASK_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_008_paper_reading_pack.md",
     "action": TASK_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_009_action_reconciliation.md",
     "launch": TASK_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_010_launch_program_pack.md",
+    "inventory": TASK_ROOT / "02_Code_Intelligence/02_Code_Intelligence_task_002_inventory_aggregator.md",
     "config": TASK_ROOT / "02_Code_Intelligence/02_Code_Intelligence_task_008_config_migrator.md",
     "archive": TASK_ROOT / "02_Code_Intelligence/02_Code_Intelligence_task_009_safe_archive_extract.md",
     "procurement": TASK_ROOT / "04_Search_Retrieval/04_Search_Retrieval_task_008_procurement_clause_version_lookup.md",
@@ -32,6 +33,7 @@ WORKSPACES = {
     "paper": WORKSPACE_ROOT / "01_Productivity_Flow/task_008_paper_reading_pack",
     "action": WORKSPACE_ROOT / "01_Productivity_Flow/task_009_action_reconciliation",
     "launch": WORKSPACE_ROOT / "01_Productivity_Flow/task_010_launch_program_pack",
+    "inventory": WORKSPACE_ROOT / "02_Code_Intelligence/task_002_inventory_aggregator",
     "config": WORKSPACE_ROOT / "02_Code_Intelligence/task_008_config_migrator",
     "procurement": WORKSPACE_ROOT / "04_Search_Retrieval/task_008_procurement_clause_version_lookup",
     "statfs": WORKSPACE_ROOT / "04_Search_Retrieval/task_010_node_statfs_release_trace",
@@ -240,6 +242,74 @@ class RemainingTaskContractTest(unittest.TestCase):
         self.assertEqual(score["atomic_failure_behavior"], 1.0)
         self.assertEqual(score["overall_score"], 1.0)
 
+    def test_inventory_defaultdict_implementation_is_scored_by_behavior(self) -> None:
+        source = self._inventory_source(
+            '''    from collections import defaultdict
+
+    totals = defaultdict(int)
+    for row in rows:
+        sku = row["sku"]
+        totals[sku] += int(row["quantity"])
+    return [{"sku": sku, "quantity": totals[sku]} for sku in sorted(totals)]'''
+        )
+        score = self._grade(
+            "inventory",
+            {
+                "project/inventory.py": source,
+                "results/inventory_summary.json": self._expected("inventory")["sample_output"],
+            },
+        )
+
+        self.assertEqual(score["public_cases_correct"], 1.0)
+        self.assertEqual(score["hidden_cases_correct"], 1.0)
+        self.assertEqual(score["source_delivery_valid"], 1.0)
+        self.assertEqual(score["overall_score"], 1.0)
+
+    def test_inventory_counter_implementation_is_scored_by_behavior(self) -> None:
+        source = self._inventory_source(
+            '''    from collections import Counter
+
+    totals = Counter()
+    for row in rows:
+        totals[row["sku"]] += int(row["quantity"])
+    return [{"sku": sku, "quantity": totals[sku]} for sku in sorted(totals)]'''
+        )
+        score = self._grade(
+            "inventory",
+            {
+                "project/inventory.py": source,
+                "results/inventory_summary.json": self._expected("inventory")["sample_output"],
+            },
+        )
+
+        self.assertEqual(score["public_cases_correct"], 1.0)
+        self.assertEqual(score["hidden_cases_correct"], 1.0)
+        self.assertEqual(score["source_delivery_valid"], 1.0)
+        self.assertEqual(score["overall_score"], 1.0)
+
+    def test_inventory_unsafe_import_is_rejected_before_execution(self) -> None:
+        source = self._inventory_source(
+            '''    import os
+
+    totals = {}
+    for row in rows:
+        sku = row["sku"]
+        totals[sku] = totals.get(sku, 0) + int(row["quantity"])
+    return [{"sku": sku, "quantity": totals[sku]} for sku in sorted(totals)]'''
+        )
+        score = self._grade(
+            "inventory",
+            {
+                "project/inventory.py": source,
+                "results/inventory_summary.json": self._expected("inventory")["sample_output"],
+            },
+        )
+
+        self.assertEqual(score["public_cases_correct"], 0.0)
+        self.assertEqual(score["hidden_cases_correct"], 0.0)
+        self.assertEqual(score["source_delivery_valid"], 0.0)
+        self.assertEqual(score["overall_score"], 0.2)
+
     def test_procurement_allows_valid_evidence_superset(self) -> None:
         expected = self._expected("procurement")
         answer = {
@@ -430,6 +500,18 @@ class RemainingTaskContractTest(unittest.TestCase):
 
     def _expected(self, name: str) -> dict:
         return json.loads((WORKSPACES[name] / "gt/expected.json").read_text(encoding="utf-8"))
+
+    def _inventory_source(self, body: str) -> str:
+        source = (
+            WORKSPACES["inventory"] / "exec/project/inventory.py"
+        ).read_text(encoding="utf-8")
+        return re.sub(
+            r"(?ms)^def aggregate_inventory\(rows\):\n.*?(?=^def main\(\):)",
+            'def aggregate_inventory(rows):\n'
+            '    """Aggregate integer quantities by SKU and return rows sorted by SKU."""\n'
+            f"{body}\n\n",
+            source,
+        )
 
     def _grade(self, name: str, outputs: dict[str, object]) -> dict:
         workspace = WORKSPACES[name]
