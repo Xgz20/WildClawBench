@@ -97,6 +97,13 @@ def grade(**kwargs) -> dict:
     if not isinstance(header, list) or not isinstance(expected_rows, list):
         return scores
 
+    rows_are_well_formed = bool(raw_rows) and all(
+        isinstance(raw, dict)
+        and set(raw) == set(header)
+        and None not in raw
+        and all(value is not None for value in raw.values())
+        for raw in raw_rows
+    )
     rows = []
     for raw in raw_rows:
         if not isinstance(raw, dict):
@@ -153,7 +160,7 @@ def grade(**kwargs) -> dict:
 
     delivery = 0.2
     delivery += 0.25 * (fieldnames == header)
-    valid_rows = True
+    valid_rows = rows_are_well_formed
     parsed_dates = []
     for row in rows:
         try:

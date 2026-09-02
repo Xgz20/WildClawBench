@@ -24,7 +24,7 @@ Build one workable phased launch plan. Respect the hard budget and deadline, pre
 
 Deliver these files under `/tmp_workspace/results/`:
 
-1. `launch_plan.csv` with exact columns `phase,milestone_id,milestone_name,start_date,end_date,owner,dependencies,planned_cost_usd,acceptance_gate,status`. Use the seven source milestone rows M1 through M7; represent Release Manager approval after pilot acceptance in M7's `acceptance_gate`, not as an eighth scheduled milestone.
+1. `launch_plan.csv` with exact columns `phase,milestone_id,milestone_name,start_date,end_date,owner,dependencies,planned_cost_usd,acceptance_gate,status`. Use the seven source milestone rows M1 through M7; represent Release Manager approval after pilot acceptance in M7's `acceptance_gate`, not as an eighth scheduled milestone. Use `planned` as the canonical `status` value; keep M7 as planned until approval is granted and describe the pending approval in `acceptance_gate` rather than marking it approved or completed.
 2. `risk_register.csv` with exact columns `risk_id,risk,trigger,owner,response,severity` and at least three concrete risks.
 3. `decision_log.md` covering the requested launch date, optional spend and controlling gates.
 4. `comms_draft.md`, ready for stakeholders but explicit about what is still conditional.
@@ -55,6 +55,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
     import csv
     import hashlib
     import json
+    import re
     from datetime import date, timedelta
     from pathlib import Path
 
@@ -72,6 +73,13 @@ def grade(transcript: list, workspace_path: str) -> dict:
 
     def regular(path):
         return path.is_file() and not path.is_symlink() and not path.parent.is_symlink()
+
+    def planned_status(value):
+        text = re.sub(r"\s+", " ", str(value or "").strip().casefold())
+        text = re.sub(r"\s*[–—]\s*", " - ", text)
+        return text == "planned" or bool(
+            re.fullmatch(r"planned - pending(?: release manager)? approval", text)
+        )
 
     plan_path = root / "results" / "launch_plan.csv"
     risk_path = root / "results" / "risk_register.csv"
@@ -99,6 +107,20 @@ def grade(transcript: list, workspace_path: str) -> dict:
         return scores
 
     actual = {row.get("milestone_id"): row for row in plan_rows if isinstance(row, dict)}
+    plan_rows_are_well_formed = all(
+        isinstance(row, dict)
+        and set(row) == set(expected["launch_plan_header"])
+        and None not in row
+        and all(value is not None for value in row.values())
+        for row in plan_rows
+    )
+    risk_rows_are_well_formed = all(
+        isinstance(row, dict)
+        and set(row) == set(expected["risk_register_header"])
+        and None not in row
+        and all(value is not None for value in row.values())
+        for row in risk_rows
+    )
     required = expected["required_milestones"]
     parsed = {}
     for milestone_id, row in actual.items():
@@ -152,7 +174,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
         ),
         release_manager_approval,
         expected["rejected_optional_request"] not in actual,
-        all(actual.get(mid, {}).get("status") == "planned" for mid in required),
+        all(planned_status(actual.get(mid, {}).get("status")) for mid in required),
     ])
 
     consistency_flags = []
@@ -185,9 +207,9 @@ def grade(transcript: list, workspace_path: str) -> dict:
         for row in risk_rows
     )
     scores["required_delivery_present"] = mean([
-        plan_header == expected["launch_plan_header"],
+        plan_header == expected["launch_plan_header"] and plan_rows_are_well_formed,
         set(actual) == set(required) and len(plan_rows) == len(required),
-        risk_header == expected["risk_register_header"],
+        risk_header == expected["risk_register_header"] and risk_rows_are_well_formed,
         risk_rows_valid,
         result_files == sorted(expected["required_output_files"]),
         all(regular(path) for path in (plan_path, risk_path, decision_path, comms_path)),

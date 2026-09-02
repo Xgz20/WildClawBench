@@ -22,7 +22,7 @@ tags:
 
 <https://arxiv.org/abs/1706.03762v7>
 
-在`/tmp_workspace/results/paper_card.json`中记录：`source,title,authors,first_submitted,version_revised,reported_results`。`source`包含`arxiv_id,version,versioned_id,url`，其中`versioned_id`规范写为`arXiv:1706.03762v7`；`first_submitted`和`version_revised`使用`YYYY-MM-DD`。作者按页面顺序列全；`reported_results`使用字段`wmt2014_english_german_bleu,wmt2014_english_french_bleu,english_french_training_days,english_french_training_gpus`。
+在`/tmp_workspace/results/paper_card.json`中记录：`source,title,authors,first_submitted,version_revised,reported_results`。`source`包含`arxiv_id,version,versioned_id,url`，其中`version`规范写为字符串`v7`，`versioned_id`规范写为`arXiv:1706.03762v7`；`first_submitted`和`version_revised`使用`YYYY-MM-DD`。作者按页面顺序列全；`reported_results`使用字段`wmt2014_english_german_bleu,wmt2014_english_french_bleu,english_french_training_days,english_french_training_gpus`。
 
 再写一份中文`/tmp_workspace/results/reading_pack.md`：先用一段话说明论文解决的问题和核心思路，再给出总计60分钟的组会议程和3个具体讨论问题。引用必须明确到v7。不要保存网页或PDF副本，不要使用其他来源或创建其他结果文件。
 
@@ -70,6 +70,20 @@ def grade(transcript: list, workspace_path: str) -> dict:
     def versioned_id(value):
         return re.sub(r"^arxiv\s*:\s*", "", str(value or "").strip(), flags=re.I)
 
+    def version(value):
+        if isinstance(value, bool):
+            return None
+        if isinstance(value, int):
+            number = value
+        elif isinstance(value, str):
+            match = re.fullmatch(r"v?([1-9]\d*)", value.strip(), flags=re.I)
+            if not match:
+                return None
+            number = int(match.group(1))
+        else:
+            return None
+        return f"v{number}"
+
     def calendar_date(value):
         text = str(value or "").strip()
         if not re.fullmatch(r"\d{4}-\d{2}-\d{2}(?:[T ][^\s]+)?", text):
@@ -91,7 +105,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
     source = card.get("source") if isinstance(card.get("source"), dict) else {}
     scores["fixed_version_correct"] = mean([
         source.get("arxiv_id") == expected["source"]["arxiv_id"],
-        source.get("version") == expected["source"]["version"],
+        version(source.get("version")) == version(expected["source"]["version"]),
         versioned_id(source.get("versioned_id"))
         == versioned_id(expected["source"]["versioned_id"]),
         source.get("url") == expected["source"]["url"],

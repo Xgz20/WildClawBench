@@ -119,6 +119,13 @@ def grade(**kwargs) -> dict:
         return {**scores, "overall_score": 0.0}
 
     columns = ["stage", "document_number", "document_date", "published_or_effective_date", "coverage", "source_url"]
+    rows_are_well_formed = all(
+        isinstance(row, dict)
+        and set(row) == set(columns)
+        and None not in row
+        and all(value is not None for value in row.values())
+        for row in rows
+    )
     expected_by_stage = {row["stage"]: row for row in expected["rows"]}
     actual_by_stage = {row.get("stage"): row for row in rows if isinstance(row, dict)}
     stages = [row["stage"] for row in expected["rows"]]
@@ -153,7 +160,7 @@ def grade(**kwargs) -> dict:
     ]
     date_pattern = re.compile(r"^\d{4}-\d{2}-\d{2}$")
     scores["structured_delivery"] = mean([
-        fieldnames == columns,
+        fieldnames == columns and rows_are_well_formed,
         [row.get("stage") for row in rows] == stages,
         len(rows) == 4,
         all(date_pattern.fullmatch(row.get("document_date", "")) for row in rows),

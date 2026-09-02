@@ -96,6 +96,13 @@ def grade(**kwargs) -> dict:
         return {**scores, "overall_score": 0.0}
 
     columns = ["use_case", "nist_status", "conditions", "primary_source", "section_or_table"]
+    rows_are_well_formed = all(
+        isinstance(row, dict)
+        and set(row) == set(columns)
+        and None not in row
+        and all(value is not None for value in row.values())
+        for row in rows
+    )
     expected_by_case = {row["use_case"]: row for row in expected["rows"]}
     actual_by_case = {row.get("use_case"): row for row in rows if isinstance(row, dict)}
     memo_lower = memo.lower()
@@ -135,7 +142,7 @@ def grade(**kwargs) -> dict:
         and p.suffix.lower() in {".html", ".htm", ".mhtml", ".pdf", ".warc"}
     ]
     scores["structured_delivery"] = mean([
-        fieldnames == columns,
+        fieldnames == columns and rows_are_well_formed,
         [row.get("use_case") for row in rows] == [row["use_case"] for row in expected["rows"]],
         len(rows) == 3,
         all(row.get("section_or_table") for row in rows),

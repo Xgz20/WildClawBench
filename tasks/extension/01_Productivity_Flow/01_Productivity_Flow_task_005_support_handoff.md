@@ -85,6 +85,13 @@ def grade(transcript: list, workspace_path: str) -> dict:
 
     actual = {row.get("ticket_id"): row for row in rows if isinstance(row, dict)}
     wanted = {row["ticket_id"]: row for row in expected["active_rows"]}
+    rows_are_well_formed = all(
+        isinstance(row, dict)
+        and set(row) == set(expected["csv_header"])
+        and None not in row
+        and all(value is not None for value in row.values())
+        for row in rows
+    )
     fact_flags = [set(actual) == set(wanted)]
     for ticket_id, target in wanted.items():
         row = actual.get(ticket_id, {})
@@ -111,7 +118,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
     results = root / "results"
     result_files = sorted(path.name for path in results.iterdir() if path.is_file() or path.is_symlink()) if results.is_dir() else []
     scores["delivery_correct"] = mean([
-        header == expected["csv_header"],
+        header == expected["csv_header"] and rows_are_well_formed,
         result_files == ["handoff.csv", "handoff_note.md"],
         regular(csv_path),
         regular(note_path),

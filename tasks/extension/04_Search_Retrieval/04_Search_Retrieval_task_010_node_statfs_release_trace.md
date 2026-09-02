@@ -89,6 +89,13 @@ def grade(**kwargs) -> dict:
         return {**scores, "overall_score": 0.0}
 
     columns = ["date", "event", "identifier", "evidence_url"]
+    rows_are_well_formed = all(
+        isinstance(row, dict)
+        and set(row) == set(columns)
+        and None not in row
+        and all(value is not None for value in row.values())
+        for row in rows
+    )
     expected_by_event = {row["event"]: row for row in expected["rows"]}
     actual_by_event = {row.get("event"): row for row in rows if isinstance(row, dict)}
     scores["source_chain_identity"] = mean([
@@ -127,7 +134,7 @@ def grade(**kwargs) -> dict:
         and p.suffix.lower() in {".html", ".htm", ".mhtml", ".pdf", ".warc"}
     ]
     scores["structured_delivery"] = mean([
-        fieldnames == columns,
+        fieldnames == columns and rows_are_well_formed,
         [row.get("event") for row in rows] == [row["event"] for row in expected["rows"]],
         len(rows) == 5,
         all(row.get(key) == wanted[key] for row, wanted in zip(rows, expected["rows"]) for key in columns),

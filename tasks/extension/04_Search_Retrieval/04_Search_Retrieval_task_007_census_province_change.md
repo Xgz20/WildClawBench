@@ -113,6 +113,13 @@ def grade(**kwargs) -> dict:
         for row in rows
         if isinstance(row, dict)
     }
+    rows_are_well_formed = all(
+        isinstance(row, dict)
+        and set(row) == set(columns)
+        and None not in row
+        and all(value is not None for value in row.values())
+        for row in rows
+    )
     scores["official_sources"] = mean([
         expected["source_urls"][0] in note,
         expected["source_urls"][1] in note,
@@ -148,7 +155,7 @@ def grade(**kwargs) -> dict:
         and p.suffix.lower() in {".html", ".htm", ".mhtml", ".pdf", ".warc"}
     ]
     scores["structured_delivery"] = mean([
-        fieldnames == columns,
+        fieldnames == columns and rows_are_well_formed,
         [canonical_province(row.get("province")) for row in rows]
         == ["广东", "浙江", "黑龙江"],
         len(rows) == 3,

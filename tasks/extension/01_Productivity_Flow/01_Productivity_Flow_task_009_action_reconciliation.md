@@ -102,6 +102,13 @@ def grade(transcript: list, workspace_path: str) -> dict:
 
     identity_actual = {row.get("order_id"): row for row in identity_rows if isinstance(row, dict)}
     identity_wanted = {row["order_id"]: row for row in expected["identity_chain_rows"]}
+    identity_rows_are_well_formed = all(
+        isinstance(row, dict)
+        and set(row) == set(expected["identity_chain_header"])
+        and None not in row
+        and all(value is not None for value in row.values())
+        for row in identity_rows
+    )
     identity_flags = [set(identity_actual) == set(identity_wanted)]
     for order_id, target in identity_wanted.items():
         row = identity_actual.get(order_id, {})
@@ -110,6 +117,13 @@ def grade(transcript: list, workspace_path: str) -> dict:
 
     exception_actual = {row.get("order_id"): row for row in exception_rows if isinstance(row, dict)}
     exception_wanted = {row["order_id"]: row for row in expected["exception_rows"]}
+    exception_rows_are_well_formed = all(
+        isinstance(row, dict)
+        and set(row) == set(expected["exceptions_header"])
+        and None not in row
+        and all(value is not None for value in row.values())
+        for row in exception_rows
+    )
     exception_flags = [set(exception_actual) == set(exception_wanted)]
     for order_id, target in exception_wanted.items():
         row = exception_actual.get(order_id, {})
@@ -136,8 +150,8 @@ def grade(transcript: list, workspace_path: str) -> dict:
     results = root / "results"
     result_files = sorted(path.name for path in results.iterdir() if path.is_file() or path.is_symlink()) if results.is_dir() else []
     scores["structured_delivery_correct"] = mean([
-        identity_header == expected["identity_chain_header"],
-        exception_header == expected["exceptions_header"],
+        identity_header == expected["identity_chain_header"] and identity_rows_are_well_formed,
+        exception_header == expected["exceptions_header"] and exception_rows_are_well_formed,
         result_files == ["exceptions.csv", "handoff_plan.md", "identity_chain.csv"],
         all(regular(path) for path in (identity_path, exceptions_path, handoff_path)),
     ])

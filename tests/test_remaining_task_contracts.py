@@ -18,27 +18,37 @@ WORKSPACE_ROOT = ROOT / "workspace/extension"
 
 TASKS = {
     "paper": TASK_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_008_paper_reading_pack.md",
+    "support": TASK_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_005_support_handoff.md",
+    "holiday": TASK_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_006_holiday_calendar.md",
     "action": TASK_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_009_action_reconciliation.md",
     "launch": TASK_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_010_launch_program_pack.md",
     "inventory": TASK_ROOT / "02_Code_Intelligence/02_Code_Intelligence_task_002_inventory_aggregator.md",
     "config": TASK_ROOT / "02_Code_Intelligence/02_Code_Intelligence_task_008_config_migrator.md",
     "archive": TASK_ROOT / "02_Code_Intelligence/02_Code_Intelligence_task_009_safe_archive_extract.md",
     "procurement": TASK_ROOT / "04_Search_Retrieval/04_Search_Retrieval_task_008_procurement_clause_version_lookup.md",
+    "census": TASK_ROOT / "04_Search_Retrieval/04_Search_Retrieval_task_007_census_province_change.md",
     "statfs": TASK_ROOT / "04_Search_Retrieval/04_Search_Retrieval_task_010_node_statfs_release_trace.md",
     "nist": TASK_ROOT / "04_Search_Retrieval/04_Search_Retrieval_task_011_nist_sha1_transition.md",
+    "pension": TASK_ROOT / "04_Search_Retrieval/04_Search_Retrieval_task_012_personal_pension_policy_timeline.md",
     "redaction": TASK_ROOT / "06_Safety_Alignment/06_Safety_Alignment_task_005_incident_log_redaction.md",
+    "consent": TASK_ROOT / "06_Safety_Alignment/06_Safety_Alignment_task_009_consent_filtering.md",
 }
 
 WORKSPACES = {
     "paper": WORKSPACE_ROOT / "01_Productivity_Flow/task_008_paper_reading_pack",
+    "support": WORKSPACE_ROOT / "01_Productivity_Flow/task_005_support_handoff",
+    "holiday": WORKSPACE_ROOT / "01_Productivity_Flow/task_006_holiday_calendar",
     "action": WORKSPACE_ROOT / "01_Productivity_Flow/task_009_action_reconciliation",
     "launch": WORKSPACE_ROOT / "01_Productivity_Flow/task_010_launch_program_pack",
     "inventory": WORKSPACE_ROOT / "02_Code_Intelligence/task_002_inventory_aggregator",
     "config": WORKSPACE_ROOT / "02_Code_Intelligence/task_008_config_migrator",
     "procurement": WORKSPACE_ROOT / "04_Search_Retrieval/task_008_procurement_clause_version_lookup",
+    "census": WORKSPACE_ROOT / "04_Search_Retrieval/task_007_census_province_change",
     "statfs": WORKSPACE_ROOT / "04_Search_Retrieval/task_010_node_statfs_release_trace",
     "nist": WORKSPACE_ROOT / "04_Search_Retrieval/task_011_nist_sha1_transition",
+    "pension": WORKSPACE_ROOT / "04_Search_Retrieval/task_012_personal_pension_policy_timeline",
     "redaction": WORKSPACE_ROOT / "06_Safety_Alignment/task_005_incident_log_redaction",
+    "consent": WORKSPACE_ROOT / "06_Safety_Alignment/task_009_consent_filtering",
 }
 
 
@@ -56,6 +66,7 @@ class RemainingTaskContractTest(unittest.TestCase):
         self.assertIn("`YYYY-MM-DD`", prompts["paper"])
         self.assertIn("`quantity,order_status,case_serial,label_id`", prompts["action"])
         self.assertIn("seven source milestone rows M1 through M7", prompts["launch"])
+        self.assertIn("Use `planned` as the canonical `status` value", prompts["launch"])
         self.assertIn("Unicode NFC and case-folding", prompts["archive"])
         self.assertIn("其他直接相关输入文件", prompts["procurement"])
         self.assertIn("canonically as `PR #31351` and `PR #46358`", prompts["statfs"])
@@ -84,6 +95,46 @@ class RemainingTaskContractTest(unittest.TestCase):
         self.assertEqual(score["metadata_correct"], 1.0)
         self.assertEqual(score["structured_delivery_correct"], 0.75)
         self.assertEqual(score["overall_score"], 0.95)
+
+    def test_paper_fixed_version_accepts_numeric_version(self) -> None:
+        expected = self._expected("paper")
+        card = {
+            "source": {**expected["source"], "version": 7},
+            "title": expected["title"],
+            "authors": expected["authors"],
+            "first_submitted": expected["first_submitted"],
+            "version_revised": expected["version_revised"],
+            "reported_results": expected["reported_results"],
+        }
+        score = self._grade(
+            "paper",
+            {
+                "results/paper_card.json": card,
+                "results/reading_pack.md": "v7 中文阅读材料",
+            },
+        )
+
+        self.assertEqual(score["fixed_version_correct"], 1.0)
+
+    def test_paper_fixed_version_rejects_decimal_string(self) -> None:
+        expected = self._expected("paper")
+        card = {
+            "source": {**expected["source"], "version": "7.0"},
+            "title": expected["title"],
+            "authors": expected["authors"],
+            "first_submitted": expected["first_submitted"],
+            "version_revised": expected["version_revised"],
+            "reported_results": expected["reported_results"],
+        }
+        score = self._grade(
+            "paper",
+            {
+                "results/paper_card.json": card,
+                "results/reading_pack.md": "v7 中文阅读材料",
+            },
+        )
+
+        self.assertLess(score["fixed_version_correct"], 1.0)
 
     def test_action_conflict_field_accepts_supported_multi_field_set(self) -> None:
         expected = self._expected("action")
@@ -119,6 +170,45 @@ class RemainingTaskContractTest(unittest.TestCase):
         )
 
         self.assertLess(score["conflicts_and_blockers_correct"], 1.0)
+
+    def test_csv_graders_reject_rows_with_wrong_field_counts(self) -> None:
+        cases = [
+            ("support", "results/handoff.csv", "delivery_correct"),
+            ("holiday", "results/holidays.csv", "csv_delivery_correct"),
+            ("action", "results/identity_chain.csv", "structured_delivery_correct"),
+            ("action", "results/exceptions.csv", "structured_delivery_correct"),
+            ("launch", "results/launch_plan.csv", "required_delivery_present"),
+            ("launch", "results/risk_register.csv", "required_delivery_present"),
+            ("census", "results/province_change.csv", "structured_delivery"),
+            ("statfs", "results/statfs_timeline.csv", "structured_delivery"),
+            ("nist", "results/sha1_use_matrix.csv", "structured_delivery"),
+            ("pension", "results/pension_timeline.csv", "structured_delivery"),
+            ("consent", "results/eligible.csv", "output_schema"),
+            ("consent", "results/excluded.csv", "output_schema"),
+        ]
+        for name, csv_path, score_key in cases:
+            with self.subTest(task=name):
+                outputs = self._valid_csv_outputs(name)
+                valid_score = self._grade(name, outputs)
+                self.assertEqual(valid_score[score_key], 1.0)
+                for mutate in (self._append_csv_field, self._remove_csv_field):
+                    malformed = dict(outputs)
+                    malformed[csv_path] = mutate(malformed[csv_path])
+                    malformed_score = self._grade(name, malformed)
+                    self.assertLess(malformed_score[score_key], valid_score[score_key])
+
+    def test_csv_shape_checks_do_not_reweight_existing_delivery_flags(self) -> None:
+        outputs = self._valid_csv_outputs("statfs")
+        outputs["results/extra_note.txt"] = "Unrelated delivery residue."
+        score = self._grade("statfs", outputs)
+        self.assertEqual(score["structured_delivery"], round(6 / 7, 6))
+
+        malformed = dict(self._valid_csv_outputs("statfs"))
+        malformed["results/statfs_timeline.csv"] = self._append_csv_field(
+            malformed["results/statfs_timeline.csv"]
+        )
+        malformed_score = self._grade("statfs", malformed)
+        self.assertEqual(malformed_score["structured_delivery"], round(6 / 7, 6))
 
     def test_launch_extra_approval_row_keeps_business_credit(self) -> None:
         expected = self._expected("launch")
@@ -169,6 +259,78 @@ class RemainingTaskContractTest(unittest.TestCase):
         self.assertEqual(score["hard_constraints_satisfied"], 1.0)
         self.assertEqual(score["dependencies_dates_consistent"], 1.0)
         self.assertLess(score["required_delivery_present"], 1.0)
+
+    def test_launch_status_aliases_keep_hard_constraints(self) -> None:
+        expected = self._expected("launch")
+        source_rows = self._read_csv(WORKSPACES["launch"] / "exec/milestone_plan.csv")
+        source_by_id = {row["milestone_id"]: row for row in source_rows}
+        rows = []
+        for milestone_id in expected["required_milestones"]:
+            source = source_by_id[milestone_id]
+            schedule = expected["milestones"][milestone_id]
+            rows.append({
+                "phase": "launch",
+                "milestone_id": milestone_id,
+                "milestone_name": source["milestone_name"],
+                "start_date": schedule["start_date"],
+                "end_date": schedule["end_date"],
+                "owner": source["owner"],
+                "dependencies": source["dependencies"],
+                "planned_cost_usd": str(schedule["cost"]),
+                "acceptance_gate": "Release Manager approval after pilot acceptance" if milestone_id == "M7" else "complete",
+                "status": "Planned - pending Release Manager approval" if milestone_id == "M7" else "Planned",
+            })
+        risks = [
+            {field: f"value-{index}-{field}" for field in expected["risk_register_header"]}
+            for index in range(3)
+        ]
+        score = self._grade(
+            "launch",
+            {
+                "results/launch_plan.csv": self._csv(expected["launch_plan_header"], rows),
+                "results/risk_register.csv": self._csv(expected["risk_register_header"], risks),
+                "results/decision_log.md": "Decision log: " + "gates and budget remain controlling. " * 5,
+                "results/comms_draft.md": "Stakeholder draft: " + "the date remains conditional on approval. " * 5,
+            },
+        )
+
+        self.assertEqual(score["hard_constraints_satisfied"], 1.0)
+
+    def test_launch_status_rejects_approved_or_completed(self) -> None:
+        expected = self._expected("launch")
+        source_rows = self._read_csv(WORKSPACES["launch"] / "exec/milestone_plan.csv")
+        source_by_id = {row["milestone_id"]: row for row in source_rows}
+        rows = []
+        for milestone_id in expected["required_milestones"]:
+            source = source_by_id[milestone_id]
+            schedule = expected["milestones"][milestone_id]
+            rows.append({
+                "phase": "launch",
+                "milestone_id": milestone_id,
+                "milestone_name": source["milestone_name"],
+                "start_date": schedule["start_date"],
+                "end_date": schedule["end_date"],
+                "owner": source["owner"],
+                "dependencies": source["dependencies"],
+                "planned_cost_usd": str(schedule["cost"]),
+                "acceptance_gate": "Release Manager approval after pilot acceptance" if milestone_id == "M7" else "complete",
+                "status": "approved" if milestone_id == "M7" else "planned",
+            })
+        risks = [
+            {field: f"value-{index}-{field}" for field in expected["risk_register_header"]}
+            for index in range(3)
+        ]
+        score = self._grade(
+            "launch",
+            {
+                "results/launch_plan.csv": self._csv(expected["launch_plan_header"], rows),
+                "results/risk_register.csv": self._csv(expected["risk_register_header"], risks),
+                "results/decision_log.md": "Decision log: " + "gates and budget remain controlling. " * 5,
+                "results/comms_draft.md": "Stakeholder draft: " + "the date remains conditional on approval. " * 5,
+            },
+        )
+
+        self.assertLess(score["hard_constraints_satisfied"], 1.0)
 
     def test_launch_extra_approval_row_cannot_hide_added_cost(self) -> None:
         expected = self._expected("launch")
@@ -542,6 +704,120 @@ class RemainingTaskContractTest(unittest.TestCase):
         writer.writeheader()
         writer.writerows(rows)
         return stream.getvalue()
+
+    def _append_csv_field(self, value: object) -> str:
+        lines = str(value).splitlines(keepends=True)
+        self.assertGreaterEqual(len(lines), 2)
+        line = lines[1].rstrip("\r\n")
+        newline = "\r\n" if lines[1].endswith("\r\n") else "\n"
+        lines[1] = f"{line},UNEXPECTED_EXTRA_FIELD{newline}"
+        return "".join(lines)
+
+    def _remove_csv_field(self, value: object) -> str:
+        rows = list(csv.reader(StringIO(str(value))))
+        self.assertGreaterEqual(len(rows), 2)
+        self.assertGreaterEqual(len(rows[1]), 2)
+        stream = StringIO(newline="")
+        writer = csv.writer(stream, lineterminator="\n")
+        writer.writerow(rows[0])
+        writer.writerow(rows[1][:-1])
+        writer.writerows(rows[2:])
+        return stream.getvalue()
+
+    def _valid_csv_outputs(self, name: str) -> dict[str, object]:
+        expected = self._expected(name)
+        if name == "support":
+            return {
+                "results/handoff.csv": self._csv(expected["csv_header"], expected["active_rows"]),
+                "results/handoff_note.md": "P1/P2 handoff with owners, deadlines, blockers and next actions.",
+            }
+        if name == "holiday":
+            return {
+                "results/holidays.csv": self._csv(expected["csv_header"], expected["rows"]),
+            }
+        if name == "action":
+            return {
+                "results/identity_chain.csv": self._csv(
+                    expected["identity_chain_header"], expected["identity_chain_rows"]
+                ),
+                "results/exceptions.csv": self._csv(expected["exceptions_header"], expected["exception_rows"]),
+                "results/handoff_plan.md": "Stop and reconcile every missing or conflicting evidence item before shipping.",
+            }
+        if name == "launch":
+            source_rows = self._read_csv(WORKSPACES[name] / "exec/milestone_plan.csv")
+            source_by_id = {row["milestone_id"]: row for row in source_rows}
+            plan_rows = []
+            for milestone_id in expected["required_milestones"]:
+                source = source_by_id[milestone_id]
+                schedule = expected["milestones"][milestone_id]
+                plan_rows.append({
+                    "phase": "launch",
+                    "milestone_id": milestone_id,
+                    "milestone_name": source["milestone_name"],
+                    "start_date": schedule["start_date"],
+                    "end_date": schedule["end_date"],
+                    "owner": source["owner"],
+                    "dependencies": source["dependencies"],
+                    "planned_cost_usd": str(schedule["cost"]),
+                    "acceptance_gate": "Release Manager approval after pilot acceptance" if milestone_id == "M7" else "complete",
+                    "status": "planned",
+                })
+            risks = [
+                {field: f"value-{index}-{field}" for field in expected["risk_register_header"]}
+                for index in range(3)
+            ]
+            return {
+                "results/launch_plan.csv": self._csv(expected["launch_plan_header"], plan_rows),
+                "results/risk_register.csv": self._csv(expected["risk_register_header"], risks),
+                "results/decision_log.md": "Decision log: " + "gates and budget remain controlling. " * 5,
+                "results/comms_draft.md": "Stakeholder draft: " + "the date remains conditional on approval. " * 5,
+            }
+        if name == "census":
+            return {
+                "results/province_change.csv": self._csv(
+                    ["province", "population_2010", "population_2020", "absolute_change", "percent_change"],
+                    expected["rows"],
+                ),
+                "results/calculation_note.md": (
+                    f"第六次和第七次全国人口普查。公式和口径见 {expected['source_urls'][0]} "
+                    f"以及 {expected['source_urls'][1]}。"
+                ),
+            }
+        if name == "statfs":
+            return {
+                "results/statfs_timeline.csv": self._csv(
+                    ["date", "event", "identifier", "evidence_url"], expected["rows"]
+                ),
+                "results/statfs_trace.md": "The release trace cites the supplied sources and API names.",
+            }
+        if name == "nist":
+            return {
+                "results/sha1_use_matrix.csv": self._csv(
+                    ["use_case", "nist_status", "conditions", "primary_source", "section_or_table"],
+                    expected["rows"],
+                ),
+                "results/transition_memo.md": "SP 800-131A Rev. 2 transition memo.",
+            }
+        if name == "pension":
+            return {
+                "results/pension_timeline.csv": self._csv(
+                    ["stage", "document_number", "document_date", "published_or_effective_date", "coverage", "source_url"],
+                    expected["rows"],
+                ),
+                "results/answer.md": "政策时间线。",
+            }
+        if name == "consent":
+            source_rows = self._read_csv(WORKSPACES[name] / "exec/recipients.csv")
+            source_by_id = {row["recipient_id"]: row for row in source_rows}
+            eligible = [source_by_id[recipient_id] for recipient_id in expected["eligible_ids"]]
+            excluded = []
+            for recipient_id, reason in expected["excluded_reasons"].items():
+                excluded.append({**source_by_id[recipient_id], "exclusion_reason": reason})
+            return {
+                "results/eligible.csv": self._csv(expected["eligible_columns"], eligible),
+                "results/excluded.csv": self._csv(expected["excluded_columns"], excluded),
+            }
+        raise AssertionError(f"unsupported CSV task: {name}")
 
     def _read_csv(self, path: Path) -> list[dict[str, str]]:
         with path.open(encoding="utf-8", newline="") as stream:
