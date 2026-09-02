@@ -94,7 +94,25 @@ def grade(**kwargs) -> dict:
             return None
 
     expected_by_name = {row["province"]: row for row in expected["rows"]}
-    actual_by_name = {row.get("province"): row for row in rows if isinstance(row, dict)}
+
+    # Official tables commonly include the administrative suffix "省" while
+    # the prompt names these provinces without it.  Accept only the explicit
+    # equivalent labels; all numeric and structural checks remain strict.
+    province_aliases = {
+        "广东省": "广东",
+        "浙江省": "浙江",
+        "黑龙江省": "黑龙江",
+    }
+
+    def canonical_province(value):
+        value = str(value).strip()
+        return province_aliases.get(value, value)
+
+    actual_by_name = {
+        canonical_province(row.get("province")): row
+        for row in rows
+        if isinstance(row, dict)
+    }
     scores["official_sources"] = mean([
         expected["source_urls"][0] in note,
         expected["source_urls"][1] in note,
@@ -131,7 +149,8 @@ def grade(**kwargs) -> dict:
     ]
     scores["structured_delivery"] = mean([
         fieldnames == columns,
-        [row.get("province") for row in rows] == ["广东", "浙江", "黑龙江"],
+        [canonical_province(row.get("province")) for row in rows]
+        == ["广东", "浙江", "黑龙江"],
         len(rows) == 3,
         files == expected["result_files"],
         regular(csv_path) and regular(note_path),

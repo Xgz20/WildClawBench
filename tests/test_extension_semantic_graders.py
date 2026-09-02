@@ -46,6 +46,16 @@ MOUTAI_GT = (
     / "workspace/extension/04_Search_Retrieval"
     / "task_009_sse_annual_report_metrics/gt/expected.json"
 )
+CENSUS_TASK = (
+    ROOT
+    / "tasks/extension/04_Search_Retrieval"
+    / "04_Search_Retrieval_task_007_census_province_change.md"
+)
+CENSUS_GT = (
+    ROOT
+    / "workspace/extension/04_Search_Retrieval"
+    / "task_007_census_province_change/gt/expected.json"
+)
 VENDOR_GT = (
     ROOT
     / "workspace/extension/03_Social_Interaction"
@@ -170,6 +180,21 @@ class ExtensionSemanticGraderTest(unittest.TestCase):
             canonical,
         )
         self.assertEqual(canonical_score["overall_score"], 1.0)
+
+    def test_census_accepts_official_province_suffixes(self) -> None:
+        expected = json.loads(CENSUS_GT.read_text(encoding="utf-8"))
+        rows = [
+            {**row, "province": f"{row['province']}省"}
+            for row in expected["rows"]
+        ]
+
+        score = self._grade_census(rows)
+
+        self.assertEqual(score["official_sources"], 1.0)
+        self.assertEqual(score["population_values"], 1.0)
+        self.assertEqual(score["change_calculations"], 1.0)
+        self.assertEqual(score["structured_delivery"], 1.0)
+        self.assertEqual(score["overall_score"], 1.0)
 
     def test_vendor_rich_nested_plan_keeps_business_credit(self) -> None:
         plan = {
@@ -461,6 +486,36 @@ class ExtensionSemanticGraderTest(unittest.TestCase):
                 if name != "impact_plan.json":
                     (root / "results" / name).write_text("draft", encoding="utf-8")
             return load_grader(VENDOR_TASK)(workspace_path=str(root))
+
+    def _grade_census(self, rows: list[dict]) -> dict:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "gt").mkdir()
+            (root / "results").mkdir()
+            expected = json.loads(CENSUS_GT.read_text(encoding="utf-8"))
+            (root / "gt/expected.json").write_text(
+                CENSUS_GT.read_text(encoding="utf-8"), encoding="utf-8"
+            )
+            columns = [
+                "province",
+                "population_2010",
+                "population_2020",
+                "absolute_change",
+                "percent_change",
+            ]
+            with (root / "results/province_change.csv").open(
+                "w", encoding="utf-8", newline=""
+            ) as stream:
+                writer = csv.DictWriter(stream, fieldnames=columns)
+                writer.writeheader()
+                writer.writerows(rows)
+            (root / "results/calculation_note.md").write_text(
+                "第六次和第七次全国人口普查。\n"
+                + "\n".join(expected["source_urls"]),
+                encoding="utf-8",
+            )
+
+            return load_grader(CENSUS_TASK)(workspace_path=str(root))
 
     def _grade_json_task(
         self,
