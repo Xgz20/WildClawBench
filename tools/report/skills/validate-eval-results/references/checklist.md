@@ -35,6 +35,9 @@
 - 超时、Harness 非零退出、过早结束、工具协议不兼容等已归因的模型/Harness 结果只记 `INFO`，不改变门禁结论。
 - 模型 API 限流、5xx 和其它错误仅由结构化模型请求失败事件触发，单模型和多模型场景均判 `REVIEW`；日志、工具输出、模型文本和任务代码中的泛关键词不触发。OpenClaw/AstronClaw 只解析 gateway 精确的 `embedded run agent end + isError=true` 事件。
 - 请求已发生但因结构化模型 API 错误而 token 为 0 时，不生成 `ZERO_TOKEN_RUN`；只有确认存在成功模型响应而 usage 仍为 0，才判采集/解析有效性失败。
+- 有模型交互的超时 run 若显式声明 usage 不可用，记
+  `USAGE_UNAVAILABLE_ON_TIMEOUT/REVIEW`：保留能力分数，单独复核 token/cost，
+  `rerun_action=do_not_rerun`，不得通过补跑模型获取 usage。
 - 无法区分评测框架与模型/Harness 责任的执行错误，以及比例异常和统计分布异常判 `REVIEW`。
 - 修复数据文件不能替代重跑；只有明确的数据解析缺陷（如旧版 `request_count` 聚合错误）才可在备份和审计记录下重解析。
 - 报告中应明确剥离“非模型能力问题”，但不得静默删除异常用例或只汇报有利子集。
