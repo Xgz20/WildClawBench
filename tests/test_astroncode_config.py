@@ -163,6 +163,91 @@ class AstronCodeConfigTests(unittest.TestCase):
         self.assertNotIn("tools", config)
         self.assertEqual(config["web_search"], "disabled")
 
+    def test_search_agent_connector_plugin_is_enabled_for_all_providers(self) -> None:
+        models = (
+            "openrouter/xopglm52",
+            "openrouter/gpt-5.5",
+            "openrouter/claude-4",
+        )
+        with patch.dict(
+            os.environ,
+            {
+                "ASTRONCODE_MODEL_PROVIDER": "",
+                "ASTRONCODE_NATIVE_WEB_SEARCH_ENABLED": "",
+            },
+            clear=False,
+        ):
+            agent = self.make_agent()
+            for model in models:
+                with self.subTest(model=model):
+                    config = self.parse_config(agent, model)
+                    self.assertIs(
+                        config["plugins"]["web-search@astron-plugin-hub"][
+                            "enabled"
+                        ],
+                        True,
+                    )
+                    self.assertEqual(config["web_search"], "disabled")
+
+    def test_astron_api_key_bootstraps_hub_for_all_providers_and_is_redacted(
+        self,
+    ) -> None:
+        secret = 'hub-secret"\n# attempted_toml_injection'
+        models = (
+            "openrouter/xopglm52",
+            "openrouter/gpt-5.5",
+            "openrouter/claude-4",
+        )
+        with patch.dict(
+            os.environ,
+            {
+                "ASTRON_API_KEY": secret,
+                "ASTRONCODE_MODEL_PROVIDER": "",
+            },
+            clear=False,
+        ):
+            agent = self.make_agent()
+            for model in models:
+                with self.subTest(model=model):
+                    config = self.parse_config(agent, model)
+                    redacted = self.parse_config(
+                        agent,
+                        model,
+                        redact_secrets=True,
+                    )
+                    self.assertEqual(
+                        config["astron_hub"][
+                            "bootstrap_personal_access_token"
+                        ],
+                        secret,
+                    )
+                    self.assertEqual(
+                        redacted["astron_hub"][
+                            "bootstrap_personal_access_token"
+                        ],
+                        "***",
+                    )
+
+    def test_astron_hub_bootstrap_requires_primary_astron_api_key(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "ASTRON_API_KEY": "",
+                "ASTRON_SPARK_API_KEY": "legacy-provider-key",
+                "ASTRONCODE_MODEL_PROVIDER": "",
+            },
+            clear=False,
+        ):
+            config = self.parse_config(self.make_agent(), "openrouter/xopglm52")
+
+        self.assertNotIn("astron_hub", config)
+        self.assertEqual(
+            config["model_providers"]["astron-spark"][
+                "experimental_bearer_token"
+            ],
+            "legacy-provider-key",
+        )
+
     def test_invalid_native_web_search_setting_fails_fast(self) -> None:
         with patch.dict(
             os.environ,
@@ -975,6 +1060,18 @@ class AstronCodeConfigTests(unittest.TestCase):
                 "experimental_bearer_token"
             ],
             secret,
+        )
+        self.assertEqual(
+            parsed_container_config["astron_hub"][
+                "bootstrap_personal_access_token"
+            ],
+            secret,
+        )
+        self.assertEqual(
+            tomllib.loads(host_config)["astron_hub"][
+                "bootstrap_personal_access_token"
+            ],
+            "***",
         )
         self.assertIn("search", parsed_container_config["mcp_servers"])
         self.assertNotIn(secret, host_config)

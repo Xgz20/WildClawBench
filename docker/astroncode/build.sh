@@ -7,12 +7,15 @@ HARNESS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${HARNESS_DIR}/../.." && pwd)"
 MANIFEST="${HARNESS_DIR}/versions.json"
 REQUESTED_VERSION=""
+WEB_FETCH_CONTEXT=""
 
 usage() {
   cat <<'EOF'
-Usage: bash docker/astroncode/build.sh [--version VERSION] [--skip-save]
+Usage: bash docker/astroncode/build.sh [--version VERSION] [--web-fetch-context PATH] [--skip-save]
 
 Builds the default version from versions.json when --version is omitted.
+The v0.7 image requires --web-fetch-context with the unpacked Linux x86_64
+web-fetch offline package directory.
 EOF
 }
 
@@ -24,6 +27,14 @@ while [[ $# -gt 0 ]]; do
         exit 2
       fi
       REQUESTED_VERSION="$2"
+      shift 2
+      ;;
+    --web-fetch-context)
+      if [[ $# -lt 2 || -z "$2" ]]; then
+        echo "--web-fetch-context requires a value" >&2
+        exit 2
+      fi
+      WEB_FETCH_CONTEXT="$2"
       shift 2
       ;;
     --skip-save)
@@ -52,6 +63,7 @@ if [[ "${WCB_LEGACY_BUILD_WRAPPER:-}" == "1" ]]; then
     v4) LEGACY_VARIANT_VERSION="v0.4-ppt" ;;
     v5) LEGACY_VARIANT_VERSION="v0.5" ;;
     v6) LEGACY_VARIANT_VERSION="v0.6" ;;
+    v7) LEGACY_VARIANT_VERSION="v0.7" ;;
     *)
       echo "Unsupported legacy AstronCode build mapping: variant=${ASTRONCODE_DOCKER_VARIANT} tag=${IMAGE_TAG:-<default>}" >&2
       exit 2
@@ -96,6 +108,7 @@ values = (
     args.get("ASTRON_CODE_DEV_VERSION", ""),
     args.get("SEARCH_UPDATER_VERSION", ""),
     args.get("NODEJS_VERSION", ""),
+    entry.get("platform", ""),
     entry.get("cli_command", "astron-code"),
 )
 if any("\x1f" in value or "\n" in value for value in values):
@@ -108,7 +121,7 @@ PY
   exit 2
 fi
 
-IFS=$'\x1f' read -r VERSION IMAGE_REF CONTEXT_REL DOCKERFILE_REL PINNED_ASTRON_CODE_VERSION PINNED_ASTRON_CODE_DEV_VERSION PINNED_SEARCH_UPDATER_VERSION PINNED_NODEJS_VERSION CLI_COMMAND <<< "${VERSION_RECORD}"
+IFS=$'\x1f' read -r VERSION IMAGE_REF CONTEXT_REL DOCKERFILE_REL PINNED_ASTRON_CODE_VERSION PINNED_ASTRON_CODE_DEV_VERSION PINNED_SEARCH_UPDATER_VERSION PINNED_NODEJS_VERSION PINNED_PLATFORM CLI_COMMAND <<< "${VERSION_RECORD}"
 BUILD_CONTEXT="${HARNESS_DIR}/${CONTEXT_REL}"
 DOCKERFILE="${HARNESS_DIR}/${DOCKERFILE_REL}"
 
@@ -150,7 +163,34 @@ if [[ -n "${SEARCH_UPDATER_VERSION:-}" && "${SEARCH_UPDATER_VERSION}" != "${PINN
   exit 2
 fi
 
+if [[ "${VERSION}" == "v0.7" ]]; then
+  if [[ -z "${WEB_FETCH_CONTEXT}" ]]; then
+    echo "${VERSION} requires --web-fetch-context with the unpacked Linux x86_64 web-fetch package" >&2
+    exit 2
+  fi
+  if [[ ! -d "${WEB_FETCH_CONTEXT}" ]]; then
+    echo "Missing web-fetch build context: ${WEB_FETCH_CONTEXT}" >&2
+    exit 2
+  fi
+  WEB_FETCH_CONTEXT="$(cd "${WEB_FETCH_CONTEXT}" && pwd -P)"
+  for required_path in start-mcp.sh check-system-deps.sh python/bin/python3 SHA256SUMS; do
+    if [[ ! -e "${WEB_FETCH_CONTEXT}/${required_path}" ]]; then
+      echo "Invalid web-fetch build context: missing ${required_path}" >&2
+      exit 2
+    fi
+  done
+elif [[ -n "${WEB_FETCH_CONTEXT}" ]]; then
+  echo "--web-fetch-context is only supported for AstronCode v0.7" >&2
+  exit 2
+fi
+
 BUILD_ARGS=()
+if [[ -n "${PINNED_PLATFORM}" ]]; then
+  BUILD_ARGS+=(--platform "${PINNED_PLATFORM}")
+fi
+if [[ -n "${WEB_FETCH_CONTEXT}" ]]; then
+  BUILD_ARGS+=(--build-context "web_fetch=${WEB_FETCH_CONTEXT}")
+fi
 if [[ -n "${PINNED_ASTRON_CODE_VERSION}" ]]; then
   BUILD_ARGS+=(--build-arg "ASTRON_CODE_VERSION=${PINNED_ASTRON_CODE_VERSION}")
 fi
@@ -182,7 +222,11 @@ docker build \
   -t "${IMAGE_REF}" \
   "${BUILD_CONTEXT}"
 
-INSTALLED_VERSION="$(docker run --rm --entrypoint "${CLI_COMMAND}" "${IMAGE_REF}" --version 2>/dev/null | head -1 || true)"
+RUN_ARGS=()
+if [[ -n "${PINNED_PLATFORM}" ]]; then
+  RUN_ARGS+=(--platform "${PINNED_PLATFORM}")
+fi
+INSTALLED_VERSION="$(docker run --rm "${RUN_ARGS[@]}" --entrypoint "${CLI_COMMAND}" "${IMAGE_REF}" --version 2>/dev/null | head -1 || true)"
 echo "Installed AstronCode (${CLI_COMMAND}): ${INSTALLED_VERSION:-unknown}"
 
 if [[ "${SKIP_SAVE:-}" == "1" ]]; then

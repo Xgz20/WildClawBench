@@ -1330,6 +1330,11 @@ class AstronCodeAgent(BaseAgent):
         )
         token = "***" if redact_secrets else provider_api_key
         uid = "***" if redact_secrets and self.astron_uid else self.astron_uid
+        bootstrap_token = (
+            "***"
+            if redact_secrets and self.astron_primary_api_key
+            else self.astron_primary_api_key
+        )
         common_config = (
             f"model_provider = {toml_basic_string(provider)}\n"
             f"{reasoning_line}"
@@ -1341,6 +1346,19 @@ class AstronCodeAgent(BaseAgent):
             f'approval_policy = "never"\n'
             f'sandbox_mode = "danger-full-access"\n'
         )
+        search_agent_config = ""
+        if bootstrap_token:
+            search_agent_config += (
+                "\n"
+                "[astron_hub]\n"
+                "bootstrap_personal_access_token = "
+                f"{toml_basic_string(bootstrap_token)}\n"
+            )
+        search_agent_config += (
+            "\n"
+            '[plugins."web-search@astron-plugin-hub"]\n'
+            "enabled = true\n"
+        )
         if provider == "openrouter":
             return common_config + (
                 '\n'
@@ -1349,7 +1367,7 @@ class AstronCodeAgent(BaseAgent):
                 f"base_url = {toml_basic_string(request_base_url or self.openrouter_base_url)}\n"
                 f"models_base_url = {toml_basic_string(self.models_base_url)}\n"
                 'env_key = "OPENROUTER_API_KEY"\n'
-            )
+            ) + search_agent_config
         if provider == "one-iflytek":
             return common_config + (
                 '\n'
@@ -1361,7 +1379,7 @@ class AstronCodeAgent(BaseAgent):
                 'wire_api = "responses"\n'
                 'requires_openai_auth = false\n'
                 'stream_idle_timeout_ms = 300000\n'
-            )
+            ) + search_agent_config
 
         return common_config + (
             '\n'
@@ -1379,7 +1397,7 @@ class AstronCodeAgent(BaseAgent):
                 else ""
             )
             + f"models_base_url = {toml_basic_string(self.models_base_url)}\n"
-        )
+        ) + search_agent_config
 
     def _resolve_provider_api_key(self, provider: str) -> str:
         if provider == "astron-spark":

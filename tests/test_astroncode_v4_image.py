@@ -301,6 +301,7 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
                 "v0.4-ppt",
                 "v0.5",
                 "v0.6",
+                "v0.7",
                 "v0.5-dev",
             },
             set(self.manifest["versions"]),
@@ -347,6 +348,7 @@ class AstronCodeBuildScriptTest(unittest.TestCase):
             "v0.4-ppt": "v4",
             "v0.5": "v5",
             "v0.6": "v6",
+            "v0.7": "v7",
             "v0.5-dev": "v5-dev",
         }
         for version, entry in self.manifest["versions"].items():

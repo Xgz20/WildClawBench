@@ -55,6 +55,7 @@ class ImageVersionManifestTest(unittest.TestCase):
             "v0.4-ppt": "v4",
             "v0.5": "v5",
             "v0.6": "v6",
+            "v0.7": "v7",
             "v0.5-dev": "v5-dev",
         }
         expected_args = {
@@ -74,6 +75,10 @@ class ImageVersionManifestTest(unittest.TestCase):
                 "ASTRON_CODE_VERSION": "0.0.42",
                 "NODEJS_VERSION": "22.23.2-1nodesource1",
                 "SEARCH_UPDATER_VERSION": "0.1.17",
+            },
+            "v0.7": {
+                "ASTRON_CODE_VERSION": "0.0.42",
+                "NODEJS_VERSION": "22.23.2-1nodesource1",
             },
             "v0.5-dev": {
                 "ASTRON_CODE_DEV_VERSION": "0.0.35",
@@ -96,6 +101,8 @@ class ImageVersionManifestTest(unittest.TestCase):
                     "astron-code-dev" if version == "v0.5-dev" else "astron-code",
                     entry.get("cli_command", "astron-code"),
                 )
+                if version == "v0.7":
+                    self.assertEqual("linux/amd64", entry.get("platform"))
                 self.assertTrue((ASTRONCODE_DIR / entry["dockerfile"]).is_file())
 
     def test_codex_manifest_binds_v01_to_pinned_cli_and_base(self):
@@ -238,6 +245,84 @@ class CanonicalBuildCliTest(unittest.TestCase):
             build[build.index("-t") + 1],
         )
         self.assertIn("ASTRON_CODE_VERSION=0.0.13", build)
+
+    def test_astroncode_v07_uses_external_web_fetch_build_context(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            web_fetch_context = Path(temp_dir) / "web-fetch"
+            for relative_path in (
+                "start-mcp.sh",
+                "check-system-deps.sh",
+                "python/bin/python3",
+                "SHA256SUMS",
+            ):
+                path = web_fetch_context / relative_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.touch()
+            canonical_web_fetch_context = web_fetch_context.resolve()
+
+            result, events = self._run_with_docker_stub(
+                [
+                    "bash",
+                    str(ASTRONCODE_BUILD),
+                    "--version",
+                    "v0.7",
+                    "--web-fetch-context",
+                    str(web_fetch_context),
+                    "--skip-save",
+                ],
+            )
+
+        self.assertEqual(0, result.returncode, result.stderr)
+        build = self._event(events, "build")
+        context = ASTRONCODE_DIR / "v7"
+        self.assertEqual(str(context / "Dockerfile"), build[build.index("-f") + 1])
+        self.assertEqual(
+            "wildclawbench-astroncode-ubuntu:v0.7",
+            build[build.index("-t") + 1],
+        )
+        self.assertEqual("linux/amd64", build[build.index("--platform") + 1])
+        self.assertEqual(
+            f"web_fetch={canonical_web_fetch_context}",
+            build[build.index("--build-context") + 1],
+        )
+        self.assertIn("ASTRON_CODE_VERSION=0.0.42", build)
+        self.assertIn("NODEJS_VERSION=22.23.2-1nodesource1", build)
+        self.assertNotIn("SEARCH_UPDATER_VERSION=", build)
+        self.assertEqual(str(context), build[-1])
+        run = self._event(events, "run")
+        self.assertEqual("linux/amd64", run[run.index("--platform") + 1])
+
+    def test_astroncode_v07_requires_web_fetch_build_context(self):
+        result, events = self._run_with_docker_stub(
+            [
+                "bash",
+                str(ASTRONCODE_BUILD),
+                "--version",
+                "v0.7",
+                "--skip-save",
+            ],
+        )
+
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("requires --web-fetch-context", result.stderr)
+        self.assertEqual([], events)
+
+    def test_web_fetch_build_context_is_rejected_for_historical_images(self):
+        result, events = self._run_with_docker_stub(
+            [
+                "bash",
+                str(ASTRONCODE_BUILD),
+                "--version",
+                "v0.6",
+                "--web-fetch-context",
+                "/tmp/not-used",
+                "--skip-save",
+            ],
+        )
+
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("only supported for AstronCode v0.7", result.stderr)
+        self.assertEqual([], events)
 
     def test_astroncode_dev_build_uses_pinned_package_and_dev_cli(self):
         result, events = self._run_with_docker_stub(

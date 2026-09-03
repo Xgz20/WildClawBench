@@ -54,6 +54,16 @@
         "SEARCH_UPDATER_VERSION": "0.1.17"
       }
     },
+    "v0.7": {
+      "image": "wildclawbench-astroncode-ubuntu:v0.7",
+      "context": "v7",
+      "dockerfile": "v7/Dockerfile",
+      "platform": "linux/amd64",
+      "build_args": {
+        "ASTRON_CODE_VERSION": "0.0.42",
+        "NODEJS_VERSION": "22.23.2-1nodesource1"
+      }
+    },
     "v0.5-dev": {
       "image": "wildclawbench-astroncode-ubuntu:v0.5-dev",
       "context": "v5-dev",

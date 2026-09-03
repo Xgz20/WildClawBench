@@ -6,6 +6,7 @@
 
 | 日期 | 完整镜像 tag | Docker variant | AstronCode 版本 | 主要变更 | 当前定位 |
 | --- | --- | --- | --- | --- | --- |
+| 2026-09-03 | `wildclawbench-astroncode-ubuntu:v0.7` | `v7` | `0.0.42` | 适配连接器版 SearchAgent，内置离线 Web Fetch MCP | 新版 SearchAgent 候选版本 |
 | 2026-09-02 | `wildclawbench-astroncode-ubuntu:v0.6` | `v6` | `0.0.42` | 升级生产 CLI 和模型目录，继承 SearchAgent 与 PPT 渲染能力 | 当前默认版本 |
 | 2026-08-25 | `wildclawbench-astroncode-ubuntu:v0.5-dev` | `v5-dev` | `0.0.35` 开发包 | 在 v0.5 能力底座上替换为 `@iflytek/astron-code-dev` 和 `astron-code-dev` | 开发调试包评测 |
 | 2026-08-24 | `wildclawbench-astroncode-ubuntu:v0.5` | `v5` | `0.0.34` | 升级 CLI 和模型目录，继承 SearchAgent 与 PPT 渲染能力 | 历史兼容版本 |
@@ -16,7 +17,51 @@
 | 2026-07-16 | `wildclawbench-astroncode-ubuntu:v0.1-test.8` | `v1` | `0.0.5-test.8` | 烘焙 astron-spark provider、model catalog 和 profile | 旧配置架构 |
 | 2026-07-15 | `wildclawbench-astroncode-ubuntu:v0.0` | 历史默认 Dockerfile | `0.0.5-benchmark-adapt.10` | 首次在 Codex 评测镜像上安装 AstronCode CLI | 初始版本 |
 
-> `v0.4` 和 `v0.4-ppt` 的镜像 tag 不能互换使用。早于 2026-08-13 构建的 `v0.4` 镜像不包含 LibreOffice，且历史 `v0.4` 不再注册为可构建版本。新评测默认使用 `v0.6`；需要复现旧版本环境时再显式选择对应 tag。
+> `v0.4` 和 `v0.4-ppt` 的镜像 tag 不能互换使用。早于 2026-08-13 构建的 `v0.4` 镜像不包含 LibreOffice，且历史 `v0.4` 不再注册为可构建版本。默认评测仍使用 `v0.6`；`v0.7` 需显式选择，需要复现旧版本环境时也应显式选择对应 tag。
+
+## v0.7
+
+### 版本信息
+
+- 完整镜像 tag：`wildclawbench-astroncode-ubuntu:v0.7`
+- 版本 Dockerfile：`docker/astroncode/v7/Dockerfile`
+- AstronCode：`0.0.42`
+- Node.js：`22.23.2`
+- 目标平台：Linux x86_64 (`linux/amd64`)
+- Search Better Skill：由 AstronCode 0.0.42 内置
+- Search：由 AstronCode 自动注册的 `acode_apps` 连接器提供
+- Fetch：镜像内 `/opt/astroncode/web-fetch` 提供本地 `web_fetch` MCP
+- PPT 渲染：LibreOffice Impress + PyMuPDF (`fitz`)
+- 预期离线包名：`Images/wildclawbench-astroncode-ubuntu_v0.7.tar.gz`
+
+### 更新内容
+
+- 移除旧的 `@iflytek/install-search-updater` 安装流程，不再写入本地 `web-search` 或 Scrapling MCP；`v0.6` 保持不变，用于复现旧 SearchAgent 环境。
+- 通过 Docker BuildKit named context 引入 Linux x86_64 `web-fetch` 离线包，工具包不进入 Git 仓库。
+- Harness 在 `ASTRON_API_KEY` 非空时写入 `[astron_hub].bootstrap_personal_access_token`，并对 Astron Spark、GPT、OpenRouter 三类 provider 统一启用 `web-search@astron-plugin-hub`。
+- 原生 Codex `web_search` 默认仍为 `disabled`；该开关不影响 `mcp__acode_apps__web_search` 连接器工具。
+- 本地 Fetch MCP 使用 `mcp__web_fetch__*` 工具命名空间，配置构建期固定保存到 `/opt/astroncode/search-agent.config.toml`。
+- 延续 `v0.6` 的 LibreOffice 和 PyMuPDF 评测设施，并在安装 AstronCode 后清理构建态 `/root/.acode` 用户配置。
+
+### 构建与验证
+
+构建时必须显式传入已解压的 `web-fetch` 离线包目录：
+
+```bash
+bash docker/astroncode/build.sh \
+  --version v0.7 \
+  --web-fetch-context /path/to/unpacked/web-fetch
+```
+
+只构建、不导出离线镜像时增加 `--skip-save`。构建脚本会强制使用 `linux/amd64`，并在构建期完成以下检查：
+
+- `astron-code 0.0.42` 和 Node.js 22
+- Web Fetch 离线包核心文件校验和及 Linux 系统依赖
+- MCP 恰好暴露 `open_session`、`close_session`、`list_sessions`、`get`、`fetch`、`stealthy_fetch`、`screenshot` 七个工具
+- 使用 `fetch` 读取构建容器内的本地测试页面
+- LibreOffice Impress 和 PyMuPDF 可用
+
+2026-09-03 在 macOS Docker Desktop 上完成真实构建，镜像 ID 为 `sha256:96dde3a5204576888626c9bada3bdd54afe278f600ae58e7c404fa0f43e6bb22`，镜像元数据为 `linux/amd64`。构建期 Web Fetch 和 PPT 检查全部通过；使用 Harness 生成的 OpenRouter 测试配置执行 `astron-code mcp list`，`web_fetch` 状态为 `enabled`。远端 `acode_apps` 连接器仍需使用真实 `ASTRON_API_KEY` 做端到端评测，并以 trace 中出现 `mcp__acode_apps__web_search` 作为生效证据。
 
 ## v0.6
 
@@ -266,6 +311,10 @@ bash docker/astroncode/build.sh
 构建指定版本时只选择清单中的完整版本，不再分别指定 Docker variant 和镜像 tag：
 
 ```bash
+# v0.7，AstronCode 0.0.42 + 连接器版 SearchAgent
+bash docker/astroncode/build.sh --version v0.7 \
+  --web-fetch-context /path/to/unpacked/web-fetch
+
 # v0.6，AstronCode 0.0.42 生产镜像
 bash docker/astroncode/build.sh --version v0.6
 
@@ -288,7 +337,7 @@ bash docker/astroncode/build.sh --version v0.2
 bash docker/astroncode/build.sh --version v0.1-test.8
 ```
 
-旧的 `script/build-astroncode-image.sh` 仍保留为兼容入口。它只接受清单中已有的 variant/tag 映射：`v1`、`v2`、`v3`、`v4`、`v5`、`v6` 分别对应 `v0.1-test.8`、`v0.2`、`v0.3`、`v0.4-ppt`、`v0.5`、`v0.6`；variant 与 tag 不匹配时会直接失败。
+旧的 `script/build-astroncode-image.sh` 仍保留为兼容入口。它只接受清单中已有的 variant/tag 映射：`v1`、`v2`、`v3`、`v4`、`v5`、`v6`、`v7` 分别对应 `v0.1-test.8`、`v0.2`、`v0.3`、`v0.4-ppt`、`v0.5`、`v0.6`、`v0.7`；variant 与 tag 不匹配时会直接失败。构建 `v0.7` 时仍需额外传入 `--web-fetch-context`。
 
 离线包发布前至少执行：
 
@@ -311,6 +360,8 @@ docker image inspect wildclawbench-astroncode-ubuntu:v0.6 >/dev/null
 - `docker/astroncode/v3/Dockerfile`
 - `docker/astroncode/v4/Dockerfile`
 - `docker/astroncode/v5/Dockerfile`
+- `docker/astroncode/v6/Dockerfile`
+- `docker/astroncode/v7/Dockerfile`
 - `docker/astroncode/v5-dev/Dockerfile`
 - `script/build-astroncode-image.sh`（兼容包装）
 - `src/utils/ppt_evidence.py`
