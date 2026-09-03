@@ -37,13 +37,70 @@ def _markdown(report: Report) -> str:
             lines.append("")
         counts = action_summary.get("counts", {})
         if counts:
-            lines.append("| 类别 | 用例数 |")
+            lines.append("| 类别 | 数量 |")
             lines.append("|---|---:|")
-            for key, label in (("tasks_to_fix", "需要修改"), ("tasks_for_review", "需要人工审核"), ("tasks_pass", "未发现问题")):
+            if "results_to_rerun" in action_summary or "framework_issues" in action_summary:
+                count_rows = (
+                    ("results_to_rerun", "需要重跑/补齐的结果"),
+                    ("framework_issues", "需要修复的框架或审计输入"),
+                    ("tasks_to_fix", "需要修改的评测用例"),
+                    ("tasks_for_review", "需要人工审核的评测用例"),
+                    ("tasks_pass", "未发现问题的评测用例"),
+                )
+            else:
+                # 兼容 validate-eval-dataset 等仍使用三类处置的报告。
+                count_rows = (
+                    ("tasks_to_fix", "需要修改"),
+                    ("tasks_for_review", "需要人工审核"),
+                    ("tasks_pass", "未发现问题"),
+                )
+            for key, label in count_rows:
                 lines.append(f"| {label} | {counts.get(key, 0)} |")
+
+        if "results_to_rerun" in action_summary:
+            items = action_summary.get("results_to_rerun") or []
+            lines.extend(["", "### 需要重跑或补齐的结果", ""])
+            if not items:
+                lines.append("- 无")
+            else:
+                lines.append("| 用例 | Unit | 问题 | 建议 |")
+                lines.append("|---|---|---|---|")
+                for item in items:
+                    task_id = sanitize_evidence(item.get("task_id", ""))
+                    unit = sanitize_evidence(item.get("unit", ""))
+                    reason = item.get("issue_codes") or []
+                    recommendation = item.get("recommendations") or ""
+                    if isinstance(reason, list):
+                        reason = "、".join(str(value) for value in reason)
+                    if isinstance(recommendation, list):
+                        recommendation = "；".join(str(value) for value in recommendation)
+                    lines.append(
+                        f"| `{task_id}` | `{unit}` | {sanitize_evidence(reason)} | "
+                        f"{sanitize_evidence(recommendation)} |"
+                    )
+
+        if "framework_issues" in action_summary:
+            items = action_summary.get("framework_issues") or []
+            lines.extend(["", "### 需要修复的框架或审计输入", ""])
+            if not items:
+                lines.append("- 无")
+            else:
+                lines.append("| 问题 | 级别 | 位置 | 建议 |")
+                lines.append("|---|---|---|---|")
+                for item in items:
+                    code = sanitize_evidence(item.get("issue_code", ""))
+                    severity = sanitize_evidence(item.get("severity", ""))
+                    location = sanitize_evidence(item.get("location", ""))
+                    recommendation = sanitize_evidence(
+                        item.get("recommendation") or item.get("message", "")
+                    )
+                    lines.append(
+                        f"| `{code}` | {severity} | `{location}` | {recommendation} |"
+                    )
+
         for key, heading, columns in (
-            ("tasks_to_fix", "需要修改的用例", ("task_id", "issue_codes", "recommendations")),
-            ("tasks_for_review", "需要人工审核的用例", ("task_id", "reasons", "recommendation")),
+            ("tasks_to_fix", "需要修改的评测用例", ("task_id", "issue_codes", "recommendations")),
+            ("tasks_for_review", "需要人工审核的评测用例", ("task_id", "reasons", "recommendation")),
         ):
             items = action_summary.get(key) or []
             lines.extend(["", f"### {heading}", ""])
