@@ -17,9 +17,12 @@ class PackResultsTest(unittest.TestCase):
         run = scope / "model" / "task" / "run"
         results = run / "task_output" / "workspace" / "results"
         results.mkdir(parents=True)
+        project = run / "task_output" / "workspace" / "project"
+        project.mkdir()
         node_modules = results / "node_modules" / "demo-package"
         node_modules.mkdir(parents=True)
         (run / "score.json").write_text('{"overall_score": 1}', encoding="utf-8")
+        (project / "solution.py").write_text("VALUE = 1\n", encoding="utf-8")
         (results / "small.txt").write_text("small", encoding="utf-8")
         (results / "large.bin").write_bytes(b"x" * (1024 * 1024 + 1))
         (node_modules / "index.js").write_text("module.exports = {}", encoding="utf-8")
@@ -45,14 +48,16 @@ class PackResultsTest(unittest.TestCase):
             light_archive = next(out.glob("eval_out_light_*.tar.gz"))
             with tarfile.open(results_archive) as archive:
                 names = archive.getnames()
+            self.assertTrue(any(name.endswith("/project/solution.py") for name in names))
             self.assertTrue(any(name.endswith("/small.txt") for name in names))
             self.assertFalse(any(name.endswith("/large.bin") for name in names))
             with tarfile.open(light_archive) as archive:
                 light_names = archive.getnames()
             self.assertTrue(any(name.endswith("/score.json") for name in light_names))
+            self.assertFalse(any("/task_output/" in name for name in light_names))
             self.assertIn("过滤 1 个超过 1 MiB 的文件", completed.stdout)
 
-    def test_default_keeps_all_result_files(self) -> None:
+    def test_default_keeps_complete_workspace_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             scope = self._fixture(root)
@@ -63,6 +68,7 @@ class PackResultsTest(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, completed.stderr + completed.stdout)
             with tarfile.open(next(out.glob("eval_out_results_*.tar.gz"))) as archive:
                 names = archive.getnames()
+            self.assertTrue(any(name.endswith("/project/solution.py") for name in names))
             self.assertTrue(any(name.endswith("/small.txt") for name in names))
             self.assertTrue(any(name.endswith("/large.bin") for name in names))
             self.assertFalse(any("/node_modules/" in name for name in names))
@@ -98,9 +104,27 @@ class PackResultsTest(unittest.TestCase):
             with tarfile.open(combined_archives[0]) as archive:
                 names = archive.getnames()
             self.assertTrue(any(name.endswith("/score.json") for name in names))
+            self.assertTrue(any(name.endswith("/project/solution.py") for name in names))
             self.assertTrue(any(name.endswith("/small.txt") for name in names))
             self.assertTrue(any(name.endswith("/node_modules/demo-package/index.js") for name in names))
             self.assertFalse(any(name.endswith("/large.bin") for name in names))
+
+    def test_combined_default_keeps_complete_workspace_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            scope = self._fixture(root)
+            out = root / "out"
+
+            completed = self._run(scope, out, "--combined")
+
+            self.assertEqual(completed.returncode, 0, completed.stderr + completed.stdout)
+            with tarfile.open(next(out.glob("eval_out_combined_*.tar.gz"))) as archive:
+                names = archive.getnames()
+            self.assertTrue(any(name.endswith("/score.json") for name in names))
+            self.assertTrue(any(name.endswith("/project/solution.py") for name in names))
+            self.assertTrue(any(name.endswith("/results/small.txt") for name in names))
+            self.assertTrue(any(name.endswith("/results/large.bin") for name in names))
+            self.assertFalse(any("/node_modules/" in name for name in names))
 
     def test_combined_rejects_no_results_mode(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -124,6 +148,7 @@ class PackResultsTest(unittest.TestCase):
             self.assertEqual(len(results_archives), 1)
             with tarfile.open(results_archives[0]) as archive:
                 names = archive.getnames()
+            self.assertTrue(any(name.endswith("/project/solution.py") for name in names))
             self.assertTrue(any(name.endswith("/small.txt") for name in names))
             self.assertFalse(any(name.endswith("/large.bin") for name in names))
 
@@ -159,7 +184,7 @@ class PackResultsTest(unittest.TestCase):
             )
 
             self.assertEqual(completed.returncode, 0, completed.stderr + completed.stdout)
-            self.assertIn("预计过滤 1 个超过 1 MiB 的 results 文件", completed.stdout)
+            self.assertIn("预计过滤 1 个超过 1 MiB 的产物文件", completed.stdout)
             self.assertEqual(list(out.glob("*.tar.gz")), [])
 
     def test_no_results_still_skips_results_archive_when_limit_is_set(self) -> None:

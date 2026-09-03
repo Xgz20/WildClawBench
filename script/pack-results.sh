@@ -9,8 +9,11 @@
 #
 # 本脚本默认产出两个包：
 #   1) *_light_*.tar.gz    —— 排除 task_output（评分/用量/日志/轨迹/汇总），通常几十 MB
-#   2) *_results_*.tar.gz  —— 只含 task_output/**/results（Agent 真实交付物）
+#   2) *_results_*.tar.gz  —— 包含 task_output/**/workspace（Agent 完整交付物）
 # 也可用 --combined 将以上内容合并为一个包。
+# 产物包默认排除可重建的 node_modules；显式传入单文件大小限制时，
+# 超限文件也会按要求过滤。除此之外，不因 results/ 存在而忽略 project/
+# 或其它 workspace 目录。
 #
 # 用法：
 #   bash docs/local/deploy/pack-results.sh                      # 打包整个 eval_out
@@ -19,12 +22,12 @@
 #   # 只打某一轮下「指定模型」的轻量结果（不含 Agent 交付物）：
 #   bash docs/local/deploy/pack-results.sh --scope all_suite/round1/xopglm52 --no-results
 #   bash docs/local/deploy/pack-results.sh --no-results         # 只出轻量包，跳过 results 包
-#   bash script/pack-results.sh --combined                     # light + results 合并为一个包
+#   bash script/pack-results.sh --combined                     # light + 完整 workspace 产物合并为一个包
 #   bash script/pack-results.sh --combined --include-node-modules
-#   bash script/pack-results.sh --only-results                 # 只打 Agent 交付物包
+#   bash script/pack-results.sh --only-results                 # 只打完整 workspace 交付物包
 #   bash docs/local/deploy/pack-results.sh --out /tmp           # 指定输出目录
 #   bash docs/local/deploy/pack-results.sh --prune              # 打包后删除 task_output 里的大媒体/权重
-#   bash script/pack-results.sh --max-result-file-mb 50 # results 中单文件超过 50 MiB 不导出
+#   bash script/pack-results.sh --max-result-file-mb 50 # workspace 中单文件超过 50 MiB 不导出
 #   bash docs/local/deploy/pack-results.sh --dry-run            # 只看体积分布，不打包
 #   EVAL_OUT=/path/to/eval_out bash docs/local/deploy/pack-results.sh
 # ============================================================
@@ -79,13 +82,14 @@ hdr(){ echo; echo "${YEL}==== $1 ====${RST}"; }
 human(){ awk -v b="$1" 'BEGIN{s="B KB MB GB TB";split(s,a," ");i=1;while(b>=1024&&i<5){b/=1024;i++}printf "%.1f%s", b, a[i]}'; }
 stat_bytes(){ stat -c%s "$1" 2>/dev/null || stat -f%z "$1"; }
 
-# 结果目录可能是 workspace/results（OpenClaw）或 workspace 本身（AstronCode）。
-# 默认排除网站项目依赖；--include-node-modules 才将其纳入归档。
+# 产物统一以 task_output/workspace 为边界。默认排除网站项目依赖；
+# --include-node-modules 才将其纳入归档。
 result_files_for_dir(){
   if [ "$INCLUDE_NODE_MODULES" = "1" ]; then
-    find "$1" -type f -print 2>/dev/null
+    find "$1" \( -type f -o -type l \) -print 2>/dev/null
   else
-    find "$1" -type f ! -path '*/node_modules/*' -print 2>/dev/null
+    find "$1" \( -type f -o -type l \) \
+      ! -path '*/node_modules' ! -path '*/node_modules/*' -print 2>/dev/null
   fi
 }
 
@@ -144,10 +148,7 @@ if [ -n "$MAX_RESULT_FILE_MB" ]; then
   max_result_file_bytes=$((MAX_RESULT_FILE_MB * 1024 * 1024))
   preview_filtered_files=0
   preview_filtered_bytes=0
-  # 收集两种模式的产物目录
-  preview_dirs_with_subdir="$(find "$LEAF" -type d -path '*/task_output/workspace/results' 2>/dev/null)"
-  preview_dirs_flat="$(find "$LEAF" -type d -path '*/task_output/workspace' ! -exec test -d '{}/results' \; -print 2>/dev/null)"
-  preview_dirs="$(printf '%s\n%s' "$preview_dirs_with_subdir" "$preview_dirs_flat" | grep -v '^$')"
+  preview_dirs="$(find "$LEAF" -type d -path '*/task_output/workspace' -print 2>/dev/null)"
   while IFS= read -r preview_result_dir; do
     [ -z "$preview_result_dir" ] && continue
     while IFS= read -r preview_result_file; do
@@ -158,7 +159,7 @@ if [ -n "$MAX_RESULT_FILE_MB" ]; then
       fi
     done < <(result_files_for_dir "$preview_result_dir")
   done <<< "$preview_dirs"
-  echo "   workspace 大小限制: ${MAX_RESULT_FILE_MB} MiB；预计过滤 ${preview_filtered_files} 个超过 ${MAX_RESULT_FILE_MB} MiB 的 results 文件（$(human "$preview_filtered_bytes")）"
+  echo "   workspace 大小限制: ${MAX_RESULT_FILE_MB} MiB；预计过滤 ${preview_filtered_files} 个超过 ${MAX_RESULT_FILE_MB} MiB 的产物文件（$(human "$preview_filtered_bytes")）"
 fi
 
 if [ "$DRY_RUN" = "1" ]; then
@@ -176,12 +177,9 @@ else
 fi
 echo "${DIM}   压缩器: $ZNAME${RST}"
 
-# 收集两种模式:
-#   1. OpenClaw系: task_output/workspace/results/
-#   2. AstronCode系: task_output/workspace/ (排除已有 results/ 子目录的,避免重复打包)
-res_dirs_with_subdir="$(find "$LEAF" -type d -path '*/task_output/workspace/results' 2>/dev/null)"
-res_dirs_flat="$(find "$LEAF" -type d -path '*/task_output/workspace' ! -exec test -d '{}/results' \; -print 2>/dev/null)"
-res_dirs="$(printf '%s\n%s' "$res_dirs_with_subdir" "$res_dirs_flat" | grep -v '^$')"
+# 每个 run 只选 workspace 根一次，完整保留 results/、project/ 及其它
+# 交付目录；不能因 results/ 存在而静默丢弃同级产物。
+res_dirs="$(find "$LEAF" -type d -path '*/task_output/workspace' -print 2>/dev/null)"
 
 # 将待导出的结果文件写入 tar 清单，同时应用 node_modules 和单文件大小过滤。
 build_result_file_list(){
