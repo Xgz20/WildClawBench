@@ -198,6 +198,39 @@ def _parse_logged_tags(raw: str) -> set[str]:
     return {str(value).strip().lower() for value in values if str(value).strip()}
 
 
+def evaluation_scope_tasks(
+    evaluation_scope: dict,
+) -> tuple[set[tuple[str, str]] | None, str | None]:
+    schema_version = evaluation_scope.get("schema_version")
+    if schema_version not in {1, 2}:
+        return None, f"schema_version={schema_version!r} 不受支持（仅支持 1 或 2）"
+    planned = evaluation_scope.get("planned_tasks")
+    if not isinstance(planned, list):
+        return None, "planned_tasks 必须是列表"
+    declared_count = evaluation_scope.get("planned_task_count")
+    if not isinstance(declared_count, int) or isinstance(declared_count, bool):
+        return None, "planned_task_count 必须是整数"
+    if declared_count != len(planned):
+        return None, (
+            f"planned_task_count={declared_count} 与 planned_tasks 长度 "
+            f"{len(planned)} 不一致"
+        )
+
+    scoped: set[tuple[str, str]] = set()
+    for index, item in enumerate(planned):
+        if not isinstance(item, dict):
+            return None, f"planned_tasks[{index}] 必须是对象"
+        category = str(item.get("category") or "").strip()
+        task_id = str(item.get("task_id") or "").strip()
+        if not category or not task_id:
+            return None, f"planned_tasks[{index}] 的 category/task_id 不能为空"
+        key = (category, task_id)
+        if key in scoped:
+            return None, f"planned_tasks 存在重复任务 {category}/{task_id}"
+        scoped.add(key)
+    return scoped, None
+
+
 def expected_tasks_for_unit(
     expected: set[tuple[str, str]],
     metadata: dict[tuple[str, str], dict[str, object]],
@@ -205,19 +238,9 @@ def expected_tasks_for_unit(
     evaluation_scope: dict | None = None,
 ) -> tuple[set[tuple[str, str]], bool]:
     """按结构化计划范围或历史 run.log 还原 unit 的预期任务集合。"""
-    if (
-        isinstance(evaluation_scope, dict)
-        and evaluation_scope.get("schema_version") == 1
-    ):
-        planned = evaluation_scope.get("planned_tasks")
-        if isinstance(planned, list):
-            scoped = {
-                (str(item.get("category") or ""), str(item.get("task_id") or ""))
-                for item in planned
-                if isinstance(item, dict)
-                and str(item.get("category") or "")
-                and str(item.get("task_id") or "")
-            }
+    if isinstance(evaluation_scope, dict):
+        scoped, scope_error = evaluation_scope_tasks(evaluation_scope)
+        if scope_error is None and scoped is not None:
             return scoped, True
 
     filters: dict[str, dict[str, object]] = defaultdict(dict)
@@ -596,7 +619,33 @@ def scan_round(result_root: Path, tasks_dir: Path | None,
                     scores_for_summary.append(fmean(run_scores))
 
         run_log = read_text(unit_dir / "run.log")
-        evaluation_scope, _scope_error = load_json(unit_dir / "evaluation_scope.json")
+        scope_path = unit_dir / "evaluation_scope.json"
+        evaluation_scope, scope_error = load_json(scope_path)
+        if scope_path.exists():
+            if scope_error:
+                findings.append(finding(
+                    "EVALUATION_SCOPE_INVALID",
+                    "error",
+                    f"evaluation_scope.json 无效：{scope_error}",
+                    unit=unit,
+                    run_dir=str(scope_path),
+                    recommendation="修复或恢复 scope 文件；不要依赖 run.log 静默推断正式评测范围。",
+                ))
+                evaluation_scope = None
+            elif evaluation_scope is not None:
+                _scoped_tasks, scope_validation_error = evaluation_scope_tasks(
+                    evaluation_scope
+                )
+                if scope_validation_error:
+                    findings.append(finding(
+                        "EVALUATION_SCOPE_INVALID",
+                        "error",
+                        f"evaluation_scope.json 无效：{scope_validation_error}",
+                        unit=unit,
+                        run_dir=str(scope_path),
+                        recommendation="修正任务计数、重复项和空任务字段后重新校验。",
+                    ))
+                    evaluation_scope = None
         unit_expected, has_logged_filters = expected_tasks_for_unit(
             expected_flat, filter_metadata, run_log, evaluation_scope,
         )
@@ -608,7 +657,7 @@ def scan_round(result_root: Path, tasks_dir: Path | None,
             and not (actual & extension_flat)
         ):
             unit_expected = expected_flat - extension_flat
-        if unit_expected:
+        if unit_expected or has_logged_filters:
             for suite, task_id in sorted(unit_expected - actual):
                 findings.append(finding("TASK_MISSING", "error", f"缺少任务 {suite}/{task_id}",
                                         unit=unit, task_id=task_id,

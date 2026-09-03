@@ -296,12 +296,17 @@ def _build_run_configuration(
     }
 
 
-def _log_run_configuration(args: Any, backend: BaseAgent, output_root: Path) -> None:
+def _log_run_configuration(
+    args: Any,
+    backend: BaseAgent,
+    output_root: Path,
+) -> dict[str, Any]:
     config = _build_run_configuration(args, backend, output_root)
     logger.info(
         "Run configuration:\n%s",
         json.dumps(config, ensure_ascii=False, indent=2),
     )
+    return config
 
 
 def _build_agent_backend(args) -> BaseAgent:
@@ -409,6 +414,70 @@ def _task_scope_entry(task: dict) -> dict[str, Any]:
     }
 
 
+def _scope_task_key(item: Mapping[str, Any]) -> tuple[str, str]:
+    return (
+        str(item.get("category") or "").strip(),
+        str(item.get("task_id") or "").strip(),
+    )
+
+
+def _validate_scope_entries(payload: Mapping[str, Any], *, source: Path) -> list[dict]:
+    schema_version = payload.get("schema_version")
+    if schema_version not in {1, 2}:
+        raise ValueError(
+            f"{source} schema_version={schema_version!r} 不受支持（仅支持 1 或 2）"
+        )
+    planned = payload.get("planned_tasks")
+    if not isinstance(planned, list):
+        raise ValueError(f"{source} planned_tasks 必须是列表")
+    declared_count = payload.get("planned_task_count")
+    if not isinstance(declared_count, int) or isinstance(declared_count, bool):
+        raise ValueError(f"{source} planned_task_count 必须是整数")
+    if declared_count != len(planned):
+        raise ValueError(
+            f"{source} planned_task_count={declared_count} 与列表长度 {len(planned)} 不一致"
+        )
+
+    normalized: list[dict] = []
+    seen: set[tuple[str, str]] = set()
+    for index, item in enumerate(planned):
+        if not isinstance(item, dict):
+            raise ValueError(f"{source} planned_tasks[{index}] 必须是对象")
+        key = _scope_task_key(item)
+        if not all(key):
+            raise ValueError(
+                f"{source} planned_tasks[{index}] 的 category/task_id 不能为空"
+            )
+        if key in seen:
+            raise ValueError(
+                f"{source} planned_tasks 存在重复任务 {key[0]}/{key[1]}"
+            )
+        seen.add(key)
+        normalized.append(item)
+    return normalized
+
+
+def _write_json_atomically(
+    path: Path,
+    payload: Mapping[str, Any],
+    *,
+    if_changed: bool = False,
+) -> None:
+    serialized = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+    if if_changed and path.is_file():
+        try:
+            if path.read_text(encoding="utf-8") == serialized:
+                return
+        except (OSError, UnicodeError):
+            pass
+    temporary_path = path.parent / f".{path.name}.{uuid.uuid4().hex}.tmp"
+    try:
+        temporary_path.write_text(serialized, encoding="utf-8")
+        os.replace(temporary_path, path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+
+
 def _write_evaluation_scope(
     output_root: Path,
     tasks: list[dict],
@@ -419,33 +488,104 @@ def _write_evaluation_scope(
     include_tags: set[str],
     exclude_tags: set[str],
     runs: int,
+    pending_tasks: list[dict] | None = None,
+    invocation_id: str | None = None,
+    recorded_at: str | None = None,
 ) -> Path:
-    planned_tasks = sorted(
+    requested_tasks = sorted(
         (_task_scope_entry(task) for task in tasks),
         key=lambda item: (item["category"], item["task_id"]),
     )
+    requested_payload = {
+        "schema_version": 2,
+        "planned_task_count": len(requested_tasks),
+        "planned_tasks": requested_tasks,
+    }
+    _validate_scope_entries(requested_payload, source=Path("current invocation"))
+
+    pending_entries = sorted(
+        (
+            _task_scope_entry(task)
+            for task in (tasks if pending_tasks is None else pending_tasks)
+        ),
+        key=lambda item: (item["category"], item["task_id"]),
+    )
+    _validate_scope_entries(
+        {
+            "schema_version": 2,
+            "planned_task_count": len(pending_entries),
+            "planned_tasks": pending_entries,
+        },
+        source=Path("current pending tasks"),
+    )
+    pending_keys = {_scope_task_key(item) for item in pending_entries}
+    requested_keys = {_scope_task_key(item) for item in requested_tasks}
+    if not pending_keys <= requested_keys:
+        raise ValueError("pending_tasks 必须是本次 planned_tasks 的子集")
+    resumed_entries = [
+        item for item in requested_tasks if _scope_task_key(item) not in pending_keys
+    ]
+
+    output_root.mkdir(parents=True, exist_ok=True)
+    path = output_root / "evaluation_scope.json"
+    accumulated: dict[tuple[str, str], dict] = {}
+    if path.exists():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError(f"已有 {path} 无法解析，拒绝覆盖: {exc}") from exc
+        if not isinstance(existing, dict):
+            raise ValueError(f"已有 {path} 顶层必须是 JSON object，拒绝覆盖")
+        for item in _validate_scope_entries(existing, source=path):
+            accumulated[_scope_task_key(item)] = item
+    for item in requested_tasks:
+        # 相同任务采用本次任务定义的最新 provenance；历史 invocation 保留旧快照。
+        accumulated[_scope_task_key(item)] = item
+    accumulated_tasks = [accumulated[key] for key in sorted(accumulated)]
     payload = {
+        "schema_version": 2,
+        "scope_semantics": "accumulated",
+        "planned_task_count": len(accumulated_tasks),
+        "planned_tasks": accumulated_tasks,
+    }
+    _validate_scope_entries(payload, source=path)
+
+    recorded_now = datetime.now().astimezone()
+    invocation_id = invocation_id or uuid.uuid4().hex
+    recorded_at = recorded_at or recorded_now.isoformat(timespec="seconds")
+    invocation_payload = {
         "schema_version": 1,
+        "scope_semantics": "invocation",
+        "invocation_id": invocation_id,
+        "recorded_at": recorded_at,
         "mode": mode,
         "categories": sorted(set(categories)),
         "modality": modality or "",
         "include_tags": sorted(include_tags),
         "exclude_tags": sorted(exclude_tags),
         "runs": runs,
-        "planned_task_count": len(planned_tasks),
-        "planned_tasks": planned_tasks,
+        "planned_task_count": len(requested_tasks),
+        "planned_tasks": requested_tasks,
+        "pending_task_count": len(pending_entries),
+        "pending_tasks": pending_entries,
+        "resumed_task_count": len(resumed_entries),
+        "resumed_tasks": resumed_entries,
+        "scheduled_run_count": len(pending_entries) * runs,
     }
-    output_root.mkdir(parents=True, exist_ok=True)
-    path = output_root / "evaluation_scope.json"
-    temporary_path = output_root / f".{path.name}.{uuid.uuid4().hex}.tmp"
-    try:
-        temporary_path.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
-        os.replace(temporary_path, path)
-    finally:
-        temporary_path.unlink(missing_ok=True)
-    logger.info("Evaluation scope written: %s (%d planned tasks)", path, len(planned_tasks))
+    history_dir = output_root / "evaluation_scope_history"
+    history_dir.mkdir(parents=True, exist_ok=True)
+    history_timestamp = recorded_now.strftime("%Y%m%dT%H%M%S%f%z")
+    history_path = history_dir / f"{history_timestamp}_{invocation_id}.json"
+    _write_json_atomically(path, payload, if_changed=True)
+    _write_json_atomically(history_path, invocation_payload)
+    logger.info(
+        "Evaluation scope written: %s (%d accumulated tasks; invocation: %d planned, %d pending, %d resumed)",
+        path,
+        len(accumulated_tasks),
+        len(requested_tasks),
+        len(pending_entries),
+        len(resumed_entries),
+    )
     return path
 
 
@@ -1153,7 +1293,8 @@ def main() -> None:
     global PASS_THRESHOLD
     PASS_THRESHOLD = args.pass_threshold  # 全局阈值供 summary 聚合使用
     backend = _build_agent_backend(args)
-    _log_run_configuration(args, backend, output_root)
+    run_configuration = _log_run_configuration(args, backend, output_root)
+    run_invocation = run_configuration["invocation"]
     models_config = None
     if args.models_config:
         models_config_path = Path(args.models_config).expanduser()
@@ -1191,6 +1332,12 @@ def main() -> None:
             sys.exit(1)
         task = parse_task_md(task_file)
         logger.info("Single task mode: %s", task["task_id"])
+        prior = None
+        if args.resume or args.rerun_error or args.rerun_anomalous:
+            prior = _load_resume_result(
+                output_root, task, args.model, args.rerun_error, args.rerun_anomalous
+            )
+        pending_tasks = [] if prior is not None else [task]
         _write_evaluation_scope(
             output_root,
             [task],
@@ -1200,14 +1347,13 @@ def main() -> None:
             include_tags={t.strip().lower() for t in (args.tags or []) if t.strip()},
             exclude_tags={t.strip().lower() for t in (args.exclude_tags or []) if t.strip()},
             runs=args.runs,
+            pending_tasks=pending_tasks,
+            invocation_id=run_invocation["id"],
+            recorded_at=run_invocation["started_at"],
         )
-        if args.resume or args.rerun_error or args.rerun_anomalous:
-            prior = _load_resume_result(
-                output_root, task, args.model, args.rerun_error, args.rerun_anomalous
-            )
-            if prior is not None:
-                _log_pending_task_counts([])
-                return  # _load_resume_result 已打印跳过日志；沿用旧结果，正常退出
+        if prior is not None:
+            _log_pending_task_counts([])
+            return  # _load_resume_result 已打印跳过日志；沿用旧结果，正常退出
         _log_pending_task_counts([task])
         # 多轮执行：k 次调用 run_single_task，各自独立 run 目录
         for run_idx in range(args.runs):
@@ -1317,6 +1463,13 @@ def main() -> None:
         include_tags={t.strip().lower() for t in (args.tags or []) if t.strip()},
         exclude_tags={t.strip().lower() for t in (args.exclude_tags or []) if t.strip()},
         runs=args.runs,
+        pending_tasks=[
+            task
+            for _category, tasks, _resumed_results in selected_categories
+            for task in tasks
+        ],
+        invocation_id=run_invocation["id"],
+        recorded_at=run_invocation["started_at"],
     )
 
     pending_tasks = [

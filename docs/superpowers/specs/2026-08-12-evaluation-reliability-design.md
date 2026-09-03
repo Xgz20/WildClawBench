@@ -30,22 +30,24 @@
 
 ## 动态执行范围
 
-新批次在 unit 根目录（与 `run.log` 同级）写入 `evaluation_scope.json`。文件在任务筛选完成、任务执行开始前生成，内容包括：
+新批次在 unit 根目录（与 `run.log` 同级）写入 `evaluation_scope.json`。v2 主文件使用累计语义，记录该目录历次调用计划过的任务并按 category/task ID 去重；单题补跑或 no-op resume 只能保持或扩大任务集合，不能把原有完整范围缩窄。相同任务再次调用时更新为本次任务定义的 provenance，实际 run 仍各自保留执行和评分契约 hash。
 
-- schema version；
-- task/category 模式；
-- category、modality、include/exclude tags；
-- 计划任务的 category、task ID 和来源；
-- 计划任务数。
+每次调用另写入 `evaluation_scope_history/<timestamp>_<invocation_id>.json`；`invocation_id` 与 `run.log` 中的 run configuration 一致，保存该次调用的：
 
-有效性校验优先使用该文件的计划任务集合，因此仍能发现选中范围内的真实漏跑。历史结果没有结构化文件时，回退解析 `run.log`：先用 `Category:` 限定分类，再应用 modality/tag/exclude-tag 过滤。若两种证据都不存在，保留原有全量兼容行为。
+- task/category 模式与 category、modality、include/exclude tags；
+- 计划任务、待执行任务与 resume 复用任务；
+- 计划任务数、待执行任务数、复用任务数和计划 run 数；
+- 每个任务的来源及 task/execution/scoring contract hash。
 
-单任务模式同样写入结构化范围。resume 模式记录筛选后的完整计划集合，包括本次复用和待执行任务，避免把复用任务误判为不在范围内。
+有效性校验兼容 v1 和 v2，优先使用主文件的累计任务集合，因此仍能发现选中范围内的真实漏跑。scope 文件存在但 JSON 损坏、版本不支持、计划数量不一致、任务重复或 category/task ID 为空时，必须报告框架错误；历史结果完全没有结构化文件时才回退解析 `run.log`：先用 `Category:` 限定分类，再应用 modality/tag/exclude-tag 过滤。若两种证据都不存在，保留原有全量兼容行为。
+
+单任务模式同样写入结构化范围。固定复用的本地 smoke 目录会累计历次冒烟任务；正式评测仍应使用独立轮次目录。resume 模式记录筛选后的完整计划集合，并在调用历史中区分本次复用和待执行任务。
 
 ## 验证
 
 - 单元测试覆盖 Judge 默认值、自定义值和非法值回退；
 - 单元测试覆盖明确 Judge 异常与正常 `llm_notes`；
 - 单元测试覆盖结构化范围、历史 category 日志回退和范围内漏题；
+- 单元测试覆盖固定 smoke 目录的累计范围、no-op resume、损坏 scope、计数不一致、重复任务和空任务字段；
 - 使用现有网站 round1 验证：不再产生其他分类的 123 个误报，task 005 被识别为判分失败；
 - 重新生成 Excel，确认“评测异常数”为 1，正式有效性门禁仍因 task 005 Judge 失败而阻断。

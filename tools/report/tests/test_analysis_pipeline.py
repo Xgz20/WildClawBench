@@ -853,7 +853,9 @@ class AnalysisPipelineTest(unittest.TestCase):
             ("07_Website_Generation", "task_web_2"),
         }
         scope = {
-            "schema_version": 1,
+            "schema_version": 2,
+            "scope_semantics": "accumulated",
+            "planned_task_count": 2,
             "planned_tasks": [
                 {"category": "07_Website_Generation", "task_id": "task_web_1"},
                 {"category": "07_Website_Generation", "task_id": "task_web_2"},
@@ -928,6 +930,71 @@ class AnalysisPipelineTest(unittest.TestCase):
 
         self.assertEqual(len(missing), 1)
         self.assertEqual(missing[0]["task_id"], "task_selected_but_missing")
+
+    def test_invalid_evaluation_scope_is_reported_instead_of_silently_ignored(self) -> None:
+        scope_path = self.unit_dir / "evaluation_scope.json"
+        scope_path.write_text("{invalid", encoding="utf-8")
+
+        report = validity_check.scan_round(self.round_dir, self.tasks_dir)
+        findings = [
+            item
+            for item in report["findings"]
+            if item["id"] == "EVALUATION_SCOPE_INVALID"
+        ]
+
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]["severity"], "error")
+        self.assertIn("JSON 解析失败", findings[0]["message"])
+
+    def test_evaluation_scope_schema_rejects_count_duplicate_and_empty_task(self) -> None:
+        invalid_scopes = (
+            {
+                "schema_version": 2,
+                "planned_task_count": 2,
+                "planned_tasks": [
+                    {"category": "01_suite", "task_id": "task_1"}
+                ],
+            },
+            {
+                "schema_version": 2,
+                "planned_task_count": 2,
+                "planned_tasks": [
+                    {"category": "01_suite", "task_id": "task_1"},
+                    {"category": "01_suite", "task_id": "task_1"},
+                ],
+            },
+            {
+                "schema_version": 2,
+                "planned_task_count": 1,
+                "planned_tasks": [{"category": "", "task_id": "task_1"}],
+            },
+        )
+
+        for scope in invalid_scopes:
+            with self.subTest(scope=scope):
+                selected, error = validity_check.evaluation_scope_tasks(scope)
+                self.assertIsNone(selected)
+                self.assertIsNotNone(error)
+
+    def test_empty_structured_scope_marks_existing_tasks_unexpected(self) -> None:
+        (self.unit_dir / "evaluation_scope.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 2,
+                    "scope_semantics": "accumulated",
+                    "planned_task_count": 0,
+                    "planned_tasks": [],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        report = validity_check.scan_round(self.round_dir, self.tasks_dir)
+        unexpected = [
+            item for item in report["findings"] if item["id"] == "TASK_UNEXPECTED"
+        ]
+
+        self.assertEqual(len(unexpected), len(self.paths))
 
     def test_audit_detects_recomputed_cost_regression(self) -> None:
         excel_path = self.generate_comparison_excel()
