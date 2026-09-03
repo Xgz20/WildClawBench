@@ -570,9 +570,9 @@ def audit_request_count_consistency(unit: str, raw: dict, findings: list[dict]) 
             f"总请求数低于发起工具调用的模型轮次（比值 {ratio:.2f} < {REQ_TURN_RATIO_MIN}），"
             "疑似 runner 请求计数缺陷",
             sheet="总览", unit=unit, evidence=evidence,
-            recommendation="Codex 系 Harness 用 tools/report/scripts/reparse_codex_usage.py "
-                           "重解析该 unit 的 usage.json 后重新生成报告；其他 Harness 核对其 "
-                           "runner 的 request_count 口径。"))
+            recommendation="仅 AstronCode/Codex 可用 tools/report/scripts/"
+                           "reparse_codex_usage.py 重解析该 unit 的 usage.json 后重新生成报告；"
+                           "其他 Harness 应核对各自 runner 的 request_count 口径。"))
     elif ratio > REQ_TURN_RATIO_MAX:
         findings.append(finding(
             "REQUEST_COUNT_OVERCOUNT", "warning",

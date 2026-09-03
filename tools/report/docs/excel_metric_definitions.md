@@ -167,7 +167,7 @@ CNY 定价再除以定价日 `CNY/USD`；分档模型按逐请求输入 token �
 2. 旧报告及其他 Harness 的工具调用数按 `tool_result` 计数。OpenCode、DeepSeek Harness、HermesAgent 的新报告已改按 `tool_use` 尝试计数；`total=0` 仍无法区分“确实未调用”“轨迹缺失”和“轨迹解析失败”。
 3. OpenCode、DeepSeek Harness、HermesAgent 的 classifier 本身仍不产生 `format_error`，但新报告已增加独立格式校验。OpenClaw、ClaudeCode 仍只匹配有限错误文本，跨 Harness 排名仍不成立。
 4. AstronCode 把 approval policy 拒绝也归为 `format_error`，这不是纯粹的工具名或参数格式错误，会混入运行策略限制。
-5. `reparse_codex_usage.py` 只适用于 Codex/AstronCode 专属目录，但脚本未按 Harness 过滤。对 DeepSeek Harness 或 OpenClaw 结果目录 dry-run，会把请求数分别错误建议为 `6→0`、`11→0`。
+5. `reparse_codex_usage.py` 曾未按 Harness 过滤：对 DeepSeek Harness 或 ClaudeCode 结果目录 dry-run，会把请求数错误建议为 `6→0`、`109→0`。现已强制读取 `execution_status.harness`，只处理 Codex/AstronCode；其他 Harness、缺失或损坏的状态文件均安全跳过。即使 Harness 匹配，只要重解析 token 与原记录漂移，也不会推断或写回请求数。
 6. 多轮任务只取最新有效 run 的请求数和工具指标，不是多轮总量，也不是轮均值。
 
 OpenCode 的 `completed` 一律记为成功，包括业务错误 JSON；`running/pending` 记为不确定。ClaudeCode 优先使用归一化轨迹保留的 `tool_result.is_error`；命令成功返回业务错误 JSON 仍记为工具执行成功。工具指标适合单 Harness 内诊断，不适合直接跨 Harness 排名。源码见 [`tool_result` 配对](../../../src/utils/tool_metrics.py#L98)、[OpenCode 分类](../../../src/utils/tool_metrics.py#L697)、[报告侧格式校验](../../../src/utils/tool_metrics.py#L878)、[派生比率](../../../src/utils/tool_metrics.py#L949)。
@@ -176,7 +176,7 @@ OpenCode 的 `completed` 一律记为成功，包括业务错误 JSON；`running
 
 #### 工具指标修正状态
 
-本次已实现：OpenCode、DeepSeek Harness、HermesAgent 仅在生成报告时按调用尝试计算格式准确率；DeepSeek Harness 使用会话内实际工具 Schema；明确非法参数、未知工具和拒绝结果计格式错误；格式无法判定时显示 `-`。该过程只读结果目录，不修改 Harness、执行流程、评分和原始产物。按要求，Excel 和领导版报告不增加轨迹覆盖状态字段。
+本次已实现：OpenCode、DeepSeek Harness、HermesAgent 仅在生成报告时按调用尝试计算格式准确率；DeepSeek Harness 使用会话内实际工具 Schema；明确非法参数、未知工具和拒绝结果计格式错误；格式无法判定时显示 `-`。`reparse_codex_usage.py` 也已增加 Harness 白名单和混合目录保护。上述改动不修改 Harness、执行流程或评分；报告指标计算只读结果目录，历史 usage 回填仍必须显式传入 `--apply`。按要求，Excel 和领导版报告不增加轨迹覆盖状态字段。
 
 其余改造仍为建议：
 
@@ -186,7 +186,7 @@ OpenCode 的 `completed` 一律记为成功，包括业务错误 JSON；`running
 | P0 | 同时统计 `tool_use_total`、`tool_result_total`、`matched_count`、`missing_result_count`、`orphan_result_count`、`duplicate_result_count` | `tool_use_total = matched_count + missing_result_count`，`tool_result_total` 可与原始轨迹逐条对账 |
 | P0 | 内部审计区分 `no_calls/missing_transcript/parse_error`，不写入 Excel 或领导版报告 | `0` 只表示已确认没有调用；轨迹缺失和解析失败时相关比率显示 `-` |
 | P0 | 从 Harness 调度层保存工具调用是否被接受及拒绝原因；仅 `unsupported_tool`、`invalid_arguments` 计格式错误，`policy_denied` 单列 | 无法捕获拒绝事件的 Harness，格式准确率显示 `-`，不显示 100% |
-| P0 | `reparse_codex_usage.py` 按 `execution_status.harness` 过滤，只允许修复 Codex/AstronCode；报告生成前增加请求数对账 | 对混合结果目录执行时跳过其他 Harness；旧报告重生成后请求数与权威事件一致 |
+| P0 | 报告生成前增加请求数对账 | 旧 Codex/AstronCode 结果完成显式回填后，重生成报告的请求数与权威事件一致 |
 | P1 | 工具执行状态优先使用原生 `completed/error/running/pending`；文本推断仅作 fallback，并记录 `classification_source` | HermesAgent 无状态非空结果不再直接判成功；可统计 fallback 占比 |
 | P1 | 多轮报告同时展示全轮总量、轮均值和最新轮快照，停止把最新轮工具量与多轮平均分并列为同一口径 | 每个资源指标明确 `all_runs/latest_run/per_run_avg`，三者可相互复算 |
 | P1 | 元数据记录 classifier 版本；为 OpenCode、AstronClaw、ClaudeCode、HermesAgent 补正常与异常真实样本 | 每个 Harness 至少覆盖成功、执行失败、格式拒绝、超时/中断四类样本；未覆盖项标为待确认 |
@@ -279,7 +279,6 @@ Sheet 名按 Excel 31 字符限制直接截断。长 unit 可能名称冲突，�
 | 成本任一任务缺失则整项为 `-` | 同时展示已估算成本、可估算任务数和总任务数 |
 | 工具指标跨 Harness 不同尺 | 仅做 Harness 内比较；对外表中披露 classifier 版本和未配对调用数 |
 | 两种“成功率”分母不同 | 明确改名为“综合成功率”和“已执行调用成功率” |
-| 修复脚本未过滤 Harness | `reparse_codex_usage.py` 只传 Codex/AstronCode 专属目录，禁止对混合结果根目录执行 `--apply` |
 | 强项与短板可能重叠 | 候选维度不足 6 个时减少 Top/Bottom 数量 |
 | 总览和详情耗时来源不同 | 统一来源并增加自动对账 |
 | 总览四态与详情原始状态不同 | 详情增加“报告状态(outcome)”列 |
