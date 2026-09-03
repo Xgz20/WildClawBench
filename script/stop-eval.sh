@@ -23,7 +23,10 @@
 # 安全说明：只展示并删除 `ancestor=<评测镜像>` 命中的容器；进程执行前
 # 再次校验命令行包含 eval/run_batch.py。切勿用 docker system prune -a 代替。
 # ============================================================
-set -uo pipefail
+# Bash 3.2-4.3 considers declared empty arrays unset under `set -u`. Empty
+# process/container selections are normal here, so nounset would abort before
+# the script reaches the stop and cleanup steps on those Bash versions.
+set -o pipefail
 
 # 各 harness 的镜像 repo；清理时涵盖该 repo 的所有本地 tag（docker 的
 # ancestor 过滤不带 tag 时只匹配 :latest，所以必须逐 tag 枚举）
