@@ -23,7 +23,7 @@ except ImportError:
 REPO_ROOT = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.utils.tool_metrics import parse_tool_metrics  # noqa: E402
+from src.utils.tool_metrics import parse_report_tool_metrics  # noqa: E402
 from src.utils.anomalies import classify_report_outcome, scan_run_dir  # noqa: E402
 from src.utils.run_selection import select_effective_run_dirs  # noqa: E402
 
@@ -292,7 +292,9 @@ def scan_raw_units(
                 anomaly_items = scan_run_dir(latest).get("items", []) if latest else []
                 outcome = classify_report_outcome(status, grading_error, anomaly_items)
                 transcript = transcript_path(latest) if latest else None
-                metrics = parse_tool_metrics(transcript, canonical_harness)
+                metrics = parse_report_tool_metrics(
+                    transcript, canonical_harness, latest
+                )
                 tasks[task_dir.name] = {
                     "suite": suite_dir.name,
                     "score": fmean(scores) if scores else None,

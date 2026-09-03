@@ -18,6 +18,7 @@ from src.utils.tool_metrics import (
     format_accuracy,
     merge_metrics,
     overall_success_rate,
+    parse_report_tool_metrics,
     parse_tool_metrics,
     unclear_ratio,
 )
@@ -28,8 +29,13 @@ def _codex_line(role: str, block: dict) -> str:
     return json.dumps({"type": "message", "message": {"role": role, "content": [block]}})
 
 
-def _tool_use(call_id: str, name: str) -> dict:
-    return {"type": "tool_use", "id": call_id, "name": name, "input": {}}
+def _tool_use(call_id: str, name: str, tool_input=None) -> dict:
+    return {
+        "type": "tool_use",
+        "id": call_id,
+        "name": name,
+        "input": {} if tool_input is None else tool_input,
+    }
 
 
 def _tool_result(
@@ -280,6 +286,17 @@ class RatioTest(unittest.TestCase):
         self.assertIsNone(overall_success_rate(empty))
         self.assertIsNone(unclear_ratio(empty))
 
+    def test_unresolved_report_format_returns_none(self):
+        metrics = {
+            "total": 2,
+            "success": 1,
+            "failure": 0,
+            "format_error": 0,
+            "unclear": 1,
+            "format_unresolved": 1,
+        }
+        self.assertIsNone(format_accuracy(metrics))
+
 
 class ParseIntegrationTest(unittest.TestCase):
     def _write(self, name: str, text: str) -> Path:
@@ -350,6 +367,78 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(m["success"], 1)
         self.assertEqual(m["failure"], 1)
         self.assertEqual(m["format_error"], 0)
+
+    def test_opencode_report_format_uses_attempts(self):
+        lines = [
+            _codex_line("assistant", _tool_use("o1", "bash", {"command": "true"})),
+            _codex_line(
+                "user", _tool_result("o1", "ok", status="completed")
+            ),
+            _codex_line("assistant", _tool_use("o2", "bash", {"command": "false"})),
+            _codex_line(
+                "user", _tool_result("o2", "exit 1", status="error")
+            ),
+            _codex_line("assistant", _tool_use("o3", "bash", '{"command":')),
+        ]
+        path = self._write("chat_opencode.jsonl", "\n".join(lines) + "\n")
+
+        metrics = parse_report_tool_metrics(path, "opencode")
+
+        self.assertEqual(metrics["total"], 3)
+        self.assertEqual(metrics["success"], 1)
+        self.assertEqual(metrics["failure"], 1)
+        self.assertEqual(metrics["format_error"], 1)
+        self.assertEqual(metrics["format_unresolved"], 0)
+        self.assertAlmostEqual(format_accuracy(metrics), 2 / 3)
+
+    def test_opencode_report_format_unpaired_call_is_not_guessed(self):
+        path = self._write(
+            "chat_opencode_unpaired.jsonl",
+            _codex_line(
+                "assistant", _tool_use("o1", "bash", {"command": "sleep 10"})
+            ),
+        )
+
+        metrics = parse_report_tool_metrics(path, "opencode")
+
+        self.assertEqual(metrics["total"], 1)
+        self.assertEqual(metrics["unclear"], 1)
+        self.assertEqual(metrics["format_unresolved"], 1)
+        self.assertIsNone(format_accuracy(metrics))
+
+    def test_opencode_completed_business_error_is_not_format_error(self):
+        lines = [
+            _codex_line("assistant", _tool_use("o1", "bash", {"command": "true"})),
+            _codex_line(
+                "user",
+                _tool_result(
+                    "o1", '{"error":"Unknown tool in remote service"}',
+                    status="completed",
+                ),
+            ),
+        ]
+        path = self._write("chat_opencode_business_error.jsonl", "\n".join(lines) + "\n")
+
+        metrics = parse_report_tool_metrics(path, "opencode")
+
+        self.assertEqual(metrics["total"], 1)
+        self.assertEqual(metrics["success"], 1)
+        self.assertEqual(metrics["format_error"], 0)
+        self.assertEqual(metrics["format_unresolved"], 0)
+        self.assertAlmostEqual(format_accuracy(metrics), 1.0)
+
+    def test_report_metrics_do_not_count_orphan_results_as_calls(self):
+        path = self._write(
+            "chat_opencode_orphan.jsonl",
+            _codex_line("user", _tool_result("missing", "ok", status="completed")),
+        )
+
+        metrics = parse_report_tool_metrics(path, "opencode")
+
+        self.assertEqual(metrics["total"], 0)
+        self.assertEqual(metrics["success"], 0)
+        self.assertEqual(metrics["format_unresolved"], 1)
+        self.assertIsNone(format_accuracy(metrics))
 
     def test_astronclaw_native_tool_calls_use_details_status(self):
         events = [
@@ -431,6 +520,70 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(metrics["unclear"], 1)
         self.assertEqual(metrics["format_error"], 0)
 
+    def test_deepseek_report_format_uses_native_request_schema(self):
+        run_dir = Path(self.tmp.name) / "run"
+        session_dir = run_dir / "dsh_sessions" / "session-1"
+        session_dir.mkdir(parents=True)
+        events = [
+            {"type": "session", "version": 0, "id": "session-1"},
+            {
+                "type": "request/header",
+                "data": {
+                    "header": {
+                        "tools": [
+                            {
+                                "name": "bash",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {"command": {"type": "string"}},
+                                    "required": ["command"],
+                                    "additionalProperties": False,
+                                },
+                            }
+                        ]
+                    }
+                },
+            },
+            {
+                "type": "tool/call",
+                "data": {
+                    "callId": "d1",
+                    "name": "bash",
+                    "arguments": '{"command":"true"}',
+                },
+            },
+            {
+                "type": "tool/call",
+                "data": {"callId": "d2", "name": "bash", "arguments": "{}"},
+            },
+        ]
+        (session_dir / "session.jsonl").write_text(
+            "\n".join(json.dumps(event) for event in events) + "\n",
+            encoding="utf-8",
+        )
+        transcript = self._write(
+            "chat_deepseek_schema.jsonl",
+            "\n".join(
+                [
+                    _codex_line(
+                        "assistant", _tool_use("d1", "bash", {"command": "true"})
+                    ),
+                    _codex_line("assistant", _tool_use("d2", "bash", {})),
+                ]
+            )
+            + "\n",
+        )
+
+        metrics = parse_report_tool_metrics(
+            transcript, "deepseek-harness", run_dir
+        )
+
+        self.assertEqual(metrics["total"], 2)
+        self.assertEqual(metrics["format_error"], 1)
+        self.assertEqual(metrics["unclear"], 1)
+        self.assertEqual(metrics["format_unresolved"], 0)
+        self.assertAlmostEqual(format_accuracy(metrics), 0.5)
+
     def test_claudecode_uses_normalized_is_error(self):
         lines = [
             _codex_line("assistant", _tool_use("c1", "Bash")),
@@ -481,6 +634,30 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(metrics["failure"], 1)
         self.assertEqual(metrics["format_error"], 0)
 
+    def test_hermes_report_format_detects_raw_and_dispatch_rejections(self):
+        lines = [
+            _codex_line(
+                "assistant", _tool_use("h1", "execute_code", {"code": "1 + 1"})
+            ),
+            _codex_line(
+                "user", _tool_result("h1", '{"status":"success","output":"2"}')
+            ),
+            _codex_line("assistant", _tool_use("h2", "execute_code", '{"code":')),
+            _codex_line("assistant", _tool_use("h3", "missing_tool", {})),
+            _codex_line(
+                "user", _tool_result("h3", '{"error":"Unknown tool: missing_tool"}')
+            ),
+        ]
+        path = self._write("chat_hermes_format.jsonl", "\n".join(lines) + "\n")
+
+        metrics = parse_report_tool_metrics(path, "hermesagent")
+
+        self.assertEqual(metrics["total"], 3)
+        self.assertEqual(metrics["success"], 1)
+        self.assertEqual(metrics["format_error"], 2)
+        self.assertEqual(metrics["format_unresolved"], 0)
+        self.assertAlmostEqual(format_accuracy(metrics), 1 / 3)
+
     def test_unregistered_harness_returns_empty(self):
         path = self._write("chat.jsonl", _codex_line("assistant", _tool_use("x", "foo")))
         m = parse_tool_metrics(path, "openclaw")
@@ -499,6 +676,32 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(agg["total"], 3)
         self.assertEqual(agg["success"], 2)
         self.assertEqual(agg["by_tool"]["a"]["total"], 3)
+
+    def test_merge_preserves_report_format_unresolved(self):
+        metrics = {
+            "total": 1,
+            "success": 0,
+            "failure": 0,
+            "format_error": 0,
+            "unclear": 1,
+            "format_unresolved": 1,
+            "by_tool": {
+                "bash": {
+                    "total": 1,
+                    "success": 0,
+                    "failure": 0,
+                    "format_error": 0,
+                    "unclear": 1,
+                    "format_unresolved": 1,
+                }
+            },
+        }
+
+        merged = merge_metrics([metrics])
+
+        self.assertEqual(merged["format_unresolved"], 1)
+        self.assertEqual(merged["by_tool"]["bash"]["format_unresolved"], 1)
+        self.assertIsNone(format_accuracy(merged))
 
 
 if __name__ == "__main__":

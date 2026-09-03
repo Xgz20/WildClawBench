@@ -96,7 +96,7 @@ except Exception:  # 独立分发/路径异常时内联同款公式兜底
 # 见 docs/local/design/Harness工具调用指标设计.md。
 try:
     from src.utils.tool_metrics import (
-        parse_tool_metrics as _parse_tool_metrics,
+        parse_report_tool_metrics as _parse_report_tool_metrics,
         merge_metrics as _merge_tool_metrics,
         format_accuracy as _tm_format_accuracy,
         execution_success_rate as _tm_exec_success,
@@ -106,7 +106,7 @@ try:
     _TOOL_METRICS_OK = True
 except Exception:  # 独立分发/路径异常时降级：不统计工具调用指标
     _TOOL_METRICS_OK = False
-    def _parse_tool_metrics(path, harness):
+    def _parse_report_tool_metrics(path, harness, run_dir=None):
         return {"total": 0, "success": 0, "failure": 0, "format_error": 0,
                 "unclear": 0, "by_tool": {}}
     def _merge_tool_metrics(lst):
@@ -365,8 +365,8 @@ class TaskRecord:
                     break
 
         # 工具调用指标（基于最新一轮的归一化轨迹）。未注册 harness / 无轨迹 → 空指标。
-        self.tool_metrics = _parse_tool_metrics(
-            self.transcript, self.canonical_harness
+        self.tool_metrics = _parse_report_tool_metrics(
+            self.transcript, self.canonical_harness, self.run_dir
         )
 
     def _estimate_cost(self, model: str, harness: str, registry, pricing_date):

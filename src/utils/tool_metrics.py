@@ -8,7 +8,7 @@
     format_error  harness 拒绝：工具名不支持 / 参数格式错误
     unclear       无法判定：后台进程、超时、无明确标记
 
-派生四个比率（上层从计数算，与 harness 无关）：
+通用解析派生四个比率（上层从计数算，与 harness 无关）：
     格式准确率   = (total - format_error) / total
     执行成功率   = success / (success + failure)
     综合成功率   = success / total
@@ -17,6 +17,10 @@
 跨 harness 差异用注册表模式隔离：每个 harness 注册一个 classifier
 ((tool_name, content, status) -> category)，新增 harness 只需写一个函数 + 一行注册。
 纯标准库，无第三方依赖，供报告脚本与平台后端共同 import。
+
+报告生成对 OpenCode、DeepSeek Harness、HermesAgent 使用独立入口
+parse_report_tool_metrics：按 tool_use 尝试计数并在报告阶段校验格式，
+不改变 Harness 执行、评分或其他调用方的通用解析口径。
 """
 from __future__ import annotations
 
@@ -26,6 +30,7 @@ from pathlib import Path
 from typing import Callable
 
 CATEGORIES = ("success", "failure", "format_error", "unclear")
+REPORT_FORMAT_HARNESSES = frozenset({"opencode", "deepseek-harness", "hermesagent"})
 
 # classifier 签名：(tool_name, content, status) -> category(∈ CATEGORIES)
 Classifier = Callable[[str, str, str], str]
@@ -155,6 +160,267 @@ def _load_tool_pairs(transcript_path: Path | None) -> list[tuple[str, str, str]]
             pairs.append((name, content_text, status))
 
     return pairs
+
+
+def _load_tool_attempts_and_results(
+    transcript_path: Path | None,
+) -> tuple[list[dict], dict[str, list[tuple[str, str]]]]:
+    """读取报告侧格式校验所需的调用尝试及结果，不改变通用解析口径。"""
+    if transcript_path is None:
+        return [], {}
+    path = Path(transcript_path)
+    if not path.is_file():
+        return [], {}
+    try:
+        raw = path.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return [], {}
+
+    attempts: list[dict] = []
+    results: dict[str, list[tuple[str, str]]] = {}
+    for obj in _iter_json_objects(raw):
+        if not isinstance(obj, dict):
+            continue
+        message = obj.get("message")
+        if not isinstance(message, dict):
+            continue
+        content_blocks = message.get("content")
+        if not isinstance(content_blocks, list):
+            continue
+        for block in content_blocks:
+            if not isinstance(block, dict):
+                continue
+            block_type = block.get("type")
+            if block_type in {"tool_use", "toolCall"}:
+                arguments = (
+                    block.get("arguments", block.get("input", {}))
+                    if block_type == "toolCall"
+                    else block.get("input", block.get("arguments", {}))
+                )
+                attempts.append(
+                    {
+                        "call_id": str(block.get("id") or ""),
+                        "tool_name": str(block.get("name") or "unknown"),
+                        "arguments": arguments,
+                    }
+                )
+            elif block_type == "tool_result":
+                call_id = str(block.get("tool_use_id") or "")
+                content = block.get("content")
+                content_text = (
+                    content
+                    if isinstance(content, str)
+                    else json.dumps(content, ensure_ascii=False)
+                )
+                status = str(block.get("status") or "")
+                if not status and block.get("is_error") is True:
+                    status = "error"
+                results.setdefault(call_id, []).append((content_text, status))
+    return attempts, results
+
+
+def _invalid_argument_shape(arguments) -> bool:
+    """判断归一化后仍可确定的参数结构错误。"""
+    parsed = arguments
+    if isinstance(arguments, str):
+        try:
+            parsed = json.loads(arguments)
+        except json.JSONDecodeError:
+            return True
+    if not isinstance(parsed, dict):
+        return True
+    return "_raw" in parsed or "_value" in parsed
+
+
+_FORMAT_REJECTION_MARKERS = (
+    "unknown tool",
+    "unsupported tool",
+    "unsupported call",
+    "tool not found",
+    "failed to parse function arguments",
+    "invalid tool arguments",
+    "invalid arguments for tool",
+    "tool input validation",
+    "arguments must be an object",
+    "arguments must be a json object",
+)
+
+
+def _result_error_text(content: str) -> str:
+    stripped = (content or "").strip()
+    if not stripped:
+        return ""
+    try:
+        payload = json.loads(stripped)
+    except json.JSONDecodeError:
+        return stripped
+    if not isinstance(payload, dict):
+        return ""
+    error = payload.get("error")
+    if isinstance(error, dict):
+        return " ".join(
+            str(error.get(key) or "") for key in ("type", "code", "message")
+        ).strip()
+    if error is not None:
+        return str(error)
+    return str(payload.get("message") or "")
+
+
+def _is_report_format_rejection(content: str, status: str) -> bool:
+    error_text = _result_error_text(content)
+    if not error_text:
+        return False
+    normalized = error_text.strip().lower()
+    normalized_status = (status or "").strip().lower()
+    if normalized_status in {"completed", "success", "ok"}:
+        return False
+    status_is_error = normalized_status in {"error", "failed", "failure"}
+    explicit_error_payload = bool(
+        (content or "").lstrip().startswith("{") and error_text != (content or "").strip()
+    )
+    if not status_is_error and not explicit_error_payload:
+        return normalized.startswith(_FORMAT_REJECTION_MARKERS)
+    return any(marker in normalized for marker in _FORMAT_REJECTION_MARKERS)
+
+
+def _schema_accepts(value, schema: dict) -> bool:
+    """校验报告需要的 JSON Schema 子集；未知关键字不影响结论。"""
+    if not isinstance(schema, dict):
+        return True
+    if "const" in schema and value != schema["const"]:
+        return False
+    if isinstance(schema.get("enum"), list) and value not in schema["enum"]:
+        return False
+    if isinstance(schema.get("allOf"), list) and not all(
+        _schema_accepts(value, item) for item in schema["allOf"]
+    ):
+        return False
+    if isinstance(schema.get("anyOf"), list) and not any(
+        _schema_accepts(value, item) for item in schema["anyOf"]
+    ):
+        return False
+    if isinstance(schema.get("oneOf"), list):
+        if sum(_schema_accepts(value, item) for item in schema["oneOf"]) != 1:
+            return False
+
+    expected = schema.get("type")
+    expected_types = expected if isinstance(expected, list) else [expected]
+    expected_types = [item for item in expected_types if isinstance(item, str)]
+    type_checks = {
+        "null": value is None,
+        "object": isinstance(value, dict),
+        "array": isinstance(value, list),
+        "string": isinstance(value, str),
+        "boolean": isinstance(value, bool),
+        "integer": isinstance(value, int) and not isinstance(value, bool),
+        "number": isinstance(value, (int, float)) and not isinstance(value, bool),
+    }
+    if expected_types and not any(type_checks.get(item, True) for item in expected_types):
+        return False
+
+    if isinstance(value, dict):
+        required = schema.get("required")
+        if isinstance(required, list) and any(key not in value for key in required):
+            return False
+        properties = schema.get("properties")
+        if isinstance(properties, dict):
+            for key, item in value.items():
+                if key in properties and not _schema_accepts(item, properties[key]):
+                    return False
+            if schema.get("additionalProperties") is False:
+                if any(key not in properties for key in value):
+                    return False
+    if isinstance(value, list) and isinstance(schema.get("items"), dict):
+        if any(not _schema_accepts(item, schema["items"]) for item in value):
+            return False
+    return True
+
+
+def _parse_call_arguments(raw_arguments) -> tuple[bool, object]:
+    if not isinstance(raw_arguments, str):
+        return True, raw_arguments
+    try:
+        return True, json.loads(raw_arguments)
+    except json.JSONDecodeError:
+        return False, raw_arguments
+
+
+def _deepseek_format_decisions(run_dir: Path | None) -> dict[str, bool]:
+    """从 DSH 原生会话返回 call_id -> 是否格式错误。"""
+    if run_dir is None:
+        return {}
+    session_root = Path(run_dir) / "dsh_sessions"
+    if not session_root.is_dir():
+        return {}
+
+    decisions: dict[str, bool] = {}
+    for session_path in sorted(session_root.rglob("session.jsonl")):
+        schemas: dict[str, dict] = {}
+        try:
+            lines = session_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(event, dict):
+                continue
+            event_type = event.get("type")
+            data = event.get("data")
+            if not isinstance(data, dict):
+                continue
+            if event_type == "request/header":
+                header = data.get("header") if isinstance(data.get("header"), dict) else {}
+                tools = header.get("tools") if isinstance(header.get("tools"), list) else []
+                schemas = {}
+                for tool in tools:
+                    if not isinstance(tool, dict):
+                        continue
+                    function = tool.get("function") if isinstance(tool.get("function"), dict) else tool
+                    name = str(function.get("name") or "")
+                    parameters = function.get("parameters")
+                    if name and isinstance(parameters, dict):
+                        schemas[name] = parameters
+                continue
+
+            calls: list[tuple[str, str, object]] = []
+            if event_type == "tool/call":
+                calls.append(
+                    (
+                        str(data.get("callId") or ""),
+                        str(data.get("name") or ""),
+                        data.get("arguments", {}),
+                    )
+                )
+            elif event_type == "assistant/message":
+                message = data.get("message") if isinstance(data.get("message"), dict) else {}
+                blocks = message.get("content") if isinstance(message.get("content"), list) else []
+                for block in blocks:
+                    if not isinstance(block, dict) or block.get("type") not in {
+                        "tool-call", "toolCall", "tool_use",
+                    }:
+                        continue
+                    calls.append(
+                        (
+                            str(block.get("id") or block.get("callId") or ""),
+                            str(block.get("name") or block.get("tool_name") or ""),
+                            block.get("arguments", block.get("input", block.get("args", {}))),
+                        )
+                    )
+
+            if not schemas:
+                continue
+            for call_id, tool_name, raw_arguments in calls:
+                parsed_ok, arguments = _parse_call_arguments(raw_arguments)
+                decisions[call_id] = (
+                    not call_id
+                    or tool_name not in schemas
+                    or not parsed_ok
+                    or not _schema_accepts(arguments, schemas.get(tool_name, {}))
+                )
+    return decisions
 
 
 # ---------------------------------------------------------------------------
@@ -432,7 +698,7 @@ def classify_opencode(tool_name: str, content: str, status: str = "") -> str:
     """OpenCode 判定：优先用 runner 保留的 state.status，无则退回 content 推断。
 
     OpenCode 无 harness 层 format_error（工具名/参数由 OpenCode 自身校验），
-    故本 classifier 不产出 format_error，格式准确率对 OpenCode 恒 100%。
+    故本通用 classifier 不产出 format_error；报告另走调用尝试校验。
     业务错误（如 {"error":"rate_limit"}）status 仍为 completed，正确归 success。
     """
     st = (status or "").lower()
@@ -576,12 +842,114 @@ def parse_tool_metrics(transcript_path: Path | None, harness: str) -> dict:
     return result
 
 
+def _increment_metric(result: dict, tool_name: str, category: str) -> None:
+    result["total"] += 1
+    result[category] += 1
+    bucket = result["by_tool"].setdefault(
+        tool_name,
+        {
+            "total": 0,
+            "success": 0,
+            "failure": 0,
+            "format_error": 0,
+            "unclear": 0,
+            "format_unresolved": 0,
+        },
+    )
+    bucket["total"] += 1
+    bucket[category] += 1
+
+
+def _combined_result_category(
+    classifier: Classifier,
+    tool_name: str,
+    result_records: list[tuple[str, str]],
+) -> str:
+    categories = {
+        classifier(tool_name, content, status)
+        for content, status in result_records
+    }
+    for category in ("format_error", "failure", "success", "unclear"):
+        if category in categories:
+            return category
+    return "unclear"
+
+
+def parse_report_tool_metrics(
+    transcript_path: Path | None,
+    harness: str,
+    run_dir: Path | None = None,
+) -> dict:
+    """报告专用口径：三类 Harness 按调用尝试校验格式，其他 Harness 保持原口径。
+
+    OpenCode、DeepSeek Harness、HermesAgent 的通用 classifier 不产出
+    format_error。报告侧改为读取 tool_use 尝试：明确的参数结构错误、工具拒绝，
+    以及 DSH 原生 request/header 中 Schema 校验失败均计为 format_error。
+    无结果且无法取得 Schema 的调用计为 unclear，并使报告格式准确率显示 `-`。
+    """
+    if harness not in REPORT_FORMAT_HARNESSES:
+        return parse_tool_metrics(transcript_path, harness)
+    classifier = _CLASSIFIERS.get(harness)
+    if classifier is None:
+        return _empty()
+
+    attempts, results_by_id = _load_tool_attempts_and_results(transcript_path)
+    result = _empty()
+    result["format_unresolved"] = 0
+    if not attempts and not results_by_id:
+        return result
+
+    deepseek_decisions = (
+        _deepseek_format_decisions(run_dir)
+        if harness == "deepseek-harness"
+        else {}
+    )
+    remaining_results = {
+        call_id: list(records) for call_id, records in results_by_id.items()
+    }
+    for attempt in attempts:
+        call_id = attempt["call_id"]
+        tool_name = attempt["tool_name"]
+        result_records = remaining_results.pop(call_id, [])
+        structural_error = (
+            not call_id
+            or not tool_name
+            or tool_name == "unknown"
+            or _invalid_argument_shape(attempt["arguments"])
+        )
+        schema_error = deepseek_decisions.get(call_id)
+        result_format_error = any(
+            _is_report_format_rejection(content, status)
+            for content, status in result_records
+        )
+        if structural_error or schema_error is True or result_format_error:
+            category = "format_error"
+        elif result_records:
+            category = _combined_result_category(classifier, tool_name, result_records)
+        else:
+            category = "unclear"
+            if schema_error is not False:
+                result["format_unresolved"] += 1
+        _increment_metric(result, tool_name, category)
+        if category == "unclear" and schema_error is not False and not result_records:
+            result["by_tool"][tool_name]["format_unresolved"] += 1
+
+    for orphan_records in remaining_results.values():
+        if not orphan_records:
+            continue
+        result["format_unresolved"] += 1
+
+    return result
+
+
 # ---------------------------------------------------------------------------
-# 比率派生（供报告/平台展示；分母为 0 时返回 None，由调用方渲染 N/A）
+# 比率派生（供报告/平台展示；分母为 0 时返回 None，由调用方决定展示）
 # ---------------------------------------------------------------------------
 
 def format_accuracy(m: dict) -> float | None:
     """格式准确率 = (total - format_error) / total。"""
+    if m.get("format_unresolved", 0):
+        return None
     total = m.get("total", 0)
     if not total:
         return None
@@ -616,16 +984,31 @@ def merge_metrics(metrics_list: list[dict]) -> dict:
     """把多条（用例级）指标聚合成一条（unit 级）。"""
     agg = _empty()
     by_tool = agg["by_tool"]
+    if any("format_unresolved" in metrics for metrics in metrics_list if metrics):
+        agg["format_unresolved"] = 0
     for m in metrics_list:
         if not m:
             continue
         for key in ("total", "success", "failure", "format_error", "unclear"):
             agg[key] += m.get(key, 0)
+        if "format_unresolved" in agg:
+            agg["format_unresolved"] += m.get("format_unresolved", 0)
         for tool_name, bucket in (m.get("by_tool") or {}).items():
             dst = by_tool.setdefault(
                 tool_name,
-                {"total": 0, "success": 0, "failure": 0, "format_error": 0, "unclear": 0},
+                {
+                    "total": 0,
+                    "success": 0,
+                    "failure": 0,
+                    "format_error": 0,
+                    "unclear": 0,
+                },
             )
             for key in ("total", "success", "failure", "format_error", "unclear"):
                 dst[key] += bucket.get(key, 0)
+            if "format_unresolved" in bucket:
+                dst["format_unresolved"] = (
+                    dst.get("format_unresolved", 0)
+                    + bucket.get("format_unresolved", 0)
+                )
     return agg

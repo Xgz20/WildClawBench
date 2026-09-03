@@ -1,13 +1,15 @@
 # WildClawBench 评测报告 Excel 指标口径审查
 
-审查对象：`tools/report/scripts/generate_eval_report.py` 当前实现（2026-08-02）。Excel 中写入的是计算结果，不是单元格公式。
+审查对象：`tools/report/scripts/generate_eval_report.py`、各 Harness Runner、`src/utils/tool_metrics.py` 当前实现及本地真实结果（2026-09-03）。Excel 中写入的是计算结果，不是单元格公式。
 
 ## 一、结论
 
 1. **总平均分、分类、难度、模态、矩阵和分差的基本公式合理**：任务等权、缺失分按 0，口径简单，能够复算。
-2. **当前报告不宜直接把能力分、多轮稳定性和资源效率用于对外排名**。这些部分存在实现错误、样本口径不一致或名称过度解释。
-3. **六项问题应在对外评审前修正**：单分制任务未进入能力分、去污染筛选不符合名称、多轮分数与最新轮明细混用、不同 unit 的实际样本数不透明、缺失分在总览和用例对比中处理不一致、能力映射重复计权。
-4. **总分可用的前提**：各 unit 使用同一任务集合，评测有效性检查通过。否则分数差可能来自缺任务或评测异常，不是模型或 Harness 能力差。
+2. **工具调用指标不是所有 Harness 都已验证准确**。旧 Codex/AstronCode 结果中的请求数存在确定低估；OpenCode、ClaudeCode、HermesAgent 缺少成功真实样本。
+3. **工具调用数存在两种口径**。OpenCode、DeepSeek Harness、HermesAgent 在新报告中按 `tool_use` 尝试计数；其他 Harness 仍按收到的 `tool_result` 计数。当前本地 47 个 run 中，22 个含工具轨迹，534 个 `tool_use` 均有对应结果；这只能证明现有样本没有漏配。
+4. **格式准确率和成功率不能直接跨 Harness 排名**。OpenCode、DeepSeek Harness、HermesAgent 已改为报告侧格式校验，不再由执行状态反推；其他 Harness 仍依赖各自 classifier。
+5. **能力分、多轮稳定性和资源效率需要带边界使用**。仍存在去污染名称不准、多轮字段混用、实际样本数不透明等问题。
+6. **总分可用的前提**：各 unit 使用同一任务集合，评测有效性检查通过。否则分数差可能来自缺任务或评测异常，不是模型或 Harness 能力差。
 
 ## 二、公共口径
 
@@ -20,7 +22,7 @@
 | 多轮用例分 | 所有有效 run 的 `overall_score` 算术平均 | 分数本身合理；其余字段仍取最新 run，存在混用 |
 | 百分数 | 聚合 Sheet 存 0~100 数值并显示 `%`；详情 Sheet 保留 0~1 | 合理，但“分差”单位应称百分点 |
 
-源码：[`effective_score` 与聚合公式](../scripts/generate_eval_report.py#L360)、[多轮分数与最新轮字段](../scripts/generate_eval_report.py#L242)。
+源码：[`effective_score` 与聚合公式](../scripts/generate_eval_report.py#L378)、[多轮分数与最新轮字段](../scripts/generate_eval_report.py#L274)。
 
 ## 三、按 Sheet 说明
 
@@ -37,21 +39,21 @@
 | 完成率 | `正常完成数 / 用例数 × 100%` | 合理；不是“有分率”或“无异常率” |
 | 平均轮数 | 对 `runs > 0` 的任务计算 `Σ有效得分轮数 / 任务数` | 可用；只统计产出有效分的 run |
 | 总tokens | 各任务最新 run 的 `usage.json.total_tokens` 之和 | 名称过宽；仅被测模型推理 token，不含裁判和工具侧消耗 |
-| 总请求数 | 各任务最新 run 的 `usage.json.request_count` 之和 | 名称过宽；仅被测模型请求，多轮时不是全轮总数 |
+| 总请求数 | 各任务最新 run 的 `usage.json.request_count` 之和；具体计数事件由 Harness Runner 决定 | 名称过宽；不是统一采集口径，多轮时也不是全轮总数 |
 | 总耗时(s) | 各任务最新 run 的 `usage.json.elapsed_time` 之和 | 不等于完整评测墙钟时间；与详情 Sheet 的耗时来源不同 |
-| 总成本(USD) | 各任务最新 run 的估算推理成本之和；任一任务不可估算则整项为 `-` | 保守但信息损失大；不含裁判、搜索、工具和外部 API 成本 |
-| 平均首 Token 响应时间 | 正常完成且 `usage.json.time_to_first_token_ms` 有效的未被替代 run 算术平均 | 单位为毫秒；缺失、超时和异常退出不按 0 计 |
+| 总成本(USD) | 有 registry 和 `pricing_date` 时重算各任务最新 run 的推理成本；否则读取 `usage.json.cost_usd`，仅 `cost_status=unavailable` 明确记为不可估；任一任务不可估算则整项为 `-` | 未标 `unavailable` 且缺少 `cost_usd` 时会回退为 0；不含裁判、搜索、工具和外部 API 成本 |
+| 平均首 Token 响应时间 | 未被执行状态显式判为失败、超时或取消，且 `usage.json.time_to_first_token_ms` 有效的未被替代 run 算术平均 | Judge 异常但执行未失败的 run 仍可能计入；缺失值不按 0 计 |
 | 首 Token 响应时间 P50/P90 | 同一有效样本集合的线性插值第 50/90 百分位 | 是 AstronCode Core 收到首个有效模型事件的时间，不等于客户端首次可见上屏 |
-| 首 Token 指标覆盖率 | `有效首响样本数 / 未被替代 run 总数 × 100%` | 旧镜像缺字段、超时和异常退出会降低覆盖率 |
+| 首 Token 指标覆盖率 | `有效首响样本数 / 未被替代 run 总数 × 100%` | 旧镜像缺字段和显式执行失败会降低覆盖率；Judge 异常不一定被排除 |
 | 首 Token 响应有效样本数 | 参与平均值及分位数计算的 run 数 | 与覆盖率一起展示，避免低覆盖率统计被误用 |
-| 工具调用数 | 最新 run 中成功配对到 `tool_result` 的记录数 | 不是所有 `tool_use` 请求数 |
+| 工具调用数 | OpenCode、DeepSeek Harness、HermesAgent 按最新 run 的 `tool_use` 尝试数；其他 Harness 按 `tool_result` 数 | 三类 Harness 会把无结果尝试计为不确定；其他 Harness 仍可能漏掉无结果尝试 |
 | 格式准确率 | `(total - format_error) / total` | 公式清楚；不同 Harness 的分类能力不同，不宜跨 Harness 排名 |
 | 执行成功率 | `success / (success + failure)` | 合理；排除 `unclear` 和 `format_error` |
 | 不确定占比 | `unclear / total` | 合理，建议与执行成功率同时看 |
 
-ClaudeCode 的 `request_count` 优先读取显式 `model_request`、`query_start` 或 `modelUsage.requestCount`；官方 `stream-json` 未提供这些字段时，按唯一 assistant `message.id` 统计模型响应次数，不使用包含工具轮次的 `result.num_turns`。
+ClaudeCode 的 `request_count` 优先读取显式 `model_request`、`query_start` 或 `modelUsage.requestCount`；官方 `stream-json` 未提供这些字段时，按唯一 assistant `message.id` 统计模型响应次数，不使用包含工具轮次的 `result.num_turns`。其他 Harness 的请求数来源见“工具调用对比”。
 
-四态分类见 [`classify_report_outcome`](../../../src/utils/anomalies.py#L376)；总览写表见 [`write_overview_sheet`](../scripts/generate_eval_report.py#L803)。
+四态分类见 [`classify_report_outcome`](../../../src/utils/anomalies.py#L432)；总览写表见 [`write_overview_sheet`](../scripts/generate_eval_report.py#L1133)。
 
 成本公式：
 
@@ -62,7 +64,7 @@ ClaudeCode 的 `request_count` 优先读取显式 `model_request`、`query_start
  + 输出 token × 输出单价) / 定价单位 token
 ```
 
-CNY 定价再除以定价日 `CNY/USD`；分档模型按逐请求输入 token 选档。源码见 [`report_entities.py`](../scripts/report_entities.py#L196)。
+CNY 定价再除以定价日 `CNY/USD`；分档模型按逐请求输入 token 选档。源码见 [`report_entities.py`](../scripts/report_entities.py#L272)。
 
 ### 2. 分类对比、难度对比、模态对比
 
@@ -75,7 +77,7 @@ CNY 定价再除以定价日 `CNY/USD`；分档模型按逐请求输入 token �
 | 固定 Harness：模型对比 | 从主表筛出同一 Harness，不重新计算 | 合理的控制变量视图 |
 | 固定模型：Harness 对比 | 从主表筛出同一模型，不重新计算 | 合理的控制变量视图 |
 
-公式见 [`write_dimension_sheet_transposed`](../scripts/generate_eval_report.py#L1128)，控制变量视图见 [`append_controlled_views`](../scripts/generate_eval_report.py#L700)。
+公式见 [`write_dimension_sheet_transposed`](../scripts/generate_eval_report.py#L2188)，控制变量视图见 [`append_controlled_views`](../scripts/generate_eval_report.py#L1027)。
 
 ### 3. Agent能力对比
 
@@ -99,7 +101,7 @@ CNY 定价再除以定价日 `CNY/USD`；分档模型按逐请求输入 token �
 |---|---|---|
 | 数据处理、推理规划、内容生成·去落盘污染 | 沿用能力分公式；若任务存在文件类检查点且其均值 `<0.5`，排除该任务 | 名称与实现不一致 |
 
-文件类检查点按键名包含 `exist/created/saved/written/parseable` 识别。**没有文件类检查点的任务仍被保留**，因此该 Sheet 不是“仅产物落盘成功的用例”。批注中的该表述不成立。源码见 [`FILE_CKPT_RE` 与筛选条件](../scripts/generate_eval_report.py#L123)、[批注](../scripts/generate_eval_report.py#L1103)。
+文件类检查点按键名包含 `exist/created/saved/written/parseable` 识别。**没有文件类检查点的任务仍被保留**，因此该 Sheet 不是“仅产物落盘成功的用例”。批注中的该表述不成立。源码见 [`FILE_CKPT_RE` 与筛选条件](../scripts/generate_eval_report.py#L143)、[批注](../scripts/generate_eval_report.py#L1467)。
 
 ### 5. 多轮稳定性分析
 
@@ -120,7 +122,7 @@ CNY 定价再除以定价日 `CNY/USD`；分档模型按逐请求输入 token �
 | 各分布 | 按固定区间统计题数和占比 | 展示分布比平均 Std 更合理；pass 指标仍是二元值 |
 | 高抖题明细 | 列出 `Std > 0.15` 的任务、各轮分数和上述指标 | 合理 |
 
-公式见 [`multirun_stats.py`](../../../src/utils/multirun_stats.py#L15)，写表逻辑见 [`write_stability_sheet`](../scripts/generate_eval_report.py#L1430)。当前“概率”“能力上界”“可靠性下界”的措辞过强。
+公式见 [`multirun_stats.py`](../../../src/utils/multirun_stats.py#L15)，写表逻辑见 [`write_stability_sheet`](../scripts/generate_eval_report.py#L2559)。当前“概率”“能力上界”“可靠性下界”的措辞过强。
 
 ### 6. 模型×Harness矩阵
 
@@ -130,7 +132,7 @@ CNY 定价再除以定价日 `CNY/USD`；分档模型按逐请求输入 token �
 | 缺失组合 | 显示 `-` | 合理 |
 | 排序 | 模型按其最佳 Harness 分降序；Harness 按列均分降序 | 仅影响展示，不影响分数 |
 
-源码见 [`write_matrix_sheet`](../scripts/generate_eval_report.py#L878)。
+源码见 [`write_matrix_sheet`](../scripts/generate_eval_report.py#L1241)。
 
 ### 7. 工具调用对比
 
@@ -138,14 +140,80 @@ CNY 定价再除以定价日 `CNY/USD`；分档模型按逐请求输入 token �
 
 | 指标 | 计算口径 | 判断与边界 |
 |---|---|---|
-| 调用数 | 配对成功的 `tool_result` 数 | 未返回结果的 `tool_use` 不计数，会低估请求量 |
-| 成功、失败、格式错误、不确定 | 由各 Harness classifier 四选一分类 | 分类规则不是跨 Harness 同一把尺 |
+| 调用数 | OpenCode、DeepSeek Harness、HermesAgent 按 `tool_use` 尝试数；其他 Harness 按 `tool_result` 数 | 三类 Harness 的无结果尝试进入“不确定”；其他 Harness 仍可能漏计 |
+| 成功、失败、格式错误、不确定 | 三类 Harness 先做报告侧格式校验，再对已返回结果使用原 classifier；其他 Harness 直接使用 classifier | 分类规则仍不是跨 Harness 同一把尺 |
 | 成功率 | `success / total` | 与总览“执行成功率”的分母不同 |
-| 格式准确率 | `(total - format_error) / total` | OpenCode classifier 不产生 `format_error`，该值天然为 100% |
+| 格式准确率 | `(total - format_error) / total` | 三类 Harness 按调用尝试校验；存在无法判定格式的调用时显示 `-`，不猜测为 100% |
 
-OpenCode 的 `completed` 一律记为成功，包括业务错误 JSON；`running/pending` 记为不确定。ClaudeCode 优先使用归一化轨迹保留的 `tool_result.is_error`；命令成功返回业务错误 JSON 仍记为工具执行成功。工具指标适合单 Harness 内诊断，不适合直接跨 Harness 排名。源码见 [`tool_result` 配对](../../../src/utils/tool_metrics.py#L92)、[OpenCode 分类](../../../src/utils/tool_metrics.py#L253)、[派生比率](../../../src/utils/tool_metrics.py#L343)。
+总览“执行成功率”=`success/(success+failure)`；本 Sheet“成功率”=`success/total`。前者排除格式错误和不确定结果，后者是综合成功率。同一报告中名称接近、分母不同，容易误读。
 
-### 8. 用例对比明细
+核验样本为 `wcb-output` 下 44 个 run，加 `output/codex` 下 3 个 run。该范围是当前本地证据，不代表生产全量。本次变更后，工具指标 35 项、报告流水线 75 项全部通过；真实 DeepSeek Harness 单 unit Excel 生成及独立审核为 PASS。
+
+#### 分 Harness 请求数和工具状态口径
+
+| Harness | 请求数来源 | 工具状态来源 | 真实样本核验 | 结论 |
+|---|---|---|---|---|
+| Codex | 去重后的 `token_count` 事件；旧格式回退逐轮用量或 assistant 消息 | `tool_result.content` 的固定文本标记 | 本地 3 个 run、29 次工具调用全部配对；2 个旧 run 的请求数分别为 `5→8`、`3→21`，另 1 个一致 | 当前事件格式下可复算；异常请求或无 token 请求仍可能漏计，旧结果需重解析 |
+| AstronCode | 去重后的 `token_count` 事件；旧格式回退逐轮用量或 assistant 消息 | 结构化状态、新版工具返回契约，最后回退 Codex 文本规则 | 本地 37 个 run；16 个有工具轨迹，477 次调用全部配对；15 个旧 run 请求数漂移；2026-08-28 样本为请求 8、工具 10，重生成 Excel 一致 | 当前事件格式下可复算；无 token 请求仍可能漏计，历史报告存在确定错误 |
+| OpenCode | SQLite 中 `type=step-finish` 的记录数 | 执行状态用 `state.status`；格式按 `tool_use` 参数结构和明确拒绝结果校验 | 本地 3 个 run 均在 warmup、鉴权或模型请求阶段失败，请求数和工具数均为 0 | 只有代码和单元测试证据；未产生 `step-finish` 的失败请求不计；无结果且格式不可判定时显示 `-` |
+| OpenClaw / AstronClaw | 归一化轨迹中的 assistant 消息数 | 原生 `details.status`，有限错误文本识别格式错误 | OpenClaw 2 个 run 的请求数为 11、10；21 次工具调用中成功 18、失败 2、不确定 1。AstronClaw 唯一样本是异常 run，只有 1 次请求、无工具调用 | OpenClaw 小样本可复算；AstronClaw 正常链路待验证；assistant 消息无稳定请求 ID，格式错误也可能漏判 |
+| DeepSeek Harness | 带 usage 的 `assistant/message` 事件数 | 执行状态用原生 `tool_result.status`；格式按 `request/header.tools` 的实际 Schema 校验原始 `tool/call` | 1 个 run：6 次请求、7 次工具调用，7 次均为 `completed`；新口径复算格式准确率为 100% | 当前成功样本一致；仍缺少真实非法参数和未知工具样本 |
+| HermesAgent | 优先 assistant 消息；回退 API 响应日志或 session assistant 消息 | 执行状态用结果 JSON 的 `status/success`；格式校验原始参数结构和明确拒绝结果 | 无本地真实 run | 待确认；无稳定请求 ID；无结果且格式不可判定时显示 `-` |
+| ClaudeCode | `model_request`、`query_start`、`modelUsage.requestCount`，最后按唯一 assistant message ID 回退 | 优先 `tool_result.is_error`，再匹配有限格式错误文本 | 无本地真实 run | 待确认；回退口径统计响应消息，不能证明包含异常或无响应请求 |
+
+#### 已确认问题
+
+1. `wcb-output/reports/4/report.xlsx` 的总请求数是 116；按当前权威事件重算应为 203。该报告的工具调用数 202、成功 176、失败 6、格式错误 1、不确定 19，以及 99.5%/96.7%/9.4% 三项比例均可复算一致。
+2. 旧报告及其他 Harness 的工具调用数按 `tool_result` 计数。OpenCode、DeepSeek Harness、HermesAgent 的新报告已改按 `tool_use` 尝试计数；`total=0` 仍无法区分“确实未调用”“轨迹缺失”和“轨迹解析失败”。
+3. OpenCode、DeepSeek Harness、HermesAgent 的 classifier 本身仍不产生 `format_error`，但新报告已增加独立格式校验。OpenClaw、ClaudeCode 仍只匹配有限错误文本，跨 Harness 排名仍不成立。
+4. AstronCode 把 approval policy 拒绝也归为 `format_error`，这不是纯粹的工具名或参数格式错误，会混入运行策略限制。
+5. `reparse_codex_usage.py` 只适用于 Codex/AstronCode 专属目录，但脚本未按 Harness 过滤。对 DeepSeek Harness 或 OpenClaw 结果目录 dry-run，会把请求数分别错误建议为 `6→0`、`11→0`。
+6. 多轮任务只取最新有效 run 的请求数和工具指标，不是多轮总量，也不是轮均值。
+
+OpenCode 的 `completed` 一律记为成功，包括业务错误 JSON；`running/pending` 记为不确定。ClaudeCode 优先使用归一化轨迹保留的 `tool_result.is_error`；命令成功返回业务错误 JSON 仍记为工具执行成功。工具指标适合单 Harness 内诊断，不适合直接跨 Harness 排名。源码见 [`tool_result` 配对](../../../src/utils/tool_metrics.py#L98)、[OpenCode 分类](../../../src/utils/tool_metrics.py#L697)、[报告侧格式校验](../../../src/utils/tool_metrics.py#L878)、[派生比率](../../../src/utils/tool_metrics.py#L949)。
+
+指定设计文档 `docs/local/design/Harness工具调用指标设计.md` 是历史方案，不是当前实现状态：文档仍写“尚未编码”和只支持 3 类 Harness，当前代码已注册 7 类。文档示例中的“不确定占比”写成 `683/4145=16.5%`，与正文公式 `unclear/total` 冲突；按正文应为 `683/6071=11.25%`。
+
+#### 工具指标修正状态
+
+本次已实现：OpenCode、DeepSeek Harness、HermesAgent 仅在生成报告时按调用尝试计算格式准确率；DeepSeek Harness 使用会话内实际工具 Schema；明确非法参数、未知工具和拒绝结果计格式错误；格式无法判定时显示 `-`。该过程只读结果目录，不修改 Harness、执行流程、评分和原始产物。按要求，Excel 和领导版报告不增加轨迹覆盖状态字段。
+
+其余改造仍为建议：
+
+| 优先级 | 改动 | 验收口径 |
+|---|---|---|
+| P0 | 每个 Runner 写入 `request_count_source` 和 `request_count_status=observed/estimated/unavailable`；只在存在稳定请求 ID 或原生请求计数时标为 `observed` | 报告不再把 assistant 消息数、`step-finish` 数或 token 事件数无条件展示为精确请求数 |
+| P0 | 同时统计 `tool_use_total`、`tool_result_total`、`matched_count`、`missing_result_count`、`orphan_result_count`、`duplicate_result_count` | `tool_use_total = matched_count + missing_result_count`，`tool_result_total` 可与原始轨迹逐条对账 |
+| P0 | 内部审计区分 `no_calls/missing_transcript/parse_error`，不写入 Excel 或领导版报告 | `0` 只表示已确认没有调用；轨迹缺失和解析失败时相关比率显示 `-` |
+| P0 | 从 Harness 调度层保存工具调用是否被接受及拒绝原因；仅 `unsupported_tool`、`invalid_arguments` 计格式错误，`policy_denied` 单列 | 无法捕获拒绝事件的 Harness，格式准确率显示 `-`，不显示 100% |
+| P0 | `reparse_codex_usage.py` 按 `execution_status.harness` 过滤，只允许修复 Codex/AstronCode；报告生成前增加请求数对账 | 对混合结果目录执行时跳过其他 Harness；旧报告重生成后请求数与权威事件一致 |
+| P1 | 工具执行状态优先使用原生 `completed/error/running/pending`；文本推断仅作 fallback，并记录 `classification_source` | HermesAgent 无状态非空结果不再直接判成功；可统计 fallback 占比 |
+| P1 | 多轮报告同时展示全轮总量、轮均值和最新轮快照，停止把最新轮工具量与多轮平均分并列为同一口径 | 每个资源指标明确 `all_runs/latest_run/per_run_avg`，三者可相互复算 |
+| P1 | 元数据记录 classifier 版本；为 OpenCode、AstronClaw、ClaudeCode、HermesAgent 补正常与异常真实样本 | 每个 Harness 至少覆盖成功、执行失败、格式拒绝、超时/中断四类样本；未覆盖项标为待确认 |
+
+### 8. 站点评测指标、_站点评测指标口径
+
+仅存在 `web-site-gen` 任务时生成。
+
+| 指标 | 计算口径 | 判断与边界 |
+|---|---|---|
+| 得分率 | Web 任务 `effective_score` 按任务等权平均 | 合理；缺失分按 0 |
+| 满分率 | `overall_score == 1.0` 的任务数 / Web 任务数 | 是严格满分率，不是完成率 |
+| L1/L2 题目得分率 | 对应难度任务按任务等权平均 | 合理；需同时看样本数 |
+| 三个一级维度 | 内容与结构、交互与功能、视觉与布局的任务级分数等权平均 | 不同证据模式不能混为同一种测量：`source_semantic` 只证源码，`browser_runtime+visual_llm` 才含运行与视觉证据 |
+| 运行耗时平均/P50/P90 | 所有未被替代 run 的 `execution_status.elapsed_time` | 多轮按 run 统计，与总览最新 run 总量口径不同 |
+| 首 Token 指标 | 与总览相同，排除执行状态显式失败、超时、取消及缺字段 run | Judge 异常但执行未失败的 run 仍可能计入；必须同时展示覆盖率和样本数 |
+| 单次运行平均成本 | 有 registry 和 `pricing_date` 时逐 run 重算，否则读取 `usage.json.cost_usd`；任一应估 run 不可估则显示 `-` | 回退口径仍存在“缺值但未标 unavailable 时按 0”问题 |
+| 单次运行平均 Token | 未被替代 run 的对应 token 算术平均 | 只含被测模型推理 token |
+| 一级/二级维度汇总 | 先计算任务内维度分，再跨任务等权平均 | 合理；二级维度样本集合可能不同 |
+
+隐藏 Sheet `_站点评测指标口径` 按 unit、指标记录单位、样本数和计算方法，用于对账，不参与评分。源码见 [`_website_unit_metrics`](../scripts/generate_eval_report.py#L1648) 和 [`write_website_metrics_sheet`](../scripts/generate_eval_report.py#L1947)。
+
+### 9. 评测契约一致性
+
+按任务列出 `execution_contract_sha256`、`scoring_contract_sha256`、`task_sha256` 的版本数和缺失数。执行或评分契约不一致只给提示，不改变分数，也不阻断报告；`task_sha256` 仅用于追溯。该 Sheet 能暴露混用版本，但不能替代正式 validity 门禁。源码见 [`write_provenance_consistency_sheet`](../scripts/generate_eval_report.py#L2336)。
+
+### 10. 用例对比明细
 
 | 指标 | 计算口径 | 判断与边界 |
 |---|---|---|
@@ -154,18 +222,18 @@ OpenCode 的 `completed` 一律记为成功，包括业务错误 JSON；`running
 | 最优单元 | 仅在非空得分中取最大值 | 与总览“缺失分按 0”不一致 |
 | 最大分差 | 非空得分的 `max - min`；少于两个有效分显示 `-` | 与总览口径不一致；单位为 0~1 原始分 |
 
-源码见 [`write_case_compare_sheet`](../scripts/generate_eval_report.py#L949)。
+源码见 [`write_case_compare_sheet`](../scripts/generate_eval_report.py#L1312)。
 
-### 9. 分差矩阵
+### 11. 分差矩阵
 
 | 指标 | 计算口径 | 判断与边界 |
 |---|---|---|
 | 行 unit - 列 unit | `行总平均分 - 列总平均分` | 合理；单位是百分点，不是百分比 |
 | 对角线 | 0 | 合理 |
 
-源码见 [`write_diff_matrix_sheet`](../scripts/generate_eval_report.py#L1259)。
+源码见 [`write_diff_matrix_sheet`](../scripts/generate_eval_report.py#L2321)。
 
-### 10. 评分详情_&lt;unit&gt;
+### 12. 评分详情_&lt;unit&gt;
 
 | 字段组 | 来源或计算口径 | 判断与边界 |
 |---|---|---|
@@ -180,13 +248,13 @@ OpenCode 的 `completed` 一律记为成功，包括业务错误 JSON；`running
 | 结果分析、根因分析 | 外部分析 JSON 回填 | 不是生成器计算指标 |
 | 四项工具指标 | 最新 run，公式同总览 | 口径边界同工具调用对比 |
 
-Sheet 名按 Excel 31 字符限制直接截断。长 unit 可能名称冲突，隐藏元数据也未记录 unit 与详情 Sheet 的映射。源码见 [`write_detail_sheet`](../scripts/generate_eval_report.py#L1474)。
+Sheet 名按 Excel 31 字符限制直接截断。长 unit 可能名称冲突，隐藏元数据也未记录 unit 与详情 Sheet 的映射。源码见 [`write_detail_sheet`](../scripts/generate_eval_report.py#L2603)。
 
-### 11. _报告元数据（隐藏）
+### 13. _报告元数据（隐藏）
 
 记录模型、Harness、unit 的原始 ID 与展示名，成本定价档案、成本状态和失败原因，实体配置版本、定价日、汇率及目标 unit。**不参与评分计算**，用于追溯和复算，设计合理。
 
-不足：未记录报告生成器版本、Git commit、任务集摘要、pass 阈值、能力映射摘要、详情 Sheet 名映射。源码见 [`write_report_metadata_sheet`](../scripts/generate_eval_report.py#L1274)。
+不足：未记录报告生成器版本、Git commit、任务集摘要、pass 阈值、能力映射摘要、详情 Sheet 名映射。源码见 [`write_report_metadata_sheet`](../scripts/generate_eval_report.py#L2399)。
 
 ## 四、问题清单
 
@@ -194,12 +262,12 @@ Sheet 名按 Excel 31 字符限制直接截断。长 unit 可能名称冲突，�
 
 | 问题 | 事实 | 影响 |
 |---|---|---|
-| 单分制任务未计入能力分 | `if not t.checkpoints: continue` 早于 `overall_score` 注入 | 04 套件等任务在能力维度中被系统性漏算 |
 | 去污染口径名实不符 | 仅排除“存在文件检查点且均值低于 0.5”的任务 | 无文件检查点任务仍保留，不能声称“仅落盘成功” |
 | 多轮字段混用 | 分数取全轮均值；状态、检查点、资源、成本、工具和判词取最新轮 | 同一行字段不属于同一统计对象，容易产生错误归因 |
 | 分组样本数不透明 | 表头 N 取任务并集；每行按该 unit 实际任务计算 | 缺任务的 unit 可能用更小样本得到更高或更低均值 |
 | 缺失分处理不一致 | 聚合按 0；最优单元和最大分差排除空值 | 总览与用例比较无法严格对账 |
-| 能力映射重复计权 | 汇总检查点和组成检查点同时参与简单平均 | 能力分权重受映射键数量影响，不代表稳定能力量表 |
+| 历史请求数未自动修复 | 报告直接读取 `usage.json.request_count` | 旧 Codex/AstronCode 报告会保留 Runner 已修复前的低估值 |
+| 工具数据缺失不可辨 | `total=0` 同时表示无调用、无轨迹或解析失败 | 0 次调用无法作为确定事实对外解释 |
 
 ### 中优先级：需改名、披露或限制用途
 
@@ -211,6 +279,7 @@ Sheet 名按 Excel 31 字符限制直接截断。长 unit 可能名称冲突，�
 | 成本任一任务缺失则整项为 `-` | 同时展示已估算成本、可估算任务数和总任务数 |
 | 工具指标跨 Harness 不同尺 | 仅做 Harness 内比较；对外表中披露 classifier 版本和未配对调用数 |
 | 两种“成功率”分母不同 | 明确改名为“综合成功率”和“已执行调用成功率” |
+| 修复脚本未过滤 Harness | `reparse_codex_usage.py` 只传 Codex/AstronCode 专属目录，禁止对混合结果根目录执行 `--apply` |
 | 强项与短板可能重叠 | 候选维度不足 6 个时减少 Top/Bottom 数量 |
 | 总览和详情耗时来源不同 | 统一来源并增加自动对账 |
 | 总览四态与详情原始状态不同 | 详情增加“报告状态(outcome)”列 |
@@ -225,8 +294,10 @@ Sheet 名按 Excel 31 字符限制直接截断。长 unit 可能名称冲突，�
 
 ## 五、对外发布条件
 
-1. 修正六项高优先级问题，并为每个分组、每个 unit 直接展示实际样本数。
+1. 修正高优先级问题，并为每个分组、每个 unit 直接展示实际样本数。
 2. 多轮报告统一为“全轮汇总”或“最新轮快照”，不能在同一行混用；资源建议同时给总量和轮均值。
-3. 能力分发布前冻结映射版本，去除汇总项与组成项重复计权，输出维度覆盖任务清单。
-4. 工具指标限制为同 Harness 比较；跨 Harness 仅展示原始计数和分类规则，不做排名。
-5. 元数据补充代码版本、任务集摘要、pass 阈值、能力映射摘要和详情 Sheet 映射，保证报告可复现。
+3. 能力分发布前冻结映射版本，保持汇总项与组成项不重复计权，并输出维度覆盖任务清单。
+4. 历史 Codex/AstronCode 结果先独立重算请求数；对当前报告执行请求数与原始事件对账。
+5. 工具指标限制为同 Harness 比较；跨 Harness 仅展示原始计数、分类规则和无法判定时的 `-`，不做排名；不在 Excel 或领导版报告新增轨迹覆盖状态。
+6. OpenCode、ClaudeCode、HermesAgent 在取得正常真实 run 前，工具指标标为“仅代码验证”或“待确认”。
+7. 元数据补充代码版本、任务集摘要、pass 阈值、能力映射摘要、classifier 版本和详情 Sheet 映射，保证报告可复现。
