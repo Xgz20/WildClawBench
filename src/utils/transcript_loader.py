@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
 OPENCLAW_FALLBACK_PATH = "/root/.openclaw/agents/main/sessions/chat.jsonl"
 JUDGE_EVIDENCE_FORMAT = "wildclaw_judge_evidence_v1"
+GRADING_TRANSCRIPT_POLICY_VERSION = "grading_transcript_v2_inline_think_filtered"
 COMPACT_EVENT_STRING_CHARS = 1200
+_INLINE_THINK_OPEN_RE = re.compile(r"<\s*think\s*>", flags=re.I)
+_INLINE_THINK_CLOSE_RE = re.compile(r"<\s*/\s*think\s*>", flags=re.I)
+_VISIBLE_TEXT_BLOCK_TYPES = {"text", "output_text", "message", "assistant_text"}
 
 
 def _safe_json_loads(text: str) -> Any | None:
@@ -50,6 +55,73 @@ def _read_transcript_file(path: Path) -> list[Any]:
     return _parse_json_lines(raw)
 
 
+def _unquoted_tag_matches(pattern: re.Pattern[str], text: str) -> list[re.Match[str]]:
+    matches: list[re.Match[str]] = []
+    for match in pattern.finditer(text):
+        before = text[match.start() - 1] if match.start() > 0 else ""
+        after = text[match.end()] if match.end() < len(text) else ""
+        if before == "`" or after == "`":
+            continue
+        matches.append(match)
+    return matches
+
+
+def _strip_inline_thinking(text: str) -> str:
+    """Remove leaked provider reasoning while preserving the visible final answer."""
+    closing_tags = _unquoted_tag_matches(_INLINE_THINK_CLOSE_RE, text)
+    if closing_tags:
+        return text[closing_tags[-1].end() :].lstrip()
+
+    opening_tags = _unquoted_tag_matches(_INLINE_THINK_OPEN_RE, text)
+    if opening_tags:
+        return text[: opening_tags[0].start()].rstrip()
+    return text
+
+
+def _sanitize_assistant_content(content: Any) -> Any:
+    if isinstance(content, str):
+        return _strip_inline_thinking(content)
+    if not isinstance(content, list):
+        return content
+
+    for index, block in enumerate(content):
+        if isinstance(block, str):
+            content[index] = _strip_inline_thinking(block)
+            continue
+        if not isinstance(block, dict):
+            continue
+        block_type = str(block.get("type") or "").lower()
+        if block_type not in _VISIBLE_TEXT_BLOCK_TYPES:
+            continue
+        for key in ("text", "content"):
+            value = block.get(key)
+            if isinstance(value, str):
+                block[key] = _strip_inline_thinking(value)
+            elif isinstance(value, dict) and isinstance(value.get("value"), str):
+                value["value"] = _strip_inline_thinking(value["value"])
+    return content
+
+
+def _sanitize_transcript_for_grading(transcript: list[Any]) -> list[Any]:
+    def sanitize_mapping(candidate: dict[str, Any]) -> None:
+        if str(candidate.get("role") or "").strip().lower() == "assistant":
+            if "content" in candidate:
+                candidate["content"] = _sanitize_assistant_content(
+                    candidate.get("content")
+                )
+            if isinstance(candidate.get("text"), str):
+                candidate["text"] = _strip_inline_thinking(candidate["text"])
+        for key in ("message", "payload"):
+            nested = candidate.get(key)
+            if isinstance(nested, dict):
+                sanitize_mapping(nested)
+
+    for event in transcript:
+        if isinstance(event, dict):
+            sanitize_mapping(event)
+    return transcript
+
+
 def load_transcript(path_str: str = "") -> list[Any]:
     candidates: list[str] = []
     if path_str:
@@ -63,7 +135,7 @@ def load_transcript(path_str: str = "") -> list[Any]:
         seen.add(candidate)
         loaded = _read_transcript_file(Path(candidate))
         if loaded:
-            return loaded
+            return _sanitize_transcript_for_grading(loaded)
     return []
 
 

@@ -76,32 +76,124 @@ def grade(**kwargs) -> dict:
     def coverage_matches(stage, value):
         text = norm(value)
         if stage == "institutional_framework":
-            return (
-                "个人养老金" in text
-                and has_any(text, "制度", "框架")
-                and has_any(text, "建立", "确立", "构建", "框架")
+            describes_framework = has_any(
+                text,
+                "制度框架",
+                "总体框架",
+                "基本框架",
+                "框架性意见",
+                "总体制度设计",
+                "制度总体设计",
+                "顶层设计",
             )
+            negates_framework = has_any(
+                text,
+                "不是制度框架",
+                "并非制度框架",
+                "未建立制度框架",
+                "尚未建立制度框架",
+                "没有建立制度框架",
+                "制度框架未建立",
+                "制度框架尚未建立",
+                "制度框架没有建立",
+                "未确立制度框架",
+                "尚未确立制度框架",
+                "制度框架未确立",
+                "制度框架尚未确立",
+            )
+            return describes_framework and not negates_framework
         if stage == "implementation_measures":
-            return (
-                "账户" in text
-                and "流程" in text
-                and has_any(text, "管理规则", "管理规范", "管理办法", "监管规则")
-                and has_any(text, "印发之日", "印发日起", "发布后", "公布后")
-                and has_any(text, "施行", "实施", "生效")
+            describes_measures = has_any(
+                text,
+                "实施办法",
+                "实施细则",
+                "业务管理",
+                "运作流程",
+                "业务流程",
+                "运行规则",
+                "操作规则",
+                "具体规则",
+                "管理规则",
+                "管理规范",
+                "管理办法",
+                "监管规则",
             )
+            gives_scope_or_effect = has_any(
+                text,
+                "全国",
+                "适用",
+                "参加人",
+                "信息平台",
+                "金融机构",
+                "政府部门",
+                "印发之日",
+                "印发日起",
+                "印发后",
+                "印发即",
+                "发布后",
+                "公布后",
+                "施行",
+                "生效",
+            )
+            negates_measures = has_any(
+                text,
+                "不是实施办法",
+                "并非实施办法",
+                "实施办法未印发",
+                "实施办法尚未印发",
+                "实施办法未施行",
+                "实施办法尚未施行",
+                "实施办法未生效",
+                "实施办法尚未生效",
+            )
+            return describes_measures and gives_scope_or_effect and not negates_measures
         if stage == "pilot_in_36_cities_or_regions":
-            return (
-                "36" in text
-                and has_any(text, "城市", "地区")
-                and has_any(text, "先行", "试点", "率先")
-                and not has_any(text, "非36", "不是36", "未在36", "不在36")
+            place_is_named = has_any(text, "城市", "地区")
+            describes_pilot_scope = place_is_named and (
+                "36" in text or has_any(text, "先行", "试点", "率先")
             )
+            negates_pilot = has_any(
+                text,
+                "非36",
+                "不是36",
+                "并非36",
+                "未在36",
+                "尚未在36",
+                "不在36",
+                "不是先行",
+                "并非先行",
+                "未先行",
+                "尚未先行",
+                "没有先行",
+                "未开展试点",
+                "尚未开展试点",
+            )
+            return describes_pilot_scope and not negates_pilot
         if stage == "national_implementation":
-            return (
-                "全国" in text
-                and has_any(text, "实施", "施行", "落地")
-                and not has_any(text, "非全国", "不是全国", "尚未全国", "未在全国", "不在全国")
+            describes_national_scope = has_any(
+                text,
+                "全国",
+                "全面实施",
+                "全面施行",
+                "全面落地",
             )
+            negates_national_scope = has_any(
+                text,
+                "非全国",
+                "不是全国",
+                "并非全国",
+                "尚未全国",
+                "未在全国",
+                "不在全国",
+                "未全面实施",
+                "尚未全面实施",
+                "没有全面实施",
+                "未全面施行",
+                "尚未全面施行",
+                "未全面落地",
+                "尚未全面落地",
+            )
+            return describes_national_scope and not negates_national_scope
         return False
 
     try:

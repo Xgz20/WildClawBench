@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from openpyxl import load_workbook
 
@@ -187,6 +188,24 @@ class EvalProvenanceHashTests(unittest.TestCase):
                 )
                 restore(self.task)
                 self.assertEqual(build_task_provenance(self.task), before)
+
+    def test_transcript_policy_only_changes_scoring_contract(self) -> None:
+        before = build_task_provenance(self.task)
+
+        with patch(
+            "src.utils.eval_provenance.GRADING_TRANSCRIPT_POLICY_VERSION",
+            "grading_transcript_test_policy",
+        ):
+            after = build_task_provenance(self.task)
+
+        self.assertEqual(
+            before["execution_contract_sha256"],
+            after["execution_contract_sha256"],
+        )
+        self.assertNotEqual(
+            before["scoring_contract_sha256"],
+            after["scoring_contract_sha256"],
+        )
 
     def test_symlink_target_content_is_not_followed(self) -> None:
         external = self.root / "external.txt"

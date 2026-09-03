@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import tempfile
 import unittest
+from pathlib import Path
 
-from src.utils.transcript_loader import build_judge_evidence
+from src.utils.transcript_loader import build_judge_evidence, load_transcript
 
 
 def message(role: str, text: str) -> dict:
@@ -35,6 +37,63 @@ def tool_call(name: str, status: str) -> dict:
 
 
 class JudgeTranscriptEvidenceTest(unittest.TestCase):
+    def test_load_transcript_strips_inline_thinking_from_assistant_text(self) -> None:
+        transcript = [
+            message("user", "Keep the literal `</think>` example."),
+            message("assistant", "hidden draft</think>final answer"),
+        ]
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "chat.jsonl"
+            raw = "\n".join(json.dumps(row) for row in transcript) + "\n"
+            path.write_text(raw, encoding="utf-8")
+
+            loaded = load_transcript(str(path))
+
+            self.assertIn("hidden draft</think>", path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                loaded[0]["message"]["content"][0]["text"],
+                "Keep the literal `</think>` example.",
+            )
+            self.assertEqual(
+                loaded[1]["message"]["content"][0]["text"],
+                "final answer",
+            )
+
+    def test_load_transcript_strips_balanced_or_unclosed_thinking(self) -> None:
+        transcript = [
+            message("assistant", "<think>private reasoning</think>visible answer"),
+            message("assistant", "visible preface<think>unfinished reasoning"),
+            {
+                "event": "query_yield",
+                "payload": {
+                    "message": {
+                        "role": "assistant",
+                        "content": [
+                            {"type": "text", "text": "draft</think>nested final"}
+                        ],
+                    }
+                },
+            },
+        ]
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "chat.json"
+            path.write_text(json.dumps(transcript), encoding="utf-8")
+
+            loaded = load_transcript(str(path))
+
+            self.assertEqual(
+                loaded[0]["message"]["content"][0]["text"],
+                "visible answer",
+            )
+            self.assertEqual(
+                loaded[1]["message"]["content"][0]["text"],
+                "visible preface",
+            )
+            self.assertEqual(
+                loaded[2]["payload"]["message"]["content"][0]["text"],
+                "nested final",
+            )
+
     def test_short_transcript_is_sent_unchanged(self) -> None:
         transcript = [
             message("user", "task prompt"),

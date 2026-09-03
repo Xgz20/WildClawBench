@@ -23,18 +23,18 @@ Use NASA’s fixed Apollo 11 report record and its official PDF:
 - https://ntrs.nasa.gov/citations/19710015566
 - https://ntrs.nasa.gov/api/citations/19710015566/downloads/19710015566.pdf
 
-Draft a 600–750 word, five-minute museum narration for families with children aged 10–14. Use the headings `# Opening`, `## Act 1`, `## Act 2`, `## Act 3`, and `## Closing Question` in that order. Add one short source note immediately after each act in the form `[Source note: NASA-SP-238, p. X]`, using the report’s printed page number. Label every sentence that is your own connective narration as `[Narrative transition: ...]`. Do not invent dialogue or present a reconstruction as a quotation. Use only this NASA record and include both fixed URLs plus Document ID 19710015566 in a final source line. Reply with the narration only; do not save the PDF or a webpage copy.
+Draft a 600–750 word, five-minute museum narration for families with children aged 10–14. Use the headings `# Opening`, `## Act 1`, `## Act 2`, `## Act 3`, and `## Closing Question` in that order. Add exactly one short source note immediately after each act: use `[Source note: NASA-SP-238, p. 1]` after Acts 1 and 2, and `[Source note: NASA-SP-238, pp. 1–2]` after Act 3 because that act combines page 1 ascent and docking with page 2 Pacific landing and recovery. Keep the Opening and Closing Question free of report-specific dates, times, quotations, and mission-event claims; use them only to introduce the exhibit and invite reflection. Label every sentence that is your own connective narration as `[Narrative transition: ...]`. Do not invent dialogue or present a reconstruction as a quotation. Use only this NASA record and include both fixed URLs plus Document ID 19710015566 in a final source line. Reply with the narration only; do not save the PDF or a webpage copy.
 
 ## Expected Behavior
 
-The narration should accurately follow launch and lunar approach, landing and surface activity, then ascent and Pacific recovery. It should preserve six ground-truth facts from printed report pages 1–2, distinguish report facts from clearly labeled narrative transitions, provide a source note after each act, address families without invented dialogue, and include the NASA-SP-238 identity, Document ID, and both fixed URLs.
+The narration should accurately follow launch and lunar approach, landing and surface activity, then ascent and Pacific recovery. It should preserve six ground-truth facts from printed report pages 1–2, distinguish report facts from clearly labeled narrative transitions, use the act-specific source-note sequence `p. 1`, `p. 1`, `pp. 1–2`, keep the opening and closing free of uncited report-specific claims, address families without invented dialogue, and include the NASA-SP-238 identity, Document ID, and both fixed URLs.
 
 ## Grading Criteria
 
 ### Automated group
 
 - [ ] `official_id_url`: two fixed URLs, Document ID and NASA-SP-238 are present without other sources — 37.5%
-- [ ] `required_sections`: opening, three chronological acts, closing question, and three source notes are structurally present — 25%
+- [ ] `required_sections`: opening, three chronological acts, closing question, and the source-note sequence `p. 1`, `p. 1`, `pp. 1–2` are structurally present — 25%
 - [ ] `length_and_labels`: 600–750 English words and narrative-transition labels are used — 37.5%
 
 ### Judge group
@@ -100,14 +100,28 @@ def grade(**kwargs) -> dict:
     positions = [text.find(heading) for heading in headings]
     heading_order = all(position >= 0 for position in positions) and positions == sorted(positions)
     exact_headings = all(len(re.findall(rf"^{re.escape(heading)}\s*$", text, flags=re.M)) == 1 for heading in headings)
-    source_notes = re.findall(r"\[Source note:\s*NASA-SP-238,\s*p\.\s*(\d+)\]", text, flags=re.I)
-    note_pages_valid = len(source_notes) == 3 and all(int(page) in {1, 2, 3} for page in source_notes)
+    source_note_pattern = re.compile(
+        r"\[Source note:\s*NASA-SP-238,\s*(p{1,2})\.\s*(\d+)"
+        r"(?:\s*[-–—]\s*(\d+))?\s*\]",
+        flags=re.I,
+    )
+    source_notes = list(source_note_pattern.finditer(text))
+    normalized_pages = []
+    for note in source_notes:
+        prefix, start, end = note.groups()
+        if prefix.lower() == "p" and end is None:
+            normalized_pages.append(start)
+        elif prefix.lower() == "pp" and end is not None:
+            normalized_pages.append(f"{start}-{end}")
+        else:
+            normalized_pages.append("")
+    note_pages_valid = normalized_pages == ["1", "1", "1-2"]
     acts = [
         text[positions[index]:positions[index + 1]] if heading_order else ""
         for index in range(1, 4)
     ]
     note_after_each = heading_order and all(
-        len(re.findall(r"\[Source note:\s*NASA-SP-238,\s*p\.\s*\d+\]", act, flags=re.I)) == 1
+        len(source_note_pattern.findall(act)) == 1
         for act in acts
     )
     closing_question = heading_order and "?" in text[positions[4]:]
@@ -156,13 +170,13 @@ Evaluate these six report-grounded facts: the July 16 launch at 8:32 a.m. EST fr
 
 ### Criterion 2: Source and transition separation (key: source_transition_separation, weight: 0.25)
 
-Evaluate whether report-based statements remain traceable to the act source notes and the writer's connective narration is visibly labeled without being passed off as quotation.
+Evaluate whether report-based statements remain traceable to the required act source notes (`p. 1`, `p. 1`, `pp. 1–2`), the Opening and Closing Question avoid uncited report-specific claims, and the writer's connective narration is visibly labeled without being passed off as quotation.
 
-**Score 1.0**: Each act's factual content is supported by its note; all creative connective sentences are clearly labeled; no invented dialogue or reconstructed scene is presented as sourced fact.
+**Score 1.0**: Each act uses the required note and all its factual content is supported by that note; the Opening and Closing Question introduce no uncited report-specific claim; all creative connective sentences are clearly labeled; no invented dialogue or reconstructed scene is presented as sourced fact.
 
-**Score 0.75**: Separation is consistently clear, with one minor transition-label or page-note omission that creates no factual ambiguity.
+**Score 0.75**: Separation is consistently clear, with one minor transition-label omission or one minor placement error in an otherwise correct page note that creates no factual ambiguity.
 
-**Score 0.5**: Most facts are traceable, but several transitions are unlabeled or one act's note is too broad, requiring editing to restore the boundary.
+**Score 0.5**: Most facts are traceable, but several transitions are unlabeled, an act uses the wrong or incomplete page note, or the Opening or Closing adds an uncited report-specific claim, requiring editing to restore the boundary.
 
 **Score 0.25**: Fact and creative narration are repeatedly mixed, source notes do not support major passages, or reconstruction is ambiguously presented.
 

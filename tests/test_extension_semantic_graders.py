@@ -21,6 +21,11 @@ PENSION_TASK = (
     / "tasks/extension/04_Search_Retrieval"
     / "04_Search_Retrieval_task_012_personal_pension_policy_timeline.md"
 )
+APOLLO_TASK = (
+    ROOT
+    / "tasks/extension/05_Creative_Synthesis"
+    / "05_Creative_Synthesis_task_010_apollo_museum_narrative.md"
+)
 VENDOR_TASK = (
     ROOT
     / "tasks/extension/03_Social_Interaction"
@@ -86,9 +91,38 @@ def load_grader(task_file: Path):
 
 
 class ExtensionSemanticGraderTest(unittest.TestCase):
-    def test_rfc_prompt_publishes_machine_readable_scope_values(self) -> None:
+    def test_apollo_prompt_and_rubric_publish_cross_page_note_contract(self) -> None:
+        task = parse_task_md(APOLLO_TASK)
+
+        self.assertIn("`[Source note: NASA-SP-238, pp. 1–2]` after Act 3", task["prompt"])
+        self.assertIn("free of report-specific dates, times, quotations", task["prompt"])
+        self.assertIn("`p. 1`, `p. 1`, `pp. 1–2`", task["llm_judge_rubric"])
+
+    def test_apollo_required_sections_accept_cross_page_act_three_note(self) -> None:
+        for separator in ("–", "-"):
+            with self.subTest(separator=separator):
+                score = self._grade_apollo(
+                    "[Source note: NASA-SP-238, p. 1]",
+                    "[Source note: NASA-SP-238, p. 1]",
+                    f"[Source note: NASA-SP-238, pp. 1{separator}2]",
+                )
+
+                self.assertEqual(score["required_sections"], 1.0)
+
+    def test_apollo_required_sections_reject_single_page_act_three_note(self) -> None:
+        score = self._grade_apollo(
+            "[Source note: NASA-SP-238, p. 1]",
+            "[Source note: NASA-SP-238, p. 1]",
+            "[Source note: NASA-SP-238, p. 2]",
+        )
+
+        self.assertLess(score["required_sections"], 1.0)
+
+    def test_rfc_prompt_publishes_replacement_and_scope_contracts(self) -> None:
         prompt = parse_task_md(RFC_TASK)["prompt"]
 
+        self.assertIn("`Obsoleted by` / `Obsoletes` metadata", prompt)
+        self.assertIn("rather than inferring it only from the closest topical scope", prompt)
         self.assertIn("HTTP semantics", prompt)
         self.assertIn("HTTP/1.1 message syntax", prompt)
 
@@ -463,6 +497,14 @@ class ExtensionSemanticGraderTest(unittest.TestCase):
 
         self.assertLess(score["contingency_math_and_constraints"], 1.0)
 
+    def test_pension_coverage_accepts_canonical_ground_truth(self) -> None:
+        rows = json.loads(PENSION_GT.read_text(encoding="utf-8"))["rows"]
+        coverage = {row["stage"]: row["coverage"] for row in rows}
+
+        score = self._grade_pension(rows, coverage)
+
+        self.assertEqual(score["coverage_and_effect"], 1.0)
+
     def test_pension_coverage_accepts_equivalent_natural_language(self) -> None:
         rows = json.loads(PENSION_GT.read_text(encoding="utf-8"))["rows"]
         equivalents = {
@@ -476,18 +518,53 @@ class ExtensionSemanticGraderTest(unittest.TestCase):
 
         self.assertEqual(score["coverage_and_effect"], 1.0)
 
-    def test_pension_coverage_rejects_missing_or_negated_facts(self) -> None:
+    def test_pension_coverage_accepts_real_result_phrasings(self) -> None:
+        rows = json.loads(PENSION_GT.read_text(encoding="utf-8"))["rows"]
+        real_result_variants = [
+            {
+                "institutional_framework": "全国（制度框架，明确选择部分城市先试行1年再逐步推开）",
+                "implementation_measures": "全国（实施办法，规定个人养老金参加流程、账户管理、产品管理等）",
+                "pilot_in_36_cities_or_regions": "36个先行城市（地区）（自本通知印发之日起可参加个人养老金）",
+                "national_implementation": "全国（自2024年12月15日起符合条件的劳动者均可参加）",
+            },
+            {
+                "institutional_framework": "基本养老保险劳动者（制度框架确立，提出选择部分城市先试行1年再逐步推开）",
+                "implementation_measures": "个人养老金实施办法细化帐户、缴费、投资、领取等运行规则，自印发之日起施行",
+                "pilot_in_36_cities_or_regions": "2022年11月起在36个先行城市（地区）先行实施",
+                "national_implementation": "全国：中国境内参加基本养老保险的劳动者均可参加",
+            },
+        ]
+
+        for coverage in real_result_variants:
+            with self.subTest(coverage=coverage):
+                score = self._grade_pension(rows, coverage)
+                self.assertEqual(score["coverage_and_effect"], 1.0)
+
+    def test_pension_coverage_rejects_missing_key_scope_or_effect(self) -> None:
         rows = json.loads(PENSION_GT.read_text(encoding="utf-8"))["rows"]
         incomplete = {
-            "institutional_framework": "建立个人养老金制度框架",
+            "institutional_framework": "全国范围",
             "implementation_measures": "规定账户与业务流程",
-            "pilot_in_36_cities_or_regions": "未在36个城市先行试点",
-            "national_implementation": "尚未全国实施",
+            "pilot_in_36_cities_or_regions": "先行实施",
+            "national_implementation": "符合条件的劳动者均可参加",
         }
 
         score = self._grade_pension(rows, incomplete)
 
-        self.assertEqual(score["coverage_and_effect"], 0.25)
+        self.assertEqual(score["coverage_and_effect"], 0.0)
+
+    def test_pension_coverage_rejects_negated_stage_facts(self) -> None:
+        rows = json.loads(PENSION_GT.read_text(encoding="utf-8"))["rows"]
+        negated = {
+            "institutional_framework": "全国范围内尚未建立制度框架",
+            "implementation_measures": "实施办法尚未施行，仍不生效",
+            "pilot_in_36_cities_or_regions": "尚未在36个城市或地区先行试点",
+            "national_implementation": "尚未全国实施",
+        }
+
+        score = self._grade_pension(rows, negated)
+
+        self.assertEqual(score["coverage_and_effect"], 0.0)
 
     def _grade_pension(self, rows: list[dict], coverage: dict[str, str]) -> dict:
         with tempfile.TemporaryDirectory() as tmp:
@@ -515,6 +592,36 @@ class ExtensionSemanticGraderTest(unittest.TestCase):
             (root / "results/answer.md").write_text("答案", encoding="utf-8")
 
             return load_grader(PENSION_TASK)(workspace_path=str(root))
+
+    def _grade_apollo(
+        self,
+        act_one_note: str,
+        act_two_note: str,
+        act_three_note: str,
+    ) -> dict:
+        text = "\n".join([
+            "# Opening",
+            "Welcome to the exhibit.",
+            "## Act 1",
+            "Launch and lunar approach.",
+            act_one_note,
+            "## Act 2",
+            "Landing and surface activity.",
+            act_two_note,
+            "## Act 3",
+            "Ascent, docking, Pacific landing, and recovery.",
+            act_three_note,
+            "## Closing Question",
+            "What would you remember?",
+        ])
+        transcript = [{
+            "type": "message",
+            "message": {
+                "role": "assistant",
+                "content": [{"type": "text", "text": text}],
+            },
+        }]
+        return load_grader(APOLLO_TASK)(transcript=transcript)
 
     def _grade_vendor(self, plan: dict) -> dict:
         with tempfile.TemporaryDirectory() as tmp:
