@@ -182,6 +182,59 @@ class AnomalyDetectionTest(unittest.TestCase):
         finally:
             temp_dir.cleanup()
 
+    def test_timeout_with_unavailable_usage_is_review_without_rerun(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            self.write_json(run_dir / "execution_status.json", {
+                "status": "timed_out", "timed_out": True, "timeout_seconds": 3600,
+                "failure_stage": "claudecode_running", "model": "model-x",
+            })
+            self.write_json(run_dir / "usage.json", {
+                "request_count": 178,
+                "total_tokens": 0,
+                "usage_source": "unavailable",
+                "usage_complete": False,
+            })
+
+            report = scan_run_dir(run_dir)
+
+            timeout_item = self.item(report, "TASK_TIMED_OUT")
+            usage_item = self.item(report, "USAGE_UNAVAILABLE_ON_TIMEOUT")
+            self.assertIsNotNone(timeout_item)
+            self.assertIsNotNone(usage_item)
+            self.assertIsNone(self.item(report, "ZERO_TOKEN_RUN"))
+            self.assertEqual(timeout_item["validity_impact"], "none")
+            self.assertEqual(usage_item["validity_impact"], "review")
+            self.assertEqual(usage_item["score_reliability"], "valid_capability_outcome")
+            self.assertEqual(usage_item["rerun_action"], "do_not_rerun")
+            self.assertEqual(report["validity_verdict"], "REVIEW")
+            self.assertFalse(report["has_validity_failure"])
+            self.assertTrue(report["needs_review"])
+            self.assertFalse(report["needs_rerun"])
+        finally:
+            temp_dir.cleanup()
+
+    def test_finished_run_with_zero_usage_remains_validity_failure(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            self.write_json(run_dir / "usage.json", {
+                "request_count": 1,
+                "total_tokens": 0,
+                "usage_source": "unavailable",
+                "usage_complete": False,
+            })
+
+            report = scan_run_dir(run_dir)
+
+            item = self.item(report, "ZERO_TOKEN_RUN")
+            self.assertIsNotNone(item)
+            self.assertEqual(item["validity_impact"], "fail")
+            self.assertEqual(item["rerun_action"], "required_after_fix")
+            self.assertEqual(report["validity_verdict"], "FAIL")
+            self.assertTrue(report["needs_rerun"])
+        finally:
+            temp_dir.cleanup()
+
     def test_harness_exit_is_capability_outcome(self) -> None:
         temp_dir, run_dir = self.make_run()
         try:
@@ -921,6 +974,51 @@ class AnomalyDetectionTest(unittest.TestCase):
             self.assertIsNotNone(result)
             refreshed = json.loads((run_dir / "anomalies.json").read_text(encoding="utf-8"))
             self.assertEqual(refreshed["schema_version"], SCHEMA_VERSION)
+            self.assertFalse(refreshed["needs_rerun"])
+
+    def test_resume_does_not_rerun_timeout_with_unavailable_usage(self) -> None:
+        from eval.run_batch import _load_resume_result
+
+        with tempfile.TemporaryDirectory() as temp:
+            output_root = Path(temp)
+            run_dir = output_root / "01_suite/task_1/model-x_20260728_1200_abc123"
+            run_dir.mkdir(parents=True)
+            self.write_json(run_dir / "execution_status.json", {
+                "status": "timed_out", "timed_out": True, "timeout_seconds": 3600,
+                "failure_stage": "claudecode_running", "model": "model-x",
+            })
+            self.write_json(run_dir / "usage.json", {
+                "request_count": 20,
+                "total_tokens": 0,
+                "usage_source": "unavailable",
+                "usage_complete": False,
+            })
+            self.write_json(run_dir / "score.json", {"overall_score": 0.0})
+            events = [
+                {"type": "assistant", "message": {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": "working"}],
+                }},
+                {"type": "assistant", "message": {
+                    "role": "assistant",
+                    "content": [{"type": "tool_use", "name": "Bash"}],
+                }},
+            ]
+            (run_dir / "chat.jsonl").write_text(
+                "\n".join(json.dumps(event) for event in events), encoding="utf-8"
+            )
+            task = {"category": "01_suite", "task_id": "task_1"}
+
+            result = _load_resume_result(
+                output_root, task, "model-x",
+                rerun_error=True, rerun_anomalous=False,
+            )
+
+            self.assertIsNotNone(result)
+            self.assertNotIn("_reliability_rerun", task)
+            refreshed = json.loads((run_dir / "anomalies.json").read_text(encoding="utf-8"))
+            self.assertEqual(refreshed["validity_verdict"], "REVIEW")
+            self.assertFalse(refreshed["has_validity_failure"])
             self.assertFalse(refreshed["needs_rerun"])
 
     def test_resume_marks_reliability_rerun_as_replacement(self) -> None:

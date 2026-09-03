@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 SCHEMA_VERSION = 2
-RULESET_VERSION = "2026-08-18.1"
+RULESET_VERSION = "2026-09-03.1"
 
 ERROR = "error"
 WARNING = "warning"
@@ -947,17 +947,49 @@ def scan_run_dir(run_dir: Path) -> dict[str, Any]:
     total_tokens = usage.get("total_tokens", 0)
     if events and (request_count == 0 or total_tokens == 0) and not structured_model_errors:
         has_model_response = model_turns > 0
-        items.append(_item(
-            "ZERO_TOKEN_RUN", "存在模型轨迹但 usage 请求数或 token 为 0",
-            stage="usage_collection",
-            attribution="evaluation_framework" if has_model_response else "undetermined",
-            confidence="high" if has_model_response else "low",
-            validity_impact="fail" if has_model_response else "review",
-            score_reliability="unreliable" if has_model_response else "requires_review",
-            rerun_action="required_after_fix" if has_model_response else "review_first",
-            evidence=[{"file": "usage.json", "request_count": request_count,
-                       "total_tokens": total_tokens, "observed_model_turns": model_turns}],
-        ))
+        usage_source = str(usage.get("usage_source") or "").strip().lower()
+        usage_declared_unavailable = (
+            usage.get("usage_complete") is False or usage_source == "unavailable"
+        )
+        if (
+            timed_out
+            and (model_turns > 0 or tool_attempts > 0)
+            and usage_declared_unavailable
+        ):
+            # Some harnesses only emit authoritative aggregate usage in their terminal
+            # result event. A timeout interrupts that event, so zero tokens here mean
+            # telemetry is unavailable, not that the timeout ceased to be a valid
+            # capability outcome. Keep the score, surface the metric gap for review,
+            # and never grant the model another attempt merely to recover usage.
+            items.append(_item(
+                "USAGE_UNAVAILABLE_ON_TIMEOUT",
+                "任务超时且 Harness 未产出最终 usage 汇总；"
+                "保留超时能力结果，token/cost 指标需人工复核",
+                stage="usage_collection", attribution="harness", confidence="high",
+                validity_impact="review", score_reliability="valid_capability_outcome",
+                rerun_action="do_not_rerun",
+                evidence=[{
+                    "file": "usage.json",
+                    "request_count": request_count,
+                    "total_tokens": total_tokens,
+                    "usage_source": usage.get("usage_source"),
+                    "usage_complete": usage.get("usage_complete"),
+                    "observed_model_turns": model_turns,
+                    "observed_tool_attempts": tool_attempts,
+                }],
+            ))
+        else:
+            items.append(_item(
+                "ZERO_TOKEN_RUN", "存在模型轨迹但 usage 请求数或 token 为 0",
+                stage="usage_collection",
+                attribution="evaluation_framework" if has_model_response else "undetermined",
+                confidence="high" if has_model_response else "low",
+                validity_impact="fail" if has_model_response else "review",
+                score_reliability="unreliable" if has_model_response else "requires_review",
+                rerun_action="required_after_fix" if has_model_response else "review_first",
+                evidence=[{"file": "usage.json", "request_count": request_count,
+                           "total_tokens": total_tokens, "observed_model_turns": model_turns}],
+            ))
 
     if score is None and not pre_grading_failure:
         if execution_item and execution_item["attribution"] in {"model", "harness"}:

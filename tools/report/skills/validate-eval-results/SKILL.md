@@ -45,6 +45,11 @@ frontmatter 还原过滤后的预期集合；被 `--exclude-tag` 等条件明确
 
 超时、Harness 进程非零退出、过早结束、工具名或工具协议不兼容，默认是模型/Harness 组合的能力结果，只记 `info`，不影响有效性门禁。只有结构化证据明确指向评测 runner、任务准备、容器调度、轨迹采集、grader、数据解析或共享评测基础设施时，才判 `FAIL`。无法自动归因的执行错误判 `REVIEW`，不能仅凭 `execution_status.status=error` 判评测无效。
 
+若已确认模型发生交互的超时 run 同时显式记录 `usage_source=unavailable`
+或 `usage_complete=false`，记为 `USAGE_UNAVAILABLE_ON_TIMEOUT/REVIEW`：超时得分仍是
+能力结果，token/cost 指标单独复核，不得生成 `ZERO_TOKEN_RUN`，也不得因
+补齐 usage 而自动重跑模型。
+
 模型 API 429/5xx 只接受 `runtime_events.jsonl`、AstronCode/Codex 原始 session 错误事件或 OpenCode DB 模型消息错误字段等结构化证据。不得从完整 `agent.log`、工具返回、任务 mock、模型文本或代码关键词触发；无论单模型还是多模型出现，默认均为 `external_service/REVIEW`，不得按共现数量自动升级为 `FAIL`。
 
 run 级信号统一由 `src/utils/anomalies.py` 生成。Skill 直接消费 `items[].attribution`、`validity_impact` 和 `rerun_action`，不得维护另一套相互矛盾的异常归因表。
