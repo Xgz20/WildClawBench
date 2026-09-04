@@ -102,18 +102,21 @@ try:
         execution_success_rate as _tm_exec_success,
         overall_success_rate as _tm_overall_success,
         unclear_ratio as _tm_unclear_ratio,
+        tool_search_hit_rate as _tm_tool_search_hit_rate,
     )
     _TOOL_METRICS_OK = True
 except Exception:  # 独立分发/路径异常时降级：不统计工具调用指标
     _TOOL_METRICS_OK = False
     def _parse_report_tool_metrics(path, harness, run_dir=None):
         return {"total": 0, "success": 0, "failure": 0, "format_error": 0,
-                "unclear": 0, "by_tool": {}}
+                "unclear": 0, "search_total": 0, "search_hit": 0,
+                "search_miss": 0, "search_unresolved": 0, "by_tool": {}}
     def _merge_tool_metrics(lst):
         return {"total": 0, "success": 0, "failure": 0, "format_error": 0,
-                "unclear": 0, "by_tool": {}}
+                "unclear": 0, "search_total": 0, "search_hit": 0,
+                "search_miss": 0, "search_unresolved": 0, "by_tool": {}}
     _tm_format_accuracy = _tm_exec_success = _tm_overall_success = \
-    _tm_unclear_ratio = lambda m: None
+    _tm_unclear_ratio = _tm_tool_search_hit_rate = lambda m: None
 
 from src.utils.anomalies import classify_execution_error, classify_report_outcome, scan_run_dir
 from src.utils.run_selection import select_effective_run_dirs
@@ -2238,7 +2241,8 @@ def reorder_report_sheets(wb) -> None:
 def write_tool_compare_sheet(wb, units: list[UnitResult]) -> None:
     """工具调用对比：按 harness 分块，块内每行 = 模型 × 工具名。
 
-    列：模型 / 工具 / 调用数 / 成功 / 失败 / 不确定 / 格式错误 / 成功率 / 格式准确率。
+    列：模型 / 工具 / 调用数 / 成功 / 失败 / 不确定 / 格式错误 / 成功率 /
+    格式准确率 / tool_search 检索命中率。
     仅纳入已注册（有有效指标）的 harness；无任何有效指标则不建表。
     区分模型：同 harness 下不同模型的工具画像差异大（有的用 shell、有的用
     exec_command），逐模型展示才能定位某模型在某工具上的系统性失败。
@@ -2255,7 +2259,7 @@ def write_tool_compare_sheet(wb, units: list[UnitResult]) -> None:
 
     ws = wb.create_sheet("工具调用对比", index=2)  # 紧跟模型×Harness矩阵之后
     header = ["模型", "工具", "调用数", "成功", "失败", "不确定", "格式错误",
-              "成功率", "格式准确率"]
+              "成功率", "格式准确率", "检索命中率（tool_search）"]
     section_fill = PatternFill("solid", fgColor="D9E1F2")
     # 模型行底色：浅灰/浅蓝交替，比表头淡，用于区分同 harness 下不同模型
     model_fills = [
@@ -2290,7 +2294,7 @@ def write_tool_compare_sheet(wb, units: list[UnitResult]) -> None:
                     cell.fill = fill
         ws.append([""] * len(header))  # 块间空行
 
-    set_widths(ws, {1: 24, 2: 22}, default=12)
+    set_widths(ws, {1: 24, 2: 22, 10: 26}, default=12)
     ws.freeze_panes = "A1"
 
 
@@ -2301,8 +2305,9 @@ def _append_tool_row(ws, model: str, tool_name: str, m: dict, bold: bool = False
         m.get("failure", 0), m.get("unclear", 0), m.get("format_error", 0),
         _pct_or_dash(_tm_overall_success(m)),
         _pct_or_dash(_tm_format_accuracy(m)),
+        _pct_or_dash(_tm_tool_search_hit_rate(m)),
     ])
-    apply_pct_format(ws, ws.max_row, [8, 9])
+    apply_pct_format(ws, ws.max_row, [8, 9, 10])
     # 统一居中对齐(否则文本列左对齐、数字列右对齐，参差不齐)
     for cell in ws[ws.max_row]:
         cell.alignment = CENTER

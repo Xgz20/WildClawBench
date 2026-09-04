@@ -20,6 +20,7 @@ from src.utils.tool_metrics import (
     overall_success_rate,
     parse_report_tool_metrics,
     parse_tool_metrics,
+    tool_search_hit_rate,
     unclear_ratio,
 )
 
@@ -279,12 +280,14 @@ class RatioTest(unittest.TestCase):
         self.assertAlmostEqual(execution_success_rate(m), 0.75)
         self.assertAlmostEqual(overall_success_rate(m), 0.6)
         self.assertAlmostEqual(unclear_ratio(m), 0.1)
+        self.assertIsNone(tool_search_hit_rate(m))
 
         empty = {"total": 0, "success": 0, "failure": 0, "format_error": 0, "unclear": 0}
         self.assertIsNone(format_accuracy(empty))
         self.assertIsNone(execution_success_rate(empty))
         self.assertIsNone(overall_success_rate(empty))
         self.assertIsNone(unclear_ratio(empty))
+        self.assertIsNone(tool_search_hit_rate(empty))
 
     def test_unresolved_report_format_returns_none(self):
         metrics = {
@@ -347,6 +350,178 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(metrics["success"], 2)
         self.assertEqual(metrics["failure"], 1)
         self.assertEqual(metrics["unclear"], 0)
+
+    def test_astroncode_report_merges_tool_search_and_hit_rate(self):
+        transcript = self._write(
+            "chat_openclaw.jsonl",
+            "\n".join(
+                [
+                    _codex_line("assistant", _tool_use("a1", "bash")),
+                    _codex_line(
+                        "user", _tool_result("a1", "Exit code: 0\nOutput:\nok")
+                    ),
+                ]
+            )
+            + "\n",
+        )
+        raw_events = [
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "tool_search_call",
+                    "call_id": "s1",
+                    "status": "completed",
+                    "execution": "client",
+                    "arguments": {"query": "calendar", "limit": 5},
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "tool_search_output",
+                    "call_id": "s1",
+                    "status": "completed",
+                    "execution": "client",
+                    "tools": [{"name": "calendar_create"}],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "tool_search_call",
+                    "call_id": "s2",
+                    "status": "completed",
+                    "execution": "client",
+                    "arguments": {"query": "missing tool"},
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "tool_search_output",
+                    "call_id": "s2",
+                    "status": "completed",
+                    "execution": "client",
+                    "tools": [],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "tool_search_call",
+                    "call_id": "s3",
+                    "status": "completed",
+                    "execution": "client",
+                    "arguments": {"query": "", "limit": 0},
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "tool_search_output",
+                    "call_id": "s3",
+                    "status": "completed",
+                    "execution": "client",
+                    "tools": [],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "tool_search_call",
+                    "call_id": "s4",
+                    "status": "completed",
+                    "execution": "client",
+                    "arguments": {"query": "write file"},
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "tool_search_call",
+                    "call_id": None,
+                    "status": "completed",
+                    "execution": "server",
+                    "arguments": {"paths": ["crm"]},
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "tool_search_output",
+                    "call_id": None,
+                    "status": "completed",
+                    "execution": "server",
+                    "tools": [{"name": "crm_lookup"}],
+                },
+            },
+            {
+                "type": "response_item",
+                "payload": {
+                    "type": "tool_search_output",
+                    "call_id": "orphan",
+                    "status": "completed",
+                    "execution": "client",
+                    "tools": [{"name": "must_not_count"}],
+                },
+            },
+        ]
+        self._write(
+            "chat.jsonl",
+            "\n".join(json.dumps(event) for event in raw_events) + "\n",
+        )
+
+        metrics = parse_report_tool_metrics(
+            transcript, "astroncode", Path(self.tmp.name)
+        )
+
+        self.assertEqual(metrics["total"], 6)
+        self.assertEqual(metrics["success"], 4)
+        self.assertEqual(metrics["format_error"], 1)
+        self.assertEqual(metrics["unclear"], 1)
+        self.assertEqual(metrics["search_total"], 5)
+        self.assertEqual(metrics["search_hit"], 2)
+        self.assertEqual(metrics["search_miss"], 1)
+        self.assertEqual(metrics["search_unresolved"], 2)
+        self.assertEqual(metrics["by_tool"]["tool_search"]["total"], 5)
+        self.assertAlmostEqual(format_accuracy(metrics), 5 / 6)
+        self.assertAlmostEqual(tool_search_hit_rate(metrics), 2 / 3)
+
+    def test_astroncode_report_does_not_double_count_normalized_tool_search(self):
+        transcript = self._write(
+            "chat_openclaw.jsonl",
+            "\n".join(
+                [
+                    _codex_line("assistant", _tool_use("s1", "tool_search")),
+                    _codex_line(
+                        "user", _tool_result("s1", '{"tools":[]}', "completed")
+                    ),
+                ]
+            )
+            + "\n",
+        )
+        self._write(
+            "chat.jsonl",
+            json.dumps(
+                {
+                    "type": "response_item",
+                    "payload": {
+                        "type": "tool_search_call",
+                        "call_id": "s1",
+                        "execution": "client",
+                        "arguments": {"query": "calendar"},
+                    },
+                }
+            )
+            + "\n",
+        )
+
+        metrics = parse_report_tool_metrics(
+            transcript, "astroncode", Path(self.tmp.name)
+        )
+
+        self.assertEqual(metrics["total"], 1)
+        self.assertEqual(metrics["by_tool"]["tool_search"]["total"], 1)
 
     def test_opencode_multiline_pretty_json(self):
         # OpenCode：多个 pretty-printed 对象直接拼接（对象跨多行）
@@ -702,6 +877,39 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(merged["format_unresolved"], 1)
         self.assertEqual(merged["by_tool"]["bash"]["format_unresolved"], 1)
         self.assertIsNone(format_accuracy(merged))
+
+    def test_merge_preserves_tool_search_hit_counts(self):
+        metrics = {
+            "total": 2,
+            "success": 2,
+            "failure": 0,
+            "format_error": 0,
+            "unclear": 0,
+            "search_total": 2,
+            "search_hit": 1,
+            "search_miss": 1,
+            "search_unresolved": 0,
+            "by_tool": {
+                "tool_search": {
+                    "total": 2,
+                    "success": 2,
+                    "failure": 0,
+                    "format_error": 0,
+                    "unclear": 0,
+                    "search_total": 2,
+                    "search_hit": 1,
+                    "search_miss": 1,
+                    "search_unresolved": 0,
+                }
+            },
+        }
+
+        merged = merge_metrics([metrics, metrics])
+
+        self.assertEqual(merged["search_total"], 4)
+        self.assertEqual(merged["search_hit"], 2)
+        self.assertEqual(merged["by_tool"]["tool_search"]["search_miss"], 2)
+        self.assertAlmostEqual(tool_search_hit_rate(merged), 0.5)
 
 
 if __name__ == "__main__":

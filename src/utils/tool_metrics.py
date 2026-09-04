@@ -18,14 +18,15 @@
 ((tool_name, content, status) -> category)，新增 harness 只需写一个函数 + 一行注册。
 纯标准库，无第三方依赖，供报告脚本与平台后端共同 import。
 
-报告生成对 OpenCode、DeepSeek Harness、HermesAgent 使用独立入口
-parse_report_tool_metrics：按 tool_use 尝试计数并在报告阶段校验格式，
-不改变 Harness 执行、评分或其他调用方的通用解析口径。
+报告生成使用独立入口 parse_report_tool_metrics：OpenCode、DeepSeek Harness、
+HermesAgent 按 tool_use 尝试计数并校验格式；AstronCode 从原始轨迹补计
+tool_search。该入口不改变 Harness 执行、评分或其他调用方的通用解析口径。
 """
 from __future__ import annotations
 
 import json
 import re
+from collections import defaultdict, deque
 from pathlib import Path
 from typing import Callable
 
@@ -57,6 +58,10 @@ def _empty() -> dict:
         "failure": 0,
         "format_error": 0,
         "unclear": 0,
+        "search_total": 0,
+        "search_hit": 0,
+        "search_miss": 0,
+        "search_unresolved": 0,
         "by_tool": {},
     }
 
@@ -421,6 +426,122 @@ def _deepseek_format_decisions(run_dir: Path | None) -> dict[str, bool]:
                     or not _schema_accepts(arguments, schemas.get(tool_name, {}))
                 )
     return decisions
+
+
+def _astroncode_payload(event: dict) -> dict | None:
+    for key in ("payload", "item", "message", "event_msg", "data"):
+        value = event.get(key)
+        if isinstance(value, dict) and value.get("type"):
+            return value
+    if event.get("type"):
+        return event
+    return None
+
+
+def _load_astroncode_tool_search_calls(run_dir: Path | None) -> list[dict]:
+    if run_dir is None:
+        return []
+    path = Path(run_dir) / "chat.jsonl"
+    if not path.is_file():
+        return []
+    try:
+        raw = path.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return []
+
+    calls: list[dict] = []
+    pending_by_id: dict[str, deque[int]] = defaultdict(deque)
+    pending_without_id: dict[str, deque[int]] = defaultdict(deque)
+    for event in _iter_json_objects(raw):
+        if not isinstance(event, dict):
+            continue
+        payload = _astroncode_payload(event)
+        if not isinstance(payload, dict):
+            continue
+        event_type = str(payload.get("type") or "").lower()
+        execution = str(payload.get("execution") or "").lower()
+        call_id = str(payload.get("call_id") or "")
+        if event_type == "tool_search_call":
+            calls.append(
+                {
+                    "call_id": call_id,
+                    "execution": execution,
+                    "arguments": payload.get("arguments"),
+                    "output": None,
+                }
+            )
+            call_index = len(calls) - 1
+            if call_id:
+                pending_by_id[call_id].append(call_index)
+            else:
+                pending_without_id[execution].append(call_index)
+            continue
+        if event_type != "tool_search_output":
+            continue
+        pending = pending_by_id.get(call_id) if call_id else pending_without_id.get(execution)
+        if pending:
+            calls[pending.popleft()]["output"] = payload
+    return calls
+
+
+def _invalid_astroncode_tool_search_arguments(arguments, execution: str) -> bool | None:
+    if execution and execution != "client":
+        return None
+    if not isinstance(arguments, dict):
+        return True
+    if any(key not in {"query", "limit"} for key in arguments):
+        return True
+    query = arguments.get("query")
+    if not isinstance(query, str) or not query.strip():
+        return True
+    if "limit" not in arguments:
+        return False
+    limit = arguments.get("limit")
+    return not isinstance(limit, int) or isinstance(limit, bool) or limit <= 0
+
+
+def _merge_astroncode_tool_search_metrics(result: dict, run_dir: Path | None) -> dict:
+    normalized_bucket = result.get("by_tool", {}).get("tool_search")
+    calls = _load_astroncode_tool_search_calls(run_dir)
+    for call in calls:
+        output = call.get("output")
+        output_status = (
+            str(output.get("status") or "").strip().lower()
+            if isinstance(output, dict)
+            else ""
+        )
+        arguments_invalid = _invalid_astroncode_tool_search_arguments(
+            call.get("arguments"), call.get("execution", "")
+        )
+        if arguments_invalid is True:
+            category = "format_error"
+        elif output_status in {"completed", "success", "ok"}:
+            category = "success"
+        elif output_status in {"error", "failed", "failure"}:
+            category = "failure"
+        else:
+            category = "unclear"
+
+        if normalized_bucket is None:
+            _increment_metric(result, "tool_search", category)
+        bucket = result["by_tool"]["tool_search"]
+        for key in ("search_total", "search_hit", "search_miss", "search_unresolved"):
+            bucket.setdefault(key, 0)
+        result["search_total"] += 1
+        bucket["search_total"] = bucket.get("search_total", 0) + 1
+
+        tools = output.get("tools") if isinstance(output, dict) else None
+        if category == "success" and isinstance(tools, list):
+            search_key = "search_hit" if tools else "search_miss"
+        else:
+            search_key = "search_unresolved"
+        result[search_key] += 1
+        bucket[search_key] = bucket.get(search_key, 0) + 1
+
+        if normalized_bucket is None and arguments_invalid is None and not output_status:
+            result["format_unresolved"] = result.get("format_unresolved", 0) + 1
+            bucket["format_unresolved"] = bucket.get("format_unresolved", 0) + 1
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -854,6 +975,10 @@ def _increment_metric(result: dict, tool_name: str, category: str) -> None:
             "format_error": 0,
             "unclear": 0,
             "format_unresolved": 0,
+            "search_total": 0,
+            "search_hit": 0,
+            "search_miss": 0,
+            "search_unresolved": 0,
         },
     )
     bucket["total"] += 1
@@ -880,13 +1005,18 @@ def parse_report_tool_metrics(
     harness: str,
     run_dir: Path | None = None,
 ) -> dict:
-    """报告专用口径：三类 Harness 按调用尝试校验格式，其他 Harness 保持原口径。
+    """报告专用口径：补充调用尝试与 AstronCode tool_search，其他口径不变。
 
     OpenCode、DeepSeek Harness、HermesAgent 的通用 classifier 不产出
     format_error。报告侧改为读取 tool_use 尝试：明确的参数结构错误、工具拒绝，
     以及 DSH 原生 request/header 中 Schema 校验失败均计为 format_error。
     无结果且无法取得 Schema 的调用计为 unclear，并使报告格式准确率显示 `-`。
+    AstronCode 额外读取 run 原始 chat.jsonl 的 tool_search_call/output。
     """
+    if harness == "astroncode":
+        return _merge_astroncode_tool_search_metrics(
+            parse_tool_metrics(transcript_path, harness), run_dir
+        )
     if harness not in REPORT_FORMAT_HARNESSES:
         return parse_tool_metrics(transcript_path, harness)
     classifier = _CLASSIFIERS.get(harness)
@@ -980,6 +1110,14 @@ def unclear_ratio(m: dict) -> float | None:
     return m.get("unclear", 0) / total
 
 
+def tool_search_hit_rate(m: dict) -> float | None:
+    """检索命中率 = 有返回工具的成功检索 / 可判定检索结果。"""
+    denominator = m.get("search_hit", 0) + m.get("search_miss", 0)
+    if not denominator:
+        return None
+    return m.get("search_hit", 0) / denominator
+
+
 def merge_metrics(metrics_list: list[dict]) -> dict:
     """把多条（用例级）指标聚合成一条（unit 级）。"""
     agg = _empty()
@@ -989,7 +1127,17 @@ def merge_metrics(metrics_list: list[dict]) -> dict:
     for m in metrics_list:
         if not m:
             continue
-        for key in ("total", "success", "failure", "format_error", "unclear"):
+        for key in (
+            "total",
+            "success",
+            "failure",
+            "format_error",
+            "unclear",
+            "search_total",
+            "search_hit",
+            "search_miss",
+            "search_unresolved",
+        ):
             agg[key] += m.get(key, 0)
         if "format_unresolved" in agg:
             agg["format_unresolved"] += m.get("format_unresolved", 0)
@@ -1006,6 +1154,14 @@ def merge_metrics(metrics_list: list[dict]) -> dict:
             )
             for key in ("total", "success", "failure", "format_error", "unclear"):
                 dst[key] += bucket.get(key, 0)
+            for key in (
+                "search_total",
+                "search_hit",
+                "search_miss",
+                "search_unresolved",
+            ):
+                if key in bucket:
+                    dst[key] = dst.get(key, 0) + bucket.get(key, 0)
             if "format_unresolved" in bucket:
                 dst["format_unresolved"] = (
                     dst.get("format_unresolved", 0)

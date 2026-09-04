@@ -1,12 +1,12 @@
 # WildClawBench 评测报告 Excel 指标口径审查
 
-审查对象：`tools/report/scripts/generate_eval_report.py`、各 Harness Runner、`src/utils/tool_metrics.py` 当前实现及本地真实结果（2026-09-03）。Excel 中写入的是计算结果，不是单元格公式。
+审查对象：`tools/report/scripts/generate_eval_report.py`、各 Harness Runner、`src/utils/tool_metrics.py` 当前实现及本地真实结果（2026-09-04）。Excel 中写入的是计算结果，不是单元格公式。
 
 ## 一、结论
 
 1. **总平均分、分类、难度、模态、矩阵和分差的基本公式合理**：任务等权、缺失分按 0，口径简单，能够复算。
 2. **工具调用指标不是所有 Harness 都已验证准确**。旧 Codex/AstronCode 结果中的请求数存在确定低估；OpenCode、ClaudeCode、HermesAgent 缺少成功真实样本。
-3. **工具调用数存在两种口径**。OpenCode、DeepSeek Harness、HermesAgent 在新报告中按 `tool_use` 尝试计数；其他 Harness 仍按收到的 `tool_result` 计数。当前本地 47 个 run 中，22 个含工具轨迹，534 个 `tool_use` 均有对应结果；这只能证明现有样本没有漏配。
+3. **工具调用数存在多种来源**。OpenCode、DeepSeek Harness、HermesAgent 按 `tool_use` 尝试计数；AstronCode 普通工具按 `tool_result`、`tool_search` 按原始 `tool_search_call` 计数；其他 Harness 仍按收到的 `tool_result` 计数。
 4. **格式准确率和成功率不能直接跨 Harness 排名**。OpenCode、DeepSeek Harness、HermesAgent 已改为报告侧格式校验，不再由执行状态反推；其他 Harness 仍依赖各自 classifier。
 5. **能力分、多轮稳定性和资源效率需要带边界使用**。仍存在去污染名称不准、多轮字段混用、实际样本数不透明等问题。
 6. **总分可用的前提**：各 unit 使用同一任务集合，评测有效性检查通过。否则分数差可能来自缺任务或评测异常，不是模型或 Harness 能力差。
@@ -46,10 +46,11 @@
 | 首 Token 响应时间 P50/P90 | 同一有效样本集合的线性插值第 50/90 百分位 | 是 AstronCode Core 收到首个有效模型事件的时间，不等于客户端首次可见上屏 |
 | 首 Token 指标覆盖率 | `有效首响样本数 / 未被替代 run 总数 × 100%` | 旧镜像缺字段和显式执行失败会降低覆盖率；Judge 异常不一定被排除 |
 | 首 Token 响应有效样本数 | 参与平均值及分位数计算的 run 数 | 与覆盖率一起展示，避免低覆盖率统计被误用 |
-| 工具调用数 | OpenCode、DeepSeek Harness、HermesAgent 按最新 run 的 `tool_use` 尝试数；其他 Harness 按 `tool_result` 数 | 三类 Harness 会把无结果尝试计为不确定；其他 Harness 仍可能漏掉无结果尝试 |
+| 工具调用数 | OpenCode、DeepSeek Harness、HermesAgent 按最新 run 的 `tool_use` 尝试数；AstronCode 普通工具按 `tool_result`、`tool_search` 按原始 `tool_search_call`；其他 Harness 按 `tool_result` 数 | AstronCode 不再漏掉独立协议的 `tool_search`；其余按结果计数的 Harness 仍可能漏掉无结果尝试 |
 | 格式准确率 | `(total - format_error) / total` | 公式清楚；不同 Harness 的分类能力不同，不宜跨 Harness 排名 |
 | 执行成功率 | `success / (success + failure)` | 合理；排除 `unclear` 和 `format_error` |
 | 不确定占比 | `unclear / total` | 合理，建议与执行成功率同时看 |
+| 检索命中率 | `tool_search` 参数有效且返回非空 `tools` 的次数 / 参数有效、输出存在且 `tools` 可判定的次数 | 只在“工具调用对比”Sheet 展示；空列表通常表示未命中，但 AstronCode 的中止响应也会写成 `completed + []`，该极端情况无法仅靠现有轨迹区分 |
 
 ClaudeCode 的 `request_count` 优先读取显式 `model_request`、`query_start` 或 `modelUsage.requestCount`；官方 `stream-json` 未提供这些字段时，按唯一 assistant `message.id` 统计模型响应次数，不使用包含工具轮次的 `result.num_turns`。其他 Harness 的请求数来源见“工具调用对比”。
 
@@ -144,17 +145,18 @@ CNY 定价再除以定价日 `CNY/USD`；分档模型按逐请求输入 token �
 | 成功、失败、格式错误、不确定 | 三类 Harness 先做报告侧格式校验，再对已返回结果使用原 classifier；其他 Harness 直接使用 classifier | 分类规则仍不是跨 Harness 同一把尺 |
 | 成功率 | `success / total` | 与总览“执行成功率”的分母不同 |
 | 格式准确率 | `(total - format_error) / total` | 三类 Harness 按调用尝试校验；存在无法判定格式的调用时显示 `-`，不猜测为 100% |
+| 检索命中率（tool_search） | `search_hit / (search_hit + search_miss)` | 仅 AstronCode 原始 `tool_search_output.tools` 可判定时有值；非法参数和缺输出不进分母，其他工具显示 `-` |
 
 总览“执行成功率”=`success/(success+failure)`；本 Sheet“成功率”=`success/total`。前者排除格式错误和不确定结果，后者是综合成功率。同一报告中名称接近、分母不同，容易误读。
 
-核验样本为 `wcb-output` 下 44 个 run，加 `output/codex` 下 3 个 run。该范围是当前本地证据，不代表生产全量。本次变更后，工具指标 35 项、报告流水线 75 项全部通过；真实 DeepSeek Harness 单 unit Excel 生成及独立审核为 PASS。
+核验样本为 `wcb-output` 下 44 个 run，加 `output/codex` 下 3 个 run及 `output/astroncode` 下 2 个含 `tool_search` 的 run。该范围是当前本地证据，不代表生产全量。本次变更后，工具指标 39 项、工具 Sheet 1 项、报告流水线 75 项全部通过；真实 DeepSeek Harness 单 unit Excel 生成及独立审核为 PASS。
 
 #### 分 Harness 请求数和工具状态口径
 
 | Harness | 请求数来源 | 工具状态来源 | 真实样本核验 | 结论 |
 |---|---|---|---|---|
 | Codex | 去重后的 `token_count` 事件；旧格式回退逐轮用量或 assistant 消息 | `tool_result.content` 的固定文本标记 | 本地 3 个 run、29 次工具调用全部配对；2 个旧 run 的请求数分别为 `5→8`、`3→21`，另 1 个一致 | 当前事件格式下可复算；异常请求或无 token 请求仍可能漏计，旧结果需重解析 |
-| AstronCode | 去重后的 `token_count` 事件；旧格式回退逐轮用量或 assistant 消息 | 结构化状态、新版工具返回契约，最后回退 Codex 文本规则 | 本地 37 个 run；16 个有工具轨迹，477 次调用全部配对；15 个旧 run 请求数漂移；2026-08-28 样本为请求 8、工具 10，重生成 Excel 一致 | 当前事件格式下可复算；无 token 请求仍可能漏计，历史报告存在确定错误 |
+| AstronCode | 去重后的 `token_count` 事件；旧格式回退逐轮用量或 assistant 消息 | 普通工具使用结构化状态及返回契约；`tool_search` 读取原始 call/output 状态 | 原有 477 次配对结论只覆盖归一化普通工具；另有 2 个本地 run 共 3 次参数有效的 `completed + []`，当前口径计成功未命中，调用数分别由 29→31、6→7 | 当前报告可复算 `tool_search` 调用和非空返回率；中止也可能编码为 `completed + []`，空结果存在无法消除的歧义；无 token 请求仍可能漏计 |
 | OpenCode | SQLite 中 `type=step-finish` 的记录数 | 执行状态用 `state.status`；格式按 `tool_use` 参数结构和明确拒绝结果校验 | 本地 3 个 run 均在 warmup、鉴权或模型请求阶段失败，请求数和工具数均为 0 | 只有代码和单元测试证据；未产生 `step-finish` 的失败请求不计；无结果且格式不可判定时显示 `-` |
 | OpenClaw / AstronClaw | 归一化轨迹中的 assistant 消息数 | 原生 `details.status`，有限错误文本识别格式错误 | OpenClaw 2 个 run 的请求数为 11、10；21 次工具调用中成功 18、失败 2、不确定 1。AstronClaw 唯一样本是异常 run，只有 1 次请求、无工具调用 | OpenClaw 小样本可复算；AstronClaw 正常链路待验证；assistant 消息无稳定请求 ID，格式错误也可能漏判 |
 | DeepSeek Harness | 带 usage 的 `assistant/message` 事件数 | 执行状态用原生 `tool_result.status`；格式按 `request/header.tools` 的实际 Schema 校验原始 `tool/call` | 1 个 run：6 次请求、7 次工具调用，7 次均为 `completed`；新口径复算格式准确率为 100% | 当前成功样本一致；仍缺少真实非法参数和未知工具样本 |
@@ -164,7 +166,7 @@ CNY 定价再除以定价日 `CNY/USD`；分档模型按逐请求输入 token �
 #### 已确认问题
 
 1. `wcb-output/reports/4/report.xlsx` 的总请求数是 116；按当前权威事件重算应为 203。该报告的工具调用数 202、成功 176、失败 6、格式错误 1、不确定 19，以及 99.5%/96.7%/9.4% 三项比例均可复算一致。
-2. 旧报告及其他 Harness 的工具调用数按 `tool_result` 计数。OpenCode、DeepSeek Harness、HermesAgent 的新报告已改按 `tool_use` 尝试计数；`total=0` 仍无法区分“确实未调用”“轨迹缺失”和“轨迹解析失败”。
+2. 旧报告中的 AstronCode `tool_search` 没有进入归一化轨迹，存在确定漏算；新报告已从原始 `chat.jsonl` 补计。OpenCode、DeepSeek Harness、HermesAgent 按 `tool_use` 尝试计数；`total=0` 仍无法区分“确实未调用”“轨迹缺失”和“轨迹解析失败”。
 3. OpenCode、DeepSeek Harness、HermesAgent 的 classifier 本身仍不产生 `format_error`，但新报告已增加独立格式校验。OpenClaw、ClaudeCode 仍只匹配有限错误文本，跨 Harness 排名仍不成立。
 4. AstronCode 把 approval policy 拒绝也归为 `format_error`，这不是纯粹的工具名或参数格式错误，会混入运行策略限制。
 5. `reparse_codex_usage.py` 曾未按 Harness 过滤：对 DeepSeek Harness 或 ClaudeCode 结果目录 dry-run，会把请求数错误建议为 `6→0`、`109→0`。现已强制读取 `execution_status.harness`，只处理 Codex/AstronCode；其他 Harness、缺失或损坏的状态文件均安全跳过。即使 Harness 匹配，只要重解析 token 与原记录漂移，也不会推断或写回请求数。
@@ -176,7 +178,7 @@ OpenCode 的 `completed` 一律记为成功，包括业务错误 JSON；`running
 
 #### 工具指标修正状态
 
-本次已实现：OpenCode、DeepSeek Harness、HermesAgent 仅在生成报告时按调用尝试计算格式准确率；DeepSeek Harness 使用会话内实际工具 Schema；明确非法参数、未知工具和拒绝结果计格式错误；格式无法判定时显示 `-`。`reparse_codex_usage.py` 也已增加 Harness 白名单和混合目录保护。上述改动不修改 Harness、执行流程或评分；报告指标计算只读结果目录，历史 usage 回填仍必须显式传入 `--apply`。按要求，Excel 和领导版报告不增加轨迹覆盖状态字段。
+本次已实现：OpenCode、DeepSeek Harness、HermesAgent 仅在生成报告时按调用尝试计算格式准确率；DeepSeek Harness 使用会话内实际工具 Schema；AstronCode 报告从原始轨迹补计 `tool_search`，并在“工具调用对比”Sheet 展示检索命中率。明确非法参数、未知工具和拒绝结果计格式错误；格式无法判定时显示 `-`。`reparse_codex_usage.py` 也已增加 Harness 白名单和混合目录保护。上述改动不修改 Harness、执行流程或评分；报告指标计算只读结果目录，历史 usage 回填仍必须显式传入 `--apply`。按要求，Excel 和领导版报告不增加轨迹覆盖状态字段。
 
 其余改造仍为建议：
 
