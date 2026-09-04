@@ -126,8 +126,31 @@ class HermesAgentRunnerTest(unittest.TestCase):
 
         self.assertEqual(max_tokens, 3072)
 
+    def test_shared_switch_disables_legacy_hermes_override(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "false",
+                "HERMES_MAX_TOKENS": "8192",
+            },
+            clear=False,
+        ):
+            agent = HermesAgentAgent()
+            max_tokens = agent._resolve_max_tokens(
+                "xopglm52", "https://maas-api.example/v2"
+            )
+
+        self.assertIsNone(max_tokens)
+
     def test_incomplete_harness_result_is_valid_finished_capability_result(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
+        with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
+            os.environ,
+            {
+                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
+                "HERMES_MAX_TOKENS": "16384",
+            },
+            clear=False,
+        ):
             root = Path(temp_dir)
             output_dir = root / "output"
             workspace = root / "workspace"

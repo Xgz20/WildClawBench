@@ -26,7 +26,10 @@ from src.agents.astroncode.backend import (
 )
 from src.utils.docker_utils import container_resource_args, run_warmup, setup_skills, snapshot_workspace_state
 from src.utils.endpoint_utils import normalize_openrouter_base_url_for_openclaw
-from src.utils.model_limits import resolve_maas_max_tokens
+from src.utils.model_limits import (
+    DEFAULT_ASTRON_MODELS_BASE_URL,
+    resolve_maas_max_tokens,
+)
 from src.utils.maas_proxy import (
     collect_maas_request_audit,
     start_maas_request_proxy,
@@ -52,10 +55,6 @@ _TRUE_ENV_VALUES = {"1", "true", "yes", "on"}
 _FALSE_ENV_VALUES = {"0", "false", "no", "off"}
 _RESERVED_CONTAINER_ENV_KEYS = frozenset(ASTRONCODE_TRACE_ROOT_ENV_KEYS)
 DEFAULT_ONE_IFLYTEK_BASE_URL = "https://one.iflytek.com/api/llm/console/chat/v1"
-DEFAULT_ASTRON_MODELS_BASE_URL = (
-    "https://astronstudio-api-volces-prod.xf-yun.com/"
-    "api/v1/model-manager"
-)
 VALID_ASTRONCODE_PROVIDERS = ("astron-spark", "one-iflytek", "openrouter")
 ASTRON_MODEL_PREFIXES = ("xminimax", "xop", "xspark", "astronclaw-")
 ASTRONCODE_MAAS_MAX_TOKENS_MODE_ENV = "ASTRONCODE_MAAS_MAX_TOKENS_MODE"
@@ -1183,9 +1182,15 @@ class AstronCodeAgent(BaseAgent):
         search_agent_config, search_agent_server_names = (
             self._read_search_agent_config_fragment(task_id)
         )
-        maas_max_tokens = resolve_maas_max_tokens(model, self.openrouter_base_url)
+        maas_max_tokens = None
+        if self.maas_max_tokens_mode == "proxy":
+            maas_max_tokens = resolve_maas_max_tokens(
+                model,
+                self.openrouter_base_url,
+                respect_enabled_switch=False,
+            )
         request_base_url = None
-        if maas_max_tokens is not None and self.maas_max_tokens_mode == "proxy":
+        if maas_max_tokens is not None:
             request_base_url = start_maas_request_proxy(
                 task_id,
                 upstream_base_url=self.openrouter_base_url,
@@ -1432,9 +1437,16 @@ class AstronCodeAgent(BaseAgent):
         failures as JSON so the agent can continue with other methods.
         """
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
+        maas_max_tokens = None
+        if self.maas_max_tokens_mode == "proxy":
+            maas_max_tokens = resolve_maas_max_tokens(
+                model,
+                self.openrouter_base_url,
+                respect_enabled_switch=False,
+            )
         helper = self._render_image_helper(
             default_model=bare_model,
-            max_tokens=resolve_maas_max_tokens(model, self.openrouter_base_url),
+            max_tokens=maas_max_tokens,
         )
 
         helper_tmp = None

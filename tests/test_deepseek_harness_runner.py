@@ -94,6 +94,7 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
                 task_env_names=("SLACK_TOKEN",),
                 lobster_env_names=("LOBSTER_TOKEN",),
                 environ={
+                    "MAAS_MAX_TOKENS": "16384",
                     "SLACK_TOKEN": "slack-secret",
                     "LOBSTER_TOKEN": "lobster-secret",
                     "DEEPSEEK_SEARCH_BASE_URL": "https://search.example/anthropic/v1",
@@ -152,6 +153,26 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
         self.assertNotIn("DEEPSEEK_SEARCH_MODEL_ID=", joined)
         self.assertNotIn("DEEPSEEK_SEARCH_ENABLED=", joined)
         self.assertNotIn("DSH_REASONING=", joined)
+        self.assertNotIn("DSH_MAX_TOKENS=", joined)
+
+    def test_shared_switch_omits_dsh_max_tokens_even_with_override(self) -> None:
+        config = resolve_dsh_config(
+            image="dsh:test",
+            openrouter_api_key="test-key",
+            openrouter_base_url="https://maas.example/v2",
+        )
+        command = build_container_command(
+            config,
+            task_id="dsh-task",
+            workspace_exec=Path("/work/exec"),
+            model="xopglm52",
+            environ={
+                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "false",
+                "MAAS_MAX_TOKENS": "4096",
+            },
+        )
+
+        self.assertNotIn("DSH_MAX_TOKENS=", "\n".join(command))
 
     def test_start_container_rejects_missing_key_before_docker(self) -> None:
         config = resolve_dsh_config(image="dsh:test", openrouter_api_key="")

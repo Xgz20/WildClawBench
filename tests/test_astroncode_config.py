@@ -312,14 +312,15 @@ class AstronCodeConfigTests(unittest.TestCase):
         start_proxy.assert_not_called()
         self.assertNotIn("base_url", config["model_providers"]["astron-spark"])
 
-    def test_proxy_maas_mode_starts_compatibility_proxy_with_common_default(
+    def test_proxy_maas_mode_starts_compatibility_proxy_with_explicit_limit(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmp, patch.dict(
             os.environ,
             {
                 "ASTRONCODE_MAAS_MAX_TOKENS_MODE": "proxy",
-                "MAAS_MAX_TOKENS": "",
+                "MAAS_MAX_TOKENS": "16384",
+                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "false",
             },
             clear=False,
         ), patch(

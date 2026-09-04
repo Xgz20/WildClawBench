@@ -9,9 +9,19 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from eval import run_batch
+from src.utils.model_limits import (
+    MODEL_LIMIT_RESOLUTION_FILENAME,
+    clear_model_limit_caches,
+)
 
 
 class RunConfigurationLoggingTests(unittest.TestCase):
+    def setUp(self) -> None:
+        clear_model_limit_caches()
+
+    def tearDown(self) -> None:
+        clear_model_limit_caches()
+
     @staticmethod
     def args() -> SimpleNamespace:
         return SimpleNamespace(
@@ -50,6 +60,7 @@ class RunConfigurationLoggingTests(unittest.TestCase):
     def test_effective_configuration_is_complete_and_redacted(self) -> None:
         environment = {
             "OPENROUTER_API_KEY": "candidate-secret",
+            "ASTRON_MODELS_API_KEY": "catalog-secret",
             "ANTHROPIC_API_KEY": "judge-secret",
             "CUSTOM_API_KEY": "task-secret",
             "OPENROUTER_BASE_URL": (
@@ -62,6 +73,11 @@ class RunConfigurationLoggingTests(unittest.TestCase):
             "WILDCLAW_GRADING_TIMEOUT_SECONDS": "725",
             "WILDCLAW_JUDGE_TIMEOUT_SECONDS": "345",
             "MAAS_MAX_TOKENS": "32768",
+            "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
+            "ASTRON_MODELS_BASE_URL": (
+                "https://catalog-user:catalog-password@catalog.example/"
+                "model-manager?token=catalog-query-secret"
+            ),
         }
 
         with patch.object(run_batch, "TIMEOUT_OVERRIDE", 3600), patch.object(
@@ -72,6 +88,11 @@ class RunConfigurationLoggingTests(unittest.TestCase):
                 self.backend(),
                 Path("/tmp/output/deepseek-harness"),
                 environ=environment,
+                model_limit_resolution={
+                    "status": "resolved",
+                    "source": "explicit_env",
+                    "max_tokens": 32768,
+                },
             )
 
         self.assertEqual(config["selection"]["value"], "all")
@@ -88,7 +109,20 @@ class RunConfigurationLoggingTests(unittest.TestCase):
             "https://maas.example/v1?[REDACTED]#[REDACTED]",
         )
         self.assertEqual(config["credentials"]["OPENROUTER_API_KEY"], "configured")
+        self.assertEqual(config["credentials"]["ASTRON_MODELS_API_KEY"], "configured")
         self.assertEqual(config["credentials"]["CUSTOM_API_KEY"], "configured")
+        self.assertEqual(
+            config["environment_endpoints"]["ASTRON_MODELS_BASE_URL"],
+            "https://catalog.example/model-manager?[REDACTED]",
+        )
+        self.assertEqual(config["model_limits"]["maas_max_tokens_override"], 32768)
+        self.assertEqual(
+            config["model_limits"]["maas_max_tokens_override_status"], "valid"
+        )
+        self.assertTrue(config["model_limits"]["maas_max_tokens_enabled"])
+        self.assertEqual(
+            config["model_limits"]["resolution"]["max_tokens"], 32768
+        )
 
         serialized = json.dumps(config, ensure_ascii=False)
         for secret in (
@@ -97,6 +131,9 @@ class RunConfigurationLoggingTests(unittest.TestCase):
             "task-secret",
             "password",
             "query-secret",
+            "catalog-secret",
+            "catalog-password",
+            "catalog-query-secret",
         ):
             self.assertNotIn(secret, serialized)
 
@@ -129,6 +166,45 @@ class RunConfigurationLoggingTests(unittest.TestCase):
         self.assertIn('\n  "execution": {\n', rendered)
         self.assertNotIn("candidate-secret", rendered)
         self.assertNotIn("query-secret", rendered)
+
+    def test_prepare_model_limit_honors_disabled_switch_and_writes_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
+            run_batch.os.environ,
+            {"WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "false"},
+            clear=True,
+        ):
+            output_root = Path(temp_dir)
+            resolution = run_batch._prepare_model_limit_resolution(
+                self.args(), self.backend(), output_root
+            )
+            snapshot = json.loads(
+                (output_root / MODEL_LIMIT_RESOLUTION_FILENAME).read_text(
+                    encoding="utf-8"
+                )
+            )
+
+        self.assertEqual(resolution["status"], "disabled")
+        self.assertIsNone(resolution["max_tokens"])
+        self.assertTrue(resolution["enabled_switch_applies"])
+        self.assertEqual(snapshot, resolution)
+
+    def test_prepare_model_limit_marks_astroncode_native_as_native_managed(self) -> None:
+        backend = object.__new__(run_batch.AstronCodeAgent)
+        backend.openrouter_base_url = "https://maas.example/v1"
+        backend.maas_max_tokens_mode = "native"
+        with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
+            run_batch.os.environ,
+            {"WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "false"},
+            clear=True,
+        ):
+            resolution = run_batch._prepare_model_limit_resolution(
+                self.args(), backend, Path(temp_dir)
+            )
+
+        self.assertEqual(resolution["status"], "native_managed")
+        self.assertEqual(resolution["source"], "astroncode_model_catalog")
+        self.assertIsNone(resolution["max_tokens"])
+        self.assertFalse(resolution["enabled_switch_applies"])
 
 
 if __name__ == "__main__":

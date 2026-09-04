@@ -56,6 +56,12 @@ from src.utils.eval_provenance import (
     write_provenance_file,
 )
 from src.utils.log_format import configure_console_logging, attach_file_logging
+from src.utils.model_limits import (
+    is_maas_model,
+    maas_max_tokens_enabled,
+    parse_positive_int,
+    prepare_maas_max_tokens_resolution,
+)
 from src.utils.run_selection import write_rerun_metadata
 
 load_dotenv()
@@ -122,6 +128,7 @@ WORKSPACE_CHANGE_BACKENDS = (
 _RUN_CONFIG_CREDENTIAL_ENV_NAMES = (
     "OPENROUTER_API_KEY",
     "ANTHROPIC_API_KEY",
+    "ASTRON_MODELS_API_KEY",
     "ASTRON_API_KEY",
     "ASTRON_SPARK_API_KEY",
     "ONE_IFLYTEK_API_KEY",
@@ -133,6 +140,7 @@ _RUN_CONFIG_CREDENTIAL_ENV_NAMES = (
 _RUN_CONFIG_ENDPOINT_ENV_NAMES = (
     "OPENROUTER_BASE_URL",
     "ANTHROPIC_BASE_URL",
+    "ASTRON_MODELS_BASE_URL",
     "DEEPSEEK_SEARCH_BASE_URL",
     "SEARXNG_BASE_URL",
 )
@@ -189,9 +197,12 @@ def _build_run_configuration(
     output_root: Path,
     *,
     environ: Mapping[str, str] | None = None,
+    model_limit_resolution: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build the non-secret effective run configuration written to ``run.log``."""
     env = os.environ if environ is None else environ
+    maas_override_raw = str(env.get("MAAS_MAX_TOKENS", "")).strip()
+    maas_override_value = parse_positive_int(maas_override_raw)
     endpoint_env = {
         name: _sanitize_endpoint_for_log(env.get(name, ""))
         for name in _RUN_CONFIG_ENDPOINT_ENV_NAMES
@@ -279,10 +290,19 @@ def _build_run_configuration(
             "anthropic_base_url": endpoint_env["ANTHROPIC_BASE_URL"],
         },
         "model_limits": {
-            "maas_max_tokens": str(env.get("MAAS_MAX_TOKENS", "")).strip() or None,
+            "maas_max_tokens_enabled": maas_max_tokens_enabled(env),
+            "maas_max_tokens_override": maas_override_value,
+            "maas_max_tokens_override_status": (
+                "unset"
+                if not maas_override_raw
+                else "valid"
+                if maas_override_value is not None
+                else "invalid"
+            ),
             "astroncode_maas_max_tokens_mode": str(
                 env.get("ASTRONCODE_MAAS_MAX_TOKENS_MODE", "")
             ).strip() or None,
+            "resolution": dict(model_limit_resolution or {}),
         },
         "astroncode": {
             "native_web_search_enabled": getattr(
@@ -300,13 +320,72 @@ def _log_run_configuration(
     args: Any,
     backend: BaseAgent,
     output_root: Path,
+    *,
+    model_limit_resolution: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    config = _build_run_configuration(args, backend, output_root)
+    config = _build_run_configuration(
+        args,
+        backend,
+        output_root,
+        model_limit_resolution=model_limit_resolution,
+    )
     logger.info(
         "Run configuration:\n%s",
         json.dumps(config, ensure_ascii=False, indent=2),
     )
     return config
+
+
+def _prepare_model_limit_resolution(
+    args: Any,
+    backend: BaseAgent,
+    output_root: Path,
+) -> dict[str, Any]:
+    """Resolve candidate limits before worker threads start."""
+
+    base_url = str(
+        getattr(backend, "openrouter_base_url", "")
+        or getattr(backend, "api_base_url", "")
+        or ""
+    )
+    is_astroncode = isinstance(backend, AstronCodeAgent)
+    native_managed = (
+        is_astroncode
+        and getattr(backend, "maas_max_tokens_mode", "native") == "native"
+        and is_maas_model(getattr(args, "model", ""), base_url)
+    )
+    resolution = prepare_maas_max_tokens_resolution(
+        getattr(args, "model", ""),
+        base_url,
+        output_root,
+        resume=bool(
+            getattr(args, "resume", False)
+            or getattr(args, "rerun_error", False)
+            or getattr(args, "rerun_anomalous", False)
+        ),
+        # This switch controls framework injection by the other Harnesses.
+        # AstronCode has its own native/proxy compatibility mode.
+        respect_enabled_switch=not is_astroncode,
+        native_managed=native_managed,
+    )
+    log_model_limit = (
+        logger.warning
+        if resolution.get("status")
+        in {
+            "catalog_credentials_missing",
+            "catalog_unavailable",
+            "model_not_found",
+            "max_output_tokens_missing",
+        }
+        else logger.info
+    )
+    log_model_limit(
+        "MaaS model limit: status=%s source=%s max_tokens=%s",
+        resolution.get("status"),
+        resolution.get("source"),
+        resolution.get("max_tokens"),
+    )
+    return resolution
 
 
 def _build_agent_backend(args) -> BaseAgent:
@@ -1293,7 +1372,17 @@ def main() -> None:
     global PASS_THRESHOLD
     PASS_THRESHOLD = args.pass_threshold  # 全局阈值供 summary 聚合使用
     backend = _build_agent_backend(args)
-    run_configuration = _log_run_configuration(args, backend, output_root)
+    model_limit_resolution = _prepare_model_limit_resolution(
+        args,
+        backend,
+        output_root,
+    )
+    run_configuration = _log_run_configuration(
+        args,
+        backend,
+        output_root,
+        model_limit_resolution=model_limit_resolution,
+    )
     run_invocation = run_configuration["invocation"]
     models_config = None
     if args.models_config:

@@ -23,7 +23,7 @@ from src.utils.docker_utils import (
     TMP_WORKSPACE,
 )
 from src.utils.grading import extract_usage_from_jsonl
-from src.utils.model_limits import resolve_maas_max_tokens
+from src.utils.model_limits import maas_max_tokens_enabled, resolve_maas_max_tokens
 
 load_dotenv()
 
@@ -146,7 +146,9 @@ class HermesAgentAgent(BaseAgent):
         self.max_tokens = _optional_positive_int_env("HERMES_MAX_TOKENS")
 
     def _resolve_max_tokens(self, model: str, base_url: str) -> int | None:
-        """Keep the legacy override, defaulting MaaS candidates to 16384."""
+        """Keep the legacy override while honoring the shared injection switch."""
+        if not maas_max_tokens_enabled():
+            return None
         if self.max_tokens is not None:
             return self.max_tokens
         return resolve_maas_max_tokens(model, base_url)

@@ -173,9 +173,10 @@ class OpenClawBackendTests(unittest.TestCase):
             openrouter_base_url="https://maas-api.example/v1"
         )
 
-        agent._register_provider(
-            "openclaw-task", "openrouter/xopglm52", 900
-        )
+        with patch.dict("os.environ", {"MAAS_MAX_TOKENS": "16384"}, clear=False):
+            agent._register_provider(
+                "openclaw-task", "openrouter/xopglm52", 900
+            )
 
         provider_config = run_mock.call_args.args[0][-1]
         self.assertIn('\\"maxTokens\\": 16384', provider_config)
