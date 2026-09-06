@@ -3,9 +3,10 @@
 This image is the runtime for the WildClawBench `deepseek-harness` backend. It
 uses `wildclawbench-codex-ubuntu:v0.0` as the final evaluation base, adds Node
 24 from `node:24-bookworm-slim`, and installs the published
-`@deepseek-ai/dsh@0.1.1-rc.2` package. Versioned build contexts are immutable:
-`v1` preserves DSH `0.1.0-rc.6`, while `v2` contains DSH `0.1.1-rc.2`.
-`versions.json` maps image tags to those contexts and selects v0.1 by default.
+`@deepseek-ai/dsh@0.1.2-rc.1` package. Versioned build contexts are immutable:
+`v1` preserves DSH `0.1.0-rc.6`, `v2` preserves DSH `0.1.1-rc.2`, and `v3`
+contains DSH `0.1.2-rc.1`. `versions.json` maps image tags to those contexts
+and selects v0.2 by default.
 
 The shared WCB base keeps the Python, browser, media, and document toolchain
 aligned with the other Harness images. Both bases run as root, so this is task
@@ -15,20 +16,20 @@ still uses `DSH_PERMISSION_MODE=danger-full-access` inside the task container.
 ## Build
 
 ```bash
-bash docker/deepseek-harness/build.sh --version v0.1 --skip-save
+bash docker/deepseek-harness/build.sh --version v0.2 --skip-save
 
 docker run --rm --entrypoint dsh \
-  wildclawbench-deepseek-harness-ubuntu:v0.1 --version
+  wildclawbench-deepseek-harness-ubuntu:v0.2 --version
 ```
 
-The expected version is `0.1.1-rc.2`. The local Docker daemon must already
+The expected version is `0.1.2-rc.1`. The local Docker daemon must already
 contain `wildclawbench-codex-ubuntu:v0.0`. `EVAL_BASE_IMAGE` and
 `NODE_RUNTIME_IMAGE` are build arguments when compatible mirrored tags are
 required, but they must match the selected manifest entry. Set
 `NPM_REGISTRY=<registry>` when a compatible npm mirror is required. Omit
-`--version` to build the default v0.1 image, or use `--version v0.0` to
-rebuild the preserved historical image. Omit `--skip-save` to export the
-selected image below `Images/`.
+`--version` to build the default v0.2 image, or use `--version v0.1` or
+`--version v0.0` to rebuild a preserved historical image. Omit `--skip-save`
+to export the selected image below `Images/`.
 
 ## Run Through WildClawBench
 
@@ -47,7 +48,7 @@ and model ID are unnecessary; task-provided alternatives such as
 ```bash
 export OPENROUTER_API_KEY='<redacted>'
 export OPENROUTER_BASE_URL='https://provider.example/v2'
-export DOCKER_IMAGE_DEEPSEEK_HARNESS='wildclawbench-deepseek-harness-ubuntu:v0.1'
+export DOCKER_IMAGE_DEEPSEEK_HARNESS='wildclawbench-deepseek-harness-ubuntu:v0.2'
 export DEEPSEEK_SEARCH_ENABLED=false
 
 uv run eval/run_batch.py \
@@ -62,6 +63,13 @@ uv run eval/run_batch.py \
 the runner reads `DSH_API` and then defaults to `openai-completions`.
 `OPENROUTER_BASE_URL` is passed through unchanged: the runner neither infers a
 protocol from the URL suffix nor rewrites the endpoint.
+
+When WCB resolves a MaaS output limit, it passes the protocol-neutral
+`maxTokens` model setting to DSH. The v0.2 entry point forces
+`compat.maxTokensField=max_tokens` only for `openai-completions`; Responses
+keeps no Completions-only compat switch and lets pi-ai serialize the same value
+as `max_output_tokens`. This prevents a Responses profile from failing during
+plugin loading before its first model request.
 
 For the MaaS route used by the PoC verification, the tested pairs are:
 
@@ -133,7 +141,7 @@ uv run python tools/deepseek_harness_poc.py convert \
   --output /path/to/output
 
 uv run python tools/deepseek_harness_poc.py run \
-  --image wildclawbench-deepseek-harness-ubuntu:v0.1 \
+  --image wildclawbench-deepseek-harness-ubuntu:v0.2 \
   --workspace /path/to/task-workspace \
   --model xopglm52 \
   --api openai-responses \
@@ -145,7 +153,34 @@ The converter recursively includes root and child `session.jsonl` files while
 leaving native files unchanged. The diagnostic runner writes redacted stdout,
 stderr, and a manifest that stores only a prompt digest.
 
-## v0.1 Upgrade Verification
+## v0.2 Upgrade Verification
+
+Verified on 2026-09-04 against the official `dsh-v0.1.2-rc.1` release:
+
+- The Linux amd64 image built successfully and reported DSH `0.1.2-rc.1` with
+  Node `v24.19.0`.
+- A request-capture mock observed `max_tokens=16384` on
+  `/v1/chat/completions` and `max_output_tokens=16384` on `/v1/responses`.
+- A complete Responses SSE mock returned `responses-smoke-complete`, and DSH
+  exited successfully instead of failing during plugin loading.
+- A two-request Chat Completions mock executed the DSH `bash` tool, returned
+  its `shell-ok` result to the model, and exited successfully.
+- The existing converter accepted the new native session and generated five
+  messages with one paired tool use/result and usage for two model requests.
+- A real Spark-X2.5 `openai-responses` task then completed on v0.2 with exit
+  code 0, seven model requests, seven paired tool use/results, a generated
+  deliverable, five successful Claude Opus 5 Judge items, score `0.9496`, and
+  anomaly verdict `PASS`.
+
+This validates image construction, profile composition, protocol-specific
+output-limit serialization, local and real-provider tool round trips, native
+session persistence, conversion, grading, and anomaly scanning. The real smoke
+ran before a dedicated model-catalog credential was configured, so it did not
+exercise `max_output_tokens=256000`; that field mapping is covered by the local
+request-capture mocks. It does not replace a full benchmark run. The detailed
+evidence boundary is recorded in `DeepSeekHarness镜像更新日志.md`.
+
+## Historical v0.1 Verification
 
 Verified on 2026-08-27 against the official `dsh-v0.1.1-rc.2` tag at commit
 `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e`:

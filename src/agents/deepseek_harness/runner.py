@@ -39,7 +39,7 @@ _USAGE_INTEGER_FIELDS = (
 
 SUPPORTED_DSH_APIS = ("openai-completions", "openai-responses")
 DEFAULT_DSH_API = "openai-completions"
-DEFAULT_IMAGE = "wildclawbench-deepseek-harness-ubuntu:v0.1"
+DEFAULT_IMAGE = "wildclawbench-deepseek-harness-ubuntu:v0.2"
 DSH_HOME = "/root/.dsh"
 DSH_SESSIONS_DIR = f"{DSH_HOME}/sessions"
 OPENCLAW_TRANSCRIPT_PATH = "/root/.openclaw/agents/main/sessions/chat.jsonl"

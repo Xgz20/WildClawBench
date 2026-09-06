@@ -65,7 +65,7 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             defaults = resolve_dsh_config()
         self.assertEqual(defaults.image, DEFAULT_IMAGE)
-        self.assertEqual(DEFAULT_IMAGE, "wildclawbench-deepseek-harness-ubuntu:v0.1")
+        self.assertEqual(DEFAULT_IMAGE, "wildclawbench-deepseek-harness-ubuntu:v0.2")
         self.assertEqual(defaults.api, DEFAULT_DSH_API)
         self.assertEqual(defaults.openrouter_base_url, "")
 

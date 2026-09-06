@@ -143,12 +143,13 @@ class ImageVersionManifestTest(unittest.TestCase):
         self.assertFalse(legacy["buildable"])
         self.assertTrue((CLAUDECODE_DIR / entry["dockerfile"]).is_file())
 
-    def test_deepseek_harness_manifest_preserves_v1_and_defaults_to_v2(self):
+    def test_deepseek_harness_manifest_preserves_history_and_defaults_to_v3(self):
         manifest = self._load_manifest(DEEPSEEK_HARNESS_MANIFEST)
-        self.assertEqual("v0.1", manifest["default"])
+        self.assertEqual("v0.2", manifest["default"])
         expected = {
             "v0.0": ("v1", "0.1.0-rc.6"),
             "v0.1": ("v2", "0.1.1-rc.2"),
+            "v0.2": ("v3", "0.1.2-rc.1"),
         }
         self.assertEqual(set(expected), set(manifest["versions"]))
         for version, (context, dsh_version) in expected.items():
@@ -436,20 +437,20 @@ class CanonicalBuildCliTest(unittest.TestCase):
         self.assertEqual(str(context), build[-1])
         self.assertNotIn("save", [event[0] for event in events])
 
-    def test_deepseek_harness_default_build_uses_v2_and_pinned_dsh(self):
+    def test_deepseek_harness_default_build_uses_v3_and_pinned_dsh(self):
         result, events = self._run_with_docker_stub(
             ["bash", str(DEEPSEEK_HARNESS_BUILD)],
             {"SKIP_SAVE": "1"},
         )
         self.assertEqual(0, result.returncode, result.stderr)
         build = self._event(events, "build")
-        context = DEEPSEEK_HARNESS_DIR / "v2"
+        context = DEEPSEEK_HARNESS_DIR / "v3"
         self.assertEqual(str(context / "Dockerfile"), build[build.index("-f") + 1])
         self.assertEqual(
-            "wildclawbench-deepseek-harness-ubuntu:v0.1",
+            "wildclawbench-deepseek-harness-ubuntu:v0.2",
             build[build.index("-t") + 1],
         )
-        self.assertIn("DSH_VERSION=0.1.1-rc.2", build)
+        self.assertIn("DSH_VERSION=0.1.2-rc.1", build)
         self.assertEqual(str(context), build[-1])
         self.assertNotIn("save", [event[0] for event in events])
 
@@ -507,7 +508,7 @@ class CanonicalBuildCliTest(unittest.TestCase):
             {"DSH_VERSION": "0.1.0-rc.6", "SKIP_SAVE": "1"},
         )
         self.assertNotEqual(0, result.returncode)
-        self.assertIn("DSH_VERSION must be 0.1.1-rc.2", result.stderr)
+        self.assertIn("DSH_VERSION must be 0.1.2-rc.1", result.stderr)
         self.assertEqual([], events)
 
     def test_pinned_codex_base_cannot_be_overridden(self):
