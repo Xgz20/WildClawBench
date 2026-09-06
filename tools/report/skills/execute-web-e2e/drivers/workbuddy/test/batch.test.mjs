@@ -7,10 +7,14 @@ import test from "node:test";
 import {
   QUEUE_SCHEMA,
   assertQueueState,
+  buildExecutionReceipt,
   buildDriverArgs,
+  canAdvanceTask,
   createQueueState,
   parseBatchArgs,
+  recordManualIntervention,
   recordTaskOrchestrationFailure,
+  recordWorkerInterruption,
   resolveQueuePlan,
 } from "../batch.mjs";
 
@@ -47,6 +51,16 @@ test("parseBatchArgs preserves explicit task order", () => {
   assert.equal(args.model, "均衡");
   assert.equal(args.permissionMode, "full-access");
   assert.equal(args.continueOnTerminalFailure, false);
+  assert.equal(args.postCancelQuiescenceSeconds, 5);
+});
+
+test("batch accepts a dynamic WorkBuddy model and forwards it to the driver", () => {
+  const args = parseBatchArgs([
+    "--harness-root", "/tmp/batch", "--run-id", "hy3", "--task-id", "task-a", "--model", "Hy3",
+  ]);
+  assert.equal(args.model, "Hy3");
+  const driverArgs = buildDriverArgs(args, { taskRoot: "/tmp/task-a" }, 0);
+  assert.deepEqual(driverArgs.slice(0, 4), ["--workspace", "/tmp/task-a", "--model", "Hy3"]);
 });
 
 test("resolveQueuePlan matches manifest tasks by exact id", async () => {
@@ -86,6 +100,7 @@ test("queue state identity and ordered tasks are immutable on resume", async () 
   assert.equal(state.schema_version, QUEUE_SCHEMA);
   assert.deepEqual(state.tasks.map((task) => task.phase), ["PENDING", "PENDING"]);
   assert.equal(state.requested_permission_mode, "current");
+  assert.equal(state.runtime.driver, null);
   assert.doesNotThrow(() => assertQueueState(state, plan, args));
   state.tasks.reverse();
   assert.throws(() => assertQueueState(state, plan, args), /task_ids/);
@@ -125,6 +140,124 @@ test("batch only forwards retry flags to tasks with an existing automation state
   const recoveryArgs = buildDriverArgs(args, task, 0, { phase: "INFRA_FAILED" });
   assert.equal(recoveryArgs.includes("--resume"), true);
   assert.equal(recoveryArgs.includes("--retry-pre-send-failure"), true);
+  assert.deepEqual(
+    recoveryArgs.slice(recoveryArgs.indexOf("--post-cancel-quiescence-seconds"), recoveryArgs.indexOf("--post-cancel-quiescence-seconds") + 2),
+    ["--post-cancel-quiescence-seconds", "5"],
+  );
+});
+
+test("batch only restarts WorkBuddy on resume when explicitly requested", () => {
+  assert.throws(() => parseBatchArgs([
+    "--harness-root", "/tmp/batch", "--run-id", "restart", "--task-id", "task-a",
+    "--restart-app-on-resume",
+  ]), /必须与 --resume 一起使用/);
+  const args = parseBatchArgs([
+    "--harness-root", "/tmp/batch", "--run-id", "restart", "--task-id", "task-a",
+    "--resume", "--restart-app-on-resume",
+  ]);
+  const task = { taskRoot: "/tmp/batch/execution/tasks/task-a" };
+  assert.equal(buildDriverArgs(args, task, 0, null).includes("--restart-app"), false);
+  assert.equal(buildDriverArgs(args, task, 0, { phase: "RUNNING" }).includes("--restart-app"), true);
+});
+
+test("timeout can only advance after cancellation and workspace quiescence", () => {
+  assert.equal(canAdvanceTask({ phase: "SUCCEEDED" }), true);
+  assert.equal(canAdvanceTask({ phase: "INFRA_FAILED" }, false), false);
+  assert.equal(canAdvanceTask({ phase: "INFRA_FAILED" }, true), true);
+  assert.equal(canAdvanceTask({ phase: "TIMEOUT", timeout: null }, true), false);
+  assert.equal(canAdvanceTask({
+    phase: "TIMEOUT",
+    timeout: { cancellation_confirmed: true, quiescence: { stable: false } },
+  }, true), false);
+  assert.equal(canAdvanceTask({
+    phase: "TIMEOUT",
+    timeout: { cancellation_confirmed: true, quiescence: { stable: true } },
+  }, true), true);
+});
+
+test("worker interruption keeps the current task recoverable and records the exact driver", async () => {
+  const root = await fixture();
+  const args = parseBatchArgs([
+    "--harness-root", root, "--run-id", "interrupt", "--task-id", "task-a",
+  ]);
+  const plan = await resolveQueuePlan(args);
+  const state = createQueueState(plan, args);
+  state.phase = "RUNNING";
+  state.current_index = 0;
+  state.tasks[0].phase = "RUNNING";
+  state.runtime.driver = { pid: 456, task_id: "task-a" };
+  recordWorkerInterruption(state, "SIGTERM", { pid: 456 });
+  assert.equal(state.phase, "INTERRUPTED");
+  assert.equal(state.tasks[0].phase, "RUNNING");
+  assert.equal(state.runtime.interrupt_signal, "SIGTERM");
+  assert.equal(state.history.at(-1).event, "WORKER_INTERRUPTED");
+  assert.equal(state.history.at(-1).driver_pid, 456);
+});
+
+test("manual intervention is audited without bypassing terminal detection", async () => {
+  assert.throws(() => parseBatchArgs([
+    "--harness-root", "/tmp/batch", "--run-id", "manual", "--task-id", "task-a",
+    "--mark-manual", "task-a",
+  ]), /必须与 --resume 一起使用/);
+  const root = await fixture();
+  const args = parseBatchArgs([
+    "--harness-root", root, "--run-id", "manual", "--task-id", "task-a", "--resume",
+    "--mark-manual", "task-a",
+  ]);
+  const plan = await resolveQueuePlan(args);
+  const state = createQueueState(plan, args);
+  state.phase = "NEEDS_ATTENTION";
+  state.tasks[0].phase = "NEEDS_ATTENTION";
+  const automation = { phase: "NEEDS_ATTENTION", history: [{ phase: "NEEDS_ATTENTION", reason: "visible-approval" }] };
+  recordManualIntervention(state, "task-a", automation);
+  assert.equal(state.tasks[0].phase, "NEEDS_ATTENTION");
+  assert.equal(state.tasks[0].manual_interventions.length, 1);
+  assert.equal(state.history.at(-1).event, "MANUAL_INTERVENTION_MARKED");
+  assert.equal(state.history.at(-1).reason, "visible-approval");
+});
+
+test("execution receipt validates full manifest scope and task identities", async () => {
+  const root = await fixture();
+  const args = parseBatchArgs([
+    "--harness-root", root, "--run-id", "receipt", "--task-id", "task-a", "--task-id", "task-b",
+  ]);
+  const plan = await resolveQueuePlan(args);
+  const state = createQueueState(plan, args);
+  state.phase = "COMPLETED";
+  for (const task of plan.tasks) {
+    await mkdir(join(task.taskRoot, "..", ".execute-web-e2e", task.taskId), { recursive: true });
+    await writeFile(task.automationStateFile, JSON.stringify({
+      identity: { batch_id: "batch-001", task_id: task.taskId, harness_id: "workbuddy" },
+      attempt_id: `attempt-${task.taskId}`,
+      phase: "SUCCEEDED",
+      driver: { id: "workbuddy", version: "1.3.0" },
+      client: { version: "5.5.3" },
+      requested_ui_model: "均衡",
+      model_selection: { requested_model: "均衡", actual_model: "均衡", method: "visible-current-value" },
+      requested_permission_mode: "current",
+      permission_selection: { requested_mode: "current", confirmed_mode: "default-sandbox", method: "visible-current-value" },
+      prompt_sha256: "a".repeat(64),
+      prompt_bytes: 10,
+      timing: { started_at: "2026-09-06T00:00:00.000Z", sent_at: "2026-09-06T00:00:01.000Z", finished_at: "2026-09-06T00:00:02.000Z" },
+      artifacts: { initial: { sha256: "b".repeat(64) }, final: { sha256: "c".repeat(64) } },
+      evidence: { terminal_source: "test", screenshots: [] },
+      error: null,
+    }));
+    await writeFile(task.executionRecordFile, JSON.stringify({
+      batch_id: "batch-001",
+      task_id: task.taskId,
+      harness: { id: "workbuddy", version: "5.5.3" },
+      execution: { status: "completed" },
+    }));
+  }
+  const receipt = await buildExecutionReceipt(plan, state);
+  assert.equal(receipt.integrity.valid, true);
+  assert.equal(receipt.integrity.models_match, true);
+  assert.equal(receipt.scope.matches_manifest, true);
+  assert.deepEqual(receipt.tasks.map((task) => task.task_id), ["task-a", "task-b"]);
+  assert.equal(receipt.tasks[0].model_selection.actual_model, "均衡");
+  assert.equal(receipt.tasks[0].permission_mode, "default-sandbox");
+  assert.ok(receipt.tasks[0].evidence.automation_state.startsWith("execution/tasks/.execute-web-e2e/"));
 });
 
 test("queue persists orchestration errors instead of leaving a task running", async () => {

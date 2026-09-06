@@ -39,6 +39,10 @@ PROMPT_SENT / RUNNING -> TIMEOUT
 
 Prompt 发送采用失败关闭语义：写入 `READY_TO_SEND` 后到确认 conversation ID 之间发生中断时，恢复流程必须先查 Harness session。不能因为没有及时写入 `PROMPT_SENT` 就再次点击发送。
 
+控制 Worker 必须持久化自身和当前 Driver 的精确 PID。优雅中断只终止观察 Driver，不终止 Harness 内正在执行的任务；恢复前若遗留 Driver 仍存活，必须拒绝启动第二个 Driver。客户端重启恢复必须依赖发送后捕获的稳定会话 ID，不能按标题、时间或当前页面猜测。
+
+`TIMEOUT` 只有在 Driver 已请求停止、Harness 明确进入非运行态，并且候选 workspace 在限定观察窗口内保持静默时才是安全终态。任何一项无法确认都进入 `NEEDS_ATTENTION`，控制面不得继续下一题。
+
 ## 终态证据优先级
 
 1. Harness 官方 turn/session 完成事件；
@@ -51,6 +55,8 @@ workspace 哈希和文件稳定只能作为产物证据，不能单独判定 Age
 ## 状态文件与正式记录
 
 丰富状态使用 `wildclawbench.web-e2e-automation-state/v1`，保存在候选单题目录外。正式 `execution_record.json` 保持 `wildclawbench.web-e2e-execution/v1`，不得增加自动化私有字段。
+
+Harness 级 Worker 使用 `wildclawbench.web-e2e-execution-receipt/v1` 汇总完整任务范围。回执只有在请求任务集合与 manifest 一致、每题 automation/execution 记录存在、身份和请求/实际模型一致、所有题均为终态时才能声明 `integrity.valid=true`。人工介入必须记录原因和时间，但不能直接把未知终态改写为成功。
 
 映射规则：
 

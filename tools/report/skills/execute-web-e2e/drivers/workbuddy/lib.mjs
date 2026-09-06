@@ -58,6 +58,7 @@ export function parseArgs(argv) {
     timeoutSeconds: 30,
     runTimeoutSeconds: 3600,
     pollIntervalSeconds: 2,
+    postCancelQuiescenceSeconds: 5,
     restartApp: false,
     resume: false,
     retryPreSendFailure: false,
@@ -84,6 +85,7 @@ export function parseArgs(argv) {
     ["--timeout-seconds", "timeoutSeconds"],
     ["--run-timeout-seconds", "runTimeoutSeconds"],
     ["--poll-interval-seconds", "pollIntervalSeconds"],
+    ["--post-cancel-quiescence-seconds", "postCancelQuiescenceSeconds"],
   ]);
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -107,6 +109,7 @@ export function parseArgs(argv) {
   values.timeoutSeconds = numberOption(values.timeoutSeconds, "timeoutSeconds");
   values.runTimeoutSeconds = numberOption(values.runTimeoutSeconds, "runTimeoutSeconds");
   values.pollIntervalSeconds = numberOption(values.pollIntervalSeconds, "pollIntervalSeconds");
+  values.postCancelQuiescenceSeconds = numberOption(values.postCancelQuiescenceSeconds, "postCancelQuiescenceSeconds");
   if (!PERMISSION_MODES.has(values.permissionMode)) {
     throw new Error("--permission-mode 仅支持 current 或 full-access");
   }
@@ -286,12 +289,17 @@ export function classifySessionStatus(rawStatus) {
   return { kind: status ? "unknown" : "missing", status };
 }
 
-export function classifyDomStatus({ running = false, agentText = "" } = {}) {
+export function classifyDomStatus({ running = false, agentText = "", rawStatus = "" } = {}) {
   const text = String(agentText || "").trim();
   const statusHeader = text.slice(0, 240);
   if (running || /(?:思考中|处理中|正在执行|Running|Processing)/i.test(statusHeader)) {
     return { kind: "running", status: "visible-running" };
   }
+  const structured = classifySessionStatus(rawStatus);
+  if (structured.kind === "success") return { kind: "success", status: `dom-data-status:${structured.status}` };
+  if (structured.kind === "failure") return { kind: "failure", status: `dom-data-status:${structured.status}` };
+  if (structured.kind === "running") return { kind: "running", status: `dom-data-status:${structured.status}` };
+  if (structured.kind === "unknown") return { kind: "unknown", status: `dom-data-status:${structured.status}` };
   if (/(?:^|\n)\s*(?:已完成|Completed)(?:\s|\d|$)/i.test(text)) {
     return { kind: "success", status: "visible-completed" };
   }
@@ -435,7 +443,7 @@ export function createInitialState(config, identity, initialSnapshot) {
     schema_version: AUTOMATION_SCHEMA,
     driver: {
       id: "workbuddy",
-      version: "1.2.0",
+      version: "1.3.0",
       control_backend: "electron-cdp+workbuddy-workspace-provider+macos-accessibility-fallback",
     },
     attempt_id: randomUUID(),
@@ -454,9 +462,25 @@ export function createInitialState(config, identity, initialSnapshot) {
     prompt_bytes: config.promptBytes,
     requested_ui_model: config.model,
     requested_permission_mode: config.permissionMode,
-    client: { app_path: config.appPath, endpoint: config.endpoint, version: "" },
-    session: { database: config.sessionDb, conversation_id: null, cwd: null, raw_status: null, updated_at_ms: null, baseline: [] },
+    client: { app_path: config.appPath, endpoint: config.endpoint, version: "", process: null },
+    session: {
+      database: config.sessionDb,
+      conversation_id: null,
+      dom_conversation_id: null,
+      dom_baseline_conversation_id: null,
+      cwd: null,
+      raw_status: null,
+      updated_at_ms: null,
+      baseline: [],
+    },
     timing: { prepared_at: now, started_at: null, sent_at: null, finished_at: null, duration_seconds: null },
+    runtime: {
+      driver_pid: process.pid,
+      driver_started_at: now,
+      heartbeat_at: now,
+      interruption: null,
+    },
+    timeout: null,
     evidence: { terminal_source: null, screenshots: [], approvals: [], final_response: null, transcript_path: null },
     artifacts: { initial: initialSnapshot, final: null, changes: null },
     error: null,

@@ -61,7 +61,13 @@ test("parseArgs supplies safe single-run defaults", () => {
   assert.equal(parsed.permissionMode, "current");
   assert.equal(parsed.runTimeoutSeconds, 3600);
   assert.equal(parsed.pollIntervalSeconds, 2);
+  assert.equal(parsed.postCancelQuiescenceSeconds, 5);
   assert.equal(parsed.resume, false);
+});
+
+test("parseArgs accepts a dynamic WorkBuddy model", () => {
+  const parsed = parseArgs(["--workspace", "/tmp/task-a", "--model", "Hy3"]);
+  assert.equal(parsed.model, "Hy3");
 });
 
 test("parseArgs requires an explicit supported permission mode", () => {
@@ -75,11 +81,15 @@ test("pre-send retry requires resume", () => {
 });
 
 test("parseArgs supports probe and recovery controls", () => {
-  const parsed = parseArgs(["--probe", "--resume", "--run-timeout-seconds", "90", "--poll-interval-seconds", "0.5"]);
+  const parsed = parseArgs([
+    "--probe", "--resume", "--run-timeout-seconds", "90", "--poll-interval-seconds", "0.5",
+    "--post-cancel-quiescence-seconds", "3",
+  ]);
   assert.equal(parsed.probe, true);
   assert.equal(parsed.resume, true);
   assert.equal(parsed.runTimeoutSeconds, 90);
   assert.equal(parsed.pollIntervalSeconds, 0.5);
+  assert.equal(parsed.postCancelQuiescenceSeconds, 3);
 });
 
 test("resolveConfig keeps state outside the candidate task", async () => {
@@ -143,6 +153,7 @@ test("session classification fails closed for unknown values", () => {
 
 test("DOM terminal classification requires an explicit status label", () => {
   assert.equal(classifyDomStatus({ running: true, agentText: "已完成 1m" }).kind, "running");
+  assert.equal(classifyDomStatus({ rawStatus: "complete", agentText: "当前服务异常" }).kind, "success");
   assert.equal(classifyDomStatus({ agentText: "WorkBuddy\n已完成 1h8m\n完成交付" }).kind, "success");
   assert.equal(classifyDomStatus({ agentText: "WorkBuddy\n已失败：网络错误" }).kind, "failure");
   assert.equal(classifyDomStatus({ agentText: "我会继续处理" }).kind, "unknown");
@@ -207,6 +218,10 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
+  assert.equal(state.driver.version, "1.3.0");
+  assert.equal(state.session.dom_conversation_id, null);
+  assert.equal(state.timeout, null);
+  assert.equal(state.runtime.driver_pid, process.pid);
   assert.doesNotThrow(() => assertStateMatches(state, config, info.identity));
   state.prompt_sha256 = "0".repeat(64);
   assert.throws(() => assertStateMatches(state, config, info.identity), /prompt_sha256/);

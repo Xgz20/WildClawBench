@@ -44,6 +44,7 @@ function usage() {
   --batch-id <ID> --task-id <ID>   没有 manifest/record 时必须显式提供
   --run-timeout-seconds <秒>       Agent 总执行超时，默认 3600
   --poll-interval-seconds <秒>     终态轮询间隔，默认 2
+  --post-cancel-quiescence-seconds <秒> 超时停止后的 workspace 静默观察，默认 5
   --resume                         从已有 automation_state 恢复，禁止重复发送
   --retry-pre-send-failure          仅归档并重试发送前、产物零变化的 INFRA_FAILED
   --restart-app                    正常退出后以本地 CDP 端口重启 WorkBuddy
@@ -106,6 +107,23 @@ async function requireUnlockedGui() {
 async function appVersion(appPath) {
   const result = await run("/usr/bin/defaults", ["read", join(appPath, "Contents", "Info"), "CFBundleShortVersionString"], { capture: true, allowFailure: true });
   return result.code === 0 ? result.stdout.trim() : "unknown";
+}
+
+async function workBuddyProcessIdentity() {
+  const result = await run(
+    "/usr/bin/osascript",
+    ["-e", `tell application "System Events" to get unix id of first application process whose bundle identifier is "${DEFAULT_BUNDLE_ID}"`],
+    { capture: true, allowFailure: true },
+  );
+  const pid = Number(result.stdout.trim());
+  if (result.code !== 0 || !Number.isInteger(pid) || pid <= 0) return null;
+  const command = await run("/bin/ps", ["-p", String(pid), "-o", "command="], { capture: true, allowFailure: true });
+  return {
+    pid,
+    bundle_id: DEFAULT_BUNDLE_ID,
+    command: command.stdout.trim() || null,
+    captured_at: new Date().toISOString(),
+  };
 }
 
 export async function querySessions(sessionDb) {
@@ -263,13 +281,30 @@ async function waitForWorkspaceSelection(page, workspace, timeout) {
 }
 
 async function ensureModel(page, model, timeout) {
-  const current = await visibleLocators(page.getByText(model, { exact: true }));
-  if (current.length) return { model, method: "visible-current-value" };
-  const triggers = await visibleLocators(page.locator('button:visible, [role="button"]:visible').filter({ hasText: /均衡|快速|深度|模型/ }));
-  if (!triggers.length) throw new Error(`当前页面未显示模型“${model}”，也找不到模型选择按钮`);
-  await triggers[triggers.length - 1].click({ timeout });
-  await clickExactText(page, model, timeout);
-  return { model, method: "dropdown-selection" };
+  const triggers = await visibleLocators(page.locator('button.cr-model-selector__trigger[role="combobox"]'));
+  if (triggers.length !== 1) throw new Error(`WorkBuddy 模型选择按钮数量异常：${triggers.length}`);
+  const trigger = triggers[0];
+  const current = ((await trigger.getAttribute("title")) || (await trigger.innerText())).trim();
+  if (current === model) return { requested_model: model, actual_model: current, method: "visible-current-value" };
+
+  await trigger.click({ timeout });
+  const listboxes = await visibleLocators(page.locator('[role="listbox"]'));
+  if (listboxes.length !== 1) throw new Error(`WorkBuddy 模型下拉框数量异常：${listboxes.length}`);
+  const labels = await visibleLocators(listboxes[0].getByText(model, { exact: true }));
+  if (labels.length !== 1) throw new Error(`WorkBuddy 模型列表中找不到唯一选项“${model}”`);
+  const option = labels[0].locator('xpath=ancestor-or-self::*[@role="option"][1]');
+  if (await option.count() !== 1) throw new Error(`WorkBuddy 模型选项“${model}”结构异常`);
+  await option.click({ timeout });
+
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const actual = ((await trigger.getAttribute("title")) || (await trigger.innerText())).trim();
+    if (actual === model) {
+      return { requested_model: model, actual_model: actual, method: "dropdown-selection+trigger-readback" };
+    }
+    await sleep(250);
+  }
+  throw new Error(`WorkBuddy 未回读目标模型“${model}”`);
 }
 
 async function inspectPermissionMode(page) {
@@ -426,6 +461,60 @@ async function chooseWorkBuddyPage(browser, timeout) {
   throw new Error("调试端口已连接，但找不到 WorkBuddy 主页面");
 }
 
+async function inspectSelectedConversationId(page) {
+  const selected = await visibleLocators(page.locator('[data-conversation-id]:has(.cb-agent-card[class*="selected"])'));
+  const ids = [];
+  for (const item of selected) {
+    const value = (await item.getAttribute("data-conversation-id").catch(() => ""))?.trim();
+    if (value) ids.push(value);
+  }
+  return [...new Set(ids)].length === 1 ? ids[0] : null;
+}
+
+async function captureAttemptConversation(page, state, timeout) {
+  const baseline = state.session.dom_baseline_conversation_id || null;
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const conversationId = await inspectSelectedConversationId(page);
+    if (conversationId && conversationId !== baseline) {
+      state.session.dom_conversation_id = conversationId;
+      state.session.dom_conversation_captured_at = new Date().toISOString();
+      return conversationId;
+    }
+    await sleep(250);
+  }
+  return null;
+}
+
+async function openAttemptConversation(page, state, timeout) {
+  const conversationId = state.session.dom_conversation_id || state.session.conversation_id || null;
+  if (!conversationId) return { opened: false, reason: "conversation-id-unavailable" };
+  if (!/^[A-Za-z0-9._:-]{1,160}$/.test(conversationId)) {
+    return { opened: false, reason: "conversation-id-format-invalid" };
+  }
+  const selected = await inspectSelectedConversationId(page);
+  if (selected === conversationId) return { opened: true, conversation_id: conversationId, method: "already-selected" };
+  const deadline = Date.now() + timeout;
+  let matches = [];
+  while (Date.now() < deadline) {
+    matches = await visibleLocators(page.locator(`[data-conversation-id="${conversationId}"]`));
+    if (matches.length === 1) break;
+    await sleep(250);
+  }
+  if (matches.length !== 1) {
+    return { opened: false, reason: `conversation-item-count:${matches.length}`, conversation_id: conversationId };
+  }
+  await matches[0].click({ timeout });
+  const selectionDeadline = Date.now() + timeout;
+  while (Date.now() < selectionDeadline) {
+    if (await inspectSelectedConversationId(page) === conversationId) {
+      return { opened: true, conversation_id: conversationId, method: "sidebar-data-conversation-id" };
+    }
+    await sleep(250);
+  }
+  return { opened: false, reason: "conversation-selection-not-confirmed", conversation_id: conversationId };
+}
+
 async function inspectDom(page) {
   const stop = page.locator('button[aria-label*="停止"]:visible, button[title*="停止"]:visible, button[aria-label*="Stop"]:visible, button[title*="Stop"]:visible');
   const running = (await visibleLocators(stop)).length > 0;
@@ -435,9 +524,14 @@ async function inspectDom(page) {
     const name = (await button.innerText().catch(() => "")) || (await button.getAttribute("aria-label")) || "";
     if (name.trim()) attention.push(name.trim());
   }
-  const agentTurns = page.locator(".cr-agent__content:visible");
+  const agentTurns = page.locator(".cr-agent:visible");
   const agentValues = await agentTurns.allInnerTexts().catch(() => []);
   const agentText = agentValues.map((value) => value.trim()).filter(Boolean).at(-1) || "";
+  const emptyConversation = (await visibleLocators(page.getByText("暂无对话记录", { exact: true }))).length > 0;
+  const statusFrames = await visibleLocators(page.locator('[data-cr-frame="true"][data-status]'));
+  const rawStatus = statusFrames.length
+    ? ((await statusFrames.at(-1).getAttribute("data-status").catch(() => "")) || "")
+    : "";
   const responseSelectors = [
     '.cr-agent__content:visible .cr-markdown:visible',
     '.cr-agent__content:visible',
@@ -459,10 +553,176 @@ async function inspectDom(page) {
   return {
     running,
     attention: [...new Set(attention)],
+    emptyConversation,
     agentText: agentText.slice(-50000),
     finalText: finalText.slice(-50000),
-    status: classifyDomStatus({ running, agentText }),
+    rawStatus,
+    status: classifyDomStatus({ running, agentText, rawStatus }),
   };
+}
+
+function observationFailureReason(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /target page|browser has been closed|websocket|econnrefused|connection closed|session closed/i.test(message)
+    ? "client-disconnected"
+    : "post-send-observation-failed";
+}
+
+async function persistNeedsAttention(config, state, identityInfo, reason, error, page = null, screenshotName = null) {
+  if (page && screenshotName) await takeScreenshot(page, config, state, screenshotName).catch(() => {});
+  transitionState(state, "NEEDS_ATTENTION", { reason });
+  state.error = error;
+  state.runtime ||= {};
+  state.runtime.heartbeat_at = new Date().toISOString();
+  await saveState(config, state);
+  await updateExecutionRecord(config, identityInfo, {
+    clientVersion: state.client.version,
+    execution: { status: "pending", error },
+  });
+  return state;
+}
+
+async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom, deadlineAt) {
+  state.timeout = {
+    deadline_at: new Date(deadlineAt).toISOString(),
+    triggered_at: new Date().toISOString(),
+    stop_requested_at: null,
+    cancellation_confirmed: false,
+    cancellation_source: null,
+    quiescence: null,
+  };
+  await takeScreenshot(page, config, state, "10-timeout-before-stop.png");
+  const currentDom = await inspectDom(page);
+  const session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
+  if (session) {
+    const classification = classifySessionStatus(session.status);
+    if (classification.kind === "success") {
+      await takeScreenshot(page, config, state, "10-succeeded-at-timeout-boundary.png");
+      return finalize(config, state, identityInfo, "SUCCEEDED", {
+        terminalSource: "workbuddy-session-db",
+        finalText: currentDom.finalText || lastDom.finalText,
+      });
+    }
+    if (classification.kind === "failure") {
+      await takeScreenshot(page, config, state, "10-failed-at-timeout-boundary.png");
+      return finalize(config, state, identityInfo, "INFRA_FAILED", {
+        terminalSource: "workbuddy-session-db",
+        error: `WorkBuddy conversation 终态：${session.status}`,
+        finalText: currentDom.finalText || lastDom.finalText,
+      });
+    }
+  }
+  if (currentDom.status.kind === "success") {
+    await takeScreenshot(page, config, state, "10-succeeded-at-timeout-boundary.png");
+    return finalize(config, state, identityInfo, "SUCCEEDED", {
+      terminalSource: "workbuddy-dom-completion",
+      finalText: currentDom.finalText || lastDom.finalText,
+    });
+  }
+  if (currentDom.status.kind === "failure") {
+    await takeScreenshot(page, config, state, "10-failed-at-timeout-boundary.png");
+    return finalize(config, state, identityInfo, "INFRA_FAILED", {
+      terminalSource: "workbuddy-dom-completion",
+      error: "WorkBuddy 页面在超时边界显示执行失败终态",
+      finalText: currentDom.finalText || lastDom.finalText,
+    });
+  }
+
+  const stopButtons = await visibleLocators(page.locator('button[aria-label*="停止"]:visible, button[title*="停止"]:visible, button[aria-label*="Stop"]:visible, button[title*="Stop"]:visible'));
+  if (!currentDom.running || stopButtons.length !== 1) {
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "timeout-stop-control-unavailable",
+      `超过 ${config.runTimeoutSeconds} 秒，但无法唯一确认并停止当前 WorkBuddy 会话`,
+      page,
+      "10-timeout-stop-unavailable.png",
+    );
+  }
+
+  state.timeout.stop_requested_at = new Date().toISOString();
+  await stopButtons[0].click({ timeout: config.timeoutSeconds * 1000 });
+  await saveState(config, state);
+  await takeScreenshot(page, config, state, "10-timeout-stop-requested.png");
+
+  const cancelDeadline = Date.now() + config.timeoutSeconds * 1000;
+  let stableNonRunningPolls = 0;
+  let cancellationSource = null;
+  let finalText = currentDom.finalText || lastDom.finalText;
+  while (Date.now() < cancelDeadline) {
+    const dom = await inspectDom(page);
+    finalText = dom.finalText || finalText;
+    const currentSession = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
+    if (currentSession) {
+      const classification = classifySessionStatus(currentSession.status);
+      if (classification.kind === "success") {
+        cancellationSource = "workbuddy-session-db-terminal-after-stop";
+        break;
+      }
+      if (classification.kind === "failure") {
+        cancellationSource = "workbuddy-session-db";
+        break;
+      }
+    }
+    if (dom.status.kind === "success") {
+      cancellationSource = "workbuddy-dom-terminal-after-stop";
+      break;
+    }
+    if (dom.status.kind === "failure") {
+      cancellationSource = "workbuddy-dom-cancelled";
+      break;
+    }
+    if (!dom.running) stableNonRunningPolls += 1;
+    else stableNonRunningPolls = 0;
+    if (stableNonRunningPolls >= 2) {
+      cancellationSource = "workbuddy-dom-non-running";
+      break;
+    }
+    await sleep(config.pollIntervalSeconds * 1000);
+  }
+  if (!cancellationSource) {
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "timeout-cancellation-unconfirmed",
+      `超过 ${config.runTimeoutSeconds} 秒，已请求停止但无法确认 WorkBuddy 不再运行`,
+      page,
+      "10-timeout-cancellation-unconfirmed.png",
+    );
+  }
+
+  state.timeout.cancellation_source = cancellationSource;
+  state.timeout.cancellation_observed_at = new Date().toISOString();
+  const before = await snapshotTree(config.candidateWorkspace);
+  await sleep(config.postCancelQuiescenceSeconds * 1000);
+  const after = await snapshotTree(config.candidateWorkspace);
+  state.timeout.quiescence = {
+    observed_seconds: config.postCancelQuiescenceSeconds,
+    before_sha256: before.sha256,
+    after_sha256: after.sha256,
+    stable: before.sha256 === after.sha256,
+  };
+  if (!state.timeout.quiescence.stable) {
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "post-timeout-workspace-still-changing",
+      "WorkBuddy 已停止，但候选 workspace 在静默观察窗口内仍发生变化",
+      page,
+      "10-timeout-workspace-changing.png",
+    );
+  }
+  state.timeout.cancellation_confirmed = true;
+  state.timeout.cancellation_confirmed_at = new Date().toISOString();
+  await takeScreenshot(page, config, state, "10-timeout-cancelled.png");
+  return finalize(config, state, identityInfo, "TIMEOUT", {
+    terminalSource: "driver-timeout+cancellation-confirmed",
+    error: `超过 ${config.runTimeoutSeconds} 秒，已确认 WorkBuddy 停止且 workspace 保持静默`,
+    finalText,
+  });
 }
 
 async function inspectApprovalPanels(page, candidateWorkspace) {
@@ -529,6 +789,8 @@ async function finalize(config, state, identityInfo, phase, { error = null, term
     ? Math.max(0, (Date.parse(finishedAt) - Date.parse(state.timing.started_at)) / 1000)
     : null;
   state.error = error;
+  state.runtime ||= {};
+  state.runtime.heartbeat_at = finishedAt;
   state.evidence.terminal_source = terminalSource;
   const finalSnapshot = await snapshotTree(config.candidateWorkspace);
   state.artifacts.final = finalSnapshot;
@@ -578,9 +840,12 @@ async function finalize(config, state, identityInfo, phase, { error = null, term
 }
 
 async function waitForTerminal(page, config, state, identityInfo) {
-  const deadline = Date.now() + config.runTimeoutSeconds * 1000;
+  const runStartedAt = Date.parse(state.timing.sent_at || state.timing.started_at || new Date().toISOString());
+  const deadline = runStartedAt + config.runTimeoutSeconds * 1000;
   let lastDom = { running: false, attention: [], finalText: "" };
   while (Date.now() < deadline) {
+    state.runtime ||= {};
+    state.runtime.heartbeat_at = new Date().toISOString();
     const approvalResult = await handleExpectedApprovals(page, config, state);
     if (approvalResult.handled) {
       await sleep(500);
@@ -651,16 +916,13 @@ async function waitForTerminal(page, config, state, identityInfo) {
         finalText: lastDom.finalText,
       });
     }
-    if (state.phase === "PROMPT_SENT" && (session || lastDom.running)) transitionState(state, "RUNNING");
+    if (new Set(["PROMPT_SENT", "NEEDS_ATTENTION"]).has(state.phase) && (session || lastDom.running)) {
+      transitionState(state, "RUNNING", { recovered_observation: state.phase === "NEEDS_ATTENTION" });
+    }
     await saveState(config, state);
     await sleep(config.pollIntervalSeconds * 1000);
   }
-  await takeScreenshot(page, config, state, "10-timeout.png");
-  return finalize(config, state, identityInfo, "TIMEOUT", {
-    terminalSource: "driver-timeout",
-    error: `超过 ${config.runTimeoutSeconds} 秒仍未检测到明确终态`,
-    finalText: lastDom.finalText,
-  });
+  return cancelTimedOutAttempt(page, config, state, identityInfo, lastDom, deadline);
 }
 
 async function resumeAutomation(config, state, identityInfo) {
@@ -668,17 +930,60 @@ async function resumeAutomation(config, state, identityInfo) {
   if (!RESUMABLE_PHASES.has(state.phase)) {
     throw new Error(`当前状态 ${state.phase} 尚未进入发送临界区；请检查 WorkBuddy 后使用新的 --output-dir 重试`);
   }
-  await requireUnlockedGui();
-  if (config.restartApp) await restartWorkBuddy(config);
-  else if (!(await endpointReady(config.endpoint))) throw new Error(`WorkBuddy 未开放调试端口 ${config.endpoint}`);
-  const { chromium } = await import("playwright-core");
-  const browser = await chromium.connectOverCDP(config.endpoint);
+  state.session ||= { conversation_id: null, dom_conversation_id: null, baseline: [] };
+  state.runtime ||= {};
+  state.runtime.driver_pid = process.pid;
+  state.runtime.driver_started_at = new Date().toISOString();
+  state.runtime.heartbeat_at = state.runtime.driver_started_at;
+  if (config.restartApp && !(state.session.dom_conversation_id || state.session.conversation_id)) {
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "client-restart-conversation-id-unavailable",
+      "恢复前没有捕获稳定 conversation ID；禁止重启后猜测会话或重发 Prompt",
+    );
+  }
+  let page = null;
   try {
-    const page = await chooseWorkBuddyPage(browser, config.timeoutSeconds * 1000);
+    await requireUnlockedGui();
+    if (config.restartApp) await restartWorkBuddy(config);
+    else if (!(await endpointReady(config.endpoint))) throw new Error(`WorkBuddy 未开放调试端口 ${config.endpoint}`);
+    state.client.process = await workBuddyProcessIdentity();
+    const { chromium } = await import("playwright-core");
+    const browser = await chromium.connectOverCDP(config.endpoint);
+    page = await chooseWorkBuddyPage(browser, config.timeoutSeconds * 1000);
     page.setDefaultTimeout(config.timeoutSeconds * 1000);
     await page.bringToFront();
+    const hasStableConversationId = Boolean(state.session.dom_conversation_id || state.session.conversation_id);
+    if (hasStableConversationId) {
+      const opened = await openAttemptConversation(page, state, config.timeoutSeconds * 1000);
+      state.session.resume_navigation = { ...opened, at: new Date().toISOString() };
+      if (!opened.opened) {
+        return persistNeedsAttention(
+          config,
+          state,
+          identityInfo,
+          "resume-conversation-not-found",
+          `无法按稳定 conversation ID 恢复原会话：${opened.reason}`,
+          page,
+          "09-resume-conversation-not-found.png",
+        );
+      }
+    }
     const session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
     const dom = await inspectDom(page);
+    if (hasStableConversationId && !session && dom.emptyConversation) {
+      return persistNeedsAttention(
+        config,
+        state,
+        identityInfo,
+        "resume-conversation-empty",
+        "已按稳定 conversation ID 打开原会话，但 WorkBuddy 显示暂无对话记录；禁止创建新任务或重发 Prompt",
+        page,
+        "09-resume-conversation-empty.png",
+      );
+    }
     if (!session && state.phase === "READY_TO_SEND" && !new Set(["running", "success", "failure"]).has(dom.status.kind)) {
       transitionState(state, "NEEDS_ATTENTION", { reason: "ambiguous-send-boundary" });
       state.error = "发送临界区中断且未找到可确认的 conversation；为避免重复提交，禁止自动重发";
@@ -697,9 +1002,52 @@ async function resumeAutomation(config, state, identityInfo) {
     }
     await saveState(config, state);
     return waitForTerminal(page, config, state, identityInfo);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const reason = observationFailureReason(error);
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      reason,
+      `${message}；恢复过程未确认原会话终态，禁止重发 Prompt`,
+      page,
+      "09-resume-observation-failed.png",
+    );
   } finally {
     // 入口会在状态落盘后退出进程。不能调用 browser.close()，否则会关闭
     // 用户正在运行的 WorkBuddy；Playwright 私有连接也不作为稳定 API 使用。
+  }
+}
+
+function installDriverSignalHandlers(config, state, identityInfo) {
+  let handling = false;
+  for (const signal of ["SIGINT", "SIGTERM"]) {
+    process.once(signal, () => {
+      if (handling) return;
+      handling = true;
+      void (async () => {
+        const interruptedAt = new Date().toISOString();
+        const previousPhase = state.phase;
+        state.runtime ||= {};
+        state.runtime.interruption = { signal, at: interruptedAt, previous_phase: previousPhase };
+        state.runtime.heartbeat_at = interruptedAt;
+        if (!TERMINAL_PHASES.has(state.phase)) {
+          transitionState(state, "NEEDS_ATTENTION", {
+            reason: "driver-interrupted",
+            signal,
+            previous_phase: previousPhase,
+          });
+          state.error = `Driver 收到 ${signal}；WorkBuddy 任务可能仍在运行，必须使用 --resume 观察原会话`;
+          await saveState(config, state);
+          await updateExecutionRecord(config, identityInfo, {
+            clientVersion: state.client.version,
+            execution: { status: "pending", error: state.error },
+          });
+        }
+        process.exit(signal === "SIGINT" ? 130 : 143);
+      })().catch(() => process.exit(signal === "SIGINT" ? 130 : 143));
+    });
   }
 }
 
@@ -717,6 +1065,7 @@ async function runAutomation(config, identityInfo) {
   }
   if (existingState) {
     if (!config.resume) throw new Error(`已有未完成状态 ${existingState.phase}；必须使用 --resume，避免重复发送 Prompt`);
+    installDriverSignalHandlers(config, existingState, identityInfo);
     return resumeAutomation(config, existingState, identityInfo);
   }
   if (config.resume && !retryArchive) throw new Error("--resume 要求已有 automation_state.json");
@@ -733,6 +1082,7 @@ async function runAutomation(config, identityInfo) {
   }
   state.timing.started_at = new Date().toISOString();
   await saveState(config, state);
+  installDriverSignalHandlers(config, state, identityInfo);
   await updateExecutionRecord(config, identityInfo, {
     clientVersion: "",
     execution: { status: "pending", started_at: state.timing.started_at, finished_at: null, duration_seconds: null, error: null },
@@ -747,6 +1097,7 @@ async function runAutomation(config, identityInfo) {
       throw new Error(`WorkBuddy 未开放调试端口 ${config.endpoint}；请添加 --restart-app，或手工以 --remote-debugging-port 启动`);
     }
     state.client.version = await appVersion(config.appPath);
+    state.client.process = await workBuddyProcessIdentity();
     transitionState(state, "CLIENT_READY");
     await saveState(config, state);
 
@@ -801,6 +1152,7 @@ async function runAutomation(config, identityInfo) {
         updated_at_ms: Number(session.updatedAt || session.createdAt || 0),
         raw_status: session.status || "",
       }));
+    state.session.dom_baseline_conversation_id = await inspectSelectedConversationId(page);
     transitionState(state, "READY_TO_SEND");
     await saveState(config, state);
     state.send_method = await clickSend(page, editor, timeout);
@@ -808,12 +1160,15 @@ async function runAutomation(config, identityInfo) {
     state.timing.sent_at = new Date().toISOString();
     transitionState(state, "PROMPT_SENT");
     await saveState(config, state);
+    await captureAttemptConversation(page, state, Math.min(timeout, 10000));
+    await saveState(config, state);
     await takeScreenshot(page, config, state, "08-prompt-sent.png");
     return await waitForTerminal(page, config, state, identityInfo);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (promptMayHaveBeenSent || state.phase === "READY_TO_SEND" || state.phase === "PROMPT_SENT" || state.phase === "RUNNING") {
-      transitionState(state, "NEEDS_ATTENTION", { reason: "post-send-observation-failed" });
+      const reason = observationFailureReason(error);
+      transitionState(state, "NEEDS_ATTENTION", { reason });
       state.error = `${message}；Prompt 可能已发送，必须使用 --resume 检查，不能直接重试`;
       await saveState(config, state);
       await updateExecutionRecord(config, identityInfo, { clientVersion: state.client.version, execution: { status: "pending", error: state.error } });
@@ -863,7 +1218,7 @@ async function probe(config) {
   }
   return {
     driver: "workbuddy",
-    version: "1.2.0",
+    version: "1.3.0",
     control_backend: "electron-cdp+workbuddy-workspace-provider+macos-accessibility-fallback",
     terminal_source: "workbuddy-session-db+workbuddy-dom",
     ready: checks.endpoint_ready && checks.session_database_readable && checks.sqlite3
@@ -910,6 +1265,7 @@ export async function main(argv) {
       restartApp: config.restartApp,
       resume: config.resume,
       retryPreSendFailure: config.retryPreSendFailure,
+      postCancelQuiescenceSeconds: config.postCancelQuiescenceSeconds,
       dryRun: config.dryRun,
     };
     console.log(JSON.stringify(safeConfig, null, 2));
