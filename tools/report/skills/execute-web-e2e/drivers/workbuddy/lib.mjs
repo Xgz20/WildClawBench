@@ -16,7 +16,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 
 export const AUTOMATION_SCHEMA = "wildclawbench.web-e2e-automation-state/v1";
 export const EXECUTION_SCHEMA = "wildclawbench.web-e2e-execution/v1";
-export const DRIVER_VERSION = "1.6.0";
+export const DRIVER_VERSION = "1.6.1";
 export const DEFAULT_APP_PATH = "/Applications/WorkBuddy.app";
 export const DEFAULT_BUNDLE_ID = "com.tencent.workbuddy.mac";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9229";
@@ -503,7 +503,7 @@ export function createInitialState(config, identity, initialSnapshot) {
     prompt_bytes: config.promptBytes,
     requested_ui_model: config.model || null,
     requested_permission_mode: config.permissionMode,
-    client: { app_path: config.appPath, endpoint: config.endpoint, version: "", process: null },
+    client: { app_path: config.appPath, endpoint: config.endpoint, version: "", process: null, launch: null },
     session: {
       database: config.sessionDb,
       conversation_id: null,

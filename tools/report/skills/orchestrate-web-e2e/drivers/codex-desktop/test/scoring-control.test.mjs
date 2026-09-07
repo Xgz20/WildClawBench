@@ -36,7 +36,7 @@ async function fixture(taskIds = ["task-1"], modelMode = "explicit") {
     scoring_skill: {
       schema_version: "wildclawbench.web-e2e-score-skill/v1",
       name: "score-web-e2e",
-      version: "4.3.0",
+      version: "4.4.0",
       supported_metric_profiles: ["web-e2e-detailed-v1", "artifactsbench-web-v1"],
       task_score_schema: "wildclawbench.web-e2e-task-score/v1",
     },
@@ -101,7 +101,7 @@ async function fixture(taskIds = ["task-1"], modelMode = "explicit") {
   return root;
 }
 
-async function scoreSkillFixture(version = "4.3.0", profiles = ["web-e2e-detailed-v1", "artifactsbench-web-v1"]) {
+async function scoreSkillFixture(version = "4.4.0", profiles = ["web-e2e-detailed-v1", "artifactsbench-web-v1"]) {
   const root = await mkdtemp(join(tmpdir(), "score-web-e2e-skill-"));
   await writeJson(join(root, "skill-metadata.json"), {
     schema_version: "wildclawbench.web-e2e-score-skill/v1",
@@ -190,7 +190,7 @@ test("preflight checks Desktop, registration mode, score Skill version and metri
   const result = await passPreflight(root, { scoreSkillDir: skillRoot, allowRendererBridge: true });
   assert.equal(result.preflight.status, "PASSED");
   assert.equal(result.preflight.metric_profile, "artifactsbench-web-v1");
-  assert.equal(result.preflight.score_skill.version, "4.3.0");
+  assert.equal(result.preflight.score_skill.version, "4.4.0");
 });
 
 test("preflight rejects an installed scoring Skill version mismatch", async () => {
@@ -208,7 +208,7 @@ test("preflight rejects a Desktop version change and unsupported metric profile"
   const root = await fixture();
   const { state } = await initialize(root);
   await registerTask(root, state.tasks[0]);
-  const skillRoot = await scoreSkillFixture("4.3.0", ["web-e2e-detailed-v1"]);
+  const skillRoot = await scoreSkillFixture("4.4.0", ["web-e2e-detailed-v1"]);
   await assert.rejects(() => preflight(root, {
     desktopVersion: "26.902.0",
     scoreSkillDir: skillRoot,

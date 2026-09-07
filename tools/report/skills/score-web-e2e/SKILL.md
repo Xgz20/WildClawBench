@@ -44,7 +44,7 @@ Skill 根目录的 `skill-metadata.json` 是自动编排读取的机器契约，
        start-static --task-root . --port 4173
      ```
 
-     单页应用需要 history fallback 时增加 `--spa-fallback`。若入口位于 `dist/`、`build/` 等目录，`--root` 指向实际可发布目录。
+     单页应用需要 history fallback 时增加 `--spa-fallback`。若入口位于 `workspace/dist/`、`workspace/build/` 等目录，增加 `--root dist` 或 `--root build`；该参数始终以候选 `workspace/` 为基准，只接受其中已有的普通相对目录，绝对路径、`..`、符号链接、缺失目录和越界路径都会被拒绝。省略时服务整个 `workspace/`。
    - 其他技术栈：遵循仓库内可验证的启动说明和配置；不要改写候选源码或脚本来迎合固定命令。无法确定安全、可重复的启动方式时记录 `evaluation_error`，不要猜测。
 
      需要在运行时副本中启动项目命令时使用：
@@ -70,7 +70,7 @@ Skill 根目录的 `skill-metadata.json` 是自动编排读取的机器契约，
    评分完成或异常退出前使用 `managed_runtime.mjs stop --task-root .` 精确停止本题记录的 PID/进程组，再使用 `managed_runtime.mjs clean --task-root .` 删除运行时副本；禁止使用 `pkill node`、按端口批量杀进程或终止未被本题状态文件记录的服务。
 3. 开始浏览器评分前读取 [浏览器交互评分与误判防护](references/browser-interaction-scoring.md)。每个 criterion 先恢复其“预设状态”，再实际点击、输入、切换、刷新、改变视口或上传文件；不得携带前序检查点的污染状态，也不得只看源码、静态 DOM 或截图推断交互成功。
 4. 首次操作未生效时，不得立即记 0。日期/时间、清空输入、取色器、滑块、HTML5 拖放、原生对话框、下载和瞬时状态必须使用参考文档中的适配方式复核，并回读操作前、提交前和提交后的公开状态。源码只用于识别控件和事件模型，不能替代页面验证。
-5. 逐 criterion 记录动作、观察、理由和证据。视觉检查点必须有视口截图；交互检查点必须写明动作前后状态。原生对话框、下载事件、瞬时状态等无法由截图完整表达的事实可保存为 `private-scoring/evidence/` 下的 Markdown 或 JSON 观察记录并引用。
+5. 逐 criterion 记录动作、观察、理由和证据。视觉检查点必须有视口截图；交互检查点必须写明动作前后状态。截图二进制必须通过 Skill 内置 `screenshot_receiver.mjs` 写入 `private-scoring/evidence/`：每张图启动一个一次性回环接收器，上传成功后自动退出。不得在题目目录临时编写接收器，不得通过剪贴板或手工 Base64 分片传输截图。文件扩展名、`Content-Type` 和实际 PNG/JPEG 签名必须一致；完整命令与 Browser 上传方式见交互参考。原生对话框、下载事件、瞬时状态等无法由截图完整表达的事实可保存为 `private-scoring/evidence/` 下的 Markdown 或 JSON 观察记录并引用。
 6. 在填写完成后审计所有 0 分理由。如果理由实质是“评分工具无法输入、拖动、捕获或验证”，或评分员主动跳过删除、清空等 Rubric 指定操作，必须先按交互指引复核；仍因工具限制无法判定时使用 `evaluation_status=evaluation_error`，不能伪装成候选功能失败。
 7. 仅 `web-e2e-detailed-v1` 读取 [美观度评分标准](references/aesthetic-scoring.md) 和 [结构化定义](references/aesthetic-rubric.json)。复用功能评分截图，常规选择 4–6 张不重复的代表性截图，覆盖桌面主状态、桌面交互状态、适用的空/错误/加载/选中/禁用状态，以及窄屏主状态和窄屏交互状态。简单页面允许只提供最低 2 张桌面图和 1 张不大于 480px 的窄屏图；复杂页面按实际状态增加。对带标签的截图集合做一次统一判定，不得逐图给总分后平均，也不得用重复截图改变分数。ArtifactsBench Profile 跳过本步骤。
 8. 使用评分智能体必有的 Node.js 执行确定性辅助脚本，测试人员不手工运行命令。先从当前已安装 Skill 的实际位置解析 `<score-web-e2e-skill-dir>`，不能假设题目内存在 `.agents/skills/`：
@@ -106,8 +106,8 @@ node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
   --output submission.json
 ```
 
-运行前确认每题 `managed_runtime.mjs status` 不再显示存活服务，并已用 `clean` 删除 `private-scoring/runtime-workspace/`。管理 Agent 不得删除或改写 `execution/tasks/*/workspace/`、`score/tasks/*/workspace/` 中的任何内容；若候选中残留 `node_modules`、`.git` 或敏感文件，应判定执行/交接包不合规并停止，不能通过清理候选来让 submission 通过。
+运行前确认每题 `managed_runtime.mjs status` 不再显示存活服务，已用 `clean` 删除 `private-scoring/runtime-workspace/`，且 `screenshot_receiver.mjs status --task-root .` 已进入可信终态。管理 Agent 不得删除或改写 `execution/tasks/*/workspace/`、`score/tasks/*/workspace/` 中的任何内容；若候选中残留 `node_modules`、`.git` 或敏感文件，应判定执行/交接包不合规并停止，不能通过清理候选来让 submission 通过。
 
-脚本会再次核对 execution、score 两份 workspace、执行回执文件 SHA 与冻结 SHA，校验全部 `task_score.json`、证据路径、Harness 与实际模型身份、受管服务终态、端口替换审计、运行时副本残留、禁止的运行时目录和敏感文件；任何不一致或空 `model.id` 都拒绝生成根目录 `submission.json`。随后测试人员使用 ZIP 工具压缩整个 Harness 根目录回传；报告 Skill 会从 ZIP 中定位唯一 `submission.json`。
+脚本会再次核对 execution、score 两份 workspace、执行回执文件 SHA 与冻结 SHA，校验全部 `task_score.json`、证据路径、Harness 与实际模型身份、受管服务终态、截图接收器终态与最近一次成功截图、端口替换审计、运行时副本残留、禁止的运行时目录和敏感文件；任何不一致或空 `model.id` 都拒绝生成根目录 `submission.json`。随后测试人员使用 ZIP 工具压缩整个 Harness 根目录回传；报告 Skill 会从 ZIP 中定位唯一 `submission.json`。
 
 详细字段见 [评分 JSON 契约](references/scoring-contract.md)。

@@ -4,6 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { processIdentity } from "./managed_runtime.mjs";
+import { SCREENSHOT_RECEIVER_SCHEMA, detectImageFormat } from "./screenshot_receiver.mjs";
 import {
   CANDIDATE_ARTIFACT_SCHEMA,
   TREE_HASH_ALGORITHM,
@@ -16,6 +18,8 @@ const SCORE_SCHEMA = "wildclawbench.web-e2e-task-score/v1";
 const EXECUTION_RECEIPT_SCHEMA = "wildclawbench.web-e2e-execution-receipt/v1";
 const RUNTIME_SCHEMA = "wildclawbench.web-e2e-scoring-runtime/v1";
 const RUNTIME_PORT_OVERRIDE_SCHEMA = "wildclawbench.web-e2e-runtime-port-override/v1";
+const SCREENSHOT_RECEIVER_TERMINAL_STATUSES = new Set(["COMPLETED", "STOPPED", "TIMED_OUT", "FAILED", "LOST"]);
+const SCREENSHOT_RECEIVER_SCRIPT = fs.realpathSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "screenshot_receiver.mjs"));
 const DETAILED_PROFILE = "web-e2e-detailed-v1";
 const SUPPORTED_METRIC_PROFILES = new Set([DETAILED_PROFILE, "artifactsbench-web-v1"]);
 const SECRET_NAMES = new Set([".env", ".env.local", ".env.production", "id_rsa", "id_ed25519", "credentials.json", "secrets.json", "my_api.json"]);
@@ -144,6 +148,77 @@ function validatePortOverrideAudit(taskRoot, taskId, expectedSha256, runtimeStat
   };
 }
 
+function liveScreenshotReceiverIdentity(taskRoot, state) {
+  let identity;
+  try {
+    identity = processIdentity(Number(state.pid));
+  } catch (error) {
+    try {
+      process.kill(Number(state.pid), 0);
+    } catch (probeError) {
+      if (probeError?.code !== "EPERM") return null;
+    }
+    throw new Error(`无法确认截图接收器进程身份: ${state.task_id}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  if (!identity) return null;
+  const exact = identity.pgid === Number(state.pgid)
+    && identity.started_at_text === state.process_started_at_text
+    && identity.cwd === fs.realpathSync(taskRoot)
+    && identity.command.includes(SCREENSHOT_RECEIVER_SCRIPT)
+    && identity.command.includes("serve")
+    && identity.command.includes(String(state.receiver_id || ""));
+  return exact ? identity : null;
+}
+
+function validateScreenshotReceiver(taskRoot, taskId, expectedSha256) {
+  const stateFile = path.join(taskRoot, "private-scoring", "screenshot-receiver-state.json");
+  if (!fs.existsSync(stateFile)) return;
+  const state = loadJson(stateFile);
+  const filename = String(state.filename || "");
+  const extension = path.extname(filename).toLowerCase();
+  const expectedFormat = extension === ".png" ? "png" : new Set([".jpg", ".jpeg"]).has(extension) ? "jpeg" : null;
+  if (state.schema_version !== SCREENSHOT_RECEIVER_SCHEMA
+    || state.task_id !== taskId
+    || state.candidate_sha256 !== expectedSha256
+    || !/^[a-f0-9-]{36}$/i.test(String(state.receiver_id || ""))
+    || !Number.isInteger(state.pid) || state.pid < 1
+    || !Number.isInteger(state.pgid) || state.pgid < 1
+    || !String(state.process_started_at_text || "").trim()
+    || state.cwd !== "."
+    || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.(?:png|jpe?g)$/i.test(filename)
+    || !expectedFormat || state.format !== expectedFormat
+    || state.content_type !== (expectedFormat === "png" ? "image/png" : "image/jpeg")
+    || !/^[a-f0-9]{64}$/.test(String(state.token_sha256 || ""))
+    || state.upload_url !== null
+    || !SCREENSHOT_RECEIVER_TERMINAL_STATUSES.has(state.status)) {
+    throw new Error(`截图接收器未进入可信终态: ${taskId}`);
+  }
+  const identity = state.pid ? liveScreenshotReceiverIdentity(taskRoot, state) : null;
+  if (identity) throw new Error(`截图接收器仍在运行: ${taskId}: PID ${identity.pid}`);
+  if (state.status !== "COMPLETED") return;
+
+  const output = state.output;
+  const expectedPath = `private-scoring/evidence/${state.filename}`;
+  if (!output || output.path !== expectedPath
+    || output.format !== state.format
+    || output.content_type !== state.content_type
+    || !Number.isInteger(output.bytes) || output.bytes < 1
+    || !/^[a-f0-9]{64}$/.test(String(output.sha256 || ""))) {
+    throw new Error(`截图接收器完成记录无效: ${taskId}`);
+  }
+  const evidenceRoot = path.join(taskRoot, "private-scoring", "evidence");
+  const outputFile = path.resolve(taskRoot, output.path);
+  if (!fs.existsSync(evidenceRoot) || fs.lstatSync(evidenceRoot).isSymbolicLink()
+    || !fs.existsSync(outputFile) || fs.lstatSync(outputFile).isSymbolicLink() || !fs.lstatSync(outputFile).isFile()
+    || !pathInside(fs.realpathSync(evidenceRoot), fs.realpathSync(outputFile))) {
+    throw new Error(`截图接收器证据文件不存在或越界: ${taskId}`);
+  }
+  const bytes = fs.readFileSync(outputFile);
+  if (bytes.length !== output.bytes || sha256(bytes) !== output.sha256 || detectImageFormat(bytes) !== output.format) {
+    throw new Error(`截图接收器证据文件校验失败: ${taskId}`);
+  }
+}
+
 function auditTree(root) {
   if (!fs.existsSync(root)) return { files: [], forbiddenDirectories: [] };
   const files = [];
@@ -245,6 +320,7 @@ export function buildSubmission(packageRoot) {
     );
     const runtimeWorkspace = path.join(taskRoot, "private-scoring", "runtime-workspace");
     if (fs.existsSync(runtimeWorkspace)) throw new Error(`评分运行时副本尚未清理: ${entry.task_id}`);
+    validateScreenshotReceiver(taskRoot, entry.task_id, expectedSha256);
     const runtimeStateFile = path.join(taskRoot, "private-scoring", "runtime-state.json");
     let runtimeState = null;
     if (fs.existsSync(runtimeStateFile)) {

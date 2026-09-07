@@ -200,7 +200,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertNotIn("model", manifest)
             self.assertFalse(manifest["execution_record_included"])
             self.assertEqual(manifest["scoring_skill"]["name"], "score-web-e2e")
-            self.assertEqual(manifest["scoring_skill"]["version"], "4.3.0")
+            self.assertEqual(manifest["scoring_skill"]["version"], "4.4.0")
             self.assertIn(manifest["metric_profile"], manifest["scoring_skill"]["supported_metric_profiles"])
 
             prefix = "web-smoke__codex/"
@@ -232,6 +232,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIn("score-web-e2e/references/browser-interaction-scoring.md", score_skill_names)
             self.assertIn("score-web-e2e/scripts/workspace-integrity.mjs", score_skill_names)
             self.assertIn("score-web-e2e/scripts/managed_runtime.mjs", score_skill_names)
+            self.assertIn("score-web-e2e/scripts/screenshot_receiver.mjs", score_skill_names)
             self.assertIn("report-web-e2e/SKILL.md", report_skill_names)
             self.assertIn("report-web-e2e/scripts/aggregate_web_e2e_results.py", report_skill_names)
             self.assertIn("report-web-e2e/scripts/build_web_e2e_workbook.mjs", report_skill_names)
@@ -376,14 +377,15 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             result = prepare_module.package_score_skill(args)
             package_path = Path(tmp).resolve() / "web-skill-only__score-web-e2e-skill.zip"
             self.assertEqual(result["path"], package_path)
-            self.assertEqual(result["file_count"], 13)
+            self.assertEqual(result["file_count"], 14)
             self.assertEqual(result["sha256"], prepare_module.sha256_file(package_path))
             self.assertFalse((Path(tmp) / "web-skill-only").exists())
             self.assertFalse(any(Path(tmp).glob("**/batch_manifest.json")))
             with zipfile.ZipFile(package_path) as archive:
                 names = [name for name in archive.namelist() if not name.endswith("/")]
-                self.assertEqual(len(names), 13)
+                self.assertEqual(len(names), 14)
                 self.assertIn("score-web-e2e/scripts/serve_static.mjs", names)
+                self.assertIn("score-web-e2e/scripts/screenshot_receiver.mjs", names)
                 self.assertIn("score-web-e2e/references/browser-interaction-scoring.md", names)
 
     def test_score_skill_only_rejects_existing_archive(self) -> None:

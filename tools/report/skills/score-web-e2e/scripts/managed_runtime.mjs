@@ -135,6 +135,28 @@ function pathInside(root, candidate) {
   return relative !== "" && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
 }
 
+function resolveCandidateStaticRoot(paths, raw) {
+  const relative = String(raw || ".").trim() || ".";
+  if (path.isAbsolute(relative) || relative.split(/[\\/]+/).includes("..")) {
+    throw new Error("--root 必须是 workspace 内的相对目录");
+  }
+  const declared = path.resolve(paths.candidate, relative);
+  if (!fs.existsSync(declared)) throw new Error(`静态站点目录不存在：${relative}`);
+  const info = fs.lstatSync(declared);
+  if (info.isSymbolicLink() || !info.isDirectory()) {
+    throw new Error("--root 必须是 workspace 内的普通目录");
+  }
+  const candidateRoot = fs.realpathSync(paths.candidate);
+  const canonical = fs.realpathSync(declared);
+  if (canonical !== candidateRoot && !pathInside(candidateRoot, canonical)) {
+    throw new Error("--root 不能越过 workspace 边界");
+  }
+  return {
+    filename: canonical,
+    relative: path.relative(candidateRoot, canonical).split(path.sep).join("/") || ".",
+  };
+}
+
 function resolveRuntimeSourceFile(paths, raw) {
   const relative = String(raw || "");
   if (!relative || path.isAbsolute(relative) || relative.split(/[\\/]+/).includes("..")) {
@@ -461,6 +483,7 @@ function parseArgs(argv) {
     fromPort: "",
     toPort: "",
     evidence: "",
+    root: ".",
   };
   let index = 1;
   for (; index < argv.length; index += 1) {
@@ -476,6 +499,7 @@ function parseArgs(argv) {
     else if (token === "--from-port") values.fromPort = argv[++index] || "";
     else if (token === "--to-port") values.toPort = argv[++index] || "";
     else if (token === "--evidence") values.evidence = argv[++index] || "";
+    else if (token === "--root") values.root = argv[++index] || "";
     else if (token === "--spa-fallback") values.spaFallback = true;
     else throw new Error(`未知参数：${token}`);
   }
@@ -491,9 +515,13 @@ async function main() {
   }
   else if (args.command === "start-static") {
     if (!/^\d+$/.test(args.port) || Number(args.port) < 1 || Number(args.port) > 65535) throw new Error("--port 必须是 1..65535 的整数");
-    const command = [process.execPath, path.join(SCRIPT_DIR, "serve_static.mjs"), "--root", "workspace", "--host", "127.0.0.1", "--port", args.port];
+    const paths = taskPaths(args.taskRoot);
+    const staticRoot = resolveCandidateStaticRoot(paths, args.root);
+    const command = [process.execPath, path.join(SCRIPT_DIR, "serve_static.mjs"), "--root", staticRoot.filename, "--host", "127.0.0.1", "--port", args.port];
     if (args.spaFallback) command.push("--spa-fallback");
     result = await startManagedService(args.taskRoot, command, `http://127.0.0.1:${args.port}/`, { useCandidate: true });
+    result.state.service.static_root = `workspace/${staticRoot.relative === "." ? "" : staticRoot.relative}`.replace(/\/$/, "");
+    writeJson(result.paths.stateFile, result.state);
   } else if (args.command === "start") {
     if (!args.url) throw new Error("start 必须提供 --url");
     result = await startManagedService(args.taskRoot, args.childCommand, args.url);

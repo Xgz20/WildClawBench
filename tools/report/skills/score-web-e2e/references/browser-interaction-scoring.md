@@ -93,6 +93,42 @@ fire(source, 'dragend');
 - 不以单个离屏、隐藏、动画中或固定定位元素的边界框直接代表整页溢出。对 1px 级舍入差异要在相同视口复测，并结合实际滚动与可见裁切描述事实，不能自设比 Rubric 更严格的阈值。
 - 切换视口、展开菜单、滚动或打开弹层后重新定位元素和截图，避免用过期坐标造成“点不中”。
 
+## 截图二进制落盘
+
+Codex Desktop 内置 Browser 的 `tab.getScreenshot({ emit: false })` 返回二进制，不应通过剪贴板、聊天文本或手工 Base64 分片转存。每张图都使用评分 Skill 内置的一次性接收器；它只监听 `127.0.0.1`，只允许写入当前题的 `private-scoring/evidence/`，上传一张合法图片后自动退出：
+
+```bash
+node <score-web-e2e-skill-dir>/scripts/screenshot_receiver.mjs \
+  start --task-root . --filename desktop-main.jpg
+```
+
+`start` 是后台启动，成功后立即返回 JSON，其中 `upload_url` 带一次性随机令牌。不要把该 URL 写进评分结果或长期日志。当前 Desktop Browser 截图通常是 JPEG，但仍要让扩展名、请求 `Content-Type` 和真实二进制签名一致。取得截图后，在桌面 Browser 的持久 JavaScript 会话中直接上传二进制：
+
+```js
+let desktopMain = await tab.getScreenshot({ emit: false });
+let uploadResponse = await fetch("<start 返回的 upload_url>", {
+  method: "POST",
+  headers: { "content-type": "image/jpeg" },
+  body: desktopMain,
+});
+nodeRepl.write({
+  status: uploadResponse.status,
+  result: await uploadResponse.text(),
+  bytes: desktopMain.length,
+});
+```
+
+只有 HTTP `201` 才表示落盘成功。随后单独运行：
+
+```bash
+node <score-web-e2e-skill-dir>/scripts/screenshot_receiver.mjs \
+  status --task-root .
+```
+
+要求状态为 `COMPLETED`，并核对 `output.path`、字节数和 SHA-256。下一张图使用新的安全文件名重新执行 `start`。接收器拒绝覆盖、目录穿越、MIME/签名不一致和超限内容；默认最多 20 MiB、5 分钟超时。若 Browser 或控制任务异常，运行 `stop --task-root .`，它只会在 PID、进程组、启动时间、命令和 cwd 全部匹配时终止已记录接收器。不存在状态文件时 `status` 返回 `NOT_STARTED`；不得用 `pkill` 清理。
+
+若二进制头是 PNG 签名 `89 50 4E 47 0D 0A 1A 0A`，改用 `.png` 和 `image/png`。如果无法取得二进制、上传始终失败或状态不能进入可信终态，按评分基础设施错误处理，不能伪造截图或把它记为候选零分。
+
 ## 媒体与非截图证据
 
 视频播放应在用户点击后核对 `currentSrc`、`readyState`、暂停状态和 `currentTime` 是否变化；浏览器自动播放限制不能直接算候选故障。对原生对话框、下载、瞬时状态、控件原始值等截图无法完整表达的事实，可在 `private-scoring/evidence/` 保存 Markdown 或 JSON 观察记录，并在 criterion 的 evidence 中引用；同时保留适用的动作前后截图。

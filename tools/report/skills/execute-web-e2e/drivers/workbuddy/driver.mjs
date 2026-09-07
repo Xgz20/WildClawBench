@@ -267,6 +267,19 @@ end tell`;
   );
 }
 
+export async function prepareClientForNewAttempt(config, state, overrides = {}) {
+  const restart = overrides.restart || restartWorkBuddy;
+  const isEndpointReady = overrides.endpointReady || endpointReady;
+  if (config.restartApp) {
+    state.client.launch = await restart(config);
+    return state.client.launch;
+  }
+  if (!(await isEndpointReady(config.endpoint))) {
+    throw new Error(`WorkBuddy 未开放调试端口 ${config.endpoint}；请添加 --restart-app，或手工以 --remote-debugging-port 启动`);
+  }
+  return null;
+}
+
 async function visibleLocators(locator) {
   const matches = [];
   const count = await locator.count();
@@ -1235,10 +1248,7 @@ async function runAutomation(config, identityInfo) {
   let promptMayHaveBeenSent = false;
   try {
     await requireUnlockedGui();
-    if (config.restartApp) await restartWorkBuddy(config);
-    else if (!(await endpointReady(config.endpoint))) {
-      throw new Error(`WorkBuddy 未开放调试端口 ${config.endpoint}；请添加 --restart-app，或手工以 --remote-debugging-port 启动`);
-    }
+    await prepareClientForNewAttempt(config, state);
     state.client.version = await appVersion(config.appPath);
     state.client.process = await workBuddyProcessIdentity();
     transitionState(state, "CLIENT_READY");

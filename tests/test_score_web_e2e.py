@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import hashlib
 import os
@@ -294,7 +295,7 @@ class FinalizeWebE2EScoreTest(unittest.TestCase):
         self.assertEqual(score["metrics"]["primary_dimensions"]["interaction_function"], 50)
         self.assertFalse(score["metrics"]["aesthetic"]["included_in_total"])
         self.assertEqual(score["metrics"]["aesthetic"]["score"], 100)
-        self.assertEqual(score["provenance"]["skill_version"], "4.3.0")
+        self.assertEqual(score["provenance"]["skill_version"], "4.4.0")
         self.assertEqual(score["metrics"]["aesthetic"]["primary_dimensions"]["layout_hierarchy"], 100)
         self.assertEqual(score["metrics"]["aesthetic"]["secondary_dimensions"]["v-01"], "MET")
         self.assertEqual(score["metrics"]["aesthetic"]["secondary_dimension_scores"]["v-01"], 100)
@@ -730,6 +731,106 @@ class BuildSubmissionTest(unittest.TestCase):
             self.assertIn("只能写入 Harness 根目录", result.stderr)
             self.assertFalse(forbidden_output.exists())
 
+    def test_submission_rejects_non_terminal_screenshot_receiver(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root = root / "score/tasks/task-1"
+            result = run_finalize(task_root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.materialize_evidence(task_root)
+            write_json(root / "manifest.json", {
+                "batch_id": "batch-1",
+                "source_revision": "abc",
+                "harness": {"id": "codex", "display_name": "Codex"},
+                "tasks": [{"task_id": "task-1", "task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"}],
+            })
+            frozen = self.materialize_candidate_integrity(root)
+            receiver_state = {
+                "schema_version": "wildclawbench.web-e2e-screenshot-receiver/v1",
+                "task_id": "task-1",
+                "candidate_sha256": frozen,
+                "receiver_id": "00000000-0000-4000-8000-000000000000",
+                "status": "RUNNING",
+                "pid": 999999,
+                "pgid": 999999,
+                "process_started_at_text": "not-running",
+                "cwd": ".",
+                "filename": "unused.png",
+                "format": "png",
+                "content_type": "image/png",
+                "token_sha256": "0" * 64,
+                "upload_url": "http://127.0.0.1:12345/screenshot/temporary-token",
+            }
+            state_file = task_root / "private-scoring/screenshot-receiver-state.json"
+            write_json(state_file, receiver_state)
+            command = ["node", str(SUBMISSION), "--package-root", str(root), "--output", str(root / "submission.json")]
+            rejected = subprocess.run(command, capture_output=True, text=True)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("截图接收器未进入可信终态", rejected.stderr)
+
+            receiver_state["status"] = "STOPPED"
+            write_json(state_file, receiver_state)
+            leaked_url = subprocess.run(command, capture_output=True, text=True)
+            self.assertNotEqual(leaked_url.returncode, 0)
+            self.assertIn("截图接收器未进入可信终态", leaked_url.stderr)
+
+            receiver_state["upload_url"] = None
+            write_json(state_file, receiver_state)
+            accepted = subprocess.run(command, capture_output=True, text=True)
+            self.assertEqual(accepted.returncode, 0, accepted.stderr)
+
+    def test_submission_revalidates_completed_receiver_output(self) -> None:
+        png = base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root = root / "score/tasks/task-1"
+            result = run_finalize(task_root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.materialize_evidence(task_root)
+            screenshot = task_root / "private-scoring/evidence/a.png"
+            screenshot.write_bytes(png)
+            write_json(root / "manifest.json", {
+                "batch_id": "batch-1",
+                "source_revision": "abc",
+                "harness": {"id": "codex", "display_name": "Codex"},
+                "tasks": [{"task_id": "task-1", "task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"}],
+            })
+            frozen = self.materialize_candidate_integrity(root)
+            write_json(task_root / "private-scoring/screenshot-receiver-state.json", {
+                "schema_version": "wildclawbench.web-e2e-screenshot-receiver/v1",
+                "task_id": "task-1",
+                "candidate_sha256": frozen,
+                "receiver_id": "00000000-0000-4000-8000-000000000000",
+                "status": "COMPLETED",
+                "pid": 999999,
+                "pgid": 999999,
+                "process_started_at_text": "not-running",
+                "cwd": ".",
+                "filename": "a.png",
+                "format": "png",
+                "content_type": "image/png",
+                "token_sha256": "0" * 64,
+                "upload_url": None,
+                "output": {
+                    "path": "private-scoring/evidence/a.png",
+                    "bytes": len(png),
+                    "sha256": hashlib.sha256(png).hexdigest(),
+                    "format": "png",
+                    "content_type": "image/png",
+                },
+            })
+            command = ["node", str(SUBMISSION), "--package-root", str(root), "--output", str(root / "submission.json")]
+            accepted = subprocess.run(command, capture_output=True, text=True)
+            self.assertEqual(accepted.returncode, 0, accepted.stderr)
+            (root / "submission.json").unlink()
+
+            screenshot.write_bytes(png + b"tampered")
+            rejected = subprocess.run(command, capture_output=True, text=True)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("截图接收器证据文件校验失败", rejected.stderr)
+
 
 class ManagedRuntimeTest(unittest.TestCase):
     @staticmethod
@@ -1016,6 +1117,68 @@ class ManagedRuntimeTest(unittest.TestCase):
             self.assertFalse((task_root / "private-scoring/runtime-port-override.json").exists())
             with self.assertRaises(ProcessLookupError):
                 os.kill(pid, 0)
+
+    def test_managed_static_service_supports_workspace_relative_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root = root / "score/tasks/task-1"
+            workspace = task_root / "workspace"
+            (workspace / "dist").mkdir(parents=True)
+            (workspace / "index.html").write_text("source root", encoding="utf-8")
+            (workspace / "dist/index.html").write_text("published dist", encoding="utf-8")
+            BuildSubmissionTest.materialize_candidate_integrity(root)
+            with socket.socket() as listener:
+                listener.bind(("127.0.0.1", 0))
+                port = listener.getsockname()[1]
+            started = subprocess.run(
+                [
+                    "node", str(MANAGED_RUNTIME), "start-static",
+                    "--task-root", str(task_root), "--root", "dist", "--port", str(port),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            try:
+                self.assertEqual(started.returncode, 0, started.stderr)
+                with urlopen(f"http://127.0.0.1:{port}/", timeout=5) as response:
+                    self.assertEqual(response.read().decode("utf-8"), "published dist")
+                state = json.loads(
+                    (task_root / "private-scoring/runtime-state.json").read_text(encoding="utf-8")
+                )
+                self.assertEqual(state["service"]["static_root"], "workspace/dist")
+            finally:
+                subprocess.run(
+                    ["node", str(MANAGED_RUNTIME), "stop", "--task-root", str(task_root)],
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                )
+
+    def test_managed_static_service_rejects_unsafe_or_missing_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root = root / "score/tasks/task-1"
+            workspace = task_root / "workspace"
+            workspace.mkdir(parents=True)
+            (workspace / "index.html").write_text("frozen", encoding="utf-8")
+            BuildSubmissionTest.materialize_candidate_integrity(root)
+            for unsafe_root, expected in (
+                (str(root), "workspace 内的相对目录"),
+                ("../outside", "workspace 内的相对目录"),
+                ("missing", "静态站点目录不存在"),
+            ):
+                rejected = subprocess.run(
+                    [
+                        "node", str(MANAGED_RUNTIME), "start-static",
+                        "--task-root", str(task_root), "--root", unsafe_root, "--port", "4173",
+                    ],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertNotEqual(rejected.returncode, 0)
+                self.assertIn(expected, rejected.stderr)
+            self.assertFalse((task_root / "private-scoring/runtime-state.json").exists())
 
 
 class StaticSiteServerTest(unittest.TestCase):

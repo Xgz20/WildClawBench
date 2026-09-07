@@ -10,9 +10,9 @@
 - 评分并发：每台机器 `score_slots=1`；
 - AstronStudio、QwenWork、DoubaoWork 尚未完成专用 Driver，不能把 WorkBuddy 的验证结论直接套用到这些客户端。
 
-基础串行链路已用 `xopglm52` 完成过三个 L1 真实用例的 WorkBuddy 执行、Codex Desktop 评分和 submission 闭环。Driver 1.6.0 新增的“不指定模型时保持客户端当前模型”语义已通过自动化回归和临时完整包集成验证，但尚未用新一轮真实 Desktop 批次复核。首次用于生产批次前，建议先用一题做本机 smoke。
+基础串行链路已在批次 `web-e2e-20260907-124800` 完成 5 个 L1 真实用例的 WorkBuddy 执行、Codex Desktop 评分和 submission 闭环。WorkBuddy 5.5.3/Driver 1.6.1 在未指定模型时连续五题读回 `current/xopglm52`，四次自动切题后队列进入 `COMPLETED`；Codex Desktop 26.901.51231 为五题分别创建项目、任务和 Browser 证据，评分为 55、65、67、77、91，编排状态最终为 `COMPLETED`。该批次评分使用 `score-web-e2e 4.3.0`。随后批次 `web-e2e-20260907-192642` 用一个 L1 完成 `score-web-e2e 4.4.0` 真实 Desktop smoke，6 张 Browser 截图均由标准一次性接收器保存并通过终态、签名和 SHA-256 门禁，submission 正常生成；该题入口直接位于 `workspace/`，所以 `start-static --root <子目录>` 仍只有自动化测试证据。首次换机器、升级 WorkBuddy/Codex Desktop/Skill 或切换模型后，仍建议先用一题做本机 smoke。
 
-文中的 `<...>` 都需要替换为实际路径或 ID。示例以 macOS、WorkBuddy 和三个 L1 用例为例。
+文中的 `<...>` 都需要替换为实际路径或 ID。示例以 macOS、WorkBuddy 和三个 L1 用例为例；第 7.1 节另列出已经完成的五题真实基线和 4.4.0 单题 smoke。
 
 ## 1. 最快跑通一次完整评测
 
@@ -399,6 +399,17 @@ private-scoring/evidence/
 
 端口冲突时优先通过启动参数或环境变量换端口。只有日志明确证明端口占用、项目又无法外部覆盖端口时，才允许对运行时副本中的唯一端口数字做受控替换；execution 和 score 的候选原件始终不能修改。
 
+静态入口在 `workspace/dist/` 或 `workspace/build/` 时，可分别使用 `managed_runtime.mjs start-static --root dist` 或 `--root build`。`--root` 始终相对 `workspace/` 解析，不能传绝对路径、`..`、符号链接或不存在的目录。
+
+Browser 截图必须使用 `score-web-e2e 4.4.0` 内置的一次性接收器落盘，不能在单题目录临时编写接收脚本，也不能通过剪贴板或手工 Base64 分片传输。评分 Agent 对每张图执行：
+
+```bash
+node <score-web-e2e-skill-dir>/scripts/screenshot_receiver.mjs \
+  start --task-root . --filename desktop-main.jpg
+```
+
+命令会后台启动并返回仅本机可用的一次性 `upload_url`。评分 Agent 在 Desktop Browser 的持久 JavaScript 会话中把 `tab.getScreenshot({ emit: false })` 返回的二进制直接 `POST` 到该 URL；只有 HTTP 201 且 `status --task-root .` 返回 `COMPLETED` 才算取证成功。文件扩展名、`Content-Type` 与 PNG/JPEG 签名必须一致。接收器默认 5 分钟超时、20 MiB 上限，上传一张合法图片后自动退出；异常时使用 `stop --task-root .` 精确停止记录的 PID。
+
 ### 6.4 评分异常不是候选零分
 
 以下情况应记录 `evaluation_error`，不能伪造 Criterion 零分或成功证据：
@@ -412,6 +423,25 @@ private-scoring/evidence/
 一题只有通过 `mark-complete` 的身份、哈希、状态和证据门禁后，控制 Agent 才能创建下一题。
 
 ## 7. 回传和报告
+
+### 7.1 已验证基线
+
+2026-09-07 的真实批次 `web-e2e-20260907-124800__workbuddy` 使用 WorkBuddy 5.5.3、Driver 1.6.1、`current/xopglm52` 和 `score-web-e2e 4.3.0`，完成 5 个 L1 用例的执行、5 个独立 Codex Desktop 项目/任务、Browser 评分和 submission。得分依次为：ab241 55、ab378 65、ab699 67、ab1468 77、ab1775 91；编排最终为 `COMPLETED`。
+
+回传 ZIP：
+
+```text
+/Users/gzx/debug-workspace/web-e2e/web-e2e-20260907-124800__workbuddy__submission.zip
+size: 32848336 bytes
+sha256: cc30f4d350f67ad3700857c63d704d035985ef810679367808c507187b14c495
+unzip -t: No errors detected
+```
+
+评分前完整备份 SHA-256 为 `b413c7a095b58b09b14a80af005172a20b14443f84d503f2506f8bda8f38065f`。该五题基线不能证明 `score-web-e2e 4.4.0`，但后续单题批次 `web-e2e-20260907-192642` 已补齐新版真实 Desktop smoke：WorkBuddy 5.5.3/Driver 1.6.1 保持 `current/xopglm52` 完成 L1 用例 `07_Website_Generation_task_ab378_square_circle_intersection`，Codex Desktop 任务 `01a07ba6-b2a2-7ec3-a842-045a4798105f` 使用内置 Browser 完成 10 项评分，得分 79。6 张 JPEG/JFIF 截图均通过 4.4.0 内置 `screenshot_receiver.mjs` 一次性上传，最后接收器状态为 `COMPLETED`，截图签名、字节数和 SHA-256 复核通过；服务已精确停止、运行时副本已清理、候选 SHA 始终为 `ba090603aed15d39a83096997caf316d7dca5d608ceda55d485ccd0a770bdf53`，`submission.json` SHA-256 为 `742b5c4ca8cbf7d3eda3a6b60fddf0212add973ee3709b3390b64265e791d760`。
+
+该单题产物的入口直接位于 `workspace/index.html`，没有可用于 `--root` 的已有子目录，因此本次不能证明 `start-static --root <子目录>` 的 Desktop 真实行为；这一项仍需单独验证，不能由截图接收器 smoke 或自动化测试替代。
+
+### 7.2 生成 submission 与报告
 
 全部评分完成后，由不参与单题评分的管理任务运行：
 
@@ -427,6 +457,7 @@ node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
 - 模型身份和模型选择模式；
 - 每题评分结果与证据；
 - 受管服务已停止；
+- 截图接收器已进入可信终态，最近一次成功截图的大小、SHA-256 和签名一致；
 - 运行时副本已清理；
 - 禁止目录和敏感文件。
 
@@ -509,6 +540,10 @@ node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
 
 记录真实错误并使用 `evaluation_error`。评分基础设施失败不等于候选功能全部为零。
 
+### Browser 截图二进制无法稳定落盘
+
+不要复制 Base64 文本，也不要在题目 `private-scoring/` 中临时创建接收器。确认评分机安装的是 `score-web-e2e 4.4.0` 或更高版本，按第 6.3 节为每张图单独启动 `screenshot_receiver.mjs`，并检查扩展名、`Content-Type` 和二进制签名是否一致。仍失败时停止接收器并记录 `evaluation_error`，不能伪造截图。
+
 ### 恢复时提示配置不一致
 
 恢复必须使用原 `run-id`、原任务顺序、原模型模式和原权限模式。旧版以“均衡”为显式默认模型创建的未完成队列，恢复时应继续显式提供 `--model 均衡`；不要把它改成新的 `current` 模式。
@@ -536,6 +571,8 @@ node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
 - [ ] 评分目录由标准准备脚本从执行原件复制生成。
 - [ ] 每题是独立 Codex Desktop 项目和独立任务。
 - [ ] 每题实际使用桌面内置 Browser 操作和取证。
+- [ ] 截图由标准一次性接收器保存，最后状态为 `COMPLETED`、`STOPPED`、`TIMED_OUT`、`FAILED` 或 `LOST`，没有存活接收进程。
+- [ ] `task_score.json` 引用的每个截图文件都存在于当前题 `private-scoring/evidence/`，且不是空文件。
 - [ ] 候选 Workspace 没有被评分或编排 Agent 修改。
 - [ ] 每题通过 `mark-complete` 后才进入下一题。
 - [ ] 根目录已生成有效 `submission.json`。

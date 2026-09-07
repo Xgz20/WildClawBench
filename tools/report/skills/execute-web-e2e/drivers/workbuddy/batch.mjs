@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import { atomicWriteJson, readJsonIfExists, snapshotTree } from "./lib.mjs";
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
-export const QUEUE_WORKER_VERSION = "1.6.0";
+export const QUEUE_WORKER_VERSION = "1.6.1";
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const DRIVER_FILE = join(SCRIPT_DIR, "driver.mjs");

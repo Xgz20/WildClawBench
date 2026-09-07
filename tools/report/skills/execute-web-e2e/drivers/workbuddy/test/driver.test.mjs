@@ -24,9 +24,26 @@ import {
 import {
   ensureModel,
   hasTrustedDomCompletion,
+  prepareClientForNewAttempt,
   restartWorkBuddy,
   waitForUniqueVisible,
 } from "../driver.mjs";
+
+test("fresh attempt persists successful WorkBuddy launch evidence", async () => {
+  const launch = {
+    status: "READY",
+    recovered_after_retry: false,
+    attempts: [{ attempt: 1, open_exit_code: 0, endpoint_ready: true }],
+  };
+  const state = { client: { launch: null } };
+  const result = await prepareClientForNewAttempt(
+    { restartApp: true, endpoint: "http://127.0.0.1:9229" },
+    state,
+    { restart: async () => launch },
+  );
+  assert.deepEqual(result, launch);
+  assert.deepEqual(state.client.launch, launch);
+});
 
 test("restartWorkBuddy retries a failed macOS open before prompt handling", async () => {
   let openCalls = 0;
@@ -360,7 +377,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.6.0");
+  assert.equal(state.driver.version, "1.6.1");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);
