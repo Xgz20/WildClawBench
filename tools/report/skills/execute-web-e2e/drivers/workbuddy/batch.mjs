@@ -16,10 +16,10 @@ import { hostname } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { atomicWriteJson, readJsonIfExists } from "./lib.mjs";
+import { atomicWriteJson, readJsonIfExists, snapshotTree } from "./lib.mjs";
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
-export const QUEUE_WORKER_VERSION = "1.3.0";
+export const QUEUE_WORKER_VERSION = "1.6.0";
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const DRIVER_FILE = join(SCRIPT_DIR, "driver.mjs");
@@ -39,7 +39,7 @@ function usage() {
     --task-id <任务 ID> [--task-id <任务 ID> ...] [选项]
 
 选项：
-  --model <UI名称>                 WorkBuddy UI 显示值，默认：均衡
+  --model <UI名称>                 可选；指定时选择并回读，省略时保持并回读当前模型
   --permission-mode <模式>         current（保持现状）或 full-access（显式开启完全访问）
   --run-timeout-seconds <秒>       每题 Agent 总执行超时，默认：3600
   --poll-interval-seconds <秒>     每题终态轮询间隔，默认：2
@@ -65,7 +65,7 @@ export function parseBatchArgs(argv) {
     harnessRoot: "",
     runId: "",
     taskIds: [],
-    model: "均衡",
+    model: "",
     permissionMode: "current",
     runTimeoutSeconds: 3600,
     pollIntervalSeconds: 2,
@@ -209,7 +209,7 @@ export function createQueueState(plan, args) {
     run_id: plan.runId,
     batch_id: plan.manifest.batch_id,
     harness_id: "workbuddy",
-    requested_ui_model: args.model,
+    requested_ui_model: args.model || null,
     requested_permission_mode: args.permissionMode,
     phase: "PREPARED",
     current_index: null,
@@ -247,7 +247,7 @@ export function assertQueueState(state, plan, args) {
   if (state.run_id !== plan.runId) mismatches.push("run_id");
   if (state.batch_id !== plan.manifest.batch_id) mismatches.push("batch_id");
   if (state.harness_id !== "workbuddy") mismatches.push("harness_id");
-  if (state.requested_ui_model !== args.model) mismatches.push("requested_ui_model");
+  if ((state.requested_ui_model || "") !== args.model) mismatches.push("requested_ui_model");
   if (state.requested_permission_mode && state.requested_permission_mode !== args.permissionMode) {
     mismatches.push("requested_permission_mode");
   }
@@ -308,12 +308,12 @@ function launchDriver(args) {
 export function buildDriverArgs(args, task, index, existingAutomation = null) {
   const driverArgs = [
     "--workspace", task.taskRoot,
-    "--model", args.model,
     "--permission-mode", args.permissionMode,
     "--run-timeout-seconds", String(args.runTimeoutSeconds),
     "--poll-interval-seconds", String(args.pollIntervalSeconds),
     "--post-cancel-quiescence-seconds", String(args.postCancelQuiescenceSeconds),
   ];
+  if (args.model) driverArgs.push("--model", args.model);
   if (args.restartAppFirst && index === 0) driverArgs.push("--restart-app");
   if (existingAutomation) {
     driverArgs.push("--resume");
@@ -438,6 +438,8 @@ export async function buildExecutionReceipt(plan, state) {
   let identitiesMatch = true;
   let modelsMatch = true;
   let allTerminal = true;
+  let workspacesMatchFinal = true;
+  let noExcludedRuntimeDirectories = true;
   for (const task of plan.tasks) {
     const queueTask = state.tasks.find((item) => item.task_id === task.taskId);
     const automation = await readJsonIfExists(task.automationStateFile);
@@ -450,10 +452,33 @@ export async function buildExecutionReceipt(plan, state) {
       || execution.task_id !== task.taskId
       || execution.harness?.id !== "workbuddy")) identitiesMatch = false;
     const actualUiModel = automation?.model_selection?.actual_model || automation?.model_selection?.model || null;
+    const selectionMode = automation?.model_selection?.mode
+      || (automation?.requested_ui_model ? "explicit" : "current");
+    const executionModelId = String(execution?.model?.id || "").trim();
+    const executionModelDisplayName = String(execution?.model?.display_name || "").trim();
     if (automation?.requested_ui_model && automation.requested_ui_model !== state.requested_ui_model) modelsMatch = false;
-    if (automation && new Set(["SUCCEEDED", "TIMEOUT"]).has(automation.phase)
+    if (!new Set(["current", "explicit"]).has(selectionMode)) modelsMatch = false;
+    if (selectionMode === "current" && automation?.requested_ui_model) modelsMatch = false;
+    if (selectionMode === "explicit" && !automation?.requested_ui_model) modelsMatch = false;
+    if (automation && new Set(["SUCCEEDED", "TIMEOUT"]).has(automation.phase) && !actualUiModel) {
+      modelsMatch = false;
+    }
+    if (automation?.requested_ui_model && automation && new Set(["SUCCEEDED", "TIMEOUT"]).has(automation.phase)
       && actualUiModel !== automation.requested_ui_model) modelsMatch = false;
+    if (automation && new Set(["SUCCEEDED", "TIMEOUT"]).has(automation.phase)
+      && actualUiModel && !new Set([executionModelId, executionModelDisplayName]).has(actualUiModel)) modelsMatch = false;
     if (!automation || !TERMINAL_TASK_PHASES.has(automation.phase)) allTerminal = false;
+    let receiptSnapshot = null;
+    try {
+      receiptSnapshot = await snapshotTree(join(task.taskRoot, "workspace"));
+    } catch {
+      workspacesMatchFinal = false;
+    }
+    const finalSha256 = automation?.artifacts?.final?.sha256 || null;
+    if (!receiptSnapshot || !finalSha256 || receiptSnapshot.sha256 !== finalSha256) {
+      workspacesMatchFinal = false;
+    }
+    if (receiptSnapshot?.excluded_runtime_directories?.length) noExcludedRuntimeDirectories = false;
     tasks.push({
       task_id: task.taskId,
       attempt_id: automation?.attempt_id || null,
@@ -466,6 +491,7 @@ export async function buildExecutionReceipt(plan, state) {
       client_version: automation?.client?.version || execution?.harness?.version || null,
       driver: automation?.driver || null,
       model_selection: automation ? {
+        mode: selectionMode,
         requested_model: automation.requested_ui_model || null,
         actual_model: actualUiModel,
         method: automation.model_selection?.method || null,
@@ -478,7 +504,11 @@ export async function buildExecutionReceipt(plan, state) {
       prompt: automation ? { sha256: automation.prompt_sha256, bytes: automation.prompt_bytes } : null,
       workspace: automation ? {
         initial_sha256: automation.artifacts?.initial?.sha256 || null,
-        final_sha256: automation.artifacts?.final?.sha256 || null,
+        final_sha256: finalSha256,
+        receipt_check_sha256: receiptSnapshot?.sha256 || null,
+        receipt_checked_at: new Date().toISOString(),
+        receipt_check_matches_final: Boolean(receiptSnapshot && finalSha256 && receiptSnapshot.sha256 === finalSha256),
+        excluded_runtime_directories: receiptSnapshot?.excluded_runtime_directories || [],
       } : null,
       timeout: automation?.timeout || null,
       manual_interventions: queueTask?.manual_interventions || [],
@@ -491,13 +521,22 @@ export async function buildExecutionReceipt(plan, state) {
       },
     });
   }
+  const actualModels = [...new Set(tasks.map((task) => task.model_selection?.actual_model).filter(Boolean))];
+  const manifestModel = plan.manifest.model || null;
+  const resolvedModel = actualModels.length === 1 ? {
+    id: manifestModel?.id || actualModels[0],
+    display_name: manifestModel?.display_name || actualModels[0],
+  } : manifestModel;
+  if (actualModels.length !== 1) modelsMatch = false;
+  if (manifestModel?.id && actualModels.length === 1
+    && !new Set([manifestModel.id, manifestModel.display_name]).has(actualModels[0])) modelsMatch = false;
   return {
     schema_version: "wildclawbench.web-e2e-execution-receipt/v1",
     generated_at: new Date().toISOString(),
     batch_id: plan.manifest.batch_id,
     run_id: state.run_id,
     harness: plan.manifest.harness,
-    model: plan.manifest.model || null,
+    model: resolvedModel,
     worker: state.worker,
     queue: {
       phase: state.phase,
@@ -516,7 +555,15 @@ export async function buildExecutionReceipt(plan, state) {
       identities_match: identitiesMatch,
       models_match: modelsMatch,
       all_tasks_terminal: allTerminal,
-      valid: sameScope && recordsPresent && identitiesMatch && modelsMatch && allTerminal,
+      workspaces_match_final: workspacesMatchFinal,
+      no_excluded_runtime_directories: noExcludedRuntimeDirectories,
+      valid: sameScope
+        && recordsPresent
+        && identitiesMatch
+        && modelsMatch
+        && allTerminal
+        && workspacesMatchFinal
+        && noExcludedRuntimeDirectories,
     },
   };
 }
@@ -527,13 +574,26 @@ async function saveExecutionReceipt(plan, state) {
   return receipt;
 }
 
+export function recordReceiptIntegrityFailure(state, receipt) {
+  if (receipt.integrity?.valid || !new Set(["COMPLETED", "COMPLETED_WITH_FAILURES"]).has(state.phase)) return false;
+  state.history.push({
+    event: "EXECUTION_RECEIPT_INTEGRITY_FAILED",
+    at: new Date().toISOString(),
+    integrity: receipt.integrity,
+  });
+  state.error = "execution-receipt.json 完整性检查失败；候选产物可能在终态后漂移或包含禁止的运行时目录";
+  state.phase = "FAILED";
+  return true;
+}
+
 async function runQueue(plan, args) {
   await mkdir(plan.queueDir, { recursive: true });
   let state = await readJsonIfExists(plan.queueStateFile);
   if (state) {
     assertQueueState(state, plan, args);
     if (new Set(["COMPLETED", "COMPLETED_WITH_FAILURES"]).has(state.phase)) {
-      await saveExecutionReceipt(plan, state);
+      const receipt = await saveExecutionReceipt(plan, state);
+      if (recordReceiptIntegrityFailure(state, receipt)) await saveQueue(plan, state);
       return state;
     }
     if (!args.resume) throw new Error(`已有未完成队列 ${state.phase}；必须使用 --resume`);
@@ -772,7 +832,8 @@ async function runQueue(plan, args) {
     state.runtime.heartbeat_at = new Date().toISOString();
     await saveQueue(plan, state).catch(() => {});
     try {
-      await saveExecutionReceipt(plan, state);
+      const receipt = await saveExecutionReceipt(plan, state);
+      if (recordReceiptIntegrityFailure(state, receipt)) await saveQueue(plan, state);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       state.history.push({ event: "EXECUTION_RECEIPT_FAILED", at: new Date().toISOString(), error: message });

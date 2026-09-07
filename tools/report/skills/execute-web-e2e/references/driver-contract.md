@@ -11,7 +11,7 @@
 | `createTask` | 为当前用例建立全新客户端任务 |
 | `selectWorkspace` | 选择并回读确认单题绝对路径或稳定标识；仅有 basename 标签不足以确认 |
 | `configurePermissions` | 按运行参数幂等回读或设置权限模式；高权限模式必须显式请求并保存确认结果 |
-| `selectModel` | 选择并回读 UI 实际值 |
+| `selectModel` | 调用者显式指定时选择并回读 UI 实际值；未指定时保持当前设置并回读实际值 |
 | `submitPrompt` | 在发送前持久化 attempt ID 和 Prompt SHA-256 |
 | `inspect` | 返回明确终态、运行态、可见异常或未知状态 |
 | `handleExpectedApproval` | 只处理严格匹配白名单、限定在候选工作空间内的一次性普通授权；保存规则和命令哈希 |
@@ -56,7 +56,7 @@ workspace 哈希和文件稳定只能作为产物证据，不能单独判定 Age
 
 丰富状态使用 `wildclawbench.web-e2e-automation-state/v1`，保存在候选单题目录外。正式 `execution_record.json` 保持 `wildclawbench.web-e2e-execution/v1`，不得增加自动化私有字段。
 
-Harness 级 Worker 使用 `wildclawbench.web-e2e-execution-receipt/v1` 汇总完整任务范围。回执只有在请求任务集合与 manifest 一致、每题 automation/execution 记录存在、身份和请求/实际模型一致、所有题均为终态时才能声明 `integrity.valid=true`。人工介入必须记录原因和时间，但不能直接把未知终态改写为成功。
+Harness 级 Worker 使用 `wildclawbench.web-e2e-execution-receipt/v1` 汇总完整任务范围。回执只有在请求任务集合与 manifest 一致、每题 automation/execution 记录存在、身份、`execution_record.model` 和模型回读一致、所有题均为终态时才能声明 `integrity.valid=true`。显式模型模式要求请求值等于实际值；保持当前配置模式允许 `requested_model=null`，但必须保存非空实际值。回执顶层 `model` 使用 Harness 实际回读模型；初始 manifest 未声明模型时也不能留空。人工介入必须记录原因和时间，但不能直接把未知终态改写为成功。
 
 映射规则：
 

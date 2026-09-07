@@ -1,0 +1,10 @@
+{
+  "schema_version": "wildclawbench.web-e2e-score-skill/v1",
+  "name": "score-web-e2e",
+  "version": "4.3.0",
+  "supported_metric_profiles": [
+    "web-e2e-detailed-v1",
+    "artifactsbench-web-v1"
+  ],
+  "task_score_schema": "wildclawbench.web-e2e-task-score/v1"
+}

@@ -29,12 +29,13 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy.sh --probe
 ```bash
 bash .agents/skills/execute-web-e2e/scripts/run-workbuddy.sh \
   /absolute/batch-root/execution/tasks/<task_id> \
-  --model 均衡 \
   --permission-mode full-access \
   --restart-app
 ```
 
-`--restart-app` 会退出并重新启动 WorkBuddy，仅在当前没有需要保留的运行任务时使用。WorkBuddy 已通过本地 CDP 端口启动时省略该参数。
+上例不传 `--model`，Driver 会保留并回读 WorkBuddy 当前模型，不操作模型的推理强度。跑批前应由测试人员在 WorkBuddy 中配置好默认模型和推理强度。需要覆盖当前模型时再显式增加 `--model <UI 精确显示名>`。
+
+`--restart-app` 会退出并重新启动 WorkBuddy，仅在当前没有需要保留的运行任务时使用。Driver 会先确认旧进程和 CDP 均已退出，再对 macOS `open` 做最多 3 次有界重试；每次都必须回读本地 CDP 才算启动成功，尝试证据写入 `automation_state.json.client.launch`。WorkBuddy 已通过本地 CDP 端口启动时省略该参数。
 
 中断后恢复：
 
@@ -58,15 +59,16 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy-batch.sh \
   --run-id <queue_id> \
   --task-id <task_id_1> \
   --task-id <task_id_2> \
-  --permission-mode full-access \
-  --model 均衡
+  --permission-mode full-access
 ```
 
-`--model` 接收 WorkBuddy 模型下拉框中的精确显示名，例如 `--model Hy3`；省略时默认“均衡”。Driver 必须从唯一模型下拉框选择并回读实际值，不能用页面上的任意同名文本判断成功。同一个 `run-id` 恢复时模型不可变；正式评测包的 `manifest.json.model` 也必须与该选择一致。
+`--model` 是可选覆盖项，接收 WorkBuddy 模型下拉框中的精确显示名，例如 `--model xopglm52`。显式传入时，Driver 选择并回读该模型；省略时，Driver 只回读当前模型，不展开下拉框，也不再自动选择“均衡”。两种模式都不操作推理强度。一个队列运行期间不得人工改变模型；所有题的实际回读模型必须一致。同一个 `run-id` 恢复时模型模式和显式请求值不可变；可选 `execution_record.json` 已预声明模型时，实际回读值也必须与其一致。
 
 `--permission-mode full-access` 是评测运行的显式授权：Driver 会在发送 Prompt 前回读权限状态，已开启时不重复点击；未开启时通过 WorkBuddy 自身的风险确认界面开启。WorkBuddy 5.5.3 将该设置作用于当前客户端的全部任务，而不是单个项目。省略该参数时默认 `current`，只记录当前权限，不修改客户端设置。
 
 Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作空间，使用文件锁保证同一 execution 包只有一个 WorkBuddy UI 队列，并把状态写到 `execution/.execute-web-e2e/queues/<queue_id>/queue_state.json`。当前题只有在明确终态、自动化状态和 `execution_record.json` 一致后才会记录 `AUTO_ADVANCE` 并启动下一题。
+
+模型下拉框完成唯一回读后，Driver 必须在发送 Prompt 前把实际模型写入 `execution_record.json.model`。显式模式记录 `mode=explicit` 及请求/实际模型；保持当前配置时记录 `mode=current`、`requested_model=null` 和实际模型。若执行记录预先声明了不同模型则失败关闭。最终回执的顶层 `model`、逐题 `model_selection` 和 execution record 必须一致，不能等到报告阶段再补模型身份。
 
 队列停在 `NEEDS_ATTENTION` 后，先处理或扩充经过审查的安全规则，再使用完全相同的参数加 `--resume`。默认遇到 `INFRA_FAILED` 或 `TIMEOUT` 即停止；只有明确需要验证失败隔离时才使用 `--continue-on-terminal-failure`。
 
@@ -76,7 +78,7 @@ Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作�
 
 达到执行时限后 Driver 必须点击当前会话的停止按钮，确认 WorkBuddy 已进入非运行态，并验证候选 workspace 在静默观察窗口内不再变化。只有三项证据齐全时才记录 `TIMEOUT`；否则记录 `NEEDS_ATTENTION`。即使指定 `--continue-on-terminal-failure`，未确认停止或 workspace 仍变化的超时任务也不能进入下一题。
 
-队列退出时会在 Harness 根目录生成 `execution-receipt.json`，汇总任务范围、attempt、自动化/正式状态、客户端与 Driver 版本、请求/实际模型、权限、Prompt/workspace 哈希和证据相对路径。`integrity.valid=true` 要求请求任务集合与 manifest 完全一致、记录齐全、身份和模型一致且所有任务均为终态。
+队列退出时会在 Harness 根目录生成 `execution-receipt.json`，汇总任务范围、attempt、自动化/正式状态、客户端与 Driver 版本、请求/实际模型、权限、Prompt/workspace 哈希和证据相对路径。生成回执时会重新计算每题 workspace SHA；`integrity.valid=true` 要求请求任务集合与 manifest 完全一致、记录齐全、身份和模型一致、所有任务均为终态，且当前 workspace 仍等于 Driver 终态冻结值。若已漂移，队列改为 `FAILED`，不得进入评分。`.git`、`.cache`、`.vite` 和 `node_modules` 被定义为非候选运行时目录；任一层级出现这些目录都会令回执无效，不能因为树哈希排除了它们就继续评分。
 
 如果 Driver 在 Prompt 发送前因 UI 自动化错误进入 `INFRA_FAILED`，且候选 workspace 没有任何变化，可在修复根因后使用 `--resume --retry-pre-send-failure`。旧 attempt 会移入相邻的 `.attempts/<task_id>/<attempt_id>/` 留存审计；发送后失败、超时或已有产物变化时拒绝自动重试。
 
@@ -87,9 +89,12 @@ Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作�
 - Prompt 只从 `PROMPT.md` 读取；状态中只保存 SHA-256 和字节数，不复制正文。
 - Prompt 发送后尽早保存侧栏 `data-conversation-id`；这是 WorkBuddy session DB 缺少当前会话时，运行中断和客户端重启恢复的稳定标识。
 - `automation_state.json` 和过程截图写到单题目录外；完成后的 transcript 证据才写回 `.web-e2e-evidence/`。
-- 优先使用 WorkBuddy 本地 session 数据库中的 conversation 状态判定终态；DOM 负责补充运行中、授权弹窗和最终回复证据。不能用固定睡眠或 workspace 文件稳定代替明确终态。
+- 执行终态后的 `workspace/` 是不可变候选产物。控制 Agent 不得为解决端口冲突、启动失败或打包检查而改写其中的源码；发现残留服务时只能在能够证明 PID 属于当前任务的情况下精确停止，否则停在 `NEEDS_ATTENTION`，禁止使用宽泛进程清理。
+- 回执生成后不能通过编辑 `execution-receipt.json`、重算哈希或从评分副本覆盖回来“修复”候选；发生任何不一致时保留现场并重新执行该评测单元。
+- 优先使用 WorkBuddy 本地 session 数据库中的 conversation 状态判定终态；DOM 负责补充运行中、授权弹窗和最终回复证据。`data-status=complete` 必须同时有实质 Markdown 回复，或同一 Agent turn 中同时出现“已完成”状态与 `conversation-finished-footer`；折叠工具卡标题不能冒充最终回复。不能用固定睡眠或 workspace 文件稳定代替明确终态。
 - 未知授权、未知 session 状态、Prompt 发送临界区不明确都失败关闭。
 - “允许完全访问”只决定 WorkBuddy 创建任务时的权限模式；若运行中仍出现授权面板，Driver 继续按下面的严格命令白名单处理，不会因为客户端已开启完全访问而自动批准未知操作。
+- 生产跑批前由测试人员按指导手册设置 Harness 的默认模型和推理强度。执行自动化只在显式提供 `--model` 时切换模型；推理强度始终沿用 Harness 当前配置，不由 Playwright 选择或校验。
 - 只允许 Driver 对显式白名单且严格限定在候选 `workspace/` 内的普通操作自动选择一次性“允许”；当前唯一规则是清理该目录下的 `.DS_Store`。其他命令（包括同类命令的路径或参数变化）一律停在 `NEEDS_ATTENTION`。
 - `SUCCEEDED`、`INFRA_FAILED`、已确认停止的 `TIMEOUT` 分别映射为 `execution_record.json` 的 `completed`、`execution_error`、`timeout`；没有生成有效站点仍是正常完成，由评分阶段判低分。
 - 第一版每台机器保持 `ui_slots: 1`、`run_slots: 1`，不要并发操作 WorkBuddy。

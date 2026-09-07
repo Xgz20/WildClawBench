@@ -3,6 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { assertManagedScoringOutput, verifyManagedScoringTask } from "./workspace-integrity.mjs";
+
 const AESTHETIC_RUBRIC_PATH = fileURLToPath(
   new URL("../references/aesthetic-rubric.json", import.meta.url),
 );
@@ -85,6 +87,8 @@ function main() {
     throw new Error("必须提供 --task-contract 和 --output");
   }
   const output = path.resolve(args.output);
+  assertManagedScoringOutput(args["task-contract"], output, "score_input.json");
+  verifyManagedScoringTask(args["task-contract"], "init-score");
   if (fs.existsSync(output)) {
     throw new Error(`拒绝覆盖已有评分输入: ${output}`);
   }

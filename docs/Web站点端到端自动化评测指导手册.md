@@ -1,0 +1,542 @@
+# Web 站点端到端自动化评测指导手册
+
+本文面向评测管理员、Harness 执行人员和评分人员，说明如何使用 Codex 中的 Web E2E Skills 完成“准备题目 → Harness 自动做题 → Codex Desktop 自动评分 → 汇总报告”。如果只是第一次跑通流程，直接按第 1 节操作；后续章节用于理解参数、恢复中断和排查失败。
+
+当前已经实现的自动化范围是：
+
+- 被评 Harness：WorkBuddy，采用 Electron CDP/Playwright 串行执行；
+- 评分 Harness：Codex Desktop，每题建立独立项目和独立任务，使用桌面内置 Browser；
+- 执行并发：每台机器 `ui_slots=1`、`run_slots=1`；
+- 评分并发：每台机器 `score_slots=1`；
+- AstronStudio、QwenWork、DoubaoWork 尚未完成专用 Driver，不能把 WorkBuddy 的验证结论直接套用到这些客户端。
+
+基础串行链路已用 `xopglm52` 完成过三个 L1 真实用例的 WorkBuddy 执行、Codex Desktop 评分和 submission 闭环。Driver 1.6.0 新增的“不指定模型时保持客户端当前模型”语义已通过自动化回归和临时完整包集成验证，但尚未用新一轮真实 Desktop 批次复核。首次用于生产批次前，建议先用一题做本机 smoke。
+
+文中的 `<...>` 都需要替换为实际路径或 ID。示例以 macOS、WorkBuddy 和三个 L1 用例为例。
+
+## 1. 最快跑通一次完整评测
+
+### 1.1 跑批前只做一次的准备
+
+执行机器需要：
+
+1. 安装并启用 `execute-web-e2e` Skill。
+2. 打开 WorkBuddy，在客户端中把默认模型设为 `xopglm52`，选择本轮要测的推理强度，并开启“允许完全访问”。
+3. 确认当前没有需要保留的运行中任务。
+4. 在执行 Skill 的 WorkBuddy Driver 目录运行一次 `npm ci`。
+
+评分机器需要：
+
+1. 安装并启用 `orchestrate-web-e2e` 和 `score-web-e2e`。
+2. 使用带桌面 Browser 的 Codex Desktop。
+3. 确认没有需要保留的运行中 Codex 任务，完全退出 ChatGPT/Codex Desktop，再在 macOS 终端启动仅本机可访问的 CDP 端口：
+
+   ```bash
+   open -na "ChatGPT" --args \
+     --remote-debugging-address=127.0.0.1 \
+     --remote-debugging-port=9230
+   ```
+
+   评分控制任务必须在这次启动后新建；控制任务运行期间不得退出或重启承载它的 Desktop。
+4. 在 `orchestrate-web-e2e/drivers/codex-desktop` 目录运行一次 `npm ci`。
+
+同一台电脑可以同时承担执行和评分；多电脑时按第 8 节传递文件。
+
+### 1.2 生成评测包
+
+在 WildClawBench 工程中打开一个 Codex 任务，复制下面的内容，把输出目录替换成实际路径：
+
+```text
+请使用 $prepare-web-e2e-workspaces 生成一个 Web 站点端到端评测批次。
+
+用例：
+- 07_Website_Generation_task_ab078_svg_smartphone_speech_bubbles
+- 07_Website_Generation_task_ab097_svg_download_animation
+- 07_Website_Generation_task_ab378_square_circle_intersection
+
+Harness：workbuddy
+指标 Profile：auto
+报告模型映射：workbuddy=xopglm52
+报告推理强度映射：workbuddy=客户端默认值
+输出目录：/Users/tester/WebE2E
+
+使用自动生成的时间戳 batch_id，不要执行题目或评分。
+```
+
+成功后会得到类似目录：
+
+```text
+/Users/tester/WebE2E/web-e2e-20260907-120000/
+├── packages/
+│   ├── web-e2e-20260907-120000__workbuddy__execution.zip
+│   ├── web-e2e-20260907-120000__workbuddy__scoring.zip
+│   ├── web-e2e-20260907-120000__score-web-e2e-skill.zip
+│   ├── web-e2e-20260907-120000__orchestrate-web-e2e-skill.zip
+│   └── web-e2e-20260907-120000__report-web-e2e-skill.zip
+└── web-e2e-20260907-120000__report-config.yaml
+```
+
+解压 execution ZIP，得到 Harness 根目录：
+
+```text
+/Users/tester/WebE2E/web-e2e-20260907-120000__workbuddy/
+```
+
+### 1.3 让 WorkBuddy 自动依次做完三题
+
+在执行机器的 Codex 控制任务中复制：
+
+```text
+请使用 $execute-web-e2e 串行执行下面 WorkBuddy 包中 manifest.json 的全部用例：
+
+/Users/tester/WebE2E/web-e2e-20260907-120000__workbuddy
+
+要求：
+- run-id 使用 workbuddy-20260907-120000；
+- 按 manifest 顺序执行全部题目；
+- 不指定模型，保持并回读 WorkBuddy 当前模型；
+- 不操作推理强度，保持 WorkBuddy 当前设置；
+- 权限模式使用 full-access；
+- 第一题前自动重启 WorkBuddy；
+- 单题失败或状态不明时停止，不跳过失败继续；
+- 完成后检查 execution-receipt.json 的 integrity.valid 必须为 true。
+```
+
+这里故意不写模型参数。Driver 会读取 WorkBuddy 当前显示的模型，不会打开模型下拉框，也不会改变推理强度。如果希望覆盖客户端当前模型，把第三条改为：
+
+```text
+- 显式指定模型 xopglm52，选择后必须回读一致；
+```
+
+全部完成后，Harness 根目录应存在：
+
+```text
+execution-receipt.json
+```
+
+至少检查：
+
+- `integrity.valid` 为 `true`；
+- 顶层 `model.id` 非空；
+- 每题 `model_selection.actual_model` 相同；
+- 未指定模型时，每题 `model_selection.mode` 为 `current`、`requested_model` 为 `null`；
+- 每题 `execution_status` 已进入终态。
+
+### 1.4 自动准备并完成 Codex Desktop 评分
+
+先把同批次 scoring ZIP 放到 Harness 根目录或其同级目录。然后在评分机器的 Codex 控制任务中复制：
+
+```text
+请使用 $orchestrate-web-e2e 闭环下面 WorkBuddy 执行包的评分：
+
+Harness 根目录：
+/Users/tester/WebE2E/web-e2e-20260907-120000__workbuddy
+
+scoring ZIP：
+/Users/tester/WebE2E/web-e2e-20260907-120000__workbuddy__scoring.zip
+
+Codex Desktop CDP：
+http://127.0.0.1:9230
+
+要求：
+1. 先校验 execution-receipt.json 并生成独立 score 工作空间；
+2. 初始化全部题目的串行评分状态；
+3. 每题注册 score/tasks/<task_id> 为独立 Codex Desktop 项目，并按绝对路径回读 projectId；
+4. 每题创建独立 Desktop 评分任务，必须使用 $score-web-e2e 和桌面内置 Browser；
+5. 一题完成并通过 mark-complete 后才创建下一题；
+6. 不覆盖评分模型或推理强度，沿用评分 Codex Desktop 的默认设置；
+7. 全部完成后运行 build_submission.mjs，在 Harness 根目录生成 submission.json；
+8. execution 和 score 中的候选 workspace 均不得修改。
+```
+
+默认先使用可见 UI 注册项目。如果这台评分机当前版本的原生文件夹选择器无法工作，只有在该 Desktop 版本已经完成过 renderer bridge 验证、测试人员明确接受其版本敏感风险后，才在请求中补充：
+
+```text
+本机已接受当前 Codex Desktop 版本的 renderer bridge 风险；允许显式使用 renderer-bridge，并在 preflight 中携带 allow-renderer-bridge。不得静默降级。
+```
+
+成功后确认 Harness 根目录存在 `submission.json`，然后用系统 ZIP 工具压缩整个 Harness 根目录。不要只压缩 `score/` 或单独发送 `submission.json`。
+
+### 1.5 生成汇总报告
+
+在安装了 `report-web-e2e` 的 Codex 任务中复制：
+
+```text
+请使用 $report-web-e2e 汇总 Web 站点端到端评测结果。
+
+回传包：
+- /Users/tester/WebE2E/returns/web-e2e-20260907-120000__workbuddy.zip
+
+报告配置：
+/Users/tester/WebE2E/web-e2e-20260907-120000/web-e2e-20260907-120000__report-config.yaml
+
+输出目录：
+/Users/tester/WebE2E/reports/web-e2e-20260907-120000
+
+请生成并校验 Markdown、JSON 和 Excel 三种报告产物。
+```
+
+最终应得到：
+
+```text
+Web站点端到端评测领导版.md
+web_e2e_report_data.json
+Web站点端到端评测报告.xlsx
+```
+
+## 2. 四个阶段和对应 Skill
+
+| 阶段 | Skill | 输入 | 主要输出 |
+| --- | --- | --- | --- |
+| 准备 | `prepare-web-e2e-workspaces` | 用例 ID、Harness、输出目录、报告配置 | execution/scoring ZIP、三个 Skill ZIP、报告配置 |
+| 执行 | `execute-web-e2e` | 解压后的 execution Harness 根目录 | 候选产物、自动化状态、`execution_record.json`、`execution-receipt.json` |
+| 评分 | `orchestrate-web-e2e` + `score-web-e2e` | 已完成执行包、scoring ZIP、Codex Desktop | 独立评分项目与任务、浏览器证据、`task_score.json`、`submission.json` |
+| 报告 | `report-web-e2e` | 一个或多个完整回传包、报告配置 | Markdown、JSON、Excel |
+
+`execute-web-e2e` 负责被评 Harness 做题，不参与评分；`score-web-e2e` 每次只评一题；`orchestrate-web-e2e` 负责交接、注册项目和调度评分任务，不自行判断得分。
+
+## 3. 模型和推理强度规则
+
+### 3.1 模型优先级
+
+WorkBuddy Driver 只有两个模型模式：
+
+| 调用方式 | 行为 | 回执记录 |
+| --- | --- | --- |
+| 显式传入 `--model <UI 精确显示名>` | 选择目标模型并回读；不一致则停止 | `mode=explicit`、请求模型、实际模型 |
+| 省略 `--model` | 保持当前模型，只回读；不展开模型下拉框 | `mode=current`、`requested_model=null`、实际模型 |
+
+省略模型不再等于“均衡”。它表示测试人员已经在 Harness 中配置好模型，自动化不得覆盖。
+
+无论哪种模式：
+
+- 发送 Prompt 前都必须取得非空实际模型；
+- 同一队列所有题的实际模型必须一致；
+- 执行过程中不要人工切换模型；
+- 实际模型会写入执行记录、执行回执、评分冻结记录、单题评分和 submission；
+- 已完成批次的模型身份不能通过编辑 JSON 更换，切换模型必须新建时间戳批次并重新执行。
+
+### 3.2 推理强度
+
+执行自动化不选择、不回读、不校验被评 Harness 的推理强度。原因是不同客户端的设置入口和模型联动差异较大，Playwright 控制容易产生静默误配。
+
+生产跑批前由测试人员手工设置推理强度；准备阶段的 `--reasoning-effort` 或 `--reasoning-effort-map` 只写入报告配置，是用户声明值，不是 UI 自动取证结果。
+
+### 3.3 建议的生产配置顺序
+
+1. 打开被评 Harness，配置模型。
+2. 配置该模型对应的推理强度。
+3. 配置权限模式。
+4. 关闭无关会话或确认没有运行中任务。
+5. 再让控制 Agent 调用 `execute-web-e2e`。
+
+如果要确保本轮使用指定模型，在执行请求中显式给出模型；如果某个 Harness 的模型/推理强度组合只能由人工稳定配置，则省略模型参数，让 Driver 保持当前设置并记录实际模型。
+
+## 4. 准备评测包
+
+### 4.1 命令行等价示例
+
+在仓库根目录运行：
+
+```bash
+.venv/bin/python .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_workspaces.py \
+  --task-id 07_Website_Generation_task_ab078_svg_smartphone_speech_bubbles \
+  --task-id 07_Website_Generation_task_ab097_svg_download_animation \
+  --task-id 07_Website_Generation_task_ab378_square_circle_intersection \
+  --harness workbuddy \
+  --metric-profile auto \
+  --model-map workbuddy=xopglm52 \
+  --reasoning-effort-map workbuddy=客户端默认值 \
+  --output-dir /Users/tester/WebE2E
+```
+
+`--model-map` 在这里用于生成报告配置，不会要求 WorkBuddy Driver 自动切换模型。执行阶段是否切换，只由调用 `execute-web-e2e` 时有没有显式提供模型决定。
+
+### 4.2 不得进入 execution 包的内容
+
+执行工作空间只能包含公开 Prompt 和初始候选 Workspace，不能包含：
+
+- Ground Truth；
+- Expected Behavior；
+- Rubric、checker 或评分脚本；
+- 题目 `eval/`、`gt/`；
+- 其他题目的 Prompt；
+- 真实账号、Cookie、API Key、私钥或生产数据。
+
+执行时选择 `execution/tasks/<task_id>/`，不要选择其中的 `workspace/`，也不要选择整个 Harness 根目录。
+
+## 5. WorkBuddy 自动执行
+
+### 5.1 一次性安装依赖与只读探测
+
+```bash
+cd <execute-web-e2e-skill-dir>/drivers/workbuddy
+npm ci
+
+bash <execute-web-e2e-skill-dir>/scripts/run-workbuddy.sh --probe
+```
+
+`--probe` 不会新建任务。若 WorkBuddy 当前停在历史会话页，可能返回 `workspace-picker-not-visible`；先切到未发送的新任务页再探测。
+
+### 5.2 直接运行批次
+
+沿用客户端当前模型：
+
+```bash
+bash <execute-web-e2e-skill-dir>/scripts/run-workbuddy-batch.sh \
+  /Users/tester/WebE2E/web-e2e-20260907-120000__workbuddy \
+  --run-id workbuddy-20260907-120000 \
+  --task-id 07_Website_Generation_task_ab078_svg_smartphone_speech_bubbles \
+  --task-id 07_Website_Generation_task_ab097_svg_download_animation \
+  --task-id 07_Website_Generation_task_ab378_square_circle_intersection \
+  --permission-mode full-access \
+  --restart-app-first
+```
+
+显式覆盖模型只需增加：
+
+```bash
+--model xopglm52
+```
+
+模型参数使用客户端下拉框中的精确显示名。同一个 `run-id` 恢复时，任务顺序、模型模式、显式模型值和权限模式都不能改变。
+
+### 5.3 如何判断一题完成并进入下一题
+
+Worker 不用固定等待时间猜测完成。它优先读取 WorkBuddy 本地 session 状态，并用 DOM 明确终态和实质最终回复补充判断。只有以下内容一致时才记录 `AUTO_ADVANCE`：
+
+- WorkBuddy 会话已经明确结束；
+- `automation_state.json` 已进入可信终态；
+- `execution_record.json` 状态和模型一致；
+- 候选 Workspace 已记录终态哈希；
+- 超时题还必须有停止确认和 Workspace 静默证据。
+
+网站没有生成成功仍可能是 Harness 的正常完成结果，后续由评分阶段判定；自动化不能因为产物质量低而替模型继续修改。
+
+### 5.4 中断恢复
+
+控制 Agent 或 Worker 中断后，使用原来的 `run-id`、任务顺序和参数，并增加 `--resume`：
+
+```bash
+bash <execute-web-e2e-skill-dir>/scripts/run-workbuddy-batch.sh \
+  /Users/tester/WebE2E/web-e2e-20260907-120000__workbuddy \
+  --run-id workbuddy-20260907-120000 \
+  --task-id 07_Website_Generation_task_ab078_svg_smartphone_speech_bubbles \
+  --task-id 07_Website_Generation_task_ab097_svg_download_animation \
+  --task-id 07_Website_Generation_task_ab378_square_circle_intersection \
+  --permission-mode full-access \
+  --resume
+```
+
+如果 WorkBuddy 客户端也崩溃，增加 `--restart-app-on-resume`。只有已捕获稳定 conversation ID 时才会恢复原会话；无法唯一确认时停在 `NEEDS_ATTENTION`，不会创建新任务或重复发送 Prompt。
+
+发送前自动化失败、候选 Workspace 完全没有变化时，修复原因后可以在恢复命令中增加 `--retry-pre-send-failure`。旧 attempt 会被归档，发送后失败不能用该参数重试。
+
+### 5.5 失败处理
+
+- `NEEDS_ATTENTION`：状态不明、未知授权或无法安全恢复，需要人工检查；它不是完成。
+- `INFRA_FAILED`：发送前控制失败或已确认的基础设施错误，默认停止队列。
+- `TIMEOUT`：只有 WorkBuddy 已停止且 Workspace 静默时才是安全终态。
+- 默认不要使用 `--continue-on-terminal-failure`；只有明确需要验证失败隔离或接受失败题继续时才使用。
+
+## 6. Codex Desktop 自动评分
+
+### 6.1 先冻结并复制执行产物
+
+评分前先备份整个 Harness 根目录，然后执行：
+
+```bash
+python3 <harness-root>/tools/prepare_scoring_workspace.py \
+  --package-root <harness-root> \
+  --scoring-archive <absolute-scoring-zip>
+```
+
+该步骤会：
+
+- 验证 `execution-receipt.json`；
+- 三次检查候选哈希；
+- 将 execution 候选复制到独立的 score 单题目录；
+- 绑定实际回读模型和执行回执 SHA；
+- 生成 `private-scoring/candidate_artifact.json`。
+
+评分不能直接在 `execution/tasks/` 中进行。
+
+### 6.2 注册项目和创建评分任务
+
+Codex Desktop 必须在控制任务开始前开放本机 CDP。先探测：
+
+```bash
+bash <orchestrate-web-e2e-skill-dir>/scripts/run-codex-project-registrar.sh \
+  --probe \
+  --endpoint http://127.0.0.1:9230
+```
+
+项目注册成功必须同时满足：
+
+- 评分目录通过 UI 或已显式允许的 renderer bridge 注册；
+- Desktop 内置 `list_projects` 按规范化绝对路径唯一回读；
+- 注册前后的 Desktop 版本一致；
+- `preflight` 校验候选哈希、执行回执、评分 Skill 版本和指标 Profile。
+
+随后由控制 Agent 调用 Desktop 内置 `create_thread` 和 `wait_threads`。不要用 Computer Use 点击 Codex 自己，也不要从外部启动裸 `codex app-server` 会话代替 Desktop 任务。
+
+### 6.3 单题评分边界
+
+每个评分任务只能访问：
+
+```text
+score/tasks/<task_id>/
+```
+
+评分 Agent 必须使用桌面内置 Browser 逐项操作和取证，并生成：
+
+```text
+private-scoring/task_score.json
+private-scoring/evidence/
+```
+
+候选 `workspace/` 是只读输入。安装依赖、构建、缓存和启动服务只能发生在 `private-scoring/runtime-workspace/` 运行时副本中。
+
+端口冲突时优先通过启动参数或环境变量换端口。只有日志明确证明端口占用、项目又无法外部覆盖端口时，才允许对运行时副本中的唯一端口数字做受控替换；execution 和 score 的候选原件始终不能修改。
+
+### 6.4 评分异常不是候选零分
+
+以下情况应记录 `evaluation_error`，不能伪造 Criterion 零分或成功证据：
+
+- 浏览器不可用；
+- 站点无法安全启动；
+- 缺少候选入口文件；
+- 评分工具无法完成 Rubric 要求的操作；
+- 证据不足以判断。
+
+一题只有通过 `mark-complete` 的身份、哈希、状态和证据门禁后，控制 Agent 才能创建下一题。
+
+## 7. 回传和报告
+
+全部评分完成后，由不参与单题评分的管理任务运行：
+
+```bash
+node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
+  --package-root <harness-root> \
+  --output <harness-root>/submission.json
+```
+
+该命令会再次检查：
+
+- execution 和 score 两份候选哈希；
+- 模型身份和模型选择模式；
+- 每题评分结果与证据；
+- 受管服务已停止；
+- 运行时副本已清理；
+- 禁止目录和敏感文件。
+
+随后压缩完整 Harness 根目录并回传。报告阶段使用批次报告配置补充模型友好名称、Harness 名称和用户声明的推理强度。
+
+## 8. 多电脑分工
+
+最小分配单元是 `Harness（模型）`。同一 Harness、同一模型的一批题不要拆到多台机器，否则客户端默认配置、版本和会话状态难以保证一致。
+
+常见组合：
+
+| 机器 | 分工 |
+| --- | --- |
+| 机器 A | WorkBuddy（模型 A）执行 |
+| 机器 B | AstronStudio（模型 A）执行；其 Driver 完成后再启用自动化 |
+| 机器 C | Codex Desktop 串行评分一个或多个已完成 Harness 包 |
+| 管理机器 | 准备批次、收集 submission、生成报告 |
+
+跨机器只传递完整文件包：
+
+1. 管理员向执行机器发送对应 Harness 的 execution ZIP，并确保执行 Skill 已安装。
+2. 执行完成后备份整个 Harness 根目录。
+3. 将完整 Harness 根目录和同批 scoring ZIP 交给评分机器。
+4. 评分完成后回传包含 `submission.json` 的完整 Harness ZIP。
+5. 管理员将全部回传 ZIP 与同一份报告配置交给 `report-web-e2e`。
+
+## 9. 候选产物不可修改
+
+被评 Harness 结束后，候选产物即冻结。以下主体都不能再修改它：
+
+- 执行控制 Agent；
+- 评分 Agent；
+- 评分编排 Agent；
+- 报告 Agent；
+- 人工操作人员。
+
+禁止为了“让评分跑起来”而在候选目录中：
+
+- 改源码或端口；
+- 创建 `package.json`；
+- 安装依赖；
+- 执行会写缓存的构建；
+- 删除 `.git`、`node_modules` 或其他不合规内容；
+- 重算哈希并接受漂移后的新值；
+- 从评分副本覆盖回 execution 原件。
+
+发现候选不合规时保留现场并重新执行该评测单元，不能清理后继续评分。
+
+## 10. 常见问题
+
+### 未传模型，为什么回执里的 requested model 是空的
+
+这是预期行为。`mode=current` 表示自动化沿用用户预配置，`requested_model=null`，但 `actual_model` 和顶层模型必须非空。
+
+### 显式指定模型后无法找到选项
+
+确认传入的是 WorkBuddy 下拉框中的精确显示名。不要使用报告中的友好名称、CLI 路由前缀或猜测的模型 ID 代替 UI 文本。
+
+### 同一队列的实际模型不一致
+
+停止评测，确认是否有人在队列执行期间修改了 WorkBuddy 默认模型。不要编辑回执修复；新建时间戳批次后重新执行。
+
+### 推理强度为什么没有出现在执行回执
+
+它由用户在 Harness 中预配置，当前不做 UI 自动回读。报告配置中的值是用户声明信息，不代表自动化已经验证。
+
+### WorkBuddy 未开放 9229 调试端口
+
+第一题使用 `--restart-app-first`，让 Driver 有界重启并验证 CDP；如果仍失败，检查客户端路径、版本和本机权限。不要在有运行中任务时强制重启。
+
+### Codex Desktop 项目注册失败
+
+先确认 `127.0.0.1:9230` 探测成功。默认使用可见 UI；renderer bridge 是版本敏感的私有兜底，只能显式启用，并且必须由 `list_projects` 按绝对路径回读。
+
+### 评分任务没有 Browser
+
+确认任务是通过当前 Codex Desktop 内置任务接口创建，项目路径是单题评分目录。不要用裸 CLI/App Server 任务冒充 Desktop 评分任务。
+
+### 站点启动失败或 Browser 被拦截
+
+记录真实错误并使用 `evaluation_error`。评分基础设施失败不等于候选功能全部为零。
+
+### 恢复时提示配置不一致
+
+恢复必须使用原 `run-id`、原任务顺序、原模型模式和原权限模式。旧版以“均衡”为显式默认模型创建的未完成队列，恢复时应继续显式提供 `--model 均衡`；不要把它改成新的 `current` 模式。
+
+## 11. 最终检查清单
+
+### 管理员
+
+- [ ] 批次 ID 包含时间戳且没有复用旧目录。
+- [ ] execution 包不含 Ground Truth、Rubric、checker、`eval/` 或 `gt/`。
+- [ ] 报告配置已填写每个 Harness（模型）单元的模型和推理强度声明。
+- [ ] 每个回传包的 `batch_id`、`source_revision`、Profile 和任务范围一致。
+
+### 执行人员
+
+- [ ] 跑批前已设置 Harness 默认模型、推理强度和权限。
+- [ ] 未指定模型时确认使用的是 `current` 模式；显式指定时使用 UI 精确显示名。
+- [ ] 同一队列执行期间没有人工切换模型。
+- [ ] `execution-receipt.json.integrity.valid=true`。
+- [ ] 候选 Workspace 中没有 `.git`、`.cache`、`.vite` 或 `node_modules`。
+- [ ] 执行完成后已备份完整 Harness 根目录。
+
+### 评分人员
+
+- [ ] 评分目录由标准准备脚本从执行原件复制生成。
+- [ ] 每题是独立 Codex Desktop 项目和独立任务。
+- [ ] 每题实际使用桌面内置 Browser 操作和取证。
+- [ ] 候选 Workspace 没有被评分或编排 Agent 修改。
+- [ ] 每题通过 `mark-complete` 后才进入下一题。
+- [ ] 根目录已生成有效 `submission.json`。
+- [ ] 回传 ZIP 包含完整 Harness 根目录。

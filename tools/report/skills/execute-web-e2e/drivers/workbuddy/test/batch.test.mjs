@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
+import { snapshotTree } from "../lib.mjs";
+
 import {
   QUEUE_SCHEMA,
   assertQueueState,
@@ -12,6 +14,7 @@ import {
   canAdvanceTask,
   createQueueState,
   parseBatchArgs,
+  recordReceiptIntegrityFailure,
   recordManualIntervention,
   recordTaskOrchestrationFailure,
   recordWorkerInterruption,
@@ -60,7 +63,17 @@ test("batch accepts a dynamic WorkBuddy model and forwards it to the driver", ()
   ]);
   assert.equal(args.model, "Hy3");
   const driverArgs = buildDriverArgs(args, { taskRoot: "/tmp/task-a" }, 0);
-  assert.deepEqual(driverArgs.slice(0, 4), ["--workspace", "/tmp/task-a", "--model", "Hy3"]);
+  const modelIndex = driverArgs.indexOf("--model");
+  assert.deepEqual(driverArgs.slice(modelIndex, modelIndex + 2), ["--model", "Hy3"]);
+});
+
+test("batch keeps the current WorkBuddy model when model is omitted", () => {
+  const args = parseBatchArgs([
+    "--harness-root", "/tmp/batch", "--run-id", "current", "--task-id", "task-a",
+  ]);
+  assert.equal(args.model, "");
+  const driverArgs = buildDriverArgs(args, { taskRoot: "/tmp/task-a" }, 0);
+  assert.equal(driverArgs.includes("--model"), false);
 });
 
 test("resolveQueuePlan matches manifest tasks by exact id", async () => {
@@ -99,6 +112,7 @@ test("queue state identity and ordered tasks are immutable on resume", async () 
   const state = createQueueState(plan, args);
   assert.equal(state.schema_version, QUEUE_SCHEMA);
   assert.deepEqual(state.tasks.map((task) => task.phase), ["PENDING", "PENDING"]);
+  assert.equal(state.requested_ui_model, null);
   assert.equal(state.requested_permission_mode, "current");
   assert.equal(state.runtime.driver, null);
   assert.doesNotThrow(() => assertQueueState(state, plan, args));
@@ -230,22 +244,23 @@ test("execution receipt validates full manifest scope and task identities", asyn
       identity: { batch_id: "batch-001", task_id: task.taskId, harness_id: "workbuddy" },
       attempt_id: `attempt-${task.taskId}`,
       phase: "SUCCEEDED",
-      driver: { id: "workbuddy", version: "1.3.0" },
+      driver: { id: "workbuddy", version: "1.6.0" },
       client: { version: "5.5.3" },
-      requested_ui_model: "均衡",
-      model_selection: { requested_model: "均衡", actual_model: "均衡", method: "visible-current-value" },
+      requested_ui_model: null,
+      model_selection: { mode: "current", requested_model: null, actual_model: "xopglm52", method: "visible-current-value" },
       requested_permission_mode: "current",
       permission_selection: { requested_mode: "current", confirmed_mode: "default-sandbox", method: "visible-current-value" },
       prompt_sha256: "a".repeat(64),
       prompt_bytes: 10,
       timing: { started_at: "2026-09-06T00:00:00.000Z", sent_at: "2026-09-06T00:00:01.000Z", finished_at: "2026-09-06T00:00:02.000Z" },
-      artifacts: { initial: { sha256: "b".repeat(64) }, final: { sha256: "c".repeat(64) } },
+      artifacts: { initial: { sha256: "b".repeat(64) }, final: await snapshotTree(join(task.taskRoot, "workspace")) },
       evidence: { terminal_source: "test", screenshots: [] },
       error: null,
     }));
     await writeFile(task.executionRecordFile, JSON.stringify({
       batch_id: "batch-001",
       task_id: task.taskId,
+      model: { id: "xopglm52", display_name: "xopglm52" },
       harness: { id: "workbuddy", version: "5.5.3" },
       execution: { status: "completed" },
     }));
@@ -253,11 +268,98 @@ test("execution receipt validates full manifest scope and task identities", asyn
   const receipt = await buildExecutionReceipt(plan, state);
   assert.equal(receipt.integrity.valid, true);
   assert.equal(receipt.integrity.models_match, true);
+  assert.equal(receipt.integrity.workspaces_match_final, true);
   assert.equal(receipt.scope.matches_manifest, true);
   assert.deepEqual(receipt.tasks.map((task) => task.task_id), ["task-a", "task-b"]);
-  assert.equal(receipt.tasks[0].model_selection.actual_model, "均衡");
+  assert.equal(receipt.tasks[0].model_selection.mode, "current");
+  assert.equal(receipt.tasks[0].model_selection.requested_model, null);
+  assert.equal(receipt.tasks[0].model_selection.actual_model, "xopglm52");
+  assert.deepEqual(receipt.model, { id: "xopglm52", display_name: "xopglm52" });
   assert.equal(receipt.tasks[0].permission_mode, "default-sandbox");
   assert.ok(receipt.tasks[0].evidence.automation_state.startsWith("execution/tasks/.execute-web-e2e/"));
+  assert.equal(receipt.tasks[0].workspace.receipt_check_matches_final, true);
+});
+
+test("execution receipt fails closed when a terminal workspace drifts", async () => {
+  const root = await fixture();
+  const args = parseBatchArgs([
+    "--harness-root", root, "--run-id", "receipt-drift", "--task-id", "task-a", "--task-id", "task-b",
+  ]);
+  const plan = await resolveQueuePlan(args);
+  const state = createQueueState(plan, args);
+  state.phase = "COMPLETED";
+  for (const task of plan.tasks) {
+    await mkdir(join(task.taskRoot, "..", ".execute-web-e2e", task.taskId), { recursive: true });
+    const final = await snapshotTree(join(task.taskRoot, "workspace"));
+    await writeFile(task.automationStateFile, JSON.stringify({
+      identity: { batch_id: "batch-001", task_id: task.taskId, harness_id: "workbuddy" },
+      attempt_id: `attempt-${task.taskId}`,
+      phase: "SUCCEEDED",
+      driver: { id: "workbuddy", version: "1.6.0" },
+      client: { version: "5.5.3" },
+      requested_ui_model: null,
+      model_selection: { mode: "current", requested_model: null, actual_model: "xopglm52" },
+      prompt_sha256: "a".repeat(64),
+      prompt_bytes: 10,
+      artifacts: { initial: final, final },
+      evidence: { terminal_source: "test", screenshots: [] },
+    }));
+    await writeFile(task.executionRecordFile, JSON.stringify({
+      batch_id: "batch-001", task_id: task.taskId, model: { id: "xopglm52", display_name: "xopglm52" }, harness: { id: "workbuddy" }, execution: { status: "completed" },
+    }));
+  }
+  await writeFile(join(plan.tasks[0].taskRoot, "workspace", "late.txt"), "drift");
+  const receipt = await buildExecutionReceipt(plan, state);
+  assert.equal(receipt.integrity.valid, false);
+  assert.equal(receipt.integrity.workspaces_match_final, false);
+  assert.equal(receipt.tasks[0].workspace.receipt_check_matches_final, false);
+});
+
+test("execution receipt rejects runtime-only directories excluded from the content hash", async () => {
+  const root = await fixture();
+  const args = parseBatchArgs([
+    "--harness-root", root, "--run-id", "receipt-runtime-dir", "--task-id", "task-a", "--task-id", "task-b",
+  ]);
+  const plan = await resolveQueuePlan(args);
+  const state = createQueueState(plan, args);
+  state.phase = "COMPLETED";
+  for (const task of plan.tasks) {
+    await mkdir(join(task.taskRoot, "..", ".execute-web-e2e", task.taskId), { recursive: true });
+    const final = await snapshotTree(join(task.taskRoot, "workspace"));
+    await writeFile(task.automationStateFile, JSON.stringify({
+      identity: { batch_id: "batch-001", task_id: task.taskId, harness_id: "workbuddy" },
+      attempt_id: `attempt-${task.taskId}`,
+      phase: "SUCCEEDED",
+      requested_ui_model: null,
+      model_selection: { mode: "current", requested_model: null, actual_model: "xopglm52" },
+      artifacts: { initial: final, final },
+    }));
+    await writeFile(task.executionRecordFile, JSON.stringify({
+      batch_id: "batch-001", task_id: task.taskId, model: { id: "xopglm52", display_name: "xopglm52" }, harness: { id: "workbuddy" }, execution: { status: "completed" },
+    }));
+  }
+  await mkdir(join(plan.tasks[0].taskRoot, "workspace", ".vite"));
+  await writeFile(join(plan.tasks[0].taskRoot, "workspace", ".vite", "cache.json"), "runtime");
+  const receipt = await buildExecutionReceipt(plan, state);
+  assert.equal(receipt.integrity.workspaces_match_final, true);
+  assert.equal(receipt.integrity.no_excluded_runtime_directories, false);
+  assert.equal(receipt.integrity.valid, false);
+  assert.deepEqual(receipt.tasks[0].workspace.excluded_runtime_directories, [".vite"]);
+});
+
+test("an invalid completion receipt always downgrades the queue to failed", () => {
+  const state = {
+    phase: "COMPLETED",
+    history: [],
+    error: null,
+  };
+  const changed = recordReceiptIntegrityFailure(state, {
+    integrity: { valid: false, workspaces_match_final: false },
+  });
+  assert.equal(changed, true);
+  assert.equal(state.phase, "FAILED");
+  assert.match(state.error, /完整性检查失败/);
+  assert.equal(state.history.at(-1).event, "EXECUTION_RECEIPT_INTEGRITY_FAILED");
 });
 
 test("queue persists orchestration errors instead of leaving a task running", async () => {

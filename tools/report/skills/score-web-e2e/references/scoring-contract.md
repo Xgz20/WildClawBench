@@ -98,13 +98,13 @@ ArtifactsBench 输入示例：
 
 功能评分与美观度结果相互独立：功能评分异常但已经取得完整美观度证据时，仍保留正式美观度结果；完全没有完成美观度取证时自动记录为 `aesthetic.status=evaluation_error`。反过来，美观度自身异常也不改变已经完成的功能总分。
 
-`execution_record.json` 是可选输入，默认批次不生成。缺失时 `finalize_score.mjs` 将 `execution.status` 写为 `not_recorded`，Token、请求数、耗时、成本、工具调用数和格式准确率均为 `null`；这不影响正常浏览器评分和总分。若管理员显式启用执行记录，`tools.format_accuracy` 使用 0–1 比例，不确定字段仍填 `null`，不能凭印象填写。
+`execution_record.json` 是可选输入，默认批次不生成。缺失时 `finalize_score.mjs` 将 `execution.status` 写为 `not_recorded`，Token、请求数、耗时、成本、工具调用数和格式准确率均为 `null`；这不影响正常浏览器评分和总分。受管评分仍必须从 `candidate_artifact.json.model` 读取由执行回执冻结的实际模型，并写入 `task_score.identity.model`；该身份不能依赖报告配置事后补全。`candidate_artifact.json.model_selection.mode` 为 `explicit` 时请求模型必须等于实际模型；为 `current` 时 `requested_model` 必须为空，但 `actual_model` 仍必须非空。缺少 `mode` 的旧回执按是否存在请求模型推断，以兼容旧批次。若管理员显式启用执行记录，`tools.format_accuracy` 使用 0–1 比例，不确定字段仍填 `null`，不能凭印象填写。
 
 ## `task_score.json`
 
 `finalize_score.mjs` 生成以下稳定结构，保存为 `private-scoring/task_score.json`：
 
-- `identity`：批次、题目、模型、Harness；
+- `identity`：批次、题目、实际回读模型、Harness；受管评分的 `model.id` 不得为空；
 - `execution`：执行状态和资源数据；
 - `evaluation`：评分状态、浏览器、逐检查点分数与证据；
 - `metric_profile`：本题采用的稳定指标 Profile；
@@ -115,3 +115,15 @@ ArtifactsBench 输入示例：
 - `provenance`：题目与 Workspace 哈希、Skill 版本和评分时间。
 
 执行错误、超时和评测异常仍应生成 `task_score.json`。它们的 `metrics.total_score` 为 0，状态字段保留异常类型；汇总报告才能同时计算完成率和全量平均分。`not_recorded + evaluation.completed` 视为正常完成，只表示本批次没有采集执行资源数据。
+
+## 运行时端口冲突审计
+
+execution/score 两份 `workspace/` 始终是冻结候选原件。端口冲突也不能修改原件；优先使用启动参数或环境变量换端口。仅当端口硬编码且不能外部覆盖、受管启动以 `START_FAILED_STOPPED` 结束、受管 stderr 同时包含原端口和明确占用错误时，`managed_runtime.mjs port-override` 才允许在 `private-scoring/runtime-workspace/` 内把唯一一处数字端口替换为另一合法端口。
+
+发生替换时生成 `private-scoring/runtime-port-override.json`，schema 为 `wildclawbench.web-e2e-runtime-port-override/v1`。每条 `overrides[]` 保存：
+
+- `runtime_created_at` 和记录时间；
+- 冲突时的回环 URL、启动命令、受管日志路径及不可变证据快照 SHA-256；
+- 运行时副本内的相对文件路径、原/新端口、唯一匹配数、替换方式及文件前后 SHA-256。
+
+`build_submission.mjs` 要求审计文件与 `runtime-state.json.port_overrides` 完全一致，证据快照仍存在且哈希、冲突文本和端口均匹配。最终 `submission.json.candidate_artifacts[].runtime_port_overrides` 记录审计次数、文件和 SHA-256；无替换时次数为 0。运行时副本在提交前仍必须清理，候选双副本仍必须等于冻结 SHA。

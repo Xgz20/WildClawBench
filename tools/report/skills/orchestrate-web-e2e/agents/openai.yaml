@@ -1,0 +1,5 @@
+interface:
+  display_name: "编排 Web E2E 桌面评测"
+  short_description: "交接执行产物并调度 Codex Desktop 串行评分"
+  default_prompt: "使用 $orchestrate-web-e2e 将已完成的桌面 Harness 执行包交接到 Codex Desktop，并串行创建评分任务。"
+

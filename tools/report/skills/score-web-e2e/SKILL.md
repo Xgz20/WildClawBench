@@ -16,12 +16,15 @@ description: 在桌面评分智能体中对单个自建或 ArtifactsBench Web �
 ```text
 workspace/
 private-scoring/task_contract.json
+private-scoring/candidate_artifact.json
 .web-e2e-scoring-ready
 ```
 
 `score-web-e2e` 必须由评分智能体的 Skill 管理功能独立安装并启用，不从当前题目目录加载。管理员通常分发 `<batch_id>__score-web-e2e-skill.zip`；同一版本每台评分客户端只安装一次，升级时替换独立 Skill 即可。
 
-不得访问工作空间父目录或其他用例。新会话只隔离对话上下文；单题工作空间用于隔离文件索引和评分结果。
+Skill 根目录的 `skill-metadata.json` 是自动编排读取的机器契约，声明当前版本、支持的 `metric_profile` 和输出 schema；人工调用不需要额外操作。
+
+不得访问工作空间父目录或其他用例。新会话只隔离对话上下文；单题工作空间用于隔离文件索引和评分结果。`workspace/` 是被评 Harness 执行结束后冻结的候选产物，只能读取和服务，评分 Agent 严禁在其中编辑、格式化、安装依赖、构建、生成缓存或删除文件。即使发生端口冲突，execution/score 两份候选原件也不得修改；唯一允许的源码调整是对 `private-scoring/runtime-workspace/` 中的运行时副本做受控端口替换。`init_score.mjs`、`finalize_score.mjs` 和编排门禁都会复核候选 SHA-256；发生漂移时必须停止并保留审计事实，不能自行恢复或接受新哈希。评分辅助脚本在受管任务中只允许写固定的 `private-scoring/score_input.json`、`private-scoring/task_score.json`、受管运行时状态/日志/端口审计文件和 Harness 根 `submission.json`，即使传错输出参数也不能写进候选目录。
 
 先读取 `task_contract.json.metric_profile`：缺失时按旧包兼容为 `web-e2e-detailed-v1`。
 
@@ -30,23 +33,41 @@ private-scoring/task_contract.json
 
 ## 评分流程
 
-1. 读取 `private-scoring/task_contract.json` 和 `.web-e2e-scoring-ready`，校验批次、题目、Harness 和哈希。`execution_record.json` 默认不存在；存在时再读取并校验执行状态和资源字段。
+1. 读取 `private-scoring/task_contract.json`、`private-scoring/candidate_artifact.json` 和 `.web-e2e-scoring-ready`，校验批次、题目、Harness、模型选择模式、实际回读模型和冻结哈希。`mode=current` 允许请求模型为空，但实际回读模型仍必须非空；受管评分的模型身份来自 `candidate_artifact.json.model`，不能由评分 Agent 猜测或留空。`execution_record.json` 默认不存在，存在时再读取并校验执行状态和资源字段。
 2. 不预设候选站点的前端框架、包管理器、构建工具或启动命令。先只读检查 `workspace/` 中的 README、`package.json`、`packageManager`、锁文件、scripts、框架配置、`index.html` 和已有构建目录，再按实际产物选择启动方式：
 
-   - Node 工程：优先遵循项目自己的启动说明；根据 `packageManager` 和锁文件选择 npm、pnpm、yarn 或 bun，不混用包管理器。只在依赖缺失且启动确实需要时安装依赖；只在项目声明的预览或生产启动方式需要构建时执行 build。启动前读取 scripts 的真实内容，不得默认项目一定存在 `build`、`start`，也不得把 Vite 参数盲目传给其他服务器。
+   - Node 工程：优先遵循项目自己的启动说明；根据 `packageManager` 和锁文件选择 npm、pnpm、yarn 或 bun，不混用包管理器。任何依赖安装、build、运行时缓存或可能写文件的启动都必须先用 `managed_runtime.mjs prepare --task-root .` 创建 `private-scoring/runtime-workspace/`，随后只在该副本内操作。启动前读取 scripts 的真实内容，不得默认项目一定存在 `build`、`start`，也不得把 Vite 参数盲目传给其他服务器。
    - 原生 HTML/CSS/JavaScript 或已有静态构建产物：不得为了适配评分流程而创建 `package.json` 或安装前端依赖。使用评分 Skill 内置的零依赖静态服务器，例如：
 
      ```bash
-     node <score-web-e2e-skill-dir>/scripts/serve_static.mjs \
-       --root workspace \
-       --host 127.0.0.1 \
-       --port 4173
+     node <score-web-e2e-skill-dir>/scripts/managed_runtime.mjs \
+       start-static --task-root . --port 4173
      ```
 
      单页应用需要 history fallback 时增加 `--spa-fallback`。若入口位于 `dist/`、`build/` 等目录，`--root` 指向实际可发布目录。
    - 其他技术栈：遵循仓库内可验证的启动说明和配置；不要改写候选源码或脚本来迎合固定命令。无法确定安全、可重复的启动方式时记录 `evaluation_error`，不要猜测。
 
-   无论采用哪种方式，都只监听 `127.0.0.1`；启动后先访问实际 URL，确认页面和静态资源可加载，再开始评分，并把实际 URL 写入 `score_input.json.site_url`。不得使用真实凭证。每题开始前关闭上一题服务并清理相同 Origin 的浏览器存储。
+     需要在运行时副本中启动项目命令时使用：
+
+     ```bash
+     node <score-web-e2e-skill-dir>/scripts/managed_runtime.mjs \
+       start --task-root . --url http://127.0.0.1:4173/ -- <项目实际启动命令及参数>
+     ```
+
+   无论采用哪种方式，都只监听 `127.0.0.1`；启动后先访问实际 URL，确认页面和静态资源可加载，再开始评分，并把实际 URL 写入 `score_input.json.site_url`。不得使用真实凭证。每题开始前清理相同 Origin 的浏览器存储。
+
+   若端口冲突，先通过启动参数或环境变量选择新端口，这种方式不修改任何源码。只有项目把端口硬编码在源码/脚本中、无法外部覆盖，并且受管 `start` 已失败、`private-scoring/runtime-logs/site.stderr.log` 明确包含原端口和 `EADDRINUSE`/`address already in use` 等冲突证据时，才可执行：
+
+   ```bash
+   node <score-web-e2e-skill-dir>/scripts/managed_runtime.mjs \
+     port-override --task-root . --file server.js \
+     --from-port 9099 --to-port 9100 \
+     --evidence private-scoring/runtime-logs/site.stderr.log
+   ```
+
+   `--file` 只能指向运行时副本内的普通 UTF-8 文件；旧端口必须且只能匹配一次，前后值必须是不同的合法数字端口。脚本拒绝候选原件路径、多处匹配、非端口修改、无冲突证据和服务仍存活的情况，并生成 `private-scoring/runtime-port-override.json`，记录冲突 URL/命令、证据快照、修改文件、原/新端口及前后文件 SHA-256。除这一个已证实的场景外，运行时副本中的候选源码也不得修改；安装依赖、build 和缓存生成属于机械运行时操作，不得回写候选。
+
+   评分完成或异常退出前使用 `managed_runtime.mjs stop --task-root .` 精确停止本题记录的 PID/进程组，再使用 `managed_runtime.mjs clean --task-root .` 删除运行时副本；禁止使用 `pkill node`、按端口批量杀进程或终止未被本题状态文件记录的服务。
 3. 开始浏览器评分前读取 [浏览器交互评分与误判防护](references/browser-interaction-scoring.md)。每个 criterion 先恢复其“预设状态”，再实际点击、输入、切换、刷新、改变视口或上传文件；不得携带前序检查点的污染状态，也不得只看源码、静态 DOM 或截图推断交互成功。
 4. 首次操作未生效时，不得立即记 0。日期/时间、清空输入、取色器、滑块、HTML5 拖放、原生对话框、下载和瞬时状态必须使用参考文档中的适配方式复核，并回读操作前、提交前和提交后的公开状态。源码只用于识别控件和事件模型，不能替代页面验证。
 5. 逐 criterion 记录动作、观察、理由和证据。视觉检查点必须有视口截图；交互检查点必须写明动作前后状态。原生对话框、下载事件、瞬时状态等无法由截图完整表达的事实可保存为 `private-scoring/evidence/` 下的 Markdown 或 JSON 观察记录并引用。
@@ -85,8 +106,8 @@ node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
   --output submission.json
 ```
 
-运行前先关闭所有站点进程；由管理 Agent 只删除本次依赖安装生成、可重新安装的 `execution/tasks/*/workspace/node_modules` 和 `score/tasks/*/workspace/node_modules`，以及候选过程意外生成的 `.git`，不得删除源文件或评分证据。
+运行前确认每题 `managed_runtime.mjs status` 不再显示存活服务，并已用 `clean` 删除 `private-scoring/runtime-workspace/`。管理 Agent 不得删除或改写 `execution/tasks/*/workspace/`、`score/tasks/*/workspace/` 中的任何内容；若候选中残留 `node_modules`、`.git` 或敏感文件，应判定执行/交接包不合规并停止，不能通过清理候选来让 submission 通过。
 
-脚本校验全部 `task_score.json`、证据路径、身份和敏感文件，并阻止把残留的 `node_modules`、`.git` 打入回传包，然后生成根目录 `submission.json`。随后测试人员使用 ZIP 工具压缩整个 Harness 根目录回传；报告 Skill 会从 ZIP 中定位唯一 `submission.json`。
+脚本会再次核对 execution、score 两份 workspace、执行回执文件 SHA 与冻结 SHA，校验全部 `task_score.json`、证据路径、Harness 与实际模型身份、受管服务终态、端口替换审计、运行时副本残留、禁止的运行时目录和敏感文件；任何不一致或空 `model.id` 都拒绝生成根目录 `submission.json`。随后测试人员使用 ZIP 工具压缩整个 Harness 根目录回传；报告 Skill 会从 ZIP 中定位唯一 `submission.json`。
 
 详细字段见 [评分 JSON 契约](references/scoring-contract.md)。

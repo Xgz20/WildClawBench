@@ -3,8 +3,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  assertManagedScoringOutput,
+  loadCandidateArtifact,
+  verifyManagedScoringTask,
+} from "./workspace-integrity.mjs";
+
 const SCHEMA_VERSION = "wildclawbench.web-e2e-task-score/v1";
-const SKILL_VERSION = "4.0.0";
 const DETAILED_PROFILE = "web-e2e-detailed-v1";
 const ARTIFACTSBENCH_PROFILE = "artifactsbench-web-v1";
 const EXECUTION_STATUSES = new Set(["completed", "execution_error", "timeout", "pending", "not_recorded"]);
@@ -12,6 +17,9 @@ const EVALUATION_STATUSES = new Set(["completed", "evaluation_error"]);
 const AESTHETIC_EVALUATION_STATUSES = new Set(["completed", "evaluation_error"]);
 const AESTHETIC_RUBRIC_PATH = fileURLToPath(
   new URL("../references/aesthetic-rubric.json", import.meta.url),
+);
+const SKILL_METADATA_PATH = fileURLToPath(
+  new URL("../skill-metadata.json", import.meta.url),
 );
 
 function parseArgs(argv) {
@@ -31,6 +39,11 @@ function loadJson(filename) {
   return value;
 }
 
+const SKILL_METADATA = loadJson(SKILL_METADATA_PATH);
+const SKILL_VERSION = String(SKILL_METADATA.version);
+if (SKILL_METADATA.task_score_schema !== SCHEMA_VERSION) {
+  throw new Error(`评分 Skill 元数据 task_score_schema 不一致: ${SKILL_METADATA.task_score_schema}`);
+}
 const AESTHETIC_RUBRIC = loadJson(AESTHETIC_RUBRIC_PATH);
 
 function number(value, label, minimum, maximum) {
@@ -121,6 +134,24 @@ function effectiveExecution(identity, execution) {
     tools: { call_count: null, format_accuracy: null },
     artifacts: {},
   };
+}
+
+function selectModel(...models) {
+  return models.find((model) => String(model?.id || "").trim())
+    || models.find((model) => model && typeof model === "object")
+    || {};
+}
+
+function managedCandidateModel(taskContractFile) {
+  const contractFile = path.resolve(taskContractFile);
+  const taskRoot = path.dirname(path.dirname(contractFile));
+  const lockFile = path.join(taskRoot, "private-scoring", "candidate_artifact.json");
+  if (!fs.existsSync(lockFile)) return null;
+  const lock = loadCandidateArtifact(lockFile);
+  const modelId = String(lock.model?.id || "").trim();
+  const displayName = String(lock.model?.display_name || "").trim();
+  if (!modelId || !displayName) throw new Error("受管评分包缺少执行回读模型身份");
+  return { id: modelId, display_name: displayName };
 }
 
 function evidencePath(value, label) {
@@ -331,7 +362,7 @@ function finalizeAesthetic(scoreInput, successfulEvaluation) {
   };
 }
 
-export function finalize(manifest, contract, execution, scoreInput) {
+export function finalize(manifest, contract, execution, scoreInput, candidateModel = null) {
   const identity = contractIdentity(contract);
   const profile = metricProfile(contract);
   if (scoreInput.metric_profile && scoreInput.metric_profile !== profile) {
@@ -354,10 +385,11 @@ export function finalize(manifest, contract, execution, scoreInput) {
   const identityModel = String(identity.model?.id ?? "");
   const manifestModel = String(manifest?.model?.id ?? "");
   const executionModel = String(effective.model?.id ?? "");
+  const candidateModelId = String(candidateModel?.id ?? "");
   const identityHarness = String(identity.harness?.id ?? "");
   const manifestHarness = String(manifest?.harness?.id ?? "");
   const executionHarness = String(effective.harness?.id ?? "");
-  const modelIds = [identityModel, manifestModel, executionModel].filter(Boolean);
+  const modelIds = [identityModel, manifestModel, executionModel, candidateModelId].filter(Boolean);
   const harnessIds = [identityHarness, manifestHarness, executionHarness].filter(Boolean);
   if (new Set(modelIds).size > 1) throw new Error("model.id 不一致");
   if (new Set(harnessIds).size > 1) throw new Error("harness.id 不一致");
@@ -422,7 +454,7 @@ export function finalize(manifest, contract, execution, scoreInput) {
       task_id: taskId,
       task_name: identity.task_name ?? taskId,
       difficulty: identity.difficulty ?? "unknown",
-      model: effective.model ?? identity.model ?? manifest?.model ?? {},
+      model: selectModel(candidateModel, effective.model, identity.model, manifest?.model),
       harness: effective.harness ?? identity.harness ?? manifest?.harness ?? {},
     },
     execution: effective.execution ?? {},
@@ -476,14 +508,20 @@ function main() {
   for (const key of ["task-contract", "score-input", "output"]) {
     if (!args[key]) throw new Error(`必须提供 --${key}`);
   }
+  assertManagedScoringOutput(args["task-contract"], args.output, "task_score.json");
+  const candidateCheck = verifyManagedScoringTask(args["task-contract"], "finalize-score:before-write");
+  const candidateModel = managedCandidateModel(args["task-contract"]);
   const result = finalize(
     args.manifest ? loadJson(args.manifest) : null,
     loadJson(args["task-contract"]),
     args["execution-record"] ? loadJson(args["execution-record"]) : null,
     loadJson(args["score-input"]),
+    candidateModel,
   );
+  if (candidateCheck) result.provenance.candidate_workspace_sha256 = candidateCheck.sha256;
   fs.mkdirSync(path.dirname(path.resolve(args.output)), { recursive: true });
   fs.writeFileSync(args.output, `${JSON.stringify(result, null, 2)}\n`, "utf8");
+  verifyManagedScoringTask(args["task-contract"], "finalize-score:after-write");
   process.stdout.write(`PASS: ${path.resolve(args.output)}\n`);
 }
 

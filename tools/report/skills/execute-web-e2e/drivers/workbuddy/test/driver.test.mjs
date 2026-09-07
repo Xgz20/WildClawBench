@@ -12,6 +12,7 @@ import {
   classifyApprovalCommand,
   classifyDomStatus,
   classifySessionStatus,
+  isSubstantiveFinalResponse,
   createInitialState,
   diffSnapshots,
   parseArgs,
@@ -20,6 +21,117 @@ import {
   snapshotTree,
   updateExecutionRecord,
 } from "../lib.mjs";
+import {
+  ensureModel,
+  hasTrustedDomCompletion,
+  restartWorkBuddy,
+  waitForUniqueVisible,
+} from "../driver.mjs";
+
+test("restartWorkBuddy retries a failed macOS open before prompt handling", async () => {
+  let openCalls = 0;
+  const result = await restartWorkBuddy(
+    { endpoint: "http://127.0.0.1:9229", appPath: "/Applications/WorkBuddy.app" },
+    {
+      launchAttempts: 3,
+      retryDelayMilliseconds: 1,
+      sleep: async () => {},
+      processIdentity: async () => null,
+      endpointReady: async () => false,
+      waitForEndpoint: async () => {},
+      run: async (command) => {
+        if (command === "/usr/bin/open") {
+          openCalls += 1;
+          return openCalls === 1
+            ? { code: 1, stdout: "", stderr: "The application cannot be opened (-600)" }
+            : { code: 0, stdout: "", stderr: "" };
+        }
+        return { code: 0, stdout: "", stderr: "" };
+      },
+    },
+  );
+  assert.equal(openCalls, 2);
+  assert.equal(result.status, "READY");
+  assert.equal(result.recovered_after_retry, true);
+  assert.equal(result.attempts[0].open_exit_code, 1);
+  assert.equal(result.attempts[1].endpoint_ready, true);
+});
+
+test("restartWorkBuddy stops after bounded launch retries", async () => {
+  await assert.rejects(
+    restartWorkBuddy(
+      { endpoint: "http://127.0.0.1:9229", appPath: "/Applications/WorkBuddy.app" },
+      {
+        launchAttempts: 2,
+        retryDelayMilliseconds: 1,
+        sleep: async () => {},
+        processIdentity: async () => null,
+        endpointReady: async () => false,
+        waitForEndpoint: async () => {},
+        run: async (command) => command === "/usr/bin/open"
+          ? { code: 1, stdout: "", stderr: "open failed" }
+          : { code: 0, stdout: "", stderr: "" },
+      },
+    ),
+    /自动启动 2 次后仍未开放调试端口/,
+  );
+});
+
+test("waitForUniqueVisible tolerates asynchronous model popover mounting", async () => {
+  const expected = { id: "model-listbox" };
+  const samples = [[], [], [expected]];
+  const actual = await waitForUniqueVisible(
+    async () => samples.shift() || [expected],
+    100,
+    "WorkBuddy 模型下拉框",
+    1,
+  );
+  assert.equal(actual, expected);
+});
+
+test("waitForUniqueVisible fails closed when multiple model popovers are visible", async () => {
+  await assert.rejects(
+    waitForUniqueVisible(async () => [{}, {}], 100, "WorkBuddy 模型下拉框", 1),
+    /WorkBuddy 模型下拉框数量异常：2/,
+  );
+});
+
+test("ensureModel keeps and reads the current model when no model is requested", async () => {
+  let clickCount = 0;
+  const trigger = {
+    isVisible: async () => true,
+    getAttribute: async (name) => name === "title" ? "xopglm52" : "false",
+    innerText: async () => "xopglm52",
+    click: async () => { clickCount += 1; },
+  };
+  const page = {
+    locator: (selector) => {
+      assert.equal(selector, 'button.cr-model-selector__trigger[role="combobox"]');
+      return { count: async () => 1, nth: () => trigger };
+    },
+  };
+
+  assert.deepEqual(await ensureModel(page, "", 100), {
+    mode: "current",
+    requested_model: null,
+    actual_model: "xopglm52",
+    method: "visible-current-value",
+  });
+  assert.equal(clickCount, 0);
+});
+
+test("DOM completion accepts a finished footer without treating a tool card as final prose", () => {
+  assert.equal(hasTrustedDomCompletion({
+    status: { kind: "success" },
+    finalText: "",
+    explicitFinished: true,
+  }), true);
+  assert.equal(hasTrustedDomCompletion({
+    status: { kind: "success" },
+    finalText: "",
+    explicitFinished: false,
+  }), false);
+});
 
 async function fixture({ manifest = true, record = false } = {}) {
   const root = await mkdtemp(join(tmpdir(), "execute-web-e2e-"));
@@ -57,7 +169,7 @@ async function fixture({ manifest = true, record = false } = {}) {
 
 test("parseArgs supplies safe single-run defaults", () => {
   const parsed = parseArgs(["--workspace", "/tmp/task"]);
-  assert.equal(parsed.model, "均衡");
+  assert.equal(parsed.model, "");
   assert.equal(parsed.permissionMode, "current");
   assert.equal(parsed.runTimeoutSeconds, 3600);
   assert.equal(parsed.pollIntervalSeconds, 2);
@@ -144,6 +256,23 @@ test("execution_record preserves identity and maps execution fields", async () =
   assert.equal(record.execution.status, "completed");
 });
 
+test("execution_record binds the actual WorkBuddy model read from the UI", async () => {
+  const item = await fixture();
+  const config = await resolveConfig(parseArgs([
+    "--workspace", item.taskRoot,
+    "--app-path", item.appPath,
+    "--model", "xopglm52",
+  ]));
+  const info = await resolveExecutionIdentity(config);
+  await updateExecutionRecord(config, info, {
+    clientVersion: "5.5.3",
+    modelSelection: { requested_model: "xopglm52", actual_model: "xopglm52" },
+    execution: { status: "pending" },
+  });
+  const record = JSON.parse(await readFile(config.executionRecord, "utf8"));
+  assert.deepEqual(record.model, { id: "xopglm52", display_name: "xopglm52" });
+});
+
 test("session classification fails closed for unknown values", () => {
   assert.equal(classifySessionStatus("Completed").kind, "success");
   assert.equal(classifySessionStatus("InProgress").kind, "running");
@@ -153,10 +282,23 @@ test("session classification fails closed for unknown values", () => {
 
 test("DOM terminal classification requires an explicit status label", () => {
   assert.equal(classifyDomStatus({ running: true, agentText: "已完成 1m" }).kind, "running");
-  assert.equal(classifyDomStatus({ rawStatus: "complete", agentText: "当前服务异常" }).kind, "success");
+  assert.equal(classifyDomStatus({ rawStatus: "complete", agentText: "WorkBuddy\n已处理 1s\n正在连接 MCP 服务…" }).kind, "running");
+  assert.equal(classifyDomStatus({ rawStatus: "complete", agentText: "WorkBuddy\n已处理 43s\n等待模型响应" }).kind, "running");
+  assert.deepEqual(
+    classifyDomStatus({ rawStatus: "complete", agentText: "当前服务异常，请稍后再试或新建任务、切换模型后重试" }),
+    { kind: "failure", status: "visible-service-error" },
+  );
+  assert.equal(classifyDomStatus({
+    rawStatus: "complete",
+    agentText: "WorkBuddy\n已完成 1m34s\n\n当前服务异常，请稍后再试或新建任务、切换模型后重试\n\nHy3\n18:52",
+  }).kind, "failure");
+  assert.equal(classifyDomStatus({ rawStatus: "complete", agentText: "已完成：页面会展示‘当前服务异常’提示" }).kind, "success");
   assert.equal(classifyDomStatus({ agentText: "WorkBuddy\n已完成 1h8m\n完成交付" }).kind, "success");
   assert.equal(classifyDomStatus({ agentText: "WorkBuddy\n已失败：网络错误" }).kind, "failure");
   assert.equal(classifyDomStatus({ agentText: "我会继续处理" }).kind, "unknown");
+  assert.equal(isSubstantiveFinalResponse("等待模型响应"), false);
+  assert.equal(isSubstantiveFinalResponse("正在连接 MCP 服务..."), false);
+  assert.equal(isSubstantiveFinalResponse("已完成页面并保存到 workspace"), true);
 });
 
 test("approval allowlist only accepts exact DS_Store cleanup inside candidate workspace", () => {
@@ -218,7 +360,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.3.0");
+  assert.equal(state.driver.version, "1.6.0");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

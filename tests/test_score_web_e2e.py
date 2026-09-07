@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import os
+import shutil
+import socket
 import subprocess
 import tempfile
 import unittest
@@ -13,6 +17,7 @@ INIT = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/init_score.mjs"
 FINALIZE = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/finalize_score.mjs"
 SUBMISSION = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/build_submission.mjs"
 STATIC_SERVER = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/serve_static.mjs"
+MANAGED_RUNTIME = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/managed_runtime.mjs"
 
 AESTHETIC_DIMENSIONS = [
     ("render_integrity", "桌面和窄屏均完整渲染"),
@@ -205,6 +210,62 @@ def run_finalize(
 
 
 class FinalizeWebE2EScoreTest(unittest.TestCase):
+    def test_managed_score_records_frozen_candidate_and_rejects_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            package_root = Path(tmp)
+            task_root = package_root / "score/tasks/task-1"
+            (task_root / "workspace").mkdir(parents=True)
+            (task_root / "workspace/index.html").write_text("frozen", encoding="utf-8")
+            frozen = BuildSubmissionTest.materialize_candidate_integrity(package_root)
+            (task_root / ".web-e2e-scoring-ready").write_text("batch-1\ntask-1\n", encoding="utf-8")
+            result = run_finalize(task_root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            score = json.loads((task_root / "private-scoring/task_score.json").read_text(encoding="utf-8"))
+            self.assertEqual(score["provenance"]["candidate_workspace_sha256"], frozen)
+            (task_root / "workspace/index.html").write_text("drift", encoding="utf-8")
+            result = run_finalize(task_root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("候选产物发生漂移", result.stderr)
+
+    def test_managed_scoring_helpers_cannot_write_into_candidate_workspace(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            package_root = Path(tmp)
+            task_root = package_root / "score/tasks/task-1"
+            (task_root / "workspace").mkdir(parents=True)
+            (task_root / "workspace/index.html").write_text("frozen", encoding="utf-8")
+            BuildSubmissionTest.materialize_candidate_integrity(package_root)
+            (task_root / ".web-e2e-scoring-ready").write_text("batch-1\ntask-1\n", encoding="utf-8")
+            _, contract, _, score_input = fixtures()
+            write_json(task_root / "private-scoring/task_contract.json", contract)
+            write_json(task_root / "private-scoring/score_input.json", score_input)
+
+            init_result = subprocess.run(
+                [
+                    "node", str(INIT),
+                    "--task-contract", str(task_root / "private-scoring/task_contract.json"),
+                    "--output", str(task_root / "workspace/score_input.json"),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(init_result.returncode, 0)
+            self.assertIn("只能写入 private-scoring/score_input.json", init_result.stderr)
+
+            finalize_result = subprocess.run(
+                [
+                    "node", str(FINALIZE),
+                    "--task-contract", str(task_root / "private-scoring/task_contract.json"),
+                    "--score-input", str(task_root / "private-scoring/score_input.json"),
+                    "--output", str(task_root / "workspace/task_score.json"),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(finalize_result.returncode, 0)
+            self.assertIn("只能写入 private-scoring/task_score.json", finalize_result.stderr)
+            self.assertFalse((task_root / "workspace/score_input.json").exists())
+            self.assertFalse((task_root / "workspace/task_score.json").exists())
+
     def test_init_cli_materializes_all_contract_criteria(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -233,7 +294,7 @@ class FinalizeWebE2EScoreTest(unittest.TestCase):
         self.assertEqual(score["metrics"]["primary_dimensions"]["interaction_function"], 50)
         self.assertFalse(score["metrics"]["aesthetic"]["included_in_total"])
         self.assertEqual(score["metrics"]["aesthetic"]["score"], 100)
-        self.assertEqual(score["provenance"]["skill_version"], "4.0.0")
+        self.assertEqual(score["provenance"]["skill_version"], "4.3.0")
         self.assertEqual(score["metrics"]["aesthetic"]["primary_dimensions"]["layout_hierarchy"], 100)
         self.assertEqual(score["metrics"]["aesthetic"]["secondary_dimensions"]["v-01"], "MET")
         self.assertEqual(score["metrics"]["aesthetic"]["secondary_dimension_scores"]["v-01"], 100)
@@ -417,7 +478,94 @@ class BuildSubmissionTest(unittest.TestCase):
         for name in ("aesthetic-desktop-main.png", "aesthetic-desktop-state.png", "aesthetic-mobile-main.png"):
             (evidence / name).write_bytes(b"png")
 
-    def test_allows_report_config_to_supply_missing_model_id(self) -> None:
+    @staticmethod
+    def materialize_candidate_integrity(
+        root: Path,
+        task_id: str = "task-1",
+        actual_model: str = "gpt-5.5",
+        model_display_name: str = "GPT-5.5",
+        model_mode: str = "explicit",
+        patch_task_score_model: bool = True,
+    ) -> str:
+        task_root = root / "score/tasks" / task_id
+        score_workspace = task_root / "workspace"
+        score_workspace.mkdir(parents=True, exist_ok=True)
+        if not any(score_workspace.iterdir()):
+            (score_workspace / "index.html").write_text("ok", encoding="utf-8")
+        execution_workspace = root / "execution/tasks" / task_id / "workspace"
+        execution_workspace.parent.mkdir(parents=True, exist_ok=True)
+        if execution_workspace.exists():
+            shutil.rmtree(execution_workspace)
+        shutil.copytree(score_workspace, execution_workspace)
+
+        entries = []
+        for filename in sorted(path for path in score_workspace.rglob("*") if path.is_file()):
+            relative = filename.relative_to(score_workspace).as_posix()
+            file_hash = hashlib.sha256(filename.read_bytes()).hexdigest()
+            entries.append((relative, "file", file_hash))
+        digest = hashlib.sha256()
+        for relative, kind, file_hash in entries:
+            digest.update(relative.encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(kind.encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(file_hash.encode("utf-8"))
+            digest.update(b"\n")
+        frozen = digest.hexdigest()
+
+        write_json(task_root / "private-scoring/candidate_artifact.json", {
+            "schema_version": "wildclawbench.web-e2e-candidate-artifact/v1",
+            "hash_algorithm": "wildclawbench.workspace-tree-sha256/v1",
+            "batch_id": "batch-1",
+            "task_id": task_id,
+            "harness_id": "codex",
+            "model": {"id": actual_model, "display_name": model_display_name},
+            "model_selection": {
+                "mode": model_mode,
+                "requested_model": actual_model if model_mode == "explicit" else None,
+                "actual_model": actual_model,
+                "method": "test-readback",
+            },
+            "expected_sha256": frozen,
+            "attempt_id": f"attempt-{task_id}",
+        })
+        write_json(root / "execution-receipt.json", {
+            "schema_version": "wildclawbench.web-e2e-execution-receipt/v1",
+            "batch_id": "batch-1",
+            "harness": {"id": "codex"},
+            "model": {"id": actual_model, "display_name": model_display_name},
+            "tasks": [{
+                "task_id": task_id,
+                "attempt_id": f"attempt-{task_id}",
+                "model_selection": {
+                    "mode": model_mode,
+                    "requested_model": actual_model if model_mode == "explicit" else None,
+                    "actual_model": actual_model,
+                    "method": "test-readback",
+                },
+                "workspace": {"final_sha256": frozen},
+            }],
+            "integrity": {"valid": True},
+        })
+        receipt_sha256 = hashlib.sha256((root / "execution-receipt.json").read_bytes()).hexdigest()
+        candidate = json.loads(
+            (task_root / "private-scoring/candidate_artifact.json").read_text(encoding="utf-8")
+        )
+        candidate["execution_receipt"] = {"sha256": receipt_sha256}
+        write_json(task_root / "private-scoring/candidate_artifact.json", candidate)
+        score_path = task_root / "private-scoring/task_score.json"
+        if score_path.is_file():
+            score = json.loads(score_path.read_text(encoding="utf-8"))
+            score["provenance"]["candidate_workspace_sha256"] = frozen
+            if patch_task_score_model:
+                score["identity"]["model"] = {
+                    "id": actual_model,
+                    "display_name": model_display_name,
+                }
+            write_json(score_path, score)
+        return frozen
+
+    def test_submission_rejects_task_score_missing_execution_readback_model(self) -> None:
         values = list(fixtures())
         values[0]["model"] = {"id": "", "display_name": ""}
         values[2]["model"] = {"id": "", "display_name": ""}
@@ -433,17 +581,37 @@ class BuildSubmissionTest(unittest.TestCase):
                 "harness": {"id": "codex", "display_name": "Codex"},
                 "tasks": [{"task_id": "task-1", "task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"}],
             })
+            self.materialize_candidate_integrity(root, patch_task_score_model=False)
             result = subprocess.run(
                 ["node", str(SUBMISSION), "--package-root", str(root), "--output", str(root / "submission.json")],
                 capture_output=True,
                 text=True,
             )
-            self.assertEqual(result.returncode, 0, result.stderr)
-            submission = json.loads((root / "submission.json").read_text(encoding="utf-8"))
-        self.assertIsNone(submission["unit"]["model_id"])
-        self.assertEqual(submission["unit"]["harness_id"], "codex")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("task_score 模型与执行回读不一致", result.stderr)
 
-    def test_artifactsbench_submission_records_metric_profile(self) -> None:
+    def test_managed_finalize_uses_frozen_execution_readback_model(self) -> None:
+        values = list(fixtures())
+        values[0]["model"] = {"id": "", "display_name": ""}
+        values[1]["identity"].pop("model", None)
+        values[2]["model"] = {"id": "", "display_name": ""}
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root = root / "score/tasks/task-1"
+            (task_root / "workspace").mkdir(parents=True)
+            (task_root / "workspace/index.html").write_text("frozen", encoding="utf-8")
+            self.materialize_candidate_integrity(
+                root,
+                actual_model="xopglm52",
+                model_display_name="xopglm52",
+            )
+            (task_root / ".web-e2e-scoring-ready").write_text("batch-1\ntask-1\n", encoding="utf-8")
+            result = run_finalize(task_root, values)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            score = json.loads((task_root / "private-scoring/task_score.json").read_text(encoding="utf-8"))
+        self.assertEqual(score["identity"]["model"], {"id": "xopglm52", "display_name": "xopglm52"})
+
+    def test_artifactsbench_submission_accepts_current_model_and_records_metric_profile(self) -> None:
         values = artifactsbench_fixtures()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -461,6 +629,7 @@ class BuildSubmissionTest(unittest.TestCase):
                 "harness": {"id": "codex", "display_name": "Codex"},
                 "tasks": [{"task_id": "task-1", "task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"}],
             })
+            self.materialize_candidate_integrity(root, model_mode="current")
             result = subprocess.run(
                 ["node", str(SUBMISSION), "--package-root", str(root), "--output", str(root / "submission.json")],
                 capture_output=True,
@@ -479,7 +648,6 @@ class BuildSubmissionTest(unittest.TestCase):
             self.materialize_evidence(task_root)
             (task_root / "workspace").mkdir()
             (task_root / "workspace/index.html").write_text("ok", encoding="utf-8")
-            (task_root / "workspace/.env").write_text("SECRET=x", encoding="utf-8")
             root_manifest = {
                 "batch_id": "batch-1",
                 "source_revision": "abc",
@@ -487,21 +655,367 @@ class BuildSubmissionTest(unittest.TestCase):
                 "tasks": [{"task_id": "task-1", "task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"}],
             }
             write_json(root / "manifest.json", root_manifest)
+            self.materialize_candidate_integrity(root)
             command = ["node", str(SUBMISSION), "--package-root", str(root), "--output", str(root / "submission.json")]
+            (task_root / "workspace/.env").write_text("SECRET=x", encoding="utf-8")
             rejected = subprocess.run(command, capture_output=True, text=True)
             self.assertNotEqual(rejected.returncode, 0)
-            self.assertIn("敏感文件", rejected.stderr)
+            self.assertIn("候选产物发生漂移", rejected.stderr)
             (task_root / "workspace/.env").unlink()
+            (root / ".env").write_text("SECRET=x", encoding="utf-8")
+            rejected_secret = subprocess.run(command, capture_output=True, text=True)
+            self.assertNotEqual(rejected_secret.returncode, 0)
+            self.assertIn("敏感文件", rejected_secret.stderr)
+            (root / ".env").unlink()
             (root / "execution/tasks/task-1/workspace/node_modules").mkdir(parents=True)
             rejected_modules = subprocess.run(command, capture_output=True, text=True)
             self.assertNotEqual(rejected_modules.returncode, 0)
             self.assertIn("node_modules", rejected_modules.stderr)
             (root / "execution/tasks/task-1/workspace/node_modules").rmdir()
+            (root / "execution/tasks/task-1/workspace/.cache").mkdir()
+            rejected_cache = subprocess.run(command, capture_output=True, text=True)
+            self.assertNotEqual(rejected_cache.returncode, 0)
+            self.assertIn("禁止的运行时目录", rejected_cache.stderr)
+            (root / "execution/tasks/task-1/workspace/.cache").rmdir()
             accepted = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(accepted.returncode, 0, accepted.stderr)
             submission = json.loads((root / "submission.json").read_text(encoding="utf-8"))
         self.assertEqual(submission["unit"]["harness_id"], "codex")
         self.assertEqual(submission["task_ids"], ["task-1"])
+
+    def test_rejects_execution_workspace_drift_before_submission(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root = root / "score/tasks/task-1"
+            result = run_finalize(task_root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.materialize_evidence(task_root)
+            write_json(root / "manifest.json", {
+                "batch_id": "batch-1",
+                "source_revision": "abc",
+                "harness": {"id": "codex", "display_name": "Codex"},
+                "tasks": [{"task_id": "task-1", "task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"}],
+            })
+            self.materialize_candidate_integrity(root)
+            (root / "execution/tasks/task-1/workspace/index.html").write_text("late drift", encoding="utf-8")
+            result = subprocess.run(
+                ["node", str(SUBMISSION), "--package-root", str(root), "--output", str(root / "submission.json")],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("候选产物发生漂移", result.stderr)
+
+    def test_submission_output_cannot_target_candidate_workspace(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root = root / "score/tasks/task-1"
+            result = run_finalize(task_root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.materialize_evidence(task_root)
+            write_json(root / "manifest.json", {
+                "batch_id": "batch-1",
+                "source_revision": "abc",
+                "harness": {"id": "codex", "display_name": "Codex"},
+                "tasks": [{"task_id": "task-1", "task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"}],
+            })
+            self.materialize_candidate_integrity(root)
+            forbidden_output = task_root / "workspace/submission.json"
+            result = subprocess.run(
+                ["node", str(SUBMISSION), "--package-root", str(root), "--output", str(forbidden_output)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("只能写入 Harness 根目录", result.stderr)
+            self.assertFalse(forbidden_output.exists())
+
+
+class ManagedRuntimeTest(unittest.TestCase):
+    @staticmethod
+    def prepare_port_conflict_task(root: Path, source: str = "server.listen(9099);\n") -> tuple[Path, Path]:
+        task_root = root / "score/tasks/task-1"
+        workspace = task_root / "workspace"
+        workspace.mkdir(parents=True)
+        (workspace / "server.js").write_text(source, encoding="utf-8")
+        BuildSubmissionTest.materialize_candidate_integrity(root)
+        prepared = subprocess.run(
+            ["node", str(MANAGED_RUNTIME), "prepare", "--task-root", str(task_root)],
+            capture_output=True,
+            text=True,
+        )
+        if prepared.returncode != 0:
+            raise AssertionError(prepared.stderr)
+        logs = task_root / "private-scoring/runtime-logs"
+        logs.mkdir()
+        (logs / "site.stderr.log").write_text(
+            "Error: listen EADDRINUSE: address already in use 127.0.0.1:9099\n",
+            encoding="utf-8",
+        )
+        state_file = task_root / "private-scoring/runtime-state.json"
+        state = json.loads(state_file.read_text(encoding="utf-8"))
+        state["service"] = {
+            "status": "START_FAILED_STOPPED",
+            "command": ["node", "server.js"],
+            "expected_url": "http://127.0.0.1:9099/",
+            "stderr": "private-scoring/runtime-logs/site.stderr.log",
+        }
+        write_json(state_file, state)
+        return task_root, workspace
+
+    @staticmethod
+    def run_port_override(task_root: Path, filename: str = "server.js", from_port: str = "9099", to_port: str = "9100"):
+        return subprocess.run(
+            [
+                "node", str(MANAGED_RUNTIME), "port-override",
+                "--task-root", str(task_root),
+                "--file", filename,
+                "--from-port", from_port,
+                "--to-port", to_port,
+                "--evidence", "private-scoring/runtime-logs/site.stderr.log",
+            ],
+            capture_output=True,
+            text=True,
+        )
+
+    def test_runtime_copy_can_change_without_modifying_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root = root / "score/tasks/task-1"
+            workspace = task_root / "workspace"
+            workspace.mkdir(parents=True)
+            (workspace / "index.html").write_text("frozen", encoding="utf-8")
+            BuildSubmissionTest.materialize_candidate_integrity(root)
+            before = (workspace / "index.html").read_bytes()
+            prepared = subprocess.run(
+                ["node", str(MANAGED_RUNTIME), "prepare", "--task-root", str(task_root)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(prepared.returncode, 0, prepared.stderr)
+            runtime_file = task_root / "private-scoring/runtime-workspace/index.html"
+            runtime_file.write_text("runtime build output", encoding="utf-8")
+            self.assertEqual((workspace / "index.html").read_bytes(), before)
+            cleaned = subprocess.run(
+                ["node", str(MANAGED_RUNTIME), "clean", "--task-root", str(task_root)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(cleaned.returncode, 0, cleaned.stderr)
+            self.assertFalse((task_root / "private-scoring/runtime-workspace").exists())
+            self.assertEqual((workspace / "index.html").read_bytes(), before)
+
+    def test_port_override_requires_managed_conflict_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root, _ = self.prepare_port_conflict_task(root)
+            state_file = task_root / "private-scoring/runtime-state.json"
+            state = json.loads(state_file.read_text(encoding="utf-8"))
+            state["service"]["status"] = "STOPPED"
+            write_json(state_file, state)
+            rejected_state = self.run_port_override(task_root)
+            self.assertNotEqual(rejected_state.returncode, 0)
+            self.assertIn("只有受管启动因端口冲突失败", rejected_state.stderr)
+
+            state["service"]["status"] = "START_FAILED_STOPPED"
+            write_json(state_file, state)
+            (task_root / "private-scoring/runtime-logs/site.stderr.log").write_text(
+                "generic startup failure on 9099\n",
+                encoding="utf-8",
+            )
+            rejected_log = self.run_port_override(task_root)
+            self.assertNotEqual(rejected_log.returncode, 0)
+            self.assertIn("不能证明端口 9099 冲突", rejected_log.stderr)
+            self.assertEqual(
+                (task_root / "private-scoring/runtime-workspace/server.js").read_text(encoding="utf-8"),
+                "server.listen(9099);\n",
+            )
+
+    def test_port_override_changes_only_runtime_copy_and_records_audit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root, workspace = self.prepare_port_conflict_task(root)
+            candidate_before = (workspace / "server.js").read_bytes()
+            rejected_candidate = self.run_port_override(task_root, "../workspace/server.js")
+            self.assertNotEqual(rejected_candidate.returncode, 0)
+            self.assertIn("runtime-workspace 内的相对路径", rejected_candidate.stderr)
+
+            accepted = self.run_port_override(task_root)
+            self.assertEqual(accepted.returncode, 0, accepted.stderr)
+            self.assertEqual((workspace / "server.js").read_bytes(), candidate_before)
+            self.assertEqual(
+                (task_root / "private-scoring/runtime-workspace/server.js").read_text(encoding="utf-8"),
+                "server.listen(9100);\n",
+            )
+            audit = json.loads(
+                (task_root / "private-scoring/runtime-port-override.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(audit["schema_version"], "wildclawbench.web-e2e-runtime-port-override/v1")
+            self.assertEqual(len(audit["overrides"]), 1)
+            event = audit["overrides"][0]
+            self.assertEqual(event["patch"]["file"], "server.js")
+            self.assertEqual(event["patch"]["from_port"], 9099)
+            self.assertEqual(event["patch"]["to_port"], 9100)
+            self.assertNotEqual(event["patch"]["before_sha256"], event["patch"]["after_sha256"])
+            self.assertTrue((task_root / event["conflict"]["evidence_path"]).is_file())
+
+    def test_port_override_rejects_multiple_matches_and_non_numeric_ports(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root, _ = self.prepare_port_conflict_task(root, "const port = 9099; server.listen(9099);\n")
+            rejected_matches = self.run_port_override(task_root)
+            self.assertNotEqual(rejected_matches.returncode, 0)
+            self.assertIn("实际 2 处", rejected_matches.stderr)
+            rejected_port = self.run_port_override(task_root, from_port="port-9099")
+            self.assertNotEqual(rejected_port.returncode, 0)
+            self.assertIn("--from-port 必须是 1..65535 的整数", rejected_port.stderr)
+            self.assertFalse((task_root / "private-scoring/runtime-port-override.json").exists())
+
+    def test_real_port_conflict_is_detected_without_stopping_port_owner(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root = root / "score/tasks/task-1"
+            workspace = task_root / "workspace"
+            workspace.mkdir(parents=True)
+            with socket.socket() as listener:
+                listener.bind(("127.0.0.1", 0))
+                occupied_port = listener.getsockname()[1]
+            replacement_port = occupied_port
+            while replacement_port == occupied_port:
+                with socket.socket() as listener:
+                    listener.bind(("127.0.0.1", 0))
+                    replacement_port = listener.getsockname()[1]
+            (workspace / "server.js").write_text(
+                "const http = require('node:http');\n"
+                f"http.createServer((_req, res) => res.end('candidate')).listen({occupied_port}, '127.0.0.1');\n",
+                encoding="utf-8",
+            )
+            BuildSubmissionTest.materialize_candidate_integrity(root)
+            prepared = subprocess.run(
+                ["node", str(MANAGED_RUNTIME), "prepare", "--task-root", str(task_root)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(prepared.returncode, 0, prepared.stderr)
+            unrelated_root = root / "unrelated"
+            unrelated_root.mkdir()
+            (unrelated_root / "index.html").write_text("unrelated", encoding="utf-8")
+            owner = subprocess.Popen(
+                [
+                    "node", str(STATIC_SERVER), "--root", str(unrelated_root),
+                    "--host", "127.0.0.1", "--port", str(occupied_port),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            try:
+                ready = owner.stdout.readline().strip()
+                self.assertTrue(ready.startswith("PASS:"), ready)
+                failed = subprocess.run(
+                    [
+                        "node", str(MANAGED_RUNTIME), "start", "--task-root", str(task_root),
+                        "--url", f"http://127.0.0.1:{occupied_port}/", "--", "node", "server.js",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                )
+                self.assertNotEqual(failed.returncode, 0)
+                state = json.loads(
+                    (task_root / "private-scoring/runtime-state.json").read_text(encoding="utf-8")
+                )
+                self.assertEqual(state["service"]["status"], "START_FAILED_STOPPED", failed.stderr)
+                conflict_log = (task_root / "private-scoring/runtime-logs/site.stderr.log").read_text(encoding="utf-8")
+                self.assertIn("EADDRINUSE", conflict_log)
+                os.kill(owner.pid, 0)
+                overridden = self.run_port_override(
+                    task_root,
+                    from_port=str(occupied_port),
+                    to_port=str(replacement_port),
+                )
+                self.assertEqual(overridden.returncode, 0, overridden.stderr)
+                runtime_source = (task_root / "private-scoring/runtime-workspace/server.js").read_text(encoding="utf-8")
+                self.assertIn(f"listen({replacement_port}", runtime_source)
+                self.assertNotIn(f"listen({occupied_port}", runtime_source)
+                os.kill(owner.pid, 0)
+            finally:
+                owner.terminate()
+                owner.communicate(timeout=5)
+
+    def test_submission_validates_port_override_audit_after_runtime_cleanup(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root, workspace = self.prepare_port_conflict_task(root)
+            (task_root / ".web-e2e-scoring-ready").write_text("batch-1\ntask-1\n", encoding="utf-8")
+            result = run_finalize(task_root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            BuildSubmissionTest.materialize_evidence(task_root)
+            write_json(root / "manifest.json", {
+                "batch_id": "batch-1",
+                "source_revision": "abc",
+                "harness": {"id": "codex", "display_name": "Codex"},
+                "tasks": [{"task_id": "task-1", "task_sha256": "task-hash", "workspace_exec_sha256": "workspace-hash"}],
+            })
+            candidate_before = (workspace / "server.js").read_bytes()
+            overridden = self.run_port_override(task_root)
+            self.assertEqual(overridden.returncode, 0, overridden.stderr)
+            cleaned = subprocess.run(
+                ["node", str(MANAGED_RUNTIME), "clean", "--task-root", str(task_root)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(cleaned.returncode, 0, cleaned.stderr)
+            command = ["node", str(SUBMISSION), "--package-root", str(root), "--output", str(root / "submission.json")]
+            submitted = subprocess.run(command, capture_output=True, text=True)
+            self.assertEqual(submitted.returncode, 0, submitted.stderr)
+            submission = json.loads((root / "submission.json").read_text(encoding="utf-8"))
+            port_audit = submission["candidate_artifacts"][0]["runtime_port_overrides"]
+            self.assertEqual(port_audit["count"], 1)
+            self.assertEqual((workspace / "server.js").read_bytes(), candidate_before)
+
+            conflict_evidence = task_root / "private-scoring/runtime-logs/port-conflict-001.log"
+            conflict_evidence.write_text("tampered", encoding="utf-8")
+            rejected = subprocess.run(command, capture_output=True, text=True)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("端口冲突证据文件校验失败", rejected.stderr)
+
+    def test_managed_static_service_stops_only_its_recorded_process_group(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            task_root = root / "score/tasks/task-1"
+            workspace = task_root / "workspace"
+            workspace.mkdir(parents=True)
+            (workspace / "index.html").write_text("managed", encoding="utf-8")
+            BuildSubmissionTest.materialize_candidate_integrity(root)
+            with socket.socket() as listener:
+                listener.bind(("127.0.0.1", 0))
+                port = listener.getsockname()[1]
+            started = subprocess.run(
+                ["node", str(MANAGED_RUNTIME), "start-static", "--task-root", str(task_root), "--port", str(port)],
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            self.assertEqual(started.returncode, 0, started.stderr)
+            state_path = task_root / "private-scoring/runtime-state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            pid = int(state["service"]["pid"])
+            self.assertEqual(state["service"]["pgid"], pid)
+            os.kill(pid, 0)
+            stopped = subprocess.run(
+                ["node", str(MANAGED_RUNTIME), "stop", "--task-root", str(task_root)],
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            self.assertEqual(stopped.returncode, 0, stopped.stderr)
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(state["service"]["status"], "STOPPED")
+            self.assertTrue(state["service"]["cleanup"]["exact_identity_verified"])
+            self.assertFalse((task_root / "private-scoring/runtime-port-override.json").exists())
+            with self.assertRaises(ProcessLookupError):
+                os.kill(pid, 0)
 
 
 class StaticSiteServerTest(unittest.TestCase):

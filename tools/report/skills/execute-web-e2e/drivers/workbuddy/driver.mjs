@@ -16,9 +16,11 @@ import {
   classifyApprovalCommand,
   classifyDomStatus,
   classifySessionStatus,
+  DRIVER_VERSION,
   createInitialState,
   diffSnapshots,
   parseArgs,
+  isSubstantiveFinalResponse,
   readJsonIfExists,
   resolveConfig,
   resolveExecutionIdentity,
@@ -38,7 +40,7 @@ function usage() {
   node driver.mjs --workspace <单题目录> [选项]
 
 核心选项：
-  --model <UI名称>                 WorkBuddy UI 显示值，默认：均衡
+  --model <UI名称>                 可选；指定时选择并回读，省略时保持并回读当前模型
   --permission-mode <模式>         current（保持现状）或 full-access（显式开启完全访问）
   --model-id <ID>                  execution_record 模型身份；已有记录时仅校验
   --batch-id <ID> --task-id <ID>   没有 manifest/record 时必须显式提供
@@ -54,6 +56,24 @@ function usage() {
 
 function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
+}
+
+export async function waitForUniqueVisible(readVisible, timeout, description, pollInterval = 250) {
+  const deadline = Date.now() + timeout;
+  let lastCount = 0;
+  while (Date.now() <= deadline) {
+    const matches = await readVisible();
+    lastCount = matches.length;
+    if (lastCount === 1) return matches[0];
+    if (lastCount > 1) throw new Error(`${description}数量异常：${lastCount}`);
+    await sleep(Math.min(pollInterval, Math.max(1, deadline - Date.now())));
+  }
+  throw new Error(`${description}数量异常：${lastCount}`);
+}
+
+export function hasTrustedDomCompletion(dom) {
+  return dom?.status?.kind === "success"
+    && (Boolean(dom.explicitFinished) || isSubstantiveFinalResponse(dom.finalText));
 }
 
 function run(command, args, options = {}) {
@@ -151,7 +171,30 @@ async function waitForEndpoint(endpoint, timeoutSeconds) {
   throw new Error(`等待 WorkBuddy 调试端口超时：${endpoint}`);
 }
 
-async function restartWorkBuddy(config) {
+async function waitForWorkBuddyStopped(config, dependencies, timeoutSeconds = 15) {
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  while (Date.now() < deadline) {
+    const [processIdentity, ready] = await Promise.all([
+      dependencies.processIdentity(),
+      dependencies.endpointReady(config.endpoint),
+    ]);
+    if (!processIdentity && !ready) return;
+    await dependencies.sleep(500);
+  }
+  throw new Error(`WorkBuddy 旧进程或调试端口未在 ${timeoutSeconds} 秒内退出`);
+}
+
+export async function restartWorkBuddy(config, overrides = {}) {
+  const dependencies = {
+    run,
+    sleep,
+    endpointReady,
+    waitForEndpoint,
+    processIdentity: workBuddyProcessIdentity,
+    launchAttempts: 3,
+    retryDelayMilliseconds: 2000,
+    ...overrides,
+  };
   const quitScript = `
 tell application "System Events"
   set matches to every application process whose bundle identifier is "${DEFAULT_BUNDLE_ID}"
@@ -159,11 +202,69 @@ tell application "System Events"
     tell application id "${DEFAULT_BUNDLE_ID}" to quit
   end if
 end tell`;
-  await run("/usr/bin/osascript", ["-e", quitScript], { allowFailure: true });
-  await sleep(2000);
+  const stopCurrentInstance = async () => {
+    await dependencies.run("/usr/bin/osascript", ["-e", quitScript], { allowFailure: true, capture: true });
+    await waitForWorkBuddyStopped(config, dependencies);
+  };
+  await stopCurrentInstance();
   const port = new URL(config.endpoint).port || "9229";
-  await run("/usr/bin/open", ["-na", config.appPath, "--args", "--remote-debugging-address=127.0.0.1", `--remote-debugging-port=${port}`]);
-  await waitForEndpoint(config.endpoint, 45);
+  const attempts = [];
+  for (let attempt = 1; attempt <= dependencies.launchAttempts; attempt += 1) {
+    let result;
+    try {
+      result = await dependencies.run(
+        "/usr/bin/open",
+        ["-na", config.appPath, "--args", "--remote-debugging-address=127.0.0.1", `--remote-debugging-port=${port}`],
+        { allowFailure: true, capture: true },
+      );
+    } catch (error) {
+      result = { code: null, stdout: "", stderr: error instanceof Error ? error.message : String(error) };
+    }
+    const evidence = {
+      attempt,
+      open_exit_code: result.code,
+      open_stderr: String(result.stderr || "").trim().slice(0, 2000) || null,
+      endpoint_ready: false,
+    };
+    attempts.push(evidence);
+
+    try {
+      if (result.code === 0) {
+        await dependencies.waitForEndpoint(config.endpoint, 45);
+        evidence.endpoint_ready = true;
+      } else {
+        await dependencies.sleep(1000);
+        if (await dependencies.endpointReady(config.endpoint)) {
+          evidence.endpoint_ready = true;
+        } else if (await dependencies.processIdentity()) {
+          await dependencies.waitForEndpoint(config.endpoint, 45);
+          evidence.endpoint_ready = true;
+        }
+      }
+    } catch (error) {
+      evidence.endpoint_error = error instanceof Error ? error.message : String(error);
+    }
+    if (evidence.endpoint_ready) {
+      return {
+        status: "READY",
+        recovered_after_retry: attempt > 1,
+        attempts,
+      };
+    }
+    if (attempt < dependencies.launchAttempts) {
+      if (await dependencies.processIdentity() || await dependencies.endpointReady(config.endpoint)) {
+        await stopCurrentInstance();
+      }
+      await dependencies.sleep(dependencies.retryDelayMilliseconds * attempt);
+    }
+  }
+  const detail = attempts
+    .map((item) => `#${item.attempt}: open=${item.open_exit_code ?? "spawn-error"}${item.endpoint_error ? `, ${item.endpoint_error}` : ""}`)
+    .join("；");
+  throw Object.assign(
+    new Error(`WorkBuddy 自动启动 ${dependencies.launchAttempts} 次后仍未开放调试端口 ${config.endpoint}：${detail}`),
+    { launchAttempts: attempts },
+  );
 }
 
 async function visibleLocators(locator) {
@@ -280,19 +381,45 @@ async function waitForWorkspaceSelection(page, workspace, timeout) {
   throw new Error(`WorkBuddy 未同时回读工作空间绝对路径和输入区标签“${expectedLabel}”`);
 }
 
-async function ensureModel(page, model, timeout) {
-  const triggers = await visibleLocators(page.locator('button.cr-model-selector__trigger[role="combobox"]'));
-  if (triggers.length !== 1) throw new Error(`WorkBuddy 模型选择按钮数量异常：${triggers.length}`);
-  const trigger = triggers[0];
+export async function ensureModel(page, model, timeout) {
+  const trigger = await waitForUniqueVisible(
+    () => visibleLocators(page.locator('button.cr-model-selector__trigger[role="combobox"]')),
+    timeout,
+    "WorkBuddy 模型选择按钮",
+  );
   const current = ((await trigger.getAttribute("title")) || (await trigger.innerText())).trim();
-  if (current === model) return { requested_model: model, actual_model: current, method: "visible-current-value" };
+  if (!current) throw new Error("WorkBuddy 当前模型显示值为空");
+  if (!model) {
+    return {
+      mode: "current",
+      requested_model: null,
+      actual_model: current,
+      method: "visible-current-value",
+    };
+  }
+  if (current === model) {
+    return {
+      mode: "explicit",
+      requested_model: model,
+      actual_model: current,
+      method: "visible-current-value",
+    };
+  }
 
-  await trigger.click({ timeout });
-  const listboxes = await visibleLocators(page.locator('[role="listbox"]'));
-  if (listboxes.length !== 1) throw new Error(`WorkBuddy 模型下拉框数量异常：${listboxes.length}`);
-  const labels = await visibleLocators(listboxes[0].getByText(model, { exact: true }));
-  if (labels.length !== 1) throw new Error(`WorkBuddy 模型列表中找不到唯一选项“${model}”`);
-  const option = labels[0].locator('xpath=ancestor-or-self::*[@role="option"][1]');
+  if (await trigger.getAttribute("aria-expanded") !== "true") {
+    await trigger.click({ timeout });
+  }
+  const listbox = await waitForUniqueVisible(
+    () => visibleLocators(page.locator('[role="listbox"]')),
+    timeout,
+    "WorkBuddy 模型下拉框",
+  );
+  const label = await waitForUniqueVisible(
+    () => visibleLocators(listbox.getByText(model, { exact: true })),
+    timeout,
+    `WorkBuddy 模型选项“${model}”`,
+  );
+  const option = label.locator('xpath=ancestor-or-self::*[@role="option"][1]');
   if (await option.count() !== 1) throw new Error(`WorkBuddy 模型选项“${model}”结构异常`);
   await option.click({ timeout });
 
@@ -300,7 +427,12 @@ async function ensureModel(page, model, timeout) {
   while (Date.now() < deadline) {
     const actual = ((await trigger.getAttribute("title")) || (await trigger.innerText())).trim();
     if (actual === model) {
-      return { requested_model: model, actual_model: actual, method: "dropdown-selection+trigger-readback" };
+      return {
+        mode: "explicit",
+        requested_model: model,
+        actual_model: actual,
+        method: "dropdown-selection+trigger-readback",
+      };
     }
     await sleep(250);
   }
@@ -527,6 +659,11 @@ async function inspectDom(page) {
   const agentTurns = page.locator(".cr-agent:visible");
   const agentValues = await agentTurns.allInnerTexts().catch(() => []);
   const agentText = agentValues.map((value) => value.trim()).filter(Boolean).at(-1) || "";
+  const latestAgent = agentTurns.last();
+  const finishedFooters = await visibleLocators(latestAgent.locator('[data-testid="conversation-finished-footer"]'));
+  const completionStatus = (await latestAgent.locator(".cr-agent__completion-status").innerText().catch(() => "")).trim();
+  const explicitFinished = finishedFooters.length === 1
+    && /^(?:已完成|Completed)(?:\s|\d|$)/i.test(completionStatus);
   const emptyConversation = (await visibleLocators(page.getByText("暂无对话记录", { exact: true }))).length > 0;
   const statusFrames = await visibleLocators(page.locator('[data-cr-frame="true"][data-status]'));
   const rawStatus = statusFrames.length
@@ -534,7 +671,6 @@ async function inspectDom(page) {
     : "";
   const responseSelectors = [
     '.cr-agent__content:visible .cr-markdown:visible',
-    '.cr-agent__content:visible',
     '[data-message-author-role="assistant"]:visible',
     '[data-testid*="assistant"]:visible',
     '.assistant-message:visible',
@@ -554,6 +690,7 @@ async function inspectDom(page) {
     running,
     attention: [...new Set(attention)],
     emptyConversation,
+    explicitFinished,
     agentText: agentText.slice(-50000),
     finalText: finalText.slice(-50000),
     rawStatus,
@@ -612,7 +749,10 @@ async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom,
       });
     }
   }
-  if (currentDom.status.kind === "success") {
+  if (hasTrustedDomCompletion({
+    ...currentDom,
+    finalText: currentDom.finalText || lastDom.finalText,
+  })) {
     await takeScreenshot(page, config, state, "10-succeeded-at-timeout-boundary.png");
     return finalize(config, state, identityInfo, "SUCCEEDED", {
       terminalSource: "workbuddy-dom-completion",
@@ -842,7 +982,7 @@ async function finalize(config, state, identityInfo, phase, { error = null, term
 async function waitForTerminal(page, config, state, identityInfo) {
   const runStartedAt = Date.parse(state.timing.sent_at || state.timing.started_at || new Date().toISOString());
   const deadline = runStartedAt + config.runTimeoutSeconds * 1000;
-  let lastDom = { running: false, attention: [], finalText: "" };
+  let lastDom = { running: false, attention: [], finalText: "", explicitFinished: false };
   while (Date.now() < deadline) {
     state.runtime ||= {};
     state.runtime.heartbeat_at = new Date().toISOString();
@@ -902,7 +1042,7 @@ async function waitForTerminal(page, config, state, identityInfo) {
         await updateExecutionRecord(config, identityInfo, { clientVersion: state.client.version, execution: { status: "pending", error: state.error } });
         return state;
       }
-    } else if (lastDom.status.kind === "success") {
+    } else if (hasTrustedDomCompletion(lastDom)) {
       await takeScreenshot(page, config, state, "10-succeeded.png");
       return finalize(config, state, identityInfo, "SUCCEEDED", {
         terminalSource: "workbuddy-dom-completion",
@@ -947,7 +1087,10 @@ async function resumeAutomation(config, state, identityInfo) {
   let page = null;
   try {
     await requireUnlockedGui();
-    if (config.restartApp) await restartWorkBuddy(config);
+    if (config.restartApp) {
+      state.client.launch = await restartWorkBuddy(config);
+      await saveState(config, state);
+    }
     else if (!(await endpointReady(config.endpoint))) throw new Error(`WorkBuddy 未开放调试端口 ${config.endpoint}`);
     state.client.process = await workBuddyProcessIdentity();
     const { chromium } = await import("playwright-core");
@@ -1139,6 +1282,11 @@ async function runAutomation(config, identityInfo) {
 
     state.model_selection = await ensureModel(page, config.model, timeout);
     transitionState(state, "MODEL_CONFIRMED");
+    await updateExecutionRecord(config, identityInfo, {
+      clientVersion: state.client.version,
+      modelSelection: state.model_selection,
+      execution: { status: "pending", error: null },
+    });
     await takeScreenshot(page, config, state, "06-model-selected.png");
     const editor = await findPromptEditor(page, timeout);
     await editor.click({ timeout });
@@ -1166,6 +1314,9 @@ async function runAutomation(config, identityInfo) {
     return await waitForTerminal(page, config, state, identityInfo);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    if (error?.launchAttempts) {
+      state.client.launch = { status: "FAILED", recovered_after_retry: false, attempts: error.launchAttempts };
+    }
     if (promptMayHaveBeenSent || state.phase === "READY_TO_SEND" || state.phase === "PROMPT_SENT" || state.phase === "RUNNING") {
       const reason = observationFailureReason(error);
       transitionState(state, "NEEDS_ATTENTION", { reason });
@@ -1218,7 +1369,7 @@ async function probe(config) {
   }
   return {
     driver: "workbuddy",
-    version: "1.3.0",
+    version: DRIVER_VERSION,
     control_backend: "electron-cdp+workbuddy-workspace-provider+macos-accessibility-fallback",
     terminal_source: "workbuddy-session-db+workbuddy-dom",
     ready: checks.endpoint_ready && checks.session_database_readable && checks.sqlite3

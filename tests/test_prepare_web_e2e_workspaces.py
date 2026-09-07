@@ -4,6 +4,7 @@ import argparse
 import importlib.util
 import json
 import shutil
+import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -14,6 +15,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PREPARE_SCRIPT = REPO_ROOT / ".agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_workspaces.py"
 FALLBACK_SCRIPT = REPO_ROOT / ".agents/skills/prepare-web-e2e-workspaces/scripts/prepare_scoring_workspace.py"
+INIT_SCORE = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/init_score.mjs"
+FINALIZE_SCORE = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/finalize_score.mjs"
+BUILD_SUBMISSION = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/build_submission.mjs"
+SCORING_CONTROL = REPO_ROOT / ".agents/skills/orchestrate-web-e2e/scripts/scoring-control.mjs"
 
 
 def load_module(name: str, path: Path):
@@ -26,6 +31,43 @@ def load_module(name: str, path: Path):
 
 prepare_module = load_module("prepare_web_e2e_workspaces", PREPARE_SCRIPT)
 fallback_module = load_module("prepare_scoring_workspace", FALLBACK_SCRIPT)
+
+
+def materialize_execution_receipt(package_root: Path, *, model_mode: str = "explicit") -> None:
+    manifest = json.loads((package_root / "manifest.json").read_text(encoding="utf-8"))
+    tasks = []
+    for entry in manifest["tasks"]:
+        snapshot = fallback_module.snapshot_workspace(
+            package_root / "execution" / "tasks" / entry["task_id"] / "workspace"
+        )
+        tasks.append({
+            "task_id": entry["task_id"],
+            "attempt_id": f"attempt-{entry['task_id']}",
+            "model_selection": {
+                "mode": model_mode,
+                "requested_model": "gpt-5.5" if model_mode == "explicit" else None,
+                "actual_model": "gpt-5.5",
+                "method": "test-readback",
+            },
+            "workspace": {
+                "final_sha256": snapshot["sha256"],
+                "receipt_check_sha256": snapshot["sha256"],
+                "receipt_check_matches_final": True,
+            },
+        })
+    (package_root / "execution-receipt.json").write_text(
+        json.dumps({
+            "schema_version": "wildclawbench.web-e2e-execution-receipt/v1",
+            "generated_at": "2026-09-06T00:00:00Z",
+            "batch_id": manifest["batch_id"],
+            "run_id": "test-run",
+            "harness": manifest["harness"],
+            "model": {"id": "gpt-5.5", "display_name": "gpt-5.5"},
+            "tasks": tasks,
+            "integrity": {"valid": True, "workspaces_match_final": True},
+        }, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def args_for(tmp: str, task_id: str) -> argparse.Namespace:
@@ -55,6 +97,32 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
     TASK_ID = "07_Website_Generation_task_001_daymark_product_website"
     FIXTURE_TASK_ID = "07_Website_Generation_task_010_paperwork_pdf_tool"
     ARTIFACTSBENCH_TASK_ID = "07_Website_Generation_task_ab020_magic_academy_game"
+
+    def test_python_and_node_candidate_hash_implementations_match(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "workspace"
+            (root / "nested").mkdir(parents=True)
+            (root / "index.html").write_text("<main>ok</main>", encoding="utf-8")
+            (root / "nested/app.js").write_text("console.log('ok')", encoding="utf-8")
+            (root / "中文页面.html").write_text("中文", encoding="utf-8")
+            (root / "Ångström.txt").write_text("accent", encoding="utf-8")
+            (root / "😀.txt").write_text("emoji", encoding="utf-8")
+            (root / "node_modules/pkg").mkdir(parents=True)
+            (root / "node_modules/pkg/index.js").write_text("ignored", encoding="utf-8")
+            (root / "link.js").symlink_to("nested/app.js")
+            python_hash = fallback_module.snapshot_workspace(root)["sha256"]
+            script = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/workspace-integrity.mjs"
+            result = subprocess.run(
+                [
+                    "node", "--input-type=module", "-e",
+                    f"import {{ snapshotWorkspace }} from {json.dumps(script.as_uri())};"
+                    f"process.stdout.write(snapshotWorkspace({json.dumps(str(root))}).sha256);",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, python_hash)
 
     def test_default_batch_id_includes_hours_minutes_and_seconds(self) -> None:
         fixed = datetime(2026, 8, 20, 14, 35, 42, tzinfo=timezone.utc)
@@ -103,6 +171,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
             score_skill_package = batch_root / "packages/web-smoke__score-web-e2e-skill.zip"
             report_skill_package = batch_root / "packages/web-smoke__report-web-e2e-skill.zip"
+            orchestrate_skill_package = batch_root / "packages/web-smoke__orchestrate-web-e2e-skill.zip"
             report_config_path = batch_root / "web-smoke__report-config.yaml"
 
             self.assertTrue((execution_task / "workspace/.gitkeep").is_file())
@@ -116,6 +185,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertFalse((score_task / ".agents").exists())
             self.assertTrue(score_skill_package.is_file())
             self.assertTrue(report_skill_package.is_file())
+            self.assertTrue(orchestrate_skill_package.is_file())
             self.assertTrue(report_config_path.is_file())
             self.assertTrue((harness_root / "tools/prepare_scoring_workspace.py").is_file())
             self.assertTrue((harness_root / "准备评分工作空间.command").is_file())
@@ -129,6 +199,9 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertNotIn("scoring_fixture_files", entry)
             self.assertNotIn("model", manifest)
             self.assertFalse(manifest["execution_record_included"])
+            self.assertEqual(manifest["scoring_skill"]["name"], "score-web-e2e")
+            self.assertEqual(manifest["scoring_skill"]["version"], "4.3.0")
+            self.assertIn(manifest["metric_profile"], manifest["scoring_skill"]["supported_metric_profiles"])
 
             prefix = "web-smoke__codex/"
             with zipfile.ZipFile(execution_package) as archive:
@@ -140,6 +213,8 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 score_skill_names = archive.namelist()
             with zipfile.ZipFile(report_skill_package) as archive:
                 report_skill_names = archive.namelist()
+            with zipfile.ZipFile(orchestrate_skill_package) as archive:
+                orchestrate_skill_names = archive.namelist()
             self.assertTrue(all(name.startswith(prefix) for name in execution_names))
             self.assertIn(f"{prefix}score/", execution_names)
             self.assertTrue(any(name.endswith(f"execution/tasks/{self.TASK_ID}/PROMPT.md") for name in execution_names))
@@ -151,13 +226,20 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertFalse(any(name.endswith("__report-config.yaml") for name in execution_names))
             self.assertFalse(any(name.endswith("__report-config.yaml") for name in scoring_names))
             self.assertIn("score-web-e2e/SKILL.md", score_skill_names)
+            self.assertIn("score-web-e2e/skill-metadata.json", score_skill_names)
             self.assertTrue(any(name.startswith("score-web-e2e/scripts/") for name in score_skill_names))
             self.assertIn("score-web-e2e/references/aesthetic-rubric.json", score_skill_names)
             self.assertIn("score-web-e2e/references/browser-interaction-scoring.md", score_skill_names)
+            self.assertIn("score-web-e2e/scripts/workspace-integrity.mjs", score_skill_names)
+            self.assertIn("score-web-e2e/scripts/managed_runtime.mjs", score_skill_names)
             self.assertIn("report-web-e2e/SKILL.md", report_skill_names)
             self.assertIn("report-web-e2e/scripts/aggregate_web_e2e_results.py", report_skill_names)
             self.assertIn("report-web-e2e/scripts/build_web_e2e_workbook.mjs", report_skill_names)
             self.assertFalse(any("__pycache__" in name or name.endswith(".pyc") or name.endswith(".DS_Store") for name in report_skill_names))
+            self.assertIn("orchestrate-web-e2e/SKILL.md", orchestrate_skill_names)
+            self.assertIn("orchestrate-web-e2e/scripts/scoring-control.mjs", orchestrate_skill_names)
+            self.assertIn("orchestrate-web-e2e/drivers/codex-desktop/package-lock.json", orchestrate_skill_names)
+            self.assertFalse(any("node_modules" in name for name in orchestrate_skill_names))
             self.assertTrue((command_info.external_attr >> 16) & 0o100)
 
             report_config = prepare_module.yaml.safe_load(report_config_path.read_text(encoding="utf-8"))
@@ -171,6 +253,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 "reasoning_effort": "high",
                 "order": 1,
             }])
+            batch_manifest = json.loads((batch_root / "batch_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                batch_manifest["orchestrate_skill_archive"],
+                "packages/web-smoke__orchestrate-web-e2e-skill.zip",
+            )
 
             contract = json.loads((score_task / "private-scoring/task_contract.json").read_text(encoding="utf-8"))
             self.assertFalse(Path(contract["source"]["task_file"]).is_absolute())
@@ -289,13 +376,13 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             result = prepare_module.package_score_skill(args)
             package_path = Path(tmp).resolve() / "web-skill-only__score-web-e2e-skill.zip"
             self.assertEqual(result["path"], package_path)
-            self.assertEqual(result["file_count"], 10)
+            self.assertEqual(result["file_count"], 13)
             self.assertEqual(result["sha256"], prepare_module.sha256_file(package_path))
             self.assertFalse((Path(tmp) / "web-skill-only").exists())
             self.assertFalse(any(Path(tmp).glob("**/batch_manifest.json")))
             with zipfile.ZipFile(package_path) as archive:
                 names = [name for name in archive.namelist() if not name.endswith("/")]
-                self.assertEqual(len(names), 10)
+                self.assertEqual(len(names), 13)
                 self.assertIn("score-web-e2e/scripts/serve_static.mjs", names)
                 self.assertIn("score-web-e2e/references/browser-interaction-scoring.md", names)
 
@@ -351,13 +438,188 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             package_root = extracted / "web-smoke__codex"
             self.assertTrue((package_root / "score").is_dir())
             self.assertFalse(any((package_root / "score").iterdir()))
+            materialize_execution_receipt(package_root)
             score_root = fallback_module.prepare_scoring_workspace(package_root, scoring_package)
             task_root = score_root / "tasks" / self.TASK_ID
             self.assertTrue((task_root / "workspace/.gitkeep").is_file())
             self.assertTrue((task_root / "private-scoring/task_contract.json").is_file())
+            candidate = json.loads((task_root / "private-scoring/candidate_artifact.json").read_text(encoding="utf-8"))
+            self.assertEqual(candidate["schema_version"], "wildclawbench.web-e2e-candidate-artifact/v1")
+            self.assertEqual(candidate["model"], {"id": "gpt-5.5", "display_name": "gpt-5.5"})
+            self.assertEqual(candidate["model_selection"]["actual_model"], "gpt-5.5")
+            contract = json.loads((task_root / "private-scoring/task_contract.json").read_text(encoding="utf-8"))
+            self.assertEqual(contract["identity"]["model"]["id"], "gpt-5.5")
+            self.assertEqual(candidate["hash_algorithm"], "wildclawbench.workspace-tree-sha256/v1")
+            self.assertRegex(candidate["execution_receipt"]["sha256"], r"^[a-f0-9]{64}$")
+            self.assertTrue(candidate["checks"]["execution_before_copy"]["valid"])
+            self.assertTrue(candidate["checks"]["score_after_copy"]["valid"])
             self.assertFalse((task_root / ".agents").exists())
             with self.assertRaisesRegex(FileExistsError, "拒绝覆盖"):
                 fallback_module.prepare_scoring_workspace(package_root, scoring_package)
+
+    def test_python_fallback_accepts_a_preconfigured_current_model(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))
+            execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
+            scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
+            extracted = Path(tmp) / "tester-current-model"
+            with zipfile.ZipFile(execution_package) as archive:
+                archive.extractall(extracted)
+            package_root = extracted / "web-smoke__codex"
+            materialize_execution_receipt(package_root, model_mode="current")
+
+            score_root = fallback_module.prepare_scoring_workspace(package_root, scoring_package)
+            candidate = json.loads(
+                (score_root / "tasks" / self.TASK_ID / "private-scoring/candidate_artifact.json")
+                .read_text(encoding="utf-8")
+            )
+
+            self.assertEqual(candidate["model_selection"]["mode"], "current")
+            self.assertIsNone(candidate["model_selection"]["requested_model"])
+            self.assertEqual(candidate["model_selection"]["actual_model"], "gpt-5.5")
+
+    def test_python_fallback_excludes_execution_runner_control_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))
+            execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
+            scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
+            extracted = Path(tmp) / "tester"
+            with zipfile.ZipFile(execution_package) as archive:
+                archive.extractall(extracted)
+            package_root = extracted / "web-smoke__codex"
+            materialize_execution_receipt(package_root)
+            control_root = package_root / "execution/tasks/.execute-web-e2e"
+            control_root.mkdir()
+            (control_root / "automation_state.json").write_text("{}\n", encoding="utf-8")
+
+            prepared = fallback_module.prepare_scoring_workspace(package_root, scoring_package)
+
+            self.assertTrue((prepared / "tasks" / self.TASK_ID / "workspace/.gitkeep").is_file())
+            self.assertFalse((prepared / "tasks/.execute-web-e2e").exists())
+
+    def test_python_fallback_rejects_execution_workspace_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))
+            execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
+            scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
+            extracted = Path(tmp) / "tester"
+            with zipfile.ZipFile(execution_package) as archive:
+                archive.extractall(extracted)
+            package_root = extracted / "web-smoke__codex"
+            materialize_execution_receipt(package_root)
+            workspace = package_root / "execution/tasks" / self.TASK_ID / "workspace"
+            (workspace / "late-change.txt").write_text("drift", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "候选产物发生漂移"):
+                fallback_module.prepare_scoring_workspace(package_root, scoring_package)
+            self.assertFalse(any((package_root / "score").iterdir()))
+
+    def test_python_fallback_rejects_excluded_runtime_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))
+            execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
+            scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
+            extracted = Path(tmp) / "tester"
+            with zipfile.ZipFile(execution_package) as archive:
+                archive.extractall(extracted)
+            package_root = extracted / "web-smoke__codex"
+            materialize_execution_receipt(package_root)
+            runtime_cache = package_root / "execution/tasks" / self.TASK_ID / "workspace/.vite"
+            runtime_cache.mkdir()
+            (runtime_cache / "cache.json").write_text("runtime", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "禁止的运行时目录"):
+                fallback_module.prepare_scoring_workspace(package_root, scoring_package)
+            self.assertFalse(any((package_root / "score").iterdir()))
+
+    def test_candidate_freeze_pipeline_rejects_drift_and_builds_clean_submission(self) -> None:
+        def prepare_package(base: Path, batch_id: str) -> tuple[Path, str]:
+            args = args_for(str(base), self.ARTIFACTSBENCH_TASK_ID)
+            args.batch_id = batch_id
+            args.harness = ["workbuddy"]
+            args.model = "xopglm52"
+            batch_root = prepare_module.prepare(args)
+            execution_package = batch_root / f"packages/{batch_id}__workbuddy__execution.zip"
+            scoring_package = batch_root / f"packages/{batch_id}__workbuddy__scoring.zip"
+            extracted = base / f"extracted-{batch_id}"
+            with zipfile.ZipFile(execution_package) as archive:
+                archive.extractall(extracted)
+            package_root = extracted / f"{batch_id}__workbuddy"
+            materialize_execution_receipt(package_root)
+            fallback_module.prepare_scoring_workspace(package_root, scoring_package)
+            initialized = subprocess.run(
+                ["node", str(SCORING_CONTROL), "init", "--package-root", str(package_root)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(initialized.returncode, 0, initialized.stderr)
+            return package_root, self.ARTIFACTSBENCH_TASK_ID
+
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            drift_root, task_id = prepare_package(base, "freeze-drift")
+            drift_file = drift_root / "score/tasks" / task_id / "workspace/late-change.txt"
+            drift_file.write_text("drift", encoding="utf-8")
+            rejected = subprocess.run(
+                ["node", str(SCORING_CONTROL), "init", "--package-root", str(drift_root)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn("候选产物发生漂移", rejected.stderr)
+            self.assertEqual(drift_file.read_text(encoding="utf-8"), "drift")
+
+            clean_root, task_id = prepare_package(base, "freeze-clean")
+            task_root = clean_root / "score/tasks" / task_id
+            contract = task_root / "private-scoring/task_contract.json"
+            score_input_path = task_root / "private-scoring/score_input.json"
+            initialized_score = subprocess.run(
+                [
+                    "node", str(INIT_SCORE), "--task-contract", str(contract),
+                    "--output", str(score_input_path),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(initialized_score.returncode, 0, initialized_score.stderr)
+            score_input = json.loads(score_input_path.read_text(encoding="utf-8"))
+            score_input["browser"] = {"name": "integration-test", "viewport": "1440x900"}
+            score_input["scorer"] = {"agent": "test"}
+            for criterion in score_input["criteria"]:
+                criterion["raw_score"] = 10
+                criterion["reason"] = "临时集成测试通过"
+                criterion["actions"] = ["读取冻结候选并验证页面"]
+                criterion["evidence"] = [
+                    {"type": "screenshot", "path": "evidence/page.png"},
+                    {"type": "observation", "path": "evidence/actions.md"},
+                ]
+            score_input_path.write_text(
+                json.dumps(score_input, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            evidence = task_root / "private-scoring/evidence"
+            evidence.mkdir()
+            (evidence / "page.png").write_bytes(b"png")
+            (evidence / "actions.md").write_text("integration actions", encoding="utf-8")
+            finalized = subprocess.run(
+                [
+                    "node", str(FINALIZE_SCORE), "--task-contract", str(contract),
+                    "--score-input", str(score_input_path),
+                    "--output", str(task_root / "private-scoring/task_score.json"),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(finalized.returncode, 0, finalized.stderr)
+            submitted = subprocess.run(
+                ["node", str(BUILD_SUBMISSION), "--package-root", str(clean_root)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(submitted.returncode, 0, submitted.stderr)
+            submission = json.loads((clean_root / "submission.json").read_text(encoding="utf-8"))
+            self.assertTrue(submission["candidate_artifacts"][0]["valid"])
+            self.assertEqual(submission["candidate_artifacts"][0]["execution_sha256"], submission["candidate_artifacts"][0]["score_sha256"])
 
     def test_python_fallback_accepts_system_metadata_and_empty_directories(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -368,6 +630,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             with zipfile.ZipFile(execution_package) as archive:
                 archive.extractall(extracted)
             package_root = extracted / "web-smoke__codex"
+            materialize_execution_receipt(package_root)
             score_root = package_root / "score"
             (score_root / ".DS_Store").write_bytes(b"finder metadata")
             (score_root / "tasks/nested-empty").mkdir(parents=True)
@@ -391,6 +654,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             with zipfile.ZipFile(execution_package) as archive:
                 archive.extractall(extracted)
             package_root = extracted / "web-smoke__codex"
+            materialize_execution_receipt(package_root)
             result_path = package_root / "score/tasks" / self.TASK_ID / "private-scoring/task_score.json"
             result_path.parent.mkdir(parents=True)
             result_path.write_text("{}\n", encoding="utf-8")

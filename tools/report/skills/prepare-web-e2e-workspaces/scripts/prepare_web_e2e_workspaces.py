@@ -27,7 +27,7 @@ except ImportError:
 
 SCHEMA_VERSION = "wildclawbench.web-e2e-batch/v3"
 REPORT_CONFIG_SCHEMA = "wildclawbench.web-e2e-report-config/v1"
-SKILL_VERSION = "4.0.0"
+SKILL_VERSION = "4.2.0"
 DETAILED_PROFILE = "web-e2e-detailed-v1"
 ARTIFACTSBENCH_PROFILE = "artifactsbench-web-v1"
 SUPPORTED_METRIC_PROFILES = {DETAILED_PROFILE, ARTIFACTSBENCH_PROFILE}
@@ -511,6 +511,7 @@ def render_checklist(batch_id: str, harness: str, tasks: list[dict], include_exe
         "",
         f"- Harness：{KNOWN_HARNESSES.get(harness, harness)} (`{harness}`)",
         f"- 用例数：{len(tasks)}",
+        "- [ ] 跑批前已在被评 Harness 中配置默认模型、推理强度和权限。执行 Skill 未显式指定模型时保持当前设置，只回读实际模型。",
         "",
     ]
     for task in tasks:
@@ -532,12 +533,12 @@ def render_checklist(batch_id: str, harness: str, tasks: list[dict], include_exe
         "## 评分阶段",
         "",
         "1. 把整个 Harness 根目录压缩为 execution 备份并移到根目录外。",
-        "2. 将 `execution/tasks/` 整个复制到根目录已有的 `score/` 下，得到 `score/tasks/`。",
+        "2. 按 manifest 将每个 `execution/tasks/<task_id>/` 复制到根目录已有的 `score/tasks/`；不要复制 `.execute-web-e2e` 等执行控制目录。",
         "3. 把对应 `__scoring.zip` 解压到 Harness 根目录，选择合并目录，不能替换整个 `score/`。",
-        "4. 若 ZIP 工具不能正确合并，请把 scoring ZIP 放在 Harness 根目录同级或根目录内，保持 `score/` 没有真实内容，再双击 `准备评分工作空间.command`（macOS）或 `准备评分工作空间.cmd`（Windows）；空目录和常见系统元数据可自动清理，兜底要求本机有 Python。",
+        "4. 推荐把 scoring ZIP 放在 Harness 根目录同级或根目录内，保持 `score/` 没有真实内容，再双击 `准备评分工作空间.command`（macOS）或 `准备评分工作空间.cmd`（Windows）；脚本按 manifest 复制题目并排除执行控制目录，兜底要求本机有 Python。",
         "5. 在评分智能体中导入管理员另行提供的 `score-web-e2e` 离线 Skill ZIP，每台评分客户端只安装一次。",
         "6. 每题在评分智能体中选择 `score/tasks/<task_id>/`，新建会话并触发 `$score-web-e2e`。",
-        "7. 全部评分后按评分 Skill 的回传准备流程关闭服务、清理可重建的 `node_modules`，生成根目录 `submission.json` 再压缩回传。",
+        "7. 全部评分后按评分 Skill 的回传准备流程精确停止本题记录的服务、删除 `private-scoring/runtime-workspace/`，复核候选哈希后生成根目录 `submission.json`；不得清理或修改候选 workspace。",
         "",
     ])
     return "\n".join(rows)
@@ -568,12 +569,25 @@ def zip_skill(source: Path, destination: Path) -> int:
     file_count = 0
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(item for item in source.rglob("*") if item.is_file()):
-            if "__pycache__" in path.parts or path.suffix == ".pyc" or path.name == ".DS_Store":
+            if "__pycache__" in path.parts or "node_modules" in path.parts or path.suffix == ".pyc" or path.name == ".DS_Store":
                 continue
             archived = PurePosixPath(source.name, path.relative_to(source).as_posix()).as_posix()
             archive.write(path, archived)
             file_count += 1
     return file_count
+
+
+def load_score_skill_metadata(scoring_skill: Path) -> dict:
+    metadata_path = scoring_skill / "skill-metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    if metadata.get("schema_version") != "wildclawbench.web-e2e-score-skill/v1":
+        raise ValueError(f"评分 Skill 元数据 schema 不兼容: {metadata_path}")
+    if metadata.get("name") != "score-web-e2e" or not metadata.get("version"):
+        raise ValueError(f"评分 Skill 元数据缺少名称或版本: {metadata_path}")
+    supported = metadata.get("supported_metric_profiles")
+    if not isinstance(supported, list) or not supported:
+        raise ValueError(f"评分 Skill 元数据缺少 supported_metric_profiles: {metadata_path}")
+    return metadata
 
 
 def package_score_skill(args: argparse.Namespace) -> dict:
@@ -586,6 +600,7 @@ def package_score_skill(args: argparse.Namespace) -> dict:
     scoring_skill = repo_root / "tools/report/skills/score-web-e2e"
     if not (scoring_skill / "SKILL.md").is_file():
         raise FileNotFoundError(f"缺少评分 Skill: {scoring_skill}")
+    load_score_skill_metadata(scoring_skill)
     package_path = output_root / f"{batch_id}__score-web-e2e-skill.zip"
     if package_path.exists():
         raise FileExistsError(f"评分 Skill 包已存在，拒绝覆盖: {package_path}")
@@ -643,9 +658,17 @@ def prepare(args: argparse.Namespace) -> Path:
     scoring_skill = repo_root / "tools/report/skills/score-web-e2e"
     if not (scoring_skill / "SKILL.md").is_file():
         raise FileNotFoundError(f"缺少评分 Skill: {scoring_skill}")
+    score_skill_metadata = load_score_skill_metadata(scoring_skill)
+    if metric_profile not in score_skill_metadata["supported_metric_profiles"]:
+        raise ValueError(
+            f"评分 Skill {score_skill_metadata['version']} 不支持 metric_profile: {metric_profile}"
+        )
     report_skill = repo_root / "tools/report/skills/report-web-e2e"
     if not (report_skill / "SKILL.md").is_file():
         raise FileNotFoundError(f"缺少报告 Skill: {report_skill}")
+    orchestrate_skill = repo_root / "tools/report/skills/orchestrate-web-e2e"
+    if not (orchestrate_skill / "SKILL.md").is_file():
+        raise FileNotFoundError(f"缺少编排 Skill: {orchestrate_skill}")
     created_at = datetime.now(timezone.utc).isoformat()
     revision = git_revision(repo_root)
     include_execution_record = bool(getattr(args, "include_execution_record", False))
@@ -666,6 +689,14 @@ def prepare(args: argparse.Namespace) -> Path:
         "package_type": "report_skill",
         "path": report_skill_package.relative_to(batch_root).as_posix(),
         "sha256": sha256_file(report_skill_package),
+    })
+    orchestrate_skill_package = batch_root / "packages" / f"{args.batch_id}__orchestrate-web-e2e-skill.zip"
+    zip_skill(orchestrate_skill, orchestrate_skill_package)
+    package_rows.append({
+        "harness": None,
+        "package_type": "orchestrate_skill",
+        "path": orchestrate_skill_package.relative_to(batch_root).as_posix(),
+        "sha256": sha256_file(orchestrate_skill_package),
     })
     report_config_path = batch_root / f"{args.batch_id}__report-config.yaml"
     report_config = build_report_config(
@@ -733,6 +764,7 @@ def prepare(args: argparse.Namespace) -> Path:
             "created_at": created_at,
             "source_revision": revision,
             "metric_profile": metric_profile,
+            "scoring_skill": score_skill_metadata,
             "package_root": package_root_name,
             "scoring_archive": f"{args.batch_id}__{harness}__scoring.zip",
             "execution_record_included": include_execution_record,
@@ -789,10 +821,12 @@ def prepare(args: argparse.Namespace) -> Path:
         "created_at": created_at,
         "source_revision": revision,
         "metric_profile": metric_profile,
+        "scoring_skill": score_skill_metadata,
         "task_ids": task_ids,
         "harnesses": harnesses,
         "score_skill_archive": score_skill_package.relative_to(batch_root).as_posix(),
         "report_skill_archive": report_skill_package.relative_to(batch_root).as_posix(),
+        "orchestrate_skill_archive": orchestrate_skill_package.relative_to(batch_root).as_posix(),
         "report_config": report_config_path.relative_to(batch_root).as_posix(),
         "report_config_ready": report_config["configuration_status"] == "ready",
         "execution_record_included": include_execution_record,

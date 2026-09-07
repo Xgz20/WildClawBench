@@ -16,10 +16,11 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 
 export const AUTOMATION_SCHEMA = "wildclawbench.web-e2e-automation-state/v1";
 export const EXECUTION_SCHEMA = "wildclawbench.web-e2e-execution/v1";
+export const DRIVER_VERSION = "1.6.0";
 export const DEFAULT_APP_PATH = "/Applications/WorkBuddy.app";
 export const DEFAULT_BUNDLE_ID = "com.tencent.workbuddy.mac";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9229";
-export const DEFAULT_MODEL = "均衡";
+export const DEFAULT_MODEL = "";
 export const DEFAULT_PERMISSION_MODE = "current";
 export const PERMISSION_MODES = new Set(["current", "full-access"]);
 export const TERMINAL_PHASES = new Set(["SUCCEEDED", "INFRA_FAILED", "TIMEOUT"]);
@@ -201,6 +202,16 @@ async function sha256File(path) {
   return createHash("sha256").update(content).digest("hex");
 }
 
+function compareUnicodeCodePoints(left, right) {
+  const leftPoints = Array.from(left, (character) => character.codePointAt(0));
+  const rightPoints = Array.from(right, (character) => character.codePointAt(0));
+  const length = Math.min(leftPoints.length, rightPoints.length);
+  for (let index = 0; index < length; index += 1) {
+    if (leftPoints[index] !== rightPoints[index]) return leftPoints[index] - rightPoints[index];
+  }
+  return leftPoints.length - rightPoints.length;
+}
+
 export async function atomicWriteJson(path, value) {
   await mkdir(dirname(path), { recursive: true });
   const temporary = `${path}.tmp-${process.pid}-${randomUUID()}`;
@@ -218,14 +229,20 @@ export async function readJsonIfExists(path) {
 }
 
 export async function snapshotTree(root, { maximumFiles = 20000 } = {}) {
+  const rootInfo = await lstat(root);
+  if (rootInfo.isSymbolicLink() || !rootInfo.isDirectory()) {
+    throw new Error(`候选 workspace 缺失或为符号链接：${root}`);
+  }
   const entries = [];
+  const excludedRuntimeDirectories = [];
   async function walk(current, prefix = "") {
     const children = await readdir(current, { withFileTypes: true });
-    children.sort((left, right) => left.name.localeCompare(right.name));
+    children.sort((left, right) => compareUnicodeCodePoints(left.name, right.name));
     for (const child of children) {
       const rel = prefix ? `${prefix}/${child.name}` : child.name;
       if (child.isDirectory()) {
-        if (!EXCLUDED_TREE_DIRS.has(child.name)) await walk(join(current, child.name), rel);
+        if (EXCLUDED_TREE_DIRS.has(child.name)) excludedRuntimeDirectories.push(rel);
+        else await walk(join(current, child.name), rel);
         continue;
       }
       if (entries.length >= maximumFiles) throw new Error(`候选目录文件数超过上限 ${maximumFiles}`);
@@ -255,6 +272,7 @@ export async function snapshotTree(root, { maximumFiles = 20000 } = {}) {
     file_count: entries.length,
     total_bytes: entries.reduce((sum, entry) => sum + entry.size, 0),
     excluded_directories: [...EXCLUDED_TREE_DIRS].sort(),
+    excluded_runtime_directories: excludedRuntimeDirectories.sort(compareUnicodeCodePoints),
     entries,
   };
 }
@@ -292,8 +310,11 @@ export function classifySessionStatus(rawStatus) {
 export function classifyDomStatus({ running = false, agentText = "", rawStatus = "" } = {}) {
   const text = String(agentText || "").trim();
   const statusHeader = text.slice(0, 240);
-  if (running || /(?:思考中|处理中|正在执行|Running|Processing)/i.test(statusHeader)) {
+  if (running || /(?:^|\n)\s*(?:思考中|处理中|正在执行|正在连接(?:\s*MCP\s*服务)?[.…]*|等待模型响应[.…|]*|Running|Processing|Waiting for model)\s*$/im.test(statusHeader)) {
     return { kind: "running", status: "visible-running" };
+  }
+  if (/(?:^|\n)\s*当前服务异常，请稍后再试或新建任务、切换模型后重试[。！!]?\s*(?=\n|$)/i.test(text)) {
+    return { kind: "failure", status: "visible-service-error" };
   }
   const structured = classifySessionStatus(rawStatus);
   if (structured.kind === "success") return { kind: "success", status: `dom-data-status:${structured.status}` };
@@ -307,6 +328,12 @@ export function classifyDomStatus({ running = false, agentText = "", rawStatus =
     return { kind: "failure", status: "visible-failure" };
   }
   return { kind: text ? "unknown" : "missing", status: text ? "visible-unknown" : "" };
+}
+
+export function isSubstantiveFinalResponse(value) {
+  const text = String(value || "").trim();
+  if (!text) return false;
+  return !/^(?:正在连接(?:\s*MCP\s*服务)?|等待模型响应|思考中|处理中|正在执行)[.…|]*$/i.test(text);
 }
 
 export function classifyApprovalCommand(command, candidateWorkspace) {
@@ -430,6 +457,20 @@ export async function updateExecutionRecord(config, identityInfo, update) {
   const record = identityInfo.existing || createExecutionRecord(identityInfo.identity);
   if (record.schema_version !== EXECUTION_SCHEMA) throw new Error(`不支持的 execution_record schema：${record.schema_version}`);
   record.harness.version = update.clientVersion || record.harness.version || "";
+  const actualUiModel = String(update.modelSelection?.actual_model || "").trim();
+  if (actualUiModel) {
+    if (config.model && actualUiModel !== config.model) {
+      throw new Error(`WorkBuddy 实际模型与请求不一致：${actualUiModel} vs ${config.model}`);
+    }
+    const declaredModelId = String(record.model?.id || identityInfo.identity.model?.id || "").trim();
+    if (declaredModelId && declaredModelId !== actualUiModel && !config.modelId) {
+      throw new Error(`execution_record.model.id 与 WorkBuddy 实际模型不一致：${declaredModelId} vs ${actualUiModel}`);
+    }
+    record.model = {
+      id: declaredModelId || actualUiModel,
+      display_name: config.modelDisplayName || actualUiModel,
+    };
+  }
   record.execution = { ...record.execution, ...update.execution };
   if (update.transcriptPath) record.artifacts.harness_transcript = relative(config.workspace, update.transcriptPath).split("\\").join("/");
   await atomicWriteJson(config.executionRecord, record);
@@ -443,7 +484,7 @@ export function createInitialState(config, identity, initialSnapshot) {
     schema_version: AUTOMATION_SCHEMA,
     driver: {
       id: "workbuddy",
-      version: "1.3.0",
+      version: DRIVER_VERSION,
       control_backend: "electron-cdp+workbuddy-workspace-provider+macos-accessibility-fallback",
     },
     attempt_id: randomUUID(),
@@ -460,7 +501,7 @@ export function createInitialState(config, identity, initialSnapshot) {
     prompt_file: config.promptFile,
     prompt_sha256: config.promptSha256,
     prompt_bytes: config.promptBytes,
-    requested_ui_model: config.model,
+    requested_ui_model: config.model || null,
     requested_permission_mode: config.permissionMode,
     client: { app_path: config.appPath, endpoint: config.endpoint, version: "", process: null },
     session: {
@@ -493,7 +534,7 @@ export function assertStateMatches(state, config, identity) {
   const mismatches = [];
   if (state.workspace !== config.workspace) mismatches.push("workspace");
   if (state.prompt_sha256 !== config.promptSha256) mismatches.push("prompt_sha256");
-  if (state.requested_ui_model !== config.model) mismatches.push("requested_ui_model");
+  if ((state.requested_ui_model || "") !== config.model) mismatches.push("requested_ui_model");
   if (state.requested_permission_mode && state.requested_permission_mode !== config.permissionMode) {
     mismatches.push("requested_permission_mode");
   }
