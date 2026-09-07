@@ -231,17 +231,91 @@ def evaluation_scope_tasks(
     return scoped, None
 
 
+def logged_selected_task_counts(run_log: str) -> dict[str, int]:
+    """Recover the last declared selected-task count for each logged category."""
+    counts: dict[str, int] = {}
+    for line in run_log.splitlines():
+        category_match = re.search(
+            r"Category:\s*(\S+),\s*(\d+)\s+tasks(?:\s|$)", line
+        )
+        if category_match:
+            counts[category_match.group(1)] = int(category_match.group(2))
+        filter_match = re.search(
+            r":\s*(\d+)/\d+\s+tasks kept in\s+(\S+)", line
+        )
+        if filter_match:
+            counts[filter_match.group(2)] = int(filter_match.group(1))
+    return {category: count for category, count in counts.items() if count > 0}
+
+
+def legacy_summary_tasks(
+    summary: dict,
+    run_log: str,
+) -> tuple[set[tuple[str, str]] | None, str | None, dict[str, object]]:
+    """Infer a legacy evaluation scope from a self-consistent batch summary."""
+    declared_count = summary.get("task_count")
+    results = summary.get("results")
+    if (
+        not isinstance(declared_count, int)
+        or isinstance(declared_count, bool)
+        or declared_count <= 0
+    ):
+        return None, "summary.task_count 必须是正整数", {}
+    if not isinstance(results, list) or not results:
+        return None, "summary.results 必须是非空列表", {}
+
+    scoped: set[tuple[str, str]] = set()
+    for index, result in enumerate(results):
+        if not isinstance(result, dict):
+            return None, f"summary.results[{index}] 必须是对象", {}
+        task_id = result.get("task_id_ori")
+        if not isinstance(task_id, str) or not task_id.strip():
+            return None, f"summary.results[{index}] 缺少 task_id_ori", {}
+        task_id = task_id.strip()
+        match = re.match(r"^(\d{2}_.+?)_(task_.+)$", task_id)
+        if not match:
+            return None, f"summary.results[{index}].task_id_ori 无法解析分类", {}
+        scoped.add((match.group(1), task_id))
+
+    if len(scoped) != declared_count:
+        return None, (
+            f"summary.task_count={declared_count} 与唯一 task_id_ori 数量 "
+            f"{len(scoped)} 不一致"
+        ), {}
+
+    category_counts = Counter(category for category, _task_id in scoped)
+    logged_counts = logged_selected_task_counts(run_log)
+    if logged_counts and dict(category_counts) != logged_counts:
+        return None, (
+            "summary 任务分类计数与 run.log 最终筛选数量不一致："
+            f"summary={dict(sorted(category_counts.items()))}, "
+            f"run_log={dict(sorted(logged_counts.items()))}"
+        ), {}
+
+    evidence: dict[str, object] = {
+        "task_count": declared_count,
+        "result_rows": len(results),
+        "category_counts": dict(sorted(category_counts.items())),
+    }
+    if logged_counts:
+        evidence["logged_selected_counts"] = dict(sorted(logged_counts.items()))
+    return scoped, None, evidence
+
+
 def expected_tasks_for_unit(
     expected: set[tuple[str, str]],
     metadata: dict[tuple[str, str], dict[str, object]],
     run_log: str,
     evaluation_scope: dict | None = None,
+    legacy_summary_scope: set[tuple[str, str]] | None = None,
 ) -> tuple[set[tuple[str, str]], bool]:
-    """按结构化计划范围或历史 run.log 还原 unit 的预期任务集合。"""
+    """按结构化范围、历史摘要或 run.log 还原 unit 的预期任务集合。"""
     if isinstance(evaluation_scope, dict):
         scoped, scope_error = evaluation_scope_tasks(evaluation_scope)
         if scope_error is None and scoped is not None:
             return scoped, True
+    if legacy_summary_scope is not None:
+        return set(legacy_summary_scope), True
 
     filters: dict[str, dict[str, object]] = defaultdict(dict)
     selected_categories = {
@@ -618,6 +692,22 @@ def scan_round(result_root: Path, tasks_dir: Path | None,
                 if run_scores:
                     scores_for_summary.append(fmean(run_scores))
 
+        summary_files = sorted(unit_dir.glob("summary_all_*.json"))
+        summary_path = summary_files[0] if summary_files else None
+        summary: dict | None = None
+        summary_error: str | None = None
+        if summary_path is None:
+            findings.append(finding(
+                "SUMMARY_MISSING", "warning", "缺少 summary_all_*.json", unit=unit
+            ))
+        else:
+            summary, summary_error = load_json(summary_path)
+            if summary_error:
+                findings.append(finding(
+                    "SUMMARY_INVALID", "error", summary_error, unit=unit,
+                    run_dir=str(summary_path),
+                ))
+
         run_log = read_text(unit_dir / "run.log")
         scope_path = unit_dir / "evaluation_scope.json"
         evaluation_scope, scope_error = load_json(scope_path)
@@ -646,18 +736,48 @@ def scan_round(result_root: Path, tasks_dir: Path | None,
                         recommendation="修正任务计数、重复项和空任务字段后重新校验。",
                     ))
                     evaluation_scope = None
-        unit_expected, has_logged_filters = expected_tasks_for_unit(
-            expected_flat, filter_metadata, run_log, evaluation_scope,
+
+        legacy_summary_scope: set[tuple[str, str]] | None = None
+        if evaluation_scope is None and isinstance(summary, dict):
+            legacy_summary_scope, legacy_scope_error, legacy_scope_evidence = (
+                legacy_summary_tasks(summary, run_log)
+            )
+            if legacy_scope_error is None and legacy_summary_scope is not None:
+                findings.append(finding(
+                    "LEGACY_SCOPE_INFERRED",
+                    "info",
+                    "缺少有效 evaluation_scope.json；已从历史 summary_all 和 run.log 恢复评测范围",
+                    unit=unit,
+                    run_dir=str(summary_path) if summary_path else "",
+                    evidence=legacy_scope_evidence,
+                    recommendation="历史结果无需回写；新评测继续使用 evaluation_scope.json。",
+                ))
+            elif legacy_scope_error:
+                findings.append(finding(
+                    "LEGACY_SCOPE_INFERENCE_SKIPPED",
+                    "warning",
+                    f"无法从历史 summary_all 可靠恢复评测范围：{legacy_scope_error}",
+                    unit=unit,
+                    run_dir=str(summary_path) if summary_path else "",
+                    recommendation="继续按 run.log 和当前任务定义检查；必要时人工确认历史评测范围。",
+                ))
+
+        unit_expected, has_declared_scope = expected_tasks_for_unit(
+            expected_flat,
+            filter_metadata,
+            run_log,
+            evaluation_scope,
+            legacy_summary_scope,
         )
         declares_extension = "official + extension" in run_log.lower()
         if (
             extension_flat
-            and not has_logged_filters
+            and not has_declared_scope
             and not declares_extension
             and not (actual & extension_flat)
         ):
             unit_expected = expected_flat - extension_flat
-        if unit_expected or has_logged_filters:
+        if unit_expected or has_declared_scope:
             for suite, task_id in sorted(unit_expected - actual):
                 findings.append(finding("TASK_MISSING", "error", f"缺少任务 {suite}/{task_id}",
                                         unit=unit, task_id=task_id,
@@ -666,25 +786,17 @@ def scan_round(result_root: Path, tasks_dir: Path | None,
                 findings.append(finding("TASK_UNEXPECTED", "warning", f"出现任务定义外的结果 {suite}/{task_id}",
                                         unit=unit, task_id=task_id))
 
-        summary_files = sorted(unit_dir.glob("summary_all_*.json"))
-        if not summary_files:
-            findings.append(finding("SUMMARY_MISSING", "warning", "缺少 summary_all_*.json", unit=unit))
-        else:
-            summary, summary_error = load_json(summary_files[0])
-            if summary_error:
-                findings.append(finding("SUMMARY_INVALID", "error", summary_error, unit=unit))
-            else:
-                summary = summary or {}
-                if summary.get("task_count") is not None and summary.get("task_count") != len(actual):
-                    findings.append(finding("SUMMARY_TASK_COUNT_MISMATCH", "error",
-                                            "summary.task_count 与目录扫描数不一致", unit=unit,
-                                            evidence={"summary": summary.get("task_count"), "scanned": len(actual)}))
-                recomputed = sum(scores_for_summary) / len(actual) if actual else 0.0
-                if isinstance(summary.get("global_avg"), (int, float)) and abs(summary["global_avg"] - recomputed) > 0.005:
-                    findings.append(finding("SUMMARY_SCORE_MISMATCH", "error",
-                                            "summary.global_avg 与 run 分数重算不一致", unit=unit,
-                                            evidence={"summary": summary["global_avg"],
-                                                      "recomputed": round(recomputed, 6)}))
+        if summary_error is None and isinstance(summary, dict):
+            if summary.get("task_count") is not None and summary.get("task_count") != len(actual):
+                findings.append(finding("SUMMARY_TASK_COUNT_MISMATCH", "error",
+                                        "summary.task_count 与目录扫描数不一致", unit=unit,
+                                        evidence={"summary": summary.get("task_count"), "scanned": len(actual)}))
+            recomputed = sum(scores_for_summary) / len(actual) if actual else 0.0
+            if isinstance(summary.get("global_avg"), (int, float)) and abs(summary["global_avg"] - recomputed) > 0.005:
+                findings.append(finding("SUMMARY_SCORE_MISMATCH", "error",
+                                        "summary.global_avg 与 run 分数重算不一致", unit=unit,
+                                        evidence={"summary": summary["global_avg"],
+                                                  "recomputed": round(recomputed, 6)}))
         if len(versions) > 1:
             findings.append(finding("HARNESS_VERSION_MIXED", "error", "同一 unit 混用了多个 harness 版本",
                                     unit=unit, evidence=dict(versions)))

@@ -899,6 +899,147 @@ class AnalysisPipelineTest(unittest.TestCase):
         self.assertTrue(scoped)
         self.assertEqual(selected, {("07_Website_Generation", "task_web_1")})
 
+    def test_logged_selected_task_counts_uses_final_filter_count(self) -> None:
+        run_log = (
+            "Category: 01_suite, 5 tasks (official + extension), parallelism: 1\n"
+            "Tag filter (any of ['custom']): 3/5 tasks kept in 01_suite\n"
+            "Exclude-tag filter (none of ['ppt']): 2/3 tasks kept in 01_suite\n"
+            "Category: 07_Website_Generation, 4 tasks, parallelism: 1\n"
+            "Tag filter (any of ['other']): 0/4 tasks kept in 07_Website_Generation\n"
+        )
+
+        self.assertEqual(
+            validity_check.logged_selected_task_counts(run_log),
+            {"01_suite": 2},
+        )
+
+    def test_legacy_summary_scope_wins_over_later_task_additions(self) -> None:
+        expected = {
+            ("01_suite", "01_suite_task_1"),
+            ("01_suite", "01_suite_task_2"),
+            ("01_suite", "01_suite_task_added_later"),
+        }
+        summary = {
+            "task_count": 2,
+            "results": [
+                {"task_id_ori": "01_suite_task_1"},
+                {"task_id_ori": "01_suite_task_2"},
+            ],
+        }
+        run_log = (
+            "Category: 01_suite, 2 tasks (official + extension), parallelism: 1\n"
+            "Tag filter (any of ['custom']): 2/2 tasks kept in 01_suite\n"
+        )
+
+        legacy_scope, error, evidence = validity_check.legacy_summary_tasks(
+            summary, run_log
+        )
+        selected, scoped = validity_check.expected_tasks_for_unit(
+            expected, {}, run_log, None, legacy_scope
+        )
+
+        self.assertIsNone(error)
+        self.assertTrue(scoped)
+        self.assertEqual(selected, {
+            ("01_suite", "01_suite_task_1"),
+            ("01_suite", "01_suite_task_2"),
+        })
+        self.assertEqual(evidence["category_counts"], {"01_suite": 2})
+
+    def test_legacy_summary_scope_rejects_inconsistent_count_or_log(self) -> None:
+        summary = {
+            "task_count": 3,
+            "results": [
+                {"task_id_ori": "01_suite_task_1"},
+                {"task_id_ori": "01_suite_task_2"},
+            ],
+        }
+        scope, error, _evidence = validity_check.legacy_summary_tasks(summary, "")
+        self.assertIsNone(scope)
+        self.assertIn("唯一 task_id_ori 数量", error)
+
+        summary["task_count"] = 2
+        scope, error, _evidence = validity_check.legacy_summary_tasks(
+            summary,
+            "Category: 01_suite, 3 tasks (official + extension), parallelism: 1\n",
+        )
+        self.assertIsNone(scope)
+        self.assertIn("分类计数", error)
+
+    def test_scan_round_infers_legacy_scope_without_flagging_later_tasks(self) -> None:
+        legacy_round = Path(self.temp_dir.name) / "legacy-round"
+        legacy_unit = legacy_round / "model-legacy" / "harness-legacy"
+        legacy_tasks = Path(self.temp_dir.name) / "legacy-tasks"
+        suite = "01_suite"
+        historical_ids = ("01_suite_task_1", "01_suite_task_2")
+
+        for task_id in (*historical_ids, "01_suite_task_added_later"):
+            task_path = legacy_tasks / suite / f"{task_id}.md"
+            task_path.parent.mkdir(parents=True, exist_ok=True)
+            task_path.write_text(
+                "---\n"
+                f"id: {task_id}\n"
+                "name: Legacy scope fixture\n"
+                f"category: {suite}\n"
+                "difficulty: L2\n"
+                "modality: pure-text\n"
+                "timeout_seconds: 300\n"
+                "grading_type: automated\n"
+                "tags: [custom]\n"
+                "---\n\n## Prompt\nTest\n",
+                encoding="utf-8",
+            )
+
+        for task_id in historical_ids:
+            run_dir = legacy_unit / suite / task_id / "run_001"
+            run_dir.mkdir(parents=True)
+            (run_dir / "score.json").write_text(
+                json.dumps({"overall_score": 0.5}), encoding="utf-8"
+            )
+            (run_dir / "execution_status.json").write_text(
+                json.dumps({"status": "completed"}), encoding="utf-8"
+            )
+            (run_dir / "usage.json").write_text(
+                json.dumps({"request_count": 1, "total_tokens": 100}),
+                encoding="utf-8",
+            )
+            (run_dir / "chat.jsonl").write_text(
+                "\n".join(
+                    json.dumps({"type": "event", "payload": {"index": index}})
+                    for index in range(5)
+                ),
+                encoding="utf-8",
+            )
+
+        (legacy_unit / "summary_all_model-legacy.json").write_text(
+            json.dumps({
+                "global_avg": 0.5,
+                "task_count": 2,
+                "results": [
+                    {"task_id_ori": task_id} for task_id in historical_ids
+                ],
+            }),
+            encoding="utf-8",
+        )
+        (legacy_unit / "run.log").write_text(
+            "Category: 01_suite, 2 tasks (official + extension), parallelism: 1\n"
+            "Tag filter (any of ['custom']): 2/2 tasks kept in 01_suite\n",
+            encoding="utf-8",
+        )
+
+        report = validity_check.scan_round(legacy_round, legacy_tasks)
+
+        self.assertFalse([
+            item for item in report["findings"]
+            if item["id"] in {"TASK_MISSING", "TASK_UNEXPECTED"}
+        ])
+        inferred = [
+            item for item in report["findings"]
+            if item["id"] == "LEGACY_SCOPE_INFERRED"
+        ]
+        self.assertEqual(len(inferred), 1)
+        self.assertEqual(inferred[0]["severity"], "info")
+
     def test_structured_scope_still_detects_missing_planned_task(self) -> None:
         missing_task = self.tasks_dir / "01_suite" / "task_selected_but_missing.md"
         missing_task.write_text(

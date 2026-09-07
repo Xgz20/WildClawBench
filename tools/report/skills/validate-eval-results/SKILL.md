@@ -33,6 +33,11 @@ frontmatter 还原过滤后的预期集合；被 `--exclude-tag` 等条件明确
 `TASK_MISSING`。多数 unit 共现相同环境信号只生成 `COMMON_MODE_ENV_SIGNAL` 调查线索，不自动
 升级为共享环境故障。
 
+范围来源优先使用 `evaluation_scope.json`。对尚未生成该文件的历史结果，仅当
+`summary_all_*.json` 的 `task_count`、全部 `results[].task_id_ori` 及 `run.log` 中各分类最终
+筛选数量相互一致时，才从 summary 恢复历史范围，并记录 `LEGACY_SCOPE_INFERRED/INFO`；不得把
+后来新增但不属于旧轮次的任务误报为 `TASK_MISSING`。历史 summary 不自洽时不作为范围依据。
+
 可靠性重跑会保留旧目录，并在新 run 的 `run_metadata.json` 中记录
 `supersedes_run`。检查时只对有效 run 做门禁，被替换的旧 run 作为审计历史保留，
 不得继续令当前轮次 `FAIL`；没有替换关系的多个有效 run 仍按正式多轮检查。

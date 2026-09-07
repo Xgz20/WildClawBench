@@ -17,6 +17,12 @@
 完整性检查必须应用运行日志中实际生效的 modality、include-tag 和 exclude-tag 条件。日志明确
 过滤掉的任务不属于当前批次预期集合，不能报 `TASK_MISSING`。
 
+任务定义会随评测迭代更新。范围证据优先级为 `evaluation_scope.json`、自洽的历史
+`summary_all_*.json`、`run.log` 加当前任务定义。历史 summary 只有在 `task_count`、唯一
+`results[].task_id_ori` 和日志各分类最终筛选数量一致时才能恢复旧轮次范围；恢复行为记为
+`LEGACY_SCOPE_INFERRED/INFO`，不回写历史目录。不得用当前新增任务制造历史 `TASK_MISSING`，
+也不得用残缺 summary 掩盖真正缺失的任务。
+
 ## 人工复核
 
 1. 评测前置资源是否一致：容器镜像、CPU/内存/磁盘、网络策略、代理、API endpoint、密钥权限、预置文件和时钟。
