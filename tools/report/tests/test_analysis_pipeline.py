@@ -1601,6 +1601,25 @@ class AnalysisPipelineTest(unittest.TestCase):
         three_level_unit.mkdir(parents=True)
         self.assertEqual(excel_report.round_root_from_unit_dir(three_level_unit), self.round_dir.resolve())
 
+    def test_excel_cli_rejects_duplicate_unit_ids_before_loading_scores(self) -> None:
+        duplicate_unit = self.round_dir / "backup" / "model-x" / "harness-y"
+        (duplicate_unit / "01_suite").mkdir(parents=True)
+
+        result = subprocess.run(
+            [sys.executable, str(EXCEL_SCRIPT), "--result-root", str(self.round_dir),
+             "--tasks-dir", str(self.tasks_dir)],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("发现重复评测单元 ID", result.stderr)
+        self.assertIn("model-x@harness-y", result.stderr)
+        self.assertIn(str(self.unit_dir.resolve()), result.stderr)
+        self.assertIn(str(duplicate_unit.resolve()), result.stderr)
+        self.assertNotIn("已加载 model-x@harness-y", result.stdout)
+
     def test_excel_cli_backfills_scoped_analysis_in_detail_sheet(self) -> None:
         workspace = self.round_dir / "report-workspace"
         workspace.mkdir(parents=True, exist_ok=True)

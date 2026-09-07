@@ -72,6 +72,9 @@ Preview 与 full 的维度数据完全一致（同样的 Excel 维度 Sheet、�
 - Excel、leader data 和领导版 Markdown 必须放在同一个 build 目录，不再复制到某个 round 根目录。
 - `round1-round2` 等范围进入报告名和元数据；不得把跨 round 报告简称为 `round2`。
 - 原始根因分析仍归属于来源 round。跨 round 工作区只保存本次消费的快照或引用，并记录来源与质量状态。
+- 过滤后的每个 `<model>@<harness>` 必须只对应一个 unit 目录。报告生成器在 Preview 和
+  Full 模式都会拒绝重复身份并列出冲突路径；不得自动选择所谓“较新”目录。备份目录应移出
+  本次结果范围，不同轮次或 Harness 版本必须使用可区分的实体 ID。
 
 ### 同一单元跨轮趋势
 

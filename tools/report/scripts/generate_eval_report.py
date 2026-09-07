@@ -210,6 +210,32 @@ def discover_units(result_root: Path) -> list[tuple[str, str, Path]]:
     return units
 
 
+def require_unique_unit_specs(unit_specs: list[tuple[str, str, Path]]) -> None:
+    """拒绝让多个结果目录共享同一 ``<model>@<harness>`` 身份。"""
+    paths_by_unit: dict[str, list[Path]] = {}
+    for model, harness, unit_dir in unit_specs:
+        paths_by_unit.setdefault(f"{model}@{harness}", []).append(unit_dir)
+
+    duplicates = {
+        unit: paths
+        for unit, paths in sorted(paths_by_unit.items())
+        if len(paths) > 1
+    }
+    if not duplicates:
+        return
+
+    lines = [
+        "发现重复评测单元 ID；已停止生成报告，避免结果重复加权或相互覆盖："
+    ]
+    for unit, paths in duplicates.items():
+        lines.append(f"- {unit}")
+        lines.extend(f"  - {path.resolve()}" for path in paths)
+    lines.append(
+        "请将备份目录移出本次结果范围，或为不同轮次/Harness 版本使用可区分的实体 ID。"
+    )
+    raise ValueError("\n".join(lines))
+
+
 def _load_json(path: Path) -> dict:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -3351,6 +3377,10 @@ def main() -> None:
         unit_specs = [u for u in unit_specs if u[1] in args.harnesses]
     if not unit_specs:
         sys.exit("错误：未发现任何 (model, harness) 结果单元")
+    try:
+        require_unique_unit_specs(unit_specs)
+    except ValueError as exc:
+        ap.error(str(exc))
     if args.target_model and args.target_harness:
         target_unit = f"{args.target_model}@{args.target_harness}"
         available_units = {f"{model}@{harness}" for model, harness, _ in unit_specs}
