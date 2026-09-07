@@ -882,6 +882,25 @@ class AnomalyDetectionTest(unittest.TestCase):
         finally:
             temp_dir.cleanup()
 
+    def test_pretty_concatenated_transcript_is_not_empty(self) -> None:
+        events = [
+            {"type": "event", "payload": {"index": index}}
+            for index in range(5)
+        ]
+        temp_dir, run_dir = self.make_run(events=[])
+        try:
+            (run_dir / "chat.jsonl").write_text(
+                "\n".join(json.dumps(event, indent=2) for event in events) + "\n",
+                encoding="utf-8",
+            )
+
+            report = scan_run_dir(run_dir)
+
+            self.assertIsNone(self.item(report, "EMPTY_TRANSCRIPT"))
+            self.assertIsNone(self.item(report, "SHORT_TRANSCRIPT"))
+        finally:
+            temp_dir.cleanup()
+
     def test_raw_session_without_standard_transcript_is_collection_failure(self) -> None:
         temp_dir, run_dir = self.make_run(events=[])
         try:

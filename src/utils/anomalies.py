@@ -12,8 +12,10 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Iterable
 
+from src.utils.transcript_loader import parse_transcript_text
+
 SCHEMA_VERSION = 2
-RULESET_VERSION = "2026-09-03.1"
+RULESET_VERSION = "2026-09-07.1"
 
 ERROR = "error"
 WARNING = "warning"
@@ -120,18 +122,11 @@ def _read_text(path: Path, max_bytes: int = 4_000_000) -> str:
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
-    events: list[dict[str, Any]] = []
-    for line in _read_text(path).splitlines():
-        line = line.strip()
-        if not line.startswith("{"):
-            continue
-        try:
-            value = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(value, dict):
-            events.append(value)
-    return events
+    return [
+        value
+        for value in parse_transcript_text(_read_text(path))
+        if isinstance(value, dict)
+    ]
 
 
 def _iter_jsonl(path: Path):

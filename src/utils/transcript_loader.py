@@ -21,15 +21,41 @@ def _safe_json_loads(text: str) -> Any | None:
         return None
 
 
-def _parse_json_lines(raw: str) -> list[Any]:
+def _transcript_rows(value: Any) -> list[Any]:
+    if isinstance(value, list):
+        return value
+    if isinstance(value, dict):
+        for key in ("transcript", "messages", "chat"):
+            nested = value.get(key)
+            if isinstance(nested, list):
+                return nested
+    return [value]
+
+
+def parse_transcript_text(raw: str) -> list[Any]:
+    """解析 JSON 数组、标准 JSONL 或连续的跨行 JSON 对象。"""
+    parsed = _safe_json_loads(raw)
+    if parsed is not None:
+        return _transcript_rows(parsed)
+
     rows: list[Any] = []
-    for line in raw.splitlines():
-        line = line.strip()
-        if not line:
+    decoder = json.JSONDecoder()
+    index = 0
+    while index < len(raw):
+        while index < len(raw) and raw[index].isspace():
+            index += 1
+        if index >= len(raw):
+            break
+        try:
+            value, end = decoder.raw_decode(raw, index)
+        except json.JSONDecodeError:
+            next_line = raw.find("\n", index)
+            if next_line < 0:
+                break
+            index = next_line + 1
             continue
-        parsed = _safe_json_loads(line)
-        if parsed is not None:
-            rows.append(parsed)
+        rows.extend(_transcript_rows(value))
+        index = end
     return rows
 
 
@@ -42,17 +68,7 @@ def _read_transcript_file(path: Path) -> list[Any]:
     except OSError:
         return []
 
-    parsed = _safe_json_loads(raw)
-    if isinstance(parsed, list):
-        return parsed
-    if isinstance(parsed, dict):
-        for key in ("transcript", "messages", "chat"):
-            value = parsed.get(key)
-            if isinstance(value, list):
-                return value
-        return [parsed]
-
-    return _parse_json_lines(raw)
+    return parse_transcript_text(raw)
 
 
 def _unquoted_tag_matches(pattern: re.Pattern[str], text: str) -> list[re.Match[str]]:

@@ -37,6 +37,28 @@ def tool_call(name: str, status: str) -> dict:
 
 
 class JudgeTranscriptEvidenceTest(unittest.TestCase):
+    def test_load_transcript_skips_bad_line_before_pretty_json_objects(self) -> None:
+        transcript = [
+            message("user", "task prompt"),
+            message("assistant", "final answer"),
+        ]
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "chat.jsonl"
+            path.write_text(
+                '{"broken": }\n'
+                + "\n".join(json.dumps(row, indent=2) for row in transcript)
+                + "\n",
+                encoding="utf-8",
+            )
+
+            loaded = load_transcript(str(path))
+
+            self.assertEqual(len(loaded), 2)
+            self.assertEqual(
+                loaded[1]["message"]["content"][0]["text"],
+                "final answer",
+            )
+
     def test_load_transcript_strips_inline_thinking_from_assistant_text(self) -> None:
         transcript = [
             message("user", "Keep the literal `</think>` example."),
