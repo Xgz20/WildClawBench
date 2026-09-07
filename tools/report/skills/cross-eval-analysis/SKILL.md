@@ -44,7 +44,7 @@ cross_eval_<axis>_report.md            # 可导入飞书的 Markdown
 
 `comparison-id` 默认由比较轴、目标、参照、固定变量和时间生成，也可用 `--comparison-id` 指定。`build_cross_eval_manifest.py` 会打印 `WORKSPACE_DIR`、`MANIFEST_PATH`、`ANALYSIS_PATH`、`QUALITY_PATH` 和 `REPORT_PATH`，后续 Workflow、校验器和渲染器必须原样使用。只有兼容旧流程时才传 `--output`；不要再手工把跨 round 产物放进最新 round。
 
-`manifest` 的比较范围默认是所有参评单元的**共同有效任务交集**。无有效分数、影响结果有效性的执行异常、被重跑替换的 run 不进入分差；这些排除信息保留在 manifest 的 `issues` 和每个任务的 `records` 中，不能默默当成 0 分。若异常分析明确标记结果为 `valid_capability_outcome`，例如模型在任务时限内未完成而被超时截断，则保留其分数参与能力比较，同时在 `issues` 中标记为 `CAPABILITY_TIMEOUT_INCLUDED`。
+`manifest` 的比较范围默认是所有参评单元的**共同有效任务交集**。无有效分数、影响结果有效性的执行异常、被重跑替换的 run 不进入分差；这些排除信息保留在 manifest 的 `issues` 和每个任务的 `records` 中，不能默默当成 0 分。磁盘异常快照不是永久事实：只有 schema、ruleset 和结构都与当前检测器一致的 `anomalies.json` 才直接复用，旧版、缺失或损坏快照按当前规则在内存中只读重算且不回写结果目录；重算失败的结果必须排除并报告框架错误。若异常分析明确标记结果为 `valid_capability_outcome`，例如模型在任务时限内未完成而被超时截断，则保留其分数参与能力比较，同时在 `issues` 中标记为 `CAPABILITY_TIMEOUT_INCLUDED`。
 
 ## 标准流程
 

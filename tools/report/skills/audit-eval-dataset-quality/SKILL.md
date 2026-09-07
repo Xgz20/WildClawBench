@@ -14,7 +14,7 @@ python3 .agents/skills/audit-eval-dataset-quality/scripts/audit_eval_dataset_qua
   --task-dir tasks/extension --result-root /path/to/result-a --result-root /path/to/result-b
 ```
 
-脚本递归发现 `score.json`，读取相邻的 `execution_status.json`、`usage.json`、`anomalies.json`，复用框架的有效 run 选择规则，保留 0 分有效结果。报告除了统计指标，还把处置拆成“结果需要重跑或补齐”“框架/审计输入需要修复”“评测用例需要修改”“评测用例需要人工复核”四类，并列出当前未发现问题的用例；默认只对 `agent.log`/`chat*.jsonl` 做有大小上限的完成、错误和评分契约信号扫描，不复制 transcript 全文。多个 model@harness 有效完成但共同接近 0 分时，会生成“疑似检查点/评分契约过严”的人工审核候选，不会直接进入用例修改清单。
+脚本递归发现 `score.json`，读取相邻的 `execution_status.json`、`usage.json`、`anomalies.json`，复用框架的有效 run 选择规则，保留 0 分有效结果。磁盘上的 `anomalies.json` 只有在 schema 和 ruleset 都与当前异常检测器一致且结构完整时才直接复用；旧版、缺失或损坏的快照会按当前规则在内存中只读重算，不回写历史结果目录。重算失败时必须作为框架/审计输入错误报告并排除该结果，不能回退信任旧快照。报告除了统计指标，还把处置拆成“结果需要重跑或补齐”“框架/审计输入需要修复”“评测用例需要修改”“评测用例需要人工复核”四类，并列出当前未发现问题的用例；默认只对 `agent.log`/`chat*.jsonl` 做有大小上限的完成、错误和评分契约信号扫描，不复制 transcript 全文。多个 model@harness 有效完成但共同接近 0 分时，会生成“疑似检查点/评分契约过严”的人工审核候选，不会直接进入用例修改清单。
 
 统计异常、单模型/单 Harness、单 run 证据均为 `REVIEW`，不默认阻断；缺任务、缺 score、执行无效和无法解析的输入为 `FAIL`。只有至少两个 Harness 且控制同一模型/任务交集时才会评估 Harness 敏感性；一个 Harness 必须明确写出“无法评估 Harness 敏感性”。可用 `--validity` 直接合并 `validate-eval-results` 输出的 `eval_result_validity.json`，也兼容旧版顶层 `runs` JSON；上游定位到 run 的 error/review 会从能力统计排除，无法定位的顶层问题会单列。不能用本 Skill 替代 `validate-eval-results`。
 

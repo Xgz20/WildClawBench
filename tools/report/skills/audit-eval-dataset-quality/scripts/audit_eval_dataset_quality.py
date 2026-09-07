@@ -311,6 +311,7 @@ _QUALITY_ACTIONS = {
     "RESULT_SCORE_MISSING": "补齐 score.json 或从统计范围中移除该 run",
     "RESULT_EVALUATOR_INVALID": "修复 Judge/评分失败后重新评分或重跑该结果",
     "RESULT_VALIDITY_INVALID": "修复异常检测指出的有效性问题后重跑该结果",
+    "RESULT_ANOMALY_REFRESH_FAILED": "修复异常检测器或审计输入后重新运行质量审计",
     "RESULT_VALIDITY_FAILED": "复核或修复上游有效性问题；判定失败后重跑该结果",
     "RESULT_TASK_MISSING": "补齐选定任务在该 model@harness 下的结果",
     "VALIDITY_INPUT_INVALID": "修复或重新生成可解析的有效性检查 JSON",
@@ -349,6 +350,7 @@ _FRAMEWORK_ISSUE_CODES = {
     "TASK_ID_NOT_FOUND",
     "TASK_ID_AMBIGUOUS",
     "TASK_READ_ERROR",
+    "RESULT_ANOMALY_REFRESH_FAILED",
 }
 
 

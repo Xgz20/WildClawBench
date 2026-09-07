@@ -6,6 +6,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from src.utils.anomalies import RULESET_VERSION, SCHEMA_VERSION
+
 
 REPORT_DIR = Path(__file__).resolve().parents[1]
 SCRIPT_DIR = REPORT_DIR / "skills/cross-eval-analysis/scripts"
@@ -24,6 +26,32 @@ cross_eval = load_module("cross_eval_utils_test", SCRIPT_DIR / "cross_eval_utils
 workspace_paths = load_module(
     "report_workspace_paths_test", REPORT_SCRIPTS_DIR / "report_workspace_paths.py"
 )
+
+
+def _anomalies(verdict="PASS", items=None):
+    items = list(items or [])
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "ruleset_version": RULESET_VERSION,
+        "validity_verdict": verdict,
+        "is_anomalous": bool(items),
+        "has_error": verdict == "FAIL",
+        "has_validity_failure": verdict == "FAIL",
+        "has_model_or_harness_issue": any(
+            item.get("attribution") in {"model", "harness"} for item in items
+        ),
+        "needs_review": verdict == "REVIEW",
+        "needs_rerun": any(
+            item.get("rerun_action") == "required_after_fix" for item in items
+        ),
+        "items": items,
+    }
+
+
+def _write_anomalies(run_dir: Path, verdict="PASS", items=None) -> None:
+    (run_dir / "anomalies.json").write_text(
+        json.dumps(_anomalies(verdict, items)), encoding="utf-8"
+    )
 
 
 class CrossEvalAnalysisTest(unittest.TestCase):
@@ -77,6 +105,7 @@ class CrossEvalAnalysisTest(unittest.TestCase):
             json.dumps({"message": {"content": [{"type": "text", "text": "完成"}]}}) + "\n",
             encoding="utf-8",
         )
+        _write_anomalies(run_dir)
 
     def test_model_manifest_aligns_common_valid_tasks_and_metadata(self) -> None:
         manifest = cross_eval.build_manifest(
@@ -100,6 +129,46 @@ class CrossEvalAnalysisTest(unittest.TestCase):
         self.assertEqual(alpha["scores"]["model-a@astroncode"]["score_pct"], 90.0)
         self.assertEqual(alpha["pairwise"][0]["delta_pct_points"], 10.0)
 
+    def test_model_manifest_rescans_stale_anomalies_before_comparison(self) -> None:
+        task_id = "01_Suite_task_alpha"
+        run_dir = (
+            self.root / "model-a" / "astroncode" / "01_Suite" /
+            task_id / "run_001"
+        )
+        (run_dir / "score.json").write_text(
+            json.dumps({
+                "overall_score": 0.9,
+                "_grading": {
+                    "llm_notes": "judge failed: judge returned no valid JSON",
+                },
+            }),
+            encoding="utf-8",
+        )
+        stale = _anomalies()
+        stale["ruleset_version"] = "obsolete"
+        stale_text = json.dumps(stale)
+        (run_dir / "anomalies.json").write_text(stale_text, encoding="utf-8")
+
+        manifest = cross_eval.build_manifest(
+            self.root,
+            axis="model",
+            fixed_harness="astroncode",
+            models=["model-a", "model-b"],
+            target_model="model-a",
+            tasks_dir=self.tasks_dir,
+        )
+
+        self.assertEqual(manifest["scope"]["task_ids"], ["01_Suite_task_beta"])
+        self.assertTrue(any(
+            item["code"] == "RESULT_VALIDITY_INVALID"
+            and item["task_id"] == task_id
+            for item in manifest["issues"]
+        ))
+        self.assertEqual(
+            (run_dir / "anomalies.json").read_text(encoding="utf-8"),
+            stale_text,
+        )
+
     def test_harness_manifest_keeps_target_variable(self) -> None:
         other_root = Path(self.temp_dir.name) / "harness-round"
         for harness, score in (("astroncode", 0.8), ("opencode", 0.7)):
@@ -107,6 +176,7 @@ class CrossEvalAnalysisTest(unittest.TestCase):
             run_dir.mkdir(parents=True)
             (run_dir / "score.json").write_text(json.dumps({"overall_score": score}), encoding="utf-8")
             (run_dir / "execution_status.json").write_text(json.dumps({"status": "completed", "exit_code": 0}), encoding="utf-8")
+            _write_anomalies(run_dir)
         manifest = cross_eval.build_manifest(
             other_root,
             axis="harness",
@@ -226,18 +296,11 @@ class CrossEvalAnalysisTest(unittest.TestCase):
                 }),
                 encoding="utf-8",
             )
-            (run_dir / "anomalies.json").write_text(
-                json.dumps({
-                    "validity_verdict": "PASS",
-                    "has_validity_failure": False,
-                    "items": [{
+            _write_anomalies(run_dir, items=[{
                         "attribution": "model",
                         "validity_impact": "none",
                         "score_reliability": "valid_capability_outcome",
-                    }],
-                }),
-                encoding="utf-8",
-            )
+                    }])
 
         manifest = cross_eval.build_manifest(
             timeout_root,
@@ -375,6 +438,7 @@ class CrossEvalAnalysisTest(unittest.TestCase):
                 + "\n",
                 encoding="utf-8",
             )
+            _write_anomalies(run_dir)
         manifest = cross_eval.build_manifest(
             other_root,
             axis="harness",

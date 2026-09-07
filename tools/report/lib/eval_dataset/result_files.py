@@ -8,6 +8,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
 
+from src.utils.anomalies import (
+    RULESET_VERSION as ANOMALY_RULESET_VERSION,
+    SCHEMA_VERSION as ANOMALY_SCHEMA_VERSION,
+    scan_run_dir,
+)
 from src.utils.run_selection import select_effective_run_dirs
 
 from .contracts import FAIL, Issue
@@ -49,6 +54,91 @@ def _load_json(path: Path) -> dict[str, Any]:
         return value if isinstance(value, dict) else {}
     except (OSError, UnicodeError, json.JSONDecodeError):
         return {}
+
+
+def _is_current_anomaly_snapshot(value: dict[str, Any]) -> bool:
+    """Return whether a persisted anomaly snapshot is safe to reuse as-is."""
+    verdict = value.get("validity_verdict")
+    items = value.get("items")
+    return (
+        value.get("schema_version") == ANOMALY_SCHEMA_VERSION
+        and value.get("ruleset_version") == ANOMALY_RULESET_VERSION
+        and verdict in {"PASS", "REVIEW", "FAIL"}
+        and isinstance(value.get("has_validity_failure"), bool)
+        and value.get("has_validity_failure") == (verdict == "FAIL")
+        and isinstance(items, list)
+        and all(isinstance(item, dict) for item in items)
+    )
+
+
+def _failed_anomaly_snapshot(error_type: str) -> dict[str, Any]:
+    """Build a fail-closed in-memory snapshot when current rules cannot run."""
+    return {
+        "schema_version": ANOMALY_SCHEMA_VERSION,
+        "ruleset_version": ANOMALY_RULESET_VERSION,
+        "validity_verdict": "FAIL",
+        "is_anomalous": True,
+        "has_error": True,
+        "has_validity_failure": True,
+        "has_model_or_harness_issue": False,
+        "needs_review": False,
+        "needs_rerun": False,
+        "items": [{
+            "id": "ANOMALY_REFRESH_FAILED",
+            "stage": "result_discovery",
+            "attribution": "evaluation_framework",
+            "confidence": "high",
+            "validity_impact": "fail",
+            "score_reliability": "unreliable",
+            "rerun_action": "review_first",
+            "description": "无法使用当前异常规则校验该结果",
+            "evidence": [{"error_type": error_type}],
+        }],
+    }
+
+
+class _CurrentAnomalyLoader:
+    """Load current anomaly conclusions once without rewriting result dirs."""
+
+    def __init__(self) -> None:
+        self._cache: dict[Path, dict[str, Any]] = {}
+        self._failures: dict[Path, dict[str, str]] = {}
+
+    def load(self, run_dir: Path) -> dict[str, Any]:
+        run_dir = Path(run_dir)
+        if run_dir in self._cache:
+            return self._cache[run_dir]
+
+        persisted = _load_json(run_dir / "anomalies.json")
+        if _is_current_anomaly_snapshot(persisted):
+            snapshot = persisted
+        else:
+            try:
+                snapshot = scan_run_dir(run_dir)
+                if not _is_current_anomaly_snapshot(snapshot):
+                    raise ValueError(
+                        "scan_run_dir returned an invalid current anomaly snapshot"
+                    )
+            except Exception as exc:  # discovery must fail closed
+                self._failures[run_dir] = {
+                    "error_type": type(exc).__name__,
+                    "error": str(exc)[:500],
+                }
+                snapshot = _failed_anomaly_snapshot(type(exc).__name__)
+
+        self._cache[run_dir] = snapshot
+        return snapshot
+
+    def load_for_selection(self, run_dir: Path) -> dict[str, Any]:
+        snapshot = self.load(run_dir)
+        if run_dir in self._failures:
+            # Loader errors must not be mistaken for implicit supersession.
+            # The selected record is then rejected by the fail-closed snapshot.
+            raise ValueError("current anomaly refresh failed")
+        return snapshot
+
+    def failure_for(self, run_dir: Path) -> dict[str, str] | None:
+        return self._failures.get(Path(run_dir))
 
 
 def _score_value(data: dict[str, Any]) -> float | None:
@@ -105,6 +195,7 @@ def _infer_identity(run_dir: Path, execution: dict[str, Any]) -> tuple[str, str,
 
 def discover_results(result_roots: Iterable[str | Path]) -> ResultDiscovery:
     discovery = ResultDiscovery()
+    anomaly_loader = _CurrentAnomalyLoader()
     groups: dict[tuple[Path, str, str, str, str], list[Path]] = {}
     for raw_root in result_roots:
         root = Path(raw_root).expanduser().resolve()
@@ -123,13 +214,16 @@ def discover_results(result_roots: Iterable[str | Path]) -> ResultDiscovery:
             groups.setdefault(key, []).append(run_dir)
 
     for (root, model, harness, category, task_id), run_dirs in sorted(groups.items(), key=lambda item: str(item[0])):
-        effective = select_effective_run_dirs(run_dirs, anomaly_loader=lambda path: _load_json(path / "anomalies.json"))
+        effective = select_effective_run_dirs(
+            run_dirs,
+            anomaly_loader=anomaly_loader.load_for_selection,
+        )
         for run_dir in effective:
             score_path = run_dir / "score.json"
             score_data = _load_json(score_path)
             execution = _load_json(run_dir / "execution_status.json")
             usage = _load_json(run_dir / "usage.json")
-            anomalies = _load_json(run_dir / "anomalies.json")
+            anomalies = anomaly_loader.load(run_dir)
             score = _score_value(score_data)
             execution_status = str(execution.get("status") or "unknown").lower()
             exit_code = execution.get("exit_code")
@@ -168,6 +262,20 @@ def discover_results(result_roots: Iterable[str | Path]) -> ResultDiscovery:
             )
             record = ResultRecord(root, run_dir, score_path if score_path.is_file() else None, model, harness, category, task_id, run_dir.name, score, score_data, execution, usage, anomalies, usable, validity)
             discovery.records.append(record)
+            anomaly_refresh_failure = anomaly_loader.failure_for(run_dir)
+            if anomaly_refresh_failure:
+                discovery.issues.append(Issue(
+                    FAIL,
+                    "RESULT_ANOMALY_REFRESH_FAILED",
+                    f"无法使用当前异常规则校验结果: {run_dir}",
+                    task_id=task_id,
+                    location=str(run_dir),
+                    evidence={
+                        "required_schema_version": ANOMALY_SCHEMA_VERSION,
+                        "required_ruleset_version": ANOMALY_RULESET_VERSION,
+                        **anomaly_refresh_failure,
+                    },
+                ))
             if score is None:
                 discovery.issues.append(Issue(FAIL, "RESULT_SCORE_MISSING", f"结果缺少可解析分数: {run_dir}", task_id=task_id, location=str(run_dir)))
             if not usable_grading:
@@ -183,7 +291,7 @@ def discover_results(result_roots: Iterable[str | Path]) -> ResultDiscovery:
                         "partial_overall_score": grading.get("partial_overall_score"),
                     },
                 ))
-            elif anomaly_validity_failure:
+            elif anomaly_validity_failure and not anomaly_refresh_failure:
                 anomaly_ids = [
                     str(item.get("id") or item.get("code"))
                     for item in anomalies.get("items", [])

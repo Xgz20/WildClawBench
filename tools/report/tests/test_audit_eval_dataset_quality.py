@@ -1,7 +1,9 @@
 import json
 import importlib.util
 from pathlib import Path
+from unittest.mock import patch
 
+from src.utils.anomalies import RULESET_VERSION, SCHEMA_VERSION
 from tools.report.lib.eval_dataset.contracts import PASS, Report
 from tools.report.lib.eval_dataset.reporting import _markdown
 
@@ -12,6 +14,26 @@ _SPEC = importlib.util.spec_from_file_location(
 _MODULE = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_MODULE)
 main = _MODULE.main
+
+
+def _anomalies(verdict="PASS", items=None):
+    items = list(items or [])
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "ruleset_version": RULESET_VERSION,
+        "validity_verdict": verdict,
+        "is_anomalous": bool(items),
+        "has_error": verdict == "FAIL",
+        "has_validity_failure": verdict == "FAIL",
+        "has_model_or_harness_issue": any(
+            item.get("attribution") in {"model", "harness"} for item in items
+        ),
+        "needs_review": verdict == "REVIEW",
+        "needs_rerun": any(
+            item.get("rerun_action") == "required_after_fix" for item in items
+        ),
+        "items": items,
+    }
 
 
 def _write_run(
@@ -36,6 +58,9 @@ def _write_run(
         }),
         encoding="utf-8",
     )
+    (run / "anomalies.json").write_text(
+        json.dumps(_anomalies()), encoding="utf-8"
+    )
     return run
 
 
@@ -49,10 +74,7 @@ def _report(output: Path) -> dict:
 
 
 def test_quality_cli_accepts_external_root_and_reports_single_harness(tmp_path):
-    root = tmp_path / "external" / "model-a" / "harness-a" / "cat" / "task-a" / "run-1"
-    root.mkdir(parents=True)
-    (root / "score.json").write_text(json.dumps({"overall_score": .5}), encoding="utf-8")
-    (root / "execution_status.json").write_text(json.dumps({"model": "model-a", "harness": "harness-a", "status": "finished", "exit_code": 0}), encoding="utf-8")
+    _write_run(tmp_path / "external", "task-a")
     output = tmp_path / "out"
     assert main(["--result-root", str(tmp_path / "external"), "--output-dir", str(output)]) == 0
     report = json.loads(next(output.glob("*/report.json")).read_text(encoding="utf-8"))
@@ -64,10 +86,13 @@ def test_quality_cli_accepts_external_root_and_reports_single_harness(tmp_path):
 def test_quality_cli_flags_common_zero_with_completion_trace(tmp_path):
     external = tmp_path / "external"
     for model in ("model-a", "model-b", "model-c"):
-        root = external / model / "harness-a" / "cat" / "task-common-zero" / "run-1"
-        root.mkdir(parents=True)
-        (root / "score.json").write_text(json.dumps({"overall_score": 0.0, "automated.checkpoint": 0.0}), encoding="utf-8")
-        (root / "execution_status.json").write_text(json.dumps({"model": model, "harness": "harness-a", "status": "finished", "exit_code": 0}), encoding="utf-8")
+        root = _write_run(
+            external, "task-common-zero", model=model, score=0.0
+        )
+        (root / "score.json").write_text(
+            json.dumps({"overall_score": 0.0, "automated.checkpoint": 0.0}),
+            encoding="utf-8",
+        )
         (root / "agent.log").write_text("Completed and saved output. The criterion checkpoint expected by the rubric was checked.\n", encoding="utf-8")
     output = tmp_path / "out"
     assert main(["--result-root", str(external), "--output-dir", str(output)]) == 0
@@ -287,12 +312,11 @@ def test_result_validity_invalid_is_rerun_not_task_fix(tmp_path):
     external = tmp_path / "external"
     run = _write_run(external, "task-invalid")
     (run / "anomalies.json").write_text(
-        json.dumps({
-            "validity_verdict": "FAIL",
-            "has_validity_failure": True,
-            "needs_rerun": True,
-            "items": [{"id": "JUDGE_FAILED"}],
-        }),
+        json.dumps(_anomalies("FAIL", [{
+            "id": "JUDGE_FAILED",
+            "validity_impact": "fail",
+            "rerun_action": "required_after_fix",
+        }])),
         encoding="utf-8",
     )
     output = tmp_path / "out"
@@ -306,6 +330,65 @@ def test_result_validity_invalid_is_rerun_not_task_fix(tmp_path):
     assert actions["results_to_rerun"][0]["task_id"] == "task-invalid"
     assert "RESULT_VALIDITY_INVALID" in actions["results_to_rerun"][0]["issue_codes"]
     assert actions["tasks_to_fix"] == []
+
+
+def test_quality_audit_rescans_stale_anomalies_with_current_rules(tmp_path):
+    external = tmp_path / "external"
+    run = _write_run(external, "task-stale")
+    (run / "score.json").write_text(
+        json.dumps({
+            "overall_score": 0.5,
+            "_grading": {
+                "llm_notes": "judge failed: judge returned no valid JSON",
+            },
+        }),
+        encoding="utf-8",
+    )
+    stale = _anomalies()
+    stale["ruleset_version"] = "obsolete"
+    stale_text = json.dumps(stale)
+    (run / "anomalies.json").write_text(stale_text, encoding="utf-8")
+    output = tmp_path / "out"
+
+    assert main([
+        "--result-root", str(external),
+        "--output-dir", str(output),
+    ]) == 1
+
+    report = _report(output)
+    assert report["summary"]["usable_score_count"] == 0
+    assert any(
+        issue["code"] == "RESULT_VALIDITY_INVALID"
+        for issue in report["issues"]
+    )
+    assert (
+        report["summary"]["action_summary"]["results_to_rerun"][0]["task_id"]
+        == "task-stale"
+    )
+    assert (run / "anomalies.json").read_text(encoding="utf-8") == stale_text
+
+
+def test_quality_audit_reports_current_anomaly_scan_failure_as_framework_issue(tmp_path):
+    external = tmp_path / "external"
+    run = _write_run(external, "task-scan-failed")
+    stale = _anomalies()
+    stale["ruleset_version"] = "obsolete"
+    (run / "anomalies.json").write_text(json.dumps(stale), encoding="utf-8")
+    output = tmp_path / "out"
+
+    with patch(
+        "tools.report.lib.eval_dataset.result_files.scan_run_dir",
+        side_effect=RuntimeError("scan exploded"),
+    ):
+        assert main([
+            "--result-root", str(external),
+            "--output-dir", str(output),
+        ]) == 1
+
+    report = _report(output)
+    framework = report["summary"]["action_summary"]["framework_issues"]
+    assert framework[0]["issue_code"] == "RESULT_ANOMALY_REFRESH_FAILED"
+    assert report["summary"]["action_summary"]["results_to_rerun"] == []
 
 
 def test_missing_task_results_expand_into_rerun_actions(tmp_path):
