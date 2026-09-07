@@ -970,6 +970,7 @@ def _anomaly_ids(anomalies: dict[str, Any] | None) -> list[str]:
 def _build_rerun_record(
     *,
     task_id: str,
+    execution_id: str,
     output_dir: Path,
     rerun_metadata: dict[str, Any],
     anomalies: dict[str, Any] | None,
@@ -1008,9 +1009,10 @@ def _build_rerun_record(
         status = "success"
 
     record = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": status,
         "task_id": task_id,
+        "execution_id": execution_id,
         "new_run": output_dir.name,
         "supersedes_run": supersedes_path.name if supersedes_path else supersedes_raw,
         "trigger": str(rerun_metadata.get("trigger") or "reliability_rerun"),
@@ -1033,6 +1035,7 @@ def _build_rerun_record(
 def _record_rerun_outcome(
     *,
     task_id: str,
+    execution_id: str,
     output_dir: Path,
     rerun_metadata: dict[str, Any] | None,
     anomalies: dict[str, Any] | None,
@@ -1041,6 +1044,7 @@ def _record_rerun_outcome(
         return None
     record = _build_rerun_record(
         task_id=task_id,
+        execution_id=execution_id,
         output_dir=output_dir,
         rerun_metadata=rerun_metadata,
         anomalies=anomalies,
@@ -1273,7 +1277,8 @@ def run_single_task(
 
         try:
             rerun_record = _record_rerun_outcome(
-                task_id=task_id,
+                task_id=task_id_ori,
+                execution_id=task_id,
                 output_dir=output_dir,
                 rerun_metadata=rerun_metadata,
                 anomalies=anomalies,

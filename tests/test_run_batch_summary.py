@@ -69,6 +69,7 @@ class BatchSummaryLoggingTests(unittest.TestCase):
 
             record = run_batch._record_rerun_outcome(
                 task_id="task_011",
+                execution_id="task_011_model_20260907_1200_abc123",
                 output_dir=new_run,
                 rerun_metadata={
                     "supersedes_run": str(old_run),
@@ -83,6 +84,12 @@ class BatchSummaryLoggingTests(unittest.TestCase):
             )
 
             self.assertEqual(record["status"], "success")
+            self.assertEqual(record["schema_version"], 2)
+            self.assertEqual(record["task_id"], "task_011")
+            self.assertEqual(
+                record["execution_id"],
+                "task_011_model_20260907_1200_abc123",
+            )
             self.assertEqual(record["resolved_anomalies"], ["JUDGE_SCHEMA_MISMATCH"])
             self.assertEqual(record["judge_attempt_count"], 2)
             self.assertEqual(record["judge_selected_attempt"], 2)
@@ -108,6 +115,7 @@ class BatchSummaryLoggingTests(unittest.TestCase):
 
             record = run_batch._record_rerun_outcome(
                 task_id="task_011",
+                execution_id="task_011_model_20260907_1200_def456",
                 output_dir=new_run,
                 rerun_metadata={"supersedes_run": str(old_run)},
                 anomalies={
