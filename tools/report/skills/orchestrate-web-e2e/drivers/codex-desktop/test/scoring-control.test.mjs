@@ -8,11 +8,16 @@ import test from "node:test";
 import { CANDIDATE_ARTIFACT_SCHEMA, TREE_HASH_ALGORITHM, snapshotWorkspace } from "../../../scripts/workspace-integrity.mjs";
 
 import {
+  buildSubmissionControl,
   initialize,
   markComplete,
+  markTimeout,
   preflight,
+  prepareRetry,
   recordProject,
   recordThread,
+  recordWait,
+  resume,
   status,
 } from "../../../scripts/scoring-control.mjs";
 
@@ -110,6 +115,26 @@ async function scoreSkillFixture(version = "4.4.0", profiles = ["web-e2e-detaile
     supported_metric_profiles: profiles,
     task_score_schema: "wildclawbench.web-e2e-task-score/v1",
   });
+  await mkdir(join(root, "scripts"), { recursive: true });
+  await writeFile(join(root, "scripts", "build_submission.mjs"), `
+import fs from "node:fs";
+import path from "node:path";
+export function buildSubmission(packageRoot) {
+  const manifest = JSON.parse(fs.readFileSync(path.join(packageRoot, "manifest.json"), "utf8"));
+  const tasks = manifest.tasks.map((entry) => JSON.parse(fs.readFileSync(path.join(packageRoot, "score", "tasks", entry.task_id, "private-scoring", "task_score.json"), "utf8")));
+  return {
+    schema_version: "wildclawbench.web-e2e-submission/v1",
+    batch_id: manifest.batch_id,
+    source_revision: manifest.source_revision ?? null,
+    metric_profile: manifest.metric_profile,
+    created_at: new Date().toISOString(),
+    unit: { model_id: "xopglm52", harness_id: "workbuddy" },
+    task_ids: manifest.tasks.map((entry) => entry.task_id),
+    candidate_artifacts: manifest.tasks.map((entry) => ({ task_id: entry.task_id, checked_at: new Date().toISOString(), valid: true })),
+    tasks,
+  };
+}
+`, "utf8");
   return root;
 }
 
@@ -150,10 +175,22 @@ async function writeValidScore(root, taskId) {
   });
 }
 
+async function recordCompletedWait(root, taskId, sequence = 1, cursor = `cursor-${sequence}`, now) {
+  return recordWait(root, taskId, {
+    waitSequence: sequence,
+    waitCursor: cursor,
+    waitStatus: "COMPLETED",
+  }, { now });
+}
+
 test("init creates immutable serial state and scoring prompts", async () => {
   const root = await fixture(["task-1", "task-2"]);
   const { state } = await initialize(root, ["task-2", "task-1"]);
   assert.equal(state.score_slots, 1);
+  assert.equal(state.schema_revision, 2);
+  assert.equal(state.score_timeout_seconds, 7200);
+  assert.equal(state.max_retries, 1);
+  assert.equal(state.submission.status, "PENDING");
   assert.deepEqual(state.tasks.map((task) => task.task_id), ["task-2", "task-1"]);
   assert.match(await readFile(state.tasks[0].scoring_prompt_file, "utf8"), /\$score-web-e2e/);
   await assert.rejects(() => initialize(root, ["task-1", "task-2"]), /任务范围或顺序不可变/);
@@ -243,6 +280,7 @@ test("valid task score completes one task and advances to the next", async () =>
   await registerTask(root, state.tasks[0]);
   await passPreflight(root);
   await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
   await writeValidScore(root, "task-1");
   const result = await markComplete(root, "task-1");
   assert.equal(result.tasks[0].phase, "COMPLETED");
@@ -290,8 +328,110 @@ test("markComplete rejects score workspace changes", async () => {
   await registerTask(root, state.tasks[0]);
   await passPreflight(root);
   await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
   await writeValidScore(root, "task-1");
   await writeFile(join(root, "score", "tasks", "task-1", "workspace", "index.html"), "modified by scorer", "utf8");
   await assert.rejects(() => markComplete(root, "task-1"), /候选产物发生漂移/);
   assert.equal((await status(root)).tasks[0].phase, "FAILED");
+});
+
+test("wait cursor survives a control restart and duplicate observations are idempotent", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordWait(root, "task-1", {
+    waitSequence: 1,
+    waitCursor: "cursor-1",
+    waitStatus: "RUNNING",
+  });
+  const restarted = await resume(root);
+  assert.equal(restarted.recommended_action.type, "WAIT_EXISTING_THREAD");
+  assert.equal(restarted.recommended_action.thread_id, "thread-1");
+  assert.equal(restarted.recommended_action.after_cursor, "cursor-1");
+  assert.equal(restarted.recommended_action.next_wait_sequence, 2);
+  const duplicate = await recordWait(root, "task-1", {
+    waitSequence: 1,
+    waitCursor: "cursor-1",
+    waitStatus: "RUNNING",
+  });
+  assert.equal(duplicate.tasks[0].attempts[0].wait_count, 1);
+  await assert.rejects(() => recordWait(root, "task-1", {
+    waitSequence: 3,
+    waitCursor: "cursor-3",
+    waitStatus: "POLL_TIMEOUT",
+  }), /waitSequence 应为 2/);
+});
+
+test("poll timeout is distinct from scoring deadline timeout", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root, [], { scoreTimeoutSeconds: 60 });
+  await registerTask(root, state.tasks[0]);
+  const skillRoot = await scoreSkillFixture();
+  await passPreflight(root, { scoreSkillDir: skillRoot });
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" }, { now: "2026-09-07T00:00:00.000Z" });
+  const polling = await recordWait(root, "task-1", {
+    waitSequence: 1,
+    waitCursor: "cursor-1",
+    waitStatus: "POLL_TIMEOUT",
+  }, { now: "2026-09-07T00:00:30.000Z" });
+  assert.equal(polling.tasks[0].phase, "SCORING");
+  const timedOut = await markTimeout(root, "task-1", { now: "2026-09-07T00:01:01.000Z" });
+  assert.equal(timedOut.tasks[0].phase, "TIMED_OUT");
+  assert.equal(timedOut.recommended_action.type, "WAIT_FOR_TIMED_OUT_THREAD_TERMINAL");
+  await assert.rejects(() => prepareRetry(root, "task-1", "deadline test"), /终态尚未确认/);
+  await recordWait(root, "task-1", {
+    waitSequence: 2,
+    waitCursor: "cursor-2",
+    waitStatus: "INTERRUPTED",
+    waitError: "test interruption",
+  }, { now: "2026-09-07T00:01:02.000Z" });
+  const retry = await prepareRetry(root, "task-1", "deadline test");
+  assert.equal(retry.tasks[0].retry_count, 1);
+  assert.equal(retry.tasks[0].phase, "PROJECT_REGISTERED");
+  assert.equal(retry.recommended_action.type, "RUN_PREFLIGHT");
+  await passPreflight(root, { scoreSkillDir: skillRoot });
+  const second = await recordThread(root, "task-1", { threadId: "thread-2", hostId: "local" });
+  assert.equal(second.tasks[0].attempts.length, 2);
+  assert.equal(second.tasks[0].attempts[1].attempt_number, 2);
+  assert.equal(second.tasks[0].thread_id, "thread-2");
+});
+
+test("a completed final score atomically builds submission exactly once", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
+  await writeValidScore(root, "task-1");
+  const completed = await markComplete(root, "task-1");
+  assert.equal(completed.phase, "COMPLETED");
+  assert.equal(completed.submission.status, "COMPLETED");
+  assert.match(completed.submission.sha256, /^[a-f0-9]{64}$/);
+  assert.equal(completed.submission.attempt_count, 1);
+  const originalSha = completed.submission.sha256;
+  const repeated = await buildSubmissionControl(root);
+  assert.equal(repeated.submission.sha256, originalSha);
+  assert.equal(repeated.submission.attempt_count, 1);
+  const submission = JSON.parse(await readFile(join(root, "submission.json"), "utf8"));
+  assert.equal(submission.batch_id, "batch-1");
+  assert.deepEqual(submission.task_ids, ["task-1"]);
+});
+
+test("a completed submission is fail-closed after file drift", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
+  await writeValidScore(root, "task-1");
+  await markComplete(root, "task-1");
+  await writeFile(join(root, "submission.json"), "{}\n", "utf8");
+  await assert.rejects(() => buildSubmissionControl(root), /发生漂移/);
+  const current = await status(root);
+  assert.equal(current.phase, "NEEDS_ATTENTION");
+  assert.equal(current.submission.status, "FAILED");
 });

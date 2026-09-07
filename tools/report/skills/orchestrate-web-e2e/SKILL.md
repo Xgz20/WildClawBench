@@ -26,10 +26,12 @@ python3 <harness-root>/tools/prepare_scoring_workspace.py \
 ```bash
 node <skill-dir>/scripts/scoring-control.mjs init \
   --package-root <harness-root> \
-  --task-id <task_id>
+  --task-id <task_id> \
+  --score-timeout-seconds 7200 \
+  --max-retries 1
 ```
 
-省略 `--task-id` 时使用 manifest 中的全部题目。状态和逐题评分 Prompt 保存到 `score/.orchestrate-web-e2e/`，不写入候选 `workspace/`。
+省略 `--task-id` 时使用 manifest 中的全部题目。评分 deadline 默认 7200 秒，失败终态默认最多重试 1 次；同一批次初始化后两者不可变。状态和逐题评分 Prompt 保存到 `score/.orchestrate-web-e2e/`，不写入候选 `workspace/`。
 
 ## 2. 用 Playwright 注册 Codex Desktop 项目
 
@@ -98,7 +100,20 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
      --host-id <host_id>
    ```
 
-4. 用 `wait_threads` 等待；需要诊断时再用 `read_thread`。一个评分任务必须实际使用 Codex Desktop 内置 Browser，并由 `$score-web-e2e` 生成 `private-scoring/task_score.json`。评分任务只能写 `private-scoring/`；候选 `workspace/` 是只读输入。站点端口冲突时优先改启动参数或环境变量；只有受管启动日志已证明冲突且端口无法外部覆盖时，评分 Skill 才能通过 `managed_runtime.mjs port-override` 修改运行时副本中的唯一数字端口并落审计。execution/score 候选原件仍不可修改，其他源码调整仍禁止。
+4. 用 `wait_threads` 等待；需要诊断时再用 `read_thread`。每次调用前从 `status` 或 `resume` 的 `recommended_action` 读取 `thread_id`、`host_id`、`after_cursor` 和 `next_wait_sequence`，调用后立即持久化本题 poll 的 cursor 与状态：
+
+   ```bash
+   node <skill-dir>/scripts/scoring-control.mjs record-wait \
+     --package-root <harness-root> \
+     --task-id <task_id> \
+     --wait-sequence <next_wait_sequence> \
+     --wait-cursor <poll.cursor> \
+     --wait-status <RUNNING|POLL_TIMEOUT|NEEDS_ATTENTION|COMPLETED|FAILED|CANCELLED|INTERRUPTED>
+   ```
+
+   `POLL_TIMEOUT` 只表示这次 `wait_threads` 没等到变化，不是评分超时；控制面只有到达 attempt 的 `deadline_at` 后才执行 `mark-timeout`。超时后原 `threadId` 状态仍不明时必须继续查询，禁止立即创建第二个任务。只有原任务已记录 `COMPLETED`、`FAILED`、`CANCELLED` 或 `INTERRUPTED` 终态，且没有 `task_score.json`、评分运行时或旧证据残留时，才可执行 `prepare-retry --retry-reason <说明>`，重新通过 preflight 后创建下一 attempt。所有 attempt、cursor、poll 次数和 retry 次数均保留在状态中。
+
+   一个评分任务必须实际使用 Codex Desktop 内置 Browser，并由 `$score-web-e2e` 生成 `private-scoring/task_score.json`。评分任务只能写 `private-scoring/`；候选 `workspace/` 是只读输入。站点端口冲突时优先改启动参数或环境变量；只有受管启动日志已证明冲突且端口无法外部覆盖时，评分 Skill 才能通过 `managed_runtime.mjs port-override` 修改运行时副本中的唯一数字端口并落审计。execution/score 候选原件仍不可修改，其他源码调整仍禁止。
 5. 完成后让控制脚本校验身份、哈希、执行状态和证据路径：
 
    ```bash
@@ -107,6 +122,15 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
      --task-id <task_id>
    ```
 
-   `mark-complete` 会再次核对 execution 与 score 两份候选 SHA，并要求 `task_score.identity.model` 与执行回执的实际模型一致；只有校验通过才能创建下一题。状态不明时先查询已有 `threadId`，不能重复创建评分任务。当前固定 `score_slots=1`。
+   `mark-complete` 只接受已经通过 `record-wait` 保存 `COMPLETED` 终态、且未超过 deadline 的 attempt；它会再次核对 execution 与 score 两份候选 SHA，并要求 `task_score.identity.model` 与执行回执的实际模型一致。只有校验通过才能创建下一题。状态不明时先查询已有 `threadId`，不能重复创建评分任务。当前固定 `score_slots=1`。
 
-全部题完成后，在不参与单题评分的管理任务中运行已安装 `score-web-e2e` 的 `build_submission.mjs`。该脚本会执行最后一次双副本哈希复检并验证端口冲突审计；不得让单题评分任务访问 Harness 根目录或其他题目，管理任务也不得修改候选 workspace。
+最后一题通过 `mark-complete` 后，控制脚本会自动调用 preflight 已绑定的 `score-web-e2e/scripts/build_submission.mjs`，以临时文件和 SHA-256 状态原子发布根目录 `submission.json`。重复调用不会重复生成；进程在发布中断后可通过 `build-submission` 收口，已完成文件丢失或漂移时失败关闭。该步骤会执行最后一次双副本哈希复检并验证端口冲突审计；不得让单题评分任务访问 Harness 根目录或其他题目，管理任务也不得修改候选 workspace。
+
+控制任务重启后执行：
+
+```bash
+node <skill-dir>/scripts/scoring-control.mjs resume \
+  --package-root <harness-root>
+```
+
+严格执行返回的 `recommended_action`。`WAIT_EXISTING_THREAD` 必须带已保存的 `after_cursor` 查询原 `threadId`；`BUILD_SUBMISSION` 或 `RETRY_SUBMISSION` 执行 `build-submission`；不得因为控制任务或 Desktop 重启而重新 `init`、覆盖 attempt 或直接创建新任务。Desktop 自身重启需要用户或独立外部 watchdog 重新拉起应用，控制任务不能在终止自身宿主后继续执行。
