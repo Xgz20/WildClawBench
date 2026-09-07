@@ -1089,18 +1089,56 @@ def _record_rerun_outcome(
     return record
 
 
-def _write_rerun_summary(results: list[dict], output_root: Path) -> None:
-    records = [
-        result["rerun"]
-        for result in results
-        if isinstance(result.get("rerun"), dict)
-    ]
+def _write_rerun_summary(output_root: Path) -> None:
+    """Rebuild the cumulative rerun summary from per-run artifacts on disk."""
+    records: list[dict[str, Any]] = []
+    seen_runs: set[str] = set()
+    invalid_record_count = 0
+    duplicate_record_count = 0
+
+    # A run artifact lives at <category>/<task>/<run>/rerun_result.json.
+    # Keep the search at that exact depth so copied task outputs cannot be
+    # mistaken for top-level evaluation records.
+    for record_path in sorted(output_root.glob("*/*/*/rerun_result.json")):
+        try:
+            loaded = json.loads(record_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            invalid_record_count += 1
+            logger.warning("跳过无效重跑记录 %s: %s", record_path, exc)
+            continue
+
+        if not isinstance(loaded, dict):
+            invalid_record_count += 1
+            logger.warning("跳过无效重跑记录 %s: 顶层必须是 JSON 对象", record_path)
+            continue
+
+        new_run = loaded.get("new_run")
+        status = loaded.get("status")
+        if not isinstance(new_run, str) or not new_run.strip():
+            invalid_record_count += 1
+            logger.warning("跳过无效重跑记录 %s: 缺少 new_run", record_path)
+            continue
+        if status not in {"success", "failed", "review"}:
+            invalid_record_count += 1
+            logger.warning("跳过无效重跑记录 %s: 未知 status=%r", record_path, status)
+            continue
+        if new_run in seen_runs:
+            duplicate_record_count += 1
+            logger.warning("跳过重复重跑记录 %s: new_run=%s", record_path, new_run)
+            continue
+
+        seen_runs.add(new_run)
+        records.append(loaded)
+
     summary = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "aggregation_scope": "all_rerun_results_under_output_root",
         "total": len(records),
         "success": sum(1 for record in records if record.get("status") == "success"),
         "failed": sum(1 for record in records if record.get("status") == "failed"),
         "review": sum(1 for record in records if record.get("status") == "review"),
+        "invalid_record_count": invalid_record_count,
+        "duplicate_record_count": duplicate_record_count,
         "records": records,
     }
     path = output_root / "rerun_summary.json"
@@ -1447,6 +1485,7 @@ def main() -> None:
         )
         if prior is not None:
             _log_pending_task_counts([])
+            _write_rerun_summary(output_root)
             return  # _load_resume_result 已打印跳过日志；沿用旧结果，正常退出
         _log_pending_task_counts([task])
         # 多轮执行：k 次调用 run_single_task，各自独立 run 目录
@@ -1462,6 +1501,7 @@ def main() -> None:
                 models_config=models_config,
                 thinking=args.thinking,
             )
+            _write_rerun_summary(output_root)
             # 单任务模式：任一轮出错即退出（保持现有语义）
             if result.get("error") or (result.get("scores") or {}).get("error"):
                 sys.exit(1)
@@ -1664,7 +1704,10 @@ def main() -> None:
                 summary_snapshot.get("validity_failure_task_count", 0) or 0
             ),
         )
-        _write_rerun_summary(all_results, output_root)
+
+    # 重跑摘要表达 output_root 下的累计历史，而非本次 invocation 的结果。
+    # 即使本轮全部 resume、没有实际执行任务，也必须从单 run 记录重建。
+    _write_rerun_summary(output_root)
 
     # 批级异常汇总（含跨 run 规则），供出数前把关与 --rerun-error 决策
     try:

@@ -11,6 +11,29 @@ from eval import run_batch
 
 class BatchSummaryLoggingTests(unittest.TestCase):
     @staticmethod
+    def write_rerun_record(
+        root: Path,
+        *,
+        category: str,
+        task_id: str,
+        run_id: str,
+        status: str,
+    ) -> Path:
+        record_path = root / category / task_id / run_id / "rerun_result.json"
+        record_path.parent.mkdir(parents=True)
+        record_path.write_text(
+            json.dumps({
+                "schema_version": 1,
+                "status": status,
+                "task_id": task_id,
+                "new_run": run_id,
+                "supersedes_run": f"old-{run_id}",
+            }),
+            encoding="utf-8",
+        )
+        return record_path
+
+    @staticmethod
     def timing() -> dict:
         return {
             "batch_total_seconds": 120.0,
@@ -129,6 +152,97 @@ class BatchSummaryLoggingTests(unittest.TestCase):
             self.assertEqual(record["status"], "failed")
             self.assertEqual(record["remaining_anomalies"], ["JUDGE_SCHEMA_MISMATCH"])
             self.assertIn("RERUN FAILED", "\n".join(captured.output))
+
+    def test_rerun_summary_accumulates_records_and_survives_noop_rebuild(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self.write_rerun_record(
+                root,
+                category="01_Productivity_Flow",
+                task_id="task_001",
+                run_id="model_20260907_1200_abc123",
+                status="success",
+            )
+            run_batch._write_rerun_summary(root)
+
+            first = json.loads((root / "rerun_summary.json").read_text())
+            self.assertEqual(first["total"], 1)
+
+            self.write_rerun_record(
+                root,
+                category="02_Code_Intelligence",
+                task_id="task_002",
+                run_id="model_20260908_1200_def456",
+                status="failed",
+            )
+            run_batch._write_rerun_summary(root)
+            # Simulate a later normal/no-op invocation with no new rerun result.
+            run_batch._write_rerun_summary(root)
+
+            summary = json.loads((root / "rerun_summary.json").read_text())
+            self.assertEqual(summary["schema_version"], 2)
+            self.assertEqual(
+                summary["aggregation_scope"],
+                "all_rerun_results_under_output_root",
+            )
+            self.assertEqual(summary["total"], 2)
+            self.assertEqual(summary["success"], 1)
+            self.assertEqual(summary["failed"], 1)
+            self.assertEqual(summary["review"], 0)
+            self.assertEqual(summary["invalid_record_count"], 0)
+            self.assertEqual(summary["duplicate_record_count"], 0)
+
+    def test_rerun_summary_skips_invalid_record_and_warns(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self.write_rerun_record(
+                root,
+                category="01_Productivity_Flow",
+                task_id="task_001",
+                run_id="valid-run",
+                status="review",
+            )
+            invalid_path = (
+                root
+                / "02_Code_Intelligence"
+                / "task_002"
+                / "invalid-run"
+                / "rerun_result.json"
+            )
+            invalid_path.parent.mkdir(parents=True)
+            invalid_path.write_text("{invalid", encoding="utf-8")
+
+            with self.assertLogs(run_batch.logger, level="WARNING") as captured:
+                run_batch._write_rerun_summary(root)
+
+            summary = json.loads((root / "rerun_summary.json").read_text())
+            self.assertEqual(summary["total"], 1)
+            self.assertEqual(summary["review"], 1)
+            self.assertEqual(summary["invalid_record_count"], 1)
+            self.assertIn("跳过无效重跑记录", "\n".join(captured.output))
+
+    def test_rerun_summary_deduplicates_new_run(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            for category, task_id in (
+                ("01_Productivity_Flow", "task_001"),
+                ("02_Code_Intelligence", "task_002"),
+            ):
+                self.write_rerun_record(
+                    root,
+                    category=category,
+                    task_id=task_id,
+                    run_id="duplicate-run",
+                    status="success",
+                )
+
+            with self.assertLogs(run_batch.logger, level="WARNING") as captured:
+                run_batch._write_rerun_summary(root)
+
+            summary = json.loads((root / "rerun_summary.json").read_text())
+            self.assertEqual(summary["total"], 1)
+            self.assertEqual(summary["duplicate_record_count"], 1)
+            self.assertIn("跳过重复重跑记录", "\n".join(captured.output))
 
     def test_generate_global_summary_returns_average(self) -> None:
         summary = {
