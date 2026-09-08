@@ -1,11 +1,47 @@
 ---
 name: execute-web-e2e
-description: 在桌面 Harness 中执行单个或批量 Web E2E 用例，持久化可恢复状态、终态证据和 execution_record；用于 WorkBuddy 等客户端的自动做题阶段，不负责评分或报告。
+description: 在 WorkBuddy、AstronStudio 等桌面 Harness 中执行单个或批量 Web E2E 用例，持久化可恢复状态、终态证据和 execution_record；用于自动做题阶段，不负责评分或报告。
 ---
 
 # 执行 Web E2E 用例
 
-本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 WorkBuddy 单题 Driver 和后台并发队列 Worker；其他 Harness Driver 仍按 Roadmap 逐步接入。
+本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 WorkBuddy 单题 Driver/后台并发队列，以及 AstronStudio 单题 Driver/串行队列；其他 Harness Driver 仍按 Roadmap 逐步接入。先读取 execution 包 `manifest.json` 的 `harness.id`，再选择同名 Driver，不能按文件名或客户端外观猜测。
+
+## AstronStudio
+
+依赖由调用本 Skill 的控制 Harness 在 AstronStudio Driver 目录执行锁定安装，不进入候选 workspace：
+
+```bash
+cd .agents/skills/execute-web-e2e/drivers/astronstudio
+npm ci
+```
+
+只读预检不会创建任务或发送 Prompt：
+
+```bash
+bash .agents/skills/execute-web-e2e/scripts/run-astronstudio.sh --probe
+```
+
+预检要求 `/Applications/AStudio.app`、本机 `http://127.0.0.1:9240`、macOS 可交互桌面和 `~/.acode/acode/userdata/state.sqlite` 均可用。`--probe` 不会点击“新建任务”；停在历史会话时 workspace picker 不可见只是诊断信息，只要“新建任务”、编辑器、权限和模型控件可用仍可执行。需要由 Driver 启动客户端时，在确认没有活动或待处理任务后显式传 `--restart-app`。
+
+串行执行完整 manifest 中的任务：
+
+```bash
+bash .agents/skills/execute-web-e2e/scripts/run-astronstudio-batch.sh \
+  /absolute/<batch_id>__astronstudio \
+  --run-id <queue_id> \
+  --task-id <task_id_1> \
+  --task-id <task_id_2> \
+  --permission-mode full-access
+```
+
+AstronStudio 首版固定 `ui_slots=1`、`run_slots=1`；显式 `--run-slots` 只接受 `1`。队列必须覆盖 manifest 的完整 task ID 集合，才可能生成 `integrity.valid=true` 的 `execution-receipt.json`。一题到达明确终态并通过 automation/execution 一致性检查后才进入下一题。
+
+省略 `--model` 时保持并回读客户端当前模型与推理强度；显式提供时只切换并回读模型，不修改推理强度。`--permission-mode full-access` 会幂等确认完全访问。模型、权限和项目绝对路径均必须在发送 Prompt 前回读并写入状态。
+
+Worker 或 Driver 中断后，用完全相同的批次参数增加 `--resume`。已捕获稳定 thread ID 后，恢复只按该 ID 和单题绝对路径观察原会话，不重发 Prompt；客户端崩溃后再增加 `--restart-app-on-resume`。AstronStudio 出现授权、用户输入或未知状态时停在 `NEEDS_ATTENTION`，首版不自动批准交互。
+
+AstronStudio 的终态优先读取本地 SQLite 的 thread session、turn、open turn 和 pending interaction 投影，DOM 只补充可见运行态、交互和最终回复。workspace 稳定不能单独判定完成。
 
 ## WorkBuddy 单题
 

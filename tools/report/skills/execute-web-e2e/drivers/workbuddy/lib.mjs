@@ -24,6 +24,12 @@ export const DEFAULT_MODEL = "";
 export const DEFAULT_PERMISSION_MODE = "current";
 export const PERMISSION_MODES = new Set(["current", "full-access"]);
 export const TERMINAL_PHASES = new Set(["SUCCEEDED", "INFRA_FAILED", "TIMEOUT"]);
+export const WORKBUDDY_PROFILE = Object.freeze({
+  id: "workbuddy",
+  displayName: "WorkBuddy",
+  driverVersion: DRIVER_VERSION,
+  controlBackend: "electron-cdp+workbuddy-workspace-provider+macos-accessibility-fallback",
+});
 export const RESUMABLE_PHASES = new Set([
   "READY_TO_SEND",
   "PROMPT_SENT",
@@ -310,7 +316,7 @@ export function classifySessionStatus(rawStatus) {
   if (new Set(["completed", "complete", "succeeded", "success", "finished", "done"]).has(normalized)) {
     return { kind: "success", status };
   }
-  if (new Set(["failed", "failure", "error", "errored", "cancelled", "canceled", "aborted", "terminated"]).has(normalized)) {
+  if (new Set(["failed", "failure", "error", "errored", "cancelled", "canceled", "aborted", "terminated", "interrupted", "stopped"]).has(normalized)) {
     return { kind: "failure", status };
   }
   if (new Set(["running", "inprogress", "pending", "active", "streaming", "processing", "executing", "started", "created", "initializing", "queued"]).has(normalized)) {
@@ -391,7 +397,7 @@ export function chooseAttemptSession(sessions, state, workspace) {
     .sort((left, right) => Number(right.updatedAt || 0) - Number(left.updatedAt || 0))[0] || null;
 }
 
-export async function resolveExecutionIdentity(config) {
+export async function resolveExecutionIdentity(config, profile = WORKBUDDY_PROFILE) {
   const existing = await readJsonIfExists(config.executionRecord);
   const manifestPath = join(config.workspace, "..", "..", "..", "manifest.json");
   const manifest = await readJsonIfExists(manifestPath);
@@ -427,14 +433,14 @@ export async function resolveExecutionIdentity(config) {
   } : {
     batchId: config.batchId,
     taskId: config.taskId,
-    harness: { id: "workbuddy", display_name: "WorkBuddy", version: "" },
+    harness: { id: profile.id, display_name: profile.displayName, version: "" },
     model: { id: config.modelId, display_name: config.modelDisplayName || config.modelId },
   };
 
   if (!identity.batchId || !identity.taskId) {
     throw new Error("缺少执行身份：需要有效 manifest/execution_record，或显式传入 --batch-id 和 --task-id");
   }
-  if (identity.harness?.id !== "workbuddy") throw new Error(`当前 Driver 不能执行 Harness：${identity.harness?.id || "未声明"}`);
+  if (identity.harness?.id !== profile.id) throw new Error(`当前 Driver 不能执行 Harness：${identity.harness?.id || "未声明"}`);
   if (fromManifest && (identity.batchId !== fromManifest.batchId || identity.taskId !== fromManifest.taskId || identity.harness?.id !== fromManifest.harness?.id)) {
     throw new Error("execution_record.json 与 manifest.json 的批次、任务或 Harness 身份不一致");
   }
@@ -444,7 +450,7 @@ export async function resolveExecutionIdentity(config) {
   return { existing, manifestPath: manifest ? manifestPath : null, identity };
 }
 
-export function createExecutionRecord(identity) {
+export function createExecutionRecord(identity, profile = WORKBUDDY_PROFILE) {
   return {
     schema_version: EXECUTION_SCHEMA,
     batch_id: identity.batchId,
@@ -454,8 +460,8 @@ export function createExecutionRecord(identity) {
       display_name: identity.model?.display_name || identity.model?.id || "",
     },
     harness: {
-      id: "workbuddy",
-      display_name: identity.harness?.display_name || "WorkBuddy",
+      id: profile.id,
+      display_name: identity.harness?.display_name || profile.displayName,
       version: identity.harness?.version || "",
     },
     execution: { status: "pending", started_at: null, finished_at: null, duration_seconds: null, error: null },
@@ -465,18 +471,18 @@ export function createExecutionRecord(identity) {
   };
 }
 
-export async function updateExecutionRecord(config, identityInfo, update) {
-  const record = identityInfo.existing || createExecutionRecord(identityInfo.identity);
+export async function updateExecutionRecord(config, identityInfo, update, profile = WORKBUDDY_PROFILE) {
+  const record = identityInfo.existing || createExecutionRecord(identityInfo.identity, profile);
   if (record.schema_version !== EXECUTION_SCHEMA) throw new Error(`不支持的 execution_record schema：${record.schema_version}`);
   record.harness.version = update.clientVersion || record.harness.version || "";
   const actualUiModel = String(update.modelSelection?.actual_model || "").trim();
   if (actualUiModel) {
     if (config.model && actualUiModel !== config.model) {
-      throw new Error(`WorkBuddy 实际模型与请求不一致：${actualUiModel} vs ${config.model}`);
+      throw new Error(`${profile.displayName} 实际模型与请求不一致：${actualUiModel} vs ${config.model}`);
     }
     const declaredModelId = String(record.model?.id || identityInfo.identity.model?.id || "").trim();
     if (declaredModelId && declaredModelId !== actualUiModel && !config.modelId) {
-      throw new Error(`execution_record.model.id 与 WorkBuddy 实际模型不一致：${declaredModelId} vs ${actualUiModel}`);
+      throw new Error(`execution_record.model.id 与 ${profile.displayName} 实际模型不一致：${declaredModelId} vs ${actualUiModel}`);
     }
     record.model = {
       id: declaredModelId || actualUiModel,
@@ -490,14 +496,14 @@ export async function updateExecutionRecord(config, identityInfo, update) {
   return record;
 }
 
-export function createInitialState(config, identity, initialSnapshot) {
+export function createInitialState(config, identity, initialSnapshot, profile = WORKBUDDY_PROFILE) {
   const now = new Date().toISOString();
   return {
     schema_version: AUTOMATION_SCHEMA,
     driver: {
-      id: "workbuddy",
-      version: DRIVER_VERSION,
-      control_backend: "electron-cdp+workbuddy-workspace-provider+macos-accessibility-fallback",
+      id: profile.id,
+      version: profile.driverVersion,
+      control_backend: profile.controlBackend,
     },
     attempt_id: randomUUID(),
     phase: "PREPARED",
@@ -541,9 +547,10 @@ export function createInitialState(config, identity, initialSnapshot) {
   };
 }
 
-export function assertStateMatches(state, config, identity) {
+export function assertStateMatches(state, config, identity, profile = WORKBUDDY_PROFILE) {
   if (state.schema_version !== AUTOMATION_SCHEMA) throw new Error(`不支持的自动化状态 schema：${state.schema_version}`);
   const mismatches = [];
+  if (state.driver?.id !== profile.id) mismatches.push("driver_id");
   if (state.workspace !== config.workspace) mismatches.push("workspace");
   if (state.prompt_sha256 !== config.promptSha256) mismatches.push("prompt_sha256");
   if ((state.requested_ui_model || "") !== config.model) mismatches.push("requested_ui_model");

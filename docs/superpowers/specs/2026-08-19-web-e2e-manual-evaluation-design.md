@@ -85,7 +85,7 @@ score/
 
 scoring ZIP 不能包含或覆盖 `workspace/`、`PROMPT.md`、`task_manifest.json` 和 `execution_record.json`。
 
-整个批次另生成一份 `<batch_id>__score-web-e2e-skill.zip`。测试人员通过评分智能体的离线 Skill 导入功能安装一次；评分 ZIP 和单题目录都不复制 Skill。后续优化评分逻辑时只需重新分发独立 Skill ZIP，不需要重建每个用例的评分材料。
+整个批次另生成一份 `score-web-e2e-skill-v<version>.zip`。测试人员通过评分智能体的离线 Skill 导入功能按版本安装一次；评分 ZIP 和单题目录都不复制 Skill。后续优化评分逻辑时只需重新分发独立 Skill ZIP，不需要重建每个用例的评分材料。
 
 ### 评分前人工合并
 

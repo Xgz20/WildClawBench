@@ -20,7 +20,7 @@ private-scoring/candidate_artifact.json
 .web-e2e-scoring-ready
 ```
 
-`score-web-e2e` 必须由评分智能体的 Skill 管理功能独立安装并启用，不从当前题目目录加载。管理员通常分发 `<batch_id>__score-web-e2e-skill.zip`；同一版本每台评分客户端只安装一次，升级时替换独立 Skill 即可。
+`score-web-e2e` 必须由评分智能体的 Skill 管理功能独立安装并启用，不从当前题目目录加载。管理员通常分发 `score-web-e2e-skill-v<version>.zip`；同一版本每台评分客户端只安装一次，升级时替换独立 Skill 即可。
 
 Skill 根目录的 `skill-metadata.json` 是自动编排读取的机器契约，声明当前版本、支持的 `metric_profile` 和输出 schema；人工调用不需要额外操作。
 

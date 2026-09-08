@@ -25,7 +25,30 @@ export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
-const DRIVER_FILE = join(SCRIPT_DIR, "driver.mjs");
+const ASTRONSTUDIO_BATCH_PROFILE = process.env.WCB_WEB_E2E_BATCH_PROFILE === "astronstudio";
+const BATCH_PROFILE = ASTRONSTUDIO_BATCH_PROFILE ? Object.freeze({
+  harnessId: "astronstudio",
+  displayName: "AstronStudio",
+  workerId: "astronstudio-serial",
+  workerVersion: "1.8.1",
+  driverFile: resolve(SCRIPT_DIR, "../astronstudio/driver.mjs"),
+  lockFileName: "astronstudio-ui.lock",
+  defaultRunSlots: 1,
+  maxRunSlots: 1,
+  detachedDispatch: false,
+  retryPreSendFailure: false,
+}) : Object.freeze({
+  harnessId: "workbuddy",
+  displayName: "WorkBuddy",
+  workerId: "workbuddy-background-concurrent",
+  workerVersion: QUEUE_WORKER_VERSION,
+  driverFile: join(SCRIPT_DIR, "driver.mjs"),
+  lockFileName: "workbuddy-ui.lock",
+  defaultRunSlots: DEFAULT_RUN_SLOTS,
+  maxRunSlots: MAX_RUN_SLOTS,
+  detachedDispatch: true,
+  retryPreSendFailure: true,
+});
 const TERMINAL_TASK_PHASES = new Set(["SUCCEEDED", "INFRA_FAILED", "TIMEOUT"]);
 const EXPECTED_EXECUTION_STATUS = {
   SUCCEEDED: "completed",
@@ -38,7 +61,7 @@ const EXPECTED_EXECUTION_STATUS = {
 };
 
 function usage() {
-  return `WorkBuddy Web E2E 后台并发队列 Worker
+  return `${BATCH_PROFILE.displayName} Web E2E ${BATCH_PROFILE.detachedDispatch ? "后台并发" : "串行"}队列 Worker
 
 用法：
   node batch.mjs --harness-root <execution 包根目录> --run-id <ID> \\
@@ -50,9 +73,9 @@ function usage() {
   --run-timeout-seconds <秒>       每题 Agent 总执行超时，默认：3600
   --poll-interval-seconds <秒>     每题终态轮询间隔，默认：2
   --post-cancel-quiescence-seconds <秒> 超时停止后的 workspace 静默观察，默认：5
-  --run-slots <1..8>              后台 Agent 并发数，默认：3；WorkBuddy UI 始终单路
-  --restart-app-first              只在第一题前重启 WorkBuddy
-  --restart-app-on-resume          恢复运行中题目时重启 WorkBuddy，并定位原会话
+  --run-slots <1..${BATCH_PROFILE.maxRunSlots}>              Agent 并发数，默认：${BATCH_PROFILE.defaultRunSlots}；UI 始终单路
+  --restart-app-first              只在第一题前重启 ${BATCH_PROFILE.displayName}
+  --restart-app-on-resume          恢复运行中题目时重启 ${BATCH_PROFILE.displayName}，并定位原会话
   --resume                         恢复同一 run-id 的未完成队列
   --retry-pre-send-failure          仅归档并重试发送前、产物零变化的 INFRA_FAILED
   --mark-manual <任务 ID>          记录人工介入并恢复检查；不绕过 Driver 终态门禁
@@ -77,7 +100,7 @@ export function parseBatchArgs(argv) {
     runTimeoutSeconds: 3600,
     pollIntervalSeconds: 2,
     postCancelQuiescenceSeconds: 5,
-    runSlots: DEFAULT_RUN_SLOTS,
+    runSlots: BATCH_PROFILE.defaultRunSlots,
     runSlotsExplicit: false,
     restartAppFirst: false,
     restartAppOnResume: false,
@@ -127,14 +150,17 @@ export function parseBatchArgs(argv) {
   values.pollIntervalSeconds = positiveNumber(values.pollIntervalSeconds, "--poll-interval-seconds");
   values.postCancelQuiescenceSeconds = positiveNumber(values.postCancelQuiescenceSeconds, "--post-cancel-quiescence-seconds");
   values.runSlots = positiveNumber(values.runSlots, "--run-slots");
-  if (!Number.isInteger(values.runSlots) || values.runSlots > MAX_RUN_SLOTS) {
-    throw new Error(`--run-slots 必须是 1 到 ${MAX_RUN_SLOTS} 的整数`);
+  if (!Number.isInteger(values.runSlots) || values.runSlots > BATCH_PROFILE.maxRunSlots) {
+    throw new Error(`--run-slots 必须是 1 到 ${BATCH_PROFILE.maxRunSlots} 的整数`);
   }
   if (!new Set(["current", "full-access"]).has(values.permissionMode)) {
     throw new Error("--permission-mode 仅支持 current 或 full-access");
   }
   if (values.retryPreSendFailure && !values.resume) {
     throw new Error("--retry-pre-send-failure 必须与 --resume 一起使用");
+  }
+  if (values.retryPreSendFailure && !BATCH_PROFILE.retryPreSendFailure) {
+    throw new Error(`${BATCH_PROFILE.displayName} 首版暂不支持 --retry-pre-send-failure`);
   }
   if (values.restartAppOnResume && !values.resume) {
     throw new Error("--restart-app-on-resume 必须与 --resume 一起使用");
@@ -172,7 +198,7 @@ export async function resolveQueuePlan(args) {
   await requireDirectory(harnessRoot, "Harness 根目录");
   const manifestPath = join(harnessRoot, "manifest.json");
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-  if (manifest.harness?.id !== "workbuddy") {
+  if (manifest.harness?.id !== BATCH_PROFILE.harnessId) {
     throw new Error(`当前 Worker 不能执行 Harness：${manifest.harness?.id || "未声明"}`);
   }
   if (!manifest.batch_id) throw new Error("manifest.json 缺少 batch_id");
@@ -211,7 +237,7 @@ export async function resolveQueuePlan(args) {
     runId: args.runId,
     queueDir: join(controlRoot, "queues", args.runId),
     queueStateFile: join(controlRoot, "queues", args.runId, "queue_state.json"),
-    lockFile: join(controlRoot, "workbuddy-ui.lock"),
+    lockFile: join(controlRoot, BATCH_PROFILE.lockFileName),
     receiptFile: join(harnessRoot, "execution-receipt.json"),
   };
 }
@@ -221,10 +247,10 @@ export function createQueueState(plan, args) {
   return {
     schema_version: QUEUE_SCHEMA,
     revision: QUEUE_STATE_REVISION,
-    worker: { id: "workbuddy-background-concurrent", version: QUEUE_WORKER_VERSION },
+    worker: { id: BATCH_PROFILE.workerId, version: BATCH_PROFILE.workerVersion },
     run_id: plan.runId,
     batch_id: plan.manifest.batch_id,
-    harness_id: "workbuddy",
+    harness_id: BATCH_PROFILE.harnessId,
     requested_ui_model: args.model || null,
     requested_permission_mode: args.permissionMode,
     ui_slots: 1,
@@ -269,7 +295,7 @@ export function assertQueueState(state, plan, args) {
   if (state.schema_version !== QUEUE_SCHEMA) mismatches.push("schema_version");
   if (state.run_id !== plan.runId) mismatches.push("run_id");
   if (state.batch_id !== plan.manifest.batch_id) mismatches.push("batch_id");
-  if (state.harness_id !== "workbuddy") mismatches.push("harness_id");
+  if (state.harness_id !== BATCH_PROFILE.harnessId) mismatches.push("harness_id");
   if ((state.requested_ui_model || "") !== args.model) mismatches.push("requested_ui_model");
   if (state.requested_permission_mode && state.requested_permission_mode !== args.permissionMode) {
     mismatches.push("requested_permission_mode");
@@ -296,8 +322,8 @@ export function migrateQueueState(state) {
     state.run_slots = 1;
     changed = true;
   }
-  if (state.run_slots < 1 || state.run_slots > MAX_RUN_SLOTS) {
-    throw new Error(`queue_state.run_slots 必须是 1 到 ${MAX_RUN_SLOTS} 的整数`);
+  if (state.run_slots < 1 || state.run_slots > BATCH_PROFILE.maxRunSlots) {
+    throw new Error(`queue_state.run_slots 必须是 1 到 ${BATCH_PROFILE.maxRunSlots} 的整数`);
   }
   for (const task of state.tasks || []) {
     if (!("dispatched_at" in task)) {
@@ -367,10 +393,10 @@ async function acquireUiLock(lockFile) {
         await unlink(lockFile);
         continue;
       }
-      throw new Error(`WorkBuddy UI 已被其他队列占用：${lockFile}`);
+      throw new Error(`${BATCH_PROFILE.displayName} UI 已被其他队列占用：${lockFile}`);
     }
   }
-  throw new Error(`无法获取 WorkBuddy UI 锁：${lockFile}`);
+  throw new Error(`无法获取 ${BATCH_PROFILE.displayName} UI 锁：${lockFile}`);
 }
 
 async function releaseUiLock(lockFile, owner) {
@@ -379,7 +405,7 @@ async function releaseUiLock(lockFile, owner) {
 }
 
 function launchDriver(args) {
-  const child = spawn(process.execPath, [DRIVER_FILE, ...args], { stdio: "inherit" });
+  const child = spawn(process.execPath, [BATCH_PROFILE.driverFile, ...args], { stdio: "inherit" });
   const completed = new Promise((resolvePromise, rejectPromise) => {
     child.once("error", rejectPromise);
     child.once("exit", (code, signal) => resolvePromise({ code: code ?? 1, signal }));
@@ -405,12 +431,13 @@ export function buildDriverArgs(args, task, index, existingAutomation = null, op
     driverArgs.push("--resume");
     if (args.restartAppOnResume && operation !== "observe-without-restart") driverArgs.push("--restart-app");
     if (mode === "retry-dispatch") {
-      driverArgs.push("--retry-pre-send-failure", "--detach-after-submit");
+      driverArgs.push("--retry-pre-send-failure");
+      if (BATCH_PROFILE.detachedDispatch) driverArgs.push("--detach-after-submit");
     } else {
       driverArgs.push("--observe-once");
     }
   } else {
-    driverArgs.push("--detach-after-submit");
+    if (BATCH_PROFILE.detachedDispatch) driverArgs.push("--detach-after-submit");
   }
   return driverArgs;
 }
@@ -492,7 +519,7 @@ async function inspectTaskResult(plan, task, driverResult) {
   if (!automation) throw new Error(`Driver 未生成 automation_state：${task.taskId}`);
   if (automation.identity?.batch_id !== plan.manifest.batch_id
     || automation.identity?.task_id !== task.taskId
-    || automation.identity?.harness_id !== "workbuddy") {
+    || automation.identity?.harness_id !== BATCH_PROFILE.harnessId) {
     throw new Error(`automation_state 身份不一致：${task.taskId}`);
   }
   const execution = await readJsonIfExists(task.executionRecordFile);
@@ -539,10 +566,10 @@ export async function buildExecutionReceipt(plan, state) {
     if (!automation || !execution) recordsPresent = false;
     if (automation && (automation.identity?.batch_id !== plan.manifest.batch_id
       || automation.identity?.task_id !== task.taskId
-      || automation.identity?.harness_id !== "workbuddy")) identitiesMatch = false;
+      || automation.identity?.harness_id !== BATCH_PROFILE.harnessId)) identitiesMatch = false;
     if (execution && (execution.batch_id !== plan.manifest.batch_id
       || execution.task_id !== task.taskId
-      || execution.harness?.id !== "workbuddy")) identitiesMatch = false;
+      || execution.harness?.id !== BATCH_PROFILE.harnessId)) identitiesMatch = false;
     const actualUiModel = automation?.model_selection?.actual_model || automation?.model_selection?.model || null;
     const selectionMode = automation?.model_selection?.mode
       || (automation?.requested_ui_model ? "explicit" : "current");
@@ -698,7 +725,13 @@ function taskFailureMessage(task, automation) {
 export function canAutomaticallyResumeAttention(automation) {
   if (automation?.phase !== "NEEDS_ATTENTION") return false;
   const reason = [...(automation.history || [])].reverse().find((entry) => entry.phase === "NEEDS_ATTENTION")?.reason;
-  return new Set(["driver-interrupted", "client-disconnected", "post-send-observation-failed"]).has(reason);
+  return new Set([
+    "driver-interrupted",
+    "client-disconnected",
+    "post-send-observation-failed",
+    "post-send-driver-error",
+    "resume-observation-failed",
+  ]).has(reason);
 }
 
 async function synchronizeQueueTasks(plan, state, args, resumeNeedsAttentionTaskId = "") {
@@ -1112,13 +1145,13 @@ export async function main(argv) {
       return state.phase === "COMPLETED" ? 0 : 3;
     }
     const state = await runQueue(plan, args);
-    console.log(`WorkBuddy 队列状态：${state.phase}；状态文件：${plan.queueStateFile}`);
+    console.log(`${BATCH_PROFILE.displayName} 队列状态：${state.phase}；状态文件：${plan.queueStateFile}`);
     if (state.phase === "COMPLETED") return 0;
     if (state.phase === "NEEDS_ATTENTION") return 3;
     if (state.phase === "INTERRUPTED") return 130;
     return 1;
   } catch (error) {
-    console.error(`WorkBuddy 队列失败：${error.message}`);
+    console.error(`${BATCH_PROFILE.displayName} 队列失败：${error.message}`);
     return 1;
   }
 }

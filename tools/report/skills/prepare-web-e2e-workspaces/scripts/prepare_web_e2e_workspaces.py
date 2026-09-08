@@ -28,7 +28,9 @@ except ImportError:
 SCHEMA_VERSION = "wildclawbench.web-e2e-batch/v3"
 REPORT_CONFIG_SCHEMA = "wildclawbench.web-e2e-report-config/v1"
 SKILLS_MANIFEST_SCHEMA = "wildclawbench.web-e2e-skills-manifest/v1"
-SKILL_VERSION = "4.2.0"
+SKILL_METADATA_SCHEMA = "wildclawbench.web-e2e-skill/v1"
+SCORE_SKILL_METADATA_SCHEMA = "wildclawbench.web-e2e-score-skill/v1"
+SKILL_VERSION = "4.3.0"
 DETAILED_PROFILE = "web-e2e-detailed-v1"
 ARTIFACTSBENCH_PROFILE = "artifactsbench-web-v1"
 SUPPORTED_METRIC_PROFILES = {DETAILED_PROFILE, ARTIFACTSBENCH_PROFILE}
@@ -44,6 +46,7 @@ KNOWN_HARNESSES = {
     "trae": "Trae",
 }
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
+SEMVER_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9a-z.-]+)?$")
 CRITERION_RE = re.compile(r"^###\s+Criterion\s+(\d+)\s*[:：]\s*(.*?)\s*\((.*?)\)\s*$")
 META_RE = re.compile(r"(?:^|,)\s*(key|primary|secondary|weight)\s*:\s*([^,]+)\s*")
 SCORING_FIXTURE_RE = re.compile(r"/tmp_workspace_eval/([A-Za-z0-9][A-Za-z0-9._/-]*)")
@@ -564,14 +567,32 @@ def zip_selected(
                 archive.write(path, archived)
 
 
+def skill_source_files(source: Path) -> list[Path]:
+    return [
+        path for path in sorted(item for item in source.rglob("*") if item.is_file())
+        if "__pycache__" not in path.parts
+        and "node_modules" not in path.parts
+        and path.suffix != ".pyc"
+        and path.name != ".DS_Store"
+    ]
+
+
+def sha256_skill_content(source: Path) -> str:
+    digest = hashlib.sha256()
+    for path in skill_source_files(source):
+        relative = path.relative_to(source).as_posix()
+        digest.update(relative.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(bytes.fromhex(sha256_file(path)))
+    return digest.hexdigest()
+
+
 def zip_skill(source: Path, destination: Path) -> int:
     """Package one independently installable Skill, once per batch."""
     destination.parent.mkdir(parents=True, exist_ok=True)
     file_count = 0
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for path in sorted(item for item in source.rglob("*") if item.is_file()):
-            if "__pycache__" in path.parts or "node_modules" in path.parts or path.suffix == ".pyc" or path.name == ".DS_Store":
-                continue
+        for path in skill_source_files(source):
             archived = PurePosixPath(source.name, path.relative_to(source).as_posix()).as_posix()
             archive.write(path, archived)
             file_count += 1
@@ -580,31 +601,34 @@ def zip_skill(source: Path, destination: Path) -> int:
 
 def package_skill(
     batch_root: Path,
-    batch_id: str,
     source: Path,
-    *,
-    version: str,
-    stages: list[str],
+    metadata: dict,
 ) -> tuple[Path, dict, dict]:
     """Package one independent Skill and return package/manifest rows."""
     if not (source / "SKILL.md").is_file():
         raise FileNotFoundError(f"缺少 Skill: {source}")
-    destination = batch_root / "packages" / f"{batch_id}__{source.name}-skill.zip"
+    version = metadata["version"]
+    destination = batch_root / "packages" / f"{source.name}-skill-v{version}.zip"
     file_count = zip_skill(source, destination)
     relative = destination.relative_to(batch_root).as_posix()
     digest = sha256_file(destination)
+    content_digest = sha256_skill_content(source)
     return destination, {
         "harness": None,
         "package_type": f"{source.name.removesuffix('-web-e2e')}_skill",
         "skill_name": source.name,
+        "skill_version": version,
+        "skill_content_sha256": content_digest,
         "path": relative,
         "sha256": digest,
     }, {
         "name": source.name,
         "version": version,
-        "stages": stages,
+        "stages": metadata["stages"],
+        "supported_metric_profiles": metadata["supported_metric_profiles"],
         "archive": relative,
         "sha256": digest,
+        "content_sha256": content_digest,
         "file_count": file_count,
     }
 
@@ -612,13 +636,46 @@ def package_skill(
 def load_score_skill_metadata(scoring_skill: Path) -> dict:
     metadata_path = scoring_skill / "skill-metadata.json"
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-    if metadata.get("schema_version") != "wildclawbench.web-e2e-score-skill/v1":
+    if metadata.get("schema_version") != SCORE_SKILL_METADATA_SCHEMA:
         raise ValueError(f"评分 Skill 元数据 schema 不兼容: {metadata_path}")
     if metadata.get("name") != "score-web-e2e" or not metadata.get("version"):
         raise ValueError(f"评分 Skill 元数据缺少名称或版本: {metadata_path}")
     supported = metadata.get("supported_metric_profiles")
     if not isinstance(supported, list) or not supported:
         raise ValueError(f"评分 Skill 元数据缺少 supported_metric_profiles: {metadata_path}")
+    return metadata
+
+
+def load_packaged_skill_metadata(skill: Path) -> dict:
+    if not (skill / "SKILL.md").is_file():
+        raise FileNotFoundError(f"缺少 Skill: {skill}")
+    if skill.name == "score-web-e2e":
+        score_metadata = load_score_skill_metadata(skill)
+        metadata = {
+            "name": score_metadata["name"],
+            "version": score_metadata["version"],
+            "stages": ["score"],
+            "supported_metric_profiles": score_metadata["supported_metric_profiles"],
+        }
+    else:
+        metadata_path = skill / "skill-metadata.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        if metadata.get("schema_version") != SKILL_METADATA_SCHEMA:
+            raise ValueError(f"Skill 元数据 schema 不兼容: {metadata_path}")
+    if metadata.get("name") != skill.name:
+        raise ValueError(f"Skill 元数据名称与目录不一致: {skill}")
+    version = str(metadata.get("version") or "")
+    if not SEMVER_RE.fullmatch(version):
+        raise ValueError(f"Skill 版本不是受支持的 SemVer: {skill}: {version}")
+    stages = metadata.get("stages")
+    if not isinstance(stages, list) or not stages or any(not isinstance(item, str) or not item for item in stages):
+        raise ValueError(f"Skill 元数据缺少 stages: {skill}")
+    supported = metadata.get("supported_metric_profiles")
+    if not isinstance(supported, list) or not supported:
+        raise ValueError(f"Skill 元数据缺少 supported_metric_profiles: {skill}")
+    unknown_profiles = sorted(set(supported) - SUPPORTED_METRIC_PROFILES)
+    if unknown_profiles:
+        raise ValueError(f"Skill 元数据含未知 metric profile: {skill}: {unknown_profiles}")
     return metadata
 
 
@@ -632,8 +689,8 @@ def package_score_skill(args: argparse.Namespace) -> dict:
     scoring_skill = repo_root / "tools/report/skills/score-web-e2e"
     if not (scoring_skill / "SKILL.md").is_file():
         raise FileNotFoundError(f"缺少评分 Skill: {scoring_skill}")
-    load_score_skill_metadata(scoring_skill)
-    package_path = output_root / f"{batch_id}__score-web-e2e-skill.zip"
+    metadata = load_packaged_skill_metadata(scoring_skill)
+    package_path = output_root / f"score-web-e2e-skill-v{metadata['version']}.zip"
     if package_path.exists():
         raise FileExistsError(f"评分 Skill 包已存在，拒绝覆盖: {package_path}")
     file_count = zip_skill(scoring_skill, package_path)
@@ -641,6 +698,8 @@ def package_score_skill(args: argparse.Namespace) -> dict:
         "path": package_path,
         "file_count": file_count,
         "sha256": sha256_file(package_path),
+        "content_sha256": sha256_skill_content(scoring_skill),
+        "version": metadata["version"],
     }
 
 
@@ -696,17 +755,13 @@ def prepare(args: argparse.Namespace) -> Path:
             f"评分 Skill {score_skill_metadata['version']} 不支持 metric_profile: {metric_profile}"
         )
     report_skill = repo_root / "tools/report/skills/report-web-e2e"
-    if not (report_skill / "SKILL.md").is_file():
-        raise FileNotFoundError(f"缺少报告 Skill: {report_skill}")
     orchestrate_skill = repo_root / "tools/report/skills/orchestrate-web-e2e"
-    if not (orchestrate_skill / "SKILL.md").is_file():
-        raise FileNotFoundError(f"缺少编排 Skill: {orchestrate_skill}")
     execute_skill = repo_root / "tools/report/skills/execute-web-e2e"
-    if not (execute_skill / "SKILL.md").is_file():
-        raise FileNotFoundError(f"缺少执行 Skill: {execute_skill}")
     run_skill = repo_root / "tools/report/skills/run-web-e2e"
-    if not (run_skill / "SKILL.md").is_file():
-        raise FileNotFoundError(f"缺少全局编排 Skill: {run_skill}")
+    packaged_skills = [scoring_skill, report_skill, orchestrate_skill, execute_skill, run_skill]
+    packaged_skill_metadata = {
+        skill.name: load_packaged_skill_metadata(skill) for skill in packaged_skills
+    }
     created_at = datetime.now(timezone.utc).isoformat()
     revision = git_revision(repo_root)
     include_execution_record = bool(getattr(args, "include_execution_record", False))
@@ -714,38 +769,39 @@ def prepare(args: argparse.Namespace) -> Path:
     batch_root.mkdir(parents=True)
     skill_manifest_rows = []
     score_skill_package, package_row, skill_row = package_skill(
-        batch_root, args.batch_id, scoring_skill,
-        version=score_skill_metadata["version"], stages=["score"],
+        batch_root, scoring_skill, packaged_skill_metadata[scoring_skill.name],
     )
     package_rows.append(package_row)
     skill_manifest_rows.append(skill_row)
     report_skill_package, package_row, skill_row = package_skill(
-        batch_root, args.batch_id, report_skill,
-        version="1.0.0", stages=["report"],
+        batch_root, report_skill, packaged_skill_metadata[report_skill.name],
     )
     package_rows.append(package_row)
     skill_manifest_rows.append(skill_row)
     orchestrate_skill_package, package_row, skill_row = package_skill(
-        batch_root, args.batch_id, orchestrate_skill,
-        version="0.1.0", stages=["score"],
+        batch_root, orchestrate_skill, packaged_skill_metadata[orchestrate_skill.name],
     )
     package_rows.append(package_row)
     skill_manifest_rows.append(skill_row)
     execute_skill_package, package_row, skill_row = package_skill(
-        batch_root, args.batch_id, execute_skill,
-        version="1.7.0", stages=["execute"],
+        batch_root, execute_skill, packaged_skill_metadata[execute_skill.name],
     )
     package_rows.append(package_row)
     skill_manifest_rows.append(skill_row)
     run_skill_package, package_row, skill_row = package_skill(
-        batch_root, args.batch_id, run_skill,
-        version="1.0.0", stages=[
-            "prepare", "execute", "score", "package", "collect", "report",
-        ],
+        batch_root, run_skill, packaged_skill_metadata[run_skill.name],
     )
     package_rows.append(package_row)
     skill_manifest_rows.append(skill_row)
     skills_manifest_path = batch_root / "packages" / "skills-manifest.json"
+    required_skills = [
+        {
+            key: row[key] for key in (
+                "name", "version", "stages", "supported_metric_profiles", "content_sha256",
+            )
+        }
+        for row in skill_manifest_rows
+    ]
     write_json(skills_manifest_path, {
         "schema_version": SKILLS_MANIFEST_SCHEMA,
         "batch_id": args.batch_id,
@@ -820,6 +876,7 @@ def prepare(args: argparse.Namespace) -> Path:
             "source_revision": revision,
             "metric_profile": metric_profile,
             "scoring_skill": score_skill_metadata,
+            "required_skills": required_skills,
             "package_root": package_root_name,
             "scoring_archive": f"{args.batch_id}__{harness}__scoring.zip",
             "execution_record_included": include_execution_record,
@@ -877,6 +934,7 @@ def prepare(args: argparse.Namespace) -> Path:
         "source_revision": revision,
         "metric_profile": metric_profile,
         "scoring_skill": score_skill_metadata,
+        "required_skills": required_skills,
         "task_ids": task_ids,
         "harnesses": harnesses,
         "score_skill_archive": score_skill_package.relative_to(batch_root).as_posix(),

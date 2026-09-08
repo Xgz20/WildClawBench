@@ -32,9 +32,9 @@ description: 按用户明确要求动态组合 Web E2E 的准备、桌面 Harnes
 
 1. 校验两个 ZIP 的批次、Harness、Profile 和完整 task IDs 一致；不能按文件名猜测身份。
 2. 从 execution ZIP 解压出独立 worker 根。默认在 execution ZIP 同级创建其顶层目录；目标已存在时只允许按已有磁盘状态恢复，不能覆盖或混入管理员 staging 根。
-3. 定位已安装的 `execute-web-e2e`、`orchestrate-web-e2e` 和 `score-web-e2e`。缺失时停止并说明需要安装哪个 Skill。
-4. 检查 WorkBuddy 与 Codex Desktop Driver 的锁定依赖。`node_modules/playwright-core` 缺失或 `npm ls --depth=0` 失败时，由控制 Harness 在对应 Driver 目录自动执行 `npm ci`；用户无需手工安装。安装失败进入 `NEEDS_ATTENTION`，不能把依赖装入候选 workspace。
-5. WorkBuddy 未显式指定模型时保持并回读当前模型，不操作推理强度；权限按生产契约使用 `full-access`。执行和评分新批次均默认三槽。Codex Desktop CDP 未显式提供时使用 `http://127.0.0.1:9230`。
+3. 解压后读取 worker 根 `manifest.json.required_skills`；若管理员同时分发了 `packages/skills-manifest.json`，还要先校验其中的版本化 ZIP SHA-256。使用本 Skill 的 `scripts/check_web_e2e_skills.py` 对比已安装 Skill 的名称、版本和内容 SHA-256。完全一致的 Skill 跳过安装；只导入 `install_required` 列出的 `<skill-name>-skill-v<version>.zip`，然后重新检查。版本相同但内容 SHA 不同必须停止，不能继续使用或静默覆盖。
+4. 根据 `manifest.harness.id` 选择 WorkBuddy 或 AstronStudio Driver，并检查它与 Codex Desktop Driver 的锁定依赖。`node_modules/playwright-core` 缺失或 `npm ls --depth=0` 失败时，由控制 Harness 在对应 Driver 目录自动执行 `npm ci`；用户无需手工安装。安装失败进入 `NEEDS_ATTENTION`，不能把依赖装入候选 workspace。
+5. 被评 Harness 未显式指定模型时保持并回读当前模型，不操作推理强度；权限按生产契约使用 `full-access`。WorkBuddy 执行默认三槽；AstronStudio 首版执行固定单槽；评分新批次默认三槽。Codex Desktop CDP 未显式提供时使用 `http://127.0.0.1:9230`。
 6. execution 回执有效后才合入 scoring ZIP 并开始评分；submission 有效后在 worker 根同级的 `offline-return/` 生成完整 return ZIP 和外部回执。
 
 因此，在客户端和 Skill 已准备好的前提下，下面的用户输入足以触发 worker 全流程：
@@ -45,6 +45,16 @@ description: 按用户明确要求动态组合 Web E2E 的准备、桌面 Harnes
 题目：/absolute/<batch_id>__<harness>__execution.zip
 评分标准：/absolute/<batch_id>__<harness>__scoring.zip
 ```
+
+安装状态可以确定性复核：
+
+```bash
+python3 <run-web-e2e-skill-dir>/scripts/check_web_e2e_skills.py \
+  --manifest /absolute/<worker-root>/manifest.json \
+  --skills-root /absolute/<codex-skills-root>
+```
+
+返回 `all_current=true` 时不得重复安装；返回其他状态时，只使用管理员提供且 ZIP SHA-256 有效的对应版本包。
 
 ## 2. 初始化和恢复状态
 
@@ -82,7 +92,7 @@ python3 <skill-dir>/scripts/run_web_e2e.py set-stage \
 
 ### 准备
 
-严格按 `prepare-web-e2e-workspaces` 创建带时间戳的新批次。准备结果应包含五个独立 Skill ZIP 和 `packages/skills-manifest.json`。Skill ZIP 是按需离线安装材料，不表示各阶段绑定执行。
+严格按 `prepare-web-e2e-workspaces` 创建带时间戳的新批次。准备结果应包含五个 `<skill-name>-skill-v<version>.zip` 和 `packages/skills-manifest.json`。Skill ZIP 是跨批次、跨自建/开源 Profile 复用的按需离线安装材料，不表示各阶段绑定执行。
 
 若完整仓库刚克隆且 Python 环境尚未准备，控制 Harness 只在仓库自身的 `.venv` 中补齐准备阶段实际缺少的 Python 依赖；不得修改系统 Python，也不得在候选 workspace 中安装依赖。仓库内的 `.agents/skills` 必须能发现 `run-web-e2e`、`prepare-web-e2e-workspaces`、`execute-web-e2e`、`orchestrate-web-e2e`、`score-web-e2e` 和 `report-web-e2e`，缺失时先停止并报告，不通过复制半套脚本继续。
 
@@ -90,7 +100,7 @@ python3 <skill-dir>/scripts/run_web_e2e.py set-stage \
 
 ### 执行与评分
 
-执行完全遵守 `execute-web-e2e`。WorkBuddy 新批次默认三槽、最大八槽，UI 操作仍为单槽；用户显式指定模型时才传 `--model`，否则保持客户端当前模型和推理强度。
+执行完全遵守 `execute-web-e2e`。WorkBuddy 新批次默认三槽、最大八槽；AstronStudio 首版固定单槽；两者 UI 操作均为单槽。用户显式指定模型时才传 `--model`，否则保持客户端当前模型和推理强度。
 
 执行回执有效后才按 `orchestrate-web-e2e` 复制到独立评分工作空间并启动评分。Codex Desktop 新批次默认三槽，每题独立项目、任务、Browser 和端口。评分任务使用 `score-web-e2e`，候选 `workspace/` 永远只读；端口冲突只允许修改 `private-scoring/runtime-workspace/` 中的评分运行时副本。
 

@@ -7,7 +7,7 @@
 | 术语 | 定义 |
 | --- | --- |
 | 控制 Harness | 用来接收用户 Prompt、调用 Web E2E Skill 并统筹执行、评分、回传和报告的 Harness。推荐使用 Codex Desktop。 |
-| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。当前已完成自动化验证的是 WorkBuddy。 |
+| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。WorkBuddy 已完成执行、评分和报告闭环；AstronStudio 已完成单个 L1 用例的真实自动执行验证。 |
 | 评分 Harness | 为被评测 Harness 的候选网站打分的 Agent。当前使用 Codex Desktop，并依赖其桌面内置 Browser 操作网站和保存证据。 |
 | 管理员 | 选择用例和被评测 Harness、准备评测包、收集各机器回传包并生成报告的人员。 |
 | 执行人员 | 接收管理员分发的题目包和评分包，在本机完成一个 `Harness（模型）` 单元的执行、评分和回传。 |
@@ -22,12 +22,12 @@
 | --- | --- | --- |
 | `prepare-web-e2e-workspaces` | 管理员 | 从 WildClawBench 用例生成题目包、评分包、报告配置和 5 个可分发 Skill ZIP。它是仓库内的准备 Skill，不计入批次分发的 5 个 ZIP。 |
 | `run-web-e2e` | 管理员或执行人员 | 推荐的全局入口。只组合 Prompt 中明确要求的准备、执行、评分、打包回传、收集和报告阶段。 |
-| `execute-web-e2e` | 执行人员 | 操作被评测 Harness 做题。当前支持 WorkBuddy，默认后台并发 3。 |
+| `execute-web-e2e` | 执行人员 | 操作被评测 Harness 做题。WorkBuddy 默认后台并发 3；AstronStudio 当前使用串行 1。 |
 | `orchestrate-web-e2e` | 执行人员或评分控制人员 | 校验执行结果、准备只读评分副本、注册 Codex Desktop 项目并调度多个评分任务。 |
 | `score-web-e2e` | Codex Desktop 单题评分任务 | 使用桌面内置 Browser 对一个用例评分并生成标准评分 JSON。通常由 `orchestrate-web-e2e` 自动调用，也支持人工单题调用。 |
 | `report-web-e2e` | 管理员 | 汇总一个或多个 Harness 回传包，生成 JSON、Markdown 和 Excel 报告。 |
 
-批次向执行和评分机器分发的 5 个 Skill 是 `run-web-e2e`、`execute-web-e2e`、`orchestrate-web-e2e`、`score-web-e2e` 和 `report-web-e2e`。管理员准备机器还需要仓库内的 `prepare-web-e2e-workspaces`。
+批次向执行和评分机器分发的 5 个 Skill 是 `run-web-e2e`、`execute-web-e2e`、`orchestrate-web-e2e`、`score-web-e2e` 和 `report-web-e2e`。Skill 包使用 `<skill-name>-skill-v<version>.zip` 命名，不带批次号；同一版本同时适用于自建与开源评测集。管理员准备机器还需要仓库内的 `prepare-web-e2e-workspaces`。
 
 ## 使用方法
 
@@ -37,14 +37,16 @@
 
 #### 1. 准备被评测 Harness
 
-在 WorkBuddy 中完成以下设置：
+在本轮被评测 Harness（WorkBuddy 或 AstronStudio）中完成以下设置：
 
 1. 选择本轮评测模型，例如 GLM5.2 对应的客户端模型选项。
 2. 设置该模型的推理强度。
-3. 权限选择“**允许完全访问**”。
+3. 权限选择“**允许完全访问**”或“**完全访问**”。
 4. 确认没有需要保留的运行中任务。
 
-如果 Prompt 没有明确指定模型，执行 Skill 会保持并回读 WorkBuddy 当前模型，不会修改推理强度。评测期间不要人工切换模型。
+如果 Prompt 没有明确指定模型，执行 Skill 会保持并回读客户端当前模型，不会修改推理强度。评测期间不要人工切换模型。
+
+WorkBuddy 已验证默认三路后台执行。AstronStudio 当前只验证了单题串行执行，生产批量验证前应在 Prompt 中明确要求执行并发为 1。
 
 #### 2. 调试模式启动 ChatGPT
 
@@ -67,7 +69,7 @@ open -na /Applications/ChatGPT.app --args \
 - `orchestrate-web-e2e`
 - `score-web-e2e`
 
-每个版本在本机安装一次即可。用户不需要手工安装执行或评分自动化依赖；控制 Harness 会自行检查并补齐。依赖安装失败时流程会停止并返回错误，不会把依赖装进候选工作空间。
+每个版本在本机安装一次即可。控制 Harness 会根据题目包 `manifest.json.required_skills`，校验已安装 Skill 的名称、版本和内容 SHA-256；完全一致时跳过安装，只安装缺失或版本不一致的包。版本相同但内容 SHA 不同会停止并报错，不能把不同内容当作同一版本。用户不需要手工安装执行或评分自动化依赖；控制 Harness 会自行检查并补齐。依赖安装失败时流程会停止并返回错误，不会把依赖装进候选工作空间。
 
 #### 4. 输入一个 Prompt
 
@@ -85,8 +87,8 @@ open -na /Applications/ChatGPT.app --args \
 1. 校验两个 ZIP 属于同一批次、同一 Harness 和相同用例范围。
 2. 解压题目包，建立独立 worker 工作目录。
 3. 自动检查和安装执行、评分所需的锁定依赖。
-4. 使用 WorkBuddy 当前模型和推理强度执行全部题目，权限使用 `full-access`。
-5. 默认使用 3 路执行并发，任一题完成后动态补入下一题。
+4. 使用题目包声明的被评测 Harness，以客户端当前模型和推理强度执行全部题目，权限使用 `full-access`。
+5. WorkBuddy 默认使用 3 路执行并发；AstronStudio 当前使用串行 1，一题明确结束并通过回执门禁后才进入下一题。
 6. 校验执行回执后合入评分包。
 7. 默认创建 3 个并发 Codex Desktop 评分任务，每题使用独立项目、任务、Browser 和端口。
 8. 生成 `submission.json`、完整回传 ZIP 和外部 SHA-256 回执。
@@ -98,6 +100,19 @@ open -na /Applications/ChatGPT.app --args \
 ```text
 执行时显式选择 WorkBuddy 中显示的模型 xopglm52，并在发送每题 Prompt 前回读确认；不要修改推理强度。
 ```
+
+AstronStudio 当前验证用法：
+
+```text
+请使用 $run-web-e2e 完成下面 AstronStudio Web E2E 评测用例的执行、评分、打包回传。
+
+题目：/absolute/path/<batch_id>__astronstudio__execution.zip
+评分标准：/absolute/path/<batch_id>__astronstudio__scoring.zip
+
+保持并回读 AstronStudio 当前模型，不修改推理强度；权限使用 full-access；执行并发设为 1。
+```
+
+AstronStudio 已验证单个 L1 用例的项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、产物和执行回执；多题自动切题、异常恢复及完整评分回传仍需先做小批次验收。
 
 例如临时使用串行：
 
@@ -233,7 +248,7 @@ WorkBuddy 执行并发和 Codex Desktop 评分并发都设为 1。
 使用自动生成的时间戳批次 ID，只准备工作空间，不执行或评分。
 ```
 
-主要产物是每个 Harness 的 `__execution.zip`、`__scoring.zip`，以及批次级报告配置和 5 个 Skill ZIP。题目包不会包含 Ground Truth、Rubric、checker、`eval/` 或 `gt/`。
+主要产物是每个 Harness 的 `__execution.zip`、`__scoring.zip`，以及批次级报告配置和 5 个版本化 Skill ZIP。execution/scoring 包保留批次号；公共 Skill 包按 `<skill-name>-skill-v<version>.zip` 命名，可以跨自建/开源批次复用。题目包不会包含 Ground Truth、Rubric、checker、`eval/` 或 `gt/`。
 
 ### 1. `run-web-e2e`
 
@@ -270,6 +285,18 @@ Prompt 必须明确写出要执行的阶段和输入路径。没有明确选择�
 ```
 
 需要显式覆盖模型时，补充 WorkBuddy 下拉框中的精确显示名。首次换机、升级 WorkBuddy、升级 Skill 或切换模型后，建议先执行 1 至 3 个 L1 用例；未完成并发 smoke 时要求并发 1。
+
+AstronStudio 使用下面的串行 Prompt：
+
+```text
+请使用 $execute-web-e2e 执行下面 AstronStudio 题目包中的全部用例：
+
+/absolute/path/<batch_id>__astronstudio
+
+保持并回读 AstronStudio 当前模型，不修改推理强度；权限使用 full-access；执行并发设为 1。完成后验证 execution-receipt.json 的 integrity.valid=true。
+```
+
+AstronStudio 当前只开放 `run_slots=1`。首次生产批次前先使用 1 至 3 个 L1 用例验证目标客户端版本、登录状态、模型、权限和 CDP。
 
 ### 3. `orchestrate-web-e2e`
 
@@ -324,8 +351,9 @@ Codex Desktop CDP：http://127.0.0.1:9230
 - Prompt 未指定被评测模型：保持并回读客户端当前模型。
 - Prompt 显式指定模型：使用客户端 UI 中的精确显示名，选择后回读一致才开始执行。
 - 推理强度：始终由用户提前在被评测 Harness 中设置，执行自动化不修改。
-- WorkBuddy 权限：生产评测使用 `full-access`，发送题目 Prompt 前会回读确认。
+- WorkBuddy、AstronStudio 权限：生产评测使用 `full-access`，发送题目 Prompt 前会回读确认。
 - WorkBuddy 执行并发：新批次默认 3，最大 8；UI 操作始终只有一路。
+- AstronStudio 执行并发：当前固定为 1，尚未开放后台并发。
 - Codex Desktop 评分并发：新批次默认 3，最大 8；每题使用独立项目、任务、Browser 和端口。
 - 同一批次执行期间不要人工切换模型、权限或关闭正在运行的客户端。
 
@@ -364,6 +392,10 @@ Codex Desktop CDP：http://127.0.0.1:9230
 ### WorkBuddy 当前模型与预期不一致
 
 停止本批次，确认客户端配置。已经执行的产物不能通过编辑 JSON 更换模型；切换模型后应新建带时间戳的批次重新执行。
+
+### AstronStudio 预检未就绪
+
+确认 `/Applications/AStudio.app` 已登录并以仅监听本机的 CDP 端口启动，macOS 桌面已解锁，且当前没有运行中或等待交互的任务。停在历史会话时 workspace picker 可以暂时不可见；只要预检整体 `ready=true`，Driver 会新建任务后再选择并回读项目绝对路径。
 
 ### Codex Desktop CDP 连接失败
 

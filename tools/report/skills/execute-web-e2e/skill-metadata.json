@@ -1,0 +1,12 @@
+{
+  "schema_version": "wildclawbench.web-e2e-skill/v1",
+  "name": "execute-web-e2e",
+  "version": "1.8.1",
+  "stages": [
+    "execute"
+  ],
+  "supported_metric_profiles": [
+    "web-e2e-detailed-v1",
+    "artifactsbench-web-v1"
+  ]
+}

@@ -18,8 +18,8 @@
 | --- | --- | --- |
 | `<batch_id>__<harness>__execution.zip` | 执行 | 包含 Prompt、初始 Workspace、执行清单和评分工作空间准备工具 |
 | `<batch_id>__<harness>__scoring.zip` | 评分准备 | 向评分副本中增加私有评分契约和评分素材 |
-| `<batch_id>__score-web-e2e-skill.zip` | 评分 | 导入评分智能体，每台评分客户端安装一次 |
-| `<batch_id>__report-web-e2e-skill.zip` | 管理员汇总 | 导入报告生成智能体，汇总全部 Harness 回传包 |
+| `score-web-e2e-skill-v<version>.zip` | 评分 | 导入评分智能体，每个版本在每台评分客户端安装一次 |
+| `report-web-e2e-skill-v<version>.zip` | 管理员汇总 | 导入报告生成智能体，汇总全部 Harness 回传包 |
 | `<batch_id>__report-config.yaml` | 管理员汇总 | 维护模型、Harness、推理强度和展示顺序；不会进入 execution/scoring ZIP |
 
 不要把 scoring ZIP 当作评分 Skill 导入，也不要把评分 Skill ZIP 解压到某个用例目录。
@@ -219,7 +219,7 @@ score/tasks/<task_id>/
 在评分智能体的 Skill 管理界面导入：
 
 ```text
-<batch_id>__score-web-e2e-skill.zip
+score-web-e2e-skill-v<version>.zip
 ```
 
 导入后确认：
@@ -330,7 +330,7 @@ bash "./准备评分工作空间.command"
 
 ### `$score-web-e2e` 无法识别
 
-确认已在评分智能体中导入并启用 `<batch_id>__score-web-e2e-skill.zip`。评分 Skill 不在单题目录的 `.agents/skills/` 下。
+确认已在评分智能体中导入并启用 `score-web-e2e-skill-v<version>.zip`。评分 Skill 不在单题目录的 `.agents/skills/` 下。
 
 ### `@PROMPT.md` 没有自动读取文件
 

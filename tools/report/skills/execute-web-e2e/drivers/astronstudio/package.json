@@ -1,0 +1,15 @@
+{
+  "name": "wildclawbench-execute-web-e2e-astronstudio",
+  "version": "1.8.1",
+  "private": true,
+  "type": "module",
+  "description": "Recoverable AstronStudio desktop driver for WildClawBench Web E2E execution",
+  "scripts": {
+    "automate": "node driver.mjs",
+    "batch": "node batch.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "1.55.0"
+  }
+}
