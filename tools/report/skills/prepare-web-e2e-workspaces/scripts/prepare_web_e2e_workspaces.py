@@ -27,6 +27,7 @@ except ImportError:
 
 SCHEMA_VERSION = "wildclawbench.web-e2e-batch/v3"
 REPORT_CONFIG_SCHEMA = "wildclawbench.web-e2e-report-config/v1"
+SKILLS_MANIFEST_SCHEMA = "wildclawbench.web-e2e-skills-manifest/v1"
 SKILL_VERSION = "4.2.0"
 DETAILED_PROFILE = "web-e2e-detailed-v1"
 ARTIFACTSBENCH_PROFILE = "artifactsbench-web-v1"
@@ -577,6 +578,37 @@ def zip_skill(source: Path, destination: Path) -> int:
     return file_count
 
 
+def package_skill(
+    batch_root: Path,
+    batch_id: str,
+    source: Path,
+    *,
+    version: str,
+    stages: list[str],
+) -> tuple[Path, dict, dict]:
+    """Package one independent Skill and return package/manifest rows."""
+    if not (source / "SKILL.md").is_file():
+        raise FileNotFoundError(f"缺少 Skill: {source}")
+    destination = batch_root / "packages" / f"{batch_id}__{source.name}-skill.zip"
+    file_count = zip_skill(source, destination)
+    relative = destination.relative_to(batch_root).as_posix()
+    digest = sha256_file(destination)
+    return destination, {
+        "harness": None,
+        "package_type": f"{source.name.removesuffix('-web-e2e')}_skill",
+        "skill_name": source.name,
+        "path": relative,
+        "sha256": digest,
+    }, {
+        "name": source.name,
+        "version": version,
+        "stages": stages,
+        "archive": relative,
+        "sha256": digest,
+        "file_count": file_count,
+    }
+
+
 def load_score_skill_metadata(scoring_skill: Path) -> dict:
     metadata_path = scoring_skill / "skill-metadata.json"
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
@@ -669,34 +701,57 @@ def prepare(args: argparse.Namespace) -> Path:
     orchestrate_skill = repo_root / "tools/report/skills/orchestrate-web-e2e"
     if not (orchestrate_skill / "SKILL.md").is_file():
         raise FileNotFoundError(f"缺少编排 Skill: {orchestrate_skill}")
+    execute_skill = repo_root / "tools/report/skills/execute-web-e2e"
+    if not (execute_skill / "SKILL.md").is_file():
+        raise FileNotFoundError(f"缺少执行 Skill: {execute_skill}")
+    run_skill = repo_root / "tools/report/skills/run-web-e2e"
+    if not (run_skill / "SKILL.md").is_file():
+        raise FileNotFoundError(f"缺少全局编排 Skill: {run_skill}")
     created_at = datetime.now(timezone.utc).isoformat()
     revision = git_revision(repo_root)
     include_execution_record = bool(getattr(args, "include_execution_record", False))
     package_rows = []
     batch_root.mkdir(parents=True)
-    score_skill_package = batch_root / "packages" / f"{args.batch_id}__score-web-e2e-skill.zip"
-    zip_skill(scoring_skill, score_skill_package)
-    package_rows.append({
-        "harness": None,
-        "package_type": "score_skill",
-        "path": score_skill_package.relative_to(batch_root).as_posix(),
-        "sha256": sha256_file(score_skill_package),
-    })
-    report_skill_package = batch_root / "packages" / f"{args.batch_id}__report-web-e2e-skill.zip"
-    zip_skill(report_skill, report_skill_package)
-    package_rows.append({
-        "harness": None,
-        "package_type": "report_skill",
-        "path": report_skill_package.relative_to(batch_root).as_posix(),
-        "sha256": sha256_file(report_skill_package),
-    })
-    orchestrate_skill_package = batch_root / "packages" / f"{args.batch_id}__orchestrate-web-e2e-skill.zip"
-    zip_skill(orchestrate_skill, orchestrate_skill_package)
-    package_rows.append({
-        "harness": None,
-        "package_type": "orchestrate_skill",
-        "path": orchestrate_skill_package.relative_to(batch_root).as_posix(),
-        "sha256": sha256_file(orchestrate_skill_package),
+    skill_manifest_rows = []
+    score_skill_package, package_row, skill_row = package_skill(
+        batch_root, args.batch_id, scoring_skill,
+        version=score_skill_metadata["version"], stages=["score"],
+    )
+    package_rows.append(package_row)
+    skill_manifest_rows.append(skill_row)
+    report_skill_package, package_row, skill_row = package_skill(
+        batch_root, args.batch_id, report_skill,
+        version="1.0.0", stages=["report"],
+    )
+    package_rows.append(package_row)
+    skill_manifest_rows.append(skill_row)
+    orchestrate_skill_package, package_row, skill_row = package_skill(
+        batch_root, args.batch_id, orchestrate_skill,
+        version="0.1.0", stages=["score"],
+    )
+    package_rows.append(package_row)
+    skill_manifest_rows.append(skill_row)
+    execute_skill_package, package_row, skill_row = package_skill(
+        batch_root, args.batch_id, execute_skill,
+        version="1.7.0", stages=["execute"],
+    )
+    package_rows.append(package_row)
+    skill_manifest_rows.append(skill_row)
+    run_skill_package, package_row, skill_row = package_skill(
+        batch_root, args.batch_id, run_skill,
+        version="1.0.0", stages=[
+            "prepare", "execute", "score", "package", "collect", "report",
+        ],
+    )
+    package_rows.append(package_row)
+    skill_manifest_rows.append(skill_row)
+    skills_manifest_path = batch_root / "packages" / "skills-manifest.json"
+    write_json(skills_manifest_path, {
+        "schema_version": SKILLS_MANIFEST_SCHEMA,
+        "batch_id": args.batch_id,
+        "source_revision": revision,
+        "created_at": created_at,
+        "skills": skill_manifest_rows,
     })
     report_config_path = batch_root / f"{args.batch_id}__report-config.yaml"
     report_config = build_report_config(
@@ -827,6 +882,9 @@ def prepare(args: argparse.Namespace) -> Path:
         "score_skill_archive": score_skill_package.relative_to(batch_root).as_posix(),
         "report_skill_archive": report_skill_package.relative_to(batch_root).as_posix(),
         "orchestrate_skill_archive": orchestrate_skill_package.relative_to(batch_root).as_posix(),
+        "execute_skill_archive": execute_skill_package.relative_to(batch_root).as_posix(),
+        "run_skill_archive": run_skill_package.relative_to(batch_root).as_posix(),
+        "skills_manifest": skills_manifest_path.relative_to(batch_root).as_posix(),
         "report_config": report_config_path.relative_to(batch_root).as_posix(),
         "report_config_ready": report_config["configuration_status"] == "ready",
         "execution_record_included": include_execution_record,

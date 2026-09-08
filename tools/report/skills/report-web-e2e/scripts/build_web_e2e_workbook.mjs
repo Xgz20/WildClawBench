@@ -453,7 +453,7 @@ function buildDetailSheet(workbook, data) {
       addScoreScale(sheet, `T4:${columnName(headers.length)}${end}`);
     }
   }
-  applyWidths(sheet, { A: 42, B: 24, C: 10, D: 18, E: 18, F: 14, G: 30, H: 16, I: 16, J: 12, K: 14, L: 12, M: 14, N: 12, O: 14, P: 14, Q: 14, R: 14, S: 14 });
+  applyWidths(sheet, { A: 70, B: 30, C: 10, D: 18, E: 18, F: 14, G: 30, H: 16, I: 16, J: 12, K: 14, L: 12, M: 14, N: 12, O: 14, P: 14, Q: 14, R: 14, S: 14 });
   for (let column = detailed ? 20 : 19; column <= headers.length; column += 1) {
     const name = columnName(column);
     sheet.getRange(`${name}:${name}`).format.columnWidth = 13;
@@ -474,6 +474,7 @@ const workbook = Workbook.create();
 buildWebsiteSheet(workbook, data);
 buildDifficultySheet(workbook, data);
 buildDetailSheet(workbook, data);
+workbook.recalculate();
 
 await fs.mkdir(path.dirname(args.output), { recursive: true });
 await fs.mkdir(args["preview-dir"], { recursive: true });

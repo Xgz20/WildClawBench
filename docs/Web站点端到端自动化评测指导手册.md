@@ -4,6 +4,7 @@
 
 当前已经实现的自动化范围是：
 
+- 全局组合：`run-web-e2e` 只启用 Prompt 明确提到的准备、执行、评分、打包回传、收集和报告阶段；`admin`、`worker`、`full-local` 只是可选预设；
 - 被评 Harness：WorkBuddy，采用 Electron CDP/Playwright 串行操作 UI、后台并发执行；
 - 评分 Harness：Codex Desktop，每题建立独立项目和独立任务，使用桌面内置 Browser；
 - 执行并发：新队列默认 `ui_slots=1`、`run_slots=3`，可显式设为 1，最多 8；
@@ -12,9 +13,45 @@
 
 基础串行链路已在批次 `web-e2e-20260907-124800` 完成 5 个 L1 真实用例的 WorkBuddy 执行、Codex Desktop 评分和 submission 闭环。WorkBuddy 5.5.3/Driver 1.6.1 在未指定模型时连续五题读回 `current/xopglm52`，四次自动切题后队列进入 `COMPLETED`；Codex Desktop 26.901.51231 为五题分别创建项目、任务和 Browser 证据，评分为 55、65、67、77、91，编排状态最终为 `COMPLETED`。该批次评分使用 `score-web-e2e 4.3.0`。随后批次 `web-e2e-20260907-192642` 用一个 L1 完成 `score-web-e2e 4.4.0` 真实 Desktop 截图接收 smoke，6 张 Browser 截图均由标准一次性接收器保存并通过终态、签名和 SHA-256 门禁，submission 正常生成。同日又使用旧五题批次的只读隔离副本完成 `start-static --root square-circle-intersection` 真实 Desktop smoke，并验证 Desktop 整个进程退出、重新打开后仍能依据磁盘状态跟踪原评分任务和自动生成 submission；这些重复评分只用于运行时验证，不计入正式成绩。评分控制面现已实现并实测默认 3 槽调度：同一 Codex Desktop 的三个独立评分任务同时使用内置 Browser，分别绑定 4173、4174、4175，真实乱序完成并只生成一次 submission；候选、端口、截图和运行时均未交叉。WorkBuddy Driver/Worker 1.7.0 已实现默认 3、最多 8 个后台任务的控制面，自动化回归为 50/50，并使用三个 L1 完成真实 `run_slots=3` smoke：三题在约 21 秒内全部投递，拥有不同 conversation ID 和共同后台运行窗口，最终乱序完成，三题 Prompt 都只发送一次，执行回执有效。首次换机器、升级 WorkBuddy/Codex Desktop/Skill、切换模型或启用并发后，仍应先做小批次 smoke；需要严格对比串并行稳定性时，继续使用同一候选做重复运行抽查。
 
+全局组合链路已在真实批次 `web-e2e-20260908-123216` 完成 5 个开源 ArtifactsBench L1 用例。WorkBuddy 使用 `xopglm52`、`full-access` 和默认三槽执行，首批三题投递后，ab378 完成约 4.5 秒后补入 ab1468，ab241 完成约 4.4 秒后补入 ab1775，5/5 执行成功且回执完整。Codex Desktop 26.901.51231 使用 `score-web-e2e 4.4.0` 完成五个独立 Browser 评分，得分为 61、79、57、77、88，平均 72.40；第四题在槽位释放后补入，第五题在控制任务交接恢复后补入。最终 submission、完整 Harness 回传 ZIP、外部 SHA-256 回执、安全导入、JSON、Markdown 和三 Sheet Excel 均通过。第五题的恢复补位证明状态可接管，不等同于控制任务不中断时的即时补位时延。
+
 文中的 `<...>` 都需要替换为实际路径或 ID。示例以 macOS、WorkBuddy 和三个 L1 用例为例；第 7.1 节另列出已经完成的五题真实基线和 4.4.0 单题 smoke。
 
 ## 1. 最快跑通一次完整评测
+
+### 1.0 推荐：让 `run-web-e2e` 按 Prompt 组合全流程
+
+完成 1.1 的客户端准备后，在同一台机器调试时可直接复制下面的 Prompt。无需额外指定 `admin` 或 `worker`；明确列出的阶段就是本次运行计划，未列出的阶段不会执行。
+
+```text
+请使用 $run-web-e2e 完成下面 Web E2E 批次的准备、执行、评分、打包回传、收集和报告。
+
+用例：
+- 07_Website_Generation_task_ab241_menu_switch_gui_framework
+- 07_Website_Generation_task_ab378_square_circle_intersection
+- 07_Website_Generation_task_ab699_css_formatter_tool
+- 07_Website_Generation_task_ab1468_mall_register_login_page
+- 07_Website_Generation_task_ab1775_pi_derivation_demo
+
+Harness：workbuddy
+指标 Profile：auto
+输出目录：/Users/tester/WebE2E
+报告模型映射：workbuddy=xopglm52
+报告推理强度映射：workbuddy=客户端默认值
+WorkBuddy 权限：full-access
+WorkBuddy 执行并发：默认 3
+Codex Desktop 评分并发：默认 3
+Codex Desktop CDP：http://127.0.0.1:9230
+
+执行阶段显式选择 xopglm52，并回读实际模型；不要操作推理强度。
+执行完成后必须验证 execution-receipt.json，再合入同批 scoring ZIP。
+每题使用独立 Codex Desktop 项目、任务、Browser 和端口；不得修改 execution 或 score 候选 workspace。
+评分完成后生成 submission，导出完整 Harness 回传 ZIP 和外部回执，再按离线导入流程收集。
+最后生成并校验 JSON、Markdown 和 Excel 三种报告。
+中断后读取磁盘状态继续，不要重新初始化或重复创建状态不明的任务。
+```
+
+如果测试人员已经在 WorkBuddy 中配置好模型，删掉“显式选择 xopglm52”一句，改为“省略模型参数，保持并回读当前模型”。跨机器时管理员只写“准备”，worker 只写“执行、评分、打包回传”，管理员收到 ZIP 后再写“收集、报告”；这些都是同一个 Skill 的合法动态组合。
 
 ### 1.1 跑批前只做一次的准备
 
@@ -70,9 +107,12 @@ Harness：workbuddy
 ├── packages/
 │   ├── web-e2e-20260907-120000__workbuddy__execution.zip
 │   ├── web-e2e-20260907-120000__workbuddy__scoring.zip
+│   ├── web-e2e-20260907-120000__run-web-e2e-skill.zip
+│   ├── web-e2e-20260907-120000__execute-web-e2e-skill.zip
 │   ├── web-e2e-20260907-120000__score-web-e2e-skill.zip
 │   ├── web-e2e-20260907-120000__orchestrate-web-e2e-skill.zip
-│   └── web-e2e-20260907-120000__report-web-e2e-skill.zip
+│   ├── web-e2e-20260907-120000__report-web-e2e-skill.zip
+│   └── skills-manifest.json
 └── web-e2e-20260907-120000__report-config.yaml
 ```
 
@@ -186,13 +226,15 @@ web_e2e_report_data.json
 Web站点端到端评测报告.xlsx
 ```
 
-## 2. 四个阶段和对应 Skill
+## 2. 六个阶段和对应 Skill
 
 | 阶段 | Skill | 输入 | 主要输出 |
 | --- | --- | --- | --- |
-| 准备 | `prepare-web-e2e-workspaces` | 用例 ID、Harness、输出目录、报告配置 | execution/scoring ZIP、三个 Skill ZIP、报告配置 |
+| 准备 | `prepare-web-e2e-workspaces` | 用例 ID、Harness、输出目录、报告配置 | execution/scoring ZIP、五个 Skill ZIP、Skill manifest、报告配置 |
 | 执行 | `execute-web-e2e` | 解压后的 execution Harness 根目录 | 候选产物、自动化状态、`execution_record.json`、`execution-receipt.json` |
 | 评分 | `orchestrate-web-e2e` + `score-web-e2e` | 已完成执行包、scoring ZIP、Codex Desktop | 独立评分项目与任务、浏览器证据、`task_score.json`、`submission.json` |
+| 打包回传 | `run-web-e2e` | 有效 `submission.json` 和完整 Harness 根目录 | return ZIP、外部 `return-receipt.json` |
+| 收集 | `run-web-e2e` | return ZIP 和对应外部回执 | 校验后的 `returns/<harness>/`、导入回执 |
 | 报告 | `report-web-e2e` | 一个或多个完整回传包、报告配置 | Markdown、JSON、Excel |
 
 `execute-web-e2e` 负责被评 Harness 做题，不参与评分；`score-web-e2e` 每次只评一题；`orchestrate-web-e2e` 负责交接、注册项目和调度评分任务，不自行判断得分。
@@ -446,6 +488,8 @@ node <score-web-e2e-skill-dir>/scripts/screenshot_receiver.mjs \
 ## 7. 回传和报告
 
 ### 7.1 已验证基线
+
+2026-09-08 的真实批次 `web-e2e-20260908-123216` 是当前全局组合验收基线。5 个开源 ArtifactsBench L1 用例使用 WorkBuddy `xopglm52` 和默认三槽执行，5/5 `SUCCEEDED`，第四、五题分别在前序题终态后约 4.5 秒和 4.4 秒补位；执行总墙钟约 22 分钟，长尾为 ab1775。Codex Desktop 26.901.51231 使用 `score-web-e2e 4.4.0`、独立端口 4173–4177 完成五题，得分为 ab241 61、ab378 79、ab699 57、ab1468 77、ab1775 88，平均 72.40。评分第五题因控制任务交接约延迟 13 分钟才恢复补位，但沿用磁盘状态且没有重复创建任务。最终 `submission.json` SHA-256 为 `a027c40e2e98a20f4798c22d820c7dd5004807140b282774a0f29288f995c74e`；return ZIP 为 27,902,048 bytes，SHA-256 为 `41d1561d6b00e57bfde70465f55c82b675e9b8aff36bcf13837e79b3ca1a961e`。安全导入后生成的 JSON、Markdown 和 Excel 一致记录 5/5 completed、平均 72.40，Excel 三张 Sheet 均通过渲染和公式错误扫描。
 
 2026-09-07 的真实批次 `web-e2e-20260907-124800__workbuddy` 使用 WorkBuddy 5.5.3、Driver 1.6.1、`current/xopglm52` 和 `score-web-e2e 4.3.0`，完成 5 个 L1 用例的执行、5 个独立 Codex Desktop 项目/任务、Browser 评分和 submission。得分依次为：ab241 55、ab378 65、ab699 67、ab1468 77、ab1775 91；编排最终为 `COMPLETED`。
 

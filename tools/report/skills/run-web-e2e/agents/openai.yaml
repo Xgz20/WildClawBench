@@ -1,0 +1,4 @@
+interface:
+  display_name: "运行 Web E2E 全流程"
+  short_description: "按 Prompt 动态组合执行、评分与离线汇总阶段"
+  default_prompt: "使用 $run-web-e2e 按我明确指定的阶段运行或恢复 Web 站点端到端评测。"

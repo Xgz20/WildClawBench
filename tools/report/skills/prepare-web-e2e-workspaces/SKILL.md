@@ -1,6 +1,6 @@
 ---
 name: prepare-web-e2e-workspaces
-description: 为自建或 ArtifactsBench Web 站点端到端评测按用例 ID 和 Harness 生成隔离执行/评分包、通用评分/编排/报告 Skill ZIP、批次配置和跨平台兜底；自动选择详细或轻量指标 Profile，不调用 WildClawBench 执行或评分流程。
+description: 为自建或 ArtifactsBench Web 站点端到端评测按用例 ID 和 Harness 生成隔离执行/评分包、五个独立阶段 Skill ZIP、批次配置和跨平台兜底；自动选择详细或轻量指标 Profile，不调用 WildClawBench 执行或评分流程。
 ---
 
 # 准备 Web E2E 工作空间
@@ -45,13 +45,16 @@ python3 .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_worksp
 
 ## 分包契约
 
-每个 Harness 生成两个 ZIP，整个批次另生成评分、编排与报告 Skill ZIP，并在批次根保留报告配置：
+每个 Harness 生成两个 ZIP，整个批次另生成五个互相独立的 Skill ZIP，并在批次根保留 `skills-manifest.json` 和报告配置。独立打包只表示可按需安装，不绑定阶段、角色或机器：
 
 - `__execution.zip`：带固定 Harness 根目录，包含 `execution/tasks/`、预置空 `score/`、最小批次 manifest、人工清单和 Python 兜底文件；先发送给执行人员。
 - `__scoring.zip`：不带 Harness 根目录，只包含 `score/tasks/` 增量；Harness 执行完成并备份后再发送。
+- `__execute-web-e2e-skill.zip`：可独立导入执行控制智能体；负责 WorkBuddy 等被评 Harness 做题。
 - `__score-web-e2e-skill.zip`：可独立导入评分智能体；每个批次只生成一份，每台评分客户端安装一次，后续可单独升级。
 - `__orchestrate-web-e2e-skill.zip`：可独立导入控制智能体；负责执行结果交接、Playwright 注册 Codex Desktop 项目以及通过内置任务接口调度评分，不执行单题评分。
 - `__report-web-e2e-skill.zip`：可独立导入报告生成智能体；每个批次只生成一份，不依赖 WildClawBench 评分流程。
+- `__run-web-e2e-skill.zip`：可选的跨阶段组合器；只运行用户 Prompt 明确选择的阶段并维护可恢复状态、离线回传和收集，不替代其他 Skill。
+- `packages/skills-manifest.json`：记录以上 Skill 的名称、版本、支持阶段、相对路径、文件数和 SHA-256，供离线选择与验包。
 - `<batch_id>__report-config.yaml`：管理员侧批次配置，记录模型、Harness、推理强度和展示顺序；与回传包一起交给报告 Skill，但不分发给执行或评分人员。
 
 被评 Harness 每题选择：
@@ -83,4 +86,4 @@ python3 .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_worksp
 
 详细 Profile 的页面美观度默认使用评分 Skill 内置的 `web-aesthetic-v1` 标准，并在 task contract 中记录版本、来源和 `joint_screenshot_set` 判定方式。`--aesthetic-rubric` 仅用于增加详细 Profile 的批次补充说明，不能替换内置的 6 个维度、权重和 32 个检查项；ArtifactsBench Profile 禁止传该参数。
 
-验收 `batch_manifest.json`、批次报告配置、每个 Harness staging 根、每 Harness 两个 ZIP、批次级评分/编排/报告 Skill ZIP 及其 SHA-256。manifest 必须分别记录 `score_skill_archive`、`orchestrate_skill_archive`、`report_skill_archive`、`report_config`、`scoring_skill` 名称/版本/Profile 能力和配置就绪状态。execution ZIP 不得含私有评分材料，scoring ZIP 不得含候选 Workspace、报告配置或 Skill 副本。
+验收 `batch_manifest.json`、`skills-manifest.json`、批次报告配置、每个 Harness staging 根、每 Harness 两个 ZIP、批次级 run/execute/score/orchestrate/report 五个独立 Skill ZIP 及其 SHA-256。batch manifest 必须分别记录 `run_skill_archive`、`execute_skill_archive`、`score_skill_archive`、`orchestrate_skill_archive`、`report_skill_archive`、`skills_manifest`、`report_config`、`scoring_skill` 名称/版本/Profile 能力和配置就绪状态。execution ZIP 不得含私有评分材料，scoring ZIP 不得含候选 Workspace、报告配置或 Skill 副本。
