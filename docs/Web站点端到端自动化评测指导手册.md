@@ -7,10 +7,10 @@
 - 被评 Harness：WorkBuddy，采用 Electron CDP/Playwright 串行执行；
 - 评分 Harness：Codex Desktop，每题建立独立项目和独立任务，使用桌面内置 Browser；
 - 执行并发：每台机器 `ui_slots=1`、`run_slots=1`；
-- 评分并发：每台机器 `score_slots=1`；
+- 评分并发：新批次默认 `score_slots=3`，可显式设置为 1 串行，最多 8；
 - AstronStudio、QwenWork、DoubaoWork 尚未完成专用 Driver，不能把 WorkBuddy 的验证结论直接套用到这些客户端。
 
-基础串行链路已在批次 `web-e2e-20260907-124800` 完成 5 个 L1 真实用例的 WorkBuddy 执行、Codex Desktop 评分和 submission 闭环。WorkBuddy 5.5.3/Driver 1.6.1 在未指定模型时连续五题读回 `current/xopglm52`，四次自动切题后队列进入 `COMPLETED`；Codex Desktop 26.901.51231 为五题分别创建项目、任务和 Browser 证据，评分为 55、65、67、77、91，编排状态最终为 `COMPLETED`。该批次评分使用 `score-web-e2e 4.3.0`。随后批次 `web-e2e-20260907-192642` 用一个 L1 完成 `score-web-e2e 4.4.0` 真实 Desktop 截图接收 smoke，6 张 Browser 截图均由标准一次性接收器保存并通过终态、签名和 SHA-256 门禁，submission 正常生成。同日又使用旧五题批次的只读隔离副本完成 `start-static --root square-circle-intersection` 真实 Desktop smoke，并验证 Desktop 整个进程退出、重新打开后仍能依据磁盘状态跟踪原评分任务和自动生成 submission；这些重复评分只用于运行时验证，不计入正式成绩。首次换机器、升级 WorkBuddy/Codex Desktop/Skill 或切换模型后，仍建议先用一题做本机 smoke。
+基础串行链路已在批次 `web-e2e-20260907-124800` 完成 5 个 L1 真实用例的 WorkBuddy 执行、Codex Desktop 评分和 submission 闭环。WorkBuddy 5.5.3/Driver 1.6.1 在未指定模型时连续五题读回 `current/xopglm52`，四次自动切题后队列进入 `COMPLETED`；Codex Desktop 26.901.51231 为五题分别创建项目、任务和 Browser 证据，评分为 55、65、67、77、91，编排状态最终为 `COMPLETED`。该批次评分使用 `score-web-e2e 4.3.0`。随后批次 `web-e2e-20260907-192642` 用一个 L1 完成 `score-web-e2e 4.4.0` 真实 Desktop 截图接收 smoke，6 张 Browser 截图均由标准一次性接收器保存并通过终态、签名和 SHA-256 门禁，submission 正常生成。同日又使用旧五题批次的只读隔离副本完成 `start-static --root square-circle-intersection` 真实 Desktop smoke，并验证 Desktop 整个进程退出、重新打开后仍能依据磁盘状态跟踪原评分任务和自动生成 submission；这些重复评分只用于运行时验证，不计入正式成绩。评分控制面现已实现并实测默认 3 槽调度：同一 Codex Desktop 的三个独立评分任务同时使用内置 Browser，分别绑定 4173、4174、4175，真实乱序完成并只生成一次 submission；候选、端口、截图和运行时均未交叉。首次换机器、升级 WorkBuddy/Codex Desktop/Skill、切换模型或启用并发后，仍应先做小批次 smoke；需要严格对比串并行评分稳定性时，继续使用同一候选做重复运行抽查。
 
 文中的 `<...>` 都需要替换为实际路径或 ID。示例以 macOS、WorkBuddy 和三个 L1 用例为例；第 7.1 节另列出已经完成的五题真实基线和 4.4.0 单题 smoke。
 
@@ -140,13 +140,13 @@ http://127.0.0.1:9230
 
 要求：
 1. 先校验 execution-receipt.json 并生成独立 score 工作空间；
-2. 初始化全部题目的串行评分状态；
+2. 初始化全部题目的评分状态，使用默认 score_slots=3，并为每题分配独立端口；若本机尚未做过并发 smoke，则显式使用 --score-slots 1；
 3. 每题注册 score/tasks/<task_id> 为独立 Codex Desktop 项目，并按绝对路径回读 projectId；
 4. 每题创建独立 Desktop 评分任务，必须使用 $score-web-e2e 和桌面内置 Browser；
-5. 每次 wait_threads 后立即保存 cursor 和状态；一题记录 COMPLETED 终态并通过 mark-complete 后才创建下一题；
+5. 一次 wait_threads 同时等待全部活动评分任务；每题返回后立即分别保存 cursor 和状态，任一题记录 COMPLETED 且通过 mark-complete 后立即补入下一题；
 6. 不覆盖评分模型或推理强度，沿用评分 Codex Desktop 的默认设置；
 7. 控制任务重启时从磁盘状态 resume 并查询原 threadId，禁止重复创建状态不明的评分任务；
-8. 最后一题通过 mark-complete 后确认 submission.json 已自动生成；失败时按 recommended_action 收口；
+8. 最后一题通过 mark-complete 后确认 submission.json 已自动生成；失败时按 recommended_actions 收口；
 9. execution 和 score 中的候选 workspace 均不得修改。
 ```
 
@@ -381,7 +381,7 @@ bash <orchestrate-web-e2e-skill-dir>/scripts/run-codex-project-registrar.sh \
 
 随后由控制 Agent 调用 Desktop 内置 `create_thread` 和 `wait_threads`。不要用 Computer Use 点击 Codex 自己，也不要从外部启动裸 `codex app-server` 会话代替 Desktop 任务。
 
-初始化评分状态时可设置 `--score-timeout-seconds` 和 `--max-retries`，默认分别为 7200 秒和 1 次，批次初始化后不可修改。每次 `wait_threads` 前从 `status`/`resume` 读取 `after_cursor` 与 `next_wait_sequence`，返回后立即执行 `record-wait`。单次轮询未等到事件应记录为 `POLL_TIMEOUT`；它不等于评分 deadline 超时。
+初始化评分状态时可设置 `--score-slots`、`--score-port-base`、`--score-timeout-seconds` 和 `--max-retries`。新批次默认 3 槽、基础端口 4173、deadline 7200 秒、失败终态最多重试 1 次；最多支持 8 槽，显式 `--score-slots 1` 可回退串行。每题端口固定为基础端口加任务序号，这些参数在批次初始化后不可修改；旧 revision 3 状态恢复后仍是 1 槽。每次 `wait_threads` 前从 `status`/`resume` 的 `recommended_actions` 读取所有活动题各自的 `after_cursor` 与 `next_wait_sequence`，一次等待多个目标，返回后由唯一控制任务逐题串行执行 `record-wait`。单次轮询未等到事件应记录为 `POLL_TIMEOUT`；它不等于评分 deadline 超时。
 
 控制任务重启后先执行：
 
@@ -390,7 +390,7 @@ node <orchestrate-web-e2e-skill-dir>/scripts/scoring-control.mjs resume \
   --package-root <harness-root>
 ```
 
-返回 `WAIT_EXISTING_THREAD` 时必须查询其中记录的原 `thread_id`，并把保存的 cursor 作为 `afterCursor`；只有原任务终态已经确认、没有评分输出或运行时残留且仍有 retry 配额时，才可 `prepare-retry`。Desktop 重启需要用户或外部 watchdog 重新拉起应用，恢复后仍执行同一流程。
+返回 `WAIT_EXISTING_THREAD` 时必须查询其中记录的原 `thread_id`，并把保存的 cursor 作为 `afterCursor`；并发批次要把全部等待动作放进同一次 `wait_threads`。只有原任务终态已经确认且仍有 retry 配额时，才可 `prepare-retry`。任一题失败后继续跟踪已活动题，但暂停补入新题，直至失败题收口。如果失败 attempt 已产生 `score_input.json`、`task_score.json`、Browser 证据、日志或运行时副本，控制脚本会把完整旧 `private-scoring/` 移入 `score/.orchestrate-web-e2e/attempts/`，生成带终态、cursor、deadline、错误原因、文件清单和 SHA-256 的 `attempt-error-receipt.json`，再恢复初始化时冻结的评分输入；不能人工删除旧文件后重试。Desktop 重启需要用户或外部 watchdog 重新拉起应用，恢复后仍执行同一流程。
 
 ### 6.3 单题评分边界
 
@@ -432,7 +432,7 @@ node <score-web-e2e-skill-dir>/scripts/screenshot_receiver.mjs \
 - 评分工具无法完成 Rubric 要求的操作；
 - 证据不足以判断。
 
-一题只有先保存评分任务 `COMPLETED` 终态，再通过 `mark-complete` 的身份、哈希、状态和证据门禁后，控制 Agent 才能创建下一题。最后一题通过后，控制脚本会使用 preflight 绑定的评分 Skill 原子生成 `submission.json`；重复调用不会重复生成，已完成文件丢失或 SHA 漂移会失败关闭。
+一题只有先保存评分任务 `COMPLETED` 终态，再通过 `mark-complete` 的身份、哈希、状态、证据、服务终态和 `runtime-workspace` 清理门禁后，才释放该题槽位并补入下一题；多题可乱序完成。最后一题通过后，控制脚本会使用 preflight 绑定的评分 Skill 原子生成 `submission.json`；重复调用不会重复生成，已完成文件丢失或 SHA 漂移会失败关闭。
 
 ## 7. 回传和报告
 
@@ -453,9 +453,15 @@ unzip -t: No errors detected
 
 该单题产物的入口直接位于 `workspace/index.html`，所以它只验证截图接收器，不能单独证明 `start-static --root <子目录>`。随后从五题基线中选择入口天然位于 `workspace/square-circle-intersection/index.html` 的同一 ab378 候选，建立只含该题的隔离包 `web-e2e-20260907-124800__workbuddy__score440-root-smoke`，并由 Codex Desktop 任务 `01a07bc2-fb0d-7ed0-9841-12e0cf6ad09d` 使用 `score-web-e2e 4.4.0` 完成真实 Browser smoke。运行状态记录 `service.static_root=workspace/square-circle-intersection`、`service.http_status=200` 和 `service.status=STOPPED`，精确 PID/进程组校验通过，`runtime-workspace` 已清理；4 张 JPEG/JFIF 截图通过一次性接收器落盘，接收器终态为 `COMPLETED`。原批次 workspace、隔离 execution workspace 和隔离 score workspace 内容一致，候选 SHA 始终为 `b417f2a8eba8021f2ebad5d20fdd14bfdfaa85d0f348dc3344647834a86c0b69`。`mark-complete` 与 `build_submission.mjs` 均通过，隔离包 `submission.json` SHA-256 为 `f330b0fa92c7d42c912146e141a7220955483480b5f7cc747f9c535a17c5e046`。
 
-同一历史评分任务随后用于 Desktop 重启恢复 smoke。重启前编排状态为 `SCORING/WAIT_EXISTING_THREAD`；Desktop 整个进程退出并重新打开后，`resume` 仍返回原任务 `01a07bc2-fb0d-7ed0-9841-12e0cf6ad09d`，没有创建替代任务。实际 `wait_threads` 完成终态和 cursor 被持久化后，`mark-complete` 自动生成 submission；重复执行 `build-submission` 的 SHA 均为 `28bb1b59cd22784142269fc303205132c1a9c79f264b9becff639399d5c9b892`，且无 pending 文件残留。来源、隔离 execution 和隔离 score 三份候选 workspace 两两一致。该实测覆盖同一控制任务重开后的恢复；另一个独立控制任务接管仍需单独验证。
+同一历史评分任务随后用于 Desktop 重启恢复 smoke。重启前编排状态为 `SCORING/WAIT_EXISTING_THREAD`；Desktop 整个进程退出并重新打开后，`resume` 仍返回原任务 `01a07bc2-fb0d-7ed0-9841-12e0cf6ad09d`，没有创建替代任务。实际 `wait_threads` 完成终态和 cursor 被持久化后，`mark-complete` 自动生成 submission；重复执行 `build-submission` 的 SHA 均为 `28bb1b59cd22784142269fc303205132c1a9c79f264b9becff639399d5c9b892`，且无 pending 文件残留。来源、隔离 execution 和隔离 score 三份候选 workspace 两两一致。
+
+另一个独立 Codex 控制任务接管也已完成实测。原控制任务只把隔离包 `web-e2e-20260907-124800__workbuddy__r5c-independent-controller-smoke-20260907-212718` 准备到 `SCORING/WAIT_EXISTING_THREAD`；独立任务 `01a07c0e-a166-7f51-8513-51076fbf63e3` 随后只读取磁盘状态，查询同一历史评分任务，保存真实 cursor `a49ffe10-3900-4c0b-bdf8-b59cafdfa222:1` 和 `COMPLETED` 终态，再由 `mark-complete` 自动生成 submission。最终状态为 `COMPLETED`，无 pending 文件，submission SHA-256 为 `8a3586342fd18e056be6a73f9f26b4007879914ce113250dcc1830aac1ccbe9a`；来源 execution、隔离 execution 和隔离 score 三份候选 workspace SHA 都是 `b417f2a8eba8021f2ebad5d20fdd14bfdfaa85d0f348dc3344647834a86c0b69`。该任务没有新建替代评分任务、重新评分或修改候选产物，证明控制面恢复不依赖原控制会话上下文。
 
 该隔离 smoke 沿用旧批次身份，只验证评分运行时，不是新的 WorkBuddy 模型执行结果；其重复评分 69/100 不得合并到正式报告。
+
+2026-09-08 又从同一五题执行包建立三题只读隔离包 `web-e2e-20260907-124800__workbuddy__r7-score3-smoke-20260908-084054`，选择 ab241、ab378、ab699 三个 L1 历史产物，并在 `execution-receipt.json` 中明确记录 `isolation.formal_result=false`。Codex Desktop 26.901.51231 同时创建三个独立评分任务，使用 `score-web-e2e 4.4.0` 和内置 Browser；三个受管站点在 4173、4174、4175 上有约 7 分 30 秒的共同监听区间，完成顺序为 ab378、ab241、ab699，单任务耗时约 9 分 22 秒、9 分 45 秒、10 分 39 秒，总墙钟时间约 10 分 36 秒。三个评分分别为 68、63、68，只用于并发运行时验证，不得并入正式成绩。
+
+三题的 `task_score.json`、Browser 截图、观察记录、站点 PID/PGID、截图接收器和 task identity 均保存在各自目录；全部截图 SHA-256 不同，submission 中的证据引用都只能解析到本题 `private-scoring/evidence/`。三个站点均为 HTTP 200 后精确停止，截图接收器均为 `COMPLETED`，没有残留 `runtime-workspace`，4173–4175 无监听残留。来源 execution、隔离 execution、隔离 score 三份候选逐文件一致；`mark-complete` 的双副本 SHA 门禁全部通过。最后一题完成后只进行一次 submission 构建，文件 SHA-256 为 `f2e15d629d85a855611fb85f5b84360d101d1754d30690cf459e62eaae65a341`。该 smoke 证明当前评分机的三路 Browser、端口、截图、服务进程和结果隔离可用；候选没有统一的 Cookie/localStorage 场景，因此共享 Browser profile 下的显式存储 sentinel 仍应作为后续增强测试，而不是本轮已证明结论。
 
 ### 7.2 生成 submission 与报告
 
@@ -489,7 +495,7 @@ node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
 | --- | --- |
 | 机器 A | WorkBuddy（模型 A）执行 |
 | 机器 B | AstronStudio（模型 A）执行；其 Driver 完成后再启用自动化 |
-| 机器 C | Codex Desktop 串行评分一个或多个已完成 Harness 包 |
+| 机器 C | Codex Desktop 按本机 `score_slots` 评分一个或多个已完成 Harness 包 |
 | 管理机器 | 准备批次、收集 submission、生成报告 |
 
 跨机器只传递完整文件包：
@@ -554,7 +560,11 @@ node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
 
 ### 控制任务或 Codex Desktop 重启
 
-不要重新初始化批次或创建新评分任务。运行 `scoring-control.mjs resume`，按照 `recommended_action` 查询状态中已有的 `thread_id`；`WAIT_EXISTING_THREAD` 必须携带保存的 `after_cursor`。Desktop 本身不会由当前控制任务在进程退出后继续拉起，需要人工重新打开或部署独立 watchdog。
+不要重新初始化批次或创建新评分任务。运行 `scoring-control.mjs resume`，按照 `recommended_actions` 查询状态中已有的全部 `thread_id`；`recommended_action` 只用于串行兼容。`WAIT_EXISTING_THREAD` 必须携带保存的 `after_cursor`。Desktop 本身不会由当前控制任务在进程退出后继续拉起，需要人工重新打开或部署独立 watchdog。
+
+### 失败评分已经留下部分文件
+
+不要删除 `private-scoring/` 中的部分评分、截图、日志或运行时状态。确认原 Desktop 任务已经进入终态，并通过 `score-web-e2e` 的受管命令停止站点服务和截图接收器后，再执行 `prepare-retry --retry-reason <说明>`；控制脚本会先检查运行时均已静默，再原子归档失败 attempt、生成结构化错误回执并恢复干净的评分输入。下一 attempt 仍需重新执行 preflight。无状态文件的运行时副本、仍为 `RUNNING` 的运行时、归档 journal、错误回执或归档内容发生漂移时都应停机审计，不能跳过门禁。
 
 ### wait_threads 返回超时
 
@@ -598,6 +608,6 @@ node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
 - [ ] 截图由标准一次性接收器保存，最后状态为 `COMPLETED`、`STOPPED`、`TIMED_OUT`、`FAILED` 或 `LOST`，没有存活接收进程。
 - [ ] `task_score.json` 引用的每个截图文件都存在于当前题 `private-scoring/evidence/`，且不是空文件。
 - [ ] 候选 Workspace 没有被评分或编排 Agent 修改。
-- [ ] 每题通过 `mark-complete` 后才进入下一题。
+- [ ] 每题通过 `mark-complete` 且运行时已清理后才释放槽位并补入下一题。
 - [ ] 根目录已生成有效 `submission.json`。
 - [ ] 回传 ZIP 包含完整 Harness 根目录。

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, readFile, realpath, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
@@ -150,6 +150,7 @@ async function registerTask(root, task, registrationMethod = "create-local-proje
 
 async function passPreflight(root, options = {}) {
   return preflight(root, {
+    taskId: options.taskId,
     desktopVersion: "26.901.51231",
     scoreSkillDir: options.scoreSkillDir || await scoreSkillFixture(),
     allowRendererBridge: options.allowRendererBridge || false,
@@ -183,17 +184,43 @@ async function recordCompletedWait(root, taskId, sequence = 1, cursor = `cursor-
   }, { now });
 }
 
-test("init creates immutable serial state and scoring prompts", async () => {
+test("init defaults to three scoring slots and assigns immutable per-task ports", async () => {
   const root = await fixture(["task-1", "task-2"]);
   const { state } = await initialize(root, ["task-2", "task-1"]);
-  assert.equal(state.score_slots, 1);
-  assert.equal(state.schema_revision, 2);
+  assert.equal(state.score_slots, 3);
+  assert.equal(state.schema_revision, 4);
+  assert.equal(state.score_port_base, 4173);
+  assert.deepEqual(state.tasks.map((task) => task.scoring_port), [4173, 4174]);
   assert.equal(state.score_timeout_seconds, 7200);
   assert.equal(state.max_retries, 1);
   assert.equal(state.submission.status, "PENDING");
   assert.deepEqual(state.tasks.map((task) => task.task_id), ["task-2", "task-1"]);
   assert.match(await readFile(state.tasks[0].scoring_prompt_file, "utf8"), /\$score-web-e2e/);
+  assert.match(await readFile(state.tasks[0].scoring_prompt_file, "utf8"), /独占本地评分端口 4173/);
   await assert.rejects(() => initialize(root, ["task-1", "task-2"]), /任务范围或顺序不可变/);
+});
+
+test("init supports explicit serial scoring and keeps slots and port base immutable", async () => {
+  const root = await fixture(["task-1", "task-2"]);
+  const { state } = await initialize(root, [], { scoreSlots: 1, scorePortBase: 5100 });
+  assert.equal(state.score_slots, 1);
+  assert.equal(state.score_port_base, 5100);
+  assert.deepEqual(state.tasks.map((task) => task.scoring_port), [5100, 5101]);
+  assert.equal((await initialize(root)).state.score_slots, 1);
+  await assert.rejects(() => initialize(root, [], { scoreSlots: 3 }), /score_slots 不可变/);
+  await assert.rejects(() => initialize(root, [], { scorePortBase: 5101 }), /score_port_base 不可变/);
+});
+
+test("init rejects a scoring port range that exceeds 65535", async () => {
+  const root = await fixture(["task-1", "task-2"]);
+  await assert.rejects(() => initialize(root, [], { scorePortBase: 65535 }), /无法为 2 个任务分配独立端口/);
+});
+
+test("init accepts at most eight scoring slots", async () => {
+  const acceptedRoot = await fixture();
+  assert.equal((await initialize(acceptedRoot, [], { scoreSlots: 8 })).state.score_slots, 8);
+  const rejectedRoot = await fixture();
+  await assert.rejects(() => initialize(rejectedRoot, [], { scoreSlots: 9 }), /scoreSlots 必须是 1\.\.8/);
 });
 
 test("init accepts a Harness model that was preconfigured and only read back", async () => {
@@ -265,13 +292,218 @@ test("recordThread is blocked until the current task passes preflight", async ()
 
 test("score_slots one prevents a second active scoring thread", async () => {
   const root = await fixture(["task-1", "task-2"]);
-  const { state } = await initialize(root);
+  const { state } = await initialize(root, [], { scoreSlots: 1 });
   for (const task of state.tasks) {
     await registerTask(root, task);
   }
+  const skillRoot = await scoreSkillFixture();
+  await passPreflight(root, { taskId: "task-1", scoreSkillDir: skillRoot });
+  await passPreflight(root, { taskId: "task-2", scoreSkillDir: skillRoot });
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await assert.rejects(() => recordThread(root, "task-2", { threadId: "thread-2", hostId: "local" }), /score_slots=1/);
+});
+
+test("preflight is isolated per task and an explicit task can start out of order", async () => {
+  const root = await fixture(["task-1", "task-2"]);
+  const { state } = await initialize(root);
+  for (const task of state.tasks) await registerTask(root, task);
+  const skillRoot = await scoreSkillFixture();
+  const second = await passPreflight(root, { taskId: "task-2", scoreSkillDir: skillRoot });
+  assert.equal(second.tasks[0].preflight.status, "PENDING");
+  assert.equal(second.tasks[1].preflight.status, "PASSED");
+  const first = await passPreflight(root, { taskId: "task-1", scoreSkillDir: skillRoot });
+  assert.equal(first.tasks[0].preflight.status, "PASSED");
+  assert.equal(first.tasks[1].preflight.status, "PASSED");
+  assert.equal(first.preflight.task_id, "task-1");
+  const started = await recordThread(root, "task-2", { threadId: "thread-2", hostId: "local" });
+  assert.equal(started.tasks[1].phase, "SCORING");
+});
+
+test("three tasks can score concurrently while the fourth waits for a released slot", async () => {
+  const root = await fixture(["task-1", "task-2", "task-3", "task-4"]);
+  const { state } = await initialize(root, [], { scoreTimeoutSeconds: 60 });
+  const skillRoot = await scoreSkillFixture();
+  for (const task of state.tasks) {
+    await registerTask(root, task);
+    await passPreflight(root, { taskId: task.task_id, scoreSkillDir: skillRoot });
+  }
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" }, { now: "2099-09-08T00:00:00.000Z" });
+  await recordThread(root, "task-2", { threadId: "thread-2", hostId: "local" }, { now: "2099-09-08T00:00:10.000Z" });
+  const three = await recordThread(root, "task-3", { threadId: "thread-3", hostId: "local" }, { now: "2099-09-08T00:00:20.000Z" });
+  assert.equal(three.active_score_tasks.length, 3);
+  assert.equal(three.available_score_slots, 0);
+  assert.deepEqual(three.active_score_tasks.map((task) => task.scoring_port), [4173, 4174, 4175]);
+  assert.deepEqual(three.active_score_tasks.map((task) => task.deadline_at), [
+    "2099-09-08T00:01:00.000Z",
+    "2099-09-08T00:01:10.000Z",
+    "2099-09-08T00:01:20.000Z",
+  ]);
+  assert.deepEqual(three.recommended_actions.map((action) => action.type), [
+    "WAIT_EXISTING_THREAD",
+    "WAIT_EXISTING_THREAD",
+    "WAIT_EXISTING_THREAD",
+  ]);
+  await assert.rejects(
+    () => recordThread(root, "task-4", { threadId: "thread-4", hostId: "local" }),
+    /score_slots=3/,
+  );
+
+  await recordWait(root, "task-1", {
+    waitSequence: 1,
+    waitCursor: "cursor-task-1",
+    waitStatus: "RUNNING",
+  }, { now: "2099-09-08T00:00:30.000Z" });
+  const cursors = await recordWait(root, "task-2", {
+    waitSequence: 1,
+    waitCursor: "cursor-task-2",
+    waitStatus: "POLL_TIMEOUT",
+  }, { now: "2099-09-08T00:00:31.000Z" });
+  assert.equal(cursors.recommended_actions.find((action) => action.task_id === "task-1").after_cursor, "cursor-task-1");
+  assert.equal(cursors.recommended_actions.find((action) => action.task_id === "task-1").next_wait_sequence, 2);
+  assert.equal(cursors.recommended_actions.find((action) => action.task_id === "task-2").after_cursor, "cursor-task-2");
+  assert.equal(cursors.recommended_actions.find((action) => action.task_id === "task-2").next_wait_sequence, 2);
+
+  const paused = await recordWait(root, "task-2", {
+    waitSequence: 2,
+    waitCursor: "cursor-task-2-failed",
+    waitStatus: "FAILED",
+    waitError: "browser failed",
+  }, { now: "2099-09-08T00:00:32.000Z" });
+  assert.deepEqual(paused.recommended_actions.map((action) => action.type), [
+    "PREPARE_RETRY",
+    "WAIT_EXISTING_THREAD",
+    "WAIT_EXISTING_THREAD",
+  ]);
+  assert.ok(!paused.recommended_actions.some((action) => action.task_id === "task-4"));
+});
+
+test("an out-of-order completion backfills the fourth task and builds submission once", async () => {
+  const root = await fixture(["task-1", "task-2", "task-3", "task-4"]);
+  const { state } = await initialize(root);
+  const skillRoot = await scoreSkillFixture();
+  for (const task of state.tasks) {
+    await registerTask(root, task);
+    await passPreflight(root, { taskId: task.task_id, scoreSkillDir: skillRoot });
+  }
+  for (const taskId of ["task-1", "task-2", "task-3"]) {
+    await recordThread(root, taskId, { threadId: `thread-${taskId}`, hostId: "local" });
+  }
+  await recordCompletedWait(root, "task-2");
+  await writeValidScore(root, "task-2");
+  const released = await markComplete(root, "task-2");
+  assert.equal(released.available_score_slots, 1);
+  assert.ok(released.recommended_actions.some((action) => action.type === "CREATE_THREAD" && action.task_id === "task-4"));
+  await recordThread(root, "task-4", { threadId: "thread-task-4", hostId: "local" });
+
+  for (const taskId of ["task-4", "task-1", "task-3"]) {
+    await recordCompletedWait(root, taskId);
+    await writeValidScore(root, taskId);
+    await markComplete(root, taskId);
+  }
+  const completed = await status(root);
+  assert.equal(completed.phase, "COMPLETED");
+  assert.equal(completed.submission.status, "COMPLETED");
+  assert.equal(completed.submission.attempt_count, 1);
+  assert.deepEqual(completed.tasks.map((task) => task.phase), ["COMPLETED", "COMPLETED", "COMPLETED", "COMPLETED"]);
+  const repeated = await markComplete(root, "task-2");
+  assert.equal(repeated.submission.attempt_count, 1);
+});
+
+test("recordThread rejects reused thread IDs and duplicate active scoring ports", async () => {
+  const root = await fixture(["task-1", "task-2", "task-3"]);
+  const { state } = await initialize(root);
+  const skillRoot = await scoreSkillFixture();
+  for (const task of state.tasks) {
+    await registerTask(root, task);
+    await passPreflight(root, { taskId: task.task_id, scoreSkillDir: skillRoot });
+  }
+  await recordThread(root, "task-1", { threadId: "shared-thread", hostId: "local" });
+  await assert.rejects(
+    () => recordThread(root, "task-2", { threadId: "shared-thread", hostId: "local" }),
+    /threadId 已被其他任务使用/,
+  );
+
+  const stateFile = join(root, "score", ".orchestrate-web-e2e", "scoring-automation-state.json");
+  const persisted = JSON.parse(await readFile(stateFile, "utf8"));
+  persisted.tasks[1].scoring_port = persisted.tasks[0].scoring_port;
+  await writeJson(stateFile, persisted);
+  await assert.rejects(
+    () => recordThread(root, "task-2", { threadId: "thread-2", hostId: "local" }),
+    /评分端口 4173 已被活动任务占用/,
+  );
+});
+
+test("markComplete does not release a slot while runtime-workspace remains", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
   await passPreflight(root);
   await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
-  await assert.rejects(() => recordThread(root, "task-2", { threadId: "thread-2", hostId: "local" }), /score_slots=1|只能为下一题/);
+  await recordCompletedWait(root, "task-1");
+  await writeValidScore(root, "task-1");
+  const privateRoot = join(root, "score", "tasks", "task-1", "private-scoring");
+  await writeJson(join(privateRoot, "runtime-state.json"), {
+    schema_version: "wildclawbench.web-e2e-scoring-runtime/v1",
+    task_id: "task-1",
+    candidate_sha256: state.tasks[0].candidate_integrity.expected_sha256,
+    service: { status: "RUNNING" },
+  });
+  await assert.rejects(() => markComplete(root, "task-1"), /评分服务未进入可信终态/);
+  await writeJson(join(privateRoot, "runtime-state.json"), {
+    schema_version: "wildclawbench.web-e2e-scoring-runtime/v1",
+    task_id: "task-1",
+    candidate_sha256: state.tasks[0].candidate_integrity.expected_sha256,
+    service: { status: "STOPPED" },
+  });
+  await mkdir(join(privateRoot, "runtime-workspace"), { recursive: true });
+  await assert.rejects(() => markComplete(root, "task-1"), /运行时副本尚未清理.*禁止释放槽位/);
+  assert.equal((await status(root)).tasks[0].phase, "SCORING");
+  await rm(join(privateRoot, "runtime-workspace"), { recursive: true });
+  await writeJson(join(privateRoot, "screenshot-receiver-state.json"), {
+    schema_version: "wildclawbench.web-e2e-screenshot-receiver/v1",
+    task_id: "task-1",
+    candidate_sha256: state.tasks[0].candidate_integrity.expected_sha256,
+    status: "RUNNING",
+  });
+  await assert.rejects(() => markComplete(root, "task-1"), /截图接收器未进入可信终态/);
+  await writeJson(join(privateRoot, "screenshot-receiver-state.json"), {
+    schema_version: "wildclawbench.web-e2e-screenshot-receiver/v1",
+    task_id: "task-1",
+    candidate_sha256: state.tasks[0].candidate_integrity.expected_sha256,
+    status: "COMPLETED",
+  });
+  const completed = await markComplete(root, "task-1");
+  assert.equal(completed.phase, "COMPLETED");
+});
+
+test("revision 3 state resumes with one slot and preserves its legacy prompt", async () => {
+  const root = await fixture(["task-1", "task-2"]);
+  const { state } = await initialize(root, [], { scoreSlots: 1 });
+  const stateFile = join(root, "score", ".orchestrate-web-e2e", "scoring-automation-state.json");
+  const legacy = JSON.parse(await readFile(stateFile, "utf8"));
+  legacy.schema_revision = 3;
+  delete legacy.score_port_base;
+  for (const task of legacy.tasks) {
+    delete task.scoring_port;
+    delete task.scoring_prompt_port_bound;
+    delete task.preflight;
+    const prompt = (await readFile(task.scoring_prompt_file, "utf8"))
+      .split("\n")
+      .filter((line) => !line.includes("独占本地评分端口"))
+      .join("\n");
+    await writeFile(task.scoring_prompt_file, prompt, "utf8");
+    task.scoring_prompt_sha256 = createHash("sha256").update(prompt).digest("hex");
+  }
+  await writeJson(stateFile, legacy);
+
+  const resumed = await resume(root);
+  assert.equal(resumed.score_slots, 1);
+  assert.deepEqual(resumed.tasks.map((task) => task.scoring_port), [4173, 4173]);
+  assert.ok(resumed.tasks.every((task) => task.preflight.status === "PENDING"));
+  const reinitialized = await initialize(root);
+  assert.equal(reinitialized.state.score_slots, 1);
+  assert.doesNotMatch(await readFile(state.tasks[0].scoring_prompt_file, "utf8"), /独占本地评分端口/);
+  await assert.rejects(() => initialize(root, [], { scoreSlots: 3 }), /score_slots 不可变/);
 });
 
 test("valid task score completes one task and advances to the next", async () => {
@@ -396,6 +628,187 @@ test("poll timeout is distinct from scoring deadline timeout", async () => {
   assert.equal(second.tasks[0].attempts.length, 2);
   assert.equal(second.tasks[0].attempts[1].attempt_number, 2);
   assert.equal(second.tasks[0].thread_id, "thread-2");
+});
+
+test("failed attempts archive partial scoring outputs and emit a structured error receipt", async () => {
+  const root = await fixture();
+  const preparedPrivateRoot = join(root, "score", "tasks", "task-1", "private-scoring");
+  await mkdir(join(preparedPrivateRoot, "fixtures"), { recursive: true });
+  await writeFile(join(preparedPrivateRoot, "fixtures", "expected-layout.json"), "{}\n", "utf8");
+  const { state } = await initialize(root);
+  const originalWorkspace = snapshotWorkspace(join(root, "score", "tasks", "task-1", "workspace")).sha256;
+  await registerTask(root, state.tasks[0]);
+  const skillRoot = await scoreSkillFixture();
+  await passPreflight(root, { scoreSkillDir: skillRoot });
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordWait(root, "task-1", {
+    waitSequence: 1,
+    waitCursor: "cursor-failed",
+    waitStatus: "FAILED",
+    waitError: "browser crashed",
+  });
+
+  const privateRoot = join(root, "score", "tasks", "task-1", "private-scoring");
+  await writeJson(join(privateRoot, "score_input.json"), { partial: true });
+  await writeJson(join(privateRoot, "task_score.json"), { incomplete: true });
+  await mkdir(join(privateRoot, "runtime-workspace"), { recursive: true });
+  await writeFile(join(privateRoot, "runtime-workspace", "generated.txt"), "runtime copy", "utf8");
+  await writeJson(join(privateRoot, "runtime-state.json"), {
+    schema_version: "wildclawbench.web-e2e-scoring-runtime/v1",
+    task_id: "task-1",
+    candidate_sha256: state.tasks[0].candidate_integrity.expected_sha256,
+    service: { status: "STOPPED" },
+  });
+  await mkdir(join(privateRoot, "evidence"), { recursive: true });
+  await writeFile(join(privateRoot, "evidence", "partial.md"), "partial browser evidence", "utf8");
+
+  const retry = await prepareRetry(root, "task-1", "retry after browser crash");
+  const archivedAttempt = retry.tasks[0].attempts[0];
+  assert.equal(retry.tasks[0].phase, "PROJECT_REGISTERED");
+  assert.equal(retry.tasks[0].retry_count, 1);
+  assert.equal(archivedAttempt.error_receipt.schema_version, "wildclawbench.web-e2e-scoring-attempt-error/v1");
+  assert.match(archivedAttempt.error_receipt.sha256, /^[a-f0-9]{64}$/);
+  const receipt = JSON.parse(await readFile(join(root, archivedAttempt.error_receipt.path), "utf8"));
+  assert.equal(receipt.attempt.terminal_status, "FAILED");
+  assert.equal(receipt.attempt.wait_cursor, "cursor-failed");
+  assert.equal(receipt.retry.next_attempt_number, 2);
+  assert.equal(receipt.failure.task_error, "browser crashed");
+  assert.ok(receipt.archive.entries.some((entry) => entry.path === "score_input.json"));
+  assert.ok(receipt.archive.entries.some((entry) => entry.path === "task_score.json"));
+  assert.ok(receipt.archive.entries.some((entry) => entry.path === "runtime-workspace/generated.txt"));
+  assert.ok(receipt.archive.entries.some((entry) => entry.path === "fixtures/expected-layout.json"));
+  assert.deepEqual((await readdir(privateRoot)).sort(), ["candidate_artifact.json", "fixtures", "task_contract.json"]);
+  assert.equal(await readFile(join(privateRoot, "fixtures", "expected-layout.json"), "utf8"), "{}\n");
+  assert.equal(snapshotWorkspace(join(root, "score", "tasks", "task-1", "workspace")).sha256, originalWorkspace);
+
+  await passPreflight(root, { scoreSkillDir: skillRoot });
+  const second = await recordThread(root, "task-1", { threadId: "thread-2", hostId: "local" });
+  assert.equal(second.tasks[0].attempts.length, 2);
+  assert.equal(second.tasks[0].attempts[1].attempt_number, 2);
+});
+
+test("prepareRetry refuses to archive active scoring runtimes", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordWait(root, "task-1", {
+    waitSequence: 1,
+    waitCursor: "cursor-failed",
+    waitStatus: "FAILED",
+    waitError: "failed while runtimes were active",
+  });
+  const privateRoot = join(root, "score", "tasks", "task-1", "private-scoring");
+  const candidateSha256 = state.tasks[0].candidate_integrity.expected_sha256;
+  await mkdir(join(privateRoot, "runtime-workspace"), { recursive: true });
+  await writeJson(join(privateRoot, "runtime-state.json"), {
+    schema_version: "wildclawbench.web-e2e-scoring-runtime/v1",
+    task_id: "task-1",
+    candidate_sha256: candidateSha256,
+    service: { status: "RUNNING" },
+  });
+  await assert.rejects(
+    () => prepareRetry(root, "task-1", "active runtime test"),
+    /评分服务未进入可信终态/,
+  );
+
+  await writeJson(join(privateRoot, "runtime-state.json"), {
+    schema_version: "wildclawbench.web-e2e-scoring-runtime/v1",
+    task_id: "task-1",
+    candidate_sha256: candidateSha256,
+    service: { status: "STOPPED" },
+  });
+  await writeJson(join(privateRoot, "screenshot-receiver-state.json"), {
+    schema_version: "wildclawbench.web-e2e-screenshot-receiver/v1",
+    task_id: "task-1",
+    candidate_sha256: candidateSha256,
+    status: "RUNNING",
+  });
+  await assert.rejects(
+    () => prepareRetry(root, "task-1", "active runtime test"),
+    /截图接收器未进入可信终态/,
+  );
+
+  await writeJson(join(privateRoot, "screenshot-receiver-state.json"), {
+    schema_version: "wildclawbench.web-e2e-screenshot-receiver/v1",
+    task_id: "task-1",
+    candidate_sha256: candidateSha256,
+    status: "STOPPED",
+  });
+  const retry = await prepareRetry(root, "task-1", "active runtime test");
+  assert.equal(retry.tasks[0].phase, "PROJECT_REGISTERED");
+  assert.equal(retry.tasks[0].attempts[0].error_receipt.schema_version, "wildclawbench.web-e2e-scoring-attempt-error/v1");
+});
+
+test("prepareRetry refuses a runtime workspace without managed state", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordWait(root, "task-1", {
+    waitSequence: 1,
+    waitCursor: "cursor-failed",
+    waitStatus: "FAILED",
+  });
+  const privateRoot = join(root, "score", "tasks", "task-1", "private-scoring");
+  await mkdir(join(privateRoot, "runtime-workspace"), { recursive: true });
+  await assert.rejects(
+    () => prepareRetry(root, "task-1", "missing runtime state test"),
+    /缺少 runtime-state\.json/,
+  );
+});
+
+test("prepareRetry resumes an interrupted attempt archive from its journal", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordWait(root, "task-1", {
+    waitSequence: 1,
+    waitCursor: "cursor-interrupted",
+    waitStatus: "INTERRUPTED",
+    waitError: "desktop exited",
+  });
+  const privateRoot = join(root, "score", "tasks", "task-1", "private-scoring");
+  await writeJson(join(privateRoot, "score_input.json"), { partial: true });
+
+  await assert.rejects(
+    () => prepareRetry(root, "task-1", "resume archive", { failAfterArchiveMove: true }),
+    /故障注入/,
+  );
+  const recovered = await prepareRetry(root, "task-1", "resume archive");
+  assert.equal(recovered.tasks[0].phase, "PROJECT_REGISTERED");
+  assert.equal(recovered.tasks[0].attempts[0].error_receipt.schema_version, "wildclawbench.web-e2e-scoring-attempt-error/v1");
+  assert.deepEqual((await readdir(privateRoot)).sort(), ["candidate_artifact.json", "task_contract.json"]);
+  const pendingRoot = join(root, "score", ".orchestrate-web-e2e", "pending-attempt-archives");
+  assert.deepEqual(await readdir(pendingRoot), []);
+});
+
+test("preflight rejects drift in an archived failed attempt", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  const skillRoot = await scoreSkillFixture();
+  await passPreflight(root, { scoreSkillDir: skillRoot });
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordWait(root, "task-1", {
+    waitSequence: 1,
+    waitCursor: "cursor-failed",
+    waitStatus: "FAILED",
+    waitError: "failed attempt",
+  });
+  const privateRoot = join(root, "score", "tasks", "task-1", "private-scoring");
+  await writeJson(join(privateRoot, "score_input.json"), { partial: true });
+  const retry = await prepareRetry(root, "task-1", "archive integrity test");
+  const archiveRoot = join(root, retry.tasks[0].attempts[0].error_receipt.archive_root, "private-scoring");
+  await writeJson(join(archiveRoot, "score_input.json"), { tampered: true });
+  await assert.rejects(
+    () => passPreflight(root, { scoreSkillDir: skillRoot }),
+    /评分 attempt 归档发生漂移/,
+  );
 });
 
 test("a completed final score atomically builds submission exactly once", async () => {

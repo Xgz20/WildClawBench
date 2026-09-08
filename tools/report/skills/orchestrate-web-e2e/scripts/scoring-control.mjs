@@ -1,7 +1,19 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
 import { realpathSync } from "node:fs";
-import { mkdir, readFile, realpath, rename, stat, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  copyFile,
+  lstat,
+  mkdir,
+  readFile,
+  readdir,
+  realpath,
+  rename,
+  stat,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -13,13 +25,22 @@ import {
 } from "./workspace-integrity.mjs";
 
 const STATE_SCHEMA = "wildclawbench.web-e2e-scoring-automation/v1";
-const STATE_REVISION = 2;
+const STATE_REVISION = 4;
 const REGISTRY_SCHEMA = "wildclawbench.codex-project-registry/v1";
 const SCORE_SCHEMA = "wildclawbench.web-e2e-task-score/v1";
 const SCORE_SKILL_SCHEMA = "wildclawbench.web-e2e-score-skill/v1";
 const EXECUTION_RECEIPT_SCHEMA = "wildclawbench.web-e2e-execution-receipt/v1";
 const SUBMISSION_SCHEMA = "wildclawbench.web-e2e-submission/v1";
+const SCORING_INPUTS_SCHEMA = "wildclawbench.web-e2e-scoring-inputs/v1";
+const ATTEMPT_ERROR_RECEIPT_SCHEMA = "wildclawbench.web-e2e-scoring-attempt-error/v1";
+const DIRECTORY_TREE_SNAPSHOT_SCHEMA = "wildclawbench.directory-tree-snapshot/v1";
+const DIRECTORY_TREE_HASH_ALGORITHM = "wildclawbench.directory-tree-sha256/v1";
+const SCORING_RUNTIME_SCHEMA = "wildclawbench.web-e2e-scoring-runtime/v1";
+const SCREENSHOT_RECEIVER_SCHEMA = "wildclawbench.web-e2e-screenshot-receiver/v1";
 const CONTROL_DIR = join("score", ".orchestrate-web-e2e");
+const DEFAULT_SCORE_SLOTS = 3;
+const MAX_SCORE_SLOTS = 8;
+const DEFAULT_SCORE_PORT_BASE = 4173;
 const DEFAULT_SCORE_TIMEOUT_SECONDS = 7200;
 const DEFAULT_MAX_RETRIES = 1;
 const WAIT_STATUSES = new Set([
@@ -32,6 +53,19 @@ const WAIT_STATUSES = new Set([
   "INTERRUPTED",
 ]);
 const TERMINAL_THREAD_STATUSES = new Set(["COMPLETED", "FAILED", "CANCELLED", "INTERRUPTED"]);
+const TERMINAL_SCORING_SERVICE_STATUSES = new Set(["STOPPED", "START_FAILED_STOPPED"]);
+const TERMINAL_SCREENSHOT_RECEIVER_STATUSES = new Set(["COMPLETED", "STOPPED", "TIMED_OUT", "FAILED", "LOST"]);
+const LEGACY_SCORING_INPUT_ROOTS = new Set(["candidate_artifact.json", "fixtures", "task_contract.json"]);
+const KNOWN_ATTEMPT_OUTPUT_ROOTS = new Set([
+  "evidence",
+  "runtime-logs",
+  "runtime-port-override.json",
+  "runtime-state.json",
+  "runtime-workspace",
+  "score_input.json",
+  "screenshot-receiver-state.json",
+  "task_score.json",
+]);
 const REGISTRATION_METHODS = new Set([
   "direct-open-folder",
   "create-local-project-dialog",
@@ -43,11 +77,11 @@ export function usage() {
   return `Web E2E 评分控制状态
 
 用法：
-  node scoring-control.mjs init --package-root <目录> [--task-id <ID> ...] [--score-timeout-seconds <秒>] [--max-retries <次数>]
+  node scoring-control.mjs init --package-root <目录> [--task-id <ID> ...] [--score-slots <1..8>] [--score-port-base <端口>] [--score-timeout-seconds <秒>] [--max-retries <次数>]
   node scoring-control.mjs status --package-root <目录>
   node scoring-control.mjs resume --package-root <目录>
   node scoring-control.mjs record-project --package-root <目录> --task-id <ID> --project-id <ID> --project-path <目录> --host-id <ID> --desktop-version <版本> --registration-method <方式>
-  node scoring-control.mjs preflight --package-root <目录> --desktop-version <版本> --score-skill-dir <目录> [--allow-renderer-bridge]
+  node scoring-control.mjs preflight --package-root <目录> [--task-id <ID>] --desktop-version <版本> --score-skill-dir <目录> [--allow-renderer-bridge]
   node scoring-control.mjs record-thread --package-root <目录> --task-id <ID> --thread-id <ID> --host-id <ID>
   node scoring-control.mjs record-wait --package-root <目录> --task-id <ID> --wait-sequence <序号> --wait-cursor <游标> --wait-status <状态> [--wait-error <说明>]
   node scoring-control.mjs mark-timeout --package-root <目录> --task-id <ID>
@@ -74,6 +108,8 @@ export function parseArgs(argv) {
     else if (token === "--score-skill-dir") values.scoreSkillDir = argv[++index] || "";
     else if (token === "--allow-renderer-bridge") values.allowRendererBridge = true;
     else if (token === "--error") values.error = argv[++index] || "";
+    else if (token === "--score-slots") values.scoreSlots = Number(argv[++index]);
+    else if (token === "--score-port-base") values.scorePortBase = Number(argv[++index]);
     else if (token === "--score-timeout-seconds") values.scoreTimeoutSeconds = Number(argv[++index]);
     else if (token === "--max-retries") values.maxRetries = Number(argv[++index]);
     else if (token === "--wait-sequence") values.waitSequence = Number(argv[++index]);
@@ -105,6 +141,12 @@ export function parseArgs(argv) {
   if (values.taskIds.some((taskId) => !taskId)) throw new Error("--task-id 不能为空");
   if (values.scoreTimeoutSeconds !== undefined && (!Number.isInteger(values.scoreTimeoutSeconds) || values.scoreTimeoutSeconds < 1)) {
     throw new Error("--score-timeout-seconds 必须是正整数");
+  }
+  if (values.scoreSlots !== undefined && (!Number.isInteger(values.scoreSlots) || values.scoreSlots < 1 || values.scoreSlots > MAX_SCORE_SLOTS)) {
+    throw new Error(`--score-slots 必须是 1..${MAX_SCORE_SLOTS} 的整数`);
+  }
+  if (values.scorePortBase !== undefined && (!Number.isInteger(values.scorePortBase) || values.scorePortBase < 1 || values.scorePortBase > 65535)) {
+    throw new Error("--score-port-base 必须是 1..65535 的整数");
   }
   if (values.maxRetries !== undefined && (!Number.isInteger(values.maxRetries) || values.maxRetries < 0)) {
     throw new Error("--max-retries 必须是非负整数");
@@ -145,6 +187,188 @@ async function atomicWriteJson(filename, value) {
   const temporary = `${filename}.tmp-${process.pid}`;
   await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
   await rename(temporary, filename);
+}
+
+function comparePaths(left, right) {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function validRootName(value) {
+  return Boolean(value) && value !== "." && value !== ".." && !value.includes("/") && !value.includes("\\");
+}
+
+async function snapshotDirectoryTree(root, roots = null) {
+  const rootInfo = await lstat(root);
+  if (rootInfo.isSymbolicLink() || !rootInfo.isDirectory()) throw new Error(`目录缺失或为符号链接：${root}`);
+  const canonical = await realpath(root);
+  const selectedRoots = roots === null
+    ? (await readdir(canonical)).sort(comparePaths)
+    : [...roots].sort(comparePaths);
+  if (!selectedRoots.length || selectedRoots.some((entry) => !validRootName(entry))) {
+    throw new Error(`目录快照根项无效：${root}`);
+  }
+  const entries = [];
+  async function walk(filename, relativePath) {
+    const info = await lstat(filename);
+    if (info.isSymbolicLink()) throw new Error(`评分目录不允许符号链接：${relativePath}`);
+    if (info.isDirectory()) {
+      entries.push({ path: relativePath, type: "directory", sha256: null, size: 0 });
+      const children = (await readdir(filename)).sort(comparePaths);
+      for (const child of children) await walk(join(filename, child), `${relativePath}/${child}`);
+      return;
+    }
+    if (!info.isFile()) throw new Error(`评分目录包含不支持的文件类型：${relativePath}`);
+    const bytes = await readFile(filename);
+    entries.push({ path: relativePath, type: "file", sha256: sha256(bytes), size: info.size });
+  }
+  for (const name of selectedRoots) await walk(join(canonical, name), name);
+  const digest = createHash("sha256");
+  for (const entry of entries) {
+    digest.update(entry.path);
+    digest.update("\0");
+    digest.update(entry.type);
+    digest.update("\0");
+    digest.update(entry.sha256 || "");
+    digest.update("\0");
+    digest.update(String(entry.size));
+    digest.update("\n");
+  }
+  return {
+    schema_version: DIRECTORY_TREE_SNAPSHOT_SCHEMA,
+    hash_algorithm: DIRECTORY_TREE_HASH_ALGORITHM,
+    roots: selectedRoots,
+    sha256: digest.digest("hex"),
+    file_count: entries.filter((entry) => entry.type === "file").length,
+    directory_count: entries.filter((entry) => entry.type === "directory").length,
+    total_bytes: entries.reduce((sum, entry) => sum + entry.size, 0),
+    entries,
+  };
+}
+
+function comparableTreeSnapshot(snapshot) {
+  return {
+    hash_algorithm: snapshot?.hash_algorithm,
+    roots: snapshot?.roots,
+    sha256: snapshot?.sha256,
+    file_count: snapshot?.file_count,
+    directory_count: snapshot?.directory_count,
+    total_bytes: snapshot?.total_bytes,
+  };
+}
+
+function assertSameTree(expected, actual, label) {
+  if (JSON.stringify(comparableTreeSnapshot(expected)) !== JSON.stringify(comparableTreeSnapshot(actual))) {
+    throw new Error(`${label} 已变化：期望 ${expected?.sha256 || "unknown"}，实际 ${actual?.sha256 || "unknown"}`);
+  }
+}
+
+async function capturePreparedScoringInputs(privateRoot) {
+  const roots = (await readdir(privateRoot)).sort(comparePaths);
+  const generated = roots.filter((name) => KNOWN_ATTEMPT_OUTPUT_ROOTS.has(name));
+  if (generated.length) throw new Error(`评分初始化目录已包含运行输出：${generated.join(", ")}`);
+  const snapshot = await snapshotDirectoryTree(privateRoot, roots);
+  return { schema_version: SCORING_INPUTS_SCHEMA, ...comparableTreeSnapshot(snapshot), captured_at: new Date().toISOString() };
+}
+
+async function resolveScoringInputs(task, privateRoot) {
+  if (task.scoring_inputs) return task.scoring_inputs;
+  const roots = (await readdir(privateRoot)).sort(comparePaths);
+  const unknown = roots.filter((name) => !LEGACY_SCORING_INPUT_ROOTS.has(name) && !KNOWN_ATTEMPT_OUTPUT_ROOTS.has(name));
+  if (unknown.length) throw new Error(`旧评分状态无法确认这些目录是否为初始输入：${unknown.join(", ")}`);
+  const preserved = roots.filter((name) => LEGACY_SCORING_INPUT_ROOTS.has(name));
+  if (!preserved.includes("candidate_artifact.json") || !preserved.includes("task_contract.json")) {
+    throw new Error("评分目录缺少 candidate_artifact.json 或 task_contract.json");
+  }
+  const snapshot = await snapshotDirectoryTree(privateRoot, preserved);
+  return {
+    schema_version: SCORING_INPUTS_SCHEMA,
+    ...comparableTreeSnapshot(snapshot),
+    captured_at: new Date().toISOString(),
+    migrated_from_revision: 2,
+  };
+}
+
+async function verifyScoringInputs(task, { allowAttemptOutputs = false } = {}) {
+  const privateRoot = join(task.score_dir, "private-scoring");
+  const inputs = await resolveScoringInputs(task, privateRoot);
+  if (inputs.schema_version !== SCORING_INPUTS_SCHEMA || inputs.hash_algorithm !== DIRECTORY_TREE_HASH_ALGORITHM) {
+    throw new Error(`评分初始输入清单无效：${task.task_id}`);
+  }
+  const current = await snapshotDirectoryTree(privateRoot, inputs.roots);
+  assertSameTree(inputs, current, `评分初始输入 ${task.task_id}`);
+  if (!allowAttemptOutputs) {
+    const actualRoots = (await readdir(privateRoot)).sort(comparePaths);
+    if (JSON.stringify(actualRoots) !== JSON.stringify([...inputs.roots].sort(comparePaths))) {
+      throw new Error(`评分目录存在未归档 attempt 输出：${task.task_id}`);
+    }
+  }
+  task.scoring_inputs = inputs;
+  return current;
+}
+
+async function loadRegularJsonIfExists(filename, label) {
+  const info = await lstat(filename).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+  if (!info) return null;
+  if (info.isSymbolicLink() || !info.isFile()) throw new Error(`${label} 不是普通文件：${filename}`);
+  return loadJson(filename);
+}
+
+async function assertAttemptRuntimeQuiescent(task, privateRoot) {
+  const expectedSha256 = task.candidate_integrity?.expected_sha256;
+  const runtimeWorkspace = join(privateRoot, "runtime-workspace");
+  const runtimeWorkspaceInfo = await lstat(runtimeWorkspace).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+  if (runtimeWorkspaceInfo && (runtimeWorkspaceInfo.isSymbolicLink() || !runtimeWorkspaceInfo.isDirectory())) {
+    throw new Error(`评分运行时副本不是普通目录：${task.task_id}`);
+  }
+  const runtimeState = await loadRegularJsonIfExists(join(privateRoot, "runtime-state.json"), "评分运行时状态");
+  if (runtimeWorkspaceInfo && !runtimeState) {
+    throw new Error(`评分运行时副本缺少 runtime-state.json，禁止归档：${task.task_id}`);
+  }
+  if (runtimeState && (
+    runtimeState.schema_version !== SCORING_RUNTIME_SCHEMA
+    || runtimeState.task_id !== task.task_id
+    || runtimeState.candidate_sha256 !== expectedSha256
+  )) {
+    throw new Error(`runtime-state.json 与冻结候选身份不一致：${task.task_id}`);
+  }
+  if (runtimeState && !TERMINAL_SCORING_SERVICE_STATUSES.has(runtimeState.service?.status)) {
+    throw new Error(`评分服务未进入可信终态，禁止归档：${task.task_id}: ${runtimeState.service?.status || "UNKNOWN"}`);
+  }
+
+  const receiverState = await loadRegularJsonIfExists(
+    join(privateRoot, "screenshot-receiver-state.json"),
+    "截图接收器状态",
+  );
+  if (receiverState && (
+    receiverState.schema_version !== SCREENSHOT_RECEIVER_SCHEMA
+    || receiverState.task_id !== task.task_id
+    || receiverState.candidate_sha256 !== expectedSha256
+  )) {
+    throw new Error(`screenshot-receiver-state.json 与冻结候选身份不一致：${task.task_id}`);
+  }
+  if (receiverState && !TERMINAL_SCREENSHOT_RECEIVER_STATUSES.has(receiverState.status)) {
+    throw new Error(`截图接收器未进入可信终态，禁止归档：${task.task_id}: ${receiverState.status || "UNKNOWN"}`);
+  }
+}
+
+async function copyTreeEntry(source, destination) {
+  const info = await lstat(source);
+  if (info.isSymbolicLink()) throw new Error(`拒绝恢复符号链接：${source}`);
+  if (info.isDirectory()) {
+    await mkdir(destination, { recursive: false, mode: info.mode & 0o777 });
+    for (const child of (await readdir(source)).sort(comparePaths)) {
+      await copyTreeEntry(join(source, child), join(destination, child));
+    }
+    return;
+  }
+  if (!info.isFile()) throw new Error(`拒绝恢复不支持的文件类型：${source}`);
+  await copyFile(source, destination);
+  await chmod(destination, info.mode & 0o777);
+}
+
+function archiveTaskKey(taskId) {
+  const readable = String(taskId).replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 80) || "task";
+  return `${readable}-${sha256(String(taskId)).slice(0, 12)}`;
 }
 
 function asDate(value = new Date()) {
@@ -189,23 +413,43 @@ function normalizeAttempt(attempt, task, state) {
   attempt.terminal_status ??= task.phase === "COMPLETED" ? "SCORE_VALIDATED" : null;
   attempt.finished_at ??= task.timing?.finished_at || null;
   attempt.score_validated_at ??= task.phase === "COMPLETED" ? task.timing?.finished_at || null : null;
+  attempt.error_receipt ??= null;
   return attempt;
 }
 
 function normalizeState(state) {
   if (state.schema_version !== STATE_SCHEMA) throw new Error(`评分状态 schema 不兼容：${state.schema_version}`);
+  const sourceRevision = Number(state.schema_revision || 1);
   state.schema_revision = STATE_REVISION;
+  state.score_slots ??= sourceRevision < 4 ? 1 : DEFAULT_SCORE_SLOTS;
+  state.score_port_base ??= DEFAULT_SCORE_PORT_BASE;
   state.score_timeout_seconds ??= DEFAULT_SCORE_TIMEOUT_SECONDS;
   state.max_retries ??= DEFAULT_MAX_RETRIES;
+  if (!Number.isInteger(state.score_slots) || state.score_slots < 1 || state.score_slots > MAX_SCORE_SLOTS) {
+    throw new Error(`评分状态的 score_slots 必须是 1..${MAX_SCORE_SLOTS}`);
+  }
+  if (!Number.isInteger(state.score_port_base) || state.score_port_base < 1 || state.score_port_base > 65535) {
+    throw new Error("评分状态的 score_port_base 无效");
+  }
   if (!Number.isInteger(state.score_timeout_seconds) || state.score_timeout_seconds < 1) throw new Error("评分状态的 score_timeout_seconds 无效");
   if (!Number.isInteger(state.max_retries) || state.max_retries < 0) throw new Error("评分状态的 max_retries 无效");
   state.score_skill ??= null;
   state.submission = { ...submissionState(), ...(state.submission || {}) };
-  for (const task of state.tasks || []) {
+  for (const [index, task] of (state.tasks || []).entries()) {
     task.score_timeout_seconds ??= state.score_timeout_seconds;
     task.max_retries ??= state.max_retries;
+    task.scoring_port ??= sourceRevision < 4
+      ? state.score_port_base
+      : state.score_port_base + index;
+    if (!Number.isInteger(task.scoring_port) || task.scoring_port < 1 || task.scoring_port > 65535) {
+      throw new Error(`评分任务的 scoring_port 无效：${task.task_id}`);
+    }
+    task.scoring_prompt_port_bound ??= sourceRevision >= 4;
+    const migratedPreflight = state.preflight?.task_id === task.task_id ? state.preflight : null;
+    task.preflight ??= migratedPreflight || { status: "PENDING", checked_at: null, task_id: task.task_id };
     task.retry_count ??= 0;
     task.attempts ??= [];
+    task.scoring_inputs ??= null;
     if (!task.attempts.length && task.thread_id) {
       task.attempts.push({
         attempt_number: 1,
@@ -225,10 +469,11 @@ function currentAttempt(task) {
   return task.attempts?.at(-1) || null;
 }
 
-function promptForTask(taskId) {
+function promptForTask(taskId, scoringPort) {
   return [
     `使用 $score-web-e2e 对当前项目中的唯一 Web E2E 用例 ${taskId} 进行完整评分。`,
     "必须使用 Codex Desktop 内置 Browser，按照 private-scoring/task_contract.json 逐项实际操作和截图取证，并生成 private-scoring/task_score.json。",
+    `本题独占本地评分端口 ${scoringPort}；启动站点和打开 Browser 时必须使用该端口，不得使用其他题目的端口。若该端口冲突，只能按评分 Skill 的受管端口冲突流程处理并保留审计。`,
     "workspace/ 是被评 Harness 已冻结的只读候选产物，严禁编辑、格式化、安装依赖、构建或生成任何文件；需要写入时只能使用 private-scoring/runtime-workspace/ 临时副本。",
     "不要访问当前项目目录之外的文件，不要创建或调度其他 Codex 任务；只用评分 Skill 的精确 PID 管理工具启动和停止本站服务，证据不足或浏览器不可用时按 Skill 契约记录 evaluation_error。",
     "完成全部评分文件后结束当前任务。",
@@ -350,7 +595,15 @@ async function inspectCandidateIntegrity(plan, taskId, scoreDir, receipt, receip
   };
 }
 
-async function validatePreparedTask(plan, entry, receipt, receiptTask, receiptSha256) {
+async function validatePreparedTask(
+  plan,
+  entry,
+  receipt,
+  receiptTask,
+  receiptSha256,
+  scoringPort,
+  { existingTask = null, preserveLegacyPrompt = false } = {},
+) {
   const scoreDir = await realpath(join(plan.root, "score", "tasks", entry.task_id));
   if (!inside(join(plan.root, "score", "tasks"), scoreDir)) throw new Error(`评分目录越界：${entry.task_id}`);
   const required = [
@@ -377,12 +630,27 @@ async function validatePreparedTask(plan, entry, receipt, receiptTask, receiptSh
   const metricProfile = String(contract.metric_profile || "web-e2e-detailed-v1");
   if (entry.metric_profile && entry.metric_profile !== metricProfile) throw new Error(`task contract metric_profile 不一致：${entry.task_id}`);
   const candidateIntegrity = await inspectCandidateIntegrity(plan, entry.task_id, scoreDir, receipt, receiptTask, receiptSha256, "init");
-  const prompt = promptForTask(entry.task_id);
+  const scoringInputs = await capturePreparedScoringInputs(join(scoreDir, "private-scoring"));
   const promptFile = join(plan.promptRoot, `${entry.task_id}.md`);
   await mkdir(plan.promptRoot, { recursive: true });
   const existingPrompt = await readFile(promptFile, "utf8").catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
-  if (existingPrompt !== null && existingPrompt !== prompt) throw new Error(`评分 Prompt 已变化：${entry.task_id}`);
-  if (existingPrompt === null) await writeFile(promptFile, prompt, { encoding: "utf8", mode: 0o600 });
+  const generatedPrompt = promptForTask(entry.task_id, scoringPort);
+  let prompt = generatedPrompt;
+  if (existingTask) {
+    if (existingTask.scoring_prompt_file !== promptFile || existingPrompt === null) {
+      throw new Error(`已有评分状态的 Prompt 文件缺失或路径不一致：${entry.task_id}`);
+    }
+    if (sha256(existingPrompt) !== existingTask.scoring_prompt_sha256) {
+      throw new Error(`已有评分状态的 Prompt SHA-256 不一致：${entry.task_id}`);
+    }
+    if (!preserveLegacyPrompt && existingPrompt !== generatedPrompt) {
+      throw new Error(`评分 Prompt 已变化：${entry.task_id}`);
+    }
+    prompt = existingPrompt;
+  } else {
+    if (existingPrompt !== null && existingPrompt !== generatedPrompt) throw new Error(`评分 Prompt 已变化：${entry.task_id}`);
+    if (existingPrompt === null) await writeFile(promptFile, generatedPrompt, { encoding: "utf8", mode: 0o600 });
+  }
   return {
     task_id: entry.task_id,
     task_name: entry.task_name || entry.task_id,
@@ -391,6 +659,7 @@ async function validatePreparedTask(plan, entry, receipt, receiptTask, receiptSh
     score_dir: scoreDir,
     scoring_prompt_file: promptFile,
     scoring_prompt_sha256: sha256(prompt),
+    scoring_prompt_port_bound: existingTask?.scoring_prompt_port_bound ?? !preserveLegacyPrompt,
     phase: "PENDING_PROJECT",
     project_id: null,
     project_host_id: null,
@@ -400,8 +669,11 @@ async function validatePreparedTask(plan, entry, receipt, receiptTask, receiptSh
     thread_host_id: null,
     score_timeout_seconds: null,
     max_retries: null,
+    scoring_port: scoringPort,
+    preflight: { status: "PENDING", checked_at: null, task_id: entry.task_id },
     retry_count: 0,
     attempts: [],
+    scoring_inputs: scoringInputs,
     score_file: join(scoreDir, "private-scoring", "task_score.json"),
     candidate_integrity: {
       schema_version: CANDIDATE_ARTIFACT_SCHEMA,
@@ -420,47 +692,29 @@ function nextTask(state) {
   return state.tasks.find((task) => task.phase !== "COMPLETED") || null;
 }
 
-function recommendedAction(state, at = new Date()) {
-  if (state.tasks.every((task) => task.phase === "COMPLETED")) {
-    if (state.submission?.status === "COMPLETED") return { type: "DONE", submission: state.submission };
-    if (state.submission?.status === "FAILED") return { type: "RETRY_SUBMISSION", error: state.submission.error };
-    return { type: "BUILD_SUBMISSION" };
-  }
-  const attention = state.tasks.find((task) => new Set(["FAILED", "TIMED_OUT"]).has(task.phase));
-  if (attention) {
-    const attempt = currentAttempt(attention);
-    const retryAvailable = attention.retry_count < attention.max_retries;
-    if (attempt?.terminal_status && retryAvailable) {
-      return {
-        type: "PREPARE_RETRY",
-        task_id: attention.task_id,
-        retry_count: attention.retry_count,
-        max_retries: attention.max_retries,
-      };
-    }
-    return {
-      type: attempt?.deadline_exceeded_at && !attempt?.terminal_status
-        ? "WAIT_FOR_TIMED_OUT_THREAD_TERMINAL"
-        : "NEEDS_ATTENTION",
-      task_id: attention.task_id,
-      thread_id: attempt?.thread_id || attention.thread_id,
-      host_id: attempt?.host_id || attention.thread_host_id,
-      after_cursor: attempt?.wait_cursor || null,
-      next_wait_sequence: (attempt?.wait_count || 0) + 1,
-      error: attention.error,
-    };
-  }
-  const task = state.tasks.find((entry) => entry.phase !== "COMPLETED");
-  if (!task) return { type: "NEEDS_ATTENTION", error: "评分状态没有可执行任务" };
-  if (task.phase === "PENDING_PROJECT") return { type: "REGISTER_PROJECT", task_id: task.task_id };
-  if (task.phase === "PROJECT_REGISTERED") {
-    if (state.preflight?.status !== "PASSED" || state.preflight?.task_id !== task.task_id) {
-      return { type: "RUN_PREFLIGHT", task_id: task.task_id };
-    }
-    return { type: "CREATE_THREAD", task_id: task.task_id };
-  }
+function taskHoldsScoreSlot(task) {
+  if (task.phase === "SCORING") return true;
+  return task.phase === "TIMED_OUT" && !currentAttempt(task)?.terminal_status;
+}
+
+function activeScoringTasks(state) {
+  return state.tasks.filter(taskHoldsScoreSlot);
+}
+
+function activeTaskAction(task, at) {
   const attempt = currentAttempt(task);
   if (!attempt) return { type: "NEEDS_ATTENTION", task_id: task.task_id, error: "SCORING 任务缺少 attempt" };
+  if (task.phase === "TIMED_OUT" && !attempt.terminal_status) {
+    return {
+      type: "WAIT_FOR_TIMED_OUT_THREAD_TERMINAL",
+      task_id: task.task_id,
+      thread_id: attempt.thread_id,
+      host_id: attempt.host_id,
+      after_cursor: attempt.wait_cursor,
+      next_wait_sequence: attempt.wait_count + 1,
+      error: task.error,
+    };
+  }
   if (attempt.terminal_status === "COMPLETED") return { type: "VALIDATE_SCORE", task_id: task.task_id };
   if (attempt.last_wait_status === "NEEDS_ATTENTION") {
     return {
@@ -486,19 +740,83 @@ function recommendedAction(state, at = new Date()) {
   };
 }
 
+function attentionTaskAction(task) {
+  const attempt = currentAttempt(task);
+  const retryAvailable = task.retry_count < task.max_retries;
+  if (attempt?.terminal_status && retryAvailable) {
+    return {
+      type: "PREPARE_RETRY",
+      task_id: task.task_id,
+      retry_count: task.retry_count,
+      max_retries: task.max_retries,
+    };
+  }
+  return {
+    type: attempt?.deadline_exceeded_at && !attempt?.terminal_status
+      ? "WAIT_FOR_TIMED_OUT_THREAD_TERMINAL"
+      : "NEEDS_ATTENTION",
+    task_id: task.task_id,
+    thread_id: attempt?.thread_id || task.thread_id,
+    host_id: attempt?.host_id || task.thread_host_id,
+    after_cursor: attempt?.wait_cursor || null,
+    next_wait_sequence: (attempt?.wait_count || 0) + 1,
+    error: task.error,
+  };
+}
+
+function recommendedActions(state, at = new Date()) {
+  if (state.tasks.every((task) => task.phase === "COMPLETED")) {
+    if (state.submission?.status === "COMPLETED") return [{ type: "DONE", submission: state.submission }];
+    if (state.submission?.status === "FAILED") return [{ type: "RETRY_SUBMISSION", error: state.submission.error }];
+    return [{ type: "BUILD_SUBMISSION" }];
+  }
+  const attentionTasks = state.tasks.filter((task) => new Set(["FAILED", "TIMED_OUT"]).has(task.phase));
+  const activeTasks = activeScoringTasks(state);
+  const actions = [
+    ...attentionTasks.map(attentionTaskAction),
+    ...activeTasks.filter((task) => !attentionTasks.includes(task)).map((task) => activeTaskAction(task, at)),
+  ];
+  if (attentionTasks.length) return actions;
+
+  const availableSlots = Math.max(0, state.score_slots - activeTasks.length);
+  const candidates = state.tasks
+    .filter((task) => new Set(["PENDING_PROJECT", "PROJECT_REGISTERED"]).has(task.phase))
+    .slice(0, availableSlots);
+  for (const task of candidates) {
+    if (task.phase === "PENDING_PROJECT") actions.push({ type: "REGISTER_PROJECT", task_id: task.task_id });
+    else if (task.preflight?.status !== "PASSED") actions.push({ type: "RUN_PREFLIGHT", task_id: task.task_id });
+    else actions.push({ type: "CREATE_THREAD", task_id: task.task_id });
+  }
+  if (!actions.length) actions.push({ type: "NEEDS_ATTENTION", error: "评分状态没有可执行任务" });
+  return actions;
+}
+
 function publicStatus(state) {
+  const activeTasks = activeScoringTasks(state);
+  const actions = recommendedActions(state);
   return {
     schema_version: state.schema_version,
     batch_id: state.batch_id,
     harness_id: state.harness_id,
     phase: state.phase,
     score_slots: state.score_slots,
+    score_port_base: state.score_port_base,
+    active_score_tasks: activeTasks.map((task) => ({
+      task_id: task.task_id,
+      thread_id: currentAttempt(task)?.thread_id || task.thread_id,
+      host_id: currentAttempt(task)?.host_id || task.thread_host_id,
+      scoring_port: task.scoring_port,
+      after_cursor: currentAttempt(task)?.wait_cursor || null,
+      deadline_at: currentAttempt(task)?.deadline_at || null,
+    })),
+    available_score_slots: Math.max(0, state.score_slots - activeTasks.length),
     score_timeout_seconds: state.score_timeout_seconds,
     max_retries: state.max_retries,
     preflight: state.preflight || null,
     score_skill: state.score_skill || null,
     submission: state.submission || null,
-    recommended_action: recommendedAction(state),
+    recommended_actions: actions,
+    recommended_action: actions[0],
     next_task: nextTask(state),
     tasks: state.tasks,
   };
@@ -528,20 +846,46 @@ export async function initialize(packageRoot, selectedTaskIds = [], options = {}
     if (!entry) throw new Error(`manifest 中没有任务：${taskId}`);
     return entry;
   });
-  const tasks = [];
-  for (const entry of entries) {
-    tasks.push(await validatePreparedTask(plan, entry, receipt, receiptTasks.get(entry.task_id), receiptSha256));
+  const existingRaw = await loadJsonIfExists(plan.stateFile);
+  const existingSourceRevision = Number(existingRaw?.schema_revision || 1);
+  const existing = existingRaw ? normalizeState(existingRaw) : null;
+  const scoreSlots = options.scoreSlots ?? existing?.score_slots ?? DEFAULT_SCORE_SLOTS;
+  const scorePortBase = options.scorePortBase ?? existing?.score_port_base ?? DEFAULT_SCORE_PORT_BASE;
+  const scoreTimeoutSeconds = options.scoreTimeoutSeconds ?? existing?.score_timeout_seconds ?? DEFAULT_SCORE_TIMEOUT_SECONDS;
+  const maxRetries = options.maxRetries ?? existing?.max_retries ?? DEFAULT_MAX_RETRIES;
+  if (!Number.isInteger(scoreSlots) || scoreSlots < 1 || scoreSlots > MAX_SCORE_SLOTS) {
+    throw new Error(`scoreSlots 必须是 1..${MAX_SCORE_SLOTS} 的整数`);
   }
-  const scoreTimeoutSeconds = options.scoreTimeoutSeconds ?? DEFAULT_SCORE_TIMEOUT_SECONDS;
-  const maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
+  if (!Number.isInteger(scorePortBase) || scorePortBase < 1 || scorePortBase > 65535) {
+    throw new Error("scorePortBase 必须是 1..65535 的整数");
+  }
+  if (!existing && scorePortBase + entries.length - 1 > 65535) {
+    throw new Error(`scorePortBase 无法为 ${entries.length} 个任务分配独立端口`);
+  }
   if (!Number.isInteger(scoreTimeoutSeconds) || scoreTimeoutSeconds < 1) throw new Error("scoreTimeoutSeconds 必须是正整数");
   if (!Number.isInteger(maxRetries) || maxRetries < 0) throw new Error("maxRetries 必须是非负整数");
+  const tasks = [];
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+    const existingTask = existing?.tasks.find((task) => task.task_id === entry.task_id) || null;
+    const scoringPort = existingTask?.scoring_port ?? scorePortBase + index;
+    tasks.push(await validatePreparedTask(
+      plan,
+      entry,
+      receipt,
+      receiptTasks.get(entry.task_id),
+      receiptSha256,
+      scoringPort,
+      {
+        existingTask,
+        preserveLegacyPrompt: Boolean(existingTask?.scoring_prompt_port_bound === false || (existing && existingSourceRevision < 4)),
+      },
+    ));
+  }
   for (const task of tasks) {
     task.score_timeout_seconds = scoreTimeoutSeconds;
     task.max_retries = maxRetries;
   }
-  const existingRaw = await loadJsonIfExists(plan.stateFile);
-  const existing = existingRaw ? normalizeState(existingRaw) : null;
   if (existing) {
     if (existing.schema_version !== STATE_SCHEMA || existing.batch_id !== plan.manifest.batch_id || existing.harness_id !== plan.manifest.harness.id) {
       throw new Error("已有评分状态身份不一致");
@@ -552,14 +896,24 @@ export async function initialize(packageRoot, selectedTaskIds = [], options = {}
     if (options.maxRetries !== undefined && existing.max_retries !== maxRetries) {
       throw new Error("已有评分状态的 max_retries 不可变");
     }
+    if (options.scoreSlots !== undefined && existing.score_slots !== scoreSlots) {
+      throw new Error("已有评分状态的 score_slots 不可变");
+    }
+    if (options.scorePortBase !== undefined && existing.score_port_base !== scorePortBase) {
+      throw new Error("已有评分状态的 score_port_base 不可变");
+    }
     if (JSON.stringify(existing.tasks.map((task) => task.task_id)) !== JSON.stringify(ids)) throw new Error("已有评分状态的任务范围或顺序不可变");
     for (let index = 0; index < tasks.length; index += 1) {
       if (existing.tasks[index].score_dir !== tasks[index].score_dir
         || existing.tasks[index].scoring_prompt_sha256 !== tasks[index].scoring_prompt_sha256
+        || existing.tasks[index].scoring_port !== tasks[index].scoring_port
         || existing.tasks[index].model?.id !== tasks[index].model.id
-        || existing.tasks[index].candidate_integrity?.expected_sha256 !== tasks[index].candidate_integrity.expected_sha256) {
+        || existing.tasks[index].candidate_integrity?.expected_sha256 !== tasks[index].candidate_integrity.expected_sha256
+        || (existing.tasks[index].scoring_inputs
+          && existing.tasks[index].scoring_inputs.sha256 !== tasks[index].scoring_inputs.sha256)) {
         throw new Error(`已有评分状态路径或 Prompt 不一致：${tasks[index].task_id}`);
       }
+      existing.tasks[index].scoring_inputs ||= tasks[index].scoring_inputs;
       existing.tasks[index].candidate_integrity.checks.push(tasks[index].candidate_integrity.checks[0]);
     }
     existing.history.push({
@@ -578,7 +932,8 @@ export async function initialize(packageRoot, selectedTaskIds = [], options = {}
     schema_revision: STATE_REVISION,
     batch_id: plan.manifest.batch_id,
     harness_id: plan.manifest.harness.id,
-    score_slots: 1,
+    score_slots: scoreSlots,
+    score_port_base: scorePortBase,
     score_timeout_seconds: scoreTimeoutSeconds,
     max_retries: maxRetries,
     phase: "PREPARED",
@@ -594,7 +949,7 @@ export async function initialize(packageRoot, selectedTaskIds = [], options = {}
       generated_at: receipt.generated_at || null,
       run_id: receipt.run_id || null,
     },
-    history: [{ event: "SCORING_PREPARED", at: now, task_ids: ids }],
+    history: [{ event: "SCORING_PREPARED", at: now, task_ids: ids, score_slots: scoreSlots, score_port_base: scorePortBase }],
   };
   await atomicWriteJson(plan.stateFile, state);
   await atomicWriteJson(plan.registryFile, {
@@ -611,6 +966,7 @@ async function loadControl(packageRoot) {
   const plan = await resolvePackage(packageRoot);
   const state = normalizeState(await loadJson(plan.stateFile));
   if (state.schema_version !== STATE_SCHEMA || state.batch_id !== plan.manifest.batch_id) throw new Error("评分状态身份不一致");
+  await verifyAttemptErrorReceipts(plan, state);
   return { plan, state };
 }
 
@@ -624,6 +980,43 @@ async function saveControl(plan, state) {
   state.updated_at = new Date().toISOString();
   refreshPhase(state);
   await atomicWriteJson(plan.stateFile, state);
+}
+
+async function verifyAttemptErrorReceipts(plan, state, { deep = false } = {}) {
+  for (const task of state.tasks || []) {
+    for (const attempt of task.attempts || []) {
+      const reference = attempt.error_receipt;
+      if (!reference) continue;
+      if (reference.schema_version !== ATTEMPT_ERROR_RECEIPT_SCHEMA || !reference.path || !reference.sha256) {
+        throw new Error(`评分 attempt 错误回执引用无效：${task.task_id}#${attempt.attempt_number}`);
+      }
+      const receiptFile = resolve(plan.root, reference.path);
+      if (!inside(plan.controlRoot, receiptFile)) throw new Error(`评分 attempt 错误回执路径越界：${reference.path}`);
+      const raw = await readFile(receiptFile);
+      if (sha256(raw) !== reference.sha256) throw new Error(`评分 attempt 错误回执发生漂移：${reference.path}`);
+      const receipt = JSON.parse(raw.toString("utf8"));
+      if (receipt.schema_version !== ATTEMPT_ERROR_RECEIPT_SCHEMA
+        || receipt.identity?.batch_id !== state.batch_id
+        || receipt.identity?.harness_id !== state.harness_id
+        || receipt.identity?.task_id !== task.task_id
+        || receipt.attempt?.attempt_number !== attempt.attempt_number
+        || receipt.attempt?.thread_id !== attempt.thread_id) {
+        throw new Error(`评分 attempt 错误回执身份不一致：${reference.path}`);
+      }
+      if (deep) {
+        const archiveRoot = resolve(plan.root, reference.archive_root || "");
+        if (!inside(plan.controlRoot, archiveRoot)) throw new Error(`评分 attempt 归档路径越界：${reference.archive_root}`);
+        if (receipt.archive?.schema_version !== DIRECTORY_TREE_SNAPSHOT_SCHEMA
+          || receipt.archive?.hash_algorithm !== DIRECTORY_TREE_HASH_ALGORITHM) {
+          throw new Error(`评分 attempt 归档清单无效：${reference.path}`);
+        }
+        const archived = await snapshotDirectoryTree(join(archiveRoot, "private-scoring"));
+        if (archived.sha256 !== reference.archive_sha256 || archived.sha256 !== receipt.archive?.sha256) {
+          throw new Error(`评分 attempt 归档发生漂移：${reference.archive_root}`);
+        }
+      }
+    }
+  }
 }
 
 async function verifyTaskCandidateOrFail(plan, state, task, stage) {
@@ -649,7 +1042,8 @@ async function verifyTaskCandidateOrFail(plan, state, task, stage) {
     task.phase = "FAILED";
     task.error = message;
     task.timing.finished_at = now;
-    state.preflight = { status: "FAILED", checked_at: now, task_id: task.task_id, error: message };
+    task.preflight = { status: "FAILED", checked_at: now, task_id: task.task_id, error: message };
+    state.preflight = task.preflight;
     state.history.push({ event: "CANDIDATE_INTEGRITY_FAILED", at: now, task_id: task.task_id, stage, error: message });
     await saveControl(plan, state);
     throw error;
@@ -679,7 +1073,8 @@ export async function recordProject(packageRoot, taskId, project) {
   task.registration_method = project.registrationMethod;
   task.phase = task.thread_id ? "SCORING" : "PROJECT_REGISTERED";
   task.timing.project_registered_at ||= now;
-  state.preflight = { status: "PENDING", checked_at: null, task_id: taskId };
+  task.preflight = { status: "PENDING", checked_at: null, task_id: taskId };
+  state.preflight = task.preflight;
   state.history.push({
     event: "PROJECT_REGISTERED",
     at: now,
@@ -716,10 +1111,15 @@ export async function recordProject(packageRoot, taskId, project) {
 
 export async function preflight(packageRoot, options) {
   const { plan, state } = await loadControl(packageRoot);
+  await verifyAttemptErrorReceipts(plan, state, { deep: true });
   if (!options.desktopVersion || !options.scoreSkillDir) throw new Error("desktopVersion 和 scoreSkillDir 均不能为空");
-  const task = nextTask(state);
+  const task = options.taskId
+    ? requireTask(state, options.taskId)
+    : state.tasks.find((entry) => entry.phase === "PROJECT_REGISTERED" && entry.preflight?.status !== "PASSED")
+      || state.tasks.find((entry) => entry.phase === "PROJECT_REGISTERED");
   if (!task) throw new Error("没有待评分任务");
-  if (!task.project_id || !task.project_host_id) throw new Error(`下一题尚未注册 Desktop 项目：${task.task_id}`);
+  if (task.phase !== "PROJECT_REGISTERED") throw new Error(`当前题状态不能执行 preflight：${task.task_id}: ${task.phase}`);
+  if (!task.project_id || !task.project_host_id) throw new Error(`当前题尚未注册 Desktop 项目：${task.task_id}`);
   if (task.project_desktop_version !== options.desktopVersion) {
     throw new Error(`Codex Desktop 版本与项目注册时不一致：${options.desktopVersion} vs ${task.project_desktop_version}`);
   }
@@ -727,6 +1127,7 @@ export async function preflight(packageRoot, options) {
     throw new Error("当前项目使用 renderer-bridge 注册，必须显式传入 --allow-renderer-bridge");
   }
   await verifyTaskCandidateOrFail(plan, state, task, "preflight");
+  await verifyScoringInputs(task);
 
   const registry = await loadJson(plan.registryFile);
   if (registry.desktop_version !== options.desktopVersion) throw new Error("Codex Desktop 版本与 project-registry 不一致");
@@ -768,7 +1169,7 @@ export async function preflight(packageRoot, options) {
   if (contractProfile !== task.metric_profile) throw new Error(`task contract metric_profile 已变化：${task.task_id}`);
 
   const now = new Date().toISOString();
-  state.preflight = {
+  task.preflight = {
     status: "PASSED",
     checked_at: now,
     task_id: task.task_id,
@@ -782,6 +1183,7 @@ export async function preflight(packageRoot, options) {
     metric_profile: task.metric_profile,
     task_contract_sha256: sha256(contractRaw),
   };
+  state.preflight = task.preflight;
   const scoreSkillBinding = {
     path: skillRoot,
     version: metadata.version,
@@ -814,14 +1216,29 @@ export async function recordThread(packageRoot, taskId, thread, options = {}) {
   if (!task.project_id) throw new Error("必须先记录 projectId");
   if (!thread.threadId || !thread.hostId) throw new Error("threadId 和 hostId 均不能为空");
   if (task.phase === "COMPLETED" && task.thread_id === thread.threadId && task.thread_host_id === thread.hostId) return publicStatus(state);
-  const active = state.tasks.find((entry) => entry.phase === "SCORING" && entry.task_id !== taskId);
-  if (active) throw new Error(`score_slots=1，已有评分任务运行中：${active.task_id}`);
-  const expected = nextTask(state);
-  if (expected?.task_id !== taskId) throw new Error(`只能为下一题创建会话：${expected?.task_id || "无"}`);
-  if (state.preflight?.status !== "PASSED" || state.preflight.task_id !== taskId) {
+  if (task.phase === "SCORING" && task.thread_id === thread.threadId && task.thread_host_id === thread.hostId) return publicStatus(state);
+  if (task.phase !== "PROJECT_REGISTERED") throw new Error(`当前任务状态不能创建评分会话：${task.phase}`);
+  const attention = state.tasks.find((entry) => new Set(["FAILED", "TIMED_OUT"]).has(entry.phase));
+  if (attention) throw new Error(`存在待处理失败任务，暂不补充评分槽位：${attention.task_id}`);
+  const active = activeScoringTasks(state);
+  if (active.length >= state.score_slots) {
+    throw new Error(`score_slots=${state.score_slots}，已有 ${active.length} 个评分任务占用槽位`);
+  }
+  if (task.preflight?.status !== "PASSED" || task.preflight.task_id !== taskId) {
     throw new Error(`必须先通过当前题评分 preflight：${taskId}`);
   }
+  const reusedBy = state.tasks.find((entry) => entry.task_id !== taskId && (
+    entry.thread_id === thread.threadId
+    || entry.attempts?.some((attempt) => attempt.thread_id === thread.threadId)
+  ));
+  if (reusedBy) throw new Error(`threadId 已被其他任务使用：${reusedBy.task_id}`);
+  if (task.attempts?.some((attempt) => attempt.thread_id === thread.threadId)) {
+    throw new Error(`threadId 已被当前任务的历史 attempt 使用：${taskId}`);
+  }
+  const portOwner = active.find((entry) => entry.scoring_port === task.scoring_port);
+  if (portOwner) throw new Error(`评分端口 ${task.scoring_port} 已被活动任务占用：${portOwner.task_id}`);
   await verifyTaskCandidateOrFail(plan, state, task, "record-thread");
+  await verifyScoringInputs(task);
   if (task.thread_id && (task.thread_id !== thread.threadId || task.thread_host_id !== thread.hostId)) throw new Error("任务已绑定不同会话");
   const existingAttempt = task.thread_id ? currentAttempt(task) : null;
   if (existingAttempt?.thread_id && (
@@ -943,7 +1360,190 @@ export async function markTimeout(packageRoot, taskId, options = {}) {
   return publicStatus(state);
 }
 
-export async function prepareRetry(packageRoot, taskId, retryReason) {
+function attemptArchivePaths(plan, task, attempt) {
+  const taskRoot = join(plan.controlRoot, "attempts", archiveTaskKey(task.task_id));
+  const attemptName = `attempt-${String(attempt.attempt_number).padStart(4, "0")}`;
+  const archiveRoot = join(taskRoot, attemptName);
+  return {
+    archiveRoot,
+    artifactsRoot: join(archiveRoot, "private-scoring"),
+    receiptFile: join(archiveRoot, "attempt-error-receipt.json"),
+    journalFile: join(plan.controlRoot, "pending-attempt-archives", `${archiveTaskKey(task.task_id)}-${attemptName}.json`),
+    restoreRoot: join(task.score_dir, `.private-scoring-restore-${attemptName}`),
+  };
+}
+
+function relativePackagePath(plan, filename) {
+  if (!inside(plan.root, filename)) throw new Error(`归档路径越界：${filename}`);
+  return relative(plan.root, filename).split("\\").join("/");
+}
+
+async function validatedExistingAttemptReceipt(plan, task, attempt, retryReason, paths) {
+  const raw = await readFile(paths.receiptFile).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+  if (!raw) return null;
+  const receipt = JSON.parse(raw.toString("utf8"));
+  if (receipt?.schema_version !== ATTEMPT_ERROR_RECEIPT_SCHEMA
+    || receipt.identity?.batch_id !== plan.manifest.batch_id
+    || receipt.identity?.harness_id !== plan.manifest.harness.id
+    || receipt.identity?.task_id !== task.task_id
+    || receipt.attempt?.attempt_number !== attempt.attempt_number
+    || receipt.attempt?.thread_id !== attempt.thread_id
+    || receipt.retry?.reason !== retryReason) {
+    throw new Error(`已有评分 attempt 错误回执身份不一致：${task.task_id}`);
+  }
+  const archived = await snapshotDirectoryTree(paths.artifactsRoot);
+  assertSameTree(receipt.archive, archived, `评分 attempt 归档 ${task.task_id}`);
+  await verifyScoringInputs(task);
+  return {
+    schema_version: ATTEMPT_ERROR_RECEIPT_SCHEMA,
+    path: relativePackagePath(plan, paths.receiptFile),
+    sha256: sha256(raw),
+    archive_root: relativePackagePath(plan, paths.archiveRoot),
+    archive_sha256: archived.sha256,
+    archived_at: receipt.archived_at,
+  };
+}
+
+async function archiveFailedAttempt(plan, state, task, attempt, retryReason, candidateBefore, options = {}) {
+  const paths = attemptArchivePaths(plan, task, attempt);
+  const privateRoot = join(task.score_dir, "private-scoring");
+  const existing = await validatedExistingAttemptReceipt(plan, task, attempt, retryReason, paths);
+  if (existing) return existing;
+
+  const existingArtifacts = await lstat(paths.artifactsRoot).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+  await assertAttemptRuntimeQuiescent(task, existingArtifacts ? paths.artifactsRoot : privateRoot);
+
+  let journal = await loadJsonIfExists(paths.journalFile);
+  if (journal) {
+    if (journal.schema_version !== ATTEMPT_ERROR_RECEIPT_SCHEMA
+      || journal.identity?.batch_id !== plan.manifest.batch_id
+      || journal.identity?.task_id !== task.task_id
+      || journal.attempt_number !== attempt.attempt_number
+      || journal.retry_reason !== retryReason
+      || JSON.stringify(journal.scoring_inputs) !== JSON.stringify(task.scoring_inputs)) {
+      throw new Error(`待恢复评分 attempt 归档 journal 身份不一致：${task.task_id}`);
+    }
+  } else {
+    journal = {
+      schema_version: ATTEMPT_ERROR_RECEIPT_SCHEMA,
+      identity: {
+        batch_id: plan.manifest.batch_id,
+        harness_id: plan.manifest.harness.id,
+        task_id: task.task_id,
+      },
+      attempt_number: attempt.attempt_number,
+      retry_reason: retryReason,
+      scoring_inputs: task.scoring_inputs,
+      failure: {
+        task_phase: task.phase,
+        task_error: task.error,
+        terminal_status: attempt.terminal_status,
+        deadline_at: attempt.deadline_at,
+        deadline_exceeded_at: attempt.deadline_exceeded_at,
+        finished_at: attempt.finished_at,
+      },
+      candidate_before: candidateBefore,
+      created_at: new Date().toISOString(),
+    };
+    await atomicWriteJson(paths.journalFile, journal);
+  }
+
+  await mkdir(dirname(paths.archiveRoot), { recursive: true });
+  await mkdir(paths.archiveRoot, { recursive: false }).catch((error) => {
+    if (error?.code !== "EEXIST") throw error;
+  });
+  const artifactsInfo = await lstat(paths.artifactsRoot).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+  if (!artifactsInfo) {
+    const privateInfo = await lstat(privateRoot).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+    if (!privateInfo?.isDirectory() || privateInfo.isSymbolicLink()) throw new Error(`待归档 private-scoring 不存在或无效：${task.task_id}`);
+    await rename(privateRoot, paths.artifactsRoot);
+    if (options.failAfterArchiveMove) throw new Error("故障注入：评分 attempt 已迁入归档但尚未恢复初始输入");
+  } else if (!artifactsInfo.isDirectory() || artifactsInfo.isSymbolicLink()) {
+    throw new Error(`评分 attempt 归档目录无效：${task.task_id}`);
+  }
+
+  const privateInfo = await lstat(privateRoot).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+  if (!privateInfo) {
+    const restoreInfo = await lstat(paths.restoreRoot).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+    if (!restoreInfo) {
+      await mkdir(paths.restoreRoot, { recursive: false, mode: 0o700 });
+      for (const rootName of task.scoring_inputs.roots) {
+        await copyTreeEntry(join(paths.artifactsRoot, rootName), join(paths.restoreRoot, rootName));
+      }
+    } else if (!restoreInfo.isDirectory() || restoreInfo.isSymbolicLink()) {
+      throw new Error(`评分初始输入恢复目录无效：${task.task_id}`);
+    }
+    const restored = await snapshotDirectoryTree(paths.restoreRoot, task.scoring_inputs.roots);
+    assertSameTree(task.scoring_inputs, restored, `待恢复评分初始输入 ${task.task_id}`);
+    await rename(paths.restoreRoot, privateRoot);
+  } else {
+    if (!privateInfo.isDirectory() || privateInfo.isSymbolicLink()) throw new Error(`评分 private-scoring 恢复结果无效：${task.task_id}`);
+    const restoreInfo = await lstat(paths.restoreRoot).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+    if (restoreInfo) throw new Error(`评分初始输入恢复目录残留：${paths.restoreRoot}`);
+  }
+  await verifyScoringInputs(task);
+  const candidateAfter = await verifyTaskCandidateOrFail(plan, state, task, "prepare-retry:restored");
+  const archived = await snapshotDirectoryTree(paths.artifactsRoot);
+  const archivedInputs = await snapshotDirectoryTree(paths.artifactsRoot, task.scoring_inputs.roots);
+  assertSameTree(task.scoring_inputs, archivedInputs, `已归档评分初始输入 ${task.task_id}`);
+  const archivedAt = new Date().toISOString();
+  const receipt = {
+    schema_version: ATTEMPT_ERROR_RECEIPT_SCHEMA,
+    archived_at: archivedAt,
+    identity: {
+      batch_id: plan.manifest.batch_id,
+      harness_id: plan.manifest.harness.id,
+      task_id: task.task_id,
+      model: task.model,
+    },
+    attempt: {
+      attempt_number: attempt.attempt_number,
+      thread_id: attempt.thread_id,
+      host_id: attempt.host_id,
+      created_at: attempt.created_at,
+      finished_at: attempt.finished_at,
+      terminal_status: attempt.terminal_status,
+      deadline_at: attempt.deadline_at,
+      deadline_exceeded_at: attempt.deadline_exceeded_at,
+      wait_cursor: attempt.wait_cursor,
+      wait_count: attempt.wait_count,
+      last_wait_sequence: attempt.last_wait_sequence,
+      last_wait_status: attempt.last_wait_status,
+      last_wait_error: attempt.last_wait_error,
+    },
+    failure: journal.failure,
+    retry: {
+      reason: retryReason,
+      next_attempt_number: attempt.attempt_number + 1,
+    },
+    scoring_inputs: task.scoring_inputs,
+    candidate_integrity: {
+      before_archive: journal.candidate_before,
+      after_restore: candidateAfter,
+    },
+    archive: {
+      schema_version: DIRECTORY_TREE_SNAPSHOT_SCHEMA,
+      ...comparableTreeSnapshot(archived),
+      path: relativePackagePath(plan, paths.artifactsRoot),
+      entries: archived.entries,
+    },
+  };
+  await atomicWriteJson(paths.receiptFile, receipt);
+  const receiptRaw = await readFile(paths.receiptFile);
+  await unlink(paths.journalFile).catch((error) => {
+    if (error?.code !== "ENOENT") throw error;
+  });
+  return {
+    schema_version: ATTEMPT_ERROR_RECEIPT_SCHEMA,
+    path: relativePackagePath(plan, paths.receiptFile),
+    sha256: sha256(receiptRaw),
+    archive_root: relativePackagePath(plan, paths.archiveRoot),
+    archive_sha256: archived.sha256,
+    archived_at: archivedAt,
+  };
+}
+
+export async function prepareRetry(packageRoot, taskId, retryReason, options = {}) {
   if (!retryReason) throw new Error("retryReason 不能为空");
   const { plan, state } = await loadControl(packageRoot);
   const task = requireTask(state, taskId);
@@ -951,23 +1551,23 @@ export async function prepareRetry(packageRoot, taskId, retryReason) {
   if (!new Set(["FAILED", "TIMED_OUT"]).has(task.phase)) throw new Error(`当前任务状态不能重试：${task.phase}`);
   if (!attempt?.terminal_status) throw new Error("原评分任务终态尚未确认，禁止创建重试任务");
   if (task.retry_count >= task.max_retries) throw new Error(`评分任务已达到最大重试次数：${task.max_retries}`);
-  if (await stat(task.score_file).catch(() => null)) throw new Error("已有 task_score.json，必须先审计而不能直接重试");
   const privateRoot = join(task.score_dir, "private-scoring");
-  const unsafeRetryArtifacts = [
-    "score_input.json",
-    "runtime-workspace",
-    "runtime-state.json",
-    "screenshot-receiver-state.json",
-    "runtime-port-override.json",
-    "evidence",
-  ];
-  for (const name of unsafeRetryArtifacts) {
-    if (await stat(join(privateRoot, name)).catch(() => null)) {
-      throw new Error(`评分 attempt 已产生 ${name}，必须隔离归档后才能重试`);
-    }
+  const archivePaths = attemptArchivePaths(plan, task, attempt);
+  const recoveryInProgress = Boolean(
+    await lstat(archivePaths.journalFile).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error))
+    || await lstat(archivePaths.receiptFile).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error)),
+  );
+  let candidateBefore = null;
+  if (!recoveryInProgress) {
+    await verifyScoringInputs(task, { allowAttemptOutputs: true });
+    candidateBefore = await verifyTaskCandidateOrFail(plan, state, task, "prepare-retry:before-archive");
+  } else if (!task.scoring_inputs) {
+    throw new Error(`评分 attempt 归档恢复缺少 scoring_inputs：${task.task_id}`);
   }
-  await verifyTaskCandidateOrFail(plan, state, task, "prepare-retry");
+  const errorReceipt = await archiveFailedAttempt(plan, state, task, attempt, retryReason, candidateBefore, options);
+  await verifyTaskCandidateOrFail(plan, state, task, "prepare-retry:ready");
   const now = new Date().toISOString();
+  attempt.error_receipt = errorReceipt;
   task.retry_count += 1;
   task.thread_id = null;
   task.thread_host_id = null;
@@ -975,7 +1575,8 @@ export async function prepareRetry(packageRoot, taskId, retryReason) {
   task.error = null;
   task.timing.thread_created_at = null;
   task.timing.finished_at = null;
-  state.preflight = { status: "PENDING", checked_at: null, task_id: taskId };
+  task.preflight = { status: "PENDING", checked_at: null, task_id: taskId };
+  state.preflight = task.preflight;
   state.history.push({
     event: "SCORING_RETRY_PREPARED",
     at: now,
@@ -983,6 +1584,7 @@ export async function prepareRetry(packageRoot, taskId, retryReason) {
     completed_attempt_number: attempt.attempt_number,
     next_attempt_number: task.retry_count + 1,
     reason: retryReason,
+    error_receipt: errorReceipt,
   });
   await saveControl(plan, state);
   return publicStatus(state);
@@ -1033,6 +1635,11 @@ export async function markComplete(packageRoot, taskId) {
   }
   await verifyTaskCandidateOrFail(plan, state, task, "mark-complete");
   await validateTaskScore(plan, task);
+  const privateRoot = join(task.score_dir, "private-scoring");
+  await assertAttemptRuntimeQuiescent(task, privateRoot);
+  const runtimeWorkspace = await lstat(join(privateRoot, "runtime-workspace"))
+    .catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+  if (runtimeWorkspace) throw new Error(`评分运行时副本尚未清理，禁止释放槽位：${task.task_id}`);
   if (task.phase === "COMPLETED") {
     if (state.tasks.every((entry) => entry.phase === "COMPLETED") && state.submission.status !== "COMPLETED") {
       return buildSubmissionFromState(plan, state);
@@ -1049,7 +1656,6 @@ export async function markComplete(packageRoot, taskId) {
     attempt.score_validated_at = now;
   }
   state.history.push({ event: "TASK_SCORE_VALIDATED", at: now, task_id: taskId, thread_id: task.thread_id });
-  state.preflight = { status: "PENDING", checked_at: null, task_id: nextTask(state)?.task_id || null };
   await saveControl(plan, state);
   if (state.tasks.every((entry) => entry.phase === "COMPLETED")) return buildSubmissionFromState(plan, state);
   return publicStatus(state);
@@ -1122,6 +1728,7 @@ async function loadSubmissionBuilder(state, scoreSkillDir) {
 
 async function buildSubmissionFromState(plan, state, options = {}) {
   if (!state.tasks.every((task) => task.phase === "COMPLETED")) throw new Error("仍有题目未完成，不能生成 submission");
+  await verifyAttemptErrorReceipts(plan, state, { deep: true });
   const outputFile = join(plan.root, "submission.json");
   const pendingFile = join(plan.controlRoot, "pending-submission.json");
   try {
@@ -1225,7 +1832,13 @@ export async function status(packageRoot) {
 
 export async function resume(packageRoot) {
   const { plan, state } = await loadControl(packageRoot);
-  state.history.push({ event: "CONTROL_RESUMED", at: new Date().toISOString(), action: recommendedAction(state).type });
+  const actions = recommendedActions(state);
+  state.history.push({
+    event: "CONTROL_RESUMED",
+    at: new Date().toISOString(),
+    action: actions[0].type,
+    actions: actions.map((action) => ({ type: action.type, task_id: action.task_id || null })),
+  });
   await saveControl(plan, state);
   return publicStatus(state);
 }
@@ -1239,17 +1852,23 @@ async function main() {
     }
     let result;
     if (args.command === "init") result = publicStatus((await initialize(args.packageRoot, args.taskIds, {
+      scoreSlots: args.scoreSlots,
+      scorePortBase: args.scorePortBase,
       scoreTimeoutSeconds: args.scoreTimeoutSeconds,
       maxRetries: args.maxRetries,
     })).state);
     else if (args.command === "status") result = await status(args.packageRoot);
     else if (args.command === "resume") result = await resume(args.packageRoot);
     else if (args.command === "build-submission") result = await buildSubmissionControl(args.packageRoot, { scoreSkillDir: args.scoreSkillDir });
-    else if (args.command === "preflight") result = await preflight(args.packageRoot, {
-      desktopVersion: args.desktopVersion,
-      scoreSkillDir: args.scoreSkillDir,
-      allowRendererBridge: args.allowRendererBridge,
-    });
+    else if (args.command === "preflight") {
+      if (args.taskIds.length > 1) throw new Error("preflight 最多提供一个 --task-id");
+      result = await preflight(args.packageRoot, {
+        taskId: args.taskIds[0],
+        desktopVersion: args.desktopVersion,
+        scoreSkillDir: args.scoreSkillDir,
+        allowRendererBridge: args.allowRendererBridge,
+      });
+    }
     else {
       if (args.taskIds.length !== 1) throw new Error(`${args.command} 必须且只能提供一个 --task-id`);
       const taskId = args.taskIds[0];
