@@ -26,6 +26,26 @@ description: 按用户明确要求动态组合 Web E2E 的准备、桌面 Harnes
 
 未选择的阶段始终是 `NOT_SELECTED`。前置产物缺失时报告阻塞，不能为了“跑通”而隐式增加阶段。
 
+### 执行人双 ZIP 入口
+
+用户明确选择“执行、评分、打包回传”，并同时提供 `__execution.zip` 与 `__scoring.zip` 时，允许只给两个绝对路径。控制 Harness 必须自行完成其余机械步骤：
+
+1. 校验两个 ZIP 的批次、Harness、Profile 和完整 task IDs 一致；不能按文件名猜测身份。
+2. 从 execution ZIP 解压出独立 worker 根。默认在 execution ZIP 同级创建其顶层目录；目标已存在时只允许按已有磁盘状态恢复，不能覆盖或混入管理员 staging 根。
+3. 定位已安装的 `execute-web-e2e`、`orchestrate-web-e2e` 和 `score-web-e2e`。缺失时停止并说明需要安装哪个 Skill。
+4. 检查 WorkBuddy 与 Codex Desktop Driver 的锁定依赖。`node_modules/playwright-core` 缺失或 `npm ls --depth=0` 失败时，由控制 Harness 在对应 Driver 目录自动执行 `npm ci`；用户无需手工安装。安装失败进入 `NEEDS_ATTENTION`，不能把依赖装入候选 workspace。
+5. WorkBuddy 未显式指定模型时保持并回读当前模型，不操作推理强度；权限按生产契约使用 `full-access`。执行和评分新批次均默认三槽。Codex Desktop CDP 未显式提供时使用 `http://127.0.0.1:9230`。
+6. execution 回执有效后才合入 scoring ZIP 并开始评分；submission 有效后在 worker 根同级的 `offline-return/` 生成完整 return ZIP 和外部回执。
+
+因此，在客户端和 Skill 已准备好的前提下，下面的用户输入足以触发 worker 全流程：
+
+```text
+请使用 $run-web-e2e 完成下面 Web E2E 评测用例的执行、评分、打包回传。
+
+题目：/absolute/<batch_id>__<harness>__execution.zip
+评分标准：/absolute/<batch_id>__<harness>__scoring.zip
+```
+
 ## 2. 初始化和恢复状态
 
 批次状态位于 `<batch-root>/.run-web-e2e/batch-state.json`，只允许 `prepare,collect,report`。Harness 单元状态位于 `<harness-root>/.run-web-e2e/unit-state.json`，只允许 `execute,score,package`。
@@ -63,6 +83,8 @@ python3 <skill-dir>/scripts/run_web_e2e.py set-stage \
 ### 准备
 
 严格按 `prepare-web-e2e-workspaces` 创建带时间戳的新批次。准备结果应包含五个独立 Skill ZIP 和 `packages/skills-manifest.json`。Skill ZIP 是按需离线安装材料，不表示各阶段绑定执行。
+
+若完整仓库刚克隆且 Python 环境尚未准备，控制 Harness 只在仓库自身的 `.venv` 中补齐准备阶段实际缺少的 Python 依赖；不得修改系统 Python，也不得在候选 workspace 中安装依赖。仓库内的 `.agents/skills` 必须能发现 `run-web-e2e`、`prepare-web-e2e-workspaces`、`execute-web-e2e`、`orchestrate-web-e2e`、`score-web-e2e` 和 `report-web-e2e`，缺失时先停止并报告，不通过复制半套脚本继续。
 
 单机全流程也必须从生成的 `__execution.zip` 解压出独立 Harness 单元根，再在该根执行和合入 `__scoring.zip`。不要直接把管理员批次中的 `harnesses/<harness>/` staging 目录当作 worker execution 包；staging 可能预置非空评分模板，标准评分交接会正确拒绝覆盖。该规则只改变本机文件搬运位置，不改变 execution receipt、候选哈希或离线回传契约。
 

@@ -9,12 +9,14 @@ description: 在桌面 Harness 中执行单个或批量 Web E2E 用例，持久�
 
 ## WorkBuddy 单题
 
-先在 Driver 目录安装锁定依赖，依赖不能安装到候选工作空间：
+依赖准备由调用本 Skill 的控制 Harness 完成，不要求用户手工进入 Driver 目录。控制 Harness 先检查 `node_modules/playwright-core` 和锁文件状态；缺失或 `npm ls --depth=0` 失败时，在 Driver 目录自动执行锁定安装。依赖只能安装在 Skill 的 Driver 目录，不能安装到候选工作空间：
 
 ```bash
 cd .agents/skills/execute-web-e2e/drivers/workbuddy
 npm ci
 ```
+
+`npm ci` 失败时保留原始错误并停止执行，不能改用未锁定版本或把依赖装进题目目录。
 
 只读预检：
 

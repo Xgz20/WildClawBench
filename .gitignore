@@ -67,6 +67,8 @@ output_qwen.rar
 !.agents/skills/score-web-e2e
 !.agents/skills/report-web-e2e
 !.agents/skills/execute-web-e2e
+!.agents/skills/orchestrate-web-e2e
+!.agents/skills/run-web-e2e
 
 # 评测集校验 Skill 及报告工具的运行产物
 report-workspace/

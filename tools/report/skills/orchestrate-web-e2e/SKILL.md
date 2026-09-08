@@ -39,7 +39,7 @@ node <skill-dir>/scripts/scoring-control.mjs init \
 
 Playwright 只操作 Codex Desktop 的“打开文件夹/添加项目”界面，不输入评分 Prompt，不评判页面，也不使用 Computer Use 操作 Codex 自己。
 
-Codex Desktop 必须在控制任务启动前由用户以仅监听本机的 CDP 端口启动。控制任务不得退出或重启承载自己的 Codex Desktop 进程。先安装锁定依赖并只读探测：
+Codex Desktop 必须在控制任务启动前由用户以仅监听本机的 CDP 端口启动。控制任务不得退出或重启承载自己的 Codex Desktop 进程。Driver 依赖由调用本 Skill 的控制 Harness 检查；缺失或 `npm ls --depth=0` 失败时，控制 Harness 在 Driver 目录自动执行 `npm ci`，不要求用户手工安装。安装失败时停止并报告原始错误，不能改用未锁定版本或把依赖装进候选目录。随后执行只读探测：
 
 ```bash
 cd <skill-dir>/drivers/codex-desktop
