@@ -5,7 +5,7 @@ description: 在桌面 Harness 中执行单个或批量 Web E2E 用例，持久�
 
 # 执行 Web E2E 用例
 
-本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 WorkBuddy 单题 Driver 和串行队列 Worker；其他 Harness Driver 仍按 Roadmap 逐步接入。
+本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 WorkBuddy 单题 Driver 和后台并发队列 Worker；其他 Harness Driver 仍按 Roadmap 逐步接入。
 
 ## WorkBuddy 单题
 
@@ -49,7 +49,7 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy.sh \
 
 运行中 Worker 收到 `SIGINT`/`SIGTERM` 时会记录 Worker 和 Driver PID、终止观察 Driver、释放 UI 锁，但不会停止 WorkBuddy 内的任务；使用同一参数加 `--resume` 后按已捕获的 `data-conversation-id` 恢复原会话。Worker 被 `SIGKILL` 时由 stale-lock 和遗留 Driver 检查恢复；旧 Driver 仍存活时拒绝启动第二个 Driver。
 
-## WorkBuddy 串行队列
+## WorkBuddy 后台并发队列
 
 用同一 `run-id` 按声明顺序执行多个任务：
 
@@ -59,20 +59,23 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy-batch.sh \
   --run-id <queue_id> \
   --task-id <task_id_1> \
   --task-id <task_id_2> \
+  --run-slots 3 \
   --permission-mode full-access
 ```
+
+新队列默认 `run_slots=3`，最大 8；显式 `--run-slots 1` 可回退为串行。已有队列冻结首次记录的并发值，恢复时省略该参数会沿用冻结值，显式提供不同值则失败关闭。没有 `run_slots` 字段的旧队列迁移为 1，不自动升级为 3。
 
 `--model` 是可选覆盖项，接收 WorkBuddy 模型下拉框中的精确显示名，例如 `--model xopglm52`。显式传入时，Driver 选择并回读该模型；省略时，Driver 只回读当前模型，不展开下拉框，也不再自动选择“均衡”。两种模式都不操作推理强度。一个队列运行期间不得人工改变模型；所有题的实际回读模型必须一致。同一个 `run-id` 恢复时模型模式和显式请求值不可变；可选 `execution_record.json` 已预声明模型时，实际回读值也必须与其一致。
 
 `--permission-mode full-access` 是评测运行的显式授权：Driver 会在发送 Prompt 前回读权限状态，已开启时不重复点击；未开启时通过 WorkBuddy 自身的风险确认界面开启。WorkBuddy 5.5.3 将该设置作用于当前客户端的全部任务，而不是单个项目。省略该参数时默认 `current`，只记录当前权限，不修改客户端设置。
 
-Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作空间，使用文件锁保证同一 execution 包只有一个 WorkBuddy UI 队列，并把状态写到 `execution/.execute-web-e2e/queues/<queue_id>/queue_state.json`。当前题只有在明确终态、自动化状态和 `execution_record.json` 一致后才会记录 `AUTO_ADVANCE` 并启动下一题。
+Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作空间，使用文件锁保证同一 execution 包只有一个 WorkBuddy UI 队列，并把状态写到 `execution/.execute-web-e2e/queues/<queue_id>/queue_state.json`。`ui_slots` 始终为 1：新建项目、设置权限/模型、发送 Prompt、切换会话和处理授权都由同一个 Driver 串行完成。Prompt 发送并捕获稳定 conversation ID 后，Driver 退出观察，让 WorkBuddy 最多保留 `run_slots` 个后台 Agent 任务；Worker 轮流按原 conversation ID 做一次性观察。任一题明确终态并通过自动化状态与 `execution_record.json` 一致性校验后释放槽位，立即补入下一题。
 
 模型下拉框完成唯一回读后，Driver 必须在发送 Prompt 前把实际模型写入 `execution_record.json.model`。显式模式记录 `mode=explicit` 及请求/实际模型；保持当前配置时记录 `mode=current`、`requested_model=null` 和实际模型。若执行记录预先声明了不同模型则失败关闭。最终回执的顶层 `model`、逐题 `model_selection` 和 execution record 必须一致，不能等到报告阶段再补模型身份。
 
-队列停在 `NEEDS_ATTENTION` 后，先处理或扩充经过审查的安全规则，再使用完全相同的参数加 `--resume`。默认遇到 `INFRA_FAILED` 或 `TIMEOUT` 即停止；只有明确需要验证失败隔离时才使用 `--continue-on-terminal-failure`。
+队列出现 `NEEDS_ATTENTION` 后停止补入新题，但继续收口已经投递的其他活动题；活动题全部结束后再返回阻塞状态。先处理或扩充经过审查的安全规则，再使用完全相同的参数加 `--resume`。默认遇到 `INFRA_FAILED` 或 `TIMEOUT` 也停止补题；只有明确需要验证失败隔离时才使用 `--continue-on-terminal-failure`。
 
-客户端崩溃后恢复时使用 `--resume --restart-app-on-resume`。只有发送后已经捕获稳定 conversation ID 时才允许重启并从侧栏恢复原会话；缺少 ID 或无法唯一定位时停在 `NEEDS_ATTENTION`，不创建新任务。
+客户端崩溃后恢复时使用 `--resume --restart-app-on-resume`。一次恢复只重启 WorkBuddy 一次，随后串行定位所有活动 conversation。只有发送后已经捕获稳定 conversation ID 时才允许重启并从侧栏恢复原会话；缺少 ID 或无法唯一定位时停在 `NEEDS_ATTENTION`，不创建新任务。
 
 人工处理 `NEEDS_ATTENTION` 后可在恢复参数中增加 `--mark-manual <task_id>`。该参数只在队列和 Harness 回执中记录人工介入原因，随后仍由 Driver 检查原会话终态；它不能把未知状态直接改成成功，也不能绕过 Prompt 幂等和终态证据门禁。
 
@@ -97,6 +100,6 @@ Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作�
 - 生产跑批前由测试人员按指导手册设置 Harness 的默认模型和推理强度。执行自动化只在显式提供 `--model` 时切换模型；推理强度始终沿用 Harness 当前配置，不由 Playwright 选择或校验。
 - 只允许 Driver 对显式白名单且严格限定在候选 `workspace/` 内的普通操作自动选择一次性“允许”；当前唯一规则是清理该目录下的 `.DS_Store`。其他命令（包括同类命令的路径或参数变化）一律停在 `NEEDS_ATTENTION`。
 - `SUCCEEDED`、`INFRA_FAILED`、已确认停止的 `TIMEOUT` 分别映射为 `execution_record.json` 的 `completed`、`execution_error`、`timeout`；没有生成有效站点仍是正常完成，由评分阶段判低分。
-- 第一版每台机器保持 `ui_slots: 1`、`run_slots: 1`，不要并发操作 WorkBuddy。
+- WorkBuddy 始终保持 `ui_slots: 1`；新队列默认 `run_slots: 3`、最大 8。这里的并发只指已投递 Agent 在客户端后台并行运行，禁止同时启动多个 Playwright Driver 抢占窗口。首次换机、升级 WorkBuddy/Skill 或切换模型后先用 3 个 L1 冒烟；未通过真实隔离验证的节点显式使用 `--run-slots 1`。
 
 实现或审查其他 Driver 时，完整读取 [Driver 契约](references/driver-contract.md)。

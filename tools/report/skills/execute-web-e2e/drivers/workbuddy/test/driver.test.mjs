@@ -23,6 +23,7 @@ import {
 } from "../lib.mjs";
 import {
   ensureModel,
+  hasStableConversationId,
   hasTrustedDomCompletion,
   prepareClientForNewAttempt,
   restartWorkBuddy,
@@ -192,6 +193,25 @@ test("parseArgs supplies safe single-run defaults", () => {
   assert.equal(parsed.pollIntervalSeconds, 2);
   assert.equal(parsed.postCancelQuiescenceSeconds, 5);
   assert.equal(parsed.resume, false);
+  assert.equal(parsed.detachAfterSubmit, false);
+  assert.equal(parsed.observeOnce, false);
+  assert.equal(parsed.quiet, false);
+});
+
+test("parseArgs validates detached dispatch and one-shot observation modes", () => {
+  assert.equal(parseArgs(["--workspace", "/tmp/task", "--detach-after-submit"]).detachAfterSubmit, true);
+  assert.equal(parseArgs(["--workspace", "/tmp/task", "--quiet"]).quiet, true);
+  assert.equal(parseArgs(["--workspace", "/tmp/task", "--resume", "--observe-once"]).observeOnce, true);
+  assert.throws(() => parseArgs(["--workspace", "/tmp/task", "--observe-once"]), /必须与 --resume/);
+  assert.throws(() => parseArgs([
+    "--workspace", "/tmp/task", "--resume", "--observe-once", "--detach-after-submit",
+  ]), /不能同时使用/);
+});
+
+test("detached dispatch requires a stable WorkBuddy conversation id", () => {
+  assert.equal(hasStableConversationId({ session: {} }), false);
+  assert.equal(hasStableConversationId({ session: { dom_conversation_id: "dom-1" } }), true);
+  assert.equal(hasStableConversationId({ session: { conversation_id: "db-1" } }), true);
 });
 
 test("parseArgs accepts a dynamic WorkBuddy model", () => {
@@ -377,7 +397,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.6.1");
+  assert.equal(state.driver.version, "1.7.0");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

@@ -4,13 +4,13 @@
 
 当前已经实现的自动化范围是：
 
-- 被评 Harness：WorkBuddy，采用 Electron CDP/Playwright 串行执行；
+- 被评 Harness：WorkBuddy，采用 Electron CDP/Playwright 串行操作 UI、后台并发执行；
 - 评分 Harness：Codex Desktop，每题建立独立项目和独立任务，使用桌面内置 Browser；
-- 执行并发：每台机器 `ui_slots=1`、`run_slots=1`；
+- 执行并发：新队列默认 `ui_slots=1`、`run_slots=3`，可显式设为 1，最多 8；
 - 评分并发：新批次默认 `score_slots=3`，可显式设置为 1 串行，最多 8；
 - AstronStudio、QwenWork、DoubaoWork 尚未完成专用 Driver，不能把 WorkBuddy 的验证结论直接套用到这些客户端。
 
-基础串行链路已在批次 `web-e2e-20260907-124800` 完成 5 个 L1 真实用例的 WorkBuddy 执行、Codex Desktop 评分和 submission 闭环。WorkBuddy 5.5.3/Driver 1.6.1 在未指定模型时连续五题读回 `current/xopglm52`，四次自动切题后队列进入 `COMPLETED`；Codex Desktop 26.901.51231 为五题分别创建项目、任务和 Browser 证据，评分为 55、65、67、77、91，编排状态最终为 `COMPLETED`。该批次评分使用 `score-web-e2e 4.3.0`。随后批次 `web-e2e-20260907-192642` 用一个 L1 完成 `score-web-e2e 4.4.0` 真实 Desktop 截图接收 smoke，6 张 Browser 截图均由标准一次性接收器保存并通过终态、签名和 SHA-256 门禁，submission 正常生成。同日又使用旧五题批次的只读隔离副本完成 `start-static --root square-circle-intersection` 真实 Desktop smoke，并验证 Desktop 整个进程退出、重新打开后仍能依据磁盘状态跟踪原评分任务和自动生成 submission；这些重复评分只用于运行时验证，不计入正式成绩。评分控制面现已实现并实测默认 3 槽调度：同一 Codex Desktop 的三个独立评分任务同时使用内置 Browser，分别绑定 4173、4174、4175，真实乱序完成并只生成一次 submission；候选、端口、截图和运行时均未交叉。首次换机器、升级 WorkBuddy/Codex Desktop/Skill、切换模型或启用并发后，仍应先做小批次 smoke；需要严格对比串并行评分稳定性时，继续使用同一候选做重复运行抽查。
+基础串行链路已在批次 `web-e2e-20260907-124800` 完成 5 个 L1 真实用例的 WorkBuddy 执行、Codex Desktop 评分和 submission 闭环。WorkBuddy 5.5.3/Driver 1.6.1 在未指定模型时连续五题读回 `current/xopglm52`，四次自动切题后队列进入 `COMPLETED`；Codex Desktop 26.901.51231 为五题分别创建项目、任务和 Browser 证据，评分为 55、65、67、77、91，编排状态最终为 `COMPLETED`。该批次评分使用 `score-web-e2e 4.3.0`。随后批次 `web-e2e-20260907-192642` 用一个 L1 完成 `score-web-e2e 4.4.0` 真实 Desktop 截图接收 smoke，6 张 Browser 截图均由标准一次性接收器保存并通过终态、签名和 SHA-256 门禁，submission 正常生成。同日又使用旧五题批次的只读隔离副本完成 `start-static --root square-circle-intersection` 真实 Desktop smoke，并验证 Desktop 整个进程退出、重新打开后仍能依据磁盘状态跟踪原评分任务和自动生成 submission；这些重复评分只用于运行时验证，不计入正式成绩。评分控制面现已实现并实测默认 3 槽调度：同一 Codex Desktop 的三个独立评分任务同时使用内置 Browser，分别绑定 4173、4174、4175，真实乱序完成并只生成一次 submission；候选、端口、截图和运行时均未交叉。WorkBuddy Driver/Worker 1.7.0 已实现默认 3、最多 8 个后台任务的控制面，自动化回归为 50/50，并使用三个 L1 完成真实 `run_slots=3` smoke：三题在约 21 秒内全部投递，拥有不同 conversation ID 和共同后台运行窗口，最终乱序完成，三题 Prompt 都只发送一次，执行回执有效。首次换机器、升级 WorkBuddy/Codex Desktop/Skill、切换模型或启用并发后，仍应先做小批次 smoke；需要严格对比串并行稳定性时，继续使用同一候选做重复运行抽查。
 
 文中的 `<...>` 都需要替换为实际路径或 ID。示例以 macOS、WorkBuddy 和三个 L1 用例为例；第 7.1 节另列出已经完成的五题真实基线和 4.4.0 单题 smoke。
 
@@ -82,18 +82,19 @@ Harness：workbuddy
 /Users/tester/WebE2E/web-e2e-20260907-120000__workbuddy/
 ```
 
-### 1.3 让 WorkBuddy 自动依次做完三题
+### 1.3 让 WorkBuddy 自动并发做完三题
 
 在执行机器的 Codex 控制任务中复制：
 
 ```text
-请使用 $execute-web-e2e 串行执行下面 WorkBuddy 包中 manifest.json 的全部用例：
+请使用 $execute-web-e2e 执行下面 WorkBuddy 包中 manifest.json 的全部用例：
 
 /Users/tester/WebE2E/web-e2e-20260907-120000__workbuddy
 
 要求：
 - run-id 使用 workbuddy-20260907-120000；
 - 按 manifest 顺序执行全部题目；
+- 后台并发使用默认 3 路；WorkBuddy 前台 UI 仍必须单路操作；
 - 不指定模型，保持并回读 WorkBuddy 当前模型；
 - 不操作推理强度，保持 WorkBuddy 当前设置；
 - 权限模式使用 full-access；
@@ -290,6 +291,7 @@ bash <execute-web-e2e-skill-dir>/scripts/run-workbuddy-batch.sh \
   --task-id 07_Website_Generation_task_ab078_svg_smartphone_speech_bubbles \
   --task-id 07_Website_Generation_task_ab097_svg_download_animation \
   --task-id 07_Website_Generation_task_ab378_square_circle_intersection \
+  --run-slots 3 \
   --permission-mode full-access \
   --restart-app-first
 ```
@@ -300,11 +302,11 @@ bash <execute-web-e2e-skill-dir>/scripts/run-workbuddy-batch.sh \
 --model xopglm52
 ```
 
-模型参数使用客户端下拉框中的精确显示名。同一个 `run-id` 恢复时，任务顺序、模型模式、显式模型值和权限模式都不能改变。
+模型参数使用客户端下拉框中的精确显示名。同一个 `run-id` 恢复时，任务顺序、模型模式、显式模型值、权限模式和并发数都不能改变。新队列省略 `--run-slots` 时默认 3；显式 `--run-slots 1` 可回退串行，最大为 8。没有并发字段的旧队列恢复时仍为 1，不会自动升级。
 
-### 5.3 如何判断一题完成并进入下一题
+### 5.3 如何判断一题完成并补入下一题
 
-Worker 不用固定等待时间猜测完成。它优先读取 WorkBuddy 本地 session 状态，并用 DOM 明确终态和实质最终回复补充判断。只有以下内容一致时才记录 `AUTO_ADVANCE`：
+Worker 不用固定等待时间猜测完成。新题发送 Prompt 并捕获稳定 conversation ID 后退出前台观察，WorkBuddy 在后台继续执行；Worker 使用唯一 UI Driver 轮流打开活动 conversation 做一次性观察。它优先读取 WorkBuddy 本地 session 状态，并用 DOM 明确终态和实质最终回复补充判断。只有以下内容一致时才释放该题槽位并补入下一题：
 
 - WorkBuddy 会话已经明确结束；
 - `automation_state.json` 已进入可信终态；
@@ -325,11 +327,12 @@ bash <execute-web-e2e-skill-dir>/scripts/run-workbuddy-batch.sh \
   --task-id 07_Website_Generation_task_ab078_svg_smartphone_speech_bubbles \
   --task-id 07_Website_Generation_task_ab097_svg_download_animation \
   --task-id 07_Website_Generation_task_ab378_square_circle_intersection \
+  --run-slots 3 \
   --permission-mode full-access \
   --resume
 ```
 
-如果 WorkBuddy 客户端也崩溃，增加 `--restart-app-on-resume`。只有已捕获稳定 conversation ID 时才会恢复原会话；无法唯一确认时停在 `NEEDS_ATTENTION`，不会创建新任务或重复发送 Prompt。
+如果 WorkBuddy 客户端也崩溃，增加 `--restart-app-on-resume`。Worker 只重启客户端一次，再串行恢复所有活动 conversation。只有已捕获稳定 conversation ID 时才会恢复原会话；无法唯一确认时停在 `NEEDS_ATTENTION`，不会创建新任务或重复发送 Prompt。
 
 发送前自动化失败、候选 Workspace 完全没有变化时，修复原因后可以在恢复命令中增加 `--retry-pre-send-failure`。旧 attempt 会被归档，发送后失败不能用该参数重试。
 
@@ -339,6 +342,12 @@ bash <execute-web-e2e-skill-dir>/scripts/run-workbuddy-batch.sh \
 - `INFRA_FAILED`：发送前控制失败或已确认的基础设施错误，默认停止队列。
 - `TIMEOUT`：只有 WorkBuddy 已停止且 Workspace 静默时才是安全终态。
 - 默认不要使用 `--continue-on-terminal-failure`；只有明确需要验证失败隔离或接受失败题继续时才使用。
+
+### 5.6 执行并发边界
+
+WorkBuddy 新队列默认记录 `ui_slots=1`、`run_slots=3`。`run_slots` 可显式设置为 1 到 8；省略时新队列使用 3，恢复已有队列时沿用首次冻结值，没有该字段的旧队列按 1 恢复。并发期间始终只有一个 Driver 操作 WorkBuddy：串行新建项目、设置模型/权限、发送 Prompt、切换会话和处理授权；不能启动多个 Playwright 进程同时点击客户端。
+
+Prompt 发送并捕获稳定 conversation ID 后，任务留在 WorkBuddy 后台运行，Driver 退出本次观察。Worker 轮流恢复各活动 conversation；任一题可信终态后释放槽位并立即补入下一题。出现未知授权或默认失败时暂停补题，但继续收口已经投递的其他活动题。当前 WorkBuddy 5.5.3/Driver 1.7.0 节点已通过 3 个 L1 真实并发 smoke；WorkBuddy/Skill 升级、换机或切换模型后仍要重跑，未通过时显式使用 `--run-slots 1`。
 
 ## 6. Codex Desktop 自动评分
 
@@ -596,6 +605,7 @@ node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
 - [ ] 跑批前已设置 Harness 默认模型、推理强度和权限。
 - [ ] 未指定模型时确认使用的是 `current` 模式；显式指定时使用 UI 精确显示名。
 - [ ] 同一队列执行期间没有人工切换模型。
+- [ ] 当前节点已通过 3 个 L1 执行并发 smoke；未通过时已显式使用 `--run-slots 1`。
 - [ ] `execution-receipt.json.integrity.valid=true`。
 - [ ] 候选 Workspace 中没有 `.git`、`.cache`、`.vite` 或 `node_modules`。
 - [ ] 执行完成后已备份完整 Harness 根目录。

@@ -16,7 +16,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 
 export const AUTOMATION_SCHEMA = "wildclawbench.web-e2e-automation-state/v1";
 export const EXECUTION_SCHEMA = "wildclawbench.web-e2e-execution/v1";
-export const DRIVER_VERSION = "1.6.1";
+export const DRIVER_VERSION = "1.7.0";
 export const DEFAULT_APP_PATH = "/Applications/WorkBuddy.app";
 export const DEFAULT_BUNDLE_ID = "com.tencent.workbuddy.mac";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9229";
@@ -63,6 +63,9 @@ export function parseArgs(argv) {
     restartApp: false,
     resume: false,
     retryPreSendFailure: false,
+    detachAfterSubmit: false,
+    observeOnce: false,
+    quiet: false,
     dryRun: false,
     probe: false,
     help: false,
@@ -95,6 +98,9 @@ export function parseArgs(argv) {
     else if (arg === "--restart-app") values.restartApp = true;
     else if (arg === "--resume") values.resume = true;
     else if (arg === "--retry-pre-send-failure") values.retryPreSendFailure = true;
+    else if (arg === "--detach-after-submit") values.detachAfterSubmit = true;
+    else if (arg === "--observe-once") values.observeOnce = true;
+    else if (arg === "--quiet") values.quiet = true;
     else if (arg === "--dry-run") values.dryRun = true;
     else if (arg === "--probe") values.probe = true;
     else {
@@ -116,6 +122,12 @@ export function parseArgs(argv) {
   }
   if (values.retryPreSendFailure && !values.resume) {
     throw new Error("--retry-pre-send-failure 必须与 --resume 一起使用");
+  }
+  if (values.observeOnce && !values.resume) {
+    throw new Error("--observe-once 必须与 --resume 一起使用");
+  }
+  if (values.detachAfterSubmit && values.observeOnce) {
+    throw new Error("--detach-after-submit 与 --observe-once 不能同时使用");
   }
   return values;
 }

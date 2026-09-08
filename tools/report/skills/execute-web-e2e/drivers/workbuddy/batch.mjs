@@ -19,7 +19,10 @@ import { fileURLToPath } from "node:url";
 import { atomicWriteJson, readJsonIfExists, snapshotTree } from "./lib.mjs";
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
-export const QUEUE_WORKER_VERSION = "1.6.1";
+export const QUEUE_STATE_REVISION = 2;
+export const QUEUE_WORKER_VERSION = "1.7.0";
+export const DEFAULT_RUN_SLOTS = 3;
+export const MAX_RUN_SLOTS = 8;
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const DRIVER_FILE = join(SCRIPT_DIR, "driver.mjs");
@@ -29,10 +32,13 @@ const EXPECTED_EXECUTION_STATUS = {
   INFRA_FAILED: "execution_error",
   TIMEOUT: "timeout",
   NEEDS_ATTENTION: "pending",
+  READY_TO_SEND: "pending",
+  PROMPT_SENT: "pending",
+  RUNNING: "pending",
 };
 
 function usage() {
-  return `WorkBuddy Web E2E 串行队列 Worker
+  return `WorkBuddy Web E2E 后台并发队列 Worker
 
 用法：
   node batch.mjs --harness-root <execution 包根目录> --run-id <ID> \\
@@ -44,6 +50,7 @@ function usage() {
   --run-timeout-seconds <秒>       每题 Agent 总执行超时，默认：3600
   --poll-interval-seconds <秒>     每题终态轮询间隔，默认：2
   --post-cancel-quiescence-seconds <秒> 超时停止后的 workspace 静默观察，默认：5
+  --run-slots <1..8>              后台 Agent 并发数，默认：3；WorkBuddy UI 始终单路
   --restart-app-first              只在第一题前重启 WorkBuddy
   --restart-app-on-resume          恢复运行中题目时重启 WorkBuddy，并定位原会话
   --resume                         恢复同一 run-id 的未完成队列
@@ -70,6 +77,8 @@ export function parseBatchArgs(argv) {
     runTimeoutSeconds: 3600,
     pollIntervalSeconds: 2,
     postCancelQuiescenceSeconds: 5,
+    runSlots: DEFAULT_RUN_SLOTS,
+    runSlotsExplicit: false,
     restartAppFirst: false,
     restartAppOnResume: false,
     resume: false,
@@ -87,6 +96,7 @@ export function parseBatchArgs(argv) {
     ["--run-timeout-seconds", "runTimeoutSeconds"],
     ["--poll-interval-seconds", "pollIntervalSeconds"],
     ["--post-cancel-quiescence-seconds", "postCancelQuiescenceSeconds"],
+    ["--run-slots", "runSlots"],
     ["--mark-manual", "markManualTaskId"],
   ]);
   for (let index = 0; index < argv.length; index += 1) {
@@ -109,12 +119,17 @@ export function parseBatchArgs(argv) {
       const value = argv[index + 1];
       if (!value || value.startsWith("--")) throw new Error(`${arg} 缺少参数值`);
       values[key] = value;
+      if (arg === "--run-slots") values.runSlotsExplicit = true;
       index += 1;
     }
   }
   values.runTimeoutSeconds = positiveNumber(values.runTimeoutSeconds, "--run-timeout-seconds");
   values.pollIntervalSeconds = positiveNumber(values.pollIntervalSeconds, "--poll-interval-seconds");
   values.postCancelQuiescenceSeconds = positiveNumber(values.postCancelQuiescenceSeconds, "--post-cancel-quiescence-seconds");
+  values.runSlots = positiveNumber(values.runSlots, "--run-slots");
+  if (!Number.isInteger(values.runSlots) || values.runSlots > MAX_RUN_SLOTS) {
+    throw new Error(`--run-slots 必须是 1 到 ${MAX_RUN_SLOTS} 的整数`);
+  }
   if (!new Set(["current", "full-access"]).has(values.permissionMode)) {
     throw new Error("--permission-mode 仅支持 current 或 full-access");
   }
@@ -205,12 +220,17 @@ export function createQueueState(plan, args) {
   const now = new Date().toISOString();
   return {
     schema_version: QUEUE_SCHEMA,
-    worker: { id: "workbuddy-serial", version: QUEUE_WORKER_VERSION },
+    revision: QUEUE_STATE_REVISION,
+    worker: { id: "workbuddy-background-concurrent", version: QUEUE_WORKER_VERSION },
     run_id: plan.runId,
     batch_id: plan.manifest.batch_id,
     harness_id: "workbuddy",
     requested_ui_model: args.model || null,
     requested_permission_mode: args.permissionMode,
+    ui_slots: 1,
+    run_slots: args.runSlots,
+    active_task_ids: [],
+    available_run_slots: args.runSlots,
     phase: "PREPARED",
     current_index: null,
     timing: { prepared_at: now, started_at: null, finished_at: null },
@@ -230,6 +250,9 @@ export function createQueueState(plan, args) {
       phase: "PENDING",
       attempt_id: null,
       started_at: null,
+      dispatched_at: null,
+      last_observed_at: null,
+      observation_count: 0,
       finished_at: null,
       driver_exit_code: null,
       automation_state_file: relative(plan.harnessRoot, task.automationStateFile),
@@ -251,10 +274,69 @@ export function assertQueueState(state, plan, args) {
   if (state.requested_permission_mode && state.requested_permission_mode !== args.permissionMode) {
     mismatches.push("requested_permission_mode");
   }
+  const frozenRunSlots = state.run_slots ?? 1;
+  if (args.runSlotsExplicit && frozenRunSlots !== args.runSlots) mismatches.push("run_slots");
   const existingIds = (state.tasks || []).map((task) => task.task_id);
   const requestedIds = plan.tasks.map((task) => task.taskId);
   if (JSON.stringify(existingIds) !== JSON.stringify(requestedIds)) mismatches.push("task_ids");
   if (mismatches.length) throw new Error(`已有 queue_state 与本次调用不一致：${mismatches.join(", ")}`);
+}
+
+export function migrateQueueState(state) {
+  let changed = false;
+  if (!Number.isInteger(state.revision) || state.revision < QUEUE_STATE_REVISION) {
+    state.revision = QUEUE_STATE_REVISION;
+    changed = true;
+  }
+  if (state.ui_slots !== 1) {
+    state.ui_slots = 1;
+    changed = true;
+  }
+  if (!Number.isInteger(state.run_slots)) {
+    state.run_slots = 1;
+    changed = true;
+  }
+  if (state.run_slots < 1 || state.run_slots > MAX_RUN_SLOTS) {
+    throw new Error(`queue_state.run_slots 必须是 1 到 ${MAX_RUN_SLOTS} 的整数`);
+  }
+  for (const task of state.tasks || []) {
+    if (!("dispatched_at" in task)) {
+      task.dispatched_at = task.started_at || null;
+      changed = true;
+    }
+    if (!("last_observed_at" in task)) {
+      task.last_observed_at = null;
+      changed = true;
+    }
+    if (!Number.isInteger(task.observation_count)) {
+      task.observation_count = 0;
+      changed = true;
+    }
+  }
+  refreshQueueSlots(state);
+  return changed;
+}
+
+export function refreshQueueSlots(state) {
+  const active = (state.tasks || [])
+    .filter((task) => new Set(["READY_TO_SEND", "PROMPT_SENT", "RUNNING"]).has(task.phase))
+    .map((task) => task.task_id);
+  if (active.length > (state.run_slots || 1)) {
+    throw new Error(`活动任务数 ${active.length} 超过冻结的 run_slots=${state.run_slots || 1}`);
+  }
+  state.active_task_ids = active;
+  state.available_run_slots = Math.max(0, (state.run_slots || 1) - active.length);
+  return state;
+}
+
+export function selectPendingTaskIndexes(state, dispatchPaused = false) {
+  if (dispatchPaused) return [];
+  const available = Math.max(0, (state.run_slots || 1) - (state.active_task_ids || []).length);
+  return (state.tasks || [])
+    .map((task, index) => ({ task, index }))
+    .filter(({ task }) => new Set(["PENDING", "RETRY_PENDING"]).has(task.phase))
+    .slice(0, available)
+    .map(({ index }) => index);
 }
 
 export function pidAlive(pid) {
@@ -305,20 +387,30 @@ function launchDriver(args) {
   return { child, completed };
 }
 
-export function buildDriverArgs(args, task, index, existingAutomation = null) {
+export function buildDriverArgs(args, task, index, existingAutomation = null, operation = null) {
   const driverArgs = [
     "--workspace", task.taskRoot,
+    "--quiet",
     "--permission-mode", args.permissionMode,
     "--run-timeout-seconds", String(args.runTimeoutSeconds),
     "--poll-interval-seconds", String(args.pollIntervalSeconds),
     "--post-cancel-quiescence-seconds", String(args.postCancelQuiescenceSeconds),
   ];
   if (args.model) driverArgs.push("--model", args.model);
-  if (args.restartAppFirst && index === 0) driverArgs.push("--restart-app");
+  const mode = operation || (existingAutomation
+    ? (args.retryPreSendFailure && existingAutomation.phase === "INFRA_FAILED" ? "retry-dispatch" : "observe")
+    : "dispatch");
+  if (args.restartAppFirst && index === 0 && mode === "dispatch") driverArgs.push("--restart-app");
   if (existingAutomation) {
     driverArgs.push("--resume");
-    if (args.restartAppOnResume) driverArgs.push("--restart-app");
-    if (args.retryPreSendFailure) driverArgs.push("--retry-pre-send-failure");
+    if (args.restartAppOnResume && operation !== "observe-without-restart") driverArgs.push("--restart-app");
+    if (mode === "retry-dispatch") {
+      driverArgs.push("--retry-pre-send-failure", "--detach-after-submit");
+    } else {
+      driverArgs.push("--observe-once");
+    }
+  } else {
+    driverArgs.push("--detach-after-submit");
   }
   return driverArgs;
 }
@@ -540,6 +632,8 @@ export async function buildExecutionReceipt(plan, state) {
     worker: state.worker,
     queue: {
       phase: state.phase,
+      ui_slots: state.ui_slots,
+      run_slots: state.run_slots,
       requested_ui_model: state.requested_ui_model,
       requested_permission_mode: state.requested_permission_mode,
       state_path: receiptRelativePath(plan, plan.queueStateFile),
@@ -586,12 +680,93 @@ export function recordReceiptIntegrityFailure(state, receipt) {
   return true;
 }
 
+function sleep(milliseconds) {
+  return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
+}
+
+function isActiveTaskPhase(phase) {
+  return new Set(["READY_TO_SEND", "PROMPT_SENT", "RUNNING"]).has(phase);
+}
+
+function taskFailureMessage(task, automation) {
+  if (automation.phase === "TIMEOUT") {
+    return `任务执行超时：${task.taskId}`;
+  }
+  return `任务未成功：${task.taskId} (${automation.phase})`;
+}
+
+export function canAutomaticallyResumeAttention(automation) {
+  if (automation?.phase !== "NEEDS_ATTENTION") return false;
+  const reason = [...(automation.history || [])].reverse().find((entry) => entry.phase === "NEEDS_ATTENTION")?.reason;
+  return new Set(["driver-interrupted", "client-disconnected", "post-send-observation-failed"]).has(reason);
+}
+
+async function synchronizeQueueTasks(plan, state, args, resumeNeedsAttentionTaskId = "") {
+  let dispatchPaused = false;
+  let blockerPhase = null;
+  let blockerMessage = null;
+  for (let index = 0; index < plan.tasks.length; index += 1) {
+    const task = plan.tasks[index];
+    const queueTask = state.tasks[index];
+    const automation = await readJsonIfExists(task.automationStateFile);
+    if (!automation) {
+      if (isActiveTaskPhase(queueTask.phase)) {
+        queueTask.phase = "WORKER_ERROR";
+        queueTask.error = "队列记录任务正在运行，但缺少 automation_state；禁止重新发送 Prompt";
+        dispatchPaused = true;
+        blockerPhase ||= "FAILED";
+        blockerMessage ||= `任务缺少可恢复状态：${task.taskId}`;
+      } else if (queueTask.phase === "WORKER_ERROR") {
+        dispatchPaused = true;
+        blockerPhase ||= "FAILED";
+        blockerMessage ||= `任务编排失败：${task.taskId}`;
+      }
+      continue;
+    }
+    const result = await inspectTaskResult(plan, task, { code: queueTask.driver_exit_code, signal: null });
+    queueTask.phase = result.automation.phase;
+    queueTask.attempt_id = result.automation.attempt_id || queueTask.attempt_id;
+    queueTask.started_at ||= result.automation.timing?.started_at || null;
+    queueTask.dispatched_at ||= result.automation.timing?.sent_at || null;
+    queueTask.finished_at = TERMINAL_TASK_PHASES.has(result.automation.phase)
+      ? result.automation.timing?.finished_at || queueTask.finished_at
+      : null;
+    queueTask.error = result.automation.error || null;
+    if (result.automation.phase === "NEEDS_ATTENTION"
+      && (task.taskId === resumeNeedsAttentionTaskId || canAutomaticallyResumeAttention(result.automation))) {
+      queueTask.phase = "RUNNING";
+      queueTask.finished_at = null;
+      queueTask.error = null;
+      continue;
+    }
+    if (result.automation.phase === "INFRA_FAILED" && args.retryPreSendFailure) {
+      queueTask.phase = "RETRY_PENDING";
+      queueTask.finished_at = null;
+      continue;
+    }
+    if (result.automation.phase === "NEEDS_ATTENTION") {
+      dispatchPaused = true;
+      blockerPhase = "NEEDS_ATTENTION";
+      blockerMessage ||= `任务需要人工处理：${task.taskId}`;
+    } else if (TERMINAL_TASK_PHASES.has(result.automation.phase)
+      && !canAdvanceTask(result.automation, args.continueOnTerminalFailure)) {
+      dispatchPaused = true;
+      blockerPhase ||= "FAILED";
+      blockerMessage ||= taskFailureMessage(task, result.automation);
+    }
+  }
+  refreshQueueSlots(state);
+  return { dispatchPaused, blockerPhase, blockerMessage };
+}
+
 async function runQueue(plan, args) {
   await mkdir(plan.queueDir, { recursive: true });
   let state = await readJsonIfExists(plan.queueStateFile);
   if (state) {
     assertQueueState(state, plan, args);
+    const migrated = migrateQueueState(state);
     if (new Set(["COMPLETED", "COMPLETED_WITH_FAILURES"]).has(state.phase)) {
+      if (migrated) await saveQueue(plan, state);
       const receipt = await saveExecutionReceipt(plan, state);
       if (recordReceiptIntegrityFailure(state, receipt)) await saveQueue(plan, state);
       return state;
@@ -603,9 +778,11 @@ async function runQueue(plan, args) {
         event: "QUEUE_CONFIGURATION_MIGRATED",
         at: new Date().toISOString(),
         requested_permission_mode: args.permissionMode,
+        ui_slots: state.ui_slots,
+        run_slots: state.run_slots,
       });
-      await saveQueue(plan, state);
     }
+    if (migrated) await saveQueue(plan, state);
   } else {
     if (args.resume) throw new Error("--resume 要求已有 queue_state.json");
     state = createQueueState(plan, args);
@@ -618,15 +795,9 @@ async function runQueue(plan, args) {
   let interruptWrite = Promise.resolve();
   let heartbeatWrite = Promise.resolve();
   let heartbeatTimer = null;
+  let restartOnResumeAvailable = args.restartAppOnResume;
   const signalHandlers = new Map();
   try {
-    if (args.markManualTaskId) {
-      const target = plan.tasks.find((task) => task.taskId === args.markManualTaskId);
-      if (!target) throw new Error(`--mark-manual 指定的任务不在当前队列：${args.markManualTaskId}`);
-      const automation = await readJsonIfExists(target.automationStateFile);
-      recordManualIntervention(state, args.markManualTaskId, automation);
-      await saveQueue(plan, state);
-    }
     state.runtime ||= {
       worker: null,
       driver: null,
@@ -635,6 +806,14 @@ async function runQueue(plan, args) {
       interrupted_at: null,
       interrupt_signal: null,
     };
+    if (args.markManualTaskId) {
+      const targetIndex = plan.tasks.findIndex((task) => task.taskId === args.markManualTaskId);
+      if (targetIndex < 0) throw new Error(`--mark-manual 指定的任务不在当前队列：${args.markManualTaskId}`);
+      const automation = await readJsonIfExists(plan.tasks[targetIndex].automationStateFile);
+      recordManualIntervention(state, args.markManualTaskId, automation);
+      state.tasks[targetIndex].phase = "RUNNING";
+      await saveQueue(plan, refreshQueueSlots(state));
+    }
     if (recoveredLock) {
       state.history.push({
         event: "STALE_UI_LOCK_RECOVERED",
@@ -657,6 +836,12 @@ async function runQueue(plan, args) {
       state.runtime.last_driver = previousDriver;
       state.runtime.driver = null;
     }
+    let { dispatchPaused, blockerPhase, blockerMessage } = await synchronizeQueueTasks(
+      plan,
+      state,
+      args,
+      args.markManualTaskId,
+    );
     state.runtime.worker = {
       pid: process.pid,
       hostname: hostname(),
@@ -688,56 +873,44 @@ async function runQueue(plan, args) {
     }
     heartbeatTimer = setInterval(() => {
       state.runtime.heartbeat_at = new Date().toISOString();
-      heartbeatWrite = heartbeatWrite.then(() => saveQueue(plan, state)).catch(() => {});
+      heartbeatWrite = heartbeatWrite.then(() => saveQueue(plan, refreshQueueSlots(state))).catch(() => {});
     }, 5000);
     heartbeatTimer.unref();
 
-    for (let index = 0; index < plan.tasks.length; index += 1) {
-      if (interruptSignal) {
-        await interruptWrite;
-        return state;
-      }
-      const queueTask = state.tasks[index];
+    const executeDriverAction = async (index, requestedMode) => {
       const task = plan.tasks[index];
-      if (queueTask.phase === "SUCCEEDED") continue;
-      if (TERMINAL_TASK_PHASES.has(queueTask.phase) && args.continueOnTerminalFailure) {
-        const previousResult = await inspectTaskResult(plan, task, { code: queueTask.driver_exit_code, signal: null });
-        if (!canAdvanceTask(previousResult.automation, true)) {
-          state.phase = "FAILED";
-          state.error = `任务不满足安全继续条件：${task.taskId} (${queueTask.phase})`;
-          await saveQueue(plan, state);
-          return state;
-        }
-        if (index + 1 < plan.tasks.length) {
-          state.history.push({
-            event: "AUTO_ADVANCE",
-            at: new Date().toISOString(),
-            from_task_id: task.taskId,
-            to_task_id: plan.tasks[index + 1].taskId,
-            resumed_after_terminal_failure: true,
-          });
-          await saveQueue(plan, state);
-        }
-        continue;
+      const queueTask = state.tasks[index];
+      const existingAutomation = requestedMode === "dispatch"
+        ? null
+        : await readJsonIfExists(task.automationStateFile);
+      if (requestedMode !== "dispatch" && !existingAutomation) {
+        const error = new Error(`任务 ${task.taskId} 缺少 automation_state；禁止恢复时创建新任务或重发 Prompt`);
+        recordTaskOrchestrationFailure(state, queueTask, task, index, error);
+        blockerPhase = "FAILED";
+        blockerMessage ||= state.error;
+        dispatchPaused = true;
+        refreshQueueSlots(state);
+        await saveQueue(plan, state);
+        return null;
       }
-
+      let operation = requestedMode;
+      const actionArgs = { ...args };
+      if (existingAutomation && restartOnResumeAvailable) {
+        actionArgs.restartAppOnResume = true;
+        restartOnResumeAvailable = false;
+      } else {
+        actionArgs.restartAppOnResume = false;
+        if (existingAutomation && requestedMode === "observe") operation = "observe-without-restart";
+      }
+      const driverArgs = buildDriverArgs(actionArgs, task, index, existingAutomation, operation);
       state.current_index = index;
-      queueTask.phase = "RUNNING";
       queueTask.started_at ||= new Date().toISOString();
       queueTask.error = null;
-      state.history.push({ event: "TASK_STARTED", at: new Date().toISOString(), index, task_id: task.taskId });
+      const event = requestedMode === "observe" ? "TASK_OBSERVATION_STARTED" : "TASK_DISPATCH_STARTED";
+      state.history.push({ event, at: new Date().toISOString(), index, task_id: task.taskId });
       await saveQueue(plan, state);
 
-      const existingAutomation = args.resume ? await readJsonIfExists(task.automationStateFile) : null;
-      const driverArgs = buildDriverArgs(args, task, index, existingAutomation);
-
-      if (interruptSignal) {
-        await interruptWrite;
-        return state;
-      }
-
       let driverResult = null;
-      let result;
       try {
         const launchedAt = new Date().toISOString();
         const launched = launchDriver(driverArgs);
@@ -746,6 +919,7 @@ async function runQueue(plan, args) {
           pid: launched.child.pid,
           hostname: hostname(),
           task_id: task.taskId,
+          operation: requestedMode,
           started_at: launchedAt,
         };
         state.runtime.heartbeat_at = launchedAt;
@@ -761,76 +935,154 @@ async function runQueue(plan, args) {
         };
         state.runtime.driver = null;
         activeDriver = null;
-        if (interruptSignal) {
-          await interruptWrite;
-          await saveQueue(plan, state);
-          return state;
+        if (interruptSignal) return null;
+        const result = await inspectTaskResult(plan, task, driverResult);
+        const at = new Date().toISOString();
+        queueTask.phase = result.automation.phase;
+        queueTask.attempt_id = result.automation.attempt_id;
+        queueTask.driver_exit_code = driverResult.code;
+        queueTask.error = result.automation.error || null;
+        queueTask.started_at ||= result.automation.timing?.started_at || at;
+        if (requestedMode !== "observe") {
+          queueTask.dispatched_at = result.automation.timing?.sent_at || at;
+          state.history.push({
+            event: "TASK_DISPATCHED",
+            at,
+            index,
+            task_id: task.taskId,
+            phase: queueTask.phase,
+            attempt_id: queueTask.attempt_id,
+          });
+        } else {
+          queueTask.last_observed_at = at;
+          queueTask.observation_count = (queueTask.observation_count || 0) + 1;
+          state.history.push({
+            event: "TASK_OBSERVED",
+            at,
+            index,
+            task_id: task.taskId,
+            phase: queueTask.phase,
+            attempt_id: queueTask.attempt_id,
+            observation_count: queueTask.observation_count,
+          });
         }
-        result = await inspectTaskResult(plan, task, driverResult);
+        if (TERMINAL_TASK_PHASES.has(queueTask.phase)) {
+          queueTask.finished_at = result.automation.timing?.finished_at || at;
+          state.history.push({
+            event: "TASK_FINISHED",
+            at,
+            index,
+            task_id: task.taskId,
+            phase: queueTask.phase,
+            attempt_id: queueTask.attempt_id,
+          });
+        } else {
+          queueTask.finished_at = null;
+        }
+        refreshQueueSlots(state);
+        await saveQueue(plan, state);
+        return result;
       } catch (error) {
-        if (interruptSignal) {
-          await interruptWrite.catch(() => {});
-          await saveQueue(plan, state);
-          return state;
-        }
+        if (interruptSignal) return null;
         recordTaskOrchestrationFailure(state, queueTask, task, index, error, driverResult);
+        blockerPhase = "FAILED";
+        blockerMessage ||= state.error;
+        dispatchPaused = true;
+        refreshQueueSlots(state);
         await saveQueue(plan, state);
-        return state;
+        return null;
       }
-      queueTask.phase = result.automation.phase;
-      queueTask.attempt_id = result.automation.attempt_id;
-      queueTask.finished_at = result.automation.timing?.finished_at || new Date().toISOString();
-      queueTask.driver_exit_code = driverResult.code;
-      queueTask.error = result.automation.error || null;
-      state.history.push({
-        event: "TASK_FINISHED",
-        at: new Date().toISOString(),
-        index,
-        task_id: task.taskId,
-        phase: queueTask.phase,
-        attempt_id: queueTask.attempt_id,
-      });
-      await saveQueue(plan, state);
+    };
 
-      if (queueTask.phase === "NEEDS_ATTENTION") {
-        state.phase = "NEEDS_ATTENTION";
-        state.error = `任务需要人工处理：${task.taskId}`;
-        await saveQueue(plan, state);
+    const classifyResult = (index, result) => {
+      if (!result) return;
+      const task = plan.tasks[index];
+      if (result.automation.phase === "NEEDS_ATTENTION") {
+        dispatchPaused = true;
+        blockerPhase = "NEEDS_ATTENTION";
+        blockerMessage ||= `任务需要人工处理：${task.taskId}`;
+        return;
+      }
+      if (TERMINAL_TASK_PHASES.has(result.automation.phase)
+        && !canAdvanceTask(result.automation, args.continueOnTerminalFailure)) {
+        dispatchPaused = true;
+        blockerPhase ||= "FAILED";
+        blockerMessage ||= taskFailureMessage(task, result.automation);
+      }
+    };
+
+    for (;;) {
+      if (interruptSignal) {
+        await interruptWrite;
         return state;
       }
-      if (!canAdvanceTask(result.automation, args.continueOnTerminalFailure)) {
-        state.phase = "FAILED";
-        state.error = queueTask.phase === "TIMEOUT"
-          ? `超时任务没有已停止且 workspace 静默的证据：${task.taskId}`
-          : `任务未成功：${task.taskId} (${queueTask.phase})`;
-        await saveQueue(plan, state);
+      refreshQueueSlots(state);
+      const dispatchIndexes = selectPendingTaskIndexes(state, dispatchPaused);
+      for (const index of dispatchIndexes) {
+        if (interruptSignal || dispatchPaused) break;
+        const retry = state.tasks[index].phase === "RETRY_PENDING";
+        const result = await executeDriverAction(index, retry ? "retry-dispatch" : "dispatch");
+        if (interruptSignal) break;
+        classifyResult(index, result);
+        refreshQueueSlots(state);
+      }
+      if (interruptSignal) continue;
+      const canFillAnotherSlot = !dispatchPaused
+        && state.available_run_slots > 0
+        && state.tasks.some((task) => new Set(["PENDING", "RETRY_PENDING"]).has(task.phase));
+      if (canFillAnotherSlot) continue;
+
+      const activeIndexes = state.tasks
+        .map((task, index) => ({ task, index }))
+        .filter(({ task }) => isActiveTaskPhase(task.phase))
+        .map(({ index }) => index);
+      const pendingRemain = state.tasks.some((task) => new Set(["PENDING", "RETRY_PENDING"]).has(task.phase));
+      if (!activeIndexes.length) {
+        if (pendingRemain && !dispatchPaused) continue;
+        if (dispatchPaused || pendingRemain || state.tasks.some((task) => new Set(["NEEDS_ATTENTION", "WORKER_ERROR"]).has(task.phase))) {
+          state.phase = blockerPhase || (state.tasks.some((task) => task.phase === "NEEDS_ATTENTION") ? "NEEDS_ATTENTION" : "FAILED");
+          state.error = blockerMessage || "队列存在未完成任务，已停止补入新题";
+        } else if (state.tasks.every((task) => task.phase === "SUCCEEDED")) {
+          state.phase = "COMPLETED";
+          state.error = null;
+        } else {
+          state.phase = "COMPLETED_WITH_FAILURES";
+          state.error = null;
+        }
+        state.current_index = null;
+        state.timing.finished_at = new Set(["COMPLETED", "COMPLETED_WITH_FAILURES"]).has(state.phase)
+          ? new Date().toISOString()
+          : state.timing.finished_at;
+        state.history.push({ event: state.phase, at: new Date().toISOString(), error: state.error });
+        await saveQueue(plan, refreshQueueSlots(state));
         return state;
       }
-      if (index + 1 < plan.tasks.length) {
-        state.history.push({
-          event: "AUTO_ADVANCE",
-          at: new Date().toISOString(),
-          from_task_id: task.taskId,
-          to_task_id: plan.tasks[index + 1].taskId,
-        });
-        await saveQueue(plan, state);
+
+      let slotReleased = false;
+      for (const index of activeIndexes) {
+        if (interruptSignal) break;
+        if (!isActiveTaskPhase(state.tasks[index].phase)) continue;
+        const result = await executeDriverAction(index, "observe");
+        if (interruptSignal) break;
+        classifyResult(index, result);
+        if (!isActiveTaskPhase(state.tasks[index].phase)) {
+          slotReleased = true;
+          break;
+        }
+      }
+      if (!slotReleased && !interruptSignal) {
+        await sleep(Math.max(100, args.pollIntervalSeconds * 1000));
       }
     }
-
-    state.phase = state.tasks.every((task) => task.phase === "SUCCEEDED") ? "COMPLETED" : "COMPLETED_WITH_FAILURES";
-    state.current_index = null;
-    state.timing.finished_at = new Date().toISOString();
-    state.history.push({ event: state.phase, at: state.timing.finished_at });
-    await saveQueue(plan, state);
-    return state;
   } finally {
     if (heartbeatTimer) clearInterval(heartbeatTimer);
     await heartbeatWrite;
     for (const [signal, handler] of signalHandlers) process.off(signal, handler);
     state.runtime ||= {};
     state.runtime.worker = null;
+    state.runtime.driver = null;
     state.runtime.heartbeat_at = new Date().toISOString();
-    await saveQueue(plan, state).catch(() => {});
+    await saveQueue(plan, refreshQueueSlots(state)).catch(() => {});
     try {
       const receipt = await saveExecutionReceipt(plan, state);
       if (recordReceiptIntegrityFailure(state, receipt)) await saveQueue(plan, state);

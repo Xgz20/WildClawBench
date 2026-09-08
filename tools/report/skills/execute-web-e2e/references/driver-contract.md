@@ -74,4 +74,4 @@ Harness 级 Worker 使用 `wildclawbench.web-e2e-execution-receipt/v1` 汇总完
 - 执行工作空间不能包含 Rubric、Expected Behavior、checker、`eval/` 或 `gt/`。
 - 操作系统隐私授权、管理员认证和未知敏感授权不能自动批准。
 - Harness 正常结束并向用户追问属于候选结果，不由控制 Agent 代答。
-- GUI 焦点、文件选择器和授权弹窗受全局 UI 锁保护。未验证 session、cwd、模型和授权路由隔离前，`ui_slots` 与 `run_slots` 均为 1。
+- GUI 焦点、文件选择器和授权弹窗受全局 UI 锁保护，`ui_slots` 必须为 1。已验证的 Driver 可以让已捕获稳定 session/conversation ID 的任务在后台运行，并用单一 UI Driver 轮流恢复观察；`run_slots` 必须有显式上限和冻结配置。未完成 session、cwd、模型、授权路由和真实客户端隔离验证的 Driver 仍保持 `run_slots=1`。

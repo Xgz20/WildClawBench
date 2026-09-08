@@ -49,6 +49,9 @@ function usage() {
   --post-cancel-quiescence-seconds <秒> 超时停止后的 workspace 静默观察，默认 5
   --resume                         从已有 automation_state 恢复，禁止重复发送
   --retry-pre-send-failure          仅归档并重试发送前、产物零变化的 INFRA_FAILED
+  --detach-after-submit            捕获稳定 conversation ID 后退出，由队列后台观察
+  --observe-once                   恢复原 conversation，只执行一次终态观察
+  --quiet                          仅输出错误；供批次 Worker 高频观察使用
   --restart-app                    正常退出后以本地 CDP 端口重启 WorkBuddy
   --dry-run                        校验输入、身份和状态，不操作 WorkBuddy
   -h, --help                       显示帮助`;
@@ -631,6 +634,10 @@ async function captureAttemptConversation(page, state, timeout) {
   return null;
 }
 
+export function hasStableConversationId(state) {
+  return Boolean(state.session?.dom_conversation_id || state.session?.conversation_id);
+}
+
 async function openAttemptConversation(page, state, timeout) {
   const conversationId = state.session.dom_conversation_id || state.session.conversation_id || null;
   if (!conversationId) return { opened: false, reason: "conversation-id-unavailable" };
@@ -674,7 +681,8 @@ async function inspectDom(page) {
   const agentText = agentValues.map((value) => value.trim()).filter(Boolean).at(-1) || "";
   const latestAgent = agentTurns.last();
   const finishedFooters = await visibleLocators(latestAgent.locator('[data-testid="conversation-finished-footer"]'));
-  const completionStatus = (await latestAgent.locator(".cr-agent__completion-status").innerText().catch(() => "")).trim();
+  const completionStatuses = await latestAgent.locator(".cr-agent__completion-status").allInnerTexts().catch(() => []);
+  const completionStatus = (completionStatuses.at(-1) || "").trim();
   const explicitFinished = finishedFooters.length === 1
     && /^(?:已完成|Completed)(?:\s|\d|$)/i.test(completionStatus);
   const emptyConversation = (await visibleLocators(page.getByText("暂无对话记录", { exact: true }))).length > 0;
@@ -992,90 +1000,110 @@ async function finalize(config, state, identityInfo, phase, { error = null, term
   return state;
 }
 
-async function waitForTerminal(page, config, state, identityInfo) {
+export async function observeAttemptOnce(page, config, state, identityInfo) {
   const runStartedAt = Date.parse(state.timing.sent_at || state.timing.started_at || new Date().toISOString());
   const deadline = runStartedAt + config.runTimeoutSeconds * 1000;
-  let lastDom = { running: false, attention: [], finalText: "", explicitFinished: false };
-  while (Date.now() < deadline) {
-    state.runtime ||= {};
-    state.runtime.heartbeat_at = new Date().toISOString();
-    const approvalResult = await handleExpectedApprovals(page, config, state);
-    if (approvalResult.handled) {
-      await sleep(500);
-      continue;
+  state.runtime ||= {};
+  state.runtime.heartbeat_at = new Date().toISOString();
+  const approvalResult = await handleExpectedApprovals(page, config, state);
+  if (approvalResult.handled) {
+    if (new Set(["PROMPT_SENT", "NEEDS_ATTENTION"]).has(state.phase)) {
+      transitionState(state, "RUNNING", { safe_approval_handled: true });
     }
-    lastDom = await inspectDom(page);
-    if (lastDom.attention.length) {
-      await takeScreenshot(page, config, state, "09-needs-attention.png");
-      const commands = approvalResult.approvals.map((approval) => approval.command).filter(Boolean);
-      transitionState(state, "NEEDS_ATTENTION", {
-        reason: "visible-approval",
-        buttons: lastDom.attention,
-        command_sha256: commands.map((command) => createHash("sha256").update(command).digest("hex")),
-      });
-      state.error = commands.length
-        ? `WorkBuddy 等待人工处理：存在未列入安全规则的授权命令（${commands.length} 个）`
-        : `WorkBuddy 等待人工处理：${lastDom.attention.join(" / ")}`;
-      await saveState(config, state);
-      await updateExecutionRecord(config, identityInfo, {
-        clientVersion: state.client.version,
-        execution: { status: "pending", error: state.error },
-      });
-      return state;
-    }
+    state.error = null;
+    await saveState(config, state);
+    await updateExecutionRecord(config, identityInfo, {
+      clientVersion: state.client.version,
+      execution: { status: "pending", error: null },
+    });
+    return state;
+  }
+  const dom = await inspectDom(page);
+  if (dom.attention.length) {
+    await takeScreenshot(page, config, state, "09-needs-attention.png");
+    const commands = approvalResult.approvals.map((approval) => approval.command).filter(Boolean);
+    transitionState(state, "NEEDS_ATTENTION", {
+      reason: "visible-approval",
+      buttons: dom.attention,
+      command_sha256: commands.map((command) => createHash("sha256").update(command).digest("hex")),
+    });
+    state.error = commands.length
+      ? `WorkBuddy 等待人工处理：存在未列入安全规则的授权命令（${commands.length} 个）`
+      : `WorkBuddy 等待人工处理：${dom.attention.join(" / ")}`;
+    await saveState(config, state);
+    await updateExecutionRecord(config, identityInfo, {
+      clientVersion: state.client.version,
+      execution: { status: "pending", error: state.error },
+    });
+    return state;
+  }
 
-    const sessions = await querySessions(config.sessionDb);
-    const session = chooseAttemptSession(sessions, state, config.workspace);
-    if (session) {
-      state.session = {
-        ...state.session,
-        conversation_id: session.conversationId,
-        cwd: session.cwd,
-        raw_status: session.status,
-        updated_at_ms: session.updatedAt || null,
-      };
-      const classification = classifySessionStatus(session.status);
-      if (classification.kind === "success") {
-        await takeScreenshot(page, config, state, "10-succeeded.png");
-        return finalize(config, state, identityInfo, "SUCCEEDED", { terminalSource: "workbuddy-session-db", finalText: lastDom.finalText });
-      }
-      if (classification.kind === "failure") {
-        await takeScreenshot(page, config, state, "10-infra-failed.png");
-        return finalize(config, state, identityInfo, "INFRA_FAILED", {
-          terminalSource: "workbuddy-session-db",
-          error: `WorkBuddy conversation 终态：${session.status}`,
-          finalText: lastDom.finalText,
-        });
-      }
-      if (classification.kind === "unknown") {
-        await takeScreenshot(page, config, state, "09-unknown-session-status.png");
-        transitionState(state, "NEEDS_ATTENTION", { reason: "unknown-session-status", raw_status: session.status });
-        state.error = `无法识别 WorkBuddy session 状态：${session.status}`;
-        await saveState(config, state);
-        await updateExecutionRecord(config, identityInfo, { clientVersion: state.client.version, execution: { status: "pending", error: state.error } });
-        return state;
-      }
-    } else if (hasTrustedDomCompletion(lastDom)) {
+  const sessions = await querySessions(config.sessionDb);
+  const session = chooseAttemptSession(sessions, state, config.workspace);
+  if (session) {
+    state.session = {
+      ...state.session,
+      conversation_id: session.conversationId,
+      cwd: session.cwd,
+      raw_status: session.status,
+      updated_at_ms: session.updatedAt || null,
+    };
+    const classification = classifySessionStatus(session.status);
+    if (classification.kind === "success") {
       await takeScreenshot(page, config, state, "10-succeeded.png");
-      return finalize(config, state, identityInfo, "SUCCEEDED", {
-        terminalSource: "workbuddy-dom-completion",
-        finalText: lastDom.finalText,
-      });
-    } else if (lastDom.status.kind === "failure") {
+      return finalize(config, state, identityInfo, "SUCCEEDED", { terminalSource: "workbuddy-session-db", finalText: dom.finalText });
+    }
+    if (classification.kind === "failure") {
       await takeScreenshot(page, config, state, "10-infra-failed.png");
       return finalize(config, state, identityInfo, "INFRA_FAILED", {
-        terminalSource: "workbuddy-dom-completion",
-        error: "WorkBuddy 页面显示执行失败终态",
-        finalText: lastDom.finalText,
+        terminalSource: "workbuddy-session-db",
+        error: `WorkBuddy conversation 终态：${session.status}`,
+        finalText: dom.finalText,
       });
     }
-    if (new Set(["PROMPT_SENT", "NEEDS_ATTENTION"]).has(state.phase) && (session || lastDom.running)) {
-      transitionState(state, "RUNNING", { recovered_observation: state.phase === "NEEDS_ATTENTION" });
+    if (classification.kind === "unknown") {
+      await takeScreenshot(page, config, state, "09-unknown-session-status.png");
+      transitionState(state, "NEEDS_ATTENTION", { reason: "unknown-session-status", raw_status: session.status });
+      state.error = `无法识别 WorkBuddy session 状态：${session.status}`;
+      await saveState(config, state);
+      await updateExecutionRecord(config, identityInfo, { clientVersion: state.client.version, execution: { status: "pending", error: state.error } });
+      return state;
     }
-    await saveState(config, state);
+  } else if (hasTrustedDomCompletion(dom)) {
+    await takeScreenshot(page, config, state, "10-succeeded.png");
+    return finalize(config, state, identityInfo, "SUCCEEDED", {
+      terminalSource: "workbuddy-dom-completion",
+      finalText: dom.finalText,
+    });
+  } else if (dom.status.kind === "failure") {
+    await takeScreenshot(page, config, state, "10-infra-failed.png");
+    return finalize(config, state, identityInfo, "INFRA_FAILED", {
+      terminalSource: "workbuddy-dom-completion",
+      error: "WorkBuddy 页面显示执行失败终态",
+      finalText: dom.finalText,
+    });
+  }
+  if (new Set(["PROMPT_SENT", "NEEDS_ATTENTION"]).has(state.phase) && (session || dom.running)) {
+    transitionState(state, "RUNNING", { recovered_observation: state.phase === "NEEDS_ATTENTION" });
+  }
+  state.error = null;
+  await saveState(config, state);
+  await updateExecutionRecord(config, identityInfo, {
+    clientVersion: state.client.version,
+    execution: { status: "pending", error: null },
+  });
+  if (Date.now() >= deadline) {
+    return cancelTimedOutAttempt(page, config, state, identityInfo, dom, deadline);
+  }
+  return state;
+}
+
+async function waitForTerminal(page, config, state, identityInfo) {
+  for (;;) {
+    const observed = await observeAttemptOnce(page, config, state, identityInfo);
+    if (TERMINAL_PHASES.has(observed.phase) || observed.phase === "NEEDS_ATTENTION") return observed;
     await sleep(config.pollIntervalSeconds * 1000);
   }
-  return cancelTimedOutAttempt(page, config, state, identityInfo, lastDom, deadline);
 }
 
 async function resumeAutomation(config, state, identityInfo) {
@@ -1111,8 +1139,8 @@ async function resumeAutomation(config, state, identityInfo) {
     page = await chooseWorkBuddyPage(browser, config.timeoutSeconds * 1000);
     page.setDefaultTimeout(config.timeoutSeconds * 1000);
     await page.bringToFront();
-    const hasStableConversationId = Boolean(state.session.dom_conversation_id || state.session.conversation_id);
-    if (hasStableConversationId) {
+    const stableConversationAvailable = hasStableConversationId(state);
+    if (stableConversationAvailable) {
       const opened = await openAttemptConversation(page, state, config.timeoutSeconds * 1000);
       state.session.resume_navigation = { ...opened, at: new Date().toISOString() };
       if (!opened.opened) {
@@ -1129,7 +1157,7 @@ async function resumeAutomation(config, state, identityInfo) {
     }
     const session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
     const dom = await inspectDom(page);
-    if (hasStableConversationId && !session && dom.emptyConversation) {
+    if (stableConversationAvailable && !session && dom.emptyConversation) {
       return persistNeedsAttention(
         config,
         state,
@@ -1157,7 +1185,9 @@ async function resumeAutomation(config, state, identityInfo) {
       transitionState(state, "PROMPT_SENT", { recovered_from_dom: dom.status.status });
     }
     await saveState(config, state);
-    return waitForTerminal(page, config, state, identityInfo);
+    return config.observeOnce
+      ? observeAttemptOnce(page, config, state, identityInfo)
+      : waitForTerminal(page, config, state, identityInfo);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const reason = observationFailureReason(error);
@@ -1319,8 +1349,39 @@ async function runAutomation(config, identityInfo) {
     transitionState(state, "PROMPT_SENT");
     await saveState(config, state);
     await captureAttemptConversation(page, state, Math.min(timeout, 10000));
+    if (!state.session.dom_conversation_id) {
+      const session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
+      if (session) {
+        state.session.conversation_id = session.conversationId;
+        state.session.cwd = session.cwd;
+        state.session.raw_status = session.status;
+        state.session.updated_at_ms = session.updatedAt || null;
+      }
+    }
     await saveState(config, state);
     await takeScreenshot(page, config, state, "08-prompt-sent.png");
+    if (config.detachAfterSubmit) {
+      if (!hasStableConversationId(state)) {
+        return persistNeedsAttention(
+          config,
+          state,
+          identityInfo,
+          "detach-conversation-id-unavailable",
+          "Prompt 已发送，但未捕获稳定 conversation ID；禁止后台猜测会话或重复发送",
+          page,
+          "09-detach-conversation-id-unavailable.png",
+        );
+      }
+      transitionState(state, "RUNNING", { detached_after_submit: true });
+      state.error = null;
+      state.runtime.heartbeat_at = new Date().toISOString();
+      await saveState(config, state);
+      await updateExecutionRecord(config, identityInfo, {
+        clientVersion: state.client.version,
+        execution: { status: "pending", error: null },
+      });
+      return state;
+    }
     return await waitForTerminal(page, config, state, identityInfo);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -1426,14 +1487,17 @@ export async function main(argv) {
       restartApp: config.restartApp,
       resume: config.resume,
       retryPreSendFailure: config.retryPreSendFailure,
+      detachAfterSubmit: config.detachAfterSubmit,
+      observeOnce: config.observeOnce,
       postCancelQuiescenceSeconds: config.postCancelQuiescenceSeconds,
       dryRun: config.dryRun,
     };
-    console.log(JSON.stringify(safeConfig, null, 2));
+    if (!config.quiet) console.log(JSON.stringify(safeConfig, null, 2));
     if (config.dryRun) return 0;
     const result = await runAutomation(config, identityInfo);
-    console.log(`WorkBuddy 自动化状态：${result.phase}；状态文件：${config.stateFile}`);
+    if (!config.quiet) console.log(`WorkBuddy 自动化状态：${result.phase}；状态文件：${config.stateFile}`);
     if (result.phase === "SUCCEEDED") return 0;
+    if (result.phase === "RUNNING" || result.phase === "PROMPT_SENT") return 0;
     if (result.phase === "NEEDS_ATTENTION") return 3;
     if (result.phase === "TIMEOUT") return 4;
     return 1;

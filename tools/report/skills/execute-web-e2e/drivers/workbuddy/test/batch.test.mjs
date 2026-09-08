@@ -7,18 +7,25 @@ import test from "node:test";
 import { snapshotTree } from "../lib.mjs";
 
 import {
+  DEFAULT_RUN_SLOTS,
+  MAX_RUN_SLOTS,
   QUEUE_SCHEMA,
+  QUEUE_STATE_REVISION,
   assertQueueState,
   buildExecutionReceipt,
   buildDriverArgs,
+  canAutomaticallyResumeAttention,
   canAdvanceTask,
   createQueueState,
+  migrateQueueState,
   parseBatchArgs,
+  refreshQueueSlots,
   recordReceiptIntegrityFailure,
   recordManualIntervention,
   recordTaskOrchestrationFailure,
   recordWorkerInterruption,
   resolveQueuePlan,
+  selectPendingTaskIndexes,
 } from "../batch.mjs";
 
 async function fixture() {
@@ -55,6 +62,18 @@ test("parseBatchArgs preserves explicit task order", () => {
   assert.equal(args.permissionMode, "full-access");
   assert.equal(args.continueOnTerminalFailure, false);
   assert.equal(args.postCancelQuiescenceSeconds, 5);
+  assert.equal(args.runSlots, DEFAULT_RUN_SLOTS);
+  assert.equal(args.runSlotsExplicit, false);
+});
+
+test("batch accepts one to eight run slots and rejects invalid values", () => {
+  const base = ["--harness-root", "/tmp/batch", "--run-id", "slots", "--task-id", "task-a"];
+  assert.equal(parseBatchArgs([...base, "--run-slots", "1"]).runSlots, 1);
+  assert.equal(parseBatchArgs([...base, "--run-slots", String(MAX_RUN_SLOTS)]).runSlots, MAX_RUN_SLOTS);
+  assert.equal(parseBatchArgs([...base, "--run-slots", "1"]).runSlotsExplicit, true);
+  for (const value of ["0", "9", "1.5", "nope"]) {
+    assert.throws(() => parseBatchArgs([...base, "--run-slots", value]), /run-slots/);
+  }
 });
 
 test("batch accepts a dynamic WorkBuddy model and forwards it to the driver", () => {
@@ -63,6 +82,7 @@ test("batch accepts a dynamic WorkBuddy model and forwards it to the driver", ()
   ]);
   assert.equal(args.model, "Hy3");
   const driverArgs = buildDriverArgs(args, { taskRoot: "/tmp/task-a" }, 0);
+  assert.equal(driverArgs.includes("--quiet"), true);
   const modelIndex = driverArgs.indexOf("--model");
   assert.deepEqual(driverArgs.slice(modelIndex, modelIndex + 2), ["--model", "Hy3"]);
 });
@@ -111,6 +131,10 @@ test("queue state identity and ordered tasks are immutable on resume", async () 
   const plan = await resolveQueuePlan(args);
   const state = createQueueState(plan, args);
   assert.equal(state.schema_version, QUEUE_SCHEMA);
+  assert.equal(state.revision, QUEUE_STATE_REVISION);
+  assert.equal(state.ui_slots, 1);
+  assert.equal(state.run_slots, 3);
+  assert.equal(state.available_run_slots, 3);
   assert.deepEqual(state.tasks.map((task) => task.phase), ["PENDING", "PENDING"]);
   assert.equal(state.requested_ui_model, null);
   assert.equal(state.requested_permission_mode, "current");
@@ -118,6 +142,57 @@ test("queue state identity and ordered tasks are immutable on resume", async () 
   assert.doesNotThrow(() => assertQueueState(state, plan, args));
   state.tasks.reverse();
   assert.throws(() => assertQueueState(state, plan, args), /task_ids/);
+});
+
+test("legacy queue migration preserves one run slot and freezes it on resume", async () => {
+  const root = await fixture();
+  const args = parseBatchArgs([
+    "--harness-root", root, "--run-id", "legacy", "--task-id", "task-a", "--task-id", "task-b",
+  ]);
+  const plan = await resolveQueuePlan(args);
+  const state = createQueueState(plan, args);
+  delete state.revision;
+  delete state.ui_slots;
+  delete state.run_slots;
+  delete state.active_task_ids;
+  delete state.available_run_slots;
+  for (const task of state.tasks) {
+    delete task.dispatched_at;
+    delete task.last_observed_at;
+    delete task.observation_count;
+  }
+  assert.equal(migrateQueueState(state), true);
+  assert.equal(state.revision, QUEUE_STATE_REVISION);
+  assert.equal(state.ui_slots, 1);
+  assert.equal(state.run_slots, 1);
+  assert.equal(state.available_run_slots, 1);
+  assert.doesNotThrow(() => assertQueueState(state, plan, args));
+  const changed = parseBatchArgs([
+    "--harness-root", root, "--run-id", "legacy", "--task-id", "task-a", "--task-id", "task-b",
+    "--run-slots", "3",
+  ]);
+  assert.throws(() => assertQueueState(state, plan, changed), /run_slots/);
+});
+
+test("scheduler fills three background slots and backfills after out-of-order completion", () => {
+  const state = {
+    run_slots: 3,
+    tasks: ["a", "b", "c", "d"].map((task_id) => ({ task_id, phase: "PENDING" })),
+  };
+  refreshQueueSlots(state);
+  assert.deepEqual(selectPendingTaskIndexes(state), [0, 1, 2]);
+  state.tasks[0].phase = "RUNNING";
+  state.tasks[1].phase = "RUNNING";
+  state.tasks[2].phase = "RUNNING";
+  refreshQueueSlots(state);
+  assert.deepEqual(state.active_task_ids, ["a", "b", "c"]);
+  assert.equal(state.available_run_slots, 0);
+  assert.deepEqual(selectPendingTaskIndexes(state), []);
+  state.tasks[1].phase = "SUCCEEDED";
+  refreshQueueSlots(state);
+  assert.deepEqual(state.active_task_ids, ["a", "c"]);
+  assert.deepEqual(selectPendingTaskIndexes(state), [3]);
+  assert.deepEqual(selectPendingTaskIndexes(state, true), []);
 });
 
 test("queue permission mode is immutable after it is recorded", async () => {
@@ -151,13 +226,42 @@ test("batch only forwards retry flags to tasks with an existing automation state
   const freshArgs = buildDriverArgs(args, task, 1, null);
   assert.equal(freshArgs.includes("--resume"), false);
   assert.equal(freshArgs.includes("--retry-pre-send-failure"), false);
+  assert.equal(freshArgs.includes("--detach-after-submit"), true);
   const recoveryArgs = buildDriverArgs(args, task, 0, { phase: "INFRA_FAILED" });
   assert.equal(recoveryArgs.includes("--resume"), true);
   assert.equal(recoveryArgs.includes("--retry-pre-send-failure"), true);
+  assert.equal(recoveryArgs.includes("--detach-after-submit"), true);
+  assert.equal(recoveryArgs.includes("--observe-once"), false);
   assert.deepEqual(
     recoveryArgs.slice(recoveryArgs.indexOf("--post-cancel-quiescence-seconds"), recoveryArgs.indexOf("--post-cancel-quiescence-seconds") + 2),
     ["--post-cancel-quiescence-seconds", "5"],
   );
+});
+
+test("active conversations are observed once without resending the prompt", () => {
+  const args = parseBatchArgs([
+    "--harness-root", "/tmp/batch", "--run-id", "observe", "--task-id", "task-a", "--resume",
+  ]);
+  const driverArgs = buildDriverArgs(args, { taskRoot: "/tmp/task-a" }, 0, { phase: "RUNNING" });
+  assert.equal(driverArgs.includes("--resume"), true);
+  assert.equal(driverArgs.includes("--observe-once"), true);
+  assert.equal(driverArgs.includes("--detach-after-submit"), false);
+  assert.equal(driverArgs.includes("--retry-pre-send-failure"), false);
+});
+
+test("only transient observation interruptions resume without manual approval", () => {
+  assert.equal(canAutomaticallyResumeAttention({
+    phase: "NEEDS_ATTENTION",
+    history: [{ phase: "NEEDS_ATTENTION", reason: "driver-interrupted" }],
+  }), true);
+  assert.equal(canAutomaticallyResumeAttention({
+    phase: "NEEDS_ATTENTION",
+    history: [{ phase: "NEEDS_ATTENTION", reason: "client-disconnected" }],
+  }), true);
+  assert.equal(canAutomaticallyResumeAttention({
+    phase: "NEEDS_ATTENTION",
+    history: [{ phase: "NEEDS_ATTENTION", reason: "visible-approval" }],
+  }), false);
 });
 
 test("batch only restarts WorkBuddy on resume when explicitly requested", () => {
