@@ -45,7 +45,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.8.3";
+export const DRIVER_VERSION = "1.8.4";
 export const DEFAULT_APP_PATH = "/Applications/AStudio.app";
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";

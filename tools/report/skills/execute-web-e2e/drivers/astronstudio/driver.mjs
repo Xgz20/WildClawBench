@@ -164,7 +164,15 @@ async function waitForAstudioStopped(config, timeoutSeconds = 20) {
   throw new Error(`AstronStudio 旧进程或调试端口未在 ${timeoutSeconds} 秒内退出`);
 }
 
-export async function restartAstudio(config, overrides = {}) {
+function matchesTrackedRecoverySession(session, recoverySession) {
+  if (!recoverySession?.threadId || !recoverySession?.turnId || !recoverySession?.cwd) return false;
+  const sessionTurnIds = new Set([session.turnId, session.activeTurnId].filter(Boolean));
+  return session.conversationId === recoverySession.threadId
+    && session.cwd === recoverySession.cwd
+    && sessionTurnIds.has(recoverySession.turnId);
+}
+
+export async function restartAstudio(config, overrides = {}, recoverySession = null) {
   const dependencies = {
     querySessions,
     processIdentity: astudioProcessIdentity,
@@ -174,15 +182,27 @@ export async function restartAstudio(config, overrides = {}) {
     waitForEndpoint,
     waitForStopped: waitForAstudioStopped,
     launchAttempts: 3,
+    gracefulQuitTimeoutSeconds: 5,
     retryDelayMilliseconds: 2000,
     ...overrides,
+  };
+  const restartSafety = {
+    mode: recoverySession ? "tracked-recovery-session" : "no-active-sessions",
+    tracked_thread_id: recoverySession?.threadId || null,
+    tracked_turn_id: recoverySession?.turnId || null,
+    tracked_cwd: recoverySession?.cwd || null,
+    active_session_count: null,
+    tracked_session_matched: false,
   };
   const currentProcess = await dependencies.processIdentity();
   if (currentProcess) {
     const active = (await dependencies.querySessions(config.sessionDb)).filter((session) =>
       new Set(["running", "needs_attention", "pending", "starting"]).has(String(session.status)),
     );
-    if (active.length > 0) {
+    restartSafety.active_session_count = active.length;
+    restartSafety.tracked_session_matched = active.length === 1
+      && matchesTrackedRecoverySession(active[0], recoverySession);
+    if (active.length > 0 && !restartSafety.tracked_session_matched) {
       throw new Error(`AstronStudio 仍有 ${active.length} 个活动或待处理任务，拒绝重启客户端`);
     }
     await dependencies.run(
@@ -190,7 +210,31 @@ export async function restartAstudio(config, overrides = {}) {
       ["-e", `tell application id "${DEFAULT_BUNDLE_ID}" to quit`],
       { allowFailure: true, capture: true },
     );
-    await dependencies.waitForStopped(config);
+    try {
+      await dependencies.waitForStopped(config, dependencies.gracefulQuitTimeoutSeconds);
+      restartSafety.shutdown = { method: "application-quit", pid: currentProcess.pid };
+    } catch (gracefulError) {
+      const remainingProcess = await dependencies.processIdentity();
+      if (!remainingProcess || remainingProcess.pid !== currentProcess.pid) {
+        throw new Error(
+          `AstronStudio 正常退出超时后进程身份已变化，拒绝发送 SIGTERM：原 PID ${currentProcess.pid}，当前 PID ${remainingProcess?.pid || "不可用"}`,
+        );
+      }
+      const terminated = await dependencies.run(
+        "/bin/kill",
+        ["-TERM", String(currentProcess.pid)],
+        { allowFailure: true, capture: true },
+      );
+      if (terminated.code !== 0) {
+        throw new Error(`AstronStudio 正常退出超时，向已核对 PID ${currentProcess.pid} 发送 SIGTERM 失败：${terminated.stderr?.trim() || `退出码 ${terminated.code}`}`);
+      }
+      await dependencies.waitForStopped(config);
+      restartSafety.shutdown = {
+        method: "sigterm-after-quit-timeout",
+        pid: currentProcess.pid,
+        graceful_error: gracefulError instanceof Error ? gracefulError.message : String(gracefulError),
+      };
+    }
   }
   const port = new URL(config.endpoint).port || "9240";
   const attempts = [];
@@ -224,7 +268,7 @@ export async function restartAstudio(config, overrides = {}) {
       evidence.endpoint_error = error instanceof Error ? error.message : String(error);
     }
     if (evidence.endpoint_ready) {
-      return { status: "READY", recovered_after_retry: attempt > 1, attempts };
+      return { status: "READY", recovered_after_retry: attempt > 1, attempts, restart_safety: restartSafety };
     }
     if (attempt < dependencies.launchAttempts) {
       if (await dependencies.processIdentity() || await dependencies.endpointReady(config.endpoint)) {
@@ -264,6 +308,22 @@ async function visibleLocators(locator) {
   for (let index = 0; index < count; index += 1) {
     const candidate = locator.nth(index);
     if (await candidate.isVisible().catch(() => false)) matches.push(candidate);
+  }
+  return matches;
+}
+
+async function pointerReachableLocators(locators) {
+  const matches = [];
+  for (const candidate of locators) {
+    const reachable = typeof candidate.evaluate !== "function"
+      ? true
+      : await candidate.evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return false;
+        const target = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        return target === element || element.contains(target);
+      }).catch(() => false);
+    if (reachable) matches.push(candidate);
   }
   return matches;
 }
@@ -320,23 +380,40 @@ function threadIdFromUrl(url) {
 }
 
 export async function findNewTaskButtons(page) {
-  const byTestId = await visibleLocators(page.getByTestId("new-thread-button"));
+  const byTestId = await pointerReachableLocators(
+    await visibleLocators(page.getByTestId("new-thread-button")),
+  );
   if (byTestId.length === 1) return byTestId;
 
-  const byText = await visibleLocators(page.locator("button").filter({ hasText: /^(?:新建任务|New task)$/i }));
+  const byText = await pointerReachableLocators(
+    await visibleLocators(page.locator("button").filter({ hasText: /^(?:新建任务|New task)$/i })),
+  );
   const exactText = [];
   for (const candidate of byText) {
     if (/^(?:新建任务|New task)$/i.test((await candidate.innerText()).trim())) exactText.push(candidate);
   }
   if (exactText.length === 1) return exactText;
 
-  const byRole = await visibleLocators(page.getByRole("button", { name: /^(?:新建任务|New task)$/i }));
+  const byRole = await pointerReachableLocators(
+    await visibleLocators(page.getByRole("button", { name: /^(?:新建任务|New task)$/i })),
+  );
   if (byRole.length === 1) return byRole;
   return byTestId.length > 1 ? byTestId : (exactText.length ? exactText : byRole);
 }
 
 async function createFreshTask(page, timeout) {
   const previousThreadId = threadIdFromUrl(page.url());
+  if ((await findNewTaskButtons(page)).length === 0) {
+    const sidebarToggles = await pointerReachableLocators(
+      await visibleLocators(page.getByRole("button", {
+        name: /^(?:切换对话侧边栏|Toggle conversation sidebar)$/i,
+      })),
+    );
+    if (sidebarToggles.length !== 1) {
+      throw new Error(`AstronStudio 对话侧边栏已收起且切换按钮数量异常：${sidebarToggles.length}`);
+    }
+    await sidebarToggles[0].click({ timeout });
+  }
   const button = await waitForUniqueVisible(
     () => findNewTaskButtons(page),
     timeout,
@@ -963,16 +1040,21 @@ async function resumeAutomation(config, state, identityInfo) {
   try {
     await requireUnlockedGui();
     if (config.restartApp) {
-      if (!(state.session?.conversation_id || state.session?.dom_conversation_id)) {
+      const recoverySession = {
+        threadId: state.session?.conversation_id || state.session?.dom_conversation_id || null,
+        turnId: state.session?.turn_id || null,
+        cwd: state.session?.cwd || null,
+      };
+      if (!recoverySession.threadId || !recoverySession.turnId || recoverySession.cwd !== config.workspace) {
         return persistNeedsAttention(
           config,
           state,
           identityInfo,
-          "client-restart-thread-id-unavailable",
-          "恢复前没有捕获稳定 AstronStudio thread ID；禁止重启后猜测会话或重发 Prompt",
+          "client-restart-identity-incomplete",
+          "恢复前没有捕获与当前工作空间一致的稳定 AstronStudio thread/turn 身份；禁止重启后猜测会话或重发 Prompt",
         );
       }
-      state.client.launch = await restartAstudio(config);
+      state.client.launch = await restartAstudio(config, {}, recoverySession);
     } else if (!(await endpointReady(config.endpoint))) {
       throw new Error(`AstronStudio 未开放调试端口 ${config.endpoint}`);
     }

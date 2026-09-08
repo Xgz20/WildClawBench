@@ -177,6 +177,27 @@ test("a duplicated new-thread test id falls back to the unique exact-text button
   assert.deepEqual(await findNewTaskButtons(page), [exactButton]);
 });
 
+test("covered new-thread nodes are ignored in favor of the pointer-reachable button", async () => {
+  const covered = {
+    isVisible: async () => true,
+    evaluate: async () => false,
+  };
+  const reachable = {
+    isVisible: async () => true,
+    evaluate: async () => true,
+  };
+  const page = {
+    getByTestId: (testId) => {
+      assert.equal(testId, "new-thread-button");
+      return locatorFor([covered, reachable]);
+    },
+    locator: () => ({ filter: () => locatorFor([]) }),
+    getByRole: () => locatorFor([]),
+  };
+
+  assert.deepEqual(await findNewTaskButtons(page), [reachable]);
+});
+
 test("workspace readback accepts the project-bound trigger after adding a project", async () => {
   const workspace = "/tmp/batch/execution/tasks/task-001";
   const projectTrigger = {
@@ -259,6 +280,113 @@ test("restart protection refuses to close AstronStudio while a task is active", 
     /仍有 1 个活动或待处理任务，拒绝重启/,
   );
   assert.equal(mutationCalls, 0);
+});
+
+test("restart recovery allows only the single tracked active AstronStudio session", async () => {
+  const mutations = [];
+  const result = await restartAstudio(
+    { endpoint: "http://127.0.0.1:9240", appPath: "/Applications/AStudio.app", sessionDb: "/tmp/state.sqlite" },
+    {
+      processIdentity: async () => ({ pid: 123 }),
+      querySessions: async () => [{
+        status: "running",
+        conversationId: "thread-1",
+        activeTurnId: "turn-1",
+        turnId: "turn-1",
+        cwd: "/tmp/task-1",
+      }],
+      run: async (command) => {
+        mutations.push(command);
+        return { code: 0, stdout: "", stderr: "" };
+      },
+      waitForEndpoint: async () => {},
+      waitForStopped: async () => {},
+    },
+    { threadId: "thread-1", turnId: "turn-1", cwd: "/tmp/task-1" },
+  );
+  assert.deepEqual(mutations, ["/usr/bin/osascript", "/usr/bin/open"]);
+  assert.deepEqual(result.restart_safety, {
+    mode: "tracked-recovery-session",
+    tracked_thread_id: "thread-1",
+    tracked_turn_id: "turn-1",
+    tracked_cwd: "/tmp/task-1",
+    active_session_count: 1,
+    tracked_session_matched: true,
+    shutdown: { method: "application-quit", pid: 123 },
+  });
+});
+
+test("restart recovery refuses an active AstronStudio session outside the tracked identity", async () => {
+  let mutationCalls = 0;
+  await assert.rejects(
+    restartAstudio(
+      { endpoint: "http://127.0.0.1:9240", appPath: "/Applications/AStudio.app", sessionDb: "/tmp/state.sqlite" },
+      {
+        processIdentity: async () => ({ pid: 123 }),
+        querySessions: async () => [{
+          status: "running",
+          conversationId: "thread-other",
+          activeTurnId: "turn-other",
+          turnId: "turn-other",
+          cwd: "/tmp/task-other",
+        }],
+        run: async () => { mutationCalls += 1; return { code: 0, stdout: "", stderr: "" }; },
+      },
+      { threadId: "thread-1", turnId: "turn-1", cwd: "/tmp/task-1" },
+    ),
+    /仍有 1 个活动或待处理任务，拒绝重启/,
+  );
+  assert.equal(mutationCalls, 0);
+});
+
+test("restart safely falls back to SIGTERM only for the same verified AstronStudio PID", async () => {
+  const mutations = [];
+  let stoppedChecks = 0;
+  const result = await restartAstudio(
+    { endpoint: "http://127.0.0.1:9240", appPath: "/Applications/AStudio.app", sessionDb: "/tmp/state.sqlite" },
+    {
+      processIdentity: async () => ({ pid: 123 }),
+      querySessions: async () => [],
+      run: async (command, args) => {
+        mutations.push([command, args]);
+        return { code: 0, stdout: "", stderr: "" };
+      },
+      waitForEndpoint: async () => {},
+      waitForStopped: async () => {
+        stoppedChecks += 1;
+        if (stoppedChecks === 1) throw new Error("graceful quit timeout");
+      },
+    },
+  );
+  assert.deepEqual(mutations.map(([command]) => command), [
+    "/usr/bin/osascript",
+    "/bin/kill",
+    "/usr/bin/open",
+  ]);
+  assert.deepEqual(mutations[1][1], ["-TERM", "123"]);
+  assert.equal(result.restart_safety.shutdown.method, "sigterm-after-quit-timeout");
+  assert.equal(result.restart_safety.shutdown.pid, 123);
+});
+
+test("restart refuses SIGTERM when the AstronStudio PID changes after quit timeout", async () => {
+  const mutations = [];
+  let processChecks = 0;
+  await assert.rejects(
+    restartAstudio(
+      { endpoint: "http://127.0.0.1:9240", appPath: "/Applications/AStudio.app", sessionDb: "/tmp/state.sqlite" },
+      {
+        processIdentity: async () => ({ pid: processChecks++ === 0 ? 123 : 456 }),
+        querySessions: async () => [],
+        run: async (command) => {
+          mutations.push(command);
+          return { code: 0, stdout: "", stderr: "" };
+        },
+        waitForStopped: async () => { throw new Error("graceful quit timeout"); },
+      },
+    ),
+    /进程身份已变化，拒绝发送 SIGTERM：原 PID 123，当前 PID 456/,
+  );
+  assert.deepEqual(mutations, ["/usr/bin/osascript"]);
 });
 
 test("restart retries a failed open call and records bounded evidence", async () => {

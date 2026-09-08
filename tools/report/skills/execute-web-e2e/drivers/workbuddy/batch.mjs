@@ -30,7 +30,7 @@ const BATCH_PROFILE = ASTRONSTUDIO_BATCH_PROFILE ? Object.freeze({
   harnessId: "astronstudio",
   displayName: "AstronStudio",
   workerId: "astronstudio-serial",
-  workerVersion: "1.8.3",
+  workerVersion: "1.8.4",
   driverFile: resolve(SCRIPT_DIR, "../astronstudio/driver.mjs"),
   lockFileName: "astronstudio-ui.lock",
   defaultRunSlots: 1,
