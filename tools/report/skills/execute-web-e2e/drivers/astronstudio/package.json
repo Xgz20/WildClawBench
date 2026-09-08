@@ -1,6 +1,6 @@
 {
   "name": "wildclawbench-execute-web-e2e-astronstudio",
-  "version": "1.8.4",
+  "version": "1.9.1",
   "private": true,
   "type": "module",
   "description": "Recoverable AstronStudio desktop driver for WildClawBench Web E2E execution",

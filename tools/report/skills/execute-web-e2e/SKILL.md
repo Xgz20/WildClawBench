@@ -5,7 +5,7 @@ description: 在 WorkBuddy、AstronStudio 等桌面 Harness 中执行单个或�
 
 # 执行 Web E2E 用例
 
-本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 WorkBuddy 单题 Driver/后台并发队列，以及 AstronStudio 单题 Driver/串行队列；其他 Harness Driver 仍按 Roadmap 逐步接入。先读取 execution 包 `manifest.json` 的 `harness.id`，再选择同名 Driver，不能按文件名或客户端外观猜测。
+本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 WorkBuddy、AstronStudio 的单题 Driver 和后台并发队列；其他 Harness Driver 仍按 Roadmap 逐步接入。先读取 execution 包 `manifest.json` 的 `harness.id`，再选择同名 Driver，不能按文件名或客户端外观猜测。
 
 ## AstronStudio
 
@@ -24,7 +24,7 @@ bash .agents/skills/execute-web-e2e/scripts/run-astronstudio.sh --probe
 
 预检要求 `/Applications/AStudio.app`、本机 `http://127.0.0.1:9240`、macOS 可交互桌面和 `~/.acode/acode/userdata/state.sqlite` 均可用。`--probe` 不会点击“新建任务”；停在历史会话时 workspace picker 不可见只是诊断信息，只要“新建任务”、编辑器、权限和模型控件可用仍可执行。需要由 Driver 启动客户端时，在确认没有活动或待处理任务后显式传 `--restart-app`。
 
-串行执行完整 manifest 中的任务：
+后台并发执行完整 manifest 中的任务：
 
 ```bash
 bash .agents/skills/execute-web-e2e/scripts/run-astronstudio-batch.sh \
@@ -32,14 +32,17 @@ bash .agents/skills/execute-web-e2e/scripts/run-astronstudio-batch.sh \
   --run-id <queue_id> \
   --task-id <task_id_1> \
   --task-id <task_id_2> \
+  --run-slots 3 \
   --permission-mode full-access
 ```
 
-AstronStudio 首版固定 `ui_slots=1`、`run_slots=1`；显式 `--run-slots` 只接受 `1`。队列必须覆盖 manifest 的完整 task ID 集合，才可能生成 `integrity.valid=true` 的 `execution-receipt.json`。一题到达明确终态并通过 automation/execution 一致性检查后才进入下一题。
+AstronStudio 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、模型/权限回读、Prompt 发送和 thread 切换仍由同一个 Driver 串行操作。发送后只有在 AstronStudio 路由与本地 SQLite 共同确认稳定 thread、turn 和 cwd 时才释放 Driver；Worker 轮流恢复各 thread 做一次性观察。任一题到达明确终态并通过 automation/execution 一致性检查后释放槽位并动态补入下一题。队列必须覆盖 manifest 的完整 task ID 集合，才可能生成 `integrity.valid=true` 的 `execution-receipt.json`。
 
 省略 `--model` 时保持并回读客户端当前模型与推理强度；显式提供时只切换并回读模型，不修改推理强度。`--permission-mode full-access` 会幂等确认完全访问。模型、权限和项目绝对路径均必须在发送 Prompt 前回读并写入状态。
 
-Worker 或 Driver 中断后，用完全相同的批次参数增加 `--resume`。已捕获稳定 thread ID 后，恢复只按该 ID 和单题绝对路径观察原会话，不重发 Prompt；客户端崩溃后再增加 `--restart-app-on-resume`。AstronStudio 出现授权、用户输入或未知状态时停在 `NEEDS_ATTENTION`，首版不自动批准交互。
+Worker 或 Driver 中断后，用完全相同的批次参数增加 `--resume`。已捕获稳定 thread ID 后，恢复只按该 ID 和单题绝对路径观察原会话，不重发 Prompt。只有一个活动任务时，客户端崩溃后可增加 `--restart-app-on-resume`；多个活动任务并发时，首版拒绝自动重启并停在 `NEEDS_ATTENTION`，避免错误接管或中断其他会话。AstronStudio 出现授权、用户输入或未知状态时停在 `NEEDS_ATTENTION`，不自动批准交互。
+
+如果 Prompt 发送前因 CDP 或 UI 自动化错误进入 `INFRA_FAILED`，且候选 workspace 经哈希确认完全未变化，可使用相同参数增加 `--resume --retry-pre-send-failure`。旧 attempt 会隔离归档；发送后失败或产物已有任何变化时拒绝自动重试。
 
 AstronStudio 的终态优先读取本地 SQLite 的 thread session、turn、open turn 和 pending interaction 投影，DOM 只补充可见运行态、交互和最终回复。workspace 稳定不能单独判定完成。
 
@@ -138,6 +141,6 @@ Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作�
 - 生产跑批前由测试人员按指导手册设置 Harness 的默认模型和推理强度。执行自动化只在显式提供 `--model` 时切换模型；推理强度始终沿用 Harness 当前配置，不由 Playwright 选择或校验。
 - 只允许 Driver 对显式白名单且严格限定在候选 `workspace/` 内的普通操作自动选择一次性“允许”；当前唯一规则是清理该目录下的 `.DS_Store`。其他命令（包括同类命令的路径或参数变化）一律停在 `NEEDS_ATTENTION`。
 - `SUCCEEDED`、`INFRA_FAILED`、已确认停止的 `TIMEOUT` 分别映射为 `execution_record.json` 的 `completed`、`execution_error`、`timeout`；没有生成有效站点仍是正常完成，由评分阶段判低分。
-- WorkBuddy 始终保持 `ui_slots: 1`；新队列默认 `run_slots: 3`、最大 8。这里的并发只指已投递 Agent 在客户端后台并行运行，禁止同时启动多个 Playwright Driver 抢占窗口。首次换机、升级 WorkBuddy/Skill 或切换模型后先用 3 个 L1 冒烟；未通过真实隔离验证的节点显式使用 `--run-slots 1`。
+- WorkBuddy 和 AstronStudio 始终保持 `ui_slots: 1`；新队列默认 `run_slots: 3`、最大 8。这里的并发只指已投递 Agent 在客户端后台并行运行，禁止同时启动多个 Playwright Driver 抢占窗口。首次换机、升级 Harness/Skill 或切换模型后先用 3 个 L1 冒烟；未通过真实隔离验证的节点显式使用 `--run-slots 1`。
 
 实现或审查其他 Driver 时，完整读取 [Driver 契约](references/driver-contract.md)。

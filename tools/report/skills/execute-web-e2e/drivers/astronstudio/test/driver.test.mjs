@@ -16,10 +16,12 @@ import {
   updateExecutionRecord,
 } from "../lib.mjs";
 import {
+  connectAstudioBrowser,
   dismissOpenMenus,
   ensureModel,
   ensurePermissionMode,
   findNewTaskButtons,
+  hasStableThreadIdentity,
   inspectWorkspace,
   isProbeReady,
   restartAstudio,
@@ -59,6 +61,44 @@ test("parseArgs uses AstronStudio defaults without changing model or reasoning",
   assert.equal(parsed.model, "");
   assert.equal(parsed.permissionMode, "current");
   assert.equal(parsed.detachAfterSubmit, false);
+  assert.equal(parseArgs(["--probe", "--detach-after-submit"]).detachAfterSubmit, true);
+});
+
+test("detached dispatch requires a route-confirmed AstronStudio thread turn and cwd", () => {
+  const workspace = "/tmp/task-1";
+  const state = {
+    session: {
+      conversation_id: "thread-1",
+      dom_conversation_id: "thread-1",
+      turn_id: "turn-1",
+      cwd: workspace,
+    },
+  };
+  assert.equal(hasStableThreadIdentity(state, workspace), true);
+  assert.equal(hasStableThreadIdentity({ session: { ...state.session, turn_id: null } }, workspace), false);
+  assert.equal(hasStableThreadIdentity({ session: { ...state.session, dom_conversation_id: "thread-other" } }, workspace), false);
+  assert.equal(hasStableThreadIdentity({ session: { ...state.session, cwd: "/tmp/task-other" } }, workspace), false);
+});
+
+test("AstronStudio CDP connection retries transient failures with a bounded timeout", async () => {
+  const calls = [];
+  const browser = { contexts: () => [] };
+  const result = await connectAstudioBrowser({}, "http://127.0.0.1:9240", 30000, {
+    attempts: 3,
+    retryDelayMilliseconds: 0,
+    sleep: async () => {},
+    connect: async (endpoint, options) => {
+      calls.push({ endpoint, options });
+      if (calls.length < 3) throw new Error(`transient-${calls.length}`);
+      return browser;
+    },
+  });
+  assert.equal(result, browser);
+  assert.deepEqual(calls, [
+    { endpoint: "http://127.0.0.1:9240", options: { timeout: 10000 } },
+    { endpoint: "http://127.0.0.1:9240", options: { timeout: 10000 } },
+    { endpoint: "http://127.0.0.1:9240", options: { timeout: 10000 } },
+  ]);
 });
 
 test("AstronStudio identity and execution record keep the Harness boundary", async () => {

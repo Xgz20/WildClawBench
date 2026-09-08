@@ -3,7 +3,7 @@
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { realpathSync } from "node:fs";
-import { copyFile, mkdir, writeFile } from "node:fs/promises";
+import { access, copyFile, mkdir, rename, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -45,6 +45,7 @@ function usage() {
   --poll-interval-seconds <秒>     终态轮询间隔，默认 2
   --post-cancel-quiescence-seconds <秒> 超时停止后的 workspace 静默观察，默认 5
   --resume                         从已有 automation_state 恢复，禁止重复发送
+  --detach-after-submit            捕获稳定 thread/turn/cwd 后退出观察，供批次 Worker 后台并发
   --observe-once                   恢复原 thread，只执行一次终态观察
   --restart-app                    确认无其他活动任务后，以本机 CDP 端口重启 AStudio
   --dry-run                        校验输入、身份和状态，不操作 AStudio
@@ -370,6 +371,29 @@ async function chooseAstudioPage(browser, timeout) {
   throw new Error("调试端口已连接，但找不到 AstronStudio 主页面");
 }
 
+export async function connectAstudioBrowser(chromium, endpoint, timeout, overrides = {}) {
+  const dependencies = {
+    connect: (url, options) => chromium.connectOverCDP(url, options),
+    sleep,
+    attempts: 3,
+    retryDelayMilliseconds: 500,
+    ...overrides,
+  };
+  const attemptTimeout = Math.max(1000, Math.min(timeout, 10000));
+  const errors = [];
+  for (let attempt = 1; attempt <= dependencies.attempts; attempt += 1) {
+    try {
+      return await dependencies.connect(endpoint, { timeout: attemptTimeout });
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+      if (attempt < dependencies.attempts) {
+        await dependencies.sleep(dependencies.retryDelayMilliseconds * attempt);
+      }
+    }
+  }
+  throw new Error(`AstronStudio CDP 连续 ${dependencies.attempts} 次连接失败：${errors.join("；")}`);
+}
+
 function threadIdFromUrl(url) {
   try {
     const match = new URL(url).hash.match(/^#\/([^/?#]+)/);
@@ -403,17 +427,27 @@ export async function findNewTaskButtons(page) {
 
 async function createFreshTask(page, timeout) {
   const previousThreadId = threadIdFromUrl(page.url());
-  if ((await findNewTaskButtons(page)).length === 0) {
+  const entryDeadline = Date.now() + timeout;
+  const sidebarToggleEligibleAt = Date.now() + Math.min(3000, Math.floor(timeout / 3));
+  let newTaskButtons = await findNewTaskButtons(page);
+  let sidebarToggleClicked = false;
+  while (newTaskButtons.length === 0 && Date.now() < entryDeadline) {
     const sidebarToggles = await pointerReachableLocators(
       await visibleLocators(page.getByRole("button", {
         name: /^(?:切换对话侧边栏|Toggle conversation sidebar)$/i,
       })),
     );
-    if (sidebarToggles.length !== 1) {
-      throw new Error(`AstronStudio 对话侧边栏已收起且切换按钮数量异常：${sidebarToggles.length}`);
+    if (sidebarToggles.length > 1) {
+      throw new Error(`AstronStudio 对话侧边栏切换按钮数量异常：${sidebarToggles.length}`);
     }
-    await sidebarToggles[0].click({ timeout });
+    if (sidebarToggles.length === 1 && !sidebarToggleClicked && Date.now() >= sidebarToggleEligibleAt) {
+      await sidebarToggles[0].click({ timeout });
+      sidebarToggleClicked = true;
+    }
+    await sleep(250);
+    newTaskButtons = await findNewTaskButtons(page);
   }
+  if (newTaskButtons.length === 0) throw new Error("AstronStudio 启动后未在限定时间内加载新建任务入口");
   const button = await waitForUniqueVisible(
     () => findNewTaskButtons(page),
     timeout,
@@ -715,12 +749,16 @@ async function captureAttemptThread(page, config, state, timeout) {
       session.conversationId === routeThreadId && resolve(String(session.cwd || "")) === config.workspace,
     );
     const candidate = exact || chooseAttemptSession(sessions, state, config.workspace);
-    if (candidate) {
+    const turnId = candidate?.turnId || candidate?.activeTurnId || null;
+    if (candidate
+      && routeThreadId === candidate.conversationId
+      && resolve(String(candidate.cwd || "")) === config.workspace
+      && turnId) {
       state.session.conversation_id = candidate.conversationId;
-      state.session.dom_conversation_id = routeThreadId === candidate.conversationId ? routeThreadId : null;
+      state.session.dom_conversation_id = routeThreadId;
       state.session.cwd = candidate.cwd;
       state.session.raw_status = candidate.status;
-      state.session.turn_id = candidate.turnId || candidate.activeTurnId || null;
+      state.session.turn_id = turnId;
       state.session.updated_at_ms = candidate.updatedAt || null;
       state.session.dom_conversation_captured_at = new Date().toISOString();
       return candidate.conversationId;
@@ -728,6 +766,16 @@ async function captureAttemptThread(page, config, state, timeout) {
     await sleep(250);
   }
   return null;
+}
+
+export function hasStableThreadIdentity(state, workspace) {
+  const threadId = state.session?.conversation_id || null;
+  return Boolean(
+    threadId
+    && state.session?.dom_conversation_id === threadId
+    && state.session?.turn_id
+    && resolve(String(state.session?.cwd || "")) === resolve(workspace),
+  );
 }
 
 async function openAttemptThread(page, state, timeout) {
@@ -787,7 +835,42 @@ async function takeScreenshot(page, config, state, name) {
   return path;
 }
 
-async function finalize(config, state, identityInfo, phase, { error = null, terminalSource = null, finalText = "" } = {}) {
+function hasWorkspaceChanges(state) {
+  const changes = state.artifacts?.changes;
+  return ["added", "modified", "removed"].some((key) => (
+    Array.isArray(changes?.[key]) && changes[key].length > 0
+  ));
+}
+
+async function archiveRetryablePreSendFailure(config, state) {
+  if (state.phase !== "INFRA_FAILED" || state.timing?.sent_at || hasWorkspaceChanges(state)) {
+    throw new Error("只允许重试 Prompt 发送前且候选 workspace 零变化的 INFRA_FAILED");
+  }
+  const archiveDir = join(dirname(config.outputDir), ".attempts", basename(config.outputDir), state.attempt_id);
+  await access(archiveDir).then(
+    () => { throw new Error(`重试归档目录已存在：${archiveDir}`); },
+    (error) => { if (error?.code !== "ENOENT") throw error; },
+  );
+  await mkdir(dirname(archiveDir), { recursive: true });
+  await rename(config.outputDir, archiveDir);
+
+  const archivedState = structuredClone(state);
+  archivedState.evidence.screenshots = (archivedState.evidence?.screenshots || []).map((path) => (
+    path.startsWith(`${config.outputDir}/`) ? `${archiveDir}/${path.slice(config.outputDir.length + 1)}` : path
+  ));
+  archivedState.archive = { archived_at: new Date().toISOString(), archive_dir: archiveDir };
+  await atomicWriteJson(join(archiveDir, "automation_state.json"), archivedState);
+  await atomicWriteJson(join(archiveDir, "result.json"), archivedState);
+  return archiveDir;
+}
+
+async function finalize(config, state, identityInfo, phase, {
+  error = null,
+  terminalSource = null,
+  finalText = "",
+  finalTextSource = "astudio-dom",
+  useLastScreenshot = true,
+} = {}) {
   transitionState(state, phase, terminalSource ? { terminal_source: terminalSource } : {});
   const finishedAt = new Date().toISOString();
   state.timing.finished_at = finishedAt;
@@ -803,7 +886,7 @@ async function finalize(config, state, identityInfo, phase, { error = null, term
 
   const evidenceDir = join(config.workspace, ".web-e2e-evidence", state.attempt_id);
   await mkdir(evidenceDir, { recursive: true });
-  const finalScreenshotSource = state.evidence.screenshots.at(-1) || null;
+  const finalScreenshotSource = useLastScreenshot ? state.evidence.screenshots.at(-1) || null : null;
   if (finalScreenshotSource) {
     const finalScreenshot = join(evidenceDir, "final.png");
     await copyFile(finalScreenshotSource, finalScreenshot);
@@ -814,14 +897,14 @@ async function finalize(config, state, identityInfo, phase, { error = null, term
     transcriptPath = join(evidenceDir, "final-response.txt");
     await writeFile(transcriptPath, `${finalText.trim()}\n`, "utf8");
     state.evidence.final_response = {
-      source: "astudio-dom",
+      source: finalTextSource,
       sha256: createHash("sha256").update(finalText.trim()).digest("hex"),
       bytes: Buffer.byteLength(finalText.trim(), "utf8"),
     };
     state.evidence.transcript_path = transcriptPath;
   } else {
     state.evidence.final_response = {
-      source: "terminal-screenshot",
+      source: finalTextSource,
       text_available: false,
       screenshot_path: state.evidence.final_screenshot_path || null,
     };
@@ -840,6 +923,77 @@ async function finalize(config, state, identityInfo, phase, { error = null, term
     },
   });
   return state;
+}
+
+function updateObservedSession(state, session, domThreadId = null) {
+  state.session = {
+    ...state.session,
+    conversation_id: session.conversationId,
+    dom_conversation_id: domThreadId === session.conversationId
+      ? session.conversationId
+      : state.session.dom_conversation_id,
+    cwd: session.cwd,
+    raw_status: session.status,
+    turn_id: session.turnId || session.activeTurnId || state.session.turn_id || null,
+    updated_at_ms: session.updatedAt || null,
+  };
+}
+
+async function persistRunningObservation(config, state, identityInfo, session) {
+  if (new Set(["PROMPT_SENT", "NEEDS_ATTENTION"]).has(state.phase)) {
+    transitionState(state, "RUNNING", { recovered_observation: state.phase === "NEEDS_ATTENTION" });
+  }
+  state.error = null;
+  await saveState(config, state);
+  await updateExecutionRecord(config, identityInfo, {
+    clientVersion: state.client.version,
+    execution: { status: "pending", error: null },
+  });
+  return session;
+}
+
+async function observeAttemptFromDatabase(config, state, identityInfo, deadline) {
+  const session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
+  if (!session) return null;
+  updateObservedSession(state, session);
+  const classification = classifySessionStatus(session.status);
+  if (classification.kind === "success" || classification.kind === "failure") {
+    const finalText = await queryFinalResponse(
+      config.sessionDb,
+      session.conversationId,
+      session.turnId || state.session.turn_id || null,
+    ).catch(() => "");
+    return finalize(config, state, identityInfo, classification.kind === "success" ? "SUCCEEDED" : "INFRA_FAILED", {
+      terminalSource: "astudio-state-sqlite",
+      error: classification.kind === "failure" ? `AstronStudio turn 终态：${session.status}` : null,
+      finalText,
+      finalTextSource: "astudio-state-sqlite",
+      useLastScreenshot: false,
+    });
+  }
+  if (session.status === "needs_attention") {
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "pending-interaction",
+      "AstronStudio 正在等待授权或用户输入，自动化不会代替被评测 Agent 作答",
+    );
+  }
+  if (classification.kind === "unknown" && session.status !== "ready") {
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "unknown-session-status",
+      `无法识别 AstronStudio session 状态：${session.status}`,
+    );
+  }
+  if (classification.kind === "running" && Date.now() < deadline) {
+    await persistRunningObservation(config, state, identityInfo, session);
+    return state;
+  }
+  return null;
 }
 
 async function persistNeedsAttention(config, state, identityInfo, reason, error, page = null, screenshotName = null) {
@@ -934,17 +1088,7 @@ export async function observeAttemptOnce(page, config, state, identityInfo) {
   const dom = await inspectDom(page);
   const session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
   if (session) {
-    state.session = {
-      ...state.session,
-      conversation_id: session.conversationId,
-      dom_conversation_id: threadIdFromUrl(page.url()) === session.conversationId
-        ? session.conversationId
-        : state.session.dom_conversation_id,
-      cwd: session.cwd,
-      raw_status: session.status,
-      turn_id: session.turnId || session.activeTurnId || state.session.turn_id || null,
-      updated_at_ms: session.updatedAt || null,
-    };
+    updateObservedSession(state, session, threadIdFromUrl(page.url()));
     const classification = classifySessionStatus(session.status);
     if (classification.kind === "success") {
       const finalText = dom.finalText || await queryFinalResponse(
@@ -1008,12 +1152,7 @@ export async function observeAttemptOnce(page, config, state, identityInfo) {
   if (new Set(["PROMPT_SENT", "NEEDS_ATTENTION"]).has(state.phase) && (session || dom.running)) {
     transitionState(state, "RUNNING", { recovered_observation: state.phase === "NEEDS_ATTENTION" });
   }
-  state.error = null;
-  await saveState(config, state);
-  await updateExecutionRecord(config, identityInfo, {
-    clientVersion: state.client.version,
-    execution: { status: "pending", error: null },
-  });
+  await persistRunningObservation(config, state, identityInfo, session);
   if (Date.now() >= deadline) {
     return cancelTimedOutAttempt(page, config, state, identityInfo, dom, deadline);
   }
@@ -1038,8 +1177,8 @@ async function resumeAutomation(config, state, identityInfo) {
   state.runtime.heartbeat_at = state.runtime.driver_started_at;
   let page = null;
   try {
-    await requireUnlockedGui();
     if (config.restartApp) {
+      await requireUnlockedGui();
       const recoverySession = {
         threadId: state.session?.conversation_id || state.session?.dom_conversation_id || null,
         turnId: state.session?.turn_id || null,
@@ -1059,8 +1198,19 @@ async function resumeAutomation(config, state, identityInfo) {
       throw new Error(`AstronStudio 未开放调试端口 ${config.endpoint}`);
     }
     state.client.process = await astudioProcessIdentity();
+    if (config.observeOnce && !config.restartApp) {
+      const runStartedAt = Date.parse(state.timing.sent_at || state.timing.started_at || new Date().toISOString());
+      const databaseObserved = await observeAttemptFromDatabase(
+        config,
+        state,
+        identityInfo,
+        runStartedAt + config.runTimeoutSeconds * 1000,
+      );
+      if (databaseObserved) return databaseObserved;
+    }
+    await requireUnlockedGui();
     const { chromium } = await import("playwright-core");
-    const browser = await chromium.connectOverCDP(config.endpoint);
+    const browser = await connectAstudioBrowser(chromium, config.endpoint, config.timeoutSeconds * 1000);
     page = await chooseAstudioPage(browser, config.timeoutSeconds * 1000);
     page.setDefaultTimeout(config.timeoutSeconds * 1000);
     await page.bringToFront();
@@ -1127,20 +1277,32 @@ function installDriverSignalHandlers(config, state, identityInfo) {
 
 async function runAutomation(config, identityInfo) {
   await mkdir(config.outputDir, { recursive: true });
-  const existingState = await readJsonIfExists(config.stateFile);
+  let existingState = await readJsonIfExists(config.stateFile);
+  let retryArchive = null;
   if (existingState) {
     assertStateMatches(existingState, config, identityInfo.identity);
-    if (TERMINAL_PHASES.has(existingState.phase)) return existingState;
+    if (TERMINAL_PHASES.has(existingState.phase)) {
+      if (!config.retryPreSendFailure) return existingState;
+      retryArchive = await archiveRetryablePreSendFailure(config, existingState);
+      existingState = null;
+    }
+  }
+  if (existingState) {
     if (!config.resume) throw new Error(`已有未完成状态 ${existingState.phase}；必须使用 --resume，避免重复发送 Prompt`);
     installDriverSignalHandlers(config, existingState, identityInfo);
     return resumeAutomation(config, existingState, identityInfo);
   }
-  if (config.resume) throw new Error("--resume 要求已有 automation_state.json");
-  if (config.retryPreSendFailure) throw new Error("AstronStudio 首版暂不支持 --retry-pre-send-failure");
-  if (config.detachAfterSubmit) throw new Error("AstronStudio 首版 run_slots 固定为 1，不支持 --detach-after-submit");
-
+  if (config.resume && !retryArchive) throw new Error("--resume 要求已有 automation_state.json");
   const initialSnapshot = await snapshotTree(config.candidateWorkspace);
   const state = createInitialState(config, identityInfo.identity, initialSnapshot);
+  if (retryArchive) {
+    state.retry = {
+      reason: "pre-send-infra-failure",
+      previous_attempt_id: basename(retryArchive),
+      archived_at: new Date().toISOString(),
+      archive_dir: retryArchive,
+    };
+  }
   state.timing.started_at = new Date().toISOString();
   await saveState(config, state);
   installDriverSignalHandlers(config, state, identityInfo);
@@ -1165,7 +1327,7 @@ async function runAutomation(config, identityInfo) {
     await saveState(config, state);
 
     const { chromium } = await import("playwright-core");
-    const browser = await chromium.connectOverCDP(config.endpoint);
+    const browser = await connectAstudioBrowser(chromium, config.endpoint, config.timeoutSeconds * 1000);
     const timeout = config.timeoutSeconds * 1000;
     const page = await chooseAstudioPage(browser, timeout);
     page.setDefaultTimeout(timeout);
@@ -1217,19 +1379,34 @@ async function runAutomation(config, identityInfo) {
     transitionState(state, "PROMPT_SENT");
     await saveState(config, state);
     await captureAttemptThread(page, config, state, Math.min(timeout, 15000));
-    if (!state.session.conversation_id) {
+    if (!hasStableThreadIdentity(state, config.workspace)) {
       return persistNeedsAttention(
         config,
         state,
         identityInfo,
-        "thread-id-unavailable-after-send",
-        "Prompt 已发送，但未从 AstronStudio 路由和状态库共同确认稳定 thread ID；禁止重发",
+        "thread-identity-unavailable-after-send",
+        "Prompt 已发送，但未从 AstronStudio 路由和状态库共同确认稳定 thread/turn/cwd；禁止重发",
         page,
         "09-thread-id-unavailable.png",
       );
     }
     await saveState(config, state);
     await takeScreenshot(page, config, state, "08-prompt-sent.png");
+    if (config.detachAfterSubmit) {
+      transitionState(state, "RUNNING", {
+        detached_after_submit: true,
+        thread_id: state.session.conversation_id,
+        turn_id: state.session.turn_id,
+      });
+      state.error = null;
+      state.runtime.heartbeat_at = new Date().toISOString();
+      await saveState(config, state);
+      await updateExecutionRecord(config, identityInfo, {
+        clientVersion: state.client.version,
+        execution: { status: "pending", error: null },
+      });
+      return state;
+    }
     return waitForTerminal(page, config, state, identityInfo);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -1290,7 +1467,7 @@ async function probe(config) {
   if (checks.endpoint_ready) {
     try {
       const { chromium } = await import("playwright-core");
-      const browser = await chromium.connectOverCDP(config.endpoint);
+      const browser = await connectAstudioBrowser(chromium, config.endpoint, config.timeoutSeconds * 1000);
       const page = await chooseAstudioPage(browser, config.timeoutSeconds * 1000);
       const testIdNewTask = await visibleLocators(page.getByTestId("new-thread-button"));
       const textNewTask = await visibleLocators(page.locator("button").filter({ hasText: /^(?:新建任务|New task)$/i }));
@@ -1314,7 +1491,7 @@ async function probe(config) {
     version: DRIVER_VERSION,
     control_backend: "electron-cdp+astudio-project-picker+sidebar-manual-path",
     terminal_source: "astudio-state-sqlite+astudio-dom",
-    concurrency: { ui_slots: 1, run_slots: 1, verified: false },
+    concurrency: { ui_slots: 1, default_run_slots: 3, max_run_slots: 8, verified: true },
     ready: isProbeReady(checks),
     checks,
   };
@@ -1356,6 +1533,7 @@ export async function main(argv) {
       executionRecord: config.executionRecord,
       restartApp: config.restartApp,
       resume: config.resume,
+      detachAfterSubmit: config.detachAfterSubmit,
       observeOnce: config.observeOnce,
       dryRun: config.dryRun,
     };
