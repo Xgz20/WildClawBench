@@ -19,6 +19,7 @@ import {
   createInitialState,
   diffSnapshots,
   parseArgs,
+  queryFinalResponse,
   querySessions,
   readJsonIfExists,
   resolveConfig,
@@ -318,20 +319,26 @@ function threadIdFromUrl(url) {
   }
 }
 
+export async function findNewTaskButtons(page) {
+  const byTestId = await visibleLocators(page.getByTestId("new-thread-button"));
+  if (byTestId.length === 1) return byTestId;
+
+  const byText = await visibleLocators(page.locator("button").filter({ hasText: /^(?:新建任务|New task)$/i }));
+  const exactText = [];
+  for (const candidate of byText) {
+    if (/^(?:新建任务|New task)$/i.test((await candidate.innerText()).trim())) exactText.push(candidate);
+  }
+  if (exactText.length === 1) return exactText;
+
+  const byRole = await visibleLocators(page.getByRole("button", { name: /^(?:新建任务|New task)$/i }));
+  if (byRole.length === 1) return byRole;
+  return byTestId.length > 1 ? byTestId : (exactText.length ? exactText : byRole);
+}
+
 async function createFreshTask(page, timeout) {
   const previousThreadId = threadIdFromUrl(page.url());
   const button = await waitForUniqueVisible(
-    async () => {
-      const byTestId = await visibleLocators(page.getByTestId("new-thread-button"));
-      if (byTestId.length) return byTestId;
-      const byText = await visibleLocators(page.locator("button").filter({ hasText: /^(?:新建任务|New task)$/i }));
-      const exactText = [];
-      for (const candidate of byText) {
-        if (/^(?:新建任务|New task)$/i.test((await candidate.innerText()).trim())) exactText.push(candidate);
-      }
-      if (exactText.length) return exactText;
-      return visibleLocators(page.getByRole("button", { name: /^(?:新建任务|New task)$/i }));
-    },
+    () => findNewTaskButtons(page),
     timeout,
     "AstronStudio 新建任务按钮",
   );
@@ -863,18 +870,28 @@ export async function observeAttemptOnce(page, config, state, identityInfo) {
     };
     const classification = classifySessionStatus(session.status);
     if (classification.kind === "success") {
+      const finalText = dom.finalText || await queryFinalResponse(
+        config.sessionDb,
+        session.conversationId,
+        session.turnId || state.session.turn_id || null,
+      ).catch(() => "");
       await takeScreenshot(page, config, state, "10-succeeded.png");
       return finalize(config, state, identityInfo, "SUCCEEDED", {
         terminalSource: "astudio-state-sqlite",
-        finalText: dom.finalText,
+        finalText,
       });
     }
     if (classification.kind === "failure") {
+      const finalText = dom.finalText || await queryFinalResponse(
+        config.sessionDb,
+        session.conversationId,
+        session.turnId || state.session.turn_id || null,
+      ).catch(() => "");
       await takeScreenshot(page, config, state, "10-infra-failed.png");
       return finalize(config, state, identityInfo, "INFRA_FAILED", {
         terminalSource: "astudio-state-sqlite",
         error: `AstronStudio turn 终态：${session.status}`,
-        finalText: dom.finalText,
+        finalText,
       });
     }
     if (session.status === "needs_attention") {

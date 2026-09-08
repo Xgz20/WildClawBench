@@ -45,7 +45,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.8.1";
+export const DRIVER_VERSION = "1.8.3";
 export const DEFAULT_APP_PATH = "/Applications/AStudio.app";
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
@@ -196,4 +196,48 @@ export async function querySessions(sessionDb = DEFAULT_SESSION_DB) {
     }
   }
   throw new Error(`读取 AstronStudio 状态库失败：${lastError instanceof Error ? lastError.message : String(lastError)}`);
+}
+
+function sqlStringLiteral(value) {
+  return `'${String(value).replaceAll("'", "''")}'`;
+}
+
+async function queryFinalResponseSnapshot(snapshotDb, threadId, turnId) {
+  const threadPredicate = `thread_id = ${sqlStringLiteral(threadId)}`;
+  const turnPredicate = turnId ? `AND turn_id = ${sqlStringLiteral(turnId)}` : "";
+  const query = `
+SELECT text
+FROM projection_thread_messages
+WHERE ${threadPredicate}
+  ${turnPredicate}
+  AND role = 'assistant'
+  AND is_streaming = 0
+  AND trim(text) <> ''
+ORDER BY sequence DESC, updated_at DESC, message_id DESC
+LIMIT 1;
+`;
+  const result = await runCapture("/usr/bin/sqlite3", ["-readonly", "-json", snapshotDb, query]);
+  const rows = result.stdout.trim() ? JSON.parse(result.stdout) : [];
+  return typeof rows[0]?.text === "string" ? rows[0].text.trim() : "";
+}
+
+export async function queryFinalResponse(sessionDb, threadId, turnId = null) {
+  await access(sessionDb);
+  if (!threadId) return "";
+  let lastError = null;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const snapshotDir = await mkdtemp(join(tmpdir(), "astudio-state-snapshot-"));
+    const snapshotDb = join(snapshotDir, "state.sqlite");
+    try {
+      await copyFile(sessionDb, snapshotDb);
+      await copyIfPresent(`${sessionDb}-wal`, `${snapshotDb}-wal`);
+      await copyIfPresent(`${sessionDb}-shm`, `${snapshotDb}-shm`);
+      return await queryFinalResponseSnapshot(snapshotDb, threadId, turnId);
+    } catch (error) {
+      lastError = error;
+    } finally {
+      await rm(snapshotDir, { recursive: true, force: true }).catch(() => {});
+    }
+  }
+  throw new Error(`读取 AstronStudio 最终回复失败：${lastError instanceof Error ? lastError.message : String(lastError)}`);
 }

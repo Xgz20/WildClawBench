@@ -9,6 +9,7 @@ import {
   assertStateMatches,
   createInitialState,
   parseArgs,
+  queryFinalResponse,
   querySessions,
   resolveConfig,
   resolveExecutionIdentity,
@@ -18,6 +19,7 @@ import {
   dismissOpenMenus,
   ensureModel,
   ensurePermissionMode,
+  findNewTaskButtons,
   inspectWorkspace,
   isProbeReady,
   restartAstudio,
@@ -148,6 +150,33 @@ test("only a recognized open menu is dismissed before creating a task", async ()
   assert.equal(escapeCount, 1);
 });
 
+test("a duplicated new-thread test id falls back to the unique exact-text button", async () => {
+  const duplicated = [
+    { isVisible: async () => true },
+    { isVisible: async () => true },
+    { isVisible: async () => true },
+  ];
+  const exactButton = {
+    isVisible: async () => true,
+    innerText: async () => "新建任务",
+  };
+  const page = {
+    getByTestId: (testId) => {
+      assert.equal(testId, "new-thread-button");
+      return locatorFor(duplicated);
+    },
+    locator: (selector) => {
+      assert.equal(selector, "button");
+      return { filter: () => locatorFor([exactButton]) };
+    },
+    getByRole: () => {
+      throw new Error("unique exact text should win before the role fallback");
+    },
+  };
+
+  assert.deepEqual(await findNewTaskButtons(page), [exactButton]);
+});
+
 test("workspace readback accepts the project-bound trigger after adding a project", async () => {
   const workspace = "/tmp/batch/execution/tasks/task-001";
   const projectTrigger = {
@@ -191,6 +220,7 @@ test("SQLite projection states normalize completion, running and pending interac
     CREATE TABLE projection_turns(row_id INTEGER PRIMARY KEY, thread_id TEXT, turn_id TEXT, requested_at TEXT, started_at TEXT, completed_at TEXT, state TEXT, termination_origin TEXT, checkpoint_turn_count INTEGER);
     CREATE TABLE projection_pending_interactions(thread_id TEXT, status TEXT);
     CREATE TABLE provider_runtime_open_turns(thread_id TEXT);
+    CREATE TABLE projection_thread_messages(message_id TEXT, thread_id TEXT, turn_id TEXT, role TEXT, text TEXT, is_streaming INTEGER, created_at TEXT, updated_at TEXT, sequence INTEGER);
     INSERT INTO projection_projects VALUES ('p1','/tmp/one',NULL),('p2','/tmp/two',NULL),('p3','/tmp/three',NULL);
     INSERT INTO projection_threads VALUES ('t1','p1','turn1','{}',NULL),('t2','p2','turn2','{}',NULL),('t3','p3','turn3','{}',NULL);
     INSERT INTO projection_thread_sessions VALUES
@@ -203,11 +233,16 @@ test("SQLite projection states normalize completion, running and pending interac
       (3,'t3','turn3','2026-09-08T03:00:00.000Z','2026-09-08T03:00:01.000Z',NULL,'running',NULL,NULL);
     INSERT INTO projection_pending_interactions VALUES ('t3','pending');
     INSERT INTO provider_runtime_open_turns VALUES ('t2');
+    INSERT INTO projection_thread_messages VALUES
+      ('m1','t1','turn1','assistant','working',0,'2026-09-08T01:00:01.000Z','2026-09-08T01:00:01.000Z',1),
+      ('m2','t1','turn1','assistant','final response',0,'2026-09-08T01:00:02.000Z','2026-09-08T01:00:02.000Z',2),
+      ('m3','t1','turn1','assistant','streaming draft',1,'2026-09-08T01:00:03.000Z','2026-09-08T01:00:03.000Z',3);
   `;
   execFileSync("/usr/bin/sqlite3", [db, sql]);
   const sessions = await querySessions(db);
   const statuses = Object.fromEntries(sessions.map((session) => [session.conversationId, session.status]));
   assert.deepEqual(statuses, { t3: "needs_attention", t2: "running", t1: "completed" });
+  assert.equal(await queryFinalResponse(db, "t1", "turn1"), "final response");
 });
 
 test("restart protection refuses to close AstronStudio while a task is active", async () => {
