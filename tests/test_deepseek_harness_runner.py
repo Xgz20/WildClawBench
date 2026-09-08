@@ -94,6 +94,7 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
                 task_env_names=("SLACK_TOKEN",),
                 lobster_env_names=("LOBSTER_TOKEN",),
                 environ={
+                    "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
                     "MAAS_MAX_TOKENS": "16384",
                     "SLACK_TOKEN": "slack-secret",
                     "LOBSTER_TOKEN": "lobster-secret",
@@ -155,7 +156,7 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
         self.assertNotIn("DSH_REASONING=", joined)
         self.assertNotIn("DSH_MAX_TOKENS=", joined)
 
-    def test_shared_switch_omits_dsh_max_tokens_even_with_override(self) -> None:
+    def test_shared_switch_defaults_to_omitting_dsh_max_tokens(self) -> None:
         config = resolve_dsh_config(
             image="dsh:test",
             openrouter_api_key="test-key",
@@ -167,7 +168,6 @@ class DeepSeekHarnessConfigurationTests(unittest.TestCase):
             workspace_exec=Path("/work/exec"),
             model="xopglm52",
             environ={
-                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "false",
                 "MAAS_MAX_TOKENS": "4096",
             },
         )

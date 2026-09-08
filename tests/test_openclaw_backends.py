@@ -173,7 +173,14 @@ class OpenClawBackendTests(unittest.TestCase):
             openrouter_base_url="https://maas-api.example/v1"
         )
 
-        with patch.dict("os.environ", {"MAAS_MAX_TOKENS": "16384"}, clear=False):
+        with patch.dict(
+            "os.environ",
+            {
+                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
+                "MAAS_MAX_TOKENS": "16384",
+            },
+            clear=False,
+        ):
             agent._register_provider(
                 "openclaw-task", "openrouter/xopglm52", 900
             )

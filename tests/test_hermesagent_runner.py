@@ -116,7 +116,11 @@ class HermesAgentRunnerTest(unittest.TestCase):
     def test_maas_model_uses_common_output_limit(self) -> None:
         with patch.dict(
             os.environ,
-            {"HERMES_MAX_TOKENS": "", "MAAS_MAX_TOKENS": "3072"},
+            {
+                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
+                "HERMES_MAX_TOKENS": "",
+                "MAAS_MAX_TOKENS": "3072",
+            },
             clear=False,
         ):
             agent = HermesAgentAgent()

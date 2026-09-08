@@ -58,7 +58,14 @@ class OpenCodeRunnerTests(unittest.TestCase):
             openrouter_api_key="test-key",
             openrouter_base_url="https://maas-api.example/v1",
         )
-        with patch.dict("os.environ", {"MAAS_MAX_TOKENS": "3072"}, clear=False):
+        with patch.dict(
+            "os.environ",
+            {
+                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
+                "MAAS_MAX_TOKENS": "3072",
+            },
+            clear=False,
+        ):
             config = json.loads(
                 agent._render_opencode_config(
                     "openrouter/xopglm52", redact_secrets=True

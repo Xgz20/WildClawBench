@@ -40,6 +40,7 @@ class ModelLimitTests(unittest.TestCase):
         self.environ = {
             "ASTRON_MODELS_BASE_URL": "https://catalog.example/model-manager",
             "ASTRON_MODELS_API_KEY": "catalog-test-token",
+            "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
         }
 
     def tearDown(self) -> None:
@@ -75,18 +76,28 @@ class ModelLimitTests(unittest.TestCase):
             "Bearer catalog-test-token",
         )
 
-    def test_switch_defaults_enabled_and_false_disables_injection(self) -> None:
-        disabled = {**self.environ, "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "false"}
+    def test_switch_defaults_disabled_and_invalid_value_stays_disabled(self) -> None:
+        base_environment = {
+            "ASTRON_MODELS_BASE_URL": "https://catalog.example/model-manager",
+            "ASTRON_MODELS_API_KEY": "catalog-test-token",
+        }
+        cases = (
+            base_environment,
+            {**base_environment, "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "false"},
+            {**base_environment, "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "invalid"},
+        )
         with patch("src.utils.model_limits.urlopen") as open_url:
-            details = resolve_maas_max_tokens_details(
-                "xopglm52",
-                "https://maas-api.example/v1",
-                environ=disabled,
-            )
+            for environment in cases:
+                with self.subTest(environment=environment):
+                    details = resolve_maas_max_tokens_details(
+                        "xopglm52",
+                        "https://maas-api.example/v1",
+                        environ=environment,
+                    )
 
-        self.assertFalse(details["enabled"])
-        self.assertEqual(details["status"], "disabled")
-        self.assertIsNone(details["max_tokens"])
+                    self.assertFalse(details["enabled"])
+                    self.assertEqual(details["status"], "disabled")
+                    self.assertIsNone(details["max_tokens"])
         open_url.assert_not_called()
 
     def test_explicit_value_has_priority_and_invalid_value_uses_catalog(self) -> None:
@@ -152,7 +163,10 @@ class ModelLimitTests(unittest.TestCase):
         details = resolve_maas_max_tokens_details(
             "xopglm52",
             "https://maas-api.example/v1",
-            environ={"ASTRON_MODELS_BASE_URL": "https://catalog.example"},
+            environ={
+                "ASTRON_MODELS_BASE_URL": "https://catalog.example",
+                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
+            },
         )
         self.assertEqual(details["status"], "catalog_credentials_missing")
         self.assertIsNone(details["max_tokens"])
@@ -235,6 +249,7 @@ class ModelLimitTests(unittest.TestCase):
                 "?token=query-secret"
             ),
             "MAAS_MAX_TOKENS": "8192",
+            "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
         }
         with tempfile.TemporaryDirectory() as temp_dir:
             resolution = prepare_maas_max_tokens_resolution(

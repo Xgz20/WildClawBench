@@ -38,7 +38,12 @@ class CodexMaasTests(unittest.TestCase):
         )
         completed = subprocess.CompletedProcess([], 0, "", "")
         with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
-            "os.environ", {"MAAS_MAX_TOKENS": "3072"}, clear=False
+            "os.environ",
+            {
+                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
+                "MAAS_MAX_TOKENS": "3072",
+            },
+            clear=False,
         ), patch(
             "src.agents.codex.runner.start_maas_request_proxy",
             return_value="http://127.0.0.1:18080",

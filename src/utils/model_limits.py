@@ -87,21 +87,26 @@ def parse_positive_int(raw: object, *, default: int | None = None) -> int | None
 
 
 def maas_max_tokens_enabled(environ: Mapping[str, str] | None = None) -> bool:
-    """Return whether non-AstronCode Harnesses may inject a MaaS limit."""
+    """Return whether non-AstronCode Harnesses may inject a MaaS limit.
+
+    Injection is opt-in because each Harness may map model output limits to a
+    different provider-specific setting. AstronCode manages its native model
+    catalog separately and does not use this shared switch.
+    """
 
     env = environ if environ is not None else os.environ
     raw = str(env.get(MAAS_MAX_TOKENS_ENABLED_ENV, "")).strip().lower()
     if not raw:
-        return True
+        return False
     if raw in _FALSE_VALUES:
         return False
     if raw in _TRUE_VALUES:
         return True
     logger.warning(
-        "%s has an invalid value; treating it as enabled",
+        "%s has an invalid value; treating it as disabled",
         MAAS_MAX_TOKENS_ENABLED_ENV,
     )
-    return True
+    return False
 
 
 def _catalog_url(environ: Mapping[str, str]) -> str:

@@ -122,7 +122,12 @@ class ClaudeCodeRunnerTests(unittest.TestCase):
 
     def test_maas_model_injects_common_output_limit_environment(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
-            os.environ, {"MAAS_MAX_TOKENS": "3072"}, clear=False
+            os.environ,
+            {
+                "WILDCLAW_MAAS_MAX_TOKENS_ENABLED": "true",
+                "MAAS_MAX_TOKENS": "3072",
+            },
+            clear=False,
         ), patch("src.agents.claudecode.runner.subprocess.run") as run, self.assertLogs(
             "src.agents.claudecode.runner", level="INFO"
         ) as logs:
