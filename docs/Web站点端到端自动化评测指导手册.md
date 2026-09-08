@@ -353,7 +353,7 @@ Codex Desktop CDP：http://127.0.0.1:9230
 - 推理强度：始终由用户提前在被评测 Harness 中设置，执行自动化不修改。
 - WorkBuddy、AstronStudio 权限：生产评测使用 `full-access`，发送题目 Prompt 前会回读确认。
 - WorkBuddy 执行并发：新批次默认 3，最大 8；UI 操作始终只有一路。
-- AstronStudio 执行并发：当前固定为 1，尚未开放后台并发。
+- AstronStudio 执行并发：新批次默认 3，最大 8；UI 操作始终只有一路。
 - Codex Desktop 评分并发：新批次默认 3，最大 8；每题使用独立项目、任务、Browser 和端口。
 - 同一批次执行期间不要人工切换模型、权限或关闭正在运行的客户端。
 
