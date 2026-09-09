@@ -45,7 +45,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.9.7";
+export const DRIVER_VERSION = "1.9.8";
 export const DEFAULT_APP_PATH = "/Applications/QwenWorkCN.app";
 export const DEFAULT_BUNDLE_ID = "cn.qwenwork.desktop.mac";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9250";

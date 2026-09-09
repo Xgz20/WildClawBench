@@ -31,15 +31,20 @@ import {
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const NATIVE_FOLDER_HELPER = join(SCRIPT_DIR, "select-folder.swift");
+const QWEN_APPROVAL_PANEL_SELECTOR = [
+  '[data-pending-interaction-id]:visible',
+  '[data-testid="pending-sandbox-panel"]:visible',
+  '[role="dialog"]:visible',
+].join(", ");
 const QWEN_STOP_CONTROL_SELECTOR = [
-  'button[aria-label*="停止"]:visible',
-  'button[title*="停止"]:visible',
-  'button[aria-label*="Stop"]:visible',
-  'button[title*="Stop"]:visible',
+  'button[aria-label*="停止"]:not([disabled]):not([aria-disabled="true"]):visible',
+  'button[title*="停止"]:not([disabled]):not([aria-disabled="true"]):visible',
+  'button[aria-label*="Stop"]:not([disabled]):not([aria-disabled="true"]):visible',
+  'button[title*="Stop"]:not([disabled]):not([aria-disabled="true"]):visible',
   // QwenWork 1.0.4 renders its active composer stop control without an
   // accessible name. Restrict the fallback to the observed rounded-square
   // stop glyph; the caller still requires exactly one visible match.
-  'button:has(svg[viewBox="0 0 24 24"] path[d^="M3 10.2556C3 7.15979"]):visible',
+  'button:not([disabled]):not([aria-disabled="true"]):has(svg[viewBox="0 0 24 24"] path[d^="M3 10.2556C3 7.15979"]):visible',
 ].join(", ");
 
 function usage() {
@@ -992,8 +997,10 @@ async function openAttemptConversation(page, config, state, timeout) {
 }
 
 export async function inspectPendingAttention(page) {
-  const attentionContainers = page.locator('[data-testid="pending-sandbox-panel"]:visible, [role="dialog"]:visible');
-  const attentionButtons = attentionContainers.getByRole("button", { name: /允许|批准|确认执行|始终允许|Allow|Approve|Deny|拒绝/ });
+  const attentionContainers = page.locator(QWEN_APPROVAL_PANEL_SELECTOR);
+  const attentionButtons = attentionContainers.getByRole("button", {
+    name: /^\s*(?:允许|批准|确认执行|始终允许|Allow|Approve|Deny|拒绝)\s*$/,
+  });
   const attention = [];
   for (const button of await visibleLocators(attentionButtons)) {
     const name = (await button.innerText().catch(() => "")) || (await button.getAttribute("aria-label")) || "";
@@ -1216,14 +1223,26 @@ async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom,
   });
 }
 
-async function inspectApprovalPanels(page, candidateWorkspace) {
-  const panels = await visibleLocators(page.locator('[data-testid="pending-sandbox-panel"]'));
+export async function inspectApprovalPanels(page, candidateWorkspace) {
+  const panels = await visibleLocators(page.locator(QWEN_APPROVAL_PANEL_SELECTOR));
   const approvals = [];
   for (const panel of panels) {
-    const command = await panel.locator('[class*="commandInline"]').innerText().catch(() => "");
+    const commandNodes = await visibleLocators(panel.locator([
+      '[style*="font-family"][title]:visible',
+      '[class*="commandInline"]:visible',
+    ].join(", ")));
+    let command = "";
+    for (const node of commandNodes) {
+      const value = (await node.getAttribute("title").catch(() => null))
+        || (await node.innerText().catch(() => ""));
+      if (value?.trim()) {
+        command = value.trim();
+        break;
+      }
+    }
     const buttons = await panel.getByRole("button").allInnerTexts().catch(() => []);
     approvals.push({
-      command: command.trim(),
+      command,
       buttons: buttons.map((value) => value.trim()).filter(Boolean),
       classification: classifyApprovalCommand(command, candidateWorkspace),
     });
@@ -1231,7 +1250,7 @@ async function inspectApprovalPanels(page, candidateWorkspace) {
   return approvals;
 }
 
-async function handleExpectedApprovals(page, config, state) {
+export async function handleExpectedApprovals(page, config, state) {
   const approvals = await inspectApprovalPanels(page, config.candidateWorkspace);
   if (!approvals.length) return { handled: false, approvals: [] };
   if (approvals.some((approval) => !approval.classification.allow)) {
@@ -1239,12 +1258,12 @@ async function handleExpectedApprovals(page, config, state) {
   }
   if (!Array.isArray(state.evidence.approvals)) state.evidence.approvals = [];
   await takeScreenshot(page, config, state, `09-approval-before-${state.evidence.approvals.length + 1}.png`);
-  const panels = await visibleLocators(page.locator('[data-testid="pending-sandbox-panel"]'));
+  const panels = await visibleLocators(page.locator(QWEN_APPROVAL_PANEL_SELECTOR));
   if (panels.length !== approvals.length) {
     throw new Error("QwenWork 授权面板数量在检查期间发生变化");
   }
   for (let index = 0; index < approvals.length; index += 1) {
-    const allowOnce = panels[index].getByRole("button", { name: /^\s*(?:\d+\s*)?允许\s*$/ });
+    const allowOnce = panels[index].getByRole("button", { name: "允许", exact: true });
     const matches = await visibleLocators(allowOnce);
     if (matches.length !== 1) throw new Error("安全授权面板中找不到唯一的单次“允许”按钮");
     await matches[0].click({ timeout: config.timeoutSeconds * 1000 });

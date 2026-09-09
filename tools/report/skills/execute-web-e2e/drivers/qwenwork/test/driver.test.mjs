@@ -3,7 +3,9 @@ import test from "node:test";
 
 import {
   chooseQwenAttemptSession,
+  handleExpectedApprovals,
   hasStableConversationId,
+  inspectApprovalPanels,
   inspectPendingAttention,
   openQwenProjectConversation,
   qwenStopControlLocator,
@@ -44,7 +46,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.9.7");
+  assert.equal(state.driver.version, "1.9.8");
 });
 
 test("QwenWork 只有同时捕获 chat 和稳定内核 session 才允许后台恢复", () => {
@@ -203,7 +205,7 @@ test("QwenWork session 捕获限定当前项目且不复用未变化的基线会
   assert.equal(session?.sessionId, "new-session");
 });
 
-test("QwenWork 只在待处理面板或对话框中识别授权按钮", async () => {
+test("QwenWork 兼容原生 pending-interaction 授权容器", async () => {
   let requestedContainer = "";
   let requestedRole = "";
   const buttons = [
@@ -228,9 +230,66 @@ test("QwenWork 只在待处理面板或对话框中识别授权按钮", async ()
     },
   };
   assert.deepEqual(await inspectPendingAttention(page), ["允许"]);
+  assert.match(requestedContainer, /data-pending-interaction-id/);
   assert.match(requestedContainer, /pending-sandbox-panel/);
   assert.match(requestedContainer, /role="dialog"/);
   assert.equal(requestedRole, "button");
+});
+
+test("QwenWork 从原生高危授权卡片严格提取命令且不列入自动批准", async () => {
+  const command = "/bin/rm -rf /tmp/qwen-approval-target.test";
+  let requestedPanelSelector = "";
+  let requestedCommandSelector = "";
+  const commandNode = {
+    isVisible: async () => true,
+    getAttribute: async (name) => name === "title" ? command : null,
+    innerText: async () => "不应优先读取此文本",
+  };
+  const panel = {
+    isVisible: async () => true,
+    locator(selector) {
+      requestedCommandSelector = selector;
+      return {
+        count: async () => 1,
+        nth: () => commandNode,
+      };
+    },
+    getByRole(role) {
+      assert.equal(role, "button");
+      return { allInnerTexts: async () => ["拒绝", "允许"] };
+    },
+  };
+  const page = {
+    locator(selector) {
+      requestedPanelSelector = selector;
+      return {
+        count: async () => 1,
+        nth: () => panel,
+      };
+    },
+  };
+  const approvals = await inspectApprovalPanels(page, "/tmp/candidate/workspace");
+  assert.match(requestedPanelSelector, /data-pending-interaction-id/);
+  assert.match(requestedCommandSelector, /font-family/);
+  assert.deepEqual(approvals, [{
+    command,
+    buttons: ["拒绝", "允许"],
+    classification: { allow: false, rule: null },
+  }]);
+
+  let approvalButtonRequested = false;
+  panel.getByRole = (role, options) => {
+    assert.equal(role, "button");
+    if (options) approvalButtonRequested = true;
+    return { allInnerTexts: async () => ["拒绝", "允许"] };
+  };
+  const result = await handleExpectedApprovals(
+    page,
+    { candidateWorkspace: "/tmp/candidate/workspace" },
+    { evidence: { approvals: [] } },
+  );
+  assert.equal(result.handled, false);
+  assert.equal(approvalButtonRequested, false);
 });
 
 test("QwenWork 停止按钮兼容 1.0.4 无无障碍名称的圆角方形图标", () => {
@@ -240,6 +299,8 @@ test("QwenWork 停止按钮兼容 1.0.4 无无障碍名称的圆角方形图标"
       assert.match(selector, /aria-label\*="停止"/);
       assert.match(selector, /aria-label\*="Stop"/);
       assert.match(selector, /path\[d\^="M3 10\.2556C3 7\.15979"\]/);
+      assert.match(selector, /:not\(\[disabled\]\)/);
+      assert.match(selector, /:not\(\[aria-disabled="true"\]\)/);
       return expected;
     },
   };
