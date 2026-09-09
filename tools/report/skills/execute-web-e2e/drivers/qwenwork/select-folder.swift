@@ -89,6 +89,39 @@ private func setAttribute(_ element: AXUIElement, name: String, value: CFTypeRef
     guard result == .success else { throw SelectionError.actionFailed(action, result) }
 }
 
+private func elementCenter(_ element: AXUIElement) throws -> CGPoint {
+    guard let positionValue = attribute(element, kAXPositionAttribute),
+          let sizeValue = attribute(element, kAXSizeAttribute) else {
+        throw SelectionError.missingElement("控件坐标或尺寸")
+    }
+    var position = CGPoint.zero
+    var size = CGSize.zero
+    guard AXValueGetValue(positionValue as! AXValue, .cgPoint, &position),
+          AXValueGetValue(sizeValue as! AXValue, .cgSize, &size) else {
+        throw SelectionError.missingElement("控件坐标或尺寸回读")
+    }
+    return CGPoint(x: position.x + size.width / 2, y: position.y + size.height / 2)
+}
+
+private func click(_ element: AXUIElement) throws {
+    let point = try elementCenter(element)
+    guard let mouseDown = CGEvent(
+        mouseEventSource: nil,
+        mouseType: .leftMouseDown,
+        mouseCursorPosition: point,
+        mouseButton: .left
+    ), let mouseUp = CGEvent(
+        mouseEventSource: nil,
+        mouseType: .leftMouseUp,
+        mouseCursorPosition: point,
+        mouseButton: .left
+    ) else {
+        throw SelectionError.missingElement("无法创建鼠标点击事件")
+    }
+    mouseDown.post(tap: .cghidEventTap)
+    mouseUp.post(tap: .cghidEventTap)
+}
+
 private func waitUntil<T>(timeoutSeconds: Double, description: String, operation: () -> T?) throws -> T {
     let deadline = Date().addingTimeInterval(timeoutSeconds)
     repeat {
@@ -102,6 +135,17 @@ private func postShortcut(processIdentifier: pid_t, virtualKey: CGKeyCode, flags
     guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: virtualKey, keyDown: true),
           let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: virtualKey, keyDown: false) else {
         throw SelectionError.missingElement("无法创建键盘事件")
+    }
+    keyDown.flags = flags
+    keyUp.flags = flags
+    keyDown.postToPid(processIdentifier)
+    keyUp.postToPid(processIdentifier)
+}
+
+private func postShortcutGlobally(virtualKey: CGKeyCode, flags: CGEventFlags = []) throws {
+    guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: virtualKey, keyDown: true),
+          let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: virtualKey, keyDown: false) else {
+        throw SelectionError.missingElement("无法创建全局键盘事件")
     }
     keyDown.flags = flags
     keyUp.flags = flags
@@ -206,27 +250,81 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
         descendants(window, role: kAXSheetRole).first
     }
     do {
-        try postShortcut(
-            processIdentifier: application.processIdentifier,
-            virtualKey: 5,
-            flags: [.maskCommand, .maskShift]
-        )
-        let pathField: AXUIElement = try waitUntil(timeoutSeconds: timeoutSeconds, description: "前往文件夹路径输入框") {
-            return descendants(outerSheet, role: kAXTextFieldRole).first { field in
-                boolAttribute(field, kAXFocusedAttribute)
+        let pathFieldDeadline = Date().addingTimeInterval(timeoutSeconds)
+        var detectedPathField: AXUIElement?
+        var shortcutAttempt = 0
+        repeat {
+            shortcutAttempt += 1
+            application.activate(options: [.activateIgnoringOtherApps])
+            _ = AXUIElementSetAttributeValue(root, kAXFrontmostAttribute as CFString, kCFBooleanTrue)
+            let panelContext = currentOpenPanel()
+            if let panelContext = panelContext {
+                _ = AXUIElementSetAttributeValue(
+                    panelContext.root,
+                    kAXFrontmostAttribute as CFString,
+                    kCFBooleanTrue
+                )
+                _ = AXUIElementSetAttributeValue(
+                    panelContext.window,
+                    kAXFocusedAttribute as CFString,
+                    kCFBooleanTrue
+                )
             }
+            switch shortcutAttempt % 3 {
+            case 1:
+                try postShortcut(
+                    processIdentifier: panelContext?.processIdentifier ?? application.processIdentifier,
+                    virtualKey: 5,
+                    flags: [.maskCommand, .maskShift]
+                )
+            case 2:
+                try postShortcut(
+                    processIdentifier: application.processIdentifier,
+                    virtualKey: 5,
+                    flags: [.maskCommand, .maskShift]
+                )
+            default:
+                try postShortcutGlobally(virtualKey: 5, flags: [.maskCommand, .maskShift])
+            }
+            let attemptDeadline = min(pathFieldDeadline, Date().addingTimeInterval(2))
+            repeat {
+                let roots = [outerSheet] + (currentOpenPanel().map { [$0.window] } ?? [])
+                detectedPathField = roots.lazy.compactMap { controlRoot in
+                    descendants(controlRoot, role: kAXTextFieldRole).first { field in
+                        boolAttribute(field, kAXFocusedAttribute)
+                    }
+                }.first
+                if detectedPathField == nil {
+                    RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+                }
+            } while detectedPathField == nil && Date() < attemptDeadline
+        } while detectedPathField == nil && Date() < pathFieldDeadline
+        guard let pathField = detectedPathField else {
+            throw SelectionError.timeout("前往文件夹路径输入框")
         }
         try setAttribute(pathField, name: kAXFocusedAttribute, value: kCFBooleanTrue, action: "聚焦文件夹路径输入框")
+        try click(pathField)
         RunLoop.current.run(until: Date().addingTimeInterval(0.2))
-        try postShortcut(processIdentifier: application.processIdentifier, virtualKey: 0, flags: [.maskCommand])
-        RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        let navigationPath = (folderPath as NSString).deletingLastPathComponent
         let pasteboard = NSPasteboard.general
         let pasteboardSnapshot = snapshotPasteboard(pasteboard)
         defer { restorePasteboard(pasteboard, snapshot: pasteboardSnapshot) }
-        let navigationPath = (folderPath as NSString).deletingLastPathComponent
         pasteboard.clearContents()
         pasteboard.setString(navigationPath, forType: .string)
-        try postShortcut(processIdentifier: application.processIdentifier, virtualKey: 9, flags: [.maskCommand])
+        try postShortcutGlobally(virtualKey: 0, flags: [.maskCommand])
+        RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        try postShortcutGlobally(virtualKey: 9, flags: [.maskCommand])
+        RunLoop.current.run(until: Date().addingTimeInterval(0.3))
+        if stringAttribute(pathField, kAXValueAttribute) != navigationPath {
+            let directSetResult = AXUIElementSetAttributeValue(
+                pathField,
+                kAXValueAttribute as CFString,
+                navigationPath as CFString
+            )
+            guard directSetResult == .success else {
+                throw SelectionError.actionFailed("写入文件夹路径", directSetResult)
+            }
+        }
         let inputDeadline = Date().addingTimeInterval(min(timeoutSeconds, 5))
         while stringAttribute(pathField, kAXValueAttribute) != navigationPath && Date() < inputDeadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
@@ -238,36 +336,84 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
         }
         RunLoop.current.run(until: Date().addingTimeInterval(0.3))
 
-        var confirmMethod = "go-button"
-        let innerButtons = descendants(outerSheet, role: kAXButtonRole)
-        let innerConfirmButton = firstButton(outerSheet, titles: ["前往", "Go"])
-            ?? innerButtons.first { button in
-                boolAttribute(button, kAXEnabledAttribute)
-                    && stringAttribute(button, kAXSubroleAttribute) == "AXDefaultButton"
+        let navigationRoots = (currentOpenPanel().map { [$0.window] } ?? []) + [outerSheet]
+        let navigationButtonDescriptions = navigationRoots.flatMap { controlRoot in
+            descendants(controlRoot, role: kAXButtonRole).map { button -> String in
+                let title = stringAttribute(button, kAXTitleAttribute)
+                let description = stringAttribute(button, kAXDescriptionAttribute)
+                let subrole = stringAttribute(button, kAXSubroleAttribute)
+                return "\(title.isEmpty ? "<空>" : title){description=\(description.isEmpty ? "<空>" : description),subrole=\(subrole.isEmpty ? "<空>" : subrole),enabled=\(boolAttribute(button, kAXEnabledAttribute))}"
             }
-        if let goButton = innerConfirmButton {
-            confirmMethod = stringAttribute(goButton, kAXTitleAttribute).isEmpty ? "default-button" : "go-button"
-            try press(goButton, action: "前往目标目录")
-        } else {
-            confirmMethod = "return-key"
-            try postShortcut(processIdentifier: application.processIdentifier, virtualKey: 36)
         }
         let folderName = (folderPath as NSString).lastPathComponent
-        let rowDeadline = Date().addingTimeInterval(min(timeoutSeconds, 5))
-        var targetRow: AXUIElement?
         var observedRows: [String] = []
-        repeat {
-            let rows = descendants(outerSheet, role: kAXRowRole)
+        func findTargetRow() -> AXUIElement? {
+            let roots = (currentOpenPanel().map { [$0.window] } ?? []) + [outerSheet]
+            let rows = roots.flatMap { descendants($0, role: kAXRowRole) }
             observedRows = rows.map { row in
                 Array(Set(descendantElements(row).flatMap(elementTexts))).sorted().joined(separator: "|")
             }
-            targetRow = rows.first { row in
+            return rows.first { row in
                 descendantElements(row).flatMap(elementTexts).contains(folderName)
             }
-            if targetRow == nil { RunLoop.current.run(until: Date().addingTimeInterval(0.1)) }
-        } while targetRow == nil && Date() < rowDeadline
+        }
+        func waitForTargetRow(seconds: Double) -> AXUIElement? {
+            let deadline = Date().addingTimeInterval(seconds)
+            repeat {
+                if let row = findTargetRow() { return row }
+                RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+            } while Date() < deadline
+            return nil
+        }
+
+        var confirmMethod = "unconfirmed"
+        var confirmAttempts: [String] = []
+        var targetRow: AXUIElement?
+        try postShortcutGlobally(virtualKey: 36)
+        confirmAttempts.append("focused-global-return")
+        targetRow = waitForTargetRow(seconds: 1.5)
+        if targetRow != nil { confirmMethod = "focused-global-return" }
+        if targetRow == nil {
+            let fieldConfirmResult = AXUIElementPerformAction(pathField, kAXConfirmAction as CFString)
+            confirmAttempts.append("text-field-confirm=\(fieldConfirmResult.rawValue)")
+            if fieldConfirmResult == .success {
+                targetRow = waitForTargetRow(seconds: 1.5)
+                if targetRow != nil { confirmMethod = "text-field-confirm" }
+            }
+        }
+        if targetRow == nil {
+            let innerConfirmButton = navigationRoots.lazy.compactMap { controlRoot in
+                firstButton(controlRoot, titles: ["前往", "Go"])
+            }.first
+            if let goButton = innerConfirmButton {
+                try press(goButton, action: "前往目标目录")
+                confirmAttempts.append("go-button")
+                targetRow = waitForTargetRow(seconds: 1.5)
+                if targetRow != nil { confirmMethod = "go-button" }
+            }
+        }
+        if targetRow == nil, let panelProcessIdentifier = currentOpenPanel()?.processIdentifier {
+            try postShortcut(processIdentifier: panelProcessIdentifier, virtualKey: 36)
+            confirmAttempts.append("open-panel-return")
+            targetRow = waitForTargetRow(seconds: 1.5)
+            if targetRow != nil { confirmMethod = "open-panel-return" }
+        }
+        if targetRow == nil {
+            try postShortcut(processIdentifier: application.processIdentifier, virtualKey: 36)
+            confirmAttempts.append("application-return")
+            targetRow = waitForTargetRow(seconds: 1.5)
+            if targetRow != nil { confirmMethod = "application-return" }
+        }
+        if targetRow == nil {
+            try postShortcutGlobally(virtualKey: 36)
+            confirmAttempts.append("global-return")
+            targetRow = waitForTargetRow(seconds: 2)
+            if targetRow != nil { confirmMethod = "global-return" }
+        }
         guard let confirmedRow = targetRow else {
-            throw SelectionError.missingElement("父目录中的目标文件夹行；观察到：\(observedRows.joined(separator: ", "))")
+            throw SelectionError.missingElement(
+                "父目录中的目标文件夹行；确认尝试=\(confirmAttempts.joined(separator: ", "))；导航按钮=\(navigationButtonDescriptions.joined(separator: ", "))；观察到：\(observedRows.joined(separator: ", "))"
+            )
         }
         try setAttribute(confirmedRow, name: kAXSelectedAttribute, value: kCFBooleanTrue, action: "选择目标文件夹行")
         RunLoop.current.run(until: Date().addingTimeInterval(0.3))
@@ -276,7 +422,8 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
         var openButton: AXUIElement?
         var observedButtons: [String] = []
         repeat {
-            let buttons = descendants(outerSheet, role: kAXButtonRole)
+            let selectionRoots = (currentOpenPanel().map { [$0.window] } ?? []) + [outerSheet]
+            let buttons = selectionRoots.flatMap { descendants($0, role: kAXButtonRole) }
             observedButtons = buttons.map { button in
                 let title = stringAttribute(button, kAXTitleAttribute)
                 let subrole = stringAttribute(button, kAXSubroleAttribute)
