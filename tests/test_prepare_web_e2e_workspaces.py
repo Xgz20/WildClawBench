@@ -175,8 +175,8 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.4.2.zip"
             report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.0.1.zip"
             orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.1.2.zip"
-            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.9.2.zip"
-            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.0.3.zip"
+            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.9.3.zip"
+            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.0.4.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
             report_config_path = batch_root / "web-smoke__report-config.yaml"
 
@@ -265,6 +265,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIn("execute-web-e2e/drivers/astronstudio/package-lock.json", execute_skill_names)
             self.assertIn("execute-web-e2e/scripts/run-astronstudio.sh", execute_skill_names)
             self.assertIn("execute-web-e2e/scripts/run-astronstudio-batch.sh", execute_skill_names)
+            self.assertIn("execute-web-e2e/drivers/qwenwork/driver.mjs", execute_skill_names)
+            self.assertIn("execute-web-e2e/drivers/qwenwork/batch.mjs", execute_skill_names)
+            self.assertIn("execute-web-e2e/drivers/qwenwork/package-lock.json", execute_skill_names)
+            self.assertIn("execute-web-e2e/scripts/run-qwenwork.sh", execute_skill_names)
+            self.assertIn("execute-web-e2e/scripts/run-qwenwork-batch.sh", execute_skill_names)
             self.assertFalse(any("node_modules" in name for name in execute_skill_names))
             self.assertIn("run-web-e2e/SKILL.md", run_skill_names)
             self.assertIn("run-web-e2e/skill-metadata.json", run_skill_names)
@@ -291,11 +296,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             )
             self.assertEqual(
                 batch_manifest["execute_skill_archive"],
-                "packages/execute-web-e2e-skill-v1.9.2.zip",
+                "packages/execute-web-e2e-skill-v1.9.3.zip",
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],
-                "packages/run-web-e2e-skill-v1.0.3.zip",
+                "packages/run-web-e2e-skill-v1.0.4.zip",
             )
             self.assertEqual(batch_manifest["skills_manifest"], "packages/skills-manifest.json")
             skills_manifest = json.loads(skills_manifest_path.read_text(encoding="utf-8"))

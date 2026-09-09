@@ -30,30 +30,47 @@ export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
-const ASTRONSTUDIO_BATCH_PROFILE = process.env.WCB_WEB_E2E_BATCH_PROFILE === "astronstudio";
-const BATCH_PROFILE = ASTRONSTUDIO_BATCH_PROFILE ? Object.freeze({
-  harnessId: "astronstudio",
-  displayName: "AstronStudio",
-  workerId: "astronstudio-background-concurrent",
-  workerVersion: "1.9.2",
-  driverFile: resolve(SCRIPT_DIR, "../astronstudio/driver.mjs"),
-  lockFileName: "astronstudio-ui.lock",
-  defaultRunSlots: DEFAULT_RUN_SLOTS,
-  maxRunSlots: MAX_RUN_SLOTS,
-  detachedDispatch: true,
-  retryPreSendFailure: true,
-}) : Object.freeze({
-  harnessId: "workbuddy",
-  displayName: "WorkBuddy",
-  workerId: "workbuddy-background-concurrent",
-  workerVersion: QUEUE_WORKER_VERSION,
-  driverFile: join(SCRIPT_DIR, "driver.mjs"),
-  lockFileName: "workbuddy-ui.lock",
-  defaultRunSlots: DEFAULT_RUN_SLOTS,
-  maxRunSlots: MAX_RUN_SLOTS,
-  detachedDispatch: true,
-  retryPreSendFailure: true,
+const BATCH_PROFILES = Object.freeze({
+  astronstudio: Object.freeze({
+    harnessId: "astronstudio",
+    displayName: "AstronStudio",
+    workerId: "astronstudio-background-concurrent",
+    workerVersion: "1.9.2",
+    driverFile: resolve(SCRIPT_DIR, "../astronstudio/driver.mjs"),
+    lockFileName: "astronstudio-ui.lock",
+    defaultRunSlots: DEFAULT_RUN_SLOTS,
+    maxRunSlots: MAX_RUN_SLOTS,
+    detachedDispatch: true,
+    retryPreSendFailure: true,
+  }),
+  qwenwork: Object.freeze({
+    harnessId: "qwenwork",
+    displayName: "QwenWork",
+    workerId: "qwenwork-serial",
+    workerVersion: "1.9.3",
+    driverFile: resolve(SCRIPT_DIR, "../qwenwork/driver.mjs"),
+    lockFileName: "qwenwork-ui.lock",
+    defaultRunSlots: 1,
+    maxRunSlots: 1,
+    detachedDispatch: false,
+    retryPreSendFailure: true,
+  }),
+  workbuddy: Object.freeze({
+    harnessId: "workbuddy",
+    displayName: "WorkBuddy",
+    workerId: "workbuddy-background-concurrent",
+    workerVersion: QUEUE_WORKER_VERSION,
+    driverFile: join(SCRIPT_DIR, "driver.mjs"),
+    lockFileName: "workbuddy-ui.lock",
+    defaultRunSlots: DEFAULT_RUN_SLOTS,
+    maxRunSlots: MAX_RUN_SLOTS,
+    detachedDispatch: true,
+    retryPreSendFailure: true,
+  }),
 });
+const requestedBatchProfile = process.env.WCB_WEB_E2E_BATCH_PROFILE || "workbuddy";
+const BATCH_PROFILE = BATCH_PROFILES[requestedBatchProfile];
+if (!BATCH_PROFILE) throw new Error(`未知 Web E2E 批次 Profile：${requestedBatchProfile}`);
 const TERMINAL_TASK_PHASES = new Set(["SUCCEEDED", "INFRA_FAILED", "TIMEOUT"]);
 const EXPECTED_EXECUTION_STATUS = {
   SUCCEEDED: "completed",

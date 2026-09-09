@@ -1,7 +1,7 @@
 {
   "schema_version": "wildclawbench.web-e2e-skill/v1",
   "name": "execute-web-e2e",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "stages": [
     "execute"
   ],

@@ -1,11 +1,11 @@
 ---
 name: execute-web-e2e
-description: 在 WorkBuddy、AstronStudio 等桌面 Harness 中执行单个或批量 Web E2E 用例，持久化可恢复状态、终态证据和 execution_record；用于自动做题阶段，不负责评分或报告。
+description: 在 WorkBuddy、AstronStudio、QwenWork 等桌面 Harness 中执行单个或批量 Web E2E 用例，持久化可恢复状态、终态证据和 execution_record；用于自动做题阶段，不负责评分或报告。
 ---
 
 # 执行 Web E2E 用例
 
-本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 WorkBuddy、AstronStudio 的单题 Driver 和后台并发队列；其他 Harness Driver 仍按 Roadmap 逐步接入。先读取 execution 包 `manifest.json` 的 `harness.id`，再选择同名 Driver，不能按文件名或客户端外观猜测。
+本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 WorkBuddy、AstronStudio 的单题 Driver 和后台并发队列，并提供 QwenWork 单路串行 Driver；其他 Harness Driver 仍按 Roadmap 逐步接入。先读取 execution 包 `manifest.json` 的 `harness.id`，再选择同名 Driver，不能按文件名或客户端外观猜测。
 
 ## AstronStudio
 
@@ -45,6 +45,38 @@ Worker 或 Driver 中断后，用完全相同的批次参数增加 `--resume`。
 如果 Prompt 发送前因 CDP 或 UI 自动化错误进入 `INFRA_FAILED`，且候选 workspace 经哈希确认完全未变化，可使用相同参数增加 `--resume --retry-pre-send-failure`。旧 attempt 会隔离归档；发送后失败或产物已有任何变化时拒绝自动重试。
 
 AstronStudio 的终态优先读取本地 SQLite 的 thread session、turn、open turn 和 pending interaction 投影，DOM 只补充可见运行态、交互和最终回复。workspace 稳定不能单独判定完成。
+
+## QwenWork
+
+依赖由控制 Harness 在 QwenWork Driver 目录执行锁定安装，不进入候选 workspace：
+
+```bash
+cd .agents/skills/execute-web-e2e/drivers/qwenwork
+npm ci
+```
+
+只读预检：
+
+```bash
+bash .agents/skills/execute-web-e2e/scripts/run-qwenwork.sh --probe
+```
+
+预检要求 `/Applications/QwenWorkCN.app`、本机 `http://127.0.0.1:9250`、macOS 可交互桌面、辅助功能权限和 `~/Library/Application Support/QwenWorkCN/data/agents.db` 可用。QwenWork 通过“新建个人项目”对话框选择单题根目录；原生目录选择后必须从 `local_projects.root_paths` 回读完整绝对路径，不能只信任文件夹 basename。
+
+单路执行完整 manifest：
+
+```bash
+bash .agents/skills/execute-web-e2e/scripts/run-qwenwork-batch.sh \
+  /absolute/<batch_id>__qwenwork \
+  --run-id <queue_id> \
+  --task-id <task_id> \
+  --run-slots 1 \
+  --permission-mode full-access
+```
+
+QwenWork 1.0.4 首版固定 `ui_slots=1`、`run_slots=1`，尚未开放后台并发。省略 `--model` 时保持并回读当前模型；显式提供时按 UI 精确名称选择并回读，不修改任务模式或其他推理设置。`--permission-mode full-access` 会通过 QwenWork 自身的全局风险确认切换为“完全访问权限”；省略时只记录当前权限。
+
+Prompt 发送后以 `sub_chats.session_id` 作为稳定内核会话 ID，以 `sub_chats.stream_id` 和 `chats.ext.taskStatus` 判断运行/终态，DOM 只补充可见授权、停止控件和最终回复。恢复时必须同时匹配稳定 session ID 和项目绝对路径；项目内会话不唯一或无法定位时进入 `NEEDS_ATTENTION`，不得新建任务或重发 Prompt。客户端重启前如数据库和存活进程共同表明仍有活动任务，Driver 拒绝重启。
 
 ## WorkBuddy 单题
 
@@ -143,6 +175,6 @@ Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作�
 - 生产跑批前由测试人员按指导手册设置 Harness 的默认模型和推理强度。执行自动化只在显式提供 `--model` 时切换模型；推理强度始终沿用 Harness 当前配置，不由 Playwright 选择或校验。
 - 只允许 Driver 对显式白名单且严格限定在候选 `workspace/` 内的普通操作自动选择一次性“允许”；当前唯一规则是清理该目录下的 `.DS_Store`。其他命令（包括同类命令的路径或参数变化）一律停在 `NEEDS_ATTENTION`。
 - `SUCCEEDED`、`INFRA_FAILED`、已确认停止的 `TIMEOUT` 分别映射为 `execution_record.json` 的 `completed`、`execution_error`、`timeout`；没有生成有效站点仍是正常完成，由评分阶段判低分。
-- WorkBuddy 和 AstronStudio 始终保持 `ui_slots: 1`；新队列默认 `run_slots: 3`、最大 8。这里的并发只指已投递 Agent 在客户端后台并行运行，禁止同时启动多个 Playwright Driver 抢占窗口。首次换机、升级 Harness/Skill 或切换模型后先用 3 个 L1 冒烟；未通过真实隔离验证的节点显式使用 `--run-slots 1`。
+- WorkBuddy 和 AstronStudio 始终保持 `ui_slots: 1`；新队列默认 `run_slots: 3`、最大 8。QwenWork 首版固定 `ui_slots: 1`、`run_slots: 1`。这里的并发只指已投递 Agent 在客户端后台并行运行，禁止同时启动多个 Playwright Driver 抢占窗口。首次换机、升级 Harness/Skill 或切换模型后，已支持并发的 Driver 先用 3 个 L1 冒烟；未通过真实隔离验证的节点显式使用 `--run-slots 1`。
 
 实现或审查其他 Driver 时，完整读取 [Driver 契约](references/driver-contract.md)。

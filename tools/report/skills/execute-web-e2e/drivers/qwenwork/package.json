@@ -1,0 +1,15 @@
+{
+  "name": "wildclawbench-execute-web-e2e-qwenwork",
+  "version": "1.9.3",
+  "private": true,
+  "type": "module",
+  "description": "Recoverable QwenWork desktop driver for WildClawBench Web E2E execution",
+  "scripts": {
+    "automate": "node driver.mjs",
+    "batch": "node batch.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "1.55.0"
+  }
+}
