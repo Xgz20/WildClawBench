@@ -7,7 +7,7 @@
 | 术语 | 定义 |
 | --- | --- |
 | 控制 Harness | 用来接收用户 Prompt、调用 Web E2E Skill 并统筹执行、评分、回传和报告的 Harness。推荐使用 Codex Desktop。 |
-| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。WorkBuddy 已完成生产流程闭环；AstronStudio 已完成串行、默认三路并发、动态补位和执行到评分闭环验证。 |
+| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。WorkBuddy 已完成生产流程闭环；AstronStudio 已完成串行、默认三路并发、动态补位和执行到评分闭环验证；QwenWork 已完成串行、默认三路并发执行和单题执行到评分闭环验证。 |
 | 评分 Harness | 为被评测 Harness 的候选网站打分的 Agent。当前使用 Codex Desktop，并依赖其桌面内置 Browser 操作网站和保存证据。 |
 | 管理员 | 选择用例和被评测 Harness、准备评测包、收集各机器回传包并生成报告的人员。 |
 | 执行人员 | 接收管理员分发的题目包和评分包，在本机完成一个 `Harness（模型）` 单元的执行、评分和回传。 |
@@ -22,7 +22,7 @@
 | --- | --- | --- |
 | `prepare-web-e2e-workspaces` | 管理员 | 从 WildClawBench 用例生成题目包、评分包、报告配置和 5 个可分发 Skill ZIP。它是仓库内的准备 Skill，不计入批次分发的 5 个 ZIP。 |
 | `run-web-e2e` | 管理员或执行人员 | 推荐的全局入口。只组合 Prompt 中明确要求的准备、执行、评分、打包回传、收集和报告阶段。 |
-| `execute-web-e2e` | 执行人员 | 操作被评测 Harness 做题。WorkBuddy 和 AstronStudio 默认后台并发 3，最大 8。 |
+| `execute-web-e2e` | 执行人员 | 操作被评测 Harness 做题。WorkBuddy、AstronStudio 和 QwenWork 默认后台并发 3，最大 8，UI 操作保持单路。 |
 | `orchestrate-web-e2e` | 执行人员或评分控制人员 | 校验执行结果、准备只读评分副本、注册 Codex Desktop 项目并调度多个评分任务。 |
 | `score-web-e2e` | Codex Desktop 单题评分任务 | 使用桌面内置 Browser 对一个用例评分并生成标准评分 JSON。通常由 `orchestrate-web-e2e` 自动调用，也支持人工单题调用。 |
 | `report-web-e2e` | 管理员 | 汇总一个或多个 Harness 回传包，生成 JSON、Markdown 和 Excel 报告。 |
@@ -37,7 +37,7 @@
 
 #### 1. 准备被评测 Harness
 
-在本轮被评测 Harness（WorkBuddy 或 AstronStudio）中完成以下设置：
+在本轮被评测 Harness（WorkBuddy、AstronStudio 或 QwenWork）中完成以下设置：
 
 1. 选择本轮评测模型，例如 GLM5.2 对应的客户端模型选项。
 2. 设置该模型的推理强度。
@@ -46,7 +46,7 @@
 
 如果 Prompt 没有明确指定模型，执行 Skill 会保持并回读客户端当前模型，不会修改推理强度。评测期间不要人工切换模型。
 
-WorkBuddy 和 AstronStudio 均使用默认三路后台执行。首次换机、升级 Harness/Skill 或切换模型后，先使用少量 L1 用例验证本机客户端隔离；未通过时在 Prompt 中明确要求执行并发为 1。
+WorkBuddy、AstronStudio 和 QwenWork 均使用默认三路后台执行。首次换机、升级 Harness/Skill 或切换模型后，先使用少量 L1 用例验证本机客户端隔离；未通过时在 Prompt 中明确要求执行并发为 1。
 
 #### 2. 调试模式启动 ChatGPT
 
@@ -88,7 +88,7 @@ open -na /Applications/ChatGPT.app --args \
 2. 解压题目包，建立独立 worker 工作目录。
 3. 自动检查和安装执行、评分所需的锁定依赖。
 4. 使用题目包声明的被评测 Harness，以客户端当前模型和推理强度执行全部题目，权限使用 `full-access`。
-5. WorkBuddy 和 AstronStudio 默认使用 3 路执行并发，最大 8；任一题明确结束并通过回执门禁后动态补入下一题。
+5. WorkBuddy、AstronStudio 和 QwenWork 默认使用 3 路执行并发，最大 8；任一题明确结束并通过回执门禁后动态补入下一题。
 6. 校验执行回执后合入评分包。
 7. 默认创建 3 个并发 Codex Desktop 评分任务，每题使用独立项目、任务、Browser 和端口。
 8. 生成 `submission.json`、完整回传 ZIP 和外部 SHA-256 回执。
@@ -113,6 +113,19 @@ AstronStudio 当前验证用法：
 ```
 
 AstronStudio 已验证项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、后台并发、动态补位、产物和执行回执。多个任务并发运行时如果客户端崩溃，当前版本会失败关闭并要求人工处理，不会自动重启客户端。
+
+QwenWork 当前验证用法：
+
+```text
+请使用 $run-web-e2e 完成下面 QwenWork Web E2E 评测用例的执行、评分、打包回传。
+
+题目：/absolute/path/<batch_id>__qwenwork__execution.zip
+评分标准：/absolute/path/<batch_id>__qwenwork__scoring.zip
+
+保持并回读 QwenWork 当前模型，不修改任务模式或其他推理设置；权限使用 full-access；使用默认执行并发 3。
+```
+
+QwenWork 已验证个人项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、默认三路后台并发、产物和执行回执。首次在新机器或新客户端版本运行时，仍应先用 3 个 L1 用例验证会话和工作空间隔离。
 
 例如临时使用串行：
 
@@ -297,6 +310,18 @@ AstronStudio 使用下面的并发 Prompt：
 ```
 
 AstronStudio 默认 `run_slots=3`、最大 8，可显式设为 1 回退串行。首次生产批次前先使用 3 个 L1 用例验证目标客户端版本、登录状态、模型、权限、CDP 和会话隔离。
+
+QwenWork 使用同样的并发 Prompt，只需把 Harness 名称和目录改为 QwenWork：
+
+```text
+请使用 $execute-web-e2e 执行下面 QwenWork 题目包中的全部用例：
+
+/absolute/path/<batch_id>__qwenwork
+
+保持并回读 QwenWork 当前模型，不修改任务模式或其他推理设置；权限使用 full-access；使用默认并发 3。完成后验证 execution-receipt.json 的 integrity.valid=true。
+```
+
+QwenWork 默认 `run_slots=3`、最大 8，可显式设为 1 回退串行；所有项目创建、目录选择、模型/权限回读和 Prompt 发送仍保持 UI 单路。
 
 ### 3. `orchestrate-web-e2e`
 

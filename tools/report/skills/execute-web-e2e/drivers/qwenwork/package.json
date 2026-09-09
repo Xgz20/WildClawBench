@@ -1,6 +1,6 @@
 {
   "name": "wildclawbench-execute-web-e2e-qwenwork",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "private": true,
   "type": "module",
   "description": "Recoverable QwenWork desktop driver for WildClawBench Web E2E execution",

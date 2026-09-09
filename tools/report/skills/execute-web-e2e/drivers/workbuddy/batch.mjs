@@ -46,13 +46,13 @@ const BATCH_PROFILES = Object.freeze({
   qwenwork: Object.freeze({
     harnessId: "qwenwork",
     displayName: "QwenWork",
-    workerId: "qwenwork-serial",
-    workerVersion: "1.9.3",
+    workerId: "qwenwork-background-concurrent",
+    workerVersion: "1.9.4",
     driverFile: resolve(SCRIPT_DIR, "../qwenwork/driver.mjs"),
     lockFileName: "qwenwork-ui.lock",
-    defaultRunSlots: 1,
-    maxRunSlots: 1,
-    detachedDispatch: false,
+    defaultRunSlots: DEFAULT_RUN_SLOTS,
+    maxRunSlots: MAX_RUN_SLOTS,
+    detachedDispatch: true,
     retryPreSendFailure: true,
   }),
   workbuddy: Object.freeze({
