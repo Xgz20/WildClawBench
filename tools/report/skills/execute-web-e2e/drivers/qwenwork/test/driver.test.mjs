@@ -41,7 +41,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.9.4");
+  assert.equal(state.driver.version, "1.9.5");
 });
 
 test("QwenWork 只有同时捕获 chat 和稳定内核 session 才允许后台恢复", () => {

@@ -47,7 +47,7 @@ const BATCH_PROFILES = Object.freeze({
     harnessId: "qwenwork",
     displayName: "QwenWork",
     workerId: "qwenwork-background-concurrent",
-    workerVersion: "1.9.4",
+    workerVersion: "1.9.5",
     driverFile: resolve(SCRIPT_DIR, "../qwenwork/driver.mjs"),
     lockFileName: "qwenwork-ui.lock",
     defaultRunSlots: DEFAULT_RUN_SLOTS,
@@ -497,6 +497,7 @@ export function canAdvanceTask(automation, continueOnTerminalFailure = false) {
 
 export function recordWorkerInterruption(state, signal, activeChild = null) {
   const at = new Date().toISOString();
+  const workerPid = state.runtime?.worker?.pid || process.pid;
   state.phase = "INTERRUPTED";
   state.error = `队列 Worker 收到 ${signal}，当前题保留为可恢复状态`;
   state.runtime ||= {};
@@ -508,7 +509,44 @@ export function recordWorkerInterruption(state, signal, activeChild = null) {
     at,
     signal,
     current_index: state.current_index,
+    worker_pid: workerPid,
     driver_pid: activeChild?.pid || state.runtime.driver?.pid || null,
+  });
+  return state;
+}
+
+export function recordWorkerStart(
+  state,
+  {
+    resume = false,
+    pid = process.pid,
+    workerHostname = hostname(),
+    recoveredLock = null,
+  } = {},
+) {
+  const at = new Date().toISOString();
+  state.runtime ||= {};
+  state.history ||= [];
+  const previousWorker = state.runtime.worker;
+  const previousInterruptedAt = state.runtime.interrupted_at;
+  const previousInterruptSignal = state.runtime.interrupt_signal;
+  const lastInterruption = [...state.history]
+    .reverse()
+    .find((entry) => entry.event === "WORKER_INTERRUPTED");
+  state.runtime.worker = { pid, hostname: workerHostname, started_at: at };
+  state.runtime.interrupted_at = null;
+  state.runtime.interrupt_signal = null;
+  state.history.push({
+    event: resume ? "WORKER_RESUMED" : "WORKER_STARTED",
+    at,
+    worker_pid: pid,
+    worker_hostname: workerHostname,
+    ...(resume ? {
+      previous_worker_pid: previousWorker?.pid || lastInterruption?.worker_pid || null,
+      previous_interrupted_at: previousInterruptedAt || lastInterruption?.at || null,
+      previous_interrupt_signal: previousInterruptSignal || lastInterruption?.signal || null,
+      stale_ui_lock_recovered: Boolean(recoveredLock),
+    } : {}),
   });
   return state;
 }
@@ -899,13 +937,7 @@ async function runQueue(plan, args) {
       args,
       args.markManualTaskId,
     );
-    state.runtime.worker = {
-      pid: process.pid,
-      hostname: hostname(),
-      started_at: new Date().toISOString(),
-    };
-    state.runtime.interrupted_at = null;
-    state.runtime.interrupt_signal = null;
+    recordWorkerStart(state, { resume: args.resume, recoveredLock });
     state.phase = "RUNNING";
     state.timing.started_at ||= new Date().toISOString();
     state.error = null;

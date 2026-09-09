@@ -81,6 +81,8 @@ QwenWork 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式
 
 Prompt 发送后以 `sub_chats.session_id` 作为稳定内核会话 ID，以 `sub_chats.stream_id` 和 `chats.ext.taskStatus` 判断运行/终态，DOM 只补充可见授权、停止控件和最终回复。恢复时必须同时匹配稳定 session ID 和项目绝对路径；项目内会话不唯一或无法定位时进入 `NEEDS_ATTENTION`，不得新建任务或重发 Prompt。客户端重启前如数据库和存活进程共同表明仍有活动任务，Driver 拒绝重启。
 
+控制任务或队列 Worker 中断后，由新的控制任务使用完全相同的批次参数增加 `--resume`。恢复只按已持久化的 attempt、`session_id`、`local_project_id` 和绝对 cwd 观察原会话，不重新创建项目或发送 Prompt。队列历史用 `WORKER_INTERRUPTED` 和 `WORKER_RESUMED` 记录旧、新 Worker PID；恢复验收必须确认 `TASK_DISPATCHED` 与 automation 中 `PROMPT_SENT` 均仍只有一次。
+
 ## WorkBuddy 单题
 
 依赖准备由调用本 Skill 的控制 Harness 完成，不要求用户手工进入 Driver 目录。控制 Harness 先检查 `node_modules/playwright-core` 和锁文件状态；缺失或 `npm ls --depth=0` 失败时，在 Driver 目录自动执行锁定安装。依赖只能安装在 Skill 的 Driver 目录，不能安装到候选工作空间：

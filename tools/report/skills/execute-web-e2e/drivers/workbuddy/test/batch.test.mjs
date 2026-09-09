@@ -24,6 +24,7 @@ import {
   recordManualIntervention,
   recordTaskOrchestrationFailure,
   recordWorkerInterruption,
+  recordWorkerStart,
   resolveQueuePlan,
   selectPendingTaskIndexes,
 } from "../batch.mjs";
@@ -303,13 +304,23 @@ test("worker interruption keeps the current task recoverable and records the exa
   state.phase = "RUNNING";
   state.current_index = 0;
   state.tasks[0].phase = "RUNNING";
+  state.runtime.worker = { pid: 123, hostname: "test-host", started_at: "2026-09-09T00:00:00.000Z" };
   state.runtime.driver = { pid: 456, task_id: "task-a" };
   recordWorkerInterruption(state, "SIGTERM", { pid: 456 });
   assert.equal(state.phase, "INTERRUPTED");
   assert.equal(state.tasks[0].phase, "RUNNING");
   assert.equal(state.runtime.interrupt_signal, "SIGTERM");
   assert.equal(state.history.at(-1).event, "WORKER_INTERRUPTED");
+  assert.equal(state.history.at(-1).worker_pid, 123);
   assert.equal(state.history.at(-1).driver_pid, 456);
+
+  state.runtime.worker = null;
+  recordWorkerStart(state, { resume: true, pid: 789, workerHostname: "test-host" });
+  assert.equal(state.history.at(-1).event, "WORKER_RESUMED");
+  assert.equal(state.history.at(-1).worker_pid, 789);
+  assert.equal(state.history.at(-1).previous_worker_pid, 123);
+  assert.equal(state.history.at(-1).previous_interrupt_signal, "SIGTERM");
+  assert.equal(state.history.at(-1).stale_ui_lock_recovered, false);
 });
 
 test("manual intervention is audited without bypassing terminal detection", async () => {
