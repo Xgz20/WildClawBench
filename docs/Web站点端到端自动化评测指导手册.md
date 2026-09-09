@@ -7,7 +7,7 @@
 | 术语 | 定义 |
 | --- | --- |
 | 控制 Harness | 用来接收用户 Prompt、调用 Web E2E Skill 并统筹执行、评分、回传和报告的 Harness。推荐使用 Codex Desktop。 |
-| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。WorkBuddy 已完成执行、评分和报告闭环；AstronStudio 已完成单个 L1 用例的真实自动执行验证。 |
+| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。WorkBuddy 已完成生产流程闭环；AstronStudio 已完成串行、默认三路并发、动态补位和执行到评分闭环验证。 |
 | 评分 Harness | 为被评测 Harness 的候选网站打分的 Agent。当前使用 Codex Desktop，并依赖其桌面内置 Browser 操作网站和保存证据。 |
 | 管理员 | 选择用例和被评测 Harness、准备评测包、收集各机器回传包并生成报告的人员。 |
 | 执行人员 | 接收管理员分发的题目包和评分包，在本机完成一个 `Harness（模型）` 单元的执行、评分和回传。 |
@@ -361,9 +361,13 @@ Codex Desktop CDP：http://127.0.0.1:9230
 
 被评测 Harness 结束后，候选网站即被冻结。执行、评分、编排和报告 Agent 都不能修改 `execution/tasks/*/workspace/` 或 `score/tasks/*/workspace/`。
 
+被评测 Harness 在做题过程中自行生成 `node_modules`、`.cache` 或 `.vite` 是正常的，不会单独导致 `execution-receipt.json` 的 `integrity.valid=false`。这些目录保留在 execution 原件中并记录到回执，准备评分副本和生成回传 ZIP 时会自动过滤；用户不需要也不允许手工删除。`.git` 仍属于禁止目录，会使完整性校验失败。
+
 如果站点依赖安装、构建或启动需要写文件，评分 Skill 只会操作 `private-scoring/runtime-workspace/` 副本。只有已经由日志证明的端口冲突，才允许在该运行时副本中受控替换端口；候选原件始终不能修改。
 
 发现候选不合规或哈希漂移时，应保留现场并重新执行该 Harness 单元，不能编辑回执或重算哈希继续评分。
+
+`integrity.valid=false` 表示执行包未通过进入评分阶段的完整性门禁，不等于该题按 0 分计分。流程会停止并保留错误证据；只有生成有效评分结果后才会进入成绩汇总。
 
 ## 用户检查清单
 

@@ -21,6 +21,8 @@ import {
   CANDIDATE_ARTIFACT_SCHEMA,
   TREE_HASH_ALGORITHM,
   loadCandidateArtifact,
+  sameRuntimeDirectoryPolicy,
+  validateRuntimeDirectoryPolicy,
   verifyWorkspace,
 } from "./workspace-integrity.mjs";
 
@@ -506,6 +508,7 @@ async function loadExecutionReceipt(plan) {
   if (!receipt || Array.isArray(receipt) || typeof receipt !== "object") throw new Error(`JSON 顶层必须是对象：${receiptFile}`);
   if (receipt.schema_version !== EXECUTION_RECEIPT_SCHEMA) throw new Error(`execution-receipt.json schema 不兼容：${receipt.schema_version}`);
   if (receipt.integrity?.valid !== true) throw new Error("execution-receipt.json 的 integrity.valid 不是 true");
+  validateRuntimeDirectoryPolicy(receipt.runtime_directory_policy);
   if (receipt.batch_id !== plan.manifest.batch_id) throw new Error("execution-receipt.json batch_id 与 manifest 不一致");
   if (receipt.harness?.id !== plan.manifest.harness.id) throw new Error("execution-receipt.json Harness 与 manifest 不一致");
   const receiptTasks = receipt.tasks || [];
@@ -551,6 +554,7 @@ async function inspectCandidateIntegrity(plan, taskId, scoreDir, receipt, receip
   const lockFile = join(scoreDir, "private-scoring", "candidate_artifact.json");
   const lock = loadCandidateArtifact(lockFile);
   const receiptModel = resolveReceiptModel(receipt, receiptTask);
+  const allowIgnoredRuntimeDirectories = validateRuntimeDirectoryPolicy(receipt.runtime_directory_policy);
   const lockSelectionMode = lock.model_selection?.mode
     || (lock.model_selection?.requested_model ? "explicit" : "current");
   if (lock.schema_version !== CANDIDATE_ARTIFACT_SCHEMA
@@ -560,6 +564,7 @@ async function inspectCandidateIntegrity(plan, taskId, scoreDir, receipt, receip
     || lock.harness_id !== plan.manifest.harness.id
     || lock.expected_sha256 !== expectedSha256
     || lock.execution_receipt?.sha256 !== receiptSha256
+    || !sameRuntimeDirectoryPolicy(lock.runtime_directory_policy, receipt.runtime_directory_policy)
     || lock.model?.id !== receiptModel.model.id
     || lock.model?.display_name !== receiptModel.model.display_name
     || lockSelectionMode !== receiptModel.selection.mode
@@ -572,7 +577,12 @@ async function inspectCandidateIntegrity(plan, taskId, scoreDir, receipt, receip
   const scoreWorkspace = await realpath(join(scoreDir, "workspace"));
   const checks = [];
   try {
-    checks.push(verifyWorkspace(executionWorkspace, expectedSha256, `${stage}:execution`));
+    checks.push(verifyWorkspace(
+      executionWorkspace,
+      expectedSha256,
+      `${stage}:execution`,
+      { allowIgnoredRuntimeDirectories },
+    ));
     checks.push(verifyWorkspace(scoreWorkspace, expectedSha256, `${stage}:score`));
   } catch (error) {
     if (error?.integrityCheck) checks.push(error.integrityCheck);

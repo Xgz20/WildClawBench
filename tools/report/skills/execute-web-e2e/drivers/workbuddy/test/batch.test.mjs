@@ -419,7 +419,7 @@ test("execution receipt fails closed when a terminal workspace drifts", async ()
   assert.equal(receipt.tasks[0].workspace.receipt_check_matches_final, false);
 });
 
-test("execution receipt rejects runtime-only directories excluded from the content hash", async () => {
+test("execution receipt records policy-declared runtime directories without invalidating source integrity", async () => {
   const root = await fixture();
   const args = parseBatchArgs([
     "--harness-root", root, "--run-id", "receipt-runtime-dir", "--task-id", "task-a", "--task-id", "task-b",
@@ -446,9 +446,42 @@ test("execution receipt rejects runtime-only directories excluded from the conte
   await writeFile(join(plan.tasks[0].taskRoot, "workspace", ".vite", "cache.json"), "runtime");
   const receipt = await buildExecutionReceipt(plan, state);
   assert.equal(receipt.integrity.workspaces_match_final, true);
-  assert.equal(receipt.integrity.no_excluded_runtime_directories, false);
+  assert.equal(receipt.integrity.no_forbidden_directories, true);
+  assert.equal(receipt.integrity.valid, true);
+  assert.equal(receipt.runtime_directory_policy.schema_version, "wildclawbench.web-e2e-runtime-directory-policy/v1");
+  assert.deepEqual(receipt.tasks[0].workspace.ignored_runtime_directories, [".vite"]);
+  assert.deepEqual(receipt.tasks[0].workspace.forbidden_directories, []);
+});
+
+test("execution receipt still rejects forbidden candidate directories", async () => {
+  const root = await fixture();
+  const args = parseBatchArgs([
+    "--harness-root", root, "--run-id", "receipt-forbidden-dir", "--task-id", "task-a", "--task-id", "task-b",
+  ]);
+  const plan = await resolveQueuePlan(args);
+  const state = createQueueState(plan, args);
+  state.phase = "COMPLETED";
+  for (const task of plan.tasks) {
+    await mkdir(join(task.taskRoot, "..", ".execute-web-e2e", task.taskId), { recursive: true });
+    const final = await snapshotTree(join(task.taskRoot, "workspace"));
+    await writeFile(task.automationStateFile, JSON.stringify({
+      identity: { batch_id: "batch-001", task_id: task.taskId, harness_id: "workbuddy" },
+      attempt_id: `attempt-${task.taskId}`,
+      phase: "SUCCEEDED",
+      requested_ui_model: null,
+      model_selection: { mode: "current", requested_model: null, actual_model: "xopglm52" },
+      artifacts: { initial: final, final },
+    }));
+    await writeFile(task.executionRecordFile, JSON.stringify({
+      batch_id: "batch-001", task_id: task.taskId, model: { id: "xopglm52", display_name: "xopglm52" }, harness: { id: "workbuddy" }, execution: { status: "completed" },
+    }));
+  }
+  await mkdir(join(plan.tasks[0].taskRoot, "workspace", ".git"));
+  const receipt = await buildExecutionReceipt(plan, state);
+  assert.equal(receipt.integrity.workspaces_match_final, true);
+  assert.equal(receipt.integrity.no_forbidden_directories, false);
   assert.equal(receipt.integrity.valid, false);
-  assert.deepEqual(receipt.tasks[0].workspace.excluded_runtime_directories, [".vite"]);
+  assert.deepEqual(receipt.tasks[0].workspace.forbidden_directories, [".git"]);
 });
 
 test("an invalid completion receipt always downgrades the queue to failed", () => {

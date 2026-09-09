@@ -19,6 +19,7 @@ STATE_SCHEMA = "wildclawbench.run-web-e2e/v1"
 RETURN_SCHEMA = "wildclawbench.web-e2e-return-receipt/v1"
 IMPORT_SCHEMA = "wildclawbench.web-e2e-import-receipt/v1"
 SUBMISSION_SCHEMA = "wildclawbench.web-e2e-submission/v1"
+RUNTIME_DIRECTORY_POLICY_SCHEMA = "wildclawbench.web-e2e-runtime-directory-policy/v1"
 ALL_STAGES = ("prepare", "execute", "score", "package", "collect", "report")
 SCOPE_STAGES = {
     "batch": ("prepare", "collect", "report"),
@@ -38,9 +39,48 @@ SECRET_NAMES = {
     "credentials.json", "secrets.json", "my_api.json",
 }
 SECRET_SUFFIXES = (".pem", ".key", ".p12", ".pfx")
-FORBIDDEN_DIRS = {".git", "node_modules", ".cache", ".vite", "runtime-workspace"}
-EXCLUDED_DIRS = FORBIDDEN_DIRS | {".run-web-e2e", "__pycache__"}
+IGNORED_RUNTIME_DIRS = {"node_modules", ".cache", ".vite"}
+FORBIDDEN_DIRS = {".git", "runtime-workspace"}
+EXCLUDED_DIRS = FORBIDDEN_DIRS | IGNORED_RUNTIME_DIRS | {".run-web-e2e", "__pycache__"}
 EXCLUDED_FILES = {".DS_Store"}
+
+
+def runtime_directory_policy() -> dict:
+    return {
+        "schema_version": RUNTIME_DIRECTORY_POLICY_SCHEMA,
+        "ignored_directories": sorted(IGNORED_RUNTIME_DIRS),
+        "forbidden_directories": [".git"],
+        "scoring_copy": "exclude-ignored-directories",
+        "return_archive": "exclude-ignored-directories",
+    }
+
+
+def validate_runtime_directory_policy(value: object) -> bool:
+    if value is None:
+        return False
+    expected = runtime_directory_policy()
+
+    def same_string_set(actual: object, wanted: list[str]) -> bool:
+        return (
+            isinstance(actual, list)
+            and all(isinstance(item, str) for item in actual)
+            and len(actual) == len(set(actual))
+            and set(actual) == set(wanted)
+        )
+
+    valid = (
+        isinstance(value, dict)
+        and set(value) == set(expected)
+        and value.get("schema_version") == expected["schema_version"]
+        and same_string_set(value.get("ignored_directories"), expected["ignored_directories"])
+        and same_string_set(value.get("forbidden_directories"), expected["forbidden_directories"])
+        and value.get("scoring_copy") == expected["scoring_copy"]
+        and value.get("return_archive") == expected["return_archive"]
+    )
+    if not valid:
+        schema = value.get("schema_version") if isinstance(value, dict) else None
+        raise ValueError(f"候选运行时目录策略不兼容: {schema or 'missing'}")
+    return True
 
 
 def utc_now() -> str:
@@ -267,6 +307,7 @@ def validate_execution_receipt(root: Path, manifest: dict) -> Path | None:
         or not (receipt.get("integrity") or {}).get("valid")
     ):
         raise ValueError(f"execution-receipt.json 身份、范围或完整性无效: {path}")
+    validate_runtime_directory_policy(receipt.get("runtime_directory_policy"))
     return path
 
 
@@ -382,13 +423,28 @@ def command_status(args: argparse.Namespace, sync: bool = False) -> dict:
     return {"state": state, "recommended_actions": recommended_actions(state)}
 
 
-def check_export_tree(root: Path) -> None:
+def check_export_tree(root: Path, *, allow_ignored_execution_runtime_directories: bool = False) -> None:
     for path in root.rglob("*"):
         rel = path.relative_to(root)
-        if any(part in FORBIDDEN_DIRS for part in rel.parts):
-            raise ValueError(f"回传目录包含禁止的运行时/依赖目录: {rel.as_posix()}")
+        ignored_indexes = [index for index, part in enumerate(rel.parts) if part in IGNORED_RUNTIME_DIRS]
+        if ignored_indexes:
+            first_ignored = ignored_indexes[0]
+            in_execution_workspace = (
+                len(rel.parts) >= 5
+                and rel.parts[0] == "execution"
+                and rel.parts[1] == "tasks"
+                and rel.parts[3] == "workspace"
+                and first_ignored >= 4
+            )
+            if path.is_symlink() and first_ignored == len(rel.parts) - 1:
+                raise ValueError(f"回传目录包含符号链接: {rel.as_posix()}")
+            if not allow_ignored_execution_runtime_directories or not in_execution_workspace:
+                raise ValueError(f"回传目录包含未获策略允许的运行时/依赖目录: {rel.as_posix()}")
+            continue
         if path.is_symlink():
             raise ValueError(f"回传目录包含符号链接: {rel.as_posix()}")
+        if any(part in FORBIDDEN_DIRS for part in rel.parts):
+            raise ValueError(f"回传目录包含禁止目录: {rel.as_posix()}")
         name = path.name.lower()
         if path.is_file() and (name in SECRET_NAMES or name.startswith(".env.") or name.endswith(SECRET_SUFFIXES)):
             raise ValueError(f"回传目录包含敏感文件: {rel.as_posix()}")
@@ -411,7 +467,14 @@ def export_return(args: argparse.Namespace) -> dict:
     if execution is None or submission_result is None:
         raise ValueError("离线回传要求有效 execution-receipt.json 和 submission.json")
     _, submission = submission_result
-    check_export_tree(root)
+    receipt = read_json(execution)
+    allow_ignored_execution_runtime_directories = validate_runtime_directory_policy(
+        receipt.get("runtime_directory_policy")
+    )
+    check_export_tree(
+        root,
+        allow_ignored_execution_runtime_directories=allow_ignored_execution_runtime_directories,
+    )
     harness = submission["unit"]["harness_id"]
     base = f"{submission['batch_id']}__{harness}"
     archive_path = output / f"{base}__return.zip"

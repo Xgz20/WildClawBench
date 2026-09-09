@@ -11,7 +11,7 @@ description: 编排桌面 Harness Web E2E 的执行结果交接、Codex Desktop 
 
 输入必须是执行完成后的 Harness 根目录。`execution-receipt.json` 必须存在、`integrity.valid=true`，且每题 execution workspace 的当前 SHA 必须仍等于回执 `final_sha256`。评分不能直接在 `execution/tasks/<task_id>` 中进行，也不能只复制若干网页文件。
 
-使用执行包自带的标准库脚本，严格按 `manifest.tasks` 把每个 `execution/tasks/<task_id>/` 复制为独立的 `score/tasks/<task_id>/`，再合并管理员提供的 scoring ZIP；不得复制 `.execute-web-e2e` 等执行控制目录：
+使用执行包自带的标准库脚本，严格按 `manifest.tasks` 把每个 `execution/tasks/<task_id>/` 复制为独立的 `score/tasks/<task_id>/`，再合并管理员提供的 scoring ZIP；不得复制 `.execute-web-e2e` 等执行控制目录。若新执行回执声明 `wildclawbench.web-e2e-runtime-directory-policy/v1`，复制时过滤 `.cache`、`.vite` 和 `node_modules`，但不修改 execution 原件；未声明策略的旧回执仍严格拒绝这些目录：
 
 ```bash
 python3 <harness-root>/tools/prepare_scoring_workspace.py \
@@ -19,7 +19,7 @@ python3 <harness-root>/tools/prepare_scoring_workspace.py \
   --scoring-archive <absolute-scoring-zip>
 ```
 
-该步骤会在复制前、复制后和发布评分目录前重复校验哈希，把候选 `workspace/`、`PROMPT.md` 和可选 `execution_record.json` 带入评分目录，并生成 `private-scoring/candidate_artifact.json` 冻结记录；该记录同时绑定 `execution-receipt.json` 的文件 SHA、模型选择模式、可选请求模型和实际回读模型。评分 contract 与可选 execution record 中的模型身份也会由该回读结果补全。scoring ZIP 只能增加 `private-scoring/` 和 `.web-e2e-scoring-ready`。它不得覆盖、恢复、清理或接受漂移后的执行产物。
+该步骤会在复制前、复制后和发布评分目录前重复校验哈希，把过滤后的候选 `workspace/`、`PROMPT.md` 和可选 `execution_record.json` 带入评分目录，并生成 `private-scoring/candidate_artifact.json` 冻结记录；该记录同时绑定 `execution-receipt.json` 的文件 SHA、运行时目录策略、模型选择模式、可选请求模型和实际回读模型。评分 contract 与可选 execution record 中的模型身份也会由该回读结果补全。score workspace 必须不含上述可忽略运行时目录，scoring ZIP 只能增加 `private-scoring/` 和 `.web-e2e-scoring-ready`。它不得覆盖、恢复、清理或接受漂移后的执行产物。
 
 随后初始化可恢复的评分状态：
 
@@ -85,7 +85,7 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
   --allow-renderer-bridge
 ```
 
-该门禁会核对 execution 与 score 两份候选 SHA、执行回执文件 SHA、禁止的运行时目录、项目注册时与当前 Desktop 版本、注册方式、`project-registry.json`、批次要求的评分 Skill 名称/版本、Skill 支持的 `metric_profile` 和当前题 contract。任一项不一致时不得创建任务。可见 UI 注册不传 `--allow-renderer-bridge`。
+该门禁会核对 execution 与 score 两份候选 SHA、执行回执文件 SHA、运行时目录策略和禁止目录、项目注册时与当前 Desktop 版本、注册方式、`project-registry.json`、批次要求的评分 Skill 名称/版本、Skill 支持的 `metric_profile` 和当前题 contract。execution 只按新回执声明容忍可忽略目录，score 副本仍严格无运行时目录；任一项不一致时不得创建任务。可见 UI 注册不传 `--allow-renderer-bridge`。
 
 ## 3. 使用 Desktop 内置任务接口评分
 

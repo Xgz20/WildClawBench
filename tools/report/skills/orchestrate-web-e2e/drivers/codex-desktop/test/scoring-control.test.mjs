@@ -5,7 +5,12 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 
-import { CANDIDATE_ARTIFACT_SCHEMA, TREE_HASH_ALGORITHM, snapshotWorkspace } from "../../../scripts/workspace-integrity.mjs";
+import {
+  CANDIDATE_ARTIFACT_SCHEMA,
+  TREE_HASH_ALGORITHM,
+  runtimeDirectoryPolicy,
+  snapshotWorkspace,
+} from "../../../scripts/workspace-integrity.mjs";
 
 import {
   buildSubmissionControl,
@@ -526,6 +531,38 @@ test("invalid execution receipt blocks scoring initialization", async () => {
   receipt.integrity.valid = false;
   await writeJson(join(root, "execution-receipt.json"), receipt);
   await assert.rejects(() => initialize(root), /integrity.valid/);
+});
+
+test("policy-declared execution runtime directories do not block scoring initialization", async () => {
+  const root = await fixture();
+  const modules = join(root, "execution", "tasks", "task-1", "workspace", "node_modules", "pkg");
+  await mkdir(modules, { recursive: true });
+  await writeFile(join(modules, "index.js"), "runtime", "utf8");
+  const receiptFile = join(root, "execution-receipt.json");
+  const receipt = JSON.parse(await readFile(receiptFile, "utf8"));
+  const reorderedPolicy = runtimeDirectoryPolicy();
+  reorderedPolicy.ignored_directories.reverse();
+  receipt.runtime_directory_policy = Object.fromEntries(
+    Object.entries(reorderedPolicy).reverse(),
+  );
+  receipt.tasks[0].workspace.ignored_runtime_directories = ["node_modules"];
+  await writeJson(receiptFile, receipt);
+  const receiptRaw = await readFile(receiptFile, "utf8");
+  const receiptSha256 = createHash("sha256").update(receiptRaw).digest("hex");
+  const lockFile = join(root, "score", "tasks", "task-1", "private-scoring", "candidate_artifact.json");
+  const lock = JSON.parse(await readFile(lockFile, "utf8"));
+  lock.execution_receipt = { sha256: receiptSha256 };
+  lock.runtime_directory_policy = runtimeDirectoryPolicy();
+  await writeJson(lockFile, lock);
+
+  const result = await initialize(root);
+
+  assert.equal(result.state.phase, "PREPARED");
+  assert.deepEqual(
+    result.state.tasks[0].candidate_integrity.checks[0].checks[0].ignored_runtime_directories,
+    ["node_modules"],
+  );
+  assert.deepEqual(result.state.tasks[0].candidate_integrity.checks[0].checks[1].ignored_runtime_directories, []);
 });
 
 test("preflight rejects execution workspace drift and persists the failure", async () => {

@@ -16,11 +16,16 @@ import { hostname } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { atomicWriteJson, readJsonIfExists, snapshotTree } from "./lib.mjs";
+import {
+  atomicWriteJson,
+  readJsonIfExists,
+  runtimeDirectoryPolicy,
+  snapshotTree,
+} from "./lib.mjs";
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
 export const QUEUE_STATE_REVISION = 2;
-export const QUEUE_WORKER_VERSION = "1.7.0";
+export const QUEUE_WORKER_VERSION = "1.7.1";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 
@@ -30,7 +35,7 @@ const BATCH_PROFILE = ASTRONSTUDIO_BATCH_PROFILE ? Object.freeze({
   harnessId: "astronstudio",
   displayName: "AstronStudio",
   workerId: "astronstudio-background-concurrent",
-  workerVersion: "1.9.1",
+  workerVersion: "1.9.2",
   driverFile: resolve(SCRIPT_DIR, "../astronstudio/driver.mjs"),
   lockFileName: "astronstudio-ui.lock",
   defaultRunSlots: DEFAULT_RUN_SLOTS,
@@ -558,7 +563,7 @@ export async function buildExecutionReceipt(plan, state) {
   let modelsMatch = true;
   let allTerminal = true;
   let workspacesMatchFinal = true;
-  let noExcludedRuntimeDirectories = true;
+  let noForbiddenDirectories = true;
   for (const task of plan.tasks) {
     const queueTask = state.tasks.find((item) => item.task_id === task.taskId);
     const automation = await readJsonIfExists(task.automationStateFile);
@@ -597,7 +602,7 @@ export async function buildExecutionReceipt(plan, state) {
     if (!receiptSnapshot || !finalSha256 || receiptSnapshot.sha256 !== finalSha256) {
       workspacesMatchFinal = false;
     }
-    if (receiptSnapshot?.excluded_runtime_directories?.length) noExcludedRuntimeDirectories = false;
+    if (receiptSnapshot?.forbidden_directories?.length) noForbiddenDirectories = false;
     tasks.push({
       task_id: task.taskId,
       attempt_id: automation?.attempt_id || null,
@@ -627,7 +632,8 @@ export async function buildExecutionReceipt(plan, state) {
         receipt_check_sha256: receiptSnapshot?.sha256 || null,
         receipt_checked_at: new Date().toISOString(),
         receipt_check_matches_final: Boolean(receiptSnapshot && finalSha256 && receiptSnapshot.sha256 === finalSha256),
-        excluded_runtime_directories: receiptSnapshot?.excluded_runtime_directories || [],
+        ignored_runtime_directories: receiptSnapshot?.ignored_runtime_directories || [],
+        forbidden_directories: receiptSnapshot?.forbidden_directories || [],
       } : null,
       timeout: automation?.timeout || null,
       manual_interventions: queueTask?.manual_interventions || [],
@@ -656,6 +662,7 @@ export async function buildExecutionReceipt(plan, state) {
     run_id: state.run_id,
     harness: plan.manifest.harness,
     model: resolvedModel,
+    runtime_directory_policy: runtimeDirectoryPolicy(),
     worker: state.worker,
     queue: {
       phase: state.phase,
@@ -677,14 +684,14 @@ export async function buildExecutionReceipt(plan, state) {
       models_match: modelsMatch,
       all_tasks_terminal: allTerminal,
       workspaces_match_final: workspacesMatchFinal,
-      no_excluded_runtime_directories: noExcludedRuntimeDirectories,
+      no_forbidden_directories: noForbiddenDirectories,
       valid: sameScope
         && recordsPresent
         && identitiesMatch
         && modelsMatch
         && allTerminal
         && workspacesMatchFinal
-        && noExcludedRuntimeDirectories,
+        && noForbiddenDirectories,
     },
   };
 }
@@ -702,7 +709,7 @@ export function recordReceiptIntegrityFailure(state, receipt) {
     at: new Date().toISOString(),
     integrity: receipt.integrity,
   });
-  state.error = "execution-receipt.json 完整性检查失败；候选产物可能在终态后漂移或包含禁止的运行时目录";
+  state.error = "execution-receipt.json 完整性检查失败；候选产物可能在终态后漂移或包含禁止目录";
   state.phase = "FAILED";
   return true;
 }

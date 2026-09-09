@@ -295,7 +295,7 @@ class FinalizeWebE2EScoreTest(unittest.TestCase):
         self.assertEqual(score["metrics"]["primary_dimensions"]["interaction_function"], 50)
         self.assertFalse(score["metrics"]["aesthetic"]["included_in_total"])
         self.assertEqual(score["metrics"]["aesthetic"]["score"], 100)
-        self.assertEqual(score["provenance"]["skill_version"], "4.4.1")
+        self.assertEqual(score["provenance"]["skill_version"], "4.4.2")
         self.assertEqual(score["metrics"]["aesthetic"]["primary_dimensions"]["layout_hierarchy"], 100)
         self.assertEqual(score["metrics"]["aesthetic"]["secondary_dimensions"]["v-01"], "MET")
         self.assertEqual(score["metrics"]["aesthetic"]["secondary_dimension_scores"]["v-01"], 100)
@@ -529,12 +529,26 @@ class BuildSubmissionTest(unittest.TestCase):
             },
             "expected_sha256": frozen,
             "attempt_id": f"attempt-{task_id}",
+            "runtime_directory_policy": {
+                "schema_version": "wildclawbench.web-e2e-runtime-directory-policy/v1",
+                "ignored_directories": [".cache", ".vite", "node_modules"],
+                "forbidden_directories": [".git"],
+                "scoring_copy": "exclude-ignored-directories",
+                "return_archive": "exclude-ignored-directories",
+            },
         })
         write_json(root / "execution-receipt.json", {
             "schema_version": "wildclawbench.web-e2e-execution-receipt/v1",
             "batch_id": "batch-1",
             "harness": {"id": "codex"},
             "model": {"id": actual_model, "display_name": model_display_name},
+            "runtime_directory_policy": {
+                "schema_version": "wildclawbench.web-e2e-runtime-directory-policy/v1",
+                "ignored_directories": [".cache", ".vite", "node_modules"],
+                "forbidden_directories": [".git"],
+                "scoring_copy": "exclude-ignored-directories",
+                "return_archive": "exclude-ignored-directories",
+            },
             "tasks": [{
                 "task_id": task_id,
                 "attempt_id": f"attempt-{task_id}",
@@ -668,19 +682,29 @@ class BuildSubmissionTest(unittest.TestCase):
             self.assertNotEqual(rejected_secret.returncode, 0)
             self.assertIn("敏感文件", rejected_secret.stderr)
             (root / ".env").unlink()
-            (root / "execution/tasks/task-1/workspace/node_modules").mkdir(parents=True)
-            rejected_modules = subprocess.run(command, capture_output=True, text=True)
-            self.assertNotEqual(rejected_modules.returncode, 0)
-            self.assertIn("node_modules", rejected_modules.stderr)
-            (root / "execution/tasks/task-1/workspace/node_modules").rmdir()
-            (root / "execution/tasks/task-1/workspace/.cache").mkdir()
-            rejected_cache = subprocess.run(command, capture_output=True, text=True)
-            self.assertNotEqual(rejected_cache.returncode, 0)
-            self.assertIn("禁止的运行时目录", rejected_cache.stderr)
-            (root / "execution/tasks/task-1/workspace/.cache").rmdir()
+            modules = root / "execution/tasks/task-1/workspace/node_modules/pkg"
+            modules.mkdir(parents=True)
+            (modules / "index.js").write_text("runtime", encoding="utf-8")
+            cache = root / "execution/tasks/task-1/workspace/.cache"
+            cache.mkdir()
+            (cache / "state.json").write_text("{}", encoding="utf-8")
+            (task_root / "workspace/node_modules").mkdir()
+            rejected_score_modules = subprocess.run(command, capture_output=True, text=True)
+            self.assertNotEqual(rejected_score_modules.returncode, 0)
+            self.assertIn("未声明为可忽略", rejected_score_modules.stderr)
+            (task_root / "workspace/node_modules").rmdir()
+            (root / "execution/tasks/task-1/workspace/.git").mkdir()
+            rejected_git = subprocess.run(command, capture_output=True, text=True)
+            self.assertNotEqual(rejected_git.returncode, 0)
+            self.assertIn("禁止目录", rejected_git.stderr)
+            (root / "execution/tasks/task-1/workspace/.git").rmdir()
             accepted = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(accepted.returncode, 0, accepted.stderr)
             submission = json.loads((root / "submission.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                submission["candidate_artifacts"][0]["ignored_runtime_directories"],
+                [".cache", "node_modules"],
+            )
         self.assertEqual(submission["unit"]["harness_id"], "codex")
         self.assertEqual(submission["task_ids"], ["task-1"])
 

@@ -122,7 +122,9 @@ Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作�
 
 达到执行时限后 Driver 必须点击当前会话的停止按钮，确认 WorkBuddy 已进入非运行态，并验证候选 workspace 在静默观察窗口内不再变化。只有三项证据齐全时才记录 `TIMEOUT`；否则记录 `NEEDS_ATTENTION`。即使指定 `--continue-on-terminal-failure`，未确认停止或 workspace 仍变化的超时任务也不能进入下一题。
 
-队列退出时会在 Harness 根目录生成 `execution-receipt.json`，汇总任务范围、attempt、自动化/正式状态、客户端与 Driver 版本、请求/实际模型、权限、Prompt/workspace 哈希和证据相对路径。生成回执时会重新计算每题 workspace SHA；`integrity.valid=true` 要求请求任务集合与 manifest 完全一致、记录齐全、身份和模型一致、所有任务均为终态，且当前 workspace 仍等于 Driver 终态冻结值。若已漂移，队列改为 `FAILED`，不得进入评分。`.git`、`.cache`、`.vite` 和 `node_modules` 被定义为非候选运行时目录；任一层级出现这些目录都会令回执无效，不能因为树哈希排除了它们就继续评分。
+队列退出时会在 Harness 根目录生成 `execution-receipt.json`，汇总任务范围、attempt、自动化/正式状态、客户端与 Driver 版本、请求/实际模型、权限、Prompt/workspace 哈希和证据相对路径。生成回执时会重新计算每题 workspace SHA；`integrity.valid=true` 要求请求任务集合与 manifest 完全一致、记录齐全、身份和模型一致、所有任务均为终态，且当前 workspace 的候选文件仍等于 Driver 终态冻结值。若候选文件已漂移，队列改为 `FAILED`，不得进入评分。
+
+被评 Harness 为运行或构建网站生成的 `.cache`、`.vite`、`node_modules` 属于可忽略运行时目录：Driver 不删除或修改它们，而是在回执中用 `wildclawbench.web-e2e-runtime-directory-policy/v1` 声明策略并逐题记录实际路径；它们不参与候选哈希，也不导致 `integrity.valid=false`。`.git` 仍是禁止目录，出现即使回执无效。只有显式声明该策略的新回执才能容忍运行时目录；旧回执继续使用严格规则。评分交接和离线回传只过滤可忽略目录，不从 execution 原件中清理它们。
 
 如果 Driver 在 Prompt 发送前因 UI 自动化错误进入 `INFRA_FAILED`，且候选 workspace 没有任何变化，可在修复根因后使用 `--resume --retry-pre-send-failure`。旧 attempt 会移入相邻的 `.attempts/<task_id>/<attempt_id>/` 留存审计；发送后失败、超时或已有产物变化时拒绝自动重试。
 

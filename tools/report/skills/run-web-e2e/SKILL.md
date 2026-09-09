@@ -102,7 +102,7 @@ python3 <skill-dir>/scripts/run_web_e2e.py set-stage \
 
 执行完全遵守 `execute-web-e2e`。WorkBuddy 和 AstronStudio 新批次均默认三槽、最大八槽；两者 UI 操作均为单槽。用户显式指定模型时才传 `--model`，否则保持客户端当前模型和推理强度。
 
-执行回执有效后才按 `orchestrate-web-e2e` 复制到独立评分工作空间并启动评分。Codex Desktop 新批次默认三槽，每题独立项目、任务、Browser 和端口。评分任务使用 `score-web-e2e`，候选 `workspace/` 永远只读；端口冲突只允许修改 `private-scoring/runtime-workspace/` 中的评分运行时副本。
+执行回执有效后才按 `orchestrate-web-e2e` 复制到独立评分工作空间并启动评分。新回执声明运行时目录策略时，execution 原件可保留被评 Harness 生成的 `.cache`、`.vite`、`node_modules`，评分复制会过滤它们且不修改原件；未声明策略的旧回执仍严格拒绝。Codex Desktop 新批次默认三槽，每题独立项目、任务、Browser 和端口。评分任务使用 `score-web-e2e`，候选 `workspace/` 永远只读；端口冲突只允许修改 `private-scoring/runtime-workspace/` 中的评分运行时副本。
 
 ### 离线回传与收集
 
@@ -114,7 +114,7 @@ python3 <skill-dir>/scripts/run_web_e2e.py export-return \
   --output-dir /absolute/offline-return
 ```
 
-该命令生成 `<batch_id>__<harness>__return.zip` 和外部 `return-receipt.json`。回执绑定 ZIP SHA-256、批次、源码 revision、Profile、模型、Harness 和完整 task IDs。目标存在时拒绝覆盖。ZIP 不含 `.git`、依赖缓存、运行时缓存、密钥或 `.run-web-e2e` 控制状态。
+该命令生成 `<batch_id>__<harness>__return.zip` 和外部 `return-receipt.json`。回执绑定 ZIP SHA-256、批次、源码 revision、Profile、模型、Harness 和完整 task IDs。目标存在时拒绝覆盖。ZIP 不含 `.git`、`.cache`、`.vite`、`node_modules`、密钥、评分运行时副本或 `.run-web-e2e` 控制状态；过滤只作用于 ZIP，不清理 execution 原件。只有声明兼容策略的执行回执才允许 execution workspace 中存在可忽略运行时目录，score workspace 中出现同名目录仍失败关闭。
 
 管理员离线收到 ZIP 和回执后导入：
 

@@ -34,7 +34,48 @@ IGNORABLE_SCORE_FILE_NAMES = {
 TREE_HASH_ALGORITHM = "wildclawbench.workspace-tree-sha256/v1"
 CANDIDATE_ARTIFACT_SCHEMA = "wildclawbench.web-e2e-candidate-artifact/v1"
 EXECUTION_RECEIPT_SCHEMA = "wildclawbench.web-e2e-execution-receipt/v1"
-EXCLUDED_TREE_DIRS = {".git", ".cache", ".vite", "node_modules"}
+RUNTIME_DIRECTORY_POLICY_SCHEMA = "wildclawbench.web-e2e-runtime-directory-policy/v1"
+IGNORED_RUNTIME_DIRS = {".cache", ".vite", "node_modules"}
+FORBIDDEN_CANDIDATE_DIRS = {".git"}
+EXCLUDED_TREE_DIRS = IGNORED_RUNTIME_DIRS | FORBIDDEN_CANDIDATE_DIRS
+
+
+def runtime_directory_policy() -> dict:
+    return {
+        "schema_version": RUNTIME_DIRECTORY_POLICY_SCHEMA,
+        "ignored_directories": sorted(IGNORED_RUNTIME_DIRS),
+        "forbidden_directories": sorted(FORBIDDEN_CANDIDATE_DIRS),
+        "scoring_copy": "exclude-ignored-directories",
+        "return_archive": "exclude-ignored-directories",
+    }
+
+
+def validate_runtime_directory_policy(value: object) -> bool:
+    if value is None:
+        return False
+    expected = runtime_directory_policy()
+
+    def same_string_set(actual: object, wanted: list[str]) -> bool:
+        return (
+            isinstance(actual, list)
+            and all(isinstance(item, str) for item in actual)
+            and len(actual) == len(set(actual))
+            and set(actual) == set(wanted)
+        )
+
+    valid = (
+        isinstance(value, dict)
+        and set(value) == set(expected)
+        and value.get("schema_version") == expected["schema_version"]
+        and same_string_set(value.get("ignored_directories"), expected["ignored_directories"])
+        and same_string_set(value.get("forbidden_directories"), expected["forbidden_directories"])
+        and value.get("scoring_copy") == expected["scoring_copy"]
+        and value.get("return_archive") == expected["return_archive"]
+    )
+    if not valid:
+        schema = value.get("schema_version") if isinstance(value, dict) else None
+        raise ValueError(f"候选运行时目录策略不兼容: {schema or 'missing'}")
+    return True
 
 
 def load_json(path: Path) -> dict:
@@ -57,16 +98,20 @@ def snapshot_workspace(root: Path, maximum_files: int = 20_000) -> dict:
     if root.is_symlink() or not root.is_dir():
         raise ValueError(f"候选 workspace 缺失或为符号链接: {root}")
     entries: list[dict] = []
-    excluded_runtime_directories: list[str] = []
+    ignored_runtime_directories: list[str] = []
+    forbidden_directories: list[str] = []
 
     def walk(current: Path, prefix: str = "") -> None:
         children = sorted(os.scandir(current), key=lambda item: item.name)
         for child in children:
             relative = f"{prefix}/{child.name}" if prefix else child.name
             child_path = Path(child.path)
+            if child.name in FORBIDDEN_CANDIDATE_DIRS:
+                forbidden_directories.append(relative)
+                continue
             if child.is_dir(follow_symlinks=False):
-                if child.name in EXCLUDED_TREE_DIRS:
-                    excluded_runtime_directories.append(relative)
+                if child.name in IGNORED_RUNTIME_DIRS:
+                    ignored_runtime_directories.append(relative)
                 else:
                     walk(child_path, relative)
                 continue
@@ -102,7 +147,9 @@ def snapshot_workspace(root: Path, maximum_files: int = 20_000) -> dict:
         "file_count": len(entries),
         "total_bytes": sum(entry["size"] for entry in entries),
         "excluded_directories": sorted(EXCLUDED_TREE_DIRS),
-        "excluded_runtime_directories": sorted(excluded_runtime_directories),
+        "ignored_runtime_directories": sorted(ignored_runtime_directories),
+        "forbidden_directories": sorted(forbidden_directories),
+        "excluded_runtime_directories": sorted(ignored_runtime_directories + forbidden_directories),
     }
 
 
@@ -113,6 +160,7 @@ def load_execution_receipt(package_root: Path, manifest: dict) -> tuple[dict, di
         raise ValueError(f"execution-receipt.json schema 不兼容: {receipt.get('schema_version')}")
     if receipt.get("integrity", {}).get("valid") is not True:
         raise ValueError("execution-receipt.json 的 integrity.valid 不是 true")
+    validate_runtime_directory_policy(receipt.get("runtime_directory_policy"))
     if receipt.get("batch_id") != manifest.get("batch_id"):
         raise ValueError("execution-receipt.json batch_id 与 manifest 不一致")
     if (receipt.get("harness") or {}).get("id") != (manifest.get("harness") or {}).get("id"):
@@ -129,7 +177,13 @@ def load_execution_receipt(package_root: Path, manifest: dict) -> tuple[dict, di
     return receipt, by_id
 
 
-def verify_workspace(root: Path, expected_sha256: str, label: str) -> dict:
+def verify_workspace(
+    root: Path,
+    expected_sha256: str,
+    label: str,
+    *,
+    allow_ignored_runtime_directories: bool = False,
+) -> dict:
     from datetime import datetime, timezone
 
     checked_at = datetime.now(timezone.utc).isoformat()
@@ -140,14 +194,24 @@ def verify_workspace(root: Path, expected_sha256: str, label: str) -> dict:
         "sha256": snapshot["sha256"],
         "file_count": snapshot["file_count"],
         "total_bytes": snapshot["total_bytes"],
-        "excluded_runtime_directories": snapshot["excluded_runtime_directories"],
-        "valid": snapshot["sha256"] == expected_sha256 and not snapshot["excluded_runtime_directories"],
+        "ignored_runtime_directories": snapshot["ignored_runtime_directories"],
+        "forbidden_directories": snapshot["forbidden_directories"],
+        "valid": (
+            snapshot["sha256"] == expected_sha256
+            and not snapshot["forbidden_directories"]
+            and (allow_ignored_runtime_directories or not snapshot["ignored_runtime_directories"])
+        ),
     }
     if not result["valid"]:
-        if snapshot["excluded_runtime_directories"]:
+        if snapshot["forbidden_directories"]:
             raise ValueError(
-                f"候选产物包含禁止的运行时目录: {label}: "
-                f"{', '.join(snapshot['excluded_runtime_directories'])}"
+                f"候选产物包含禁止目录: {label}: "
+                f"{', '.join(snapshot['forbidden_directories'])}"
+            )
+        if snapshot["ignored_runtime_directories"] and not allow_ignored_runtime_directories:
+            raise ValueError(
+                f"候选产物包含未声明为可忽略的运行时目录: {label}: "
+                f"{', '.join(snapshot['ignored_runtime_directories'])}"
             )
         raise ValueError(
             f"候选产物发生漂移: {label}: 期望 {expected_sha256}，实际 {snapshot['sha256']}"
@@ -251,6 +315,7 @@ def write_candidate_artifact_lock(
             "run_id": receipt.get("run_id"),
             "sha256": receipt_sha256,
         },
+        "runtime_directory_policy": receipt.get("runtime_directory_policy"),
         "prepared_at": score_check["checked_at"],
         "checks": {
             "execution_before_copy": execution_check,
@@ -408,12 +473,29 @@ def copy_manifest_execution_tasks(execution_tasks: Path, destination: Path, mani
         source = execution_tasks / task_id
         if source.is_symlink() or not source.is_dir():
             raise ValueError(f"执行任务目录缺失或为符号链接: {source}")
-        shutil.copytree(source, destination / task_id, symlinks=True)
+        def ignore_runtime_directories(directory: str, names: list[str]) -> set[str]:
+            root = Path(directory)
+            return {
+                name for name in names
+                if name in IGNORED_RUNTIME_DIRS
+                and not (root / name).is_symlink()
+                and (root / name).is_dir()
+            }
+
+        shutil.copytree(
+            source,
+            destination / task_id,
+            symlinks=True,
+            ignore=ignore_runtime_directories,
+        )
 
 
 def prepare_scoring_workspace(package_root: Path, archive_path: Path) -> Path:
     manifest = load_json(package_root / "manifest.json")
     receipt, receipt_tasks = load_execution_receipt(package_root, manifest)
+    allow_ignored_runtime_directories = validate_runtime_directory_policy(
+        receipt.get("runtime_directory_policy")
+    )
     receipt_sha256 = sha256_file(package_root / "execution-receipt.json")
     execution_tasks = package_root / "execution" / "tasks"
     score_root = package_root / "score"
@@ -430,6 +512,7 @@ def prepare_scoring_workspace(package_root: Path, archive_path: Path) -> Path:
             execution_tasks / task_id / "workspace",
             receipt_tasks[task_id]["workspace"]["final_sha256"],
             f"execution/{task_id}/before-copy",
+            allow_ignored_runtime_directories=allow_ignored_runtime_directories,
         )
 
     with tempfile.TemporaryDirectory(prefix=".web-e2e-score-", dir=package_root) as temporary:
@@ -465,6 +548,7 @@ def prepare_scoring_workspace(package_root: Path, archive_path: Path) -> Path:
                 execution_tasks / task_id / "workspace",
                 receipt_tasks[task_id]["workspace"]["final_sha256"],
                 f"execution/{task_id}/before-publish",
+                allow_ignored_runtime_directories=allow_ignored_runtime_directories,
             )
             verify_workspace(
                 prepared_score / "tasks" / task_id / "workspace",

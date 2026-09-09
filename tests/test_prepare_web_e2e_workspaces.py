@@ -65,6 +65,7 @@ def materialize_execution_receipt(package_root: Path, *, model_mode: str = "expl
             "run_id": "test-run",
             "harness": manifest["harness"],
             "model": {"id": "gpt-5.5", "display_name": "gpt-5.5"},
+            "runtime_directory_policy": fallback_module.runtime_directory_policy(),
             "tasks": tasks,
             "integrity": {"valid": True, "workspaces_match_final": True},
         }, ensure_ascii=False, indent=2) + "\n",
@@ -171,11 +172,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             score_task = harness_root / "score/tasks" / self.TASK_ID
             execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
             scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
-            score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.4.1.zip"
+            score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.4.2.zip"
             report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.0.1.zip"
-            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.1.1.zip"
-            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.9.1.zip"
-            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.0.2.zip"
+            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.1.2.zip"
+            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.9.2.zip"
+            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.0.3.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
             report_config_path = batch_root / "web-smoke__report-config.yaml"
 
@@ -208,7 +209,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertNotIn("model", manifest)
             self.assertFalse(manifest["execution_record_included"])
             self.assertEqual(manifest["scoring_skill"]["name"], "score-web-e2e")
-            self.assertEqual(manifest["scoring_skill"]["version"], "4.4.1")
+            self.assertEqual(manifest["scoring_skill"]["version"], "4.4.2")
             self.assertIn(manifest["metric_profile"], manifest["scoring_skill"]["supported_metric_profiles"])
             self.assertEqual(len(manifest["required_skills"]), 5)
 
@@ -286,15 +287,15 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             batch_manifest = json.loads((batch_root / "batch_manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(
                 batch_manifest["orchestrate_skill_archive"],
-                "packages/orchestrate-web-e2e-skill-v0.1.1.zip",
+                "packages/orchestrate-web-e2e-skill-v0.1.2.zip",
             )
             self.assertEqual(
                 batch_manifest["execute_skill_archive"],
-                "packages/execute-web-e2e-skill-v1.9.1.zip",
+                "packages/execute-web-e2e-skill-v1.9.2.zip",
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],
-                "packages/run-web-e2e-skill-v1.0.2.zip",
+                "packages/run-web-e2e-skill-v1.0.3.zip",
             )
             self.assertEqual(batch_manifest["skills_manifest"], "packages/skills-manifest.json")
             skills_manifest = json.loads(skills_manifest_path.read_text(encoding="utf-8"))
@@ -382,7 +383,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIsNone(report_skill_packages[0]["harness"])
             self.assertEqual(
                 manifest["score_skill_archive"],
-                "packages/score-web-e2e-skill-v4.4.1.zip",
+                "packages/score-web-e2e-skill-v4.4.2.zip",
             )
             self.assertEqual(
                 manifest["report_skill_archive"],
@@ -434,11 +435,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 "--repo-root", str(REPO_ROOT),
             ])
             result = prepare_module.package_score_skill(args)
-            package_path = Path(tmp).resolve() / "score-web-e2e-skill-v4.4.1.zip"
+            package_path = Path(tmp).resolve() / "score-web-e2e-skill-v4.4.2.zip"
             self.assertEqual(result["path"], package_path)
             self.assertEqual(result["file_count"], 14)
             self.assertEqual(result["sha256"], prepare_module.sha256_file(package_path))
-            self.assertEqual(result["version"], "4.4.1")
+            self.assertEqual(result["version"], "4.4.2")
             self.assertEqual(
                 result["content_sha256"],
                 prepare_module.sha256_skill_content(REPO_ROOT / "tools/report/skills/score-web-e2e"),
@@ -653,7 +654,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 fallback_module.prepare_scoring_workspace(package_root, scoring_package)
             self.assertFalse(any((package_root / "score").iterdir()))
 
-    def test_python_fallback_rejects_excluded_runtime_directory(self) -> None:
+    def test_python_fallback_filters_policy_declared_runtime_directory(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))
             execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
@@ -667,7 +668,39 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             runtime_cache.mkdir()
             (runtime_cache / "cache.json").write_text("runtime", encoding="utf-8")
 
-            with self.assertRaisesRegex(ValueError, "禁止的运行时目录"):
+            prepared = fallback_module.prepare_scoring_workspace(package_root, scoring_package)
+            score_workspace = prepared / "tasks" / self.TASK_ID / "workspace"
+            candidate = json.loads(
+                (prepared / "tasks" / self.TASK_ID / "private-scoring/candidate_artifact.json")
+                .read_text(encoding="utf-8")
+            )
+            self.assertTrue(runtime_cache.is_dir())
+            self.assertFalse((score_workspace / ".vite").exists())
+            self.assertEqual(
+                candidate["checks"]["execution_before_copy"]["ignored_runtime_directories"],
+                [".vite"],
+            )
+            self.assertEqual(candidate["checks"]["score_after_copy"]["ignored_runtime_directories"], [])
+
+    def test_python_fallback_requires_policy_before_ignoring_runtime_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))
+            execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
+            scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
+            extracted = Path(tmp) / "tester-legacy-runtime"
+            with zipfile.ZipFile(execution_package) as archive:
+                archive.extractall(extracted)
+            package_root = extracted / "web-smoke__codex"
+            materialize_execution_receipt(package_root)
+            receipt_path = package_root / "execution-receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt.pop("runtime_directory_policy")
+            receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            runtime_modules = package_root / "execution/tasks" / self.TASK_ID / "workspace/node_modules/pkg"
+            runtime_modules.mkdir(parents=True)
+            (runtime_modules / "index.js").write_text("runtime", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "未声明为可忽略"):
                 fallback_module.prepare_scoring_workspace(package_root, scoring_package)
             self.assertFalse(any((package_root / "score").iterdir()))
 

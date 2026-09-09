@@ -93,6 +93,13 @@ def materialize_results(harness: Path) -> None:
     })
 
 
+def declare_runtime_directory_policy(harness: Path) -> None:
+    receipt_path = harness / "execution-receipt.json"
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt["runtime_directory_policy"] = run_module.runtime_directory_policy()
+    write_json(receipt_path, receipt)
+
+
 def init_args(root: Path, scope: str, stages: list[str], preset: str | None = None) -> argparse.Namespace:
     return argparse.Namespace(root=str(root), scope=scope, stage=stages, preset=preset)
 
@@ -178,6 +185,60 @@ class RunWebE2ETest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "SHA-256"):
                 run_module.import_return(argparse.Namespace(
                     batch_root=str(batch), archive=str(archive), receipt=str(receipt),
+                ))
+
+    def test_export_filters_policy_declared_execution_runtime_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _, harness = materialize_batch(base)
+            materialize_results(harness)
+            declare_runtime_directory_policy(harness)
+            workspace = harness / "execution/tasks/task-1/workspace"
+            for relative in ("node_modules/pkg/index.js", ".cache/state.json", ".vite/cache.json"):
+                target = workspace / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("runtime", encoding="utf-8")
+
+            exported = run_module.export_return(argparse.Namespace(
+                package_root=str(harness), output_dir=str(base / "offline"),
+            ))
+
+            self.assertTrue((workspace / "node_modules/pkg/index.js").is_file())
+            with zipfile.ZipFile(exported["archive"]) as archive:
+                names = archive.namelist()
+            self.assertFalse(any(
+                part in run_module.IGNORED_RUNTIME_DIRS
+                for name in names
+                for part in Path(name).parts
+            ))
+
+    def test_export_requires_policy_for_execution_runtime_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _, harness = materialize_batch(base)
+            materialize_results(harness)
+            modules = harness / "execution/tasks/task-1/workspace/node_modules/pkg"
+            modules.mkdir(parents=True)
+            (modules / "index.js").write_text("runtime", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "未获策略允许"):
+                run_module.export_return(argparse.Namespace(
+                    package_root=str(harness), output_dir=str(base / "offline"),
+                ))
+
+    def test_export_still_rejects_git_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _, harness = materialize_batch(base)
+            materialize_results(harness)
+            declare_runtime_directory_policy(harness)
+            git_dir = harness / "execution/tasks/task-1/workspace/.git"
+            git_dir.mkdir()
+            (git_dir / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "禁止目录"):
+                run_module.export_return(argparse.Namespace(
+                    package_root=str(harness), output_dir=str(base / "offline"),
                 ))
 
     def test_import_rejects_path_traversal_and_symlink(self) -> None:

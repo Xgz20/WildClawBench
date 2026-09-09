@@ -58,6 +58,8 @@ workspace 哈希和文件稳定只能作为产物证据，不能单独判定 Age
 
 Harness 级 Worker 使用 `wildclawbench.web-e2e-execution-receipt/v1` 汇总完整任务范围。回执只有在请求任务集合与 manifest 一致、每题 automation/execution 记录存在、身份、`execution_record.model` 和模型回读一致、所有题均为终态时才能声明 `integrity.valid=true`。显式模型模式要求请求值等于实际值；保持当前配置模式允许 `requested_model=null`，但必须保存非空实际值。回执顶层 `model` 使用 Harness 实际回读模型；初始 manifest 未声明模型时也不能留空。人工介入必须记录原因和时间，但不能直接把未知终态改写为成功。
 
+若被评 Harness 在候选中生成 `.cache`、`.vite` 或 `node_modules`，Worker 不得删除、清理或修改原件。新回执必须声明 `wildclawbench.web-e2e-runtime-directory-policy/v1`：`ignored_directories` 固定为这三个目录，`forbidden_directories` 固定为 `.git`，评分复制和回传都使用 `exclude-ignored-directories`。可忽略目录不参与候选哈希，逐题 workspace 快照仍记录其实际相对路径；`.git` 继续使完整性失败。没有该策略的旧回执仍严格拒绝可忽略目录。评分副本和回传 ZIP 必须过滤可忽略目录，但 execution 原件保持不变。
+
 映射规则：
 
 | 自动化状态 | 正式执行状态 |

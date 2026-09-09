@@ -106,8 +106,8 @@ node <score-web-e2e-skill-dir>/scripts/build_submission.mjs \
   --output submission.json
 ```
 
-运行前确认每题 `managed_runtime.mjs status` 不再显示存活服务，已用 `clean` 删除 `private-scoring/runtime-workspace/`，且 `screenshot_receiver.mjs status --task-root .` 已进入可信终态。管理 Agent 不得删除或改写 `execution/tasks/*/workspace/`、`score/tasks/*/workspace/` 中的任何内容；若候选中残留 `node_modules`、`.git` 或敏感文件，应判定执行/交接包不合规并停止，不能通过清理候选来让 submission 通过。
+运行前确认每题 `managed_runtime.mjs status` 不再显示存活服务，已用 `clean` 删除 `private-scoring/runtime-workspace/`，且 `screenshot_receiver.mjs status --task-root .` 已进入可信终态。管理 Agent 不得删除或改写 `execution/tasks/*/workspace/`、`score/tasks/*/workspace/` 中的任何内容。新执行回执声明运行时目录策略时，execution 原件可保留被评 Harness 生成的 `.cache`、`.vite`、`node_modules`，但评分副本必须已在交接时过滤；`.git`、敏感文件、评分副本中新生成的运行时目录或任何候选漂移仍判为不合规。不能通过清理候选来让 submission 通过。
 
-脚本会再次核对 execution、score 两份 workspace、执行回执文件 SHA 与冻结 SHA，校验全部 `task_score.json`、证据路径、Harness 与实际模型身份、受管服务终态、截图接收器终态与最近一次成功截图、端口替换审计、运行时副本残留、禁止的运行时目录和敏感文件；任何不一致或空 `model.id` 都拒绝生成根目录 `submission.json`。随后测试人员使用 ZIP 工具压缩整个 Harness 根目录回传；报告 Skill 会从 ZIP 中定位唯一 `submission.json`。
+脚本会再次核对 execution、score 两份 workspace、执行回执文件 SHA、运行时目录策略与冻结 SHA，校验全部 `task_score.json`、证据路径、Harness 与实际模型身份、受管服务终态、截图接收器终态与最近一次成功截图、端口替换审计、运行时副本残留、禁止目录和敏感文件；任何不一致或空 `model.id` 都拒绝生成根目录 `submission.json`。随后由 `run-web-e2e export-return` 生成回传 ZIP：过滤 execution 原件中的可忽略运行时目录，同时保留并校验其他候选与评分证据。
 
 详细字段见 [评分 JSON 契约](references/scoring-contract.md)。

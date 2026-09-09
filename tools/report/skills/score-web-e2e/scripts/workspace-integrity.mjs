@@ -4,7 +4,47 @@ import path from "node:path";
 
 export const TREE_HASH_ALGORITHM = "wildclawbench.workspace-tree-sha256/v1";
 export const CANDIDATE_ARTIFACT_SCHEMA = "wildclawbench.web-e2e-candidate-artifact/v1";
-export const EXCLUDED_TREE_DIRS = new Set([".git", ".cache", ".vite", "node_modules"]);
+export const RUNTIME_DIRECTORY_POLICY_SCHEMA = "wildclawbench.web-e2e-runtime-directory-policy/v1";
+export const IGNORED_RUNTIME_DIRS = new Set([".cache", ".vite", "node_modules"]);
+export const FORBIDDEN_CANDIDATE_DIRS = new Set([".git"]);
+export const EXCLUDED_TREE_DIRS = new Set([...IGNORED_RUNTIME_DIRS, ...FORBIDDEN_CANDIDATE_DIRS]);
+
+export function runtimeDirectoryPolicy() {
+  return {
+    schema_version: RUNTIME_DIRECTORY_POLICY_SCHEMA,
+    ignored_directories: [...IGNORED_RUNTIME_DIRS].sort(),
+    forbidden_directories: [...FORBIDDEN_CANDIDATE_DIRS].sort(),
+    scoring_copy: "exclude-ignored-directories",
+    return_archive: "exclude-ignored-directories",
+  };
+}
+
+export function validateRuntimeDirectoryPolicy(value) {
+  if (value == null) return false;
+  const expected = runtimeDirectoryPolicy();
+  const expectedKeys = Object.keys(expected).sort();
+  const actualKeys = value && !Array.isArray(value) && typeof value === "object"
+    ? Object.keys(value).sort()
+    : [];
+  const sameStringSet = (actual, wanted) => Array.isArray(actual)
+    && actual.length === wanted.length
+    && new Set(actual).size === actual.length
+    && actual.every((item) => typeof item === "string" && wanted.includes(item));
+  const valid = JSON.stringify(actualKeys) === JSON.stringify(expectedKeys)
+    && value.schema_version === expected.schema_version
+    && sameStringSet(value.ignored_directories, expected.ignored_directories)
+    && sameStringSet(value.forbidden_directories, expected.forbidden_directories)
+    && value.scoring_copy === expected.scoring_copy
+    && value.return_archive === expected.return_archive;
+  if (!valid) {
+    throw new Error(`候选运行时目录策略不兼容：${value?.schema_version || "missing"}`);
+  }
+  return true;
+}
+
+export function sameRuntimeDirectoryPolicy(left, right) {
+  return validateRuntimeDirectoryPolicy(left) === validateRuntimeDirectoryPolicy(right);
+}
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -25,14 +65,19 @@ export function snapshotWorkspace(root, { maximumFiles = 20_000 } = {}) {
   if (rootInfo.isSymbolicLink() || !rootInfo.isDirectory()) throw new Error(`候选 workspace 缺失或为符号链接：${root}`);
   const canonical = fs.realpathSync(root);
   const entries = [];
-  const excludedRuntimeDirectories = [];
+  const ignoredRuntimeDirectories = [];
+  const forbiddenDirectories = [];
   function walk(current, prefix = "") {
     const children = fs.readdirSync(current, { withFileTypes: true });
     children.sort((left, right) => compareUnicodeCodePoints(left.name, right.name));
     for (const child of children) {
       const relative = prefix ? `${prefix}/${child.name}` : child.name;
+      if (FORBIDDEN_CANDIDATE_DIRS.has(child.name)) {
+        forbiddenDirectories.push(relative);
+        continue;
+      }
       if (child.isDirectory()) {
-        if (EXCLUDED_TREE_DIRS.has(child.name)) excludedRuntimeDirectories.push(relative);
+        if (IGNORED_RUNTIME_DIRS.has(child.name)) ignoredRuntimeDirectories.push(relative);
         else walk(path.join(current, child.name), relative);
         continue;
       }
@@ -63,7 +108,9 @@ export function snapshotWorkspace(root, { maximumFiles = 20_000 } = {}) {
     file_count: entries.length,
     total_bytes: entries.reduce((sum, entry) => sum + entry.size, 0),
     excluded_directories: [...EXCLUDED_TREE_DIRS].sort(),
-    excluded_runtime_directories: excludedRuntimeDirectories.sort(compareUnicodeCodePoints),
+    ignored_runtime_directories: ignoredRuntimeDirectories.sort(compareUnicodeCodePoints),
+    forbidden_directories: forbiddenDirectories.sort(compareUnicodeCodePoints),
+    excluded_runtime_directories: [...ignoredRuntimeDirectories, ...forbiddenDirectories].sort(compareUnicodeCodePoints),
   };
 }
 
@@ -76,21 +123,28 @@ export function loadCandidateArtifact(lockFile) {
   return value;
 }
 
-export function verifyWorkspace(root, expectedSha256, label) {
+export function verifyWorkspace(root, expectedSha256, label, { allowIgnoredRuntimeDirectories = false } = {}) {
   const snapshot = snapshotWorkspace(root);
+  const ignoredDirectoriesValid = allowIgnoredRuntimeDirectories || snapshot.ignored_runtime_directories.length === 0;
   const result = {
     stage: label,
     checked_at: new Date().toISOString(),
     sha256: snapshot.sha256,
     file_count: snapshot.file_count,
     total_bytes: snapshot.total_bytes,
-    excluded_runtime_directories: snapshot.excluded_runtime_directories,
-    valid: snapshot.sha256 === expectedSha256 && snapshot.excluded_runtime_directories.length === 0,
+    ignored_runtime_directories: snapshot.ignored_runtime_directories,
+    forbidden_directories: snapshot.forbidden_directories,
+    valid: snapshot.sha256 === expectedSha256
+      && snapshot.forbidden_directories.length === 0
+      && ignoredDirectoriesValid,
   };
   if (!result.valid) {
-    const detail = snapshot.excluded_runtime_directories.length
-      ? `候选产物包含禁止的运行时目录：${snapshot.excluded_runtime_directories.join(", ")}`
-      : `候选产物发生漂移：${label}，期望 ${expectedSha256}，实际 ${snapshot.sha256}`;
+    let detail = `候选产物发生漂移：${label}，期望 ${expectedSha256}，实际 ${snapshot.sha256}`;
+    if (snapshot.forbidden_directories.length) {
+      detail = `候选产物包含禁止目录：${snapshot.forbidden_directories.join(", ")}`;
+    } else if (!ignoredDirectoriesValid) {
+      detail = `候选产物包含未声明为可忽略的运行时目录：${snapshot.ignored_runtime_directories.join(", ")}`;
+    }
     throw Object.assign(
       new Error(detail),
       { integrityCheck: result },

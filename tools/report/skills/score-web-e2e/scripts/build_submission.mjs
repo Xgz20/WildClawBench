@@ -8,8 +8,12 @@ import { processIdentity } from "./managed_runtime.mjs";
 import { SCREENSHOT_RECEIVER_SCHEMA, detectImageFormat } from "./screenshot_receiver.mjs";
 import {
   CANDIDATE_ARTIFACT_SCHEMA,
+  FORBIDDEN_CANDIDATE_DIRS,
+  IGNORED_RUNTIME_DIRS,
   TREE_HASH_ALGORITHM,
   loadCandidateArtifact,
+  sameRuntimeDirectoryPolicy,
+  validateRuntimeDirectoryPolicy,
   verifyWorkspace,
 } from "./workspace-integrity.mjs";
 
@@ -24,7 +28,7 @@ const DETAILED_PROFILE = "web-e2e-detailed-v1";
 const SUPPORTED_METRIC_PROFILES = new Set([DETAILED_PROFILE, "artifactsbench-web-v1"]);
 const SECRET_NAMES = new Set([".env", ".env.local", ".env.production", "id_rsa", "id_ed25519", "credentials.json", "secrets.json", "my_api.json"]);
 const SECRET_SUFFIXES = [".pem", ".key", ".p12", ".pfx"];
-const FORBIDDEN_DIR_NAMES = new Set(["node_modules", ".git", ".cache", ".vite"]);
+const FORBIDDEN_DIR_NAMES = new Set([...FORBIDDEN_CANDIDATE_DIRS, "runtime-workspace"]);
 const PORT_CONFLICT_PATTERNS = [
   /EADDRINUSE/i,
   /address\s+already\s+in\s+use/i,
@@ -220,21 +224,24 @@ function validateScreenshotReceiver(taskRoot, taskId, expectedSha256) {
 }
 
 function auditTree(root) {
-  if (!fs.existsSync(root)) return { files: [], forbiddenDirectories: [] };
+  if (!fs.existsSync(root)) return { files: [], forbiddenDirectories: [], ignoredRuntimeDirectories: [] };
   const files = [];
   const forbiddenDirectories = [];
+  const ignoredRuntimeDirectories = [];
   for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
     const filename = path.join(root, entry.name);
     if (entry.isDirectory()) {
-      if (FORBIDDEN_DIR_NAMES.has(entry.name)) forbiddenDirectories.push(filename);
+      if (IGNORED_RUNTIME_DIRS.has(entry.name)) ignoredRuntimeDirectories.push(filename);
+      else if (FORBIDDEN_DIR_NAMES.has(entry.name)) forbiddenDirectories.push(filename);
       else {
         const nested = auditTree(filename);
         files.push(...nested.files);
         forbiddenDirectories.push(...nested.forbiddenDirectories);
+        ignoredRuntimeDirectories.push(...nested.ignoredRuntimeDirectories);
       }
     } else if (entry.isFile()) files.push(filename);
   }
-  return { files, forbiddenDirectories };
+  return { files, forbiddenDirectories, ignoredRuntimeDirectories };
 }
 
 function resolveReceiptModel(receipt, receiptTask) {
@@ -273,6 +280,7 @@ export function buildSubmission(packageRoot) {
   if (receipt.schema_version !== EXECUTION_RECEIPT_SCHEMA || receipt.integrity?.valid !== true) {
     throw new Error("execution-receipt.json 缺失、schema 不兼容或 integrity.valid 不是 true");
   }
+  const allowIgnoredRuntimeDirectories = validateRuntimeDirectoryPolicy(receipt.runtime_directory_policy);
   if (receipt.batch_id !== manifest.batch_id || receipt.harness?.id !== manifest.harness?.id) {
     throw new Error("execution-receipt.json 身份与 manifest 不一致");
   }
@@ -301,6 +309,7 @@ export function buildSubmission(packageRoot) {
       || candidateLock.harness_id !== manifest.harness?.id
       || candidateLock.expected_sha256 !== expectedSha256
       || candidateLock.execution_receipt?.sha256 !== receiptSha256
+      || !sameRuntimeDirectoryPolicy(candidateLock.runtime_directory_policy, receipt.runtime_directory_policy)
       || candidateLock.model?.id !== receiptModel.id
       || candidateLock.model?.display_name !== receiptModel.display_name
       || candidateSelectionMode !== receiptModel.selection_mode
@@ -312,6 +321,7 @@ export function buildSubmission(packageRoot) {
       path.join(packageRoot, "execution", "tasks", entry.task_id, "workspace"),
       expectedSha256,
       `build-submission:${entry.task_id}:execution`,
+      { allowIgnoredRuntimeDirectories },
     );
     const scoreCheck = verifyWorkspace(
       path.join(taskRoot, "workspace"),
@@ -405,6 +415,7 @@ export function buildSubmission(packageRoot) {
       checked_at: scoreCheck.checked_at,
       execution_sha256: executionCheck.sha256,
       score_sha256: scoreCheck.sha256,
+      ignored_runtime_directories: executionCheck.ignored_runtime_directories,
       runtime_port_overrides: portOverrideAudit,
       valid: true,
     });

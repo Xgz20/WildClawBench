@@ -16,7 +16,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 
 export const AUTOMATION_SCHEMA = "wildclawbench.web-e2e-automation-state/v1";
 export const EXECUTION_SCHEMA = "wildclawbench.web-e2e-execution/v1";
-export const DRIVER_VERSION = "1.7.0";
+export const DRIVER_VERSION = "1.7.1";
 export const DEFAULT_APP_PATH = "/Applications/WorkBuddy.app";
 export const DEFAULT_BUNDLE_ID = "com.tencent.workbuddy.mac";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9229";
@@ -36,7 +36,20 @@ export const RESUMABLE_PHASES = new Set([
   "RUNNING",
   "NEEDS_ATTENTION",
 ]);
-const EXCLUDED_TREE_DIRS = new Set([".git", ".cache", ".vite", "node_modules"]);
+export const RUNTIME_DIRECTORY_POLICY_SCHEMA = "wildclawbench.web-e2e-runtime-directory-policy/v1";
+export const IGNORED_RUNTIME_DIRS = new Set([".cache", ".vite", "node_modules"]);
+export const FORBIDDEN_CANDIDATE_DIRS = new Set([".git"]);
+const EXCLUDED_TREE_DIRS = new Set([...IGNORED_RUNTIME_DIRS, ...FORBIDDEN_CANDIDATE_DIRS]);
+
+export function runtimeDirectoryPolicy() {
+  return {
+    schema_version: RUNTIME_DIRECTORY_POLICY_SCHEMA,
+    ignored_directories: [...IGNORED_RUNTIME_DIRS].sort(),
+    forbidden_directories: [...FORBIDDEN_CANDIDATE_DIRS].sort(),
+    scoring_copy: "exclude-ignored-directories",
+    return_archive: "exclude-ignored-directories",
+  };
+}
 
 function numberOption(value, name, { minimum = 0, integer = false } = {}) {
   const parsed = Number(value);
@@ -252,14 +265,19 @@ export async function snapshotTree(root, { maximumFiles = 20000 } = {}) {
     throw new Error(`候选 workspace 缺失或为符号链接：${root}`);
   }
   const entries = [];
-  const excludedRuntimeDirectories = [];
+  const ignoredRuntimeDirectories = [];
+  const forbiddenDirectories = [];
   async function walk(current, prefix = "") {
     const children = await readdir(current, { withFileTypes: true });
     children.sort((left, right) => compareUnicodeCodePoints(left.name, right.name));
     for (const child of children) {
       const rel = prefix ? `${prefix}/${child.name}` : child.name;
+      if (FORBIDDEN_CANDIDATE_DIRS.has(child.name)) {
+        forbiddenDirectories.push(rel);
+        continue;
+      }
       if (child.isDirectory()) {
-        if (EXCLUDED_TREE_DIRS.has(child.name)) excludedRuntimeDirectories.push(rel);
+        if (IGNORED_RUNTIME_DIRS.has(child.name)) ignoredRuntimeDirectories.push(rel);
         else await walk(join(current, child.name), rel);
         continue;
       }
@@ -290,7 +308,9 @@ export async function snapshotTree(root, { maximumFiles = 20000 } = {}) {
     file_count: entries.length,
     total_bytes: entries.reduce((sum, entry) => sum + entry.size, 0),
     excluded_directories: [...EXCLUDED_TREE_DIRS].sort(),
-    excluded_runtime_directories: excludedRuntimeDirectories.sort(compareUnicodeCodePoints),
+    ignored_runtime_directories: ignoredRuntimeDirectories.sort(compareUnicodeCodePoints),
+    forbidden_directories: forbiddenDirectories.sort(compareUnicodeCodePoints),
+    excluded_runtime_directories: [...ignoredRuntimeDirectories, ...forbiddenDirectories].sort(compareUnicodeCodePoints),
     entries,
   };
 }
