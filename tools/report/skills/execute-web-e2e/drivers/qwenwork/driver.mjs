@@ -485,6 +485,80 @@ async function clickExactText(page, value, timeout) {
   throw new Error(`找不到可见文本：${value}`);
 }
 
+export function qwenProjectSidebarLabel(page, projectName) {
+  return page
+    .locator('[data-slot="collapsible-menu-item-label"]')
+    .getByText(projectName, { exact: true });
+}
+
+export async function openQwenProjectConversation(
+  page,
+  { projectName, conversationName, conversationId },
+  timeout,
+) {
+  if (!projectName || !conversationName || !conversationId) {
+    throw new Error("QwenWork 恢复原会话缺少项目名、会话名或 conversation ID");
+  }
+  const selectedChat = () => {
+    try {
+      return new URL(page.url()).searchParams.get("chat");
+    } catch {
+      return null;
+    }
+  };
+  if (selectedChat() === conversationId) {
+    return {
+      opened: true,
+      method: "conversation-already-selected",
+      project_name: projectName,
+      conversation_id: conversationId,
+    };
+  }
+
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const projectLabels = await visibleLocators(qwenProjectSidebarLabel(page, projectName));
+    if (projectLabels.length > 1) {
+      throw new Error(`QwenWork 侧栏项目“${projectName}”数量异常：${projectLabels.length}`);
+    }
+    if (projectLabels.length === 1) {
+      const projectLabel = projectLabels[0];
+      const projectGroup = projectLabel.locator('xpath=ancestor::*[@data-slot="collapsible-menu-item"][1]');
+      if (await projectGroup.count() !== 1) throw new Error(`QwenWork 侧栏项目“${projectName}”结构异常`);
+      const expander = projectLabel.locator("xpath=ancestor::button[1]");
+      if (await expander.count() !== 1) throw new Error(`QwenWork 侧栏项目“${projectName}”展开按钮结构异常`);
+      if ((await expander.getAttribute("aria-expanded")) !== "true") {
+        await expander.evaluate((element) => element.click());
+        await sleep(250);
+      }
+      const projectContainer = projectGroup.locator("xpath=parent::*");
+      const conversations = await visibleLocators(
+        projectContainer.getByRole("button", { name: conversationName, exact: true }),
+      );
+      if (conversations.length > 1) {
+        throw new Error(`QwenWork 项目“${projectName}”中的原会话数量异常：${conversations.length}`);
+      }
+      if (conversations.length === 1) {
+        await conversations[0].click({ timeout });
+        while (Date.now() < deadline) {
+          if (selectedChat() === conversationId) {
+            return {
+              opened: true,
+              method: "project-sidebar-existing-conversation",
+              project_name: projectName,
+              conversation_id: conversationId,
+            };
+          }
+          await sleep(100);
+        }
+        throw new Error(`QwenWork 未导航到原 conversation ${conversationId}`);
+      }
+    }
+    await sleep(250);
+  }
+  throw new Error(`QwenWork 无法在项目“${projectName}”中定位原会话“${conversationName}”`);
+}
+
 async function selectNativeFolder(folderPath, timeoutSeconds) {
   const { stdout } = await run("/usr/bin/swift", [NATIVE_FOLDER_HELPER, DEFAULT_BUNDLE_ID, folderPath, String(timeoutSeconds)], { capture: true });
   try {
@@ -515,14 +589,18 @@ async function openProjectByName(page, projectName, timeout) {
     if (projectSelectors.length > 1) break;
 
     if (!navigationMethod) {
-      const projectLabels = await visibleLocators(page.getByText(projectName, { exact: true }));
+      // The same project name may also be visible in the new-task project
+      // selector. Scope recovery to the sidebar tree so that two legitimate
+      // renderings of one database project are not treated as two projects.
+      const projectLabels = await visibleLocators(qwenProjectSidebarLabel(page, projectName));
       if (projectLabels.length > 1) {
         throw new Error(`QwenWork 侧栏项目“${projectName}”数量异常：${projectLabels.length}`);
       }
       if (projectLabels.length === 1) {
-        const projectGroup = projectLabels[0].locator('xpath=ancestor::div[@data-state][1]');
+        const projectGroup = projectLabels[0].locator('xpath=ancestor::*[@data-slot="collapsible-menu-item"][1]');
         if (await projectGroup.count() !== 1) throw new Error(`QwenWork 侧栏项目“${projectName}”结构异常`);
-        const createTaskButtons = await visibleLocators(projectGroup.getByRole("button", { name: "在项目中新建任务", exact: true }));
+        const projectContainer = projectGroup.locator("xpath=parent::*");
+        const createTaskButtons = await visibleLocators(projectContainer.getByRole("button", { name: "在项目中新建任务", exact: true }));
         if (createTaskButtons.length !== 1) {
           throw new Error(`QwenWork 侧栏项目“${projectName}”的新任务按钮数量异常：${createTaskButtons.length}`);
         }
@@ -872,7 +950,13 @@ async function openAttemptConversation(page, config, state, timeout) {
   rememberSession(state, session);
   const projectName = session.projectName || state.session.project_name || state.workspace_selection?.project_name;
   if (!projectName) return { opened: false, reason: "project-name-unavailable", session_id: session.sessionId };
-  const project = await openProjectByName(page, projectName, timeout);
+  const conversationName = session.conversationName || state.session.conversation_name;
+  if (!conversationName) return { opened: false, reason: "conversation-name-unavailable", session_id: session.sessionId };
+  const project = await openQwenProjectConversation(page, {
+    projectName,
+    conversationName,
+    conversationId: session.conversationId,
+  }, timeout);
   const projectSessions = (await querySessions(config.sessionDb)).filter((candidate) => (
     candidate.cwd && resolve(String(candidate.cwd)) === config.workspace
   ));
@@ -888,7 +972,7 @@ async function openAttemptConversation(page, config, state, timeout) {
     opened: true,
     conversation_id: session.conversationId,
     session_id: session.sessionId,
-    method: "project-selection+unique-project-session+agents-sqlite",
+    method: "project-sidebar-conversation+unique-project-session+agents-sqlite",
     project,
   };
 }

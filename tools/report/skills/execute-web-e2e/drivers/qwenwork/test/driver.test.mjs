@@ -5,6 +5,8 @@ import {
   chooseQwenAttemptSession,
   hasStableConversationId,
   inspectPendingAttention,
+  openQwenProjectConversation,
+  qwenProjectSidebarLabel,
   restartQwenWork,
   waitForUniqueVisible,
 } from "../driver.mjs";
@@ -41,12 +43,98 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.9.5");
+  assert.equal(state.driver.version, "1.9.6");
 });
 
 test("QwenWork 只有同时捕获 chat 和稳定内核 session 才允许后台恢复", () => {
   assert.equal(hasStableConversationId({ session: { conversation_id: "chat", session_id: null } }), false);
   assert.equal(hasStableConversationId({ session: { conversation_id: "chat", session_id: "session" } }), true);
+});
+
+test("QwenWork 项目恢复只匹配侧栏标签，不混入新任务项目选择器", () => {
+  const calls = [];
+  const expected = {};
+  const page = {
+    locator(selector) {
+      calls.push(["locator", selector]);
+      return {
+        getByText(value, options) {
+          calls.push(["getByText", value, options]);
+          return expected;
+        },
+      };
+    },
+  };
+  assert.equal(qwenProjectSidebarLabel(page, "project-a"), expected);
+  assert.deepEqual(calls, [
+    ["locator", '[data-slot="collapsible-menu-item-label"]'],
+    ["getByText", "project-a", { exact: true }],
+  ]);
+});
+
+test("QwenWork 客户端重启后按原 conversation ID 打开侧栏会话", async () => {
+  let currentUrl = "file:///QwenWork/index.html?windowId=main";
+  const conversation = {
+    isVisible: async () => true,
+    click: async () => {
+      currentUrl = "file:///QwenWork/index.html?windowId=main&chat=chat-1";
+    },
+  };
+  const conversationCollection = {
+    count: async () => 1,
+    nth: () => conversation,
+  };
+  const projectContainer = {
+    getByRole: (role, options) => {
+      assert.equal(role, "button");
+      assert.deepEqual(options, { name: "conversation-a", exact: true });
+      return conversationCollection;
+    },
+  };
+  const projectGroup = {
+    count: async () => 1,
+    locator: (selector) => {
+      assert.equal(selector, "xpath=parent::*");
+      return projectContainer;
+    },
+  };
+  const expander = {
+    count: async () => 1,
+    getAttribute: async () => "true",
+  };
+  const projectLabel = {
+    isVisible: async () => true,
+    locator: (selector) => {
+      if (selector === 'xpath=ancestor::*[@data-slot="collapsible-menu-item"][1]') return projectGroup;
+      if (selector === "xpath=ancestor::button[1]") return expander;
+      throw new Error(`unexpected selector: ${selector}`);
+    },
+  };
+  const projectLabels = {
+    count: async () => 1,
+    nth: () => projectLabel,
+  };
+  const page = {
+    url: () => currentUrl,
+    locator: (selector) => {
+      assert.equal(selector, '[data-slot="collapsible-menu-item-label"]');
+      return {
+        getByText: (value, options) => {
+          assert.equal(value, "project-a");
+          assert.deepEqual(options, { exact: true });
+          return projectLabels;
+        },
+      };
+    },
+  };
+  const opened = await openQwenProjectConversation(page, {
+    projectName: "project-a",
+    conversationName: "conversation-a",
+    conversationId: "chat-1",
+  }, 100);
+  assert.equal(opened.opened, true);
+  assert.equal(opened.method, "project-sidebar-existing-conversation");
+  assert.equal(opened.conversation_id, "chat-1");
 });
 
 test("QwenWork 可捕获发送后同一秒创建的 session", () => {
@@ -162,6 +250,31 @@ test("QwenWork 重启前拒绝打断活动任务", async () => {
     /活动任务/,
   );
   assert.equal(mutationCalled, false);
+});
+
+test("QwenWork 主进程和端口均已崩溃时允许重启并保留活动 session", async () => {
+  let launched = false;
+  const launch = await restartQwenWork(
+    { endpoint: DEFAULT_ENDPOINT, appPath: DEFAULT_APP_PATH, sessionDb: DEFAULT_SESSION_DB },
+    {
+      processIdentity: async () => (launched
+        ? { pid: 456, command: `${DEFAULT_APP_PATH}/Contents/MacOS/QwenWorkCN` }
+        : null),
+      endpointReady: async () => launched,
+      querySessions: async () => [{ streamId: "stream", status: "running" }],
+      run: async (command) => {
+        if (command === "/usr/bin/open") launched = true;
+        return { code: 0, stdout: "", stderr: "" };
+      },
+      waitForEndpoint: async () => {},
+      sleep: async () => {},
+      launchAttempts: 1,
+    },
+  );
+  assert.equal(launch.status, "READY");
+  assert.equal(launch.stop.pid, null);
+  assert.equal(launch.attempts.length, 1);
+  assert.equal(launch.attempts[0].endpoint_ready, true);
 });
 
 test("唯一可见元素等待器拒绝歧义", async () => {

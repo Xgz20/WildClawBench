@@ -83,6 +83,8 @@ Prompt 发送后以 `sub_chats.session_id` 作为稳定内核会话 ID，以 `su
 
 控制任务或队列 Worker 中断后，由新的控制任务使用完全相同的批次参数增加 `--resume`。恢复只按已持久化的 attempt、`session_id`、`local_project_id` 和绝对 cwd 观察原会话，不重新创建项目或发送 Prompt。队列历史用 `WORKER_INTERRUPTED` 和 `WORKER_RESUMED` 记录旧、新 Worker PID；恢复验收必须确认 `TASK_DISPATCHED` 与 automation 中 `PROMPT_SENT` 均仍只有一次。
 
+QwenWork 客户端崩溃且本地 CDP 端口已经关闭时，使用相同参数增加 `--resume --restart-app-on-resume`。Driver 只重启一次客户端，并从数据库确认唯一项目、原 `session_id` 和侧栏中的原 conversation 后继续观察；项目名称同时出现在侧栏和新任务选择器属于同一数据库项目的两个视图，恢复只使用侧栏项目树定位。若 QwenWork 把原 session 恢复为运行或完成状态，沿用原 attempt 收口；若客户端明确把它标记为 `interrupted`，则记录 `INFRA_FAILED`，不得重发 Prompt 或伪造恢复成功。数据库存在多个项目、多个会话或 cwd 不一致时仍停在 `NEEDS_ATTENTION`。
+
 ## WorkBuddy 单题
 
 依赖准备由调用本 Skill 的控制 Harness 完成，不要求用户手工进入 Driver 目录。控制 Harness 先检查 `node_modules/playwright-core` 和锁文件状态；缺失或 `npm ls --depth=0` 失败时，在 Driver 目录自动执行锁定安装。依赖只能安装在 Skill 的 Driver 目录，不能安装到候选工作空间：
