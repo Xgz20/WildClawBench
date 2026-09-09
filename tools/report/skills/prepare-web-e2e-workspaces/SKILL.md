@@ -74,7 +74,7 @@ python3 .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_worksp
 3. 将 `__scoring.zip` 解压到 Harness 根目录，选择合并目录，不能替换整个 `score/`；
 4. 检查每题同时存在 `workspace/`、`private-scoring/` 和 `.web-e2e-scoring-ready`；评分 Skill 从客户端已安装位置加载，不在题目目录内。
 
-推荐直接把 `__scoring.zip` 放在 Harness 根目录同级或根目录内，保持预置的 `score/` 没有真实内容，再双击根目录中的 `准备评分工作空间.command`（macOS）或 `准备评分工作空间.cmd`（Windows）。封装会调用标准库脚本 `tools/prepare_scoring_workspace.py`，要求有效 `execution-receipt.json`，在复制前、复制后和发布前核对最终候选 SHA，严格按 manifest 中的题目目录创建临时副本，生成 `private-scoring/candidate_artifact.json`，同时锁定执行回执文件 SHA 和实际回读模型，排除 `.execute-web-e2e` 等执行控制目录，安全解压评分包并在全部校验通过后填充 `score/`；空目录以及 `.DS_Store`、`Thumbs.db` 等系统元数据会被安全清理，真实文件、评分结果和符号链接仍会触发拒绝覆盖。本机没有 Python 时再回退到上述人工 ZIP 流程，但人工流程也必须生成并核对同等冻结记录后才能自动编排。
+推荐直接把 `__scoring.zip` 放在 Harness 根目录同级或根目录内，保持预置的 `score/` 没有真实内容，再双击根目录中的 `准备评分工作空间.command`（macOS）或 `准备评分工作空间.cmd`（Windows）。封装会调用标准库脚本 `tools/prepare_scoring_workspace.py`，要求有效 `execution-receipt.json`，在复制前、复制后和发布前核对最终候选 SHA，严格按 manifest 中的题目目录创建临时副本，生成 `private-scoring/candidate_artifact.json`，同时锁定执行回执文件 SHA、运行时目录策略和实际回读模型，排除 `.execute-web-e2e` 等执行控制目录，并在新回执声明兼容策略时从评分副本过滤 `.cache`、`.vite` 和 `node_modules`，但不修改 execution 原件。随后安全解压评分包并在全部校验通过后填充 `score/`；空目录以及 `.DS_Store`、`Thumbs.db` 等系统元数据会被安全清理，真实文件、评分结果和符号链接仍会触发拒绝覆盖。本机没有 Python 时再回退到上述人工 ZIP 流程，但人工流程也必须生成并核对同等冻结记录后才能自动编排。
 
 ## 隔离与路径
 
@@ -84,7 +84,7 @@ python3 .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_worksp
 - Rubric 引用的 `/tmp_workspace_eval/<file>` 只复制实际引用文件到 `private-scoring/fixtures/`，不能无条件复制整个 `eval/`。
 - 评分契约中 `/tmp_workspace` 改写为 `./workspace`，`/tmp_workspace_eval` 改写为 `./private-scoring/fixtures`。
 - 每个评分工作空间只含一个用例；评分 Agent 选择 `score/tasks/<task_id>/`，不能选择 Harness 根目录。
-- 候选 `workspace/` 任一层级都不得包含 `.git`、`.cache`、`.vite` 或 `node_modules`。这些目录属于运行时状态，若被评 Harness 将其留在终态产物中，准备评分必须失败并重新执行，不能在冻结后由控制 Agent 清理。
+- `.git` 在候选 `workspace/` 任一层级都属于禁止项。被评 Harness 在执行阶段生成的 `.cache`、`.vite`、`node_modules` 属于可忽略运行时目录：只有新 `execution-receipt.json` 声明 `wildclawbench.web-e2e-runtime-directory-policy/v1` 时才允许保留在 execution 原件中，评分复制会过滤它们；旧回执仍严格拒绝。控制 Agent 不得在冻结后清理或修改 execution 原件。
 
 详细 Profile 的页面美观度默认使用评分 Skill 内置的 `web-aesthetic-v1` 标准，并在 task contract 中记录版本、来源和 `joint_screenshot_set` 判定方式。`--aesthetic-rubric` 仅用于增加详细 Profile 的批次补充说明，不能替换内置的 6 个维度、权重和 32 个检查项；ArtifactsBench Profile 禁止传该参数。
 
