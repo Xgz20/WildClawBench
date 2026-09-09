@@ -6,6 +6,7 @@ import {
   hasStableConversationId,
   inspectPendingAttention,
   openQwenProjectConversation,
+  qwenStopControlLocator,
   qwenProjectSidebarLabel,
   restartQwenWork,
   waitForUniqueVisible,
@@ -43,7 +44,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.9.6");
+  assert.equal(state.driver.version, "1.9.7");
 });
 
 test("QwenWork 只有同时捕获 chat 和稳定内核 session 才允许后台恢复", () => {
@@ -230,6 +231,19 @@ test("QwenWork 只在待处理面板或对话框中识别授权按钮", async ()
   assert.match(requestedContainer, /pending-sandbox-panel/);
   assert.match(requestedContainer, /role="dialog"/);
   assert.equal(requestedRole, "button");
+});
+
+test("QwenWork 停止按钮兼容 1.0.4 无无障碍名称的圆角方形图标", () => {
+  const expected = {};
+  const page = {
+    locator(selector) {
+      assert.match(selector, /aria-label\*="停止"/);
+      assert.match(selector, /aria-label\*="Stop"/);
+      assert.match(selector, /path\[d\^="M3 10\.2556C3 7\.15979"\]/);
+      return expected;
+    },
+  };
+  assert.equal(qwenStopControlLocator(page), expected);
 });
 
 test("QwenWork 重启前拒绝打断活动任务", async () => {

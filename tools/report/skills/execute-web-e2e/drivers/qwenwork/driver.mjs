@@ -31,6 +31,16 @@ import {
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const NATIVE_FOLDER_HELPER = join(SCRIPT_DIR, "select-folder.swift");
+const QWEN_STOP_CONTROL_SELECTOR = [
+  'button[aria-label*="停止"]:visible',
+  'button[title*="停止"]:visible',
+  'button[aria-label*="Stop"]:visible',
+  'button[title*="Stop"]:visible',
+  // QwenWork 1.0.4 renders its active composer stop control without an
+  // accessible name. Restrict the fallback to the observed rounded-square
+  // stop glyph; the caller still requires exactly one visible match.
+  'button:has(svg[viewBox="0 0 24 24"] path[d^="M3 10.2556C3 7.15979"]):visible',
+].join(", ");
 
 function usage() {
   return `QwenWork Web E2E 单题执行 Driver
@@ -77,6 +87,10 @@ export async function waitForUniqueVisible(readVisible, timeout, description, po
 export function hasTrustedDomCompletion(dom) {
   return dom?.status?.kind === "success"
     && (Boolean(dom.explicitFinished) || isSubstantiveFinalResponse(dom.finalText));
+}
+
+export function qwenStopControlLocator(page) {
+  return page.locator(QWEN_STOP_CONTROL_SELECTOR);
 }
 
 function run(command, args, options = {}) {
@@ -989,7 +1003,7 @@ export async function inspectPendingAttention(page) {
 }
 
 async function inspectDom(page) {
-  const stop = page.locator('button[aria-label*="停止"]:visible, button[title*="停止"]:visible, button[aria-label*="Stop"]:visible, button[title*="Stop"]:visible');
+  const stop = qwenStopControlLocator(page);
   const running = (await visibleLocators(stop)).length > 0;
   const attention = await inspectPendingAttention(page);
   const agentTurns = page.locator('[data-message-author-role="assistant"]:visible, [data-role="assistant"]:visible, [class*="assistant-message"]:visible');
@@ -1098,7 +1112,7 @@ async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom,
     });
   }
 
-  const stopButtons = await visibleLocators(page.locator('button[aria-label*="停止"]:visible, button[title*="停止"]:visible, button[aria-label*="Stop"]:visible, button[title*="Stop"]:visible'));
+  const stopButtons = await visibleLocators(qwenStopControlLocator(page));
   if (!currentDom.running || stopButtons.length !== 1) {
     return persistNeedsAttention(
       config,
@@ -1112,6 +1126,11 @@ async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom,
   }
 
   state.timeout.stop_requested_at = new Date().toISOString();
+  const accessibleStopLabel = (await stopButtons[0].getAttribute("aria-label").catch(() => null))
+    || (await stopButtons[0].getAttribute("title").catch(() => null));
+  state.timeout.stop_control_method = accessibleStopLabel
+    ? "accessible-label"
+    : "qwenwork-rounded-square-stop-icon";
   await stopButtons[0].click({ timeout: config.timeoutSeconds * 1000 });
   await saveState(config, state);
   await takeScreenshot(page, config, state, "10-timeout-stop-requested.png");
