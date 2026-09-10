@@ -59,6 +59,8 @@ Windows 脚本动态解析当前 Codex MSIX 包的真实 manifest 入口，并�
 
 两个脚本均等待 `http://127.0.0.1:9230/json/list` 和所选的 `http://127.0.0.1:9240/json/list` 返回至少一个真实 target，并验证端口监听者属于目标客户端。端口被无关进程占用时不得结束该进程，脚本失败并进入 `NEEDS_ATTENTION`。`-CheckOnly` / `--check-only` 仅用于故障诊断，不是标准 E2E 前置流程。
 
+Windows 的 `-ForceRestart` 只用于用户明确要求的客户端重启恢复验收；它会强制重启 `-Application` 选中的客户端，即使当前 CDP 已正常。使用前必须先持久化原 thread、cursor、attempt 和 deadline；重启 Codex 时从独立隐藏 PowerShell 进程调用该脚本，避免启动器随当前 Desktop 进程一起中断。`-ForceRestart` 不能与 `-CheckOnly` 同时使用，也不能作为普通前置准备的默认参数。
+
 重启 Codex Desktop 可能中断承载当前控制任务的客户端，因此必须先持久化本 Skill 的运行状态；客户端回来后从原状态恢复，不能重新初始化或创建重复任务。同一次初始前置准备不要再向 AstronStudio Driver 传 `--restart-app`，避免两套入口重复重启。脚本失败、超时或 target 列表为空时不得继续 UI 自动化。
 
 因此，在客户端和 Skill 已准备好的前提下，下面的用户输入足以触发 worker 全流程：

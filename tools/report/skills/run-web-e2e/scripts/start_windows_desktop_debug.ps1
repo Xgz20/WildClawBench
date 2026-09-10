@@ -12,7 +12,9 @@ param(
     [ValidateRange(1, 120)]
     [int]$TimeoutSeconds = 20,
 
-    [switch]$CheckOnly
+    [switch]$CheckOnly,
+
+    [switch]$ForceRestart
 )
 
 Set-StrictMode -Version 2.0
@@ -20,6 +22,10 @@ $ErrorActionPreference = "Stop"
 
 $includeCodex = $Application -in @("All", "Codex")
 $includeAstronStudio = $Application -in @("All", "AstronStudio")
+
+if ($CheckOnly -and $ForceRestart) {
+    throw "CheckOnly and ForceRestart cannot be used together."
+}
 
 if ($includeCodex -and $includeAstronStudio -and $CodexPort -eq $AstronStudioPort) {
     throw "CodexPort and AstronStudioPort must be different."
@@ -44,6 +50,9 @@ if ($PSVersionTable.PSEdition -ne "Desktop") {
 
     if ($CheckOnly) {
         $childArguments += "-CheckOnly"
+    }
+    if ($ForceRestart) {
+        $childArguments += "-ForceRestart"
     }
 
     & $windowsPowerShell @childArguments
@@ -263,6 +272,15 @@ else {
     $astronStudioReady = $true
 }
 
+if ($ForceRestart) {
+    if ($includeCodex) {
+        $codexReady = $false
+    }
+    if ($includeAstronStudio) {
+        $astronStudioReady = $false
+    }
+}
+
 if ($CheckOnly) {
     if (-not $codexReady) {
         throw "Codex Desktop is not exposing a valid CDP target on port $CodexPort."
@@ -286,6 +304,7 @@ else {
     $processNames = @()
     if ($includeCodex -and -not $codexReady) {
         $processNames += "ChatGPT"
+        $processNames += "Codex"
     }
     if ($includeAstronStudio -and -not $astronStudioReady) {
         $processNames += "AStudio"
