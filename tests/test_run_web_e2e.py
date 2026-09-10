@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import tempfile
 import unittest
 import zipfile
@@ -169,6 +170,24 @@ class RunWebE2ETest(unittest.TestCase):
             self.assertTrue(again["idempotent"])
             self.assertEqual(before, (harness / "execution/tasks/task-1/workspace/index.html").read_bytes())
             self.assertTrue((batch / "returns/workbuddy/submission.json").is_file())
+
+    def test_export_clamps_pre_1980_timestamps_without_touching_candidates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _, harness = materialize_batch(base)
+            materialize_results(harness)
+            candidate = harness / "execution/tasks/task-1/workspace/index.html"
+            os.utime(candidate, (1, 1))
+            candidate_mtime_ns = candidate.stat().st_mtime_ns
+
+            exported = run_module.export_return(argparse.Namespace(
+                package_root=str(harness), output_dir=str(base / "offline"),
+            ))
+
+            self.assertEqual(candidate.stat().st_mtime_ns, candidate_mtime_ns)
+            with zipfile.ZipFile(exported["archive"]) as archive:
+                member = f"{harness.name}/execution/tasks/task-1/workspace/index.html"
+                self.assertEqual(archive.getinfo(member).date_time, (1980, 1, 1, 0, 0, 0))
 
     def test_import_rejects_archive_and_receipt_tampering(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -482,7 +482,12 @@ def export_return(args: argparse.Namespace) -> dict:
     if archive_path.exists() or receipt_path.exists():
         raise FileExistsError(f"回传目标已存在，拒绝覆盖: {archive_path} / {receipt_path}")
     output.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(archive_path, "x", compression=zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(
+        archive_path,
+        "x",
+        compression=zipfile.ZIP_DEFLATED,
+        strict_timestamps=False,
+    ) as archive:
         files = 0
         for path in sorted(item for item in root.rglob("*") if item.is_file()):
             relative = path.relative_to(root)
