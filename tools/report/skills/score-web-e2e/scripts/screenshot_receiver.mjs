@@ -6,7 +6,11 @@ import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { processIdentity } from "./managed_runtime.mjs";
+import {
+  processIdentity,
+  terminateProcessIdentity,
+  windowsCommandIncludesPath,
+} from "./managed_runtime.mjs";
 import { loadCandidateArtifact, verifyWorkspace } from "./workspace-integrity.mjs";
 
 export const SCREENSHOT_RECEIVER_SCHEMA = "wildclawbench.web-e2e-screenshot-receiver/v1";
@@ -149,8 +153,14 @@ function assertReceiverIdentity(paths, state) {
   const mismatches = [];
   if (identity.pgid !== Number(state.pgid)) mismatches.push("pgid");
   if (identity.started_at_text !== state.process_started_at_text) mismatches.push("started_at");
-  if (identity.cwd !== paths.root) mismatches.push("cwd");
-  if (!identity.command.includes(SCRIPT_FILE)) mismatches.push("script");
+  if (process.platform === "win32") {
+    if (identity.process_group_mode !== "windows-process-tree") mismatches.push("process_group_mode");
+    if (state.process_group_mode && state.process_group_mode !== "windows-process-tree") mismatches.push("saved_process_group_mode");
+    if (!windowsCommandIncludesPath(identity.command, paths.root)) mismatches.push("task_root");
+  } else if (identity.cwd !== paths.root) mismatches.push("cwd");
+  if (process.platform === "win32"
+    ? !windowsCommandIncludesPath(identity.command, SCRIPT_FILE)
+    : !identity.command.includes(SCRIPT_FILE)) mismatches.push("script");
   if (!identity.command.includes("serve")) mismatches.push("command");
   if (!identity.command.includes(state.receiver_id)) mismatches.push("receiver_id");
   if (mismatches.length) {
@@ -265,16 +275,24 @@ export async function startReceiver(taskRoot, options) {
 
   let cleanupError = null;
   const identity = safeProcessIdentity(child.pid);
-  if (identity && identity.pgid === child.pid && identity.cwd === paths.root && identity.command.includes(SCRIPT_FILE)) {
-    process.kill(-identity.pgid, "SIGTERM");
+  const startupIdentityMatches = identity
+    && identity.pgid === child.pid
+    && (process.platform === "win32" ? windowsCommandIncludesPath(identity.command, paths.root) : identity.cwd === paths.root)
+    && (process.platform === "win32"
+      ? windowsCommandIncludesPath(identity.command, SCRIPT_FILE)
+      : identity.command.includes(SCRIPT_FILE));
+  if (startupIdentityMatches) {
+    terminateProcessIdentity(identity, false);
     if (!(await waitForExit(identity.pid, 2_000))) {
       const remaining = safeProcessIdentity(identity.pid);
       if (remaining
         && remaining.pgid === identity.pgid
         && remaining.started_at_text === identity.started_at_text
-        && remaining.cwd === paths.root
-        && remaining.command.includes(SCRIPT_FILE)) {
-        process.kill(-remaining.pgid, "SIGKILL");
+        && (process.platform === "win32" ? windowsCommandIncludesPath(remaining.command, paths.root) : remaining.cwd === paths.root)
+        && (process.platform === "win32"
+          ? windowsCommandIncludesPath(remaining.command, SCRIPT_FILE)
+          : remaining.command.includes(SCRIPT_FILE))) {
+        terminateProcessIdentity(remaining, true);
       }
       if (!(await waitForExit(identity.pid, 2_000))) {
         cleanupError = `截图接收器启动失败后仍未退出：PID ${identity.pid}`;
@@ -319,10 +337,10 @@ export async function stopReceiver(taskRoot) {
   let identity = inspected.identity;
   const exactIdentityVerified = Boolean(identity);
   if (identity) {
-    process.kill(-identity.pgid, "SIGTERM");
+    terminateProcessIdentity(identity, false);
     if (!(await waitForExit(identity.pid, 5_000))) {
       identity = assertReceiverIdentity(paths, state);
-      if (identity) process.kill(-identity.pgid, "SIGKILL");
+      if (identity) terminateProcessIdentity(identity, true);
       if (!(await waitForExit(Number(state.pid), 2_000))) throw new Error(`截图接收器无法停止：PID ${state.pid}`);
     }
   }
@@ -332,6 +350,7 @@ export async function stopReceiver(taskRoot) {
   state.cleanup = {
     pid: state.pid,
     pgid: state.pgid,
+    process_group_mode: state.process_group_mode || "posix-process-group",
     exact_identity_verified: exactIdentityVerified,
     stopped_at: new Date().toISOString(),
   };
@@ -364,7 +383,10 @@ async function serveReceiver(args) {
   const timeoutMs = validateInteger(args.timeoutMs, "--timeout-ms", 100, 600_000);
   const maxBytes = validateInteger(args.maxBytes, "--max-bytes", 8, 100 * 1024 * 1024);
   const identity = processIdentity(process.pid);
-  if (!identity || identity.pgid !== process.pid || identity.cwd !== paths.root) {
+  const identityMismatch = process.platform === "win32"
+    ? !windowsCommandIncludesPath(identity?.command, paths.root)
+    : identity?.cwd !== paths.root;
+  if (!identity || identity.pgid !== process.pid || identityMismatch) {
     throw new Error("无法确认截图接收器的独立进程组或 cwd");
   }
   const state = {
@@ -375,6 +397,7 @@ async function serveReceiver(args) {
     status: "STARTING",
     pid: process.pid,
     pgid: identity.pgid,
+    process_group_mode: identity.process_group_mode,
     process_started_at_text: identity.started_at_text,
     cwd: ".",
     filename: image.filename,

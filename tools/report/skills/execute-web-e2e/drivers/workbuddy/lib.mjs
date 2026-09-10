@@ -172,13 +172,17 @@ async function canonicalizePotentialPath(path) {
   }
 }
 
-export async function resolveConfig(parsed) {
+export async function resolveConfig(parsed, overrides = {}) {
   const endpoint = new URL(parsed.endpoint);
   if (!new Set(["127.0.0.1", "localhost", "::1"]).has(endpoint.hostname)) {
     throw new Error("--endpoint 仅允许连接本机地址");
   }
-  const appPath = await realpath(resolve(parsed.appPath));
-  await access(join(appPath, "Contents", "Resources", "app.asar"));
+  const resolveAppPath = overrides.resolveAppPath
+    || (async (value) => realpath(resolve(value)));
+  const validateAppPath = overrides.validateAppPath
+    || (async (value) => access(join(value, "Contents", "Resources", "app.asar")));
+  const appPath = await resolveAppPath(parsed.appPath);
+  await validateAppPath(appPath);
   const sessionDb = resolve(parsed.sessionDb);
 
   if (parsed.probe) {

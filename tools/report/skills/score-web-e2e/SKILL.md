@@ -67,7 +67,9 @@ Skill 根目录的 `skill-metadata.json` 是自动编排读取的机器契约，
 
    `--file` 只能指向运行时副本内的普通 UTF-8 文件；旧端口必须且只能匹配一次，前后值必须是不同的合法数字端口。脚本拒绝候选原件路径、多处匹配、非端口修改、无冲突证据和服务仍存活的情况，并生成 `private-scoring/runtime-port-override.json`，记录冲突 URL/命令、证据快照、修改文件、原/新端口及前后文件 SHA-256。除这一个已证实的场景外，运行时副本中的候选源码也不得修改；安装依赖、build 和缓存生成属于机械运行时操作，不得回写候选。
 
-   评分完成或异常退出前使用 `managed_runtime.mjs stop --task-root .` 精确停止本题记录的 PID/进程组，再使用 `managed_runtime.mjs clean --task-root .` 删除运行时副本；禁止使用 `pkill node`、按端口批量杀进程或终止未被本题状态文件记录的服务。
+   评分完成或异常退出前使用 `managed_runtime.mjs stop --task-root .` 精确停止本题记录的 PID/进程组（Windows 为带唯一 service ID 的受管 Node 根进程及其进程树），再使用 `managed_runtime.mjs clean --task-root .` 删除运行时副本；禁止使用 `pkill node`、`taskkill /IM node.exe`、按端口批量杀进程或终止未被本题状态文件记录的服务。Windows 使用 Node wrapper 承载原始站点命令，以创建时间、完整命令、service ID 和 PID 共同校验身份；`.cmd`/`.bat` 启动命令只在该受管 wrapper 内调用系统 shell。
+
+   受管站点与截图接收器已提供 Windows 进程树静态实现和模拟测试；目标 Windows 机器尚未完成站点启动、Browser 访问、截图回传和清理验收时，不得标记为生产已验证。
 3. 开始浏览器评分前读取 [浏览器交互评分与误判防护](references/browser-interaction-scoring.md)。每个 criterion 先恢复其“预设状态”，再实际点击、输入、切换、刷新、改变视口或上传文件；不得携带前序检查点的污染状态，也不得只看源码、静态 DOM 或截图推断交互成功。
 4. 首次操作未生效时，不得立即记 0。日期/时间、清空输入、取色器、滑块、HTML5 拖放、原生对话框、下载和瞬时状态必须使用参考文档中的适配方式复核，并回读操作前、提交前和提交后的公开状态。源码只用于识别控件和事件模型，不能替代页面验证。
 5. 逐 criterion 记录动作、观察、理由和证据。视觉检查点必须有视口截图；交互检查点必须写明动作前后状态。截图二进制必须通过 Skill 内置 `screenshot_receiver.mjs` 写入 `private-scoring/evidence/`：每张图启动一个一次性回环接收器，上传成功后自动退出。不得在题目目录临时编写接收器，不得通过剪贴板或手工 Base64 分片传输截图。文件扩展名、`Content-Type` 和实际 PNG/JPEG 签名必须一致；完整命令与 Browser 上传方式见交互参考。原生对话框、下载事件、瞬时状态等无法由截图完整表达的事实可保存为 `private-scoring/evidence/` 下的 Markdown 或 JSON 观察记录并引用。

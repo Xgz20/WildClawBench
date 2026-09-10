@@ -1,7 +1,7 @@
 {
   "schema_version": "wildclawbench.web-e2e-score-skill/v1",
   "name": "score-web-e2e",
-  "version": "4.4.2",
+  "version": "4.5.0",
   "supported_metric_profiles": [
     "web-e2e-detailed-v1",
     "artifactsbench-web-v1"

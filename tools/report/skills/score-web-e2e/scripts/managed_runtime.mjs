@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawn, execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,7 @@ import { loadCandidateArtifact, verifyWorkspace } from "./workspace-integrity.mj
 const RUNTIME_SCHEMA = "wildclawbench.web-e2e-scoring-runtime/v1";
 export const RUNTIME_PORT_OVERRIDE_SCHEMA = "wildclawbench.web-e2e-runtime-port-override/v1";
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const PROCESS_WRAPPER_FILE = path.join(SCRIPT_DIR, "managed-process-worker.mjs");
 const PORT_CONFLICT_PATTERNS = [
   /EADDRINUSE/i,
   /address\s+already\s+in\s+use/i,
@@ -284,18 +285,83 @@ function processCwd(pid) {
   }
 }
 
-export function processIdentity(pid) {
+export function processIdentity(pid, overrides = {}) {
   if (!Number.isInteger(pid) || pid <= 0) return null;
+  const platform = overrides.platform || process.platform;
+  const runSync = overrides.execFileSync || execFileSync;
+  const probePid = overrides.probePid || ((value) => process.kill(value, 0));
   try {
-    process.kill(pid, 0);
+    probePid(pid);
   } catch (error) {
     if (error?.code !== "EPERM") return null;
   }
-  const output = execFileSync("/bin/ps", ["-p", String(pid), "-o", "pgid=,stat=,lstart=,command="], { encoding: "utf8" }).trim();
+  if (platform === "win32") {
+    const script = `$process = Get-CimInstance Win32_Process -Filter "ProcessId = ${pid}"; if ($process) { $process | Select-Object ProcessId,CreationDate,ExecutablePath,CommandLine | ConvertTo-Json -Compress }`;
+    const output = runSync(
+      "powershell.exe",
+      ["-NoProfile", "-NonInteractive", "-Command", script],
+      { encoding: "utf8" },
+    ).trim();
+    if (!output) return null;
+    const info = JSON.parse(output);
+    if (Number(info.ProcessId) !== pid || !info.CreationDate || !info.CommandLine) {
+      throw new Error(`无法读取评分服务 Windows 进程身份：PID ${pid}`);
+    }
+    return {
+      pid,
+      pgid: pid,
+      started_at_text: String(info.CreationDate),
+      command: String(info.CommandLine),
+      cwd: null,
+      executable_path: info.ExecutablePath || null,
+      process_group_mode: "windows-process-tree",
+    };
+  }
+  const output = runSync("/bin/ps", ["-p", String(pid), "-o", "pgid=,stat=,lstart=,command="], { encoding: "utf8" }).trim();
   const match = output.match(/^(\d+)\s+(\S+)\s+(.{24})\s+(.+)$/);
   if (!match) throw new Error(`无法读取评分服务进程身份：PID ${pid}`);
   if (match[2].startsWith("Z")) return null;
-  return { pid, pgid: Number(match[1]), started_at_text: match[3].trim(), command: match[4], cwd: processCwd(pid) };
+  return {
+    pid,
+    pgid: Number(match[1]),
+    started_at_text: match[3].trim(),
+    command: match[4],
+    cwd: processCwd(pid),
+    process_group_mode: "posix-process-group",
+  };
+}
+
+export function processTerminationInvocation(identity, { force = false, platform = process.platform } = {}) {
+  if (platform === "win32") {
+    return {
+      command: "taskkill.exe",
+      args: ["/PID", String(identity.pid), "/T", ...(force ? ["/F"] : [])],
+    };
+  }
+  return { signal: force ? "SIGKILL" : "SIGTERM", pid: -identity.pgid };
+}
+
+export function windowsCommandIncludesPath(commandLine, expectedPath) {
+  const normalize = (value) => String(value || "")
+    .replaceAll("/", "\\")
+    .toLowerCase();
+  const expected = normalize(expectedPath);
+  return Boolean(expected) && normalize(commandLine).includes(expected);
+}
+
+export function terminateProcessIdentity(identity, force = false) {
+  const invocation = processTerminationInvocation(identity, { force });
+  if (invocation.command) {
+    try {
+      return execFileSync(invocation.command, invocation.args, { encoding: "utf8" });
+    } catch (error) {
+      if (!processIdentity(identity.pid)) return "";
+      if (!force) return error instanceof Error ? error.message : String(error);
+      throw error;
+    }
+  }
+  process.kill(invocation.pid, invocation.signal);
+  return "";
 }
 
 function validateLoopbackUrl(raw) {
@@ -344,9 +410,20 @@ export async function startManagedService(taskRoot, command, expectedUrl, { useC
   const stderrPath = path.join(paths.logRoot, "site.stderr.log");
   const stdout = fs.openSync(stdoutPath, "w", 0o600);
   const stderr = fs.openSync(stderrPath, "w", 0o600);
+  const serviceId = randomUUID();
+  const launchCommand = process.platform === "win32"
+    ? [
+      process.execPath,
+      PROCESS_WRAPPER_FILE,
+      "--service-id",
+      serviceId,
+      "--",
+      ...command.map(String),
+    ]
+    : command.map(String);
   let child;
   try {
-    child = spawn(String(command[0]), command.slice(1).map(String), {
+    child = spawn(String(launchCommand[0]), launchCommand.slice(1), {
       cwd,
       detached: true,
       stdio: ["ignore", stdout, stderr],
@@ -370,6 +447,8 @@ export async function startManagedService(taskRoot, command, expectedUrl, { useC
       process_started_at_text: null,
       cwd: useCandidate ? "." : "private-scoring/runtime-workspace",
       command: command.map(String),
+      service_id: serviceId,
+      process_group_mode: process.platform === "win32" ? "windows-process-tree" : "posix-process-group",
       expected_url: url,
       started_at: new Date().toISOString(),
       stdout: "private-scoring/runtime-logs/site.stdout.log",
@@ -377,7 +456,10 @@ export async function startManagedService(taskRoot, command, expectedUrl, { useC
     };
     writeJson(paths.stateFile, state);
     identity = processIdentity(child.pid);
-    if (!identity || identity.pgid !== child.pid || identity.cwd !== fs.realpathSync(cwd)) {
+    const windowsIdentityMismatch = process.platform === "win32"
+      && (!windowsCommandIncludesPath(identity?.command, PROCESS_WRAPPER_FILE) || !identity.command.includes(serviceId));
+    const posixIdentityMismatch = process.platform !== "win32" && identity?.cwd !== fs.realpathSync(cwd);
+    if (!identity || identity.pgid !== child.pid || windowsIdentityMismatch || posixIdentityMismatch) {
       throw new Error("无法确认评分服务的独立进程组或 cwd，已拒绝托管");
     }
     state.service.pgid = identity.pgid;
@@ -395,8 +477,8 @@ export async function startManagedService(taskRoot, command, expectedUrl, { useC
       if (state.service?.pid === child.pid && fs.existsSync(paths.stateFile)) {
         await stopManagedService(taskRoot, { expectedFailure: true });
       } else if (identity?.pid === child.pid && identity.pgid === child.pid) {
-        process.kill(-identity.pgid, "SIGTERM");
-        if (!(await waitForExit(identity.pid, 5_000))) process.kill(-identity.pgid, "SIGKILL");
+        terminateProcessIdentity(identity, false);
+        if (!(await waitForExit(identity.pid, 5_000))) terminateProcessIdentity(identity, true);
       } else if (child.pid) {
         child.kill("SIGTERM");
       }
@@ -413,10 +495,19 @@ function assertManagedIdentity(paths, service) {
   if (!identity) return null;
   const expectedCwd = fs.realpathSync(service.cwd === "." ? paths.root : paths.runtime);
   const expectedExecutable = path.basename(String(service.command?.[0] || ""));
+  const processGroupMode = process.platform === "win32" ? "windows-process-tree" : "posix-process-group";
+  const platformIdentityMismatch = process.platform === "win32"
+    ? (!service.service_id
+      || !windowsCommandIncludesPath(identity.command, PROCESS_WRAPPER_FILE)
+      || !identity.command.includes(service.service_id))
+    : identity.cwd !== expectedCwd;
   if (identity.pgid !== Number(service.pgid)
     || identity.started_at_text !== service.process_started_at_text
-    || identity.cwd !== expectedCwd
-    || !identity.command.includes(expectedExecutable)) {
+    || identity.process_group_mode !== processGroupMode
+    || platformIdentityMismatch
+    || (process.platform === "win32"
+      ? !identity.command.toLowerCase().includes(expectedExecutable.toLowerCase())
+      : !identity.command.includes(expectedExecutable))) {
     throw new Error(`PID ${service.pid} 的身份、进程组或 cwd 已变化，拒绝终止`);
   }
   return identity;
@@ -440,17 +531,22 @@ export async function stopManagedService(taskRoot, { expectedFailure = false } =
   const identity = assertManagedIdentity(paths, state.service);
   const stopStartedAt = new Date().toISOString();
   if (identity) {
-    process.kill(-identity.pgid, "SIGTERM");
+    terminateProcessIdentity(identity, false);
     if (!(await waitForExit(identity.pid, 5_000))) {
       const secondIdentity = assertManagedIdentity(paths, state.service);
-      if (secondIdentity) process.kill(-secondIdentity.pgid, "SIGKILL");
+      if (secondIdentity) terminateProcessIdentity(secondIdentity, true);
       if (!(await waitForExit(identity.pid, 2_000))) throw new Error(`评分服务无法停止：PID ${identity.pid}`);
     }
   }
   state.service.status = expectedFailure ? "START_FAILED_STOPPED" : "STOPPED";
   state.service.stop_started_at = stopStartedAt;
   state.service.stopped_at = new Date().toISOString();
-  state.service.cleanup = { pid: state.service.pid, pgid: state.service.pgid, exact_identity_verified: Boolean(identity) };
+  state.service.cleanup = {
+    pid: state.service.pid,
+    pgid: state.service.pgid,
+    process_group_mode: state.service.process_group_mode || "posix-process-group",
+    exact_identity_verified: Boolean(identity),
+  };
   state.candidate_checks.push(candidateCheck(paths, "stop-service").check);
   writeJson(paths.stateFile, state);
   return { paths, state };

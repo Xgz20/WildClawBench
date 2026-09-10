@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { processIdentity } from "./managed_runtime.mjs";
+import { processIdentity, windowsCommandIncludesPath } from "./managed_runtime.mjs";
 import { SCREENSHOT_RECEIVER_SCHEMA, detectImageFormat } from "./screenshot_receiver.mjs";
 import {
   CANDIDATE_ARTIFACT_SCHEMA,
@@ -165,10 +165,17 @@ function liveScreenshotReceiverIdentity(taskRoot, state) {
     throw new Error(`无法确认截图接收器进程身份: ${state.task_id}: ${error instanceof Error ? error.message : String(error)}`);
   }
   if (!identity) return null;
+  const platformIdentityMatches = process.platform === "win32"
+    ? identity.process_group_mode === "windows-process-tree"
+      && (!state.process_group_mode || state.process_group_mode === "windows-process-tree")
+      && windowsCommandIncludesPath(identity.command, fs.realpathSync(taskRoot))
+    : identity.cwd === fs.realpathSync(taskRoot);
   const exact = identity.pgid === Number(state.pgid)
     && identity.started_at_text === state.process_started_at_text
-    && identity.cwd === fs.realpathSync(taskRoot)
-    && identity.command.includes(SCREENSHOT_RECEIVER_SCRIPT)
+    && platformIdentityMatches
+    && (process.platform === "win32"
+      ? windowsCommandIncludesPath(identity.command, SCREENSHOT_RECEIVER_SCRIPT)
+      : identity.command.includes(SCREENSHOT_RECEIVER_SCRIPT))
     && identity.command.includes("serve")
     && identity.command.includes(String(state.receiver_id || ""));
   return exact ? identity : null;

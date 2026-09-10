@@ -7,7 +7,7 @@
 | 术语 | 定义 |
 | --- | --- |
 | 控制 Harness | 用来接收用户 Prompt、调用 Web E2E Skill 并统筹执行、评分、回传和报告的 Harness。推荐使用 Codex Desktop。 |
-| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。WorkBuddy 已完成生产流程闭环；AstronStudio 已完成串行、默认三路并发、动态补位和执行到评分闭环验证；QwenWork 已完成串行、默认三路并发执行和单题执行到评分闭环验证。 |
+| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。macOS 上 WorkBuddy 已完成生产流程闭环；AstronStudio 已完成串行、默认三路并发、动态补位和执行到评分闭环验证；QwenWork 已完成串行、默认三路并发执行和单题执行到评分闭环验证。Windows 当前只提供 AstronStudio 全流程静态适配，仍待真机验收。 |
 | 评分 Harness | 为被评测 Harness 的候选网站打分的 Agent。当前使用 Codex Desktop，并依赖其桌面内置 Browser 操作网站和保存证据。 |
 | 管理员 | 选择用例和被评测 Harness、准备评测包、收集各机器回传包并生成报告的人员。 |
 | 执行人员 | 接收管理员分发的题目包和评分包，在本机完成一个 `Harness（模型）` 单元的执行、评分和回传。 |
@@ -50,12 +50,21 @@ WorkBuddy、AstronStudio 和 QwenWork 均使用默认三路后台执行。首次
 
 #### 2. 调试模式启动 ChatGPT
 
-先完全退出 ChatGPT 桌面客户端，再在 macOS 终端执行：
+先完全退出 ChatGPT 桌面客户端。macOS 在终端执行：
 
 ```bash
 open -na /Applications/ChatGPT.app --args \
   --remote-debugging-address=127.0.0.1 \
   --remote-debugging-port=9230
+```
+
+Windows 在 PowerShell 中把路径替换为本机实际的 `ChatGPT.exe` 或 `Codex.exe`：
+
+```powershell
+Start-Process -FilePath "C:\实际安装目录\ChatGPT.exe" -ArgumentList @(
+  "--remote-debugging-address=127.0.0.1",
+  "--remote-debugging-port=9230"
+)
 ```
 
 评分编排需要通过 Playwright 操作 ChatGPT 的项目管理界面，因此必须以仅监听本机的 CDP 调试端口启动。启动后再创建新的控制任务，不能让当前控制任务退出或重启承载自己的 ChatGPT 进程。
@@ -112,7 +121,7 @@ AstronStudio 当前验证用法：
 保持并回读 AstronStudio 当前模型，不修改推理强度；权限使用 full-access；使用默认执行并发 3。
 ```
 
-AstronStudio 已验证项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、后台并发、动态补位、产物和执行回执。多个任务并发运行时如果客户端崩溃，当前版本会失败关闭并要求人工处理，不会自动重启客户端。
+AstronStudio 在 macOS 已验证项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、后台并发、动态补位、产物和执行回执。Windows 已具备应用发现/启动、CDP 控制、SQLite 读取、Codex Desktop 项目注册和评分服务进程树管理的静态实现，但在 Windows 真机完成验证前不属于生产已验证。Windows 首次测试时请在 Prompt 中明确“执行并发设为 1”，通过单题与三题串行后再测试默认并发 3。多个任务并发运行时如果客户端崩溃，当前版本会失败关闭并要求人工处理，不会自动重启客户端。
 
 QwenWork 当前验证用法：
 
@@ -424,7 +433,7 @@ Codex Desktop CDP：http://127.0.0.1:9230
 
 ### AstronStudio 预检未就绪
 
-确认 `/Applications/AStudio.app` 已登录并以仅监听本机的 CDP 端口启动，macOS 桌面已解锁，且当前没有运行中或等待交互的任务。停在历史会话时 workspace picker 可以暂时不可见；只要预检整体 `ready=true`，Driver 会新建任务后再选择并回读项目绝对路径。
+确认客户端已登录并以仅监听本机的 CDP 端口启动，桌面已解锁，且当前没有运行中或等待交互的任务。macOS 默认应用路径为 `/Applications/AStudio.app`；Windows 默认从当前用户安装信息和 `%LOCALAPPDATA%\Programs` 查找 `AStudio.exe`，找不到时在 Prompt 中提供实际主程序路径。停在历史会话时 workspace picker 可以暂时不可见；只要预检整体 `ready=true`，Driver 会新建任务后再选择并回读项目绝对路径。
 
 ### Codex Desktop CDP 连接失败
 

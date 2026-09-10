@@ -37,6 +37,8 @@ description: 按用户明确要求动态组合 Web E2E 的准备、桌面 Harnes
 5. 被评 Harness 未显式指定模型时保持并回读当前模型，不操作推理强度；权限按生产契约使用 `full-access`。WorkBuddy、AstronStudio 和 QwenWork 的新执行队列均默认三槽、最大八槽；评分新批次默认三槽。三种 Harness 的 UI 操作始终保持单槽。Codex Desktop CDP 未显式提供时使用 `http://127.0.0.1:9230`。
 6. execution 回执有效后才合入 scoring ZIP 并开始评分；submission 有效后在 worker 根同级的 `offline-return/` 生成完整 return ZIP 和外部回执。
 
+平台路由必须显式：macOS 使用各 Driver 的 `.sh` 入口；Windows 上 AstronStudio 使用 `run-astronstudio.cmd` / `run-astronstudio-batch.cmd`，Codex Desktop 项目注册使用 `run-codex-project-registrar.cmd`。Python 状态脚本在 Windows 优先用 `py -3`，否则使用可用的 `python`；不得硬调用 `python3`。当前 Windows 端到端静态支持范围仅为 `AstronStudio -> Codex Desktop 评分 -> 回传/报告`；WorkBuddy、QwenWork 和 DoubaoWork 在 Windows 上必须返回 `NEEDS_ATTENTION`，不能回退调用 macOS Driver。Windows 真机验收完成前，本组合不能标记为生产已验证。
+
 因此，在客户端和 Skill 已准备好的前提下，下面的用户输入足以触发 worker 全流程：
 
 ```text
@@ -101,6 +103,8 @@ python3 <skill-dir>/scripts/run_web_e2e.py set-stage \
 ### 执行与评分
 
 执行完全遵守 `execute-web-e2e`。WorkBuddy、AstronStudio 和 QwenWork 新批次均默认三槽、最大八槽，三者 UI 操作均为单槽。用户显式指定模型时才传 `--model`，否则保持客户端当前模型和推理强度。
+
+Windows 首轮 AstronStudio 验收必须显式使用执行并发 1，依次通过只读探针、单个 L1、三个 L1 串行自动切题后，再验证默认三路并发和动态补位。不得把 macOS 上既有的并发验证结论直接外推到 Windows。
 
 执行回执有效后才按 `orchestrate-web-e2e` 复制到独立评分工作空间并启动评分。新回执声明运行时目录策略时，execution 原件可保留被评 Harness 生成的 `.cache`、`.vite`、`node_modules`，评分复制会过滤它们且不修改原件；未声明策略的旧回执仍严格拒绝。Codex Desktop 新批次默认三槽，每题独立项目、任务、Browser 和端口。评分任务使用 `score-web-e2e`，候选 `workspace/` 永远只读；端口冲突只允许修改 `private-scoring/runtime-workspace/` 中的评分运行时副本。
 

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 process.env.WCB_WEB_E2E_BATCH_PROFILE = "astronstudio";
 
 const { main } = await import("../workbuddy/batch.mjs");
+export { main };
 
 const isEntrypoint = process.argv[1]
   && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));

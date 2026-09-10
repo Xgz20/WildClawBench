@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 import test from "node:test";
 
 import {
@@ -13,8 +13,18 @@ import {
   querySessions,
   resolveConfig,
   resolveExecutionIdentity,
+  sqliteBackendStatus,
   updateExecutionRecord,
 } from "../lib.mjs";
+import {
+  astronGuiSessionStatus,
+  astronProcessIdentity,
+  defaultAstronAppPath,
+  gracefulQuitAstron,
+  launchAstron,
+  resolveAstronAppPath,
+  terminateAstronProcess,
+} from "../platform.mjs";
 import {
   connectAstudioBrowser,
   dismissOpenMenus,
@@ -62,6 +72,125 @@ test("parseArgs uses AstronStudio defaults without changing model or reasoning",
   assert.equal(parsed.permissionMode, "current");
   assert.equal(parsed.detachAfterSubmit, false);
   assert.equal(parseArgs(["--probe", "--detach-after-submit"]).detachAfterSubmit, true);
+});
+
+test("Windows AstronStudio discovery prefers the registered install location", async () => {
+  const root = await mkdtemp(join(tmpdir(), "astronstudio-windows-install-"));
+  const installDir = join(root, "Programs", "AStudio");
+  const executable = join(installDir, "AStudio.exe");
+  await mkdir(join(installDir, "resources"), { recursive: true });
+  await writeFile(executable, "fixture");
+  await writeFile(join(installDir, "resources", "app.asar"), "fixture");
+  const calls = [];
+  const resolved = await resolveAstronAppPath("", {
+    platform: "win32",
+    pathApi: posix,
+    environment: { LOCALAPPDATA: join(root, "fallback") },
+    runCommand: async (command, args) => {
+      calls.push([command, args]);
+      if (args[1] === "HKCU\\Software\\AStudio") {
+        return { code: 0, stdout: `    InstallLocation    REG_SZ    ${installDir}\r\n`, stderr: "" };
+      }
+      return { code: 1, stdout: "", stderr: "missing" };
+    },
+  });
+  assert.equal(resolved, await realpath(executable));
+  assert.equal(calls.length, 3);
+  assert.equal(defaultAstronAppPath("win32"), "");
+});
+
+test("Windows AstronStudio process identity matches the exact executable and ignores renderers", async () => {
+  const appPath = "C:\\Users\\tester\\AppData\\Local\\Programs\\AStudio\\AStudio.exe";
+  const identity = await astronProcessIdentity(appPath, {
+    platform: "win32",
+    runCommand: async (command) => {
+      assert.equal(command, "powershell.exe");
+      return {
+        code: 0,
+        stderr: "",
+        stdout: JSON.stringify([
+          { ProcessId: 101, ExecutablePath: appPath, CommandLine: `"${appPath}" --remote-debugging-port=9240` },
+          { ProcessId: 102, ExecutablePath: appPath, CommandLine: `"${appPath}" --type=renderer` },
+          { ProcessId: 201, ExecutablePath: "D:\\Other\\AStudio.exe", CommandLine: "D:\\Other\\AStudio.exe" },
+        ]),
+      };
+    },
+  });
+  assert.equal(identity.pid, 101);
+  assert.equal(identity.executable_path, appPath);
+  assert.equal(identity.platform, "win32");
+});
+
+test("Windows AstronStudio process identity fails closed when the main PID is ambiguous", async () => {
+  const appPath = "C:\\Apps\\AStudio\\AStudio.exe";
+  await assert.rejects(
+    astronProcessIdentity(appPath, {
+      platform: "win32",
+      runCommand: async () => ({
+        code: 0,
+        stderr: "",
+        stdout: JSON.stringify([
+          { ProcessId: 101, ExecutablePath: appPath, CommandLine: `"${appPath}"` },
+          { ProcessId: 102, ExecutablePath: appPath, CommandLine: `"${appPath}" --remote-debugging-port=9240` },
+        ]),
+      }),
+    }),
+    /匹配的 AstronStudio 主进程，拒绝选择不唯一 PID/,
+  );
+});
+
+test("Windows GUI probing fails closed when PowerShell cannot prove an unlocked desktop", async () => {
+  const status = await astronGuiSessionStatus({
+    platform: "win32",
+    runCommand: async () => ({ code: 1, stdout: "", stderr: "access denied" }),
+  });
+  assert.equal(status.unlocked, false);
+  assert.equal(status.lock_source, "windows-gui-probe-failed");
+  assert.match(status.error, /access denied/);
+});
+
+test("Windows launch and exact-PID termination use native process APIs", async () => {
+  const launches = [];
+  const launch = await launchAstron("C:\\Apps\\AStudio\\AStudio.exe", "9240", {
+    platform: "win32",
+    launchDetached: async (command, args) => {
+      launches.push([command, args]);
+      return { code: 0, stdout: "", stderr: "", pid: 321 };
+    },
+  });
+  assert.equal(launch.pid, 321);
+  assert.deepEqual(launches, [[
+    "C:\\Apps\\AStudio\\AStudio.exe",
+    ["--remote-debugging-address=127.0.0.1", "--remote-debugging-port=9240"],
+  ]]);
+
+  const commands = [];
+  await gracefulQuitAstron({ pid: 321 }, {
+    platform: "win32",
+    runCommand: async (command, args) => {
+      commands.push([command, args]);
+      return { code: 0, stdout: "", stderr: "" };
+    },
+  });
+  await terminateAstronProcess({ pid: 321 }, {
+    platform: "win32",
+    runCommand: async (command, args) => {
+      commands.push([command, args]);
+      return { code: 0, stdout: "", stderr: "" };
+    },
+  });
+  assert.equal(commands[0][0], "powershell.exe");
+  assert.equal(commands[0][1].at(-1), "321");
+  assert.deepEqual(commands[1], ["taskkill.exe", ["/PID", "321", "/T", "/F"]]);
+});
+
+test("SQLite backend prefers the Node runtime on Windows without requiring sqlite3.exe", async () => {
+  const status = await sqliteBackendStatus({
+    platform: "win32",
+    loadNodeSqlite: async () => ({ DatabaseSync: class {} }),
+    runCommand: async () => { throw new Error("CLI should not be called"); },
+  });
+  assert.deepEqual(status, { available: true, backend: "node:sqlite", command: null, error: null });
 });
 
 test("detached dispatch requires a route-confirmed AstronStudio thread turn and cwd", () => {
@@ -335,16 +464,14 @@ test("restart recovery allows only the single tracked active AstronStudio sessio
         turnId: "turn-1",
         cwd: "/tmp/task-1",
       }],
-      run: async (command) => {
-        mutations.push(command);
-        return { code: 0, stdout: "", stderr: "" };
-      },
+      gracefulQuit: async () => { mutations.push("graceful-quit"); return { code: 0, stdout: "", stderr: "" }; },
+      launchApp: async () => { mutations.push("launch-app"); return { code: 0, stdout: "", stderr: "" }; },
       waitForEndpoint: async () => {},
       waitForStopped: async () => {},
     },
     { threadId: "thread-1", turnId: "turn-1", cwd: "/tmp/task-1" },
   );
-  assert.deepEqual(mutations, ["/usr/bin/osascript", "/usr/bin/open"]);
+  assert.deepEqual(mutations, ["graceful-quit", "launch-app"]);
   assert.deepEqual(result.restart_safety, {
     mode: "tracked-recovery-session",
     tracked_thread_id: "thread-1",
@@ -387,8 +514,16 @@ test("restart safely falls back to SIGTERM only for the same verified AstronStud
     {
       processIdentity: async () => ({ pid: 123 }),
       querySessions: async () => [],
-      run: async (command, args) => {
-        mutations.push([command, args]);
+      gracefulQuit: async (processInfo) => {
+        mutations.push(["graceful-quit", processInfo.pid]);
+        return { code: 0, stdout: "", stderr: "" };
+      },
+      terminateProcess: async (processInfo) => {
+        mutations.push(["terminate", processInfo.pid]);
+        return { code: 0, stdout: "", stderr: "" };
+      },
+      launchApp: async () => {
+        mutations.push(["launch-app"]);
         return { code: 0, stdout: "", stderr: "" };
       },
       waitForEndpoint: async () => {},
@@ -398,12 +533,11 @@ test("restart safely falls back to SIGTERM only for the same verified AstronStud
       },
     },
   );
-  assert.deepEqual(mutations.map(([command]) => command), [
-    "/usr/bin/osascript",
-    "/bin/kill",
-    "/usr/bin/open",
+  assert.deepEqual(mutations, [
+    ["graceful-quit", 123],
+    ["terminate", 123],
+    ["launch-app"],
   ]);
-  assert.deepEqual(mutations[1][1], ["-TERM", "123"]);
   assert.equal(result.restart_safety.shutdown.method, "sigterm-after-quit-timeout");
   assert.equal(result.restart_safety.shutdown.pid, 123);
 });
@@ -417,8 +551,8 @@ test("restart refuses SIGTERM when the AstronStudio PID changes after quit timeo
       {
         processIdentity: async () => ({ pid: processChecks++ === 0 ? 123 : 456 }),
         querySessions: async () => [],
-        run: async (command) => {
-          mutations.push(command);
+        gracefulQuit: async () => {
+          mutations.push("graceful-quit");
           return { code: 0, stdout: "", stderr: "" };
         },
         waitForStopped: async () => { throw new Error("graceful quit timeout"); },
@@ -426,7 +560,7 @@ test("restart refuses SIGTERM when the AstronStudio PID changes after quit timeo
     ),
     /进程身份已变化，拒绝发送 SIGTERM：原 PID 123，当前 PID 456/,
   );
-  assert.deepEqual(mutations, ["/usr/bin/osascript"]);
+  assert.deepEqual(mutations, ["graceful-quit"]);
 });
 
 test("restart retries a failed open call and records bounded evidence", async () => {
@@ -442,8 +576,7 @@ test("restart retries a failed open call and records bounded evidence", async ()
       sleep: async () => {},
       launchAttempts: 3,
       retryDelayMilliseconds: 1,
-      run: async (command) => {
-        if (command !== "/usr/bin/open") return { code: 0, stdout: "", stderr: "" };
+      launchApp: async () => {
         openCalls += 1;
         return openCalls === 1
           ? { code: 1, stdout: "", stderr: "open failed" }

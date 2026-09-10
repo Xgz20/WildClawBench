@@ -172,11 +172,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             score_task = harness_root / "score/tasks" / self.TASK_ID
             execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
             scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
-            score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.4.2.zip"
+            score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.0.zip"
             report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.0.1.zip"
-            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.1.2.zip"
-            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.9.8.zip"
-            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.0.5.zip"
+            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.2.0.zip"
+            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.10.0.zip"
+            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.1.0.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
             report_config_path = batch_root / "web-smoke__report-config.yaml"
 
@@ -209,7 +209,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertNotIn("model", manifest)
             self.assertFalse(manifest["execution_record_included"])
             self.assertEqual(manifest["scoring_skill"]["name"], "score-web-e2e")
-            self.assertEqual(manifest["scoring_skill"]["version"], "4.4.2")
+            self.assertEqual(manifest["scoring_skill"]["version"], "4.5.0")
             self.assertIn(manifest["metric_profile"], manifest["scoring_skill"]["supported_metric_profiles"])
             self.assertEqual(len(manifest["required_skills"]), 5)
 
@@ -246,6 +246,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIn("score-web-e2e/references/browser-interaction-scoring.md", score_skill_names)
             self.assertIn("score-web-e2e/scripts/workspace-integrity.mjs", score_skill_names)
             self.assertIn("score-web-e2e/scripts/managed_runtime.mjs", score_skill_names)
+            self.assertIn("score-web-e2e/scripts/managed-process-worker.mjs", score_skill_names)
             self.assertIn("score-web-e2e/scripts/screenshot_receiver.mjs", score_skill_names)
             self.assertIn("report-web-e2e/SKILL.md", report_skill_names)
             self.assertIn("report-web-e2e/skill-metadata.json", report_skill_names)
@@ -256,6 +257,9 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIn("orchestrate-web-e2e/skill-metadata.json", orchestrate_skill_names)
             self.assertIn("orchestrate-web-e2e/scripts/scoring-control.mjs", orchestrate_skill_names)
             self.assertIn("orchestrate-web-e2e/drivers/codex-desktop/package-lock.json", orchestrate_skill_names)
+            self.assertIn("orchestrate-web-e2e/drivers/codex-desktop/platform.mjs", orchestrate_skill_names)
+            self.assertIn("orchestrate-web-e2e/drivers/codex-desktop/select-folder.ps1", orchestrate_skill_names)
+            self.assertIn("orchestrate-web-e2e/scripts/run-codex-project-registrar.cmd", orchestrate_skill_names)
             self.assertFalse(any("node_modules" in name for name in orchestrate_skill_names))
             self.assertIn("execute-web-e2e/SKILL.md", execute_skill_names)
             self.assertIn("execute-web-e2e/skill-metadata.json", execute_skill_names)
@@ -265,6 +269,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIn("execute-web-e2e/drivers/astronstudio/package-lock.json", execute_skill_names)
             self.assertIn("execute-web-e2e/scripts/run-astronstudio.sh", execute_skill_names)
             self.assertIn("execute-web-e2e/scripts/run-astronstudio-batch.sh", execute_skill_names)
+            self.assertIn("execute-web-e2e/scripts/run-astronstudio.cmd", execute_skill_names)
+            self.assertIn("execute-web-e2e/scripts/run-astronstudio-batch.cmd", execute_skill_names)
+            self.assertIn("execute-web-e2e/scripts/run-astronstudio.mjs", execute_skill_names)
+            self.assertIn("execute-web-e2e/scripts/run-astronstudio-batch.mjs", execute_skill_names)
+            self.assertIn("execute-web-e2e/drivers/astronstudio/platform.mjs", execute_skill_names)
             self.assertIn("execute-web-e2e/drivers/qwenwork/driver.mjs", execute_skill_names)
             self.assertIn("execute-web-e2e/drivers/qwenwork/batch.mjs", execute_skill_names)
             self.assertIn("execute-web-e2e/drivers/qwenwork/package-lock.json", execute_skill_names)
@@ -292,15 +301,15 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             batch_manifest = json.loads((batch_root / "batch_manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(
                 batch_manifest["orchestrate_skill_archive"],
-                "packages/orchestrate-web-e2e-skill-v0.1.2.zip",
+                "packages/orchestrate-web-e2e-skill-v0.2.0.zip",
             )
             self.assertEqual(
                 batch_manifest["execute_skill_archive"],
-                "packages/execute-web-e2e-skill-v1.9.8.zip",
+                "packages/execute-web-e2e-skill-v1.10.0.zip",
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],
-                "packages/run-web-e2e-skill-v1.0.5.zip",
+                "packages/run-web-e2e-skill-v1.1.0.zip",
             )
             self.assertEqual(batch_manifest["skills_manifest"], "packages/skills-manifest.json")
             skills_manifest = json.loads(skills_manifest_path.read_text(encoding="utf-8"))
@@ -388,7 +397,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIsNone(report_skill_packages[0]["harness"])
             self.assertEqual(
                 manifest["score_skill_archive"],
-                "packages/score-web-e2e-skill-v4.4.2.zip",
+                "packages/score-web-e2e-skill-v4.5.0.zip",
             )
             self.assertEqual(
                 manifest["report_skill_archive"],
@@ -440,11 +449,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 "--repo-root", str(REPO_ROOT),
             ])
             result = prepare_module.package_score_skill(args)
-            package_path = Path(tmp).resolve() / "score-web-e2e-skill-v4.4.2.zip"
+            package_path = Path(tmp).resolve() / "score-web-e2e-skill-v4.5.0.zip"
             self.assertEqual(result["path"], package_path)
-            self.assertEqual(result["file_count"], 14)
+            self.assertEqual(result["file_count"], 15)
             self.assertEqual(result["sha256"], prepare_module.sha256_file(package_path))
-            self.assertEqual(result["version"], "4.4.2")
+            self.assertEqual(result["version"], "4.5.0")
             self.assertEqual(
                 result["content_sha256"],
                 prepare_module.sha256_skill_content(REPO_ROOT / "tools/report/skills/score-web-e2e"),
@@ -453,8 +462,9 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertFalse(any(Path(tmp).glob("**/batch_manifest.json")))
             with zipfile.ZipFile(package_path) as archive:
                 names = [name for name in archive.namelist() if not name.endswith("/")]
-                self.assertEqual(len(names), 14)
+                self.assertEqual(len(names), 15)
                 self.assertIn("score-web-e2e/scripts/serve_static.mjs", names)
+                self.assertIn("score-web-e2e/scripts/managed-process-worker.mjs", names)
                 self.assertIn("score-web-e2e/scripts/screenshot_receiver.mjs", names)
                 self.assertIn("score-web-e2e/references/browser-interaction-scoring.md", names)
 

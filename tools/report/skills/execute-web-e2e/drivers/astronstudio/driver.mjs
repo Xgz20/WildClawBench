@@ -8,7 +8,6 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
-  DEFAULT_BUNDLE_ID,
   DRIVER_VERSION,
   RESUMABLE_PHASES,
   TERMINAL_PHASES,
@@ -25,9 +24,18 @@ import {
   resolveConfig,
   resolveExecutionIdentity,
   snapshotTree,
+  sqliteBackendStatus,
   transitionState,
   updateExecutionRecord,
 } from "./lib.mjs";
+import {
+  astronAppVersion,
+  astronGuiSessionStatus,
+  astronProcessIdentity,
+  gracefulQuitAstron,
+  launchAstron,
+  terminateAstronProcess,
+} from "./platform.mjs";
 
 function usage() {
   return `AstronStudio Web E2E 单题执行 Driver
@@ -86,65 +94,12 @@ async function endpointReady(endpoint) {
   }
 }
 
-async function guiSessionStatus() {
-  const frontmost = await run(
-    "/usr/bin/osascript",
-    ["-e", 'tell application "System Events" to get name of first application process whose frontmost is true'],
-    { capture: true, allowFailure: true },
-  );
-  const registry = await run(
-    "/usr/sbin/ioreg",
-    ["-n", "Root", "-d1"],
-    { capture: true, allowFailure: true },
-  );
-  const frontmostApplication = frontmost.code === 0 ? frontmost.stdout.trim() : "unknown";
-  const lockMatch = registry.stdout.match(/"IOConsoleLocked"\s*=\s*(Yes|No)/);
-  const screenLocked = lockMatch ? lockMatch[1] === "Yes" : null;
-  return {
-    frontmost_application: frontmostApplication,
-    screen_locked: screenLocked,
-    lock_source: lockMatch ? "ioreg.IOConsoleLocked" : "frontmost-application-fallback",
-    unlocked: screenLocked === null
-      ? frontmost.code === 0 && frontmostApplication.toLowerCase() !== "loginwindow"
-      : !screenLocked,
-  };
-}
-
 async function requireUnlockedGui() {
-  const status = await guiSessionStatus();
+  const status = await astronGuiSessionStatus();
   if (!status.unlocked) {
-    throw new Error(`macOS 图形会话不可交互（当前前台：${status.frontmost_application}）；请解锁桌面后重试`);
+    throw new Error(`图形会话不可交互（当前前台：${status.frontmost_application}）；请解锁桌面后重试`);
   }
   return status;
-}
-
-async function appVersion(appPath) {
-  const result = await run(
-    "/usr/bin/defaults",
-    ["read", join(appPath, "Contents", "Info"), "CFBundleShortVersionString"],
-    { capture: true, allowFailure: true },
-  );
-  return result.code === 0 ? result.stdout.trim() : "unknown";
-}
-
-async function astudioProcessIdentity() {
-  const result = await run(
-    "/usr/bin/osascript",
-    ["-e", `tell application "System Events" to get unix id of first application process whose bundle identifier is "${DEFAULT_BUNDLE_ID}"`],
-    { capture: true, allowFailure: true },
-  );
-  const pid = Number(result.stdout.trim());
-  if (result.code !== 0 || !Number.isInteger(pid) || pid <= 0) return null;
-  const command = await run("/bin/ps", ["-p", String(pid), "-o", "command="], {
-    capture: true,
-    allowFailure: true,
-  });
-  return {
-    pid,
-    bundle_id: DEFAULT_BUNDLE_ID,
-    command: command.stdout.trim() || null,
-    captured_at: new Date().toISOString(),
-  };
 }
 
 async function waitForEndpoint(endpoint, timeoutSeconds) {
@@ -159,7 +114,7 @@ async function waitForEndpoint(endpoint, timeoutSeconds) {
 async function waitForAstudioStopped(config, timeoutSeconds = 20) {
   const deadline = Date.now() + timeoutSeconds * 1000;
   while (Date.now() < deadline) {
-    if (!(await astudioProcessIdentity()) && !(await endpointReady(config.endpoint))) return;
+    if (!(await astronProcessIdentity(config.appPath)) && !(await endpointReady(config.endpoint))) return;
     await sleep(500);
   }
   throw new Error(`AstronStudio 旧进程或调试端口未在 ${timeoutSeconds} 秒内退出`);
@@ -176,9 +131,11 @@ function matchesTrackedRecoverySession(session, recoverySession) {
 export async function restartAstudio(config, overrides = {}, recoverySession = null) {
   const dependencies = {
     querySessions,
-    processIdentity: astudioProcessIdentity,
+    processIdentity: () => astronProcessIdentity(config.appPath),
     endpointReady,
-    run,
+    gracefulQuit: gracefulQuitAstron,
+    terminateProcess: terminateAstronProcess,
+    launchApp: launchAstron,
     sleep,
     waitForEndpoint,
     waitForStopped: waitForAstudioStopped,
@@ -206,11 +163,7 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
     if (active.length > 0 && !restartSafety.tracked_session_matched) {
       throw new Error(`AstronStudio 仍有 ${active.length} 个活动或待处理任务，拒绝重启客户端`);
     }
-    await dependencies.run(
-      "/usr/bin/osascript",
-      ["-e", `tell application id "${DEFAULT_BUNDLE_ID}" to quit`],
-      { allowFailure: true, capture: true },
-    );
+    await dependencies.gracefulQuit(currentProcess);
     try {
       await dependencies.waitForStopped(config, dependencies.gracefulQuitTimeoutSeconds);
       restartSafety.shutdown = { method: "application-quit", pid: currentProcess.pid };
@@ -221,11 +174,7 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
           `AstronStudio 正常退出超时后进程身份已变化，拒绝发送 SIGTERM：原 PID ${currentProcess.pid}，当前 PID ${remainingProcess?.pid || "不可用"}`,
         );
       }
-      const terminated = await dependencies.run(
-        "/bin/kill",
-        ["-TERM", String(currentProcess.pid)],
-        { allowFailure: true, capture: true },
-      );
+      const terminated = await dependencies.terminateProcess(currentProcess);
       if (terminated.code !== 0) {
         throw new Error(`AstronStudio 正常退出超时，向已核对 PID ${currentProcess.pid} 发送 SIGTERM 失败：${terminated.stderr?.trim() || `退出码 ${terminated.code}`}`);
       }
@@ -242,11 +191,7 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
   for (let attempt = 1; attempt <= dependencies.launchAttempts; attempt += 1) {
     let result;
     try {
-      result = await dependencies.run(
-        "/usr/bin/open",
-        ["-na", config.appPath, "--args", "--remote-debugging-address=127.0.0.1", `--remote-debugging-port=${port}`],
-        { allowFailure: true, capture: true },
-      );
+      result = await dependencies.launchApp(config.appPath, port);
     } catch (error) {
       result = { code: null, stdout: "", stderr: error instanceof Error ? error.message : String(error) };
     }
@@ -273,11 +218,8 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
     }
     if (attempt < dependencies.launchAttempts) {
       if (await dependencies.processIdentity() || await dependencies.endpointReady(config.endpoint)) {
-        await dependencies.run(
-          "/usr/bin/osascript",
-          ["-e", `tell application id "${DEFAULT_BUNDLE_ID}" to quit`],
-          { allowFailure: true, capture: true },
-        );
+        const retryProcess = await dependencies.processIdentity();
+        if (retryProcess) await dependencies.gracefulQuit(retryProcess);
         await dependencies.waitForStopped(config);
       }
       await dependencies.sleep(dependencies.retryDelayMilliseconds * attempt);
@@ -1197,7 +1139,7 @@ async function resumeAutomation(config, state, identityInfo) {
     } else if (!(await endpointReady(config.endpoint))) {
       throw new Error(`AstronStudio 未开放调试端口 ${config.endpoint}`);
     }
-    state.client.process = await astudioProcessIdentity();
+    state.client.process = await astronProcessIdentity(config.appPath);
     if (config.observeOnce && !config.restartApp) {
       const runStartedAt = Date.parse(state.timing.sent_at || state.timing.started_at || new Date().toISOString());
       const databaseObserved = await observeAttemptFromDatabase(
@@ -1321,8 +1263,8 @@ async function runAutomation(config, identityInfo) {
   try {
     await requireUnlockedGui();
     await prepareClient(config, state);
-    state.client.version = await appVersion(config.appPath);
-    state.client.process = await astudioProcessIdentity();
+    state.client.version = await astronAppVersion(config.appPath);
+    state.client.process = await astronProcessIdentity(config.appPath);
     transitionState(state, "CLIENT_READY");
     await saveState(config, state);
 
@@ -1427,21 +1369,27 @@ async function runAutomation(config, identityInfo) {
 }
 
 export function isProbeReady(checks) {
-  return checks.endpoint_ready && checks.state_database_readable && checks.sqlite3
+  const sqliteReady = checks.sqlite ?? checks.sqlite3;
+  return checks.endpoint_ready && checks.state_database_readable && sqliteReady
     && checks.gui_session_unlocked && checks.new_task_available
     && checks.permission_setting_available && checks.model_setting_available
     && checks.composer_available;
 }
 
 async function probe(config) {
-  const gui = await guiSessionStatus();
+  const gui = await astronGuiSessionStatus();
+  const sqlite = await sqliteBackendStatus();
   const checks = {
     app_exists: true,
-    client_version: await appVersion(config.appPath),
+    app_path: config.appPath,
+    platform: process.platform,
+    client_version: await astronAppVersion(config.appPath),
     endpoint_ready: await endpointReady(config.endpoint),
     state_database_readable: false,
     session_count: null,
-    sqlite3: false,
+    sqlite: sqlite.available,
+    sqlite_backend: sqlite.backend,
+    sqlite_command: sqlite.command,
     gui_session_unlocked: gui.unlocked,
     screen_locked: gui.screen_locked,
     gui_lock_source: gui.lock_source,
@@ -1453,8 +1401,6 @@ async function probe(config) {
     composer_available: false,
   };
   try {
-    const sqlite = await run("/usr/bin/sqlite3", ["--version"], { capture: true, allowFailure: true });
-    checks.sqlite3 = sqlite.code === 0;
     const sessions = await querySessions(config.sessionDb);
     checks.state_database_readable = true;
     checks.session_count = sessions.length;
@@ -1491,7 +1437,13 @@ async function probe(config) {
     version: DRIVER_VERSION,
     control_backend: "electron-cdp+astudio-project-picker+sidebar-manual-path",
     terminal_source: "astudio-state-sqlite+astudio-dom",
-    concurrency: { ui_slots: 1, default_run_slots: 3, max_run_slots: 8, verified: true },
+    concurrency: {
+      ui_slots: 1,
+      default_run_slots: 3,
+      max_run_slots: 8,
+      verified: process.platform === "darwin",
+      verification_scope: process.platform === "darwin" ? "macos-live-e2e" : "windows-static-pending-live-e2e",
+    },
     ready: isProbeReady(checks),
     checks,
   };

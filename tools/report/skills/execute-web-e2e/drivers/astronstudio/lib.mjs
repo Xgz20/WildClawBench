@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { access, copyFile, mkdtemp, rm } from "node:fs/promises";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
@@ -26,6 +26,12 @@ import {
   transitionState,
   updateExecutionRecord as updateBaseExecutionRecord,
 } from "../workbuddy/lib.mjs";
+import {
+  defaultAstronAppPath,
+  defaultAstronSessionDb,
+  resolveAstronAppPath,
+  validateAstronAppPath,
+} from "./platform.mjs";
 
 export {
   AUTOMATION_SCHEMA,
@@ -45,11 +51,11 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.9.2";
-export const DEFAULT_APP_PATH = "/Applications/AStudio.app";
+export const DRIVER_VERSION = "1.10.0";
+export const DEFAULT_APP_PATH = defaultAstronAppPath();
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
-export const DEFAULT_SESSION_DB = join(homedir(), ".acode", "acode", "userdata", "state.sqlite");
+export const DEFAULT_SESSION_DB = defaultAstronSessionDb();
 export const ASTRONSTUDIO_PROFILE = Object.freeze({
   id: "astronstudio",
   displayName: "AstronStudio",
@@ -69,8 +75,16 @@ export function parseArgs(argv) {
   return parsed;
 }
 
-export async function resolveConfig(parsed) {
-  return resolveBaseConfig(parsed);
+export async function resolveConfig(parsed, overrides = {}) {
+  const platform = overrides.platform || process.platform;
+  const appPath = await resolveAstronAppPath(parsed.appPath, { ...overrides, platform });
+  return resolveBaseConfig(
+    { ...parsed, appPath },
+    {
+      resolveAppPath: async (value) => value,
+      validateAppPath: async (value) => validateAstronAppPath(value, platform),
+    },
+  );
 }
 
 export async function resolveExecutionIdentity(config) {
@@ -102,6 +116,57 @@ function runCapture(command, args) {
       else rejectPromise(new Error(`${command} 执行失败（退出码 ${code}）：${stderr.trim()}`));
     });
   });
+}
+
+let nodeSqlitePromise;
+
+async function loadNodeSqlite() {
+  if (!nodeSqlitePromise) {
+    nodeSqlitePromise = import("node:sqlite").catch(() => null);
+  }
+  return nodeSqlitePromise;
+}
+
+function sqliteCliPath(platform = process.platform) {
+  return platform === "win32" ? "sqlite3.exe" : "/usr/bin/sqlite3";
+}
+
+export async function sqliteBackendStatus(overrides = {}) {
+  const loadSqlite = overrides.loadNodeSqlite || loadNodeSqlite;
+  const sqliteModule = await loadSqlite();
+  if (typeof sqliteModule?.DatabaseSync === "function") {
+    return { available: true, backend: "node:sqlite", command: null, error: null };
+  }
+  const command = overrides.sqliteCommand || sqliteCliPath(overrides.platform);
+  const runCommand = overrides.runCommand || runCapture;
+  try {
+    await runCommand(command, ["--version"]);
+    return { available: true, backend: "sqlite3-cli", command, error: null };
+  } catch (error) {
+    return {
+      available: false,
+      backend: "unavailable",
+      command,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+async function querySqlite(snapshotDb, query, overrides = {}) {
+  const loadSqlite = overrides.loadNodeSqlite || loadNodeSqlite;
+  const sqliteModule = await loadSqlite();
+  if (typeof sqliteModule?.DatabaseSync === "function") {
+    const database = new sqliteModule.DatabaseSync(snapshotDb, { readOnly: true });
+    try {
+      return database.prepare(query).all();
+    } finally {
+      database.close();
+    }
+  }
+  const command = overrides.sqliteCommand || sqliteCliPath(overrides.platform);
+  const runCommand = overrides.runCommand || runCapture;
+  const result = await runCommand(command, ["-readonly", "-json", snapshotDb, query]);
+  return result.stdout.trim() ? JSON.parse(result.stdout) : [];
 }
 
 async function copyIfPresent(source, destination) {
@@ -164,13 +229,13 @@ WHERE threads.deleted_at IS NULL AND projects.deleted_at IS NULL
 ORDER BY updatedAtIso DESC, sessions.thread_id ASC;
 `;
 
-async function querySnapshot(snapshotDb) {
-  const integrity = await runCapture("/usr/bin/sqlite3", ["-readonly", snapshotDb, "PRAGMA quick_check;"]);
-  if (integrity.stdout.trim() !== "ok") {
-    throw new Error(`AstronStudio 状态库快照校验失败：${integrity.stdout.trim() || "无结果"}`);
+async function querySnapshot(snapshotDb, overrides = {}) {
+  const integrityRows = await querySqlite(snapshotDb, "PRAGMA quick_check;", overrides);
+  const integrity = Object.values(integrityRows[0] || {})[0];
+  if (integrity !== "ok") {
+    throw new Error(`AstronStudio 状态库快照校验失败：${integrity || "无结果"}`);
   }
-  const result = await runCapture("/usr/bin/sqlite3", ["-readonly", "-json", snapshotDb, SESSION_QUERY]);
-  const rows = result.stdout.trim() ? JSON.parse(result.stdout) : [];
+  const rows = await querySqlite(snapshotDb, SESSION_QUERY, overrides);
   return rows.map((row) => ({
     ...row,
     updatedAt: Date.parse(row.updatedAtIso || "") || 0,
@@ -178,7 +243,7 @@ async function querySnapshot(snapshotDb) {
   }));
 }
 
-export async function querySessions(sessionDb = DEFAULT_SESSION_DB) {
+export async function querySessions(sessionDb = DEFAULT_SESSION_DB, overrides = {}) {
   await access(sessionDb);
   let lastError = null;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
@@ -188,7 +253,7 @@ export async function querySessions(sessionDb = DEFAULT_SESSION_DB) {
       await copyFile(sessionDb, snapshotDb);
       await copyIfPresent(`${sessionDb}-wal`, `${snapshotDb}-wal`);
       await copyIfPresent(`${sessionDb}-shm`, `${snapshotDb}-shm`);
-      return await querySnapshot(snapshotDb);
+      return await querySnapshot(snapshotDb, overrides);
     } catch (error) {
       lastError = error;
     } finally {
@@ -202,7 +267,7 @@ function sqlStringLiteral(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
 }
 
-async function queryFinalResponseSnapshot(snapshotDb, threadId, turnId) {
+async function queryFinalResponseSnapshot(snapshotDb, threadId, turnId, overrides = {}) {
   const threadPredicate = `thread_id = ${sqlStringLiteral(threadId)}`;
   const turnPredicate = turnId ? `AND turn_id = ${sqlStringLiteral(turnId)}` : "";
   const query = `
@@ -216,12 +281,11 @@ WHERE ${threadPredicate}
 ORDER BY sequence DESC, updated_at DESC, message_id DESC
 LIMIT 1;
 `;
-  const result = await runCapture("/usr/bin/sqlite3", ["-readonly", "-json", snapshotDb, query]);
-  const rows = result.stdout.trim() ? JSON.parse(result.stdout) : [];
+  const rows = await querySqlite(snapshotDb, query, overrides);
   return typeof rows[0]?.text === "string" ? rows[0].text.trim() : "";
 }
 
-export async function queryFinalResponse(sessionDb, threadId, turnId = null) {
+export async function queryFinalResponse(sessionDb, threadId, turnId = null, overrides = {}) {
   await access(sessionDb);
   if (!threadId) return "";
   let lastError = null;
@@ -232,7 +296,7 @@ export async function queryFinalResponse(sessionDb, threadId, turnId = null) {
       await copyFile(sessionDb, snapshotDb);
       await copyIfPresent(`${sessionDb}-wal`, `${snapshotDb}-wal`);
       await copyIfPresent(`${sessionDb}-shm`, `${snapshotDb}-shm`);
-      return await queryFinalResponseSnapshot(snapshotDb, threadId, turnId);
+      return await queryFinalResponseSnapshot(snapshotDb, threadId, turnId, overrides);
     } catch (error) {
       lastError = error;
     } finally {

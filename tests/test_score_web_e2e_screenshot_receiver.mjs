@@ -12,6 +12,11 @@ import {
   stopReceiver,
 } from "../tools/report/skills/score-web-e2e/scripts/screenshot_receiver.mjs";
 import {
+  processIdentity,
+  processTerminationInvocation,
+  windowsCommandIncludesPath,
+} from "../tools/report/skills/score-web-e2e/scripts/managed_runtime.mjs";
+import {
   CANDIDATE_ARTIFACT_SCHEMA,
   TREE_HASH_ALGORITHM,
   snapshotWorkspace,
@@ -22,6 +27,55 @@ const PNG_1X1 = Buffer.from(
   "base64",
 );
 const JPEG_SIGNATURE_SAMPLE = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0xff, 0xd9]);
+
+test("Windows managed processes terminate only the recorded PID tree", () => {
+  const identity = { pid: 321, pgid: 321 };
+  assert.deepEqual(processTerminationInvocation(identity, { platform: "win32" }), {
+    command: "taskkill.exe",
+    args: ["/PID", "321", "/T"],
+  });
+  assert.deepEqual(processTerminationInvocation(identity, { platform: "win32", force: true }), {
+    command: "taskkill.exe",
+    args: ["/PID", "321", "/T", "/F"],
+  });
+});
+
+test("Windows process command path matching ignores case and slash direction", () => {
+  assert.equal(
+    windowsCommandIncludesPath(
+      '"C:\\Program Files\\nodejs\\node.exe" C:/Skills/Score-Web-E2E/scripts/managed-process-worker.mjs',
+      "c:\\skills\\score-web-e2e\\scripts\\managed-process-worker.mjs",
+    ),
+    true,
+  );
+  assert.equal(windowsCommandIncludesPath("node.exe worker.mjs", "C:\\scores\\task-1"), false);
+});
+
+test("Windows managed process identity records creation time and command line", () => {
+  const identity = processIdentity(321, {
+    platform: "win32",
+    probePid: (pid) => assert.equal(pid, 321),
+    execFileSync: (command, args) => {
+      assert.equal(command, "powershell.exe");
+      assert.match(args.join(" "), /ProcessId = 321/);
+      return JSON.stringify({
+        ProcessId: 321,
+        CreationDate: "2026-09-09T12:00:00.000000+480",
+        ExecutablePath: "C:\\Program Files\\nodejs\\node.exe",
+        CommandLine: "node.exe managed-process-worker.mjs --service-id service-id",
+      });
+    },
+  });
+  assert.deepEqual(identity, {
+    pid: 321,
+    pgid: 321,
+    started_at_text: "2026-09-09T12:00:00.000000+480",
+    command: "node.exe managed-process-worker.mjs --service-id service-id",
+    cwd: null,
+    executable_path: "C:\\Program Files\\nodejs\\node.exe",
+    process_group_mode: "windows-process-tree",
+  });
+});
 
 function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));

@@ -7,6 +7,10 @@ import {
   pageRank,
   parseArgs,
 } from "../register-projects.mjs";
+import {
+  folderHelperInvocation,
+  resolveCodexAppPath,
+} from "../platform.mjs";
 
 test("parseArgs accepts probe and repeated project paths", () => {
   const args = parseArgs([
@@ -44,4 +48,56 @@ test("multiple equal app pages require an exact URL", () => {
   ];
   assert.throws(() => choosePageInventory(pages), /多个同等候选/);
   assert.equal(choosePageInventory(pages, "app://-/two").index, 1);
+});
+
+test("Windows Codex Desktop path is discovered from the process using the requested CDP port", async () => {
+  const appPath = "C:\\Users\\tester\\AppData\\Local\\Programs\\ChatGPT\\ChatGPT.exe";
+  const resolved = await resolveCodexAppPath("", "http://127.0.0.1:9230", {
+    platform: "win32",
+    realpathPath: async (value) => value,
+    statPath: async (value) => ({
+      isFile: () => value.toLowerCase() === appPath.toLowerCase(),
+      isDirectory: () => false,
+    }),
+    runCommand: async (command, args) => {
+      assert.equal(command, "powershell.exe");
+      assert.match(args.join(" "), /remote-debugging-port=9230/);
+      return {
+        code: 0,
+        stderr: "",
+        stdout: JSON.stringify({ ProcessId: 101, ExecutablePath: appPath, CommandLine: `"${appPath}" --remote-debugging-port=9230` }),
+      };
+    },
+    environment: {},
+  });
+  assert.equal(resolved, appPath);
+});
+
+test("Windows project registration uses the UI Automation folder helper", () => {
+  const invocation = folderHelperInvocation({
+    platform: "win32",
+    driverDir: "C:\\skills\\orchestrate-web-e2e\\drivers\\codex-desktop",
+    bundleId: "unused",
+    appPath: "C:\\Apps\\ChatGPT.exe",
+    project: "C:\\scores\\task-1",
+    timeoutSeconds: 15,
+  });
+  assert.equal(invocation.command, "powershell.exe");
+  assert.deepEqual(invocation.args.slice(0, 6), [
+    "-NoProfile",
+    "-NonInteractive",
+    "-STA",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-File",
+  ]);
+  assert.match(invocation.args[6], /select-folder\.ps1$/);
+  assert.deepEqual(invocation.args.slice(-6), [
+    "-AppPath",
+    "C:\\Apps\\ChatGPT.exe",
+    "-Folder",
+    "C:\\scores\\task-1",
+    "-TimeoutSeconds",
+    "15",
+  ]);
 });

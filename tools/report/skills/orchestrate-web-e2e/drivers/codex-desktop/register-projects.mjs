@@ -1,14 +1,19 @@
 #!/usr/bin/env node
-import { spawn } from "node:child_process";
 import { realpathSync } from "node:fs";
 import { mkdir, realpath, writeFile } from "node:fs/promises";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import {
+  codexAppVersion,
+  defaultCodexAppPath,
+  resolveCodexAppPath,
+  runFolderHelper,
+} from "./platform.mjs";
 
 const DEFAULT_ENDPOINT = "http://127.0.0.1:9230";
 const DEFAULT_BUNDLE_ID = "com.openai.codex";
 const DRIVER_DIR = dirname(fileURLToPath(import.meta.url));
-const DEFAULT_HELPER = join(DRIVER_DIR, "select-folder.swift");
 
 export function usage() {
   return `Codex Desktop 项目注册器
@@ -24,7 +29,7 @@ export function usage() {
   --endpoint <URL>                Codex Desktop 本机 CDP 地址
   --page-url <URL>                多窗口时精确指定主页面 URL
   --bundle-id <ID>                macOS 应用 bundle id
-  --app-path <路径>               Codex Desktop 应用路径
+  --app-path <路径>               Codex Desktop 应用路径；Windows 可传 exe 或安装目录
   --timeout-seconds <秒>          单步超时，默认 15
   --output <JSON>                 注册证据输出文件
 `;
@@ -38,7 +43,7 @@ export function parseArgs(argv) {
     endpoint: DEFAULT_ENDPOINT,
     pageUrl: "",
     bundleId: DEFAULT_BUNDLE_ID,
-    appPath: "/Applications/ChatGPT.app",
+    appPath: defaultCodexAppPath(),
     timeoutSeconds: 15,
     output: "",
     help: false,
@@ -212,7 +217,7 @@ async function registerWithRendererBridge(page, project) {
 async function finalizeProjectRegistration(page, project, timeout) {
   const dialog = page.getByRole("dialog");
   await dialog.waitFor({ state: "visible", timeout });
-  const sourceBasename = project.split("/").at(-1);
+  const sourceBasename = basename(project);
   const selectedSources = dialog.getByRole("button", { name: /^(Remove|移除)\s+/i });
   if (await selectedSources.count() !== 1 || !(await selectedSources.first().getAttribute("aria-label"))?.endsWith(sourceBasename)) {
     throw new Error(`创建项目对话框未回读到目标源文件夹：${sourceBasename}`);
@@ -225,39 +230,6 @@ async function finalizeProjectRegistration(page, project, timeout) {
   if (!(await create.isEnabled())) throw new Error("选择源文件夹后创建项目按钮仍不可用");
   await create.click({ timeout, noWaitAfter: true });
   await dialog.waitFor({ state: "hidden", timeout });
-}
-
-function runHelper(helper, bundleId, project, timeoutSeconds) {
-  return new Promise((resolvePromise, rejectPromise) => {
-    const child = spawn("/usr/bin/xcrun", ["swift", helper, bundleId, project, String(timeoutSeconds)], {
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.on("data", (chunk) => { stdout += chunk; });
-    child.stderr.on("data", (chunk) => { stderr += chunk; });
-    child.once("error", rejectPromise);
-    child.once("exit", (code) => {
-      if (code === 0) resolvePromise(JSON.parse(stdout));
-      else rejectPromise(new Error(stderr.trim() || `文件夹选择 helper 退出码 ${code}`));
-    });
-  });
-}
-
-function appVersion(appPath) {
-  return new Promise((resolvePromise, rejectPromise) => {
-    const child = spawn("/usr/libexec/PlistBuddy", ["-c", "Print :CFBundleShortVersionString", join(appPath, "Contents", "Info.plist")], {
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.on("data", (chunk) => { stdout += chunk; });
-    child.stderr.on("data", (chunk) => { stderr += chunk; });
-    child.once("error", rejectPromise);
-    child.once("exit", (code) => code === 0
-      ? resolvePromise(stdout.trim())
-      : rejectPromise(new Error(stderr.trim() || `无法读取 Codex Desktop 版本：${appPath}`)));
-  });
 }
 
 async function inspectPages(browser) {
@@ -279,6 +251,7 @@ export async function run(args) {
   if (!(await endpointReady(args.endpoint))) {
     throw new Error(`Codex Desktop 未开放本机 CDP：${args.endpoint}。请在启动控制任务前以 --remote-debugging-address=127.0.0.1 和 --remote-debugging-port 启动 Desktop`);
   }
+  const appPath = await resolveCodexAppPath(args.appPath, args.endpoint);
   const { chromium } = await import("playwright-core");
   const browser = await chromium.connectOverCDP(args.endpoint);
   try {
@@ -290,7 +263,9 @@ export async function run(args) {
     const result = {
       schema_version: "wildclawbench.codex-project-registration/v1",
       endpoint: args.endpoint,
-      desktop_version: await appVersion(args.appPath),
+      platform: process.platform,
+      app_path: appPath,
+      desktop_version: await codexAppVersion(appPath),
       desktop_page: { title: selected.title, url: selected.url },
       probed_at: new Date().toISOString(),
       projects: [],
@@ -310,19 +285,21 @@ export async function run(args) {
       const registration = args.rendererBridge
         ? await registerWithRendererBridge(page, project)
         : await beginProjectRegistration(page, args.timeoutSeconds * 1000);
-      const nativeSelection = registration.nativeSelection ?? await runHelper(
-        DEFAULT_HELPER,
-        args.bundleId,
+      const nativeSelection = registration.nativeSelection ?? await runFolderHelper({
+        platform: process.platform,
+        driverDir: DRIVER_DIR,
+        bundleId: args.bundleId,
+        appPath,
         project,
-        args.timeoutSeconds,
-      );
+        timeoutSeconds: args.timeoutSeconds,
+      });
       if (registration.finalize) await finalizeProjectRegistration(page, project, args.timeoutSeconds * 1000);
       await page.waitForTimeout(1000);
       const evidenceDir = args.output ? dirname(resolve(args.output)) : "";
       let screenshot = null;
       if (evidenceDir) {
         await mkdir(evidenceDir, { recursive: true });
-        screenshot = join(evidenceDir, `${project.split("/").at(-1)}-registered.png`);
+        screenshot = join(evidenceDir, `${basename(project)}-registered.png`);
         await page.screenshot({ path: screenshot });
       }
       result.projects.push({ requested_path: rawProject, canonical_path: project, ui_method: registration.method, native_selection: nativeSelection, screenshot });

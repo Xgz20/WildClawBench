@@ -16,13 +16,19 @@ cd .agents/skills/execute-web-e2e/drivers/astronstudio
 npm ci
 ```
 
-只读预检不会创建任务或发送 Prompt：
+只读预检不会创建任务或发送 Prompt。macOS：
 
 ```bash
 bash .agents/skills/execute-web-e2e/scripts/run-astronstudio.sh --probe
 ```
 
-预检要求 `/Applications/AStudio.app`、本机 `http://127.0.0.1:9240`、macOS 可交互桌面和 `~/.acode/acode/userdata/state.sqlite` 均可用。`--probe` 不会点击“新建任务”；停在历史会话时 workspace picker 不可见只是诊断信息，只要“新建任务”、编辑器、权限和模型控件可用仍可执行。需要由 Driver 启动客户端时，在确认没有活动或待处理任务后显式传 `--restart-app`。
+Windows：
+
+```bat
+.agents\skills\execute-web-e2e\scripts\run-astronstudio.cmd --probe
+```
+
+预检要求本机 `http://127.0.0.1:9240`、可交互且未锁定的桌面和 `%USERPROFILE%\.acode\acode\userdata\state.sqlite`（macOS 同目录位于 `$HOME`）均可用。macOS 默认使用 `/Applications/AStudio.app`；Windows 依次读取 `HKCU\Software\AStudio`、历史品牌注册表和 `%LOCALAPPDATA%\Programs`，也可显式传 `--app-path <AStudio.exe或安装目录>`。SQLite 优先使用 Node.js 自带的 `node:sqlite`；运行时不提供该模块时才回退到系统 `sqlite3` 命令。`--probe` 不会点击“新建任务”；停在历史会话时 workspace picker 不可见只是诊断信息，只要“新建任务”、编辑器、权限和模型控件可用仍可执行。需要由 Driver 启动客户端时，在确认没有活动或待处理任务后显式传 `--restart-app`。
 
 后台并发执行完整 manifest 中的任务：
 
@@ -35,6 +41,14 @@ bash .agents/skills/execute-web-e2e/scripts/run-astronstudio-batch.sh \
   --run-slots 3 \
   --permission-mode full-access
 ```
+
+Windows 使用相同参数和原生入口：
+
+```bat
+.agents\skills\execute-web-e2e\scripts\run-astronstudio-batch.cmd C:\absolute\batch__astronstudio --run-id queue-1 --task-id task-1 --task-id task-2 --run-slots 3 --permission-mode full-access
+```
+
+Windows 入口、平台探测和状态库读取已有静态实现与模拟测试，但在目标 Windows 机器完成 `--probe`、单题、三题串行和三路并发验收前，不得标记为生产已验证；首次验收显式使用 `--run-slots 1`。
 
 AstronStudio 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、模型/权限回读、Prompt 发送和 thread 切换仍由同一个 Driver 串行操作。发送后只有在 AstronStudio 路由与本地 SQLite 共同确认稳定 thread、turn 和 cwd 时才释放 Driver；Worker 轮流恢复各 thread 做一次性观察。任一题到达明确终态并通过 automation/execution 一致性检查后释放槽位并动态补入下一题。队列必须覆盖 manifest 的完整 task ID 集合，才可能生成 `integrity.valid=true` 的 `execution-receipt.json`。
 
@@ -170,7 +184,7 @@ Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作�
 ## 执行约束
 
 - 选择的是单题根目录 `execution/tasks/<task_id>/`，不是其中的 `workspace/`。
-- WorkBuddy 5.5.3 优先通过其输入框 workspace provider 写入并回读绝对路径；只有该能力不存在时才退回 macOS 原生文件夹选择器。不能只凭同名目录标签确认工作空间。
+- WorkBuddy 5.5.3 优先通过其输入框 workspace provider 写入并回读绝对路径；只有该能力不存在时才退回 macOS 原生文件夹选择器。不能只凭同名目录标签确认工作空间。AstronStudio 通过应用内路径输入与项目回读完成选择，不依赖 Windows 原生文件夹选择器。
 - Prompt 只从 `PROMPT.md` 读取；状态中只保存 SHA-256 和字节数，不复制正文。
 - Prompt 发送后尽早保存侧栏 `data-conversation-id`；这是 WorkBuddy session DB 缺少当前会话时，运行中断和客户端重启恢复的稳定标识。
 - `automation_state.json` 和过程截图写到单题目录外；完成后的 transcript 证据才写回 `.web-e2e-evidence/`。

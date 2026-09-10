@@ -35,7 +35,7 @@ const BATCH_PROFILES = Object.freeze({
     harnessId: "astronstudio",
     displayName: "AstronStudio",
     workerId: "astronstudio-background-concurrent",
-    workerVersion: "1.9.2",
+    workerVersion: "1.10.0",
     driverFile: resolve(SCRIPT_DIR, "../astronstudio/driver.mjs"),
     lockFileName: "astronstudio-ui.lock",
     defaultRunSlots: DEFAULT_RUN_SLOTS,
