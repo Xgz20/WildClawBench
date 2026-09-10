@@ -33,6 +33,7 @@ import {
   dismissOpenMenus,
   ensureModel,
   ensurePermissionMode,
+  findConversationSidebarToggles,
   findNewTaskButtons,
   hasStableThreadIdentity,
   inspectWorkspace,
@@ -448,6 +449,22 @@ test("covered new-thread nodes are ignored in favor of the pointer-reachable but
   };
 
   assert.deepEqual(await findNewTaskButtons(page), [reachable]);
+});
+
+test("sidebar toggle discovery survives Electron titlebar hit-test overlays", async () => {
+  const coveredButVisible = {
+    isVisible: async () => true,
+    evaluate: async () => false,
+  };
+  const page = {
+    getByRole: (role, options) => {
+      assert.equal(role, "button");
+      assert.equal(options.name.test("切换对话侧边栏"), true);
+      return locatorFor([coveredButVisible]);
+    },
+  };
+
+  assert.deepEqual(await findConversationSidebarToggles(page), [coveredButVisible]);
 });
 
 test("workspace readback accepts the project-bound trigger after adding a project", async () => {

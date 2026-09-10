@@ -367,6 +367,12 @@ export async function findNewTaskButtons(page) {
   return byTestId.length > 1 ? byTestId : (exactText.length ? exactText : byRole);
 }
 
+export async function findConversationSidebarToggles(page) {
+  return visibleLocators(page.getByRole("button", {
+    name: /^(?:切换(?:对话)?侧边栏|Toggle (?:conversation )?sidebar)$/i,
+  }));
+}
+
 export async function isReusableEmptyTaskRoute(page) {
   const headings = await visibleLocators(page.getByTestId("empty-landing-heading"));
   if (headings.length !== 1) return false;
@@ -379,20 +385,17 @@ async function createFreshTask(page, timeout) {
   const previousThreadId = threadIdFromUrl(page.url());
   const entryDeadline = Date.now() + timeout;
   const sidebarToggleEligibleAt = Date.now() + Math.min(3000, Math.floor(timeout / 3));
+  const sidebarToggleRetryMilliseconds = 1500;
   let newTaskButtons = await findNewTaskButtons(page);
-  let sidebarToggleClicked = false;
+  let nextSidebarToggleAttemptAt = sidebarToggleEligibleAt;
   while (newTaskButtons.length === 0 && Date.now() < entryDeadline) {
-    const sidebarToggles = await pointerReachableLocators(
-      await visibleLocators(page.getByRole("button", {
-        name: /^(?:切换对话侧边栏|Toggle conversation sidebar)$/i,
-      })),
-    );
+    const sidebarToggles = await findConversationSidebarToggles(page);
     if (sidebarToggles.length > 1) {
       throw new Error(`AstronStudio 对话侧边栏切换按钮数量异常：${sidebarToggles.length}`);
     }
-    if (sidebarToggles.length === 1 && !sidebarToggleClicked && Date.now() >= sidebarToggleEligibleAt) {
-      await sidebarToggles[0].click({ timeout });
-      sidebarToggleClicked = true;
+    if (sidebarToggles.length === 1 && Date.now() >= nextSidebarToggleAttemptAt) {
+      await sidebarToggles[0].click({ timeout, force: true });
+      nextSidebarToggleAttemptAt = Date.now() + sidebarToggleRetryMilliseconds;
     }
     await sleep(250);
     newTaskButtons = await findNewTaskButtons(page);
