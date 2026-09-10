@@ -325,7 +325,7 @@ export async function astronProcessIdentity(appPath, overrides = {}) {
   const platform = overrides.platform || process.platform;
   const runCommand = overrides.runCommand || runCapture;
   if (platform === "win32") {
-    const script = `Get-CimInstance Win32_Process | Where-Object { @('AStudio.exe','AstronStudio.exe','Acode.exe') -contains $_.Name } | Select-Object ProcessId,ExecutablePath,CommandLine | ConvertTo-Json -Compress`;
+    const script = `Get-CimInstance Win32_Process | Where-Object { @('AStudio.exe','AstronStudio.exe','Acode.exe') -contains $_.Name } | Select-Object ProcessId,ParentProcessId,ExecutablePath,CommandLine | ConvertTo-Json -Compress`;
     const result = await runCommand(
       "powershell.exe",
       ["-NoProfile", "-NonInteractive", "-Command", script],
@@ -339,11 +339,22 @@ export async function astronProcessIdentity(appPath, overrides = {}) {
       return null;
     }
     const expectedPath = normalizeWindowsPath(appPath);
-    const matches = processes.filter((item) => {
+    const executableMatches = processes.filter((item) => {
       const executablePath = normalizeWindowsPath(item.ExecutablePath);
       const exactExecutable = executablePath && executablePath === expectedPath;
       const commandMatches = normalizeWindowsPath(windowsCommandExecutable(item.CommandLine)) === expectedPath;
-      return (exactExecutable || commandMatches) && !/(?:^|\s)--type=/iu.test(String(item.CommandLine || ""));
+      return exactExecutable || commandMatches;
+    });
+    const matchingPids = new Set(executableMatches
+      .map((item) => Number(item.ProcessId))
+      .filter((pid) => Number.isInteger(pid) && pid > 0));
+    const matches = executableMatches.filter((item) => {
+      const commandLine = String(item.CommandLine || "");
+      const parentPid = Number(item.ParentProcessId);
+      const isSameExecutableChild = Number.isInteger(parentPid) && matchingPids.has(parentPid);
+      const isElectronChild = /(?:^|\s)--type=/iu.test(commandLine);
+      const isNodeRuntimeChild = /(?:^|\s)(?:--max-old-space-size(?:=|\s)|-e(?:\s|$))/iu.test(commandLine);
+      return !isSameExecutableChild && !isElectronChild && !isNodeRuntimeChild;
     });
     if (matches.length > 1) {
       throw new Error(`检测到 ${matches.length} 个与 ${appPath} 匹配的 AstronStudio 主进程，拒绝选择不唯一 PID`);

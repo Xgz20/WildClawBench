@@ -462,7 +462,7 @@ async function closeProjectPicker(page, timeout) {
   throw new Error("AstronStudio 项目选择弹层未能关闭");
 }
 
-async function addProjectByManualPath(page, workspace, timeout) {
+export async function addProjectByManualPath(page, workspace, timeout) {
   const projectTab = await waitForUniqueVisible(
     async () => {
       const matches = await visibleLocators(page.locator("button").filter({ hasText: /^(?:项目|Projects)$/i }));
@@ -477,20 +477,33 @@ async function addProjectByManualPath(page, workspace, timeout) {
   );
   await projectTab.click({ timeout });
   const addProject = await waitForUniqueVisible(
-    () => visibleLocators(page.getByRole("button", { name: /^(?:添加项目|Add project)$/i })),
+    () => visibleLocators(page.locator(
+      'button[aria-label="添加项目"], button[aria-label="Add project"]',
+    )),
     timeout,
     "AstronStudio 添加项目侧栏按钮",
   );
   if (!(await addProject.isEnabled())) throw new Error("AstronStudio 添加项目侧栏按钮未启用");
   await addProject.evaluate((button) => button.click());
   const typePath = await waitForUniqueVisible(
-    () => visibleLocators(page.getByRole("button", { name: /^(?:输入路径|Type path)$/i })),
+    async () => {
+      const matches = await visibleLocators(
+        page.locator("button").filter({ hasText: /^(?:输入路径|Type path)$/i }),
+      );
+      const exact = [];
+      for (const button of matches) {
+        if (/^(?:输入路径|Type path)$/i.test((await button.innerText()).trim())) exact.push(button);
+      }
+      return exact;
+    },
     timeout,
     "AstronStudio 输入项目路径按钮",
   );
-  await typePath.click({ timeout });
+  await typePath.evaluate((button) => button.click());
   const pathInput = await waitForUniqueVisible(
-    () => visibleLocators(page.getByRole("textbox", { name: /^(?:项目路径|Project path)$/i })),
+    () => visibleLocators(page.locator(
+      'input[aria-label="项目路径"], input[aria-label="Project path"]',
+    )),
     timeout,
     "AstronStudio 项目路径输入框",
   );
@@ -499,12 +512,16 @@ async function addProjectByManualPath(page, workspace, timeout) {
   return { method: "sidebar-manual-path" };
 }
 
-async function selectWorkspace(page, workspace, timeout) {
-  const trigger = await waitForUniqueVisible(
-    async () => (await visibleWorkspaceTriggers(page)).map(({ locator }) => locator),
-    timeout,
-    "AstronStudio 项目选择按钮",
-  );
+export async function selectWorkspace(page, workspace, timeout) {
+  const triggers = await visibleWorkspaceTriggers(page);
+  if (triggers.length > 1) {
+    throw new Error(`AstronStudio 项目选择按钮数量异常：${triggers.length}`);
+  }
+  if (triggers.length === 0) {
+    const backend = await addProjectByManualPath(page, workspace, timeout);
+    return { backend, page: await waitForWorkspaceSelection(page, workspace, timeout) };
+  }
+  const trigger = triggers[0].locator;
   await trigger.click({ timeout });
   const visibleOptions = await visibleLocators(page.getByRole("option"));
   const existingMatches = [];

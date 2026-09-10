@@ -27,6 +27,7 @@ import {
   terminateAstronProcess,
 } from "../platform.mjs";
 import {
+  addProjectByManualPath,
   connectAstudioBrowser,
   dismissOpenMenus,
   ensureModel,
@@ -36,6 +37,7 @@ import {
   inspectWorkspace,
   isProbeReady,
   restartAstudio,
+  selectWorkspace,
 } from "../driver.mjs";
 
 async function fixture() {
@@ -160,9 +162,11 @@ test("Windows AstronStudio process identity matches the exact executable and ign
         code: 0,
         stderr: "",
         stdout: JSON.stringify([
-          { ProcessId: 101, ExecutablePath: appPath, CommandLine: `"${appPath}" --remote-debugging-port=9240` },
-          { ProcessId: 102, ExecutablePath: appPath, CommandLine: `"${appPath}" --type=renderer` },
-          { ProcessId: 201, ExecutablePath: "D:\\Other\\AStudio.exe", CommandLine: "D:\\Other\\AStudio.exe" },
+          { ProcessId: 101, ParentProcessId: 10, ExecutablePath: appPath, CommandLine: `"${appPath}" --remote-debugging-port=9240` },
+          { ProcessId: 102, ParentProcessId: 101, ExecutablePath: appPath, CommandLine: `"${appPath}" --type=renderer` },
+          { ProcessId: 103, ParentProcessId: 101, ExecutablePath: appPath, CommandLine: `${appPath} --max-old-space-size=4033 server.mjs` },
+          { ProcessId: 104, ParentProcessId: 101, ExecutablePath: appPath, CommandLine: `${appPath} -e "setInterval(() => {}, 250)"` },
+          { ProcessId: 201, ParentProcessId: 10, ExecutablePath: "D:\\Other\\AStudio.exe", CommandLine: "D:\\Other\\AStudio.exe" },
         ]),
       };
     },
@@ -181,8 +185,8 @@ test("Windows AstronStudio process identity fails closed when the main PID is am
         code: 0,
         stderr: "",
         stdout: JSON.stringify([
-          { ProcessId: 101, ExecutablePath: appPath, CommandLine: `"${appPath}"` },
-          { ProcessId: 102, ExecutablePath: appPath, CommandLine: `"${appPath}" --remote-debugging-port=9240` },
+          { ProcessId: 101, ParentProcessId: 10, ExecutablePath: appPath, CommandLine: `"${appPath}"` },
+          { ProcessId: 102, ParentProcessId: 20, ExecutablePath: appPath, CommandLine: `"${appPath}" --remote-debugging-port=9240` },
         ]),
       }),
     }),
@@ -437,6 +441,124 @@ test("workspace readback accepts the project-bound trigger after adding a projec
     path: workspace,
     label: "task-001",
     source_test_id: "project-picker-trigger",
+  });
+});
+
+test("manual project entry uses Windows-compatible ARIA selectors and bypasses covered buttons", async () => {
+  const workspace = "C:\\batch\\execution\\tasks\\task-001\\workspace";
+  const calls = [];
+  const projectTab = {
+    isVisible: async () => true,
+    innerText: async () => "项目",
+    click: async () => calls.push("project-tab-click"),
+  };
+  const addProject = {
+    isVisible: async () => true,
+    isEnabled: async () => true,
+    evaluate: async () => calls.push("add-project-dom-click"),
+  };
+  const typePath = {
+    isVisible: async () => true,
+    innerText: async () => "输入路径",
+    evaluate: async () => calls.push("type-path-dom-click"),
+  };
+  const pathInput = {
+    isVisible: async () => true,
+    fill: async (value) => calls.push(["fill", value]),
+    press: async (key) => calls.push(["press", key]),
+  };
+  const page = {
+    locator: (selector) => {
+      if (selector === "button") {
+        return {
+          filter: ({ hasText }) => locatorFor(
+            hasText.test("项目") ? [projectTab] : hasText.test("输入路径") ? [typePath] : [],
+          ),
+        };
+      }
+      if (selector === 'button[aria-label="添加项目"], button[aria-label="Add project"]') {
+        return locatorFor([addProject]);
+      }
+      if (selector === 'input[aria-label="项目路径"], input[aria-label="Project path"]') {
+        return locatorFor([pathInput]);
+      }
+      throw new Error(`unexpected selector: ${selector}`);
+    },
+  };
+
+  assert.deepEqual(await addProjectByManualPath(page, workspace, 100), {
+    method: "sidebar-manual-path",
+  });
+  assert.deepEqual(calls, [
+    "project-tab-click",
+    "add-project-dom-click",
+    "type-path-dom-click",
+    ["fill", workspace],
+    ["press", "Enter"],
+  ]);
+});
+
+test("workspace selection adds an absolute path when the empty task has no picker trigger", async () => {
+  const workspace = "C:\\batch\\execution\\tasks\\task-001\\workspace";
+  let selected = false;
+  const projectTab = {
+    isVisible: async () => true,
+    innerText: async () => "项目",
+    click: async () => {},
+  };
+  const addProject = {
+    isVisible: async () => true,
+    isEnabled: async () => true,
+    evaluate: async () => {},
+  };
+  const typePath = {
+    isVisible: async () => true,
+    innerText: async () => "输入路径",
+    evaluate: async () => {},
+  };
+  const pathInput = {
+    isVisible: async () => true,
+    fill: async (value) => assert.equal(value, workspace),
+    press: async (key) => {
+      assert.equal(key, "Enter");
+      selected = true;
+    },
+  };
+  const selectedTrigger = {
+    isVisible: async () => true,
+    getAttribute: async (name) => (name === "title" ? workspace : null),
+    innerText: async () => "task-001",
+  };
+  const page = {
+    getByTestId: (testId) => locatorFor(
+      selected && testId === "project-picker-trigger" ? [selectedTrigger] : [],
+    ),
+    locator: (selector) => {
+      if (selector === "button") {
+        return {
+          filter: ({ hasText }) => locatorFor(
+            hasText.test("项目") ? [projectTab] : hasText.test("输入路径") ? [typePath] : [],
+          ),
+        };
+      }
+      if (selector === 'button[aria-label="添加项目"], button[aria-label="Add project"]') {
+        return locatorFor([addProject]);
+      }
+      if (selector === 'input[aria-label="项目路径"], input[aria-label="Project path"]') {
+        return locatorFor([pathInput]);
+      }
+      throw new Error(`unexpected selector: ${selector}`);
+    },
+  };
+
+  assert.deepEqual(await selectWorkspace(page, workspace, 100), {
+    backend: { method: "sidebar-manual-path" },
+    page: {
+      requested_path: workspace,
+      confirmed_path: workspace,
+      confirmed_label: "task-001",
+      method: "workspace-trigger-title-readback",
+    },
   });
 });
 
