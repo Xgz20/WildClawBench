@@ -39,6 +39,28 @@ description: 按用户明确要求动态组合 Web E2E 的准备、桌面 Harnes
 
 平台路由必须显式：macOS 使用各 Driver 的 `.sh` 入口；Windows 上 AstronStudio 使用 `run-astronstudio.cmd` / `run-astronstudio-batch.cmd`，Codex Desktop 项目注册使用 `run-codex-project-registrar.cmd`。Python 状态脚本在 Windows 优先用 `py -3`，否则使用可用的 `python`；不得硬调用 `python3`。当前 Windows 端到端静态支持范围仅为 `AstronStudio -> Codex Desktop 评分 -> 回传/报告`；WorkBuddy、QwenWork 和 DoubaoWork 在 Windows 上必须返回 `NEEDS_ATTENTION`，不能回退调用 macOS Driver。Windows 真机验收完成前，本组合不能标记为生产已验证。
 
+### macOS / Windows 桌面 CDP 自动前置准备
+
+选择 `execute` 或 `score` 时，必须在任何 UI 操作和阶段 `RUNNING` 之前调用本 Skill 的确定性脚本。正常入口不是只读检查：脚本先复用已经返回真实 CDP target、且监听进程身份正确的客户端；缺少有效调试端点时仅自动关闭并重启所选客户端，不要求用户手工关、启。
+
+按所选阶段收窄作用域：只选择 `execute` 时使用 AstronStudio，只选择 `score` 时使用 Codex，同机同时选择二者时使用 `All` / `all`。Windows 使用：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File <run-web-e2e-skill-dir>\scripts\start_windows_desktop_debug.ps1 -Application All
+```
+
+macOS 使用：
+
+```bash
+/bin/bash <run-web-e2e-skill-dir>/scripts/start_macos_desktop_debug.sh --application all
+```
+
+Windows 脚本动态解析当前 Codex MSIX 包的真实 manifest 入口，并从当前用户注册表及 `%LOCALAPPDATA%\Programs` 解析 `AStudio.exe`、`AstronStudio.exe` 或 `Acode.exe`。macOS 脚本默认解析 `/Applications` 和当前用户 `Applications` 下的 `ChatGPT.app` / `Codex.app` 与 `AStudio.app` / `AstronStudio.app`；非标准位置只允许通过对应的显式路径参数传入。
+
+两个脚本均等待 `http://127.0.0.1:9230/json/list` 和所选的 `http://127.0.0.1:9240/json/list` 返回至少一个真实 target，并验证端口监听者属于目标客户端。端口被无关进程占用时不得结束该进程，脚本失败并进入 `NEEDS_ATTENTION`。`-CheckOnly` / `--check-only` 仅用于故障诊断，不是标准 E2E 前置流程。
+
+重启 Codex Desktop 可能中断承载当前控制任务的客户端，因此必须先持久化本 Skill 的运行状态；客户端回来后从原状态恢复，不能重新初始化或创建重复任务。同一次初始前置准备不要再向 AstronStudio Driver 传 `--restart-app`，避免两套入口重复重启。脚本失败、超时或 target 列表为空时不得继续 UI 自动化。
+
 因此，在客户端和 Skill 已准备好的前提下，下面的用户输入足以触发 worker 全流程：
 
 ```text

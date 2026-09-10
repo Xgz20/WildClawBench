@@ -48,26 +48,11 @@
 
 WorkBuddy、AstronStudio 和 QwenWork 均使用默认三路后台执行。首次换机、升级 Harness/Skill 或切换模型后，先使用少量 L1 用例验证本机客户端隔离；未通过时在 Prompt 中明确要求执行并发为 1。
 
-#### 2. 调试模式启动 ChatGPT
+#### 2. 自动准备桌面客户端调试模式
 
-先完全退出 ChatGPT 桌面客户端。macOS 在终端执行：
+`run-web-e2e` 在进入执行或评分阶段前会自动检查 Codex Desktop 和 AstronStudio。有效 CDP 端点会原样复用；缺少调试模式时只关闭并重启需要的客户端，无需人工退出、重新打开。Windows 会动态解析 Codex MSIX 的真实入口和 AstronStudio 当前用户安装路径，macOS 会解析标准系统或用户 Applications 目录。
 
-```bash
-open -na /Applications/ChatGPT.app --args \
-  --remote-debugging-address=127.0.0.1 \
-  --remote-debugging-port=9230
-```
-
-Windows 在 PowerShell 中把路径替换为本机实际的 `ChatGPT.exe` 或 `Codex.exe`：
-
-```powershell
-Start-Process -FilePath "C:\实际安装目录\ChatGPT.exe" -ArgumentList @(
-  "--remote-debugging-address=127.0.0.1",
-  "--remote-debugging-port=9230"
-)
-```
-
-评分编排需要通过 Playwright 操作 ChatGPT 的项目管理界面，因此必须以仅监听本机的 CDP 调试端口启动。启动后再创建新的控制任务，不能让当前控制任务退出或重启承载自己的 ChatGPT 进程。
+默认 Codex Desktop 使用 `127.0.0.1:9230`，AstronStudio 使用 `127.0.0.1:9240`，且都只监听本机。若 Codex Desktop 本身承载当前控制任务，自动重启可能中断当前回合；Skill 会先持久化状态，客户端恢复后必须继续原任务，不要重新初始化。
 
 #### 3. 安装 Skill
 
@@ -409,7 +394,7 @@ Codex Desktop CDP：http://127.0.0.1:9230
 
 - [ ] 已安装本场景所需 Skill。
 - [ ] 被评测 Harness 的模型、推理强度和权限已经设置。
-- [ ] ChatGPT 已用 `127.0.0.1:9230` 调试模式启动。
+- [ ] 允许 `run-web-e2e` 自动检查并按需重启 Codex Desktop/AstronStudio 调试模式。
 - [ ] 题目包和评分包来自同一批次、同一 Harness。
 - [ ] 当前没有需要保留的运行中任务。
 
@@ -433,11 +418,11 @@ Codex Desktop CDP：http://127.0.0.1:9230
 
 ### AstronStudio 预检未就绪
 
-确认客户端已登录并以仅监听本机的 CDP 端口启动，桌面已解锁，且当前没有运行中或等待交互的任务。macOS 默认应用路径为 `/Applications/AStudio.app`；Windows 默认从当前用户安装信息和 `%LOCALAPPDATA%\Programs` 查找 `AStudio.exe`，找不到时在 Prompt 中提供实际主程序路径。停在历史会话时 workspace picker 可以暂时不可见；只要预检整体 `ready=true`，Driver 会新建任务后再选择并回读项目绝对路径。
+确认客户端已登录且桌面已解锁。`run-web-e2e` 会自动检查 `127.0.0.1:9240`，无有效 CDP target 时按需重启 AstronStudio。macOS 默认应用路径为 `/Applications/AStudio.app`；Windows 默认从当前用户安装信息和 `%LOCALAPPDATA%\Programs` 查找 `AStudio.exe`，找不到时在 Prompt 中提供实际主程序路径。停在历史会话时 workspace picker 可以暂时不可见；只要预检整体 `ready=true`，Driver 会新建任务后再选择并回读项目绝对路径。
 
 ### Codex Desktop CDP 连接失败
 
-确认已经完全退出旧 ChatGPT 进程，并按本手册命令重新启动。必须在调试模式启动之后新建控制任务。
+先重新运行 `run-web-e2e` 的桌面 CDP 前置准备；它会复用健康实例，或自动关闭并以调试参数重启 Codex Desktop。若端口被无关进程占用、应用未安装或重启后仍无真实 target，流程会进入 `NEEDS_ATTENTION` 并保留现场。
 
 ### 控制任务中断或 Desktop 重启
 

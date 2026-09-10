@@ -176,7 +176,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.0.1.zip"
             orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.2.0.zip"
             execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.10.0.zip"
-            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.1.0.zip"
+            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.2.0.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
             report_config_path = batch_root / "web-smoke__report-config.yaml"
 
@@ -284,6 +284,8 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIn("run-web-e2e/skill-metadata.json", run_skill_names)
             self.assertIn("run-web-e2e/scripts/check_web_e2e_skills.py", run_skill_names)
             self.assertIn("run-web-e2e/scripts/run_web_e2e.py", run_skill_names)
+            self.assertIn("run-web-e2e/scripts/start_macos_desktop_debug.sh", run_skill_names)
+            self.assertIn("run-web-e2e/scripts/start_windows_desktop_debug.ps1", run_skill_names)
             self.assertIn("run-web-e2e/references/handoff-contract.md", run_skill_names)
             self.assertTrue((command_info.external_attr >> 16) & 0o100)
 
@@ -309,7 +311,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],
-                "packages/run-web-e2e-skill-v1.1.0.zip",
+                "packages/run-web-e2e-skill-v1.2.0.zip",
             )
             self.assertEqual(batch_manifest["skills_manifest"], "packages/skills-manifest.json")
             skills_manifest = json.loads(skills_manifest_path.read_text(encoding="utf-8"))
