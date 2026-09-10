@@ -19,6 +19,7 @@ const ACTIVE_STATUSES = new Set(["STARTING", "RUNNING"]);
 const TERMINAL_STATUSES = new Set(["COMPLETED", "STOPPED", "TIMED_OUT", "FAILED", "LOST"]);
 const DEFAULT_TIMEOUT_MS = 300_000;
 const DEFAULT_MAX_BYTES = 20 * 1024 * 1024;
+export const RECEIVER_STARTUP_TIMEOUT_MS = 15_000;
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -253,7 +254,7 @@ export async function startReceiver(taskRoot, options) {
 
   let startupError = null;
   try {
-    const deadline = Date.now() + 5_000;
+    const deadline = Date.now() + RECEIVER_STARTUP_TIMEOUT_MS;
     while (Date.now() < deadline) {
       if (fs.existsSync(paths.stateFile)) {
         const state = loadJson(paths.stateFile);
@@ -308,7 +309,7 @@ export async function startReceiver(taskRoot, options) {
     throw startupError;
   }
   if (cleanupError) throw new Error(cleanupError);
-  throw new Error(`截图接收器未在 5 秒内就绪${logTail ? `：${logTail}` : ""}`);
+  throw new Error(`截图接收器未在 ${RECEIVER_STARTUP_TIMEOUT_MS / 1_000} 秒内就绪${logTail ? `：${logTail}` : ""}`);
 }
 
 export function receiverStatus(taskRoot) {

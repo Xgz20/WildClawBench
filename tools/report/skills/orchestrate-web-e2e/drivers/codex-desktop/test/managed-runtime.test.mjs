@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { adoptWindowsStartingServiceIdentity } from "../../../../score-web-e2e/scripts/managed_runtime.mjs";
+import { RECEIVER_STARTUP_TIMEOUT_MS } from "../../../../score-web-e2e/scripts/screenshot_receiver.mjs";
+
+test("allows enough time for the Windows screenshot receiver to publish RUNNING state", () => {
+  assert.equal(RECEIVER_STARTUP_TIMEOUT_MS, 15_000);
+});
 
 function startingService() {
   return {

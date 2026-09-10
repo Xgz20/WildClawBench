@@ -6,7 +6,7 @@
   "description": "Playwright project registrar for Codex Desktop Web E2E scoring",
   "scripts": {
     "probe": "node register-projects.mjs --probe",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test"
   },
   "dependencies": {
     "playwright-core": "1.55.0"
