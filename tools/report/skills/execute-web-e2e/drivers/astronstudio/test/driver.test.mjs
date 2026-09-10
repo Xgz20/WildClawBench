@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, mkdir, readFile, realpath, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, realpath, rename, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, posix, win32 } from "node:path";
 import test from "node:test";
 
 import {
   assertStateMatches,
+  atomicWriteJson,
   createInitialState,
   parseArgs,
   queryFinalResponse,
@@ -36,9 +37,33 @@ import {
   hasStableThreadIdentity,
   inspectWorkspace,
   isProbeReady,
+  isReusableEmptyTaskRoute,
   restartAstudio,
   selectWorkspace,
 } from "../driver.mjs";
+
+test("Windows atomic JSON persistence retries transient rename locks", async () => {
+  const root = await mkdtemp(join(tmpdir(), "astronstudio-atomic-write-"));
+  const output = join(root, "queue_state.json");
+  const delays = [];
+  let renameCalls = 0;
+  await atomicWriteJson(output, { phase: "RUNNING" }, {
+    platform: "win32",
+    sleep: async (milliseconds) => { delays.push(milliseconds); },
+    rename: async (...args) => {
+      renameCalls += 1;
+      if (renameCalls < 3) {
+        const error = new Error("transient Windows file lock");
+        error.code = "EPERM";
+        throw error;
+      }
+      return rename(...args);
+    },
+  });
+  assert.equal(renameCalls, 3);
+  assert.deepEqual(delays, [25, 50]);
+  assert.deepEqual(JSON.parse(await readFile(output, "utf8")), { phase: "RUNNING" });
+});
 
 async function fixture() {
   const root = await mkdtemp(join(tmpdir(), "astronstudio-driver-"));
@@ -444,9 +469,32 @@ test("workspace readback accepts the project-bound trigger after adding a projec
   });
 });
 
+test("an unchanged AstronStudio route is reusable only when it is an empty task draft", async () => {
+  const heading = { isVisible: async () => true };
+  const editor = {
+    isVisible: async () => true,
+    innerText: async () => "\n",
+  };
+  const emptyPage = {
+    getByTestId: (testId) => locatorFor(
+      testId === "empty-landing-heading" ? [heading] : testId === "composer-editor" ? [editor] : [],
+    ),
+  };
+  assert.equal(await isReusableEmptyTaskRoute(emptyPage), true);
+
+  editor.innerText = async () => "unsent draft";
+  assert.equal(await isReusableEmptyTaskRoute(emptyPage), false);
+
+  const historyPage = {
+    getByTestId: (testId) => locatorFor(testId === "composer-editor" ? [editor] : []),
+  };
+  assert.equal(await isReusableEmptyTaskRoute(historyPage), false);
+});
+
 test("manual project entry uses Windows-compatible ARIA selectors and bypasses covered buttons", async () => {
   const workspace = "C:\\batch\\execution\\tasks\\task-001\\workspace";
   const calls = [];
+  let pathEntryOpen = false;
   const projectTab = {
     isVisible: async () => true,
     innerText: async () => "项目",
@@ -460,12 +508,21 @@ test("manual project entry uses Windows-compatible ARIA selectors and bypasses c
   const typePath = {
     isVisible: async () => true,
     innerText: async () => "输入路径",
-    evaluate: async () => calls.push("type-path-dom-click"),
+    evaluate: async () => {
+      calls.push("type-path-dom-click");
+      pathEntryOpen = true;
+    },
   };
   const pathInput = {
     isVisible: async () => true,
-    fill: async (value) => calls.push(["fill", value]),
-    press: async (key) => calls.push(["press", key]),
+    fill: async () => assert.fail("project path must not use keyboard-backed fill"),
+    press: async () => assert.fail("project path must not use Enter submission"),
+    evaluate: async (_callback, value) => calls.push(["set-native-value", value]),
+  };
+  const submitProject = {
+    isVisible: async () => true,
+    isEnabled: async () => true,
+    evaluate: async () => calls.push("submit-project-dom-click"),
   };
   const page = {
     locator: (selector) => {
@@ -477,7 +534,7 @@ test("manual project entry uses Windows-compatible ARIA selectors and bypasses c
         };
       }
       if (selector === 'button[aria-label="添加项目"], button[aria-label="Add project"]') {
-        return locatorFor([addProject]);
+        return locatorFor([pathEntryOpen ? submitProject : addProject]);
       }
       if (selector === 'input[aria-label="项目路径"], input[aria-label="Project path"]') {
         return locatorFor([pathInput]);
@@ -493,14 +550,15 @@ test("manual project entry uses Windows-compatible ARIA selectors and bypasses c
     "project-tab-click",
     "add-project-dom-click",
     "type-path-dom-click",
-    ["fill", workspace],
-    ["press", "Enter"],
+    ["set-native-value", workspace],
+    "submit-project-dom-click",
   ]);
 });
 
 test("workspace selection adds an absolute path when the empty task has no picker trigger", async () => {
   const workspace = "C:\\batch\\execution\\tasks\\task-001\\workspace";
   let selected = false;
+  let pathEntryOpen = false;
   const projectTab = {
     isVisible: async () => true,
     innerText: async () => "项目",
@@ -514,15 +572,18 @@ test("workspace selection adds an absolute path when the empty task has no picke
   const typePath = {
     isVisible: async () => true,
     innerText: async () => "输入路径",
-    evaluate: async () => {},
+    evaluate: async () => { pathEntryOpen = true; },
   };
   const pathInput = {
     isVisible: async () => true,
-    fill: async (value) => assert.equal(value, workspace),
-    press: async (key) => {
-      assert.equal(key, "Enter");
-      selected = true;
-    },
+    fill: async () => assert.fail("project path must not use keyboard-backed fill"),
+    press: async () => assert.fail("project path must not use Enter submission"),
+    evaluate: async (_callback, value) => assert.equal(value, workspace),
+  };
+  const submitProject = {
+    isVisible: async () => true,
+    isEnabled: async () => true,
+    evaluate: async () => { selected = true; },
   };
   const selectedTrigger = {
     isVisible: async () => true,
@@ -542,7 +603,7 @@ test("workspace selection adds an absolute path when the empty task has no picke
         };
       }
       if (selector === 'button[aria-label="添加项目"], button[aria-label="Add project"]') {
-        return locatorFor([addProject]);
+        return locatorFor([pathEntryOpen ? submitProject : addProject]);
       }
       if (selector === 'input[aria-label="项目路径"], input[aria-label="Project path"]') {
         return locatorFor([pathInput]);

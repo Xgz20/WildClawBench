@@ -8,6 +8,7 @@ import {
   readlink,
   realpath,
   rename,
+  rm,
   stat,
   writeFile,
 } from "node:fs/promises";
@@ -247,11 +248,36 @@ function compareUnicodeCodePoints(left, right) {
   return leftPoints.length - rightPoints.length;
 }
 
-export async function atomicWriteJson(path, value) {
-  await mkdir(dirname(path), { recursive: true });
+export async function atomicWriteJson(path, value, overrides = {}) {
+  const makeDirectory = overrides.mkdir || mkdir;
+  const writeTemporary = overrides.writeFile || writeFile;
+  const renameTemporary = overrides.rename || rename;
+  const removeTemporary = overrides.rm || rm;
+  const sleep = overrides.sleep || ((milliseconds) => new Promise((resolvePromise) => {
+    setTimeout(resolvePromise, milliseconds);
+  }));
+  const platform = overrides.platform || process.platform;
+  const renameAttempts = overrides.renameAttempts || (platform === "win32" ? 8 : 1);
+
+  await makeDirectory(dirname(path), { recursive: true });
   const temporary = `${path}.tmp-${process.pid}-${randomUUID()}`;
-  await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-  await rename(temporary, path);
+  await writeTemporary(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  try {
+    for (let attempt = 1; attempt <= renameAttempts; attempt += 1) {
+      try {
+        await renameTemporary(temporary, path);
+        return;
+      } catch (error) {
+        const retryable = platform === "win32"
+          && new Set(["EPERM", "EACCES", "EBUSY"]).has(error?.code);
+        if (!retryable || attempt === renameAttempts) throw error;
+        await sleep(Math.min(250, 25 * (2 ** (attempt - 1))));
+      }
+    }
+  } catch (error) {
+    await removeTemporary(temporary, { force: true }).catch(() => {});
+    throw error;
+  }
 }
 
 export async function readJsonIfExists(path) {

@@ -367,6 +367,14 @@ export async function findNewTaskButtons(page) {
   return byTestId.length > 1 ? byTestId : (exactText.length ? exactText : byRole);
 }
 
+export async function isReusableEmptyTaskRoute(page) {
+  const headings = await visibleLocators(page.getByTestId("empty-landing-heading"));
+  if (headings.length !== 1) return false;
+  const editors = await visibleLocators(page.getByTestId("composer-editor"));
+  if (editors.length !== 1) return false;
+  return (await editors[0].innerText()).trim() === "";
+}
+
 async function createFreshTask(page, timeout) {
   const previousThreadId = threadIdFromUrl(page.url());
   const entryDeadline = Date.now() + timeout;
@@ -400,8 +408,15 @@ async function createFreshTask(page, timeout) {
   while (Date.now() < deadline) {
     const threadId = threadIdFromUrl(page.url());
     const editorVisible = (await visibleLocators(page.getByTestId("composer-editor"))).length === 1;
-    if (threadId && threadId !== previousThreadId && editorVisible) {
-      return { thread_id_candidate: threadId, previous_thread_id: previousThreadId };
+    if (threadId && editorVisible) {
+      const reusedEmptyDraft = threadId === previousThreadId && await isReusableEmptyTaskRoute(page);
+      if (threadId !== previousThreadId || reusedEmptyDraft) {
+        return {
+          thread_id_candidate: threadId,
+          previous_thread_id: previousThreadId,
+          reused_empty_draft: reusedEmptyDraft,
+        };
+      }
     }
     await sleep(250);
   }
@@ -507,8 +522,34 @@ export async function addProjectByManualPath(page, workspace, timeout) {
     timeout,
     "AstronStudio 项目路径输入框",
   );
-  await pathInput.fill(workspace, { timeout });
-  await pathInput.press("Enter", { timeout });
+  // AStudio can asynchronously return focus to the composer while this inline
+  // input is mounted. Playwright's keyboard-backed fill/Enter path can then
+  // place the project path in the chat composer instead of registering it.
+  // Update the controlled input through its native setter and submit with the
+  // dedicated button so project registration never depends on keyboard focus.
+  await pathInput.evaluate((input, value) => {
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    if (!setter) throw new Error("HTMLInputElement value setter unavailable");
+    setter.call(input, value);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }, workspace);
+
+  const submitDeadline = Date.now() + timeout;
+  let submitPath = null;
+  while (Date.now() <= submitDeadline) {
+    const buttons = await visibleLocators(page.locator(
+      'button[aria-label="添加项目"], button[aria-label="Add project"]',
+    ));
+    if (buttons.length > 1) throw new Error(`AstronStudio 添加项目提交按钮数量异常：${buttons.length}`);
+    if (buttons.length === 1 && await buttons[0].isEnabled()) {
+      submitPath = buttons[0];
+      break;
+    }
+    await sleep(Math.min(100, Math.max(1, submitDeadline - Date.now())));
+  }
+  if (!submitPath) throw new Error("AstronStudio 添加项目提交按钮未启用");
+  await submitPath.evaluate((button) => button.click());
   return { method: "sidebar-manual-path" };
 }
 
