@@ -349,6 +349,32 @@ export function windowsCommandIncludesPath(commandLine, expectedPath) {
   return Boolean(expected) && normalize(commandLine).includes(expected);
 }
 
+export function adoptWindowsStartingServiceIdentity(service, identity, {
+  processWrapperFile = PROCESS_WRAPPER_FILE,
+} = {}) {
+  const expectedPid = Number(service?.pid);
+  const expectedExecutable = path.basename(String(service?.command?.[0] || ""));
+  const commandLine = String(identity?.command || "");
+  if (service?.status !== "STARTING"
+    || service.process_group_mode !== "windows-process-tree"
+    || !Number.isInteger(expectedPid)
+    || expectedPid <= 0
+    || !service.service_id
+    || !expectedExecutable
+    || Number(identity?.pid) !== expectedPid
+    || Number(identity?.pgid) !== expectedPid
+    || identity?.process_group_mode !== "windows-process-tree"
+    || !identity.started_at_text
+    || !windowsCommandIncludesPath(commandLine, processWrapperFile)
+    || !commandLine.includes(service.service_id)
+    || !commandLine.toLowerCase().includes(expectedExecutable.toLowerCase())) {
+    return false;
+  }
+  service.pgid = identity.pgid;
+  service.process_started_at_text = identity.started_at_text;
+  return true;
+}
+
 export function terminateProcessIdentity(identity, force = false) {
   const invocation = processTerminationInvocation(identity, { force });
   if (invocation.command) {
@@ -401,10 +427,33 @@ export async function startManagedService(taskRoot, command, expectedUrl, { useC
     cleanup: null,
   };
   validateRuntimeState(state, lock);
-  if (state.service?.pid && processIdentity(Number(state.service.pid))) throw new Error(`评分服务仍在运行：PID ${state.service.pid}`);
   const cwd = useCandidate ? paths.root : paths.runtime;
   if (!useCandidate && !fs.existsSync(paths.runtime)) throw new Error("启动可写服务前必须先 prepare 运行时副本");
   const url = validateLoopbackUrl(expectedUrl);
+  const serviceCwd = useCandidate ? "." : "private-scoring/runtime-workspace";
+  const existingIdentity = state.service?.pid ? processIdentity(Number(state.service.pid)) : null;
+  if (existingIdentity) {
+    const sameCommand = JSON.stringify(state.service.command || []) === JSON.stringify(command.map(String));
+    const recoverable = process.platform === "win32"
+      && state.service.cwd === serviceCwd
+      && state.service.expected_url === url
+      && sameCommand
+      && adoptWindowsStartingServiceIdentity(state.service, existingIdentity);
+    if (!recoverable) throw new Error(`评分服务仍在运行：PID ${state.service.pid}`);
+    writeJson(paths.stateFile, state);
+    try {
+      state.service.http_status = await waitForUrl(url);
+      if (!assertManagedIdentity(paths, state.service, existingIdentity)) throw new Error("评分服务在恢复检查期间退出");
+      state.service.status = "RUNNING";
+      state.service.ready_at = new Date().toISOString();
+      state.candidate_checks.push(check);
+      writeJson(paths.stateFile, state);
+      return { paths, state };
+    } catch (error) {
+      await stopManagedService(taskRoot, { expectedFailure: true });
+      throw error;
+    }
+  }
   fs.mkdirSync(paths.logRoot, { recursive: true });
   const stdoutPath = path.join(paths.logRoot, "site.stdout.log");
   const stderrPath = path.join(paths.logRoot, "site.stderr.log");
@@ -445,7 +494,7 @@ export async function startManagedService(taskRoot, command, expectedUrl, { useC
       pid: child.pid,
       pgid: null,
       process_started_at_text: null,
-      cwd: useCandidate ? "." : "private-scoring/runtime-workspace",
+      cwd: serviceCwd,
       command: command.map(String),
       service_id: serviceId,
       process_group_mode: process.platform === "win32" ? "windows-process-tree" : "posix-process-group",
@@ -490,8 +539,8 @@ export async function startManagedService(taskRoot, command, expectedUrl, { useC
   return { paths, state };
 }
 
-function assertManagedIdentity(paths, service) {
-  const identity = processIdentity(Number(service.pid));
+function assertManagedIdentity(paths, service, observedIdentity = null) {
+  const identity = observedIdentity || processIdentity(Number(service.pid));
   if (!identity) return null;
   const expectedCwd = fs.realpathSync(service.cwd === "." ? paths.root : paths.runtime);
   const expectedExecutable = path.basename(String(service.command?.[0] || ""));
@@ -528,7 +577,13 @@ export async function stopManagedService(taskRoot, { expectedFailure = false } =
   const lock = loadCandidateArtifact(paths.lockFile);
   validateRuntimeState(state, lock);
   if (!state.service?.pid) return { paths, state };
-  const identity = assertManagedIdentity(paths, state.service);
+  const observedIdentity = processIdentity(Number(state.service.pid));
+  if (process.platform === "win32"
+    && observedIdentity
+    && adoptWindowsStartingServiceIdentity(state.service, observedIdentity)) {
+    writeJson(paths.stateFile, state);
+  }
+  const identity = assertManagedIdentity(paths, state.service, observedIdentity);
   const stopStartedAt = new Date().toISOString();
   if (identity) {
     terminateProcessIdentity(identity, false);
