@@ -1047,10 +1047,22 @@ async function persistNeedsAttention(config, state, identityInfo, reason, error,
   return state;
 }
 
-async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom, deadlineAt) {
-  const stopButtons = await visibleLocators(page.locator('button[aria-label="停止生成"], button[aria-label="Stop generation"]'));
+export async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom, deadlineAt, overrides = {}) {
+  const dependencies = {
+    visibleLocators,
+    querySessions,
+    inspectDom,
+    snapshotTree,
+    sleep,
+    persistNeedsAttention,
+    takeScreenshot,
+    finalize,
+    now: () => new Date().toISOString(),
+    ...overrides,
+  };
+  const stopButtons = await dependencies.visibleLocators(page.locator('button[aria-label="停止生成"], button[aria-label="Stop generation"]'));
   if (stopButtons.length !== 1) {
-    return persistNeedsAttention(
+    return dependencies.persistNeedsAttention(
       config,
       state,
       identityInfo,
@@ -1060,20 +1072,24 @@ async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom,
       "10-timeout-stop-unavailable.png",
     );
   }
+  const stopRequestedAt = dependencies.now();
   await stopButtons[0].click({ timeout: config.timeoutSeconds * 1000 });
   const stopDeadline = Date.now() + config.timeoutSeconds * 1000;
   let stopped = false;
+  let stopConfirmedAt = null;
   while (Date.now() < stopDeadline) {
-    const session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
-    const dom = await inspectDom(page);
+    const session = chooseAttemptSession(await dependencies.querySessions(config.sessionDb), state, config.workspace);
+    if (session) updateObservedSession(state, session);
+    const dom = await dependencies.inspectDom(page);
     if (session && classifySessionStatus(session.status).kind !== "running" && !dom.running) {
       stopped = true;
+      stopConfirmedAt = dependencies.now();
       break;
     }
-    await sleep(500);
+    await dependencies.sleep(500);
   }
   if (!stopped) {
-    return persistNeedsAttention(
+    return dependencies.persistNeedsAttention(
       config,
       state,
       identityInfo,
@@ -1083,11 +1099,11 @@ async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom,
       "10-timeout-stop-unconfirmed.png",
     );
   }
-  const quietBefore = await snapshotTree(config.candidateWorkspace);
-  await sleep(config.postCancelQuiescenceSeconds * 1000);
-  const quietAfter = await snapshotTree(config.candidateWorkspace);
+  const quietBefore = await dependencies.snapshotTree(config.candidateWorkspace);
+  await dependencies.sleep(config.postCancelQuiescenceSeconds * 1000);
+  const quietAfter = await dependencies.snapshotTree(config.candidateWorkspace);
   if (quietBefore.sha256 !== quietAfter.sha256) {
-    return persistNeedsAttention(
+    return dependencies.persistNeedsAttention(
       config,
       state,
       identityInfo,
@@ -1099,7 +1115,8 @@ async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom,
   }
   state.timeout = {
     deadline_at: new Date(deadlineAt).toISOString(),
-    stop_requested_at: new Date().toISOString(),
+    stop_requested_at: stopRequestedAt,
+    stop_confirmed_at: stopConfirmedAt,
     stop_confirmed: true,
     workspace_quiescent: true,
     cancellation_confirmed: true,
@@ -1111,8 +1128,8 @@ async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom,
     },
     last_dom_running: lastDom.running,
   };
-  await takeScreenshot(page, config, state, "10-timeout.png");
-  return finalize(config, state, identityInfo, "TIMEOUT", {
+  await dependencies.takeScreenshot(page, config, state, "10-timeout.png");
+  return dependencies.finalize(config, state, identityInfo, "TIMEOUT", {
     terminalSource: "astudio-session-db+stop-confirmation+workspace-quiescence",
     error: `超过 ${config.runTimeoutSeconds} 秒，已确认 AstronStudio 停止且 workspace 保持静默`,
     finalText: lastDom.finalText,

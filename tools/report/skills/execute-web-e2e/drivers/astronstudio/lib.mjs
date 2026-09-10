@@ -51,7 +51,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.10.11";
+export const DRIVER_VERSION = "1.10.12";
 export const DEFAULT_APP_PATH = defaultAstronAppPath();
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
