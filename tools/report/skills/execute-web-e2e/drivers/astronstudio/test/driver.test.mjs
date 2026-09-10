@@ -848,3 +848,90 @@ test("restart retries a failed open call and records bounded evidence", async ()
   assert.equal(result.attempts[0].endpoint_ready, false);
   assert.equal(result.attempts[1].endpoint_ready, true);
 });
+
+test("restart force-terminates the same verified retry process after graceful cleanup times out", async () => {
+  const mutations = [];
+  let openCalls = 0;
+  let processChecks = 0;
+  let stoppedChecks = 0;
+  const result = await restartAstudio(
+    { endpoint: "http://127.0.0.1:9240", appPath: "C:\\Program Files\\AStudio\\AStudio.exe", sessionDb: "C:\\AStudio Data\\state.sqlite" },
+    {
+      processIdentity: async () => {
+        processChecks += 1;
+        if (processChecks === 1) return null;
+        return { pid: 321 };
+      },
+      endpointReady: async () => false,
+      querySessions: async () => [],
+      waitForEndpoint: async () => {
+        if (openCalls === 1) throw new Error("debug endpoint timeout");
+      },
+      waitForStopped: async () => {
+        stoppedChecks += 1;
+        if (stoppedChecks === 1) throw new Error("graceful cleanup timeout");
+      },
+      gracefulQuit: async (processInfo) => {
+        mutations.push(["graceful-quit", processInfo.pid]);
+        return { code: 0, stdout: "", stderr: "" };
+      },
+      terminateProcess: async (processInfo) => {
+        mutations.push(["terminate", processInfo.pid]);
+        return { code: 0, stdout: "", stderr: "" };
+      },
+      sleep: async () => {},
+      launchAttempts: 3,
+      retryDelayMilliseconds: 1,
+      launchApp: async () => {
+        openCalls += 1;
+        mutations.push(["launch-app", openCalls]);
+        return { code: 0, stdout: "", stderr: "", pid: 321 };
+      },
+    },
+  );
+  assert.deepEqual(mutations, [
+    ["launch-app", 1],
+    ["graceful-quit", 321],
+    ["terminate", 321],
+    ["launch-app", 2],
+  ]);
+  assert.equal(result.recovered_after_retry, true);
+  assert.deepEqual(result.attempts[0].retry_cleanup, {
+    method: "sigterm-after-quit-timeout",
+    pid: 321,
+    graceful_error: "graceful cleanup timeout",
+  });
+});
+
+test("restart refuses to force-terminate a different process during retry cleanup", async () => {
+  let processChecks = 0;
+  let terminateCalls = 0;
+  await assert.rejects(
+    restartAstudio(
+      { endpoint: "http://127.0.0.1:9240", appPath: "C:\\Program Files\\AStudio\\AStudio.exe", sessionDb: "C:\\AStudio Data\\state.sqlite" },
+      {
+        processIdentity: async () => {
+          processChecks += 1;
+          if (processChecks === 1) return null;
+          if (processChecks === 2) return { pid: 321 };
+          return { pid: 456 };
+        },
+        endpointReady: async () => false,
+        querySessions: async () => [],
+        waitForEndpoint: async () => { throw new Error("debug endpoint timeout"); },
+        waitForStopped: async () => { throw new Error("graceful cleanup timeout"); },
+        gracefulQuit: async () => ({ code: 0, stdout: "", stderr: "" }),
+        terminateProcess: async () => {
+          terminateCalls += 1;
+          return { code: 0, stdout: "", stderr: "" };
+        },
+        sleep: async () => {},
+        launchAttempts: 2,
+        retryDelayMilliseconds: 1,
+        launchApp: async () => ({ code: 0, stdout: "", stderr: "", pid: 321 }),
+      },
+    ),
+    /启动重试清理超时后进程身份已变化，拒绝强制终止：原 PID 321，当前 PID 456/,
+  );
+  assert.equal(terminateCalls, 0);
+});

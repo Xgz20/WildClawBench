@@ -217,10 +217,41 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
       return { status: "READY", recovered_after_retry: attempt > 1, attempts, restart_safety: restartSafety };
     }
     if (attempt < dependencies.launchAttempts) {
-      if (await dependencies.processIdentity() || await dependencies.endpointReady(config.endpoint)) {
-        const retryProcess = await dependencies.processIdentity();
-        if (retryProcess) await dependencies.gracefulQuit(retryProcess);
-        await dependencies.waitForStopped(config);
+      const retryProcess = await dependencies.processIdentity();
+      const retryEndpointReady = await dependencies.endpointReady(config.endpoint);
+      if (retryProcess || retryEndpointReady) {
+        if (!retryProcess) {
+          throw new Error(`AstronStudio 启动重试前调试端口仍可访问，但无法核对对应进程身份：${config.endpoint}`);
+        }
+        if (Number.isInteger(result.pid) && retryProcess.pid !== result.pid) {
+          throw new Error(
+            `AstronStudio 启动重试前进程身份与本次启动不一致，拒绝关闭：启动 PID ${result.pid}，当前 PID ${retryProcess.pid}`,
+          );
+        }
+        await dependencies.gracefulQuit(retryProcess);
+        try {
+          await dependencies.waitForStopped(config, dependencies.gracefulQuitTimeoutSeconds);
+          evidence.retry_cleanup = { method: "application-quit", pid: retryProcess.pid };
+        } catch (gracefulError) {
+          const remainingProcess = await dependencies.processIdentity();
+          if (!remainingProcess || remainingProcess.pid !== retryProcess.pid) {
+            throw new Error(
+              `AstronStudio 启动重试清理超时后进程身份已变化，拒绝强制终止：原 PID ${retryProcess.pid}，当前 PID ${remainingProcess?.pid || "不可用"}`,
+            );
+          }
+          const terminated = await dependencies.terminateProcess(retryProcess);
+          if (terminated.code !== 0) {
+            throw new Error(
+              `AstronStudio 启动重试清理超时，强制终止已核对 PID ${retryProcess.pid} 失败：${terminated.stderr?.trim() || `退出码 ${terminated.code}`}`,
+            );
+          }
+          await dependencies.waitForStopped(config);
+          evidence.retry_cleanup = {
+            method: "sigterm-after-quit-timeout",
+            pid: retryProcess.pid,
+            graceful_error: gracefulError instanceof Error ? gracefulError.message : String(gracefulError),
+          };
+        }
       }
       await dependencies.sleep(dependencies.retryDelayMilliseconds * attempt);
     }
