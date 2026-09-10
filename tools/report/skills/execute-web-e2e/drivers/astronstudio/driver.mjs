@@ -1385,6 +1385,7 @@ async function probe(config) {
     platform: process.platform,
     client_version: await astronAppVersion(config.appPath),
     endpoint_ready: await endpointReady(config.endpoint),
+    state_database_path: config.sessionDb,
     state_database_readable: false,
     session_count: null,
     sqlite: sqlite.available,

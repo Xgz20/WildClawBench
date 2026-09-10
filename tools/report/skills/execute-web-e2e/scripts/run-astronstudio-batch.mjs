@@ -2,7 +2,7 @@
 
 import { access } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const driverDir = resolve(scriptDir, "../drivers/astronstudio");
@@ -12,7 +12,7 @@ async function main(argv) {
     console.error("用法: run-astronstudio-batch.cmd <Harness 根目录> --run-id <ID> --task-id <ID> [--task-id <ID> ...] [选项]");
     return 2;
   }
-  const { main: runBatch } = await import(join(driverDir, "batch.mjs"));
+  const { main: runBatch } = await import(pathToFileURL(join(driverDir, "batch.mjs")).href);
   if (new Set(["--help", "-h"]).has(argv[0])) return runBatch(argv);
   try {
     await access(join(driverDir, "node_modules", "playwright-core"));
@@ -26,3 +26,4 @@ async function main(argv) {
 
 const exitCode = await main(process.argv.slice(2));
 process.exitCode = exitCode;
+setImmediate(() => process.exit(exitCode));

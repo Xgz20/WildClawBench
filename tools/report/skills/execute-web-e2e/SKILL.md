@@ -28,7 +28,7 @@ Windows：
 .agents\skills\execute-web-e2e\scripts\run-astronstudio.cmd --probe
 ```
 
-预检要求本机 `http://127.0.0.1:9240`、可交互且未锁定的桌面和 `%USERPROFILE%\.acode\acode\userdata\state.sqlite`（macOS 同目录位于 `$HOME`）均可用。macOS 默认使用 `/Applications/AStudio.app`；Windows 依次读取 `HKCU\Software\AStudio`、历史品牌注册表和 `%LOCALAPPDATA%\Programs`，也可显式传 `--app-path <AStudio.exe或安装目录>`。SQLite 优先使用 Node.js 自带的 `node:sqlite`；运行时不提供该模块时才回退到系统 `sqlite3` 命令。`--probe` 不会点击“新建任务”；停在历史会话时 workspace picker 不可见只是诊断信息，只要“新建任务”、编辑器、权限和模型控件可用仍可执行。需要由 Driver 启动客户端时，在确认没有活动或待处理任务后显式传 `--restart-app`。
+预检要求本机 `http://127.0.0.1:9240`、可交互且未锁定的桌面和 AstronStudio 状态库均可用。状态库保留 `%USERPROFILE%\.acode\acode\userdata\state.sqlite` 为第一候选；Windows 上该文件不存在时，继续检查基于当前用户 `%LOCALAPPDATA%` 动态解析的 `%LOCALAPPDATA%\Programs\AStudio Data\userdata\state.sqlite`。macOS 默认使用 `/Applications/AStudio.app`；Windows 依次读取 `HKCU\Software\AStudio`、历史品牌注册表和 `%LOCALAPPDATA%\Programs`，也可显式传 `--app-path <AStudio.exe或安装目录>`。SQLite 优先使用 Node.js 自带的 `node:sqlite`；运行时不提供该模块时才回退到系统 `sqlite3` 命令。`--probe` 不会点击“新建任务”；停在历史会话时 workspace picker 不可见只是诊断信息，只要“新建任务”、编辑器、权限和模型控件可用仍可执行。需要由 Driver 启动客户端时，在确认没有活动或待处理任务后显式传 `--restart-app`。
 
 后台并发执行完整 manifest 中的任务：
 

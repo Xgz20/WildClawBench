@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, posix } from "node:path";
+import { join, posix, win32 } from "node:path";
 import test from "node:test";
 
 import {
@@ -20,6 +20,7 @@ import {
   astronGuiSessionStatus,
   astronProcessIdentity,
   defaultAstronAppPath,
+  defaultAstronSessionDb,
   gracefulQuitAstron,
   launchAstron,
   resolveAstronAppPath,
@@ -56,6 +57,21 @@ async function fixture() {
   return { root, harnessRoot, taskId, taskRoot, appPath };
 }
 
+async function initializeSqlite(databasePath, sql) {
+  const sqliteModule = await import("node:sqlite").catch(() => null);
+  if (typeof sqliteModule?.DatabaseSync === "function") {
+    const database = new sqliteModule.DatabaseSync(databasePath);
+    try {
+      database.exec(sql);
+    } finally {
+      database.close();
+    }
+    return;
+  }
+  const sqliteCommand = process.platform === "win32" ? "sqlite3.exe" : "/usr/bin/sqlite3";
+  execFileSync(sqliteCommand, [databasePath, sql]);
+}
+
 function locatorFor(elements) {
   return {
     count: async () => elements.length,
@@ -65,13 +81,48 @@ function locatorFor(elements) {
 
 test("parseArgs uses AstronStudio defaults without changing model or reasoning", () => {
   const parsed = parseArgs(["--probe"]);
-  assert.equal(parsed.appPath, "/Applications/AStudio.app");
+  assert.equal(parsed.appPath, defaultAstronAppPath());
   assert.equal(parsed.endpoint, "http://127.0.0.1:9240");
-  assert.match(parsed.sessionDb, /\.acode\/acode\/userdata\/state\.sqlite$/);
+  assert.equal(parsed.sessionDb, defaultAstronSessionDb());
   assert.equal(parsed.model, "");
   assert.equal(parsed.permissionMode, "current");
   assert.equal(parsed.detachAfterSubmit, false);
   assert.equal(parseArgs(["--probe", "--detach-after-submit"]).detachAfterSubmit, true);
+  assert.equal(
+    parseArgs(["--probe", "--session-db", "C:\\custom\\state.sqlite"]).sessionDb,
+    "C:\\custom\\state.sqlite",
+  );
+});
+
+test("Windows AstronStudio state database keeps the legacy path and falls back to the current-user data directory", () => {
+  const home = "C:\\Users\\dynamic-user";
+  const localAppData = "C:\\Users\\dynamic-user\\AppData\\Local";
+  const legacy = "C:\\Users\\dynamic-user\\.acode\\acode\\userdata\\state.sqlite";
+  const installedData = "C:\\Users\\dynamic-user\\AppData\\Local\\Programs\\AStudio Data\\userdata\\state.sqlite";
+  const shared = {
+    platform: "win32",
+    environment: { LOCALAPPDATA: localAppData },
+  };
+
+  assert.equal(defaultAstronSessionDb(home, win32, {
+    ...shared,
+    existsPath: (candidate) => candidate === legacy,
+  }), legacy);
+
+  const checked = [];
+  assert.equal(defaultAstronSessionDb(home, win32, {
+    ...shared,
+    existsPath: (candidate) => {
+      checked.push(candidate);
+      return candidate === installedData;
+    },
+  }), installedData);
+  assert.deepEqual(checked, [legacy, installedData]);
+
+  assert.equal(defaultAstronSessionDb(home, win32, {
+    ...shared,
+    existsPath: () => false,
+  }), legacy);
 });
 
 test("Windows AstronStudio discovery prefers the registered install location", async () => {
@@ -236,7 +287,7 @@ test("AstronStudio identity and execution record keep the Harness boundary", asy
     "--workspace", item.taskRoot,
     "--app-path", item.appPath,
     "--model", "GLM-5.2",
-  ]));
+  ]), { platform: "darwin" });
   const info = await resolveExecutionIdentity(config);
   assert.equal(info.identity.harness.id, "astronstudio");
   const state = createInitialState(config, info.identity, { sha256: "initial", entries: [] });
@@ -255,7 +306,10 @@ test("AstronStudio identity and execution record keep the Harness boundary", asy
 
 test("AstronStudio state cannot be resumed by another Driver profile", async () => {
   const item = await fixture();
-  const config = await resolveConfig(parseArgs(["--workspace", item.taskRoot, "--app-path", item.appPath]));
+  const config = await resolveConfig(
+    parseArgs(["--workspace", item.taskRoot, "--app-path", item.appPath]),
+    { platform: "darwin" },
+  );
   const info = await resolveExecutionIdentity(config);
   const state = createInitialState(config, info.identity, { sha256: "initial", entries: [] });
   state.driver.id = "workbuddy";
@@ -428,7 +482,7 @@ test("SQLite projection states normalize completion, running and pending interac
       ('m2','t1','turn1','assistant','final response',0,'2026-09-08T01:00:02.000Z','2026-09-08T01:00:02.000Z',2),
       ('m3','t1','turn1','assistant','streaming draft',1,'2026-09-08T01:00:03.000Z','2026-09-08T01:00:03.000Z',3);
   `;
-  execFileSync("/usr/bin/sqlite3", [db, sql]);
+  await initializeSqlite(db, sql);
   const sessions = await querySessions(db);
   const statuses = Object.fromEntries(sessions.map((session) => [session.conversationId, session.status]));
   assert.deepEqual(statuses, { t3: "needs_attention", t2: "running", t1: "completed" });

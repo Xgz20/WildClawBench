@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { access, realpath, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import * as systemPath from "node:path";
@@ -112,8 +113,29 @@ export function defaultAstronAppPath(platform = process.platform) {
   return platform === "win32" ? "" : MACOS_APP_PATH;
 }
 
-export function defaultAstronSessionDb(home = homedir(), pathApi = systemPath) {
-  return pathApi.join(home, ".acode", "acode", "userdata", "state.sqlite");
+export function astronSessionDbCandidates(home = homedir(), pathApi = systemPath, overrides = {}) {
+  const platform = overrides.platform || process.platform;
+  const environment = overrides.environment || process.env;
+  const candidates = [pathApi.join(home, ".acode", "acode", "userdata", "state.sqlite")];
+
+  if (platform === "win32") {
+    const localAppData = environment.LOCALAPPDATA || pathApi.join(home, "AppData", "Local");
+    candidates.push(pathApi.join(
+      localAppData,
+      "Programs",
+      "AStudio Data",
+      "userdata",
+      "state.sqlite",
+    ));
+  }
+
+  return [...new Set(candidates)];
+}
+
+export function defaultAstronSessionDb(home = homedir(), pathApi = systemPath, overrides = {}) {
+  const existsPath = overrides.existsPath || existsSync;
+  const candidates = astronSessionDbCandidates(home, pathApi, overrides);
+  return candidates.find((candidate) => existsPath(candidate)) || candidates[0];
 }
 
 export async function resolveAstronAppPath(requestedPath = "", overrides = {}) {
