@@ -452,19 +452,24 @@ test("covered new-thread nodes are ignored in favor of the pointer-reachable but
 });
 
 test("sidebar toggle discovery survives Electron titlebar hit-test overlays", async () => {
-  const coveredButVisible = {
+  const coveredDuplicate = {
     isVisible: async () => true,
+    getAttribute: async (name) => (name === "aria-label" ? "切换对话侧边栏" : null),
     evaluate: async () => false,
   };
+  const reachableToggle = {
+    isVisible: async () => true,
+    getAttribute: async (name) => (name === "aria-label" ? "切换对话侧边栏" : null),
+    evaluate: async () => true,
+  };
   const page = {
-    getByRole: (role, options) => {
-      assert.equal(role, "button");
-      assert.equal(options.name.test("切换对话侧边栏"), true);
-      return locatorFor([coveredButVisible]);
+    locator: (selector) => {
+      assert.equal(selector, "button[aria-label]");
+      return locatorFor([coveredDuplicate, reachableToggle]);
     },
   };
 
-  assert.deepEqual(await findConversationSidebarToggles(page), [coveredButVisible]);
+  assert.deepEqual(await findConversationSidebarToggles(page), [reachableToggle]);
 });
 
 test("workspace readback accepts the project-bound trigger after adding a project", async () => {

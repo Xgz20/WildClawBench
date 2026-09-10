@@ -368,9 +368,13 @@ export async function findNewTaskButtons(page) {
 }
 
 export async function findConversationSidebarToggles(page) {
-  return visibleLocators(page.getByRole("button", {
-    name: /^(?:切换(?:对话)?侧边栏|Toggle (?:conversation )?sidebar)$/i,
-  }));
+  const candidates = await visibleLocators(page.locator("button[aria-label]"));
+  const matches = [];
+  for (const candidate of candidates) {
+    const label = (await candidate.getAttribute("aria-label") || "").trim();
+    if (/^(?:切换对话侧边栏|Toggle conversation sidebar)$/i.test(label)) matches.push(candidate);
+  }
+  return pointerReachableLocators(matches);
 }
 
 export async function isReusableEmptyTaskRoute(page) {
