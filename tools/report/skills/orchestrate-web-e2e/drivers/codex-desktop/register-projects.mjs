@@ -219,6 +219,7 @@ async function finalizeProjectRegistration(page, project, timeout) {
   await dialog.waitFor({ state: "visible", timeout });
   const sourceBasename = basename(project);
   const selectedSources = dialog.getByRole("button", { name: /^(Remove|移除)\s+/i });
+  await selectedSources.first().waitFor({ state: "visible", timeout }).catch(() => {});
   if (await selectedSources.count() !== 1 || !(await selectedSources.first().getAttribute("aria-label"))?.endsWith(sourceBasename)) {
     throw new Error(`创建项目对话框未回读到目标源文件夹：${sourceBasename}`);
   }

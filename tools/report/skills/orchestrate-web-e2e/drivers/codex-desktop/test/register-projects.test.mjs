@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -8,6 +9,7 @@ import {
   parseArgs,
 } from "../register-projects.mjs";
 import {
+  codexAppVersion,
   folderHelperInvocation,
   resolveCodexAppPath,
 } from "../platform.mjs";
@@ -71,6 +73,30 @@ test("Windows Codex Desktop path is discovered from the process using the reques
     environment: {},
   });
   assert.equal(resolved, appPath);
+});
+
+test("Windows Codex Desktop version lookup preserves paths with spaces", async () => {
+  const appPath = "C:\\Program Files\\WindowsApps\\Codex O'Clock\\ChatGPT.exe";
+  const version = await codexAppVersion(appPath, {
+    platform: "win32",
+    runCommand: async (command, args, options) => {
+      assert.equal(command, "powershell.exe");
+      assert.equal(options.allowFailure, true);
+      const encodedIndex = args.indexOf("-EncodedCommand");
+      assert.notEqual(encodedIndex, -1);
+      const script = Buffer.from(args[encodedIndex + 1], "base64").toString("utf16le");
+      assert.match(script, /C:\\Program Files\\WindowsApps/);
+      assert.match(script, /Codex O''Clock\\ChatGPT\.exe/);
+      assert.ok(!args.includes(appPath));
+      return { code: 0, stdout: "26.903.8094.0", stderr: "" };
+    },
+  });
+  assert.equal(version, "26.903.8094.0");
+});
+
+test("Windows folder helper is ASCII-compatible with Windows PowerShell 5.1", () => {
+  const source = readFileSync(new URL("../select-folder.ps1", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /[^\x00-\x7f]/);
 });
 
 test("Windows project registration uses the UI Automation folder helper", () => {

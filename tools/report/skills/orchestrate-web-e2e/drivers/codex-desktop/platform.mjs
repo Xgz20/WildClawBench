@@ -131,14 +131,21 @@ export async function codexAppVersion(appPath, overrides = {}) {
   const platform = overrides.platform || process.platform;
   const runCommand = overrides.runCommand || runCapture;
   if (platform === "win32") {
+    const escapedAppPath = String(appPath).replaceAll("'", "''");
+    const script = [
+      "$ErrorActionPreference = 'Stop'",
+      `$AppPath = '${escapedAppPath}'`,
+      "$Version = (Get-Item -LiteralPath $AppPath).VersionInfo.ProductVersion",
+      "if ([string]::IsNullOrWhiteSpace($Version)) { exit 1 }",
+      "[Console]::Out.Write($Version)",
+    ].join("; ");
     const result = await runCommand(
       "powershell.exe",
       [
         "-NoProfile",
         "-NonInteractive",
-        "-Command",
-        "& { param([string]$AppPath) (Get-Item -LiteralPath $AppPath).VersionInfo.ProductVersion }",
-        appPath,
+        "-EncodedCommand",
+        Buffer.from(script, "utf16le").toString("base64"),
       ],
       { allowFailure: true },
     );
