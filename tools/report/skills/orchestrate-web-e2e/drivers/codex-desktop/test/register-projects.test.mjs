@@ -5,6 +5,8 @@ import test from "node:test";
 import {
   assertLoopbackEndpoint,
   choosePageInventory,
+  connectCodexOverCDP,
+  isUnsupportedDownloadBehaviorError,
   pageRank,
   parseArgs,
 } from "../register-projects.mjs";
@@ -50,6 +52,33 @@ test("multiple equal app pages require an exact URL", () => {
   ];
   assert.throws(() => choosePageInventory(pages), /多个同等候选/);
   assert.equal(choosePageInventory(pages, "app://-/two").index, 1);
+});
+
+test("Codex CDP retries Playwright with Electron download defaults when browser contexts are active", async () => {
+  const calls = [];
+  const expectedBrowser = { contexts: () => [] };
+  const chromium = {
+    connectOverCDP: async (endpoint) => {
+      calls.push(endpoint);
+      if (calls.length === 1) {
+        throw new Error("Protocol error (Browser.setDownloadBehavior): Browser context management is not supported.");
+      }
+      return expectedBrowser;
+    },
+  };
+  const result = await connectCodexOverCDP(chromium, "http://127.0.0.1:9230");
+  assert.equal(result.browser, expectedBrowser);
+  assert.equal(result.compatibility, "electron-internal-download-default");
+  assert.deepEqual(calls, ["http://127.0.0.1:9230", "http://127.0.0.1:9230"]);
+});
+
+test("Codex CDP compatibility does not hide unrelated connection failures", async () => {
+  const error = new Error("connection refused");
+  assert.equal(isUnsupportedDownloadBehaviorError(error), false);
+  await assert.rejects(
+    connectCodexOverCDP({ connectOverCDP: async () => { throw error; } }, "http://127.0.0.1:9230"),
+    error,
+  );
 });
 
 test("Windows Codex Desktop path is discovered from the process using the requested CDP port", async () => {

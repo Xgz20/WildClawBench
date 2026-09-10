@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { realpathSync } from "node:fs";
 import { mkdir, realpath, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -14,6 +15,47 @@ import {
 const DEFAULT_ENDPOINT = "http://127.0.0.1:9230";
 const DEFAULT_BUNDLE_ID = "com.openai.codex";
 const DRIVER_DIR = dirname(fileURLToPath(import.meta.url));
+let cdpDownloadCompatibilityInstalled = false;
+
+export function isUnsupportedDownloadBehaviorError(error) {
+  const message = String(error?.message || error || "");
+  return message.includes("Browser.setDownloadBehavior")
+    && message.includes("Browser context management is not supported");
+}
+
+function installCdpDownloadCompatibility() {
+  if (cdpDownloadCompatibilityInstalled) return;
+  const require = createRequire(import.meta.url);
+  const playwrightRoot = dirname(require.resolve("playwright-core/package.json"));
+  const { CRBrowser } = require(join(playwrightRoot, "lib", "server", "chromium", "crBrowser.js"));
+  const originalConnect = CRBrowser.connect;
+  CRBrowser.connect = async function connectWithElectronDownloadDefault(parent, transport, options, devtools) {
+    const compatibleOptions = options?.persistent
+      ? {
+        ...options,
+        persistent: {
+          ...options.persistent,
+          acceptDownloads: "internal-browser-default",
+        },
+      }
+      : options;
+    return originalConnect.call(this, parent, transport, compatibleOptions, devtools);
+  };
+  cdpDownloadCompatibilityInstalled = true;
+}
+
+export async function connectCodexOverCDP(chromium, endpoint) {
+  try {
+    return { browser: await chromium.connectOverCDP(endpoint), compatibility: "default" };
+  } catch (error) {
+    if (!isUnsupportedDownloadBehaviorError(error)) throw error;
+    installCdpDownloadCompatibility();
+    return {
+      browser: await chromium.connectOverCDP(endpoint),
+      compatibility: "electron-internal-download-default",
+    };
+  }
+}
 
 export function usage() {
   return `Codex Desktop 项目注册器
@@ -254,7 +296,7 @@ export async function run(args) {
   }
   const appPath = await resolveCodexAppPath(args.appPath, args.endpoint);
   const { chromium } = await import("playwright-core");
-  const browser = await chromium.connectOverCDP(args.endpoint);
+  const { browser, compatibility } = await connectCodexOverCDP(chromium, args.endpoint);
   try {
     const pages = await inspectPages(browser);
     const inventory = pages.map(({ title, url }, index) => ({ index, title, url }));
@@ -268,6 +310,7 @@ export async function run(args) {
       app_path: appPath,
       desktop_version: await codexAppVersion(appPath),
       desktop_page: { title: selected.title, url: selected.url },
+      cdp_connection_compatibility: compatibility,
       probed_at: new Date().toISOString(),
       projects: [],
     };

@@ -1,12 +1,12 @@
 {
   "name": "wildclawbench-orchestrate-web-e2e-codex-desktop",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "type": "module",
   "description": "Playwright project registrar for Codex Desktop Web E2E scoring",
   "scripts": {
     "probe": "node register-projects.mjs --probe",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/register-projects.test.mjs test/scoring-control.test.mjs"
   },
   "dependencies": {
     "playwright-core": "1.55.0"

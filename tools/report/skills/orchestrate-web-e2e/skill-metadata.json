@@ -1,7 +1,7 @@
 {
   "schema_version": "wildclawbench.web-e2e-skill/v1",
   "name": "orchestrate-web-e2e",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "stages": [
     "score"
   ],
