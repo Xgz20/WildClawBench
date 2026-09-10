@@ -175,14 +175,27 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
         );
       }
       const terminated = await dependencies.terminateProcess(currentProcess);
+      let terminationRace = null;
       if (terminated.code !== 0) {
-        throw new Error(`AstronStudio 正常退出超时，向已核对 PID ${currentProcess.pid} 发送 SIGTERM 失败：${terminated.stderr?.trim() || `退出码 ${terminated.code}`}`);
+        const processAfterTerminate = await dependencies.processIdentity();
+        const endpointAfterTerminate = await dependencies.endpointReady(config.endpoint);
+        if (processAfterTerminate || endpointAfterTerminate) {
+          throw new Error(`AstronStudio 正常退出超时，向已核对 PID ${currentProcess.pid} 发送 SIGTERM 失败：${terminated.stderr?.trim() || `退出码 ${terminated.code}`}`);
+        }
+        terminationRace = {
+          exit_code: terminated.code,
+          error: terminated.stderr?.trim() || `退出码 ${terminated.code}`,
+        };
       }
       await dependencies.waitForStopped(config);
       restartSafety.shutdown = {
-        method: "sigterm-after-quit-timeout",
+        method: terminationRace ? "verified-stopped-after-terminate-race" : "sigterm-after-quit-timeout",
         pid: currentProcess.pid,
         graceful_error: gracefulError instanceof Error ? gracefulError.message : String(gracefulError),
+        ...(terminationRace ? {
+          termination_exit_code: terminationRace.exit_code,
+          termination_error: terminationRace.error,
+        } : {}),
       };
     }
   }
@@ -240,16 +253,29 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
             );
           }
           const terminated = await dependencies.terminateProcess(retryProcess);
+          let terminationRace = null;
           if (terminated.code !== 0) {
-            throw new Error(
-              `AstronStudio 启动重试清理超时，强制终止已核对 PID ${retryProcess.pid} 失败：${terminated.stderr?.trim() || `退出码 ${terminated.code}`}`,
-            );
+            const processAfterTerminate = await dependencies.processIdentity();
+            const endpointAfterTerminate = await dependencies.endpointReady(config.endpoint);
+            if (processAfterTerminate || endpointAfterTerminate) {
+              throw new Error(
+                `AstronStudio 启动重试清理超时，强制终止已核对 PID ${retryProcess.pid} 失败：${terminated.stderr?.trim() || `退出码 ${terminated.code}`}`,
+              );
+            }
+            terminationRace = {
+              exit_code: terminated.code,
+              error: terminated.stderr?.trim() || `退出码 ${terminated.code}`,
+            };
           }
           await dependencies.waitForStopped(config);
           evidence.retry_cleanup = {
-            method: "sigterm-after-quit-timeout",
+            method: terminationRace ? "verified-stopped-after-terminate-race" : "sigterm-after-quit-timeout",
             pid: retryProcess.pid,
             graceful_error: gracefulError instanceof Error ? gracefulError.message : String(gracefulError),
+            ...(terminationRace ? {
+              termination_exit_code: terminationRace.exit_code,
+              termination_error: terminationRace.error,
+            } : {}),
           };
         }
       }

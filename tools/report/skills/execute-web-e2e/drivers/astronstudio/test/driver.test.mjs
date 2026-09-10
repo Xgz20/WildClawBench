@@ -904,6 +904,80 @@ test("restart force-terminates the same verified retry process after graceful cl
   });
 });
 
+test("restart accepts a failed Windows tree kill only after the verified process and endpoint are gone", async () => {
+  let openCalls = 0;
+  let processChecks = 0;
+  let stoppedChecks = 0;
+  const result = await restartAstudio(
+    { endpoint: "http://127.0.0.1:9240", appPath: "C:\\Program Files\\AStudio\\AStudio.exe", sessionDb: "C:\\AStudio Data\\state.sqlite" },
+    {
+      processIdentity: async () => {
+        processChecks += 1;
+        if (processChecks === 1 || processChecks >= 4) return null;
+        return { pid: 321 };
+      },
+      endpointReady: async () => false,
+      querySessions: async () => [],
+      waitForEndpoint: async () => {
+        if (openCalls === 1) throw new Error("debug endpoint timeout");
+      },
+      waitForStopped: async () => {
+        stoppedChecks += 1;
+        if (stoppedChecks === 1) throw new Error("graceful cleanup timeout");
+      },
+      gracefulQuit: async () => ({ code: 0, stdout: "", stderr: "" }),
+      terminateProcess: async () => ({
+        code: 128,
+        stdout: "",
+        stderr: "child process disappeared while taskkill was running",
+      }),
+      sleep: async () => {},
+      launchAttempts: 2,
+      retryDelayMilliseconds: 1,
+      launchApp: async () => {
+        openCalls += 1;
+        return { code: 0, stdout: "", stderr: "", pid: 321 };
+      },
+    },
+  );
+  assert.equal(openCalls, 2);
+  assert.equal(result.recovered_after_retry, true);
+  assert.deepEqual(result.attempts[0].retry_cleanup, {
+    method: "verified-stopped-after-terminate-race",
+    pid: 321,
+    graceful_error: "graceful cleanup timeout",
+    termination_exit_code: 128,
+    termination_error: "child process disappeared while taskkill was running",
+  });
+});
+
+test("restart rejects a failed Windows tree kill while the verified process is still present", async () => {
+  let processChecks = 0;
+  await assert.rejects(
+    restartAstudio(
+      { endpoint: "http://127.0.0.1:9240", appPath: "C:\\Program Files\\AStudio\\AStudio.exe", sessionDb: "C:\\AStudio Data\\state.sqlite" },
+      {
+        processIdentity: async () => {
+          processChecks += 1;
+          if (processChecks === 1) return null;
+          return { pid: 321 };
+        },
+        endpointReady: async () => false,
+        querySessions: async () => [],
+        waitForEndpoint: async () => { throw new Error("debug endpoint timeout"); },
+        waitForStopped: async () => { throw new Error("graceful cleanup timeout"); },
+        gracefulQuit: async () => ({ code: 0, stdout: "", stderr: "" }),
+        terminateProcess: async () => ({ code: 128, stdout: "", stderr: "taskkill failed" }),
+        sleep: async () => {},
+        launchAttempts: 2,
+        retryDelayMilliseconds: 1,
+        launchApp: async () => ({ code: 0, stdout: "", stderr: "", pid: 321 }),
+      },
+    ),
+    /强制终止已核对 PID 321 失败：taskkill failed/,
+  );
+});
+
 test("restart refuses to force-terminate a different process during retry cleanup", async () => {
   let processChecks = 0;
   let terminateCalls = 0;
