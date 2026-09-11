@@ -63,7 +63,7 @@ macOS 使用：
 /bin/bash <run-web-e2e-skill-dir>/scripts/start_macos_desktop_debug.sh --application all
 ```
 
-Windows 脚本动态解析当前 Codex MSIX 包的真实 manifest 入口，并从当前用户注册表及 `%LOCALAPPDATA%\Programs` 解析 `AStudio.exe`、`AstronStudio.exe`、`Acode.exe`、`WorkBuddy.exe` 或 `CodeBuddy.exe`。WorkBuddy 重启前还会只读检查 `%USERPROFILE%\.workbuddy\workbuddy.db`，存在活动或待处理 session 时失败关闭。macOS 脚本默认解析 `/Applications` 和当前用户 `Applications` 下的 `ChatGPT.app` / `Codex.app` 与 `AStudio.app` / `AstronStudio.app`；非标准位置只允许通过对应的显式路径参数传入。
+Windows 脚本动态解析当前 Codex MSIX 包的真实 manifest 入口，并从当前用户注册表及 `%LOCALAPPDATA%\Programs` 解析 `AStudio.exe`、`AstronStudio.exe`、`Acode.exe`、`WorkBuddy.exe` 或 `CodeBuddy.exe`。WorkBuddy 重启前还会只读检查 `%USERPROFILE%\.workbuddy\workbuddy.db`，存在活动或待处理 session 时失败关闭；停止旧实例时只处理可执行文件完整路径与动态发现结果一致的进程，同名但位于其他目录的辅助进程或应用必须跳过。macOS 脚本默认解析 `/Applications` 和当前用户 `Applications` 下的 `ChatGPT.app` / `Codex.app` 与 `AStudio.app` / `AstronStudio.app`；非标准位置只允许通过对应的显式路径参数传入。
 
 两个脚本均等待所选的 Codex `9230`、AstronStudio `9240` 或 WorkBuddy `9229` 的 `/json/list` 返回至少一个真实 target，并验证端口监听者属于目标客户端。端口被无关进程占用时不得结束该进程，脚本失败并进入 `NEEDS_ATTENTION`。`-CheckOnly` / `--check-only` 仅用于故障诊断，不是标准 E2E 前置流程。
 

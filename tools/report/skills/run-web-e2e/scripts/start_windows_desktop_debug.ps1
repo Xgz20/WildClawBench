@@ -436,21 +436,20 @@ else {
     }
 
     $workBuddyExecutable = $null
+    $workBuddyProcesses = @()
     if ($includeWorkBuddy -and -not $workBuddyReady) {
         $workBuddyExecutable = Resolve-WorkBuddyExecutable
-        $workBuddyProcesses = @(Get-Process -Name "WorkBuddy", "CodeBuddy" -ErrorAction SilentlyContinue)
+        $expectedWorkBuddyPath = [IO.Path]::GetFullPath($workBuddyExecutable)
+        $workBuddyProcesses = @(
+            Get-Process -Name "WorkBuddy", "CodeBuddy" -ErrorAction SilentlyContinue |
+                Where-Object {
+                    $actualPath = $null
+                    try { $actualPath = $_.Path } catch { }
+                    $actualPath -and ([IO.Path]::GetFullPath($actualPath) -ieq $expectedWorkBuddyPath)
+                }
+        )
         if ($workBuddyProcesses.Count -gt 0) {
             Assert-WorkBuddyRestartSafe
-            foreach ($workBuddyProcess in $workBuddyProcesses) {
-                $actualPath = $workBuddyProcess.Path
-                if (-not $actualPath -or -not [string]::Equals(
-                    [IO.Path]::GetFullPath($actualPath),
-                    [IO.Path]::GetFullPath($workBuddyExecutable),
-                    [StringComparison]::OrdinalIgnoreCase
-                )) {
-                    throw "WorkBuddy process identity does not match the discovered executable; refusing to stop PID $($workBuddyProcess.Id)."
-                }
-            }
         }
     }
 
@@ -464,11 +463,6 @@ else {
         $processNames += "AstronStudio"
         $processNames += "Acode"
     }
-    if ($includeWorkBuddy -and -not $workBuddyReady) {
-        $processNames += "WorkBuddy"
-        $processNames += "CodeBuddy"
-    }
-
     if ($processNames.Count -gt 0) {
         Write-Host "Stopping desktop processes that are missing valid CDP endpoints..."
         $existingProcesses = Get-Process `
@@ -479,6 +473,12 @@ else {
             $existingProcesses | Stop-Process -Force
             $existingProcesses | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue
         }
+    }
+
+    if ($workBuddyProcesses.Count -gt 0) {
+        Write-Host "Stopping WorkBuddy processes whose executable path matches the discovered installation..."
+        $workBuddyProcesses | Stop-Process -Force
+        $workBuddyProcesses | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue
     }
 
     if ($includeCodex -and -not $codexReady) {
