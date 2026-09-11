@@ -29,6 +29,7 @@ import {
   updateExecutionRecord,
 } from "./lib.mjs";
 import {
+  terminateCandidateWorkspaceProcesses,
   gracefulQuitWorkBuddy,
   launchWorkBuddy,
   queryWorkBuddySessionSnapshot,
@@ -894,6 +895,27 @@ async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom,
 
   state.timeout.cancellation_source = cancellationSource;
   state.timeout.cancellation_observed_at = new Date().toISOString();
+  try {
+    state.timeout.process_cleanup = await terminateCandidateWorkspaceProcesses(config.candidateWorkspace);
+  } catch (error) {
+    state.timeout.process_cleanup = {
+      supported: process.platform === "win32",
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+  await saveState(config, state);
+  if (!state.timeout.process_cleanup.success) {
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "timeout-candidate-process-cleanup-failed",
+      `WorkBuddy 已停止，但无法确认候选 workspace 的后台进程全部退出：${state.timeout.process_cleanup.error || "仍检测到残留进程"}`,
+      page,
+      "10-timeout-process-cleanup-failed.png",
+    );
+  }
   const before = await snapshotTree(config.candidateWorkspace);
   await sleep(config.postCancelQuiescenceSeconds * 1000);
   const after = await snapshotTree(config.candidateWorkspace);

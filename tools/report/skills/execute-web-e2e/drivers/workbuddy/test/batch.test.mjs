@@ -283,18 +283,22 @@ test("batch only restarts WorkBuddy on resume when explicitly requested", () => 
   assert.equal(buildDriverArgs(args, task, 0, { phase: "RUNNING" }).includes("--restart-app"), true);
 });
 
-test("timeout can only advance after cancellation and workspace quiescence", () => {
+test("timeout can only advance after cancellation, process cleanup and workspace quiescence", () => {
   assert.equal(canAdvanceTask({ phase: "SUCCEEDED" }), true);
   assert.equal(canAdvanceTask({ phase: "INFRA_FAILED" }, false), false);
   assert.equal(canAdvanceTask({ phase: "INFRA_FAILED" }, true), true);
   assert.equal(canAdvanceTask({ phase: "TIMEOUT", timeout: null }, true), false);
   assert.equal(canAdvanceTask({
     phase: "TIMEOUT",
-    timeout: { cancellation_confirmed: true, quiescence: { stable: false } },
+    timeout: { cancellation_confirmed: true, process_cleanup: { success: true }, quiescence: { stable: false } },
   }, true), false);
   assert.equal(canAdvanceTask({
     phase: "TIMEOUT",
-    timeout: { cancellation_confirmed: true, quiescence: { stable: true } },
+    timeout: { cancellation_confirmed: true, process_cleanup: { success: false }, quiescence: { stable: true } },
+  }, true), false);
+  assert.equal(canAdvanceTask({
+    phase: "TIMEOUT",
+    timeout: { cancellation_confirmed: true, process_cleanup: { success: true }, quiescence: { stable: true } },
   }, true), true);
 });
 

@@ -102,6 +102,160 @@ function parsePowerShellJson(stdout) {
   return Array.isArray(parsed) ? parsed : [parsed];
 }
 
+const WINDOWS_PROCESS_SNAPSHOT_SCRIPT = `
+Get-CimInstance Win32_Process |
+  Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,CommandLine |
+  ConvertTo-Json -Compress
+`;
+
+function windowsCommandReferencesPath(commandLine, candidateWorkspace) {
+  const command = normalizeWindowsPath(commandLine);
+  const workspace = normalizeWindowsPath(candidateWorkspace);
+  if (!command || !workspace) return false;
+  let index = command.indexOf(workspace);
+  while (index >= 0) {
+    const trailing = command[index + workspace.length] || "";
+    if (!trailing || /[\\\s"']/u.test(trailing)) return true;
+    index = command.indexOf(workspace, index + 1);
+  }
+  return false;
+}
+
+export function selectCandidateWorkspaceProcesses(processes, candidateWorkspace, { excludedPids = [] } = {}) {
+  if (!systemPath.win32.isAbsolute(candidateWorkspace)) {
+    throw new Error(`候选 workspace 必须是 Windows 绝对路径：${candidateWorkspace}`);
+  }
+  const excluded = new Set(excludedPids.map(Number));
+  const normalized = (processes || []).map((item) => ({
+    pid: Number(item.ProcessId),
+    parent_pid: Number(item.ParentProcessId) || null,
+    name: String(item.Name || ""),
+    executable_path: item.ExecutablePath ? String(item.ExecutablePath) : null,
+    command_line: item.CommandLine ? String(item.CommandLine) : null,
+  })).filter((item) => Number.isInteger(item.pid) && item.pid > 0 && !excluded.has(item.pid));
+  const byPid = new Map(normalized.map((item) => [item.pid, item]));
+  const seedPids = new Set(normalized
+    .filter((item) => windowsCommandReferencesPath(item.command_line, candidateWorkspace))
+    .map((item) => item.pid));
+  const targetPids = new Set(seedPids);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const item of normalized) {
+      if (!targetPids.has(item.pid) && item.parent_pid && targetPids.has(item.parent_pid)) {
+        targetPids.add(item.pid);
+        changed = true;
+      }
+    }
+  }
+  const rootPids = [...seedPids].filter((pid) => {
+    let parentPid = byPid.get(pid)?.parent_pid;
+    const visited = new Set();
+    while (parentPid && !visited.has(parentPid)) {
+      if (seedPids.has(parentPid)) return false;
+      visited.add(parentPid);
+      parentPid = byPid.get(parentPid)?.parent_pid;
+    }
+    return true;
+  });
+  return {
+    seed_pids: [...seedPids].sort((left, right) => left - right),
+    root_pids: rootPids.sort((left, right) => left - right),
+    targets: normalized
+      .filter((item) => targetPids.has(item.pid))
+      .map((item) => ({
+        pid: item.pid,
+        parent_pid: item.parent_pid,
+        name: item.name,
+        executable_path: item.executable_path,
+        matched_by_workspace: seedPids.has(item.pid),
+      }))
+      .sort((left, right) => left.pid - right.pid),
+  };
+}
+
+export async function candidateWorkspaceProcessSnapshot(candidateWorkspace, overrides = {}) {
+  const platform = overrides.platform || process.platform;
+  if (platform !== "win32") {
+    return { supported: false, seed_pids: [], root_pids: [], targets: [] };
+  }
+  const runCommand = overrides.runCommand || runCapture;
+  const result = await runCommand(
+    "powershell.exe",
+    ["-NoProfile", "-NonInteractive", "-Command", WINDOWS_PROCESS_SNAPSHOT_SCRIPT],
+    { capture: true, allowFailure: true },
+  );
+  if (result.code !== 0) {
+    throw new Error(`无法读取 Windows 候选进程表：${String(result.stderr || `退出码 ${result.code}`).trim()}`);
+  }
+  let processes;
+  try {
+    processes = parsePowerShellJson(result.stdout);
+  } catch (error) {
+    throw new Error(`Windows 候选进程表不是有效 JSON：${error instanceof Error ? error.message : String(error)}`);
+  }
+  return {
+    supported: true,
+    ...selectCandidateWorkspaceProcesses(processes, candidateWorkspace, {
+      excludedPids: overrides.excludedPids || [process.pid],
+    }),
+  };
+}
+
+export async function terminateCandidateWorkspaceProcesses(candidateWorkspace, overrides = {}) {
+  const platform = overrides.platform || process.platform;
+  if (platform !== "win32") {
+    return {
+      supported: false,
+      success: true,
+      before: { seed_pids: [], root_pids: [], targets: [] },
+      termination_attempts: [],
+      after: { seed_pids: [], root_pids: [], targets: [] },
+    };
+  }
+  const runCommand = overrides.runCommand || runCapture;
+  const snapshot = async () => candidateWorkspaceProcessSnapshot(candidateWorkspace, {
+    ...overrides,
+    runCommand,
+  });
+  const before = await snapshot();
+  const terminationAttempts = [];
+  for (const pid of before.root_pids) {
+    const result = await runCommand(
+      "taskkill.exe",
+      ["/PID", String(pid), "/T", "/F"],
+      { allowFailure: true, capture: true },
+    ).catch((error) => ({ code: null, stdout: "", stderr: error instanceof Error ? error.message : String(error) }));
+    terminationAttempts.push({
+      pid,
+      exit_code: result.code,
+      error: result.code === 0 ? null : String(result.stderr || `退出码 ${result.code}`).trim(),
+    });
+  }
+  let after = await snapshot();
+  const wait = overrides.sleep || ((milliseconds) => new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds)));
+  const deadline = Date.now() + (overrides.waitMilliseconds ?? 5000);
+  while (after.targets.length && Date.now() < deadline) {
+    await wait(Math.min(250, Math.max(1, deadline - Date.now())));
+    after = await snapshot();
+  }
+  return {
+    supported: true,
+    success: after.targets.length === 0,
+    before: {
+      seed_pids: before.seed_pids,
+      root_pids: before.root_pids,
+      targets: before.targets,
+    },
+    termination_attempts: terminationAttempts,
+    after: {
+      seed_pids: after.seed_pids,
+      root_pids: after.root_pids,
+      targets: after.targets,
+    },
+  };
+}
+
 function registryInstallCandidates(entries, pathApi) {
   const candidates = [];
   for (const entry of entries) {

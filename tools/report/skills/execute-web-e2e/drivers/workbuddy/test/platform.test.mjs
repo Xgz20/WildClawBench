@@ -5,15 +5,77 @@ import { join, win32 } from "node:path";
 import test from "node:test";
 
 import {
+  candidateWorkspaceProcessSnapshot,
   defaultWorkBuddyAppPath,
   defaultWorkBuddySessionDb,
   launchWorkBuddy,
   queryWorkBuddySessionSnapshot,
   resolveWorkBuddyAppPath,
+  selectCandidateWorkspaceProcesses,
+  terminateCandidateWorkspaceProcesses,
   workBuddyGuiSessionStatus,
   workBuddyProcessIdentity,
   workBuddySqliteBackendStatus,
 } from "../platform.mjs";
+
+test("Windows candidate process selection includes descendants and rejects prefix collisions", () => {
+  const workspace = "D:\\debug-workspace\\web-e2e\\task-1\\workspace";
+  const selected = selectCandidateWorkspaceProcesses([
+    { ProcessId: 100, ParentProcessId: 1, Name: "node.exe", CommandLine: `node ${workspace}\\install-deps.cjs` },
+    { ProcessId: 101, ParentProcessId: 100, Name: "node.exe", CommandLine: "node npm-cli.js install" },
+    { ProcessId: 102, ParentProcessId: 1, Name: "node.exe", CommandLine: `node ${workspace}-other\\script.js` },
+    { ProcessId: 103, ParentProcessId: 1, Name: "node.exe", CommandLine: `node D:/debug-workspace/web-e2e/task-1/workspace/site/build.js` },
+  ], workspace);
+  assert.deepEqual(selected.seed_pids, [100, 103]);
+  assert.deepEqual(selected.root_pids, [100, 103]);
+  assert.deepEqual(selected.targets.map((item) => item.pid), [100, 101, 103]);
+  assert.equal(selected.targets.find((item) => item.pid === 101).matched_by_workspace, false);
+});
+
+test("Windows candidate process snapshot fails closed when process inventory is unavailable", async () => {
+  await assert.rejects(
+    candidateWorkspaceProcessSnapshot("D:\\task\\workspace", {
+      platform: "win32",
+      runCommand: async () => ({ code: 1, stdout: "", stderr: "access denied" }),
+    }),
+    /无法读取 Windows 候选进程表.*access denied/u,
+  );
+});
+
+test("Windows candidate process cleanup terminates only exact workspace roots and verifies zero residue", async () => {
+  const workspace = "D:\\task\\workspace";
+  let inventoryReads = 0;
+  const commands = [];
+  const result = await terminateCandidateWorkspaceProcesses(workspace, {
+    platform: "win32",
+    excludedPids: [],
+    waitMilliseconds: 0,
+    runCommand: async (command, args) => {
+      commands.push([command, args]);
+      if (command === "powershell.exe") {
+        inventoryReads += 1;
+        return {
+          code: 0,
+          stdout: inventoryReads === 1
+            ? JSON.stringify([
+              { ProcessId: 200, ParentProcessId: 1, Name: "node.exe", CommandLine: `node ${workspace}\\install.cjs` },
+              { ProcessId: 201, ParentProcessId: 200, Name: "node.exe", CommandLine: "node npm-cli.js" },
+              { ProcessId: 300, ParentProcessId: 1, Name: "node.exe", CommandLine: "node unrelated.js" },
+            ])
+            : "null",
+          stderr: "",
+        };
+      }
+      assert.equal(command, "taskkill.exe");
+      assert.deepEqual(args, ["/PID", "200", "/T", "/F"]);
+      return { code: 0, stdout: "terminated", stderr: "" };
+    },
+  });
+  assert.equal(result.success, true);
+  assert.deepEqual(result.before.targets.map((item) => item.pid), [200, 201]);
+  assert.deepEqual(result.after.targets, []);
+  assert.equal(commands.filter(([command]) => command === "taskkill.exe").length, 1);
+});
 
 test("Windows defaults keep app discovery dynamic and session data under the current user", () => {
   assert.equal(defaultWorkBuddyAppPath("win32"), "");

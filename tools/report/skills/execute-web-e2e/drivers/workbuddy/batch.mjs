@@ -25,7 +25,7 @@ import {
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
 export const QUEUE_STATE_REVISION = 2;
-export const QUEUE_WORKER_VERSION = "1.8.3";
+export const QUEUE_WORKER_VERSION = "1.8.4";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 
@@ -490,6 +490,7 @@ export function canAdvanceTask(automation, continueOnTerminalFailure = false) {
   if (automation.phase === "INFRA_FAILED") return true;
   if (automation.phase === "TIMEOUT") {
     return automation.timeout?.cancellation_confirmed === true
+      && automation.timeout?.process_cleanup?.success === true
       && automation.timeout?.quiescence?.stable === true;
   }
   return false;

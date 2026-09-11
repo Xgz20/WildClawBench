@@ -41,7 +41,7 @@ Prompt 发送采用失败关闭语义：写入 `READY_TO_SEND` 后到确认 conv
 
 控制 Worker 必须持久化自身和当前 Driver 的精确 PID。优雅中断只终止观察 Driver，不终止 Harness 内正在执行的任务；恢复前若遗留 Driver 仍存活，必须拒绝启动第二个 Driver。客户端重启恢复必须依赖发送后捕获的稳定会话 ID，不能按标题、时间或当前页面猜测。
 
-`TIMEOUT` 只有在 Driver 已请求停止、Harness 明确进入非运行态，并且候选 workspace 在限定观察窗口内保持静默时才是安全终态。任何一项无法确认都进入 `NEEDS_ATTENTION`，控制面不得继续下一题。
+`TIMEOUT` 只有在 Driver 已请求停止、Harness 明确进入非运行态、平台要求的候选后台进程已清理，并且候选 workspace 在限定观察窗口内保持静默时才是安全终态。任何一项无法确认都进入 `NEEDS_ATTENTION`，控制面不得继续下一题。
 
 ## 终态证据优先级
 
