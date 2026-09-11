@@ -902,6 +902,39 @@ test("a completed final score atomically builds submission exactly once", async 
   assert.deepEqual(submission.task_ids, ["task-1"]);
 });
 
+test("submission resumes idempotently after interruption at the publish boundary", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
+  await writeValidScore(root, "task-1");
+
+  await assert.rejects(
+    () => markComplete(root, "task-1", { failAfterPendingWrite: true }),
+    /submission 待发布文件与 GENERATING 状态已持久化/,
+  );
+  const interrupted = await status(root);
+  assert.equal(interrupted.phase, "FINALIZING");
+  assert.equal(interrupted.submission.status, "GENERATING");
+  assert.equal(interrupted.submission.attempt_count, 1);
+  assert.equal(await readFile(join(root, "submission.json")).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error)), null);
+  assert.ok(await readFile(join(root, "score", ".orchestrate-web-e2e", "pending-submission.json")));
+
+  const recovered = await buildSubmissionControl(root);
+  assert.equal(recovered.phase, "COMPLETED");
+  assert.equal(recovered.submission.status, "COMPLETED");
+  assert.equal(recovered.submission.attempt_count, 1);
+  const repeated = await buildSubmissionControl(root);
+  assert.equal(repeated.submission.sha256, recovered.submission.sha256);
+  assert.equal(repeated.submission.attempt_count, 1);
+
+  const stateFile = JSON.parse(await readFile(join(root, "score", ".orchestrate-web-e2e", "scoring-automation-state.json"), "utf8"));
+  assert.equal(stateFile.history.filter((entry) => entry.event === "SUBMISSION_GENERATING").length, 1);
+  assert.equal(stateFile.history.filter((entry) => entry.event === "SUBMISSION_COMPLETED").length, 1);
+});
+
 test("a completed submission is fail-closed after file drift", async () => {
   const root = await fixture();
   const { state } = await initialize(root);

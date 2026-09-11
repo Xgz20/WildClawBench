@@ -38,6 +38,7 @@ const ATTEMPT_ERROR_RECEIPT_SCHEMA = "wildclawbench.web-e2e-scoring-attempt-erro
 const DIRECTORY_TREE_SNAPSHOT_SCHEMA = "wildclawbench.directory-tree-snapshot/v1";
 const DIRECTORY_TREE_HASH_ALGORITHM = "wildclawbench.directory-tree-sha256/v1";
 const SCORING_RUNTIME_SCHEMA = "wildclawbench.web-e2e-scoring-runtime/v1";
+const TEST_SUBMISSION_INTERRUPTION = "WILDCLAWBENCH_TEST_SUBMISSION_INTERRUPTION";
 const SCREENSHOT_RECEIVER_SCHEMA = "wildclawbench.web-e2e-screenshot-receiver/v1";
 const CONTROL_DIR = join("score", ".orchestrate-web-e2e");
 const DEFAULT_SCORE_SLOTS = 3;
@@ -1634,7 +1635,7 @@ export async function validateTaskScore(plan, task) {
   return score;
 }
 
-export async function markComplete(packageRoot, taskId) {
+export async function markComplete(packageRoot, taskId, options = {}) {
   const { plan, state } = await loadControl(packageRoot);
   const task = requireTask(state, taskId);
   if (!task.thread_id) throw new Error("任务没有已记录的评分会话");
@@ -1652,7 +1653,7 @@ export async function markComplete(packageRoot, taskId) {
   if (runtimeWorkspace) throw new Error(`评分运行时副本尚未清理，禁止释放槽位：${task.task_id}`);
   if (task.phase === "COMPLETED") {
     if (state.tasks.every((entry) => entry.phase === "COMPLETED") && state.submission.status !== "COMPLETED") {
-      return buildSubmissionFromState(plan, state);
+      return buildSubmissionFromState(plan, state, options);
     }
     return publicStatus(state);
   }
@@ -1667,7 +1668,7 @@ export async function markComplete(packageRoot, taskId) {
   }
   state.history.push({ event: "TASK_SCORE_VALIDATED", at: now, task_id: taskId, thread_id: task.thread_id });
   await saveControl(plan, state);
-  if (state.tasks.every((entry) => entry.phase === "COMPLETED")) return buildSubmissionFromState(plan, state);
+  if (state.tasks.every((entry) => entry.phase === "COMPLETED")) return buildSubmissionFromState(plan, state, options);
   return publicStatus(state);
 }
 
@@ -1796,6 +1797,11 @@ async function buildSubmissionFromState(plan, state, options = {}) {
       };
       state.history.push({ event: "SUBMISSION_GENERATING", at: now, output_file: outputFile, sha256: state.submission.sha256 });
       await saveControl(plan, state);
+      if (options.failAfterPendingWrite) {
+        const interruption = new Error("故障注入：submission 待发布文件与 GENERATING 状态已持久化");
+        interruption.code = TEST_SUBMISSION_INTERRUPTION;
+        throw interruption;
+      }
       await rename(pendingFile, outputFile);
     }
     const outputRaw = await readFile(outputFile);
@@ -1809,6 +1815,7 @@ async function buildSubmissionFromState(plan, state, options = {}) {
     await saveControl(plan, state);
     return publicStatus(state);
   } catch (error) {
+    if (error?.code === TEST_SUBMISSION_INTERRUPTION) throw error;
     const now = new Date().toISOString();
     state.submission.status = "FAILED";
     state.submission.error = error instanceof Error ? error.message : String(error);
