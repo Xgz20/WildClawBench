@@ -22,6 +22,7 @@ import {
   updateExecutionRecord,
 } from "../lib.mjs";
 import {
+  confirmFullAccessRiskDialog,
   ensureModel,
   hasStableConversationId,
   hasTrustedDomCompletion,
@@ -29,6 +30,23 @@ import {
   restartWorkBuddy,
   waitForUniqueVisible,
 } from "../driver.mjs";
+
+test("full access confirmation clicks the stable label and verifies readback", async () => {
+  let labelClicks = 0;
+  let confirmClicks = 0;
+  const dialog = {
+    locator: (selector) => selector === "label.wb-checkbox"
+      ? { click: async () => { labelClicks += 1; } }
+      : { isChecked: async () => labelClicks === 1 },
+    getByRole: () => ({
+      isEnabled: async () => labelClicks === 1,
+      click: async () => { confirmClicks += 1; },
+    }),
+  };
+  await confirmFullAccessRiskDialog(dialog, 100, { sleep: async () => {} });
+  assert.equal(labelClicks, 1);
+  assert.equal(confirmClicks, 1);
+});
 
 test("fresh attempt persists successful WorkBuddy launch evidence", async () => {
   const launch = {
@@ -400,7 +418,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.0");
+  assert.equal(state.driver.version, "1.8.1");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

@@ -493,6 +493,28 @@ async function inspectPermissionMode(page) {
   };
 }
 
+export async function confirmFullAccessRiskDialog(dialog, timeout, overrides = {}) {
+  const wait = overrides.sleep || sleep;
+  const label = dialog.locator("label.wb-checkbox");
+  const checkbox = dialog.locator('input[type="checkbox"]');
+  const confirmButton = dialog.getByRole("button", { name: /允许完全访问|Allow full access/i });
+  await label.click({ timeout });
+
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const [checked, enabled] = await Promise.all([
+      checkbox.isChecked().catch(() => false),
+      confirmButton.isEnabled().catch(() => false),
+    ]);
+    if (checked && enabled) {
+      await confirmButton.click({ timeout });
+      return;
+    }
+    await wait(100);
+  }
+  throw new Error("WorkBuddy 完全访问风险确认框未回读已勾选状态");
+}
+
 async function ensurePermissionMode(page, requestedMode, timeout) {
   let before = await inspectPermissionMode(page);
   if (!before.available) throw new Error(`WorkBuddy 权限设置不可用：${before.reason}`);
@@ -522,8 +544,7 @@ async function ensurePermissionMode(page, requestedMode, timeout) {
 
   const dialog = page.getByRole("dialog").filter({ hasText: /允许完全访问|Allow full access/i });
   await dialog.waitFor({ state: "visible", timeout });
-  await dialog.locator('input[type="checkbox"]').check({ timeout });
-  await dialog.getByRole("button", { name: /允许完全访问|Allow full access/i }).click({ timeout });
+  await confirmFullAccessRiskDialog(dialog, timeout);
 
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
