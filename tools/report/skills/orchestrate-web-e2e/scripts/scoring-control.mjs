@@ -14,7 +14,7 @@ import {
   unlink,
   writeFile,
 } from "node:fs/promises";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, toNamespacedPath } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
@@ -202,7 +202,7 @@ function validRootName(value) {
 async function snapshotDirectoryTree(root, roots = null) {
   const rootInfo = await lstat(root);
   if (rootInfo.isSymbolicLink() || !rootInfo.isDirectory()) throw new Error(`目录缺失或为符号链接：${root}`);
-  const canonical = await realpath(root);
+  const canonical = await realpath(process.platform === "win32" ? toNamespacedPath(resolve(root)) : root);
   const selectedRoots = roots === null
     ? (await readdir(canonical)).sort(comparePaths)
     : [...roots].sort(comparePaths);

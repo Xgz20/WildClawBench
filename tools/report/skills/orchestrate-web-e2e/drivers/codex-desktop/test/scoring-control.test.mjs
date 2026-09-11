@@ -31,8 +31,9 @@ async function writeJson(filename, value) {
   await writeFile(filename, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
-async function fixture(taskIds = ["task-1"], modelMode = "explicit") {
-  const root = await mkdtemp(join(tmpdir(), "web-e2e-scoring-control-"));
+async function fixture(taskIds = ["task-1"], modelMode = "explicit", parentRoot = tmpdir()) {
+  await mkdir(parentRoot, { recursive: true });
+  const root = await mkdtemp(join(parentRoot, "web-e2e-scoring-control-"));
   const tasks = taskIds.map((taskId) => ({
     task_id: taskId,
     task_name: taskId,
@@ -722,6 +723,37 @@ test("failed attempts archive partial scoring outputs and emit a structured erro
   const second = await recordThread(root, "task-1", { threadId: "thread-2", hostId: "local" });
   assert.equal(second.tasks[0].attempts.length, 2);
   assert.equal(second.tasks[0].attempts[1].attempt_number, 2);
+});
+
+test("failed attempt archives support Windows paths longer than MAX_PATH", async () => {
+  const base = await mkdtemp(join(tmpdir(), "web-e2e-scoring-long-path-"));
+  let parentRoot = base;
+  while (join(parentRoot, "web-e2e-scoring-control-000000").length < 185) {
+    parentRoot = join(parentRoot, "long-path-segment");
+  }
+  const root = await fixture(["task-1"], "explicit", parentRoot);
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-long-path", hostId: "local" });
+  await recordWait(root, "task-1", {
+    waitSequence: 1,
+    waitCursor: "cursor-long-path",
+    waitStatus: "FAILED",
+    waitError: "controlled long path failure",
+  });
+
+  const privateRoot = join(root, "score", "tasks", "task-1", "private-scoring");
+  await writeJson(join(privateRoot, "score_input.json"), { partial: true });
+  await mkdir(join(privateRoot, "evidence"), { recursive: true });
+  await writeFile(join(privateRoot, "evidence", "partial.md"), "partial evidence", "utf8");
+
+  const retry = await prepareRetry(root, "task-1", "retry long path attempt");
+  const receipt = retry.tasks[0].attempts[0].error_receipt;
+  assert.equal(retry.tasks[0].retry_count, 1);
+  assert.match(receipt.sha256, /^[a-f0-9]{64}$/);
+  const archived = JSON.parse(await readFile(join(root, receipt.path), "utf8"));
+  assert.ok(archived.archive.entries.some((entry) => entry.path === "evidence/partial.md"));
 });
 
 test("prepareRetry refuses to archive active scoring runtimes", async () => {
