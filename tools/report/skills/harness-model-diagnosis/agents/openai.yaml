@@ -1,0 +1,4 @@
+interface:
+  display_name: "Harness 与模型诊断"
+  short_description: "基于评测统计、轨迹和可选源码诊断 Harness 与模型问题，输出研发证据报告"
+  default_prompt: "使用 $harness-model-diagnosis 分析指定评测目录中目标 Harness 或模型的问题与优化项，给出可复算数据、run_id 证据和 Markdown 报告。"
