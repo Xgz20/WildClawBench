@@ -48,7 +48,7 @@ Windows 使用相同参数和原生入口：
 .agents\skills\execute-web-e2e\scripts\run-astronstudio-batch.cmd C:\absolute\batch__astronstudio --run-id queue-1 --task-id task-1 --task-id task-2 --run-slots 3 --permission-mode full-access
 ```
 
-Windows 入口、平台探测和状态库读取已有静态实现与模拟测试，但在目标 Windows 机器完成 `--probe`、单题、三题串行和三路并发验收前，不得标记为生产已验证；首次验收显式使用 `--run-slots 1`。
+Windows 入口、平台探测、状态库读取、`--probe`、单题、三题串行和默认三路并发动态补位已在目标 Windows 机器完成真机生产验证。更换桌面客户端大版本或 Driver 核心实现后，回归仍必须先显式使用 `--run-slots 1`，通过只读探针、单题和三题串行后再测试并发。
 
 AstronStudio 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、模型/权限回读、Prompt 发送和 thread 切换仍由同一个 Driver 串行操作。发送后只有在 AstronStudio 路由与本地 SQLite 共同确认稳定 thread、turn 和 cwd 时才释放 Driver；Worker 轮流恢复各 thread 做一次性观察。任一题到达明确终态并通过 automation/execution 一致性检查后释放槽位并动态补入下一题。队列必须覆盖 manifest 的完整 task ID 集合，才可能生成 `integrity.valid=true` 的 `execution-receipt.json`。
 

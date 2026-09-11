@@ -69,7 +69,7 @@ Windows 将上述入口替换为 `run-codex-project-registrar.cmd`；若无法�
 
 默认路径必须通过可见 UI 和原生文件夹选择器完成。若目标 Desktop 版本的文件夹选择器在自动化会话中无法弹出，注册器应失败关闭；只有测试人员明确接受该版本私有接口风险时，才可增加 `--renderer-bridge`。该模式通过 Desktop 预加载 bridge 把已规范化的绝对目录交给内置项目管理器，仍须由 `list_projects` 精确回读，不能作为未记录的静默降级。升级 Desktop 后必须重新验证该模式。
 
-macOS 原生文件夹选择器由随 Driver 分发的 Accessibility helper 处理；Windows 由随 Driver 分发的 PowerShell UI Automation helper 处理，并且只接受与已解析 Desktop 主程序路径完全一致的进程。两者都不属于 Computer Use。Windows 实现完成真机探针和项目注册验收前，只能标记为静态支持，不能标记为生产已验证。注册后再次调用 `list_projects`，必须按规范化绝对路径唯一匹配，不能按重复的目录名猜测。然后记录项目：
+macOS 原生文件夹选择器由随 Driver 分发的 Accessibility helper 处理；Windows 由随 Driver 分发的 PowerShell UI Automation helper 处理，并且只接受与已解析 Desktop 主程序路径完全一致的进程。两者都不属于 Computer Use。Windows 已完成真机探针、文件夹选择、绝对路径唯一回读、并发评分和 submission 恢复验收，属于生产已验证。注册后再次调用 `list_projects`，仍必须按规范化绝对路径唯一匹配，不能按重复的目录名猜测。然后记录项目：
 
 ```bash
 node <skill-dir>/scripts/scoring-control.mjs record-project \

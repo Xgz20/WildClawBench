@@ -7,7 +7,7 @@
 | 术语 | 定义 |
 | --- | --- |
 | 控制 Harness | 用来接收用户 Prompt、调用 Web E2E Skill 并统筹执行、评分、回传和报告的 Harness。推荐使用 Codex Desktop。 |
-| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。macOS 上 WorkBuddy 已完成生产流程闭环；AstronStudio 已完成串行、默认三路并发、动态补位和执行到评分闭环验证；QwenWork 已完成串行、默认三路并发执行和单题执行到评分闭环验证。Windows 当前只提供 AstronStudio 全流程静态适配，仍待真机验收。 |
+| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。macOS 上 WorkBuddy 已完成生产流程闭环；AstronStudio 已完成串行、默认三路并发、动态补位和执行到评分闭环验证；QwenWork 已完成串行、默认三路并发执行和单题执行到评分闭环验证。Windows 上 AstronStudio 已完成全流程真机生产验证。 |
 | 评分 Harness | 为被评测 Harness 的候选网站打分的 Agent。当前使用 Codex Desktop，并依赖其桌面内置 Browser 操作网站和保存证据。 |
 | 管理员 | 选择用例和被评测 Harness、准备评测包、收集各机器回传包并生成报告的人员。 |
 | 执行人员 | 接收管理员分发的题目包和评分包，在本机完成一个 `Harness（模型）` 单元的执行、评分和回传。 |
@@ -106,7 +106,7 @@ AstronStudio 当前验证用法：
 保持并回读 AstronStudio 当前模型，不修改推理强度；权限使用 full-access；使用默认执行并发 3。
 ```
 
-AstronStudio 在 macOS 已验证项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、后台并发、动态补位、产物和执行回执。Windows 已具备应用发现/启动、CDP 控制、SQLite 读取、Codex Desktop 项目注册和评分服务进程树管理的静态实现，但在 Windows 真机完成验证前不属于生产已验证。Windows 首次测试时请在 Prompt 中明确“执行并发设为 1”，通过单题与三题串行后再测试默认并发 3。多个任务并发运行时如果客户端崩溃，当前版本会失败关闭并要求人工处理，不会自动重启客户端。
+AstronStudio 在 macOS 已验证项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、后台并发、动态补位、产物和执行回执。Windows 真机基线（AstronStudio 3.2.1.242、Codex Desktop 152.0.7977.83）已完成只读探针、单题、三题串行、默认三路并发与动态补位、项目精确注册、并发评分、submission、离线回传与报告、单 Prompt 闭环，以及控制任务接管、客户端重启、超时、发送前重试、评分 attempt 隔离和 submission 中断恢复，可标记为生产已验证。如果更换桌面客户端大版本或 Driver 核心实现，应按只读探针、单题、三题串行、五题并发和全闭环的顺序回归。多个 AstronStudio 任务并发运行时如果客户端崩溃，当前版本仍会进入 `NEEDS_ATTENTION` 并要求人工处理，不会自动重启后冒险接管多个会话。
 
 QwenWork 当前验证用法：
 
