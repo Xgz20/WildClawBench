@@ -74,7 +74,7 @@ python3 .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_worksp
 3. 将 `__scoring.zip` 解压到 Harness 根目录，选择合并目录，不能替换整个 `score/`；
 4. 检查每题同时存在 `workspace/`、`private-scoring/` 和 `.web-e2e-scoring-ready`；评分 Skill 从客户端已安装位置加载，不在题目目录内。
 
-推荐直接把 `__scoring.zip` 放在 Harness 根目录同级或根目录内，保持预置的 `score/` 没有真实内容，再双击根目录中的 `准备评分工作空间.command`（macOS）或 `准备评分工作空间.cmd`（Windows）。封装会调用标准库脚本 `tools/prepare_scoring_workspace.py`，要求有效 `execution-receipt.json`，在复制前、复制后和发布前核对最终候选 SHA，严格按 manifest 中的题目目录创建临时副本，生成 `private-scoring/candidate_artifact.json`，同时锁定执行回执文件 SHA、运行时目录策略和实际回读模型，排除 `.execute-web-e2e` 等执行控制目录，并在新回执声明兼容策略时从评分副本过滤 `.cache`、`.vite` 和 `node_modules`，但不修改 execution 原件。随后安全解压评分包并在全部校验通过后填充 `score/`；空目录以及 `.DS_Store`、`Thumbs.db` 等系统元数据会被安全清理，真实文件、评分结果和符号链接仍会触发拒绝覆盖。本机没有 Python 时再回退到上述人工 ZIP 流程，但人工流程也必须生成并核对同等冻结记录后才能自动编排。
+推荐直接把 `__scoring.zip` 放在 Harness 根目录同级或根目录内，保持预置的 `score/` 没有真实内容，再双击根目录中的 `准备评分工作空间.command`（macOS）或 `准备评分工作空间.cmd`（Windows）。封装会调用标准库脚本 `tools/prepare_scoring_workspace.py`，要求有效 `execution-receipt.json`，并要求每题同时为 `automation_phase=SUCCEEDED`、`execution_status=completed`；安全超时或明确失败的终态回执即使完整也禁止进入评分。在复制前、复制后和发布前核对最终候选 SHA，严格按 manifest 中的题目目录创建临时副本，生成 `private-scoring/candidate_artifact.json`，同时锁定执行回执文件 SHA、运行时目录策略和实际回读模型，排除 `.execute-web-e2e` 等执行控制目录，并在新回执声明兼容策略时从评分副本过滤 `.cache`、`.vite` 和 `node_modules`，但不修改 execution 原件。随后安全解压评分包并在全部校验通过后填充 `score/`；空目录以及 `.DS_Store`、`Thumbs.db` 等系统元数据会被安全清理，真实文件、评分结果和符号链接仍会触发拒绝覆盖。本机没有 Python 时再回退到上述人工 ZIP 流程，但人工流程也必须生成并核对同等冻结记录后才能自动编排。
 
 ## 隔离与路径
 

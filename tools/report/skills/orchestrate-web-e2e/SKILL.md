@@ -9,7 +9,7 @@ description: 编排桌面 Harness Web E2E 的执行结果交接、Codex Desktop 
 
 ## 1. 生成独立评分工作空间
 
-输入必须是执行完成后的 Harness 根目录。`execution-receipt.json` 必须存在、`integrity.valid=true`，且每题 execution workspace 的当前 SHA 必须仍等于回执 `final_sha256`。评分不能直接在 `execution/tasks/<task_id>` 中进行，也不能只复制若干网页文件。
+输入必须是整批执行成功后的 Harness 根目录。`execution-receipt.json` 必须存在、`integrity.valid=true`，每题必须同时为 `automation_phase=SUCCEEDED`、`execution_status=completed`，且 execution workspace 的当前 SHA 必须仍等于回执 `final_sha256`。安全超时或明确失败的完整终态回执只能用于审计与恢复，禁止进入评分。评分不能直接在 `execution/tasks/<task_id>` 中进行，也不能只复制若干网页文件。
 
 使用执行包自带的标准库脚本，严格按 `manifest.tasks` 把每个 `execution/tasks/<task_id>/` 复制为独立的 `score/tasks/<task_id>/`，再合并管理员提供的 scoring ZIP；不得复制 `.execute-web-e2e` 等执行控制目录。若新执行回执声明 `wildclawbench.web-e2e-runtime-directory-policy/v1`，复制时过滤 `.cache`、`.vite` 和 `node_modules`，但不修改 execution 原件；未声明策略的旧回执仍严格拒绝这些目录：
 

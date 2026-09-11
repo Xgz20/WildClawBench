@@ -171,6 +171,13 @@ def load_execution_receipt(package_root: Path, manifest: dict) -> tuple[dict, di
     if len(by_id) != len(tasks) or set(by_id) != set(manifest_ids):
         raise ValueError("execution-receipt.json 任务范围与 manifest 不一致")
     for task_id, task in by_id.items():
+        automation_phase = str(task.get("automation_phase") or "")
+        execution_status = str(task.get("execution_status") or "")
+        if automation_phase != "SUCCEEDED" or execution_status != "completed":
+            raise ValueError(
+                f"execution-receipt.json 任务未成功完成，禁止进入评分: {task_id}: "
+                f"automation_phase={automation_phase!r}, execution_status={execution_status!r}"
+            )
         frozen = str((task.get("workspace") or {}).get("final_sha256") or "")
         if len(frozen) != 64:
             raise ValueError(f"execution-receipt.json 缺少最终 workspace SHA-256: {task_id}")

@@ -45,6 +45,8 @@ def materialize_execution_receipt(package_root: Path, *, model_mode: str = "expl
         tasks.append({
             "task_id": entry["task_id"],
             "attempt_id": f"attempt-{entry['task_id']}",
+            "automation_phase": "SUCCEEDED",
+            "execution_status": "completed",
             "model_selection": {
                 "mode": model_mode,
                 "requested_model": "gpt-5.5" if model_mode == "explicit" else None,
@@ -174,9 +176,9 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
             score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.0.zip"
             report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.0.1.zip"
-            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.2.0.zip"
-            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.10.4.zip"
-            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.2.0.zip"
+            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.2.3.zip"
+            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.10.19.zip"
+            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.2.3.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
             report_config_path = batch_root / "web-smoke__report-config.yaml"
 
@@ -303,15 +305,15 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             batch_manifest = json.loads((batch_root / "batch_manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(
                 batch_manifest["orchestrate_skill_archive"],
-                "packages/orchestrate-web-e2e-skill-v0.2.0.zip",
+                "packages/orchestrate-web-e2e-skill-v0.2.3.zip",
             )
             self.assertEqual(
                 batch_manifest["execute_skill_archive"],
-                "packages/execute-web-e2e-skill-v1.10.4.zip",
+                "packages/execute-web-e2e-skill-v1.10.19.zip",
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],
-                "packages/run-web-e2e-skill-v1.2.0.zip",
+                "packages/run-web-e2e-skill-v1.2.3.zip",
             )
             self.assertEqual(batch_manifest["skills_manifest"], "packages/skills-manifest.json")
             skills_manifest = json.loads(skills_manifest_path.read_text(encoding="utf-8"))
@@ -718,6 +720,26 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             (runtime_modules / "index.js").write_text("runtime", encoding="utf-8")
 
             with self.assertRaisesRegex(ValueError, "未声明为可忽略"):
+                fallback_module.prepare_scoring_workspace(package_root, scoring_package)
+            self.assertFalse(any((package_root / "score").iterdir()))
+
+    def test_python_fallback_rejects_timeout_execution_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            batch_root = prepare_module.prepare(args_for(tmp, self.ARTIFACTSBENCH_TASK_ID))
+            execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
+            scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
+            extracted = Path(tmp) / "tester-timeout"
+            with zipfile.ZipFile(execution_package) as archive:
+                archive.extractall(extracted)
+            package_root = extracted / "web-smoke__codex"
+            materialize_execution_receipt(package_root)
+            receipt_path = package_root / "execution-receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["tasks"][0]["automation_phase"] = "TIMEOUT"
+            receipt["tasks"][0]["execution_status"] = "timeout"
+            receipt_path.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "任务未成功完成"):
                 fallback_module.prepare_scoring_workspace(package_root, scoring_package)
             self.assertFalse(any((package_root / "score").iterdir()))
 

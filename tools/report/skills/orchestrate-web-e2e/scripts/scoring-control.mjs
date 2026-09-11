@@ -518,6 +518,11 @@ async function loadExecutionReceipt(plan) {
   if (byId.size !== receiptTasks.length || JSON.stringify([...byId.keys()].sort()) !== JSON.stringify([...manifestIds].sort())) {
     throw new Error("execution-receipt.json 任务范围与 manifest 不一致");
   }
+  for (const [taskId, task] of byId) {
+    if (task.automation_phase !== "SUCCEEDED" || task.execution_status !== "completed") {
+      throw new Error(`execution-receipt.json 任务未成功完成，禁止进入评分：${taskId}：automation_phase=${task.automation_phase || "<empty>"}, execution_status=${task.execution_status || "<empty>"}`);
+    }
+  }
   return { receipt, byId, receiptSha256: sha256(receiptRaw) };
 }
 

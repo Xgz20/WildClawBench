@@ -89,6 +89,8 @@ async function fixture(taskIds = ["task-1"], modelMode = "explicit", parentRoot 
     receiptTasks.push({
       task_id: entry.task_id,
       attempt_id: `attempt-${entry.task_id}`,
+      automation_phase: "SUCCEEDED",
+      execution_status: "completed",
       model_selection: modelSelection,
       workspace: { final_sha256: frozen },
     });
@@ -532,6 +534,15 @@ test("invalid execution receipt blocks scoring initialization", async () => {
   receipt.integrity.valid = false;
   await writeJson(join(root, "execution-receipt.json"), receipt);
   await assert.rejects(() => initialize(root), /integrity.valid/);
+});
+
+test("timeout execution receipt blocks scoring initialization", async () => {
+  const root = await fixture();
+  const receipt = JSON.parse(await readFile(join(root, "execution-receipt.json"), "utf8"));
+  receipt.tasks[0].automation_phase = "TIMEOUT";
+  receipt.tasks[0].execution_status = "timeout";
+  await writeJson(join(root, "execution-receipt.json"), receipt);
+  await assert.rejects(() => initialize(root), /任务未成功完成/u);
 });
 
 test("policy-declared execution runtime directories do not block scoring initialization", async () => {
