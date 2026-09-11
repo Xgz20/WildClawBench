@@ -261,6 +261,10 @@ test("only transient observation interruptions resume without manual approval", 
   }), true);
   assert.equal(canAutomaticallyResumeAttention({
     phase: "NEEDS_ATTENTION",
+    history: [{ phase: "NEEDS_ATTENTION", reason: "unknown-session-status" }],
+  }), true);
+  assert.equal(canAutomaticallyResumeAttention({
+    phase: "NEEDS_ATTENTION",
     history: [{ phase: "NEEDS_ATTENTION", reason: "visible-approval" }],
   }), false);
 });

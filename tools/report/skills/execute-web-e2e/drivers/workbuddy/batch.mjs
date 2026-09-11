@@ -25,7 +25,7 @@ import {
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
 export const QUEUE_STATE_REVISION = 2;
-export const QUEUE_WORKER_VERSION = "1.8.2";
+export const QUEUE_WORKER_VERSION = "1.8.3";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 
@@ -793,6 +793,7 @@ export function canAutomaticallyResumeAttention(automation) {
     "post-send-observation-failed",
     "post-send-driver-error",
     "resume-observation-failed",
+    "unknown-session-status",
   ]).has(reason);
 }
 
