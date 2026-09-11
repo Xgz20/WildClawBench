@@ -334,6 +334,7 @@ test("execution_record binds the actual WorkBuddy model read from the UI", async
 test("session classification fails closed for unknown values", () => {
   assert.equal(classifySessionStatus("Completed").kind, "success");
   assert.equal(classifySessionStatus("InProgress").kind, "running");
+  assert.equal(classifySessionStatus("working").kind, "running");
   assert.equal(classifySessionStatus("Failed").kind, "failure");
   assert.equal(classifySessionStatus("MysteryState").kind, "unknown");
 });
@@ -418,7 +419,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.1");
+  assert.equal(state.driver.version, "1.8.2");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

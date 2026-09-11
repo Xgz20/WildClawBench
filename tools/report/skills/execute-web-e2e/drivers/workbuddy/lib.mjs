@@ -23,7 +23,7 @@ import {
 
 export const AUTOMATION_SCHEMA = "wildclawbench.web-e2e-automation-state/v1";
 export const EXECUTION_SCHEMA = "wildclawbench.web-e2e-execution/v1";
-export const DRIVER_VERSION = "1.8.1";
+export const DRIVER_VERSION = "1.8.2";
 export const DEFAULT_APP_PATH = defaultWorkBuddyAppPath();
 export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9229";
@@ -376,7 +376,7 @@ export function classifySessionStatus(rawStatus) {
   if (new Set(["failed", "failure", "error", "errored", "cancelled", "canceled", "aborted", "terminated", "interrupted", "stopped"]).has(normalized)) {
     return { kind: "failure", status };
   }
-  if (new Set(["running", "inprogress", "pending", "active", "streaming", "processing", "executing", "started", "created", "initializing", "queued"]).has(normalized)) {
+  if (new Set(["running", "working", "inprogress", "pending", "active", "streaming", "processing", "executing", "started", "created", "initializing", "queued"]).has(normalized)) {
     return { kind: "running", status };
   }
   return { kind: status ? "unknown" : "missing", status };
