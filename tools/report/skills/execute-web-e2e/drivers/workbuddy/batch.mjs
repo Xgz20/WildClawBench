@@ -24,8 +24,8 @@ import {
 } from "./lib.mjs";
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
-export const QUEUE_STATE_REVISION = 2;
-export const QUEUE_WORKER_VERSION = "1.8.4";
+export const QUEUE_STATE_REVISION = 3;
+export const QUEUE_WORKER_VERSION = "1.8.5";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 
@@ -485,12 +485,13 @@ export function recordTaskOrchestrationFailure(state, queueTask, task, index, er
 }
 
 export function canAdvanceTask(automation, continueOnTerminalFailure = false) {
-  if (automation.phase === "SUCCEEDED") return true;
+  if (automation.phase === "SUCCEEDED") return automation.terminal_process_cleanup?.success === true;
   if (!continueOnTerminalFailure) return false;
-  if (automation.phase === "INFRA_FAILED") return true;
+  if (automation.phase === "INFRA_FAILED") return automation.terminal_process_cleanup?.success === true;
   if (automation.phase === "TIMEOUT") {
     return automation.timeout?.cancellation_confirmed === true
       && automation.timeout?.process_cleanup?.success === true
+      && automation.terminal_process_cleanup?.success === true
       && automation.timeout?.quiescence?.stable === true;
   }
   return false;
@@ -618,6 +619,7 @@ export async function buildExecutionReceipt(plan, state) {
   let identitiesMatch = true;
   let modelsMatch = true;
   let allTerminal = true;
+  let processCleanupConfirmed = true;
   let workspacesMatchFinal = true;
   let noForbiddenDirectories = true;
   for (const task of plan.tasks) {
@@ -648,6 +650,7 @@ export async function buildExecutionReceipt(plan, state) {
     if (automation && new Set(["SUCCEEDED", "TIMEOUT"]).has(automation.phase)
       && actualUiModel && !new Set([executionModelId, executionModelDisplayName]).has(actualUiModel)) modelsMatch = false;
     if (!automation || !TERMINAL_TASK_PHASES.has(automation.phase)) allTerminal = false;
+    if (!automation || automation.terminal_process_cleanup?.success !== true) processCleanupConfirmed = false;
     let receiptSnapshot = null;
     try {
       receiptSnapshot = await snapshotTree(join(task.taskRoot, "workspace"));
@@ -692,6 +695,7 @@ export async function buildExecutionReceipt(plan, state) {
         forbidden_directories: receiptSnapshot?.forbidden_directories || [],
       } : null,
       timeout: automation?.timeout || null,
+      process_cleanup: automation?.terminal_process_cleanup || null,
       manual_interventions: queueTask?.manual_interventions || [],
       evidence: {
         automation_state: receiptRelativePath(plan, task.automationStateFile),
@@ -739,6 +743,7 @@ export async function buildExecutionReceipt(plan, state) {
       identities_match: identitiesMatch,
       models_match: modelsMatch,
       all_tasks_terminal: allTerminal,
+      process_cleanup_confirmed: processCleanupConfirmed,
       workspaces_match_final: workspacesMatchFinal,
       no_forbidden_directories: noForbiddenDirectories,
       valid: sameScope
@@ -746,6 +751,7 @@ export async function buildExecutionReceipt(plan, state) {
         && identitiesMatch
         && modelsMatch
         && allTerminal
+        && processCleanupConfirmed
         && workspacesMatchFinal
         && noForbiddenDirectories,
     },

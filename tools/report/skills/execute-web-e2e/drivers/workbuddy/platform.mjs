@@ -109,8 +109,8 @@ Get-CimInstance Win32_Process |
 `;
 
 function windowsCommandReferencesPath(commandLine, candidateWorkspace) {
-  const command = normalizeWindowsPath(commandLine);
-  const workspace = normalizeWindowsPath(candidateWorkspace);
+  const command = normalizeWindowsPath(commandLine).replace(/\\+/gu, "\\");
+  const workspace = normalizeWindowsPath(candidateWorkspace).replace(/\\+/gu, "\\");
   if (!command || !workspace) return false;
   let index = command.indexOf(workspace);
   while (index >= 0) {
@@ -121,7 +121,11 @@ function windowsCommandReferencesPath(commandLine, candidateWorkspace) {
   return false;
 }
 
-export function selectCandidateWorkspaceProcesses(processes, candidateWorkspace, { excludedPids = [] } = {}) {
+export function selectCandidateWorkspaceProcesses(processes, candidateWorkspace, {
+  excludedPids = [],
+  taskRoot = null,
+  includeSessionHost = false,
+} = {}) {
   if (!systemPath.win32.isAbsolute(candidateWorkspace)) {
     throw new Error(`候选 workspace 必须是 Windows 绝对路径：${candidateWorkspace}`);
   }
@@ -134,9 +138,24 @@ export function selectCandidateWorkspaceProcesses(processes, candidateWorkspace,
     command_line: item.CommandLine ? String(item.CommandLine) : null,
   })).filter((item) => Number.isInteger(item.pid) && item.pid > 0 && !excluded.has(item.pid));
   const byPid = new Map(normalized.map((item) => [item.pid, item]));
-  const seedPids = new Set(normalized
+  if (includeSessionHost && (!taskRoot || !systemPath.win32.isAbsolute(taskRoot))) {
+    throw new Error(`清理 WorkBuddy 会话宿主需要 Windows 绝对 task 根：${taskRoot || "<empty>"}`);
+  }
+  const workspaceSeedPids = new Set(normalized
     .filter((item) => windowsCommandReferencesPath(item.command_line, candidateWorkspace))
     .map((item) => item.pid));
+  const sessionHosts = includeSessionHost ? normalized.filter((item) => {
+    const commandLine = String(item.command_line || "");
+    return WINDOWS_EXECUTABLE_NAMES.some((name) => name.toLowerCase() === item.name.toLowerCase())
+      && /(?:^|\s)--serve(?:\s|$)/iu.test(commandLine)
+      && /(?:^|\s)--session-id(?:\s|=|$)/iu.test(commandLine)
+      && windowsCommandReferencesPath(commandLine, taskRoot);
+  }) : [];
+  if (sessionHosts.length > 1) {
+    throw new Error(`检测到 ${sessionHosts.length} 个与 ${taskRoot} 匹配的 WorkBuddy 会话宿主，拒绝清理不唯一进程`);
+  }
+  const sessionHostPids = new Set(sessionHosts.map((item) => item.pid));
+  const seedPids = new Set([...workspaceSeedPids, ...sessionHostPids]);
   const targetPids = new Set(seedPids);
   let changed = true;
   while (changed) {
@@ -160,6 +179,8 @@ export function selectCandidateWorkspaceProcesses(processes, candidateWorkspace,
   });
   return {
     seed_pids: [...seedPids].sort((left, right) => left - right),
+    workspace_seed_pids: [...workspaceSeedPids].sort((left, right) => left - right),
+    session_host_pids: [...sessionHostPids].sort((left, right) => left - right),
     root_pids: rootPids.sort((left, right) => left - right),
     targets: normalized
       .filter((item) => targetPids.has(item.pid))
@@ -168,7 +189,8 @@ export function selectCandidateWorkspaceProcesses(processes, candidateWorkspace,
         parent_pid: item.parent_pid,
         name: item.name,
         executable_path: item.executable_path,
-        matched_by_workspace: seedPids.has(item.pid),
+        matched_by_workspace: workspaceSeedPids.has(item.pid),
+        matched_by_session_host: sessionHostPids.has(item.pid),
       }))
       .sort((left, right) => left.pid - right.pid),
   };
@@ -198,6 +220,8 @@ export async function candidateWorkspaceProcessSnapshot(candidateWorkspace, over
     supported: true,
     ...selectCandidateWorkspaceProcesses(processes, candidateWorkspace, {
       excludedPids: overrides.excludedPids || [process.pid],
+      taskRoot: overrides.taskRoot || null,
+      includeSessionHost: overrides.includeSessionHost === true,
     }),
   };
 }
@@ -208,9 +232,9 @@ export async function terminateCandidateWorkspaceProcesses(candidateWorkspace, o
     return {
       supported: false,
       success: true,
-      before: { seed_pids: [], root_pids: [], targets: [] },
+      before: { seed_pids: [], workspace_seed_pids: [], session_host_pids: [], root_pids: [], targets: [] },
       termination_attempts: [],
-      after: { seed_pids: [], root_pids: [], targets: [] },
+      after: { seed_pids: [], workspace_seed_pids: [], session_host_pids: [], root_pids: [], targets: [] },
     };
   }
   const runCommand = overrides.runCommand || runCapture;
@@ -244,12 +268,16 @@ export async function terminateCandidateWorkspaceProcesses(candidateWorkspace, o
     success: after.targets.length === 0,
     before: {
       seed_pids: before.seed_pids,
+      workspace_seed_pids: before.workspace_seed_pids,
+      session_host_pids: before.session_host_pids,
       root_pids: before.root_pids,
       targets: before.targets,
     },
     termination_attempts: terminationAttempts,
     after: {
       seed_pids: after.seed_pids,
+      workspace_seed_pids: after.workspace_seed_pids,
+      session_host_pids: after.session_host_pids,
       root_pids: after.root_pids,
       targets: after.targets,
     },

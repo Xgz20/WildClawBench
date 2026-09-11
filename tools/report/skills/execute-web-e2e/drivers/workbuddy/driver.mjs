@@ -896,7 +896,10 @@ async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom,
   state.timeout.cancellation_source = cancellationSource;
   state.timeout.cancellation_observed_at = new Date().toISOString();
   try {
-    state.timeout.process_cleanup = await terminateCandidateWorkspaceProcesses(config.candidateWorkspace);
+    state.timeout.process_cleanup = await terminateCandidateWorkspaceProcesses(config.candidateWorkspace, {
+      taskRoot: config.workspace,
+      includeSessionHost: true,
+    });
   } catch (error) {
     state.timeout.process_cleanup = {
       supported: process.platform === "win32",
@@ -1003,6 +1006,30 @@ async function takeScreenshot(page, config, state, name) {
 }
 
 async function finalize(config, state, identityInfo, phase, { error = null, terminalSource = null, finalText = "" } = {}) {
+  try {
+    state.terminal_process_cleanup = await terminateCandidateWorkspaceProcesses(config.candidateWorkspace, {
+      taskRoot: config.workspace,
+      includeSessionHost: true,
+    });
+  } catch (cleanupError) {
+    state.terminal_process_cleanup = {
+      supported: process.platform === "win32",
+      success: false,
+      error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+    };
+  }
+  if (!state.terminal_process_cleanup.success) {
+    transitionState(state, "NEEDS_ATTENTION", { reason: "terminal-task-process-cleanup-failed" });
+    state.error = `WorkBuddy 已出现终态，但无法确认任务会话进程全部退出：${state.terminal_process_cleanup.error || "仍检测到残留进程"}`;
+    state.runtime ||= {};
+    state.runtime.heartbeat_at = new Date().toISOString();
+    await saveState(config, state);
+    await updateExecutionRecord(config, identityInfo, {
+      clientVersion: state.client.version,
+      execution: { status: "pending", error: state.error },
+    });
+    return state;
+  }
   transitionState(state, phase, terminalSource ? { terminal_source: terminalSource } : {});
   const finishedAt = new Date().toISOString();
   state.timing.finished_at = finishedAt;

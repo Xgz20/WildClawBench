@@ -27,9 +27,43 @@ test("Windows candidate process selection includes descendants and rejects prefi
     { ProcessId: 103, ParentProcessId: 1, Name: "node.exe", CommandLine: `node D:/debug-workspace/web-e2e/task-1/workspace/site/build.js` },
   ], workspace);
   assert.deepEqual(selected.seed_pids, [100, 103]);
+  assert.deepEqual(selected.workspace_seed_pids, [100, 103]);
+  assert.deepEqual(selected.session_host_pids, []);
   assert.deepEqual(selected.root_pids, [100, 103]);
   assert.deepEqual(selected.targets.map((item) => item.pid), [100, 101, 103]);
   assert.equal(selected.targets.find((item) => item.pid === 101).matched_by_workspace, false);
+});
+
+test("Windows candidate process selection includes the unique WorkBuddy task session host", () => {
+  const taskRoot = "D:\\debug-workspace\\web-e2e\\batch\\execution\\tasks\\task-a";
+  const workspace = `${taskRoot}\\workspace`;
+  const escapedTaskRoot = taskRoot.replaceAll("\\", "\\\\");
+  const selected = selectCandidateWorkspaceProcesses([
+    { ProcessId: 10, ParentProcessId: 1, Name: "WorkBuddy.exe", CommandLine: 'WorkBuddy.exe --remote-debugging-port=9229' },
+    { ProcessId: 400, ParentProcessId: 10, Name: "WorkBuddy.exe", CommandLine: `WorkBuddy.exe --serve --session-id=session-a --config-json "{\\"trustedDirectories\\":[\\"${escapedTaskRoot}\\"]}"` },
+    { ProcessId: 401, ParentProcessId: 400, Name: "node.exe", CommandLine: "node extension-host.js" },
+    { ProcessId: 500, ParentProcessId: 10, Name: "WorkBuddy.exe", CommandLine: `WorkBuddy.exe --serve --session-id session-b --config-json ${escapedTaskRoot}-other` },
+  ], workspace, { taskRoot, includeSessionHost: true });
+  assert.deepEqual(selected.workspace_seed_pids, []);
+  assert.deepEqual(selected.session_host_pids, [400]);
+  assert.deepEqual(selected.root_pids, [400]);
+  assert.deepEqual(selected.targets.map((item) => item.pid), [400, 401]);
+  assert.equal(selected.targets[0].matched_by_session_host, true);
+  assert.equal(selected.targets[1].matched_by_session_host, false);
+});
+
+test("Windows candidate process selection fails closed for duplicate WorkBuddy task session hosts", () => {
+  const taskRoot = "D:\\batch\\execution\\tasks\\task-a";
+  const processes = [600, 601].map((pid) => ({
+    ProcessId: pid,
+    ParentProcessId: 1,
+    Name: "WorkBuddy.exe",
+    CommandLine: `WorkBuddy.exe --serve --session-id session-${pid} --workspace "${taskRoot}"`,
+  }));
+  assert.throws(
+    () => selectCandidateWorkspaceProcesses(processes, `${taskRoot}\\workspace`, { taskRoot, includeSessionHost: true }),
+    /检测到 2 个.*会话宿主/u,
+  );
 });
 
 test("Windows candidate process snapshot fails closed when process inventory is unavailable", async () => {

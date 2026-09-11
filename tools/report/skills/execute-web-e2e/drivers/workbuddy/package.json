@@ -1,6 +1,6 @@
 {
   "name": "wildclawbench-execute-web-e2e-workbuddy",
-  "version": "1.8.4",
+  "version": "1.8.5",
   "private": true,
   "type": "module",
   "description": "Recoverable WorkBuddy desktop driver for WildClawBench Web E2E execution",

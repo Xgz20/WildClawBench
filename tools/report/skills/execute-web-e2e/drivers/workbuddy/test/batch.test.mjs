@@ -283,23 +283,32 @@ test("batch only restarts WorkBuddy on resume when explicitly requested", () => 
   assert.equal(buildDriverArgs(args, task, 0, { phase: "RUNNING" }).includes("--restart-app"), true);
 });
 
-test("timeout can only advance after cancellation, process cleanup and workspace quiescence", () => {
-  assert.equal(canAdvanceTask({ phase: "SUCCEEDED" }), true);
+test("terminal task can only advance after task process cleanup", () => {
+  assert.equal(canAdvanceTask({ phase: "SUCCEEDED" }), false);
+  assert.equal(canAdvanceTask({ phase: "SUCCEEDED", terminal_process_cleanup: { success: true } }), true);
   assert.equal(canAdvanceTask({ phase: "INFRA_FAILED" }, false), false);
-  assert.equal(canAdvanceTask({ phase: "INFRA_FAILED" }, true), true);
+  assert.equal(canAdvanceTask({ phase: "INFRA_FAILED", terminal_process_cleanup: { success: true } }, true), true);
   assert.equal(canAdvanceTask({ phase: "TIMEOUT", timeout: null }, true), false);
   assert.equal(canAdvanceTask({
     phase: "TIMEOUT",
+    terminal_process_cleanup: { success: true },
     timeout: { cancellation_confirmed: true, process_cleanup: { success: true }, quiescence: { stable: false } },
   }, true), false);
   assert.equal(canAdvanceTask({
     phase: "TIMEOUT",
+    terminal_process_cleanup: { success: true },
     timeout: { cancellation_confirmed: true, process_cleanup: { success: false }, quiescence: { stable: true } },
   }, true), false);
   assert.equal(canAdvanceTask({
     phase: "TIMEOUT",
+    terminal_process_cleanup: { success: true },
     timeout: { cancellation_confirmed: true, process_cleanup: { success: true }, quiescence: { stable: true } },
   }, true), true);
+  assert.equal(canAdvanceTask({
+    phase: "TIMEOUT",
+    terminal_process_cleanup: { success: false },
+    timeout: { cancellation_confirmed: true, process_cleanup: { success: true }, quiescence: { stable: true } },
+  }, true), false);
 });
 
 test("worker interruption keeps the current task recoverable and records the exact driver", async () => {
@@ -367,6 +376,7 @@ test("execution receipt validates full manifest scope and task identities", asyn
       identity: { batch_id: "batch-001", task_id: task.taskId, harness_id: "workbuddy" },
       attempt_id: `attempt-${task.taskId}`,
       phase: "SUCCEEDED",
+      terminal_process_cleanup: { supported: true, success: true, before: {}, after: {} },
       driver: { id: "workbuddy", version: "1.6.1" },
       client: { version: "5.5.3" },
       requested_ui_model: null,
@@ -390,6 +400,7 @@ test("execution receipt validates full manifest scope and task identities", asyn
   }
   const receipt = await buildExecutionReceipt(plan, state);
   assert.equal(receipt.integrity.valid, true);
+  assert.equal(receipt.integrity.process_cleanup_confirmed, true);
   assert.equal(receipt.integrity.models_match, true);
   assert.equal(receipt.integrity.workspaces_match_final, true);
   assert.equal(receipt.scope.matches_manifest, true);
@@ -399,6 +410,7 @@ test("execution receipt validates full manifest scope and task identities", asyn
   assert.equal(receipt.tasks[0].model_selection.actual_model, "xopglm52");
   assert.deepEqual(receipt.model, { id: "xopglm52", display_name: "xopglm52" });
   assert.equal(receipt.tasks[0].permission_mode, "default-sandbox");
+  assert.equal(receipt.tasks[0].process_cleanup.success, true);
   assert.ok(receipt.tasks[0].evidence.automation_state.startsWith("execution/tasks/.execute-web-e2e/"));
   assert.equal(receipt.tasks[0].workspace.receipt_check_matches_final, true);
 });
@@ -418,6 +430,7 @@ test("execution receipt fails closed when a terminal workspace drifts", async ()
       identity: { batch_id: "batch-001", task_id: task.taskId, harness_id: "workbuddy" },
       attempt_id: `attempt-${task.taskId}`,
       phase: "SUCCEEDED",
+      terminal_process_cleanup: { supported: true, success: true, before: {}, after: {} },
       driver: { id: "workbuddy", version: "1.6.1" },
       client: { version: "5.5.3" },
       requested_ui_model: null,
@@ -453,6 +466,7 @@ test("execution receipt records policy-declared runtime directories without inva
       identity: { batch_id: "batch-001", task_id: task.taskId, harness_id: "workbuddy" },
       attempt_id: `attempt-${task.taskId}`,
       phase: "SUCCEEDED",
+      terminal_process_cleanup: { supported: true, success: true, before: {}, after: {} },
       requested_ui_model: null,
       model_selection: { mode: "current", requested_model: null, actual_model: "xopglm52" },
       artifacts: { initial: final, final },
@@ -487,6 +501,7 @@ test("execution receipt still rejects forbidden candidate directories", async ()
       identity: { batch_id: "batch-001", task_id: task.taskId, harness_id: "workbuddy" },
       attempt_id: `attempt-${task.taskId}`,
       phase: "SUCCEEDED",
+      terminal_process_cleanup: { supported: true, success: true, before: {}, after: {} },
       requested_ui_model: null,
       model_selection: { mode: "current", requested_model: null, actual_model: "xopglm52" },
       artifacts: { initial: final, final },
