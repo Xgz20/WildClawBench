@@ -184,6 +184,8 @@ Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作�
 
 客户端崩溃后恢复时使用 `--resume --restart-app-on-resume`。一次恢复只重启 WorkBuddy 一次，随后串行定位所有活动 conversation。只有发送后已经捕获稳定 conversation ID 时才允许重启并从侧栏恢复原会话；缺少 ID 或无法唯一定位时停在 `NEEDS_ATTENTION`，不创建新任务。
 
+Windows 重启恢复还会等待原 conversation 对应的唯一 WorkBuddy 会话宿主重新出现。若客户端只恢复出数据库中的陈旧 `working` 状态，但 60 秒内没有恢复会话宿主，则按 `workbuddy-client-restart-unrecovered` 记录结构化 `INFRA_FAILED`；不能继续等待到普通执行超时，更不能把陈旧状态伪装成恢复成功。若数据库明确把原会话标记为 `interrupted`，同样保留为结构化执行失败且不重发 Prompt。
+
 人工处理 `NEEDS_ATTENTION` 后可在恢复参数中增加 `--mark-manual <task_id>`。该参数只在队列和 Harness 回执中记录人工介入原因，随后仍由 Driver 检查原会话终态；它不能把未知状态直接改成成功，也不能绕过 Prompt 幂等和终态证据门禁。
 
 达到执行时限后 Driver 必须点击当前会话的停止按钮，确认 WorkBuddy 已进入非运行态，并验证候选 workspace 在静默观察窗口内不再变化。Windows 还必须按候选 workspace 完整绝对路径发现后台种子进程，只终止这些种子及其后代并回读零残留；进程清理摘要写入 `timeout.process_cleanup`，不能用进程名做宽泛清理。只有停止确认、进程清理和 workspace 静默三项证据齐全时才记录 `TIMEOUT`；否则记录 `NEEDS_ATTENTION`。即使指定 `--continue-on-terminal-failure`，任一条件未确认的超时任务也不能进入下一题。

@@ -28,6 +28,7 @@ import {
   hasTrustedDomCompletion,
   prepareClientForNewAttempt,
   restartWorkBuddy,
+  waitForRestartedAttemptRecovery,
   waitForUniqueVisible,
 } from "../driver.mjs";
 
@@ -419,11 +420,99 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.6");
+  assert.equal(state.driver.version, "1.8.7");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);
   assert.doesNotThrow(() => assertStateMatches(state, config, info.identity));
   state.prompt_sha256 = "0".repeat(64);
   assert.throws(() => assertStateMatches(state, config, info.identity), /prompt_sha256/);
+});
+
+test("client restart recovery waits for the exact Windows session host", async () => {
+  let clock = 0;
+  let processChecks = 0;
+  const result = await waitForRestartedAttemptRecovery(
+    {
+      sessionDb: "C:\\fixture\\workbuddy.db",
+      workspace: "C:\\fixture\\task-a",
+      candidateWorkspace: "C:\\fixture\\task-a\\workspace",
+    },
+    {
+      session: { conversation_id: "conversation-a" },
+    },
+    {
+      graceMilliseconds: 5_000,
+      now: () => clock,
+      sleep: async (milliseconds) => { clock += milliseconds; },
+      querySessions: async () => [{
+        conversationId: "conversation-a",
+        cwd: "C:\\fixture\\task-a",
+        status: "working",
+        updatedAt: 10,
+      }],
+      processSnapshot: async () => {
+        processChecks += 1;
+        return {
+          supported: true,
+          session_host_pids: processChecks === 1 ? [] : [321],
+        };
+      },
+    },
+  );
+  assert.equal(result.outcome, "session-host-restored");
+  assert.deepEqual(result.session_host_pids, [321]);
+  assert.equal(processChecks, 2);
+});
+
+test("client restart recovery fails closed on stale active state without a session host", async () => {
+  const result = await waitForRestartedAttemptRecovery(
+    {
+      sessionDb: "C:\\fixture\\workbuddy.db",
+      workspace: "C:\\fixture\\task-a",
+      candidateWorkspace: "C:\\fixture\\task-a\\workspace",
+    },
+    {
+      session: { conversation_id: "conversation-a" },
+    },
+    {
+      graceMilliseconds: 0,
+      now: () => 100,
+      querySessions: async () => [{
+        conversationId: "conversation-a",
+        cwd: "C:\\fixture\\task-a",
+        status: "working",
+        updatedAt: 10,
+      }],
+      processSnapshot: async () => ({ supported: true, session_host_pids: [] }),
+    },
+  );
+  assert.equal(result.outcome, "stale-active-without-session-host");
+  assert.deepEqual(result.session_host_pids, []);
+});
+
+test("client restart recovery preserves an explicit interrupted terminal state", async () => {
+  let processChecks = 0;
+  const result = await waitForRestartedAttemptRecovery(
+    {
+      sessionDb: "C:\\fixture\\workbuddy.db",
+      workspace: "C:\\fixture\\task-a",
+      candidateWorkspace: "C:\\fixture\\task-a\\workspace",
+    },
+    {
+      session: { conversation_id: "conversation-a" },
+    },
+    {
+      querySessions: async () => [{
+        conversationId: "conversation-a",
+        cwd: "C:\\fixture\\task-a",
+        status: "interrupted",
+        updatedAt: 20,
+      }],
+      processSnapshot: async () => { processChecks += 1; },
+    },
+  );
+  assert.equal(result.outcome, "session-status-changed");
+  assert.equal(result.session_status_kind, "failure");
+  assert.equal(processChecks, 0);
 });

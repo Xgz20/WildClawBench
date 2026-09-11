@@ -29,6 +29,7 @@ import {
   updateExecutionRecord,
 } from "./lib.mjs";
 import {
+  candidateWorkspaceProcessSnapshot,
   terminateCandidateWorkspaceProcesses,
   gracefulQuitWorkBuddy,
   launchWorkBuddy,
@@ -43,6 +44,7 @@ import {
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const NATIVE_FOLDER_HELPER = join(SCRIPT_DIR, "select-folder.swift");
+const RESTART_RECOVERY_GRACE_MILLISECONDS = 60_000;
 
 function usage() {
   return `WorkBuddy Web E2E 单题执行 Driver
@@ -128,6 +130,82 @@ async function requireUnlockedGui() {
 
 export async function querySessions(sessionDb, overrides = {}) {
   return queryWorkBuddySessions(sessionDb, overrides);
+}
+
+export async function waitForRestartedAttemptRecovery(config, state, overrides = {}) {
+  const queryAttemptSessions = overrides.querySessions || querySessions;
+  const processSnapshot = overrides.processSnapshot || candidateWorkspaceProcessSnapshot;
+  const wait = overrides.sleep || sleep;
+  const now = overrides.now || Date.now;
+  const graceMilliseconds = overrides.graceMilliseconds ?? RESTART_RECOVERY_GRACE_MILLISECONDS;
+  const startedAtMilliseconds = now();
+  const deadline = startedAtMilliseconds + graceMilliseconds;
+  let session = null;
+
+  for (;;) {
+    session = chooseAttemptSession(
+      await queryAttemptSessions(config.sessionDb),
+      state,
+      config.workspace,
+    );
+    if (!session) {
+      return {
+        outcome: "session-missing",
+        grace_milliseconds: graceMilliseconds,
+        observed_milliseconds: now() - startedAtMilliseconds,
+        session: null,
+        session_host_pids: [],
+      };
+    }
+
+    const classification = classifySessionStatus(session.status);
+    if (classification.kind !== "running") {
+      return {
+        outcome: "session-status-changed",
+        grace_milliseconds: graceMilliseconds,
+        observed_milliseconds: now() - startedAtMilliseconds,
+        session,
+        session_status_kind: classification.kind,
+        session_host_pids: [],
+      };
+    }
+
+    const snapshot = await processSnapshot(config.candidateWorkspace, {
+      taskRoot: config.workspace,
+      includeSessionHost: true,
+    });
+    if (!snapshot.supported) {
+      return {
+        outcome: "process-check-unsupported",
+        grace_milliseconds: graceMilliseconds,
+        observed_milliseconds: now() - startedAtMilliseconds,
+        session,
+        session_status_kind: classification.kind,
+        session_host_pids: [],
+      };
+    }
+    if (snapshot.session_host_pids.length === 1) {
+      return {
+        outcome: "session-host-restored",
+        grace_milliseconds: graceMilliseconds,
+        observed_milliseconds: now() - startedAtMilliseconds,
+        session,
+        session_status_kind: classification.kind,
+        session_host_pids: snapshot.session_host_pids,
+      };
+    }
+    if (now() >= deadline) {
+      return {
+        outcome: "stale-active-without-session-host",
+        grace_milliseconds: graceMilliseconds,
+        observed_milliseconds: now() - startedAtMilliseconds,
+        session,
+        session_status_kind: classification.kind,
+        session_host_pids: [],
+      };
+    }
+    await wait(Math.min(1000, Math.max(1, deadline - now())));
+  }
 }
 
 async function waitForEndpoint(endpoint, timeoutSeconds) {
@@ -1216,6 +1294,7 @@ async function resumeAutomation(config, state, identityInfo) {
       "恢复前没有捕获稳定 conversation ID；禁止重启后猜测会话或重发 Prompt",
     );
   }
+  const preRestartUpdatedAtMilliseconds = Number(state.session.updated_at_ms || 0) || null;
   let page = null;
   try {
     await requireUnlockedGui();
@@ -1249,8 +1328,37 @@ async function resumeAutomation(config, state, identityInfo) {
         );
       }
     }
-    const session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
-    const dom = await inspectDom(page);
+    let session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
+    let dom = await inspectDom(page);
+    if (config.restartApp && process.platform === "win32") {
+      const recovery = await waitForRestartedAttemptRecovery(config, state);
+      session = recovery.session || session;
+      state.client.launch.recovery = {
+        outcome: recovery.outcome,
+        checked_at: new Date().toISOString(),
+        grace_milliseconds: recovery.grace_milliseconds,
+        observed_milliseconds: recovery.observed_milliseconds,
+        previous_session_updated_at_ms: preRestartUpdatedAtMilliseconds,
+        observed_session_updated_at_ms: Number(recovery.session?.updatedAt || 0) || null,
+        observed_session_status: recovery.session?.status || null,
+        session_host_pids: recovery.session_host_pids,
+      };
+      await saveState(config, state);
+      if (recovery.outcome === "stale-active-without-session-host") {
+        if (session) {
+          state.session.conversation_id = session.conversationId;
+          state.session.cwd = session.cwd;
+          state.session.raw_status = session.status;
+          state.session.updated_at_ms = session.updatedAt || null;
+        }
+        await takeScreenshot(page, config, state, "10-restart-session-unrecovered.png");
+        return finalize(config, state, identityInfo, "INFRA_FAILED", {
+          terminalSource: "workbuddy-client-restart-unrecovered",
+          error: `WorkBuddy 客户端重启后 ${Math.round(recovery.grace_milliseconds / 1000)} 秒内原会话仍为 ${session?.status || "running"}，且未恢复唯一 Windows 会话宿主；按客户端崩溃结构化失败，禁止伪装成功或重发 Prompt`,
+        });
+      }
+      dom = await inspectDom(page);
+    }
     if (stableConversationAvailable && !session && dom.emptyConversation) {
       return persistNeedsAttention(
         config,
