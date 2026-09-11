@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 import test from "node:test";
 
 import {
@@ -57,14 +57,11 @@ test("restartWorkBuddy retries a failed macOS open before prompt handling", asyn
       processIdentity: async () => null,
       endpointReady: async () => false,
       waitForEndpoint: async () => {},
-      run: async (command) => {
-        if (command === "/usr/bin/open") {
-          openCalls += 1;
-          return openCalls === 1
-            ? { code: 1, stdout: "", stderr: "The application cannot be opened (-600)" }
-            : { code: 0, stdout: "", stderr: "" };
-        }
-        return { code: 0, stdout: "", stderr: "" };
+      launchApp: async () => {
+        openCalls += 1;
+        return openCalls === 1
+          ? { code: 1, stdout: "", stderr: "The application cannot be opened (-600)" }
+          : { code: 0, stdout: "", stderr: "" };
       },
     },
   );
@@ -86,9 +83,7 @@ test("restartWorkBuddy stops after bounded launch retries", async () => {
         processIdentity: async () => null,
         endpointReady: async () => false,
         waitForEndpoint: async () => {},
-        run: async (command) => command === "/usr/bin/open"
-          ? { code: 1, stdout: "", stderr: "open failed" }
-          : { code: 0, stdout: "", stderr: "" },
+        launchApp: async () => ({ code: 1, stdout: "", stderr: "open failed" }),
       },
     ),
     /自动启动 2 次后仍未开放调试端口/,
@@ -156,10 +151,18 @@ async function fixture({ manifest = true, record = false } = {}) {
   const harnessRoot = join(root, "batch__workbuddy");
   const taskId = "task-001";
   const taskRoot = join(harnessRoot, "execution", "tasks", taskId);
-  const appPath = join(root, "WorkBuddy.app");
+  const appPath = process.platform === "win32"
+    ? join(root, "WorkBuddy", "WorkBuddy.exe")
+    : join(root, "WorkBuddy.app");
   await mkdir(join(taskRoot, "workspace"), { recursive: true });
-  await mkdir(join(appPath, "Contents", "Resources"), { recursive: true });
-  await writeFile(join(appPath, "Contents", "Resources", "app.asar"), "fixture");
+  if (process.platform === "win32") {
+    await mkdir(join(root, "WorkBuddy", "resources"), { recursive: true });
+    await writeFile(appPath, "fixture");
+    await writeFile(join(root, "WorkBuddy", "resources", "app.asar"), "fixture");
+  } else {
+    await mkdir(join(appPath, "Contents", "Resources"), { recursive: true });
+    await writeFile(join(appPath, "Contents", "Resources", "app.asar"), "fixture");
+  }
   await writeFile(join(taskRoot, "PROMPT.md"), "build a site\n");
   if (manifest) {
     await writeFile(join(harnessRoot, "manifest.json"), JSON.stringify({
@@ -341,12 +344,12 @@ test("DOM terminal classification requires an explicit status label", () => {
 test("approval allowlist only accepts exact DS_Store cleanup inside candidate workspace", () => {
   const workspace = "/tmp/e2e-task/workspace";
   const safe = `rm -f ${workspace}/.DS_Store && find ${workspace} -name '.DS_Store' -delete`;
-  assert.deepEqual(classifyApprovalCommand(safe, workspace), {
+  assert.deepEqual(classifyApprovalCommand(safe, workspace, posix), {
     allow: true,
     rule: "candidate-workspace-ds-store-cleanup",
   });
-  assert.equal(classifyApprovalCommand(`rm -rf ${workspace}`, workspace).allow, false);
-  assert.equal(classifyApprovalCommand("rm -f /tmp/.DS_Store && find /tmp -name '.DS_Store' -delete", workspace).allow, false);
+  assert.equal(classifyApprovalCommand(`rm -rf ${workspace}`, workspace, posix).allow, false);
+  assert.equal(classifyApprovalCommand("rm -f /tmp/.DS_Store && find /tmp -name '.DS_Store' -delete", workspace, posix).allow, false);
 });
 
 test("chooseSession requires exact cwd and respects recovery id", () => {
@@ -397,7 +400,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.7.1");
+  assert.equal(state.driver.version, "1.8.0");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

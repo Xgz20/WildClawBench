@@ -28,6 +28,17 @@ import {
   transitionState,
   updateExecutionRecord,
 } from "./lib.mjs";
+import {
+  gracefulQuitWorkBuddy,
+  launchWorkBuddy,
+  queryWorkBuddySessionSnapshot,
+  queryWorkBuddySessions,
+  terminateWorkBuddyProcess,
+  workBuddyAppVersion,
+  workBuddyGuiSessionStatus,
+  workBuddyProcessIdentity,
+  workBuddySqliteBackendStatus,
+} from "./platform.mjs";
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const NATIVE_FOLDER_HELPER = join(SCRIPT_DIR, "select-folder.swift");
@@ -106,63 +117,16 @@ async function endpointReady(endpoint) {
   }
 }
 
-async function guiSessionStatus() {
-  const result = await run(
-    "/usr/bin/osascript",
-    ["-e", 'tell application "System Events" to get name of first application process whose frontmost is true'],
-    { capture: true, allowFailure: true },
-  );
-  const frontmostApplication = result.code === 0 ? result.stdout.trim() : "unknown";
-  return {
-    frontmost_application: frontmostApplication,
-    unlocked: result.code === 0 && frontmostApplication.toLowerCase() !== "loginwindow",
-  };
-}
-
 async function requireUnlockedGui() {
-  const status = await guiSessionStatus();
+  const status = await workBuddyGuiSessionStatus();
   if (!status.unlocked) {
-    throw new Error(`macOS 图形会话不可交互（当前前台：${status.frontmost_application}）；请解锁桌面后重试`);
+    throw new Error(`图形会话不可交互（当前前台：${status.frontmost_application}）；请解锁桌面后重试`);
   }
   return status;
 }
 
-async function appVersion(appPath) {
-  const result = await run("/usr/bin/defaults", ["read", join(appPath, "Contents", "Info"), "CFBundleShortVersionString"], { capture: true, allowFailure: true });
-  return result.code === 0 ? result.stdout.trim() : "unknown";
-}
-
-async function workBuddyProcessIdentity() {
-  const result = await run(
-    "/usr/bin/osascript",
-    ["-e", `tell application "System Events" to get unix id of first application process whose bundle identifier is "${DEFAULT_BUNDLE_ID}"`],
-    { capture: true, allowFailure: true },
-  );
-  const pid = Number(result.stdout.trim());
-  if (result.code !== 0 || !Number.isInteger(pid) || pid <= 0) return null;
-  const command = await run("/bin/ps", ["-p", String(pid), "-o", "command="], { capture: true, allowFailure: true });
-  return {
-    pid,
-    bundle_id: DEFAULT_BUNDLE_ID,
-    command: command.stdout.trim() || null,
-    captured_at: new Date().toISOString(),
-  };
-}
-
-export async function querySessions(sessionDb) {
-  await access(sessionDb);
-  const result = await run("/usr/bin/sqlite3", ["-readonly", "-json", sessionDb, "SELECT CAST(value AS TEXT) AS value FROM ItemTable"], { capture: true });
-  const rows = result.stdout.trim() ? JSON.parse(result.stdout) : [];
-  const sessions = [];
-  for (const row of rows) {
-    try {
-      const value = JSON.parse(row.value);
-      if (value && typeof value === "object" && value.conversationId) sessions.push(value);
-    } catch {
-      // Ignore unrelated/corrupt rows; an exact session is still required for success.
-    }
-  }
-  return sessions;
+export async function querySessions(sessionDb, overrides = {}) {
+  return queryWorkBuddySessions(sessionDb, overrides);
 }
 
 async function waitForEndpoint(endpoint, timeoutSeconds) {
@@ -187,39 +151,85 @@ async function waitForWorkBuddyStopped(config, dependencies, timeoutSeconds = 15
   throw new Error(`WorkBuddy 旧进程或调试端口未在 ${timeoutSeconds} 秒内退出`);
 }
 
-export async function restartWorkBuddy(config, overrides = {}) {
+function matchesTrackedRecoverySession(session, recoverySession) {
+  if (!recoverySession?.conversationId || !recoverySession?.cwd) return false;
+  return session.conversationId === recoverySession.conversationId
+    && resolve(String(session.cwd || "")) === resolve(recoverySession.cwd);
+}
+
+export async function restartWorkBuddy(config, overrides = {}, recoverySession = null) {
   const dependencies = {
-    run,
+    querySessions,
     sleep,
     endpointReady,
     waitForEndpoint,
-    processIdentity: workBuddyProcessIdentity,
+    processIdentity: () => workBuddyProcessIdentity(config.appPath),
+    gracefulQuit: gracefulQuitWorkBuddy,
+    terminateProcess: terminateWorkBuddyProcess,
+    launchApp: launchWorkBuddy,
     launchAttempts: 3,
+    gracefulQuitTimeoutSeconds: 5,
     retryDelayMilliseconds: 2000,
     ...overrides,
   };
-  const quitScript = `
-tell application "System Events"
-  set matches to every application process whose bundle identifier is "${DEFAULT_BUNDLE_ID}"
-  if (count of matches) > 0 then
-    tell application id "${DEFAULT_BUNDLE_ID}" to quit
-  end if
-end tell`;
-  const stopCurrentInstance = async () => {
-    await dependencies.run("/usr/bin/osascript", ["-e", quitScript], { allowFailure: true, capture: true });
-    await waitForWorkBuddyStopped(config, dependencies);
+  const restartSafety = {
+    mode: recoverySession ? "tracked-recovery-session" : "no-active-sessions",
+    tracked_conversation_id: recoverySession?.conversationId || null,
+    tracked_cwd: recoverySession?.cwd || null,
+    active_session_count: null,
+    tracked_session_matched: false,
   };
-  await stopCurrentInstance();
+  const stopCurrentInstance = async (processInfo) => {
+    await dependencies.gracefulQuit(processInfo);
+    try {
+      await waitForWorkBuddyStopped(config, dependencies, dependencies.gracefulQuitTimeoutSeconds);
+      restartSafety.shutdown = { method: "application-quit", pid: processInfo.pid };
+    } catch (gracefulError) {
+      const remainingProcess = await dependencies.processIdentity();
+      if (!remainingProcess || remainingProcess.pid !== processInfo.pid) {
+        throw new Error(
+          `WorkBuddy 正常退出超时后进程身份已变化，拒绝强制终止：原 PID ${processInfo.pid}，当前 PID ${remainingProcess?.pid || "不可用"}`,
+        );
+      }
+      const terminated = await dependencies.terminateProcess(processInfo);
+      if (terminated.code !== 0) {
+        const [processAfterTerminate, endpointAfterTerminate] = await Promise.all([
+          dependencies.processIdentity(),
+          dependencies.endpointReady(config.endpoint),
+        ]);
+        if (processAfterTerminate || endpointAfterTerminate) {
+          throw new Error(`WorkBuddy 强制终止已核对 PID ${processInfo.pid} 失败：${terminated.stderr?.trim() || `退出码 ${terminated.code}`}`);
+        }
+      }
+      await waitForWorkBuddyStopped(config, dependencies);
+      restartSafety.shutdown = {
+        method: "terminate-after-quit-timeout",
+        pid: processInfo.pid,
+        graceful_error: gracefulError instanceof Error ? gracefulError.message : String(gracefulError),
+      };
+    }
+  };
+  const currentProcess = await dependencies.processIdentity();
+  if (currentProcess) {
+    const active = (await dependencies.querySessions(config.sessionDb)).filter((session) =>
+      new Set(["running", "needs_attention", "pending", "starting"]).has(String(session.status || "").toLowerCase()),
+    );
+    restartSafety.active_session_count = active.length;
+    restartSafety.tracked_session_matched = active.length === 1
+      && matchesTrackedRecoverySession(active[0], recoverySession);
+    if (active.length > 0 && !restartSafety.tracked_session_matched) {
+      throw new Error(`WorkBuddy 仍有 ${active.length} 个活动或待处理任务，拒绝重启客户端`);
+    }
+    await stopCurrentInstance(currentProcess);
+  } else if (await dependencies.endpointReady(config.endpoint)) {
+    throw new Error(`WorkBuddy 调试端点可访问，但无法核对主进程身份：${config.endpoint}`);
+  }
   const port = new URL(config.endpoint).port || "9229";
   const attempts = [];
   for (let attempt = 1; attempt <= dependencies.launchAttempts; attempt += 1) {
     let result;
     try {
-      result = await dependencies.run(
-        "/usr/bin/open",
-        ["-na", config.appPath, "--args", "--remote-debugging-address=127.0.0.1", `--remote-debugging-port=${port}`],
-        { allowFailure: true, capture: true },
-      );
+      result = await dependencies.launchApp(config.appPath, port);
     } catch (error) {
       result = { code: null, stdout: "", stderr: error instanceof Error ? error.message : String(error) };
     }
@@ -252,11 +262,18 @@ end tell`;
         status: "READY",
         recovered_after_retry: attempt > 1,
         attempts,
+        restart_safety: restartSafety,
       };
     }
     if (attempt < dependencies.launchAttempts) {
-      if (await dependencies.processIdentity() || await dependencies.endpointReady(config.endpoint)) {
-        await stopCurrentInstance();
+      const retryProcess = await dependencies.processIdentity();
+      const retryEndpointReady = await dependencies.endpointReady(config.endpoint);
+      if (retryProcess || retryEndpointReady) {
+        if (!retryProcess) throw new Error(`WorkBuddy 启动重试前调试端点仍可访问，但无法核对主进程身份：${config.endpoint}`);
+        if (Number.isInteger(result.pid) && retryProcess.pid !== result.pid) {
+          throw new Error(`WorkBuddy 启动重试前进程身份不一致：启动 PID ${result.pid}，当前 PID ${retryProcess.pid}`);
+        }
+        await stopCurrentInstance(retryProcess);
       }
       await dependencies.sleep(dependencies.retryDelayMilliseconds * attempt);
     }
@@ -1129,11 +1146,14 @@ async function resumeAutomation(config, state, identityInfo) {
   try {
     await requireUnlockedGui();
     if (config.restartApp) {
-      state.client.launch = await restartWorkBuddy(config);
+      state.client.launch = await restartWorkBuddy(config, {}, {
+        conversationId: state.session.dom_conversation_id || state.session.conversation_id,
+        cwd: config.workspace,
+      });
       await saveState(config, state);
     }
     else if (!(await endpointReady(config.endpoint))) throw new Error(`WorkBuddy 未开放调试端口 ${config.endpoint}`);
-    state.client.process = await workBuddyProcessIdentity();
+    state.client.process = await workBuddyProcessIdentity(config.appPath);
     const { chromium } = await import("playwright-core");
     const browser = await chromium.connectOverCDP(config.endpoint);
     page = await chooseWorkBuddyPage(browser, config.timeoutSeconds * 1000);
@@ -1279,8 +1299,8 @@ async function runAutomation(config, identityInfo) {
   try {
     await requireUnlockedGui();
     await prepareClientForNewAttempt(config, state);
-    state.client.version = await appVersion(config.appPath);
-    state.client.process = await workBuddyProcessIdentity();
+    state.client.version = await workBuddyAppVersion(config.appPath);
+    state.client.process = await workBuddyProcessIdentity(config.appPath);
     transitionState(state, "CLIENT_READY");
     await saveState(config, state);
 
@@ -1298,6 +1318,11 @@ async function runAutomation(config, identityInfo) {
     try {
       workspaceBackend = await selectWorkspaceViaInputProvider(page, config.workspace, timeout);
     } catch (providerError) {
+      if (process.platform === "win32") {
+        throw new Error(
+          `WorkBuddy Windows workspace input provider 不可用，且原生文件夹选择器尚未安全接管：${providerError instanceof Error ? providerError.message : String(providerError)}`,
+        );
+      }
       await clickExactText(page, "选择工作空间", timeout);
       await takeScreenshot(page, config, state, "03-workspace-menu.png");
       await clickExactText(page, "打开本地文件夹", timeout);
@@ -1403,25 +1428,29 @@ async function runAutomation(config, identityInfo) {
 }
 
 async function probe(config) {
-  const gui = await guiSessionStatus();
+  const gui = await workBuddyGuiSessionStatus();
+  const sqliteBackend = await workBuddySqliteBackendStatus();
   const checks = {
     app_exists: true,
-    client_version: await appVersion(config.appPath),
+    app_path: config.appPath,
+    client_version: await workBuddyAppVersion(config.appPath),
+    process: await workBuddyProcessIdentity(config.appPath),
     endpoint_ready: await endpointReady(config.endpoint),
     session_database_readable: false,
     session_count: null,
-    sqlite3: false,
+    session_database: config.sessionDb,
+    sqlite: sqliteBackend,
     gui_session_unlocked: gui.unlocked,
     frontmost_application: gui.frontmost_application,
     workspace_input_provider_available: false,
     permission_setting_available: false,
   };
   try {
-    const sqlite = await run("/usr/bin/sqlite3", ["--version"], { capture: true, allowFailure: true });
-    checks.sqlite3 = sqlite.code === 0;
-    const sessions = await querySessions(config.sessionDb);
+    const snapshot = await queryWorkBuddySessionSnapshot(config.sessionDb);
     checks.session_database_readable = true;
-    checks.session_count = sessions.length;
+    checks.session_database_schema = snapshot.schema;
+    checks.session_database_backend = snapshot.backend;
+    checks.session_count = snapshot.sessions.length;
   } catch (error) {
     checks.session_database_error = error instanceof Error ? error.message : String(error);
   }
@@ -1441,9 +1470,9 @@ async function probe(config) {
   return {
     driver: "workbuddy",
     version: DRIVER_VERSION,
-    control_backend: "electron-cdp+workbuddy-workspace-provider+macos-accessibility-fallback",
+    control_backend: "electron-cdp+workbuddy-workspace-provider+platform-native-fallback",
     terminal_source: "workbuddy-session-db+workbuddy-dom",
-    ready: checks.endpoint_ready && checks.session_database_readable && checks.sqlite3
+    ready: checks.endpoint_ready && checks.session_database_readable && checks.sqlite.available
       && checks.gui_session_unlocked && checks.workspace_input_provider_available
       && checks.permission_setting_available,
     checks,

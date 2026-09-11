@@ -1,6 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
 import {
-  access,
   lstat,
   mkdir,
   readFile,
@@ -12,14 +11,21 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
-import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+
+import {
+  MACOS_BUNDLE_ID,
+  defaultWorkBuddyAppPath,
+  defaultWorkBuddySessionDb,
+  resolveWorkBuddyAppPath,
+  validateWorkBuddyAppPath,
+} from "./platform.mjs";
 
 export const AUTOMATION_SCHEMA = "wildclawbench.web-e2e-automation-state/v1";
 export const EXECUTION_SCHEMA = "wildclawbench.web-e2e-execution/v1";
-export const DRIVER_VERSION = "1.7.1";
-export const DEFAULT_APP_PATH = "/Applications/WorkBuddy.app";
-export const DEFAULT_BUNDLE_ID = "com.tencent.workbuddy.mac";
+export const DRIVER_VERSION = "1.8.0";
+export const DEFAULT_APP_PATH = defaultWorkBuddyAppPath();
+export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9229";
 export const DEFAULT_MODEL = "";
 export const DEFAULT_PERMISSION_MODE = "current";
@@ -29,7 +35,7 @@ export const WORKBUDDY_PROFILE = Object.freeze({
   id: "workbuddy",
   displayName: "WorkBuddy",
   driverVersion: DRIVER_VERSION,
-  controlBackend: "electron-cdp+workbuddy-workspace-provider+macos-accessibility-fallback",
+  controlBackend: "electron-cdp+workbuddy-workspace-provider+platform-native-fallback",
 });
 export const RESUMABLE_PHASES = new Set([
   "READY_TO_SEND",
@@ -75,7 +81,7 @@ export function parseArgs(argv) {
     outputDir: "",
     stateFile: "",
     executionRecord: "",
-    sessionDb: join(homedir(), "Library", "Application Support", "WorkBuddy", "codebuddy-sessions.vscdb"),
+    sessionDb: defaultWorkBuddySessionDb(),
     timeoutSeconds: 30,
     runTimeoutSeconds: 3600,
     pollIntervalSeconds: 2,
@@ -178,10 +184,11 @@ export async function resolveConfig(parsed, overrides = {}) {
   if (!new Set(["127.0.0.1", "localhost", "::1"]).has(endpoint.hostname)) {
     throw new Error("--endpoint 仅允许连接本机地址");
   }
+  const platform = overrides.platform || process.platform;
   const resolveAppPath = overrides.resolveAppPath
-    || (async (value) => realpath(resolve(value)));
+    || ((value) => resolveWorkBuddyAppPath(value, { platform }));
   const validateAppPath = overrides.validateAppPath
-    || (async (value) => access(join(value, "Contents", "Resources", "app.asar")));
+    || ((value) => validateWorkBuddyAppPath(value, platform));
   const appPath = await resolveAppPath(parsed.appPath);
   await validateAppPath(appPath);
   const sessionDb = resolve(parsed.sessionDb);
@@ -404,10 +411,10 @@ export function isSubstantiveFinalResponse(value) {
   return !/^(?:正在连接(?:\s*MCP\s*服务)?|等待模型响应|思考中|处理中|正在执行)[.…|]*$/i.test(text);
 }
 
-export function classifyApprovalCommand(command, candidateWorkspace) {
+export function classifyApprovalCommand(command, candidateWorkspace, pathApi = { resolve, join }) {
   const value = String(command || "").trim();
-  const root = resolve(candidateWorkspace);
-  const file = join(root, ".DS_Store");
+  const root = pathApi.resolve(candidateWorkspace);
+  const file = pathApi.join(root, ".DS_Store");
   const candidates = new Set([
     `rm -f ${file} && find ${root} -name '.DS_Store' -delete`,
     `rm -f '${file}' && find '${root}' -name '.DS_Store' -delete`,

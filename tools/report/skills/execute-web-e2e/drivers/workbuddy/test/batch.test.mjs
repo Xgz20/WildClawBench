@@ -107,8 +107,8 @@ test("resolveQueuePlan matches manifest tasks by exact id", async () => {
   ]);
   const plan = await resolveQueuePlan(args);
   assert.deepEqual(plan.tasks.map((task) => task.taskId), ["task-b", "task-a"]);
-  assert.ok(plan.queueStateFile.endsWith("execution/.execute-web-e2e/queues/l1-test/queue_state.json"));
-  assert.ok(plan.lockFile.endsWith("execution/.execute-web-e2e/workbuddy-ui.lock"));
+  assert.equal(plan.queueStateFile, join(root, "execution", ".execute-web-e2e", "queues", "l1-test", "queue_state.json"));
+  assert.equal(plan.lockFile, join(root, "execution", ".execute-web-e2e", "workbuddy-ui.lock"));
 });
 
 test("resolveQueuePlan rejects duplicate and unknown task ids", async () => {
