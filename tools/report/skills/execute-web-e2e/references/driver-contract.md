@@ -43,7 +43,7 @@ Prompt 发送采用失败关闭语义：写入 `READY_TO_SEND` 后到确认 conv
 
 `TIMEOUT` 只有在 Driver 已请求停止、Harness 明确进入非运行态、平台要求的候选后台进程已清理，并且候选 workspace 在限定观察窗口内保持静默时才是安全终态。任何一项无法确认都进入 `NEEDS_ATTENTION`，控制面不得继续下一题。
 
-任一终态还必须在候选冻结前完成任务级进程收口，并把结果持久化为 `terminal_process_cleanup`。Windows WorkBuddy 会话宿主必须同时满足可执行文件名、`--serve`、`--session-id` 和任务根完整绝对路径四项精确约束；多匹配或清理后仍有残留都必须失败关闭。执行回执只有在每题清理证据均成功时才能声明 `integrity.valid=true`。
+任一终态还必须在候选冻结前完成任务级进程收口，并把结果持久化为 `terminal_process_cleanup`。Windows WorkBuddy 会话宿主必须同时满足可执行文件名、`--serve`、`--session-id` 和任务根完整绝对路径四项精确约束；多匹配、清理后仍有残留或规定安静窗口内出现迟到进程且未再次收口都必须失败关闭。执行回执只有在每题清理证据均成功时才能声明 `integrity.valid=true`。
 
 ## 终态证据优先级
 

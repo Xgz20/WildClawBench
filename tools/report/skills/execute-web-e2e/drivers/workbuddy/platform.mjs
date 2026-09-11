@@ -244,28 +244,54 @@ export async function terminateCandidateWorkspaceProcesses(candidateWorkspace, o
   });
   const before = await snapshot();
   const terminationAttempts = [];
-  for (const pid of before.root_pids) {
-    const result = await runCommand(
-      "taskkill.exe",
-      ["/PID", String(pid), "/T", "/F"],
-      { allowFailure: true, capture: true },
-    ).catch((error) => ({ code: null, stdout: "", stderr: error instanceof Error ? error.message : String(error) }));
-    terminationAttempts.push({
-      pid,
-      exit_code: result.code,
-      error: result.code === 0 ? null : String(result.stderr || `退出码 ${result.code}`).trim(),
-    });
-  }
+  const attemptedPids = new Set();
+  const terminateRoots = async (processSnapshot, detectedLate = false) => {
+    for (const pid of processSnapshot.root_pids) {
+      if (attemptedPids.has(pid)) continue;
+      attemptedPids.add(pid);
+      const result = await runCommand(
+        "taskkill.exe",
+        ["/PID", String(pid), "/T", "/F"],
+        { allowFailure: true, capture: true },
+      ).catch((error) => ({ code: null, stdout: "", stderr: error instanceof Error ? error.message : String(error) }));
+      terminationAttempts.push({
+        pid,
+        detected_late: detectedLate,
+        exit_code: result.code,
+        error: result.code === 0 ? null : String(result.stderr || `退出码 ${result.code}`).trim(),
+      });
+    }
+  };
+  await terminateRoots(before);
   let after = await snapshot();
   const wait = overrides.sleep || ((milliseconds) => new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds)));
-  const deadline = Date.now() + (overrides.waitMilliseconds ?? 5000);
-  while (after.targets.length && Date.now() < deadline) {
-    await wait(Math.min(250, Math.max(1, deadline - Date.now())));
+  const now = overrides.now || (() => Date.now());
+  const requestedWaitMilliseconds = Math.max(0, overrides.waitMilliseconds ?? 5000);
+  const quietMilliseconds = Math.max(0, overrides.quietMilliseconds ?? Math.min(1000, requestedWaitMilliseconds));
+  const waitMilliseconds = Math.max(quietMilliseconds, requestedWaitMilliseconds);
+  const startedAt = now();
+  const deadline = startedAt + waitMilliseconds;
+  let quietSince = after.targets.length ? null : now();
+  let lateProcessDetected = false;
+  while (now() < deadline) {
+    if (!after.targets.length && quietSince !== null && now() - quietSince >= quietMilliseconds) break;
+    await wait(Math.min(250, Math.max(1, deadline - now()), Math.max(1, quietMilliseconds)));
     after = await snapshot();
+    if (after.targets.length) {
+      lateProcessDetected ||= quietSince !== null;
+      quietSince = null;
+      await terminateRoots(after, true);
+      after = await snapshot();
+    }
+    if (!after.targets.length && quietSince === null) quietSince = now();
   }
+  const quietObservedMilliseconds = quietSince === null ? 0 : Math.max(0, now() - quietSince);
   return {
     supported: true,
-    success: after.targets.length === 0,
+    success: after.targets.length === 0 && quietObservedMilliseconds >= quietMilliseconds,
+    quiet_window_milliseconds: quietMilliseconds,
+    quiet_observed_milliseconds: quietObservedMilliseconds,
+    late_process_detected: lateProcessDetected,
     before: {
       seed_pids: before.seed_pids,
       workspace_seed_pids: before.workspace_seed_pids,

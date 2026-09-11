@@ -899,6 +899,8 @@ async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom,
     state.timeout.process_cleanup = await terminateCandidateWorkspaceProcesses(config.candidateWorkspace, {
       taskRoot: config.workspace,
       includeSessionHost: true,
+      quietMilliseconds: 45_000,
+      waitMilliseconds: 60_000,
     });
   } catch (error) {
     state.timeout.process_cleanup = {
@@ -1010,6 +1012,8 @@ async function finalize(config, state, identityInfo, phase, { error = null, term
     state.terminal_process_cleanup = await terminateCandidateWorkspaceProcesses(config.candidateWorkspace, {
       taskRoot: config.workspace,
       includeSessionHost: true,
+      quietMilliseconds: phase === "TIMEOUT" ? 5_000 : 45_000,
+      waitMilliseconds: phase === "TIMEOUT" ? 10_000 : 60_000,
     });
   } catch (cleanupError) {
     state.terminal_process_cleanup = {

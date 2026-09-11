@@ -188,7 +188,7 @@ Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作�
 
 达到执行时限后 Driver 必须点击当前会话的停止按钮，确认 WorkBuddy 已进入非运行态，并验证候选 workspace 在静默观察窗口内不再变化。Windows 还必须按候选 workspace 完整绝对路径发现后台种子进程，只终止这些种子及其后代并回读零残留；进程清理摘要写入 `timeout.process_cleanup`，不能用进程名做宽泛清理。只有停止确认、进程清理和 workspace 静默三项证据齐全时才记录 `TIMEOUT`；否则记录 `NEEDS_ATTENTION`。即使指定 `--continue-on-terminal-failure`，任一条件未确认的超时任务也不能进入下一题。
 
-WorkBuddy 任一终态（成功、明确失败或安全超时）在冻结候选 workspace 前，还必须收口当前任务的会话宿主及其进程树。Windows 只能同时依据 WorkBuddy `--serve`、`--session-id` 和任务根完整绝对路径唯一定位会话宿主，并保留候选 workspace 进程匹配作为补充；不得按 WorkBuddy/Node 进程名宽泛终止。清理结果写入 `terminal_process_cleanup` 并进入 execution receipt；清理失败或匹配到多个宿主时进入 `NEEDS_ATTENTION`，禁止批次补位或生成有效回执。
+WorkBuddy 任一终态（成功、明确失败或安全超时）在冻结候选 workspace 前，还必须收口当前任务的会话宿主及其进程树。Windows 只能同时依据 WorkBuddy `--serve`、`--session-id` 和任务根完整绝对路径唯一定位会话宿主，并保留候选 workspace 进程匹配作为补充；不得按 WorkBuddy/Node 进程名宽泛终止。首次回读零残留后还要保持 45 秒安静观察，期间出现的迟到候选进程必须按精确路径再次清除并重新计算安静窗口。清理结果写入 `terminal_process_cleanup` 并进入 execution receipt；清理失败、安静窗口不足或匹配到多个宿主时进入 `NEEDS_ATTENTION`，禁止批次补位或生成有效回执。
 
 队列退出时会在 Harness 根目录生成 `execution-receipt.json`，汇总任务范围、attempt、自动化/正式状态、客户端与 Driver 版本、请求/实际模型、权限、Prompt/workspace 哈希和证据相对路径。生成回执时会重新计算每题 workspace SHA；`integrity.valid=true` 要求请求任务集合与 manifest 完全一致、记录齐全、身份和模型一致、所有任务均为终态，且当前 workspace 的候选文件仍等于 Driver 终态冻结值。若候选文件已漂移，队列改为 `FAILED`，不得进入评分。
 

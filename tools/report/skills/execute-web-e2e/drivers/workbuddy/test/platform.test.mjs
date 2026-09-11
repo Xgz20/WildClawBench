@@ -111,6 +111,40 @@ test("Windows candidate process cleanup terminates only exact workspace roots an
   assert.equal(commands.filter(([command]) => command === "taskkill.exe").length, 1);
 });
 
+test("Windows candidate process cleanup catches a process that appears during the quiet window", async () => {
+  const workspace = "D:\\task\\workspace";
+  let inventoryReads = 0;
+  let clock = 0;
+  const killed = [];
+  const result = await terminateCandidateWorkspaceProcesses(workspace, {
+    platform: "win32",
+    excludedPids: [],
+    quietMilliseconds: 3,
+    waitMilliseconds: 20,
+    now: () => clock,
+    sleep: async (milliseconds) => { clock += milliseconds; },
+    runCommand: async (command, args) => {
+      if (command === "powershell.exe") {
+        inventoryReads += 1;
+        return {
+          code: 0,
+          stdout: inventoryReads === 3
+            ? JSON.stringify({ ProcessId: 700, ParentProcessId: 1, Name: "python.exe", CommandLine: `python ${workspace}\\server.py` })
+            : "null",
+          stderr: "",
+        };
+      }
+      killed.push(Number(args[1]));
+      return { code: 0, stdout: "terminated", stderr: "" };
+    },
+  });
+  assert.equal(result.success, true);
+  assert.equal(result.late_process_detected, true);
+  assert.ok(result.quiet_observed_milliseconds >= 3);
+  assert.deepEqual(killed, [700]);
+  assert.equal(result.termination_attempts[0].detected_late, true);
+});
+
 test("Windows defaults keep app discovery dynamic and session data under the current user", () => {
   assert.equal(defaultWorkBuddyAppPath("win32"), "");
   assert.equal(
