@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("All", "Codex", "AstronStudio")]
+    [ValidateSet("All", "Codex", "AstronStudio", "WorkBuddy", "CodexWorkBuddy")]
     [string]$Application = "All",
 
     [ValidateRange(1024, 65535)]
@@ -8,6 +8,9 @@ param(
 
     [ValidateRange(1024, 65535)]
     [int]$AstronStudioPort = 9240,
+
+    [ValidateRange(1024, 65535)]
+    [int]$WorkBuddyPort = 9229,
 
     [ValidateRange(1, 120)]
     [int]$TimeoutSeconds = 20,
@@ -20,15 +23,21 @@ param(
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
 
-$includeCodex = $Application -in @("All", "Codex")
+$includeCodex = $Application -in @("All", "Codex", "CodexWorkBuddy")
 $includeAstronStudio = $Application -in @("All", "AstronStudio")
+$includeWorkBuddy = $Application -in @("WorkBuddy", "CodexWorkBuddy")
 
 if ($CheckOnly -and $ForceRestart) {
     throw "CheckOnly and ForceRestart cannot be used together."
 }
 
-if ($includeCodex -and $includeAstronStudio -and $CodexPort -eq $AstronStudioPort) {
-    throw "CodexPort and AstronStudioPort must be different."
+$selectedPorts = @()
+if ($includeCodex) { $selectedPorts += [pscustomobject]@{ Name = "Codex"; Port = $CodexPort } }
+if ($includeAstronStudio) { $selectedPorts += [pscustomobject]@{ Name = "AstronStudio"; Port = $AstronStudioPort } }
+if ($includeWorkBuddy) { $selectedPorts += [pscustomobject]@{ Name = "WorkBuddy"; Port = $WorkBuddyPort } }
+$duplicatePorts = @($selectedPorts | Group-Object Port | Where-Object Count -gt 1)
+if ($duplicatePorts.Count -gt 0) {
+    throw "Selected desktop applications must use different CDP ports."
 }
 
 # The Appx module used to launch Codex is supported by Windows PowerShell 5.1.
@@ -45,6 +54,7 @@ if ($PSVersionTable.PSEdition -ne "Desktop") {
         "-Application", $Application,
         "-CodexPort", $CodexPort,
         "-AstronStudioPort", $AstronStudioPort,
+        "-WorkBuddyPort", $WorkBuddyPort,
         "-TimeoutSeconds", $TimeoutSeconds
     )
 
@@ -202,6 +212,109 @@ function Resolve-AstronStudioExecutable {
     throw "AstronStudio was not found in its registry keys or LOCALAPPDATA Programs directories."
 }
 
+function Resolve-WorkBuddyExecutable {
+    $executableNames = @("WorkBuddy.exe", "CodeBuddy.exe")
+    $candidates = @()
+
+    $uninstallEntries = Get-ItemProperty `
+        -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" `
+        -ErrorAction SilentlyContinue |
+        Where-Object {
+            $_.PSObject.Properties["DisplayName"] -and
+            [string]$_.DisplayName -match "^WorkBuddy(?:\s|$)"
+        }
+
+    foreach ($entry in $uninstallEntries) {
+        if ($entry.PSObject.Properties["InstallLocation"] -and $entry.InstallLocation) {
+            $candidates += [string]$entry.InstallLocation
+        }
+        if ($entry.PSObject.Properties["DisplayIcon"] -and $entry.DisplayIcon) {
+            $displayIcon = (([string]$entry.DisplayIcon).Trim() -replace ",\d+$", "").Trim('"')
+            $candidates += $displayIcon
+        }
+    }
+
+    $candidates += Join-Path $env:LOCALAPPDATA "Programs\WorkBuddy"
+
+    foreach ($candidate in $candidates | Where-Object { $_ } | Select-Object -Unique) {
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            if ((Split-Path -Leaf $candidate) -in $executableNames) {
+                return (Get-Item -LiteralPath $candidate).FullName
+            }
+            continue
+        }
+
+        if (-not (Test-Path -LiteralPath $candidate -PathType Container)) {
+            continue
+        }
+
+        foreach ($executableName in $executableNames) {
+            $executable = Join-Path $candidate $executableName
+            if (Test-Path -LiteralPath $executable -PathType Leaf) {
+                return (Get-Item -LiteralPath $executable).FullName
+            }
+        }
+    }
+
+    throw "WorkBuddy was not found in the current-user uninstall registry or LOCALAPPDATA Programs directory."
+}
+
+function Get-WorkBuddyActiveSessionCount {
+    $sessionDatabase = Join-Path $env:USERPROFILE ".workbuddy\workbuddy.db"
+    if (-not (Test-Path -LiteralPath $sessionDatabase -PathType Leaf)) {
+        throw "WorkBuddy session database was not found; refusing to restart a running client: $sessionDatabase"
+    }
+
+    $pythonScript = @'
+import pathlib, sqlite3, sys
+path = pathlib.Path(sys.argv[1]).resolve()
+database = sqlite3.connect(path.as_uri() + '?mode=ro', uri=True)
+columns = {row[1] for row in database.execute('PRAGMA table_info(sessions)')}
+if 'status' not in columns:
+    raise RuntimeError('sessions.status is unavailable')
+where = 'lower(status) in (?,?,?,?)'
+if 'deleted_at' in columns:
+    where += ' and deleted_at is null'
+active = ('running', 'needs_attention', 'pending', 'starting')
+count = database.execute('select count(*) from sessions where ' + where, active).fetchone()[0]
+database.close()
+print(count)
+'@
+
+    $pythonCommands = @(
+        [pscustomobject]@{ Command = "py.exe"; Prefix = @("-3") },
+        [pscustomobject]@{ Command = "python.exe"; Prefix = @() }
+    )
+    $errors = @()
+    foreach ($python in $pythonCommands) {
+        if (-not (Get-Command $python.Command -ErrorAction SilentlyContinue)) {
+            continue
+        }
+        $arguments = @($python.Prefix) + @("-c", $pythonScript, $sessionDatabase)
+        $previousErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        try {
+            $output = & $python.Command @arguments 2>&1
+            $pythonExitCode = $LASTEXITCODE
+        }
+        finally {
+            $ErrorActionPreference = $previousErrorActionPreference
+        }
+        if ($pythonExitCode -eq 0 -and "$output" -match "^\d+$") {
+            return [int]$output
+        }
+        $errors += "$($python.Command): $output"
+    }
+    throw "No usable read-only SQLite backend could verify WorkBuddy sessions: $($errors -join '; ')"
+}
+
+function Assert-WorkBuddyRestartSafe {
+    $activeCount = Get-WorkBuddyActiveSessionCount
+    if ($activeCount -gt 0) {
+        throw "WorkBuddy has $activeCount active or pending session(s); refusing to restart the client."
+    }
+}
+
 function Assert-PortAvailable {
     param(
         [Parameter(Mandatory = $true)]
@@ -272,12 +385,25 @@ else {
     $astronStudioReady = $true
 }
 
+if ($includeWorkBuddy) {
+    $workBuddyReady = $null -ne (Get-CdpStatus `
+        -Name "WorkBuddy" `
+        -Port $WorkBuddyPort `
+        -ExpectedProcesses @("WorkBuddy", "CodeBuddy"))
+}
+else {
+    $workBuddyReady = $true
+}
+
 if ($ForceRestart) {
     if ($includeCodex) {
         $codexReady = $false
     }
     if ($includeAstronStudio) {
         $astronStudioReady = $false
+    }
+    if ($includeWorkBuddy) {
+        $workBuddyReady = $false
     }
 }
 
@@ -287,6 +413,9 @@ if ($CheckOnly) {
     }
     if (-not $astronStudioReady) {
         throw "AstronStudio is not exposing a valid CDP target on port $AstronStudioPort."
+    }
+    if (-not $workBuddyReady) {
+        throw "WorkBuddy is not exposing a valid CDP target on port $WorkBuddyPort."
     }
 }
 else {
@@ -300,6 +429,30 @@ else {
             -Port $AstronStudioPort `
             -ExpectedProcesses @("AStudio", "AstronStudio", "Acode")
     }
+    if ($includeWorkBuddy -and -not $workBuddyReady) {
+        Assert-PortRestartable `
+            -Port $WorkBuddyPort `
+            -ExpectedProcesses @("WorkBuddy", "CodeBuddy")
+    }
+
+    $workBuddyExecutable = $null
+    if ($includeWorkBuddy -and -not $workBuddyReady) {
+        $workBuddyExecutable = Resolve-WorkBuddyExecutable
+        $workBuddyProcesses = @(Get-Process -Name "WorkBuddy", "CodeBuddy" -ErrorAction SilentlyContinue)
+        if ($workBuddyProcesses.Count -gt 0) {
+            Assert-WorkBuddyRestartSafe
+            foreach ($workBuddyProcess in $workBuddyProcesses) {
+                $actualPath = $workBuddyProcess.Path
+                if (-not $actualPath -or -not [string]::Equals(
+                    [IO.Path]::GetFullPath($actualPath),
+                    [IO.Path]::GetFullPath($workBuddyExecutable),
+                    [StringComparison]::OrdinalIgnoreCase
+                )) {
+                    throw "WorkBuddy process identity does not match the discovered executable; refusing to stop PID $($workBuddyProcess.Id)."
+                }
+            }
+        }
+    }
 
     $processNames = @()
     if ($includeCodex -and -not $codexReady) {
@@ -310,6 +463,10 @@ else {
         $processNames += "AStudio"
         $processNames += "AstronStudio"
         $processNames += "Acode"
+    }
+    if ($includeWorkBuddy -and -not $workBuddyReady) {
+        $processNames += "WorkBuddy"
+        $processNames += "CodeBuddy"
     }
 
     if ($processNames.Count -gt 0) {
@@ -373,6 +530,18 @@ else {
                 "--remote-debugging-port=$AstronStudioPort"
             )
     }
+
+    if ($includeWorkBuddy -and -not $workBuddyReady) {
+        Assert-PortAvailable -Port $WorkBuddyPort
+
+        Write-Host "Starting WorkBuddy with CDP on port $WorkBuddyPort..."
+        Start-Process `
+            -FilePath $workBuddyExecutable `
+            -ArgumentList @(
+                "--remote-debugging-address=127.0.0.1",
+                "--remote-debugging-port=$WorkBuddyPort"
+            )
+    }
 }
 
 Write-Host "Waiting for $Application CDP endpoints..."
@@ -389,6 +558,13 @@ if ($includeAstronStudio) {
         -Name "AstronStudio" `
         -Port $AstronStudioPort `
         -ExpectedProcesses @("AStudio", "AstronStudio", "Acode") `
+        -Timeout $TimeoutSeconds
+}
+if ($includeWorkBuddy) {
+    $statuses += Wait-CdpStatus `
+        -Name "WorkBuddy" `
+        -Port $WorkBuddyPort `
+        -ExpectedProcesses @("WorkBuddy", "CodeBuddy") `
         -Timeout $TimeoutSeconds
 }
 

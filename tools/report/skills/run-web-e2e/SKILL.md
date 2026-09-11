@@ -37,17 +37,19 @@ description: 按用户明确要求动态组合 Web E2E 的准备、桌面 Harnes
 5. 被评 Harness 未显式指定模型时保持并回读当前模型，不操作推理强度；权限按生产契约使用 `full-access`。WorkBuddy、AstronStudio 和 QwenWork 的新执行队列均默认三槽、最大八槽；评分新批次默认三槽。三种 Harness 的 UI 操作始终保持单槽。Codex Desktop CDP 未显式提供时使用 `http://127.0.0.1:9230`。
 6. execution 回执有效后才合入 scoring ZIP 并开始评分；submission 有效后在 worker 根同级的 `offline-return/` 生成完整 return ZIP 和外部回执。
 
-平台路由必须显式：macOS 使用各 Driver 的 `.sh` 入口；Windows 上 AstronStudio 使用 `run-astronstudio.cmd` / `run-astronstudio-batch.cmd`，Codex Desktop 项目注册使用 `run-codex-project-registrar.cmd`。Python 状态脚本在 Windows 优先用 `py -3`，否则使用可用的 `python`；不得硬调用 `python3`。当前 Windows 端到端生产已验证范围仅为 `AstronStudio -> Codex Desktop 评分 -> 回传/报告`；WorkBuddy、QwenWork 和 DoubaoWork 在 Windows 上必须返回 `NEEDS_ATTENTION`，不能回退调用 macOS Driver。
+平台路由必须显式：macOS 使用各 Driver 的 `.sh` 入口；Windows 上 AstronStudio 使用 `run-astronstudio.cmd` / `run-astronstudio-batch.cmd`，WorkBuddy 使用 `run-workbuddy.cmd` / `run-workbuddy-batch.cmd`，Codex Desktop 项目注册使用 `run-codex-project-registrar.cmd`。Python 状态脚本在 Windows 优先用 `py -3`，否则使用可用的 `python`；不得硬调用 `python3`。当前 Windows 端到端生产已验证范围仅为 `AstronStudio -> Codex Desktop 评分 -> 回传/报告`；WorkBuddy Windows 只读 probe 已有入口，但完成单题、串行、并发、评分与恢复验收前仍必须返回 `NEEDS_ATTENTION`；QwenWork 和 DoubaoWork 也不能回退调用 macOS Driver。
 
 ### macOS / Windows 桌面 CDP 自动前置准备
 
 选择 `execute` 或 `score` 时，必须在任何 UI 操作和阶段 `RUNNING` 之前调用本 Skill 的确定性脚本。正常入口不是只读检查：脚本先复用已经返回真实 CDP target、且监听进程身份正确的客户端；缺少有效调试端点时仅自动关闭并重启所选客户端，不要求用户手工关、启。
 
-按所选阶段收窄作用域：只选择 `execute` 时使用 AstronStudio，只选择 `score` 时使用 Codex，同机同时选择二者时使用 `All` / `all`。Windows 使用：
+按所选阶段和 Harness 收窄作用域：AstronStudio 只执行使用 `AstronStudio`，WorkBuddy 只执行使用 `WorkBuddy`，只评分使用 `Codex`；AstronStudio 执行加评分使用兼容值 `All`，WorkBuddy 执行加评分使用 `CodexWorkBuddy`。Windows 使用：
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File <run-web-e2e-skill-dir>\scripts\start_windows_desktop_debug.ps1 -Application All
 ```
+
+WorkBuddy 只执行时改为 `-Application WorkBuddy`，执行加 Codex 评分时改为 `-Application CodexWorkBuddy`。WorkBuddy 默认 CDP 为 `http://127.0.0.1:9229`。
 
 在 Codex Desktop 当前任务中执行客户端重启恢复验收时，必须改用任务计划程序托管入口，使重启 Worker 脱离当前 Codex 进程作业：
 
@@ -61,9 +63,9 @@ macOS 使用：
 /bin/bash <run-web-e2e-skill-dir>/scripts/start_macos_desktop_debug.sh --application all
 ```
 
-Windows 脚本动态解析当前 Codex MSIX 包的真实 manifest 入口，并从当前用户注册表及 `%LOCALAPPDATA%\Programs` 解析 `AStudio.exe`、`AstronStudio.exe` 或 `Acode.exe`。macOS 脚本默认解析 `/Applications` 和当前用户 `Applications` 下的 `ChatGPT.app` / `Codex.app` 与 `AStudio.app` / `AstronStudio.app`；非标准位置只允许通过对应的显式路径参数传入。
+Windows 脚本动态解析当前 Codex MSIX 包的真实 manifest 入口，并从当前用户注册表及 `%LOCALAPPDATA%\Programs` 解析 `AStudio.exe`、`AstronStudio.exe`、`Acode.exe`、`WorkBuddy.exe` 或 `CodeBuddy.exe`。WorkBuddy 重启前还会只读检查 `%USERPROFILE%\.workbuddy\workbuddy.db`，存在活动或待处理 session 时失败关闭。macOS 脚本默认解析 `/Applications` 和当前用户 `Applications` 下的 `ChatGPT.app` / `Codex.app` 与 `AStudio.app` / `AstronStudio.app`；非标准位置只允许通过对应的显式路径参数传入。
 
-两个脚本均等待 `http://127.0.0.1:9230/json/list` 和所选的 `http://127.0.0.1:9240/json/list` 返回至少一个真实 target，并验证端口监听者属于目标客户端。端口被无关进程占用时不得结束该进程，脚本失败并进入 `NEEDS_ATTENTION`。`-CheckOnly` / `--check-only` 仅用于故障诊断，不是标准 E2E 前置流程。
+两个脚本均等待所选的 Codex `9230`、AstronStudio `9240` 或 WorkBuddy `9229` 的 `/json/list` 返回至少一个真实 target，并验证端口监听者属于目标客户端。端口被无关进程占用时不得结束该进程，脚本失败并进入 `NEEDS_ATTENTION`。`-CheckOnly` / `--check-only` 仅用于故障诊断，不是标准 E2E 前置流程。
 
 Windows 的 `-ForceRestart` 只用于用户明确要求的客户端重启恢复验收；它会强制重启 `-Application` 选中的客户端，即使当前 CDP 已正常。使用前必须先持久化原 thread、cursor、attempt 和 deadline。当前任务需要重启 Codex 时，禁止通过 `Start-Process` 派生隐藏 PowerShell：该进程仍可能继承 Codex 的 Windows Job，并在客户端退出时一起终止。必须使用 `restart_windows_desktop_debug.ps1` 注册交互式一次性计划任务；Worker 延迟启动、调用底层 `start_windows_desktop_debug.ps1 -ForceRestart`，把状态和日志写入 `%LOCALAPPDATA%\WildClawBench\desktop-debug-restart\`，结束后删除自己的计划任务。底层 `-ForceRestart` 不能与 `-CheckOnly` 同时使用，也不能作为普通前置准备的默认参数。
 

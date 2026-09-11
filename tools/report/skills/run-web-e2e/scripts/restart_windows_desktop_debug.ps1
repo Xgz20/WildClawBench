@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("All", "Codex", "AstronStudio")]
+    [ValidateSet("All", "Codex", "AstronStudio", "WorkBuddy", "CodexWorkBuddy")]
     [string]$Application = "All",
 
     [ValidateRange(1024, 65535)]
@@ -8,6 +8,9 @@ param(
 
     [ValidateRange(1024, 65535)]
     [int]$AstronStudioPort = 9240,
+
+    [ValidateRange(1024, 65535)]
+    [int]$WorkBuddyPort = 9229,
 
     [ValidateRange(1, 120)]
     [int]$TimeoutSeconds = 60,
@@ -43,6 +46,7 @@ function Write-RestartStatus {
         task_name = $TaskName
         codex_port = $CodexPort
         astronstudio_port = $AstronStudioPort
+        workbuddy_port = $WorkBuddyPort
         timeout_seconds = $TimeoutSeconds
         delay_seconds = $DelaySeconds
         updated_at = [DateTime]::UtcNow.ToString("o")
@@ -91,6 +95,7 @@ if ($ScheduledWorker) {
             Application = $Application
             CodexPort = $CodexPort
             AstronStudioPort = $AstronStudioPort
+            WorkBuddyPort = $WorkBuddyPort
             TimeoutSeconds = $TimeoutSeconds
             ForceRestart = $true
         }
@@ -150,6 +155,7 @@ $workerCommand = @(
     "-Application $(ConvertTo-SingleQuotedPowerShellLiteral -Value $Application)",
     "-CodexPort $CodexPort",
     "-AstronStudioPort $AstronStudioPort",
+    "-WorkBuddyPort $WorkBuddyPort",
     "-TimeoutSeconds $TimeoutSeconds",
     "-DelaySeconds $DelaySeconds",
     "-StatusDirectory $(ConvertTo-SingleQuotedPowerShellLiteral -Value $StatusDirectory)",

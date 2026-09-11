@@ -103,8 +103,17 @@ QwenWork 客户端崩溃且本地 CDP 端口已经关闭时，使用相同参数
 
 依赖准备由调用本 Skill 的控制 Harness 完成，不要求用户手工进入 Driver 目录。控制 Harness 先检查 `node_modules/playwright-core` 和锁文件状态；缺失或 `npm ls --depth=0` 失败时，在 Driver 目录自动执行锁定安装。依赖只能安装在 Skill 的 Driver 目录，不能安装到候选工作空间：
 
+macOS：
+
 ```bash
 cd .agents/skills/execute-web-e2e/drivers/workbuddy
+npm ci
+```
+
+Windows：
+
+```powershell
+Set-Location .agents\skills\execute-web-e2e\drivers\workbuddy
 npm ci
 ```
 
@@ -115,6 +124,8 @@ npm ci
 ```bash
 bash .agents/skills/execute-web-e2e/scripts/run-workbuddy.sh --probe
 ```
+
+Windows 使用 `run-workbuddy.cmd --probe`。Driver 从当前用户卸载注册表和 `%LOCALAPPDATA%\Programs\WorkBuddy` 动态解析 `WorkBuddy.exe` / `CodeBuddy.exe`，状态库固定按当前用户解析为 `%USERPROFILE%\.workbuddy\workbuddy.db`；不得写死用户名。Windows Node.js 不提供 `node:sqlite` 时按顺序回退到 `py -3`、`python` 的只读 `sqlite3`，不能把依赖装入候选 workspace。
 
 `--probe` 不会点击“新建任务”。WorkBuddy 只有在新任务页挂载 workspace picker；若当前停在历史会话页，探针会以 `workspace-picker-not-visible` 返回未就绪。切换到未发送的新任务页后重跑，不能把该结果误判为插件或 CDP 不可用。
 
@@ -129,7 +140,7 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy.sh \
 
 上例不传 `--model`，Driver 会保留并回读 WorkBuddy 当前模型，不操作模型的推理强度。跑批前应由测试人员在 WorkBuddy 中配置好默认模型和推理强度。需要覆盖当前模型时再显式增加 `--model <UI 精确显示名>`。
 
-`--restart-app` 会退出并重新启动 WorkBuddy，仅在当前没有需要保留的运行任务时使用。Driver 会先确认旧进程和 CDP 均已退出，再对 macOS `open` 做最多 3 次有界重试；每次都必须回读本地 CDP 才算启动成功，尝试证据写入 `automation_state.json.client.launch`。WorkBuddy 已通过本地 CDP 端口启动时省略该参数。
+`--restart-app` 会退出并重新启动 WorkBuddy，仅在当前没有需要保留的运行任务时使用。Driver 会先按完整主程序路径唯一核对主进程，读取状态库确认没有其他活动任务，并确认旧进程和 CDP 均已退出；Windows 只终止已核对的进程树，macOS `open` 做最多 3 次有界重试。每次都必须回读本地 CDP 才算启动成功，尝试证据写入 `automation_state.json.client.launch`。WorkBuddy 已通过本地 CDP 端口启动时省略该参数。
 
 中断后恢复：
 
@@ -156,6 +167,8 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy-batch.sh \
   --run-slots 3 \
   --permission-mode full-access
 ```
+
+Windows 使用同名参数的 `run-workbuddy-batch.cmd`，路径可使用 `D:\debug-workspace\web-e2e` 下的新批次目录。Windows 真机隔离验收完成前必须显式使用 `--run-slots 1`；不能把 macOS 的多槽结论直接外推。
 
 新队列默认 `run_slots=3`，最大 8；显式 `--run-slots 1` 可回退为串行。已有队列冻结首次记录的并发值，恢复时省略该参数会沿用冻结值，显式提供不同值则失败关闭。没有 `run_slots` 字段的旧队列迁移为 1，不自动升级为 3。
 
