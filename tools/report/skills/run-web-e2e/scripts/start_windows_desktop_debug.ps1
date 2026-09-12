@@ -259,6 +259,44 @@ function Resolve-WorkBuddyExecutable {
     throw "WorkBuddy was not found in the current-user uninstall registry or LOCALAPPDATA Programs directory."
 }
 
+function Resolve-WorkBuddyBundledNodeDirectory {
+    $versionsRoot = Join-Path `
+        $env:USERPROFILE `
+        ".workbuddy\binaries\node\versions"
+    if (-not (Test-Path -LiteralPath $versionsRoot -PathType Container)) {
+        return $null
+    }
+
+    $candidates = @(
+        Get-ChildItem -LiteralPath $versionsRoot -Directory -ErrorAction SilentlyContinue |
+            ForEach-Object {
+                $parsedVersion = [version]"0.0.0.0"
+                [void][version]::TryParse(
+                    ($_.Name -replace "-.*$", ""),
+                    [ref]$parsedVersion
+                )
+                [pscustomobject]@{
+                    Directory = $_.FullName
+                    Name = $_.Name
+                    Version = $parsedVersion
+                }
+            } |
+            Sort-Object `
+                @{ Expression = "Version"; Descending = $true }, `
+                @{ Expression = "Name"; Descending = $true }
+    )
+
+    foreach ($candidate in $candidates) {
+        if (
+            (Test-Path -LiteralPath (Join-Path $candidate.Directory "node.exe") -PathType Leaf) -and
+            (Test-Path -LiteralPath (Join-Path $candidate.Directory "npm.cmd") -PathType Leaf)
+        ) {
+            return $candidate.Directory
+        }
+    }
+    return $null
+}
+
 function Get-WorkBuddyActiveSessionCount {
     $sessionDatabase = Join-Path $env:USERPROFILE ".workbuddy\workbuddy.db"
     if (-not (Test-Path -LiteralPath $sessionDatabase -PathType Leaf)) {
@@ -535,12 +573,64 @@ else {
         Assert-PortAvailable -Port $WorkBuddyPort
 
         Write-Host "Starting WorkBuddy with CDP on port $WorkBuddyPort..."
-        Start-Process `
-            -FilePath $workBuddyExecutable `
-            -ArgumentList @(
-                "--remote-debugging-address=127.0.0.1",
-                "--remote-debugging-port=$WorkBuddyPort"
-            )
+        $workBuddyNodeDirectory = Resolve-WorkBuddyBundledNodeDirectory
+        $previousProcessPath = $env:Path
+        $previousNpmAudit = [Environment]::GetEnvironmentVariable("npm_config_audit", "Process")
+        $previousNpmFund = [Environment]::GetEnvironmentVariable("npm_config_fund", "Process")
+        $previousNpmUpdateNotifier = [Environment]::GetEnvironmentVariable("npm_config_update_notifier", "Process")
+        $previousNpmPreferOffline = [Environment]::GetEnvironmentVariable("npm_config_prefer_offline", "Process")
+        $previousBashDefaultTimeout = [Environment]::GetEnvironmentVariable("BASH_DEFAULT_TIMEOUT_MS", "Process")
+        $previousBashMaxTimeout = [Environment]::GetEnvironmentVariable("BASH_MAX_TIMEOUT_MS", "Process")
+        try {
+            if ($workBuddyNodeDirectory) {
+                $pathEntries = @($env:Path -split ";" | Where-Object { $_ })
+                if ($workBuddyNodeDirectory -notin $pathEntries) {
+                    $env:Path = (@($workBuddyNodeDirectory) + $pathEntries) -join ";"
+                }
+            }
+            if ($null -eq $previousNpmAudit) {
+                $env:npm_config_audit = "false"
+            }
+            if ($null -eq $previousNpmFund) {
+                $env:npm_config_fund = "false"
+            }
+            if ($null -eq $previousNpmUpdateNotifier) {
+                $env:npm_config_update_notifier = "false"
+            }
+            if ($null -eq $previousNpmPreferOffline) {
+                $env:npm_config_prefer_offline = "true"
+            }
+            if ($null -eq $previousBashDefaultTimeout) {
+                $env:BASH_DEFAULT_TIMEOUT_MS = "600000"
+            }
+            if ($null -eq $previousBashMaxTimeout) {
+                $env:BASH_MAX_TIMEOUT_MS = "600000"
+            }
+            Start-Process `
+                -FilePath $workBuddyExecutable `
+                -ArgumentList @(
+                    "--remote-debugging-address=127.0.0.1",
+                    "--remote-debugging-port=$WorkBuddyPort"
+                )
+        }
+        finally {
+            $env:Path = $previousProcessPath
+            foreach ($savedValue in @(
+                [pscustomobject]@{ Name = "npm_config_audit"; Value = $previousNpmAudit },
+                [pscustomobject]@{ Name = "npm_config_fund"; Value = $previousNpmFund },
+                [pscustomobject]@{ Name = "npm_config_update_notifier"; Value = $previousNpmUpdateNotifier },
+                [pscustomobject]@{ Name = "npm_config_prefer_offline"; Value = $previousNpmPreferOffline },
+                [pscustomobject]@{ Name = "BASH_DEFAULT_TIMEOUT_MS"; Value = $previousBashDefaultTimeout },
+                [pscustomobject]@{ Name = "BASH_MAX_TIMEOUT_MS"; Value = $previousBashMaxTimeout }
+            )) {
+                if ($null -eq $savedValue.Value) {
+                    Remove-Item -LiteralPath "Env:$($savedValue.Name)" -ErrorAction SilentlyContinue
+                }
+                else {
+                    [Environment]::SetEnvironmentVariable($savedValue.Name, $savedValue.Value, "Process")
+                }
+            }
+        }
     }
 }
 

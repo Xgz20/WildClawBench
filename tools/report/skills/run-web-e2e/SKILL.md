@@ -31,7 +31,7 @@ description: 按用户明确要求动态组合 Web E2E 的准备、桌面 Harnes
 用户明确选择“执行、评分、打包回传”，并同时提供 `__execution.zip` 与 `__scoring.zip` 时，允许只给两个绝对路径。控制 Harness 必须自行完成其余机械步骤：
 
 1. 校验两个 ZIP 的批次、Harness、Profile 和完整 task IDs 一致；不能按文件名猜测身份。
-2. 从 execution ZIP 解压出独立 worker 根。默认在 execution ZIP 同级创建其顶层目录；目标已存在时只允许按已有磁盘状态恢复，不能覆盖或混入管理员 staging 根。
+2. 从 execution ZIP 解压出独立 worker 根。默认在 execution ZIP 同级创建其顶层目录；Windows WorkBuddy 必须改用 `D:\debug-workspace\web-e2e\w\<短批次ID>` 这类短的独立目录作为 worker 根本身，解压时去掉 ZIP 顶层包名或在发送前把该顶层目录安全改为短名，并确认每题候选 `workspace` 绝对路径不超过 180 字符，避免包名和完整 task ID 叠加后触发 npm 的传统 Win32 长路径行为。目标已存在时只允许按已有磁盘状态恢复，不能覆盖或混入管理员 staging 根。
 3. 解压后读取 worker 根 `manifest.json.required_skills`；若管理员同时分发了 `packages/skills-manifest.json`，还要先校验其中的版本化 ZIP SHA-256。使用本 Skill 的 `scripts/check_web_e2e_skills.py` 对比已安装 Skill 的名称、版本和内容 SHA-256。完全一致的 Skill 跳过安装；只导入 `install_required` 列出的 `<skill-name>-skill-v<version>.zip`，然后重新检查。版本相同但内容 SHA 不同必须停止，不能继续使用或静默覆盖。
 4. 根据 `manifest.harness.id` 选择 WorkBuddy、AstronStudio 或 QwenWork Driver，并检查它与 Codex Desktop Driver 的锁定依赖。`node_modules/playwright-core` 缺失或 `npm ls --depth=0` 失败时，由控制 Harness 在对应 Driver 目录自动执行 `npm ci`；用户无需手工安装。安装失败进入 `NEEDS_ATTENTION`，不能把依赖装入候选 workspace。
 5. 被评 Harness 未显式指定模型时保持并回读当前模型，不操作推理强度；权限按生产契约使用 `full-access`。WorkBuddy、AstronStudio 和 QwenWork 的新执行队列均默认三槽、最大八槽；评分新批次默认三槽。三种 Harness 的 UI 操作始终保持单槽。Codex Desktop CDP 未显式提供时使用 `http://127.0.0.1:9230`。
@@ -63,7 +63,7 @@ macOS 使用：
 /bin/bash <run-web-e2e-skill-dir>/scripts/start_macos_desktop_debug.sh --application all
 ```
 
-Windows 脚本动态解析当前 Codex MSIX 包的真实 manifest 入口，并从当前用户注册表及 `%LOCALAPPDATA%\Programs` 解析 `AStudio.exe`、`AstronStudio.exe`、`Acode.exe`、`WorkBuddy.exe` 或 `CodeBuddy.exe`。WorkBuddy 重启前还会只读检查 `%USERPROFILE%\.workbuddy\workbuddy.db`，存在活动或待处理 session 时失败关闭；停止旧实例时只处理可执行文件完整路径与动态发现结果一致的进程，同名但位于其他目录的辅助进程或应用必须跳过。macOS 脚本默认解析 `/Applications` 和当前用户 `Applications` 下的 `ChatGPT.app` / `Codex.app` 与 `AStudio.app` / `AstronStudio.app`；非标准位置只允许通过对应的显式路径参数传入。
+Windows 脚本动态解析当前 Codex MSIX 包的真实 manifest 入口，并从当前用户注册表及 `%LOCALAPPDATA%\Programs` 解析 `AStudio.exe`、`AstronStudio.exe`、`Acode.exe`、`WorkBuddy.exe` 或 `CodeBuddy.exe`。WorkBuddy 重启前还会只读检查 `%USERPROFILE%\.workbuddy\workbuddy.db`，存在活动或待处理 session 时失败关闭；停止旧实例时只处理可执行文件完整路径与动态发现结果一致的进程，同名但位于其他目录的辅助进程或应用必须跳过。启动 WorkBuddy 时动态选择其 `%USERPROFILE%\.workbuddy\binaries\node\versions` 下最高的完整 Node/npm 运行时，只对新客户端进程补充 `PATH`，并默认设置 `npm_config_audit=false`、`npm_config_fund=false`、`npm_config_update_notifier=false`、`npm_config_prefer_offline=true` 以及 WorkBuddy 官方支持的 `BASH_DEFAULT_TIMEOUT_MS=600000`、`BASH_MAX_TIMEOUT_MS=600000`；用户已有同名 Shell 时限配置优先，启动脚本自身环境随后恢复。macOS 脚本默认解析 `/Applications` 和当前用户 `Applications` 下的 `ChatGPT.app` / `Codex.app` 与 `AStudio.app` / `AstronStudio.app`；非标准位置只允许通过对应的显式路径参数传入。
 
 两个脚本均等待所选的 Codex `9230`、AstronStudio `9240` 或 WorkBuddy `9229` 的 `/json/list` 返回至少一个真实 target，并验证端口监听者属于目标客户端。端口被无关进程占用时不得结束该进程，脚本失败并进入 `NEEDS_ATTENTION`。`-CheckOnly` / `--check-only` 仅用于故障诊断，不是标准 E2E 前置流程。
 

@@ -28,9 +28,21 @@ import {
   hasTrustedDomCompletion,
   prepareClientForNewAttempt,
   restartWorkBuddy,
+  terminalProcessCleanupTiming,
   waitForRestartedAttemptRecovery,
   waitForUniqueVisible,
 } from "../driver.mjs";
+
+test("ordinary terminal cleanup leaves enough time for a late Windows preview process", () => {
+  assert.deepEqual(terminalProcessCleanupTiming("SUCCEEDED"), {
+    quietMilliseconds: 45_000,
+    waitMilliseconds: 120_000,
+  });
+  assert.deepEqual(terminalProcessCleanupTiming("TIMEOUT"), {
+    quietMilliseconds: 5_000,
+    waitMilliseconds: 10_000,
+  });
+});
 
 test("full access confirmation clicks the stable label and verifies readback", async () => {
   let labelClicks = 0;
@@ -420,7 +432,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.7");
+  assert.equal(state.driver.version, "1.8.9");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

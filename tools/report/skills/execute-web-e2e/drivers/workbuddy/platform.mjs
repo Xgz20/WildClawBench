@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { access, realpath, stat } from "node:fs/promises";
+import { access, readdir, realpath, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import * as systemPath from "node:path";
 
@@ -26,12 +26,13 @@ function runCapture(command, args, options = {}) {
   });
 }
 
-function spawnDetached(command, args) {
+function spawnDetached(command, args, options = {}) {
   return new Promise((resolvePromise, rejectPromise) => {
     const child = spawn(command, args, {
       detached: true,
       stdio: "ignore",
       windowsHide: false,
+      ...options,
     });
     child.once("error", rejectPromise);
     child.once("spawn", () => {
@@ -595,12 +596,94 @@ export async function terminateWorkBuddyProcess(processInfo, overrides = {}) {
   return runCommand("/bin/kill", ["-TERM", String(processInfo.pid)], { allowFailure: true, capture: true });
 }
 
+function compareRuntimeDirectoryNames(left, right) {
+  const leftParts = String(left).match(/\d+/gu)?.map(Number) || [];
+  const rightParts = String(right).match(/\d+/gu)?.map(Number) || [];
+  const length = Math.max(leftParts.length, rightParts.length);
+  for (let index = 0; index < length; index += 1) {
+    const difference = (rightParts[index] || 0) - (leftParts[index] || 0);
+    if (difference !== 0) return difference;
+  }
+  return String(right).localeCompare(String(left));
+}
+
+export async function resolveWorkBuddyBundledNodeDirectory(overrides = {}) {
+  const platform = overrides.platform || process.platform;
+  if (platform !== "win32") return "";
+  const environment = overrides.environment || process.env;
+  const userProfile = overrides.userProfile || environment.USERPROFILE || homedir();
+  const pathApi = overrides.pathApi || systemPath.win32;
+  const readDirectory = overrides.readDirectory || readdir;
+  const pathExists = overrides.pathExists || existsSync;
+  const versionsRoot = pathApi.join(userProfile, ".workbuddy", "binaries", "node", "versions");
+  let names;
+  try {
+    names = await readDirectory(versionsRoot);
+  } catch {
+    return "";
+  }
+  for (const name of names.map(String).sort(compareRuntimeDirectoryNames)) {
+    const directory = pathApi.join(versionsRoot, name);
+    if (pathExists(pathApi.join(directory, "node.exe")) && pathExists(pathApi.join(directory, "npm.cmd"))) {
+      return directory;
+    }
+  }
+  return "";
+}
+
+export async function workBuddyLaunchEnvironment(overrides = {}) {
+  const platform = overrides.platform || process.platform;
+  const environment = { ...(overrides.environment || process.env) };
+  if (platform !== "win32") {
+    return { environment, node_directory: null, path_prepend: false, npm_defaults: null };
+  }
+  const nodeDirectory = await resolveWorkBuddyBundledNodeDirectory({ ...overrides, environment });
+  const pathKey = Object.keys(environment).find((key) => key.toLowerCase() === "path") || "Path";
+  const pathEntries = String(environment[pathKey] || "").split(";").filter(Boolean);
+  const pathPrepend = Boolean(nodeDirectory)
+    && !pathEntries.some((entry) => systemPath.win32.normalize(entry).toLowerCase() === systemPath.win32.normalize(nodeDirectory).toLowerCase());
+  if (pathPrepend) environment[pathKey] = [nodeDirectory, ...pathEntries].join(";");
+  if (environment.npm_config_audit === undefined) environment.npm_config_audit = "false";
+  if (environment.npm_config_fund === undefined) environment.npm_config_fund = "false";
+  if (environment.npm_config_update_notifier === undefined) environment.npm_config_update_notifier = "false";
+  if (environment.npm_config_prefer_offline === undefined) environment.npm_config_prefer_offline = "true";
+  if (environment.BASH_DEFAULT_TIMEOUT_MS === undefined) environment.BASH_DEFAULT_TIMEOUT_MS = "600000";
+  if (environment.BASH_MAX_TIMEOUT_MS === undefined) environment.BASH_MAX_TIMEOUT_MS = "600000";
+  return {
+    environment,
+    node_directory: nodeDirectory || null,
+    path_prepend: pathPrepend,
+    npm_defaults: {
+      audit: environment.npm_config_audit,
+      fund: environment.npm_config_fund,
+      update_notifier: environment.npm_config_update_notifier,
+      prefer_offline: environment.npm_config_prefer_offline,
+    },
+    shell_defaults: {
+      timeout_ms: environment.BASH_DEFAULT_TIMEOUT_MS,
+      max_timeout_ms: environment.BASH_MAX_TIMEOUT_MS,
+    },
+  };
+}
+
 export async function launchWorkBuddy(appPath, port, overrides = {}) {
   const platform = overrides.platform || process.platform;
   const runCommand = overrides.runCommand || runCapture;
   const launchDetached = overrides.launchDetached || spawnDetached;
   const debugArgs = ["--remote-debugging-address=127.0.0.1", `--remote-debugging-port=${port}`];
-  if (platform === "win32") return launchDetached(appPath, debugArgs);
+  if (platform === "win32") {
+    const prepared = await workBuddyLaunchEnvironment(overrides);
+    const result = await launchDetached(appPath, debugArgs, { env: prepared.environment });
+    return {
+      ...result,
+      environment_preparation: {
+        node_directory: prepared.node_directory,
+        path_prepend: prepared.path_prepend,
+        npm_defaults: prepared.npm_defaults,
+        shell_defaults: prepared.shell_defaults,
+      },
+    };
+  }
   return runCommand("/usr/bin/open", ["-na", appPath, "--args", ...debugArgs], { allowFailure: true, capture: true });
 }
 

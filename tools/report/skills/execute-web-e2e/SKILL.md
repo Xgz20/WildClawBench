@@ -125,7 +125,7 @@ npm ci
 bash .agents/skills/execute-web-e2e/scripts/run-workbuddy.sh --probe
 ```
 
-Windows 使用 `run-workbuddy.cmd --probe`。Driver 从当前用户卸载注册表和 `%LOCALAPPDATA%\Programs\WorkBuddy` 动态解析 `WorkBuddy.exe` / `CodeBuddy.exe`，状态库固定按当前用户解析为 `%USERPROFILE%\.workbuddy\workbuddy.db`；不得写死用户名。Windows Node.js 不提供 `node:sqlite` 时按顺序回退到 `py -3`、`python` 的只读 `sqlite3`，不能把依赖装入候选 workspace。
+Windows 使用 `run-workbuddy.cmd --probe`。Driver 从当前用户卸载注册表和 `%LOCALAPPDATA%\Programs\WorkBuddy` 动态解析 `WorkBuddy.exe` / `CodeBuddy.exe`，状态库固定按当前用户解析为 `%USERPROFILE%\.workbuddy\workbuddy.db`；不得写死用户名。Windows Node.js 不提供 `node:sqlite` 时按顺序回退到 `py -3`、`python` 的只读 `sqlite3`，不能把 Driver 依赖装入候选 workspace。由 Driver 重启 WorkBuddy 时，还会动态选择 `%USERPROFILE%\.workbuddy\binaries\node\versions` 中版本最高且同时含 `node.exe`、`npm.cmd` 的客户端运行时，将其加入新客户端的进程级 `PATH`；同时为 npm 默认关闭 audit、fund 和更新提示、优先复用本地缓存，并按 WorkBuddy 官方环境变量把 Shell 默认/最大命令时限设为 600000 毫秒，避免 Windows 大依赖树被客户端默认 120000 毫秒中止。用户已显式设置的同名环境值优先。准备结果写入 `automation_state.json.client.launch.attempts[].environment_preparation`，不得写死版本或用户目录。
 
 `--probe` 不会点击“新建任务”。WorkBuddy 只有在新任务页挂载 workspace picker；若当前停在历史会话页，探针会以 `workspace-picker-not-visible` 返回未就绪。切换到未发送的新任务页后重跑，不能把该结果误判为插件或 CDP 不可用。
 
@@ -168,7 +168,7 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy-batch.sh \
   --permission-mode full-access
 ```
 
-Windows 使用同名参数的 `run-workbuddy-batch.cmd`，路径可使用 `D:\debug-workspace\web-e2e` 下的新批次目录。Windows 真机隔离验收完成前必须显式使用 `--run-slots 1`；不能把 macOS 的多槽结论直接外推。
+Windows 使用同名参数的 `run-workbuddy-batch.cmd`。为避免 npm 依赖树触发传统 Win32 长路径问题，worker 必须直接解压到 `D:\debug-workspace\web-e2e\w\<短批次ID>` 这类短目录，不能再嵌套 `workers\<完整批次名>\<完整包名>`；解压后还要在发送前确认每题候选 `workspace` 绝对路径长度不超过 180。该限制只约束 worker 的本机搬运位置，不改变包内 task ID、execution receipt 或候选哈希。Windows 真机隔离验收完成前必须显式使用 `--run-slots 1`；不能把 macOS 的多槽结论直接外推。
 
 新队列默认 `run_slots=3`，最大 8；显式 `--run-slots 1` 可回退为串行。已有队列冻结首次记录的并发值，恢复时省略该参数会沿用冻结值，显式提供不同值则失败关闭。没有 `run_slots` 字段的旧队列迁移为 1，不自动升级为 3。
 
@@ -190,7 +190,9 @@ Windows 重启恢复还会等待原 conversation 对应的唯一 WorkBuddy 会�
 
 达到执行时限后 Driver 必须点击当前会话的停止按钮，确认 WorkBuddy 已进入非运行态，并验证候选 workspace 在静默观察窗口内不再变化。Windows 还必须按候选 workspace 完整绝对路径发现后台种子进程，只终止这些种子及其后代并回读零残留；进程清理摘要写入 `timeout.process_cleanup`，不能用进程名做宽泛清理。只有停止确认、进程清理和 workspace 静默三项证据齐全时才记录 `TIMEOUT`；否则记录 `NEEDS_ATTENTION`。即使指定 `--continue-on-terminal-failure`，任一条件未确认的超时任务也不能进入下一题。
 
-WorkBuddy 任一终态（成功、明确失败或安全超时）在冻结候选 workspace 前，还必须收口当前任务的会话宿主及其进程树。Windows 只能同时依据 WorkBuddy `--serve`、`--session-id` 和任务根完整绝对路径唯一定位会话宿主，并保留候选 workspace 进程匹配作为补充；不得按 WorkBuddy/Node 进程名宽泛终止。首次回读零残留后还要保持 45 秒安静观察，期间出现的迟到候选进程必须按精确路径再次清除并重新计算安静窗口。清理结果写入 `terminal_process_cleanup` 并进入 execution receipt；清理失败、安静窗口不足或匹配到多个宿主时进入 `NEEDS_ATTENTION`，禁止批次补位或生成有效回执。
+WorkBuddy 任一终态（成功、明确失败或安全超时）在冻结候选 workspace 前，还必须收口当前任务的会话宿主及其进程树。Windows 只能同时依据 WorkBuddy `--serve`、`--session-id` 和任务根完整绝对路径唯一定位会话宿主，并保留候选 workspace 进程匹配作为补充；不得按 WorkBuddy/Node 进程名宽泛终止。首次回读零残留后还要保持 45 秒安静观察，普通终态最多观察 120 秒，期间出现的迟到候选进程必须按精确路径再次清除并重新计算安静窗口；这样可覆盖 WorkBuddy 在首轮清理接近一分钟时才投递的预览进程。清理结果写入 `terminal_process_cleanup` 并进入 execution receipt；清理失败、安静窗口不足或匹配到多个宿主时进入 `NEEDS_ATTENTION`，禁止批次补位或生成有效回执。
+
+若 `NEEDS_ATTENTION` 的最后原因仅为 `terminal-task-process-cleanup-failed`，同一 run-id 的 `--resume` 可以自动重新观察原 conversation 并再次执行精确收口；该恢复路径不得重发 Prompt，也不能跳过终态、进程零残留或安静窗口门禁。
 
 队列退出时会在 Harness 根目录生成 `execution-receipt.json`，汇总任务范围、attempt、自动化/正式状态、客户端与 Driver 版本、请求/实际模型、权限、Prompt/workspace 哈希和证据相对路径。生成回执时会重新计算每题 workspace SHA；`integrity.valid=true` 要求请求任务集合与 manifest 完全一致、记录齐全、身份和模型一致、所有任务均为终态，且当前 workspace 的候选文件仍等于 Driver 终态冻结值。若候选文件已漂移，队列改为 `FAILED`，不得进入评分。
 

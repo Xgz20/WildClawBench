@@ -316,6 +316,7 @@ export async function restartWorkBuddy(config, overrides = {}, recoverySession =
       attempt,
       open_exit_code: result.code,
       open_stderr: String(result.stderr || "").trim().slice(0, 2000) || null,
+      environment_preparation: result.environment_preparation || null,
       endpoint_ready: false,
     };
     attempts.push(evidence);
@@ -1085,13 +1086,22 @@ async function takeScreenshot(page, config, state, name) {
   return path;
 }
 
+export function terminalProcessCleanupTiming(phase) {
+  return phase === "TIMEOUT"
+    ? { quietMilliseconds: 5_000, waitMilliseconds: 10_000 }
+    : { quietMilliseconds: 45_000, waitMilliseconds: 120_000 };
+}
+
 async function finalize(config, state, identityInfo, phase, { error = null, terminalSource = null, finalText = "" } = {}) {
   try {
     state.terminal_process_cleanup = await terminateCandidateWorkspaceProcesses(config.candidateWorkspace, {
       taskRoot: config.workspace,
       includeSessionHost: true,
-      quietMilliseconds: phase === "TIMEOUT" ? 5_000 : 45_000,
-      waitMilliseconds: phase === "TIMEOUT" ? 10_000 : 60_000,
+      // WorkBuddy may start another background preview process near the end of
+      // the first cleanup minute.  Keep the overall deadline long enough to
+      // observe a complete 45-second quiet window after that late process is
+      // terminated instead of failing closed a few seconds too early.
+      ...terminalProcessCleanupTiming(phase),
     });
   } catch (cleanupError) {
     state.terminal_process_cleanup = {

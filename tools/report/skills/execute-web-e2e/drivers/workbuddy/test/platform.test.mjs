@@ -11,9 +11,11 @@ import {
   launchWorkBuddy,
   queryWorkBuddySessionSnapshot,
   resolveWorkBuddyAppPath,
+  resolveWorkBuddyBundledNodeDirectory,
   selectCandidateWorkspaceProcesses,
   terminateCandidateWorkspaceProcesses,
   workBuddyGuiSessionStatus,
+  workBuddyLaunchEnvironment,
   workBuddyProcessIdentity,
   workBuddySqliteBackendStatus,
 } from "../platform.mjs";
@@ -233,9 +235,14 @@ test("Windows launch forwards the exact CDP address and port", async () => {
   const observed = {};
   const result = await launchWorkBuddy("C:\\Apps\\WorkBuddy\\WorkBuddy.exe", "9229", {
     platform: "win32",
-    launchDetached: async (command, args) => {
+    userProfile: "C:\\Users\\dynamic-user",
+    environment: { Path: "C:\\Windows\\System32", KEEP_ME: "yes" },
+    readDirectory: async () => ["20.18.1-1", "22.22.2-3", "22.5.0-1"],
+    pathExists: (path) => /22\.22\.2-3\\(?:node\.exe|npm\.cmd)$/iu.test(path),
+    launchDetached: async (command, args, options) => {
       observed.command = command;
       observed.args = args;
+      observed.options = options;
       return { code: 0, stdout: "", stderr: "", pid: 4321 };
     },
   });
@@ -244,7 +251,45 @@ test("Windows launch forwards the exact CDP address and port", async () => {
     "--remote-debugging-address=127.0.0.1",
     "--remote-debugging-port=9229",
   ]);
+  assert.equal(
+    observed.options.env.Path,
+    "C:\\Users\\dynamic-user\\.workbuddy\\binaries\\node\\versions\\22.22.2-3;C:\\Windows\\System32",
+  );
+  assert.equal(observed.options.env.npm_config_audit, "false");
+  assert.equal(observed.options.env.npm_config_fund, "false");
+  assert.equal(observed.options.env.npm_config_update_notifier, "false");
+  assert.equal(observed.options.env.npm_config_prefer_offline, "true");
+  assert.equal(observed.options.env.BASH_DEFAULT_TIMEOUT_MS, "600000");
+  assert.equal(observed.options.env.BASH_MAX_TIMEOUT_MS, "600000");
+  assert.equal(observed.options.env.KEEP_ME, "yes");
+  assert.equal(result.environment_preparation.path_prepend, true);
+  assert.equal(result.environment_preparation.node_directory.endsWith("22.22.2-3"), true);
   assert.equal(result.pid, 4321);
+});
+
+test("Windows bundled Node discovery fails closed when no complete runtime exists", async () => {
+  const directory = await resolveWorkBuddyBundledNodeDirectory({
+    platform: "win32",
+    userProfile: "C:\\Users\\dynamic-user",
+    readDirectory: async () => ["22.22.2-3"],
+    pathExists: (path) => path.endsWith("node.exe"),
+  });
+  assert.equal(directory, "");
+
+  const prepared = await workBuddyLaunchEnvironment({
+    platform: "win32",
+    userProfile: "C:\\Users\\dynamic-user",
+    environment: { Path: "C:\\Windows\\System32", npm_config_audit: "true" },
+    readDirectory: async () => [],
+  });
+  assert.equal(prepared.node_directory, null);
+  assert.equal(prepared.path_prepend, false);
+  assert.equal(prepared.environment.Path, "C:\\Windows\\System32");
+  assert.equal(prepared.environment.npm_config_audit, "true");
+  assert.equal(prepared.environment.npm_config_fund, "false");
+  assert.equal(prepared.environment.npm_config_prefer_offline, "true");
+  assert.equal(prepared.environment.BASH_DEFAULT_TIMEOUT_MS, "600000");
+  assert.equal(prepared.environment.BASH_MAX_TIMEOUT_MS, "600000");
 });
 
 test("Windows session query falls back to Python sqlite and normalizes the sessions schema", async () => {

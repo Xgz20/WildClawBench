@@ -250,7 +250,7 @@ test("active conversations are observed once without resending the prompt", () =
   assert.equal(driverArgs.includes("--retry-pre-send-failure"), false);
 });
 
-test("only transient observation interruptions resume without manual approval", () => {
+test("only safe observation and terminal cleanup failures resume without manual approval", () => {
   assert.equal(canAutomaticallyResumeAttention({
     phase: "NEEDS_ATTENTION",
     history: [{ phase: "NEEDS_ATTENTION", reason: "driver-interrupted" }],
@@ -262,6 +262,10 @@ test("only transient observation interruptions resume without manual approval", 
   assert.equal(canAutomaticallyResumeAttention({
     phase: "NEEDS_ATTENTION",
     history: [{ phase: "NEEDS_ATTENTION", reason: "unknown-session-status" }],
+  }), true);
+  assert.equal(canAutomaticallyResumeAttention({
+    phase: "NEEDS_ATTENTION",
+    history: [{ phase: "NEEDS_ATTENTION", reason: "terminal-task-process-cleanup-failed" }],
   }), true);
   assert.equal(canAutomaticallyResumeAttention({
     phase: "NEEDS_ATTENTION",
