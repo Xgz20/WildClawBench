@@ -45,6 +45,8 @@ import {
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const NATIVE_FOLDER_HELPER = join(SCRIPT_DIR, "select-folder.swift");
 const RESTART_RECOVERY_GRACE_MILLISECONDS = 60_000;
+const SEND_ACCEPTANCE_TIMEOUT_MILLISECONDS = 60_000;
+const SEND_CLICK_ATTEMPTS = 2;
 
 function usage() {
   return `WorkBuddy Web E2E 单题执行 Driver
@@ -653,6 +655,10 @@ async function archiveRetryablePreSendFailure(config, state) {
   if (state.phase !== "INFRA_FAILED" || state.timing?.sent_at || hasWorkspaceChanges(state)) {
     throw new Error("只允许重试 Prompt 发送前且候选 workspace 零变化的 INFRA_FAILED");
   }
+  if (state.send_confirmation?.click_attempted
+    && (!state.send_confirmation?.confirmed_unsent || !config.restartApp)) {
+    throw new Error("发生过发送点击的失败仅允许在确认未接收且使用 --restart-app 后重试");
+  }
   const archiveDir = join(dirname(config.outputDir), ".attempts", basename(config.outputDir), state.attempt_id);
   await access(archiveDir).then(
     () => { throw new Error(`重试归档目录已存在：${archiveDir}`); },
@@ -714,6 +720,96 @@ async function clickSend(page, editor, timeout) {
   }
   await editor.press("Enter", { timeout });
   return "enter-key-fallback";
+}
+
+function normalizePromptEditorText(value) {
+  return String(value || "").replace(/\r\n/g, "\n").trim();
+}
+
+async function readPromptEditorText(editor) {
+  return editor.evaluate((element) => {
+    if ("value" in element && typeof element.value === "string") return element.value;
+    return element.innerText || element.textContent || "";
+  });
+}
+
+export async function waitForPromptSubmissionAcceptance(page, editor, config, state, overrides = {}) {
+  const queryAttemptSessions = overrides.querySessions || querySessions;
+  const inspectConversation = overrides.inspectSelectedConversationId || inspectSelectedConversationId;
+  const inspectPage = overrides.inspectDom || inspectDom;
+  const readEditor = overrides.readEditorText || readPromptEditorText;
+  const takeSnapshot = overrides.snapshotTree || snapshotTree;
+  const wait = overrides.sleep || sleep;
+  const now = overrides.now || Date.now;
+  const timeoutMilliseconds = overrides.timeoutMilliseconds ?? SEND_ACCEPTANCE_TIMEOUT_MILLISECONDS;
+  const pollMilliseconds = overrides.pollMilliseconds ?? 500;
+  const expectedPrompt = normalizePromptEditorText(config.prompt);
+  const baselineConversationId = state.session.dom_baseline_conversation_id || null;
+  const startedAt = now();
+  const deadline = startedAt + timeoutMilliseconds;
+  let lastEditorText = "";
+  let lastDom = null;
+
+  for (;;) {
+    const domConversationId = await inspectConversation(page);
+    const session = chooseAttemptSession(await queryAttemptSessions(config.sessionDb), state, config.workspace);
+    lastDom = await inspectPage(page);
+    lastEditorText = normalizePromptEditorText(await readEditor(editor).catch(() => ""));
+
+    if (domConversationId && domConversationId !== baselineConversationId) {
+      return {
+        accepted: true,
+        source: "workbuddy-dom-conversation-id",
+        observed_milliseconds: now() - startedAt,
+        dom_conversation_id: domConversationId,
+        session: session || null,
+        editor_cleared: lastEditorText !== expectedPrompt,
+      };
+    }
+    if (session) {
+      return {
+        accepted: true,
+        source: "workbuddy-session-db",
+        observed_milliseconds: now() - startedAt,
+        dom_conversation_id: null,
+        session,
+        editor_cleared: lastEditorText !== expectedPrompt,
+      };
+    }
+    if (lastDom?.status?.kind === "running" && lastEditorText !== expectedPrompt) {
+      return {
+        accepted: true,
+        source: "workbuddy-dom-running",
+        observed_milliseconds: now() - startedAt,
+        dom_conversation_id: null,
+        session: null,
+        editor_cleared: true,
+      };
+    }
+    if (now() >= deadline) break;
+    await wait(Math.min(pollMilliseconds, Math.max(1, deadline - now())));
+  }
+
+  const currentSnapshot = await takeSnapshot(config.candidateWorkspace);
+  const workspaceChanges = diffSnapshots(state.artifacts.initial, currentSnapshot);
+  const workspaceUnchanged = !["added", "modified", "removed"]
+    .some((key) => Array.isArray(workspaceChanges[key]) && workspaceChanges[key].length > 0);
+  const editorRetainsPrompt = lastEditorText === expectedPrompt;
+  const domInactive = !new Set(["running", "success", "failure"]).has(lastDom?.status?.kind);
+  const confirmedUnsent = editorRetainsPrompt && domInactive && workspaceUnchanged;
+  return {
+    accepted: false,
+    source: confirmedUnsent ? "confirmed-not-accepted" : "ambiguous-send-boundary",
+    observed_milliseconds: now() - startedAt,
+    dom_conversation_id: null,
+    session: null,
+    editor_cleared: !editorRetainsPrompt,
+    editor_retains_prompt: editorRetainsPrompt,
+    dom_status: lastDom?.status?.status || null,
+    workspace_unchanged: workspaceUnchanged,
+    workspace_changes: workspaceChanges,
+    confirmed_unsent: confirmedUnsent,
+  };
 }
 
 async function chooseWorkBuddyPage(browser, timeout) {
@@ -1583,9 +1679,71 @@ async function runAutomation(config, identityInfo) {
     state.session.dom_baseline_conversation_id = await inspectSelectedConversationId(page);
     transitionState(state, "READY_TO_SEND");
     await saveState(config, state);
-    state.send_method = await clickSend(page, editor, timeout);
-    promptMayHaveBeenSent = true;
-    state.timing.sent_at = new Date().toISOString();
+    state.send_confirmation = {
+      click_attempted: false,
+      accepted: false,
+      confirmed_unsent: false,
+      attempts: [],
+    };
+    let acceptedSubmission = null;
+    for (let clickAttempt = 1; clickAttempt <= SEND_CLICK_ATTEMPTS; clickAttempt += 1) {
+      const clickedAt = new Date().toISOString();
+      const sendMethod = await clickSend(page, editor, timeout);
+      promptMayHaveBeenSent = true;
+      state.send_method = sendMethod;
+      state.send_confirmation.click_attempted = true;
+      state.send_confirmation.attempts.push({ attempt: clickAttempt, method: sendMethod, clicked_at: clickedAt });
+      await saveState(config, state);
+      const confirmation = await waitForPromptSubmissionAcceptance(page, editor, config, state);
+      Object.assign(state.send_confirmation.attempts.at(-1), { confirmation });
+      state.send_confirmation.confirmed_unsent = confirmation.confirmed_unsent === true;
+      await saveState(config, state);
+      if (confirmation.accepted) {
+        acceptedSubmission = { ...confirmation, clicked_at: clickedAt, attempt: clickAttempt };
+        break;
+      }
+      if (!confirmation.confirmed_unsent || clickAttempt === SEND_CLICK_ATTEMPTS) break;
+      await takeScreenshot(page, config, state, `07-send-not-accepted-attempt-${clickAttempt}.png`);
+    }
+
+    if (!acceptedSubmission) {
+      const lastConfirmation = state.send_confirmation.attempts.at(-1)?.confirmation || {};
+      state.send_confirmation.accepted = false;
+      state.send_confirmation.confirmed_unsent = lastConfirmation.confirmed_unsent === true;
+      await takeScreenshot(page, config, state, "08-prompt-not-accepted.png");
+      if (lastConfirmation.confirmed_unsent) {
+        return finalize(config, state, identityInfo, "INFRA_FAILED", {
+          terminalSource: "workbuddy-send-not-accepted",
+          error: `WorkBuddy 连续 ${state.send_confirmation.attempts.length} 次点击发送后仍保留完整 Prompt，且未创建会话、未进入运行态、workspace 零变化；判定客户端未接收 Prompt`,
+        });
+      }
+      return persistNeedsAttention(
+        config,
+        state,
+        identityInfo,
+        "ambiguous-send-boundary",
+        "发送点击后未获得稳定接收证据，且无法证明 Prompt 未被接收；禁止重复发送",
+        page,
+        "09-ambiguous-send-boundary.png",
+      );
+    }
+
+    state.send_confirmation.accepted = true;
+    state.send_confirmation.confirmed_unsent = false;
+    state.send_confirmation.accepted_at = new Date().toISOString();
+    state.send_confirmation.accepted_source = acceptedSubmission.source;
+    state.send_confirmation.accepted_attempt = acceptedSubmission.attempt;
+    if (acceptedSubmission.dom_conversation_id) {
+      state.session.dom_conversation_id = acceptedSubmission.dom_conversation_id;
+      state.session.dom_conversation_captured_at = state.send_confirmation.accepted_at;
+    }
+    if (acceptedSubmission.session) {
+      state.session.conversation_id = acceptedSubmission.session.conversationId;
+      state.session.cwd = acceptedSubmission.session.cwd;
+      state.session.raw_status = acceptedSubmission.session.status;
+      state.session.updated_at_ms = acceptedSubmission.session.updatedAt || null;
+    }
+    state.timing.sent_at = acceptedSubmission.clicked_at;
     transitionState(state, "PROMPT_SENT");
     await saveState(config, state);
     await captureAttemptConversation(page, state, Math.min(timeout, 10000));

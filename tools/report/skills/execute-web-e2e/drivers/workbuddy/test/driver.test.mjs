@@ -30,6 +30,7 @@ import {
   prepareClientForNewAttempt,
   restartWorkBuddy,
   terminalProcessCleanupTiming,
+  waitForPromptSubmissionAcceptance,
   waitForRestartedAttemptRecovery,
   waitForUniqueVisible,
 } from "../driver.mjs";
@@ -273,6 +274,97 @@ test("detached dispatch requires a stable WorkBuddy conversation id", () => {
   assert.equal(hasStableConversationId({ session: { conversation_id: "db-1" } }), true);
 });
 
+test("prompt submission is accepted only after an exact workspace session appears", async () => {
+  const initial = { entries: [{ path: ".gitkeep", type: "file", sha256: "empty" }] };
+  const state = {
+    session: { baseline: [], dom_baseline_conversation_id: "previous" },
+    timing: { prepared_at: "2026-09-12T00:00:00.000Z", sent_at: null },
+    artifacts: { initial },
+  };
+  const session = {
+    conversationId: "current",
+    cwd: "/tmp/task",
+    status: "InProgress",
+    createdAt: Date.parse("2026-09-12T00:00:01.000Z"),
+    updatedAt: Date.parse("2026-09-12T00:00:01.000Z"),
+  };
+  const result = await waitForPromptSubmissionAcceptance({}, {}, {
+    prompt: "build a site",
+    sessionDb: "/tmp/workbuddy.db",
+    workspace: "/tmp/task",
+    candidateWorkspace: "/tmp/task/workspace",
+  }, state, {
+    querySessions: async () => [session],
+    inspectSelectedConversationId: async () => null,
+    inspectDom: async () => ({ status: { kind: "missing", status: "" } }),
+    readEditorText: async () => "",
+    snapshotTree: async () => { throw new Error("accepted submission must not need a workspace snapshot"); },
+    now: () => 10,
+  });
+  assert.equal(result.accepted, true);
+  assert.equal(result.source, "workbuddy-session-db");
+  assert.equal(result.session.conversationId, "current");
+});
+
+test("prompt submission permits one retry only after proving the click was not accepted", async () => {
+  let clock = 0;
+  const initial = { entries: [{ path: ".gitkeep", type: "file", sha256: "empty" }] };
+  const state = {
+    session: { baseline: [], dom_baseline_conversation_id: null },
+    timing: { prepared_at: "2026-09-12T00:00:00.000Z", sent_at: null },
+    artifacts: { initial },
+  };
+  const result = await waitForPromptSubmissionAcceptance({}, {}, {
+    prompt: "build a site\r\n",
+    sessionDb: "/tmp/workbuddy.db",
+    workspace: "/tmp/task",
+    candidateWorkspace: "/tmp/task/workspace",
+  }, state, {
+    querySessions: async () => [],
+    inspectSelectedConversationId: async () => null,
+    inspectDom: async () => ({ status: { kind: "missing", status: "" } }),
+    readEditorText: async () => "build a site\n",
+    snapshotTree: async () => initial,
+    sleep: async (milliseconds) => { clock += milliseconds; },
+    now: () => clock,
+    timeoutMilliseconds: 20,
+    pollMilliseconds: 10,
+  });
+  assert.equal(result.accepted, false);
+  assert.equal(result.confirmed_unsent, true);
+  assert.equal(result.editor_retains_prompt, true);
+  assert.equal(result.workspace_unchanged, true);
+  assert.deepEqual(result.workspace_changes, { added: [], modified: [], removed: [] });
+});
+
+test("prompt submission remains ambiguous when the editor clears without a session or running state", async () => {
+  let clock = 0;
+  const initial = { entries: [{ path: ".gitkeep", type: "file", sha256: "empty" }] };
+  const result = await waitForPromptSubmissionAcceptance({}, {}, {
+    prompt: "build a site",
+    sessionDb: "/tmp/workbuddy.db",
+    workspace: "/tmp/task",
+    candidateWorkspace: "/tmp/task/workspace",
+  }, {
+    session: { baseline: [], dom_baseline_conversation_id: null },
+    timing: { prepared_at: "2026-09-12T00:00:00.000Z", sent_at: null },
+    artifacts: { initial },
+  }, {
+    querySessions: async () => [],
+    inspectSelectedConversationId: async () => null,
+    inspectDom: async () => ({ status: { kind: "missing", status: "" } }),
+    readEditorText: async () => "",
+    snapshotTree: async () => initial,
+    sleep: async (milliseconds) => { clock += milliseconds; },
+    now: () => clock,
+    timeoutMilliseconds: 20,
+    pollMilliseconds: 10,
+  });
+  assert.equal(result.accepted, false);
+  assert.equal(result.confirmed_unsent, false);
+  assert.equal(result.source, "ambiguous-send-boundary");
+});
+
 test("parseArgs accepts a dynamic WorkBuddy model", () => {
   const parsed = parseArgs(["--workspace", "/tmp/task-a", "--model", "Hy3"]);
   assert.equal(parsed.model, "Hy3");
@@ -457,7 +549,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.10");
+  assert.equal(state.driver.version, "1.8.11");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);
