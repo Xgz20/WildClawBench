@@ -127,6 +127,8 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy.sh --probe
 
 Windows 使用 `run-workbuddy.cmd --probe`。Driver 从当前用户卸载注册表和 `%LOCALAPPDATA%\Programs\WorkBuddy` 动态解析 `WorkBuddy.exe` / `CodeBuddy.exe`，状态库固定按当前用户解析为 `%USERPROFILE%\.workbuddy\workbuddy.db`；不得写死用户名。Windows Node.js 不提供 `node:sqlite` 时按顺序回退到 `py -3`、`python` 的只读 `sqlite3`，不能把 Driver 依赖装入候选 workspace。由 Driver 重启 WorkBuddy 时，还会动态选择 `%USERPROFILE%\.workbuddy\binaries\node\versions` 中版本最高且同时含 `node.exe`、`npm.cmd` 的客户端运行时，将其加入新客户端的进程级 `PATH`；同时为 npm 默认关闭 audit、fund 和更新提示、优先复用本地缓存，并按 WorkBuddy 官方环境变量把 Shell 默认/最大命令时限设为 600000 毫秒，避免 Windows 大依赖树被客户端默认 120000 毫秒中止。用户已显式设置的同名环境值优先。准备结果写入 `automation_state.json.client.launch.attempts[].environment_preparation`，不得写死版本或用户目录。
 
+Windows WorkBuddy 的 Electron 页面在部分更新版本中会让 Playwright 高层截图接口永久等待，即使字体已经加载完成。Driver 在 Windows 必须通过当前已附着页面的 CDP `Page.captureScreenshot` 直接采集可视区域 PNG；macOS 继续使用 Playwright 截图。每张截图的路径、采集方法和时间写入 `evidence.screenshot_captures`，截图失败仍须失败关闭，不能跳过证据门禁。
+
 `--probe` 不会点击“新建任务”。WorkBuddy 只有在新任务页挂载 workspace picker；若当前停在历史会话页，探针会以 `workspace-picker-not-visible` 返回未就绪。切换到未发送的新任务页后重跑，不能把该结果误判为插件或 CDP 不可用。
 
 执行一个准备包中的任务：

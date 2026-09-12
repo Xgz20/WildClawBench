@@ -22,6 +22,7 @@ import {
   updateExecutionRecord,
 } from "../lib.mjs";
 import {
+  capturePageScreenshot,
   confirmFullAccessRiskDialog,
   ensureModel,
   hasStableConversationId,
@@ -32,6 +33,30 @@ import {
   waitForRestartedAttemptRecovery,
   waitForUniqueVisible,
 } from "../driver.mjs";
+
+test("Windows screenshots use direct CDP capture when Electron page.screenshot hangs", async () => {
+  const root = await mkdtemp(join(tmpdir(), "workbuddy-screenshot-"));
+  const path = join(root, "capture.png");
+  let detached = false;
+  const page = {
+    context: () => ({
+      newCDPSession: async () => ({
+        send: async (method, options) => {
+          assert.equal(method, "Page.captureScreenshot");
+          assert.deepEqual(options, { format: "png", fromSurface: true, captureBeyondViewport: false });
+          return { data: Buffer.from("png-fixture").toString("base64") };
+        },
+        detach: async () => { detached = true; },
+      }),
+    }),
+    screenshot: async () => { throw new Error("must not use Playwright screenshot on Windows"); },
+  };
+  assert.deepEqual(await capturePageScreenshot(page, path, { platform: "win32" }), {
+    method: "cdp-page-captureScreenshot",
+  });
+  assert.equal(await readFile(path, "utf8"), "png-fixture");
+  assert.equal(detached, true);
+});
 
 test("ordinary terminal cleanup leaves enough time for a late Windows preview process", () => {
   assert.deepEqual(terminalProcessCleanupTiming("SUCCEEDED"), {
@@ -432,7 +457,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.9");
+  assert.equal(state.driver.version, "1.8.10");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

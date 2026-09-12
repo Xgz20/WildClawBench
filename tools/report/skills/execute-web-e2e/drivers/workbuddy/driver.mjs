@@ -1078,10 +1078,33 @@ async function saveState(config, state) {
   await atomicWriteJson(config.resultFile, state);
 }
 
+export async function capturePageScreenshot(page, path, overrides = {}) {
+  const platform = overrides.platform || process.platform;
+  if (platform !== "win32") {
+    await page.screenshot({ path });
+    return { method: "playwright" };
+  }
+  const session = await page.context().newCDPSession(page);
+  try {
+    const result = await session.send("Page.captureScreenshot", {
+      format: "png",
+      fromSurface: true,
+      captureBeyondViewport: false,
+    });
+    if (!result?.data) throw new Error("CDP Page.captureScreenshot 未返回 PNG 数据");
+    await writeFile(path, Buffer.from(result.data, "base64"));
+    return { method: "cdp-page-captureScreenshot" };
+  } finally {
+    await session.detach().catch(() => {});
+  }
+}
+
 async function takeScreenshot(page, config, state, name) {
   const path = join(config.outputDir, name);
-  await page.screenshot({ path });
+  const capture = await capturePageScreenshot(page, path);
   state.evidence.screenshots.push(path);
+  state.evidence.screenshot_captures ||= [];
+  state.evidence.screenshot_captures.push({ path, method: capture.method, at: new Date().toISOString() });
   await saveState(config, state);
   return path;
 }
