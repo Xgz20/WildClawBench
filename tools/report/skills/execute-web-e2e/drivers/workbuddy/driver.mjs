@@ -872,17 +872,31 @@ async function inspectSelectedConversationId(page) {
   return [...new Set(ids)].length === 1 ? ids[0] : null;
 }
 
-async function captureAttemptConversation(page, state, timeout) {
+export async function captureAttemptConversation(page, state, timeout, config = null, overrides = {}) {
+  const inspectConversation = overrides.inspectSelectedConversationId || inspectSelectedConversationId;
+  const queryAttemptSessions = overrides.querySessions || querySessions;
+  const wait = overrides.sleep || sleep;
+  const now = overrides.now || Date.now;
   const baseline = state.session.dom_baseline_conversation_id || null;
-  const deadline = Date.now() + timeout;
-  while (Date.now() < deadline) {
-    const conversationId = await inspectSelectedConversationId(page);
+  const deadline = now() + timeout;
+  while (now() < deadline) {
+    const conversationId = await inspectConversation(page);
     if (conversationId && conversationId !== baseline) {
       state.session.dom_conversation_id = conversationId;
       state.session.dom_conversation_captured_at = new Date().toISOString();
       return conversationId;
     }
-    await sleep(250);
+    if (config) {
+      const session = chooseAttemptSession(await queryAttemptSessions(config.sessionDb), state, config.workspace);
+      if (session) {
+        state.session.conversation_id = session.conversationId;
+        state.session.cwd = session.cwd;
+        state.session.raw_status = session.status;
+        state.session.updated_at_ms = session.updatedAt || null;
+        return session.conversationId;
+      }
+    }
+    await wait(Math.min(250, Math.max(1, deadline - now())));
   }
   return null;
 }
@@ -1785,7 +1799,12 @@ async function runAutomation(config, identityInfo) {
     state.timing.sent_at = acceptedSubmission.clicked_at;
     transitionState(state, "PROMPT_SENT");
     await saveState(config, state);
-    await captureAttemptConversation(page, state, Math.min(timeout, 10000));
+    await captureAttemptConversation(
+      page,
+      state,
+      Math.max(timeout, SEND_ACCEPTANCE_TIMEOUT_MILLISECONDS),
+      config,
+    );
     if (!state.session.dom_conversation_id) {
       const session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
       if (session) {

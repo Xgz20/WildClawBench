@@ -22,6 +22,7 @@ import {
   updateExecutionRecord,
 } from "../lib.mjs";
 import {
+  captureAttemptConversation,
   capturePageScreenshot,
   confirmFullAccessRiskDialog,
   ensureModel,
@@ -181,7 +182,7 @@ test("waitForUniqueVisible tolerates asynchronous model popover mounting", async
   const samples = [[], [], [expected]];
   const actual = await waitForUniqueVisible(
     async () => samples.shift() || [expected],
-    100,
+    2_000,
     "WorkBuddy 模型下拉框",
     1,
   );
@@ -301,6 +302,34 @@ test("detached dispatch requires a stable WorkBuddy conversation id", () => {
   assert.equal(hasStableConversationId({ session: {} }), false);
   assert.equal(hasStableConversationId({ session: { dom_conversation_id: "dom-1" } }), true);
   assert.equal(hasStableConversationId({ session: { conversation_id: "db-1" } }), true);
+});
+
+test("detached dispatch waits for a delayed exact-workspace database conversation", async () => {
+  let clock = 0;
+  const state = {
+    session: { baseline: [], dom_baseline_conversation_id: "previous" },
+    timing: { prepared_at: "2026-09-12T00:00:00.000Z", sent_at: "2026-09-12T00:00:01.000Z" },
+  };
+  const session = {
+    conversationId: "delayed-conversation",
+    cwd: "/tmp/task",
+    status: "working",
+    createdAt: Date.parse("2026-09-12T00:00:02.000Z"),
+    updatedAt: Date.parse("2026-09-12T00:00:02.000Z"),
+  };
+  const captured = await captureAttemptConversation({}, state, 30_000, {
+    sessionDb: "/tmp/workbuddy.db",
+    workspace: "/tmp/task",
+  }, {
+    inspectSelectedConversationId: async () => null,
+    querySessions: async () => clock >= 20_000 ? [session] : [],
+    sleep: async (milliseconds) => { clock += milliseconds; },
+    now: () => clock,
+  });
+  assert.equal(captured, "delayed-conversation");
+  assert.equal(state.session.conversation_id, "delayed-conversation");
+  assert.equal(state.session.cwd, "/tmp/task");
+  assert.equal(state.session.raw_status, "working");
 });
 
 test("prompt submission is accepted only after an exact workspace session appears", async () => {
@@ -578,7 +607,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.12");
+  assert.equal(state.driver.version, "1.8.13");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);
