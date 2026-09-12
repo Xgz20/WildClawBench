@@ -31,6 +31,7 @@ import {
   restartWorkBuddy,
   terminalProcessCleanupTiming,
   waitForPromptSubmissionAcceptance,
+  waitForFullAccessTransition,
   waitForRestartedAttemptRecovery,
   waitForUniqueVisible,
 } from "../driver.mjs";
@@ -85,6 +86,34 @@ test("full access confirmation clicks the stable label and verifies readback", a
   await confirmFullAccessRiskDialog(dialog, 100, { sleep: async () => {} });
   assert.equal(labelClicks, 1);
   assert.equal(confirmClicks, 1);
+});
+
+test("full access accepts the updated WorkBuddy direct-toggle flow without a risk dialog", async () => {
+  let clock = 0;
+  let confirmations = 0;
+  const result = await waitForFullAccessTransition({}, {
+    isVisible: async () => false,
+  }, 1_000, {
+    inspectPermissionMode: async () => ({ available: true, mode: "full-access" }),
+    confirmFullAccessRiskDialog: async () => { confirmations += 1; },
+    sleep: async (milliseconds) => { clock += milliseconds; },
+    now: () => clock,
+    noDialogGraceMilliseconds: 200,
+  });
+  assert.deepEqual(result, { risk_confirmation: false });
+  assert.equal(confirmations, 0);
+});
+
+test("full access still confirms the risk dialog when the client presents it", async () => {
+  let confirmations = 0;
+  const result = await waitForFullAccessTransition({}, {
+    isVisible: async () => true,
+  }, 1_000, {
+    inspectPermissionMode: async () => ({ available: false, mode: "default-sandbox" }),
+    confirmFullAccessRiskDialog: async () => { confirmations += 1; },
+  });
+  assert.deepEqual(result, { risk_confirmation: true });
+  assert.equal(confirmations, 1);
 });
 
 test("fresh attempt persists successful WorkBuddy launch evidence", async () => {
@@ -549,7 +578,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.11");
+  assert.equal(state.driver.version, "1.8.12");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

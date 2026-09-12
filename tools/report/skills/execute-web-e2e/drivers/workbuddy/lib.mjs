@@ -23,7 +23,7 @@ import {
 
 export const AUTOMATION_SCHEMA = "wildclawbench.web-e2e-automation-state/v1";
 export const EXECUTION_SCHEMA = "wildclawbench.web-e2e-execution/v1";
-export const DRIVER_VERSION = "1.8.11";
+export const DRIVER_VERSION = "1.8.12";
 export const DEFAULT_APP_PATH = defaultWorkBuddyAppPath();
 export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9229";

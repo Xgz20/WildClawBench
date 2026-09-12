@@ -572,6 +572,7 @@ async function inspectPermissionMode(page) {
     mode,
     label: label.trim(),
     enabled: await trigger.isEnabled().catch(() => false),
+    expanded: await trigger.getAttribute("aria-expanded") === "true",
   };
 }
 
@@ -597,13 +598,50 @@ export async function confirmFullAccessRiskDialog(dialog, timeout, overrides = {
   throw new Error("WorkBuddy 完全访问风险确认框未回读已勾选状态");
 }
 
+export async function waitForFullAccessTransition(page, dialog, timeout, overrides = {}) {
+  const inspect = overrides.inspectPermissionMode || inspectPermissionMode;
+  const confirmRisk = overrides.confirmFullAccessRiskDialog || confirmFullAccessRiskDialog;
+  const wait = overrides.sleep || sleep;
+  const now = overrides.now || Date.now;
+  const noDialogGraceMilliseconds = overrides.noDialogGraceMilliseconds ?? 500;
+  const deadline = now() + timeout;
+  let fullAccessObservedAt = null;
+
+  while (now() < deadline) {
+    if (await dialog.isVisible().catch(() => false)) {
+      await confirmRisk(dialog, timeout);
+      return { risk_confirmation: true };
+    }
+    const current = await inspect(page);
+    if (current.available && current.mode === "full-access") {
+      fullAccessObservedAt ??= now();
+      if (now() - fullAccessObservedAt >= noDialogGraceMilliseconds) {
+        return { risk_confirmation: false };
+      }
+    } else {
+      fullAccessObservedAt = null;
+    }
+    await wait(100);
+  }
+  throw new Error("WorkBuddy 未显示风险确认框，也未直接回读“允许完全访问”状态");
+}
+
+async function closePermissionPopover(page, before, timeout) {
+  if (!before.expanded) return;
+  const menu = page.locator(".cr-permission-setting-popover:visible");
+  await page.keyboard.press("Escape");
+  await menu.waitFor({ state: "hidden", timeout });
+}
+
 async function ensurePermissionMode(page, requestedMode, timeout) {
   let before = await inspectPermissionMode(page);
   if (!before.available) throw new Error(`WorkBuddy 权限设置不可用：${before.reason}`);
   if (requestedMode === "current") {
+    await closePermissionPopover(page, before, timeout);
     return { requested_mode: requestedMode, confirmed_mode: before.mode, changed: false, method: "visible-current-value" };
   }
   if (before.mode === "full-access") {
+    await closePermissionPopover(page, before, timeout);
     return { requested_mode: requestedMode, confirmed_mode: before.mode, changed: false, method: "visible-current-value" };
   }
   const enableDeadline = Date.now() + timeout;
@@ -625,8 +663,7 @@ async function ensurePermissionMode(page, requestedMode, timeout) {
   if (await toggle.getAttribute("aria-checked") !== "true") await toggle.click({ timeout });
 
   const dialog = page.getByRole("dialog").filter({ hasText: /允许完全访问|Allow full access/i });
-  await dialog.waitFor({ state: "visible", timeout });
-  await confirmFullAccessRiskDialog(dialog, timeout);
+  const transition = await waitForFullAccessTransition(page, dialog, timeout);
 
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
@@ -638,7 +675,9 @@ async function ensurePermissionMode(page, requestedMode, timeout) {
         requested_mode: requestedMode,
         confirmed_mode: current.mode,
         changed: true,
-        method: "permission-popover+risk-confirmation",
+        method: transition.risk_confirmation
+          ? "permission-popover+risk-confirmation"
+          : "permission-popover+direct-toggle",
       };
     }
     await sleep(250);
