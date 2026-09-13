@@ -293,18 +293,23 @@ export function chooseQwenAttemptSession(sessions, state, workspace) {
   const baseline = state.session?.baseline || [];
   const sentAt = state.timing?.sent_at ? Date.parse(state.timing.sent_at) : 0;
   const preparedAt = Date.parse(state.timing?.prepared_at || 0);
-  // QwenWork 1.0.4 stores session timestamps with one-second precision. The
-  // session can therefore be created in the same second just before the
-  // post-click sent_at value. Compare new sessions against the start of that
-  // second, while existing baseline sessions must still advance explicitly.
+  // QwenWork stores session timestamps with one-second precision, and the DB
+  // row may precede the post-click sent_at observation by more than one second.
+  // A session absent from the captured pre-send baseline is still deterministic
+  // when it belongs to the exact newly-created project and workspace. Legacy
+  // states without a project id retain the timestamp guard.
   const notBefore = Math.floor((sentAt || preparedAt) / 1000) * 1000;
   return exact
     .filter((session) => {
       const updatedAt = Number(session.updatedAt || session.createdAt || 0);
-      const previous = session.subChatId
-        ? baseline.find((item) => item.sub_chat_id === session.subChatId)
-        : baseline.find((item) => item.conversation_id === session.conversationId);
+      const previous = (session.sessionId
+        ? baseline.find((item) => item.session_id === session.sessionId)
+        : null)
+        || (session.subChatId
+          ? baseline.find((item) => item.sub_chat_id === session.subChatId)
+          : baseline.find((item) => item.conversation_id === session.conversationId));
       if (previous) return updatedAt > Number(previous.updated_at_ms || 0);
+      if (expectedProjectId) return true;
       return updatedAt >= notBefore;
     })
     .sort((left, right) => Number(right.updatedAt || 0) - Number(left.updatedAt || 0))[0] || null;

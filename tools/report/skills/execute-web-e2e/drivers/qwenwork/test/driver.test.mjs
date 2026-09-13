@@ -62,7 +62,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.10.7");
+  assert.equal(state.driver.version, "1.10.8");
 });
 
 test("QwenWork 问卷停止参数必须与恢复模式组合", () => {
@@ -310,6 +310,29 @@ test("QwenWork 可捕获发送后同一秒创建的 session", () => {
       cwd: workspace,
       createdAt: Date.parse("2026-09-09T05:28:32.000Z"),
       updatedAt: Date.parse("2026-09-09T05:28:32.000Z"),
+    },
+  ], state, workspace);
+  assert.equal(session?.sessionId, "session-1");
+});
+
+test("QwenWork 以发送前基线识别精确项目中时间戳提前的 session", () => {
+  const workspace = "/tmp/task";
+  const state = {
+    session: { local_project_id: "project-1", baseline: [] },
+    timing: {
+      prepared_at: "2026-09-09T05:28:27.530Z",
+      sent_at: "2026-09-09T05:28:32.232Z",
+    },
+  };
+  const session = chooseQwenAttemptSession([
+    {
+      conversationId: "chat-1",
+      subChatId: "sub-chat-1",
+      sessionId: "session-1",
+      localProjectId: "project-1",
+      cwd: workspace,
+      createdAt: Date.parse("2026-09-09T05:28:31.000Z"),
+      updatedAt: Date.parse("2026-09-09T05:28:31.000Z"),
     },
   ], state, workspace);
   assert.equal(session?.sessionId, "session-1");
