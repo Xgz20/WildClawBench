@@ -156,7 +156,32 @@ export function selectCandidateWorkspaceProcesses(processes, candidateWorkspace,
     throw new Error(`检测到 ${sessionHosts.length} 个与 ${taskRoot} 匹配的 WorkBuddy 会话宿主，拒绝清理不唯一进程`);
   }
   const sessionHostPids = new Set(sessionHosts.map((item) => item.pid));
-  const seedPids = new Set([...workspaceSeedPids, ...sessionHostPids]);
+  const prewarmHostPids = new Set();
+  if (includeSessionHost) {
+    for (const workspacePid of workspaceSeedPids) {
+      let parentPid = byPid.get(workspacePid)?.parent_pid;
+      const visited = new Set();
+      while (parentPid && !visited.has(parentPid)) {
+        visited.add(parentPid);
+        const parent = byPid.get(parentPid);
+        if (!parent) break;
+        const commandLine = String(parent.command_line || "");
+        const isWorkBuddy = WINDOWS_EXECUTABLE_NAMES.some((name) => name.toLowerCase() === parent.name.toLowerCase());
+        if (isWorkBuddy
+          && /(?:^|[\\/\s"])codebuddy(?:\.cmd|\.exe)?(?:\s|$)/iu.test(commandLine)
+          && /(?:^|\s)--prewarm(?:\s|$)/iu.test(commandLine)
+          && /(?:^|\s)--prewarm-id(?:\s|=|$)/iu.test(commandLine)) {
+          prewarmHostPids.add(parent.pid);
+          break;
+        }
+        parentPid = parent.parent_pid;
+      }
+    }
+    if (prewarmHostPids.size > 1) {
+      throw new Error(`候选 workspace 的进程映射到 ${prewarmHostPids.size} 个 WorkBuddy prewarm 宿主，拒绝清理不唯一进程`);
+    }
+  }
+  const seedPids = new Set([...workspaceSeedPids, ...sessionHostPids, ...prewarmHostPids]);
   const targetPids = new Set(seedPids);
   let changed = true;
   while (changed) {
@@ -182,6 +207,7 @@ export function selectCandidateWorkspaceProcesses(processes, candidateWorkspace,
     seed_pids: [...seedPids].sort((left, right) => left - right),
     workspace_seed_pids: [...workspaceSeedPids].sort((left, right) => left - right),
     session_host_pids: [...sessionHostPids].sort((left, right) => left - right),
+    prewarm_host_pids: [...prewarmHostPids].sort((left, right) => left - right),
     root_pids: rootPids.sort((left, right) => left - right),
     targets: normalized
       .filter((item) => targetPids.has(item.pid))
@@ -192,6 +218,7 @@ export function selectCandidateWorkspaceProcesses(processes, candidateWorkspace,
         executable_path: item.executable_path,
         matched_by_workspace: workspaceSeedPids.has(item.pid),
         matched_by_session_host: sessionHostPids.has(item.pid),
+        matched_by_prewarm_host: prewarmHostPids.has(item.pid),
       }))
       .sort((left, right) => left.pid - right.pid),
   };
@@ -233,9 +260,9 @@ export async function terminateCandidateWorkspaceProcesses(candidateWorkspace, o
     return {
       supported: false,
       success: true,
-      before: { seed_pids: [], workspace_seed_pids: [], session_host_pids: [], root_pids: [], targets: [] },
+      before: { seed_pids: [], workspace_seed_pids: [], session_host_pids: [], prewarm_host_pids: [], root_pids: [], targets: [] },
       termination_attempts: [],
-      after: { seed_pids: [], workspace_seed_pids: [], session_host_pids: [], root_pids: [], targets: [] },
+      after: { seed_pids: [], workspace_seed_pids: [], session_host_pids: [], prewarm_host_pids: [], root_pids: [], targets: [] },
     };
   }
   const runCommand = overrides.runCommand || runCapture;
@@ -297,6 +324,7 @@ export async function terminateCandidateWorkspaceProcesses(candidateWorkspace, o
       seed_pids: before.seed_pids,
       workspace_seed_pids: before.workspace_seed_pids,
       session_host_pids: before.session_host_pids,
+      prewarm_host_pids: before.prewarm_host_pids,
       root_pids: before.root_pids,
       targets: before.targets,
     },
@@ -305,6 +333,7 @@ export async function terminateCandidateWorkspaceProcesses(candidateWorkspace, o
       seed_pids: after.seed_pids,
       workspace_seed_pids: after.workspace_seed_pids,
       session_host_pids: after.session_host_pids,
+      prewarm_host_pids: after.prewarm_host_pids,
       root_pids: after.root_pids,
       targets: after.targets,
     },

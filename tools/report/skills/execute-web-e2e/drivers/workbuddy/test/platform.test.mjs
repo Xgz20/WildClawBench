@@ -54,6 +54,35 @@ test("Windows candidate process selection includes the unique WorkBuddy task ses
   assert.equal(selected.targets[1].matched_by_session_host, false);
 });
 
+test("Windows candidate process selection includes the unique updated WorkBuddy prewarm ancestor", () => {
+  const taskRoot = "D:\\batch\\execution\\tasks\\task-a";
+  const workspace = `${taskRoot}\\workspace`;
+  const selected = selectCandidateWorkspaceProcesses([
+    { ProcessId: 10, ParentProcessId: 1, Name: "WorkBuddy.exe", CommandLine: "WorkBuddy.exe --remote-debugging-port=9229" },
+    { ProcessId: 700, ParentProcessId: 10, Name: "WorkBuddy.exe", CommandLine: "WorkBuddy.exe C:\\app\\cli\\bin\\codebuddy --prewarm --prewarm-id wb-pool-a" },
+    { ProcessId: 701, ParentProcessId: 700, Name: "WorkBuddy.exe", CommandLine: `WorkBuddy.exe windows-child-process-containment.cjs -- ${workspace}\\start.cmd` },
+    { ProcessId: 702, ParentProcessId: 701, Name: "node.exe", CommandLine: `node ${workspace}\\node_modules\\vite\\bin\\vite.js` },
+    { ProcessId: 800, ParentProcessId: 10, Name: "WorkBuddy.exe", CommandLine: "WorkBuddy.exe C:\\app\\cli\\bin\\codebuddy --prewarm --prewarm-id wb-pool-b" },
+    { ProcessId: 801, ParentProcessId: 800, Name: "node.exe", CommandLine: "node D:\\other\\workspace\\server.js" },
+  ], workspace, { taskRoot, includeSessionHost: true });
+  assert.deepEqual(selected.workspace_seed_pids, [701, 702]);
+  assert.deepEqual(selected.prewarm_host_pids, [700]);
+  assert.deepEqual(selected.root_pids, [700]);
+  assert.deepEqual(selected.targets.map((item) => item.pid), [700, 701, 702]);
+  assert.equal(selected.targets[0].matched_by_prewarm_host, true);
+});
+
+test("Windows candidate process selection fails closed when one workspace maps to multiple prewarm hosts", () => {
+  const taskRoot = "D:\\batch\\execution\\tasks\\task-a";
+  const workspace = `${taskRoot}\\workspace`;
+  assert.throws(() => selectCandidateWorkspaceProcesses([
+    { ProcessId: 700, ParentProcessId: 1, Name: "WorkBuddy.exe", CommandLine: "WorkBuddy.exe C:\\app\\cli\\bin\\codebuddy --prewarm --prewarm-id wb-pool-a" },
+    { ProcessId: 701, ParentProcessId: 700, Name: "node.exe", CommandLine: `node ${workspace}\\server-a.js` },
+    { ProcessId: 800, ParentProcessId: 1, Name: "WorkBuddy.exe", CommandLine: "WorkBuddy.exe C:\\app\\cli\\bin\\codebuddy --prewarm --prewarm-id wb-pool-b" },
+    { ProcessId: 801, ParentProcessId: 800, Name: "node.exe", CommandLine: `node ${workspace}\\server-b.js` },
+  ], workspace, { taskRoot, includeSessionHost: true }), /映射到 2 个 WorkBuddy prewarm 宿主/u);
+});
+
 test("Windows candidate process selection fails closed for duplicate WorkBuddy task session hosts", () => {
   const taskRoot = "D:\\batch\\execution\\tasks\\task-a";
   const processes = [600, 601].map((pid) => ({
