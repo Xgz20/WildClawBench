@@ -329,6 +329,10 @@ test("only safe observation and terminal cleanup failures resume without manual 
   }), true);
   assert.equal(canAutomaticallyResumeAttention({
     phase: "NEEDS_ATTENTION",
+    history: [{ phase: "NEEDS_ATTENTION", reason: "detach-conversation-id-unavailable" }],
+  }), true);
+  assert.equal(canAutomaticallyResumeAttention({
+    phase: "NEEDS_ATTENTION",
     history: [{ phase: "NEEDS_ATTENTION", reason: "terminal-task-process-cleanup-failed" }],
   }), true);
   assert.equal(canAutomaticallyResumeAttention({

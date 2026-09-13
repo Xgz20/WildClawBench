@@ -826,6 +826,7 @@ export function canAutomaticallyResumeAttention(automation) {
     "post-send-driver-error",
     "resume-observation-failed",
     "unknown-session-status",
+    "detach-conversation-id-unavailable",
     "terminal-task-process-cleanup-failed",
   ]).has(reason);
 }
