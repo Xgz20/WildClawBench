@@ -13,6 +13,7 @@ import {
   qwenStopControlLocator,
   qwenProjectSidebarLabel,
   restartQwenWork,
+  terminalProcessCleanupTiming,
   waitForUniqueVisible,
 } from "../driver.mjs";
 import {
@@ -48,7 +49,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.10.0");
+  assert.equal(state.driver.version, "1.10.1");
 });
 
 test("QwenWork 只有同时捕获 chat 和稳定内核 session 才允许后台恢复", () => {
@@ -390,6 +391,17 @@ test("QwenWork Windows 截图使用直接 CDP Page.captureScreenshot", async () 
   assert.equal(calls[0][0], "Page.captureScreenshot");
   assert.equal(detached, true);
   await import("node:fs/promises").then(({ rm }) => rm(target, { force: true }));
+});
+
+test("QwenWork 终态进程收口为普通终态保留完整安静窗口", () => {
+  assert.deepEqual(terminalProcessCleanupTiming("SUCCEEDED"), {
+    quietMilliseconds: 45_000,
+    waitMilliseconds: 120_000,
+  });
+  assert.deepEqual(terminalProcessCleanupTiming("TIMEOUT"), {
+    quietMilliseconds: 5_000,
+    waitMilliseconds: 10_000,
+  });
 });
 
 test("唯一可见元素等待器拒绝歧义", async () => {

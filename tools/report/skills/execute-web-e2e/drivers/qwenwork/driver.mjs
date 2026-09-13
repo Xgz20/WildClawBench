@@ -39,6 +39,7 @@ import {
   queryQwenWorkSqlite,
   terminateQwenWorkProcess,
 } from "./platform.mjs";
+import { terminateCandidateWorkspaceProcesses } from "../workbuddy/platform.mjs";
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const QWEN_APPROVAL_PANEL_SELECTOR = [
@@ -1319,7 +1320,57 @@ async function takeScreenshot(page, config, state, name) {
   return path;
 }
 
+export function terminalProcessCleanupTiming(phase) {
+  return phase === "TIMEOUT"
+    ? { quietMilliseconds: 5_000, waitMilliseconds: 10_000 }
+    : { quietMilliseconds: 45_000, waitMilliseconds: 120_000 };
+}
+
+async function collectTerminalProcessCleanup(config, state, phase, identityInfo, { backfill = false } = {}) {
+  try {
+    state.terminal_process_cleanup = await terminateCandidateWorkspaceProcesses(config.candidateWorkspace, {
+      taskRoot: config.workspace,
+      includeSessionHost: false,
+      ...terminalProcessCleanupTiming(phase),
+    });
+  } catch (cleanupError) {
+    state.terminal_process_cleanup = {
+      supported: process.platform === "win32",
+      success: false,
+      error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+    };
+  }
+  if (!state.terminal_process_cleanup.success) {
+    transitionState(state, "NEEDS_ATTENTION", { reason: "terminal-task-process-cleanup-failed" });
+    state.error = `QwenWork 已出现终态，但无法确认候选工作空间相关进程全部退出：${state.terminal_process_cleanup.error || "仍检测到残留进程"}`;
+    state.runtime ||= {};
+    state.runtime.heartbeat_at = new Date().toISOString();
+    await saveState(config, state);
+    await updateExecutionRecord(config, identityInfo, {
+      clientVersion: state.client.version,
+      execution: { status: "pending", error: state.error },
+    });
+    return false;
+  }
+  if (backfill) {
+    state.driver ||= {};
+    state.driver.version = DRIVER_VERSION;
+    state.history ||= [];
+    state.history.push({
+      event: "TERMINAL_PROCESS_CLEANUP_BACKFILLED",
+      at: new Date().toISOString(),
+      phase,
+      driver_version: DRIVER_VERSION,
+    });
+    state.runtime ||= {};
+    state.runtime.heartbeat_at = new Date().toISOString();
+    await saveState(config, state);
+  }
+  return true;
+}
+
 async function finalize(config, state, identityInfo, phase, { error = null, terminalSource = null, finalText = "" } = {}) {
+  if (!(await collectTerminalProcessCleanup(config, state, phase, identityInfo))) return state;
   transitionState(state, phase, terminalSource ? { terminal_source: terminalSource } : {});
   const finishedAt = new Date().toISOString();
   state.timing.finished_at = finishedAt;
@@ -1612,7 +1663,18 @@ async function runAutomation(config, identityInfo) {
   if (existingState) {
     assertStateMatches(existingState, config, identityInfo.identity);
     if (TERMINAL_PHASES.has(existingState.phase)) {
-      if (!config.retryPreSendFailure) return existingState;
+      if (!config.retryPreSendFailure) {
+        if (config.resume && existingState.terminal_process_cleanup?.success !== true) {
+          await collectTerminalProcessCleanup(
+            config,
+            existingState,
+            existingState.phase,
+            identityInfo,
+            { backfill: true },
+          );
+        }
+        return existingState;
+      }
       retryArchive = await archiveRetryablePreSendFailure(config, existingState);
       existingState = null;
     }

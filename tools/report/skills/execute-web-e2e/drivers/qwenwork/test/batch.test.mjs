@@ -7,6 +7,11 @@ import test from "node:test";
 
 const DRIVER_DIR = realpathSync(join(dirname(fileURLToPath(import.meta.url)), ".."));
 process.env.WCB_WEB_E2E_BATCH_PROFILE = "qwenwork";
+
+test("QwenWork 平台 batch 封装导出 Windows 调用所需的 main", async () => {
+  const module = await import(`../batch.mjs?windows-wrapper=${Date.now()}`);
+  assert.equal(typeof module.main, "function");
+});
 const {
   buildDriverArgs,
   canAutomaticallyResumeAttention,

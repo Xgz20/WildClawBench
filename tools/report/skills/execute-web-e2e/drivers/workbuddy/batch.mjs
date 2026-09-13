@@ -47,7 +47,7 @@ const BATCH_PROFILES = Object.freeze({
     harnessId: "qwenwork",
     displayName: "QwenWork",
     workerId: "qwenwork-background-concurrent",
-    workerVersion: "1.9.8",
+    workerVersion: "1.10.1",
     driverFile: resolve(SCRIPT_DIR, "../qwenwork/driver.mjs"),
     lockFileName: "qwenwork-ui.lock",
     defaultRunSlots: DEFAULT_RUN_SLOTS,
@@ -349,6 +349,10 @@ export function assertQueueState(state, plan, args) {
 
 export function migrateQueueState(state) {
   let changed = false;
+  if (state.worker?.id === BATCH_PROFILE.workerId && state.worker.version !== BATCH_PROFILE.workerVersion) {
+    state.worker.version = BATCH_PROFILE.workerVersion;
+    changed = true;
+  }
   if (!Number.isInteger(state.revision) || state.revision < QUEUE_STATE_REVISION) {
     state.revision = QUEUE_STATE_REVISION;
     changed = true;
