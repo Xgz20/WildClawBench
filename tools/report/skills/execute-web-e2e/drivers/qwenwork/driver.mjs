@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 import { realpathSync } from "node:fs";
 import { access, copyFile, mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -1354,8 +1354,21 @@ export async function capturePageScreenshot(page, path, overrides = {}) {
   }
 }
 
+export function nextScreenshotPath(outputDir, existingPaths, name) {
+  const requestedPath = join(outputDir, name);
+  const usedPaths = new Set(existingPaths || []);
+  if (!usedPaths.has(requestedPath)) return requestedPath;
+
+  const extension = extname(name);
+  const stem = extension ? name.slice(0, -extension.length) : name;
+  for (let sequence = 2; ; sequence += 1) {
+    const candidate = join(outputDir, `${stem}-${sequence}${extension}`);
+    if (!usedPaths.has(candidate)) return candidate;
+  }
+}
+
 async function takeScreenshot(page, config, state, name) {
-  const path = join(config.outputDir, name);
+  const path = nextScreenshotPath(config.outputDir, state.evidence.screenshots, name);
   const capture = await capturePageScreenshot(page, path, {
     timeoutMilliseconds: Math.min(config.timeoutSeconds * 1000, 15_000),
   });

@@ -10,6 +10,7 @@ import {
   inspectPendingAttention,
   inspectUserQuestions,
   isQwenWorkMainPageDescriptor,
+  nextScreenshotPath,
   openQwenProjectConversation,
   qwenStopControlLocator,
   qwenProjectSidebarLabel,
@@ -51,7 +52,17 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.10.3");
+  assert.equal(state.driver.version, "1.10.4");
+});
+
+test("QwenWork 重复终态观察为截图分配唯一证据路径", () => {
+  const first = nextScreenshotPath("output", [], "10-succeeded.png");
+  const second = nextScreenshotPath("output", [first], "10-succeeded.png");
+  const third = nextScreenshotPath("output", [first, second], "10-succeeded.png");
+  assert.match(first, /10-succeeded\.png$/);
+  assert.match(second, /10-succeeded-2\.png$/);
+  assert.match(third, /10-succeeded-3\.png$/);
+  assert.equal(new Set([first, second, third]).size, 3);
 });
 
 test("QwenWork 只有同时捕获 chat 和稳定内核 session 才允许后台恢复", () => {
