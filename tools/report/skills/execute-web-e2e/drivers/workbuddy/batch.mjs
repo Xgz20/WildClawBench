@@ -831,6 +831,10 @@ export function canAutomaticallyResumeAttention(automation) {
   ]).has(reason);
 }
 
+export function shouldPrioritizeResumeBeforeDispatch(state, restartOnResumeAvailable) {
+  return Boolean(restartOnResumeAvailable && state.tasks.some((task) => isActiveTaskPhase(task.phase)));
+}
+
 async function synchronizeQueueTasks(plan, state, args, resumeNeedsAttentionTaskId = "") {
   let dispatchPaused = false;
   let blockerPhase = null;
@@ -1152,7 +1156,9 @@ async function runQueue(plan, args) {
         return state;
       }
       refreshQueueSlots(state);
-      const dispatchIndexes = selectPendingTaskIndexes(state, dispatchPaused);
+      const dispatchIndexes = shouldPrioritizeResumeBeforeDispatch(state, restartOnResumeAvailable)
+        ? []
+        : selectPendingTaskIndexes(state, dispatchPaused);
       for (const index of dispatchIndexes) {
         if (interruptSignal || dispatchPaused) break;
         const retry = state.tasks[index].phase === "RETRY_PENDING";

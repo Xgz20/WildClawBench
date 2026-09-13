@@ -984,7 +984,7 @@ async function captureAttemptSession(config, state, timeout) {
 }
 
 export function attemptSessionCaptureTimeout(timeout) {
-  return Math.min(timeout, 60000);
+  return Math.max(timeout, 60000);
 }
 
 export function hasStableConversationId(state) {

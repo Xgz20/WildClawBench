@@ -27,6 +27,7 @@ import {
   recordWorkerStart,
   resolveQueuePlan,
   selectPendingTaskIndexes,
+  shouldPrioritizeResumeBeforeDispatch,
 } from "../batch.mjs";
 
 async function fixture() {
@@ -381,6 +382,19 @@ test("terminal task can only advance after task process cleanup", () => {
     terminal_process_cleanup: { success: false },
     timeout: { cancellation_confirmed: true, process_cleanup: { success: true }, quiescence: { stable: true } },
   }, true), false);
+});
+
+test("restart recovery observes an existing task before dispatching pending work", () => {
+  const state = {
+    tasks: [
+      { phase: "RUNNING" },
+      { phase: "PENDING" },
+    ],
+  };
+  assert.equal(shouldPrioritizeResumeBeforeDispatch(state, true), true);
+  assert.equal(shouldPrioritizeResumeBeforeDispatch(state, false), false);
+  state.tasks[0].phase = "SUCCEEDED";
+  assert.equal(shouldPrioritizeResumeBeforeDispatch(state, true), false);
 });
 
 test("worker interruption keeps the current task recoverable and records the exact driver", async () => {

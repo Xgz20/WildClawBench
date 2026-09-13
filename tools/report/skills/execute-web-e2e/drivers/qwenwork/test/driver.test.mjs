@@ -32,9 +32,9 @@ import {
   parseArgs,
 } from "../lib.mjs";
 
-test("QwenWork session 捕获在慢写库客户端上最多等待六十秒", () => {
-  assert.equal(attemptSessionCaptureTimeout(5000), 5000);
-  assert.equal(attemptSessionCaptureTimeout(120000), 60000);
+test("QwenWork session 捕获在慢写库客户端上至少等待六十秒", () => {
+  assert.equal(attemptSessionCaptureTimeout(5000), 60000);
+  assert.equal(attemptSessionCaptureTimeout(120000), 120000);
 });
 
 test("QwenWork 参数默认使用独立应用、CDP 端口和状态库", () => {
