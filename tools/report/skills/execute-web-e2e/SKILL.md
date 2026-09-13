@@ -75,7 +75,9 @@ npm ci
 bash .agents/skills/execute-web-e2e/scripts/run-qwenwork.sh --probe
 ```
 
-预检要求 `/Applications/QwenWorkCN.app`、本机 `http://127.0.0.1:9250`、macOS 可交互桌面、辅助功能权限和 `~/Library/Application Support/QwenWorkCN/data/agents.db` 可用。QwenWork 通过“新建个人项目”对话框选择单题根目录；原生目录选择后必须从 `local_projects.root_paths` 回读完整绝对路径，不能只信任文件夹 basename。
+Windows 使用 `run-qwenwork.cmd --probe`。Driver 从当前用户卸载注册表和 `%LOCALAPPDATA%\Programs\QwenWorkCN` / `%LOCALAPPDATA%\Programs\QwenWork` 动态解析版本化安装子目录中的 `QwenWorkCN.exe` / `QwenWork.exe`，状态库按当前用户解析为 `%APPDATA%\QwenWorkCN\data\agents.db`；不得写死用户名或客户端版本。Windows Node.js 不提供 `node:sqlite` 时按顺序回退到 `py -3`、`python` 的只读 `sqlite3`。macOS 使用 `/Applications/QwenWorkCN.app` 和 `~/Library/Application Support/QwenWorkCN/data/agents.db`。两端预检均要求本机 `http://127.0.0.1:9250`、可交互且未锁定的桌面、状态库、项目入口、Prompt 编辑器、模型及权限控件可用；`--probe` 不创建项目、不发送 Prompt。
+
+QwenWork 通过“新建个人项目”对话框选择单题根目录；macOS 使用辅助功能 helper，Windows 使用当前 Driver 目录下的 PowerShell UI Automation helper，并按动态发现的主程序完整路径约束原生窗口。原生目录选择后必须从 `local_projects.root_paths` 回读完整绝对路径，不能只信任文件夹 basename。Windows Electron 截图使用当前页面的 CDP `Page.captureScreenshot`，每张截图记录路径、采集方法和时间。
 
 后台并发执行完整 manifest 中的任务：
 
@@ -88,6 +90,14 @@ bash .agents/skills/execute-web-e2e/scripts/run-qwenwork-batch.sh \
   --run-slots 3 \
   --permission-mode full-access
 ```
+
+Windows 使用相同参数和原生入口：
+
+```bat
+.agents\skills\execute-web-e2e\scripts\run-qwenwork-batch.cmd C:\absolute\batch__qwenwork --run-id queue-1 --task-id task-1 --task-id task-2 --run-slots 3 --permission-mode full-access
+```
+
+Windows QwenWork 的动态路径、进程、SQLite、CDP 启动、页面识别和只读 probe 已完成真机验证；在单题、串行、并发、评分回传与恢复清单全部通过前，不得把这一结论扩大为 Windows 端到端生产验证。
 
 QwenWork 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、目录选择、权限/模型回读和 Prompt 发送始终由一个 Driver 串行完成；捕获稳定 `session_id`、`stream_id`、`local_project_id` 和绝对 cwd 后释放 UI Driver，由 Worker 轮流恢复原会话做一次性观察。任一题明确终态后释放后台槽位并动态补入下一题。
 

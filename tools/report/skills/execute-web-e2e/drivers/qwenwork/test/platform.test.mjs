@@ -1,0 +1,138 @@
+import assert from "node:assert/strict";
+import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, win32 } from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+import {
+  defaultQwenWorkAppPath,
+  defaultQwenWorkSessionDb,
+  launchQwenWork,
+  qwenWorkFolderHelperInvocation,
+  qwenWorkGuiSessionStatus,
+  qwenWorkProcessIdentity,
+  qwenWorkSqliteBackendStatus,
+  queryQwenWorkSqlite,
+  resolveQwenWorkAppPath,
+} from "../platform.mjs";
+
+test("Windows QwenWork 默认路径按当前用户动态计算", () => {
+  assert.equal(defaultQwenWorkAppPath("win32"), "");
+  assert.equal(
+    defaultQwenWorkSessionDb("C:\\Users\\dynamic-user", win32, { platform: "win32" }),
+    "C:\\Users\\dynamic-user\\AppData\\Roaming\\QwenWorkCN\\data\\agents.db",
+  );
+});
+
+test("Windows QwenWork 自动发现最新版本化安装子目录", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qwenwork-platform-"));
+  const localAppData = join(root, "Local");
+  const installRoot = join(localAppData, "Programs", "QwenWorkCN");
+  const oldRoot = join(installRoot, "1.0.4-26010101");
+  const newRoot = join(installRoot, "1.0.5-26090806");
+  await mkdir(join(oldRoot, "resources"), { recursive: true });
+  await mkdir(join(newRoot, "resources"), { recursive: true });
+  await writeFile(join(oldRoot, "QwenWorkCN.exe"), "fixture");
+  await writeFile(join(newRoot, "QwenWorkCN.exe"), "fixture");
+  await writeFile(join(newRoot, "resources", "app.asar"), "fixture");
+
+  const resolved = await resolveQwenWorkAppPath("", {
+    platform: "win32",
+    environment: { LOCALAPPDATA: localAppData },
+    runCommand: async () => ({ code: 0, stdout: "null", stderr: "" }),
+  });
+  assert.equal(resolved, join(newRoot, "QwenWorkCN.exe"));
+});
+
+test("Windows QwenWork 主进程识别排除 renderer 子进程", async () => {
+  const appPath = "C:\\Users\\dynamic-user\\AppData\\Local\\Programs\\QwenWorkCN\\1.0.5\\QwenWorkCN.exe";
+  const identity = await qwenWorkProcessIdentity(appPath, {
+    platform: "win32",
+    runCommand: async () => ({
+      code: 0,
+      stdout: JSON.stringify([
+        { ProcessId: 1200, ParentProcessId: 800, ExecutablePath: appPath, CommandLine: `"${appPath}" --remote-debugging-port=9250` },
+        { ProcessId: 1201, ParentProcessId: 1200, ExecutablePath: appPath, CommandLine: `"${appPath}" --type=renderer` },
+      ]),
+      stderr: "",
+    }),
+  });
+  assert.equal(identity.pid, 1200);
+  assert.equal(identity.executable_path, appPath);
+});
+
+test("Windows QwenWork SQLite 查询回退到 py -3 只读后端", async () => {
+  const commands = [];
+  const result = await queryQwenWorkSqlite(fileURLToPath(import.meta.url), "SELECT 1 AS value", {
+    platform: "win32",
+    loadNodeSqlite: async () => null,
+    runCommand: async (command, args) => {
+      commands.push([command, args]);
+      return { code: 0, stdout: '[{"value":1}]', stderr: "" };
+    },
+  });
+  assert.equal(result.backend, "python-sqlite3:py-3");
+  assert.deepEqual(result.rows, [{ value: 1 }]);
+  assert.equal(commands[0][0], "py.exe");
+  assert.equal(commands[0][1][0], "-3");
+});
+
+test("Windows QwenWork SQLite 可用性探测回读具体后端", async () => {
+  const status = await qwenWorkSqliteBackendStatus({
+    platform: "win32",
+    loadNodeSqlite: async () => null,
+    runCommand: async (command) => ({ code: command === "py.exe" ? 0 : 1, stdout: "", stderr: "" }),
+  });
+  assert.deepEqual(status, {
+    available: true,
+    backend: "python-sqlite3:py-3",
+    command: "py.exe",
+    error: null,
+  });
+});
+
+test("Windows QwenWork 文件夹选择器调用本地 PowerShell UIA helper", () => {
+  const invocation = qwenWorkFolderHelperInvocation({
+    platform: "win32",
+    driverDir: "D:\\repo\\qwenwork",
+    appPath: "C:\\Apps\\QwenWorkCN.exe",
+    folder: "D:\\tasks\\task-a",
+    timeoutSeconds: 30,
+  });
+  assert.equal(invocation.command, "powershell.exe");
+  assert.deepEqual(invocation.args.slice(-6), [
+    "-AppPath", "C:\\Apps\\QwenWorkCN.exe",
+    "-Folder", "D:\\tasks\\task-a",
+    "-TimeoutSeconds", "30",
+  ]);
+  assert.match(invocation.args[invocation.args.indexOf("-File") + 1], /qwenwork\\select-folder\.ps1$/iu);
+});
+
+test("Windows QwenWork 启动透传精确 CDP 参数", async () => {
+  const observed = {};
+  const result = await launchQwenWork("C:\\Apps\\QwenWorkCN.exe", "9250", {
+    platform: "win32",
+    launchDetached: async (command, args) => {
+      observed.command = command;
+      observed.args = args;
+      return { code: 0, stdout: "", stderr: "", pid: 4321 };
+    },
+  });
+  assert.equal(observed.command, "C:\\Apps\\QwenWorkCN.exe");
+  assert.deepEqual(observed.args, [
+    "--remote-debugging-address=127.0.0.1",
+    "--remote-debugging-port=9250",
+  ]);
+  assert.equal(result.pid, 4321);
+});
+
+test("Windows QwenWork GUI 探测失败时关闭放行", async () => {
+  const status = await qwenWorkGuiSessionStatus({
+    platform: "win32",
+    runCommand: async () => ({ code: 1, stdout: "", stderr: "access denied" }),
+  });
+  assert.equal(status.unlocked, false);
+  assert.equal(status.lock_source, "windows-gui-probe-failed");
+  assert.equal(status.error, "access denied");
+});

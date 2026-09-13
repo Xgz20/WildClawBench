@@ -28,9 +28,19 @@ import {
   transitionState,
   updateExecutionRecord,
 } from "./lib.mjs";
+import {
+  gracefulQuitQwenWork,
+  launchQwenWork,
+  qwenWorkAppVersion,
+  qwenWorkFolderHelperInvocation,
+  qwenWorkGuiSessionStatus,
+  qwenWorkProcessIdentity,
+  qwenWorkSqliteBackendStatus,
+  queryQwenWorkSqlite,
+  terminateQwenWorkProcess,
+} from "./platform.mjs";
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
-const NATIVE_FOLDER_HELPER = join(SCRIPT_DIR, "select-folder.swift");
 const QWEN_APPROVAL_PANEL_SELECTOR = [
   '[data-pending-interaction-id]:visible',
   '[data-testid="pending-sandbox-panel"]:visible',
@@ -125,50 +135,15 @@ async function endpointReady(endpoint) {
   }
 }
 
-async function guiSessionStatus() {
-  const result = await run(
-    "/usr/bin/osascript",
-    ["-e", 'tell application "System Events" to get name of first application process whose frontmost is true'],
-    { capture: true, allowFailure: true },
-  );
-  const frontmostApplication = result.code === 0 ? result.stdout.trim() : "unknown";
-  return {
-    frontmost_application: frontmostApplication,
-    unlocked: result.code === 0 && frontmostApplication.toLowerCase() !== "loginwindow",
-  };
-}
-
 async function requireUnlockedGui() {
-  const status = await guiSessionStatus();
+  const status = await qwenWorkGuiSessionStatus();
   if (!status.unlocked) {
-    throw new Error(`macOS 图形会话不可交互（当前前台：${status.frontmost_application}）；请解锁桌面后重试`);
+    throw new Error(`图形会话不可交互（当前前台：${status.frontmost_application}）；请解锁桌面后重试`);
   }
   return status;
 }
 
-async function appVersion(appPath) {
-  const result = await run("/usr/bin/defaults", ["read", join(appPath, "Contents", "Info"), "CFBundleShortVersionString"], { capture: true, allowFailure: true });
-  return result.code === 0 ? result.stdout.trim() : "unknown";
-}
-
-async function qwenWorkProcessIdentity() {
-  const result = await run(
-    "/usr/bin/osascript",
-    ["-e", `tell application "System Events" to get unix id of first application process whose bundle identifier is "${DEFAULT_BUNDLE_ID}"`],
-    { capture: true, allowFailure: true },
-  );
-  const pid = Number(result.stdout.trim());
-  if (result.code !== 0 || !Number.isInteger(pid) || pid <= 0) return null;
-  const command = await run("/bin/ps", ["-p", String(pid), "-o", "command="], { capture: true, allowFailure: true });
-  return {
-    pid,
-    bundle_id: DEFAULT_BUNDLE_ID,
-    command: command.stdout.trim() || null,
-    captured_at: new Date().toISOString(),
-  };
-}
-
-export async function querySessions(sessionDb) {
+export async function querySessions(sessionDb, overrides = {}) {
   await access(sessionDb);
   let lastError = null;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
@@ -182,9 +157,10 @@ export async function querySessions(sessionDb) {
       await copyFile(`${sessionDb}-shm`, `${snapshotDb}-shm`).catch((error) => {
         if (error?.code !== "ENOENT") throw error;
       });
-      const integrity = await run("/usr/bin/sqlite3", ["-readonly", snapshotDb, "PRAGMA quick_check;"], { capture: true });
-      if (integrity.stdout.trim() !== "ok") {
-        throw new Error(`QwenWork 状态库快照校验失败：${integrity.stdout.trim() || "无结果"}`);
+      const integrity = await queryQwenWorkSqlite(snapshotDb, "PRAGMA quick_check;", overrides);
+      const integrityValue = String(integrity.rows[0]?.quick_check || integrity.rows[0]?.integrity_check || "").trim();
+      if (integrityValue !== "ok") {
+        throw new Error(`QwenWork 状态库快照校验失败：${integrityValue || "无结果"}`);
       }
       const query = `
 SELECT
@@ -233,8 +209,7 @@ LEFT JOIN projects ON projects.id = chats.project_id
 WHERE chats.deleted_at IS NULL
 ORDER BY sub_chats.updated_at DESC, sub_chats.id ASC;
 `;
-      const result = await run("/usr/bin/sqlite3", ["-readonly", "-json", snapshotDb, query], { capture: true });
-      return result.stdout.trim() ? JSON.parse(result.stdout) : [];
+      return (await queryQwenWorkSqlite(snapshotDb, query, overrides)).rows;
     } catch (error) {
       lastError = error;
     } finally {
@@ -244,7 +219,7 @@ ORDER BY sub_chats.updated_at DESC, sub_chats.id ASC;
   throw new Error(`读取 QwenWork 状态库失败：${lastError instanceof Error ? lastError.message : String(lastError)}`);
 }
 
-export async function queryProjects(sessionDb) {
+export async function queryProjects(sessionDb, overrides = {}) {
   await access(sessionDb);
   let lastError = null;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
@@ -269,8 +244,7 @@ FROM local_projects
 WHERE deleted_at IS NULL
 ORDER BY updated_at DESC, id ASC;
 `;
-      const result = await run("/usr/bin/sqlite3", ["-readonly", "-json", snapshotDb, query], { capture: true });
-      return result.stdout.trim() ? JSON.parse(result.stdout) : [];
+      return (await queryQwenWorkSqlite(snapshotDb, query, overrides)).rows;
     } catch (error) {
       lastError = error;
     } finally {
@@ -359,42 +333,47 @@ async function waitForQwenWorkStopped(config, dependencies, timeoutSeconds = 15)
 
 export async function restartQwenWork(config, overrides = {}) {
   const dependencies = {
-    run,
     sleep,
     endpointReady,
     waitForEndpoint,
-    processIdentity: qwenWorkProcessIdentity,
+    processIdentity: () => qwenWorkProcessIdentity(config.appPath),
     querySessions,
+    gracefulQuit: gracefulQuitQwenWork,
+    terminateProcess: terminateQwenWorkProcess,
+    launchApp: launchQwenWork,
     launchAttempts: 3,
+    gracefulQuitTimeoutSeconds: 5,
     retryDelayMilliseconds: 2000,
     ...overrides,
   };
-  const quitScript = `
-tell application "System Events"
-  set matches to every application process whose bundle identifier is "${DEFAULT_BUNDLE_ID}"
-  if (count of matches) > 0 then
-    tell application id "${DEFAULT_BUNDLE_ID}" to quit
-  end if
-end tell`;
-  const stopCurrentInstance = async () => {
-    const before = await dependencies.processIdentity();
-    await dependencies.run("/usr/bin/osascript", ["-e", quitScript], { allowFailure: true, capture: true });
+  const stopCurrentInstance = async (before) => {
+    await dependencies.gracefulQuit(before);
     try {
-      await waitForQwenWorkStopped(config, dependencies);
-      return { method: "application-quit", pid: before?.pid || null };
-    } catch (error) {
+      await waitForQwenWorkStopped(config, dependencies, dependencies.gracefulQuitTimeoutSeconds);
+      return { method: "application-quit", pid: before.pid };
+    } catch (gracefulError) {
       const current = await dependencies.processIdentity();
-      if (!before || !current || current.pid !== before.pid) throw error;
-      const expectedExecutable = join(config.appPath, "Contents", "MacOS");
-      if (!String(current.command || "").includes(expectedExecutable)) {
-        throw new Error(`QwenWork 退出超时，且 PID ${current.pid} 的命令无法核对为目标应用；拒绝发送信号`);
+      if (!current || current.pid !== before.pid) {
+        throw new Error(
+          `QwenWork 正常退出超时后进程身份已变化，拒绝强制终止：原 PID ${before.pid}，当前 PID ${current?.pid || "不可用"}`,
+        );
       }
-      const terminated = await dependencies.run("/bin/kill", ["-TERM", String(current.pid)], { allowFailure: true, capture: true });
+      const terminated = await dependencies.terminateProcess(current);
       if (terminated.code !== 0) {
-        throw new Error(`QwenWork 正常退出超时，向已核对 PID ${current.pid} 发送 SIGTERM 失败：${terminated.stderr.trim()}`);
+        const [processAfterTerminate, endpointAfterTerminate] = await Promise.all([
+          dependencies.processIdentity(),
+          dependencies.endpointReady(config.endpoint),
+        ]);
+        if (processAfterTerminate || endpointAfterTerminate) {
+          throw new Error(`QwenWork 强制终止已核对 PID ${current.pid} 失败：${terminated.stderr?.trim() || `退出码 ${terminated.code}`}`);
+        }
       }
       await waitForQwenWorkStopped(config, dependencies, 10);
-      return { method: "verified-pid-sigterm", pid: current.pid };
+      return {
+        method: "terminate-after-quit-timeout",
+        pid: current.pid,
+        graceful_error: gracefulError instanceof Error ? gracefulError.message : String(gracefulError),
+      };
     }
   };
   const [initialProcess, initialEndpoint, sessions] = await Promise.all([
@@ -406,17 +385,18 @@ end tell`;
   if ((initialProcess || initialEndpoint) && activeSessions.length) {
     throw new Error(`QwenWork 当前有 ${activeSessions.length} 个活动任务；拒绝为自动化重启客户端`);
   }
-  const stop = await stopCurrentInstance();
+  if (!initialProcess && initialEndpoint) {
+    throw new Error(`QwenWork 调试端点可访问，但无法核对主进程身份：${config.endpoint}`);
+  }
+  const stop = initialProcess
+    ? await stopCurrentInstance(initialProcess)
+    : { method: "not-running", pid: null };
   const port = new URL(config.endpoint).port || "9250";
   const attempts = [];
   for (let attempt = 1; attempt <= dependencies.launchAttempts; attempt += 1) {
     let result;
     try {
-      result = await dependencies.run(
-        "/usr/bin/open",
-        ["-na", config.appPath, "--args", "--remote-debugging-address=127.0.0.1", `--remote-debugging-port=${port}`],
-        { allowFailure: true, capture: true },
-      );
+      result = await dependencies.launchApp(config.appPath, port);
     } catch (error) {
       result = { code: null, stdout: "", stderr: error instanceof Error ? error.message : String(error) };
     }
@@ -453,8 +433,14 @@ end tell`;
       };
     }
     if (attempt < dependencies.launchAttempts) {
-      if (await dependencies.processIdentity() || await dependencies.endpointReady(config.endpoint)) {
-        await stopCurrentInstance();
+      const retryProcess = await dependencies.processIdentity();
+      const retryEndpointReady = await dependencies.endpointReady(config.endpoint);
+      if (retryProcess || retryEndpointReady) {
+        if (!retryProcess) throw new Error(`QwenWork 启动重试前调试端点仍可访问，但无法核对主进程身份：${config.endpoint}`);
+        if (Number.isInteger(result.pid) && retryProcess.pid !== result.pid) {
+          throw new Error(`QwenWork 启动重试前进程身份不一致：启动 PID ${result.pid}，当前 PID ${retryProcess.pid}`);
+        }
+        await stopCurrentInstance(retryProcess);
       }
       await dependencies.sleep(dependencies.retryDelayMilliseconds * attempt);
     }
@@ -578,8 +564,15 @@ export async function openQwenProjectConversation(
   throw new Error(`QwenWork 无法在项目“${projectName}”中定位原会话“${conversationName}”`);
 }
 
-async function selectNativeFolder(folderPath, timeoutSeconds) {
-  const { stdout } = await run("/usr/bin/swift", [NATIVE_FOLDER_HELPER, DEFAULT_BUNDLE_ID, folderPath, String(timeoutSeconds)], { capture: true });
+async function selectNativeFolder(appPath, folderPath, timeoutSeconds) {
+  const invocation = qwenWorkFolderHelperInvocation({
+    driverDir: SCRIPT_DIR,
+    bundleId: DEFAULT_BUNDLE_ID,
+    appPath,
+    folder: folderPath,
+    timeoutSeconds,
+  });
+  const { stdout } = await run(invocation.command, invocation.args, { capture: true });
   try {
     return JSON.parse(stdout.trim());
   } catch {
@@ -699,7 +692,7 @@ async function createQwenProject(page, config, state, identityInfo, timeout) {
   const pathPicker = dialog.locator('[data-slot="path-picker-trigger"]');
   if (await pathPicker.count() !== 1) throw new Error("QwenWork 新建项目对话框缺少唯一的目录选择器");
   await pathPicker.evaluate((element) => element.click());
-  const native = await selectNativeFolder(config.workspace, config.timeoutSeconds);
+  const native = await selectNativeFolder(config.appPath, config.workspace, config.timeoutSeconds);
   const expectedLabel = basename(config.workspace);
   const selectedLabel = (await dialog.locator('[data-slot="path-picker-value"]').innerText()).trim();
   if (selectedLabel !== expectedLabel) {
@@ -729,7 +722,7 @@ async function createQwenProject(page, config, state, identityInfo, timeout) {
     confirmed_path: resolve(String(project.cwd)),
     project_id: project.projectId,
     project_name: project.name,
-    method: "project-dialog+macos-accessibility+agents-sqlite",
+    method: "project-dialog+platform-native-folder+agents-sqlite",
     native,
     opened,
   };
@@ -933,11 +926,23 @@ async function clickSend(page, editor, timeout) {
   return "enter-key-fallback";
 }
 
+export function isQwenWorkMainPageDescriptor({ title = "", url = "" }) {
+  const value = String(url);
+  if (/(?:[?#&])windowId=main(?:[&#]|$)/iu.test(value)) return true;
+  return /QwenWork|千问办公/iu.test(String(title)) && !/voice-overlay\.html/iu.test(value);
+}
+
 async function chooseQwenWorkPage(browser, timeout) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     const pages = browser.contexts().flatMap((context) => context.pages());
-    for (const page of pages) if (/QwenWork/i.test(await page.title().catch(() => ""))) return page;
+    for (const page of pages) {
+      const descriptor = {
+        title: await page.title().catch(() => ""),
+        url: page.url(),
+      };
+      if (isQwenWorkMainPageDescriptor(descriptor)) return page;
+    }
     if (pages.length === 1) return pages[0];
     await sleep(250);
   }
@@ -1283,10 +1288,33 @@ async function saveState(config, state) {
   await atomicWriteJson(config.resultFile, state);
 }
 
+export async function capturePageScreenshot(page, path, overrides = {}) {
+  const platform = overrides.platform || process.platform;
+  if (platform !== "win32") {
+    await page.screenshot({ path });
+    return { method: "playwright" };
+  }
+  const session = await page.context().newCDPSession(page);
+  try {
+    const result = await session.send("Page.captureScreenshot", {
+      format: "png",
+      fromSurface: true,
+      captureBeyondViewport: false,
+    });
+    if (!result?.data) throw new Error("CDP Page.captureScreenshot 未返回 PNG 数据");
+    await writeFile(path, Buffer.from(result.data, "base64"));
+    return { method: "cdp-page-captureScreenshot" };
+  } finally {
+    await session.detach().catch(() => {});
+  }
+}
+
 async function takeScreenshot(page, config, state, name) {
   const path = join(config.outputDir, name);
-  await page.screenshot({ path });
+  const capture = await capturePageScreenshot(page, path);
   state.evidence.screenshots.push(path);
+  state.evidence.screenshot_captures ||= [];
+  state.evidence.screenshot_captures.push({ path, method: capture.method, at: new Date().toISOString() });
   await saveState(config, state);
   return path;
 }
@@ -1476,7 +1504,7 @@ async function resumeAutomation(config, state, identityInfo) {
       await saveState(config, state);
     }
     else if (!(await endpointReady(config.endpoint))) throw new Error(`QwenWork 未开放调试端口 ${config.endpoint}`);
-    state.client.process = await qwenWorkProcessIdentity();
+    state.client.process = await qwenWorkProcessIdentity(config.appPath);
     const { chromium } = await import("playwright-core");
     const browser = await chromium.connectOverCDP(config.endpoint);
     page = await chooseQwenWorkPage(browser, config.timeoutSeconds * 1000);
@@ -1619,8 +1647,8 @@ async function runAutomation(config, identityInfo) {
   try {
     await requireUnlockedGui();
     await prepareClientForNewAttempt(config, state);
-    state.client.version = await appVersion(config.appPath);
-    state.client.process = await qwenWorkProcessIdentity();
+    state.client.version = await qwenWorkAppVersion(config.appPath);
+    state.client.process = await qwenWorkProcessIdentity(config.appPath);
     transitionState(state, "CLIENT_READY");
     await saveState(config, state);
 
@@ -1719,14 +1747,21 @@ async function runAutomation(config, identityInfo) {
 }
 
 async function probe(config) {
-  const gui = await guiSessionStatus();
+  const gui = await qwenWorkGuiSessionStatus();
+  const sqliteBackend = await qwenWorkSqliteBackendStatus();
+  const nativeHelperPath = process.platform === "win32"
+    ? join(SCRIPT_DIR, "select-folder.ps1")
+    : join(SCRIPT_DIR, "select-folder.swift");
   const checks = {
     app_exists: true,
-    client_version: await appVersion(config.appPath),
+    app_path: config.appPath,
+    client_version: await qwenWorkAppVersion(config.appPath),
+    process: await qwenWorkProcessIdentity(config.appPath),
     endpoint_ready: await endpointReady(config.endpoint),
     session_database_readable: false,
     session_count: null,
-    sqlite3: false,
+    session_database: config.sessionDb,
+    sqlite: sqliteBackend,
     gui_session_unlocked: gui.unlocked,
     frontmost_application: gui.frontmost_application,
     project_database_readable: false,
@@ -1739,16 +1774,15 @@ async function probe(config) {
     blocking_dialog_count: null,
   };
   try {
-    const sqlite = await run("/usr/bin/sqlite3", ["--version"], { capture: true, allowFailure: true });
-    checks.sqlite3 = sqlite.code === 0;
     const sessions = await querySessions(config.sessionDb);
     const projects = await queryProjects(config.sessionDb);
     checks.session_database_readable = true;
     checks.session_count = sessions.length;
     checks.project_database_readable = true;
     checks.project_count = projects.length;
-    await access(NATIVE_FOLDER_HELPER);
+    await access(nativeHelperPath);
     checks.native_folder_helper_available = true;
+    checks.native_folder_helper = nativeHelperPath;
   } catch (error) {
     checks.session_database_error = error instanceof Error ? error.message : String(error);
   }
@@ -1771,10 +1805,10 @@ async function probe(config) {
   return {
     driver: "qwenwork",
     version: DRIVER_VERSION,
-    control_backend: "electron-cdp+qwenwork-project-dialog+macos-accessibility+agents-sqlite",
+    control_backend: "electron-cdp+qwenwork-project-dialog+platform-native-folder+agents-sqlite",
     terminal_source: "qwenwork-agents-sqlite+qwenwork-dom",
     ready: checks.endpoint_ready && checks.session_database_readable && checks.project_database_readable
-      && checks.sqlite3 && checks.gui_session_unlocked && checks.native_folder_helper_available
+      && checks.sqlite.available && checks.gui_session_unlocked && checks.native_folder_helper_available
       && checks.blocking_dialog_count === 0
       && checks.new_project_action_available && checks.prompt_editor_available
       && checks.model_selector_available && checks.permission_setting_available,

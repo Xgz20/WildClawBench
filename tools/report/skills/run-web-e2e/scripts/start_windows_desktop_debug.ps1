@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("All", "Codex", "AstronStudio", "WorkBuddy", "CodexWorkBuddy")]
+    [ValidateSet("All", "Codex", "AstronStudio", "WorkBuddy", "CodexWorkBuddy", "QwenWork", "CodexQwenWork")]
     [string]$Application = "All",
 
     [ValidateRange(1024, 65535)]
@@ -11,6 +11,9 @@ param(
 
     [ValidateRange(1024, 65535)]
     [int]$WorkBuddyPort = 9229,
+
+    [ValidateRange(1024, 65535)]
+    [int]$QwenWorkPort = 9250,
 
     [ValidateRange(1, 120)]
     [int]$TimeoutSeconds = 20,
@@ -26,6 +29,7 @@ $ErrorActionPreference = "Stop"
 $includeCodex = $Application -in @("All", "Codex", "CodexWorkBuddy")
 $includeAstronStudio = $Application -in @("All", "AstronStudio")
 $includeWorkBuddy = $Application -in @("WorkBuddy", "CodexWorkBuddy")
+$includeQwenWork = $Application -in @("QwenWork", "CodexQwenWork")
 
 if ($CheckOnly -and $ForceRestart) {
     throw "CheckOnly and ForceRestart cannot be used together."
@@ -35,6 +39,7 @@ $selectedPorts = @()
 if ($includeCodex) { $selectedPorts += [pscustomobject]@{ Name = "Codex"; Port = $CodexPort } }
 if ($includeAstronStudio) { $selectedPorts += [pscustomobject]@{ Name = "AstronStudio"; Port = $AstronStudioPort } }
 if ($includeWorkBuddy) { $selectedPorts += [pscustomobject]@{ Name = "WorkBuddy"; Port = $WorkBuddyPort } }
+if ($includeQwenWork) { $selectedPorts += [pscustomobject]@{ Name = "QwenWork"; Port = $QwenWorkPort } }
 $duplicatePorts = @($selectedPorts | Group-Object Port | Where-Object Count -gt 1)
 if ($duplicatePorts.Count -gt 0) {
     throw "Selected desktop applications must use different CDP ports."
@@ -55,6 +60,7 @@ if ($PSVersionTable.PSEdition -ne "Desktop") {
         "-CodexPort", $CodexPort,
         "-AstronStudioPort", $AstronStudioPort,
         "-WorkBuddyPort", $WorkBuddyPort,
+        "-QwenWorkPort", $QwenWorkPort,
         "-TimeoutSeconds", $TimeoutSeconds
     )
 
@@ -259,6 +265,64 @@ function Resolve-WorkBuddyExecutable {
     throw "WorkBuddy was not found in the current-user uninstall registry or LOCALAPPDATA Programs directory."
 }
 
+function Resolve-QwenWorkExecutable {
+    $executableNames = @("QwenWorkCN.exe", "QwenWork.exe")
+    $candidates = @()
+
+    $uninstallEntries = Get-ItemProperty `
+        -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" `
+        -ErrorAction SilentlyContinue |
+        Where-Object {
+            $_.PSObject.Properties["DisplayName"] -and
+            [string]$_.DisplayName -match "^(?:千问办公|QwenWorkCN|QwenWork)(?:\s|$)"
+        }
+
+    foreach ($entry in $uninstallEntries) {
+        if ($entry.PSObject.Properties["InstallLocation"] -and $entry.InstallLocation) {
+            $candidates += [string]$entry.InstallLocation
+        }
+        if ($entry.PSObject.Properties["DisplayIcon"] -and $entry.DisplayIcon) {
+            $displayIcon = (([string]$entry.DisplayIcon).Trim() -replace ",\d+$", "").Trim('"')
+            $candidates += $displayIcon
+        }
+        if ($entry.PSObject.Properties["UninstallString"] -and $entry.UninstallString) {
+            $uninstall = ([string]$entry.UninstallString).Trim().Trim('"')
+            $candidates += Split-Path -Parent $uninstall
+        }
+    }
+
+    $candidates += Join-Path $env:LOCALAPPDATA "Programs\QwenWorkCN"
+    $candidates += Join-Path $env:LOCALAPPDATA "Programs\QwenWork"
+
+    foreach ($candidate in $candidates | Where-Object { $_ } | Select-Object -Unique) {
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            if ((Split-Path -Leaf $candidate) -in $executableNames) {
+                return (Get-Item -LiteralPath $candidate).FullName
+            }
+            $candidate = Split-Path -Parent $candidate
+        }
+
+        if (-not (Test-Path -LiteralPath $candidate -PathType Container)) {
+            continue
+        }
+
+        $directories = @((Get-Item -LiteralPath $candidate)) + @(
+            Get-ChildItem -LiteralPath $candidate -Directory -ErrorAction SilentlyContinue |
+                Sort-Object Name -Descending
+        )
+        foreach ($directory in $directories) {
+            foreach ($executableName in $executableNames) {
+                $executable = Join-Path $directory.FullName $executableName
+                if (Test-Path -LiteralPath $executable -PathType Leaf) {
+                    return (Get-Item -LiteralPath $executable).FullName
+                }
+            }
+        }
+    }
+
+    throw "QwenWork was not found in the current-user uninstall registry or LOCALAPPDATA Programs directories."
+}
+
 function Resolve-WorkBuddyBundledNodeDirectory {
     $versionsRoot = Join-Path `
         $env:USERPROFILE `
@@ -350,6 +414,68 @@ function Assert-WorkBuddyRestartSafe {
     $activeCount = Get-WorkBuddyActiveSessionCount
     if ($activeCount -gt 0) {
         throw "WorkBuddy has $activeCount active or pending session(s); refusing to restart the client."
+    }
+}
+
+function Get-QwenWorkActiveSessionCount {
+    $sessionDatabase = Join-Path $env:APPDATA "QwenWorkCN\data\agents.db"
+    if (-not (Test-Path -LiteralPath $sessionDatabase -PathType Leaf)) {
+        throw "QwenWork session database was not found; refusing to restart a running client: $sessionDatabase"
+    }
+
+    $pythonScript = @'
+import pathlib, sqlite3, sys
+path = pathlib.Path(sys.argv[1]).resolve()
+database = sqlite3.connect(path.as_uri() + '?mode=ro', uri=True)
+tables = {row[0] for row in database.execute('select name from sqlite_master where type=char(116,97,98,108,101)')}
+if not {'sub_chats', 'chats'}.issubset(tables):
+    raise RuntimeError('sub_chats or chats table is unavailable')
+active = database.execute('''
+select count(*)
+from sub_chats
+join chats on chats.id = sub_chats.chat_id
+where chats.deleted_at is null
+  and (
+    sub_chats.stream_id is not null
+    or lower(coalesce(json_extract(chats.ext, '$.taskStatus'), '')) in
+      ('running', 'needs_attention', 'pending', 'starting')
+  )
+''').fetchone()[0]
+database.close()
+print(active)
+'@
+
+    $pythonCommands = @(
+        [pscustomobject]@{ Command = "py.exe"; Prefix = @("-3") },
+        [pscustomobject]@{ Command = "python.exe"; Prefix = @() }
+    )
+    $errors = @()
+    foreach ($python in $pythonCommands) {
+        if (-not (Get-Command $python.Command -ErrorAction SilentlyContinue)) {
+            continue
+        }
+        $arguments = @($python.Prefix) + @("-c", $pythonScript, $sessionDatabase)
+        $previousErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        try {
+            $output = & $python.Command @arguments 2>&1
+            $pythonExitCode = $LASTEXITCODE
+        }
+        finally {
+            $ErrorActionPreference = $previousErrorActionPreference
+        }
+        if ($pythonExitCode -eq 0 -and "$output" -match "^\d+$") {
+            return [int]$output
+        }
+        $errors += "$($python.Command): $output"
+    }
+    throw "No usable read-only SQLite backend could verify QwenWork sessions: $($errors -join '; ')"
+}
+
+function Assert-QwenWorkRestartSafe {
+    $activeCount = Get-QwenWorkActiveSessionCount
+    if ($activeCount -gt 0) {
+        throw "QwenWork has $activeCount active or pending session(s); refusing to restart the client."
     }
 }
 
@@ -471,6 +597,16 @@ else {
     $workBuddyReady = $true
 }
 
+if ($includeQwenWork) {
+    $qwenWorkReady = $null -ne (Get-CdpStatus `
+        -Name "QwenWork" `
+        -Port $QwenWorkPort `
+        -ExpectedProcesses @("QwenWorkCN", "QwenWork"))
+}
+else {
+    $qwenWorkReady = $true
+}
+
 if ($ForceRestart) {
     if ($includeCodex) {
         $codexReady = $false
@@ -480,6 +616,9 @@ if ($ForceRestart) {
     }
     if ($includeWorkBuddy) {
         $workBuddyReady = $false
+    }
+    if ($includeQwenWork) {
+        $qwenWorkReady = $false
     }
 }
 
@@ -492,6 +631,9 @@ if ($CheckOnly) {
     }
     if (-not $workBuddyReady) {
         throw "WorkBuddy is not exposing a valid CDP target on port $WorkBuddyPort."
+    }
+    if (-not $qwenWorkReady) {
+        throw "QwenWork is not exposing a valid CDP target on port $QwenWorkPort."
     }
 }
 else {
@@ -510,6 +652,11 @@ else {
             -Port $WorkBuddyPort `
             -ExpectedProcesses @("WorkBuddy", "CodeBuddy")
     }
+    if ($includeQwenWork -and -not $qwenWorkReady) {
+        Assert-PortRestartable `
+            -Port $QwenWorkPort `
+            -ExpectedProcesses @("QwenWorkCN", "QwenWork")
+    }
 
     $workBuddyExecutable = $null
     $workBuddyProcesses = @()
@@ -526,6 +673,24 @@ else {
         )
         if ($workBuddyProcesses.Count -gt 0) {
             Assert-WorkBuddyRestartSafe
+        }
+    }
+
+    $qwenWorkExecutable = $null
+    $qwenWorkProcesses = @()
+    if ($includeQwenWork -and -not $qwenWorkReady) {
+        $qwenWorkExecutable = Resolve-QwenWorkExecutable
+        $expectedQwenWorkPath = [IO.Path]::GetFullPath($qwenWorkExecutable)
+        $qwenWorkProcesses = @(
+            Get-Process -Name "QwenWorkCN", "QwenWork" -ErrorAction SilentlyContinue |
+                Where-Object {
+                    $actualPath = $null
+                    try { $actualPath = $_.Path } catch { }
+                    $actualPath -and ([IO.Path]::GetFullPath($actualPath) -ieq $expectedQwenWorkPath)
+                }
+        )
+        if ($qwenWorkProcesses.Count -gt 0) {
+            Assert-QwenWorkRestartSafe
         }
     }
 
@@ -555,6 +720,12 @@ else {
         Write-Host "Stopping WorkBuddy processes whose executable path matches the discovered installation..."
         $workBuddyProcesses | Stop-Process -Force
         $workBuddyProcesses | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue
+    }
+
+    if ($qwenWorkProcesses.Count -gt 0) {
+        Write-Host "Stopping QwenWork processes whose executable path matches the discovered installation..."
+        $qwenWorkProcesses | Stop-Process -Force
+        $qwenWorkProcesses | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue
     }
 
     if ($includeCodex -and -not $codexReady) {
@@ -679,6 +850,21 @@ else {
             }
         }
     }
+
+    if ($includeQwenWork -and -not $qwenWorkReady) {
+        Wait-PortAvailable `
+            -Port $QwenWorkPort `
+            -ExpectedProcesses @("QwenWorkCN", "QwenWork") `
+            -TimeoutSeconds $TimeoutSeconds
+
+        Write-Host "Starting QwenWork with CDP on port $QwenWorkPort..."
+        Start-Process `
+            -FilePath $qwenWorkExecutable `
+            -ArgumentList @(
+                "--remote-debugging-address=127.0.0.1",
+                "--remote-debugging-port=$QwenWorkPort"
+            )
+    }
 }
 
 Write-Host "Waiting for $Application CDP endpoints..."
@@ -702,6 +888,13 @@ if ($includeWorkBuddy) {
         -Name "WorkBuddy" `
         -Port $WorkBuddyPort `
         -ExpectedProcesses @("WorkBuddy", "CodeBuddy") `
+        -Timeout $TimeoutSeconds
+}
+if ($includeQwenWork) {
+    $statuses += Wait-CdpStatus `
+        -Name "QwenWork" `
+        -Port $QwenWorkPort `
+        -ExpectedProcesses @("QwenWorkCN", "QwenWork") `
         -Timeout $TimeoutSeconds
 }
 

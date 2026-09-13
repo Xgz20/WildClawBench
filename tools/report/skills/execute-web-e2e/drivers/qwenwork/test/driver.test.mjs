@@ -3,10 +3,12 @@ import test from "node:test";
 
 import {
   chooseQwenAttemptSession,
+  capturePageScreenshot,
   handleExpectedApprovals,
   hasStableConversationId,
   inspectApprovalPanels,
   inspectPendingAttention,
+  isQwenWorkMainPageDescriptor,
   openQwenProjectConversation,
   qwenStopControlLocator,
   qwenProjectSidebarLabel,
@@ -46,7 +48,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.9.8");
+  assert.equal(state.driver.version, "1.10.0");
 });
 
 test("QwenWork 只有同时捕获 chat 和稳定内核 session 才允许后台恢复", () => {
@@ -337,8 +339,8 @@ test("QwenWork 主进程和端口均已崩溃时允许重启并保留活动 sess
         : null),
       endpointReady: async () => launched,
       querySessions: async () => [{ streamId: "stream", status: "running" }],
-      run: async (command) => {
-        if (command === "/usr/bin/open") launched = true;
+      launchApp: async () => {
+        launched = true;
         return { code: 0, stdout: "", stderr: "" };
       },
       waitForEndpoint: async () => {},
@@ -350,6 +352,44 @@ test("QwenWork 主进程和端口均已崩溃时允许重启并保留活动 sess
   assert.equal(launch.stop.pid, null);
   assert.equal(launch.attempts.length, 1);
   assert.equal(launch.attempts[0].endpoint_ready, true);
+});
+
+test("QwenWork Windows 主页面识别兼容中文标题和 hash windowId", () => {
+  assert.equal(isQwenWorkMainPageDescriptor({
+    title: "千问办公",
+    url: "file:///C:/Apps/QwenWorkCN/resources/app.asar/out/renderer/index.html#windowId=main",
+  }), true);
+  assert.equal(isQwenWorkMainPageDescriptor({
+    title: "千问办公",
+    url: "file:///C:/Apps/QwenWorkCN/resources/app.asar/out/renderer/voice-overlay.html",
+  }), false);
+});
+
+test("QwenWork Windows 截图使用直接 CDP Page.captureScreenshot", async () => {
+  const calls = [];
+  let detached = false;
+  const page = {
+    context() {
+      return {
+        async newCDPSession(actualPage) {
+          assert.equal(actualPage, page);
+          return {
+            async send(method, params) {
+              calls.push([method, params]);
+              return { data: Buffer.from("png-fixture").toString("base64") };
+            },
+            async detach() { detached = true; },
+          };
+        },
+      };
+    },
+  };
+  const target = new URL("./screenshot-fixture.png", import.meta.url);
+  const result = await capturePageScreenshot(page, target, { platform: "win32" });
+  assert.equal(result.method, "cdp-page-captureScreenshot");
+  assert.equal(calls[0][0], "Page.captureScreenshot");
+  assert.equal(detached, true);
+  await import("node:fs/promises").then(({ rm }) => rm(target, { force: true }));
 });
 
 test("唯一可见元素等待器拒绝歧义", async () => {

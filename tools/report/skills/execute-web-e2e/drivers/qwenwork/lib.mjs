@@ -1,6 +1,3 @@
-import { homedir } from "node:os";
-import { join } from "node:path";
-
 import {
   AUTOMATION_SCHEMA,
   EXECUTION_SCHEMA,
@@ -25,6 +22,13 @@ import {
   transitionState,
   updateExecutionRecord as updateBaseExecutionRecord,
 } from "../workbuddy/lib.mjs";
+import {
+  MACOS_BUNDLE_ID,
+  defaultQwenWorkAppPath,
+  defaultQwenWorkSessionDb,
+  resolveQwenWorkAppPath,
+  validateQwenWorkAppPath,
+} from "./platform.mjs";
 
 export {
   AUTOMATION_SCHEMA,
@@ -45,16 +49,16 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.9.8";
-export const DEFAULT_APP_PATH = "/Applications/QwenWorkCN.app";
-export const DEFAULT_BUNDLE_ID = "cn.qwenwork.desktop.mac";
+export const DRIVER_VERSION = "1.10.0";
+export const DEFAULT_APP_PATH = defaultQwenWorkAppPath();
+export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9250";
-export const DEFAULT_SESSION_DB = join(homedir(), "Library", "Application Support", "QwenWorkCN", "data", "agents.db");
+export const DEFAULT_SESSION_DB = defaultQwenWorkSessionDb();
 export const QWENWORK_PROFILE = Object.freeze({
   id: "qwenwork",
   displayName: "QwenWork",
   driverVersion: DRIVER_VERSION,
-  controlBackend: "electron-cdp+qwenwork-project-dialog+macos-accessibility+agents-sqlite",
+  controlBackend: "electron-cdp+qwenwork-project-dialog+platform-native-folder+agents-sqlite",
 });
 
 function optionWasProvided(argv, name) {
@@ -70,7 +74,10 @@ export function parseArgs(argv) {
 }
 
 export async function resolveConfig(parsed) {
-  return resolveBaseConfig(parsed);
+  return resolveBaseConfig(parsed, {
+    resolveAppPath: resolveQwenWorkAppPath,
+    validateAppPath: validateQwenWorkAppPath,
+  });
 }
 
 export async function resolveExecutionIdentity(config) {
