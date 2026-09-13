@@ -87,6 +87,23 @@ function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
 }
 
+export async function withOperationTimeout(operation, timeoutMilliseconds, description) {
+  let timer = null;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise((_, rejectPromise) => {
+        timer = setTimeout(
+          () => rejectPromise(new Error(`${description}超过 ${timeoutMilliseconds} 毫秒未返回`)),
+          timeoutMilliseconds,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export async function waitForUniqueVisible(readVisible, timeout, description, pollInterval = 250) {
   const deadline = Date.now() + timeout;
   let lastCount = 0;
@@ -1015,10 +1032,27 @@ export async function inspectPendingAttention(page) {
   return [...new Set(attention)];
 }
 
+export async function inspectUserQuestions(page) {
+  const questions = [];
+  const containers = await visibleLocators(page.locator('[data-slot="user-question"]'));
+  for (const container of containers) {
+    const title = ((await container.locator('[data-slot="user-question-header"] span').first().innerText().catch(() => "")) || "").trim();
+    const pagination = ((await container.locator('[data-slot="user-question-pagination"]').innerText().catch(() => "")) || "").trim();
+    const prompt = ((await container.locator('[data-slot="user-question-questions"]').innerText().catch(() => "")) || "").trim();
+    questions.push({
+      title: title.slice(0, 200) || null,
+      pagination: pagination.slice(0, 50) || null,
+      prompt: prompt.slice(0, 2_000) || null,
+    });
+  }
+  return questions;
+}
+
 async function inspectDom(page) {
   const stop = qwenStopControlLocator(page);
   const running = (await visibleLocators(stop)).length > 0;
   const attention = await inspectPendingAttention(page);
+  const userQuestions = await inspectUserQuestions(page);
   const agentTurns = page.locator('[data-message-author-role="assistant"]:visible, [data-role="assistant"]:visible, [class*="assistant-message"]:visible');
   const agentValues = await agentTurns.allInnerTexts().catch(() => []);
   const agentText = agentValues.map((value) => value.trim()).filter(Boolean).at(-1) || "";
@@ -1045,6 +1079,7 @@ async function inspectDom(page) {
   return {
     running,
     attention,
+    userQuestions,
     emptyConversation,
     explicitFinished,
     agentText: agentText.slice(-50000),
@@ -1295,24 +1330,35 @@ export async function capturePageScreenshot(page, path, overrides = {}) {
     await page.screenshot({ path });
     return { method: "playwright" };
   }
-  const session = await page.context().newCDPSession(page);
+  const timeoutMilliseconds = overrides.timeoutMilliseconds || 15_000;
+  const session = await withOperationTimeout(
+    page.context().newCDPSession(page),
+    timeoutMilliseconds,
+    "创建 QwenWork 页面 CDP 会话",
+  );
   try {
-    const result = await session.send("Page.captureScreenshot", {
-      format: "png",
-      fromSurface: true,
-      captureBeyondViewport: false,
-    });
+    const result = await withOperationTimeout(
+      session.send("Page.captureScreenshot", {
+        format: "png",
+        fromSurface: true,
+        captureBeyondViewport: false,
+      }),
+      timeoutMilliseconds,
+      "采集 QwenWork 页面截图",
+    );
     if (!result?.data) throw new Error("CDP Page.captureScreenshot 未返回 PNG 数据");
     await writeFile(path, Buffer.from(result.data, "base64"));
     return { method: "cdp-page-captureScreenshot" };
   } finally {
-    await session.detach().catch(() => {});
+    await withOperationTimeout(session.detach(), 2_000, "释放 QwenWork 页面 CDP 会话").catch(() => {});
   }
 }
 
 async function takeScreenshot(page, config, state, name) {
   const path = join(config.outputDir, name);
-  const capture = await capturePageScreenshot(page, path);
+  const capture = await capturePageScreenshot(page, path, {
+    timeoutMilliseconds: Math.min(config.timeoutSeconds * 1000, 15_000),
+  });
   state.evidence.screenshots.push(path);
   state.evidence.screenshot_captures ||= [];
   state.evidence.screenshot_captures.push({ path, method: capture.method, at: new Date().toISOString() });
@@ -1447,6 +1493,25 @@ export async function observeAttemptOnce(page, config, state, identityInfo) {
     return state;
   }
   const dom = await inspectDom(page);
+  if (dom.userQuestions.length) {
+    await takeScreenshot(page, config, state, "09-user-input-required.png");
+    transitionState(state, "NEEDS_ATTENTION", {
+      reason: "visible-user-question",
+      questions: dom.userQuestions,
+    });
+    state.error = `QwenWork 等待用户输入：检测到 ${dom.userQuestions.length} 个问卷交互；控制端禁止代答或发送第二条 Prompt`;
+    state.pending_interaction = {
+      type: "user-question",
+      detected_at: new Date().toISOString(),
+      questions: dom.userQuestions,
+    };
+    await saveState(config, state);
+    await updateExecutionRecord(config, identityInfo, {
+      clientVersion: state.client.version,
+      execution: { status: "pending", error: state.error },
+    });
+    return state;
+  }
   if (dom.attention.length) {
     await takeScreenshot(page, config, state, "09-needs-attention.png");
     const commands = approvalResult.approvals.map((approval) => approval.command).filter(Boolean);
@@ -1557,10 +1622,10 @@ async function resumeAutomation(config, state, identityInfo) {
     else if (!(await endpointReady(config.endpoint))) throw new Error(`QwenWork 未开放调试端口 ${config.endpoint}`);
     state.client.process = await qwenWorkProcessIdentity(config.appPath);
     const { chromium } = await import("playwright-core");
-    const browser = await chromium.connectOverCDP(config.endpoint);
+    const browser = await chromium.connectOverCDP(config.endpoint, { timeout: config.timeoutSeconds * 1000 });
     page = await chooseQwenWorkPage(browser, config.timeoutSeconds * 1000);
     page.setDefaultTimeout(config.timeoutSeconds * 1000);
-    await page.bringToFront();
+    await withOperationTimeout(page.bringToFront(), config.timeoutSeconds * 1000, "激活 QwenWork 主页面");
     const stableConversationAvailable = hasStableConversationId(state);
     if (stableConversationAvailable) {
       const opened = await openAttemptConversation(page, config, state, config.timeoutSeconds * 1000);
@@ -1715,11 +1780,11 @@ async function runAutomation(config, identityInfo) {
     await saveState(config, state);
 
     const { chromium } = await import("playwright-core");
-    browser = await chromium.connectOverCDP(config.endpoint);
     const timeout = config.timeoutSeconds * 1000;
+    browser = await chromium.connectOverCDP(config.endpoint, { timeout });
     const page = await chooseQwenWorkPage(browser, timeout);
     page.setDefaultTimeout(timeout);
-    await page.bringToFront();
+    await withOperationTimeout(page.bringToFront(), timeout, "激活 QwenWork 主页面");
     await takeScreenshot(page, config, state, "01-initial.png");
 
     await takeScreenshot(page, config, state, "02-before-new-project.png");
@@ -1851,7 +1916,7 @@ async function probe(config) {
   if (checks.endpoint_ready) {
     try {
       const { chromium } = await import("playwright-core");
-      const browser = await chromium.connectOverCDP(config.endpoint);
+      const browser = await chromium.connectOverCDP(config.endpoint, { timeout: config.timeoutSeconds * 1000 });
       const page = await chooseQwenWorkPage(browser, config.timeoutSeconds * 1000);
       checks.blocking_dialog_count = (await visibleLocators(page.locator('[role="dialog"]'))).length;
       checks.new_project_action_available = (await visibleLocators(page.locator('button[aria-label="新建项目"]'))).length > 0;

@@ -8,6 +8,7 @@ import {
   hasStableConversationId,
   inspectApprovalPanels,
   inspectPendingAttention,
+  inspectUserQuestions,
   isQwenWorkMainPageDescriptor,
   openQwenProjectConversation,
   qwenStopControlLocator,
@@ -15,6 +16,7 @@ import {
   restartQwenWork,
   terminalProcessCleanupTiming,
   waitForUniqueVisible,
+  withOperationTimeout,
 } from "../driver.mjs";
 import {
   createInitialState,
@@ -49,7 +51,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.10.1");
+  assert.equal(state.driver.version, "1.10.2");
 });
 
 test("QwenWork 只有同时捕获 chat 和稳定内核 session 才允许后台恢复", () => {
@@ -355,6 +357,40 @@ test("QwenWork 主进程和端口均已崩溃时允许重启并保留活动 sess
   assert.equal(launch.attempts[0].endpoint_ready, true);
 });
 
+test("QwenWork 识别问卷型用户输入且不点击任何选项", async () => {
+  let clicks = 0;
+  const valueLocator = (value) => ({
+    innerText: async () => value,
+    first() { return this; },
+  });
+  const container = {
+    isVisible: async () => true,
+    locator(selector) {
+      if (selector === '[data-slot="user-question-header"] span') return valueLocator("视觉风格");
+      if (selector === '[data-slot="user-question-pagination"]') return valueLocator("1 / 3");
+      if (selector === '[data-slot="user-question-questions"]') return valueLocator("这个原型希望是哪种视觉风格？");
+      throw new Error(`unexpected selector: ${selector}`);
+    },
+    click: async () => { clicks += 1; },
+  };
+  const page = {
+    locator(selector) {
+      assert.equal(selector, '[data-slot="user-question"]');
+      return {
+        count: async () => 1,
+        nth: () => container,
+      };
+    },
+  };
+
+  assert.deepEqual(await inspectUserQuestions(page), [{
+    title: "视觉风格",
+    pagination: "1 / 3",
+    prompt: "这个原型希望是哪种视觉风格？",
+  }]);
+  assert.equal(clicks, 0);
+});
+
 test("QwenWork Windows 主页面识别兼容中文标题和 hash windowId", () => {
   assert.equal(isQwenWorkMainPageDescriptor({
     title: "千问办公",
@@ -391,6 +427,13 @@ test("QwenWork Windows 截图使用直接 CDP Page.captureScreenshot", async () 
   assert.equal(calls[0][0], "Page.captureScreenshot");
   assert.equal(detached, true);
   await import("node:fs/promises").then(({ rm }) => rm(target, { force: true }));
+});
+
+test("QwenWork Windows CDP 操作超时后失败关闭", async () => {
+  await assert.rejects(
+    withOperationTimeout(new Promise(() => {}), 5, "截图测试"),
+    /截图测试超过 5 毫秒未返回/,
+  );
 });
 
 test("QwenWork 终态进程收口为普通终态保留完整安静窗口", () => {

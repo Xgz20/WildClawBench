@@ -88,7 +88,11 @@ function Get-FolderDialog([int[]]$ProcessIds) {
     )
     $matches = @()
     foreach ($window in $windows) {
-        if ($ProcessIds -notcontains $window.Current.ProcessId -or $window.Current.IsOffscreen) { continue }
+        if (
+            $ProcessIds -notcontains $window.Current.ProcessId -or
+            $window.Current.IsOffscreen -or
+            $window.Current.ClassName -ne "#32770"
+        ) { continue }
         $elements = $window.FindAll(
             [System.Windows.Automation.TreeScope]::Descendants,
             [System.Windows.Automation.Condition]::TrueCondition

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, win32 } from "node:path";
 import test from "node:test";
@@ -107,6 +107,14 @@ test("Windows QwenWork 文件夹选择器调用本地 PowerShell UIA helper", ()
     "-TimeoutSeconds", "30",
   ]);
   assert.match(invocation.args[invocation.args.indexOf("-File") + 1], /qwenwork\\select-folder\.ps1$/iu);
+});
+
+test("Windows QwenWork 文件夹选择器只扫描标准系统对话框", async () => {
+  const helper = await readFile(new URL("../select-folder.ps1", import.meta.url), "utf8");
+  const classFilter = helper.indexOf('$window.Current.ClassName -ne "#32770"');
+  const descendantScan = helper.indexOf("$window.FindAll(");
+  assert.ok(classFilter >= 0);
+  assert.ok(descendantScan > classFilter);
 });
 
 test("Windows QwenWork 启动透传精确 CDP 参数", async () => {
