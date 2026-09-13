@@ -26,7 +26,7 @@ param(
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
 
-$includeCodex = $Application -in @("All", "Codex", "CodexWorkBuddy")
+$includeCodex = $Application -in @("All", "Codex", "CodexWorkBuddy", "CodexQwenWork")
 $includeAstronStudio = $Application -in @("All", "AstronStudio")
 $includeWorkBuddy = $Application -in @("WorkBuddy", "CodexWorkBuddy")
 $includeQwenWork = $Application -in @("QwenWork", "CodexQwenWork")

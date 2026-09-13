@@ -12,6 +12,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "tools/report/skills/run-web-e2e/scripts/run_web_e2e.py"
+WINDOWS_DESKTOP_DEBUG_SCRIPT = (
+    REPO_ROOT / "tools/report/skills/run-web-e2e/scripts/start_windows_desktop_debug.ps1"
+)
 
 
 def load_module():
@@ -23,6 +26,19 @@ def load_module():
 
 
 run_module = load_module()
+
+
+class WindowsDesktopDebugScriptTests(unittest.TestCase):
+    def test_codex_qwenwork_selects_both_clients(self) -> None:
+        script = WINDOWS_DESKTOP_DEBUG_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn(
+            '$includeCodex = $Application -in @("All", "Codex", "CodexWorkBuddy", "CodexQwenWork")',
+            script,
+        )
+        self.assertIn(
+            '$includeQwenWork = $Application -in @("QwenWork", "CodexQwenWork")',
+            script,
+        )
 
 
 TASK_IDS = ["task-1", "task-2"]
