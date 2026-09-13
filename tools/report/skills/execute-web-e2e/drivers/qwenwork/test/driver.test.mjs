@@ -17,6 +17,9 @@ import {
   rememberSession,
   restartQwenWork,
   terminalProcessCleanupTiming,
+  userQuestionsMatch,
+  validateAbandonmentConnection,
+  validateUserQuestionAbandonmentState,
   waitForUniqueVisible,
   withOperationTimeout,
 } from "../driver.mjs";
@@ -53,7 +56,102 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.10.5");
+  assert.equal(state.driver.version, "1.10.6");
+});
+
+test("QwenWork 问卷停止参数必须与恢复模式组合", () => {
+  assert.throws(() => parseArgs(["--probe", "--abandon-user-question"]), /必须与 --resume/);
+  assert.equal(parseArgs(["--probe", "--resume", "--abandon-user-question"]).abandonUserQuestion, true);
+});
+
+test("QwenWork 问卷停止只接受完整稳定身份和同一 cwd", () => {
+  const workspace = "C:\\tasks\\one";
+  const state = {
+    phase: "NEEDS_ATTENTION",
+    pending_interaction: { type: "user-question", questions: [{ title: "视觉风格", prompt: "请选择" }] },
+    session: {
+      conversation_id: "chat",
+      session_id: "session",
+      local_project_id: "project",
+      cwd: workspace,
+    },
+  };
+  assert.doesNotThrow(() => validateUserQuestionAbandonmentState(state, workspace));
+  assert.throws(
+    () => validateUserQuestionAbandonmentState({ ...state, session: { ...state.session, session_id: null } }, workspace),
+    /缺少稳定身份/,
+  );
+  assert.throws(() => validateUserQuestionAbandonmentState(state, "C:\\tasks\\other"), /cwd/);
+});
+
+test("QwenWork 问卷停止要求当前交互与已持久化摘要完全一致", () => {
+  const expected = [{ title: "视觉风格", pagination: "1 / 3", prompt: "请选择风格" }];
+  assert.equal(userQuestionsMatch(expected, [{ ...expected[0] }]), true);
+  assert.equal(userQuestionsMatch(expected, [{ ...expected[0], prompt: "请选择技术" }]), false);
+});
+
+test("QwenWork 仅在原 CDP 不可达且主进程缺失时允许临时恢复端口", async () => {
+  const state = {
+    phase: "NEEDS_ATTENTION",
+    pending_interaction: { type: "user-question", questions: [{ prompt: "请选择" }] },
+    client: { endpoint: DEFAULT_ENDPOINT },
+    session: {
+      conversation_id: "chat",
+      session_id: "session",
+      local_project_id: "project",
+      cwd: "C:\\tasks\\one",
+    },
+  };
+  const config = {
+    workspace: "C:\\tasks\\one",
+    endpoint: "http://127.0.0.1:9251",
+    appPath: DEFAULT_APP_PATH,
+    restartApp: true,
+  };
+  assert.deepEqual(
+    await validateAbandonmentConnection(config, state, {
+      endpointReady: async () => false,
+      processIdentity: async () => null,
+    }),
+    {
+      overridden: true,
+      original_endpoint: DEFAULT_ENDPOINT,
+      recovery_endpoint: "http://127.0.0.1:9251",
+      reason: "original-cdp-unreachable-and-qwenwork-process-absent",
+    },
+  );
+  await assert.rejects(
+    validateAbandonmentConnection(config, state, {
+      endpointReady: async (endpoint) => endpoint === DEFAULT_ENDPOINT,
+      processIdentity: async () => null,
+    }),
+    /仍可核对/,
+  );
+  const resumedState = {
+    ...state,
+    recovery_connection: {
+      overridden: true,
+      original_endpoint: DEFAULT_ENDPOINT,
+      recovery_endpoint: "http://127.0.0.1:9251",
+      reason: "original-cdp-unreachable-and-qwenwork-process-absent",
+    },
+  };
+  assert.equal((await validateAbandonmentConnection(
+    { ...config, restartApp: false },
+    resumedState,
+    {
+      endpointReady: async (endpoint) => endpoint === "http://127.0.0.1:9251",
+      processIdentity: async () => ({ pid: 123 }),
+    },
+  )).resumed, true);
+  assert.equal((await validateAbandonmentConnection(
+    { ...config, restartApp: false },
+    state,
+    {
+      endpointReady: async (endpoint) => endpoint === "http://127.0.0.1:9251",
+      processIdentity: async () => ({ pid: 123 }),
+    },
+  )).adopted, true);
 });
 
 test("QwenWork 终态查询不覆盖已捕获的稳定会话身份", () => {

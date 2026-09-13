@@ -49,7 +49,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.10.5";
+export const DRIVER_VERSION = "1.10.6";
 export const DEFAULT_APP_PATH = defaultQwenWorkAppPath();
 export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9250";
@@ -66,7 +66,15 @@ function optionWasProvided(argv, name) {
 }
 
 export function parseArgs(argv) {
-  const parsed = parseBaseArgs(argv);
+  const abandonUserQuestion = argv.includes("--abandon-user-question");
+  const parsed = parseBaseArgs(argv.filter((value) => value !== "--abandon-user-question"));
+  if (abandonUserQuestion && !parsed.resume) {
+    throw new Error("--abandon-user-question 必须与 --resume 一起使用");
+  }
+  if (abandonUserQuestion && (parsed.retryPreSendFailure || parsed.detachAfterSubmit || parsed.observeOnce)) {
+    throw new Error("--abandon-user-question 不能与重试、后台投递或单次观察参数组合使用");
+  }
+  parsed.abandonUserQuestion = abandonUserQuestion;
   if (!optionWasProvided(argv, "--app-path")) parsed.appPath = DEFAULT_APP_PATH;
   if (!optionWasProvided(argv, "--endpoint")) parsed.endpoint = DEFAULT_ENDPOINT;
   if (!optionWasProvided(argv, "--session-db")) parsed.sessionDb = DEFAULT_SESSION_DB;

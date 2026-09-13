@@ -77,6 +77,7 @@ function usage() {
   --retry-pre-send-failure          仅归档并重试发送前、产物零变化的 INFRA_FAILED
   --detach-after-submit            捕获稳定 conversation ID 后退出，由队列后台观察
   --observe-once                   恢复原 conversation，只执行一次终态观察
+  --abandon-user-question          仅停止已持久化且身份完全匹配的问卷会话，并结构化失败收口
   --quiet                          仅输出错误；供批次 Worker 高频观察使用
   --restart-app                    正常退出后以本地 CDP 端口重启 QwenWork
   --dry-run                        校验输入、身份和状态，不操作 QwenWork
@@ -1049,6 +1050,77 @@ export async function inspectUserQuestions(page) {
   return questions;
 }
 
+function normalizedQuestions(questions) {
+  return (questions || []).map((question) => ({
+    title: String(question?.title || "").trim() || null,
+    pagination: String(question?.pagination || "").trim() || null,
+    prompt: String(question?.prompt || "").trim() || null,
+  }));
+}
+
+export function userQuestionsMatch(expected, actual) {
+  return JSON.stringify(normalizedQuestions(expected)) === JSON.stringify(normalizedQuestions(actual));
+}
+
+export function validateUserQuestionAbandonmentState(state, workspace) {
+  if (state?.phase !== "NEEDS_ATTENTION" || state?.pending_interaction?.type !== "user-question") {
+    throw new Error("--abandon-user-question 只允许处理已持久化为 NEEDS_ATTENTION 的问卷会话");
+  }
+  const required = [
+    ["conversation_id", state.session?.conversation_id],
+    ["session_id", state.session?.session_id],
+    ["local_project_id", state.session?.local_project_id],
+    ["cwd", state.session?.cwd],
+  ];
+  const missing = required.filter(([, value]) => !String(value || "").trim()).map(([name]) => name);
+  if (missing.length) throw new Error(`问卷会话缺少稳定身份：${missing.join(", ")}`);
+  if (resolve(String(state.session.cwd)) !== resolve(workspace)) {
+    throw new Error("问卷会话 cwd 与当前任务根不一致；拒绝停止未知会话");
+  }
+  if (!Array.isArray(state.pending_interaction.questions) || !state.pending_interaction.questions.length) {
+    throw new Error("问卷会话没有已持久化的问题摘要；拒绝停止未知交互");
+  }
+}
+
+export async function validateAbandonmentConnection(config, state, overrides = {}) {
+  validateUserQuestionAbandonmentState(state, config.workspace);
+  const originalEndpoint = state.client?.endpoint || "";
+  if (!originalEndpoint || originalEndpoint === config.endpoint) return { overridden: false };
+  const isEndpointReady = overrides.endpointReady || endpointReady;
+  const readProcessIdentity = overrides.processIdentity || (() => qwenWorkProcessIdentity(config.appPath));
+  const [originalReady, recoveryReady, currentProcess] = await Promise.all([
+    isEndpointReady(originalEndpoint),
+    isEndpointReady(config.endpoint),
+    readProcessIdentity(),
+  ]);
+  const persistedRecoveryMatches = state.recovery_connection?.recovery_endpoint === config.endpoint
+    && state.recovery_connection?.original_endpoint === originalEndpoint;
+  if (persistedRecoveryMatches && !originalReady && recoveryReady && currentProcess) {
+    return { ...state.recovery_connection, overridden: true, resumed: true };
+  }
+  if (!originalReady && recoveryReady && currentProcess) {
+    return {
+      overridden: true,
+      adopted: true,
+      original_endpoint: originalEndpoint,
+      recovery_endpoint: config.endpoint,
+      reason: "existing-verified-qwenwork-recovery-endpoint",
+    };
+  }
+  if (!config.restartApp) {
+    throw new Error("问卷恢复改用其他本机 CDP 端口时必须显式使用 --restart-app");
+  }
+  if (originalReady || recoveryReady || currentProcess) {
+    throw new Error("原 QwenWork 实例仍可核对；拒绝通过其他 CDP 端口停止会话");
+  }
+  return {
+    overridden: true,
+    original_endpoint: originalEndpoint,
+    recovery_endpoint: config.endpoint,
+    reason: "original-cdp-unreachable-and-qwenwork-process-absent",
+  };
+}
+
 async function inspectDom(page) {
   const stop = qwenStopControlLocator(page);
   const running = (await visibleLocators(stop)).length > 0;
@@ -1261,6 +1333,155 @@ async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom,
   return finalize(config, state, identityInfo, "TIMEOUT", {
     terminalSource: "driver-timeout+cancellation-confirmed",
     error: `超过 ${config.runTimeoutSeconds} 秒，已确认 QwenWork 停止且 workspace 保持静默`,
+    finalText,
+  });
+}
+
+async function abandonUserQuestion(page, config, state, identityInfo) {
+  validateUserQuestionAbandonmentState(state, config.workspace);
+  const dom = await inspectDom(page);
+  const session = chooseQwenAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
+  if (!session
+      || session.sessionId !== state.session.session_id
+      || session.conversationId !== state.session.conversation_id
+      || session.localProjectId !== state.session.local_project_id) {
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "abandon-user-question-session-mismatch",
+      "无法按已持久化的 session、conversation、project 和 cwd 唯一核对问卷会话；拒绝停止",
+      page,
+      "09-abandon-session-mismatch.png",
+    );
+  }
+  rememberSession(state, session);
+  const classification = classifySessionStatus(session.status);
+  if (classification.kind === "success") {
+    await takeScreenshot(page, config, state, "10-succeeded-before-abandon.png");
+    return finalize(config, state, identityInfo, "SUCCEEDED", {
+      terminalSource: "qwenwork-session-db-before-abandon",
+      finalText: session.finalText || dom.finalText,
+    });
+  }
+  if (classification.kind === "failure" && !session.streamId) {
+    await takeScreenshot(page, config, state, "10-failed-before-abandon.png");
+    return finalize(config, state, identityInfo, "INFRA_FAILED", {
+      terminalSource: "qwenwork-session-db-before-abandon",
+      error: `QwenWork conversation 已是失败终态：${session.status}`,
+      finalText: session.finalText || dom.finalText,
+    });
+  }
+  if (!userQuestionsMatch(state.pending_interaction.questions, dom.userQuestions)) {
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "abandon-user-question-content-mismatch",
+      "当前可见问卷与已持久化问题摘要不一致；拒绝停止未知交互",
+      page,
+      "09-abandon-question-mismatch.png",
+    );
+  }
+  const stopButtons = await visibleLocators(qwenStopControlLocator(page));
+  if (!dom.running || stopButtons.length !== 1) {
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "abandon-user-question-stop-control-unavailable",
+      "已核对问卷会话，但无法唯一确认其停止控件；拒绝执行其他 UI 操作",
+      page,
+      "09-abandon-stop-unavailable.png",
+    );
+  }
+
+  const before = await snapshotTree(config.candidateWorkspace);
+  state.abandonment = {
+    reason: "pending-user-question",
+    requested_at: new Date().toISOString(),
+    conversation_id: session.conversationId,
+    session_id: session.sessionId,
+    local_project_id: session.localProjectId,
+    cwd: session.cwd,
+    questions_sha256: createHash("sha256")
+      .update(JSON.stringify(normalizedQuestions(dom.userQuestions)))
+      .digest("hex"),
+    stop_requested_at: null,
+    confirmed_at: null,
+    confirmation_source: null,
+    quiescence: null,
+  };
+  await takeScreenshot(page, config, state, "10-abandon-before-stop.png");
+  state.abandonment.stop_requested_at = new Date().toISOString();
+  await stopButtons[0].click({ timeout: config.timeoutSeconds * 1000 });
+  await saveState(config, state);
+  await takeScreenshot(page, config, state, "10-abandon-stop-requested.png");
+
+  const deadline = Date.now() + config.timeoutSeconds * 1000;
+  let confirmationSource = null;
+  let finalText = session.finalText || dom.finalText;
+  let stableNonRunningPolls = 0;
+  while (Date.now() < deadline) {
+    const currentDom = await inspectDom(page);
+    const currentSession = chooseQwenAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
+    if (!currentSession || currentSession.sessionId !== state.session.session_id) break;
+    rememberSession(state, currentSession);
+    finalText = currentSession.finalText || currentDom.finalText || finalText;
+    const currentClassification = classifySessionStatus(currentSession.status);
+    if (!currentSession.streamId && currentClassification.kind === "success") {
+      confirmationSource = "qwenwork-session-db-success-after-stop";
+      break;
+    }
+    if (!currentSession.streamId && currentClassification.kind === "failure") {
+      confirmationSource = "qwenwork-session-db-failure-after-stop";
+      break;
+    }
+    if (!currentSession.streamId && !currentDom.running) stableNonRunningPolls += 1;
+    else stableNonRunningPolls = 0;
+    if (stableNonRunningPolls >= 2) {
+      confirmationSource = "qwenwork-session-db-no-stream+dom-non-running";
+      break;
+    }
+    await sleep(config.pollIntervalSeconds * 1000);
+  }
+  if (!confirmationSource) {
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "abandon-user-question-unconfirmed",
+      "已请求停止问卷会话，但数据库和页面未共同确认会话停止",
+      page,
+      "10-abandon-unconfirmed.png",
+    );
+  }
+
+  await sleep(config.postCancelQuiescenceSeconds * 1000);
+  const after = await snapshotTree(config.candidateWorkspace);
+  state.abandonment.confirmed_at = new Date().toISOString();
+  state.abandonment.confirmation_source = confirmationSource;
+  state.abandonment.quiescence = {
+    observed_seconds: config.postCancelQuiescenceSeconds,
+    before_sha256: before.sha256,
+    after_sha256: after.sha256,
+    stable: before.sha256 === after.sha256,
+  };
+  if (!state.abandonment.quiescence.stable) {
+    return persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "post-abandon-workspace-still-changing",
+      "QwenWork 问卷会话已停止，但候选 workspace 在静默观察窗口内仍发生变化",
+      page,
+      "10-abandon-workspace-changing.png",
+    );
+  }
+  await takeScreenshot(page, config, state, "10-abandon-confirmed.png");
+  return finalize(config, state, identityInfo, "INFRA_FAILED", {
+    terminalSource: "driver-abandon-user-question+stop-confirmed",
+    error: "QwenWork 请求用户回答问卷；控制端未代答，已停止原会话并结构化失败收口",
     finalText,
   });
 }
@@ -1617,6 +1838,13 @@ async function resumeAutomation(config, state, identityInfo) {
   state.runtime.driver_pid = process.pid;
   state.runtime.driver_started_at = new Date().toISOString();
   state.runtime.heartbeat_at = state.runtime.driver_started_at;
+  if (config.abandonUserQuestion) {
+    const recoveryConnection = await validateAbandonmentConnection(config, state);
+    if (recoveryConnection.overridden) {
+      state.recovery_connection = { ...recoveryConnection, validated_at: new Date().toISOString() };
+      await saveState(config, state);
+    }
+  }
   if (config.restartApp && !hasStableConversationId(state)) {
     return persistNeedsAttention(
       config,
@@ -1658,6 +1886,9 @@ async function resumeAutomation(config, state, identityInfo) {
     }
     const session = chooseQwenAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
     const dom = await inspectDom(page);
+    if (config.abandonUserQuestion) {
+      return abandonUserQuestion(page, config, state, identityInfo);
+    }
     if (stableConversationAvailable && !session && dom.emptyConversation) {
       return persistNeedsAttention(
         config,
@@ -1996,6 +2227,7 @@ export async function main(argv) {
       retryPreSendFailure: config.retryPreSendFailure,
       detachAfterSubmit: config.detachAfterSubmit,
       observeOnce: config.observeOnce,
+      abandonUserQuestion: config.abandonUserQuestion,
       postCancelQuiescenceSeconds: config.postCancelQuiescenceSeconds,
       dryRun: config.dryRun,
     };

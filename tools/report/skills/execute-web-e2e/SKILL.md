@@ -107,6 +107,8 @@ Prompt 发送后以 `sub_chats.session_id` 作为稳定内核会话 ID，以 `su
 
 QwenWork 出现 `data-slot="user-question"` 问卷或其他明确用户输入请求时，Driver 保存问题标题、分页和问题摘要后进入 `NEEDS_ATTENTION`。控制端不得点击“推荐”“跳过”或提交任何选项，因为这会代替被评测 Agent 作答并产生第二条用户消息。Windows 页面激活和 CDP 截图均有有界超时；原生目录选择器只扫描当前 QwenWork 进程拥有的标准 `#32770` 系统对话框，避免遍历 Electron 主窗口的完整可访问性树。
 
+已确认不再继续的问卷任务可由控制端显式使用单题 Driver 的 `--resume --abandon-user-question` 收口。该动作只在原 automation 已记录 `NEEDS_ATTENTION`、问卷摘要、稳定 conversation/session/project 和绝对 cwd，且当前页面仍显示同一问卷与唯一停止控件时生效；它只点击停止，不点击“推荐”“跳过”或答案，并在数据库确认 stream 结束、候选 workspace 静默后记录结构化 `INFRA_FAILED`。若客户端重启已把原 session 明确标记为 `interrupted`，则直接按数据库终态失败收口。若原默认 CDP 留下无法响应且找不到所属主进程的 Windows 幽灵监听，可额外显式传新的本机 `--endpoint` 与 `--restart-app`；只有原端点不可达、QwenWork 主进程确实不存在时才允许临时端口恢复。同一已核对的临时 QwenWork 实例可继续收口其他身份完整匹配的旧问卷 session，但不能用于继续做题或重发 Prompt。
+
 控制任务或队列 Worker 中断后，由新的控制任务使用完全相同的批次参数增加 `--resume`。恢复只按已持久化的 attempt、`session_id`、`local_project_id` 和绝对 cwd 观察原会话，不重新创建项目或发送 Prompt。队列历史用 `WORKER_INTERRUPTED` 和 `WORKER_RESUMED` 记录旧、新 Worker PID；恢复验收必须确认 `TASK_DISPATCHED` 与 automation 中 `PROMPT_SENT` 均仍只有一次。
 
 QwenWork 客户端崩溃且本地 CDP 端口已经关闭时，使用相同参数增加 `--resume --restart-app-on-resume`。Driver 只重启一次客户端，并从数据库确认唯一项目、原 `session_id` 和侧栏中的原 conversation 后继续观察；项目名称同时出现在侧栏和新任务选择器属于同一数据库项目的两个视图，恢复只使用侧栏项目树定位。若 QwenWork 把原 session 恢复为运行或完成状态，沿用原 attempt 收口；若客户端明确把它标记为 `interrupted`，则记录 `INFRA_FAILED`，不得重发 Prompt 或伪造恢复成功。数据库存在多个项目、多个会话或 cwd 不一致时仍停在 `NEEDS_ATTENTION`。
