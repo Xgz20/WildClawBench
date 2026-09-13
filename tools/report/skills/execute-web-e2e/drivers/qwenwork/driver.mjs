@@ -1616,20 +1616,31 @@ export function terminalProcessCleanupTiming(phase) {
     : { quietMilliseconds: 45_000, waitMilliseconds: 120_000 };
 }
 
+export function recordTerminalProcessCleanup(state, phase, cleanup) {
+  state.terminal_process_cleanup = cleanup;
+  if (phase === "TIMEOUT") {
+    state.timeout ||= {};
+    state.timeout.process_cleanup = cleanup;
+  }
+  return cleanup;
+}
+
 async function collectTerminalProcessCleanup(config, state, phase, identityInfo, { backfill = false } = {}) {
+  let cleanup;
   try {
-    state.terminal_process_cleanup = await terminateCandidateWorkspaceProcesses(config.candidateWorkspace, {
+    cleanup = await terminateCandidateWorkspaceProcesses(config.candidateWorkspace, {
       taskRoot: config.workspace,
       includeSessionHost: false,
       ...terminalProcessCleanupTiming(phase),
     });
   } catch (cleanupError) {
-    state.terminal_process_cleanup = {
+    cleanup = {
       supported: process.platform === "win32",
       success: false,
       error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
     };
   }
+  recordTerminalProcessCleanup(state, phase, cleanup);
   if (!state.terminal_process_cleanup.success) {
     transitionState(state, "NEEDS_ATTENTION", { reason: "terminal-task-process-cleanup-failed" });
     state.error = `QwenWork 已出现终态，但无法确认候选工作空间相关进程全部退出：${state.terminal_process_cleanup.error || "仍检测到残留进程"}`;

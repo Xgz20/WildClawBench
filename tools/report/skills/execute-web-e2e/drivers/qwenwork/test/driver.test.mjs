@@ -15,6 +15,7 @@ import {
   openQwenProjectConversation,
   qwenStopControlLocator,
   qwenProjectSidebarLabel,
+  recordTerminalProcessCleanup,
   rememberSession,
   restartQwenWork,
   terminalProcessCleanupTiming,
@@ -62,7 +63,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.10.8");
+  assert.equal(state.driver.version, "1.10.9");
 });
 
 test("QwenWork 问卷停止参数必须与恢复模式组合", () => {
@@ -615,6 +616,24 @@ test("QwenWork 终态进程收口为普通终态保留完整安静窗口", () =>
     quietMilliseconds: 5_000,
     waitMilliseconds: 10_000,
   });
+});
+
+test("QwenWork 超时终态复用同一份进程清理证据", () => {
+  const timeoutState = { timeout: { cancellation_confirmed: true } };
+  const cleanup = { supported: true, success: true, before: {}, after: {} };
+  assert.equal(recordTerminalProcessCleanup(timeoutState, "TIMEOUT", cleanup), cleanup);
+  assert.equal(timeoutState.terminal_process_cleanup, cleanup);
+  assert.equal(timeoutState.timeout.process_cleanup, cleanup);
+
+  const failedState = { timeout: {} };
+  const failedCleanup = { supported: true, success: false, error: "still running" };
+  recordTerminalProcessCleanup(failedState, "TIMEOUT", failedCleanup);
+  assert.equal(failedState.timeout.process_cleanup, failedCleanup);
+
+  const successState = {};
+  recordTerminalProcessCleanup(successState, "SUCCEEDED", cleanup);
+  assert.equal(successState.terminal_process_cleanup, cleanup);
+  assert.equal(successState.timeout, undefined);
 });
 
 test("唯一可见元素等待器拒绝歧义", async () => {
