@@ -49,6 +49,8 @@ node "$REPORT_SKILL_DIR/scripts/build_web_e2e_workbook.mjs" \
   --preview-dir /tmp/web-e2e-report-preview
 ```
 
+若 Windows 上 `artifact-tool` 的 `workbook.render()` 发生原生进程崩溃，可在已复现最小用例后追加 `--skip-preview true` 仅跳过内置预览。此时构建结果会明确返回 `preview_status=EXTERNAL_REQUIRED`，必须再用可用的独立只读渲染器逐表生成并检查三张预览；不得把跳过渲染本身当作视觉验收通过。
+
 生成后检查三张 Sheet 名称和顺序，逐表渲染预览，扫描公式错误，并核对 Excel 总平均分、完成率和用例数与 JSON/Markdown 一致。
 
 ## 统计边界

@@ -464,65 +464,84 @@ function buildDetailSheet(workbook, data) {
 }
 
 
-const args = argsFrom(process.argv.slice(2));
-const data = JSON.parse(await fs.readFile(args.input, "utf8"));
-if (data.schema_version !== "wildclawbench.web-e2e-report-data/v1") {
-  throw new Error(`不兼容的 report data schema: ${data.schema_version}`);
-}
+async function main() {
+  const args = argsFrom(process.argv.slice(2));
+  if (args["skip-preview"] !== undefined && !["true", "false"].includes(args["skip-preview"])) {
+    throw new Error("--skip-preview 只接受 true 或 false");
+  }
+  const skipPreview = args["skip-preview"] === "true";
+  const data = JSON.parse(await fs.readFile(args.input, "utf8"));
+  if (data.schema_version !== "wildclawbench.web-e2e-report-data/v1") {
+    throw new Error(`不兼容的 report data schema: ${data.schema_version}`);
+  }
 
-const workbook = Workbook.create();
-buildWebsiteSheet(workbook, data);
-buildDifficultySheet(workbook, data);
-buildDetailSheet(workbook, data);
-workbook.recalculate();
+  const workbook = Workbook.create();
+  buildWebsiteSheet(workbook, data);
+  buildDifficultySheet(workbook, data);
+  buildDetailSheet(workbook, data);
+  workbook.recalculate();
 
-await fs.mkdir(path.dirname(args.output), { recursive: true });
-await fs.mkdir(args["preview-dir"], { recursive: true });
-for (const sheetName of ["站点评测指标", "难度对比", "用例对比明细"]) {
-  const preview = await workbook.render({ sheetName, autoCrop: "all", scale: 1, format: "png" });
-  await fs.writeFile(
-    path.join(args["preview-dir"], `${sheetName}.png`),
-    new Uint8Array(await preview.arrayBuffer()),
-  );
-}
+  await fs.mkdir(path.dirname(args.output), { recursive: true });
+  await fs.mkdir(args["preview-dir"], { recursive: true });
+  if (!skipPreview) {
+    for (const sheetName of ["站点评测指标", "难度对比", "用例对比明细"]) {
+      const preview = await workbook.render({ sheetName, autoCrop: "all", scale: 1, format: "png" });
+      await fs.writeFile(
+        path.join(args["preview-dir"], `${sheetName}.png`),
+        new Uint8Array(await preview.arrayBuffer()),
+      );
+    }
+  }
 
-const inspection = await workbook.inspect({
-  kind: "sheet",
-  include: "id,name",
-  maxChars: 2000,
-});
-const errors = await workbook.inspect({
-  kind: "match",
-  searchTerm: "#REF!|#DIV/0!|#VALUE!|#NAME\\?|#N/A",
-  options: { useRegex: true, maxResults: 100 },
-  summary: "final formula error scan",
-});
-const keyRanges = [
-  ["站点评测指标", data.metric_profile === ARTIFACTSBENCH_PROFILE
-    ? `A1:P${4 + data.units.length}`
-    : `A1:${columnName(Math.max(26, 2 + Object.keys(data.labels.secondary).length, 2 + Object.keys(data.labels.aesthetic_secondary ?? {}).length))}${18 + 5 * data.units.length}`],
-  ["难度对比", `A1:${columnName(2 + data.difficulty_values.length)}${3 + data.difficulty_rows.length}`],
-  ["用例对比明细", `A1:${columnName((data.metric_profile === ARTIFACTSBENCH_PROFILE ? 18 : 19) + Object.keys(data.labels.primary).length + Object.keys(data.labels.secondary).length)}${3 + data.detail_rows.length}`],
-];
-const tableChecks = [];
-for (const [sheetId, range] of keyRanges) {
-  const check = await workbook.inspect({
-    kind: "table",
-    sheetId,
-    range,
-    include: "values,formulas",
-    tableMaxRows: 8,
-    tableMaxCols: 30,
-    maxChars: 5000,
+  const inspection = await workbook.inspect({
+    kind: "sheet",
+    include: "id,name",
+    maxChars: 2000,
   });
-  tableChecks.push(check.ndjson);
+  const errors = await workbook.inspect({
+    kind: "match",
+    searchTerm: "#REF!|#DIV/0!|#VALUE!|#NAME\\?|#N/A",
+    options: { useRegex: true, maxResults: 100 },
+    summary: "final formula error scan",
+  });
+  const keyRanges = [
+    ["站点评测指标", data.metric_profile === ARTIFACTSBENCH_PROFILE
+      ? `A1:P${4 + data.units.length}`
+      : `A1:${columnName(Math.max(26, 2 + Object.keys(data.labels.secondary).length, 2 + Object.keys(data.labels.aesthetic_secondary ?? {}).length))}${18 + 5 * data.units.length}`],
+    ["难度对比", `A1:${columnName(2 + data.difficulty_values.length)}${3 + data.difficulty_rows.length}`],
+    ["用例对比明细", `A1:${columnName((data.metric_profile === ARTIFACTSBENCH_PROFILE ? 18 : 19) + Object.keys(data.labels.primary).length + Object.keys(data.labels.secondary).length)}${3 + data.detail_rows.length}`],
+  ];
+  const tableChecks = [];
+  for (const [sheetId, range] of keyRanges) {
+    const check = await workbook.inspect({
+      kind: "table",
+      sheetId,
+      range,
+      include: "values,formulas",
+      tableMaxRows: 8,
+      tableMaxCols: 30,
+      maxChars: 5000,
+    });
+    tableChecks.push(check.ndjson);
+  }
+  const output = await SpreadsheetFile.exportXlsx(workbook);
+  await output.save(args.output);
+  console.log(JSON.stringify({
+    status: "PASS",
+    output: args.output,
+    preview_status: skipPreview ? "EXTERNAL_REQUIRED" : "COMPLETED",
+    sheets: inspection.ndjson,
+    formula_error_scan: errors.ndjson,
+    key_range_checks: tableChecks,
+  }));
 }
-const output = await SpreadsheetFile.exportXlsx(workbook);
-await output.save(args.output);
-console.log(JSON.stringify({
-  status: "PASS",
-  output: args.output,
-  sheets: inspection.ndjson,
-  formula_error_scan: errors.ndjson,
-  key_range_checks: tableChecks,
-}));
+
+
+// artifact-tool 的异步桥接在渲染阶段可能短暂没有活跃句柄。保持一个引用句柄，
+// 避免 Node 在入口 Promise 尚未完成时以退出码 13 提前结束。
+const entrypointKeepAlive = setInterval(() => {}, 1_000);
+try {
+  await main();
+} finally {
+  clearInterval(entrypointKeepAlive);
+}

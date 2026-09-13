@@ -175,10 +175,10 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
             scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
             score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.0.zip"
-            report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.0.1.zip"
+            report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.0.2.zip"
             orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.2.3.zip"
-            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.10.19.zip"
-            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.2.3.zip"
+            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.10.28.zip"
+            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.2.4.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
             report_config_path = batch_root / "web-smoke__report-config.yaml"
 
@@ -309,11 +309,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             )
             self.assertEqual(
                 batch_manifest["execute_skill_archive"],
-                "packages/execute-web-e2e-skill-v1.10.19.zip",
+                "packages/execute-web-e2e-skill-v1.10.28.zip",
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],
-                "packages/run-web-e2e-skill-v1.2.3.zip",
+                "packages/run-web-e2e-skill-v1.2.4.zip",
             )
             self.assertEqual(batch_manifest["skills_manifest"], "packages/skills-manifest.json")
             skills_manifest = json.loads(skills_manifest_path.read_text(encoding="utf-8"))
@@ -405,7 +405,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             )
             self.assertEqual(
                 manifest["report_skill_archive"],
-                "packages/report-web-e2e-skill-v1.0.1.zip",
+                "packages/report-web-e2e-skill-v1.0.2.zip",
             )
             self.assertEqual(manifest["report_config"], "web-smoke__report-config.yaml")
             self.assertTrue(manifest["report_config_ready"])
