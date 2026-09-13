@@ -30,12 +30,39 @@ import {
   hasTrustedDomCompletion,
   prepareClientForNewAttempt,
   restartWorkBuddy,
+  runEntrypointWithKeepAlive,
   terminalProcessCleanupTiming,
   waitForPromptSubmissionAcceptance,
   waitForFullAccessTransition,
   waitForRestartedAttemptRecovery,
   waitForUniqueVisible,
 } from "../driver.mjs";
+
+test("driver entrypoint keeps Node alive until the automation promise settles", async () => {
+  const timer = {};
+  let active = false;
+  let cleared = null;
+  const exitCode = await runEntrypointWithKeepAlive(async (args) => {
+    assert.deepEqual(args, ["--fixture"]);
+    assert.equal(active, true);
+    await Promise.resolve();
+    return 0;
+  }, ["--fixture"], {
+    setInterval: (callback, milliseconds) => {
+      assert.equal(typeof callback, "function");
+      assert.equal(milliseconds, 1_000);
+      active = true;
+      return timer;
+    },
+    clearInterval: (value) => {
+      cleared = value;
+      active = false;
+    },
+  });
+  assert.equal(exitCode, 0);
+  assert.equal(active, false);
+  assert.equal(cleared, timer);
+});
 
 test("Windows screenshots use direct CDP capture when Electron page.screenshot hangs", async () => {
   const root = await mkdtemp(join(tmpdir(), "workbuddy-screenshot-"));
@@ -607,7 +634,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.14");
+  assert.equal(state.driver.version, "1.8.15");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

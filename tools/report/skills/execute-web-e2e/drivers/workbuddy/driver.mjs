@@ -48,6 +48,17 @@ const RESTART_RECOVERY_GRACE_MILLISECONDS = 60_000;
 const SEND_ACCEPTANCE_TIMEOUT_MILLISECONDS = 60_000;
 const SEND_CLICK_ATTEMPTS = 2;
 
+export async function runEntrypointWithKeepAlive(runMain, args, overrides = {}) {
+  const startInterval = overrides.setInterval || setInterval;
+  const stopInterval = overrides.clearInterval || clearInterval;
+  const keepAlive = startInterval(() => {}, overrides.intervalMilliseconds || 1_000);
+  try {
+    return await runMain(args);
+  } finally {
+    stopInterval(keepAlive);
+  }
+}
+
 function usage() {
   return `WorkBuddy Web E2E 单题执行 Driver
 
@@ -1969,7 +1980,10 @@ export async function main(argv) {
 
 const isEntrypoint = process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
 if (isEntrypoint) {
-  const exitCode = await main(process.argv.slice(2));
+  // Playwright can briefly have no referenced native handle while an Electron
+  // renderer remounts between queued tasks.  Keep the Node entrypoint alive so
+  // an otherwise unsettled top-level await is not terminated with exit code 13.
+  const exitCode = await runEntrypointWithKeepAlive(main, process.argv.slice(2));
   process.exitCode = exitCode;
   setImmediate(() => process.exit(exitCode));
 }
