@@ -9,10 +9,27 @@ Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
 Add-Type -TypeDefinition @"
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
 public static class NativeFolderDialogControl {
+    public delegate bool EnumWindowCallback(IntPtr window, IntPtr state);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool EnumWindows(EnumWindowCallback callback, IntPtr state);
+
+    [DllImport("user32.dll")]
+    public static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern int GetClassNameW(IntPtr window, StringBuilder className, int capacity);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsWindowVisible(IntPtr window);
+
     [DllImport("user32.dll", EntryPoint = "SendMessageW", CharSet = CharSet.Unicode, SetLastError = true)]
     public static extern IntPtr SendTextMessage(IntPtr window, uint message, IntPtr parameter, string value);
 
@@ -25,6 +42,21 @@ public static class NativeFolderDialogControl {
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool IsWindowEnabled(IntPtr window);
+
+    public static long[] FindVisibleTopLevelDialogs(int[] processIds) {
+        var expected = new HashSet<int>(processIds ?? new int[0]);
+        var matches = new List<long>();
+        EnumWindows(delegate(IntPtr window, IntPtr state) {
+            uint processId;
+            GetWindowThreadProcessId(window, out processId);
+            if (!expected.Contains((int)processId) || !IsWindowVisible(window)) return true;
+            var className = new StringBuilder(256);
+            GetClassNameW(window, className, className.Capacity);
+            if (className.ToString() == "#32770") matches.Add(window.ToInt64());
+            return true;
+        }, IntPtr.Zero);
+        return matches.ToArray();
+    }
 }
 "@
 
@@ -82,17 +114,11 @@ function Get-ExactAppProcessIds([string]$ExpectedPath) {
 }
 
 function Get-FolderDialog([int[]]$ProcessIds) {
-    $windows = [System.Windows.Automation.AutomationElement]::RootElement.FindAll(
-        [System.Windows.Automation.TreeScope]::Children,
-        [System.Windows.Automation.Condition]::TrueCondition
-    )
     $matches = @()
-    foreach ($window in $windows) {
-        if (
-            $ProcessIds -notcontains $window.Current.ProcessId -or
-            $window.Current.IsOffscreen -or
-            $window.Current.ClassName -ne "#32770"
-        ) { continue }
+    $dialogHandles = [NativeFolderDialogControl]::FindVisibleTopLevelDialogs($ProcessIds)
+    foreach ($handleValue in $dialogHandles) {
+        $window = [System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]$handleValue)
+        if (-not $window -or $window.Current.IsOffscreen) { continue }
         $elements = $window.FindAll(
             [System.Windows.Automation.TreeScope]::Descendants,
             [System.Windows.Automation.Condition]::TrueCondition

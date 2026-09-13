@@ -111,10 +111,15 @@ test("Windows QwenWork 文件夹选择器调用本地 PowerShell UIA helper", ()
 
 test("Windows QwenWork 文件夹选择器只扫描标准系统对话框", async () => {
   const helper = await readFile(new URL("../select-folder.ps1", import.meta.url), "utf8");
-  const classFilter = helper.indexOf('$window.Current.ClassName -ne "#32770"');
+  const classFilter = helper.indexOf('className.ToString() == "#32770"');
+  const nativeEnumeration = helper.indexOf("FindVisibleTopLevelDialogs");
+  const fromHandle = helper.indexOf("AutomationElement]::FromHandle");
   const descendantScan = helper.indexOf("$window.FindAll(");
   assert.ok(classFilter >= 0);
-  assert.ok(descendantScan > classFilter);
+  assert.ok(nativeEnumeration >= 0);
+  assert.ok(fromHandle > nativeEnumeration);
+  assert.ok(descendantScan > fromHandle);
+  assert.doesNotMatch(helper, /RootElement\.FindAll/);
 });
 
 test("Windows QwenWork 启动透传精确 CDP 参数", async () => {
