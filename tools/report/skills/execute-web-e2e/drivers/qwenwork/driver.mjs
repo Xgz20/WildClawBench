@@ -983,6 +983,10 @@ async function captureAttemptSession(config, state, timeout) {
   return null;
 }
 
+export function attemptSessionCaptureTimeout(timeout) {
+  return Math.min(timeout, 60000);
+}
+
 export function hasStableConversationId(state) {
   return Boolean(state.session?.session_id && state.session?.conversation_id);
 }
@@ -2073,7 +2077,7 @@ async function runAutomation(config, identityInfo) {
     state.timing.sent_at = new Date().toISOString();
     transitionState(state, "PROMPT_SENT");
     await saveState(config, state);
-    await captureAttemptSession(config, state, Math.min(timeout, 15000));
+    await captureAttemptSession(config, state, attemptSessionCaptureTimeout(timeout));
     await saveState(config, state);
     await takeScreenshot(page, config, state, "08-prompt-sent.png");
     if (config.detachAfterSubmit) {
