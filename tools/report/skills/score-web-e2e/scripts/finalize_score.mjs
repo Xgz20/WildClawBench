@@ -39,6 +39,39 @@ function loadJson(filename) {
   return value;
 }
 
+function samePath(left, right) {
+  const normalizedLeft = path.normalize(left);
+  const normalizedRight = path.normalize(right);
+  return process.platform === "win32"
+    ? normalizedLeft.toLowerCase() === normalizedRight.toLowerCase()
+    : normalizedLeft === normalizedRight;
+}
+
+export function resolveExecutionRecordPath(taskContractPath, suppliedPath = null) {
+  const resolvedContract = fs.realpathSync(taskContractPath);
+  const taskRoot = path.dirname(path.dirname(resolvedContract));
+  const expectedPath = path.join(taskRoot, "execution_record.json");
+  const candidatePath = suppliedPath ? path.resolve(suppliedPath) : expectedPath;
+
+  if (suppliedPath && !samePath(candidatePath, expectedPath)) {
+    throw new Error(`--execution-record 只能指向当前评分题根的 execution_record.json: ${expectedPath}`);
+  }
+  if (!fs.existsSync(candidatePath)) {
+    if (suppliedPath) throw new Error(`execution_record.json 不存在: ${candidatePath}`);
+    return null;
+  }
+
+  const candidateStat = fs.lstatSync(candidatePath);
+  if (candidateStat.isSymbolicLink() || !candidateStat.isFile()) {
+    throw new Error(`execution_record.json 必须是当前评分题根内的普通文件: ${candidatePath}`);
+  }
+  const resolvedCandidate = fs.realpathSync(candidatePath);
+  if (!samePath(resolvedCandidate, expectedPath)) {
+    throw new Error(`execution_record.json 真实路径越界: ${resolvedCandidate}`);
+  }
+  return resolvedCandidate;
+}
+
 const SKILL_METADATA = loadJson(SKILL_METADATA_PATH);
 const SKILL_VERSION = String(SKILL_METADATA.version);
 if (SKILL_METADATA.task_score_schema !== SCHEMA_VERSION) {
@@ -511,10 +544,14 @@ function main() {
   assertManagedScoringOutput(args["task-contract"], args.output, "task_score.json");
   const candidateCheck = verifyManagedScoringTask(args["task-contract"], "finalize-score:before-write");
   const candidateModel = managedCandidateModel(args["task-contract"]);
+  const executionRecordPath = resolveExecutionRecordPath(
+    args["task-contract"],
+    args["execution-record"] ?? null,
+  );
   const result = finalize(
     args.manifest ? loadJson(args.manifest) : null,
     loadJson(args["task-contract"]),
-    args["execution-record"] ? loadJson(args["execution-record"]) : null,
+    executionRecordPath ? loadJson(executionRecordPath) : null,
     loadJson(args["score-input"]),
     candidateModel,
   );

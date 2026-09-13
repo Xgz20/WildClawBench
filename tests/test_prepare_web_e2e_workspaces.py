@@ -176,7 +176,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             score_task = harness_root / "score/tasks" / self.TASK_ID
             execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
             scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
-            score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.0.zip"
+            score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.1.zip"
             report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.0.2.zip"
             orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.2.3.zip"
             execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.11.4.zip"
@@ -213,7 +213,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertNotIn("model", manifest)
             self.assertFalse(manifest["execution_record_included"])
             self.assertEqual(manifest["scoring_skill"]["name"], "score-web-e2e")
-            self.assertEqual(manifest["scoring_skill"]["version"], "4.5.0")
+            self.assertEqual(manifest["scoring_skill"]["version"], "4.5.1")
             self.assertIn(manifest["metric_profile"], manifest["scoring_skill"]["supported_metric_profiles"])
             self.assertEqual(len(manifest["required_skills"]), 5)
 
@@ -403,7 +403,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIsNone(report_skill_packages[0]["harness"])
             self.assertEqual(
                 manifest["score_skill_archive"],
-                "packages/score-web-e2e-skill-v4.5.0.zip",
+                "packages/score-web-e2e-skill-v4.5.1.zip",
             )
             self.assertEqual(
                 manifest["report_skill_archive"],
@@ -455,11 +455,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 "--repo-root", str(REPO_ROOT),
             ])
             result = prepare_module.package_score_skill(args)
-            package_path = Path(tmp).resolve() / "score-web-e2e-skill-v4.5.0.zip"
+            package_path = Path(tmp).resolve() / "score-web-e2e-skill-v4.5.1.zip"
             self.assertEqual(result["path"], package_path)
             self.assertEqual(result["file_count"], 15)
             self.assertEqual(result["sha256"], prepare_module.sha256_file(package_path))
-            self.assertEqual(result["version"], "4.5.0")
+            self.assertEqual(result["version"], "4.5.1")
             self.assertEqual(
                 result["content_sha256"],
                 prepare_module.sha256_skill_content(REPO_ROOT / "tools/report/skills/score-web-e2e"),

@@ -98,7 +98,7 @@ ArtifactsBench 输入示例：
 
 功能评分与美观度结果相互独立：功能评分异常但已经取得完整美观度证据时，仍保留正式美观度结果；完全没有完成美观度取证时自动记录为 `aesthetic.status=evaluation_error`。反过来，美观度自身异常也不改变已经完成的功能总分。
 
-`execution_record.json` 是可选输入，默认批次不生成。缺失时 `finalize_score.mjs` 将 `execution.status` 写为 `not_recorded`，Token、请求数、耗时、成本、工具调用数和格式准确率均为 `null`；这不影响正常浏览器评分和总分。受管评分仍必须从 `candidate_artifact.json.model` 读取由执行回执冻结的实际模型，并写入 `task_score.identity.model`；该身份不能依赖报告配置事后补全。`candidate_artifact.json.model_selection.mode` 为 `explicit` 时请求模型必须等于实际模型；为 `current` 时 `requested_model` 必须为空，但 `actual_model` 仍必须非空。缺少 `mode` 的旧回执按是否存在请求模型推断，以兼容旧批次。若管理员显式启用执行记录，`tools.format_accuracy` 使用 0–1 比例，不确定字段仍填 `null`，不能凭印象填写。
+`execution_record.json` 是可选输入，默认批次不生成。`finalize_score.mjs` 会自动读取当前评分题根的同名普通文件；只有文件确实缺失时，才把 `execution.status` 写为 `not_recorded`，并把 Token、请求数、耗时、成本、工具调用数和格式准确率记为 `null`。旧调用仍可显式传入 `--execution-record execution_record.json`，但路径必须精确落在当前评分题根，且不能是符号链接或其他非普通文件。这不影响正常浏览器评分和总分。受管评分仍必须从 `candidate_artifact.json.model` 读取由执行回执冻结的实际模型，并写入 `task_score.identity.model`；该身份不能依赖报告配置事后补全。`candidate_artifact.json.model_selection.mode` 为 `explicit` 时请求模型必须等于实际模型；为 `current` 时 `requested_model` 必须为空，但 `actual_model` 仍必须非空。缺少 `mode` 的旧回执按是否存在请求模型推断，以兼容旧批次。若管理员显式启用执行记录，`tools.format_accuracy` 使用 0–1 比例，不确定字段仍填 `null`，不能凭印象填写。
 
 ## `task_score.json`
 

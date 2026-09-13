@@ -183,6 +183,7 @@ export function assertManagedScoringOutput(taskContractFile, outputFile, expecte
   if (!fs.existsSync(markerFile) && !fs.existsSync(lockFile)) return;
   const expected = path.join(taskRoot, "private-scoring", expectedName);
   if (path.resolve(outputFile) !== expected) {
-    throw new Error(`受管评分任务只能写入 ${path.relative(taskRoot, expected)}`);
+    const portableExpected = path.relative(taskRoot, expected).split(path.sep).join("/");
+    throw new Error(`受管评分任务只能写入 ${portableExpected}`);
   }
 }

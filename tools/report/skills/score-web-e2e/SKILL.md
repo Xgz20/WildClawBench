@@ -88,7 +88,7 @@ Skill 根目录的 `skill-metadata.json` 是自动编排读取的机器契约，
      --output private-scoring/task_score.json
    ```
 
-若当前题目确实带有可选的 `execution_record.json`，在 finalize 命令中增加 `--execution-record execution_record.json`。旧包仍可继续同时传入 `--manifest task_manifest.json`，但新包不生成该文件。
+`finalize_score.mjs` 会在当前评分题根自动发现并读取可选的 `execution_record.json`；不存在时才记录为 `not_recorded`。旧调用可继续显式传入 `--execution-record execution_record.json`，但该参数只允许指向当前题根的同名普通文件，不能越界或跟随符号链接。旧包也可继续同时传入 `--manifest task_manifest.json`，但新包不生成该文件。
 
 脚本只校验字段和计算分数，不替 Agent 判断。详细 Profile 的 criterion 为归一化 0–1，页面美观度是独立 0–100 指标，`included_in_total=false`。ArtifactsBench Profile 的输入是 `raw_score` 0–10 整数，输出同时保存原始分与归一化分；总分按归一化 Criterion 加权后转为百分制。
 
