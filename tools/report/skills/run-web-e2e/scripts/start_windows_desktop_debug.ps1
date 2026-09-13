@@ -374,6 +374,44 @@ function Assert-PortAvailable {
     }
 }
 
+function Wait-PortAvailable {
+    param(
+        [Parameter(Mandatory = $true)]
+        [int]$Port,
+
+        [Parameter(Mandatory = $true)]
+        [string[]]$ExpectedProcesses,
+
+        [Parameter(Mandatory = $true)]
+        [int]$TimeoutSeconds
+    )
+
+    $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+    do {
+        $listener = Get-NetTCPConnection `
+            -LocalPort $Port `
+            -State Listen `
+            -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+
+        if (-not $listener) {
+            return
+        }
+
+        $process = Get-Process `
+            -Id $listener.OwningProcess `
+            -ErrorAction SilentlyContinue
+        if ($process -and $process.ProcessName -notin $ExpectedProcesses) {
+            throw "Port $Port was claimed by unrelated process $($process.ProcessName) (PID $($listener.OwningProcess)) while waiting for the desktop client to exit."
+        }
+
+        Start-Sleep -Milliseconds 250
+    } while ([DateTime]::UtcNow -lt $deadline)
+
+    $processName = if ($process) { $process.ProcessName } else { "unknown" }
+    throw "Timed out waiting for port $Port to be released by $processName (PID $($listener.OwningProcess))."
+}
+
 function Assert-PortRestartable {
     param(
         [Parameter(Mandatory = $true)]
@@ -520,7 +558,10 @@ else {
     }
 
     if ($includeCodex -and -not $codexReady) {
-        Assert-PortAvailable -Port $CodexPort
+        Wait-PortAvailable `
+            -Port $CodexPort `
+            -ExpectedProcesses @("ChatGPT", "Codex") `
+            -TimeoutSeconds $TimeoutSeconds
 
         Import-Module Appx
         $codexPackage = Get-AppxPackage -Name "OpenAI.Codex" |
@@ -556,7 +597,10 @@ else {
     }
 
     if ($includeAstronStudio -and -not $astronStudioReady) {
-        Assert-PortAvailable -Port $AstronStudioPort
+        Wait-PortAvailable `
+            -Port $AstronStudioPort `
+            -ExpectedProcesses @("AStudio", "AstronStudio", "Acode") `
+            -TimeoutSeconds $TimeoutSeconds
 
         $astronStudioExecutable = Resolve-AstronStudioExecutable
 
@@ -570,7 +614,10 @@ else {
     }
 
     if ($includeWorkBuddy -and -not $workBuddyReady) {
-        Assert-PortAvailable -Port $WorkBuddyPort
+        Wait-PortAvailable `
+            -Port $WorkBuddyPort `
+            -ExpectedProcesses @("WorkBuddy", "CodeBuddy") `
+            -TimeoutSeconds $TimeoutSeconds
 
         Write-Host "Starting WorkBuddy with CDP on port $WorkBuddyPort..."
         $workBuddyNodeDirectory = Resolve-WorkBuddyBundledNodeDirectory

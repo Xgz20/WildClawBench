@@ -67,7 +67,7 @@ Windows 脚本动态解析当前 Codex MSIX 包的真实 manifest 入口，并�
 
 两个脚本均等待所选的 Codex `9230`、AstronStudio `9240` 或 WorkBuddy `9229` 的 `/json/list` 返回至少一个真实 target，并验证端口监听者属于目标客户端。端口被无关进程占用时不得结束该进程，脚本失败并进入 `NEEDS_ATTENTION`。`-CheckOnly` / `--check-only` 仅用于故障诊断，不是标准 E2E 前置流程。
 
-Windows 的 `-ForceRestart` 只用于用户明确要求的客户端重启恢复验收；它会强制重启 `-Application` 选中的客户端，即使当前 CDP 已正常。使用前必须先持久化原 thread、cursor、attempt 和 deadline。当前任务需要重启 Codex 时，禁止通过 `Start-Process` 派生隐藏 PowerShell：该进程仍可能继承 Codex 的 Windows Job，并在客户端退出时一起终止。必须使用 `restart_windows_desktop_debug.ps1` 注册交互式一次性计划任务；Worker 延迟启动、调用底层 `start_windows_desktop_debug.ps1 -ForceRestart`，把状态和日志写入 `%LOCALAPPDATA%\WildClawBench\desktop-debug-restart\`，结束后删除自己的计划任务。底层 `-ForceRestart` 不能与 `-CheckOnly` 同时使用，也不能作为普通前置准备的默认参数。
+Windows 的 `-ForceRestart` 只用于用户明确要求的客户端重启恢复验收；它会强制重启 `-Application` 选中的客户端，即使当前 CDP 已正常。使用前必须先持久化原 thread、cursor、attempt 和 deadline。当前任务需要重启 Codex 时，禁止通过 `Start-Process` 派生隐藏 PowerShell：该进程仍可能继承 Codex 的 Windows Job，并在客户端退出时一起终止。必须使用 `restart_windows_desktop_debug.ps1` 注册交互式一次性计划任务；Worker 延迟启动、调用底层 `start_windows_desktop_debug.ps1 -ForceRestart`，把状态和日志写入 `%LOCALAPPDATA%\WildClawBench\desktop-debug-restart\`，结束后删除自己的计划任务。底层启动器会在有界时限内等待已核对的旧客户端释放 CDP 端口；等待期间端口若被无关进程抢占则立即失败关闭，避免把正常的 Windows 进程退出延迟误判成永久端口冲突。底层 `-ForceRestart` 不能与 `-CheckOnly` 同时使用，也不能作为普通前置准备的默认参数。
 
 重启 Codex Desktop 可能中断承载当前控制任务的客户端，因此必须先持久化本 Skill 的运行状态；客户端回来后从原状态恢复，不能重新初始化或创建重复任务。同一次初始前置准备不要再向 AstronStudio Driver 传 `--restart-app`，避免两套入口重复重启。脚本失败、超时或 target 列表为空时不得继续 UI 自动化。
 
