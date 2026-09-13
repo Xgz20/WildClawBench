@@ -97,7 +97,7 @@ Windows 使用相同参数和原生入口：
 .agents\skills\execute-web-e2e\scripts\run-qwenwork-batch.cmd C:\absolute\batch__qwenwork --run-id queue-1 --task-id task-1 --task-id task-2 --run-slots 3 --permission-mode full-access
 ```
 
-Windows QwenWork 的动态路径、进程、SQLite、CDP 启动、页面识别和只读 probe 已完成真机验证；在单题、串行、并发、评分回传与恢复清单全部通过前，不得把这一结论扩大为 Windows 端到端生产验证。
+QwenWorkCN 1.0.5.0 已在 Windows 完成动态路径、进程、SQLite、CDP 启动、页面识别、只读 probe、单题、三题串行、默认三槽五题动态补位、Codex Desktop 评分与 submission、离线回传/报告、单 Prompt 全流程、Worker 硬中断恢复、客户端重启和安全超时真机验收，属于当前 Windows 生产验证基线。验收模型为 `标准｜Qwen3.8-Flash`，权限为 `full-access`；更换客户端大版本、Driver 核心实现或模型后仍须从只读 probe 和一至三个 L1 smoke 开始回归。
 
 QwenWork 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、目录选择、权限/模型回读和 Prompt 发送始终由一个 Driver 串行完成；捕获稳定 `session_id`、`stream_id`、`local_project_id` 和绝对 cwd 后释放 UI Driver，由 Worker 轮流恢复原会话做一次性观察。任一题明确终态后释放后台槽位并动态补入下一题。
 

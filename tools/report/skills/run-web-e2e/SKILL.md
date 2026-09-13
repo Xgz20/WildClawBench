@@ -37,7 +37,7 @@ description: 按用户明确要求动态组合 Web E2E 的准备、桌面 Harnes
 5. 被评 Harness 未显式指定模型时保持并回读当前模型，不操作推理强度；权限按生产契约使用 `full-access`。WorkBuddy、AstronStudio 和 QwenWork 的新执行队列均默认三槽、最大八槽；评分新批次默认三槽。三种 Harness 的 UI 操作始终保持单槽。Codex Desktop CDP 未显式提供时使用 `http://127.0.0.1:9230`。
 6. execution 回执有效后才合入 scoring ZIP 并开始评分；submission 有效后在 worker 根同级的 `offline-return/` 生成完整 return ZIP 和外部回执。
 
-平台路由必须显式：macOS 使用各 Driver 的 `.sh` 入口；Windows 上 AstronStudio 使用 `run-astronstudio.cmd` / `run-astronstudio-batch.cmd`，WorkBuddy 使用 `run-workbuddy.cmd` / `run-workbuddy-batch.cmd`，QwenWork 使用 `run-qwenwork.cmd` / `run-qwenwork-batch.cmd`，Codex Desktop 项目注册使用 `run-codex-project-registrar.cmd`。Python 状态脚本在 Windows 优先用 `py -3`，否则使用可用的 `python`；不得硬调用 `python3`。当前 Windows 端到端生产已验证范围包括 `AstronStudio -> Codex Desktop 评分 -> 回传/报告` 与 `WorkBuddy 5.5.3 -> Codex Desktop 评分 -> 回传/报告`；WorkBuddy 已通过单题、串行、默认三槽动态补位、单 Prompt 全流程以及控制任务/客户端重启、超时、评分接管、失败 attempt 隔离和 submission 中断恢复验收。QwenWork 已完成 Windows 静态适配与只读 probe 真机验证，但在其余生产清单通过前仍未进入 Windows 端到端生产验证范围；DoubaoWork 也未进入该范围，二者均不能回退调用 macOS Driver。
+平台路由必须显式：macOS 使用各 Driver 的 `.sh` 入口；Windows 上 AstronStudio 使用 `run-astronstudio.cmd` / `run-astronstudio-batch.cmd`，WorkBuddy 使用 `run-workbuddy.cmd` / `run-workbuddy-batch.cmd`，QwenWork 使用 `run-qwenwork.cmd` / `run-qwenwork-batch.cmd`，Codex Desktop 项目注册使用 `run-codex-project-registrar.cmd`。Python 状态脚本在 Windows 优先用 `py -3`，否则使用可用的 `python`；不得硬调用 `python3`。当前 Windows 端到端生产已验证范围包括 `AstronStudio -> Codex Desktop 评分 -> 回传/报告`、`WorkBuddy 5.5.3 -> Codex Desktop 评分 -> 回传/报告` 与 `QwenWorkCN 1.0.5.0 -> Codex Desktop 评分 -> 回传/报告`。WorkBuddy 已通过单题、串行、默认三槽动态补位、单 Prompt 全流程以及控制任务/客户端重启、超时、评分接管、失败 attempt 隔离和 submission 中断恢复验收；QwenWork 已通过同等执行并发和完整闭环，并完成 Worker 硬中断、客户端重启结构化失败与安全超时验收。DoubaoWork 尚未进入该范围；Windows Harness 均不能回退调用 macOS Driver。
 
 ### macOS / Windows 桌面 CDP 自动前置准备
 
@@ -137,6 +137,8 @@ python3 <skill-dir>/scripts/run_web_e2e.py set-stage \
 执行完全遵守 `execute-web-e2e`。WorkBuddy、AstronStudio 和 QwenWork 新批次均默认三槽、最大八槽，三者 UI 操作均为单槽。用户显式指定模型时才传 `--model`，否则保持客户端当前模型和推理强度。
 
 Windows AstronStudio 已按“只读探针 → 单个 L1（执行并发 1）→ 三个 L1 串行自动切题 → 五个 L1 默认三路并发与动态补位”完成真机生产验证。更换桌面客户端大版本或 Driver 核心实现后，必须按同一顺序回归，不得把 macOS 或旧 Windows 基线的结论直接外推。
+
+Windows QwenWorkCN 1.0.5.0 已按同一执行顺序完成真机验证，并使用 `标准｜Qwen3.8-Flash`、`full-access` 完成 Codex Desktop 评分、submission、离线回传/报告与单 Prompt 组合器闭环；恢复门禁覆盖 Worker 进程丢失、客户端重启后内核 `interrupted` 结构化失败和主动停止后的安全 `TIMEOUT`。首次换机、客户端升级或模型切换仍须重新执行 probe 与 L1 smoke。
 
 执行回执有效后才按 `orchestrate-web-e2e` 复制到独立评分工作空间并启动评分。新回执声明运行时目录策略时，execution 原件可保留被评 Harness 生成的 `.cache`、`.vite`、`node_modules`，评分复制会过滤它们且不修改原件；任意命名但具备 Chromium `Local State` 与 profile 数据库特征的浏览器用户数据目录也会从评分副本整体过滤。未声明策略的旧回执仍严格拒绝候选运行时目录。Codex Desktop 新批次默认三槽，每题独立项目、任务、Browser 和端口。评分任务使用 `score-web-e2e`，候选 `workspace/` 永远只读；端口冲突只允许修改 `private-scoring/runtime-workspace/` 中的评分运行时副本。
 
