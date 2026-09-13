@@ -170,7 +170,7 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy-batch.sh \
   --permission-mode full-access
 ```
 
-Windows 使用同名参数的 `run-workbuddy-batch.cmd`。为避免 npm 依赖树触发传统 Win32 长路径问题，worker 必须直接解压到 `D:\debug-workspace\web-e2e\w\<短批次ID>` 这类短目录，不能再嵌套 `workers\<完整批次名>\<完整包名>`；解压后还要在发送前确认每题候选 `workspace` 绝对路径长度不超过 180。该限制只约束 worker 的本机搬运位置，不改变包内 task ID、execution receipt 或候选哈希。Windows 真机隔离验收完成前必须显式使用 `--run-slots 1`；不能把 macOS 的多槽结论直接外推。
+Windows 使用同名参数的 `run-workbuddy-batch.cmd`。为避免 npm 依赖树触发传统 Win32 长路径问题，worker 必须直接解压到 `D:\debug-workspace\web-e2e\w\<短批次ID>` 这类短目录，不能再嵌套 `workers\<完整批次名>\<完整包名>`；解压后还要在发送前确认每题候选 `workspace` 绝对路径长度不超过 180。该限制只约束 worker 的本机搬运位置，不改变包内 task ID、execution receipt 或候选哈希。WorkBuddy 5.5.3 已在 Windows 完成单题、三题串行、默认三槽五题动态补位、执行到评分/回传/报告闭环、单 Prompt 组合器以及中断、客户端重启、超时和恢复真机验收，属于当前生产验证基线。首次换机、升级 WorkBuddy/Skill 或切换模型后仍须先用一至三个 L1 用例 smoke；未通过当前节点隔离验证时显式回退到 `--run-slots 1`。
 
 新队列默认 `run_slots=3`，最大 8；显式 `--run-slots 1` 可回退为串行。已有队列冻结首次记录的并发值，恢复时省略该参数会沿用冻结值，显式提供不同值则失败关闭。没有 `run_slots` 字段的旧队列迁移为 1，不自动升级为 3。
 

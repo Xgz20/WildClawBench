@@ -37,7 +37,7 @@ description: 按用户明确要求动态组合 Web E2E 的准备、桌面 Harnes
 5. 被评 Harness 未显式指定模型时保持并回读当前模型，不操作推理强度；权限按生产契约使用 `full-access`。WorkBuddy、AstronStudio 和 QwenWork 的新执行队列均默认三槽、最大八槽；评分新批次默认三槽。三种 Harness 的 UI 操作始终保持单槽。Codex Desktop CDP 未显式提供时使用 `http://127.0.0.1:9230`。
 6. execution 回执有效后才合入 scoring ZIP 并开始评分；submission 有效后在 worker 根同级的 `offline-return/` 生成完整 return ZIP 和外部回执。
 
-平台路由必须显式：macOS 使用各 Driver 的 `.sh` 入口；Windows 上 AstronStudio 使用 `run-astronstudio.cmd` / `run-astronstudio-batch.cmd`，WorkBuddy 使用 `run-workbuddy.cmd` / `run-workbuddy-batch.cmd`，Codex Desktop 项目注册使用 `run-codex-project-registrar.cmd`。Python 状态脚本在 Windows 优先用 `py -3`，否则使用可用的 `python`；不得硬调用 `python3`。当前 Windows 端到端生产已验证范围仅为 `AstronStudio -> Codex Desktop 评分 -> 回传/报告`；WorkBuddy Windows 只读 probe 已有入口，但完成单题、串行、并发、评分与恢复验收前仍必须返回 `NEEDS_ATTENTION`；QwenWork 和 DoubaoWork 也不能回退调用 macOS Driver。
+平台路由必须显式：macOS 使用各 Driver 的 `.sh` 入口；Windows 上 AstronStudio 使用 `run-astronstudio.cmd` / `run-astronstudio-batch.cmd`，WorkBuddy 使用 `run-workbuddy.cmd` / `run-workbuddy-batch.cmd`，Codex Desktop 项目注册使用 `run-codex-project-registrar.cmd`。Python 状态脚本在 Windows 优先用 `py -3`，否则使用可用的 `python`；不得硬调用 `python3`。当前 Windows 端到端生产已验证范围包括 `AstronStudio -> Codex Desktop 评分 -> 回传/报告` 与 `WorkBuddy 5.5.3 -> Codex Desktop 评分 -> 回传/报告`；WorkBuddy 已通过单题、串行、默认三槽动态补位、单 Prompt 全流程以及控制任务/客户端重启、超时、评分接管、失败 attempt 隔离和 submission 中断恢复验收。QwenWork 和 DoubaoWork 尚未进入 Windows 生产验证范围，也不能回退调用 macOS Driver。
 
 ### macOS / Windows 桌面 CDP 自动前置准备
 
