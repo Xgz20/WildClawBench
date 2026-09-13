@@ -23,6 +23,7 @@ import {
   recordReceiptIntegrityFailure,
   recordManualIntervention,
   recordTaskOrchestrationFailure,
+  recordUnexpectedWorkerInterruption,
   recordWorkerInterruption,
   recordWorkerStart,
   resolveQueuePlan,
@@ -424,6 +425,64 @@ test("worker interruption keeps the current task recoverable and records the exa
   assert.equal(state.history.at(-1).previous_worker_pid, 123);
   assert.equal(state.history.at(-1).previous_interrupt_signal, "SIGTERM");
   assert.equal(state.history.at(-1).stale_ui_lock_recovered, false);
+});
+
+test("resume audits an abruptly lost worker before recording the replacement worker", async () => {
+  const root = await fixture();
+  const args = parseBatchArgs([
+    "--harness-root", root, "--run-id", "lost-worker", "--task-id", "task-a",
+  ]);
+  const plan = await resolveQueuePlan(args);
+  const state = createQueueState(plan, args);
+  state.phase = "RUNNING";
+  state.current_index = 0;
+  state.tasks[0].phase = "RUNNING";
+  state.runtime.worker = { pid: 123, hostname: "test-host", started_at: "2026-09-09T00:00:00.000Z" };
+  state.runtime.driver = { pid: 456, task_id: "task-a" };
+  state.runtime.heartbeat_at = "2026-09-09T00:00:05.000Z";
+
+  assert.equal(recordUnexpectedWorkerInterruption(state, {
+    currentHostname: "test-host",
+    isPidAlive: () => false,
+  }), true);
+  assert.equal(state.phase, "INTERRUPTED");
+  assert.equal(state.tasks[0].phase, "RUNNING");
+  assert.equal(state.runtime.interrupt_signal, "PROCESS_LOST");
+  assert.deepEqual(state.history.at(-1), {
+    event: "WORKER_INTERRUPTED",
+    at: state.runtime.interrupted_at,
+    signal: "PROCESS_LOST",
+    current_index: 0,
+    worker_pid: 123,
+    driver_pid: 456,
+    inferred: true,
+    previous_heartbeat_at: "2026-09-09T00:00:05.000Z",
+  });
+
+  recordWorkerStart(state, { resume: true, pid: 789, workerHostname: "test-host" });
+  assert.deepEqual(state.history.slice(-2).map((entry) => entry.event), ["WORKER_INTERRUPTED", "WORKER_RESUMED"]);
+  assert.equal(state.history.at(-1).previous_worker_pid, 123);
+  assert.equal(state.history.at(-1).previous_interrupt_signal, "PROCESS_LOST");
+});
+
+test("resume refuses takeover while the recorded worker is alive or belongs to another host", async () => {
+  const root = await fixture();
+  const args = parseBatchArgs([
+    "--harness-root", root, "--run-id", "live-worker", "--task-id", "task-a",
+  ]);
+  const plan = await resolveQueuePlan(args);
+  const state = createQueueState(plan, args);
+  state.runtime.worker = { pid: 123, hostname: "test-host", started_at: "2026-09-09T00:00:00.000Z" };
+
+  assert.throws(() => recordUnexpectedWorkerInterruption(state, {
+    currentHostname: "test-host",
+    isPidAlive: () => true,
+  }), /仍在运行/);
+  assert.throws(() => recordUnexpectedWorkerInterruption(state, {
+    currentHostname: "other-host",
+    isPidAlive: () => false,
+  }), /属于其他主机/);
+  assert.equal(state.history.some((entry) => entry.event === "WORKER_INTERRUPTED"), false);
 });
 
 test("manual intervention is audited without bypassing terminal detection", async () => {

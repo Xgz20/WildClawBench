@@ -25,7 +25,7 @@ import {
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
 export const QUEUE_STATE_REVISION = 3;
-export const QUEUE_WORKER_VERSION = "1.8.16";
+export const QUEUE_WORKER_VERSION = "1.8.17";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 
@@ -35,7 +35,7 @@ const BATCH_PROFILES = Object.freeze({
     harnessId: "astronstudio",
     displayName: "AstronStudio",
     workerId: "astronstudio-background-concurrent",
-    workerVersion: "1.10.0",
+    workerVersion: "1.10.1",
     driverFile: resolve(SCRIPT_DIR, "../astronstudio/driver.mjs"),
     lockFileName: "astronstudio-ui.lock",
     defaultRunSlots: DEFAULT_RUN_SLOTS,
@@ -47,7 +47,7 @@ const BATCH_PROFILES = Object.freeze({
     harnessId: "qwenwork",
     displayName: "QwenWork",
     workerId: "qwenwork-background-concurrent",
-    workerVersion: "1.10.1",
+    workerVersion: "1.10.2",
     driverFile: resolve(SCRIPT_DIR, "../qwenwork/driver.mjs"),
     lockFileName: "qwenwork-ui.lock",
     defaultRunSlots: DEFAULT_RUN_SLOTS,
@@ -540,6 +540,43 @@ export function recordWorkerInterruption(state, signal, activeChild = null) {
   return state;
 }
 
+export function recordUnexpectedWorkerInterruption(
+  state,
+  {
+    currentHostname = hostname(),
+    isPidAlive = pidAlive,
+  } = {},
+) {
+  const previousWorker = state.runtime?.worker;
+  if (!previousWorker?.pid) return false;
+  if (previousWorker.hostname && previousWorker.hostname !== currentHostname) {
+    throw new Error(
+      `上一次队列 Worker 属于其他主机 ${previousWorker.hostname}（PID ${previousWorker.pid}）；拒绝自动接管`,
+    );
+  }
+  if (isPidAlive(Number(previousWorker.pid))) {
+    throw new Error(`上一次队列 Worker 仍在运行（PID ${previousWorker.pid}）；拒绝启动第二个 Worker`);
+  }
+  const alreadyRecorded = Boolean(state.runtime?.interrupted_at)
+    || [...(state.history || [])].reverse().some((entry) => (
+      entry.event === "WORKER_INTERRUPTED"
+      && Number(entry.worker_pid) === Number(previousWorker.pid)
+      && (!previousWorker.started_at || !entry.at || entry.at >= previousWorker.started_at)
+    ));
+  if (alreadyRecorded) return false;
+
+  const previousHeartbeatAt = state.runtime?.heartbeat_at || null;
+  const activeDriver = state.runtime?.driver?.pid
+    ? { pid: state.runtime.driver.pid }
+    : null;
+  recordWorkerInterruption(state, "PROCESS_LOST", activeDriver);
+  const event = state.history.at(-1);
+  event.inferred = true;
+  event.previous_heartbeat_at = previousHeartbeatAt;
+  state.error = `检测到上一次队列 Worker 进程已退出（PID ${previousWorker.pid}），当前题保留为可恢复状态`;
+  return true;
+}
+
 export function recordWorkerStart(
   state,
   {
@@ -933,6 +970,8 @@ async function runQueue(plan, args) {
     state = createQueueState(plan, args);
     await saveQueue(plan, state);
   }
+
+  if (args.resume) recordUnexpectedWorkerInterruption(state);
 
   const { owner: lockOwner, recoveredLock } = await acquireUiLock(plan.lockFile);
   let activeDriver = null;

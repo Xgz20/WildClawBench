@@ -634,7 +634,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.16");
+  assert.equal(state.driver.version, "1.8.17");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

@@ -111,6 +111,8 @@ QwenWork 出现 `data-slot="user-question"` 问卷或其他明确用户输入请
 
 控制任务或队列 Worker 中断后，由新的控制任务使用完全相同的批次参数增加 `--resume`。恢复只按已持久化的 attempt、`session_id`、`local_project_id` 和绝对 cwd 观察原会话，不重新创建项目或发送 Prompt。队列历史用 `WORKER_INTERRUPTED` 和 `WORKER_RESUMED` 记录旧、新 Worker PID；恢复验收必须确认 `TASK_DISPATCHED` 与 automation 中 `PROMPT_SENT` 均仍只有一次。
 
+Windows `.cmd`、终端或宿主进程可能直接结束 Worker，导致 Node 收不到可捕获的 SIGINT/SIGTERM。此时 `--resume` 必须先核对状态中的旧 Worker 属于当前主机且 PID 已消失，再以 `signal=PROCESS_LOST`、`inferred=true` 补记 `WORKER_INTERRUPTED`，清理已退出的遗留 Driver/锁，随后记录 `WORKER_RESUMED`；旧 Worker PID 仍存活或来自其他主机时拒绝启动第二个 Worker。
+
 QwenWork 客户端崩溃且本地 CDP 端口已经关闭时，使用相同参数增加 `--resume --restart-app-on-resume`。Driver 只重启一次客户端，并从数据库确认唯一项目、原 `session_id` 和侧栏中的原 conversation 后继续观察；项目名称同时出现在侧栏和新任务选择器属于同一数据库项目的两个视图，恢复只使用侧栏项目树定位。若 QwenWork 把原 session 恢复为运行或完成状态，沿用原 attempt 收口；若客户端明确把它标记为 `interrupted`，则记录 `INFRA_FAILED`，不得重发 Prompt 或伪造恢复成功。数据库存在多个项目、多个会话或 cwd 不一致时仍停在 `NEEDS_ATTENTION`。
 
 ## WorkBuddy 单题
@@ -168,7 +170,7 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy.sh \
 
 恢复时必须沿用相同的 `automation_state.json`。Prompt 已进入发送临界区后，Driver 只检查已有 WorkBuddy conversation，不能盲目重发。状态不明时停在 `NEEDS_ATTENTION`。
 
-运行中 Worker 收到 `SIGINT`/`SIGTERM` 时会记录 Worker 和 Driver PID、终止观察 Driver、释放 UI 锁，但不会停止 WorkBuddy 内的任务；使用同一参数加 `--resume` 后按已捕获的 `data-conversation-id` 恢复原会话。Worker 被 `SIGKILL` 时由 stale-lock 和遗留 Driver 检查恢复；旧 Driver 仍存活时拒绝启动第二个 Driver。
+运行中 Worker 收到 `SIGINT`/`SIGTERM` 时会记录 Worker 和 Driver PID、终止观察 Driver、释放 UI 锁，但不会停止 WorkBuddy 内的任务；使用同一参数加 `--resume` 后按已捕获的 `data-conversation-id` 恢复原会话。Worker 被 `SIGKILL` 或 Windows 宿主直接结束时，恢复入口会在确认旧 PID 已消失后补记推断型 `WORKER_INTERRUPTED(signal=PROCESS_LOST)`，再通过 stale-lock 和遗留 Driver 检查恢复；旧 Worker/Driver 仍存活或旧 Worker 属于其他主机时拒绝启动第二个进程。
 
 ## WorkBuddy 后台并发队列
 

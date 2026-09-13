@@ -16,6 +16,7 @@ const {
   buildDriverArgs,
   canAutomaticallyResumeAttention,
   parseBatchArgs,
+  recordUnexpectedWorkerInterruption,
   recordWorkerInterruption,
   recordWorkerStart,
 } = await import(`../../workbuddy/batch.mjs?qwenwork-recovery=${Date.now()}`);
@@ -85,4 +86,30 @@ test("QwenWork resumes the same conversation without resending after a worker ha
   assert.equal(state.history[1].worker_pid, 303);
   assert.equal(state.history[1].previous_worker_pid, 101);
   assert.equal(state.history[1].previous_interrupt_signal, "SIGTERM");
+});
+
+test("QwenWork resume records a Windows-aborted worker before the replacement worker", () => {
+  const state = {
+    phase: "RUNNING",
+    current_index: 0,
+    runtime: {
+      worker: { pid: 101, hostname: "windows-host", started_at: "2026-09-09T00:00:00.000Z" },
+      driver: { pid: 202, task_id: "task-a" },
+      heartbeat_at: "2026-09-09T00:00:05.000Z",
+      interrupted_at: null,
+      interrupt_signal: null,
+    },
+    tasks: [{ task_id: "task-a", phase: "RUNNING", attempt_id: "attempt-1" }],
+    history: [],
+  };
+  assert.equal(recordUnexpectedWorkerInterruption(state, {
+    currentHostname: "windows-host",
+    isPidAlive: () => false,
+  }), true);
+  recordWorkerStart(state, { resume: true, pid: 303, workerHostname: "windows-host" });
+  assert.equal(state.tasks[0].attempt_id, "attempt-1");
+  assert.deepEqual(state.history.map((entry) => entry.event), ["WORKER_INTERRUPTED", "WORKER_RESUMED"]);
+  assert.equal(state.history[0].signal, "PROCESS_LOST");
+  assert.equal(state.history[0].inferred, true);
+  assert.equal(state.history[1].previous_worker_pid, 101);
 });
