@@ -38,6 +38,12 @@ RUNTIME_DIRECTORY_POLICY_SCHEMA = "wildclawbench.web-e2e-runtime-directory-polic
 IGNORED_RUNTIME_DIRS = {".cache", ".vite", "node_modules"}
 FORBIDDEN_CANDIDATE_DIRS = {".git"}
 EXCLUDED_TREE_DIRS = IGNORED_RUNTIME_DIRS | FORBIDDEN_CANDIDATE_DIRS
+CHROMIUM_PROFILE_MARKERS = (
+    ("Preferences",),
+    ("Login Data",),
+    ("Web Data",),
+    ("Network", "Cookies"),
+)
 
 
 def runtime_directory_policy() -> dict:
@@ -91,6 +97,39 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def is_chromium_profile_directory_name(name: str) -> bool:
+    lowered = name.casefold()
+    return lowered == "default" or lowered.startswith("profile ")
+
+
+def discover_chromium_user_data_roots(root: Path) -> set[Path]:
+    """Locate generated Chromium user-data roots without relying on their directory names."""
+    discovered: set[Path] = set()
+    for local_state in root.rglob("Local State"):
+        if local_state.is_symlink() or not local_state.is_file():
+            continue
+        candidate = local_state.parent
+        has_profile_marker = False
+        try:
+            children = list(candidate.iterdir())
+        except OSError:
+            continue
+        for profile in children:
+            if (
+                profile.is_symlink()
+                or not profile.is_dir()
+                or not is_chromium_profile_directory_name(profile.name)
+            ):
+                continue
+            if any(profile.joinpath(*marker).is_file() for marker in CHROMIUM_PROFILE_MARKERS):
+                has_profile_marker = True
+                break
+        crashpad = candidate / "Crashpad"
+        if has_profile_marker or (crashpad.is_dir() and not crashpad.is_symlink()):
+            discovered.add(candidate.relative_to(root))
+    return discovered
 
 
 def snapshot_workspace(root: Path, maximum_files: int = 20_000) -> dict:
@@ -480,14 +519,24 @@ def copy_manifest_execution_tasks(execution_tasks: Path, destination: Path, mani
         source = execution_tasks / task_id
         if source.is_symlink() or not source.is_dir():
             raise ValueError(f"执行任务目录缺失或为符号链接: {source}")
+        browser_profile_roots = {
+            profile.parts for profile in discover_chromium_user_data_roots(source)
+        }
+
         def ignore_runtime_directories(directory: str, names: list[str]) -> set[str]:
             root = Path(directory)
-            return {
+            current_parts = root.relative_to(source).parts
+            ignored = {
                 name for name in names
                 if name in IGNORED_RUNTIME_DIRS
                 and not (root / name).is_symlink()
                 and (root / name).is_dir()
             }
+            ignored.update(
+                name for name in names
+                if current_parts + (name,) in browser_profile_roots
+            )
+            return ignored
 
         shutil.copytree(
             source,

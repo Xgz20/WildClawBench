@@ -13,13 +13,14 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-PREPARE_SCRIPT = REPO_ROOT / ".agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_workspaces.py"
-FALLBACK_SCRIPT = REPO_ROOT / ".agents/skills/prepare-web-e2e-workspaces/scripts/prepare_scoring_workspace.py"
-INIT_SCORE = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/init_score.mjs"
-FINALIZE_SCORE = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/finalize_score.mjs"
-BUILD_SUBMISSION = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/build_submission.mjs"
-SCORING_CONTROL = REPO_ROOT / ".agents/skills/orchestrate-web-e2e/scripts/scoring-control.mjs"
-CHECK_SKILLS = REPO_ROOT / ".agents/skills/run-web-e2e/scripts/check_web_e2e_skills.py"
+SKILLS_ROOT = REPO_ROOT / "tools/report/skills"
+PREPARE_SCRIPT = SKILLS_ROOT / "prepare-web-e2e-workspaces/scripts/prepare_web_e2e_workspaces.py"
+FALLBACK_SCRIPT = SKILLS_ROOT / "prepare-web-e2e-workspaces/scripts/prepare_scoring_workspace.py"
+INIT_SCORE = SKILLS_ROOT / "score-web-e2e/scripts/init_score.mjs"
+FINALIZE_SCORE = SKILLS_ROOT / "score-web-e2e/scripts/finalize_score.mjs"
+BUILD_SUBMISSION = SKILLS_ROOT / "score-web-e2e/scripts/build_submission.mjs"
+SCORING_CONTROL = SKILLS_ROOT / "orchestrate-web-e2e/scripts/scoring-control.mjs"
+CHECK_SKILLS = SKILLS_ROOT / "run-web-e2e/scripts/check_web_e2e_skills.py"
 
 
 def load_module(name: str, path: Path):
@@ -116,7 +117,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             (root / "node_modules/pkg/index.js").write_text("ignored", encoding="utf-8")
             (root / "link.js").symlink_to("nested/app.js")
             python_hash = fallback_module.snapshot_workspace(root)["sha256"]
-            script = REPO_ROOT / ".agents/skills/score-web-e2e/scripts/workspace-integrity.mjs"
+            script = SKILLS_ROOT / "score-web-e2e/scripts/workspace-integrity.mjs"
             result = subprocess.run(
                 [
                     "node", "--input-type=module", "-e",
@@ -125,6 +126,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(result.stdout, python_hash)
@@ -177,8 +179,8 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.0.zip"
             report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.0.2.zip"
             orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.2.3.zip"
-            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.10.28.zip"
-            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.2.4.zip"
+            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.11.4.zip"
+            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.3.1.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
             report_config_path = batch_root / "web-smoke__report-config.yaml"
 
@@ -309,11 +311,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             )
             self.assertEqual(
                 batch_manifest["execute_skill_archive"],
-                "packages/execute-web-e2e-skill-v1.10.28.zip",
+                "packages/execute-web-e2e-skill-v1.11.4.zip",
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],
-                "packages/run-web-e2e-skill-v1.2.4.zip",
+                "packages/run-web-e2e-skill-v1.3.1.zip",
             )
             self.assertEqual(batch_manifest["skills_manifest"], "packages/skills-manifest.json")
             skills_manifest = json.loads(skills_manifest_path.read_text(encoding="utf-8"))
@@ -701,6 +703,28 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             )
             self.assertEqual(candidate["checks"]["score_after_copy"]["ignored_runtime_directories"], [])
 
+    def test_python_fallback_filters_chromium_profile_without_touching_execution(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))
+            execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
+            scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
+            extracted = Path(tmp) / "tester-browser-profile"
+            with zipfile.ZipFile(execution_package) as archive:
+                archive.extractall(extracted)
+            package_root = extracted / "web-smoke__codex"
+            materialize_execution_receipt(package_root)
+            profile = package_root / "execution/tasks" / self.TASK_ID / "scratch/udata"
+            (profile / "Default/Network").mkdir(parents=True)
+            (profile / "Default/Network/Cookies").write_text("cookie", encoding="utf-8")
+            (profile / "Default/Login Data").write_text("login", encoding="utf-8")
+            (profile / "Local State").write_text("{}", encoding="utf-8")
+
+            prepared = fallback_module.prepare_scoring_workspace(package_root, scoring_package)
+
+            self.assertTrue((profile / "Default/Network/Cookies").is_file())
+            self.assertFalse((prepared / "tasks" / self.TASK_ID / "scratch/udata").exists())
+            self.assertTrue((prepared / "tasks" / self.TASK_ID / "workspace/.gitkeep").is_file())
+
     def test_python_fallback_requires_policy_before_ignoring_runtime_directory(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))
@@ -762,6 +786,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 ["node", str(SCORING_CONTROL), "init", "--package-root", str(package_root)],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
             )
             self.assertEqual(initialized.returncode, 0, initialized.stderr)
             return package_root, self.ARTIFACTSBENCH_TASK_ID
@@ -775,6 +800,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 ["node", str(SCORING_CONTROL), "init", "--package-root", str(drift_root)],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
             )
             self.assertNotEqual(rejected.returncode, 0)
             self.assertIn("候选产物发生漂移", rejected.stderr)
@@ -791,6 +817,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
             )
             self.assertEqual(initialized_score.returncode, 0, initialized_score.stderr)
             score_input = json.loads(score_input_path.read_text(encoding="utf-8"))
@@ -820,12 +847,14 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
             )
             self.assertEqual(finalized.returncode, 0, finalized.stderr)
             submitted = subprocess.run(
                 ["node", str(BUILD_SUBMISSION), "--package-root", str(clean_root)],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
             )
             self.assertEqual(submitted.returncode, 0, submitted.stderr)
             submission = json.loads((clean_root / "submission.json").read_text(encoding="utf-8"))

@@ -13,6 +13,7 @@ import hashlib
 import json
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import zipfile
@@ -548,6 +549,16 @@ def render_checklist(batch_id: str, harness: str, tasks: list[dict], include_exe
     return "\n".join(rows)
 
 
+def write_zip_file(archive: zipfile.ZipFile, path: Path, archived: str) -> None:
+    """Write portable POSIX modes even when the package is produced on Windows."""
+    info = zipfile.ZipInfo.from_file(path, archived)
+    mode = 0o755 if path.suffix.lower() in {".command", ".sh"} else 0o644
+    info.create_system = 3
+    info.external_attr = (stat.S_IFREG | mode) << 16
+    with path.open("rb") as source:
+        archive.writestr(info, source.read(), compress_type=zipfile.ZIP_DEFLATED)
+
+
 def zip_selected(
     source: Path,
     destination: Path,
@@ -564,7 +575,7 @@ def zip_selected(
             relative = path.relative_to(source).as_posix()
             if relative in prefixes or any(relative.startswith(f"{prefix}/") for prefix in prefixes):
                 archived = f"{archive_prefix}/{relative}" if archive_prefix else relative
-                archive.write(path, archived)
+                write_zip_file(archive, path, archived)
 
 
 def skill_source_files(source: Path) -> list[Path]:
@@ -594,7 +605,7 @@ def zip_skill(source: Path, destination: Path) -> int:
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for path in skill_source_files(source):
             archived = PurePosixPath(source.name, path.relative_to(source).as_posix()).as_posix()
-            archive.write(path, archived)
+            write_zip_file(archive, path, archived)
             file_count += 1
     return file_count
 

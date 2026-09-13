@@ -43,6 +43,12 @@ IGNORED_RUNTIME_DIRS = {"node_modules", ".cache", ".vite"}
 FORBIDDEN_DIRS = {".git", "runtime-workspace"}
 EXCLUDED_DIRS = FORBIDDEN_DIRS | IGNORED_RUNTIME_DIRS | {".run-web-e2e", "__pycache__"}
 EXCLUDED_FILES = {".DS_Store"}
+CHROMIUM_PROFILE_MARKERS = (
+    ("Preferences",),
+    ("Login Data",),
+    ("Web Data",),
+    ("Network", "Cookies"),
+)
 
 
 def runtime_directory_policy() -> dict:
@@ -423,9 +429,77 @@ def command_status(args: argparse.Namespace, sync: bool = False) -> dict:
     return {"state": state, "recommended_actions": recommended_actions(state)}
 
 
-def check_export_tree(root: Path, *, allow_ignored_execution_runtime_directories: bool = False) -> None:
+def is_chromium_profile_directory_name(name: str) -> bool:
+    lowered = name.casefold()
+    return lowered == "default" or lowered.startswith("profile ")
+
+
+def discover_chromium_user_data_roots(root: Path) -> set[Path]:
+    """Locate generated Chromium user-data roots without relying on their directory names."""
+    discovered: set[Path] = set()
+    for local_state in root.rglob("Local State"):
+        if local_state.is_symlink() or not local_state.is_file():
+            continue
+        candidate = local_state.parent
+        has_profile_marker = False
+        try:
+            children = list(candidate.iterdir())
+        except OSError:
+            continue
+        for profile in children:
+            if (
+                profile.is_symlink()
+                or not profile.is_dir()
+                or not is_chromium_profile_directory_name(profile.name)
+            ):
+                continue
+            if any(profile.joinpath(*marker).is_file() for marker in CHROMIUM_PROFILE_MARKERS):
+                has_profile_marker = True
+                break
+        crashpad = candidate / "Crashpad"
+        if has_profile_marker or (crashpad.is_dir() and not crashpad.is_symlink()):
+            discovered.add(candidate.relative_to(root))
+    return discovered
+
+
+def path_has_prefix(relative: Path | PurePosixPath, prefix: Path | PurePosixPath) -> bool:
+    return relative.parts[:len(prefix.parts)] == prefix.parts
+
+
+def archive_chromium_user_data_roots(paths: list[PurePosixPath]) -> set[PurePosixPath]:
+    lowered_paths = [tuple(part.casefold() for part in path.parts) for path in paths]
+    discovered: set[PurePosixPath] = set()
+    for path, lowered in zip(paths, lowered_paths):
+        if not lowered or lowered[-1] != "local state":
+            continue
+        root_parts = lowered[:-1]
+        for member in lowered_paths:
+            if member[:len(root_parts)] != root_parts:
+                continue
+            remainder = member[len(root_parts):]
+            if remainder and remainder[0] == "crashpad":
+                discovered.add(PurePosixPath(*path.parts[:-1]))
+                break
+            if not remainder or not is_chromium_profile_directory_name(remainder[0]):
+                continue
+            marker = remainder[1:]
+            if marker in tuple(tuple(part.casefold() for part in item) for item in CHROMIUM_PROFILE_MARKERS):
+                discovered.add(PurePosixPath(*path.parts[:-1]))
+                break
+    return discovered
+
+
+def check_export_tree(
+    root: Path,
+    *,
+    allow_ignored_execution_runtime_directories: bool = False,
+    browser_profile_roots: set[Path] | None = None,
+) -> None:
+    browser_profile_roots = browser_profile_roots or set()
     for path in root.rglob("*"):
         rel = path.relative_to(root)
+        if any(path_has_prefix(rel, profile_root) for profile_root in browser_profile_roots):
+            continue
         ignored_indexes = [index for index, part in enumerate(rel.parts) if part in IGNORED_RUNTIME_DIRS]
         if ignored_indexes:
             first_ignored = ignored_indexes[0]
@@ -450,11 +524,13 @@ def check_export_tree(root: Path, *, allow_ignored_execution_runtime_directories
             raise ValueError(f"回传目录包含敏感文件: {rel.as_posix()}")
 
 
-def should_exclude(relative: Path) -> bool:
+def should_exclude(relative: Path, browser_profile_roots: set[Path] | None = None) -> bool:
+    browser_profile_roots = browser_profile_roots or set()
     return (
         any(part in EXCLUDED_DIRS for part in relative.parts)
         or relative.name in EXCLUDED_FILES
         or relative.suffix == ".pyc"
+        or any(path_has_prefix(relative, profile_root) for profile_root in browser_profile_roots)
     )
 
 
@@ -471,9 +547,11 @@ def export_return(args: argparse.Namespace) -> dict:
     allow_ignored_execution_runtime_directories = validate_runtime_directory_policy(
         receipt.get("runtime_directory_policy")
     )
+    browser_profile_roots = discover_chromium_user_data_roots(root)
     check_export_tree(
         root,
         allow_ignored_execution_runtime_directories=allow_ignored_execution_runtime_directories,
+        browser_profile_roots=browser_profile_roots,
     )
     harness = submission["unit"]["harness_id"]
     base = f"{submission['batch_id']}__{harness}"
@@ -491,7 +569,7 @@ def export_return(args: argparse.Namespace) -> dict:
         files = 0
         for path in sorted(item for item in root.rglob("*") if item.is_file()):
             relative = path.relative_to(root)
-            if should_exclude(relative):
+            if should_exclude(relative, browser_profile_roots):
                 continue
             archive.write(path, PurePosixPath(root.name, relative.as_posix()).as_posix())
             files += 1
@@ -529,6 +607,7 @@ def export_return(args: argparse.Namespace) -> dict:
 def validate_zip_members(archive: zipfile.ZipFile) -> str:
     top_levels: set[str] = set()
     submission_members: list[str] = []
+    member_paths: list[PurePosixPath] = []
     for info in archive.infolist():
         raw = info.filename
         path = PurePosixPath(raw)
@@ -536,10 +615,15 @@ def validate_zip_members(archive: zipfile.ZipFile) -> str:
             raise ValueError(f"ZIP 包含不安全路径: {raw}")
         if stat.S_ISLNK(info.external_attr >> 16):
             raise ValueError(f"ZIP 包含符号链接: {raw}")
+        member_paths.append(path)
         if path.parts:
             top_levels.add(path.parts[0])
         if path.name == "submission.json":
             submission_members.append(raw)
+    browser_profile_roots = archive_chromium_user_data_roots(member_paths)
+    if browser_profile_roots:
+        first = sorted(path.as_posix() for path in browser_profile_roots)[0]
+        raise ValueError(f"ZIP 包含 Chromium 浏览器用户数据目录: {first}")
     if len(top_levels) != 1:
         raise ValueError("ZIP 必须且只能包含一个顶层 Harness 根目录")
     if len(submission_members) != 1 or len(PurePosixPath(submission_members[0]).parts) != 2:

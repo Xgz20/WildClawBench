@@ -245,6 +245,58 @@ class RunWebE2ETest(unittest.TestCase):
                     package_root=str(harness), output_dir=str(base / "offline"),
                 ))
 
+    def test_export_filters_chromium_profiles_without_touching_sources(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _, harness = materialize_batch(base)
+            materialize_results(harness)
+            profiles = (
+                harness / "execution/tasks/task-1/scratch/udata",
+                harness / "score/tasks/task-1/browser-artifacts/arbitrary-name",
+            )
+            for profile in profiles:
+                (profile / "Default/Network").mkdir(parents=True)
+                (profile / "Default/Network/Cookies").write_text("cookie", encoding="utf-8")
+                (profile / "Default/Login Data").write_text("login", encoding="utf-8")
+                (profile / "Local State").write_text("{}", encoding="utf-8")
+                (profile / "Crashpad/reports").mkdir(parents=True)
+                (profile / "Crashpad/reports/crash.dmp").write_bytes(b"dump")
+
+            exported = run_module.export_return(argparse.Namespace(
+                package_root=str(harness), output_dir=str(base / "offline"),
+            ))
+
+            self.assertTrue(all((profile / "Local State").is_file() for profile in profiles))
+            with zipfile.ZipFile(exported["archive"]) as archive:
+                names = archive.namelist()
+            self.assertFalse(any("/scratch/udata/" in name for name in names))
+            self.assertFalse(any("/browser-artifacts/arbitrary-name/" in name for name in names))
+            self.assertTrue(any(name.endswith("/execution/tasks/task-1/workspace/index.html") for name in names))
+
+    def test_import_rejects_chromium_profile_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            batch, _ = materialize_batch(base)
+            archive_path = base / "browser-profile.zip"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                archive.writestr("root/submission.json", b"{}")
+                archive.writestr("root/execution/tasks/task-1/scratch/udata/Local State", b"{}")
+                archive.writestr("root/execution/tasks/task-1/scratch/udata/Default/Preferences", b"{}")
+            receipt_path = base / "browser-profile.json"
+            write_json(receipt_path, {
+                "schema_version": run_module.RETURN_SCHEMA,
+                "archive": {
+                    "filename": archive_path.name,
+                    "sha256": run_module.sha256_file(archive_path),
+                    "size_bytes": archive_path.stat().st_size,
+                },
+            })
+
+            with self.assertRaisesRegex(ValueError, "Chromium 浏览器用户数据目录"):
+                run_module.import_return(argparse.Namespace(
+                    batch_root=str(batch), archive=str(archive_path), receipt=str(receipt_path),
+                ))
+
     def test_export_still_rejects_git_directory(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)

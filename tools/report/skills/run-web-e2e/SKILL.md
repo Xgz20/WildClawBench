@@ -138,7 +138,7 @@ python3 <skill-dir>/scripts/run_web_e2e.py set-stage \
 
 Windows AstronStudio 已按“只读探针 → 单个 L1（执行并发 1）→ 三个 L1 串行自动切题 → 五个 L1 默认三路并发与动态补位”完成真机生产验证。更换桌面客户端大版本或 Driver 核心实现后，必须按同一顺序回归，不得把 macOS 或旧 Windows 基线的结论直接外推。
 
-执行回执有效后才按 `orchestrate-web-e2e` 复制到独立评分工作空间并启动评分。新回执声明运行时目录策略时，execution 原件可保留被评 Harness 生成的 `.cache`、`.vite`、`node_modules`，评分复制会过滤它们且不修改原件；未声明策略的旧回执仍严格拒绝。Codex Desktop 新批次默认三槽，每题独立项目、任务、Browser 和端口。评分任务使用 `score-web-e2e`，候选 `workspace/` 永远只读；端口冲突只允许修改 `private-scoring/runtime-workspace/` 中的评分运行时副本。
+执行回执有效后才按 `orchestrate-web-e2e` 复制到独立评分工作空间并启动评分。新回执声明运行时目录策略时，execution 原件可保留被评 Harness 生成的 `.cache`、`.vite`、`node_modules`，评分复制会过滤它们且不修改原件；任意命名但具备 Chromium `Local State` 与 profile 数据库特征的浏览器用户数据目录也会从评分副本整体过滤。未声明策略的旧回执仍严格拒绝候选运行时目录。Codex Desktop 新批次默认三槽，每题独立项目、任务、Browser 和端口。评分任务使用 `score-web-e2e`，候选 `workspace/` 永远只读；端口冲突只允许修改 `private-scoring/runtime-workspace/` 中的评分运行时副本。
 
 ### 离线回传与收集
 
@@ -150,7 +150,7 @@ python3 <skill-dir>/scripts/run_web_e2e.py export-return \
   --output-dir /absolute/offline-return
 ```
 
-该命令生成 `<batch_id>__<harness>__return.zip` 和外部 `return-receipt.json`。回执绑定 ZIP SHA-256、批次、源码 revision、Profile、模型、Harness 和完整 task IDs。目标存在时拒绝覆盖。ZIP 不含 `.git`、`.cache`、`.vite`、`node_modules`、密钥、评分运行时副本或 `.run-web-e2e` 控制状态；过滤只作用于 ZIP，不清理 execution 原件。只有声明兼容策略的执行回执才允许 execution workspace 中存在可忽略运行时目录，score workspace 中出现同名目录仍失败关闭。
+该命令生成 `<batch_id>__<harness>__return.zip` 和外部 `return-receipt.json`。回执绑定 ZIP SHA-256、批次、源码 revision、Profile、模型、Harness 和完整 task IDs。目标存在时拒绝覆盖。ZIP 不含 `.git`、`.cache`、`.vite`、`node_modules`、密钥、评分运行时副本、`.run-web-e2e` 控制状态，也不含动态识别出的 Chromium 浏览器用户数据目录（Cookies、Login Data、Local State、Crashpad 等）；过滤只作用于 ZIP，不清理 execution/score 原件。导入端会再次拒绝包含此类 profile 树的外部 ZIP。只有声明兼容策略的执行回执才允许 execution workspace 中存在可忽略运行时目录，score workspace 中出现同名目录仍失败关闭。
 
 管理员离线收到 ZIP 和回执后导入：
 
