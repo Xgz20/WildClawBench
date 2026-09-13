@@ -14,6 +14,7 @@ import {
   openQwenProjectConversation,
   qwenStopControlLocator,
   qwenProjectSidebarLabel,
+  rememberSession,
   restartQwenWork,
   terminalProcessCleanupTiming,
   waitForUniqueVisible,
@@ -52,7 +53,38 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.10.4");
+  assert.equal(state.driver.version, "1.10.5");
+});
+
+test("QwenWork 终态查询不覆盖已捕获的稳定会话身份", () => {
+  const state = {
+    session: {
+      conversation_id: "conversation-a",
+      sub_chat_id: "sub-chat-a",
+      session_id: "session-a",
+      local_project_id: "project-a",
+      project_name: "Project A",
+      conversation_name: "Conversation A",
+      cwd: "C:\\tasks\\a",
+      raw_status: "running",
+      stream_id: "stream-a",
+      model_level: "flash",
+      updated_at_ms: 100,
+    },
+  };
+  rememberSession(state, {
+    conversationId: "conversation-a",
+    sessionId: "session-a",
+    status: "completed",
+    streamId: null,
+    updatedAt: 200,
+  });
+  assert.equal(state.session.stream_id, "stream-a");
+  assert.equal(state.session.sub_chat_id, "sub-chat-a");
+  assert.equal(state.session.local_project_id, "project-a");
+  assert.equal(state.session.cwd, "C:\\tasks\\a");
+  assert.equal(state.session.raw_status, "completed");
+  assert.equal(state.session.updated_at_ms, 200);
 });
 
 test("QwenWork 重复终态观察为截图分配唯一证据路径", () => {

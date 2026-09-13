@@ -309,20 +309,21 @@ export function chooseQwenAttemptSession(sessions, state, workspace) {
     .sort((left, right) => Number(right.updatedAt || 0) - Number(left.updatedAt || 0))[0] || null;
 }
 
-function rememberSession(state, session) {
+export function rememberSession(state, session) {
+  const previous = state.session || {};
   state.session = {
-    ...state.session,
-    conversation_id: session.conversationId,
-    sub_chat_id: session.subChatId || null,
-    session_id: session.sessionId || null,
-    local_project_id: session.localProjectId || state.session?.local_project_id || null,
-    project_name: session.projectName || state.session?.project_name || null,
-    conversation_name: session.conversationName || null,
-    cwd: session.cwd,
-    raw_status: session.status,
-    stream_id: session.streamId || null,
-    model_level: session.modelLevel || null,
-    updated_at_ms: session.updatedAt || null,
+    ...previous,
+    conversation_id: session.conversationId || previous.conversation_id || null,
+    sub_chat_id: session.subChatId || previous.sub_chat_id || null,
+    session_id: session.sessionId || previous.session_id || null,
+    local_project_id: session.localProjectId || previous.local_project_id || null,
+    project_name: session.projectName || previous.project_name || null,
+    conversation_name: session.conversationName || previous.conversation_name || null,
+    cwd: session.cwd || previous.cwd || null,
+    raw_status: session.status || previous.raw_status || null,
+    stream_id: session.streamId || previous.stream_id || null,
+    model_level: session.modelLevel || previous.model_level || null,
+    updated_at_ms: session.updatedAt || previous.updated_at_ms || null,
   };
   return session;
 }
