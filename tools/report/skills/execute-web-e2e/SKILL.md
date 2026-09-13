@@ -142,7 +142,7 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy.sh \
 
 上例不传 `--model`，Driver 会保留并回读 WorkBuddy 当前模型，不操作模型的推理强度。跑批前应由测试人员在 WorkBuddy 中配置好默认模型和推理强度。需要覆盖当前模型时再显式增加 `--model <UI 精确显示名>`。
 
-`--restart-app` 会退出并重新启动 WorkBuddy，仅在当前没有需要保留的运行任务时使用。Driver 会先按完整主程序路径唯一核对主进程，读取状态库确认没有其他活动任务，并确认旧进程和 CDP 均已退出；Windows 只终止已核对的进程树，macOS `open` 做最多 3 次有界重试。每次都必须回读本地 CDP 才算启动成功，尝试证据写入 `automation_state.json.client.launch`。WorkBuddy 已通过本地 CDP 端口启动时省略该参数。
+`--restart-app` 会退出并重新启动 WorkBuddy，仅在当前没有需要保留的运行任务时使用。Driver 会先按完整主程序路径唯一核对主进程，读取状态库确认没有其他活动任务，并确认旧进程和 CDP 均已退出；Windows 只终止已核对的进程树，macOS `open` 做最多 3 次有界重试。每次都必须回读本地 CDP 才算启动成功，尝试证据写入 `automation_state.json.client.launch`。WorkBuddy 已通过本地 CDP 端口启动时省略该参数。单题和批量入口都支持显式 `--endpoint <本机CDP地址>` 与 `--app-path <完整主程序路径>`；批量队列会冻结这两个连接参数并逐题透传，恢复时必须保持一致。只有发送前失败且候选零变化时，才允许在 `--resume --retry-pre-send-failure` 中为旧队列补录连接覆盖，例如绕开 Windows 已确认的陈旧监听端口；不得静默换端口或在 Prompt 已发送后改连其他实例。
 
 中断后恢复：
 

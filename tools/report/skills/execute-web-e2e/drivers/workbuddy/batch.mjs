@@ -25,7 +25,7 @@ import {
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
 export const QUEUE_STATE_REVISION = 3;
-export const QUEUE_WORKER_VERSION = "1.8.15";
+export const QUEUE_WORKER_VERSION = "1.8.16";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 
@@ -91,6 +91,8 @@ function usage() {
 
 选项：
   --model <UI名称>                 可选；指定时选择并回读，省略时保持并回读当前模型
+  --endpoint <本机CDP地址>         可选；覆盖 Driver 默认 CDP 地址，并在队列中冻结
+  --app-path <主程序路径>          可选；显式指定桌面主程序完整路径，并在队列中冻结
   --permission-mode <模式>         current（保持现状）或 full-access（显式开启完全访问）
   --run-timeout-seconds <秒>       每题 Agent 总执行超时，默认：3600
   --poll-interval-seconds <秒>     每题终态轮询间隔，默认：2
@@ -118,6 +120,8 @@ export function parseBatchArgs(argv) {
     runId: "",
     taskIds: [],
     model: "",
+    endpoint: "",
+    appPath: "",
     permissionMode: "current",
     runTimeoutSeconds: 3600,
     pollIntervalSeconds: 2,
@@ -137,6 +141,8 @@ export function parseBatchArgs(argv) {
     ["--harness-root", "harnessRoot"],
     ["--run-id", "runId"],
     ["--model", "model"],
+    ["--endpoint", "endpoint"],
+    ["--app-path", "appPath"],
     ["--permission-mode", "permissionMode"],
     ["--run-timeout-seconds", "runTimeoutSeconds"],
     ["--poll-interval-seconds", "pollIntervalSeconds"],
@@ -274,6 +280,8 @@ export function createQueueState(plan, args) {
     batch_id: plan.manifest.batch_id,
     harness_id: BATCH_PROFILE.harnessId,
     requested_ui_model: args.model || null,
+    requested_endpoint: args.endpoint || null,
+    requested_app_path: args.appPath || null,
     requested_permission_mode: args.permissionMode,
     ui_slots: 1,
     run_slots: args.runSlots,
@@ -319,6 +327,15 @@ export function assertQueueState(state, plan, args) {
   if (state.batch_id !== plan.manifest.batch_id) mismatches.push("batch_id");
   if (state.harness_id !== BATCH_PROFILE.harnessId) mismatches.push("harness_id");
   if ((state.requested_ui_model || "") !== args.model) mismatches.push("requested_ui_model");
+  const mayAdoptPreSendConnectionOverride = args.resume && args.retryPreSendFailure;
+  if ((state.requested_endpoint || "") !== args.endpoint
+    && !(mayAdoptPreSendConnectionOverride && !state.requested_endpoint && args.endpoint)) {
+    mismatches.push("requested_endpoint");
+  }
+  if ((state.requested_app_path || "") !== args.appPath
+    && !(mayAdoptPreSendConnectionOverride && !state.requested_app_path && args.appPath)) {
+    mismatches.push("requested_app_path");
+  }
   if (state.requested_permission_mode && state.requested_permission_mode !== args.permissionMode) {
     mismatches.push("requested_permission_mode");
   }
@@ -445,6 +462,8 @@ export function buildDriverArgs(args, task, index, existingAutomation = null, op
     "--post-cancel-quiescence-seconds", String(args.postCancelQuiescenceSeconds),
   ];
   if (args.model) driverArgs.push("--model", args.model);
+  if (args.endpoint) driverArgs.push("--endpoint", args.endpoint);
+  if (args.appPath) driverArgs.push("--app-path", args.appPath);
   const mode = operation || (existingAutomation
     ? (args.retryPreSendFailure && existingAutomation.phase === "INFRA_FAILED" ? "retry-dispatch" : "observe")
     : "dispatch");
@@ -729,6 +748,8 @@ export async function buildExecutionReceipt(plan, state) {
       ui_slots: state.ui_slots,
       run_slots: state.run_slots,
       requested_ui_model: state.requested_ui_model,
+      requested_endpoint: state.requested_endpoint || null,
+      requested_app_path: state.requested_app_path || null,
       requested_permission_mode: state.requested_permission_mode,
       state_path: receiptRelativePath(plan, plan.queueStateFile),
     },
@@ -886,6 +907,17 @@ async function runQueue(plan, args) {
         run_slots: state.run_slots,
       });
     }
+    if (!state.requested_endpoint && args.endpoint) {
+      state.requested_endpoint = args.endpoint;
+      state.history.push({
+        event: "QUEUE_CONNECTION_OVERRIDE_MIGRATED",
+        at: new Date().toISOString(),
+        requested_endpoint: args.endpoint,
+        requested_app_path: args.appPath || null,
+        reason: "retry-pre-send-failure",
+      });
+    }
+    if (!state.requested_app_path && args.appPath) state.requested_app_path = args.appPath;
     if (migrated) await saveQueue(plan, state);
   } else {
     if (args.resume) throw new Error("--resume 要求已有 queue_state.json");

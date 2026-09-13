@@ -97,6 +97,68 @@ test("batch keeps the current WorkBuddy model when model is omitted", () => {
   assert.equal(driverArgs.includes("--model"), false);
 });
 
+test("batch freezes and forwards explicit desktop connection overrides", async () => {
+  const root = await fixture();
+  const args = parseBatchArgs([
+    "--harness-root", root,
+    "--run-id", "connection",
+    "--task-id", "task-a",
+    "--endpoint", "http://127.0.0.1:9250",
+    "--app-path", "C:\\Programs\\WorkBuddy\\WorkBuddy.exe",
+  ]);
+  const plan = await resolveQueuePlan(args);
+  const state = createQueueState(plan, args);
+  assert.equal(state.requested_endpoint, "http://127.0.0.1:9250");
+  assert.equal(state.requested_app_path, "C:\\Programs\\WorkBuddy\\WorkBuddy.exe");
+  const driverArgs = buildDriverArgs(args, { taskRoot: "/tmp/task-a" }, 0);
+  assert.deepEqual(
+    driverArgs.slice(driverArgs.indexOf("--endpoint"), driverArgs.indexOf("--endpoint") + 2),
+    ["--endpoint", "http://127.0.0.1:9250"],
+  );
+  assert.deepEqual(
+    driverArgs.slice(driverArgs.indexOf("--app-path"), driverArgs.indexOf("--app-path") + 2),
+    ["--app-path", "C:\\Programs\\WorkBuddy\\WorkBuddy.exe"],
+  );
+
+  const changed = parseBatchArgs([
+    "--harness-root", root,
+    "--run-id", "connection",
+    "--task-id", "task-a",
+    "--endpoint", "http://127.0.0.1:9251",
+    "--app-path", "C:\\Programs\\WorkBuddy\\WorkBuddy.exe",
+    "--resume",
+  ]);
+  assert.throws(() => assertQueueState(state, plan, changed), /requested_endpoint/);
+});
+
+test("pre-send retry may adopt a connection override for a legacy queue", async () => {
+  const root = await fixture();
+  const initial = parseBatchArgs([
+    "--harness-root", root, "--run-id", "retry-connection", "--task-id", "task-a",
+  ]);
+  const plan = await resolveQueuePlan(initial);
+  const state = createQueueState(plan, initial);
+  delete state.requested_endpoint;
+  delete state.requested_app_path;
+  const retry = parseBatchArgs([
+    "--harness-root", root,
+    "--run-id", "retry-connection",
+    "--task-id", "task-a",
+    "--resume",
+    "--retry-pre-send-failure",
+    "--endpoint", "http://127.0.0.1:9250",
+  ]);
+  assert.doesNotThrow(() => assertQueueState(state, plan, retry));
+  const ordinaryResume = parseBatchArgs([
+    "--harness-root", root,
+    "--run-id", "retry-connection",
+    "--task-id", "task-a",
+    "--resume",
+    "--endpoint", "http://127.0.0.1:9250",
+  ]);
+  assert.throws(() => assertQueueState(state, plan, ordinaryResume), /requested_endpoint/);
+});
+
 test("resolveQueuePlan matches manifest tasks by exact id", async () => {
   const root = await fixture();
   const args = parseBatchArgs([
@@ -138,6 +200,8 @@ test("queue state identity and ordered tasks are immutable on resume", async () 
   assert.equal(state.available_run_slots, 3);
   assert.deepEqual(state.tasks.map((task) => task.phase), ["PENDING", "PENDING"]);
   assert.equal(state.requested_ui_model, null);
+  assert.equal(state.requested_endpoint, null);
+  assert.equal(state.requested_app_path, null);
   assert.equal(state.requested_permission_mode, "current");
   assert.equal(state.runtime.driver, null);
   assert.doesNotThrow(() => assertQueueState(state, plan, args));
