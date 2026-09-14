@@ -99,21 +99,37 @@ test("ordinary terminal cleanup leaves enough time for a late Windows preview pr
   });
 });
 
-test("full access confirmation clicks the stable label and verifies readback", async () => {
-  let labelClicks = 0;
+test("full access confirmation checks the unique dialog checkbox and verifies readback", async () => {
+  let checkboxChecks = 0;
   let confirmClicks = 0;
   const dialog = {
-    locator: (selector) => selector === "label.wb-checkbox"
-      ? { click: async () => { labelClicks += 1; } }
-      : { isChecked: async () => labelClicks === 1 },
+    locator: (selector) => {
+      assert.equal(selector, 'input[type="checkbox"]');
+      return {
+        count: async () => 1,
+        check: async () => { checkboxChecks += 1; },
+        isChecked: async () => checkboxChecks === 1,
+      };
+    },
     getByRole: () => ({
-      isEnabled: async () => labelClicks === 1,
+      isEnabled: async () => checkboxChecks === 1,
       click: async () => { confirmClicks += 1; },
     }),
   };
   await confirmFullAccessRiskDialog(dialog, 100, { sleep: async () => {} });
-  assert.equal(labelClicks, 1);
+  assert.equal(checkboxChecks, 1);
   assert.equal(confirmClicks, 1);
+});
+
+test("full access confirmation fails closed when the risk dialog checkbox is ambiguous", async () => {
+  const dialog = {
+    locator: () => ({ count: async () => 2 }),
+    getByRole: () => ({}),
+  };
+  await assert.rejects(
+    confirmFullAccessRiskDialog(dialog, 100),
+    /复选框数量异常：2/,
+  );
 });
 
 test("full access accepts the updated WorkBuddy direct-toggle flow without a risk dialog", async () => {
@@ -634,7 +650,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.18");
+  assert.equal(state.driver.version, "1.8.19");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

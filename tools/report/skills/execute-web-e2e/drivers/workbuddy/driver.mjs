@@ -589,10 +589,13 @@ async function inspectPermissionMode(page) {
 
 export async function confirmFullAccessRiskDialog(dialog, timeout, overrides = {}) {
   const wait = overrides.sleep || sleep;
-  const label = dialog.locator("label.wb-checkbox");
   const checkbox = dialog.locator('input[type="checkbox"]');
   const confirmButton = dialog.getByRole("button", { name: /允许完全访问|Allow full access/i });
-  await label.click({ timeout });
+  const checkboxCount = await checkbox.count();
+  if (checkboxCount !== 1) {
+    throw new Error(`WorkBuddy 完全访问风险确认框中的复选框数量异常：${checkboxCount}`);
+  }
+  await checkbox.check({ timeout });
 
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {

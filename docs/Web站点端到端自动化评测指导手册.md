@@ -41,6 +41,8 @@
 
 批次向执行和评分机器分发的 5 个 Skill 是 `run-web-e2e`、`execute-web-e2e`、`orchestrate-web-e2e`、`score-web-e2e` 和 `report-web-e2e`。Skill 包使用 `<skill-name>-skill-v<version>.zip` 命名，不带批次号；同一版本同时适用于自建与开源评测集。管理员准备机器还需要仓库内的 `prepare-web-e2e-workspaces`。
 
+正式包可以在 macOS 或 Windows 的干净仓库检出中生成。若执行和验收都在 Windows，推荐直接在 Windows 本地准备批次，省去跨机器传包；必须记录生成时的完整 Git revision，并以本次 `batch_manifest.json`、`skills-manifest.json` 中的内容 SHA 和 ZIP SHA 为准。不同操作系统或生成时间的 ZIP 归档 SHA 不要求相同，不能把历史包的 SHA 套到本次包上。具体门禁和可直接粘贴的 Windows Prompt 见[生产验收清单](Web站点端到端自动化评测生产验收清单.md)。
+
 ## 使用方法
 
 ### 做题+打分场景

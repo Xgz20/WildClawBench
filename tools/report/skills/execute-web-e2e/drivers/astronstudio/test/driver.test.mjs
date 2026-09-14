@@ -40,6 +40,8 @@ import {
   inspectWorkspace,
   isProbeReady,
   isReusableEmptyTaskRoute,
+  observeAttemptOnce,
+  readSessionsWithDiagnostics,
   restartAstudio,
   selectWorkspace,
 } from "../driver.mjs";
@@ -152,6 +154,122 @@ test("Windows AstronStudio state database keeps the legacy path and falls back t
     ...shared,
     existsPath: () => false,
   }), legacy);
+});
+
+test("AstronStudio records a transient state database failure and clears the consecutive count after recovery", async () => {
+  const timestamps = [
+    "2026-09-14T10:00:00.000Z",
+    "2026-09-14T10:00:01.000Z",
+  ];
+  const state = { evidence: {} };
+  const failed = await readSessionsWithDiagnostics(
+    state,
+    async () => { throw new Error("database disk image is malformed"); },
+    { now: () => timestamps.shift() },
+  );
+  assert.equal(failed.sessions, null);
+  assert.match(failed.error, /database disk image is malformed/);
+  assert.deepEqual(state.evidence.state_database_observation, {
+    total_failures: 1,
+    consecutive_failures: 1,
+    last_failed_at: "2026-09-14T10:00:00.000Z",
+    last_error: "database disk image is malformed",
+    last_success_at: null,
+    last_recovered_at: null,
+  });
+
+  const sessions = [{ conversationId: "thread-1" }];
+  const recovered = await readSessionsWithDiagnostics(
+    state,
+    async () => sessions,
+    { now: () => timestamps.shift() },
+  );
+  assert.equal(recovered.sessions, sessions);
+  assert.equal(recovered.error, null);
+  assert.deepEqual(state.evidence.state_database_observation, {
+    total_failures: 1,
+    consecutive_failures: 0,
+    last_failed_at: "2026-09-14T10:00:00.000Z",
+    last_error: "database disk image is malformed",
+    last_success_at: "2026-09-14T10:00:01.000Z",
+    last_recovered_at: "2026-09-14T10:00:01.000Z",
+  });
+});
+
+test("AstronStudio keeps observing from DOM during a transient state database snapshot failure", async () => {
+  const sentAt = Date.parse("2026-09-14T10:00:00.000Z");
+  const state = {
+    phase: "PROMPT_SENT",
+    timing: { sent_at: new Date(sentAt).toISOString(), started_at: new Date(sentAt).toISOString() },
+    runtime: {},
+    evidence: {},
+    error: null,
+    history: [],
+    session: {
+      conversation_id: "thread-1",
+      dom_conversation_id: "thread-1",
+      cwd: "/tmp/task-1",
+      baseline: [],
+    },
+  };
+  let persistence = null;
+  const result = await observeAttemptOnce(
+    { url: () => "http://localhost/#/thread-1" },
+    {
+      sessionDb: "/tmp/state.sqlite",
+      workspace: "/tmp/task-1",
+      runTimeoutSeconds: 60,
+    },
+    state,
+    { taskId: "task-1" },
+    {
+      inspectDom: async () => ({ running: true, attention: [], finalText: "" }),
+      querySessions: async () => { throw new Error("database disk image is malformed"); },
+      persistRunningObservation: async (_config, currentState, _identity, session, options) => {
+        persistence = { session, options };
+        return currentState;
+      },
+      nowMilliseconds: () => sentAt + 1_000,
+      cancelTimedOutAttempt: async () => { throw new Error("must not cancel before deadline"); },
+    },
+  );
+  assert.equal(result, state);
+  assert.equal(state.phase, "RUNNING");
+  assert.equal(state.evidence.state_database_observation.consecutive_failures, 1);
+  assert.match(state.evidence.state_database_observation.last_error, /database disk image is malformed/);
+  assert.deepEqual(persistence, { session: null, options: { allowTransition: true } });
+});
+
+test("AstronStudio requires attention when its state database is still unreadable at the deadline", async () => {
+  const sentAt = Date.parse("2026-09-14T10:00:00.000Z");
+  const state = {
+    phase: "RUNNING",
+    timing: { sent_at: new Date(sentAt).toISOString(), started_at: new Date(sentAt).toISOString() },
+    runtime: {},
+    evidence: {},
+    error: null,
+    history: [],
+    session: { conversation_id: "thread-1", cwd: "/tmp/task-1", baseline: [] },
+  };
+  const result = await observeAttemptOnce(
+    { url: () => "http://localhost/#/thread-1" },
+    {
+      sessionDb: "/tmp/state.sqlite",
+      workspace: "/tmp/task-1",
+      runTimeoutSeconds: 60,
+    },
+    state,
+    { taskId: "task-1" },
+    {
+      inspectDom: async () => ({ running: false, attention: [], finalText: "" }),
+      querySessions: async () => { throw new Error("database disk image is malformed"); },
+      nowMilliseconds: () => sentAt + 60_000,
+      persistNeedsAttention: async (_config, _state, _identity, reason, error) => ({ reason, error }),
+      cancelTimedOutAttempt: async () => { throw new Error("must not cancel without database confirmation"); },
+    },
+  );
+  assert.equal(result.reason, "state-database-unreadable-at-deadline");
+  assert.match(result.error, /无法从 AstronStudio 状态库确认原会话终态/);
 });
 
 test("Windows AstronStudio discovery prefers the registered install location", async () => {

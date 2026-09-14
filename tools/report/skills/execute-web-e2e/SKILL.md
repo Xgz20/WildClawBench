@@ -59,6 +59,7 @@ Worker 或 Driver 中断后，用完全相同的批次参数增加 `--resume`。
 如果 Prompt 发送前因 CDP 或 UI 自动化错误进入 `INFRA_FAILED`，且候选 workspace 经哈希确认完全未变化，可使用相同参数增加 `--resume --retry-pre-send-failure`。旧 attempt 会隔离归档；发送后失败或产物已有任何变化时拒绝自动重试。
 
 AstronStudio 的终态优先读取本地 SQLite 的 thread session、turn、open turn 和 pending interaction 投影，DOM 只补充可见运行态、交互和最终回复。workspace 稳定不能单独判定完成。
+活跃 WAL 写入期间若某次 SQLite 快照不一致，Driver 会把失败次数、最近错误和恢复时间记录到 `evidence.state_database_observation`，并在执行时限内基于 DOM 保持等待；后续快照恢复后继续按原 thread/turn/cwd 判定。到达 deadline 时状态库仍不可读则进入 `NEEDS_ATTENTION`，不会把 DOM 或 workspace 稳定误当作成功，也不会重发 Prompt。
 
 ## QwenWork
 

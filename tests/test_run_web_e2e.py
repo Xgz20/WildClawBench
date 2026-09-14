@@ -91,6 +91,13 @@ class MacOSDesktopDebugScriptTests(unittest.TestCase):
         self.assertIn("com.tencent.workbuddy.mac", script)
         self.assertIn("cn.qwenwork.desktop.mac", script)
 
+    def test_listener_identity_uses_resolved_app_path_and_allows_cold_start(self) -> None:
+        script = MACOS_DESKTOP_DEBUG_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('timeout_seconds=60', script)
+        self.assertIn('[[ "$command" == "$app_path/Contents/MacOS/"* ]]', script)
+        self.assertIn('[[ "$command" != "$app_path/Contents/MacOS/"* ]]', script)
+        self.assertNotIn("process_pattern", script)
+
 
 TASK_IDS = ["task-1", "task-2"]
 

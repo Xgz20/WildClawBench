@@ -6,7 +6,7 @@ codex_port=9230
 astronstudio_port=9240
 workbuddy_port=9229
 qwenwork_port=9250
-timeout_seconds=20
+timeout_seconds=60
 check_only=false
 codex_app_path=""
 astronstudio_app_path=""
@@ -189,7 +189,7 @@ listener_pid() {
 
 cdp_ready() {
   local port="$1"
-  local process_pattern="$2"
+  local app_path="$2"
   local version
   local targets
   local pid
@@ -202,9 +202,8 @@ cdp_ready() {
 
   pid="$(listener_pid "$port")"
   [[ -n "$pid" ]] || return 1
-  command="$(/bin/ps -p "$pid" -o comm= 2>/dev/null)" || return 1
-  command="$(/usr/bin/basename "$command")"
-  [[ "$command" =~ $process_pattern ]]
+  command="$(/bin/ps -p "$pid" -o command= 2>/dev/null)" || return 1
+  [[ "$command" == "$app_path/Contents/MacOS/"* ]]
 }
 
 app_is_running() {
@@ -310,7 +309,7 @@ assert_port_available() {
 
 assert_port_restartable() {
   local port="$1"
-  local process_pattern="$2"
+  local app_path="$2"
   local pid
   local command
 
@@ -319,9 +318,8 @@ assert_port_restartable() {
     return 0
   fi
 
-  command="$(/bin/ps -p "$pid" -o comm= 2>/dev/null || true)"
-  command="$(/usr/bin/basename "$command")"
-  if [[ ! "$command" =~ $process_pattern ]]; then
+  command="$(/bin/ps -p "$pid" -o command= 2>/dev/null || true)"
+  if [[ "$command" != "$app_path/Contents/MacOS/"* ]]; then
     echo "Port $port is already used by $command (PID $pid); refusing to stop an unrelated process" >&2
     return 1
   fi
@@ -342,11 +340,11 @@ start_app() {
 wait_for_cdp() {
   local name="$1"
   local port="$2"
-  local process_pattern="$3"
+  local app_path="$3"
   local deadline=$(( $(/bin/date +%s) + timeout_seconds ))
 
   while (( $(/bin/date +%s) < deadline )); do
-    if cdp_ready "$port" "$process_pattern"; then
+    if cdp_ready "$port" "$app_path"; then
       return 0
     fi
     /bin/sleep 0.5
@@ -382,25 +380,59 @@ workbuddy_ready=true
 qwenwork_ready=true
 
 if $include_codex; then
-  if ! cdp_ready "$codex_port" '^(ChatGPT|Codex)$'; then
+  codex_app_path="$(resolve_app_path \
+    "$codex_app_path" \
+    "/Applications/ChatGPT.app" \
+    "/Applications/Codex.app" \
+    "$HOME/Applications/ChatGPT.app" \
+    "$HOME/Applications/Codex.app")" || {
+      echo "Codex Desktop application bundle was not found" >&2
+      exit 1
+    }
+  if ! cdp_ready "$codex_port" "$codex_app_path"; then
     codex_ready=false
   fi
 fi
 
 if $include_astronstudio; then
-  if ! cdp_ready "$astronstudio_port" '^(AStudio|AstronStudio|Acode)$'; then
+  astronstudio_app_path="$(resolve_app_path \
+    "$astronstudio_app_path" \
+    "/Applications/AStudio.app" \
+    "/Applications/AstronStudio.app" \
+    "$HOME/Applications/AStudio.app" \
+    "$HOME/Applications/AstronStudio.app")" || {
+      echo "AstronStudio application bundle was not found" >&2
+      exit 1
+    }
+  if ! cdp_ready "$astronstudio_port" "$astronstudio_app_path"; then
     astronstudio_ready=false
   fi
 fi
 
 if $include_workbuddy; then
-  if ! cdp_ready "$workbuddy_port" '^(WorkBuddy|CodeBuddy)$'; then
+  workbuddy_app_path="$(resolve_app_path \
+    "$workbuddy_app_path" \
+    "/Applications/WorkBuddy.app" \
+    "$HOME/Applications/WorkBuddy.app")" || {
+      echo "WorkBuddy application bundle was not found" >&2
+      exit 1
+    }
+  if ! cdp_ready "$workbuddy_port" "$workbuddy_app_path"; then
     workbuddy_ready=false
   fi
 fi
 
 if $include_qwenwork; then
-  if ! cdp_ready "$qwenwork_port" '^(QwenWorkCN|QwenWork)$'; then
+  qwenwork_app_path="$(resolve_app_path \
+    "$qwenwork_app_path" \
+    "/Applications/QwenWorkCN.app" \
+    "/Applications/QwenWork.app" \
+    "$HOME/Applications/QwenWorkCN.app" \
+    "$HOME/Applications/QwenWork.app")" || {
+      echo "QwenWork application bundle was not found" >&2
+      exit 1
+    }
+  if ! cdp_ready "$qwenwork_port" "$qwenwork_app_path"; then
     qwenwork_ready=false
   fi
 fi
@@ -424,44 +456,19 @@ if $check_only; then
   fi
 else
   if $include_codex && ! $codex_ready; then
-    assert_port_restartable "$codex_port" '^(ChatGPT|Codex)$'
-    codex_app_path="$(resolve_app_path \
-      "$codex_app_path" \
-      "/Applications/ChatGPT.app" \
-      "/Applications/Codex.app" \
-      "$HOME/Applications/ChatGPT.app" \
-      "$HOME/Applications/Codex.app")" || {
-        echo "Codex Desktop application bundle was not found" >&2
-        exit 1
-      }
+    assert_port_restartable "$codex_port" "$codex_app_path"
     stop_app "Codex Desktop" "$codex_app_path" "com.openai.codex"
     start_app "Codex Desktop" "$codex_app_path" "$codex_port"
   fi
 
   if $include_astronstudio && ! $astronstudio_ready; then
-    assert_port_restartable "$astronstudio_port" '^(AStudio|AstronStudio|Acode)$'
-    astronstudio_app_path="$(resolve_app_path \
-      "$astronstudio_app_path" \
-      "/Applications/AStudio.app" \
-      "/Applications/AstronStudio.app" \
-      "$HOME/Applications/AStudio.app" \
-      "$HOME/Applications/AstronStudio.app")" || {
-        echo "AstronStudio application bundle was not found" >&2
-        exit 1
-      }
+    assert_port_restartable "$astronstudio_port" "$astronstudio_app_path"
     stop_app "AstronStudio" "$astronstudio_app_path" "cn.xfyun.acode"
     start_app "AstronStudio" "$astronstudio_app_path" "$astronstudio_port"
   fi
 
   if $include_workbuddy && ! $workbuddy_ready; then
-    assert_port_restartable "$workbuddy_port" '^(WorkBuddy|CodeBuddy)$'
-    workbuddy_app_path="$(resolve_app_path \
-      "$workbuddy_app_path" \
-      "/Applications/WorkBuddy.app" \
-      "$HOME/Applications/WorkBuddy.app")" || {
-        echo "WorkBuddy application bundle was not found" >&2
-        exit 1
-      }
+    assert_port_restartable "$workbuddy_port" "$workbuddy_app_path"
     if app_is_running "$workbuddy_app_path"; then
       assert_workbuddy_restart_safe
     fi
@@ -470,16 +477,7 @@ else
   fi
 
   if $include_qwenwork && ! $qwenwork_ready; then
-    assert_port_restartable "$qwenwork_port" '^(QwenWorkCN|QwenWork)$'
-    qwenwork_app_path="$(resolve_app_path \
-      "$qwenwork_app_path" \
-      "/Applications/QwenWorkCN.app" \
-      "/Applications/QwenWork.app" \
-      "$HOME/Applications/QwenWorkCN.app" \
-      "$HOME/Applications/QwenWork.app")" || {
-        echo "QwenWork application bundle was not found" >&2
-        exit 1
-      }
+    assert_port_restartable "$qwenwork_port" "$qwenwork_app_path"
     if app_is_running "$qwenwork_app_path"; then
       assert_qwenwork_restart_safe
     fi
@@ -490,16 +488,16 @@ fi
 
 echo "Waiting for $application CDP endpoints..."
 if $include_codex; then
-  wait_for_cdp "Codex Desktop" "$codex_port" '^(ChatGPT|Codex)$'
+  wait_for_cdp "Codex Desktop" "$codex_port" "$codex_app_path"
 fi
 if $include_astronstudio; then
-  wait_for_cdp "AstronStudio" "$astronstudio_port" '^(AStudio|AstronStudio|Acode)$'
+  wait_for_cdp "AstronStudio" "$astronstudio_port" "$astronstudio_app_path"
 fi
 if $include_workbuddy; then
-  wait_for_cdp "WorkBuddy" "$workbuddy_port" '^(WorkBuddy|CodeBuddy)$'
+  wait_for_cdp "WorkBuddy" "$workbuddy_port" "$workbuddy_app_path"
 fi
 if $include_qwenwork; then
-  wait_for_cdp "QwenWork" "$qwenwork_port" '^(QwenWorkCN|QwenWork)$'
+  wait_for_cdp "QwenWork" "$qwenwork_port" "$qwenwork_app_path"
 fi
 
 echo

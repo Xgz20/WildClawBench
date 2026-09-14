@@ -1003,8 +1003,9 @@ function updateObservedSession(state, session, domThreadId = null) {
   };
 }
 
-async function persistRunningObservation(config, state, identityInfo, session) {
-  if (new Set(["PROMPT_SENT", "NEEDS_ATTENTION"]).has(state.phase)) {
+async function persistRunningObservation(config, state, identityInfo, session, options = {}) {
+  const allowTransition = options.allowTransition ?? true;
+  if (allowTransition && new Set(["PROMPT_SENT", "NEEDS_ATTENTION"]).has(state.phase)) {
     transitionState(state, "RUNNING", { recovered_observation: state.phase === "NEEDS_ATTENTION" });
   }
   state.error = null;
@@ -1016,8 +1017,63 @@ async function persistRunningObservation(config, state, identityInfo, session) {
   return session;
 }
 
+export async function readSessionsWithDiagnostics(state, readSessions, overrides = {}) {
+  const now = overrides.now || (() => new Date().toISOString());
+  state.evidence ||= {};
+  const previous = state.evidence.state_database_observation || {};
+  try {
+    const sessions = await readSessions();
+    const observedAt = now();
+    state.evidence.state_database_observation = {
+      total_failures: Number(previous.total_failures || 0),
+      consecutive_failures: 0,
+      last_failed_at: previous.last_failed_at || null,
+      last_error: previous.last_error || null,
+      last_success_at: observedAt,
+      last_recovered_at: Number(previous.consecutive_failures || 0) > 0
+        ? observedAt
+        : previous.last_recovered_at || null,
+    };
+    return { sessions, error: null };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const observedAt = now();
+    state.evidence.state_database_observation = {
+      total_failures: Number(previous.total_failures || 0) + 1,
+      consecutive_failures: Number(previous.consecutive_failures || 0) + 1,
+      last_failed_at: observedAt,
+      last_error: message,
+      last_success_at: previous.last_success_at || null,
+      last_recovered_at: previous.last_recovered_at || null,
+    };
+    return { sessions: null, error: message };
+  }
+}
+
 async function observeAttemptFromDatabase(config, state, identityInfo, deadline) {
-  const session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
+  const database = await readSessionsWithDiagnostics(
+    state,
+    () => querySessions(config.sessionDb),
+  );
+  if (database.error) {
+    state.runtime.heartbeat_at = new Date().toISOString();
+    await saveState(config, state);
+    await updateExecutionRecord(config, identityInfo, {
+      clientVersion: state.client.version,
+      execution: { status: "pending", error: null },
+    });
+    if (Date.now() >= deadline) {
+      return persistNeedsAttention(
+        config,
+        state,
+        identityInfo,
+        "state-database-unreadable-at-deadline",
+        `${database.error}；执行时限已到，但无法从 AstronStudio 状态库确认原会话终态`,
+      );
+    }
+    return null;
+  }
+  const session = chooseAttemptSession(database.sessions, state, config.workspace);
   if (!session) return null;
   updateObservedSession(state, session);
   const classification = classifySessionStatus(session.status);
@@ -1162,42 +1218,71 @@ export async function cancelTimedOutAttempt(page, config, state, identityInfo, l
   });
 }
 
-export async function observeAttemptOnce(page, config, state, identityInfo) {
+export async function observeAttemptOnce(page, config, state, identityInfo, overrides = {}) {
+  const dependencies = {
+    inspectDom,
+    querySessions,
+    queryFinalResponse,
+    takeScreenshot,
+    finalize,
+    persistNeedsAttention,
+    persistRunningObservation,
+    cancelTimedOutAttempt,
+    nowMilliseconds: () => Date.now(),
+    ...overrides,
+  };
   const runStartedAt = Date.parse(state.timing.sent_at || state.timing.started_at || new Date().toISOString());
   const deadline = runStartedAt + config.runTimeoutSeconds * 1000;
   state.runtime.heartbeat_at = new Date().toISOString();
-  const dom = await inspectDom(page);
-  const session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
+  const dom = await dependencies.inspectDom(page);
+  const database = await readSessionsWithDiagnostics(
+    state,
+    () => dependencies.querySessions(config.sessionDb),
+  );
+  if (database.error && dependencies.nowMilliseconds() >= deadline) {
+    return dependencies.persistNeedsAttention(
+      config,
+      state,
+      identityInfo,
+      "state-database-unreadable-at-deadline",
+      `${database.error}；执行时限已到，但无法从 AstronStudio 状态库确认原会话终态`,
+      page,
+      "09-state-database-unreadable.png",
+    );
+  }
+  const session = database.sessions
+    ? chooseAttemptSession(database.sessions, state, config.workspace)
+    : null;
   if (session) {
     updateObservedSession(state, session, threadIdFromUrl(page.url()));
     const classification = classifySessionStatus(session.status);
     if (classification.kind === "success") {
-      const finalText = dom.finalText || await queryFinalResponse(
+      const finalText = dom.finalText || await dependencies.queryFinalResponse(
         config.sessionDb,
         session.conversationId,
         session.turnId || state.session.turn_id || null,
       ).catch(() => "");
-      await takeScreenshot(page, config, state, "10-succeeded.png");
-      return finalize(config, state, identityInfo, "SUCCEEDED", {
+      await dependencies.takeScreenshot(page, config, state, "10-succeeded.png");
+      return dependencies.finalize(config, state, identityInfo, "SUCCEEDED", {
         terminalSource: "astudio-state-sqlite",
         finalText,
       });
     }
     if (classification.kind === "failure") {
-      const finalText = dom.finalText || await queryFinalResponse(
+      const finalText = dom.finalText || await dependencies.queryFinalResponse(
         config.sessionDb,
         session.conversationId,
         session.turnId || state.session.turn_id || null,
       ).catch(() => "");
-      await takeScreenshot(page, config, state, "10-infra-failed.png");
-      return finalize(config, state, identityInfo, "INFRA_FAILED", {
+      await dependencies.takeScreenshot(page, config, state, "10-infra-failed.png");
+      return dependencies.finalize(config, state, identityInfo, "INFRA_FAILED", {
         terminalSource: "astudio-state-sqlite",
         error: `AstronStudio turn 终态：${session.status}`,
         finalText,
       });
     }
     if (session.status === "needs_attention") {
-      return persistNeedsAttention(
+      return dependencies.persistNeedsAttention(
         config,
         state,
         identityInfo,
@@ -1208,7 +1293,7 @@ export async function observeAttemptOnce(page, config, state, identityInfo) {
       );
     }
     if (classification.kind === "unknown" && session.status !== "ready") {
-      return persistNeedsAttention(
+      return dependencies.persistNeedsAttention(
         config,
         state,
         identityInfo,
@@ -1220,7 +1305,7 @@ export async function observeAttemptOnce(page, config, state, identityInfo) {
     }
   }
   if (dom.attention.length > 0) {
-    return persistNeedsAttention(
+    return dependencies.persistNeedsAttention(
       config,
       state,
       identityInfo,
@@ -1233,9 +1318,11 @@ export async function observeAttemptOnce(page, config, state, identityInfo) {
   if (new Set(["PROMPT_SENT", "NEEDS_ATTENTION"]).has(state.phase) && (session || dom.running)) {
     transitionState(state, "RUNNING", { recovered_observation: state.phase === "NEEDS_ATTENTION" });
   }
-  await persistRunningObservation(config, state, identityInfo, session);
-  if (Date.now() >= deadline) {
-    return cancelTimedOutAttempt(page, config, state, identityInfo, dom, deadline);
+  await dependencies.persistRunningObservation(config, state, identityInfo, session, {
+    allowTransition: Boolean(session || dom.running),
+  });
+  if (dependencies.nowMilliseconds() >= deadline) {
+    return dependencies.cancelTimedOutAttempt(page, config, state, identityInfo, dom, deadline);
   }
   return state;
 }
@@ -1309,9 +1396,8 @@ async function resumeAutomation(config, state, identityInfo) {
       );
     }
     await saveState(config, state);
-    return config.observeOnce
-      ? observeAttemptOnce(page, config, state, identityInfo)
-      : waitForTerminal(page, config, state, identityInfo);
+    if (config.observeOnce) return await observeAttemptOnce(page, config, state, identityInfo);
+    return await waitForTerminal(page, config, state, identityInfo);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return persistNeedsAttention(
@@ -1371,7 +1457,7 @@ async function runAutomation(config, identityInfo) {
   if (existingState) {
     if (!config.resume) throw new Error(`已有未完成状态 ${existingState.phase}；必须使用 --resume，避免重复发送 Prompt`);
     installDriverSignalHandlers(config, existingState, identityInfo);
-    return resumeAutomation(config, existingState, identityInfo);
+    return await resumeAutomation(config, existingState, identityInfo);
   }
   if (config.resume && !retryArchive) throw new Error("--resume 要求已有 automation_state.json");
   const initialSnapshot = await snapshotTree(config.candidateWorkspace);
@@ -1488,7 +1574,7 @@ async function runAutomation(config, identityInfo) {
       });
       return state;
     }
-    return waitForTerminal(page, config, state, identityInfo);
+    return await waitForTerminal(page, config, state, identityInfo);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (promptMayHaveBeenSent || new Set(["READY_TO_SEND", "PROMPT_SENT", "RUNNING"]).has(state.phase)) {
