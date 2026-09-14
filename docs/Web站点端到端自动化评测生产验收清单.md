@@ -4,15 +4,15 @@
 
 ## 1. 当前结论
 
-当前发布候选处于 `IN_PROGRESS`：macOS 三 Harness 前置脚本和单个 L1 发布前冒烟均已通过，期间发现并修复 WorkBuddy 权限确认框结构变化与 AstronStudio 活跃 SQLite 快照瞬时失败问题。修复尚待 P1 提交，正式包也尚未按新 revision 重建；三端完整评分、回传、报告和恢复矩阵仍不能标记为当前候选 `PASSED`。
+当前发布候选处于 `IN_PROGRESS`：macOS 三 Harness 前置脚本和单个 L1 发布前冒烟均已通过，期间发现并修复 WorkBuddy 权限确认框结构变化与 AstronStudio 活跃 SQLite 快照瞬时失败问题；修复已固化到 `7bec4509b3b26759764116cdbcbce53ac07d1601`，自建 40 题和开源 120 题正式包也已按该 revision 重建并通过隔离与 SHA 审计。三端完整评分、回传、报告和恢复矩阵仍未完成，因此当前候选还不能整体标记为 `PASSED`。
 
 ### 当前实施进度
 
 | 阶段 | 状态 | 完成条件 | 证据 |
 | --- | --- | --- | --- |
 | P0 修复跨平台发布门禁 | `PASSED` | macOS 三 Harness 前置准备、Windows 精确进程身份、QwenWork 重启入口、测试入口和路径兼容测试全部通过 | AstronStudio 39/39、WorkBuddy 87/87、QwenWork 40/40、Codex Desktop 48/48、截图接收器 8/8、Web E2E Python 104/104；五个 Skill 校验通过；macOS 三 Harness L1 冒烟 3/3 |
-| P1 固化发布 revision | `NOT_STARTED` | 只提交相关改动，记录完整 commit SHA，工作树中无遗漏的相关修改 | 本轮修复待提交；基线提交 `609123b` 已被后续改动取代 |
-| P2 生成正式包 | `NOT_STARTED` | 自建 40 题、开源 120 题各生成一个新批次，两个批次均包含三 Harness 并绑定实际打包 revision；五个 Skill ZIP 版本与 SHA 完整 | `report-workspace/web-e2e-automation-packages/` 下新批次 manifest |
+| P1 固化发布 revision | `PASSED` | 只提交相关改动，记录完整 commit SHA，工作树中无遗漏的相关修改 | `7bec4509b3b26759764116cdbcbce53ac07d1601`；提交后只剩与 Web E2E 无关的 AstronCode 用量文件未跟踪 |
+| P2 生成正式包 | `PASSED` | 自建 40 题、开源 120 题各生成一个新批次，两个批次均包含三 Harness 并绑定实际打包 revision；五个 Skill ZIP 版本与 SHA 完整 | `web-e2e-20260914-183141-custom40`、`web-e2e-20260914-183141-opensource120`；22/22 ZIP SHA 通过，execution/scoring 隔离通过 |
 | P3 macOS 受影响项回归 | `IN_PROGRESS` | 依照第 4 节完成并登记证据 | 三 Harness 的 V02/V03 发布前冒烟已完成；评分、回传、报告和恢复项仍待正式包验证 |
 | P4 Windows 真机回归 | `NOT_STARTED` | 每个目标 Harness 依照第 4 节完成并登记证据 | Windows worker、return receipt、报告和恢复状态 |
 | P5 发布结论 | `NOT_STARTED` | 所有声明为生产可用的 Harness×OS 组合均为 `PASSED`，未通过组合在指导手册中明确降级 | 本清单、指导手册和正式包 manifest 一致 |
@@ -45,8 +45,8 @@
 
 | 项目 | 值 |
 | --- | --- |
-| Web E2E 实现 revision | `待 P1 提交后填写；当前基线 d23f004+本轮未提交修复` |
-| 正式包 source revision | `待 P2 在 macOS 当前干净检出上生成后，以当时 git rev-parse HEAD 完整值填写` |
+| Web E2E 实现 revision | `7bec4509b3b26759764116cdbcbce53ac07d1601` |
+| 正式包 source revision | `7bec4509b3b26759764116cdbcbce53ac07d1601` |
 | `execute-web-e2e` | `1.11.12` |
 | WorkBuddy Driver | `1.8.19` |
 | AstronStudio Driver | `1.10.14` |
@@ -55,8 +55,23 @@
 | `score-web-e2e` | `4.5.2` |
 | `run-web-e2e` | `1.3.5` |
 | `report-web-e2e` | `1.0.2` |
-| Skill ZIP/content SHA | `待 P2 正式打包后填写` |
+| Skill ZIP/content SHA | 见下表；两个正式批次逐项一致 |
 | Node.js / Playwright | `真机验收时填写；Driver 锁定 playwright-core 1.55.0` |
+
+| Skill | 版本 | content SHA-256 | ZIP SHA-256 |
+| --- | --- | --- | --- |
+| `score-web-e2e` | `4.5.2` | `6fdc8e9a9a8d014b4dab2a4c053d586a08e1f962f03a5071817e251aa2defe0a` | `9121323a68457c4ba28a741b479126d5d6b33d57421feaa4a87532536acf34e1` |
+| `report-web-e2e` | `1.0.2` | `a2236d07217989d73befc711e6019932b5e8910bee1938cb9011bf8d7c6d4875` | `ebb7796fba2caa9b2361b540a167001cca4d645a1ebcb02e084392d346092b6b` |
+| `orchestrate-web-e2e` | `0.2.4` | `bc2f9a6b362966ebeed3ea0dd8ede87af39b8bc04772ab0e617b1113593bcc45` | `5ffd3843d1b51def30106084c74f27c1c54b00988b0cf03d0cd5b383983472e9` |
+| `execute-web-e2e` | `1.11.12` | `74a2387c5f2ecd0b1974f989ce4489ad549c083c431fe442c40fdbab6c83d27b` | `1d7e1748ebac6348021d08baef2bf9eab5431059fbb34acbbff18ad57b03416d` |
+| `run-web-e2e` | `1.3.5` | `64845b60286fbd436c67632fd597a47afe56df595627ce089770cba44ffff4f8` | `aa2f94587e9e6813e4885f92df15be82fe64d280d2d0f3c5cff8af5f40c23f9d` |
+
+正式包位于 `report-workspace/web-e2e-automation-packages/`：
+
+- `web-e2e-20260914-183141-custom40`：40 个自建用例，`web-e2e-detailed-v1`；
+- `web-e2e-20260914-183141-opensource120`：120 个开源用例，`artifactsbench-web-v1`。
+
+两个批次均包含 `astronstudio`、`workbuddy`、`qwenwork`，各有 11 个 ZIP。2026-09-14 的只读审计逐项重算了 22 个 ZIP 的 SHA-256，结果均与各自 `batch_manifest.json` 一致；6 个 execution ZIP 均不含 Ground Truth、Rubric、checker、`eval/`、`gt/`、`private-scoring/` 或 `task_contract.json`，6 个 scoring ZIP 均不含 `workspace/`、`PROMPT.md`、`execution_record.json` 或 `task_manifest.json`。各 execution/scoring ZIP 的独立 SHA 以对应批次 `batch_manifest.json` 为准。
 
 正式包可以在 macOS 或 Windows 的干净检出中生成；本轮先在 macOS 当前仓库生成并审计，Windows 也可按同一代码自行重建用于同机验收。准备脚本只读取仓库中的题目、Workspace 和 Skill 源码，写出的路径统一使用可移植格式。必须满足以下门禁：
 
@@ -165,7 +180,7 @@
 请使用 $prepare-web-e2e-workspaces 在当前 Windows 仓库中为 Web E2E 当前发布候选生成正式评测包。如果 Windows 无法解析仓库 .agents/skills 下的符号链接，则直接读取并遵循 tools/report/skills/prepare-web-e2e-workspaces/SKILL.md，不要复制或改写 Skill。
 
 先完成发布门禁：
-1. 使用 git rev-parse --show-toplevel、git rev-parse HEAD 和 git status --short 确认仓库、完整 revision 和工作树状态；执行 git merge-base --is-ancestor 609123b5448facf51c09b9a6022e97a5df32e116 HEAD，退出码必须为 0。Web E2E Skill、准备脚本、tasks/07_Website_Generation 和 tasks/extension/07_Website_Generation 存在未提交修改时停止，不得带脏源码打包。
+1. 使用 git rev-parse --show-toplevel、git rev-parse HEAD 和 git status --short 确认仓库、完整 revision 和工作树状态；执行 git merge-base --is-ancestor 7bec4509b3b26759764116cdbcbce53ac07d1601 HEAD，退出码必须为 0。Web E2E Skill、准备脚本、tasks/07_Website_Generation 和 tasks/extension/07_Website_Generation 存在未提交修改时停止，不得带脏源码打包。
 2. 检查可用的 Python 3 和 PyYAML；缺失依赖由控制任务安装到仓库自己的 Python 环境，不得安装到任何题目 workspace。
 3. 从 tasks/extension/07_Website_Generation 按文件名排序收集全部 Markdown 用例 ID，必须恰好 40 个；从 tasks/07_Website_Generation 按文件名排序收集全部 Markdown 用例 ID，必须恰好 120 个。数量不符立即停止，不猜测、不跳题。
 
@@ -191,8 +206,8 @@ P2 通过后，在 Windows Codex 的仓库任务中输入下面 Prompt。它要�
 请以仓库 docs/Web站点端到端自动化评测生产验收清单.md 为唯一任务清单，继续当前发布候选的 Windows 真机验收。
 
 先执行只读检查：
-1. 用 git rev-parse --show-toplevel 和 git rev-parse HEAD 确认仓库及 revision，并确认 Web E2E 源码和题目目录没有未提交修改；P2 写入本清单的预期证据记录可以保留在工作树中，不视为源码污染。
-2. 读取五个 Web E2E Skill 的 skill-metadata.json；在 report-workspace/web-e2e-automation-packages 中查找 source_revision 精确等于当前 HEAD、同时包含 AstronStudio、WorkBuddy、QwenWork 的最新正式自建/开源批次。不存在时停止并报告，不使用旧包或临时重打包。
+1. 用 git rev-parse --show-toplevel 和 git rev-parse HEAD 确认仓库及 revision，读取本清单登记的“Web E2E 实现 revision”，并确认该 revision 是当前 HEAD 的祖先；同时确认该 revision 之后 Web E2E Skill、准备脚本和题目目录没有代码变化或未提交修改。仅本清单等验收文档位于后续提交不改变发布身份；P2 写入本清单的预期证据记录可以保留在工作树中，不视为源码污染。
+2. 读取五个 Web E2E Skill 的 skill-metadata.json；在 report-workspace/web-e2e-automation-packages 中查找 source_revision 精确等于 P2 登记的“正式包 source revision”、同时包含 AstronStudio、WorkBuddy、QwenWork 的正式自建/开源批次，并逐项复核 Skill content SHA 与本清单一致。不存在时停止并报告，不使用其他 revision 的旧包或临时重打包。
 3. 只读发现 AstronStudio 和 Codex Desktop 的真实可执行程序完整路径，使用 Test-Path 验证；检查 9230/9240 端口监听者和完整进程路径。不要按进程名批量结束程序。
 4. 对照清单输出当前应执行的下一个 V 项、已有状态、批次和证据目录。若前置身份不一致，标记 BLOCKED 并停止。
 
