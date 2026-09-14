@@ -7,7 +7,7 @@
 | 术语 | 定义 |
 | --- | --- |
 | 控制 Harness | 用来接收用户 Prompt、调用 Web E2E Skill 并统筹执行、评分、回传和报告的 Harness。推荐使用 Codex Desktop。 |
-| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。macOS 上 WorkBuddy 已完成生产流程闭环；AstronStudio 已完成串行、默认三路并发、动态补位和执行到评分闭环验证；QwenWork 已完成串行、默认三路并发执行和单题执行到评分闭环验证。Windows 上 AstronStudio 和 WorkBuddy 均已完成全流程真机生产验证。 |
+| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。各客户端的平台生产验证范围见下表。 |
 | 评分 Harness | 为被评测 Harness 的候选网站打分的 Agent。当前使用 Codex Desktop，并依赖其桌面内置 Browser 操作网站和保存证据。 |
 | 管理员 | 选择用例和被评测 Harness、准备评测包、收集各机器回传包并生成报告的人员。 |
 | 执行人员 | 接收管理员分发的题目包和评分包，在本机完成一个 `Harness（模型）` 单元的执行、评分和回传。 |
@@ -15,6 +15,18 @@
 | 题目包 | 文件名以 `__execution.zip` 结尾，包含公开 Prompt 和被评测 Harness 可见的初始工作空间，不包含标准答案或评分标准。 |
 | 评分包 | 文件名以 `__scoring.zip` 结尾，只包含评分契约和私有评分材料，必须等做题完成后再合入评分工作空间。 |
 | 回传包 | 完成评分后生成的完整 Harness ZIP，以及同级的 SHA-256 回执。管理员可离线接收并导入。 |
+
+## 平台生产验证状态
+
+“支持该平台”只表示存在可用 Driver 和平台入口；只有执行、评分、submission、离线回传/报告、单 Prompt 组合器与恢复门禁全部完成真机验收后，才标记为“生产已验证”。当前状态如下：
+
+| 被评测 Harness | macOS | Windows |
+| --- | --- | --- |
+| AstronStudio | 已完成串行、默认三路并发、动态补位和执行到评分闭环验证；完整回传/报告、单 Prompt 组合器及中断、超时、客户端重启等恢复验收待后续完成。 | 已完成全流程真机生产验证。当前基线为 AstronStudio 3.2.1.242、Codex Desktop 152.0.7977.83。 |
+| WorkBuddy | 已完成生产流程闭环。 | 已完成全流程真机生产验证。当前基线为 WorkBuddy 5.5.3。 |
+| QwenWork | 已完成串行、默认三路并发执行和单题执行到评分闭环验证；多题评分、submission、完整回传/报告、单 Prompt 组合器及恢复验收待后续完成。 | 已完成全流程真机生产验证。当前基线为 QwenWorkCN 1.0.5.0。 |
+
+以上结论只适用于已验收的客户端和 Driver 基线。首次换机、升级桌面客户端或 Skill、切换模型，或者修改 Driver 核心实现后，仍须先执行只读 probe 和少量 L1 smoke；必要时按单题、串行、并发、完整闭环和恢复验收的顺序重新验证。
 
 ### Web E2E Skill
 
@@ -50,9 +62,9 @@ WorkBuddy、AstronStudio 和 QwenWork 均使用默认三路后台执行。首次
 
 #### 2. 自动准备桌面客户端调试模式
 
-`run-web-e2e` 在进入执行或评分阶段前会自动检查 Codex Desktop 和 AstronStudio。有效 CDP 端点会原样复用；缺少调试模式时只关闭并重启需要的客户端，无需人工退出、重新打开。Windows 会动态解析 Codex MSIX 的真实入口和 AstronStudio 当前用户安装路径，macOS 会解析标准系统或用户 Applications 目录。
+`run-web-e2e` 在进入执行或评分阶段前会自动检查 Codex Desktop 和本轮选择的 AstronStudio、WorkBuddy 或 QwenWork。有效 CDP 端点会原样复用；缺少调试模式时只关闭并重启需要的客户端，无需人工退出、重新打开。Windows 会动态解析 Codex MSIX 和所选 Harness 的当前用户安装路径，macOS 会解析标准系统或用户 Applications 目录。
 
-默认 Codex Desktop 使用 `127.0.0.1:9230`，AstronStudio 使用 `127.0.0.1:9240`，且都只监听本机。若 Codex Desktop 本身承载当前控制任务，自动重启可能中断当前回合；Skill 会先持久化状态，客户端恢复后必须继续原任务，不要重新初始化。
+默认 Codex Desktop 使用 `127.0.0.1:9230`，AstronStudio 使用 `127.0.0.1:9240`，WorkBuddy 使用 `127.0.0.1:9229`，QwenWork 使用 `127.0.0.1:9250`，且都只监听本机。若 Codex Desktop 本身承载当前控制任务，自动重启可能中断当前回合；Skill 会先持久化状态，客户端恢复后必须继续原任务，不要重新初始化。
 
 #### 3. 安装 Skill
 
@@ -106,7 +118,7 @@ AstronStudio 当前验证用法：
 保持并回读 AstronStudio 当前模型，不修改推理强度；权限使用 full-access；使用默认执行并发 3。
 ```
 
-AstronStudio 在 macOS 已验证项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、后台并发、动态补位、产物和执行回执。Windows 真机基线（AstronStudio 3.2.1.242、Codex Desktop 152.0.7977.83）已完成只读探针、单题、三题串行、默认三路并发与动态补位、项目精确注册、并发评分、submission、离线回传与报告、单 Prompt 闭环，以及控制任务接管、客户端重启、超时、发送前重试、评分 attempt 隔离和 submission 中断恢复，可标记为生产已验证。如果更换桌面客户端大版本或 Driver 核心实现，应按只读探针、单题、三题串行、五题并发和全闭环的顺序回归。多个 AstronStudio 任务并发运行时如果客户端崩溃，当前版本仍会进入 `NEEDS_ATTENTION` 并要求人工处理，不会自动重启后冒险接管多个会话。
+AstronStudio 在 macOS 已验证项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、后台并发、动态补位、产物、执行回执和执行到评分闭环；完整回传/报告、单 Prompt 组合器及中断、超时、客户端重启等恢复验收仍待后续完成。Windows 真机基线（AstronStudio 3.2.1.242、Codex Desktop 152.0.7977.83）已完成只读探针、单题、三题串行、默认三路并发与动态补位、项目精确注册、并发评分、submission、离线回传与报告、单 Prompt 闭环，以及控制任务接管、客户端重启、超时、发送前重试、评分 attempt 隔离和 submission 中断恢复，可标记为生产已验证。如果更换桌面客户端大版本或 Driver 核心实现，应按只读探针、单题、三题串行、五题并发和全闭环的顺序回归。多个 AstronStudio 任务并发运行时如果客户端崩溃，当前版本仍会进入 `NEEDS_ATTENTION` 并要求人工处理，不会自动重启后冒险接管多个会话。
 
 QwenWork 当前验证用法：
 
@@ -119,12 +131,12 @@ QwenWork 当前验证用法：
 保持并回读 QwenWork 当前模型，不修改任务模式或其他推理设置；权限使用 full-access；使用默认执行并发 3。
 ```
 
-QwenWork 已验证个人项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、默认三路后台并发、产物和执行回执。首次在新机器或新客户端版本运行时，仍应先用 3 个 L1 用例验证会话和工作空间隔离。
+QwenWork 在 macOS 已验证个人项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、串行和默认三路后台并发、产物、执行回执及单题执行到评分闭环；多题评分、submission、完整回传/报告、单 Prompt 组合器和恢复验收仍待后续完成。Windows QwenWorkCN 1.0.5.0 已完成单题、三题串行、默认三槽五题动态补位、Codex Desktop 评分与 submission、离线回传/报告、单 Prompt 全流程、Worker 硬中断恢复、客户端重启和安全超时真机验收，属于当前生产验证基线。首次在新机器或新客户端版本运行时，仍应先用 1 至 3 个 L1 用例验证会话和工作空间隔离。
 
 例如临时使用串行：
 
 ```text
-WorkBuddy 执行并发和 Codex Desktop 评分并发都设为 1。
+QwenWork 执行并发和 Codex Desktop 评分并发都设为 1。
 ```
 
 #### 5. 获取回传包
@@ -370,9 +382,8 @@ Codex Desktop CDP：http://127.0.0.1:9230
 - Prompt 未指定被评测模型：保持并回读客户端当前模型。
 - Prompt 显式指定模型：使用客户端 UI 中的精确显示名，选择后回读一致才开始执行。
 - 推理强度：始终由用户提前在被评测 Harness 中设置，执行自动化不修改。
-- WorkBuddy、AstronStudio 权限：生产评测使用 `full-access`，发送题目 Prompt 前会回读确认。
-- WorkBuddy 执行并发：新批次默认 3，最大 8；UI 操作始终只有一路。
-- AstronStudio 执行并发：新批次默认 3，最大 8；UI 操作始终只有一路。
+- WorkBuddy、AstronStudio、QwenWork 权限：生产评测使用 `full-access`，发送题目 Prompt 前会回读确认。
+- WorkBuddy、AstronStudio、QwenWork 执行并发：新批次默认 3，最大 8；UI 操作始终只有一路。
 - Codex Desktop 评分并发：新批次默认 3，最大 8；每题使用独立项目、任务、Browser 和端口。
 - 同一批次执行期间不要人工切换模型、权限或关闭正在运行的客户端。
 
@@ -394,7 +405,7 @@ Codex Desktop CDP：http://127.0.0.1:9230
 
 - [ ] 已安装本场景所需 Skill。
 - [ ] 被评测 Harness 的模型、推理强度和权限已经设置。
-- [ ] 允许 `run-web-e2e` 自动检查并按需重启 Codex Desktop/AstronStudio 调试模式。
+- [ ] 允许 `run-web-e2e` 自动检查并按需重启 Codex Desktop 和本轮选择的 AstronStudio、WorkBuddy 或 QwenWork 调试模式。
 - [ ] 题目包和评分包来自同一批次、同一 Harness。
 - [ ] 当前没有需要保留的运行中任务。
 
