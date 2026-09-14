@@ -1,0 +1,4 @@
+interface:
+  display_name: "WildClawBench Case Generator"
+  short_description: "将真实 Query 转换为通用场景 v2 评测用例"
+  default_prompt: "使用 $wildclawbench-case-generator 将这个真实 Query 转换为可审核的 WildClawBench v2 通用场景用例。"

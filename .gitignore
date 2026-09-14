@@ -58,6 +58,7 @@ output_qwen.rar
 .claude/skills/*
 !.claude/skills/validate-eval-dataset
 !.claude/skills/audit-eval-dataset-quality
+!.claude/skills/wildclawbench-case-generator
 .codex
 .agents/*
 !.agents/skills/
@@ -71,6 +72,7 @@ output_qwen.rar
 !.agents/skills/execute-web-e2e
 !.agents/skills/orchestrate-web-e2e
 !.agents/skills/run-web-e2e
+!.agents/skills/wildclawbench-case-generator
 
 # 评测集校验 Skill 及报告工具的运行产物
 report-workspace/

@@ -87,9 +87,9 @@ Prompt 明确授权的 `/tmp_workspace/project/` 文件，但额外报告仍放�
    仅Prompt题仍提交 `exec/.gitkeep`。
 3. 在 `tasks/extension/task_sources.yaml` 记录设计来源；仅实时网络题填写运行时信源。
 4. 在 `tools/report/data/checkpoint_capability_map7.yaml` 为每个评分key映射1个主能力和至多1个次能力。
-5. 生成过程中运行
-   `python3 tools/validate_extension_tasks.py --allow-incomplete`；全部登记任务落盘后
-   去掉 `--allow-incomplete`，执行严格完整性校验。
+5. 使用 `.agents/skills/wildclawbench-case-generator/` 转换通用场景 Query 时，
+   组装脚本会校验来源登记和能力映射，并在落盘后自动调用
+   `validate-eval-dataset`；手工新增时也应对新任务显式运行该静态校验 Skill。
 6. 单跑验证：`--task tasks/extension/<大类>/<file>.md`；
    或并入批量：`--category <大类>` / `--category all`。
 

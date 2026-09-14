@@ -7,7 +7,7 @@
 # ============================================================================
 
 # 字段与顺序对齐 WildClawBench 官方任务；category 实际以父目录名为准（frontmatter 仅说明）
-id: 04_Search_Retrieval_task_101_example    # 任务标识；扩展集格式 <Category>_task_<N≥101>_<slug>
+id: 04_Search_Retrieval_task_001_example    # 任务标识；扩展集格式 <Category>_task_<NNN>_<slug>，分类内从001起且不复用保留号
 name: 示例混合任务                            # 任务名（报告展示）
 category: 04_Search_Retrieval                # 所属大类（须与父目录名一致）
 timeout_seconds: 180                         # 执行超时（秒）
