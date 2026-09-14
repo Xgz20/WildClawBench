@@ -64,6 +64,7 @@ output_qwen.rar
 .agents/skills/*
 !.agents/skills/validate-eval-dataset
 !.agents/skills/audit-eval-dataset-quality
+!.agents/skills/harness-model-diagnosis
 !.agents/skills/prepare-web-e2e-workspaces
 !.agents/skills/score-web-e2e
 !.agents/skills/report-web-e2e
