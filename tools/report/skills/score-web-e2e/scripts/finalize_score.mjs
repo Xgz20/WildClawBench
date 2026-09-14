@@ -53,9 +53,6 @@ export function resolveExecutionRecordPath(taskContractPath, suppliedPath = null
   const expectedPath = path.join(taskRoot, "execution_record.json");
   const candidatePath = suppliedPath ? path.resolve(suppliedPath) : expectedPath;
 
-  if (suppliedPath && !samePath(candidatePath, expectedPath)) {
-    throw new Error(`--execution-record 只能指向当前评分题根的 execution_record.json: ${expectedPath}`);
-  }
   if (!fs.existsSync(candidatePath)) {
     if (suppliedPath) throw new Error(`execution_record.json 不存在: ${candidatePath}`);
     return null;
@@ -67,7 +64,7 @@ export function resolveExecutionRecordPath(taskContractPath, suppliedPath = null
   }
   const resolvedCandidate = fs.realpathSync(candidatePath);
   if (!samePath(resolvedCandidate, expectedPath)) {
-    throw new Error(`execution_record.json 真实路径越界: ${resolvedCandidate}`);
+    throw new Error(`--execution-record 只能指向当前评分题根的 execution_record.json: ${expectedPath}`);
   }
   return resolvedCandidate;
 }

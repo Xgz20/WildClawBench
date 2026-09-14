@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, win32 } from "node:path";
+import { join, posix, win32 } from "node:path";
 import test from "node:test";
 
 import {
@@ -195,10 +195,11 @@ test("Windows app discovery accepts the default per-user installation", async ()
 
   const resolved = await resolveWorkBuddyAppPath("", {
     platform: "win32",
+    pathApi: posix,
     environment: { LOCALAPPDATA: localAppData },
     runCommand: async () => ({ code: 0, stdout: "null", stderr: "" }),
   });
-  assert.equal(resolved, executable);
+  assert.equal(resolved, await realpath(executable));
 });
 
 test("Windows process identity selects only the exact main executable", async () => {

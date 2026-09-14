@@ -18,15 +18,15 @@
 
 ## 平台生产验证状态
 
-“支持该平台”只表示存在可用 Driver 和平台入口；只有执行、评分、submission、离线回传/报告、单 Prompt 组合器与恢复门禁全部完成真机验收后，才标记为“生产已验证”。当前状态如下：
+“支持该平台”只表示存在可用 Driver 和平台入口；只有执行、评分、submission、离线回传/报告、单 Prompt 组合器与恢复门禁全部在同一发布身份下完成真机验收后，才标记为“生产已验证”。下表概述已有证据，当前发布候选的权威状态、版本和证据入口以 [Web 站点端到端自动化评测生产验收清单](Web站点端到端自动化评测生产验收清单.md) 为准。
 
 | 被评测 Harness | macOS | Windows |
 | --- | --- | --- |
-| AstronStudio | 已完成串行、默认三路并发、动态补位和执行到评分闭环验证；完整回传/报告、单 Prompt 组合器及中断、超时、客户端重启等恢复验收待后续完成。 | 已完成全流程真机生产验证。当前基线为 AstronStudio 3.2.1.242、Codex Desktop 152.0.7977.83。 |
-| WorkBuddy | 已完成生产流程闭环。 | 已完成全流程真机生产验证。当前基线为 WorkBuddy 5.5.3。 |
-| QwenWork | 已完成串行、默认三路并发执行和单题执行到评分闭环验证；多题评分、submission、完整回传/报告、单 Prompt 组合器及恢复验收待后续完成。 | 已完成全流程真机生产验证。当前基线为 QwenWorkCN 1.0.5.0。 |
+| AstronStudio | 历史批次已覆盖串行、默认三路并发、动态补位及单题 execution→score→submission→return；报告、单 Prompt 和恢复边界尚未形成完整同版本证据。 | 历史批次已覆盖全流程，客户端基线为 AstronStudio 3.2.1.242、Codex Desktop 152.0.7977.83；当前发布候选因 Skill/前置脚本更新必须重新验收。 |
+| WorkBuddy | 历史批次已覆盖五题执行、评分、回传和报告；当前发布候选的前置脚本已更新，须按清单至少重跑 probe、L1 smoke 和受影响恢复项。 | 历史批次已覆盖全流程，客户端基线为 WorkBuddy 5.5.3；当前发布候选因 Skill/前置脚本更新必须重新验收。 |
+| QwenWork | 历史批次已覆盖串行、默认三路并发、三题评分、submission 和 return；报告、单 Prompt 和恢复边界尚未形成完整同版本证据。 | 历史批次已覆盖全流程，客户端基线为 QwenWorkCN 1.0.5.0；当前发布候选因 Skill/前置脚本更新必须重新验收。 |
 
-以上结论只适用于已验收的客户端和 Driver 基线。首次换机、升级桌面客户端或 Skill、切换模型，或者修改 Driver 核心实现后，仍须先执行只读 probe 和少量 L1 smoke；必要时按单题、串行、并发、完整闭环和恢复验收的顺序重新验证。
+历史结论不能自动外推到新 revision。首次换机、升级桌面客户端或 Skill、切换模型，或者修改 Driver/桌面前置脚本核心实现后，须在生产验收清单中把受影响项标为 `STALE`，再按只读 probe、L1 smoke、串行、并发、完整闭环和恢复验收的顺序重验。
 
 ### Web E2E Skill
 
@@ -62,7 +62,7 @@ WorkBuddy、AstronStudio 和 QwenWork 均使用默认三路后台执行。首次
 
 #### 2. 自动准备桌面客户端调试模式
 
-`run-web-e2e` 在进入执行或评分阶段前会自动检查 Codex Desktop 和本轮选择的 AstronStudio、WorkBuddy 或 QwenWork。有效 CDP 端点会原样复用；缺少调试模式时只关闭并重启需要的客户端，无需人工退出、重新打开。Windows 会动态解析 Codex MSIX 和所选 Harness 的当前用户安装路径，macOS 会解析标准系统或用户 Applications 目录。
+`run-web-e2e` 在进入执行或评分阶段前会自动检查 Codex Desktop 和本轮选择的 AstronStudio、WorkBuddy 或 QwenWork。有效 CDP 端点会原样复用；缺少调试模式时只关闭并重启需要的客户端，无需人工退出、重新打开。Windows 会动态解析 Codex MSIX 和所选 Harness 的当前用户安装路径，macOS 会解析标准系统或用户 Applications 目录。Windows 还会核对监听者和待停止进程的完整可执行路径；macOS 在重启已运行的 WorkBuddy/QwenWork 前会只读核对状态库，无法证明没有活动任务时停止并提示人工处理。
 
 默认 Codex Desktop 使用 `127.0.0.1:9230`，AstronStudio 使用 `127.0.0.1:9240`，WorkBuddy 使用 `127.0.0.1:9229`，QwenWork 使用 `127.0.0.1:9250`，且都只监听本机。若 Codex Desktop 本身承载当前控制任务，自动重启可能中断当前回合；Skill 会先持久化状态，客户端恢复后必须继续原任务，不要重新初始化。
 
@@ -118,7 +118,7 @@ AstronStudio 当前验证用法：
 保持并回读 AstronStudio 当前模型，不修改推理强度；权限使用 full-access；使用默认执行并发 3。
 ```
 
-AstronStudio 在 macOS 已验证项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、后台并发、动态补位、产物、执行回执和执行到评分闭环；完整回传/报告、单 Prompt 组合器及中断、超时、客户端重启等恢复验收仍待后续完成。Windows 真机基线（AstronStudio 3.2.1.242、Codex Desktop 152.0.7977.83）已完成只读探针、单题、三题串行、默认三路并发与动态补位、项目精确注册、并发评分、submission、离线回传与报告、单 Prompt 闭环，以及控制任务接管、客户端重启、超时、发送前重试、评分 attempt 隔离和 submission 中断恢复，可标记为生产已验证。如果更换桌面客户端大版本或 Driver 核心实现，应按只读探针、单题、三题串行、五题并发和全闭环的顺序回归。多个 AstronStudio 任务并发运行时如果客户端崩溃，当前版本仍会进入 `NEEDS_ATTENTION` 并要求人工处理，不会自动重启后冒险接管多个会话。
+AstronStudio 在 macOS 的历史证据已覆盖项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、后台并发、动态补位、产物、执行回执，以及单题 execution→score→submission→return；报告、单 Prompt 组合器及中断、超时、客户端重启等恢复验收仍待补齐。Windows 历史真机基线（AstronStudio 3.2.1.242、Codex Desktop 152.0.7977.83）已覆盖只读探针、单题、三题串行、默认三路并发与动态补位、项目精确注册、并发评分、submission、离线回传与报告、单 Prompt 闭环，以及控制任务接管、客户端重启、超时、发送前重试、评分 attempt 隔离和 submission 中断恢复。当前发布候选修改了 Skill 和桌面前置脚本，须按生产验收清单重新绑定证据后才能恢复“生产已验证”状态。多个 AstronStudio 任务并发运行时如果客户端崩溃，仍会进入 `NEEDS_ATTENTION` 并要求人工处理，不会自动重启后冒险接管多个会话。
 
 QwenWork 当前验证用法：
 
@@ -131,7 +131,7 @@ QwenWork 当前验证用法：
 保持并回读 QwenWork 当前模型，不修改任务模式或其他推理设置；权限使用 full-access；使用默认执行并发 3。
 ```
 
-QwenWork 在 macOS 已验证个人项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、串行和默认三路后台并发、产物、执行回执及单题执行到评分闭环；多题评分、submission、完整回传/报告、单 Prompt 组合器和恢复验收仍待后续完成。Windows QwenWorkCN 1.0.5.0 已完成单题、三题串行、默认三槽五题动态补位、Codex Desktop 评分与 submission、离线回传/报告、单 Prompt 全流程、Worker 硬中断恢复、客户端重启和安全超时真机验收，属于当前生产验证基线。首次在新机器或新客户端版本运行时，仍应先用 1 至 3 个 L1 用例验证会话和工作空间隔离。
+QwenWork 在 macOS 的历史证据已覆盖个人项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、串行和默认三路后台并发、产物、执行回执、三题评分、submission 和 return；报告、单 Prompt 组合器和恢复验收仍待补齐。Windows QwenWorkCN 1.0.5.0 的历史批次已完成单题、三题串行、默认三槽五题动态补位、Codex Desktop 评分与 submission、离线回传/报告、单 Prompt 全流程、Worker 硬中断恢复、客户端重启和安全超时验收。由于当前 Skill 和前置脚本已更新，该结论是历史基线，不代表新发布候选已通过；应按生产验收清单重新绑定 revision、Skill 版本和证据。
 
 例如临时使用串行：
 
@@ -408,6 +408,7 @@ Codex Desktop CDP：http://127.0.0.1:9230
 - [ ] 允许 `run-web-e2e` 自动检查并按需重启 Codex Desktop 和本轮选择的 AstronStudio、WorkBuddy 或 QwenWork 调试模式。
 - [ ] 题目包和评分包来自同一批次、同一 Harness。
 - [ ] 当前没有需要保留的运行中任务。
+- [ ] 当前发布 identity 已登记到生产验收清单；若属于新客户端/Skill/revision，受影响项没有沿用旧 `PASSED`。
 
 完成后：
 

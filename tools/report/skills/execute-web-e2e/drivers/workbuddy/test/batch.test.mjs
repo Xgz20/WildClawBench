@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -163,6 +163,7 @@ test("pre-send retry may adopt a connection override for a legacy queue", async 
 
 test("resolveQueuePlan matches manifest tasks by exact id", async () => {
   const root = await fixture();
+  const canonicalRoot = await realpath(root);
   const args = parseBatchArgs([
     "--harness-root", root,
     "--run-id", "l1-test",
@@ -171,8 +172,8 @@ test("resolveQueuePlan matches manifest tasks by exact id", async () => {
   ]);
   const plan = await resolveQueuePlan(args);
   assert.deepEqual(plan.tasks.map((task) => task.taskId), ["task-b", "task-a"]);
-  assert.equal(plan.queueStateFile, join(root, "execution", ".execute-web-e2e", "queues", "l1-test", "queue_state.json"));
-  assert.equal(plan.lockFile, join(root, "execution", ".execute-web-e2e", "workbuddy-ui.lock"));
+  assert.equal(plan.queueStateFile, join(canonicalRoot, "execution", ".execute-web-e2e", "queues", "l1-test", "queue_state.json"));
+  assert.equal(plan.lockFile, join(canonicalRoot, "execution", ".execute-web-e2e", "workbuddy-ui.lock"));
 });
 
 test("resolveQueuePlan rejects duplicate and unknown task ids", async () => {

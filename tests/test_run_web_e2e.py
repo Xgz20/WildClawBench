@@ -4,6 +4,7 @@ import argparse
 import importlib.util
 import json
 import os
+import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -14,6 +15,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "tools/report/skills/run-web-e2e/scripts/run_web_e2e.py"
 WINDOWS_DESKTOP_DEBUG_SCRIPT = (
     REPO_ROOT / "tools/report/skills/run-web-e2e/scripts/start_windows_desktop_debug.ps1"
+)
+WINDOWS_DESKTOP_RESTART_SCRIPT = (
+    REPO_ROOT / "tools/report/skills/run-web-e2e/scripts/restart_windows_desktop_debug.ps1"
+)
+MACOS_DESKTOP_DEBUG_SCRIPT = (
+    REPO_ROOT / "tools/report/skills/run-web-e2e/scripts/start_macos_desktop_debug.sh"
 )
 
 
@@ -39,6 +46,50 @@ class WindowsDesktopDebugScriptTests(unittest.TestCase):
             '$includeQwenWork = $Application -in @("QwenWork", "CodexQwenWork")',
             script,
         )
+
+    def test_stop_and_cdp_identity_are_bound_to_discovered_executable(self) -> None:
+        script = WINDOWS_DESKTOP_DEBUG_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("function Get-InstalledProcessesByExecutable", script)
+        self.assertIn("[IO.Path]::GetFullPath($ExpectedExecutablePath)", script)
+        self.assertIn("$codexProcesses | Stop-Process -Force", script)
+        self.assertIn("$astronStudioProcesses | Stop-Process -Force", script)
+        self.assertNotIn("-Name $processNames", script)
+
+    def test_restart_helper_forwards_qwenwork_scope_and_port(self) -> None:
+        script = WINDOWS_DESKTOP_RESTART_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('"QwenWork", "CodexQwenWork"', script)
+        self.assertIn("[int]$QwenWorkPort = 9250", script)
+        self.assertIn("QwenWorkPort = $QwenWorkPort", script)
+        self.assertIn('"-QwenWorkPort $QwenWorkPort"', script)
+
+
+class MacOSDesktopDebugScriptTests(unittest.TestCase):
+    def test_script_parses_and_lists_all_supported_scopes(self) -> None:
+        parsed = subprocess.run(
+            ["/bin/bash", "-n", str(MACOS_DESKTOP_DEBUG_SCRIPT)],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(parsed.returncode, 0, parsed.stderr)
+        help_result = subprocess.run(
+            ["/bin/bash", str(MACOS_DESKTOP_DEBUG_SCRIPT), "--help"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(help_result.returncode, 0, help_result.stderr)
+        self.assertIn("codex-workbuddy", help_result.stdout)
+        self.assertIn("codex-qwenwork", help_result.stdout)
+        self.assertIn("--workbuddy-port PORT", help_result.stdout)
+        self.assertIn("--qwenwork-port PORT", help_result.stdout)
+
+    def test_workbuddy_and_qwenwork_restart_checks_fail_closed(self) -> None:
+        script = MACOS_DESKTOP_DEBUG_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("assert_workbuddy_restart_safe", script)
+        self.assertIn("assert_qwenwork_restart_safe", script)
+        self.assertIn("codebuddy-sessions.vscdb", script)
+        self.assertIn("QwenWorkCN/data/agents.db", script)
+        self.assertIn("com.tencent.workbuddy.mac", script)
+        self.assertIn("cn.qwenwork.desktop.mac", script)
 
 
 TASK_IDS = ["task-1", "task-2"]

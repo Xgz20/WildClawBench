@@ -37,7 +37,7 @@ description: 按用户明确要求动态组合 Web E2E 的准备、桌面 Harnes
 5. 被评 Harness 未显式指定模型时保持并回读当前模型，不操作推理强度；权限按生产契约使用 `full-access`。WorkBuddy、AstronStudio 和 QwenWork 的新执行队列均默认三槽、最大八槽；评分新批次默认三槽。三种 Harness 的 UI 操作始终保持单槽。Codex Desktop CDP 未显式提供时使用 `http://127.0.0.1:9230`。
 6. execution 回执有效后才合入 scoring ZIP 并开始评分；submission 有效后在 worker 根同级的 `offline-return/` 生成完整 return ZIP 和外部回执。
 
-平台路由必须显式：macOS 使用各 Driver 的 `.sh` 入口；Windows 上 AstronStudio 使用 `run-astronstudio.cmd` / `run-astronstudio-batch.cmd`，WorkBuddy 使用 `run-workbuddy.cmd` / `run-workbuddy-batch.cmd`，QwenWork 使用 `run-qwenwork.cmd` / `run-qwenwork-batch.cmd`，Codex Desktop 项目注册使用 `run-codex-project-registrar.cmd`。Python 状态脚本在 Windows 优先用 `py -3`，否则使用可用的 `python`；不得硬调用 `python3`。当前 Windows 端到端生产已验证范围包括 `AstronStudio -> Codex Desktop 评分 -> 回传/报告`、`WorkBuddy 5.5.3 -> Codex Desktop 评分 -> 回传/报告` 与 `QwenWorkCN 1.0.5.0 -> Codex Desktop 评分 -> 回传/报告`。WorkBuddy 已通过单题、串行、默认三槽动态补位、单 Prompt 全流程以及控制任务/客户端重启、超时、评分接管、失败 attempt 隔离和 submission 中断恢复验收；QwenWork 已通过同等执行并发和完整闭环，并完成 Worker 硬中断、客户端重启结构化失败与安全超时验收。DoubaoWork 尚未进入该范围；Windows Harness 均不能回退调用 macOS Driver。
+平台路由必须显式：macOS 使用各 Driver 的 `.sh` 入口；Windows 上 AstronStudio 使用 `run-astronstudio.cmd` / `run-astronstudio-batch.cmd`，WorkBuddy 使用 `run-workbuddy.cmd` / `run-workbuddy-batch.cmd`，QwenWork 使用 `run-qwenwork.cmd` / `run-qwenwork-batch.cmd`，Codex Desktop 项目注册使用 `run-codex-project-registrar.cmd`。Python 状态脚本在 Windows 优先用 `py -3`，否则使用可用的 `python`；不得硬调用 `python3`。Windows 的 AstronStudio、WorkBuddy 5.5.3 和 QwenWorkCN 1.0.5.0 历史批次均已有执行、Codex Desktop 评分、回传和报告证据，恢复边界也已有不同程度覆盖；但生产结论必须绑定本轮 Git revision、五个 Skill 版本、客户端版本和真机验收记录，不能把旧批次结论直接外推到新 Skill。DoubaoWork 尚未进入该范围；Windows Harness 均不能回退调用 macOS Driver。
 
 ### macOS / Windows 桌面 CDP 自动前置准备
 
@@ -63,11 +63,13 @@ macOS 使用：
 /bin/bash <run-web-e2e-skill-dir>/scripts/start_macos_desktop_debug.sh --application all
 ```
 
-Windows 脚本动态解析当前 Codex MSIX 包的真实 manifest 入口，并从当前用户注册表及 `%LOCALAPPDATA%\Programs` 解析 `AStudio.exe`、`AstronStudio.exe`、`Acode.exe`、`WorkBuddy.exe`、`CodeBuddy.exe`、`QwenWorkCN.exe` 或 `QwenWork.exe`。WorkBuddy 重启前会只读检查 `%USERPROFILE%\.workbuddy\workbuddy.db`；QwenWork 重启前会只读检查 `%APPDATA%\QwenWorkCN\data\agents.db` 的稳定内核会话。存在活动或待处理 session 时均失败关闭；停止旧实例时只处理可执行文件完整路径与动态发现结果一致的进程，同名但位于其他目录的辅助进程或应用必须跳过。启动 WorkBuddy 时动态选择其 `%USERPROFILE%\.workbuddy\binaries\node\versions` 下最高的完整 Node/npm 运行时，只对新客户端进程补充 `PATH`，并默认设置 `npm_config_audit=false`、`npm_config_fund=false`、`npm_config_update_notifier=false`、`npm_config_prefer_offline=true` 以及 WorkBuddy 官方支持的 `BASH_DEFAULT_TIMEOUT_MS=600000`、`BASH_MAX_TIMEOUT_MS=600000`；用户已有同名 Shell 时限配置优先，启动脚本自身环境随后恢复。macOS 脚本默认解析 `/Applications` 和当前用户 `Applications` 下的 `ChatGPT.app` / `Codex.app` 与 `AStudio.app` / `AstronStudio.app`；非标准位置只允许通过对应的显式路径参数传入。
+Windows 脚本动态解析当前 Codex MSIX 包的真实 manifest 入口，并从当前用户注册表及 `%LOCALAPPDATA%\Programs` 解析 `AStudio.exe`、`AstronStudio.exe`、`Acode.exe`、`WorkBuddy.exe`、`CodeBuddy.exe`、`QwenWorkCN.exe` 或 `QwenWork.exe`。WorkBuddy 重启前会只读检查 `%USERPROFILE%\.workbuddy\workbuddy.db`；QwenWork 重启前会只读检查 `%APPDATA%\QwenWorkCN\data\agents.db` 的稳定内核会话。存在活动或待处理 session 时均失败关闭；CDP 监听者和待停止进程的可执行文件完整路径都必须与动态发现结果一致，同名但位于其他目录的进程必须拒绝或跳过。启动 WorkBuddy 时动态选择其 `%USERPROFILE%\.workbuddy\binaries\node\versions` 下最高的完整 Node/npm 运行时，只对新客户端进程补充 `PATH`，并默认设置 `npm_config_audit=false`、`npm_config_fund=false`、`npm_config_update_notifier=false`、`npm_config_prefer_offline=true` 以及 WorkBuddy 官方支持的 `BASH_DEFAULT_TIMEOUT_MS=600000`、`BASH_MAX_TIMEOUT_MS=600000`；用户已有同名 Shell 时限配置优先，启动脚本自身环境随后恢复。
+
+macOS 的 `--application` 与 Windows 作用域一致，使用小写连字符值：`all`、`codex`、`astronstudio`、`workbuddy`、`codex-workbuddy`、`qwenwork`、`codex-qwenwork`。脚本默认解析 `/Applications` 和当前用户 `Applications` 下的 `ChatGPT.app` / `Codex.app`、`AStudio.app` / `AstronStudio.app`、`WorkBuddy.app` 与 `QwenWorkCN.app` / `QwenWork.app`；非标准位置通过对应的显式路径参数传入。WorkBuddy 或 QwenWork 已运行但缺少健康 CDP 时，脚本会先用系统 `sqlite3` 只读核对状态库；数据库、Schema 或读取后端不可用，或者存在活动/待处理 session 时，都拒绝重启。
 
 两个脚本均等待所选的 Codex `9230`、AstronStudio `9240`、WorkBuddy `9229` 或 QwenWork `9250` 的 `/json/list` 返回至少一个真实 target，并验证端口监听者属于目标客户端。端口被无关进程占用时不得结束该进程，脚本失败并进入 `NEEDS_ATTENTION`。`-CheckOnly` / `--check-only` 仅用于故障诊断，不是标准 E2E 前置流程。
 
-Windows 的 `-ForceRestart` 只用于用户明确要求的客户端重启恢复验收；它会强制重启 `-Application` 选中的客户端，即使当前 CDP 已正常。使用前必须先持久化原 thread、cursor、attempt 和 deadline。当前任务需要重启 Codex 时，禁止通过 `Start-Process` 派生隐藏 PowerShell：该进程仍可能继承 Codex 的 Windows Job，并在客户端退出时一起终止。必须使用 `restart_windows_desktop_debug.ps1` 注册交互式一次性计划任务；Worker 延迟启动、调用底层 `start_windows_desktop_debug.ps1 -ForceRestart`，把状态和日志写入 `%LOCALAPPDATA%\WildClawBench\desktop-debug-restart\`，结束后删除自己的计划任务。底层启动器会在有界时限内等待已核对的旧客户端释放 CDP 端口；等待期间端口若被无关进程抢占则立即失败关闭，避免把正常的 Windows 进程退出延迟误判成永久端口冲突。底层 `-ForceRestart` 不能与 `-CheckOnly` 同时使用，也不能作为普通前置准备的默认参数。
+Windows 的 `-ForceRestart` 只用于用户明确要求的客户端重启恢复验收；它会强制重启 `-Application` 选中的客户端，即使当前 CDP 已正常。使用前必须先持久化原 thread、cursor、attempt 和 deadline。当前任务需要重启 Codex 时，禁止通过 `Start-Process` 派生隐藏 PowerShell：该进程仍可能继承 Codex 的 Windows Job，并在客户端退出时一起终止。必须使用 `restart_windows_desktop_debug.ps1` 注册交互式一次性计划任务；Worker 延迟启动、调用底层 `start_windows_desktop_debug.ps1 -ForceRestart`，把状态和日志写入 `%LOCALAPPDATA%\WildClawBench\desktop-debug-restart\`，结束后删除自己的计划任务。该入口支持 QwenWork 和 Codex+QwenWork 作用域并持久化 `QwenWorkPort`。底层启动器会在有界时限内等待已核对的旧客户端释放 CDP 端口；等待期间端口若被无关进程抢占则立即失败关闭，避免把正常的 Windows 进程退出延迟误判成永久端口冲突。底层 `-ForceRestart` 不能与 `-CheckOnly` 同时使用，也不能作为普通前置准备的默认参数。
 
 重启 Codex Desktop 可能中断承载当前控制任务的客户端，因此必须先持久化本 Skill 的运行状态；客户端回来后从原状态恢复，不能重新初始化或创建重复任务。同一次初始前置准备不要再向 AstronStudio Driver 传 `--restart-app`，避免两套入口重复重启。脚本失败、超时或 target 列表为空时不得继续 UI 自动化。
 
@@ -136,9 +138,9 @@ python3 <skill-dir>/scripts/run_web_e2e.py set-stage \
 
 执行完全遵守 `execute-web-e2e`。WorkBuddy、AstronStudio 和 QwenWork 新批次均默认三槽、最大八槽，三者 UI 操作均为单槽。用户显式指定模型时才传 `--model`，否则保持客户端当前模型和推理强度。
 
-Windows AstronStudio 已按“只读探针 → 单个 L1（执行并发 1）→ 三个 L1 串行自动切题 → 五个 L1 默认三路并发与动态补位”完成真机生产验证。更换桌面客户端大版本或 Driver 核心实现后，必须按同一顺序回归，不得把 macOS 或旧 Windows 基线的结论直接外推。
+Windows AstronStudio 的历史批次已按“只读探针 → 单个 L1（执行并发 1）→ 三个 L1 串行自动切题 → 五个 L1 默认三路并发与动态补位”完成真机验证。更换桌面客户端大版本、Skill 或 Driver/前置脚本核心实现后，必须按同一顺序回归，不得把 macOS 或旧 Windows 基线的结论直接外推。
 
-Windows QwenWorkCN 1.0.5.0 已按同一执行顺序完成真机验证，并使用 `标准｜Qwen3.8-Flash`、`full-access` 完成 Codex Desktop 评分、submission、离线回传/报告与单 Prompt 组合器闭环；恢复门禁覆盖 Worker 进程丢失、客户端重启后内核 `interrupted` 结构化失败和主动停止后的安全 `TIMEOUT`。首次换机、客户端升级或模型切换仍须重新执行 probe 与 L1 smoke。
+Windows QwenWorkCN 1.0.5.0 的历史批次已按同一执行顺序完成真机验证，并使用 `标准｜Qwen3.8-Flash`、`full-access` 完成 Codex Desktop 评分、submission、离线回传/报告与单 Prompt 组合器闭环；恢复门禁覆盖 Worker 进程丢失、客户端重启后内核 `interrupted` 结构化失败和主动停止后的安全 `TIMEOUT`。首次换机、客户端或 Skill 升级、核心脚本修改或模型切换仍须重新执行 probe 与 L1 smoke，并按受影响范围补齐验收。
 
 执行回执有效后才按 `orchestrate-web-e2e` 复制到独立评分工作空间并启动评分。新回执声明运行时目录策略时，execution 原件可保留被评 Harness 生成的 `.cache`、`.vite`、`node_modules`，评分复制会过滤它们且不修改原件；任意命名但具备 Chromium `Local State` 与 profile 数据库特征的浏览器用户数据目录也会从评分副本整体过滤。未声明策略的旧回执仍严格拒绝候选运行时目录。Codex Desktop 新批次默认三槽，每题独立项目、任务、Browser 和端口。评分任务使用 `score-web-e2e`，候选 `workspace/` 永远只读；端口冲突只允许修改 `private-scoring/runtime-workspace/` 中的评分运行时副本。
 

@@ -84,7 +84,10 @@ function Get-CdpStatus {
         [int]$Port,
 
         [Parameter(Mandatory = $true)]
-        [string[]]$ExpectedProcesses
+        [string[]]$ExpectedProcesses,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ExpectedExecutablePath
     )
 
     try {
@@ -111,6 +114,13 @@ function Get-CdpStatus {
             -ErrorAction SilentlyContinue
 
         if (-not $process -or $process.ProcessName -notin $ExpectedProcesses) {
+            return $null
+        }
+
+        $actualExecutablePath = $null
+        try { $actualExecutablePath = $process.Path } catch { }
+        if (-not $actualExecutablePath -or
+            [IO.Path]::GetFullPath($actualExecutablePath) -ine [IO.Path]::GetFullPath($ExpectedExecutablePath)) {
             return $null
         }
 
@@ -143,6 +153,9 @@ function Wait-CdpStatus {
         [string[]]$ExpectedProcesses,
 
         [Parameter(Mandatory = $true)]
+        [string]$ExpectedExecutablePath,
+
+        [Parameter(Mandatory = $true)]
         [int]$Timeout
     )
 
@@ -152,7 +165,8 @@ function Wait-CdpStatus {
         $status = Get-CdpStatus `
             -Name $Name `
             -Port $Port `
-            -ExpectedProcesses $ExpectedProcesses
+            -ExpectedProcesses $ExpectedProcesses `
+            -ExpectedExecutablePath $ExpectedExecutablePath
         if ($status) {
             return $status
         }
@@ -161,6 +175,37 @@ function Wait-CdpStatus {
     } while ([DateTime]::UtcNow -lt $deadline)
 
     throw "$Name CDP endpoint did not become ready on port $Port within $Timeout seconds."
+}
+
+function Resolve-CodexApplication {
+    Import-Module Appx
+    $package = Get-AppxPackage -Name "OpenAI.Codex" |
+        Sort-Object Version -Descending |
+        Select-Object -First 1
+
+    if (-not $package) {
+        throw "The OpenAI.Codex package is not installed."
+    }
+
+    $manifest = Get-AppxPackageManifest -Package $package
+    $applicationEntry = @($manifest.Package.Applications.Application) |
+        Select-Object -First 1
+    if (-not $applicationEntry) {
+        throw "No application entry was found in the OpenAI.Codex package manifest."
+    }
+
+    $executable = Join-Path `
+        $package.InstallLocation `
+        ([string]$applicationEntry.Executable)
+    if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
+        throw "Codex executable was not found: $executable"
+    }
+
+    return [pscustomobject]@{
+        Package = $package
+        ApplicationEntry = $applicationEntry
+        Executable = (Get-Item -LiteralPath $executable).FullName
+    }
 }
 
 function Resolve-AstronStudioExecutable {
@@ -500,6 +545,42 @@ function Assert-PortAvailable {
     }
 }
 
+function Get-InstalledProcessesByExecutable {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string[]]$ProcessNames,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ExecutablePath
+    )
+
+    $expectedPath = [IO.Path]::GetFullPath($ExecutablePath)
+    return @(
+        Get-Process -Name $ProcessNames -ErrorAction SilentlyContinue |
+            Where-Object {
+                $actualPath = $null
+                try { $actualPath = $_.Path } catch { }
+                $actualPath -and ([IO.Path]::GetFullPath($actualPath) -ieq $expectedPath)
+            }
+    )
+}
+
+function Test-InstalledProcessIdentity {
+    param(
+        [Parameter(Mandatory = $true)]
+        $Process,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ExecutablePath
+    )
+
+    $actualPath = $null
+    try { $actualPath = $Process.Path } catch { }
+    return $actualPath -and (
+        [IO.Path]::GetFullPath($actualPath) -ieq [IO.Path]::GetFullPath($ExecutablePath)
+    )
+}
+
 function Wait-PortAvailable {
     param(
         [Parameter(Mandatory = $true)]
@@ -507,6 +588,9 @@ function Wait-PortAvailable {
 
         [Parameter(Mandatory = $true)]
         [string[]]$ExpectedProcesses,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ExpectedExecutablePath,
 
         [Parameter(Mandatory = $true)]
         [int]$TimeoutSeconds
@@ -527,8 +611,11 @@ function Wait-PortAvailable {
         $process = Get-Process `
             -Id $listener.OwningProcess `
             -ErrorAction SilentlyContinue
-        if ($process -and $process.ProcessName -notin $ExpectedProcesses) {
-            throw "Port $Port was claimed by unrelated process $($process.ProcessName) (PID $($listener.OwningProcess)) while waiting for the desktop client to exit."
+        if (-not $process -or
+            $process.ProcessName -notin $ExpectedProcesses -or
+            -not (Test-InstalledProcessIdentity -Process $process -ExecutablePath $ExpectedExecutablePath)) {
+            $processName = if ($process) { $process.ProcessName } else { "unknown" }
+            throw "Port $Port was claimed by unrelated process $processName (PID $($listener.OwningProcess)) while waiting for the desktop client to exit."
         }
 
         Start-Sleep -Milliseconds 250
@@ -544,7 +631,10 @@ function Assert-PortRestartable {
         [int]$Port,
 
         [Parameter(Mandatory = $true)]
-        [string[]]$ExpectedProcesses
+        [string[]]$ExpectedProcesses,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ExpectedExecutablePath
     )
 
     $listener = Get-NetTCPConnection `
@@ -561,17 +651,26 @@ function Assert-PortRestartable {
         -Id $listener.OwningProcess `
         -ErrorAction SilentlyContinue
 
-    if (-not $process -or $process.ProcessName -notin $ExpectedProcesses) {
+    if (-not $process -or
+        $process.ProcessName -notin $ExpectedProcesses -or
+        -not (Test-InstalledProcessIdentity -Process $process -ExecutablePath $ExpectedExecutablePath)) {
         $processName = if ($process) { $process.ProcessName } else { "unknown" }
         throw "Port $Port is already used by $processName (PID $($listener.OwningProcess)); refusing to stop an unrelated process."
     }
 }
 
+$codexApplication = if ($includeCodex) { Resolve-CodexApplication } else { $null }
+$codexExecutable = if ($codexApplication) { $codexApplication.Executable } else { $null }
+$astronStudioExecutable = if ($includeAstronStudio) { Resolve-AstronStudioExecutable } else { $null }
+$workBuddyExecutable = if ($includeWorkBuddy) { Resolve-WorkBuddyExecutable } else { $null }
+$qwenWorkExecutable = if ($includeQwenWork) { Resolve-QwenWorkExecutable } else { $null }
+
 if ($includeCodex) {
     $codexReady = $null -ne (Get-CdpStatus `
         -Name "Codex Desktop" `
         -Port $CodexPort `
-        -ExpectedProcesses @("ChatGPT", "Codex"))
+        -ExpectedProcesses @("ChatGPT", "Codex") `
+        -ExpectedExecutablePath $codexExecutable)
 }
 else {
     $codexReady = $true
@@ -581,7 +680,8 @@ if ($includeAstronStudio) {
     $astronStudioReady = $null -ne (Get-CdpStatus `
         -Name "AstronStudio" `
         -Port $AstronStudioPort `
-        -ExpectedProcesses @("AStudio", "AstronStudio", "Acode"))
+        -ExpectedProcesses @("AStudio", "AstronStudio", "Acode") `
+        -ExpectedExecutablePath $astronStudioExecutable)
 }
 else {
     $astronStudioReady = $true
@@ -591,7 +691,8 @@ if ($includeWorkBuddy) {
     $workBuddyReady = $null -ne (Get-CdpStatus `
         -Name "WorkBuddy" `
         -Port $WorkBuddyPort `
-        -ExpectedProcesses @("WorkBuddy", "CodeBuddy"))
+        -ExpectedProcesses @("WorkBuddy", "CodeBuddy") `
+        -ExpectedExecutablePath $workBuddyExecutable)
 }
 else {
     $workBuddyReady = $true
@@ -601,7 +702,8 @@ if ($includeQwenWork) {
     $qwenWorkReady = $null -ne (Get-CdpStatus `
         -Name "QwenWork" `
         -Port $QwenWorkPort `
-        -ExpectedProcesses @("QwenWorkCN", "QwenWork"))
+        -ExpectedProcesses @("QwenWorkCN", "QwenWork") `
+        -ExpectedExecutablePath $qwenWorkExecutable)
 }
 else {
     $qwenWorkReady = $true
@@ -640,80 +742,78 @@ else {
     if ($includeCodex -and -not $codexReady) {
         Assert-PortRestartable `
             -Port $CodexPort `
-            -ExpectedProcesses @("ChatGPT", "Codex")
+            -ExpectedProcesses @("ChatGPT", "Codex") `
+            -ExpectedExecutablePath $codexExecutable
     }
     if ($includeAstronStudio -and -not $astronStudioReady) {
         Assert-PortRestartable `
             -Port $AstronStudioPort `
-            -ExpectedProcesses @("AStudio", "AstronStudio", "Acode")
+            -ExpectedProcesses @("AStudio", "AstronStudio", "Acode") `
+            -ExpectedExecutablePath $astronStudioExecutable
     }
     if ($includeWorkBuddy -and -not $workBuddyReady) {
         Assert-PortRestartable `
             -Port $WorkBuddyPort `
-            -ExpectedProcesses @("WorkBuddy", "CodeBuddy")
+            -ExpectedProcesses @("WorkBuddy", "CodeBuddy") `
+            -ExpectedExecutablePath $workBuddyExecutable
     }
     if ($includeQwenWork -and -not $qwenWorkReady) {
         Assert-PortRestartable `
             -Port $QwenWorkPort `
-            -ExpectedProcesses @("QwenWorkCN", "QwenWork")
+            -ExpectedProcesses @("QwenWorkCN", "QwenWork") `
+            -ExpectedExecutablePath $qwenWorkExecutable
     }
 
-    $workBuddyExecutable = $null
-    $workBuddyProcesses = @()
+    $codexProcesses = @(
+        if ($includeCodex -and -not $codexReady) {
+            Get-InstalledProcessesByExecutable `
+                -ProcessNames @("ChatGPT", "Codex") `
+                -ExecutablePath $codexExecutable
+        }
+    )
+    $astronStudioProcesses = @(
+        if ($includeAstronStudio -and -not $astronStudioReady) {
+            Get-InstalledProcessesByExecutable `
+                -ProcessNames @("AStudio", "AstronStudio", "Acode") `
+                -ExecutablePath $astronStudioExecutable
+        }
+    )
+    $workBuddyProcesses = @(
+        if ($includeWorkBuddy -and -not $workBuddyReady) {
+            Get-InstalledProcessesByExecutable `
+                -ProcessNames @("WorkBuddy", "CodeBuddy") `
+                -ExecutablePath $workBuddyExecutable
+        }
+    )
     if ($includeWorkBuddy -and -not $workBuddyReady) {
-        $workBuddyExecutable = Resolve-WorkBuddyExecutable
-        $expectedWorkBuddyPath = [IO.Path]::GetFullPath($workBuddyExecutable)
-        $workBuddyProcesses = @(
-            Get-Process -Name "WorkBuddy", "CodeBuddy" -ErrorAction SilentlyContinue |
-                Where-Object {
-                    $actualPath = $null
-                    try { $actualPath = $_.Path } catch { }
-                    $actualPath -and ([IO.Path]::GetFullPath($actualPath) -ieq $expectedWorkBuddyPath)
-                }
-        )
         if ($workBuddyProcesses.Count -gt 0) {
             Assert-WorkBuddyRestartSafe
         }
     }
 
-    $qwenWorkExecutable = $null
-    $qwenWorkProcesses = @()
+    $qwenWorkProcesses = @(
+        if ($includeQwenWork -and -not $qwenWorkReady) {
+            Get-InstalledProcessesByExecutable `
+                -ProcessNames @("QwenWorkCN", "QwenWork") `
+                -ExecutablePath $qwenWorkExecutable
+        }
+    )
     if ($includeQwenWork -and -not $qwenWorkReady) {
-        $qwenWorkExecutable = Resolve-QwenWorkExecutable
-        $expectedQwenWorkPath = [IO.Path]::GetFullPath($qwenWorkExecutable)
-        $qwenWorkProcesses = @(
-            Get-Process -Name "QwenWorkCN", "QwenWork" -ErrorAction SilentlyContinue |
-                Where-Object {
-                    $actualPath = $null
-                    try { $actualPath = $_.Path } catch { }
-                    $actualPath -and ([IO.Path]::GetFullPath($actualPath) -ieq $expectedQwenWorkPath)
-                }
-        )
         if ($qwenWorkProcesses.Count -gt 0) {
             Assert-QwenWorkRestartSafe
         }
     }
 
-    $processNames = @()
-    if ($includeCodex -and -not $codexReady) {
-        $processNames += "ChatGPT"
-        $processNames += "Codex"
+    if ($codexProcesses.Count -gt 0) {
+        Write-Host "Stopping Codex processes whose executable path matches the discovered MSIX installation..."
+        $codexProcesses | Stop-Process -Force
+        $codexProcesses | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue
     }
-    if ($includeAstronStudio -and -not $astronStudioReady) {
-        $processNames += "AStudio"
-        $processNames += "AstronStudio"
-        $processNames += "Acode"
-    }
-    if ($processNames.Count -gt 0) {
-        Write-Host "Stopping desktop processes that are missing valid CDP endpoints..."
-        $existingProcesses = Get-Process `
-            -Name $processNames `
-            -ErrorAction SilentlyContinue
 
-        if ($existingProcesses) {
-            $existingProcesses | Stop-Process -Force
-            $existingProcesses | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue
-        }
+    if ($astronStudioProcesses.Count -gt 0) {
+        Write-Host "Stopping AstronStudio processes whose executable path matches the discovered installation..."
+        $astronStudioProcesses | Stop-Process -Force
+        $astronStudioProcesses | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue
     }
 
     if ($workBuddyProcesses.Count -gt 0) {
@@ -732,37 +832,13 @@ else {
         Wait-PortAvailable `
             -Port $CodexPort `
             -ExpectedProcesses @("ChatGPT", "Codex") `
+            -ExpectedExecutablePath $codexExecutable `
             -TimeoutSeconds $TimeoutSeconds
-
-        Import-Module Appx
-        $codexPackage = Get-AppxPackage -Name "OpenAI.Codex" |
-            Sort-Object Version -Descending |
-            Select-Object -First 1
-
-        if (-not $codexPackage) {
-            throw "The OpenAI.Codex package is not installed."
-        }
-
-        $manifest = Get-AppxPackageManifest -Package $codexPackage
-        $applicationEntry = @($manifest.Package.Applications.Application) |
-            Select-Object -First 1
-
-        if (-not $applicationEntry) {
-            throw "No application entry was found in the OpenAI.Codex package manifest."
-        }
-
-        $codexExecutable = Join-Path `
-            $codexPackage.InstallLocation `
-            ([string]$applicationEntry.Executable)
-
-        if (-not (Test-Path -LiteralPath $codexExecutable)) {
-            throw "Codex executable was not found: $codexExecutable"
-        }
 
         Write-Host "Starting Codex with CDP on port $CodexPort..."
         Invoke-CommandInDesktopPackage `
-            -PackageFamilyName $codexPackage.PackageFamilyName `
-            -AppId ([string]$applicationEntry.Id) `
+            -PackageFamilyName $codexApplication.Package.PackageFamilyName `
+            -AppId ([string]$codexApplication.ApplicationEntry.Id) `
             -Command $codexExecutable `
             -Args "--remote-debugging-address=127.0.0.1 --remote-debugging-port=$CodexPort"
     }
@@ -771,9 +847,8 @@ else {
         Wait-PortAvailable `
             -Port $AstronStudioPort `
             -ExpectedProcesses @("AStudio", "AstronStudio", "Acode") `
+            -ExpectedExecutablePath $astronStudioExecutable `
             -TimeoutSeconds $TimeoutSeconds
-
-        $astronStudioExecutable = Resolve-AstronStudioExecutable
 
         Write-Host "Starting AstronStudio with CDP on port $AstronStudioPort..."
         Start-Process `
@@ -788,6 +863,7 @@ else {
         Wait-PortAvailable `
             -Port $WorkBuddyPort `
             -ExpectedProcesses @("WorkBuddy", "CodeBuddy") `
+            -ExpectedExecutablePath $workBuddyExecutable `
             -TimeoutSeconds $TimeoutSeconds
 
         Write-Host "Starting WorkBuddy with CDP on port $WorkBuddyPort..."
@@ -855,6 +931,7 @@ else {
         Wait-PortAvailable `
             -Port $QwenWorkPort `
             -ExpectedProcesses @("QwenWorkCN", "QwenWork") `
+            -ExpectedExecutablePath $qwenWorkExecutable `
             -TimeoutSeconds $TimeoutSeconds
 
         Write-Host "Starting QwenWork with CDP on port $QwenWorkPort..."
@@ -874,6 +951,7 @@ if ($includeCodex) {
         -Name "Codex Desktop" `
         -Port $CodexPort `
         -ExpectedProcesses @("ChatGPT", "Codex") `
+        -ExpectedExecutablePath $codexExecutable `
         -Timeout $TimeoutSeconds
 }
 if ($includeAstronStudio) {
@@ -881,6 +959,7 @@ if ($includeAstronStudio) {
         -Name "AstronStudio" `
         -Port $AstronStudioPort `
         -ExpectedProcesses @("AStudio", "AstronStudio", "Acode") `
+        -ExpectedExecutablePath $astronStudioExecutable `
         -Timeout $TimeoutSeconds
 }
 if ($includeWorkBuddy) {
@@ -888,6 +967,7 @@ if ($includeWorkBuddy) {
         -Name "WorkBuddy" `
         -Port $WorkBuddyPort `
         -ExpectedProcesses @("WorkBuddy", "CodeBuddy") `
+        -ExpectedExecutablePath $workBuddyExecutable `
         -Timeout $TimeoutSeconds
 }
 if ($includeQwenWork) {
@@ -895,6 +975,7 @@ if ($includeQwenWork) {
         -Name "QwenWork" `
         -Port $QwenWorkPort `
         -ExpectedProcesses @("QwenWorkCN", "QwenWork") `
+        -ExpectedExecutablePath $qwenWorkExecutable `
         -Timeout $TimeoutSeconds
 }
 

@@ -506,6 +506,7 @@ export function qwenWorkFolderHelperInvocation({
   folder,
   timeoutSeconds,
 }) {
+  const pathApi = platform === "win32" ? systemPath.win32 : systemPath;
   if (platform === "win32") {
     return {
       command: "powershell.exe",
@@ -516,7 +517,7 @@ export function qwenWorkFolderHelperInvocation({
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        systemPath.join(driverDir, "select-folder.ps1"),
+        pathApi.join(driverDir, "select-folder.ps1"),
         "-AppPath",
         appPath,
         "-Folder",
@@ -528,6 +529,6 @@ export function qwenWorkFolderHelperInvocation({
   }
   return {
     command: "/usr/bin/swift",
-    args: [systemPath.join(driverDir, "select-folder.swift"), bundleId, folder, String(timeoutSeconds)],
+    args: [pathApi.join(driverDir, "select-folder.swift"), bundleId, folder, String(timeoutSeconds)],
   };
 }

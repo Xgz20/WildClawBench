@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, win32 } from "node:path";
+import { join, posix, win32 } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -39,10 +39,11 @@ test("Windows QwenWork 自动发现最新版本化安装子目录", async () => 
 
   const resolved = await resolveQwenWorkAppPath("", {
     platform: "win32",
+    pathApi: posix,
     environment: { LOCALAPPDATA: localAppData },
     runCommand: async () => ({ code: 0, stdout: "null", stderr: "" }),
   });
-  assert.equal(resolved, join(newRoot, "QwenWorkCN.exe"));
+  assert.equal(resolved, await realpath(join(newRoot, "QwenWorkCN.exe")));
 });
 
 test("Windows QwenWork 主进程识别排除 renderer 子进程", async () => {
