@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { EventEmitter } from "node:events";
 import { mkdtemp, mkdir, readFile, realpath, rename, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, posix, win32 } from "node:path";
@@ -8,6 +9,7 @@ import test from "node:test";
 import {
   assertStateMatches,
   atomicWriteJson,
+  copySqliteSnapshot,
   createInitialState,
   parseArgs,
   queryFinalResponse,
@@ -27,6 +29,7 @@ import {
   gracefulQuitAstron,
   launchAstron,
   resolveAstronAppPath,
+  sanitizeAstronLaunchEnvironment,
   terminateAstronProcess,
 } from "../platform.mjs";
 import {
@@ -45,12 +48,35 @@ import {
   isReusableEmptyTaskRoute,
   main,
   observeAttemptOnce,
+  postSendIdentityTimeoutMilliseconds,
   readSessionsWithDiagnostics,
   recordTerminalProcessCleanup,
+  recoverAttemptThreadIdentityFromDatabase,
   restartAstudio,
+  selectRouteConfirmedAttemptSession,
   selectWorkspace,
   terminalProcessCleanupTiming,
 } from "../driver.mjs";
+
+test("AstronStudio state snapshot copy kills a stuck isolated copier at the deadline", async () => {
+  const child = new EventEmitter();
+  child.stderr = new EventEmitter();
+  let killSignal = null;
+  child.kill = (signal) => {
+    killSignal = signal;
+    setImmediate(() => child.emit("exit", null, signal));
+    return true;
+  };
+
+  await assert.rejects(
+    copySqliteSnapshot("state.sqlite", "snapshot.sqlite", {
+      copyTimeoutMilliseconds: 5,
+      spawnProcess: () => child,
+    }),
+    (error) => error?.code === "ASTRON_SNAPSHOT_TIMEOUT",
+  );
+  assert.equal(killSignal, "SIGKILL");
+});
 
 test("Windows atomic JSON persistence retries transient rename locks", async () => {
   const root = await mkdtemp(join(tmpdir(), "astronstudio-atomic-write-"));
@@ -359,15 +385,31 @@ test("Windows launch and exact-PID termination use native process APIs", async (
   const launches = [];
   const launch = await launchAstron("C:\\Apps\\AStudio\\AStudio.exe", "9240", {
     platform: "win32",
-    launchDetached: async (command, args) => {
-      launches.push([command, args]);
+    environment: {
+      PATH: "C:\\Windows\\System32",
+      CODEX_APP_TOOLS_PIPE_PATH: "\\\\.\\pipe\\codex-control",
+      NODE_CHANNEL_FD: "7",
+      ASTRON_API_KEY: "keep-me",
+    },
+    launchDetached: async (command, args, options) => {
+      launches.push([command, args, options]);
       return { code: 0, stdout: "", stderr: "", pid: 321 };
     },
   });
   assert.equal(launch.pid, 321);
+  assert.deepEqual(launch.environment_preparation, {
+    strategy: "remove-host-control-and-node-ipc-variables",
+    removed_variables: ["CODEX_APP_TOOLS_PIPE_PATH", "NODE_CHANNEL_FD"],
+  });
   assert.deepEqual(launches, [[
     "C:\\Apps\\AStudio\\AStudio.exe",
     ["--remote-debugging-address=127.0.0.1", "--remote-debugging-port=9240"],
+    {
+      environment: {
+        PATH: "C:\\Windows\\System32",
+        ASTRON_API_KEY: "keep-me",
+      },
+    },
   ]]);
 
   const commands = [];
@@ -413,6 +455,121 @@ test("detached dispatch requires a route-confirmed AstronStudio thread turn and 
   assert.equal(hasStableThreadIdentity({ session: { ...state.session, turn_id: null } }, workspace), false);
   assert.equal(hasStableThreadIdentity({ session: { ...state.session, dom_conversation_id: "thread-other" } }, workspace), false);
   assert.equal(hasStableThreadIdentity({ session: { ...state.session, cwd: "/tmp/task-other" } }, workspace), false);
+});
+
+test("AstronStudio launch environment removes host control and Node IPC variables only", () => {
+  const result = sanitizeAstronLaunchEnvironment({
+    Path: "C:\\Windows\\System32",
+    CODEX_THREAD_ID: "thread-secret",
+    codex_ci: "1",
+    CHATGPT_SESSION_ID: "session-secret",
+    ELECTRON_RUN_AS_NODE: "1",
+    NODE_CHANNEL_FD: "9",
+    NODE_UNIQUE_ID: "worker-1",
+    NODE_OPTIONS: "--max-old-space-size=4096",
+    ASTRON_API_KEY: "astron-key",
+    HTTPS_PROXY: "http://127.0.0.1:8080",
+  });
+
+  assert.deepEqual(result.removedVariables, [
+    "CHATGPT_SESSION_ID",
+    "codex_ci",
+    "CODEX_THREAD_ID",
+    "ELECTRON_RUN_AS_NODE",
+    "NODE_CHANNEL_FD",
+    "NODE_UNIQUE_ID",
+  ]);
+  assert.deepEqual(result.environment, {
+    Path: "C:\\Windows\\System32",
+    NODE_OPTIONS: "--max-old-space-size=4096",
+    ASTRON_API_KEY: "astron-key",
+    HTTPS_PROXY: "http://127.0.0.1:8080",
+  });
+});
+
+test("AstronStudio binds a delayed post-send session to a persisted pre-send route", () => {
+  const workspace = join("C:\\", "batch", "task-1");
+  const sentAt = Date.parse("2026-09-15T09:03:08.279Z");
+  const state = {
+    task_creation: { thread_id_candidate: "new-task-route" },
+    timing: { sent_at: "2026-09-15T09:03:08.279Z" },
+    session: {
+      conversation_id: null,
+      dom_conversation_id: null,
+      dom_baseline_conversation_id: "thread-delayed",
+      baseline: [],
+    },
+  };
+  const sessions = [{
+    conversationId: "thread-delayed",
+    turnId: "turn-1",
+    cwd: workspace,
+    status: "running",
+    updatedAt: sentAt + 12_000,
+  }];
+
+  const match = selectRouteConfirmedAttemptSession(sessions, state, workspace, "unrelated-current-route");
+  assert.equal(match.session.conversationId, "thread-delayed");
+  assert.equal(match.routeSource, "pre-send-route");
+});
+
+test("AstronStudio never recovers an exact-cwd session without a captured route match", () => {
+  const workspace = join("C:\\", "batch", "task-1");
+  const sentAt = Date.parse("2026-09-15T09:03:08.279Z");
+  const state = {
+    timing: { sent_at: "2026-09-15T09:03:08.279Z" },
+    task_creation: { thread_id_candidate: "expected-route" },
+    session: { dom_baseline_conversation_id: "expected-route", baseline: [] },
+  };
+  const sessions = [{
+    conversationId: "newest-but-unconfirmed",
+    turnId: "turn-1",
+    cwd: workspace,
+    status: "running",
+    updatedAt: sentAt + 60_000,
+  }];
+
+  assert.equal(selectRouteConfirmedAttemptSession(sessions, state, workspace), null);
+});
+
+test("AstronStudio post-send identity window is bounded between 120 and 180 seconds", () => {
+  assert.equal(postSendIdentityTimeoutMilliseconds(15_000), 120_000);
+  assert.equal(postSendIdentityTimeoutMilliseconds(150_000), 150_000);
+  assert.equal(postSendIdentityTimeoutMilliseconds(300_000), 180_000);
+});
+
+test("AstronStudio resume recovers thread and turn only from persisted route evidence", async () => {
+  const workspace = join("C:\\", "batch", "task-1");
+  const sentAt = Date.parse("2026-09-15T09:03:08.279Z");
+  const state = {
+    timing: { sent_at: "2026-09-15T09:03:08.279Z" },
+    task_creation: { thread_id_candidate: "different-new-task-route" },
+    session: {
+      conversation_id: null,
+      dom_conversation_id: null,
+      dom_baseline_conversation_id: "thread-recovered",
+      baseline: [],
+    },
+  };
+  const recovered = await recoverAttemptThreadIdentityFromDatabase(
+    { workspace, sessionDb: "fixture.sqlite" },
+    state,
+    {
+      querySessions: async () => [{
+        conversationId: "thread-recovered",
+        turnId: "turn-recovered",
+        cwd: workspace,
+        status: "completed",
+        updatedAt: sentAt + 12_000,
+      }],
+      now: () => "2026-09-15T09:04:00.000Z",
+    },
+  );
+
+  assert.equal(recovered, "thread-recovered");
+  assert.equal(hasStableThreadIdentity(state, workspace), true);
+  assert.equal(state.session.route_confirmation.source, "pre-send-route");
+  assert.equal(state.session.route_confirmation.recovered_from_persisted_state, true);
 });
 
 test("AstronStudio CDP connection retries transient failures with a bounded timeout", async () => {
@@ -543,10 +700,17 @@ test("AstronStudio terminal --resume backfills cleanup without resending the pro
   await atomicWriteJson(config.stateFile, state);
   await atomicWriteJson(config.resultFile, state);
 
-  assert.equal(await main(args), 0);
+  assert.equal(await main(args, {
+    platform: "darwin",
+    collectTerminalProcessCleanup: (currentConfig, currentState, phase, currentIdentity, options) =>
+      collectTerminalProcessCleanup(currentConfig, currentState, phase, currentIdentity, {
+        ...options,
+        terminateProcesses: async () => ({ supported: false, success: true, skipped: true }),
+      }),
+  }), 0);
   const recovered = JSON.parse(await readFile(config.stateFile, "utf8"));
   assert.equal(recovered.phase, "SUCCEEDED");
-  assert.equal(recovered.driver.version, "1.10.15");
+  assert.equal(recovered.driver.version, "1.10.18");
   assert.equal(recovered.terminal_process_cleanup.supported, false);
   assert.equal(recovered.terminal_process_cleanup.success, true);
   assert.equal(recovered.terminal_process_cleanup.backfill_verification.unchanged, true);

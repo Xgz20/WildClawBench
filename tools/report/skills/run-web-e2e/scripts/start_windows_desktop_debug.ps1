@@ -263,6 +263,53 @@ function Resolve-AstronStudioExecutable {
     throw "AstronStudio was not found in its registry keys or LOCALAPPDATA Programs directories."
 }
 
+function Start-AstronStudioWithSanitizedEnvironment {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ExecutablePath,
+
+        [Parameter(Mandatory = $true)]
+        [int]$Port
+    )
+
+    $nodeIpcNames = @(
+        "ELECTRON_RUN_AS_NODE",
+        "NODE_CHANNEL_FD",
+        "NODE_UNIQUE_ID"
+    )
+    $removedNames = @(
+        Get-ChildItem Env: | Where-Object {
+            $_.Name.StartsWith("CODEX_", [System.StringComparison]::OrdinalIgnoreCase) -or
+            $_.Name.StartsWith("CHATGPT_", [System.StringComparison]::OrdinalIgnoreCase) -or
+            $_.Name -in $nodeIpcNames
+        } | ForEach-Object Name | Sort-Object -Unique
+    )
+    $savedValues = @{}
+    foreach ($name in $removedNames) {
+        $savedValues[$name] = (Get-Item -LiteralPath "Env:$name").Value
+    }
+
+    try {
+        foreach ($name in $removedNames) {
+            Remove-Item -LiteralPath "Env:$name" -ErrorAction Stop
+        }
+        if ($removedNames.Count -gt 0) {
+            Write-Host "AstronStudio launch environment removed host-control variables: $($removedNames -join ', ')"
+        }
+        Start-Process `
+            -FilePath $ExecutablePath `
+            -ArgumentList @(
+                "--remote-debugging-address=127.0.0.1",
+                "--remote-debugging-port=$Port"
+            )
+    }
+    finally {
+        foreach ($name in $removedNames) {
+            Set-Item -LiteralPath "Env:$name" -Value $savedValues[$name]
+        }
+    }
+}
+
 function Resolve-WorkBuddyExecutable {
     $executableNames = @("WorkBuddy.exe", "CodeBuddy.exe")
     $candidates = @()
@@ -581,6 +628,26 @@ function Test-InstalledProcessIdentity {
     )
 }
 
+function Stop-InstalledProcessTrees {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object[]]$Processes,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ExecutablePath
+    )
+
+    foreach ($process in $Processes | Sort-Object Id) {
+        if (-not (Test-InstalledProcessIdentity -Process $process -ExecutablePath $ExecutablePath)) {
+            throw "Refusing to stop PID $($process.Id) because its executable path no longer matches $ExecutablePath."
+        }
+        & "$env:SystemRoot\System32\taskkill.exe" /PID ([string]$process.Id) /T /F | Out-Null
+        if ($LASTEXITCODE -ne 0 -and (Get-Process -Id $process.Id -ErrorAction SilentlyContinue)) {
+            throw "Failed to stop the verified process tree rooted at PID $($process.Id)."
+        }
+    }
+}
+
 function Wait-PortAvailable {
     param(
         [Parameter(Mandatory = $true)]
@@ -611,10 +678,13 @@ function Wait-PortAvailable {
         $process = Get-Process `
             -Id $listener.OwningProcess `
             -ErrorAction SilentlyContinue
-        if (-not $process -or
-            $process.ProcessName -notin $ExpectedProcesses -or
+        if (-not $process) {
+            Start-Sleep -Milliseconds 250
+            continue
+        }
+        if ($process.ProcessName -notin $ExpectedProcesses -or
             -not (Test-InstalledProcessIdentity -Process $process -ExecutablePath $ExpectedExecutablePath)) {
-            $processName = if ($process) { $process.ProcessName } else { "unknown" }
+            $processName = $process.ProcessName
             throw "Port $Port was claimed by unrelated process $processName (PID $($listener.OwningProcess)) while waiting for the desktop client to exit."
         }
 
@@ -812,7 +882,9 @@ else {
 
     if ($astronStudioProcesses.Count -gt 0) {
         Write-Host "Stopping AstronStudio processes whose executable path matches the discovered installation..."
-        $astronStudioProcesses | Stop-Process -Force
+        Stop-InstalledProcessTrees `
+            -Processes $astronStudioProcesses `
+            -ExecutablePath $astronStudioExecutable
         $astronStudioProcesses | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue
     }
 
@@ -851,12 +923,9 @@ else {
             -TimeoutSeconds $TimeoutSeconds
 
         Write-Host "Starting AstronStudio with CDP on port $AstronStudioPort..."
-        Start-Process `
-            -FilePath $astronStudioExecutable `
-            -ArgumentList @(
-                "--remote-debugging-address=127.0.0.1",
-                "--remote-debugging-port=$AstronStudioPort"
-            )
+        Start-AstronStudioWithSanitizedEnvironment `
+            -ExecutablePath $astronStudioExecutable `
+            -Port $AstronStudioPort
     }
 
     if ($includeWorkBuddy -and -not $workBuddyReady) {

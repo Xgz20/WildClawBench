@@ -253,6 +253,13 @@ test("project mapping requires the exact scoring directory", async () => {
   assert.equal(result.next_task.project_id, "project-task-1");
 });
 
+test("project mapping accepts the upgraded Desktop on-this-computer dialog", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  const result = await registerTask(root, state.tasks[0], "create-project-dialog-on-this-computer");
+  assert.equal(result.next_task.registration_method, "create-project-dialog-on-this-computer");
+});
+
 test("preflight checks Desktop, registration mode, score Skill version and metric profile", async () => {
   const root = await fixture();
   const { state } = await initialize(root);

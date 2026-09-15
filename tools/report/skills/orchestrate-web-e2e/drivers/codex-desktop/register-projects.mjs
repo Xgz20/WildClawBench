@@ -122,8 +122,9 @@ export function pageRank({ title, url }) {
   if (/devtools:/i.test(url)) return -1000;
   let score = 0;
   if (/^app:\/\//i.test(url)) score += 100;
+  if (/^app:\/\/-\/(?:index\.html)?(?:[?#]|$)/i.test(url)) score += 200;
   if (/codex|chatgpt/i.test(title)) score += 40;
-  if (/initialRoute=.*avatar-overlay/i.test(url)) score -= 50;
+  if (/detached-window|initialRoute=.*(?:avatar-overlay|detached-window)/i.test(url)) score -= 250;
   if (/settings|browser/i.test(title)) score -= 10;
   return score;
 }
@@ -209,19 +210,38 @@ async function beginProjectRegistration(page, timeout) {
     const dialog = page.getByRole("dialog");
     await dialog.waitFor({ state: "visible", timeout });
     const local = dialog.getByRole("radio", { name: /^(Local|本地)(\s|$)/i });
-    if (await local.count() !== 1) throw new Error("创建项目对话框缺少唯一的本地项目选项");
-    if (await local.getAttribute("aria-checked") !== "true") await local.click({ timeout, noWaitAfter: true });
-    await dialog.getByRole("button", { name: /^(Next|下一步)$/i }).click({ timeout, noWaitAfter: true });
+    const localCount = await local.count();
+    if (localCount > 1) throw new Error(`创建项目对话框的本地项目选项不唯一，实际 ${localCount} 个`);
+    if (localCount === 1) {
+      if (await local.getAttribute("aria-checked") !== "true") await local.click({ timeout, noWaitAfter: true });
+      await dialog.getByRole("button", { name: /^(Next|下一步)$/i }).click({ timeout, noWaitAfter: true });
+    }
     const staleSources = dialog.getByRole("button", { name: /^(Remove|移除)\s+/i });
     while (await staleSources.count()) {
       await staleSources.first().click({ timeout, noWaitAfter: true });
     }
-    const sourceFolder = await uniqueVisible([
-      dialog.getByRole("button", { name: /^(Select source folder|选择源文件夹)$/i }),
-      dialog.getByRole("button", { name: /^(Add folder|添加文件夹)$/i }),
-    ], "源文件夹选择入口");
+    let sourceFolderLocators;
+    if (localCount === 1) {
+      sourceFolderLocators = [
+        dialog.getByRole("button", { name: /^(Select source folder|选择源文件夹)$/i }),
+        dialog.getByRole("button", { name: /^(Add folder|添加文件夹)$/i }),
+      ];
+    } else {
+      const projectDevice = await uniqueVisible([
+        dialog.getByRole("button", { name: /^(Project location|Project device|项目所在设备)$/i }),
+      ], "项目所在设备");
+      const projectDeviceText = (await projectDevice.innerText()).trim();
+      if (!/^(Add folder on this computer|在此电脑上添加文件夹)$/i.test(projectDeviceText)) {
+        throw new Error(`创建项目对话框未选择本机设备：${projectDeviceText || "空"}`);
+      }
+      sourceFolderLocators = [dialog.getByRole("button", { name: /^(Add|添加)$/i })];
+    }
+    const sourceFolder = await uniqueVisible(sourceFolderLocators, "源文件夹选择入口");
     await sourceFolder.click({ timeout, noWaitAfter: true, force: true });
-    return { method: "create-local-project-dialog", finalize: true };
+    return {
+      method: localCount === 1 ? "create-local-project-dialog" : "create-project-dialog-on-this-computer",
+      finalize: true,
+    };
   }
 
   const addPattern = /^(Add project|添加项目|New project|新建项目|Open project|打开项目)$/i;

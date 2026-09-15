@@ -72,6 +72,7 @@ const KNOWN_ATTEMPT_OUTPUT_ROOTS = new Set([
 const REGISTRATION_METHODS = new Set([
   "direct-open-folder",
   "create-local-project-dialog",
+  "create-project-dialog-on-this-computer",
   "add-project-then-open-folder",
   "renderer-bridge",
 ]);

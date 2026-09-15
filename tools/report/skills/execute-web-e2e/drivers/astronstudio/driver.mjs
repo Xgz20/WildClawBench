@@ -214,6 +214,7 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
       open_exit_code: result.code,
       open_stderr: String(result.stderr || "").trim().slice(0, 2000) || null,
       endpoint_ready: false,
+      environment_preparation: result.environment_preparation || null,
     };
     attempts.push(evidence);
     try {
@@ -805,32 +806,106 @@ async function clickSend(page, timeout) {
   return "submit-button-accessible-label";
 }
 
-async function captureAttemptThread(page, config, state, timeout) {
-  const deadline = Date.now() + timeout;
-  while (Date.now() < deadline) {
-    const routeThreadId = threadIdFromUrl(page.url());
-    const sessions = await querySessions(config.sessionDb);
-    const exact = sessions.find((session) =>
-      session.conversationId === routeThreadId && resolve(String(session.cwd || "")) === config.workspace,
-    );
-    const candidate = exact || chooseAttemptSession(sessions, state, config.workspace);
-    const turnId = candidate?.turnId || candidate?.activeTurnId || null;
-    if (candidate
-      && routeThreadId === candidate.conversationId
-      && resolve(String(candidate.cwd || "")) === config.workspace
-      && turnId) {
-      state.session.conversation_id = candidate.conversationId;
-      state.session.dom_conversation_id = routeThreadId;
-      state.session.cwd = candidate.cwd;
-      state.session.raw_status = candidate.status;
-      state.session.turn_id = turnId;
-      state.session.updated_at_ms = candidate.updatedAt || null;
-      state.session.dom_conversation_captured_at = new Date().toISOString();
-      return candidate.conversationId;
-    }
-    await sleep(250);
+function routeReferences(state, currentRouteThreadId = null) {
+  const references = [
+    ["current-route", currentRouteThreadId],
+    ["captured-dom-route", state.session?.dom_conversation_id],
+    ["pre-send-route", state.session?.dom_baseline_conversation_id],
+    ["new-task-route", state.task_creation?.thread_id_candidate],
+  ];
+  const seen = new Set();
+  return references
+    .filter(([, threadId]) => threadId && !seen.has(threadId) && seen.add(threadId))
+    .map(([source, threadId]) => ({ source, threadId }));
+}
+
+function isPostSendAttemptSession(session, state, workspace) {
+  if (!session?.conversationId || !session.cwd) return false;
+  if (resolve(String(session.cwd)) !== resolve(workspace)) return false;
+  if (!(session.turnId || session.activeTurnId)) return false;
+  const updatedAt = Number(session.updatedAt || session.createdAt || 0);
+  const sentAt = state.timing?.sent_at ? Date.parse(state.timing.sent_at) : 0;
+  if (sentAt) return updatedAt >= sentAt;
+  const baseline = new Map((state.session?.baseline || [])
+    .map((item) => [item.conversation_id, Number(item.updated_at_ms || 0)]));
+  if (baseline.size) {
+    return !baseline.has(session.conversationId) || updatedAt > baseline.get(session.conversationId);
+  }
+  const preparedAt = Date.parse(state.timing?.prepared_at || 0);
+  return updatedAt >= preparedAt;
+}
+
+export function selectRouteConfirmedAttemptSession(
+  sessions,
+  state,
+  workspace,
+  currentRouteThreadId = null,
+) {
+  const eligible = sessions.filter((session) => isPostSendAttemptSession(session, state, workspace));
+  for (const reference of routeReferences(state, currentRouteThreadId)) {
+    const session = eligible
+      .filter((item) => item.conversationId === reference.threadId)
+      .sort((left, right) => Number(right.updatedAt || 0) - Number(left.updatedAt || 0))[0];
+    if (session) return { session, routeSource: reference.source, routeThreadId: reference.threadId };
   }
   return null;
+}
+
+function recordRouteConfirmedAttempt(state, match, currentRouteThreadId = null, now = new Date().toISOString()) {
+  const { session, routeSource, routeThreadId } = match;
+  state.session.conversation_id = session.conversationId;
+  state.session.dom_conversation_id = routeThreadId;
+  state.session.cwd = session.cwd;
+  state.session.raw_status = session.status;
+  state.session.turn_id = session.turnId || session.activeTurnId;
+  state.session.updated_at_ms = session.updatedAt || null;
+  state.session.dom_conversation_captured_at = now;
+  state.session.route_confirmation = {
+    source: routeSource,
+    thread_id: routeThreadId,
+    observed_route_thread_id: currentRouteThreadId,
+    session_updated_at_ms: session.updatedAt || null,
+    confirmed_at: now,
+  };
+  return session.conversationId;
+}
+
+export function postSendIdentityTimeoutMilliseconds(uiTimeout) {
+  return Math.min(Math.max(Number(uiTimeout) || 0, 120_000), 180_000);
+}
+
+export async function captureAttemptThread(page, config, state, timeout, overrides = {}) {
+  const dependencies = {
+    querySessions,
+    sleep,
+    nowMilliseconds: () => Date.now(),
+    now: () => new Date().toISOString(),
+    ...overrides,
+  };
+  const deadline = dependencies.nowMilliseconds() + timeout;
+  while (dependencies.nowMilliseconds() < deadline) {
+    const routeThreadId = threadIdFromUrl(page.url());
+    const sessions = await dependencies.querySessions(config.sessionDb);
+    const match = selectRouteConfirmedAttemptSession(sessions, state, config.workspace, routeThreadId);
+    if (match) return recordRouteConfirmedAttempt(state, match, routeThreadId, dependencies.now());
+    await dependencies.sleep(250);
+  }
+  return null;
+}
+
+export async function recoverAttemptThreadIdentityFromDatabase(config, state, overrides = {}) {
+  if (hasStableThreadIdentity(state, config.workspace)) return state.session.conversation_id;
+  const dependencies = {
+    querySessions,
+    now: () => new Date().toISOString(),
+    ...overrides,
+  };
+  const sessions = await dependencies.querySessions(config.sessionDb);
+  const match = selectRouteConfirmedAttemptSession(sessions, state, config.workspace);
+  if (!match) return null;
+  const conversationId = recordRouteConfirmedAttempt(state, match, null, dependencies.now());
+  state.session.route_confirmation.recovered_from_persisted_state = true;
+  return conversationId;
 }
 
 export function hasStableThreadIdentity(state, workspace) {
@@ -1464,6 +1539,29 @@ async function resumeAutomation(config, state, identityInfo) {
   state.runtime.heartbeat_at = state.runtime.driver_started_at;
   let page = null;
   try {
+    if (!hasStableThreadIdentity(state, config.workspace)) {
+      const recoveredThreadId = await recoverAttemptThreadIdentityFromDatabase(config, state);
+      if (recoveredThreadId) {
+        state.history.push({
+          event: "THREAD_IDENTITY_RECOVERED_FROM_PERSISTED_ROUTE",
+          at: new Date().toISOString(),
+          thread_id: recoveredThreadId,
+          turn_id: state.session.turn_id,
+          route_source: state.session.route_confirmation?.source || null,
+        });
+        await saveState(config, state);
+      }
+    }
+    if (config.observeOnce && !config.restartApp) {
+      const runStartedAt = Date.parse(state.timing.sent_at || state.timing.started_at || new Date().toISOString());
+      const databaseObserved = await observeAttemptFromDatabase(
+        config,
+        state,
+        identityInfo,
+        runStartedAt + config.runTimeoutSeconds * 1000,
+      );
+      if (databaseObserved) return databaseObserved;
+    }
     if (config.restartApp) {
       await requireUnlockedGui();
       const recoverySession = {
@@ -1485,16 +1583,6 @@ async function resumeAutomation(config, state, identityInfo) {
       throw new Error(`AstronStudio 未开放调试端口 ${config.endpoint}`);
     }
     state.client.process = await astronProcessIdentity(config.appPath);
-    if (config.observeOnce && !config.restartApp) {
-      const runStartedAt = Date.parse(state.timing.sent_at || state.timing.started_at || new Date().toISOString());
-      const databaseObserved = await observeAttemptFromDatabase(
-        config,
-        state,
-        identityInfo,
-        runStartedAt + config.runTimeoutSeconds * 1000,
-      );
-      if (databaseObserved) return databaseObserved;
-    }
     await requireUnlockedGui();
     const { chromium } = await import("playwright-core");
     const browser = await connectAstudioBrowser(chromium, config.endpoint, config.timeoutSeconds * 1000);
@@ -1561,7 +1649,8 @@ function installDriverSignalHandlers(config, state, identityInfo) {
   }
 }
 
-async function runAutomation(config, identityInfo) {
+async function runAutomation(config, identityInfo, overrides = {}) {
+  const collectCleanup = overrides.collectTerminalProcessCleanup || collectTerminalProcessCleanup;
   await mkdir(config.outputDir, { recursive: true });
   let existingState = await readJsonIfExists(config.stateFile);
   let retryArchive = null;
@@ -1570,7 +1659,7 @@ async function runAutomation(config, identityInfo) {
     if (TERMINAL_PHASES.has(existingState.phase)) {
       if (!config.retryPreSendFailure) {
         if (config.resume && existingState.terminal_process_cleanup?.success !== true) {
-          await collectTerminalProcessCleanup(
+          await collectCleanup(
             config,
             existingState,
             existingState.phase,
@@ -1667,6 +1756,7 @@ async function runAutomation(config, identityInfo) {
         raw_status: session.status || "",
       }));
     state.session.dom_baseline_conversation_id = threadIdFromUrl(page.url());
+    state.session.dom_baseline_conversation_captured_at = new Date().toISOString();
     transitionState(state, "READY_TO_SEND");
     await saveState(config, state);
 
@@ -1675,7 +1765,7 @@ async function runAutomation(config, identityInfo) {
     state.timing.sent_at = new Date().toISOString();
     transitionState(state, "PROMPT_SENT");
     await saveState(config, state);
-    await captureAttemptThread(page, config, state, Math.min(timeout, 15000));
+    await captureAttemptThread(page, config, state, postSendIdentityTimeoutMilliseconds(timeout));
     if (!hasStableThreadIdentity(state, config.workspace)) {
       return persistNeedsAttention(
         config,
@@ -1805,7 +1895,7 @@ async function probe(config) {
   };
 }
 
-export async function main(argv) {
+export async function main(argv, overrides = {}) {
   let parsed;
   try {
     parsed = parseArgs(argv);
@@ -1819,7 +1909,7 @@ export async function main(argv) {
     return 0;
   }
   try {
-    const config = await resolveConfig(parsed);
+    const config = await resolveConfig(parsed, overrides);
     if (config.probe) {
       const result = await probe(config);
       console.log(JSON.stringify(result, null, 2));
@@ -1847,7 +1937,7 @@ export async function main(argv) {
     };
     if (!config.quiet) console.log(JSON.stringify(safeConfig, null, 2));
     if (config.dryRun) return 0;
-    const result = await runAutomation(config, identityInfo);
+    const result = await runAutomation(config, identityInfo, overrides);
     if (!config.quiet) console.log(`AstronStudio 自动化状态：${result.phase}；状态文件：${config.stateFile}`);
     if (result.phase === "SUCCEEDED") return 0;
     if (result.phase === "RUNNING" || result.phase === "PROMPT_SENT") return 0;

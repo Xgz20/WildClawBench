@@ -15,6 +15,30 @@ export const WINDOWS_REGISTRY_KEYS = Object.freeze([
   "HKCU\\Software\\AstronStudio",
   "HKCU\\Software\\Acode",
 ]);
+export const HOST_CONTROL_ENVIRONMENT_PREFIXES = Object.freeze(["CODEX_", "CHATGPT_"]);
+export const HOST_IPC_ENVIRONMENT_NAMES = Object.freeze([
+  "ELECTRON_RUN_AS_NODE",
+  "NODE_CHANNEL_FD",
+  "NODE_UNIQUE_ID",
+]);
+
+export function sanitizeAstronLaunchEnvironment(environment = process.env) {
+  const sanitized = { ...environment };
+  const removedVariables = [];
+  const explicitNames = new Set(HOST_IPC_ENVIRONMENT_NAMES.map((name) => name.toUpperCase()));
+  for (const name of Object.keys(sanitized)) {
+    const normalized = name.toUpperCase();
+    if (
+      HOST_CONTROL_ENVIRONMENT_PREFIXES.some((prefix) => normalized.startsWith(prefix))
+      || explicitNames.has(normalized)
+    ) {
+      delete sanitized[name];
+      removedVariables.push(name);
+    }
+  }
+  removedVariables.sort((left, right) => left.localeCompare(right));
+  return { environment: sanitized, removedVariables };
+}
 
 function runCapture(command, args, options = {}) {
   return new Promise((resolvePromise, rejectPromise) => {
@@ -35,12 +59,13 @@ function runCapture(command, args, options = {}) {
   });
 }
 
-function spawnDetached(command, args) {
+function spawnDetached(command, args, options = {}) {
   return new Promise((resolvePromise, rejectPromise) => {
     const child = spawn(command, args, {
       detached: true,
       stdio: "ignore",
       windowsHide: false,
+      env: options.environment || process.env,
     });
     child.once("error", rejectPromise);
     child.once("spawn", () => {
@@ -431,7 +456,19 @@ export async function launchAstron(appPath, port, overrides = {}) {
   const runCommand = overrides.runCommand || runCapture;
   const launchDetached = overrides.launchDetached || spawnDetached;
   const debugArgs = ["--remote-debugging-address=127.0.0.1", `--remote-debugging-port=${port}`];
-  if (platform === "win32") return launchDetached(appPath, debugArgs);
+  if (platform === "win32") {
+    const launchEnvironment = sanitizeAstronLaunchEnvironment(overrides.environment || process.env);
+    const result = await launchDetached(appPath, debugArgs, {
+      environment: launchEnvironment.environment,
+    });
+    return {
+      ...result,
+      environment_preparation: {
+        strategy: "remove-host-control-and-node-ipc-variables",
+        removed_variables: launchEnvironment.removedVariables,
+      },
+    };
+  }
   return runCommand(
     "/usr/bin/open",
     ["-na", appPath, "--args", ...debugArgs],

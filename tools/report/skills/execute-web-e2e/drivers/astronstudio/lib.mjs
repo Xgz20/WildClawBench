@@ -1,7 +1,8 @@
 import { spawn } from "node:child_process";
-import { access, copyFile, mkdtemp, rm } from "node:fs/promises";
+import { access, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   AUTOMATION_SCHEMA,
@@ -51,7 +52,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.10.15";
+export const DRIVER_VERSION = "1.10.18";
 export const DEFAULT_APP_PATH = defaultAstronAppPath();
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
@@ -92,7 +93,11 @@ export async function resolveExecutionIdentity(config) {
 }
 
 export function createInitialState(config, identity, initialSnapshot) {
-  return createBaseInitialState(config, identity, initialSnapshot, ASTRONSTUDIO_PROFILE);
+  const state = createBaseInitialState(config, identity, initialSnapshot, ASTRONSTUDIO_PROFILE);
+  state.session.turn_id = null;
+  state.session.dom_baseline_conversation_captured_at = null;
+  state.session.route_confirmation = null;
+  return state;
 }
 
 export function assertStateMatches(state, config, identity) {
@@ -169,12 +174,54 @@ async function querySqlite(snapshotDb, query, overrides = {}) {
   return result.stdout.trim() ? JSON.parse(result.stdout) : [];
 }
 
-async function copyIfPresent(source, destination) {
-  try {
-    await copyFile(source, destination);
-  } catch (error) {
-    if (error?.code !== "ENOENT") throw error;
-  }
+const SQLITE_SNAPSHOT_COPY_SCRIPT = fileURLToPath(new URL("./sqlite-snapshot-copy.mjs", import.meta.url));
+const SQLITE_SNAPSHOT_COPY_TIMEOUT_MILLISECONDS = 10_000;
+
+export function copySqliteSnapshot(source, destination, overrides = {}) {
+  const spawnProcess = overrides.spawnProcess || spawn;
+  const executable = overrides.execPath || process.execPath;
+  const script = overrides.copyScript || SQLITE_SNAPSHOT_COPY_SCRIPT;
+  const timeoutMilliseconds = overrides.copyTimeoutMilliseconds
+    || SQLITE_SNAPSHOT_COPY_TIMEOUT_MILLISECONDS;
+
+  return new Promise((resolvePromise, rejectPromise) => {
+    const child = spawnProcess(executable, [script, source, destination], {
+      stdio: ["ignore", "ignore", "pipe"],
+      windowsHide: true,
+    });
+    let stderr = "";
+    let settled = false;
+    let timedOut = false;
+    child.stderr?.on("data", (chunk) => {
+      if (stderr.length < 8192) stderr += chunk;
+    });
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill("SIGKILL");
+    }, timeoutMilliseconds);
+
+    const settle = (error = null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (error) rejectPromise(error);
+      else resolvePromise();
+    };
+    child.once("error", (error) => settle(error));
+    child.once("exit", (code, signal) => {
+      if (timedOut) {
+        const error = new Error(`AstronStudio 状态库快照复制超过 ${timeoutMilliseconds} 毫秒，已终止隔离复制进程`);
+        error.code = "ASTRON_SNAPSHOT_TIMEOUT";
+        settle(error);
+        return;
+      }
+      if (code !== 0) {
+        settle(new Error(`AstronStudio 状态库快照复制失败（退出码 ${code ?? "unknown"}，信号 ${signal || "none"}）：${stderr.trim() || "无错误输出"}`));
+        return;
+      }
+      settle();
+    });
+  });
 }
 
 const SESSION_QUERY = `
@@ -245,17 +292,17 @@ async function querySnapshot(snapshotDb, overrides = {}) {
 
 export async function querySessions(sessionDb = DEFAULT_SESSION_DB, overrides = {}) {
   await access(sessionDb);
+  const copySnapshot = overrides.copySnapshot || copySqliteSnapshot;
   let lastError = null;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     const snapshotDir = await mkdtemp(join(tmpdir(), "astudio-state-snapshot-"));
     const snapshotDb = join(snapshotDir, "state.sqlite");
     try {
-      await copyFile(sessionDb, snapshotDb);
-      await copyIfPresent(`${sessionDb}-wal`, `${snapshotDb}-wal`);
-      await copyIfPresent(`${sessionDb}-shm`, `${snapshotDb}-shm`);
+      await copySnapshot(sessionDb, snapshotDb, overrides);
       return await querySnapshot(snapshotDb, overrides);
     } catch (error) {
       lastError = error;
+      if (error?.code === "ASTRON_SNAPSHOT_TIMEOUT") break;
     } finally {
       await rm(snapshotDir, { recursive: true, force: true }).catch(() => {});
     }
@@ -288,17 +335,17 @@ LIMIT 1;
 export async function queryFinalResponse(sessionDb, threadId, turnId = null, overrides = {}) {
   await access(sessionDb);
   if (!threadId) return "";
+  const copySnapshot = overrides.copySnapshot || copySqliteSnapshot;
   let lastError = null;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     const snapshotDir = await mkdtemp(join(tmpdir(), "astudio-state-snapshot-"));
     const snapshotDb = join(snapshotDir, "state.sqlite");
     try {
-      await copyFile(sessionDb, snapshotDb);
-      await copyIfPresent(`${sessionDb}-wal`, `${snapshotDb}-wal`);
-      await copyIfPresent(`${sessionDb}-shm`, `${snapshotDb}-shm`);
+      await copySnapshot(sessionDb, snapshotDb, overrides);
       return await queryFinalResponseSnapshot(snapshotDb, threadId, turnId, overrides);
     } catch (error) {
       lastError = error;
+      if (error?.code === "ASTRON_SNAPSHOT_TIMEOUT") break;
     } finally {
       await rm(snapshotDir, { recursive: true, force: true }).catch(() => {});
     }

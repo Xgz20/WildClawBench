@@ -37,12 +37,22 @@ test("registrar only accepts loopback HTTP endpoints", () => {
 test("Codex app page outranks browser and DevTools pages", () => {
   assert.ok(pageRank({ title: "Codex", url: "app://-/" }) > pageRank({ title: "Browser", url: "https://example.com" }));
   assert.ok(pageRank({ title: "ChatGPT", url: "app://-/index.html" }) > pageRank({ title: "ChatGPT", url: "app://-/index.html?initialRoute=%2Favatar-overlay" }));
+  assert.ok(pageRank({ title: "执行 Web E2E 全流程", url: "app://-/index.html" }) > pageRank({ title: "ChatGPT", url: "app://-/detached-window.html?initialRoute=%2Fdetached-window" }));
   assert.ok(pageRank({ title: "DevTools", url: "devtools://devtools" }) < 0);
   const selected = choosePageInventory([
     { index: 0, title: "Example", url: "https://example.com" },
     { index: 1, title: "Codex", url: "app://-/" },
   ]);
   assert.equal(selected.index, 1);
+});
+
+test("main app page outranks upgraded Desktop detached and avatar windows", () => {
+  const selected = choosePageInventory([
+    { index: 0, title: "执行 Web E2E 全流程", url: "app://-/index.html" },
+    { index: 1, title: "ChatGPT", url: "app://-/index.html?initialRoute=%2Favatar-overlay" },
+    { index: 2, title: "ChatGPT", url: "app://-/detached-window.html?initialRoute=%2Fdetached-window" },
+  ]);
+  assert.equal(selected.index, 0);
 });
 
 test("multiple equal app pages require an exact URL", () => {
