@@ -99,17 +99,47 @@ test("ordinary terminal cleanup leaves enough time for a late Windows preview pr
   });
 });
 
-test("full access confirmation checks the unique dialog checkbox and verifies readback", async () => {
+test("full access confirmation clicks the visible checkbox label and verifies readback", async () => {
+  let labelClicks = 0;
+  let confirmClicks = 0;
+  const dialog = {
+    locator: (selector) => {
+      if (selector === 'input[type="checkbox"]') {
+        return {
+          count: async () => 1,
+          isChecked: async () => labelClicks === 1,
+        };
+      }
+      assert.equal(selector, "label.wb-checkbox");
+      return {
+        count: async () => 1,
+        click: async () => { labelClicks += 1; },
+      };
+    },
+    getByRole: () => ({
+      isEnabled: async () => labelClicks === 1,
+      click: async () => { confirmClicks += 1; },
+    }),
+  };
+  await confirmFullAccessRiskDialog(dialog, 100, { sleep: async () => {} });
+  assert.equal(labelClicks, 1);
+  assert.equal(confirmClicks, 1);
+});
+
+test("full access confirmation falls back to the native checkbox when no visible label exists", async () => {
   let checkboxChecks = 0;
   let confirmClicks = 0;
   const dialog = {
     locator: (selector) => {
-      assert.equal(selector, 'input[type="checkbox"]');
-      return {
-        count: async () => 1,
-        check: async () => { checkboxChecks += 1; },
-        isChecked: async () => checkboxChecks === 1,
-      };
+      if (selector === 'input[type="checkbox"]') {
+        return {
+          count: async () => 1,
+          check: async () => { checkboxChecks += 1; },
+          isChecked: async () => checkboxChecks === 1,
+        };
+      }
+      assert.equal(selector, "label.wb-checkbox");
+      return { count: async () => 0 };
     },
     getByRole: () => ({
       isEnabled: async () => checkboxChecks === 1,
@@ -650,7 +680,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.19");
+  assert.equal(state.driver.version, "1.8.20");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);
