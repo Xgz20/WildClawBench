@@ -4,18 +4,18 @@
 
 ## 1. 当前结论
 
-当前发布候选处于 `IN_PROGRESS`，AstronStudio×Windows **仍不能正式投入生产，但 V02–V10 功能闭环已经验证**。未提交修复候选已升级到 execute 1.11.16 / Driver 1.10.18 / run 1.3.7，并为升级后的 Codex Desktop 项目对话框补充了 orchestrate 0.2.6 兼容修改：AstronStudio Driver 49/49、Codex Desktop Driver 52/52、准备脚本 31/31 和 Skill 校验均通过。AstronStudio 3.3.1.277 在 127.0.0.1:9241 上重新通过只读 V02、单 L1 V03、三题串行 V04 和五题默认三槽 V05；V05 为 5/5 `SUCCEEDED`、每题 `PROMPT_SENT=1`、conversation/turn 均唯一、GLM-5.2 / High / full-access、终态清理成功且 execution receipt `integrity.valid=true`。Codex Desktop 26.908.9136 随后以 127.0.0.1:9230 调试端点完成五个精确项目注册、默认三路评分和动态补位，五题得分为 78、70、76、64、82，平均 74，submission、return ZIP/外部 receipt、管理员导入和报告三件套全部通过。以上仍是 HEAD `4c635115...` 上未提交工作树的功能证据，批次 manifest 没有包含 execute/Driver/run/orchestrate 修复；批次锁定 orchestrate 0.2.5，而升级后项目注册实际使用未打包的 0.2.6。默认 9240 仍被无存活所属进程的陈旧监听占用，本轮证据绑定 9241；V11–V17、正式端口恢复和提交后同一发布身份的重打包复验尚未完成。
+当前发布候选中，AstronStudio×Windows 已完成 V00–V17，状态为 **生产已验证**。发布实现 revision 为 `6988b5252bc9140e86dae139fdffbcfc964bcfbf`，正式包锁定 execute 1.11.16 / AstronStudio Driver 1.10.18 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.7 / report 1.0.2。Windows 10 10.0.19042 x64 真机使用 AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、GLM-5.2 / High / full-access：正式 ZIP 的单 Prompt 执行→评分→submission→return 已闭环；独立控制任务接管、Harness 重启安全失败、Codex 平台托管重启、发送前唯一重试、执行超时、评分 attempt 隔离和 submission 发布中断恢复均通过。V03–V10 依据完全一致的 execute/score/report/run 内容 SHA、实际 orchestrate 0.2.6 运行身份及正式 ZIP V11 冒烟完成证据重绑定；默认端口 9240 已恢复并重新通过进程路径检查。该结论只覆盖本节锁定的 AstronStudio×Windows 组合，不代表 macOS、WorkBuddy 或 QwenWork 已完成当前发布身份的生产验收。
 
 ### 当前实施进度
 
 | 阶段 | 状态 | 完成条件 | 证据 |
 | --- | --- | --- | --- |
 | P0 修复跨平台发布门禁 | `PASSED` | macOS 三 Harness 前置准备、Windows 精确进程身份、QwenWork 重启入口、测试入口和路径兼容测试全部通过 | 原发布门禁测试均通过；升级后项目对话框兼容修改的 Codex Desktop Driver 为 52/52、准备工作空间 31/31 |
-| P1 固化发布 revision | `PASSED` | 只提交相关改动，记录完整 commit SHA，工作树中无遗漏的相关修改 | `0486480ca9dda5a5b6269d997caf7fb8af4e8444`；执行终态和评分会话竞态修复均已提交，未纳入无关的 `requirements.txt` 和 AstronCode 用量文件 |
-| P2 生成正式包 | `PASSED` | 自建 40 题、开源 120 题各生成一个新批次，两个批次均包含三 Harness 并绑定实际打包 revision；五个 Skill ZIP 版本与 SHA 完整 | `web-e2e-20260915-140309-custom40`、`web-e2e-20260915-140309-opensource120`；共 22/22 ZIP SHA 与 6+6 execution/scoring 隔离审计通过 |
+| P1 固化发布 revision | `PASSED` | 只提交相关改动，记录完整 commit SHA，工作树中无遗漏的相关修改 | `6988b5252bc9140e86dae139fdffbcfc964bcfbf`；AstronStudio Windows 验收链路修复已提交 |
+| P2 生成正式包 | `PASSED` | 自建 40 题、开源 120 题各生成一个新批次，两个批次均包含三 Harness 并绑定实际打包 revision；五个 Skill ZIP 版本与 SHA 完整 | `web-e2e-20260915-232007-custom40`、`web-e2e-20260915-232007-opensource120`；共 22/22 ZIP SHA 与 6+6 execution/scoring 隔离审计通过 |
 | P3 macOS 受影响项回归 | `IN_PROGRESS` | 依照第 4 节完成并登记证据 | AstronStudio V04–V10 功能闭环完成；正式 0.2.5 ZIP 的单 L1 执行已通过，评分项目注册等待 Codex 9230 调试端点，V11–V17 尚未完成 |
-| P4 Windows 真机回归 | `IN_PROGRESS` | 每个目标 Harness 依照第 4 节完成并登记证据 | 未提交候选在 AStudio 3.3.1.277、127.0.0.1:9241 和 Codex Desktop 26.908.9136、127.0.0.1:9230 上完成 AstronStudio V02–V10；V11–V17、9240 陈旧监听及提交后同一正式包身份复验尚未关闭 |
-| P5 发布结论 | `NOT_STARTED` | 所有声明为生产可用的 Harness×OS 组合均为 `PASSED`，未通过组合在指导手册中明确降级 | 本清单、指导手册和正式包 manifest 一致 |
+| P4 Windows 真机回归 | `IN_PROGRESS` | 每个目标 Harness 依照第 4 节完成并登记证据 | AstronStudio×Windows V00–V17 已全部通过；WorkBuddy×Windows 与 QwenWork×Windows 仍为旧身份证据，不在本次生产声明范围 |
+| P5 发布结论 | `PASSED` | 所有声明为生产可用的 Harness×OS 组合均为 `PASSED`，未通过组合在指导手册中明确降级 | 本次只声明 AstronStudio×Windows 为生产已验证；指导手册、清单和正式包 manifest 已对齐 |
 
 ## 2. 状态与更新规则
 
@@ -47,37 +47,37 @@
 
 | 项目 | 值 |
 | --- | --- |
-| Web E2E 实现 revision | `0486480ca9dda5a5b6269d997caf7fb8af4e8444` |
-| 正式包 source revision | `0486480ca9dda5a5b6269d997caf7fb8af4e8444` |
-| `execute-web-e2e` | `1.11.13` |
+| Web E2E 实现 revision | `6988b5252bc9140e86dae139fdffbcfc964bcfbf` |
+| 正式包 source revision | `6988b5252bc9140e86dae139fdffbcfc964bcfbf` |
+| `execute-web-e2e` | `1.11.16` |
 | WorkBuddy Driver | `1.8.19` |
-| AstronStudio Driver | `1.10.15` |
+| AstronStudio Driver | `1.10.18` |
 | QwenWork Driver | `1.10.10` |
-| `orchestrate-web-e2e` | `0.2.5` |
+| `orchestrate-web-e2e` | `0.2.6` |
 | `score-web-e2e` | `4.5.2` |
-| `run-web-e2e` | `1.3.5` |
+| `run-web-e2e` | `1.3.7` |
 | `report-web-e2e` | `1.0.2` |
 | Skill ZIP/content SHA | 见下表；两个正式批次逐项一致 |
-| Node.js / Playwright | `真机验收时填写；Driver 锁定 playwright-core 1.55.0` |
+| Node.js / Playwright | `Node.js 24.17.0；Driver 锁定 playwright-core 1.55.0` |
 
 | Skill | 版本 | content SHA-256 | ZIP SHA-256 |
 | --- | --- | --- | --- |
-| `score-web-e2e` | `4.5.2` | `6fdc8e9a9a8d014b4dab2a4c053d586a08e1f962f03a5071817e251aa2defe0a` | `9121323a68457c4ba28a741b479126d5d6b33d57421feaa4a87532536acf34e1` |
-| `report-web-e2e` | `1.0.2` | `a2236d07217989d73befc711e6019932b5e8910bee1938cb9011bf8d7c6d4875` | `ebb7796fba2caa9b2361b540a167001cca4d645a1ebcb02e084392d346092b6b` |
-| `orchestrate-web-e2e` | `0.2.5` | `3bf5d6bea6ca31c3b7464a46616f791073c2868e676cb8d9b3647dd97a075c18` | `73a4cfdb6d02dfdcb56be0a8f7a526b1a457988602d81abd3354b031b5ab348d` |
-| `execute-web-e2e` | `1.11.13` | `fadcffe629b05f1444af61267ff8721308a07e7df580d8afed3025b9db1b8ae6` | `bdeda81b3a7137f2704179c35fddb89f528b2f239f9d7f267dd3f81dfe5da502` |
-| `run-web-e2e` | `1.3.5` | `64845b60286fbd436c67632fd597a47afe56df595627ce089770cba44ffff4f8` | `aa2f94587e9e6813e4885f92df15be82fe64d280d2d0f3c5cff8af5f40c23f9d` |
+| `score-web-e2e` | `4.5.2` | `9e870f17452d00d11a2d0f339b4e12d477bceb623206af34cc6f76bb64625e93` | `4ce81bbc5126be94254c38ec4c7fed58c7a3a02efa13f4d53b0d3e1843c66425` |
+| `report-web-e2e` | `1.0.2` | `e931fe4668189caf3ea8ff3323c7aec99eadba2a991a402c509d439af9a629dc` | `485ad4b56908c47ea0ceafb690be49432b9c11b90d143d62d33894214deff280` |
+| `orchestrate-web-e2e` | `0.2.6` | `7b2c9fca36a158dc5e0beb98642aef1684bce23e76457b92ea8ff527a5db27a4` | `73d578ab6f21d03d10d0d5bd0ca235422809f5cda730707f69eafc11b73fc211` |
+| `execute-web-e2e` | `1.11.16` | `f0b5e84344761cc61e5a33dc1db142123368762045ce43e9a1b7bf0b3691f970` | `af7188824bc97c5535bee5e195bae327e0a1783ce77115d0fdf142bf22f30881` |
+| `run-web-e2e` | `1.3.7` | `448bfb2c59d0575afda7fe8efe7f845cec2a68d430b85a41598e88cae4cc5c7d` | `901652f564d535066b39f3f34ee4982d7bce36f834ed988245f6b3609f4d5ee7` |
 
 正式包位于 `report-workspace/web-e2e-automation-packages/`：
 
-- `web-e2e-20260915-140309-custom40`：40 个自建用例，`web-e2e-detailed-v1`；
-- `web-e2e-20260915-140309-opensource120`：120 个开源用例，`artifactsbench-web-v1`。
+- `web-e2e-20260915-232007-custom40`：40 个自建用例，`web-e2e-detailed-v1`；
+- `web-e2e-20260915-232007-opensource120`：120 个开源用例，`artifactsbench-web-v1`。
 
 两个批次均包含 `astronstudio`、`workbuddy`、`qwenwork`，各有 11 个 ZIP。2026-09-15 的只读审计逐项重算了 22 个 ZIP 的 SHA-256，结果均与各自 `batch_manifest.json` 一致；6 个 execution ZIP 均不含 Ground Truth、Rubric、checker、`eval/`、`gt/`、`private-scoring/` 或 `task_contract.json`，6 个 scoring ZIP 均不含 `workspace/`、`PROMPT.md`、`execution_record.json` 或 `task_manifest.json`。五个 Skill 的版本、content SHA 和 ZIP SHA 在两个批次中逐项一致。`report_config_ready=false` 表示管理员尚未填写本次实际模型映射，是准备阶段的预期状态。各 execution/scoring ZIP 的独立 SHA 以对应批次 `batch_manifest.json` 为准。
 
-### 3.1.1 未固化的 AstronStudio Windows 修复候选
+### 3.1.1 AstronStudio Windows 证据沿用与正式包重绑定
 
-当前工作树在 HEAD `4c635115562284de0603a99e6368ee4b8a46e1a7` 上包含未提交的 execute 1.11.16 / AstronStudio Driver 1.10.18 / run 1.3.7，以及适配 Codex Desktop 26.908.9136 新项目对话框的 orchestrate 0.2.6 修改，不能替代 3.1 的正式发布身份。1.10.16 的发送后身份恢复约束继续保留；1.10.18 进一步隔离 Windows 启动时的 `CODEX_*`、`CHATGPT_*` 与 Node IPC 环境变量，并用独立 Node 24 子进程复制活跃 SQLite，10 秒硬超时后失败关闭或回退 DOM，不再允许文件锁卡死队列。诊断批次 `windows-as-driver-1.10.18-v03-20260915-185350`、`windows-as-driver-1.10.18-v04-20260915-185842` 和 `windows-as-driver-1.10.18-v05-20260915-194158` 分别完成单题、三题串行和五题默认三槽真机验证；最后一个批次还以仓库中的 orchestrate 0.2.6 完成五题项目注册、三路评分、submission、return、导入和报告，平均分 74。该批次 manifest 仍记录未包含工作树修改的 HEAD，且包内锁定 orchestrate 0.2.5，只能作为功能证据，不能晋升为正式包。
+提交 `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 已固化 execute 1.11.16 / AstronStudio Driver 1.10.18 / run 1.3.7 / orchestrate 0.2.6。诊断批次 `windows-as-driver-1.10.18-v03-20260915-185350`、`windows-as-driver-1.10.18-v04-20260915-185842` 和 `windows-as-driver-1.10.18-v05-20260915-194158` 的 execute、score、report、run content/ZIP SHA 与 `232007` 正式包逐项一致；V06–V10 实际使用仓库 orchestrate 0.2.6，且候选完整性、submission、return、import/report 证据均可独立校验。由于旧诊断 manifest 自身锁定 0.2.5，不能单独作为正式身份；本轮额外从正式 0.2.6 ZIP 完成 V11 单 Prompt 全流程，并直接完成 V12–V17 恢复边界，故按第 2 节“内容 SHA 与客户端版本完全不变可注明证据沿用”的规则，把 V03–V10 重绑定到当前发布身份。V15 后已将 AstronStudio 恢复到 127.0.0.1:9240，标准启动脚本确认监听 PID 37408 的主程序路径为 `C:\Users\xgzhu6\AppData\Local\Programs\AStudio\AStudio.exe`。
 
 正式包可以在 macOS 或 Windows 的干净检出中生成；本轮先在 macOS 当前仓库生成并审计，Windows 也可按同一代码自行重建用于同机验收。准备脚本只读取仓库中的题目、Workspace 和 Skill 源码，写出的路径统一使用可移植格式。必须满足以下门禁：
 
@@ -103,6 +103,7 @@
 | `windows-astron-driver-11016-20260915` | Windows 10 10.0.19042 / x64 | AstronStudio 3.2.1.242 | GLM-5.2 / High | 未启动评分；Codex 9230 未启用 | `windows-astron-driver-1.10.16-functional-20260915-173623` | Codex（本机） | 2026-09-15 | 未提交功能候选；V02 通过，V03 两个隔离 attempt 均失败关闭；未启动 V04–V09 |
 | `windows-astron-331277-20260915` | Windows 10 10.0.19042 / x64 | AstronStudio 3.3.1.277 | GLM-5.2 / High | 未启动评分；Codex 9230 未启用 | `windows-astron-driver-1.10.16-final-20260915-175731` | Codex（本机） | 2026-09-15 | 未提交功能候选；升级后 V02 通过，V03 两个隔离 attempt 均失败关闭；后端反复 `read ENOTCONN` 退出并重启，未启动 V04–V09 |
 | `windows-astron-331277-driver-11018-20260915` | Windows 10 10.0.19042 / x64 | AstronStudio 3.3.1.277 | GLM-5.2 / High | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `windows-as-driver-1.10.18-v05-20260915-194158` | Codex（本机） | 2026-09-15 | 未提交功能候选；AStudio 经环境隔离启动在 127.0.0.1:9241，后端 PID 34848；Codex 以 127.0.0.1:9230 完成评分；V02–V10 通过，平均分 74；项目注册使用未打包 orchestrate 0.2.6，默认 9240 仍有陈旧监听 |
+| `windows-astron-release-6988b52-20260916` | Windows 10 10.0.19042 / x64 | AstronStudio 3.3.1.277 | GLM-5.2 / High / full-access | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `web-e2e-20260915-232007-opensource120`；验证 batch `windows-as-release-6988b52-v11-20260915-232329` | Codex（本机） | 2026-09-16 | 当前正式发布身份；Node 24.17.0；AstronStudio 127.0.0.1:9240、Codex 127.0.0.1:9230；V00–V17 全部通过 |
 
 ## 4. Harness×OS 验收矩阵
 
@@ -110,7 +111,7 @@
 
 | ID | 验收项 | macOS AstronStudio | macOS WorkBuddy | macOS QwenWork | Windows AstronStudio | Windows WorkBuddy | Windows QwenWork |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| V00 | 发布身份和依赖锁定 | I | I | I | I | I | I |
+| V00 | 发布身份和依赖锁定 | I | I | I | P | I | I |
 | V01 | 仓库测试与 Skill 校验 | P | P | P | P | P | P |
 | V02 | 只读 probe 与 CDP 进程身份 | P | P | P | P | S | S |
 | V03 | 单个 L1、`run_slots=1` | P | P | P | P | S | S |
@@ -121,13 +122,13 @@
 | V08 | submission 原子生成 | I | S | S | P | S | S |
 | V09 | return ZIP、外部 receipt 与 SHA | I | S | S | P | S | S |
 | V10 | 管理员 import 与报告三件套 | I | S | N | P | S | S |
-| V11 | 一个 Prompt 执行→评分→打包 | I | S | N | S | S | S |
-| V12 | 独立控制任务接管磁盘状态 | N | S | N | S | S | S |
-| V13 | 被评 Harness 重启恢复/安全失败 | N | S | N | S | S | S |
-| V14 | Codex Desktop 重启恢复 | N | S | N | S | S | S |
-| V15 | 执行/评分超时与发送前重试 | N | S | N | S | S | S |
-| V16 | 评分失败 attempt 隔离和错误回执 | N | S | N | S | S | N |
-| V17 | submission 发布中断恢复 | N | S | N | S | S | N |
+| V11 | 一个 Prompt 执行→评分→打包 | I | S | N | P | S | S |
+| V12 | 独立控制任务接管磁盘状态 | N | S | N | P | S | S |
+| V13 | 被评 Harness 重启恢复/安全失败 | N | S | N | P | S | S |
+| V14 | Codex Desktop 重启恢复 | N | S | N | P | S | S |
+| V15 | 执行/评分超时与发送前重试 | N | S | N | P | S | S |
+| V16 | 评分失败 attempt 隔离和错误回执 | N | S | N | P | S | N |
+| V17 | submission 发布中断恢复 | N | S | N | P | S | N |
 
 ### 4.1 各项验收条件
 
@@ -199,6 +200,17 @@
 | `windows-astron-11018-v08-20260915` | AstronStudio×Windows | V08 | `PASSED` | 仓库 orchestrate 0.2.6；score 4.5.2 | 同 V05 五题 | 最后一题 `mark-complete` 后原子构建 submission | `submission.json`；SHA `f197442c137603fefb2596867c7ef2e33d21a64d6c7b8756d48c36baa0a2be11` | 2026-09-15 / Codex | scoring phase 与 submission status 均为 `COMPLETED`，`attempt_count=1`；5/5 完整 task ID，最终候选双副本哈希和端口审计通过，无 pending 文件 |
 | `windows-astron-11018-v09-20260915` | AstronStudio×Windows | V09 | `PASSED` | run 1.3.7 | 同 V05 五题 | `run_web_e2e.py export-return` | `D:\debug-workspace\web-e2e\windows-as-driver-1.10.18-v05-20260915-194158\offline-return\windows-as-driver-1.10.18-v05-20260915-194158__astronstudio__return.zip`；ZIP SHA `bc7d6d606ee5af77a440d8577ac0b6f0d6adf0fa699ac5c5262c5862ff99776b`；外部 receipt SHA `edd56d457b57d9d2a8c475fc71145f0c020212505c65c388fec9765dd2dd0863` | 2026-09-15 / Codex | 5,348,366 字节、289 个文件；回执绑定批次、Harness、GLM-5.2、Profile、完整五题和 ZIP SHA；导入门禁再次确认无路径穿越、符号链接、浏览器 profile、密钥及禁止目录 |
 | `windows-astron-11018-v10-20260915` | AstronStudio×Windows | V10 | `PASSED` | run 1.3.7；report 1.0.2；ArtifactsBench Profile | 同 V05 五题 | `import-return`；报告聚合；Artifact Tool 构建；WPS 独立只读渲染 | import receipt SHA `8132c4dbc0e098658cb1c615b4524034e06d5788e254201dad488aa1ef79455a`；报告 JSON/MD/XLSX SHA `189a0687...` / `91e0586a...` / `aad7b6f8...`；batch state SHA `b1ee825b...` | 2026-09-15 / Codex | collect/report 均 `COMPLETED`；5/5 完成、平均分 74、完成率 100%；Excel 三 Sheet 顺序和关键值通过，保存后公式错误扫描为 0；Artifact Tool 内置预览原生崩溃后按 Skill 降级，WPS 逐 Sheet PDF/PNG 只读预览均无截断或乱码 |
+| `windows-astron-release-v00-20260916` | AstronStudio×Windows | V00 | `PASSED` | `6988b5252bc9140e86dae139fdffbcfc964bcfbf`；execute 1.11.16 / Driver 1.10.18；orchestrate 0.2.6；score 4.5.2；run 1.3.7；report 1.0.2 | `web-e2e-20260915-232007-custom40`、`web-e2e-20260915-232007-opensource120` | 标准准备脚本；三 Harness；Profile auto；重算 manifest/hash | `report-workspace/web-e2e-automation-packages/`；两批次 40/120 题、各 11 ZIP，22/22 SHA 匹配；五个 Skill content/ZIP SHA 见 3.1 | 2026-09-16 / Codex | 两批次 source revision 均为 `6988b525...`，Harness 均为 AstronStudio/WorkBuddy/QwenWork，execution/scoring 边界审计通过，正式身份锁定 |
+| `windows-astron-release-v01-20260916` | AstronStudio×Windows | V01 | `PASSED` | 同 V00；Node 24.17.0；playwright-core 1.55.0 | 不适用 | 三执行 Driver、Codex Desktop Driver、截图接收器、准备脚本与六个 Skill quick validate | 当前仓库；Astron 49/49、WorkBuddy 87/87、QwenWork 40/40、Codex 52/52、receiver 8/8、prepare 31/31；六个 Skill 校验通过 | 2026-09-16 / Codex | Windows Node 测试使用显式测试文件；所有命令退出码为 0 |
+| `windows-astron-release-v02-20260916` | AstronStudio×Windows | V02 | `PASSED` | 同 V00；AstronStudio 3.3.1.277 | `windows-as-release-6988b52-20260915-232329` | 标准 Windows 调试启动脚本；Driver `--probe`；最终恢复 127.0.0.1:9240 | `D:\debug-workspace\web-e2e\windows-as-release-6988b52-20260915-232329\V02-astronstudio-probe-pass.json`；启动日志 `V02-start-windows-desktop-debug.log` | 2026-09-16 / Codex | probe `ready=true`、状态库可读、GUI 解锁、GLM-5.2 / High / full-access、活动会话为 0；V15 后标准启动脚本再次确认 9240/PID 37408 和 AStudio.exe 完整路径 |
+| `windows-astron-release-v03-v10-rebind-20260916` | AstronStudio×Windows | V03–V10 | `PASSED` | 当前正式包与旧功能批次的 execute/score/report/run content 和 ZIP SHA 逐项一致；实际评分运行时 orchestrate 0.2.6 | `windows-as-driver-1.10.18-v03-20260915-185350`、`v04-20260915-185842`、`v05-20260915-194158` | 内容哈希审计；正式 0.2.6 ZIP V11 冒烟；旧五题 execution→score→submission→return→import/report 证据复核 | V05 根 `D:\debug-workspace\web-e2e\windows-as-driver-1.10.18-v05-20260915-194158\windows-as-driver-1.10.18-v05-20260915-194158\harnesses\astronstudio`；execution receipt `b1667497...`；scoring state `d826b648...`；submission `f197442c...`；return ZIP `bc7d6d60...`；import receipt `8132c4db...` | 2026-09-16 / Codex | V03 1/1、V04 3/3、V05 5/5 执行成功；V06–V10 五题平均 74 且完整性无漂移。旧 manifest 的 orchestrate 0.2.5 不单独用于晋级，正式 V11 对 0.2.6 包完成补充绑定 |
+| `windows-astron-release-v11-20260916` | AstronStudio×Windows | V11 | `PASSED` | 同 V00；五个 Skill 均从正式 ZIP 解压 | `windows-as-release-6988b52-v11-20260915-232329`；ab078 | 用户单个 `$run-web-e2e` Prompt；execute→score→package | `D:\debug-workspace\web-e2e\windows-as-release-6988b52-20260915-232329\workers\v11\windows-as-release-6988b52-v11-20260915-232329__astronstudio`；unit state SHA `8a3551b774528cf1db56fd163229858134ffa5fe11bcf30af57e7760ddf6c09f`；execution receipt `97404891...`；scoring state `2280cf62...`；submission `65b4aec3...`；return ZIP `32287a78...` | 2026-09-16 / Codex | 三阶段均 `COMPLETED`；执行仅一次 Prompt，候选 SHA `a8422d20...`；评分 thread `01a0a5bb-...` 得分 76；return ZIP 1,049,592 字节、76 文件 |
+| `windows-astron-release-v12-20260916` | AstronStudio×Windows | V12 | `PASSED` | 同 V00 | `v12-independent-handoff`；ab078 | 精确终止原 Worker PID 2016；独立 Codex 任务以相同参数 `--resume` 接管 | V12 根 `D:\debug-workspace\web-e2e\windows-as-release-6988b52-20260915-232329\workers\v12\windows-as-release-6988b52-v11-20260915-232329__astronstudio`；queue SHA `16e391ab...`；automation SHA `86afbb0d...`；receipt SHA `2ac294df...` | 2026-09-16 / Codex | 新控制任务 `01a0a5c9-...` 使用 Worker PID 31204；conversation `7be3e960-...`、turn `01a0a5c7-...`、attempt `98f0dfd7-...` 全部沿用；`WORKER_INTERRUPTED=1`、`WORKER_RESUMED=1`、`PROMPT_SENT=1`，最终成功 |
+| `windows-astron-release-v13-20260916` | AstronStudio×Windows | V13 | `PASSED` | 同 V00 | `v13-harness-restart`；ab078 | Prompt 发送后精确结束 AStudio 进程树；`--resume --restart-app-on-resume` | V13 根 `D:\debug-workspace\web-e2e\windows-as-release-6988b52-20260915-232329\workers\v13\windows-as-release-6988b52-v11-20260915-232329__astronstudio`；queue SHA `0301557d...`；automation/result SHA `3518a48c...` | 2026-09-16 / Codex | 原 conversation `72dcbe73-...`、turn `01a0a5ce-...` 被状态库明确标记 `interrupted`；Driver 安全收口 `INFRA_FAILED`，没有重发，候选 SHA 前后均为 `6dd93633...`。这是验收条件允许的安全失败分支 |
+| `windows-astron-release-v14-20260916` | AstronStudio×Windows | V14 | `PASSED` | 同 V00；Codex Desktop 26.908.9136 | V12 评分副本；ab078 | `restart_windows_desktop_debug.ps1` 平台托管重启；同一评分 thread 恢复 | V14/V17 共用评分根；重启 status SHA `55c511b8...`；stdout SHA `0a19121b...`；task score SHA `8f739eff...` | 2026-09-16 / Codex | 重启前后均为 thread `01a0a5d3-...`、attempt 1、deadline `2026-09-15T18:08:20.503Z`；重启后端口 4183 服务重建，最终得分 75、候选 SHA 不变；等待序列为两次 `POLL_TIMEOUT` 后 `COMPLETED` |
+| `windows-astron-release-v15-20260916` | AstronStudio×Windows | V15 | `PASSED` | 同 V00 | `v15-presend-timeout`；ab078 | 9242 不监听触发发送前失败；启动后 `--resume --retry-pre-send-failure`；执行上限 10 秒；同会话只观察恢复 | V15 根 `D:\debug-workspace\web-e2e\windows-as-release-6988b52-20260915-232329\workers\v15\windows-as-release-6988b52-v11-20260915-232329__astronstudio`；queue SHA `b74dedbc...`；automation SHA `a9bfa2b6...`；execution record SHA `197c8d94...`；旧 attempt SHA `9b4bbff5...` | 2026-09-16 / Codex | 旧 attempt `a479f64b-...` 为 `INFRA_FAILED`、`sent_at=null`、Prompt 0 次、候选无变化并已归档；新 attempt `0df7db61-...` Prompt 1 次，状态库复制短暂超时后只观察恢复，最终 `TIMEOUT`，停止/取消/5 秒静默均确认，未伪造成功；V14 同时证明评分轮询超时与 deadline 可区分 |
+| `windows-astron-release-v16-20260916` | AstronStudio×Windows | V16 | `PASSED` | 与正式包相同的 orchestrate 0.2.6 / score 4.5.2 / Codex 客户端 | 旧 V07 五题中的 ab095 | 复核模型容量失败后的 `prepare-retry` 原子归档与第二次线程 | 旧 V05 根；scoring state SHA `d826b648...`；attempt error receipt SHA `0446ae9e...`；archive SHA `51b6d14d...`；submission SHA `f197442c...` | 2026-09-16 / Codex | attempt 1 明确 `FAILED: Selected model is at capacity`，候选在归档前/恢复后均为 `d9a55ceb...`；attempt 2 完成，`retry_count=1`，未切换模型，结构化错误回执完整 |
+| `windows-astron-release-v17-20260916` | AstronStudio×Windows | V17 | `PASSED` | 同 V00；orchestrate 0.2.6 | V12 评分副本；ab078 | 在 pending submission 持久化后注入发布中断；连续两次 `build-submission` | V14/V17 评分根；中断 pending SHA 与最终 submission SHA 均为 `749aac5df958fb0412b69e1de1073506f5a4c1428a782cbf33ea06383eed6c76`；最终 scoring state SHA `fba290ec...` | 2026-09-16 / Codex | 中断时 phase `FINALIZING`、submission `GENERATING`、pending 存在且正式文件不存在；恢复后 phase/submission 均 `COMPLETED`、pending 清除、attempt_count 仍为 1；第二次构建幂等 |
 
 ### 4.3 本轮 macOS 冒烟边界
 
