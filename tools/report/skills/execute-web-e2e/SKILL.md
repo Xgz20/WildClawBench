@@ -152,6 +152,8 @@ Windows 使用 `run-workbuddy.cmd --probe`。Driver 从当前用户卸载注册�
 
 Windows WorkBuddy 的 Electron 页面在部分更新版本中会让 Playwright 高层截图接口永久等待，即使字体已经加载完成。Driver 在 Windows 必须通过当前已附着页面的 CDP `Page.captureScreenshot` 直接采集可视区域 PNG；macOS 继续使用 Playwright 截图。每张截图的路径、采集方法和时间写入 `evidence.screenshot_captures`，截图失败仍须失败关闭，不能跳过证据门禁。
 
+WorkBuddy 5.5.6 在多会话运行期间可能偶发单次 `connectOverCDP` 超时。Driver 对每次连接使用最多三次、单次最多 10 秒的有界重试；连续失败后仍进入 `NEEDS_ATTENTION`，不得因此新建任务或重发 Prompt。
+
 `--probe` 不会点击“新建任务”。WorkBuddy 只有在新任务页挂载 workspace picker；若当前停在历史会话页，探针会以 `workspace-picker-not-visible` 返回未就绪。切换到未发送的新任务页后重跑，不能把该结果误判为插件或 CDP 不可用。
 
 执行一个准备包中的任务：

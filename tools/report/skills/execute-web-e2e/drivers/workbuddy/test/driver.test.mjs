@@ -24,6 +24,7 @@ import {
 import {
   captureAttemptConversation,
   capturePageScreenshot,
+  connectWorkBuddyBrowser,
   confirmFullAccessRiskDialog,
   ensureModel,
   hasStableConversationId,
@@ -125,6 +126,27 @@ test("full access confirmation clicks the visible checkbox label and verifies re
   await confirmFullAccessRiskDialog(dialog, 100, { sleep: async () => {} });
   assert.equal(labelClicks, 1);
   assert.equal(confirmClicks, 1);
+});
+
+test("WorkBuddy CDP connection retries transient failures with a bounded timeout", async () => {
+  const calls = [];
+  const browser = { contexts: () => [] };
+  const result = await connectWorkBuddyBrowser({}, "http://127.0.0.1:9229", 30000, {
+    attempts: 3,
+    retryDelayMilliseconds: 0,
+    sleep: async () => {},
+    connect: async (endpoint, options) => {
+      calls.push({ endpoint, options });
+      if (calls.length < 3) throw new Error(`transient-${calls.length}`);
+      return browser;
+    },
+  });
+  assert.equal(result, browser);
+  assert.deepEqual(calls, [
+    { endpoint: "http://127.0.0.1:9229", options: { timeout: 10000 } },
+    { endpoint: "http://127.0.0.1:9229", options: { timeout: 10000 } },
+    { endpoint: "http://127.0.0.1:9229", options: { timeout: 10000 } },
+  ]);
 });
 
 test("full access confirmation falls back to the native checkbox when no visible label exists", async () => {
@@ -696,7 +718,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.22");
+  assert.equal(state.driver.version, "1.8.23");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

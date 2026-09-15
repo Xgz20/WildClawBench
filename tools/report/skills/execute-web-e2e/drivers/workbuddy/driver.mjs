@@ -88,6 +88,29 @@ function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
 }
 
+export async function connectWorkBuddyBrowser(chromium, endpoint, timeout, overrides = {}) {
+  const dependencies = {
+    connect: (url, options) => chromium.connectOverCDP(url, options),
+    sleep,
+    attempts: 3,
+    retryDelayMilliseconds: 500,
+    ...overrides,
+  };
+  const attemptTimeout = Math.max(1000, Math.min(timeout, 10000));
+  const errors = [];
+  for (let attempt = 1; attempt <= dependencies.attempts; attempt += 1) {
+    try {
+      return await dependencies.connect(endpoint, { timeout: attemptTimeout });
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+      if (attempt < dependencies.attempts) {
+        await dependencies.sleep(dependencies.retryDelayMilliseconds * attempt);
+      }
+    }
+  }
+  throw new Error(`WorkBuddy CDP 连续 ${dependencies.attempts} 次连接失败：${errors.join("；")}`);
+}
+
 export async function waitForUniqueVisible(readVisible, timeout, description, pollInterval = 250) {
   const deadline = Date.now() + timeout;
   let lastCount = 0;
@@ -1540,7 +1563,11 @@ async function resumeAutomation(config, state, identityInfo) {
     else if (!(await endpointReady(config.endpoint))) throw new Error(`WorkBuddy 未开放调试端口 ${config.endpoint}`);
     state.client.process = await workBuddyProcessIdentity(config.appPath);
     const { chromium } = await import("playwright-core");
-    const browser = await chromium.connectOverCDP(config.endpoint);
+    const browser = await connectWorkBuddyBrowser(
+      chromium,
+      config.endpoint,
+      config.timeoutSeconds * 1000,
+    );
     page = await chooseWorkBuddyPage(browser, config.timeoutSeconds * 1000);
     page.setDefaultTimeout(config.timeoutSeconds * 1000);
     await page.bringToFront();
@@ -1719,8 +1746,8 @@ async function runAutomation(config, identityInfo) {
     await saveState(config, state);
 
     const { chromium } = await import("playwright-core");
-    browser = await chromium.connectOverCDP(config.endpoint);
     const timeout = config.timeoutSeconds * 1000;
+    browser = await connectWorkBuddyBrowser(chromium, config.endpoint, timeout);
     const page = await chooseWorkBuddyPage(browser, timeout);
     page.setDefaultTimeout(timeout);
     await page.bringToFront();
@@ -1938,7 +1965,11 @@ async function probe(config) {
   if (checks.endpoint_ready) {
     try {
       const { chromium } = await import("playwright-core");
-      const browser = await chromium.connectOverCDP(config.endpoint);
+      const browser = await connectWorkBuddyBrowser(
+        chromium,
+        config.endpoint,
+        config.timeoutSeconds * 1000,
+      );
       const page = await chooseWorkBuddyPage(browser, config.timeoutSeconds * 1000);
       checks.workspace_input_provider = await inspectWorkspaceInputProvider(page);
       checks.workspace_input_provider_available = checks.workspace_input_provider.available;
