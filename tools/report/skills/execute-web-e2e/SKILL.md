@@ -154,6 +154,8 @@ Windows WorkBuddy 的 Electron 页面在部分更新版本中会让 Playwright �
 
 WorkBuddy 5.5.6 在多会话运行期间可能偶发单次 `connectOverCDP` 超时。Driver 对每次连接使用最多三次、单次最多 10 秒的有界重试；连续失败后仍进入 `NEEDS_ATTENTION`，不得因此新建任务或重发 Prompt。
 
+WorkBuddy 5.5.6 重启后可能暂时不在侧栏渲染新 conversation 的 `data-conversation-id`。恢复时若精确 cwd 和已持久化 conversation ID 对应的数据库会话已经是明确终态，可直接按该数据库终态收口；若它仍在运行，仅当数据库里恰好只有这一条运行会话、当前主对话区仍显示原 Prompt 且页面有运行控件时，才允许继续观察当前页。任一条件不唯一或不一致都停在 `NEEDS_ATTENTION`，不得按标题猜测会话。
+
 `--probe` 不会点击“新建任务”。WorkBuddy 只有在新任务页挂载 workspace picker；若当前停在历史会话页，探针会以 `workspace-picker-not-visible` 返回未就绪。切换到未发送的新任务页后重跑，不能把该结果误判为插件或 CDP 不可用。
 
 执行一个准备包中的任务：
@@ -177,7 +179,7 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy.sh \
   --resume
 ```
 
-恢复时必须沿用相同的 `automation_state.json`。Prompt 已进入发送临界区后，Driver 只检查已有 WorkBuddy conversation，不能盲目重发。状态不明时停在 `NEEDS_ATTENTION`。
+恢复时必须沿用相同的 `automation_state.json`。Prompt 已进入发送临界区后，Driver 只检查已有 WorkBuddy conversation，不能盲目重发。侧栏 ID 暂时缺失时只允许使用上一段定义的精确数据库终态或“唯一运行会话 + 当前主区原 Prompt”回退；状态不明时停在 `NEEDS_ATTENTION`。
 
 运行中 Worker 收到 `SIGINT`/`SIGTERM` 时会记录 Worker 和 Driver PID、终止观察 Driver、释放 UI 锁，但不会停止 WorkBuddy 内的任务；使用同一参数加 `--resume` 后按已捕获的 `data-conversation-id` 恢复原会话。Worker 被 `SIGKILL` 或 Windows 宿主直接结束时，恢复入口会在确认旧 PID 已消失后补记推断型 `WORKER_INTERRUPTED(signal=PROCESS_LOST)`，再通过 stale-lock 和遗留 Driver 检查恢复；旧 Worker/Driver 仍存活或旧 Worker 属于其他主机时拒绝启动第二个进程。
 

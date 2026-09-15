@@ -24,6 +24,8 @@ import {
 import {
   captureAttemptConversation,
   capturePageScreenshot,
+  canTrustExactTerminalSession,
+  canTrustCurrentConversationWithoutSidebar,
   connectWorkBuddyBrowser,
   confirmFullAccessRiskDialog,
   ensureModel,
@@ -39,6 +41,35 @@ import {
   waitForRestartedAttemptRecovery,
   waitForUniqueVisible,
 } from "../driver.mjs";
+
+test("resume may trust the visible prompt only for one exact running session", () => {
+  const attemptSession = { conversationId: "conversation-a", status: "working" };
+  const input = {
+    expectedPrompt: "请在 ./workspace 下创建项目。\n\n创建 SVG 插画。",
+    visiblePrompts: ["请在 .\nworkspace\uFEFF 下创建项目。\n创建 SVG 插画。"],
+    dom: { running: true },
+    attemptSession,
+    sessions: [attemptSession],
+  };
+  assert.equal(canTrustCurrentConversationWithoutSidebar(input), true);
+  assert.equal(canTrustCurrentConversationWithoutSidebar({
+    ...input,
+    sessions: [attemptSession, { conversationId: "conversation-b", status: "active" }],
+  }), false);
+  assert.equal(canTrustCurrentConversationWithoutSidebar({
+    ...input,
+    visiblePrompts: ["另一个任务"],
+  }), false);
+  assert.equal(canTrustCurrentConversationWithoutSidebar({ ...input, dom: { running: false } }), false);
+});
+
+test("resume does not require sidebar navigation for an exact terminal database session", () => {
+  assert.equal(canTrustExactTerminalSession({ conversationId: "conversation-a", status: "completed" }, "conversation-a"), true);
+  assert.equal(canTrustExactTerminalSession({ conversationId: "conversation-a", status: "error" }, "conversation-a"), true);
+  assert.equal(canTrustExactTerminalSession({ conversationId: "conversation-a", status: "completed" }, "conversation-b"), false);
+  assert.equal(canTrustExactTerminalSession({ conversationId: "conversation-a", status: "working" }, "conversation-a"), false);
+  assert.equal(canTrustExactTerminalSession(null, "conversation-a"), false);
+});
 
 test("driver entrypoint keeps Node alive until the automation promise settles", async () => {
   const timer = {};
@@ -718,7 +749,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.23");
+  assert.equal(state.driver.version, "1.8.24");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

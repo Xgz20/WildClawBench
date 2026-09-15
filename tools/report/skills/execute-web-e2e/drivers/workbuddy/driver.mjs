@@ -990,6 +990,45 @@ async function openAttemptConversation(page, state, timeout) {
   return { opened: false, reason: "conversation-selection-not-confirmed", conversation_id: conversationId };
 }
 
+function canonicalPromptText(value) {
+  return String(value || "")
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\s+/g, "")
+    .replace(/\.\/workspace/gi, ".workspace");
+}
+
+async function inspectVisibleConversationPrompts(page) {
+  return page.locator('[data-testid="conversation-shell"] .cr-user-content:visible')
+    .allInnerTexts()
+    .catch(() => []);
+}
+
+export function canTrustCurrentConversationWithoutSidebar({
+  expectedPrompt = "",
+  visiblePrompts = [],
+  dom = null,
+  attemptSession = null,
+  sessions = [],
+} = {}) {
+  const expected = canonicalPromptText(expectedPrompt);
+  if (!expected || !attemptSession || classifySessionStatus(attemptSession.status).kind !== "running" || !dom?.running) {
+    return false;
+  }
+  const runningSessions = sessions.filter((session) => classifySessionStatus(session.status).kind === "running");
+  if (runningSessions.length !== 1 || runningSessions[0].conversationId !== attemptSession.conversationId) return false;
+  return visiblePrompts.some((prompt) => canonicalPromptText(prompt) === expected);
+}
+
+export function canTrustExactTerminalSession(session, expectedConversationId) {
+  return Boolean(
+    session
+    && expectedConversationId
+    && session.conversationId === expectedConversationId
+    && new Set(["success", "failure"]).has(classifySessionStatus(session.status).kind),
+  );
+}
+
 async function inspectDom(page) {
   const stop = page.locator('button[aria-label*="停止"]:visible, button[title*="停止"]:visible, button[aria-label*="Stop"]:visible, button[title*="Stop"]:visible');
   const running = (await visibleLocators(stop)).length > 0;
@@ -1573,7 +1612,35 @@ async function resumeAutomation(config, state, identityInfo) {
     await page.bringToFront();
     const stableConversationAvailable = hasStableConversationId(state);
     if (stableConversationAvailable) {
-      const opened = await openAttemptConversation(page, state, config.timeoutSeconds * 1000);
+      const sessions = await querySessions(config.sessionDb);
+      const attemptSession = chooseAttemptSession(sessions, state, config.workspace);
+      const expectedConversationId = state.session.conversation_id || state.session.dom_conversation_id || null;
+      let opened = canTrustExactTerminalSession(attemptSession, expectedConversationId)
+        ? {
+            opened: true,
+            conversation_id: attemptSession.conversationId,
+            method: "exact-terminal-session-db",
+            terminal_status: attemptSession.status,
+          }
+        : await openAttemptConversation(page, state, config.timeoutSeconds * 1000);
+      if (!opened.opened) {
+        const dom = await inspectDom(page);
+        const visiblePrompts = await inspectVisibleConversationPrompts(page);
+        if (canTrustCurrentConversationWithoutSidebar({
+          expectedPrompt: config.prompt,
+          visiblePrompts,
+          dom,
+          attemptSession,
+          sessions,
+        })) {
+          opened = {
+            opened: true,
+            conversation_id: attemptSession.conversationId,
+            method: "current-prompt+unique-running-session",
+            sidebar_reason: opened.reason,
+          };
+        }
+      }
       state.session.resume_navigation = { ...opened, at: new Date().toISOString() };
       if (!opened.opened) {
         return persistNeedsAttention(
