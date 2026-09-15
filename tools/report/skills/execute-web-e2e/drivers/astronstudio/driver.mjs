@@ -36,6 +36,7 @@ import {
   launchAstron,
   terminateAstronProcess,
 } from "./platform.mjs";
+import { terminateCandidateWorkspaceProcesses } from "../workbuddy/platform.mjs";
 
 function usage() {
   return `AstronStudio Web E2E 单题执行 Driver
@@ -891,6 +892,123 @@ async function saveState(config, state) {
   await atomicWriteJson(config.resultFile, state);
 }
 
+export function terminalProcessCleanupTiming(phase) {
+  return phase === "TIMEOUT"
+    ? { quietMilliseconds: 5_000, waitMilliseconds: 10_000 }
+    : { quietMilliseconds: 45_000, waitMilliseconds: 120_000 };
+}
+
+export function recordTerminalProcessCleanup(state, phase, cleanup) {
+  state.terminal_process_cleanup = cleanup;
+  if (phase === "TIMEOUT") {
+    state.timeout ||= {};
+    state.timeout.process_cleanup = cleanup;
+  }
+  return cleanup;
+}
+
+export async function collectTerminalProcessCleanup(
+  config,
+  state,
+  phase,
+  identityInfo,
+  overrides = {},
+) {
+  const backfill = overrides.backfill === true;
+  const snapshot = overrides.snapshotTree || snapshotTree;
+  const terminateProcesses = overrides.terminateProcesses || terminateCandidateWorkspaceProcesses;
+  const persistState = overrides.saveState || saveState;
+  const persistExecutionRecord = overrides.updateExecutionRecord || updateExecutionRecord;
+  const now = overrides.now || (() => new Date().toISOString());
+  const frozenSha256 = state.artifacts?.final?.sha256 || null;
+  let beforeBackfill = null;
+  let cleanup;
+
+  if (backfill) {
+    beforeBackfill = await snapshot(config.candidateWorkspace);
+    if (!frozenSha256 || beforeBackfill.sha256 !== frozenSha256) {
+      cleanup = {
+        supported: process.platform === "win32",
+        success: false,
+        skipped: true,
+        error: !frozenSha256
+          ? "旧终态缺少冻结候选 SHA-256，禁止补录进程清理证据"
+          : `候选工作空间已偏离冻结结果：期望 ${frozenSha256}，实际 ${beforeBackfill.sha256}`,
+        backfill_verification: {
+          frozen_candidate_sha256: frozenSha256,
+          before_cleanup_sha256: beforeBackfill.sha256,
+          after_cleanup_sha256: null,
+          unchanged: false,
+        },
+      };
+    }
+  }
+
+  if (!cleanup) {
+    try {
+      cleanup = await terminateProcesses(config.candidateWorkspace, {
+        taskRoot: config.workspace,
+        includeSessionHost: false,
+        ...terminalProcessCleanupTiming(phase),
+      });
+    } catch (cleanupError) {
+      cleanup = {
+        supported: process.platform === "win32",
+        success: false,
+        error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+      };
+    }
+  }
+
+  if (backfill && cleanup.success) {
+    const afterBackfill = await snapshot(config.candidateWorkspace);
+    cleanup = {
+      ...cleanup,
+      success: afterBackfill.sha256 === frozenSha256,
+      error: afterBackfill.sha256 === frozenSha256
+        ? cleanup.error || null
+        : `进程收口后候选工作空间偏离冻结结果：期望 ${frozenSha256}，实际 ${afterBackfill.sha256}`,
+      backfill_verification: {
+        frozen_candidate_sha256: frozenSha256,
+        before_cleanup_sha256: beforeBackfill.sha256,
+        after_cleanup_sha256: afterBackfill.sha256,
+        unchanged: afterBackfill.sha256 === frozenSha256,
+      },
+    };
+  }
+
+  recordTerminalProcessCleanup(state, phase, cleanup);
+  if (!cleanup.success) {
+    transitionState(state, "NEEDS_ATTENTION", { reason: "terminal-task-process-cleanup-failed" });
+    state.error = `AstronStudio 已出现终态，但无法确认候选工作空间相关进程全部退出：${cleanup.error || "仍检测到残留进程"}`;
+    state.runtime ||= {};
+    state.runtime.heartbeat_at = now();
+    await persistState(config, state);
+    await persistExecutionRecord(config, identityInfo, {
+      clientVersion: state.client.version,
+      execution: { status: "pending", error: state.error },
+    });
+    return false;
+  }
+
+  if (backfill) {
+    state.driver ||= {};
+    state.driver.version = DRIVER_VERSION;
+    state.history ||= [];
+    state.history.push({
+      event: "TERMINAL_PROCESS_CLEANUP_BACKFILLED",
+      at: now(),
+      phase,
+      driver_version: DRIVER_VERSION,
+      frozen_candidate_sha256: frozenSha256,
+    });
+    state.runtime ||= {};
+    state.runtime.heartbeat_at = now();
+    await persistState(config, state);
+  }
+  return true;
+}
+
 async function takeScreenshot(page, config, state, name) {
   const path = join(config.outputDir, name);
   await page.screenshot({ path });
@@ -935,6 +1053,7 @@ async function finalize(config, state, identityInfo, phase, {
   finalTextSource = "astudio-dom",
   useLastScreenshot = true,
 } = {}) {
+  if (!(await collectTerminalProcessCleanup(config, state, phase, identityInfo))) return state;
   transitionState(state, phase, terminalSource ? { terminal_source: terminalSource } : {});
   const finishedAt = new Date().toISOString();
   state.timing.finished_at = finishedAt;
@@ -1449,7 +1568,18 @@ async function runAutomation(config, identityInfo) {
   if (existingState) {
     assertStateMatches(existingState, config, identityInfo.identity);
     if (TERMINAL_PHASES.has(existingState.phase)) {
-      if (!config.retryPreSendFailure) return existingState;
+      if (!config.retryPreSendFailure) {
+        if (config.resume && existingState.terminal_process_cleanup?.success !== true) {
+          await collectTerminalProcessCleanup(
+            config,
+            existingState,
+            existingState.phase,
+            identityInfo,
+            { backfill: true },
+          );
+        }
+        return existingState;
+      }
       retryArchive = await archiveRetryablePreSendFailure(config, existingState);
       existingState = null;
     }

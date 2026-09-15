@@ -14,7 +14,9 @@ import {
   querySessions,
   resolveConfig,
   resolveExecutionIdentity,
+  snapshotTree,
   sqliteBackendStatus,
+  transitionState,
   updateExecutionRecord,
 } from "../lib.mjs";
 import {
@@ -30,6 +32,7 @@ import {
 import {
   addProjectByManualPath,
   cancelTimedOutAttempt,
+  collectTerminalProcessCleanup,
   connectAstudioBrowser,
   dismissOpenMenus,
   ensureModel,
@@ -40,10 +43,13 @@ import {
   inspectWorkspace,
   isProbeReady,
   isReusableEmptyTaskRoute,
+  main,
   observeAttemptOnce,
   readSessionsWithDiagnostics,
+  recordTerminalProcessCleanup,
   restartAstudio,
   selectWorkspace,
+  terminalProcessCleanupTiming,
 } from "../driver.mjs";
 
 test("Windows atomic JSON persistence retries transient rename locks", async () => {
@@ -463,6 +469,125 @@ test("AstronStudio state cannot be resumed by another Driver profile", async () 
   const state = createInitialState(config, info.identity, { sha256: "initial", entries: [] });
   state.driver.id = "workbuddy";
   assert.throws(() => assertStateMatches(state, config, info.identity), /driver_id/);
+});
+
+test("AstronStudio terminal process cleanup uses bounded quiet windows and reuses timeout evidence", () => {
+  assert.deepEqual(terminalProcessCleanupTiming("SUCCEEDED"), {
+    quietMilliseconds: 45_000,
+    waitMilliseconds: 120_000,
+  });
+  assert.deepEqual(terminalProcessCleanupTiming("TIMEOUT"), {
+    quietMilliseconds: 5_000,
+    waitMilliseconds: 10_000,
+  });
+
+  const state = { timeout: { cancellation_confirmed: true } };
+  const cleanup = { supported: true, success: true, before: {}, after: {} };
+  assert.equal(recordTerminalProcessCleanup(state, "TIMEOUT", cleanup), cleanup);
+  assert.equal(state.terminal_process_cleanup, cleanup);
+  assert.equal(state.timeout.process_cleanup, cleanup);
+});
+
+test("AstronStudio cleanup failure requires attention and leaves the execution pending", async () => {
+  const state = {
+    phase: "RUNNING",
+    terminal: false,
+    history: [],
+    runtime: {},
+    client: { version: "3.0.0-alpha.19" },
+    artifacts: { final: null },
+    error: null,
+  };
+  const persisted = [];
+  const recordUpdates = [];
+  const completed = await collectTerminalProcessCleanup(
+    { workspace: "/batch/task-1", candidateWorkspace: "/batch/task-1/workspace" },
+    state,
+    "SUCCEEDED",
+    { taskId: "task-1" },
+    {
+      terminateProcesses: async (_candidateWorkspace, options) => {
+        assert.equal(options.taskRoot, "/batch/task-1");
+        assert.equal(options.includeSessionHost, false);
+        return { supported: true, success: false, error: "still running" };
+      },
+      saveState: async (_config, currentState) => { persisted.push(structuredClone(currentState)); },
+      updateExecutionRecord: async (_config, _identity, update) => { recordUpdates.push(update); },
+      now: () => "2026-09-14T12:00:00.000Z",
+    },
+  );
+
+  assert.equal(completed, false);
+  assert.equal(state.phase, "NEEDS_ATTENTION");
+  assert.equal(state.terminal, false);
+  assert.equal(state.terminal_process_cleanup.success, false);
+  assert.match(state.error, /still running/);
+  assert.equal(persisted.length, 1);
+  assert.equal(recordUpdates[0].execution.status, "pending");
+});
+
+test("AstronStudio terminal --resume backfills cleanup without resending the prompt", async () => {
+  const item = await fixture();
+  const args = ["--workspace", item.taskRoot, "--app-path", item.appPath, "--resume", "--quiet"];
+  const config = await resolveConfig(parseArgs(args), { platform: "darwin" });
+  const info = await resolveExecutionIdentity(config);
+  const frozen = await snapshotTree(config.candidateWorkspace);
+  const state = createInitialState(config, info.identity, frozen);
+  state.driver.version = "1.10.14";
+  state.timing.started_at = "2026-09-14T10:00:00.000Z";
+  state.timing.sent_at = "2026-09-14T10:00:01.000Z";
+  state.timing.finished_at = "2026-09-14T10:01:00.000Z";
+  state.artifacts.final = frozen;
+  state.history.push({ phase: "PROMPT_SENT", at: state.timing.sent_at });
+  transitionState(state, "SUCCEEDED", { terminal_source: "fixture" });
+  await atomicWriteJson(config.stateFile, state);
+  await atomicWriteJson(config.resultFile, state);
+
+  assert.equal(await main(args), 0);
+  const recovered = JSON.parse(await readFile(config.stateFile, "utf8"));
+  assert.equal(recovered.phase, "SUCCEEDED");
+  assert.equal(recovered.driver.version, "1.10.15");
+  assert.equal(recovered.terminal_process_cleanup.supported, false);
+  assert.equal(recovered.terminal_process_cleanup.success, true);
+  assert.equal(recovered.terminal_process_cleanup.backfill_verification.unchanged, true);
+  assert.equal(recovered.history.filter((entry) => entry.phase === "PROMPT_SENT").length, 1);
+  assert.equal(recovered.history.filter((entry) => entry.event === "TERMINAL_PROCESS_CLEANUP_BACKFILLED").length, 1);
+});
+
+test("AstronStudio terminal cleanup backfill fails closed after candidate drift", async () => {
+  const state = {
+    phase: "SUCCEEDED",
+    terminal: true,
+    history: [],
+    runtime: {},
+    client: { version: "3.0.0-alpha.19" },
+    artifacts: { final: { sha256: "frozen-sha" } },
+    error: null,
+  };
+  let terminationCalled = false;
+  const completed = await collectTerminalProcessCleanup(
+    { workspace: "/batch/task-1", candidateWorkspace: "/batch/task-1/workspace" },
+    state,
+    "SUCCEEDED",
+    { taskId: "task-1" },
+    {
+      backfill: true,
+      snapshotTree: async () => ({ sha256: "changed-sha", entries: [] }),
+      terminateProcesses: async () => {
+        terminationCalled = true;
+        return { supported: true, success: true };
+      },
+      saveState: async () => {},
+      updateExecutionRecord: async () => {},
+      now: () => "2026-09-14T12:00:00.000Z",
+    },
+  );
+
+  assert.equal(completed, false);
+  assert.equal(terminationCalled, false);
+  assert.equal(state.phase, "NEEDS_ATTENTION");
+  assert.equal(state.terminal_process_cleanup.skipped, true);
+  assert.match(state.error, /偏离冻结结果/);
 });
 
 test("model and full-access settings are read without opening their menus", async () => {

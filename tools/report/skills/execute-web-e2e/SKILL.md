@@ -61,6 +61,10 @@ Worker 或 Driver 中断后，用完全相同的批次参数增加 `--resume`。
 AstronStudio 的终态优先读取本地 SQLite 的 thread session、turn、open turn 和 pending interaction 投影，DOM 只补充可见运行态、交互和最终回复。workspace 稳定不能单独判定完成。
 活跃 WAL 写入期间若某次 SQLite 快照不一致，Driver 会把失败次数、最近错误和恢复时间记录到 `evidence.state_database_observation`，并在执行时限内基于 DOM 保持等待；后续快照恢复后继续按原 thread/turn/cwd 判定。到达 deadline 时状态库仍不可读则进入 `NEEDS_ATTENTION`，不会把 DOM 或 workspace 稳定误当作成功，也不会重发 Prompt。
 
+AstronStudio 任一终态（成功、明确失败或安全超时）在冻结候选 workspace 前都必须写入 `terminal_process_cleanup`。Windows 只按候选 workspace 的完整绝对路径精确识别、终止相关进程并回读零残留；不得按 AstronStudio、Node 或浏览器进程名宽泛清理。macOS 当前没有等价的任务进程枚举实现，显式记录 `supported=false, success=true`，不能伪装成已执行进程终止。清理失败进入 `NEEDS_ATTENTION`，队列不得补位，也不能生成有效回执；`TIMEOUT` 同时复用该证据到 `timeout.process_cleanup`。
+
+若旧终态由此前 Driver 版本产生且缺少清理证据，可以用完全相同的单题或队列参数增加 `--resume` 补录。补录前后必须把当前候选 SHA-256 与原终态冻结 SHA-256 精确匹配；冻结值缺失或候选已有漂移时失败关闭。该路径只补录终态证据、更新 Driver 版本，不创建项目、不恢复新会话，也不重发 Prompt。
+
 ## QwenWork
 
 依赖由控制 Harness 在 QwenWork Driver 目录执行锁定安装，不进入候选 workspace：

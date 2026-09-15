@@ -43,7 +43,9 @@ Prompt 发送采用失败关闭语义：写入 `READY_TO_SEND` 后到确认 conv
 
 `TIMEOUT` 只有在 Driver 已请求停止、Harness 明确进入非运行态、平台要求的候选后台进程已清理，并且候选 workspace 在限定观察窗口内保持静默时才是安全终态。任何一项无法确认都进入 `NEEDS_ATTENTION`，控制面不得继续下一题。
 
-任一终态还必须在候选冻结前完成任务级进程收口，并把结果持久化为 `terminal_process_cleanup`。Windows WorkBuddy 会话宿主必须同时满足可执行文件名、`--serve`、`--session-id` 和任务根完整绝对路径四项精确约束；多匹配、清理后仍有残留或规定安静窗口内出现迟到进程且未再次收口都必须失败关闭。执行回执只有在每题清理证据均成功时才能声明 `integrity.valid=true`。
+任一终态还必须在候选冻结前完成任务级进程收口，并把结果持久化为 `terminal_process_cleanup`。Windows WorkBuddy 会话宿主必须同时满足可执行文件名、`--serve`、`--session-id` 和任务根完整绝对路径四项精确约束；Windows AstronStudio 当前按候选 workspace 的完整绝对路径精确约束相关进程。不得按 Harness、Node 或浏览器进程名宽泛清理；多匹配、清理后仍有残留或规定安静窗口内出现迟到进程且未再次收口都必须失败关闭。平台尚未实现等价任务进程枚举时必须显式记录 `supported=false`，并说明该平台没有执行进程终止；不能伪造进程清理目标。执行回执只有在每题清理证据成功且满足当前平台契约时才能声明 `integrity.valid=true`。
+
+Driver 升级后若要给旧终态补录 `terminal_process_cleanup`，只能通过显式 `--resume` 进入专用补录路径。补录前后都必须将候选 workspace SHA-256 与旧状态中冻结的终态 SHA-256 精确比对；冻结值缺失或候选漂移时失败关闭。补录不能创建新任务、恢复新会话、发送 Prompt 或改写候选产物，状态历史必须记录补录事件与新 Driver 版本。
 
 ## 终态证据优先级
 
