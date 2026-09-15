@@ -298,6 +298,35 @@ test("recordThread is blocked until the current task passes preflight", async ()
   await assert.rejects(() => recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" }), /必须先通过.*preflight/);
 });
 
+test("recordThread adopts known attempt outputs created before create_thread returns", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root, { taskId: "task-1" });
+  const privateRoot = join(root, "score", "tasks", "task-1", "private-scoring");
+  await writeJson(join(privateRoot, "score_input.json"), { site_url: "http://127.0.0.1:4173/" });
+  await mkdir(join(privateRoot, "runtime-logs"), { recursive: true });
+  await writeFile(join(privateRoot, "runtime-logs", "site.stdout.log"), "started", "utf8");
+
+  const started = await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  assert.equal(started.tasks[0].phase, "SCORING");
+  assert.equal(started.tasks[0].thread_id, "thread-1");
+});
+
+test("recordThread still rejects unknown output created after preflight", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root, { taskId: "task-1" });
+  const privateRoot = join(root, "score", "tasks", "task-1", "private-scoring");
+  await writeFile(join(privateRoot, "unexpected.txt"), "unexpected", "utf8");
+
+  await assert.rejects(
+    () => recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" }),
+    /未知 attempt 输出.*unexpected\.txt/,
+  );
+});
+
 test("score_slots one prevents a second active scoring thread", async () => {
   const root = await fixture(["task-1", "task-2"]);
   const { state } = await initialize(root, [], { scoreSlots: 1 });

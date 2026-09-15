@@ -299,8 +299,13 @@ async function verifyScoringInputs(task, { allowAttemptOutputs = false } = {}) {
   }
   const current = await snapshotDirectoryTree(privateRoot, inputs.roots);
   assertSameTree(inputs, current, `评分初始输入 ${task.task_id}`);
-  if (!allowAttemptOutputs) {
-    const actualRoots = (await readdir(privateRoot)).sort(comparePaths);
+  const actualRoots = (await readdir(privateRoot)).sort(comparePaths);
+  if (allowAttemptOutputs) {
+    const unknown = actualRoots.filter((name) => !inputs.roots.includes(name) && !KNOWN_ATTEMPT_OUTPUT_ROOTS.has(name));
+    if (unknown.length) {
+      throw new Error(`评分目录包含未知 attempt 输出：${task.task_id}: ${unknown.join(", ")}`);
+    }
+  } else {
     if (JSON.stringify(actualRoots) !== JSON.stringify([...inputs.roots].sort(comparePaths))) {
       throw new Error(`评分目录存在未归档 attempt 输出：${task.task_id}`);
     }
@@ -1254,7 +1259,10 @@ export async function recordThread(packageRoot, taskId, thread, options = {}) {
   const portOwner = active.find((entry) => entry.scoring_port === task.scoring_port);
   if (portOwner) throw new Error(`评分端口 ${task.scoring_port} 已被活动任务占用：${portOwner.task_id}`);
   await verifyTaskCandidateOrFail(plan, state, task, "record-thread");
-  await verifyScoringInputs(task);
+  // Desktop create_thread 返回 threadId 前，评分任务可能已经开始写入已知的
+  // private-scoring attempt 输出。preflight 已确认目录当时干净，因此这里允许
+  // 这段不可避免窗口内产生的受管输出，但仍拒绝未知根目录并复核冻结输入。
+  await verifyScoringInputs(task, { allowAttemptOutputs: true });
   if (task.thread_id && (task.thread_id !== thread.threadId || task.thread_host_id !== thread.hostId)) throw new Error("任务已绑定不同会话");
   const existingAttempt = task.thread_id ? currentAttempt(task) : null;
   if (existingAttempt?.thread_id && (

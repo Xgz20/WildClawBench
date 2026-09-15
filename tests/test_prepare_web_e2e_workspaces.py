@@ -178,7 +178,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
             score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.2.zip"
             report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.0.2.zip"
-            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.2.4.zip"
+            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.2.5.zip"
             execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.11.13.zip"
             run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.3.5.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
@@ -307,7 +307,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             batch_manifest = json.loads((batch_root / "batch_manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(
                 batch_manifest["orchestrate_skill_archive"],
-                "packages/orchestrate-web-e2e-skill-v0.2.4.zip",
+                "packages/orchestrate-web-e2e-skill-v0.2.5.zip",
             )
             self.assertEqual(
                 batch_manifest["execute_skill_archive"],
