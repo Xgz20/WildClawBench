@@ -189,13 +189,13 @@ bash .agents/skills/execute-web-e2e/scripts/run-workbuddy-batch.sh \
   --run-id <queue_id> \
   --task-id <task_id_1> \
   --task-id <task_id_2> \
-  --run-slots 3 \
+  --run-slots 2 \
   --permission-mode full-access
 ```
 
-Windows 使用同名参数的 `run-workbuddy-batch.cmd`。为避免 npm 依赖树触发传统 Win32 长路径问题，worker 必须直接解压到 `D:\debug-workspace\web-e2e\w\<短批次ID>` 这类短目录，不能再嵌套 `workers\<完整批次名>\<完整包名>`；解压后还要在发送前确认每题候选 `workspace` 绝对路径长度不超过 180。该限制只约束 worker 的本机搬运位置，不改变包内 task ID、execution receipt 或候选哈希。WorkBuddy 5.5.3 已在 Windows 完成单题、三题串行、默认三槽五题动态补位、执行到评分/回传/报告闭环、单 Prompt 组合器以及中断、客户端重启、超时和恢复真机验收，属于当前生产验证基线。首次换机、升级 WorkBuddy/Skill 或切换模型后仍须先用一至三个 L1 用例 smoke；未通过当前节点隔离验证时显式回退到 `--run-slots 1`。
+Windows 使用同名参数的 `run-workbuddy-batch.cmd`。为避免 npm 依赖树触发传统 Win32 长路径问题，worker 必须直接解压到 `D:\debug-workspace\web-e2e\w\<短批次ID>` 这类短目录，不能再嵌套 `workers\<完整批次名>\<完整包名>`；解压后还要在发送前确认每题候选 `workspace` 绝对路径长度不超过 180。该限制只约束 worker 的本机搬运位置，不改变包内 task ID、execution receipt 或候选哈希。WorkBuddy 5.5.6 与 `xopglm52` 在 Windows 真机验证中，三路后台会话会使第三条会话出现 `session/load` 或 `session/set_mode` 连接初始化超时；双路五题动态补位已 5/5 通过。因此新队列安全默认值为 2，显式提高并发前必须在目标客户端、模型和机器上重新完成隔离验证。首次换机、升级 WorkBuddy/Skill 或切换模型后仍须先用一至三个 L1 用例 smoke；未通过双路隔离验证时显式回退到 `--run-slots 1`。
 
-新队列默认 `run_slots=3`，最大 8；显式 `--run-slots 1` 可回退为串行。已有队列冻结首次记录的并发值，恢复时省略该参数会沿用冻结值，显式提供不同值则失败关闭。没有 `run_slots` 字段的旧队列迁移为 1，不自动升级为 3。
+新队列默认 `run_slots=2`，最大 8；显式 `--run-slots 1` 可回退为串行。已有队列冻结首次记录的并发值，恢复时省略该参数会沿用冻结值，显式提供不同值则失败关闭。没有 `run_slots` 字段的旧队列迁移为 1，不自动升级为 2。
 
 `--model` 是可选覆盖项，接收 WorkBuddy 模型下拉框中的精确显示名，例如 `--model xopglm52`。显式传入时，Driver 选择并回读该模型；省略时，Driver 只回读当前模型，不展开下拉框，也不再自动选择“均衡”。两种模式都不操作推理强度。一个队列运行期间不得人工改变模型；所有题的实际回读模型必须一致。同一个 `run-id` 恢复时模型模式和显式请求值不可变；可选 `execution_record.json` 已预声明模型时，实际回读值也必须与其一致。
 
@@ -240,6 +240,6 @@ WorkBuddy 任一终态（成功、明确失败或安全超时）在冻结候选 
 - 生产跑批前由测试人员按指导手册设置 Harness 的默认模型和推理强度。执行自动化只在显式提供 `--model` 时切换模型；推理强度始终沿用 Harness 当前配置，不由 Playwright 选择或校验。
 - 只允许 Driver 对显式白名单且严格限定在候选 `workspace/` 内的普通操作自动选择一次性“允许”；当前唯一规则是清理该目录下的 `.DS_Store`。其他命令（包括同类命令的路径或参数变化）一律停在 `NEEDS_ATTENTION`。
 - `SUCCEEDED`、`INFRA_FAILED`、已确认停止的 `TIMEOUT` 分别映射为 `execution_record.json` 的 `completed`、`execution_error`、`timeout`；没有生成有效站点仍是正常完成，由评分阶段判低分。
-- WorkBuddy、AstronStudio 和 QwenWork 始终保持 `ui_slots: 1`；新队列默认 `run_slots: 3`、最大 8。这里的并发只指已投递 Agent 在客户端后台并行运行，禁止同时启动多个 Playwright Driver 抢占窗口。首次换机、升级 Harness/Skill 或切换模型后，先用 3 个 L1 冒烟；未通过真实隔离验证的节点显式使用 `--run-slots 1`。
+- WorkBuddy、AstronStudio 和 QwenWork 始终保持 `ui_slots: 1`；WorkBuddy 新队列默认 `run_slots: 2`，AstronStudio 和 QwenWork 默认 `run_slots: 3`，三者最大均为 8。这里的并发只指已投递 Agent 在客户端后台并行运行，禁止同时启动多个 Playwright Driver 抢占窗口。首次换机、升级 Harness/Skill 或切换模型后，先用 3 个 L1 冒烟；未通过真实隔离验证的节点显式使用 `--run-slots 1`。
 
 实现或审查其他 Driver 时，完整读取 [Driver 契约](references/driver-contract.md)。

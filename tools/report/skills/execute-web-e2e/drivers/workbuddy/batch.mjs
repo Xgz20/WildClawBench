@@ -25,8 +25,8 @@ import {
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
 export const QUEUE_STATE_REVISION = 3;
-export const QUEUE_WORKER_VERSION = "1.8.21";
-export const DEFAULT_RUN_SLOTS = 3;
+export const QUEUE_WORKER_VERSION = "1.8.22";
+export const DEFAULT_RUN_SLOTS = 2;
 export const MAX_RUN_SLOTS = 8;
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
@@ -38,7 +38,7 @@ const BATCH_PROFILES = Object.freeze({
     workerVersion: "1.10.1",
     driverFile: resolve(SCRIPT_DIR, "../astronstudio/driver.mjs"),
     lockFileName: "astronstudio-ui.lock",
-    defaultRunSlots: DEFAULT_RUN_SLOTS,
+    defaultRunSlots: 3,
     maxRunSlots: MAX_RUN_SLOTS,
     detachedDispatch: true,
     retryPreSendFailure: true,
@@ -50,7 +50,7 @@ const BATCH_PROFILES = Object.freeze({
     workerVersion: "1.10.2",
     driverFile: resolve(SCRIPT_DIR, "../qwenwork/driver.mjs"),
     lockFileName: "qwenwork-ui.lock",
-    defaultRunSlots: DEFAULT_RUN_SLOTS,
+    defaultRunSlots: 3,
     maxRunSlots: MAX_RUN_SLOTS,
     detachedDispatch: true,
     retryPreSendFailure: true,
