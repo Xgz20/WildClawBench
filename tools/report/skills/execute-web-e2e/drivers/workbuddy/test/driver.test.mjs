@@ -28,6 +28,7 @@ import {
   ensureModel,
   hasStableConversationId,
   hasTrustedDomCompletion,
+  hasTrustedDomCompletionForExactSession,
   prepareClientForNewAttempt,
   restartWorkBuddy,
   runEntrypointWithKeepAlive,
@@ -304,6 +305,21 @@ test("DOM completion accepts a finished footer without treating a tool card as f
     finalText: "",
     explicitFinished: false,
   }), false);
+});
+
+test("stale running database status accepts DOM completion only for the exact selected conversation", () => {
+  const dom = {
+    status: { kind: "success", status: "visible-completed" },
+    finalText: "站点已经完成并写入工作区。",
+    explicitFinished: true,
+  };
+  const session = { conversationId: "conversation-1", status: "working" };
+  const state = { session: { conversation_id: "conversation-1" } };
+
+  assert.equal(hasTrustedDomCompletionForExactSession(dom, session, state, "conversation-1"), true);
+  assert.equal(hasTrustedDomCompletionForExactSession(dom, session, state, "conversation-2"), false);
+  assert.equal(hasTrustedDomCompletionForExactSession(dom, { ...session, conversationId: "conversation-2" }, state, "conversation-1"), false);
+  assert.equal(hasTrustedDomCompletionForExactSession({ ...dom, explicitFinished: false, finalText: "" }, session, state, "conversation-1"), false);
 });
 
 async function fixture({ manifest = true, record = false } = {}) {
@@ -680,7 +696,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.20");
+  assert.equal(state.driver.version, "1.8.21");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

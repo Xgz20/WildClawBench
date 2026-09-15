@@ -106,6 +106,16 @@ export function hasTrustedDomCompletion(dom) {
     && (Boolean(dom.explicitFinished) || isSubstantiveFinalResponse(dom.finalText));
 }
 
+export function hasTrustedDomCompletionForExactSession(dom, session, state, selectedConversationId) {
+  const expectedConversationId = state?.session?.dom_conversation_id
+    || state?.session?.conversation_id
+    || "";
+  return hasTrustedDomCompletion(dom)
+    && Boolean(expectedConversationId)
+    && session?.conversationId === expectedConversationId
+    && selectedConversationId === expectedConversationId;
+}
+
 function run(command, args, options = {}) {
   return new Promise((resolvePromise, rejectPromise) => {
     const { allowFailure = false, capture = false, ...spawnOptions } = options;
@@ -1426,6 +1436,23 @@ export async function observeAttemptOnce(page, config, state, identityInfo) {
     if (classification.kind === "success") {
       await takeScreenshot(page, config, state, "10-succeeded.png");
       return finalize(config, state, identityInfo, "SUCCEEDED", { terminalSource: "workbuddy-session-db", finalText: dom.finalText });
+    }
+    if (classification.kind === "running" && hasTrustedDomCompletion(dom)) {
+      const selectedConversationId = await inspectSelectedConversationId(page);
+      if (hasTrustedDomCompletionForExactSession(dom, session, state, selectedConversationId)) {
+        state.session.terminal_observation = {
+          database_status: session.status,
+          dom_status: dom.status.status,
+          explicit_finished: Boolean(dom.explicitFinished),
+          selected_conversation_id: selectedConversationId,
+          observed_at: new Date().toISOString(),
+        };
+        await takeScreenshot(page, config, state, "10-succeeded.png");
+        return finalize(config, state, identityInfo, "SUCCEEDED", {
+          terminalSource: "workbuddy-dom-completion-with-stale-session-db",
+          finalText: dom.finalText,
+        });
+      }
     }
     if (classification.kind === "failure") {
       await takeScreenshot(page, config, state, "10-infra-failed.png");

@@ -25,7 +25,7 @@ import {
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
 export const QUEUE_STATE_REVISION = 3;
-export const QUEUE_WORKER_VERSION = "1.8.20";
+export const QUEUE_WORKER_VERSION = "1.8.21";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 
