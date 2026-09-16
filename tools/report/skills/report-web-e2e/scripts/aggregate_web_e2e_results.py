@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import math
 import statistics
 import sys
 import tarfile
@@ -263,6 +264,52 @@ def numeric(value):
     return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
 
 
+# 每项单独计算覆盖，不能用 Token 的完整性代替耗时、请求或工具的完整性。
+RESOURCE_FIELDS = [
+    ("input_tokens", "usage", "输入Token"), ("output_tokens", "usage", "输出Token"),
+    ("total_tokens", "usage", "总Token"),
+    ("cache_read_input_tokens", "usage", "缓存读取Token"),
+    ("cache_creation_input_tokens", "usage", "缓存写入Token"),
+    ("reasoning_output_tokens", "usage", "推理输出Token"),
+    ("request_count", "usage", "模型请求数（非HTTP尝试）"),
+    ("request_attempt_count", "usage", "HTTP尝试次数"),
+    ("call_count", "tools", "工具调用数"),
+    ("duration_seconds", "execution", "执行流程耗时(s)"),
+    ("agent_duration_seconds", "execution", "智能体耗时(s)"),
+]
+
+
+def resource_value(task, group, key, allow_partial=False):
+    value = numeric((task.get(group) or {}).get(key))
+    collection = (task.get("usage") or {}).get("collection") or {}
+    status = collection.get("metrics", {}).get(key, {}).get("status", "legacy")
+    if allow_partial and status == "partial" and value is None:
+        value = numeric(collection.get("known_subtotals", {}).get(key))
+    allowed = {"legacy", "observed", "inferred"} | ({"partial"} if allow_partial else set())
+    if value is None or not math.isfinite(value) or value < 0 or status not in allowed:
+        return None
+    if group != "execution" and not value.is_integer():
+        return None
+    return value
+
+
+def resource_summary(tasks):
+    result = {}
+    for key, group, label in RESOURCE_FIELDS:
+        complete = [resource_value(t, group, key) for t in tasks]
+        known = [resource_value(t, group, key, allow_partial=True) for t in tasks]
+        statuses = [((t.get("usage") or {}).get("collection") or {}).get("metrics", {}).get(key, {}).get("status", "legacy") for t in tasks]
+        result[key] = {
+            "label": label, "total": complete_sum(complete),
+            "known_subtotal": round(sum(v for v in known if v is not None), 6) if any(v is not None for v in known) else None,
+            "covered_cases": sum(v is not None for v in complete), "total_cases": len(tasks),
+            "partial_cases": sum(a is None and b is not None for a, b in zip(complete, known)),
+            "inferred_cases": sum(v is not None and s == "inferred" for v, s in zip(complete, statuses)),
+            "status_counts": {s: statuses.count(s) for s in sorted(set(statuses))},
+        }
+    return result
+
+
 def complete_sum(values: list):
     numbers = [numeric(value) for value in values]
     return round(sum(numbers), 6) if numbers and all(value is not None for value in numbers) else None
@@ -379,11 +426,12 @@ def unit_summary(
         else []
     )
     aesthetic_scored = [value for value in aesthetic_values if value is not None]
-    durations = complete_values([(task.get("execution") or {}).get("duration_seconds") for task in tasks])
+    resources = resource_summary(tasks)
+    durations = complete_values([resource_value(task, "execution", "duration_seconds") for task in tasks])
     costs = complete_values([(task.get("usage") or {}).get("cost_usd") for task in tasks])
-    total_token_values = complete_values([(task.get("usage") or {}).get("total_tokens") for task in tasks])
-    input_token_values = complete_values([(task.get("usage") or {}).get("input_tokens") for task in tasks])
-    output_token_values = complete_values([(task.get("usage") or {}).get("output_tokens") for task in tasks])
+    total_token_values = complete_values([resource_value(task, "usage", "total_tokens") for task in tasks])
+    input_token_values = complete_values([resource_value(task, "usage", "input_tokens") for task in tasks])
+    output_token_values = complete_values([resource_value(task, "usage", "output_tokens") for task in tasks])
     return {
         "model": unit["model_display_name"],
         "model_id": unit["model_id"],
@@ -412,10 +460,16 @@ def unit_summary(
         "average_input_tokens": average(input_token_values),
         "average_output_tokens": average(output_token_values),
         "total_tokens": round(sum(total_token_values), 6) if total_token_values else None,
-        "total_requests": complete_sum([(task.get("usage") or {}).get("request_count") for task in tasks]),
-        "total_duration_seconds": complete_sum([(task.get("execution") or {}).get("duration_seconds") for task in tasks]),
+        "total_requests": resources["request_count"]["total"],
+        "total_duration_seconds": resources["duration_seconds"]["total"],
         "total_cost_usd": complete_sum([(task.get("usage") or {}).get("cost_usd") for task in tasks]),
-        "tool_call_count": complete_sum([(task.get("tools") or {}).get("call_count") for task in tasks]),
+        "tool_call_count": resources["call_count"]["total"],
+        "total_input_tokens": resources["input_tokens"]["total"],
+        "total_output_tokens": resources["output_tokens"]["total"],
+        "total_cache_read_input_tokens": resources["cache_read_input_tokens"]["total"],
+        "total_cache_creation_input_tokens": resources["cache_creation_input_tokens"]["total"],
+        "total_agent_duration_seconds": resources["agent_duration_seconds"]["total"],
+        "resource_metrics": resources,
         "format_accuracy": format_accuracy(tasks),
         "primary_dimensions": {key: dimension_average(tasks, key, "primary_dimensions") for key in primary_keys},
         "secondary_dimensions": {key: dimension_average(tasks, key, "secondary_dimensions") for key in secondary_keys},
@@ -525,16 +579,18 @@ def build_report_data(submissions: list[dict], config: dict | None = None) -> di
                     numeric(completed_aesthetic(task).get("score"))
                     if metric_profile == DETAILED_PROFILE else None
                 ),
-                "duration_seconds": numeric(task.get("execution", {}).get("duration_seconds")),
-                "total_tokens": numeric(task.get("usage", {}).get("total_tokens")),
-                "input_tokens": numeric(task.get("usage", {}).get("input_tokens")),
-                "output_tokens": numeric(task.get("usage", {}).get("output_tokens")),
-                "request_count": numeric(task.get("usage", {}).get("request_count")),
+                "duration_seconds": resource_value(task, "execution", "duration_seconds"),
+                "total_tokens": resource_value(task, "usage", "total_tokens"),
+                "input_tokens": resource_value(task, "usage", "input_tokens"),
+                "output_tokens": resource_value(task, "usage", "output_tokens"),
+                "request_count": resource_value(task, "usage", "request_count"),
                 "cost_usd": numeric(task.get("usage", {}).get("cost_usd")),
-                "tool_call_count": numeric(task.get("tools", {}).get("call_count")),
+                "tool_call_count": resource_value(task, "tools", "call_count"),
                 "format_accuracy": numeric(task.get("tools", {}).get("format_accuracy")),
                 "primary_dimensions": task.get("metrics", {}).get("primary_dimensions") or {},
                 "secondary_dimensions": task.get("metrics", {}).get("secondary_dimensions") or {},
+                "resource_collection": (task.get("usage") or {}).get("collection") or {},
+                "resource_metrics": {key: resource_value(task, group, key) for key, group, _ in RESOURCE_FIELDS},
                 "aesthetic_primary_dimensions": completed_aesthetic(task).get("primary_dimensions") or {},
                 "aesthetic_secondary_dimensions": completed_aesthetic(task).get("secondary_dimensions") or {},
                 "aesthetic_secondary_dimension_scores": completed_aesthetic(task).get("secondary_dimension_scores") or {},
@@ -587,6 +643,24 @@ def spread_statement(rows: list[dict], value_getter, labels: dict[str, str]) -> 
     return f"最大横向分差出现在“{label}”，分差为 {gap:.2f} 分。"
 
 
+def append_resource_columns(headers, rows, units):
+    headers.extend(["输入Token", "输出Token", "缓存读取Token", "缓存写入Token", "智能体耗时(s)"])
+    for row, unit in zip(rows, units):
+        row.extend(unit.get(key) for key in ("total_input_tokens", "total_output_tokens", "total_cache_read_input_tokens", "total_cache_creation_input_tokens", "total_agent_duration_seconds"))
+
+
+def resource_coverage_markdown(units):
+    lines = ["", "### 资源数据覆盖", "",
+             "总量仅在该指标覆盖全部用例时展示；已知小计包含部分记录，不代表完整总量。输入含缓存，推理输出是输出的子集，均不重复相加。总耗时沿用执行流程壁钟，智能体耗时单列。模型请求数不是包含所有失败重试的 HTTP 次数。后台与子智能体未关联的消耗不计入主任务。", ""]
+    rows = []
+    for unit in units:
+        for value in unit.get("resource_metrics", {}).values():
+            rows.append([unit["unit"], value["label"], value["total"], value["known_subtotal"],
+                         f"{value['covered_cases']}/{value['total_cases']}", value["partial_cases"], value["inferred_cases"]])
+    lines.extend(markdown_table(["模型@Harness", "指标", "完整总量", "已知小计", "完整覆盖", "部分记录数", "推导记录数"], rows))
+    return lines
+
+
 def render_artifactsbench_markdown(data: dict) -> str:
     units = data["units"]
     leader = max(units, key=lambda item: (item["total_average_score"], item["unit"]))
@@ -621,7 +695,9 @@ def render_artifactsbench_markdown(data: dict) -> str:
         item["total_requests"], item["total_duration_seconds"], item["total_cost_usd"],
         item["tool_call_count"], item["format_accuracy"],
     ] for item in units]
+    append_resource_columns(overview_headers, overview_rows, units)
     lines.extend(markdown_table(overview_headers, overview_rows))
+    lines.extend(resource_coverage_markdown(units))
     lines.extend(["", "## 难度等级", ""])
     lines.append(spread_statement(
         data["difficulty_rows"],
@@ -679,7 +755,9 @@ def render_markdown(data: dict) -> str:
         item["total_requests"], item["total_duration_seconds"], item["total_cost_usd"],
         item["tool_call_count"], item["format_accuracy"],
     ] for item in units]
+    append_resource_columns(overview_headers, overview_rows, units)
     lines.extend(markdown_table(overview_headers, overview_rows))
+    lines.extend(resource_coverage_markdown(units))
 
     lines.extend(["", "## 难度等级", ""])
     lines.append(spread_statement(

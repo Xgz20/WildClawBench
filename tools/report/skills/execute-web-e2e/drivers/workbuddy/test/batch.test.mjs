@@ -65,6 +65,7 @@ test("parseBatchArgs preserves explicit task order", () => {
   assert.equal(args.permissionMode, "full-access");
   assert.equal(args.continueOnTerminalFailure, false);
   assert.equal(args.postCancelQuiescenceSeconds, 5);
+  assert.equal(DEFAULT_RUN_SLOTS, 3);
   assert.equal(args.runSlots, DEFAULT_RUN_SLOTS);
   assert.equal(args.runSlotsExplicit, false);
 });
@@ -199,8 +200,8 @@ test("queue state identity and ordered tasks are immutable on resume", async () 
   assert.equal(state.schema_version, QUEUE_SCHEMA);
   assert.equal(state.revision, QUEUE_STATE_REVISION);
   assert.equal(state.ui_slots, 1);
-  assert.equal(state.run_slots, 2);
-  assert.equal(state.available_run_slots, 2);
+  assert.equal(state.run_slots, 3);
+  assert.equal(state.available_run_slots, 3);
   assert.deepEqual(state.tasks.map((task) => task.phase), ["PENDING", "PENDING"]);
   assert.equal(state.requested_ui_model, null);
   assert.equal(state.requested_endpoint, null);

@@ -60,6 +60,36 @@ const GROUP_COLORS = {
 };
 const ARTIFACTSBENCH_PROFILE = "artifactsbench-web-v1";
 
+const RESOURCE_HEADERS = ["输入Token", "输出Token", "缓存读取Token", "缓存写入Token", "智能体耗时(s)"];
+const RESOURCE_KEYS = ["total_input_tokens", "total_output_tokens", "total_cache_read_input_tokens", "total_cache_creation_input_tokens", "total_agent_duration_seconds"];
+
+function collectionNote(collection) {
+  if (!collection?.metrics) return "legacy（未记录采集来源状态）";
+  const states = {};
+  for (const { status } of Object.values(collection.metrics)) states[status] = (states[status] || 0) + 1;
+  return [Object.entries(states).map(([k, v]) => `${k}:${v}`).join("; "), ...(collection.warnings || [])].join("\n");
+}
+
+// 覆盖表留在既有站点评测 Sheet，不增新 Sheet，不将未知小计冒充完整总量。
+function writeResourceCoverage(sheet, row, units) {
+  styleSection(sheet, row, 8, "资源数据覆盖（输入含缓存；请求非HTTP尝试；后台/未关联子任务除外）");
+  const rows = units.flatMap(unit => Object.values(unit.resource_metrics || {}).map(m => [
+    unit.unit, m.label, m.total, m.known_subtotal, `${m.covered_cases}/${m.total_cases}`, m.partial_cases, m.inferred_cases,
+    Object.entries(m.status_counts || {}).map(([k, v]) => `${k}:${v}`).join("; "),
+  ]));
+  const end = writeTable(sheet, row + 1, ["模型@Harness", "指标", "完整总量", "已知小计", "完整覆盖", "部分记录数", "推导记录数", "来源状态"], rows);
+  if (rows.length) {
+    sheet.getRange(`A${row + 2}:H${end}`).format.wrapText = true;
+    sheet.getRange(`A${row + 2}:H${end}`).format.rowHeight = 42;
+    for (let i = 0; i < rows.length; i += 1) {
+      sheet.getRange(`C${row + 2 + i}:D${row + 2 + i}`).format.numberFormat = rows[i][1].includes("耗时") ? "#,##0.000" : "#,##0";
+    }
+    sheet.getRange(`E${row + 2}:G${end}`).format.horizontalAlignment = "center";
+    sheet.getRange(`F${row + 2}:G${end}`).format.numberFormat = "0";
+  }
+  return end;
+}
+
 
 function styleTitle(sheet, row, lastColumn, title) {
   const end = columnName(lastColumn);
@@ -244,6 +274,7 @@ function buildArtifactsWebsiteSheet(workbook, data) {
   const headers = [
     "模型", "Harness", "推理强度", "总平均分", "用例数", "正常完成数", "执行错误数", "超时数", "评测异常数",
     "完成率", "总tokens", "总请求数", "总耗时(s)", "总成本(USD)", "工具调用数", "格式准确率",
+    ...RESOURCE_HEADERS,
   ];
   styleTitle(sheet, 1, headers.length, `ArtifactsBench Web 站点端到端评测指标 · ${data.batch_id}`);
   styleSection(sheet, 3, headers.length, "总分与执行概况（无功能和美观度维度）");
@@ -252,6 +283,7 @@ function buildArtifactsWebsiteSheet(workbook, data) {
     unit.completed_count, unit.execution_error_count, unit.timeout_count, unit.evaluation_error_count,
     unit.completion_rate, unit.total_tokens, unit.total_requests, unit.total_duration_seconds,
     unit.total_cost_usd, unit.tool_call_count, unit.format_accuracy,
+    ...RESOURCE_KEYS.map(key => unit[key]),
   ]);
   writeTable(sheet, 4, headers, rows, { scoreStartColumn: 4, scoreEndColumn: 4 });
   if (rows.length) {
@@ -264,8 +296,12 @@ function buildArtifactsWebsiteSheet(workbook, data) {
     sheet.getRange(`N5:N${end}`).format.numberFormat = "$0.000000";
     sheet.getRange(`O5:O${end}`).format.numberFormat = "#,##0";
     sheet.getRange(`P5:P${end}`).format.numberFormat = "0.00";
+    sheet.getRange(`Q5:T${end}`).format.numberFormat = "#,##0";
+    sheet.getRange(`U5:U${end}`).format.numberFormat = "0.000";
   }
   applyWidths(sheet, { A: 22, B: 18, C: 14, D: 14, E: 11, F: 13, G: 13, H: 11, I: 13, J: 12, K: 14, L: 14, M: 14, N: 16, O: 14, P: 14 });
+  applyWidths(sheet, { Q: 16, R: 16, S: 18, T: 18, U: 18 });
+  writeResourceCoverage(sheet, 7 + rows.length, data.units);
   sheet.freezePanes.freezeRows(4);
   sheet.freezePanes.freezeColumns(2);
   return sheet;
@@ -284,6 +320,7 @@ function buildWebsiteSheet(workbook, data) {
     "总tokens", "总请求数", "总耗时(s)", "总成本(USD)", "工具调用数", "格式准确率",
     "平均耗时(s)", "耗时P50(s)", "耗时P90(s)", "平均成本(USD)",
     "平均总Token", "平均输入Token", "平均输出Token",
+    ...RESOURCE_HEADERS,
   ];
   const primaryEntries = Object.entries(data.labels.primary);
   const secondaryEntries = Object.entries(data.labels.secondary);
@@ -302,6 +339,7 @@ function buildWebsiteSheet(workbook, data) {
     unit.average_duration_seconds, unit.duration_p50_seconds, unit.duration_p90_seconds,
     unit.average_cost_usd, unit.average_total_tokens, unit.average_input_tokens,
     unit.average_output_tokens,
+    ...RESOURCE_KEYS.map(key => unit[key]),
   ]);
   let lastRow = writeTable(sheet, 4, summaryHeaders, summaryRows, { scoreStartColumn: 4, scoreEndColumn: 7 });
   const summaryStart = 5;
@@ -317,9 +355,12 @@ function buildWebsiteSheet(workbook, data) {
     sheet.getRange(`S${summaryStart}:V${summaryEnd}`).format.numberFormat = "0.00";
     sheet.getRange(`W${summaryStart}:W${summaryEnd}`).format.numberFormat = "$0.000000";
     sheet.getRange(`X${summaryStart}:Z${summaryEnd}`).format.numberFormat = "#,##0.00";
+    sheet.getRange(`AA${summaryStart}:AD${summaryEnd}`).format.numberFormat = "#,##0";
+    sheet.getRange(`AE${summaryStart}:AE${summaryEnd}`).format.numberFormat = "0.000";
     addScoreScale(sheet, `M${summaryStart}:M${summaryEnd}`);
   }
 
+  lastRow = writeResourceCoverage(sheet, lastRow + 2, data.units);
   let sectionRow = lastRow + 2;
   const primaryHeaders = ["模型@Harness", "总平均分", ...primaryEntries.map(([, label]) => label)];
   styleSection(sheet, sectionRow, primaryHeaders.length, "站点评测一级维度汇总");
@@ -419,7 +460,7 @@ function buildDetailSheet(workbook, data) {
     "用例ID", "用例名称", "难度", "模型", "Harness", "推理强度", "模型@Harness", "执行状态", "评测状态",
     "总分",
   ];
-  const resourceHeaders = ["耗时(s)", "总tokens", "请求数", "成本(USD)", "工具调用数", "格式准确率", "输入tokens", "输出tokens"];
+  const resourceHeaders = ["耗时(s)", "总tokens", "请求数", "成本(USD)", "工具调用数", "格式准确率", "输入tokens", "输出tokens", "缓存读取Token", "缓存写入Token", "智能体耗时(s)", "采集说明"];
   const headers = detailed
     ? [...baseHeaders, "美观度总分", ...resourceHeaders, ...primaryEntries.map(([, label]) => label), ...secondaryEntries.map(([, label]) => label)]
     : [...baseHeaders, ...resourceHeaders];
@@ -430,8 +471,14 @@ function buildDetailSheet(workbook, data) {
       row.execution_status, row.evaluation_status, row.total_score,
     ];
     const resources = [
-      row.duration_seconds, row.total_tokens, row.request_count, row.cost_usd,
-      row.tool_call_count, normalizeAccuracy(row.format_accuracy), row.input_tokens, row.output_tokens,
+      row.resource_metrics ? row.resource_metrics.duration_seconds : row.duration_seconds,
+      row.resource_metrics ? row.resource_metrics.total_tokens : row.total_tokens,
+      row.resource_metrics ? row.resource_metrics.request_count : row.request_count, row.cost_usd,
+      row.resource_metrics ? row.resource_metrics.call_count : row.tool_call_count, normalizeAccuracy(row.format_accuracy),
+      row.resource_metrics ? row.resource_metrics.input_tokens : row.input_tokens,
+      row.resource_metrics ? row.resource_metrics.output_tokens : row.output_tokens,
+      row.resource_metrics?.cache_read_input_tokens, row.resource_metrics?.cache_creation_input_tokens,
+      row.resource_metrics?.agent_duration_seconds, collectionNote(row.resource_collection),
     ];
     return detailed
       ? [...base, row.aesthetic_score, ...resources, ...primaryEntries.map(([key]) => row.primary_dimensions[key]), ...secondaryEntries.map(([key]) => row.secondary_dimensions[key])]
@@ -448,15 +495,23 @@ function buildDetailSheet(workbook, data) {
     sheet.getRange(`${columnName(15 + offset)}4:${columnName(15 + offset)}${end}`).format.numberFormat = "#,##0";
     sheet.getRange(`${columnName(16 + offset)}4:${columnName(16 + offset)}${end}`).format.numberFormat = "0.00";
     sheet.getRange(`${columnName(17 + offset)}4:${columnName(18 + offset)}${end}`).format.numberFormat = "#,##0";
+    sheet.getRange(`${columnName(19 + offset)}4:${columnName(20 + offset)}${end}`).format.numberFormat = "#,##0";
+    sheet.getRange(`${columnName(21 + offset)}4:${columnName(21 + offset)}${end}`).format.numberFormat = "0.000";
     addScoreScale(sheet, `J4:J${end}`);
-    if (detailed && headers.length >= 20) {
-      addScoreScale(sheet, `T4:${columnName(headers.length)}${end}`);
+    if (detailed && headers.length >= 24) {
+      addScoreScale(sheet, `X4:${columnName(headers.length)}${end}`);
     }
   }
   applyWidths(sheet, { A: 70, B: 30, C: 10, D: 18, E: 18, F: 14, G: 30, H: 16, I: 16, J: 12, K: 14, L: 12, M: 14, N: 12, O: 14, P: 14, Q: 14, R: 14, S: 14 });
   for (let column = detailed ? 20 : 19; column <= headers.length; column += 1) {
     const name = columnName(column);
     sheet.getRange(`${name}:${name}`).format.columnWidth = 13;
+  }
+  const noteColumn = columnName(detailed ? 23 : 22);
+  sheet.getRange(`${noteColumn}:${noteColumn}`).format.columnWidth = 44;
+  if (rows.length) {
+    sheet.getRange(`${noteColumn}4:${noteColumn}${3 + rows.length}`).format.wrapText = true;
+    sheet.getRange(`A4:${columnName(headers.length)}${3 + rows.length}`).format.rowHeight = 42;
   }
   sheet.freezePanes.freezeRows(3);
   sheet.freezePanes.freezeColumns(2);
@@ -506,10 +561,10 @@ async function main() {
   });
   const keyRanges = [
     ["站点评测指标", data.metric_profile === ARTIFACTSBENCH_PROFILE
-      ? `A1:P${4 + data.units.length}`
-      : `A1:${columnName(Math.max(26, 2 + Object.keys(data.labels.secondary).length, 2 + Object.keys(data.labels.aesthetic_secondary ?? {}).length))}${18 + 5 * data.units.length}`],
+      ? `A1:U${4 + data.units.length}`
+      : `A1:${columnName(Math.max(31, 2 + Object.keys(data.labels.secondary).length, 2 + Object.keys(data.labels.aesthetic_secondary ?? {}).length))}${18 + 5 * data.units.length}`],
     ["难度对比", `A1:${columnName(2 + data.difficulty_values.length)}${3 + data.difficulty_rows.length}`],
-    ["用例对比明细", `A1:${columnName((data.metric_profile === ARTIFACTSBENCH_PROFILE ? 18 : 19) + Object.keys(data.labels.primary).length + Object.keys(data.labels.secondary).length)}${3 + data.detail_rows.length}`],
+    ["用例对比明细", `A1:${columnName((data.metric_profile === ARTIFACTSBENCH_PROFILE ? 22 : 23) + Object.keys(data.labels.primary).length + Object.keys(data.labels.secondary).length)}${3 + data.detail_rows.length}`],
   ];
   const tableChecks = [];
   for (const [sheetId, range] of keyRanges) {
