@@ -6,3 +6,4 @@ modelscope
 python-dotenv
 pyyaml
 openpyxl>=3.1
+pyarrow>=12,<18

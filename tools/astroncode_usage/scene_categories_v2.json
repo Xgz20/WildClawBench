@@ -1,0 +1,85 @@
+{
+  "version": "astroncode-scene-v2",
+  "categories": [
+    {
+      "name": "问题排查与修复",
+      "description": "定位错误、异常、失败、兼容性或运行问题并给出修复。",
+      "patterns": ["报错|错误|异常|失败|故障|崩溃|闪退|不工作|不能运行|无法运行|排查|定位问题|修复|兼容性|bug|debug|troubleshoot|fix\\b|error\\b|exception\\b|failed\\b"]
+    },
+    {
+      "name": "产品需求与项目协作",
+      "description": "产品需求、用户故事、项目计划、任务协作、排期和进度管理。",
+      "patterns": ["产品需求|业务需求|功能需求|非功能需求|需求分析|需求拆解|需求评审|需求管理|需求优先级|需求文档|用户故事|用户旅程|验收标准|产品方案|产品规划|产品路线图|项目管理|项目协作|项目计划|项目排期|项目进度|项目里程碑|项目复盘|任务分配|任务拆解|任务跟踪|进度跟踪|迭代计划|排期|里程碑|待办事项|prd\\b|roadmap|backlog|sprint|milestone|user story|acceptance criteria|product requirement|project plan|project schedule"]
+    },
+    {
+      "name": "测试、评审与质量",
+      "description": "编写或运行测试、代码评审、静态检查、质量审计和验收。",
+      "patterns": ["单元测试|集成测试|端到端测试|测试用例|覆盖率|代码评审|代码审查|审计|验收|lint|pytest|unittest|test case|code review|review this|quality assurance|e2e"]
+    },
+    {
+      "name": "信息检索与研究",
+      "description": "搜索、调研、资料收集、事实核验和对比研究。",
+      "patterns": ["调研|查资料|资料收集|事实核验|竞品分析|文献|论文|引用|资料来源|信息检索|research|find information|literature|paper\\b|citation"]
+    },
+    {
+      "name": "文件与本地资源操作",
+      "description": "打开、查找、复制、移动、重命名、删除、压缩或整理本地文件和目录。",
+      "patterns": ["(?:打开|读取|查看|查找|搜索|定位|新建|创建|复制|移动|重命名|删除|清理|整理|保存|上传|下载|压缩|解压|归档|同步).{0,12}(?:文件|文件夹|目录|路径)", "(?:文件|文件夹|目录|路径).{0,12}(?:打开|读取|查看|查找|搜索|定位|新建|创建|复制|移动|重命名|删除|清理|整理|保存|上传|下载|压缩|解压|归档|同步)", "磁盘空间|存储空间|文件管理|清理缓存|finder\\b|file explorer", "(?:open|read|find|locate|create|copy|move|rename|delete|remove|save|upload|download|compress|extract|archive|sync).{0,30}(?:file|folder|directory|path)\\b", "(?:file|folder|directory|path).{0,30}(?:open|read|find|locate|create|copy|move|rename|delete|remove|save|upload|download|compress|extract|archive|sync)\\b"]
+    },
+    {
+      "name": "文档写作与办公处理",
+      "description": "撰写、总结、翻译和整理文档、表格、幻灯片、邮件等办公内容。",
+      "patterns": ["文档|说明书|总结|摘要|改写|润色|翻译|周报|报告|邮件|合同|简历|表格|电子表格|幻灯片|演示文稿|word|markdown|ppt|pptx|xlsx|spreadsheet|presentation|translate|summarize"]
+    },
+    {
+      "name": "重构、性能与架构",
+      "description": "重构代码、优化性能、设计架构、拆分模块或改进可维护性。",
+      "patterns": ["重构|性能优化|性能瓶颈|架构设计|系统架构|模块拆分|可维护性|扩展性|设计模式|内存优化|并发优化|refactor|performance|architecture|scalab|design pattern"]
+    },
+    {
+      "name": "运维部署与环境配置",
+      "description": "部署、发布、容器、CI/CD、系统命令、网络和运行环境配置。",
+      "patterns": ["部署|发布|上线|服务器|容器|镜像|环境变量|配置环境|安装依赖|运维|网络|端口|证书|域名|日志采集|docker|kubernetes|k8s|helm|terraform|ansible|nginx|ci/cd|github actions|gitlab ci|shell|bash|powershell"]
+    },
+    {
+      "name": "前端、网站与交互开发",
+      "description": "网页、前端组件、样式、交互、可视化界面和客户端 UI 开发。",
+      "patterns": ["前端|网页|网站|页面|组件|交互|响应式|样式|布局|浏览器|用户界面|小程序|react|vue|angular|svelte|next\\.?js|nuxt|html|css|javascript|typescript|tailwind|antd|element ui|ui/ux|frontend"]
+    },
+    {
+      "name": "后端、接口与服务开发",
+      "description": "服务端业务、API、鉴权、消息系统和分布式服务开发。",
+      "patterns": ["后端|服务端|接口|鉴权|认证|权限|微服务|消息队列|网关|缓存|定时任务|api\\b|backend|server side|restful|graphql|grpc|spring|django|flask|fastapi|gin\\b|gorm|express\\b|nestjs|redis|kafka|rabbitmq"]
+    },
+    {
+      "name": "数据与数据库",
+      "description": "数据库设计与查询、数据清洗、统计分析、报表和数据可视化。",
+      "patterns": ["数据库|数据表|数据清洗|数据分析|统计分析|可视化|报表|指标|查询优化|数据仓库|数据管道|sql\\b|mysql|postgres|sqlite|oracle|mongodb|elasticsearch|clickhouse|pandas|numpy|excel|csv|etl\\b|dashboard"]
+    },
+    {
+      "name": "AI、模型与智能体",
+      "description": "大模型、机器学习、提示词、RAG、智能体和模型评测相关任务。",
+      "patterns": ["大模型|模型训练|模型推理|机器学习|深度学习|提示词|智能体|评测集|模型评测|向量库|嵌入模型|多模态|llm\\b|agent\\b|prompt|rag\\b|embedding|transformer|pytorch|tensorflow|openai|claude|qwen|deepseek"]
+    },
+    {
+      "name": "图像音视频与设计",
+      "description": "图像、照片、海报、视觉稿、音频和视频的生成、编辑与处理。",
+      "patterns": ["图片|图像|照片|截图|海报|封面图|图标|logo|插画|视觉设计|平面设计|ui设计|ux设计|界面设计|交互设计|设计稿|原型图|画布|抠图|水印|视频|音频|录音|字幕|剪辑|配色|figma|photoshop|illustrator|image\\b|photo\\b|screenshot|poster|cover image|icon\\b|illustration|visual design|ui design|ux design|mockup|video\\b|audio\\b|subtitle|watermark"]
+    },
+    {
+      "name": "学习咨询与生活助理",
+      "description": "知识讲解、学习辅导、计划建议及旅行、健康、消费等生活任务。",
+      "patterns": ["解释一下|怎么理解|学习计划|教学|教程|练习题|旅行|行程|菜谱|健康|健身|购物|推荐|提醒|日程|预算|理财|课程|作业|learn|explain|tutorial|travel|recipe|workout"]
+    },
+    {
+      "name": "通用代码与功能开发",
+      "description": "未落入专门技术域的代码生成、功能实现、脚本和工程开发。",
+      "patterns": ["写代码|实现功能|开发一个|创建项目|生成代码|编写脚本|命令行工具|算法|函数|类|模块|仓库|代码库|python|java\\b|golang|rust\\b|c\\+\\+|c#|ruby|php|代码"]
+    },
+    {
+      "name": "未分类（规则未命中）",
+      "description": "Query 为空或未命中当前规则；缺少场景信息的续接、指代和通用短指令保留在此类。",
+      "patterns": []
+    }
+  ]
+}
