@@ -18,11 +18,11 @@
 
 ## 平台生产验证状态
 
-“支持该平台”只表示存在可用 Driver 和平台入口；只有执行、评分、submission、离线回传/报告、单 Prompt 组合器与恢复门禁全部在同一发布身份下完成真机验收后，才标记为“生产已验证”。下表概述已有证据，当前发布候选的权威状态、版本和证据入口以 [Web 站点端到端自动化评测生产验收清单](Web站点端到端自动化评测生产验收清单.md) 为准。
+“支持该平台”只表示存在可用 Driver 和平台入口。生产准入分为“主流程生产可用”“并发生产可用”和“无人值守高可用”三级；较低层级可以先投入受控评测，但必须遵守 canary、值守和人工恢复约束。下表概述已有证据，当前发布候选的权威状态、版本和证据入口以 [Web 站点端到端自动化评测生产验收清单](Web站点端到端自动化评测生产验收清单.md) 为准。
 
 | 被评测 Harness | macOS | Windows |
 | --- | --- | --- |
-| AstronStudio | 历史批次已覆盖串行、默认三路并发、动态补位及单题 execution→score→submission→return；报告、单 Prompt 和恢复边界尚未形成完整同版本证据。 | **生产已验证**：发布实现 revision `6988b525...`，AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（runtime 152.0.7977.83）、execute 1.11.16 / Driver 1.10.18 / orchestrate 0.2.6 / run 1.3.7；V00–V17 已在 Windows 10 x64 真机通过。 |
+| AstronStudio | **主流程生产可用**：revision `6988b525...` 的独立 macOS 包已完成单 L1 execution→score→submission→return；首个正式批次先跑 3–5 个 L1 canary。当前 revision 的默认三槽并发、管理员 import/report 和恢复边界尚未重绑，不能按无人值守高可用使用。 | **无人值守高可用已验证**：发布实现 revision `6988b525...`，AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（runtime 152.0.7977.83）、execute 1.11.16 / Driver 1.10.18 / orchestrate 0.2.6 / run 1.3.7；V00–V17 已在 Windows 10 x64 真机通过。 |
 | WorkBuddy | 历史批次已覆盖五题执行、评分、回传和报告；当前发布候选的前置脚本已更新，须按清单至少重跑 probe、L1 smoke 和受影响恢复项。 | 历史批次已覆盖全流程，客户端基线为 WorkBuddy 5.5.3；当前发布候选因 Skill/前置脚本更新必须重新验收。 |
 | QwenWork | 历史批次已覆盖串行、默认三路并发、三题评分、submission 和 return；报告、单 Prompt 和恢复边界尚未形成完整同版本证据。 | 历史批次已覆盖全流程，客户端基线为 QwenWorkCN 1.0.5.0；当前发布候选因 Skill/前置脚本更新必须重新验收。 |
 
@@ -120,7 +120,9 @@ AstronStudio 当前验证用法：
 保持并回读 AstronStudio 当前模型，不修改推理强度；权限使用 full-access；使用默认执行并发 3。
 ```
 
-AstronStudio 在 macOS 的历史证据已覆盖项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、后台并发、动态补位、产物、执行回执，以及单题 execution→score→submission→return；报告、单 Prompt 组合器及中断、超时、客户端重启等恢复验收仍待补齐。Windows 当前发布身份 `6988b525...` 已在 AstronStudio 3.3.1.277 与 Codex Desktop 26.908.9136 上完成 V00–V17：包括只读探针、单题、三题串行、默认三路并发与动态补位、项目精确注册、并发评分、submission、离线回传与报告、正式 ZIP 单 Prompt 闭环，以及独立控制任务接管、Harness/Codex 重启、超时、发送前唯一重试、评分 attempt 隔离和 submission 中断恢复，因此标记为“生产已验证”。该结论仅绑定清单登记的 Windows/客户端/Skill/模型身份；任一关键身份变化后必须按清单转为 `STALE` 并最少重跑 probe 与 1–3 个 L1 smoke。多个 AstronStudio 任务并发运行时如果客户端崩溃，仍会进入 `NEEDS_ATTENTION` 并要求人工处理，不会自动重启后冒险接管多个会话。
+AstronStudio 在 macOS 的当前发布身份 `6988b525...` 已用 AstronStudio 3.0.0-alpha.19、Codex Desktop 26.908.70816 和 GLM-5.2 / High / full-access 完成单 L1 execution→score→submission→return，候选哈希无漂移，因此可按“主流程生产可用”投入受控评测。第一次正式运行先选 3–5 个 L1，确认执行回执、评分和回传均正常后再放大；在并发和恢复项补齐前保持人工值守。macOS 本地重打包的 Skill content SHA 与 Windows 正式包未能跨平台重现一致，必须按清单登记的独立包身份安装和校验，不能混用两个平台的 manifest 或归档 SHA。
+
+Windows 当前发布身份已在 AstronStudio 3.3.1.277 与 Codex Desktop 26.908.9136 上完成 V00–V17：包括只读探针、单题、三题串行、默认三路并发与动态补位、项目精确注册、并发评分、submission、离线回传与报告、正式 ZIP 单 Prompt 闭环，以及独立控制任务接管、Harness/Codex 重启、超时、发送前唯一重试、评分 attempt 隔离和 submission 中断恢复，因此标记为“无人值守高可用已验证”。这些结论仅绑定清单登记的 OS、客户端、Skill 和模型身份；任一关键 identity 变化后必须转为 `STALE` 并至少重跑 probe 与一个 L1 完整闭环。多个 AstronStudio 任务并发运行时如果客户端崩溃，仍会进入 `NEEDS_ATTENTION` 并要求人工处理，不会自动重启后冒险接管多个会话。
 
 QwenWork 当前验证用法：
 

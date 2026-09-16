@@ -4,7 +4,9 @@
 
 ## 1. 当前结论
 
-当前发布候选中，AstronStudio×Windows 已完成 V00–V17，状态为 **生产已验证**。发布实现 revision 为 `6988b5252bc9140e86dae139fdffbcfc964bcfbf`，正式包锁定 execute 1.11.16 / AstronStudio Driver 1.10.18 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.7 / report 1.0.2。Windows 10 10.0.19042 x64 真机使用 AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、GLM-5.2 / High / full-access：正式 ZIP 的单 Prompt 执行→评分→submission→return 已闭环；独立控制任务接管、Harness 重启安全失败、Codex 平台托管重启、发送前唯一重试、执行超时、评分 attempt 隔离和 submission 发布中断恢复均通过。V03–V10 依据完全一致的 execute/score/report/run 内容 SHA、实际 orchestrate 0.2.6 运行身份及正式 ZIP V11 冒烟完成证据重绑定；默认端口 9240 已恢复并重新通过进程路径检查。该结论只覆盖本节锁定的 AstronStudio×Windows 组合，不代表 macOS、WorkBuddy 或 QwenWork 已完成当前发布身份的生产验收。
+当前发布候选中，AstronStudio×Windows 已完成 V00–V17，状态为 **无人值守高可用已验证**。发布实现 revision 为 `6988b5252bc9140e86dae139fdffbcfc964bcfbf`，正式包锁定 execute 1.11.16 / AstronStudio Driver 1.10.18 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.7 / report 1.0.2。Windows 10 10.0.19042 x64 真机使用 AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、GLM-5.2 / High / full-access：正式 ZIP 的单 Prompt 执行→评分→submission→return 已闭环；独立控制任务接管、Harness 重启安全失败、Codex 平台托管重启、发送前唯一重试、执行超时、评分 attempt 隔离和 submission 发布中断恢复均通过。V03–V10 依据完全一致的 execute/score/report/run 内容 SHA、实际 orchestrate 0.2.6 运行身份及正式 ZIP V11 冒烟完成证据重绑定；默认端口 9240 已恢复并重新通过进程路径检查。
+
+AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 的 execution→score→submission→return，状态为 **主流程生产可用**：AstronStudio 3.0.0-alpha.19、Codex Desktop 26.908.70816、GLM-5.2 / High / full-access，执行回执 `integrity.valid=true`，评分 81 分，候选双副本哈希无漂移，三阶段状态均为 `COMPLETED`。该结论允许先进入受控正式评测，但首个正式批次必须先跑 3–5 个 L1 canary 再放大；当前 revision 的三题串行、五题默认三槽、三路评分动态补位、管理员 import/report 和 V12–V17 恢复边界尚未重新绑定，因此不能标记为“并发生产可用”或“无人值守高可用”。macOS 本地重打包与 Windows `232007` 正式包的 Skill content SHA 未能重现一致，当前只作为独立 macOS 包身份使用，不能冒充 Windows 原始 ZIP；跨平台内容哈希差异另行修复。
 
 ### 当前实施进度
 
@@ -13,9 +15,9 @@
 | P0 修复跨平台发布门禁 | `PASSED` | macOS 三 Harness 前置准备、Windows 精确进程身份、QwenWork 重启入口、测试入口和路径兼容测试全部通过 | 原发布门禁测试均通过；升级后项目对话框兼容修改的 Codex Desktop Driver 为 52/52、准备工作空间 31/31 |
 | P1 固化发布 revision | `PASSED` | 只提交相关改动，记录完整 commit SHA，工作树中无遗漏的相关修改 | `6988b5252bc9140e86dae139fdffbcfc964bcfbf`；AstronStudio Windows 验收链路修复已提交 |
 | P2 生成正式包 | `PASSED` | 自建 40 题、开源 120 题各生成一个新批次，两个批次均包含三 Harness 并绑定实际打包 revision；五个 Skill ZIP 版本与 SHA 完整 | `web-e2e-20260915-232007-custom40`、`web-e2e-20260915-232007-opensource120`；共 22/22 ZIP SHA 与 6+6 execution/scoring 隔离审计通过 |
-| P3 macOS 受影响项回归 | `IN_PROGRESS` | 依照第 4 节完成并登记证据 | AstronStudio V04–V10 功能闭环完成；正式 0.2.5 ZIP 的单 L1 执行已通过，评分项目注册等待 Codex 9230 调试端点，V11–V17 尚未完成 |
+| P3 macOS 受影响项回归 | `IN_PROGRESS` | 依照第 4 节完成并登记证据 | AstronStudio 当前 revision 的单 L1 execution→score→submission→return 已通过，达到“主流程生产可用”；并发重绑定、管理员 import/report 和 V12–V17 尚未完成 |
 | P4 Windows 真机回归 | `IN_PROGRESS` | 每个目标 Harness 依照第 4 节完成并登记证据 | AstronStudio×Windows V00–V17 已全部通过；WorkBuddy×Windows 与 QwenWork×Windows 仍为旧身份证据，不在本次生产声明范围 |
-| P5 发布结论 | `PASSED` | 所有声明为生产可用的 Harness×OS 组合均为 `PASSED`，未通过组合在指导手册中明确降级 | 本次只声明 AstronStudio×Windows 为生产已验证；指导手册、清单和正式包 manifest 已对齐 |
+| P5 发布结论 | `PASSED` | 所有对外声明均绑定明确准入层级，未通过组合在指导手册中降级 | AstronStudio×Windows 为“无人值守高可用”；AstronStudio×macOS 为“主流程生产可用”；其他组合沿用旧证据或待验收 |
 
 ## 2. 状态与更新规则
 
@@ -26,6 +28,16 @@
 | `BLOCKED` | 已执行但被明确问题阻塞；记录错误、复现入口和所需处理，不得改写为失败题目得分。 |
 | `PASSED` | 当前发布身份下已满足验收条件，且证据路径、时间和操作者均已登记。 |
 | `STALE` | 旧发布曾通过或有部分证据，但客户端、Driver、Skill 或关键依赖变化后需要重验。 |
+
+验收状态记录单项是否通过；对外可用结论按以下三级准入，避免为了补齐低频故障注入而长期阻塞正常生产：
+
+| 准入层级 | 最低证据 | 允许范围 | 尚未覆盖时的约束 |
+| --- | --- | --- | --- |
+| 主流程生产可用 | 当前实现 revision 和客户端身份下，至少一个 L1 完成 probe、执行、Codex Browser 评分、submission 与 return，候选哈希无漂移 | 可开始受控正式评测 | 首个正式批次先跑 3–5 个 L1 canary；并发和异常恢复失败时允许人工介入 |
+| 并发生产可用 | 当前身份下完成三题串行自动切题、五题默认执行并发与动态补位、默认三路评分、submission、return、import/report | 可按默认并发运行常规批次 | 客户端崩溃、控制任务中断等恢复场景仍需值守 |
+| 无人值守高可用 | 并发生产可用，并完成 V12–V17 的接管、客户端重启、超时、重试、失败 attempt 隔离和 submission 恢复 | 可按已验证边界无人值守运行 | 多活动会话崩溃等契约明确要求失败关闭的场景仍转人工 |
+
+同一组合可以在矩阵仍有 `IN_PROGRESS` 项时达到较低准入层级；文档必须同时写明已达到的层级和未覆盖项，不能把“主流程生产可用”简写为“完全生产已验证”。
 
 以下任一变化发生后，受影响项必须从 `PASSED` 改为 `STALE`：
 
@@ -79,6 +91,12 @@
 
 提交 `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 已固化 execute 1.11.16 / AstronStudio Driver 1.10.18 / run 1.3.7 / orchestrate 0.2.6。诊断批次 `windows-as-driver-1.10.18-v03-20260915-185350`、`windows-as-driver-1.10.18-v04-20260915-185842` 和 `windows-as-driver-1.10.18-v05-20260915-194158` 的 execute、score、report、run content/ZIP SHA 与 `232007` 正式包逐项一致；V06–V10 实际使用仓库 orchestrate 0.2.6，且候选完整性、submission、return、import/report 证据均可独立校验。由于旧诊断 manifest 自身锁定 0.2.5，不能单独作为正式身份；本轮额外从正式 0.2.6 ZIP 完成 V11 单 Prompt 全流程，并直接完成 V12–V17 恢复边界，故按第 2 节“内容 SHA 与客户端版本完全不变可注明证据沿用”的规则，把 V03–V10 重绑定到当前发布身份。V15 后已将 AstronStudio 恢复到 127.0.0.1:9240，标准启动脚本确认监听 PID 37408 的主程序路径为 `C:\Users\xgzhu6\AppData\Local\Programs\AStudio\AStudio.exe`。
 
+### 3.1.2 AstronStudio macOS 独立包身份
+
+macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了独立单题批次 `web-e2e-20260916-095335-mac-astron-release-6988b52-smoke`。批次内五个 Skill 版本与 3.1 相同，但实际 content SHA 为 score `6fdc8e9a...`、report `a2236d07...`、orchestrate `350224ca...`、execute `c73a0c0d...`、run `4b9e7748...`，没有重现 Windows `232007` manifest 中的 content SHA；CRLF 模拟也未得到精确匹配，根因尚未确认。该批次 manifest、解压后的隔离 Skill 和评分时独立安装的 score 4.5.2 在本批次内部完全一致，`check_web_e2e_skills.py` 返回 `all_current=true`，所以本轮真机结果可证明这个 macOS 独立包身份的功能，不证明 Windows ZIP 可在 macOS 重现，也不允许把两者作为同一个归档身份混用。
+
+本轮 execution/scoring ZIP SHA 分别为 `90b9c767...` / `ffc6a65d...`。跨平台 content SHA 不可复现是发布工程问题，后续应统一文本换行、文件排序和内容哈希规范，并用同一测试向量在 macOS/Windows 双端重算；修复只影响打包/哈希身份时不要求重跑已经完成的页面评分，但必须重新执行 Skill 安装校验和一个 L1 包级冒烟。
+
 正式包可以在 macOS 或 Windows 的干净检出中生成；本轮先在 macOS 当前仓库生成并审计，Windows 也可按同一代码自行重建用于同机验收。准备脚本只读取仓库中的题目、Workspace 和 Skill 源码，写出的路径统一使用可移植格式。必须满足以下门禁：
 
 - 生成机器的检出必须包含 P1 记录的实现提交，且打包前 Web E2E 相关源码和题目目录没有未提交修改；
@@ -99,6 +117,7 @@
 | `mac-astron-v04-v09-20260915` | macOS 26.6.2 / x86_64 | AstronStudio 3.0.0-alpha.19 | GLM-5.2 / High | Codex Desktop 26.903.71938 | `web-e2e-20260914-202829-mac-astron-concurrent5-fixed` | Codex（本机） | 2026-09-15 | execute 1.11.13 / Driver 1.10.15 未提交工作树功能证据；批次 revision 不包含修复，不作为正式发布证据 |
 | `mac-astron-v04-v10-20260915` | macOS 26.6.2 / x86_64 | AstronStudio 3.0.0-alpha.19 | GLM-5.2 / High | Codex Desktop 26.903.71938 | `web-e2e-20260915-115625-mac-astron-release-concurrent5` | Codex（本机） | 2026-09-15 | execute 1.11.13 / Driver 1.10.15；评分运行时使用与提交 `0486480` 相同内容的 orchestrate 0.2.5 热修复，包内仍为 0.2.4，因此作为功能证据并等待正式 ZIP 冒烟重绑定 |
 | `mac-astron-v025-zip-smoke-20260915` | macOS 26.6.2 / x86_64 | AstronStudio 3.0.0-alpha.19 | GLM-5.2 / High | Codex Desktop 26.903.71938 | `web-e2e-20260915-140309-mac-astron-v025-smoke` | Codex（本机） | 2026-09-15 | 五个 Skill 从正式 ZIP 解压且内容 SHA 与 `140309-opensource120` 完全一致；单 L1 execution 已通过，评分等待 9230 调试端点 |
+| `mac-astron-release-6988b52-v11-20260916` | macOS 26.6.2 / x86_64 | AstronStudio 3.0.0-alpha.19 | GLM-5.2 / High / full-access | Codex Desktop 26.908.70816 | `web-e2e-20260916-095335-mac-astron-release-6988b52-smoke` | Codex（本机） | 2026-09-16 | 同实现 revision 的独立 macOS 包；单 L1 execution→score→submission→return 完成，达到“主流程生产可用”；与 Windows `232007` content SHA 不同，不作为同一归档身份 |
 | `windows-astron-v03-20260915` | Windows 10 10.0.19042 / x64 | AstronStudio 3.2.1.242 | GLM-5.2 / High | 尚未参与评分 | `windows-astron-v03-20260915-155220` | Codex（本机） | 2026-09-15 | 实现 revision `0486480`；execute 1.11.13 / Driver 1.10.15；Node 24.19.0；V02/V03 已通过，当前使用经完整路径校验的 AStudio 和 127.0.0.1:9241 |
 | `windows-astron-driver-11016-20260915` | Windows 10 10.0.19042 / x64 | AstronStudio 3.2.1.242 | GLM-5.2 / High | 未启动评分；Codex 9230 未启用 | `windows-astron-driver-1.10.16-functional-20260915-173623` | Codex（本机） | 2026-09-15 | 未提交功能候选；V02 通过，V03 两个隔离 attempt 均失败关闭；未启动 V04–V09 |
 | `windows-astron-331277-20260915` | Windows 10 10.0.19042 / x64 | AstronStudio 3.3.1.277 | GLM-5.2 / High | 未启动评分；Codex 9230 未启用 | `windows-astron-driver-1.10.16-final-20260915-175731` | Codex（本机） | 2026-09-15 | 未提交功能候选；升级后 V02 通过，V03 两个隔离 attempt 均失败关闭；后端反复 `read ENOTCONN` 退出并重启，未启动 V04–V09 |
@@ -111,18 +130,18 @@
 
 | ID | 验收项 | macOS AstronStudio | macOS WorkBuddy | macOS QwenWork | Windows AstronStudio | Windows WorkBuddy | Windows QwenWork |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| V00 | 发布身份和依赖锁定 | I | I | I | P | I | I |
+| V00 | 发布身份和依赖锁定 | P | I | I | P | I | I |
 | V01 | 仓库测试与 Skill 校验 | P | P | P | P | P | P |
 | V02 | 只读 probe 与 CDP 进程身份 | P | P | P | P | S | S |
 | V03 | 单个 L1、`run_slots=1` | P | P | P | P | S | S |
 | V04 | 三个 L1 串行自动进入下一题 | I | S | S | P | S | S |
 | V05 | 五个 L1、默认三槽动态补位 | I | S | S | P | S | S |
-| V06 | Codex Desktop 项目精确注册 | I | S | S | P | S | S |
+| V06 | Codex Desktop 项目精确注册 | P | S | S | P | S | S |
 | V07 | 默认三路并发评分与动态补位 | I | S | S | P | S | S |
-| V08 | submission 原子生成 | I | S | S | P | S | S |
-| V09 | return ZIP、外部 receipt 与 SHA | I | S | S | P | S | S |
+| V08 | submission 原子生成 | P | S | S | P | S | S |
+| V09 | return ZIP、外部 receipt 与 SHA | P | S | S | P | S | S |
 | V10 | 管理员 import 与报告三件套 | I | S | N | P | S | S |
-| V11 | 一个 Prompt 执行→评分→打包 | I | S | N | P | S | S |
+| V11 | 一个 Prompt 执行→评分→打包 | P | S | N | P | S | S |
 | V12 | 独立控制任务接管磁盘状态 | N | S | N | P | S | S |
 | V13 | 被评 Harness 重启恢复/安全失败 | N | S | N | P | S | S |
 | V14 | Codex Desktop 重启恢复 | N | S | N | P | S | S |
@@ -211,10 +230,13 @@
 | `windows-astron-release-v15-20260916` | AstronStudio×Windows | V15 | `PASSED` | 同 V00 | `v15-presend-timeout`；ab078 | 9242 不监听触发发送前失败；启动后 `--resume --retry-pre-send-failure`；执行上限 10 秒；同会话只观察恢复 | V15 根 `D:\debug-workspace\web-e2e\windows-as-release-6988b52-20260915-232329\workers\v15\windows-as-release-6988b52-v11-20260915-232329__astronstudio`；queue SHA `b74dedbc...`；automation SHA `a9bfa2b6...`；execution record SHA `197c8d94...`；旧 attempt SHA `9b4bbff5...` | 2026-09-16 / Codex | 旧 attempt `a479f64b-...` 为 `INFRA_FAILED`、`sent_at=null`、Prompt 0 次、候选无变化并已归档；新 attempt `0df7db61-...` Prompt 1 次，状态库复制短暂超时后只观察恢复，最终 `TIMEOUT`，停止/取消/5 秒静默均确认，未伪造成功；V14 同时证明评分轮询超时与 deadline 可区分 |
 | `windows-astron-release-v16-20260916` | AstronStudio×Windows | V16 | `PASSED` | 与正式包相同的 orchestrate 0.2.6 / score 4.5.2 / Codex 客户端 | 旧 V07 五题中的 ab095 | 复核模型容量失败后的 `prepare-retry` 原子归档与第二次线程 | 旧 V05 根；scoring state SHA `d826b648...`；attempt error receipt SHA `0446ae9e...`；archive SHA `51b6d14d...`；submission SHA `f197442c...` | 2026-09-16 / Codex | attempt 1 明确 `FAILED: Selected model is at capacity`，候选在归档前/恢复后均为 `d9a55ceb...`；attempt 2 完成，`retry_count=1`，未切换模型，结构化错误回执完整 |
 | `windows-astron-release-v17-20260916` | AstronStudio×Windows | V17 | `PASSED` | 同 V00；orchestrate 0.2.6 | V12 评分副本；ab078 | 在 pending submission 持久化后注入发布中断；连续两次 `build-submission` | V14/V17 评分根；中断 pending SHA 与最终 submission SHA 均为 `749aac5df958fb0412b69e1de1073506f5a4c1428a782cbf33ea06383eed6c76`；最终 scoring state SHA `fba290ec...` | 2026-09-16 / Codex | 中断时 phase `FINALIZING`、submission `GENERATING`、pending 存在且正式文件不存在；恢复后 phase/submission 均 `COMPLETED`、pending 清除、attempt_count 仍为 1；第二次构建幂等 |
+| `mac-astron-release-v11-20260916` | AstronStudio×macOS | V00/V02/V03/V06/V08/V09/V11 | `PASSED` | `6988b5252bc9140e86dae139fdffbcfc964bcfbf`；execute 1.11.16 / Driver 1.10.18；orchestrate 0.2.6；score 4.5.2；run 1.3.7 | `web-e2e-20260916-095335-mac-astron-release-6988b52-smoke`；ab078 | `$run-web-e2e` 单次恢复指令；执行/评分均单槽；Codex 可见 UI 项目注册；内置 Browser 评分；export-return | worker `/Users/gzx/debug-workspace/web-e2e/mac-release-validation-20260916-6988b52/workers/v11/web-e2e-20260916-095335-mac-astron-release-6988b52-smoke__astronstudio`；execution receipt `bf15df13...`；queue `40cff7ff...`；scoring state `0f8aecf0...`；task score `0a33a1d6...`；submission `36dcce38...`；unit state `225b9f98...`；return ZIP `96fa39f8...`；外部 receipt `bffe999b...` | 2026-09-16 / Codex | probe `ready=true`；1/1 `SUCCEEDED`，执行 115.389 秒，候选 SHA `753f8360...`；项目 ID `83a1206f-...`，评分 thread `01a0a7f7-...`，得分 81；execution/score 双副本哈希一致，三阶段均 `COMPLETED`，return ZIP 4,719,652 字节、51 文件；无人工授权或异常恢复 |
 
 ### 4.3 本轮 macOS 冒烟边界
 
-三 Harness 的 V03 证明当前前置脚本能够连接正确客户端、完成项目/模型/权限回读、只发送一次 Prompt，并按稳定会话终态冻结候选。AstronStudio 的三题串行、五题默认三槽动态补位，以及同一五题的项目注册、三路评分、submission、离线回传、幂等导入和报告三件套已经完成；评分和导出前后的 execution/score 候选 SHA 均无漂移。评分运行时使用的 0.2.5 热修复已原样提交为 `0486480`，但该五题包内仍附带 0.2.4，所以 V06–V10 在发布矩阵中仍记为 `I`。当前正式 0.2.5 ZIP 的单 L1 冒烟已完成 execution 并安全停在 `PENDING_PROJECT`，待 Codex 9230 恢复后继续 score/package/collect/report；V11 完成后再继续 V12–V17，P3 仍为 `IN_PROGRESS`。
+当前 revision 的 AstronStudio 单 L1 已从只读 probe 继续完成执行、评分、submission 和离线回传。执行只发送一次 Prompt，回读 GLM-5.2 / High / full-access，execution receipt `integrity.valid=true`；Codex Desktop 通过可见 UI 注册精确评分项目，独立评分 thread 使用内置 Browser 取得桌面和窄屏证据，得分 81；评分服务和运行时副本已清理，execution/score 候选 SHA 均保持 `753f8360...`。最终 unit state 中 execute、score、package 都为 `COMPLETED`，因此 AstronStudio×macOS 达到“主流程生产可用”。
+
+本轮没有重复执行三题串行、五题默认三槽、三路评分动态补位、管理员 import/report 或 V12–V17。旧 macOS 批次证明这些功能曾在相同客户端系列上工作，但不能直接升级为当前 revision 的 `PASSED`；矩阵继续保留 `IN_PROGRESS`/`NOT_STARTED`，对应“并发生产可用”和“无人值守高可用”尚未完成。生产投入采用渐进方式：首个正式批次先执行 3–5 个 L1 canary，execution receipt、评分和回传均通过后再放大，不再为了上线前形式完整而重跑全部历史回归。
 
 macOS 的 AstronStudio、WorkBuddy 和 QwenWork 当前均记录 `terminal_process_cleanup.supported=false`；这表示本平台没有执行 Windows 等价的候选进程枚举与终止，不表示已证明没有残留进程。QwenWork V03 终态后仍观察到其自启的 headless Chrome/预览服务残留；完整生产验收必须单独补齐 macOS 精确进程收口，不能以执行回执有效替代该平台能力缺口。
 
@@ -283,4 +305,6 @@ P2 通过后，在 Windows Codex 的仓库任务中输入下面 Prompt。它要�
 
 ## 7. 发布判定
 
-单个 Harness×OS 只有 V00–V17 全部为 `PASSED`，或未执行项有经过评审的明确非适用说明时，才能在指导手册中标记“生产已验证”。若只通过 V00–V11，可标记“主流程已验证，恢复边界未完成”；若只通过 V00–V05，只能标记“执行阶段已验证”。`BLOCKED`、`STALE` 或缺失证据均不能折算为通过。
+发布结论必须使用第 2 节的三级准入名称，并附带当前 revision、客户端和 Skill 身份。一个当前身份的完整 L1 worker 闭环通过后，可以先标记“主流程生产可用”并以 3–5 个 L1 canary 启动正式评测；并发执行、并发评分和报告在当前身份下通过后，升级为“并发生产可用”；V12–V17 全部通过或经评审明确不适用后，才标记“无人值守高可用”。
+
+`BLOCKED`、`STALE` 或缺失证据不能折算为更高层级。较低层级不要求为补齐更高层级而在上线前机械重跑全部历史用例，但必须保留未覆盖项、值守要求和失败后的人工处置边界。任何关键 identity 变化仍按第 2 节转为 `STALE`，至少重跑 probe 与一个 L1 完整闭环。
