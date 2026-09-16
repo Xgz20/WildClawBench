@@ -24,7 +24,7 @@
 | --- | --- | --- |
 | AstronStudio | **主流程生产可用**：revision `6988b525...` 的独立 macOS 包已完成单 L1 execution→score→submission→return；首个正式批次先跑 3–5 个 L1 canary。当前 revision 的默认三槽并发、管理员 import/report 和恢复边界尚未重绑，不能按无人值守高可用使用。 | **无人值守高可用已验证**：发布实现 revision `6988b525...`，AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（runtime 152.0.7977.83）、execute 1.11.16 / Driver 1.10.18 / orchestrate 0.2.6 / run 1.3.7；V00–V17 已在 Windows 10 x64 真机通过。 |
 | WorkBuddy | 历史批次已覆盖五题执行、评分、回传和报告；当前发布候选的前置脚本已更新，须按清单至少重跑 probe、L1 smoke 和受影响恢复项。 | **无人值守高可用已验证**：发布实现 revision `ee70a67...`，WorkBuddy 5.5.6.0、Codex Desktop 26.908.9136（runtime 152.0.7977.83）、execute 1.11.21 / Driver 1.8.24 / orchestrate 0.2.6 / run 1.3.8；V00–V17 已在 Windows 10 x64 真机通过。 |
-| QwenWork | 历史批次已覆盖串行、默认三路并发、三题评分、submission 和 return；报告、单 Prompt 和恢复边界尚未形成完整同版本证据。 | 历史批次已覆盖全流程，客户端基线为 QwenWorkCN 1.0.5.0；当前发布候选因 Skill/前置脚本更新必须重新验收。 |
+| QwenWork | 历史批次已覆盖串行、默认三路并发、三题评分、submission 和 return；报告、单 Prompt 和恢复边界尚未形成完整同版本证据。 | **主流程生产可用**：revision `24771ce...` 的单 L1 包已在 QwenWorkCN 1.0.5.0、Codex Desktop 26.908.9136、execute 1.11.21 / Driver 1.10.10 / orchestrate 0.2.6 / run 1.3.8 下完成 execution→score→submission→return；首个正式批次先跑 3–5 个 L1 canary。当前身份的串行、默认三槽、并发评分、报告和恢复边界尚未重绑，不能按并发生产或无人值守高可用使用。 |
 
 历史结论不能自动外推到新 revision。首次换机、升级桌面客户端或 Skill、切换模型，或者修改 Driver/桌面前置脚本核心实现后，须在生产验收清单中把受影响项标为 `STALE`，再按只读 probe、L1 smoke、串行、并发、完整闭环和恢复验收的顺序重验。
 
@@ -148,7 +148,7 @@ QwenWork 当前验证用法：
 保持并回读 QwenWork 当前模型，不修改任务模式或其他推理设置；权限使用 full-access；使用默认执行并发 3。
 ```
 
-QwenWork 在 macOS 的历史证据已覆盖个人项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、串行和默认三路后台并发、产物、执行回执、三题评分、submission 和 return；报告、单 Prompt 组合器和恢复验收仍待补齐。Windows QwenWorkCN 1.0.5.0 的历史批次已完成单题、三题串行、默认三槽五题动态补位、Codex Desktop 评分与 submission、离线回传/报告、单 Prompt 全流程、Worker 硬中断恢复、客户端重启和安全超时验收。由于当前 Skill 和前置脚本已更新，该结论是历史基线，不代表新发布候选已通过；应按生产验收清单重新绑定 revision、Skill 版本和证据。
+QwenWork 在 macOS 的历史证据已覆盖个人项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、串行和默认三路后台并发、产物、执行回执、三题评分、submission 和 return；报告、单 Prompt 组合器和恢复验收仍待补齐。Windows 当前验收身份 `24771ce...` 已在 QwenWorkCN 1.0.5.0、标准｜Qwen3.8-Flash / full-access 与 Codex Desktop 26.908.9136 上完成单 L1 execution→score→submission→return：执行回执 `integrity.valid=true`，评分 88 分，submission 与 return SHA 校验通过，候选哈希无漂移，三阶段均为 `COMPLETED`，因此标记为“主流程生产可用”。第一次正式运行先选 3–5 个 L1 canary 并保持人工值守；历史单题、串行、默认三槽、报告和恢复证据仅作为风险参考，在当前身份重绑前不升级为“并发生产可用”或“无人值守高可用”。
 
 例如临时使用串行：
 

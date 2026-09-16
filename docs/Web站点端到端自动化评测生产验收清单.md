@@ -4,11 +4,13 @@
 
 ## 1. 当前结论
 
-当前发布候选中，AstronStudio×Windows 和 WorkBuddy×Windows 均已完成 V00–V17，状态为 **无人值守高可用已验证**。
+当前发布候选中，AstronStudio×Windows 和 WorkBuddy×Windows 均已完成 V00–V17，状态为 **无人值守高可用已验证**；QwenWork×Windows 已完成当前身份的单 L1 execution→score→submission→return，状态为 **主流程生产可用**。
 
 AstronStudio×Windows 发布实现 revision 为 `6988b5252bc9140e86dae139fdffbcfc964bcfbf`，正式包锁定 execute 1.11.16 / AstronStudio Driver 1.10.18 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.7 / report 1.0.2。Windows 10 10.0.19042 x64 真机使用 AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、GLM-5.2 / High / full-access：正式 ZIP 的单 Prompt 执行→评分→submission→return 已闭环；独立控制任务接管、Harness 重启安全失败、Codex 平台托管重启、发送前唯一重试、执行超时、评分 attempt 隔离和 submission 发布中断恢复均通过。V03–V10 依据完全一致的 execute/score/report/run 内容 SHA、实际 orchestrate 0.2.6 运行身份及正式 ZIP V11 冒烟完成证据重绑定；默认端口 9240 已恢复并重新通过进程路径检查。
 
 WorkBuddy×Windows 发布实现 revision 为 `ee70a67b0d53bf700a389b7fbe3f68fde3c3b288`，补充验收包锁定 execute 1.11.21 / WorkBuddy Driver 1.8.24 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.8 / report 1.0.2。同一 Windows 真机使用 WorkBuddy 5.5.6.0、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、xopglm52 / full-access：V03 单题、V05 默认双路五题动态补位、五题评分/回传/报告、正式包单 Prompt、独立控制任务接管、Harness 重启安全失败、Codex 平台托管重启、发送前唯一重试、执行超时、评分 attempt 隔离和 submission 发布中断恢复均通过。
+
+QwenWork×Windows 当前验收 revision 为 `24771ce5f86f9bbc9336cf0c0c48effa5f0b2990`，单题包锁定 execute 1.11.21 / QwenWork Driver 1.10.10 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.8 / report 1.0.2。同一 Windows 真机使用 QwenWorkCN 1.0.5.0、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、标准｜Qwen3.8-Flash / full-access：probe、单 L1 执行、Codex 可见 UI 项目注册、内置 Browser 评分、submission 和 return 均通过，评分 88 分，候选双副本哈希无漂移，三阶段状态均为 `COMPLETED`。终态截图曾连续超时，控制端停止旧观察进程后以同一 run-id/attempt 重启 QwenWork 并恢复采集，未重发 Prompt，最终回执仍为 `SUCCEEDED` 且 `manual_interventions=[]`。该结论允许先进入受控正式评测，但首个正式批次必须先跑 3–5 个 L1 canary；当前身份的三题串行、默认三槽、并发评分、管理员 import/report 和 V12–V17 尚未重新绑定，因此不能标记为“并发生产可用”或“无人值守高可用”。
 
 AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 的 execution→score→submission→return，状态为 **主流程生产可用**：AstronStudio 3.0.0-alpha.19、Codex Desktop 26.908.70816、GLM-5.2 / High / full-access，执行回执 `integrity.valid=true`，评分 81 分，候选双副本哈希无漂移，三阶段状态均为 `COMPLETED`。该结论允许先进入受控正式评测，但首个正式批次必须先跑 3–5 个 L1 canary 再放大；当前 revision 的三题串行、五题默认三槽、三路评分动态补位、管理员 import/report 和 V12–V17 恢复边界尚未重新绑定，因此不能标记为“并发生产可用”或“无人值守高可用”。macOS 本地重打包与 Windows `232007` 正式包的 Skill content SHA 未能重现一致，当前只作为独立 macOS 包身份使用，不能冒充 Windows 原始 ZIP；跨平台内容哈希差异另行修复。QwenWork 和其余 macOS 组合不在当前高可用声明范围。
 
@@ -17,11 +19,11 @@ AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 �
 | 阶段 | 状态 | 完成条件 | 证据 |
 | --- | --- | --- | --- |
 | P0 修复跨平台发布门禁 | `PASSED` | macOS 三 Harness 前置准备、Windows 精确进程身份、QwenWork 重启入口、测试入口和路径兼容测试全部通过 | 原发布门禁测试均通过；升级后项目对话框兼容修改的 Codex Desktop Driver 为 52/52、准备工作空间 31/31 |
-| P1 固化发布 revision | `PASSED` | 只提交相关改动，记录完整 commit SHA，工作树中无遗漏的相关修改 | AstronStudio 基线 `6988b5252bc9140e86dae139fdffbcfc964bcfbf`；WorkBuddy 补充发布 `ee70a67b0d53bf700a389b7fbe3f68fde3c3b288` |
-| P2 生成正式包 | `PASSED` | 自建 40 题、开源 120 题各生成一个新批次，两个批次均包含三 Harness 并绑定实际打包 revision；受影响 Harness 的补充验收包绑定增量 revision；五个 Skill 版本与 SHA 完整 | 基线 `web-e2e-20260915-232007-custom40` / `opensource120` 共 22/22 ZIP SHA 通过；WorkBuddy 补充包 `windows-wb-release-ee70a67-v03/v05-20260916-0616` 绑定 `ee70a67` |
+| P1 固化发布 revision | `PASSED` | 只提交相关改动，记录完整 commit SHA，工作树中无遗漏的相关修改 | AstronStudio 基线 `6988b5252bc9140e86dae139fdffbcfc964bcfbf`；WorkBuddy 补充发布 `ee70a67b0d53bf700a389b7fbe3f68fde3c3b288`；QwenWork 当前单 L1 验收包绑定 `24771ce5f86f9bbc9336cf0c0c48effa5f0b2990` |
+| P2 生成正式包 | `PASSED` | 自建 40 题、开源 120 题各生成一个新批次，两个批次均包含三 Harness 并绑定实际打包 revision；受影响 Harness 的补充验收包绑定增量 revision；五个 Skill 版本与 SHA 完整 | 基线 `web-e2e-20260915-232007-custom40` / `opensource120` 共 22/22 ZIP SHA 通过；WorkBuddy 补充包 `windows-wb-release-ee70a67-v03/v05-20260916-0616` 绑定 `ee70a67`；QwenWork 单题包 `windows-qwen-mainflow-24771ce-l1-20260916-113542` 绑定 `24771ce` |
 | P3 macOS 受影响项回归 | `IN_PROGRESS` | 依照第 4 节完成并登记证据 | AstronStudio 当前 revision 的单 L1 execution→score→submission→return 已通过，达到“主流程生产可用”；并发重绑定、管理员 import/report 和 V12–V17 尚未完成 |
-| P4 Windows 真机回归 | `IN_PROGRESS` | 每个目标 Harness 依照第 4 节完成并登记证据 | AstronStudio×Windows、WorkBuddy×Windows V00–V17 已全部通过；QwenWork×Windows 仍待当前身份重验 |
-| P5 发布结论 | `PASSED` | 所有对外声明均绑定明确准入层级，未通过组合在指导手册中降级 | AstronStudio×Windows、WorkBuddy×Windows 为“无人值守高可用”；AstronStudio×macOS 为“主流程生产可用”；其他组合沿用旧证据或待验收 |
+| P4 Windows 真机回归 | `IN_PROGRESS` | 每个目标 Harness 依照第 4 节完成并登记证据 | AstronStudio×Windows、WorkBuddy×Windows V00–V17 已全部通过；QwenWork×Windows 当前身份的 V00/V02/V03/V06/V08/V09/V11 已通过，达到“主流程生产可用”，更高层级仍待按需迭代 |
+| P5 发布结论 | `PASSED` | 所有对外声明均绑定明确准入层级，未通过组合在指导手册中降级 | AstronStudio×Windows、WorkBuddy×Windows 为“无人值守高可用”；AstronStudio×macOS、QwenWork×Windows 为“主流程生产可用”；其他组合沿用旧证据或待验收 |
 
 ## 2. 状态与更新规则
 
@@ -65,13 +67,14 @@ AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 �
 | --- | --- |
 | 基线正式包实现/source revision | `6988b5252bc9140e86dae139fdffbcfc964bcfbf` |
 | WorkBuddy 补充发布实现/source revision | `ee70a67b0d53bf700a389b7fbe3f68fde3c3b288` |
-| `execute-web-e2e` | 基线 `1.11.16`；WorkBuddy 补充发布 `1.11.21` |
+| QwenWork Windows 主流程验收实现/source revision | `24771ce5f86f9bbc9336cf0c0c48effa5f0b2990` |
+| `execute-web-e2e` | 基线 `1.11.16`；WorkBuddy/QwenWork 补充验收 `1.11.21` |
 | WorkBuddy Driver | `1.8.24` |
 | AstronStudio Driver | `1.10.18` |
 | QwenWork Driver | `1.10.10` |
 | `orchestrate-web-e2e` | `0.2.6` |
 | `score-web-e2e` | `4.5.2` |
-| `run-web-e2e` | 基线 `1.3.7`；WorkBuddy 补充发布 `1.3.8` |
+| `run-web-e2e` | 基线 `1.3.7`；WorkBuddy/QwenWork 补充验收 `1.3.8` |
 | `report-web-e2e` | `1.0.2` |
 | Skill ZIP/content SHA | 见下表；两个正式批次逐项一致 |
 | Node.js / Playwright | `Node.js 24.17.0；Driver 锁定 playwright-core 1.55.0` |
@@ -107,6 +110,10 @@ macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了
 
 提交 `ee70a67b0d53bf700a389b7fbe3f68fde3c3b288` 固化 execute 1.11.21 / WorkBuddy Driver 1.8.24 / run 1.3.8，重点覆盖 CDP 瞬时连接重试、默认双路执行、终态状态滞留、5.5.6 完全访问确认和重启后侧栏会话缺失。`windows-wb-release-ee70a67-v03-20260916-0616` 与 `windows-wb-release-ee70a67-v05-20260916-0616` 的 manifest 均精确绑定该 revision 和五个 Skill content SHA。V03–V17 使用 WorkBuddy 5.5.6.0、xopglm52 / full-access 完成，不沿用 5.5.3 的历史生产结论；V01 仓库测试为 92/92，通过后才开始真机验收。
 
+### 3.1.4 QwenWork Windows 主流程验收身份
+
+批次 `windows-qwen-mainflow-24771ce-l1-20260916-113542` 的 manifest 精确绑定 `24771ce5f86f9bbc9336cf0c0c48effa5f0b2990`，锁定 score 4.5.2 / report 1.0.2 / orchestrate 0.2.6 / execute 1.11.21 / run 1.3.8；五个 Skill content SHA 与当前安装完全一致。QwenWork Driver 仍为 1.10.10，当前 revision 相对既有验证基线没有 QwenWork Driver 运行时代码差异。本轮只用该身份完成一个 L1 全闭环，用于满足“主流程生产可用”门禁；历史串行、默认三槽、报告和恢复证据不自动升格为当前 `PASSED`。
+
 正式包可以在 macOS 或 Windows 的干净检出中生成；本轮先在 macOS 当前仓库生成并审计，Windows 也可按同一代码自行重建用于同机验收。准备脚本只读取仓库中的题目、Workspace 和 Skill 源码，写出的路径统一使用可移植格式。必须满足以下门禁：
 
 - 生成机器的检出必须包含 P1 记录的实现提交，且打包前 Web E2E 相关源码和题目目录没有未提交修改；
@@ -134,6 +141,7 @@ macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了
 | `windows-astron-331277-driver-11018-20260915` | Windows 10 10.0.19042 / x64 | AstronStudio 3.3.1.277 | GLM-5.2 / High | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `windows-as-driver-1.10.18-v05-20260915-194158` | Codex（本机） | 2026-09-15 | 未提交功能候选；AStudio 经环境隔离启动在 127.0.0.1:9241，后端 PID 34848；Codex 以 127.0.0.1:9230 完成评分；V02–V10 通过，平均分 74；项目注册使用未打包 orchestrate 0.2.6，默认 9240 仍有陈旧监听 |
 | `windows-astron-release-6988b52-20260916` | Windows 10 10.0.19042 / x64 | AstronStudio 3.3.1.277 | GLM-5.2 / High / full-access | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `web-e2e-20260915-232007-opensource120`；验证 batch `windows-as-release-6988b52-v11-20260915-232329` | Codex（本机） | 2026-09-16 | 当前正式发布身份；Node 24.17.0；AstronStudio 127.0.0.1:9240、Codex 127.0.0.1:9230；V00–V17 全部通过 |
 | `windows-workbuddy-release-ee70a67-20260916` | Windows 10 10.0.19042 / x64 | WorkBuddy 5.5.6.0 | xopglm52 / full-access | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `windows-wb-release-ee70a67-v03-20260916-0616`、`windows-wb-release-ee70a67-v05-20260916-0616` | Codex（本机） | 2026-09-16 | 当前 WorkBuddy 发布身份；Node 24.17.0；WorkBuddy 127.0.0.1:9229（V15 同身份恢复到 9299）、Codex 127.0.0.1:9230；V00–V17 全部通过 |
+| `windows-qwen-mainflow-24771ce-20260916` | Windows 10 10.0.19042 / x64 | QwenWorkCN 1.0.5.0 | 标准｜Qwen3.8-Flash / full-access | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `windows-qwen-mainflow-24771ce-l1-20260916-113542` | Codex（本机） | 2026-09-16 | 当前 QwenWork 主流程验收身份；Node 18.16.1；QwenWork 127.0.0.1:9250、Codex 127.0.0.1:9230；V00/V02/V03/V06/V08/V09/V11 通过 |
 
 ## 4. Harness×OS 验收矩阵
 
@@ -141,18 +149,18 @@ macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了
 
 | ID | 验收项 | macOS AstronStudio | macOS WorkBuddy | macOS QwenWork | Windows AstronStudio | Windows WorkBuddy | Windows QwenWork |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| V00 | 发布身份和依赖锁定 | P | I | I | P | P | I |
+| V00 | 发布身份和依赖锁定 | P | I | I | P | P | P |
 | V01 | 仓库测试与 Skill 校验 | P | P | P | P | P | P |
-| V02 | 只读 probe 与 CDP 进程身份 | P | P | P | P | P | S |
-| V03 | 单个 L1、`run_slots=1` | P | P | P | P | P | S |
+| V02 | 只读 probe 与 CDP 进程身份 | P | P | P | P | P | P |
+| V03 | 单个 L1、`run_slots=1` | P | P | P | P | P | P |
 | V04 | 三个 L1 串行自动进入下一题 | I | S | S | P | P | S |
 | V05 | 五个 L1、Harness 默认槽位动态补位 | I | S | S | P | P | S |
-| V06 | Codex Desktop 项目精确注册 | P | S | S | P | P | S |
+| V06 | Codex Desktop 项目精确注册 | P | S | S | P | P | P |
 | V07 | 默认三路并发评分与动态补位 | I | S | S | P | P | S |
-| V08 | submission 原子生成 | P | S | S | P | P | S |
-| V09 | return ZIP、外部 receipt 与 SHA | P | S | S | P | P | S |
+| V08 | submission 原子生成 | P | S | S | P | P | P |
+| V09 | return ZIP、外部 receipt 与 SHA | P | S | S | P | P | P |
 | V10 | 管理员 import 与报告三件套 | I | S | N | P | P | S |
-| V11 | 一个 Prompt 执行→评分→打包 | P | S | N | P | P | S |
+| V11 | 一个 Prompt 执行→评分→打包 | P | S | N | P | P | P |
 | V12 | 独立控制任务接管磁盘状态 | N | S | N | P | P | S |
 | V13 | 被评 Harness 重启恢复/安全失败 | N | S | N | P | P | S |
 | V14 | Codex Desktop 重启恢复 | N | S | N | P | P | S |
@@ -250,6 +258,7 @@ macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了
 | `windows-workbuddy-release-v14-20260916` | WorkBuddy×Windows | V14 | `PASSED` | 同 WorkBuddy V00；Codex Desktop 26.908.9136 | V12 评分副本；ab078 | 平台托管重启 Codex；同一评分 thread 原地恢复 | `D:\debug-workspace\web-e2e\w\x12w\v14-codex-restart\status.json`；restart status SHA `eee8f017...6c6cc`；score SHA `64e2bd21...de8d`；submission SHA `7d882aac...55b8e` | 2026-09-16 / Codex | 重启后同一 thread `01a0a809-...`、attempt 1、deadline 不变；中断态映射为 `NEEDS_ATTENTION` 后继续原 thread，最终得分 67，未新建评分 attempt |
 | `windows-workbuddy-release-v15-20260916` | WorkBuddy×Windows | V15 | `PASSED` | 同 WorkBuddy V00 | `windows-wb-556-v15-ee70a67-20260916-1048`；ab078 | 9299 未监听触发发送前失败；同端点启动后唯一重试；执行上限 10 秒 | 根 `D:\debug-workspace\web-e2e\w\x15w`；旧 attempt `6743c771-...`；新 attempt `39faff75-...` | 2026-09-16 / Codex | 旧 attempt `sent_at=null`、Prompt 0 次并原子归档；新 attempt Prompt 1 次后进入 `TIMEOUT`，停止/取消、45 秒进程静默和 5 秒候选静默均确认，候选 SHA 前后不变 |
 | `windows-workbuddy-release-v16-v17-20260916` | WorkBuddy×Windows | V16–V17 | `PASSED` | 同 WorkBuddy V00 | V12 评分副本；ab078 | 受控无评分产物故障→错误 attempt 归档→唯一重试；pending submission 后注入中断→重复恢复构建 | 根 `D:\debug-workspace\web-e2e\w\x16v17`；attempt error receipt SHA `2c0ab066e01850c3a5e4cd2b00040a7b01c1561a3249f8109f681bfad1c98225`；最终 submission SHA `f409086c988cf93e0ae57bc5d97c979b3edba6ff131169aa80157240634a5feb` | 2026-09-16 / Codex | attempt 1 结构化失败并隔离，attempt 2 同模型完成、得分 67、`retry_count=1`；发布中断时 `FINALIZING/GENERATING` 且仅 pending 存在，恢复后 `COMPLETED`、pending 清除、`attempt_count=1`，第二次构建幂等 |
+| `windows-qwen-mainflow-24771ce-20260916` | QwenWork×Windows | V00/V02/V03/V06/V08/V09/V11 | `PASSED` | `24771ce5f86f9bbc9336cf0c0c48effa5f0b2990`；execute 1.11.21 / Driver 1.10.10；orchestrate 0.2.6；score 4.5.2；run 1.3.8；report 1.0.2 | `windows-qwen-mainflow-24771ce-l1-20260916-113542`；ab078 | 单次 `$run-web-e2e` 实施指令；执行/评分均单槽；Codex 可见 UI 项目注册；内置 Browser 评分；export-return | 根 `D:\debug-workspace\web-e2e\q\run-20260916-113542\windows-qwen-mainflow-24771ce-l1-20260916-113542__qwenwork`；execution receipt `ff03bf92...f9e1ce`；queue `3fad47c1...3b5df`；scoring state `43d44e35...2e727`；task score `bf6496d4...d97f9`；submission `04efc832...fd00a`；unit state `0a512f0a...e6265`；return ZIP `d4f0981c...6f8c5`；外部 receipt `f5ce0c6a...2615a` | 2026-09-16 / Codex | probe `ready=true`；1/1 `SUCCEEDED`，执行 980.983 秒，候选 SHA `af442f88...547f9`；项目 ID `ec658d30-...`，评分 thread `01a0a85c-...`，得分 88；终态截图超时后同 run-id/attempt 重启客户端恢复，Prompt 未重发、无人工批准；return ZIP 2,337,860 字节、76 项，无不安全路径、禁止目录或浏览器 profile；三阶段均 `COMPLETED` |
 
 ### 4.3 本轮 macOS 冒烟边界
 
@@ -260,6 +269,12 @@ macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了
 macOS 的 AstronStudio、WorkBuddy 和 QwenWork 当前均记录 `terminal_process_cleanup.supported=false`；这表示本平台没有执行 Windows 等价的候选进程枚举与终止，不表示已证明没有残留进程。QwenWork V03 终态后仍观察到其自启的 headless Chrome/预览服务残留；完整生产验收必须单独补齐 macOS 精确进程收口，不能以执行回执有效替代该平台能力缺口。
 
 用户为 AstronStudio 增加录屏权限并主动重启后，只读 probe 返回 `ready=true`，客户端仍为 3.0.0-alpha.19，模型/推理强度为 GLM-5.2 / High，权限为 full-access，9240 调试端点正常。但 SQLite 状态库仍投影出一个来自已完成 V05 任务的 `open_turn`，而对应 latest turn 已是 `completed`、session 已 ready。该不一致未影响 V06–V09，但当前重启保护会因此失败关闭；在定位投影清理机制并完成受控重启验收前，V13 仍保持 `NOT_STARTED`。
+
+### 4.4 本轮 QwenWork Windows 主流程边界
+
+当前 revision 的 QwenWork 单 L1 已完成 probe、执行、评分、submission 和离线回传。执行只发送一次 Prompt，回读标准｜Qwen3.8-Flash / full-access，execution receipt `integrity.valid=true`；Codex Desktop 通过可见 UI 把评分目录精确注册为项目，独立评分 thread 使用内置 Browser 取得桌面、交互和窄屏证据，得分 88；评分服务和运行时副本已清理，execution/score 候选 SHA 始终为 `af442f8846514005e1858a4b3e300fbcfb3c84f80f65e46471f538fcb89547f9`。return ZIP 与外部 receipt 的身份和 SHA 一致，包内 submission SHA 等于原件，且未发现不安全路径、`.git`、`node_modules`、运行时缓存或 Chromium profile。最终 unit state 中 execute、score、package 均为 `COMPLETED`，因此 QwenWork×Windows 达到“主流程生产可用”。
+
+本轮没有重跑三题串行、五题默认三槽、默认并发评分、管理员 import/report 或 V12–V17。旧 Windows 批次证明这些能力曾在 QwenWorkCN 1.0.5.0 系列工作，但不能直接升级为当前 revision 的 `PASSED`；矩阵继续保留 `STALE`/`NOT_STARTED`。生产投入采用渐进方式：首个正式批次先执行 3–5 个 L1 canary，execution receipt、评分和回传均通过后再放大；并发或异常恢复失败时允许人工介入，不为上线前形式完整而大规模重跑全部历史回归。
 
 ## 5. 历史证据索引
 
@@ -272,7 +287,7 @@ macOS 的 AstronStudio、WorkBuddy 和 QwenWork 当前均记录 `terminal_proces
 | QwenWork×macOS | 三题执行、评分、submission、return | `/Users/gzx/debug-workspace/web-e2e/qwenwork-concurrent3.q563DW/worker/web-e2e-20260909-164755__qwenwork` |
 | AstronStudio×Windows | 手册记录过全流程与恢复验收，缺少仓库内统一验收摘要 | 当前发布候选须重新登记 V00–V17 |
 | WorkBuddy×Windows | 5.5.3 历史全流程与恢复验收 | 已由 `ee70a67` / WorkBuddy 5.5.6.0 的 V00–V17 当前证据替代；旧证据仅用于问题对照 |
-| QwenWork×Windows | 手册记录过 1.0.5.0 全流程和部分恢复边界，V16/V17 缺少直接真机记录 | 当前发布候选须重新登记 V00–V17 |
+| QwenWork×Windows | 1.0.5.0 历史批次覆盖全流程和部分恢复边界；当前 revision 已重绑一个 L1 主流程闭环 | 当前 V00/V02/V03/V06/V08/V09/V11 已通过；V04/V05/V07/V10/V12–V15 保留 `STALE`，V16/V17 为 `NOT_STARTED` |
 
 ## 6. Windows Codex 正式打包与继续验证 Prompt
 
