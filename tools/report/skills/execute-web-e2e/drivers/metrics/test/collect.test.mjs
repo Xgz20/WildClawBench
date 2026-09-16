@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile, symlink, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, writeFile, symlink, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 import { collectLocalMetrics } from "../collect.mjs";
+import { empty } from "../parsers.mjs";
+import { inspectQwenRuntime, verifiedQwenProfile } from "../qwen-profile.mjs";
+import { updateExecutionRecord, createExecutionRecord } from "../../workbuddy/lib.mjs";
+import { queryResourceIdentity } from "../../astronstudio/lib.mjs";
 
 async function fixture(t, overrides = {}) {
   const home = await mkdtemp(join(tmpdir(), "web-resource-test-"));
@@ -28,6 +32,62 @@ test("本机会话按 ID/cwd 精确关联，只输出数值、来源和哈希", 
   assert.match(result.collection.sources[0].sha256, /^[a-f0-9]{64}$/);
   assert.equal(result.collection.sources[0].path, "project/session-123.jsonl");
   assert.ok(!JSON.stringify(result).includes("PRIVATE_PROMPT"));
+});
+
+test("统一记录写入器透传资源，不改变执行状态、模型和工具准确率", async t => {
+  const root = await mkdtemp(join(tmpdir(), "web-resource-record-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const identity = { batchId: "batch", taskId: "task", harness: { id: "qwenwork" }, model: { id: "model" } };
+  const existing = createExecutionRecord(identity);
+  existing.tools.format_accuracy = 0.8;
+  existing.usage.cost_usd = 1;
+  const metrics = empty("DISABLED");
+  metrics.usage.total_tokens = 123;
+  metrics.execution.agent_duration_seconds = 2;
+  const file = join(root, "execution_record.json");
+  const info = { identity, existing };
+  await updateExecutionRecord({ executionRecord: file }, info, { resourceMetrics: metrics, execution: { status: "completed", duration_seconds: 5 } });
+  const result = JSON.parse(await readFile(file, "utf8"));
+  assert.equal(result.execution.status, "completed");
+  assert.equal(result.execution.duration_seconds, 5);
+  assert.equal(result.execution.agent_duration_seconds, 2);
+  assert.equal(result.usage.total_tokens, 123);
+  assert.equal(result.tools.format_accuracy, 0.8);
+  assert.equal(result.usage.cost_usd, 1);
+  assert.deepEqual(result.usage.collection.warnings, ["DISABLED"]);
+  assert.equal(result.model.id, "model");
+  await updateExecutionRecord({ executionRecord: file }, info, { execution: { error: null } });
+  assert.equal(info.existing.usage.total_tokens, 123);
+});
+
+test("Astron 原生身份查询限定 thread 和 turn，非唯一映射拒绝", async () => {
+  let rows = [{ cursor: JSON.stringify({ threadId: "native-session" }), cwd: "/task" }];
+  const overrides = { copySnapshot: async () => {}, loadNodeSqlite: async () => ({ DatabaseSync: class {
+    prepare(sql) {
+      assert.match(sql, /runtime.thread_id = 'desktop-thread'/);
+      assert.match(sql, /turns.turn_id = 'target-turn'/);
+      return { all: () => rows };
+    }
+    close() {}
+  } }) };
+  assert.deepEqual(await queryResourceIdentity("ignored", "desktop-thread", "target-turn", overrides), { nativeId: "native-session", cwd: "/task" });
+  rows = [];
+  await assert.rejects(queryResourceIdentity("ignored", "desktop-thread", "target-turn", overrides), /AMBIGUOUS_NATIVE_SESSION/);
+});
+
+test("未知本地 Qwen SDK 与混合 transcript 版本不能命中已验 Profile", async t => {
+  const root = await mkdtemp(join(tmpdir(), "web-resource-profile-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const sdk = join(root, "Contents/Resources/app.asar.unpacked/node_modules/@qoder-ai/qoder-agent-sdk");
+  await mkdir(join(sdk, "dist/_worker"), { recursive: true });
+  await writeFile(join(sdk, "package.json"), JSON.stringify({ name: "@ali/qodercn-agent-sdk-next", version: "1.0.28" }));
+  await writeFile(join(sdk, "dist/_worker/qoder-worker-runtime.obf.mjs"), "unknown runtime");
+  const identity = await inspectQwenRuntime(root, "1.0.5", [{ type: "assistant", version: "1.1.32" }], "darwin");
+  assert.equal(identity.sdk_version, "1.0.28");
+  assert.match(identity.runtime_sha256, /^[a-f0-9]{64}$/);
+  assert.equal(verifiedQwenProfile(identity), null);
+  const mixed = await inspectQwenRuntime(root, "1.0.5", [{ type: "assistant", version: "1.1.32" }, { type: "assistant" }], "darwin");
+  assert.equal(mixed.transcript_version, null);
 });
 test("cwd 和 session 不一致、符号链接与坏 JSON 失败关闭", async t => {
   const { input, file, project } = await fixture(t, { cwd: "/different-task" });

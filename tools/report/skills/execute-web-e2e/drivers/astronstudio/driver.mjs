@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
+import { captureResourceMetrics } from "../metrics/capture.mjs";
 import { spawn } from "node:child_process";
 import { realpathSync } from "node:fs";
 import { access, copyFile, mkdir, rename, writeFile } from "node:fs/promises";
@@ -1170,6 +1171,7 @@ async function finalize(config, state, identityInfo, phase, {
   await saveState(config, state);
   const formalStatus = phase === "SUCCEEDED" ? "completed" : phase === "TIMEOUT" ? "timeout" : "execution_error";
   await updateExecutionRecord(config, identityInfo, {
+    resourceMetrics: await captureResourceMetrics(config, state, "astronstudio"),
     clientVersion: state.client.version,
     transcriptPath,
     execution: {

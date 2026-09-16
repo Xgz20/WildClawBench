@@ -89,6 +89,28 @@ D:\WebE2E\web-e2e-20260820-105921__codex\execution\tasks\07_Website_Generation_t
 
 如果当前 Harness 不支持 `@文件名` 引用，打开当前目录唯一的 `PROMPT.md`，复制其完整内容发送给 Harness。
 
+### 2.5 QwenWork Token 采集（可选，但必须按平台边界操作）
+
+QwenWork 的输入、输出、缓存读取和总 Token 默认可能被客户端隐藏。需要采集时，在启动 QwenWork 新进程前设置 `QODERCN_EXPOSE_TOKEN_USAGE=1`，并确保当前没有活动任务。变量必须传给实际启动 Driver 的同一命令，不能写到 `PROMPT.md`，也不能只在另一个终端临时设置。
+
+macOS：
+
+```bash
+QODERCN_EXPOSE_TOKEN_USAGE=1 \
+bash "/实际安装路径/execute-web-e2e/scripts/run-qwenwork.sh" \
+  "/实际批次/<batch_id>__qwenwork/execution/tasks/<task_id>" --restart-app
+```
+
+Windows CMD：
+
+```bat
+set "QODERCN_EXPOSE_TOKEN_USAGE=1"
+call "C:\Skills\execute-web-e2e\scripts\run-qwenwork.cmd" "D:\WebE2E\<batch_id>__qwenwork\execution\tasks\<task_id>" --restart-app
+set "QODERCN_EXPOSE_TOKEN_USAGE="
+```
+
+设置成功只表示开关已透传，不代表 Token 已通过口径验证。当前已验证的是 macOS QwenWork 1.0.5 Profile；Windows 暂不把 Token 写入正式汇总，直到完成 Windows 运行时、日志字段和输入含缓存语义的验收。请求数、工具数、智能体耗时仍可独立记录。
+
 ### 2.2 执行时的目录要求
 
 - Harness 只能在当前题目的 `workspace/` 中创建或修改站点产物。
@@ -285,6 +307,14 @@ score/tasks/<task_id>/private-scoring/
 
 完成一题后关闭该题启动的站点服务，再为下一题新建工作空间和会话。
 
+### 5.4 资源指标检查
+
+执行终态由 Driver 自动读取本机原生会话数据，并将资源字段写入该题的 `execution_record.json`；评分人员不需要手工采集或编辑 Token。评分和回传过程必须保留 `usage.collection`、输入/输出/总 Token、缓存读取 Token、请求数、工具数、执行流程耗时和智能体耗时。
+
+报告汇总前，管理员应分别检查 AstronStudio、WorkBuddy、QwenWork 三个回传单元的 `resource_metrics` 覆盖率。只有状态为 `observed`、`inferred` 或兼容旧记录的 `legacy` 才进入总量；`masked`、`unverified`、`partial`、`unavailable` 显示为空值和已知小计。缓存读取已经包含在输入 Token 中，不能在总 Token 中再次相加。缓存写入 Token、推理输出 Token 和 HTTP 尝试次数当前没有可靠统一来源，可以为空，但必须在报告中体现覆盖不足。
+
+QwenWork 需要 Token 时，按第 2.5 节在启动新进程前设置 `QODERCN_EXPOSE_TOKEN_USAGE=1`。当前已验证的 Token Profile 仅覆盖 macOS QwenWork 1.0.5；Windows 上在完成生产验收清单的运行时 Profile 验收前，Token 仍会显示为 `unverified`，不能宣称三 Harness 的 Token 指标已全部打通。
+
 ## 6. 生成回传结果
 
 全部单题评分完成后，新建一个不参与单题评分的管理会话，并将 `<harness-package-root>/` 选为工作空间。输入：
@@ -348,6 +378,7 @@ bash "./准备评分工作空间.command"
 - [ ] 每题使用独立会话，通过 `@PROMPT.md` 发起执行。
 - [ ] 候选产物全部位于该题 `workspace/`。
 - [ ] 全部题目完成后已备份 Harness 根目录。
+- [ ] 若使用 QwenWork Token 采集，已在启动新进程前显式设置开关，并确认没有活动任务。
 
 ### 评分人员
 
@@ -357,3 +388,4 @@ bash "./准备评分工作空间.command"
 - [ ] 每题均生成 `private-scoring/task_score.json`。
 - [ ] 全部评分后根目录已生成 `submission.json`。
 - [ ] 回传 ZIP 包含完整 Harness 根目录，且不包含真实凭证。
+- [ ] 报告前已检查三个 Harness 的资源字段状态和覆盖率；未知字段未被手工改成 0。

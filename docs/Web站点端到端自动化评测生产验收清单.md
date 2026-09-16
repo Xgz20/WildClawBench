@@ -25,6 +25,69 @@ AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 �
 | P4 Windows 真机回归 | `IN_PROGRESS` | 每个目标 Harness 依照第 4 节完成并登记证据 | AstronStudio×Windows、WorkBuddy×Windows V00–V17 已全部通过；QwenWork×Windows 当前身份的 V00/V02/V03/V06/V08/V09/V11 已通过，达到“主流程生产可用”，更高层级仍待按需迭代 |
 | P5 发布结论 | `PASSED` | 所有对外声明均绑定明确准入层级，未通过组合在指导手册中降级 | AstronStudio×Windows、WorkBuddy×Windows 为“无人值守高可用”；AstronStudio×macOS、QwenWork×Windows 为“主流程生产可用”；其他组合沿用旧证据或待验收 |
 
+### 1.1 Windows 资源指标验收增补（实现三 Harness 结果可汇总）
+
+本节是当前资源指标实现新增后的独立门禁，不会把旧的执行/评分闭环证据自动升级为“资源指标已验收”。目标是同一个 Windows 批次中，AstronStudio、WorkBuddy、QwenWork 三个 Harness 的每个用例都能在 `execution_record.json` 产生资源字段，评分回传后仍保留这些字段，最终在报告 JSON、领导版 Markdown 和 Excel 的“站点评测指标”中出现。
+
+#### 通过口径
+
+每个 Harness 至少完成 1 个全新 L1 用例，推荐使用同一批次、同一模型和同一推理强度。以下字段必须具有有效状态（`observed` 或明确的 `inferred`）：
+
+| 字段 | 要求 | 说明 |
+| --- | --- | --- |
+| `execution.duration_seconds` | 必须有值 | Driver 流程壁钟，包含 UI 操作和终态收口。 |
+| `execution.agent_duration_seconds` | 必须有值 | Harness 原生智能体耗时或有明确依据的推导值。 |
+| `usage.request_count` | 必须有值 | Harness 原生请求/响应事件计数，不宣称是所有 HTTP 重试次数。 |
+| `tools.call_count` | 必须有值 | 按原生调用 ID 去重，结果事件不重复计算。 |
+| `usage.input_tokens`、`output_tokens`、`total_tokens`、`cache_read_input_tokens` | 三个 Harness 均需 `observed` 才能宣称“Token 指标已打通” | 不完整、隐藏或未经 Profile 验证时为 `null`，并记录覆盖率，不能补零。 |
+| `usage.cache_creation_input_tokens`、`reasoning_output_tokens`、`request_attempt_count` | 可为 `null` | 当前三个 Harness 没有可靠的统一原生来源；报告必须显示未知/覆盖不足，而不是推算。 |
+
+报告的完整总量只接受 `observed`、`inferred` 或兼容旧记录的 `legacy`。`partial`、`masked`、`unverified`、`unavailable` 仅进入已知小计和覆盖率，不能进入总量。若要求“3 个 Harness 评测结果都带上 Token 指标”，任一 Harness 的四个核心 Token 字段为 `unverified` 或 `masked`，则资源指标门禁不通过，报告只能作为不完整数据报告发布。
+
+#### P6：源码与 Windows 分发包门禁
+
+- [ ] 当前提交包含 `execute-web-e2e` 资源采集器、三个 Driver 的终态调用、统一 `execution_record.json` 写入和独立的 QwenWork runtime Profile；不能继续使用旧的 execute 1.11.x / Driver 1.10.x 包。
+- [ ] 在 Windows 干净目录安装本次最新 Skill 包；当前实现候选为 execute `1.12.1`、WorkBuddy Driver `1.8.27`、AstronStudio Driver `1.10.20`、QwenWork Driver `1.10.12`，实际值以本批次 `skills-manifest.json` 为准。
+- [ ] Windows Node.js 运行所有 metrics/Driver 测试并记录退出码；SQLite 优先使用 `node:sqlite`，只有运行时不提供时才验证 `py -3`/`python` 的只读回退。不得把依赖安装到题目 `workspace/`。
+- [ ] 重新计算 Skill content SHA、ZIP SHA 和 `source_revision`，并将它们写入本清单；旧包的 SHA 或旧验收包不能作为本门禁证据。
+
+#### P7：Windows 三 Harness 采集冒烟
+
+每个 Harness 都按相同顺序完成一个全新 L1：只读 probe → `run_slots=1` 单题执行 → 明确终态 → 资源采集 → 评分。执行前确认没有活动任务，且没有设置 `WEB_E2E_RESOURCE_METRICS=off`。每项都要记录批次、完整 task ID、attempt ID、客户端版本、Driver 版本、模型/推理强度、绝对 workspace、原生数据源相对路径和来源 SHA-256。
+
+- [ ] **AstronStudio×Windows**：确认 Driver 能从当前用户状态库按桌面 thread/turn 精确映射原生 session，原生日志 cwd 与题目根一致；`input/output/total/cache_read/request_count/call_count/agent_duration_seconds` 均为 `observed` 或 `inferred`。
+- [ ] **WorkBuddy×Windows**：确认本地 session JSONL 按唯一 conversation/message ID 关联，消息 usage 去重且 cwd 一致；同上核心字段有效，缺失字段只能记录 `partial` 与已知小计。
+- [ ] **QwenWork×Windows**：先执行下列显式开关命令启动新进程，再发送题目；不能只给已有进程设置环境变量：
+
+  ```bat
+  set "QODERCN_EXPOSE_TOKEN_USAGE=1"
+  call "C:\Skills\execute-web-e2e\scripts\run-qwenwork.cmd" "D:\WebE2E\<batch_id>__qwenwork\execution\tasks\<task_id>" --restart-app
+  set "QODERCN_EXPOSE_TOKEN_USAGE="
+  ```
+
+  [ ] 记录新进程确实由该命令启动，回读 transcript 的 provider、版本和主 turn；按 request ID 去重，响应集合与 `turn.finished` 终值一致，输入已含缓存，且 `cache_read_input_tokens <= input_tokens`。
+  [ ] 读取 Windows 当前 QwenWork runtime、SDK package 和 transcript 版本，计算 runtime SHA-256。若与已验 macOS Profile 不同，新增独立 Windows Profile；若相同，也必须把 Profile 平台匹配规则扩展为 Windows 并补测试。未完成前，QwenWork Token 状态保持 `unverified`，不能宣称三 Harness Token 已打通。
+
+#### P8：评分回传透传门禁
+
+- [ ] 对上述三个 execution 结果分别复制评分工作空间并完成评分；评分 Agent 不读取或修改 `execution/tasks/` 原件。
+- [ ] 每个 `score/tasks/<task_id>/private-scoring/task_score.json` 或最终 `submission.json` 保留 `usage.collection`、Token 字段、请求数、工具数、执行耗时和智能体耗时；评分自身的 Token 不得混入被评 Harness 资源。
+- [ ] 生成三个独立 return ZIP，检查 ZIP 内每个任务都有这些字段，且候选 workspace 哈希未漂移；缺失或 `unverified` 不能静默改成 0。
+
+#### P9：报告闭环门禁
+
+- [ ] 使用同一批次的三个 return ZIP 和同一份 `<batch_id>__report-config.yaml` 运行 `report-web-e2e`；不能混入旧批次或不同 Profile。
+- [ ] 在 `web_e2e_report_data.json` 中逐单元检查：`total_input_tokens`、`total_output_tokens`、`total_cache_read_input_tokens`、`total_tokens`、`total_requests`、`tool_call_count`、`total_duration_seconds`、`total_agent_duration_seconds` 及其 `resource_metrics.*.covered_cases/total_cases/status_counts`。
+- [ ] 领导版 Markdown 的“总览”表和“资源数据覆盖”表能看到三个 Harness；总量与 JSON 一致，不完整字段显示空值/已知小计和覆盖率。
+- [ ] Excel 仅保留 `站点评测指标`、`难度对比`、`用例对比明细` 三个 Sheet；“站点评测指标”总览列出输入/输出/缓存读取/缓存写入/智能体耗时等资源列，缓存写入未知时显示空值；保存后检查公式错误和关键值与 JSON/Markdown 一致。
+- [ ] 报告生成完成后，将报告 JSON、Markdown、Excel、三份 return receipt、三份资源字段抽样和来源 SHA 写回本清单；其中任何一个 Harness 缺少核心 Token 覆盖时，P9 标记 `BLOCKED`，不得写成“三 Harness 指标已完成”。
+
+#### Windows 完成后的升级条件
+
+只有 P6–P9 全部通过，且三个 Harness 的核心 Token 字段均为 `observed`、请求数/工具数/两类耗时均有有效状态，才能将本清单中的“Windows 资源指标”标记为 `PASSED`，并在报告结论中宣称三个 Harness 结果可横向比较。仅有代码测试、旧批次数值、QwenWork 的请求/工具/耗时，或报告能生成但 Token 为 `unverified`，都只能标记 `IN_PROGRESS`/`BLOCKED`。
+
+当前已知状态：AstronStudio 和 WorkBuddy 的 Windows 资源采集路径已实现但需要本次新包真机重验；QwenWork Windows 的请求数、工具数和耗时路径已实现，Token Profile 尚未验证；因此当前不能宣称 Windows 上三个 Harness 的 Token 指标已全部打通。
+
 ## 2. 状态与更新规则
 
 | 状态 | 含义 |

@@ -52,7 +52,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.10.18";
+export const DRIVER_VERSION = "1.10.20";
 export const DEFAULT_APP_PATH = defaultAstronAppPath();
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
@@ -312,6 +312,28 @@ export async function querySessions(sessionDb = DEFAULT_SESSION_DB, overrides = 
 
 function sqlStringLiteral(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
+}
+
+// 精确 thread/turn 映射到原生会话；不从最近会话或 UI 标题猜测。
+export async function queryResourceIdentity(sessionDb, threadId, turnId, overrides = {}) {
+  const snapshotDir = await mkdtemp(join(tmpdir(), "astudio-resource-snapshot-"));
+  const snapshotDb = join(snapshotDir, "state.sqlite");
+  try {
+    await (overrides.copySnapshot || copySqliteSnapshot)(sessionDb, snapshotDb, overrides);
+    const rows = await querySqlite(snapshotDb, `
+SELECT runtime.resume_cursor_json AS cursor, projects.workspace_root AS cwd
+FROM provider_session_runtime AS runtime
+JOIN projection_threads AS threads ON threads.thread_id = runtime.thread_id
+JOIN projection_projects AS projects ON projects.project_id = threads.project_id
+WHERE runtime.thread_id = ${sqlStringLiteral(threadId)}
+AND EXISTS (SELECT 1 FROM projection_turns AS turns
+  WHERE turns.thread_id = runtime.thread_id AND turns.turn_id = ${sqlStringLiteral(turnId)});
+`, overrides);
+    if (rows.length !== 1) throw new Error("AMBIGUOUS_NATIVE_SESSION");
+    return { nativeId: JSON.parse(rows[0].cursor).threadId, cwd: rows[0].cwd };
+  } finally {
+    await rm(snapshotDir, { recursive: true, force: true }).catch(() => {});
+  }
 }
 
 async function queryFinalResponseSnapshot(snapshotDb, threadId, turnId, overrides = {}) {

@@ -3,6 +3,7 @@ import { readFile, readdir, lstat, realpath } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { empty, parseAstron, parseWorkBuddy, parseQwen } from "./parsers.mjs";
+import { inspectQwenRuntime } from "./qwen-profile.mjs";
 
 const MAX_BYTES = 64 * 1024 * 1024;
 const safeId = (id) => typeof id === "string" && /^[a-zA-Z0-9_-]{8,100}$/u.test(id);
@@ -85,7 +86,8 @@ export async function collectLocalMetrics(input) {
       if (totalBytes > 2 * MAX_BYTES) throw new Error("TOTAL_TRACE_SIZE_LIMIT");
       traces.push(await readTrace(file, root));
     }
-    result = parseQwen(traces.flatMap(t => t.rows));
+    const runtimeIdentity = await inspectQwenRuntime(input.appPath || state.client?.app_path, state.client?.version, transcript.rows);
+    result = parseQwen(traces.flatMap(t => t.rows), { runtimeIdentity });
     sources = [transcript.source, ...traces.map(t => t.source)];
   } else return empty("UNSUPPORTED_HARNESS");
   result.collection.sources = sources;

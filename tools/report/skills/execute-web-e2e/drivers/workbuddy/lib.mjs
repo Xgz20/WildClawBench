@@ -23,7 +23,7 @@ import {
 
 export const AUTOMATION_SCHEMA = "wildclawbench.web-e2e-automation-state/v1";
 export const EXECUTION_SCHEMA = "wildclawbench.web-e2e-execution/v1";
-export const DRIVER_VERSION = "1.8.24";
+export const DRIVER_VERSION = "1.8.27";
 export const DEFAULT_APP_PATH = defaultWorkBuddyAppPath();
 export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9229";
@@ -547,6 +547,16 @@ export async function updateExecutionRecord(config, identityInfo, update, profil
     };
   }
   record.execution = { ...record.execution, ...update.execution };
+  if (update.resourceMetrics) {
+    const metrics = update.resourceMetrics;
+    record.usage = { ...record.usage, ...metrics.usage, collection: metrics.collection };
+    record.tools = { ...record.tools, ...metrics.tools };
+    record.execution.agent_duration_seconds = metrics.execution.agent_duration_seconds;
+    metrics.collection.metrics.duration_seconds = {
+      status: Number.isFinite(record.execution.duration_seconds) && record.execution.duration_seconds >= 0 ? "observed" : "unavailable",
+      basis: "driver wall clock; includes UI setup and terminal cleanup",
+    };
+  }
   if (update.transcriptPath) record.artifacts.harness_transcript = relative(config.workspace, update.transcriptPath).split("\\").join("/");
   await atomicWriteJson(config.executionRecord, record);
   identityInfo.existing = record;

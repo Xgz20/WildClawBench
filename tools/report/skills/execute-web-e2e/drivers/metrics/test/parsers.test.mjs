@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parseAstron, parseWorkBuddy, parseQwen } from "../parsers.mjs";
 import { captureResourceMetrics } from "../capture.mjs";
+import { QWEN_PROFILE } from "../qwen-profile.mjs";
 import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
 
@@ -74,9 +75,9 @@ test("Astron 按 turn 减去前轮基线，缺终态标为 partial", () => {
 const qwen = (tokens = 0) => [
   { type: "turn.started", turn_id: "main", data: { is_subagent: false } },
   { type: "model.request.started", turn_id: "main", request_id: "request", data: { request_index: 1 } },
-  { type: "model.response.completed", turn_id: "main", request_id: "request", data: { input_tokens: tokens, output_tokens: tokens, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } },
+  { type: "model.response.completed", turn_id: "main", request_id: "request", data: { provider: "qoder", input_tokens: tokens, output_tokens: tokens, cache_read_input_tokens: tokens / 2, cache_creation_input_tokens: 0 } },
   { type: "tool.requested", turn_id: "main", tool_call_id: "tool", data: { tool_name: "Bash" } },
-  { type: "turn.finished", turn_id: "main", data: { duration_ms: 5000 } },
+  { type: "turn.finished", turn_id: "main", data: { duration_ms: 5000, input_tokens: tokens, output_tokens: tokens, cache_read_input_tokens: tokens / 2, cache_creation_input_tokens: 0 } },
   { type: "model.request.started", turn_id: "memory", request_id: "memory-request" },
   { type: "turn.finished", turn_id: "memory", data: { duration_ms: 1000 } },
 ];
@@ -91,12 +92,51 @@ test("Qwen 未显式验证时保留非零 native usage，验证后按输入含�
   assert.equal(unverified.usage.total_tokens, null);
   assert.equal(unverified.collection.native_usage.input_tokens, 10);
   assert.equal(unverified.collection.metrics.total_tokens.status, "unverified");
-  const verified = parseQwen(qwen(10), { tokenExposureVerified: true });
+  const verified = parseQwen(qwen(10), { runtimeIdentity: QWEN_PROFILE });
   assert.equal(verified.usage.input_tokens, 10);
   assert.equal(verified.usage.output_tokens, 10);
   assert.equal(verified.usage.total_tokens, 20);
-  assert.equal(verified.usage.cache_read_input_tokens, 0);
+  assert.equal(verified.usage.cache_read_input_tokens, 5);
+  assert.equal(verified.usage.cache_creation_input_tokens, null);
   assert.equal(verified.collection.metrics.total_tokens.status, "observed");
+});
+test("Qwen 不能用布尔开关、未知运行时或 provider 放行", () => {
+  for (const runtimeIdentity of [null, { ...QWEN_PROFILE, runtime_sha256: "unknown" }, { ...QWEN_PROFILE, platform: "win32" }, { ...QWEN_PROFILE, transcript_version: "next" }]) {
+    assert.equal(parseQwen(qwen(10), { runtimeIdentity, tokenExposureVerified: true }).collection.metrics.total_tokens.status, "unverified");
+  }
+  const rows = qwen(10); rows[2].data.provider = "other";
+  assert.equal(parseQwen(rows, { runtimeIdentity: QWEN_PROFILE }).usage.total_tokens, null);
+});
+test("Qwen 重复事件只计一次，终值冲突和缓存大于输入不提供完整值", () => {
+  const rows = qwen(10);
+  const parse = () => parseQwen(rows, { runtimeIdentity: QWEN_PROFILE });
+  rows.push(structuredClone(rows[2]));
+  assert.equal(parse().usage.total_tokens, 20);
+  rows[4].data.input_tokens = 100;
+  assert.equal(parse().collection.metrics.total_tokens.status, "unverified");
+  assert.equal(parse().usage.total_tokens, null);
+  rows[4].data.input_tokens = 10;
+  rows[2].data.cache_read_input_tokens = rows.at(-1).data.cache_read_input_tokens = rows[4].data.cache_read_input_tokens = 11;
+  assert.equal(parse().usage.cache_read_input_tokens, null);
+  assert.equal(parse().collection.metrics.cache_read_input_tokens.status, "unverified");
+});
+test("Qwen 缺响应、混合遮蔽、缺终态或字段保留 partial 与小计", () => {
+  for (const change of [
+    rows => rows.push({ type: "model.request.started", turn_id: "main", request_id: "missing" }),
+    rows => rows.splice(4, 1),
+    rows => delete rows[4].data.input_tokens,
+    rows => { rows.push({ ...rows[1], request_id: "masked" }, { ...rows[2], request_id: "masked", data: { provider: "qoder", input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } }); },
+  ]) {
+    const rows = qwen(10); change(rows);
+    const result = parseQwen(rows, { runtimeIdentity: QWEN_PROFILE });
+    assert.equal(result.usage.total_tokens, null);
+    assert.equal(result.collection.metrics.total_tokens.status, "partial");
+    assert.equal(result.collection.known_subtotals.total_tokens, 20);
+  }
+  const rows = qwen(10); delete rows[2].data.cache_read_input_tokens;
+  const result = parseQwen(rows, { runtimeIdentity: QWEN_PROFILE });
+  assert.equal(result.usage.total_tokens, 20);
+  assert.equal(result.usage.cache_read_input_tokens, null);
 });
 test("采集不可用不会抛出并污染执行终态", async () => {
   const result = await captureResourceMetrics({ workspace: "/tmp/nonexistent" }, { session: {} }, "workbuddy");

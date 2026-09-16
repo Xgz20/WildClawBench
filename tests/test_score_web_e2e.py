@@ -704,10 +704,16 @@ class BuildSubmissionTest(unittest.TestCase):
 
     def test_artifactsbench_submission_accepts_current_model_and_records_metric_profile(self) -> None:
         values = artifactsbench_fixtures()
+        values[2]["usage"].update({
+            "total_tokens": 297096, "cache_read_input_tokens": 281792,
+            "cache_creation_input_tokens": None,
+            "collection": {"metrics": {"total_tokens": {"status": "observed"}}, "version": "1.1.0"},
+        })
+        values[2]["execution"]["agent_duration_seconds"] = 108.356
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             task_root = root / "score/tasks/task-1"
-            result = run_finalize(task_root, values)
+            result = run_finalize(task_root, values, include_execution=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             evidence = task_root / "private-scoring/evidence"
             evidence.mkdir()
@@ -729,6 +735,8 @@ class BuildSubmissionTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             submission = json.loads((root / "submission.json").read_text(encoding="utf-8"))
         self.assertEqual(submission["metric_profile"], "artifactsbench-web-v1")
+        self.assertEqual(submission["tasks"][0]["usage"], values[2]["usage"])
+        self.assertEqual(submission["tasks"][0]["execution"]["agent_duration_seconds"], 108.356)
 
     def test_rejects_secrets_and_builds_submission_after_cleanup(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

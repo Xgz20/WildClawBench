@@ -31,7 +31,8 @@ export function captureResourceMetrics(config, state, harness, overrides = {}) {
       }
       catch { finish(empty("COLLECTOR_INVALID_OUTPUT")); }
     });
-    child.stdin.end(JSON.stringify({ harness, workspace: config.workspace, sessionDb: config.sessionDb,
-      state: { session: state.session, timing: state.timing, attempt_id: state.attempt_id } }));
+    child.stdin.end(JSON.stringify({ harness, workspace: config.workspace, sessionDb: config.sessionDb, appPath: config.appPath,
+      state: { session: state.session, timing: state.timing, attempt_id: state.attempt_id,
+        client: { version: state.client?.version, app_path: state.client?.app_path } } }));
   });
 }

@@ -413,8 +413,13 @@ export async function launchQwenWork(appPath, port, overrides = {}) {
   const runCommand = overrides.runCommand || runCapture;
   const launchDetached = overrides.launchDetached || spawnDetached;
   const debugArgs = ["--remote-debugging-address=127.0.0.1", `--remote-debugging-port=${port}`];
-  if (platform === "win32") return launchDetached(appPath, debugArgs);
-  return runCommand("/usr/bin/open", ["-na", appPath, "--args", ...debugArgs], { allowFailure: true, capture: true });
+  const environment = overrides.environment || process.env;
+  // LaunchServices 不保证继承 shell 环境，macOS 必须显式交给 open；仅传已知布尔值。
+  const exposure = environment.QODERCN_EXPOSE_TOKEN_USAGE;
+  const envArgs = /^(1|true|yes|0|false|no)$/iu.test(exposure || "")
+    ? ["--env", `QODERCN_EXPOSE_TOKEN_USAGE=${exposure}`] : [];
+  if (platform === "win32") return launchDetached(appPath, debugArgs, { env: environment });
+  return runCommand("/usr/bin/open", ["-na", appPath, ...envArgs, "--args", ...debugArgs], { allowFailure: true, capture: true });
 }
 
 async function loadNodeSqlite() {

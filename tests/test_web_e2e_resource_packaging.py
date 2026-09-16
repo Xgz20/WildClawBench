@@ -43,7 +43,7 @@ class ResourcePackagingTest(unittest.TestCase):
             archive = root / "execute.zip"
             module.zip_skill(SKILLS / "execute-web-e2e", archive)
             with zipfile.ZipFile(archive) as package:
-                for name in ("capture", "collect", "worker", "parsers"):
+                for name in ("capture", "collect", "worker", "parsers", "qwen-profile"):
                     self.assertIn(f"execute-web-e2e/drivers/metrics/{name}.mjs", package.namelist())
                 self.assertIn("execute-web-e2e/scripts/collect-resource-metrics.mjs", package.namelist())
                 self.assertIn("execute-web-e2e/references/resource-metrics.md", package.namelist())

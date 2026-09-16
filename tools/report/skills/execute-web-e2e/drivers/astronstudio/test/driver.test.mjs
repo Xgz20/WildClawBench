@@ -710,7 +710,7 @@ test("AstronStudio terminal --resume backfills cleanup without resending the pro
   }), 0);
   const recovered = JSON.parse(await readFile(config.stateFile, "utf8"));
   assert.equal(recovered.phase, "SUCCEEDED");
-  assert.equal(recovered.driver.version, "1.10.18");
+  assert.equal(recovered.driver.version, "1.10.20");
   assert.equal(recovered.terminal_process_cleanup.supported, false);
   assert.equal(recovered.terminal_process_cleanup.success, true);
   assert.equal(recovered.terminal_process_cleanup.backfill_verification.unchanged, true);

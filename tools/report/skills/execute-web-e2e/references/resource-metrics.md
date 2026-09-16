@@ -8,7 +8,7 @@
 | --- | --- | --- | --- | --- | --- |
 | AstronStudio | 原生目标 turn 累计值减前轮基线 | 读取量是输入子集；写入量未知 | 推导值：与增量 usage 对账的累计快照推进次数 | 唯一原生 call_id | task_started 到 task_complete |
 | WorkBuddy | 原生 messageId 去重的 usage | 读取量是输入子集；写入量未知 | 唯一已持久化响应 ID 数 | 唯一 callId，不含 result | 首个人工消息到最终助手消息，标记 inferred |
-| QwenWork | 默认隐藏；全零保留 null/masked，非零但未经语义验证保留 unverified | 同左 | 主 turn 的 model.request.started ID 数 | 主 turn 的 tool.requested ID 数 | SDK turn.finished.duration_ms |
+| QwenWork | 默认隐藏；已验运行时中逐响应非零 usage 与主 turn 终值对账后可用；未知组合保留 unverified | 读取量是输入子集；写入量未知 | 主 turn 的 model.request.started ID 数 | 主 turn 的 tool.requested ID 数 | SDK turn.finished.duration_ms |
 
 这是主任务口径，**不等于账单总量**。后台记忆整理单列在 `background_operations`，未关联子智能体、客户端后台服务和不可见 HTTP 重试排除。各 Harness 的模型请求数来源并不完全相同，不能统一声称是底层 HTTP 请求次数；`request_attempt_count` 没有可靠原生数据时为 null。费用、工具格式准确率不从次数推断。
 
@@ -46,7 +46,13 @@ call <execute-skill>\scripts\run-qwenwork.cmd <全新单题根目录> --restart-
 set "QODERCN_EXPOSE_TOKEN_USAGE="
 ```
 
-开关存在、环境变量设置成功或界面显示数字均不代表适配验收通过。必须核对真实非零 usage 与缓存是否已含在输入中，才能发布对应运行时的归一化适配；未通过时保持 masked / unverified。不要修改应用二进制或全局用户设置。
+开关存在、环境变量设置成功或界面显示数字均不代表适配验收通过。不要修改应用二进制或全局用户设置。
+
+采集器 1.1.0 已核对 macOS QwenWork 1.0.5、SDK `@ali/qodercn-agent-sdk-next@1.0.28`、transcript 版本 `1.1.32` 的 qoder provider。`drivers/metrics/qwen-profile.mjs` 内冻结已验 runtime SHA-256，采集时只读当前应用比对；客户端版本、SDK、transcript 版本、平台或哈希不同均不放行 Token 归一化。应用已升级或迁移后的历史采集可能因无法复核原运行时而保留 unverified，不能用环境开关强制放行。Windows 尚未验证该归一化 Profile。
+
+该版本的原生 `input_tokens` 直接来自 `prompt_tokens`，**已经包含缓存读取**；总 Token = input + output，不再加 cache read。须按 request ID 去重并核对请求/响应集合、逐响应有效非零输入/输出、缓存不大于输入，以及 `turn.finished` 终值。缺响应、混入隐藏零值、缺终态/字段时保留 partial 与已知小计；终值冲突保留 unverified。请求数、工具数、耗时独立判断，不因 Token 不可用一起丢失。`cache_creation_input_tokens=0` 是适配器默认值，标准缓存写入量仍为 null；不声称已观察到真实零写入。
+
+2026-09-16 隔离单题实测：8 请求、7 工具、输入 293981、输出 3115、缓存读取 281792、总 Token 297096、原生耗时 108.356 秒；主任务后的记忆整理另有 1 请求，排除于主任务汇总。该样本证明 macOS 指定运行时口径，不代表所有模型/客户端版本或 Windows 生产验收通过。
 
 ## 历史结果只读验证
 

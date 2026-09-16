@@ -133,6 +133,57 @@ def report_config():
 
 
 class ReportWebE2ETest(unittest.TestCase):
+    def test_resource_coverage_is_independent_in_both_profiles(self):
+        for factory in (submission, artifactsbench_submission):
+            item = factory("smoke-only", "qwenwork", [70, 90])
+            for entry in item["tasks"]:
+                entry["usage"] = {
+                    "input_tokens": 293981, "output_tokens": 3115, "total_tokens": 297096,
+                    "cache_read_input_tokens": 281792, "cache_creation_input_tokens": None,
+                    "request_count": 8,
+                    "collection": {"metrics": {
+                        key: {"status": "observed"} for key in (
+                            "input_tokens", "output_tokens", "total_tokens", "cache_read_input_tokens",
+                            "request_count", "call_count", "agent_duration_seconds", "duration_seconds",
+                        )
+                    }},
+                }
+                entry["tools"]["call_count"] = 7
+                entry["execution"]["duration_seconds"] = 176.849
+                entry["execution"]["agent_duration_seconds"] = 108.356
+            data = report_module.build_report_data([item])
+            unit = data["units"][0]
+            self.assertEqual(unit["total_tokens"], 594192)
+            self.assertEqual(unit["total_input_tokens"], 587962)
+            self.assertEqual(unit["total_cache_read_input_tokens"], 563584)
+            self.assertIsNone(unit["total_cache_creation_input_tokens"])
+            self.assertEqual(unit["total_requests"], 16)
+            self.assertEqual(unit["tool_call_count"], 14)
+            self.assertEqual(unit["total_agent_duration_seconds"], 216.712)
+            self.assertIn("资源数据覆盖", report_module.render_markdown(data))
+            self.assertIn("594192", report_module.render_markdown(data))
+            last = item["tasks"][1]["usage"]
+            last["total_tokens"] = None
+            last["collection"]["metrics"]["total_tokens"] = {"status": "partial"}
+            last["collection"]["known_subtotals"] = {"total_tokens": 20}
+            unit = report_module.build_report_data([item])["units"][0]
+            self.assertIsNone(unit["total_tokens"])
+            self.assertEqual(unit["total_requests"], 16)
+            self.assertEqual(unit["resource_metrics"]["total_tokens"]["known_subtotal"], 297116)
+            self.assertEqual(unit["resource_metrics"]["total_tokens"]["covered_cases"], 1)
+            self.assertEqual(unit["resource_metrics"]["total_tokens"]["partial_cases"], 1)
+            self.assertIsNone(unit["resource_metrics"]["cache_creation_input_tokens"]["known_subtotal"])
+
+    def test_invalid_or_unverified_resource_values_do_not_enter_totals(self):
+        for value, status in [(0, "masked"), (123, "unverified"), (-1, "observed"), (1.5, "observed"), (float("nan"), "legacy"), (True, "observed")]:
+            item = submission("test", "test", [70, 90])
+            for entry in item["tasks"]:
+                entry["usage"]["total_tokens"] = value
+                entry["usage"]["collection"] = {"metrics": {"total_tokens": {"status": status}}}
+            unit = report_module.build_report_data([item])["units"][0]
+            self.assertIsNone(unit["total_tokens"])
+            self.assertIsNone(unit["resource_metrics"]["total_tokens"]["known_subtotal"])
+
     def test_loads_zip_and_tar_gz_submissions(self) -> None:
         payload = submission("m1", "codex", [100, 50])
         encoded = json.dumps(payload).encode("utf-8")

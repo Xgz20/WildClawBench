@@ -1,5 +1,6 @@
 // 资源指标只取原生计数；缺失、隐藏、冲突均不能转换成真实零消耗。
-export const VERSION = "1.0.0";
+import { verifiedQwenProfile } from "./qwen-profile.mjs";
+export const VERSION = "1.1.0";
 export const TOKEN_KEYS = ["input_tokens", "output_tokens", "total_tokens", "cache_read_input_tokens", "cache_creation_input_tokens", "reasoning_output_tokens"];
 const METRIC_KEYS = [...TOKEN_KEYS, "request_count", "request_attempt_count", "call_count", "agent_duration_seconds"];
 export const count = (n) => Number.isSafeInteger(n) && n >= 0 ? n : null;
@@ -127,7 +128,7 @@ export function parseAstron(rows, turnId) {
   return result;
 }
 
-export function parseQwen(rows, { tokenExposureVerified = false } = {}) {
+export function parseQwen(rows, { runtimeIdentity = null } = {}) {
   const result = empty(); result.collection.warnings = [];
   const starts = rows.filter(r => r.type === "turn.started" && !r.data?.is_subagent);
   const turns = [...new Set(starts.map(r => r.turn_id))];
@@ -136,7 +137,8 @@ export function parseQwen(rows, { tokenExposureVerified = false } = {}) {
   const requests = unique(selected.filter(r => r.type === "model.request.started"), r => r.request_id, r => ({ index: r.data?.request_index }));
   const responses = unique(selected.filter(r => r.type === "model.response.completed"), r => r.request_id, r => r.data);
   const calls = unique(selected.filter(r => r.type === "tool.requested"), r => r.tool_call_id, r => ({ name: r.data?.tool_name }));
-  const finish = selected.find(r => r.type === "turn.finished");
+  const finishes = unique(selected.filter(r => r.type === "turn.finished"), r => r.turn_id, r => r.data);
+  const finish = finishes.has(turnId) ? { data: finishes.get(turnId) } : null;
   const matched = requests.size > 0 && requests.size === responses.size && [...requests.keys()].every(k => responses.has(k));
   setMetric(result, "usage", "request_count", requests.size || null, finish ? "observed" : "partial", "main-turn model.request.started IDs; not HTTP attempts");
   setMetric(result, "tools", "call_count", calls.size, finish ? "observed" : "partial", "tool.requested IDs; Thinking UI excluded");
@@ -147,11 +149,44 @@ export function parseQwen(rows, { tokenExposureVerified = false } = {}) {
   const raw = Object.fromEntries(keys.map(k => [k, sumKnown(values.map(u => u[k]))]));
   const nonzero = keys.some(k => raw[k] > 0);
   result.collection.native_usage = nonzero ? raw : null;
-  // 仅允许经过运行时 Profile 核对的采集路径归一化；输入原生字段已包含缓存读取量。
+  const profile = verifiedQwenProfile(runtimeIdentity);
+  result.collection.runtime_identity = runtimeIdentity;
+  result.collection.normalization_profile = profile;
+  // 单条全零可能是隐藏值；不能因同会话其他响应非零就把它视为真实零。
+  const exposed = values.filter(u => count(u.input_tokens) != null && count(u.output_tokens) != null
+    && u.input_tokens + u.output_tokens > 0);
   const masked = values.length > 0 && keys.every(k => raw[k] === 0);
-  if (nonzero && tokenExposureVerified && matched) {
-    for (const key of keys) setMetric(result, "usage", key, raw[key], finish ? "observed" : "partial", "verified Qoder response usage; input includes cache read");
-    setMetric(result, "usage", "total_tokens", sumKnown([raw.input_tokens, raw.output_tokens]), finish ? "observed" : "partial", "native total input + output");
+  if (nonzero && profile && values.every(u => u.provider === "qoder")) {
+    const invalidCache = exposed.some(u => count(u.cache_read_input_tokens) != null && u.cache_read_input_tokens > u.input_tokens);
+    for (const key of ["input_tokens", "output_tokens", "cache_read_input_tokens"]) {
+      const numbers = exposed.map(u => u[key]).filter(n => count(n) != null);
+      const subtotal = sumKnown(numbers);
+      const complete = matched && exposed.length === values.length && numbers.length === values.length;
+      const final = count(finish?.data?.[key]);
+      const conflict = (complete && final != null && subtotal !== final) || (key === "cache_read_input_tokens" && invalidCache);
+      const observed = complete && final != null && !conflict;
+      setMetric(result, "usage", key, observed ? subtotal : null, "observed", "verified Qoder response sum reconciled with turn.finished; input includes cache read");
+      if (!observed) {
+        result.collection.metrics[key].status = conflict ? "unverified" : "partial";
+        if (!conflict && subtotal != null) {
+          result.collection.known_subtotals ??= {};
+          result.collection.known_subtotals[key] = subtotal;
+        }
+        result.collection.warnings.push(conflict ? `QWEN_${key.toUpperCase()}_MISMATCH` : `QWEN_${key.toUpperCase()}_INCOMPLETE`);
+      }
+    }
+    setMetric(result, "usage", "total_tokens", sumKnown([result.usage.input_tokens, result.usage.output_tokens]), "observed", "cache-inclusive input + output; no extra cache addition");
+    if (result.usage.total_tokens == null) {
+      const invalid = ["input_tokens", "output_tokens"].some(k => result.collection.metrics[k].status === "unverified");
+      result.collection.metrics.total_tokens.status = invalid ? "unverified" : "partial";
+      const subtotal = sumKnown(exposed.map(u => count(u.input_tokens + u.output_tokens)));
+      if (!invalid && subtotal != null) {
+        result.collection.known_subtotals ??= {};
+        result.collection.known_subtotals.total_tokens = subtotal;
+      }
+    }
+    result.collection.metrics.cache_creation_input_tokens.basis = "Qoder adapter initializes zero; independent cache writes not observed";
+    result.collection.metrics.reasoning_output_tokens.basis = "not exposed in native response events";
   } else {
     for (const key of TOKEN_KEYS) result.collection.metrics[key] = {
       status: nonzero ? "unverified" : masked ? "masked" : "unavailable",
@@ -166,6 +201,8 @@ export function parseQwen(rows, { tokenExposureVerified = false } = {}) {
       duration_seconds: count(end.data?.duration_ms) == null ? null : end.data.duration_ms / 1000 });
   }
   result.collection.native_turn_id = turnId;
+  result.collection.response_coverage = { known: exposed.length, total: requests.size };
   if (!matched) result.collection.warnings.push("INCOMPLETE_REQUEST_RESPONSES");
+  if (!finish) result.collection.warnings.push("INCOMPLETE_NATIVE_TURN");
   return result;
 }

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
+import { captureResourceMetrics } from "../metrics/capture.mjs";
 import { spawn } from "node:child_process";
 import { realpathSync } from "node:fs";
 import { access, copyFile, mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
@@ -1716,6 +1717,7 @@ async function finalize(config, state, identityInfo, phase, { error = null, term
 
   const formalStatus = phase === "SUCCEEDED" ? "completed" : phase === "TIMEOUT" ? "timeout" : "execution_error";
   await updateExecutionRecord(config, identityInfo, {
+    resourceMetrics: await captureResourceMetrics(config, state, "qwenwork"),
     clientVersion: state.client.version,
     transcriptPath,
     execution: {
