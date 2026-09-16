@@ -23,7 +23,7 @@
 | 被评测 Harness | macOS | Windows |
 | --- | --- | --- |
 | AstronStudio | **主流程生产可用**：revision `6988b525...` 的独立 macOS 包已完成单 L1 execution→score→submission→return；首个正式批次先跑 3–5 个 L1 canary。当前 revision 的默认三槽并发、管理员 import/report 和恢复边界尚未重绑，不能按无人值守高可用使用。 | **无人值守高可用已验证**：发布实现 revision `6988b525...`，AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（runtime 152.0.7977.83）、execute 1.11.16 / Driver 1.10.18 / orchestrate 0.2.6 / run 1.3.7；V00–V17 已在 Windows 10 x64 真机通过。 |
-| WorkBuddy | 历史批次已覆盖五题执行、评分、回传和报告；当前发布候选的前置脚本已更新，须按清单至少重跑 probe、L1 smoke 和受影响恢复项。 | 历史批次已覆盖全流程，客户端基线为 WorkBuddy 5.5.3；当前发布候选因 Skill/前置脚本更新必须重新验收。 |
+| WorkBuddy | 历史批次已覆盖五题执行、评分、回传和报告；当前发布候选的前置脚本已更新，须按清单至少重跑 probe、L1 smoke 和受影响恢复项。 | **无人值守高可用已验证**：发布实现 revision `ee70a67...`，WorkBuddy 5.5.6.0、Codex Desktop 26.908.9136（runtime 152.0.7977.83）、execute 1.11.21 / Driver 1.8.24 / orchestrate 0.2.6 / run 1.3.8；V00–V17 已在 Windows 10 x64 真机通过。 |
 | QwenWork | 历史批次已覆盖串行、默认三路并发、三题评分、submission 和 return；报告、单 Prompt 和恢复边界尚未形成完整同版本证据。 | 历史批次已覆盖全流程，客户端基线为 QwenWorkCN 1.0.5.0；当前发布候选因 Skill/前置脚本更新必须重新验收。 |
 
 历史结论不能自动外推到新 revision。首次换机、升级桌面客户端或 Skill、切换模型，或者修改 Driver/桌面前置脚本核心实现后，须在生产验收清单中把受影响项标为 `STALE`，再按只读 probe、L1 smoke、串行、并发、完整闭环和恢复验收的顺序重验。
@@ -34,7 +34,7 @@
 | --- | --- | --- |
 | `prepare-web-e2e-workspaces` | 管理员 | 从 WildClawBench 用例生成题目包、评分包、报告配置和 5 个可分发 Skill ZIP。它是仓库内的准备 Skill，不计入批次分发的 5 个 ZIP。 |
 | `run-web-e2e` | 管理员或执行人员 | 推荐的全局入口。只组合 Prompt 中明确要求的准备、执行、评分、打包回传、收集和报告阶段。 |
-| `execute-web-e2e` | 执行人员 | 操作被评测 Harness 做题。WorkBuddy、AstronStudio 和 QwenWork 默认后台并发 3，最大 8，UI 操作保持单路。 |
+| `execute-web-e2e` | 执行人员 | 操作被评测 Harness 做题。WorkBuddy 默认后台并发 2，AstronStudio 和 QwenWork 默认 3；最大均为 8，UI 操作保持单路。 |
 | `orchestrate-web-e2e` | 执行人员或评分控制人员 | 校验执行结果、准备只读评分副本、注册 Codex Desktop 项目并调度多个评分任务。 |
 | `score-web-e2e` | Codex Desktop 单题评分任务 | 使用桌面内置 Browser 对一个用例评分并生成标准评分 JSON。通常由 `orchestrate-web-e2e` 自动调用，也支持人工单题调用。 |
 | `report-web-e2e` | 管理员 | 汇总一个或多个 Harness 回传包，生成 JSON、Markdown 和 Excel 报告。 |
@@ -60,7 +60,7 @@
 
 如果 Prompt 没有明确指定模型，执行 Skill 会保持并回读客户端当前模型，不会修改推理强度。评测期间不要人工切换模型。
 
-WorkBuddy、AstronStudio 和 QwenWork 均使用默认三路后台执行。首次换机、升级 Harness/Skill 或切换模型后，先使用少量 L1 用例验证本机客户端隔离；未通过时在 Prompt 中明确要求执行并发为 1。
+WorkBuddy 使用默认双路后台执行，AstronStudio 和 QwenWork 使用默认三路后台执行。首次换机、升级 Harness/Skill 或切换模型后，先使用少量 L1 用例验证本机客户端隔离；未通过时在 Prompt 中明确要求执行并发为 1。
 
 #### 2. 自动准备桌面客户端调试模式
 
@@ -96,7 +96,7 @@ WorkBuddy、AstronStudio 和 QwenWork 均使用默认三路后台执行。首次
 2. 解压题目包，建立独立 worker 工作目录。
 3. 自动检查和安装执行、评分所需的锁定依赖。
 4. 使用题目包声明的被评测 Harness，以客户端当前模型和推理强度执行全部题目，权限使用 `full-access`。
-5. WorkBuddy、AstronStudio 和 QwenWork 默认使用 3 路执行并发，最大 8；任一题明确结束并通过回执门禁后动态补入下一题。
+5. WorkBuddy 默认使用 2 路执行并发，AstronStudio 和 QwenWork 默认使用 3 路；最大均为 8，任一题明确结束并通过回执门禁后动态补入下一题。
 6. 校验执行回执后合入评分包。
 7. 默认创建 3 个并发 Codex Desktop 评分任务，每题使用独立项目、任务、Browser 和端口。
 8. 生成 `submission.json`、完整回传 ZIP 和外部 SHA-256 回执。
@@ -123,6 +123,19 @@ AstronStudio 当前验证用法：
 AstronStudio 在 macOS 的当前发布身份 `6988b525...` 已用 AstronStudio 3.0.0-alpha.19、Codex Desktop 26.908.70816 和 GLM-5.2 / High / full-access 完成单 L1 execution→score→submission→return，候选哈希无漂移，因此可按“主流程生产可用”投入受控评测。第一次正式运行先选 3–5 个 L1，确认执行回执、评分和回传均正常后再放大；在并发和恢复项补齐前保持人工值守。macOS 本地重打包的 Skill content SHA 与 Windows 正式包未能跨平台重现一致，必须按清单登记的独立包身份安装和校验，不能混用两个平台的 manifest 或归档 SHA。
 
 Windows 当前发布身份已在 AstronStudio 3.3.1.277 与 Codex Desktop 26.908.9136 上完成 V00–V17：包括只读探针、单题、三题串行、默认三路并发与动态补位、项目精确注册、并发评分、submission、离线回传与报告、正式 ZIP 单 Prompt 闭环，以及独立控制任务接管、Harness/Codex 重启、超时、发送前唯一重试、评分 attempt 隔离和 submission 中断恢复，因此标记为“无人值守高可用已验证”。这些结论仅绑定清单登记的 OS、客户端、Skill 和模型身份；任一关键 identity 变化后必须转为 `STALE` 并至少重跑 probe 与一个 L1 完整闭环。多个 AstronStudio 任务并发运行时如果客户端崩溃，仍会进入 `NEEDS_ATTENTION` 并要求人工处理，不会自动重启后冒险接管多个会话。
+
+WorkBuddy 当前验证用法：
+
+```text
+请使用 $run-web-e2e 完成下面 WorkBuddy Web E2E 评测用例的执行、评分、打包回传。
+
+题目：/absolute/path/<batch_id>__workbuddy__execution.zip
+评分标准：/absolute/path/<batch_id>__workbuddy__scoring.zip
+
+保持并回读 WorkBuddy 当前模型，不修改推理强度；权限使用 full-access；使用默认执行并发 2。
+```
+
+WorkBuddy 在 macOS 的证据仍是历史基线。Windows 当前发布身份 `ee70a67...` 已在 WorkBuddy 5.5.6.0、xopglm52 / full-access 与 Codex Desktop 26.908.9136 上完成 V00–V17：包括默认双路五题动态补位、五题评分/回传/报告、单 Prompt 闭环、独立控制任务接管、WorkBuddy 重启安全失败、Codex 平台托管重启、发送前唯一重试、执行超时、评分失败 attempt 隔离和 submission 发布中断恢复，因此标记为“无人值守高可用已验证”。评分过程中没有需要人工批准的权限请求；完全访问由配置和客户端回读确认。任一关键身份变化后必须按清单转为 `STALE` 并最少重跑 probe 与 1–3 个 L1 smoke。
 
 QwenWork 当前验证用法：
 
@@ -304,10 +317,12 @@ Prompt 必须明确写出要执行的阶段和输入路径。没有明确选择�
 
 /absolute/path/<batch_id>__workbuddy
 
-保持并回读 WorkBuddy 当前模型，不修改推理强度；权限使用 full-access；使用默认并发 3。完成后验证 execution-receipt.json 的 integrity.valid=true。
+保持并回读 WorkBuddy 当前模型，不修改推理强度；权限使用 full-access；使用默认并发 2。完成后验证 execution-receipt.json 的 integrity.valid=true。
 ```
 
 需要显式覆盖模型时，补充 WorkBuddy 下拉框中的精确显示名。首次换机、升级 WorkBuddy、升级 Skill 或切换模型后，建议先执行 1 至 3 个 L1 用例；未完成并发 smoke 时要求并发 1。
+
+WorkBuddy 默认 `run_slots=2`、最大 8，可显式设为 1 回退串行；所有项目创建、目录选择、模型/权限回读和 Prompt 发送仍保持 UI 单路。
 
 AstronStudio 使用下面的并发 Prompt：
 
@@ -387,7 +402,7 @@ Codex Desktop CDP：http://127.0.0.1:9230
 - Prompt 显式指定模型：使用客户端 UI 中的精确显示名，选择后回读一致才开始执行。
 - 推理强度：始终由用户提前在被评测 Harness 中设置，执行自动化不修改。
 - WorkBuddy、AstronStudio、QwenWork 权限：生产评测使用 `full-access`，发送题目 Prompt 前会回读确认。
-- WorkBuddy、AstronStudio、QwenWork 执行并发：新批次默认 3，最大 8；UI 操作始终只有一路。
+- WorkBuddy 执行并发：新批次默认 2，最大 8；AstronStudio、QwenWork 默认 3，最大 8；UI 操作始终只有一路。
 - Codex Desktop 评分并发：新批次默认 3，最大 8；每题使用独立项目、任务、Browser 和端口。
 - 同一批次执行期间不要人工切换模型、权限或关闭正在运行的客户端。
 
