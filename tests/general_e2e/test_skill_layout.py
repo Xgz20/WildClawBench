@@ -52,13 +52,17 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("collect-general-e2e").version,
                 get_skill_spec("collect-general-e2e").implementation_status,
             ),
-            ("0.3.0", "interface_only"),
+            ("0.4.0", "operational"),
         )
         self.assertTrue(
             all(
                 spec.implementation_status == "interface_only"
                 for spec in GENERAL_E2E_SKILLS
-                if spec.name not in {"prepare-general-e2e-workspaces", "execute-general-e2e"}
+                if spec.name not in {
+                    "prepare-general-e2e-workspaces",
+                    "execute-general-e2e",
+                    "collect-general-e2e",
+                }
             )
         )
 

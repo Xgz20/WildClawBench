@@ -1,0 +1,54 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:receipt:v1",
+  "schema_version": 1,
+  "scope": {
+    "batch_id": "general-g2-02-s4-retry1-macos-20260917-230054",
+    "unit_id": "astronstudio-macos-x86-64"
+  },
+  "dataset": {
+    "id": "general-custom60-v1",
+    "digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a"
+  },
+  "stage": "collect-evidence",
+  "status": "completed",
+  "created_at": "2026-09-17T17:18:09.334Z",
+  "task_ids": [
+    "01_Productivity_Flow_task_003_retro_agenda"
+  ],
+  "tasks": [
+    {
+      "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+      "attempt_id": "143cdcd2-6a04-4486-ac1c-f1564b725103",
+      "status": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/candidate/candidate-artifact.json",
+      "sha256": "a92c69ed8c09035f57e64905499c3a199afe3fd3e3717995396f36ef622c16e4",
+      "size": 2131
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/evidence-manifest.json",
+      "sha256": "23937f80965b9f10551939aebbbb0d7ea01d46f0e757c6e973bbd42d5fceb14d",
+      "size": 4495
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/execution-record.json",
+      "sha256": "1a3c175d7d98e5d042689e6f3f3a9b07780abe2d4d5a38c2dbc63612e058af37",
+      "size": 2740
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/process-cleanup.json",
+      "sha256": "fe516d23c2742ad66d08f12a1ae94b3dd5005575a8571bb467b549511e019cc1",
+      "size": 1504
+    }
+  ],
+  "integrity": {
+    "scope_matches": true,
+    "identities_match": true,
+    "hashes_verified": true,
+    "valid": true
+  },
+  "error": null
+}

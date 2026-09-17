@@ -1,0 +1,97 @@
+{
+  "schema_version": "wildclawbench.general-e2e-evidence-manifest/v1",
+  "identity": {
+    "batch_id": "general-g2-02-s4-retry1-macos-20260917-230054",
+    "unit_id": "astronstudio-macos-x86-64",
+    "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+    "attempt_id": "143cdcd2-6a04-4486-ac1c-f1564b725103"
+  },
+  "dataset": {
+    "id": "general-custom60-v1",
+    "digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a"
+  },
+  "collected_at": "2026-09-17T17:18:09.334Z",
+  "collection": {
+    "collector": "astronstudio-macos-general-e2e-finalizer",
+    "version": "0.1.0",
+    "stage_status": "completed",
+    "business_status": "completed",
+    "process_cleanup_path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/process-cleanup.json",
+    "candidate_artifact_path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/candidate/candidate-artifact.json",
+    "execution_record_path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/execution-record.json"
+  },
+  "artifacts": [
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/candidate/candidate-artifact.json",
+      "sha256": "a92c69ed8c09035f57e64905499c3a199afe3fd3e3717995396f36ef622c16e4",
+      "size": 2131,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/candidate/workspace/.gitkeep",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size": 1,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/execution/PROMPT.md",
+      "sha256": "4883c97962465eb0b21ac77caf18a5c06fb29c256efa85eac5775746a1437509",
+      "size": 555,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/execution/automation-state.json",
+      "sha256": "ba40caab885433d4b098df853f8777f16ebcd045142ed35221a5d2a39dcd2697",
+      "size": 5246,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/execution/execution-record.pre-collect.json",
+      "sha256": "c172463884a7fe64c4bb66bb44cb27c772207c5d0e08e733457987f6c513930d",
+      "size": 2354,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/execution/unit-manifest.json",
+      "sha256": "66cd51fdf17eb646b4333ca9abf68ec99578c9e3598dfc0dbc4238827e8b0ffd",
+      "size": 3420,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/final-response.md",
+      "sha256": "b436e6a776b6d320892fb53fd3cfd124170d34827ebdc6757ce21158b3992381",
+      "size": 2225,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/process-cleanup.json",
+      "sha256": "fe516d23c2742ad66d08f12a1ae94b3dd5005575a8571bb467b549511e019cc1",
+      "size": 1504,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/resource-metrics.json",
+      "sha256": "5a9c912d643d1722b87fa55aa9056fd177d21e6dd9e692ebaf5d387e966481a4",
+      "size": 6157,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/trace/raw/astronstudio-provider-events.jsonl",
+      "sha256": "5a04620f463cb3f5c7491a31165a9b748aef1ef0887ef6ec5b6793dd8d20b709",
+      "size": 386635,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/trace/trace-index.json",
+      "sha256": "a57b5e534a47458885f58005f1971e028c76d148d5234692b7e8631da63d25e5",
+      "size": 1866,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/trace/transcript.jsonl",
+      "sha256": "f5d958f9801e2a9bd8e37894f03c3c7488c65eb3a39f6bf8fe37aedc9d7193b2",
+      "size": 7314,
+      "type": "file"
+    }
+  ]
+}

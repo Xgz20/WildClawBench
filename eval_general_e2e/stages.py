@@ -14,7 +14,7 @@ INTERFACE_ONLY = "interface_only"
 OPERATIONAL = "operational"
 PREPARE_SKILL_VERSION = "0.2.0"
 EXECUTE_SKILL_VERSION = "0.3.0"
-COLLECT_SKILL_VERSION = "0.3.0"
+COLLECT_SKILL_VERSION = "0.4.0"
 
 
 @dataclass(frozen=True)
@@ -72,6 +72,7 @@ GENERAL_E2E_SKILLS: Tuple[GeneralE2ESkillSpec, ...] = (
         input_contract="执行状态、原生轨迹和终态 Workspace",
         output_contract="冻结候选、标准轨迹、指标、证据清单和执行回执",
         version=COLLECT_SKILL_VERSION,
+        implementation_status=OPERATIONAL,
     ),
     GeneralE2ESkillSpec(
         name="orchestrate-general-e2e",

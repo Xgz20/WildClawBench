@@ -7,7 +7,7 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 
 将一次执行 attempt 收口为冻结候选和可审计证据，阶段名固定为 `collect-evidence`，不与 `import-return` 混用。
 
-## 当前能力门禁
+## 能力门禁
 
 先运行：
 
@@ -15,7 +15,34 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 python -m eval_general_e2e skills --name collect-general-e2e --json
 ```
 
-整个 Skill 只有 `implementation_status` 为 `operational` 时才能生成冻结候选和正式执行回执。当前 `0.3.0/interface_only` 已交付 AstronStudio macOS 的轨迹和资源子能力：可将精确绑定的原生 turn 事件归档为原始 JSONL、标准 transcript 和 trace index，并从冻结轨迹映射 `resource-metrics-v1`。候选冻结和正式收口仍未交付，不得将这些产物单独宣称为可评分回执。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+当前 `0.4.0/operational` 支持 AstronStudio macOS 的完整采集阶段：精确归档原生 turn、生成标准 transcript 和资源指标、收口任务进程、冻结终态候选，并生成正式执行回执。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+
+## 正式收口流程
+
+先用下述两个子能力生成并校验 trace 与 resource metrics，再运行正式收口器：
+
+```bash
+node scripts/finalize_astronstudio_execution.mjs \
+  --unit-root /absolute/unit-root \
+  --state-file /absolute/unit-root/.general-e2e/execution/<task-id>/automation-state.json \
+  --trace-index /absolute/unit-root/.general-e2e/execution/<task-id>/trace/trace-index.json \
+  --resource-metrics /absolute/unit-root/.general-e2e/execution/<task-id>/trace/resource-metrics.json
+```
+
+收口器在发布候选前校验 package manifest、dataset、task/attempt、Prompt digest、一次发送、原生会话和终态；随后只终止与候选 Workspace 绝对路径或 cwd 精确绑定的 macOS 任务进程，等待零残留安静窗口，再确认 Workspace 静默并复制完整目录树。默认不排除 `.git`、`node_modules` 或 `__pycache__`；确需忽略或禁止目录时，必须通过 `--candidate-policy` 提供带理由的 basename 策略。
+
+正式产物位于 `evidence/tasks/<task-id>/<attempt-id>/`，包括冻结候选、候选描述、执行状态快照、轨迹、资源指标、进程收口、证据清单和正式 `execution-record.json`。当 unit manifest 中所有任务都各有唯一 attempt 时，生成 `receipts/collect-evidence-receipt.json`。当前版本不替多 attempt 选择优胜 attempt；同一任务已有另一正式 attempt 时失败关闭。
+
+正式 evidence 和 receipt 都不可覆盖。完成后必须运行不可变校验：
+
+```bash
+node scripts/finalize_astronstudio_execution.mjs \
+  --verify-only \
+  --unit-root /absolute/unit-root \
+  --task-id <task-id>
+```
+
+校验同时重算冻结候选与原始 Workspace，验证 evidence manifest、receipt 哈希及候选/执行回执身份。任何漂移都必须阻断评分。完整参数、目录策略和失败边界见 [AstronStudio 正式收口](references/astronstudio-finalization.md)。
 
 ## AstronStudio 轨迹子能力
 
@@ -54,4 +81,7 @@ Token 使用逐次原生 `last*` 增量求和并与累计 `total*` 对账；工�
 - 输出：冻结候选、原始/标准轨迹、资源指标、证据清单和执行回执。
 - 校验 attempt 身份、Prompt digest、原生会话绑定及候选完整性。
 - 未知指标保留 `null` 和来源状态；不能按零值填充。
+- 只支持 AstronStudio macOS 正式收口；其他平台必须明确失败，不得伪造进程清理成功。
+- `completed` 必须提供 trace 和 resource metrics；非成功终态只归档实际存在的部分证据。
+- `timeout/cancelled` 必须已有执行阶段确认的取消结果，避免后台任务继续写入候选。
 - 不调度评分、不判定 criterion、不导入管理员侧回传包。

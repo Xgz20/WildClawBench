@@ -1,0 +1,101 @@
+{
+  "schema_version": "wildclawbench.general-e2e-candidate-artifact/v1",
+  "identity": {
+    "batch_id": "general-g2-02-s1-macos-20260917-224935",
+    "unit_id": "astronstudio-macos-x86-64",
+    "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+    "attempt_id": "693c1c28-a78a-409b-82d7-b0dfcadb3132"
+  },
+  "hash_algorithm": "wildclawbench.workspace-tree-sha256/v1",
+  "expected_sha256": "87cf47353206e9ceb4c4d9bb67a4326bc76ef7376cf26b03c82da5514362e070",
+  "frozen_at": "2026-09-17T17:17:33.426Z",
+  "policy": {
+    "schema_version": "wildclawbench.general-e2e-candidate-policy/v1",
+    "policy_source": "exact-all-default",
+    "ignored_directories": [],
+    "forbidden_directories": []
+  },
+  "runtime_directory_policy": {
+    "schema_version": "wildclawbench.general-e2e-runtime-directory-policy/v1",
+    "ignored_directories": [],
+    "forbidden_directories": [],
+    "scoring_copy": "exclude-ignored-directories",
+    "return_archive": "exclude-ignored-directories"
+  },
+  "source_workspace": {
+    "path": "execution/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/workspace",
+    "sha256": "87cf47353206e9ceb4c4d9bb67a4326bc76ef7376cf26b03c82da5514362e070",
+    "file_count": 6,
+    "total_bytes": 5066,
+    "snapshot_before_sha256": "87cf47353206e9ceb4c4d9bb67a4326bc76ef7376cf26b03c82da5514362e070",
+    "snapshot_after_stability_sha256": "87cf47353206e9ceb4c4d9bb67a4326bc76ef7376cf26b03c82da5514362e070",
+    "snapshot_after_copy_sha256": "87cf47353206e9ceb4c4d9bb67a4326bc76ef7376cf26b03c82da5514362e070",
+    "stability_window_milliseconds": 5000,
+    "ignored_runtime_directories": [],
+    "forbidden_directories": []
+  },
+  "candidate": {
+    "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/candidate/workspace",
+    "sha256": "87cf47353206e9ceb4c4d9bb67a4326bc76ef7376cf26b03c82da5514362e070",
+    "file_count": 6,
+    "total_bytes": 5066
+  },
+  "entries": [
+    {
+      "path": "project",
+      "type": "directory",
+      "sha256": null,
+      "size": 0,
+      "mode": "0755"
+    },
+    {
+      "path": "project/__pycache__",
+      "type": "directory",
+      "sha256": null,
+      "size": 0,
+      "mode": "0755"
+    },
+    {
+      "path": "project/__pycache__/converter.cpython-310.pyc",
+      "type": "file",
+      "sha256": "deffb35eabb95669587892960bf3ae733dc58472fbdaa6be942e81c3b80641d1",
+      "size": 840,
+      "mode": "0644"
+    },
+    {
+      "path": "project/__pycache__/converter.cpython-38.pyc",
+      "type": "file",
+      "sha256": "aee182f52b7998a35aeb9a08ba246734f1459e698a5afaf9fbd4abce861c84cf",
+      "size": 952,
+      "mode": "0644"
+    },
+    {
+      "path": "project/__pycache__/test_converter.cpython-310-pytest-8.0.0.pyc",
+      "type": "file",
+      "sha256": "3c6024e0a1e237c005a1473ed8373f6703d709fbcc543e0272da303d984d49f3",
+      "size": 1164,
+      "mode": "0644"
+    },
+    {
+      "path": "project/__pycache__/test_converter.cpython-38.pyc",
+      "type": "file",
+      "sha256": "f92a69a3e53d32c2d5c48e233da0ab749fd4edaf1ef234673719d78564488474",
+      "size": 1209,
+      "mode": "0644"
+    },
+    {
+      "path": "project/converter.py",
+      "type": "file",
+      "sha256": "55a8aa6734a63682dc8eb8e4d5fefacdb13a3e1d71f9a652c1efa104b8baf074",
+      "size": 451,
+      "mode": "0644"
+    },
+    {
+      "path": "project/test_converter.py",
+      "type": "file",
+      "sha256": "acb9cea1312a9a0ab7b3badc094873c17ab5495e4cfea3096c440a09295fe8f2",
+      "size": 450,
+      "mode": "0644"
+    }
+  ]
+}

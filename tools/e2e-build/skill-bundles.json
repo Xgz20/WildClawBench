@@ -56,7 +56,7 @@
       "name": "collect-general-e2e",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/collect-general-e2e",
-      "components": ["resource-metrics", "workspace-integrity"]
+      "components": ["desktop-runtime", "resource-metrics", "workspace-integrity"]
     },
     {
       "name": "orchestrate-general-e2e",

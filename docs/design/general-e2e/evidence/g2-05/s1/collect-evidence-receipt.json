@@ -1,0 +1,54 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:receipt:v1",
+  "schema_version": 1,
+  "scope": {
+    "batch_id": "general-g2-02-s1-macos-20260917-224935",
+    "unit_id": "astronstudio-macos-x86-64"
+  },
+  "dataset": {
+    "id": "general-custom60-v1",
+    "digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a"
+  },
+  "stage": "collect-evidence",
+  "status": "completed",
+  "created_at": "2026-09-17T17:17:33.426Z",
+  "task_ids": [
+    "02_Code_Intelligence_task_001_temperature_cli_fix"
+  ],
+  "tasks": [
+    {
+      "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+      "attempt_id": "693c1c28-a78a-409b-82d7-b0dfcadb3132",
+      "status": "completed"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/candidate/candidate-artifact.json",
+      "sha256": "27688852002749ed8b2409286ebd4fe1d6a1f7b6c1915f9443823c3aa0a870a4",
+      "size": 3540
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/evidence-manifest.json",
+      "sha256": "a85eaf831baf8f51fce3f60b3edf0433c20ba8e5e39b24ec79612b73c60c2f5d",
+      "size": 6227
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/execution-record.json",
+      "sha256": "ff2a90088d2a57d5426a8468e0554ac744657cc3832000cbe64bcd34685cbdb5",
+      "size": 2768
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/process-cleanup.json",
+      "sha256": "284c3adfbf3d601069c21b3d8206910308e214d8246e8d153c2aed7ddc51ecc4",
+      "size": 1497
+    }
+  ],
+  "integrity": {
+    "scope_matches": true,
+    "identities_match": true,
+    "hashes_verified": true,
+    "valid": true
+  },
+  "error": null
+}

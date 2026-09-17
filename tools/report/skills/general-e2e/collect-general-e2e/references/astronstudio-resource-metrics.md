@@ -35,4 +35,4 @@
 
 ## 输出边界
 
-默认在 trace index 同目录生成 `resource-metrics.json`。输出只是 G2-04 资源证据；G2-05 完成候选冻结、进程收口和正式 execution receipt 前，不能进入评分。
+默认在 trace index 同目录生成 `resource-metrics.json`。该文件只是正式收口的输入；只有 `finalize_astronstudio_execution.mjs` 生成并通过不可变校验的 collect receipt 才能进入评分。

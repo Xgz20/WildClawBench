@@ -1,0 +1,34 @@
+{
+  "schema_version": "wildclawbench.general-e2e-task-process-cleanup/v1",
+  "supported": true,
+  "platform": "darwin",
+  "success": true,
+  "quiet_window_milliseconds": 5000,
+  "quiet_observed_milliseconds": 5637,
+  "late_process_detected": false,
+  "before": {
+    "supported": true,
+    "platform": "darwin",
+    "workspace": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s1/unit/general-g2-02-s1-macos-20260917-224935__astronstudio-macos-x86-64/execution/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/workspace",
+    "seed_pids": [],
+    "root_pids": [],
+    "targets": []
+  },
+  "termination_attempts": [],
+  "after": {
+    "supported": true,
+    "platform": "darwin",
+    "workspace": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s1/unit/general-g2-02-s1-macos-20260917-224935__astronstudio-macos-x86-64/execution/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/workspace",
+    "seed_pids": [],
+    "root_pids": [],
+    "targets": []
+  },
+  "collected_at": "2026-09-17T17:17:33.426Z",
+  "identity": {
+    "batch_id": "general-g2-02-s1-macos-20260917-224935",
+    "unit_id": "astronstudio-macos-x86-64",
+    "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+    "attempt_id": "693c1c28-a78a-409b-82d7-b0dfcadb3132"
+  },
+  "candidate_workspace": "execution/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/workspace"
+}

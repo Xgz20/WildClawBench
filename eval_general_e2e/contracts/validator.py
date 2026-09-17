@@ -361,21 +361,34 @@ def _validate_execution_record(document: Mapping[str, Any]) -> None:
         _fail("INVALID_VALUE", "$.evidence.missing", "complete evidence cannot list missing items")
 
     candidate = _mapping(_required(document, "candidate", "$"), "$.candidate")
-    _nullable_relative_path(
+    candidate_path = _nullable_relative_path(
         _required(candidate, "path", "$.candidate"), "$.candidate.path"
     )
     candidate_sha = _nullable_sha256(
         _required(candidate, "frozen_sha256", "$.candidate"),
         "$.candidate.frozen_sha256",
     )
-    _nullable_timestamp(
+    candidate_frozen_at = _nullable_timestamp(
         _required(candidate, "frozen_at", "$.candidate"), "$.candidate.frozen_at"
     )
-    _enum(
+    drift_status = _enum(
         _required(candidate, "drift_status", "$.candidate"),
         {"not_frozen", "stable", "drifted", "unverified"},
         "$.candidate.drift_status",
     )
+    candidate_identity = (candidate_path, candidate_sha, candidate_frozen_at)
+    if drift_status == "stable" and any(value is None for value in candidate_identity):
+        _fail(
+            "REQUIRED_FIELD",
+            "$.candidate",
+            "stable candidate needs path, frozen_sha256, and frozen_at",
+        )
+    if drift_status == "not_frozen" and any(value is not None for value in candidate_identity):
+        _fail(
+            "INVALID_VALUE",
+            "$.candidate",
+            "not_frozen candidate must not claim path, frozen_sha256, or frozen_at",
+        )
     _nullable_relative_path(
         _required(document, "resource_metrics_path", "$"), "$.resource_metrics_path"
     )
@@ -953,6 +966,14 @@ def _validate_receipt(document: Mapping[str, Any]) -> None:
         _fail("INVALID_VALUE", "$.integrity.valid", "must equal all integrity checks")
     if status_value == "completed" and not valid:
         _fail("INVALID_VALUE", "$.status", f"completed {stage} receipt requires valid integrity")
+    if status_value == "completed" and any(
+        item.get("status") != "completed" for item in task_receipts
+    ):
+        _fail(
+            "INVALID_VALUE",
+            "$.tasks",
+            f"completed {stage} receipt requires every task to be completed",
+        )
     error = _required(document, "error", "$")
     if status_value == "failed" and error is None:
         _fail("REQUIRED_FIELD", "$.error", "failed receipt needs an error")

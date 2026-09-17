@@ -179,6 +179,30 @@ class GeneralE2EContractTests(unittest.TestCase):
             validate_contract(execution)
         self.assertEqual(captured.exception.code, "REQUIRED_FIELD")
 
+    def test_candidate_state_fields_are_semantically_consistent(self) -> None:
+        execution = json.loads((VALID / "execution-record.json").read_text(encoding="utf-8"))
+        execution["candidate"]["path"] = None
+        with self.assertRaises(ContractValidationError) as captured:
+            validate_contract(execution)
+        self.assertEqual(captured.exception.code, "REQUIRED_FIELD")
+
+        execution["candidate"] = {
+            "path": "candidate/workspace",
+            "frozen_sha256": None,
+            "frozen_at": None,
+            "drift_status": "not_frozen",
+        }
+        with self.assertRaises(ContractValidationError) as captured:
+            validate_contract(execution)
+        self.assertEqual(captured.exception.code, "INVALID_VALUE")
+
+    def test_completed_receipt_requires_completed_tasks(self) -> None:
+        receipt = json.loads((VALID / "receipt.json").read_text(encoding="utf-8"))
+        receipt["tasks"][0]["status"] = "partial"
+        with self.assertRaises(ContractValidationError) as captured:
+            validate_contract(receipt)
+        self.assertEqual(captured.exception.code, "INVALID_VALUE")
+
     def test_trace_index_accepts_adapter_binding_and_consistent_normalization_counts(self) -> None:
         trace = json.loads((VALID / "trace-index.json").read_text(encoding="utf-8"))
         trace.update({

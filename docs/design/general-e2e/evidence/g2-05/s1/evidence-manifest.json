@@ -1,0 +1,127 @@
+{
+  "schema_version": "wildclawbench.general-e2e-evidence-manifest/v1",
+  "identity": {
+    "batch_id": "general-g2-02-s1-macos-20260917-224935",
+    "unit_id": "astronstudio-macos-x86-64",
+    "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+    "attempt_id": "693c1c28-a78a-409b-82d7-b0dfcadb3132"
+  },
+  "dataset": {
+    "id": "general-custom60-v1",
+    "digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a"
+  },
+  "collected_at": "2026-09-17T17:17:33.426Z",
+  "collection": {
+    "collector": "astronstudio-macos-general-e2e-finalizer",
+    "version": "0.1.0",
+    "stage_status": "completed",
+    "business_status": "completed",
+    "process_cleanup_path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/process-cleanup.json",
+    "candidate_artifact_path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/candidate/candidate-artifact.json",
+    "execution_record_path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/execution-record.json"
+  },
+  "artifacts": [
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/candidate/candidate-artifact.json",
+      "sha256": "27688852002749ed8b2409286ebd4fe1d6a1f7b6c1915f9443823c3aa0a870a4",
+      "size": 3540,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/candidate/workspace/project/__pycache__/converter.cpython-310.pyc",
+      "sha256": "deffb35eabb95669587892960bf3ae733dc58472fbdaa6be942e81c3b80641d1",
+      "size": 840,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/candidate/workspace/project/__pycache__/converter.cpython-38.pyc",
+      "sha256": "aee182f52b7998a35aeb9a08ba246734f1459e698a5afaf9fbd4abce861c84cf",
+      "size": 952,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/candidate/workspace/project/__pycache__/test_converter.cpython-310-pytest-8.0.0.pyc",
+      "sha256": "3c6024e0a1e237c005a1473ed8373f6703d709fbcc543e0272da303d984d49f3",
+      "size": 1164,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/candidate/workspace/project/__pycache__/test_converter.cpython-38.pyc",
+      "sha256": "f92a69a3e53d32c2d5c48e233da0ab749fd4edaf1ef234673719d78564488474",
+      "size": 1209,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/candidate/workspace/project/converter.py",
+      "sha256": "55a8aa6734a63682dc8eb8e4d5fefacdb13a3e1d71f9a652c1efa104b8baf074",
+      "size": 451,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/candidate/workspace/project/test_converter.py",
+      "sha256": "acb9cea1312a9a0ab7b3badc094873c17ab5495e4cfea3096c440a09295fe8f2",
+      "size": 450,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/execution/PROMPT.md",
+      "sha256": "455f6e3fc79fa77d6d7ab98e43b93baee8e4f946c025bc2a118c943073c05c0b",
+      "size": 541,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/execution/automation-state.json",
+      "sha256": "dbbc4d7b41586dc469d519d2d243ce24fdfe067c535a8dd3aaba09ec1c912e7d",
+      "size": 6454,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/execution/execution-record.pre-collect.json",
+      "sha256": "6d2cddb46466fa3bc743583a420d08dc56948e252865b56d975d827588f060a9",
+      "size": 2361,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/execution/unit-manifest.json",
+      "sha256": "8e064cabf6e0807f8a19f76b857009fa8e8dfa0a543288b73a4c26fe48903db6",
+      "size": 4606,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/final-response.md",
+      "sha256": "8a87ee09b6cced3b50d37c01164125e106062b948d613762bcf9135686f0e91a",
+      "size": 822,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/process-cleanup.json",
+      "sha256": "284c3adfbf3d601069c21b3d8206910308e214d8246e8d153c2aed7ddc51ecc4",
+      "size": 1497,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/resource-metrics.json",
+      "sha256": "dd4ef3cec86b2cc06773cf2037f7c6f3e2d19c653fa14bfb970bca8d3a0fad30",
+      "size": 8892,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/trace/raw/astronstudio-provider-events.jsonl",
+      "sha256": "7181fd47a6811190a0c03854e5bf382b0d99cd2aa90e0962998911a5bd499cd0",
+      "size": 203857,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/trace/trace-index.json",
+      "sha256": "6c1df7aee6dbc225492f1c96c7748fe9f3e08ed31ca64de88004d74bebf6a20b",
+      "size": 2452,
+      "type": "file"
+    },
+    {
+      "path": "evidence/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/693c1c28-a78a-409b-82d7-b0dfcadb3132/trace/transcript.jsonl",
+      "sha256": "a829deabe469e9827497d7e13dc8df5d2f6c5d70d5bc6d541b0e17a64abf2ed7",
+      "size": 47692,
+      "type": "file"
+    }
+  ]
+}

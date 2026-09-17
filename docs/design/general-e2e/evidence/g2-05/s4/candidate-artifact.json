@@ -1,0 +1,52 @@
+{
+  "schema_version": "wildclawbench.general-e2e-candidate-artifact/v1",
+  "identity": {
+    "batch_id": "general-g2-02-s4-retry1-macos-20260917-230054",
+    "unit_id": "astronstudio-macos-x86-64",
+    "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+    "attempt_id": "143cdcd2-6a04-4486-ac1c-f1564b725103"
+  },
+  "hash_algorithm": "wildclawbench.workspace-tree-sha256/v1",
+  "expected_sha256": "1ac1d99d2123fd4eaa234d95e989f85787d08473cd4e6b3d66648ade5af65592",
+  "frozen_at": "2026-09-17T17:18:09.334Z",
+  "policy": {
+    "schema_version": "wildclawbench.general-e2e-candidate-policy/v1",
+    "policy_source": "exact-all-default",
+    "ignored_directories": [],
+    "forbidden_directories": []
+  },
+  "runtime_directory_policy": {
+    "schema_version": "wildclawbench.general-e2e-runtime-directory-policy/v1",
+    "ignored_directories": [],
+    "forbidden_directories": [],
+    "scoring_copy": "exclude-ignored-directories",
+    "return_archive": "exclude-ignored-directories"
+  },
+  "source_workspace": {
+    "path": "execution/tasks/01_Productivity_Flow_task_003_retro_agenda/workspace",
+    "sha256": "1ac1d99d2123fd4eaa234d95e989f85787d08473cd4e6b3d66648ade5af65592",
+    "file_count": 1,
+    "total_bytes": 1,
+    "snapshot_before_sha256": "1ac1d99d2123fd4eaa234d95e989f85787d08473cd4e6b3d66648ade5af65592",
+    "snapshot_after_stability_sha256": "1ac1d99d2123fd4eaa234d95e989f85787d08473cd4e6b3d66648ade5af65592",
+    "snapshot_after_copy_sha256": "1ac1d99d2123fd4eaa234d95e989f85787d08473cd4e6b3d66648ade5af65592",
+    "stability_window_milliseconds": 5000,
+    "ignored_runtime_directories": [],
+    "forbidden_directories": []
+  },
+  "candidate": {
+    "path": "evidence/tasks/01_Productivity_Flow_task_003_retro_agenda/143cdcd2-6a04-4486-ac1c-f1564b725103/candidate/workspace",
+    "sha256": "1ac1d99d2123fd4eaa234d95e989f85787d08473cd4e6b3d66648ade5af65592",
+    "file_count": 1,
+    "total_bytes": 1
+  },
+  "entries": [
+    {
+      "path": ".gitkeep",
+      "type": "file",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "size": 1,
+      "mode": "0644"
+    }
+  ]
+}

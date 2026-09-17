@@ -348,7 +348,7 @@ process.stdout.write(JSON.stringify({{
         self.assertNotIn(str(REPO_ROOT), execution_help.stdout + execution_help.stderr)
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required")
-    def test_general_collect_trace_entrypoints_load_outside_checkout(self) -> None:
+    def test_general_collect_entrypoints_load_outside_checkout(self) -> None:
         detached = self.temp_root / "detached-general-collect"
         detached.mkdir()
         root = BUILD._safe_extract(
@@ -358,16 +358,25 @@ process.stdout.write(JSON.stringify({{
         archive = root / "scripts/archive_astronstudio_trace.mjs"
         query = root / "scripts/query_trace.mjs"
         resources = root / "scripts/collect_astronstudio_resource_metrics.mjs"
+        finalizer = root / "scripts/finalize_astronstudio_execution.mjs"
         self.assertTrue(archive.is_file())
         self.assertTrue(query.is_file())
         self.assertTrue(resources.is_file())
+        self.assertTrue(finalizer.is_file())
         self.assertTrue(
             (root / "vendor/e2e-shared/resource-metrics/trace-io.mjs").is_file()
+        )
+        self.assertTrue(
+            (root / "vendor/e2e-shared/desktop-runtime/process.mjs").is_file()
+        )
+        self.assertTrue(
+            (root / "vendor/e2e-shared/handoff/workspace-integrity.mjs").is_file()
         )
         for entrypoint, marker in (
             (archive, "轨迹归档器"),
             (query, "只读检索"),
             (resources, "资源指标采集器"),
+            (finalizer, "正式收口器"),
         ):
             completed = subprocess.run(
                 ["node", str(entrypoint), "--help"],
