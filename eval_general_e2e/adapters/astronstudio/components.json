@@ -1,0 +1,10 @@
+{
+  "schema_version": "wildclawbench.general-e2e-adapter-binding/v1",
+  "adapter": "astronstudio",
+  "entrypoint": "eval_general_e2e/adapters/astronstudio/components.mjs",
+  "components": {
+    "desktop-runtime": "1.0.0",
+    "resource-metrics": "1.0.0",
+    "workspace-integrity": "1.0.0"
+  }
+}

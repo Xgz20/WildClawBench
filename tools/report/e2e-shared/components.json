@@ -1,0 +1,30 @@
+{
+  "schema_version": "wildclawbench.e2e-shared-source-catalog/v1",
+  "components": [
+    {
+      "name": "desktop-runtime",
+      "version": "1.0.0",
+      "source_root": "tools/report/e2e-shared/desktop-runtime",
+      "entrypoints": [
+        "process.mjs"
+      ]
+    },
+    {
+      "name": "resource-metrics",
+      "version": "1.0.0",
+      "source_root": "tools/report/e2e-shared/resource-metrics",
+      "entrypoints": [
+        "native-parsers.mjs",
+        "trace-io.mjs"
+      ]
+    },
+    {
+      "name": "workspace-integrity",
+      "version": "1.0.0",
+      "source_root": "tools/report/e2e-shared/handoff",
+      "entrypoints": [
+        "workspace-integrity.mjs"
+      ]
+    }
+  ]
+}

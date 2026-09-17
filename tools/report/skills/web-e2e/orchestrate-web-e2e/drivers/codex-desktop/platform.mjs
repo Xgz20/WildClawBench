@@ -1,46 +1,16 @@
-import { spawn } from "node:child_process";
 import { access, realpath, stat } from "node:fs/promises";
 import * as systemPath from "node:path";
+import {
+  isDirectory,
+  isFile,
+  runCapture,
+} from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 
 export const MACOS_CODEX_APP_PATH = "/Applications/ChatGPT.app";
 export const WINDOWS_CODEX_EXECUTABLE_NAMES = Object.freeze(["ChatGPT.exe", "Codex.exe"]);
 
-function runCapture(command, args, options = {}) {
-  return new Promise((resolvePromise, rejectPromise) => {
-    const { allowFailure = false, ...spawnOptions } = options;
-    const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], ...spawnOptions });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.on("data", (chunk) => { stdout += chunk; });
-    child.stderr.on("data", (chunk) => { stderr += chunk; });
-    child.once("error", rejectPromise);
-    child.once("exit", (code) => {
-      if (code === 0 || allowFailure) resolvePromise({ code, stdout, stderr });
-      else rejectPromise(new Error(`${command} 执行失败（退出码 ${code}）：${stderr.trim()}`));
-    });
-  });
-}
-
 function normalizeWindowsPath(value) {
   return String(value || "").trim().replace(/^"|"$/g, "").replaceAll("/", "\\").toLowerCase();
-}
-
-async function isFile(path, statPath) {
-  try {
-    return (await statPath(path)).isFile();
-  } catch (error) {
-    if (error?.code === "ENOENT") return false;
-    throw error;
-  }
-}
-
-async function isDirectory(path, statPath) {
-  try {
-    return (await statPath(path)).isDirectory();
-  } catch (error) {
-    if (error?.code === "ENOENT") return false;
-    throw error;
-  }
 }
 
 async function resolveWindowsExecutable(candidate, dependencies) {

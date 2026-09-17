@@ -15,7 +15,7 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 python -m eval_general_e2e skills --name collect-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才写入正式证据目录。当前 `interface_only` 表示轨迹适配和资源采集组件尚未交付；不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+只有 `implementation_status` 为 `operational` 时才写入正式证据目录。共享安全轨迹读取、原生资源解析和 Workspace 完整性基元已完成，但 General 标准轨迹、资源契约映射与正式收口流程尚未交付；当前仍为 `interface_only`。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
 
 ## 责任边界
 

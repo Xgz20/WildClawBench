@@ -15,7 +15,7 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `interface_only` 表示 G1-03 的 Driver 和适配器尚未交付；应保留输入包、明确报告未就绪并停止。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。共享进程基元和 AstronStudio source binding 已完成，但正式会话状态机、Prompt 单次发送与恢复实现尚未交付；当前仍为 `interface_only`，应保留输入包、明确报告未就绪并停止。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## 责任边界
 

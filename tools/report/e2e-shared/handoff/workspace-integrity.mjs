@@ -1,0 +1,196 @@
+import { createHash } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+
+export const COMPONENT_NAME = "workspace-integrity";
+export const COMPONENT_VERSION = "1.0.0";
+
+function requireIdentifier(value, name) {
+  if (typeof value !== "string" || !value.trim()) throw new TypeError(`${name} must be a non-empty string`);
+  return value;
+}
+
+function requireDirectoryNames(value, name) {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !item || item.includes("/") || item.includes("\\"))) {
+    throw new TypeError(`${name} must be an array of directory basenames`);
+  }
+  return new Set(value);
+}
+
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function compareUnicodeCodePoints(left, right) {
+  const leftPoints = Array.from(left, (character) => character.codePointAt(0));
+  const rightPoints = Array.from(right, (character) => character.codePointAt(0));
+  const length = Math.min(leftPoints.length, rightPoints.length);
+  for (let index = 0; index < length; index += 1) {
+    if (leftPoints[index] !== rightPoints[index]) return leftPoints[index] - rightPoints[index];
+  }
+  return leftPoints.length - rightPoints.length;
+}
+
+export function createWorkspaceIntegrity(options) {
+  const treeHashAlgorithm = requireIdentifier(options?.treeHashAlgorithm, "treeHashAlgorithm");
+  const candidateArtifactSchema = requireIdentifier(options?.candidateArtifactSchema, "candidateArtifactSchema");
+  const runtimeDirectoryPolicySchema = requireIdentifier(
+    options?.runtimeDirectoryPolicySchema,
+    "runtimeDirectoryPolicySchema",
+  );
+  const ignoredRuntimeDirs = requireDirectoryNames(options?.ignoredDirectories, "ignoredDirectories");
+  const forbiddenCandidateDirs = requireDirectoryNames(options?.forbiddenDirectories, "forbiddenDirectories");
+  const excludedTreeDirs = new Set([...ignoredRuntimeDirs, ...forbiddenCandidateDirs]);
+
+  function runtimeDirectoryPolicy() {
+    return {
+      schema_version: runtimeDirectoryPolicySchema,
+      ignored_directories: [...ignoredRuntimeDirs].sort(),
+      forbidden_directories: [...forbiddenCandidateDirs].sort(),
+      scoring_copy: "exclude-ignored-directories",
+      return_archive: "exclude-ignored-directories",
+    };
+  }
+
+  function validateRuntimeDirectoryPolicy(value) {
+    if (value == null) return false;
+    const expected = runtimeDirectoryPolicy();
+    const expectedKeys = Object.keys(expected).sort();
+    const actualKeys = value && !Array.isArray(value) && typeof value === "object"
+      ? Object.keys(value).sort()
+      : [];
+    const sameStringSet = (actual, wanted) => Array.isArray(actual)
+      && actual.length === wanted.length
+      && new Set(actual).size === actual.length
+      && actual.every((item) => typeof item === "string" && wanted.includes(item));
+    const valid = JSON.stringify(actualKeys) === JSON.stringify(expectedKeys)
+      && value.schema_version === expected.schema_version
+      && sameStringSet(value.ignored_directories, expected.ignored_directories)
+      && sameStringSet(value.forbidden_directories, expected.forbidden_directories)
+      && value.scoring_copy === expected.scoring_copy
+      && value.return_archive === expected.return_archive;
+    if (!valid) {
+      throw new Error(`候选运行时目录策略不兼容：${value?.schema_version || "missing"}`);
+    }
+    return true;
+  }
+
+  function sameRuntimeDirectoryPolicy(left, right) {
+    return validateRuntimeDirectoryPolicy(left) === validateRuntimeDirectoryPolicy(right);
+  }
+
+  function snapshotWorkspace(root, { maximumFiles = 20_000 } = {}) {
+    const rootInfo = fs.lstatSync(root);
+    if (rootInfo.isSymbolicLink() || !rootInfo.isDirectory()) {
+      throw new Error(`候选 workspace 缺失或为符号链接：${root}`);
+    }
+    const canonical = fs.realpathSync(root);
+    const entries = [];
+    const ignoredRuntimeDirectories = [];
+    const forbiddenDirectories = [];
+    function walk(current, prefix = "") {
+      const children = fs.readdirSync(current, { withFileTypes: true });
+      children.sort((left, right) => compareUnicodeCodePoints(left.name, right.name));
+      for (const child of children) {
+        const relative = prefix ? `${prefix}/${child.name}` : child.name;
+        if (forbiddenCandidateDirs.has(child.name)) {
+          forbiddenDirectories.push(relative);
+          continue;
+        }
+        if (child.isDirectory()) {
+          if (ignoredRuntimeDirs.has(child.name)) ignoredRuntimeDirectories.push(relative);
+          else walk(path.join(current, child.name), relative);
+          continue;
+        }
+        if (entries.length >= maximumFiles) throw new Error(`候选目录文件数超过上限 ${maximumFiles}`);
+        const filename = path.join(current, child.name);
+        const info = fs.lstatSync(filename);
+        if (info.isSymbolicLink()) {
+          const target = fs.readlinkSync(filename);
+          entries.push({ path: relative, type: "symlink", sha256: sha256(target), size: target.length });
+        } else if (info.isFile()) {
+          entries.push({ path: relative, type: "file", sha256: sha256(fs.readFileSync(filename)), size: info.size });
+        }
+      }
+    }
+    walk(canonical);
+    const digest = createHash("sha256");
+    for (const entry of entries) {
+      digest.update(entry.path);
+      digest.update("\0");
+      digest.update(entry.type);
+      digest.update("\0");
+      digest.update(entry.sha256);
+      digest.update("\n");
+    }
+    return {
+      root: canonical,
+      sha256: digest.digest("hex"),
+      file_count: entries.length,
+      total_bytes: entries.reduce((sum, entry) => sum + entry.size, 0),
+      excluded_directories: [...excludedTreeDirs].sort(),
+      ignored_runtime_directories: ignoredRuntimeDirectories.sort(compareUnicodeCodePoints),
+      forbidden_directories: forbiddenDirectories.sort(compareUnicodeCodePoints),
+      excluded_runtime_directories: [...ignoredRuntimeDirectories, ...forbiddenDirectories].sort(compareUnicodeCodePoints),
+    };
+  }
+
+  function loadCandidateArtifact(lockFile) {
+    const value = JSON.parse(fs.readFileSync(lockFile, "utf8"));
+    if (!value || Array.isArray(value) || typeof value !== "object") {
+      throw new Error(`候选冻结文件无效：${lockFile}`);
+    }
+    if (value.schema_version !== candidateArtifactSchema) {
+      throw new Error(`候选冻结 schema 不兼容：${lockFile}`);
+    }
+    if (value.hash_algorithm !== treeHashAlgorithm) {
+      throw new Error(`候选冻结哈希算法不兼容：${lockFile}`);
+    }
+    if (!/^[a-f0-9]{64}$/.test(String(value.expected_sha256 || ""))) {
+      throw new Error(`候选冻结 SHA-256 无效：${lockFile}`);
+    }
+    return value;
+  }
+
+  function verifyWorkspace(root, expectedSha256, label, { allowIgnoredRuntimeDirectories = false } = {}) {
+    const snapshot = snapshotWorkspace(root);
+    const ignoredDirectoriesValid = allowIgnoredRuntimeDirectories || snapshot.ignored_runtime_directories.length === 0;
+    const result = {
+      stage: label,
+      checked_at: new Date().toISOString(),
+      sha256: snapshot.sha256,
+      file_count: snapshot.file_count,
+      total_bytes: snapshot.total_bytes,
+      ignored_runtime_directories: snapshot.ignored_runtime_directories,
+      forbidden_directories: snapshot.forbidden_directories,
+      valid: snapshot.sha256 === expectedSha256
+        && snapshot.forbidden_directories.length === 0
+        && ignoredDirectoriesValid,
+    };
+    if (!result.valid) {
+      let detail = `候选产物发生漂移：${label}，期望 ${expectedSha256}，实际 ${snapshot.sha256}`;
+      if (snapshot.forbidden_directories.length) {
+        detail = `候选产物包含禁止目录：${snapshot.forbidden_directories.join(", ")}`;
+      } else if (!ignoredDirectoriesValid) {
+        detail = `候选产物包含未声明为可忽略的运行时目录：${snapshot.ignored_runtime_directories.join(", ")}`;
+      }
+      throw Object.assign(new Error(detail), { integrityCheck: result });
+    }
+    return result;
+  }
+
+  return Object.freeze({
+    treeHashAlgorithm,
+    candidateArtifactSchema,
+    runtimeDirectoryPolicySchema,
+    ignoredRuntimeDirs,
+    forbiddenCandidateDirs,
+    excludedTreeDirs,
+    runtimeDirectoryPolicy,
+    validateRuntimeDirectoryPolicy,
+    sameRuntimeDirectoryPolicy,
+    snapshotWorkspace,
+    loadCandidateArtifact,
+    verifyWorkspace,
+  });
+}

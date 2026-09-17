@@ -3,6 +3,11 @@ import { existsSync } from "node:fs";
 import { access, realpath, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import * as systemPath from "node:path";
+import {
+  isDirectory,
+  isFile,
+  runCapture,
+} from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 
 export const MACOS_APP_PATH = "/Applications/AStudio.app";
 export const WINDOWS_EXECUTABLE_NAMES = Object.freeze([
@@ -38,25 +43,6 @@ export function sanitizeAstronLaunchEnvironment(environment = process.env) {
   }
   removedVariables.sort((left, right) => left.localeCompare(right));
   return { environment: sanitized, removedVariables };
-}
-
-function runCapture(command, args, options = {}) {
-  return new Promise((resolvePromise, rejectPromise) => {
-    const { allowFailure = false, capture: _capture = true, ...spawnOptions } = options;
-    const child = spawn(command, args, {
-      stdio: ["ignore", "pipe", "pipe"],
-      ...spawnOptions,
-    });
-    let stdout = "";
-    let stderr = "";
-    child.stdout?.on("data", (chunk) => { stdout += chunk; });
-    child.stderr?.on("data", (chunk) => { stderr += chunk; });
-    child.once("error", rejectPromise);
-    child.once("exit", (code) => {
-      if (code === 0 || allowFailure) resolvePromise({ code, stdout, stderr });
-      else rejectPromise(new Error(`${command} 执行失败（退出码 ${code}）：${stderr.trim()}`));
-    });
-  });
 }
 
 function spawnDetached(command, args, options = {}) {
@@ -98,24 +84,6 @@ function windowsCommandExecutable(commandLine) {
 function parseRegistryInstallLocation(stdout) {
   const match = String(stdout || "").match(/^\s*InstallLocation\s+REG_\w+\s+(.+?)\s*$/imu);
   return match?.[1]?.trim() || null;
-}
-
-async function isFile(path, statPath) {
-  try {
-    return (await statPath(path)).isFile();
-  } catch (error) {
-    if (error?.code === "ENOENT") return false;
-    throw error;
-  }
-}
-
-async function isDirectory(path, statPath) {
-  try {
-    return (await statPath(path)).isDirectory();
-  } catch (error) {
-    if (error?.code === "ENOENT") return false;
-    throw error;
-  }
 }
 
 async function findWindowsExecutable(candidate, dependencies) {

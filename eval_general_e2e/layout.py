@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
+from .adapters import inspect_shared_component_layout
 from .stages import GENERAL_E2E_SKILLS
 
 
@@ -130,6 +131,9 @@ def inspect_repository_layout(repo_root: Union[str, Path]) -> Dict[str, object]:
             "detail": f"missing legacy files: {legacy_missing}",
         })
 
+    shared_components = inspect_shared_component_layout(root)
+    errors.extend(shared_components["errors"])
+
     return {
         "schema_version": "wildclawbench.general-e2e-layout-check/v1",
         "status": "PASS" if not errors else "FAIL",
@@ -142,5 +146,6 @@ def inspect_repository_layout(repo_root: Union[str, Path]) -> Dict[str, object]:
             "missing_files": legacy_missing,
             "preserved": not legacy_missing,
         },
+        "shared_components": shared_components,
         "errors": errors,
     }

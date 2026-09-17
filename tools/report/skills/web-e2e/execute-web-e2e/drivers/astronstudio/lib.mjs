@@ -3,6 +3,7 @@ import { access, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 
 import {
   AUTOMATION_SCHEMA,
@@ -106,21 +107,6 @@ export function assertStateMatches(state, config, identity) {
 
 export async function updateExecutionRecord(config, identityInfo, update) {
   return updateBaseExecutionRecord(config, identityInfo, update, ASTRONSTUDIO_PROFILE);
-}
-
-function runCapture(command, args) {
-  return new Promise((resolvePromise, rejectPromise) => {
-    const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"] });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.on("data", (chunk) => { stdout += chunk; });
-    child.stderr.on("data", (chunk) => { stderr += chunk; });
-    child.once("error", rejectPromise);
-    child.once("exit", (code) => {
-      if (code === 0) resolvePromise({ stdout, stderr });
-      else rejectPromise(new Error(`${command} 执行失败（退出码 ${code}）：${stderr.trim()}`));
-    });
-  });
 }
 
 let nodeSqlitePromise;

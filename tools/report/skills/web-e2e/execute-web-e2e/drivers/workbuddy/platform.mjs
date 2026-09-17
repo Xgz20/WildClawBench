@@ -3,28 +3,17 @@ import { existsSync } from "node:fs";
 import { access, readdir, realpath, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import * as systemPath from "node:path";
+import {
+  isDirectory,
+  isFile,
+  runCapture,
+} from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 
 export const MACOS_APP_PATH = "/Applications/WorkBuddy.app";
 export const MACOS_BUNDLE_ID = "com.tencent.workbuddy.mac";
 export const WINDOWS_EXECUTABLE_NAMES = Object.freeze(["WorkBuddy.exe", "CodeBuddy.exe"]);
 
 let nodeSqlitePromise;
-
-function runCapture(command, args, options = {}) {
-  return new Promise((resolvePromise, rejectPromise) => {
-    const { allowFailure = false, capture: _capture = true, ...spawnOptions } = options;
-    const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"], ...spawnOptions });
-    let stdout = "";
-    let stderr = "";
-    child.stdout?.on("data", (chunk) => { stdout += chunk; });
-    child.stderr?.on("data", (chunk) => { stderr += chunk; });
-    child.once("error", rejectPromise);
-    child.once("exit", (code) => {
-      if (code === 0 || allowFailure) resolvePromise({ code, stdout, stderr });
-      else rejectPromise(new Error(`${command} 执行失败（退出码 ${code}）：${stderr.trim()}`));
-    });
-  });
-}
 
 function spawnDetached(command, args, options = {}) {
   return new Promise((resolvePromise, rejectPromise) => {
@@ -60,24 +49,6 @@ function windowsCommandExecutable(commandLine) {
     return closingQuote > 1 ? value.slice(1, closingQuote) : "";
   }
   return value.split(/\s+/u, 1)[0];
-}
-
-async function isFile(path, statPath) {
-  try {
-    return (await statPath(path)).isFile();
-  } catch (error) {
-    if (error?.code === "ENOENT") return false;
-    throw error;
-  }
-}
-
-async function isDirectory(path, statPath) {
-  try {
-    return (await statPath(path)).isDirectory();
-  } catch (error) {
-    if (error?.code === "ENOENT") return false;
-    throw error;
-  }
 }
 
 async function findWindowsExecutable(candidate, dependencies) {
