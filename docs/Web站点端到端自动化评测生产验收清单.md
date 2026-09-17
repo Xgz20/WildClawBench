@@ -1,29 +1,31 @@
 # Web 站点端到端自动化评测生产验收清单
 
-本文是 Web E2E 自动化发布候选的 Git 管理验收台账。Windows 或 macOS 真机验证必须以本文为任务清单，记录同一发布身份下的状态和证据；代码测试、旧批次结果和口头结论不能替代当前真机验收。
+本文仅供内部开发和发布验收使用，是 Web E2E 自动化发布候选的 Git 管理验收台账。Windows 或 macOS 真机验证必须以本文为任务清单，记录同一发布身份下的状态和证据；代码测试、旧批次结果和口头结论不能替代当前真机验收。
 
 ## 1. 当前结论
 
-当前发布候选中，AstronStudio×Windows 和 WorkBuddy×Windows 均已完成 V00–V17，状态为 **无人值守高可用已验证**；QwenWork×Windows 已完成当前身份的单 L1 execution→score→submission→return，状态为 **主流程生产可用**。独立的 Windows 资源指标门禁已在 revision `ff5d476b3355960a71326ba4944a63923ce7022c` 上完成 P6–P9，三个 Harness 的四个核心 Token 字段均为 `observed`，状态为 **PASSED**；这只升级资源指标可汇总结论，不改变 QwenWork 的并发与恢复准入层级。
+当前功能准入结论中，AstronStudio×Windows 和 WorkBuddy×Windows 均已完成 V00–V17，状态为 **无人值守高可用已验证**；QwenWork×Windows 已完成当前身份的单 L1 execution→score→submission→return，状态为 **主流程生产可用**。独立的 Windows 资源指标门禁已在 revision `ff5d476b3355960a71326ba4944a63923ce7022c` 上完成 P6–P9，三个 Harness 的四个核心 Token 字段均为 `observed`，状态为 **PASSED**；这只升级资源指标可汇总结论，不改变 QwenWork 的并发与恢复准入层级。
 
-AstronStudio×Windows 发布实现 revision 为 `6988b5252bc9140e86dae139fdffbcfc964bcfbf`，正式包锁定 execute 1.11.16 / AstronStudio Driver 1.10.18 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.7 / report 1.0.2。Windows 10 10.0.19042 x64 真机使用 AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、GLM-5.2 / High / full-access：正式 ZIP 的单 Prompt 执行→评分→submission→return 已闭环；独立控制任务接管、Harness 重启安全失败、Codex 平台托管重启、发送前唯一重试、执行超时、评分 attempt 隔离和 submission 发布中断恢复均通过。V03–V10 依据完全一致的 execute/score/report/run 内容 SHA、实际 orchestrate 0.2.6 运行身份及正式 ZIP V11 冒烟完成证据重绑定；默认端口 9240 已恢复并重新通过进程路径检查。
+AstronStudio×Windows 功能准入基线 revision 为 `6988b5252bc9140e86dae139fdffbcfc964bcfbf`，验收包锁定 execute 1.11.16 / AstronStudio Driver 1.10.18 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.7 / report 1.0.2。Windows 10 10.0.19042 x64 真机使用 AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、GLM-5.2 / High / full-access：正式 ZIP 的单 Prompt 执行→评分→submission→return 已闭环；独立控制任务接管、Harness 重启安全失败、Codex 平台托管重启、发送前唯一重试、执行超时、评分 attempt 隔离和 submission 发布中断恢复均通过。V03–V10 依据完全一致的 execute/score/report/run 内容 SHA、实际 orchestrate 0.2.6 运行身份及正式 ZIP V11 冒烟完成证据重绑定；默认端口 9240 已恢复并重新通过进程路径检查。
 
-WorkBuddy×Windows 发布实现 revision 为 `ee70a67b0d53bf700a389b7fbe3f68fde3c3b288`，补充验收包锁定 execute 1.11.21 / WorkBuddy Driver 1.8.24 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.8 / report 1.0.2。同一 Windows 真机使用 WorkBuddy 5.5.6.0、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、xopglm52 / full-access：V03 单题、V05 默认双路五题动态补位、五题评分/回传/报告、正式包单 Prompt、独立控制任务接管、Harness 重启安全失败、Codex 平台托管重启、发送前唯一重试、执行超时、评分 attempt 隔离和 submission 发布中断恢复均通过。
+WorkBuddy×Windows 功能准入基线 revision 为 `ee70a67b0d53bf700a389b7fbe3f68fde3c3b288`，补充验收包锁定 execute 1.11.21 / WorkBuddy Driver 1.8.24 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.8 / report 1.0.2。同一 Windows 真机使用 WorkBuddy 5.5.6.0、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、xopglm52 / full-access：V03 单题、V05 默认双路五题动态补位、五题评分/回传/报告、正式包单 Prompt、独立控制任务接管、Harness 重启安全失败、Codex 平台托管重启、发送前唯一重试、执行超时、评分 attempt 隔离和 submission 发布中断恢复均通过。
 
-QwenWork×Windows 当前验收 revision 为 `24771ce5f86f9bbc9336cf0c0c48effa5f0b2990`，单题包锁定 execute 1.11.21 / QwenWork Driver 1.10.10 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.8 / report 1.0.2。同一 Windows 真机使用 QwenWorkCN 1.0.5.0、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、标准｜Qwen3.8-Flash / full-access：probe、单 L1 执行、Codex 可见 UI 项目注册、内置 Browser 评分、submission 和 return 均通过，评分 88 分，候选双副本哈希无漂移，三阶段状态均为 `COMPLETED`。终态截图曾连续超时，控制端停止旧观察进程后以同一 run-id/attempt 重启 QwenWork 并恢复采集，未重发 Prompt，最终回执仍为 `SUCCEEDED` 且 `manual_interventions=[]`。该结论允许先进入受控正式评测，但首个正式批次必须先跑 3–5 个 L1 canary；当前身份的三题串行、默认三槽、并发评分、管理员 import/report 和 V12–V17 尚未重新绑定，因此不能标记为“并发生产可用”或“无人值守高可用”。
+QwenWork×Windows 主流程功能准入基线 revision 为 `24771ce5f86f9bbc9336cf0c0c48effa5f0b2990`，单题包锁定 execute 1.11.21 / QwenWork Driver 1.10.10 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.8 / report 1.0.2。同一 Windows 真机使用 QwenWorkCN 1.0.5.0、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、标准｜Qwen3.8-Flash / full-access：probe、单 L1 执行、Codex 可见 UI 项目注册、内置 Browser 评分、submission 和 return 均通过，评分 88 分，候选双副本哈希无漂移，三阶段状态均为 `COMPLETED`。终态截图曾连续超时，控制端停止旧观察进程后以同一 run-id/attempt 重启 QwenWork 并恢复采集，未重发 Prompt，最终回执仍为 `SUCCEEDED` 且 `manual_interventions=[]`。该结论允许先进入受控正式评测，但首个正式批次必须先跑 3–5 个 L1 canary；当前身份的三题串行、默认三槽、并发评分、管理员 import/report 和 V12–V17 尚未重新绑定，因此不能标记为“并发生产可用”或“无人值守高可用”。
 
 AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 的 execution→score→submission→return，状态为 **主流程生产可用**：AstronStudio 3.0.0-alpha.19、Codex Desktop 26.908.70816、GLM-5.2 / High / full-access，执行回执 `integrity.valid=true`，评分 81 分，候选双副本哈希无漂移，三阶段状态均为 `COMPLETED`。该结论允许先进入受控正式评测，但首个正式批次必须先跑 3–5 个 L1 canary 再放大；当前 revision 的三题串行、五题默认三槽、三路评分动态补位、管理员 import/report 和 V12–V17 恢复边界尚未重新绑定，因此不能标记为“并发生产可用”或“无人值守高可用”。macOS 本地重打包与 Windows `232007` 正式包的 Skill content SHA 未能重现一致，当前只作为独立 macOS 包身份使用，不能冒充 Windows 原始 ZIP；跨平台内容哈希差异另行修复。QwenWork 和其余 macOS 组合不在当前高可用声明范围。
+
+当前对外分发包已更新为 `web-e2e-20260917-153405-custom40` 和 `web-e2e-20260917-153405-opensource120`，source revision 均为 `b8296d8f4ec7a2bf81b814e4460453c0bf5e4068`。分发包已包含资源指标工作空间；上述各 Harness 准入结论仍按实际真机验收身份解读，不因重新打包自动升级。
 
 ### 当前实施进度
 
 | 阶段 | 状态 | 完成条件 | 证据 |
 | --- | --- | --- | --- |
 | P0 修复跨平台发布门禁 | `PASSED` | macOS 三 Harness 前置准备、Windows 精确进程身份、QwenWork 重启入口、测试入口和路径兼容测试全部通过 | 原发布门禁测试均通过；升级后项目对话框兼容修改的 Codex Desktop Driver 为 52/52、准备工作空间 31/31 |
-| P1 固化发布 revision | `PASSED` | 只提交相关改动，记录完整 commit SHA，工作树中无遗漏的相关修改 | AstronStudio 基线 `6988b5252bc9140e86dae139fdffbcfc964bcfbf`；WorkBuddy 补充发布 `ee70a67b0d53bf700a389b7fbe3f68fde3c3b288`；QwenWork 当前单 L1 验收包绑定 `24771ce5f86f9bbc9336cf0c0c48effa5f0b2990` |
-| P2 生成正式包 | `PASSED` | 自建 40 题、开源 120 题各生成一个新批次，两个批次均包含三 Harness 并绑定实际打包 revision；受影响 Harness 的补充验收包绑定增量 revision；五个 Skill 版本与 SHA 完整 | 基线 `web-e2e-20260915-232007-custom40` / `opensource120` 共 22/22 ZIP SHA 通过；WorkBuddy 补充包 `windows-wb-release-ee70a67-v03/v05-20260916-0616` 绑定 `ee70a67`；QwenWork 单题包 `windows-qwen-mainflow-24771ce-l1-20260916-113542` 绑定 `24771ce` |
+| P1 固化发布 revision | `PASSED` | 只提交相关改动，记录完整 commit SHA，工作树中无遗漏的相关修改 | 当前正式分发包 `b8296d8f4ec7a2bf81b814e4460453c0bf5e4068`；功能准入基线分别为 AstronStudio `6988b525...`、WorkBuddy `ee70a67...`、QwenWork `24771ce...` |
+| P2 生成正式包 | `PASSED` | 自建 40 题、开源 120 题各生成一个新批次，两个批次均包含三 Harness、资源指标记录和五个版本化 Skill ZIP | `web-e2e-20260917-153405-custom40` / `opensource120`，source revision `b8296d8...`；每批 11 个 ZIP，共 22/22 SHA 匹配；6 个 execution ZIP 分别包含 40/120 份 `execution_record.json`，execution/scoring 公私边界审计通过 |
 | P3 macOS 受影响项回归 | `IN_PROGRESS` | 依照第 4 节完成并登记证据 | AstronStudio 当前 revision 的单 L1 execution→score→submission→return 已通过，达到“主流程生产可用”；并发重绑定、管理员 import/report 和 V12–V17 尚未完成 |
 | P4 Windows 真机回归 | `IN_PROGRESS` | 每个目标 Harness 依照第 4 节完成并登记证据 | AstronStudio×Windows、WorkBuddy×Windows V00–V17 已全部通过；QwenWork×Windows 当前身份的 V00/V02/V03/V06/V08/V09/V11 已通过，达到“主流程生产可用”，更高层级仍待按需迭代 |
-| P5 发布结论 | `PASSED` | 所有对外声明均绑定明确准入层级，未通过组合在指导手册中降级 | AstronStudio×Windows、WorkBuddy×Windows 为“无人值守高可用”；AstronStudio×macOS、QwenWork×Windows 为“主流程生产可用”；其他组合沿用旧证据或待验收 |
+| P5 发布结论 | `PASSED` | 平台准入层级、验证状态和待验收项只在本内部清单维护；对外指导手册只提供可执行的使用说明 | 指导手册已移除平台验证状态、revision、验收矩阵和待验证说明；各 Harness 的内部准入结论继续以本清单为准 |
 
 ### 1.1 Windows 资源指标验收增补（实现三 Harness 结果可汇总）
 
@@ -46,8 +48,8 @@ AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 �
 
 #### P6：源码与 Windows 分发包门禁
 
-- [x] 当前提交包含 `execute-web-e2e` 资源采集器、三个 Driver 的终态调用、统一 `execution_record.json` 写入和独立的 QwenWork runtime Profile；不能继续使用旧的 execute 1.11.x / Driver 1.10.x 包。
-- [x] 在 Windows 干净目录安装本次最新 Skill 包；当前实现候选为 execute `1.12.3`、WorkBuddy Driver `1.8.27`、AstronStudio Driver `1.10.21`、QwenWork Driver `1.10.14`，实际值以本批次 `skills-manifest.json` 为准。
+- [x] 当前提交包含 `execute-web-e2e` 资源采集器、三个 Driver 的终态调用、统一 `execution_record.json` 写入和独立的 QwenWork runtime Profile；不能继续使用不含资源采集的 execute 1.11.x 旧包。
+- [x] 在 Windows 干净目录安装本次最新 Skill 包；当前正式分发包为 execute `1.12.6`、WorkBuddy Driver `1.8.27`、AstronStudio Driver `1.10.21`、QwenWork Driver `1.10.17`，实际值以本批次 `skills-manifest.json` 和包内 Driver metadata 为准。
 - [x] Windows Node.js 运行所有 metrics/Driver 测试并记录退出码；SQLite 优先使用 `node:sqlite`，只有运行时不提供时才验证 `py -3`/`python` 的只读回退。不得把依赖安装到题目 `workspace/`。
 - [x] 重新计算 Skill content SHA、ZIP SHA 和 `source_revision`，并将它们写入本清单；旧包的 SHA 或旧验收包不能作为本门禁证据。
 
@@ -57,16 +59,14 @@ AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 �
 
 - [x] **AstronStudio×Windows**：确认 Driver 能从当前用户状态库按桌面 thread/turn 精确映射原生 session，原生日志 cwd 与题目根一致；`input/output/total/cache_read/request_count/call_count/agent_duration_seconds` 均为 `observed` 或 `inferred`。
 - [x] **WorkBuddy×Windows**：确认本地 session JSONL 按唯一 conversation/message ID 关联，消息 usage 去重且 cwd 一致；同上核心字段有效，缺失字段只能记录 `partial` 与已知小计。
-- [x] **QwenWork×Windows**：先执行下列显式开关命令启动新进程，再发送题目；不能只给已有进程设置环境变量：
+- [x] **QwenWork×Windows**：使用 execute-web-e2e 1.12.6 或更新版本的普通单题/批量入口，由 Driver 在首题前安全重启客户端并只向新客户端子进程注入 Token 开关。不在控制终端、系统全局环境或题目 Prompt 中手工设置 `QODERCN_EXPOSE_TOKEN_USAGE`：
 
   ```bat
-  set "QODERCN_EXPOSE_TOKEN_USAGE=1"
-  call "C:\Skills\execute-web-e2e\scripts\run-qwenwork.cmd" "D:\WebE2E\<batch_id>__qwenwork\execution\tasks\<task_id>" --restart-app
-  set "QODERCN_EXPOSE_TOKEN_USAGE="
+  call "C:\Skills\execute-web-e2e\scripts\run-qwenwork.cmd" "D:\WebE2E\<batch_id>__qwenwork\execution\tasks\<task_id>"
   ```
 
-  [x] 记录新进程确实由该命令启动，回读 transcript 的 provider、版本和主 turn；按 request ID 去重，响应集合与 `turn.finished` 终值一致，输入已含缓存，且 `cache_read_input_tokens <= input_tokens`。
-  [x] 读取 Windows 当前 QwenWork runtime、SDK package 和 transcript 版本，计算 runtime SHA-256。若与已验 macOS Profile 不同，新增独立 Windows Profile；若相同，也必须把 Profile 平台匹配规则扩展为 Windows 并补测试。未完成前，QwenWork Token 状态保持 `unverified`，不能宣称三 Harness Token 已打通。
+  [x] 记录新进程由 Driver 管理开关（`managed_by=qwenwork-driver`），回读 transcript 的 provider、版本和主 turn；按 request ID 去重，响应集合与 `turn.finished` 终值一致，输入已含缓存，且 `cache_read_input_tokens <= input_tokens`。
+  [x] 读取 Windows 当前 QwenWork runtime、SDK package 和 transcript 版本，计算 runtime SHA-256；已建立 Windows 精确 Profile 并补齐平台、客户端版本、SDK、transcript 和 runtime SHA 匹配测试。任一身份漂移时 Token 状态保持 `unverified`，不进入完整总量。
 
 #### P8：评分回传透传门禁
 
@@ -185,7 +185,7 @@ JSON 和 Markdown 中三个 Harness 的资源总量、覆盖率和来源状态�
 
 collector `1.1.3` 在正式终态原生写入 input `1531951`、output `23861`、total `1555812`、cache read `1449600`、请求 `26`、工具 `25`，四项核心 Token、请求数、工具数和两类耗时均为 `observed`，警告为空。运行身份为 `@ali/qodercn-agent-sdk-next@1.0.28`、transcript `1.1.32`、runtime SHA `e86620b7e772d1f536ba15beea8c3059bf6075dffb478aceaa8cad328a879c28`，精确命中 `qwenwork-1.0.6-qoder-cache-inclusive-v1`。主 turn `6e47d1ef-1c2b-4f05-b037-e8cd107e7646` 的 `model.request.started` 与 `model.response.completed` 均为 26 个唯一 ID，集合一致、provider 全部为 `qoder`、零 usage 响应数与 `cache_read > input` 异常数均为 0；唯一 `turn.finished` 与逐响应总和一致。另有 4 个后台请求和 3 个后台工具调用，已作为 `background-turn` 排除于主任务统计。
 
-正式证据 SHA-256：execution receipt `a90160dcde98b7bdcf51d2984aeb446a82bca957205d0cbca930af3a0ebeecaa`，execution record `b2f749c70be0fb4a2abf7b63c6797fba0c04e1905b3cc99aa15b179008d4636e`，automation state `407d3aee3cee1ec49558695bb3cd635c806ec3569acecf830fc25bfb189cbd93`，queue state `50d6947e7222a94373b43f2b2d62cb9d56a93fb7a8b766f8079fff1ee375c165`。据此，execute `1.12.6` / Driver `1.10.17` / collector `1.1.3` 在 Windows QwenWorkCN `1.0.6.0` 下的“自动注入 + 单 L1 资源指标”门禁为 `PASSED`；用户不需要手工开启 Token 开关。首个正式批次仍按指导手册使用 3–5 个 L1、并发 1 的 canary，之后再按受影响范围恢复并发。
+正式证据 SHA-256：execution receipt `a90160dcde98b7bdcf51d2984aeb446a82bca957205d0cbca930af3a0ebeecaa`，execution record `b2f749c70be0fb4a2abf7b63c6797fba0c04e1905b3cc99aa15b179008d4636e`，automation state `407d3aee3cee1ec49558695bb3cd635c806ec3569acecf830fc25bfb189cbd93`，queue state `50d6947e7222a94373b43f2b2d62cb9d56a93fb7a8b766f8079fff1ee375c165`。据此，execute `1.12.6` / Driver `1.10.17` / collector `1.1.3` 在 Windows QwenWorkCN `1.0.6.0` 下的“自动注入 + 单 L1 资源指标”门禁为 `PASSED`；用户不需要手工开启 Token 开关。新正式包按本清单 6.2 先执行 3–5 个 L1、并发 1 的 QwenWork canary，之后再按受影响范围恢复并发。
 
 ## 2. 状态与更新规则
 
@@ -221,42 +221,36 @@ collector `1.1.3` 在正式终态原生写入 input `1531951`、output `23861`�
 
 ## 3. 发布身份
 
-### 3.1 当前发布候选
+### 3.1 当前正式分发包
 
-下表记录已固化并重新打包的发布身份。真机验收必须使用本节的 revision、Skill content SHA 和新批次；`100045`、`183141` 及更早批次只能作为历史证据。
+下表是当前用于新评测的分发身份。真机执行必须使用本节登记的批次、Skill content SHA 和 ZIP SHA；`20260917-153405` 之前的批次仅作为历史证据或故障对照。
 
 | 项目 | 值 |
 | --- | --- |
-| 基线正式包实现/source revision | `6988b5252bc9140e86dae139fdffbcfc964bcfbf` |
-| WorkBuddy 补充发布实现/source revision | `ee70a67b0d53bf700a389b7fbe3f68fde3c3b288` |
-| QwenWork Windows 主流程验收实现/source revision | `24771ce5f86f9bbc9336cf0c0c48effa5f0b2990` |
-| `execute-web-e2e` | 基线 `1.11.16`；WorkBuddy/QwenWork 补充验收 `1.11.21` |
-| WorkBuddy Driver | `1.8.24` |
-| AstronStudio Driver | `1.10.18` |
-| QwenWork Driver | `1.10.10` |
+| 正式分发包实现/source revision | `b8296d8f4ec7a2bf81b814e4460453c0bf5e4068` |
+| 自建评测批次 | `web-e2e-20260917-153405-custom40`，40 题，`web-e2e-detailed-v1` |
+| 开源评测批次 | `web-e2e-20260917-153405-opensource120`，120 题，`artifactsbench-web-v1` |
+| 被评 Harness | `astronstudio`、`workbuddy`、`qwenwork` |
+| `execute-web-e2e` | `1.12.6` |
+| AstronStudio / WorkBuddy / QwenWork Driver | `1.10.21` / `1.8.27` / `1.10.17` |
 | `orchestrate-web-e2e` | `0.2.6` |
 | `score-web-e2e` | `4.5.2` |
-| `run-web-e2e` | 基线 `1.3.7`；WorkBuddy/QwenWork 补充验收 `1.3.8` |
-| `report-web-e2e` | `1.0.2` |
-| Skill ZIP/content SHA | 见下表；两个正式批次逐项一致 |
-| Node.js / Playwright | `Node.js 24.17.0；Driver 锁定 playwright-core 1.55.0` |
+| `run-web-e2e` | `1.3.9` |
+| `report-web-e2e` | `1.1.0` |
+| 执行记录 | `execution_record_included=true`；每个 execution ZIP 包含全部用例的 `execution_record.json` |
+| 报告配置 | `configuration_status=requires_model_mapping`；生成正式报告前必须填写三个 Harness 的 `model_id`，`model_display_name` 和 `reasoning_effort` 按实际评测配置填写 |
 
 | Skill | 版本 | content SHA-256 | ZIP SHA-256 |
 | --- | --- | --- | --- |
-| `score-web-e2e` | `4.5.2` | `9e870f17452d00d11a2d0f339b4e12d477bceb623206af34cc6f76bb64625e93` | `4ce81bbc5126be94254c38ec4c7fed58c7a3a02efa13f4d53b0d3e1843c66425` |
-| `report-web-e2e` | `1.0.2` | `e931fe4668189caf3ea8ff3323c7aec99eadba2a991a402c509d439af9a629dc` | `485ad4b56908c47ea0ceafb690be49432b9c11b90d143d62d33894214deff280` |
-| `orchestrate-web-e2e` | `0.2.6` | `7b2c9fca36a158dc5e0beb98642aef1684bce23e76457b92ea8ff527a5db27a4` | `73d578ab6f21d03d10d0d5bd0ca235422809f5cda730707f69eafc11b73fc211` |
-| `execute-web-e2e` | `1.11.16` | `f0b5e84344761cc61e5a33dc1db142123368762045ce43e9a1b7bf0b3691f970` | `af7188824bc97c5535bee5e195bae327e0a1783ce77115d0fdf142bf22f30881` |
-| `run-web-e2e` | `1.3.7` | `448bfb2c59d0575afda7fe8efe7f845cec2a68d430b85a41598e88cae4cc5c7d` | `901652f564d535066b39f3f34ee4982d7bce36f834ed988245f6b3609f4d5ee7` |
+| `score-web-e2e` | `4.5.2` | `6fdc8e9a9a8d014b4dab2a4c053d586a08e1f962f03a5071817e251aa2defe0a` | `34afc5c963f21ca9815d02d0b89a8d0bb80cec9ec263e53c6fb50eb08f84cbf0` |
+| `report-web-e2e` | `1.1.0` | `051c7e6f89296d154a186e7776b53858b0fa11a1ed62f2578ca022a939460442` | `18ef1741d14bb650556ff97811b718640d2fdb9e11daf5423e197d84a71db734` |
+| `orchestrate-web-e2e` | `0.2.6` | `350224caf3e92793b559fcce23748f4817f0d95e09cd647d28daa2b53a3f4d70` | `d1882a4b1d370a32a542a9954bc6ec133853af51ca7c627e85a3a111a057d244` |
+| `execute-web-e2e` | `1.12.6` | `a75fb9baaf3e082b0892f242c77d4140ec1de65aea085cb099d954331e46a07e` | `f308c9f339507309b6cf21fbc9164c6470086e180c83667eb9cbe9a6d3ec2845` |
+| `run-web-e2e` | `1.3.9` | `8461fa7a2619ca337e9a123edd7b69b2db79f8e9c5b7e8cd06071e9479d4886f` | `1e3b407e89e8d1d295a72d8d6e104f04bc0060ccc50f8d657f11822f34375e68` |
 
-WorkBuddy 补充验收包在 manifest 中额外锁定 `execute-web-e2e` 1.11.21（content SHA `acaefe68f7ccdbcd3ebf527cf14e9b3cd734078ec0b777550a7d0cd94b571ab5`）和 `run-web-e2e` 1.3.8（content SHA `c7c98ed8038ef5725efeff243b3da101747c0ec5d902f13423aee0f69c57d820`）；其余三个 Skill content SHA 与上表一致。补充包用于 WorkBuddy 当前 revision 真机晋级，不改写 `232007` 基线归档的 source revision 或 ZIP SHA。
+正式包位于 `report-workspace/web-e2e-automation-packages/`。两个批次均包含三个 Harness 的 execution/scoring ZIP 和五个 Skill ZIP，每批 11 个 ZIP。本轮只读审计逐项重算 22 个 ZIP 的 SHA-256，结果全部与 `batch_manifest.json` 一致；6 个 execution ZIP 分别含有 40/120 份 `execution_record.json`，execution/scoring 公私边界审计通过。
 
-正式包位于 `report-workspace/web-e2e-automation-packages/`：
-
-- `web-e2e-20260915-232007-custom40`：40 个自建用例，`web-e2e-detailed-v1`；
-- `web-e2e-20260915-232007-opensource120`：120 个开源用例，`artifactsbench-web-v1`。
-
-两个批次均包含 `astronstudio`、`workbuddy`、`qwenwork`，各有 11 个 ZIP。2026-09-15 的只读审计逐项重算了 22 个 ZIP 的 SHA-256，结果均与各自 `batch_manifest.json` 一致；6 个 execution ZIP 均不含 Ground Truth、Rubric、checker、`eval/`、`gt/`、`private-scoring/` 或 `task_contract.json`，6 个 scoring ZIP 均不含 `workspace/`、`PROMPT.md`、`execution_record.json` 或 `task_manifest.json`。五个 Skill 的版本、content SHA 和 ZIP SHA 在两个批次中逐项一致。`report_config_ready=false` 表示管理员尚未填写本次实际模型映射，是准备阶段的预期状态。各 execution/scoring ZIP 的独立 SHA 以对应批次 `batch_manifest.json` 为准。
+以下 3.1.1–3.1.4 保留各 Harness 功能准入的真机基线和重绑关系。这些记录用于解释当前准入等级，不是应继续分发的旧 Skill 包。
 
 ### 3.1.1 AstronStudio Windows 证据沿用与正式包重绑定
 
@@ -264,7 +258,7 @@ WorkBuddy 补充验收包在 manifest 中额外锁定 `execute-web-e2e` 1.11.21�
 
 ### 3.1.2 AstronStudio macOS 独立包身份
 
-macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了独立单题批次 `web-e2e-20260916-095335-mac-astron-release-6988b52-smoke`。批次内五个 Skill 版本与 3.1 相同，但实际 content SHA 为 score `6fdc8e9a...`、report `a2236d07...`、orchestrate `350224ca...`、execute `c73a0c0d...`、run `4b9e7748...`，没有重现 Windows `232007` manifest 中的 content SHA；CRLF 模拟也未得到精确匹配，根因尚未确认。该批次 manifest、解压后的隔离 Skill 和评分时独立安装的 score 4.5.2 在本批次内部完全一致，`check_web_e2e_skills.py` 返回 `all_current=true`，所以本轮真机结果可证明这个 macOS 独立包身份的功能，不证明 Windows ZIP 可在 macOS 重现，也不允许把两者作为同一个归档身份混用。
+macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了独立单题批次 `web-e2e-20260916-095335-mac-astron-release-6988b52-smoke`。批次内五个 Skill 版本与当时 `6988b525...` 基线一致，实际 content SHA 为 score `6fdc8e9a...`、report `a2236d07...`、orchestrate `350224ca...`、execute `c73a0c0d...`、run `4b9e7748...`，没有重现 Windows `232007` manifest 中的 content SHA；CRLF 模拟也未得到精确匹配，根因尚未确认。该批次 manifest、解压后的隔离 Skill 和评分时独立安装的 score 4.5.2 在本批次内部完全一致，`check_web_e2e_skills.py` 返回 `all_current=true`，所以本轮真机结果可证明这个 macOS 独立包身份的功能，不证明 Windows ZIP 可在 macOS 重现，也不允许把两者作为同一个归档身份混用。
 
 本轮 execution/scoring ZIP SHA 分别为 `90b9c767...` / `ffc6a65d...`。跨平台 content SHA 不可复现是发布工程问题，后续应统一文本换行、文件排序和内容哈希规范，并用同一测试向量在 macOS/Windows 双端重算；修复只影响打包/哈希身份时不要求重跑已经完成的页面评分，但必须重新执行 Skill 安装校验和一个 L1 包级冒烟。
 
@@ -301,13 +295,13 @@ macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了
 | `windows-astron-driver-11016-20260915` | Windows 10 10.0.19042 / x64 | AstronStudio 3.2.1.242 | GLM-5.2 / High | 未启动评分；Codex 9230 未启用 | `windows-astron-driver-1.10.16-functional-20260915-173623` | Codex（本机） | 2026-09-15 | 未提交功能候选；V02 通过，V03 两个隔离 attempt 均失败关闭；未启动 V04–V09 |
 | `windows-astron-331277-20260915` | Windows 10 10.0.19042 / x64 | AstronStudio 3.3.1.277 | GLM-5.2 / High | 未启动评分；Codex 9230 未启用 | `windows-astron-driver-1.10.16-final-20260915-175731` | Codex（本机） | 2026-09-15 | 未提交功能候选；升级后 V02 通过，V03 两个隔离 attempt 均失败关闭；后端反复 `read ENOTCONN` 退出并重启，未启动 V04–V09 |
 | `windows-astron-331277-driver-11018-20260915` | Windows 10 10.0.19042 / x64 | AstronStudio 3.3.1.277 | GLM-5.2 / High | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `windows-as-driver-1.10.18-v05-20260915-194158` | Codex（本机） | 2026-09-15 | 未提交功能候选；AStudio 经环境隔离启动在 127.0.0.1:9241，后端 PID 34848；Codex 以 127.0.0.1:9230 完成评分；V02–V10 通过，平均分 74；项目注册使用未打包 orchestrate 0.2.6，默认 9240 仍有陈旧监听 |
-| `windows-astron-release-6988b52-20260916` | Windows 10 10.0.19042 / x64 | AstronStudio 3.3.1.277 | GLM-5.2 / High / full-access | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `web-e2e-20260915-232007-opensource120`；验证 batch `windows-as-release-6988b52-v11-20260915-232329` | Codex（本机） | 2026-09-16 | 当前正式发布身份；Node 24.17.0；AstronStudio 127.0.0.1:9240、Codex 127.0.0.1:9230；V00–V17 全部通过 |
-| `windows-workbuddy-release-ee70a67-20260916` | Windows 10 10.0.19042 / x64 | WorkBuddy 5.5.6.0 | xopglm52 / full-access | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `windows-wb-release-ee70a67-v03-20260916-0616`、`windows-wb-release-ee70a67-v05-20260916-0616` | Codex（本机） | 2026-09-16 | 当前 WorkBuddy 发布身份；Node 24.17.0；WorkBuddy 127.0.0.1:9229（V15 同身份恢复到 9299）、Codex 127.0.0.1:9230；V00–V17 全部通过 |
-| `windows-qwen-mainflow-24771ce-20260916` | Windows 10 10.0.19042 / x64 | QwenWorkCN 1.0.5.0 | 标准｜Qwen3.8-Flash / full-access | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `windows-qwen-mainflow-24771ce-l1-20260916-113542` | Codex（本机） | 2026-09-16 | 当前 QwenWork 主流程验收身份；Node 18.16.1；QwenWork 127.0.0.1:9250、Codex 127.0.0.1:9230；V00/V02/V03/V06/V08/V09/V11 通过 |
+| `windows-astron-release-6988b52-20260916` | Windows 10 10.0.19042 / x64 | AstronStudio 3.3.1.277 | GLM-5.2 / High / full-access | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `web-e2e-20260915-232007-opensource120`；验证 batch `windows-as-release-6988b52-v11-20260915-232329` | Codex（本机） | 2026-09-16 | AstronStudio Windows 功能准入基线；Node 24.17.0；AstronStudio 127.0.0.1:9240、Codex 127.0.0.1:9230；V00–V17 全部通过 |
+| `windows-workbuddy-release-ee70a67-20260916` | Windows 10 10.0.19042 / x64 | WorkBuddy 5.5.6.0 | xopglm52 / full-access | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `windows-wb-release-ee70a67-v03-20260916-0616`、`windows-wb-release-ee70a67-v05-20260916-0616` | Codex（本机） | 2026-09-16 | WorkBuddy Windows 功能准入基线；Node 24.17.0；WorkBuddy 127.0.0.1:9229（V15 同身份恢复到 9299）、Codex 127.0.0.1:9230；V00–V17 全部通过 |
+| `windows-qwen-mainflow-24771ce-20260916` | Windows 10 10.0.19042 / x64 | QwenWorkCN 1.0.5.0 | 标准｜Qwen3.8-Flash / full-access | Codex Desktop 26.908.9136；CDP runtime 152.0.7977.83 | `windows-qwen-mainflow-24771ce-l1-20260916-113542` | Codex（本机） | 2026-09-16 | QwenWork Windows 主流程功能准入基线；Node 18.16.1；QwenWork 127.0.0.1:9250、Codex 127.0.0.1:9230；V00/V02/V03/V06/V08/V09/V11 通过 |
 
 ## 4. Harness×OS 验收矩阵
 
-缩写：`N`=`NOT_STARTED`，`I`=`IN_PROGRESS`，`B`=`BLOCKED`，`P`=`PASSED`，`S`=`STALE`。矩阵记录当前发布候选状态，不能把下方历史证据直接改写成 `P`。
+缩写：`N`=`NOT_STARTED`，`I`=`IN_PROGRESS`，`B`=`BLOCKED`，`P`=`PASSED`，`S`=`STALE`。矩阵记录各 Harness×OS 的功能准入基线状态；分发包更新不会自动改写矩阵，也不能把下方历史证据直接改写成 `P`。
 
 | ID | 验收项 | macOS AstronStudio | macOS WorkBuddy | macOS QwenWork | Windows AstronStudio | Windows WorkBuddy | Windows QwenWork |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -339,7 +333,7 @@ macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了
 | V02 | 只读 `--probe` 成功；CDP 仅监听 `127.0.0.1`；端口监听者完整路径等于发现的主程序；桌面解锁、状态库和关键 UI 就绪 | probe JSON、主程序路径、端口/PID、客户端版本 |
 | V03 | 一个 L1 题目终态明确，模型/权限回读正确，候选非空，`execution_record.json` 与自动化状态一致 | task ID、automation state、execution record、候选 SHA |
 | V04 | 三题以 `run_slots=1` 自动切题，无重复项目、重复 Prompt 或跳题 | queue state、三题 conversation/thread ID、终态时间线 |
-| V05 | 五题使用 Harness 默认槽位（WorkBuddy `run_slots=2`，AstronStudio/QwenWork `run_slots=3`）；首批投递后，任一题完成即补入下一题；`ui_slots=1` | queue state、槽位时间线、五题终态、execution receipt |
+| V05 | 五题使用 Harness 当前默认槽位（WorkBuddy、AstronStudio、QwenWork 均为 `run_slots=3`）；首批投递后，任一题完成即补入下一题；`ui_slots=1` | queue state、槽位时间线、五题终态、execution receipt |
 | V06 | 每个评分目录只注册到一个精确 Codex 项目，项目路径等于 `score/tasks/<task_id>`，没有指向 execution 原件 | registration JSON、Codex 项目/任务 ID |
 | V07 | `score_slots=3`，每题独立任务、Browser、端口；任一题终态后动态补位 | scoring state、端口表、thread/cursor、逐题 score |
 | V08 | 全题评分通过后只生成一次有效 `submission.json`；候选双副本哈希无漂移 | submission SHA、build state、完整性输出 |
@@ -440,14 +434,14 @@ macOS 的 AstronStudio、WorkBuddy 和 QwenWork 当前均记录 `terminal_proces
 
 ## 5. 历史证据索引
 
-以下只用于定位旧结果和决定哪些项为 `STALE`，不等于当前发布候选通过。
+以下只用于定位旧结果和决定哪些项为 `STALE`，不等于当前正式分发包已通过对应的功能准入项。
 
 | Harness×OS | 历史范围 | 本地证据 |
 | --- | --- | --- |
 | WorkBuddy×macOS | 五题执行、评分、回传、报告及恢复边界 | `/Users/gzx/debug-workspace/web-e2e/web-e2e-20260908-123216` |
 | AstronStudio×macOS | 单题 execution→score→submission→return；另有串行/并发执行 | `/Users/gzx/debug-workspace/web-e2e/astronstudio-full-flow-validation/workers/web-e2e-20260909-092954__astronstudio` |
 | QwenWork×macOS | 三题执行、评分、submission、return | `/Users/gzx/debug-workspace/web-e2e/qwenwork-concurrent3.q563DW/worker/web-e2e-20260909-164755__qwenwork` |
-| AstronStudio×Windows | 手册记录过全流程与恢复验收，缺少仓库内统一验收摘要 | 当前发布候选须重新登记 V00–V17 |
+| AstronStudio×Windows | 早期全流程与恢复验收 | 已由 `6988b525...` / AstronStudio 3.3.1.277 的 V00–V17 仓库内证据替代；旧证据仅用于问题对照 |
 | WorkBuddy×Windows | 5.5.3 历史全流程与恢复验收 | 已由 `ee70a67` / WorkBuddy 5.5.6.0 的 V00–V17 当前证据替代；旧证据仅用于问题对照 |
 | QwenWork×Windows | 1.0.5.0 历史批次覆盖全流程和部分恢复边界；当前 revision 已重绑一个 L1 主流程闭环 | 当前 V00/V02/V03/V06/V08/V09/V11 已通过；V04/V05/V07/V10/V12–V15 保留 `STALE`，V16/V17 为 `NOT_STARTED` |
 
@@ -461,7 +455,7 @@ macOS 的 AstronStudio、WorkBuddy 和 QwenWork 当前均记录 `terminal_proces
 请使用 $prepare-web-e2e-workspaces 在当前 Windows 仓库中为 Web E2E 当前发布候选生成正式评测包。如果 Windows 无法解析仓库 .agents/skills 下的符号链接，则直接读取并遵循 tools/report/skills/prepare-web-e2e-workspaces/SKILL.md，不要复制或改写 Skill。
 
 先完成发布门禁：
-1. 使用 git rev-parse --show-toplevel、git rev-parse HEAD 和 git status --short 确认仓库、完整 revision 和工作树状态；执行 git merge-base --is-ancestor 9c83621b9e766f467f376f09df567002e8fd0d6c HEAD，退出码必须为 0。Web E2E Skill、准备脚本、tasks/07_Website_Generation 和 tasks/extension/07_Website_Generation 存在未提交修改时停止，不得带脏源码打包。
+1. 使用 git rev-parse --show-toplevel、git rev-parse HEAD 和 git status --short 确认仓库、完整 revision 和工作树状态；从本清单 3.1 读取“正式分发包实现/source revision”，执行 git merge-base --is-ancestor <该revision> HEAD，退出码必须为 0。Web E2E Skill、准备脚本、tasks/07_Website_Generation 和 tasks/extension/07_Website_Generation 存在未提交修改时停止，不得带脏源码打包。
 2. 检查可用的 Python 3 和 PyYAML；缺失依赖由控制任务安装到仓库自己的 Python 环境，不得安装到任何题目 workspace。
 3. 从 tasks/extension/07_Website_Generation 按文件名排序收集全部 Markdown 用例 ID，必须恰好 40 个；从 tasks/07_Website_Generation 按文件名排序收集全部 Markdown 用例 ID，必须恰好 120 个。数量不符立即停止，不猜测、不跳题。
 
@@ -469,30 +463,31 @@ macOS 的 AstronStudio、WorkBuddy 和 QwenWork 当前均记录 `terminal_proces
 - web-e2e-<时间戳>-custom40：上述 40 个自建用例；
 - web-e2e-<时间戳>-opensource120：上述 120 个开源用例。
 
-两个批次都指定 --harness astronstudio、--harness workbuddy、--harness qwenwork，metric profile 使用 auto；不预填模型和推理强度，不生成 execution_record。应直接调用仓库标准准备脚本，不手工拼 ZIP。
+两个批次都指定 --harness astronstudio、--harness workbuddy、--harness qwenwork，metric profile 使用 auto，显式传入 --include-execution-record；不预填模型和推理强度。应直接调用仓库标准准备脚本，不手工拼 ZIP。
 
 生成后逐项校验：
 1. 两个 batch_manifest.json 的 source_revision 都严格等于开始时记录的完整 HEAD，每个批次的 task_ids 分别为 40/120，harnesses 都严格包含 astronstudio、workbuddy、qwenwork。
-2. 每个批次均存在三 Harness 各自的 execution.zip 和 scoring.zip、报告配置、packages/skills-manifest.json，以及五个版本化 Skill ZIP。
+2. 每个批次均存在三 Harness 各自的 execution.zip 和 scoring.zip、报告配置、packages/skills-manifest.json，以及五个版本化 Skill ZIP；`execution_record_included=true`。
 3. 两个批次中五个 Skill 的名称、版本和 content_sha256 逐项相同；分别使用本次 manifest 记录的 ZIP sha256 验证文件，不与旧 macOS 包的 ZIP SHA 比较。
-4. 审计 execution ZIP 不含 Ground Truth、Rubric、checker、eval 或 gt；scoring ZIP 不含候选 workspace、PROMPT.md 或 execution_record.json。
-5. 把生成路径、批次 ID、完整 source revision、五个 Skill 版本/content SHA/ZIP SHA、校验结果写入 docs/Web站点端到端自动化评测生产验收清单.md，将 P2 标为 PASSED；本轮不要执行题目、提交或推送。
+4. 逐个打开 6 个 execution ZIP，自建批次每包必须包含 40 份 `execution_record.json`，开源批次每包必须包含 120 份；审计 execution ZIP 不含 Ground Truth、Rubric、checker、eval 或 gt，scoring ZIP 不含候选 workspace、PROMPT.md 或 execution_record.json。
+5. 确认两份报告配置的 `configuration_status=requires_model_mapping`；在执行/评分阶段可以保持该状态，生成正式报告前必须填写三个 Harness 的 `model_id`，并按实际评测配置展示名和推理强度。
+6. 把生成路径、批次 ID、完整 source revision、五个 Skill 版本/content SHA/ZIP SHA、校验结果写入 docs/Web站点端到端自动化评测生产验收清单.md，将 P2 标为 PASSED；本轮不要执行题目、提交或推送。
 ```
 
-### 6.2 使用 Windows 本地正式包继续真机验证
+### 6.2 使用最新正式包执行 canary 或身份漂移复验
 
-P2 通过后，在 Windows Codex 的仓库任务中输入下面 Prompt。它要求控制任务自行发现仓库和刚生成的最新有效包，不需要先手工填写路径：
+P2 通过后，在 Windows Codex 的仓库任务中输入下面 Prompt。它适用于新正式包的小批量 canary，也适用于 Harness、Skill、模型或系统身份变化后的受影响项复验：
 
 ```text
-请以仓库 docs/Web站点端到端自动化评测生产验收清单.md 为唯一任务清单，继续当前发布候选的 Windows 真机验收。
+请以仓库 docs/Web站点端到端自动化评测生产验收清单.md 为唯一任务清单，使用 3.1 登记的最新正式分发包验证我指定的 Harness。
 
 先执行只读检查：
-1. 用 git rev-parse --show-toplevel 和 git rev-parse HEAD 确认仓库及 revision，读取本清单登记的“Web E2E 实现 revision”，并确认该 revision 是当前 HEAD 的祖先；同时确认该 revision 之后 Web E2E Skill、准备脚本和题目目录没有代码变化或未提交修改。仅本清单等验收文档位于后续提交不改变发布身份；P2 写入本清单的预期证据记录可以保留在工作树中，不视为源码污染。
-2. 读取五个 Web E2E Skill 的 skill-metadata.json；在 report-workspace/web-e2e-automation-packages 中查找 source_revision 精确等于 P2 登记的“正式包 source revision”、同时包含 AstronStudio、WorkBuddy、QwenWork 的正式自建/开源批次，并逐项复核 Skill content SHA 与本清单一致。不存在时停止并报告，不使用其他 revision 的旧包或临时重打包。
-3. 只读发现 AstronStudio 和 Codex Desktop 的真实可执行程序完整路径，使用 Test-Path 验证；检查 9230/9240 端口监听者和完整进程路径。不要按进程名批量结束程序。
-4. 对照清单输出当前应执行的下一个 V 项、已有状态、批次和证据目录。若前置身份不一致，标记 BLOCKED 并停止。
+1. 用 git rev-parse --show-toplevel 和 git rev-parse HEAD 确认仓库及 revision，读取 3.1 登记的正式分发包 source revision，确认它是当前 HEAD 的祖先；同时确认 Web E2E Skill、准备脚本和题目目录没有未提交修改。
+2. 只使用 3.1 登记的自建/开源批次，逐项复核 source_revision、Skill 版本、content SHA、ZIP SHA、`execution_record_included=true` 和三个 Harness 范围。任一项不一致时停止，不使用旧包或临时重打包。
+3. 只读发现目标 Harness 和 Codex Desktop 的真实可执行程序完整路径，检查对应本机 CDP 端口监听者和完整进程路径。不要按进程名批量结束程序。
+4. 读取目标 Harness 的客户端版本、Driver、模型、推理强度、权限和操作系统身份，与本清单已有证据对比。身份一致时执行 1–3 个 L1 canary；任一关键身份变化时，将受影响 V 项标为 `STALE`，从 V02 只读 probe 和 V03 单 L1 开始复验。
 
-从 V02 开始按顺序验证 AstronStudio×Windows：只读 probe、单个 L1、三个 L1 串行、五个 L1 默认三槽动态补位、Codex 项目注册、三路评分、submission、return、import/report、单 Prompt和恢复边界。每完成或失败一个 V 项，都更新清单中的单项验收记录与矩阵状态，写明命令或原 Prompt、批次/任务 ID、绝对证据路径、receipt/SHA、时间和错误；不要把代码测试当作真机通过。
+按上一步确定的范围执行 canary 或单项复验。每完成或失败一个 V 项，都更新清单中的单项验收记录与矩阵状态，写明命令或原 Prompt、批次/任务 ID、绝对证据路径、receipt/SHA、时间和错误；不要把代码测试当作真机通过。
 
 候选 execution/score workspace 在被评 Harness 完成后不可修改；端口冲突只允许修改 private-scoring/runtime-workspace。任何候选哈希漂移、身份不一致、活动任务不唯一或状态不明确都失败关闭。若需要重启承载当前任务的 Codex Desktop，先持久化状态，并使用 run-web-e2e 的 restart_windows_desktop_debug.ps1 计划任务入口；不要让控制任务直接退出或普通 Start-Process 重启自身。
 
