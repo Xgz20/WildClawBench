@@ -4,7 +4,7 @@
 
 ## 1. 当前结论
 
-当前发布候选中，AstronStudio×Windows 和 WorkBuddy×Windows 均已完成 V00–V17，状态为 **无人值守高可用已验证**；QwenWork×Windows 已完成当前身份的单 L1 execution→score→submission→return，状态为 **主流程生产可用**。
+当前发布候选中，AstronStudio×Windows 和 WorkBuddy×Windows 均已完成 V00–V17，状态为 **无人值守高可用已验证**；QwenWork×Windows 已完成当前身份的单 L1 execution→score→submission→return，状态为 **主流程生产可用**。独立的 Windows 资源指标门禁已在 revision `ff5d476b3355960a71326ba4944a63923ce7022c` 上完成 P6–P9，三个 Harness 的四个核心 Token 字段均为 `observed`，状态为 **PASSED**；这只升级资源指标可汇总结论，不改变 QwenWork 的并发与恢复准入层级。
 
 AstronStudio×Windows 发布实现 revision 为 `6988b5252bc9140e86dae139fdffbcfc964bcfbf`，正式包锁定 execute 1.11.16 / AstronStudio Driver 1.10.18 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.7 / report 1.0.2。Windows 10 10.0.19042 x64 真机使用 AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、GLM-5.2 / High / full-access：正式 ZIP 的单 Prompt 执行→评分→submission→return 已闭环；独立控制任务接管、Harness 重启安全失败、Codex 平台托管重启、发送前唯一重试、执行超时、评分 attempt 隔离和 submission 发布中断恢复均通过。V03–V10 依据完全一致的 execute/score/report/run 内容 SHA、实际 orchestrate 0.2.6 运行身份及正式 ZIP V11 冒烟完成证据重绑定；默认端口 9240 已恢复并重新通过进程路径检查。
 
@@ -46,18 +46,18 @@ AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 �
 
 #### P6：源码与 Windows 分发包门禁
 
-- [ ] 当前提交包含 `execute-web-e2e` 资源采集器、三个 Driver 的终态调用、统一 `execution_record.json` 写入和独立的 QwenWork runtime Profile；不能继续使用旧的 execute 1.11.x / Driver 1.10.x 包。
-- [ ] 在 Windows 干净目录安装本次最新 Skill 包；当前实现候选为 execute `1.12.3`、WorkBuddy Driver `1.8.27`、AstronStudio Driver `1.10.21`、QwenWork Driver `1.10.14`，实际值以本批次 `skills-manifest.json` 为准。
-- [ ] Windows Node.js 运行所有 metrics/Driver 测试并记录退出码；SQLite 优先使用 `node:sqlite`，只有运行时不提供时才验证 `py -3`/`python` 的只读回退。不得把依赖安装到题目 `workspace/`。
-- [ ] 重新计算 Skill content SHA、ZIP SHA 和 `source_revision`，并将它们写入本清单；旧包的 SHA 或旧验收包不能作为本门禁证据。
+- [x] 当前提交包含 `execute-web-e2e` 资源采集器、三个 Driver 的终态调用、统一 `execution_record.json` 写入和独立的 QwenWork runtime Profile；不能继续使用旧的 execute 1.11.x / Driver 1.10.x 包。
+- [x] 在 Windows 干净目录安装本次最新 Skill 包；当前实现候选为 execute `1.12.3`、WorkBuddy Driver `1.8.27`、AstronStudio Driver `1.10.21`、QwenWork Driver `1.10.14`，实际值以本批次 `skills-manifest.json` 为准。
+- [x] Windows Node.js 运行所有 metrics/Driver 测试并记录退出码；SQLite 优先使用 `node:sqlite`，只有运行时不提供时才验证 `py -3`/`python` 的只读回退。不得把依赖安装到题目 `workspace/`。
+- [x] 重新计算 Skill content SHA、ZIP SHA 和 `source_revision`，并将它们写入本清单；旧包的 SHA 或旧验收包不能作为本门禁证据。
 
 #### P7：Windows 三 Harness 采集冒烟
 
 每个 Harness 都按相同顺序完成一个全新 L1：只读 probe → `run_slots=1` 单题执行 → 明确终态 → 资源采集 → 评分。执行前确认没有活动任务，且没有设置 `WEB_E2E_RESOURCE_METRICS=off`。每项都要记录批次、完整 task ID、attempt ID、客户端版本、Driver 版本、模型/推理强度、绝对 workspace、原生数据源相对路径和来源 SHA-256。
 
-- [ ] **AstronStudio×Windows**：确认 Driver 能从当前用户状态库按桌面 thread/turn 精确映射原生 session，原生日志 cwd 与题目根一致；`input/output/total/cache_read/request_count/call_count/agent_duration_seconds` 均为 `observed` 或 `inferred`。
-- [ ] **WorkBuddy×Windows**：确认本地 session JSONL 按唯一 conversation/message ID 关联，消息 usage 去重且 cwd 一致；同上核心字段有效，缺失字段只能记录 `partial` 与已知小计。
-- [ ] **QwenWork×Windows**：先执行下列显式开关命令启动新进程，再发送题目；不能只给已有进程设置环境变量：
+- [x] **AstronStudio×Windows**：确认 Driver 能从当前用户状态库按桌面 thread/turn 精确映射原生 session，原生日志 cwd 与题目根一致；`input/output/total/cache_read/request_count/call_count/agent_duration_seconds` 均为 `observed` 或 `inferred`。
+- [x] **WorkBuddy×Windows**：确认本地 session JSONL 按唯一 conversation/message ID 关联，消息 usage 去重且 cwd 一致；同上核心字段有效，缺失字段只能记录 `partial` 与已知小计。
+- [x] **QwenWork×Windows**：先执行下列显式开关命令启动新进程，再发送题目；不能只给已有进程设置环境变量：
 
   ```bat
   set "QODERCN_EXPOSE_TOKEN_USAGE=1"
@@ -65,28 +65,28 @@ AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 �
   set "QODERCN_EXPOSE_TOKEN_USAGE="
   ```
 
-  [ ] 记录新进程确实由该命令启动，回读 transcript 的 provider、版本和主 turn；按 request ID 去重，响应集合与 `turn.finished` 终值一致，输入已含缓存，且 `cache_read_input_tokens <= input_tokens`。
-  [ ] 读取 Windows 当前 QwenWork runtime、SDK package 和 transcript 版本，计算 runtime SHA-256。若与已验 macOS Profile 不同，新增独立 Windows Profile；若相同，也必须把 Profile 平台匹配规则扩展为 Windows 并补测试。未完成前，QwenWork Token 状态保持 `unverified`，不能宣称三 Harness Token 已打通。
+  [x] 记录新进程确实由该命令启动，回读 transcript 的 provider、版本和主 turn；按 request ID 去重，响应集合与 `turn.finished` 终值一致，输入已含缓存，且 `cache_read_input_tokens <= input_tokens`。
+  [x] 读取 Windows 当前 QwenWork runtime、SDK package 和 transcript 版本，计算 runtime SHA-256。若与已验 macOS Profile 不同，新增独立 Windows Profile；若相同，也必须把 Profile 平台匹配规则扩展为 Windows 并补测试。未完成前，QwenWork Token 状态保持 `unverified`，不能宣称三 Harness Token 已打通。
 
 #### P8：评分回传透传门禁
 
-- [ ] 对上述三个 execution 结果分别复制评分工作空间并完成评分；评分 Agent 不读取或修改 `execution/tasks/` 原件。
-- [ ] 每个 `score/tasks/<task_id>/private-scoring/task_score.json` 或最终 `submission.json` 保留 `usage.collection`、Token 字段、请求数、工具数、执行耗时和智能体耗时；评分自身的 Token 不得混入被评 Harness 资源。
-- [ ] 生成三个独立 return ZIP，检查 ZIP 内每个任务都有这些字段，且候选 workspace 哈希未漂移；缺失或 `unverified` 不能静默改成 0。
+- [x] 对上述三个 execution 结果分别复制评分工作空间并完成评分；评分 Agent 不读取或修改 `execution/tasks/` 原件。
+- [x] 每个 `score/tasks/<task_id>/private-scoring/task_score.json` 或最终 `submission.json` 保留 `usage.collection`、Token 字段、请求数、工具数、执行耗时和智能体耗时；评分自身的 Token 不得混入被评 Harness 资源。
+- [x] 生成三个独立 return ZIP，检查 ZIP 内每个任务都有这些字段，且候选 workspace 哈希未漂移；缺失或 `unverified` 不能静默改成 0。
 
 #### P9：报告闭环门禁
 
-- [ ] 使用同一批次的三个 return ZIP 和同一份 `<batch_id>__report-config.yaml` 运行 `report-web-e2e`；不能混入旧批次或不同 Profile。
-- [ ] 在 `web_e2e_report_data.json` 中逐单元检查：`total_input_tokens`、`total_output_tokens`、`total_cache_read_input_tokens`、`total_tokens`、`total_requests`、`tool_call_count`、`total_duration_seconds`、`total_agent_duration_seconds` 及其 `resource_metrics.*.covered_cases/total_cases/status_counts`。
-- [ ] 领导版 Markdown 的“总览”表和“资源数据覆盖”表能看到三个 Harness；总量与 JSON 一致，不完整字段显示空值/已知小计和覆盖率。
-- [ ] Excel 仅保留 `站点评测指标`、`难度对比`、`用例对比明细` 三个 Sheet；“站点评测指标”总览列出输入/输出/缓存读取/缓存写入/智能体耗时等资源列，缓存写入未知时显示空值；保存后检查公式错误和关键值与 JSON/Markdown 一致。
-- [ ] 报告生成完成后，将报告 JSON、Markdown、Excel、三份 return receipt、三份资源字段抽样和来源 SHA 写回本清单；其中任何一个 Harness 缺少核心 Token 覆盖时，P9 标记 `BLOCKED`，不得写成“三 Harness 指标已完成”。
+- [x] 使用同一批次的三个 return ZIP 和同一份 `<batch_id>__report-config.yaml` 运行 `report-web-e2e`；不能混入旧批次或不同 Profile。
+- [x] 在 `web_e2e_report_data.json` 中逐单元检查：`total_input_tokens`、`total_output_tokens`、`total_cache_read_input_tokens`、`total_tokens`、`total_requests`、`tool_call_count`、`total_duration_seconds`、`total_agent_duration_seconds` 及其 `resource_metrics.*.covered_cases/total_cases/status_counts`。
+- [x] 领导版 Markdown 的“总览”表和“资源数据覆盖”表能看到三个 Harness；总量与 JSON 一致，不完整字段显示空值/已知小计和覆盖率。
+- [x] Excel 仅保留 `站点评测指标`、`难度对比`、`用例对比明细` 三个 Sheet；“站点评测指标”总览列出输入/输出/缓存读取/缓存写入/智能体耗时等资源列，缓存写入未知时显示空值；保存后检查公式错误和关键值与 JSON/Markdown 一致。
+- [x] 报告生成完成后，将报告 JSON、Markdown、Excel、三份 return receipt、三份资源字段抽样和来源 SHA 写回本清单；其中任何一个 Harness 缺少核心 Token 覆盖时，P9 标记 `BLOCKED`，不得写成“三 Harness 指标已完成”。
 
 #### Windows 完成后的升级条件
 
 只有 P6–P9 全部通过，且三个 Harness 的核心 Token 字段均为 `observed`、请求数/工具数/两类耗时均有有效状态，才能将本清单中的“Windows 资源指标”标记为 `PASSED`，并在报告结论中宣称三个 Harness 结果可横向比较。仅有代码测试、旧批次数值、QwenWork 的请求/工具/耗时，或报告能生成但 Token 为 `unverified`，都只能标记 `IN_PROGRESS`/`BLOCKED`。
 
-当前已知状态（2026-09-17 修复后）：Windows 资源指标门禁为 **IN_PROGRESS**。AstronStudio Windows 日志根发现和 QwenWork Windows 精确 Profile 的实现缺口已经修复，单元测试及历史会话只读重放通过；QwenWork 历史样本仍按事实保持 `masked`。三个 Harness 尚未完成本次新包 L1 和 P8–P9 验收，因此不能宣称 Windows 三 Harness Token 指标已全部打通。
+当前已知状态（2026-09-17 全新 L1 闭环后）：Windows 资源指标门禁为 **PASSED**。AstronStudio、WorkBuddy、QwenWork 三个 Harness 在同一批次的四个核心 Token 字段均为 `observed`，请求数、工具数、执行流程耗时和智能体耗时均有有效状态；评分透传、三份 return、管理员导入及 JSON/Markdown/三 Sheet Excel 报告均已完成。历史 QwenWork 样本继续按事实保持 `masked`，没有回填或改写。
 
 #### 2026-09-17 Windows 指标只读诊断记录
 
@@ -123,6 +123,50 @@ QwenWork runtime SHA-256：`e86620b7e772d1f536ba15beea8c3059bf6075dffb478aceaa8c
 Windows Node `22.22.2` 下 metrics `19/19`、AstronStudio `49/49`、WorkBuddy `92/92`、QwenWork `41/41` 全部通过；仓库 `.venv` Python `3.11.9` 下资源打包、准备、评分和报告四组测试 `88/88` 通过。报告测试入口改为直接加载受版本控制的 `tools/report/skills/report-web-e2e`，不再依赖 Windows 是否把 `.agents/skills` 检出为真实符号链接。
 
 修复后的采集器只读重放同一历史样本：AstronStudio 得到 input `4389411`、output `32133`、total `4421544`、cache read `4155584`、请求 `57`、工具 `76`、智能体耗时 `750.035` 秒，全部无告警；旁路文件 `astronstudio-postfix-readonly-metrics.json` SHA-256 为 `356b49bc3d53772c25f744a22998b75e17dde41ac404663e0ae0850b52cb88e4`。QwenWork 精确命中 `qwenwork-1.0.5-qoder-cache-inclusive-v1`，但旧会话仍为 `QWEN_TOKEN_USAGE_MASKED`；旁路文件 `qwenwork-postfix-readonly-metrics.json` SHA-256 为 `717a452a880f985ea19515981fec77806740b039d4198aac4ef6ea143a89b350`。这证明两个实现缺口已修复，但不能替代 P7 的全新非零 Token L1。
+
+#### 2026-09-17 Windows 三 Harness 资源指标 P6–P9 真机闭环
+
+验收批次为 `windows-metrics-ff5d476-l1-20260917-114821`，source revision 为 `ff5d476b3355960a71326ba4944a63923ce7022c`，Profile 为 `artifactsbench-web-v1`，三个 Harness 均执行同一全新 L1 `07_Website_Generation_task_ab078_svg_smartphone_speech_bubbles`。管理员批次根为 `D:\WorkProgram\xingchen\astroncode\dev\astroncode-eval\report-workspace\web-e2e-automation-packages\windows-metrics-ff5d476-l1-20260917-114821`，短路径 worker 根为 `D:\debug-workspace\web-e2e\m\ff5d476-114821`，其中 `as`、`wb`、`qw` 分别对应三个 Harness；每题候选路径长度为 135，满足 WorkBuddy 的 Windows 短路径门禁。较早的 `windows-metrics-47ef174-l1-20260917-113743` 仅为 `prepared`、0 executed，保留审计但未混入本次结果。
+
+P6 分发身份如下；三个 worker 的安装检查均返回 `all_current=true`：
+
+| Skill | 版本 | content SHA-256 | ZIP SHA-256 |
+| --- | --- | --- | --- |
+| score-web-e2e | `4.5.2` | `9e870f17452d00d11a2d0f339b4e12d477bceb623206af34cc6f76bb64625e93` | `4ce81bbc5126be94254c38ec4c7fed58c7a3a02efa13f4d53b0d3e1843c66425` |
+| report-web-e2e | `1.1.0` | `75ca2afe27129000c3613129868067dcb459c4e1a206d1067f6c6ac22d7fd697` | `810e5f5e807ef5992dd3340b1d32c9aac47733eaaa1f69810a3c8c7490f4313f` |
+| orchestrate-web-e2e | `0.2.6` | `7b2c9fca36a158dc5e0beb98642aef1684bce23e76457b92ea8ff527a5db27a4` | `73d578ab6f21d03d10d0d5bd0ca235422809f5cda730707f69eafc11b73fc211` |
+| execute-web-e2e | `1.12.3` | `98b3a8531d507d6a8bfe2e69e1093ad529afc39ca131efecc3e5c9e8b454d8fb` | `3203d89d6b16504aa491fa4cd9bd02606731ca93097f4348dd3ffeb319599fef` |
+| run-web-e2e | `1.3.9` | `ce013596ff6b15b25ee65dde7e7889f34016c1aa84ee52a3b9bca1c46c1e599f` | `671de274921d47fbc526c7392be3c83fe4fe3f1bf2b9981ab26a29c82ea44953` |
+
+Driver 版本为 AstronStudio `1.10.21`、WorkBuddy `1.8.27`、QwenWork `1.10.14`，metrics collector 为 `1.1.2`。Windows Node `22.22.2` 下 metrics `19/19`、AstronStudio `49/49`、WorkBuddy `92/92`、QwenWork `41/41` 均以退出码 0 通过；仓库 `.venv` Python 下资源打包、准备、评分和报告测试 `88/88` 通过。测试、Skill 与 Driver 依赖均未写入候选 `workspace/`。
+
+P7 的三个 execution receipt 均为 `integrity.valid=true`、`manual_interventions=[]`，候选哈希与终态冻结值一致，采集告警均为空：
+
+| Harness / 客户端 / 模型 | attempt / 原生会话 | input / output / total / cache read | 请求 / 工具 / 流程耗时 / 智能体耗时 | 原生来源 SHA-256 | 状态结论 |
+| --- | --- | --- | --- | --- | --- |
+| AstronStudio `3.3.1.277` / GLM-5.2 High | `8975e60a-3c64-43bc-a8ea-e8b186c625ac` / rollout session `01a0ad85-2457-7810-a746-ac07ab90f2bc` | `481070 / 8293 / 489363 / 465088` | `14 / 13 / 310.407s / 204.741s` | `44c85d42ebad61481fe8905b74f332d66a208851416e8ed01d923df24db05b80` | 四个核心 Token、工具数、两类耗时 `observed`；请求数 `inferred` |
+| WorkBuddy `5.5.6.0` / xopglm52 | `f797cd05-ba3c-490e-aa0d-e3235439095d` / conversation `bb4b666f-2ef7-4d3c-8d25-fdd22649f2dd` | `556077 / 6671 / 562748 / 512128` | `14 / 14 / 375.931s / 312.410s` | `30f99521a0145eec6e7c55ca79cd1e0de4daa93e32301a5c4c1555284fa2ab29` | 四个核心 Token、请求数、工具数、流程耗时 `observed`，响应覆盖 `14/14`；智能体耗时 `inferred` |
+| QwenWork `1.0.6.0` / 标准｜Qwen3.8-Flash | `63020ead-4aab-40e5-a38f-b2bfb89f8a49` / session `50db1cd4-40e4-4198-a60e-c5cd03dc6a71` / turn `686cb8d5-23e2-4ef0-8fe2-ccbc4372ed43` | `562753 / 11498 / 574251 / 513280` | `12 / 15 / 414.868s / 289.372s` | transcript `f4e1f94cd2765d6875b94a45f33e12d7abca97340ad42fb9223d0c8b168fa374`；segment `1399ae4e8d7c691054100f78022aa5b31fc1c6643b30b47e422a641e67e7ab62` | 四个核心 Token、请求数、工具数、两类耗时全部 `observed`，响应覆盖 `12/12` |
+
+QwenWork 执行前显式设置 `QODERCN_EXPOSE_TOKEN_USAGE=1`，并通过 `--restart-app-first` 启动新客户端 PID `43640`。运行身份为 `@ali/qodercn-agent-sdk-next@1.0.28`、transcript `1.1.32`、runtime SHA `e86620b7e772d1f536ba15beea8c3059bf6075dffb478aceaa8cad328a879c28`，精确命中 `qwenwork-1.0.6-qoder-cache-inclusive-v1`。主 turn 的 `model.request.started` 与 `model.response.completed` 均为 12 个唯一 ID，集合完全一致且 provider 全部为 `qoder`；非零 usage 与 `cache_read <= input` 异常数均为 0，唯一一条 `turn.finished` 的终值与逐响应总和一致。另有一个后台 request，已明确登记为 `background-turn` 并排除于主任务统计。
+
+P8 的评分目录均由冻结 execution 复制生成，评分站点通过受管静态服务实际渲染并留存截图；停止服务、清理运行时副本和截图接收器可信终态检查通过。三个 `task_score.json` 的总分分别为 AstronStudio 76、WorkBuddy 63、QwenWork 78，执行资源字段从对应 `execution_record.json` 完整透传：
+
+| Harness | 候选 SHA-256 | execution record SHA-256 | task score SHA-256 | submission SHA-256 | return ZIP / 外部 receipt SHA-256 |
+| --- | --- | --- | --- | --- | --- |
+| AstronStudio | `45021050b3cae098bce96eb25e1c13ba1dfe3e639806229a27ac735dfd2e87c8` | `1e0874d8a6b5ddeebd9d4ba380b6dd012e1d60fdecb9071611d9f7dd8d76017c` | `259c3490e3a1ff1ec8161e174db2d04643fc6ffba8de1d38c778de7684d31ea0` | `5eff7fef288c36981f58f5b1fa892f832485c05201fc9933e9a371783a889d76` | `8388d78b4f772f32efd76f74fd6ee16104dfe992f2303e0ca6f0bd7e06fa50a7` / `98321d6f7edb67507dcc234bbeb47e61ddda2ae03f512a22e0dabfed3b2f254c` |
+| WorkBuddy | `60532170abf2af47f22f5519cfe3727d098f428fefbd77771448699df0199d02` | `df5565b454c42317722ca59008b6e5f1216036f6e9ba728b0e3065fbefa860e8` | `8a38367bfddeb95d4003bb8b136fba15200a4a208a7aeca4f7d7218db988b05a` | `dbb6c224fb1098352b017d0fb97edcefa40c7ec3c57cbe7654377b3ad729e25a` | `4016547823153c199665996ad1d4e1f4bfc0023beb668474900c4f99d9f8c6ae` / `e79aab7647f4ffa1aac663c893b2921c563492c4f4b3277c5c041ac9a8ec4636` |
+| QwenWork | `06b348e2fbb2e695104fdd6ab158f6fbf417efe00266bda6a48c2e6dddf7d35f` | `0cf8fd1286d19f9bd58c254a38a717e056d311d2b6597375737986b050da1556` | `8a193584a4538cbb5514113a4050850a393d46f624dc4b5c6554b8437d398355` | `c248396e24f008c969735a37ed5b63cfc80ec11f9d1c3566645e3396080fea85` | `cef1ff8fabf2fc0f93b59325a0754d50f42b7202ebb6b2b5261be6e4e8437fe4` / `85af4490886520cf2620ce96c32570a16dea7e0c5b44cad219c036848536d1b3` |
+
+三份 return 均已原子导入管理员批次的 `returns/<harness>/`，collect 状态为 `COMPLETED`。P9 使用同一份 `windows-metrics-ff5d476-l1-20260917-114821__report-config.yaml` 汇总，最终产物位于管理员批次的 `report-output`：
+
+| 产物 | SHA-256 |
+| --- | --- |
+| `web_e2e_report_data.json` | `b87a77adce8261fec73010c704d137a7cc94e9a29b563819a03db7c910faeb8b` |
+| `Web站点端到端评测领导版.md` | `c61a6587dff5c35cf99cba0fac4db5ce787ff427623f6d6d993702fb10438e51` |
+| `Web站点端到端评测报告.xlsx` | `f736e9ef575ff01ae825b532d21d56107cf48faeb326eb7c71e365e17dde70b4` |
+
+JSON 和 Markdown 中三个 Harness 的资源总量、覆盖率和来源状态与单题产物一致；缓存写入、QwenWork 推理 Token 和 HTTP 尝试次数继续显示未知，没有补零。Excel 只包含 `站点评测指标`、`难度对比`、`用例对比明细`，公式错误扫描为 0，关键值与 JSON/Markdown 一致。Windows 上 `artifact-tool` 的最小 `workbook.render()` 以退出码 `-1073741819` 复现原生崩溃，因此按 Skill 允许的 `--skip-preview true` 生成正式 XLSX，再用独立只读渲染器逐表检查三个 Sheet，未把跳过内置预览本身记为视觉通过。最终三个 worker 的 `execute/score/package` 均为 `COMPLETED`，管理员批次的 `prepare/collect/report` 均为 `COMPLETED`；据此 P6–P9 和 Windows 资源指标门禁均为 `PASSED`。
 
 ## 2. 状态与更新规则
 
