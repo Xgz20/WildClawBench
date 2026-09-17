@@ -471,7 +471,7 @@ macOS 的 AstronStudio、WorkBuddy 和 QwenWork 当前均记录 `terminal_proces
 3. 两个批次中五个 Skill 的名称、版本和 content_sha256 逐项相同；分别使用本次 manifest 记录的 ZIP sha256 验证文件，不与旧 macOS 包的 ZIP SHA 比较。
 4. 逐个打开 6 个 execution ZIP，自建批次每包必须包含 40 份 `execution_record.json`，开源批次每包必须包含 120 份；审计 execution ZIP 不含 Ground Truth、Rubric、checker、eval 或 gt，scoring ZIP 不含候选 workspace、PROMPT.md 或 execution_record.json。
 5. 确认两份报告配置的 `configuration_status=requires_model_mapping`；在执行/评分阶段可以保持该状态，生成正式报告前必须填写三个 Harness 的 `model_id`，并按实际评测配置展示名和推理强度。
-6. 把生成路径、批次 ID、完整 source revision、五个 Skill 版本/content SHA/ZIP SHA、校验结果写入 docs/Web站点端到端自动化评测生产验收清单.md，将 P2 标为 PASSED；本轮不要执行题目、提交或推送。
+6. 把生成路径、批次 ID、完整 source revision、五个 Skill 版本/content SHA/ZIP SHA、校验结果写入 docs/design/web-e2e/Web站点端到端自动化评测生产验收清单.md，将 P2 标为 PASSED；本轮不要执行题目、提交或推送。
 ```
 
 ### 6.2 使用最新正式包执行 canary 或身份漂移复验
@@ -479,7 +479,7 @@ macOS 的 AstronStudio、WorkBuddy 和 QwenWork 当前均记录 `terminal_proces
 P2 通过后，在 Windows Codex 的仓库任务中输入下面 Prompt。它适用于新正式包的小批量 canary，也适用于 Harness、Skill、模型或系统身份变化后的受影响项复验：
 
 ```text
-请以仓库 docs/Web站点端到端自动化评测生产验收清单.md 为唯一任务清单，使用 3.1 登记的最新正式分发包验证我指定的 Harness。
+请以仓库 docs/design/web-e2e/Web站点端到端自动化评测生产验收清单.md 为唯一任务清单，使用 3.1 登记的最新正式分发包验证我指定的 Harness。
 
 先执行只读检查：
 1. 用 git rev-parse --show-toplevel 和 git rev-parse HEAD 确认仓库及 revision，读取 3.1 登记的正式分发包 source revision，确认它是当前 HEAD 的祖先；同时确认 Web E2E Skill、准备脚本和题目目录没有未提交修改。
