@@ -44,7 +44,7 @@
       "name": "prepare-general-e2e-workspaces",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/prepare-general-e2e-workspaces",
-      "components": []
+      "components": ["dataset-bundle-verifier"]
     },
     {
       "name": "execute-general-e2e",

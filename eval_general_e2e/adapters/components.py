@@ -45,6 +45,17 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         vendor_root="vendor/e2e-shared/handoff",
         entrypoints=("workspace-integrity.mjs",),
     ),
+    SharedComponentSpec(
+        name="dataset-bundle-verifier",
+        version="1.0.0",
+        source_root="eval_general_e2e/shared/dataset_bundle",
+        vendor_root="vendor/e2e-shared/dataset-bundle",
+        entrypoints=("verify.py",),
+    ),
+)
+
+ASTRONSTUDIO_COMPONENT_NAMES = frozenset(
+    {"desktop-runtime", "resource-metrics", "workspace-integrity"}
 )
 
 
@@ -146,7 +157,11 @@ def inspect_shared_component_layout(
     except (OSError, json.JSONDecodeError) as exc:
         binding = None
         errors.append({"code": "GENERAL_ADAPTER_BINDING_INVALID", "detail": str(exc)})
-    expected_versions = {item.name: item.version for item in EXPECTED_COMPONENTS}
+    expected_versions = {
+        item.name: item.version
+        for item in EXPECTED_COMPONENTS
+        if item.name in ASTRONSTUDIO_COMPONENT_NAMES
+    }
     if not isinstance(binding, dict) or binding.get("schema_version") != GENERAL_BINDING_SCHEMA:
         if binding is not None:
             errors.append({

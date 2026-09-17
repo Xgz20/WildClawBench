@@ -71,7 +71,12 @@ class E2EBuildTests(unittest.TestCase):
         self.assertEqual(len(skills), 13)
         self.assertEqual(
             set(components),
-            {"desktop-runtime", "resource-metrics", "workspace-integrity"},
+            {
+                "desktop-runtime",
+                "resource-metrics",
+                "workspace-integrity",
+                "dataset-bundle-verifier",
+            },
         )
         self.assertEqual(self.manifest["skill_count"], 13)
         self.assertEqual(set(self.rows), EXPECTED_SKILLS)
