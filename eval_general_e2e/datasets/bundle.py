@@ -25,6 +25,7 @@ from eval_general_e2e.shared.dataset_bundle.verify import (
     SCHEMA_ID,
     SCHEMA_VERSION,
     TREE_HASH_ALGORITHM,
+    _validate_manifest,
     canonical_sha256 as _canonical_sha256,
     safe_relative_path as _safe_relative_path,
     sha256_bytes as _sha256_bytes,

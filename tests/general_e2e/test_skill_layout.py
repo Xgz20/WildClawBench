@@ -33,8 +33,19 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
             ("collect-evidence",),
         )
         self.assertIn("import-return", get_skill_spec("run-general-e2e").stages)
+        self.assertEqual(
+            (
+                get_skill_spec("prepare-general-e2e-workspaces").version,
+                get_skill_spec("prepare-general-e2e-workspaces").implementation_status,
+            ),
+            ("0.2.0", "operational"),
+        )
         self.assertTrue(
-            all(spec.implementation_status == "interface_only" for spec in GENERAL_E2E_SKILLS)
+            all(
+                spec.implementation_status == "interface_only"
+                for spec in GENERAL_E2E_SKILLS
+                if spec.name != "prepare-general-e2e-workspaces"
+            )
         )
 
     def test_canonical_metadata_discovery_and_legacy_layout_pass(self) -> None:
@@ -43,7 +54,7 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
         self.assertEqual(report["expected_skill_count"], 7)
         self.assertTrue(report["legacy_eval_e2e"]["preserved"])
         self.assertEqual(report["shared_components"]["status"], "PASS")
-        self.assertEqual(len(report["shared_components"]["components"]), 3)
+        self.assertEqual(len(report["shared_components"]["components"]), 4)
         self.assertTrue(all(item["valid"] for item in report["skills"]))
 
     def test_cli_exposes_machine_readable_registry(self) -> None:

@@ -47,7 +47,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="dataset-bundle-verifier",
-        version="1.0.0",
+        version="1.0.1",
         source_root="eval_general_e2e/shared/dataset_bundle",
         vendor_root="vendor/e2e-shared/dataset-bundle",
         entrypoints=("verify.py",),

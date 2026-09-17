@@ -38,12 +38,17 @@
       "minItems": 1,
       "items": {"$ref": "#/$defs/requiredSkill"}
     },
+    "skill_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/skillArtifact"}
+    },
     "artifacts": {"type": "array", "items": {"$ref": "#/$defs/artifact"}}
   },
   "allOf": [
     {
       "if": {"properties": {"manifest_kind": {"const": "batch"}}},
-      "then": {"required": ["units", "artifacts"]},
+      "then": {"required": ["units", "skill_artifacts", "artifacts"]},
       "else": {"required": ["unit_id", "unit", "tasks"]}
     }
   ],
@@ -86,6 +91,17 @@
         "implementation_status": {"enum": ["interface_only", "operational"]},
         "content_sha256": {"$ref": "#/$defs/sha256"},
         "zip_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "skillArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "path", "sha256", "size"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "path": {"$ref": "#/$defs/relativePath"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "size": {"type": "integer", "minimum": 1}
       }
     },
     "artifact": {

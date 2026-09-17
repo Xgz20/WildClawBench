@@ -29,7 +29,8 @@
     "catalog_digest": {"$ref": "#/$defs/sha256"},
     "schemas": {
       "type": "array",
-      "minItems": 2,
+      "minItems": 3,
+      "maxItems": 3,
       "items": {"$ref": "#/$defs/artifact"}
     },
     "skill_count": {"const": 7},

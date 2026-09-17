@@ -1,0 +1,36 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:prepare-config:v1",
+  "schema_version": 1,
+  "contract_version": "general-e2e-contract-v1",
+  "bundle_protocol": "general-e2e-package-v1",
+  "batch_id": "general-smoke",
+  "task_ids": [
+    "01_Productivity_Flow_task_001_expense_policy_check"
+  ],
+  "units": [
+    {
+      "unit_id": "astronstudio-macos",
+      "task_ids": [
+        "01_Productivity_Flow_task_001_expense_policy_check"
+      ],
+      "harness": {
+        "id": "astronstudio",
+        "platform": "macos-arm64",
+        "version": null
+      },
+      "model": {
+        "requested_id": "replace-with-model-id",
+        "reasoning_effort": "high"
+      },
+      "execution_mode": "automatic"
+    }
+  ],
+  "judge": {
+    "protocol": "codex-agent-judge-v1",
+    "model": "replace-with-judge-model",
+    "reasoning_effort": "high"
+  },
+  "report": {
+    "title": "General E2E smoke"
+  }
+}

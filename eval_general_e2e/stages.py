@@ -11,6 +11,8 @@ BUNDLE_PROTOCOL = "general-e2e-package-v1"
 SKILL_METADATA_SCHEMA = "wildclawbench.general-e2e-skill/v1"
 INITIAL_SKILL_VERSION = "0.1.0"
 INTERFACE_ONLY = "interface_only"
+OPERATIONAL = "operational"
+PREPARE_SKILL_VERSION = "0.2.0"
 
 
 @dataclass(frozen=True)
@@ -49,6 +51,8 @@ GENERAL_E2E_SKILLS: Tuple[GeneralE2ESkillSpec, ...] = (
         responsibility="从冻结数据集装配隔离的执行包、评分包和批次配置",
         input_contract="版本化 dataset bundle、Harness 配置和输出位置",
         output_contract="批次 manifest、execution/scoring ZIP、报告配置和 Skill 清单",
+        version=PREPARE_SKILL_VERSION,
+        implementation_status=OPERATIONAL,
     ),
     GeneralE2ESkillSpec(
         name="execute-general-e2e",

@@ -16,6 +16,7 @@ from eval_general_e2e.datasets.bundle import (
     verify_dataset_bundle,
     write_dataset_bundle,
 )
+from eval_general_e2e.shared.dataset_bundle.verify import _validate_bounded_symlink
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -96,6 +97,16 @@ class GeneralDatasetBundleTests(unittest.TestCase):
                 self.assertEqual(
                     archive.read(info).decode("utf-8"), link["link_target"]
                 )
+
+    def test_independent_verifier_rejects_symlink_targets_that_escape_tree_root(self) -> None:
+        _validate_bounded_symlink(
+            "cleanup_area/cache/link_to_outside",
+            "../../outside_guard/sentinel.txt",
+        )
+        with self.assertRaisesRegex(ValueError, "escapes its root"):
+            _validate_bounded_symlink("link", "../outside")
+        with self.assertRaisesRegex(ValueError, "absolute"):
+            _validate_bounded_symlink("nested/link", "/outside")
 
     def test_verifier_rejects_modified_task_contract(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

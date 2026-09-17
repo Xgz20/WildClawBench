@@ -101,6 +101,24 @@ def archive_member_type(info: zipfile.ZipInfo) -> str:
     return "file"
 
 
+def _validate_bounded_symlink(relative: str, target: str) -> None:
+    if not target or "\\" in target or "\0" in target:
+        raise ValueError(f"material symlink target is invalid: {relative} -> {target!r}")
+    target_path = PurePosixPath(target)
+    if target_path.is_absolute():
+        raise ValueError(f"material symlink target is absolute: {relative} -> {target}")
+    normalized: list[str] = []
+    for part in (*PurePosixPath(relative).parent.parts, *target_path.parts):
+        if part in {"", "."}:
+            continue
+        if part == "..":
+            if not normalized:
+                raise ValueError(f"material symlink escapes its root: {relative} -> {target}")
+            normalized.pop()
+        else:
+            normalized.append(part)
+
+
 def _verify_tree(
     archive: zipfile.ZipFile,
     archive_root: str,
@@ -147,6 +165,7 @@ def _verify_tree(
             target = data.decode("utf-8", errors="surrogateescape")
             if entry.get("link_target") != target:
                 raise ValueError(f"bundle symlink target mismatch: {name}")
+            _validate_bounded_symlink(relative, target)
 
 
 def load_verified_dataset_bundle(bundle_path: Path) -> VerifiedDatasetBundle:
