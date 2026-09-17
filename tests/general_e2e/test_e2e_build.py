@@ -7,6 +7,7 @@ from pathlib import Path, PurePosixPath
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 import warnings
@@ -76,6 +77,7 @@ class E2EBuildTests(unittest.TestCase):
                 "resource-metrics",
                 "workspace-integrity",
                 "dataset-bundle-verifier",
+                "grading-core",
             },
         )
         self.assertEqual(self.manifest["skill_count"], 13)
@@ -400,6 +402,42 @@ process.stdout.write(JSON.stringify({{
             self.assertEqual(completed.returncode, 0, completed.stderr)
             self.assertIn(marker, completed.stdout)
             self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
+
+    def test_general_grading_core_loads_outside_checkout(self) -> None:
+        detached = self.temp_root / "detached-general-score"
+        detached.mkdir()
+        root = BUILD._safe_extract(
+            self.archive_path("score-general-e2e"),
+            detached / "installed",
+        )
+        vendor_parent = root / "vendor/e2e-shared"
+        package = vendor_parent / "wildclawbench_grading_core"
+        self.assertTrue((package / "__init__.py").is_file())
+        self.assertTrue((package / "rule-runtime-dependencies.json").is_file())
+        source = """
+import json
+import sys
+sys.path.insert(0, sys.argv[1])
+import wildclawbench_grading_core as core
+payload = core.inspect_rule_dependencies('import yaml\\nimport playwright.sync_api')
+print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external']}))
+"""
+        completed = subprocess.run(
+            [sys.executable, "-I", "-c", source, str(vendor_parent)],
+            cwd=detached,
+            env={"PATH": ""},
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(payload["version"], "0.1.0")
+        self.assertEqual(
+            {item["distribution"] for item in payload["external"]},
+            {"PyYAML", "playwright"},
+        )
+        self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
 
 
 if __name__ == "__main__":

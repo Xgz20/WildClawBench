@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import math
 import os
 import subprocess
 import tempfile
@@ -14,6 +13,12 @@ from .judge_audit import write_attempt, write_summary
 from .judge_shim import parse_json_candidate
 from .ppt_evidence import build_ppt_evidence_code
 from .website_evidence import build_website_evidence_code
+from src.wildclawbench_grading_core.compat import (
+    align_legacy_rubric_scores,
+    combine_legacy_v2_scores,
+    parse_grade_stdout,
+    validate_legacy_rubric_scores,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -696,17 +701,7 @@ def _build_grading_env_args(
 
 def _parse_grade_stdout(stdout: str) -> dict | None:
     """Extract the last valid JSON object from grade runner stdout."""
-    try:
-        return json.loads(stdout.strip())
-    except json.JSONDecodeError:
-        for line in reversed(stdout.strip().splitlines()):
-            line = line.strip()
-            if line.startswith("{"):
-                try:
-                    return json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-    return None
+    return parse_grade_stdout(stdout)
 
 
 def _combine_v2(
@@ -725,38 +720,19 @@ def _combine_v2(
     directly (weight collapses to LLM-only). Breakdown keys are prefixed by
     source so the report tool and capability map can reference stable keys.
     """
-    w_auto = float(grading_weights.get("automated", 0.5))
-    w_llm = float(grading_weights.get("llm_judge", 0.5))
-
-    if auto_score is None:
-        overall = llm_score
-        w_auto = 0.0
-    else:
-        total_w = w_auto + w_llm
-        if total_w <= 0:
-            w_auto = w_llm = 0.5
-            total_w = 1.0
-        overall = (auto_score * w_auto + llm_score * w_llm) / total_w
-
-    scores: dict = {}
-    for k, v in auto_breakdown.items():
-        scores[f"automated.{k}"] = v
-    for k, v in llm_breakdown.items():
-        scores[f"llm_judge.{k}"] = v
-    scores["_grading"] = {
-        "mode": "v2_hybrid" if auto_score is not None else "v2_llm_only",
-        "automated_score": round(auto_score, 5) if auto_score is not None else None,
-        "llm_judge_score": round(llm_score, 5),
-        "weights": {"automated": w_auto, "llm_judge": w_llm},
-    }
-    if llm_notes:
-        scores["_grading"]["llm_notes"] = llm_notes
+    scores = combine_legacy_v2_scores(
+        auto_score,
+        auto_breakdown,
+        llm_score,
+        llm_breakdown,
+        llm_notes,
+        grading_weights,
+    )
     dimensions = _aggregate_rubric_dimensions(
         rubric_criteria or [], llm_breakdown, metric_profile=metric_profile
     )
     if dimensions:
         scores["_dimensions"] = dimensions
-    scores["overall_score"] = round(max(0.0, min(1.0, overall)), 4)
     return scores
 
 
@@ -935,110 +911,18 @@ def _exec_container_python(
         Path(runner_host).unlink(missing_ok=True)
 
 
-def _format_score_values(values: list[float]) -> str:
-    return json.dumps(values, ensure_ascii=False, separators=(",", ":"))
-
-
-def _format_received_score(value: object) -> str:
-    rendered = repr(value)
-    return rendered if len(rendered) <= 160 else rendered[:157] + "..."
-
-
 def _validate_rubric_scores(
     raw: dict, rubric_criteria: list[dict],
 ) -> tuple[dict[str, float] | None, str]:
     """Validate and canonicalize judge scores against the rubric contract."""
-    raw_scores = raw.get("scores") if isinstance(raw, dict) else None
-    if not isinstance(raw_scores, dict):
-        return None, "scores must be a JSON object"
-
-    expected_keys = [str(criterion["key"]) for criterion in rubric_criteria]
-    if len(expected_keys) != len(set(expected_keys)):
-        return None, "rubric declares duplicate criterion keys"
-
-    actual_keys = set(raw_scores)
-    expected_key_set = set(expected_keys)
-    errors: list[str] = []
-    criteria_by_key = {
-        str(criterion["key"]): criterion for criterion in rubric_criteria
-    }
-    for key in expected_keys:
-        if key not in actual_keys:
-            allowed = criteria_by_key[key].get("allowed_scores")
-            suffix = (
-                f"; allowed values: {_format_score_values(allowed)}"
-                if isinstance(allowed, list) and allowed
-                else "; allowed range: [0.0,1.0]"
-            )
-            errors.append(f"missing score {key!r}{suffix}")
-    for key in sorted(actual_keys - expected_key_set, key=str):
-        errors.append(
-            f"unexpected score {key!r}={_format_received_score(raw_scores[key])}"
-        )
-
-    normalized: dict[str, float] = {}
-    for criterion in rubric_criteria:
-        key = str(criterion["key"])
-        if key not in raw_scores:
-            continue
-        value = raw_scores[key]
-        if isinstance(value, bool) or not isinstance(value, (int, float)):
-            errors.append(
-                f"score {key!r}={_format_received_score(value)} must be a finite number"
-            )
-            continue
-        numeric = float(value)
-        if not math.isfinite(numeric):
-            errors.append(
-                f"score {key!r}={_format_received_score(value)} must be a finite number"
-            )
-            continue
-
-        allowed = criterion.get("allowed_scores")
-        if isinstance(allowed, list) and allowed:
-            match = next((
-                float(candidate)
-                for candidate in allowed
-                if isinstance(candidate, (int, float))
-                and not isinstance(candidate, bool)
-                and math.isfinite(float(candidate))
-                and math.isclose(numeric, float(candidate), rel_tol=0.0, abs_tol=1e-9)
-            ), None)
-            if match is None:
-                errors.append(
-                    f"score {key!r}={_format_received_score(value)}; allowed values: "
-                    f"{_format_score_values(allowed)}"
-                )
-                continue
-            normalized[key] = match
-        elif 0.0 <= numeric <= 1.0:
-            normalized[key] = numeric
-        else:
-            errors.append(
-                f"score {key!r}={_format_received_score(value)}; "
-                "allowed range: [0.0,1.0]"
-            )
-
-    if errors:
-        return None, "; ".join(errors)
-    return normalized, ""
+    return validate_legacy_rubric_scores(raw, rubric_criteria)
 
 
 def _align_rubric_scores(
     task_id: str, raw: dict, rubric_criteria: list[dict],
 ) -> tuple[float, dict, str]:
     """Compute the weighted result after strict rubric-contract validation."""
-    breakdown, validation_error = _validate_rubric_scores(raw, rubric_criteria)
-    if breakdown is None:
-        raise ValueError(validation_error)
-
-    total_w = sum(c["weight"] for c in rubric_criteria)
-    if total_w > 0:
-        score = sum(breakdown[c["key"]] * c["weight"] for c in rubric_criteria) / total_w
-    else:
-        score = sum(breakdown.values()) / len(breakdown) if breakdown else 0.0
-    notes = str(raw.get("notes", "")) if isinstance(raw, dict) else ""
-    return score, breakdown, notes
+    return align_legacy_rubric_scores(raw, rubric_criteria)
 
 
 def _build_rubric_judge_prompt(

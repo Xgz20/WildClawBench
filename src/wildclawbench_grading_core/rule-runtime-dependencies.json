@@ -1,0 +1,17 @@
+{
+  "schema_version": "wildclawbench.general-e2e-rule-dependencies/v1",
+  "dependencies": [
+    {
+      "distribution": "PyYAML",
+      "import_roots": ["yaml"],
+      "runtime_assets": [],
+      "version_policy": "freeze-in-managed-rule-runtime"
+    },
+    {
+      "distribution": "playwright",
+      "import_roots": ["playwright"],
+      "runtime_assets": ["chromium"],
+      "version_policy": "freeze-in-managed-rule-runtime"
+    }
+  ]
+}

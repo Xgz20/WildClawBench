@@ -68,7 +68,7 @@
       "name": "score-general-e2e",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/score-general-e2e",
-      "components": ["workspace-integrity"]
+      "components": ["workspace-integrity", "grading-core"]
     },
     {
       "name": "report-general-e2e",

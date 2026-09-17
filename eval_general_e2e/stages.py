@@ -15,6 +15,7 @@ OPERATIONAL = "operational"
 PREPARE_SKILL_VERSION = "0.2.0"
 EXECUTE_SKILL_VERSION = "0.4.0"
 COLLECT_SKILL_VERSION = "0.4.0"
+SCORE_SKILL_VERSION = "0.2.0"
 
 
 @dataclass(frozen=True)
@@ -87,6 +88,7 @@ GENERAL_E2E_SKILLS: Tuple[GeneralE2ESkillSpec, ...] = (
         responsibility="对单题执行自动规则和语义裁判并保留证据审计",
         input_contract="单题评分工作空间和冻结裁判配置",
         output_contract="规则分、语义分、证据引用、审计和标准 score.json",
+        version=SCORE_SKILL_VERSION,
     ),
     GeneralE2ESkillSpec(
         name="report-general-e2e",

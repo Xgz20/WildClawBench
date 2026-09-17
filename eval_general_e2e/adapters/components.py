@@ -52,6 +52,13 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         vendor_root="vendor/e2e-shared/dataset-bundle",
         entrypoints=("verify.py",),
     ),
+    SharedComponentSpec(
+        name="grading-core",
+        version="0.1.0",
+        source_root="src/wildclawbench_grading_core",
+        vendor_root="vendor/e2e-shared/wildclawbench_grading_core",
+        entrypoints=("__init__.py",),
+    ),
 )
 
 ASTRONSTUDIO_COMPONENT_NAMES = frozenset(
