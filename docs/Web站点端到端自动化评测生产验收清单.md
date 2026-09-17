@@ -168,11 +168,24 @@ P8 的评分目录均由冻结 execution 复制生成，评分站点通过受管
 
 JSON 和 Markdown 中三个 Harness 的资源总量、覆盖率和来源状态与单题产物一致；缓存写入、QwenWork 推理 Token 和 HTTP 尝试次数继续显示未知，没有补零。Excel 只包含 `站点评测指标`、`难度对比`、`用例对比明细`，公式错误扫描为 0，关键值与 JSON/Markdown 一致。Windows 上 `artifact-tool` 的最小 `workbook.render()` 以退出码 `-1073741819` 复现原生崩溃，因此按 Skill 允许的 `--skip-preview true` 生成正式 XLSX，再用独立只读渲染器逐表检查三个 Sheet，未把跳过内置预览本身记为视觉通过。最终三个 worker 的 `execute/score/package` 均为 `COMPLETED`，管理员批次的 `prepare/collect/report` 均为 `COMPLETED`；据此 P6–P9 和 Windows 资源指标门禁均为 `PASSED`。
 
-#### QwenWork Token 自动注入后续候选
+#### 2026-09-17 QwenWork Token 自动注入实机验收
 
-在上述 `ff5d476...` 实机闭环中，控制任务显式设置 `QODERCN_EXPOSE_TOKEN_USAGE=1` 并使用 `--restart-app-first`；execute-web-e2e 1.12.3 / QwenWork Driver 1.10.14 本身只负责透传已有环境变量，尚未做到普通 Skill 调用自动开启。自动注入最初在 execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 中实现，当前发布候选为 execute 1.12.6 / Driver 1.10.17 / collector 1.1.3，并同时覆盖原生目录选择异步回读和 Windows Node 18 长日志路径：全新单题默认安全重启，全新批次默认只在第一题前安全重启，Driver 向新客户端子进程同时注入 CDP 参数和 Token 开关，不修改控制 Harness 的全局环境；发现活动任务时失败关闭。
+在上述 `ff5d476...` 实机闭环中，控制任务显式设置 `QODERCN_EXPOSE_TOKEN_USAGE=1` 并使用 `--restart-app-first`；execute-web-e2e 1.12.3 / QwenWork Driver 1.10.14 本身只负责透传已有环境变量，尚未做到普通 Skill 调用自动开启。自动注入最初在 execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 中实现，本轮最终发布身份为 execute 1.12.6 / Driver 1.10.17 / collector 1.1.3，并同时覆盖原生目录选择异步回读和 Windows Node 18 长日志路径：全新单题默认安全重启，全新批次默认只在第一题前安全重启，Driver 向新客户端子进程同时注入 CDP 参数和 Token 开关，不修改控制 Harness 的全局环境；发现活动任务时失败关闭。
 
-该改动消除了用户或 Prompt 手工设置环境变量的要求，但属于 Driver 核心启动行为变化。当前 `ff5d476...` 的 P6–P9 证据继续有效，不自动升级到 1.12.6 / 1.10.17 / 1.1.3；新候选必须重新生成 Skill ZIP、完成安装身份检查、只读 probe 和至少一个 QwenWork 1.0.6.0 全新 L1，并确认 `client.launch.environment_preparation.token_usage_exposure.managed_by=qwenwork-driver`、四个核心 Token 为 `observed`、采集告警为空后，才能标记新的资源指标身份为 `PASSED`。
+该改动消除了用户或 Prompt 手工设置环境变量的要求，但属于 Driver 核心启动行为变化。`ff5d476...` 的 P6–P9 证据继续有效，不直接改写为新发布身份；本节只重验自动注入、Windows Node 18 采集和单 L1 执行，不替代 P8/P9 评分、回传与报告，也不把单题结果外推为并发或无人值守高可用。
+
+真实迭代现场均保留，未把失败样本伪装成通过：
+
+- `qwenwork-token-auto-629819d-l1-20260917-141901` 使用 execute `1.12.4` / Driver `1.10.15`，自动重启后的状态已记录 `managed_by=qwenwork-driver`，但原生目录选择后立即读取到旧占位文字“选择文件夹”，在发送 Prompt 前以 `INFRA_FAILED` 收口；候选 SHA 未变化、`PROMPT_SENT=0`。修复为有界等待异步标签更新。
+- `qwenwork-token-auto-d6ede80-l1-20260917-143405` 使用 execute `1.12.5` / Driver `1.10.16`，执行 `SUCCEEDED` 且 receipt 完整，但 Windows Node `18.16.1` 对长度 263 的真实 segment 路径执行 `realpath(file)` 返回 `ENOENT`，正式 execution record 保留 `SOURCE_READ_FAILED`，不作为指标通过证据。修复后的只读重放得到四项核心 Token `observed`，但未回填旧回执。
+
+最终正式批次为 `qwenwork-token-auto-c257fbd-l1-20260917-145043`，source revision 为 `c257fbdd016b450fc62f06dc9f7b4f2b0a78a8fd`，执行包位于 `D:\WorkProgram\xingchen\astroncode\dev\astroncode-eval\report-workspace\web-e2e-automation-packages\qwenwork-token-auto-c257fbd-l1-20260917-145043`，独立 worker 根为 `D:\debug-workspace\web-e2e\m\c257fbd-145043\qw`。execute-web-e2e `1.12.6` 的 content SHA-256 为 `a6c14d71cebb6bd00e8aba1c08b307977ba7a0438402dd910ff08454d701cb6d`，ZIP SHA-256 为 `934313c38bed3c6acb8c60405d64ed36766d12e4fbd521cc65a4a24ecd206e38`；安装检查返回 `all_current=true`。只读 probe 确认 QwenWorkCN `1.0.6.0`、Driver `1.10.17`、模型 `标准｜Qwen3.8-Flash`、`full-access`、CDP/SQLite/UI 均就绪。
+
+最终 L1 使用 `run_slots=1`，队列为 `COMPLETED`，execution receipt 为 `integrity.valid=true`、`manual_interventions=[]`，automation 为 `SUCCEEDED`，状态与队列中 `PROMPT_SENT` / `TASK_DISPATCHED` 均只有一次。新客户端 PID `1236` 的 `client.launch.environment_preparation.token_usage_exposure` 精确记录 `managed_by=qwenwork-driver`、`value=1`、`scope=client-process`；控制 Harness 全局环境未被修改。候选从初始 SHA `6dd93633cb8abae0fdec0cd768bc942d5cf35a22a793aad1cbac2e7832f38dd7` 冻结为 `0188519e61d525b0c8395177dc2d88064ac9c190dd568dc110ce315019ff7ad5`，receipt 复核完全一致；终态进程清理成功并观察到 `45535ms` 静默窗。
+
+collector `1.1.3` 在正式终态原生写入 input `1531951`、output `23861`、total `1555812`、cache read `1449600`、请求 `26`、工具 `25`，四项核心 Token、请求数、工具数和两类耗时均为 `observed`，警告为空。运行身份为 `@ali/qodercn-agent-sdk-next@1.0.28`、transcript `1.1.32`、runtime SHA `e86620b7e772d1f536ba15beea8c3059bf6075dffb478aceaa8cad328a879c28`，精确命中 `qwenwork-1.0.6-qoder-cache-inclusive-v1`。主 turn `6e47d1ef-1c2b-4f05-b037-e8cd107e7646` 的 `model.request.started` 与 `model.response.completed` 均为 26 个唯一 ID，集合一致、provider 全部为 `qoder`、零 usage 响应数与 `cache_read > input` 异常数均为 0；唯一 `turn.finished` 与逐响应总和一致。另有 4 个后台请求和 3 个后台工具调用，已作为 `background-turn` 排除于主任务统计。
+
+正式证据 SHA-256：execution receipt `a90160dcde98b7bdcf51d2984aeb446a82bca957205d0cbca930af3a0ebeecaa`，execution record `b2f749c70be0fb4a2abf7b63c6797fba0c04e1905b3cc99aa15b179008d4636e`，automation state `407d3aee3cee1ec49558695bb3cd635c806ec3569acecf830fc25bfb189cbd93`，queue state `50d6947e7222a94373b43f2b2d62cb9d56a93fb7a8b766f8079fff1ee375c165`。据此，execute `1.12.6` / Driver `1.10.17` / collector `1.1.3` 在 Windows QwenWorkCN `1.0.6.0` 下的“自动注入 + 单 L1 资源指标”门禁为 `PASSED`；用户不需要手工开启 Token 开关。首个正式批次仍按指导手册使用 3–5 个 L1、并发 1 的 canary，之后再按受影响范围恢复并发。
 
 ## 2. 状态与更新规则
 

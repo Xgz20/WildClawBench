@@ -24,7 +24,7 @@
 | --- | --- | --- |
 | AstronStudio | **主流程生产可用**：revision `6988b525...` 的独立 macOS 包已完成单 L1 execution→score→submission→return；首个正式批次先跑 3–5 个 L1 canary。当前 revision 的默认三槽并发、管理员 import/report 和恢复边界尚未重绑，不能按无人值守高可用使用。 | **无人值守高可用已验证**：发布实现 revision `6988b525...`，AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（runtime 152.0.7977.83）、execute 1.11.16 / Driver 1.10.18 / orchestrate 0.2.6 / run 1.3.7；V00–V17 已在 Windows 10 x64 真机通过。 |
 | WorkBuddy | 历史批次已覆盖五题执行、评分、回传和报告；当前发布候选的前置脚本已更新，须按清单至少重跑 probe、L1 smoke 和受影响恢复项。 | **无人值守高可用已验证**：发布实现 revision `ee70a67...`，WorkBuddy 5.5.6.0、Codex Desktop 26.908.9136（runtime 152.0.7977.83）、execute 1.11.21 / Driver 1.8.24 / orchestrate 0.2.6 / run 1.3.8；V00–V17 已在 Windows 10 x64 真机通过。 |
-| QwenWork | 历史批次已覆盖串行、默认三路并发、三题评分、submission 和 return；报告、单 Prompt 和恢复边界尚未形成完整同版本证据。 | **主流程生产可用**：revision `24771ce...` 的单 L1 包已在 QwenWorkCN 1.0.5.0 下完成 execution→score→submission→return；资源指标补充 revision `ff5d476...` 已使用 QwenWorkCN 1.0.6.0、execute 1.12.3 / Driver 1.10.14 / collector 1.1.2 完成全新单 L1、评分透传、return、管理员导入和报告，四个核心 Token 均为 `observed`。首个正式批次先跑 3–5 个 L1 canary；当前身份的串行、默认三槽、并发评分和恢复边界尚未重绑，不能按并发生产或无人值守高可用使用。 |
+| QwenWork | 历史批次已覆盖串行、默认三路并发、三题评分、submission 和 return；报告、单 Prompt 和恢复边界尚未形成完整同版本证据。 | **主流程生产可用**：revision `24771ce...` 的单 L1 包已在 QwenWorkCN 1.0.5.0 下完成 execution→score→submission→return；资源指标闭环 revision `ff5d476...` 已完成三 Harness 的执行、评分、return、管理员导入和报告。最新自动注入 revision `c257fbd...` 又使用 QwenWorkCN 1.0.6.0、execute 1.12.6 / Driver 1.10.17 / collector 1.1.3 完成只读 probe 与全新单 L1，四个核心 Token 均为 `observed` 且无需人工设置开关。首个正式批次先跑 3–5 个 L1 canary；当前身份的多题串行、默认三槽、并发评分和恢复边界尚未重绑，不能按并发生产或无人值守高可用使用。 |
 
 历史结论不能自动外推到新 revision。首次换机、升级桌面客户端或 Skill、切换模型，或者修改 Driver/桌面前置脚本核心实现后，须在生产验收清单中把受影响项标为 `STALE`，再按只读 probe、L1 smoke、串行、并发、完整闭环和恢复验收的顺序重验。
 
@@ -77,7 +77,7 @@
   --run-id '<run-id>' --task-id '<task-id>' --run-slots 1 --permission-mode full-access
 ```
 
-开关只负责让客户端暴露原生 usage，不代表任意版本都能进入正式汇总。采集器仍会精确核对平台、客户端、SDK、transcript 和 runtime SHA；当前 Windows 真机通过的是 QwenWorkCN 1.0.6.0 的 `qwenwork-1.0.6-qoder-cache-inclusive-v1`，四个核心 Token 均为 `observed`。任一身份漂移都保持 `unverified`，历史 `masked` 样本也不会回填。revision `ff5d476...` 的 P6–P9 证据来自 execute 1.12.3 / Driver 1.10.14，由控制任务显式注入开关；当前内建自动注入发布候选为 execute 1.12.6 / Driver 1.10.17 / collector 1.1.3，并同时覆盖原生目录选择异步回读和 Windows Node 18 长日志路径，发布前仍须重新生成 Skill 包并至少完成 probe 和一个全新 L1。
+开关只负责让客户端暴露原生 usage，不代表任意版本都能进入正式汇总。采集器仍会精确核对平台、客户端、SDK、transcript 和 runtime SHA；当前 Windows 真机通过的是 QwenWorkCN 1.0.6.0 的 `qwenwork-1.0.6-qoder-cache-inclusive-v1`，四个核心 Token 均为 `observed`。任一身份漂移都保持 `unverified`，历史 `masked` 样本也不会回填。revision `ff5d476...` 的 P6–P9 证据来自 execute 1.12.3 / Driver 1.10.14，由控制任务显式注入开关；当前内建自动注入发布身份 execute 1.12.6 / Driver 1.10.17 / collector 1.1.3 已在 revision `c257fbd...` 完成只读 probe 和一个全新 L1，覆盖原生目录选择异步回读与 Windows Node 18 长日志路径，`managed_by=qwenwork-driver`、四项核心 Token `observed`、告警为空。
 
 WorkBuddy、AstronStudio 和 QwenWork 的技术默认后台执行并发均为 3，最大均为 8，UI 操作保持单路。QwenWork 当前生产准入仍要求首批 canary 显式使用并发 1；首次换机、升级 Harness/Skill 或切换模型后也先用少量 L1 验证本机客户端隔离。
 
