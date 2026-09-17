@@ -40,6 +40,13 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
             ),
             ("0.2.0", "operational"),
         )
+        self.assertEqual(
+            (
+                get_skill_spec("execute-general-e2e").version,
+                get_skill_spec("execute-general-e2e").implementation_status,
+            ),
+            ("0.2.0", "interface_only"),
+        )
         self.assertTrue(
             all(
                 spec.implementation_status == "interface_only"

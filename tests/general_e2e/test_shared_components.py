@@ -135,6 +135,14 @@ process.stdout.write(JSON.stringify({{
                     (web_root / vendored).read_bytes(),
                 )
 
+    def test_general_probe_development_snapshot_matches_canonical_source(self) -> None:
+        canonical = REPO_ROOT / "tools/report/e2e-shared/desktop-runtime/process.mjs"
+        snapshot = (
+            REPO_ROOT
+            / "tools/report/skills/general-e2e/execute-general-e2e/vendor/e2e-shared/desktop-runtime/process.mjs"
+        )
+        self.assertEqual(snapshot.read_bytes(), canonical.read_bytes())
+
     def test_web_adapters_preserve_web_metric_and_integrity_profiles(self) -> None:
         parser = REPO_ROOT / "tools/report/skills/web-e2e/execute-web-e2e/drivers/metrics/parsers.mjs"
         orchestrate = REPO_ROOT / "tools/report/skills/web-e2e/orchestrate-web-e2e/scripts/workspace-integrity.mjs"

@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:general-e2e:astronstudio-run-config:v1",
+  "title": "Frozen AstronStudio General E2E run configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_version",
+    "frozen_at",
+    "implementation",
+    "platform",
+    "harness",
+    "control",
+    "state_database",
+    "tested_model",
+    "dependencies",
+    "execution_policy",
+    "config_digest_algorithm",
+    "config_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "wildclawbench.general-e2e-astronstudio-run-config/v1"
+    },
+    "contract_version": {
+      "const": "general-e2e-contract-v1"
+    },
+    "frozen_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "implementation": {
+      "type": "object",
+      "required": ["skill_name", "skill_version", "implementation_status", "source_revision", "distribution", "components"]
+    },
+    "platform": {
+      "type": "object",
+      "required": ["os", "version", "build", "architecture"]
+    },
+    "harness": {
+      "type": "object",
+      "required": ["id", "app_path", "bundle_id", "client_version", "process_executable"],
+      "properties": {
+        "id": {
+          "const": "astronstudio"
+        },
+        "app_path": {
+          "type": "string"
+        },
+        "bundle_id": {
+          "const": "cn.xfyun.acode"
+        },
+        "client_version": {
+          "type": "string"
+        },
+        "process_executable": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "control": {
+      "type": "object",
+      "required": ["backend", "endpoint", "endpoint_source", "ui_slots", "execution_concurrency"],
+      "properties": {
+        "backend": {
+          "const": "electron-cdp"
+        },
+        "endpoint": {
+          "type": "string",
+          "pattern": "^http://(?:127\\.0\\.0\\.1|localhost|\\[::1\\]):[0-9]+$"
+        },
+        "endpoint_source": {
+          "type": "string"
+        },
+        "ui_slots": {
+          "const": 1
+        },
+        "execution_concurrency": {
+          "const": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "state_database": {
+      "type": "object",
+      "required": ["path", "snapshot_backend", "required_tables"]
+    },
+    "tested_model": {
+      "type": "object",
+      "required": ["display_name", "reasoning_display", "permission_display", "verification"],
+      "properties": {
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reasoning_display": {
+          "type": "string",
+          "minLength": 1
+        },
+        "permission_display": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verification": {
+          "const": "cdp-visible-current-value"
+        }
+      },
+      "additionalProperties": false
+    },
+    "dependencies": {
+      "type": "object"
+    },
+    "execution_policy": {
+      "type": "object",
+      "required": ["prompt_send_enabled_by_probe", "app_restart_enabled_by_probe", "initial_concurrency"],
+      "properties": {
+        "prompt_send_enabled_by_probe": {
+          "const": false
+        },
+        "app_restart_enabled_by_probe": {
+          "const": false
+        },
+        "initial_concurrency": {
+          "const": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "config_digest_algorithm": {
+      "const": "sha256-canonical-json/v1"
+    },
+    "config_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

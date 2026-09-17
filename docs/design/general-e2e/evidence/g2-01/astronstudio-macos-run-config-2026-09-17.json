@@ -1,0 +1,104 @@
+{
+  "schema_version": "wildclawbench.general-e2e-astronstudio-run-config/v1",
+  "contract_version": "general-e2e-contract-v1",
+  "frozen_at": "2026-09-17T14:20:48.448Z",
+  "implementation": {
+    "skill_name": "execute-general-e2e",
+    "skill_version": "0.2.0",
+    "implementation_status": "interface_only",
+    "source_revision": null,
+    "distribution": "repository-source",
+    "components": [
+      {
+        "name": "desktop-runtime",
+        "version": "1.0.0",
+        "content_sha256": null
+      }
+    ]
+  },
+  "platform": {
+    "os": "macOS",
+    "version": "26.6.2",
+    "build": "25G83",
+    "architecture": "x86_64"
+  },
+  "harness": {
+    "id": "astronstudio",
+    "app_path": "/Applications/AStudio.app",
+    "bundle_id": "cn.xfyun.acode",
+    "client_version": "3.3.1",
+    "process_executable": "/Applications/AStudio.app/Contents/MacOS/AStudio"
+  },
+  "control": {
+    "backend": "electron-cdp",
+    "endpoint": "http://127.0.0.1:9240",
+    "endpoint_source": "process-command",
+    "ui_slots": 1,
+    "execution_concurrency": 1
+  },
+  "state_database": {
+    "path": "/Users/gzx/.acode/acode/userdata/state.sqlite",
+    "snapshot_backend": "node:sqlite",
+    "required_tables": [
+      "projection_thread_sessions",
+      "projection_threads"
+    ]
+  },
+  "tested_model": {
+    "display_name": "GLM-5.2",
+    "reasoning_display": "High",
+    "permission_display": "完全访问",
+    "verification": "cdp-visible-current-value"
+  },
+  "dependencies": {
+    "node": {
+      "available": true,
+      "version": "v24.14.0",
+      "executable": "/Users/gzx/.nvm/versions/node/v24.14.0/bin/node",
+      "websocket_api": true
+    },
+    "python": {
+      "available": true,
+      "version": "Python 3.8.3",
+      "command": "python3",
+      "error": null
+    },
+    "sqlite": {
+      "node_sqlite_available": true,
+      "cli": {
+        "available": true,
+        "version": "3.51.0 2025-06-12 13:14:41 f0ca7bba1c5e232e5d279fad6338121ab55af0c8c68c84cdfb18ba5114dcaapl (64-bit)",
+        "command": "/usr/bin/sqlite3",
+        "error": null
+      }
+    },
+    "docker": {
+      "available": true,
+      "version": "Docker version 29.6.1, build 8900f1d",
+      "command": "docker",
+      "error": null
+    },
+    "codex": {
+      "available": true,
+      "version": "codex-cli 0.145.0",
+      "command": "codex",
+      "error": null
+    },
+    "required_for_probe": {
+      "node": true,
+      "state_database_backend": true
+    },
+    "recorded_for_later_stages": [
+      "python",
+      "docker",
+      "codex"
+    ]
+  },
+  "execution_policy": {
+    "prompt_send_enabled_by_probe": false,
+    "app_restart_enabled_by_probe": false,
+    "initial_concurrency": 1
+  },
+  "config_digest_algorithm": "sha256-canonical-json/v1",
+  "config_digest": "39ccb11c8c6cacd8b35918ed325f171265499e37ec36dae0441b374411d901dd"
+}

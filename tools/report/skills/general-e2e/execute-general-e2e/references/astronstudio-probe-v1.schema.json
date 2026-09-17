@@ -1,0 +1,526 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:general-e2e:astronstudio-probe:v1",
+  "title": "AstronStudio General E2E macOS probe",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "probe_version",
+    "captured_at",
+    "status",
+    "ready",
+    "failed_checks",
+    "implementation",
+    "environment",
+    "app",
+    "process",
+    "gui",
+    "devtools_active_port",
+    "cdp",
+    "state_database",
+    "dependencies",
+    "action_audit",
+    "frozen_run_config"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "wildclawbench.general-e2e-astronstudio-probe/v1"
+    },
+    "probe_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "enum": ["PASS", "NEEDS_ATTENTION"]
+    },
+    "ready": {
+      "type": "boolean"
+    },
+    "failed_checks": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "implementation": {
+      "$ref": "#/$defs/implementation"
+    },
+    "environment": {
+      "$ref": "#/$defs/environment"
+    },
+    "app": {
+      "$ref": "#/$defs/app"
+    },
+    "process": {
+      "$ref": "#/$defs/process"
+    },
+    "gui": {
+      "$ref": "#/$defs/gui"
+    },
+    "devtools_active_port": {
+      "$ref": "#/$defs/devtoolsActivePort"
+    },
+    "cdp": {
+      "$ref": "#/$defs/cdp"
+    },
+    "state_database": {
+      "$ref": "#/$defs/stateDatabase"
+    },
+    "dependencies": {
+      "type": "object"
+    },
+    "action_audit": {
+      "$ref": "#/$defs/actionAudit"
+    },
+    "frozen_run_config": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "urn:wildclawbench:schema:general-e2e:astronstudio-run-config:v1"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "nullableString": {
+      "type": ["string", "null"]
+    },
+    "implementation": {
+      "type": "object",
+      "required": ["skill_name", "skill_version", "implementation_status", "source_revision", "distribution", "components"],
+      "properties": {
+        "skill_name": {
+          "const": "execute-general-e2e"
+        },
+        "skill_version": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "implementation_status": {
+          "type": ["string", "null"]
+        },
+        "source_revision": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "distribution": {
+          "enum": ["built-skill-package", "repository-source", "unknown"]
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "version", "content_sha256"],
+            "properties": {
+              "name": {
+                "type": ["string", "null"]
+              },
+              "version": {
+                "type": ["string", "null"]
+              },
+              "content_sha256": {
+                "type": ["string", "null"],
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "environment": {
+      "type": "object",
+      "required": ["platform", "product_name", "product_version", "build_version", "architecture"],
+      "properties": {
+        "platform": {
+          "type": "string"
+        },
+        "product_name": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "product_version": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "build_version": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "architecture": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "app": {
+      "type": "object",
+      "required": ["installed", "path", "executable_path", "bundle_id", "version", "bundle_identity_verified"],
+      "properties": {
+        "installed": {
+          "type": "boolean"
+        },
+        "path": {
+          "type": "string"
+        },
+        "executable_path": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "bundle_id": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "version": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "bundle_identity_verified": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "process": {
+      "type": "object",
+      "required": ["running", "identity_verified", "pid", "listening_ports"],
+      "properties": {
+        "running": {
+          "type": "boolean"
+        },
+        "identity_verified": {
+          "type": "boolean"
+        },
+        "pid": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "ppid": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "executable_path": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "started_at": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "command_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "remote_debugging_port": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "listening_ports": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          }
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "gui": {
+      "type": "object",
+      "required": ["frontmost_application", "screen_locked", "lock_source", "unlocked"],
+      "properties": {
+        "frontmost_application": {
+          "type": "string"
+        },
+        "screen_locked": {
+          "type": ["boolean", "null"]
+        },
+        "lock_source": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "unlocked": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "devtoolsActivePort": {
+      "type": "object",
+      "required": ["path", "exists", "port", "modified_at", "valid_for_process", "status"],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "exists": {
+          "type": "boolean"
+        },
+        "port": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "modified_at": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "valid_for_process": {
+          "type": "boolean"
+        },
+        "status": {
+          "enum": ["current", "stale_or_invalid", "missing", "unreadable"]
+        },
+        "error": {
+          "type": ["string", "null"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "model": {
+      "type": "object",
+      "required": ["value", "reasoning_display", "source", "verified", "reasoning_verified"],
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "reasoning_display": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "source": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "reasoning_verified": {
+          "type": "boolean"
+        },
+        "visible_match_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "permission": {
+      "type": "object",
+      "required": ["display", "source", "verified"],
+      "properties": {
+        "display": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "source": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "disabled": {
+          "type": ["boolean", "null"]
+        },
+        "visible_match_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "cdp": {
+      "type": "object",
+      "required": ["ready", "endpoint", "endpoint_source", "owned_by_main_process", "model", "permission", "attempts"],
+      "properties": {
+        "ready": {
+          "type": "boolean"
+        },
+        "endpoint": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "endpoint_source": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "owned_by_main_process": {
+          "type": "boolean"
+        },
+        "browser": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "protocol_version": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "page_target_count": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "page_title": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "page_url_scheme": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "model": {
+          "$ref": "#/$defs/model"
+        },
+        "permission": {
+          "$ref": "#/$defs/permission"
+        },
+        "attempts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["endpoint", "source", "ready", "owned_by_main_process", "error"],
+            "properties": {
+              "endpoint": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "ready": {
+                "type": "boolean"
+              },
+              "owned_by_main_process": {
+                "type": "boolean"
+              },
+              "error": {
+                "type": ["string", "null"]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "error": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "stateDatabase": {
+      "type": "object",
+      "required": ["path", "readable", "integrity", "schema_ready", "latest_persisted_model"],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "readable": {
+          "type": "boolean"
+        },
+        "source_open_mode": {
+          "type": "string"
+        },
+        "snapshot_backend": {
+          "type": "string"
+        },
+        "snapshot_attempts": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "integrity": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "table_count": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "missing_required_tables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "schema_ready": {
+          "type": "boolean"
+        },
+        "latest_persisted_model": {
+          "type": ["object", "null"]
+        },
+        "active_or_pending_session_count": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "source_size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source_modified_at_before_probe": {
+          "type": "string"
+        },
+        "error": {
+          "type": ["string", "null"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "actionAudit": {
+      "type": "object",
+      "required": [
+        "policy",
+        "allowed_operations",
+        "app_start_attempted",
+        "app_restart_attempted",
+        "app_quit_attempted",
+        "ui_click_attempted",
+        "workspace_selection_attempted",
+        "model_selection_attempted",
+        "composer_access_attempted",
+        "prompt_send_attempted",
+        "source_database_write_attempted"
+      ],
+      "properties": {
+        "policy": {
+          "const": "read_only"
+        },
+        "allowed_operations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "app_start_attempted": {
+          "const": false
+        },
+        "app_restart_attempted": {
+          "const": false
+        },
+        "app_quit_attempted": {
+          "const": false
+        },
+        "ui_click_attempted": {
+          "const": false
+        },
+        "workspace_selection_attempted": {
+          "const": false
+        },
+        "model_selection_attempted": {
+          "const": false
+        },
+        "composer_access_attempted": {
+          "const": false
+        },
+        "prompt_send_attempted": {
+          "const": false
+        },
+        "source_database_write_attempted": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

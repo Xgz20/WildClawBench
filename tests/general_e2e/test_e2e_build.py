@@ -307,6 +307,34 @@ process.stdout.write(JSON.stringify({{
         )
         self.assertEqual(payload["orchestrate"], payload["score"])
 
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required")
+    def test_general_execute_probe_loads_outside_checkout(self) -> None:
+        detached = self.temp_root / "detached-general-execute"
+        detached.mkdir()
+        root = BUILD._safe_extract(
+            self.archive_path("execute-general-e2e"),
+            detached / "installed",
+        )
+        probe = root / "scripts/probe_astronstudio_macos.mjs"
+        self.assertTrue(probe.is_file())
+        self.assertTrue(
+            (root / "vendor/e2e-shared/desktop-runtime/process.mjs").is_file()
+        )
+        completed = subprocess.run(
+            ["node", str(probe), "--help"],
+            cwd=detached,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn(
+            "macOS 只读探针",
+            completed.stdout,
+            f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}",
+        )
+        self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

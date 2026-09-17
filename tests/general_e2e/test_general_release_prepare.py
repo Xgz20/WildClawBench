@@ -162,8 +162,16 @@ class GeneralReleasePrepareTests(unittest.TestCase):
             ("0.2.0", "operational"),
         )
         self.assertEqual(
+            readiness["execute-general-e2e"],
+            ("0.2.0", "interface_only"),
+        )
+        self.assertEqual(
             set(readiness.values()),
-            {("0.2.0", "operational"), ("0.1.0", "interface_only")},
+            {
+                ("0.2.0", "operational"),
+                ("0.2.0", "interface_only"),
+                ("0.1.0", "interface_only"),
+            },
         )
 
     def test_packaged_prepare_runs_without_checkout_or_pythonpath(self) -> None:

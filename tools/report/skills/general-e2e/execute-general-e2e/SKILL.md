@@ -15,7 +15,21 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。共享进程基元和 AstronStudio source binding 已完成，但正式会话状态机、Prompt 单次发送与恢复实现尚未交付；当前仍为 `interface_only`，应保留输入包、明确报告未就绪并停止。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.2.0/interface_only` 已提供 AstronStudio macOS 只读探针，但正式会话状态机、Prompt 单次发送与恢复仍未交付；除探针外应保留输入包、明确报告未就绪并停止。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+
+## AstronStudio macOS 只读探针
+
+在发送任何 Prompt 前运行：
+
+```bash
+node scripts/probe_astronstudio_macos.mjs \
+  --output /absolute/new/probe.json \
+  --config-output /absolute/new/run-config.json
+```
+
+探针只读取 macOS、应用包、精确主进程、GUI 锁定状态、CDP 元数据与可见模型/推理/权限、状态库快照和依赖版本。它不启动、退出或重启 AStudio，不点击 UI，不选择工作空间/模型，不读取 composer 内容，也不发送 Prompt。输出路径必须是新文件。
+
+只有探针返回 `PASS` 才会写 `run-config.json`；CDP 缺失或不属于已核对主进程、`DevToolsActivePort` 早于当前进程、状态库快照不完整、模型/推理/权限不能从可见 UI 回读时均返回 `NEEDS_ATTENTION`，不会用最近线程的持久化模型冒充当前配置。完整字段和失败语义见 [AstronStudio macOS 探针契约](references/astronstudio-macos-probe.md)。
 
 ## 责任边界
 
