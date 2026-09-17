@@ -10,17 +10,17 @@ import {
   receiverStatus,
   startReceiver,
   stopReceiver,
-} from "../tools/report/skills/score-web-e2e/scripts/screenshot_receiver.mjs";
+} from "../tools/report/skills/web-e2e/score-web-e2e/scripts/screenshot_receiver.mjs";
 import {
   processIdentity,
   processTerminationInvocation,
   windowsCommandIncludesPath,
-} from "../tools/report/skills/score-web-e2e/scripts/managed_runtime.mjs";
+} from "../tools/report/skills/web-e2e/score-web-e2e/scripts/managed_runtime.mjs";
 import {
   CANDIDATE_ARTIFACT_SCHEMA,
   TREE_HASH_ALGORITHM,
   snapshotWorkspace,
-} from "../tools/report/skills/score-web-e2e/scripts/workspace-integrity.mjs";
+} from "../tools/report/skills/web-e2e/score-web-e2e/scripts/workspace-integrity.mjs";
 
 const PNG_1X1 = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",

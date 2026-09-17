@@ -9,7 +9,7 @@ import unittest
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ROOT / "tools/report/skills"
+SKILLS = ROOT / "tools/report/skills/web-e2e"
 
 
 class ResourcePackagingTest(unittest.TestCase):

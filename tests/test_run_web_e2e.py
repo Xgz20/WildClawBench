@@ -12,15 +12,15 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = REPO_ROOT / "tools/report/skills/run-web-e2e/scripts/run_web_e2e.py"
+SCRIPT = REPO_ROOT / "tools/report/skills/web-e2e/run-web-e2e/scripts/run_web_e2e.py"
 WINDOWS_DESKTOP_DEBUG_SCRIPT = (
-    REPO_ROOT / "tools/report/skills/run-web-e2e/scripts/start_windows_desktop_debug.ps1"
+    REPO_ROOT / "tools/report/skills/web-e2e/run-web-e2e/scripts/start_windows_desktop_debug.ps1"
 )
 WINDOWS_DESKTOP_RESTART_SCRIPT = (
-    REPO_ROOT / "tools/report/skills/run-web-e2e/scripts/restart_windows_desktop_debug.ps1"
+    REPO_ROOT / "tools/report/skills/web-e2e/run-web-e2e/scripts/restart_windows_desktop_debug.ps1"
 )
 MACOS_DESKTOP_DEBUG_SCRIPT = (
-    REPO_ROOT / "tools/report/skills/run-web-e2e/scripts/start_macos_desktop_debug.sh"
+    REPO_ROOT / "tools/report/skills/web-e2e/run-web-e2e/scripts/start_macos_desktop_debug.sh"
 )
 
 
@@ -50,9 +50,12 @@ class WindowsDesktopDebugScriptTests(unittest.TestCase):
     def test_stop_and_cdp_identity_are_bound_to_discovered_executable(self) -> None:
         script = WINDOWS_DESKTOP_DEBUG_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("function Get-InstalledProcessesByExecutable", script)
+        self.assertIn("function Stop-InstalledProcessTrees", script)
         self.assertIn("[IO.Path]::GetFullPath($ExpectedExecutablePath)", script)
         self.assertIn("$codexProcesses | Stop-Process -Force", script)
-        self.assertIn("$astronStudioProcesses | Stop-Process -Force", script)
+        self.assertIn("-Processes $astronStudioProcesses", script)
+        self.assertIn("-ExecutablePath $astronStudioExecutable", script)
+        self.assertNotIn("$astronStudioProcesses | Stop-Process -Force", script)
         self.assertNotIn("-Name $processNames", script)
 
     def test_restart_helper_forwards_qwenwork_scope_and_port(self) -> None:

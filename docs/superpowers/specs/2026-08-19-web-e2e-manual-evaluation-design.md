@@ -10,7 +10,7 @@
 2. `score-web-e2e`：作为评分客户端独立安装、可单独升级的 Skill，驱动评分 Agent 对单题站点操作取证，并用 Node.js 校验生成标准 JSON；
 3. `report-web-e2e`：校验多个回传包，读取工程内批次配置，生成领导版 Markdown、报告数据 JSON 和三 Sheet Excel。
 
-三个 Skill 的 canonical 源目录统一位于 `tools/report/skills/<skill-name>/`，`.agents/skills/<skill-name>` 只保留指向 canonical 源的相对软链接。
+Web E2E Skill 的 canonical 源目录统一位于 `tools/report/skills/web-e2e/<skill-name>/`，`.agents/skills/<skill-name>` 只保留指向 canonical 源的相对软链接。
 
 脚本只处理确定性工作：复制 Workspace、改写路径、隔离私有评分材料、合并目录、校验 JSON、计算分数、过滤敏感内容和渲染报表。脚本不发题、不调用 Harness、不控制浏览器，也不决定 criterion 分数。
 

@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILLS_ROOT = REPO_ROOT / "tools/report/skills"
+SKILLS_ROOT = REPO_ROOT / "tools/report/skills/web-e2e"
 PREPARE_SCRIPT = SKILLS_ROOT / "prepare-web-e2e-workspaces/scripts/prepare_web_e2e_workspaces.py"
 FALLBACK_SCRIPT = SKILLS_ROOT / "prepare-web-e2e-workspaces/scripts/prepare_scoring_workspace.py"
 INIT_SCORE = SKILLS_ROOT / "score-web-e2e/scripts/init_score.mjs"
@@ -332,7 +332,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 self.assertEqual(item["sha256"], prepare_module.sha256_file(archive_path))
                 self.assertEqual(
                     item["content_sha256"],
-                    prepare_module.sha256_skill_content(REPO_ROOT / "tools/report/skills" / item["name"]),
+                    prepare_module.sha256_skill_content(SKILLS_ROOT / item["name"]),
                 )
             self.assertEqual(batch_manifest["required_skills"], manifest["required_skills"])
             self.assertEqual(
@@ -462,7 +462,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertEqual(result["version"], "4.5.2")
             self.assertEqual(
                 result["content_sha256"],
-                prepare_module.sha256_skill_content(REPO_ROOT / "tools/report/skills/score-web-e2e"),
+                prepare_module.sha256_skill_content(SKILLS_ROOT / "score-web-e2e"),
             )
             self.assertFalse((Path(tmp) / "web-skill-only").exists())
             self.assertFalse(any(Path(tmp).glob("**/batch_manifest.json")))
@@ -521,7 +521,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 "execute-web-e2e", "run-web-e2e",
             ):
                 shutil.copytree(
-                    REPO_ROOT / "tools/report/skills" / skill_name,
+                    SKILLS_ROOT / skill_name,
                     installed_root / skill_name,
                     ignore=shutil.ignore_patterns("__pycache__", "node_modules", "*.pyc", ".DS_Store"),
                 )
@@ -538,7 +538,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 "missing",
             )
 
-            shutil.copytree(REPO_ROOT / "tools/report/skills/run-web-e2e", run_skill)
+            shutil.copytree(SKILLS_ROOT / "run-web-e2e", run_skill)
             metadata_path = run_skill / "skill-metadata.json"
             metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
             metadata["version"] = "9.9.9"
@@ -549,7 +549,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 "version_mismatch",
             )
 
-            shutil.copy2(REPO_ROOT / "tools/report/skills/run-web-e2e/skill-metadata.json", metadata_path)
+            shutil.copy2(SKILLS_ROOT / "run-web-e2e/skill-metadata.json", metadata_path)
             with (run_skill / "SKILL.md").open("a", encoding="utf-8") as handle:
                 handle.write("\n测试内容差异。\n")
             content_mismatch = check_skills_module.inspect_skills(manifest_path, [installed_root])

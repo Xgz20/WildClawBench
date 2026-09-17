@@ -697,7 +697,7 @@ def package_score_skill(args: argparse.Namespace) -> dict:
     batch_id = str(getattr(args, "batch_id", "") or default_batch_id()).strip()
     if not SLUG_RE.fullmatch(batch_id):
         raise ValueError(f"批次 ID 不是安全 slug: {batch_id}")
-    scoring_skill = repo_root / "tools/report/skills/score-web-e2e"
+    scoring_skill = repo_root / "tools/report/skills/web-e2e/score-web-e2e"
     if not (scoring_skill / "SKILL.md").is_file():
         raise FileNotFoundError(f"缺少评分 Skill: {scoring_skill}")
     metadata = load_packaged_skill_metadata(scoring_skill)
@@ -757,7 +757,7 @@ def prepare(args: argparse.Namespace) -> Path:
     for task in tasks:
         if "/tmp_workspace_eval" in task["prompt"]:
             raise ValueError(f"Prompt 不得暴露私有评分素材路径: {task['task_id']}")
-    scoring_skill = repo_root / "tools/report/skills/score-web-e2e"
+    scoring_skill = repo_root / "tools/report/skills/web-e2e/score-web-e2e"
     if not (scoring_skill / "SKILL.md").is_file():
         raise FileNotFoundError(f"缺少评分 Skill: {scoring_skill}")
     score_skill_metadata = load_score_skill_metadata(scoring_skill)
@@ -765,10 +765,11 @@ def prepare(args: argparse.Namespace) -> Path:
         raise ValueError(
             f"评分 Skill {score_skill_metadata['version']} 不支持 metric_profile: {metric_profile}"
         )
-    report_skill = repo_root / "tools/report/skills/report-web-e2e"
-    orchestrate_skill = repo_root / "tools/report/skills/orchestrate-web-e2e"
-    execute_skill = repo_root / "tools/report/skills/execute-web-e2e"
-    run_skill = repo_root / "tools/report/skills/run-web-e2e"
+    web_skills_root = repo_root / "tools/report/skills/web-e2e"
+    report_skill = web_skills_root / "report-web-e2e"
+    orchestrate_skill = web_skills_root / "orchestrate-web-e2e"
+    execute_skill = web_skills_root / "execute-web-e2e"
+    run_skill = web_skills_root / "run-web-e2e"
     packaged_skills = [scoring_skill, report_skill, orchestrate_skill, execute_skill, run_skill]
     packaged_skill_metadata = {
         skill.name: load_packaged_skill_metadata(skill) for skill in packaged_skills
@@ -898,11 +899,11 @@ def prepare(args: argparse.Namespace) -> Path:
         (harness_dir / "执行清单.md").write_text(
             render_checklist(args.batch_id, harness, tasks, include_execution_record), encoding="utf-8"
         )
-        helper_source = repo_root / "tools/report/skills/prepare-web-e2e-workspaces/scripts/prepare_scoring_workspace.py"
+        helper_source = repo_root / "tools/report/skills/web-e2e/prepare-web-e2e-workspaces/scripts/prepare_scoring_workspace.py"
         helper_dir = harness_dir / "tools"
         helper_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy2(helper_source, helper_dir / helper_source.name)
-        assets_dir = repo_root / "tools/report/skills/prepare-web-e2e-workspaces/assets"
+        assets_dir = repo_root / "tools/report/skills/web-e2e/prepare-web-e2e-workspaces/assets"
         for filename in ("准备评分工作空间.command", "准备评分工作空间.cmd"):
             target = harness_dir / filename
             shutil.copy2(assets_dir / filename, target)

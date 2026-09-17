@@ -15,7 +15,7 @@ from urllib.request import urlopen
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCORE_SKILL_ROOT = REPO_ROOT / "tools/report/skills/score-web-e2e"
+SCORE_SKILL_ROOT = REPO_ROOT / "tools/report/skills/web-e2e/score-web-e2e"
 INIT = SCORE_SKILL_ROOT / "scripts/init_score.mjs"
 FINALIZE = SCORE_SKILL_ROOT / "scripts/finalize_score.mjs"
 SUBMISSION = SCORE_SKILL_ROOT / "scripts/build_submission.mjs"

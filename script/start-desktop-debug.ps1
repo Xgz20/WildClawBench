@@ -19,7 +19,7 @@ $ErrorActionPreference = "Stop"
 
 $skillScript = Join-Path `
     $PSScriptRoot `
-    "..\tools\report\skills\run-web-e2e\scripts\start_windows_desktop_debug.ps1"
+    "..\tools\report\skills\web-e2e\run-web-e2e\scripts\start_windows_desktop_debug.ps1"
 
 if (-not (Test-Path -LiteralPath $skillScript)) {
     throw "run-web-e2e desktop debug helper was not found: $skillScript"
