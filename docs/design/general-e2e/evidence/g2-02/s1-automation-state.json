@@ -1,0 +1,168 @@
+{
+  "schema_version": "wildclawbench.general-e2e-astronstudio-execution-state/v1",
+  "driver": {
+    "id": "astronstudio-macos",
+    "version": "0.1.0"
+  },
+  "identity": {
+    "batch_id": "general-g2-02-s1-macos-20260917-224935",
+    "unit_id": "astronstudio-macos-x86-64",
+    "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+    "attempt_id": "693c1c28-a78a-409b-82d7-b0dfcadb3132"
+  },
+  "dataset": {
+    "id": "general-custom60-v1",
+    "digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a"
+  },
+  "phase": "COMPLETED",
+  "task_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s1/unit/general-g2-02-s1-macos-20260917-224935__astronstudio-macos-x86-64/execution/tasks/02_Code_Intelligence_task_001_temperature_cli_fix",
+  "candidate_workspace": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s1/unit/general-g2-02-s1-macos-20260917-224935__astronstudio-macos-x86-64/execution/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/workspace",
+  "run_config": {
+    "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/docs/design/general-e2e/evidence/g2-01/astronstudio-macos-run-config-2026-09-17.json",
+    "config_digest": "39ccb11c8c6cacd8b35918ed325f171265499e37ec36dae0441b374411d901dd"
+  },
+  "prompt": {
+    "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s1/unit/general-g2-02-s1-macos-20260917-224935__astronstudio-macos-x86-64/execution/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/PROMPT.md",
+    "sha256": "455f6e3fc79fa77d6d7ab98e43b93baee8e4f946c025bc2a118c943073c05c0b",
+    "send_status": "sent",
+    "sent_at": "2026-09-17T14:51:51.671Z"
+  },
+  "send": {
+    "dispatch_attempt_count": 1,
+    "dispatch_armed_at": "2026-09-17T14:51:51.637Z",
+    "dispatch_completed_at": "2026-09-17T14:51:51.671Z",
+    "pre_send_route_thread_id": "95764284-cbb8-4604-82bb-c03f1e8bf1e8",
+    "post_send_route_thread_id": "1fc7cf29-ec97-41ab-8264-51d23cc86bc5"
+  },
+  "session": {
+    "thread_id": "1fc7cf29-ec97-41ab-8264-51d23cc86bc5",
+    "turn_id": "01a0afda-4a76-79a2-887a-09cc22592523",
+    "session_id": "01a0afda-3943-74b1-99a1-86fefb8e2f67",
+    "cwd": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s1/unit/general-g2-02-s1-macos-20260917-224935__astronstudio-macos-x86-64/execution/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/workspace",
+    "verified": true,
+    "baseline": [],
+    "native_status": "completed",
+    "last_observed_at": "2026-09-17T14:52:30.547Z"
+  },
+  "client": {
+    "version": "3.3.1",
+    "model": "GLM-5.2",
+    "reasoning": "High",
+    "permission": "完全访问",
+    "ui_verification": {
+      "thread_id": "1fc7cf29-ec97-41ab-8264-51d23cc86bc5",
+      "model_count": 1,
+      "model": "GLM-5.2",
+      "reasoning": "High",
+      "permission_count": 1,
+      "permission": "完全访问"
+    },
+    "workspace_selection": {
+      "method": "exact-path-selection",
+      "count": 1,
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s1/unit/general-g2-02-s1-macos-20260917-224935__astronstudio-macos-x86-64/execution/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/workspace",
+      "label": "workspace"
+    }
+  },
+  "execution": {
+    "business_status": "completed",
+    "started_at": "2026-09-17T14:51:41.541Z",
+    "finished_at": "2026-09-17T14:52:30.547Z",
+    "duration_seconds": 49.006,
+    "agent_duration_seconds": null,
+    "deadline_at": "2026-09-17T14:56:41.541Z",
+    "error": null
+  },
+  "evidence": {
+    "final_response_path": ".general-e2e/execution/02_Code_Intelligence_task_001_temperature_cli_fix/final-response.md",
+    "final_response_sha256": "8a87ee09b6cced3b50d37c01164125e106062b948d613762bcf9135686f0e91a"
+  },
+  "human_assistance": {
+    "mode": "automatic",
+    "operation_count": 0,
+    "semantic_intervention_count": 0
+  },
+  "history": [
+    {
+      "phase": "PENDING",
+      "at": "2026-09-17T14:51:41.541Z",
+      "event": "ATTEMPT_CREATED"
+    },
+    {
+      "phase": "PENDING",
+      "at": "2026-09-17T14:51:51.637Z",
+      "event": "PROMPT_DISPATCH_ARMED",
+      "route_thread_id": "95764284-cbb8-4604-82bb-c03f1e8bf1e8",
+      "prompt_sha256": "455f6e3fc79fa77d6d7ab98e43b93baee8e4f946c025bc2a118c943073c05c0b"
+    },
+    {
+      "phase": "RUNNING",
+      "at": "2026-09-17T14:51:51.671Z",
+      "event": "PROMPT_DISPATCH_RETURNED",
+      "route_thread_id": "1fc7cf29-ec97-41ab-8264-51d23cc86bc5"
+    },
+    {
+      "phase": "RUNNING",
+      "at": "2026-09-17T14:51:56.901Z",
+      "event": "NATIVE_IDENTITY_BOUND",
+      "thread_id": "1fc7cf29-ec97-41ab-8264-51d23cc86bc5",
+      "turn_id": "01a0afda-4a76-79a2-887a-09cc22592523",
+      "session_id": "01a0afda-3943-74b1-99a1-86fefb8e2f67"
+    },
+    {
+      "phase": "RUNNING",
+      "at": "2026-09-17T14:52:01.165Z",
+      "event": "NATIVE_RUNNING_OBSERVED",
+      "native_status": "running"
+    },
+    {
+      "phase": "RUNNING",
+      "at": "2026-09-17T14:52:04.332Z",
+      "event": "NATIVE_RUNNING_OBSERVED",
+      "native_status": "running"
+    },
+    {
+      "phase": "RUNNING",
+      "at": "2026-09-17T14:52:07.807Z",
+      "event": "NATIVE_RUNNING_OBSERVED",
+      "native_status": "running"
+    },
+    {
+      "phase": "RUNNING",
+      "at": "2026-09-17T14:52:11.305Z",
+      "event": "NATIVE_RUNNING_OBSERVED",
+      "native_status": "running"
+    },
+    {
+      "phase": "RUNNING",
+      "at": "2026-09-17T14:52:14.511Z",
+      "event": "NATIVE_RUNNING_OBSERVED",
+      "native_status": "running"
+    },
+    {
+      "phase": "RUNNING",
+      "at": "2026-09-17T14:52:17.729Z",
+      "event": "NATIVE_RUNNING_OBSERVED",
+      "native_status": "running"
+    },
+    {
+      "phase": "RUNNING",
+      "at": "2026-09-17T14:52:20.877Z",
+      "event": "NATIVE_RUNNING_OBSERVED",
+      "native_status": "running"
+    },
+    {
+      "phase": "RUNNING",
+      "at": "2026-09-17T14:52:25.857Z",
+      "event": "NATIVE_RUNNING_OBSERVED",
+      "native_status": "running"
+    },
+    {
+      "phase": "COMPLETED",
+      "at": "2026-09-17T14:52:30.547Z",
+      "event": "NATIVE_TERMINAL_OBSERVED",
+      "native_status": "completed",
+      "turn_state": "completed"
+    }
+  ]
+}

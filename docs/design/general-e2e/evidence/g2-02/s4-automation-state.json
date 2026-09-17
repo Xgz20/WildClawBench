@@ -1,0 +1,120 @@
+{
+  "schema_version": "wildclawbench.general-e2e-astronstudio-execution-state/v1",
+  "driver": {
+    "id": "astronstudio-macos",
+    "version": "0.1.0"
+  },
+  "identity": {
+    "batch_id": "general-g2-02-s4-retry1-macos-20260917-230054",
+    "unit_id": "astronstudio-macos-x86-64",
+    "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+    "attempt_id": "143cdcd2-6a04-4486-ac1c-f1564b725103"
+  },
+  "dataset": {
+    "id": "general-custom60-v1",
+    "digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a"
+  },
+  "phase": "COMPLETED",
+  "task_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s4-retry1/unit/general-g2-02-s4-retry1-macos-20260917-230054__astronstudio-macos-x86-64/execution/tasks/01_Productivity_Flow_task_003_retro_agenda",
+  "candidate_workspace": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s4-retry1/unit/general-g2-02-s4-retry1-macos-20260917-230054__astronstudio-macos-x86-64/execution/tasks/01_Productivity_Flow_task_003_retro_agenda/workspace",
+  "run_config": {
+    "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s4-retry1/astronstudio-run-config.json",
+    "config_digest": "77c3048e96873d3eb578cbdf95cc87251a3d25ebd09f3c044200ff7e17b09183"
+  },
+  "prompt": {
+    "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s4-retry1/unit/general-g2-02-s4-retry1-macos-20260917-230054__astronstudio-macos-x86-64/execution/tasks/01_Productivity_Flow_task_003_retro_agenda/PROMPT.md",
+    "sha256": "4883c97962465eb0b21ac77caf18a5c06fb29c256efa85eac5775746a1437509",
+    "send_status": "sent",
+    "sent_at": "2026-09-17T15:02:28.781Z"
+  },
+  "send": {
+    "dispatch_attempt_count": 1,
+    "dispatch_armed_at": "2026-09-17T15:02:28.742Z",
+    "dispatch_completed_at": "2026-09-17T15:02:28.781Z",
+    "pre_send_route_thread_id": "1dfebf68-8449-4ca6-934a-c06c0274cf83",
+    "post_send_route_thread_id": "d34a6ebb-581e-452c-96bd-e9f0eb101744"
+  },
+  "session": {
+    "thread_id": "d34a6ebb-581e-452c-96bd-e9f0eb101744",
+    "turn_id": "01a0afe4-02dd-7562-8315-24dcb9cb765a",
+    "session_id": "01a0afe3-e980-7a91-a889-1d3801846d26",
+    "cwd": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s4-retry1/unit/general-g2-02-s4-retry1-macos-20260917-230054__astronstudio-macos-x86-64/execution/tasks/01_Productivity_Flow_task_003_retro_agenda/workspace",
+    "verified": true,
+    "baseline": [],
+    "native_status": "completed",
+    "last_observed_at": "2026-09-17T15:03:38.756Z"
+  },
+  "client": {
+    "version": "3.3.1",
+    "model": "GLM-5.2",
+    "reasoning": "High",
+    "permission": "完全访问",
+    "ui_verification": {
+      "thread_id": "d34a6ebb-581e-452c-96bd-e9f0eb101744",
+      "model_count": 1,
+      "model": "GLM-5.2",
+      "reasoning": "High",
+      "permission_count": 1,
+      "permission": "完全访问"
+    },
+    "workspace_selection": {
+      "method": "exact-path-selection",
+      "count": 1,
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s4-retry1/unit/general-g2-02-s4-retry1-macos-20260917-230054__astronstudio-macos-x86-64/execution/tasks/01_Productivity_Flow_task_003_retro_agenda/workspace",
+      "label": "workspace"
+    }
+  },
+  "execution": {
+    "business_status": "completed",
+    "started_at": "2026-09-17T15:02:13.324Z",
+    "finished_at": "2026-09-17T15:03:38.756Z",
+    "duration_seconds": 85.432,
+    "agent_duration_seconds": null,
+    "deadline_at": "2026-09-17T15:07:13.324Z",
+    "error": null
+  },
+  "evidence": {
+    "final_response_path": ".general-e2e/execution/01_Productivity_Flow_task_003_retro_agenda/final-response.md",
+    "final_response_sha256": "b436e6a776b6d320892fb53fd3cfd124170d34827ebdc6757ce21158b3992381"
+  },
+  "human_assistance": {
+    "mode": "automatic",
+    "operation_count": 0,
+    "semantic_intervention_count": 0
+  },
+  "history": [
+    {
+      "phase": "PENDING",
+      "at": "2026-09-17T15:02:13.324Z",
+      "event": "ATTEMPT_CREATED"
+    },
+    {
+      "phase": "PENDING",
+      "at": "2026-09-17T15:02:28.742Z",
+      "event": "PROMPT_DISPATCH_ARMED",
+      "route_thread_id": "1dfebf68-8449-4ca6-934a-c06c0274cf83",
+      "prompt_sha256": "4883c97962465eb0b21ac77caf18a5c06fb29c256efa85eac5775746a1437509"
+    },
+    {
+      "phase": "RUNNING",
+      "at": "2026-09-17T15:02:28.781Z",
+      "event": "PROMPT_DISPATCH_RETURNED",
+      "route_thread_id": "d34a6ebb-581e-452c-96bd-e9f0eb101744"
+    },
+    {
+      "phase": "RUNNING",
+      "at": "2026-09-17T15:02:33.557Z",
+      "event": "NATIVE_IDENTITY_BOUND",
+      "thread_id": "d34a6ebb-581e-452c-96bd-e9f0eb101744",
+      "turn_id": "01a0afe4-02dd-7562-8315-24dcb9cb765a",
+      "session_id": "01a0afe3-e980-7a91-a889-1d3801846d26"
+    },
+    {
+      "phase": "COMPLETED",
+      "at": "2026-09-17T15:03:38.756Z",
+      "event": "NATIVE_TERMINAL_OBSERVED",
+      "native_status": "completed",
+      "turn_state": "completed"
+    }
+  ]
+}

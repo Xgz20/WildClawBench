@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:general-e2e:astronstudio-execution-state:v1",
+  "title": "AstronStudio General E2E execution state v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "driver",
+    "identity",
+    "dataset",
+    "phase",
+    "task_root",
+    "candidate_workspace",
+    "run_config",
+    "prompt",
+    "send",
+    "session",
+    "client",
+    "execution",
+    "evidence",
+    "human_assistance",
+    "history"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "wildclawbench.general-e2e-astronstudio-execution-state/v1"
+    },
+    "driver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"const": "astronstudio-macos"},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}
+      }
+    },
+    "identity": {"$ref": "#/$defs/identity"},
+    "dataset": {"$ref": "#/$defs/dataset"},
+    "phase": {
+      "enum": ["PENDING", "RUNNING", "NEEDS_ATTENTION", "COMPLETED", "FAILED"]
+    },
+    "task_root": {"type": "string", "minLength": 1},
+    "candidate_workspace": {"type": "string", "minLength": 1},
+    "run_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "config_digest"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "config_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "send_status", "sent_at"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "send_status": {"enum": ["not_sent", "intent_persisted", "sent", "uncertain"]},
+        "sent_at": {"$ref": "#/$defs/nullableString"}
+      }
+    },
+    "send": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dispatch_attempt_count",
+        "dispatch_armed_at",
+        "dispatch_completed_at",
+        "pre_send_route_thread_id",
+        "post_send_route_thread_id"
+      ],
+      "properties": {
+        "dispatch_attempt_count": {"type": "integer", "minimum": 0, "maximum": 1},
+        "dispatch_armed_at": {"$ref": "#/$defs/nullableString"},
+        "dispatch_completed_at": {"$ref": "#/$defs/nullableString"},
+        "pre_send_route_thread_id": {"$ref": "#/$defs/nullableString"},
+        "post_send_route_thread_id": {"$ref": "#/$defs/nullableString"}
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "thread_id",
+        "turn_id",
+        "session_id",
+        "cwd",
+        "verified",
+        "baseline",
+        "native_status",
+        "last_observed_at"
+      ],
+      "properties": {
+        "thread_id": {"$ref": "#/$defs/nullableString"},
+        "turn_id": {"$ref": "#/$defs/nullableString"},
+        "session_id": {"$ref": "#/$defs/nullableString"},
+        "cwd": {"$ref": "#/$defs/nullableString"},
+        "verified": {"type": "boolean"},
+        "baseline": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["thread_id", "turn_id", "session_id", "updated_at_ms"],
+            "properties": {
+              "thread_id": {"$ref": "#/$defs/nullableString"},
+              "turn_id": {"$ref": "#/$defs/nullableString"},
+              "session_id": {"$ref": "#/$defs/nullableString"},
+              "updated_at_ms": {"type": "number", "minimum": 0}
+            }
+          }
+        },
+        "native_status": {"$ref": "#/$defs/nullableString"},
+        "last_observed_at": {"$ref": "#/$defs/nullableString"}
+      }
+    },
+    "client": {"type": "object"},
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "business_status",
+        "started_at",
+        "finished_at",
+        "duration_seconds",
+        "agent_duration_seconds",
+        "deadline_at",
+        "error"
+      ],
+      "properties": {
+        "business_status": {
+          "type": ["string", "null"],
+          "enum": ["completed", "candidate_error", "timeout", "infrastructure_error", "cancelled", null]
+        },
+        "started_at": {"type": "string", "format": "date-time"},
+        "finished_at": {"$ref": "#/$defs/nullableString"},
+        "duration_seconds": {"type": ["number", "null"], "minimum": 0},
+        "agent_duration_seconds": {"type": ["number", "null"], "minimum": 0},
+        "deadline_at": {"type": "string", "format": "date-time"},
+        "error": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["code", "message"],
+              "properties": {
+                "code": {"type": "string", "minLength": 1},
+                "message": {"type": "string", "minLength": 1}
+              }
+            }
+          ]
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["final_response_path", "final_response_sha256"],
+      "properties": {
+        "final_response_path": {"$ref": "#/$defs/nullableString"},
+        "final_response_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "human_assistance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "operation_count", "semantic_intervention_count"],
+      "properties": {
+        "mode": {"enum": ["automatic", "human_assisted"]},
+        "operation_count": {"type": "integer", "minimum": 0},
+        "semantic_intervention_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "history": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["phase", "at", "event"],
+        "properties": {
+          "phase": {"enum": ["PENDING", "RUNNING", "NEEDS_ATTENTION", "COMPLETED", "FAILED"]},
+          "at": {"type": "string", "format": "date-time"},
+          "event": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "nullableString": {"type": ["string", "null"]},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["batch_id", "unit_id", "task_id", "attempt_id"],
+      "properties": {
+        "batch_id": {"type": "string", "minLength": 1},
+        "unit_id": {"type": "string", "minLength": 1},
+        "task_id": {"type": "string", "minLength": 1},
+        "attempt_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "digest"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "digest": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

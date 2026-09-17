@@ -15,7 +15,7 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.2.0/interface_only` 已提供 AstronStudio macOS 只读探针，但正式会话状态机、Prompt 单次发送与恢复仍未交付；除探针外应保留输入包、明确报告未就绪并停止。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.3.0/operational` 支持 AstronStudio macOS 只读探针和单题执行；批量队列、可信超时停止、候选冻结、轨迹与资源收口仍未交付。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## AstronStudio macOS 只读探针
 
@@ -31,6 +31,19 @@ node scripts/probe_astronstudio_macos.mjs \
 
 只有探针返回 `PASS` 才会写 `run-config.json`；CDP 缺失或不属于已核对主进程、`DevToolsActivePort` 早于当前进程、状态库快照不完整、模型/推理/权限不能从可见 UI 回读时均返回 `NEEDS_ATTENTION`，不会用最近线程的持久化模型冒充当前配置。完整字段和失败语义见 [AstronStudio macOS 探针契约](references/astronstudio-macos-probe.md)。
 
+## AstronStudio macOS 单题执行
+
+使用已经验证并解压的 execution unit，传入 G2-01 冻结配置：
+
+```bash
+node scripts/execute_astronstudio_macos.mjs \
+  --unit-root /absolute/extracted-unit \
+  --task-id <完整任务ID> \
+  --run-config /absolute/frozen-run-config.json
+```
+
+已有状态只能加 `--resume` 恢复同一 attempt。执行器在发送前持久化 Prompt digest、路由和会话基线；发送临界点不明确时写 `uncertain / NEEDS_ATTENTION`，不得再次调用发送动作。终态由原生状态库的精确 thread/turn/session/cwd 判断，不以文件变化或 UI 最终文本代替，因此纯回复任务同样可识别。完整调用、输出和当前未实现边界见 [AstronStudio macOS 单题执行契约](references/astronstudio-macos-execution.md)。
+
 ## 责任边界
 
 - 输入：execution 包、Harness 配置和执行策略。
@@ -38,3 +51,4 @@ node scripts/probe_astronstudio_macos.mjs \
 - Prompt 发送意图和 digest 必须先持久化；发送状态不确定时进入人工关注，不重发。
 - 支持 `automated` 与 `human_assisted`，人工语义干预必须单独记录。
 - 不读取 scoring 包，不冻结正式候选，不启动裁判或汇总报告。
+- G2-03/G2-04/G2-05 完成前，单题输出保持 `evidence.completeness=partial`、`resource_metrics_path=null` 和 `candidate.drift_status=not_frozen`，不能直接进入评分。

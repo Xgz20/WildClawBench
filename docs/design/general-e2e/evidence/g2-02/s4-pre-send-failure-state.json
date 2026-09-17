@@ -1,0 +1,86 @@
+{
+  "schema_version": "wildclawbench.general-e2e-astronstudio-execution-state/v1",
+  "driver": {
+    "id": "astronstudio-macos",
+    "version": "0.1.0"
+  },
+  "identity": {
+    "batch_id": "general-g2-02-s4-macos-20260917-225623",
+    "unit_id": "astronstudio-macos-x86-64",
+    "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+    "attempt_id": "bb42c4a3-03b8-4e0c-99c9-0a91e88c2e92"
+  },
+  "dataset": {
+    "id": "general-custom60-v1",
+    "digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a"
+  },
+  "phase": "FAILED",
+  "task_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s4/unit/general-g2-02-s4-macos-20260917-225623__astronstudio-macos-x86-64/execution/tasks/01_Productivity_Flow_task_003_retro_agenda",
+  "candidate_workspace": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s4/unit/general-g2-02-s4-macos-20260917-225623__astronstudio-macos-x86-64/execution/tasks/01_Productivity_Flow_task_003_retro_agenda/workspace",
+  "run_config": {
+    "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s4/astronstudio-run-config.json",
+    "config_digest": "987cd96b45bd8339224a42fe861a8f9b4e55cc0822ec61ee5357aa01d3bfa5a6"
+  },
+  "prompt": {
+    "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s4/unit/general-g2-02-s4-macos-20260917-225623__astronstudio-macos-x86-64/execution/tasks/01_Productivity_Flow_task_003_retro_agenda/PROMPT.md",
+    "sha256": "4883c97962465eb0b21ac77caf18a5c06fb29c256efa85eac5775746a1437509",
+    "send_status": "not_sent",
+    "sent_at": null
+  },
+  "send": {
+    "dispatch_attempt_count": 0,
+    "dispatch_armed_at": null,
+    "dispatch_completed_at": null,
+    "pre_send_route_thread_id": null,
+    "post_send_route_thread_id": null
+  },
+  "session": {
+    "thread_id": null,
+    "turn_id": null,
+    "session_id": null,
+    "cwd": null,
+    "verified": false,
+    "baseline": [],
+    "native_status": null,
+    "last_observed_at": null
+  },
+  "client": {
+    "version": "3.3.1",
+    "model": "GLM-5.2",
+    "reasoning": "High",
+    "permission": "完全访问"
+  },
+  "execution": {
+    "business_status": "infrastructure_error",
+    "started_at": "2026-09-17T14:57:36.827Z",
+    "finished_at": "2026-09-17T14:57:36.850Z",
+    "duration_seconds": 0.023,
+    "agent_duration_seconds": null,
+    "deadline_at": "2026-09-17T15:02:36.827Z",
+    "error": {
+      "code": "PRE_SEND_DRIVER_ERROR",
+      "message": "AstronStudio 新建任务按钮数量异常：50"
+    }
+  },
+  "evidence": {
+    "final_response_path": null,
+    "final_response_sha256": null
+  },
+  "human_assistance": {
+    "mode": "automatic",
+    "operation_count": 0,
+    "semantic_intervention_count": 0
+  },
+  "history": [
+    {
+      "phase": "PENDING",
+      "at": "2026-09-17T14:57:36.827Z",
+      "event": "ATTEMPT_CREATED"
+    },
+    {
+      "phase": "FAILED",
+      "at": "2026-09-17T14:57:36.850Z",
+      "event": "PRE_SEND_DRIVER_ERROR"
+    }
+  ]
+}

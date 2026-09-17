@@ -13,7 +13,7 @@ INITIAL_SKILL_VERSION = "0.1.0"
 INTERFACE_ONLY = "interface_only"
 OPERATIONAL = "operational"
 PREPARE_SKILL_VERSION = "0.2.0"
-EXECUTE_SKILL_VERSION = "0.2.0"
+EXECUTE_SKILL_VERSION = "0.3.0"
 
 
 @dataclass(frozen=True)
@@ -62,6 +62,7 @@ GENERAL_E2E_SKILLS: Tuple[GeneralE2ESkillSpec, ...] = (
         input_contract="execution 包、Harness 配置和执行策略",
         output_contract="原生会话绑定、执行终态和初步资源记录",
         version=EXECUTE_SKILL_VERSION,
+        implementation_status=OPERATIONAL,
     ),
     GeneralE2ESkillSpec(
         name="collect-general-e2e",

@@ -1,0 +1,71 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:execution-record:v1",
+  "schema_version": 1,
+  "identity": {
+    "batch_id": "general-g2-02-s4-retry1-macos-20260917-230054",
+    "unit_id": "astronstudio-macos-x86-64",
+    "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+    "attempt_id": "143cdcd2-6a04-4486-ac1c-f1564b725103"
+  },
+  "dataset": {
+    "id": "general-custom60-v1",
+    "digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a"
+  },
+  "phase": "COMPLETED",
+  "harness": {
+    "id": "astronstudio",
+    "platform": "macos-x86-64",
+    "version": "3.3.1"
+  },
+  "model": {
+    "requested_id": "GLM-5.2",
+    "actual_id": "GLM-5.2",
+    "reasoning_effort": "High",
+    "verification_status": "verified"
+  },
+  "execution": {
+    "business_status": "completed",
+    "started_at": "2026-09-17T15:02:13.324Z",
+    "finished_at": "2026-09-17T15:03:38.756Z",
+    "duration_seconds": 85.432,
+    "agent_duration_seconds": null,
+    "error": null
+  },
+  "prompt": {
+    "sha256": "4883c97962465eb0b21ac77caf18a5c06fb29c256efa85eac5775746a1437509",
+    "send_status": "sent",
+    "sent_at": "2026-09-17T15:02:28.781Z"
+  },
+  "session": {
+    "thread_id": "d34a6ebb-581e-452c-96bd-e9f0eb101744",
+    "turn_id": "01a0afe4-02dd-7562-8315-24dcb9cb765a",
+    "session_id": "01a0afe3-e980-7a91-a889-1d3801846d26",
+    "cwd": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s4-retry1/unit/general-g2-02-s4-retry1-macos-20260917-230054__astronstudio-macos-x86-64/execution/tasks/01_Productivity_Flow_task_003_retro_agenda/workspace",
+    "verified": true
+  },
+  "evidence": {
+    "completeness": "partial",
+    "transcript_path": null,
+    "trace_index_path": null,
+    "final_response_path": ".general-e2e/execution/01_Productivity_Flow_task_003_retro_agenda/final-response.md",
+    "missing": [
+      "raw_trace",
+      "transcript",
+      "trace_index",
+      "resource_metrics",
+      "candidate_freeze"
+    ]
+  },
+  "candidate": {
+    "path": "execution/tasks/01_Productivity_Flow_task_003_retro_agenda/workspace",
+    "frozen_sha256": null,
+    "frozen_at": null,
+    "drift_status": "not_frozen"
+  },
+  "resource_metrics_path": null,
+  "human_assistance": {
+    "mode": "automatic",
+    "operation_count": 0,
+    "semantic_intervention_count": 0
+  }
+}

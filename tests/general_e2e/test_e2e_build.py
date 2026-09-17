@@ -308,7 +308,7 @@ process.stdout.write(JSON.stringify({{
         self.assertEqual(payload["orchestrate"], payload["score"])
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required")
-    def test_general_execute_probe_loads_outside_checkout(self) -> None:
+    def test_general_execute_entrypoints_load_outside_checkout(self) -> None:
         detached = self.temp_root / "detached-general-execute"
         detached.mkdir()
         root = BUILD._safe_extract(
@@ -316,7 +316,9 @@ process.stdout.write(JSON.stringify({{
             detached / "installed",
         )
         probe = root / "scripts/probe_astronstudio_macos.mjs"
+        execute = root / "scripts/execute_astronstudio_macos.mjs"
         self.assertTrue(probe.is_file())
+        self.assertTrue(execute.is_file())
         self.assertTrue(
             (root / "vendor/e2e-shared/desktop-runtime/process.mjs").is_file()
         )
@@ -334,6 +336,16 @@ process.stdout.write(JSON.stringify({{
             f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}",
         )
         self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
+        execution_help = subprocess.run(
+            ["node", str(execute), "--help"],
+            cwd=detached,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(execution_help.returncode, 0, execution_help.stderr)
+        self.assertIn("macOS 单题执行器", execution_help.stdout)
+        self.assertNotIn(str(REPO_ROOT), execution_help.stdout + execution_help.stderr)
 
 
 if __name__ == "__main__":
