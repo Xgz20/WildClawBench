@@ -1,0 +1,4 @@
+interface:
+  display_name: "执行 General E2E 用例"
+  short_description: "在桌面 Harness 中执行并持久化通用场景评测用例状态"
+  default_prompt: "使用 $execute-general-e2e 在指定桌面 Harness 中运行 General E2E 执行包。"

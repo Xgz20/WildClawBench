@@ -72,6 +72,13 @@ output_qwen.rar
 !.agents/skills/execute-web-e2e
 !.agents/skills/orchestrate-web-e2e
 !.agents/skills/run-web-e2e
+!.agents/skills/prepare-general-e2e-workspaces
+!.agents/skills/execute-general-e2e
+!.agents/skills/collect-general-e2e
+!.agents/skills/orchestrate-general-e2e
+!.agents/skills/score-general-e2e
+!.agents/skills/report-general-e2e
+!.agents/skills/run-general-e2e
 !.agents/skills/wildclawbench-case-generator
 
 # 评测集校验 Skill 及报告工具的运行产物

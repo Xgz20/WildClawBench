@@ -1,0 +1,4 @@
+interface:
+  display_name: "采集 General E2E 证据"
+  short_description: "冻结候选并归档通用评测的原始轨迹、标准轨迹和资源证据"
+  default_prompt: "使用 $collect-general-e2e 收集并校验指定 General E2E 执行结果的证据。"

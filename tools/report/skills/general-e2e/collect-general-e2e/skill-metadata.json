@@ -1,0 +1,11 @@
+{
+  "schema_version": "wildclawbench.general-e2e-skill/v1",
+  "name": "collect-general-e2e",
+  "version": "0.1.0",
+  "contract_version": "general-e2e-contract-v1",
+  "bundle_protocol": "general-e2e-package-v1",
+  "implementation_status": "interface_only",
+  "stages": [
+    "collect-evidence"
+  ]
+}

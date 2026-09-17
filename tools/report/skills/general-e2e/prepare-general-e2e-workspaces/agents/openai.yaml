@@ -1,0 +1,4 @@
+interface:
+  display_name: "准备 General E2E 工作空间"
+  short_description: "从冻结数据集生成隔离的通用评测执行包、评分包和批次配置"
+  default_prompt: "使用 $prepare-general-e2e-workspaces 为指定 General E2E 数据集和 Harness 准备隔离评测包。"

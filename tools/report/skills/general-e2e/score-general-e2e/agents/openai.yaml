@@ -1,0 +1,4 @@
+interface:
+  display_name: "评分 General E2E 单题"
+  short_description: "结合自动规则和语义裁判对单个通用评测用例评分并输出证据审计"
+  default_prompt: "使用 $score-general-e2e 对指定 General E2E 单题工作空间进行独立评分。"

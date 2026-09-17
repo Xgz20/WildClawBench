@@ -1,0 +1,4 @@
+interface:
+  display_name: "汇总 General E2E 报告"
+  short_description: "聚合已校验回传包并生成可复算的通用评测报告和异常分母"
+  default_prompt: "使用 $report-general-e2e 汇总指定 General E2E 回传包并生成报告。"

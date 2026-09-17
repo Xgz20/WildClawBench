@@ -1,0 +1,4 @@
+interface:
+  display_name: "运行 General E2E 全流程"
+  short_description: "按显式阶段串联、恢复并交接通用端到端评测全流程与离线回传"
+  default_prompt: "使用 $run-general-e2e 按我指定的阶段运行或恢复 General E2E 评测。"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "编排 General E2E 评分"
+  short_description: "构建独立评分工作空间并调度可恢复的单题裁判任务与回传"
+  default_prompt: "使用 $orchestrate-general-e2e 将有效执行回执编排为独立 General E2E 评分任务。"
