@@ -43,6 +43,11 @@ test("QwenWork 参数默认使用独立应用、CDP 端口和状态库", () => {
   assert.equal(parsed.appPath, DEFAULT_APP_PATH);
   assert.equal(parsed.endpoint, DEFAULT_ENDPOINT);
   assert.equal(parsed.sessionDb, DEFAULT_SESSION_DB);
+  assert.equal(parsed.restartApp, false);
+  const freshExecution = parseArgs(["--workspace", "C:\\tasks\\one"]);
+  assert.equal(freshExecution.restartApp, true);
+  assert.equal(freshExecution.restartReason, "driver-managed-token-usage-exposure");
+  assert.equal(parseArgs(["--workspace", "C:\\tasks\\one", "--resume"]).restartApp, false);
 });
 
 test("QwenWork automation state 使用独立 Driver profile", () => {
@@ -63,7 +68,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.10.14");
+  assert.equal(state.driver.version, "1.10.15");
 });
 
 test("QwenWork 问卷停止参数必须与恢复模式组合", () => {
@@ -506,7 +511,7 @@ test("QwenWork 重启前拒绝打断活动任务", async () => {
 test("QwenWork 主进程和端口均已崩溃时允许重启并保留活动 session", async () => {
   let launched = false;
   const launch = await restartQwenWork(
-    { endpoint: DEFAULT_ENDPOINT, appPath: DEFAULT_APP_PATH, sessionDb: DEFAULT_SESSION_DB },
+    { endpoint: DEFAULT_ENDPOINT, appPath: DEFAULT_APP_PATH, sessionDb: DEFAULT_SESSION_DB, resume: true },
     {
       processIdentity: async () => (launched
         ? { pid: 456, command: `${DEFAULT_APP_PATH}/Contents/MacOS/QwenWorkCN` }
@@ -526,6 +531,32 @@ test("QwenWork 主进程和端口均已崩溃时允许重启并保留活动 sess
   assert.equal(launch.stop.pid, null);
   assert.equal(launch.attempts.length, 1);
   assert.equal(launch.attempts[0].endpoint_ready, true);
+  assert.deepEqual(launch.environment_preparation.token_usage_exposure, {
+    managed_by: "qwenwork-driver",
+    variable: "QODERCN_EXPOSE_TOKEN_USAGE",
+    value: "1",
+    scope: "client-process",
+  });
+});
+
+test("QwenWork 全新执行即使客户端已崩溃也拒绝覆盖遗留活动 session", async () => {
+  let launched = false;
+  await assert.rejects(
+    restartQwenWork(
+      { endpoint: DEFAULT_ENDPOINT, appPath: DEFAULT_APP_PATH, sessionDb: DEFAULT_SESSION_DB, resume: false },
+      {
+        processIdentity: async () => null,
+        endpointReady: async () => false,
+        querySessions: async () => [{ streamId: "stream", status: "running" }],
+        launchApp: async () => {
+          launched = true;
+          return { code: 0, stdout: "", stderr: "" };
+        },
+      },
+    ),
+    /活动任务/,
+  );
+  assert.equal(launched, false);
 });
 
 test("QwenWork 识别问卷型用户输入且不点击任何选项", async () => {

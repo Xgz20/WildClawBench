@@ -9,6 +9,8 @@ import {
   defaultQwenWorkAppPath,
   defaultQwenWorkSessionDb,
   launchQwenWork,
+  QWEN_TOKEN_USAGE_ENV_NAME,
+  QWEN_TOKEN_USAGE_ENV_VALUE,
   qwenWorkFolderHelperInvocation,
   qwenWorkGuiSessionStatus,
   qwenWorkProcessIdentity,
@@ -151,20 +153,26 @@ test("Windows QwenWork GUI 探测失败时关闭放行", async () => {
   assert.equal(status.error, "access denied");
 });
 
-test("Token 暴露只在调用者显式设置时透传，新进程不修改全局环境", async () => {
+test("Token 暴露由 Driver 自动注入新进程且不修改调用者环境", async () => {
   for (const value of [undefined, "1", "false", "invalid"]) {
     const environment = value === undefined ? {} : { QODERCN_EXPOSE_TOKEN_USAGE: value };
+    const original = { ...environment };
     let args;
     await launchQwenWork("/Applications/QwenWorkCN.app", "9250", {
       platform: "darwin", environment,
       runCommand: async (_command, actual) => { args = actual; return { code: 0 }; },
     });
-    assert.equal(args.includes("--env"), value === "1" || value === "false");
-    if (args.includes("--env")) assert.equal(args[args.indexOf("--env") + 1], `QODERCN_EXPOSE_TOKEN_USAGE=${value}`);
+    assert.equal(args.includes("--env"), true);
+    assert.equal(args[args.indexOf("--env") + 1], `${QWEN_TOKEN_USAGE_ENV_NAME}=${QWEN_TOKEN_USAGE_ENV_VALUE}`);
+    assert.deepEqual(environment, original);
   }
-  const environment = { PATH: "fixture", QODERCN_EXPOSE_TOKEN_USAGE: "1" };
+  const environment = { PATH: "fixture", QODERCN_EXPOSE_TOKEN_USAGE: "false" };
   await launchQwenWork("C:\\Apps\\QwenWorkCN.exe", "9250", {
     platform: "win32", environment,
-    launchDetached: async (_command, _args, options) => { assert.deepEqual(options.env, environment); return { code: 0 }; },
+    launchDetached: async (_command, _args, options) => {
+      assert.deepEqual(options.env, { PATH: "fixture", QODERCN_EXPOSE_TOKEN_USAGE: "1" });
+      return { code: 0 };
+    },
   });
+  assert.deepEqual(environment, { PATH: "fixture", QODERCN_EXPOSE_TOKEN_USAGE: "false" });
 });

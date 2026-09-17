@@ -408,16 +408,24 @@ export async function terminateQwenWorkProcess(processInfo, overrides = {}) {
   return runCommand("/bin/kill", ["-TERM", String(processInfo.pid)], { allowFailure: true, capture: true });
 }
 
+export const QWEN_TOKEN_USAGE_ENV_NAME = "QODERCN_EXPOSE_TOKEN_USAGE";
+export const QWEN_TOKEN_USAGE_ENV_VALUE = "1";
+
+export function qwenWorkLaunchEnvironment(environment = process.env) {
+  return {
+    ...environment,
+    [QWEN_TOKEN_USAGE_ENV_NAME]: QWEN_TOKEN_USAGE_ENV_VALUE,
+  };
+}
+
 export async function launchQwenWork(appPath, port, overrides = {}) {
   const platform = overrides.platform || process.platform;
   const runCommand = overrides.runCommand || runCapture;
   const launchDetached = overrides.launchDetached || spawnDetached;
   const debugArgs = ["--remote-debugging-address=127.0.0.1", `--remote-debugging-port=${port}`];
-  const environment = overrides.environment || process.env;
-  // LaunchServices 不保证继承 shell 环境，macOS 必须显式交给 open；仅传已知布尔值。
-  const exposure = environment.QODERCN_EXPOSE_TOKEN_USAGE;
-  const envArgs = /^(1|true|yes|0|false|no)$/iu.test(exposure || "")
-    ? ["--env", `QODERCN_EXPOSE_TOKEN_USAGE=${exposure}`] : [];
+  const environment = qwenWorkLaunchEnvironment(overrides.environment || process.env);
+  // Token 暴露开关与 CDP 参数都由 Driver 注入到新客户端进程；不修改控制 Harness 的全局环境。
+  const envArgs = ["--env", `${QWEN_TOKEN_USAGE_ENV_NAME}=${QWEN_TOKEN_USAGE_ENV_VALUE}`];
   if (platform === "win32") return launchDetached(appPath, debugArgs, { env: environment });
   return runCommand("/usr/bin/open", ["-na", appPath, ...envArgs, "--args", ...debugArgs], { allowFailure: true, capture: true });
 }

@@ -28,6 +28,19 @@ test("QwenWork batch worker defaults to three background run slots and caps at e
   assert.match(help.stdout, /--run-slots <1\.\.8>/);
   assert.match(help.stdout, /Agent 并发数，默认：3；UI 始终单路/);
 
+  const automaticLaunch = parseBatchArgs([
+    "--harness-root", "/tmp/batch",
+    "--run-id", "automatic-token-usage",
+    "--task-id", "task-a",
+  ]);
+  assert.equal(automaticLaunch.restartAppFirst, true);
+  assert.equal(buildDriverArgs(
+    automaticLaunch,
+    { taskRoot: "/tmp/batch/execution/tasks/task-a" },
+    0,
+    null,
+  ).includes("--restart-app"), true);
+
   for (const [runSlots, expectedError] of [
     ["0", /--run-slots 必须是正数/],
     ["9", /--run-slots 必须是 1 到 8 的整数/],

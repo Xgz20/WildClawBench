@@ -32,6 +32,8 @@ import {
 import {
   gracefulQuitQwenWork,
   launchQwenWork,
+  QWEN_TOKEN_USAGE_ENV_NAME,
+  QWEN_TOKEN_USAGE_ENV_VALUE,
   qwenWorkAppVersion,
   qwenWorkFolderHelperInvocation,
   qwenWorkGuiSessionStatus,
@@ -80,7 +82,7 @@ function usage() {
   --observe-once                   恢复原 conversation，只执行一次终态观察
   --abandon-user-question          仅停止已持久化且身份完全匹配的问卷会话，并结构化失败收口
   --quiet                          仅输出错误；供批次 Worker 高频观察使用
-  --restart-app                    正常退出后以本地 CDP 端口重启 QwenWork
+  --restart-app                    兼容显式指定；全新执行会为 Token 采集默认安全重启 QwenWork
   --dry-run                        校验输入、身份和状态，不操作 QwenWork
   -h, --help                       显示帮助`;
 }
@@ -408,7 +410,7 @@ export async function restartQwenWork(config, overrides = {}) {
     dependencies.querySessions(config.sessionDb),
   ]);
   const activeSessions = sessions.filter((session) => session.streamId || classifySessionStatus(session.status).kind === "running");
-  if ((initialProcess || initialEndpoint) && activeSessions.length) {
+  if (activeSessions.length && (!config.resume || initialProcess || initialEndpoint)) {
     throw new Error(`QwenWork 当前有 ${activeSessions.length} 个活动任务；拒绝为自动化重启客户端`);
   }
   if (!initialProcess && initialEndpoint) {
@@ -456,6 +458,14 @@ export async function restartQwenWork(config, overrides = {}) {
         recovered_after_retry: attempt > 1,
         stop,
         attempts,
+        environment_preparation: {
+          token_usage_exposure: {
+            managed_by: "qwenwork-driver",
+            variable: QWEN_TOKEN_USAGE_ENV_NAME,
+            value: QWEN_TOKEN_USAGE_ENV_VALUE,
+            scope: "client-process",
+          },
+        },
       };
     }
     if (attempt < dependencies.launchAttempts) {

@@ -91,25 +91,22 @@ D:\WebE2E\web-e2e-20260820-105921__codex\execution\tasks\07_Website_Generation_t
 
 ### 2.5 QwenWork Token 采集（可选，但必须按平台边界操作）
 
-QwenWork 的输入、输出、缓存读取和总 Token 默认可能被客户端隐藏。需要采集时，在启动 QwenWork 新进程前设置 `QODERCN_EXPOSE_TOKEN_USAGE=1`，并确保当前没有活动任务。变量必须传给实际启动 Driver 的同一命令，不能写到 `PROMPT.md`，也不能只在另一个终端临时设置。
+QwenWork 的输入、输出、缓存读取和总 Token 默认可能被客户端隐藏。execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 起由 Driver 自动处理：全新单题默认安全重启客户端，全新批次默认只在第一题前安全重启，并仅向新 QwenWork 子进程注入 `QODERCN_EXPOSE_TOKEN_USAGE=1`。用户不需要手工设置环境变量，也不能把它写到系统全局环境或 `PROMPT.md`。重启前发现活动任务时 Driver 会停止并要求人工处理。
 
 macOS：
 
 ```bash
-QODERCN_EXPOSE_TOKEN_USAGE=1 \
 bash "/实际安装路径/execute-web-e2e/scripts/run-qwenwork.sh" \
-  "/实际批次/<batch_id>__qwenwork/execution/tasks/<task_id>" --restart-app
+  "/实际批次/<batch_id>__qwenwork/execution/tasks/<task_id>"
 ```
 
 Windows CMD：
 
 ```bat
-set "QODERCN_EXPOSE_TOKEN_USAGE=1"
-call "C:\Skills\execute-web-e2e\scripts\run-qwenwork.cmd" "D:\WebE2E\<batch_id>__qwenwork\execution\tasks\<task_id>" --restart-app
-set "QODERCN_EXPOSE_TOKEN_USAGE="
+call "C:\Skills\execute-web-e2e\scripts\run-qwenwork.cmd" "D:\WebE2E\<batch_id>__qwenwork\execution\tasks\<task_id>"
 ```
 
-设置成功只表示开关已透传，不代表 Token 已通过口径验证。当前已验证的是 macOS QwenWork 1.0.5 Profile；Windows 暂不把 Token 写入正式汇总，直到完成 Windows 运行时、日志字段和输入含缓存语义的验收。请求数、工具数、智能体耗时仍可独立记录。
+自动注入成功只表示开关已传给新客户端进程，不代表任意运行时都能通过口径验证。当前 Windows 真机已验证 QwenWorkCN 1.0.6.0 的 `qwenwork-1.0.6-qoder-cache-inclusive-v1`，四个核心 Token 均为 `observed`；客户端、SDK、transcript、平台或 runtime SHA 任一漂移时仍保留 `unverified`。revision `ff5d476...` 的实机证据使用 execute 1.12.3 / Driver 1.10.14，由控制任务显式注入开关；内建自动注入的 1.12.4 / 1.10.15 发布包仍须重新完成 probe 和一个全新 L1。
 
 ### 2.2 执行时的目录要求
 
@@ -313,7 +310,7 @@ score/tasks/<task_id>/private-scoring/
 
 报告汇总前，管理员应分别检查 AstronStudio、WorkBuddy、QwenWork 三个回传单元的 `resource_metrics` 覆盖率。只有状态为 `observed`、`inferred` 或兼容旧记录的 `legacy` 才进入总量；`masked`、`unverified`、`partial`、`unavailable` 显示为空值和已知小计。缓存读取已经包含在输入 Token 中，不能在总 Token 中再次相加。缓存写入 Token、推理输出 Token 和 HTTP 尝试次数当前没有可靠统一来源，可以为空，但必须在报告中体现覆盖不足。
 
-QwenWork 需要 Token 时，按第 2.5 节在启动新进程前设置 `QODERCN_EXPOSE_TOKEN_USAGE=1`。当前已验证的 Token Profile 仅覆盖 macOS QwenWork 1.0.5；Windows 上在完成生产验收清单的运行时 Profile 验收前，Token 仍会显示为 `unverified`，不能宣称三 Harness 的 Token 指标已全部打通。
+QwenWork 需要 Token 时，按第 2.5 节使用 execute-web-e2e 的普通入口即可，开关和首题前安全重启由 Driver 自动管理。Windows QwenWorkCN 1.0.6.0 已通过精确 Profile 和全新 L1 验收；未知身份仍显示为 `unverified`，不能仅凭已注入开关宣称指标可用。
 
 ## 6. 生成回传结果
 

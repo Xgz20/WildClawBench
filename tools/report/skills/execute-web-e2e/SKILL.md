@@ -92,17 +92,21 @@ bash .agents/skills/execute-web-e2e/scripts/run-qwenwork-batch.sh \
   --run-id <queue_id> \
   --task-id <task_id_1> \
   --task-id <task_id_2> \
-  --run-slots 3 \
+  --run-slots 1 \
   --permission-mode full-access
 ```
 
 Windows 使用相同参数和原生入口：
 
 ```bat
-.agents\skills\execute-web-e2e\scripts\run-qwenwork-batch.cmd C:\absolute\batch__qwenwork --run-id queue-1 --task-id task-1 --task-id task-2 --run-slots 3 --permission-mode full-access
+.agents\skills\execute-web-e2e\scripts\run-qwenwork-batch.cmd C:\absolute\batch__qwenwork --run-id queue-1 --task-id task-1 --task-id task-2 --run-slots 1 --permission-mode full-access
 ```
 
-QwenWorkCN 1.0.5.0 已在 Windows 完成动态路径、进程、SQLite、CDP 启动、页面识别、只读 probe、单题、三题串行、默认三槽五题动态补位、Codex Desktop 评分与 submission、离线回传/报告、单 Prompt 全流程、Worker 硬中断恢复、客户端重启和安全超时真机验收，属于当前 Windows 生产验证基线。验收模型为 `标准｜Qwen3.8-Flash`，权限为 `full-access`；更换客户端大版本、Driver 核心实现或模型后仍须从只读 probe 和一至三个 L1 smoke 开始回归。
+QwenWork 的 Token 暴露由 Driver 管理，用户和控制 Harness 都不需要预先设置环境变量。全新单题默认执行一次安全客户端重启；全新批次默认只在第一题前安全重启。Driver 在新客户端子进程中同时注入本机 CDP 参数和 `QODERCN_EXPOSE_TOKEN_USAGE=1`，不修改控制 Harness 的全局环境。重启前若状态库或存活进程表明存在活动任务，立即停止并进入人工处理。已有客户端进程不能在运行中补加该变量，因此禁止为了省略重启而复用无法证明已带开关的旧进程。
+
+开关只允许原生 usage 出现在 transcript 中，不能绕过指标 Profile。采集器仍须精确核对平台、QwenWork 客户端、SDK、transcript 版本和 runtime SHA；未知身份保持 `unverified`，历史 `masked` 样本不得回填。资源字段、状态和 QwenWork Profile 的详细口径见[资源指标参考](references/resource-metrics.md)。execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 首次引入自动注入，发布包必须重新通过 probe 和一个全新 L1 后才能继承既有生产准入。
+
+QwenWorkCN 1.0.5.0 的历史 Windows 身份已覆盖动态路径、进程、SQLite、CDP 启动、页面识别、串行、并发和部分恢复边界。当前主流程与资源指标证据以生产验收清单为准：QwenWorkCN 1.0.6.0 已在 `ff5d476...` 完成带指标的全新单 L1 闭环，四个核心 Token 均为 `observed`；自动注入实现属于后续 1.12.4 / Driver 1.10.15 候选，真机重验前不得把旧证据直接升级到该新身份。验收模型为 `标准｜Qwen3.8-Flash`，权限为 `full-access`；更换客户端大版本、Driver 核心实现或模型后仍须从只读 probe 和一至三个 L1 smoke 开始回归。
 
 QwenWork 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、目录选择、权限/模型回读和 Prompt 发送始终由一个 Driver 串行完成；捕获稳定 `session_id`、`stream_id`、`local_project_id` 和绝对 cwd 后释放 UI Driver，由 Worker 轮流恢复原会话做一次性观察。任一题明确终态后释放后台槽位并动态补入下一题。
 
@@ -246,6 +250,6 @@ WorkBuddy 任一终态（成功、明确失败或安全超时）在冻结候选 
 - 生产跑批前由测试人员按指导手册设置 Harness 的默认模型和推理强度。执行自动化只在显式提供 `--model` 时切换模型；推理强度始终沿用 Harness 当前配置，不由 Playwright 选择或校验。
 - 只允许 Driver 对显式白名单且严格限定在候选 `workspace/` 内的普通操作自动选择一次性“允许”；当前唯一规则是清理该目录下的 `.DS_Store`。其他命令（包括同类命令的路径或参数变化）一律停在 `NEEDS_ATTENTION`。
 - `SUCCEEDED`、`INFRA_FAILED`、已确认停止的 `TIMEOUT` 分别映射为 `execution_record.json` 的 `completed`、`execution_error`、`timeout`；没有生成有效站点仍是正常完成，由评分阶段判低分。
-- WorkBuddy、AstronStudio 和 QwenWork 始终保持 `ui_slots: 1`；新队列默认 `run_slots: 3`、最大 8。这里的并发只指已投递 Agent 在客户端后台并行运行，禁止同时启动多个 Playwright Driver 抢占窗口。首次换机、升级 Harness/Skill 或切换模型后，先用 3 个 L1 冒烟；未通过真实隔离验证的节点显式使用 `--run-slots 1`。
+- WorkBuddy、AstronStudio 和 QwenWork 始终保持 `ui_slots: 1`；新队列技术默认 `run_slots: 3`、最大 8。这里的并发只指已投递 Agent 在客户端后台并行运行，禁止同时启动多个 Playwright Driver 抢占窗口。QwenWork 当前生产 canary 显式使用 `--run-slots 1`；首次换机、升级 Harness/Skill 或切换模型后也先用 3 个 L1 串行冒烟，通过真实隔离验证后再恢复并发。
 
 实现或审查其他 Driver 时，完整读取 [Driver 契约](references/driver-contract.md)。

@@ -49,7 +49,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.10.14";
+export const DRIVER_VERSION = "1.10.15";
 export const DEFAULT_APP_PATH = defaultQwenWorkAppPath();
 export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9250";
@@ -78,6 +78,10 @@ export function parseArgs(argv) {
   if (!optionWasProvided(argv, "--app-path")) parsed.appPath = DEFAULT_APP_PATH;
   if (!optionWasProvided(argv, "--endpoint")) parsed.endpoint = DEFAULT_ENDPOINT;
   if (!optionWasProvided(argv, "--session-db")) parsed.sessionDb = DEFAULT_SESSION_DB;
+  if (!parsed.help && !parsed.probe && !parsed.resume) {
+    parsed.restartApp = true;
+    parsed.restartReason = "driver-managed-token-usage-exposure";
+  }
   return parsed;
 }
 

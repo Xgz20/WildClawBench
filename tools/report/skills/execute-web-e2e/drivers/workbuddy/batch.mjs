@@ -47,13 +47,14 @@ const BATCH_PROFILES = Object.freeze({
     harnessId: "qwenwork",
     displayName: "QwenWork",
     workerId: "qwenwork-background-concurrent",
-    workerVersion: "1.10.2",
+    workerVersion: "1.10.3",
     driverFile: resolve(SCRIPT_DIR, "../qwenwork/driver.mjs"),
     lockFileName: "qwenwork-ui.lock",
     defaultRunSlots: 3,
     maxRunSlots: MAX_RUN_SLOTS,
     detachedDispatch: true,
     retryPreSendFailure: true,
+    restartAppFirstByDefault: true,
   }),
   workbuddy: Object.freeze({
     harnessId: "workbuddy",
@@ -98,7 +99,7 @@ function usage() {
   --poll-interval-seconds <秒>     每题终态轮询间隔，默认：2
   --post-cancel-quiescence-seconds <秒> 超时停止后的 workspace 静默观察，默认：5
   --run-slots <1..${BATCH_PROFILE.maxRunSlots}>              Agent 并发数，默认：${BATCH_PROFILE.defaultRunSlots}；UI 始终单路
-  --restart-app-first              只在第一题前重启 ${BATCH_PROFILE.displayName}
+  --restart-app-first              只在第一题前重启 ${BATCH_PROFILE.displayName}${BATCH_PROFILE.restartAppFirstByDefault ? "（新队列默认启用）" : ""}
   --restart-app-on-resume          恢复运行中题目时重启 ${BATCH_PROFILE.displayName}，并定位原会话
   --resume                         恢复同一 run-id 的未完成队列
   --retry-pre-send-failure          仅归档并重试发送前、产物零变化的 INFRA_FAILED
@@ -128,7 +129,7 @@ export function parseBatchArgs(argv) {
     postCancelQuiescenceSeconds: 5,
     runSlots: BATCH_PROFILE.defaultRunSlots,
     runSlotsExplicit: false,
-    restartAppFirst: false,
+    restartAppFirst: Boolean(BATCH_PROFILE.restartAppFirstByDefault),
     restartAppOnResume: false,
     resume: false,
     retryPreSendFailure: false,

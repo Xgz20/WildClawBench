@@ -168,6 +168,12 @@ P8 的评分目录均由冻结 execution 复制生成，评分站点通过受管
 
 JSON 和 Markdown 中三个 Harness 的资源总量、覆盖率和来源状态与单题产物一致；缓存写入、QwenWork 推理 Token 和 HTTP 尝试次数继续显示未知，没有补零。Excel 只包含 `站点评测指标`、`难度对比`、`用例对比明细`，公式错误扫描为 0，关键值与 JSON/Markdown 一致。Windows 上 `artifact-tool` 的最小 `workbook.render()` 以退出码 `-1073741819` 复现原生崩溃，因此按 Skill 允许的 `--skip-preview true` 生成正式 XLSX，再用独立只读渲染器逐表检查三个 Sheet，未把跳过内置预览本身记为视觉通过。最终三个 worker 的 `execute/score/package` 均为 `COMPLETED`，管理员批次的 `prepare/collect/report` 均为 `COMPLETED`；据此 P6–P9 和 Windows 资源指标门禁均为 `PASSED`。
 
+#### QwenWork Token 自动注入后续候选
+
+在上述 `ff5d476...` 实机闭环中，控制任务显式设置 `QODERCN_EXPOSE_TOKEN_USAGE=1` 并使用 `--restart-app-first`；execute-web-e2e 1.12.3 / QwenWork Driver 1.10.14 本身只负责透传已有环境变量，尚未做到普通 Skill 调用自动开启。后续源码候选升级为 execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15：全新单题默认安全重启，全新批次默认只在第一题前安全重启，Driver 向新客户端子进程同时注入 CDP 参数和 Token 开关，不修改控制 Harness 的全局环境；发现活动任务时失败关闭。
+
+该改动消除了用户或 Prompt 手工设置环境变量的要求，但属于 Driver 核心启动行为变化。当前 `ff5d476...` 的 P6–P9 证据继续有效，不自动升级到 1.12.4 / 1.10.15；新候选必须重新生成 Skill ZIP、完成安装身份检查、只读 probe 和至少一个 QwenWork 1.0.6.0 全新 L1，并确认 `client.launch.environment_preparation.token_usage_exposure.managed_by=qwenwork-driver`、四个核心 Token 为 `observed`、采集告警为空后，才能标记新的资源指标身份为 `PASSED`。
+
 ## 2. 状态与更新规则
 
 | 状态 | 含义 |

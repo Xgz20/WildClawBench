@@ -24,7 +24,7 @@
 | --- | --- | --- |
 | AstronStudio | **主流程生产可用**：revision `6988b525...` 的独立 macOS 包已完成单 L1 execution→score→submission→return；首个正式批次先跑 3–5 个 L1 canary。当前 revision 的默认三槽并发、管理员 import/report 和恢复边界尚未重绑，不能按无人值守高可用使用。 | **无人值守高可用已验证**：发布实现 revision `6988b525...`，AstronStudio 3.3.1.277、Codex Desktop 26.908.9136（runtime 152.0.7977.83）、execute 1.11.16 / Driver 1.10.18 / orchestrate 0.2.6 / run 1.3.7；V00–V17 已在 Windows 10 x64 真机通过。 |
 | WorkBuddy | 历史批次已覆盖五题执行、评分、回传和报告；当前发布候选的前置脚本已更新，须按清单至少重跑 probe、L1 smoke 和受影响恢复项。 | **无人值守高可用已验证**：发布实现 revision `ee70a67...`，WorkBuddy 5.5.6.0、Codex Desktop 26.908.9136（runtime 152.0.7977.83）、execute 1.11.21 / Driver 1.8.24 / orchestrate 0.2.6 / run 1.3.8；V00–V17 已在 Windows 10 x64 真机通过。 |
-| QwenWork | 历史批次已覆盖串行、默认三路并发、三题评分、submission 和 return；报告、单 Prompt 和恢复边界尚未形成完整同版本证据。 | **主流程生产可用**：revision `24771ce...` 的单 L1 包已在 QwenWorkCN 1.0.5.0、Codex Desktop 26.908.9136、execute 1.11.21 / Driver 1.10.10 / orchestrate 0.2.6 / run 1.3.8 下完成 execution→score→submission→return；首个正式批次先跑 3–5 个 L1 canary。当前身份的串行、默认三槽、并发评分、报告和恢复边界尚未重绑，不能按并发生产或无人值守高可用使用。 |
+| QwenWork | 历史批次已覆盖串行、默认三路并发、三题评分、submission 和 return；报告、单 Prompt 和恢复边界尚未形成完整同版本证据。 | **主流程生产可用**：revision `24771ce...` 的单 L1 包已在 QwenWorkCN 1.0.5.0 下完成 execution→score→submission→return；资源指标补充 revision `ff5d476...` 已使用 QwenWorkCN 1.0.6.0、execute 1.12.3 / Driver 1.10.14 / collector 1.1.2 完成全新单 L1、评分透传、return、管理员导入和报告，四个核心 Token 均为 `observed`。首个正式批次先跑 3–5 个 L1 canary；当前身份的串行、默认三槽、并发评分和恢复边界尚未重绑，不能按并发生产或无人值守高可用使用。 |
 
 历史结论不能自动外推到新 revision。首次换机、升级桌面客户端或 Skill、切换模型，或者修改 Driver/桌面前置脚本核心实现后，须在生产验收清单中把受影响项标为 `STALE`，再按只读 probe、L1 smoke、串行、并发、完整闭环和恢复验收的顺序重验。
 
@@ -34,7 +34,7 @@
 | --- | --- | --- |
 | `prepare-web-e2e-workspaces` | 管理员 | 从 WildClawBench 用例生成题目包、评分包、报告配置和 5 个可分发 Skill ZIP。它是仓库内的准备 Skill，不计入批次分发的 5 个 ZIP。 |
 | `run-web-e2e` | 管理员或执行人员 | 推荐的全局入口。只组合 Prompt 中明确要求的准备、执行、评分、打包回传、收集和报告阶段。 |
-| `execute-web-e2e` | 执行人员 | 操作被评测 Harness 做题。WorkBuddy、AstronStudio 和 QwenWork 默认后台并发均为 3；最大均为 8，UI 操作保持单路。 |
+| `execute-web-e2e` | 执行人员 | 操作被评测 Harness 做题。WorkBuddy、AstronStudio 和 QwenWork 的技术默认后台并发均为 3；最大均为 8，UI 操作保持单路。QwenWork 当前生产 canary 固定使用并发 1。 |
 | `orchestrate-web-e2e` | 执行人员或评分控制人员 | 校验执行结果、准备只读评分副本、注册 Codex Desktop 项目并调度多个评分任务。 |
 | `score-web-e2e` | Codex Desktop 单题评分任务 | 使用桌面内置 Browser 对一个用例评分并生成标准评分 JSON。通常由 `orchestrate-web-e2e` 自动调用，也支持人工单题调用。 |
 | `report-web-e2e` | 管理员 | 汇总一个或多个 Harness 回传包，生成 JSON、Markdown 和 Excel 报告。 |
@@ -60,29 +60,26 @@
 
 如果 Prompt 没有明确指定模型，执行 Skill 会保持并回读客户端当前模型，不会修改推理强度。评测期间不要人工切换模型。
 
-#### QwenWork Token 采集开关（仅用于已验证运行时）
+#### QwenWork Token 采集开关（由 Skill 自动管理）
 
-若希望执行记录中出现 QwenWork 的输入、输出、缓存读取和总 Token，必须在**启动 QwenWork 新进程之前**显式设置 `QODERCN_EXPOSE_TOKEN_USAGE=1`。该变量不是题目 Prompt，也不是评分 Agent 的配置；已有 QwenWork 进程不会因后来设置变量而生效。启动前先确认没有活动任务，避免重启影响其他评测。
+用户不需要手工设置 `QODERCN_EXPOSE_TOKEN_USAGE`，也不要把它写入系统全局环境、题目 Prompt 或评分 Agent 配置。从 execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 开始，控制 Harness 正常调用 QwenWork 单题或批量入口即可：Driver 会像注入本机 CDP 参数一样，仅向新 QwenWork 客户端子进程注入 `QODERCN_EXPOSE_TOKEN_USAGE=1`，不会修改控制 Harness 的全局环境。
 
-macOS Terminal：
+全新单题默认在发送 Prompt 前安全重启 QwenWork；全新批次默认只在第一题前重启一次，后续题目复用同一个已带开关的客户端进程。重启前 Driver 会核对主程序完整路径、9250 调试端点和状态库；只要发现活动任务就停止并进入人工处理，不会为了采集 Token 强制打断会话。普通调用不需要额外写环境变量或重启参数：
 
-```bash
-QODERCN_EXPOSE_TOKEN_USAGE=1 \
-bash "/实际安装路径/execute-web-e2e/scripts/run-qwenwork.sh" \
-  "/实际批次/<batch_id>__qwenwork/execution/tasks/<task_id>" --restart-app
+```powershell
+& 'C:\Skills\execute-web-e2e\scripts\run-qwenwork.cmd' `
+  'D:\评测包\<batch_id>__qwenwork\execution\tasks\<task_id>'
 ```
 
-Windows CMD：
-
-```bat
-set "QODERCN_EXPOSE_TOKEN_USAGE=1"
-call "C:\Skills\execute-web-e2e\scripts\run-qwenwork.cmd" "D:\评测包\<batch_id>__qwenwork\execution\tasks\<task_id>" --restart-app
-set "QODERCN_EXPOSE_TOKEN_USAGE="
+```powershell
+& 'C:\Skills\execute-web-e2e\scripts\run-qwenwork-batch.cmd' `
+  'D:\评测包\<batch_id>__qwenwork' `
+  --run-id '<run-id>' --task-id '<task-id>' --run-slots 1 --permission-mode full-access
 ```
 
-如果使用 `$run-web-e2e`，要在发给控制 Harness 的 Prompt 中明确要求“启动 QwenWork 时透传 `QODERCN_EXPOSE_TOKEN_USAGE=1`，且仅在无活动任务时使用 `--restart-app`”。不要把变量写入系统全局环境。当前已验证的 Token 归一化 Profile 仅适用于 macOS QwenWork 1.0.5；Windows 上即使请求、工具和耗时能够采集，Token 仍会标记为 `unverified`，直到完成本清单的 Windows Profile 验收。
+开关只负责让客户端暴露原生 usage，不代表任意版本都能进入正式汇总。采集器仍会精确核对平台、客户端、SDK、transcript 和 runtime SHA；当前 Windows 真机通过的是 QwenWorkCN 1.0.6.0 的 `qwenwork-1.0.6-qoder-cache-inclusive-v1`，四个核心 Token 均为 `observed`。任一身份漂移都保持 `unverified`，历史 `masked` 样本也不会回填。revision `ff5d476...` 的 P6–P9 证据来自 execute 1.12.3 / Driver 1.10.14，由控制任务显式注入开关；1.12.4 / 1.10.15 将该动作内建到 Driver，发布前仍须重新生成 Skill 包并至少完成 probe 和一个全新 L1。
 
-WorkBuddy、AstronStudio 和 QwenWork 当前 Skill 默认后台执行并发均为 3，最大为 8，UI 操作保持单路。首次换机、升级 Harness/Skill 或切换模型后，先使用少量 L1 用例验证本机客户端隔离；未通过时在 Prompt 中明确要求执行并发为 1。
+WorkBuddy、AstronStudio 和 QwenWork 的技术默认后台执行并发均为 3，最大均为 8，UI 操作保持单路。QwenWork 当前生产准入仍要求首批 canary 显式使用并发 1；首次换机、升级 Harness/Skill 或切换模型后也先用少量 L1 验证本机客户端隔离。
 
 #### 2. 自动准备桌面客户端调试模式
 
@@ -118,7 +115,7 @@ WorkBuddy、AstronStudio 和 QwenWork 当前 Skill 默认后台执行并发均�
 2. 解压题目包，建立独立 worker 工作目录。
 3. 自动检查和安装执行、评分所需的锁定依赖。
 4. 使用题目包声明的被评测 Harness，以客户端当前模型和推理强度执行全部题目，权限使用 `full-access`。
-5. WorkBuddy、AstronStudio 和 QwenWork 默认使用 3 路执行并发，最大均为 8，任一题明确结束并通过回执门禁后动态补入下一题。
+5. 三个 Harness 的技术默认值均为 3 路执行并发、最大 8；未达到并发生产准入的 QwenWork 首批 canary 使用 1 路。任一题明确结束并通过回执门禁后动态补入下一题。
 6. 校验执行回执后合入评分包。
 7. 默认创建 3 个并发 Codex Desktop 评分任务，每题使用独立项目、任务、Browser 和端口。
 8. 生成 `submission.json`、完整回传 ZIP 和外部 SHA-256 回执。
@@ -167,7 +164,7 @@ QwenWork 当前验证用法：
 题目：/absolute/path/<batch_id>__qwenwork__execution.zip
 评分标准：/absolute/path/<batch_id>__qwenwork__scoring.zip
 
-保持并回读 QwenWork 当前模型，不修改任务模式或其他推理设置；权限使用 full-access；使用默认执行并发 3。
+保持并回读 QwenWork 当前模型，不修改任务模式或其他推理设置；权限使用 full-access；当前 canary 的执行和 Codex Desktop 评分并发均设为 1。Token 暴露开关由 execute-web-e2e 自动注入，不需要手工设置环境变量。
 ```
 
 QwenWork 在 macOS 的历史证据已覆盖个人项目创建、绝对路径回读、Prompt 发送、SQLite 终态识别、串行和默认三路后台并发、产物、执行回执、三题评分、submission 和 return；报告、单 Prompt 组合器和恢复验收仍待补齐。Windows 当前验收身份 `24771ce...` 已在 QwenWorkCN 1.0.5.0、标准｜Qwen3.8-Flash / full-access 与 Codex Desktop 26.908.9136 上完成单 L1 execution→score→submission→return：执行回执 `integrity.valid=true`，评分 88 分，submission 与 return SHA 校验通过，候选哈希无漂移，三阶段均为 `COMPLETED`，因此标记为“主流程生产可用”。第一次正式运行先选 3–5 个 L1 canary 并保持人工值守；历史单题、串行、默认三槽、报告和恢复证据仅作为风险参考，在当前身份重绑前不升级为“并发生产可用”或“无人值守高可用”。
@@ -367,10 +364,10 @@ QwenWork 使用同样的并发 Prompt，只需把 Harness 名称和目录改为 
 
 /absolute/path/<batch_id>__qwenwork
 
-保持并回读 QwenWork 当前模型，不修改任务模式或其他推理设置；权限使用 full-access；使用默认并发 3。完成后验证 execution-receipt.json 的 integrity.valid=true。
+保持并回读 QwenWork 当前模型，不修改任务模式或其他推理设置；权限使用 full-access；当前 canary 使用并发 1。Token 暴露开关和首题前安全重启由 execute-web-e2e 自动管理。完成后验证 execution-receipt.json 的 integrity.valid=true。
 ```
 
-QwenWork 默认 `run_slots=3`、最大 8，可显式设为 1 回退串行；所有项目创建、目录选择、模型/权限回读和 Prompt 发送仍保持 UI 单路。
+QwenWork 技术默认值为 `run_slots=3`、最大 8，可显式设为 1 回退串行；当前身份完成 V04/V05 前生产 canary 固定使用 1。所有项目创建、目录选择、模型/权限回读和 Prompt 发送仍保持 UI 单路。
 
 ### 3. `orchestrate-web-e2e`
 
@@ -426,7 +423,7 @@ Codex Desktop CDP：http://127.0.0.1:9230
 - Prompt 显式指定模型：使用客户端 UI 中的精确显示名，选择后回读一致才开始执行。
 - 推理强度：始终由用户提前在被评测 Harness 中设置，执行自动化不修改。
 - WorkBuddy、AstronStudio、QwenWork 权限：生产评测使用 `full-access`，发送题目 Prompt 前会回读确认。
-- WorkBuddy、AstronStudio、QwenWork 执行并发：新批次默认 3，最大 8；UI 操作始终只有一路。
+- WorkBuddy、AstronStudio 和 QwenWork 的技术默认执行并发均为 3、最大 8；UI 操作始终只有一路。未完成并发准入的 QwenWork 生产 canary 使用 1。
 - Codex Desktop 评分并发：新批次默认 3，最大 8；每题使用独立项目、任务、Browser 和端口。
 - 同一批次执行期间不要人工切换模型、权限或关闭正在运行的客户端。
 
