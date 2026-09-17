@@ -15,7 +15,26 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 python -m eval_general_e2e skills --name collect-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才写入正式证据目录。共享安全轨迹读取、原生资源解析和 Workspace 完整性基元已完成，但 General 标准轨迹、资源契约映射与正式收口流程尚未交付；当前仍为 `interface_only`。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+整个 Skill 只有 `implementation_status` 为 `operational` 时才能生成冻结候选和正式执行回执。当前 `0.2.0/interface_only` 已交付 AstronStudio macOS 的轨迹子能力：可将精确绑定的原生 turn 事件归档为原始 JSONL、标准 transcript 和 trace index，并可只读检索。资源契约映射、候选冻结和正式收口仍未交付，不得将轨迹产物单独宣称为可评分回执。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+
+## AstronStudio 轨迹子能力
+
+归档前必须确认 `automation-state.json` 已终态、Prompt 只发送一次，且 `thread_id / turn_id / session_id / cwd` 已验证。归档器仅读 SQLite/WAL 快照，不读“最近任务”：
+
+```bash
+node scripts/archive_astronstudio_trace.mjs \
+  --state-file /absolute/unit/.general-e2e/execution/<task-id>/automation-state.json
+```
+
+只读查询不改写轨迹，范围、call ID、路径和文本过滤按 AND 组合：
+
+```bash
+node scripts/query_trace.mjs \
+  --trace-index /absolute/trace/trace-index.json \
+  --call-id <call-id> --page 1 --page-size 50
+```
+
+完整参数、产物和失败门禁见 [AstronStudio 轨迹归档与检索](references/astronstudio-trace.md)。
 
 ## 责任边界
 

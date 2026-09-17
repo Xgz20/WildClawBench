@@ -1,0 +1,81 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:trace-index:v1",
+  "schema_version": 1,
+  "identity": {
+    "batch_id": "general-g2-02-s1-macos-20260917-224935",
+    "unit_id": "astronstudio-macos-x86-64",
+    "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+    "attempt_id": "693c1c28-a78a-409b-82d7-b0dfcadb3132"
+  },
+  "adapter": {
+    "id": "astronstudio-provider-runtime-events",
+    "version": "0.1.0",
+    "source": "provider_runtime_events"
+  },
+  "session": {
+    "thread_id": "1fc7cf29-ec97-41ab-8264-51d23cc86bc5",
+    "turn_id": "01a0afda-4a76-79a2-887a-09cc22592523",
+    "session_id": "01a0afda-3943-74b1-99a1-86fefb8e2f67",
+    "cwd": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s1/unit/general-g2-02-s1-macos-20260917-224935__astronstudio-macos-x86-64/execution/tasks/02_Code_Intelligence_task_001_temperature_cli_fix/workspace",
+    "lifecycle_generation": "fff12c2a-c098-4265-b16a-1ca03c3d95ce"
+  },
+  "transcript": {
+    "path": "transcript.jsonl",
+    "sha256": "a829deabe469e9827497d7e13dc8df5d2f6c5d70d5bc6d541b0e17a64abf2ed7",
+    "size": 47692,
+    "event_count": 24
+  },
+  "raw_trace": [
+    {
+      "path": "raw/astronstudio-provider-events.jsonl",
+      "sha256": "7181fd47a6811190a0c03854e5bf382b0d99cd2aa90e0962998911a5bd499cd0",
+      "size": 203857
+    }
+  ],
+  "raw_event_range": {
+    "first_sequence": 203184,
+    "last_sequence": 203357,
+    "event_count": 148
+  },
+  "normalization": {
+    "native_event_count": 148,
+    "normalized_event_count": 24,
+    "filtered_native_event_count": 124,
+    "compatibility_profiles": [
+      "general-e2e-transcript-event-v1",
+      "wildclawbench-grading-transcript-v2"
+    ]
+  },
+  "completeness": {
+    "status": "complete",
+    "omitted_event_count": 0,
+    "missing": []
+  },
+  "calls": [
+    {
+      "call_id": "call_ejc5vlbeymeopijqtq32l5g8",
+      "call_sequence": 6,
+      "result_sequence": 7
+    },
+    {
+      "call_id": "call_6umddk24snxj8z185nvq7try",
+      "call_sequence": 10,
+      "result_sequence": 11
+    },
+    {
+      "call_id": "call_d7lai6nfh6rtrwpc67s75qrl",
+      "call_sequence": 12,
+      "result_sequence": 13
+    },
+    {
+      "call_id": "call_ltxjrhtyydau3njm77g3rcxm",
+      "call_sequence": 16,
+      "result_sequence": 17
+    },
+    {
+      "call_id": "call_p31nia1ldiewkvxc7wuth4yx",
+      "call_sequence": 18,
+      "result_sequence": 19
+    }
+  ]
+}

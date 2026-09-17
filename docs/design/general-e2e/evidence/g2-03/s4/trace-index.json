@@ -1,0 +1,55 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:trace-index:v1",
+  "schema_version": 1,
+  "identity": {
+    "batch_id": "general-g2-02-s4-retry1-macos-20260917-230054",
+    "unit_id": "astronstudio-macos-x86-64",
+    "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+    "attempt_id": "143cdcd2-6a04-4486-ac1c-f1564b725103"
+  },
+  "adapter": {
+    "id": "astronstudio-provider-runtime-events",
+    "version": "0.1.0",
+    "source": "provider_runtime_events"
+  },
+  "session": {
+    "thread_id": "d34a6ebb-581e-452c-96bd-e9f0eb101744",
+    "turn_id": "01a0afe4-02dd-7562-8315-24dcb9cb765a",
+    "session_id": "01a0afe3-e980-7a91-a889-1d3801846d26",
+    "cwd": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/report-workspace/general-e2e/g2-02/worker-s4-retry1/unit/general-g2-02-s4-retry1-macos-20260917-230054__astronstudio-macos-x86-64/execution/tasks/01_Productivity_Flow_task_003_retro_agenda/workspace",
+    "lifecycle_generation": "c7689152-a803-451f-a2ea-7c281cb5578e"
+  },
+  "transcript": {
+    "path": "transcript.jsonl",
+    "sha256": "f5d958f9801e2a9bd8e37894f03c3c7488c65eb3a39f6bf8fe37aedc9d7193b2",
+    "size": 7314,
+    "event_count": 5
+  },
+  "raw_trace": [
+    {
+      "path": "raw/astronstudio-provider-events.jsonl",
+      "sha256": "5a04620f463cb3f5c7491a31165a9b748aef1ef0887ef6ec5b6793dd8d20b709",
+      "size": 386635
+    }
+  ],
+  "raw_event_range": {
+    "first_sequence": 203381,
+    "last_sequence": 203706,
+    "event_count": 319
+  },
+  "normalization": {
+    "native_event_count": 319,
+    "normalized_event_count": 5,
+    "filtered_native_event_count": 314,
+    "compatibility_profiles": [
+      "general-e2e-transcript-event-v1",
+      "wildclawbench-grading-transcript-v2"
+    ]
+  },
+  "completeness": {
+    "status": "complete",
+    "omitted_event_count": 0,
+    "missing": []
+  },
+  "calls": []
+}

@@ -123,6 +123,46 @@ class GeneralE2EContractTests(unittest.TestCase):
             validate_contract(execution)
         self.assertEqual(captured.exception.code, "REQUIRED_FIELD")
 
+    def test_trace_index_accepts_adapter_binding_and_consistent_normalization_counts(self) -> None:
+        trace = json.loads((VALID / "trace-index.json").read_text(encoding="utf-8"))
+        trace.update({
+            "adapter": {
+                "id": "astronstudio-provider-runtime-events",
+                "version": "0.1.0",
+                "source": "provider_runtime_events",
+            },
+            "session": {
+                "thread_id": "thread-fixture",
+                "turn_id": "turn-fixture",
+                "session_id": "session-fixture",
+                "cwd": "/tmp/workspace-fixture",
+                "lifecycle_generation": "lifecycle-fixture",
+            },
+            "raw_event_range": {
+                "first_sequence": 100,
+                "last_sequence": 110,
+                "event_count": 8,
+            },
+            "normalization": {
+                "native_event_count": 8,
+                "normalized_event_count": 2,
+                "filtered_native_event_count": 6,
+                "compatibility_profiles": ["general-e2e-transcript-event-v1"],
+            },
+        })
+        validate_contract(trace)
+
+        trace["normalization"]["normalized_event_count"] = 3
+        with self.assertRaises(ContractValidationError) as captured:
+            validate_contract(trace)
+        self.assertEqual(captured.exception.code, "INVALID_VALUE")
+
+        trace["normalization"]["normalized_event_count"] = 2
+        trace["raw_trace"] = []
+        with self.assertRaises(ContractValidationError) as captured:
+            validate_contract(trace)
+        self.assertEqual(captured.exception.code, "EVIDENCE_MISSING")
+
 
 if __name__ == "__main__":
     unittest.main()

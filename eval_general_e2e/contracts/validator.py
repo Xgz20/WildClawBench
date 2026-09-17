@@ -425,6 +425,17 @@ def _validate_transcript_event(document: Mapping[str, Any]) -> None:
 
 def _validate_trace_index(document: Mapping[str, Any]) -> None:
     _validate_task_identity(_required(document, "identity", "$"))
+    if "adapter" in document:
+        adapter = _mapping(document["adapter"], "$.adapter")
+        _string(_required(adapter, "id", "$.adapter"), "$.adapter.id")
+        version = _string(_required(adapter, "version", "$.adapter"), "$.adapter.version")
+        if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
+            _fail("INVALID_VALUE", "$.adapter.version", "must be a semantic version")
+        _string(_required(adapter, "source", "$.adapter"), "$.adapter.source")
+    if "session" in document:
+        session = _mapping(document["session"], "$.session")
+        for field in ("thread_id", "turn_id", "session_id", "cwd", "lifecycle_generation"):
+            _string(_required(session, field, "$.session"), f"$.session.{field}")
     transcript = _validate_artifact(_required(document, "transcript", "$"), "$.transcript")
     event_count = _integer(_required(transcript, "event_count", "$.transcript"), "$.transcript.event_count")
     completeness = _mapping(_required(document, "completeness", "$"), "$.completeness")
@@ -449,8 +460,72 @@ def _validate_trace_index(document: Mapping[str, Any]) -> None:
         _string(item, f"$.completeness.missing[{index}]")
     if status_value == "complete" and missing:
         _fail("INVALID_VALUE", "$.completeness.missing", "complete trace cannot list missing items")
-    for index, artifact in enumerate(_list(_required(document, "raw_trace", "$"), "$.raw_trace")):
+    raw_trace = _list(_required(document, "raw_trace", "$"), "$.raw_trace")
+    if status_value == "complete" and not raw_trace:
+        _fail("EVIDENCE_MISSING", "$.raw_trace", "complete trace needs a raw archive")
+    for index, artifact in enumerate(raw_trace):
         _validate_artifact(artifact, f"$.raw_trace[{index}]")
+    if "raw_event_range" in document:
+        event_range = _mapping(document["raw_event_range"], "$.raw_event_range")
+        first_sequence = _integer(
+            _required(event_range, "first_sequence", "$.raw_event_range"),
+            "$.raw_event_range.first_sequence",
+        )
+        last_sequence = _integer(
+            _required(event_range, "last_sequence", "$.raw_event_range"),
+            "$.raw_event_range.last_sequence",
+        )
+        native_event_count = _integer(
+            _required(event_range, "event_count", "$.raw_event_range"),
+            "$.raw_event_range.event_count",
+            minimum=1,
+        )
+        if last_sequence < first_sequence:
+            _fail("INVALID_VALUE", "$.raw_event_range", "last_sequence precedes first_sequence")
+    else:
+        native_event_count = None
+    if "normalization" in document:
+        normalization = _mapping(document["normalization"], "$.normalization")
+        normalized_native_count = _integer(
+            _required(normalization, "native_event_count", "$.normalization"),
+            "$.normalization.native_event_count",
+            minimum=1,
+        )
+        normalized_event_count = _integer(
+            _required(normalization, "normalized_event_count", "$.normalization"),
+            "$.normalization.normalized_event_count",
+            minimum=1,
+        )
+        filtered_native_count = _integer(
+            _required(normalization, "filtered_native_event_count", "$.normalization"),
+            "$.normalization.filtered_native_event_count",
+        )
+        profiles = _list(
+            _required(normalization, "compatibility_profiles", "$.normalization"),
+            "$.normalization.compatibility_profiles",
+        )
+        for index, profile in enumerate(profiles):
+            _string(profile, f"$.normalization.compatibility_profiles[{index}]")
+        if not profiles or len(profiles) != len(set(profiles)):
+            _fail("INVALID_VALUE", "$.normalization.compatibility_profiles", "must be non-empty and unique")
+        if normalized_event_count != event_count:
+            _fail(
+                "INVALID_VALUE",
+                "$.normalization.normalized_event_count",
+                "must equal transcript.event_count",
+            )
+        if native_event_count is not None and normalized_native_count != native_event_count:
+            _fail(
+                "INVALID_VALUE",
+                "$.normalization.native_event_count",
+                "must equal raw_event_range.event_count",
+            )
+        if normalized_event_count + filtered_native_count != normalized_native_count:
+            _fail(
+                "INVALID_VALUE",
+                "$.normalization.filtered_native_event_count",
+                "normalized plus filtered counts must equal native_event_count",
+            )
     call_ids: set[str] = set()
     for index, call in enumerate(_list(_required(document, "calls", "$"), "$.calls")):
         item = _mapping(call, f"$.calls[{index}]")

@@ -347,6 +347,36 @@ process.stdout.write(JSON.stringify({{
         self.assertIn("macOS 单题执行器", execution_help.stdout)
         self.assertNotIn(str(REPO_ROOT), execution_help.stdout + execution_help.stderr)
 
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required")
+    def test_general_collect_trace_entrypoints_load_outside_checkout(self) -> None:
+        detached = self.temp_root / "detached-general-collect"
+        detached.mkdir()
+        root = BUILD._safe_extract(
+            self.archive_path("collect-general-e2e"),
+            detached / "installed",
+        )
+        archive = root / "scripts/archive_astronstudio_trace.mjs"
+        query = root / "scripts/query_trace.mjs"
+        self.assertTrue(archive.is_file())
+        self.assertTrue(query.is_file())
+        self.assertTrue(
+            (root / "vendor/e2e-shared/resource-metrics/trace-io.mjs").is_file()
+        )
+        for entrypoint, marker in (
+            (archive, "轨迹归档器"),
+            (query, "只读检索"),
+        ):
+            completed = subprocess.run(
+                ["node", str(entrypoint), "--help"],
+                cwd=detached,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertIn(marker, completed.stdout)
+            self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
