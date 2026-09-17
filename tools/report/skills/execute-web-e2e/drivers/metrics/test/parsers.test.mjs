@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parseAstron, parseWorkBuddy, parseQwen } from "../parsers.mjs";
 import { captureResourceMetrics } from "../capture.mjs";
-import { QWEN_PROFILE, QWEN_WINDOWS_PROFILE } from "../qwen-profile.mjs";
+import { QWEN_PROFILE, QWEN_WINDOWS_PROFILE, QWEN_WINDOWS_1_0_6_PROFILE } from "../qwen-profile.mjs";
 import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
 
@@ -102,6 +102,9 @@ test("Qwen 未显式验证时保留非零 native usage，验证后按输入含�
   const windows = parseQwen(qwen(10), { runtimeIdentity: QWEN_WINDOWS_PROFILE });
   assert.equal(windows.usage.total_tokens, 20);
   assert.equal(windows.collection.normalization_profile, QWEN_PROFILE.id);
+  const windows106 = parseQwen(qwen(10), { runtimeIdentity: QWEN_WINDOWS_1_0_6_PROFILE });
+  assert.equal(windows106.usage.total_tokens, 20);
+  assert.equal(windows106.collection.normalization_profile, QWEN_WINDOWS_1_0_6_PROFILE.id);
 });
 test("Qwen 不能用布尔开关、未知运行时或 provider 放行", () => {
   for (const runtimeIdentity of [null, { ...QWEN_PROFILE, runtime_sha256: "unknown" }, { ...QWEN_PROFILE, platform: "win32" }, { ...QWEN_PROFILE, transcript_version: "next" }]) {

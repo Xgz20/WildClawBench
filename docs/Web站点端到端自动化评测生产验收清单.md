@@ -47,7 +47,7 @@ AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 �
 #### P6：源码与 Windows 分发包门禁
 
 - [ ] 当前提交包含 `execute-web-e2e` 资源采集器、三个 Driver 的终态调用、统一 `execution_record.json` 写入和独立的 QwenWork runtime Profile；不能继续使用旧的 execute 1.11.x / Driver 1.10.x 包。
-- [ ] 在 Windows 干净目录安装本次最新 Skill 包；当前实现候选为 execute `1.12.2`、WorkBuddy Driver `1.8.27`、AstronStudio Driver `1.10.21`、QwenWork Driver `1.10.13`，实际值以本批次 `skills-manifest.json` 为准。
+- [ ] 在 Windows 干净目录安装本次最新 Skill 包；当前实现候选为 execute `1.12.3`、WorkBuddy Driver `1.8.27`、AstronStudio Driver `1.10.21`、QwenWork Driver `1.10.14`，实际值以本批次 `skills-manifest.json` 为准。
 - [ ] Windows Node.js 运行所有 metrics/Driver 测试并记录退出码；SQLite 优先使用 `node:sqlite`，只有运行时不提供时才验证 `py -3`/`python` 的只读回退。不得把依赖安装到题目 `workspace/`。
 - [ ] 重新计算 Skill content SHA、ZIP SHA 和 `source_revision`，并将它们写入本清单；旧包的 SHA 或旧验收包不能作为本门禁证据。
 
@@ -118,7 +118,7 @@ QwenWork runtime SHA-256：`e86620b7e772d1f536ba15beea8c3059bf6075dffb478aceaa8c
 
 #### 2026-09-17 Windows 指标修复与静态回归
 
-修复候选为 execute `1.12.2` / metrics collector `1.1.1`、AstronStudio Driver `1.10.21`、WorkBuddy Driver `1.8.27`、QwenWork Driver `1.10.13`。AstronStudio 现在同时检查旧 `%USERPROFILE%\.acode\sessions` 与由已验证 `state.sqlite` 推导的相邻 `acode-home-overlay\sessions`，多个根重复命中仍以 `AMBIGUOUS_TRACE` 失败关闭。QwenWork 增加 `platform=win32`、`client_version=1.0.5.0` 的精确 Profile，SDK、transcript 和 runtime SHA 任一漂移均不放行归一化。
+修复候选最初为 execute `1.12.2` / metrics collector `1.1.1`、AstronStudio Driver `1.10.21`、WorkBuddy Driver `1.8.27`、QwenWork Driver `1.10.13`。AstronStudio 现在同时检查旧 `%USERPROFILE%\.acode\sessions` 与由已验证 `state.sqlite` 推导的相邻 `acode-home-overlay\sessions`，多个根重复命中仍以 `AMBIGUOUS_TRACE` 失败关闭。QwenWork 最初增加 `platform=win32`、`client_version=1.0.5.0` 的精确 Profile；真机 probe 随后发现客户端已升级到 `1.0.6.0`，其 SDK `1.0.28` 与 runtime SHA `e86620b7e772d1f536ba15beea8c3059bf6075dffb478aceaa8cad328a879c28` 均未变化，因此当前候选继续升级为 execute `1.12.3` / collector `1.1.2` / QwenWork Driver `1.10.14`，并为 1.0.6.0 新增独立精确 Profile ID。SDK、transcript、平台、客户端版本和 runtime SHA 任一漂移仍不放行归一化。
 
 Windows Node `22.22.2` 下 metrics `19/19`、AstronStudio `49/49`、WorkBuddy `92/92`、QwenWork `41/41` 全部通过；仓库 `.venv` Python `3.11.9` 下资源打包、准备、评分和报告四组测试 `88/88` 通过。报告测试入口改为直接加载受版本控制的 `tools/report/skills/report-web-e2e`，不再依赖 Windows 是否把 `.agents/skills` 检出为真实符号链接。
 

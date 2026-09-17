@@ -63,7 +63,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.10.13");
+  assert.equal(state.driver.version, "1.10.14");
 });
 
 test("QwenWork 问卷停止参数必须与恢复模式组合", () => {

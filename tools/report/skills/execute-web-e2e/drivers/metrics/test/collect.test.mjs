@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import test from "node:test";
 import { collectLocalMetrics, findAstronTrace } from "../collect.mjs";
 import { empty } from "../parsers.mjs";
-import { inspectQwenRuntime, QWEN_PROFILE, QWEN_WINDOWS_PROFILE, verifiedQwenProfile } from "../qwen-profile.mjs";
+import { inspectQwenRuntime, QWEN_PROFILE, QWEN_WINDOWS_PROFILE, QWEN_WINDOWS_1_0_6_PROFILE, verifiedQwenProfile } from "../qwen-profile.mjs";
 import { updateExecutionRecord, createExecutionRecord } from "../../workbuddy/lib.mjs";
 import { queryResourceIdentity } from "../../astronstudio/lib.mjs";
 
@@ -91,7 +91,9 @@ test("未知本地 Qwen SDK 与混合 transcript 版本不能命中已验 Profil
 });
 test("Qwen Windows 仅接受已核对的客户端和相同 runtime 身份", () => {
   assert.equal(verifiedQwenProfile(QWEN_WINDOWS_PROFILE), QWEN_PROFILE.id);
-  assert.equal(verifiedQwenProfile({ ...QWEN_WINDOWS_PROFILE, client_version: "1.0.6.0" }), null);
+  assert.equal(verifiedQwenProfile(QWEN_WINDOWS_1_0_6_PROFILE), QWEN_WINDOWS_1_0_6_PROFILE.id);
+  assert.equal(verifiedQwenProfile({ ...QWEN_WINDOWS_PROFILE, client_version: "1.0.6.0" }), QWEN_WINDOWS_1_0_6_PROFILE.id);
+  assert.equal(verifiedQwenProfile({ ...QWEN_WINDOWS_1_0_6_PROFILE, client_version: "1.0.7.0" }), null);
   assert.equal(verifiedQwenProfile({ ...QWEN_WINDOWS_PROFILE, runtime_sha256: "unknown" }), null);
   assert.equal(verifiedQwenProfile({ ...QWEN_WINDOWS_PROFILE, transcript_version: "next" }), null);
 });

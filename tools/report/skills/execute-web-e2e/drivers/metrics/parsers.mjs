@@ -1,6 +1,6 @@
 // 资源指标只取原生计数；缺失、隐藏、冲突均不能转换成真实零消耗。
 import { verifiedQwenProfile } from "./qwen-profile.mjs";
-export const VERSION = "1.1.1";
+export const VERSION = "1.1.2";
 export const TOKEN_KEYS = ["input_tokens", "output_tokens", "total_tokens", "cache_read_input_tokens", "cache_creation_input_tokens", "reasoning_output_tokens"];
 const METRIC_KEYS = [...TOKEN_KEYS, "request_count", "request_attempt_count", "call_count", "agent_duration_seconds"];
 export const count = (n) => Number.isSafeInteger(n) && n >= 0 ? n : null;

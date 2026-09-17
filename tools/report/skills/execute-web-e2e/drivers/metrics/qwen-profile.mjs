@@ -19,7 +19,18 @@ export const QWEN_WINDOWS_PROFILE = Object.freeze({
   client_version: "1.0.5.0",
 });
 
-export const QWEN_PROFILES = Object.freeze([QWEN_PROFILE, QWEN_WINDOWS_PROFILE]);
+export const QWEN_WINDOWS_1_0_6_PROFILE = Object.freeze({
+  ...QWEN_PROFILE,
+  id: "qwenwork-1.0.6-qoder-cache-inclusive-v1",
+  platform: "win32",
+  client_version: "1.0.6.0",
+});
+
+export const QWEN_PROFILES = Object.freeze([
+  QWEN_PROFILE,
+  QWEN_WINDOWS_PROFILE,
+  QWEN_WINDOWS_1_0_6_PROFILE,
+]);
 
 export function verifiedQwenProfile(identity) {
   const matched = identity && QWEN_PROFILES.find(profile => Object.entries(profile)
