@@ -1,0 +1,83 @@
+{
+  "schema_version": "wildclawbench.e2e-build-plan/v1",
+  "skills": [
+    {
+      "name": "prepare-web-e2e-workspaces",
+      "scene": "web-e2e",
+      "source_root": "tools/report/skills/web-e2e/prepare-web-e2e-workspaces",
+      "components": []
+    },
+    {
+      "name": "execute-web-e2e",
+      "scene": "web-e2e",
+      "source_root": "tools/report/skills/web-e2e/execute-web-e2e",
+      "components": ["desktop-runtime", "resource-metrics"]
+    },
+    {
+      "name": "orchestrate-web-e2e",
+      "scene": "web-e2e",
+      "source_root": "tools/report/skills/web-e2e/orchestrate-web-e2e",
+      "components": ["desktop-runtime", "workspace-integrity"]
+    },
+    {
+      "name": "score-web-e2e",
+      "scene": "web-e2e",
+      "source_root": "tools/report/skills/web-e2e/score-web-e2e",
+      "components": ["workspace-integrity"]
+    },
+    {
+      "name": "report-web-e2e",
+      "scene": "web-e2e",
+      "source_root": "tools/report/skills/web-e2e/report-web-e2e",
+      "components": []
+    },
+    {
+      "name": "run-web-e2e",
+      "scene": "web-e2e",
+      "source_root": "tools/report/skills/web-e2e/run-web-e2e",
+      "components": []
+    },
+    {
+      "name": "prepare-general-e2e-workspaces",
+      "scene": "general-e2e",
+      "source_root": "tools/report/skills/general-e2e/prepare-general-e2e-workspaces",
+      "components": []
+    },
+    {
+      "name": "execute-general-e2e",
+      "scene": "general-e2e",
+      "source_root": "tools/report/skills/general-e2e/execute-general-e2e",
+      "components": ["desktop-runtime"]
+    },
+    {
+      "name": "collect-general-e2e",
+      "scene": "general-e2e",
+      "source_root": "tools/report/skills/general-e2e/collect-general-e2e",
+      "components": ["resource-metrics", "workspace-integrity"]
+    },
+    {
+      "name": "orchestrate-general-e2e",
+      "scene": "general-e2e",
+      "source_root": "tools/report/skills/general-e2e/orchestrate-general-e2e",
+      "components": ["workspace-integrity"]
+    },
+    {
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_root": "tools/report/skills/general-e2e/score-general-e2e",
+      "components": ["workspace-integrity"]
+    },
+    {
+      "name": "report-general-e2e",
+      "scene": "general-e2e",
+      "source_root": "tools/report/skills/general-e2e/report-general-e2e",
+      "components": []
+    },
+    {
+      "name": "run-general-e2e",
+      "scene": "general-e2e",
+      "source_root": "tools/report/skills/general-e2e/run-general-e2e",
+      "components": []
+    }
+  ]
+}
