@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:general-e2e:receipt:v1",
+  "title": "General E2E stage receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "scope", "dataset", "stage", "status", "created_at", "task_ids", "tasks", "artifacts", "integrity", "error"],
+  "properties": {
+    "schema_id": {"const": "urn:wildclawbench:schema:general-e2e:receipt:v1"}, "schema_version": {"const": 1},
+    "scope": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/batchScope"}, "dataset": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/dataset"},
+    "stage": {"enum": ["execution", "collect-evidence", "scoring", "package", "import-return", "report"]}, "status": {"enum": ["completed", "failed", "partial", "needs_attention"]}, "created_at": {"type": "string", "format": "date-time"},
+    "task_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["task_id", "attempt_id", "status"],
+        "properties": {
+          "task_id": {"type": "string", "minLength": 1},
+          "attempt_id": {"type": "string", "minLength": 1},
+          "status": {"enum": ["completed", "failed", "partial", "needs_attention"]}
+        }
+      }
+    },
+    "artifacts": {"type": "array", "items": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/artifact"}},
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope_matches", "identities_match", "hashes_verified", "valid"],
+      "properties": {
+        "scope_matches": {"type": "boolean"},
+        "identities_match": {"type": "boolean"},
+        "hashes_verified": {"type": "boolean"},
+        "valid": {"type": "boolean"}
+      }
+    },
+    "error": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/error"}
+  }
+}

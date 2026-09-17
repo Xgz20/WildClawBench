@@ -1,0 +1,14 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:receipt:v1",
+  "schema_version": 1,
+  "scope": {"batch_id": "batch-smoke", "unit_id": "astronstudio-macos"},
+  "dataset": {"id": "general-custom60-v1", "digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a"},
+  "stage": "collect-evidence",
+  "status": "completed",
+  "created_at": "2026-09-17T10:03:00+08:00",
+  "task_ids": ["task-zero"],
+  "tasks": [{"task_id": "task-zero", "attempt_id": "exec-001", "status": "completed"}],
+  "artifacts": [{"path": "evidence/tasks/task-zero/exec-001/execution-record.json", "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "size": 1024}],
+  "integrity": {"scope_matches": true, "identities_match": true, "hashes_verified": true, "valid": true},
+  "error": null
+}

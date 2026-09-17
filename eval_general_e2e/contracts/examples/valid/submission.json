@@ -1,0 +1,11 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:submission:v1",
+  "schema_version": 1,
+  "scope": {"batch_id": "batch-smoke", "unit_id": "astronstudio-macos"},
+  "dataset": {"id": "general-custom60-v1", "digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a"},
+  "created_at": "2026-09-17T10:05:00+08:00",
+  "task_count": 1,
+  "task_ids": ["task-zero"],
+  "tasks": [{"task_id": "task-zero", "execution_attempt_id": "exec-001", "execution_status": "completed", "scoring_attempt_id": "score-001", "judge_protocol": "not-required", "score_status": "valid", "score_path": "score/tasks/task-zero/score.json", "score_sha256": "2222222222222222222222222222222222222222222222222222222222222222", "candidate_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "evidence_sha256": "3333333333333333333333333333333333333333333333333333333333333333"}],
+  "integrity": {"scope_matches": true, "identities_match": true, "hashes_verified": true, "valid": true}
+}

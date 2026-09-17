@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:general-e2e:trace-index:v1",
+  "title": "General E2E trace index v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "identity", "transcript", "raw_trace", "completeness", "calls"],
+  "properties": {
+    "schema_id": {"const": "urn:wildclawbench:schema:general-e2e:trace-index:v1"}, "schema_version": {"const": 1},
+    "identity": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/taskIdentity"},
+    "transcript": {
+      "allOf": [{"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/artifact"}],
+      "type": "object", "required": ["event_count"], "properties": {"event_count": {"type": "integer", "minimum": 0}}
+    },
+    "raw_trace": {"type": "array", "items": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/artifact"}},
+    "completeness": {
+      "type": "object", "additionalProperties": false, "required": ["status", "omitted_event_count", "missing"],
+      "properties": {"status": {"enum": ["complete", "partial", "unavailable"]}, "omitted_event_count": {"type": "integer", "minimum": 0}, "missing": {"type": "array", "items": {"type": "string", "minLength": 1}}}
+    },
+    "calls": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false, "required": ["call_id", "call_sequence", "result_sequence"],
+        "properties": {"call_id": {"type": "string", "minLength": 1}, "call_sequence": {"type": "integer", "minimum": 0}, "result_sequence": {"type": ["integer", "null"], "minimum": 0}}
+      }
+    }
+  }
+}

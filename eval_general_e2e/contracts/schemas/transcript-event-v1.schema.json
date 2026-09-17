@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:general-e2e:transcript-event:v1",
+  "title": "General E2E normalized transcript event v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_id", "schema_version", "identity", "event_id", "sequence", "occurred_at", "type", "source"],
+  "properties": {
+    "schema_id": {"const": "urn:wildclawbench:schema:general-e2e:transcript-event:v1"},
+    "schema_version": {"const": 1},
+    "identity": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/taskIdentity"},
+    "event_id": {"type": "string", "minLength": 1}, "sequence": {"type": "integer", "minimum": 0},
+    "occurred_at": {"type": ["string", "null"], "format": "date-time"},
+    "type": {"enum": ["user_message", "assistant_message", "tool_call", "tool_result", "error", "status", "usage"]},
+    "role": {"enum": ["user", "assistant", "system", null]}, "content": {"type": ["string", "null"]},
+    "tool": {
+      "type": "object", "additionalProperties": true,
+      "properties": {"call_id": {"type": "string", "minLength": 1}, "name": {"type": "string", "minLength": 1}, "arguments": {}, "result": {}, "status": {"enum": ["success", "error", "unknown"]}}
+    },
+    "source": {
+      "type": "object", "additionalProperties": false, "required": ["adapter", "raw_ref", "redacted"],
+      "properties": {"adapter": {"type": "string", "minLength": 1}, "raw_ref": {"type": ["string", "null"]}, "redacted": {"type": "boolean"}}
+    }
+  }
+}

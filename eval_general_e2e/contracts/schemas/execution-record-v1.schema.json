@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:general-e2e:execution-record:v1",
+  "title": "General E2E execution record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "identity", "dataset", "phase", "harness", "model", "execution", "prompt", "session", "evidence", "candidate", "resource_metrics_path", "human_assistance"],
+  "properties": {
+    "schema_id": {"const": "urn:wildclawbench:schema:general-e2e:execution-record:v1"},
+    "schema_version": {"const": 1},
+    "identity": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/taskIdentity"},
+    "dataset": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/dataset"},
+    "phase": {"enum": ["NOT_SELECTED", "PENDING", "RUNNING", "NEEDS_HUMAN", "NEEDS_ATTENTION", "COMPLETED", "FAILED"]},
+    "harness": {
+      "type": "object", "additionalProperties": false, "required": ["id", "platform", "version"],
+      "properties": {"id": {"type": "string", "minLength": 1}, "platform": {"type": "string", "minLength": 1}, "version": {"type": ["string", "null"]}}
+    },
+    "model": {
+      "type": "object", "additionalProperties": false, "required": ["requested_id", "actual_id", "reasoning_effort", "verification_status"],
+      "properties": {
+        "requested_id": {"type": "string", "minLength": 1}, "actual_id": {"type": ["string", "null"]},
+        "reasoning_effort": {"type": ["string", "null"]}, "verification_status": {"enum": ["verified", "unverified", "unknown"]}
+      }
+    },
+    "execution": {
+      "type": "object", "additionalProperties": false, "required": ["business_status", "started_at", "finished_at", "duration_seconds", "agent_duration_seconds", "error"],
+      "properties": {
+        "business_status": {"type": ["string", "null"], "enum": ["completed", "candidate_error", "timeout", "infrastructure_error", "cancelled", null]},
+        "started_at": {"type": ["string", "null"], "format": "date-time"}, "finished_at": {"type": ["string", "null"], "format": "date-time"},
+        "duration_seconds": {"type": ["number", "null"], "minimum": 0}, "agent_duration_seconds": {"type": ["number", "null"], "minimum": 0},
+        "error": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/error"}
+      }
+    },
+    "prompt": {
+      "type": "object", "additionalProperties": false, "required": ["sha256", "send_status", "sent_at"],
+      "properties": {"sha256": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/sha256"}, "send_status": {"enum": ["not_sent", "intent_persisted", "sent", "uncertain"]}, "sent_at": {"type": ["string", "null"], "format": "date-time"}}
+    },
+    "session": {
+      "type": "object", "additionalProperties": false, "required": ["thread_id", "turn_id", "session_id", "cwd", "verified"],
+      "properties": {"thread_id": {"type": ["string", "null"]}, "turn_id": {"type": ["string", "null"]}, "session_id": {"type": ["string", "null"]}, "cwd": {"type": ["string", "null"]}, "verified": {"type": "boolean"}}
+    },
+    "evidence": {
+      "type": "object", "additionalProperties": false, "required": ["completeness", "transcript_path", "trace_index_path", "final_response_path", "missing"],
+      "properties": {
+        "completeness": {"enum": ["complete", "partial", "unavailable"]},
+        "transcript_path": {"type": ["string", "null"]}, "trace_index_path": {"type": ["string", "null"]}, "final_response_path": {"type": ["string", "null"]},
+        "missing": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "candidate": {
+      "type": "object", "additionalProperties": false, "required": ["path", "frozen_sha256", "frozen_at", "drift_status"],
+      "properties": {"path": {"type": ["string", "null"]}, "frozen_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}, "frozen_at": {"type": ["string", "null"], "format": "date-time"}, "drift_status": {"enum": ["not_frozen", "stable", "drifted", "unverified"]}}
+    },
+    "resource_metrics_path": {"type": ["string", "null"]},
+    "human_assistance": {
+      "type": "object", "additionalProperties": false, "required": ["mode", "operation_count", "semantic_intervention_count"],
+      "properties": {"mode": {"enum": ["automatic", "human_assisted"]}, "operation_count": {"type": "integer", "minimum": 0}, "semantic_intervention_count": {"type": "integer", "minimum": 0}}
+    }
+  }
+}

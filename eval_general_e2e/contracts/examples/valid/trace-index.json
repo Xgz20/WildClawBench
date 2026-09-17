@@ -1,0 +1,9 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:trace-index:v1",
+  "schema_version": 1,
+  "identity": {"batch_id": "batch-smoke", "unit_id": "astronstudio-macos", "task_id": "task-zero", "attempt_id": "exec-001"},
+  "transcript": {"path": "evidence/transcript.jsonl", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "size": 512, "event_count": 2},
+  "raw_trace": [{"path": "evidence/raw/events.jsonl", "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "size": 768}],
+  "completeness": {"status": "complete", "omitted_event_count": 0, "missing": []},
+  "calls": []
+}

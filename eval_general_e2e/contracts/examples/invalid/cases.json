@@ -1,0 +1,32 @@
+[
+  {
+    "name": "unsupported execution schema version",
+    "base": "../valid/execution-record.json",
+    "mutations": {"schema_version": 2},
+    "expected_code": "SCHEMA_UNSUPPORTED"
+  },
+  {
+    "name": "judged criterion without evidence",
+    "base": "../valid/score-zero.json",
+    "mutations": {"evaluation.criteria.0.evidence": []},
+    "expected_code": "EVIDENCE_MISSING"
+  },
+  {
+    "name": "unavailable metric disguised as zero",
+    "base": "../valid/resource-metrics-zero.json",
+    "mutations": {"metrics.usage.input_tokens.status": "unavailable"},
+    "expected_code": "METRIC_STATUS_VALUE_MISMATCH"
+  },
+  {
+    "name": "invalid score disguised as capability zero",
+    "base": "../valid/score-zero.json",
+    "mutations": {"result.valid": false, "result.invalid_reason": "judge failed"},
+    "expected_code": "INVALID_VALUE"
+  },
+  {
+    "name": "submission silently drops the frozen task scope",
+    "base": "../valid/submission.json",
+    "mutations": {"task_ids.0": "different-task"},
+    "expected_code": "SCOPE_MISMATCH"
+  }
+]

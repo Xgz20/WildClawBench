@@ -1,0 +1,12 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:transcript-event:v1",
+  "schema_version": 1,
+  "identity": {"batch_id": "batch-smoke", "unit_id": "astronstudio-macos", "task_id": "task-zero", "attempt_id": "exec-001"},
+  "event_id": "event-0001",
+  "sequence": 0,
+  "occurred_at": "2026-09-17T10:00:00+08:00",
+  "type": "user_message",
+  "role": "user",
+  "content": "Complete the task in the selected workspace.",
+  "source": {"adapter": "astronstudio-v1", "raw_ref": "raw/events.jsonl#0", "redacted": false}
+}

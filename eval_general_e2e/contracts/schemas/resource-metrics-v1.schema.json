@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:general-e2e:resource-metrics:v1",
+  "title": "General E2E resource metrics v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "identity", "collection", "metrics"],
+  "properties": {
+    "schema_id": {"const": "urn:wildclawbench:schema:general-e2e:resource-metrics:v1"}, "schema_version": {"const": 1},
+    "identity": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/taskIdentity"},
+    "collection": {
+      "type": "object", "additionalProperties": false, "required": ["collector", "version", "status", "collected_at", "sources", "warnings", "excluded_scope"],
+      "properties": {
+        "collector": {"type": "string", "minLength": 1}, "version": {"type": "string", "minLength": 1}, "status": {"enum": ["complete", "partial", "unavailable"]},
+        "collected_at": {"type": "string", "format": "date-time"}, "sources": {"type": "array", "items": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/artifact"}},
+        "warnings": {"type": "array", "items": {"type": "string", "minLength": 1}}, "excluded_scope": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "metrics": {
+      "type": "object", "additionalProperties": false, "required": ["usage", "requests", "tools", "timing"],
+      "properties": {
+        "usage": {"$ref": "#/$defs/usage"}, "requests": {"$ref": "#/$defs/requests"}, "tools": {"$ref": "#/$defs/tools"}, "timing": {"$ref": "#/$defs/timing"}
+      }
+    }
+  },
+  "$defs": {
+    "metric": {
+      "type": "object", "additionalProperties": false, "required": ["value", "status", "basis"],
+      "properties": {"value": {"type": ["number", "null"], "minimum": 0}, "status": {"enum": ["observed", "inferred", "partial", "masked", "unverified", "unavailable"]}, "basis": {"type": "string", "minLength": 1}}
+    },
+    "usage": {"type": "object", "additionalProperties": false, "required": ["input_tokens", "output_tokens", "total_tokens", "cache_read_input_tokens", "cache_creation_input_tokens", "reasoning_output_tokens"], "properties": {"input_tokens": {"$ref": "#/$defs/metric"}, "output_tokens": {"$ref": "#/$defs/metric"}, "total_tokens": {"$ref": "#/$defs/metric"}, "cache_read_input_tokens": {"$ref": "#/$defs/metric"}, "cache_creation_input_tokens": {"$ref": "#/$defs/metric"}, "reasoning_output_tokens": {"$ref": "#/$defs/metric"}}},
+    "requests": {"type": "object", "additionalProperties": false, "required": ["request_count", "request_attempt_count"], "properties": {"request_count": {"$ref": "#/$defs/metric"}, "request_attempt_count": {"$ref": "#/$defs/metric"}}},
+    "tools": {"type": "object", "additionalProperties": false, "required": ["call_count"], "properties": {"call_count": {"$ref": "#/$defs/metric"}}},
+    "timing": {"type": "object", "additionalProperties": false, "required": ["duration_seconds", "agent_duration_seconds"], "properties": {"duration_seconds": {"$ref": "#/$defs/metric"}, "agent_duration_seconds": {"$ref": "#/$defs/metric"}}}
+  }
+}

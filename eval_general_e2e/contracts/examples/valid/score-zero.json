@@ -1,0 +1,15 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:score:v1",
+  "schema_version": 1,
+  "identity": {"batch_id": "batch-smoke", "unit_id": "astronstudio-macos", "task_id": "task-zero", "attempt_id": "score-001"},
+  "dataset": {"id": "general-custom60-v1", "digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a"},
+  "execution": {"record_path": "evidence/execution-record.json", "record_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "attempt_id": "exec-001", "business_status": "completed"},
+  "judge": {"protocol": "not-required", "model": null, "reasoning_effort": null, "attempt_id": "judge-not-required"},
+  "components": {"rules": {"status": "completed", "score": 0.0}, "semantics": {"status": "not_required", "score": null}},
+  "evaluation": {
+    "status": "completed",
+    "criteria": [{"key": "output_correct", "weight": 1.0, "status": "judged", "score": 0.0, "reason": "The deterministic rule found a mismatch.", "evidence": [{"type": "rule_result", "path": "private-scoring/rule-result.json", "event_ids": ["event-0002"], "sha256": "1111111111111111111111111111111111111111111111111111111111111111"}]}],
+    "error": null
+  },
+  "result": {"valid": true, "total_score": 0.0, "invalid_reason": null}
+}

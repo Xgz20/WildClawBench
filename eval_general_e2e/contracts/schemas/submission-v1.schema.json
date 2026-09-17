@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:general-e2e:submission:v1",
+  "title": "General E2E submission v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "scope", "dataset", "created_at", "task_count", "task_ids", "tasks", "integrity"],
+  "properties": {
+    "schema_id": {"const": "urn:wildclawbench:schema:general-e2e:submission:v1"}, "schema_version": {"const": 1},
+    "scope": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/batchScope"}, "dataset": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/dataset"},
+    "created_at": {"type": "string", "format": "date-time"}, "task_count": {"type": "integer", "minimum": 1}, "task_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "tasks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/task"}},
+    "integrity": {"type": "object", "additionalProperties": false, "required": ["scope_matches", "identities_match", "hashes_verified", "valid"], "properties": {"scope_matches": {"type": "boolean"}, "identities_match": {"type": "boolean"}, "hashes_verified": {"type": "boolean"}, "valid": {"type": "boolean"}}}
+  },
+  "$defs": {
+    "task": {
+      "type": "object", "additionalProperties": false, "required": ["task_id", "execution_attempt_id", "execution_status", "scoring_attempt_id", "judge_protocol", "score_status", "score_path", "score_sha256", "candidate_sha256", "evidence_sha256"],
+      "properties": {"task_id": {"type": "string", "minLength": 1}, "execution_attempt_id": {"type": "string", "minLength": 1}, "execution_status": {"enum": ["completed", "candidate_error", "timeout", "infrastructure_error", "cancelled"]}, "scoring_attempt_id": {"type": ["string", "null"]}, "judge_protocol": {"type": ["string", "null"], "enum": ["codex-agent-judge-v1", "api-judge-v1", "not-required", null]}, "score_status": {"enum": ["valid", "evaluation_error", "unscored"]}, "score_path": {"type": ["string", "null"]}, "score_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}, "candidate_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}, "evidence_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}}
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:resource-metrics:v1",
+  "schema_version": 1,
+  "identity": {"batch_id": "batch-smoke", "unit_id": "astronstudio-macos", "task_id": "task-zero", "attempt_id": "exec-001"},
+  "collection": {
+    "collector": "astronstudio-native",
+    "version": "1.0.0",
+    "status": "complete",
+    "collected_at": "2026-09-17T10:00:07+08:00",
+    "sources": [{"path": "evidence/raw/usage.json", "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "size": 128}],
+    "warnings": [],
+    "excluded_scope": ["judge_usage", "control_usage"]
+  },
+  "metrics": {
+    "usage": {
+      "input_tokens": {"value": 0, "status": "observed", "basis": "native task turn delta"},
+      "output_tokens": {"value": 0, "status": "observed", "basis": "native task turn delta"},
+      "total_tokens": {"value": 0, "status": "observed", "basis": "native task turn delta"},
+      "cache_read_input_tokens": {"value": 0, "status": "observed", "basis": "native task turn delta"},
+      "cache_creation_input_tokens": {"value": null, "status": "unavailable", "basis": "client does not expose cache writes"},
+      "reasoning_output_tokens": {"value": null, "status": "unavailable", "basis": "client does not expose reasoning tokens"}
+    },
+    "requests": {
+      "request_count": {"value": 0, "status": "observed", "basis": "unique native response IDs"},
+      "request_attempt_count": {"value": null, "status": "unavailable", "basis": "HTTP attempts are not exposed"}
+    },
+    "tools": {"call_count": {"value": 0, "status": "observed", "basis": "unique native call IDs"}},
+    "timing": {
+      "duration_seconds": {"value": 0.0, "status": "observed", "basis": "driver monotonic clock"},
+      "agent_duration_seconds": {"value": 0.0, "status": "observed", "basis": "native task timestamps"}
+    }
+  }
+}

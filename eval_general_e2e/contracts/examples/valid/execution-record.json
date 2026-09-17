@@ -1,0 +1,16 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:execution-record:v1",
+  "schema_version": 1,
+  "identity": {"batch_id": "batch-smoke", "unit_id": "astronstudio-macos", "task_id": "task-zero", "attempt_id": "exec-001"},
+  "dataset": {"id": "general-custom60-v1", "digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a"},
+  "phase": "COMPLETED",
+  "harness": {"id": "astronstudio", "platform": "macos-arm64", "version": "0.0.0-test"},
+  "model": {"requested_id": "model-test", "actual_id": "model-test", "reasoning_effort": "high", "verification_status": "verified"},
+  "execution": {"business_status": "completed", "started_at": "2026-09-17T10:00:00+08:00", "finished_at": "2026-09-17T10:00:05+08:00", "duration_seconds": 5.0, "agent_duration_seconds": 0.0, "error": null},
+  "prompt": {"sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "send_status": "sent", "sent_at": "2026-09-17T10:00:00+08:00"},
+  "session": {"thread_id": "thread-001", "turn_id": "turn-001", "session_id": "session-001", "cwd": "/tmp/general-e2e/task-zero", "verified": true},
+  "evidence": {"completeness": "complete", "transcript_path": "evidence/transcript.jsonl", "trace_index_path": "evidence/trace-index.json", "final_response_path": "evidence/final-response.md", "missing": []},
+  "candidate": {"path": "candidate/workspace", "frozen_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "frozen_at": "2026-09-17T10:00:06+08:00", "drift_status": "stable"},
+  "resource_metrics_path": "evidence/resource-metrics.json",
+  "human_assistance": {"mode": "automatic", "operation_count": 0, "semantic_intervention_count": 0}
+}
