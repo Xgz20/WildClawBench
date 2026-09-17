@@ -104,9 +104,9 @@ Windows 使用相同参数和原生入口：
 
 QwenWork 的 Token 暴露由 Driver 管理，用户和控制 Harness 都不需要预先设置环境变量。全新单题默认执行一次安全客户端重启；全新批次默认只在第一题前安全重启。Driver 在新客户端子进程中同时注入本机 CDP 参数和 `QODERCN_EXPOSE_TOKEN_USAGE=1`，不修改控制 Harness 的全局环境。重启前若状态库或存活进程表明存在活动任务，立即停止并进入人工处理。已有客户端进程不能在运行中补加该变量，因此禁止为了省略重启而复用无法证明已带开关的旧进程。
 
-开关只允许原生 usage 出现在 transcript 中，不能绕过指标 Profile。采集器仍须精确核对平台、QwenWork 客户端、SDK、transcript 版本和 runtime SHA；未知身份保持 `unverified`，历史 `masked` 样本不得回填。资源字段、状态和 QwenWork Profile 的详细口径见[资源指标参考](references/resource-metrics.md)。execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 首次引入自动注入；当前发布候选为 execute 1.12.5 / Driver 1.10.16，并为原生目录选择后的异步标签更新增加有界等待。发布包必须重新通过 probe 和一个全新 L1 后才能继承既有生产准入。
+开关只允许原生 usage 出现在 transcript 中，不能绕过指标 Profile。采集器仍须精确核对平台、QwenWork 客户端、SDK、transcript 版本和 runtime SHA；未知身份保持 `unverified`，历史 `masked` 样本不得回填。资源字段、状态和 QwenWork Profile 的详细口径见[资源指标参考](references/resource-metrics.md)。execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 首次引入自动注入；当前发布候选为 execute 1.12.6 / Driver 1.10.17 / collector 1.1.3，并同时覆盖原生目录选择异步回读和 Windows Node 18 长日志路径。发布包必须重新通过 probe 和一个全新 L1 后才能继承既有生产准入。
 
-QwenWorkCN 1.0.5.0 的历史 Windows 身份已覆盖动态路径、进程、SQLite、CDP 启动、页面识别、串行、并发和部分恢复边界。当前主流程与资源指标证据以生产验收清单为准：QwenWorkCN 1.0.6.0 已在 `ff5d476...` 完成带指标的全新单 L1 闭环，四个核心 Token 均为 `observed`；自动注入发布候选当前为 execute 1.12.5 / Driver 1.10.16，真机重验前不得把旧证据直接升级到该新身份。验收模型为 `标准｜Qwen3.8-Flash`，权限为 `full-access`；更换客户端大版本、Driver 核心实现或模型后仍须从只读 probe 和一至三个 L1 smoke 开始回归。
+QwenWorkCN 1.0.5.0 的历史 Windows 身份已覆盖动态路径、进程、SQLite、CDP 启动、页面识别、串行、并发和部分恢复边界。当前主流程与资源指标证据以生产验收清单为准：QwenWorkCN 1.0.6.0 已在 `ff5d476...` 完成带指标的全新单 L1 闭环，四个核心 Token 均为 `observed`；自动注入发布候选当前为 execute 1.12.6 / Driver 1.10.17 / collector 1.1.3，真机重验前不得把旧证据直接升级到该新身份。验收模型为 `标准｜Qwen3.8-Flash`，权限为 `full-access`；更换客户端大版本、Driver 核心实现或模型后仍须从只读 probe 和一至三个 L1 smoke 开始回归。
 
 QwenWork 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、目录选择、权限/模型回读和 Prompt 发送始终由一个 Driver 串行完成；捕获稳定 `session_id`、`stream_id`、`local_project_id` 和绝对 cwd 后释放 UI Driver，由 Worker 轮流恢复原会话做一次性观察。任一题明确终态后释放后台槽位并动态补入下一题。
 

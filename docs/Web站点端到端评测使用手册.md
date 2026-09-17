@@ -106,7 +106,7 @@ Windows CMD：
 call "C:\Skills\execute-web-e2e\scripts\run-qwenwork.cmd" "D:\WebE2E\<batch_id>__qwenwork\execution\tasks\<task_id>"
 ```
 
-自动注入成功只表示开关已传给新客户端进程，不代表任意运行时都能通过口径验证。当前 Windows 真机已验证 QwenWorkCN 1.0.6.0 的 `qwenwork-1.0.6-qoder-cache-inclusive-v1`，四个核心 Token 均为 `observed`；客户端、SDK、transcript、平台或 runtime SHA 任一漂移时仍保留 `unverified`。revision `ff5d476...` 的实机证据使用 execute 1.12.3 / Driver 1.10.14，由控制任务显式注入开关；当前内建自动注入发布候选为 execute 1.12.5 / Driver 1.10.16，并为原生目录选择后的异步标签更新增加有界等待，仍须重新完成 probe 和一个全新 L1。
+自动注入成功只表示开关已传给新客户端进程，不代表任意运行时都能通过口径验证。当前 Windows 真机已验证 QwenWorkCN 1.0.6.0 的 `qwenwork-1.0.6-qoder-cache-inclusive-v1`，四个核心 Token 均为 `observed`；客户端、SDK、transcript、平台或 runtime SHA 任一漂移时仍保留 `unverified`。revision `ff5d476...` 的实机证据使用 execute 1.12.3 / Driver 1.10.14，由控制任务显式注入开关；当前内建自动注入发布候选为 execute 1.12.6 / Driver 1.10.17 / collector 1.1.3，并同时覆盖原生目录选择异步回读和 Windows Node 18 长日志路径，仍须重新完成 probe 和一个全新 L1。
 
 ### 2.2 执行时的目录要求
 

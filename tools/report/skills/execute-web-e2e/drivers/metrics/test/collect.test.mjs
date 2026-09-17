@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, readFile, writeFile, symlink, rm } from "node:fs/promis
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
-import { collectLocalMetrics, findAstronTrace } from "../collect.mjs";
+import { collectLocalMetrics, findAstronTrace, readTrace } from "../collect.mjs";
 import { empty } from "../parsers.mjs";
 import { inspectQwenRuntime, QWEN_PROFILE, QWEN_WINDOWS_PROFILE, QWEN_WINDOWS_1_0_6_PROFILE, verifiedQwenProfile } from "../qwen-profile.mjs";
 import { updateExecutionRecord, createExecutionRecord } from "../../workbuddy/lib.mjs";
@@ -88,6 +88,19 @@ test("未知本地 Qwen SDK 与混合 transcript 版本不能命中已验 Profil
   assert.equal(verifiedQwenProfile(identity), null);
   const mixed = await inspectQwenRuntime(root, "1.0.5", [{ type: "assistant", version: "1.1.32" }, { type: "assistant" }], "darwin");
   assert.equal(mixed.transcript_version, null);
+});
+
+test("长日志文件通过真实父目录校验且保持在受信根内", async t => {
+  const root = await mkdtemp(join(tmpdir(), "web-resource-long-trace-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const parent = join(root, "p".repeat(180));
+  await mkdir(parent, { recursive: true });
+  const file = join(parent, `trace-${"f".repeat(70)}.jsonl`);
+  await writeFile(file, `${JSON.stringify({ type: "event" })}\n`);
+  assert.ok(file.length > 260);
+  const result = await readTrace(file, root);
+  assert.equal(result.rows.length, 1);
+  assert.equal(result.source.path, `${"p".repeat(180)}/trace-${"f".repeat(70)}.jsonl`);
 });
 test("Qwen Windows 仅接受已核对的客户端和相同 runtime 身份", () => {
   assert.equal(verifiedQwenProfile(QWEN_WINDOWS_PROFILE), QWEN_PROFILE.id);

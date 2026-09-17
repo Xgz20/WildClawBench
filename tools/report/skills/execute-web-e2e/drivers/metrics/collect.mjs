@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile, readdir, lstat, realpath } from "node:fs/promises";
 import { homedir } from "node:os";
-import { dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { empty, parseAstron, parseWorkBuddy, parseQwen } from "./parsers.mjs";
 import { inspectQwenRuntime } from "./qwen-profile.mjs";
 
@@ -9,10 +9,15 @@ const MAX_BYTES = 64 * 1024 * 1024;
 const safeId = (id) => typeof id === "string" && /^[a-zA-Z0-9_-]{8,100}$/u.test(id);
 const samePath = (a, b) => process.platform === "win32" ? resolve(a).toLowerCase() === resolve(b).toLowerCase() : resolve(a) === resolve(b);
 
-async function readTrace(file, root) {
+export async function readTrace(file, root) {
   const info = await lstat(file);
   if (!info.isFile() || info.isSymbolicLink() || info.size > MAX_BYTES) throw new Error("UNSAFE_OR_OVERSIZED_TRACE");
-  const rel = relative(await realpath(root), await realpath(file));
+  // Node 18 on Windows can lstat/read a path longer than MAX_PATH while
+  // realpath(file) still reports ENOENT. Resolve the trusted parent instead;
+  // lstat above has already rejected a symlink at the file leaf.
+  const resolvedRoot = await realpath(root);
+  const resolvedParent = await realpath(dirname(file));
+  const rel = relative(resolvedRoot, join(resolvedParent, basename(file)));
   if (rel.startsWith("..") || rel === "") throw new Error("TRACE_OUTSIDE_ROOT");
   const bytes = await readFile(file);
   if (bytes.length > MAX_BYTES) throw new Error("OVERSIZED_TRACE");

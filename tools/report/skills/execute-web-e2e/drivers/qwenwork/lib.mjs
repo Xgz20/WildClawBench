@@ -49,7 +49,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.10.16";
+export const DRIVER_VERSION = "1.10.17";
 export const DEFAULT_APP_PATH = defaultQwenWorkAppPath();
 export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9250";
