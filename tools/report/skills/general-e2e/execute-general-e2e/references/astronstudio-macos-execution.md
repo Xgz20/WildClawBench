@@ -4,7 +4,7 @@
 
 `scripts/execute_astronstudio_macos.mjs` 接收一个已解压的 General E2E execution unit、一个完整 task ID 和 G2-01 冻结运行配置。它完成单题 Prompt 一次发送、`thread_id / turn_id / session_id / cwd` 绑定和原生终态观察。
 
-当前实现不负责批量队列、超时停止、候选冻结、轨迹归档、资源采集、评分或报告。这些能力分别由 G2-03 至 G4 实现。执行器输出的 `execution-record.json` 因此固定为 `evidence.completeness=partial`、`candidate.drift_status=not_frozen`、`resource_metrics_path=null`，不能直接作为 collect 或评分准入回执。
+当前实现不负责超时停止、候选冻结、轨迹归档、资源采集、评分或报告。串行批量由 [macOS 队列入口](astronstudio-macos-queue.md) 调用本执行器；采集与正式回执由 `collect-general-e2e` 负责。执行器输出的 `execution-record.json` 因此固定为 `evidence.completeness=partial`、`candidate.drift_status=not_frozen`、`resource_metrics_path=null`，不能直接作为评分准入回执。
 
 ## 调用
 
@@ -43,7 +43,7 @@ node scripts/execute_astronstudio_macos.mjs \
 
 状态查询只读取主状态库的临时副本及同批复制的 WAL/SHM，不写源库。AStudio 热写入导致副本 `quick_check` 或查询短暂失败时，单次查询先退避重试；Prompt 已发送并绑定身份后，终态轮询继续保留同一 attempt 重试，不因此创建新任务或再次发送。`--resume --observe-once` 仍只尝试一次上层观察；该次读取失败会持久化 `NATIVE_STATE_READ_FAILED / NEEDS_ATTENTION`，可再次恢复。
 
-执行锁遗留时，只有 `--resume` 且记录的 PID 已不存活才允许清除陈旧锁；普通新运行不会接管锁。
+执行锁遗留时，只有 `--resume` 且记录的 PID 已不存活才允许清除陈旧锁；普通新运行不会接管锁。单题 Driver 同时持有 unit 级 `astronstudio-ui.lock` 和 task 级 `driver.lock`，因此即使绕过队列直接启动多个单题入口，也只有一个进程可以操作 AStudio UI。
 
 发送前 Driver 失败会写 `FAILED / infrastructure_error / not_sent`，该 attempt 保持终态，`--resume` 只回读而不会在原 attempt 补发。修复环境或 Driver 后，应保留失败状态作为证据并从新准备的 execution unit 创建新 attempt；不得删除状态后把后续发送伪装成同一次执行。
 

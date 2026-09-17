@@ -1,0 +1,111 @@
+{
+  "schema_version": "wildclawbench.general-e2e-g2-06-verification-summary/v1",
+  "verified_at": "2026-09-18T02:23:48+08:00",
+  "implementation_revision": "6929ea4d7c57838d965eb855a1107a275636944b",
+  "implementation": {
+    "execute_skill_version": "0.4.0",
+    "execute_skill_zip_sha256": "b5f93fd2ddc2612c79b095630bf575c861c218c4c0fbd83867bb6f5908694a73",
+    "queue_worker_sha256": "558424aa3351116337384cb628fb325448896d2c6a9c8591fb34beb779e8f052",
+    "single_task_driver_sha256": "232ec223aa147d1ef788971ae651dbd084a141fba8a981db3d6245ffbe4d0510",
+    "queue_schema_sha256": "e321596ef864e91a40917104c1fda8f05e53e9a00d2392197e6344f2c6dd1582"
+  },
+  "environment": {
+    "os": "macOS 26.6.2",
+    "architecture": "x86_64",
+    "astronstudio_version": "3.3.1",
+    "model": "GLM-5.2",
+    "reasoning": "High",
+    "permission": "完全访问",
+    "cdp_endpoint": "http://127.0.0.1:9240"
+  },
+  "serial_smoke": {
+    "batch_id": "general-g2-06-smoke4-macos-20260918",
+    "unit_id": "astronstudio-macos-x86-64",
+    "queue_id": "g2-06-smoke4-worker-interrupt",
+    "queue_digest": "2bd3d436a0a06273b1a8b8696ca589c56cc47c5ad496bf5cd8bdfd98712c6041",
+    "execution_zip_sha256": "8ec1140e0250e4b012217232c4bd53373ab3e4f6ae2e88b6d4e1dbbc6309cca5",
+    "queue_state_sha256": "8c0130109de9f9af51656e085c54ea6bbd0259cb153f0910b8468a1ea254226d",
+    "queue_receipt_sha256": "6e4000bfd2ba12e3fb7a99a3ab7ad16b8269a113c1066f86f4e54a3eb54ec7c4",
+    "worker_interruption": {
+      "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+      "attempt_id": "8d1e11e5-b148-48d6-8809-ce8230260591",
+      "thread_id": "dd56868c-1c01-4836-902e-2c3de3660f87",
+      "turn_id": "01a0b091-09ab-7aa3-b01c-4d93926a48ad",
+      "session_id": "01a0b090-f278-72c2-b3ca-23dc69d5388c",
+      "dispatch_attempt_count": 1,
+      "events": [
+        "WORKER_PROCESS_LOST",
+        "WORKER_RESUMED",
+        "TASK_ATTEMPT_RESUME_REQUESTED"
+      ],
+      "recovered_stale_lock": true,
+      "final_phase": "COMPLETED"
+    },
+    "tasks": [
+      {
+        "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+        "attempt_id": "8d1e11e5-b148-48d6-8809-ce8230260591",
+        "dispatch_attempt_count": 1,
+        "phase": "COMPLETED"
+      },
+      {
+        "task_id": "01_Productivity_Flow_task_005_support_handoff",
+        "attempt_id": "49dd34e5-3246-4f0d-a4b7-8e40dae203f0",
+        "dispatch_attempt_count": 1,
+        "phase": "COMPLETED"
+      },
+      {
+        "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+        "attempt_id": "73cc6ebb-1359-4b9f-8002-284b24e20c16",
+        "dispatch_attempt_count": 1,
+        "phase": "COMPLETED"
+      },
+      {
+        "task_id": "06_Safety_Alignment_task_001_suspicious_installer",
+        "attempt_id": "84382625-8db1-4083-9eee-60d25ceb3c30",
+        "dispatch_attempt_count": 1,
+        "phase": "COMPLETED"
+      }
+    ],
+    "integrity": {
+      "queue_digest_matches": true,
+      "all_tasks_terminal": true,
+      "attempts_explicit_and_unique": true,
+      "no_duplicate_dispatch": true,
+      "valid": true
+    }
+  },
+  "client_restart_injection": {
+    "batch_id": "general-g2-06-client-restart-s3-macos-20260918",
+    "queue_id": "g2-06-client-restart-s3",
+    "task_id": "01_Productivity_Flow_task_005_support_handoff",
+    "attempt_id": "acb734e5-83bc-4b5e-be3e-f2cea169917f",
+    "thread_id": "daabbeed-3e44-430b-bc11-035e66fefe5c",
+    "turn_id": "01a0b09a-3588-70c0-99d5-2363ee72ddfb",
+    "session_id": "01a0b09a-1cba-7020-9052-e0376091538b",
+    "dispatch_attempt_count": 1,
+    "old_client_pid": 83983,
+    "new_client_pid": 96570,
+    "native_status": "interrupted",
+    "business_status": "cancelled",
+    "error_code": "ASTRONSTUDIO_TURN_INTERRUPTED",
+    "queue_state_sha256": "fdbbf07720a57369c8c8d140a3870c0116981ab583b1447bc8df6630cb31cb0c",
+    "automation_state_sha256": "5fe4bf6fd86a3fc9cada95e46a7a58d3132b7f0d0573040c92f8ab6fba68c0b1",
+    "prompt_redispatched": false,
+    "outcome": "trusted_failure_same_attempt"
+  },
+  "post_restart_probe": {
+    "status": "PASS",
+    "failed_checks": [],
+    "client_pid": 96570,
+    "cdp_loopback_only": true,
+    "active_or_pending_session_count": 0,
+    "sha256": "02cf888e030a87f414c8e71d0edf08fe33d81c51301cf65db7b2afc55e406459"
+  },
+  "scope_limits": {
+    "mac_02": "PASS",
+    "mac_07": "NOT_RUN because unknown interaction and timeout injection remain",
+    "mac_08": "NOT_RUN because run_slots=3 and dynamic refill were not enabled or tested",
+    "windows": "NOT_RUN"
+  }
+}

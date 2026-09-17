@@ -248,6 +248,7 @@ export async function resolveExecutionConfig(parsed) {
     recordFile: join(controlRoot, "execution-record.json"),
     finalResponseFile: join(controlRoot, "final-response.md"),
     lockFile: join(controlRoot, "driver.lock"),
+    uiLockFile: join(unitRoot, ".general-e2e", "astronstudio-ui.lock"),
     stateDatabase: runConfig.state_database.path,
     endpoint: runConfig.control.endpoint,
     appPath: runConfig.harness.app_path,
@@ -871,24 +872,28 @@ function processIsAlive(pid) {
   }
 }
 
-async function acquireLock(config, allowStaleRecovery = false) {
-  await mkdir(config.controlRoot, { recursive: true });
+async function acquireLock(path, allowStaleRecovery = false, metadata = {}) {
+  await mkdir(dirname(path), { recursive: true });
   let handle;
   try {
-    handle = await open(config.lockFile, "wx", 0o600);
+    handle = await open(path, "wx", 0o600);
   } catch (error) {
     if (error?.code !== "EEXIST") throw error;
-    const existing = await readJsonIfPresent(config.lockFile).catch(() => null);
+    const existing = await readJsonIfPresent(path).catch(() => null);
     if (!allowStaleRecovery || processIsAlive(Number(existing?.pid))) {
-      throw new Error(`执行锁已存在：${config.lockFile}`);
+      throw new Error(`执行锁已存在：${path}`);
     }
-    await rm(config.lockFile, { force: true });
-    handle = await open(config.lockFile, "wx", 0o600);
+    await rm(path, { force: true });
+    handle = await open(path, "wx", 0o600);
   }
-  await handle.writeFile(`${JSON.stringify({ pid: process.pid, started_at: new Date().toISOString() })}\n`);
+  await handle.writeFile(`${JSON.stringify({
+    pid: process.pid,
+    started_at: new Date().toISOString(),
+    ...metadata,
+  })}\n`);
   return async () => {
     await handle.close().catch(() => {});
-    await rm(config.lockFile, { force: true });
+    await rm(path, { force: true });
   };
 }
 
@@ -909,10 +914,21 @@ export async function main(argv = process.argv.slice(2), overrides = {}) {
     console.error("本入口只支持 AstronStudio macOS；Windows 由 G5 的原生入口实现");
     return 2;
   }
-  let releaseLock = null;
+  const releaseLocks = [];
   try {
     const config = await resolveExecutionConfig(parsed);
-    releaseLock = await acquireLock(config, parsed.resume);
+    releaseLocks.push(await acquireLock(config.uiLockFile, parsed.resume, {
+      kind: "astronstudio-ui",
+      batch_id: config.manifest.batch_id,
+      unit_id: config.manifest.unit_id,
+      task_id: config.task.task_id,
+    }));
+    releaseLocks.push(await acquireLock(config.lockFile, parsed.resume, {
+      kind: "task-driver",
+      batch_id: config.manifest.batch_id,
+      unit_id: config.manifest.unit_id,
+      task_id: config.task.task_id,
+    }));
     const state = await executeSingleTask(config, overrides.dependencies || {});
     console.log(JSON.stringify({
       phase: state.phase,
@@ -931,7 +947,7 @@ export async function main(argv = process.argv.slice(2), overrides = {}) {
     console.error(error instanceof Error ? error.message : String(error));
     return 2;
   } finally {
-    if (releaseLock) await releaseLock().catch(() => {});
+    for (const releaseLock of releaseLocks.reverse()) await releaseLock().catch(() => {});
   }
 }
 

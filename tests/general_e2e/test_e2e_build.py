@@ -317,8 +317,10 @@ process.stdout.write(JSON.stringify({{
         )
         probe = root / "scripts/probe_astronstudio_macos.mjs"
         execute = root / "scripts/execute_astronstudio_macos.mjs"
+        batch = root / "scripts/run_astronstudio_macos_batch.mjs"
         self.assertTrue(probe.is_file())
         self.assertTrue(execute.is_file())
+        self.assertTrue(batch.is_file())
         self.assertTrue(
             (root / "vendor/e2e-shared/desktop-runtime/process.mjs").is_file()
         )
@@ -335,6 +337,16 @@ process.stdout.write(JSON.stringify({{
             completed.stdout,
             f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}",
         )
+        self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
+        completed = subprocess.run(
+            ["node", str(batch), "--help"],
+            cwd=detached,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("串行队列 Worker", completed.stdout)
         self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
         execution_help = subprocess.run(
             ["node", str(execute), "--help"],
