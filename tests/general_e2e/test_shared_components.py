@@ -35,6 +35,10 @@ class SharedComponentTests(unittest.TestCase):
             {item["name"]: item["version"] for item in report["components"]},
             {item.name: item.version for item in EXPECTED_COMPONENTS},
         )
+        self.assertEqual(
+            {item["name"]: item["vendor_root"] for item in report["components"]},
+            {item.name: item.vendor_root for item in EXPECTED_COMPONENTS},
+        )
 
     def test_general_adapter_binds_only_canonical_shared_sources(self) -> None:
         source = GENERAL_ADAPTER.read_text(encoding="utf-8")

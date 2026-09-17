@@ -1,0 +1,4 @@
+tools/e2e-build/** text=auto eol=lf
+tools/report/e2e-shared/** text=auto eol=lf
+tools/report/skills/web-e2e/** text=auto eol=lf
+tools/report/skills/general-e2e/** text=auto eol=lf

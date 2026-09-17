@@ -5,7 +5,10 @@
       "name": "prepare-web-e2e-workspaces",
       "scene": "web-e2e",
       "source_root": "tools/report/skills/web-e2e/prepare-web-e2e-workspaces",
-      "components": []
+      "components": [],
+      "development_repository_references": [
+        "scripts/prepare_web_e2e_workspaces.py"
+      ]
     },
     {
       "name": "execute-web-e2e",

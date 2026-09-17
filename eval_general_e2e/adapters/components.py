@@ -19,6 +19,7 @@ class SharedComponentSpec:
     name: str
     version: str
     source_root: str
+    vendor_root: str
     entrypoints: Tuple[str, ...]
 
 
@@ -27,18 +28,21 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         name="desktop-runtime",
         version="1.0.0",
         source_root="tools/report/e2e-shared/desktop-runtime",
+        vendor_root="vendor/e2e-shared/desktop-runtime",
         entrypoints=("process.mjs",),
     ),
     SharedComponentSpec(
         name="resource-metrics",
         version="1.0.0",
         source_root="tools/report/e2e-shared/resource-metrics",
+        vendor_root="vendor/e2e-shared/resource-metrics",
         entrypoints=("native-parsers.mjs", "trace-io.mjs"),
     ),
     SharedComponentSpec(
         name="workspace-integrity",
         version="1.0.0",
         source_root="tools/report/e2e-shared/handoff",
+        vendor_root="vendor/e2e-shared/handoff",
         entrypoints=("workspace-integrity.mjs",),
     ),
 )
@@ -102,6 +106,8 @@ def inspect_shared_component_layout(
                 row_errors.append(f"version must be fixed at {expected.version}")
             if item.get("source_root") != expected.source_root:
                 row_errors.append("source_root mismatch")
+            if item.get("vendor_root") != expected.vendor_root:
+                row_errors.append("vendor_root mismatch")
             if tuple(item.get("entrypoints", ())) != expected.entrypoints:
                 row_errors.append("entrypoints mismatch")
         component_root = root / expected.source_root
@@ -123,6 +129,7 @@ def inspect_shared_component_layout(
             "name": expected.name,
             "version": expected.version,
             "source_root": expected.source_root,
+            "vendor_root": expected.vendor_root,
             "entrypoints": list(expected.entrypoints),
             "valid": not row_errors,
         })

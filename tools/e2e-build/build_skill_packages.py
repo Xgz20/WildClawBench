@@ -13,7 +13,7 @@ import shutil
 import stat
 import subprocess
 import tempfile
-from typing import Iterable, Sequence
+from typing import Sequence
 import zipfile
 
 
@@ -25,8 +25,10 @@ CONTENT_HASH_ALGORITHM = "wildclawbench.skill-content-sha256/v1"
 COMPONENT_HASH_ALGORITHM = "wildclawbench.component-content-sha256/v1"
 ZIP_HASH_ALGORITHM = "sha256"
 FIXED_ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
+ARCHIVE_EXECUTABLE_SUFFIXES = frozenset({".command", ".sh"})
 SEMVER_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
 GIT_REVISION_RE = re.compile(r"^[a-f0-9]{40}$")
+SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
 JS_IMPORT_RE = re.compile(
     r"(?:\bfrom\s+|\bimport\s*\(\s*|\bimport\s+)[\"']([^\"']+)[\"']"
 )
@@ -35,6 +37,10 @@ IGNORED_NAMES = frozenset({".DS_Store"})
 IGNORED_PARTS = frozenset({"__pycache__", "node_modules"})
 SOURCE_VENDOR_PREFIX = PurePosixPath("vendor/e2e-shared")
 SKILL_SOURCE_EXCLUDED_PARTS = frozenset({"test", "tests"})
+REPOSITORY_PATH_MARKERS = (b"/Users/", b"C:\\Users\\", b"tools/report/skills/")
+EXPECTED_DEVELOPMENT_REPOSITORY_REFERENCES = {
+    "prepare-web-e2e-workspaces": ["scripts/prepare_web_e2e_workspaces.py"],
+}
 
 
 class BuildError(ValueError):
@@ -118,6 +124,8 @@ def git_revision(repo_root: Path) -> str:
 def _validate_relative_path(value: object, field: str) -> str:
     if not isinstance(value, str) or not value:
         raise BuildError(f"INVALID_RELATIVE_PATH: {field}")
+    if "\\" in value or "\0" in value:
+        raise BuildError(f"INVALID_RELATIVE_PATH: {field}: {value}")
     relative = PurePosixPath(value)
     if relative.is_absolute() or ".." in relative.parts or "." in relative.parts:
         raise BuildError(f"INVALID_RELATIVE_PATH: {field}: {value}")
@@ -186,10 +194,37 @@ def _load_configuration(repo_root: Path) -> tuple[dict[str, dict], dict[str, dic
         unknown = sorted(set(requested_components) - set(components))
         if unknown:
             raise BuildError(f"SKILL_COMPONENT_UNKNOWN: {name}: {unknown}")
+        development_references = item.get("development_repository_references", [])
+        if (
+            not isinstance(development_references, list)
+            or len(development_references) != len(set(development_references))
+        ):
+            raise BuildError(f"SKILL_DEVELOPMENT_REFERENCES_INVALID: {name}")
+        normalized_development_references = [
+            _validate_relative_path(
+                reference,
+                f"{name}.development_repository_references",
+            )
+            for reference in development_references
+        ]
+        expected_development_references = (
+            EXPECTED_DEVELOPMENT_REPOSITORY_REFERENCES.get(name, [])
+        )
+        if normalized_development_references != expected_development_references:
+            raise BuildError(
+                f"SKILL_DEVELOPMENT_REFERENCES_UNAPPROVED: {name}: "
+                f"{normalized_development_references}"
+            )
+        for reference in normalized_development_references:
+            if not (source / reference).is_file():
+                raise BuildError(
+                    f"SKILL_DEVELOPMENT_REFERENCE_MISSING: {name}: {reference}"
+                )
         skills[name] = {
             **item,
             "source_root": source_root,
             "components": requested_components,
+            "development_repository_references": normalized_development_references,
         }
 
     discovered = {
@@ -286,9 +321,16 @@ def stage_skill(
         "skill_version": version,
         "source_revision": source_revision,
         "components": component_rows,
+        "development_repository_references": list(
+            skill["development_repository_references"]
+        ),
     }
     write_json(destination / "bundled-components.json", bundled_components)
-    validate_dependency_closure(destination)
+    validate_dependency_closure(
+        destination,
+        allowed_repository_references=skill["development_repository_references"],
+        forbidden_repository_roots=(repo_root,),
+    )
     return bundled_components
 
 
@@ -301,8 +343,25 @@ def _resolve_relative_import(source_file: Path, specifier: str) -> Path | None:
     return next((candidate for candidate in candidates if candidate.is_file()), None)
 
 
-def validate_dependency_closure(skill_root: Path) -> dict:
+def validate_dependency_closure(
+    skill_root: Path,
+    *,
+    allowed_repository_references: Sequence[str] = (),
+    forbidden_repository_roots: Sequence[Path] = (),
+) -> dict:
     root = skill_root.resolve()
+    allowed = {
+        _validate_relative_path(item, "allowed_repository_references")
+        for item in allowed_repository_references
+    }
+    used_repository_references: set[str] = set()
+    path_markers = list(REPOSITORY_PATH_MARKERS)
+    for repository_root in forbidden_repository_roots:
+        resolved_root = repository_root.expanduser().resolve()
+        for value in {str(resolved_root), resolved_root.as_posix()}:
+            encoded = value.encode("utf-8")
+            if encoded and encoded not in path_markers:
+                path_markers.append(encoded)
     checked_imports = 0
     for source_file in regular_files(root):
         if source_file.suffix not in CODE_SUFFIXES:
@@ -324,29 +383,34 @@ def validate_dependency_closure(skill_root: Path) -> dict:
                     f"RELATIVE_IMPORT_ESCAPES_SKILL: {source_file.relative_to(root).as_posix()}: {specifier}"
                 ) from exc
 
-    absolute_repo_markers = (b"/Users/", b"C:\\Users\\", b"tools/report/skills/")
     for source_file in regular_files(root):
         if source_file.name == "bundled-components.json":
             continue
         if source_file.suffix not in CODE_SUFFIXES | {".py", ".ps1", ".sh", ".cmd"}:
             continue
         data = source_file.read_bytes()
-        for marker in absolute_repo_markers:
+        for marker in path_markers:
             if marker in data:
                 relative = source_file.relative_to(root).as_posix()
-                # The legacy Web prepare implementation locates development
-                # sources by repository-relative names. G1-05 replaces this
-                # administrator-only source lookup with a release catalog.
-                if relative == "scripts/prepare_web_e2e_workspaces.py" and marker == b"tools/report/skills/":
+                if marker == b"tools/report/skills/" and relative in allowed:
+                    used_repository_references.add(relative)
                     continue
                 raise BuildError(f"REPOSITORY_PATH_REFERENCE: {relative}: {marker.decode(errors='replace')}")
-    return {"status": "PASS", "checked_relative_imports": checked_imports}
+    unused = sorted(allowed - used_repository_references)
+    if unused:
+        raise BuildError(f"UNUSED_REPOSITORY_PATH_EXCEPTIONS: {unused}")
+    return {
+        "status": "PASS",
+        "checked_relative_imports": checked_imports,
+        "development_repository_references": sorted(used_repository_references),
+    }
 
 
 def _zip_info(archive_name: str, mode: int) -> zipfile.ZipInfo:
     info = zipfile.ZipInfo(archive_name, date_time=FIXED_ZIP_TIMESTAMP)
     info.create_system = 3
-    info.compress_type = zipfile.ZIP_DEFLATED
+    # Stored entries avoid zlib-version drift between macOS and Windows.
+    info.compress_type = zipfile.ZIP_STORED
     info.external_attr = ((stat.S_IFREG | mode) & 0xFFFF) << 16
     return info
 
@@ -357,13 +421,12 @@ def write_deterministic_zip(skill_root: Path, destination: Path) -> int:
     with zipfile.ZipFile(
         destination,
         "w",
-        compression=zipfile.ZIP_DEFLATED,
-        compresslevel=9,
+        compression=zipfile.ZIP_STORED,
     ) as archive:
         for path in files:
             relative = path.relative_to(skill_root).as_posix()
             archived = PurePosixPath(skill_root.name, relative).as_posix()
-            mode = stat.S_IMODE(path.stat().st_mode) or 0o644
+            mode = 0o755 if path.suffix.lower() in ARCHIVE_EXECUTABLE_SUFFIXES else 0o644
             archive.writestr(_zip_info(archived, mode), path.read_bytes())
     return len(files)
 
@@ -418,6 +481,9 @@ def build_skill_package(
         "zip_hash_algorithm": ZIP_HASH_ALGORITHM,
         "zip_sha256": zip_sha256,
         "components": component_manifest["components"],
+        "development_repository_references": component_manifest[
+            "development_repository_references"
+        ],
     }
 
 
@@ -437,7 +503,7 @@ def build_skill_packages(
     if unknown:
         raise BuildError(f"UNKNOWN_SKILLS: {unknown}")
     revision = source_revision or git_revision(repo_root)
-    if not isinstance(revision, str) or not revision.strip() or "/" in revision or "\\" in revision:
+    if not isinstance(revision, str) or not GIT_REVISION_RE.fullmatch(revision):
         raise BuildError("SOURCE_REVISION_INVALID")
 
     rows = [
@@ -466,10 +532,17 @@ def build_skill_packages(
 def _safe_extract(archive_path: Path, destination: Path) -> Path:
     with zipfile.ZipFile(archive_path) as archive:
         roots: set[str] = set()
+        names: set[str] = set()
         for info in archive.infolist():
+            if "\\" in info.filename or "\0" in info.filename:
+                raise BuildError(f"UNSAFE_ARCHIVE_PATH: {info.filename}")
             relative = PurePosixPath(info.filename)
             if relative.is_absolute() or ".." in relative.parts or not relative.parts:
                 raise BuildError(f"UNSAFE_ARCHIVE_PATH: {info.filename}")
+            normalized = relative.as_posix()
+            if normalized in names:
+                raise BuildError(f"ARCHIVE_DUPLICATE_PATH: {info.filename}")
+            names.add(normalized)
             roots.add(relative.parts[0])
             file_type = (info.external_attr >> 16) & 0o170000
             if file_type == stat.S_IFLNK:
@@ -490,7 +563,11 @@ def _safe_extract(archive_path: Path, destination: Path) -> Path:
     return skill_root
 
 
-def _verify_component_contents(skill_root: Path, manifest: dict) -> None:
+def _verify_component_contents(
+    skill_root: Path,
+    manifest: dict,
+    source_revision: str,
+) -> None:
     components = manifest.get("components")
     if not isinstance(components, list):
         raise BuildError("BUNDLED_COMPONENTS_INVALID")
@@ -502,11 +579,31 @@ def _verify_component_contents(skill_root: Path, manifest: dict) -> None:
         if name in seen:
             raise BuildError(f"BUNDLED_COMPONENT_DUPLICATE: {name}")
         seen.add(name)
+        version = item.get("version")
+        if not isinstance(version, str) or not SEMVER_RE.fullmatch(version):
+            raise BuildError(f"BUNDLED_COMPONENT_VERSION_INVALID: {name}")
+        if item.get("source_revision") != source_revision:
+            raise BuildError(f"BUNDLED_COMPONENT_REVISION_MISMATCH: {name}")
+        _validate_relative_path(item.get("source_root"), f"{name}.source_root")
         vendor_root = _validate_relative_path(item.get("vendor_root"), f"{name}.vendor_root")
+        if not vendor_root.startswith(f"{SOURCE_VENDOR_PREFIX.as_posix()}/"):
+            raise BuildError(f"BUNDLED_COMPONENT_VENDOR_ROOT_INVALID: {name}")
+        if item.get("content_hash_algorithm") != COMPONENT_HASH_ALGORITHM:
+            raise BuildError(f"BUNDLED_COMPONENT_HASH_ALGORITHM_INVALID: {name}")
+        content_sha256 = item.get("content_sha256")
+        if not isinstance(content_sha256, str) or not SHA256_RE.fullmatch(content_sha256):
+            raise BuildError(f"BUNDLED_COMPONENT_HASH_INVALID: {name}")
         component_root = skill_root / vendor_root
-        if tree_content_sha256(component_root) != item.get("content_sha256"):
+        if tree_content_sha256(component_root) != content_sha256:
             raise BuildError(f"BUNDLED_COMPONENT_CONTENT_MISMATCH: {name}")
-        for entrypoint in item.get("entrypoints", []):
+        entrypoints = item.get("entrypoints")
+        if (
+            not isinstance(entrypoints, list)
+            or not entrypoints
+            or len(entrypoints) != len(set(entrypoints))
+        ):
+            raise BuildError(f"BUNDLED_COMPONENT_ENTRYPOINTS_INVALID: {name}")
+        for entrypoint in entrypoints:
             relative = _validate_relative_path(entrypoint, f"{name}.entrypoints")
             if not (component_root / relative).is_file():
                 raise BuildError(f"BUNDLED_COMPONENT_ENTRYPOINT_MISSING: {name}: {relative}")
@@ -527,11 +624,27 @@ def verify_skill_package(archive_path: Path, expected: dict | None = None) -> di
             raise BuildError("BUNDLED_COMPONENTS_SCHEMA_MISMATCH")
         if bundled.get("skill_name") != skill_root.name:
             raise BuildError("BUNDLED_COMPONENTS_SKILL_MISMATCH")
+        source_revision = bundled.get("source_revision")
+        if not isinstance(source_revision, str) or not GIT_REVISION_RE.fullmatch(
+            source_revision
+        ):
+            raise BuildError("BUNDLED_COMPONENTS_REVISION_INVALID")
         metadata = read_json(skill_root / "skill-metadata.json")
         if metadata.get("name") != skill_root.name or metadata.get("version") != bundled.get("skill_version"):
             raise BuildError("BUNDLED_COMPONENTS_METADATA_MISMATCH")
-        _verify_component_contents(skill_root, bundled)
-        closure = validate_dependency_closure(skill_root)
+        _verify_component_contents(skill_root, bundled, source_revision)
+        development_references = bundled.get("development_repository_references")
+        if not isinstance(development_references, list):
+            raise BuildError("BUNDLED_DEVELOPMENT_REFERENCES_INVALID")
+        if development_references != EXPECTED_DEVELOPMENT_REPOSITORY_REFERENCES.get(
+            skill_root.name,
+            [],
+        ):
+            raise BuildError("BUNDLED_DEVELOPMENT_REFERENCES_UNAPPROVED")
+        closure = validate_dependency_closure(
+            skill_root,
+            allowed_repository_references=development_references,
+        )
         content_sha256 = tree_content_sha256(skill_root)
         if expected is not None:
             if expected.get("name") != skill_root.name:
@@ -540,8 +653,18 @@ def verify_skill_package(archive_path: Path, expected: dict | None = None) -> di
                 raise BuildError(f"CONTENT_HASH_MISMATCH: {skill_root.name}")
             if expected.get("version") != metadata.get("version"):
                 raise BuildError(f"VERSION_MISMATCH: {skill_root.name}")
+            if expected.get("source_revision") != source_revision:
+                raise BuildError(f"SOURCE_REVISION_MISMATCH: {skill_root.name}")
+            if expected.get("content_hash_algorithm") != CONTENT_HASH_ALGORITHM:
+                raise BuildError(f"CONTENT_HASH_ALGORITHM_MISMATCH: {skill_root.name}")
+            if expected.get("zip_hash_algorithm") != ZIP_HASH_ALGORITHM:
+                raise BuildError(f"ZIP_HASH_ALGORITHM_MISMATCH: {skill_root.name}")
             if expected.get("components") != bundled.get("components"):
                 raise BuildError(f"COMPONENT_MANIFEST_MISMATCH: {skill_root.name}")
+            if expected.get("development_repository_references", []) != development_references:
+                raise BuildError(
+                    f"DEVELOPMENT_REFERENCE_MANIFEST_MISMATCH: {skill_root.name}"
+                )
         file_count = len(regular_files(skill_root))
         if expected is not None and expected.get("file_count") != file_count:
             raise BuildError(f"FILE_COUNT_MISMATCH: {skill_root.name}")
@@ -554,6 +677,9 @@ def verify_skill_package(archive_path: Path, expected: dict | None = None) -> di
         "content_sha256": content_sha256,
         "zip_sha256": zip_sha256,
         "checked_relative_imports": closure["checked_relative_imports"],
+        "development_repository_references": closure[
+            "development_repository_references"
+        ],
     }
 
 
@@ -564,19 +690,35 @@ def verify_build_manifest(manifest_path: Path, package_dir: Path | None = None) 
     rows = manifest.get("skills")
     if not isinstance(rows, list) or manifest.get("skill_count") != len(rows):
         raise BuildError("BUILD_MANIFEST_SCOPE_INVALID")
+    source_revision = manifest.get("source_revision")
+    if not isinstance(source_revision, str) or not GIT_REVISION_RE.fullmatch(
+        source_revision
+    ):
+        raise BuildError("BUILD_MANIFEST_REVISION_INVALID")
     root = package_dir.resolve() if package_dir else manifest_path.resolve().parent
     results = []
+    names: set[str] = set()
+    archives: set[str] = set()
     for row in rows:
         if not isinstance(row, dict):
             raise BuildError("BUILD_MANIFEST_ENTRY_INVALID")
+        name = row.get("name")
+        if not isinstance(name, str) or not name or name in names:
+            raise BuildError(f"BUILD_MANIFEST_SKILL_INVALID: {name}")
+        names.add(name)
+        if row.get("source_revision") != source_revision:
+            raise BuildError(f"BUILD_MANIFEST_REVISION_MISMATCH: {name}")
         archive = row.get("archive")
         if not isinstance(archive, str) or PurePosixPath(archive).name != archive:
             raise BuildError("BUILD_MANIFEST_ARCHIVE_INVALID")
+        if archive in archives:
+            raise BuildError(f"BUILD_MANIFEST_ARCHIVE_DUPLICATE: {archive}")
+        archives.add(archive)
         results.append(verify_skill_package(root / archive, row))
     return {
         "schema_version": "wildclawbench.e2e-skill-build-verification/v1",
         "status": "PASS",
-        "source_revision": manifest.get("source_revision"),
+        "source_revision": source_revision,
         "skill_count": len(results),
         "skills": results,
     }
