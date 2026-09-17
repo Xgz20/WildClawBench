@@ -75,6 +75,62 @@ class GeneralE2EContractTests(unittest.TestCase):
         self.assertEqual(score["result"]["total_score"], 0.0)
         self.assertIsNone(score["result"]["invalid_reason"])
 
+    def test_resource_metric_coverage_sources_and_known_subtotals_are_consistent(self) -> None:
+        metrics = json.loads(
+            (VALID / "resource-metrics-zero.json").read_text(encoding="utf-8")
+        )
+        fields = (
+            "input_tokens",
+            "output_tokens",
+            "total_tokens",
+            "cache_read_input_tokens",
+            "cache_creation_input_tokens",
+            "reasoning_output_tokens",
+            "request_count",
+            "request_attempt_count",
+            "call_count",
+            "duration_seconds",
+            "agent_duration_seconds",
+        )
+        metric_by_name = {
+            **metrics["metrics"]["usage"],
+            **metrics["metrics"]["requests"],
+            **metrics["metrics"]["tools"],
+            **metrics["metrics"]["timing"],
+        }
+        metrics["collection"].update({
+            "coverage": {
+                field: {
+                    "known": 0 if metric_by_name[field]["status"] == "unavailable" else 1,
+                    "total": None if field == "request_attempt_count" else 1,
+                    "unit": "fixture",
+                }
+                for field in fields
+            },
+            "known_subtotals": {},
+            "metric_sources": {
+                field: [f"evidence/raw.jsonl#/{field}"] for field in fields
+            },
+        })
+        validate_contract(metrics)
+
+        metrics["metrics"]["usage"]["total_tokens"].update({
+            "value": None,
+            "status": "partial",
+        })
+        metrics["collection"]["coverage"]["total_tokens"] = {
+            "known": 1,
+            "total": 2,
+            "unit": "usage_update",
+        }
+        metrics["collection"]["known_subtotals"]["total_tokens"] = 10
+        validate_contract(metrics)
+
+        metrics["metrics"]["usage"]["total_tokens"]["status"] = "observed"
+        with self.assertRaises(ContractValidationError) as captured:
+            validate_contract(metrics)
+        self.assertEqual(captured.exception.code, "METRIC_STATUS_VALUE_MISMATCH")
+
     def test_schema_files_cover_every_runtime_contract_identifier(self) -> None:
         for schema_id in KNOWN_SCHEMAS:
             with self.subTest(schema_id=schema_id):

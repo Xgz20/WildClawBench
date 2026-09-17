@@ -61,6 +61,19 @@ INTEGER_METRICS = {
     "request_attempt_count",
     "call_count",
 }
+RESOURCE_METRIC_FIELDS = (
+    "input_tokens",
+    "output_tokens",
+    "total_tokens",
+    "cache_read_input_tokens",
+    "cache_creation_input_tokens",
+    "reasoning_output_tokens",
+    "request_count",
+    "request_attempt_count",
+    "call_count",
+    "duration_seconds",
+    "agent_duration_seconds",
+)
 
 
 class ContractValidationError(ValueError):
@@ -612,14 +625,109 @@ def _validate_resource_metrics(document: Mapping[str, Any]) -> None:
         "tools": ("call_count",),
         "timing": ("duration_seconds", "agent_duration_seconds"),
     }
+    metric_values: dict[str, Mapping[str, Any]] = {}
     for group_name, fields in groups.items():
         group = _mapping(_required(metrics, group_name, "$.metrics"), f"$.metrics.{group_name}")
         for field in fields:
-            _validate_metric(
+            metric_value = _mapping(
                 _required(group, field, f"$.metrics.{group_name}"),
+                f"$.metrics.{group_name}.{field}",
+            )
+            _validate_metric(
+                metric_value,
                 f"$.metrics.{group_name}.{field}",
                 field,
             )
+            metric_values[field] = metric_value
+
+    if "coverage" in collection:
+        coverage = _mapping(collection["coverage"], "$.collection.coverage")
+        for field in RESOURCE_METRIC_FIELDS:
+            item = _mapping(
+                _required(coverage, field, "$.collection.coverage"),
+                f"$.collection.coverage.{field}",
+            )
+            known = _integer(
+                _required(item, "known", f"$.collection.coverage.{field}"),
+                f"$.collection.coverage.{field}.known",
+            )
+            total_value = _required(item, "total", f"$.collection.coverage.{field}")
+            total = None if total_value is None else _integer(
+                total_value,
+                f"$.collection.coverage.{field}.total",
+            )
+            _string(
+                _required(item, "unit", f"$.collection.coverage.{field}"),
+                f"$.collection.coverage.{field}.unit",
+            )
+            if total is not None and known > total:
+                _fail(
+                    "INVALID_VALUE",
+                    f"$.collection.coverage.{field}",
+                    "known coverage cannot exceed total",
+                )
+            status_value = metric_values[field]["status"]
+            if status_value in {"observed", "inferred"} and (total is None or known != total):
+                _fail(
+                    "METRIC_COVERAGE_MISMATCH",
+                    f"$.collection.coverage.{field}",
+                    f"{status_value} metric needs complete coverage",
+                )
+            if status_value in {"masked", "unavailable"} and known != 0:
+                _fail(
+                    "METRIC_COVERAGE_MISMATCH",
+                    f"$.collection.coverage.{field}.known",
+                    f"{status_value} metric cannot claim known observations",
+                )
+
+    known_subtotals = _mapping(
+        collection.get("known_subtotals", {}),
+        "$.collection.known_subtotals",
+    )
+    for field, subtotal in known_subtotals.items():
+        if field not in RESOURCE_METRIC_FIELDS:
+            _fail(
+                "INVALID_VALUE",
+                f"$.collection.known_subtotals.{field}",
+                "unknown metric",
+            )
+        if field in INTEGER_METRICS:
+            _integer(subtotal, f"$.collection.known_subtotals.{field}")
+        else:
+            _number(subtotal, f"$.collection.known_subtotals.{field}")
+        if metric_values[field]["status"] not in {"partial", "unverified"}:
+            _fail(
+                "METRIC_STATUS_VALUE_MISMATCH",
+                f"$.collection.known_subtotals.{field}",
+                "known subtotal is only valid for partial or unverified metrics",
+            )
+
+    if "metric_sources" in collection:
+        metric_sources = _mapping(collection["metric_sources"], "$.collection.metric_sources")
+        for field in RESOURCE_METRIC_FIELDS:
+            refs = _list(
+                _required(metric_sources, field, "$.collection.metric_sources"),
+                f"$.collection.metric_sources.{field}",
+            )
+            if not refs:
+                _fail(
+                    "EVIDENCE_MISSING",
+                    f"$.collection.metric_sources.{field}",
+                    "metric needs at least one source reference",
+                )
+            seen_refs: set[str] = set()
+            for index, ref in enumerate(refs):
+                source_ref = _string(
+                    ref,
+                    f"$.collection.metric_sources.{field}[{index}]",
+                )
+                if source_ref in seen_refs:
+                    _fail(
+                        "INVALID_VALUE",
+                        f"$.collection.metric_sources.{field}[{index}]",
+                        "duplicate source reference",
+                    )
+                seen_refs.add(source_ref)
 
 
 def _validate_score_component(value: Any, path: str) -> None:

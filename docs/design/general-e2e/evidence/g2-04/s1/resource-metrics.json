@@ -1,0 +1,247 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:resource-metrics:v1",
+  "schema_version": 1,
+  "identity": {
+    "batch_id": "general-g2-02-s1-macos-20260917-224935",
+    "unit_id": "astronstudio-macos-x86-64",
+    "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+    "attempt_id": "693c1c28-a78a-409b-82d7-b0dfcadb3132"
+  },
+  "collection": {
+    "collector": "astronstudio-provider-runtime-resource-metrics",
+    "version": "0.1.0",
+    "status": "complete",
+    "collected_at": "2026-09-17T14:52:30.547Z",
+    "sources": [
+      {
+        "path": "execution/automation-state.json",
+        "sha256": "dbbc4d7b41586dc469d519d2d243ce24fdfe067c535a8dd3aaba09ec1c912e7d",
+        "size": 6454
+      },
+      {
+        "path": "trace/trace-index.json",
+        "sha256": "6c1df7aee6dbc225492f1c96c7748fe9f3e08ed31ca64de88004d74bebf6a20b",
+        "size": 2452
+      },
+      {
+        "path": "trace/raw/astronstudio-provider-events.jsonl",
+        "sha256": "7181fd47a6811190a0c03854e5bf382b0d99cd2aa90e0962998911a5bd499cd0",
+        "size": 203857
+      }
+    ],
+    "warnings": [],
+    "excluded_scope": [
+      "judge_usage",
+      "control_usage",
+      "client_background_services",
+      "unobserved_http_retries",
+      "cache_creation_input_tokens",
+      "request_attempt_count"
+    ],
+    "coverage": {
+      "input_tokens": {
+        "known": 7,
+        "total": 7,
+        "unit": "usage_update"
+      },
+      "output_tokens": {
+        "known": 7,
+        "total": 7,
+        "unit": "usage_update"
+      },
+      "total_tokens": {
+        "known": 7,
+        "total": 7,
+        "unit": "usage_update"
+      },
+      "cache_read_input_tokens": {
+        "known": 7,
+        "total": 7,
+        "unit": "usage_update"
+      },
+      "reasoning_output_tokens": {
+        "known": 7,
+        "total": 7,
+        "unit": "usage_update"
+      },
+      "cache_creation_input_tokens": {
+        "known": 0,
+        "total": 7,
+        "unit": "usage_update"
+      },
+      "request_count": {
+        "known": 7,
+        "total": 7,
+        "unit": "usage_update"
+      },
+      "request_attempt_count": {
+        "known": 0,
+        "total": null,
+        "unit": "http_attempt"
+      },
+      "call_count": {
+        "known": 5,
+        "total": 5,
+        "unit": "tool_call"
+      },
+      "duration_seconds": {
+        "known": 1,
+        "total": 1,
+        "unit": "attempt"
+      },
+      "agent_duration_seconds": {
+        "known": 1,
+        "total": 1,
+        "unit": "turn"
+      }
+    },
+    "known_subtotals": {},
+    "metric_sources": {
+      "input_tokens": [
+        "trace/raw/astronstudio-provider-events.jsonl#L25",
+        "trace/raw/astronstudio-provider-events.jsonl#L63",
+        "trace/raw/astronstudio-provider-events.jsonl#L64",
+        "trace/raw/astronstudio-provider-events.jsonl#L74",
+        "trace/raw/astronstudio-provider-events.jsonl#L87",
+        "trace/raw/astronstudio-provider-events.jsonl#L124",
+        "trace/raw/astronstudio-provider-events.jsonl#L147"
+      ],
+      "output_tokens": [
+        "trace/raw/astronstudio-provider-events.jsonl#L25",
+        "trace/raw/astronstudio-provider-events.jsonl#L63",
+        "trace/raw/astronstudio-provider-events.jsonl#L64",
+        "trace/raw/astronstudio-provider-events.jsonl#L74",
+        "trace/raw/astronstudio-provider-events.jsonl#L87",
+        "trace/raw/astronstudio-provider-events.jsonl#L124",
+        "trace/raw/astronstudio-provider-events.jsonl#L147"
+      ],
+      "total_tokens": [
+        "trace/raw/astronstudio-provider-events.jsonl#L25",
+        "trace/raw/astronstudio-provider-events.jsonl#L63",
+        "trace/raw/astronstudio-provider-events.jsonl#L64",
+        "trace/raw/astronstudio-provider-events.jsonl#L74",
+        "trace/raw/astronstudio-provider-events.jsonl#L87",
+        "trace/raw/astronstudio-provider-events.jsonl#L124",
+        "trace/raw/astronstudio-provider-events.jsonl#L147"
+      ],
+      "cache_read_input_tokens": [
+        "trace/raw/astronstudio-provider-events.jsonl#L25",
+        "trace/raw/astronstudio-provider-events.jsonl#L63",
+        "trace/raw/astronstudio-provider-events.jsonl#L64",
+        "trace/raw/astronstudio-provider-events.jsonl#L74",
+        "trace/raw/astronstudio-provider-events.jsonl#L87",
+        "trace/raw/astronstudio-provider-events.jsonl#L124",
+        "trace/raw/astronstudio-provider-events.jsonl#L147"
+      ],
+      "reasoning_output_tokens": [
+        "trace/raw/astronstudio-provider-events.jsonl#L25",
+        "trace/raw/astronstudio-provider-events.jsonl#L63",
+        "trace/raw/astronstudio-provider-events.jsonl#L64",
+        "trace/raw/astronstudio-provider-events.jsonl#L74",
+        "trace/raw/astronstudio-provider-events.jsonl#L87",
+        "trace/raw/astronstudio-provider-events.jsonl#L124",
+        "trace/raw/astronstudio-provider-events.jsonl#L147"
+      ],
+      "cache_creation_input_tokens": [
+        "trace/raw/astronstudio-provider-events.jsonl#L25",
+        "trace/raw/astronstudio-provider-events.jsonl#L63",
+        "trace/raw/astronstudio-provider-events.jsonl#L64",
+        "trace/raw/astronstudio-provider-events.jsonl#L74",
+        "trace/raw/astronstudio-provider-events.jsonl#L87",
+        "trace/raw/astronstudio-provider-events.jsonl#L124",
+        "trace/raw/astronstudio-provider-events.jsonl#L147"
+      ],
+      "request_count": [
+        "trace/raw/astronstudio-provider-events.jsonl#L25",
+        "trace/raw/astronstudio-provider-events.jsonl#L63",
+        "trace/raw/astronstudio-provider-events.jsonl#L64",
+        "trace/raw/astronstudio-provider-events.jsonl#L74",
+        "trace/raw/astronstudio-provider-events.jsonl#L87",
+        "trace/raw/astronstudio-provider-events.jsonl#L124",
+        "trace/raw/astronstudio-provider-events.jsonl#L147"
+      ],
+      "request_attempt_count": [
+        "trace/raw/astronstudio-provider-events.jsonl"
+      ],
+      "call_count": [
+        "trace/raw/astronstudio-provider-events.jsonl#L72",
+        "trace/raw/astronstudio-provider-events.jsonl#L81",
+        "trace/raw/astronstudio-provider-events.jsonl#L84",
+        "trace/raw/astronstudio-provider-events.jsonl#L118",
+        "trace/raw/astronstudio-provider-events.jsonl#L121"
+      ],
+      "duration_seconds": [
+        "execution/automation-state.json#/execution"
+      ],
+      "agent_duration_seconds": [
+        "trace/raw/astronstudio-provider-events.jsonl#L1",
+        "trace/raw/astronstudio-provider-events.jsonl#L148"
+      ]
+    }
+  },
+  "metrics": {
+    "usage": {
+      "input_tokens": {
+        "value": 167237,
+        "status": "observed",
+        "basis": "native per-response lastInputTokens sum reconciled with totalInputTokens; cache and reasoning are subsets"
+      },
+      "output_tokens": {
+        "value": 1318,
+        "status": "observed",
+        "basis": "native per-response lastOutputTokens sum reconciled with totalOutputTokens; cache and reasoning are subsets"
+      },
+      "total_tokens": {
+        "value": 168555,
+        "status": "observed",
+        "basis": "native per-response lastUsedTokens sum reconciled with totalProcessedTokens; cache and reasoning are subsets"
+      },
+      "cache_read_input_tokens": {
+        "value": 145152,
+        "status": "observed",
+        "basis": "native per-response lastCachedInputTokens sum reconciled with totalCachedInputTokens; cache and reasoning are subsets"
+      },
+      "cache_creation_input_tokens": {
+        "value": null,
+        "status": "unavailable",
+        "basis": "AstronStudio provider runtime events do not expose cache creation input tokens"
+      },
+      "reasoning_output_tokens": {
+        "value": 83,
+        "status": "observed",
+        "basis": "native per-response lastReasoningOutputTokens sum reconciled with totalReasoningOutputTokens; cache and reasoning are subsets"
+      }
+    },
+    "requests": {
+      "request_count": {
+        "value": 7,
+        "status": "inferred",
+        "basis": "count of advancing native usage snapshots reconciled with per-response token increments; not HTTP attempts"
+      },
+      "request_attempt_count": {
+        "value": null,
+        "status": "unavailable",
+        "basis": "provider runtime events do not expose lower-level HTTP attempts or retries"
+      }
+    },
+    "tools": {
+      "call_count": {
+        "value": 5,
+        "status": "observed",
+        "basis": "unique native item.started call ID; result events excluded and call set reconciled with trace index"
+      }
+    },
+    "timing": {
+      "duration_seconds": {
+        "value": 49.006,
+        "status": "observed",
+        "basis": "execution driver wall clock from attempt start through terminal observation"
+      },
+      "agent_duration_seconds": {
+        "value": 32.476,
+        "status": "observed",
+        "basis": "native turn.started to turn.completed timestamp for the bound turn"
+      }
+    }
+  }
+}

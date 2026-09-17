@@ -14,7 +14,7 @@ INTERFACE_ONLY = "interface_only"
 OPERATIONAL = "operational"
 PREPARE_SKILL_VERSION = "0.2.0"
 EXECUTE_SKILL_VERSION = "0.3.0"
-COLLECT_SKILL_VERSION = "0.2.0"
+COLLECT_SKILL_VERSION = "0.3.0"
 
 
 @dataclass(frozen=True)

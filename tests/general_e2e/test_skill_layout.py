@@ -52,7 +52,7 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("collect-general-e2e").version,
                 get_skill_spec("collect-general-e2e").implementation_status,
             ),
-            ("0.2.0", "interface_only"),
+            ("0.3.0", "interface_only"),
         )
         self.assertTrue(
             all(

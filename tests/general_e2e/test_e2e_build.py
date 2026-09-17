@@ -357,14 +357,17 @@ process.stdout.write(JSON.stringify({{
         )
         archive = root / "scripts/archive_astronstudio_trace.mjs"
         query = root / "scripts/query_trace.mjs"
+        resources = root / "scripts/collect_astronstudio_resource_metrics.mjs"
         self.assertTrue(archive.is_file())
         self.assertTrue(query.is_file())
+        self.assertTrue(resources.is_file())
         self.assertTrue(
             (root / "vendor/e2e-shared/resource-metrics/trace-io.mjs").is_file()
         )
         for entrypoint, marker in (
             (archive, "轨迹归档器"),
             (query, "只读检索"),
+            (resources, "资源指标采集器"),
         ):
             completed = subprocess.run(
                 ["node", str(entrypoint), "--help"],
