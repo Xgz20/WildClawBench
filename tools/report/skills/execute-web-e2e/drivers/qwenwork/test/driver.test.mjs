@@ -22,6 +22,7 @@ import {
   userQuestionsMatch,
   validateAbandonmentConnection,
   validateUserQuestionAbandonmentState,
+  waitForQwenFolderSelectionLabel,
   waitForUniqueVisible,
   withOperationTimeout,
 } from "../driver.mjs";
@@ -68,7 +69,25 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.10.15");
+  assert.equal(state.driver.version, "1.10.16");
+});
+
+test("QwenWork 原生目录选择等待异步更新后的目录标签", async () => {
+  const values = ["选择文件夹", "选择文件夹", "task-a"];
+  const locator = {
+    async innerText() {
+      return values.shift() ?? "task-a";
+    },
+  };
+  assert.equal(await waitForQwenFolderSelectionLabel(locator, "task-a", 100, 1), "task-a");
+});
+
+test("QwenWork 原生目录选择标签持续不一致时失败关闭", async () => {
+  const locator = { innerText: async () => "选择文件夹" };
+  await assert.rejects(
+    waitForQwenFolderSelectionLabel(locator, "task-a", 5, 1),
+    /选择文件夹 vs task-a/,
+  );
 });
 
 test("QwenWork 问卷停止参数必须与恢复模式组合", () => {

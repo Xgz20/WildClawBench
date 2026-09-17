@@ -77,7 +77,7 @@
   --run-id '<run-id>' --task-id '<task-id>' --run-slots 1 --permission-mode full-access
 ```
 
-开关只负责让客户端暴露原生 usage，不代表任意版本都能进入正式汇总。采集器仍会精确核对平台、客户端、SDK、transcript 和 runtime SHA；当前 Windows 真机通过的是 QwenWorkCN 1.0.6.0 的 `qwenwork-1.0.6-qoder-cache-inclusive-v1`，四个核心 Token 均为 `observed`。任一身份漂移都保持 `unverified`，历史 `masked` 样本也不会回填。revision `ff5d476...` 的 P6–P9 证据来自 execute 1.12.3 / Driver 1.10.14，由控制任务显式注入开关；1.12.4 / 1.10.15 将该动作内建到 Driver，发布前仍须重新生成 Skill 包并至少完成 probe 和一个全新 L1。
+开关只负责让客户端暴露原生 usage，不代表任意版本都能进入正式汇总。采集器仍会精确核对平台、客户端、SDK、transcript 和 runtime SHA；当前 Windows 真机通过的是 QwenWorkCN 1.0.6.0 的 `qwenwork-1.0.6-qoder-cache-inclusive-v1`，四个核心 Token 均为 `observed`。任一身份漂移都保持 `unverified`，历史 `masked` 样本也不会回填。revision `ff5d476...` 的 P6–P9 证据来自 execute 1.12.3 / Driver 1.10.14，由控制任务显式注入开关；当前内建自动注入发布候选为 execute 1.12.5 / Driver 1.10.16，并为原生目录选择后的异步标签更新增加有界等待，发布前仍须重新生成 Skill 包并至少完成 probe 和一个全新 L1。
 
 WorkBuddy、AstronStudio 和 QwenWork 的技术默认后台执行并发均为 3，最大均为 8，UI 操作保持单路。QwenWork 当前生产准入仍要求首批 canary 显式使用并发 1；首次换机、升级 Harness/Skill 或切换模型后也先用少量 L1 验证本机客户端隔离。
 

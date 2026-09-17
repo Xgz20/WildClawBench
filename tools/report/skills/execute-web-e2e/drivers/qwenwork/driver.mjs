@@ -121,6 +121,22 @@ export async function waitForUniqueVisible(readVisible, timeout, description, po
   throw new Error(`${description}数量异常：${lastCount}`);
 }
 
+export async function waitForQwenFolderSelectionLabel(
+  valueLocator,
+  expectedLabel,
+  timeout,
+  pollInterval = 250,
+) {
+  const deadline = Date.now() + timeout;
+  let selectedLabel = "";
+  while (Date.now() <= deadline) {
+    selectedLabel = (await valueLocator.innerText().catch(() => "")).trim();
+    if (selectedLabel === expectedLabel) return selectedLabel;
+    await sleep(Math.min(pollInterval, Math.max(1, deadline - Date.now())));
+  }
+  throw new Error(`QwenWork 原生目录选择回读不一致：${selectedLabel || "<空>"} vs ${expectedLabel}`);
+}
+
 export function hasTrustedDomCompletion(dom) {
   return dom?.status?.kind === "success"
     && (Boolean(dom.explicitFinished) || isSubstantiveFinalResponse(dom.finalText));
@@ -730,10 +746,11 @@ async function createQwenProject(page, config, state, identityInfo, timeout) {
   await pathPicker.evaluate((element) => element.click());
   const native = await selectNativeFolder(config.appPath, config.workspace, config.timeoutSeconds);
   const expectedLabel = basename(config.workspace);
-  const selectedLabel = (await dialog.locator('[data-slot="path-picker-value"]').innerText()).trim();
-  if (selectedLabel !== expectedLabel) {
-    throw new Error(`QwenWork 原生目录选择回读不一致：${selectedLabel || "<空>"} vs ${expectedLabel}`);
-  }
+  const selectedLabel = await waitForQwenFolderSelectionLabel(
+    dialog.locator('[data-slot="path-picker-value"]'),
+    expectedLabel,
+    Math.min(timeout, 15_000),
+  );
   await dialog.getByRole("button", { name: "新建项目", exact: true }).click({ timeout });
   await dialog.waitFor({ state: "hidden", timeout });
 
