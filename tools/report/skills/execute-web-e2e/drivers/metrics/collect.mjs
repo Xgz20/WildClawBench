@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile, readdir, lstat, realpath } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { empty, parseAstron, parseWorkBuddy, parseQwen } from "./parsers.mjs";
 import { inspectQwenRuntime } from "./qwen-profile.mjs";
 
@@ -34,6 +34,34 @@ async function find(root, levels, filename) {
   return matches;
 }
 
+export function astronSessionRoots(home, sessionDb) {
+  const roots = [join(home, ".acode", "sessions")];
+  if (typeof sessionDb === "string" && sessionDb.trim()) {
+    // Windows AStudio keeps state.sqlite under "AStudio Data/userdata" and
+    // native rollouts under the adjacent acode-home-overlay directory.
+    roots.push(join(dirname(dirname(resolve(sessionDb))), "acode-home-overlay", "sessions"));
+  }
+  return [...new Set(roots.map(root => resolve(root)))];
+}
+
+export async function findAstronTrace(home, sessionDb, sessionId) {
+  const matches = [];
+  for (const root of astronSessionRoots(home, sessionDb)) {
+    let info;
+    try { info = await lstat(root); }
+    catch (error) {
+      if (error?.code === "ENOENT") continue;
+      throw error;
+    }
+    if (!info.isDirectory() || info.isSymbolicLink()) throw new Error("UNSAFE_TRACE_ROOT");
+    for (const file of await find(root, 3, name => name.endsWith(`-${sessionId}.jsonl`))) {
+      matches.push({ file, root });
+    }
+  }
+  if (matches.length !== 1) throw new Error("AMBIGUOUS_TRACE");
+  return matches[0];
+}
+
 function assertCwd(rows, cwd, selector) {
   const paths = rows.map(selector).filter(Boolean);
   if (!paths.length || paths.some(p => !samePath(p, cwd))) throw new Error("TRACE_CWD_MISMATCH");
@@ -50,10 +78,8 @@ export async function collectLocalMetrics(input) {
     const identity = await queryResourceIdentity(sessionDb, thread, turn);
     sessionId = identity.nativeId;
     if (!safeId(sessionId) || !samePath(identity.cwd, workspace)) throw new Error("SESSION_IDENTITY_MISMATCH");
-    const root = join(home, ".acode", "sessions");
-    const files = await find(root, 3, name => name.endsWith(`-${sessionId}.jsonl`));
-    if (files.length !== 1) throw new Error("AMBIGUOUS_TRACE");
-    const trace = await readTrace(files[0], root);
+    const { file, root } = await findAstronTrace(home, sessionDb, sessionId);
+    const trace = await readTrace(file, root);
     assertCwd(trace.rows.filter(r => r.type === "session_meta"), workspace, r => r.payload?.cwd);
     result = parseAstron(trace.rows, turn);
     sources = [trace.source];

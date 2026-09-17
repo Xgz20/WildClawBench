@@ -3,9 +3,9 @@ import { mkdtemp, mkdir, readFile, writeFile, symlink, rm } from "node:fs/promis
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
-import { collectLocalMetrics } from "../collect.mjs";
+import { collectLocalMetrics, findAstronTrace } from "../collect.mjs";
 import { empty } from "../parsers.mjs";
-import { inspectQwenRuntime, verifiedQwenProfile } from "../qwen-profile.mjs";
+import { inspectQwenRuntime, QWEN_PROFILE, QWEN_WINDOWS_PROFILE, verifiedQwenProfile } from "../qwen-profile.mjs";
 import { updateExecutionRecord, createExecutionRecord } from "../../workbuddy/lib.mjs";
 import { queryResourceIdentity } from "../../astronstudio/lib.mjs";
 
@@ -88,6 +88,29 @@ test("未知本地 Qwen SDK 与混合 transcript 版本不能命中已验 Profil
   assert.equal(verifiedQwenProfile(identity), null);
   const mixed = await inspectQwenRuntime(root, "1.0.5", [{ type: "assistant", version: "1.1.32" }, { type: "assistant" }], "darwin");
   assert.equal(mixed.transcript_version, null);
+});
+test("Qwen Windows 仅接受已核对的客户端和相同 runtime 身份", () => {
+  assert.equal(verifiedQwenProfile(QWEN_WINDOWS_PROFILE), QWEN_PROFILE.id);
+  assert.equal(verifiedQwenProfile({ ...QWEN_WINDOWS_PROFILE, client_version: "1.0.6.0" }), null);
+  assert.equal(verifiedQwenProfile({ ...QWEN_WINDOWS_PROFILE, runtime_sha256: "unknown" }), null);
+  assert.equal(verifiedQwenProfile({ ...QWEN_WINDOWS_PROFILE, transcript_version: "next" }), null);
+});
+test("Astron 日志发现支持 Windows AStudio Data 并拒绝跨根重复命中", async t => {
+  const home = await mkdtemp(join(tmpdir(), "web-resource-astron-"));
+  t.after(() => rm(home, { recursive: true, force: true }));
+  const stateDb = join(home, "Programs/AStudio Data/userdata/state.sqlite");
+  const windowsRoot = join(home, "Programs/AStudio Data/acode-home-overlay/sessions/2026/09/17");
+  const sessionId = "native-session-123";
+  await mkdir(windowsRoot, { recursive: true });
+  const expected = join(windowsRoot, `rollout-${sessionId}.jsonl`);
+  await writeFile(expected, "{}\n");
+  assert.deepEqual(await findAstronTrace(home, stateDb, sessionId), {
+    file: expected, root: join(home, "Programs/AStudio Data/acode-home-overlay/sessions"),
+  });
+  const legacy = join(home, ".acode/sessions/2026/09/17");
+  await mkdir(legacy, { recursive: true });
+  await writeFile(join(legacy, `rollout-${sessionId}.jsonl`), "{}\n");
+  await assert.rejects(findAstronTrace(home, stateDb, sessionId), /AMBIGUOUS_TRACE/);
 });
 test("cwd 和 session 不一致、符号链接与坏 JSON 失败关闭", async t => {
   const { input, file, project } = await fixture(t, { cwd: "/different-task" });

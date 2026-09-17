@@ -13,9 +13,18 @@ export const QWEN_PROFILE = Object.freeze({
   runtime_sha256: "e86620b7e772d1f536ba15beea8c3059bf6075dffb478aceaa8cad328a879c28",
 });
 
+export const QWEN_WINDOWS_PROFILE = Object.freeze({
+  ...QWEN_PROFILE,
+  platform: "win32",
+  client_version: "1.0.5.0",
+});
+
+export const QWEN_PROFILES = Object.freeze([QWEN_PROFILE, QWEN_WINDOWS_PROFILE]);
+
 export function verifiedQwenProfile(identity) {
-  return identity && Object.entries(QWEN_PROFILE).filter(([k]) => k !== "id")
-    .every(([k, v]) => identity[k] === v) ? QWEN_PROFILE.id : null;
+  const matched = identity && QWEN_PROFILES.find(profile => Object.entries(profile)
+    .filter(([key]) => key !== "id").every(([key, value]) => identity[key] === value));
+  return matched?.id ?? null;
 }
 
 export async function inspectQwenRuntime(appPath, clientVersion, transcript, platform = process.platform) {

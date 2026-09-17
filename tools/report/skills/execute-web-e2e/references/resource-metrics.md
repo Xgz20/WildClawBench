@@ -48,7 +48,7 @@ set "QODERCN_EXPOSE_TOKEN_USAGE="
 
 开关存在、环境变量设置成功或界面显示数字均不代表适配验收通过。不要修改应用二进制或全局用户设置。
 
-采集器 1.1.0 已核对 macOS QwenWork 1.0.5、SDK `@ali/qodercn-agent-sdk-next@1.0.28`、transcript 版本 `1.1.32` 的 qoder provider。`drivers/metrics/qwen-profile.mjs` 内冻结已验 runtime SHA-256，采集时只读当前应用比对；客户端版本、SDK、transcript 版本、平台或哈希不同均不放行 Token 归一化。应用已升级或迁移后的历史采集可能因无法复核原运行时而保留 unverified，不能用环境开关强制放行。Windows 尚未验证该归一化 Profile。
+采集器 1.1.1 已核对 macOS QwenWork 1.0.5 与 Windows QwenWorkCN 1.0.5.0 的精确客户端身份；两端 SDK 均为 `@ali/qodercn-agent-sdk-next@1.0.28`、transcript 版本均为 `1.1.32`，且 qoder provider runtime SHA-256 完全相同。`drivers/metrics/qwen-profile.mjs` 分平台冻结这两组精确身份，采集时只读当前应用比对；客户端版本、SDK、transcript 版本、平台或哈希不同均不放行 Token 归一化。应用已升级或迁移后的历史采集可能因无法复核原运行时而保留 unverified，不能用环境开关强制放行。Windows 的非零 Token 仍须由显式开关启动的全新 L1 按下述对账门禁完成生产验收；历史 masked 样本不会因新增 Profile 被改写。
 
 该版本的原生 `input_tokens` 直接来自 `prompt_tokens`，**已经包含缓存读取**；总 Token = input + output，不再加 cache read。须按 request ID 去重并核对请求/响应集合、逐响应有效非零输入/输出、缓存不大于输入，以及 `turn.finished` 终值。缺响应、混入隐藏零值、缺终态/字段时保留 partial 与已知小计；终值冲突保留 unverified。请求数、工具数、耗时独立判断，不因 Token 不可用一起丢失。`cache_creation_input_tokens=0` 是适配器默认值，标准缓存写入量仍为 null；不声称已观察到真实零写入。
 

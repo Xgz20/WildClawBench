@@ -47,7 +47,7 @@ AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 �
 #### P6：源码与 Windows 分发包门禁
 
 - [ ] 当前提交包含 `execute-web-e2e` 资源采集器、三个 Driver 的终态调用、统一 `execution_record.json` 写入和独立的 QwenWork runtime Profile；不能继续使用旧的 execute 1.11.x / Driver 1.10.x 包。
-- [ ] 在 Windows 干净目录安装本次最新 Skill 包；当前实现候选为 execute `1.12.1`、WorkBuddy Driver `1.8.27`、AstronStudio Driver `1.10.20`、QwenWork Driver `1.10.12`，实际值以本批次 `skills-manifest.json` 为准。
+- [ ] 在 Windows 干净目录安装本次最新 Skill 包；当前实现候选为 execute `1.12.2`、WorkBuddy Driver `1.8.27`、AstronStudio Driver `1.10.21`、QwenWork Driver `1.10.13`，实际值以本批次 `skills-manifest.json` 为准。
 - [ ] Windows Node.js 运行所有 metrics/Driver 测试并记录退出码；SQLite 优先使用 `node:sqlite`，只有运行时不提供时才验证 `py -3`/`python` 的只读回退。不得把依赖安装到题目 `workspace/`。
 - [ ] 重新计算 Skill content SHA、ZIP SHA 和 `source_revision`，并将它们写入本清单；旧包的 SHA 或旧验收包不能作为本门禁证据。
 
@@ -86,7 +86,43 @@ AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 �
 
 只有 P6–P9 全部通过，且三个 Harness 的核心 Token 字段均为 `observed`、请求数/工具数/两类耗时均有有效状态，才能将本清单中的“Windows 资源指标”标记为 `PASSED`，并在报告结论中宣称三个 Harness 结果可横向比较。仅有代码测试、旧批次数值、QwenWork 的请求/工具/耗时，或报告能生成但 Token 为 `unverified`，都只能标记 `IN_PROGRESS`/`BLOCKED`。
 
-当前已知状态：AstronStudio 和 WorkBuddy 的 Windows 资源采集路径已实现但需要本次新包真机重验；QwenWork Windows 的请求数、工具数和耗时路径已实现，Token Profile 尚未验证；因此当前不能宣称 Windows 上三个 Harness 的 Token 指标已全部打通。
+当前已知状态（2026-09-17 修复后）：Windows 资源指标门禁为 **IN_PROGRESS**。AstronStudio Windows 日志根发现和 QwenWork Windows 精确 Profile 的实现缺口已经修复，单元测试及历史会话只读重放通过；QwenWork 历史样本仍按事实保持 `masked`。三个 Harness 尚未完成本次新包 L1 和 P8–P9 验收，因此不能宣称 Windows 三 Harness Token 指标已全部打通。
+
+#### 2026-09-17 Windows 指标只读诊断记录
+
+实现 revision：`345597345a58109f2bf501a20970e12b25776581`；execute `1.12.1` / metrics collector `1.1.0`；AstronStudio Driver `1.10.20`、WorkBuddy Driver `1.8.27`、QwenWork Driver `1.10.12`。本次以当前采集器重新读取既有完成会话，旁路输出诊断 JSON，未回填历史 execution/score/submission；以下数值是诊断证据，不能登记为本次全新 L1 通过。
+
+| Harness | 当前采集器结果 | 原因与影响 | 门禁结论 |
+| --- | --- | --- | --- |
+| AstronStudio 3.3.1.277 | 所有资源值为空，`SOURCE_READ_FAILED` | `drivers/metrics/collect.mjs` 固定搜索 `%USERPROFILE%\.acode\sessions`，本机该目录不存在；状态库已成功按 thread/turn 映射 native session。日志实际位于 `%LOCALAPPDATA%\Programs\AStudio Data\acode-home-overlay\sessions`，cwd 与任务根精确一致。直接调用同一 parser 可取得完整数值，证明故障在日志路径发现。 | P6/P7 `BLOCKED` |
+| WorkBuddy 5.5.6.0 | input `1026008`、output `7569`、total `1033577`、cache read `980544`，四项均 `observed`；请求 `25`、工具 `26`；智能体耗时 `463.247` 秒（`inferred`） | 唯一 conversation/message ID 和 cwd 校验通过，usage 覆盖 `25/25`，无采集警告。当前样本未发现采集异常；仍需本次新包 L1。 | 历史样本诊断通过；P7 `NOT_STARTED` |
+| QwenWorkCN 1.0.5.0 | 请求 `30`、工具 `30`、智能体耗时 `722.388` 秒均 `observed`；核心 Token 均为空且为 `masked`；暴露 usage 覆盖 `0/30` | 实际 SDK 为 `@ali/qodercn-agent-sdk-next@1.0.28`，transcript `1.1.32`，runtime SHA 与已验 macOS 完全相同。但 `qwen-profile.mjs` 只接受 `platform=darwin`、`client_version=1.0.5`，本机为 `win32`、`1.0.5.0`，匹配返回 `null`。即使新进程暴露非零 Token，现有代码也只能得到 `unverified`。历史样本只能证明 Token 被隐藏，不能反推其启动环境。 | P6/P7 `BLOCKED` |
+
+QwenWork runtime SHA-256：`e86620b7e772d1f536ba15beea8c3059bf6075dffb478aceaa8cad328a879c28`。后续应先扩展严格的 Windows 身份匹配和测试，再按 P7 显式环境开关启动新进程、运行全新 L1，并完成 request/response/turn.finished 对账；仅设置开关不足以解除当前阻断。
+
+三份样本均为 `07_Website_Generation_task_ab078_svg_smartphone_speech_bubbles`：
+
+| Harness | 原批次 / attempt | 原生来源 SHA-256 |
+| --- | --- | --- |
+| AstronStudio | `windows-as-release-6988b52-v11-20260915-232329` / `6bccf792-afaa-421f-adcd-e6f8cf5637bd` | 实际 rollout `506ae66dff2069a5cade626003462a78262235d76b25e2d77fc6d6a05e4181ae` |
+| WorkBuddy | `windows-wb-release-ee70a67-v03-20260916-0616` / `5bd61018-c557-44d5-b092-ec6acb636c64` | session JSONL `bc438ee9a356fd5a7c38518f1e73d370d9ee08143ef3fa6a5a55c3147837e0fd` |
+| QwenWork | `windows-qwen-mainflow-24771ce-l1-20260916-113542` / `7d3a45d3-e73e-4644-ae41-c33977fa0f17` | transcript `8b1e5dd98c313c44b3c7d5a7246b8e8a748ee49e10847a7bdfa78bd00242fdf1`；事件段 `7ba371ca5f9880ba925d8627e57510bf382d600ac50ce1c7771a95ea88d7437f` |
+
+证据目录：`D:\WorkProgram\xingchen\astroncode\dev\astroncode-eval\report-workspace\windows-metrics-audit-20260917`。`diagnostic-evidence.json` SHA-256 为 `f0fb988acb8ec2c0a43f4699e5fa29d9c0f78c1ce37a4ba3c2b05b2b3feb0bea`，包含三个绝对任务路径、会话/客户端/模型身份、来源 SHA、当前实现 SHA、完整采集状态，以及核对前后的候选和正式文件 SHA。三个候选均与原终态冻结 SHA 一致，automation、execution record、execution receipt、submission 均未变化。`verify-evidence.mjs` 是只读复现入口，拒绝覆盖已有诊断输出。
+
+验证环境与测试：Windows Node `22.22.2`（`C:\Users\xgzhu6\.workbuddy\binaries\node\versions\22.22.2-3\node.exe`，原生 `node:sqlite`）下 metrics `17/17`、AstronStudio `49/49`、WorkBuddy `92/92`、QwenWork `41/41`，退出码均为 `0`；仓库 `.venv` Python `3.11.9` / PyYAML `6.0.3`、`PYTHONUTF8=1` 下 `tests.test_web_e2e_resource_packaging`、`tests.test_prepare_web_e2e_workspaces`、`tests.test_report_web_e2e`、`tests.test_score_web_e2e` 共 `88/88`，退出码 `0`。测试证明现有测试和透传/覆盖率逻辑通过，未覆盖上述两个 Windows 实机适配缺口。
+
+环境复现注意：PATH 默认 Node `18.16.1` 缺少 `node:sqlite` 且未安装 `sqlite3.exe`，AstronStudio 原测试因此 `48/49`；默认 `py -3` 缺少 PyYAML。Windows 将 `.agents/skills/*` 检出成普通链接文本，报告测试按该入口加载时会 `FileNotFoundError`；本次在工程内 `.agents\windows-metrics-validation`（`feat/windows-metrics-validation`）用可恢复目录联接完成测试。Node 测试使用 PowerShell 枚举 `*.test.mjs` 后传入完整文件列表，避免不同 Node 版本对目录/通配符的解析差异。
+
+上述只读诊断阶段未修改采集实现、未生成或安装新的正式 Skill ZIP、未启动客户端或新发 Prompt，也未执行真实评分/回传/报告。其结论仅用于定位缺口；旧 V00–V17 主流程结论不因此升级为资源指标已验收。
+
+#### 2026-09-17 Windows 指标修复与静态回归
+
+修复候选为 execute `1.12.2` / metrics collector `1.1.1`、AstronStudio Driver `1.10.21`、WorkBuddy Driver `1.8.27`、QwenWork Driver `1.10.13`。AstronStudio 现在同时检查旧 `%USERPROFILE%\.acode\sessions` 与由已验证 `state.sqlite` 推导的相邻 `acode-home-overlay\sessions`，多个根重复命中仍以 `AMBIGUOUS_TRACE` 失败关闭。QwenWork 增加 `platform=win32`、`client_version=1.0.5.0` 的精确 Profile，SDK、transcript 和 runtime SHA 任一漂移均不放行归一化。
+
+Windows Node `22.22.2` 下 metrics `19/19`、AstronStudio `49/49`、WorkBuddy `92/92`、QwenWork `41/41` 全部通过；仓库 `.venv` Python `3.11.9` 下资源打包、准备、评分和报告四组测试 `88/88` 通过。报告测试入口改为直接加载受版本控制的 `tools/report/skills/report-web-e2e`，不再依赖 Windows 是否把 `.agents/skills` 检出为真实符号链接。
+
+修复后的采集器只读重放同一历史样本：AstronStudio 得到 input `4389411`、output `32133`、total `4421544`、cache read `4155584`、请求 `57`、工具 `76`、智能体耗时 `750.035` 秒，全部无告警；旁路文件 `astronstudio-postfix-readonly-metrics.json` SHA-256 为 `356b49bc3d53772c25f744a22998b75e17dde41ac404663e0ae0850b52cb88e4`。QwenWork 精确命中 `qwenwork-1.0.5-qoder-cache-inclusive-v1`，但旧会话仍为 `QWEN_TOKEN_USAGE_MASKED`；旁路文件 `qwenwork-postfix-readonly-metrics.json` SHA-256 为 `717a452a880f985ea19515981fec77806740b039d4198aac4ef6ea143a89b350`。这证明两个实现缺口已修复，但不能替代 P7 的全新非零 Token L1。
 
 ## 2. 状态与更新规则
 

@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = REPO_ROOT / ".agents/skills/report-web-e2e/scripts/aggregate_web_e2e_results.py"
+SCRIPT = REPO_ROOT / "tools/report/skills/report-web-e2e/scripts/aggregate_web_e2e_results.py"
 
 
 def load_module():
