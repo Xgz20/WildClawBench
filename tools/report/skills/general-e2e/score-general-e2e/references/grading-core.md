@@ -1,16 +1,16 @@
 # General E2E 评分 core 接口
 
-`score-general-e2e` 0.2.0 装配 `grading-core` 0.1.0。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、容器、模型调用或任务调度。
+`score-general-e2e` 0.2.1 装配 `grading-core` 0.1.1。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、本地进程运行时、模型调用或任务调度。
 
-发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。core 仅依赖 Python 标准库；任务规则所需的 PyYAML、Playwright 和 Chromium 属于 G3-02 受管规则 runtime，不安装到控制 Harness 的宿主 Python。
+发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。core 仅依赖 Python 标准库；任务规则所需的 PyYAML、Playwright 和 Chromium 属于 G3-02 专用评分虚拟环境，不安装到控制 Harness 使用的 Python 环境。
 
 ## 公开 API
 
 ### `run_rules()`
 
-输入任务 `automated_checks`、受管 `executor`、评分容器内的 `workspace_path`、可选标准轨迹和预期 criterion key。core 先校验 AST、唯一同步 `grade()` 入口及静态 import，再调用注入的 executor，严格校验返回 key、`overall_score`、有限数值和 `[0,1]` 范围。
+输入任务 `automated_checks`、受管 `executor`、本地 runtime 副本的真实 `workspace_path`、可选标准轨迹和预期 criterion key。core 先校验 AST、唯一同步 `grade()` 入口及静态 import，再调用注入的 executor，严格校验返回 key、`overall_score`、有限数值和 `[0,1]` 范围。
 
-非空规则必须提供受管 executor。不要使用 `exec()`、`subprocess` 或宿主临时目录绕过此门禁。G3-02 应让 executor 在隔离容器中把候选映射到 `/tmp_workspace`，并返回 JSON 对象。
+非空规则必须提供受管 executor。不要在控制 Harness 或评分编排进程中使用 `exec()`，也不要用任意宿主临时目录绕过评分目录门禁。G3-02 应让 executor 通过结构化 IPC 调用专用虚拟环境中的独立 Python Worker，把一次性 runtime 副本的真实绝对路径作为 `workspace_path` 传给 `grade()`，并返回 JSON 对象。
 
 ### `build_evidence_index()`
 
@@ -41,11 +41,13 @@ backend 可恢复失败与契约失败应在外围评分 attempt 中分别记录
 
 ## G3-02 边界
 
-下列能力不属于 core 0.1.0，必须在 `score-general-e2e` 保持 `interface_only` 期间拒绝正式执行：
+下列能力不属于 core 0.1.1，必须在 `score-general-e2e` 保持 `interface_only` 期间拒绝正式执行：
 
 - 私有 scoring 包合入、候选只读副本和 GT 后置；
-- `/tmp_workspace`、transcript 与证据根目录的受管映射；
-- 规则容器的网络、进程、文件权限、时限和资源限制；
-- PyYAML、Playwright、Chromium 精确版本及镜像 digest；
+- 逻辑 `/tmp_workspace`、真实本机 workspace、transcript 与证据根目录的受管映射；
+- 本地 Worker 的环境白名单、进程组、超时、跨平台进程树清理和文件权限；
+- PyYAML、Playwright、Chromium 的精确版本、依赖锁及浏览器安装校验；
 - Codex 评分任务/API Judge transport、审计、恢复和重试；
 - 标准 `score.json`、submission 和回传包发布。
+
+专用虚拟环境和独立进程只提供依赖复现、故障收口与进程隔离，不是针对恶意 grader 的安全沙箱。General E2E 的规则代码来自冻结且受信任的数据集；其中启动的候选子进程仍必须在凭据清空、无额外网络授权、超时和进程树清理约束下运行。

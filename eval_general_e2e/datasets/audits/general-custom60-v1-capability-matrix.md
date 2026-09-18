@@ -8,7 +8,7 @@
 | dataset digest | `119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a` |
 | contract | `general-e2e-contract-v1` |
 | source revision | `d23f0048263bf18b13b6f4717af5c3dab018d499` |
-| audit digest | `b6932c48a02fab3d9f83dfd7e666e641c20dae70336ee5c0e5d6123fa1166bd0` |
+| audit digest | `a93ef89fc2c5847e8d375835e4e66a845cebe6ea8092b4cd80c5e2b4fc9a86c1` |
 | 用例数 | 60 |
 
 ## 1. 结论
@@ -70,14 +70,14 @@
 | `POSIX_WORKSPACE_ROOT` | 60 | prepare/adapter 将逻辑 /tmp_workspace 映射到短本机工作目录；发送文本、原始路径、映射表和哈希均保留，不静默改写数据集任务 |
 | `PYTHON3_ALIAS` | 9 | 预检固定 Python 3.12；在受管任务环境提供 python3 兼容入口，或在声明支持的POSIX shell 环境运行。缺失时阻止发送，不把环境缺失计为模型失败 |
 | `POSIX_SHELL_BLOCK` | 8 | 命令块在预检通过的受管 shell 中执行；Windows 原生 launcher 使用 .cmd/PowerShell 启动，但不改题内命令语义 |
-| `CRLF_DATA_SEMANTICS` | 1 | bundle 解包和候选冻结按字节保真，不做换行转换；自动规则在固定 Linux 评分环境复核字段内 CRLF 与记录边界 |
+| `CRLF_DATA_SEMANTICS` | 1 | bundle 解包和候选冻结按字节保真，不做换行转换；自动规则在锁定的本地Python 评分运行时复核字段内 CRLF 与记录边界 |
 | `SYMLINK_FIXTURE` | 1 | 预检 Windows Developer Mode/创建符号链接权限并验证目标未被解引用；无法保真时该题 BLOCKED，不复制目标内容冒充符号链接 |
 | `ARCHIVE_WINDOWS_PATH_RULES` | 1 | 保留测试归档原始字节，在固定 Python 环境同时验证 POSIX/Windows 分隔符、NFC 和 case-fold；不得由解包工具预先规范化测试样本 |
 | `POSIX_SCRIPT_AS_DATA` | 1 | 脚本仅作为待审文本按字节提供，不要求 Windows 可执行，也不得为验证方便而运行 |
 | `SHELL_TRACE_NORMALIZATION` | 10 | 将 Bash、PowerShell、cmd 和终端类工具映射到 shell.execute 兼容视图，同时保留原始工具名、完整参数和顺序，供安全规则识别禁止行为 |
-| `PLAYWRIGHT_SCORING_DEPENDENCY` | 1 | Playwright 与浏览器固定在评分依赖/容器中，不要求被测 Harness 安装；Windows本机评分需单独通过 Docker Desktop/WSL2 挂载与浏览器 smoke |
+| `PLAYWRIGHT_SCORING_DEPENDENCY` | 1 | Playwright 与浏览器固定在专用评分虚拟环境和受管浏览器缓存中，不要求被测Harness 安装；Windows 本机评分需单独通过原生路径与浏览器 smoke |
 
-Windows 通用基线还包括短工作根、UTF-8/中文与空格路径、候选字节冻结，以及Linux 规则评分镜像。任何无法满足的题应在发送前标为 BLOCKED，不能改写 Prompt 后继续沿用原 dataset digest。
+Windows 通用基线还包括短工作根、UTF-8/中文与空格路径、候选字节冻结，以及锁定的本地规则评分运行时。任何无法满足的题应在发送前标为 BLOCKED，不能改写 Prompt 后继续沿用原 dataset digest。
 
 ## 4. 逐题矩阵
 
@@ -148,7 +148,7 @@ Windows 通用基线还包括短工作根、UTF-8/中文与空格路径、候选
 
 | 依赖 | 用例 | 处置 |
 | --- | --- | --- |
-| `playwright` | `05_Creative_Synthesis_task_008_accessible_timeline_microsite` | 固定在评分容器并锁定浏览器版本 |
+| `playwright` | `05_Creative_Synthesis_task_008_accessible_timeline_microsite` | 固定在专用评分虚拟环境并锁定浏览器版本 |
 | `yaml` | `05_Creative_Synthesis_task_005_branching_dialogue` | 固定在评分环境依赖锁中 |
 
 详细的逐题声明路径、结果路径、命令块、素材类型、grader imports、AST 检测结果和每个 Windows 风险的处置见同目录 JSON。本文结论只证明静态契约已审计，不代表macOS 或 Windows 真机执行/评分已经通过。

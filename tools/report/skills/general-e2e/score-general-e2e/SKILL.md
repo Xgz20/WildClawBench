@@ -15,7 +15,7 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 python -m eval_general_e2e skills --name score-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才形成正式评分。当前 `0.2.0/interface_only` 已提供可独立装配的 runtime-neutral 评分 core，但受管规则容器、私有评分目录以及真实 Codex/API Judge transport 尚未交付；应报告未就绪并保留评分输入，不得在宿主机执行任务规则，也不得调用旧 CLI grading 后把结果改名为 General E2E 分数。
+只有 `implementation_status` 为 `operational` 时才形成正式评分。当前 `0.2.1/interface_only` 已提供可独立装配的 runtime-neutral 评分 core，但本地受管规则运行时、私有评分目录以及真实 Codex/API Judge transport 尚未交付；应报告未就绪并保留评分输入，不得直接在控制 Harness 的 Python 进程中执行任务规则，也不得调用旧 CLI grading 后把结果改名为 General E2E 分数。
 
 ## 责任边界
 
@@ -29,4 +29,4 @@ python -m eval_general_e2e skills --name score-general-e2e --json
 
 需要开发、校验或接入评分 core 时，读取[评分 core 接口](references/grading-core.md)。当前四个公开 API 可用于确定性契约验证和受管 backend 接入；`run_rules()` 不会自行执行不可信规则，`evaluate_semantics()` 也不会自行调用模型。
 
-G3-02 完成私有评分目录、`/tmp_workspace` 映射、GT 后置和受管规则容器后，才能接入正式规则执行。真实 `codex-agent-judge-v1` 与 `api-judge-v1` transport 分别由后续阶段交付；在这些阶段完成前保持 `interface_only`。
+G3-02 完成私有评分目录、真实本机路径传参、GT 后置和本地受管 Python Worker 后，才能接入正式规则执行。Worker 必须使用专用虚拟环境、环境变量白名单、超时、独立进程组及跨平台进程树清理；不得要求 Docker。真实 `codex-agent-judge-v1` 与 `api-judge-v1` transport 分别由后续阶段交付；在这些阶段完成前保持 `interface_only`。

@@ -6,7 +6,7 @@ from .finalize import finalize_score
 from .rules import inspect_rule_dependencies, run_rules
 from .semantics import evaluate_semantics
 
-CORE_VERSION = "0.1.0"
+CORE_VERSION = "0.1.1"
 
 __all__ = (
     "CORE_VERSION",

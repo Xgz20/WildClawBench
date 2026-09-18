@@ -163,8 +163,8 @@ WINDOWS_DISPOSITIONS = {
     "CRLF_DATA_SEMANTICS": {
         "scope": "execution_and_scoring",
         "disposition": (
-            "bundle 解包和候选冻结按字节保真，不做换行转换；自动规则在固定 Linux 评分"
-            "环境复核字段内 CRLF 与记录边界"
+            "bundle 解包和候选冻结按字节保真，不做换行转换；自动规则在锁定的本地"
+            "Python 评分运行时复核字段内 CRLF 与记录边界"
         ),
     },
     "SYMLINK_FIXTURE": {
@@ -197,8 +197,8 @@ WINDOWS_DISPOSITIONS = {
     "PLAYWRIGHT_SCORING_DEPENDENCY": {
         "scope": "scoring",
         "disposition": (
-            "Playwright 与浏览器固定在评分依赖/容器中，不要求被测 Harness 安装；Windows"
-            "本机评分需单独通过 Docker Desktop/WSL2 挂载与浏览器 smoke"
+            "Playwright 与浏览器固定在专用评分虚拟环境和受管浏览器缓存中，不要求被测"
+            "Harness 安装；Windows 本机评分需单独通过原生路径与浏览器 smoke"
         ),
     },
 }
@@ -1005,7 +1005,7 @@ def render_markdown(matrix: Mapping[str, Any]) -> str:
     lines.extend([
         "",
         "Windows 通用基线还包括短工作根、UTF-8/中文与空格路径、候选字节冻结，以及"
-        "Linux 规则评分镜像。任何无法满足的题应在发送前标为 BLOCKED，不能改写 Prompt 后"
+        "锁定的本地规则评分运行时。任何无法满足的题应在发送前标为 BLOCKED，不能改写 Prompt 后"
         "继续沿用原 dataset digest。",
         "",
         "## 4. 逐题矩阵",
@@ -1040,7 +1040,7 @@ def render_markdown(matrix: Mapping[str, Any]) -> str:
     ])
     for imported, task_ids in summary["grader_external_import_tasks"].items():
         disposition = (
-            "固定在评分容器并锁定浏览器版本"
+            "固定在专用评分虚拟环境并锁定浏览器版本"
             if imported == "playwright"
             else "固定在评分环境依赖锁中"
         )

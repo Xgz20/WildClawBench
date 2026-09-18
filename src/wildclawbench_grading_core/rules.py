@@ -1,4 +1,4 @@
-"""Rule-component execution independent of a concrete container runtime."""
+"""Rule-component execution independent of a concrete managed runtime."""
 
 from __future__ import annotations
 
@@ -105,8 +105,8 @@ def run_rules(
 ) -> dict[str, Any]:
     """Audit, execute and validate one task's rule component.
 
-    The core never executes untrusted task code by itself. G3-02 supplies the
-    managed-container executor; tests may inject an isolated fixture executor.
+    The core never executes task code by itself. G3-02 supplies the managed
+    local-process executor; tests may inject an isolated fixture executor.
     """
 
     if not isinstance(automated_checks, str):

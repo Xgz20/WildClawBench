@@ -1,5 +1,5 @@
 {
-  "audit_digest": "b6932c48a02fab3d9f83dfd7e666e641c20dae70336ee5c0e5d6123fa1166bd0",
+  "audit_digest": "a93ef89fc2c5847e8d375835e4e66a845cebe6ea8092b4cd80c5e2b4fc9a86c1",
   "audit_method": "deterministic static inspection of Prompt, workspace manifest, and grader AST; no task, grader, network request, or Judge was executed",
   "dataset": {
     "contract_version": "general-e2e-contract-v1",
@@ -2330,7 +2330,7 @@
       },
       "windows": {
         "dispositions": {
-          "CRLF_DATA_SEMANTICS": "bundle 解包和候选冻结按字节保真，不做换行转换；自动规则在固定 Linux 评分环境复核字段内 CRLF 与记录边界",
+          "CRLF_DATA_SEMANTICS": "bundle 解包和候选冻结按字节保真，不做换行转换；自动规则在锁定的本地Python 评分运行时复核字段内 CRLF 与记录边界",
           "POSIX_SHELL_BLOCK": "命令块在预检通过的受管 shell 中执行；Windows 原生 launcher 使用 .cmd/PowerShell 启动，但不改题内命令语义",
           "POSIX_WORKSPACE_ROOT": "prepare/adapter 将逻辑 /tmp_workspace 映射到短本机工作目录；发送文本、原始路径、映射表和哈希均保留，不静默改写数据集任务",
           "PYTHON3_ALIAS": "预检固定 Python 3.12；在受管任务环境提供 python3 兼容入口，或在声明支持的POSIX shell 环境运行。缺失时阻止发送，不把环境缺失计为模型失败"
@@ -7232,7 +7232,7 @@
       },
       "windows": {
         "dispositions": {
-          "PLAYWRIGHT_SCORING_DEPENDENCY": "Playwright 与浏览器固定在评分依赖/容器中，不要求被测 Harness 安装；Windows本机评分需单独通过 Docker Desktop/WSL2 挂载与浏览器 smoke",
+          "PLAYWRIGHT_SCORING_DEPENDENCY": "Playwright 与浏览器固定在专用评分虚拟环境和受管浏览器缓存中，不要求被测Harness 安装；Windows 本机评分需单独通过原生路径与浏览器 smoke",
           "POSIX_WORKSPACE_ROOT": "prepare/adapter 将逻辑 /tmp_workspace 映射到短本机工作目录；发送文本、原始路径、映射表和哈希均保留，不静默改写数据集任务"
         },
         "risk_codes": [
@@ -9086,11 +9086,11 @@
       "scope": "execution_and_scoring"
     },
     "CRLF_DATA_SEMANTICS": {
-      "disposition": "bundle 解包和候选冻结按字节保真，不做换行转换；自动规则在固定 Linux 评分环境复核字段内 CRLF 与记录边界",
+      "disposition": "bundle 解包和候选冻结按字节保真，不做换行转换；自动规则在锁定的本地Python 评分运行时复核字段内 CRLF 与记录边界",
       "scope": "execution_and_scoring"
     },
     "PLAYWRIGHT_SCORING_DEPENDENCY": {
-      "disposition": "Playwright 与浏览器固定在评分依赖/容器中，不要求被测 Harness 安装；Windows本机评分需单独通过 Docker Desktop/WSL2 挂载与浏览器 smoke",
+      "disposition": "Playwright 与浏览器固定在专用评分虚拟环境和受管浏览器缓存中，不要求被测Harness 安装；Windows 本机评分需单独通过原生路径与浏览器 smoke",
       "scope": "scoring"
     },
     "POSIX_SCRIPT_AS_DATA": {

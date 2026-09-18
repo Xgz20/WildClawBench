@@ -35,7 +35,7 @@ def local_fixture_executor(source: str, context: dict) -> dict:
 
 class GradingCoreTests(unittest.TestCase):
     def test_public_api_and_same_fixture_match_legacy_combiner(self) -> None:
-        self.assertEqual(CORE_VERSION, "0.1.0")
+        self.assertEqual(CORE_VERSION, "0.1.1")
         source = """
 def grade(transcript: list, workspace_path: str) -> dict:
     assert workspace_path == "/tmp_workspace"
