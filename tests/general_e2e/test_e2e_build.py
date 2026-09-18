@@ -474,6 +474,51 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
             str(REPO_ROOT), runtime_completed.stdout + runtime_completed.stderr
         )
 
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required")
+    def test_general_orchestrator_entrypoints_load_outside_checkout(self) -> None:
+        detached = self.temp_root / "detached-general-orchestrator"
+        detached.mkdir()
+        root = BUILD._safe_extract(
+            self.archive_path("orchestrate-general-e2e"),
+            detached / "installed",
+        )
+        controller = root / "scripts/orchestrate_general_e2e.py"
+        registrar = root / "drivers/codex-desktop/register-projects.mjs"
+        self.assertTrue(controller.is_file())
+        self.assertTrue(registrar.is_file())
+        self.assertTrue(
+            (root / "vendor/e2e-shared/desktop-runtime/process.mjs").is_file()
+        )
+        self.assertTrue(
+            (root / "vendor/e2e-shared/handoff/workspace-integrity.mjs").is_file()
+        )
+        controller_help = subprocess.run(
+            [sys.executable, "-I", str(controller), "--help"],
+            cwd=detached,
+            env={"PATH": ""},
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(controller_help.returncode, 0, controller_help.stderr)
+        self.assertIn("General E2E Codex", controller_help.stdout)
+        registrar_help = subprocess.run(
+            ["node", str(registrar), "--help"],
+            cwd=detached,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(registrar_help.returncode, 0, registrar_help.stderr)
+        self.assertIn("Codex Desktop 项目注册器", registrar_help.stdout)
+        self.assertNotIn(
+            str(REPO_ROOT),
+            controller_help.stdout
+            + controller_help.stderr
+            + registrar_help.stdout
+            + registrar_help.stderr,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

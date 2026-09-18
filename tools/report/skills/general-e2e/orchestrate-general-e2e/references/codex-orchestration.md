@@ -1,0 +1,134 @@
+# General E2E Codex 项目与任务编排
+
+## 能力边界
+
+本控制器把正式 execution record 与独立 scoring ZIP 交接为每题一个私有评分 attempt，并维护 Codex Desktop 项目、线程、wait cursor 和 deadline。它不执行 Harness，不亲自判分，不生成 `score.json` 或 submission。
+
+当前仅接受 `codex-agent-judge-v1`。`report-config.json` 中的模型和推理强度必须是已选定的非空值；`unconfigured-*` 占位值会失败关闭。`api-judge-v1` 由后续专用后端实现，不会静默转为 Codex Agent。
+
+## 初始化
+
+输入需要包含：
+
+- 已完成 collect 的 execution unit，且每个选择题只有一个可唯一发现的正式 execution record；存在多个 attempt 时用 `--execution-record TASK_ID=/absolute/path` 明确选择；
+- 与 unit 身份和任务范围一致的 scoring ZIP；
+- 同一批次的 `report-config.json`；
+- 独立安装的 `score-general-e2e` Skill 目录。
+
+```bash
+python <skill-dir>/scripts/orchestrate_general_e2e.py init \
+  --unit-root /absolute/path/to/execution-unit \
+  --scoring-package /absolute/path/to/unit-scoring.zip \
+  --report-config /absolute/path/to/report-config.json \
+  --score-skill-dir /absolute/path/to/score-general-e2e \
+  --output-root /absolute/path/to/private-orchestrations \
+  --orchestration-id ORCHESTRATION_ID \
+  --score-slots 1 \
+  --score-timeout-seconds 7200
+```
+
+初始化采用临时目录和原子发布。每题调用 score Skill 的 `prepare` 子能力，生成不同的 `scoring_attempt_id`、attempt 根和评分 Prompt；状态冻结 unit/report/scoring package SHA、score Skill 版本与入口 SHA、runtime lock、裁判协议、模型、推理强度、Prompt SHA、任务顺序和 deadline 策略。首版只支持单槽，其他值失败关闭。
+
+## 注册 Codex Desktop 项目
+
+先安装锁定 Driver 依赖并只读探测。Desktop 必须在控制任务启动前以 loopback CDP 启动；控制任务不得重启承载自己的 Desktop：
+
+```bash
+cd <skill-dir>/drivers/codex-desktop
+npm ci
+
+bash <skill-dir>/scripts/run-codex-project-registrar.sh \
+  --probe \
+  --endpoint http://127.0.0.1:9230
+```
+
+Windows 使用 `run-codex-project-registrar.cmd`。Driver 与 Web E2E 使用相同的 `wildclawbench.codex-project-registration/v1` 契约，但随 General Skill 独立分发；默认通过可见 UI 和原生文件夹选择器注册，不使用 Computer Use 操作 Codex 自己。只有测试人员明确接受当前 Desktop 版本私有接口风险时才可传 `--renderer-bridge`。
+
+读取 `status` 的 `REGISTER_PROJECT.project_path`，先调用 Desktop 内置 `list_projects` 按规范化绝对路径唯一匹配。已经存在时直接复用并记录：
+
+```bash
+python <skill-dir>/scripts/orchestrate_general_e2e.py record-project \
+  --orchestration-root /absolute/path/to/orchestration \
+  --task-id TASK_ID \
+  --project-id PROJECT_ID \
+  --host-id HOST_ID \
+  --project-path /absolute/path/from/recommended-action \
+  --desktop-version DESKTOP_VERSION
+```
+
+不存在时先注册该目录：
+
+```bash
+bash <skill-dir>/scripts/run-codex-project-registrar.sh \
+  --endpoint http://127.0.0.1:9230 \
+  --project /absolute/path/from/recommended-action \
+  --output /private/path/registration.json
+```
+
+再次调用 `list_projects` 确认绝对路径唯一匹配，再执行 `record-project`，并增加 `--registration-evidence /private/path/registration.json`。项目名相同或路径尾部相同不能代替完整路径匹配。
+
+随后执行前置检查；Desktop 版本必须与项目登记时一致：
+
+```bash
+python <skill-dir>/scripts/orchestrate_general_e2e.py preflight \
+  --orchestration-root /absolute/path/to/orchestration \
+  --task-id TASK_ID \
+  --desktop-version DESKTOP_VERSION
+```
+
+前置检查会重算队列、Prompt、项目证据、attempt manifest、候选原件和私有评分材料，并复核 score Skill 及 runtime lock 未漂移。
+
+## 创建与等待评分任务
+
+只执行 `status` 或 `resume` 返回的第一个 `recommended_actions` 项。`CREATE_THREAD` 时读取 `prompt_file`，调用 Desktop 内置 `create_thread`：
+
+- target 使用动作中的 `project_id`，environment 固定 `{type: "local"}`；
+- `model` 和 `thinking` 必须使用动作冻结值，不沿用控制会话默认值；
+- 不创建 projectless、cloud 或 worktree 任务；
+- 返回后立即保存 thread/host。
+
+```bash
+python <skill-dir>/scripts/orchestrate_general_e2e.py record-thread \
+  --orchestration-root /absolute/path/to/orchestration \
+  --task-id TASK_ID \
+  --thread-id THREAD_ID \
+  --host-id HOST_ID
+```
+
+`WAIT_EXISTING_THREAD` 使用动作中的 `thread_id`、`host_id`、`after_cursor` 和 `next_wait_sequence` 调用 `wait_threads`。每次返回后立即记录：
+
+```bash
+python <skill-dir>/scripts/orchestrate_general_e2e.py record-wait \
+  --orchestration-root /absolute/path/to/orchestration \
+  --task-id TASK_ID \
+  --wait-sequence N \
+  --wait-cursor CURSOR \
+  --wait-status RUNNING
+```
+
+允许状态为 `RUNNING / POLL_TIMEOUT / NEEDS_ATTENTION / COMPLETED / FAILED / CANCELLED / INTERRUPTED`。`POLL_TIMEOUT` 只是本次等待没有变化；`NEEDS_ATTENTION` 应按 `INSPECT_THREAD` 读取原任务，必要时在同一线程继续，不得新建替代任务。
+
+到达 deadline 时，状态先返回 `MARK_TIMEOUT`。执行 `mark-timeout` 后继续等待原 thread 的明确终态；即使原 thread 后来返回 `COMPLETED`，该 attempt 仍按超时失败保存，不自动新建重试：
+
+```bash
+python <skill-dir>/scripts/orchestrate_general_e2e.py mark-timeout \
+  --orchestration-root /absolute/path/to/orchestration \
+  --task-id TASK_ID
+```
+
+如果一次已发出的 `wait_threads` 跨过 deadline 后才返回，直接执行 `record-wait`；控制器会在同一次原子状态更新中先记录超时，再保存 cursor 和线程终态，不会把 deadline 后的 `COMPLETED` 误记为成功。
+
+线程终态后单槽才进入下一题。G3-03 的 `THREAD_COMPLETED` 只证明编排任务完成，不证明评分有效；正式结果准入由 G3-04 实现。
+
+## 恢复与失败关闭
+
+控制任务重启后只运行：
+
+```bash
+python <skill-dir>/scripts/orchestrate_general_e2e.py resume \
+  --orchestration-root /absolute/path/to/orchestration
+```
+
+严格继续返回的动作。不要重新 `init`，不要按最近任务猜测 thread，不要丢弃 cursor 或重置 deadline。状态使用原子替换写入，并假定只有一个控制任务串行修改；多个控制任务不得同时写同一 orchestration。
+
+以下情况失败关闭：裁判配置未冻结、API 协议误入、同题 execution record 不唯一、score Skill 或 runtime lock 漂移、Prompt/attempt/项目证据漂移、项目路径不一致、Desktop 版本改变、host 切换、wait sequence 跳号、deadline 未到提前超时，以及单槽任务未终态就操作下一题。

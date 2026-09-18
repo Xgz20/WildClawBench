@@ -15,6 +15,7 @@ OPERATIONAL = "operational"
 PREPARE_SKILL_VERSION = "0.2.0"
 EXECUTE_SKILL_VERSION = "0.4.0"
 COLLECT_SKILL_VERSION = "0.4.0"
+ORCHESTRATE_SKILL_VERSION = "0.2.0"
 SCORE_SKILL_VERSION = "0.3.0"
 
 
@@ -81,6 +82,7 @@ GENERAL_E2E_SKILLS: Tuple[GeneralE2ESkillSpec, ...] = (
         responsibility="建立独立评分工作空间并调度可恢复的单题裁判任务",
         input_contract="有效执行回执、scoring 包和冻结裁判配置",
         output_contract="评分队列、裁判任务状态和有效 submission",
+        version=ORCHESTRATE_SKILL_VERSION,
     ),
     GeneralE2ESkillSpec(
         name="score-general-e2e",
