@@ -15,7 +15,7 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 python -m eval_general_e2e skills --name score-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才形成正式评分。当前 `0.3.0/interface_only` 已提供可独立装配的 runtime-neutral 评分 core，以及不依赖 Docker 的私有评分目录和本地受管规则 Worker；真实 Codex/API Judge transport、合分审计与标准 `score.json` 尚未交付。因此可以运行和审计自动规则子能力，但不得把规则组件冒充完整 General E2E 分数，也不得调用旧 CLI grading 后改名发布。
+只有 `implementation_status` 为 `operational` 时才形成完整双后端生产评分。当前 `0.4.0/interface_only` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询与结构化判定校验、合分审计及标准 `score.json`；API Judge transport、submission 和真实 Codex 小批准入尚未交付。fixture 判定不能冒充真实语义评分，也不得调用旧 CLI grading 后改名发布。
 
 ## 责任边界
 
@@ -25,10 +25,12 @@ python -m eval_general_e2e skills --name score-general-e2e --json
 - 语义判断必须引用可定位证据，长轨迹可分页回查，不能只用截断摘要替代原文。
 - 不创建下一题任务，不重跑被测 Harness，不聚合跨题结果。
 
-## 已交付规则子能力与后续边界
+## 已交付能力与后续边界
 
 需要开发、校验或接入评分 core 时，读取[评分 core 接口](references/grading-core.md)。当前四个公开 API 可用于确定性契约验证和受管 backend 接入；`run_rules()` 不会自行执行不可信规则，`evaluate_semantics()` 也不会自行调用模型。
 
 需要准备、复核或执行本地规则时，读取[本地受管规则运行时](references/local-rule-runtime.md)，使用 `scripts/score_general_e2e.py`。该入口强制候选原件只读、一次性 runtime 副本、GT 后置、真实本机 workspace 路径、冻结 transcript、专用虚拟环境、环境白名单、超时、独立进程组和进程树清理；不得要求 Docker。
 
-真实 `codex-agent-judge-v1` 与 `api-judge-v1` transport 分别由后续阶段交付；在语义评分、合分审计和标准产物完成前保持 `interface_only`。
+在控制 Harness 的独立评分会话中执行默认语义协议时，读取[Codex 语义评分协议](references/codex-agent-judge.md)。必须先生成冻结证据目录，再通过 `query-evidence` 分页回查；逐项结果只能引用已查询的 evidence ID，并声明已检查支持证据和反例。声称“未发生”时必须用无过滤分页覆盖完整 transcript。缺证据保留 `unresolved`；导入后由 core 校验分值锚点、引用、Judge 身份和请求锁，再合成标准 `score.json`。`verify-score` 会重新校验来源锁并从冻结组件重算标准分，不只比对结果文件自带的哈希。
+
+`api-judge-v1` transport、submission 和真实 Codex 评分小批验收仍由后续阶段完成；在这些门禁完成前保持 `interface_only`。

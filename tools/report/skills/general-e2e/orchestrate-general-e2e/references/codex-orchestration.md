@@ -118,7 +118,15 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py mark-timeout \
 
 如果一次已发出的 `wait_threads` 跨过 deadline 后才返回，直接执行 `record-wait`；控制器会在同一次原子状态更新中先记录超时，再保存 cursor 和线程终态，不会把 deadline 后的 `COMPLETED` 误记为成功。
 
-线程终态后单槽才进入下一题。G3-03 的 `THREAD_COMPLETED` 只证明编排任务完成，不证明评分有效；正式结果准入由 G3-04 实现。
+线程返回 `COMPLETED` 后，单槽进入 `SCORE_VERIFICATION_PENDING`，不会立即切换下一题。执行 `status` 返回的 `VERIFY_SCORE`，确认评分会话已生成并校验 `score.json`，再记录结果：
+
+```bash
+python <skill-dir>/scripts/orchestrate_general_e2e.py record-score \
+  --orchestration-root /absolute/path/to/orchestration \
+  --task-id TASK_ID
+```
+
+`record-score` 调用冻结的 score Skill `verify-score`，复核标准 score、审计、语义查询日志和来源 SHA；有效能力分和合法的 `evaluation_error / total_score=null` 都可记录。只有评分产物通过校验后单槽才进入下一题。线程完成但缺少、篡改或未通过校验的 score 继续占用当前槽位。
 
 ## 恢复与失败关闭
 

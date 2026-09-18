@@ -102,8 +102,18 @@ def grade(transcript, workspace_path):
 
 
 class Fixture:
-    def __init__(self, root: Path, *, rule: str = SUCCESS_RULE, gt_collision: bool = False):
+    def __init__(
+        self,
+        root: Path,
+        *,
+        rule: str = SUCCESS_RULE,
+        gt_collision: bool = False,
+        grading_type: str = "automated",
+        grading_weights: dict | None = None,
+        llm_judge_rubric: str = "",
+    ):
         self.root = root
+        self.grading_type = grading_type
         self.batch_id = "batch-fixture"
         self.unit_id = "unit-fixture"
         self.task_id = "task-fixture"
@@ -168,8 +178,9 @@ class Fixture:
         contract = {
             "task_id": self.task_id,
             "automated_checks": rule,
-            "grading_type": "automated",
-            "grading_weights": {},
+            "grading_type": grading_type,
+            "grading_weights": grading_weights or {},
+            "llm_judge_rubric": llm_judge_rubric,
         }
         contract_bytes = json.dumps(contract).encode("utf-8")
         task_bytes = b"# Fixture task\n"
@@ -197,8 +208,8 @@ class Fixture:
             "tasks": [
                 {
                     "task_id": self.task_id,
-                    "grading_type": "automated",
-                    "grading_weights": {},
+                    "grading_type": grading_type,
+                    "grading_weights": grading_weights or {},
                     "contract": {
                         "path": f"{private_root}/contract.json",
                         "sha256": sha256_bytes(contract_bytes),
@@ -237,6 +248,7 @@ class Fixture:
         self.output_root = root / "attempts"
 
     def prepare(self, attempt_id: str = "score-attempt") -> Path:
+        semantic = self.grading_type != "automated"
         result = RUNTIME.prepare_attempt(
             unit_root=self.unit_root,
             execution_record_path=self.execution_record,
@@ -245,6 +257,10 @@ class Fixture:
             scoring_attempt_id=attempt_id,
             output_root=self.output_root,
             runtime_lock_path=LOCK_PATH,
+            judge_protocol="codex-agent-judge-v1" if semantic else None,
+            judge_model="gpt-fixture" if semantic else None,
+            judge_reasoning_effort="high" if semantic else None,
+            judge_attempt_id=attempt_id if semantic else None,
         )
         return Path(result["attempt_root"])
 

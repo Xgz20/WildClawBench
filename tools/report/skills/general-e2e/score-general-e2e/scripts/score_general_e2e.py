@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 import os
 from pathlib import Path, PurePosixPath
 import re
@@ -25,6 +26,15 @@ import zipfile
 
 ATTEMPT_SCHEMA = "wildclawbench.general-e2e-local-scoring-attempt/v1"
 AUDIT_SCHEMA = "wildclawbench.general-e2e-rule-runtime-audit/v1"
+JUDGE_CONFIG_SCHEMA = "wildclawbench.general-e2e-judge-config/v1"
+SEMANTIC_CATALOG_SCHEMA = "wildclawbench.general-e2e-semantic-evidence-catalog/v1"
+SEMANTIC_REQUEST_SCHEMA = "wildclawbench.general-e2e-semantic-request/v1"
+SEMANTIC_RESPONSE_SCHEMA = "wildclawbench.general-e2e-codex-judge-response/v1"
+SEMANTIC_QUERY_LOG_SCHEMA = "wildclawbench.general-e2e-semantic-query-log/v1"
+SEMANTIC_AUDIT_SCHEMA = "wildclawbench.general-e2e-semantic-audit/v1"
+SCORE_AUDIT_SCHEMA = "wildclawbench.general-e2e-score-audit/v1"
+SCORE_SCHEMA_ID = "urn:wildclawbench:schema:general-e2e:score:v1"
+SEMANTIC_PROMPT_PROTOCOL = "wildclawbench.general-e2e-codex-judge-prompt/v1"
 RUNTIME_LOCK_SCHEMA = "wildclawbench.general-e2e-rule-runtime-lock/v1"
 RUNTIME_MARKER_SCHEMA = "wildclawbench.general-e2e-rule-runtime-marker/v1"
 WORKER_REQUEST_SCHEMA = "wildclawbench.general-e2e-rule-worker-request/v1"
@@ -40,6 +50,27 @@ MAX_PACKAGE_TOTAL_BYTES = 512 * 1024 * 1024
 MAX_PACKAGE_MEMBERS = 20_000
 MAX_WORKER_LOG_BYTES = 4 * 1024 * 1024
 MAX_WORKER_RESULT_BYTES = 16 * 1024 * 1024
+MAX_EVIDENCE_TEXT_PAGE_CHARS = 256 * 1024
+SEMANTIC_PROTOCOLS = {"codex-agent-judge-v1", "api-judge-v1"}
+REASONING_EFFORTS = {
+    "none",
+    "minimal",
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max",
+    "ultra",
+}
+_RUBRIC_HEADING_RE = re.compile(r"^###\s+(.*?)\s*\((.*?)\)\s*$")
+_RUBRIC_METADATA_RE = re.compile(
+    r"(?:^|,)\s*(key|weight)\s*:\s*([^,]+)\s*"
+)
+_RUBRIC_SCORE_RE = re.compile(
+    r"^\s*(?:\*\*\s*)?Score\s+"
+    r"([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*(?:\*\*)?\s*[:：]",
+    re.IGNORECASE,
+)
 
 
 class ScoringRuntimeError(ValueError):
@@ -108,10 +139,50 @@ def _write_new_json(path: Path, value: object) -> None:
         raise ScoringRuntimeError("OUTPUT_EXISTS", str(path)) from exc
 
 
+def _publish_new_files(files: Mapping[Path, bytes]) -> None:
+    """Publish a small terminal artifact set without leaving normal partial writes."""
+
+    published: list[Path] = []
+    try:
+        for path, payload in files.items():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                with path.open("xb") as handle:
+                    handle.write(payload)
+            except FileExistsError as exc:
+                raise ScoringRuntimeError("OUTPUT_EXISTS", str(path)) from exc
+            published.append(path)
+    except BaseException:
+        for path in reversed(published):
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
+        raise
+
+
+def _atomic_write_json(path: Path, value: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.parent / f".{path.name}.tmp-{uuid.uuid4().hex}"
+    try:
+        with temporary.open("xb") as handle:
+            handle.write(_pretty_json_bytes(value))
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
 def _identifier(value: object, label: str) -> str:
     if not isinstance(value, str) or not ID_RE.fullmatch(value):
         raise ScoringRuntimeError("IDENTIFIER_INVALID", f"{label}={value!r}")
     return value
+
+
+def _required_string(value: object, label: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ScoringRuntimeError("STRING_INVALID", f"{label}={value!r}")
+    return value.strip()
 
 
 def _sha256(value: object, label: str) -> str:
@@ -582,6 +653,10 @@ def prepare_attempt(
     scoring_attempt_id: str,
     output_root: Path,
     runtime_lock_path: Path,
+    judge_protocol: str | None = None,
+    judge_model: str | None = None,
+    judge_reasoning_effort: str | None = None,
+    judge_attempt_id: str | None = None,
 ) -> dict[str, Any]:
     unit_root = unit_root.expanduser().resolve(strict=True)
     if not unit_root.is_dir() or unit_root.is_symlink():
@@ -672,6 +747,41 @@ def prepare_attempt(
         transcript_count = _validate_transcript(transcript_source)
 
     runtime_lock, runtime_lock_sha = _load_runtime_lock(runtime_lock_path)
+    judge_values = (
+        judge_protocol,
+        judge_model,
+        judge_reasoning_effort,
+        judge_attempt_id,
+    )
+    if any(value is not None for value in judge_values) and not all(
+        value is not None for value in judge_values
+    ):
+        raise ScoringRuntimeError(
+            "JUDGE_CONFIG_INCOMPLETE",
+            "protocol, model, reasoning effort and attempt ID must be supplied together",
+        )
+    judge_config: dict[str, Any] | None = None
+    if all(value is not None for value in judge_values):
+        protocol = _required_string(judge_protocol, "judge_protocol")
+        if protocol not in SEMANTIC_PROTOCOLS:
+            raise ScoringRuntimeError("JUDGE_PROTOCOL_UNSUPPORTED", protocol)
+        model = _required_string(judge_model, "judge_model")
+        if model.lower().startswith("unconfigured"):
+            raise ScoringRuntimeError("JUDGE_MODEL_UNCONFIGURED", model)
+        reasoning_effort = _required_string(
+            judge_reasoning_effort, "judge_reasoning_effort"
+        )
+        if reasoning_effort not in REASONING_EFFORTS:
+            raise ScoringRuntimeError(
+                "JUDGE_REASONING_EFFORT_UNSUPPORTED", reasoning_effort
+            )
+        judge_config = {
+            "schema_version": JUDGE_CONFIG_SCHEMA,
+            "protocol": protocol,
+            "model": model,
+            "reasoning_effort": reasoning_effort,
+            "attempt_id": _identifier(judge_attempt_id, "judge_attempt_id"),
+        }
     destination = (
         output_root.expanduser().resolve()
         / f"{batch_id}__{unit_id}"
@@ -707,6 +817,10 @@ def prepare_attempt(
         (private_root / "contract.json").write_bytes(contract_bytes)
         (private_root / "task.md").write_bytes(task_bytes)
         shutil.copyfile(runtime_lock_path, private_root / "runtime-lock.json")
+        judge_config_sha: str | None = None
+        if judge_config is not None:
+            _write_new_json(private_root / "judge-config.json", judge_config)
+            judge_config_sha = _sha256_file(private_root / "judge-config.json")
 
         transcript_sha: str | None = None
         transcript_target: Path | None = None
@@ -753,6 +867,9 @@ def prepare_attempt(
                 "transcript": "private/transcript.jsonl" if transcript_target else None,
                 "runtime_lock": "private/runtime-lock.json",
                 "execution_record": "private/execution-record.json",
+                "judge_config": (
+                    "private/judge-config.json" if judge_config is not None else None
+                ),
             },
             "digests": {
                 "candidate_original_sha256": candidate_sha,
@@ -765,6 +882,7 @@ def prepare_attempt(
                 "transcript_sha256": transcript_sha,
                 "runtime_lock_sha256": runtime_lock_sha,
                 "execution_record_sha256": _sha256_file(execution_record_path),
+                "judge_config_sha256": judge_config_sha,
             },
             "transcript_event_count": transcript_count,
             "private_scoring": {
@@ -779,6 +897,16 @@ def prepare_attempt(
                 "docker_required": False,
                 "lock": runtime_lock,
             },
+            "judge": (
+                {
+                    "protocol": judge_config["protocol"],
+                    "model": judge_config["model"],
+                    "reasoning_effort": judge_config["reasoning_effort"],
+                    "attempt_id": judge_config["attempt_id"],
+                }
+                if judge_config is not None
+                else None
+            ),
         }
         _write_new_json(staging / "attempt-manifest.json", manifest)
         os.replace(staging, destination)
@@ -834,6 +962,36 @@ def verify_attempt(attempt_root: Path) -> dict[str, Any]:
         path = _resolve_within(root, paths.get(key), key)
         if not path.is_file() or path.is_symlink() or _sha256_file(path) != digests.get(digest_key):
             raise ScoringRuntimeError("ATTEMPT_PRIVATE_MATERIAL_DRIFT", key)
+    judge_config_relative = paths.get("judge_config")
+    if judge_config_relative is not None:
+        judge_config_path = _resolve_within(
+            root, judge_config_relative, "judge_config"
+        )
+        if (
+            not judge_config_path.is_file()
+            or judge_config_path.is_symlink()
+            or _sha256_file(judge_config_path)
+            != digests.get("judge_config_sha256")
+        ):
+            raise ScoringRuntimeError(
+                "ATTEMPT_PRIVATE_MATERIAL_DRIFT", "judge_config"
+            )
+        judge_config = _read_json(
+            judge_config_path, code="JUDGE_CONFIG_INVALID"
+        )
+        if (
+            judge_config.get("schema_version") != JUDGE_CONFIG_SCHEMA
+            or manifest.get("judge")
+            != {
+                "protocol": judge_config.get("protocol"),
+                "model": judge_config.get("model"),
+                "reasoning_effort": judge_config.get("reasoning_effort"),
+                "attempt_id": judge_config.get("attempt_id"),
+            }
+        ):
+            raise ScoringRuntimeError("JUDGE_CONFIG_INVALID", "manifest mismatch")
+    elif manifest.get("judge") is not None or digests.get("judge_config_sha256") is not None:
+        raise ScoringRuntimeError("JUDGE_CONFIG_INVALID", "incomplete manifest lock")
     transcript = paths.get("transcript")
     if transcript is not None:
         path = _resolve_within(root, transcript, "transcript")
@@ -1431,6 +1589,1307 @@ def run_rules_attempt(
     }
 
 
+def _import_semantic_grading_core() -> tuple[Any, Any, Any, Any]:
+    vendor_root = Path(__file__).resolve().parents[1] / "vendor/e2e-shared"
+    if vendor_root.is_dir() and str(vendor_root) not in sys.path:
+        sys.path.insert(0, str(vendor_root))
+    try:
+        from wildclawbench_grading_core import (  # type: ignore
+            GradingCoreError,
+            build_evidence_index,
+            evaluate_semantics,
+            finalize_score,
+        )
+    except ImportError as exc:
+        raise ScoringRuntimeError(
+            "GRADING_CORE_UNAVAILABLE",
+            "install the packaged vendor/e2e-shared directory on PYTHONPATH",
+        ) from exc
+    return build_evidence_index, evaluate_semantics, finalize_score, GradingCoreError
+
+
+def _parse_semantic_criteria(rubric_text: object) -> list[dict[str, Any]]:
+    if not isinstance(rubric_text, str) or not rubric_text.strip():
+        return []
+    criteria: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
+    body: list[str] = []
+    for line in rubric_text.splitlines():
+        heading = _RUBRIC_HEADING_RE.match(line.strip())
+        metadata = (
+            {
+                key: value.strip()
+                for key, value in _RUBRIC_METADATA_RE.findall(heading.group(2))
+            }
+            if heading
+            else {}
+        )
+        key = metadata.get("key", "")
+        try:
+            weight = float(metadata.get("weight", ""))
+        except ValueError:
+            weight = None
+        if heading and ID_RE.fullmatch(key) and weight is not None:
+            if current is not None:
+                current["rubric"] = "\n".join(body).strip()
+                current["allowed_scores"] = sorted(
+                    {
+                        float(match.group(1))
+                        for rubric_line in current["rubric"].splitlines()
+                        if (match := _RUBRIC_SCORE_RE.match(rubric_line))
+                    }
+                )
+                criteria.append(current)
+            name = re.sub(
+                r"^(?:Criterion\s+\d+\s*[:：]\s*)?", "", heading.group(1)
+            ).strip()
+            current = {
+                "key": key,
+                "name": name,
+                "weight": weight,
+                "rubric": "",
+                "not_applicable_allowed": False,
+            }
+            body = [line]
+        elif current is not None:
+            body.append(line)
+    if current is not None:
+        current["rubric"] = "\n".join(body).strip()
+        current["allowed_scores"] = sorted(
+            {
+                float(match.group(1))
+                for rubric_line in current["rubric"].splitlines()
+                if (match := _RUBRIC_SCORE_RE.match(rubric_line))
+            }
+        )
+        criteria.append(current)
+    keys = [item["key"] for item in criteria]
+    if len(keys) != len(set(keys)):
+        raise ScoringRuntimeError("SEMANTIC_RUBRIC_INVALID", "duplicate criterion key")
+    if any(
+        not item["allowed_scores"]
+        or item["weight"] < 0
+        or item["weight"] > 1
+        for item in criteria
+    ):
+        raise ScoringRuntimeError(
+            "SEMANTIC_RUBRIC_INVALID", "missing score anchors or invalid weight"
+        )
+    if criteria and abs(sum(item["weight"] for item in criteria) - 1.0) > 1e-6:
+        raise ScoringRuntimeError(
+            "SEMANTIC_RUBRIC_INVALID", "criterion weights must sum to 1.0"
+        )
+    return criteria
+
+
+def _regular_evidence_files(root: Path) -> list[Path]:
+    return sorted(
+        (
+            path
+            for path in root.rglob("*")
+            if path.is_file() and not path.is_symlink()
+        ),
+        key=lambda path: path.relative_to(root).as_posix(),
+    )
+
+
+def _semantic_paths(root: Path) -> dict[str, Path]:
+    semantic = root / "semantic"
+    return {
+        "root": semantic,
+        "catalog": semantic / "evidence-catalog.json",
+        "request": semantic / "request.json",
+        "template": semantic / "response-template.json",
+        "query_log": semantic / "query-log.json",
+        "response": semantic / "response.json",
+        "component": semantic / "semantic-component.json",
+        "audit": semantic / "semantic-audit.json",
+    }
+
+
+def _semantic_reference_inputs(
+    attempt_root: Path,
+    manifest: Mapping[str, Any],
+    transcript: Sequence[Mapping[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
+    references: list[dict[str, Any]] = []
+    event_locations: dict[str, dict[str, Any]] = {}
+
+    def add_file(evidence_type: str, path: Path) -> None:
+        references.append(
+            {
+                "type": evidence_type,
+                "path": path.relative_to(attempt_root).as_posix(),
+                "sha256": _sha256_file(path),
+            }
+        )
+
+    add_file("task_definition", attempt_root / manifest["paths"]["task"])
+    add_file("scoring_contract", attempt_root / manifest["paths"]["contract"])
+    add_file(
+        "execution_record", attempt_root / manifest["paths"]["execution_record"]
+    )
+    add_file(
+        "candidate_manifest", attempt_root / manifest["paths"]["candidate_artifact"]
+    )
+    candidate = attempt_root / manifest["paths"]["candidate_original"]
+    for path in _regular_evidence_files(candidate):
+        add_file("candidate_file", path)
+    private_gt = attempt_root / manifest["paths"]["gt"]
+    for path in _regular_evidence_files(private_gt):
+        add_file("private_reference", path)
+    rule_component = attempt_root / "rule-component.json"
+    if rule_component.is_file() and not rule_component.is_symlink():
+        add_file("rule_result", rule_component)
+    rule_audit = attempt_root / "rule-audit.json"
+    if rule_audit.is_file() and not rule_audit.is_symlink():
+        add_file("rule_audit", rule_audit)
+    transcript_relative = manifest["paths"].get("transcript")
+    if transcript_relative is not None:
+        transcript_path = attempt_root / transcript_relative
+        transcript_sha = _sha256_file(transcript_path)
+        seen: set[str] = set()
+        for line_number, event in enumerate(transcript, start=1):
+            event_id = _required_string(event.get("event_id"), "transcript.event_id")
+            if event_id in seen:
+                raise ScoringRuntimeError("TRANSCRIPT_EVENT_ID_DUPLICATE", event_id)
+            seen.add(event_id)
+            references.append(
+                {
+                    "type": "transcript_event",
+                    "path": transcript_relative,
+                    "event_ids": [event_id],
+                    "sha256": transcript_sha,
+                }
+            )
+            event_locations[event_id] = {
+                "line": line_number,
+                "path": transcript_relative,
+            }
+    return references, event_locations
+
+
+def _load_judge_config(root: Path, manifest: Mapping[str, Any]) -> dict[str, Any]:
+    relative = manifest.get("paths", {}).get("judge_config")
+    if relative is None:
+        raise ScoringRuntimeError("JUDGE_CONFIG_REQUIRED")
+    config = _read_json(
+        _resolve_within(root, relative, "judge_config"), code="JUDGE_CONFIG_INVALID"
+    )
+    if config.get("schema_version") != JUDGE_CONFIG_SCHEMA:
+        raise ScoringRuntimeError("JUDGE_CONFIG_INVALID", "schema")
+    return config
+
+
+def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
+    root = attempt_root.expanduser().resolve(strict=True)
+    verify_attempt(root)
+    paths = _semantic_paths(root)
+    if paths["root"].exists():
+        raise ScoringRuntimeError("SEMANTIC_PREPARATION_EXISTS", str(paths["root"]))
+    manifest = _read_json(root / "attempt-manifest.json")
+    contract = _read_json(
+        root / manifest["paths"]["contract"], code="SCORING_CONTRACT_INVALID"
+    )
+    grading_type = manifest.get("grading", {}).get("type")
+    if grading_type not in {"automated", "hybrid", "llm_judge"}:
+        raise ScoringRuntimeError("GRADING_TYPE_INVALID", repr(grading_type))
+    rich_criteria = (
+        []
+        if grading_type == "automated"
+        else _parse_semantic_criteria(contract.get("llm_judge_rubric"))
+    )
+    if grading_type != "automated" and not rich_criteria:
+        raise ScoringRuntimeError("SEMANTIC_RUBRIC_INVALID", "no criteria parsed")
+    transcript_relative = manifest["paths"].get("transcript")
+    transcript = (
+        _read_transcript(root / transcript_relative)
+        if transcript_relative is not None
+        else []
+    )
+    references, event_locations = _semantic_reference_inputs(
+        root, manifest, transcript
+    )
+    build_evidence_index, evaluate_semantics, _, grading_error_type = (
+        _import_semantic_grading_core()
+    )
+    event_ids = list(event_locations)
+    try:
+        evidence_index = build_evidence_index(
+            references,
+            base_dir=root,
+            known_event_ids=event_ids,
+        )
+    except grading_error_type as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+    evidence_by_event: dict[str, str] = {}
+    for entry in evidence_index["entries"]:
+        for event_id in entry["reference"].get("event_ids", []):
+            evidence_by_event[event_id] = entry["id"]
+    for event_id, location in event_locations.items():
+        location["evidence_id"] = evidence_by_event[event_id]
+    catalog = {
+        "schema_version": SEMANTIC_CATALOG_SCHEMA,
+        "identity": manifest["identity"],
+        "created_at": _now(),
+        "evidence_index": evidence_index,
+        "transcript": {
+            "path": transcript_relative,
+            "event_count": len(transcript),
+            "event_locations": event_locations,
+        },
+    }
+    staging = root / f".semantic.staging-{uuid.uuid4().hex}"
+    staging.mkdir(parents=False, exist_ok=False)
+    try:
+        _write_new_json(staging / "evidence-catalog.json", catalog)
+        catalog_sha = _sha256_file(staging / "evidence-catalog.json")
+        if grading_type == "automated":
+            try:
+                component = evaluate_semantics(
+                    [],
+                    evaluator=None,
+                    evidence_index=evidence_index,
+                    protocol="not-required",
+                )
+            except grading_error_type as exc:
+                raise ScoringRuntimeError(exc.code, exc.message) from exc
+            audit = {
+                "schema_version": SEMANTIC_AUDIT_SCHEMA,
+                "identity": manifest["identity"],
+                "status": "completed",
+                "protocol": "not-required",
+                "model": None,
+                "reasoning_effort": None,
+                "evidence_catalog_sha256": catalog_sha,
+                "request_sha256": None,
+                "response_sha256": None,
+                "query_log_sha256": None,
+                "component_sha256": _sha256_bytes(_pretty_json_bytes(component)),
+                "counterevidence_policy": "not-required",
+                "docker_used": False,
+                "error": None,
+            }
+            _write_new_json(staging / "semantic-component.json", component)
+            _write_new_json(staging / "semantic-audit.json", audit)
+        else:
+            judge = _load_judge_config(root, manifest)
+            if judge.get("protocol") != "codex-agent-judge-v1":
+                raise ScoringRuntimeError(
+                    "SEMANTIC_PROTOCOL_UNSUPPORTED",
+                    f"G3-04 accepts codex-agent-judge-v1, got {judge.get('protocol')!r}",
+                )
+            rubric_text = _required_string(
+                contract.get("llm_judge_rubric"), "llm_judge_rubric"
+            )
+            request = {
+                "schema_version": SEMANTIC_REQUEST_SCHEMA,
+                "prompt_protocol": SEMANTIC_PROMPT_PROTOCOL,
+                "identity": manifest["identity"],
+                "judge": {
+                    "protocol": judge["protocol"],
+                    "model": judge["model"],
+                    "reasoning_effort": judge["reasoning_effort"],
+                    "attempt_id": judge["attempt_id"],
+                },
+                "grading": manifest["grading"],
+                "rubric": {
+                    "text": rubric_text,
+                    "sha256": _sha256_bytes(rubric_text.encode("utf-8")),
+                    "criteria": rich_criteria,
+                },
+                "evidence": {
+                    "catalog_path": "semantic/evidence-catalog.json",
+                    "catalog_sha256": catalog_sha,
+                    "index_digest": evidence_index["digest"],
+                    "transcript_event_count": len(transcript),
+                },
+                "requirements": {
+                    "score_each_declared_criterion": True,
+                    "cite_only_frozen_evidence_ids": True,
+                    "check_supporting_evidence": True,
+                    "check_contradicting_evidence": True,
+                    "absence_claim_requires_complete_transcript_coverage": True,
+                    "unresolved_is_not_zero": True,
+                },
+            }
+            _write_new_json(staging / "request.json", request)
+            request_sha = _sha256_file(staging / "request.json")
+            response_locks = {
+                "request_sha256": request_sha,
+                "evidence_catalog_sha256": catalog_sha,
+                "evidence_index_digest": evidence_index["digest"],
+                "rubric_sha256": request["rubric"]["sha256"],
+            }
+            template = {
+                "schema_version": SEMANTIC_RESPONSE_SCHEMA,
+                "identity": manifest["identity"],
+                "judge": request["judge"],
+                "locks": response_locks,
+                "criteria": [
+                    {
+                        "key": criterion["key"],
+                        "status": "unresolved",
+                        "score": None,
+                        "reason": "尚未完成证据核验。",
+                        "evidence_ids": [],
+                        "review": {
+                            "query_ids": [],
+                            "supporting_evidence_checked": False,
+                            "contradicting_evidence_checked": False,
+                            "absence_claim": False,
+                            "complete_event_range_checked": False,
+                        },
+                    }
+                    for criterion in rich_criteria
+                ],
+                "notes": "",
+            }
+            query_log = {
+                "schema_version": SEMANTIC_QUERY_LOG_SCHEMA,
+                "identity": manifest["identity"],
+                "queries": [],
+            }
+            _write_new_json(staging / "response-template.json", template)
+            _write_new_json(staging / "query-log.json", query_log)
+        os.replace(staging, paths["root"])
+    except BaseException:
+        _remove_tree(staging)
+        raise
+    result = {
+        "status": "PASS",
+        "attempt_root": str(root),
+        "grading_type": grading_type,
+        "evidence_catalog": str(paths["catalog"]),
+    }
+    if grading_type == "automated":
+        result["semantic_status"] = "not_required"
+    else:
+        result.update(
+            {
+                "semantic_status": "awaiting_response",
+                "request": str(paths["request"]),
+                "response_template": str(paths["template"]),
+            }
+        )
+    return result
+
+
+def _load_semantic_catalog(root: Path) -> dict[str, Any]:
+    paths = _semantic_paths(root)
+    catalog = _read_json(paths["catalog"], code="SEMANTIC_CATALOG_INVALID")
+    if catalog.get("schema_version") != SEMANTIC_CATALOG_SCHEMA:
+        raise ScoringRuntimeError("SEMANTIC_CATALOG_INVALID", "schema")
+    return catalog
+
+
+def _append_semantic_query(
+    root: Path,
+    *,
+    mode: str,
+    filters: Mapping[str, Any],
+    offset: int,
+    limit: int,
+    total: int,
+    returned_evidence_ids: Sequence[str],
+    returned_event_ids: Sequence[str],
+    coverage: Mapping[str, Any] | None,
+    result: Mapping[str, Any],
+) -> str:
+    paths = _semantic_paths(root)
+    if paths["audit"].exists():
+        raise ScoringRuntimeError("SEMANTIC_ATTEMPT_ALREADY_TERMINAL")
+    log = _read_json(paths["query_log"], code="SEMANTIC_QUERY_LOG_INVALID")
+    if log.get("schema_version") != SEMANTIC_QUERY_LOG_SCHEMA or not isinstance(
+        log.get("queries"), list
+    ):
+        raise ScoringRuntimeError("SEMANTIC_QUERY_LOG_INVALID", "shape")
+    query_id = f"query-{len(log['queries']) + 1:04d}"
+    log["queries"].append(
+        {
+            "query_id": query_id,
+            "at": _now(),
+            "mode": mode,
+            "filters": dict(filters),
+            "offset": offset,
+            "limit": limit,
+            "total_matches": total,
+            "returned_count": len(result.get("items", [])),
+            "returned_evidence_ids": list(dict.fromkeys(returned_evidence_ids)),
+            "returned_event_ids": list(dict.fromkeys(returned_event_ids)),
+            "coverage": dict(coverage) if coverage is not None else None,
+            "result_sha256": _sha256_bytes(_canonical_json_bytes(result)),
+        }
+    )
+    _atomic_write_json(paths["query_log"], log)
+    return query_id
+
+
+def query_evidence_attempt(
+    *,
+    attempt_root: Path,
+    mode: str,
+    offset: int = 0,
+    limit: int = 50,
+    evidence_id: str | None = None,
+    evidence_type: str | None = None,
+    event_id: str | None = None,
+    call_id: str | None = None,
+    path_contains: str | None = None,
+    text: str | None = None,
+    max_chars: int = 65536,
+) -> dict[str, Any]:
+    root = attempt_root.expanduser().resolve(strict=True)
+    verify_attempt(root)
+    if mode not in {"catalog", "transcript", "file"}:
+        raise ScoringRuntimeError("SEMANTIC_QUERY_MODE_INVALID", mode)
+    if offset < 0 or limit < 1 or limit > 1000:
+        raise ScoringRuntimeError("SEMANTIC_QUERY_PAGE_INVALID")
+    if max_chars < 1 or max_chars > MAX_EVIDENCE_TEXT_PAGE_CHARS:
+        raise ScoringRuntimeError("SEMANTIC_QUERY_SIZE_INVALID")
+    catalog = _load_semantic_catalog(root)
+    index_entries = catalog.get("evidence_index", {}).get("entries")
+    if not isinstance(index_entries, list):
+        raise ScoringRuntimeError("SEMANTIC_CATALOG_INVALID", "entries")
+    by_id = {entry.get("id"): entry for entry in index_entries}
+    filters = {
+        key: value
+        for key, value in {
+            "evidence_id": evidence_id,
+            "evidence_type": evidence_type,
+            "event_id": event_id,
+            "call_id": call_id,
+            "path_contains": path_contains,
+            "text": text,
+        }.items()
+        if value is not None
+    }
+    allowed_filters = {
+        "catalog": {"evidence_id", "evidence_type", "path_contains"},
+        "transcript": {"event_id", "call_id", "path_contains", "text"},
+        "file": {"evidence_id"},
+    }[mode]
+    unsupported_filters = sorted(set(filters) - allowed_filters)
+    if unsupported_filters:
+        raise ScoringRuntimeError(
+            "SEMANTIC_QUERY_FILTER_INVALID",
+            f"mode={mode} unsupported={unsupported_filters}",
+        )
+    returned_evidence_ids: list[str] = []
+    returned_event_ids: list[str] = []
+    coverage: dict[str, Any] | None = None
+    if mode == "catalog":
+        matches = []
+        for entry in index_entries:
+            reference = entry.get("reference", {})
+            if evidence_id is not None and entry.get("id") != evidence_id:
+                continue
+            if evidence_type is not None and reference.get("type") != evidence_type:
+                continue
+            if path_contains is not None and path_contains not in str(reference.get("path", "")):
+                continue
+            matches.append(entry)
+        items = matches[offset : offset + limit]
+        returned_evidence_ids = [str(item["id"]) for item in items]
+    elif mode == "transcript":
+        manifest = _read_json(root / "attempt-manifest.json")
+        relative = manifest.get("paths", {}).get("transcript")
+        events = _read_transcript(root / relative) if relative is not None else []
+        event_locations = catalog.get("transcript", {}).get("event_locations", {})
+        matches = []
+        for line_number, item in enumerate(events, start=1):
+            item_event_id = item.get("event_id")
+            serialized = json.dumps(item, ensure_ascii=False, sort_keys=True)
+            item_call_id = (
+                item.get("tool", {}).get("call_id")
+                if isinstance(item.get("tool"), dict)
+                else None
+            )
+            if event_id is not None and item_event_id != event_id:
+                continue
+            if call_id is not None and item_call_id != call_id:
+                continue
+            if path_contains is not None and path_contains not in serialized:
+                continue
+            if text is not None and text.casefold() not in serialized.casefold():
+                continue
+            location = event_locations.get(item_event_id, {})
+            matches.append(
+                {
+                    "event": item,
+                    "locator": {
+                        "path": relative,
+                        "line": line_number,
+                        "event_id": item_event_id,
+                        "evidence_id": location.get("evidence_id"),
+                    },
+                }
+            )
+        items = matches[offset : offset + limit]
+        returned_event_ids = [str(item["locator"]["event_id"]) for item in items]
+        returned_evidence_ids = [
+            str(item["locator"]["evidence_id"])
+            for item in items
+            if item["locator"].get("evidence_id") is not None
+        ]
+        unfiltered = all(
+            value is None for value in (event_id, call_id, path_contains, text)
+        )
+        coverage = {
+            "kind": "transcript-range",
+            "unfiltered": unfiltered,
+            "start": offset,
+            "end": offset + len(items),
+            "total": len(events),
+        }
+    else:
+        if evidence_id is None or evidence_id not in by_id:
+            raise ScoringRuntimeError(
+                "SEMANTIC_EVIDENCE_ID_UNKNOWN", repr(evidence_id)
+            )
+        reference = by_id[evidence_id].get("reference", {})
+        relative = reference.get("path")
+        if not isinstance(relative, str):
+            raise ScoringRuntimeError("SEMANTIC_EVIDENCE_FILE_REQUIRED", evidence_id)
+        path = _resolve_within(root, relative, "semantic evidence file")
+        selected_lines: list[tuple[int, str, bool]] = []
+        total_lines = 0
+        emitted_chars = 0
+        truncated_by_chars = False
+        try:
+            with path.open("r", encoding="utf-8") as handle:
+                for line_number, line in enumerate(handle, start=1):
+                    total_lines = line_number
+                    if (
+                        line_number <= offset
+                        or len(selected_lines) >= limit
+                        or truncated_by_chars
+                    ):
+                        continue
+                    normalized = line.rstrip("\n")
+                    remaining = max_chars - emitted_chars
+                    if len(normalized) > remaining:
+                        truncated_by_chars = True
+                        if not selected_lines and remaining > 0:
+                            selected_lines.append(
+                                (line_number, normalized[:remaining], True)
+                            )
+                        continue
+                    selected_lines.append((line_number, normalized, False))
+                    emitted_chars += len(normalized)
+        except UnicodeDecodeError as exc:
+            raise ScoringRuntimeError(
+                "SEMANTIC_EVIDENCE_NOT_UTF8", relative
+            ) from exc
+        items = [
+            {
+                "line": line_number,
+                "text": line,
+                "text_truncated": text_truncated,
+                "evidence_id": evidence_id,
+                "path": relative,
+            }
+            for line_number, line, text_truncated in selected_lines
+        ]
+        returned_evidence_ids = [evidence_id] if items else []
+        coverage = {
+            "kind": "file-lines",
+            "path": relative,
+            "start_line": offset + 1,
+            "end_line": selected_lines[-1][0] if selected_lines else offset,
+            "total_lines": total_lines,
+            "truncated_by_chars": truncated_by_chars,
+        }
+    total_matches = len(matches) if mode != "file" else total_lines
+    result_payload = {
+        "mode": mode,
+        "offset": offset,
+        "limit": limit,
+        "total_matches": total_matches,
+        "returned_count": len(items),
+        "has_more": offset + len(items) < total_matches,
+        "items": items,
+    }
+    query_id = _append_semantic_query(
+        root,
+        mode=mode,
+        filters=filters,
+        offset=offset,
+        limit=limit,
+        total=total_matches,
+        returned_evidence_ids=returned_evidence_ids,
+        returned_event_ids=returned_event_ids,
+        coverage=coverage,
+        result=result_payload,
+    )
+    return {
+        "status": "PASS",
+        "query_id": query_id,
+        **result_payload,
+    }
+
+
+def _queries_cover_complete_transcript(
+    queries: Sequence[Mapping[str, Any]], query_ids: Sequence[str], total: int
+) -> bool:
+    selected = {query.get("query_id"): query for query in queries}
+    ranges: list[tuple[int, int]] = []
+    for query_id in query_ids:
+        coverage = selected.get(query_id, {}).get("coverage")
+        if (
+            isinstance(coverage, Mapping)
+            and coverage.get("kind") == "transcript-range"
+            and coverage.get("unfiltered") is True
+            and coverage.get("total") == total
+            and isinstance(coverage.get("start"), int)
+            and isinstance(coverage.get("end"), int)
+        ):
+            ranges.append((coverage["start"], coverage["end"]))
+    cursor = 0
+    for start, end in sorted(ranges):
+        if start > cursor:
+            return False
+        cursor = max(cursor, end)
+    return cursor >= total
+
+
+def record_semantics_attempt(
+    *, attempt_root: Path, response_path: Path
+) -> dict[str, Any]:
+    root = attempt_root.expanduser().resolve(strict=True)
+    verify_attempt(root)
+    paths = _semantic_paths(root)
+    if paths["audit"].exists() or paths["component"].exists() or paths["response"].exists():
+        raise ScoringRuntimeError("SEMANTIC_ATTEMPT_ALREADY_TERMINAL")
+    supplied_response_path = Path(
+        os.path.abspath(response_path.expanduser())
+    )
+    if supplied_response_path.is_symlink() or not supplied_response_path.is_file():
+        raise ScoringRuntimeError(
+            "SEMANTIC_RESPONSE_PATH_INVALID", str(supplied_response_path)
+        )
+    response_path = supplied_response_path.resolve(strict=True)
+    if (
+        response_path == paths["response"]
+        or response_path == root
+        or root not in response_path.parents
+    ):
+        raise ScoringRuntimeError("SEMANTIC_RESPONSE_PATH_INVALID", str(response_path))
+    raw_bytes = response_path.read_bytes()
+    raw_sha = _sha256_bytes(raw_bytes)
+    try:
+        response = json.loads(raw_bytes.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        response = None
+        parse_error: BaseException | None = ScoringRuntimeError(
+            "SEMANTIC_RESPONSE_INVALID", str(exc)
+        )
+    else:
+        parse_error = None
+    manifest = _read_json(root / "attempt-manifest.json")
+    request = _read_json(paths["request"], code="SEMANTIC_REQUEST_INVALID")
+    catalog = _load_semantic_catalog(root)
+    query_log = _read_json(paths["query_log"], code="SEMANTIC_QUERY_LOG_INVALID")
+    query_log_sha = _sha256_file(paths["query_log"])
+    build_evidence_index, evaluate_semantics, _, grading_error_type = (
+        _import_semantic_grading_core()
+    )
+    del build_evidence_index
+    error: dict[str, str] | None = None
+    component: dict[str, Any] | None = None
+    try:
+        if parse_error is not None:
+            raise parse_error
+        if not isinstance(response, dict) or response.get("schema_version") != SEMANTIC_RESPONSE_SCHEMA:
+            raise ScoringRuntimeError("SEMANTIC_RESPONSE_INVALID", "schema")
+        expected_locks = {
+            "request_sha256": _sha256_file(paths["request"]),
+            "evidence_catalog_sha256": _sha256_file(paths["catalog"]),
+            "evidence_index_digest": catalog["evidence_index"]["digest"],
+            "rubric_sha256": request["rubric"]["sha256"],
+        }
+        if (
+            response.get("identity") != manifest["identity"]
+            or response.get("judge") != request["judge"]
+            or response.get("locks") != expected_locks
+        ):
+            raise ScoringRuntimeError("SEMANTIC_RESPONSE_LOCK_MISMATCH")
+        rows = response.get("criteria")
+        if not isinstance(rows, list):
+            raise ScoringRuntimeError("SEMANTIC_RESPONSE_INVALID", "criteria")
+        expected_keys = [item["key"] for item in request["rubric"]["criteria"]]
+        if [item.get("key") for item in rows if isinstance(item, dict)] != expected_keys:
+            raise ScoringRuntimeError("SEMANTIC_RESPONSE_KEYS_MISMATCH")
+        entries = catalog["evidence_index"]["entries"]
+        evidence_by_id = {entry["id"]: entry["reference"] for entry in entries}
+        queries = query_log.get("queries")
+        if not isinstance(queries, list):
+            raise ScoringRuntimeError("SEMANTIC_QUERY_LOG_INVALID", "queries")
+        query_by_id = {query.get("query_id"): query for query in queries}
+        backend_rows: list[dict[str, Any]] = []
+        for row in rows:
+            status = row.get("status")
+            evidence_ids = row.get("evidence_ids")
+            review = row.get("review")
+            if (
+                not isinstance(evidence_ids, list)
+                or len(evidence_ids) != len(set(evidence_ids))
+                or not isinstance(review, dict)
+            ):
+                raise ScoringRuntimeError("SEMANTIC_RESPONSE_INVALID", row.get("key", ""))
+            unknown_evidence = [item for item in evidence_ids if item not in evidence_by_id]
+            if unknown_evidence:
+                raise ScoringRuntimeError(
+                    "SEMANTIC_EVIDENCE_ID_UNKNOWN", repr(unknown_evidence)
+                )
+            query_ids = review.get("query_ids")
+            if not isinstance(query_ids, list) or len(query_ids) != len(set(query_ids)):
+                raise ScoringRuntimeError("SEMANTIC_REVIEW_INVALID", "query_ids")
+            unknown_queries = [item for item in query_ids if item not in query_by_id]
+            if unknown_queries:
+                raise ScoringRuntimeError(
+                    "SEMANTIC_QUERY_ID_UNKNOWN", repr(unknown_queries)
+                )
+            queried_evidence = {
+                evidence
+                for query_id in query_ids
+                for evidence in query_by_id[query_id].get(
+                    "returned_evidence_ids", []
+                )
+            }
+            if not set(evidence_ids).issubset(queried_evidence):
+                raise ScoringRuntimeError(
+                    "SEMANTIC_CITATION_NOT_QUERIED", row["key"]
+                )
+            if status == "judged":
+                if (
+                    not query_ids
+                    or review.get("supporting_evidence_checked") is not True
+                    or review.get("contradicting_evidence_checked") is not True
+                ):
+                    raise ScoringRuntimeError(
+                        "SEMANTIC_COUNTEREVIDENCE_CHECK_REQUIRED", row["key"]
+                    )
+                if review.get("absence_claim") is True:
+                    total = catalog.get("transcript", {}).get("event_count", 0)
+                    if (
+                        review.get("complete_event_range_checked") is not True
+                        or not _queries_cover_complete_transcript(
+                            queries, query_ids, total
+                        )
+                    ):
+                        raise ScoringRuntimeError(
+                            "SEMANTIC_ABSENCE_COVERAGE_REQUIRED", row["key"]
+                        )
+            backend_rows.append(
+                {
+                    "key": row.get("key"),
+                    "status": status,
+                    "score": row.get("score"),
+                    "reason": row.get("reason"),
+                    "evidence": [evidence_by_id[item] for item in evidence_ids],
+                }
+            )
+
+        core_criteria = [
+            {
+                "key": item["key"],
+                "weight": item["weight"],
+                "allowed_scores": item["allowed_scores"],
+                "not_applicable_allowed": item["not_applicable_allowed"],
+            }
+            for item in request["rubric"]["criteria"]
+        ]
+
+        def evaluator(_criteria: object, _evidence: object) -> dict[str, Any]:
+            return {
+                "criteria": backend_rows,
+                "notes": response.get("notes", ""),
+            }
+
+        component = evaluate_semantics(
+            core_criteria,
+            evaluator=evaluator,
+            evidence_index=catalog["evidence_index"],
+            protocol=request["judge"]["protocol"],
+        )
+    except BaseException as exc:
+        if isinstance(exc, ScoringRuntimeError):
+            error = {"code": exc.code, "message": exc.detail or exc.code}
+        elif isinstance(exc, grading_error_type):
+            error = {"code": exc.code, "message": exc.message}
+        else:
+            error = {
+                "code": "SEMANTIC_RECORD_UNEXPECTED",
+                "message": str(exc) or type(exc).__name__,
+            }
+    audit = {
+        "schema_version": SEMANTIC_AUDIT_SCHEMA,
+        "identity": manifest["identity"],
+        "status": "completed" if error is None else "failed",
+        "protocol": request["judge"]["protocol"],
+        "model": request["judge"]["model"],
+        "reasoning_effort": request["judge"]["reasoning_effort"],
+        "evidence_catalog_sha256": _sha256_file(paths["catalog"]),
+        "request_sha256": _sha256_file(paths["request"]),
+        "response_sha256": raw_sha,
+        "query_log_sha256": query_log_sha,
+        "component_sha256": (
+            _sha256_bytes(_pretty_json_bytes(component)) if component is not None else None
+        ),
+        "counterevidence_policy": "per-criterion-declaration-and-query-proof/v1",
+        "docker_used": False,
+        "error": error,
+    }
+    terminal_files = {
+        paths["response"]: raw_bytes,
+        paths["audit"]: _pretty_json_bytes(audit),
+    }
+    if component is not None:
+        terminal_files[paths["component"]] = _pretty_json_bytes(component)
+    _publish_new_files(terminal_files)
+    if error is not None:
+        raise ScoringRuntimeError(error["code"], error["message"])
+    return {
+        "status": "PASS",
+        "attempt_root": str(root),
+        "semantic_component": component,
+        "audit": audit,
+    }
+
+
+def _evaluation_error_component(error: Mapping[str, Any]) -> dict[str, Any]:
+    code = str(error.get("code") or "COMPONENT_FAILED")
+    message = str(error.get("message") or error.get("detail") or code)
+    return {
+        "status": "evaluation_error",
+        "score": None,
+        "criteria": [],
+        "error": {"code": code, "message": message},
+    }
+
+
+def _load_rule_component_for_final(
+    root: Path, grading_type: str
+) -> dict[str, Any]:
+    if grading_type == "llm_judge":
+        return {
+            "status": "not_required",
+            "score": None,
+            "criteria": [],
+            "error": None,
+        }
+    component_path = root / "rule-component.json"
+    if component_path.is_file():
+        return _read_json(component_path, code="RULE_COMPONENT_INVALID")
+    audit_path = root / "rule-audit.json"
+    if audit_path.is_file():
+        audit = _read_json(audit_path, code="RULE_AUDIT_INVALID")
+        if audit.get("status") == "failed" and isinstance(audit.get("error"), dict):
+            return _evaluation_error_component(audit["error"])
+    raise ScoringRuntimeError("RULE_COMPONENT_MISSING")
+
+
+def _load_semantic_component_for_final(
+    root: Path, grading_type: str
+) -> dict[str, Any]:
+    paths = _semantic_paths(root)
+    if grading_type == "automated":
+        if not paths["component"].is_file():
+            raise ScoringRuntimeError("SEMANTIC_COMPONENT_MISSING")
+        return _read_json(paths["component"], code="SEMANTIC_COMPONENT_INVALID")
+    if paths["component"].is_file():
+        return _read_json(paths["component"], code="SEMANTIC_COMPONENT_INVALID")
+    if paths["audit"].is_file():
+        audit = _read_json(paths["audit"], code="SEMANTIC_AUDIT_INVALID")
+        if audit.get("status") == "failed" and isinstance(audit.get("error"), dict):
+            return _evaluation_error_component(audit["error"])
+    raise ScoringRuntimeError("SEMANTIC_COMPONENT_MISSING")
+
+
+def _score_evidence_reference(path: Path, root: Path, evidence_type: str) -> dict[str, Any]:
+    return {
+        "type": evidence_type,
+        "path": path.relative_to(root).as_posix(),
+        "sha256": _sha256_file(path),
+    }
+
+
+def _standard_score_criteria(
+    root: Path,
+    *,
+    grading_type: str,
+    final: Mapping[str, Any],
+    rules: Mapping[str, Any],
+    semantics: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    criteria: list[dict[str, Any]] = []
+    weights = final["weights"]
+    if grading_type in {"automated", "hybrid"}:
+        if (root / "rule-component.json").is_file():
+            rule_evidence = _score_evidence_reference(
+                root / "rule-component.json", root, "rule_result"
+            )
+        else:
+            rule_evidence = _score_evidence_reference(
+                root / "rule-audit.json", root, "rule_audit"
+            )
+        rule_status = "judged" if rules.get("status") == "completed" else "unresolved"
+        criteria.append(
+            {
+                "key": "automated_component",
+                "weight": weights["automated"],
+                "status": rule_status,
+                "score": rules.get("score") if rule_status == "judged" else None,
+                "reason": (
+                    "冻结自动规则组件已通过受管 Worker 执行和契约校验。"
+                    if rule_status == "judged"
+                    else str((rules.get("error") or {}).get("message") or "自动规则未形成有效组件。")
+                ),
+                "evidence": [rule_evidence],
+            }
+        )
+    if grading_type in {"hybrid", "llm_judge"}:
+        semantic_rows = semantics.get("criteria")
+        if not semantic_rows:
+            request = _read_json(
+                _semantic_paths(root)["request"], code="SEMANTIC_REQUEST_INVALID"
+            )
+            audit_ref = _score_evidence_reference(
+                _semantic_paths(root)["audit"], root, "semantic_audit"
+            )
+            semantic_rows = [
+                {
+                    "key": item["key"],
+                    "weight": item["weight"],
+                    "status": "unresolved",
+                    "score": None,
+                    "reason": str(
+                        (semantics.get("error") or {}).get("message")
+                        or "语义评分未形成有效组件。"
+                    ),
+                    "evidence": [audit_ref],
+                }
+                for item in request["rubric"]["criteria"]
+            ]
+        for row in semantic_rows:
+            criteria.append(
+                {
+                    "key": row["key"],
+                    "weight": row["weight"] * weights["llm_judge"],
+                    "status": row["status"],
+                    "score": row.get("score"),
+                    "reason": row["reason"],
+                    "evidence": row.get("evidence", []),
+                }
+            )
+    return criteria
+
+
+def _validate_standard_score_document(score: Mapping[str, Any]) -> None:
+    if score.get("schema_id") != SCORE_SCHEMA_ID or score.get("schema_version") != 1:
+        raise ScoringRuntimeError("SCORE_DOCUMENT_INVALID", "schema")
+    evaluation = score.get("evaluation")
+    result = score.get("result")
+    if not isinstance(evaluation, Mapping) or not isinstance(result, Mapping):
+        raise ScoringRuntimeError("SCORE_DOCUMENT_INVALID", "shape")
+    criteria = evaluation.get("criteria")
+    if not isinstance(criteria, list) or not criteria:
+        raise ScoringRuntimeError("SCORE_DOCUMENT_INVALID", "criteria")
+    keys = [row.get("key") for row in criteria if isinstance(row, Mapping)]
+    if len(keys) != len(criteria) or len(keys) != len(set(keys)):
+        raise ScoringRuntimeError("SCORE_DOCUMENT_INVALID", "criterion keys")
+    try:
+        weights = [float(row.get("weight", -1)) for row in criteria]
+    except (TypeError, ValueError) as exc:
+        raise ScoringRuntimeError("SCORE_DOCUMENT_INVALID", "criterion weights") from exc
+    if (
+        any(not math.isfinite(weight) or weight < 0 for weight in weights)
+        or abs(sum(weights) - 1.0) > 1e-6
+    ):
+        raise ScoringRuntimeError("SCORE_DOCUMENT_INVALID", "criterion weights")
+    valid = result.get("valid")
+    if not isinstance(valid, bool):
+        raise ScoringRuntimeError("SCORE_DOCUMENT_INVALID", "result validity")
+    if valid:
+        try:
+            total_score = float(result.get("total_score"))
+        except (TypeError, ValueError) as exc:
+            raise ScoringRuntimeError("SCORE_DOCUMENT_INVALID", "valid result") from exc
+        if (
+            not math.isfinite(total_score)
+            or not 0 <= total_score <= 1
+            or evaluation.get("status") != "completed"
+        ):
+            raise ScoringRuntimeError("SCORE_DOCUMENT_INVALID", "valid result")
+    elif result.get("total_score") is not None:
+        raise ScoringRuntimeError("SCORE_DOCUMENT_INVALID", "invalid result must use null")
+
+
+def _score_source_digests(root: Path) -> dict[str, str | None]:
+    semantic_paths = _semantic_paths(root)
+
+    def digest_if_file(path: Path) -> str | None:
+        return _sha256_file(path) if path.is_file() and not path.is_symlink() else None
+
+    return {
+        "attempt_manifest_sha256": _sha256_file(root / "attempt-manifest.json"),
+        "rule_component_sha256": digest_if_file(root / "rule-component.json"),
+        "rule_audit_sha256": digest_if_file(root / "rule-audit.json"),
+        "semantic_component_sha256": digest_if_file(semantic_paths["component"]),
+        "semantic_audit_sha256": digest_if_file(semantic_paths["audit"]),
+    }
+
+
+def _verify_semantic_terminal(
+    root: Path, manifest: Mapping[str, Any]
+) -> dict[str, Any]:
+    paths = _semantic_paths(root)
+    audit = _read_json(paths["audit"], code="SEMANTIC_AUDIT_INVALID")
+    if (
+        audit.get("schema_version") != SEMANTIC_AUDIT_SCHEMA
+        or audit.get("identity") != manifest.get("identity")
+        or audit.get("docker_used") is not False
+        or audit.get("evidence_catalog_sha256") != _sha256_file(paths["catalog"])
+    ):
+        raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "identity or source")
+    grading_type = manifest.get("grading", {}).get("type")
+    if grading_type == "automated":
+        expected_judge = ("not-required", None, None)
+        if any(
+            audit.get(key) is not None
+            for key in ("request_sha256", "response_sha256", "query_log_sha256")
+        ):
+            raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "automated source")
+    else:
+        judge = _load_judge_config(root, manifest)
+        expected_judge = (
+            judge["protocol"],
+            judge["model"],
+            judge["reasoning_effort"],
+        )
+        for key, path_key in (
+            ("request_sha256", "request"),
+            ("response_sha256", "response"),
+            ("query_log_sha256", "query_log"),
+        ):
+            if audit.get(key) != _sha256_file(paths[path_key]):
+                raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", key)
+    if (
+        (
+            audit.get("protocol"),
+            audit.get("model"),
+            audit.get("reasoning_effort"),
+        )
+        != expected_judge
+    ):
+        raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "judge")
+    component_sha = (
+        _sha256_file(paths["component"])
+        if paths["component"].is_file() and not paths["component"].is_symlink()
+        else None
+    )
+    if audit.get("component_sha256") != component_sha:
+        raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "component")
+    status = audit.get("status")
+    if (
+        status == "completed"
+        and (component_sha is None or audit.get("error") is not None)
+    ) or (
+        status == "failed"
+        and (component_sha is not None or not isinstance(audit.get("error"), dict))
+    ) or status not in {"completed", "failed"}:
+        raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "terminal status")
+    return audit
+
+
+def _build_standard_score(
+    root: Path,
+    manifest: Mapping[str, Any],
+    *,
+    finalize_score: Any,
+) -> dict[str, Any]:
+    grading_type = manifest["grading"]["type"]
+    rules = _load_rule_component_for_final(root, grading_type)
+    semantics = _load_semantic_component_for_final(root, grading_type)
+    final = finalize_score(
+        grading_type=grading_type,
+        grading_weights=manifest["grading"].get("weights"),
+        rules=rules,
+        semantics=semantics,
+    )
+    criteria = _standard_score_criteria(
+        root,
+        grading_type=grading_type,
+        final=final,
+        rules=rules,
+        semantics=semantics,
+    )
+    execution = _read_json(
+        root / manifest["paths"]["execution_record"],
+        code="EXECUTION_RECORD_INVALID",
+    )
+    semantic_error = semantics.get("error") if isinstance(semantics, Mapping) else None
+    rule_error = rules.get("error") if isinstance(rules, Mapping) else None
+    final_error = semantic_error or rule_error
+    if not final["result"]["valid"] and not isinstance(final_error, Mapping):
+        final_error = {
+            "code": "FINAL_SCORE_INVALID",
+            "message": final["result"]["invalid_reason"] or "score is invalid",
+        }
+    if grading_type == "automated":
+        judge = {
+            "protocol": "not-required",
+            "model": None,
+            "reasoning_effort": None,
+            "attempt_id": "judge-not-required",
+        }
+    else:
+        judge_config = _load_judge_config(root, manifest)
+        judge = {
+            "protocol": judge_config["protocol"],
+            "model": judge_config["model"],
+            "reasoning_effort": judge_config["reasoning_effort"],
+            "attempt_id": judge_config["attempt_id"],
+        }
+    score = {
+        "schema_id": SCORE_SCHEMA_ID,
+        "schema_version": 1,
+        "identity": {
+            "batch_id": manifest["identity"]["batch_id"],
+            "unit_id": manifest["identity"]["unit_id"],
+            "task_id": manifest["identity"]["task_id"],
+            "attempt_id": manifest["identity"]["scoring_attempt_id"],
+        },
+        "dataset": manifest["dataset"],
+        "execution": {
+            "record_path": manifest["paths"]["execution_record"],
+            "record_sha256": manifest["digests"]["execution_record_sha256"],
+            "attempt_id": manifest["identity"]["execution_attempt_id"],
+            "business_status": execution["execution"]["business_status"],
+        },
+        "judge": judge,
+        "components": final["components"],
+        "evaluation": {
+            "status": final["evaluation"]["status"],
+            "criteria": criteria,
+            "error": dict(final_error) if isinstance(final_error, Mapping) else None,
+        },
+        "result": final["result"],
+    }
+    _validate_standard_score_document(score)
+    return score
+
+
+def finalize_score_attempt(*, attempt_root: Path) -> dict[str, Any]:
+    root = attempt_root.expanduser().resolve(strict=True)
+    verify_attempt(root)
+    score_path = root / "score.json"
+    audit_path = root / "score-audit.json"
+    if score_path.exists() or audit_path.exists():
+        raise ScoringRuntimeError("SCORE_ATTEMPT_ALREADY_TERMINAL")
+    manifest = _read_json(root / "attempt-manifest.json")
+    grading_type = manifest["grading"]["type"]
+    _, _, finalize_score, grading_error_type = _import_semantic_grading_core()
+    try:
+        _verify_semantic_terminal(root, manifest)
+        score = _build_standard_score(
+            root, manifest, finalize_score=finalize_score
+        )
+        score_bytes = _pretty_json_bytes(score)
+        audit = {
+            "schema_version": SCORE_AUDIT_SCHEMA,
+            "identity": manifest["identity"],
+            "created_at": _now(),
+            "status": "completed",
+            "grading_type": grading_type,
+            "source": _score_source_digests(root),
+            "score_schema_validation": "passed",
+            "score_sha256": _sha256_bytes(score_bytes),
+            "docker_used": False,
+            "error": None,
+        }
+        _publish_new_files(
+            {
+                score_path: score_bytes,
+                audit_path: _pretty_json_bytes(audit),
+            }
+        )
+    except BaseException as exc:
+        if isinstance(exc, ScoringRuntimeError):
+            error = {"code": exc.code, "message": exc.detail or exc.code}
+        elif isinstance(exc, grading_error_type):
+            error = {"code": exc.code, "message": exc.message}
+        else:
+            error = {"code": "SCORE_FINALIZE_UNEXPECTED", "message": str(exc)}
+        failure_audit = {
+            "schema_version": SCORE_AUDIT_SCHEMA,
+            "identity": manifest["identity"],
+            "created_at": _now(),
+            "status": "failed",
+            "grading_type": grading_type,
+            "source": {},
+            "score_schema_validation": "not_available",
+            "score_sha256": None,
+            "docker_used": False,
+            "error": error,
+        }
+        if not audit_path.exists():
+            _write_new_json(audit_path, failure_audit)
+        raise ScoringRuntimeError(error["code"], error["message"])
+    return {
+        "status": "PASS",
+        "attempt_root": str(root),
+        "score": score,
+        "audit": audit,
+    }
+
+
+def verify_score_attempt(attempt_root: Path) -> dict[str, Any]:
+    root = attempt_root.expanduser().resolve(strict=True)
+    verify_attempt(root)
+    score = _read_json(root / "score.json", code="SCORE_DOCUMENT_INVALID")
+    audit = _read_json(root / "score-audit.json", code="SCORE_AUDIT_INVALID")
+    _validate_standard_score_document(score)
+    manifest = _read_json(
+        root / "attempt-manifest.json", code="ATTEMPT_MANIFEST_INVALID"
+    )
+    if (
+        audit.get("schema_version") != SCORE_AUDIT_SCHEMA
+        or audit.get("status") != "completed"
+        or audit.get("identity") != manifest.get("identity")
+        or audit.get("grading_type") != manifest.get("grading", {}).get("type")
+        or audit.get("score_schema_validation") != "passed"
+        or audit.get("error") is not None
+        or audit.get("score_sha256") != _sha256_file(root / "score.json")
+        or audit.get("docker_used") is not False
+    ):
+        raise ScoringRuntimeError("SCORE_AUDIT_INVALID", "terminal lock mismatch")
+    expected_source = _score_source_digests(root)
+    if audit.get("source") != expected_source:
+        raise ScoringRuntimeError("SCORE_SOURCE_DRIFT", "source digest mismatch")
+    semantic_audit = _verify_semantic_terminal(root, manifest)
+    if semantic_audit.get("query_log_sha256") is not None and semantic_audit.get(
+        "query_log_sha256"
+    ) != _sha256_file(_semantic_paths(root)["query_log"]):
+        raise ScoringRuntimeError("SCORE_SOURCE_DRIFT", "semantic query log")
+    _, _, finalize_score, grading_error_type = _import_semantic_grading_core()
+    try:
+        expected_score = _build_standard_score(
+            root, manifest, finalize_score=finalize_score
+        )
+    except grading_error_type as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+    if score != expected_score:
+        raise ScoringRuntimeError("SCORE_RECOMPUTE_MISMATCH")
+    return {
+        "status": "PASS",
+        "attempt_root": str(root),
+        "score_valid": score["result"]["valid"],
+        "score_sha256": audit["score_sha256"],
+    }
+
+
 def _default_lock_path() -> Path:
     return Path(__file__).resolve().parents[1] / "references/scoring-runtime-lock.json"
 
@@ -1568,6 +3027,10 @@ def main(argv: list[str] | None = None) -> int:
     prepare.add_argument("--scoring-attempt-id", required=True)
     prepare.add_argument("--output-root", required=True, type=Path)
     prepare.add_argument("--runtime-lock", type=Path, default=_default_lock_path())
+    prepare.add_argument("--judge-protocol")
+    prepare.add_argument("--judge-model")
+    prepare.add_argument("--judge-reasoning-effort")
+    prepare.add_argument("--judge-attempt-id")
 
     verify = subparsers.add_parser("verify")
     verify.add_argument("--attempt-root", required=True, type=Path)
@@ -1577,6 +3040,34 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--runtime-python", required=True, type=Path)
     run.add_argument("--timeout-seconds", type=float, default=120.0)
     run.add_argument("--playwright-browsers-path", type=Path)
+
+    prepare_semantics = subparsers.add_parser("prepare-semantics")
+    prepare_semantics.add_argument("--attempt-root", required=True, type=Path)
+
+    query_evidence = subparsers.add_parser("query-evidence")
+    query_evidence.add_argument("--attempt-root", required=True, type=Path)
+    query_evidence.add_argument(
+        "--mode", required=True, choices=("catalog", "transcript", "file")
+    )
+    query_evidence.add_argument("--offset", type=int, default=0)
+    query_evidence.add_argument("--limit", type=int, default=50)
+    query_evidence.add_argument("--evidence-id")
+    query_evidence.add_argument("--evidence-type")
+    query_evidence.add_argument("--event-id")
+    query_evidence.add_argument("--call-id")
+    query_evidence.add_argument("--path-contains")
+    query_evidence.add_argument("--text")
+    query_evidence.add_argument("--max-chars", type=int, default=65536)
+
+    record_semantics = subparsers.add_parser("record-semantics")
+    record_semantics.add_argument("--attempt-root", required=True, type=Path)
+    record_semantics.add_argument("--response", required=True, type=Path)
+
+    finalize = subparsers.add_parser("finalize")
+    finalize.add_argument("--attempt-root", required=True, type=Path)
+
+    verify_score = subparsers.add_parser("verify-score")
+    verify_score.add_argument("--attempt-root", required=True, type=Path)
 
     probe = subparsers.add_parser("probe-runtime")
     probe.add_argument("--runtime-python", required=True, type=Path)
@@ -1601,6 +3092,10 @@ def main(argv: list[str] | None = None) -> int:
                 scoring_attempt_id=args.scoring_attempt_id,
                 output_root=args.output_root,
                 runtime_lock_path=args.runtime_lock,
+                judge_protocol=args.judge_protocol,
+                judge_model=args.judge_model,
+                judge_reasoning_effort=args.judge_reasoning_effort,
+                judge_attempt_id=args.judge_attempt_id,
             )
         elif args.command == "verify":
             result = verify_attempt(args.attempt_root)
@@ -1611,6 +3106,31 @@ def main(argv: list[str] | None = None) -> int:
                 timeout_seconds=args.timeout_seconds,
                 playwright_browsers_path=args.playwright_browsers_path,
             )
+        elif args.command == "prepare-semantics":
+            result = prepare_semantics_attempt(attempt_root=args.attempt_root)
+        elif args.command == "query-evidence":
+            result = query_evidence_attempt(
+                attempt_root=args.attempt_root,
+                mode=args.mode,
+                offset=args.offset,
+                limit=args.limit,
+                evidence_id=args.evidence_id,
+                evidence_type=args.evidence_type,
+                event_id=args.event_id,
+                call_id=args.call_id,
+                path_contains=args.path_contains,
+                text=args.text,
+                max_chars=args.max_chars,
+            )
+        elif args.command == "record-semantics":
+            result = record_semantics_attempt(
+                attempt_root=args.attempt_root,
+                response_path=args.response,
+            )
+        elif args.command == "finalize":
+            result = finalize_score_attempt(attempt_root=args.attempt_root)
+        elif args.command == "verify-score":
+            result = verify_score_attempt(args.attempt_root)
         elif args.command == "probe-runtime":
             result = probe_runtime(
                 runtime_python=args.runtime_python,

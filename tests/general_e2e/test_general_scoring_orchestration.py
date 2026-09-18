@@ -10,6 +10,7 @@ import stat
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import warnings
 import zipfile
 
@@ -350,6 +351,19 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         attempts = [Path(task["attempt_path"]) for task in view["tasks"]]
         self.assertNotEqual(attempts[0], attempts[1])
         self.assertTrue(all((path / "attempt-manifest.json").is_file() for path in attempts))
+        self.assertTrue(all((path / "private/judge-config.json").is_file() for path in attempts))
+        first_attempt_manifest = json.loads(
+            (attempts[0] / "attempt-manifest.json").read_text()
+        )
+        self.assertEqual(
+            first_attempt_manifest["judge"],
+            {
+                "protocol": "codex-agent-judge-v1",
+                "model": "gpt-fixture",
+                "reasoning_effort": "high",
+                "attempt_id": "orchestration-fixture-001",
+            },
+        )
         state = json.loads(
             (Path(view["orchestration_root"]) / "orchestration-state.json").read_text()
         )
@@ -425,9 +439,27 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             wait_status="COMPLETED",
             now=self.t0 + timedelta(seconds=20),
         )
-        self.assertEqual(completed["completed_count"], 1)
-        self.assertEqual(completed["recommended_actions"][0]["task_id"], "task-two")
-        self.assertEqual(completed["recommended_actions"][0]["action"], "REGISTER_PROJECT")
+        self.assertEqual(completed["completed_count"], 0)
+        self.assertEqual(completed["recommended_actions"][0]["task_id"], "task-one")
+        self.assertEqual(completed["recommended_actions"][0]["action"], "VERIFY_SCORE")
+        attempt = Path(completed["tasks"][0]["attempt_path"])
+        (attempt / "score.json").write_text(
+            json.dumps({"result": {"valid": True, "total_score": 0.8}}),
+            encoding="utf-8",
+        )
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            return_value={"status": "PASS", "score_valid": True},
+        ):
+            scored = ORCHESTRATOR.record_score(
+                root,
+                task_id=task_id,
+                now=self.t0 + timedelta(seconds=21),
+            )
+        self.assertEqual(scored["completed_count"], 1)
+        self.assertEqual(scored["recommended_actions"][0]["task_id"], "task-two")
+        self.assertEqual(scored["recommended_actions"][0]["action"], "REGISTER_PROJECT")
 
     def test_existing_project_can_be_reused_from_exact_list_projects_match(self) -> None:
         fixture = Fixture(self.root, task_ids=("task-one",))

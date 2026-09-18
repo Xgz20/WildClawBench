@@ -2,7 +2,7 @@
 
 ## 能力与边界
 
-该运行时在本机独立 Python Worker 中执行冻结、可信的 General E2E 自动规则，不使用 Docker。它生成规则组件和运行审计，不调用语义裁判、不合成标准 `score.json`，也不把规则分当作完整评测分。
+该运行时在本机独立 Python Worker 中执行冻结、可信的 General E2E 自动规则，不使用 Docker。它只生成规则组件和运行审计；语义判定及标准 `score.json` 由同一 Skill 的 [Codex 语义评分协议](codex-agent-judge.md)和 `finalize` 子命令完成，规则分本身不等于完整评测分。
 
 专用虚拟环境、独立进程和环境白名单用于依赖复现、故障收口和凭据隔离，不是针对恶意 grader 的安全沙箱。只允许执行版本化数据集中的冻结规则；不要把任意第三方 Python 代码传给 Worker。
 

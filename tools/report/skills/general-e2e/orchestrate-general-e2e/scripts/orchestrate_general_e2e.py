@@ -18,11 +18,11 @@ import uuid
 
 
 STATE_SCHEMA = "wildclawbench.general-e2e-scoring-orchestration/v1"
-STATE_REVISION = 1
+STATE_REVISION = 2
 REGISTRATION_SCHEMA = "wildclawbench.codex-project-registration/v1"
 PACKAGE_SCHEMA = "urn:wildclawbench:schema:general-e2e:package-manifest:v1"
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
-PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v1"
+PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v2"
 ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
 WAIT_STATUSES = {
@@ -35,12 +35,13 @@ WAIT_STATUSES = {
     "INTERRUPTED",
 }
 THREAD_PHASES = {"THREAD_RUNNING", "NEEDS_ATTENTION", "THREAD_TIMEOUT_PENDING"}
-TERMINAL_PHASES = {"THREAD_COMPLETED", "THREAD_FAILED"}
+TERMINAL_PHASES = {"SCORE_RECORDED", "THREAD_FAILED"}
 TASK_PHASES = {
     "AWAITING_PROJECT",
     "PROJECT_REGISTERED",
     "PREFLIGHT_PASSED",
     *THREAD_PHASES,
+    "SCORE_VERIFICATION_PENDING",
     *TERMINAL_PHASES,
 }
 REASONING_EFFORTS = {
@@ -368,6 +369,8 @@ def _prompt_text(task_id: str, attempt_id: str, judge: Mapping[str, Any]) -> str
 - prompt_protocol：`{PROMPT_PROTOCOL}`
 
 项目根目录就是本题私有评分 attempt。先读取 `attempt-manifest.json`，再严格遵循已安装 `$score-general-e2e` 的能力门禁和证据要求。只处理本题，不创建或调度其他任务，不执行被测 Harness，不修改 `candidate-original/`，不把自动规则组件冒充完整分数。若当前 Skill 尚不能形成正式评分，保留输入并明确报告未就绪，不得调用旧 CLI 或切换到 API Judge。
+
+按 Skill 的单题流程执行：复核 attempt；按 grading type 运行所需自动规则；准备冻结语义证据目录；使用分页查询逐 criterion 查找支持证据和反例；把结构化判定写入新的响应文件并导入；最后合分并运行 `verify-score`。对纯 automated 任务不执行语义判断；必要证据不足时保留 `unresolved`，不得补零。只有 `verify-score` 通过后才把评分任务报告为完成。
 """
 
 
@@ -454,6 +457,14 @@ def initialize(
                     attempt_id,
                     "--output-root",
                     str(staging / "attempts"),
+                    "--judge-protocol",
+                    judge["protocol"],
+                    "--judge-model",
+                    judge["model"],
+                    "--judge-reasoning-effort",
+                    judge["reasoning_effort"],
+                    "--judge-attempt-id",
+                    attempt_id,
                 ],
             )
             attempt_root = Path(result["attempt_root"]).resolve(strict=True)
@@ -482,6 +493,7 @@ def initialize(
                     "project": None,
                     "preflight": None,
                     "thread": None,
+                    "score": None,
                     "history": [
                         {
                             "at": _timestamp(created),
@@ -602,6 +614,19 @@ def _verify_state(root: Path) -> dict[str, Any]:
                 or _sha256_file(evidence) != project.get("evidence_sha256")
             ):
                 raise OrchestrationError("PROJECT_REGISTRATION_DRIFT", str(task.get("task_id")))
+        score = task.get("score")
+        if score is not None:
+            score_path = root / str(score.get("path", ""))
+            if (
+                not _inside(root, score_path.resolve())
+                or score_path.is_symlink()
+                or not score_path.is_file()
+                or _sha256_file(score_path) != score.get("sha256")
+            ):
+                raise OrchestrationError("SCORE_ARTIFACT_DRIFT", str(task.get("task_id")))
+            _run_score_command(
+                state["score_skill"], ["verify-score", "--attempt-root", str(attempt)]
+            )
     return state
 
 
@@ -610,7 +635,7 @@ def _state_status(state: Mapping[str, Any]) -> str:
         return "RUNNING"
     return (
         "COMPLETED"
-        if all(task.get("phase") == "THREAD_COMPLETED" for task in state.get("tasks", []))
+        if all(task.get("phase") == "SCORE_RECORDED" for task in state.get("tasks", []))
         else "COMPLETED_WITH_FAILURES"
     )
 
@@ -646,6 +671,19 @@ def _recommended_actions(
                 "model": state["judge"]["model"],
                 "thinking": state["judge"]["reasoning_effort"],
                 "prompt_file": str((root / task["prompt_path"]).resolve()),
+            }
+        ]
+    if phase == "SCORE_VERIFICATION_PENDING":
+        return [
+            {
+                "action": "VERIFY_SCORE",
+                "task_id": task_id,
+                "attempt_path": attempt,
+                "command": [
+                    "verify-score",
+                    "--attempt-root",
+                    attempt,
+                ],
             }
         ]
     thread = task.get("thread") or {}
@@ -688,7 +726,7 @@ def _public_view(root: Path, state: Mapping[str, Any], now: datetime) -> dict[st
         "judge": state["judge"],
         "task_count": len(state["tasks"]),
         "completed_count": sum(
-            task.get("phase") == "THREAD_COMPLETED" for task in state["tasks"]
+            task.get("phase") == "SCORE_RECORDED" for task in state["tasks"]
         ),
         "failed_count": sum(
             task.get("phase") == "THREAD_FAILED" for task in state["tasks"]
@@ -704,6 +742,12 @@ def _public_view(root: Path, state: Mapping[str, Any], now: datetime) -> dict[st
                 "cursor": (task.get("thread") or {}).get("cursor"),
                 "deadline_at": (task.get("thread") or {}).get("deadline_at"),
                 "thread_status": (task.get("thread") or {}).get("status"),
+                "score_valid": (task.get("score") or {}).get("valid"),
+                "score_path": (
+                    str((root / task["score"]["path"]).resolve())
+                    if task.get("score") is not None
+                    else None
+                ),
             }
             for task in state["tasks"]
         ],
@@ -926,9 +970,47 @@ def record_wait(
     else:
         thread["finished_at"] = _timestamp(event_time)
         if wait_status == "COMPLETED" and not thread.get("timed_out_at"):
-            task["phase"] = "THREAD_COMPLETED"
+            task["phase"] = "SCORE_VERIFICATION_PENDING"
         else:
             task["phase"] = "THREAD_FAILED"
+    return _save(root, state, event_time)
+
+
+def record_score(
+    orchestration_root: Path,
+    *,
+    task_id: str,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    root = _state_root(orchestration_root)
+    state = _verify_state(root)
+    task = _require_active(state, _identifier(task_id, "task_id"))
+    if task.get("phase") != "SCORE_VERIFICATION_PENDING":
+        raise OrchestrationError("SCORE_VERIFICATION_NOT_EXPECTED", task_id)
+    attempt = (root / task["attempt_path"]).resolve(strict=True)
+    verification = _run_score_command(
+        state["score_skill"], ["verify-score", "--attempt-root", str(attempt)]
+    )
+    score_path = attempt / "score.json"
+    score = _read_json(score_path, "SCORE_DOCUMENT_INVALID")
+    if verification.get("score_valid") is not score.get("result", {}).get("valid"):
+        raise OrchestrationError("SCORE_VERIFICATION_MISMATCH", task_id)
+    event_time = now or _now()
+    task["score"] = {
+        "path": score_path.relative_to(root).as_posix(),
+        "sha256": _sha256_file(score_path),
+        "valid": score["result"]["valid"],
+        "total_score": score["result"]["total_score"],
+        "recorded_at": _timestamp(event_time),
+    }
+    task["phase"] = "SCORE_RECORDED"
+    task["history"].append(
+        {
+            "at": _timestamp(event_time),
+            "event": "SCORE_RECORDED",
+            "valid": score["result"]["valid"],
+        }
+    )
     return _save(root, state, event_time)
 
 
@@ -1018,6 +1100,10 @@ def main(argv: list[str] | None = None) -> int:
     _parse_common(timeout)
     timeout.add_argument("--task-id", required=True)
 
+    score = subparsers.add_parser("record-score")
+    _parse_common(score)
+    score.add_argument("--task-id", required=True)
+
     args = parser.parse_args(argv)
     try:
         if args.command == "init":
@@ -1067,8 +1153,13 @@ def main(argv: list[str] | None = None) -> int:
                 wait_status=args.wait_status,
                 wait_error=args.wait_error,
             )
-        else:
+        elif args.command == "mark-timeout":
             result = mark_timeout(
+                args.orchestration_root,
+                task_id=args.task_id,
+            )
+        else:
+            result = record_score(
                 args.orchestration_root,
                 task_id=args.task_id,
             )
