@@ -17,6 +17,7 @@ EXECUTE_SKILL_VERSION = "0.4.0"
 COLLECT_SKILL_VERSION = "0.4.0"
 ORCHESTRATE_SKILL_VERSION = "0.5.0"
 SCORE_SKILL_VERSION = "0.6.0"
+RUN_SKILL_VERSION = "0.2.0"
 
 
 @dataclass(frozen=True)
@@ -113,6 +114,7 @@ GENERAL_E2E_SKILLS: Tuple[GeneralE2ESkillSpec, ...] = (
         responsibility="按用户明确选择的阶段串联、恢复和交接 General E2E 流程",
         input_contract="显式阶段、冻结配置、输入包或已有运行状态",
         output_contract="阶段状态、回执、回传包及所选阶段的最终产物",
+        version=RUN_SKILL_VERSION,
     ),
 )
 

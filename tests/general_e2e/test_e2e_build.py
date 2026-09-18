@@ -520,6 +520,30 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
             + registrar_help.stderr,
         )
 
+    def test_general_run_entrypoint_loads_outside_checkout(self) -> None:
+        detached = self.temp_root / "detached-general-run"
+        detached.mkdir()
+        root = BUILD._safe_extract(
+            self.archive_path("run-general-e2e"),
+            detached / "installed",
+        )
+        controller = root / "scripts/run_general_e2e.py"
+        self.assertTrue(controller.is_file())
+        self.assertTrue(
+            (root / "vendor/e2e-shared/general-contracts/validator.py").is_file()
+        )
+        completed = subprocess.run(
+            [sys.executable, "-I", str(controller), "--help"],
+            cwd=detached,
+            env={"PATH": ""},
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("General E2E", completed.stdout)
+        self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

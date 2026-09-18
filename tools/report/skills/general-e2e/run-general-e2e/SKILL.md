@@ -16,7 +16,33 @@ python -m eval_general_e2e skills --json
 python -m eval_general_e2e check-layout
 ```
 
-只执行用户明确选择且 `implementation_status` 为 `operational` 的阶段。当前七个入口均为 `interface_only`，所以不得启动完整评测；应列出未实现阶段并停止。不要以 Web E2E 或旧 `eval_e2e` 替代缺失阶段，也不要因“一条 Prompt”扩大用户授权。
+只执行用户明确选择且对应单阶段 Skill 已具备所需能力的阶段。当前 `0.2.0/interface_only` 已实现批次/单元两级状态恢复、冻结输入校验、标准回传打包、安全导入、幂等与冲突选择；但 report Skill 和 General 完整生产评分准入尚未完成，所以不得宣称整条链路 operational。不要以 Web E2E 或旧 `eval_e2e` 替代缺失阶段，也不要因“一条 Prompt”扩大用户授权。
+
+## 已实现入口
+
+先建立显式状态；`--input role=/absolute/file` 会冻结评分包、报告配置等外部输入，恢复时重算 SHA：
+
+```bash
+python scripts/run_general_e2e.py init \
+  --scope unit --root /absolute/unit-root \
+  --stage execute,collect-evidence,score,package \
+  --input scoring-package=/absolute/unit-scoring.zip
+
+python scripts/run_general_e2e.py resume --root /absolute/unit-root
+```
+
+阶段开始、人工接管或失败使用 `set-stage`；完成不能手工填写，必须用 `record-execution`、`record-receipt`、`record-submission`、`package-return` 或 `import-return` 记录通过身份、终态、契约与哈希校验的产物。详细命令和恢复边界见 [流程状态与离线回传](references/flow-and-return.md)。
+
+单元评分完成后生成确定性回传包：
+
+```bash
+python scripts/run_general_e2e.py package-return \
+  --unit-root /absolute/unit-root \
+  --orchestration-root /absolute/orchestration-root \
+  --output-dir /absolute/returns
+```
+
+管理员侧导入时会手工解析 ZIP，拒绝越界路径、重复成员、未知类型、哈希漂移和越界符号链接。相同 archive SHA 幂等；同一批次单元的不同内容分别保存在 `returns/<unit-id>/<package-id>/`，并清除当前选择。只有显式 `select-import` 后，冲突单元才能继续报告阶段。
 
 ## 阶段与责任
 
@@ -27,3 +53,5 @@ python -m eval_general_e2e check-layout
 - `collect-evidence` 采集执行证据；`import-return` 导入管理员回传，二者不能混称 collect。
 - 支持人工执行或离线交接，但不补造自动化证据，不覆盖冲突 attempt。
 - 组合器不重写单阶段规则；具体执行、取证、评分和报告由对应 Skill 负责。
+- batch scope 只管理 `prepare / import-return / report`；unit scope 只管理 `execute / collect-evidence / score / package`，不能把两类根目录混用。
+- 回传包只收录冻结 unit manifest、正式 receipts/evidence、完整 submission、执行记录和评分 attempt；排除评分 `runtime/` 副本、缓存和常见凭据文件。

@@ -80,7 +80,7 @@
       "name": "run-general-e2e",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/run-general-e2e",
-      "components": []
+      "components": ["general-contracts"]
     }
   ]
 }
