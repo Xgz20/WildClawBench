@@ -6,6 +6,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import stat
 import sys
 import tempfile
 import unittest
@@ -224,6 +225,55 @@ def create_execution_state(unit: Path) -> Path:
 
 
 class RunGeneralE2ETests(unittest.TestCase):
+    def test_extract_defers_read_only_directory_modes_until_children_exist(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            destination = (Path(temp_dir) / "imported").resolve()
+            destination.mkdir()
+            directory_info = zipfile.ZipInfo("candidate-original/")
+            directory_info.external_attr = (stat.S_IFDIR | 0o555) << 16
+            file_info = zipfile.ZipInfo("candidate-original/candidate-artifact.json")
+            file_info.external_attr = (stat.S_IFREG | 0o444) << 16
+            payload = b'{}\n'
+            verified = {
+                "members": {
+                    "candidate-original": (directory_info, b""),
+                    "candidate-original/candidate-artifact.json": (
+                        file_info,
+                        payload,
+                    ),
+                },
+                "manifest": {
+                    "entries": [
+                        {
+                            "path": "candidate-original",
+                            "kind": "directory",
+                        },
+                        {
+                            "path": "candidate-original/candidate-artifact.json",
+                            "kind": "file",
+                        },
+                    ]
+                },
+                "manifest_bytes": b"{}\n",
+                "receipt_bytes": b"{}\n",
+            }
+
+            try:
+                MODULE.extract_verified_return(verified, destination)
+                candidate = destination / "candidate-original"
+                self.assertEqual(
+                    (candidate / "candidate-artifact.json").read_bytes(), payload
+                )
+                self.assertEqual(stat.S_IMODE(candidate.stat().st_mode), 0o555)
+                self.assertEqual(
+                    stat.S_IMODE((candidate / "candidate-artifact.json").stat().st_mode),
+                    0o444,
+                )
+            finally:
+                candidate = destination / "candidate-original"
+                if candidate.exists():
+                    os.chmod(candidate, 0o755)
+
     def test_batch_manifest_artifacts_are_locked_for_resume(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             batch = Path(temp_dir) / "batch"

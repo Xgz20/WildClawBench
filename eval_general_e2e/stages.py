@@ -15,10 +15,10 @@ OPERATIONAL = "operational"
 PREPARE_SKILL_VERSION = "0.2.0"
 EXECUTE_SKILL_VERSION = "0.5.0"
 COLLECT_SKILL_VERSION = "0.4.0"
-ORCHESTRATE_SKILL_VERSION = "0.6.2"
-SCORE_SKILL_VERSION = "0.6.1"
-RUN_SKILL_VERSION = "0.2.0"
-REPORT_SKILL_VERSION = "0.2.0"
+ORCHESTRATE_SKILL_VERSION = "0.7.0"
+SCORE_SKILL_VERSION = "0.7.0"
+RUN_SKILL_VERSION = "0.3.0"
+REPORT_SKILL_VERSION = "0.2.1"
 
 
 @dataclass(frozen=True)
@@ -85,6 +85,7 @@ GENERAL_E2E_SKILLS: Tuple[GeneralE2ESkillSpec, ...] = (
         input_contract="有效执行回执、scoring 包和冻结裁判配置",
         output_contract="评分队列、裁判任务状态和有效 submission",
         version=ORCHESTRATE_SKILL_VERSION,
+        implementation_status=OPERATIONAL,
     ),
     GeneralE2ESkillSpec(
         name="score-general-e2e",
@@ -93,6 +94,7 @@ GENERAL_E2E_SKILLS: Tuple[GeneralE2ESkillSpec, ...] = (
         input_contract="单题评分工作空间和冻结裁判配置",
         output_contract="规则分、语义分、证据引用、审计和标准 score.json",
         version=SCORE_SKILL_VERSION,
+        implementation_status=OPERATIONAL,
     ),
     GeneralE2ESkillSpec(
         name="report-general-e2e",
@@ -118,6 +120,7 @@ GENERAL_E2E_SKILLS: Tuple[GeneralE2ESkillSpec, ...] = (
         input_contract="显式阶段、冻结配置、输入包或已有运行状态",
         output_contract="阶段状态、回执、回传包及所选阶段的最终产物",
         version=RUN_SKILL_VERSION,
+        implementation_status=OPERATIONAL,
     ),
 )
 

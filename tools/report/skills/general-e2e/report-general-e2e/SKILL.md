@@ -15,7 +15,7 @@ description: 校验并汇总 General E2E submission 和回传包，生成同源 
 python -m eval_general_e2e skills --name report-general-e2e --json
 ```
 
-`0.2.0/operational` 已支持从批次导入选择生成正式报告。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
+`0.2.1/operational` 已支持从批次导入选择生成正式报告，并兼容 UI 展示的推理强度大小写与 manifest 规范值。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
 
 ## 责任边界
 

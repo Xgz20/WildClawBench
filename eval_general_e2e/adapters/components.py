@@ -33,7 +33,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="desktop-debug",
-        version="1.0.0",
+        version="1.0.1",
         source_root="tools/report/e2e-shared/desktop-debug",
         vendor_root="vendor/e2e-shared/desktop-debug",
         entrypoints=("restart_macos_desktop_debug.sh",),

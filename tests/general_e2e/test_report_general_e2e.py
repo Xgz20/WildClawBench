@@ -130,7 +130,9 @@ class Fixture:
         value["model"] = {
             "requested_id": self.unit["model"]["requested_id"],
             "actual_id": self.unit["model"]["requested_id"],
-            "reasoning_effort": self.unit["model"]["reasoning_effort"],
+            # AstronStudio reports the UI display label while the batch
+            # manifest stores the canonical enum value.
+            "reasoning_effort": self.unit["model"]["reasoning_effort"].title(),
             "verification_status": "verified",
         }
         start = datetime(2026, 9, 18, 1, 0, tzinfo=timezone.utc) + timedelta(seconds=index * 10)

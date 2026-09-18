@@ -491,6 +491,10 @@ launchctl bootout gui/$(id -u)/com.wildclawbench.desktop-debug-restart.codex
 
 不需要重启电脑。确认 Codex Desktop 已停止反复拉起后，再使用当前 `run-web-e2e` 随包提供的 `scripts/restart_macos_desktop_debug.sh`。新版入口使用固定单实例 Label 和 `KeepAlive=false` 的一次性 LaunchAgent，拒绝与遗留任务或另一轮重启并发；每轮状态与日志保存在 `~/Library/Application Support/WildClawBench/desktop-debug-restart/<run-id>/`，只有 `status.json` 为 `PASSED` 才恢复原评测状态。不要自行改回 `launchctl submit`。
 
+### 重启时出现“退出 Codex？”确认框
+
+当前 macOS 重启入口会自动处理已知退出确认框：只有目标进程属于已核对的 Codex bundle、对话框标题精确为“退出 Codex？”/“退出 ChatGPT？”或对应英文标题、按钮精确为“退出”/“Quit”时才点击。其他更新、授权、未保存修改或未知弹窗一律不点。macOS 未授予辅助功能访问、文案不匹配或 UI Automation 暂时不可用时，脚本仍会在正常退出等待 10 秒后发送 TERM，再等待 5 秒后才使用 KILL，因此不需要手工点击；确认框可能短暂可见。若希望无闪现，需要在系统设置中为执行 `osascript` 的控制环境授予辅助功能权限，但这不是完成重启的硬前提。
+
 ### 控制任务中断或 Desktop 重启
 
 重新打开 ChatGPT 后使用恢复 Prompt。Skill 会查询原有任务和磁盘状态；不要删除状态目录或要求重新创建状态不明的任务。

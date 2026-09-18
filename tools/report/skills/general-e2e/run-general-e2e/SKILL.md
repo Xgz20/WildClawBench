@@ -16,7 +16,7 @@ python -m eval_general_e2e skills --json
 python -m eval_general_e2e check-layout
 ```
 
-只执行用户明确选择且对应单阶段 Skill 已具备所需能力的阶段。当前 `0.2.0/interface_only` 已实现批次/单元两级状态恢复、冻结输入校验、标准回传打包、安全导入、幂等与冲突选择；但 report Skill 和 General 完整生产评分准入尚未完成，所以不得宣称整条链路 operational。不要以 Web E2E 或旧 `eval_e2e` 替代缺失阶段，也不要因“一条 Prompt”扩大用户授权。
+只执行用户明确选择且对应单阶段 Skill 已具备所需能力的阶段。当前 `0.3.0/operational` 已实现批次/单元两级状态恢复、冻结输入校验、标准回传打包、安全导入、幂等与冲突选择；G4-03 已完成 AstronStudio macOS 五题执行、默认三槽评分、回传和同源报告闭环。该状态不外推 Windows、其他 Harness 或 60 题全量。不要以 Web E2E 或旧 `eval_e2e` 替代 General 阶段，也不要因“一条 Prompt”扩大用户授权。
 
 ## 已实现入口
 

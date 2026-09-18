@@ -59,39 +59,33 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("orchestrate-general-e2e").version,
                 get_skill_spec("orchestrate-general-e2e").implementation_status,
             ),
-            ("0.6.2", "interface_only"),
+            ("0.7.0", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("score-general-e2e").version,
                 get_skill_spec("score-general-e2e").implementation_status,
             ),
-            ("0.6.1", "interface_only"),
+            ("0.7.0", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("run-general-e2e").version,
                 get_skill_spec("run-general-e2e").implementation_status,
             ),
-            ("0.2.0", "interface_only"),
+            ("0.3.0", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("report-general-e2e").version,
                 get_skill_spec("report-general-e2e").implementation_status,
             ),
-            ("0.2.0", "operational"),
+            ("0.2.1", "operational"),
         )
         self.assertTrue(
             all(
-                spec.implementation_status == "interface_only"
+                spec.implementation_status == "operational"
                 for spec in GENERAL_E2E_SKILLS
-                if spec.name not in {
-                    "prepare-general-e2e-workspaces",
-                    "execute-general-e2e",
-                    "collect-general-e2e",
-                    "report-general-e2e",
-                }
             )
         )
 

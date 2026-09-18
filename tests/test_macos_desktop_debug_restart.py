@@ -35,6 +35,7 @@ class ManagedMacOSDesktopRestartTests(unittest.TestCase):
         self.launchctl_log = self.root / "launchctl.log"
         self.open_log = self.root / "open.log"
         self.quit_log = self.root / "quit.log"
+        self.pkill_log = self.root / "pkill.log"
         self.nohup_log = self.root / "nohup.log"
         self.status_root = self.root / "status"
         self.env = os.environ.copy()
@@ -47,6 +48,7 @@ class ManagedMacOSDesktopRestartTests(unittest.TestCase):
                 "FAKE_LAUNCHCTL_LOG": str(self.launchctl_log),
                 "FAKE_OPEN_LOG": str(self.open_log),
                 "FAKE_QUIT_LOG": str(self.quit_log),
+                "FAKE_PKILL_LOG": str(self.pkill_log),
                 "FAKE_NOHUP_LOG": str(self.nohup_log),
                 "WCB_MACOS_UNAME_BIN": self._fake("uname", 'printf "Darwin\\n"'),
                 "WCB_MACOS_ID_BIN": self._fake("id", 'printf "501\\n"'),
@@ -80,12 +82,29 @@ exit 0
                 "WCB_MACOS_PGREP_BIN": self._fake(
                     "pgrep", '[[ -f "$FAKE_APP_RUNNING_FILE" ]]'
                 ),
-                "WCB_MACOS_PKILL_BIN": self._fake("pkill", "exit 0"),
+                "WCB_MACOS_PKILL_BIN": self._fake(
+                    "pkill",
+                    """
+printf '%s\\n' "$*" >> "$FAKE_PKILL_LOG"
+if [[ "$*" == *"-TERM"* ]]; then
+  /bin/rm -f -- "$FAKE_APP_RUNNING_FILE"
+fi
+""",
+                ),
                 "WCB_MACOS_OSASCRIPT_BIN": self._fake(
                     "osascript",
                     """
 printf '%s\\n' "$*" >> "$FAKE_QUIT_LOG"
-/bin/rm -f -- "$FAKE_APP_RUNNING_FILE"
+if [[ "$1" == "-e" ]]; then
+  if [[ "${FAKE_QUIT_REQUIRES_CONFIRM:-0}" != "1" ]]; then
+    /bin/rm -f -- "$FAKE_APP_RUNNING_FILE"
+  fi
+elif [[ "${FAKE_CONFIRM_MATCH:-0}" == "1" ]]; then
+  printf 'CONFIRMED\\n'
+  /bin/rm -f -- "$FAKE_APP_RUNNING_FILE"
+else
+  printf 'NO_MATCH\\n'
+fi
 """,
                 ),
                 "WCB_MACOS_OPEN_BIN": self._fake(
@@ -145,6 +164,8 @@ fi
         self.assertNotIn(b"launchctl submit", source)
         self.assertIn(b"<key>RunAtLoad</key>", source)
         self.assertIn(b"<key>KeepAlive</key>", source)
+        self.assertIn("退出 Codex？".encode(), source)
+        self.assertIn(b'elementRole is "AXButton"', source)
         self.assertEqual(WEB_COPY.read_bytes(), source)
         help_result = self._run("--help")
         self.assertEqual(help_result.returncode, 0, help_result.stderr)
@@ -221,6 +242,81 @@ fi
             "bootout gui/501/com.wildclawbench.desktop-debug-restart.codex",
             self.launchctl_log.read_text(encoding="utf-8"),
         )
+
+    def test_worker_confirms_only_the_recognized_codex_quit_dialog(self) -> None:
+        self.app_running.write_text("running\n", encoding="utf-8")
+        state_dir = self.root / "confirm-worker"
+        state_dir.mkdir()
+        plist = state_dir / "job.plist"
+        plist.write_text("fixture\n", encoding="utf-8")
+        env = dict(self.env)
+        env["FAKE_QUIT_REQUIRES_CONFIRM"] = "1"
+        env["FAKE_CONFIRM_MATCH"] = "1"
+        result = self._run(
+            "--worker",
+            "--job-label",
+            "com.wildclawbench.desktop-debug-restart.codex",
+            "--job-uid",
+            "501",
+            "--state-dir",
+            str(state_dir),
+            "--plist-path",
+            str(plist),
+            "--run-id",
+            "confirm-run",
+            "--created-at",
+            "2026-09-18T00:00:00Z",
+            "--app-path",
+            str(self.app),
+            "--port",
+            "9230",
+            "--delay-seconds",
+            "0",
+            env=env,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Confirmed the recognized Codex quit dialog", result.stdout)
+        invocations = self.quit_log.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(len(invocations), 2)
+        self.assertTrue(invocations[0].startswith("-e "))
+        self.assertEqual(invocations[1], "- Codex")
+        self.assertFalse(self.pkill_log.exists())
+
+    def test_unknown_quit_dialog_is_not_confirmed_and_uses_term_fallback(self) -> None:
+        self.app_running.write_text("running\n", encoding="utf-8")
+        state_dir = self.root / "unknown-dialog-worker"
+        state_dir.mkdir()
+        plist = state_dir / "job.plist"
+        plist.write_text("fixture\n", encoding="utf-8")
+        env = dict(self.env)
+        env["FAKE_QUIT_REQUIRES_CONFIRM"] = "1"
+        result = self._run(
+            "--worker",
+            "--job-label",
+            "com.wildclawbench.desktop-debug-restart.codex",
+            "--job-uid",
+            "501",
+            "--state-dir",
+            str(state_dir),
+            "--plist-path",
+            str(plist),
+            "--run-id",
+            "unknown-dialog-run",
+            "--created-at",
+            "2026-09-18T00:00:00Z",
+            "--app-path",
+            str(self.app),
+            "--port",
+            "9230",
+            "--delay-seconds",
+            "0",
+            env=env,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("Confirmed the recognized Codex quit dialog", result.stdout)
+        pkill = self.pkill_log.read_text(encoding="utf-8")
+        self.assertIn("-TERM", pkill)
+        self.assertNotIn("-KILL", pkill)
 
     def test_existing_legacy_or_current_job_fails_closed(self) -> None:
         for label in (

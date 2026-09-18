@@ -562,7 +562,7 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         self.assertTrue(all(len(task["prompt_sha256"]) == 64 for task in state["tasks"]))
         self.assertNotEqual(state["tasks"][0]["prompt_sha256"], state["tasks"][1]["prompt_sha256"])
 
-    def test_interface_only_normal_prompt_remains_fail_closed(self) -> None:
+    def test_operational_normal_prompt_uses_the_frozen_production_skill(self) -> None:
         fixture = Fixture(self.root / "normal-gate", task_ids=("task-one",))
         view = fixture.initialize(now=self.t0)
         self.assertIsNone(view["validation"])
@@ -574,7 +574,7 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             (root / task["attempt_path"] / "attempt-manifest.json").read_text()
         )
         self.assertIn("validation_mode：`production`", prompt)
-        self.assertIn("若当前 Skill 尚不能形成正式评分", prompt)
+        self.assertIn("当前冻结 Skill 为 `operational`", prompt)
         self.assertNotIn("允许当前 `interface_only` Skill 执行", prompt)
         self.assertIsNone(manifest["validation"])
 
@@ -596,13 +596,36 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         self.assertEqual(manifest["validation"], state["validation"])
         self.assertIn("validation_mode：`acceptance`", prompt)
         self.assertIn("acceptance_id：`G4-03`", prompt)
-        self.assertIn("产物只能作为该验收项证据", prompt)
+        self.assertIn("仍须完整执行所有证据、查询、结构化判定、合分", prompt)
+        self.assertIn(f"score_skill_root：`{SCORE_SKILL.resolve()}`", prompt)
+        self.assertIn(
+            f"score_skill_entrypoint：`{SCORE_RUNTIME_PATH.resolve()}`", prompt
+        )
+        self.assertIn("不得使用项目、仓库或自动发现路径中的同名 Skill", prompt)
+        self.assertNotIn("使用 `$score-general-e2e`", prompt)
         changed = json.loads(json.dumps(state))
         changed["validation"] = {"mode": "acceptance", "acceptance_id": "G4-04"}
         self.assertNotEqual(state["queue_digest"], ORCHESTRATOR._queue_digest(changed))
         self.assertEqual(manifest["grading"]["type"], "llm_judge")
         self.assertEqual(manifest["judge"]["model"], "gpt-fixture")
         self.assertEqual(manifest["judge"]["reasoning_effort"], "high")
+
+    def test_legacy_v3_prompt_remains_verifiable_without_frozen_path_fields(self) -> None:
+        prompt = ORCHESTRATOR._prompt_text(
+            "task-one",
+            "attempt-one",
+            {
+                "protocol": "codex-agent-judge-v1",
+                "model": "gpt-fixture",
+                "reasoning_effort": "high",
+            },
+            "llm_judge",
+            {"mode": "acceptance", "acceptance_id": "G4-03"},
+            prompt_protocol="general-e2e-codex-scoring-prompt/v3",
+        )
+        self.assertTrue(prompt.startswith("使用 `$score-general-e2e`"))
+        self.assertIn("prompt_protocol：`general-e2e-codex-scoring-prompt/v3`", prompt)
+        self.assertNotIn("score_skill_root", prompt)
 
     def test_acceptance_marker_mismatch_and_api_backend_fail_closed(self) -> None:
         fixture = Fixture(self.root / "acceptance-mismatch", task_ids=("task-one",))

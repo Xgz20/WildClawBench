@@ -43,6 +43,6 @@ backend 可恢复失败与契约失败应在外围评分 attempt 中分别记录
 
 私有 scoring 包合入、候选只读副本、GT 后置、真实本机路径映射以及本地 Worker 由 G3-02 的 `scripts/score_general_e2e.py` 实现，不进入 core。具体操作和平台状态见[本地受管规则运行时](local-rule-runtime.md)。
 
-G3-04 已在外围评分 attempt 中接入 Codex 评分会话，G3-05 又接入 API Judge transport、输入裁剪、重试和独立审计；两者都只向 core 提供已验证的 backend 结果，不改变 transport-neutral 边界。submission、回传包、真实 Codex 小批和 API Judge 生产准入仍未交付，因此 Skill 继续保持 `interface_only`。
+G3-04 已在外围评分 attempt 中接入 Codex 评分会话，G3-05 又接入 API Judge transport、输入裁剪、重试和独立审计；两者都只向 core 提供已验证的 backend 结果，不改变 transport-neutral 边界。G4-03 已完成真实 Codex 五题闭环、submission、回传和报告；Skill 现为 `operational`。Windows、60 题全量和裁判校准仍需独立验收。
 
 专用虚拟环境和独立进程只提供依赖复现、故障收口与进程隔离，不是针对恶意 grader 的安全沙箱。General E2E 的规则代码来自冻结且受信任的数据集；其中启动的候选子进程仍必须在凭据清空、无额外网络授权、超时和进程树清理约束下运行。

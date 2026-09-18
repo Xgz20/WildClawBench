@@ -27,9 +27,9 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py init \
   --score-timeout-seconds 7200
 ```
 
-普通生产运行不要传验收标记。Skill 仍为 `interface_only`、需要执行已批准的真实验收项时，显式增加例如 `--acceptance-id G4-03`。控制器会把 `{mode: acceptance, acceptance_id: G4-03}` 同时冻结到 orchestration state、queue digest、评分 Prompt 和每题 attempt manifest；四处不一致即失败关闭。该选项只适用于 `codex-agent-judge-v1`，不能用于 API Judge，也不能把验收产物描述为生产准入结果。重评分需要验收时必须在 `init-rescore` 再次显式传入，不能从源 attempt 隐式继承。
+普通生产运行不要传验收标记。需要为批准的验收项单独留证时，显式增加例如 `--acceptance-id G4-03`。控制器会把 `{mode: acceptance, acceptance_id: G4-03}` 同时冻结到 orchestration state、queue digest、评分 Prompt 和每题 attempt manifest；四处不一致即失败关闭。该选项只适用于 `codex-agent-judge-v1`，不能用于 API Judge。重评分需要验收时必须在 `init-rescore` 再次显式传入，不能从源 attempt 隐式继承。
 
-初始化采用临时目录和原子发布。每题调用 score Skill 的 `prepare` 子能力，生成不同的 `scoring_attempt_id`、attempt 根和评分 Prompt；状态冻结 unit/report/scoring package SHA、score Skill 版本与入口 SHA、runtime lock、裁判协议、模型、推理强度、可选验收标记、Prompt SHA、任务顺序和 deadline 策略。语义评分默认 3 槽，可配置 1–8；改变槽位或验收标记必须新建 orchestration，不能恢复时漂移。
+初始化采用临时目录和原子发布。每题调用 score Skill 的 `prepare` 子能力，生成不同的 `scoring_attempt_id`、attempt 根和评分 Prompt；状态冻结 unit/report/scoring package SHA、score Skill 绝对根目录、版本、入口路径与入口 SHA、runtime lock、裁判协议、模型、推理强度、可选验收标记、Prompt SHA、任务顺序和 deadline 策略。评分 Prompt 要求子任务只读取该冻结根，不使用项目、仓库或自动发现路径中的同名 Skill。语义评分默认 3 槽，可配置 1–8；改变槽位或验收标记必须新建 orchestration，不能恢复时漂移。
 
 `automated` 任务先运行规则并在本地形成 `not-required` 语义组件和标准分，不创建 Codex 项目或评分会话；`hybrid` 先运行并冻结规则组件，再进入语义评分队列；`llm_judge` 直接进入语义评分队列。规则 Worker 不计入 `score_slots`，但当前控制器串行发起规则动作，避免把本地规则并发误报成语义评分并发。
 
@@ -56,7 +56,7 @@ Windows 使用 `run-codex-project-registrar.cmd`。Driver 与 Web E2E 使用相�
   --port 9230
 ```
 
-入口固定使用 `com.wildclawbench.desktop-debug-restart.codex` 单实例 Label、`RunAtLoad=true`、`KeepAlive=false`，状态和日志保存在 `~/Library/Application Support/WildClawBench/desktop-debug-restart/<run-id>/`。当前回合中断后，新控制任务读取 `status.json` 并恢复原 orchestration；只有 `PASSED` 才继续项目注册。禁止使用 `launchctl submit` 或任何自动复活的临时任务；脚本检测到旧版 `com.wildclawbench.general-e2e.codex-debug`、`com.wildclawbench.general-e2e.codex-refresh` 或已有新 Label 时会失败关闭。
+入口固定使用 `com.wildclawbench.desktop-debug-restart.codex` 单实例 Label、`RunAtLoad=true`、`KeepAlive=false`，状态和日志保存在 `~/Library/Application Support/WildClawBench/desktop-debug-restart/<run-id>/`。脚本发出正常退出后，只在目标进程属于已核对的 Codex bundle、窗口中出现精确的“退出 Codex？”/“Quit Codex?”标题且按钮为“退出”/“Quit”时自动确认；未知弹窗、辅助功能不可用或文案不匹配时不点击，继续使用 10 秒 TERM、5 秒 KILL 的有界兜底。当前回合中断后，新控制任务读取 `status.json` 并恢复原 orchestration；只有 `PASSED` 才继续项目注册。禁止使用 `launchctl submit` 或任何自动复活的临时任务；脚本检测到旧版 `com.wildclawbench.general-e2e.codex-debug`、`com.wildclawbench.general-e2e.codex-refresh` 或已有新 Label 时会失败关闭。
 
 读取 `status` 的 `REGISTER_PROJECT.project_path`，先调用 Desktop 内置 `list_projects` 按规范化绝对路径唯一匹配。已经存在时直接复用并记录：
 

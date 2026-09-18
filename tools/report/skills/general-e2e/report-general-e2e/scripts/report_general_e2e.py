@@ -156,6 +156,14 @@ def numeric(value: object) -> float | int | None:
     return value
 
 
+def normalize_reasoning_effort(value: object) -> object:
+    """Normalize UI display casing for the logical reasoning-effort identity."""
+
+    if isinstance(value, str):
+        return value.strip().casefold()
+    return value
+
+
 def mean(values: Iterable[float | int]) -> float | None:
     items = [float(value) for value in values]
     return sum(items) / len(items) if items else None
@@ -548,7 +556,10 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
         or execution.get("dataset") != selected["submission"]["dataset"]
         or execution.get("harness") != unit["harness"]
         or execution.get("model", {}).get("requested_id") != unit["model"]["requested_id"]
-        or execution.get("model", {}).get("reasoning_effort") != unit["model"].get("reasoning_effort")
+        or normalize_reasoning_effort(
+            execution.get("model", {}).get("reasoning_effort")
+        )
+        != normalize_reasoning_effort(unit["model"].get("reasoning_effort"))
     ):
         raise ReportError(f"EXECUTION_IDENTITY_MISMATCH: {unit['unit_id']}:{task_id}")
     score: dict[str, Any] | None = None

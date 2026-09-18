@@ -15,9 +15,9 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 python -m eval_general_e2e skills --name score-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才形成完整双后端生产评分。当前 `0.6.1/interface_only` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、合分审计和 `verify-score`。终态评分可复用冻结候选创建独立重评分 attempt。真实 Codex 小批和完整生产闭环尚未交付，fixture 不能冒充真实语义评分。
+当前 `0.7.0/operational` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、合分审计和 `verify-score`。终态评分可复用冻结候选创建独立重评分 attempt。G4-03 已完成固定 `gpt-6-astra/high` 的三题真实 Codex 语义评分并纳入五题闭环；该生产状态不表示 Windows 或其他 Harness 已验收。
 
-普通生产调用仍须在 `interface_only` 时停止。唯一例外是控制 Prompt 明确声明验收运行，且其中的 acceptance ID 与 `attempt-manifest.json` 的 `validation.mode=acceptance`、`validation.acceptance_id` 完全相同；此时可以按完整协议生成验收证据，但不得省略证据查询、反例检查、合分或 `verify-score`，也不得据此单独宣称生产就绪。标记缺失、不一致或使用 API Judge 时立即停止。
+评分 Prompt 必须冻结并显式给出本 Skill 根、入口、版本和入口 SHA；不得从项目或仓库中的同名 Skill 猜测入口。普通生产运行的 manifest 不含 validation 标记；显式验收运行仍要求 Prompt 的 acceptance ID 与 `attempt-manifest.json` 完全相同。两种模式都不得省略证据查询、反例检查、合分或 `verify-score`。
 
 ## 责任边界
 
@@ -27,7 +27,7 @@ python -m eval_general_e2e skills --name score-general-e2e --json
 - 语义判断必须引用可定位证据，长轨迹可分页回查，不能只用截断摘要替代原文。
 - 不创建下一题任务，不重跑被测 Harness，不聚合跨题结果。
 
-## 已交付能力与后续边界
+## 已交付能力与边界
 
 需要开发、校验或接入评分 core 时，读取[评分 core 接口](references/grading-core.md)。当前四个公开 API 可用于确定性契约验证和受管 backend 接入；`run_rules()` 不会自行执行不可信规则，`evaluate_semantics()` 也不会自行调用模型。
 
@@ -39,4 +39,4 @@ python -m eval_general_e2e skills --name score-general-e2e --json
 
 需要对有效分或合法评测异常重新评分时，读取[独立重评分 attempt](references/rescore.md)。重评分只复制冻结候选与评分输入，重建干净 runtime，并显式冻结新的 Judge 配置；不得复用 attempt ID 或修改源评分目录。
 
-真实 Codex 评分小批和 API Judge 生产准入仍由后续阶段完成；在这些门禁完成前保持 `interface_only`。
+G4-03 的五题验收与 G3-05 的真实 API Judge smoke 已完成双后端准入。后续 Windows、60 题全量和裁判校准仍按各自验收项独立留证，不能由本状态自动推导。

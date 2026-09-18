@@ -27,7 +27,8 @@ PACKAGE_SCHEMA = "urn:wildclawbench:schema:general-e2e:package-manifest:v1"
 SCORE_SCHEMA = "urn:wildclawbench:schema:general-e2e:score:v1"
 SUBMISSION_SCHEMA = "urn:wildclawbench:schema:general-e2e:submission:v1"
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
-PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v3"
+PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v4"
+LEGACY_CODEX_PROMPT_PROTOCOLS = {"general-e2e-codex-scoring-prompt/v3"}
 API_PROMPT_PROTOCOL = "general-e2e-api-scoring-orchestration/v1"
 ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
@@ -517,6 +518,9 @@ def _prompt_text(
     judge: Mapping[str, Any],
     grading_type: str,
     validation: Mapping[str, str] | None,
+    score_skill: Mapping[str, Any] | None = None,
+    *,
+    prompt_protocol: str = PROMPT_PROTOCOL,
 ) -> str:
     rule_instruction = (
         "本题是 hybrid；自动规则组件已由控制器在创建语义会话前运行并冻结。"
@@ -543,7 +547,45 @@ def _prompt_text(
             "- validation_mode：`acceptance`\n"
             f"- acceptance_id：`{acceptance_id}`"
         )
-    return f"""使用 `$score-general-e2e` 对当前 Codex 项目中的唯一 General E2E 任务进行评分。
+    if prompt_protocol in LEGACY_CODEX_PROMPT_PROTOCOLS:
+        skill_instruction = "使用 `$score-general-e2e` 对当前 Codex 项目中的唯一 General E2E 任务进行评分。"
+        frozen_skill_identity = ""
+        skill_usage = "严格遵循已安装 `$score-general-e2e` 的能力门禁和证据要求"
+    elif prompt_protocol == PROMPT_PROTOCOL:
+        if score_skill is None:
+            raise OrchestrationError("SCORE_SKILL_LOCK_MISSING")
+        score_skill_root = _required_string(score_skill.get("path"), "score_skill.path")
+        score_entrypoint = str(_score_entrypoint(score_skill))
+        implementation_status = _required_string(
+            score_skill.get("implementation_status"),
+            "score_skill.implementation_status",
+        )
+        skill_instruction = "使用下列冻结的 `score-general-e2e` Skill 对当前 Codex 项目中的唯一 General E2E 任务进行评分。"
+        frozen_skill_identity = f"""
+- score_skill_root：`{score_skill_root}`
+- score_skill_entrypoint：`{score_entrypoint}`
+- score_skill_version：`{score_skill['version']}`
+- score_skill_entrypoint_sha256：`{score_skill['entrypoint_sha256']}`"""
+        skill_usage = (
+            f"先完整读取 `{score_skill_root}/SKILL.md` 及其为本题要求的引用文件，"
+            f"所有评分命令只调用 `{score_entrypoint}`。不得使用项目、仓库或自动发现路径中的同名 Skill；"
+            "冻结目录缺失、身份或哈希不匹配时立即停止"
+        )
+        if implementation_status == "operational" and validation is None:
+            readiness_instruction = (
+                "当前冻结 Skill 为 `operational`；按正式评分协议完成本题，"
+                "不得调用旧 CLI 或切换到 API Judge。"
+            )
+        elif implementation_status == "operational":
+            readiness_instruction = (
+                f"这是显式冻结的 `{acceptance_id}` 验收运行。`attempt-manifest.json` 中的 "
+                f"`validation.mode=acceptance` 与 `validation.acceptance_id={acceptance_id}` "
+                "必须同时匹配；仍须完整执行所有证据、查询、结构化判定、合分和 `verify-score` 门禁。"
+                "标记缺失或不匹配时立即失败关闭，不得调用旧 CLI、修改候选或切换到 API Judge。"
+            )
+    else:
+        raise OrchestrationError("SCORING_PROMPT_PROTOCOL_UNSUPPORTED", prompt_protocol)
+    return f"""{skill_instruction}
 
 冻结身份：
 
@@ -552,10 +594,10 @@ def _prompt_text(
 - judge_protocol：`{judge['protocol']}`
 - judge_model：`{judge['model']}`
 - reasoning_effort：`{judge['reasoning_effort']}`
-- prompt_protocol：`{PROMPT_PROTOCOL}`
-{validation_identity}
+- prompt_protocol：`{prompt_protocol}`
+{validation_identity}{frozen_skill_identity}
 
-项目根目录就是本题私有评分 attempt。先读取 `attempt-manifest.json`，再严格遵循已安装 `$score-general-e2e` 的能力门禁和证据要求。只处理本题，不创建或调度其他任务，不执行被测 Harness，不修改 `candidate-original/`，不把自动规则组件冒充完整分数。{readiness_instruction}
+项目根目录就是本题私有评分 attempt。先读取 `attempt-manifest.json`，再{skill_usage}。只处理本题，不创建或调度其他任务，不执行被测 Harness，不修改 `candidate-original/`，不把自动规则组件冒充完整分数。{readiness_instruction}
 
 {rule_instruction}
 
@@ -809,7 +851,12 @@ def initialize(
                 prompt_path.parent.mkdir(parents=True, exist_ok=True)
                 prompt_path.write_text(
                     _prompt_text(
-                        task_id, attempt_id, judge, grading_type, validation
+                        task_id,
+                        attempt_id,
+                        judge,
+                        grading_type,
+                        validation,
+                        score_skill,
                     ),
                     encoding="utf-8",
                     newline="\n",
@@ -1043,7 +1090,12 @@ def initialize_rescore(
                 prompt_path.parent.mkdir(parents=True, exist_ok=True)
                 prompt_path.write_text(
                     _prompt_text(
-                        task_id, attempt_id, judge, grading_type, validation
+                        task_id,
+                        attempt_id,
+                        judge,
+                        grading_type,
+                        validation,
+                        score_skill,
                     ),
                     encoding="utf-8",
                     newline="\n",
@@ -1322,14 +1374,15 @@ def _verify_state(root: Path) -> dict[str, Any]:
         raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "validation missing")
     validation = _validate_validation_marker(state.get("validation"))
     judge_protocol = state.get("judge", {}).get("protocol")
+    prompt_protocol = state.get("prompt_protocol")
     expected_prompt_protocol = (
-        API_PROMPT_PROTOCOL
+        prompt_protocol == API_PROMPT_PROTOCOL
         if judge_protocol == "api-judge-v1"
-        else PROMPT_PROTOCOL
+        else prompt_protocol in {PROMPT_PROTOCOL, *LEGACY_CODEX_PROMPT_PROTOCOLS}
     )
     if (
         judge_protocol not in {"codex-agent-judge-v1", "api-judge-v1"}
-        or state.get("prompt_protocol") != expected_prompt_protocol
+        or not expected_prompt_protocol
         or validation is not None
         and judge_protocol != "codex-agent-judge-v1"
     ):
@@ -1451,6 +1504,8 @@ def _verify_state(root: Path) -> dict[str, Any]:
                 state["judge"],
                 str(task.get("grading_type")),
                 validation,
+                state["score_skill"],
+                prompt_protocol=str(state.get("prompt_protocol")),
             )
         ):
             raise OrchestrationError("SCORING_PROMPT_DRIFT", str(task.get("task_id")))

@@ -252,6 +252,68 @@ app_is_running() {
   "$pgrep_bin" -f "$app_path/Contents/MacOS/" >/dev/null 2>&1
 }
 
+confirm_known_quit_dialog() {
+  local app_process_name confirmation
+  app_process_name="$(basename "$app_path" .app)"
+  case "$app_process_name" in
+    ChatGPT|Codex) ;;
+    *) return 1 ;;
+  esac
+  confirmation="$("$osascript_bin" - "$app_process_name" <<'APPLESCRIPT' 2>/dev/null || true
+on run argv
+  if (count of argv) is not 1 then return "NO_MATCH"
+  set processName to item 1 of argv
+  if processName is not "ChatGPT" and processName is not "Codex" then return "NO_MATCH"
+  set expectedTitles to {"退出 Codex？", "退出 ChatGPT？", "Quit Codex?", "Quit ChatGPT?"}
+  set expectedButtons to {"退出", "Quit"}
+  tell application "System Events"
+    if not (exists process processName) then return "NO_MATCH"
+    tell process processName
+      repeat with candidateWindow in windows
+        set windowElements to {}
+        try
+          set windowElements to entire contents of candidateWindow
+        end try
+        set matchedTitle to false
+        repeat with candidateElement in windowElements
+          set elementText to ""
+          try
+            set elementText to value of candidateElement as text
+          end try
+          if elementText is "" then
+            try
+              set elementText to name of candidateElement as text
+            end try
+          end if
+          if expectedTitles contains elementText then
+            set matchedTitle to true
+            exit repeat
+          end if
+        end repeat
+        if matchedTitle then
+          repeat with candidateElement in windowElements
+            set elementRole to ""
+            set elementName to ""
+            try
+              set elementRole to role of candidateElement as text
+              set elementName to name of candidateElement as text
+            end try
+            if elementRole is "AXButton" and expectedButtons contains elementName then
+              perform action "AXPress" of candidateElement
+              return "CONFIRMED"
+            end if
+          end repeat
+        end if
+      end repeat
+    end tell
+  end tell
+  return "NO_MATCH"
+end run
+APPLESCRIPT
+)"
+  [[ "$confirmation" == "CONFIRMED" ]]
+}
+
 stop_app() {
   local attempt
   if ! app_is_running; then
@@ -262,6 +324,9 @@ stop_app() {
   for attempt in {1..20}; do
     if ! app_is_running; then
       return 0
+    fi
+    if confirm_known_quit_dialog; then
+      echo "Confirmed the recognized Codex quit dialog."
     fi
     "$sleep_bin" 0.5
   done

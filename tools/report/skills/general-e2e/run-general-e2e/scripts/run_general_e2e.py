@@ -1416,6 +1416,7 @@ def load_import_index(batch_root: Path, batch_manifest: Mapping[str, Any]) -> di
 def extract_verified_return(verified: Mapping[str, Any], destination: Path) -> None:
     members = verified["members"]
     rows = {item["path"]: item for item in verified["manifest"]["entries"]}
+    directory_modes: list[tuple[Path, int]] = []
     control = {
         "package-manifest.json": ("file", verified["manifest_bytes"], 0o644, None),
         "receipts/package-receipt.json": ("file", verified["receipt_bytes"], 0o644, None),
@@ -1435,7 +1436,14 @@ def extract_verified_return(verified: Mapping[str, Any], destination: Path) -> N
             raise FlowError(f"IMPORT_PATH_ESCAPE: {relative}")
         if kind == "directory":
             target_path.mkdir(parents=True, exist_ok=False)
-            os.chmod(target_path, stat.S_IMODE(info.external_attr >> 16))
+            # Keep directories writable until all descendants and symlinks are
+            # materialized.  Return packages intentionally contain read-only
+            # candidate trees (for example 0555); applying those modes during
+            # the depth-first extraction prevents later child files from
+            # being created on POSIX hosts.
+            directory_modes.append(
+                (target_path, stat.S_IMODE(info.external_attr >> 16))
+            )
         elif kind == "file":
             target_path.parent.mkdir(parents=True, exist_ok=True)
             with target_path.open("xb") as handle:
@@ -1449,6 +1457,12 @@ def extract_verified_return(verified: Mapping[str, Any], destination: Path) -> N
         target_path.parent.mkdir(parents=True, exist_ok=True)
         safe_symlink_target(PurePosixPath(relative), row["link_target"])
         os.symlink(row["link_target"], target_path)
+    for target_path, mode in sorted(
+        directory_modes,
+        key=lambda item: len(item[0].relative_to(destination).parts),
+        reverse=True,
+    ):
+        os.chmod(target_path, mode)
 
 
 def import_receipt_document(
