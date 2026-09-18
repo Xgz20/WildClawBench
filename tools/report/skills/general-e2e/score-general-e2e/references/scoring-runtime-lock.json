@@ -1,0 +1,59 @@
+{
+  "schema_version": "wildclawbench.general-e2e-rule-runtime-lock/v1",
+  "python": {
+    "major": 3,
+    "minor": 11
+  },
+  "dependencies": [
+    {
+      "distribution": "PyYAML",
+      "version": "6.0.3",
+      "import_roots": [
+        "yaml"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "playwright",
+      "version": "1.55.0",
+      "import_roots": [
+        "playwright"
+      ],
+      "runtime_assets": [
+        {
+          "name": "chromium",
+          "revision": "1187",
+          "version": "140.0.7339.16"
+        }
+      ]
+    },
+    {
+      "distribution": "greenlet",
+      "version": "3.5.6",
+      "import_roots": [
+        "greenlet"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "pyee",
+      "version": "13.0.1",
+      "import_roots": [
+        "pyee"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "typing_extensions",
+      "version": "4.16.0",
+      "import_roots": [
+        "typing_extensions"
+      ],
+      "runtime_assets": []
+    }
+  ],
+  "requirements": {
+    "path": "scoring-runtime-requirements.txt",
+    "sha256": "f0225b6cf5baa31d232c4b12f838b48d43387c908458c16cccb14e19e03c31c9"
+  }
+}

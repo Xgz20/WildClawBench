@@ -414,6 +414,13 @@ process.stdout.write(JSON.stringify({{
         package = vendor_parent / "wildclawbench_grading_core"
         self.assertTrue((package / "__init__.py").is_file())
         self.assertTrue((package / "rule-runtime-dependencies.json").is_file())
+        runtime_script = root / "scripts/score_general_e2e.py"
+        self.assertTrue(runtime_script.is_file())
+        self.assertTrue((root / "scripts/rule_worker.py").is_file())
+        self.assertTrue((root / "references/scoring-runtime-lock.json").is_file())
+        self.assertTrue(
+            (root / "references/scoring-runtime-requirements.txt").is_file()
+        )
         source = """
 import json
 import sys
@@ -438,6 +445,34 @@ print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external']}
             {"PyYAML", "playwright"},
         )
         self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
+
+        runtime_source = """
+import importlib.util
+import json
+import sys
+spec = importlib.util.spec_from_file_location('detached_score_runtime', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+run_rules, error_type = module._import_grading_core()
+print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}))
+"""
+        runtime_completed = subprocess.run(
+            [sys.executable, "-I", "-c", runtime_source, str(runtime_script)],
+            cwd=detached,
+            env={"PATH": ""},
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(runtime_completed.returncode, 0, runtime_completed.stderr)
+        self.assertEqual(
+            json.loads(runtime_completed.stdout),
+            {"run_rules": "run_rules", "error": "GradingCoreError"},
+        )
+        self.assertNotIn(
+            str(REPO_ROOT), runtime_completed.stdout + runtime_completed.stderr
+        )
 
 
 if __name__ == "__main__":

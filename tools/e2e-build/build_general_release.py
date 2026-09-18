@@ -138,7 +138,8 @@ def _install_text(release_id: str) -> bytes:
         "本套件包含七个相互独立的 Skill ZIP、release catalog 与契约 schema。"
         "先校验 suite，再按 `release-catalog.json` 中的 SHA-256 安装所需 Skill。\n\n"
         "`prepare-general-e2e-workspaces` 可直接消费 dataset bundle 和本 suite；"
-        "其余标记为 `interface_only` 的 Skill 仅提供已冻结接口，不得当作可运行实现。\n"
+        "标记为 `interface_only` 的 Skill 不得当作完整业务阶段；"
+        "其中已交付的受限子能力以各 Skill 的能力门禁为准。\n"
     ).encode("utf-8")
 
 

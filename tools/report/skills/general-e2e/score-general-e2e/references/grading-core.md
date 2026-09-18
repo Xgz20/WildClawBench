@@ -1,6 +1,6 @@
 # General E2E 评分 core 接口
 
-`score-general-e2e` 0.2.1 装配 `grading-core` 0.1.1。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、本地进程运行时、模型调用或任务调度。
+`score-general-e2e` 0.3.0 装配 `grading-core` 0.1.1。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、本地进程运行时、模型调用或任务调度。
 
 发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。core 仅依赖 Python 标准库；任务规则所需的 PyYAML、Playwright 和 Chromium 属于 G3-02 专用评分虚拟环境，不安装到控制 Harness 使用的 Python 环境。
 
@@ -39,14 +39,12 @@
 
 backend 可恢复失败与契约失败应在外围评分 attempt 中分别记录，不要吞掉错误后生成有效 `score.json`。
 
-## G3-02 边界
+## 运行时与后续边界
 
-下列能力不属于 core 0.1.1，必须在 `score-general-e2e` 保持 `interface_only` 期间拒绝正式执行：
+私有 scoring 包合入、候选只读副本、GT 后置、真实本机路径映射以及本地 Worker 由 G3-02 的 `scripts/score_general_e2e.py` 实现，不进入 core。具体操作和平台状态见[本地受管规则运行时](local-rule-runtime.md)。
 
-- 私有 scoring 包合入、候选只读副本和 GT 后置；
-- 逻辑 `/tmp_workspace`、真实本机 workspace、transcript 与证据根目录的受管映射；
-- 本地 Worker 的环境白名单、进程组、超时、跨平台进程树清理和文件权限；
-- PyYAML、Playwright、Chromium 的精确版本、依赖锁及浏览器安装校验；
+下列能力仍未交付，必须在 `score-general-e2e` 保持 `interface_only` 期间拒绝完整正式评分：
+
 - Codex 评分任务/API Judge transport、审计、恢复和重试；
 - 标准 `score.json`、submission 和回传包发布。
 
