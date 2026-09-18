@@ -15,7 +15,7 @@ description: 将有效 General E2E 执行回执交接为独立单题评分工作
 python -m eval_general_e2e skills --name orchestrate-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才形成完整评分 submission。当前 `0.3.0/interface_only` 已交付 Codex 项目注册、可恢复单题任务编排、Judge 配置写入评分 attempt，以及线程完成后的 `verify-score` 准入；语义取证、结构化判定与标准 `score.json` 由配套 score Skill 提供，但 API Judge、submission 和真实 Codex 小批准入尚未交付。因此线程完成后仍必须记录通过校验的评分产物，不能借用 Web E2E 浏览器评分协议。
+只有 `implementation_status` 为 `operational` 时才形成完整评分 submission。当前 `0.4.0/interface_only` 已交付 Codex 项目/任务编排、API Judge 队列与崩溃恢复、Judge 配置写入评分 attempt，以及统一的 `verify-score` 准入；语义取证、transport、结构化判定与标准 `score.json` 由配套 score Skill 提供。submission、真实 Codex 小批和 API Judge 生产准入尚未交付，不能借用 Web E2E 浏览器评分协议。
 
 ## 责任边界
 
@@ -27,6 +27,8 @@ python -m eval_general_e2e skills --name orchestrate-general-e2e --json
 
 ## 已交付编排子能力
 
-需要初始化或恢复 Codex 评分任务时，读取 [Codex 项目与任务编排](references/codex-orchestration.md)，使用 `scripts/orchestrate_general_e2e.py`。控制器只接受已明确配置模型和推理强度的 `codex-agent-judge-v1`，当前不接收 API Judge；它通过 `recommended_actions` 驱动控制 Harness 调用项目列表、`create_thread`、`wait_threads` 和必要的线程检查，不直接调用模型或伪造工具结果。
+需要初始化或恢复 Codex 评分任务时，读取 [Codex 项目与任务编排](references/codex-orchestration.md)，使用 `scripts/orchestrate_general_e2e.py`。控制器通过 `recommended_actions` 驱动控制 Harness 调用项目列表、`create_thread`、`wait_threads` 和必要的线程检查，不直接伪造模型或工具结果。
 
 每题项目根是独立私有评分 attempt，项目注册器位于 `drivers/codex-desktop/`。同一编排首版固定单槽；原 thread 未取得明确终态时不创建替代任务。线程返回完成后，控制器保持当前槽位并给出 `VERIFY_SCORE`，只有 `record-score` 调用 score Skill 的 `verify-score` 通过并锁定 `score.json` 后才进入下一题。
+
+显式选择 `api-judge-v1` 时，读取 [API Judge 编排](references/api-orchestration.md)。API 任务从 `API_READY` 进入 `API_RUNNING` 后才调用 score Skill；恢复始终续同一 attempt，已形成终态时不重复请求，结果未知时失败关闭。API 队列不注册 Codex 项目、不创建线程，也不在失败时回退到 Codex。

@@ -15,7 +15,7 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 python -m eval_general_e2e skills --name score-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才形成完整双后端生产评分。当前 `0.4.0/interface_only` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询与结构化判定校验、合分审计及标准 `score.json`；API Judge transport、submission 和真实 Codex 小批准入尚未交付。fixture 判定不能冒充真实语义评分，也不得调用旧 CLI grading 后改名发布。
+只有 `implementation_status` 为 `operational` 时才形成完整双后端生产评分。当前 `0.5.0/interface_only` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、合分审计和 `verify-score`。submission、真实 Codex 小批和 API Judge 生产准入尚未交付，fixture 不能冒充真实语义评分。
 
 ## 责任边界
 
@@ -33,4 +33,6 @@ python -m eval_general_e2e skills --name score-general-e2e --json
 
 在控制 Harness 的独立评分会话中执行默认语义协议时，读取[Codex 语义评分协议](references/codex-agent-judge.md)。必须先生成冻结证据目录，再通过 `query-evidence` 分页回查；逐项结果只能引用已查询的 evidence ID，并声明已检查支持证据和反例。声称“未发生”时必须用无过滤分页覆盖完整 transcript。缺证据保留 `unresolved`；导入后由 core 校验分值锚点、引用、Judge 身份和请求锁，再合成标准 `score.json`。`verify-score` 会重新校验来源锁并从冻结组件重算标准分，不只比对结果文件自带的哈希。
 
-`api-judge-v1` transport、submission 和真实 Codex 评分小批验收仍由后续阶段完成；在这些门禁完成前保持 `interface_only`。
+显式选择 API 后端时，读取 [API Judge 评分协议](references/api-judge.md)。使用 `prepare --api-runtime-config ...` 冻结 provider、endpoint、模型、输入/输出预算、timeout、重试与凭据环境变量名；凭据值只能由运行环境注入。`run-api-score` 可恢复地完成规则、语义请求、合分和校验，API 最终失败形成合法 `evaluation_error / total_score=null`，不会补零、切换模型或回退到 Codex。
+
+submission、真实 Codex 评分小批和 API Judge 生产准入仍由后续阶段完成；在这些门禁完成前保持 `interface_only`。

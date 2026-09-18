@@ -171,11 +171,11 @@ class GeneralReleasePrepareTests(unittest.TestCase):
         )
         self.assertEqual(
             readiness["score-general-e2e"],
-            ("0.4.0", "interface_only"),
+            ("0.5.0", "interface_only"),
         )
         self.assertEqual(
             readiness["orchestrate-general-e2e"],
-            ("0.3.0", "interface_only"),
+            ("0.4.0", "interface_only"),
         )
         self.assertEqual(
             set(readiness.values()),
@@ -183,8 +183,8 @@ class GeneralReleasePrepareTests(unittest.TestCase):
                 ("0.2.0", "operational"),
                 ("0.4.0", "operational"),
                 ("0.1.0", "interface_only"),
-                ("0.3.0", "interface_only"),
                 ("0.4.0", "interface_only"),
+                ("0.5.0", "interface_only"),
             },
         )
 

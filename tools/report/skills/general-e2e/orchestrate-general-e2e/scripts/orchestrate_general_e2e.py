@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare and persist recoverable Codex scoring task orchestration."""
+"""Prepare and persist recoverable Codex or API Judge scoring orchestration."""
 
 from __future__ import annotations
 
@@ -18,11 +18,12 @@ import uuid
 
 
 STATE_SCHEMA = "wildclawbench.general-e2e-scoring-orchestration/v1"
-STATE_REVISION = 2
+STATE_REVISION = 3
 REGISTRATION_SCHEMA = "wildclawbench.codex-project-registration/v1"
 PACKAGE_SCHEMA = "urn:wildclawbench:schema:general-e2e:package-manifest:v1"
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
 PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v2"
+API_PROMPT_PROTOCOL = "general-e2e-api-scoring-orchestration/v1"
 ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
 WAIT_STATUSES = {
@@ -37,6 +38,8 @@ WAIT_STATUSES = {
 THREAD_PHASES = {"THREAD_RUNNING", "NEEDS_ATTENTION", "THREAD_TIMEOUT_PENDING"}
 TERMINAL_PHASES = {"SCORE_RECORDED", "THREAD_FAILED"}
 TASK_PHASES = {
+    "API_READY",
+    "API_RUNNING",
     "AWAITING_PROJECT",
     "PROJECT_REGISTERED",
     "PREFLIGHT_PASSED",
@@ -224,7 +227,10 @@ def _score_entrypoint(lock: Mapping[str, Any]) -> Path:
 
 
 def _run_score_command(
-    lock: Mapping[str, Any], arguments: Sequence[str]
+    lock: Mapping[str, Any],
+    arguments: Sequence[str],
+    *,
+    credential_env: str | None = None,
 ) -> dict[str, Any]:
     environment = {
         "PATH": os.environ.get("PATH", ""),
@@ -232,6 +238,10 @@ def _run_score_command(
         "PYTHONNOUSERSITE": "1",
         "PYTHONUTF8": "1",
     }
+    if credential_env is not None:
+        credential = os.environ.get(credential_env, "")
+        if credential:
+            environment[credential_env] = credential
     completed = subprocess.run(
         [sys.executable, str(_score_entrypoint(lock)), *arguments],
         check=False,
@@ -332,7 +342,7 @@ def _load_identity(
     if not isinstance(judge, dict):
         raise OrchestrationError("JUDGE_CONFIG_INVALID", "missing object")
     protocol = _required_string(judge.get("protocol"), "judge.protocol")
-    if protocol != "codex-agent-judge-v1":
+    if protocol not in {"codex-agent-judge-v1", "api-judge-v1"}:
         raise OrchestrationError("JUDGE_PROTOCOL_UNSUPPORTED", protocol)
     model = _required_string(judge.get("model"), "judge.model")
     if model.lower().startswith("unconfigured"):
@@ -410,6 +420,7 @@ def initialize(
     orchestration_id: str,
     task_ids: Sequence[str] = (),
     execution_records: Mapping[str, Path] | None = None,
+    api_runtime_config: Path | None = None,
     score_timeout_seconds: int = 7200,
     score_slots: int = 1,
     now: datetime | None = None,
@@ -424,6 +435,14 @@ def initialize(
     report_config = _regular_file(report_config, "REPORT_CONFIG_INVALID")
     score_skill = _score_skill_lock(score_skill_dir)
     identity, judge, selected = _load_identity(unit_root, report_config, task_ids)
+    if judge["protocol"] == "api-judge-v1":
+        if api_runtime_config is None:
+            raise OrchestrationError("API_JUDGE_CONFIG_REQUIRED")
+        api_runtime_config = _regular_file(
+            api_runtime_config, "API_JUDGE_CONFIG_INVALID"
+        )
+    elif api_runtime_config is not None:
+        raise OrchestrationError("API_JUDGE_CONFIG_UNEXPECTED")
     explicit = execution_records or {}
     if set(explicit) - set(selected):
         raise OrchestrationError(
@@ -437,13 +456,12 @@ def initialize(
     staging.mkdir(parents=False, exist_ok=False)
     created = now or _now()
     tasks: list[dict[str, Any]] = []
+    frozen_api_runtime: dict[str, Any] | None = None
     try:
         for index, task_id in enumerate(selected):
             record = _find_execution_record(unit_root, task_id, explicit)
             attempt_id = f"{orchestration_id}-{index + 1:03d}"
-            result = _run_score_command(
-                score_skill,
-                [
+            prepare_arguments = [
                     "prepare",
                     "--unit-root",
                     str(unit_root),
@@ -465,18 +483,42 @@ def initialize(
                     judge["reasoning_effort"],
                     "--judge-attempt-id",
                     attempt_id,
-                ],
-            )
+                ]
+            if api_runtime_config is not None:
+                prepare_arguments.extend(
+                    ["--api-runtime-config", str(api_runtime_config)]
+                )
+            result = _run_score_command(score_skill, prepare_arguments)
             attempt_root = Path(result["attempt_root"]).resolve(strict=True)
             if not _inside(staging, attempt_root):
                 raise OrchestrationError("ATTEMPT_PATH_ESCAPE", str(attempt_root))
-            prompt_path = staging / "prompts" / f"{task_id}.md"
-            prompt_path.parent.mkdir(parents=True, exist_ok=True)
-            prompt_path.write_text(
-                _prompt_text(task_id, attempt_id, judge),
-                encoding="utf-8",
-                newline="\n",
+            attempt_manifest = _read_json(
+                attempt_root / "attempt-manifest.json", "ATTEMPT_MANIFEST_INVALID"
             )
+            attempt_judge = attempt_manifest.get("judge")
+            if not isinstance(attempt_judge, dict):
+                raise OrchestrationError("JUDGE_CONFIG_INVALID", "attempt manifest")
+            current_api_runtime = attempt_judge.get("api_runtime")
+            if judge["protocol"] == "api-judge-v1":
+                if not isinstance(current_api_runtime, dict):
+                    raise OrchestrationError("API_JUDGE_CONFIG_INVALID", "not frozen")
+                if frozen_api_runtime is None:
+                    frozen_api_runtime = current_api_runtime
+                elif frozen_api_runtime != current_api_runtime:
+                    raise OrchestrationError("API_JUDGE_CONFIG_MISMATCH")
+                prompt_path = None
+                prompt_sha256 = None
+                initial_phase = "API_READY"
+            else:
+                prompt_path = staging / "prompts" / f"{task_id}.md"
+                prompt_path.parent.mkdir(parents=True, exist_ok=True)
+                prompt_path.write_text(
+                    _prompt_text(task_id, attempt_id, judge),
+                    encoding="utf-8",
+                    newline="\n",
+                )
+                prompt_sha256 = _sha256_file(prompt_path)
+                initial_phase = "AWAITING_PROJECT"
             tasks.append(
                 {
                     "task_id": task_id,
@@ -487,9 +529,13 @@ def initialize(
                     "attempt_manifest_sha256": _sha256_file(
                         attempt_root / "attempt-manifest.json"
                     ),
-                    "prompt_path": prompt_path.relative_to(staging).as_posix(),
-                    "prompt_sha256": _sha256_file(prompt_path),
-                    "phase": "AWAITING_PROJECT",
+                    "prompt_path": (
+                        prompt_path.relative_to(staging).as_posix()
+                        if prompt_path is not None
+                        else None
+                    ),
+                    "prompt_sha256": prompt_sha256,
+                    "phase": initial_phase,
                     "project": None,
                     "preflight": None,
                     "thread": None,
@@ -510,8 +556,19 @@ def initialize(
             "updated_at": _timestamp(created),
             "status": "RUNNING",
             "identity": identity,
-            "judge": judge,
-            "prompt_protocol": PROMPT_PROTOCOL,
+            "judge": {
+                **judge,
+                **(
+                    {"api_runtime": frozen_api_runtime}
+                    if frozen_api_runtime is not None
+                    else {}
+                ),
+            },
+            "prompt_protocol": (
+                API_PROMPT_PROTOCOL
+                if judge["protocol"] == "api-judge-v1"
+                else PROMPT_PROTOCOL
+            ),
             "score_timeout_seconds": score_timeout_seconds,
             "score_slots": score_slots,
             "score_skill": score_skill,
@@ -519,6 +576,11 @@ def initialize(
                 "unit_manifest_sha256": _sha256_file(unit_root / "manifest.json"),
                 "report_config_sha256": _sha256_file(report_config),
                 "scoring_package_sha256": _sha256_file(scoring_package),
+                "api_runtime_config_sha256": (
+                    _sha256_file(api_runtime_config)
+                    if api_runtime_config is not None
+                    else None
+                ),
             },
             "tasks": tasks,
         }
@@ -583,11 +645,18 @@ def _verify_state(root: Path) -> dict[str, Any]:
     if current_skill != state.get("score_skill"):
         raise OrchestrationError("SCORE_SKILL_DRIFT")
     for task in tasks:
-        prompt = root / str(task.get("prompt_path", ""))
+        prompt_value = task.get("prompt_path")
+        prompt = root / str(prompt_value) if prompt_value is not None else None
         attempt = root / str(task.get("attempt_path", ""))
-        if not _inside(root, prompt.resolve()) or not _inside(root, attempt.resolve()):
-            raise OrchestrationError("ORCHESTRATION_PATH_ESCAPE", str(task.get("task_id")))
         if (
+            (prompt is not None and not _inside(root, prompt.resolve()))
+            or not _inside(root, attempt.resolve())
+        ):
+            raise OrchestrationError("ORCHESTRATION_PATH_ESCAPE", str(task.get("task_id")))
+        if prompt is None:
+            if state.get("judge", {}).get("protocol") != "api-judge-v1" or task.get("prompt_sha256") is not None:
+                raise OrchestrationError("SCORING_PROMPT_DRIFT", str(task.get("task_id")))
+        elif (
             prompt.is_symlink()
             or not prompt.is_file()
             or _sha256_file(prompt) != task.get("prompt_sha256")
@@ -649,6 +718,22 @@ def _recommended_actions(
     task_id = task["task_id"]
     attempt = str((root / task["attempt_path"]).resolve())
     phase = task["phase"]
+    if phase in {"API_READY", "API_RUNNING"}:
+        return [
+            {
+                "action": "RUN_API_SCORE",
+                "task_id": task_id,
+                "attempt_path": attempt,
+                "resume": phase == "API_RUNNING",
+                "command": [
+                    "run-api-score",
+                    "--orchestration-root",
+                    str(root),
+                    "--task-id",
+                    task_id,
+                ],
+            }
+        ]
     if phase == "AWAITING_PROJECT":
         return [{"action": "REGISTER_PROJECT", "task_id": task_id, "project_path": attempt}]
     if phase == "PROJECT_REGISTERED":
@@ -1014,6 +1099,62 @@ def record_score(
     return _save(root, state, event_time)
 
 
+def run_api_score_task(
+    orchestration_root: Path,
+    *,
+    task_id: str,
+    runtime_python: Path | None = None,
+    rule_timeout_seconds: float = 120.0,
+    playwright_browsers_path: Path | None = None,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    root = _state_root(orchestration_root)
+    state = _verify_state(root)
+    if state.get("judge", {}).get("protocol") != "api-judge-v1":
+        raise OrchestrationError("API_JUDGE_PROTOCOL_REQUIRED")
+    task = _require_active(state, _identifier(task_id, "task_id"))
+    if task.get("phase") not in {"API_READY", "API_RUNNING"}:
+        raise OrchestrationError("API_SCORE_NOT_EXPECTED", task_id)
+    event_time = now or _now()
+    if task["phase"] == "API_READY":
+        task["phase"] = "API_RUNNING"
+        task["history"].append(
+            {"at": _timestamp(event_time), "event": "API_SCORE_STARTED"}
+        )
+        _save(root, state, event_time)
+    attempt = (root / task["attempt_path"]).resolve(strict=True)
+    arguments = ["run-api-score", "--attempt-root", str(attempt)]
+    if runtime_python is not None:
+        arguments.extend(["--runtime-python", str(runtime_python)])
+    arguments.extend(["--timeout-seconds", str(rule_timeout_seconds)])
+    if playwright_browsers_path is not None:
+        arguments.extend(
+            ["--playwright-browsers-path", str(playwright_browsers_path)]
+        )
+    runtime = state["judge"].get("api_runtime")
+    if not isinstance(runtime, dict):
+        raise OrchestrationError("API_JUDGE_CONFIG_INVALID", "runtime missing")
+    result = _run_score_command(
+        state["score_skill"],
+        arguments,
+        credential_env=_required_string(
+            runtime.get("credential_env"), "api credential_env"
+        ),
+    )
+    if not isinstance(result.get("score_valid"), bool):
+        raise OrchestrationError("SCORE_SKILL_OUTPUT_INVALID", "score_valid")
+    task["phase"] = "SCORE_VERIFICATION_PENDING"
+    task["history"].append(
+        {
+            "at": _timestamp(event_time),
+            "event": "API_SCORE_COMMAND_COMPLETED",
+            "score_valid": result["score_valid"],
+        }
+    )
+    _save(root, state, event_time)
+    return record_score(root, task_id=task_id, now=event_time)
+
+
 def mark_timeout(
     orchestration_root: Path,
     *,
@@ -1062,6 +1203,7 @@ def main(argv: list[str] | None = None) -> int:
     init.add_argument("--orchestration-id", required=True)
     init.add_argument("--task-id", action="append", default=[])
     init.add_argument("--execution-record", action="append", default=[])
+    init.add_argument("--api-runtime-config", type=Path)
     init.add_argument("--score-timeout-seconds", type=int, default=7200)
     init.add_argument("--score-slots", type=int, default=1)
 
@@ -1104,6 +1246,13 @@ def main(argv: list[str] | None = None) -> int:
     _parse_common(score)
     score.add_argument("--task-id", required=True)
 
+    api_score = subparsers.add_parser("run-api-score")
+    _parse_common(api_score)
+    api_score.add_argument("--task-id", required=True)
+    api_score.add_argument("--runtime-python", type=Path)
+    api_score.add_argument("--rule-timeout-seconds", type=float, default=120.0)
+    api_score.add_argument("--playwright-browsers-path", type=Path)
+
     args = parser.parse_args(argv)
     try:
         if args.command == "init":
@@ -1116,6 +1265,7 @@ def main(argv: list[str] | None = None) -> int:
                 orchestration_id=args.orchestration_id,
                 task_ids=args.task_id,
                 execution_records=_execution_record_map(args.execution_record),
+                api_runtime_config=args.api_runtime_config,
                 score_timeout_seconds=args.score_timeout_seconds,
                 score_slots=args.score_slots,
             )
@@ -1158,10 +1308,18 @@ def main(argv: list[str] | None = None) -> int:
                 args.orchestration_root,
                 task_id=args.task_id,
             )
-        else:
+        elif args.command == "record-score":
             result = record_score(
                 args.orchestration_root,
                 task_id=args.task_id,
+            )
+        else:
+            result = run_api_score_task(
+                args.orchestration_root,
+                task_id=args.task_id,
+                runtime_python=args.runtime_python,
+                rule_timeout_seconds=args.rule_timeout_seconds,
+                playwright_browsers_path=args.playwright_browsers_path,
             )
         _print(result)
         return 0

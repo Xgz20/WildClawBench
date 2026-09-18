@@ -278,6 +278,7 @@ class Fixture:
         *,
         orchestration_id: str = "orchestration-fixture",
         timeout: int = 60,
+        api_runtime_config: Path | None = None,
         now: datetime | None = None,
     ) -> dict:
         return ORCHESTRATOR.initialize(
@@ -288,9 +289,32 @@ class Fixture:
             output_root=self.output_root,
             orchestration_id=orchestration_id,
             execution_records=self.execution_records,
+            api_runtime_config=api_runtime_config,
             score_timeout_seconds=timeout,
             now=now,
         )
+
+    def api_runtime_config(self) -> Path:
+        path = self.root / "api-runtime.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema_version": SCORE_RUNTIME.API_JUDGE_CONFIG_SCHEMA,
+                    "provider": "openai-chat-completions",
+                    "base_url": "https://judge.example.test/v1",
+                    "credential_env": "GENERAL_E2E_TEST_API_KEY",
+                    "max_output_tokens": 1024,
+                    "timeout_seconds": 30,
+                    "max_attempts": 1,
+                    "max_input_chars": 20000,
+                    "max_evidence_item_chars": 512,
+                    "temperature": 0,
+                    "reasoning_parameter": "reasoning_effort",
+                }
+            ),
+            encoding="utf-8",
+        )
+        return path
 
     def registration_evidence(self, task: dict, path: Path) -> Path:
         evidence = self.root / f"{task['task_id']}-registration.json"
@@ -482,6 +506,61 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             state["tasks"][0]["project"]["registration_method"], "existing-project"
         )
 
+    def test_api_queue_never_creates_codex_project_or_thread(self) -> None:
+        fixture = Fixture(
+            self.root / "api-queue",
+            task_ids=("task-one",),
+            protocol="api-judge-v1",
+            judge_model="openai-fixture",
+        )
+        view = fixture.initialize(
+            api_runtime_config=fixture.api_runtime_config(), now=self.t0
+        )
+        self.assertEqual(view["recommended_actions"][0]["action"], "RUN_API_SCORE")
+        self.assertEqual(view["tasks"][0]["phase"], "API_READY")
+        state_path = Path(view["orchestration_root"]) / "orchestration-state.json"
+        state = json.loads(state_path.read_text())
+        self.assertIsNone(state["tasks"][0]["prompt_path"])
+        self.assertIsNone(state["tasks"][0]["project"])
+        self.assertIsNone(state["tasks"][0]["thread"])
+        self.assertEqual(
+            state["judge"]["api_runtime"]["credential_env"],
+            "GENERAL_E2E_TEST_API_KEY",
+        )
+
+        attempt = Path(view["tasks"][0]["attempt_path"])
+        (attempt / "score.json").write_text(
+            json.dumps({"result": {"valid": False, "total_score": None}}),
+            encoding="utf-8",
+        )
+        calls = []
+
+        def fake_score(_lock, arguments, **kwargs):
+            calls.append((list(arguments), dict(kwargs)))
+            if arguments[0] in {"run-api-score", "verify-score"}:
+                return {"status": "PASS", "score_valid": False}
+            return {"status": "PASS", "candidate_sha256": "f" * 64}
+
+        with patch.object(ORCHESTRATOR, "_run_score_command", side_effect=fake_score):
+            completed = ORCHESTRATOR.run_api_score_task(
+                Path(view["orchestration_root"]),
+                task_id="task-one",
+                now=self.t0,
+            )
+        self.assertEqual(completed["status"], "COMPLETED")
+        self.assertEqual(completed["completed_count"], 1)
+        api_calls = [call for call in calls if call[0][0] == "run-api-score"]
+        self.assertEqual(len(api_calls), 1)
+        self.assertEqual(
+            api_calls[0][1]["credential_env"], "GENERAL_E2E_TEST_API_KEY"
+        )
+        self.assertFalse(
+            any(
+                action.get("action") in {"REGISTER_PROJECT", "CREATE_THREAD"}
+                for action in completed["recommended_actions"]
+            )
+        )
+
     def test_deadline_does_not_create_replacement_before_original_thread_is_terminal(self) -> None:
         fixture = Fixture(self.root, task_ids=("task-one",))
         view = fixture.initialize(timeout=10, now=self.t0)
@@ -555,9 +634,14 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
     def test_configuration_backend_and_concurrency_fail_closed(self) -> None:
         api_fixture = Fixture(self.root / "api", protocol="api-judge-v1")
         with self.assertRaisesRegex(
-            ORCHESTRATOR.OrchestrationError, "JUDGE_PROTOCOL_UNSUPPORTED"
+            ORCHESTRATOR.OrchestrationError, "API_JUDGE_CONFIG_REQUIRED"
         ):
             api_fixture.initialize(now=self.t0)
+        unsupported_fixture = Fixture(self.root / "unsupported", protocol="other-judge-v1")
+        with self.assertRaisesRegex(
+            ORCHESTRATOR.OrchestrationError, "JUDGE_PROTOCOL_UNSUPPORTED"
+        ):
+            unsupported_fixture.initialize(now=self.t0)
         null_fixture = Fixture(self.root / "null", reasoning_effort=None)
         with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError, "STRING_REQUIRED"):
             null_fixture.initialize(now=self.t0)

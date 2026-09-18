@@ -4,7 +4,7 @@
 
 本控制器把正式 execution record 与独立 scoring ZIP 交接为每题一个私有评分 attempt，并维护 Codex Desktop 项目、线程、wait cursor 和 deadline。它不执行 Harness，不亲自判分，不生成 `score.json` 或 submission。
 
-当前仅接受 `codex-agent-judge-v1`。`report-config.json` 中的模型和推理强度必须是已选定的非空值；`unconfigured-*` 占位值会失败关闭。`api-judge-v1` 由后续专用后端实现，不会静默转为 Codex Agent。
+本页只描述 `codex-agent-judge-v1` 分支。`report-config.json` 中的模型和推理强度必须是已选定的非空值；`unconfigured-*` 占位值会失败关闭。显式的 `api-judge-v1` 使用独立的 [API Judge 编排](api-orchestration.md)，两个分支不会静默互换。
 
 ## 初始化
 
@@ -139,4 +139,4 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py resume \
 
 严格继续返回的动作。不要重新 `init`，不要按最近任务猜测 thread，不要丢弃 cursor 或重置 deadline。状态使用原子替换写入，并假定只有一个控制任务串行修改；多个控制任务不得同时写同一 orchestration。
 
-以下情况失败关闭：裁判配置未冻结、API 协议误入、同题 execution record 不唯一、score Skill 或 runtime lock 漂移、Prompt/attempt/项目证据漂移、项目路径不一致、Desktop 版本改变、host 切换、wait sequence 跳号、deadline 未到提前超时，以及单槽任务未终态就操作下一题。
+以下情况失败关闭：裁判配置未冻结、Codex 分支混入 API 动作、同题 execution record 不唯一、score Skill 或 runtime lock 漂移、Prompt/attempt/项目证据漂移、项目路径不一致、Desktop 版本改变、host 切换、wait sequence 跳号、deadline 未到提前超时，以及单槽任务未终态就操作下一题。

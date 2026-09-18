@@ -1,6 +1,6 @@
 # General E2E 评分 core 接口
 
-`score-general-e2e` 0.4.0 装配 `grading-core` 0.1.1。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、本地进程运行时、模型调用或任务调度。
+`score-general-e2e` 0.5.0 装配 `grading-core` 0.1.1。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、本地进程运行时、模型调用或任务调度。
 
 发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。core 仅依赖 Python 标准库；任务规则所需的 PyYAML、Playwright 和 Chromium 属于 G3-02 专用评分虚拟环境，不安装到控制 Harness 使用的 Python 环境。
 
@@ -43,6 +43,6 @@ backend 可恢复失败与契约失败应在外围评分 attempt 中分别记录
 
 私有 scoring 包合入、候选只读副本、GT 后置、真实本机路径映射以及本地 Worker 由 G3-02 的 `scripts/score_general_e2e.py` 实现，不进入 core。具体操作和平台状态见[本地受管规则运行时](local-rule-runtime.md)。
 
-G3-04 已在外围评分 attempt 中接入 Codex 评分会话的证据目录、分页查询、结构化回传、合分审计和标准 `score.json`；这些能力不改变 core 的 transport-neutral 边界。API Judge transport、submission、回传包和真实 Codex 小批准入仍未交付，因此 Skill 继续保持 `interface_only`。
+G3-04 已在外围评分 attempt 中接入 Codex 评分会话，G3-05 又接入 API Judge transport、输入裁剪、重试和独立审计；两者都只向 core 提供已验证的 backend 结果，不改变 transport-neutral 边界。submission、回传包、真实 Codex 小批和 API Judge 生产准入仍未交付，因此 Skill 继续保持 `interface_only`。
 
 专用虚拟环境和独立进程只提供依赖复现、故障收口与进程隔离，不是针对恶意 grader 的安全沙箱。General E2E 的规则代码来自冻结且受信任的数据集；其中启动的候选子进程仍必须在凭据清空、无额外网络授权、超时和进程树清理约束下运行。
