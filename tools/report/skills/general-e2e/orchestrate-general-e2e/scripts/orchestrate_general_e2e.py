@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timedelta, timezone
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -18,9 +19,11 @@ import uuid
 
 
 STATE_SCHEMA = "wildclawbench.general-e2e-scoring-orchestration/v1"
-STATE_REVISION = 3
+STATE_REVISION = 4
 REGISTRATION_SCHEMA = "wildclawbench.codex-project-registration/v1"
 PACKAGE_SCHEMA = "urn:wildclawbench:schema:general-e2e:package-manifest:v1"
+SCORE_SCHEMA = "urn:wildclawbench:schema:general-e2e:score:v1"
+SUBMISSION_SCHEMA = "urn:wildclawbench:schema:general-e2e:submission:v1"
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
 PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v2"
 API_PROMPT_PROTOCOL = "general-e2e-api-scoring-orchestration/v1"
@@ -36,7 +39,7 @@ WAIT_STATUSES = {
     "INTERRUPTED",
 }
 THREAD_PHASES = {"THREAD_RUNNING", "NEEDS_ATTENTION", "THREAD_TIMEOUT_PENDING"}
-TERMINAL_PHASES = {"SCORE_RECORDED", "THREAD_FAILED"}
+TERMINAL_PHASES = {"SCORE_RECORDED", "THREAD_FAILED", "UNSCORED"}
 TASK_PHASES = {
     "API_READY",
     "API_RUNNING",
@@ -64,6 +67,13 @@ REGISTRATION_METHODS = {
     "add-project-then-open-folder",
     "renderer-bridge",
     "existing-project",
+}
+BUSINESS_STATUSES = {
+    "completed",
+    "candidate_error",
+    "timeout",
+    "infrastructure_error",
+    "cancelled",
 }
 
 
@@ -145,6 +155,41 @@ def _read_json(path: Path, code: str = "JSON_INVALID") -> dict[str, Any]:
     if not isinstance(value, dict):
         raise OrchestrationError(code, f"{path}: top-level value must be an object")
     return value
+
+
+def _validate_contract(
+    document: Mapping[str, Any], *, expected_schema_id: str
+) -> None:
+    vendor = (
+        Path(__file__).resolve().parents[1]
+        / "vendor/e2e-shared/general-contracts/validator.py"
+    )
+    try:
+        if vendor.is_file():
+            spec = importlib.util.spec_from_file_location(
+                "wildclawbench_general_contracts_vendor", vendor
+            )
+            if spec is None or spec.loader is None:
+                raise ImportError(str(vendor))
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            validate_contract = module.validate_contract
+        else:
+            from eval_general_e2e.contracts import (  # type: ignore
+                validate_contract,
+            )
+    except (ImportError, OSError, AttributeError) as exc:
+        raise OrchestrationError("CONTRACT_VALIDATOR_UNAVAILABLE", str(exc)) from exc
+    try:
+        validate_contract(document, expected_schema_id=expected_schema_id)
+    except Exception as exc:
+        code = getattr(exc, "code", type(exc).__name__)
+        path = getattr(exc, "path", "$")
+        message = getattr(exc, "message", str(exc))
+        raise OrchestrationError(
+            "CONTRACT_VALIDATION_FAILED",
+            f"{code} at {path}: {message}",
+        ) from exc
 
 
 def _write_new_json(path: Path, value: object) -> None:
@@ -301,6 +346,81 @@ def _find_execution_record(
     return regular[0]
 
 
+def _execution_summary(
+    record_path: Path,
+    *,
+    batch_id: str,
+    unit_id: str,
+    task_id: str,
+) -> dict[str, Any]:
+    record = _read_json(record_path, "EXECUTION_RECORD_INVALID")
+    identity = record.get("identity")
+    if not isinstance(identity, dict) or (
+        identity.get("batch_id"),
+        identity.get("unit_id"),
+        identity.get("task_id"),
+    ) != (batch_id, unit_id, task_id):
+        raise OrchestrationError("EXECUTION_RECORD_IDENTITY_MISMATCH", task_id)
+    execution_attempt_id = _identifier(
+        identity.get("attempt_id"), "execution_attempt_id"
+    )
+    execution = record.get("execution")
+    business_status = (
+        execution.get("business_status") if isinstance(execution, dict) else None
+    )
+    if business_status not in BUSINESS_STATUSES:
+        raise OrchestrationError("EXECUTION_RECORD_STATUS_INVALID", task_id)
+    candidate = record.get("candidate")
+    candidate = candidate if isinstance(candidate, dict) else {}
+    candidate_sha = candidate.get("frozen_sha256")
+    candidate_sha = (
+        candidate_sha
+        if isinstance(candidate_sha, str) and SHA256_RE.fullmatch(candidate_sha)
+        else None
+    )
+    evidence = record.get("evidence")
+    evidence = evidence if isinstance(evidence, dict) else {}
+    evidence_manifest = record_path.with_name("evidence-manifest.json")
+    evidence_sha: str | None = None
+    if evidence_manifest.is_file() and not evidence_manifest.is_symlink():
+        evidence_document = _read_json(
+            evidence_manifest, "EVIDENCE_MANIFEST_INVALID"
+        )
+        if evidence_document.get("identity") != identity:
+            raise OrchestrationError("EVIDENCE_MANIFEST_IDENTITY_MISMATCH", task_id)
+        evidence_sha = _sha256_file(evidence_manifest)
+    failure: dict[str, str] | None = None
+    if business_status != "completed":
+        failure = {
+            "code": "EXECUTION_NOT_COMPLETED",
+            "message": f"execution business status is {business_status}",
+        }
+    elif record.get("phase") != "COMPLETED":
+        failure = {
+            "code": "EXECUTION_PHASE_NOT_COMPLETED",
+            "message": f"execution phase is {record.get('phase')!r}",
+        }
+    elif evidence.get("completeness") != "complete":
+        failure = {
+            "code": "EXECUTION_EVIDENCE_INCOMPLETE",
+            "message": "complete execution evidence is required for scoring",
+        }
+    elif candidate.get("drift_status") != "stable" or candidate_sha is None:
+        failure = {
+            "code": "EXECUTION_CANDIDATE_NOT_STABLE",
+            "message": "a stable frozen candidate is required for scoring",
+        }
+    return {
+        "attempt_id": execution_attempt_id,
+        "business_status": business_status,
+        "candidate_sha256": candidate_sha,
+        "evidence_sha256": evidence_sha,
+        "record_sha256": _sha256_file(record_path),
+        "scorable": failure is None,
+        "failure": failure,
+    }
+
+
 def _load_identity(
     unit_root: Path, report_config_path: Path, task_ids: Sequence[str]
 ) -> tuple[dict[str, Any], dict[str, Any], list[str]]:
@@ -386,6 +506,7 @@ def _prompt_text(task_id: str, attempt_id: str, judge: Mapping[str, Any]) -> str
 
 def _queue_digest(state: Mapping[str, Any]) -> str:
     payload = {
+        "kind": state.get("kind"),
         "identity": state.get("identity"),
         "judge": state.get("judge"),
         "prompt_protocol": state.get("prompt_protocol"),
@@ -397,7 +518,10 @@ def _queue_digest(state: Mapping[str, Any]) -> str:
             {
                 "task_id": task.get("task_id"),
                 "order": task.get("order"),
+                "execution": task.get("execution"),
+                "execution_record_path": task.get("execution_record_path"),
                 "execution_record_sha256": task.get("execution_record_sha256"),
+                "source": task.get("source"),
                 "scoring_attempt_id": task.get("scoring_attempt_id"),
                 "attempt_path": task.get("attempt_path"),
                 "attempt_manifest_sha256": task.get("attempt_manifest_sha256"),
@@ -408,6 +532,56 @@ def _queue_digest(state: Mapping[str, Any]) -> str:
         ],
     }
     return _sha256_bytes(_canonical_bytes(payload))
+
+
+def _load_rescore_judge(
+    report_config_path: Path,
+    source_state: Mapping[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    report = _read_json(report_config_path, "REPORT_CONFIG_INVALID")
+    if report.get("schema_version") != REPORT_CONFIG_SCHEMA:
+        raise OrchestrationError("REPORT_CONFIG_INVALID", "schema")
+    identity = source_state.get("identity")
+    if not isinstance(identity, dict):
+        raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "identity")
+    if (
+        report.get("batch_id") != identity.get("batch_id")
+        or report.get("dataset") != identity.get("dataset")
+        or report.get("release") != identity.get("release")
+    ):
+        raise OrchestrationError("REPORT_CONFIG_IDENTITY_MISMATCH")
+    units = report.get("units")
+    if not isinstance(units, list) or len(
+        [
+            item
+            for item in units
+            if isinstance(item, dict) and item.get("unit_id") == identity.get("unit_id")
+        ]
+    ) != 1:
+        raise OrchestrationError(
+            "REPORT_CONFIG_UNIT_MISMATCH", str(identity.get("unit_id"))
+        )
+    judge = report.get("judge")
+    if not isinstance(judge, dict):
+        raise OrchestrationError("JUDGE_CONFIG_INVALID", "missing object")
+    protocol = _required_string(judge.get("protocol"), "judge.protocol")
+    if protocol not in {"codex-agent-judge-v1", "api-judge-v1"}:
+        raise OrchestrationError("JUDGE_PROTOCOL_UNSUPPORTED", protocol)
+    model = _required_string(judge.get("model"), "judge.model")
+    if model.lower().startswith("unconfigured"):
+        raise OrchestrationError("JUDGE_MODEL_UNCONFIGURED", model)
+    reasoning_effort = _required_string(
+        judge.get("reasoning_effort"), "judge.reasoning_effort"
+    )
+    if reasoning_effort not in REASONING_EFFORTS:
+        raise OrchestrationError(
+            "JUDGE_REASONING_EFFORT_UNSUPPORTED", reasoning_effort
+        )
+    return dict(identity), {
+        "protocol": protocol,
+        "model": model,
+        "reasoning_effort": reasoning_effort,
+    }
 
 
 def initialize(
@@ -460,6 +634,48 @@ def initialize(
     try:
         for index, task_id in enumerate(selected):
             record = _find_execution_record(unit_root, task_id, explicit)
+            execution = _execution_summary(
+                record,
+                batch_id=identity["batch_id"],
+                unit_id=identity["unit_id"],
+                task_id=task_id,
+            )
+            frozen_record = staging / "execution-records" / f"{task_id}.json"
+            frozen_record.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(record, frozen_record)
+            if _sha256_file(frozen_record) != execution["record_sha256"]:
+                raise OrchestrationError("EXECUTION_RECORD_COPY_MISMATCH", task_id)
+            common_task = {
+                "task_id": task_id,
+                "order": index,
+                "execution": execution,
+                "execution_record_path": frozen_record.relative_to(staging).as_posix(),
+                "execution_record_sha256": execution["record_sha256"],
+                "project": None,
+                "preflight": None,
+                "thread": None,
+                "score": None,
+            }
+            if not execution["scorable"]:
+                tasks.append(
+                    {
+                        **common_task,
+                        "scoring_attempt_id": None,
+                        "attempt_path": None,
+                        "attempt_manifest_sha256": None,
+                        "prompt_path": None,
+                        "prompt_sha256": None,
+                        "phase": "UNSCORED",
+                        "history": [
+                            {
+                                "at": _timestamp(created),
+                                "event": "SCORING_NOT_STARTED",
+                                "error": execution["failure"],
+                            }
+                        ],
+                    }
+                )
+                continue
             attempt_id = f"{orchestration_id}-{index + 1:03d}"
             prepare_arguments = [
                     "prepare",
@@ -521,9 +737,7 @@ def initialize(
                 initial_phase = "AWAITING_PROJECT"
             tasks.append(
                 {
-                    "task_id": task_id,
-                    "order": index,
-                    "execution_record_sha256": _sha256_file(record),
+                    **common_task,
                     "scoring_attempt_id": attempt_id,
                     "attempt_path": attempt_root.relative_to(staging).as_posix(),
                     "attempt_manifest_sha256": _sha256_file(
@@ -536,10 +750,6 @@ def initialize(
                     ),
                     "prompt_sha256": prompt_sha256,
                     "phase": initial_phase,
-                    "project": None,
-                    "preflight": None,
-                    "thread": None,
-                    "score": None,
                     "history": [
                         {
                             "at": _timestamp(created),
@@ -551,6 +761,7 @@ def initialize(
         state: dict[str, Any] = {
             "schema_version": STATE_SCHEMA,
             "revision": STATE_REVISION,
+            "kind": "initial",
             "orchestration_id": orchestration_id,
             "created_at": _timestamp(created),
             "updated_at": _timestamp(created),
@@ -583,6 +794,237 @@ def initialize(
                 ),
             },
             "tasks": tasks,
+            "submission": None,
+        }
+        state["queue_digest"] = _queue_digest(state)
+        _write_new_json(staging / "orchestration-state.json", state)
+        os.replace(staging, final_root)
+    except BaseException:
+        if staging.exists():
+            shutil.rmtree(staging)
+        raise
+    return status(final_root, now=created)
+
+
+def initialize_rescore(
+    *,
+    source_orchestration_root: Path,
+    report_config: Path,
+    score_skill_dir: Path,
+    output_root: Path,
+    orchestration_id: str,
+    task_ids: Sequence[str] = (),
+    api_runtime_config: Path | None = None,
+    score_timeout_seconds: int = 7200,
+    score_slots: int = 1,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    if score_timeout_seconds < 1:
+        raise OrchestrationError("SCORE_TIMEOUT_INVALID")
+    if score_slots != 1:
+        raise OrchestrationError("SCORE_SLOTS_UNSUPPORTED", "G3-06 requires 1")
+    orchestration_id = _identifier(orchestration_id, "orchestration_id")
+    source_root = _state_root(source_orchestration_root)
+    source_state = _verify_state(source_root)
+    if _state_status(source_state) not in {"COMPLETED", "COMPLETED_WITH_FAILURES"}:
+        raise OrchestrationError("RESCORE_SOURCE_NOT_TERMINAL")
+    if source_state.get("submission") is None:
+        raise OrchestrationError("RESCORE_SOURCE_SUBMISSION_REQUIRED")
+    report_config = _regular_file(report_config, "REPORT_CONFIG_INVALID")
+    identity, judge = _load_rescore_judge(report_config, source_state)
+    score_skill = _score_skill_lock(score_skill_dir)
+    source_tasks = source_state["tasks"]
+    available = [
+        task["task_id"]
+        for task in source_tasks
+        if task.get("phase") == "SCORE_RECORDED"
+    ]
+    selected = list(task_ids) if task_ids else available
+    if (
+        not selected
+        or len(selected) != len(set(selected))
+        or any(task_id not in available for task_id in selected)
+    ):
+        raise OrchestrationError("RESCORE_TASK_SELECTION_INVALID", repr(selected))
+    selected_set = set(selected)
+    selected = [
+        task["task_id"] for task in source_tasks if task["task_id"] in selected_set
+    ]
+    if judge["protocol"] == "api-judge-v1":
+        if api_runtime_config is None:
+            raise OrchestrationError("API_JUDGE_CONFIG_REQUIRED")
+        api_runtime_config = _regular_file(
+            api_runtime_config, "API_JUDGE_CONFIG_INVALID"
+        )
+    elif api_runtime_config is not None:
+        raise OrchestrationError("API_JUDGE_CONFIG_UNEXPECTED")
+
+    final_root = output_root.expanduser().resolve() / orchestration_id
+    if final_root.exists():
+        raise OrchestrationError("ORCHESTRATION_EXISTS", str(final_root))
+    final_root.parent.mkdir(parents=True, exist_ok=True)
+    staging = final_root.parent / f".{orchestration_id}.staging-{uuid.uuid4().hex}"
+    staging.mkdir(parents=False, exist_ok=False)
+    created = now or _now()
+    tasks: list[dict[str, Any]] = []
+    frozen_api_runtime: dict[str, Any] | None = None
+    source_state_path = source_root / "orchestration-state.json"
+    source_submission_path = source_root / "submission.json"
+    try:
+        for index, task_id in enumerate(selected):
+            source_task = _task_by_id(source_state, task_id)
+            source_attempt_value = source_task.get("attempt_path")
+            if not isinstance(source_attempt_value, str):
+                raise OrchestrationError("RESCORE_SOURCE_ATTEMPT_MISSING", task_id)
+            source_attempt = _regular_directory(
+                source_root / source_attempt_value, "RESCORE_SOURCE_ATTEMPT_MISSING"
+            )
+            source_score = source_task.get("score")
+            if not isinstance(source_score, dict):
+                raise OrchestrationError("RESCORE_SOURCE_SCORE_MISSING", task_id)
+            _run_score_command(
+                source_state["score_skill"],
+                ["verify-score", "--attempt-root", str(source_attempt)],
+            )
+            frozen_record = staging / "execution-records" / f"{task_id}.json"
+            frozen_record.parent.mkdir(parents=True, exist_ok=True)
+            source_record = source_root / source_task["execution_record_path"]
+            shutil.copyfile(source_record, frozen_record)
+            if _sha256_file(frozen_record) != source_task["execution_record_sha256"]:
+                raise OrchestrationError("EXECUTION_RECORD_COPY_MISMATCH", task_id)
+
+            attempt_id = f"{orchestration_id}-{index + 1:03d}"
+            prepare_arguments = [
+                "prepare-rescore",
+                "--source-attempt-root",
+                str(source_attempt),
+                "--scoring-attempt-id",
+                attempt_id,
+                "--output-root",
+                str(staging / "attempts"),
+                "--judge-protocol",
+                judge["protocol"],
+                "--judge-model",
+                judge["model"],
+                "--judge-reasoning-effort",
+                judge["reasoning_effort"],
+                "--judge-attempt-id",
+                attempt_id,
+            ]
+            if api_runtime_config is not None:
+                prepare_arguments.extend(
+                    ["--api-runtime-config", str(api_runtime_config)]
+                )
+            result = _run_score_command(score_skill, prepare_arguments)
+            attempt_root = Path(result["attempt_root"]).resolve(strict=True)
+            if not _inside(staging, attempt_root):
+                raise OrchestrationError("ATTEMPT_PATH_ESCAPE", str(attempt_root))
+            attempt_manifest = _read_json(
+                attempt_root / "attempt-manifest.json", "ATTEMPT_MANIFEST_INVALID"
+            )
+            attempt_judge = attempt_manifest.get("judge")
+            if not isinstance(attempt_judge, dict):
+                raise OrchestrationError("JUDGE_CONFIG_INVALID", "attempt manifest")
+            current_api_runtime = attempt_judge.get("api_runtime")
+            if judge["protocol"] == "api-judge-v1":
+                if not isinstance(current_api_runtime, dict):
+                    raise OrchestrationError("API_JUDGE_CONFIG_INVALID", "not frozen")
+                if frozen_api_runtime is None:
+                    frozen_api_runtime = current_api_runtime
+                elif frozen_api_runtime != current_api_runtime:
+                    raise OrchestrationError("API_JUDGE_CONFIG_MISMATCH")
+                prompt_path = None
+                prompt_sha256 = None
+                initial_phase = "API_READY"
+            else:
+                prompt_path = staging / "prompts" / f"{task_id}.md"
+                prompt_path.parent.mkdir(parents=True, exist_ok=True)
+                prompt_path.write_text(
+                    _prompt_text(task_id, attempt_id, judge),
+                    encoding="utf-8",
+                    newline="\n",
+                )
+                prompt_sha256 = _sha256_file(prompt_path)
+                initial_phase = "AWAITING_PROJECT"
+            tasks.append(
+                {
+                    "task_id": task_id,
+                    "order": index,
+                    "execution": dict(source_task["execution"]),
+                    "execution_record_path": frozen_record.relative_to(staging).as_posix(),
+                    "execution_record_sha256": source_task["execution_record_sha256"],
+                    "source": {
+                        "orchestration_id": source_state["orchestration_id"],
+                        "scoring_attempt_id": source_task["scoring_attempt_id"],
+                        "attempt_manifest_sha256": source_task["attempt_manifest_sha256"],
+                        "score_sha256": source_score["sha256"],
+                        "score_valid": source_score["valid"],
+                    },
+                    "scoring_attempt_id": attempt_id,
+                    "attempt_path": attempt_root.relative_to(staging).as_posix(),
+                    "attempt_manifest_sha256": _sha256_file(
+                        attempt_root / "attempt-manifest.json"
+                    ),
+                    "prompt_path": (
+                        prompt_path.relative_to(staging).as_posix()
+                        if prompt_path is not None
+                        else None
+                    ),
+                    "prompt_sha256": prompt_sha256,
+                    "project": None,
+                    "preflight": None,
+                    "thread": None,
+                    "score": None,
+                    "phase": initial_phase,
+                    "history": [
+                        {
+                            "at": _timestamp(created),
+                            "event": "RESCORE_ATTEMPT_PREPARED",
+                            "source_scoring_attempt_id": source_task[
+                                "scoring_attempt_id"
+                            ],
+                        }
+                    ],
+                }
+            )
+        state: dict[str, Any] = {
+            "schema_version": STATE_SCHEMA,
+            "revision": STATE_REVISION,
+            "kind": "rescore",
+            "orchestration_id": orchestration_id,
+            "created_at": _timestamp(created),
+            "updated_at": _timestamp(created),
+            "status": "RUNNING",
+            "identity": identity,
+            "judge": {
+                **judge,
+                **(
+                    {"api_runtime": frozen_api_runtime}
+                    if frozen_api_runtime is not None
+                    else {}
+                ),
+            },
+            "prompt_protocol": (
+                API_PROMPT_PROTOCOL
+                if judge["protocol"] == "api-judge-v1"
+                else PROMPT_PROTOCOL
+            ),
+            "score_timeout_seconds": score_timeout_seconds,
+            "score_slots": score_slots,
+            "score_skill": score_skill,
+            "sources": {
+                "source_orchestration_id": source_state["orchestration_id"],
+                "source_state_sha256": _sha256_file(source_state_path),
+                "source_submission_sha256": _sha256_file(source_submission_path),
+                "report_config_sha256": _sha256_file(report_config),
+                "api_runtime_config_sha256": (
+                    _sha256_file(api_runtime_config)
+                    if api_runtime_config is not None
+                    else None
+                ),
+            },
+            "tasks": tasks,
+            "submission": None,
         }
         state["queue_digest"] = _queue_digest(state)
         _write_new_json(staging / "orchestration-state.json", state)
@@ -620,10 +1062,146 @@ def _require_active(state: Mapping[str, Any], task_id: str) -> dict[str, Any]:
     return task
 
 
+def _verified_score_document(
+    root: Path,
+    state: Mapping[str, Any],
+    task: Mapping[str, Any],
+) -> tuple[dict[str, Any], Path]:
+    attempt_value = task.get("attempt_path")
+    if not isinstance(attempt_value, str):
+        raise OrchestrationError("SCORE_ATTEMPT_MISSING", str(task.get("task_id")))
+    attempt = (root / attempt_value).resolve(strict=True)
+    verification = _run_score_command(
+        state["score_skill"], ["verify-score", "--attempt-root", str(attempt)]
+    )
+    score_path = attempt / "score.json"
+    score = _read_json(score_path, "SCORE_DOCUMENT_INVALID")
+    _validate_contract(score, expected_schema_id=SCORE_SCHEMA)
+    identity = score.get("identity")
+    execution = score.get("execution")
+    judge = score.get("judge")
+    result = score.get("result")
+    expected_identity = state.get("identity", {})
+    task_execution = task.get("execution", {})
+    if (
+        not isinstance(identity, dict)
+        or identity.get("batch_id") != expected_identity.get("batch_id")
+        or identity.get("unit_id") != expected_identity.get("unit_id")
+        or identity.get("task_id") != task.get("task_id")
+        or identity.get("attempt_id") != task.get("scoring_attempt_id")
+        or not isinstance(execution, dict)
+        or execution.get("attempt_id") != task_execution.get("attempt_id")
+        or execution.get("business_status") != task_execution.get("business_status")
+        or execution.get("record_sha256") != task.get("execution_record_sha256")
+        or not isinstance(judge, dict)
+        or judge.get("protocol")
+        not in {"codex-agent-judge-v1", "api-judge-v1", "not-required"}
+        or not isinstance(result, dict)
+        or not isinstance(result.get("valid"), bool)
+        or verification.get("score_valid") is not result.get("valid")
+    ):
+        raise OrchestrationError(
+            "SCORE_IDENTITY_MISMATCH", str(task.get("task_id"))
+        )
+    if result["valid"]:
+        total = result.get("total_score")
+        if isinstance(total, bool) or not isinstance(total, (int, float)):
+            raise OrchestrationError(
+                "SCORE_RESULT_INVALID", str(task.get("task_id"))
+            )
+    elif result.get("total_score") is not None:
+        raise OrchestrationError(
+            "SCORE_RESULT_INVALID", str(task.get("task_id"))
+        )
+    return score, score_path
+
+
+def _submission_document(
+    root: Path,
+    state: Mapping[str, Any],
+    *,
+    created_at: str,
+) -> dict[str, Any]:
+    if any(task.get("phase") not in TERMINAL_PHASES for task in state["tasks"]):
+        raise OrchestrationError("SUBMISSION_TASKS_NOT_TERMINAL")
+    identity = state.get("identity")
+    if not isinstance(identity, dict):
+        raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "identity")
+    dataset = identity.get("dataset")
+    if not isinstance(dataset, dict):
+        raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "dataset")
+    dataset_document = {
+        "id": _required_string(dataset.get("id"), "dataset.id"),
+        "digest": _required_string(dataset.get("digest"), "dataset.digest"),
+    }
+    submission_tasks: list[dict[str, Any]] = []
+    for task in state["tasks"]:
+        execution = task["execution"]
+        phase = task["phase"]
+        if phase == "SCORE_RECORDED":
+            score, score_path = _verified_score_document(root, state, task)
+            result = score["result"]
+            judge_protocol = score["judge"]["protocol"]
+            semantic_catalog = (root / task["attempt_path"] / "semantic/evidence-catalog.json")
+            evidence_sha = (
+                _sha256_file(semantic_catalog)
+                if semantic_catalog.is_file() and not semantic_catalog.is_symlink()
+                else execution.get("evidence_sha256")
+            )
+            score_status = "valid" if result["valid"] else "evaluation_error"
+            scoring_attempt_id = task["scoring_attempt_id"]
+            score_relative = score_path.relative_to(root).as_posix()
+            score_sha = _sha256_file(score_path)
+        else:
+            score_status = "unscored"
+            scoring_attempt_id = None
+            judge_protocol = None
+            score_relative = None
+            score_sha = None
+            evidence_sha = execution.get("evidence_sha256")
+        submission_tasks.append(
+            {
+                "task_id": task["task_id"],
+                "execution_attempt_id": execution["attempt_id"],
+                "execution_status": execution["business_status"],
+                "scoring_attempt_id": scoring_attempt_id,
+                "judge_protocol": judge_protocol,
+                "score_status": score_status,
+                "score_path": score_relative,
+                "score_sha256": score_sha,
+                "candidate_sha256": execution.get("candidate_sha256"),
+                "evidence_sha256": evidence_sha,
+            }
+        )
+    document = {
+        "schema_id": SUBMISSION_SCHEMA,
+        "schema_version": 1,
+        "scope": {
+            "batch_id": identity["batch_id"],
+            "unit_id": identity["unit_id"],
+        },
+        "dataset": dataset_document,
+        "created_at": created_at,
+        "task_count": len(submission_tasks),
+        "task_ids": [task["task_id"] for task in submission_tasks],
+        "tasks": submission_tasks,
+        "integrity": {
+            "scope_matches": True,
+            "identities_match": True,
+            "hashes_verified": True,
+            "valid": True,
+        },
+    }
+    _validate_contract(document, expected_schema_id=SUBMISSION_SCHEMA)
+    return document
+
+
 def _verify_state(root: Path) -> dict[str, Any]:
     state = _read_json(root / "orchestration-state.json", "ORCHESTRATION_STATE_INVALID")
     if state.get("schema_version") != STATE_SCHEMA or state.get("revision") != STATE_REVISION:
         raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "schema or revision")
+    if state.get("kind") not in {"initial", "rescore"}:
+        raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "kind")
     tasks = state.get("tasks")
     if not isinstance(tasks, list) or not tasks or not all(
         isinstance(task, dict) for task in tasks
@@ -633,6 +1211,7 @@ def _verify_state(root: Path) -> dict[str, Any]:
     if (
         not all(isinstance(task_id, str) and ID_RE.fullmatch(task_id) for task_id in task_ids)
         or len(task_ids) != len(set(task_ids))
+        or [task.get("order") for task in tasks] != list(range(len(tasks)))
         or any(task.get("phase") not in TASK_PHASES for task in tasks)
     ):
         raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "task identity or phase")
@@ -645,9 +1224,70 @@ def _verify_state(root: Path) -> dict[str, Any]:
     if current_skill != state.get("score_skill"):
         raise OrchestrationError("SCORE_SKILL_DRIFT")
     for task in tasks:
+        record_value = task.get("execution_record_path")
+        record = root / str(record_value)
+        if (
+            not isinstance(record_value, str)
+            or not _inside(root, record.resolve())
+            or record.is_symlink()
+            or not record.is_file()
+            or _sha256_file(record) != task.get("execution_record_sha256")
+        ):
+            raise OrchestrationError(
+                "EXECUTION_RECORD_DRIFT", str(task.get("task_id"))
+            )
+        execution = task.get("execution")
+        record_document = _read_json(record, "EXECUTION_RECORD_INVALID")
+        record_identity = record_document.get("identity")
+        record_execution = record_document.get("execution")
+        record_candidate = record_document.get("candidate")
+        if (
+            not isinstance(execution, dict)
+            or not isinstance(record_identity, dict)
+            or record_identity.get("task_id") != task.get("task_id")
+            or record_identity.get("batch_id") != state.get("identity", {}).get("batch_id")
+            or record_identity.get("unit_id") != state.get("identity", {}).get("unit_id")
+            or record_identity.get("attempt_id") != execution.get("attempt_id")
+            or not isinstance(record_execution, dict)
+            or record_execution.get("business_status")
+            != execution.get("business_status")
+            or (
+                execution.get("candidate_sha256") is not None
+                and (
+                    not isinstance(record_candidate, dict)
+                    or record_candidate.get("frozen_sha256")
+                    != execution.get("candidate_sha256")
+                )
+            )
+            or not isinstance(execution.get("scorable"), bool)
+        ):
+            raise OrchestrationError(
+                "EXECUTION_RECORD_LOCK_MISMATCH", str(task.get("task_id"))
+            )
+        attempt_value = task.get("attempt_path")
+        if attempt_value is None:
+            if (
+                task.get("phase") != "UNSCORED"
+                or execution.get("scorable") is not False
+                or task.get("scoring_attempt_id") is not None
+                or task.get("attempt_manifest_sha256") is not None
+                or task.get("prompt_path") is not None
+                or task.get("prompt_sha256") is not None
+                or task.get("project") is not None
+                or task.get("thread") is not None
+                or task.get("score") is not None
+            ):
+                raise OrchestrationError(
+                    "UNSCORED_TASK_INVALID", str(task.get("task_id"))
+                )
+            continue
+        if not isinstance(attempt_value, str) or execution.get("scorable") is not True:
+            raise OrchestrationError(
+                "SCORING_ATTEMPT_STATE_INVALID", str(task.get("task_id"))
+            )
         prompt_value = task.get("prompt_path")
         prompt = root / str(prompt_value) if prompt_value is not None else None
-        attempt = root / str(task.get("attempt_path", ""))
+        attempt = root / attempt_value
         if (
             (prompt is not None and not _inside(root, prompt.resolve()))
             or not _inside(root, attempt.resolve())
@@ -673,6 +1313,49 @@ def _verify_state(root: Path) -> dict[str, Any]:
         _run_score_command(
             state["score_skill"], ["verify", "--attempt-root", str(attempt)]
         )
+        manifest_document = _read_json(manifest, "ATTEMPT_MANIFEST_INVALID")
+        manifest_identity = manifest_document.get("identity")
+        manifest_judge = manifest_document.get("judge")
+        expected_judge = state.get("judge", {})
+        if (
+            not isinstance(manifest_identity, dict)
+            or manifest_identity.get("batch_id") != state.get("identity", {}).get("batch_id")
+            or manifest_identity.get("unit_id") != state.get("identity", {}).get("unit_id")
+            or manifest_identity.get("task_id") != task.get("task_id")
+            or manifest_identity.get("execution_attempt_id") != execution.get("attempt_id")
+            or manifest_identity.get("scoring_attempt_id") != task.get("scoring_attempt_id")
+            or not isinstance(manifest_judge, dict)
+            or manifest_judge.get("protocol") != expected_judge.get("protocol")
+            or manifest_judge.get("model") != expected_judge.get("model")
+            or manifest_judge.get("reasoning_effort")
+            != expected_judge.get("reasoning_effort")
+        ):
+            raise OrchestrationError(
+                "SCORING_ATTEMPT_IDENTITY_MISMATCH", str(task.get("task_id"))
+            )
+        source = task.get("source")
+        lineage = manifest_document.get("lineage")
+        if state.get("kind") == "rescore":
+            if (
+                not isinstance(source, dict)
+                or not isinstance(lineage, dict)
+                or lineage.get("kind") != "rescore"
+                or lineage.get("source_scoring_attempt_id")
+                != source.get("scoring_attempt_id")
+                or lineage.get("source_attempt_manifest_sha256")
+                != source.get("attempt_manifest_sha256")
+                or lineage.get("source_score_sha256") != source.get("score_sha256")
+                or lineage.get("source_score_valid") != source.get("score_valid")
+                or lineage.get("source_candidate_sha256")
+                != execution.get("candidate_sha256")
+            ):
+                raise OrchestrationError(
+                    "RESCORE_LINEAGE_MISMATCH", str(task.get("task_id"))
+                )
+        elif source is not None or lineage is not None:
+            raise OrchestrationError(
+                "INITIAL_LINEAGE_UNEXPECTED", str(task.get("task_id"))
+            )
         project = task.get("project")
         if project is not None:
             evidence = root / str(project.get("evidence_path", ""))
@@ -693,9 +1376,49 @@ def _verify_state(root: Path) -> dict[str, Any]:
                 or _sha256_file(score_path) != score.get("sha256")
             ):
                 raise OrchestrationError("SCORE_ARTIFACT_DRIFT", str(task.get("task_id")))
-            _run_score_command(
-                state["score_skill"], ["verify-score", "--attempt-root", str(attempt)]
+            score_document, verified_score_path = _verified_score_document(
+                root, state, task
             )
+            result = score_document["result"]
+            if (
+                task.get("phase") != "SCORE_RECORDED"
+                or verified_score_path != score_path
+                or score.get("valid") is not result.get("valid")
+                or score.get("total_score") != result.get("total_score")
+            ):
+                raise OrchestrationError(
+                    "SCORE_STATE_MISMATCH", str(task.get("task_id"))
+                )
+        elif task.get("phase") == "SCORE_RECORDED":
+            raise OrchestrationError(
+                "SCORE_STATE_MISSING", str(task.get("task_id"))
+            )
+    submission = state.get("submission")
+    if submission is not None:
+        if not isinstance(submission, dict):
+            raise OrchestrationError("SUBMISSION_STATE_INVALID")
+        submission_path = root / str(submission.get("path", ""))
+        if (
+            submission_path != root / "submission.json"
+            or submission_path.is_symlink()
+            or not submission_path.is_file()
+            or _sha256_file(submission_path) != submission.get("sha256")
+        ):
+            raise OrchestrationError("SUBMISSION_DRIFT")
+        submission_document = _read_json(
+            submission_path, "SUBMISSION_DOCUMENT_INVALID"
+        )
+        _validate_contract(
+            submission_document, expected_schema_id=SUBMISSION_SCHEMA
+        )
+        created_at = submission_document.get("created_at")
+        if created_at != submission.get("created_at"):
+            raise OrchestrationError("SUBMISSION_STATE_INVALID", "created_at")
+        expected_submission = _submission_document(
+            root, state, created_at=_required_string(created_at, "submission.created_at")
+        )
+        if submission_document != expected_submission:
+            raise OrchestrationError("SUBMISSION_CONTENT_MISMATCH")
     return state
 
 
@@ -714,6 +1437,17 @@ def _recommended_actions(
 ) -> list[dict[str, Any]]:
     task = _active_task(state)
     if task is None:
+        if state.get("submission") is None:
+            return [
+                {
+                    "action": "BUILD_SUBMISSION",
+                    "command": [
+                        "build-submission",
+                        "--orchestration-root",
+                        str(root),
+                    ],
+                }
+            ]
         return []
     task_id = task["task_id"]
     attempt = str((root / task["attempt_path"]).resolve())
@@ -803,6 +1537,23 @@ def _recommended_actions(
 
 def _public_view(root: Path, state: Mapping[str, Any], now: datetime) -> dict[str, Any]:
     status_value = _state_status(state)
+    terminal_count = sum(
+        task.get("phase") in TERMINAL_PHASES for task in state["tasks"]
+    )
+    valid_score_count = sum(
+        task.get("phase") == "SCORE_RECORDED"
+        and (task.get("score") or {}).get("valid") is True
+        for task in state["tasks"]
+    )
+    evaluation_error_count = sum(
+        task.get("phase") == "SCORE_RECORDED"
+        and (task.get("score") or {}).get("valid") is False
+        for task in state["tasks"]
+    )
+    unscored_count = sum(
+        task.get("phase") in {"THREAD_FAILED", "UNSCORED"}
+        for task in state["tasks"]
+    )
     return {
         "status": status_value,
         "orchestration_root": str(root),
@@ -810,18 +1561,29 @@ def _public_view(root: Path, state: Mapping[str, Any], now: datetime) -> dict[st
         "queue_digest": state["queue_digest"],
         "judge": state["judge"],
         "task_count": len(state["tasks"]),
+        "terminal_count": terminal_count,
         "completed_count": sum(
             task.get("phase") == "SCORE_RECORDED" for task in state["tasks"]
         ),
-        "failed_count": sum(
-            task.get("phase") == "THREAD_FAILED" for task in state["tasks"]
+        "valid_score_count": valid_score_count,
+        "evaluation_error_count": evaluation_error_count,
+        "unscored_count": unscored_count,
+        "failed_count": unscored_count,
+        "submission_path": (
+            str((root / state["submission"]["path"]).resolve())
+            if state.get("submission") is not None
+            else None
         ),
         "tasks": [
             {
                 "task_id": task["task_id"],
                 "phase": task["phase"],
                 "scoring_attempt_id": task["scoring_attempt_id"],
-                "attempt_path": str((root / task["attempt_path"]).resolve()),
+                "attempt_path": (
+                    str((root / task["attempt_path"]).resolve())
+                    if task.get("attempt_path") is not None
+                    else None
+                ),
                 "project_id": (task.get("project") or {}).get("project_id"),
                 "thread_id": (task.get("thread") or {}).get("thread_id"),
                 "cursor": (task.get("thread") or {}).get("cursor"),
@@ -844,6 +1606,32 @@ def status(orchestration_root: Path, *, now: datetime | None = None) -> dict[str
     root = _state_root(orchestration_root)
     state = _verify_state(root)
     return _public_view(root, state, now or _now())
+
+
+def build_submission(
+    orchestration_root: Path,
+    *,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    root = _state_root(orchestration_root)
+    state = _verify_state(root)
+    if any(task.get("phase") not in TERMINAL_PHASES for task in state["tasks"]):
+        raise OrchestrationError("SUBMISSION_TASKS_NOT_TERMINAL")
+    if state.get("submission") is not None:
+        return _public_view(root, state, now or _now())
+    destination = root / "submission.json"
+    if destination.exists() or destination.is_symlink():
+        raise OrchestrationError("SUBMISSION_OUTPUT_CONFLICT", str(destination))
+    event_time = now or _now()
+    created_at = _timestamp(event_time)
+    document = _submission_document(root, state, created_at=created_at)
+    _write_new_json(destination, document)
+    state["submission"] = {
+        "path": destination.relative_to(root).as_posix(),
+        "sha256": _sha256_file(destination),
+        "created_at": created_at,
+    }
+    return _save(root, state, event_time)
 
 
 def _save(root: Path, state: dict[str, Any], now: datetime) -> dict[str, Any]:
@@ -1207,8 +1995,24 @@ def main(argv: list[str] | None = None) -> int:
     init.add_argument("--score-timeout-seconds", type=int, default=7200)
     init.add_argument("--score-slots", type=int, default=1)
 
+    init_rescore = subparsers.add_parser("init-rescore")
+    init_rescore.add_argument(
+        "--source-orchestration-root", required=True, type=Path
+    )
+    init_rescore.add_argument("--report-config", required=True, type=Path)
+    init_rescore.add_argument("--score-skill-dir", required=True, type=Path)
+    init_rescore.add_argument("--output-root", required=True, type=Path)
+    init_rescore.add_argument("--orchestration-id", required=True)
+    init_rescore.add_argument("--task-id", action="append", default=[])
+    init_rescore.add_argument("--api-runtime-config", type=Path)
+    init_rescore.add_argument("--score-timeout-seconds", type=int, default=7200)
+    init_rescore.add_argument("--score-slots", type=int, default=1)
+
     for name in ("status", "resume"):
         _parse_common(subparsers.add_parser(name))
+
+    build = subparsers.add_parser("build-submission")
+    _parse_common(build)
 
     project = subparsers.add_parser("record-project")
     _parse_common(project)
@@ -1269,8 +2073,22 @@ def main(argv: list[str] | None = None) -> int:
                 score_timeout_seconds=args.score_timeout_seconds,
                 score_slots=args.score_slots,
             )
+        elif args.command == "init-rescore":
+            result = initialize_rescore(
+                source_orchestration_root=args.source_orchestration_root,
+                report_config=args.report_config,
+                score_skill_dir=args.score_skill_dir,
+                output_root=args.output_root,
+                orchestration_id=args.orchestration_id,
+                task_ids=args.task_id,
+                api_runtime_config=args.api_runtime_config,
+                score_timeout_seconds=args.score_timeout_seconds,
+                score_slots=args.score_slots,
+            )
         elif args.command in {"status", "resume"}:
             result = status(args.orchestration_root)
+        elif args.command == "build-submission":
+            result = build_submission(args.orchestration_root)
         elif args.command == "record-project":
             result = record_project(
                 args.orchestration_root,
@@ -1313,7 +2131,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.orchestration_root,
                 task_id=args.task_id,
             )
-        else:
+        elif args.command == "run-api-score":
             result = run_api_score_task(
                 args.orchestration_root,
                 task_id=args.task_id,
@@ -1321,6 +2139,8 @@ def main(argv: list[str] | None = None) -> int:
                 rule_timeout_seconds=args.rule_timeout_seconds,
                 playwright_browsers_path=args.playwright_browsers_path,
             )
+        else:
+            raise OrchestrationError("COMMAND_UNSUPPORTED", str(args.command))
         _print(result)
         return 0
     except OrchestrationError as exc:

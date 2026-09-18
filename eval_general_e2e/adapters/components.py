@@ -59,6 +59,13 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         vendor_root="vendor/e2e-shared/wildclawbench_grading_core",
         entrypoints=("__init__.py",),
     ),
+    SharedComponentSpec(
+        name="general-contracts",
+        version="1.0.0",
+        source_root="eval_general_e2e/contracts",
+        vendor_root="vendor/e2e-shared/general-contracts",
+        entrypoints=("validator.py",),
+    ),
 )
 
 ASTRONSTUDIO_COMPONENT_NAMES = frozenset(

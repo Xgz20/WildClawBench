@@ -829,6 +829,62 @@ def _load_runtime_lock(path: Path) -> tuple[dict[str, Any], str]:
     return value, _sha256_file(path)
 
 
+def _freeze_judge_config(
+    *,
+    judge_protocol: str | None,
+    judge_model: str | None,
+    judge_reasoning_effort: str | None,
+    judge_attempt_id: str | None,
+    api_runtime_config_path: Path | None,
+) -> dict[str, Any] | None:
+    judge_values = (
+        judge_protocol,
+        judge_model,
+        judge_reasoning_effort,
+        judge_attempt_id,
+    )
+    if any(value is not None for value in judge_values) and not all(
+        value is not None for value in judge_values
+    ):
+        raise ScoringRuntimeError(
+            "JUDGE_CONFIG_INCOMPLETE",
+            "protocol, model, reasoning effort and attempt ID must be supplied together",
+        )
+    if not all(value is not None for value in judge_values):
+        if api_runtime_config_path is not None:
+            raise ScoringRuntimeError("API_JUDGE_CONFIG_UNEXPECTED", "judge missing")
+        return None
+    protocol = _required_string(judge_protocol, "judge_protocol")
+    if protocol not in SEMANTIC_PROTOCOLS:
+        raise ScoringRuntimeError("JUDGE_PROTOCOL_UNSUPPORTED", protocol)
+    model = _required_string(judge_model, "judge_model")
+    if model.lower().startswith("unconfigured"):
+        raise ScoringRuntimeError("JUDGE_MODEL_UNCONFIGURED", model)
+    reasoning_effort = _required_string(
+        judge_reasoning_effort, "judge_reasoning_effort"
+    )
+    if reasoning_effort not in REASONING_EFFORTS:
+        raise ScoringRuntimeError(
+            "JUDGE_REASONING_EFFORT_UNSUPPORTED", reasoning_effort
+        )
+    if protocol == "api-judge-v1":
+        if api_runtime_config_path is None:
+            raise ScoringRuntimeError("API_JUDGE_CONFIG_REQUIRED")
+        api_runtime = _load_api_runtime_config(api_runtime_config_path)
+    else:
+        if api_runtime_config_path is not None:
+            raise ScoringRuntimeError("API_JUDGE_CONFIG_UNEXPECTED", protocol)
+        api_runtime = None
+    return {
+        "schema_version": JUDGE_CONFIG_SCHEMA,
+        "protocol": protocol,
+        "model": model,
+        "reasoning_effort": reasoning_effort,
+        "attempt_id": _identifier(judge_attempt_id, "judge_attempt_id"),
+        "api_runtime": api_runtime,
+    }
+
+
 def prepare_attempt(
     *,
     unit_root: Path,
@@ -933,54 +989,13 @@ def prepare_attempt(
         transcript_count = _validate_transcript(transcript_source)
 
     runtime_lock, runtime_lock_sha = _load_runtime_lock(runtime_lock_path)
-    judge_values = (
-        judge_protocol,
-        judge_model,
-        judge_reasoning_effort,
-        judge_attempt_id,
+    judge_config = _freeze_judge_config(
+        judge_protocol=judge_protocol,
+        judge_model=judge_model,
+        judge_reasoning_effort=judge_reasoning_effort,
+        judge_attempt_id=judge_attempt_id,
+        api_runtime_config_path=api_runtime_config_path,
     )
-    if any(value is not None for value in judge_values) and not all(
-        value is not None for value in judge_values
-    ):
-        raise ScoringRuntimeError(
-            "JUDGE_CONFIG_INCOMPLETE",
-            "protocol, model, reasoning effort and attempt ID must be supplied together",
-        )
-    judge_config: dict[str, Any] | None = None
-    if all(value is not None for value in judge_values):
-        protocol = _required_string(judge_protocol, "judge_protocol")
-        if protocol not in SEMANTIC_PROTOCOLS:
-            raise ScoringRuntimeError("JUDGE_PROTOCOL_UNSUPPORTED", protocol)
-        model = _required_string(judge_model, "judge_model")
-        if model.lower().startswith("unconfigured"):
-            raise ScoringRuntimeError("JUDGE_MODEL_UNCONFIGURED", model)
-        reasoning_effort = _required_string(
-            judge_reasoning_effort, "judge_reasoning_effort"
-        )
-        if reasoning_effort not in REASONING_EFFORTS:
-            raise ScoringRuntimeError(
-                "JUDGE_REASONING_EFFORT_UNSUPPORTED", reasoning_effort
-            )
-        if protocol == "api-judge-v1":
-            if api_runtime_config_path is None:
-                raise ScoringRuntimeError("API_JUDGE_CONFIG_REQUIRED")
-            api_runtime = _load_api_runtime_config(api_runtime_config_path)
-        else:
-            if api_runtime_config_path is not None:
-                raise ScoringRuntimeError(
-                    "API_JUDGE_CONFIG_UNEXPECTED", protocol
-                )
-            api_runtime = None
-        judge_config = {
-            "schema_version": JUDGE_CONFIG_SCHEMA,
-            "protocol": protocol,
-            "model": model,
-            "reasoning_effort": reasoning_effort,
-            "attempt_id": _identifier(judge_attempt_id, "judge_attempt_id"),
-            "api_runtime": api_runtime,
-        }
-    elif api_runtime_config_path is not None:
-        raise ScoringRuntimeError("API_JUDGE_CONFIG_UNEXPECTED", "judge missing")
     destination = (
         output_root.expanduser().resolve()
         / f"{batch_id}__{unit_id}"
@@ -1133,6 +1148,40 @@ def verify_attempt(attempt_root: Path) -> dict[str, Any]:
     digests = manifest.get("digests")
     if not isinstance(paths, dict) or not isinstance(digests, dict):
         raise ScoringRuntimeError("ATTEMPT_MANIFEST_INVALID", "shape")
+    lineage = manifest.get("lineage")
+    if lineage is not None:
+        required_lineage_keys = {
+            "kind",
+            "source_scoring_attempt_id",
+            "source_attempt_manifest_sha256",
+            "source_score_sha256",
+            "source_score_valid",
+            "source_candidate_sha256",
+            "source_judge",
+        }
+        manifest_identity = manifest.get("identity")
+        if not isinstance(manifest_identity, dict):
+            raise ScoringRuntimeError("ATTEMPT_MANIFEST_INVALID", "identity")
+        current_attempt_id = manifest_identity.get("scoring_attempt_id")
+        if (
+            not isinstance(lineage, dict)
+            or set(lineage) != required_lineage_keys
+            or lineage.get("kind") != "rescore"
+            or not ID_RE.fullmatch(str(lineage.get("source_scoring_attempt_id") or ""))
+            or lineage.get("source_scoring_attempt_id") == current_attempt_id
+            or not SHA256_RE.fullmatch(
+                str(lineage.get("source_attempt_manifest_sha256") or "")
+            )
+            or not SHA256_RE.fullmatch(str(lineage.get("source_score_sha256") or ""))
+            or not isinstance(lineage.get("source_score_valid"), bool)
+            or lineage.get("source_candidate_sha256")
+            != digests.get("candidate_original_sha256")
+            or (
+                lineage.get("source_judge") is not None
+                and not isinstance(lineage.get("source_judge"), dict)
+            )
+        ):
+            raise ScoringRuntimeError("RESCORE_LINEAGE_INVALID")
     original = _resolve_within(root, paths.get("candidate_original"), "candidate_original")
     entries, candidate_sha = _inventory_tree(original)
     if candidate_sha != digests.get("candidate_original_sha256"):
@@ -4112,6 +4161,252 @@ def verify_score_attempt(attempt_root: Path) -> dict[str, Any]:
     }
 
 
+def prepare_rescore_attempt(
+    *,
+    source_attempt_root: Path,
+    scoring_attempt_id: str,
+    output_root: Path,
+    judge_protocol: str | None = None,
+    judge_model: str | None = None,
+    judge_reasoning_effort: str | None = None,
+    judge_attempt_id: str | None = None,
+    api_runtime_config_path: Path | None = None,
+) -> dict[str, Any]:
+    source_root = source_attempt_root.expanduser().resolve(strict=True)
+    source_attempt_verification = verify_attempt(source_root)
+    source_score_verification = verify_score_attempt(source_root)
+    source_manifest_path = source_root / "attempt-manifest.json"
+    source_score_path = source_root / "score.json"
+    source_manifest = _read_json(
+        source_manifest_path, code="ATTEMPT_MANIFEST_INVALID"
+    )
+    source_score = _read_json(source_score_path, code="SCORE_DOCUMENT_INVALID")
+    source_identity = source_manifest.get("identity")
+    if not isinstance(source_identity, dict):
+        raise ScoringRuntimeError("ATTEMPT_MANIFEST_INVALID", "identity")
+    scoring_attempt_id = _identifier(scoring_attempt_id, "scoring_attempt_id")
+    source_attempt_id = _identifier(
+        source_identity.get("scoring_attempt_id"), "source_scoring_attempt_id"
+    )
+    if scoring_attempt_id == source_attempt_id:
+        raise ScoringRuntimeError("RESCORE_ATTEMPT_ID_REUSED", scoring_attempt_id)
+    judge_config = _freeze_judge_config(
+        judge_protocol=judge_protocol,
+        judge_model=judge_model,
+        judge_reasoning_effort=judge_reasoning_effort,
+        judge_attempt_id=judge_attempt_id,
+        api_runtime_config_path=api_runtime_config_path,
+    )
+    grading = source_manifest.get("grading")
+    if not isinstance(grading, dict):
+        raise ScoringRuntimeError("ATTEMPT_MANIFEST_INVALID", "grading")
+    if grading.get("type") != "automated" and judge_config is None:
+        raise ScoringRuntimeError("JUDGE_CONFIG_REQUIRED_FOR_RESCORE")
+
+    batch_id = _identifier(source_identity.get("batch_id"), "batch_id")
+    unit_id = _identifier(source_identity.get("unit_id"), "unit_id")
+    task_id = _identifier(source_identity.get("task_id"), "task_id")
+    execution_attempt_id = _identifier(
+        source_identity.get("execution_attempt_id"), "execution_attempt_id"
+    )
+    destination = (
+        output_root.expanduser().resolve()
+        / f"{batch_id}__{unit_id}"
+        / task_id
+        / scoring_attempt_id
+    )
+    if destination.exists():
+        raise ScoringRuntimeError("SCORING_ATTEMPT_EXISTS", str(destination))
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    staging = destination.parent / f".{destination.name}.staging-{uuid.uuid4().hex}"
+    staging.mkdir(parents=False, exist_ok=False)
+    source_paths = source_manifest.get("paths")
+    source_digests = source_manifest.get("digests")
+    source_private_scoring = source_manifest.get("private_scoring")
+    if not all(
+        isinstance(value, dict)
+        for value in (source_paths, source_digests, source_private_scoring)
+    ):
+        raise ScoringRuntimeError("ATTEMPT_MANIFEST_INVALID", "rescore inputs")
+    try:
+        source_original = _resolve_within(
+            source_root, source_paths.get("candidate_original"), "candidate_original"
+        )
+        candidate_entries, candidate_sha = _inventory_tree(source_original)
+        if candidate_sha != source_attempt_verification["candidate_sha256"]:
+            raise ScoringRuntimeError("RESCORE_CANDIDATE_MISMATCH")
+        original_workspace = staging / "candidate-original/workspace"
+        runtime_workspace = staging / "runtime/workspace"
+        private_root = staging / "private"
+        private_root.mkdir(parents=True)
+        _copy_inventory(source_original, original_workspace, candidate_entries)
+        source_artifact = _resolve_within(
+            source_root,
+            source_paths.get("candidate_artifact"),
+            "candidate_artifact",
+        )
+        shutil.copyfile(
+            source_artifact, staging / "candidate-original/candidate-artifact.json"
+        )
+        _make_read_only(staging / "candidate-original")
+
+        _copy_inventory(original_workspace, runtime_workspace, candidate_entries)
+        if os.path.lexists(runtime_workspace / "gt"):
+            raise ScoringRuntimeError("RUNTIME_GT_COLLISION")
+        source_gt = _resolve_within(source_root, source_paths.get("gt"), "gt")
+        source_gt_entries, _ = _inventory_tree(source_gt)
+        target_gt = private_root / "gt"
+        _copy_inventory(source_gt, target_gt, source_gt_entries)
+        shutil.copytree(target_gt, runtime_workspace / "gt", symlinks=True)
+        private_gt_entries, private_gt_sha = _inventory_tree(target_gt)
+        _, runtime_initial_sha = _inventory_tree(runtime_workspace)
+
+        copied_files = (
+            ("contract", "contract.json"),
+            ("task", "task.md"),
+            ("runtime_lock", "runtime-lock.json"),
+            ("execution_record", "execution-record.json"),
+        )
+        for source_key, target_name in copied_files:
+            shutil.copyfile(
+                _resolve_within(
+                    source_root, source_paths.get(source_key), source_key
+                ),
+                private_root / target_name,
+            )
+        runtime_lock, runtime_lock_sha = _load_runtime_lock(
+            private_root / "runtime-lock.json"
+        )
+
+        transcript_target: Path | None = None
+        transcript_sha: str | None = None
+        transcript_relative = source_paths.get("transcript")
+        if transcript_relative is not None:
+            transcript_target = private_root / "transcript.jsonl"
+            shutil.copyfile(
+                _resolve_within(source_root, transcript_relative, "transcript"),
+                transcript_target,
+            )
+            transcript_sha = _sha256_file(transcript_target)
+        transcript_count = (
+            _validate_transcript(transcript_target)
+            if transcript_target is not None
+            else 0
+        )
+
+        judge_config_sha: str | None = None
+        if judge_config is not None:
+            _write_new_json(private_root / "judge-config.json", judge_config)
+            judge_config_sha = _sha256_file(private_root / "judge-config.json")
+        source_judge = source_manifest.get("judge")
+        source_score_result = source_score.get("result")
+        if not isinstance(source_score_result, dict) or not isinstance(
+            source_score_result.get("valid"), bool
+        ):
+            raise ScoringRuntimeError("SCORE_DOCUMENT_INVALID", "result")
+        manifest = {
+            "schema_version": ATTEMPT_SCHEMA,
+            "created_at": _now(),
+            "identity": {
+                "batch_id": batch_id,
+                "unit_id": unit_id,
+                "task_id": task_id,
+                "execution_attempt_id": execution_attempt_id,
+                "scoring_attempt_id": scoring_attempt_id,
+            },
+            "dataset": dict(source_manifest.get("dataset") or {}),
+            "grading": dict(grading),
+            "source": dict(source_manifest.get("source") or {}),
+            "paths": {
+                "candidate_original": "candidate-original/workspace",
+                "candidate_artifact": "candidate-original/candidate-artifact.json",
+                "runtime_workspace": "runtime/workspace",
+                "contract": "private/contract.json",
+                "task": "private/task.md",
+                "gt": "private/gt",
+                "transcript": (
+                    "private/transcript.jsonl"
+                    if transcript_target is not None
+                    else None
+                ),
+                "runtime_lock": "private/runtime-lock.json",
+                "execution_record": "private/execution-record.json",
+                "judge_config": (
+                    "private/judge-config.json" if judge_config is not None else None
+                ),
+            },
+            "digests": {
+                "candidate_original_sha256": candidate_sha,
+                "candidate_artifact_sha256": _sha256_file(source_artifact),
+                "contract_sha256": _sha256_file(private_root / "contract.json"),
+                "task_sha256": _sha256_file(private_root / "task.md"),
+                "private_scoring_tree_sha256": source_digests.get(
+                    "private_scoring_tree_sha256"
+                ),
+                "private_gt_workspace_sha256": private_gt_sha,
+                "runtime_initial_sha256": runtime_initial_sha,
+                "transcript_sha256": transcript_sha,
+                "runtime_lock_sha256": runtime_lock_sha,
+                "execution_record_sha256": _sha256_file(
+                    private_root / "execution-record.json"
+                ),
+                "judge_config_sha256": judge_config_sha,
+            },
+            "transcript_event_count": transcript_count,
+            "private_scoring": {
+                "entries": source_private_scoring.get("entries"),
+                "workspace_entries": private_gt_entries,
+            },
+            "runtime": {
+                "kind": "local-managed-python-worker",
+                "logical_workspace_root": "/tmp_workspace",
+                "workspace_argument": "runtime/workspace",
+                "gt_injected_after_execution": True,
+                "docker_required": False,
+                "lock": runtime_lock,
+            },
+            "judge": (
+                {
+                    "protocol": judge_config["protocol"],
+                    "model": judge_config["model"],
+                    "reasoning_effort": judge_config["reasoning_effort"],
+                    "attempt_id": judge_config["attempt_id"],
+                    **(
+                        {"api_runtime": judge_config["api_runtime"]}
+                        if judge_config["api_runtime"] is not None
+                        else {}
+                    ),
+                }
+                if judge_config is not None
+                else None
+            ),
+            "lineage": {
+                "kind": "rescore",
+                "source_scoring_attempt_id": source_attempt_id,
+                "source_attempt_manifest_sha256": _sha256_file(
+                    source_manifest_path
+                ),
+                "source_score_sha256": _sha256_file(source_score_path),
+                "source_score_valid": source_score_result["valid"],
+                "source_candidate_sha256": candidate_sha,
+                "source_judge": source_judge,
+            },
+        }
+        _write_new_json(staging / "attempt-manifest.json", manifest)
+        os.replace(staging, destination)
+    except BaseException:
+        _remove_tree(staging)
+        raise
+    return {
+        "status": "PASS",
+        "attempt_root": str(destination),
+        "source_attempt_root": str(source_root),
+        "source_score_valid": source_score_verification["score_valid"],
+        "candidate_sha256": source_attempt_verification["candidate_sha256"],
+        "manifest": manifest,
+    }
+
+
 def run_api_score_attempt(
     *,
     attempt_root: Path,
@@ -4305,6 +4600,16 @@ def main(argv: list[str] | None = None) -> int:
     prepare.add_argument("--judge-attempt-id")
     prepare.add_argument("--api-runtime-config", type=Path)
 
+    prepare_rescore = subparsers.add_parser("prepare-rescore")
+    prepare_rescore.add_argument("--source-attempt-root", required=True, type=Path)
+    prepare_rescore.add_argument("--scoring-attempt-id", required=True)
+    prepare_rescore.add_argument("--output-root", required=True, type=Path)
+    prepare_rescore.add_argument("--judge-protocol")
+    prepare_rescore.add_argument("--judge-model")
+    prepare_rescore.add_argument("--judge-reasoning-effort")
+    prepare_rescore.add_argument("--judge-attempt-id")
+    prepare_rescore.add_argument("--api-runtime-config", type=Path)
+
     verify = subparsers.add_parser("verify")
     verify.add_argument("--attempt-root", required=True, type=Path)
 
@@ -4374,6 +4679,17 @@ def main(argv: list[str] | None = None) -> int:
                 scoring_attempt_id=args.scoring_attempt_id,
                 output_root=args.output_root,
                 runtime_lock_path=args.runtime_lock,
+                judge_protocol=args.judge_protocol,
+                judge_model=args.judge_model,
+                judge_reasoning_effort=args.judge_reasoning_effort,
+                judge_attempt_id=args.judge_attempt_id,
+                api_runtime_config_path=args.api_runtime_config,
+            )
+        elif args.command == "prepare-rescore":
+            result = prepare_rescore_attempt(
+                source_attempt_root=args.source_attempt_root,
+                scoring_attempt_id=args.scoring_attempt_id,
+                output_root=args.output_root,
                 judge_protocol=args.judge_protocol,
                 judge_model=args.judge_model,
                 judge_reasoning_effort=args.judge_reasoning_effort,

@@ -15,7 +15,7 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 python -m eval_general_e2e skills --name score-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才形成完整双后端生产评分。当前 `0.5.0/interface_only` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、合分审计和 `verify-score`。submission、真实 Codex 小批和 API Judge 生产准入尚未交付，fixture 不能冒充真实语义评分。
+只有 `implementation_status` 为 `operational` 时才形成完整双后端生产评分。当前 `0.6.0/interface_only` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、合分审计和 `verify-score`。终态评分可复用冻结候选创建独立重评分 attempt。真实 Codex 小批和完整生产闭环尚未交付，fixture 不能冒充真实语义评分。
 
 ## 责任边界
 
@@ -35,4 +35,6 @@ python -m eval_general_e2e skills --name score-general-e2e --json
 
 显式选择 API 后端时，读取 [API Judge 评分协议](references/api-judge.md)。使用 `prepare --api-runtime-config ...` 冻结 provider、endpoint、模型、输入/输出预算、timeout、重试与凭据环境变量名；凭据值只能由运行环境注入。`run-api-score` 可恢复地完成规则、语义请求、合分和校验，API 最终失败形成合法 `evaluation_error / total_score=null`，不会补零、切换模型或回退到 Codex。
 
-submission、真实 Codex 评分小批和 API Judge 生产准入仍由后续阶段完成；在这些门禁完成前保持 `interface_only`。
+需要对有效分或合法评测异常重新评分时，读取[独立重评分 attempt](references/rescore.md)。重评分只复制冻结候选与评分输入，重建干净 runtime，并显式冻结新的 Judge 配置；不得复用 attempt ID 或修改源评分目录。
+
+真实 Codex 评分小批和 API Judge 生产准入仍由后续阶段完成；在这些门禁完成前保持 `interface_only`。

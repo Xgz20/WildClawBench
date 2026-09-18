@@ -351,6 +351,62 @@ class GeneralApiJudgeTests(unittest.TestCase):
         self.assertTrue(truncated)
         self.assertTrue(all(row["included_chars"] < row["original_chars"] for row in truncated))
 
+    def test_failed_api_score_can_create_separate_codex_rescore_attempt(self) -> None:
+        source = self._attempt("api-failed-before-rescore", provider="openai-responses")
+        with patch.dict(os.environ, {}, clear=True):
+            result = RUNTIME.run_api_score_attempt(attempt_root=source)
+        self.assertFalse(result["score_valid"])
+        source_hashes = {
+            path.relative_to(source).as_posix(): RUNTIME._sha256_file(path)
+            for path in source.rglob("*")
+            if path.is_file()
+        }
+
+        prepared = RUNTIME.prepare_rescore_attempt(
+            source_attempt_root=source,
+            scoring_attempt_id="score-codex-rescore",
+            output_root=self.root / "rescore-attempts",
+            judge_protocol="codex-agent-judge-v1",
+            judge_model="gpt-rescore-fixture",
+            judge_reasoning_effort="high",
+            judge_attempt_id="judge-codex-rescore",
+        )
+        rescore = Path(prepared["attempt_root"])
+        verified = RUNTIME.verify_attempt(rescore)
+        self.assertEqual(verified["candidate_sha256"], result["candidate_sha256"])
+        manifest = json.loads((rescore / "attempt-manifest.json").read_text())
+        self.assertEqual(manifest["lineage"]["kind"], "rescore")
+        self.assertEqual(
+            manifest["lineage"]["source_scoring_attempt_id"],
+            "score-api-failed-before-rescore",
+        )
+        self.assertFalse(manifest["lineage"]["source_score_valid"])
+        self.assertEqual(manifest["judge"]["protocol"], "codex-agent-judge-v1")
+        self.assertNotIn("api_runtime", manifest["judge"])
+        semantic = RUNTIME.prepare_semantics_attempt(attempt_root=rescore)
+        self.assertEqual(semantic["semantic_status"], "awaiting_response")
+        self.assertEqual(
+            source_hashes,
+            {
+                path.relative_to(source).as_posix(): RUNTIME._sha256_file(path)
+                for path in source.rglob("*")
+                if path.is_file()
+            },
+        )
+
+        with self.assertRaisesRegex(
+            RUNTIME.ScoringRuntimeError, "RESCORE_ATTEMPT_ID_REUSED"
+        ):
+            RUNTIME.prepare_rescore_attempt(
+                source_attempt_root=source,
+                scoring_attempt_id="score-api-failed-before-rescore",
+                output_root=self.root / "reuse-rejected",
+                judge_protocol="codex-agent-judge-v1",
+                judge_model="gpt-rescore-fixture",
+                judge_reasoning_effort="high",
+                judge_attempt_id="judge-reuse-rejected",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

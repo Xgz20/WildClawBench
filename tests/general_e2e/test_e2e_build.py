@@ -78,6 +78,7 @@ class E2EBuildTests(unittest.TestCase):
                 "workspace-integrity",
                 "dataset-bundle-verifier",
                 "grading-core",
+                "general-contracts",
             },
         )
         self.assertEqual(self.manifest["skill_count"], 13)

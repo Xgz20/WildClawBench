@@ -163,6 +163,11 @@ class Fixture:
                 "automated_checks": rule,
                 "grading_type": "hybrid",
                 "grading_weights": {"automated": 0.5, "llm_judge": 0.5},
+                "llm_judge_rubric": (
+                    "### Fixture criterion (key: fixture, weight: 1.0)\n"
+                    "Score 0.0: incorrect\n"
+                    "Score 1.0: correct\n"
+                ),
             }
             contract_bytes = json.dumps(contract).encode("utf-8")
             task_bytes = f"# {task_id}\n".encode("utf-8")
@@ -360,6 +365,126 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             now=now or self.t0,
         )
 
+    def _set_execution_status(
+        self,
+        fixture: Fixture,
+        task_id: str,
+        *,
+        business_status: str,
+        phase: str,
+        completeness: str = "complete",
+    ) -> None:
+        path = fixture.execution_records[task_id]
+        document = json.loads(path.read_text(encoding="utf-8"))
+        document["execution"]["business_status"] = business_status
+        document["phase"] = phase
+        document["evidence"]["completeness"] = completeness
+        path.write_text(json.dumps(document), encoding="utf-8")
+
+    def _record_fixture_score(
+        self,
+        orchestration_root: Path,
+        task_id: str,
+        *,
+        valid: bool,
+        total_score: float | None,
+    ) -> None:
+        state_path = orchestration_root / "orchestration-state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        task = next(item for item in state["tasks"] if item["task_id"] == task_id)
+        score_path = orchestration_root / task["attempt_path"] / "score.json"
+        score = {
+            "schema_id": ORCHESTRATOR.SCORE_SCHEMA,
+            "schema_version": 1,
+            "identity": {
+                "batch_id": state["identity"]["batch_id"],
+                "unit_id": state["identity"]["unit_id"],
+                "task_id": task_id,
+                "attempt_id": task["scoring_attempt_id"],
+            },
+            "dataset": {
+                "id": state["identity"]["dataset"]["id"],
+                "digest": state["identity"]["dataset"]["digest"],
+            },
+            "execution": {
+                "record_path": "private/execution-record.json",
+                "record_sha256": task["execution_record_sha256"],
+                "attempt_id": task["execution"]["attempt_id"],
+                "business_status": task["execution"]["business_status"],
+            },
+            "judge": {
+                "protocol": state["judge"]["protocol"],
+                "model": state["judge"]["model"],
+                "reasoning_effort": state["judge"]["reasoning_effort"],
+                "attempt_id": task["scoring_attempt_id"],
+            },
+            "components": {
+                "rules": {
+                    "status": "completed",
+                    "score": total_score if total_score is not None else 1.0,
+                },
+                "semantics": {
+                    "status": "completed" if valid else "evaluation_error",
+                    "score": total_score if valid else None,
+                },
+            },
+            "evaluation": {
+                "status": "completed" if valid else "evaluation_error",
+                "criteria": (
+                    [
+                        {
+                            "key": "fixture",
+                            "weight": 1.0,
+                            "status": "judged",
+                            "score": total_score,
+                            "reason": "fixture",
+                            "evidence": [
+                                {
+                                    "type": "rule_result",
+                                    "path": "rule-component.json",
+                                    "sha256": "a" * 64,
+                                }
+                            ],
+                        }
+                    ]
+                    if valid
+                    else []
+                ),
+                "error": (
+                    None
+                    if valid
+                    else {"code": "JUDGE_FAILED", "message": "fixture failure"}
+                ),
+            },
+            "result": {
+                "valid": valid,
+                "total_score": total_score,
+                "invalid_reason": None if valid else "JUDGE_FAILED",
+            },
+        }
+        score_path.write_text(json.dumps(score), encoding="utf-8")
+        task["score"] = {
+            "path": score_path.relative_to(orchestration_root).as_posix(),
+            "sha256": hashlib.sha256(score_path.read_bytes()).hexdigest(),
+            "valid": valid,
+            "total_score": total_score,
+            "recorded_at": self.t0.isoformat(),
+        }
+        task["phase"] = "SCORE_RECORDED"
+        state["status"] = ORCHESTRATOR._state_status(state)
+        state_path.write_text(json.dumps(state), encoding="utf-8")
+
+    def _fixture_score_command(self, _lock, arguments, **_kwargs):
+        if arguments[0] == "verify-score":
+            score = json.loads(
+                (Path(arguments[-1]) / "score.json").read_text()
+            )
+            return {
+                "status": "PASS",
+                "score_valid": score["result"]["valid"],
+            }
+        return {"status": "PASS", "candidate_sha256": "f" * 64}
+
     def test_init_creates_isolated_attempts_and_freezes_judge_and_prompt(self) -> None:
         fixture = Fixture(self.root)
         view = fixture.initialize(now=self.t0)
@@ -474,7 +599,7 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         with patch.object(
             ORCHESTRATOR,
             "_run_score_command",
-            return_value={"status": "PASS", "score_valid": True},
+            side_effect=self._fixture_score_command,
         ):
             scored = ORCHESTRATOR.record_score(
                 root,
@@ -601,7 +726,9 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         )
         self.assertEqual(terminal["status"], "COMPLETED_WITH_FAILURES")
         self.assertEqual(terminal["failed_count"], 1)
-        self.assertEqual(terminal["recommended_actions"], [])
+        self.assertEqual(
+            terminal["recommended_actions"][0]["action"], "BUILD_SUBMISSION"
+        )
 
         late_fixture = Fixture(self.root / "late", task_ids=("task-one",))
         late = late_fixture.initialize(timeout=10, now=self.t0)
@@ -737,6 +864,234 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             ORCHESTRATOR.OrchestrationError, "PROJECT_REGISTRATION_DRIFT"
         ):
             ORCHESTRATOR.status(root, now=self.t0)
+
+    def test_submission_distinguishes_zero_evaluation_error_and_unscored(self) -> None:
+        fixture = Fixture(
+            self.root,
+            task_ids=("task-zero", "task-judge-error", "task-timeout"),
+        )
+        self._set_execution_status(
+            fixture,
+            "task-timeout",
+            business_status="timeout",
+            phase="FAILED",
+        )
+        view = fixture.initialize(now=self.t0)
+        root = Path(view["orchestration_root"])
+        self.assertEqual(view["tasks"][2]["phase"], "UNSCORED")
+        self.assertIsNone(view["tasks"][2]["attempt_path"])
+        self._record_fixture_score(root, "task-zero", valid=True, total_score=0.0)
+        self._record_fixture_score(
+            root, "task-judge-error", valid=False, total_score=None
+        )
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            side_effect=self._fixture_score_command,
+        ):
+            completed = ORCHESTRATOR.status(root, now=self.t0)
+            self.assertEqual(completed["terminal_count"], 3)
+            self.assertEqual(completed["valid_score_count"], 1)
+            self.assertEqual(completed["evaluation_error_count"], 1)
+            self.assertEqual(completed["unscored_count"], 1)
+            self.assertEqual(
+                completed["recommended_actions"][0]["action"], "BUILD_SUBMISSION"
+            )
+            built = ORCHESTRATOR.build_submission(root, now=self.t0)
+            repeated = ORCHESTRATOR.build_submission(root, now=self.t0)
+        self.assertEqual(built["submission_path"], repeated["submission_path"])
+        submission = json.loads((root / "submission.json").read_text())
+        self.assertEqual(
+            [item["task_id"] for item in submission["tasks"]], fixture.task_ids
+        )
+        by_id = {item["task_id"]: item for item in submission["tasks"]}
+        self.assertEqual(by_id["task-zero"]["score_status"], "valid")
+        score = json.loads((root / by_id["task-zero"]["score_path"]).read_text())
+        self.assertEqual(score["result"]["total_score"], 0.0)
+        self.assertEqual(
+            by_id["task-judge-error"]["score_status"], "evaluation_error"
+        )
+        self.assertIsNotNone(by_id["task-judge-error"]["score_sha256"])
+        self.assertEqual(by_id["task-timeout"]["score_status"], "unscored")
+        self.assertIsNone(by_id["task-timeout"]["scoring_attempt_id"])
+        self.assertIsNone(by_id["task-timeout"]["judge_protocol"])
+        self.assertIsNone(by_id["task-timeout"]["score_path"])
+        self.assertIsNone(by_id["task-timeout"]["score_sha256"])
+
+        submission["task_ids"] = submission["task_ids"][:-1]
+        submission["tasks"] = submission["tasks"][:-1]
+        submission["task_count"] -= 1
+        (root / "submission.json").write_text(json.dumps(submission), encoding="utf-8")
+        state_path = root / "orchestration-state.json"
+        state = json.loads(state_path.read_text())
+        state["submission"]["sha256"] = hashlib.sha256(
+            (root / "submission.json").read_bytes()
+        ).hexdigest()
+        state_path.write_text(json.dumps(state), encoding="utf-8")
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            side_effect=self._fixture_score_command,
+        ):
+            with self.assertRaisesRegex(
+                ORCHESTRATOR.OrchestrationError, "SUBMISSION_CONTENT_MISMATCH"
+            ):
+                ORCHESTRATOR.status(root, now=self.t0)
+
+    def test_incomplete_evidence_is_unscored_without_judge_attempt(self) -> None:
+        fixture = Fixture(self.root, task_ids=("task-one",))
+        self._set_execution_status(
+            fixture,
+            "task-one",
+            business_status="completed",
+            phase="COMPLETED",
+            completeness="partial",
+        )
+        view = fixture.initialize(now=self.t0)
+        self.assertEqual(view["status"], "COMPLETED_WITH_FAILURES")
+        self.assertEqual(view["unscored_count"], 1)
+        self.assertEqual(view["tasks"][0]["phase"], "UNSCORED")
+        self.assertIsNone(view["tasks"][0]["scoring_attempt_id"])
+        self.assertIsNone(view["tasks"][0]["attempt_path"])
+        root = Path(view["orchestration_root"])
+        self.assertFalse((root / "attempts").exists())
+        built = ORCHESTRATOR.build_submission(root, now=self.t0)
+        self.assertEqual(built["unscored_count"], 1)
+
+    def test_rescore_orchestration_uses_new_attempt_and_preserves_source(self) -> None:
+        fixture = Fixture(
+            self.root / "source",
+            task_ids=("task-one",),
+            protocol="api-judge-v1",
+            judge_model="api-fixture",
+        )
+        api_runtime = fixture.api_runtime_config()
+        view = fixture.initialize(api_runtime_config=api_runtime, now=self.t0)
+        source_root = Path(view["orchestration_root"])
+        def direct_score_command(_lock, arguments, **_kwargs):
+            command = arguments[0]
+            values = {
+                arguments[index]: arguments[index + 1]
+                for index in range(1, len(arguments) - 1, 2)
+                if arguments[index].startswith("--")
+            }
+            if command == "verify":
+                return SCORE_RUNTIME.verify_attempt(Path(values["--attempt-root"]))
+            if command == "verify-score":
+                return SCORE_RUNTIME.verify_score_attempt(
+                    Path(values["--attempt-root"])
+                )
+            if command == "run-api-score":
+                return SCORE_RUNTIME.run_api_score_attempt(
+                    attempt_root=Path(values["--attempt-root"]),
+                    runtime_python=Path(values["--runtime-python"]),
+                    timeout_seconds=float(values["--timeout-seconds"]),
+                )
+            if command == "prepare-rescore":
+                return SCORE_RUNTIME.prepare_rescore_attempt(
+                    source_attempt_root=Path(values["--source-attempt-root"]),
+                    scoring_attempt_id=values["--scoring-attempt-id"],
+                    output_root=Path(values["--output-root"]),
+                    judge_protocol=values["--judge-protocol"],
+                    judge_model=values["--judge-model"],
+                    judge_reasoning_effort=values["--judge-reasoning-effort"],
+                    judge_attempt_id=values["--judge-attempt-id"],
+                )
+            raise AssertionError(arguments)
+
+        with (
+            patch.dict(
+                os.environ, {"GENERAL_E2E_TEST_API_KEY": ""}, clear=False
+            ),
+            patch.object(
+                ORCHESTRATOR,
+                "_run_score_command",
+                side_effect=direct_score_command,
+            ),
+        ):
+            source_done = ORCHESTRATOR.run_api_score_task(
+                source_root,
+                task_id="task-one",
+                runtime_python=Path(sys.executable),
+                now=self.t0,
+            )
+        self.assertEqual(source_done["evaluation_error_count"], 1)
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            side_effect=direct_score_command,
+        ):
+            ORCHESTRATOR.build_submission(source_root, now=self.t0)
+        source_hashes = {
+            path.relative_to(source_root).as_posix(): hashlib.sha256(
+                path.read_bytes()
+            ).hexdigest()
+            for path in source_root.rglob("*")
+            if path.is_file()
+        }
+        report = json.loads(fixture.report_config.read_text())
+        report["judge"] = {
+            "protocol": "codex-agent-judge-v1",
+            "model": "gpt-rescore-fixture",
+            "reasoning_effort": "high",
+        }
+        rescore_report = fixture.root / "rescore-report-config.json"
+        rescore_report.write_text(json.dumps(report), encoding="utf-8")
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            side_effect=direct_score_command,
+        ):
+            rescore = ORCHESTRATOR.initialize_rescore(
+                source_orchestration_root=source_root,
+                report_config=rescore_report,
+                score_skill_dir=SCORE_SKILL,
+                output_root=fixture.output_root,
+                orchestration_id="rescore-fixture",
+                now=self.t0,
+            )
+        self.assertEqual(rescore["judge"]["protocol"], "codex-agent-judge-v1")
+        self.assertEqual(rescore["tasks"][0]["phase"], "AWAITING_PROJECT")
+        source_state = json.loads(
+            (source_root / "orchestration-state.json").read_text()
+        )
+        rescore_state = json.loads(
+            (Path(rescore["orchestration_root"]) / "orchestration-state.json").read_text()
+        )
+        self.assertNotEqual(
+            source_state["tasks"][0]["scoring_attempt_id"],
+            rescore_state["tasks"][0]["scoring_attempt_id"],
+        )
+        self.assertEqual(
+            source_state["tasks"][0]["execution"]["candidate_sha256"],
+            rescore_state["tasks"][0]["execution"]["candidate_sha256"],
+        )
+        current_source_hashes = {
+            path.relative_to(source_root).as_posix(): hashlib.sha256(
+                path.read_bytes()
+            ).hexdigest()
+            for path in source_root.rglob("*")
+            if path.is_file()
+        }
+        self.assertEqual(source_hashes, current_source_hashes)
+        with (
+            patch.object(
+                ORCHESTRATOR,
+                "_run_score_command",
+                side_effect=direct_score_command,
+            ),
+            self.assertRaisesRegex(
+                ORCHESTRATOR.OrchestrationError, "ORCHESTRATION_EXISTS"
+            ),
+        ):
+            ORCHESTRATOR.initialize_rescore(
+                source_orchestration_root=source_root,
+                report_config=rescore_report,
+                score_skill_dir=SCORE_SKILL,
+                output_root=fixture.output_root,
+                orchestration_id="rescore-fixture",
+                now=self.t0,
+            )
 
 
 if __name__ == "__main__":

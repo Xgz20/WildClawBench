@@ -62,7 +62,7 @@
       "name": "orchestrate-general-e2e",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/orchestrate-general-e2e",
-      "components": ["desktop-runtime", "workspace-integrity"]
+      "components": ["desktop-runtime", "workspace-integrity", "general-contracts"]
     },
     {
       "name": "score-general-e2e",
