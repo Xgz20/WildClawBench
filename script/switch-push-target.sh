@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # ============================================================
-# WildClawBench · 切换当前分支的 Git Push 目标
+# WildClawBench · 切换当前分支的 Git Fetch/Push 目标
 #
 # 用法：
 #   bash script/switch-push-target.sh both    # IDEA Push 同时推送 Gitee + GitHub
-#   bash script/switch-push-target.sh github  # IDEA Push 只推送 GitHub
-#   bash script/switch-push-target.sh gitee   # IDEA Push 只推送公司 Gitee
+#   bash script/switch-push-target.sh github  # Fetch/Push 只使用 GitHub
+#   bash script/switch-push-target.sh gitee   # Fetch/Push 只使用公司 Gitee
 #   bash script/switch-push-target.sh both --dry-run
 #
 # `both` 使用 origin 的多个 pushurl。Git/IDEA 对 origin 执行 push 时，
@@ -69,10 +69,19 @@ if [ -z "$BRANCH" ]; then
   }
 fi
 
-GITHUB_URL="${GITHUB_URL:-$(git config --get remote.github.url || true)}"
-GITEE_URL="${GITEE_URL:-$(git config --get remote.origin.url || true)}"
+if [ -z "${GITHUB_URL:-}" ]; then
+  GITHUB_URL="$(git config --get remote.github.url || true)"
+fi
+if [ -z "${GITEE_URL:-}" ]; then
+  # 优先读取独立的 gitee remote；这样 origin 切到 GitHub 后，
+  # 仍然可以无网络地切回公司仓库。
+  GITEE_URL="$(git config --get remote.gitee.url || true)"
+  if [ -z "$GITEE_URL" ]; then
+    GITEE_URL="$(git config --get remote.origin.url || true)"
+  fi
+fi
 [ -n "$GITHUB_URL" ] || { echo "未找到 GitHub 地址（remote.github.url）" >&2; exit 1; }
-[ -n "$GITEE_URL" ] || { echo "未找到 Gitee 地址（remote.origin.url）" >&2; exit 1; }
+[ -n "$GITEE_URL" ] || { echo "未找到 Gitee 地址（remote.gitee.url 或 remote.origin.url）" >&2; exit 1; }
 
 set_push_urls() {
   local remote="$1"
@@ -82,6 +91,12 @@ set_push_urls() {
   for url in "$@"; do
     git config --add "remote.${remote}.pushurl" "$url"
   done
+}
+
+set_fetch_url() {
+  local remote="$1"
+  local url="$2"
+  git config "remote.${remote}.url" "$url"
 }
 
 ensure_gitee_remote() {
@@ -110,9 +125,9 @@ set_branch_upstream() {
 
 if [ "$DRY_RUN" = "1" ]; then
   case "$TARGET" in
-    both)   echo "将把 ${BRANCH} 的 Push 目标切换为：公司 Gitee + GitHub" ;;
-    github) echo "将把 ${BRANCH} 的 Push 目标切换为：GitHub" ;;
-    gitee)  echo "将把 ${BRANCH} 的 Push 目标切换为：公司 Gitee" ;;
+    both)   echo "将把 ${BRANCH} 的 Fetch 切换为公司 Gitee，Push 切换为公司 Gitee + GitHub" ;;
+    github) echo "将把 ${BRANCH} 的 Fetch/Push 切换为：GitHub" ;;
+    gitee)  echo "将把 ${BRANCH} 的 Fetch/Push 切换为：公司 Gitee" ;;
   esac
   echo "GitHub: $GITHUB_URL"
   echo "Gitee:  $GITEE_URL"
@@ -124,23 +139,28 @@ ensure_gitee_remote
 
 case "$TARGET" in
   both)
+    set_fetch_url origin "$GITEE_URL"
     set_push_urls origin "$GITEE_URL" "$GITHUB_URL"
     set_branch_upstream origin
-    label="公司 Gitee + GitHub"
+    label="Fetch 公司 Gitee；Push 公司 Gitee + GitHub"
     ;;
   github)
+    set_fetch_url origin "$GITHUB_URL"
     set_push_urls origin "$GITHUB_URL"
     set_branch_upstream github
-    label="GitHub"
+    label="Fetch/Push GitHub"
     ;;
   gitee)
+    set_fetch_url origin "$GITEE_URL"
     set_push_urls origin "$GITEE_URL"
     set_branch_upstream gitee
-    label="公司 Gitee"
+    label="Fetch/Push 公司 Gitee"
     ;;
 esac
 
-echo "已切换 ${BRANCH} 的 Push 目标：${label}"
+echo "已切换 ${BRANCH} 的 Fetch/Push 目标：${label}"
 echo "当前 upstream: $(git config --get "branch.${BRANCH}.remote")/${BRANCH}"
+echo "origin fetchurl:"
+git remote get-url --all origin | sed 's/^/  /'
 echo "origin pushurl:"
 git remote get-url --all --push origin | sed 's/^/  /'
