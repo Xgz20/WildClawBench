@@ -164,6 +164,31 @@ async function uniqueVisible(locators, label) {
   return matches[0];
 }
 
+export function trustDialogMatchesProject(dialogText, project) {
+  return String(dialogText || "")
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .includes(project);
+}
+
+async function confirmProjectTrust(page, project, timeout) {
+  const matches = [];
+  for (const dialog of await visible(page.getByRole("dialog"))) {
+    const trust = dialog.getByRole("button", { name: /^(Trust folder|信任文件夹)$/i });
+    if (await trust.count() === 1) matches.push({ dialog, trust });
+  }
+  if (!matches.length) return false;
+  if (matches.length !== 1) throw new Error(`文件夹信任对话框必须唯一可见，实际 ${matches.length} 个`);
+  const { dialog, trust } = matches[0];
+  if (!trustDialogMatchesProject(await dialog.innerText(), project)) {
+    throw new Error(`文件夹信任对话框未完整回显目标绝对路径：${project}`);
+  }
+  await trust.click({ timeout, noWaitAfter: true });
+  await dialog.waitFor({ state: "hidden", timeout });
+  return true;
+}
+
 async function dismissStaleProjectDialog(page, timeout) {
   const dialogs = await visible(page.getByRole("dialog"));
   if (!dialogs.length) return;
@@ -277,7 +302,8 @@ async function registerWithRendererBridge(page, project) {
 }
 
 async function finalizeProjectRegistration(page, project, timeout) {
-  const dialog = page.getByRole("dialog");
+  const nameInput = page.getByRole("textbox", { name: /^(Project name|项目名称)$/i });
+  const dialog = page.getByRole("dialog").filter({ has: nameInput });
   await dialog.waitFor({ state: "visible", timeout });
   const sourceBasename = basename(project);
   const selectedSources = dialog.getByRole("button", { name: /^(Remove|移除)\s+/i });
@@ -285,9 +311,9 @@ async function finalizeProjectRegistration(page, project, timeout) {
   if (await selectedSources.count() !== 1 || !(await selectedSources.first().getAttribute("aria-label"))?.endsWith(sourceBasename)) {
     throw new Error(`创建项目对话框未回读到目标源文件夹：${sourceBasename}`);
   }
-  const nameInput = dialog.getByRole("textbox", { name: /^(Project name|项目名称)$/i });
-  if (await nameInput.count() !== 1) throw new Error("创建项目对话框缺少唯一的项目名称输入框");
-  if (!(await nameInput.inputValue()).trim()) await nameInput.fill(sourceBasename, { timeout });
+  const dialogNameInput = dialog.getByRole("textbox", { name: /^(Project name|项目名称)$/i });
+  if (await dialogNameInput.count() !== 1) throw new Error("创建项目对话框缺少唯一的项目名称输入框");
+  if (!(await dialogNameInput.inputValue()).trim()) await dialogNameInput.fill(sourceBasename, { timeout });
   const create = dialog.getByRole("button", { name: /^(Create project|创建项目)$/i });
   await create.waitFor({ state: "visible", timeout });
   if (!(await create.isEnabled())) throw new Error("选择源文件夹后创建项目按钮仍不可用");
@@ -345,19 +371,28 @@ export async function run(args) {
       if (!isAbsolute(rawProject)) throw new Error(`--project 必须为绝对路径：${rawProject}`);
       const project = await realpath(rawProject);
       await page.bringToFront();
-      await dismissStaleProjectDialog(page, args.timeoutSeconds * 1000);
-      const registration = args.rendererBridge
-        ? await registerWithRendererBridge(page, project)
-        : await beginProjectRegistration(page, args.timeoutSeconds * 1000);
-      const nativeSelection = registration.nativeSelection ?? await runFolderHelper({
-        platform: process.platform,
-        driverDir: DRIVER_DIR,
-        bundleId: args.bundleId,
-        appPath,
-        project,
-        timeoutSeconds: args.timeoutSeconds,
-      });
-      if (registration.finalize) await finalizeProjectRegistration(page, project, args.timeoutSeconds * 1000);
+      const recoveredTrust = await confirmProjectTrust(page, project, args.timeoutSeconds * 1000);
+      let registration;
+      let nativeSelection;
+      if (recoveredTrust) {
+        registration = { method: "confirm-pending-trust", finalize: false };
+        nativeSelection = { folder: project, method: "trust-dialog-recovery", status: "registered" };
+      } else {
+        await dismissStaleProjectDialog(page, args.timeoutSeconds * 1000);
+        registration = args.rendererBridge
+          ? await registerWithRendererBridge(page, project)
+          : await beginProjectRegistration(page, args.timeoutSeconds * 1000);
+        nativeSelection = registration.nativeSelection ?? await runFolderHelper({
+          platform: process.platform,
+          driverDir: DRIVER_DIR,
+          bundleId: args.bundleId,
+          appPath,
+          project,
+          timeoutSeconds: args.timeoutSeconds,
+        });
+        if (registration.finalize) await finalizeProjectRegistration(page, project, args.timeoutSeconds * 1000);
+        await confirmProjectTrust(page, project, args.timeoutSeconds * 1000);
+      }
       await page.waitForTimeout(1000);
       const evidenceDir = args.output ? dirname(resolve(args.output)) : "";
       let screenshot = null;

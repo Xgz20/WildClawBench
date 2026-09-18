@@ -9,6 +9,7 @@ import {
   isUnsupportedDownloadBehaviorError,
   pageRank,
   parseArgs,
+  trustDialogMatchesProject,
 } from "../register-projects.mjs";
 import {
   codexAppVersion,
@@ -32,6 +33,13 @@ test("registrar only accepts loopback HTTP endpoints", () => {
   assert.equal(assertLoopbackEndpoint("http://127.0.0.1:9230").hostname, "127.0.0.1");
   assert.throws(() => assertLoopbackEndpoint("https://127.0.0.1:9230"), /只允许本机/);
   assert.throws(() => assertLoopbackEndpoint("http://192.0.2.1:9230"), /只允许本机/);
+});
+
+test("folder trust confirmation requires the exact requested absolute path", () => {
+  const project = "/tmp/score/tasks/task-one";
+  const dialog = `Trust this folder?\n${project}\n\nTrust folder\nCancel`;
+  assert.equal(trustDialogMatchesProject(dialog, project), true);
+  assert.equal(trustDialogMatchesProject(dialog, "/tmp/score/tasks/task"), false);
 });
 
 test("Codex app page outranks browser and DevTools pages", () => {

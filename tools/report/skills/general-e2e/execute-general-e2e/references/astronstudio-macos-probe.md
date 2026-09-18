@@ -43,6 +43,6 @@
 - `3`：`NEEDS_ATTENTION`，环境或可见配置尚未满足冻结条件。
 - `2`：参数、输出文件冲突或探针自身错误。
 
-`--output` 和 `--config-output` 使用创建新文件语义，拒绝覆盖已有证据。冻结配置执行并发固定为 1；五题三槽动态补位和隔离仍须在 MAC-08/G4-05 单独验收后才能提高。
+`--output` 和 `--config-output` 使用创建新文件语义，拒绝覆盖已有证据。新冻结配置的执行并发默认值为 3、上限为 8，UI Prompt 发送仍固定单槽；旧的并发 1 冻结配置继续可用。代码和 fixture 只证明调度契约，目标客户端的五题三槽动态补位仍须在 G4-03 真机闭环中留证。
 
 `config_digest` 使用 `sha256-canonical-json/v1`：递归按对象键排序、数组保持原顺序，以紧凑 JSON 编码后计算 SHA-256；计算前移除 `config_digest_algorithm` 和 `config_digest` 两个 digest 元数据字段。读取方必须同时校验 schema 对算法字段的固定值和重算结果。

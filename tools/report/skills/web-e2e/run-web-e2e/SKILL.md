@@ -63,6 +63,16 @@ macOS 使用：
 /bin/bash <run-web-e2e-skill-dir>/scripts/start_macos_desktop_debug.sh --application all
 ```
 
+如果当前控制任务就运行在需要重启的 Codex Desktop 中，只能改用一次性托管入口：
+
+```bash
+/bin/bash <run-web-e2e-skill-dir>/scripts/restart_macos_desktop_debug.sh \
+  --application codex \
+  --port 9230
+```
+
+该入口使用固定单实例 Label、`RunAtLoad=true`、`KeepAlive=false` 的 LaunchAgent，并将状态与日志写入 `~/Library/Application Support/WildClawBench/desktop-debug-restart/<run-id>/`。调用后当前回合可能中断；Desktop 恢复后读取 `status.json`，只有 `PASSED` 才继续原状态。禁止使用 `launchctl submit` 或临时常驻任务完成自重启；发现 `com.wildclawbench.general-e2e.codex-debug`、`com.wildclawbench.general-e2e.codex-refresh` 等旧任务时先停止并清理，不能叠加新的重启任务。
+
 Windows 脚本动态解析当前 Codex MSIX 包的真实 manifest 入口，并从当前用户注册表及 `%LOCALAPPDATA%\Programs` 解析 `AStudio.exe`、`AstronStudio.exe`、`Acode.exe`、`WorkBuddy.exe`、`CodeBuddy.exe`、`QwenWorkCN.exe` 或 `QwenWork.exe`。启动 AstronStudio 时只从新客户端环境删除控制 Harness 的 `CODEX_*`、`CHATGPT_*` 变量以及 `NODE_CHANNEL_FD`、`NODE_UNIQUE_ID`、`ELECTRON_RUN_AS_NODE`，避免宿主命名管道或 Node IPC 身份泄漏到 AStudio 后端；输出和 Driver 状态只记录变量名，不记录值，PATH、代理和模型凭据保持不变。WorkBuddy 重启前会只读检查 `%USERPROFILE%\.workbuddy\workbuddy.db`；QwenWork 重启前会只读检查 `%APPDATA%\QwenWorkCN\data\agents.db` 的稳定内核会话。存在活动或待处理 session 时均失败关闭；CDP 监听者和待停止进程的可执行文件完整路径都必须与动态发现结果一致，同名但位于其他目录的进程必须拒绝或跳过。启动 WorkBuddy 时动态选择其 `%USERPROFILE%\.workbuddy\binaries\node\versions` 下最高的完整 Node/npm 运行时，只对新客户端进程补充 `PATH`，并默认设置 `npm_config_audit=false`、`npm_config_fund=false`、`npm_config_update_notifier=false`、`npm_config_prefer_offline=true` 以及 WorkBuddy 官方支持的 `BASH_DEFAULT_TIMEOUT_MS=600000`、`BASH_MAX_TIMEOUT_MS=600000`；用户已有同名 Shell 时限配置优先，启动脚本自身环境随后恢复。
 
 macOS 的 `--application` 与 Windows 作用域一致，使用小写连字符值：`all`、`codex`、`astronstudio`、`workbuddy`、`codex-workbuddy`、`qwenwork`、`codex-qwenwork`。脚本默认解析 `/Applications` 和当前用户 `Applications` 下的 `ChatGPT.app` / `Codex.app`、`AStudio.app` / `AstronStudio.app`、`WorkBuddy.app` 与 `QwenWorkCN.app` / `QwenWork.app`；非标准位置通过对应的显式路径参数传入。WorkBuddy 或 QwenWork 已运行但缺少健康 CDP 时，脚本会先用系统 `sqlite3` 只读核对状态库；数据库、Schema 或读取后端不可用，或者存在活动/待处理 session 时，都拒绝重启。

@@ -23,6 +23,7 @@ import {
   clickSend,
   currentThreadId,
   discoverMainTarget,
+  fillPrompt,
   prepareExecutionUi,
 } from "./lib/astronstudio-cdp.mjs";
 import {
@@ -48,6 +49,8 @@ function usage() {
   --resume                       恢复同一 attempt；禁止重复发送 Prompt
   --detach-after-submit          绑定 thread/turn/session/cwd 后退出观察
   --observe-once                 恢复后只执行一次原生状态观察
+  --managed-run-slots <1-8>     批队列冻结的后台 Agent 槽位，默认 1
+  --allowed-active-session-id   批队列已登记的活动 session，可重复
   --timeout-ms <毫秒>            单次 UI/CDP 操作超时，默认 30000
   --poll-interval-ms <毫秒>      终态轮询间隔，默认 1000
   --identity-timeout-ms <毫秒>   发送后身份绑定时限，默认 120000，范围 120000–180000
@@ -63,6 +66,12 @@ function positiveInteger(value, name) {
   return parsed;
 }
 
+function boundedSlots(value, name) {
+  const parsed = positiveInteger(value, name);
+  if (parsed > 8) throw new Error(`${name} 必须在 1–8 之间`);
+  return parsed;
+}
+
 export function parseArgs(argv) {
   const values = {
     unitRoot: "",
@@ -71,6 +80,8 @@ export function parseArgs(argv) {
     resume: false,
     detachAfterSubmit: false,
     observeOnce: false,
+    managedRunSlots: 1,
+    allowedActiveSessionIds: [],
     timeoutMs: 30_000,
     pollIntervalMs: 1_000,
     identityTimeoutMs: 120_000,
@@ -83,6 +94,7 @@ export function parseArgs(argv) {
     ["--timeout-ms", "timeoutMs"],
     ["--poll-interval-ms", "pollIntervalMs"],
     ["--identity-timeout-ms", "identityTimeoutMs"],
+    ["--managed-run-slots", "managedRunSlots"],
   ]);
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -90,13 +102,19 @@ export function parseArgs(argv) {
     else if (arg === "--resume") values.resume = true;
     else if (arg === "--detach-after-submit") values.detachAfterSubmit = true;
     else if (arg === "--observe-once") values.observeOnce = true;
+    else if (arg === "--allowed-active-session-id") {
+      const value = argv[index + 1];
+      if (!value || value.startsWith("--")) throw new Error("--allowed-active-session-id 缺少值");
+      values.allowedActiveSessionIds.push(value);
+      index += 1;
+    }
     else {
       const key = valued.get(arg);
       if (!key) throw new Error(`未知选项：${arg}`);
       const value = argv[index + 1];
       if (!value || value.startsWith("--")) throw new Error(`${arg} 缺少值`);
-      values[key] = new Set(["timeoutMs", "pollIntervalMs", "identityTimeoutMs"]).has(key)
-        ? positiveInteger(value, arg)
+      values[key] = new Set(["timeoutMs", "pollIntervalMs", "identityTimeoutMs", "managedRunSlots"]).has(key)
+        ? (key === "managedRunSlots" ? boundedSlots(value, arg) : positiveInteger(value, arg))
         : value;
       index += 1;
     }
@@ -104,6 +122,15 @@ export function parseArgs(argv) {
   if (values.observeOnce && !values.resume) throw new Error("--observe-once 必须与 --resume 一起使用");
   if (values.detachAfterSubmit && values.observeOnce) {
     throw new Error("--detach-after-submit 与 --observe-once 不能同时使用");
+  }
+  if (values.allowedActiveSessionIds.length && !values.detachAfterSubmit) {
+    throw new Error("--allowed-active-session-id 只允许批队列发送阶段使用");
+  }
+  if (new Set(values.allowedActiveSessionIds).size !== values.allowedActiveSessionIds.length) {
+    throw new Error("--allowed-active-session-id 不能重复");
+  }
+  if (values.allowedActiveSessionIds.length >= values.managedRunSlots) {
+    throw new Error("已登记活动 session 数必须小于 --managed-run-slots");
   }
   if (values.identityTimeoutMs < 120_000 || values.identityTimeoutMs > 180_000) {
     throw new Error("--identity-timeout-ms 必须在 120000–180000 之间");
@@ -174,8 +201,18 @@ function assertFrozenConfig(runConfig) {
   if (runConfig.harness?.id !== "astronstudio" || runConfig.harness?.bundle_id !== "cn.xfyun.acode") {
     throw new Error("冻结运行配置不是 AstronStudio");
   }
-  if (runConfig.control?.backend !== "electron-cdp" || runConfig.control?.execution_concurrency !== 1) {
-    throw new Error("G2-02 只支持冻结的单槽 electron-cdp 配置");
+  const configuredConcurrency = Number(runConfig.control?.execution_concurrency);
+  const maximumConcurrency = Number(runConfig.control?.maximum_execution_concurrency || 8);
+  if (
+    runConfig.control?.backend !== "electron-cdp"
+    || !Number.isInteger(configuredConcurrency)
+    || configuredConcurrency < 1
+    || configuredConcurrency > 8
+    || !Number.isInteger(maximumConcurrency)
+    || maximumConcurrency < configuredConcurrency
+    || maximumConcurrency > 8
+  ) {
+    throw new Error("冻结运行配置的 electron-cdp 并发范围无效");
   }
   if (runConfig.execution_policy?.prompt_send_enabled_by_probe !== false) {
     throw new Error("冻结运行配置的 probe 边界无效");
@@ -276,6 +313,12 @@ export function classifyNativeState(session) {
     return { kind: "running", businessStatus: null };
   }
   return { kind: "unknown", businessStatus: null };
+}
+
+export function isBlockingActiveSession(session) {
+  const state = String(session?.status || "").trim().toLowerCase();
+  return Boolean(session?.active_turn_id)
+    || new Set(["running", "starting", "pending", "needs_attention"]).has(state);
 }
 
 function baselineMap(state) {
@@ -495,7 +538,21 @@ async function currentProbe(config, dependencies, fresh) {
   if (current.tested_model.permission_display !== frozen.tested_model.permission_display) mismatches.push("permission");
   if (mismatches.length) throw new Error(`当前 AstronStudio 配置偏离冻结值：${mismatches.join(",")}`);
   const activeCount = report.state_database.active_or_pending_session_count;
-  if (fresh && activeCount !== 0) throw new Error(`AstronStudio 仍有 ${activeCount ?? "unknown"} 个活动或待处理任务`);
+  if (fresh && config.managedRunSlots === 1 && activeCount !== 0) {
+    throw new Error(`AstronStudio 仍有 ${activeCount ?? "unknown"} 个活动或待处理任务`);
+  }
+  if (fresh && config.managedRunSlots > 1) {
+    const allowed = new Set(config.allowedActiveSessionIds);
+    const sessions = await dependencies.queryNativeSessions(config.stateDatabase);
+    const activeSessions = sessions.filter(isBlockingActiveSession);
+    const unknown = activeSessions.filter((session) => !allowed.has(session.session_id));
+    if (unknown.length) {
+      throw new Error(`AstronStudio 存在不属于当前队列的活动 session：${unknown.map((item) => item.session_id).join(",")}`);
+    }
+    if (activeSessions.length >= config.managedRunSlots) {
+      throw new Error(`AstronStudio 活动 session 已达到并发上限 ${config.managedRunSlots}`);
+    }
+  }
   return report;
 }
 
@@ -746,6 +803,7 @@ export async function executeSingleTask(config, overrides = {}) {
     discoverMainTarget,
     connectCdp: (url, timeout) => CdpClient.connect(url, timeout),
     prepareExecutionUi,
+    fillPrompt,
     clickSend,
     currentThreadId,
     sleep: (milliseconds) => new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds)),
@@ -774,6 +832,7 @@ export async function executeSingleTask(config, overrides = {}) {
     state.send.pre_send_route_thread_id = prepared.task.thread_id;
     const sessions = await dependencies.queryNativeSessions(config.stateDatabase);
     state.session.baseline = baselineRows(sessions, config.candidateWorkspace);
+    await dependencies.fillPrompt(client, config.prompt, config.timeoutMs);
     state.prompt.send_status = "intent_persisted";
     state.send.dispatch_armed_at = dependencies.now();
     state.send.dispatch_attempt_count = 1;

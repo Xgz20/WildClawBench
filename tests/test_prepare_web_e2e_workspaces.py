@@ -180,7 +180,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.1.0.zip"
             orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.2.7.zip"
             execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.12.7.zip"
-            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.3.9.zip"
+            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.3.10.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
             report_config_path = batch_root / "web-smoke__report-config.yaml"
 
@@ -233,6 +233,9 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 execute_skill_names = archive.namelist()
             with zipfile.ZipFile(run_skill_package) as archive:
                 run_skill_names = archive.namelist()
+                run_restart_info = archive.getinfo(
+                    "run-web-e2e/scripts/restart_macos_desktop_debug.sh"
+                )
             self.assertTrue(all(name.startswith(prefix) for name in execution_names))
             self.assertIn(f"{prefix}score/", execution_names)
             self.assertTrue(any(name.endswith(f"execution/tasks/{self.TASK_ID}/PROMPT.md") for name in execution_names))
@@ -313,9 +316,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIn("run-web-e2e/scripts/check_web_e2e_skills.py", run_skill_names)
             self.assertIn("run-web-e2e/scripts/run_web_e2e.py", run_skill_names)
             self.assertIn("run-web-e2e/scripts/start_macos_desktop_debug.sh", run_skill_names)
+            self.assertIn("run-web-e2e/scripts/restart_macos_desktop_debug.sh", run_skill_names)
             self.assertIn("run-web-e2e/scripts/start_windows_desktop_debug.ps1", run_skill_names)
             self.assertIn("run-web-e2e/references/handoff-contract.md", run_skill_names)
             self.assertTrue((command_info.external_attr >> 16) & 0o100)
+            self.assertTrue((run_restart_info.external_attr >> 16) & 0o111)
 
             report_config = prepare_module.yaml.safe_load(report_config_path.read_text(encoding="utf-8"))
             self.assertEqual(report_config["schema_version"], prepare_module.REPORT_CONFIG_SCHEMA)
@@ -339,7 +344,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],
-                "packages/run-web-e2e-skill-v1.3.9.zip",
+                "packages/run-web-e2e-skill-v1.3.10.zip",
             )
             self.assertEqual(batch_manifest["skills_manifest"], "packages/skills-manifest.json")
             skills_manifest = json.loads(skills_manifest_path.read_text(encoding="utf-8"))

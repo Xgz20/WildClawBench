@@ -74,6 +74,7 @@ class E2EBuildTests(unittest.TestCase):
             set(components),
             {
                 "desktop-runtime",
+                "desktop-debug",
                 "resource-metrics",
                 "workspace-integrity",
                 "dataset-bundle-verifier",
@@ -127,6 +128,38 @@ class E2EBuildTests(unittest.TestCase):
                                 f"{skill_name}/{component['vendor_root']}/{relative}"
                             )
                             self.assertEqual(archive.read(archived), source.read_bytes())
+
+    def test_general_orchestrator_vendors_managed_macos_restart(self) -> None:
+        with zipfile.ZipFile(self.archive_path("orchestrate-general-e2e")) as archive:
+            names = set(archive.namelist())
+            self.assertIn(
+                "orchestrate-general-e2e/scripts/restart_macos_desktop_debug.sh",
+                names,
+            )
+            self.assertIn(
+                "orchestrate-general-e2e/vendor/e2e-shared/desktop-debug/"
+                "restart_macos_desktop_debug.sh",
+                names,
+            )
+        detached = self.temp_root / "detached-general-restart"
+        detached.mkdir()
+        root = BUILD._safe_extract(
+            self.archive_path("orchestrate-general-e2e"),
+            detached / "installed",
+        )
+        completed = subprocess.run(
+            [
+                "/bin/bash",
+                str(root / "scripts/restart_macos_desktop_debug.sh"),
+                "--help",
+            ],
+            cwd=detached,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("KeepAlive=false", completed.stdout)
 
     def test_build_is_byte_deterministic_and_uses_portable_zip_metadata(self) -> None:
         second_output = self.temp_root / "second"

@@ -23,15 +23,19 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py init \
   --score-skill-dir /absolute/path/to/score-general-e2e \
   --output-root /absolute/path/to/private-orchestrations \
   --orchestration-id ORCHESTRATION_ID \
-  --score-slots 1 \
+  --score-slots 3 \
   --score-timeout-seconds 7200
 ```
 
-初始化采用临时目录和原子发布。每题调用 score Skill 的 `prepare` 子能力，生成不同的 `scoring_attempt_id`、attempt 根和评分 Prompt；状态冻结 unit/report/scoring package SHA、score Skill 版本与入口 SHA、runtime lock、裁判协议、模型、推理强度、Prompt SHA、任务顺序和 deadline 策略。首版只支持单槽，其他值失败关闭。
+普通生产运行不要传验收标记。Skill 仍为 `interface_only`、需要执行已批准的真实验收项时，显式增加例如 `--acceptance-id G4-03`。控制器会把 `{mode: acceptance, acceptance_id: G4-03}` 同时冻结到 orchestration state、queue digest、评分 Prompt 和每题 attempt manifest；四处不一致即失败关闭。该选项只适用于 `codex-agent-judge-v1`，不能用于 API Judge，也不能把验收产物描述为生产准入结果。重评分需要验收时必须在 `init-rescore` 再次显式传入，不能从源 attempt 隐式继承。
+
+初始化采用临时目录和原子发布。每题调用 score Skill 的 `prepare` 子能力，生成不同的 `scoring_attempt_id`、attempt 根和评分 Prompt；状态冻结 unit/report/scoring package SHA、score Skill 版本与入口 SHA、runtime lock、裁判协议、模型、推理强度、可选验收标记、Prompt SHA、任务顺序和 deadline 策略。语义评分默认 3 槽，可配置 1–8；改变槽位或验收标记必须新建 orchestration，不能恢复时漂移。
+
+`automated` 任务先运行规则并在本地形成 `not-required` 语义组件和标准分，不创建 Codex 项目或评分会话；`hybrid` 先运行并冻结规则组件，再进入语义评分队列；`llm_judge` 直接进入语义评分队列。规则 Worker 不计入 `score_slots`，但当前控制器串行发起规则动作，避免把本地规则并发误报成语义评分并发。
 
 ## 注册 Codex Desktop 项目
 
-先安装锁定 Driver 依赖并只读探测。Desktop 必须在控制任务启动前以 loopback CDP 启动；控制任务不得重启承载自己的 Desktop：
+先安装锁定 Driver 依赖并只读探测。Desktop 应优先在控制任务启动前以 loopback CDP 启动：
 
 ```bash
 cd <skill-dir>/drivers/codex-desktop
@@ -43,6 +47,16 @@ bash <skill-dir>/scripts/run-codex-project-registrar.sh \
 ```
 
 Windows 使用 `run-codex-project-registrar.cmd`。Driver 与 Web E2E 使用相同的 `wildclawbench.codex-project-registration/v1` 契约，但随 General Skill 独立分发；默认通过可见 UI 和原生文件夹选择器注册，不使用 Computer Use 操作 Codex 自己。只有测试人员明确接受当前 Desktop 版本私有接口风险时才可传 `--renderer-bridge`。
+
+如果 macOS 当前控制任务就承载在需要补开 CDP 的 Codex Desktop 中，只能先持久化编排状态，再调用一次性托管入口：
+
+```bash
+/bin/bash <skill-dir>/scripts/restart_macos_desktop_debug.sh \
+  --application codex \
+  --port 9230
+```
+
+入口固定使用 `com.wildclawbench.desktop-debug-restart.codex` 单实例 Label、`RunAtLoad=true`、`KeepAlive=false`，状态和日志保存在 `~/Library/Application Support/WildClawBench/desktop-debug-restart/<run-id>/`。当前回合中断后，新控制任务读取 `status.json` 并恢复原 orchestration；只有 `PASSED` 才继续项目注册。禁止使用 `launchctl submit` 或任何自动复活的临时任务；脚本检测到旧版 `com.wildclawbench.general-e2e.codex-debug`、`com.wildclawbench.general-e2e.codex-refresh` 或已有新 Label 时会失败关闭。
 
 读取 `status` 的 `REGISTER_PROJECT.project_path`，先调用 Desktop 内置 `list_projects` 按规范化绝对路径唯一匹配。已经存在时直接复用并记录：
 
@@ -80,7 +94,7 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py preflight \
 
 ## 创建与等待评分任务
 
-只执行 `status` 或 `resume` 返回的第一个 `recommended_actions` 项。`CREATE_THREAD` 时读取 `prompt_file`，调用 Desktop 内置 `create_thread`：
+按 `status` 或 `resume` 返回的 `recommended_actions` 执行动作。最多同时出现冻结槽位数的语义任务；每个任务的状态更新仍单独、原子记录。`CREATE_THREAD` 时读取 `prompt_file`，调用 Desktop 内置 `create_thread`：
 
 - target 使用动作中的 `project_id`，environment 固定 `{type: "local"}`；
 - `model` 和 `thinking` 必须使用动作冻结值，不沿用控制会话默认值；
@@ -118,7 +132,7 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py mark-timeout \
 
 如果一次已发出的 `wait_threads` 跨过 deadline 后才返回，直接执行 `record-wait`；控制器会在同一次原子状态更新中先记录超时，再保存 cursor 和线程终态，不会把 deadline 后的 `COMPLETED` 误记为成功。
 
-线程返回 `COMPLETED` 后，单槽进入 `SCORE_VERIFICATION_PENDING`，不会立即切换下一题。执行 `status` 返回的 `VERIFY_SCORE`，确认评分会话已生成并校验 `score.json`，再记录结果：
+线程返回 `COMPLETED` 后，该槽进入 `SCORE_VERIFICATION_PENDING`，不会立即补位。执行 `status` 返回的 `VERIFY_SCORE`，确认评分会话已生成并校验 `score.json`，再记录结果：
 
 ```bash
 python <skill-dir>/scripts/orchestrate_general_e2e.py record-score \
@@ -126,7 +140,7 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py record-score \
   --task-id TASK_ID
 ```
 
-`record-score` 调用冻结的 score Skill `verify-score`，复核标准 score、审计、语义查询日志和来源 SHA；有效能力分和合法的 `evaluation_error / total_score=null` 都可记录。只有评分产物通过校验后单槽才进入下一题。线程完成但缺少、篡改或未通过校验的 score 继续占用当前槽位。
+`record-score` 调用冻结的 score Skill `verify-score`，复核标准 score、审计、语义查询日志和来源 SHA；有效能力分和合法的 `evaluation_error / total_score=null` 都可记录。只有评分产物通过校验后该槽才按冻结顺序动态补位。线程完成但缺少、篡改或未通过校验的 score 继续占用当前槽位。
 
 ## 恢复与失败关闭
 
@@ -139,4 +153,4 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py resume \
 
 严格继续返回的动作。不要重新 `init`，不要按最近任务猜测 thread，不要丢弃 cursor 或重置 deadline。状态使用原子替换写入，并假定只有一个控制任务串行修改；多个控制任务不得同时写同一 orchestration。
 
-以下情况失败关闭：裁判配置未冻结、Codex 分支混入 API 动作、同题 execution record 不唯一、score Skill 或 runtime lock 漂移、Prompt/attempt/项目证据漂移、项目路径不一致、Desktop 版本改变、host 切换、wait sequence 跳号、deadline 未到提前超时，以及单槽任务未终态就操作下一题。
+以下情况失败关闭：裁判配置未冻结、Codex 分支混入 API 动作、同题 execution record 不唯一、score Skill 或 runtime lock 漂移、Prompt/attempt/项目证据漂移、项目路径不一致、Desktop 版本改变、host 切换、wait sequence 跳号、deadline 未到提前超时，以及操作不属于当前活动槽位的任务。

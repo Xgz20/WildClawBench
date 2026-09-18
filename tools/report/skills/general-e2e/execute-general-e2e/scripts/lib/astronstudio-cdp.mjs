@@ -440,6 +440,5 @@ export async function prepareExecutionUi(client, config) {
   if (ui.permission_count !== 1 || ui.permission !== config.expectedPermission) {
     throw new Error(`AstronStudio 当前权限不匹配：${ui.permission || "unknown"} vs ${config.expectedPermission}`);
   }
-  await fillPrompt(client, config.prompt, config.timeoutMs);
   return { task, workspace, ui };
 }

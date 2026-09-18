@@ -874,7 +874,8 @@ export function buildFrozenRunConfig(observation) {
       endpoint: observation.cdp.endpoint,
       endpoint_source: observation.cdp.endpoint_source,
       ui_slots: 1,
-      execution_concurrency: 1,
+      execution_concurrency: 3,
+      maximum_execution_concurrency: 8,
     },
     state_database: {
       path: observation.state_database.path,
@@ -891,7 +892,7 @@ export function buildFrozenRunConfig(observation) {
     execution_policy: {
       prompt_send_enabled_by_probe: false,
       app_restart_enabled_by_probe: false,
-      initial_concurrency: 1,
+      initial_concurrency: 3,
     },
   };
   return {

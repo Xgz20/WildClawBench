@@ -6,6 +6,8 @@
 
 当前真实评分模型与推理强度仍须在批次 `report-config.json` 中明确配置。fixture 响应只验证协议和代码，不能作为真实语义评分证据。
 
+当 Skill 仍为 `interface_only` 时，普通生产 Prompt 必须停止。仅可执行显式验收运行：控制 Prompt 必须给出 acceptance ID，且与 `attempt-manifest.json` 的 `validation.mode=acceptance` 和 `validation.acceptance_id` 完全相同。标记缺失或不一致时停止，不生成或导入语义响应。验收运行仍执行本页全部证据与校验步骤，其结果只证明对应验收项实际运行，不能单独证明 Skill 已达到生产状态。
+
 ## 单题流程
 
 项目根就是私有评分 attempt。先复核输入：

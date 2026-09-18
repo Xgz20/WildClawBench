@@ -14,6 +14,7 @@ import {
   EXECUTION_RECORD_SCHEMA,
   classifyNativeState,
   executeSingleTask,
+  isBlockingActiveSession,
   parseArgs,
   selectRouteBoundSession,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs";
@@ -132,6 +133,7 @@ function commonDependencies(config, sessions, clickCounter) {
       workspace: { method: "exact-path-selection", path: config.candidateWorkspace },
       ui: { model: "GLM-5.2", reasoning: "High", permission: "完全访问" },
     }),
+    fillPrompt: async () => ({ editor_count: 1, matches: true }),
     clickSend: async () => {
       clickCounter.count += 1;
       return { clicked: true, count: 1, thread_id: "thread-1" };
@@ -171,6 +173,44 @@ test("CLI requires resume for observation and keeps identity timeout bounded", (
     "--resume",
     "--observe-once",
   ]).observeOnce, true);
+  assert.equal(parseArgs([
+    "--unit-root", "/tmp/unit",
+    "--task-id", TASK_ID,
+    "--run-config", "/tmp/config.json",
+    "--detach-after-submit",
+    "--managed-run-slots", "8",
+  ]).managedRunSlots, 8);
+  assert.throws(() => parseArgs([
+    "--unit-root", "/tmp/unit",
+    "--task-id", TASK_ID,
+    "--run-config", "/tmp/config.json",
+    "--detach-after-submit",
+    "--managed-run-slots", "9",
+  ]), /1–8/u);
+});
+
+test("managed dispatch rejects an active session outside the frozen queue", async () => {
+  const config = await fixture();
+  const clickCounter = { count: 0 };
+  try {
+    const dependencies = commonDependencies(
+      config,
+      [[{ ...nativeSession("running"), session_id: "foreign-session", thread_id: "foreign-thread" }]],
+      clickCounter,
+    );
+    await assert.rejects(
+      executeSingleTask({
+        ...config,
+        detachAfterSubmit: true,
+        managedRunSlots: 3,
+        allowedActiveSessionIds: ["registered-session"],
+      }, dependencies),
+      /不属于当前队列的活动 session：foreign-session/u,
+    );
+    assert.equal(clickCounter.count, 0);
+  } finally {
+    await rm(config.unitRoot, { recursive: true, force: true });
+  }
 });
 
 test("global new-task action wins over many per-workspace new-thread actions", async () => {
@@ -262,6 +302,14 @@ test("a completed native turn is terminal even when the task only returns prose"
     classifyNativeState({ turn_state: "completed", status: "ready", active_turn_id: null }),
     { kind: "completed", businessStatus: "completed" },
   );
+});
+
+test("managed dispatch ignores stale ready sessions without an active turn", () => {
+  assert.equal(isBlockingActiveSession({ status: "ready", active_turn_id: null }), false);
+  assert.equal(isBlockingActiveSession({ status: "created", active_turn_id: null }), false);
+  assert.equal(isBlockingActiveSession({ status: "running", active_turn_id: null }), true);
+  assert.equal(isBlockingActiveSession({ status: "ready", active_turn_id: "turn-active" }), true);
+  assert.equal(isBlockingActiveSession({ status: "needs_attention", active_turn_id: null }), true);
 });
 
 test("fresh execution dispatches exactly once and binds all native identities", async () => {

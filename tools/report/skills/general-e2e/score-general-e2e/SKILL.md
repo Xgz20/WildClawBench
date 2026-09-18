@@ -15,7 +15,9 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 python -m eval_general_e2e skills --name score-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才形成完整双后端生产评分。当前 `0.6.0/interface_only` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、合分审计和 `verify-score`。终态评分可复用冻结候选创建独立重评分 attempt。真实 Codex 小批和完整生产闭环尚未交付，fixture 不能冒充真实语义评分。
+只有 `implementation_status` 为 `operational` 时才形成完整双后端生产评分。当前 `0.6.1/interface_only` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、合分审计和 `verify-score`。终态评分可复用冻结候选创建独立重评分 attempt。真实 Codex 小批和完整生产闭环尚未交付，fixture 不能冒充真实语义评分。
+
+普通生产调用仍须在 `interface_only` 时停止。唯一例外是控制 Prompt 明确声明验收运行，且其中的 acceptance ID 与 `attempt-manifest.json` 的 `validation.mode=acceptance`、`validation.acceptance_id` 完全相同；此时可以按完整协议生成验收证据，但不得省略证据查询、反例检查、合分或 `verify-score`，也不得据此单独宣称生产就绪。标记缺失、不一致或使用 API Judge 时立即停止。
 
 ## 责任边界
 

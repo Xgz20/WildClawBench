@@ -244,6 +244,24 @@ test("completed execution freezes an exact candidate and creates a verified rece
     const verified = await verifyAstronStudioCollection({ unitRoot: value.root, taskId: value.taskId });
     assert.equal(verified.status, "PASS");
     assert.equal(verified.candidate_sha256, result.candidate_sha256);
+    const siblingPath = "evidence/tasks/sibling-task/sibling-attempt/process-cleanup.json";
+    const siblingBytes = Buffer.from("{\"sibling\":true}\n", "utf8");
+    await mkdir(join(value.root, "evidence", "tasks", "sibling-task", "sibling-attempt"), { recursive: true });
+    await writeFile(join(value.root, siblingPath), siblingBytes);
+    const receiptPath = join(value.root, "receipts", "collect-evidence-receipt.json");
+    const receipt = JSON.parse(await readFile(receiptPath, "utf8"));
+    receipt.artifacts.push({
+      path: siblingPath,
+      sha256: digest(siblingBytes),
+      size: siblingBytes.length,
+    });
+    receipt.artifacts.sort((left, right) => left.path.localeCompare(right.path));
+    await writeJson(receiptPath, receipt);
+    const verifiedWithSibling = await verifyAstronStudioCollection({
+      unitRoot: value.root,
+      taskId: value.taskId,
+    });
+    assert.equal(verifiedWithSibling.status, "PASS");
     await assert.rejects(
       finalizeAstronStudioExecution(options(value), {
         terminateProcesses: async () => successfulCleanup(),

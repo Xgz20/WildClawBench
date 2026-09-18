@@ -130,13 +130,15 @@ function passingObservation() {
   };
 }
 
-test("a complete read-only observation freezes a single-slot run config", () => {
+test("a complete read-only observation freezes default three-slot run config", () => {
   const report = buildProbeReport(passingObservation(), "2026-09-17T10:00:00.000Z");
   assert.equal(report.status, "PASS");
   assert.equal(report.ready, true);
   assert.deepEqual(report.failed_checks, []);
   assert.equal(report.frozen_run_config.schema_version, RUN_CONFIG_SCHEMA);
-  assert.equal(report.frozen_run_config.control.execution_concurrency, 1);
+  assert.equal(report.frozen_run_config.control.execution_concurrency, 3);
+  assert.equal(report.frozen_run_config.control.maximum_execution_concurrency, 8);
+  assert.equal(report.frozen_run_config.execution_policy.initial_concurrency, 3);
   assert.equal(report.frozen_run_config.frozen_at, "2026-09-17T10:00:00.000Z");
   assert.equal(report.frozen_run_config.tested_model.display_name, "Spark X2.5");
   assert.match(report.frozen_run_config.config_digest, /^[0-9a-f]{64}$/u);

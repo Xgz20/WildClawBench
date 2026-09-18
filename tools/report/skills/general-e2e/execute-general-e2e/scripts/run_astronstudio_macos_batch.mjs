@@ -19,7 +19,8 @@ export const QUEUE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-qu
 export const QUEUE_WORKER_VERSION = "0.1.0";
 export const QUEUE_REVISION = 1;
 export const UI_SLOTS = 1;
-export const RUN_SLOTS = 1;
+export const RUN_SLOTS = 3;
+export const MAX_RUN_SLOTS = 8;
 
 const SINGLE_TASK_SCRIPT = resolve(
   fileURLToPath(new URL("./execute_astronstudio_macos.mjs", import.meta.url)),
@@ -39,14 +40,14 @@ function usage() {
   --resume                       恢复同一 queue 和已登记 attempt；不重发 Prompt
   --status                       只读取持久化队列状态
   --continue-on-terminal-failure 明确失败终态后继续下一题
-  --run-slots <1>                Agent 槽位；G2-06 固定为 1
+  --run-slots <1-8>              后台 Agent 槽位，默认 3
   --timeout-ms <毫秒>            传给单题执行器，默认 30000
   --poll-interval-ms <毫秒>      传给单题执行器，默认 1000
   --identity-timeout-ms <毫秒>   传给单题执行器，默认 120000
   -h, --help                     显示帮助
 
 未指定 --task-id 时按 execution manifest.task_ids 的冻结顺序执行全部任务。
-queue digest、任务顺序、单槽策略和 attempt 选择一经创建不可变。三槽并发需后续独立验收。`;
+queue digest、任务顺序、并发策略和 attempt 选择一经创建不可变。UI 发送固定单槽，后台 Agent 动态补位。`;
 }
 
 function positiveInteger(value, name) {
@@ -100,8 +101,8 @@ export function parseBatchArgs(argv) {
       index += 1;
     }
   }
-  if (values.runSlots !== RUN_SLOTS) {
-    throw new Error("G2-06 仅发布 run_slots=1；三槽并发必须在 MAC-08 独立验收后启用");
+  if (values.runSlots > MAX_RUN_SLOTS) {
+    throw new Error(`--run-slots 必须在 1–${MAX_RUN_SLOTS} 之间`);
   }
   if (values.identityTimeoutMs < 120_000 || values.identityTimeoutMs > 180_000) {
     throw new Error("--identity-timeout-ms 必须在 120000–180000 之间");
@@ -193,6 +194,15 @@ export async function resolveBatchPlan(args) {
   if (typeof runConfig.config_digest !== "string" || !/^[0-9a-f]{64}$/.test(runConfig.config_digest)) {
     throw new Error("冻结运行配置缺少有效 config_digest");
   }
+  const maximumConcurrency = Number(runConfig.control?.maximum_execution_concurrency || 8);
+  if (
+    !Number.isInteger(maximumConcurrency)
+    || maximumConcurrency < 1
+    || maximumConcurrency > MAX_RUN_SLOTS
+    || args.runSlots > maximumConcurrency
+  ) {
+    throw new Error(`--run-slots 超出冻结配置上限：${maximumConcurrency}`);
+  }
   const queueRoot = join(unitRoot, ".general-e2e", "queues", args.queueId);
   const frozen = {
     batch_id: manifest.batch_id,
@@ -203,7 +213,7 @@ export async function resolveBatchPlan(args) {
     run_config_digest: runConfig.config_digest,
     task_ids: [...taskIds],
     ui_slots: UI_SLOTS,
-    run_slots: RUN_SLOTS,
+    run_slots: args.runSlots,
     continue_on_terminal_failure: args.continueOnTerminalFailure,
     driver_options: {
       timeout_ms: args.timeoutMs,
@@ -242,7 +252,7 @@ export function createQueueState(plan, now = new Date().toISOString()) {
   return {
     schema_version: QUEUE_SCHEMA,
     revision: QUEUE_REVISION,
-    worker: { id: "astronstudio-macos-serial", version: QUEUE_WORKER_VERSION },
+    worker: { id: "astronstudio-macos-concurrent", version: QUEUE_WORKER_VERSION },
     identity: {
       batch_id: plan.manifest.batch_id,
       unit_id: plan.manifest.unit_id,
@@ -256,6 +266,7 @@ export function createQueueState(plan, now = new Date().toISOString()) {
     configuration: { ...plan.frozen },
     phase: "PREPARED",
     current_task_id: null,
+    active_task_ids: [],
     runtime: {
       worker_pid: null,
       worker_started_at: null,
@@ -391,7 +402,7 @@ export function synchronizeTaskFromAutomation(plan, queueTask, automation, now =
   return queueTask;
 }
 
-async function launchSingleTask(plan, args, taskId, resume) {
+async function launchSingleTask(plan, args, taskId, operation, activeSessionIds = []) {
   const childArgs = [
     SINGLE_TASK_SCRIPT,
     "--unit-root", plan.unitRoot,
@@ -401,7 +412,16 @@ async function launchSingleTask(plan, args, taskId, resume) {
     "--poll-interval-ms", String(args.pollIntervalMs),
     "--identity-timeout-ms", String(args.identityTimeoutMs),
   ];
-  if (resume) childArgs.push("--resume");
+  if (operation === "dispatch") {
+    childArgs.push("--detach-after-submit", "--managed-run-slots", String(args.runSlots));
+    for (const sessionId of activeSessionIds) {
+      childArgs.push("--allowed-active-session-id", sessionId);
+    }
+  } else if (operation === "observe") {
+    childArgs.push("--resume", "--observe-once");
+  } else {
+    throw new Error(`不支持的单题操作：${operation}`);
+  }
   const child = spawn(process.execPath, childArgs, { stdio: "inherit" });
   return new Promise((resolvePromise, rejectPromise) => {
     child.once("error", rejectPromise);
@@ -422,7 +442,7 @@ function buildQueueReceipt(plan, state, now) {
     identity: { ...state.identity },
     phase: state.phase,
     ui_slots: UI_SLOTS,
-    run_slots: RUN_SLOTS,
+    run_slots: state.configuration.run_slots,
     tasks: state.tasks.map((task) => ({
       task_id: task.task_id,
       phase: task.phase,
@@ -460,6 +480,7 @@ function recordUnexpectedWorkerLoss(state, isAlive, now) {
     event: "WORKER_PROCESS_LOST",
     previous_worker_pid: previousPid,
     current_task_id: state.current_task_id,
+    active_task_ids: [...(state.active_task_ids || [])],
   });
   return true;
 }
@@ -469,7 +490,10 @@ export async function runQueue(plan, args, overrides = {}) {
     now: () => new Date().toISOString(),
     pid: process.pid,
     isProcessAlive: processIsAlive,
-    runTask: (taskId, resume) => launchSingleTask(plan, args, taskId, resume),
+    runTask: (taskId, operation, activeSessionIds) => (
+      launchSingleTask(plan, args, taskId, operation, activeSessionIds)
+    ),
+    sleep: (milliseconds) => new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds)),
     ...overrides,
   };
   let state = await readJsonIfPresent(plan.queueStateFile);
@@ -511,84 +535,155 @@ export async function runQueue(plan, args, overrides = {}) {
     state.error = null;
     await persist(plan, state, dependencies.now());
 
-    for (const queueTask of state.tasks) {
-      const statePath = controlPath(plan, queueTask.task_id, "automation-state.json");
-      let automation = await readJsonIfPresent(statePath);
-      if (automation) synchronizeTaskFromAutomation(plan, queueTask, automation, dependencies.now());
-      if (queueTask.phase === "COMPLETED") continue;
-      if (queueTask.phase === "FAILED" && args.continueOnTerminalFailure) continue;
-      if (queueTask.phase === "FAILED") {
-        state.phase = "FAILED";
-        state.current_task_id = queueTask.task_id;
-        state.error = `任务失败，未启用继续策略：${queueTask.task_id}`;
-        await persist(plan, state, dependencies.now());
-        return state;
+    for (;;) {
+      for (const queueTask of state.tasks) {
+        const automation = await readJsonIfPresent(
+          controlPath(plan, queueTask.task_id, "automation-state.json"),
+        );
+        if (automation) synchronizeTaskFromAutomation(plan, queueTask, automation, dependencies.now());
       }
 
-      const resumeTask = Boolean(automation);
-      state.current_task_id = queueTask.task_id;
-      queueTask.phase = resumeTask ? automation.phase : "RUNNING";
-      queueTask.started_at ||= dependencies.now();
-      state.history.push({
-        at: dependencies.now(),
-        event: resumeTask ? "TASK_ATTEMPT_RESUME_REQUESTED" : "TASK_DISPATCH_REQUESTED",
-        task_id: queueTask.task_id,
-        attempt_id: queueTask.selected_attempt_id,
-      });
-      await persist(plan, state, dependencies.now());
+      let running = state.tasks.filter((task) => task.phase === "RUNNING");
+      const attention = state.tasks.filter((task) => task.phase === "NEEDS_ATTENTION");
+      const failed = state.tasks.filter((task) => task.phase === "FAILED");
+      state.active_task_ids = running.map((task) => task.task_id);
+      state.current_task_id = state.active_task_ids[0] || null;
 
-      let driverResult;
-      try {
-        driverResult = await dependencies.runTask(queueTask.task_id, resumeTask);
-      } catch (error) {
-        driverResult = { code: 2, signal: null, error: error instanceof Error ? error.message : String(error) };
-      }
-      queueTask.driver_exit_code = driverResult.code;
-      automation = await readJsonIfPresent(statePath);
-      if (!automation) {
-        queueTask.phase = "NEEDS_ATTENTION";
-        queueTask.error = {
-          code: "DRIVER_STATE_MISSING",
-          message: driverResult.error || `单题 Driver 退出码 ${driverResult.code}，且未生成 automation-state`,
-        };
+      if (attention.length) {
         state.phase = "NEEDS_ATTENTION";
-        state.error = `任务缺少可恢复状态：${queueTask.task_id}`;
+        state.error = `任务需要人工关注：${attention.map((task) => task.task_id).join(",")}`;
         await persist(plan, state, dependencies.now());
         return state;
       }
-      synchronizeTaskFromAutomation(plan, queueTask, automation, dependencies.now());
-      state.history.push({
-        at: dependencies.now(),
-        event: "TASK_DRIVER_RETURNED",
-        task_id: queueTask.task_id,
-        attempt_id: queueTask.selected_attempt_id,
-        task_phase: queueTask.phase,
-        driver_exit_code: driverResult.code,
-        driver_signal: driverResult.signal || null,
-      });
-      await persist(plan, state, dependencies.now());
 
-      if (queueTask.phase === "COMPLETED") continue;
-      if (queueTask.phase === "FAILED" && args.continueOnTerminalFailure) continue;
-      state.phase = queueTask.phase === "FAILED" ? "FAILED" : "NEEDS_ATTENTION";
-      state.error = queueTask.phase === "FAILED"
-        ? `任务失败，未启用继续策略：${queueTask.task_id}`
-        : `任务 ${queueTask.task_id} 尚未终态；恢复前禁止切到下一题`;
-      await persist(plan, state, dependencies.now());
-      return state;
+      let dispatchBlocked = failed.length > 0 && !args.continueOnTerminalFailure;
+      while (!dispatchBlocked && running.length < args.runSlots) {
+        const pending = state.tasks.find((task) => task.phase === "PENDING");
+        if (!pending) break;
+        const activeSessionIds = running.map((task) => task.session.session_id).filter(Boolean);
+        if (activeSessionIds.length !== running.length) break;
+        pending.phase = "RUNNING";
+        pending.started_at ||= dependencies.now();
+        state.active_task_ids = [...running.map((task) => task.task_id), pending.task_id];
+        state.current_task_id = state.active_task_ids[0] || null;
+        state.history.push({
+          at: dependencies.now(),
+          event: "TASK_DISPATCH_REQUESTED",
+          task_id: pending.task_id,
+          active_task_ids: [...state.active_task_ids],
+        });
+        await persist(plan, state, dependencies.now());
+
+        let driverResult;
+        try {
+          driverResult = await dependencies.runTask(pending.task_id, "dispatch", activeSessionIds);
+        } catch (error) {
+          driverResult = {
+            code: 2,
+            signal: null,
+            error: error instanceof Error ? error.message : String(error),
+          };
+        }
+        pending.driver_exit_code = driverResult.code;
+        const automation = await readJsonIfPresent(
+          controlPath(plan, pending.task_id, "automation-state.json"),
+        );
+        if (!automation) {
+          pending.phase = "NEEDS_ATTENTION";
+          pending.error = {
+            code: "DRIVER_STATE_MISSING",
+            message: driverResult.error || `单题 Driver 退出码 ${driverResult.code}，且未生成 automation-state`,
+          };
+        } else {
+          synchronizeTaskFromAutomation(plan, pending, automation, dependencies.now());
+        }
+        state.history.push({
+          at: dependencies.now(),
+          event: "TASK_DISPATCH_RETURNED",
+          task_id: pending.task_id,
+          attempt_id: pending.selected_attempt_id,
+          task_phase: pending.phase,
+          driver_exit_code: driverResult.code,
+          driver_signal: driverResult.signal || null,
+        });
+        await persist(plan, state, dependencies.now());
+        if (pending.phase === "NEEDS_ATTENTION") break;
+        if (pending.phase === "FAILED" && !args.continueOnTerminalFailure) {
+          dispatchBlocked = true;
+        }
+        running = state.tasks.filter((task) => task.phase === "RUNNING");
+      }
+
+      running = state.tasks.filter((task) => task.phase === "RUNNING");
+      const pending = state.tasks.filter((task) => task.phase === "PENDING");
+      const currentAttention = state.tasks.filter((task) => task.phase === "NEEDS_ATTENTION");
+      if (currentAttention.length) continue;
+      if (!running.length && !pending.length) {
+        const terminalFailures = state.tasks.filter((task) => task.phase === "FAILED");
+        state.phase = terminalFailures.length ? "COMPLETED_WITH_FAILURES" : "COMPLETED";
+        state.active_task_ids = [];
+        state.current_task_id = null;
+        state.error = terminalFailures.length
+          ? `${terminalFailures.length} 个任务以明确失败终态结束`
+          : null;
+        state.history.push({
+          at: dependencies.now(),
+          event: state.phase === "COMPLETED" ? "QUEUE_COMPLETED" : "QUEUE_COMPLETED_WITH_FAILURES",
+          failed_task_ids: terminalFailures.map((task) => task.task_id),
+        });
+        await persist(plan, state, dependencies.now());
+        return state;
+      }
+      if (!running.length && dispatchBlocked) {
+        const currentFailures = state.tasks.filter((task) => task.phase === "FAILED");
+        state.phase = "FAILED";
+        state.active_task_ids = [];
+        state.current_task_id = currentFailures[0]?.task_id || null;
+        state.error = `任务失败，未启用继续策略：${currentFailures[0]?.task_id}`;
+        await persist(plan, state, dependencies.now());
+        return state;
+      }
+
+      let observedChange = false;
+      for (const queueTask of running) {
+        const previousPhase = queueTask.phase;
+        let driverResult;
+        try {
+          driverResult = await dependencies.runTask(queueTask.task_id, "observe", []);
+        } catch (error) {
+          driverResult = {
+            code: 2,
+            signal: null,
+            error: error instanceof Error ? error.message : String(error),
+          };
+        }
+        queueTask.driver_exit_code = driverResult.code;
+        const automation = await readJsonIfPresent(
+          controlPath(plan, queueTask.task_id, "automation-state.json"),
+        );
+        if (!automation) {
+          queueTask.phase = "NEEDS_ATTENTION";
+          queueTask.error = {
+            code: "DRIVER_STATE_MISSING",
+            message: driverResult.error || "观察阶段缺少 automation-state",
+          };
+        } else {
+          synchronizeTaskFromAutomation(plan, queueTask, automation, dependencies.now());
+        }
+        observedChange ||= queueTask.phase !== previousPhase;
+        state.history.push({
+          at: dependencies.now(),
+          event: "TASK_OBSERVATION_RETURNED",
+          task_id: queueTask.task_id,
+          attempt_id: queueTask.selected_attempt_id,
+          task_phase: queueTask.phase,
+          driver_exit_code: driverResult.code,
+          driver_signal: driverResult.signal || null,
+        });
+        await persist(plan, state, dependencies.now());
+      }
+      if (!observedChange) await dependencies.sleep(args.pollIntervalMs);
     }
-
-    const failed = state.tasks.filter((task) => task.phase === "FAILED");
-    state.phase = failed.length ? "COMPLETED_WITH_FAILURES" : "COMPLETED";
-    state.current_task_id = null;
-    state.error = failed.length ? `${failed.length} 个任务以明确失败终态结束` : null;
-    state.history.push({
-      at: dependencies.now(),
-      event: state.phase === "COMPLETED" ? "QUEUE_COMPLETED" : "QUEUE_COMPLETED_WITH_FAILURES",
-      failed_task_ids: failed.map((task) => task.task_id),
-    });
-    await persist(plan, state, dependencies.now());
-    return state;
   } catch (error) {
     state.phase = "FAILED";
     state.error = error instanceof Error ? error.message : String(error);

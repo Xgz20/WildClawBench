@@ -213,6 +213,27 @@ def _identifier(value: object, label: str) -> str:
     return value
 
 
+def _validation_marker(acceptance_id: str | None) -> dict[str, str] | None:
+    if acceptance_id is None:
+        return None
+    return {
+        "mode": "acceptance",
+        "acceptance_id": _identifier(acceptance_id, "acceptance_id"),
+    }
+
+
+def _verify_validation_marker(value: object) -> dict[str, str] | None:
+    if value is None:
+        return None
+    if (
+        not isinstance(value, dict)
+        or set(value) != {"mode", "acceptance_id"}
+        or value.get("mode") != "acceptance"
+    ):
+        raise ScoringRuntimeError("VALIDATION_MARKER_INVALID")
+    return _validation_marker(value.get("acceptance_id"))
+
+
 def _required_string(value: object, label: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ScoringRuntimeError("STRING_INVALID", f"{label}={value!r}")
@@ -899,6 +920,7 @@ def prepare_attempt(
     judge_reasoning_effort: str | None = None,
     judge_attempt_id: str | None = None,
     api_runtime_config_path: Path | None = None,
+    acceptance_id: str | None = None,
 ) -> dict[str, Any]:
     unit_root = unit_root.expanduser().resolve(strict=True)
     if not unit_root.is_dir() or unit_root.is_symlink():
@@ -996,6 +1018,12 @@ def prepare_attempt(
         judge_attempt_id=judge_attempt_id,
         api_runtime_config_path=api_runtime_config_path,
     )
+    validation = _validation_marker(acceptance_id)
+    if validation is not None and (
+        judge_config is None
+        or judge_config.get("protocol") != "codex-agent-judge-v1"
+    ):
+        raise ScoringRuntimeError("ACCEPTANCE_MODE_REQUIRES_CODEX_JUDGE")
     destination = (
         output_root.expanduser().resolve()
         / f"{batch_id}__{unit_id}"
@@ -1126,6 +1154,7 @@ def prepare_attempt(
                 if judge_config is not None
                 else None
             ),
+            "validation": validation,
         }
         _write_new_json(staging / "attempt-manifest.json", manifest)
         os.replace(staging, destination)
@@ -1144,6 +1173,7 @@ def verify_attempt(attempt_root: Path) -> dict[str, Any]:
     manifest = _read_json(root / "attempt-manifest.json", code="ATTEMPT_MANIFEST_INVALID")
     if manifest.get("schema_version") != ATTEMPT_SCHEMA:
         raise ScoringRuntimeError("ATTEMPT_MANIFEST_INVALID", "schema")
+    validation = _verify_validation_marker(manifest.get("validation"))
     paths = manifest.get("paths")
     digests = manifest.get("digests")
     if not isinstance(paths, dict) or not isinstance(digests, dict):
@@ -1247,6 +1277,11 @@ def verify_attempt(attempt_root: Path) -> dict[str, Any]:
             raise ScoringRuntimeError("JUDGE_CONFIG_INVALID", "manifest mismatch")
     elif manifest.get("judge") is not None or digests.get("judge_config_sha256") is not None:
         raise ScoringRuntimeError("JUDGE_CONFIG_INVALID", "incomplete manifest lock")
+    if validation is not None and (
+        not isinstance(manifest.get("judge"), dict)
+        or manifest["judge"].get("protocol") != "codex-agent-judge-v1"
+    ):
+        raise ScoringRuntimeError("ACCEPTANCE_MODE_REQUIRES_CODEX_JUDGE")
     transcript = paths.get("transcript")
     if transcript is not None:
         path = _resolve_within(root, transcript, "transcript")
@@ -4171,6 +4206,7 @@ def prepare_rescore_attempt(
     judge_reasoning_effort: str | None = None,
     judge_attempt_id: str | None = None,
     api_runtime_config_path: Path | None = None,
+    acceptance_id: str | None = None,
 ) -> dict[str, Any]:
     source_root = source_attempt_root.expanduser().resolve(strict=True)
     source_attempt_verification = verify_attempt(source_root)
@@ -4197,6 +4233,12 @@ def prepare_rescore_attempt(
         judge_attempt_id=judge_attempt_id,
         api_runtime_config_path=api_runtime_config_path,
     )
+    validation = _validation_marker(acceptance_id)
+    if validation is not None and (
+        judge_config is None
+        or judge_config.get("protocol") != "codex-agent-judge-v1"
+    ):
+        raise ScoringRuntimeError("ACCEPTANCE_MODE_REQUIRES_CODEX_JUDGE")
     grading = source_manifest.get("grading")
     if not isinstance(grading, dict):
         raise ScoringRuntimeError("ATTEMPT_MANIFEST_INVALID", "grading")
@@ -4380,6 +4422,7 @@ def prepare_rescore_attempt(
                 if judge_config is not None
                 else None
             ),
+            "validation": validation,
             "lineage": {
                 "kind": "rescore",
                 "source_scoring_attempt_id": source_attempt_id,
@@ -4599,6 +4642,7 @@ def main(argv: list[str] | None = None) -> int:
     prepare.add_argument("--judge-reasoning-effort")
     prepare.add_argument("--judge-attempt-id")
     prepare.add_argument("--api-runtime-config", type=Path)
+    prepare.add_argument("--acceptance-id")
 
     prepare_rescore = subparsers.add_parser("prepare-rescore")
     prepare_rescore.add_argument("--source-attempt-root", required=True, type=Path)
@@ -4609,6 +4653,7 @@ def main(argv: list[str] | None = None) -> int:
     prepare_rescore.add_argument("--judge-reasoning-effort")
     prepare_rescore.add_argument("--judge-attempt-id")
     prepare_rescore.add_argument("--api-runtime-config", type=Path)
+    prepare_rescore.add_argument("--acceptance-id")
 
     verify = subparsers.add_parser("verify")
     verify.add_argument("--attempt-root", required=True, type=Path)
@@ -4684,6 +4729,7 @@ def main(argv: list[str] | None = None) -> int:
                 judge_reasoning_effort=args.judge_reasoning_effort,
                 judge_attempt_id=args.judge_attempt_id,
                 api_runtime_config_path=args.api_runtime_config,
+                acceptance_id=args.acceptance_id,
             )
         elif args.command == "prepare-rescore":
             result = prepare_rescore_attempt(
@@ -4695,6 +4741,7 @@ def main(argv: list[str] | None = None) -> int:
                 judge_reasoning_effort=args.judge_reasoning_effort,
                 judge_attempt_id=args.judge_attempt_id,
                 api_runtime_config_path=args.api_runtime_config,
+                acceptance_id=args.acceptance_id,
             )
         elif args.command == "verify":
             result = verify_attempt(args.attempt_root)

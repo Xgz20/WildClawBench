@@ -19,13 +19,15 @@ import uuid
 
 
 STATE_SCHEMA = "wildclawbench.general-e2e-scoring-orchestration/v1"
-STATE_REVISION = 4
+STATE_REVISION = 6
+DEFAULT_SCORE_SLOTS = 3
+MAX_SCORE_SLOTS = 8
 REGISTRATION_SCHEMA = "wildclawbench.codex-project-registration/v1"
 PACKAGE_SCHEMA = "urn:wildclawbench:schema:general-e2e:package-manifest:v1"
 SCORE_SCHEMA = "urn:wildclawbench:schema:general-e2e:score:v1"
 SUBMISSION_SCHEMA = "urn:wildclawbench:schema:general-e2e:submission:v1"
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
-PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v2"
+PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v3"
 API_PROMPT_PROTOCOL = "general-e2e-api-scoring-orchestration/v1"
 ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
@@ -40,7 +42,9 @@ WAIT_STATUSES = {
 }
 THREAD_PHASES = {"THREAD_RUNNING", "NEEDS_ATTENTION", "THREAD_TIMEOUT_PENDING"}
 TERMINAL_PHASES = {"SCORE_RECORDED", "THREAD_FAILED", "UNSCORED"}
+RULE_PHASES = {"RULES_READY", "RULES_RUNNING", "RULES_NEEDS_ATTENTION"}
 TASK_PHASES = {
+    *RULE_PHASES,
     "API_READY",
     "API_RUNNING",
     "AWAITING_PROJECT",
@@ -112,6 +116,27 @@ def _identifier(value: object, label: str) -> str:
     if not isinstance(value, str) or not ID_RE.fullmatch(value):
         raise OrchestrationError("IDENTIFIER_INVALID", f"{label}={value!r}")
     return value
+
+
+def _validation_marker(acceptance_id: str | None) -> dict[str, str] | None:
+    if acceptance_id is None:
+        return None
+    return {
+        "mode": "acceptance",
+        "acceptance_id": _identifier(acceptance_id, "acceptance_id"),
+    }
+
+
+def _validate_validation_marker(value: object) -> dict[str, str] | None:
+    if value is None:
+        return None
+    if (
+        not isinstance(value, dict)
+        or set(value) != {"mode", "acceptance_id"}
+        or value.get("mode") != "acceptance"
+    ):
+        raise OrchestrationError("VALIDATION_MARKER_INVALID")
+    return _validation_marker(value.get("acceptance_id"))
 
 
 def _required_string(value: object, label: str) -> str:
@@ -486,7 +511,38 @@ def _load_identity(
     return identity, frozen_judge, selected
 
 
-def _prompt_text(task_id: str, attempt_id: str, judge: Mapping[str, Any]) -> str:
+def _prompt_text(
+    task_id: str,
+    attempt_id: str,
+    judge: Mapping[str, Any],
+    grading_type: str,
+    validation: Mapping[str, str] | None,
+) -> str:
+    rule_instruction = (
+        "本题是 hybrid；自动规则组件已由控制器在创建语义会话前运行并冻结。"
+        "先复核现有 `rule-component.json`，不得重复运行规则；再准备语义证据、完成语义判定并合分。"
+        if grading_type == "hybrid"
+        else "本题是 llm_judge；不运行自动规则，只完成语义证据、判定、合分与校验。"
+    )
+    if validation is None:
+        readiness_instruction = (
+            "若当前 Skill 尚不能形成正式评分，保留输入并明确报告未就绪，"
+            "不得调用旧 CLI 或切换到 API Judge。"
+        )
+        validation_identity = "- validation_mode：`production`"
+    else:
+        acceptance_id = validation["acceptance_id"]
+        readiness_instruction = (
+            f"这是显式冻结的 `{acceptance_id}` 验收运行。仅当 `attempt-manifest.json` 中的 "
+            f"`validation.mode=acceptance` 与 `validation.acceptance_id={acceptance_id}` "
+            "同时匹配时，允许当前 `interface_only` Skill 执行本次验收评分；仍须完整执行所有证据、"
+            "查询、结构化判定、合分和 `verify-score` 门禁。产物只能作为该验收项证据，不能单独宣称生产就绪。"
+            "标记缺失或不匹配时立即失败关闭，不得调用旧 CLI、修改候选或切换到 API Judge。"
+        )
+        validation_identity = (
+            "- validation_mode：`acceptance`\n"
+            f"- acceptance_id：`{acceptance_id}`"
+        )
     return f"""使用 `$score-general-e2e` 对当前 Codex 项目中的唯一 General E2E 任务进行评分。
 
 冻结身份：
@@ -497,10 +553,13 @@ def _prompt_text(task_id: str, attempt_id: str, judge: Mapping[str, Any]) -> str
 - judge_model：`{judge['model']}`
 - reasoning_effort：`{judge['reasoning_effort']}`
 - prompt_protocol：`{PROMPT_PROTOCOL}`
+{validation_identity}
 
-项目根目录就是本题私有评分 attempt。先读取 `attempt-manifest.json`，再严格遵循已安装 `$score-general-e2e` 的能力门禁和证据要求。只处理本题，不创建或调度其他任务，不执行被测 Harness，不修改 `candidate-original/`，不把自动规则组件冒充完整分数。若当前 Skill 尚不能形成正式评分，保留输入并明确报告未就绪，不得调用旧 CLI 或切换到 API Judge。
+项目根目录就是本题私有评分 attempt。先读取 `attempt-manifest.json`，再严格遵循已安装 `$score-general-e2e` 的能力门禁和证据要求。只处理本题，不创建或调度其他任务，不执行被测 Harness，不修改 `candidate-original/`，不把自动规则组件冒充完整分数。{readiness_instruction}
 
-按 Skill 的单题流程执行：复核 attempt；按 grading type 运行所需自动规则；准备冻结语义证据目录；使用分页查询逐 criterion 查找支持证据和反例；把结构化判定写入新的响应文件并导入；最后合分并运行 `verify-score`。对纯 automated 任务不执行语义判断；必要证据不足时保留 `unresolved`，不得补零。只有 `verify-score` 通过后才把评分任务报告为完成。
+{rule_instruction}
+
+使用分页查询逐 criterion 查找支持证据和反例，把结构化判定写入新的响应文件并导入；必要证据不足时保留 `unresolved`，不得补零。只有 `verify-score` 通过后才把评分任务报告为完成。
 """
 
 
@@ -509,6 +568,7 @@ def _queue_digest(state: Mapping[str, Any]) -> str:
         "kind": state.get("kind"),
         "identity": state.get("identity"),
         "judge": state.get("judge"),
+        "validation": state.get("validation"),
         "prompt_protocol": state.get("prompt_protocol"),
         "score_timeout_seconds": state.get("score_timeout_seconds"),
         "score_slots": state.get("score_slots"),
@@ -522,6 +582,7 @@ def _queue_digest(state: Mapping[str, Any]) -> str:
                 "execution_record_path": task.get("execution_record_path"),
                 "execution_record_sha256": task.get("execution_record_sha256"),
                 "source": task.get("source"),
+                "grading_type": task.get("grading_type"),
                 "scoring_attempt_id": task.get("scoring_attempt_id"),
                 "attempt_path": task.get("attempt_path"),
                 "attempt_manifest_sha256": task.get("attempt_manifest_sha256"),
@@ -595,20 +656,26 @@ def initialize(
     task_ids: Sequence[str] = (),
     execution_records: Mapping[str, Path] | None = None,
     api_runtime_config: Path | None = None,
+    acceptance_id: str | None = None,
     score_timeout_seconds: int = 7200,
-    score_slots: int = 1,
+    score_slots: int = DEFAULT_SCORE_SLOTS,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     if score_timeout_seconds < 1:
         raise OrchestrationError("SCORE_TIMEOUT_INVALID")
-    if score_slots != 1:
-        raise OrchestrationError("SCORE_SLOTS_UNSUPPORTED", "G3-03 requires 1")
+    if not 1 <= score_slots <= MAX_SCORE_SLOTS:
+        raise OrchestrationError(
+            "SCORE_SLOTS_UNSUPPORTED", f"expected 1..{MAX_SCORE_SLOTS}"
+        )
     orchestration_id = _identifier(orchestration_id, "orchestration_id")
     unit_root = _regular_directory(unit_root, "UNIT_ROOT_INVALID")
     scoring_package = _regular_file(scoring_package, "SCORING_PACKAGE_INVALID")
     report_config = _regular_file(report_config, "REPORT_CONFIG_INVALID")
     score_skill = _score_skill_lock(score_skill_dir)
     identity, judge, selected = _load_identity(unit_root, report_config, task_ids)
+    validation = _validation_marker(acceptance_id)
+    if validation is not None and judge["protocol"] != "codex-agent-judge-v1":
+        raise OrchestrationError("ACCEPTANCE_MODE_REQUIRES_CODEX_JUDGE")
     if judge["protocol"] == "api-judge-v1":
         if api_runtime_config is None:
             raise OrchestrationError("API_JUDGE_CONFIG_REQUIRED")
@@ -655,6 +722,7 @@ def initialize(
                 "preflight": None,
                 "thread": None,
                 "score": None,
+                "grading_type": None,
             }
             if not execution["scorable"]:
                 tasks.append(
@@ -704,6 +772,10 @@ def initialize(
                 prepare_arguments.extend(
                     ["--api-runtime-config", str(api_runtime_config)]
                 )
+            if validation is not None:
+                prepare_arguments.extend(
+                    ["--acceptance-id", validation["acceptance_id"]]
+                )
             result = _run_score_command(score_skill, prepare_arguments)
             attempt_root = Path(result["attempt_root"]).resolve(strict=True)
             if not _inside(staging, attempt_root):
@@ -712,6 +784,9 @@ def initialize(
                 attempt_root / "attempt-manifest.json", "ATTEMPT_MANIFEST_INVALID"
             )
             attempt_judge = attempt_manifest.get("judge")
+            grading_type = (attempt_manifest.get("grading") or {}).get("type")
+            if grading_type not in {"automated", "hybrid", "llm_judge"}:
+                raise OrchestrationError("GRADING_TYPE_INVALID", str(grading_type))
             if not isinstance(attempt_judge, dict):
                 raise OrchestrationError("JUDGE_CONFIG_INVALID", "attempt manifest")
             current_api_runtime = attempt_judge.get("api_runtime")
@@ -725,19 +800,28 @@ def initialize(
                 prompt_path = None
                 prompt_sha256 = None
                 initial_phase = "API_READY"
+            elif grading_type == "automated":
+                prompt_path = None
+                prompt_sha256 = None
+                initial_phase = "RULES_READY"
             else:
                 prompt_path = staging / "prompts" / f"{task_id}.md"
                 prompt_path.parent.mkdir(parents=True, exist_ok=True)
                 prompt_path.write_text(
-                    _prompt_text(task_id, attempt_id, judge),
+                    _prompt_text(
+                        task_id, attempt_id, judge, grading_type, validation
+                    ),
                     encoding="utf-8",
                     newline="\n",
                 )
                 prompt_sha256 = _sha256_file(prompt_path)
-                initial_phase = "AWAITING_PROJECT"
+                initial_phase = (
+                    "RULES_READY" if grading_type == "hybrid" else "AWAITING_PROJECT"
+                )
             tasks.append(
                 {
                     **common_task,
+                    "grading_type": grading_type,
                     "scoring_attempt_id": attempt_id,
                     "attempt_path": attempt_root.relative_to(staging).as_posix(),
                     "attempt_manifest_sha256": _sha256_file(
@@ -775,6 +859,7 @@ def initialize(
                     else {}
                 ),
             },
+            "validation": validation,
             "prompt_protocol": (
                 API_PROMPT_PROTOCOL
                 if judge["protocol"] == "api-judge-v1"
@@ -815,14 +900,17 @@ def initialize_rescore(
     orchestration_id: str,
     task_ids: Sequence[str] = (),
     api_runtime_config: Path | None = None,
+    acceptance_id: str | None = None,
     score_timeout_seconds: int = 7200,
-    score_slots: int = 1,
+    score_slots: int = DEFAULT_SCORE_SLOTS,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     if score_timeout_seconds < 1:
         raise OrchestrationError("SCORE_TIMEOUT_INVALID")
-    if score_slots != 1:
-        raise OrchestrationError("SCORE_SLOTS_UNSUPPORTED", "G3-06 requires 1")
+    if not 1 <= score_slots <= MAX_SCORE_SLOTS:
+        raise OrchestrationError(
+            "SCORE_SLOTS_UNSUPPORTED", f"expected 1..{MAX_SCORE_SLOTS}"
+        )
     orchestration_id = _identifier(orchestration_id, "orchestration_id")
     source_root = _state_root(source_orchestration_root)
     source_state = _verify_state(source_root)
@@ -832,6 +920,9 @@ def initialize_rescore(
         raise OrchestrationError("RESCORE_SOURCE_SUBMISSION_REQUIRED")
     report_config = _regular_file(report_config, "REPORT_CONFIG_INVALID")
     identity, judge = _load_rescore_judge(report_config, source_state)
+    validation = _validation_marker(acceptance_id)
+    if validation is not None and judge["protocol"] != "codex-agent-judge-v1":
+        raise OrchestrationError("ACCEPTANCE_MODE_REQUIRES_CODEX_JUDGE")
     score_skill = _score_skill_lock(score_skill_dir)
     source_tasks = source_state["tasks"]
     available = [
@@ -915,6 +1006,10 @@ def initialize_rescore(
                 prepare_arguments.extend(
                     ["--api-runtime-config", str(api_runtime_config)]
                 )
+            if validation is not None:
+                prepare_arguments.extend(
+                    ["--acceptance-id", validation["acceptance_id"]]
+                )
             result = _run_score_command(score_skill, prepare_arguments)
             attempt_root = Path(result["attempt_root"]).resolve(strict=True)
             if not _inside(staging, attempt_root):
@@ -923,6 +1018,9 @@ def initialize_rescore(
                 attempt_root / "attempt-manifest.json", "ATTEMPT_MANIFEST_INVALID"
             )
             attempt_judge = attempt_manifest.get("judge")
+            grading_type = (attempt_manifest.get("grading") or {}).get("type")
+            if grading_type not in {"automated", "hybrid", "llm_judge"}:
+                raise OrchestrationError("GRADING_TYPE_INVALID", str(grading_type))
             if not isinstance(attempt_judge, dict):
                 raise OrchestrationError("JUDGE_CONFIG_INVALID", "attempt manifest")
             current_api_runtime = attempt_judge.get("api_runtime")
@@ -936,20 +1034,29 @@ def initialize_rescore(
                 prompt_path = None
                 prompt_sha256 = None
                 initial_phase = "API_READY"
+            elif grading_type == "automated":
+                prompt_path = None
+                prompt_sha256 = None
+                initial_phase = "RULES_READY"
             else:
                 prompt_path = staging / "prompts" / f"{task_id}.md"
                 prompt_path.parent.mkdir(parents=True, exist_ok=True)
                 prompt_path.write_text(
-                    _prompt_text(task_id, attempt_id, judge),
+                    _prompt_text(
+                        task_id, attempt_id, judge, grading_type, validation
+                    ),
                     encoding="utf-8",
                     newline="\n",
                 )
                 prompt_sha256 = _sha256_file(prompt_path)
-                initial_phase = "AWAITING_PROJECT"
+                initial_phase = (
+                    "RULES_READY" if grading_type == "hybrid" else "AWAITING_PROJECT"
+                )
             tasks.append(
                 {
                     "task_id": task_id,
                     "order": index,
+                    "grading_type": grading_type,
                     "execution": dict(source_task["execution"]),
                     "execution_record_path": frozen_record.relative_to(staging).as_posix(),
                     "execution_record_sha256": source_task["execution_record_sha256"],
@@ -1004,6 +1111,7 @@ def initialize_rescore(
                     else {}
                 ),
             },
+            "validation": validation,
             "prompt_protocol": (
                 API_PROMPT_PROTOCOL
                 if judge["protocol"] == "api-judge-v1"
@@ -1047,17 +1155,25 @@ def _task_by_id(state: Mapping[str, Any], task_id: str) -> dict[str, Any]:
     return matches[0]
 
 
+def _semantic_active_tasks(state: Mapping[str, Any]) -> list[dict[str, Any]]:
+    slots = int(state.get("score_slots", 0))
+    candidates = [
+        task
+        for task in state.get("tasks", [])
+        if task.get("grading_type") != "automated"
+        and task.get("phase") not in TERMINAL_PHASES | RULE_PHASES
+    ]
+    return candidates[:slots]
+
+
 def _active_task(state: Mapping[str, Any]) -> dict[str, Any] | None:
-    return next(
-        (task for task in state.get("tasks", []) if task.get("phase") not in TERMINAL_PHASES),
-        None,
-    )
+    active = _semantic_active_tasks(state)
+    return active[0] if active else None
 
 
 def _require_active(state: Mapping[str, Any], task_id: str) -> dict[str, Any]:
     task = _task_by_id(state, task_id)
-    active = _active_task(state)
-    if active is None or active is not task:
+    if task not in _semantic_active_tasks(state):
         raise OrchestrationError("TASK_NOT_ACTIVE", task_id)
     return task
 
@@ -1202,6 +1318,29 @@ def _verify_state(root: Path) -> dict[str, Any]:
         raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "schema or revision")
     if state.get("kind") not in {"initial", "rescore"}:
         raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "kind")
+    if "validation" not in state:
+        raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "validation missing")
+    validation = _validate_validation_marker(state.get("validation"))
+    judge_protocol = state.get("judge", {}).get("protocol")
+    expected_prompt_protocol = (
+        API_PROMPT_PROTOCOL
+        if judge_protocol == "api-judge-v1"
+        else PROMPT_PROTOCOL
+    )
+    if (
+        judge_protocol not in {"codex-agent-judge-v1", "api-judge-v1"}
+        or state.get("prompt_protocol") != expected_prompt_protocol
+        or validation is not None
+        and judge_protocol != "codex-agent-judge-v1"
+    ):
+        raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "validation or prompt protocol")
+    score_slots = state.get("score_slots")
+    if (
+        isinstance(score_slots, bool)
+        or not isinstance(score_slots, int)
+        or not 1 <= score_slots <= MAX_SCORE_SLOTS
+    ):
+        raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "score_slots")
     tasks = state.get("tasks")
     if not isinstance(tasks, list) or not tasks or not all(
         isinstance(task, dict) for task in tasks
@@ -1276,6 +1415,7 @@ def _verify_state(root: Path) -> dict[str, Any]:
                 or task.get("project") is not None
                 or task.get("thread") is not None
                 or task.get("score") is not None
+                or task.get("grading_type") is not None
             ):
                 raise OrchestrationError(
                     "UNSCORED_TASK_INVALID", str(task.get("task_id"))
@@ -1294,12 +1434,24 @@ def _verify_state(root: Path) -> dict[str, Any]:
         ):
             raise OrchestrationError("ORCHESTRATION_PATH_ESCAPE", str(task.get("task_id")))
         if prompt is None:
-            if state.get("judge", {}).get("protocol") != "api-judge-v1" or task.get("prompt_sha256") is not None:
+            prompt_not_required = (
+                state.get("judge", {}).get("protocol") == "api-judge-v1"
+                or task.get("grading_type") == "automated"
+            )
+            if not prompt_not_required or task.get("prompt_sha256") is not None:
                 raise OrchestrationError("SCORING_PROMPT_DRIFT", str(task.get("task_id")))
         elif (
             prompt.is_symlink()
             or not prompt.is_file()
             or _sha256_file(prompt) != task.get("prompt_sha256")
+            or prompt.read_text(encoding="utf-8")
+            != _prompt_text(
+                str(task.get("task_id")),
+                str(task.get("scoring_attempt_id")),
+                state["judge"],
+                str(task.get("grading_type")),
+                validation,
+            )
         ):
             raise OrchestrationError("SCORING_PROMPT_DRIFT", str(task.get("task_id")))
         manifest = attempt / "attempt-manifest.json"
@@ -1316,6 +1468,7 @@ def _verify_state(root: Path) -> dict[str, Any]:
         manifest_document = _read_json(manifest, "ATTEMPT_MANIFEST_INVALID")
         manifest_identity = manifest_document.get("identity")
         manifest_judge = manifest_document.get("judge")
+        manifest_grading_type = (manifest_document.get("grading") or {}).get("type")
         expected_judge = state.get("judge", {})
         if (
             not isinstance(manifest_identity, dict)
@@ -1324,6 +1477,8 @@ def _verify_state(root: Path) -> dict[str, Any]:
             or manifest_identity.get("task_id") != task.get("task_id")
             or manifest_identity.get("execution_attempt_id") != execution.get("attempt_id")
             or manifest_identity.get("scoring_attempt_id") != task.get("scoring_attempt_id")
+            or manifest_grading_type != task.get("grading_type")
+            or manifest_document.get("validation") != validation
             or not isinstance(manifest_judge, dict)
             or manifest_judge.get("protocol") != expected_judge.get("protocol")
             or manifest_judge.get("model") != expected_judge.get("model")
@@ -1435,8 +1590,18 @@ def _state_status(state: Mapping[str, Any]) -> str:
 def _recommended_actions(
     root: Path, state: Mapping[str, Any], now: datetime
 ) -> list[dict[str, Any]]:
-    task = _active_task(state)
-    if task is None:
+    rule_task = next(
+        (task for task in state.get("tasks", []) if task.get("phase") in RULE_PHASES),
+        None,
+    )
+    active_tasks = _semantic_active_tasks(state)
+    automated_verification_tasks = [
+        task
+        for task in state.get("tasks", [])
+        if task.get("grading_type") == "automated"
+        and task.get("phase") == "SCORE_VERIFICATION_PENDING"
+    ]
+    if rule_task is None and not active_tasks and not automated_verification_tasks:
         if state.get("submission") is None:
             return [
                 {
@@ -1449,6 +1614,30 @@ def _recommended_actions(
                 }
             ]
         return []
+    actions: list[dict[str, Any]] = []
+    if rule_task is not None:
+        actions.append(
+            {
+                "action": "RUN_RULE_COMPONENT",
+                "task_id": rule_task["task_id"],
+                "attempt_path": str((root / rule_task["attempt_path"]).resolve()),
+                "resume": rule_task["phase"] != "RULES_READY",
+                "grading_type": rule_task["grading_type"],
+            }
+        )
+    for task in automated_verification_tasks:
+        actions.extend(_recommended_actions_for_task(root, state, task, now))
+    for task in active_tasks:
+        actions.extend(_recommended_actions_for_task(root, state, task, now))
+    return actions
+
+
+def _recommended_actions_for_task(
+    root: Path,
+    state: Mapping[str, Any],
+    task: Mapping[str, Any],
+    now: datetime,
+) -> list[dict[str, Any]]:
     task_id = task["task_id"]
     attempt = str((root / task["attempt_path"]).resolve())
     phase = task["phase"]
@@ -1560,6 +1749,8 @@ def _public_view(root: Path, state: Mapping[str, Any], now: datetime) -> dict[st
         "orchestration_id": state["orchestration_id"],
         "queue_digest": state["queue_digest"],
         "judge": state["judge"],
+        "validation": state["validation"],
+        "score_slots": state["score_slots"],
         "task_count": len(state["tasks"]),
         "terminal_count": terminal_count,
         "completed_count": sum(
@@ -1857,7 +2048,10 @@ def record_score(
 ) -> dict[str, Any]:
     root = _state_root(orchestration_root)
     state = _verify_state(root)
-    task = _require_active(state, _identifier(task_id, "task_id"))
+    task_id = _identifier(task_id, "task_id")
+    task = _task_by_id(state, task_id)
+    if task.get("grading_type") != "automated":
+        task = _require_active(state, task_id)
     if task.get("phase") != "SCORE_VERIFICATION_PENDING":
         raise OrchestrationError("SCORE_VERIFICATION_NOT_EXPECTED", task_id)
     attempt = (root / task["attempt_path"]).resolve(strict=True)
@@ -1885,6 +2079,80 @@ def record_score(
         }
     )
     return _save(root, state, event_time)
+
+
+def run_rule_score_task(
+    orchestration_root: Path,
+    *,
+    task_id: str,
+    runtime_python: Path,
+    rule_timeout_seconds: float = 120.0,
+    playwright_browsers_path: Path | None = None,
+    now: datetime | None = None,
+) -> dict[str, Any]:
+    root = _state_root(orchestration_root)
+    state = _verify_state(root)
+    task = _task_by_id(state, _identifier(task_id, "task_id"))
+    grading_type = task.get("grading_type")
+    if grading_type not in {"automated", "hybrid"}:
+        raise OrchestrationError("RULE_COMPONENT_NOT_REQUIRED", task_id)
+    if task.get("phase") not in RULE_PHASES:
+        raise OrchestrationError("RULE_COMPONENT_NOT_EXPECTED", task_id)
+    event_time = now or _now()
+    attempt = (root / task["attempt_path"]).resolve(strict=True)
+    if task["phase"] == "RULES_READY":
+        task["phase"] = "RULES_RUNNING"
+        task["history"].append(
+            {"at": _timestamp(event_time), "event": "RULE_COMPONENT_STARTED"}
+        )
+        _save(root, state, event_time)
+    rule_component = attempt / "rule-component.json"
+    if not rule_component.is_file():
+        arguments = [
+            "run-rules",
+            "--attempt-root",
+            str(attempt),
+            "--runtime-python",
+            str(runtime_python),
+            "--timeout-seconds",
+            str(rule_timeout_seconds),
+        ]
+        if playwright_browsers_path is not None:
+            arguments.extend(
+                ["--playwright-browsers-path", str(playwright_browsers_path)]
+            )
+        try:
+            _run_score_command(state["score_skill"], arguments)
+        except BaseException as exc:
+            task["phase"] = "RULES_NEEDS_ATTENTION"
+            task["history"].append(
+                {
+                    "at": _timestamp(event_time),
+                    "event": "RULE_COMPONENT_FAILED",
+                    "error": str(exc),
+                }
+            )
+            _save(root, state, event_time)
+            raise
+    _run_score_command(state["score_skill"], ["verify", "--attempt-root", str(attempt)])
+    task["history"].append(
+        {"at": _timestamp(event_time), "event": "RULE_COMPONENT_RECORDED"}
+    )
+    if grading_type == "hybrid":
+        task["phase"] = "AWAITING_PROJECT"
+        return _save(root, state, event_time)
+
+    semantic_audit = attempt / "semantic/semantic-audit.json"
+    if not semantic_audit.is_file():
+        _run_score_command(
+            state["score_skill"], ["prepare-semantics", "--attempt-root", str(attempt)]
+        )
+    score_path = attempt / "score.json"
+    if not score_path.is_file():
+        _run_score_command(state["score_skill"], ["finalize", "--attempt-root", str(attempt)])
+    task["phase"] = "SCORE_VERIFICATION_PENDING"
+    _save(root, state, event_time)
+    return record_score(root, task_id=task_id, now=event_time)
 
 
 def run_api_score_task(
@@ -1992,8 +2260,9 @@ def main(argv: list[str] | None = None) -> int:
     init.add_argument("--task-id", action="append", default=[])
     init.add_argument("--execution-record", action="append", default=[])
     init.add_argument("--api-runtime-config", type=Path)
+    init.add_argument("--acceptance-id")
     init.add_argument("--score-timeout-seconds", type=int, default=7200)
-    init.add_argument("--score-slots", type=int, default=1)
+    init.add_argument("--score-slots", type=int, default=DEFAULT_SCORE_SLOTS)
 
     init_rescore = subparsers.add_parser("init-rescore")
     init_rescore.add_argument(
@@ -2005,8 +2274,9 @@ def main(argv: list[str] | None = None) -> int:
     init_rescore.add_argument("--orchestration-id", required=True)
     init_rescore.add_argument("--task-id", action="append", default=[])
     init_rescore.add_argument("--api-runtime-config", type=Path)
+    init_rescore.add_argument("--acceptance-id")
     init_rescore.add_argument("--score-timeout-seconds", type=int, default=7200)
-    init_rescore.add_argument("--score-slots", type=int, default=1)
+    init_rescore.add_argument("--score-slots", type=int, default=DEFAULT_SCORE_SLOTS)
 
     for name in ("status", "resume"):
         _parse_common(subparsers.add_parser(name))
@@ -2050,6 +2320,13 @@ def main(argv: list[str] | None = None) -> int:
     _parse_common(score)
     score.add_argument("--task-id", required=True)
 
+    rule_score = subparsers.add_parser("run-rule-score")
+    _parse_common(rule_score)
+    rule_score.add_argument("--task-id", required=True)
+    rule_score.add_argument("--runtime-python", required=True, type=Path)
+    rule_score.add_argument("--rule-timeout-seconds", type=float, default=120.0)
+    rule_score.add_argument("--playwright-browsers-path", type=Path)
+
     api_score = subparsers.add_parser("run-api-score")
     _parse_common(api_score)
     api_score.add_argument("--task-id", required=True)
@@ -2070,6 +2347,7 @@ def main(argv: list[str] | None = None) -> int:
                 task_ids=args.task_id,
                 execution_records=_execution_record_map(args.execution_record),
                 api_runtime_config=args.api_runtime_config,
+                acceptance_id=args.acceptance_id,
                 score_timeout_seconds=args.score_timeout_seconds,
                 score_slots=args.score_slots,
             )
@@ -2082,6 +2360,7 @@ def main(argv: list[str] | None = None) -> int:
                 orchestration_id=args.orchestration_id,
                 task_ids=args.task_id,
                 api_runtime_config=args.api_runtime_config,
+                acceptance_id=args.acceptance_id,
                 score_timeout_seconds=args.score_timeout_seconds,
                 score_slots=args.score_slots,
             )
@@ -2130,6 +2409,14 @@ def main(argv: list[str] | None = None) -> int:
             result = record_score(
                 args.orchestration_root,
                 task_id=args.task_id,
+            )
+        elif args.command == "run-rule-score":
+            result = run_rule_score_task(
+                args.orchestration_root,
+                task_id=args.task_id,
+                runtime_python=args.runtime_python,
+                rule_timeout_seconds=args.rule_timeout_seconds,
+                playwright_browsers_path=args.playwright_browsers_path,
             )
         elif args.command == "run-api-score":
             result = run_api_score_task(

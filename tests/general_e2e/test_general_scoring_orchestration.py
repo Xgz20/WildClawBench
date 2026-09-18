@@ -77,6 +77,8 @@ class Fixture:
         protocol: str = "codex-agent-judge-v1",
         judge_model: str = "gpt-fixture",
         reasoning_effort: str | None = "high",
+        grading_type: str = "llm_judge",
+        grading_types: tuple[str, ...] | None = None,
     ) -> None:
         self.root = root
         self.batch_id = "batch-orchestration"
@@ -101,7 +103,13 @@ class Fixture:
         self.scoring_package = root / "scoring.zip"
         archive_entries: list[tuple[zipfile.ZipInfo, bytes]] = []
 
+        if grading_types is not None and len(grading_types) != len(self.task_ids):
+            raise ValueError("grading_types must align with task_ids")
+
         for index, task_id in enumerate(self.task_ids):
+            task_grading_type = (
+                grading_types[index] if grading_types is not None else grading_type
+            )
             identity = {
                 "batch_id": self.batch_id,
                 "unit_id": self.unit_id,
@@ -158,11 +166,15 @@ class Fixture:
                 "def grade(transcript, workspace_path):\n"
                 "    return {'criterion': 1.0, 'overall_score': 1.0}\n"
             )
+            grading_weights = {
+                "automated": 1.0 if task_grading_type == "automated" else (0.5 if task_grading_type == "hybrid" else 0.0),
+                "llm_judge": 0.0 if task_grading_type == "automated" else (0.5 if task_grading_type == "hybrid" else 1.0),
+            }
             contract = {
                 "task_id": task_id,
-                "automated_checks": rule,
-                "grading_type": "hybrid",
-                "grading_weights": {"automated": 0.5, "llm_judge": 0.5},
+                "automated_checks": rule if task_grading_type != "llm_judge" else "",
+                "grading_type": task_grading_type,
+                "grading_weights": grading_weights,
                 "llm_judge_rubric": (
                     "### Fixture criterion (key: fixture, weight: 1.0)\n"
                     "Score 0.0: incorrect\n"
@@ -188,7 +200,7 @@ class Fixture:
                 {
                     "task_id": task_id,
                     "order": index,
-                    "grading_type": "hybrid",
+                    "grading_type": task_grading_type,
                     "grading_weights": contract["grading_weights"],
                     "contract": {
                         "path": f"{private_root}/contract.json",
@@ -284,6 +296,8 @@ class Fixture:
         orchestration_id: str = "orchestration-fixture",
         timeout: int = 60,
         api_runtime_config: Path | None = None,
+        acceptance_id: str | None = None,
+        score_slots: int = ORCHESTRATOR.DEFAULT_SCORE_SLOTS,
         now: datetime | None = None,
     ) -> dict:
         return ORCHESTRATOR.initialize(
@@ -295,7 +309,9 @@ class Fixture:
             orchestration_id=orchestration_id,
             execution_records=self.execution_records,
             api_runtime_config=api_runtime_config,
+            acceptance_id=acceptance_id,
             score_timeout_seconds=timeout,
+            score_slots=score_slots,
             now=now,
         )
 
@@ -485,6 +501,30 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             }
         return {"status": "PASS", "candidate_sha256": "f" * 64}
 
+    def _direct_local_score_command(self, _lock, arguments, **_kwargs):
+        command = arguments[0]
+        values = {
+            arguments[index]: arguments[index + 1]
+            for index in range(1, len(arguments) - 1, 2)
+            if arguments[index].startswith("--")
+        }
+        attempt_root = Path(values["--attempt-root"])
+        if command == "verify":
+            return SCORE_RUNTIME.verify_attempt(attempt_root)
+        if command == "run-rules":
+            return SCORE_RUNTIME.run_rules_attempt(
+                attempt_root=attempt_root,
+                runtime_python=Path(values["--runtime-python"]),
+                timeout_seconds=float(values["--timeout-seconds"]),
+            )
+        if command == "prepare-semantics":
+            return SCORE_RUNTIME.prepare_semantics_attempt(attempt_root=attempt_root)
+        if command == "finalize":
+            return SCORE_RUNTIME.finalize_score_attempt(attempt_root=attempt_root)
+        if command == "verify-score":
+            return SCORE_RUNTIME.verify_score_attempt(attempt_root)
+        raise AssertionError(arguments)
+
     def test_init_creates_isolated_attempts_and_freezes_judge_and_prompt(self) -> None:
         fixture = Fixture(self.root)
         view = fixture.initialize(now=self.t0)
@@ -495,8 +535,10 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             "reasoning_effort": "high",
         })
         self.assertEqual(view["task_count"], 2)
-        self.assertEqual(len(view["recommended_actions"]), 1)
-        self.assertEqual(view["recommended_actions"][0]["action"], "REGISTER_PROJECT")
+        self.assertEqual(len(view["recommended_actions"]), 2)
+        self.assertTrue(
+            all(action["action"] == "REGISTER_PROJECT" for action in view["recommended_actions"])
+        )
         attempts = [Path(task["attempt_path"]) for task in view["tasks"]]
         self.assertNotEqual(attempts[0], attempts[1])
         self.assertTrue(all((path / "attempt-manifest.json").is_file() for path in attempts))
@@ -516,9 +558,251 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         state = json.loads(
             (Path(view["orchestration_root"]) / "orchestration-state.json").read_text()
         )
-        self.assertEqual(state["score_slots"], 1)
+        self.assertEqual(state["score_slots"], 3)
         self.assertTrue(all(len(task["prompt_sha256"]) == 64 for task in state["tasks"]))
         self.assertNotEqual(state["tasks"][0]["prompt_sha256"], state["tasks"][1]["prompt_sha256"])
+
+    def test_interface_only_normal_prompt_remains_fail_closed(self) -> None:
+        fixture = Fixture(self.root / "normal-gate", task_ids=("task-one",))
+        view = fixture.initialize(now=self.t0)
+        self.assertIsNone(view["validation"])
+        root = Path(view["orchestration_root"])
+        state = json.loads((root / "orchestration-state.json").read_text())
+        task = state["tasks"][0]
+        prompt = (root / task["prompt_path"]).read_text(encoding="utf-8")
+        manifest = json.loads(
+            (root / task["attempt_path"] / "attempt-manifest.json").read_text()
+        )
+        self.assertIn("validation_mode：`production`", prompt)
+        self.assertIn("若当前 Skill 尚不能形成正式评分", prompt)
+        self.assertNotIn("允许当前 `interface_only` Skill 执行", prompt)
+        self.assertIsNone(manifest["validation"])
+
+    def test_acceptance_mode_is_frozen_in_state_prompt_manifest_and_digest(self) -> None:
+        fixture = Fixture(self.root / "acceptance", task_ids=("task-one",))
+        view = fixture.initialize(acceptance_id="G4-03", now=self.t0)
+        self.assertEqual(
+            view["validation"],
+            {"mode": "acceptance", "acceptance_id": "G4-03"},
+        )
+        root = Path(view["orchestration_root"])
+        state = json.loads((root / "orchestration-state.json").read_text())
+        task = state["tasks"][0]
+        prompt = (root / task["prompt_path"]).read_text(encoding="utf-8")
+        manifest = json.loads(
+            (root / task["attempt_path"] / "attempt-manifest.json").read_text()
+        )
+        self.assertEqual(state["prompt_protocol"], ORCHESTRATOR.PROMPT_PROTOCOL)
+        self.assertEqual(manifest["validation"], state["validation"])
+        self.assertIn("validation_mode：`acceptance`", prompt)
+        self.assertIn("acceptance_id：`G4-03`", prompt)
+        self.assertIn("产物只能作为该验收项证据", prompt)
+        changed = json.loads(json.dumps(state))
+        changed["validation"] = {"mode": "acceptance", "acceptance_id": "G4-04"}
+        self.assertNotEqual(state["queue_digest"], ORCHESTRATOR._queue_digest(changed))
+        self.assertEqual(manifest["grading"]["type"], "llm_judge")
+        self.assertEqual(manifest["judge"]["model"], "gpt-fixture")
+        self.assertEqual(manifest["judge"]["reasoning_effort"], "high")
+
+    def test_acceptance_marker_mismatch_and_api_backend_fail_closed(self) -> None:
+        fixture = Fixture(self.root / "acceptance-mismatch", task_ids=("task-one",))
+        view = fixture.initialize(acceptance_id="G4-03", now=self.t0)
+        root = Path(view["orchestration_root"])
+        state_path = root / "orchestration-state.json"
+        state = json.loads(state_path.read_text())
+        task = state["tasks"][0]
+        manifest_path = root / task["attempt_path"] / "attempt-manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["validation"]["acceptance_id"] = "G4-04"
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        state["tasks"][0]["attempt_manifest_sha256"] = ORCHESTRATOR._sha256_file(
+            manifest_path
+        )
+        state["queue_digest"] = ORCHESTRATOR._queue_digest(state)
+        state_path.write_text(json.dumps(state), encoding="utf-8")
+        with self.assertRaisesRegex(
+            ORCHESTRATOR.OrchestrationError, "SCORING_ATTEMPT_IDENTITY_MISMATCH"
+        ):
+            ORCHESTRATOR.status(root, now=self.t0)
+
+        api_fixture = Fixture(
+            self.root / "acceptance-api",
+            task_ids=("task-api",),
+            protocol="api-judge-v1",
+            judge_model="api-fixture",
+        )
+        with self.assertRaisesRegex(
+            ORCHESTRATOR.OrchestrationError,
+            "ACCEPTANCE_MODE_REQUIRES_CODEX_JUDGE",
+        ):
+            api_fixture.initialize(
+                acceptance_id="G4-03",
+                api_runtime_config=api_fixture.api_runtime_config(),
+                now=self.t0,
+            )
+
+    def test_three_semantic_slots_refill_without_blocking_on_earlier_tasks(self) -> None:
+        task_ids = tuple(f"task-{index}" for index in range(1, 6))
+        fixture = Fixture(self.root, task_ids=task_ids)
+        view = fixture.initialize(now=self.t0)
+        self.assertEqual(
+            [action["task_id"] for action in view["recommended_actions"]],
+            list(task_ids[:3]),
+        )
+        root = Path(view["orchestration_root"])
+        self._record_fixture_score(root, task_ids[0], valid=True, total_score=0.8)
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            side_effect=self._fixture_score_command,
+        ):
+            refilled = ORCHESTRATOR.status(root, now=self.t0)
+        self.assertEqual(
+            [action["task_id"] for action in refilled["recommended_actions"]],
+            list(task_ids[1:4]),
+        )
+        fourth = refilled["tasks"][3]
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            side_effect=self._fixture_score_command,
+        ):
+            ORCHESTRATOR.record_project(
+                root,
+                task_id=fourth["task_id"],
+                project_id="project-four",
+                host_id="host-local",
+                project_path=Path(fourth["attempt_path"]),
+                desktop_version="2026.918.1",
+                now=self.t0,
+            )
+            with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError, "TASK_NOT_ACTIVE"):
+                ORCHESTRATOR.record_project(
+                    root,
+                    task_id=task_ids[4],
+                    project_id="project-five",
+                    host_id="host-local",
+                    project_path=Path(refilled["tasks"][4]["attempt_path"]),
+                    desktop_version="2026.918.1",
+                    now=self.t0,
+                )
+
+    def test_automated_and_hybrid_rules_do_not_consume_semantic_slots(self) -> None:
+        hybrid = Fixture(
+            self.root / "hybrid",
+            task_ids=("task-hybrid",),
+            grading_type="hybrid",
+        )
+        hybrid_view = hybrid.initialize(now=self.t0)
+        self.assertEqual(hybrid_view["recommended_actions"][0]["action"], "RUN_RULE_COMPONENT")
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            side_effect=self._direct_local_score_command,
+        ):
+            hybrid_ready = ORCHESTRATOR.run_rule_score_task(
+                Path(hybrid_view["orchestration_root"]),
+                task_id="task-hybrid",
+                runtime_python=Path(sys.executable),
+                now=self.t0,
+            )
+        self.assertEqual(hybrid_ready["tasks"][0]["phase"], "AWAITING_PROJECT")
+        self.assertEqual(hybrid_ready["recommended_actions"][0]["action"], "REGISTER_PROJECT")
+
+        automated = Fixture(
+            self.root / "automated",
+            task_ids=("task-automated",),
+            grading_type="automated",
+        )
+        automated_view = automated.initialize(now=self.t0)
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            side_effect=self._direct_local_score_command,
+        ):
+            automated_done = ORCHESTRATOR.run_rule_score_task(
+                Path(automated_view["orchestration_root"]),
+                task_id="task-automated",
+                runtime_python=Path(sys.executable),
+                now=self.t0,
+            )
+        self.assertEqual(automated_done["status"], "COMPLETED")
+        self.assertEqual(automated_done["tasks"][0]["phase"], "SCORE_RECORDED")
+        self.assertEqual(
+            automated_done["recommended_actions"][0]["action"],
+            "BUILD_SUBMISSION",
+        )
+
+    def test_automated_verification_bypasses_full_semantic_slots(self) -> None:
+        task_ids = ("semantic-one", "semantic-two", "semantic-three", "automated")
+        fixture = Fixture(
+            self.root / "mixed-slots",
+            task_ids=task_ids,
+            grading_types=("llm_judge", "llm_judge", "llm_judge", "automated"),
+        )
+        view = fixture.initialize(now=self.t0)
+        self.assertEqual(
+            [
+                (action["action"], action["task_id"])
+                for action in view["recommended_actions"]
+            ],
+            [
+                ("RUN_RULE_COMPONENT", "automated"),
+                ("REGISTER_PROJECT", "semantic-one"),
+                ("REGISTER_PROJECT", "semantic-two"),
+                ("REGISTER_PROJECT", "semantic-three"),
+            ],
+        )
+        root = Path(view["orchestration_root"])
+        original_record_score = ORCHESTRATOR.record_score
+        with (
+            patch.object(
+                ORCHESTRATOR,
+                "_run_score_command",
+                side_effect=self._direct_local_score_command,
+            ),
+            patch.object(
+                ORCHESTRATOR,
+                "record_score",
+                side_effect=lambda orchestration_root, **_kwargs: ORCHESTRATOR.status(
+                    orchestration_root, now=self.t0
+                ),
+            ),
+        ):
+            pending = ORCHESTRATOR.run_rule_score_task(
+                root,
+                task_id="automated",
+                runtime_python=Path(sys.executable),
+                now=self.t0,
+            )
+        self.assertEqual(pending["tasks"][3]["phase"], "SCORE_VERIFICATION_PENDING")
+        self.assertEqual(
+            [
+                (action["action"], action["task_id"])
+                for action in pending["recommended_actions"]
+            ],
+            [
+                ("VERIFY_SCORE", "automated"),
+                ("REGISTER_PROJECT", "semantic-one"),
+                ("REGISTER_PROJECT", "semantic-two"),
+                ("REGISTER_PROJECT", "semantic-three"),
+            ],
+        )
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            side_effect=self._direct_local_score_command,
+        ):
+            recorded = original_record_score(
+                root,
+                task_id="automated",
+                now=self.t0,
+            )
+        self.assertEqual(recorded["tasks"][3]["phase"], "SCORE_RECORDED")
+        self.assertEqual(
+            [action["task_id"] for action in recorded["recommended_actions"]],
+            list(task_ids[:3]),
+        )
 
     def test_project_preflight_thread_cursor_and_next_task_are_recoverable(self) -> None:
         fixture = Fixture(self.root)
@@ -787,6 +1071,18 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         ):
             unsupported_effort.initialize(now=self.t0)
         slot_fixture = Fixture(self.root / "slots")
+        accepted = ORCHESTRATOR.initialize(
+            unit_root=slot_fixture.unit_root,
+            scoring_package=slot_fixture.scoring_package,
+            report_config=slot_fixture.report_config,
+            score_skill_dir=SCORE_SKILL,
+            output_root=slot_fixture.output_root,
+            orchestration_id="slot-fixture",
+            execution_records=slot_fixture.execution_records,
+            score_slots=8,
+            now=self.t0,
+        )
+        self.assertEqual(accepted["score_slots"], 8)
         with self.assertRaisesRegex(
             ORCHESTRATOR.OrchestrationError, "SCORE_SLOTS_UNSUPPORTED"
         ):
@@ -796,9 +1092,9 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
                 report_config=slot_fixture.report_config,
                 score_skill_dir=SCORE_SKILL,
                 output_root=slot_fixture.output_root,
-                orchestration_id="slot-fixture",
+                orchestration_id="slot-overflow-fixture",
                 execution_records=slot_fixture.execution_records,
-                score_slots=2,
+                score_slots=9,
                 now=self.t0,
             )
 
@@ -996,6 +1292,7 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
                     judge_model=values["--judge-model"],
                     judge_reasoning_effort=values["--judge-reasoning-effort"],
                     judge_attempt_id=values["--judge-attempt-id"],
+                    acceptance_id=values.get("--acceptance-id"),
                 )
             raise AssertionError(arguments)
 
@@ -1048,9 +1345,14 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
                 score_skill_dir=SCORE_SKILL,
                 output_root=fixture.output_root,
                 orchestration_id="rescore-fixture",
+                acceptance_id="G4-03",
                 now=self.t0,
             )
         self.assertEqual(rescore["judge"]["protocol"], "codex-agent-judge-v1")
+        self.assertEqual(
+            rescore["validation"],
+            {"mode": "acceptance", "acceptance_id": "G4-03"},
+        )
         self.assertEqual(rescore["tasks"][0]["phase"], "AWAITING_PROJECT")
         source_state = json.loads(
             (source_root / "orchestration-state.json").read_text()
@@ -1058,6 +1360,14 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         rescore_state = json.loads(
             (Path(rescore["orchestration_root"]) / "orchestration-state.json").read_text()
         )
+        rescore_attempt = (
+            Path(rescore["orchestration_root"])
+            / rescore_state["tasks"][0]["attempt_path"]
+        )
+        rescore_manifest = json.loads(
+            (rescore_attempt / "attempt-manifest.json").read_text()
+        )
+        self.assertEqual(rescore_manifest["validation"], rescore_state["validation"])
         self.assertNotEqual(
             source_state["tasks"][0]["scoring_attempt_id"],
             rescore_state["tasks"][0]["scoring_attempt_id"],

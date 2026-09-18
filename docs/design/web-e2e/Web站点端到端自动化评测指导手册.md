@@ -73,7 +73,7 @@ WorkBuddy、AstronStudio 和 QwenWork 的默认后台执行并发均为 3，最�
 
 `run-web-e2e` 在进入执行或评分阶段前会自动检查 Codex Desktop 和本轮选择的 AstronStudio、WorkBuddy 或 QwenWork。有效 CDP 端点会原样复用；缺少调试模式时只关闭并重启需要的客户端，无需人工退出、重新打开。Windows 会动态解析 Codex MSIX 和所选 Harness 的当前用户安装路径，macOS 会解析标准系统或用户 Applications 目录。Windows 还会核对监听者和待停止进程的完整可执行路径；macOS 在重启已运行的 WorkBuddy/QwenWork 前会只读核对状态库，无法证明没有活动任务时停止并提示人工处理。
 
-默认 Codex Desktop 使用 `127.0.0.1:9230`，AstronStudio 使用 `127.0.0.1:9240`，WorkBuddy 使用 `127.0.0.1:9229`，QwenWork 使用 `127.0.0.1:9250`，且都只监听本机。若 Codex Desktop 本身承载当前控制任务，自动重启可能中断当前回合；Skill 会先持久化状态，客户端恢复后必须继续原任务，不要重新初始化。
+默认 Codex Desktop 使用 `127.0.0.1:9230`，AstronStudio 使用 `127.0.0.1:9240`，WorkBuddy 使用 `127.0.0.1:9229`，QwenWork 使用 `127.0.0.1:9250`，且都只监听本机。若 Codex Desktop 本身承载当前控制任务，Skill 会在持久化状态后使用一次性托管任务重启；当前回合可能中断，客户端恢复后必须继续原任务，不要重新初始化。
 
 #### 3. 安装 Skill
 
@@ -476,6 +476,20 @@ Codex Desktop CDP：http://127.0.0.1:9230
 ### Codex Desktop CDP 连接失败
 
 先重新运行 `run-web-e2e` 的桌面 CDP 前置准备；它会复用健康实例，或自动关闭并以调试参数重启 Codex Desktop。若端口被无关进程占用、应用未安装或重启后仍无真实 target，流程会进入 `NEEDS_ATTENTION` 并保留现场。
+
+### Codex Desktop 反复重启且无法停止
+
+若 Codex Desktop 每次打开后又被退出、手工退出也会再次启动，先停止评测。该现象通常是旧版自动化通过 `launchctl submit` 注册了会被 launchd 自动拉起的临时任务，不是 Codex Desktop 自身反复崩溃，也与 “Trust this folder” 提示无关。
+
+在 macOS 终端执行以下止损命令；任务不存在时命令可能返回非零，可继续执行下一条：
+
+```bash
+launchctl remove com.wildclawbench.general-e2e.codex-refresh
+launchctl remove com.wildclawbench.general-e2e.codex-debug
+launchctl bootout gui/$(id -u)/com.wildclawbench.desktop-debug-restart.codex
+```
+
+不需要重启电脑。确认 Codex Desktop 已停止反复拉起后，再使用当前 `run-web-e2e` 随包提供的 `scripts/restart_macos_desktop_debug.sh`。新版入口使用固定单实例 Label 和 `KeepAlive=false` 的一次性 LaunchAgent，拒绝与遗留任务或另一轮重启并发；每轮状态与日志保存在 `~/Library/Application Support/WildClawBench/desktop-debug-restart/<run-id>/`，只有 `status.json` 为 `PASSED` 才恢复原评测状态。不要自行改回 `launchctl submit`。
 
 ### 控制任务中断或 Desktop 重启
 

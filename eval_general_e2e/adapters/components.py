@@ -32,6 +32,13 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         entrypoints=("process.mjs",),
     ),
     SharedComponentSpec(
+        name="desktop-debug",
+        version="1.0.0",
+        source_root="tools/report/e2e-shared/desktop-debug",
+        vendor_root="vendor/e2e-shared/desktop-debug",
+        entrypoints=("restart_macos_desktop_debug.sh",),
+    ),
+    SharedComponentSpec(
         name="resource-metrics",
         version="1.0.0",
         source_root="tools/report/e2e-shared/resource-metrics",

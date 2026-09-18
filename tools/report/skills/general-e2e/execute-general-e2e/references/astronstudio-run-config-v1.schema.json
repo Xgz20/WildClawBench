@@ -78,7 +78,13 @@
           "const": 1
         },
         "execution_concurrency": {
-          "const": 1
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 3
+        },
+        "maximum_execution_concurrency": {
+          "const": 8
         }
       },
       "additionalProperties": false
@@ -123,7 +129,10 @@
           "const": false
         },
         "initial_concurrency": {
-          "const": 1
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 3
         }
       },
       "additionalProperties": false

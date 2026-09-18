@@ -1,3 +1,4 @@
+import { constants as fsConstants } from "node:fs";
 import { copyFile, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -83,14 +84,14 @@ function sleep(milliseconds) {
 
 async function copyIfPresent(source, destination) {
   try {
-    await copyFile(source, destination);
+    await copyFile(source, destination, fsConstants.COPYFILE_FICLONE);
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
   }
 }
 
 async function queryWithNodeSqlite(databasePath, sql, sqliteModule) {
-  const database = new sqliteModule.DatabaseSync(databasePath, { readOnly: true });
+  const database = new sqliteModule.DatabaseSync(databasePath);
   try {
     return database.prepare(sql).all();
   } finally {
@@ -101,7 +102,7 @@ async function queryWithNodeSqlite(databasePath, sql, sqliteModule) {
 async function queryWithCli(databasePath, sql, runCommand = runCapture) {
   const result = await runCommand(
     "/usr/bin/sqlite3",
-    ["-readonly", "-json", databasePath, sql],
+    ["-json", databasePath, sql],
     { capture: true, allowFailure: false },
   );
   return result.stdout.trim() ? JSON.parse(result.stdout) : [];
@@ -124,9 +125,8 @@ export async function withStateSnapshot(stateDatabase, operation, overrides = {}
     const root = await mkdtemp(join(tmpdir(), "general-e2e-astudio-execute-"));
     const snapshot = join(root, "state.sqlite");
     try {
-      await copyFile(source, snapshot);
+      await copyFile(source, snapshot, fsConstants.COPYFILE_FICLONE);
       await copyIfPresent(`${source}-wal`, `${snapshot}-wal`);
-      await copyIfPresent(`${source}-shm`, `${snapshot}-shm`);
       const integrityRows = await querySnapshot(snapshot, "PRAGMA quick_check;", overrides);
       const integrity = String(Object.values(integrityRows[0] || {})[0] || "");
       if (integrity !== "ok") throw new Error(`状态库快照 quick_check=${integrity || "empty"}`);

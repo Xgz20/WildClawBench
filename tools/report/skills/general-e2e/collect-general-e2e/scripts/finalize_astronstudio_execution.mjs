@@ -716,7 +716,9 @@ export async function verifyAstronStudioCollection(options) {
     `${evidenceRelative}/execution-record.json`,
     `${evidenceRelative}/process-cleanup.json`,
   ];
-  const actualReceiptPaths = (receipt.artifacts || []).map((item) => item.path);
+  const actualReceiptPaths = (receipt.artifacts || [])
+    .filter((item) => item.path.startsWith(`${evidenceRelative}/`))
+    .map((item) => item.path);
   if (JSON.stringify(actualReceiptPaths) !== JSON.stringify(expectedReceiptPaths)) {
     throw new Error("COLLECT_RECEIPT_ARTIFACT_SCOPE_MISMATCH");
   }
