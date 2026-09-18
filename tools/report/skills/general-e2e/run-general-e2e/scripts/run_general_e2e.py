@@ -209,15 +209,17 @@ def resolve_directory(path: Path, code: str) -> Path:
 def load_contract_validator():
     skill_root = Path(__file__).resolve().parents[1]
     vendored = skill_root / "vendor/e2e-shared/general-contracts/validator.py"
-    if vendored.is_file():
-        module_path = vendored
-        module_name = "wildclawbench_vendored_general_contracts"
-    else:
-        try:
-            from eval_general_e2e.contracts import validator as module
-        except ImportError as exc:
-            raise FlowError("GENERAL_CONTRACT_VALIDATOR_UNAVAILABLE") from exc
-        return module
+    candidates = [vendored]
+    # Source-checkout fallback; released Skill packages always use the vendored copy.
+    for parent in skill_root.parents:
+        candidate = parent / "eval_general_e2e/contracts/validator.py"
+        if candidate.is_file():
+            candidates.append(candidate)
+            break
+    module_path = next((path for path in candidates if path.is_file()), None)
+    if module_path is None:
+        raise FlowError("GENERAL_CONTRACT_VALIDATOR_UNAVAILABLE")
+    module_name = "wildclawbench_vendored_general_contracts"
     spec = importlib.util.spec_from_file_location(module_name, module_path)
     if spec is None or spec.loader is None:
         raise FlowError("GENERAL_CONTRACT_VALIDATOR_UNAVAILABLE")

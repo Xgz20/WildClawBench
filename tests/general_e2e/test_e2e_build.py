@@ -475,6 +475,31 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
             str(REPO_ROOT), runtime_completed.stdout + runtime_completed.stderr
         )
 
+    def test_general_report_entrypoint_loads_outside_checkout(self) -> None:
+        detached = self.temp_root / "detached-general-report"
+        detached.mkdir()
+        root = BUILD._safe_extract(
+            self.archive_path("report-general-e2e"),
+            detached / "installed",
+        )
+        entrypoint = root / "scripts/report_general_e2e.py"
+        renderer = root / "scripts/render_general_e2e_excel.mjs"
+        contracts = root / "vendor/e2e-shared/general-contracts/validator.py"
+        self.assertTrue(entrypoint.is_file())
+        self.assertTrue(renderer.is_file())
+        self.assertTrue(contracts.is_file())
+        completed = subprocess.run(
+            [sys.executable, "-I", str(entrypoint), "--help"],
+            cwd=detached,
+            env={"PATH": ""},
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("General E2E 独立报告生成器", completed.stdout)
+        self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
+
     @unittest.skipUnless(shutil.which("node"), "Node.js is required")
     def test_general_orchestrator_entrypoints_load_outside_checkout(self) -> None:
         detached = self.temp_root / "detached-general-orchestrator"

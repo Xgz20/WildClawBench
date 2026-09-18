@@ -75,6 +75,13 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
             ),
             ("0.2.0", "interface_only"),
         )
+        self.assertEqual(
+            (
+                get_skill_spec("report-general-e2e").version,
+                get_skill_spec("report-general-e2e").implementation_status,
+            ),
+            ("0.2.0", "operational"),
+        )
         self.assertTrue(
             all(
                 spec.implementation_status == "interface_only"
@@ -83,6 +90,7 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                     "prepare-general-e2e-workspaces",
                     "execute-general-e2e",
                     "collect-general-e2e",
+                    "report-general-e2e",
                 }
             )
         )

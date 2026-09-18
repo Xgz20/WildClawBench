@@ -182,11 +182,14 @@ class GeneralReleasePrepareTests(unittest.TestCase):
             ("0.2.0", "interface_only"),
         )
         self.assertEqual(
+            readiness["report-general-e2e"],
+            ("0.2.0", "operational"),
+        )
+        self.assertEqual(
             set(readiness.values()),
             {
                 ("0.2.0", "operational"),
                 ("0.4.0", "operational"),
-                ("0.1.0", "interface_only"),
                 ("0.2.0", "interface_only"),
                 ("0.5.0", "interface_only"),
                 ("0.6.0", "interface_only"),
@@ -410,7 +413,7 @@ class GeneralReleasePrepareTests(unittest.TestCase):
             changed = False
             for info in source.infolist():
                 data = source.read(info)
-                if not changed and info.filename.endswith("-skill-v0.1.0.zip"):
+                if not changed and info.filename.endswith(".zip"):
                     data += b"tampered"
                     changed = True
                 target.writestr(info, data)

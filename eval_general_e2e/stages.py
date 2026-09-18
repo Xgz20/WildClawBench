@@ -18,6 +18,7 @@ COLLECT_SKILL_VERSION = "0.4.0"
 ORCHESTRATE_SKILL_VERSION = "0.5.0"
 SCORE_SKILL_VERSION = "0.6.0"
 RUN_SKILL_VERSION = "0.2.0"
+REPORT_SKILL_VERSION = "0.2.0"
 
 
 @dataclass(frozen=True)
@@ -99,6 +100,8 @@ GENERAL_E2E_SKILLS: Tuple[GeneralE2ESkillSpec, ...] = (
         responsibility="校验并聚合回传包，生成同源可复算报告",
         input_contract="校验通过的回传包和报告配置",
         output_contract="报告 JSON、Markdown、Excel、覆盖率和异常分母",
+        version=REPORT_SKILL_VERSION,
+        implementation_status=OPERATIONAL,
     ),
     GeneralE2ESkillSpec(
         name="run-general-e2e",
