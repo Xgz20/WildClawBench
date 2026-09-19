@@ -237,8 +237,7 @@ function assertBindingProvenance(source, state, index) {
     throw new Error(`QWENWORK_COLLECTOR_BINDING_PROJECT_MISMATCH: ${index}`);
   }
   const observation = value.terminal_observation;
-  if (!observation || observation.trusted_terminal !== true
-      || observation.target_session_verified !== true
+  if (!observation || observation.target_session_verified !== true
       || observation.active_stream !== false
       || observation.stop_confirmed !== true
       || (Array.isArray(observation.conflicts) && observation.conflicts.length)) {
