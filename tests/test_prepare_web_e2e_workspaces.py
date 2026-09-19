@@ -182,7 +182,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.4.zip"
             report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.1.1.zip"
             orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.3.2.zip"
-            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.14.0.zip"
+            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.15.0.zip"
             run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.4.2.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
             skills_build_manifest_path = batch_root / "packages/skills-build-manifest.json"
@@ -317,6 +317,9 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIn("execute-web-e2e/drivers/qwenwork/driver.mjs", execute_skill_names)
             self.assertIn("execute-web-e2e/drivers/qwenwork/batch.mjs", execute_skill_names)
             self.assertIn("execute-web-e2e/drivers/qwenwork/package-lock.json", execute_skill_names)
+            self.assertIn("execute-web-e2e/drivers/doubaowork/driver.mjs", execute_skill_names)
+            self.assertIn("execute-web-e2e/drivers/doubaowork/package-lock.json", execute_skill_names)
+            self.assertIn("execute-web-e2e/drivers/doubaowork/select-folder.swift", execute_skill_names)
             self.assertIn("execute-web-e2e/scripts/run-qwenwork.sh", execute_skill_names)
             self.assertIn("execute-web-e2e/scripts/run-qwenwork-batch.sh", execute_skill_names)
             self.assertFalse(any("node_modules" in name for name in execute_skill_names))
@@ -350,7 +353,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             )
             self.assertEqual(
                 batch_manifest["execute_skill_archive"],
-                "packages/execute-web-e2e-skill-v1.14.0.zip",
+                "packages/execute-web-e2e-skill-v1.15.0.zip",
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],

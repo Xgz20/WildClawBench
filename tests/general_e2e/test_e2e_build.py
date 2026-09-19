@@ -385,6 +385,20 @@ process.stdout.write(JSON.stringify({{
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("串行队列 Worker", completed.stdout)
         self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
+        for driver, script in (("workbuddy", "execute.mjs"), ("qwenwork", "driver.mjs")):
+            with self.subTest(driver=driver):
+                driver_root = root / "drivers" / driver
+                self.assertTrue((driver_root / "package-lock.json").is_file())
+                completed = subprocess.run(
+                    ["node", str(driver_root / script), "--help"],
+                    cwd=detached,
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                self.assertIn("--resume", completed.stdout)
+                self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
         execution_help = subprocess.run(
             ["node", str(execute), "--help"],
             cwd=detached,
