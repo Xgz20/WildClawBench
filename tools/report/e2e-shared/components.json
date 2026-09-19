@@ -69,11 +69,13 @@
     },
     {
       "name": "general-contracts",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "source_root": "eval_general_e2e/contracts",
       "vendor_root": "vendor/e2e-shared/general-contracts",
       "entrypoints": [
-        "validator.py"
+        "validator.py",
+        "execution_state.py",
+        "schemas/general-execution-state-v1.schema.json"
       ]
     }
   ]

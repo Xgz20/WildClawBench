@@ -40,6 +40,51 @@ class SharedComponentTests(unittest.TestCase):
             {item.name: item.vendor_root for item in EXPECTED_COMPONENTS},
         )
 
+    def test_explicit_adapter_binding_is_a_validated_catalog_subset(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            catalog = root / "tools/report/e2e-shared/components.json"
+            catalog.parent.mkdir(parents=True)
+            catalog.write_bytes((REPO_ROOT / catalog.relative_to(root)).read_bytes())
+            for component in EXPECTED_COMPONENTS:
+                for entrypoint in component.entrypoints:
+                    path = root / component.source_root / entrypoint
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text("fixture", encoding="utf-8")
+            folder = root / "eval_general_e2e/adapters/workbuddy"
+            folder.mkdir(parents=True)
+            entrypoint = folder / "components.mjs"
+            entrypoint.write_text("export {};\n", encoding="utf-8")
+            binding = {
+                "schema_version": "wildclawbench.general-e2e-adapter-binding/v1",
+                "adapter": "workbuddy",
+                "entrypoint": entrypoint.relative_to(root).as_posix(),
+                "components": {"desktop-runtime": "1.0.0"},
+            }
+            path = folder / "components.json"
+            path.write_text(json.dumps(binding), encoding="utf-8")
+            report = inspect_shared_component_layout(root, adapter="workbuddy")
+            self.assertEqual(report["status"], "PASS", report["errors"])
+            self.assertEqual(report["binding"], path.relative_to(root).as_posix())
+            for field, value in (
+                ("adapter", "qwenwork"),
+                ("entrypoint", "../escape.mjs"),
+                ("components", {}),
+                ("components", {"unknown": "1.0.0"}),
+                ("components", {"desktop-runtime": "9.0.0"}),
+            ):
+                with self.subTest(field=field, value=value):
+                    path.write_text(json.dumps({**binding, field: value}), encoding="utf-8")
+                    rejected = inspect_shared_component_layout(root, adapter="workbuddy")
+                    self.assertEqual(rejected["status"], "FAIL")
+            path.write_text(json.dumps(binding), encoding="utf-8")
+            entrypoint.unlink()
+            entrypoint.symlink_to(catalog)
+            self.assertEqual(inspect_shared_component_layout(root, adapter="workbuddy")["status"], "FAIL")
+            for adapter in ("../workbuddy", "WorkBuddy", "", "a/b"):
+                with self.subTest(adapter=adapter), self.assertRaises(ValueError):
+                    inspect_shared_component_layout(root, adapter=adapter)
+
     def test_general_adapter_binds_only_canonical_shared_sources(self) -> None:
         source = GENERAL_ADAPTER.read_text(encoding="utf-8")
         self.assertIn("tools/report/e2e-shared", source)
