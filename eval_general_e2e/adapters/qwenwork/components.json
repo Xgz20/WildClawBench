@@ -1,0 +1,11 @@
+{
+  "schema_version": "wildclawbench.general-e2e-adapter-binding/v1",
+  "adapter": "qwenwork",
+  "entrypoint": "eval_general_e2e/adapters/qwenwork/components.mjs",
+  "components": {
+    "desktop-runtime": "1.0.0",
+    "desktop-app-discovery": "1.2.0",
+    "resource-metrics": "1.0.0",
+    "general-contracts": "1.2.0"
+  }
+}
