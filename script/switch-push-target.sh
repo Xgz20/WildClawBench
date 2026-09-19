@@ -4,7 +4,7 @@
 #
 # 用法：
 #   bash script/switch-push-target.sh both    # IDEA Push 同时推送 Gitee + GitHub
-#   bash script/switch-push-target.sh github  # Fetch/Push 只使用 GitHub
+#   bash script/switch-push-target.sh github  # Fetch/Push 只使用 GitHub，并移除 Gitee 远程
 #   bash script/switch-push-target.sh gitee   # Fetch/Push 只使用公司 Gitee
 #   bash script/switch-push-target.sh both --dry-run
 #
@@ -77,11 +77,20 @@ if [ -z "${GITEE_URL:-}" ]; then
   # 仍然可以无网络地切回公司仓库。
   GITEE_URL="$(git config --get remote.gitee.url || true)"
   if [ -z "$GITEE_URL" ]; then
-    GITEE_URL="$(git config --get remote.origin.url || true)"
+    GITEE_URL="$(git config --get wildclawbench.gitee-url || true)"
+  fi
+  if [ -z "$GITEE_URL" ]; then
+    ORIGIN_URL="$(git config --get remote.origin.url || true)"
+    if [ -n "$ORIGIN_URL" ] && [ "$ORIGIN_URL" != "$GITHUB_URL" ]; then
+      GITEE_URL="$ORIGIN_URL"
+    fi
   fi
 fi
 [ -n "$GITHUB_URL" ] || { echo "未找到 GitHub 地址（remote.github.url）" >&2; exit 1; }
-[ -n "$GITEE_URL" ] || { echo "未找到 Gitee 地址（remote.gitee.url 或 remote.origin.url）" >&2; exit 1; }
+if [ "$TARGET" != "github" ] && [ -z "$GITEE_URL" ]; then
+  echo "未找到 Gitee 地址（remote.gitee.url、wildclawbench.gitee-url 或 remote.origin.url）" >&2
+  exit 1
+fi
 
 set_push_urls() {
   local remote="$1"
@@ -106,6 +115,7 @@ ensure_gitee_remote() {
     git remote add gitee "$GITEE_URL"
   fi
   set_push_urls gitee "$GITEE_URL"
+  git config wildclawbench.gitee-url "$GITEE_URL"
 }
 
 ensure_github_remote() {
@@ -130,27 +140,35 @@ if [ "$DRY_RUN" = "1" ]; then
     gitee)  echo "将把 ${BRANCH} 的 Fetch/Push 切换为：公司 Gitee" ;;
   esac
   echo "GitHub: $GITHUB_URL"
-  echo "Gitee:  $GITEE_URL"
+  echo "Gitee:  ${GITEE_URL:-未配置（github 模式无需 Gitee 地址）}"
   exit 0
 fi
 
 ensure_github_remote
-ensure_gitee_remote
 
 case "$TARGET" in
   both)
+    ensure_gitee_remote
     set_fetch_url origin "$GITEE_URL"
     set_push_urls origin "$GITEE_URL" "$GITHUB_URL"
     set_branch_upstream origin
     label="Fetch 公司 Gitee；Push 公司 Gitee + GitHub"
     ;;
   github)
+    # IDEA 的 Fetch 会遍历所有已配置远程。家中无法访问公司网络时，
+    # 移除 gitee remote，避免 IDEA 仍然尝试连接 code.iflytek.com。
+    # 地址已保存到 wildclawbench.gitee-url，执行 both/gitee 时会自动恢复。
+    if [ -n "$GITEE_URL" ]; then
+      git config wildclawbench.gitee-url "$GITEE_URL"
+    fi
+    git remote remove gitee >/dev/null 2>&1 || true
     set_fetch_url origin "$GITHUB_URL"
     set_push_urls origin "$GITHUB_URL"
     set_branch_upstream github
-    label="Fetch/Push GitHub"
+    label="Fetch/Push GitHub（已隐藏 Gitee 远程）"
     ;;
   gitee)
+    ensure_gitee_remote
     set_fetch_url origin "$GITEE_URL"
     set_push_urls origin "$GITEE_URL"
     set_branch_upstream gitee
