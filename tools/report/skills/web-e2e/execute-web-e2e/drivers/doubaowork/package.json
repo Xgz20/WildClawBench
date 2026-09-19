@@ -1,0 +1,16 @@
+{
+  "name": "wildclawbench-doubaowork-driver",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "DoubaoWork macOS Web E2E client adapter probes and native evidence parser",
+  "scripts": {
+    "probe": "node probe.mjs",
+    "extract-native-evidence": "node native-evidence.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "1.55.0"
+  }
+}
+

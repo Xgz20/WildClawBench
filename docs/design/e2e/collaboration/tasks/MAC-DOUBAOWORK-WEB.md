@@ -2,13 +2,13 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 唯一负责人 / 实际任务 ID | 待创建独立 macOS 任务；尚未启动 |
-| 工作状态 / 代码交付 | PLANNED / LOCAL_ONLY（当前仅有任务定义，无本任务实现交付） |
-| 计划分支 / worktree | `feat/doubaowork-macos-web-e2e` / `<主项目>/.agents/doubaowork-macos-web-e2e`，尚未创建 |
-| 创建 base / 已采用公共基线 | 待 COMMON-CB04 / 未采用 |
-| 已读台账的 SYNC_SHA / 实际工作 HEAD | 尚未同步本轮远端台账；接手核验后分别记录 |
-| 同步源 / 实现与集成 SHA | 接手核对实际仓库及本机 remote；未提交、未集成 |
-| 最后更新 | 2026-09-19（Asia/Shanghai），控制任务初始化；接手后由本任务维护 |
+| 唯一负责人 / 实际任务 ID | 独立 Codex 开发任务 / `MAC-DOUBAOWORK-WEB` |
+| 工作状态 / 代码交付 | ACTIVE / LOCAL_ONLY；P1 只读 probe、原生字段映射、脱敏 fixtures 与离线 adapter 已实现，尚未集成 |
+| 分支 / worktree | `feat/doubaowork-macos-web-e2e` / `<主项目>/.agents/doubaowork-macos-web-e2e`，已核验绑定 |
+| 创建 base / 已采用公共基线 | `03c38f280a64ad9bc9308c768f0f5795050355cc` / COMMON-001 已 SEEN，待本批独立修改提交后 merge |
+| 已读台账的 SYNC_SHA / 实际工作 HEAD | 已固定并读取 `0dd42824cb8eb510ab126fd74553f93312c9f201`；当前仍基于创建 base，提交/merge 后更新 |
+| 同步源 / 实现与集成 SHA | `github/feature/astroncode-eval`；当前实现待本地提交，未集成、未 push |
+| 最后更新 | 2026-09-19（Asia/Shanghai），完成 P1 并收到 COMMON-001 |
 
 ## 本轮范围与修改归属
 
@@ -22,7 +22,7 @@
 
 硬依赖：[COMMON](COMMON.md) 的 COMMON-CB04 已发布，且本任务的 adapter/状态/指标接口约定可取得。**不依赖 COMMON-CM01 的全部新增指标实现。** 基线未发布时可继续只读环境盘点、已有日志/fixture 分析和差异清单；不自创公共字段或依赖未合入 worktree。
 
-- [ ] P1：本机只读 probe、原生身份与字段/能力映射。
+- [x] P1：本机只读 probe、原生身份与字段/能力映射。证据见 [P1 记录](../../../web-e2e/evidence/doubaowork-macos-web-e2e/README.md)；缺失字段保持 null/unverified，不代表正式执行通过。
 - [ ] P2：单题一次发送、可信终态、恢复和正式证据收口。
 - [ ] P3：原始轨迹/资源对账与完整单题评分/回传/报告。
 - [ ] P4：按场景验收三题串行、五题动态补位及声明并发。
@@ -33,20 +33,22 @@
 
 ## 下一项与阻塞
 
-下一项：复核本机 CDP 与本地项目创建，核对原生目录选择和完整路径回读；收录可移交的先前 probe 证据后，明确正式 Driver 相比 probe 缺少的能力。
+下一项：提交当前独立实现，merge 固定 `SYNC_SHA=0dd42824...` 并回写 COMMON-001 ADOPTED；继续实现 P2 的 Web 状态机/一次发送恢复，但在桌面时段前只做离线代码。独占时段获配后，用一个全新 L1 验证本地电脑→新建项目、完整路径回读、单次发送和新原生 session 捕获。
 
-当前依赖缺口：首次公共基线尚未发布，责任方 COMMON，恢复条件为公共基线及相关交接可从集成分支取得。当前未开始平台实施，不把未知本机条件写成测试失败。
+当前依赖缺口：COMMON-001/CB-A 已发布，但其 General Schema 对本 Web 任务不适用；COMMON 的 Web CB-B 仍需提供 native identity/provenance、多 artifact trace、公共 finalizer、平台进程清理 hook 和发行装配。P2 客户端离线状态机可继续；缺少可信原生终态/cwd/进程清理时不得生成正式完整回执。
 
 ## 本机现场与恢复
 
-未登记，接手先检查本机活动进程、队列与既有批次；不能推断桌面空闲。登记本地证据根、实际版本/配置、batch/unit/attempt、原生 session/thread/turn/cwd、候选状态及真实 resume 入口。代码更新仅在相关批次安全收口后进行，不覆盖历史现场。
+当前没有本任务 queue、worker 或活动批次；仅只读观察到 DoubaoWork 2.28.12 的既有进程、loopback `9260` 和旧 smoke 完成页，不能据此推断整台桌面空闲。P1 未截图、未点击、未发送、未启动/重启客户端；本地证据根为 `/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-macos-web-e2e/`。旧 smoke 的显式 session 旁路解析不回填历史 execution/score/submission。
+
+下一桌面时段材料已写入 P1 记录：应用为 DoubaoWork 2.28.12；范围限一个全新 L1 的本地电脑→新建项目、目录回读、一次发送和新 session 捕获；操作前检查活动/待处理会话；发送临界区未知时停在 NEEDS_ATTENTION，不重发；不切模型、不提升权限、不代答追问。
 
 ## 接收记录
 
 | 交接 ID | 状态 | 已采用集成 SHA | 处理结果、验收证据/阻塞 | 下一项 |
 | --- | --- | --- | --- | --- |
-| 尚无记录 | — | — | 接手扫描全部目标含 MAC-DOUBAOWORK-WEB/ALL 的正式交接；此行不表示不存在新交接 | P1 |
+| COMMON-001 | SEEN | 待 merge；固定 `SYNC_SHA=0dd42824...`，推荐源码 `ed366b30...`，CB-A `abce5da8...` | 已读取交接与 General adapter 接口；General Schema 对 Web 不适用。当前无活动批次，先提交独立修改再 merge；Web CB-B 缺口见 P1 记录 | 提交、merge、回写 ADOPTED 后继续 P2 离线状态机 |
 
 ## 本轮交付
 
-仅初始化任务定义；无实现、无本平台新真机证据、无提交/推送。后续每批交付新增交接 ID，登记来源 revision、差异、验证范围及发给其他任务的具体动作。
+P1 已形成 DoubaoWork 专属只读 probe、平台/source discovery、原生 trajectory 旁路解析、macOS 目录 helper、脱敏 fixtures、14 个 Node 测试和证据记录；最终只读实机 probe 退出码 0，原生旁路提取退出码 0，Swift 仅 typecheck。没有新 Prompt、正式 execution/collect/评分/回传/报告或发行证据。当前待提交、待 merge COMMON-001、未 push；完成后新增本任务交接并登记实现 SHA。

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "background-fixture",
+    "type": "page",
+    "url": "chrome://doubaowork-background/"
+  },
+  {
+    "id": "non-page-chat-fixture",
+    "type": "other",
+    "url": "doubaowork://doubaowork-chat/"
+  },
+  {
+    "id": "chat-fixture",
+    "type": "page",
+    "url": "doubaowork://doubaowork-chat/chat/12345678901234567"
+  }
+]
