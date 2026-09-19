@@ -1,0 +1,6 @@
+{
+  "role": "assistant",
+  "message": "{\"role\":\"assistant\",\"content\":[{\"type\":\"tool-call\",\"toolCallId\":\"call-1\",\"toolName\":\"write_file\",\"args\":{\"path\":\"/tmp_workspace/result.txt\",\"content\":\"fixture\"}}]}",
+  "id": "dddddddddddddddddddddddddddddddd",
+  "extra": "{\"requestId\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"modelId\":\"fixture-model\",\"modelName\":\"Fixture Model\",\"traceId\":\"11111111111111111111111111111111\",\"responseId\":\"response-fixture-1\"}"
+}

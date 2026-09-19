@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { access, lstat, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { access, lstat, mkdir, readFile, readdir, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -323,7 +323,8 @@ export async function main(argv) {
   return report;
 }
 
-const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+const entryPath = process.argv[1] ? await realpath(process.argv[1]).catch(() => null) : null;
+const isMain = entryPath === await realpath(fileURLToPath(import.meta.url));
 if (isMain) {
   main(process.argv.slice(2)).catch((error) => {
     process.stderr.write(`${error instanceof Error ? error.stack : String(error)}\n`);

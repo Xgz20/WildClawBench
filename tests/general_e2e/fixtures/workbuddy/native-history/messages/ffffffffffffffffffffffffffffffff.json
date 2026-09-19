@@ -1,0 +1,6 @@
+{
+  "role": "assistant",
+  "message": "{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"The synthetic fixture output is ready.\"}]}",
+  "id": "ffffffffffffffffffffffffffffffff",
+  "extra": "{\"requestId\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"modelId\":\"fixture-model\",\"modelName\":\"Fixture Model\",\"traceId\":\"11111111111111111111111111111111\",\"responseId\":\"response-fixture-2\"}"
+}

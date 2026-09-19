@@ -1,0 +1,12 @@
+{
+  "role": "user",
+  "message": "{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Create the synthetic fixture output.\\n\"}]}",
+  "id": "cccccccccccccccccccccccccccccccc",
+  "references": [
+    {
+      "type": "folder",
+      "enabled": true
+    }
+  ],
+  "extra": "{\"requestId\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"modelId\":\"fixture-model\",\"modelName\":\"Fixture Model\",\"traceId\":\"11111111111111111111111111111111\"}"
+}

@@ -2,13 +2,13 @@
 
 | 字段 | 当前值 |
 | --- | --- |
-| 唯一负责人 / 实际任务 ID | 待创建独立 macOS 任务；尚未启动 |
-| 工作状态 / 代码交付 | PLANNED / LOCAL_ONLY（当前仅有任务定义，无本任务实现交付） |
-| 计划分支 / worktree | `feat/doubaowork-macos-web-e2e` / `<主项目>/.agents/doubaowork-macos-web-e2e`，尚未创建 |
-| 创建 base / 已采用公共基线 | 待 COMMON-CB04 / 未采用 |
-| 已读台账的 SYNC_SHA / 实际工作 HEAD | 尚未同步本轮远端台账；接手核验后分别记录 |
-| 同步源 / 实现与集成 SHA | 接手核对实际仓库及本机 remote；未提交、未集成 |
-| 最后更新 | 2026-09-19（Asia/Shanghai），控制任务初始化；接手后由本任务维护 |
+| 唯一负责人 / 实际任务 ID | 独立 Codex 开发任务 / `MAC-DOUBAOWORK-WEB` |
+| 工作状态 / 代码交付 | ACTIVE / LOCAL_ONLY；P1 已完成，P2 已完成一次开发 canary 的单次发送与 session 绑定，但终态仍为 `NEEDS_ATTENTION`，未正式收口 |
+| 分支 / worktree | `feat/doubaowork-macos-web-e2e` / `<主项目>/.agents/doubaowork-macos-web-e2e`，已核验绑定 |
+| 创建 base / 已采用公共基线 | `03c38f280a64ad9bc9308c768f0f5795050355cc` / COMMON-001、COMMON-002 均已 ADOPTED；COMMON-002 merge `ca7cc2ed74e3c8bb148ccd702c385f1ba8f62cb9` |
+| 已读台账的 SYNC_SHA / 必需源码 | `46a23a43572aed34bc2eec457d67423e2bce08af` / `eb23784a7ed25b0f0364db0392783de277b22b96`，均已通过祖先检查 |
+| 同步源 / 实现与集成 SHA | `github/feature/astroncode-eval`；P1 `f168f2e4c7e5e447249cfb7e96b0d195b99e3e60`、P2 journal `d183e28f2224aed40fd14ae43d8f7ab9ce6cbb0b`、canary 事后交付 `47dcaee`、COMMON-002 merge `ca7cc2e`；未 push |
+| 最后更新 | 2026-09-19（Asia/Shanghai），通过 `MAC-DOUBAOWORK-WEB-002` 更正 canary 候选现场并采用 COMMON-002 |
 
 ## 本轮范围与修改归属
 
@@ -20,10 +20,12 @@
 
 ## 依赖与完成清单
 
-硬依赖：[COMMON](COMMON.md) 的 COMMON-CB04 已发布，且本任务的 adapter/状态/指标接口约定可取得。**不依赖 COMMON-CM01 的全部新增指标实现。** 基线未发布时可继续只读环境盘点、已有日志/fixture 分析和差异清单；不自创公共字段或依赖未合入 worktree。
+COMMON-001/002 已采用。desktop-app-discovery 1.2.0、execute-web-e2e 1.14.0、run-web-e2e 1.4.2、orchestrate-web-e2e 0.3.2 均已进入本分支，prepare 4.4.0 已支持 `harness=doubaowork`。COMMON-002 的 General trace/finalizer wire 对 Web 不适用；本任务仍不依赖 COMMON-CM01 的全部新增指标实现。
 
-- [ ] P1：本机只读 probe、原生身份与字段/能力映射。
-- [ ] P2：单题一次发送、可信终态、恢复和正式证据收口。
+本次 prepared input/Skills 包绑定源码 `c098a2e386baec6b04ed4af615349bea974f0746` 和 execute 1.13.1 / run 1.4.1 / orchestrate 0.3.1；live Driver 0.3.0 则是以该 base 为起点的未提交迭代，automation state 没有 `source_revision`，也未归档运行时文件哈希/dirty diff。事后提交 `47dcaee` 包含 live 后修复，不能冒充精确 live revision。分支随后采用 COMMON-002 同样不追溯改变 canary 身份。
+
+- [x] P1：本机只读 probe、原生身份与字段/能力映射。证据见 [P1 记录](../../../web-e2e/evidence/doubaowork-macos-web-e2e/README.md)；缺失字段保持 null/unverified，不代表正式执行通过。
+- [ ] P2：单题一次发送、可信终态、恢复和正式证据收口。客户端 journal、一次真机发送、UI/native session 绑定和只观察恢复已完成；可信终态、native cwd、进程清理和正式证据收口仍未通过。
 - [ ] P3：原始轨迹/资源对账与完整单题评分/回传/报告。
 - [ ] P4：按场景验收三题串行、五题动态补位及声明并发。
 - [ ] P5：受影响故障加固、候选不可变与仓库外发行。
@@ -33,20 +35,25 @@
 
 ## 下一项与阻塞
 
-下一项：复核本机 CDP 与本地项目创建，核对原生目录选择和完整路径回读；收录可移交的先前 probe 证据后，明确正式 Driver 相比 probe 缺少的能力。
+下一项：不再连接或操作 DoubaoWork UI。先离线更正本次 canary 证据，并补齐 Web metrics、公共 execute/run 路由、可信 terminal/cwd、精确 cleanup、正式 finalizer/receipt 和发行入口；以后只有在这些实现完成且另行批准新批次/时段后才做真机复验。
 
-当前依赖缺口：首次公共基线尚未发布，责任方 COMMON，恢复条件为公共基线及相关交接可从集成分支取得。当前未开始平台实施，不把未知本机条件写成测试失败。
+当前依赖缺口：Web metrics 尚未注册 DoubaoWork；execute/run 尚无公共 DoubaoWork 路由；nullable native identity、多 artifact trace、可信终态/cwd、平台精确 cleanup、正式 Web finalizer/receipt 与发行装配尚未闭环。精确需求见 [MAC-DOUBAOWORK-WEB-001](../handoffs/MAC-DOUBAOWORK-WEB-001.md)。缺少可信原生终态/cwd/进程清理时不得生成正式完整回执。
 
 ## 本机现场与恢复
 
-未登记，接手先检查本机活动进程、队列与既有批次；不能推断桌面空闲。登记本地证据根、实际版本/配置、batch/unit/attempt、原生 session/thread/turn/cwd、候选状态及真实 resume 入口。代码更新仅在相关批次安全收口后进行，不覆盖历史现场。
+`SLOT-MAC-20260919-01` 已释放，之后未再连接或操作 DoubaoWork UI。本次唯一实际发送的 canary 仍为 `NEEDS_ATTENTION`：候选已生成 `countdown/index.html` 和两张截图，但没有可信原生终态/cwd 或正式 execution/score/submission。20:20:10+08:00 的只读现场核验还发现同一进程组内的 DoubaoWork sandbox Bash/Python 两个进程仍在候选 `workspace/countdown` 上，其中 Python 监听 8848；未执行终止，因此 cleanup 明确未完成。本地证据根为 `/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-macos-web-e2e/`。
+
+仓库内 canary 索引只保存脱敏后的 session 哈希、文件哈希和状态边界。最新 1,893 字节 UI 回复没有唯一原件；旧 `ui-final-reply.txt` 仅是 145 字节部分回复，不能冒充最终证据。
+
+增量更正与 COMMON 接收动作见 [MAC-DOUBAOWORK-WEB-002](../handoffs/MAC-DOUBAOWORK-WEB-002.md)；已消费的 `MAC-DOUBAOWORK-WEB-001` 保持原样，不静默改写历史交接。
 
 ## 接收记录
 
 | 交接 ID | 状态 | 已采用集成 SHA | 处理结果、验收证据/阻塞 | 下一项 |
 | --- | --- | --- | --- | --- |
-| 尚无记录 | — | — | 接手扫描全部目标含 MAC-DOUBAOWORK-WEB/ALL 的正式交接；此行不表示不存在新交接 | P1 |
+| COMMON-001 | ADOPTED | merge `6cd5aac76055503380af6380cd203196515de642`；固定 `SYNC_SHA=0dd42824cb8eb510ab126fd74553f93312c9f201`，推荐源码 `ed366b30bc5ddd2ae35ef6361c3ac7c72ce9963a`，CB-A `abce5da832f16b48cd402ceef04a6abda544a379` | 推荐源码与 CB-A 均已核验为 SYNC_SHA 祖先并合入；General Schema 对 Web 不适用，不创建 General adapter | 后续由 COMMON-002 记录承接 |
+| COMMON-002 | ADOPTED | merge `ca7cc2ed74e3c8bb148ccd702c385f1ba8f62cb9`；`SYNC_SHA=46a23a43572aed34bc2eec457d67423e2bce08af`；必需源码 `eb23784a7ed25b0f0364db0392783de277b22b96` | 两个源码均为 HEAD 祖先；采用 discovery 1.2.0、Web execute 1.14.0 / run 1.4.2 / orchestrate 0.3.2，prepare 已支持 DoubaoWork。共享 discovery 测试 3/3 通过，真实安装只读核验 `identity_verified=true`；General finalizer/trace 不作为 Web 正式收口证据 | 补 Web metrics、execute/run 路由、terminal/cwd、cleanup、finalizer/receipt 与发行 |
 
 ## 本轮交付
 
-仅初始化任务定义；无实现、无本平台新真机证据、无提交/推送。后续每批交付新增交接 ID，登记来源 revision、差异、验证范围及发给其他任务的具体动作。
+P1 已形成 DoubaoWork 专属只读 probe、共享 discovery 接入、原生 trajectory 旁路解析、macOS 目录 helper、脱敏 fixtures 与证据记录。P2 Driver 0.3.0 已完成唯一 dispatch、严格项目/路径/模型/权限/Prompt 回读、进程身份锁与只观察恢复；当前 Node 39/39、共享 Doubao discovery 3/3、prepare 33/33、Web Skill layout 4/4，以及六个 MJS 语法、Swift typecheck 和 `git diff --check` 均通过。canary 生成了站点，但因可信终态/cwd/cleanup 和正式 finalizer 缺失保持 `NEEDS_ATTENTION`；没有正式 execution/collect/评分/回传/报告或发行证据。未 push、未合主分支。

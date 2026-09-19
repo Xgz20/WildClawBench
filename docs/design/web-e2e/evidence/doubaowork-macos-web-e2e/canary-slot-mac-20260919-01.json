@@ -1,0 +1,205 @@
+{
+  "schema": "wildclawbench.doubaowork-development-canary-index/v1",
+  "task": "MAC-DOUBAOWORK-WEB",
+  "slot_id": "SLOT-MAC-20260919-01",
+  "batch_id": "web-e2e-20260919-doubaowork-canary-01",
+  "task_id": "07_Website_Generation_task_023_important_day_countdown",
+  "development_only": true,
+  "client": {
+    "platform": "macOS x86_64",
+    "app_version": "2.28.12",
+    "bundle_id": "com.work.pc.doubao",
+    "endpoint": "http://127.0.0.1:9260",
+    "actual_model": "自动 高",
+    "actual_permission_mode": "按需确认"
+  },
+  "prepared_input": {
+    "manifest_schema": "wildclawbench.web-e2e-batch/v3",
+    "source_revision": "c098a2e386baec6b04ed4af615349bea974f0746",
+    "difficulty": "L1",
+    "prompt_sha256": "04816a6cfb9b924c424553171146318f6b00dc7b3a6a6e53887034beed16c29f",
+    "private_scoring_exposed": false,
+    "packaged_skill_versions": {
+      "execute-web-e2e": "1.13.1",
+      "run-web-e2e": "1.4.1",
+      "orchestrate-web-e2e": "0.3.1",
+      "score-web-e2e": "4.5.4",
+      "report-web-e2e": "1.1.1"
+    }
+  },
+  "live_driver_identity": {
+    "driver_version": "0.3.0",
+    "repository_base_revision": "c098a2e386baec6b04ed4af615349bea974f0746",
+    "source_revision": null,
+    "exact_code_snapshot_frozen": false,
+    "post_canary_delivery_commit": "47dcaee8279309202ebdcabf40cf4777fe758b3c",
+    "post_canary_delivery_is_exact_live_snapshot": false,
+    "note": "The live canary used uncommitted iterative Driver changes on the recorded repository base. No runtime Driver file hash or dirty-diff snapshot was archived. Commit 47dcaee also contains fixes made after the live observation and must not be treated as the exact live code revision."
+  },
+  "preflight": {
+    "relative_path_under_debug_root": "slot-mac-20260919-01-pre-dispatch-02/probe.json",
+    "sha256": "4cfd6234840ccc750fd02e61766d4cdd89558f9c9e6d2313f59f99a7aebfa1ff",
+    "status": "passed",
+    "read_only": true
+  },
+  "attempts": [
+    {
+      "reference": "development-run-01",
+      "result": "pre-send-failed",
+      "reason": "tooltip wait and tilde normalization were not yet supported",
+      "dispatch_attempt_count": 0
+    },
+    {
+      "reference": "development-run-02",
+      "result": "pre-send-failed",
+      "reason": "a diagnostic create-project dialog was still visible during preflight",
+      "dispatch_attempt_count": 0
+    },
+    {
+      "reference": "development-run-03/pre-send-1",
+      "result": "pre-send-failed",
+      "reason": "new project existed in the sidebar but no project conversation had been opened",
+      "dispatch_attempt_count": 0
+    },
+    {
+      "reference": "development-run-03/pre-send-2",
+      "result": "pre-send-failed",
+      "reason": "ProseMirror added a trailing empty block to the exact Prompt content",
+      "dispatch_attempt_count": 0
+    },
+    {
+      "reference": "development-run-03/dispatched",
+      "result": "ui-completion-candidate-unverified",
+      "dispatch_attempt_count": 1,
+      "conversation_id_sha256": "a672e6e3383787466d91b511204a0ac552c8fcf654a4fd69b2d8213b6913709c",
+      "session_directory_id_sha256": "a672e6e3383787466d91b511204a0ac552c8fcf654a4fd69b2d8213b6913709c"
+    }
+  ],
+  "send_summary": {
+    "total_dispatch_attempt_count": 1,
+    "prompt_sent_exactly_once": true,
+    "automation_state_sha256": "5e58a6489200c4e5d3abbbb69600e6e1d46437d3faa7ac0f9c64fbe916846e85",
+    "development_dispatch_sha256": "c8743f911c0e9e55cb9054870c3a1b3441d72a01fbcaf2ce1671c6c5b2e5d8f2"
+  },
+  "observations": [
+    {
+      "relative_path_under_run": "development-observation-1789817972965.json",
+      "sha256": "cda6f54b1feea43dff022f5f9cb2beed4cc3f3683ac33ad86003ad185dc33b00",
+      "observed_at": "2026-09-19T11:39:32.964Z",
+      "status": "superseded-partial",
+      "busy_conversation_count": 1,
+      "stop_control_count": 0,
+      "final_assistant_bytes": 145,
+      "note": "Its SLOT_RELEASED value is invalid because the busy sidebar marker had not yet been included in the running gate. Its fixed-name reply, screenshot, and native evidence are early partial artifacts only."
+    },
+    {
+      "relative_path_under_run": "development-observation-1789818426079.json",
+      "sha256": "c594a21f0617a5a5f3a324cb65d1e51f67d81a8fc99df761dac5eeda486fb46b",
+      "observed_at": "2026-09-19T11:47:06.078Z",
+      "status": "latest-ui-completion-candidate-unverified",
+      "busy_conversation_count": 0,
+      "stop_control_count": 0,
+      "dialog_count": 0,
+      "question_count": 0,
+      "approval_count": 0,
+      "final_assistant_bytes": 1893,
+      "final_assistant_sha256": "2e3157e09c3e181adfc87b0faf460d3cef33d5c68520e9dab5aea158ebe25e78",
+      "note": "The observation proves only the latest DOM candidate and idle UI. Its final_reply pointer reused the earlier fixed-name partial file and is therefore invalid for this observation; no latest UI reply or screenshot artifact is claimed."
+    }
+  ],
+  "latest_native_snapshot": {
+    "relative_path_under_run": "native-evidence-1789818426079.json",
+    "sha256": "5a4d03af5fc7af8ff85a1dc105af2ac8bc3fbd48959d7607fdd7681a6bd8f803",
+    "collected_at": "2026-09-19T11:55:30.219Z",
+    "event_count": 29,
+    "tool_call_known_subtotal": 14,
+    "tool_call_coverage_denominator": null,
+    "native_cwd": null,
+    "terminal_status": "unverified"
+  },
+  "candidate_workspace": {
+    "read_only_observed_at": "2026-09-19T20:11:13+0800",
+    "regular_file_count": 4,
+    "symlink_count": 0,
+    "known_prohibited_runtime_entry_count": 0,
+    "known_prohibited_runtime_names_checked": [
+      ".git",
+      "node_modules",
+      ".cache",
+      ".vite",
+      "Local State",
+      "Cookies",
+      "Login Data",
+      "Crashpad"
+    ],
+    "files": [
+      {
+        "path": ".gitkeep",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "countdown/index.html",
+        "bytes": 18216,
+        "sha256": "b43018a6b6393607dce34cb15b066db70cf2a9e71b555ffc2c65a6f84bf8f36d"
+      },
+      {
+        "path": "countdown/_shots/index_desktop.png",
+        "bytes": 51639,
+        "sha256": "f07eafe45574282a36bf2669212ceffb34c61b86f025ecd1ab71f1ae85eef647"
+      },
+      {
+        "path": "countdown/_shots/index_mobile.png",
+        "bytes": 51491,
+        "sha256": "5020624add475b963e1e13709177c3a4fbb241d59194cc898c1bdcc9626aad2c"
+      }
+    ],
+    "site_generated": true,
+    "formally_collected": false,
+    "scored": false,
+    "screenshot_binding_to_current_html": "unverified",
+    "note": "A post-slot read-only filesystem check proved that the site and two screenshots exist. This does not establish trusted terminal completion, native cwd, cleanup, formal execution validity, or a score."
+  },
+  "candidate_process_check": {
+    "observed_at": "2026-09-19T20:20:10+0800",
+    "cleanup_verified": false,
+    "residual_process_count": 2,
+    "processes": [
+      {
+        "pid": 83934,
+        "parent_pid": 3662,
+        "process_group_id": 83934,
+        "executable_scope": "DoubaoWork sandbox shell",
+        "command_summary": "bash wrapper for candidate http.server task",
+        "cwd_relative_to_task_root": "workspace/countdown",
+        "started_at": "2026-09-19T19:41:11+0800"
+      },
+      {
+        "pid": 83960,
+        "parent_pid": 83934,
+        "process_group_id": 83934,
+        "executable_scope": "DoubaoWork sandbox_runtime",
+        "command_suffix": "python3 -m http.server 8848",
+        "cwd_relative_to_task_root": "workspace/countdown",
+        "listening_tcp_port": 8848,
+        "started_at": "2026-09-19T19:41:11+0800"
+      }
+    ],
+    "note": "The processes were only inspected. They were not terminated, and no cleanup success is claimed."
+  },
+  "formal_outputs": {
+    "execution_record_created": false,
+    "execution_receipt_created": false,
+    "score_created": false,
+    "report_created": false
+  },
+  "canary_status": "NEEDS_ATTENTION",
+  "remaining_gaps": [
+    "trusted native terminal status",
+    "native cwd or equivalent trusted binding",
+    "task process cleanup",
+    "latest UI final reply and screenshot were not uniquely archived by the live revision",
+    "resource totals and coverage denominator"
+  ],
+  "slot_status": "SLOT_RELEASED"
+}

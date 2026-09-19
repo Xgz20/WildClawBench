@@ -1,0 +1,15 @@
+{
+  "conversations": [
+    {
+      "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "type": "craft",
+      "name": "合成脱敏任务",
+      "createdAt": "2026-09-19T08:00:00.000Z",
+      "lastMessageAt": "2026-09-19T08:00:04.000Z",
+      "modelMap": {
+        "craft": "fixture-model"
+      }
+    }
+  ],
+  "current": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}
