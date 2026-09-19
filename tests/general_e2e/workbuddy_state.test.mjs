@@ -216,3 +216,92 @@ test("WorkBuddy state mapping fails closed on cwd and prompt mismatches", async 
     await rm(fixture.root, { recursive: true, force: true });
   }
 });
+
+test("WorkBuddy state requires aligned terminal semantics and confirmed cancellation", async () => {
+  const fixture = await createUnitFixture();
+  try {
+    const base = {
+      identity: IDENTITY,
+      dataset: DATASET,
+      taskRoot: fixture.taskRoot,
+      candidateWorkspace: fixture.workspace,
+      prompt: {
+        path: fixture.promptPath,
+        sha256: sha256(fixture.promptText),
+        send_status: "sent",
+        sent_at: "2026-09-19T08:00:00.000Z",
+      },
+      send: { dispatch_attempt_count: 1 },
+      sessionSnapshot: {
+        conversation_id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        cwd: fixture.workspace,
+        status: "Failed",
+      },
+      history: {
+        binding: {
+          conversation_id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          request_id: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          request_state: { raw: "running" },
+        },
+        prompt: { sha256: sha256(fixture.promptText) },
+        completeness: { status: "partial", missing: ["request_terminal_state:running"] },
+        final_response: null,
+        request: { startedAt: 1789804800000 },
+        conversation: { lastMessageAt: "2026-09-19T08:00:04.000Z" },
+        resources: null,
+      },
+      bindingEvidence: fixture.bindingEvidence,
+    };
+
+    const conflict = buildWorkBuddyExecutionState(base);
+    assert.equal(conflict.phase, "NEEDS_ATTENTION");
+    assert.equal(conflict.execution.business_status, null);
+    assert.equal(conflict.execution.error.code, "WORKBUDDY_TERMINAL_STATE_CONFLICT");
+
+    const running = buildWorkBuddyExecutionState({
+      ...base,
+      sessionSnapshot: { ...base.sessionSnapshot, status: "Running" },
+    });
+    assert.equal(running.phase, "RUNNING");
+    assert.equal(running.execution.finished_at, null);
+    assert.equal(running.execution.duration_seconds, null);
+
+    const interrupted = buildWorkBuddyExecutionState({
+      ...base,
+      sessionSnapshot: { ...base.sessionSnapshot, status: "Interrupted" },
+      history: {
+        ...base.history,
+        binding: { ...base.history.binding, request_state: { raw: "interrupted" } },
+      },
+    });
+    assert.equal(interrupted.phase, "NEEDS_ATTENTION");
+    assert.equal(interrupted.execution.error.code, "WORKBUDDY_INTERRUPTION_UNVERIFIED");
+
+    const unconfirmed = buildWorkBuddyExecutionState({
+      ...base,
+      sessionSnapshot: { ...base.sessionSnapshot, status: "Cancelled" },
+      history: {
+        ...base.history,
+        binding: { ...base.history.binding, request_state: { raw: "cancelled" } },
+      },
+    });
+    assert.equal(unconfirmed.phase, "NEEDS_ATTENTION");
+    assert.equal(unconfirmed.execution.error.code, "WORKBUDDY_CANCELLATION_UNCONFIRMED");
+    assert.equal(unconfirmed.execution.cancellation_confirmed, null);
+
+    const confirmed = buildWorkBuddyExecutionState({
+      ...base,
+      sessionSnapshot: { ...base.sessionSnapshot, status: "Cancelled" },
+      history: {
+        ...base.history,
+        binding: { ...base.history.binding, request_state: { raw: "cancelled" } },
+      },
+      cancellationConfirmed: true,
+    });
+    assert.equal(confirmed.phase, "FAILED");
+    assert.equal(confirmed.execution.business_status, "cancelled");
+    assert.equal(confirmed.execution.cancellation_confirmed, true);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});

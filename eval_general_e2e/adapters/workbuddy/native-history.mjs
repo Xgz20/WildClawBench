@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
-import { lstat, readFile, readdir, realpath, stat } from "node:fs/promises";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { constants as fsConstants } from "node:fs";
+import { lstat, open, readdir, realpath } from "node:fs/promises";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 export const WORKBUDDY_HISTORY_ADAPTER_ID = "workbuddy-native-history";
 export const WORKBUDDY_HISTORY_ADAPTER_VERSION = "0.1.0";
@@ -14,6 +15,9 @@ export const GENERAL_TRANSCRIPT_EVENT_SCHEMA =
 const SUCCESS_STATES = new Set(["complete", "completed", "success", "succeeded", "done", "finished"]);
 const FAILURE_STATES = new Set(["failed", "failure", "error", "errored", "cancelled", "canceled", "aborted", "interrupted"]);
 const RUNNING_STATES = new Set(["created", "pending", "queued", "running", "working", "streaming", "processing", "active"]);
+const SAFE_NATIVE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$/u;
+const TOOL_SUCCESS_STATES = new Set(["success", "succeeded"]);
+const TOOL_FAILURE_STATES = new Set(["failed", "failure", "error", "errored"]);
 
 function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -27,6 +31,14 @@ function assertObject(value, label) {
 function assertString(value, label) {
   if (typeof value !== "string" || !value.trim()) throw new Error(`${label} 必须是非空字符串`);
   return value;
+}
+
+export function assertSafeWorkBuddyNativeId(value, label) {
+  const id = assertString(value, label);
+  if (!SAFE_NATIVE_ID.test(id) || id === "." || id === ".." || /^[A-Za-z]:/u.test(id)) {
+    throw new Error(`${label} 不是安全的原生 ID 段`);
+  }
+  return id;
 }
 
 function numeric(value) {
@@ -48,14 +60,69 @@ function parseStoredJson(value, label) {
   }
 }
 
-async function readJson(path, label = path) {
-  let value;
+function isInside(root, target) {
+  const value = relative(root, target);
+  return value === "" || (!value.startsWith("..") && !isAbsolute(value));
+}
+
+async function assertTrustedPath(root, target, expectedType, label) {
+  const canonicalRoot = await realpath(resolve(root));
+  const lexicalTarget = resolve(target);
+  if (!isInside(canonicalRoot, lexicalTarget)) throw new Error(`${label} 越出已验证 history 根`);
+  const segments = relative(canonicalRoot, lexicalTarget).split(/[\\/]+/u).filter(Boolean);
+  let current = canonicalRoot;
+  for (const segment of segments) {
+    current = join(current, segment);
+    const info = await lstat(current);
+    if (info.isSymbolicLink()) throw new Error(`${label} 路径包含符号链接：${current}`);
+  }
+  const info = await lstat(lexicalTarget);
+  if (expectedType === "file" && !info.isFile()) throw new Error(`${label} 不是普通文件`);
+  if (expectedType === "directory" && !info.isDirectory()) throw new Error(`${label} 不是目录`);
+  const canonicalTarget = await realpath(lexicalTarget);
+  if (!isInside(canonicalRoot, canonicalTarget)) throw new Error(`${label} 解析后越出已验证 history 根`);
+  return { root: canonicalRoot, path: canonicalTarget };
+}
+
+function sameFileSnapshot(left, right) {
+  return left.dev === right.dev
+    && left.ino === right.ino
+    && left.size === right.size
+    && left.mtimeNs === right.mtimeNs
+    && left.ctimeNs === right.ctimeNs;
+}
+
+async function readJsonSnapshot(path, label, trustedRoot) {
+  const verified = await assertTrustedPath(trustedRoot, path, "file", label);
+  let handle;
   try {
-    value = JSON.parse(await readFile(path, "utf8"));
+    handle = await open(verified.path, fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW || 0));
+    const before = await handle.stat({ bigint: true });
+    const bytes = await handle.readFile();
+    const after = await handle.stat({ bigint: true });
+    if (!sameFileSnapshot(before, after) || BigInt(bytes.length) !== after.size) {
+      throw new Error("文件在读取期间发生变化");
+    }
+    let value;
+    try {
+      value = JSON.parse(bytes.toString("utf8"));
+    } catch (error) {
+      throw new Error(`不是有效 JSON：${error instanceof Error ? error.message : String(error)}`);
+    }
+    return {
+      value: assertObject(value, label),
+      artifact: {
+        path: verified.path,
+        sha256: createHash("sha256").update(bytes).digest("hex"),
+        size: bytes.length,
+        modified_at: new Date(Number(after.mtimeNs / 1_000_000n)).toISOString(),
+      },
+    };
   } catch (error) {
     throw new Error(`${label} 读取失败：${error instanceof Error ? error.message : String(error)}`);
+  } finally {
+    await handle?.close().catch(() => {});
   }
-  return assertObject(value, label);
 }
 
 async function isDirectory(path) {
@@ -89,7 +156,7 @@ export function workBuddyWorkspaceHistoryKey(workspace) {
 
 export function classifyWorkBuddyState(rawState) {
   const raw = String(rawState || "").trim();
-  const normalized = raw.toLowerCase().replace(/[\s_-]+/gu, "");
+  const normalized = raw.toLowerCase();
   if (SUCCESS_STATES.has(normalized)) return { kind: "success", raw };
   if (FAILURE_STATES.has(normalized)) return { kind: "failure", raw };
   if (RUNNING_STATES.has(normalized)) return { kind: "running", raw };
@@ -110,7 +177,16 @@ export async function findWorkBuddyWorkspaceHistory({ dataRoot, workspace }) {
       if (await isDirectory(nested)) candidates.push(nested);
     }
   }
-  const unique = [...new Set(await Promise.all(candidates.map((item) => realpath(item))))];
+  const verifiedCandidates = [];
+  for (const item of candidates) {
+    verifiedCandidates.push((await assertTrustedPath(
+      canonicalDataRoot,
+      item,
+      "directory",
+      "WorkBuddy workspace history",
+    )).path);
+  }
+  const unique = [...new Set(verifiedCandidates)];
   if (unique.length !== 1) {
     throw new Error(`WORKBUDDY_HISTORY_AMBIGUOUS: expected=1 actual=${unique.length} key=${historyKey}`);
   }
@@ -140,22 +216,36 @@ export async function loadWorkBuddyConversation({
   conversationId,
   requestId,
 }) {
-  assertString(conversationId, "conversationId");
-  assertString(requestId, "requestId");
+  assertSafeWorkBuddyNativeId(conversationId, "conversationId");
+  assertSafeWorkBuddyNativeId(requestId, "requestId");
   const located = await findWorkBuddyWorkspaceHistory({ dataRoot, workspace });
   const workspaceIndexPath = join(located.history_directory, "index.json");
-  const workspaceIndex = await readJson(workspaceIndexPath, "WorkBuddy workspace index");
+  const workspaceIndexSnapshot = await readJsonSnapshot(
+    workspaceIndexPath,
+    "WorkBuddy workspace index",
+    located.history_directory,
+  );
+  const workspaceIndex = workspaceIndexSnapshot.value;
   const conversation = chooseExact(workspaceIndex.conversations || [], conversationId, "conversationId");
   const conversationDirectory = join(located.history_directory, conversationId);
-  if (!(await isDirectory(conversationDirectory))) {
-    throw new Error(`WorkBuddy conversation 目录不存在：${conversationId}`);
-  }
+  await assertTrustedPath(
+    located.history_directory,
+    conversationDirectory,
+    "directory",
+    "WorkBuddy conversation 目录",
+  );
   const conversationIndexPath = join(conversationDirectory, "index.json");
-  const conversationIndex = await readJson(conversationIndexPath, "WorkBuddy conversation index");
+  const conversationIndexSnapshot = await readJsonSnapshot(
+    conversationIndexPath,
+    "WorkBuddy conversation index",
+    located.history_directory,
+  );
+  const conversationIndex = conversationIndexSnapshot.value;
   const request = chooseExact(conversationIndex.requests || [], requestId, "requestId");
   const indexedMessages = new Map();
   for (const item of conversationIndex.messages || []) {
-    if (!isObject(item) || typeof item.id !== "string") throw new Error("WorkBuddy message index 含无效条目");
+    if (!isObject(item)) throw new Error("WorkBuddy message index 含无效条目");
+    assertSafeWorkBuddyNativeId(item.id, "WorkBuddy message id");
     if (indexedMessages.has(item.id)) throw new Error(`WorkBuddy message id 重复：${item.id}`);
     indexedMessages.set(item.id, item);
   }
@@ -165,13 +255,18 @@ export async function loadWorkBuddyConversation({
   const seen = new Set();
   const messages = [];
   for (const messageId of request.messages) {
-    assertString(messageId, "request.messages[]");
+    assertSafeWorkBuddyNativeId(messageId, "request.messages[]");
     if (seen.has(messageId)) throw new Error(`WorkBuddy request 消息引用重复：${messageId}`);
     seen.add(messageId);
     const metadata = indexedMessages.get(messageId);
     if (!metadata) throw new Error(`WorkBuddy request 引用了不存在的消息：${messageId}`);
     const messagePath = join(conversationDirectory, "messages", `${messageId}.json`);
-    const envelope = await readJson(messagePath, `WorkBuddy message ${messageId}`);
+    const messageSnapshot = await readJsonSnapshot(
+      messagePath,
+      `WorkBuddy message ${messageId}`,
+      located.history_directory,
+    );
+    const envelope = messageSnapshot.value;
     if (envelope.id !== messageId) throw new Error(`WorkBuddy message id 不匹配：${messageId}`);
     if (envelope.role !== metadata.role) throw new Error(`WorkBuddy message role 不匹配：${messageId}`);
     const message = parseStoredJson(envelope.message, `WorkBuddy message payload ${messageId}`);
@@ -187,6 +282,7 @@ export async function loadWorkBuddyConversation({
       message,
       extra,
       source_ref: safeLogicalRef("message", messageId),
+      artifact: messageSnapshot.artifact,
     });
   }
   return {
@@ -202,6 +298,11 @@ export async function loadWorkBuddyConversation({
       workspace_index: safeLogicalRef("workspace"),
       conversation_index: safeLogicalRef("conversation"),
       messages: messages.map((item) => item.source_ref),
+    },
+    source_artifacts: {
+      workspace_index: workspaceIndexSnapshot.artifact,
+      conversation_index: conversationIndexSnapshot.artifact,
+      messages: messages.map((item) => item.artifact),
     },
   };
 }
@@ -243,9 +344,13 @@ function unavailableMetric(basis, total = 1, unit = "conversation_request") {
 }
 
 function toolStatus(result) {
-  const rawStatus = String(result?.status || result?.result?.status || "").trim();
-  if (result?.success === true || SUCCESS_STATES.has(rawStatus.toLowerCase())) return "success";
-  if (result?.success === false || FAILURE_STATES.has(rawStatus.toLowerCase())) return "error";
+  const rawStatus = String(result?.status || result?.result?.status || "").trim().toLowerCase();
+  if (result?.success === true) return "success";
+  if (result?.success === false) return "error";
+  const exitCode = result?.exit_code ?? result?.exitCode ?? result?.result?.exit_code ?? result?.result?.exitCode;
+  if (typeof exitCode === "number" && Number.isInteger(exitCode)) return exitCode === 0 ? "success" : "error";
+  if (TOOL_SUCCESS_STATES.has(rawStatus)) return "success";
+  if (TOOL_FAILURE_STATES.has(rawStatus)) return "error";
   return "unknown";
 }
 
@@ -276,7 +381,11 @@ function nativeToolOutcomes(messages) {
         outcomes.push({
           call_id: nested?.toolCallId || null,
           name: nested?.name || null,
-          status: toolStatus({ status: nested?.executeStatus }),
+          status: toolStatus({
+            status: nested?.executeStatus,
+            success: nested?.success,
+            exitCode: nested?.exitCode ?? nested?.exit_code,
+          }),
           source_ref: item.source_ref,
           scope: "linked-child",
         });
@@ -590,12 +699,11 @@ export function toGeneralResourceMetrics({
 }
 
 export async function inspectWorkBuddyHistoryArtifact(path) {
-  const info = await stat(path);
-  if (!info.isFile()) throw new Error(`WorkBuddy history artifact 不是文件：${path}`);
+  const snapshot = await readJsonSnapshot(path, "WorkBuddy history artifact", dirname(resolve(path)));
   return {
     path: basename(path),
-    sha256: createHash("sha256").update(await readFile(path)).digest("hex"),
-    size: info.size,
+    sha256: snapshot.artifact.sha256,
+    size: snapshot.artifact.size,
   };
 }
 

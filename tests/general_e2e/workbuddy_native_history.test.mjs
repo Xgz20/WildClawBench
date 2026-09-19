@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { cp, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 
 import {
+  assertSafeWorkBuddyNativeId,
   findWorkBuddyWorkspaceHistory,
   loadWorkBuddyConversation,
   normalizeWorkBuddyConversation,
@@ -66,6 +68,12 @@ test("WorkBuddy history layout binds exact workspace, conversation, and request"
       "assistant",
     ]);
     assert.equal(loaded.request.state, "complete");
+    const conversationBytes = await readFile(join(fixture.conversationRoot, "index.json"));
+    assert.equal(
+      loaded.source_artifacts.conversation_index.sha256,
+      createHash("sha256").update(conversationBytes).digest("hex"),
+    );
+    assert.equal(loaded.source_artifacts.messages.length, 4);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
@@ -107,7 +115,7 @@ test("WorkBuddy history normalizes transcript, calls, resources, and coverage", 
     assert.equal(normalized.resources.cache_semantics.all_observed_checks_pass, true);
     assert.deepEqual(
       normalized.resources.tool_outcomes.map((item) => [item.scope, item.status]),
-      [["conversation", "success"], ["linked-child", "success"]],
+      [["conversation", "success"], ["linked-child", "unknown"]],
     );
 
     const resourceMetrics = toGeneralResourceMetrics({
@@ -167,5 +175,56 @@ test("WorkBuddy history fails closed on cross-request and incomplete evidence", 
     );
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("WorkBuddy history rejects path escape IDs and symlinked sources", async () => {
+  assert.throws(() => assertSafeWorkBuddyNativeId("../escape", "conversationId"), /安全/u);
+  assert.throws(() => assertSafeWorkBuddyNativeId("C:escape", "conversationId"), /安全/u);
+  assert.throws(() => assertSafeWorkBuddyNativeId("a\\b", "messageId"), /安全/u);
+
+  const fixture = await createNativeHistoryFixture();
+  try {
+    await assert.rejects(
+      loadWorkBuddyConversation({
+        ...fixture,
+        conversationId: "../escape",
+        requestId: REQUEST_ID,
+      }),
+      /安全/u,
+    );
+
+    const external = join(fixture.root, "external-index.json");
+    await writeFile(external, await readFile(join(fixture.conversationRoot, "index.json")));
+    await rm(join(fixture.conversationRoot, "index.json"));
+    await symlink(external, join(fixture.conversationRoot, "index.json"));
+    await assert.rejects(
+      loadWorkBuddyConversation({
+        ...fixture,
+        conversationId: CONVERSATION_ID,
+        requestId: REQUEST_ID,
+      }),
+      /符号链接/u,
+    );
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+
+  const ancestorFixture = await createNativeHistoryFixture();
+  try {
+    const externalConversation = join(ancestorFixture.root, "external-conversation");
+    await cp(ancestorFixture.conversationRoot, externalConversation, { recursive: true });
+    await rm(ancestorFixture.conversationRoot, { recursive: true, force: true });
+    await symlink(externalConversation, ancestorFixture.conversationRoot);
+    await assert.rejects(
+      loadWorkBuddyConversation({
+        ...ancestorFixture,
+        conversationId: CONVERSATION_ID,
+        requestId: REQUEST_ID,
+      }),
+      /符号链接/u,
+    );
+  } finally {
+    await rm(ancestorFixture.root, { recursive: true, force: true });
   }
 });

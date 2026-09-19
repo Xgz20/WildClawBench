@@ -4,8 +4,11 @@ export const WORKBUDDY_EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-execu
 export const WORKBUDDY_DRIVER_ID = "workbuddy-macos-general";
 export const WORKBUDDY_DRIVER_VERSION = "0.1.0";
 
-const SUCCESS_STATES = new Set(["complete", "completed", "success", "succeeded", "done", "finished"]);
-const FAILURE_STATES = new Set(["failed", "failure", "error", "errored", "cancelled", "canceled", "aborted", "interrupted"]);
+const SUCCESS_STATES = new Set(["complete", "completed", "success", "succeeded"]);
+const FAILURE_STATES = new Set(["failed", "failure", "error", "errored"]);
+const CANCELLED_STATES = new Set(["cancelled", "canceled", "aborted"]);
+const INTERRUPTED_STATES = new Set(["interrupted"]);
+const RUNNING_STATES = new Set(["created", "pending", "queued", "running", "working", "streaming", "processing", "active"]);
 
 function assertObject(value, label) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`);
@@ -19,9 +22,12 @@ function assertString(value, label) {
 
 function classify(value) {
   const raw = String(value || "").trim();
-  const normalized = raw.toLowerCase().replace(/[\s_-]+/gu, "");
+  const normalized = raw.toLowerCase();
   if (SUCCESS_STATES.has(normalized)) return "success";
   if (FAILURE_STATES.has(normalized)) return "failure";
+  if (CANCELLED_STATES.has(normalized)) return "cancelled";
+  if (INTERRUPTED_STATES.has(normalized)) return "interrupted";
+  if (RUNNING_STATES.has(normalized)) return "running";
   return raw ? "unknown" : "missing";
 }
 
@@ -53,6 +59,7 @@ export function buildWorkBuddyExecutionState({
   sessionSnapshot,
   history,
   bindingEvidence,
+  cancellationConfirmed = false,
   humanAssistance = { mode: "automatic", operation_count: 0, semantic_intervention_count: 0 },
 }) {
   assertObject(identity, "identity");
@@ -85,25 +92,45 @@ export function buildWorkBuddyExecutionState({
   if (sessionKind === "success" && requestKind === "success" && history.completeness?.status === "complete") {
     phase = "COMPLETED";
     businessStatus = "completed";
-  } else if (sessionKind === "failure" || requestKind === "failure") {
+  } else if (sessionKind === "running" && requestKind === "running") {
+    phase = "RUNNING";
+  } else if (sessionKind === "failure" && requestKind === "failure") {
     phase = "FAILED";
     businessStatus = "candidate_error";
     error = {
       code: "WORKBUDDY_NATIVE_FAILURE",
       message: `session=${sessionSnapshot.status || "missing"}; request=${history.binding?.request_state?.raw || "missing"}`,
     };
-  } else {
+  } else if (
+    sessionKind === "cancelled"
+    && requestKind === "cancelled"
+    && cancellationConfirmed === true
+  ) {
+    phase = "FAILED";
+    businessStatus = "cancelled";
     error = {
-      code: "WORKBUDDY_TERMINAL_STATE_UNVERIFIED",
+      code: "WORKBUDDY_NATIVE_CANCELLED",
+      message: `session=${sessionSnapshot.status}; request=${history.binding.request_state.raw}; cancellation_confirmed=true`,
+    };
+  } else {
+    const code = sessionKind === "interrupted" || requestKind === "interrupted"
+      ? "WORKBUDDY_INTERRUPTION_UNVERIFIED"
+      : sessionKind === "cancelled" || requestKind === "cancelled"
+        ? "WORKBUDDY_CANCELLATION_UNCONFIRMED"
+        : sessionKind === "failure" || requestKind === "failure"
+          ? "WORKBUDDY_TERMINAL_STATE_CONFLICT"
+          : "WORKBUDDY_TERMINAL_STATE_UNVERIFIED";
+    error = {
+      code,
       message: `session=${sessionSnapshot.status || "missing"}; request=${history.binding?.request_state?.raw || "missing"}; trace=${history.completeness?.status || "missing"}`,
     };
   }
 
   const startedAt = isoFromEpoch(history.request?.startedAt)
     || isoTimestamp(prompt.sent_at);
-  const finishedAt = phase === "NEEDS_ATTENTION"
-    ? null
-    : isoTimestamp(history.conversation?.lastMessageAt);
+  const finishedAt = new Set(["COMPLETED", "FAILED"]).has(phase)
+    ? isoTimestamp(history.conversation?.lastMessageAt)
+    : null;
   return {
     schema_version: WORKBUDDY_EXECUTION_STATE_SCHEMA,
     driver: {
@@ -140,7 +167,9 @@ export function buildWorkBuddyExecutionState({
       finished_at: finishedAt,
       duration_seconds: durationSeconds(startedAt, finishedAt),
       error,
-      cancellation_confirmed: null,
+      cancellation_confirmed: phase === "FAILED" && businessStatus === "cancelled"
+        ? true
+        : null,
     },
     human_assistance: humanAssistance,
     extensions: {
