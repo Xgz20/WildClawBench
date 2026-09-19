@@ -144,6 +144,13 @@ driver-side assessment，不创建或覆盖公共 `execution-receipt.json`，也
 当前 driver 已生成正式 receipt。即使达到该状态，`native_terminal_verified` 和
 `native_cwd_verified` 仍严格反映原生字段是否真的为 `verified`。
 
+`receipt-bridge.mjs` 提供 `mapDoubaoAssessmentToWebReceiptBridge(...)`，只在内存中把
+assessment 映射为公共 Web v1 使用的 `automation_phase`、`execution_status`、
+`terminal` 和 `workspace_binding` 字段。它要求 assessment 的全部收口门禁通过；Prompt
+回读不是 `verified`、UI/native identity 不一致、cleanup 缺失或候选未冻结时固定返回
+`NEEDS_ATTENTION` 和 `pending`。bridge 不读取或写入 `execution-receipt.json`，也不会
+把 UI 完成候选提升为 native terminal 或 cwd；对应字段保持原始 `unverified` 状态。
+
 ## 离线验证
 
 ```bash

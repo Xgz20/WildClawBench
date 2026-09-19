@@ -1,0 +1,25 @@
+{
+  "schema": "wildclawbench.doubaowork-web-finalizer-assessment/v1",
+  "formal_execution_receipt_allowed": false,
+  "identity": {
+    "batch_id": "batch-finalizer",
+    "task_id": "task-finalizer",
+    "attempt_id": "attempt-finalizer"
+  },
+  "native": {
+    "terminal_status": "unverified",
+    "cwd_status": "unverified",
+    "cwd_verified": false
+  },
+  "integrity": {
+    "valid": false,
+    "equivalent_web_binding": false,
+    "native_terminal_verified": false,
+    "native_cwd_verified": false,
+    "process_cleanup_verified": true,
+    "candidate_frozen": true
+  },
+  "reasons": [
+    "NATIVE_EVIDENCE_IDENTITY_MISMATCH"
+  ]
+}
