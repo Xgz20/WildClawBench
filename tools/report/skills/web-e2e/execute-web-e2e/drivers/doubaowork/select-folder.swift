@@ -306,4 +306,3 @@ do {
     FileHandle.standardError.write(Data("\(message)\n".utf8))
     exit(1)
 }
-

@@ -84,4 +84,3 @@ Focused checks：Node 14/14 通过；四个 `.mjs` `node --check` 通过；`swif
 - 操作：先只读枚举 page/session 与是否存在运行/待处理会话；创建本题新项目；运行目录 helper；tooltip 回读完整路径；保持当前非空模型显示和当前权限；写入 intent/Prompt SHA/attempt 后仅发送一次；捕获新 conversation ID；只观察，不评分。
 - 恢复：`READY_TO_SEND` 后中断先查新 session；无法唯一确认是否发送就停在 `NEEDS_ATTENTION`，不重发。未知终态、追问或授权转人工；不代答。
 - 收口：当前没有可信原生终态/cwd/进程清理，所以首次时段目标是获得缺口样本和失败关闭行为，不预承诺正式 execution receipt。原始日志仍只留 `<DEBUG_ROOT>`。
-

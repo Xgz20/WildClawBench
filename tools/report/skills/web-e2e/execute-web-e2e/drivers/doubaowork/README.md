@@ -1,6 +1,6 @@
 # DoubaoWork macOS Web E2E 客户端适配
 
-当前目录是 `MAC-DOUBAOWORK-WEB` 的客户端专属开发面，版本 `0.1.0`。现阶段提供：应用/CDP 身份严格核验的只读 probe、macOS 原生目录选择 helper、显式 session 目录发现、脱敏 fixture 和原生 `trajectory.jsonl` 的旁路提取器。
+当前目录是 `MAC-DOUBAOWORK-WEB` 的客户端专属开发面，版本 `0.2.0`。现阶段提供：应用/CDP 身份严格核验的只读 probe、macOS 原生目录选择 helper、显式 session 目录发现、脱敏 fixture、原生 `trajectory.jsonl` 的旁路提取器，以及不触碰客户端的发送意图 journal/恢复决策。
 
 这不是完整生产 Driver。它不会生成正式 `execution_record.json` 或 execution receipt，也没有实现可信原生终态、安全停止、任务进程清理、公共 finalizer、评分交接或发行装配。上述能力分别等待 COMMON 的 CB-A/CB-B 接口和真机验收；不得把本目录测试或旧 smoke 写成完整 Web E2E 通过。
 
@@ -62,6 +62,18 @@ node native-evidence.mjs \
 - UI 最终回复不能把 `terminal.status` 提升为成功；
 - 原始 trajectory 不复制进输出，只保存规范化事件、相对路径、大小和 SHA-256。完整原始文件仍留本机受限目录。
 
+## 发送意图 journal 与恢复边界
+
+`state.mjs` 使用现有 Web automation state 标识，但当前只写客户端专属控制状态，不生成正式 execution record。调用顺序必须是：
+
+1. workspace tooltip、实际权限和实际模型全部回读；
+2. `recordSendIntent` 将 `READY_TO_SEND` 与 Prompt SHA 落盘；
+3. **在任何 UI click 前**调用 `persistBeforeDispatch`，原子写入 `dispatch_attempt_count=1` 和 `dispatch_started_at`；
+4. click 被客户端接受后才能 `recordPromptAccepted`；
+5. 发送后对照发送前保存的 UI conversation 与原生 session 目录两组基线；只有两侧各自恰好出现一个新 ID 且相等时，才做 tentative binding；native cwd/turn 仍为 null。
+
+恢复只在 `READY_TO_SEND + dispatch_attempt_count=0` 时允许首次发送。计数已为 1、会话缺失/多候选、或已绑定 session 无法重新确认时一律 `NEEDS_ATTENTION`/observe-only，禁止自动重发。单测验证状态文件拒绝符号链接、dispatch start 先于 click 落盘和所有发送临界窗口。
+
 ## 离线验证
 
 ```bash
@@ -70,8 +82,8 @@ node --check lib.mjs
 node --check platform.mjs
 node --check native-evidence.mjs
 node --check probe.mjs
+node --check state.mjs
 swiftc -typecheck select-folder.swift
 ```
 
 fixture 已替换 Prompt、文件内容、工具结果、真实会话/agent ID 和绝对路径，不包含认证信息、历史侧栏或截图。
-

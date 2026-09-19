@@ -54,4 +54,3 @@ test("损坏行只形成缺口，不吞掉后续有效事件", () => {
   assert.equal(parsed.events.length, 1);
   assert.equal(parsed.warnings[0].code, "INVALID_JSON_LINE");
 });
-

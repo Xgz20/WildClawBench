@@ -44,4 +44,3 @@ test("原生 source discovery 只匹配显式 session 和普通 trajectory 文�
   assert.equal(discovery.logs.length, 1);
   assert.equal(discovery.logs[0].task_binding, "unbound");
 });
-
