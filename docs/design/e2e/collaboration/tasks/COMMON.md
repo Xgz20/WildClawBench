@@ -28,7 +28,7 @@
 - [ ] **COMMON-CM01**：公共五项新增指标聚合/报告与 AstronStudio 参考映射，含 fixtures 和实际来源对账；不阻塞依赖已明确的客户端适配。
 - [x] **COMMON-IN01**：接收并审查首批三平台 P2 与修复，保留原提交合入；COMMON-003 组合回归及本批变更复跑共 254/254，通过新增 COMMON-004。此勾选仅代表本批，不代表完整平台验收。
 - [x] **COMMON-IN02**：WorkBuddy 输入修复及 canary 交接已集成，Qwen SLOT04 证据/COMMON-003 接收记录已集成；Web 最小复用方案明确，发布 COMMON-004。
-- [ ] **COMMON-IN03**：WorkBuddy SLOT05 阻断结果已接收；仍需专属 collector，Qwen selector/只读 DB/collector、Doubao cleanup 动态反例与等价绑定、COMMON 公共 Web 接线；逐项审查，不因前批已合入而跳过。
+- [ ] **COMMON-IN03**：WorkBuddy SLOT05 阻断结果已接收；Qwen selector/只读 DB 已接收但仍需 collector，Doubao cleanup 动态反例与等价绑定已接收但仍需公共 finalizer 接线，COMMON 公共 Web 接线继续逐项审查，不因前批已合入而跳过。
 
 ## 下一项与依赖
 
@@ -52,7 +52,8 @@ Windows 接收 COMMON-001/002/003 后直接推进本机 G5-01，无需等待 Mac
 | MAC-QWENWORK-GENERAL-003 | ADOPTED | `f0bf24f`、`e646a01` | 项目控件当前可见视图唯一性与 SQLite 主库/WAL/SHM 快照加固；Node 聚焦测试 30/30 通过 | 静态复核、collector 与真机新时段待验 |
 | MAC-QWENWORK-GENERAL-001/002 及恢复修复 | ADOPTED | merge `c4b1f7b`，含 `9081df5` | Node 32 + Python 3 与 Swift typecheck 通过；CLI 脱仓另修为 `dc5ff64` | 修 selector/关闭库 probe、交接 SLOT04 失败关闭证据与独立 collector |
 | MAC-DOUBAOWORK-WEB-001/002 | ADOPTED | merge `b484085`、`769e9b5`，含 `3a3057c` | Node 39/39；一次发送/绑定、网站生成已核对；可信终态/cleanup/正式闭环未完成 | 原生来源、精确 cleanup 与 Web 公共接入 |
+| MAC-DOUBAOWORK-WEB-003 | ADOPTED | `11d0182`、`b57b03e`、`0424174` | 等价绑定、Prompt 回读、候选 cleanup 生命周期和恢复状态加固；Doubao Node 54/54；未操作客户端，公共 finalizer/可信 native terminal/cwd 仍缺 | Web metrics、公共 finalizer/receipt 与真机新 slot 前发行 |
 
 ## 本轮交付
 
-推荐源码 `2023b4d`。完整集成回归 254/254：General Python63、Node130、Web Python61；其中本批 WorkBuddy Node25、General Python46 已复跑。General execute0.8.1、Web execute1.15.0；COMMON-004 给出输入修复、Web等价证据和下一批动作。Doubao 0f6d2c6 因动态进程反例退回，未合入。没有新生产发行，也没有把三个客户端标成完整E2E通过。
+推荐源码 `2023b4d`。完整集成回归基线 254/254：General Python63、Node130、Web Python61；本批补充 WorkBuddy/Qwen/Doubao 专属聚焦回归分别通过，Doubao Node 54/54。General execute0.8.1、Web execute1.15.0；COMMON-004 给出输入修复、Web等价证据和下一批动作。Doubao 候选 cleanup 与等价绑定已集成，但未接公共 finalizer/可信 native terminal/cwd；没有新生产发行，也没有把三个客户端标成完整E2E通过。

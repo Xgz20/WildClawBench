@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | MAC-WORKBUDDY-GENERAL | P2 `e388dfa`、组件绑定 `b3ac3da`；独立 Node 23/23 | SLOT03 发送前失败已安全恢复草稿、释放；输入修复 `5bea762` 审查通过，Node 25/25 与 VM guards 7/7；SLOT05 清空门禁失败已按 `MAC-WORKBUDDY-GENERAL-003` 收口并释放，未创建 attempt；collector 独立推进 |
 | MAC-QWENWORK-GENERAL | `9081df5`；独立 Node 32 + Python 3；Swift typecheck | SLOT04 已释放；项目 trigger 歧义导致 send=0；修可见控件 selector、关闭数据库的只读 probe；collector 独立交付 |
-| MAC-DOUBAOWORK-WEB | P2 `47dcaee`、公共 merge `ca7cc2e`、更正 `3a3057c`；Node 39/39 | 离线审计原生 terminal/完整 workspace 绑定、实现精确 cleanup 及反例；COMMON 审查最小 Web 公共接口复用 |
+| MAC-DOUBAOWORK-WEB | P2 `47dcaee`、公共 merge `ca7cc2e`、更正 `3a3057c`；离线加固 `40c2f71`/`2e21a54`/`5d7b6d9` 已接收，集成 Node 54/54 | UI 等价绑定、Prompt 回读、进程重挂和恢复状态已加固；cleanup 尚未接入公共 finalizer，可信 native terminal/cwd 与正式 receipt 仍待补齐 |
 | COMMON | CB-A/CB-B、三 Driver、发行版本与 Qwen CLI 路径别名修复 | 发布 COMMON-003，接收下一批平台修复/collector；新增五项指标另属 COMMON-CM01 |
 
 公共/平台组合回归：General Python 63、Node 130（公共 34、WorkBuddy 25、Qwen 32、Doubao 39）、Web Python 61，合计 254/254。General execute 本批升为 0.8.1、Web execute 1.15.0；尚未新建生产发行包。
@@ -61,4 +61,4 @@ General trace v2 / common finalizer 已由 COMMON-002 提供；平台真实 coll
 
 Windows 接收 COMMON-001/002/003/004 和最新 baseline 后继续本机 G5-01，无需等待三个 Mac 或新增指标完成。Windows 真机记录由接收方回写，本控制任务未操作或代填其通过状态。两机以固定 SHA 和新增 handoff 接续，活动批次不切源码/Skill。
 
-Doubao 0f6d2c6 cleanup 独立审查未通过，未合入：父退出后 reparent 子进程丢失、PID复用后再次发信号、归属在信号前过期，以及 ..cache 合法路径/workspace实体变化反例已退回平台。未调用真实canary清理；修复后再复核。
+Doubao 原 `0f6d2c6` cleanup 已由 `40c2f71` 及 `5d7b6d9` 离线修订并接收，覆盖父退出后 reparent 子进程、PID 复用、归属复核、`..cache` 合法路径和 workspace 实体变化反例；尚未接入 Driver 公共 finalizer，未调用真实 canary 清理。UI `verified` 仍只表示等价绑定，不提升为 native/trusted 终态。
