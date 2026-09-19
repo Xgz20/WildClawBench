@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple, Union
 
 SOURCE_CATALOG_SCHEMA = "wildclawbench.e2e-shared-source-catalog/v1"
 GENERAL_BINDING_SCHEMA = "wildclawbench.general-e2e-adapter-binding/v1"
+ADAPTER_ID = re.compile(r"^[a-z][a-z0-9-]*$")
 SEMVER = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
 
 
@@ -75,10 +76,10 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="general-contracts",
-        version="1.0.0",
+        version="1.1.0",
         source_root="eval_general_e2e/contracts",
         vendor_root="vendor/e2e-shared/general-contracts",
-        entrypoints=("validator.py",),
+        entrypoints=("validator.py", "execution_state.py", "schemas/general-execution-state-v1.schema.json"),
     ),
 )
 
@@ -98,12 +99,20 @@ def _read_json(path: Path) -> object:
 
 def inspect_shared_component_layout(
     repo_root: Union[str, Path],
+    *,
+    adapter: str = "astronstudio",
 ) -> Dict[str, object]:
-    """Validate canonical sources, fixed versions, and the AstronStudio binding."""
+    """Validate canonical sources and one explicitly selected adapter binding.
 
+    The default preserves the original AstronStudio report and strict binding.
+    New adapters declare a non-empty subset of catalog components.
+    """
+
+    if not isinstance(adapter, str) or not ADAPTER_ID.fullmatch(adapter):
+        raise ValueError("adapter must be a lowercase slug")
     root = Path(repo_root).expanduser().resolve()
     catalog_file = root / "tools/report/e2e-shared/components.json"
-    binding_file = root / "eval_general_e2e/adapters/astronstudio/components.json"
+    binding_file = root / f"eval_general_e2e/adapters/{adapter}/components.json"
     errors: List[Dict[str, str]] = []
     rows: List[Dict[str, object]] = []
 
@@ -186,8 +195,10 @@ def inspect_shared_component_layout(
         })
 
     try:
+        if binding_file.is_symlink() or not binding_file.resolve().is_relative_to(root):
+            raise ValueError("binding must be a regular file inside the repository")
         binding = _read_json(binding_file)
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError) as exc:
         binding = None
         errors.append({"code": "GENERAL_ADAPTER_BINDING_INVALID", "detail": str(exc)})
     expected_versions = {
@@ -202,23 +213,31 @@ def inspect_shared_component_layout(
                 "detail": "binding schema mismatch",
             })
     else:
-        if binding.get("adapter") != "astronstudio":
+        if binding.get("adapter") != adapter:
             errors.append({
                 "code": "GENERAL_ADAPTER_BINDING_INVALID",
-                "detail": "adapter must be astronstudio",
+                "detail": f"adapter must be {adapter}",
             })
-        if binding.get("components") != expected_versions:
+        requested = binding.get("components")
+        catalog_versions = {item.name: item.version for item in EXPECTED_COMPONENTS}
+        valid_versions = isinstance(requested, dict) and bool(requested) and all(
+            name in catalog_versions and version == catalog_versions[name]
+            for name, version in requested.items()
+        )
+        if not valid_versions or (adapter == "astronstudio" and requested != expected_versions):
             errors.append({
                 "code": "GENERAL_ADAPTER_BINDING_INVALID",
                 "detail": "component versions do not match the source catalog",
             })
         entrypoint = binding.get("entrypoint")
-        if entrypoint != "eval_general_e2e/adapters/astronstudio/components.mjs":
+        if entrypoint != f"eval_general_e2e/adapters/{adapter}/components.mjs":
             errors.append({
                 "code": "GENERAL_ADAPTER_BINDING_INVALID",
                 "detail": "entrypoint mismatch",
             })
-        elif not (root / entrypoint).is_file():
+        elif (not (root / entrypoint).is_file()
+              or (root / entrypoint).is_symlink()
+              or not (root / entrypoint).resolve().is_relative_to(root)):
             errors.append({
                 "code": "GENERAL_ADAPTER_BINDING_INVALID",
                 "detail": "entrypoint is missing",
