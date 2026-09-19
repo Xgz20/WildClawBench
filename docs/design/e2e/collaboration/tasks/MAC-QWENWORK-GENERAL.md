@@ -3,12 +3,12 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 唯一负责人 / 实际任务 ID | 独立开发任务 / `MAC-QWENWORK-GENERAL`；由 COMMON 控制任务派发 |
-| 工作状态 / 代码交付 | ACTIVE / LOCAL_ONLY；P1 已完成，P2 live canary 在发送前门禁失败；selector/probe 已离线加固，正式 collect 未完成 |
+| 工作状态 / 代码交付 | ACTIVE / INTEGRATED；P1 已完成，P2 live canary 在发送前门禁失败；selector/project 绑定与 SQLite 主库/WAL/SHM 快照已离线加固，正式 collect 未完成 |
 | 计划分支 / worktree | `feat/qwenwork-macos-general-e2e` / `<主项目>/.agents/qwenwork-macos-general-e2e`；绑定已核验 |
 | 创建 base / 已采用公共基线 | `03c38f280a64ad9bc9308c768f0f5795050355cc` / COMMON-003 推荐源码 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3` |
-| 已读台账的 SYNC_SHA / 实际工作 HEAD | `82e947b926a4525aac7ba2de08b76830ee9c739b` / COMMON-003 merge `7b39dd9`，canary Driver `9081df5` |
-| 同步源 / 实现与集成 SHA | `github/feature/astroncode-eval`；COMMON-003 `82e947b...39b` 已核验并 merge；CB-A `abce5da832f16b48cd402ceef04a6abda544a379`；P1 `3f4ccbced1e90d71bea66508dfe8cca698bc7bea`；P2 Driver 修复至 `9081df5288d59c83e9e4d34d3bc8b288d96d7568`；未 push |
-| 最后更新 | 2026-09-19（Asia/Shanghai），SLOT04 真实 prepare PASS；UI project trigger 重复导致发送前失败关闭，`PROMPT_SENT=0` |
+| 已读台账的 SYNC_SHA / 实际工作 HEAD | `82e947b926a4525aac7ba2de08b76830ee9c739b` / `8229e9668b014799829ddaaec91f1e3fabb76025`，canary Driver `9081df5` |
+| 同步源 / 实现与集成 SHA | `github/feature/astroncode-eval`；COMMON-003 `82e947b...39b` 已核验并 merge；CB-A `abce5da832f16b48cd402ceef04a6abda544a379`；P1 `3f4ccbced1e90d71bea66508dfe8cca698bc7bea`；P2 Driver 修复至 `9081df5288d59c83e9e4d34d3bc8b288d96d7568`；selector/DB 加固 `993cdc55bf0ab6cec9aa9b10b7276cfe15b90ad3`；集成 `f0bf24f`/`e646a01`；未 push |
+| 最后更新 | 2026-09-19（Asia/Shanghai），SLOT04 真实 prepare PASS；UI project trigger 重复导致发送前失败关闭，`PROMPT_SENT=0`；离线加固已接收 |
 
 ## 本轮范围与修改归属
 
@@ -23,7 +23,7 @@ Windows 同号版本、旧 macOS token profile 不能覆盖当前 macOS 运行�
 硬依赖：[COMMON](COMMON.md) 的 COMMON-CB04 已发布，且本任务的 adapter/状态/指标接口约定可取得。**不依赖 COMMON-CM01 的全部新增指标实现。** 基线未发布时可继续只读环境盘点、已有日志/fixture 分析和差异清单；不自创公共字段或依赖未合入 worktree。
 
 - [x] P1：本机只读 probe、原生身份与字段/能力映射。实现 `3f4ccbced1e90d71bea66508dfe8cca698bc7bea`；证据：[qwenwork-macos-readonly-20260919](../../../general-e2e/evidence/qwenwork-macos-readonly-20260919/README.md)。
-- [ ] P2：单题一次发送、可信终态、恢复和正式证据收口。离线 Driver 已修复至 `9081df5288d59c83e9e4d34d3bc8b288d96d7568`；SLOT04 在发送前发现两个可见 project trigger 并失败关闭；selector/probe 已在 `993cdc5` 加固并通过 Qwen Node 37/37，仍缺一次真机发送、CB-B 正式证据收口和 cleanup。
+- [ ] P2：单题一次发送、可信终态、恢复和正式证据收口。离线 Driver 已修复至 `9081df5288d59c83e9e4d34d3bc8b288d96d7568`；SLOT04 在发送前发现两个可见 project trigger 并失败关闭；selector/project 绑定与 SQLite 主库/WAL/SHM 快照已在 `993cdc5` 加固并通过 Qwen Node 37/37，仍缺一次真机发送、CB-B 正式证据收口和 cleanup。
 - [ ] P3：原始轨迹/资源对账与完整单题评分/回传/报告。
 - [ ] P4：按场景验收三题串行、五题动态补位及声明并发。
 - [ ] P5：受影响故障加固、候选不可变与仓库外发行。
@@ -33,7 +33,7 @@ Windows 同号版本、旧 macOS token profile 不能覆盖当前 macOS 运行�
 
 ## 下一项与阻塞
 
-下一项：基于 `993cdc5` 的 selector/probe 专属修复申请新桌面时段，从全新 attempt 做 UI 回读、一次发送、session/cwd/Prompt 捕获和同 attempt 恢复。COMMON-003 与 CLI main-guard 修复 `dc5ff64` 已采用并通过 Qwen/脱仓布局回归。
+下一项：基于 `993cdc5` 的 selector/probe 与 SQLite 快照专属修复申请新桌面时段，从全新 attempt 做 UI 回读、一次发送、session/cwd/Prompt 捕获和同 attempt 恢复。COMMON-003 与 CLI main-guard 修复 `dc5ff64` 已采用并通过 Qwen/脱仓布局回归。
 
 当前剩余未验证：具体 npm 安装/脱仓 CDP runtime smoke、selector/probe 在新桌面时段的真机行为、一次发送与恢复、CB-B 正式证据和 QwenWork cleanup。当前 execute ZIP 已包含 QwenWork 专属 `package.json` 与 lockfile；运行前必须在 Driver 目录显式执行 `npm ci`，不借用 Web Skill 运行时。QwenWorkCN 1.0.6 未命中历史 macOS 1.0.5 Token Profile，严格资源输出保持 null/coverage。SLOT04 已释放，当前无桌面许可。
 
@@ -50,7 +50,7 @@ P2 canary CLI、冻结配置、前置条件和回退方案见 [qwenwork-macos-p2
 | 交接 ID | 状态 | 已采用集成 SHA | 处理结果、验收证据/阻塞 | 下一项 |
 | --- | --- | --- | --- | --- |
 | COMMON-001 | VERIFIED | `0dd42824cb8eb510ab126fd74553f93312c9f201`（推荐源码 `ed366b30...963a`） | 无活动 QwenWork 会话后 merge；已按 CB-A 输出 session/cwd/证据，thread/turn 为 null；公共 55/55、新增 Node 12/12、Python 3/3 通过 | P2 真机时段；CB-B 接口交接 |
-| MAC-QWENWORK-GENERAL-003 | OPEN | `993cdc5` 离线修复已集成 | SLOT04 真实 prepare PASS；发送前 project trigger `2` 个候选失败，`PROMPT_SENT=0`；用户手动确认退出；关闭库 probe error 14；新修复已通过 Qwen Node 37/37 | 新 slot 做 selector/probe 真机验证并继续 CB-B |
+| MAC-QWENWORK-GENERAL-003 | ADOPTED | `f0bf24f`、`e646a01`（源提交 `993cdc5`、`8229e96`） | SLOT04 真实 prepare PASS；发送前 project trigger `2` 个候选失败，`PROMPT_SENT=0`；用户手动确认退出；关闭库 probe error 14；项目控件与 SQLite 快照加固通过 Qwen Node 37/37 | 新 slot 做 selector/probe 真机验证并继续 CB-B |
 | COMMON-003 | VERIFIED | SYNC `82e947b926a4525aac7ba2de08b76830ee9c739b`；推荐源码 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3`；merge `7b39dd9` | GitHub ls-remote 与源码祖先通过；采用 execute `0.8.0` 和 Qwen CLI main-guard 修复；Qwen Node 32/32、Python 3/3、Skill build/layout 24/24 通过 | selector/probe 专属修复；collector 独立审查 |
 
 ## 本轮交付

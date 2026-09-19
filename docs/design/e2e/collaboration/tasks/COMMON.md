@@ -28,11 +28,11 @@
 - [ ] **COMMON-CM01**：公共五项新增指标聚合/报告与 AstronStudio 参考映射，含 fixtures 和实际来源对账；不阻塞依赖已明确的客户端适配。
 - [x] **COMMON-IN01**：接收并审查首批三平台 P2 与修复，保留原提交合入；COMMON-003 组合回归及本批变更复跑共 254/254，通过新增 COMMON-004。此勾选仅代表本批，不代表完整平台验收。
 - [x] **COMMON-IN02**：WorkBuddy 输入修复及 canary 交接已集成，Qwen SLOT04 证据/COMMON-003 接收记录已集成；Web 最小复用方案明确，发布 COMMON-004。
-- [ ] **COMMON-IN03**：WorkBuddy SLOT05 真实结果及专属 collector、Qwen selector/只读 DB/collector、Doubao cleanup 动态反例与等价绑定、COMMON 公共 Web 接线；逐项审查，不因前批已合入而跳过。
+- [ ] **COMMON-IN03**：WorkBuddy SLOT05 阻断结果已接收；仍需专属 collector，Qwen selector/只读 DB/collector、Doubao cleanup 动态反例与等价绑定、COMMON 公共 Web 接线；逐项审查，不因前批已合入而跳过。
 
 ## 下一项与依赖
 
-三个开发 Driver、组件绑定、execute 版本与 Qwen CLI 脱仓修复已纳入 [COMMON-003](../handoffs/COMMON-003.md)。WorkBuddy SLOT03 没有实际发送且已恢复用户草稿；Qwen SLOT04 因发送前项目控件歧义退出、已释放；Doubao 更正了已生成网站的证据，继续离线处理 terminal/cwd/cleanup。下一批重点为真实输入和正式 collector，公共 Web 适配范围由 COMMON 集中确定。
+三个开发 Driver、组件绑定、execute 版本与 Qwen CLI 脱仓修复已纳入 [COMMON-003](../handoffs/COMMON-003.md)。WorkBuddy SLOT03 没有实际发送且已恢复用户草稿；SLOT05 清空门禁失败已由 [MAC-WORKBUDDY-GENERAL-003](../handoffs/MAC-WORKBUDDY-GENERAL-003.md) 收口并释放；Qwen SLOT04 因发送前项目控件歧义退出、已释放；Doubao 更正了已生成网站的证据，继续离线处理 terminal/cwd/cleanup。下一批重点为真实输入和正式 collector，公共 Web 适配范围由 COMMON 集中确定。
 
 Windows 接收 COMMON-001/002/003 后直接推进本机 G5-01，无需等待 Mac 新 Harness 完成。活动批次先按原 revision 收口，空闲干净后再采用新源码。
 
@@ -40,7 +40,7 @@ Windows 接收 COMMON-001/002/003 后直接推进本机 G5-01，无需等待 Mac
 
 ## 本机现场与恢复
 
-控制集成 worktree 为 `.agents/e2e-harness-contract`；三个平台保持原绑定。SLOT01/02/03 已释放，SLOT04 也已释放；WorkBuddy 已获 SLOT05，Qwen/Doubao 继续离线修复。WorkBuddy 用户草稿已精确恢复，Doubao 候选 HTTP 服务残留不等于安全清理完成。实时状态以平台回报为准；完整调度见[控制推进记录](../control-progress.md)。原始数据位于 `/Users/gzx/debug-workspace/e2e-evaluate`，不写入仓库或 report-workspace。
+控制集成 worktree 为 `.agents/e2e-harness-contract`；三个平台保持原绑定。SLOT01/02/03/04/05 均已释放；WorkBuddy SLOT05 清空门禁失败但草稿哈希保持一致，Qwen/Doubao 继续离线修复。Doubao 候选 HTTP 服务残留不等于安全清理完成。实时状态以平台回报为准；完整调度见[控制推进记录](../control-progress.md)。原始数据位于 `/Users/gzx/debug-workspace/e2e-evaluate`，不写入仓库或 report-workspace。
 
 ## 接收记录
 
@@ -48,6 +48,8 @@ Windows 接收 COMMON-001/002/003 后直接推进本机 G5-01，无需等待 Mac
 | --- | --- | --- | --- | --- |
 | 原 General smoke 收口（历史交付） | VERIFIED | `86786e219c29730dba26e28426bcbe3f2414dab8` | 本地 collect/submission 哈希及生产包 15 项通过；不冒充新接口真机证据 | COMMON-CB02 |
 | MAC-WORKBUDDY-GENERAL-001 及 P2 后续交付 | ADOPTED | merge `8dac427`，含 `b3ac3da` | 源码/fixture 审查和 Node 23/23 通过；SLOT03 发送按钮 disabled，未实际发送，草稿已恢复 | 输入修复 5bea762 与新 handoff 已集成；SLOT05 真机与 collector待验 |
+| MAC-WORKBUDDY-GENERAL-003 | ADOPTED | `ef7e000`、`7ae4d91`、`fed1668` | SLOT05 清空门禁失败后安全停止；未创建 attempt、click/send/native session=0；用户草稿正文/HTML SHA 保持一致 | 设计新的草稿隔离路径；专属 collector/真实终态仍待验 |
+| MAC-QWENWORK-GENERAL-003 | ADOPTED | `f0bf24f`、`e646a01` | 项目控件当前可见视图唯一性与 SQLite 主库/WAL/SHM 快照加固；Node 聚焦测试 30/30 通过 | 静态复核、collector 与真机新时段待验 |
 | MAC-QWENWORK-GENERAL-001/002 及恢复修复 | ADOPTED | merge `c4b1f7b`，含 `9081df5` | Node 32 + Python 3 与 Swift typecheck 通过；CLI 脱仓另修为 `dc5ff64` | 修 selector/关闭库 probe、交接 SLOT04 失败关闭证据与独立 collector |
 | MAC-DOUBAOWORK-WEB-001/002 | ADOPTED | merge `b484085`、`769e9b5`，含 `3a3057c` | Node 39/39；一次发送/绑定、网站生成已核对；可信终态/cleanup/正式闭环未完成 | 原生来源、精确 cleanup 与 Web 公共接入 |
 
