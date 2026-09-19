@@ -27,6 +27,7 @@ export const QWENWORK_SHARED_COMPONENTS = Object.freeze({
   "desktop-runtime": DESKTOP_RUNTIME_VERSION,
   "desktop-app-discovery": DESKTOP_APP_DISCOVERY_VERSION,
   "resource-metrics": RESOURCE_METRICS_VERSION,
+  "general-contracts": "1.2.0",
 });
 
 export const QWENWORK_NATIVE_RESOURCE_PROFILE = Object.freeze({

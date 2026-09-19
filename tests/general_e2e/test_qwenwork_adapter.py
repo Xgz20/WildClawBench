@@ -26,8 +26,9 @@ class QwenWorkAdapterLayoutTests(unittest.TestCase):
             binding["components"],
             {
                 "desktop-runtime": "1.0.0",
-                "desktop-app-discovery": "1.1.0",
+                "desktop-app-discovery": "1.2.0",
                 "resource-metrics": "1.0.0",
+                "general-contracts": "1.2.0",
             },
         )
 
