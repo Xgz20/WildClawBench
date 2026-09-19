@@ -126,6 +126,26 @@ node driver.mjs --resume --retry-pre-send-failure \
 
 即使 UI 最终回复稳定出现，当前版本仍把它记录为 `NEEDS_ATTENTION` 的非可信完成候选。停止控件与当前 conversation 的 sidebar busy 标记都属于 running 门禁；两者任一存在时不能释放槽位或采信完成候选。每次完成观察使用同一个 observation ID 生成唯一回复、截图和 native evidence 文件，回复原件的字节数与 SHA-256 必须和同次 DOM 快照一致，禁止复用更早的部分回复。native terminal、精确 cwd、任务进程清理和公共 finalizer 未补齐前，不生成正式 `execution_record.json` 或 execution receipt。
 
+## Web v1 finalizer adapter（离线）
+
+`finalizer.mjs` 提供 `assessDoubaoWebFinalization(...)`，把当前观察转换为
+`wildclawbench.doubaowork-web-finalizer-assessment/v1` 的可审计门禁结果。它只做
+driver-side assessment，不创建或覆盖公共 `execution-receipt.json`，也没有公共
+`run-web-e2e` 路由。门禁同时校验：
+
+- 当前 conversation、project、完整 workspace tooltip、Prompt 回读和稳定 UI 完成候选；
+- native evidence 的 schema、conversation/session/workspace 绑定；原生 `terminal` 和
+  `cwd` 状态原样保留，`unverified` 不会被 UI 完成候选提升；
+- cleanup 必须 `supported=true`、`success=true`、无 tracked residue、无 after targets，
+  且 quiet window 已完成；
+- candidate 必须由上游明确标记 `frozen=true` 并带有效 SHA-256。
+
+任一证据缺失都返回 `status=NEEDS_ATTENTION`、`integrity.valid=false`，并列出稳定的
+失败代码。只有等价 Web 绑定、native evidence 身份、精确 cleanup 和候选冻结同时满足时，
+才返回 `READY_FOR_WEB_RECEIPT`；这只表示可供后续公共 Web v1 receipt 接线消费，不代表
+当前 driver 已生成正式 receipt。即使达到该状态，`native_terminal_verified` 和
+`native_cwd_verified` 仍严格反映原生字段是否真的为 `verified`。
+
 ## 离线验证
 
 ```bash
@@ -137,6 +157,7 @@ node --check native-evidence.mjs
 node --check process-cleanup.mjs
 node --check probe.mjs
 node --check state.mjs
+node --check finalizer.mjs
 swiftc -typecheck select-folder.swift
 ```
 

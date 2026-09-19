@@ -56,6 +56,7 @@ import {
   atomicWriteJson,
   buildNativeEvidence,
 } from "./native-evidence.mjs";
+import { assessDoubaoWebFinalization } from "./finalizer.mjs";
 
 const execFile = promisify(execFileCallback);
 const DRIVER_DIR = dirname(fileURLToPath(import.meta.url));
@@ -1193,6 +1194,28 @@ async function resumeDevelopmentRun(options) {
         at: new Date().toISOString(),
       };
     }
+    const cleanupEvidence = state.terminal_process_cleanup ?? {
+      supported: false,
+      success: false,
+      error_code: "CLEANUP_NOT_RUN",
+      tracked_residue: null,
+      after: null,
+    };
+    const finalizerAssessment = assessDoubaoWebFinalization({
+      state,
+      observation: {
+        ui: pageObservation.snapshot,
+        binding: bindingEvidence,
+        classification,
+        stable_completion_observations: stableCompletionCount,
+        terminal_process_cleanup: cleanupEvidence,
+      },
+      nativeEvidence: nativeEvidence
+        ? JSON.parse(await readFile(join(outputDir, nativeEvidence.file), "utf8"))
+        : null,
+      cleanup: cleanupEvidence,
+      candidate: null,
+    });
     state.session.binding_evidence.push(bindingEvidence);
     await atomicWriteAttemptState(stateFile, state);
 
@@ -1225,6 +1248,7 @@ async function resumeDevelopmentRun(options) {
         } : null,
         native_evidence: nativeEvidence,
       },
+      finalizer: finalizerAssessment,
       terminal: {
         status: "unverified",
         trusted_native_terminal: false,
