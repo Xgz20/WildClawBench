@@ -14,21 +14,21 @@ QwenWork×Windows 主流程功能准入基线 revision 为 `24771ce5f86f9bbc9336
 
 AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 的 execution→score→submission→return，状态为 **主流程生产可用**：AstronStudio 3.0.0-alpha.19、Codex Desktop 26.908.70816、GLM-5.2 / High / full-access，执行回执 `integrity.valid=true`，评分 81 分，候选双副本哈希无漂移，三阶段状态均为 `COMPLETED`。该结论允许先进入受控正式评测，但首个正式批次必须先跑 3–5 个 L1 canary 再放大；当前 revision 的三题串行、五题默认三槽、三路评分动态补位、管理员 import/report 和 V12–V17 恢复边界尚未重新绑定，因此不能标记为“并发生产可用”或“无人值守高可用”。历史 macOS 本地重打包与 Windows `232007` 正式包的 Skill content SHA 未能重现一致，只能作为各自独立包身份。当前源码候选已改用统一确定性构建器，但跨平台问题只有在提交后由 macOS/Windows 对同一 revision 生成并逐字节对账后才能关闭。QwenWork 和其余 macOS 组合不在当前高可用声明范围。
 
-当前对外分发包已更新为 `web-e2e-20260917-153405-custom40` 和 `web-e2e-20260917-153405-opensource120`，source revision 均为 `b8296d8f4ec7a2bf81b814e4460453c0bf5e4068`。分发包已包含资源指标工作空间；上述各 Harness 准入结论仍按实际真机验收身份解读，不因重新打包自动升级。
+当前对外分发候选已更新为 `web-e2e-20260919-125641-custom40` 和 `web-e2e-20260919-125641-opensource120`，source revision 均为 `dba9700ee33db4fd9c7f404bc27958e0efbef246`。分发包已包含资源指标工作空间和统一构建的五个阶段 Skill；上述各 Harness 准入结论仍按实际真机验收身份解读，不因重新打包自动升级。
 
-2026-09-19 的当前源码候选把 Web 五个阶段 Skill 接入 Web/General 共用的确定性构建器，并将 prepare/score/report/orchestrate/execute/run 版本分别提升到 `4.4.0/4.5.4/1.1.1/0.3.1/1.13.1/1.4.1`。该候选尚未基于提交后的 revision 重新生成正式 40/120 包，也未完成双平台字节对账或新版本真机 smoke，因此不替换上面的正式分发身份和既有准入结论。
+2026-09-19 的当前发布候选已把 Web 五个阶段 Skill 接入 Web/General 共用的确定性构建器，并将 prepare/score/report/orchestrate/execute/run 版本分别提升到 `4.4.0/4.5.4/1.1.1/0.3.1/1.13.1/1.4.1`。基于提交 `dba9700ee33db4fd9c7f404bc27958e0efbef246` 已重新生成正式 40/120 包并完成 macOS 本机双批次验包；双平台字节对账和新版本真机 smoke 尚未完成，因此不自动继承旧版本的功能准入结论。
 
 ### 当前实施进度
 
 | 阶段 | 状态 | 完成条件 | 证据 |
 | --- | --- | --- | --- |
 | P0 修复跨平台发布门禁 | `PASSED` | macOS 三 Harness 前置准备、Windows 精确进程身份、QwenWork 重启入口、测试入口和路径兼容测试全部通过 | 原发布门禁测试均通过；升级后项目对话框兼容修改的 Codex Desktop Driver 为 52/52、准备工作空间 31/31 |
-| P1 固化发布 revision | `PASSED` | 只提交相关改动，记录完整 commit SHA，工作树中无遗漏的相关修改 | 当前正式分发包 `b8296d8f4ec7a2bf81b814e4460453c0bf5e4068`；功能准入基线分别为 AstronStudio `6988b525...`、WorkBuddy `ee70a67...`、QwenWork `24771ce...` |
-| P2 生成正式包 | `PASSED` | 自建 40 题、开源 120 题各生成一个新批次，两个批次均包含三 Harness、资源指标记录和五个版本化 Skill ZIP | `web-e2e-20260917-153405-custom40` / `opensource120`，source revision `b8296d8...`；每批 11 个 ZIP，共 22/22 SHA 匹配；6 个 execution ZIP 分别包含 40/120 份 `execution_record.json`，execution/scoring 公私边界审计通过 |
-| P3 macOS 受影响项回归 | `IN_PROGRESS` | 依照第 4 节完成并登记证据 | AstronStudio 当前 revision 的单 L1 execution→score→submission→return 已通过，达到“主流程生产可用”；并发重绑定、管理员 import/report 和 V12–V17 尚未完成 |
-| P4 Windows 真机回归 | `IN_PROGRESS` | 每个目标 Harness 依照第 4 节完成并登记证据 | AstronStudio×Windows、WorkBuddy×Windows V00–V17 已全部通过；QwenWork×Windows 当前身份的 V00/V02/V03/V06/V08/V09/V11 已通过，达到“主流程生产可用”，更高层级仍待按需迭代 |
+| P1 固化发布 revision | `PASSED` | 只提交相关改动，记录完整 commit SHA，工作树中无遗漏的相关修改 | 当前正式分发包 `dba9700ee33db4fd9c7f404bc27958e0efbef246`；功能准入基线分别为 AstronStudio `6988b525...`、WorkBuddy `ee70a67...`、QwenWork `24771ce...` |
+| P2 生成正式包 | `PASSED` | 自建 40 题、开源 120 题各生成一个新批次，两个批次均包含三 Harness、资源指标记录和五个版本化 Skill ZIP | `web-e2e-20260919-125641-custom40` / `opensource120`，source revision `dba9700...`；每批 11 个 ZIP，共 22/22 SHA 匹配；五个 Skill 的运行/构建/ZIP 身份和 Skill set SHA 跨批次一致；6 个 execution ZIP 分别包含 40/120 份 `execution_record.json`，execution/scoring 公私边界审计通过 |
+| P3 macOS 受影响项回归 | `IN_PROGRESS` | 依照第 4 节完成并登记证据 | 旧版本 AstronStudio 单 L1 execution→score→submission→return 已通过；`dba9700...` 新包尚未完成最小真机 smoke，旧并发、管理员 import/report 和恢复证据不自动重绑 |
+| P4 Windows 真机回归 | `IN_PROGRESS` | 每个目标 Harness 依照第 4 节完成并登记证据 | AstronStudio×Windows、WorkBuddy×Windows 旧身份 V00–V17 已全部通过，QwenWork×Windows 旧身份覆盖主流程；`dba9700...` 仍待 Windows 同 revision 打包对账与受影响项最小 smoke |
 | P5 发布结论 | `PASSED` | 平台准入层级、验证状态和待验收项只在本内部清单维护；对外指导手册只提供可执行的使用说明 | 指导手册已移除平台验证状态、revision、验收矩阵和待验证说明；各 Harness 的内部准入结论继续以本清单为准 |
-| P10 统一 Skill 构建候选 | `IN_PROGRESS` | Web prepare 使用统一确定性构建器；40/120 批次 Skill set 身份一致；macOS/Windows 同 revision 归档逐字节一致；完成安装检查和最小真机 smoke | Web Python 115/115、General Python 136/136、旧 `eval_e2e` 60/60、General/共享 Node 68/68、Web 四组 Driver Node 242/242、13 个 Skill quick validate、13/13 Skill build/verify 和 layout 均通过；仓库内详细/开源 Profile 双批次的五个 Skill ZIP、build manifest 与 Skill set SHA 完全一致。待提交后生成正式 40/120 包并进行 Windows/macOS 对账，不能提前标为 `PASSED` |
+| P10 统一 Skill 构建候选 | `IN_PROGRESS` | Web prepare 使用统一确定性构建器；40/120 批次 Skill set 身份一致；macOS/Windows 同 revision 归档逐字节一致；完成安装检查和最小真机 smoke | Web Python 116/116、General Python 136/136、旧 `eval_e2e` 60/60、General/共享 Node 68/68、Web 四组 Driver Node 242/242、13 个 Skill quick validate、13/13 Skill build/verify 和 layout 均通过；`dba9700...` 正式 40/120 包的五个 Skill ZIP、build manifest 与 Skill set SHA 完全一致，自建包安装后用开源清单检查为 `all_current=true`、`install_required=[]`、`conflicts=[]`。待 Windows 同 revision 对账和新版本最小真机 smoke，不能提前标为 `PASSED` |
 
 ### 1.1 Windows 资源指标验收增补（实现三 Harness 结果可汇总）
 
@@ -226,32 +226,33 @@ collector `1.1.3` 在正式终态原生写入 input `1531951`、output `23861`�
 
 ### 3.1 当前正式分发包
 
-下表是当前用于新评测的分发身份。真机执行必须使用本节登记的批次、Skill content SHA 和 ZIP SHA；`20260917-153405` 之前的批次仅作为历史证据或故障对照。
+下表是当前用于新评测的分发身份。真机执行必须使用本节登记的批次、Skill 运行 content SHA、完整构建 content SHA 和 ZIP SHA；`20260919-125641` 之前的批次仅作为历史证据或故障对照。
 
 | 项目 | 值 |
 | --- | --- |
-| 正式分发包实现/source revision | `b8296d8f4ec7a2bf81b814e4460453c0bf5e4068` |
-| 自建评测批次 | `web-e2e-20260917-153405-custom40`，40 题，`web-e2e-detailed-v1` |
-| 开源评测批次 | `web-e2e-20260917-153405-opensource120`，120 题，`artifactsbench-web-v1` |
+| 正式分发包实现/source revision | `dba9700ee33db4fd9c7f404bc27958e0efbef246` |
+| 自建评测批次 | `web-e2e-20260919-125641-custom40`，40 题，`web-e2e-detailed-v1` |
+| 开源评测批次 | `web-e2e-20260919-125641-opensource120`，120 题，`artifactsbench-web-v1` |
 | 被评 Harness | `astronstudio`、`workbuddy`、`qwenwork` |
-| `execute-web-e2e` | `1.12.6` |
-| AstronStudio / WorkBuddy / QwenWork Driver | `1.10.21` / `1.8.27` / `1.10.17` |
-| `orchestrate-web-e2e` | `0.2.6` |
-| `score-web-e2e` | `4.5.2` |
-| `run-web-e2e` | `1.3.9` |
-| `report-web-e2e` | `1.1.0` |
+| `execute-web-e2e` | `1.13.1` |
+| AstronStudio / WorkBuddy / QwenWork Driver | `1.11.0` / `1.9.0` / `1.11.0` |
+| `orchestrate-web-e2e` | `0.3.1` |
+| `score-web-e2e` | `4.5.4` |
+| `run-web-e2e` | `1.4.1` |
+| `report-web-e2e` | `1.1.1` |
+| Skill set SHA-256 | `09056028fdb79422d0eec55211e0d279f2e7fdf5a6d911eaa61a22ef49e30e44` |
 | 执行记录 | `execution_record_included=true`；每个 execution ZIP 包含全部用例的 `execution_record.json` |
 | 报告配置 | `configuration_status=requires_model_mapping`；生成正式报告前必须填写三个 Harness 的 `model_id`，`model_display_name` 和 `reasoning_effort` 按实际评测配置填写 |
 
-| Skill | 版本 | content SHA-256 | ZIP SHA-256 |
-| --- | --- | --- | --- |
-| `score-web-e2e` | `4.5.2` | `6fdc8e9a9a8d014b4dab2a4c053d586a08e1f962f03a5071817e251aa2defe0a` | `34afc5c963f21ca9815d02d0b89a8d0bb80cec9ec263e53c6fb50eb08f84cbf0` |
-| `report-web-e2e` | `1.1.0` | `051c7e6f89296d154a186e7776b53858b0fa11a1ed62f2578ca022a939460442` | `18ef1741d14bb650556ff97811b718640d2fdb9e11daf5423e197d84a71db734` |
-| `orchestrate-web-e2e` | `0.2.6` | `350224caf3e92793b559fcce23748f4817f0d95e09cd647d28daa2b53a3f4d70` | `d1882a4b1d370a32a542a9954bc6ec133853af51ca7c627e85a3a111a057d244` |
-| `execute-web-e2e` | `1.12.6` | `a75fb9baaf3e082b0892f242c77d4140ec1de65aea085cb099d954331e46a07e` | `f308c9f339507309b6cf21fbc9164c6470086e180c83667eb9cbe9a6d3ec2845` |
-| `run-web-e2e` | `1.3.9` | `8461fa7a2619ca337e9a123edd7b69b2db79f8e9c5b7e8cd06071e9479d4886f` | `1e3b407e89e8d1d295a72d8d6e104f04bc0060ccc50f8d657f11822f34375e68` |
+| Skill | 版本 | 运行 content SHA-256 | 完整构建 content SHA-256 | ZIP SHA-256 |
+| --- | --- | --- | --- | --- |
+| `score-web-e2e` | `4.5.4` | `55da82a2796414e2d3a13e6d16a4c896561c46b13243c4a2847491cf358b527a` | `9b9c84c9add0c72c29ed132d34bb155dbeeb9f0cc96dbc059f994f6139344ace` | `42b6b7e53905666eebf872e2d48a382f0de79a2cefd6afa799f3dc7c0670bede` |
+| `report-web-e2e` | `1.1.1` | `8024a6ae713f9c81e323d98e0e8a82d2c48c70d0ddd4130f5e49e1ee1220cff0` | `4e1bc59220c0b9d4531a3100953dc300af91f6cb011fb744a25b4d3aad330a00` | `68d146305c2866ddce89333aefaca32c7f539e757f535f519197d3fe382e2e5e` |
+| `orchestrate-web-e2e` | `0.3.1` | `a30bb1fb54600dbb4f590aec061301033cde8cfd32d2b23cd6d13dbea9643b2f` | `ed0d2c9910ccef6654317fd07a15282545fbe6747ced66113d3c0f3ae7da9f0f` | `8003633bed90c8e7c0a6301040ede9ad8d822bb310c3fbf1b5e7770f378bcc39` |
+| `execute-web-e2e` | `1.13.1` | `8f8c7f672b6473b0cad57a343f19eaa529c0435edbf221b2ec84b9aed48061d0` | `644499994c85b5c393e57960c924e35083efc91636c2b487b56788d5e66c01b7` | `0a3c786983a1ded876b3b97b2d4eafb5bffa8f9d3733815563cbd123a13f725f` |
+| `run-web-e2e` | `1.4.1` | `afa23a3282ff3da9b55b43aa5b302e5364d123980dd713484316890267644803` | `2ad70919f4f41355b0361c506e1187587de1a798ba7cf7d088c0debc0577178c` | `e4edfada04dcd7940e308f865cfc4a96e6eb4268ffe9ae2afb29bbc2639a49f4` |
 
-正式包位于 `report-workspace/web-e2e-automation-packages/`。两个批次均包含三个 Harness 的 execution/scoring ZIP 和五个 Skill ZIP，每批 11 个 ZIP。本轮只读审计逐项重算 22 个 ZIP 的 SHA-256，结果全部与 `batch_manifest.json` 一致；6 个 execution ZIP 分别含有 40/120 份 `execution_record.json`，execution/scoring 公私边界审计通过。
+正式包位于 `report-workspace/web-e2e-automation-packages/`。两个批次均包含三个 Harness 的 execution/scoring ZIP 和五个 Skill ZIP，每批 11 个 ZIP。本轮只读审计逐项重算 22 个 ZIP 的 SHA-256，结果全部与 `batch_manifest.json` 一致；五个 Skill ZIP 和 `skills-build-manifest.json` 跨批次逐字节一致，运行/构建/ZIP 哈希逐项一致。将自建批次 Skill 解压到临时安装根后，使用开源批次清单检查得到 `all_current=true`、`installation_allowed=true`、`install_required=[]`、`conflicts=[]`。6 个 execution ZIP 分别含有 40/120 份 `execution_record.json`，execution/scoring 公私边界审计通过；两份报告配置保持 `requires_model_mapping`，符合执行前预期。
 
 以下 3.1.1–3.1.4 保留各 Harness 功能准入的真机基线和重绑关系。这些记录用于解释当前准入等级，不是应继续分发的旧 Skill 包。
 
