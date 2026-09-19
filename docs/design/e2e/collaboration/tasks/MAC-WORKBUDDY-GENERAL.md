@@ -6,7 +6,7 @@
 | 工作状态 / 代码交付 | ACTIVE / LOCAL_ONLY；P1/P2 离线入口与真实输入修复已提交；SLOT05 发送前清空门禁失败关闭，未创建新 attempt，用户草稿保持完整 |
 | 计划分支 / worktree | `feat/workbuddy-macos-general-e2e` / `<主项目>/.agents/workbuddy-macos-general-e2e`；绑定已核验 |
 | 创建 base / 已采用公共基线 | `03c38f280a64ad9bc9308c768f0f5795050355cc` / COMMON-002 推荐源码 `eb23784a7ed25b0f0364db0392783de277b22b96` |
-| 已读台账的 SYNC_SHA / 实际工作 HEAD | COMMON-004 已采用 `2061e68b6d9d98ae09772aab99c3337c3ab68555`；当前工作 HEAD `4be1e02c79cbbd15f7510d1d876f48e5429aeda3` |
+| 已读台账的 SYNC_SHA / 实际工作 HEAD | COMMON-004 覆盖数校正已采用 `ddba8d645da18af75d04fad4a7a47ec1aaa1c161`；当前工作 HEAD `73d75565b37fb88626f4239411bd0e7cf95b4687` |
 | 同步源 / 实现与集成 SHA | `github/feature/astroncode-eval`（COMMON-004 已核验）；P2 `e388dfa43c0f38263ebcf57bf022ba1eb2c3cfeb`；COMMON merge `4529352ca92bf213995fd00433c6d77af3f8fc32`；组件绑定 `b3ac3da374165d74a41a3198e13d05928d671552`；输入修复 `5bea7621e4c90222d3f2e0000ab1ca6093af6e0b`；COMMON-003/004 merge `0eddf84e34f2cd8f738f819eebdd963acda3ae77` / `4be1e02c79cbbd15f7510d1d876f48e5429aeda3`；未 push |
 | 最后更新 | 2026-09-19（Asia/Shanghai），完成 SLOT05 发行冻结、只读门禁和草稿清空失败安全收尾 |
 
@@ -50,7 +50,7 @@
 | COMMON-001 | VERIFIED | `0dd42824cb8eb510ab126fd74553f93312c9f201`（推荐源码 `ed366b30...963a`） | 无活动 WorkBuddy 进程后 merge；已按 CB-A 输出真实 conversation/request/cwd 映射，thread 为 null；公共 55/55、新增 Node 9/9 与语法检查通过 | P2 真机时段；CB-B 接口交接 |
 | COMMON-002 | VERIFIED | `4529352ca92bf213995fd00433c6d77af3f8fc32`（SYNC `46a23a...08af`，推荐源码 `eb23784...2b96`） | WorkBuddy 精确绑定已更新到 discovery/contracts 1.2.0；shared/layout/contracts/build/collection Python 46/46、WorkBuddy/finalizer/discovery Node 38/38 通过 | 实现专属 trace v2 collector 与 cleanup hook；继续 canary |
 | COMMON-003 | VERIFIED | `0eddf84e34f2cd8f738f819eebdd963acda3ae77`（SYNC `82e947b926a4525aac7ba2de08b76830ee9c739b`，推荐源码 `dc5ff64...13c3`） | 远端 SHA、推荐源码祖先关系核验；General Python 63/63、组合 Node 130/130、Web Python 61/61；WorkBuddy 采用 5bea762 离线修复，旧 SLOT03 reservation=1/click=0/send=0，草稿已恢复 | 新交接输入修复与受控 SLOT05 canary |
-| COMMON-004 | ADOPTED | `4be1e02c79cbbd15f7510d1d876f48e5429aeda3`（SYNC `2061e68b6d9d98ae09772aab99c3337c3ab68555`，推荐源码 `2023b4d...ca4`） | execute 0.8.1 与 WorkBuddy 输入修复已进入当前工作树；按要求先冻结 0.8.0 release 做 SLOT05 发送前门禁，因无法安全清空旧草稿停止，未创建新 attempt | 标记 SLOT05_RELEASED 后后续发行采用 0.8.1；不重试本轮清空 |
+| COMMON-004 | ADOPTED | `73d75565b37fb88626f4239411bd0e7cf95b4687`（SYNC `ddba8d645da18af75d04fad4a7a47ec1aaa1c161`，推荐源码 `2023b4d...ca4`） | execute 0.8.1 与 WorkBuddy 输入修复已进入当前工作树；按要求先冻结 0.8.0 release 做 SLOT05 发送前门禁，因无法安全清空旧草稿停止，未创建新 attempt；公共组合覆盖数校正已核验 | 后续发行采用 0.8.1；不重试本轮清空 |
 
 ## 本轮交付
 
