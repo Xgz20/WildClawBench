@@ -1,0 +1,38 @@
+[
+  {
+    "conversation_id": "conversation-fixture-001",
+    "sub_chat_id": "sub-chat-fixture-001",
+    "session_id": "session-fixture-001",
+    "local_project_id": "project-fixture-001",
+    "cwd": "/private/tmp/qwenwork-general-fixture/workspace",
+    "native_status": "completed",
+    "stream_id": null,
+    "model_level": "standard",
+    "updated_at_ms": 1789614006000,
+    "created_at_ms": 1789614000000
+  },
+  {
+    "conversation_id": "conversation-fixture-002",
+    "sub_chat_id": "sub-chat-fixture-002",
+    "session_id": "session-fixture-002",
+    "local_project_id": "project-fixture-002",
+    "cwd": "/private/tmp/qwenwork-other-fixture/workspace",
+    "native_status": "cancelled",
+    "stream_id": null,
+    "model_level": "standard",
+    "updated_at_ms": 1789614010000,
+    "created_at_ms": 1789614000000
+  },
+  {
+    "conversation_id": "conversation-fixture-003",
+    "sub_chat_id": "sub-chat-fixture-003",
+    "session_id": "session-fixture-003",
+    "local_project_id": "project-fixture-003",
+    "cwd": "/private/tmp/qwenwork-running-fixture/workspace",
+    "native_status": "running",
+    "stream_id": "stream-fixture-003",
+    "model_level": "standard",
+    "updated_at_ms": 1789614020000,
+    "created_at_ms": 1789614000000
+  }
+]
