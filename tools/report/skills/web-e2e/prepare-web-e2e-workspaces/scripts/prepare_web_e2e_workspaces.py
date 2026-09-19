@@ -10,12 +10,14 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+import importlib.util
 import json
 import re
 import shutil
 import stat
 import subprocess
 import sys
+import tempfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
@@ -31,7 +33,17 @@ REPORT_CONFIG_SCHEMA = "wildclawbench.web-e2e-report-config/v1"
 SKILLS_MANIFEST_SCHEMA = "wildclawbench.web-e2e-skills-manifest/v1"
 SKILL_METADATA_SCHEMA = "wildclawbench.web-e2e-skill/v1"
 SCORE_SKILL_METADATA_SCHEMA = "wildclawbench.web-e2e-score-skill/v1"
-SKILL_VERSION = "4.3.1"
+SKILL_VERSION = "4.4.0"
+SKILL_SET_HASH_ALGORITHM = "wildclawbench.e2e-skill-set-sha256/v1"
+SKILL_INSTALL_CONTENT_HASH_ALGORITHM = "wildclawbench.skill-install-content-sha256/v1"
+SKILL_IDENTITY_FIELDS = ("name", "version", "content_sha256")
+PACKAGED_SKILL_NAMES = (
+    "score-web-e2e",
+    "report-web-e2e",
+    "orchestrate-web-e2e",
+    "execute-web-e2e",
+    "run-web-e2e",
+)
 DETAILED_PROFILE = "web-e2e-detailed-v1"
 ARTIFACTSBENCH_PROFILE = "artifactsbench-web-v1"
 SUPPORTED_METRIC_PROFILES = {DETAILED_PROFILE, ARTIFACTSBENCH_PROFILE}
@@ -102,6 +114,65 @@ def sha256_file(path: Path) -> str:
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
+    return digest.hexdigest()
+
+
+def normalized_skill_file_bytes(relative: str, data: bytes) -> bytes:
+    """Remove build provenance from the install identity, not from the package."""
+    if relative != "bundled-components.json":
+        return data
+    try:
+        bundled = json.loads(data.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("bundled-components.json 不是有效 UTF-8 JSON") from exc
+    if not isinstance(bundled, dict):
+        raise ValueError("bundled-components.json 顶层不是对象")
+    bundled.pop("source_revision", None)
+    components = bundled.get("components")
+    if not isinstance(components, list):
+        raise ValueError("bundled-components.json 缺少 components")
+    for component in components:
+        if not isinstance(component, dict):
+            raise ValueError("bundled-components.json 包含非法组件")
+        component.pop("source_revision", None)
+    return json.dumps(
+        bundled,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+
+def skill_install_content_sha256_from_archive(archive_path: Path, skill_name: str) -> str:
+    """Hash runtime content while ignoring revision-only provenance fields."""
+    digest = hashlib.sha256()
+    seen: set[str] = set()
+    prefix = f"{skill_name}/"
+    with zipfile.ZipFile(archive_path) as archive:
+        infos = sorted(archive.infolist(), key=lambda item: item.filename)
+        for info in infos:
+            if info.is_dir():
+                continue
+            raw = info.filename
+            relative_path = PurePosixPath(raw)
+            if (
+                "\\" in raw
+                or "\0" in raw
+                or relative_path.is_absolute()
+                or ".." in relative_path.parts
+                or not raw.startswith(prefix)
+            ):
+                raise ValueError(f"Skill ZIP 路径非法: {archive_path}: {raw}")
+            relative = raw[len(prefix):]
+            if not relative or relative in seen:
+                raise ValueError(f"Skill ZIP 路径为空或重复: {archive_path}: {raw}")
+            seen.add(relative)
+            content = normalized_skill_file_bytes(relative, archive.read(info))
+            digest.update(relative.encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(hashlib.sha256(content).digest())
+    if not seen:
+        raise ValueError(f"Skill ZIP 为空: {archive_path}")
     return digest.hexdigest()
 
 
@@ -578,70 +649,101 @@ def zip_selected(
                 write_zip_file(archive, path, archived)
 
 
-def skill_source_files(source: Path) -> list[Path]:
-    return [
-        path for path in sorted(item for item in source.rglob("*") if item.is_file())
-        if "__pycache__" not in path.parts
-        and "node_modules" not in path.parts
-        and path.suffix != ".pyc"
-        and path.name != ".DS_Store"
-    ]
+def load_skill_builder(repo_root: Path):
+    builder_path = repo_root / "tools/e2e-build/build_skill_packages.py"
+    if not builder_path.is_file():
+        raise FileNotFoundError(f"缺少统一 E2E Skill 构建器: {builder_path}")
+    spec = importlib.util.spec_from_file_location("wildclawbench_e2e_skill_builder", builder_path)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"无法加载统一 E2E Skill 构建器: {builder_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
-def sha256_skill_content(source: Path) -> str:
+def skill_set_sha256(rows: list[dict]) -> str:
+    """Hash the ordered, batch-independent identities of a Skill set."""
     digest = hashlib.sha256()
-    for path in skill_source_files(source):
-        relative = path.relative_to(source).as_posix()
-        digest.update(relative.encode("utf-8"))
-        digest.update(b"\0")
-        digest.update(bytes.fromhex(sha256_file(path)))
+    seen: set[str] = set()
+    for row in rows:
+        name = str(row.get("name") or "")
+        if not name or name in seen:
+            raise ValueError(f"Skill 集合包含空名称或重复名称: {name!r}")
+        seen.add(name)
+        for field in SKILL_IDENTITY_FIELDS:
+            value = str(row.get(field) or "")
+            if not value:
+                raise ValueError(f"Skill 身份缺少 {field}: {name}")
+            digest.update(field.encode("utf-8"))
+            digest.update(b"=")
+            digest.update(value.encode("utf-8"))
+            digest.update(b"\0")
     return digest.hexdigest()
 
 
-def zip_skill(source: Path, destination: Path) -> int:
-    """Package one independently installable Skill, once per batch."""
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    file_count = 0
-    with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for path in skill_source_files(source):
-            archived = PurePosixPath(source.name, path.relative_to(source).as_posix()).as_posix()
-            write_zip_file(archive, path, archived)
-            file_count += 1
-    return file_count
+def build_packaged_skills(
+    repo_root: Path,
+    package_dir: Path,
+    revision: str,
+    metadata_by_name: dict[str, dict],
+) -> tuple[dict, list[dict], list[dict]]:
+    """Build and verify the five deterministic, independently installable Skills."""
+    builder = load_skill_builder(repo_root)
+    build_manifest = builder.build_skill_packages(
+        repo_root,
+        package_dir,
+        skill_names=PACKAGED_SKILL_NAMES,
+        source_revision=revision,
+    )
+    builder.verify_build_manifest(package_dir / "skills-build-manifest.json", package_dir)
+    build_rows = build_manifest.get("skills")
+    if not isinstance(build_rows, list) or [row.get("name") for row in build_rows] != list(PACKAGED_SKILL_NAMES):
+        raise ValueError("统一构建器返回的 Web E2E Skill 范围或顺序不符合预期")
 
-
-def package_skill(
-    batch_root: Path,
-    source: Path,
-    metadata: dict,
-) -> tuple[Path, dict, dict]:
-    """Package one independent Skill and return package/manifest rows."""
-    if not (source / "SKILL.md").is_file():
-        raise FileNotFoundError(f"缺少 Skill: {source}")
-    version = metadata["version"]
-    destination = batch_root / "packages" / f"{source.name}-skill-v{version}.zip"
-    file_count = zip_skill(source, destination)
-    relative = destination.relative_to(batch_root).as_posix()
-    digest = sha256_file(destination)
-    content_digest = sha256_skill_content(source)
-    return destination, {
-        "harness": None,
-        "package_type": f"{source.name.removesuffix('-web-e2e')}_skill",
-        "skill_name": source.name,
-        "skill_version": version,
-        "skill_content_sha256": content_digest,
-        "path": relative,
-        "sha256": digest,
-    }, {
-        "name": source.name,
-        "version": version,
-        "stages": metadata["stages"],
-        "supported_metric_profiles": metadata["supported_metric_profiles"],
-        "archive": relative,
-        "sha256": digest,
-        "content_sha256": content_digest,
-        "file_count": file_count,
-    }
+    package_rows: list[dict] = []
+    skill_rows: list[dict] = []
+    for build_row in build_rows:
+        name = build_row["name"]
+        metadata = metadata_by_name[name]
+        if build_row["version"] != metadata["version"]:
+            raise ValueError(f"统一构建结果与 Skill 元数据版本不一致: {name}")
+        relative = f"packages/{build_row['archive']}"
+        archive_path = package_dir / build_row["archive"]
+        install_content_sha256 = skill_install_content_sha256_from_archive(
+            archive_path,
+            name,
+        )
+        package_rows.append({
+            "harness": None,
+            "package_type": f"{name.removesuffix('-web-e2e')}_skill",
+            "skill_name": name,
+            "skill_version": build_row["version"],
+            "skill_content_sha256": install_content_sha256,
+            "path": relative,
+            "sha256": build_row["zip_sha256"],
+        })
+        skill_rows.append({
+            "name": name,
+            "version": build_row["version"],
+            "stages": metadata["stages"],
+            "supported_metric_profiles": metadata["supported_metric_profiles"],
+            "archive": relative,
+            # Preserve sha256 for existing v1 consumers; zip_sha256 makes its transport-only role explicit.
+            "sha256": build_row["zip_sha256"],
+            "zip_hash_algorithm": build_row["zip_hash_algorithm"],
+            "zip_sha256": build_row["zip_sha256"],
+            "content_hash_algorithm": SKILL_INSTALL_CONTENT_HASH_ALGORITHM,
+            "content_sha256": install_content_sha256,
+            "build_content_hash_algorithm": build_row["content_hash_algorithm"],
+            "build_content_sha256": build_row["content_sha256"],
+            "file_count": build_row["file_count"],
+            "source_revision": build_row["source_revision"],
+            "components": build_row["components"],
+            "development_repository_references": build_row[
+                "development_repository_references"
+            ],
+        })
+    return build_manifest, package_rows, skill_rows
 
 
 def load_score_skill_metadata(scoring_skill: Path) -> dict:
@@ -698,19 +800,35 @@ def package_score_skill(args: argparse.Namespace) -> dict:
     if not SLUG_RE.fullmatch(batch_id):
         raise ValueError(f"批次 ID 不是安全 slug: {batch_id}")
     scoring_skill = repo_root / "tools/report/skills/web-e2e/score-web-e2e"
-    if not (scoring_skill / "SKILL.md").is_file():
-        raise FileNotFoundError(f"缺少评分 Skill: {scoring_skill}")
     metadata = load_packaged_skill_metadata(scoring_skill)
     package_path = output_root / f"score-web-e2e-skill-v{metadata['version']}.zip"
     if package_path.exists():
         raise FileExistsError(f"评分 Skill 包已存在，拒绝覆盖: {package_path}")
-    file_count = zip_skill(scoring_skill, package_path)
+    output_root.mkdir(parents=True, exist_ok=True)
+    builder = load_skill_builder(repo_root)
+    revision = git_revision(repo_root)
+    with tempfile.TemporaryDirectory(prefix="web-e2e-score-skill-") as temp_dir:
+        temp_root = Path(temp_dir)
+        manifest = builder.build_skill_packages(
+            repo_root,
+            temp_root,
+            skill_names=("score-web-e2e",),
+            source_revision=revision,
+        )
+        builder.verify_build_manifest(temp_root / "skills-build-manifest.json", temp_root)
+        row = manifest["skills"][0]
+        shutil.copy2(temp_root / row["archive"], package_path)
+        if sha256_file(package_path) != row["zip_sha256"]:
+            raise ValueError("评分 Skill ZIP 复制后 SHA-256 不一致")
     return {
         "path": package_path,
-        "file_count": file_count,
-        "sha256": sha256_file(package_path),
-        "content_sha256": sha256_skill_content(scoring_skill),
-        "version": metadata["version"],
+        "file_count": row["file_count"],
+        "sha256": row["zip_sha256"],
+        "content_sha256": skill_install_content_sha256_from_archive(
+            package_path,
+            row["name"],
+        ),
+        "version": row["version"],
     }
 
 
@@ -766,11 +884,7 @@ def prepare(args: argparse.Namespace) -> Path:
             f"评分 Skill {score_skill_metadata['version']} 不支持 metric_profile: {metric_profile}"
         )
     web_skills_root = repo_root / "tools/report/skills/web-e2e"
-    report_skill = web_skills_root / "report-web-e2e"
-    orchestrate_skill = web_skills_root / "orchestrate-web-e2e"
-    execute_skill = web_skills_root / "execute-web-e2e"
-    run_skill = web_skills_root / "run-web-e2e"
-    packaged_skills = [scoring_skill, report_skill, orchestrate_skill, execute_skill, run_skill]
+    packaged_skills = [web_skills_root / name for name in PACKAGED_SKILL_NAMES]
     packaged_skill_metadata = {
         skill.name: load_packaged_skill_metadata(skill) for skill in packaged_skills
     }
@@ -779,37 +893,29 @@ def prepare(args: argparse.Namespace) -> Path:
     include_execution_record = bool(getattr(args, "include_execution_record", False))
     package_rows = []
     batch_root.mkdir(parents=True)
-    skill_manifest_rows = []
-    score_skill_package, package_row, skill_row = package_skill(
-        batch_root, scoring_skill, packaged_skill_metadata[scoring_skill.name],
+    package_dir = batch_root / "packages"
+    _build_manifest, skill_package_rows, skill_manifest_rows = build_packaged_skills(
+        repo_root,
+        package_dir,
+        revision,
+        packaged_skill_metadata,
     )
-    package_rows.append(package_row)
-    skill_manifest_rows.append(skill_row)
-    report_skill_package, package_row, skill_row = package_skill(
-        batch_root, report_skill, packaged_skill_metadata[report_skill.name],
-    )
-    package_rows.append(package_row)
-    skill_manifest_rows.append(skill_row)
-    orchestrate_skill_package, package_row, skill_row = package_skill(
-        batch_root, orchestrate_skill, packaged_skill_metadata[orchestrate_skill.name],
-    )
-    package_rows.append(package_row)
-    skill_manifest_rows.append(skill_row)
-    execute_skill_package, package_row, skill_row = package_skill(
-        batch_root, execute_skill, packaged_skill_metadata[execute_skill.name],
-    )
-    package_rows.append(package_row)
-    skill_manifest_rows.append(skill_row)
-    run_skill_package, package_row, skill_row = package_skill(
-        batch_root, run_skill, packaged_skill_metadata[run_skill.name],
-    )
-    package_rows.append(package_row)
-    skill_manifest_rows.append(skill_row)
-    skills_manifest_path = batch_root / "packages" / "skills-manifest.json"
+    package_rows.extend(skill_package_rows)
+    skill_packages = {
+        row["name"]: batch_root / row["archive"] for row in skill_manifest_rows
+    }
+    score_skill_package = skill_packages["score-web-e2e"]
+    report_skill_package = skill_packages["report-web-e2e"]
+    orchestrate_skill_package = skill_packages["orchestrate-web-e2e"]
+    execute_skill_package = skill_packages["execute-web-e2e"]
+    run_skill_package = skill_packages["run-web-e2e"]
+    skills_manifest_path = package_dir / "skills-manifest.json"
+    skill_set_digest = skill_set_sha256(skill_manifest_rows)
     required_skills = [
         {
             key: row[key] for key in (
-                "name", "version", "stages", "supported_metric_profiles", "content_sha256",
+                "name", "version", "stages", "supported_metric_profiles",
+                "content_hash_algorithm", "content_sha256",
             )
         }
         for row in skill_manifest_rows
@@ -819,6 +925,13 @@ def prepare(args: argparse.Namespace) -> Path:
         "batch_id": args.batch_id,
         "source_revision": revision,
         "created_at": created_at,
+        "identity_policy": {
+            "matching_fields": list(SKILL_IDENTITY_FIELDS),
+            "archive_sha256_role": "transport_integrity_only",
+            "same_version_different_content": "release_conflict",
+        },
+        "skill_set_hash_algorithm": SKILL_SET_HASH_ALGORITHM,
+        "skill_set_sha256": skill_set_digest,
         "skills": skill_manifest_rows,
     })
     report_config_path = batch_root / f"{args.batch_id}__report-config.yaml"
@@ -955,6 +1068,9 @@ def prepare(args: argparse.Namespace) -> Path:
         "execute_skill_archive": execute_skill_package.relative_to(batch_root).as_posix(),
         "run_skill_archive": run_skill_package.relative_to(batch_root).as_posix(),
         "skills_manifest": skills_manifest_path.relative_to(batch_root).as_posix(),
+        "skill_build_manifest": "packages/skills-build-manifest.json",
+        "skill_set_hash_algorithm": SKILL_SET_HASH_ALGORITHM,
+        "skill_set_sha256": skill_set_digest,
         "report_config": report_config_path.relative_to(batch_root).as_posix(),
         "report_config_ready": report_config["configuration_status"] == "ready",
         "execution_record_included": include_execution_record,
@@ -1017,8 +1133,11 @@ def main() -> None:
         print(json.dumps({
             "status": "PASS",
             "path": str(result["path"]),
+            "version": result["version"],
             "file_count": result["file_count"],
             "sha256": result["sha256"],
+            "content_sha256": result["content_sha256"],
+            "zip_sha256": result["sha256"],
         }, ensure_ascii=False))
         return
     print(f"PASS: {batch_root}")

@@ -27,9 +27,9 @@
 | `score-web-e2e` | Codex Desktop 单题评分任务 | 使用桌面内置 Browser 对一个用例评分并生成标准评分 JSON。通常由 `orchestrate-web-e2e` 自动调用，也支持人工单题调用。 |
 | `report-web-e2e` | 管理员 | 汇总一个或多个 Harness 回传包，生成 JSON、Markdown 和 Excel 报告。 |
 
-批次向执行和评分机器分发的 5 个 Skill 是 `run-web-e2e`、`execute-web-e2e`、`orchestrate-web-e2e`、`score-web-e2e` 和 `report-web-e2e`。Skill 包使用 `<skill-name>-skill-v<version>.zip` 命名，不带批次号；同一版本同时适用于自建与开源评测集。管理员准备机器还需要仓库内的 `prepare-web-e2e-workspaces`。
+批次向执行和评分机器分发的 5 个 Skill 是 `run-web-e2e`、`execute-web-e2e`、`orchestrate-web-e2e`、`score-web-e2e` 和 `report-web-e2e`。Skill 包使用 `<skill-name>-skill-v<version>.zip` 命名，不带批次号；同一版本同时适用于自建与开源评测集。每个 ZIP 已包含该 Skill 所需的共享组件，执行或评分机器不需要另装公共 Skill。管理员准备机器还需要仓库内的 `prepare-web-e2e-workspaces`。
 
-管理员可以在 macOS 或 Windows 上生成评测包。执行人员应安装同一批次随包提供的 Skill ZIP，并以 `batch_manifest.json`、`skills-manifest.json` 中的版本和 SHA-256 为准。不要混用不同批次的题目包、评分包或 Skill 包。
+管理员可以在 macOS 或 Windows 上生成评测包。题目包和评分包必须来自同一批次；Skill 安装则以 `packages/skills-manifest.json` 为唯一清单，按名称、版本和运行内容 SHA-256 判断。该内容哈希不包含 Git revision 等仅用于来源审计的字段；三者完全一致的已安装 Skill 可以跨批次、自建 40 题和开源 120 题直接复用，不需要重复安装。ZIP SHA-256 只用于确认收到的具体分发文件未损坏，因此不同 revision 的 ZIP SHA 可以不同而不强制重装。
 
 ## 使用方法
 
@@ -77,7 +77,7 @@ WorkBuddy、AstronStudio 和 QwenWork 的默认后台执行并发均为 3，最�
 
 #### 3. 安装 Skill
 
-可以通过 Codex 的 Skill 管理功能手动安装，也可以在 Codex 控制任务中通过 Prompt 自动安装。两种方式都应使用管理员随同本批次分发的 `packages/skills-manifest.json` 和版本化 Skill ZIP，不要从不同批次拼装。
+可以通过 Codex 的 Skill 管理功能手动安装，也可以在 Codex 控制任务中通过 Prompt 自动安装。两种方式都应以管理员提供的 `packages/skills-manifest.json` 为唯一安装清单；如果另一个批次的 Skill 集合名称、版本和内容 SHA-256 完全一致，可以直接复用已安装版本，不必再次导入 ZIP。
 
 手动安装并启用以下 5 个 Skill：
 
@@ -98,14 +98,14 @@ Skill 包目录：/absolute/path/<batch_id>/packages
 1. 读取 Skill 包目录中的 skills-manifest.json，以其中的 skills 列表为唯一安装清单；安装 run-web-e2e、execute-web-e2e、orchestrate-web-e2e、score-web-e2e 和 report-web-e2e。
 2. 安装前逐个校验 ZIP 的文件名、SHA-256、唯一顶层目录、解压内容的 content SHA-256，以及 skill-metadata.json 中的 name/version；ZIP 包含绝对路径、.. 或符号链接时停止。
 3. 安装到当前用户的 Codex 用户级 Skill 目录：macOS 使用 $HOME/.agents/skills，Windows 使用 %USERPROFILE%\.agents\skills。不要安装到仓库、评测批次、execution、score 或候选 workspace 中。
-4. 已安装版本和 content SHA-256 完全一致时跳过。需要升级时，先把旧目录备份到 Skill 根目录之外，再通过临时目录解压、校验并原子替换；任一步失败都恢复旧版本，不覆盖无关 Skill。
-5. 安装后使用 run-web-e2e/scripts/check_web_e2e_skills.py 对同一 skills-manifest.json 重新检查，必须 all_current=true；否则停止并报告，不开始评测。
+4. 已安装名称、版本和 content SHA-256 完全一致时跳过。缺失或版本不同才允许安装/升级：先把旧目录备份到 Skill 根目录之外，再通过临时目录解压、校验并原子替换；任一步失败都恢复旧版本，不覆盖无关 Skill。同版本但 content SHA-256 不同属于发布冲突，必须停止并报告，不能覆盖重装。
+5. 安装后使用 run-web-e2e/scripts/check_web_e2e_skills.py 对同一 skills-manifest.json 重新检查，必须 all_current=true、installation_allowed=true 且 conflicts 为空；否则停止并报告，不开始评测。
 6. 最后列出每个 Skill 的 installed、skipped 或 failed 状态，以及实际安装路径、版本和 content SHA-256。若 Codex 没有立即发现新 Skill，提示我重启 Codex 后新建控制任务，不要在当前任务中继续执行评测。
 ```
 
 这个 Prompt 不依赖 Web E2E Skill 已经安装；Codex 可以先把本地 ZIP 安装到用户级目录。Codex 通常会自动发现新安装的 Skill；如果安装结果未出现在 Skill 列表中，重启 Codex 后再开始评测。
 
-每个版本在本机安装一次即可。控制 Harness 会根据题目包 `manifest.json.required_skills`，校验已安装 Skill 的名称、版本和内容 SHA-256；完全一致时跳过安装，只安装缺失或版本不一致的包。版本相同但内容 SHA 不同会停止并报错，不能把不同内容当作同一版本。用户不需要手工安装执行或评分自动化依赖；控制 Harness 会自行检查并补齐。依赖安装失败时流程会停止并返回错误，不会把依赖装进候选工作空间。
+每个 Skill release 在本机安装一次即可，不与批次绑定。控制 Harness 会根据题目包 `manifest.json.required_skills` 或管理员提供的 `packages/skills-manifest.json`，校验已安装 Skill 的名称、版本和内容 SHA-256；完全一致时跨批次跳过安装，只安装缺失或版本不一致的包。同版本不同内容会列入 `conflicts` 并停止，这是发布侧应提升版本的问题，不应让用户反复覆盖安装。用户不需要手工安装共享组件、执行或评分自动化依赖；控制 Harness 会自行检查并补齐。依赖安装失败时流程会停止并返回错误，不会把依赖装进候选工作空间。
 
 #### 4. 输入一个 Prompt
 

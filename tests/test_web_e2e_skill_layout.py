@@ -18,15 +18,13 @@ WEB_SKILLS = (
     "report-web-e2e",
     "run-web-e2e",
 )
-PREPARE_SCRIPT = (
-    WEB_SKILLS_ROOT
-    / "prepare-web-e2e-workspaces/scripts/prepare_web_e2e_workspaces.py"
-)
+SKILL_BUILDER = REPO_ROOT / "tools/e2e-build/build_skill_packages.py"
+FIXED_REVISION = "1" * 40
 
 
-def load_prepare_module():
+def load_skill_builder():
     spec = importlib.util.spec_from_file_location(
-        "prepare_web_e2e_for_layout_test", PREPARE_SCRIPT
+        "web_e2e_skill_builder_for_layout_test", SKILL_BUILDER
     )
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
@@ -37,7 +35,7 @@ def load_prepare_module():
 class WebE2ESkillLayoutTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.prepare_module = load_prepare_module()
+        cls.skill_builder = load_skill_builder()
 
     def test_canonical_sources_are_grouped_without_legacy_duplicates(self):
         self.assertEqual(
@@ -73,14 +71,23 @@ class WebE2ESkillLayoutTest(unittest.TestCase):
     def test_independent_zip_top_level_remains_skill_name(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_root = Path(temp_dir)
+            manifest = self.skill_builder.build_skill_packages(
+                REPO_ROOT,
+                temp_root,
+                skill_names=WEB_SKILLS,
+                source_revision=FIXED_REVISION,
+            )
+            self.skill_builder.verify_build_manifest(
+                temp_root / "skills-build-manifest.json",
+                temp_root,
+            )
+            rows = {row["name"]: row for row in manifest["skills"]}
             for name in WEB_SKILLS:
-                archive_path = temp_root / f"{name}.zip"
-                self.prepare_module.zip_skill(
-                    WEB_SKILLS_ROOT / name, archive_path
-                )
+                archive_path = temp_root / rows[name]["archive"]
                 with zipfile.ZipFile(archive_path) as archive:
                     members = archive.namelist()
                 self.assertIn(f"{name}/SKILL.md", members)
+                self.assertIn(f"{name}/bundled-components.json", members)
                 self.assertTrue(members)
                 self.assertTrue(
                     all(member.startswith(f"{name}/") for member in members),

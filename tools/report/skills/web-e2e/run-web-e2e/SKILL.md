@@ -32,9 +32,9 @@ description: 按用户明确要求动态组合 Web E2E 的准备、桌面 Harnes
 
 1. 校验两个 ZIP 的批次、Harness、Profile 和完整 task IDs 一致；不能按文件名猜测身份。
 2. 从 execution ZIP 解压出独立 worker 根。默认在 execution ZIP 同级创建其顶层目录；Windows WorkBuddy 必须改用 `D:\debug-workspace\web-e2e\w\<短批次ID>` 这类短的独立目录作为 worker 根本身，解压时去掉 ZIP 顶层包名或在发送前把该顶层目录安全改为短名，并确认每题候选 `workspace` 绝对路径不超过 180 字符，避免包名和完整 task ID 叠加后触发 npm 的传统 Win32 长路径行为。目标已存在时只允许按已有磁盘状态恢复，不能覆盖或混入管理员 staging 根。
-3. 解压后读取 worker 根 `manifest.json.required_skills`；若管理员同时分发了 `packages/skills-manifest.json`，还要先校验其中的版本化 ZIP SHA-256。使用本 Skill 的 `scripts/check_web_e2e_skills.py` 对比已安装 Skill 的名称、版本和内容 SHA-256。完全一致的 Skill 跳过安装；只导入 `install_required` 列出的 `<skill-name>-skill-v<version>.zip`，然后重新检查。版本相同但内容 SHA 不同必须停止，不能继续使用或静默覆盖。
+3. 解压后读取 worker 根 `manifest.json.required_skills`；若管理员同时分发了 `packages/skills-manifest.json`，以它作为唯一安装清单并先校验版本化 ZIP SHA-256。使用本 Skill 的 `scripts/check_web_e2e_skills.py` 对比已安装 Skill 的名称、版本和运行内容 SHA-256；该哈希排除构建 revision 等非运行来源字段。`all_current=true` 时跨批次直接复用；仅导入 `install_required` 列出的缺失或不同版本包。`conflicts` 非空或 `installation_allowed=false` 时停止，其中同版本不同运行内容是发布冲突，不能继续使用、静默覆盖或让用户重复安装。
 4. 根据 `manifest.harness.id` 选择 WorkBuddy、AstronStudio 或 QwenWork Driver，并检查它与 Codex Desktop Driver 的锁定依赖。`node_modules/playwright-core` 缺失或 `npm ls --depth=0` 失败时，由控制 Harness 在对应 Driver 目录自动执行 `npm ci`；用户无需手工安装。安装失败进入 `NEEDS_ATTENTION`，不能把依赖装入候选 workspace。
-5. 被评 Harness 未显式指定模型时保持并回读当前模型，不操作推理强度；权限按生产契约使用 `full-access`。WorkBuddy 新执行队列默认双槽，AstronStudio 和 QwenWork 默认三槽，三者最大均为八槽；评分新批次默认三槽。三种 Harness 的 UI 操作始终保持单槽。Codex Desktop CDP 未显式提供时使用 `http://127.0.0.1:9230`。
+5. 被评 Harness 未显式指定模型时保持并回读当前模型，不操作推理强度；权限按生产契约使用 `full-access`。WorkBuddy、AstronStudio 和 QwenWork 新执行队列均默认三槽、最大八槽；评分新批次默认三槽。三种 Harness 的 UI 操作始终保持单槽。Codex Desktop CDP 未显式提供时使用 `http://127.0.0.1:9230`。
 6. execution 回执有效后才合入 scoring ZIP 并开始评分；submission 有效后在 worker 根同级的 `offline-return/` 生成完整 return ZIP 和外部回执。
 
 平台路由必须显式：macOS 使用各 Driver 的 `.sh` 入口；Windows 上 AstronStudio 使用 `run-astronstudio.cmd` / `run-astronstudio-batch.cmd`，WorkBuddy 使用 `run-workbuddy.cmd` / `run-workbuddy-batch.cmd`，QwenWork 使用 `run-qwenwork.cmd` / `run-qwenwork-batch.cmd`，Codex Desktop 项目注册使用 `run-codex-project-registrar.cmd`。Python 状态脚本在 Windows 优先用 `py -3`，否则使用可用的 `python`；不得硬调用 `python3`。Windows 的 AstronStudio、WorkBuddy 5.5.3 和 QwenWorkCN 1.0.5.0 历史批次均已有执行、Codex Desktop 评分、回传和报告证据，恢复边界也已有不同程度覆盖；但生产结论必须绑定本轮 Git revision、五个 Skill 版本、客户端版本和真机验收记录，不能把旧批次结论直接外推到新 Skill。DoubaoWork 尚未进入该范围；Windows Harness 均不能回退调用 macOS Driver。
@@ -100,7 +100,7 @@ python3 <run-web-e2e-skill-dir>/scripts/check_web_e2e_skills.py \
   --skills-root /absolute/<codex-skills-root>
 ```
 
-返回 `all_current=true` 时不得重复安装；返回其他状态时，只使用管理员提供且 ZIP SHA-256 有效的对应版本包。
+返回 `all_current=true` 时不得重复安装。`installation_allowed=true` 且 `install_required` 非空时，只安装清单列出的缺失或不同版本包；`conflicts` 非空时停止并报告发布侧，不能通过覆盖同版本目录规避冲突。ZIP SHA-256 只证明收到的归档未损坏，安装复用身份仍以名称、版本和内容 SHA-256 为准。
 
 ## 2. 初始化和恢复状态
 

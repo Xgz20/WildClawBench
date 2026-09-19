@@ -10,6 +10,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "tools/report/skills/web-e2e"
+SKILL_BUILDER = ROOT / "tools/e2e-build/build_skill_packages.py"
+FIXED_REVISION = "1" * 40
 
 
 class ResourcePackagingTest(unittest.TestCase):
@@ -34,19 +36,25 @@ class ResourcePackagingTest(unittest.TestCase):
             self.assertEqual(target.read_bytes(), before)
 
     def test_standalone_execute_package_contains_resource_collector(self):
-        script = SKILLS / "prepare-web-e2e-workspaces/scripts/prepare_web_e2e_workspaces.py"
-        spec = importlib.util.spec_from_file_location("prepare_resource_package", script)
+        spec = importlib.util.spec_from_file_location("web_resource_package_builder", SKILL_BUILDER)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            archive = root / "execute.zip"
-            module.zip_skill(SKILLS / "execute-web-e2e", archive)
+            manifest = module.build_skill_packages(
+                ROOT,
+                root,
+                skill_names=("execute-web-e2e",),
+                source_revision=FIXED_REVISION,
+            )
+            module.verify_build_manifest(root / "skills-build-manifest.json", root)
+            archive = root / manifest["skills"][0]["archive"]
             with zipfile.ZipFile(archive) as package:
                 for name in ("capture", "collect", "worker", "parsers", "qwen-profile"):
                     self.assertIn(f"execute-web-e2e/drivers/metrics/{name}.mjs", package.namelist())
                 self.assertIn("execute-web-e2e/scripts/collect-resource-metrics.mjs", package.namelist())
                 self.assertIn("execute-web-e2e/references/resource-metrics.md", package.namelist())
+                self.assertIn("execute-web-e2e/bundled-components.json", package.namelist())
                 self.assertFalse(any("node_modules/" in name for name in package.namelist()))
                 package.extractall(root)
             result = subprocess.run(

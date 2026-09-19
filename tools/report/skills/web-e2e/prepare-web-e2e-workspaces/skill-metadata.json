@@ -1,7 +1,7 @@
 {
   "schema_version": "wildclawbench.web-e2e-skill/v1",
   "name": "prepare-web-e2e-workspaces",
-  "version": "4.3.1",
+  "version": "4.4.0",
   "stages": [
     "prepare"
   ],

@@ -12,17 +12,18 @@
 
 ## 1. 领取文件
 
-每个 Harness 对应两个任务包，整个批次另有评分 Skill、报告 Skill 和一份批次报告配置。测试人员通常只会收到与自己有关的前三类文件；报告 Skill 和报告配置由管理员在汇总阶段使用。
+每个 Harness 对应两个任务包，整个批次另有 `packages/skills-manifest.json`、五个独立 Skill ZIP 和一份批次报告配置。`skills-manifest.json` 是 Skill 领取与安装的唯一清单；测试人员按自己的阶段安装所需项，报告 Skill 和报告配置由管理员在汇总阶段使用。
 
 | 文件 | 使用阶段 | 用途 |
 | --- | --- | --- |
 | `<batch_id>__<harness>__execution.zip` | 执行 | 包含 Prompt、初始 Workspace、执行清单和评分工作空间准备工具 |
 | `<batch_id>__<harness>__scoring.zip` | 评分准备 | 向评分副本中增加私有评分契约和评分素材 |
+| `packages/skills-manifest.json` | Skill 安装 | 唯一清单；记录五个 Skill 的版本、运行内容 SHA-256、ZIP SHA-256 和归档相对路径 |
 | `score-web-e2e-skill-v<version>.zip` | 评分 | 导入评分智能体，每个版本在每台评分客户端安装一次 |
 | `report-web-e2e-skill-v<version>.zip` | 管理员汇总 | 导入报告生成智能体，汇总全部 Harness 回传包 |
 | `<batch_id>__report-config.yaml` | 管理员汇总 | 维护模型、Harness、推理强度和展示顺序；不会进入 execution/scoring ZIP |
 
-不要把 scoring ZIP 当作评分 Skill 导入，也不要把评分 Skill ZIP 解压到某个用例目录。
+不要把 scoring ZIP 当作评分 Skill 导入，也不要把评分 Skill ZIP 解压到某个用例目录。Skill ZIP 已携带所需共享组件，不需要再领取或安装公共 Skill。另一个批次的名称、版本和运行内容 SHA-256 与清单完全一致时，可以复用已安装 Skill；Git revision 等来源字段变化不会单独触发重装。
 
 ### execution ZIP 解压后的结构
 
@@ -235,7 +236,7 @@ score/tasks/<task_id>/
 
 ## 4. 安装并启用评分 Skill
 
-在评分智能体的 Skill 管理界面导入：
+先读取本批次 `packages/skills-manifest.json`，定位其中 `name=score-web-e2e` 的归档。仅当本机未安装该名称/版本/content SHA-256，或版本不同需要升级时，才在评分智能体的 Skill 管理界面导入：
 
 ```text
 score-web-e2e-skill-v<version>.zip
@@ -245,7 +246,9 @@ score-web-e2e-skill-v<version>.zip
 
 - Skill 名称为 `score-web-e2e`；
 - Skill 已启用；
-- 同一台评分客户端只保留需要使用的版本；
+- 包内内容 SHA-256 与 `skills-manifest.json` 一致；
+- 同名、同版本、同内容已安装时直接复用，不因批次不同重复安装；
+- 同版本但内容 SHA-256 不同时停止并联系管理员，不能覆盖重装；
 - 更新评分 Skill 时只重新导入新的 Skill ZIP，不需要改动各题评分目录。
 
 ## 5. 逐题评分
@@ -375,12 +378,12 @@ bash "./准备评分工作空间.command"
 - [ ] 每题使用独立会话，通过 `@PROMPT.md` 发起执行。
 - [ ] 候选产物全部位于该题 `workspace/`。
 - [ ] 全部题目完成后已备份 Harness 根目录。
-- [ ] 若使用 QwenWork Token 采集，已在启动新进程前显式设置开关，并确认没有活动任务。
+- [ ] 若使用 QwenWork Token 采集，已确认没有活动任务；采集开关由 execute Skill 向新客户端进程自动注入，未手工写入系统全局环境或题目 Prompt。
 
 ### 评分人员
 
 - [ ] `score/` 从执行副本生成，未修改 `execution/tasks/`。
-- [ ] 已独立安装并启用 `score-web-e2e`。
+- [ ] 已按 `packages/skills-manifest.json` 校验并启用 `score-web-e2e`，同版本内容冲突时未覆盖安装。
 - [ ] 每题选择 `score/tasks/<task_id>/`，并使用独立评分会话。
 - [ ] 每题均生成 `private-scoring/task_score.json`。
 - [ ] 全部评分后根目录已生成 `submission.json`。

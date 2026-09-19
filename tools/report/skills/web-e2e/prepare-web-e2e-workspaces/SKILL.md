@@ -45,7 +45,7 @@ python3 .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_worksp
 
 ## 分包契约
 
-每个 Harness 生成两个 ZIP，整个批次另生成五个互相独立的 Skill ZIP，并在批次根保留 `skills-manifest.json` 和报告配置。独立打包只表示可按需安装，不绑定阶段、角色或机器：
+每个 Harness 生成两个 ZIP，整个批次另通过仓库统一 E2E 构建器生成五个互相独立的 Skill ZIP，并在批次根保留 `skills-build-manifest.json`、`skills-manifest.json` 和报告配置。Web prepare 本身仍从显式 `repo_root` 读取任务、Workspace 与构建器，不要求脱离仓库运行；分发出去的五个阶段 Skill 均自带所需共享组件，不要求用户另装公共 Skill。独立打包只表示可按需安装，不绑定阶段、角色或机器：
 
 - `__execution.zip`：带固定 Harness 根目录，包含 `execution/tasks/`、预置空 `score/`、最小批次 manifest、人工清单和 Python 兜底文件；先发送给执行人员。
 - `__scoring.zip`：不带 Harness 根目录，只包含 `score/tasks/` 增量；Harness 执行完成并备份后再发送。
@@ -54,10 +54,11 @@ python3 .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_worksp
 - `orchestrate-web-e2e-skill-v<version>.zip`：可独立导入控制智能体；负责执行结果交接、Playwright 注册 Codex Desktop 项目以及通过内置任务接口调度评分，不执行单题评分。
 - `report-web-e2e-skill-v<version>.zip`：可独立导入报告生成智能体；不依赖 WildClawBench 评分流程。
 - `run-web-e2e-skill-v<version>.zip`：可选的跨阶段组合器；只运行用户 Prompt 明确选择的阶段并维护可恢复状态、离线回传和收集，不替代其他 Skill。
-- `packages/skills-manifest.json`：记录以上 Skill 的名称、版本、支持阶段、兼容 Profile、相对路径、文件数、内容 SHA-256 和 ZIP SHA-256，供离线选择、安装去重与验包。
+- `packages/skills-build-manifest.json`：统一构建器的原始构建清单；记录组件闭包、source revision、完整构建内容 SHA-256 与 ZIP SHA-256，并用于批次生成时立即验包。
+- `packages/skills-manifest.json`：面向安装者的唯一清单；记录以上 Skill 的名称、版本、支持阶段、兼容 Profile、相对路径、文件数、运行内容 SHA-256、ZIP SHA-256 和批次无关 Skill set SHA-256，供离线选择、安装去重与验包。运行内容 SHA 会规范化排除 `bundled-components.json` 中仅用于来源审计的 revision 字段，但仍覆盖全部运行文件和组件内容。
 - `<batch_id>__report-config.yaml`：管理员侧批次配置，记录模型、Harness、推理强度和展示顺序；与回传包一起交给报告 Skill，但不分发给执行或评分人员。
 
-五个 Skill 同时兼容自建详细 Profile 与 ArtifactsBench Profile，不因批次或题集重新发布。Skill ZIP 文件名不带 `batch_id`；控制 Harness 先根据 execution 包 `manifest.json.required_skills` 或 `packages/skills-manifest.json` 比对已安装 Skill 的名称、版本和内容 SHA-256，完全一致时跳过安装。版本相同但内容 SHA 不同必须失败关闭，不能把不同内容当作同一发布版本。
+五个 Skill 同时兼容自建详细 Profile 与 ArtifactsBench Profile，不因批次或题集重新发布。Skill ZIP 文件名不带 `batch_id`；安装身份固定为 `name + version + content_sha256`，与 `batch_id` 和构建 revision 无关。控制 Harness 先根据 execution 包 `manifest.json.required_skills` 或 `packages/skills-manifest.json` 比对已安装 Skill，完全一致时跨批次直接复用。ZIP SHA-256 只校验分发文件的传输完整性；版本相同但运行内容 SHA 不同属于发布版本冲突，必须失败关闭并由发布侧提升版本，不能提示用户反复覆盖安装。
 
 被评 Harness 每题选择：
 
@@ -88,4 +89,4 @@ python3 .agents/skills/prepare-web-e2e-workspaces/scripts/prepare_web_e2e_worksp
 
 详细 Profile 的页面美观度默认使用评分 Skill 内置的 `web-aesthetic-v1` 标准，并在 task contract 中记录版本、来源和 `joint_screenshot_set` 判定方式。`--aesthetic-rubric` 仅用于增加详细 Profile 的批次补充说明，不能替换内置的 6 个维度、权重和 32 个检查项；ArtifactsBench Profile 禁止传该参数。
 
-验收 `batch_manifest.json`、`skills-manifest.json`、批次报告配置、每个 Harness staging 根、每 Harness 两个 ZIP、批次级 run/execute/score/orchestrate/report 五个版本化 Skill ZIP 及其内容/ZIP SHA-256。batch manifest 必须分别记录 `run_skill_archive`、`execute_skill_archive`、`score_skill_archive`、`orchestrate_skill_archive`、`report_skill_archive`、`required_skills`、`skills_manifest`、`report_config`、`scoring_skill` 名称/版本/Profile 能力和配置就绪状态。execution ZIP 不得含私有评分材料，scoring ZIP 不得含候选 Workspace、报告配置或 Skill 副本。
+验收 `batch_manifest.json`、`skills-build-manifest.json`、`skills-manifest.json`、批次报告配置、每个 Harness staging 根、每 Harness 两个 ZIP、批次级 run/execute/score/orchestrate/report 五个版本化 Skill ZIP 及其内容/ZIP SHA-256。统一构建清单必须通过依赖闭包与归档复核；batch manifest 必须分别记录 `run_skill_archive`、`execute_skill_archive`、`score_skill_archive`、`orchestrate_skill_archive`、`report_skill_archive`、`required_skills`、`skill_build_manifest`、`skills_manifest`、批次无关 Skill set SHA、`report_config`、`scoring_skill` 名称/版本/Profile 能力和配置就绪状态。execution ZIP 不得含私有评分材料，scoring ZIP 不得含候选 Workspace、报告配置或 Skill 副本。

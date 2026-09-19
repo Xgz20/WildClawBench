@@ -5,6 +5,7 @@ import importlib.util
 import json
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 import zipfile
@@ -21,6 +22,7 @@ FINALIZE_SCORE = SKILLS_ROOT / "score-web-e2e/scripts/finalize_score.mjs"
 BUILD_SUBMISSION = SKILLS_ROOT / "score-web-e2e/scripts/build_submission.mjs"
 SCORING_CONTROL = SKILLS_ROOT / "orchestrate-web-e2e/scripts/scoring-control.mjs"
 CHECK_SKILLS = SKILLS_ROOT / "run-web-e2e/scripts/check_web_e2e_skills.py"
+E2E_SKILL_BUILDER = REPO_ROOT / "tools/e2e-build/build_skill_packages.py"
 
 
 def load_module(name: str, path: Path):
@@ -34,6 +36,7 @@ def load_module(name: str, path: Path):
 prepare_module = load_module("prepare_web_e2e_workspaces", PREPARE_SCRIPT)
 fallback_module = load_module("prepare_scoring_workspace", FALLBACK_SCRIPT)
 check_skills_module = load_module("check_web_e2e_skills", CHECK_SKILLS)
+skill_builder_module = load_module("build_skill_packages", E2E_SKILL_BUILDER)
 
 
 def materialize_execution_receipt(package_root: Path, *, model_mode: str = "explicit") -> None:
@@ -176,12 +179,13 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             score_task = harness_root / "score/tasks" / self.TASK_ID
             execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
             scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
-            score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.3.zip"
-            report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.1.0.zip"
-            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.3.0.zip"
-            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.13.0.zip"
-            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.4.0.zip"
+            score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.4.zip"
+            report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.1.1.zip"
+            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.3.1.zip"
+            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.13.1.zip"
+            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.4.1.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
+            skills_build_manifest_path = batch_root / "packages/skills-build-manifest.json"
             report_config_path = batch_root / "web-smoke__report-config.yaml"
 
             self.assertTrue((execution_task / "workspace/.gitkeep").is_file())
@@ -199,6 +203,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertTrue(execute_skill_package.is_file())
             self.assertTrue(run_skill_package.is_file())
             self.assertTrue(skills_manifest_path.is_file())
+            self.assertTrue(skills_build_manifest_path.is_file())
             self.assertTrue(report_config_path.is_file())
             self.assertTrue((harness_root / "tools/prepare_scoring_workspace.py").is_file())
             self.assertTrue((harness_root / "准备评分工作空间.command").is_file())
@@ -213,7 +218,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertNotIn("model", manifest)
             self.assertFalse(manifest["execution_record_included"])
             self.assertEqual(manifest["scoring_skill"]["name"], "score-web-e2e")
-            self.assertEqual(manifest["scoring_skill"]["version"], "4.5.3")
+            self.assertEqual(manifest["scoring_skill"]["version"], "4.5.4")
             self.assertIn(manifest["metric_profile"], manifest["scoring_skill"]["supported_metric_profiles"])
             self.assertEqual(len(manifest["required_skills"]), 5)
 
@@ -248,6 +253,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertFalse(any(name.endswith("__report-config.yaml") for name in scoring_names))
             self.assertIn("score-web-e2e/SKILL.md", score_skill_names)
             self.assertIn("score-web-e2e/skill-metadata.json", score_skill_names)
+            self.assertIn("score-web-e2e/bundled-components.json", score_skill_names)
             self.assertTrue(any(name.startswith("score-web-e2e/scripts/") for name in score_skill_names))
             self.assertIn("score-web-e2e/references/aesthetic-rubric.json", score_skill_names)
             self.assertIn("score-web-e2e/references/browser-interaction-scoring.md", score_skill_names)
@@ -261,11 +267,13 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIn("score-web-e2e/scripts/screenshot_receiver.mjs", score_skill_names)
             self.assertIn("report-web-e2e/SKILL.md", report_skill_names)
             self.assertIn("report-web-e2e/skill-metadata.json", report_skill_names)
+            self.assertIn("report-web-e2e/bundled-components.json", report_skill_names)
             self.assertIn("report-web-e2e/scripts/aggregate_web_e2e_results.py", report_skill_names)
             self.assertIn("report-web-e2e/scripts/build_web_e2e_workbook.mjs", report_skill_names)
             self.assertFalse(any("__pycache__" in name or name.endswith(".pyc") or name.endswith(".DS_Store") for name in report_skill_names))
             self.assertIn("orchestrate-web-e2e/SKILL.md", orchestrate_skill_names)
             self.assertIn("orchestrate-web-e2e/skill-metadata.json", orchestrate_skill_names)
+            self.assertIn("orchestrate-web-e2e/bundled-components.json", orchestrate_skill_names)
             self.assertIn("orchestrate-web-e2e/scripts/scoring-control.mjs", orchestrate_skill_names)
             self.assertIn(
                 "orchestrate-web-e2e/vendor/e2e-shared/handoff/workspace-integrity.mjs",
@@ -282,6 +290,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertFalse(any("node_modules" in name for name in orchestrate_skill_names))
             self.assertIn("execute-web-e2e/SKILL.md", execute_skill_names)
             self.assertIn("execute-web-e2e/skill-metadata.json", execute_skill_names)
+            self.assertIn("execute-web-e2e/bundled-components.json", execute_skill_names)
             self.assertIn("execute-web-e2e/drivers/workbuddy/batch.mjs", execute_skill_names)
             self.assertIn("execute-web-e2e/drivers/astronstudio/driver.mjs", execute_skill_names)
             self.assertIn("execute-web-e2e/drivers/astronstudio/batch.mjs", execute_skill_names)
@@ -313,6 +322,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertFalse(any("node_modules" in name for name in execute_skill_names))
             self.assertIn("run-web-e2e/SKILL.md", run_skill_names)
             self.assertIn("run-web-e2e/skill-metadata.json", run_skill_names)
+            self.assertIn("run-web-e2e/bundled-components.json", run_skill_names)
             self.assertIn("run-web-e2e/scripts/check_web_e2e_skills.py", run_skill_names)
             self.assertIn("run-web-e2e/scripts/run_web_e2e.py", run_skill_names)
             self.assertIn("run-web-e2e/scripts/start_macos_desktop_debug.sh", run_skill_names)
@@ -336,18 +346,31 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             batch_manifest = json.loads((batch_root / "batch_manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(
                 batch_manifest["orchestrate_skill_archive"],
-                "packages/orchestrate-web-e2e-skill-v0.3.0.zip",
+                "packages/orchestrate-web-e2e-skill-v0.3.1.zip",
             )
             self.assertEqual(
                 batch_manifest["execute_skill_archive"],
-                "packages/execute-web-e2e-skill-v1.13.0.zip",
+                "packages/execute-web-e2e-skill-v1.13.1.zip",
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],
-                "packages/run-web-e2e-skill-v1.4.0.zip",
+                "packages/run-web-e2e-skill-v1.4.1.zip",
             )
             self.assertEqual(batch_manifest["skills_manifest"], "packages/skills-manifest.json")
+            self.assertEqual(
+                batch_manifest["skill_build_manifest"],
+                "packages/skills-build-manifest.json",
+            )
+            build_verification = skill_builder_module.verify_build_manifest(
+                skills_build_manifest_path,
+                batch_root / "packages",
+            )
+            self.assertEqual(build_verification["status"], "PASS")
             skills_manifest = json.loads(skills_manifest_path.read_text(encoding="utf-8"))
+            skills_build_manifest = json.loads(
+                skills_build_manifest_path.read_text(encoding="utf-8")
+            )
+            build_rows = {item["name"]: item for item in skills_build_manifest["skills"]}
             self.assertEqual(skills_manifest["schema_version"], prepare_module.SKILLS_MANIFEST_SCHEMA)
             self.assertEqual(
                 [item["name"] for item in skills_manifest["skills"]],
@@ -359,10 +382,35 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             for item in skills_manifest["skills"]:
                 archive_path = batch_root / item["archive"]
                 self.assertEqual(item["sha256"], prepare_module.sha256_file(archive_path))
+                self.assertEqual(item["zip_sha256"], item["sha256"])
+                self.assertEqual(
+                    item["content_hash_algorithm"],
+                    prepare_module.SKILL_INSTALL_CONTENT_HASH_ALGORITHM,
+                )
                 self.assertEqual(
                     item["content_sha256"],
-                    prepare_module.sha256_skill_content(SKILLS_ROOT / item["name"]),
+                    prepare_module.skill_install_content_sha256_from_archive(
+                        archive_path,
+                        item["name"],
+                    ),
                 )
+                self.assertEqual(
+                    item["build_content_sha256"],
+                    build_rows[item["name"]]["content_sha256"],
+                )
+                self.assertEqual(item["components"], build_rows[item["name"]]["components"])
+            self.assertEqual(
+                skills_manifest["skill_set_sha256"],
+                prepare_module.skill_set_sha256(skills_manifest["skills"]),
+            )
+            self.assertEqual(
+                batch_manifest["skill_set_sha256"],
+                skills_manifest["skill_set_sha256"],
+            )
+            self.assertEqual(
+                skills_manifest["identity_policy"]["matching_fields"],
+                ["name", "version", "content_sha256"],
+            )
             self.assertEqual(batch_manifest["required_skills"], manifest["required_skills"])
             self.assertEqual(
                 [item["content_sha256"] for item in skills_manifest["skills"]],
@@ -432,11 +480,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIsNone(report_skill_packages[0]["harness"])
             self.assertEqual(
                 manifest["score_skill_archive"],
-                "packages/score-web-e2e-skill-v4.5.3.zip",
+                "packages/score-web-e2e-skill-v4.5.4.zip",
             )
             self.assertEqual(
                 manifest["report_skill_archive"],
-                "packages/report-web-e2e-skill-v1.1.0.zip",
+                "packages/report-web-e2e-skill-v1.1.1.zip",
             )
             self.assertEqual(manifest["report_config"], "web-smoke__report-config.yaml")
             self.assertTrue(manifest["report_config_ready"])
@@ -484,20 +532,17 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 "--repo-root", str(REPO_ROOT),
             ])
             result = prepare_module.package_score_skill(args)
-            package_path = Path(tmp).resolve() / "score-web-e2e-skill-v4.5.3.zip"
+            package_path = Path(tmp).resolve() / "score-web-e2e-skill-v4.5.4.zip"
             self.assertEqual(result["path"], package_path)
-            self.assertEqual(result["file_count"], 16)
             self.assertEqual(result["sha256"], prepare_module.sha256_file(package_path))
-            self.assertEqual(result["version"], "4.5.3")
-            self.assertEqual(
-                result["content_sha256"],
-                prepare_module.sha256_skill_content(SKILLS_ROOT / "score-web-e2e"),
-            )
+            self.assertEqual(result["version"], "4.5.4")
             self.assertFalse((Path(tmp) / "web-skill-only").exists())
             self.assertFalse(any(Path(tmp).glob("**/batch_manifest.json")))
+            self.assertFalse((Path(tmp) / "skills-build-manifest.json").exists())
             with zipfile.ZipFile(package_path) as archive:
                 names = [name for name in archive.namelist() if not name.endswith("/")]
-                self.assertEqual(len(names), 16)
+                self.assertEqual(len(names), result["file_count"])
+                self.assertIn("score-web-e2e/bundled-components.json", names)
                 self.assertIn("score-web-e2e/scripts/serve_static.mjs", names)
                 self.assertIn("score-web-e2e/scripts/managed-process-worker.mjs", names)
                 self.assertIn("score-web-e2e/scripts/screenshot_receiver.mjs", names)
@@ -518,12 +563,12 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             with self.assertRaisesRegex(FileExistsError, "拒绝覆盖"):
                 prepare_module.package_score_skill(args)
 
-    def test_skill_archives_are_identical_across_batches(self) -> None:
+    def test_skill_archives_are_identical_across_detailed_and_open_profile_batches(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             first_args = args_for(tmp, self.TASK_ID)
             first_args.batch_id = "web-smoke-a"
             first_root = prepare_module.prepare(first_args)
-            second_args = args_for(tmp, self.TASK_ID)
+            second_args = args_for(tmp, self.ARTIFACTSBENCH_TASK_ID)
             second_args.batch_id = "web-smoke-b"
             second_root = prepare_module.prepare(second_args)
             first_manifest = json.loads(
@@ -538,30 +583,113 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 [(item["name"], item["version"], item["content_sha256"], item["sha256"])
                  for item in second_manifest["skills"]],
             )
+            self.assertEqual(first_manifest["skill_set_sha256"], second_manifest["skill_set_sha256"])
+            self.assertEqual(
+                (first_root / "packages/skills-build-manifest.json").read_bytes(),
+                (second_root / "packages/skills-build-manifest.json").read_bytes(),
+            )
             for item in first_manifest["skills"]:
                 self.assertEqual(
                     (first_root / item["archive"]).read_bytes(),
                     (second_root / item["archive"]).read_bytes(),
                 )
 
+    def test_skill_install_identity_ignores_revision_only_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            first_root = Path(tmp) / "first"
+            second_root = Path(tmp) / "second"
+            first = skill_builder_module.build_skill_packages(
+                REPO_ROOT,
+                first_root,
+                skill_names=("score-web-e2e",),
+                source_revision="1" * 40,
+            )["skills"][0]
+            second = skill_builder_module.build_skill_packages(
+                REPO_ROOT,
+                second_root,
+                skill_names=("score-web-e2e",),
+                source_revision="2" * 40,
+            )["skills"][0]
+            first_archive = first_root / first["archive"]
+            second_archive = second_root / second["archive"]
+            self.assertNotEqual(first["content_sha256"], second["content_sha256"])
+            self.assertNotEqual(first["zip_sha256"], second["zip_sha256"])
+            self.assertEqual(
+                prepare_module.skill_install_content_sha256_from_archive(
+                    first_archive,
+                    first["name"],
+                ),
+                prepare_module.skill_install_content_sha256_from_archive(
+                    second_archive,
+                    second["name"],
+                ),
+            )
+
+            installed_root = Path(tmp) / "installed"
+            with zipfile.ZipFile(first_archive) as archive:
+                archive.extractall(installed_root)
+            installed = installed_root / first["name"]
+            expected = prepare_module.skill_install_content_sha256_from_archive(
+                second_archive,
+                second["name"],
+            )
+            self.assertEqual(
+                check_skills_module.skill_content_sha256(
+                    installed,
+                    check_skills_module.INSTALL_CONTENT_HASH_ALGORITHM,
+                ),
+                expected,
+            )
+            install_row = {
+                "name": second["name"],
+                "version": second["version"],
+                "content_hash_algorithm": prepare_module.SKILL_INSTALL_CONTENT_HASH_ALGORITHM,
+                "content_sha256": expected,
+                "archive": f"second/{second['archive']}",
+                "sha256": second["zip_sha256"],
+                "zip_sha256": second["zip_sha256"],
+            }
+            install_manifest = {
+                "schema_version": prepare_module.SKILLS_MANIFEST_SCHEMA,
+                "batch_id": "revision-two",
+                "identity_policy": {
+                    "matching_fields": list(prepare_module.SKILL_IDENTITY_FIELDS),
+                    "archive_sha256_role": "transport_integrity_only",
+                    "same_version_different_content": "release_conflict",
+                },
+                "skill_set_hash_algorithm": prepare_module.SKILL_SET_HASH_ALGORITHM,
+                "skill_set_sha256": prepare_module.skill_set_sha256([install_row]),
+                "skills": [install_row],
+            }
+            install_manifest_path = second_root / "skills-manifest.json"
+            install_manifest_path.write_text(
+                json.dumps(install_manifest, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            inspection = check_skills_module.inspect_skills(
+                install_manifest_path,
+                [installed_root],
+            )
+            self.assertTrue(inspection["all_current"])
+            self.assertTrue(inspection["installation_allowed"])
+            self.assertEqual(inspection["install_required"], [])
+            self.assertEqual(inspection["conflicts"], [])
+
     def test_skill_installation_check_detects_current_missing_version_and_content(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))
             manifest_path = batch_root / "packages/skills-manifest.json"
             installed_root = Path(tmp) / "installed"
-            for skill_name in (
-                "score-web-e2e", "report-web-e2e", "orchestrate-web-e2e",
-                "execute-web-e2e", "run-web-e2e",
-            ):
-                shutil.copytree(
-                    SKILLS_ROOT / skill_name,
-                    installed_root / skill_name,
-                    ignore=shutil.ignore_patterns("__pycache__", "node_modules", "*.pyc", ".DS_Store"),
-                )
+            skill_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            for item in skill_manifest["skills"]:
+                with zipfile.ZipFile(batch_root / item["archive"]) as archive:
+                    archive.extractall(installed_root)
 
             current = check_skills_module.inspect_skills(manifest_path, [installed_root])
             self.assertTrue(current["all_current"])
+            self.assertTrue(current["installation_allowed"])
             self.assertEqual(current["install_required"], [])
+            self.assertEqual(current["conflicts"], [])
 
             run_skill = installed_root / "run-web-e2e"
             shutil.rmtree(run_skill)
@@ -570,8 +698,14 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 next(item["status"] for item in missing["skills"] if item["name"] == "run-web-e2e"),
                 "missing",
             )
+            self.assertIn("run-web-e2e", missing["install_required"])
+            self.assertTrue(missing["installation_allowed"])
 
-            shutil.copytree(SKILLS_ROOT / "run-web-e2e", run_skill)
+            run_manifest = next(
+                item for item in skill_manifest["skills"] if item["name"] == "run-web-e2e"
+            )
+            with zipfile.ZipFile(batch_root / run_manifest["archive"]) as archive:
+                archive.extractall(installed_root)
             metadata_path = run_skill / "skill-metadata.json"
             metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
             metadata["version"] = "9.9.9"
@@ -581,15 +715,60 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 next(item["status"] for item in version_mismatch["skills"] if item["name"] == "run-web-e2e"),
                 "version_mismatch",
             )
+            self.assertIn("run-web-e2e", version_mismatch["install_required"])
+            self.assertTrue(version_mismatch["installation_allowed"])
 
-            shutil.copy2(SKILLS_ROOT / "run-web-e2e/skill-metadata.json", metadata_path)
+            with zipfile.ZipFile(batch_root / run_manifest["archive"]) as archive:
+                metadata_path.write_bytes(archive.read("run-web-e2e/skill-metadata.json"))
             with (run_skill / "SKILL.md").open("a", encoding="utf-8") as handle:
                 handle.write("\n测试内容差异。\n")
             content_mismatch = check_skills_module.inspect_skills(manifest_path, [installed_root])
             self.assertEqual(
                 next(item["status"] for item in content_mismatch["skills"] if item["name"] == "run-web-e2e"),
-                "content_mismatch",
+                "version_content_conflict",
             )
+            self.assertNotIn("run-web-e2e", content_mismatch["install_required"])
+            self.assertIn("run-web-e2e", content_mismatch["conflicts"])
+            self.assertFalse(content_mismatch["installation_allowed"])
+
+    def test_skill_installation_check_fails_closed_on_manifest_or_archive_tampering(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            batch_root = prepare_module.prepare(args_for(tmp, self.TASK_ID))
+            manifest_path = batch_root / "packages/skills-manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+            tampered_manifest = json.loads(json.dumps(manifest))
+            tampered_manifest["skills"][0]["content_sha256"] = "0" * 64
+            tampered_manifest_path = batch_root / "packages/tampered-skills-manifest.json"
+            tampered_manifest_path.write_text(
+                json.dumps(tampered_manifest, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "Skill set SHA-256"):
+                check_skills_module.inspect_skills(tampered_manifest_path, [Path(tmp) / "installed"])
+
+            archive_path = batch_root / manifest["skills"][0]["archive"]
+            archive_path.write_bytes(archive_path.read_bytes() + b"tampered")
+            result = check_skills_module.inspect_skills(
+                manifest_path,
+                [Path(tmp) / "installed"],
+            )
+            self.assertEqual(result["conflicts"], [manifest["skills"][0]["name"]])
+            self.assertFalse(result["installation_allowed"])
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(CHECK_SKILLS),
+                    "--manifest",
+                    str(manifest_path),
+                    "--skills-root",
+                    str(Path(tmp) / "installed"),
+                ],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(completed.returncode, 4, completed.stdout + completed.stderr)
 
     def test_manual_copy_then_scoring_zip_merge_materializes_score_tasks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

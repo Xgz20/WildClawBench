@@ -12,9 +12,11 @@ WorkBuddy×Windows 功能准入基线 revision 为 `ee70a67b0d53bf700a389b7fbe3f
 
 QwenWork×Windows 主流程功能准入基线 revision 为 `24771ce5f86f9bbc9336cf0c0c48effa5f0b2990`，单题包锁定 execute 1.11.21 / QwenWork Driver 1.10.10 / orchestrate 0.2.6 / score 4.5.2 / run 1.3.8 / report 1.0.2。同一 Windows 真机使用 QwenWorkCN 1.0.5.0、Codex Desktop 26.908.9136（CDP runtime 152.0.7977.83）、标准｜Qwen3.8-Flash / full-access：probe、单 L1 执行、Codex 可见 UI 项目注册、内置 Browser 评分、submission 和 return 均通过，评分 88 分，候选双副本哈希无漂移，三阶段状态均为 `COMPLETED`。终态截图曾连续超时，控制端停止旧观察进程后以同一 run-id/attempt 重启 QwenWork 并恢复采集，未重发 Prompt，最终回执仍为 `SUCCEEDED` 且 `manual_interventions=[]`。该结论允许先进入受控正式评测，但首个正式批次必须先跑 3–5 个 L1 canary；当前身份的三题串行、默认三槽、并发评分、管理员 import/report 和 V12–V17 尚未重新绑定，因此不能标记为“并发生产可用”或“无人值守高可用”。
 
-AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 的 execution→score→submission→return，状态为 **主流程生产可用**：AstronStudio 3.0.0-alpha.19、Codex Desktop 26.908.70816、GLM-5.2 / High / full-access，执行回执 `integrity.valid=true`，评分 81 分，候选双副本哈希无漂移，三阶段状态均为 `COMPLETED`。该结论允许先进入受控正式评测，但首个正式批次必须先跑 3–5 个 L1 canary 再放大；当前 revision 的三题串行、五题默认三槽、三路评分动态补位、管理员 import/report 和 V12–V17 恢复边界尚未重新绑定，因此不能标记为“并发生产可用”或“无人值守高可用”。macOS 本地重打包与 Windows `232007` 正式包的 Skill content SHA 未能重现一致，当前只作为独立 macOS 包身份使用，不能冒充 Windows 原始 ZIP；跨平台内容哈希差异另行修复。QwenWork 和其余 macOS 组合不在当前高可用声明范围。
+AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 的 execution→score→submission→return，状态为 **主流程生产可用**：AstronStudio 3.0.0-alpha.19、Codex Desktop 26.908.70816、GLM-5.2 / High / full-access，执行回执 `integrity.valid=true`，评分 81 分，候选双副本哈希无漂移，三阶段状态均为 `COMPLETED`。该结论允许先进入受控正式评测，但首个正式批次必须先跑 3–5 个 L1 canary 再放大；当前 revision 的三题串行、五题默认三槽、三路评分动态补位、管理员 import/report 和 V12–V17 恢复边界尚未重新绑定，因此不能标记为“并发生产可用”或“无人值守高可用”。历史 macOS 本地重打包与 Windows `232007` 正式包的 Skill content SHA 未能重现一致，只能作为各自独立包身份。当前源码候选已改用统一确定性构建器，但跨平台问题只有在提交后由 macOS/Windows 对同一 revision 生成并逐字节对账后才能关闭。QwenWork 和其余 macOS 组合不在当前高可用声明范围。
 
 当前对外分发包已更新为 `web-e2e-20260917-153405-custom40` 和 `web-e2e-20260917-153405-opensource120`，source revision 均为 `b8296d8f4ec7a2bf81b814e4460453c0bf5e4068`。分发包已包含资源指标工作空间；上述各 Harness 准入结论仍按实际真机验收身份解读，不因重新打包自动升级。
+
+2026-09-19 的当前源码候选把 Web 五个阶段 Skill 接入 Web/General 共用的确定性构建器，并将 prepare/score/report/orchestrate/execute/run 版本分别提升到 `4.4.0/4.5.4/1.1.1/0.3.1/1.13.1/1.4.1`。该候选尚未基于提交后的 revision 重新生成正式 40/120 包，也未完成双平台字节对账或新版本真机 smoke，因此不替换上面的正式分发身份和既有准入结论。
 
 ### 当前实施进度
 
@@ -26,6 +28,7 @@ AstronStudio×macOS 已在同一实现 revision 的干净检出上完成单 L1 �
 | P3 macOS 受影响项回归 | `IN_PROGRESS` | 依照第 4 节完成并登记证据 | AstronStudio 当前 revision 的单 L1 execution→score→submission→return 已通过，达到“主流程生产可用”；并发重绑定、管理员 import/report 和 V12–V17 尚未完成 |
 | P4 Windows 真机回归 | `IN_PROGRESS` | 每个目标 Harness 依照第 4 节完成并登记证据 | AstronStudio×Windows、WorkBuddy×Windows V00–V17 已全部通过；QwenWork×Windows 当前身份的 V00/V02/V03/V06/V08/V09/V11 已通过，达到“主流程生产可用”，更高层级仍待按需迭代 |
 | P5 发布结论 | `PASSED` | 平台准入层级、验证状态和待验收项只在本内部清单维护；对外指导手册只提供可执行的使用说明 | 指导手册已移除平台验证状态、revision、验收矩阵和待验证说明；各 Harness 的内部准入结论继续以本清单为准 |
+| P10 统一 Skill 构建候选 | `IN_PROGRESS` | Web prepare 使用统一确定性构建器；40/120 批次 Skill set 身份一致；macOS/Windows 同 revision 归档逐字节一致；完成安装检查和最小真机 smoke | Web Python 115/115、General Python 136/136、旧 `eval_e2e` 60/60、General/共享 Node 68/68、Web 四组 Driver Node 242/242、13 个 Skill quick validate、13/13 Skill build/verify 和 layout 均通过；仓库内详细/开源 Profile 双批次的五个 Skill ZIP、build manifest 与 Skill set SHA 完全一致。待提交后生成正式 40/120 包并进行 Windows/macOS 对账，不能提前标为 `PASSED` |
 
 ### 1.1 Windows 资源指标验收增补（实现三 Harness 结果可汇总）
 
@@ -260,7 +263,7 @@ collector `1.1.3` 在正式终态原生写入 input `1531951`、output `23861`�
 
 macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了独立单题批次 `web-e2e-20260916-095335-mac-astron-release-6988b52-smoke`。批次内五个 Skill 版本与当时 `6988b525...` 基线一致，实际 content SHA 为 score `6fdc8e9a...`、report `a2236d07...`、orchestrate `350224ca...`、execute `c73a0c0d...`、run `4b9e7748...`，没有重现 Windows `232007` manifest 中的 content SHA；CRLF 模拟也未得到精确匹配，根因尚未确认。该批次 manifest、解压后的隔离 Skill 和评分时独立安装的 score 4.5.2 在本批次内部完全一致，`check_web_e2e_skills.py` 返回 `all_current=true`，所以本轮真机结果可证明这个 macOS 独立包身份的功能，不证明 Windows ZIP 可在 macOS 重现，也不允许把两者作为同一个归档身份混用。
 
-本轮 execution/scoring ZIP SHA 分别为 `90b9c767...` / `ffc6a65d...`。跨平台 content SHA 不可复现是发布工程问题，后续应统一文本换行、文件排序和内容哈希规范，并用同一测试向量在 macOS/Windows 双端重算；修复只影响打包/哈希身份时不要求重跑已经完成的页面评分，但必须重新执行 Skill 安装校验和一个 L1 包级冒烟。
+本轮 execution/scoring ZIP SHA 分别为 `90b9c767...` / `ffc6a65d...`。当前源码候选已统一文本换行、文件排序、时间戳、权限、存储方式和内容哈希规范，并在 Web prepare 中落地同一个构建器；但历史差异只有在提交后的同一 revision 上完成 macOS/Windows 双端重算和归档逐字节对账后才能关闭。修复只影响打包/哈希身份时不要求重跑已经完成的页面评分，但新 Skill release 必须重新执行安装校验和一个 L1 包级冒烟。
 
 ### 3.1.3 WorkBuddy Windows 补充发布身份
 
@@ -270,12 +273,12 @@ macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了
 
 批次 `windows-qwen-mainflow-24771ce-l1-20260916-113542` 的 manifest 精确绑定 `24771ce5f86f9bbc9336cf0c0c48effa5f0b2990`，锁定 score 4.5.2 / report 1.0.2 / orchestrate 0.2.6 / execute 1.11.21 / run 1.3.8；五个 Skill content SHA 与当前安装完全一致。QwenWork Driver 仍为 1.10.10，当前 revision 相对既有验证基线没有 QwenWork Driver 运行时代码差异。本轮只用该身份完成一个 L1 全闭环，用于满足“主流程生产可用”门禁；历史串行、默认三槽、报告和恢复证据不自动升格为当前 `PASSED`。
 
-正式包可以在 macOS 或 Windows 的干净检出中生成；本轮先在 macOS 当前仓库生成并审计，Windows 也可按同一代码自行重建用于同机验收。准备脚本只读取仓库中的题目、Workspace 和 Skill 源码，写出的路径统一使用可移植格式。必须满足以下门禁：
+正式包可以在 macOS 或 Windows 的干净检出中生成。准备脚本继续从仓库读取题目和 Workspace，并调用统一 E2E 构建器生成五个阶段 Skill；分发 Skill 不依赖 checkout。必须满足以下门禁：
 
 - 生成机器的检出必须包含 P1 记录的实现提交，且打包前 Web E2E 相关源码和题目目录没有未提交修改；
-- `batch_manifest.json`、`packages/skills-manifest.json` 和各 Harness manifest 的 `source_revision` 必须等于打包时的 `git rev-parse HEAD`；
-- 自建、开源两个批次的五个 Skill 名称、版本和 `content_sha256` 必须完全一致；
-- ZIP 的 `sha256` 绑定本次实际生成的归档。不同操作系统或不同生成时间产生的 ZIP 归档 SHA 不要求与历史包相等，不能混用旧包的 SHA；
+- `batch_manifest.json`、`packages/skills-build-manifest.json`、`packages/skills-manifest.json` 和各 Harness manifest 的 `source_revision` 必须等于打包时的 `git rev-parse HEAD`；
+- 自建、开源两个批次的五个 Skill 名称、版本、运行 `content_sha256`、ZIP SHA 和 `skill_set_sha256` 必须完全一致，五个 ZIP 逐字节一致；`skills-build-manifest.json` 的完整构建内容 SHA 同时逐项一致。运行内容哈希规范化排除来源 revision，构建内容哈希与 ZIP SHA 仍保留完整来源和归档审计；
+- 同一提交在 macOS 与 Windows 生成的五个 Skill ZIP 也必须逐字节一致；未完成双端对账时只能保留候选状态，不能关闭 P10。历史包 SHA 不要求与新 release 相等，也不能混用旧包清单；
 - 生成后以该批次及其外部 receipt 为唯一验证输入，不再用同 revision 的另一个本地重打包结果替换中途产物。
 
 ### 3.2 真机身份记录
@@ -467,11 +470,11 @@ macOS 的 AstronStudio、WorkBuddy 和 QwenWork 当前均记录 `terminal_proces
 
 生成后逐项校验：
 1. 两个 batch_manifest.json 的 source_revision 都严格等于开始时记录的完整 HEAD，每个批次的 task_ids 分别为 40/120，harnesses 都严格包含 astronstudio、workbuddy、qwenwork。
-2. 每个批次均存在三 Harness 各自的 execution.zip 和 scoring.zip、报告配置、packages/skills-manifest.json，以及五个版本化 Skill ZIP；`execution_record_included=true`。
-3. 两个批次中五个 Skill 的名称、版本和 content_sha256 逐项相同；分别使用本次 manifest 记录的 ZIP sha256 验证文件，不与旧 macOS 包的 ZIP SHA 比较。
+2. 每个批次均存在三 Harness 各自的 execution.zip 和 scoring.zip、报告配置、`packages/skills-build-manifest.json`、`packages/skills-manifest.json`，以及五个版本化 Skill ZIP；统一构建清单验包通过，`execution_record_included=true`。
+3. 两个批次中五个 Skill 的名称、版本、运行 content SHA、完整构建 content SHA、ZIP SHA 和 `skill_set_sha256` 逐项相同，五个 ZIP 逐字节一致；分别使用本次 manifest 验证文件，不与旧正式包 SHA 比较。
 4. 逐个打开 6 个 execution ZIP，自建批次每包必须包含 40 份 `execution_record.json`，开源批次每包必须包含 120 份；审计 execution ZIP 不含 Ground Truth、Rubric、checker、eval 或 gt，scoring ZIP 不含候选 workspace、PROMPT.md 或 execution_record.json。
 5. 确认两份报告配置的 `configuration_status=requires_model_mapping`；在执行/评分阶段可以保持该状态，生成正式报告前必须填写三个 Harness 的 `model_id`，并按实际评测配置展示名和推理强度。
-6. 把生成路径、批次 ID、完整 source revision、五个 Skill 版本/content SHA/ZIP SHA、校验结果写入 docs/design/web-e2e/Web站点端到端自动化评测生产验收清单.md，将 P2 标为 PASSED；本轮不要执行题目、提交或推送。
+6. 把生成路径、批次 ID、完整 source revision、五个 Skill 版本/content SHA/ZIP SHA、Skill set SHA 和校验结果写入 docs/design/web-e2e/Web站点端到端自动化评测生产验收清单.md；只更新 P2 的新正式包证据，P10 必须等 macOS/Windows 同 revision 对账和最小 smoke 后才能标为 PASSED。本轮不要执行题目、提交或推送。
 ```
 
 ### 6.2 使用最新正式包执行 canary 或身份漂移复验
