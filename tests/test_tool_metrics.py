@@ -695,6 +695,28 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(metrics["unclear"], 1)
         self.assertEqual(metrics["format_error"], 0)
 
+    def test_minimax_code_uses_native_status_and_report_argument_shape(self):
+        lines = [
+            _codex_line("assistant", _tool_use("m1", "bash", {"command": "true"})),
+            _codex_line("user", _tool_result("m1", "ok", "completed")),
+            _codex_line("assistant", _tool_use("m2", "read", {"_raw": "{broken"})),
+            _codex_line("user", _tool_result("m2", "invalid arguments", "error")),
+            _codex_line("assistant", _tool_use("m3", "bash", {})),
+            _codex_line("user", _tool_result("m3", "waiting", "pending")),
+        ]
+        path = self._write("chat_minimax.jsonl", "\n".join(lines) + "\n")
+
+        metrics = parse_tool_metrics(path, "minimax-code")
+        report_metrics = parse_report_tool_metrics(path, "minimax-code")
+
+        self.assertEqual(metrics["total"], 3)
+        self.assertEqual(metrics["success"], 1)
+        self.assertEqual(metrics["failure"], 1)
+        self.assertEqual(metrics["unclear"], 1)
+        self.assertEqual(report_metrics["format_error"], 1)
+        self.assertEqual(report_metrics["success"], 1)
+        self.assertEqual(report_metrics["unclear"], 1)
+
     def test_deepseek_report_format_uses_native_request_schema(self):
         run_dir = Path(self.tmp.name) / "run"
         session_dir = run_dir / "dsh_sessions" / "session-1"

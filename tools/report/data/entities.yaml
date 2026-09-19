@@ -194,3 +194,8 @@ harnesses:
     family: DeepSeek Harness
     aliases: []
     capabilities: {}
+  minimax-code:
+    display_name: MiniMax Code
+    family: MiniMax Code
+    aliases: []
+    capabilities: {}

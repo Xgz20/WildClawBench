@@ -1,0 +1,99 @@
+#!/bin/sh
+set -eu
+
+: "${MCODE_MODEL_ID:?MCODE_MODEL_ID is required}"
+: "${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required}"
+
+export MINIMAX_DATA_DIR="${MINIMAX_DATA_DIR:-/tmp/wildclaw_mcode}"
+export MCODE_DISABLE_TELEMETRY=1
+export DO_NOT_TRACK=1
+MCODE_API="${MCODE_API:-openai-completions}"
+MCODE_TIMEOUT_SECONDS="${MCODE_TIMEOUT_SECONDS:-300}"
+OPENROUTER_BASE_URL="${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}"
+MCODE_PROMPT_MODE="${MCODE_PROMPT_MODE:-coding}"
+
+case "${MCODE_API}" in
+  openai-completions|openai-responses|anthropic-messages) ;;
+  *)
+    echo "MCODE_API must be openai-completions, openai-responses, or anthropic-messages" >&2
+    exit 2
+    ;;
+esac
+case "${MCODE_TIMEOUT_SECONDS}" in
+  ''|*[!0-9]*)
+    echo "MCODE_TIMEOUT_SECONDS must be a positive integer" >&2
+    exit 2
+    ;;
+  0)
+    echo "MCODE_TIMEOUT_SECONDS must be a positive integer" >&2
+    exit 2
+    ;;
+esac
+case "${MCODE_PROMPT_MODE}" in
+  tui|coding|work) ;;
+  *)
+    echo "MCODE_PROMPT_MODE must be tui, coding, or work" >&2
+    exit 2
+    ;;
+esac
+case "${MCODE_OUTPUT_LIMIT:-}" in
+  '' ) ;;
+  *[!0-9]*|0)
+    echo "MCODE_OUTPUT_LIMIT must be a positive integer when set" >&2
+    exit 2
+    ;;
+esac
+
+mkdir -p "${MINIMAX_DATA_DIR}/skills" /tmp_workspace
+
+# The official provider command owns the persisted custom-provider schema.
+# Its output is kept separate so stdout remains pure stream-json.
+add_provider() {
+  mcode provider add \
+    --name WildClawBench \
+    --base-url "${OPENROUTER_BASE_URL}" \
+    --api-format "${MCODE_API}" \
+    --model "${MCODE_MODEL_ID}" \
+    --api-key-env OPENROUTER_API_KEY \
+    "$@"
+}
+
+if [ -n "${MCODE_OUTPUT_LIMIT:-}" ]; then
+  add_provider --output-limit "${MCODE_OUTPUT_LIMIT}" \
+    > /tmp/mcode-provider.log 2>&1 || provider_status=$?
+else
+  add_provider > /tmp/mcode-provider.log 2>&1 || provider_status=$?
+fi
+if [ "${provider_status:-0}" -ne 0 ]; then
+  cat /tmp/mcode-provider.log >&2
+  exit 3
+fi
+
+# mcode 0.4.12 checks account access before applying the per-run --model
+# override. Selecting the custom provider as default prevents an unrelated
+# MiniMax Token Plan login gate while retaining the explicit --model below.
+export MCODE_MODEL_REF="custom_provider:wildclawbench/${MCODE_MODEL_ID}"
+node <<'NODE'
+const fs = require('node:fs');
+const path = `${process.env.MINIMAX_DATA_DIR}/config.yaml`;
+let source = fs.readFileSync(path, 'utf8');
+const line = `defaultModel: ${JSON.stringify(process.env.MCODE_MODEL_REF)}`;
+source = /^defaultModel:.*$/m.test(source)
+  ? source.replace(/^defaultModel:.*$/m, line)
+  : `${line}\n${source}`;
+fs.writeFileSync(path, source, 'utf8');
+NODE
+
+# Custom providers currently expose provider-default reasoning rather than
+# named effort levels. MCODE_THINKING_REQUESTED is intentionally not forwarded
+# as --effort; the runner records that boundary in execution_status.json.
+exec mcode exec \
+  --cwd /tmp_workspace \
+  --model "${MCODE_MODEL_REF}" \
+  --prompt-mode "${MCODE_PROMPT_MODE}" \
+  --permission full \
+  --timeout "${MCODE_TIMEOUT_SECONDS}s" \
+  --output-format stream-json \
+  --diagnostics-dir /tmp/mcode-diagnostics \
+  --output-last-message /tmp/mcode-last-message.txt \
+  "$@"

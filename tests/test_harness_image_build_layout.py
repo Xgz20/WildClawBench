@@ -12,14 +12,17 @@ ASTRONCODE_DIR = REPO_ROOT / "docker" / "astroncode"
 CLAUDECODE_DIR = REPO_ROOT / "docker" / "claudecode"
 CODEX_DIR = REPO_ROOT / "docker" / "codex"
 DEEPSEEK_HARNESS_DIR = REPO_ROOT / "docker" / "deepseek-harness"
+MINIMAX_CODE_DIR = REPO_ROOT / "docker" / "minimax-code"
 ASTRONCODE_BUILD = ASTRONCODE_DIR / "build.sh"
 CLAUDECODE_BUILD = CLAUDECODE_DIR / "build.sh"
 CODEX_BUILD = CODEX_DIR / "build.sh"
 DEEPSEEK_HARNESS_BUILD = DEEPSEEK_HARNESS_DIR / "build.sh"
+MINIMAX_CODE_BUILD = MINIMAX_CODE_DIR / "build.sh"
 ASTRONCODE_MANIFEST = ASTRONCODE_DIR / "versions.json"
 CLAUDECODE_MANIFEST = CLAUDECODE_DIR / "versions.json"
 CODEX_MANIFEST = CODEX_DIR / "versions.json"
 DEEPSEEK_HARNESS_MANIFEST = DEEPSEEK_HARNESS_DIR / "versions.json"
+MINIMAX_CODE_MANIFEST = MINIMAX_CODE_DIR / "versions.json"
 ASTRONCODE_WRAPPER = REPO_ROOT / "script" / "build-astroncode-image.sh"
 CODEX_WRAPPER = REPO_ROOT / "script" / "build-codex-image.sh"
 
@@ -32,6 +35,7 @@ BUILD_ENV_NAMES = (
     "SEARCH_UPDATER_VERSION",
     "CODEX_VERSION",
     "DSH_VERSION",
+    "MCODE_VERSION",
     "EVAL_BASE_IMAGE",
     "NODE_RUNTIME_IMAGE",
     "IMAGE_TAG",
@@ -174,11 +178,30 @@ class ImageVersionManifestTest(unittest.TestCase):
                     (DEEPSEEK_HARNESS_DIR / entry["dockerfile"]).is_file()
                 )
 
+    def test_minimax_code_manifest_binds_v00_to_pinned_cli_and_base(self):
+        manifest = self._load_manifest(MINIMAX_CODE_MANIFEST)
+        self.assertEqual("v0.0", manifest["default"])
+        self.assertEqual({"v0.0"}, set(manifest["versions"]))
+        entry = manifest["versions"]["v0.0"]
+        self.assertEqual("wildclawbench-minimax-code-ubuntu:v0.0", entry["image"])
+        self.assertEqual("v1", entry["context"])
+        self.assertEqual("v1/Dockerfile", entry["dockerfile"])
+        self.assertEqual(
+            {
+                "MCODE_VERSION": "0.4.12",
+                "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0",
+                "NODE_RUNTIME_IMAGE": "node:24-bookworm-slim",
+            },
+            entry["build_args"],
+        )
+        self.assertTrue((MINIMAX_CODE_DIR / entry["dockerfile"]).is_file())
+
     def test_harness_directories_do_not_duplicate_version_contexts_under_releases(self):
         self.assertFalse((ASTRONCODE_DIR / "releases").exists())
         self.assertFalse((CLAUDECODE_DIR / "releases").exists())
         self.assertFalse((CODEX_DIR / "releases").exists())
         self.assertFalse((DEEPSEEK_HARNESS_DIR / "releases").exists())
+        self.assertFalse((MINIMAX_CODE_DIR / "releases").exists())
 
     def test_canonical_builders_are_executable_and_export_capable(self):
         for build_script in (
@@ -186,6 +209,7 @@ class ImageVersionManifestTest(unittest.TestCase):
             CLAUDECODE_BUILD,
             CODEX_BUILD,
             DEEPSEEK_HARNESS_BUILD,
+            MINIMAX_CODE_BUILD,
         ):
             with self.subTest(build_script=build_script):
                 self.assertTrue(build_script.is_file())

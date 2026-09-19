@@ -45,7 +45,7 @@ _ENVIRONMENT_ERROR_RE = re.compile(
 )
 _HARNESS_RUN_FAILED_RE = re.compile(
     r"^(?:AstronCode|AstronClaw|OpenCode|Codex|OpenClaw|HermesAgent|ClaudeCode|"
-    r"DeepSeek Harness)\s+run failed\s*\(rc=\d+\)",
+    r"DeepSeek Harness|MiniMax Code)\s+run failed\s*\(rc=\d+\)",
     re.I,
 )
 # Auth / quota exhaustion on the evaluation's own LLM endpoint is an infrastructure
@@ -169,6 +169,9 @@ def _raw_session_files(run_dir: Path) -> list[Path]:
         root = run_dir / dirname
         if root.is_dir():
             result.extend(sorted(root.rglob("*.jsonl")))
+    minimax_trace = run_dir / "minimax_code_trace.jsonl"
+    if minimax_trace.is_file():
+        result.append(minimax_trace)
     return result
 
 
@@ -489,20 +492,38 @@ def _structured_model_errors(run_dir: Path, status: dict) -> list[dict[str, Any]
             payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
             event_type = str(event.get("type") or "").lower()
             payload_type = str(payload.get("type") or "").lower()
+            minimax_error: dict[str, Any] | None = None
+            if event_type == "turn.failed" and isinstance(event.get("error"), dict):
+                minimax_error = event["error"]
+            elif event_type == "exec.completed":
+                result = event.get("result")
+                if (
+                    isinstance(result, dict)
+                    and result.get("status") != "succeeded"
+                    and isinstance(result.get("error"), dict)
+                ):
+                    minimax_error = result["error"]
             is_error_event = (
                 (event_type == "event_msg" and payload_type == "error")
                 or (event_type == "response_item" and payload_type == "error")
                 or event_type == "error"
+                or minimax_error is not None
             )
             if not is_error_event:
                 continue
             message = str(
-                payload.get("message") or payload.get("error") or payload.get("text")
+                (minimax_error or {}).get("message")
+                or payload.get("message") or payload.get("error") or payload.get("text")
                 or event.get("message") or event.get("error") or ""
             )
+            status_match = _HTTP_STATUS_RE.search(message)
             errors.append({
                 "message": message,
-                "http_status": payload.get("http_status") or payload.get("status_code"),
+                "http_status": (
+                    payload.get("http_status")
+                    or payload.get("status_code")
+                    or (int(status_match.group(1)) if status_match else None)
+                ),
                 "recovered": False,
                 "evidence": {
                     "file": str(session_file.relative_to(run_dir)),
