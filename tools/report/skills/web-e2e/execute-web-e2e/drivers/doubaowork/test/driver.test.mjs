@@ -18,6 +18,7 @@ import {
   assertPreSendRetryEligible,
   canonicalEditorBlockText,
   classifyDevelopmentObservation,
+  confirmResumePromptReadback,
   selectConfigurationReadback,
   selectWorkspaceReadbackCandidate,
   validateObservationBinding,
@@ -27,7 +28,6 @@ import {
 import { sha256Text } from "../lib.mjs";
 import {
   bindConversation,
-  confirmConversationPromptReadback,
   confirmModel,
   confirmPermission,
   confirmWorkspaceReadback,
@@ -216,12 +216,9 @@ test("每次观察都要验证 conversation-project-workspace-Prompt 等价绑�
   };
   const evidence = validateObservationBinding(state, valid);
   assert.equal(evidence.status, "verified");
-  confirmConversationPromptReadback(state, {
-    sha256: valid.latest_user_message_sha256,
-    bytes: valid.latest_user_message_bytes,
-    normalization: valid.latest_user_message_normalization,
-  }, "2026-09-19T00:00:10.000Z");
+  assert.equal(confirmResumePromptReadback(state, valid, evidence), true);
   assert.equal(state.session.prompt_readback.status, "verified");
+  assert.equal(confirmResumePromptReadback(state, valid, evidence), false);
 
   assert.throws(
     () => validateObservationBinding(state, { ...valid, current_conversation_id: "124" }),

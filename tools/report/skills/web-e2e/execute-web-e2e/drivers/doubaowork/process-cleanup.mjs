@@ -211,7 +211,6 @@ export async function readMacProcessInventory(overrides = {}) {
     .filter((item) => {
       const before = beforeByPid.get(item.pid);
       return before
-        && before.parent_pid === item.parent_pid
         && before.process_group_id === item.process_group_id
         && before.process_start_identity === item.process_start_identity
         && before.executable_path === item.executable_path;

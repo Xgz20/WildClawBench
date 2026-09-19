@@ -102,6 +102,47 @@ test("ps 身份在 cwd 读取前后变化时不按 PID 拼接为候选进程", a
   assert.equal(responses.length, 0);
 });
 
+test("ps 复核允许子进程重挂但仍保留相同启动身份", async () => {
+  const responses = [
+    {
+      code: 0,
+      stdout: [
+        " 700 300 300 Sat Sep 19 19:41:11 2026 /bin/bash",
+        " 701 700 300 Sat Sep 19 19:41:11 2026 /usr/bin/python3",
+      ].join("\n"),
+      stderr: "",
+    },
+    {
+      code: 0,
+      stdout: [
+        "p700",
+        "cbash",
+        "fcwd",
+        "n/private/debug/task/workspace",
+        "p701",
+        "cpython3",
+        "fcwd",
+        "n/private/debug/task/workspace/site",
+      ].join("\n"),
+      stderr: "",
+    },
+    {
+      code: 0,
+      stdout: [
+        " 700 1 300 Sat Sep 19 19:41:11 2026 /bin/bash",
+        " 701 1 300 Sat Sep 19 19:41:11 2026 /usr/bin/python3",
+      ].join("\n"),
+      stderr: "",
+    },
+  ];
+  const inventory = await readMacProcessInventory({
+    runCommand: async () => responses.shift(),
+  });
+  assert.deepEqual(inventory.map((item) => item.pid), [700, 701]);
+  assert.equal(inventory.find((item) => item.pid === 701).parent_pid, 1);
+  assert.equal(responses.length, 0);
+});
+
 test("候选选择只接受完整 cwd 边界并包含后代，不匹配同名其他任务", () => {
   const workspace = "/private/debug/task/workspace";
   const selected = selectDoubaoCandidateProcesses([

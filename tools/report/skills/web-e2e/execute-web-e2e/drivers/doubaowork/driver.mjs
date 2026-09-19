@@ -456,6 +456,20 @@ export function validateObservationBinding(state, snapshot) {
   };
 }
 
+export function confirmResumePromptReadback(state, snapshot, bindingEvidence) {
+  if (bindingEvidence?.status !== "verified") {
+    throw new Error("恢复 Prompt 回读必须先通过当前 conversation 绑定校验");
+  }
+  if (state.session.prompt_readback?.status === "verified") return false;
+  confirmConversationPromptReadback(state, {
+    sha256: snapshot.latest_user_message_sha256,
+    bytes: snapshot.latest_user_message_bytes,
+    normalization: snapshot.latest_user_message_normalization,
+    source: "resume-bound-conversation-user-message",
+  }, snapshot.observed_at ? new Date(snapshot.observed_at) : new Date());
+  return true;
+}
+
 function assertNoConflictingActivity(snapshot) {
   if (snapshot.stop_control_count > 0
       || snapshot.busy_conversation_count > 0
@@ -1102,6 +1116,9 @@ async function resumeDevelopmentRun(options) {
     while (Date.now() < deadline) {
       pageObservation = await inspectPage(client.page, { projectName: state.client.project_name });
       bindingEvidence = validateObservationBinding(state, pageObservation.snapshot);
+      if (confirmResumePromptReadback(state, pageObservation.snapshot, bindingEvidence)) {
+        await atomicWriteAttemptState(stateFile, state);
+      }
       classification = classifyDevelopmentObservation(pageObservation.snapshot);
       if (classification.kind === "needs-attention" || classification.kind === "failure-candidate") break;
       if (classification.kind === "ui-completion-candidate") {
@@ -1120,6 +1137,9 @@ async function resumeDevelopmentRun(options) {
     }
 
     bindingEvidence = validateObservationBinding(state, pageObservation.snapshot);
+    if (confirmResumePromptReadback(state, pageObservation.snapshot, bindingEvidence)) {
+      await atomicWriteAttemptState(stateFile, state);
+    }
     const running = pageObservation.snapshot.stop_control_count > 0
       || pageObservation.snapshot.bound_conversation_busy_count > 0;
     const pending = pageObservation.snapshot.visible_dialog_count > 0
