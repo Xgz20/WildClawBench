@@ -459,7 +459,7 @@ macOS 的 AstronStudio、WorkBuddy 和 QwenWork 当前均记录 `terminal_proces
 请使用 $prepare-web-e2e-workspaces 在当前 Windows 仓库中为 Web E2E 当前发布候选生成正式评测包。如果 Windows 无法解析仓库 .agents/skills 下的符号链接，则直接读取并遵循 tools/report/skills/web-e2e/prepare-web-e2e-workspaces/SKILL.md，不要复制或改写 Skill。
 
 先完成发布门禁：
-1. 使用 git rev-parse --show-toplevel、git rev-parse HEAD 和 git status --short 确认仓库、完整 revision 和工作树状态；从本清单 3.1 读取“正式分发包实现/source revision”，执行 git merge-base --is-ancestor <该revision> HEAD，退出码必须为 0。Web E2E Skill、准备脚本、tasks/07_Website_Generation 和 tasks/extension/07_Website_Generation 存在未提交修改时停止，不得带脏源码打包。
+1. 使用 git rev-parse --show-toplevel、git rev-parse HEAD 和 git status --short 确认主工程根、当前 revision 和工作树状态；从本清单 3.1 读取“正式分发包实现/source revision”。打包源码必须精确等于该 revision，不能只验证它是当前 HEAD 的祖先。若主工程 HEAD 已因证据文档提交而前进，在主工程根的 `.agents/web-e2e-release-<短revision>` 创建指向该 revision 的 detached Git worktree，不切换或回退主工程；如果目标 worktree 已存在，只能在确认其 HEAD 精确匹配且工作树干净后复用。后续准备脚本和 `--repo-root` 使用该精确 revision worktree，`--output-dir` 仍使用主工程的 `report-workspace/web-e2e-automation-packages`。Web E2E Skill、准备脚本、tasks/07_Website_Generation 和 tasks/extension/07_Website_Generation 在打包 worktree 中存在未提交修改时停止。
 2. 检查可用的 Python 3 和 PyYAML；缺失依赖由控制任务安装到仓库自己的 Python 环境，不得安装到任何题目 workspace。
 3. 从 tasks/extension/07_Website_Generation 按文件名排序收集全部 Markdown 用例 ID，必须恰好 40 个；从 tasks/07_Website_Generation 按文件名排序收集全部 Markdown 用例 ID，必须恰好 120 个。数量不符立即停止，不猜测、不跳题。
 
@@ -470,7 +470,7 @@ macOS 的 AstronStudio、WorkBuddy 和 QwenWork 当前均记录 `terminal_proces
 两个批次都指定 --harness astronstudio、--harness workbuddy、--harness qwenwork，metric profile 使用 auto，显式传入 --include-execution-record；不预填模型和推理强度。应直接调用仓库标准准备脚本，不手工拼 ZIP。
 
 生成后逐项校验：
-1. 两个 batch_manifest.json 的 source_revision 都严格等于开始时记录的完整 HEAD，每个批次的 task_ids 分别为 40/120，harnesses 都严格包含 astronstudio、workbuddy、qwenwork。
+1. 两个 batch_manifest.json 的 source_revision 都严格等于 3.1 登记的“正式分发包实现/source revision”和打包 worktree 的完整 HEAD；每个批次的 task_ids 分别为 40/120，harnesses 都严格包含 astronstudio、workbuddy、qwenwork。
 2. 每个批次均存在三 Harness 各自的 execution.zip 和 scoring.zip、报告配置、`packages/skills-build-manifest.json`、`packages/skills-manifest.json`，以及五个版本化 Skill ZIP；统一构建清单验包通过，`execution_record_included=true`。
 3. 两个批次中五个 Skill 的名称、版本、运行 content SHA、完整构建 content SHA、ZIP SHA 和 `skill_set_sha256` 逐项相同，五个 ZIP 逐字节一致；分别使用本次 manifest 验证文件，不与旧正式包 SHA 比较。
 4. 逐个打开 6 个 execution ZIP，自建批次每包必须包含 40 份 `execution_record.json`，开源批次每包必须包含 120 份；审计 execution ZIP 不含 Ground Truth、Rubric、checker、eval 或 gt，scoring ZIP 不含候选 workspace、PROMPT.md 或 execution_record.json。
