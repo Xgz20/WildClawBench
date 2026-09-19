@@ -34,8 +34,7 @@ class ManagedMacOSDesktopRestartTests(unittest.TestCase):
         self.app_running = self.root / "app.running"
         self.launchctl_log = self.root / "launchctl.log"
         self.open_log = self.root / "open.log"
-        self.quit_log = self.root / "quit.log"
-        self.pkill_log = self.root / "pkill.log"
+        self.kill_log = self.root / "kill.log"
         self.nohup_log = self.root / "nohup.log"
         self.status_root = self.root / "status"
         self.env = os.environ.copy()
@@ -47,8 +46,7 @@ class ManagedMacOSDesktopRestartTests(unittest.TestCase):
                 "FAKE_APP_RUNNING_FILE": str(self.app_running),
                 "FAKE_LAUNCHCTL_LOG": str(self.launchctl_log),
                 "FAKE_OPEN_LOG": str(self.open_log),
-                "FAKE_QUIT_LOG": str(self.quit_log),
-                "FAKE_PKILL_LOG": str(self.pkill_log),
+                "FAKE_KILL_LOG": str(self.kill_log),
                 "FAKE_NOHUP_LOG": str(self.nohup_log),
                 "WCB_MACOS_UNAME_BIN": self._fake("uname", 'printf "Darwin\\n"'),
                 "WCB_MACOS_ID_BIN": self._fake("id", 'printf "501\\n"'),
@@ -77,33 +75,23 @@ exit 0
                     '[[ -f "$FAKE_LISTENER_FILE" ]] || exit 1\nprintf "4242\\n"',
                 ),
                 "WCB_MACOS_PS_BIN": self._fake(
-                    "ps", 'printf "%s\\n" "$FAKE_APP_PATH/Contents/MacOS/Codex"'
-                ),
-                "WCB_MACOS_PGREP_BIN": self._fake(
-                    "pgrep", '[[ -f "$FAKE_APP_RUNNING_FILE" ]]'
-                ),
-                "WCB_MACOS_PKILL_BIN": self._fake(
-                    "pkill",
+                    "ps",
                     """
-printf '%s\\n' "$*" >> "$FAKE_PKILL_LOG"
-if [[ "$*" == *"-TERM"* ]]; then
-  /bin/rm -f -- "$FAKE_APP_RUNNING_FILE"
+if [[ "$*" == "-axo pid=,ppid=,command=" ]]; then
+  if [[ -f "$FAKE_APP_RUNNING_FILE" ]]; then
+    printf '4242 1 %s/Contents/MacOS/Codex --fixture\\n' "$FAKE_APP_PATH"
+  fi
+elif [[ "$*" == "-p 4242 -o command=" && -f "$FAKE_APP_RUNNING_FILE" ]]; then
+  printf '%s/Contents/MacOS/Codex --fixture\\n' "$FAKE_APP_PATH"
 fi
 """,
                 ),
-                "WCB_MACOS_OSASCRIPT_BIN": self._fake(
-                    "osascript",
+                "WCB_MACOS_KILL_BIN": self._fake(
+                    "kill",
                     """
-printf '%s\\n' "$*" >> "$FAKE_QUIT_LOG"
-if [[ "$1" == "-e" ]]; then
-  if [[ "${FAKE_QUIT_REQUIRES_CONFIRM:-0}" != "1" ]]; then
-    /bin/rm -f -- "$FAKE_APP_RUNNING_FILE"
-  fi
-elif [[ "${FAKE_CONFIRM_MATCH:-0}" == "1" ]]; then
-  printf 'CONFIRMED\\n'
+printf '%s\\n' "$*" >> "$FAKE_KILL_LOG"
+if [[ "$1" == "-KILL" || "${FAKE_TERM_IGNORED:-0}" != "1" ]]; then
   /bin/rm -f -- "$FAKE_APP_RUNNING_FILE"
-else
-  printf 'NO_MATCH\\n'
 fi
 """,
                 ),
@@ -112,6 +100,7 @@ fi
                     """
 printf '%s\\n' "$*" >> "$FAKE_OPEN_LOG"
 : > "$FAKE_LISTENER_FILE"
+: > "$FAKE_APP_RUNNING_FILE"
 """,
                 ),
                 "WCB_MACOS_CURL_BIN": self._fake(
@@ -164,8 +153,11 @@ fi
         self.assertNotIn(b"launchctl submit", source)
         self.assertIn(b"<key>RunAtLoad</key>", source)
         self.assertIn(b"<key>KeepAlive</key>", source)
-        self.assertIn("退出 Codex？".encode(), source)
-        self.assertIn(b'elementRole is "AXButton"', source)
+        self.assertIn(b"signal_app_processes TERM", source)
+        self.assertIn(b"signal_app_processes KILL", source)
+        self.assertNotIn(b"osascript", source)
+        self.assertNotIn(b"System Events", source)
+        self.assertNotIn(b"pkill", source)
         self.assertEqual(WEB_COPY.read_bytes(), source)
         help_result = self._run("--help")
         self.assertEqual(help_result.returncode, 0, help_result.stderr)
@@ -220,7 +212,7 @@ fi
         status = json.loads((state_dir / "status.json").read_text(encoding="utf-8"))
         self.assertEqual(status["status"], "PASSED")
         self.assertEqual(len(self.open_log.read_text(encoding="utf-8").splitlines()), 1)
-        self.assertEqual(len(self.quit_log.read_text(encoding="utf-8").splitlines()), 1)
+        self.assertEqual(self.kill_log.read_text(encoding="utf-8").splitlines(), ["-TERM 4242"])
         self.assertIn("--cleanup-worker", self._read_eventually(self.nohup_log))
 
         cleanup = self._run(
@@ -243,15 +235,14 @@ fi
             self.launchctl_log.read_text(encoding="utf-8"),
         )
 
-    def test_worker_confirms_only_the_recognized_codex_quit_dialog(self) -> None:
+    def test_worker_falls_back_to_kill_after_bounded_term_wait(self) -> None:
         self.app_running.write_text("running\n", encoding="utf-8")
         state_dir = self.root / "confirm-worker"
         state_dir.mkdir()
         plist = state_dir / "job.plist"
         plist.write_text("fixture\n", encoding="utf-8")
         env = dict(self.env)
-        env["FAKE_QUIT_REQUIRES_CONFIRM"] = "1"
-        env["FAKE_CONFIRM_MATCH"] = "1"
+        env["FAKE_TERM_IGNORED"] = "1"
         result = self._run(
             "--worker",
             "--job-label",
@@ -263,7 +254,7 @@ fi
             "--plist-path",
             str(plist),
             "--run-id",
-            "confirm-run",
+            "kill-fallback-run",
             "--created-at",
             "2026-09-18T00:00:00Z",
             "--app-path",
@@ -275,48 +266,10 @@ fi
             env=env,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("Confirmed the recognized Codex quit dialog", result.stdout)
-        invocations = self.quit_log.read_text(encoding="utf-8").splitlines()
-        self.assertEqual(len(invocations), 2)
-        self.assertTrue(invocations[0].startswith("-e "))
-        self.assertEqual(invocations[1], "- Codex")
-        self.assertFalse(self.pkill_log.exists())
-
-    def test_unknown_quit_dialog_is_not_confirmed_and_uses_term_fallback(self) -> None:
-        self.app_running.write_text("running\n", encoding="utf-8")
-        state_dir = self.root / "unknown-dialog-worker"
-        state_dir.mkdir()
-        plist = state_dir / "job.plist"
-        plist.write_text("fixture\n", encoding="utf-8")
-        env = dict(self.env)
-        env["FAKE_QUIT_REQUIRES_CONFIRM"] = "1"
-        result = self._run(
-            "--worker",
-            "--job-label",
-            "com.wildclawbench.desktop-debug-restart.codex",
-            "--job-uid",
-            "501",
-            "--state-dir",
-            str(state_dir),
-            "--plist-path",
-            str(plist),
-            "--run-id",
-            "unknown-dialog-run",
-            "--created-at",
-            "2026-09-18T00:00:00Z",
-            "--app-path",
-            str(self.app),
-            "--port",
-            "9230",
-            "--delay-seconds",
-            "0",
-            env=env,
+        self.assertEqual(
+            self.kill_log.read_text(encoding="utf-8").splitlines(),
+            ["-TERM 4242", "-KILL 4242"],
         )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertNotIn("Confirmed the recognized Codex quit dialog", result.stdout)
-        pkill = self.pkill_log.read_text(encoding="utf-8")
-        self.assertIn("-TERM", pkill)
-        self.assertNotIn("-KILL", pkill)
 
     def test_existing_legacy_or_current_job_fails_closed(self) -> None:
         for label in (

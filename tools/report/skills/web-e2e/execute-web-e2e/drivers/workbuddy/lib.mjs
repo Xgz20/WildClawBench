@@ -17,13 +17,14 @@ import {
   MACOS_BUNDLE_ID,
   defaultWorkBuddyAppPath,
   defaultWorkBuddySessionDb,
+  discoverWorkBuddyApp,
   resolveWorkBuddyAppPath,
   validateWorkBuddyAppPath,
 } from "./platform.mjs";
 
 export const AUTOMATION_SCHEMA = "wildclawbench.web-e2e-automation-state/v1";
 export const EXECUTION_SCHEMA = "wildclawbench.web-e2e-execution/v1";
-export const DRIVER_VERSION = "1.8.27";
+export const DRIVER_VERSION = "1.9.0";
 export const DEFAULT_APP_PATH = defaultWorkBuddyAppPath();
 export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9229";
@@ -78,6 +79,7 @@ export function parseArgs(argv) {
     taskId: "",
     endpoint: DEFAULT_ENDPOINT,
     appPath: DEFAULT_APP_PATH,
+    appPathExplicit: false,
     outputDir: "",
     stateFile: "",
     executionRecord: "",
@@ -135,6 +137,7 @@ export function parseArgs(argv) {
       const value = argv[index + 1];
       if (!value || value.startsWith("--")) throw new Error(`${arg} 缺少参数值`);
       values[key] = value;
+      if (key === "appPath") values.appPathExplicit = true;
       index += 1;
     }
   }
@@ -186,15 +189,31 @@ export async function resolveConfig(parsed, overrides = {}) {
   }
   const platform = overrides.platform || process.platform;
   const resolveAppPath = overrides.resolveAppPath
-    || ((value) => resolveWorkBuddyAppPath(value, { platform }));
+    || ((value) => resolveWorkBuddyAppPath(value, { platform, endpoint: parsed.endpoint }));
+  const discoverApp = overrides.discoverApp
+    || (overrides.resolveAppPath
+      ? async (value) => ({
+        schema_version: "wildclawbench.desktop-app-discovery/v1",
+        path: await resolveAppPath(value),
+        executable_path: null,
+        source: parsed.appPathExplicit ? "explicit" : "injected_resolver",
+        identity_verified: true,
+        bundle_id: null,
+        version: null,
+        candidates_checked: [],
+      })
+      : (value) => discoverWorkBuddyApp(value, { platform, endpoint: parsed.endpoint }));
   const validateAppPath = overrides.validateAppPath
     || ((value) => validateWorkBuddyAppPath(value, platform));
-  const appPath = await resolveAppPath(parsed.appPath);
+  const appDiscovery = parsed.appDiscovery || await discoverApp(
+    parsed.appPathExplicit ? parsed.appPath : "",
+  );
+  const appPath = appDiscovery.path;
   await validateAppPath(appPath);
   const sessionDb = resolve(parsed.sessionDb);
 
   if (parsed.probe) {
-    return { ...parsed, appPath, endpoint: endpoint.origin, sessionDb };
+    return { ...parsed, appPath, appDiscovery, endpoint: endpoint.origin, sessionDb };
   }
   if (!parsed.workspace) throw new Error("必须指定 --workspace，或使用 --probe");
   const workspace = await realpath(resolve(parsed.workspace));
@@ -227,6 +246,7 @@ export async function resolveConfig(parsed, overrides = {}) {
     promptSha256: sha256Text(prompt),
     promptBytes: Buffer.byteLength(prompt, "utf8"),
     appPath,
+    appDiscovery,
     endpoint: endpoint.origin,
     outputDir,
     stateFile,
@@ -588,7 +608,14 @@ export function createInitialState(config, identity, initialSnapshot, profile = 
     prompt_bytes: config.promptBytes,
     requested_ui_model: config.model || null,
     requested_permission_mode: config.permissionMode,
-    client: { app_path: config.appPath, endpoint: config.endpoint, version: "", process: null, launch: null },
+    client: {
+      app_path: config.appPath,
+      app_discovery: config.appDiscovery || null,
+      endpoint: config.endpoint,
+      version: "",
+      process: null,
+      launch: null,
+    },
     session: {
       database: config.sessionDb,
       conversation_id: null,
@@ -620,6 +647,11 @@ export function assertStateMatches(state, config, identity, profile = WORKBUDDY_
   if (state.driver?.id !== profile.id) mismatches.push("driver_id");
   if (state.workspace !== config.workspace) mismatches.push("workspace");
   if (state.prompt_sha256 !== config.promptSha256) mismatches.push("prompt_sha256");
+  if (state.client?.app_path && state.client.app_path !== config.appPath) mismatches.push("app_path");
+  if (
+    state.client?.app_discovery?.path
+    && state.client.app_discovery.path !== config.appDiscovery?.path
+  ) mismatches.push("app_discovery_path");
   if ((state.requested_ui_model || "") !== config.model) mismatches.push("requested_ui_model");
   if (state.requested_permission_mode && state.requested_permission_mode !== config.permissionMode) {
     mismatches.push("requested_permission_mode");

@@ -5,6 +5,7 @@ schema_version="wildclawbench.macos-desktop-debug-restart/v1"
 job_label="com.wildclawbench.desktop-debug-restart.codex"
 application="codex"
 app_path=""
+app_discovery_source=""
 port=9230
 delay_seconds=3
 timeout_seconds=60
@@ -22,9 +23,7 @@ id_bin="${WCB_MACOS_ID_BIN:-/usr/bin/id}"
 uuidgen_bin="${WCB_MACOS_UUIDGEN_BIN:-/usr/bin/uuidgen}"
 lsof_bin="${WCB_MACOS_LSOF_BIN:-/usr/sbin/lsof}"
 ps_bin="${WCB_MACOS_PS_BIN:-/bin/ps}"
-pgrep_bin="${WCB_MACOS_PGREP_BIN:-/usr/bin/pgrep}"
-pkill_bin="${WCB_MACOS_PKILL_BIN:-/usr/bin/pkill}"
-osascript_bin="${WCB_MACOS_OSASCRIPT_BIN:-/usr/bin/osascript}"
+kill_bin="${WCB_MACOS_KILL_BIN:-/bin/kill}"
 open_bin="${WCB_MACOS_OPEN_BIN:-/usr/bin/open}"
 curl_bin="${WCB_MACOS_CURL_BIN:-/usr/bin/curl}"
 sleep_bin="${WCB_MACOS_SLEEP_BIN:-/bin/sleep}"
@@ -34,6 +33,11 @@ nohup_bin="${WCB_MACOS_NOHUP_BIN:-/usr/bin/nohup}"
 
 script_dir="$(cd "$(dirname "$0")" && pwd -P)"
 script_path="$script_dir/$(basename "$0")"
+discovery_cli="$script_dir/../desktop-app-discovery/cli.mjs"
+if [[ ! -f "$discovery_cli" ]]; then
+  discovery_cli="$script_dir/../vendor/e2e-shared/desktop-app-discovery/cli.mjs"
+fi
+node_bin="${WCB_NODE_BIN:-}"
 
 usage() {
   cat <<'EOF'
@@ -63,6 +67,10 @@ while (( $# > 0 )); do
       ;;
     --app-path)
       app_path="${2:-}"
+      shift 2
+      ;;
+    --app-discovery-source)
+      app_discovery_source="${2:-}"
       shift 2
       ;;
     --port)
@@ -181,26 +189,40 @@ validate_app_bundle() {
 }
 
 resolve_app_path() {
-  local candidate
+  local discovery_output discovered_path discovered_source ignored_executable
   if [[ -n "$app_path" ]]; then
     validate_app_bundle "$app_path" || {
       echo "--app-path is not a com.openai.codex application bundle: $app_path" >&2
       return 1
     }
+    if [[ -z "$app_discovery_source" ]]; then
+      app_discovery_source="explicit"
+    fi
     return 0
   fi
-  for candidate in \
-    "/Applications/ChatGPT.app" \
-    "/Applications/Codex.app" \
-    "$HOME/Applications/ChatGPT.app" \
-    "$HOME/Applications/Codex.app"; do
-    if validate_app_bundle "$candidate"; then
-      app_path="$candidate"
-      return 0
-    fi
-  done
-  echo "Codex Desktop application bundle was not found" >&2
-  return 1
+  if [[ ! -f "$discovery_cli" ]]; then
+    echo "Bundled desktop application discovery CLI was not found: $discovery_cli" >&2
+    return 1
+  fi
+  if [[ -z "$node_bin" ]]; then
+    node_bin="$(/usr/bin/which node 2>/dev/null || true)"
+  fi
+  if [[ -z "$node_bin" || ! -x "$node_bin" ]]; then
+    echo "Node.js is required for Codex Desktop application discovery" >&2
+    return 1
+  fi
+  discovery_output="$("$node_bin" "$discovery_cli" --profile codex --platform darwin --format tsv)" || return 1
+  IFS=$'\t' read -r discovered_path discovered_source ignored_executable <<< "$discovery_output"
+  if [[ -z "$discovered_path" || -z "$discovered_source" ]]; then
+    echo "Codex Desktop application discovery returned an incomplete result" >&2
+    return 1
+  fi
+  app_path="$discovered_path"
+  app_discovery_source="$discovered_source"
+  validate_app_bundle "$app_path" || {
+    echo "Discovered path is not a com.openai.codex application bundle: $app_path" >&2
+    return 1
+  }
 }
 
 write_status() {
@@ -211,7 +233,7 @@ write_status() {
   if [[ -n "$error_message" ]]; then
     error_json="\"$(json_escape "$error_message")\""
   fi
-  /usr/bin/printf '{\n  "schema_version": "%s",\n  "status": "%s",\n  "application": "codex",\n  "job_label": "%s",\n  "run_id": "%s",\n  "created_at": "%s",\n  "updated_at": "%s",\n  "port": %s,\n  "app_path": "%s",\n  "state_dir": "%s",\n  "error": %s\n}\n' \
+  /usr/bin/printf '{\n  "schema_version": "%s",\n  "status": "%s",\n  "application": "codex",\n  "job_label": "%s",\n  "run_id": "%s",\n  "created_at": "%s",\n  "updated_at": "%s",\n  "port": %s,\n  "app_path": "%s",\n  "app_discovery_source": "%s",\n  "state_dir": "%s",\n  "error": %s\n}\n' \
     "$schema_version" \
     "$status" \
     "$(json_escape "$job_label")" \
@@ -220,6 +242,7 @@ write_status() {
     "$(utc_now)" \
     "$port" \
     "$(json_escape "$app_path")" \
+    "$(json_escape "$app_discovery_source")" \
     "$(json_escape "$state_dir")" \
     "$error_json" > "$temporary"
   /bin/mv -f "$temporary" "$status_path"
@@ -248,70 +271,58 @@ assert_port_restartable() {
   fi
 }
 
-app_is_running() {
-  "$pgrep_bin" -f "$app_path/Contents/MacOS/" >/dev/null 2>&1
+app_main_pids() {
+  local prefix="${app_path}/Contents/MacOS/"
+  "$ps_bin" -axo pid=,ppid=,command= | /usr/bin/awk -v prefix="$prefix" '
+    {
+      pid = $1
+      ppid = $2
+      command = $0
+      sub(/^[[:space:]]*[0-9]+[[:space:]]+[0-9]+[[:space:]]+/, "", command)
+      if (index(command, prefix) == 1) {
+        matched[pid] = 1
+        parent[pid] = ppid
+        ordered[++count] = pid
+      }
+    }
+    END {
+      for (idx = 1; idx <= count; idx += 1) {
+        pid = ordered[idx]
+        if (!(parent[pid] in matched)) print pid
+      }
+    }
+  '
 }
 
-confirm_known_quit_dialog() {
-  local app_process_name confirmation
-  app_process_name="$(basename "$app_path" .app)"
-  case "$app_process_name" in
-    ChatGPT|Codex) ;;
-    *) return 1 ;;
-  esac
-  confirmation="$("$osascript_bin" - "$app_process_name" <<'APPLESCRIPT' 2>/dev/null || true
-on run argv
-  if (count of argv) is not 1 then return "NO_MATCH"
-  set processName to item 1 of argv
-  if processName is not "ChatGPT" and processName is not "Codex" then return "NO_MATCH"
-  set expectedTitles to {"退出 Codex？", "退出 ChatGPT？", "Quit Codex?", "Quit ChatGPT?"}
-  set expectedButtons to {"退出", "Quit"}
-  tell application "System Events"
-    if not (exists process processName) then return "NO_MATCH"
-    tell process processName
-      repeat with candidateWindow in windows
-        set windowElements to {}
-        try
-          set windowElements to entire contents of candidateWindow
-        end try
-        set matchedTitle to false
-        repeat with candidateElement in windowElements
-          set elementText to ""
-          try
-            set elementText to value of candidateElement as text
-          end try
-          if elementText is "" then
-            try
-              set elementText to name of candidateElement as text
-            end try
-          end if
-          if expectedTitles contains elementText then
-            set matchedTitle to true
-            exit repeat
-          end if
-        end repeat
-        if matchedTitle then
-          repeat with candidateElement in windowElements
-            set elementRole to ""
-            set elementName to ""
-            try
-              set elementRole to role of candidateElement as text
-              set elementName to name of candidateElement as text
-            end try
-            if elementRole is "AXButton" and expectedButtons contains elementName then
-              perform action "AXPress" of candidateElement
-              return "CONFIRMED"
-            end if
-          end repeat
-        end if
-      end repeat
-    end tell
-  end tell
-  return "NO_MATCH"
-end run
-APPLESCRIPT
-)"
-  [[ "$confirmation" == "CONFIRMED" ]]
+app_is_running() {
+  [[ -n "$(app_main_pids)" ]]
+}
+
+process_matches_app_path() {
+  local pid="$1"
+  local command
+  command="$("$ps_bin" -p "$pid" -o command= 2>/dev/null || true)"
+  [[ -n "$command" && "$command" == "$app_path/Contents/MacOS/"* ]]
+}
+
+signal_app_processes() {
+  local signal="$1"
+  local pids pid
+  pids="$(app_main_pids)"
+  if [[ -z "$pids" ]]; then
+    return 0
+  fi
+  while read -r pid; do
+    [[ -n "$pid" ]] || continue
+    if ! process_matches_app_path "$pid"; then
+      echo "Codex Desktop process identity changed before $signal; refusing to signal PID $pid" >&2
+      return 1
+    fi
+    if ! "$kill_bin" "-$signal" "$pid" 2>/dev/null && process_matches_app_path "$pid"; then
+      echo "Unable to send $signal to verified Codex Desktop PID $pid" >&2
+      return 1
+    fi
+  done <<< "$pids"
 }
 
 stop_app() {
@@ -320,24 +331,14 @@ stop_app() {
     return 0
   fi
   echo "Stopping Codex Desktop for one managed restart..."
-  "$osascript_bin" -e 'tell application id "com.openai.codex" to quit' >/dev/null 2>&1 || true
+  signal_app_processes TERM
   for attempt in {1..20}; do
     if ! app_is_running; then
       return 0
     fi
-    if confirm_known_quit_dialog; then
-      echo "Confirmed the recognized Codex quit dialog."
-    fi
     "$sleep_bin" 0.5
   done
-  "$pkill_bin" -TERM -f "$app_path/Contents/MacOS/" >/dev/null 2>&1 || true
-  for attempt in {1..10}; do
-    if ! app_is_running; then
-      return 0
-    fi
-    "$sleep_bin" 0.5
-  done
-  "$pkill_bin" -KILL -f "$app_path/Contents/MacOS/" >/dev/null 2>&1 || true
+  signal_app_processes KILL
   "$sleep_bin" 1
   if app_is_running; then
     echo "Unable to stop Codex Desktop" >&2
@@ -405,6 +406,7 @@ schedule_cleanup() {
     --state-dir "$state_dir" \
     --plist-path "$plist_path" \
     --app-path "$app_path" \
+    --app-discovery-source "$app_discovery_source" \
     --port "$port" \
     --delay-seconds 0 \
     --timeout-seconds "$timeout_seconds" \
@@ -471,6 +473,8 @@ render_plist() {
     "    <string>$(xml_escape "$created_at")</string>" \
     '    <string>--app-path</string>' \
     "    <string>$(xml_escape "$app_path")</string>" \
+    '    <string>--app-discovery-source</string>' \
+    "    <string>$(xml_escape "$app_discovery_source")</string>" \
     '    <string>--port</string>' \
     "    <string>$(xml_escape "$port")</string>" \
     '    <string>--delay-seconds</string>' \

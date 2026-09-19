@@ -74,6 +74,7 @@ class E2EBuildTests(unittest.TestCase):
             set(components),
             {
                 "desktop-runtime",
+                "desktop-app-discovery",
                 "desktop-debug",
                 "resource-metrics",
                 "workspace-integrity",

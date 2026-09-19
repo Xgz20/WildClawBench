@@ -21,6 +21,14 @@ param(
     [ValidateRange(1, 30)]
     [int]$DelaySeconds = 5,
 
+    [string]$CodexAppPath = "",
+
+    [string]$AstronStudioAppPath = "",
+
+    [string]$WorkBuddyAppPath = "",
+
+    [string]$QwenWorkAppPath = "",
+
     [string]$StatusDirectory,
 
     [switch]$ScheduledWorker,
@@ -53,6 +61,10 @@ function Write-RestartStatus {
         qwenwork_port = $QwenWorkPort
         timeout_seconds = $TimeoutSeconds
         delay_seconds = $DelaySeconds
+        codex_app_path = $CodexAppPath
+        astronstudio_app_path = $AstronStudioAppPath
+        workbuddy_app_path = $WorkBuddyAppPath
+        qwenwork_app_path = $QwenWorkAppPath
         updated_at = [DateTime]::UtcNow.ToString("o")
         error = $ErrorMessage
     }
@@ -102,6 +114,10 @@ if ($ScheduledWorker) {
             WorkBuddyPort = $WorkBuddyPort
             QwenWorkPort = $QwenWorkPort
             TimeoutSeconds = $TimeoutSeconds
+            CodexAppPath = $CodexAppPath
+            AstronStudioAppPath = $AstronStudioAppPath
+            WorkBuddyAppPath = $WorkBuddyAppPath
+            QwenWorkAppPath = $QwenWorkAppPath
             ForceRestart = $true
         }
 
@@ -164,6 +180,10 @@ $workerCommand = @(
     "-QwenWorkPort $QwenWorkPort",
     "-TimeoutSeconds $TimeoutSeconds",
     "-DelaySeconds $DelaySeconds",
+    "-CodexAppPath $(ConvertTo-SingleQuotedPowerShellLiteral -Value $CodexAppPath)",
+    "-AstronStudioAppPath $(ConvertTo-SingleQuotedPowerShellLiteral -Value $AstronStudioAppPath)",
+    "-WorkBuddyAppPath $(ConvertTo-SingleQuotedPowerShellLiteral -Value $WorkBuddyAppPath)",
+    "-QwenWorkAppPath $(ConvertTo-SingleQuotedPowerShellLiteral -Value $QwenWorkAppPath)",
     "-StatusDirectory $(ConvertTo-SingleQuotedPowerShellLiteral -Value $StatusDirectory)",
     "-ScheduledWorker",
     "-TaskName $(ConvertTo-SingleQuotedPowerShellLiteral -Value $TaskName)"

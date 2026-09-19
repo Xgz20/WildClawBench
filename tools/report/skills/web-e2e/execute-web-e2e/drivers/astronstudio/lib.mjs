@@ -31,7 +31,7 @@ import {
 import {
   defaultAstronAppPath,
   defaultAstronSessionDb,
-  resolveAstronAppPath,
+  discoverAstronApp,
   validateAstronAppPath,
 } from "./platform.mjs";
 
@@ -53,7 +53,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.10.21";
+export const DRIVER_VERSION = "1.11.0";
 export const DEFAULT_APP_PATH = defaultAstronAppPath();
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
@@ -79,9 +79,13 @@ export function parseArgs(argv) {
 
 export async function resolveConfig(parsed, overrides = {}) {
   const platform = overrides.platform || process.platform;
-  const appPath = await resolveAstronAppPath(parsed.appPath, { ...overrides, platform });
+  const appDiscovery = await discoverAstronApp(
+    parsed.appPathExplicit ? parsed.appPath : "",
+    { ...overrides, platform, endpoint: parsed.endpoint },
+  );
+  const appPath = appDiscovery.path;
   return resolveBaseConfig(
-    { ...parsed, appPath },
+    { ...parsed, appPath, appDiscovery },
     {
       resolveAppPath: async (value) => value,
       validateAppPath: async (value) => validateAstronAppPath(value, platform),

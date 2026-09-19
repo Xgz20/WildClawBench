@@ -22,6 +22,10 @@ import {
   updateExecutionRecord,
 } from "../lib.mjs";
 import {
+  gracefulQuitWorkBuddy,
+  terminateWorkBuddyProcess,
+} from "../platform.mjs";
+import {
   captureAttemptConversation,
   capturePageScreenshot,
   canTrustExactTerminalSession,
@@ -41,6 +45,20 @@ import {
   waitForRestartedAttemptRecovery,
   waitForUniqueVisible,
 } from "../driver.mjs";
+
+test("macOS WorkBuddy termination uses exact PID signals without Apple Events", async () => {
+  const commands = [];
+  const runCommand = async (command, args) => {
+    commands.push([command, args]);
+    return { code: 0, stdout: "", stderr: "" };
+  };
+  await gracefulQuitWorkBuddy({ pid: 401 }, { platform: "darwin", runCommand });
+  await terminateWorkBuddyProcess({ pid: 401 }, { platform: "darwin", runCommand });
+  assert.deepEqual(commands, [
+    ["/bin/kill", ["-TERM", "401"]],
+    ["/bin/kill", ["-KILL", "401"]],
+  ]);
+});
 
 test("resume may trust the visible prompt only for one exact running session", () => {
   const attemptSession = { conversationId: "conversation-a", status: "working" };
@@ -390,7 +408,15 @@ async function fixture({ manifest = true, record = false } = {}) {
     await writeFile(join(root, "WorkBuddy", "resources", "app.asar"), "fixture");
   } else {
     await mkdir(join(appPath, "Contents", "Resources"), { recursive: true });
+    await mkdir(join(appPath, "Contents", "MacOS"), { recursive: true });
     await writeFile(join(appPath, "Contents", "Resources", "app.asar"), "fixture");
+    await writeFile(join(appPath, "Contents", "MacOS", "WorkBuddy"), "fixture");
+    await writeFile(join(appPath, "Contents", "Info.plist"), `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleIdentifier</key><string>com.tencent.workbuddy.mac</string>
+<key>CFBundleShortVersionString</key><string>5.5.6</string>
+</dict></plist>\n`);
   }
   await writeFile(join(taskRoot, "PROMPT.md"), "build a site\n");
   if (manifest) {
@@ -749,7 +775,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.8.27");
+  assert.equal(state.driver.version, "1.9.0");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

@@ -41,6 +41,20 @@ function passingObservation() {
       bundle_id: "cn.xfyun.acode",
       version: "3.3.1",
       bundle_identity_verified: true,
+      discovery: {
+        schema_version: "wildclawbench.desktop-app-discovery/v1",
+        component_version: "1.1.0",
+        profile_id: "astronstudio",
+        platform: "darwin",
+        path: "/Applications/AStudio.app",
+        executable_path: "/Applications/AStudio.app/Contents/MacOS/AStudio",
+        source: "running_process",
+        identity_verified: true,
+        bundle_id: "cn.xfyun.acode",
+        version: "3.3.1",
+        candidates_checked: [],
+        discovered_at: "2026-09-17T09:08:13.000Z",
+      },
     },
     process: {
       running: true,
@@ -154,17 +168,17 @@ test("a complete read-only observation freezes default three-slot run config", (
 });
 
 test("an unknown macOS lock state fails closed", async () => {
+  const calls = [];
   const runCommand = async (command) => {
-    if (command === "/usr/bin/osascript") {
-      return { code: 0, stdout: "AStudio\n", stderr: "" };
-    }
+    calls.push(command);
     return { code: 1, stdout: "", stderr: "ioreg unavailable" };
   };
   const result = await inspectGui(runCommand);
-  assert.equal(result.frontmost_application, "AStudio");
+  assert.equal(result.frontmost_application, "unknown");
   assert.equal(result.screen_locked, null);
-  assert.equal(result.lock_source, null);
+  assert.equal(result.lock_source, "ioreg-unavailable");
   assert.equal(result.unlocked, false);
+  assert.deepEqual(calls, ["/usr/sbin/ioreg"]);
 });
 
 test("a persisted model cannot replace current UI model and reasoning readback", () => {
@@ -324,6 +338,7 @@ test("probe orchestration has no mutating callback and preserves read-only audit
     },
     {
       capturedAt: "2026-09-17T10:00:00.000Z",
+      discoverApp: async () => { calls.push("discovery"); return observation.app.discovery; },
       inspectImplementation: async () => { calls.push("implementation"); return observation.implementation; },
       inspectEnvironment: async () => { calls.push("environment"); return observation.environment; },
       inspectApp: async () => { calls.push("app"); return observation.app; },
@@ -342,6 +357,7 @@ test("probe orchestration has no mutating callback and preserves read-only audit
     "cdp-read",
     "database",
     "dependencies",
+    "discovery",
     "environment",
     "gui",
     "implementation",

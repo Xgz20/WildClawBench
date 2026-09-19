@@ -1,39 +1,9 @@
-import { access, realpath, stat } from "node:fs/promises";
 import * as systemPath from "node:path";
-import {
-  isDirectory,
-  isFile,
-  runCapture,
-} from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
+import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
+import { discoverDesktopApp } from "../../vendor/e2e-shared/desktop-app-discovery/index.mjs";
+import { CODEX_DESKTOP_APP_PROFILE } from "../../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 
 export const MACOS_CODEX_APP_PATH = "/Applications/ChatGPT.app";
-export const WINDOWS_CODEX_EXECUTABLE_NAMES = Object.freeze(["ChatGPT.exe", "Codex.exe"]);
-
-function normalizeWindowsPath(value) {
-  return String(value || "").trim().replace(/^"|"$/g, "").replaceAll("/", "\\").toLowerCase();
-}
-
-async function resolveWindowsExecutable(candidate, dependencies) {
-  const { pathApi, realpathPath, statPath } = dependencies;
-  if (await isFile(candidate, statPath)) {
-    return WINDOWS_CODEX_EXECUTABLE_NAMES.some((name) => name.toLowerCase() === pathApi.basename(candidate).toLowerCase())
-      ? realpathPath(candidate)
-      : null;
-  }
-  if (!(await isDirectory(candidate, statPath))) return null;
-  for (const name of WINDOWS_CODEX_EXECUTABLE_NAMES) {
-    const executable = pathApi.join(candidate, name);
-    if (await isFile(executable, statPath)) return realpathPath(executable);
-  }
-  return null;
-}
-
-function parseWindowsProcesses(stdout) {
-  const value = String(stdout || "").trim();
-  if (!value || value === "null") return [];
-  const parsed = JSON.parse(value);
-  return Array.isArray(parsed) ? parsed : [parsed];
-}
 
 export function defaultCodexAppPath(platform = process.platform) {
   return platform === "win32" ? "" : MACOS_CODEX_APP_PATH;
@@ -41,60 +11,25 @@ export function defaultCodexAppPath(platform = process.platform) {
 
 export async function resolveCodexAppPath(requestedPath, endpoint, overrides = {}) {
   const platform = overrides.platform || process.platform;
-  const pathApi = overrides.pathApi || (platform === "win32" ? systemPath.win32 : systemPath);
-  const realpathPath = overrides.realpathPath || realpath;
-  const statPath = overrides.statPath || stat;
-  const runCommand = overrides.runCommand || runCapture;
-  const environment = overrides.environment || process.env;
+  const discovery = await discoverDesktopApp({
+    profile: CODEX_DESKTOP_APP_PROFILE,
+    requestedPath: requestedPath || "",
+    endpoint,
+    platform,
+    environment: overrides.environment || process.env,
+  }, overrides);
+  return discovery.path;
+}
 
-  if (platform !== "win32") {
-    const candidate = requestedPath || MACOS_CODEX_APP_PATH;
-    const resolved = await realpathPath(systemPath.resolve(candidate));
-    await access(systemPath.join(resolved, "Contents", "Info.plist"));
-    return resolved;
-  }
-  if (requestedPath) {
-    const explicit = await resolveWindowsExecutable(requestedPath, { pathApi, realpathPath, statPath });
-    if (!explicit) throw new Error(`--app-path 未指向受支持的 Codex Desktop 主程序或安装目录：${requestedPath}`);
-    return explicit;
-  }
-
-  const port = new URL(endpoint).port || "9230";
-  const script = `Get-CimInstance Win32_Process | Where-Object { @('ChatGPT.exe','Codex.exe') -contains $_.Name -and $_.CommandLine -match '--remote-debugging-port=${port}(?:\\s|$)' } | Select-Object ProcessId,ExecutablePath,CommandLine | ConvertTo-Json -Compress`;
-  const processResult = await runCommand(
-    "powershell.exe",
-    ["-NoProfile", "-NonInteractive", "-Command", script],
-    { allowFailure: true },
-  ).catch(() => ({ code: null, stdout: "" }));
-  if (processResult.code === 0) {
-    let processes = [];
-    try {
-      processes = parseWindowsProcesses(processResult.stdout);
-    } catch {
-      processes = [];
-    }
-    const executablePaths = [...new Set(processes.map((item) => normalizeWindowsPath(item.ExecutablePath)).filter(Boolean))];
-    if (executablePaths.length > 1) {
-      throw new Error(`检测到 ${executablePaths.length} 个使用 CDP ${port} 的 Codex Desktop 主程序，必须显式传入 --app-path`);
-    }
-    const discovered = processes.find((item) => item.ExecutablePath)?.ExecutablePath;
-    if (discovered) {
-      const executable = await resolveWindowsExecutable(discovered, { pathApi, realpathPath, statPath });
-      if (executable) return executable;
-    }
-  }
-
-  const localAppData = environment.LOCALAPPDATA || "";
-  if (localAppData) {
-    for (const directory of ["ChatGPT", "Codex"]) {
-      const executable = await resolveWindowsExecutable(
-        pathApi.join(localAppData, "Programs", directory),
-        { pathApi, realpathPath, statPath },
-      );
-      if (executable) return executable;
-    }
-  }
-  throw new Error("未找到正在使用目标 CDP 端口的 Codex Desktop Windows 主程序；请显式传入 --app-path <ChatGPT.exe或Codex.exe>");
+export async function discoverCodexApp(requestedPath, endpoint, overrides = {}) {
+  const platform = overrides.platform || process.platform;
+  return discoverDesktopApp({
+    profile: CODEX_DESKTOP_APP_PROFILE,
+    requestedPath: requestedPath || "",
+    endpoint,
+    platform,
+    environment: overrides.environment || process.env,
+  }, overrides);
 }
 
 export async function codexAppVersion(appPath, overrides = {}) {

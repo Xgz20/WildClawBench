@@ -30,8 +30,10 @@ import {
   queryFinalResponse,
   queryNativeSessions,
 } from "./lib/astronstudio-state.mjs";
+import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery/index.mjs";
+import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.1.0";
+export const EXECUTION_DRIVER_VERSION = "0.2.0";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -250,6 +252,20 @@ export async function resolveExecutionConfig(parsed) {
   const runConfigPath = await realpath(resolve(parsed.runConfig));
   const runConfig = await readJson(runConfigPath);
   assertFrozenConfig(runConfig);
+  if (
+    !runConfig.harness.app_discovery?.identity_verified
+    || runConfig.harness.app_discovery.path !== runConfig.harness.app_path
+  ) {
+    throw new Error("冻结运行配置缺少有效且一致的客户端发现证据");
+  }
+  const verifiedApp = await verifyDesktopAppPath({
+    profile: ASTRONSTUDIO_APP_PROFILE,
+    path: runConfig.harness.app_path,
+    platform: "darwin",
+  });
+  if (verifiedApp.path !== runConfig.harness.app_path) {
+    throw new Error("冻结的 AstronStudio 路径已改变，拒绝静默切换客户端");
+  }
   if (
     manifest.unit.harness.version
     && manifest.unit.harness.version !== runConfig.harness.client_version

@@ -13,6 +13,10 @@ astronstudio_app_path=""
 workbuddy_app_path=""
 qwenwork_app_path=""
 
+script_dir="$(cd "$(dirname "$0")" && pwd -P)"
+discovery_cli="$script_dir/../vendor/e2e-shared/desktop-app-discovery/cli.mjs"
+node_bin="${WCB_NODE_BIN:-}"
+
 usage() {
   cat <<'EOF'
 Usage: start_macos_desktop_debug.sh [options]
@@ -159,27 +163,39 @@ for (( index=0; index<${#selected_ports[@]}; index+=1 )); do
 done
 
 resolve_app_path() {
-  local requested="$1"
-  shift
+  local profile="$1"
+  local requested="$2"
+  local endpoint="$3"
+  local output discovered_path ignored_source ignored_executable
 
-  if [[ -n "$requested" ]]; then
-    if [[ -d "$requested" ]]; then
-      printf '%s\n' "$requested"
-      return 0
-    fi
-    echo "Application bundle was not found: $requested" >&2
+  if [[ ! -f "$discovery_cli" ]]; then
+    echo "Bundled desktop application discovery CLI was not found: $discovery_cli" >&2
     return 1
   fi
-
-  local candidate
-  for candidate in "$@"; do
-    if [[ -d "$candidate" ]]; then
-      printf '%s\n' "$candidate"
-      return 0
-    fi
-  done
-
-  return 1
+  if [[ -z "$node_bin" ]]; then
+    node_bin="$(/usr/bin/which node 2>/dev/null || true)"
+  fi
+  if [[ -z "$node_bin" || ! -x "$node_bin" ]]; then
+    echo "Node.js is required for desktop application discovery" >&2
+    return 1
+  fi
+  local arguments=(
+    "$discovery_cli"
+    --profile "$profile"
+    --platform darwin
+    --endpoint "$endpoint"
+    --format tsv
+  )
+  if [[ -n "$requested" ]]; then
+    arguments+=(--app-path "$requested")
+  fi
+  output="$("$node_bin" "${arguments[@]}")" || return 1
+  IFS=$'\t' read -r discovered_path ignored_source ignored_executable <<< "$output"
+  if [[ -z "$discovered_path" ]]; then
+    echo "Desktop application discovery returned an incomplete result for $profile" >&2
+    return 1
+  fi
+  printf '%s\n' "$discovered_path"
 }
 
 listener_pid() {
@@ -206,9 +222,66 @@ cdp_ready() {
   [[ "$command" == "$app_path/Contents/MacOS/"* ]]
 }
 
+app_main_pids() {
+  local app_path="$1"
+  local prefix="${app_path}/Contents/MacOS/"
+
+  /bin/ps -axo pid=,ppid=,command= | /usr/bin/awk -v prefix="$prefix" '
+    {
+      pid = $1
+      ppid = $2
+      command = $0
+      sub(/^[[:space:]]*[0-9]+[[:space:]]+[0-9]+[[:space:]]+/, "", command)
+      if (index(command, prefix) == 1) {
+        matched[pid] = 1
+        parent[pid] = ppid
+        ordered[++count] = pid
+      }
+    }
+    END {
+      for (idx = 1; idx <= count; idx += 1) {
+        pid = ordered[idx]
+        if (!(parent[pid] in matched)) print pid
+      }
+    }
+  '
+}
+
 app_is_running() {
   local app_path="$1"
-  /usr/bin/pgrep -f "${app_path}/Contents/MacOS/" >/dev/null 2>&1
+  [[ -n "$(app_main_pids "$app_path")" ]]
+}
+
+process_matches_app_path() {
+  local pid="$1"
+  local app_path="$2"
+  local command
+  command="$(/bin/ps -p "$pid" -o command= 2>/dev/null || true)"
+  [[ -n "$command" && "$command" == "$app_path/Contents/MacOS/"* ]]
+}
+
+signal_app_processes() {
+  local name="$1"
+  local app_path="$2"
+  local signal="$3"
+  local pids
+  local pid
+
+  pids="$(app_main_pids "$app_path")"
+  if [[ -z "$pids" ]]; then
+    return 0
+  fi
+  while read -r pid; do
+    [[ -n "$pid" ]] || continue
+    if ! process_matches_app_path "$pid" "$app_path"; then
+      echo "$name process identity changed before $signal; refusing to signal PID $pid" >&2
+      return 1
+    fi
+    if ! /bin/kill "-$signal" "$pid" 2>/dev/null && process_matches_app_path "$pid" "$app_path"; then
+      echo "Unable to send $signal to verified $name PID $pid" >&2
+      return 1
+    fi
+  done <<< "$pids"
 }
 
 sqlite_scalar() {
@@ -263,14 +336,13 @@ assert_qwenwork_restart_safe() {
 stop_app() {
   local name="$1"
   local app_path="$2"
-  local bundle_id="$3"
 
   if ! app_is_running "$app_path"; then
     return 0
   fi
 
   echo "Stopping $name because its CDP endpoint is not ready..."
-  /usr/bin/osascript -e "tell application id \"${bundle_id}\" to quit" >/dev/null 2>&1 || true
+  signal_app_processes "$name" "$app_path" TERM
 
   local attempt
   for attempt in {1..20}; do
@@ -280,15 +352,7 @@ stop_app() {
     /bin/sleep 0.5
   done
 
-  /usr/bin/pkill -TERM -f "${app_path}/Contents/MacOS/" >/dev/null 2>&1 || true
-  for attempt in {1..10}; do
-    if ! app_is_running "$app_path"; then
-      return 0
-    fi
-    /bin/sleep 0.5
-  done
-
-  /usr/bin/pkill -KILL -f "${app_path}/Contents/MacOS/" >/dev/null 2>&1 || true
+  signal_app_processes "$name" "$app_path" KILL
   /bin/sleep 1
 
   if app_is_running "$app_path"; then
@@ -381,11 +445,9 @@ qwenwork_ready=true
 
 if $include_codex; then
   codex_app_path="$(resolve_app_path \
+    codex \
     "$codex_app_path" \
-    "/Applications/ChatGPT.app" \
-    "/Applications/Codex.app" \
-    "$HOME/Applications/ChatGPT.app" \
-    "$HOME/Applications/Codex.app")" || {
+    "http://127.0.0.1:${codex_port}")" || {
       echo "Codex Desktop application bundle was not found" >&2
       exit 1
     }
@@ -396,11 +458,9 @@ fi
 
 if $include_astronstudio; then
   astronstudio_app_path="$(resolve_app_path \
+    astronstudio \
     "$astronstudio_app_path" \
-    "/Applications/AStudio.app" \
-    "/Applications/AstronStudio.app" \
-    "$HOME/Applications/AStudio.app" \
-    "$HOME/Applications/AstronStudio.app")" || {
+    "http://127.0.0.1:${astronstudio_port}")" || {
       echo "AstronStudio application bundle was not found" >&2
       exit 1
     }
@@ -411,9 +471,9 @@ fi
 
 if $include_workbuddy; then
   workbuddy_app_path="$(resolve_app_path \
+    workbuddy \
     "$workbuddy_app_path" \
-    "/Applications/WorkBuddy.app" \
-    "$HOME/Applications/WorkBuddy.app")" || {
+    "http://127.0.0.1:${workbuddy_port}")" || {
       echo "WorkBuddy application bundle was not found" >&2
       exit 1
     }
@@ -424,11 +484,9 @@ fi
 
 if $include_qwenwork; then
   qwenwork_app_path="$(resolve_app_path \
+    qwenwork \
     "$qwenwork_app_path" \
-    "/Applications/QwenWorkCN.app" \
-    "/Applications/QwenWork.app" \
-    "$HOME/Applications/QwenWorkCN.app" \
-    "$HOME/Applications/QwenWork.app")" || {
+    "http://127.0.0.1:${qwenwork_port}")" || {
       echo "QwenWork application bundle was not found" >&2
       exit 1
     }
@@ -457,13 +515,13 @@ if $check_only; then
 else
   if $include_codex && ! $codex_ready; then
     assert_port_restartable "$codex_port" "$codex_app_path"
-    stop_app "Codex Desktop" "$codex_app_path" "com.openai.codex"
+    stop_app "Codex Desktop" "$codex_app_path"
     start_app "Codex Desktop" "$codex_app_path" "$codex_port"
   fi
 
   if $include_astronstudio && ! $astronstudio_ready; then
     assert_port_restartable "$astronstudio_port" "$astronstudio_app_path"
-    stop_app "AstronStudio" "$astronstudio_app_path" "cn.xfyun.acode"
+    stop_app "AstronStudio" "$astronstudio_app_path"
     start_app "AstronStudio" "$astronstudio_app_path" "$astronstudio_port"
   fi
 
@@ -472,7 +530,7 @@ else
     if app_is_running "$workbuddy_app_path"; then
       assert_workbuddy_restart_safe
     fi
-    stop_app "WorkBuddy" "$workbuddy_app_path" "com.tencent.workbuddy.mac"
+    stop_app "WorkBuddy" "$workbuddy_app_path"
     start_app "WorkBuddy" "$workbuddy_app_path" "$workbuddy_port"
   fi
 
@@ -481,7 +539,7 @@ else
     if app_is_running "$qwenwork_app_path"; then
       assert_qwenwork_restart_safe
     fi
-    stop_app "QwenWork" "$qwenwork_app_path" "cn.qwenwork.desktop.mac"
+    stop_app "QwenWork" "$qwenwork_app_path"
     start_app "QwenWork" "$qwenwork_app_path" "$qwenwork_port"
   fi
 fi

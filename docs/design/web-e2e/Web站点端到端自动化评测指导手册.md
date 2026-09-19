@@ -71,7 +71,7 @@ WorkBuddy、AstronStudio 和 QwenWork 的默认后台执行并发均为 3，最�
 
 #### 2. 自动准备桌面客户端调试模式
 
-`run-web-e2e` 在进入执行或评分阶段前会自动检查 Codex Desktop 和本轮选择的 AstronStudio、WorkBuddy 或 QwenWork。有效 CDP 端点会原样复用；缺少调试模式时只关闭并重启需要的客户端，无需人工退出、重新打开。Windows 会动态解析 Codex MSIX 和所选 Harness 的当前用户安装路径，macOS 会解析标准系统或用户 Applications 目录。Windows 还会核对监听者和待停止进程的完整可执行路径；macOS 在重启已运行的 WorkBuddy/QwenWork 前会只读核对状态库，无法证明没有活动任务时停止并提示人工处理。
+`run-web-e2e` 在进入执行或评分阶段前会自动检查 Codex Desktop 和本轮选择的 AstronStudio、WorkBuddy 或 QwenWork。有效 CDP 端点会原样复用；缺少调试模式时只关闭并重启需要的客户端，无需人工退出、重新打开。除 Windows Codex 继续从 MSIX manifest 解析真实入口外，两端统一按“显式路径 → 当前运行进程 → 系统登记 → 标准目录”发现应用；macOS 校验 Bundle ID 和包内文件，Windows 覆盖 HKCU/HKLM、App Paths、四类卸载注册表与标准目录。Windows 还会核对监听者和待停止进程的完整可执行路径；macOS 在重启已运行的 WorkBuddy/QwenWork 前会只读核对状态库，无法证明没有活动任务时停止并提示人工处理。
 
 默认 Codex Desktop 使用 `127.0.0.1:9230`，AstronStudio 使用 `127.0.0.1:9240`，WorkBuddy 使用 `127.0.0.1:9229`，QwenWork 使用 `127.0.0.1:9250`，且都只监听本机。若 Codex Desktop 本身承载当前控制任务，Skill 会在持久化状态后使用一次性托管任务重启；当前回合可能中断，客户端恢复后必须继续原任务，不要重新初始化。
 
@@ -471,7 +471,13 @@ Codex Desktop CDP：http://127.0.0.1:9230
 
 ### AstronStudio 预检未就绪
 
-确认客户端已登录且桌面已解锁。`run-web-e2e` 会自动检查 `127.0.0.1:9240`，无有效 CDP target 时按需重启 AstronStudio。macOS 默认应用路径为 `/Applications/AStudio.app`；Windows 默认从当前用户安装信息和 `%LOCALAPPDATA%\Programs` 查找 `AStudio.exe`，找不到时在 Prompt 中提供实际主程序路径。停在历史会话时 workspace picker 可以暂时不可见；只要预检整体 `ready=true`，Driver 会新建任务后再选择并回读项目绝对路径。
+确认客户端已登录且桌面已解锁。`run-web-e2e` 会自动检查 `127.0.0.1:9240`，无有效 CDP target 时按需重启 AstronStudio。脚本会动态发现标准或自定义安装；发现不到或同层存在多个合法安装时，在 Prompt 中提供实际主程序路径（macOS 为 `.app`，Windows 为 `.exe` 或安装目录）。停在历史会话时 workspace picker 可以暂时不可见；只要预检整体 `ready=true`，Driver 会新建任务后再选择并回读项目绝对路径。
+
+### macOS 提示“ChatGPT.app 想要控制 AStudio.app”
+
+这是旧版 macOS 路径通过 Apple Events 或 `System Events` 控制其他 App 时产生的 TCC 自动化授权，不是 Web E2E 做题所需权限，也不代表启用了 Codex Computer Use。当前入口的应用发现、主进程识别、锁屏探测以及 Codex/Harness 退出分别使用 Spotlight/文件校验、`ps`、`ioreg` 和已核对 PID 的有界 TERM/KILL，不再控制目标 App 或 `System Events`。因此当前包不依赖该授权，也不自动点击系统授权弹窗。
+
+旧包中一直保留弹窗可能遮挡 Harness UI；选择“不允许”后旧入口通常会进入 TERM/KILL 兜底。若仍出现该提示，先停止流程并核对实际安装的 `run-web-e2e`、`execute-web-e2e` 版本与内容 SHA，避免把旧 Skill 当成当前实现。企业环境若另有必须使用 Apple Events 的自动化，应由管理员通过 MDM PPPC 管理，不要实现通用“看到允许就点击”。
 
 ### Codex Desktop CDP 连接失败
 
@@ -493,7 +499,7 @@ launchctl bootout gui/$(id -u)/com.wildclawbench.desktop-debug-restart.codex
 
 ### 重启时出现“退出 Codex？”确认框
 
-当前 macOS 重启入口会自动处理已知退出确认框：只有目标进程属于已核对的 Codex bundle、对话框标题精确为“退出 Codex？”/“退出 ChatGPT？”或对应英文标题、按钮精确为“退出”/“Quit”时才点击。其他更新、授权、未保存修改或未知弹窗一律不点。macOS 未授予辅助功能访问、文案不匹配或 UI Automation 暂时不可用时，脚本仍会在正常退出等待 10 秒后发送 TERM，再等待 5 秒后才使用 KILL，因此不需要手工点击；确认框可能短暂可见。若希望无闪现，需要在系统设置中为执行 `osascript` 的控制环境授予辅助功能权限，但这不是完成重启的硬前提。
+当前 macOS 托管重启入口不再调用菜单退出、Apple Events 或 UI Automation，也不会点击退出确认框。它只向已核对安装路径的 Codex 根进程发送 TERM，等待 10 秒后仍存在才重新核对同一 PID 并发送 KILL；正常情况下无需人工点击，也无需授予 Automation/辅助功能权限。如果新版本客户端仍弹出确认框，脚本不会把它当作授权去点击，但有界 KILL 会继续收口；若最终 `status.json` 不是 `PASSED`，保留日志并进入 `NEEDS_ATTENTION`，不要手工放宽成“看到弹窗就允许”。
 
 ### 控制任务中断或 Desktop 重启
 

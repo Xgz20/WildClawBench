@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   codexAppVersion,
   defaultCodexAppPath,
-  resolveCodexAppPath,
+  discoverCodexApp,
   runFolderHelper,
 } from "./platform.mjs";
 
@@ -340,7 +340,8 @@ export async function run(args) {
   if (!(await endpointReady(args.endpoint))) {
     throw new Error(`Codex Desktop 未开放本机 CDP：${args.endpoint}。请在启动控制任务前以 --remote-debugging-address=127.0.0.1 和 --remote-debugging-port 启动 Desktop`);
   }
-  const appPath = await resolveCodexAppPath(args.appPath, args.endpoint);
+  const appDiscovery = await discoverCodexApp(args.appPath, args.endpoint);
+  const appPath = appDiscovery.path;
   const { chromium } = await import("playwright-core");
   const { browser, compatibility } = await connectCodexOverCDP(chromium, args.endpoint);
   try {
@@ -354,6 +355,7 @@ export async function run(args) {
       endpoint: args.endpoint,
       platform: process.platform,
       app_path: appPath,
+      app_discovery: appDiscovery,
       desktop_version: await codexAppVersion(appPath),
       desktop_page: { title: selected.title, url: selected.url },
       cdp_connection_compatibility: compatibility,

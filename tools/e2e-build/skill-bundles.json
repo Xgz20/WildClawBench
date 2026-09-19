@@ -14,13 +14,13 @@
       "name": "execute-web-e2e",
       "scene": "web-e2e",
       "source_root": "tools/report/skills/web-e2e/execute-web-e2e",
-      "components": ["desktop-runtime", "resource-metrics"]
+      "components": ["desktop-runtime", "desktop-app-discovery", "resource-metrics"]
     },
     {
       "name": "orchestrate-web-e2e",
       "scene": "web-e2e",
       "source_root": "tools/report/skills/web-e2e/orchestrate-web-e2e",
-      "components": ["desktop-runtime", "workspace-integrity"]
+      "components": ["desktop-runtime", "desktop-app-discovery", "workspace-integrity"]
     },
     {
       "name": "score-web-e2e",
@@ -38,7 +38,7 @@
       "name": "run-web-e2e",
       "scene": "web-e2e",
       "source_root": "tools/report/skills/web-e2e/run-web-e2e",
-      "components": []
+      "components": ["desktop-app-discovery"]
     },
     {
       "name": "prepare-general-e2e-workspaces",
@@ -50,7 +50,7 @@
       "name": "execute-general-e2e",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/execute-general-e2e",
-      "components": ["desktop-runtime"]
+      "components": ["desktop-runtime", "desktop-app-discovery"]
     },
     {
       "name": "collect-general-e2e",
@@ -62,7 +62,7 @@
       "name": "orchestrate-general-e2e",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/orchestrate-general-e2e",
-      "components": ["desktop-runtime", "desktop-debug", "workspace-integrity", "general-contracts"]
+      "components": ["desktop-runtime", "desktop-app-discovery", "desktop-debug", "workspace-integrity", "general-contracts"]
     },
     {
       "name": "score-general-e2e",

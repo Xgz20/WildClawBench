@@ -40,13 +40,34 @@
     },
     "harness": {
       "type": "object",
-      "required": ["id", "app_path", "bundle_id", "client_version", "process_executable"],
+      "required": ["id", "app_path", "app_discovery", "bundle_id", "client_version", "process_executable"],
       "properties": {
         "id": {
           "const": "astronstudio"
         },
         "app_path": {
           "type": "string"
+        },
+        "app_discovery": {
+          "type": "object",
+          "required": ["schema_version", "path", "source", "identity_verified", "candidates_checked"],
+          "properties": {
+            "schema_version": {
+              "const": "wildclawbench.desktop-app-discovery/v1"
+            },
+            "path": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "identity_verified": {
+              "const": true
+            },
+            "candidates_checked": {
+              "type": "array"
+            }
+          }
         },
         "bundle_id": {
           "const": "cn.xfyun.acode"

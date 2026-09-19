@@ -32,8 +32,15 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         entrypoints=("process.mjs",),
     ),
     SharedComponentSpec(
+        name="desktop-app-discovery",
+        version="1.1.0",
+        source_root="tools/report/e2e-shared/desktop-app-discovery",
+        vendor_root="vendor/e2e-shared/desktop-app-discovery",
+        entrypoints=("index.mjs", "profiles.mjs", "cli.mjs"),
+    ),
+    SharedComponentSpec(
         name="desktop-debug",
-        version="1.0.1",
+        version="1.1.0",
         source_root="tools/report/e2e-shared/desktop-debug",
         vendor_root="vendor/e2e-shared/desktop-debug",
         entrypoints=("restart_macos_desktop_debug.sh",),
@@ -76,7 +83,12 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
 )
 
 ASTRONSTUDIO_COMPONENT_NAMES = frozenset(
-    {"desktop-runtime", "resource-metrics", "workspace-integrity"}
+    {
+        "desktop-runtime",
+        "desktop-app-discovery",
+        "resource-metrics",
+        "workspace-integrity",
+    }
 )
 
 

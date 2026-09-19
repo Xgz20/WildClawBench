@@ -18,6 +18,14 @@ param(
     [ValidateRange(1, 120)]
     [int]$TimeoutSeconds = 20,
 
+    [string]$CodexAppPath = "",
+
+    [string]$AstronStudioAppPath = "",
+
+    [string]$WorkBuddyAppPath = "",
+
+    [string]$QwenWorkAppPath = "",
+
     [switch]$CheckOnly,
 
     [switch]$ForceRestart
@@ -25,6 +33,10 @@ param(
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
+$scriptRoot = Split-Path -Parent $PSCommandPath
+$desktopAppDiscoveryCli = Join-Path `
+    $scriptRoot `
+    "..\vendor\e2e-shared\desktop-app-discovery\cli.mjs"
 
 $includeCodex = $Application -in @("All", "Codex", "CodexWorkBuddy", "CodexQwenWork")
 $includeAstronStudio = $Application -in @("All", "AstronStudio")
@@ -61,7 +73,11 @@ if ($PSVersionTable.PSEdition -ne "Desktop") {
         "-AstronStudioPort", $AstronStudioPort,
         "-WorkBuddyPort", $WorkBuddyPort,
         "-QwenWorkPort", $QwenWorkPort,
-        "-TimeoutSeconds", $TimeoutSeconds
+        "-TimeoutSeconds", $TimeoutSeconds,
+        "-CodexAppPath", $CodexAppPath,
+        "-AstronStudioAppPath", $AstronStudioAppPath,
+        "-WorkBuddyAppPath", $WorkBuddyAppPath,
+        "-QwenWorkAppPath", $QwenWorkAppPath
     )
 
     if ($CheckOnly) {
@@ -177,7 +193,64 @@ function Wait-CdpStatus {
     throw "$Name CDP endpoint did not become ready on port $Port within $Timeout seconds."
 }
 
+function Resolve-DesktopApplicationExecutable {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("astronstudio", "workbuddy", "qwenwork", "codex")]
+        [string]$Profile,
+
+        [string]$RequestedPath = "",
+
+        [Parameter(Mandatory = $true)]
+        [int]$Port
+    )
+
+    if (-not (Test-Path -LiteralPath $desktopAppDiscoveryCli -PathType Leaf)) {
+        throw "Bundled desktop application discovery CLI was not found: $desktopAppDiscoveryCli"
+    }
+    $nodeCommand = Get-Command node.exe -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if (-not $nodeCommand) {
+        throw "Node.js is required for desktop application discovery."
+    }
+    $arguments = @(
+        $desktopAppDiscoveryCli,
+        "--profile", $Profile,
+        "--platform", "win32",
+        "--endpoint", "http://127.0.0.1:$Port",
+        "--format", "json"
+    )
+    if ($RequestedPath) {
+        $arguments += @("--app-path", $RequestedPath)
+    }
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        $output = & $nodeCommand.Source @arguments 2>&1
+        $exitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+    $text = "$($output -join [Environment]::NewLine)"
+    if ($exitCode -ne 0) {
+        throw "Desktop application discovery failed for $Profile: $text"
+    }
+    try {
+        $result = $text | ConvertFrom-Json
+    }
+    catch {
+        throw "Desktop application discovery returned invalid JSON for $Profile."
+    }
+    if (-not $result.executable_path -or
+        -not (Test-Path -LiteralPath $result.executable_path -PathType Leaf)) {
+        throw "Desktop application discovery returned no usable executable for $Profile."
+    }
+    return (Get-Item -LiteralPath $result.executable_path).FullName
+}
+
 function Resolve-CodexApplication {
+    param([string]$RequestedPath = "")
     Import-Module Appx
     $package = Get-AppxPackage -Name "OpenAI.Codex" |
         Sort-Object Version -Descending |
@@ -201,66 +274,29 @@ function Resolve-CodexApplication {
         throw "Codex executable was not found: $executable"
     }
 
+    $resolvedExecutable = (Get-Item -LiteralPath $executable).FullName
+    if ($RequestedPath) {
+        $requestedExecutable = Resolve-DesktopApplicationExecutable `
+            -Profile "codex" `
+            -RequestedPath $RequestedPath `
+            -Port $CodexPort
+        if ([IO.Path]::GetFullPath($requestedExecutable) -ine [IO.Path]::GetFullPath($resolvedExecutable)) {
+            throw "CodexAppPath does not match the installed OpenAI.Codex Appx package executable."
+        }
+    }
+
     return [pscustomobject]@{
         Package = $package
         ApplicationEntry = $applicationEntry
-        Executable = (Get-Item -LiteralPath $executable).FullName
+        Executable = $resolvedExecutable
     }
 }
 
 function Resolve-AstronStudioExecutable {
-    $executableNames = @("AStudio.exe", "AstronStudio.exe", "Acode.exe")
-    $candidates = @()
-
-    foreach ($registryPath in @(
-        "HKCU:\Software\AStudio",
-        "HKCU:\Software\AstronStudio",
-        "HKCU:\Software\Acode"
-    )) {
-        $registryValue = Get-ItemProperty `
-            -LiteralPath $registryPath `
-            -Name "InstallLocation" `
-            -ErrorAction SilentlyContinue
-
-        $installLocation = if ($registryValue) {
-            $registryValue.InstallLocation
-        }
-        else {
-            $null
-        }
-
-        if ($installLocation) {
-            $candidates += [string]$installLocation
-        }
-    }
-
-    foreach ($directoryName in @("AStudio", "AstronStudio", "Acode")) {
-        $candidates += Join-Path `
-            $env:LOCALAPPDATA `
-            "Programs\$directoryName"
-    }
-
-    foreach ($candidate in $candidates | Select-Object -Unique) {
-        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
-            if ((Split-Path -Leaf $candidate) -in $executableNames) {
-                return (Get-Item -LiteralPath $candidate).FullName
-            }
-            continue
-        }
-
-        if (-not (Test-Path -LiteralPath $candidate -PathType Container)) {
-            continue
-        }
-
-        foreach ($executableName in $executableNames) {
-            $executable = Join-Path $candidate $executableName
-            if (Test-Path -LiteralPath $executable -PathType Leaf) {
-                return (Get-Item -LiteralPath $executable).FullName
-            }
-        }
-    }
-
-    throw "AstronStudio was not found in its registry keys or LOCALAPPDATA Programs directories."
+    return Resolve-DesktopApplicationExecutable `
+        -Profile "astronstudio" `
+        -RequestedPath $AstronStudioAppPath `
+        -Port $AstronStudioPort
 }
 
 function Start-AstronStudioWithSanitizedEnvironment {
@@ -311,108 +347,17 @@ function Start-AstronStudioWithSanitizedEnvironment {
 }
 
 function Resolve-WorkBuddyExecutable {
-    $executableNames = @("WorkBuddy.exe", "CodeBuddy.exe")
-    $candidates = @()
-
-    $uninstallEntries = Get-ItemProperty `
-        -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" `
-        -ErrorAction SilentlyContinue |
-        Where-Object {
-            $_.PSObject.Properties["DisplayName"] -and
-            [string]$_.DisplayName -match "^WorkBuddy(?:\s|$)"
-        }
-
-    foreach ($entry in $uninstallEntries) {
-        if ($entry.PSObject.Properties["InstallLocation"] -and $entry.InstallLocation) {
-            $candidates += [string]$entry.InstallLocation
-        }
-        if ($entry.PSObject.Properties["DisplayIcon"] -and $entry.DisplayIcon) {
-            $displayIcon = (([string]$entry.DisplayIcon).Trim() -replace ",\d+$", "").Trim('"')
-            $candidates += $displayIcon
-        }
-    }
-
-    $candidates += Join-Path $env:LOCALAPPDATA "Programs\WorkBuddy"
-
-    foreach ($candidate in $candidates | Where-Object { $_ } | Select-Object -Unique) {
-        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
-            if ((Split-Path -Leaf $candidate) -in $executableNames) {
-                return (Get-Item -LiteralPath $candidate).FullName
-            }
-            continue
-        }
-
-        if (-not (Test-Path -LiteralPath $candidate -PathType Container)) {
-            continue
-        }
-
-        foreach ($executableName in $executableNames) {
-            $executable = Join-Path $candidate $executableName
-            if (Test-Path -LiteralPath $executable -PathType Leaf) {
-                return (Get-Item -LiteralPath $executable).FullName
-            }
-        }
-    }
-
-    throw "WorkBuddy was not found in the current-user uninstall registry or LOCALAPPDATA Programs directory."
+    return Resolve-DesktopApplicationExecutable `
+        -Profile "workbuddy" `
+        -RequestedPath $WorkBuddyAppPath `
+        -Port $WorkBuddyPort
 }
 
 function Resolve-QwenWorkExecutable {
-    $executableNames = @("QwenWorkCN.exe", "QwenWork.exe")
-    $candidates = @()
-
-    $uninstallEntries = Get-ItemProperty `
-        -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" `
-        -ErrorAction SilentlyContinue |
-        Where-Object {
-            $_.PSObject.Properties["DisplayName"] -and
-            [string]$_.DisplayName -match "^(?:千问办公|QwenWorkCN|QwenWork)(?:\s|$)"
-        }
-
-    foreach ($entry in $uninstallEntries) {
-        if ($entry.PSObject.Properties["InstallLocation"] -and $entry.InstallLocation) {
-            $candidates += [string]$entry.InstallLocation
-        }
-        if ($entry.PSObject.Properties["DisplayIcon"] -and $entry.DisplayIcon) {
-            $displayIcon = (([string]$entry.DisplayIcon).Trim() -replace ",\d+$", "").Trim('"')
-            $candidates += $displayIcon
-        }
-        if ($entry.PSObject.Properties["UninstallString"] -and $entry.UninstallString) {
-            $uninstall = ([string]$entry.UninstallString).Trim().Trim('"')
-            $candidates += Split-Path -Parent $uninstall
-        }
-    }
-
-    $candidates += Join-Path $env:LOCALAPPDATA "Programs\QwenWorkCN"
-    $candidates += Join-Path $env:LOCALAPPDATA "Programs\QwenWork"
-
-    foreach ($candidate in $candidates | Where-Object { $_ } | Select-Object -Unique) {
-        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
-            if ((Split-Path -Leaf $candidate) -in $executableNames) {
-                return (Get-Item -LiteralPath $candidate).FullName
-            }
-            $candidate = Split-Path -Parent $candidate
-        }
-
-        if (-not (Test-Path -LiteralPath $candidate -PathType Container)) {
-            continue
-        }
-
-        $directories = @((Get-Item -LiteralPath $candidate)) + @(
-            Get-ChildItem -LiteralPath $candidate -Directory -ErrorAction SilentlyContinue |
-                Sort-Object Name -Descending
-        )
-        foreach ($directory in $directories) {
-            foreach ($executableName in $executableNames) {
-                $executable = Join-Path $directory.FullName $executableName
-                if (Test-Path -LiteralPath $executable -PathType Leaf) {
-                    return (Get-Item -LiteralPath $executable).FullName
-                }
-            }
-        }
-    }
-
-    throw "QwenWork was not found in the current-user uninstall registry or LOCALAPPDATA Programs directories."
+    return Resolve-DesktopApplicationExecutable `
+        -Profile "qwenwork" `
+        -RequestedPath $QwenWorkAppPath `
+        -Port $QwenWorkPort
 }
 
 function Resolve-WorkBuddyBundledNodeDirectory {
@@ -729,7 +674,7 @@ function Assert-PortRestartable {
     }
 }
 
-$codexApplication = if ($includeCodex) { Resolve-CodexApplication } else { $null }
+$codexApplication = if ($includeCodex) { Resolve-CodexApplication -RequestedPath $CodexAppPath } else { $null }
 $codexExecutable = if ($codexApplication) { $codexApplication.Executable } else { $null }
 $astronStudioExecutable = if ($includeAstronStudio) { Resolve-AstronStudioExecutable } else { $null }
 $workBuddyExecutable = if ($includeWorkBuddy) { Resolve-WorkBuddyExecutable } else { $null }

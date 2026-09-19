@@ -109,7 +109,15 @@ async function fixture() {
   const appPath = join(root, "AStudio.app");
   await mkdir(join(taskRoot, "workspace"), { recursive: true });
   await mkdir(join(appPath, "Contents", "Resources"), { recursive: true });
+  await mkdir(join(appPath, "Contents", "MacOS"), { recursive: true });
   await writeFile(join(appPath, "Contents", "Resources", "app.asar"), "fixture");
+  await writeFile(join(appPath, "Contents", "MacOS", "AStudio"), "fixture");
+  await writeFile(join(appPath, "Contents", "Info.plist"), `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleIdentifier</key><string>cn.xfyun.acode</string>
+<key>CFBundleShortVersionString</key><string>3.3.1</string>
+</dict></plist>\n`);
   await writeFile(join(taskRoot, "PROMPT.md"), "build a site\n");
   await writeFile(join(harnessRoot, "manifest.json"), JSON.stringify({
     schema_version: "wildclawbench.web-e2e-batch/v3",
@@ -325,7 +333,8 @@ test("Windows AstronStudio discovery prefers the registered install location", a
     },
   });
   assert.equal(resolved, await realpath(executable));
-  assert.equal(calls.length, 3);
+  assert(calls.some(([, args]) => args.includes("HKCU\\Software\\AStudio")));
+  assert(calls.some(([, args]) => args.includes("HKLM\\Software\\AStudio")));
   assert.equal(defaultAstronAppPath("win32"), "");
 });
 
@@ -430,6 +439,21 @@ test("Windows launch and exact-PID termination use native process APIs", async (
   assert.equal(commands[0][0], "powershell.exe");
   assert.equal(commands[0][1].at(-1), "321");
   assert.deepEqual(commands[1], ["taskkill.exe", ["/PID", "321", "/T", "/F"]]);
+});
+
+test("macOS exact-PID termination does not send Apple Events", async () => {
+  const commands = [];
+  const runCommand = async (command, args) => {
+    commands.push([command, args]);
+    return { code: 0, stdout: "", stderr: "" };
+  };
+  await gracefulQuitAstron({ pid: 321 }, { platform: "darwin", runCommand });
+  await terminateAstronProcess({ pid: 321 }, { platform: "darwin", runCommand });
+  assert.deepEqual(commands, [
+    ["/bin/kill", ["-TERM", "321"]],
+    ["/bin/kill", ["-KILL", "321"]],
+  ]);
+  assert.equal(commands.some(([command]) => command === "/usr/bin/osascript"), false);
 });
 
 test("SQLite backend prefers the Node runtime on Windows without requiring sqlite3.exe", async () => {
@@ -710,7 +734,7 @@ test("AstronStudio terminal --resume backfills cleanup without resending the pro
   }), 0);
   const recovered = JSON.parse(await readFile(config.stateFile, "utf8"));
   assert.equal(recovered.phase, "SUCCEEDED");
-  assert.equal(recovered.driver.version, "1.10.21");
+  assert.equal(recovered.driver.version, "1.11.0");
   assert.equal(recovered.terminal_process_cleanup.supported, false);
   assert.equal(recovered.terminal_process_cleanup.success, true);
   assert.equal(recovered.terminal_process_cleanup.backfill_verification.unchanged, true);
@@ -1146,7 +1170,7 @@ test("restart recovery allows only the single tracked active AstronStudio sessio
     tracked_cwd: "/tmp/task-1",
     active_session_count: 1,
     tracked_session_matched: true,
-    shutdown: { method: "application-quit", pid: 123 },
+    shutdown: { method: "sigterm", pid: 123 },
   });
 });
 
@@ -1173,7 +1197,7 @@ test("restart recovery refuses an active AstronStudio session outside the tracke
   assert.equal(mutationCalls, 0);
 });
 
-test("restart safely falls back to SIGTERM only for the same verified AstronStudio PID", async () => {
+test("restart safely falls back to SIGKILL only for the same verified AstronStudio PID", async () => {
   const mutations = [];
   let stoppedChecks = 0;
   const result = await restartAstudio(
@@ -1205,11 +1229,11 @@ test("restart safely falls back to SIGTERM only for the same verified AstronStud
     ["terminate", 123],
     ["launch-app"],
   ]);
-  assert.equal(result.restart_safety.shutdown.method, "sigterm-after-quit-timeout");
+  assert.equal(result.restart_safety.shutdown.method, "sigkill-after-term-timeout");
   assert.equal(result.restart_safety.shutdown.pid, 123);
 });
 
-test("restart refuses SIGTERM when the AstronStudio PID changes after quit timeout", async () => {
+test("restart refuses forced termination when the AstronStudio PID changes after TERM timeout", async () => {
   const mutations = [];
   let processChecks = 0;
   await assert.rejects(
@@ -1225,7 +1249,7 @@ test("restart refuses SIGTERM when the AstronStudio PID changes after quit timeo
         waitForStopped: async () => { throw new Error("graceful quit timeout"); },
       },
     ),
-    /进程身份已变化，拒绝发送 SIGTERM：原 PID 123，当前 PID 456/,
+    /进程身份已变化，拒绝强制终止：原 PID 123，当前 PID 456/,
   );
   assert.deepEqual(mutations, ["graceful-quit"]);
 });
@@ -1305,7 +1329,7 @@ test("restart force-terminates the same verified retry process after graceful cl
   ]);
   assert.equal(result.recovered_after_retry, true);
   assert.deepEqual(result.attempts[0].retry_cleanup, {
-    method: "sigterm-after-quit-timeout",
+    method: "sigkill-after-term-timeout",
     pid: 321,
     graceful_error: "graceful cleanup timeout",
   });

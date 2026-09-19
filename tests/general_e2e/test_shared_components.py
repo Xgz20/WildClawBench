@@ -58,6 +58,7 @@ process.stdout.write(JSON.stringify({{
             payload["components"],
             {
                 "desktop-runtime": "1.0.0",
+                "desktop-app-discovery": "1.1.0",
                 "resource-metrics": "1.0.0",
                 "workspace-integrity": "1.0.0",
             },
@@ -120,9 +121,12 @@ process.stdout.write(JSON.stringify({{
     def test_web_vendored_snapshots_match_canonical_sources(self) -> None:
         copies = (
             ("desktop-runtime/process.mjs", "execute-web-e2e/vendor/e2e-shared/desktop-runtime/process.mjs"),
+            ("desktop-app-discovery/index.mjs", "execute-web-e2e/vendor/e2e-shared/desktop-app-discovery/index.mjs"),
+            ("desktop-app-discovery/profiles.mjs", "execute-web-e2e/vendor/e2e-shared/desktop-app-discovery/profiles.mjs"),
             ("resource-metrics/native-parsers.mjs", "execute-web-e2e/vendor/e2e-shared/resource-metrics/native-parsers.mjs"),
             ("resource-metrics/trace-io.mjs", "execute-web-e2e/vendor/e2e-shared/resource-metrics/trace-io.mjs"),
             ("desktop-runtime/process.mjs", "orchestrate-web-e2e/vendor/e2e-shared/desktop-runtime/process.mjs"),
+            ("desktop-app-discovery/index.mjs", "orchestrate-web-e2e/vendor/e2e-shared/desktop-app-discovery/index.mjs"),
             ("handoff/workspace-integrity.mjs", "orchestrate-web-e2e/vendor/e2e-shared/handoff/workspace-integrity.mjs"),
             ("handoff/workspace-integrity.mjs", "score-web-e2e/vendor/e2e-shared/handoff/workspace-integrity.mjs"),
         )
@@ -142,6 +146,13 @@ process.stdout.write(JSON.stringify({{
             / "tools/report/skills/general-e2e/execute-general-e2e/vendor/e2e-shared/desktop-runtime/process.mjs"
         )
         self.assertEqual(snapshot.read_bytes(), canonical.read_bytes())
+        discovery_root = REPO_ROOT / "tools/report/e2e-shared/desktop-app-discovery"
+        vendored_root = (
+            REPO_ROOT
+            / "tools/report/skills/general-e2e/execute-general-e2e/vendor/e2e-shared/desktop-app-discovery"
+        )
+        for name in ("index.mjs", "profiles.mjs", "cli.mjs"):
+            self.assertEqual((vendored_root / name).read_bytes(), (discovery_root / name).read_bytes())
 
     def test_web_adapters_preserve_web_metric_and_integrity_profiles(self) -> None:
         parser = REPO_ROOT / "tools/report/skills/web-e2e/execute-web-e2e/drivers/metrics/parsers.mjs"

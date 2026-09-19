@@ -306,10 +306,13 @@ export async function restartWorkBuddy(config, overrides = {}, recoverySession =
     tracked_session_matched: false,
   };
   const stopCurrentInstance = async (processInfo) => {
+    const currentPlatform = processInfo.platform || process.platform;
+    const gracefulMethod = currentPlatform === "win32" ? "close-main-window" : "sigterm";
+    const forcedMethod = currentPlatform === "win32" ? "taskkill-after-close-timeout" : "sigkill-after-term-timeout";
     await dependencies.gracefulQuit(processInfo);
     try {
       await waitForWorkBuddyStopped(config, dependencies, dependencies.gracefulQuitTimeoutSeconds);
-      restartSafety.shutdown = { method: "application-quit", pid: processInfo.pid };
+      restartSafety.shutdown = { method: gracefulMethod, pid: processInfo.pid };
     } catch (gracefulError) {
       const remainingProcess = await dependencies.processIdentity();
       if (!remainingProcess || remainingProcess.pid !== processInfo.pid) {
@@ -329,7 +332,7 @@ export async function restartWorkBuddy(config, overrides = {}, recoverySession =
       }
       await waitForWorkBuddyStopped(config, dependencies);
       restartSafety.shutdown = {
-        method: "terminate-after-quit-timeout",
+        method: forcedMethod,
         pid: processInfo.pid,
         graceful_error: gracefulError instanceof Error ? gracefulError.message : String(gracefulError),
       };

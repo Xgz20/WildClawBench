@@ -1,7 +1,7 @@
 {
   "schema_version": "wildclawbench.general-e2e-skill/v1",
   "name": "execute-general-e2e",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "contract_version": "general-e2e-contract-v1",
   "bundle_protocol": "general-e2e-package-v1",
   "implementation_status": "operational",

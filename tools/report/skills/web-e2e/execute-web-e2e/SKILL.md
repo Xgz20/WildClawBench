@@ -28,7 +28,7 @@ Windows：
 .agents\skills\execute-web-e2e\scripts\run-astronstudio.cmd --probe
 ```
 
-预检要求本机 `http://127.0.0.1:9240`、可交互且未锁定的桌面和 AstronStudio 状态库均可用。状态库保留 `%USERPROFILE%\.acode\acode\userdata\state.sqlite` 为第一候选；Windows 上该文件不存在时，继续检查基于当前用户 `%LOCALAPPDATA%` 动态解析的 `%LOCALAPPDATA%\Programs\AStudio Data\userdata\state.sqlite`。macOS 默认使用 `/Applications/AStudio.app`；Windows 依次读取 `HKCU\Software\AStudio`、历史品牌注册表和 `%LOCALAPPDATA%\Programs`，也可显式传 `--app-path <AStudio.exe或安装目录>`。SQLite 优先使用 Node.js 自带的 `node:sqlite`；运行时不提供该模块时才回退到系统 `sqlite3` 命令。`--probe` 不会点击“新建任务”；停在历史会话时 workspace picker 不可见只是诊断信息，只要“新建任务”、编辑器、权限和模型控件可用仍可执行。需要由 Driver 启动客户端时，在确认没有活动或待处理任务后显式传 `--restart-app`。
+预检要求本机 `http://127.0.0.1:9240`、可交互且未锁定的桌面和 AstronStudio 状态库均可用。状态库保留 `%USERPROFILE%\.acode\acode\userdata\state.sqlite` 为第一候选；Windows 上该文件不存在时，继续检查基于当前用户 `%LOCALAPPDATA%` 动态解析的 `%LOCALAPPDATA%\Programs\AStudio Data\userdata\state.sqlite`。应用路径统一按“显式路径 → 当前运行进程 → 系统登记 → 标准目录”发现：macOS 校验 Bundle ID、主可执行文件和 `app.asar`；Windows 覆盖 HKCU/HKLM 产品注册表、App Paths、四类卸载注册表及 `%LOCALAPPDATA%`/`Program Files`，也可显式传 `--app-path <AStudio.exe或安装目录>`。同层多个合法安装失败关闭。SQLite 优先使用 Node.js 自带的 `node:sqlite`；运行时不提供该模块时才回退到系统 `sqlite3` 命令。`--probe` 不会点击“新建任务”；停在历史会话时 workspace picker 不可见只是诊断信息，只要“新建任务”、编辑器、权限和模型控件可用仍可执行。需要由 Driver 启动客户端时，在确认没有活动或待处理任务后显式传 `--restart-app`。macOS 的进程身份与锁屏探测只使用 `ps`/`ioreg`，退出只对已核对主 PID 发送有界 TERM/KILL；不调用 `System Events` 或目标 App Apple Events，因此不依赖控制其他 App 的 Automation 授权。
 
 后台并发执行完整 manifest 中的任务：
 
@@ -48,7 +48,7 @@ Windows 使用相同参数和原生入口：
 .agents\skills\execute-web-e2e\scripts\run-astronstudio-batch.cmd C:\absolute\batch__astronstudio --run-id queue-1 --task-id task-1 --task-id task-2 --run-slots 3 --permission-mode full-access
 ```
 
-Windows 入口、平台探测和状态库读取已在目标 Windows 机器完成真机验证。Driver 1.10.18 在 1.10.16 的发送后会话身份捕获基础上，隔离 Windows 启动时由控制 Harness 注入的 `CODEX_*`、`CHATGPT_*` 和 Node IPC 环境变量，并只记录被删除的变量名；用户的 PATH、代理和模型凭据保持不变。活跃 SQLite 文件的复制放入独立子进程并设 10 秒硬超时，遇到 Windows 长时间文件锁时终止复制子进程、记录读库失败并回退到同一 thread 的 DOM 观察，不得卡死队列或重发 Prompt。旧版本的单题、三题串行和默认三路并发证据均需重验；必须先显式使用 `--run-slots 1`，通过只读探针、单题和三题串行后再测试并发。单题尚未重新通过时，不得把静态测试或旧 Driver 结果表述为当前 Windows 生产验证。
+Windows 入口、平台探测和状态库读取已在目标 Windows 机器完成过真机验证。Driver 1.10.18 在 1.10.16 的发送后会话身份捕获基础上，隔离 Windows 启动时由控制 Harness 注入的 `CODEX_*`、`CHATGPT_*` 和 Node IPC 环境变量，并只记录被删除的变量名；用户的 PATH、代理和模型凭据保持不变。当前 Driver 1.11.0 又引入共享动态应用发现和冻结路径复核，因此旧版本的单题、三题串行和默认三路并发证据均需重验；必须先显式使用 `--run-slots 1`，通过只读探针、单题和三题串行后再测试并发。活跃 SQLite 文件复制仍使用 10 秒硬超时，遇到 Windows 长时间文件锁时终止复制子进程、记录读库失败并回退到同一 thread 的 DOM 观察，不得卡死队列或重发 Prompt。当前单题尚未重新通过时，不得把静态测试或旧 Driver 结果表述为本版 Windows 生产验证。
 
 AstronStudio 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、模型/权限回读、Prompt 发送和 thread 切换仍由同一个 Driver 串行操作。发送后在有界 120–180 秒窗口内，只有 AstronStudio 当前或已持久化路由、本地 SQLite 的发送后 session、非空 turn 和精确 cwd 共同确认时才释放 Driver；Worker 轮流恢复各 thread 做一次性观察。任一题到达明确终态并通过 automation/execution 一致性检查后释放槽位并动态补入下一题。队列必须覆盖 manifest 的完整 task ID 集合，才可能生成 `integrity.valid=true` 的 `execution-receipt.json`。
 
@@ -80,7 +80,7 @@ npm ci
 bash .agents/skills/execute-web-e2e/scripts/run-qwenwork.sh --probe
 ```
 
-Windows 使用 `run-qwenwork.cmd --probe`。Driver 从当前用户卸载注册表和 `%LOCALAPPDATA%\Programs\QwenWorkCN` / `%LOCALAPPDATA%\Programs\QwenWork` 动态解析版本化安装子目录中的 `QwenWorkCN.exe` / `QwenWork.exe`，状态库按当前用户解析为 `%APPDATA%\QwenWorkCN\data\agents.db`；不得写死用户名或客户端版本。Windows Node.js 不提供 `node:sqlite` 时按顺序回退到 `py -3`、`python` 的只读 `sqlite3`。macOS 使用 `/Applications/QwenWorkCN.app` 和 `~/Library/Application Support/QwenWorkCN/data/agents.db`。两端预检均要求本机 `http://127.0.0.1:9250`、可交互且未锁定的桌面、状态库、项目入口、Prompt 编辑器、模型及权限控件可用；`--probe` 不创建项目、不发送 Prompt。
+Windows 使用 `run-qwenwork.cmd --probe`。Driver 使用共享发现组件覆盖当前运行进程、HKCU/HKLM App Paths、四类卸载注册表和标准目录，并动态解析版本化安装子目录中的 `QwenWorkCN.exe` / `QwenWork.exe`；状态库按当前用户解析为 `%APPDATA%\QwenWorkCN\data\agents.db`，不得写死用户名或客户端版本。Windows Node.js 不提供 `node:sqlite` 时按顺序回退到 `py -3`、`python` 的只读 `sqlite3`。macOS 通过运行进程、Spotlight Bundle ID 和 Applications 目录发现 QwenWork，状态库为 `~/Library/Application Support/QwenWorkCN/data/agents.db`。两端预检均要求本机 `http://127.0.0.1:9250`、可交互且未锁定的桌面、状态库、项目入口、Prompt 编辑器、模型及权限控件可用；`--probe` 不创建项目、不发送 Prompt。
 
 QwenWork 通过“新建个人项目”对话框选择单题根目录；macOS 使用辅助功能 helper，Windows 使用当前 Driver 目录下的 PowerShell UI Automation helper，并按动态发现的主程序完整路径约束原生窗口。原生目录选择后必须从 `local_projects.root_paths` 回读完整绝对路径，不能只信任文件夹 basename。Windows Electron 截图使用当前页面的 CDP `Page.captureScreenshot`，每张截图记录路径、采集方法和时间。
 
@@ -104,9 +104,9 @@ Windows 使用相同参数和原生入口：
 
 QwenWork 的 Token 暴露由 Driver 管理，用户和控制 Harness 都不需要预先设置环境变量。全新单题默认执行一次安全客户端重启；全新批次默认只在第一题前安全重启。Driver 在新客户端子进程中同时注入本机 CDP 参数和 `QODERCN_EXPOSE_TOKEN_USAGE=1`，不修改控制 Harness 的全局环境。重启前若状态库或存活进程表明存在活动任务，立即停止并进入人工处理。已有客户端进程不能在运行中补加该变量，因此禁止为了省略重启而复用无法证明已带开关的旧进程。
 
-开关只允许原生 usage 出现在 transcript 中，不能绕过指标 Profile。采集器仍须精确核对平台、QwenWork 客户端、SDK、transcript 版本和 runtime SHA；未知身份保持 `unverified`，历史 `masked` 样本不得回填。资源字段、状态和 QwenWork Profile 的详细口径见[资源指标参考](references/resource-metrics.md)。execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 首次引入自动注入；当前源码候选为 execute 1.12.7 / Driver 1.10.17 / collector 1.1.3，其中 1.12.7 只抽取共享组件并保持 Web adapter 契约，生产真机证据仍停留在 1.12.6。发布包必须重新通过 probe 和一个全新 L1 后才能继承既有生产准入。
+开关只允许原生 usage 出现在 transcript 中，不能绕过指标 Profile。采集器仍须精确核对平台、QwenWork 客户端、SDK、transcript 版本和 runtime SHA；未知身份保持 `unverified`，历史 `masked` 样本不得回填。资源字段、状态和 QwenWork Profile 的详细口径见[资源指标参考](references/resource-metrics.md)。execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 首次引入自动注入；当前源码候选为 execute 1.13.0 / Driver 1.11.0 / collector 1.1.3，并新增共享动态应用发现、冻结路径复核及无 Apple Events 的 macOS 进程收口。生产真机证据仍绑定旧版本，发布包必须重新通过 probe 和一个全新 L1 后才能继承既有生产准入。
 
-QwenWorkCN 1.0.5.0 的历史 Windows 身份已覆盖动态路径、进程、SQLite、CDP 启动、页面识别、串行、并发和部分恢复边界。当前主流程与资源指标证据以生产验收清单为准：QwenWorkCN 1.0.6.0 已在 `ff5d476...` 完成带指标的全新单 L1 闭环，四个核心 Token 均为 `observed`；当前源码候选为 execute 1.12.7 / Driver 1.10.17 / collector 1.1.3，生产真机证据仍绑定 execute 1.12.6，重验前不得把旧证据直接升级到新身份。验收模型为 `标准｜Qwen3.8-Flash`，权限为 `full-access`；更换客户端大版本、Driver 核心实现或模型后仍须从只读 probe 和一至三个 L1 smoke 开始回归。
+QwenWorkCN 1.0.5.0 的历史 Windows 身份已覆盖动态路径、进程、SQLite、CDP 启动、页面识别、串行、并发和部分恢复边界。当前主流程与资源指标证据以生产验收清单为准：QwenWorkCN 1.0.6.0 已在 `ff5d476...` 完成带指标的全新单 L1 闭环，四个核心 Token 均为 `observed`；当前源码候选为 execute 1.13.0 / Driver 1.11.0 / collector 1.1.3，生产真机证据仍绑定旧 execute/Driver 组合，重验前不得把旧证据直接升级到新身份。验收模型为 `标准｜Qwen3.8-Flash`，权限为 `full-access`；更换客户端大版本、Driver 核心实现或模型后仍须从只读 probe 和一至三个 L1 smoke 开始回归。
 
 QwenWork 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、目录选择、权限/模型回读和 Prompt 发送始终由一个 Driver 串行完成；捕获稳定 `session_id`、`stream_id`、`local_project_id` 和绝对 cwd 后释放 UI Driver，由 Worker 轮流恢复原会话做一次性观察。任一题明确终态后释放后台槽位并动态补入下一题。
 
@@ -152,7 +152,7 @@ npm ci
 bash .agents/skills/execute-web-e2e/scripts/run-workbuddy.sh --probe
 ```
 
-Windows 使用 `run-workbuddy.cmd --probe`。Driver 从当前用户卸载注册表和 `%LOCALAPPDATA%\Programs\WorkBuddy` 动态解析 `WorkBuddy.exe` / `CodeBuddy.exe`，状态库固定按当前用户解析为 `%USERPROFILE%\.workbuddy\workbuddy.db`；不得写死用户名。Windows Node.js 不提供 `node:sqlite` 时按顺序回退到 `py -3`、`python` 的只读 `sqlite3`，不能把 Driver 依赖装入候选 workspace。由 Driver 重启 WorkBuddy 时，还会动态选择 `%USERPROFILE%\.workbuddy\binaries\node\versions` 中版本最高且同时含 `node.exe`、`npm.cmd` 的客户端运行时，将其加入新客户端的进程级 `PATH`；同时为 npm 默认关闭 audit、fund 和更新提示、优先复用本地缓存，并按 WorkBuddy 官方环境变量把 Shell 默认/最大命令时限设为 600000 毫秒，避免 Windows 大依赖树被客户端默认 120000 毫秒中止。用户已显式设置的同名环境值优先。准备结果写入 `automation_state.json.client.launch.attempts[].environment_preparation`，不得写死版本或用户目录。
+Windows 使用 `run-workbuddy.cmd --probe`。Driver 使用共享发现组件覆盖当前运行进程、HKCU/HKLM App Paths、四类卸载注册表和标准目录，动态解析 `WorkBuddy.exe` / `CodeBuddy.exe`；状态库固定按当前用户解析为 `%USERPROFILE%\.workbuddy\workbuddy.db`，不得写死用户名。Windows Node.js 不提供 `node:sqlite` 时按顺序回退到 `py -3`、`python` 的只读 `sqlite3`，不能把 Driver 依赖装入候选 workspace。由 Driver 重启 WorkBuddy 时，还会动态选择 `%USERPROFILE%\.workbuddy\binaries\node\versions` 中版本最高且同时含 `node.exe`、`npm.cmd` 的客户端运行时，将其加入新客户端的进程级 `PATH`；同时为 npm 默认关闭 audit、fund 和更新提示、优先复用本地缓存，并按 WorkBuddy 官方环境变量把 Shell 默认/最大命令时限设为 600000 毫秒，避免 Windows 大依赖树被客户端默认 120000 毫秒中止。用户已显式设置的同名环境值优先。准备结果写入 `automation_state.json.client.launch.attempts[].environment_preparation`，不得写死版本或用户目录。
 
 Windows WorkBuddy 的 Electron 页面在部分更新版本中会让 Playwright 高层截图接口永久等待，即使字体已经加载完成。Driver 在 Windows 必须通过当前已附着页面的 CDP `Page.captureScreenshot` 直接采集可视区域 PNG；macOS 继续使用 Playwright 截图。每张截图的路径、采集方法和时间写入 `evidence.screenshot_captures`，截图失败仍须失败关闭，不能跳过证据门禁。
 

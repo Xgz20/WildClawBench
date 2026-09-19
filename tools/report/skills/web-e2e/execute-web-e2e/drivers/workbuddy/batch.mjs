@@ -17,6 +17,17 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 import { fileURLToPath } from "node:url";
 
 import {
+  discoverDesktopApp,
+  sameDesktopAppPath,
+  verifyDesktopAppPath,
+} from "../../vendor/e2e-shared/desktop-app-discovery/index.mjs";
+import {
+  ASTRONSTUDIO_APP_PROFILE,
+  QWENWORK_APP_PROFILE,
+  WORKBUDDY_APP_PROFILE,
+} from "../../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
+
+import {
   atomicWriteJson,
   readJsonIfExists,
   runtimeDirectoryPolicy,
@@ -25,7 +36,7 @@ import {
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
 export const QUEUE_STATE_REVISION = 3;
-export const QUEUE_WORKER_VERSION = "1.8.25";
+export const QUEUE_WORKER_VERSION = "1.9.0";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 
@@ -35,19 +46,20 @@ const BATCH_PROFILES = Object.freeze({
     harnessId: "astronstudio",
     displayName: "AstronStudio",
     workerId: "astronstudio-background-concurrent",
-    workerVersion: "1.10.1",
+    workerVersion: "1.11.0",
     driverFile: resolve(SCRIPT_DIR, "../astronstudio/driver.mjs"),
     lockFileName: "astronstudio-ui.lock",
     defaultRunSlots: 3,
     maxRunSlots: MAX_RUN_SLOTS,
     detachedDispatch: true,
     retryPreSendFailure: true,
+    appProfile: ASTRONSTUDIO_APP_PROFILE,
   }),
   qwenwork: Object.freeze({
     harnessId: "qwenwork",
     displayName: "QwenWork",
     workerId: "qwenwork-background-concurrent",
-    workerVersion: "1.10.3",
+    workerVersion: "1.11.0",
     driverFile: resolve(SCRIPT_DIR, "../qwenwork/driver.mjs"),
     lockFileName: "qwenwork-ui.lock",
     defaultRunSlots: 3,
@@ -55,6 +67,7 @@ const BATCH_PROFILES = Object.freeze({
     detachedDispatch: true,
     retryPreSendFailure: true,
     restartAppFirstByDefault: true,
+    appProfile: QWENWORK_APP_PROFILE,
   }),
   workbuddy: Object.freeze({
     harnessId: "workbuddy",
@@ -67,6 +80,7 @@ const BATCH_PROFILES = Object.freeze({
     maxRunSlots: MAX_RUN_SLOTS,
     detachedDispatch: true,
     retryPreSendFailure: true,
+    appProfile: WORKBUDDY_APP_PROFILE,
   }),
 });
 const requestedBatchProfile = process.env.WCB_WEB_E2E_BATCH_PROFILE || "workbuddy";
@@ -283,6 +297,7 @@ export function createQueueState(plan, args) {
     requested_ui_model: args.model || null,
     requested_endpoint: args.endpoint || null,
     requested_app_path: args.appPath || null,
+    app_discovery: null,
     requested_permission_mode: args.permissionMode,
     ui_slots: 1,
     run_slots: args.runSlots,
@@ -319,6 +334,38 @@ export function createQueueState(plan, args) {
     history: [{ event: "QUEUE_PREPARED", at: now }],
     error: null,
   };
+}
+
+export async function freezeQueueAppDiscovery(state, args, overrides = {}) {
+  const platform = overrides.platform || process.platform;
+  if (state.app_discovery?.path) {
+    const verified = await verifyDesktopAppPath({
+      profile: BATCH_PROFILE.appProfile,
+      path: state.app_discovery.path,
+      platform,
+    }, overrides);
+    if (!sameDesktopAppPath(verified.path, state.app_discovery.path, platform)) {
+      throw new Error(`冻结的客户端路径规范化结果发生变化：${state.app_discovery.path} -> ${verified.path}`);
+    }
+    return state.app_discovery;
+  }
+  const discovery = await discoverDesktopApp({
+    profile: BATCH_PROFILE.appProfile,
+    requestedPath: args.appPath || "",
+    endpoint: args.endpoint || null,
+    platform,
+    environment: overrides.environment || process.env,
+    home: overrides.home,
+  }, overrides);
+  state.app_discovery = discovery;
+  state.history.push({
+    event: "APP_DISCOVERY_FROZEN",
+    at: new Date().toISOString(),
+    path: discovery.path,
+    source: discovery.source,
+    identity_verified: discovery.identity_verified,
+  });
+  return discovery;
 }
 
 export function assertQueueState(state, plan, args) {
@@ -937,6 +984,7 @@ async function runQueue(plan, args) {
   if (state) {
     assertQueueState(state, plan, args);
     const migrated = migrateQueueState(state);
+    await freezeQueueAppDiscovery(state, args);
     if (new Set(["COMPLETED", "COMPLETED_WITH_FAILURES"]).has(state.phase)) {
       if (migrated) await saveQueue(plan, state);
       const receipt = await saveExecutionReceipt(plan, state);
@@ -969,6 +1017,7 @@ async function runQueue(plan, args) {
   } else {
     if (args.resume) throw new Error("--resume 要求已有 queue_state.json");
     state = createQueueState(plan, args);
+    await freezeQueueAppDiscovery(state, args);
     await saveQueue(plan, state);
   }
 
@@ -1074,6 +1123,7 @@ async function runQueue(plan, args) {
       }
       let operation = requestedMode;
       const actionArgs = { ...args };
+      actionArgs.appPath = state.app_discovery.path;
       if (existingAutomation && restartOnResumeAvailable) {
         actionArgs.restartAppOnResume = true;
         restartOnResumeAvailable = false;

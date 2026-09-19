@@ -5,6 +5,14 @@ import {
   runCapture,
 } from "../../../tools/report/e2e-shared/desktop-runtime/process.mjs";
 import {
+  COMPONENT_VERSION as DESKTOP_APP_DISCOVERY_VERSION,
+  discoverDesktopApp,
+  verifyDesktopAppPath,
+} from "../../../tools/report/e2e-shared/desktop-app-discovery/index.mjs";
+import {
+  ASTRONSTUDIO_APP_PROFILE,
+} from "../../../tools/report/e2e-shared/desktop-app-discovery/profiles.mjs";
+import {
   COMPONENT_VERSION as RESOURCE_METRICS_VERSION,
   createNativeResourceMetricParsers,
 } from "../../../tools/report/e2e-shared/resource-metrics/native-parsers.mjs";
@@ -22,6 +30,7 @@ import {
 
 export const ASTRONSTUDIO_SHARED_COMPONENTS = Object.freeze({
   "desktop-runtime": DESKTOP_RUNTIME_VERSION,
+  "desktop-app-discovery": DESKTOP_APP_DISCOVERY_VERSION,
   "resource-metrics": RESOURCE_METRICS_VERSION,
   "workspace-integrity": WORKSPACE_INTEGRITY_VERSION,
 });
@@ -68,4 +77,7 @@ export {
   readTrace,
   runCapture,
   sameNativePath,
+  discoverDesktopApp,
+  verifyDesktopAppPath,
+  ASTRONSTUDIO_APP_PROFILE,
 };

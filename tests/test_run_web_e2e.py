@@ -58,12 +58,27 @@ class WindowsDesktopDebugScriptTests(unittest.TestCase):
         self.assertNotIn("$astronStudioProcesses | Stop-Process -Force", script)
         self.assertNotIn("-Name $processNames", script)
 
+    def test_windows_discovery_uses_the_shared_component_and_accepts_explicit_paths(self) -> None:
+        script = WINDOWS_DESKTOP_DEBUG_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("desktop-app-discovery\\cli.mjs", script)
+        self.assertIn("function Resolve-DesktopApplicationExecutable", script)
+        self.assertIn('[string]$AstronStudioAppPath = ""', script)
+        self.assertIn('[string]$WorkBuddyAppPath = ""', script)
+        self.assertIn('[string]$QwenWorkAppPath = ""', script)
+        self.assertIn('"--platform", "win32"', script)
+        self.assertNotIn("current-user uninstall registry", script)
+
     def test_restart_helper_forwards_qwenwork_scope_and_port(self) -> None:
         script = WINDOWS_DESKTOP_RESTART_SCRIPT.read_text(encoding="utf-8")
         self.assertIn('"QwenWork", "CodexQwenWork"', script)
         self.assertIn("[int]$QwenWorkPort = 9250", script)
         self.assertIn("QwenWorkPort = $QwenWorkPort", script)
         self.assertIn('"-QwenWorkPort $QwenWorkPort"', script)
+        self.assertIn("QwenWorkAppPath = $QwenWorkAppPath", script)
+        self.assertIn(
+            '"-QwenWorkAppPath $(ConvertTo-SingleQuotedPowerShellLiteral -Value $QwenWorkAppPath)"',
+            script,
+        )
 
 
 class MacOSDesktopDebugScriptTests(unittest.TestCase):
@@ -91,15 +106,26 @@ class MacOSDesktopDebugScriptTests(unittest.TestCase):
         self.assertIn("assert_qwenwork_restart_safe", script)
         self.assertIn("codebuddy-sessions.vscdb", script)
         self.assertIn("QwenWorkCN/data/agents.db", script)
-        self.assertIn("com.tencent.workbuddy.mac", script)
-        self.assertIn("cn.qwenwork.desktop.mac", script)
+        self.assertIn('signal_app_processes "$name" "$app_path" TERM', script)
+        self.assertIn('signal_app_processes "$name" "$app_path" KILL', script)
+        self.assertNotIn("tell application id", script)
 
     def test_listener_identity_uses_resolved_app_path_and_allows_cold_start(self) -> None:
         script = MACOS_DESKTOP_DEBUG_SCRIPT.read_text(encoding="utf-8")
         self.assertIn('timeout_seconds=60', script)
         self.assertIn('[[ "$command" == "$app_path/Contents/MacOS/"* ]]', script)
         self.assertIn('[[ "$command" != "$app_path/Contents/MacOS/"* ]]', script)
+        self.assertIn("process_matches_app_path", script)
+        self.assertIn("app_main_pids", script)
         self.assertNotIn("process_pattern", script)
+        self.assertNotIn("/usr/bin/pkill", script)
+
+    def test_macos_discovery_uses_the_shared_component(self) -> None:
+        script = MACOS_DESKTOP_DEBUG_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("vendor/e2e-shared/desktop-app-discovery/cli.mjs", script)
+        self.assertIn("--profile \"$profile\"", script)
+        self.assertIn("--app-path \"$requested\"", script)
+        self.assertNotIn('"/Applications/AStudio.app"', script)
 
 
 TASK_IDS = ["task-1", "task-2"]

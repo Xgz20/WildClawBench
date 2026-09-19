@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, realpath, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, win32 } from "node:path";
 import test from "node:test";
 
 import { snapshotTree } from "../lib.mjs";
@@ -17,6 +17,7 @@ import {
   canAutomaticallyResumeAttention,
   canAdvanceTask,
   createQueueState,
+  freezeQueueAppDiscovery,
   migrateQueueState,
   parseBatchArgs,
   refreshQueueSlots,
@@ -30,6 +31,25 @@ import {
   selectPendingTaskIndexes,
   shouldPrioritizeResumeBeforeDispatch,
 } from "../batch.mjs";
+
+test("Windows queue resume accepts case-only differences in a revalidated frozen app path", async () => {
+  const state = {
+    app_discovery: {
+      path: "C:\\Program Files\\WorkBuddy\\WorkBuddy.exe",
+    },
+  };
+  const frozen = await freezeQueueAppDiscovery(state, {}, {
+    platform: "win32",
+    pathApi: win32,
+    realpathPath: async () => "c:\\program files\\workbuddy\\workbuddy.exe",
+    statPath: async (path) => ({
+      isFile: () => /(?:WorkBuddy\.exe|resources\\app\.asar)$/iu.test(path),
+      isDirectory: () => false,
+    }),
+    runCommand: async () => ({ code: 0, stdout: "1.0.0", stderr: "" }),
+  });
+  assert.equal(frozen, state.app_discovery);
+});
 
 async function fixture() {
   const root = await mkdtemp(join(tmpdir(), "workbuddy-batch-"));

@@ -1,24 +1,22 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { access, realpath, stat } from "node:fs/promises";
+import { access } from "node:fs/promises";
 import { homedir } from "node:os";
 import * as systemPath from "node:path";
+import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 import {
-  isDirectory,
-  isFile,
-  runCapture,
-} from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
+  discoverDesktopApp,
+  inspectMacDesktopAppProcess,
+} from "../../vendor/e2e-shared/desktop-app-discovery/index.mjs";
+import {
+  ASTRONSTUDIO_APP_PROFILE,
+} from "../../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 
 export const MACOS_APP_PATH = "/Applications/AStudio.app";
 export const WINDOWS_EXECUTABLE_NAMES = Object.freeze([
   "AStudio.exe",
   "AstronStudio.exe",
   "Acode.exe",
-]);
-export const WINDOWS_REGISTRY_KEYS = Object.freeze([
-  "HKCU\\Software\\AStudio",
-  "HKCU\\Software\\AstronStudio",
-  "HKCU\\Software\\Acode",
 ]);
 export const HOST_CONTROL_ENVIRONMENT_PREFIXES = Object.freeze(["CODEX_", "CHATGPT_"]);
 export const HOST_IPC_ENVIRONMENT_NAMES = Object.freeze([
@@ -81,27 +79,6 @@ function windowsCommandExecutable(commandLine) {
   return value.split(/\s+/u, 1)[0];
 }
 
-function parseRegistryInstallLocation(stdout) {
-  const match = String(stdout || "").match(/^\s*InstallLocation\s+REG_\w+\s+(.+?)\s*$/imu);
-  return match?.[1]?.trim() || null;
-}
-
-async function findWindowsExecutable(candidate, dependencies) {
-  const { pathApi, realpathPath, statPath } = dependencies;
-  if (await isFile(candidate, statPath)) {
-    if (!WINDOWS_EXECUTABLE_NAMES.some((name) => name.toLowerCase() === pathApi.basename(candidate).toLowerCase())) {
-      return null;
-    }
-    return realpathPath(candidate);
-  }
-  if (!(await isDirectory(candidate, statPath))) return null;
-  for (const executableName of WINDOWS_EXECUTABLE_NAMES) {
-    const executable = pathApi.join(candidate, executableName);
-    if (await isFile(executable, statPath)) return realpathPath(executable);
-  }
-  return null;
-}
-
 export function defaultAstronAppPath(platform = process.platform) {
   return platform === "win32" ? "" : MACOS_APP_PATH;
 }
@@ -133,56 +110,27 @@ export function defaultAstronSessionDb(home = homedir(), pathApi = systemPath, o
 
 export async function resolveAstronAppPath(requestedPath = "", overrides = {}) {
   const platform = overrides.platform || process.platform;
-  const pathApi = overrides.pathApi || (platform === "win32" ? systemPath.win32 : systemPath);
-  const realpathPath = overrides.realpathPath || realpath;
-  const statPath = overrides.statPath || stat;
-  const runCommand = overrides.runCommand || runCapture;
-  const environment = overrides.environment || process.env;
+  const discovery = await discoverDesktopApp({
+    profile: ASTRONSTUDIO_APP_PROFILE,
+    requestedPath,
+    platform,
+    endpoint: overrides.endpoint || null,
+    environment: overrides.environment || process.env,
+    home: overrides.home || homedir(),
+  }, overrides);
+  return discovery.path;
+}
 
-  if (platform !== "win32") {
-    const candidate = requestedPath || MACOS_APP_PATH;
-    const resolved = await realpathPath(systemPath.resolve(candidate));
-    await access(systemPath.join(resolved, "Contents", "Resources", "app.asar"));
-    return resolved;
-  }
-
-  if (requestedPath) {
-    const explicit = await findWindowsExecutable(requestedPath, { pathApi, realpathPath, statPath });
-    if (!explicit) {
-      throw new Error(`--app-path 未指向受支持的 AstronStudio 安装目录或主程序：${requestedPath}`);
-    }
-    return explicit;
-  }
-
-  const candidates = [];
-  for (const registryKey of WINDOWS_REGISTRY_KEYS) {
-    const result = await runCommand("reg.exe", ["query", registryKey, "/v", "InstallLocation"], {
-      capture: true,
-      allowFailure: true,
-    }).catch(() => ({ code: null, stdout: "", stderr: "" }));
-    if (result.code === 0) {
-      const installLocation = parseRegistryInstallLocation(result.stdout);
-      if (installLocation) candidates.push(installLocation);
-    }
-  }
-  const localAppData = environment.LOCALAPPDATA || "";
-  if (localAppData) {
-    for (const directoryName of ["AStudio", "AstronStudio", "Acode"]) {
-      candidates.push(pathApi.join(localAppData, "Programs", directoryName));
-    }
-  }
-
-  const seen = new Set();
-  for (const candidate of candidates) {
-    const key = normalizeWindowsPath(candidate);
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    const executable = await findWindowsExecutable(candidate, { pathApi, realpathPath, statPath });
-    if (executable) return executable;
-  }
-  throw new Error(
-    "未找到 AstronStudio Windows 主程序；请确认 HKCU\\Software\\AStudio\\InstallLocation 可用，或显式传入 --app-path <AStudio.exe或安装目录>",
-  );
+export async function discoverAstronApp(requestedPath = "", overrides = {}) {
+  const platform = overrides.platform || process.platform;
+  return discoverDesktopApp({
+    profile: ASTRONSTUDIO_APP_PROFILE,
+    requestedPath,
+    platform,
+    endpoint: overrides.endpoint || null,
+    environment: overrides.environment || process.env,
+    home: overrides.home || homedir(),
+  }, overrides);
 }
 
 export async function validateAstronAppPath(appPath, platform = process.platform) {
@@ -266,26 +214,18 @@ export async function astronGuiSessionStatus(overrides = {}) {
     }
   }
 
-  const frontmost = await runCommand(
-    "/usr/bin/osascript",
-    ["-e", 'tell application "System Events" to get name of first application process whose frontmost is true'],
-    { capture: true, allowFailure: true },
-  );
   const registry = await runCommand(
     "/usr/sbin/ioreg",
     ["-n", "Root", "-d1"],
     { capture: true, allowFailure: true },
   );
-  const frontmostApplication = frontmost.code === 0 ? frontmost.stdout.trim() : "unknown";
   const lockMatch = registry.stdout.match(/"IOConsoleLocked"\s*=\s*(Yes|No)/);
   const screenLocked = lockMatch ? lockMatch[1] === "Yes" : null;
   return {
-    frontmost_application: frontmostApplication,
+    frontmost_application: "unknown",
     screen_locked: screenLocked,
-    lock_source: lockMatch ? "ioreg.IOConsoleLocked" : "frontmost-application-fallback",
-    unlocked: screenLocked === null
-      ? frontmost.code === 0 && frontmostApplication.toLowerCase() !== "loginwindow"
-      : !screenLocked,
+    lock_source: lockMatch ? "ioreg.IOConsoleLocked" : "ioreg-unavailable",
+    unlocked: screenLocked === false,
   };
 }
 
@@ -364,24 +304,10 @@ export async function astronProcessIdentity(appPath, overrides = {}) {
     };
   }
 
-  const result = await runCommand(
-    "/usr/bin/osascript",
-    ["-e", 'tell application "System Events" to get unix id of first application process whose bundle identifier is "cn.xfyun.acode"'],
-    { capture: true, allowFailure: true },
-  );
-  const pid = Number(result.stdout.trim());
-  if (result.code !== 0 || !Number.isInteger(pid) || pid <= 0) return null;
-  const command = await runCommand("/bin/ps", ["-p", String(pid), "-o", "command="], {
-    capture: true,
-    allowFailure: true,
-  });
-  return {
-    pid,
-    bundle_id: "cn.xfyun.acode",
-    command: command.stdout.trim() || null,
-    platform: "darwin",
-    captured_at: new Date().toISOString(),
-  };
+  return inspectMacDesktopAppProcess({
+    profile: ASTRONSTUDIO_APP_PROFILE,
+    appPath,
+  }, { ...overrides, runCommand });
 }
 
 export async function gracefulQuitAstron(processInfo, overrides = {}) {
@@ -396,8 +322,8 @@ export async function gracefulQuitAstron(processInfo, overrides = {}) {
     );
   }
   return runCommand(
-    "/usr/bin/osascript",
-    ["-e", 'tell application id "cn.xfyun.acode" to quit'],
+    "/bin/kill",
+    ["-TERM", String(processInfo.pid)],
     { allowFailure: true, capture: true },
   );
 }
@@ -414,7 +340,7 @@ export async function terminateAstronProcess(processInfo, overrides = {}) {
   }
   return runCommand(
     "/bin/kill",
-    ["-TERM", String(processInfo.pid)],
+    ["-KILL", String(processInfo.pid)],
     { allowFailure: true, capture: true },
   );
 }

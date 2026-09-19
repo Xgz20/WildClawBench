@@ -391,10 +391,13 @@ export async function restartQwenWork(config, overrides = {}) {
     ...overrides,
   };
   const stopCurrentInstance = async (before) => {
+    const currentPlatform = before.platform || process.platform;
+    const gracefulMethod = currentPlatform === "win32" ? "close-main-window" : "sigterm";
+    const forcedMethod = currentPlatform === "win32" ? "taskkill-after-close-timeout" : "sigkill-after-term-timeout";
     await dependencies.gracefulQuit(before);
     try {
       await waitForQwenWorkStopped(config, dependencies, dependencies.gracefulQuitTimeoutSeconds);
-      return { method: "application-quit", pid: before.pid };
+      return { method: gracefulMethod, pid: before.pid };
     } catch (gracefulError) {
       const current = await dependencies.processIdentity();
       if (!current || current.pid !== before.pid) {
@@ -414,7 +417,7 @@ export async function restartQwenWork(config, overrides = {}) {
       }
       await waitForQwenWorkStopped(config, dependencies, 10);
       return {
-        method: "terminate-after-quit-timeout",
+        method: forcedMethod,
         pid: current.pid,
         graceful_error: gracefulError instanceof Error ? gracefulError.message : String(gracefulError),
       };

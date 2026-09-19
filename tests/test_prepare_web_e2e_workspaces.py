@@ -178,9 +178,9 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
             score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.3.zip"
             report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.1.0.zip"
-            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.2.7.zip"
-            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.12.7.zip"
-            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.3.11.zip"
+            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.3.0.zip"
+            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.13.0.zip"
+            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.4.0.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
             report_config_path = batch_root / "web-smoke__report-config.yaml"
 
@@ -336,15 +336,15 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             batch_manifest = json.loads((batch_root / "batch_manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(
                 batch_manifest["orchestrate_skill_archive"],
-                "packages/orchestrate-web-e2e-skill-v0.2.7.zip",
+                "packages/orchestrate-web-e2e-skill-v0.3.0.zip",
             )
             self.assertEqual(
                 batch_manifest["execute_skill_archive"],
-                "packages/execute-web-e2e-skill-v1.12.7.zip",
+                "packages/execute-web-e2e-skill-v1.13.0.zip",
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],
-                "packages/run-web-e2e-skill-v1.3.11.zip",
+                "packages/run-web-e2e-skill-v1.4.0.zip",
             )
             self.assertEqual(batch_manifest["skills_manifest"], "packages/skills-manifest.json")
             skills_manifest = json.loads(skills_manifest_path.read_text(encoding="utf-8"))

@@ -1,13 +1,16 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { access, readdir, realpath, stat } from "node:fs/promises";
+import { access } from "node:fs/promises";
 import { homedir } from "node:os";
 import * as systemPath from "node:path";
+import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 import {
-  isDirectory,
-  isFile,
-  runCapture,
-} from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
+  discoverDesktopApp,
+  inspectMacDesktopAppProcess,
+} from "../../vendor/e2e-shared/desktop-app-discovery/index.mjs";
+import {
+  QWENWORK_APP_PROFILE,
+} from "../../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 
 export const MACOS_APP_PATH = "/Applications/QwenWorkCN.app";
 export const MACOS_BUNDLE_ID = "cn.qwenwork.desktop.mac";
@@ -58,63 +61,6 @@ function parsePowerShellJson(stdout) {
   return Array.isArray(parsed) ? parsed : [parsed];
 }
 
-function compareVersionDirectoryNames(left, right) {
-  const leftParts = String(left).match(/\d+/gu)?.map(Number) || [];
-  const rightParts = String(right).match(/\d+/gu)?.map(Number) || [];
-  const length = Math.max(leftParts.length, rightParts.length);
-  for (let index = 0; index < length; index += 1) {
-    const difference = (rightParts[index] || 0) - (leftParts[index] || 0);
-    if (difference !== 0) return difference;
-  }
-  return String(right).localeCompare(String(left));
-}
-
-async function findWindowsExecutable(candidate, dependencies) {
-  const { pathApi, realpathPath, statPath, readDirectory } = dependencies;
-  if (await isFile(candidate, statPath)) {
-    const supported = WINDOWS_EXECUTABLE_NAMES.some((name) => name.toLowerCase() === pathApi.basename(candidate).toLowerCase());
-    return supported ? realpathPath(candidate) : null;
-  }
-  if (!(await isDirectory(candidate, statPath))) return null;
-
-  for (const executableName of WINDOWS_EXECUTABLE_NAMES) {
-    const executable = pathApi.join(candidate, executableName);
-    if (await isFile(executable, statPath)) return realpathPath(executable);
-  }
-
-  let childNames = [];
-  try {
-    childNames = (await readDirectory(candidate, { withFileTypes: true }))
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name)
-      .sort(compareVersionDirectoryNames);
-  } catch {
-    return null;
-  }
-  for (const childName of childNames) {
-    const child = pathApi.join(candidate, childName);
-    for (const executableName of WINDOWS_EXECUTABLE_NAMES) {
-      const executable = pathApi.join(child, executableName);
-      if (await isFile(executable, statPath)) return realpathPath(executable);
-    }
-  }
-  return null;
-}
-
-function registryInstallCandidates(entries, pathApi) {
-  const candidates = [];
-  for (const entry of entries) {
-    if (entry.InstallLocation) candidates.push(String(entry.InstallLocation).trim());
-    if (entry.DisplayIcon) candidates.push(String(entry.DisplayIcon).trim().replace(/,\d+$/u, "").replace(/^"|"$/gu, ""));
-    const uninstall = String(entry.UninstallString || "").trim();
-    const executable = uninstall.startsWith('"')
-      ? uninstall.slice(1, uninstall.indexOf('"', 1))
-      : uninstall.split(/\s+/u, 1)[0];
-    if (executable) candidates.push(pathApi.dirname(executable));
-  }
-  return candidates;
-}
-
 export function defaultQwenWorkAppPath(platform = process.platform) {
   return platform === "win32" ? "" : MACOS_APP_PATH;
 }
@@ -127,58 +73,27 @@ export function defaultQwenWorkSessionDb(home = homedir(), pathApi = systemPath,
 
 export async function resolveQwenWorkAppPath(requestedPath = "", overrides = {}) {
   const platform = overrides.platform || process.platform;
-  const pathApi = overrides.pathApi || (platform === "win32" ? systemPath.win32 : systemPath);
-  const realpathPath = overrides.realpathPath || realpath;
-  const statPath = overrides.statPath || stat;
-  const readDirectory = overrides.readDirectory || readdir;
-  const runCommand = overrides.runCommand || runCapture;
-  const environment = overrides.environment || process.env;
+  const discovery = await discoverDesktopApp({
+    profile: QWENWORK_APP_PROFILE,
+    requestedPath,
+    platform,
+    endpoint: overrides.endpoint || null,
+    environment: overrides.environment || process.env,
+    home: overrides.home || homedir(),
+  }, overrides);
+  return discovery.path;
+}
 
-  if (platform !== "win32") {
-    const resolved = await realpathPath(systemPath.resolve(requestedPath || MACOS_APP_PATH));
-    await access(systemPath.join(resolved, "Contents", "Resources", "app.asar"));
-    return resolved;
-  }
-
-  const dependencies = { pathApi, realpathPath, statPath, readDirectory };
-  if (requestedPath) {
-    const explicit = await findWindowsExecutable(requestedPath, dependencies);
-    if (!explicit) throw new Error(`--app-path 未指向受支持的 QwenWork 安装目录或主程序：${requestedPath}`);
-    return explicit;
-  }
-
-  const candidates = [];
-  const registryScript = `
-Get-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*' -ErrorAction SilentlyContinue |
-  Where-Object { $_.DisplayName -match '^(?:千问办公|QwenWorkCN|QwenWork)(?:\\s|$)' } |
-  Select-Object InstallLocation,DisplayIcon,UninstallString |
-  ConvertTo-Json -Compress
-`;
-  const registry = await runCommand(
-    "powershell.exe",
-    ["-NoProfile", "-NonInteractive", "-Command", registryScript],
-    { capture: true, allowFailure: true },
-  ).catch(() => ({ code: null, stdout: "", stderr: "" }));
-  if (registry.code === 0) {
-    try {
-      candidates.push(...registryInstallCandidates(parsePowerShellJson(registry.stdout), pathApi));
-    } catch {
-      // A malformed registry response must not suppress deterministic path discovery.
-    }
-  }
-  const localAppData = environment.LOCALAPPDATA || pathApi.join(homedir(), "AppData", "Local");
-  candidates.push(pathApi.join(localAppData, "Programs", "QwenWorkCN"));
-  candidates.push(pathApi.join(localAppData, "Programs", "QwenWork"));
-
-  const seen = new Set();
-  for (const candidate of candidates) {
-    const key = normalizeWindowsPath(candidate);
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    const executable = await findWindowsExecutable(candidate, dependencies);
-    if (executable) return executable;
-  }
-  throw new Error("未找到 QwenWork Windows 主程序；请确认当前用户已安装千问办公，或显式传入 --app-path <QwenWorkCN.exe或安装目录>");
+export async function discoverQwenWorkApp(requestedPath = "", overrides = {}) {
+  const platform = overrides.platform || process.platform;
+  return discoverDesktopApp({
+    profile: QWENWORK_APP_PROFILE,
+    requestedPath,
+    platform,
+    endpoint: overrides.endpoint || null,
+    environment: overrides.environment || process.env,
+    home: overrides.home || homedir(),
+  }, overrides);
 }
 
 export async function validateQwenWorkAppPath(appPath, platform = process.platform) {
@@ -261,15 +176,18 @@ export async function qwenWorkGuiSessionStatus(overrides = {}) {
       };
     }
   }
-  const result = await runCommand(
-    "/usr/bin/osascript",
-    ["-e", 'tell application "System Events" to get name of first application process whose frontmost is true'],
+  const registry = await runCommand(
+    "/usr/sbin/ioreg",
+    ["-n", "Root", "-d1"],
     { capture: true, allowFailure: true },
   );
-  const frontmostApplication = result.code === 0 ? result.stdout.trim() : "unknown";
+  const lockMatch = registry.stdout.match(/"IOConsoleLocked"\s*=\s*(Yes|No)/u);
+  const screenLocked = lockMatch ? lockMatch[1] === "Yes" : null;
   return {
-    frontmost_application: frontmostApplication,
-    unlocked: result.code === 0 && frontmostApplication.toLowerCase() !== "loginwindow",
+    frontmost_application: "unknown",
+    screen_locked: screenLocked,
+    lock_source: lockMatch ? "ioreg.IOConsoleLocked" : "ioreg-unavailable",
+    unlocked: screenLocked === false,
   };
 }
 
@@ -335,21 +253,10 @@ export async function qwenWorkProcessIdentity(appPath, overrides = {}) {
       captured_at: new Date().toISOString(),
     };
   }
-  const result = await runCommand(
-    "/usr/bin/osascript",
-    ["-e", `tell application "System Events" to get unix id of first application process whose bundle identifier is "${MACOS_BUNDLE_ID}"`],
-    { capture: true, allowFailure: true },
-  );
-  const pid = Number(result.stdout.trim());
-  if (result.code !== 0 || !Number.isInteger(pid) || pid <= 0) return null;
-  const command = await runCommand("/bin/ps", ["-p", String(pid), "-o", "command="], { capture: true, allowFailure: true });
-  return {
-    pid,
-    bundle_id: MACOS_BUNDLE_ID,
-    command: command.stdout.trim() || null,
-    platform: "darwin",
-    captured_at: new Date().toISOString(),
-  };
+  return inspectMacDesktopAppProcess({
+    profile: QWENWORK_APP_PROFILE,
+    appPath,
+  }, { ...overrides, runCommand });
 }
 
 export async function gracefulQuitQwenWork(processInfo, overrides = {}) {
@@ -364,8 +271,8 @@ export async function gracefulQuitQwenWork(processInfo, overrides = {}) {
     );
   }
   return runCommand(
-    "/usr/bin/osascript",
-    ["-e", `tell application id "${MACOS_BUNDLE_ID}" to quit`],
+    "/bin/kill",
+    ["-TERM", String(processInfo.pid)],
     { allowFailure: true, capture: true },
   );
 }
@@ -376,7 +283,7 @@ export async function terminateQwenWorkProcess(processInfo, overrides = {}) {
   if (platform === "win32") {
     return runCommand("taskkill.exe", ["/PID", String(processInfo.pid), "/T", "/F"], { allowFailure: true, capture: true });
   }
-  return runCommand("/bin/kill", ["-TERM", String(processInfo.pid)], { allowFailure: true, capture: true });
+  return runCommand("/bin/kill", ["-KILL", String(processInfo.pid)], { allowFailure: true, capture: true });
 }
 
 export const QWEN_TOKEN_USAGE_ENV_NAME = "QODERCN_EXPOSE_TOKEN_USAGE";

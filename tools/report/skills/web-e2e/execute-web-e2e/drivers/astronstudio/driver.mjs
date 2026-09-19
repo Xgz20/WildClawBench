@@ -156,6 +156,9 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
   };
   const currentProcess = await dependencies.processIdentity();
   if (currentProcess) {
+    const currentPlatform = currentProcess.platform || process.platform;
+    const gracefulMethod = currentPlatform === "win32" ? "close-main-window" : "sigterm";
+    const forcedMethod = currentPlatform === "win32" ? "taskkill-after-close-timeout" : "sigkill-after-term-timeout";
     const active = (await dependencies.querySessions(config.sessionDb)).filter((session) =>
       new Set(["running", "needs_attention", "pending", "starting"]).has(String(session.status)),
     );
@@ -168,12 +171,12 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
     await dependencies.gracefulQuit(currentProcess);
     try {
       await dependencies.waitForStopped(config, dependencies.gracefulQuitTimeoutSeconds);
-      restartSafety.shutdown = { method: "application-quit", pid: currentProcess.pid };
+      restartSafety.shutdown = { method: gracefulMethod, pid: currentProcess.pid };
     } catch (gracefulError) {
       const remainingProcess = await dependencies.processIdentity();
       if (!remainingProcess || remainingProcess.pid !== currentProcess.pid) {
         throw new Error(
-          `AstronStudio 正常退出超时后进程身份已变化，拒绝发送 SIGTERM：原 PID ${currentProcess.pid}，当前 PID ${remainingProcess?.pid || "不可用"}`,
+          `AstronStudio 正常终止等待超时后进程身份已变化，拒绝强制终止：原 PID ${currentProcess.pid}，当前 PID ${remainingProcess?.pid || "不可用"}`,
         );
       }
       const terminated = await dependencies.terminateProcess(currentProcess);
@@ -182,7 +185,7 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
         const processAfterTerminate = await dependencies.processIdentity();
         const endpointAfterTerminate = await dependencies.endpointReady(config.endpoint);
         if (processAfterTerminate || endpointAfterTerminate) {
-          throw new Error(`AstronStudio 正常退出超时，向已核对 PID ${currentProcess.pid} 发送 SIGTERM 失败：${terminated.stderr?.trim() || `退出码 ${terminated.code}`}`);
+          throw new Error(`AstronStudio 正常终止等待超时，强制终止已核对 PID ${currentProcess.pid} 失败：${terminated.stderr?.trim() || `退出码 ${terminated.code}`}`);
         }
         terminationRace = {
           exit_code: terminated.code,
@@ -191,7 +194,7 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
       }
       await dependencies.waitForStopped(config);
       restartSafety.shutdown = {
-        method: terminationRace ? "verified-stopped-after-terminate-race" : "sigterm-after-quit-timeout",
+        method: terminationRace ? "verified-stopped-after-terminate-race" : forcedMethod,
         pid: currentProcess.pid,
         graceful_error: gracefulError instanceof Error ? gracefulError.message : String(gracefulError),
         ...(terminationRace ? {
@@ -244,10 +247,13 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
             `AstronStudio 启动重试前进程身份与本次启动不一致，拒绝关闭：启动 PID ${result.pid}，当前 PID ${retryProcess.pid}`,
           );
         }
+        const retryPlatform = retryProcess.platform || process.platform;
+        const retryGracefulMethod = retryPlatform === "win32" ? "close-main-window" : "sigterm";
+        const retryForcedMethod = retryPlatform === "win32" ? "taskkill-after-close-timeout" : "sigkill-after-term-timeout";
         await dependencies.gracefulQuit(retryProcess);
         try {
           await dependencies.waitForStopped(config, dependencies.gracefulQuitTimeoutSeconds);
-          evidence.retry_cleanup = { method: "application-quit", pid: retryProcess.pid };
+          evidence.retry_cleanup = { method: retryGracefulMethod, pid: retryProcess.pid };
         } catch (gracefulError) {
           const remainingProcess = await dependencies.processIdentity();
           if (!remainingProcess || remainingProcess.pid !== retryProcess.pid) {
@@ -272,7 +278,7 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
           }
           await dependencies.waitForStopped(config);
           evidence.retry_cleanup = {
-            method: terminationRace ? "verified-stopped-after-terminate-race" : "sigterm-after-quit-timeout",
+            method: terminationRace ? "verified-stopped-after-terminate-race" : retryForcedMethod,
             pid: retryProcess.pid,
             graceful_error: gracefulError instanceof Error ? gracefulError.message : String(gracefulError),
             ...(terminationRace ? {

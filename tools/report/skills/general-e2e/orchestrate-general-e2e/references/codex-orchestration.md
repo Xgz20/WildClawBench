@@ -56,7 +56,7 @@ Windows 使用 `run-codex-project-registrar.cmd`。Driver 与 Web E2E 使用相�
   --port 9230
 ```
 
-入口固定使用 `com.wildclawbench.desktop-debug-restart.codex` 单实例 Label、`RunAtLoad=true`、`KeepAlive=false`，状态和日志保存在 `~/Library/Application Support/WildClawBench/desktop-debug-restart/<run-id>/`。脚本发出正常退出后，只在目标进程属于已核对的 Codex bundle、窗口中出现精确的“退出 Codex？”/“Quit Codex?”标题且按钮为“退出”/“Quit”时自动确认；未知弹窗、辅助功能不可用或文案不匹配时不点击，继续使用 10 秒 TERM、5 秒 KILL 的有界兜底。当前回合中断后，新控制任务读取 `status.json` 并恢复原 orchestration；只有 `PASSED` 才继续项目注册。禁止使用 `launchctl submit` 或任何自动复活的临时任务；脚本检测到旧版 `com.wildclawbench.general-e2e.codex-debug`、`com.wildclawbench.general-e2e.codex-refresh` 或已有新 Label 时会失败关闭。
+入口固定使用 `com.wildclawbench.desktop-debug-restart.codex` 单实例 Label、`RunAtLoad=true`、`KeepAlive=false`，状态和日志保存在 `~/Library/Application Support/WildClawBench/desktop-debug-restart/<run-id>/`。脚本先动态发现并校验 Codex bundle，再以 `ps` 选择该安装路径下的唯一根进程；只在发送前重新核对 PID 命令路径，先 TERM 并等待 10 秒，仍未退出才重新核对并 KILL。它不请求 Apple Events 退出，不读取或点击退出对话框，也不调用 `System Events`，因此不需要 Automation 或辅助功能授权。当前回合中断后，新控制任务读取 `status.json` 并恢复原 orchestration；只有 `PASSED` 才继续项目注册。禁止使用 `launchctl submit` 或任何自动复活的临时任务；脚本检测到旧版 `com.wildclawbench.general-e2e.codex-debug`、`com.wildclawbench.general-e2e.codex-refresh` 或已有新 Label 时会失败关闭。
 
 读取 `status` 的 `REGISTER_PROJECT.project_path`，先调用 Desktop 内置 `list_projects` 按规范化绝对路径唯一匹配。已经存在时直接复用并记录：
 

@@ -11,10 +11,17 @@ import {
   COMPONENT_VERSION as DESKTOP_RUNTIME_VERSION,
   runCapture,
 } from "../vendor/e2e-shared/desktop-runtime/process.mjs";
+import {
+  discoverDesktopApp,
+  inspectMacDesktopAppProcess,
+} from "../vendor/e2e-shared/desktop-app-discovery/index.mjs";
+import {
+  ASTRONSTUDIO_APP_PROFILE,
+} from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 
 export const PROBE_SCHEMA = "wildclawbench.general-e2e-astronstudio-probe/v1";
 export const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
-export const PROBE_VERSION = "0.1.0";
+export const PROBE_VERSION = "0.2.0";
 export const DEFAULT_APP_PATH = "/Applications/AStudio.app";
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
@@ -35,6 +42,7 @@ const READ_ONLY_OPERATIONS = Object.freeze([
   "read-skill-and-component-metadata",
   "read-os-version",
   "read-app-bundle",
+  "discover-app-installation",
   "read-process-identity",
   "read-gui-session",
   "read-listening-ports",
@@ -53,7 +61,7 @@ function usage() {
   node scripts/probe_astronstudio_macos.mjs [选项]
 
 选项：
-  --app-path <AStudio.app>         默认 /Applications/AStudio.app
+  --app-path <AStudio.app>         可选；显式路径优先，否则自动发现并冻结
   --state-db <state.sqlite>        默认 ~/.acode/acode/userdata/state.sqlite
   --endpoint <http://127.0.0.1:端口> 显式指定本机 CDP；省略时按进程参数、有效 DevToolsActivePort、9240 探测
   --output <probe.json>            新建探针结果；已存在时拒绝覆盖
@@ -72,7 +80,8 @@ function parsePositiveInteger(value, field) {
 
 export function parseArgs(argv) {
   const config = {
-    appPath: DEFAULT_APP_PATH,
+    appPath: "",
+    appPathExplicit: false,
     stateDb: DEFAULT_STATE_DB,
     endpoint: null,
     endpointExplicit: false,
@@ -101,6 +110,7 @@ export function parseArgs(argv) {
     if (!value || value.startsWith("--")) throw new Error(`${arg} 缺少值`);
     index += 1;
     config[key] = key === "timeoutMs" ? parsePositiveInteger(value, arg) : value;
+    if (key === "appPath") config.appPathExplicit = true;
     if (key === "endpoint") config.endpointExplicit = true;
   }
   if (!config.help) {
@@ -271,67 +281,37 @@ function parseDebugPort(command) {
 }
 
 async function inspectProcess(app, runCommand = runCapture) {
-  const pidResult = await runCommand(
-    "/usr/bin/osascript",
-    ["-e", `tell application "System Events" to get unix id of first application process whose bundle identifier is "${DEFAULT_BUNDLE_ID}"`],
-    { capture: true, allowFailure: true },
-  );
-  const pid = Number(pidResult.stdout.trim());
-  if (pidResult.code !== 0 || !Number.isInteger(pid) || pid <= 0) {
+  const processInfo = await inspectMacDesktopAppProcess({
+    profile: ASTRONSTUDIO_APP_PROFILE,
+    appPath: app.path,
+  }, { runCommand });
+  if (!processInfo) {
     return { running: false, identity_verified: false, pid: null };
   }
-  const readPs = async (format) => {
-    const result = await runCommand("/bin/ps", ["-p", String(pid), "-o", format], {
-      capture: true,
-      allowFailure: true,
-    });
-    return result.code === 0 ? result.stdout.trim() : "";
-  };
-  const [ppidText, startedText, executable, command] = await Promise.all([
-    readPs("ppid="),
-    readPs("lstart="),
-    readPs("comm="),
-    readPs("command="),
-  ]);
   const expectedExecutable = await realpath(app.executable_path);
-  let actualExecutable = executable;
-  try {
-    actualExecutable = await realpath(executable);
-  } catch {
-    // Keep the observed value so identity verification fails closed.
-  }
-  const startedAtEpoch = Date.parse(startedText);
   return {
     running: true,
-    identity_verified: actualExecutable === expectedExecutable,
-    pid,
-    ppid: Number(ppidText) || null,
-    executable_path: actualExecutable || null,
-    started_at: isoOrNull(startedAtEpoch),
-    command_sha256: command ? sha256(command) : null,
-    remote_debugging_port: parseDebugPort(command),
+    identity_verified: processInfo.executable_path === expectedExecutable,
+    pid: processInfo.pid,
+    ppid: processInfo.ppid,
+    executable_path: processInfo.executable_path,
+    started_at: processInfo.started_at,
+    command_sha256: processInfo.command ? sha256(processInfo.command) : null,
+    remote_debugging_port: parseDebugPort(processInfo.command),
   };
 }
 
 export async function inspectGui(runCommand = runCapture) {
-  const [frontmost, registry] = await Promise.all([
-    runCommand(
-      "/usr/bin/osascript",
-      ["-e", 'tell application "System Events" to get name of first application process whose frontmost is true'],
-      { capture: true, allowFailure: true },
-    ),
-    runCommand("/usr/sbin/ioreg", ["-n", "Root", "-d1"], {
-      capture: true,
-      allowFailure: true,
-    }),
-  ]);
-  const frontmostApplication = frontmost.code === 0 ? frontmost.stdout.trim() : "unknown";
+  const registry = await runCommand("/usr/sbin/ioreg", ["-n", "Root", "-d1"], {
+    capture: true,
+    allowFailure: true,
+  });
   const lockMatch = registry.stdout.match(/"IOConsoleLocked"\s*=\s*(Yes|No)/u);
   const screenLocked = lockMatch ? lockMatch[1] === "Yes" : null;
   return {
-    frontmost_application: frontmostApplication,
+    frontmost_application: "unknown",
     screen_locked: screenLocked,
-    lock_source: lockMatch ? "ioreg.IOConsoleLocked" : null,
+    lock_source: lockMatch ? "ioreg.IOConsoleLocked" : "ioreg-unavailable",
     unlocked: screenLocked === false,
   };
 }
@@ -865,6 +845,7 @@ export function buildFrozenRunConfig(observation) {
     harness: {
       id: "astronstudio",
       app_path: observation.app.path,
+      app_discovery: observation.app.discovery,
       bundle_id: observation.app.bundle_id,
       client_version: observation.app.version,
       process_executable: observation.process.executable_path,
@@ -967,14 +948,33 @@ export async function probeAstronStudio(config, overrides = {}) {
     distribution: "unknown",
     components: [],
   }, () => (overrides.inspectImplementation || inspectImplementation)());
+  const appDiscovery = await safeObservation("app discovery", {
+    schema_version: "wildclawbench.desktop-app-discovery/v1",
+    path: config.appPath || null,
+    executable_path: null,
+    source: config.appPathExplicit ? "explicit" : null,
+    identity_verified: false,
+    bundle_id: null,
+    version: null,
+    candidates_checked: [],
+  }, () => (overrides.discoverApp || discoverDesktopApp)({
+    profile: ASTRONSTUDIO_APP_PROFILE,
+    requestedPath: config.appPathExplicit ? config.appPath : "",
+    platform: "darwin",
+    environment: overrides.environment || process.env,
+  }, overrides));
   const app = await safeObservation("app", {
     installed: false,
-    path: resolve(config.appPath),
+    path: appDiscovery.path || config.appPath || null,
     executable_path: null,
     bundle_id: null,
     version: null,
     bundle_identity_verified: false,
-  }, () => (overrides.inspectApp || inspectApp)(config.appPath, runCommand));
+    discovery: appDiscovery,
+  }, async () => ({
+    ...await (overrides.inspectApp || inspectApp)(appDiscovery.path, runCommand),
+    discovery: appDiscovery,
+  }));
   const processInfo = await safeObservation("process", {
     running: false,
     identity_verified: false,

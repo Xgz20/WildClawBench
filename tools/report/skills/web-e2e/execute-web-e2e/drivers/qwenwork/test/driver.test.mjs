@@ -33,6 +33,24 @@ import {
   DEFAULT_SESSION_DB,
   parseArgs,
 } from "../lib.mjs";
+import {
+  gracefulQuitQwenWork,
+  terminateQwenWorkProcess,
+} from "../platform.mjs";
+
+test("macOS QwenWork termination uses exact PID signals without Apple Events", async () => {
+  const commands = [];
+  const runCommand = async (command, args) => {
+    commands.push([command, args]);
+    return { code: 0, stdout: "", stderr: "" };
+  };
+  await gracefulQuitQwenWork({ pid: 501 }, { platform: "darwin", runCommand });
+  await terminateQwenWorkProcess({ pid: 501 }, { platform: "darwin", runCommand });
+  assert.deepEqual(commands, [
+    ["/bin/kill", ["-TERM", "501"]],
+    ["/bin/kill", ["-KILL", "501"]],
+  ]);
+});
 
 test("QwenWork session 捕获在慢写库客户端上至少等待六十秒", () => {
   assert.equal(attemptSessionCaptureTimeout(5000), 60000);
@@ -69,7 +87,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.10.17");
+  assert.equal(state.driver.version, "1.11.0");
 });
 
 test("QwenWork 原生目录选择等待异步更新后的目录标签", async () => {
