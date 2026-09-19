@@ -1,6 +1,6 @@
 # 控制推进记录
 
-维护者：COMMON。更新：2026-09-19 21:00 +08:00。这是控制任务的调度/审查快照，不替代平台卡与技术验收，也不是跨进程桌面锁。没有配置定时巡检。
+维护者：COMMON。更新：2026-09-19 21:10 +08:00。这是控制任务的调度/审查快照，不替代平台卡与技术验收，也不是跨进程桌面锁。没有配置定时巡检。
 
 ## 当前交付与下一项
 
@@ -8,7 +8,7 @@
 
 | 任务 | 已审查并集成的交付 | 正在推进 |
 | --- | --- | --- |
-| MAC-WORKBUDDY-GENERAL | P2 `e388dfa`、组件绑定 `b3ac3da`；独立 Node 23/23 | SLOT03 发送前失败已安全恢复草稿、释放；离线修真实输入事件与 armed 前 enabled 检查，补证据交接；collector 独立推进 |
+| MAC-WORKBUDDY-GENERAL | P2 `e388dfa`、组件绑定 `b3ac3da`；独立 Node 23/23 | SLOT03 发送前失败已安全恢复草稿、释放；输入修复 `5bea762` 审查通过，Node 25/25 与 VM guards 7/7；SLOT05 新 canary 已授予，先采用 COMMON-003/冻结身份；collector 独立推进 |
 | MAC-QWENWORK-GENERAL | `9081df5`；独立 Node 32 + Python 3；Swift typecheck | SLOT04 已释放；项目 trigger 歧义导致 send=0；修可见控件 selector、关闭数据库的只读 probe；collector 独立交付 |
 | MAC-DOUBAOWORK-WEB | P2 `47dcaee`、公共 merge `ca7cc2e`、更正 `3a3057c`；Node 39/39 | 离线审计原生 terminal/完整 workspace 绑定、实现精确 cleanup 及反例；COMMON 审查最小 Web 公共接口复用 |
 | COMMON | CB-A/CB-B、三 Driver、发行版本与 Qwen CLI 路径别名修复 | 发布 COMMON-003，接收下一批平台修复/collector；新增五项指标另属 COMMON-CM01 |
@@ -23,8 +23,9 @@
 | SLOT-MAC-20260919-02 | MAC-WORKBUDDY-GENERAL | 启动/CDP/配置/原生状态与草稿检查 | SLOT_RELEASED；发现原 31 字草稿，未发送 |
 | SLOT-MAC-20260919-03 | MAC-WORKBUDDY-GENERAL | 私有备份核验后临时移出草稿、一次开发尝试、精确恢复 | SLOT03_RELEASED；reservation=1、实际 click=0/send=0；原草稿正文/HTML SHA 已恢复 |
 | SLOT-MAC-20260919-04 | MAC-QWENWORK-GENERAL | 无活动冲突后启动 QwenWork 9250；真实 General 单题、keep-current、一次发送/观察恢复 | SLOT04_RELEASED；send=0、无 attempt；最后由用户确认退出，9250/主进程/DB 写者均已消失 |
+| SLOT-MAC-20260919-05 | MAC-WORKBUDDY-GENERAL | 输入修复后新调试 attempt、原草稿私有核验与恢复、真实单题一次发送/观察 | 已授予；在新文档/COMMON-003 合并并冻结源码后开始；待明确安全释放 |
 
-当前无桌面持有者，三个任务先推进离线修复/collector。下一时段必须由控制任务在修复审查后明确授予，不能自动开始。不可为补证据重发不确定发送，不代答未知对话框。结束时必须报告真实 task/session/attempt、未停止状态、残留进程和恢复路径；只有安全交接后才分配下一时段。
+SLOT05 仅 WorkBuddy 可操作桌面，Qwen/Doubao 继续离线修复/collector。后续时段由控制任务在修复审查后明确授予，不能自动开始。不可为补证据重发不确定发送，不代答未知对话框。结束时必须报告真实 task/session/attempt、未停止状态、残留进程和恢复路径；只有安全交接后才分配下一时段。
 
 ## WorkBuddy SLOT03
 
@@ -32,7 +33,7 @@ attempt `3e554524-6599-4182-aecc-3257977867c0` 在发送前已冻结 628 字符 
 
 同 attempt 只读 resume 没有重发，仍无 native 身份。未发送 Prompt 已移出，原 31 字用户草稿正文与 HTML SHA 均恢复；只有动态 style 属性不同。备份、恢复截图和证据权限为 0600，正文不入 Git。WorkBuddy 保持本轮启动的 PID 33343 / CDP 9229，模型 xopglm52、权限 default-sandbox；再次操作前必须重验现场，不能把此快照当作实时状态。
 
-平台离线修复使用真实输入事件并在 armed 前确认 enabled，不绕过 disabled。fixture 只能证明其覆盖范围，真实客户端行为仍需新的独占时段和新的调试 attempt；原 attempt 计数不重置。
+平台修复 `5bea762` 使用 Input.insertText 并在 armed 前确认 enabled，不绕过 disabled。独立 Node 25/25、实际 DOM 表达式 VM guards 7/7 通过；这些不是 React 真机证据。SLOT05 已授予，重新核验私有草稿备份与当前内容后才临时移出，新建调试 attempt 验证，旧 attempt 计数不重置。
 
 ## QwenWork SLOT04
 
@@ -54,7 +55,7 @@ attempt `3e554524-6599-4182-aecc-3257977867c0` 在发送前已冻结 628 字符 
 
 ## 公共接口与跨平台
 
-General trace v2 / common finalizer 已由 COMMON-002 提供；平台真实 collector 和 cleanup hook 单独审查，不能复制或绕过正式门禁。General wire 不直接用于 Doubao Web；先复用已有 Web 能力，再集中确定缺失的公共路由/资源映射/收口接口。discovery 1.2.0 与 prepare 的 Doubao 支持已经交付，不再列为全缺。
+General trace v2 / common finalizer 已由 COMMON-002 提供；平台真实 collector 和 cleanup hook 单独审查，不能复制或绕过正式门禁。General wire 不直接用于 Doubao Web；已明确[最小公共接入方案](doubaowork-web-integration.md)：复用现有 Web v1 writer/receipt，平台补可归档等价绑定和 cleanup，COMMON 注册 parser/route 与专属严格 gate。discovery 1.2.0 与 prepare 的 Doubao 支持已经交付，不再列为全缺。
 
 原生工具 completed 不等于业务成功；缺失指标保持 null、known subtotal、coverage。取消/中断、来源路径、锁 stale 双接管和恢复状态反例已经分别复核，不能以此替代尚未进行的真实恢复/cleanup/评分验收。
 

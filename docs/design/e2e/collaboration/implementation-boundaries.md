@@ -13,6 +13,8 @@ CB-A 已随 COMMON-001 发布，CB-B 第一批通用机制随 [COMMON-002](hando
 
 原生字段调研可从 [Web/General 指标盘点与 Harness 可行性分析](../../general-e2e/Web与通用E2E指标盘点及Harness可行性分析.md)开始；该文附历史来源哈希，平台任务仍需核对本机实际版本和数据，不能继承历史样本的覆盖状态。
 
+DoubaoWork 下一批采用[Web 等价证据与最小公共接入方案](doubaowork-web-integration.md)。缺少原生 cwd/terminal 保持未知，以归档的 UI/project/workspace/Prompt 与真实 cleanup 证据链验收，不将不存在的字段设为永久前置条件。
+
 当前必须明确的边界：
 
 - 新 Harness 不伪造 AstronStudio 的 thread/turn/session/lifecycle 字段；缺少的原生 ID 明确为空，另用可回溯且哈希绑定的原始证据证明会话与完整 Workspace 的对应。
