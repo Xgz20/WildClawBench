@@ -584,9 +584,9 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
         detached.mkdir()
         installed = BUILD._safe_extract(self.archive_path("run-general-e2e"), detached / "installed")
         bundled = json.loads((installed / "bundled-components.json").read_text())
-        self.assertEqual(bundled["skill_version"], "0.4.0")
+        self.assertEqual(bundled["skill_version"], "0.5.0")
         component = next(item for item in bundled["components"] if item["name"] == "general-contracts")
-        self.assertEqual(component["version"], "1.1.0")
+        self.assertEqual(component["version"], "1.2.0")
         for relative in ("execution_state.py", "schemas/general-execution-state-v1.schema.json"):
             self.assertEqual(
                 (installed / "vendor/e2e-shared/general-contracts" / relative).read_bytes(),
@@ -609,6 +609,38 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
         rejected = subprocess.run(command, cwd=detached, env={"PATH": ""}, capture_output=True, text=True)
         self.assertNotEqual(rejected.returncode, 0)
         self.assertIn("EXECUTION_DRIVER_BINDING_MISMATCH", rejected.stderr + rejected.stdout)
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required")
+    def test_generic_collection_and_trace_v2_run_from_detached_skill(self) -> None:
+        detached = self.temp_root / "detached-general-collection-v2"
+        detached.mkdir()
+        installed = BUILD._safe_extract(self.archive_path("collect-general-e2e"), detached / "installed")
+        bundled = json.loads((installed / "bundled-components.json").read_text())
+        self.assertEqual(bundled["skill_version"], "0.5.0")
+        component = next(item for item in bundled["components"] if item["name"] == "general-contracts")
+        self.assertEqual(component["version"], "1.2.0")
+        for relative in ("collection_validation.py", "schemas/trace-index-v2.schema.json"):
+            self.assertEqual(
+                (installed / "vendor/e2e-shared/general-contracts" / relative).read_bytes(),
+                (REPO_ROOT / "eval_general_e2e/contracts" / relative).read_bytes(),
+            )
+        fixture_uri = (REPO_ROOT / "tests/general_e2e/helpers/general-collection-fixture.mjs").as_uri()
+        entry_uri = (installed / "scripts/finalize_general_execution.mjs").as_uri()
+        source = f"""
+import {{ fixture, fixtureHook }} from {json.dumps(fixture_uri)};
+import {{ finalizeGeneralExecution }} from {json.dumps(entry_uri)};
+const value = await fixture({{ parent: {json.dumps(str(detached))} }});
+value.options.pythonExecutable = {json.dumps(sys.executable)};
+const result = await finalizeGeneralExecution(value.options, {{ processCleanup: fixtureHook() }});
+process.stdout.write(JSON.stringify(result));
+"""
+        completed = subprocess.run([shutil.which("node"), "--input-type=module", "-e", source],
+            cwd=detached, env={"PATH": ""}, capture_output=True, text=True)
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(json.loads(completed.stdout)["receipt_status"], "completed")
+        help_result = subprocess.run([shutil.which("node"), str(installed / "scripts/finalize_general_execution.mjs"), "--help"],
+            cwd=detached, env={"PATH": ""}, capture_output=True, text=True)
+        self.assertEqual(help_result.returncode, 0, help_result.stderr)
 
     def test_general_run_entrypoint_loads_outside_checkout(self) -> None:
         detached = self.temp_root / "detached-general-run"

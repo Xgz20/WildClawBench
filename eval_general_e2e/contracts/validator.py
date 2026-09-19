@@ -20,6 +20,7 @@ KNOWN_SCHEMAS = {
     f"{SCHEMA_PREFIX}:execution-record:v1": "execution-record-v1.schema.json",
     f"{SCHEMA_PREFIX}:transcript-event:v1": "transcript-event-v1.schema.json",
     f"{SCHEMA_PREFIX}:trace-index:v1": "trace-index-v1.schema.json",
+    f"{SCHEMA_PREFIX}:trace-index:v2": "trace-index-v2.schema.json",
     f"{SCHEMA_PREFIX}:resource-metrics:v1": "resource-metrics-v1.schema.json",
     f"{SCHEMA_PREFIX}:score:v1": "score-v1.schema.json",
     f"{SCHEMA_PREFIX}:submission:v1": "submission-v1.schema.json",
@@ -204,7 +205,8 @@ def _nullable_timestamp(value: Any, path: str) -> Optional[str]:
 def _validate_header(document: Mapping[str, Any], expected_schema_id: Optional[str]) -> str:
     schema_id = _string(_required(document, "schema_id", "$"), "$.schema_id")
     version = _required(document, "schema_version", "$")
-    if schema_id not in KNOWN_SCHEMAS or version != 1:
+    expected_version = 2 if schema_id == f"{SCHEMA_PREFIX}:trace-index:v2" else 1
+    if schema_id not in KNOWN_SCHEMAS or type(version) is not int or version != expected_version:
         _fail(
             "SCHEMA_UNSUPPORTED",
             "$.schema_id",
@@ -449,7 +451,7 @@ def _validate_transcript_event(document: Mapping[str, Any]) -> None:
             _required(tool, "result", "$.tool")
 
 
-def _validate_trace_index(document: Mapping[str, Any]) -> None:
+def _validate_trace_index(document: Mapping[str, Any], *, nullable_native: bool = False) -> None:
     _validate_task_identity(_required(document, "identity", "$"))
     if "adapter" in document:
         adapter = _mapping(document["adapter"], "$.adapter")
@@ -461,7 +463,11 @@ def _validate_trace_index(document: Mapping[str, Any]) -> None:
     if "session" in document:
         session = _mapping(document["session"], "$.session")
         for field in ("thread_id", "turn_id", "session_id", "cwd", "lifecycle_generation"):
-            _string(_required(session, field, "$.session"), f"$.session.{field}")
+            value = _required(session, field, "$.session")
+            if nullable_native and field != "cwd":
+                _nullable_string(value, f"$.session.{field}")
+            else:
+                _string(value, f"$.session.{field}")
     transcript = _validate_artifact(_required(document, "transcript", "$"), "$.transcript")
     event_count = _integer(_required(transcript, "event_count", "$.transcript"), "$.transcript.event_count")
     completeness = _mapping(_required(document, "completeness", "$"), "$.completeness")
@@ -576,6 +582,33 @@ def _validate_trace_index(document: Mapping[str, Any]) -> None:
                     f"$.calls[{index}].result_sequence",
                     "must follow the call and remain inside transcript range",
                 )
+
+
+def _validate_trace_index_v2(document: Mapping[str, Any]) -> None:
+    schema = json.loads(schema_path(f"{SCHEMA_PREFIX}:trace-index:v2").read_text(encoding="utf-8"))
+    for field in schema["required"]:
+        _required(document, field, "$")
+    if set(document) - set(schema["properties"]):
+        _fail("INVALID_VALUE", "$", "unknown trace-index v2 field")
+    _validate_trace_index(document, nullable_native=True)
+    session = document["session"]
+    if not any(session[field] is not None for field in ("thread_id", "turn_id", "session_id")):
+        _fail("IDENTITY_INVALID", "$.session", "at least one native ID is required")
+    if document["transcript"]["path"] != "transcript.jsonl":
+        _fail("PATH_INVALID", "$.transcript.path", "must be transcript.jsonl")
+    seen = {"transcript.jsonl", "trace-index.json"}
+    for group, prefix in (("raw_trace", "raw/"), ("binding_evidence", "bindings/")):
+        artifacts = _list(document[group], f"$.{group}")
+        if not artifacts:
+            _fail("EVIDENCE_MISSING", f"$.{group}", "non-empty artifacts required")
+        for index, artifact in enumerate(artifacts):
+            _validate_artifact(artifact, f"$.{group}[{index}]")
+            path = artifact["path"]
+            if path in seen or not path.startswith(prefix) or ":" in path or any(part in {"", ".", ".."} for part in path.split("/")):
+                _fail("PATH_INVALID", f"$.{group}[{index}].path", "duplicate or unsafe artifact path")
+            if artifact["size"] == 0:
+                _fail("EVIDENCE_MISSING", f"$.{group}[{index}]", "empty artifact")
+            seen.add(path)
 
 
 def _validate_metric(value: Any, path: str, metric_name: str) -> None:
@@ -987,6 +1020,7 @@ VALIDATORS: Mapping[str, Callable[[Mapping[str, Any]], None]] = {
     f"{SCHEMA_PREFIX}:execution-record:v1": _validate_execution_record,
     f"{SCHEMA_PREFIX}:transcript-event:v1": _validate_transcript_event,
     f"{SCHEMA_PREFIX}:trace-index:v1": _validate_trace_index,
+    f"{SCHEMA_PREFIX}:trace-index:v2": _validate_trace_index_v2,
     f"{SCHEMA_PREFIX}:resource-metrics:v1": _validate_resource_metrics,
     f"{SCHEMA_PREFIX}:score:v1": _validate_score,
     f"{SCHEMA_PREFIX}:submission:v1": _validate_submission,
@@ -1018,14 +1052,23 @@ def validate_contract_file(
 
 
 def validate_transcript_jsonl(path: Path) -> list[Mapping[str, Any]]:
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        raise ContractValidationError("JSON_INVALID", "$", str(exc)) from exc
+    return validate_transcript_jsonl_bytes(data)
+
+
+def validate_transcript_jsonl_bytes(data: bytes) -> list[Mapping[str, Any]]:
+    """Validate the exact immutable transcript bytes used for artifact hashing."""
     schema_id = f"{SCHEMA_PREFIX}:transcript-event:v1"
     events: list[Mapping[str, Any]] = []
     seen_ids: set[str] = set()
     previous_sequence = -1
     identity: Optional[Mapping[str, Any]] = None
     try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except (OSError, UnicodeError) as exc:
+        lines = data.decode("utf-8").splitlines()
+    except UnicodeError as exc:
         raise ContractValidationError("JSON_INVALID", "$", str(exc)) from exc
     for line_number, line in enumerate(lines, start=1):
         if not line.strip():

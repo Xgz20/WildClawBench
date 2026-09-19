@@ -7,7 +7,7 @@ function usage() {
   return `Desktop application discovery
 
 Usage:
-  node cli.mjs --profile <astronstudio|workbuddy|qwenwork|codex> [options]
+  node cli.mjs --profile <astronstudio|workbuddy|qwenwork|doubaowork|codex> [options]
 
 Options:
   --app-path <path>       Explicit installation path (highest priority)
@@ -31,7 +31,7 @@ function parseArgs(argv) {
     else throw new Error(`unknown argument: ${item}`);
   }
   if (!result.help && !BUILTIN_DESKTOP_APP_PROFILES[result.profile]) {
-    throw new Error("--profile must select astronstudio, workbuddy, qwenwork, or codex");
+    throw new Error("--profile must select astronstudio, workbuddy, qwenwork, doubaowork, or codex");
   }
   if (!new Set(["json", "tsv"]).has(result.format)) throw new Error("--format must be json or tsv");
   return result;
