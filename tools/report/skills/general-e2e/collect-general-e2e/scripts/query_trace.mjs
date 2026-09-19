@@ -170,7 +170,11 @@ function matchEvent(event, filters) {
 export async function queryTrace(options) {
   const indexPath = resolve(options.traceIndex);
   const index = JSON.parse(await readFile(indexPath, "utf8"));
-  if (index?.schema_id !== "urn:wildclawbench:schema:general-e2e:trace-index:v1") {
+  const expectedVersion = new Map([
+    ["urn:wildclawbench:schema:general-e2e:trace-index:v1", 1],
+    ["urn:wildclawbench:schema:general-e2e:trace-index:v2", 2],
+  ]).get(index?.schema_id);
+  if (!expectedVersion || index.schema_version !== expectedVersion) {
     throw new Error("TRACE_INDEX_UNSUPPORTED");
   }
   const transcript = await readSafeArtifact(indexPath, index.transcript);

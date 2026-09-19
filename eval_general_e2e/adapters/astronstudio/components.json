@@ -4,7 +4,7 @@
   "entrypoint": "eval_general_e2e/adapters/astronstudio/components.mjs",
   "components": {
     "desktop-runtime": "1.0.0",
-    "desktop-app-discovery": "1.1.0",
+    "desktop-app-discovery": "1.2.0",
     "resource-metrics": "1.0.0",
     "workspace-integrity": "1.0.0"
   }

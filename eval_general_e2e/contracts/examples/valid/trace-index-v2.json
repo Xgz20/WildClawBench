@@ -1,0 +1,48 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:trace-index:v2",
+  "schema_version": 2,
+  "identity": {
+    "batch_id": "batch-smoke",
+    "unit_id": "astronstudio-macos",
+    "task_id": "task-zero",
+    "attempt_id": "exec-001"
+  },
+  "transcript": {
+    "path": "transcript.jsonl",
+    "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "size": 512,
+    "event_count": 2
+  },
+  "raw_trace": [
+    {
+      "path": "raw/native.jsonl",
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "size": 768
+    }
+  ],
+  "completeness": {
+    "status": "complete",
+    "omitted_event_count": 0,
+    "missing": []
+  },
+  "calls": [],
+  "adapter": {
+    "id": "qwenwork-fixture",
+    "version": "0.1.0",
+    "source": "redacted-fixture"
+  },
+  "session": {
+    "thread_id": null,
+    "turn_id": null,
+    "session_id": "native-session",
+    "cwd": "/fixture/workspace",
+    "lifecycle_generation": null
+  },
+  "binding_evidence": [
+    {
+      "path": "bindings/session.json",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "size": 20
+    }
+  ]
+}
