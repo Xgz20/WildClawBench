@@ -1,0 +1,48 @@
+{
+  "messages": [
+    {
+      "id": "cccccccccccccccccccccccccccccccc",
+      "type": "text",
+      "role": "user",
+      "isComplete": true
+    },
+    {
+      "id": "dddddddddddddddddddddddddddddddd",
+      "type": "text",
+      "role": "assistant",
+      "isComplete": true
+    },
+    {
+      "id": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "type": "text",
+      "role": "tool",
+      "isComplete": true
+    },
+    {
+      "id": "ffffffffffffffffffffffffffffffff",
+      "type": "text",
+      "role": "assistant",
+      "isComplete": true
+    }
+  ],
+  "requests": [
+    {
+      "id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "type": "craft",
+      "messages": [
+        "cccccccccccccccccccccccccccccccc",
+        "dddddddddddddddddddddddddddddddd",
+        "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "ffffffffffffffffffffffffffffffff"
+      ],
+      "state": "complete",
+      "startedAt": 1789804800000,
+      "usage": {
+        "inputTokens": 120,
+        "outputTokens": 30,
+        "totalTokens": 150,
+        "lastTokens": 70
+      }
+    }
+  ]
+}

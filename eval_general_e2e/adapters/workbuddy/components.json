@@ -1,0 +1,9 @@
+{
+  "schema_version": "wildclawbench.general-e2e-adapter-binding/v1",
+  "adapter": "workbuddy",
+  "entrypoint": "eval_general_e2e/adapters/workbuddy/components.mjs",
+  "components": {
+    "desktop-app-discovery": "1.2.0",
+    "general-contracts": "1.2.0"
+  }
+}
