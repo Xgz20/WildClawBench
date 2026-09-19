@@ -92,6 +92,28 @@ export const QWENWORK_APP_PROFILE = Object.freeze({
   }),
 });
 
+// DoubaoWork macOS has a native application bundle with an embedded browser.
+// Discovery verifies this layout; the Driver separately verifies its CDP owner
+// and supported runtime. There is no inferred Electron/app.asar requirement.
+export const DOUBAOWORK_APP_PROFILE = Object.freeze({
+  id: "doubaowork",
+  displayName: "DoubaoWork",
+  macos: Object.freeze({
+    bundleIds: Object.freeze(["com.work.pc.doubao"]),
+    appNames: Object.freeze(["DoubaoWork.app"]),
+    executableNames: Object.freeze(["DoubaoWork"]),
+    requiredRelativePaths: Object.freeze([
+      "Contents/Info.plist",
+      "Contents/MacOS/DoubaoWork",
+      "Contents/Helpers/DoubaoWork Browser.app/Contents/MacOS/DoubaoWork Browser",
+    ]),
+    standardPaths: Object.freeze([
+      "/Applications/DoubaoWork.app",
+      "{home}/Applications/DoubaoWork.app",
+    ]),
+  }),
+});
+
 export const CODEX_DESKTOP_APP_PROFILE = Object.freeze({
   id: "codex-desktop",
   displayName: "Codex Desktop",
@@ -124,6 +146,7 @@ export const BUILTIN_DESKTOP_APP_PROFILES = Object.freeze({
   astronstudio: ASTRONSTUDIO_APP_PROFILE,
   workbuddy: WORKBUDDY_APP_PROFILE,
   qwenwork: QWENWORK_APP_PROFILE,
+  doubaowork: DOUBAOWORK_APP_PROFILE,
   codex: CODEX_DESKTOP_APP_PROFILE,
   "codex-desktop": CODEX_DESKTOP_APP_PROFILE,
 });

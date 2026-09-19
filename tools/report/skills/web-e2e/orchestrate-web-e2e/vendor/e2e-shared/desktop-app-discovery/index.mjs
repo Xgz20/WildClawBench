@@ -5,7 +5,7 @@ import { promisify } from "node:util";
 import { execFile } from "node:child_process";
 
 export const COMPONENT_NAME = "desktop-app-discovery";
-export const COMPONENT_VERSION = "1.1.0";
+export const COMPONENT_VERSION = "1.2.0";
 export const DISCOVERY_SCHEMA = "wildclawbench.desktop-app-discovery/v1";
 
 const execFileAsync = promisify(execFile);

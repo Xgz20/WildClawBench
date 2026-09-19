@@ -16,3 +16,7 @@
 ```bash
 .venv/bin/python -m unittest tests.general_e2e.test_contracts -v
 ```
+
+## 通用采集扩展（CB-B）
+
+`general-contracts@1.2.0` 新增独立 `trace-index:v2`（`schema_version=2`），支持 nullable 原生 thread/turn/lifecycle、多个 raw artifact 及与 CB-A state 哈希绑定的 `binding_evidence`。`trace-index:v1` 及其 AstronStudio 收集器保持原约束。`collection_validation.py` 在正式冻结前校验 state、trace、transcript、resource provenance 的同一字节快照；新格式的正式采集必须使用通用 finalizer 和真实平台清理 hook。已有 resource-metrics/receipt/execution-record v1 不改变。

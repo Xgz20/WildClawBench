@@ -15,7 +15,7 @@ description: 将有效 General E2E 执行回执交接为独立单题评分工作
 python -m eval_general_e2e skills --name orchestrate-general-e2e --json
 ```
 
-当前 `0.8.0/operational` 已交付 automated/hybrid/llm_judge 路由、默认 3 槽且上限 8 的语义评分调度、Codex 项目/任务编排、API Judge 队列与崩溃恢复、统一 `verify-score` 准入、完整范围 submission、独立重评分编排、动态 Codex Desktop 发现和 macOS 一次性托管重启入口。G4-03 已用旧版本 AstronStudio macOS 五题覆盖两题 automated、一题 hybrid、两题 llm_judge，得到 5/5 有效评分、回传和三种报告；语义评分固定为 `gpt-6-astra/high`，三会话并发。该证据只支持当时已验证的平台与版本组合，不能自动升级到本版共享发现/重启实现，也不能外推 Windows 或其他 Harness。
+当前 `0.9.0/operational` 已交付 automated/hybrid/llm_judge 路由、默认 3 槽且上限 8 的语义评分调度、Codex 项目/任务编排、API Judge 队列与崩溃恢复、统一 `verify-score` 准入、完整范围 submission、独立重评分编排、动态 Codex Desktop 发现和 macOS 一次性托管重启入口。G4-03 已用旧版本 AstronStudio macOS 五题覆盖两题 automated、一题 hybrid、两题 llm_judge，得到 5/5 有效评分、回传和三种报告；语义评分固定为 `gpt-6-astra/high`，三会话并发。该证据只支持当时已验证的平台与版本组合，不能自动升级到本版共享发现/重启实现，也不能外推 Windows 或其他 Harness。
 
 普通生产调用不传 `--acceptance-id`。该参数仅用于显式验收留证；传入后，编排状态、队列摘要、评分 Prompt 与每题 `attempt-manifest.json` 中的 acceptance ID 必须完全一致。API Judge 不接受此标记，缺失或不一致时失败关闭。
 
