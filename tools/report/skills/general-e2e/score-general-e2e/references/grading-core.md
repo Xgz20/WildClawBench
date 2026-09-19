@@ -1,6 +1,6 @@
 # General E2E 评分 core 接口
 
-`score-general-e2e` 0.5.0 装配 `grading-core` 0.1.1。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、本地进程运行时、模型调用或任务调度。
+`score-general-e2e` 0.8.0 装配 `grading-core` 0.2.0。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、本地进程运行时、模型调用或任务调度。
 
 发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。core 仅依赖 Python 标准库；任务规则所需的 PyYAML、Playwright 和 Chromium 属于 G3-02 专用评分虚拟环境，不安装到控制 Harness 使用的 Python 环境。
 
@@ -10,6 +10,8 @@
 
 输入任务 `automated_checks`、受管 `executor`、本地 runtime 副本的真实 `workspace_path`、可选标准轨迹和预期 criterion key。core 先校验 AST、唯一同步 `grade()` 入口及静态 import，再调用注入的 executor，严格校验返回 key、`overall_score`、有限数值和 `[0,1]` 范围。
 
+返回的规则组件 schema 为 `wildclawbench.general-e2e-rule-component/v2`。每个 criterion 都包含中文 `reason`、`decision.anchor`、观察分数、满分/零分锚点、原始 `result_key` 和待运行时物化的证据定位。`full_score`、`zero_score`、`partial_score` 只解释冻结规则已返回的数值，不新增业务语义，也不允许模型改判。
+
 非空规则必须提供受管 executor。不要在控制 Harness 或评分编排进程中使用 `exec()`，也不要用任意宿主临时目录绕过评分目录门禁。G3-02 应让 executor 通过结构化 IPC 调用专用虚拟环境中的独立 Python Worker，把一次性 runtime 副本的真实绝对路径作为 `workspace_path` 传给 `grade()`，并返回 JSON 对象。
 
 ### `build_evidence_index()`
@@ -18,7 +20,7 @@
 
 ### `evaluate_semantics()`
 
-输入 rubric criteria、注入的语义 evaluator、冻结证据索引和协议。支持 `codex-agent-judge-v1`、`api-judge-v1`；没有语义 criterion 时使用 `not-required`。evaluator 的每个已判定 criterion 必须使用允许分值并引用冻结索引中的证据。未判定 criterion 返回 `evaluation_error` 和 `score=null`，不能补零。
+输入 rubric criteria、注入的语义 evaluator、冻结证据索引和协议。支持 `codex-agent-judge-v1`、`api-judge-v1`；没有语义 criterion 时使用 `not-required`。evaluator 的每个已判定 criterion 必须使用允许分值、引用冻结索引中的证据，并以中文解释为何采用该分值锚点。未判定 criterion 也必须用中文说明证据缺口，返回 `evaluation_error` 和 `score=null`，不能补零。
 
 这个 API 校验 backend 结果，但不创建 Codex 评分任务、不发送 API 请求，也不实现重试或 backend 切换。
 
@@ -32,7 +34,7 @@
 
 - 规则与依赖：`RULE_SOURCE_INVALID`、`RULE_ENTRYPOINT_INVALID`、`RULE_CONTEXT_INVALID`、`RULE_CONTRACT_INVALID`、`RULE_EXECUTOR_REQUIRED`、`RULE_EXECUTION_FAILED`、`RULE_RESULT_INVALID`、`RULE_RESULT_KEYS_MISMATCH`、`RULE_RELATIVE_IMPORT_UNSUPPORTED`、`RULE_DYNAMIC_IMPORT_UNSUPPORTED`、`RULE_DEPENDENCY_UNDECLARED`、`DEPENDENCY_CATALOG_INVALID`。
 - 证据：`EVIDENCE_ROOT_INVALID`、`EVIDENCE_PATH_INVALID`、`EVIDENCE_FILE_MISSING`、`EVIDENCE_DIGEST_MISMATCH`、`EVIDENCE_EVENT_MISSING`、`EVIDENCE_REFERENCE_INVALID`、`EVIDENCE_REFERENCE_DUPLICATE`、`EVIDENCE_INDEX_INVALID`。
-- 语义：`SEMANTIC_CONTRACT_INVALID`、`SEMANTIC_PROTOCOL_INVALID`、`SEMANTIC_EVALUATOR_REQUIRED`、`SEMANTIC_BACKEND_FAILED`、`SEMANTIC_RESULT_INVALID`、`SEMANTIC_RESULT_KEYS_MISMATCH`、`SEMANTIC_SCORE_NOT_ALLOWED`、`SEMANTIC_EVIDENCE_REQUIRED`、`SEMANTIC_EVIDENCE_UNKNOWN`。
+- 语义：`SEMANTIC_CONTRACT_INVALID`、`SEMANTIC_PROTOCOL_INVALID`、`SEMANTIC_EVALUATOR_REQUIRED`、`SEMANTIC_BACKEND_FAILED`、`SEMANTIC_RESULT_INVALID`、`SEMANTIC_RESULT_KEYS_MISMATCH`、`SEMANTIC_SCORE_NOT_ALLOWED`、`SEMANTIC_EVIDENCE_REQUIRED`、`SEMANTIC_EVIDENCE_UNKNOWN`、`SEMANTIC_REASON_LANGUAGE_INVALID`。
 - 合分与公共校验：`SCORE_VALUE_INVALID`、`SCORE_COMPONENT_INVALID`、`CRITERION_KEY_INVALID`、`GRADING_TYPE_INVALID`、`GRADING_WEIGHTS_INVALID`、`FINAL_CRITERIA_INVALID`。
 
 `SEMANTIC_CRITERIA_UNRESOLVED` 和 `SEMANTIC_NO_JUDGED_CRITERIA` 是结构化 semantic component 中的 `error.code`；它们返回 `evaluation_error / score=null`，不抛出异常。

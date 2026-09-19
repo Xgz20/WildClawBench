@@ -8,7 +8,7 @@
   "components": {"rules": {"status": "completed", "score": 0.0}, "semantics": {"status": "not_required", "score": null}},
   "evaluation": {
     "status": "completed",
-    "criteria": [{"key": "output_correct", "weight": 1.0, "status": "judged", "score": 0.0, "reason": "The deterministic rule found a mismatch.", "evidence": [{"type": "rule_result", "path": "private-scoring/rule-result.json", "event_ids": ["event-0002"], "sha256": "1111111111111111111111111111111111111111111111111111111111111111"}]}],
+    "criteria": [{"key": "output_correct", "weight": 1.0, "status": "judged", "score": 0.0, "reason": "确定性规则发现候选结果与冻结预期不一致，因此本项为零分。", "evidence": [{"type": "rule_result", "path": "private-scoring/rule-result.json", "event_ids": ["event-0002"], "sha256": "1111111111111111111111111111111111111111111111111111111111111111"}]}],
     "error": null
   },
   "result": {"valid": true, "total_score": 0.0, "invalid_reason": null}

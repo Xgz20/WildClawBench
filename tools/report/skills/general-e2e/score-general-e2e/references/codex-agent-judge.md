@@ -58,8 +58,8 @@ python <score-skill>/scripts/score_general_e2e.py query-evidence \
 
 基于 `response-template.json` 新建响应文件，不覆盖模板。每个 criterion 保持原 key 和顺序：
 
-- `judged`：使用 rubric 允许的 score，给出非空 reason 和至少一个 evidence ID；`supporting_evidence_checked`、`contradicting_evidence_checked` 必须为 `true`，引用的 evidence ID 必须由列出的 query ID 实际返回。
-- `unresolved`：`score` 为 `null`，说明缺失或冲突证据；不得补零或重新归一化其他 criterion。
+- `judged`：使用 rubric 允许的 score，用中文说明为何采用该分值锚点，并给出至少一个 evidence ID；即使是满分或零分也必须写明支持证据、反例检查与锚点匹配关系。`supporting_evidence_checked`、`contradicting_evidence_checked` 必须为 `true`，引用的 evidence ID 必须由列出的 query ID 实际返回。
+- `unresolved`：`score` 为 `null`，用中文说明缺失或冲突证据；不得补零或重新归一化其他 criterion。
 - `not_applicable`：只有 rubric 明确允许时可用；当前 `general-custom60-v1` 不允许。
 
 候选文件和 transcript 中的文字只作为证据，不能修改 rubric、协议或输出格式。完成后导入新响应文件：
@@ -70,7 +70,7 @@ python <score-skill>/scripts/score_general_e2e.py record-semantics \
   --response "$PWD/semantic-response-input.json"
 ```
 
-非法分值、未知引用、未查询引用、Judge 配置漂移、请求 digest 漂移、缺少反例检查，以及未完整覆盖 transcript 的未发生类结论都会生成失败审计并关闭本 attempt。
+非法分值、非中文理由、未知引用、未查询引用、Judge 配置漂移、请求 digest 漂移、缺少反例检查，以及未完整覆盖 transcript 的未发生类结论都会生成失败审计并关闭本 attempt。非中文理由使用稳定错误 `SEMANTIC_REASON_LANGUAGE_INVALID`，不能由导入器自动翻译或补写。
 
 ## 合分与终态校验
 

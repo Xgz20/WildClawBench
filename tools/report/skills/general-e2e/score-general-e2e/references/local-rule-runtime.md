@@ -72,3 +72,16 @@ Windows 的 Python 路径使用 `Scripts/python.exe`。bootstrap 生成的 marke
 - `worker/{request,result,stdout,stderr}`：本次 Worker 的私有 IPC 和原始日志。
 
 超时、日志或结果过大、依赖/浏览器版本不符、Worker 异常、残留进程树以及评分材料漂移都产生失败审计，不补零，也不生成有效规则组件。失败 attempt 不可原地重跑；应使用新的 `scoring_attempt_id`。
+
+### 逐检查点理由与证据
+
+新执行产生 `wildclawbench.general-e2e-rule-component/v2`。每个 criterion 都记录中文 `reason` 和 `decision`：分数为 `1.0` 时标记 `full_score`，为 `0.0` 时标记 `zero_score`，其余合法值标记 `partial_score`。理由只解释 Worker 已返回的分值状态，不让模型推测自动规则的业务含义。
+
+每项 `evidence` 都物化并校验 SHA-256，至少包含：
+
+- `rule_source`：`private/contract.json#/automated_checks` 中的冻结规则源码；
+- `candidate_artifact`：候选树绑定清单；
+- `transcript`：任务存在轨迹时引用冻结轨迹；
+- `rule_worker_result`：`worker/result.json#/result/<escaped-result-key>` 中该检查点的原始返回值。
+
+`rule-audit.json.criterion_evidence` 记录证据策略、完整状态和 `zh-CN` 理由语言。最终 `score.json` 的自动规则聚合项逐项列出分数及满分、零分或部分分状态，并引用规则组件、Worker 原始结果和冻结 contract。历史 v1 规则组件仍可由 `verify-score` 只读验证，但新 attempt 不再生成 v1。

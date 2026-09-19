@@ -22,6 +22,10 @@ SemanticEvaluator = Callable[
 _PROTOCOLS = frozenset({"codex-agent-judge-v1", "api-judge-v1"})
 
 
+def _contains_chinese_explanation(value: str) -> bool:
+    return sum("\u3400" <= character <= "\u9fff" for character in value) >= 4
+
+
 def _normalize_criteria(criteria: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     if not isinstance(criteria, Sequence) or isinstance(criteria, (str, bytes)):
         raise GradingCoreError(
@@ -148,6 +152,11 @@ def evaluate_semantics(
         if not isinstance(reason, str) or not reason.strip():
             raise GradingCoreError(
                 "SEMANTIC_RESULT_INVALID", f"criterion {key!r} requires a reason"
+            )
+        if not _contains_chinese_explanation(reason):
+            raise GradingCoreError(
+                "SEMANTIC_REASON_LANGUAGE_INVALID",
+                f"criterion {key!r} reason must be a Chinese explanation",
             )
         references = row.get("evidence", [])
         if not isinstance(references, list):

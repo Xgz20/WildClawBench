@@ -155,7 +155,7 @@ class GeneralSemanticScoringTests(unittest.TestCase):
             {
                 "status": "judged",
                 "score": 1.0,
-                "reason": "The frozen answer file exactly matches the reference.",
+                "reason": "冻结答案文件与参考答案完全一致，因此本项得满分。",
                 "evidence_ids": [candidate_id],
                 "review": {
                     "query_ids": ["query-0001", "query-0002"],
@@ -170,7 +170,7 @@ class GeneralSemanticScoringTests(unittest.TestCase):
             {
                 "status": "judged",
                 "score": 0.5,
-                "reason": "The single frozen event provides partial trace support.",
+                "reason": "唯一冻结事件只能提供部分轨迹支持，因此本项得部分分。",
                 "evidence_ids": [transcript_id],
                 "review": {
                     "query_ids": ["query-0002"],
@@ -214,6 +214,48 @@ class GeneralSemanticScoringTests(unittest.TestCase):
         ):
             RUNTIME.verify_score_attempt(attempt)
 
+    def test_codex_response_with_english_reason_is_rejected(self) -> None:
+        attempt = self._hybrid_attempt("english-reason")
+        response, candidate_id, transcript_id = self._prepare_and_query(attempt)
+        response["criteria"][0].update(
+            {
+                "status": "judged",
+                "score": 1.0,
+                "reason": "The frozen answer supports a full score.",
+                "evidence_ids": [candidate_id],
+                "review": {
+                    "query_ids": ["query-0001"],
+                    "supporting_evidence_checked": True,
+                    "contradicting_evidence_checked": True,
+                    "absence_claim": False,
+                    "complete_event_range_checked": False,
+                },
+            }
+        )
+        response["criteria"][1].update(
+            {
+                "status": "judged",
+                "score": 1.0,
+                "reason": "冻结轨迹证据支持该检查点采用满分档位。",
+                "evidence_ids": [transcript_id],
+                "review": {
+                    "query_ids": ["query-0002"],
+                    "supporting_evidence_checked": True,
+                    "contradicting_evidence_checked": True,
+                    "absence_claim": False,
+                    "complete_event_range_checked": False,
+                },
+            }
+        )
+        response_path = attempt / "semantic-response-input.json"
+        response_path.write_text(json.dumps(response), encoding="utf-8")
+        with self.assertRaisesRegex(
+            RUNTIME.ScoringRuntimeError, "SEMANTIC_REASON_LANGUAGE_INVALID"
+        ):
+            RUNTIME.record_semantics_attempt(
+                attempt_root=attempt, response_path=response_path
+            )
+
     def test_unresolved_criterion_stays_evaluation_error_instead_of_zero(self) -> None:
         fixture = Fixture(
             self.root / "unresolved",
@@ -243,7 +285,7 @@ class GeneralSemanticScoringTests(unittest.TestCase):
             {
                 "status": "judged",
                 "score": 1.0,
-                "reason": "fixture",
+                "reason": "测试证据支持当前检查点的判定结果。",
                 "evidence_ids": ["evidence-9999"],
                 "review": {
                     "query_ids": ["query-0001"],
@@ -277,7 +319,7 @@ class GeneralSemanticScoringTests(unittest.TestCase):
             {
                 "status": "judged",
                 "score": 1.0,
-                "reason": "fixture",
+                "reason": "测试证据支持当前检查点的判定结果。",
                 "evidence_ids": [candidate_id],
                 "review": {
                     "query_ids": ["query-0001"],
@@ -323,7 +365,7 @@ class GeneralSemanticScoringTests(unittest.TestCase):
             {
                 "status": "judged",
                 "score": 1.0,
-                "reason": "No contradictory event was found.",
+                "reason": "完整轨迹中没有发现与当前判定相矛盾的事件。",
                 "evidence_ids": [evidence_id],
                 "review": {
                     "query_ids": ["query-0001"],

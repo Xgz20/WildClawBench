@@ -134,7 +134,7 @@ class GeneralApiJudgeTests(unittest.TestCase):
                     "key": criterion["key"],
                     "status": "judged",
                     "score": score,
-                    "reason": "Frozen evidence supports this anchor.",
+                    "reason": "冻结证据支持当前检查点采用这个分值锚点。",
                     "evidence_ids": [evidence_ids[0]],
                     "supporting_evidence_checked": True,
                     "contradicting_evidence_checked": True,
@@ -256,6 +256,36 @@ class GeneralApiJudgeTests(unittest.TestCase):
         ):
             reused = RUNTIME.run_api_judge_attempt(attempt_root=attempt)
         self.assertTrue(reused["reused_terminal"])
+
+    def test_english_reason_retries_once_and_prompt_requires_chinese(self) -> None:
+        attempt = self._attempt(
+            "english-reason-retry",
+            provider="openai-chat-completions",
+            max_attempts=2,
+        )
+        api_input = json.loads((attempt / "semantic/api-input.json").read_text())
+        semantic_request = json.loads((attempt / "semantic/request.json").read_text())
+        self.assertIn("Chinese (zh-CN)", api_input["system_prompt"])
+        self.assertEqual(semantic_request["requirements"]["reason_language"], "zh-CN")
+        valid = self._candidate(attempt)
+        invalid = json.loads(json.dumps(valid))
+        for row in invalid["criteria"]:
+            row["reason"] = "The frozen evidence supports this score anchor."
+        responses = [
+            self._openai_response(json.dumps(invalid), "chat-english"),
+            self._openai_response(json.dumps(valid), "chat-chinese"),
+        ]
+        with patch.dict(os.environ, {"GENERAL_E2E_TEST_API_KEY": "test-key"}), patch.object(
+            RUNTIME, "_api_http_exchange", side_effect=responses
+        ) as exchange:
+            result = RUNTIME.run_api_judge_attempt(attempt_root=attempt)
+        self.assertEqual(result["attempt_count"], 2)
+        self.assertEqual(result["selected_attempt"], 2)
+        self.assertEqual(exchange.call_count, 2)
+        audit = json.loads((attempt / "semantic/api-audit.json").read_text())
+        self.assertEqual(audit["retry_count"], 1)
+        self.assertEqual(audit["attempts"][0]["error"]["code"], "SEMANTIC_REASON_LANGUAGE_INVALID")
+        self.assertEqual(audit["attempts"][1]["status"], "completed")
 
     def test_openai_responses_request_shape_and_usage_are_audited(self) -> None:
         attempt = self._attempt("openai-responses", provider="openai-responses")

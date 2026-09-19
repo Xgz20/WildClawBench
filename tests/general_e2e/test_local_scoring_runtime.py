@@ -313,12 +313,53 @@ class LocalScoringRuntimeTests(unittest.TestCase):
             timeout_seconds=10,
         )
         self.assertEqual(result["rule_component"]["score"], 1.0)
+        component = result["rule_component"]
+        self.assertEqual(
+            component["schema_version"],
+            "wildclawbench.general-e2e-rule-component/v2",
+        )
+        self.assertEqual(component["reason_language"], "zh-CN")
+        self.assertEqual(
+            component["evidence_policy"],
+            "per-criterion-rule-source-and-worker-result/v1",
+        )
+        criterion = component["criteria"][0]
+        self.assertIn("达到满分", criterion["reason"])
+        evidence_by_type = {row["type"]: row for row in criterion["evidence"]}
+        self.assertEqual(
+            set(evidence_by_type),
+            {"rule_source", "candidate_artifact", "transcript", "rule_worker_result"},
+        )
+        self.assertEqual(evidence_by_type["rule_source"]["path"], "private/contract.json")
+        self.assertEqual(evidence_by_type["rule_source"]["json_pointer"], "/automated_checks")
+        self.assertEqual(
+            evidence_by_type["candidate_artifact"]["path"],
+            "candidate-original/candidate-artifact.json",
+        )
+        self.assertEqual(evidence_by_type["transcript"]["path"], "private/transcript.jsonl")
+        self.assertEqual(evidence_by_type["rule_worker_result"]["path"], "worker/result.json")
+        self.assertEqual(evidence_by_type["rule_worker_result"]["result_key"], "fixture")
+        self.assertEqual(evidence_by_type["rule_worker_result"]["json_pointer"], "/result/fixture")
+        worker_result = json.loads((attempt / "worker/result.json").read_text())
+        self.assertEqual(worker_result["result"]["fixture"], criterion["score"])
         self.assertFalse(result["audit"]["docker_used"])
         self.assertEqual(
             result["audit"]["worker"]["environment_keys"],
             sorted(RUNTIME._sanitized_environment(self.runtime_python)),
         )
         self.assertFalse(result["audit"]["runtime_workspace"]["drifted"])
+        self.assertTrue(result["audit"]["criterion_evidence"]["complete"])
+
+        semantic = RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+        self.assertEqual(semantic["semantic_status"], "not_required")
+        score = RUNTIME.finalize_score_attempt(attempt_root=attempt)["score"]
+        automated = score["evaluation"]["criteria"][0]
+        self.assertIn("fixture=1（满分，规则判定全部满足）", automated["reason"])
+        self.assertEqual(
+            {row["type"] for row in automated["evidence"]},
+            {"rule_result", "rule_worker_result", "rule_source"},
+        )
+        self.assertTrue(RUNTIME.verify_score_attempt(attempt)["score_valid"])
 
     def test_attempt_is_not_overwritten_and_candidate_drift_fails_closed(self) -> None:
         fixture = Fixture(self.root)

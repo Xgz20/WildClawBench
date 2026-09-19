@@ -11,7 +11,7 @@ from .dependencies import inspect_dependencies
 from .errors import GradingCoreError
 
 
-RULE_COMPONENT_SCHEMA = "wildclawbench.general-e2e-rule-component/v1"
+RULE_COMPONENT_SCHEMA = "wildclawbench.general-e2e-rule-component/v2"
 RuleExecutor = Callable[[str, Mapping[str, Any]], Mapping[str, Any]]
 
 
@@ -94,6 +94,28 @@ def _validate_rule_scores(
     return breakdown, overall
 
 
+def _score_anchor(score: float) -> str:
+    if score == 1.0:
+        return "full_score"
+    if score == 0.0:
+        return "zero_score"
+    return "partial_score"
+
+
+def _criterion_reason(key: str, score: float) -> str:
+    anchor = _score_anchor(score)
+    if anchor == "full_score":
+        conclusion = "达到满分，说明冻结规则判定该检查点全部满足"
+    elif anchor == "zero_score":
+        conclusion = "命中零分，说明冻结规则判定该检查点未满足"
+    else:
+        conclusion = "属于部分得分，说明冻结规则判定该检查点仅部分满足"
+    return (
+        f"自动规则检查点“{key}”在受管执行中返回 {score:g}，{conclusion}。"
+        "该结论必须结合冻结规则源码和 Worker 原始结果复算，不由语义裁判补写或改判。"
+    )
+
+
 def run_rules(
     automated_checks: str,
     *,
@@ -156,7 +178,25 @@ def run_rules(
         "status": "completed",
         "score": overall,
         "criteria": [
-            {"key": key, "status": "judged", "score": value}
+            {
+                "key": key,
+                "status": "judged",
+                "score": value,
+                "reason": _criterion_reason(key, value),
+                "decision": {
+                    "anchor": _score_anchor(value),
+                    "observed_score": value,
+                    "full_score": 1.0,
+                    "zero_score": 0.0,
+                    "result_key": key,
+                },
+                "evidence": [
+                    {
+                        "type": "managed_rule_result",
+                        "result_key": key,
+                    }
+                ],
+            }
             for key, value in breakdown.items()
         ],
         "raw_scores": normalized_raw,

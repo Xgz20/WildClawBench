@@ -35,7 +35,7 @@ def local_fixture_executor(source: str, context: dict) -> dict:
 
 class GradingCoreTests(unittest.TestCase):
     def test_public_api_and_same_fixture_match_legacy_combiner(self) -> None:
-        self.assertEqual(CORE_VERSION, "0.1.1")
+        self.assertEqual(CORE_VERSION, "0.2.0")
         source = """
 def grade(transcript: list, workspace_path: str) -> dict:
     assert workspace_path == "/tmp_workspace"
@@ -71,7 +71,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
                     "key": "answer_quality",
                     "status": "judged",
                     "score": 0.5,
-                    "reason": "The frozen evidence supports the middle anchor.",
+                    "reason": "冻结证据支持该检查点采用中间分值档位。",
                     "evidence": [reference],
                 }],
                 "notes": "fixture",
@@ -102,6 +102,17 @@ def grade(transcript: list, workspace_path: str) -> dict:
             {"automated": 0.7, "llm_judge": 0.3},
         )
         self.assertEqual(rules["score"], 0.8)
+        self.assertEqual(
+            rules["schema_version"],
+            "wildclawbench.general-e2e-rule-component/v2",
+        )
+        self.assertEqual(rules["criteria"][0]["decision"]["anchor"], "partial_score")
+        self.assertEqual(rules["criteria"][0]["decision"]["result_key"], "rule_accuracy")
+        self.assertIn("部分得分", rules["criteria"][0]["reason"])
+        self.assertEqual(
+            rules["criteria"][0]["evidence"],
+            [{"type": "managed_rule_result", "result_key": "rule_accuracy"}],
+        )
         self.assertEqual(semantics["score"], 0.5)
         self.assertEqual(final["result"], {
             "valid": True,
@@ -158,6 +169,50 @@ def grade(transcript: list, workspace_path: str) -> dict:
                 workspace_path="/tmp_workspace",
                 expected_keys=["quality"],
             )
+
+    def test_rule_criteria_explain_full_zero_and_partial_scores_in_chinese(self) -> None:
+        source = "def grade(**kwargs): return {}"
+        values = {"full": 1.0, "zero": 0.0, "partial": 0.5, "overall_score": 0.5}
+        component = run_rules(
+            source,
+            executor=lambda _rule, _context: values,
+            workspace_path="/tmp_workspace",
+            expected_keys=["full", "zero", "partial"],
+        )
+        rows = {row["key"]: row for row in component["criteria"]}
+        self.assertEqual(rows["full"]["decision"]["anchor"], "full_score")
+        self.assertEqual(rows["zero"]["decision"]["anchor"], "zero_score")
+        self.assertEqual(rows["partial"]["decision"]["anchor"], "partial_score")
+        self.assertIn("达到满分", rows["full"]["reason"])
+        self.assertIn("命中零分", rows["zero"]["reason"])
+        self.assertIn("部分得分", rows["partial"]["reason"])
+
+    def test_semantic_reason_must_be_a_chinese_explanation(self) -> None:
+        evidence = build_evidence_index([
+            {"type": "transcript", "event_ids": ["event-0001"]}
+        ], known_event_ids={"event-0001"})
+        reference = evidence["entries"][0]["reference"]
+
+        def evaluator(_criteria, _evidence):
+            return {
+                "criteria": [{
+                    "key": "quality",
+                    "status": "judged",
+                    "score": 1.0,
+                    "reason": "The frozen evidence supports a full score.",
+                    "evidence": [reference],
+                }]
+            }
+
+        with self.assertRaisesRegex(
+            GradingCoreError, "SEMANTIC_REASON_LANGUAGE_INVALID"
+        ):
+            evaluate_semantics(
+                [{"key": "quality", "weight": 1.0, "allowed_scores": [0.0, 1.0]}],
+                evaluator=evaluator,
+                evidence_index=evidence,
+                protocol="codex-agent-judge-v1",
+            )
         source = "def grade(**kwargs): return {'renamed': 1.0, 'overall_score': 1.0}"
         with self.assertRaisesRegex(GradingCoreError, "RULE_RESULT_KEYS_MISMATCH"):
             run_rules(
@@ -210,7 +265,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
                     "key": "quality",
                     "status": "unresolved",
                     "score": None,
-                    "reason": "Required evidence is missing.",
+                    "reason": "完成该检查点判定所需的冻结证据缺失。",
                     "evidence": [],
                 }]
             }
@@ -245,7 +300,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
                     "key": "quality",
                     "status": "not_applicable",
                     "score": None,
-                    "reason": "The criterion cannot be applied to this candidate.",
+                    "reason": "该检查点无法应用到当前冻结候选结果。",
                     "evidence": [],
                 }]
             }
