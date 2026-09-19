@@ -237,6 +237,7 @@ export function confirmQwenDispatchBinding(state, { session, promptEvidence, now
 
 export function markQwenNeedsAttention(state, { code, message, now }) {
   state.phase = "NEEDS_ATTENTION";
+  state.execution_state = null;
   state.attention = {
     code: requireString(code, "attention.code"),
     message: requireString(message, "attention.message"),

@@ -549,6 +549,20 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
     await dependencies.writeJournal(config.state_file, state);
   }
 
+  if (
+    config.resume === true
+    && state.send.dispatch_attempt_count === 0
+    && config.recovery_probe.active_or_pending_count !== 0
+  ) {
+    return persistAttention(
+      config,
+      state,
+      dependencies,
+      "QWENWORK_RECOVERY_PROBE_NOT_IDLE_FOR_UNSENT_ATTEMPT",
+      "恢复时仍存在活动或待处理原生会话；本 attempt 尚未发送，禁止准备或进入发送临界区",
+    );
+  }
+
   if (action === "return-terminal") return { journal: state, execution_state: structuredClone(state.execution_state) };
   if (action === "observe-bound-session") return observeBoundAttempt(config, state, dependencies);
   if (action === "inspect-only") {
@@ -586,17 +600,6 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
         error instanceof Error ? error.message : String(error),
       );
     }
-  }
-
-  if (action === "dispatch-once" && config.resume === true
-      && config.recovery_probe.active_or_pending_count !== 0) {
-    return persistAttention(
-      config,
-      state,
-      dependencies,
-      "QWENWORK_RECOVERY_PROBE_NOT_IDLE_FOR_DISPATCH",
-      "恢复时仍存在活动或待处理原生会话；本 attempt 尚未发送，禁止进入发送临界区",
-    );
   }
 
   try {

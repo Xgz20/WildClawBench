@@ -16,6 +16,7 @@ export const QWEN_STOP_SELECTOR = [
   'button[aria-label*="Stop"]:not([disabled]):not([aria-disabled="true"]):visible',
   'button[title*="Stop"]:not([disabled]):not([aria-disabled="true"]):visible',
 ].join(", ");
+export const QWEN_TASK_VIEW_SELECTOR = ".agents-chat-view-root";
 
 function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
@@ -275,6 +276,7 @@ function currentQwenConversationId(address) {
 
 export async function inspectQwenTaskUi(page, observedAt, expectedSession = null, sessionRows = []) {
   const stopControls = await visibleLocators(page.locator(QWEN_STOP_SELECTOR));
+  const taskViews = await visibleLocators(page.locator(QWEN_TASK_VIEW_SELECTOR));
   const address = typeof page.url === "function" ? page.url() : "";
   const title = visibleValue(typeof page.title === "function" ? await page.title().catch(() => "") : "");
   const conversationId = currentQwenConversationId(address);
@@ -297,6 +299,7 @@ export async function inspectQwenTaskUi(page, observedAt, expectedSession = null
     && conversationId === expectedConversationId
     && title === expectedSubChatName
     && exactPeer
+    && taskViews.length === 1
   );
   const conflicts = [];
   if (!expectedConversationId || conversationId !== expectedConversationId) {
@@ -306,10 +309,11 @@ export async function inspectQwenTaskUi(page, observedAt, expectedSession = null
     conflicts.push(`ui-sub-chat-title-mismatch:${title || "<none>"}`);
   }
   if (!exactPeer) conflicts.push(`ui-sub-chat-identity-count:${peers.length}`);
+  if (taskViews.length !== 1) conflicts.push(`ui-task-view-count:${taskViews.length}`);
   if (stopControls.length > 1) conflicts.push(`visible-stop-control-count:${stopControls.length}`);
   return {
     observed_at: observedAt,
-    source: "electron-cdp-route-title-visible-controls+sqlite-identity",
+    source: "electron-cdp-route-title-task-container-visible-controls+sqlite-identity",
     target_session_verified: targetSessionVerified,
     ui_binding: {
       conversation_id: conversationId,

@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
-import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { hostname, tmpdir } from "node:os";
 import { join } from "node:path";
-import { promisify } from "node:util";
 import test from "node:test";
 
 import {
@@ -30,11 +28,11 @@ import {
   assertStableQwenUiConfiguration,
   confirmQwenWorkspaceProject,
   inspectQwenTaskUi,
+  QWEN_TASK_VIEW_SELECTOR,
   readQwenUiConfiguration,
   requireUniqueVisible,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/ui.mjs";
 
-const execFileAsync = promisify(execFile);
 const SELECT_FOLDER = new URL(
   "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/select-folder.swift",
   import.meta.url,
@@ -188,7 +186,9 @@ test("terminal UI observation binds the visible chat and unique sub-chat before 
   const page = {
     url: () => `file:///qwenwork/index.html?windowId=main&chat=${target.conversation_id}`,
     title: async () => target.sub_chat_name,
-    locator: () => fakeLocator([]),
+    locator: (selector) => selector === QWEN_TASK_VIEW_SELECTOR
+      ? fakeLocator([fakeElement()])
+      : fakeLocator([]),
   };
   const exact = await inspectQwenTaskUi(page, "2026-09-19T10:00:30.000Z", target, [target]);
   assert.equal(exact.target_session_verified, true);
@@ -206,6 +206,15 @@ test("terminal UI observation binds the visible chat and unique sub-chat before 
   assert.equal(unbound.stop_confirmed, false);
   assert.equal(unbound.active_stream, null);
   assert.ok(unbound.conflicts.some((value) => value.startsWith("ui-conversation-mismatch:")));
+
+  const emptyDom = await inspectQwenTaskUi({
+    ...page,
+    locator: () => fakeLocator([]),
+  }, "2026-09-19T10:00:31.500Z", target, [target]);
+  assert.equal(emptyDom.target_session_verified, false);
+  assert.equal(emptyDom.stop_confirmed, false);
+  assert.equal(emptyDom.active_stream, null);
+  assert.ok(emptyDom.conflicts.includes("ui-task-view-count:0"));
 
   const duplicateName = await inspectQwenTaskUi(page, "2026-09-19T10:00:32.000Z", target, [
     target,
@@ -393,13 +402,142 @@ test("terminal journal replay returns the persisted execution projection without
   assert.equal(result.journal.recovery.last_readonly_probe.sha256, config.recovery_probe.sha256);
 });
 
-test("native folder picker rejects ambiguous and unrelated open-panel ownership", async () => {
-  const { stdout } = await execFileAsync("/usr/bin/swift", [SELECT_FOLDER, "--self-test-owner-binding"], {
-    maxBuffer: 1024 * 1024,
+test("native folder picker only operates on the QwenWork AX sheet subtree", async () => {
+  const source = await readFile(SELECT_FOLDER, "utf8");
+  for (const forbidden of [
+    "openAndSavePanelService",
+    "currentOpenPanel",
+    "postShortcutGlobally",
+    "panelFrameMatchesOwner",
+  ]) {
+    assert.doesNotMatch(source, new RegExp(forbidden, "u"));
+  }
+  assert.match(source, /descendants\(outerSheet, role:/u);
+  assert.match(source, /postShortcut\(processIdentifier: application\.processIdentifier/u);
+  assert.match(source, /qwen-application-ax-sheet-descendant-only/u);
+});
+
+test("a lost bound session clears a stale RUNNING projection and can complete on the next resume", async () => {
+  const config = makeConfig({ resume: true });
+  const state = createQwenAttemptJournal({
+    identity: config.identity,
+    dataset: config.dataset,
+    taskRoot: config.task_root,
+    candidateWorkspace: config.candidate_workspace,
+    prompt: config.prompt,
+    configDigest: config.config_digest,
+    now: "2026-09-19T10:00:00.000Z",
   });
-  assert.deepEqual(JSON.parse(stdout.trim()), {
-    status: "PASS",
-    owner_binding: "qwen-outer-sheet-frame-overlap",
+  recordQwenDispatchIntent(state, {
+    project: project(),
+    configuration: configuration(),
+    baseline: [],
+    now: "2026-09-19T10:00:01.000Z",
+  });
+  reserveQwenDispatch(state, { now: "2026-09-19T10:00:02.000Z", reservationId: "reservation-fixture" });
+  markQwenDispatchReturned(state, { now: "2026-09-19T10:00:03.000Z", method: "fixture-click" });
+  confirmQwenDispatchBinding(state, {
+    session: session(),
+    promptEvidence: { verified: true, prompt_sha256: PROMPT_SHA },
+    now: "2026-09-19T10:00:04.000Z",
+  });
+  applyQwenExecutionProjection(state, {
+    identity: config.identity,
+    phase: "RUNNING",
+    send: { dispatch_attempt_count: 1 },
+    execution: { business_status: null },
+  }, "2026-09-19T10:00:05.000Z");
+
+  let stored = structuredClone(state);
+  let visibleSessions = [];
+  let dispatches = 0;
+  const now = clock();
+  const dependencies = {
+    withAttemptLock: async (_config, operation) => operation(),
+    now,
+    readJournal: async () => structuredClone(stored),
+    writeJournal: async (_path, next) => { stored = structuredClone(next); },
+    prepareUi: async () => { throw new Error("must not prepare"); },
+    verifyPreparedUi: async () => { throw new Error("must not verify prepared UI"); },
+    fillPrompt: async () => { throw new Error("must not fill"); },
+    dispatchPrompt: async () => { dispatches += 1; },
+    querySessions: async () => visibleSessions,
+    verifySessionPrompt: async () => { throw new Error("must not rebind prompt"); },
+    observeUi: async () => ({
+      observed_at: now(),
+      source: "fixture",
+      target_session_verified: true,
+      active_stream: false,
+      stop_confirmed: true,
+      conflicts: [],
+    }),
+    writeBindingEvidence: async () => [
+      { path: "evidence/binding.json", sha256: "b".repeat(64), size: 10 },
+    ],
+  };
+
+  const missing = await runQwenGeneralAttempt(config, dependencies);
+  assert.equal(missing.journal.phase, "NEEDS_ATTENTION");
+  assert.equal(missing.journal.execution_state, null);
+  assert.equal(dispatches, 0);
+
+  visibleSessions = [session()];
+  const completed = await runQwenGeneralAttempt(config, dependencies);
+  assert.equal(completed.journal.phase, "COMPLETED");
+  assert.equal(completed.execution_state.phase, "COMPLETED");
+  assert.equal(dispatches, 0);
+});
+
+test("PREPARING resume requires an idle recovery probe before any UI work", async () => {
+  const config = makeConfig({ resume: true });
+  let stored = createQwenAttemptJournal({
+    identity: config.identity,
+    dataset: config.dataset,
+    taskRoot: config.task_root,
+    candidateWorkspace: config.candidate_workspace,
+    prompt: config.prompt,
+    configDigest: config.config_digest,
+    now: "2026-09-19T10:00:00.000Z",
+  });
+  const calls = {
+    prepare: 0,
+    verify: 0,
+    fill: 0,
+    dispatch: 0,
+    query: 0,
+    prompt: 0,
+    observe: 0,
+    binding: 0,
+  };
+  const counted = (name, value = undefined) => async () => {
+    calls[name] += 1;
+    return value;
+  };
+  const result = await runQwenGeneralAttempt(config, {
+    withAttemptLock: async (_config, operation) => operation(),
+    now: clock(),
+    readJournal: async () => structuredClone(stored),
+    writeJournal: async (_path, next) => { stored = structuredClone(next); },
+    prepareUi: counted("prepare"),
+    verifyPreparedUi: counted("verify"),
+    fillPrompt: counted("fill"),
+    dispatchPrompt: counted("dispatch"),
+    querySessions: counted("query", []),
+    verifySessionPrompt: counted("prompt"),
+    observeUi: counted("observe"),
+    writeBindingEvidence: counted("binding", []),
+  });
+  assert.equal(result.journal.phase, "NEEDS_ATTENTION");
+  assert.equal(result.journal.attention.code, "QWENWORK_RECOVERY_PROBE_NOT_IDLE_FOR_UNSENT_ATTEMPT");
+  assert.deepEqual(calls, {
+    prepare: 0,
+    verify: 0,
+    fill: 0,
+    dispatch: 0,
+    query: 0,
+    prompt: 0,
+    observe: 0,
+    binding: 0,
   });
 });
 
