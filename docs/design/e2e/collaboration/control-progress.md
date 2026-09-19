@@ -1,47 +1,61 @@
 # 控制推进记录
 
-维护者：COMMON。更新：2026-09-19 19:56 +08:00。这是控制任务的调度/审查快照，不替代任务卡和技术验收，也不是跨进程桌面锁。
+维护者：COMMON。更新：2026-09-19 21:00 +08:00。这是控制任务的调度/审查快照，不替代平台卡与技术验收，也不是跨进程桌面锁。没有配置定时巡检。
 
-## 第二轮目标
+## 当前交付与下一项
 
-首轮 P1 交付已收到；继续三个原任务，完成客户端执行入口、已发现正确性问题、受控真机采样与 CB-B 公共收口。未经审查的平台分支不直接合入工作分支。源码变化均在指定 worktree。
+本轮把三个平台的开发 Driver 集成到公共分支，完成 252 项组合测试，推荐源码为 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3`，版本和接收要求见 [COMMON-003](handoffs/COMMON-003.md)。源码全部在 `.agents/e2e-harness-contract` 集成；不把开发 canary 或离线测试写成正式 E2E 完成。
 
-| 任务 | 已收到的交付 HEAD | 控制任务已安排的下一项 |
+| 任务 | 已审查并集成的交付 | 正在推进 |
 | --- | --- | --- |
-| MAC-WORKBUDDY-GENERAL | `975f21aaf5b356ea2632acca55cf6b7d8cd0439a`；P2 `e388dfa43c0f38263ebcf57bf022ba1eb2c3cfeb` | 本轮修复复核通过，控制任务独立 WorkBuddy 23/23；SLOT02 允许公共基线/真实输入/配置与空闲核验后一次开发 canary |
-| MAC-QWENWORK-GENERAL | `d9eabf0` 已采用 COMMON-002；锁修复/依赖 `7dcba74` | 26 Node 通过，stale 自动接管已关闭；追加审查发现 UI/session 停止绑定、面板归属、过期 probe 恢复、终态状态重放四项，修复后再进入 live |
-| MAC-DOUBAOWORK-WEB | `c098a2e386baec6b04ed4af615349bea974f0746`；P2 修复/采样工作区待交付 | 一题真实发送、绑定和同 attempt 恢复已观察；SLOT01 已释放，离线修复锁祖先/重试回读/唯一证据快照并提交 |
-| COMMON-CB05 | `eb23784a7ed25b0f0364db0392783de277b22b96` | 第一批通用机制完成，General 94 + Web 61 组合回归通过；COMMON-002 派发平台接入 |
+| MAC-WORKBUDDY-GENERAL | P2 `e388dfa`、组件绑定 `b3ac3da`；独立 Node 23/23 | SLOT03 发送前失败已安全恢复草稿、释放；离线修真实输入事件与 armed 前 enabled 检查，补证据交接；collector 独立推进 |
+| MAC-QWENWORK-GENERAL | `9081df5`；独立 Node 32 + Python 3；Swift typecheck | SLOT04 已释放；项目 trigger 歧义导致 send=0；修可见控件 selector、关闭数据库的只读 probe；collector 独立交付 |
+| MAC-DOUBAOWORK-WEB | P2 `47dcaee`、公共 merge `ca7cc2e`、更正 `3a3057c`；Node 39/39 | 离线审计原生 terminal/完整 workspace 绑定、实现精确 cleanup 及反例；COMMON 审查最小 Web 公共接口复用 |
+| COMMON | CB-A/CB-B、三 Driver、发行版本与 Qwen CLI 路径别名修复 | 发布 COMMON-003，接收下一批平台修复/collector；新增五项指标另属 COMMON-CM01 |
 
-本轮推荐源码 `eb23784` 包含 Doubao macOS 原生 discovery 1.2.0、general-contracts 1.2.0 与通用收口。155 项组合测试通过；[COMMON-002](handoffs/COMMON-002.md) 列明全部 Skill 版本和平台动作。三个平台专属代码仍待审查集成，不属于本公共源码的新平台支持声明。
+公共/平台组合回归：General Python 63、Node 128（公共 34、WorkBuddy 23、Qwen 32、Doubao 39）、Web Python 61。General execute 0.8.0、Web execute 1.15.0；其他 COMMON-002 版本保持。尚未新建生产发行包。
 
 ## 桌面时段
 
-| 时段 ID | 独占任务 | 允许范围 | 当前状态 |
+| 时段 ID | 独占任务 | 允许范围 | 状态 |
 | --- | --- | --- | --- |
-| SLOT-MAC-20260919-01 | MAC-DOUBAOWORK-WEB | 一题 L1 开发采样、一次发送/同 attempt 恢复 | SLOT_RELEASED；最新 19:47:06 +08:00 observation busy/stop/pending 均 0，任务已明确转离线 |
-| SLOT-MAC-20260919-02 | MAC-WORKBUDDY-GENERAL | 无冲突检查后启动/核验 CDP、回读模型权限、真实 General 单题一次发送与同 attempt 观察恢复 | 已授予；P2 e388dfa 经控制复核及 23 项专属测试通过，等待实际 preflight/执行结果 |
+| SLOT-MAC-20260919-01 | MAC-DOUBAOWORK-WEB | 一题 Web L1，一次发送/同 attempt 恢复 | SLOT_RELEASED；最新有效 UI observation 无 busy/stop/pending；候选 HTTP 服务仍有残留，不等于 cleanup 完成 |
+| SLOT-MAC-20260919-02 | MAC-WORKBUDDY-GENERAL | 启动/CDP/配置/原生状态与草稿检查 | SLOT_RELEASED；发现原 31 字草稿，未发送 |
+| SLOT-MAC-20260919-03 | MAC-WORKBUDDY-GENERAL | 私有备份核验后临时移出草稿、一次开发尝试、精确恢复 | SLOT03_RELEASED；reservation=1、实际 click=0/send=0；原草稿正文/HTML SHA 已恢复 |
+| SLOT-MAC-20260919-04 | MAC-QWENWORK-GENERAL | 无活动冲突后启动 QwenWork 9250；真实 General 单题、keep-current、一次发送/观察恢复 | SLOT04_RELEASED；send=0、无 attempt；最后由用户确认退出，9250/主进程/DB 写者均已消失 |
 
-SLOT02 期间 QwenWork、DoubaoWork 只允许代码、fixtures 与只读文件盘点，不操作桌面。采样不是正式评测通过：不伪造其他 Harness manifest，不代答未知交互，不重发不确定发送，不在终态/停止未确认时冻结或生成有效回执。
+当前无桌面持有者，三个任务先推进离线修复/collector。下一时段必须由控制任务在修复审查后明确授予，不能自动开始。不可为补证据重发不确定发送，不代答未知对话框。结束时必须报告真实 task/session/attempt、未停止状态、残留进程和恢复路径；只有安全交接后才分配下一时段。
 
-时段结束必须报告客户端仍活动的 task/session/attempt 和恢复路径；存在未确认停止的运行时不得仅按时间到期自动转让。没有活动状态则明确释放，由控制任务再分配下一项。
+## WorkBuddy SLOT03
 
-## 审查与公共依赖
+attempt `3e554524-6599-4182-aecc-3257977867c0` 在发送前已冻结 628 字符 Prompt，DOM SHA 与 manifest 一致，但发送按钮 disabled，`dispatchPrompt` 返回可用按钮 0。journal 已 reservation=1，实际 click=0/send=0，原生候选会话为 0；不能算模型执行失败或任务已发送。
 
-- WorkBuddy 首轮用取消/中断状态产生 candidate_error，可能绕过停止确认；已退回专属任务修复，未据此宣布执行可用。
-- 两个 General 原生解析器需要将工具完成与业务成功分开；明确 exit_code/业务结果不足时保留 unknown。
-- DoubaoWork 首轮统计声称唯一 call_id 但按行计数且未隔离 agent；已要求作用域/冲突反例。原生终态、cwd 和清理依然是当前重点采样缺口。
-- prepare 已有 DoubaoWork Harness 名称与通用 slug 支持，不再把准备入口误记为必然缺失；execute/run/metrics 的实际接入分别核验。
-- 新 trace-index v2 保留 v1，原生缺少 thread/turn/lifecycle 时显式 null。新通用收口没有可信、受支持的 cleanup hook 就拒绝正式冻结；旧 Astron 行为需通过兼容回归。
-- general-contracts 1.2.0、collect-general-e2e 0.5.0；其他受影响版本见 COMMON-002。尚未新建生产发行。
-- 三任务实际执行入口必须持有 owner lock，覆盖 journal/UI/send/绑定。除了空锁双 worker，还需 stale 锁双接管反例：不允许后一个回收者移走新建活锁。Qwen 交付存在此竞态，已退回修复；其他两任务同步自查。
+同 attempt 只读 resume 没有重发，仍无 native 身份。未发送 Prompt 已移出，原 31 字用户草稿正文与 HTML SHA 均恢复；只有动态 style 属性不同。备份、恢复截图和证据权限为 0600，正文不入 Git。WorkBuddy 保持本轮启动的 PID 33343 / CDP 9229，模型 xopglm52、权限 default-sandbox；再次操作前必须重验现场，不能把此快照当作实时状态。
 
-## SLOT01 证据边界
+平台离线修复使用真实输入事件并在 armed 前确认 enabled，不绕过 disabled。fixture 只能证明其覆盖范围，真实客户端行为仍需新的独占时段和新的调试 attempt；原 attempt 计数不重置。
 
-真实任务 `07_Website_Generation_task_023_important_day_countdown`，批次 `web-e2e-20260919-doubaowork-canary-01`，唯一已发送 attempt `f2d106cc-aeb4-4f56-a863-9a82edec5c6e`，dispatch=1；保持客户端原模型显示“自动 高”和权限“按需确认”。发送前失败与未发送 attempts 由平台证据索引保留，不计为多次发送。
+## QwenWork SLOT04
 
-控制任务只读核验的本机目录：`/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-macos-web-e2e/slot-mac-20260919-01-canary/development-run-03/`。`development-observation-1789817972965.json` 的 busy=1 但误记释放，已作废完成/释放结论；Driver 修复后 `development-observation-1789818426079.json`（19:47:06 +08:00）busy/stop/dialog/question/approval 均 0，最终回复观测 1893 字节，分类仍为不可信 UI 完成候选。
+单题 prepare 与 verify-batch 通过，live 仍固定源码 9081df5。发送前项目 trigger 返回 2 个候选，唯一性门禁拒绝继续；没有选目录、建项目、填 Prompt 或 attempt journal，send=0。平台将按当前可见视图修 selector，不使用首个元素绕过歧义。
 
-旧固定回复/native 文件可能仅覆盖此前部分轨迹，不能引用为最新完整证据。平台改用每次唯一 snapshot 文件、同次 DOM/hash 对账并保存旧原件；最新归档是否完整以其后续已提交索引为准。当前没有正式 execution record/receipt、native cwd/terminal 或进程清理通过声明；不重发来补证据。
+退出最后依赖用户手动确认，不能计为自动退出/恢复通过。释放时精确主进程不存在、9250 无监听、agents.db/WAL/SHM 无占用。关闭后 WAL/SHM 消失，原 probe 与 sqlite3 -readonly 报 error 14；没有生成 probe-after-restore-final.json。无写者后补充 immutable 读取 quick_check=ok、21 个 session、active/pending=0，只是恢复旁证。平台需补无 sidecar 关闭库及活动 WAL/并发写入反例，probe 不得创建/删除/修复用户 sidecar。
 
-Windows 从 COMMON-001/002 和最新 baseline 接续；完成约定基线检查后推进本机 G5-01。未收到 Windows 本机接收与真机记录，不代填通过。
+## DoubaoWork SLOT01
+
+真实任务 `07_Website_Generation_task_023_important_day_countdown`，批次 `web-e2e-20260919-doubaowork-canary-01`，唯一实际发送 attempt `f2d106cc-aeb4-4f56-a863-9a82edec5c6e`。模型“自动 高”、权限“按需确认”；UI/native session 唯一绑定。已消费旧交接不改写，更正见 [MAC-DOUBAOWORK-WEB-002](handoffs/MAC-DOUBAOWORK-WEB-002.md)。
+
+- 19:39:32 的 observation busy=1，却误记释放；该完成/释放结论无效。
+- 19:47:06 的 observation busy/stop/dialog/question/approval 均 0，回复候选 1,893 字节，但最新回复/截图未唯一归档，旧 145 字节回复不能代替它；当前源码已修唯一快照，尚未真机复验。
+- 后续只读核对已确认倒计时 HTML 18,216 字节及两张截图；“只有 .gitkeep”判断已更正。HTML mtime 晚于截图，未证明它们对应当前 HTML。
+- 候选 Bash/Python 进程组仍以 `workspace/countdown` 为 cwd，Python 监听 8848；尚未清理。缺 native terminal/cwd、正式 execution record/receipt、score/report，保持 NEEDS_ATTENTION。
+- prepared input 冻结在 c098...；live Driver 是未提交迭代且未留精确文件哈希/dirty diff。47dcaee 包含事后修复，不是精确 live source。
+
+本机原件位于 `/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-macos-web-e2e/slot-mac-20260919-01-canary/`。不为了补齐来源身份重发原 Prompt。
+
+## 公共接口与跨平台
+
+General trace v2 / common finalizer 已由 COMMON-002 提供；平台真实 collector 和 cleanup hook 单独审查，不能复制或绕过正式门禁。General wire 不直接用于 Doubao Web；先复用已有 Web 能力，再集中确定缺失的公共路由/资源映射/收口接口。discovery 1.2.0 与 prepare 的 Doubao 支持已经交付，不再列为全缺。
+
+原生工具 completed 不等于业务成功；缺失指标保持 null、known subtotal、coverage。取消/中断、来源路径、锁 stale 双接管和恢复状态反例已经分别复核，不能以此替代尚未进行的真实恢复/cleanup/评分验收。
+
+Windows 接收 COMMON-001/002/003 和最新 baseline 后继续本机 G5-01，无需等待三个 Mac 或新增指标完成。Windows 真机记录由接收方回写，本控制任务未操作或代填其通过状态。两机以固定 SHA 和新增 handoff 接续，活动批次不切源码/Skill。

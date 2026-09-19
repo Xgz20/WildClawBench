@@ -9,7 +9,7 @@
 | CB-A：开发接口 | adapter 组件绑定校验、通用 execution-state Schema、旧 AstronStudio 状态兼容、run 状态接收与真实身份/证据校验 | 平台 probe、一次发送/恢复、原生日志解析、规范化输出与 fixtures；使用通过校验的状态登记 execute 阶段 | 不因新状态被接收就宣称正式 collect、评分或完整 E2E 已通过 |
 | CB-B：正式收口 | 公共 finalizer、原始 trace 多 artifact、原生会话身份映射、可信资源来源集合、平台进程清理 hook、发行闭包 | 对接正式 collect receipt，随后验证完整评分/回传/报告 | 未验收的 OS/架构/版本和恢复能力不继承其他平台结论 |
 
-CB-A 已随 COMMON-001 发布，CB-B 第一批通用机制随 [COMMON-002](handoffs/COMMON-002.md) 发布。平台按正式接口实现原生 collector 和可信 cleanup hook，不能复制整套 AstronStudio finalizer 或降低校验绕过依赖。未能表达的真实样本和接口缺项交 COMMON 处理。额外五项指标的统一扩展另属 COMMON-CM01，不阻塞现有 11 项资源指标、原始数据和适配开发。
+CB-A 已随 COMMON-001 发布，CB-B 第一批通用机制随 [COMMON-002](handoffs/COMMON-002.md) 发布。平台按正式接口实现原生 collector 和可信 cleanup hook，不能复制整套 AstronStudio finalizer 或降低校验绕过依赖。未能表达的真实样本和接口缺项交 COMMON 处理。三个平台开发 Driver 已在 [COMMON-003](handoffs/COMMON-003.md) 集成；正式平台 collector 和 Web 公共路由仍按下表归属单独交付。额外五项指标的统一扩展另属 COMMON-CM01，不阻塞现有 11 项资源指标、原始数据和适配开发。
 
 原生字段调研可从 [Web/General 指标盘点与 Harness 可行性分析](../../general-e2e/Web与通用E2E指标盘点及Harness可行性分析.md)开始；该文附历史来源哈希，平台任务仍需核对本机实际版本和数据，不能继承历史样本的覆盖状态。
 

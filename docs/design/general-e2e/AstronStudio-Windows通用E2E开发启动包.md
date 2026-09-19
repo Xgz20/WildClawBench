@@ -6,6 +6,8 @@
 
 **契约与 macOS 最终 smoke 修复合入、公共接口基线明确后，Windows 可以与三个 macOS Harness 任务并行开发，不必等待新增指标全部实现。** Windows 使用独立 worktree，先验证本机执行和采集，再完成本机评分闭环。Windows 执行、macOS 评分另作交接验收，不替代 Windows 本机能力。
 
+当前开发基线另见 [COMMON-003](../e2e/collaboration/handoffs/COMMON-003.md)：本轮集成三个 macOS 开发 Driver、升级 execute Skill 并修复 Qwen CLI 路径别名，不改变 Windows wire 或 cleanup 要求。Windows 处理最新交接后继续 G5-01，不等待 Mac canary 完成。
+
 当前公共正式收口接口见 [COMMON-002](../e2e/collaboration/handoffs/COMMON-002.md)：新 Windows 状态使用 CB-A，采集使用 trace-index v2 与通用 finalizer，必须提供实际 Windows cleanup hook。先完成该交接列出的基线回归，再推进本机 G5-01；旧 AstronStudio macOS wrapper 不代表 Windows 支持。
 
 本文是开发交接说明，不是 Windows 已支持的声明。核验源码为 `457e35560ea5cd090db1ce8b68c747de95ae3622`，**这不是后续启动时的冻结基线**。实际启动时必须重新核对入口、契约和能力状态。技术验收更新[实现计划与验收清单](通用场景端到端自动化评测实现计划与验收清单.md)，代码采用状态与交接接收写入任务卡，本文不再维护一份 PASS 表。
