@@ -12,7 +12,7 @@
 | 实现提交 | CB-A `abce5da832f16b48cd402ceef04a6abda544a379`；CB-B `eb23784a7ed25b0f0364db0392783de277b22b96`，均保留原提交 |
 | 契约 / 版本 | `E2E-HARNESS-CONTRACT/0.1` / `run-general-e2e@0.5.0` / `general-contracts@1.2.0`；General execute 0.8.1 / Web execute 1.15.0；完整版本见 COMMON-003/004 |
 | 开发接口 | [通用执行状态接口](../../../../tools/report/skills/general-e2e/run-general-e2e/references/adapter-execution-state.md)，已集成 CB-A；CB-B 通用 finalizer / trace v2 已可消费，平台原生采集与真实 cleanup hook 仍需分别实现验证 |
-| 验证范围 | COMMON-003 组合 252 项通过；本批输入/版本变更复跑 WorkBuddy Node 25、General Python 46 通过；无新 Harness/Windows 正式闭环声明 |
+| 验证范围 | COMMON-003 及本批输入修复组合回归 254/254（General Python 63、Node 130、Web Python 61）；无新 Harness/Windows 正式闭环声明 |
 | 并行任务 | 三个 macOS 独立任务已启动并核验 worktree 绑定，见[派发记录](dispatch.md)；平台卡由各自负责人更新后交付集成 |
 | 未完成公共项 | WorkBuddy 输入真机验证、Qwen selector/关闭库 probe、Doubao cleanup 加固、各平台正式收口与验收、COMMON-CM01 新增五项指标；不阻塞已有接口的独立开发 |
 | macOS 既有 smoke | [双题 smoke](../../general-e2e/evidence/macos-current-smoke-20260919/README.md)、[G4-03](../../general-e2e/evidence/g4-03/README.md)；证据提交 `86786e219c29730dba26e28426bcbe3f2414dab8`，实际执行源码 `457e35560ea5cd090db1ce8b68c747de95ae3622` |

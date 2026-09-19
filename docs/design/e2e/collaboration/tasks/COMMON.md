@@ -26,7 +26,7 @@
 - [x] **COMMON-CB04**：推荐源码已发布，实际 SHA 及接收动作见 [COMMON-001](../handoffs/COMMON-001.md)；台账随后续提交同步。三个 Mac 任务已创建并核验绑定；Windows 接收方未代填通过。
 - [x] **COMMON-CB05**：CB-B 第一批通用机制提交 `eb23784`，trace v2 / 多来源 / 共用 finalizer / cleanup hook 校验与脱仓执行完成；本轮 General 94 + Web 61 通过。平台真实原生采集和 cleanup 实现及正式闭环尚待各任务验收。
 - [ ] **COMMON-CM01**：公共五项新增指标聚合/报告与 AstronStudio 参考映射，含 fixtures 和实际来源对账；不阻塞依赖已明确的客户端适配。
-- [x] **COMMON-IN01**：接收并审查首批三平台 P2 与修复，保留原提交合入；252 项组合回归通过，新增 COMMON-003。此勾选仅代表本批，不代表完整平台验收。
+- [x] **COMMON-IN01**：接收并审查首批三平台 P2 与修复，保留原提交合入；COMMON-003 组合回归及本批变更复跑共 254/254，通过新增 COMMON-004。此勾选仅代表本批，不代表完整平台验收。
 - [x] **COMMON-IN02**：WorkBuddy 输入修复及 canary 交接已集成，Qwen SLOT04 证据/COMMON-003 接收记录已集成；Web 最小复用方案明确，发布 COMMON-004。
 - [ ] **COMMON-IN03**：WorkBuddy SLOT05 真实结果及专属 collector、Qwen selector/只读 DB/collector、Doubao cleanup 动态反例与等价绑定、COMMON 公共 Web 接线；逐项审查，不因前批已合入而跳过。
 
@@ -53,4 +53,4 @@ Windows 接收 COMMON-001/002/003 后直接推进本机 G5-01，无需等待 Mac
 
 ## 本轮交付
 
-推荐源码 `2023b4d`。COMMON-003 的252项组合测试通过；本批 WorkBuddy Node25、General Python46 复跑通过。General execute0.8.1、Web execute1.15.0；COMMON-004 给出输入修复、Web等价证据和下一批动作。Doubao 0f6d2c6 因动态进程反例退回，未合入。没有新生产发行，也没有把三个客户端标成完整E2E通过。
+推荐源码 `2023b4d`。完整集成回归 254/254：General Python63、Node130、Web Python61；其中本批 WorkBuddy Node25、General Python46 已复跑。General execute0.8.1、Web execute1.15.0；COMMON-004 给出输入修复、Web等价证据和下一批动作。Doubao 0f6d2c6 因动态进程反例退回，未合入。没有新生产发行，也没有把三个客户端标成完整E2E通过。

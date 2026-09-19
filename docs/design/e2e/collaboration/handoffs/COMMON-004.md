@@ -14,7 +14,7 @@ WorkBuddy `5bea7621e4c90222d3f2e0000ab1ca6093af6e0b` 使用 `Input.insertText`�
 
 新增交接 [MAC-WORKBUDDY-GENERAL-002](MAC-WORKBUDDY-GENERAL-002.md) 与 [MAC-QWENWORK-GENERAL-003](MAC-QWENWORK-GENERAL-003.md) 已集成，保留旧交接。WorkBuddy 原 SLOT03 reservation=1、实际 click/send=0，草稿已恢复；Qwen SLOT04 send=0、无 attempt，最后依赖用户确认退出，关闭库 probe error 14 未修复。控制任务核对 Qwen 提交的 7 份本地证据，大小/哈希全部匹配。后续 live 结果另行交付，不扩大这些旧证据。
 
-控制 worktree 在本批代码复跑 **71 项测试**：WorkBuddy Node 25、General Python build/layout/run/shared-components 46，均通过。独立审查另用 VM 执行真实 DOM 表达式验证 7 项保护分支；不是浏览器或真实 React 输入证明。COMMON-003 的其他未变化源码维持原 252 项组合测试范围，不把重复执行数量叠加为新覆盖。
+控制 worktree 在本批代码完成完整 **254/254** 组合回归：General Python 63、Node 130（公共 34、WorkBuddy 25、Qwen 32、Doubao 39）、Web Python 61，均通过。新增 WorkBuddy 输入 fixture 另用 VM 执行真实 DOM 表达式验证 7 项保护分支；不是浏览器或真实 React 输入证明。
 
 ```text
 node --test tests/general_e2e/workbuddy_*.test.mjs
