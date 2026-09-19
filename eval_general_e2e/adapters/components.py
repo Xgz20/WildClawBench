@@ -34,7 +34,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="desktop-app-discovery",
-        version="1.1.0",
+        version="1.2.0",
         source_root="tools/report/e2e-shared/desktop-app-discovery",
         vendor_root="vendor/e2e-shared/desktop-app-discovery",
         entrypoints=("index.mjs", "profiles.mjs", "cli.mjs"),
@@ -76,10 +76,11 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="general-contracts",
-        version="1.1.0",
+        version="1.2.0",
         source_root="eval_general_e2e/contracts",
         vendor_root="vendor/e2e-shared/general-contracts",
-        entrypoints=("validator.py", "execution_state.py", "schemas/general-execution-state-v1.schema.json"),
+        entrypoints=("validator.py", "execution_state.py", "schemas/general-execution-state-v1.schema.json",
+                     "collection_validation.py", "schemas/trace-index-v2.schema.json"),
     ),
 )
 

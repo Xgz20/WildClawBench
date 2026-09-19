@@ -1,10 +1,10 @@
 # General E2E 通用执行状态接口（CB-A）
 
-新 Harness 使用 `wildclawbench.general-e2e-execution-state/v1` 输出可恢复的执行状态，再由 `record-execution` 登记已经验证的终态。此接口支持开发执行器与登记执行结果；**正式 `collect-evidence` 仍依赖 CB-B 公共收口器与各 Harness 原生采集器**。本接口不生成 receipt，不证明已完成原生客户端 smoke、评分或生产验收。
+新 Harness 使用 `wildclawbench.general-e2e-execution-state/v1` 输出可恢复的执行状态，再由 `record-execution` 登记已经验证的终态。此接口支持开发执行器与登记执行结果；**正式 `collect-evidence` 使用 CB-B 公共收口接口，仍需各 Harness 原生采集器与真实平台清理 hook 验证**。本接口不生成 receipt，不证明已完成原生客户端 smoke、评分或生产验收。
 
 ## 1. 接入与兼容
 
-运行期唯一 Schema 是本 Skill 内的 `vendor/e2e-shared/general-contracts/schemas/general-execution-state-v1.schema.json`，校验器是 同目录的 `execution_state.py`。两者从 canonical `eval_general_e2e/contracts/` 构建进入 `general-contracts@1.1.0`，运行时直接读取 Schema 并验证其所用关键字；未知关键字失败关闭。Skill 版本为 `run-general-e2e@0.4.0`。
+运行期唯一 Schema 是本 Skill 内的 `vendor/e2e-shared/general-contracts/schemas/general-execution-state-v1.schema.json`，校验器是 同目录的 `execution_state.py`。两者从 canonical `eval_general_e2e/contracts/` 构建进入 `general-contracts@1.2.0`，运行时直接读取 Schema 并验证其所用关键字；未知关键字失败关闭。Skill 版本为 `run-general-e2e@0.5.0`。
 
 旧 `wildclawbench.general-e2e-astronstudio-execution-state/v1` 保留既有字段检查，只能登记到 AstronStudio macOS 单元（`platform=macos` 或 `macos-*`）。新 Windows 实现使用通用 Schema，不伪装为旧 Mac Driver。
 

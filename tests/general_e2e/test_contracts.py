@@ -35,9 +35,9 @@ def _mutate(document: object, dotted_path: str, value: object) -> None:
 
 
 class GeneralE2EContractTests(unittest.TestCase):
-    def test_all_seven_positive_examples_validate(self) -> None:
+    def test_all_positive_examples_validate(self) -> None:
         examples = sorted(VALID.glob("*.json"))
-        self.assertEqual(len(examples), 7)
+        self.assertEqual(len(examples), len(KNOWN_SCHEMAS))
         seen = set()
         for example in examples:
             with self.subTest(example=example.name):
@@ -142,6 +142,36 @@ class GeneralE2EContractTests(unittest.TestCase):
             (CONTRACTS / "schemas/common-v1.schema.json").read_text(encoding="utf-8")
         )
         self.assertEqual(common["$id"], "urn:wildclawbench:schema:general-e2e:common:v1")
+
+    def test_trace_v2_preserves_nullable_native_ids_without_weakening_v1(self) -> None:
+        trace = json.loads((VALID / "trace-index.json").read_text(encoding="utf-8"))
+        trace.update({
+            "schema_id": "urn:wildclawbench:schema:general-e2e:trace-index:v2", "schema_version": 2,
+            "adapter": {"id": "qwenwork-fixture", "version": "0.1.0", "source": "fixture"},
+            "session": {"thread_id": None, "turn_id": None, "session_id": "native-session", "cwd": "/fixture/workspace", "lifecycle_generation": None},
+            "binding_evidence": [{"path": "bindings/session.json", "sha256": "1" * 64, "size": 20}],
+        })
+        trace["transcript"]["path"] = "transcript.jsonl"
+        trace["raw_trace"][0]["path"] = "raw/native.jsonl"
+        validate_contract(trace)
+        legacy = copy.deepcopy(trace)
+        legacy.update(schema_id="urn:wildclawbench:schema:general-e2e:trace-index:v1", schema_version=1)
+        with self.assertRaises(ContractValidationError):
+            validate_contract(legacy)
+        for mutation in ("all-null", "duplicate", "escape", "wrong-version", "empty-binding"):
+            changed = copy.deepcopy(trace)
+            if mutation == "all-null":
+                changed["session"]["session_id"] = None
+            elif mutation == "duplicate":
+                changed["raw_trace"].append(changed["raw_trace"][0])
+            elif mutation == "escape":
+                changed["binding_evidence"][0]["path"] = "bindings/../outside"
+            elif mutation == "wrong-version":
+                changed["schema_version"] = 1
+            else:
+                changed["binding_evidence"] = []
+            with self.subTest(mutation=mutation), self.assertRaises(ContractValidationError):
+                validate_contract(changed)
 
     def test_transcript_jsonl_requires_stable_identity_and_sequence(self) -> None:
         first = json.loads((VALID / "transcript-event.json").read_text(encoding="utf-8"))
