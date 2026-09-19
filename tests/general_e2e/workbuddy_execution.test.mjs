@@ -17,6 +17,7 @@ import {
   assertWorkBuddyRuntimeSupport,
   assertWorkBuddyUiConfiguration,
   assertWorkBuddyUiIdle,
+  fillWorkBuddyPrompt,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/ui.mjs";
 
 function sha256(value) {
@@ -179,6 +180,80 @@ test("WorkBuddy P2 arguments and UI readback fail closed", () => {
     () => assertWorkBuddyUiIdle({ ...rawUi("/workspace"), busy_control_count: 1 }),
     /活动或未知交互/u,
   );
+});
+
+test("WorkBuddy P2 uses CDP real input and requires an enabled send control", async () => {
+  class StatefulEditorClient {
+    constructor({ enableOnInsert }) {
+      this.content = "";
+      this.focused = false;
+      this.sendEnabled = false;
+      this.enableOnInsert = enableOnInsert;
+      this.insertCalls = 0;
+    }
+
+    async evaluate(source) {
+      if (source.includes("document.activeElement === editor")) {
+        this.focused = true;
+        return { focused: true, count: 1, initial_content: this.content };
+      }
+      if (source.includes("send_enabled_count")) {
+        return {
+          editor_count: 1,
+          content: this.content,
+          send_control_count: 1,
+          send_enabled_count: this.sendEnabled ? 1 : 0,
+        };
+      }
+      throw new Error("unexpected evaluate expression");
+    }
+
+    async send(method, params) {
+      assert.equal(method, "Input.insertText");
+      assert.equal(this.focused, true);
+      this.insertCalls += 1;
+      this.content = params.text;
+      this.sendEnabled = this.enableOnInsert;
+      return {};
+    }
+  }
+
+  const prompt = "Stateful editor fixture\n";
+  const enabled = new StatefulEditorClient({ enableOnInsert: true });
+  const ready = await fillWorkBuddyPrompt(enabled, prompt, 20);
+  assert.equal(enabled.insertCalls, 1);
+  assert.equal(ready.content, prompt);
+  assert.equal(ready.send_enabled_count, 1);
+
+  const domOnly = new StatefulEditorClient({ enableOnInsert: false });
+  await assert.rejects(
+    fillWorkBuddyPrompt(domOnly, prompt, 5),
+    /发送控件启用超时/u,
+  );
+  assert.equal(domOnly.content, prompt);
+  assert.equal(domOnly.sendEnabled, false);
+  assert.equal(domOnly.insertCalls, 1);
+});
+
+test("WorkBuddy P2 keeps a disabled send control before dispatch arming", async () => {
+  const fixture = await createExecutionUnit();
+  try {
+    const counters = { prepare: 0, fill: 0, dispatch: 0, close: 0 };
+    const deps = dependencies(fixture.config, counters, () => binding(fixture.config, "running"));
+    deps.fillPrompt = async () => {
+      counters.fill += 1;
+      throw new Error("等待 WorkBuddy Prompt 真实输入和发送控件启用超时");
+    };
+    const result = await executeWorkBuddyTask(fixture.config, deps);
+    assert.equal(counters.fill, 1);
+    assert.equal(counters.dispatch, 0);
+    assert.equal(result.journal.send.dispatch_attempt_count, 0);
+    assert.equal(result.journal.prompt.send_status, "not_sent");
+    assert.equal(result.journal.phase, "FAILED");
+    assert.equal(result.journal.execution.error.code, "WORKBUDDY_PRE_SEND_DRIVER_ERROR");
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
 });
 
 test("WorkBuddy P2 accepts synchronous default UI cleanup", async () => {

@@ -295,27 +295,53 @@ export function assertWorkBuddyUiConfiguration(ui, expected) {
   };
 }
 
-export async function fillWorkBuddyPrompt(client, prompt) {
-  const result = await client.evaluate(expression(`
+export async function readWorkBuddyPromptState(client) {
+  return client.evaluate(expression(`
     const editors = visibleAll('textarea, [contenteditable="true"]');
-    if (editors.length !== 1) return { filled: false, count: editors.length, readback: null };
+    const buttons = visibleAll('button[aria-label], button[title], [role="button"][aria-label]')
+      .filter((button) => /(?:发送|Send)/iu.test(
+        (button.getAttribute('aria-label') || button.getAttribute('title') || '').trim()
+      ));
+    const enabled = buttons.filter((button) => !button.disabled && button.getAttribute('aria-disabled') !== 'true');
+    const content = editors.length === 1
+      ? ('value' in editors[0] ? editors[0].value : (editors[0].innerText || editors[0].textContent || ''))
+      : null;
+    return {
+      editor_count: editors.length,
+      content,
+      send_control_count: buttons.length,
+      send_enabled_count: enabled.length
+    };
+  `));
+}
+
+export async function fillWorkBuddyPrompt(client, prompt, timeoutMs = 30_000) {
+  const focused = await client.evaluate(expression(`
+    const editors = visibleAll('textarea, [contenteditable="true"]');
+    if (editors.length !== 1) return { focused: false, count: editors.length, initial_content: null };
     const editor = editors[0];
-    editor.focus();
-    if ('value' in editor) {
-      const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(editor), 'value')?.set;
-      if (setter) setter.call(editor, __arg.prompt); else editor.value = __arg.prompt;
-      editor.dispatchEvent(new Event('input', { bubbles: true }));
-    } else {
-      editor.textContent = __arg.prompt;
-      editor.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: __arg.prompt }));
+    const initialContent = 'value' in editor ? editor.value : (editor.innerText || editor.textContent || '');
+    if (initialContent.length !== 0) {
+      return { focused: false, count: 1, initial_content: initialContent };
     }
-    const readback = 'value' in editor ? editor.value : (editor.innerText || editor.textContent || '');
-    return { filled: true, count: 1, readback };
-  `, { prompt }), { userGesture: true });
-  if (!result?.filled || result.readback !== prompt) {
-    throw new Error(`WorkBuddy Prompt 填入或回读失败：count=${result?.count ?? "unknown"}`);
+    editor.focus();
+    return { focused: document.activeElement === editor, count: 1, initial_content: initialContent };
+  `), { userGesture: true });
+  if (!focused?.focused) {
+    throw new Error(
+      `WorkBuddy Prompt 编辑器不可安全聚焦：count=${focused?.count ?? "unknown"}; initial_length=${focused?.initial_content?.length ?? "unknown"}`,
+    );
   }
-  return result;
+  await client.send("Input.insertText", { text: prompt });
+  return waitFor(
+    () => readWorkBuddyPromptState(client),
+    (state) => state.editor_count === 1
+      && state.content === prompt
+      && state.send_control_count === 1
+      && state.send_enabled_count === 1,
+    timeoutMs,
+    "等待 WorkBuddy Prompt 真实输入和发送控件启用",
+  );
 }
 
 export async function dispatchWorkBuddyPrompt(client) {
