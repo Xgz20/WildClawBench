@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash, randomUUID } from "node:crypto";
-import { lstat, open, readFile, readdir, stat, writeFile, mkdir, rename, rm } from "node:fs/promises";
+import { lstat, open, readFile, readdir, realpath, stat, writeFile, mkdir, rename, rm } from "node:fs/promises";
 import { hostname } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -824,7 +824,9 @@ async function main(argv = process.argv.slice(2)) {
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// Node resolves the module URL through aliases such as macOS /var -> /private/var.
+const entryPath = process.argv[1] ? await realpath(process.argv[1]).catch(() => null) : null;
+if (entryPath === await realpath(fileURLToPath(import.meta.url))) {
   main().then((code) => { process.exitCode = code; }).catch((error) => {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
     process.exitCode = 2;
