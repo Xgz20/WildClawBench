@@ -36,7 +36,7 @@ COMMON-001 已交付三个 Mac 任务，首轮实现/证据与公共需求已收
 
 ## 本机现场与恢复
 
-文档与公共接口 worktree 已登记。三个 Mac 任务沿用原绑定，见[派发记录](../dispatch.md)；SLOT01 DoubaoWork 采样已释放；SLOT02 分配 WorkBuddy 的 PRECHECK_ONLY，未放行发送。QwenWork/DoubaoWork 离线收口。实际发送/活动现场以平台回报为准，不能从时段分配推断已发送或已停止。调试产物使用 `/Users/gzx/debug-workspace/e2e-evaluate`，原始候选/轨迹不放进台账。
+文档与公共接口 worktree 已登记。三个 Mac 任务沿用原绑定，见[派发记录](../dispatch.md)；SLOT01 DoubaoWork 采样已释放；SLOT02 已在 P2 e388dfa 控制复核与 23 项专属测试通过后放行 WorkBuddy 单题开发 canary，先完成环境/输入/配置检查。QwenWork/DoubaoWork 离线收口。实际发送/活动现场以平台回报为准，不能从时段分配推断已发送或已停止。调试产物使用 `/Users/gzx/debug-workspace/e2e-evaluate`，原始候选/轨迹不放进台账。
 
 ## 接收记录
 

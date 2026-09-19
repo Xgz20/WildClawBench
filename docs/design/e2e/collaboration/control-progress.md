@@ -8,7 +8,7 @@
 
 | 任务 | 已收到的交付 HEAD | 控制任务已安排的下一项 |
 | --- | --- | --- |
-| MAC-WORKBUDDY-GENERAL | `975f21aaf5b356ea2632acca55cf6b7d8cd0439a`；P2 工作区待交付 | 修复同步 cleanup、manifest 越界、RUNNING 时间与首次发送空闲检查；SLOT02 仅 preflight，待提交复核后才发送 |
+| MAC-WORKBUDDY-GENERAL | `975f21aaf5b356ea2632acca55cf6b7d8cd0439a`；P2 `e388dfa43c0f38263ebcf57bf022ba1eb2c3cfeb` | 本轮修复复核通过，控制任务独立 WorkBuddy 23/23；SLOT02 允许公共基线/真实输入/配置与空闲核验后一次开发 canary |
 | MAC-QWENWORK-GENERAL | `d9eabf0` 已采用 COMMON-002；锁修复/依赖 `7dcba74` | 26 Node 通过，stale 自动接管已关闭；追加审查发现 UI/session 停止绑定、面板归属、过期 probe 恢复、终态状态重放四项，修复后再进入 live |
 | MAC-DOUBAOWORK-WEB | `c098a2e386baec6b04ed4af615349bea974f0746`；P2 修复/采样工作区待交付 | 一题真实发送、绑定和同 attempt 恢复已观察；SLOT01 已释放，离线修复锁祖先/重试回读/唯一证据快照并提交 |
 | COMMON-CB05 | `eb23784a7ed25b0f0364db0392783de277b22b96` | 第一批通用机制完成，General 94 + Web 61 组合回归通过；COMMON-002 派发平台接入 |
@@ -20,7 +20,7 @@
 | 时段 ID | 独占任务 | 允许范围 | 当前状态 |
 | --- | --- | --- | --- |
 | SLOT-MAC-20260919-01 | MAC-DOUBAOWORK-WEB | 一题 L1 开发采样、一次发送/同 attempt 恢复 | SLOT_RELEASED；最新 19:47:06 +08:00 observation busy/stop/pending 均 0，任务已明确转离线 |
-| SLOT-MAC-20260919-02 | MAC-WORKBUDDY-GENERAL | 无冲突检查后启动/核验 CDP、回读模型权限、准备真实 General 单题与配置 | 已授予 PRECHECK_ONLY；当前不发送 Prompt，P2 修复提交经控制者复核后再放行一次 canary |
+| SLOT-MAC-20260919-02 | MAC-WORKBUDDY-GENERAL | 无冲突检查后启动/核验 CDP、回读模型权限、真实 General 单题一次发送与同 attempt 观察恢复 | 已授予；P2 e388dfa 经控制复核及 23 项专属测试通过，等待实际 preflight/执行结果 |
 
 SLOT02 期间 QwenWork、DoubaoWork 只允许代码、fixtures 与只读文件盘点，不操作桌面。采样不是正式评测通过：不伪造其他 Harness manifest，不代答未知交互，不重发不确定发送，不在终态/停止未确认时冻结或生成有效回执。
 
