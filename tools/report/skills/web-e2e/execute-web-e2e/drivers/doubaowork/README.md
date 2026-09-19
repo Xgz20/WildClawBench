@@ -8,6 +8,8 @@
 
 `validateObservationBinding(state, snapshot)` 是平台侧可消费的严格门禁：当前 URL conversation ID 必须等于已绑定 ID，侧栏会话必须属于已确认 project ID，当前 project 控件必须唯一回读，并且已经以完整 tooltip 回读确认 workspace。发送后最新 user message 按 `crlf-to-lf+strip-trailing-newlines/v1` 明示规范化，以 SHA-256 与字节数与发送前摘要精确比对；错 conversation、错 project、旧回复或 Prompt 不一致均失败关闭。`inspectPage` 在每一次恢复观察都重新返回该快照，不只在导航后检查。
 
+返回证据中的 `status: verified` 只表示上述 UI 等价绑定已通过；automation state 的 `binding_status: tentative` 仍表示 native/trusted conversation、terminal 和 cwd 尚未确认，不能把 UI 等价证据提升为正式成功。
+
 正向 UI 完成标识仅使用可见最终回复操作区与非空最终回复的组合证据，同时要求已绑定会话无 busy/stop/pending/error。稳定文本、工具 `completed`、其他会话 busy 或旧 canary 文件都不能单独升级为成功；公共 finalizer 尚未接入前仍只记录等价证据和 `NEEDS_ATTENTION` 状态。
 
 ## 只读 probe
