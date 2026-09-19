@@ -16,6 +16,7 @@ import { test } from "node:test";
 import {
   atomicWriteJson,
   buildNativeEvidence,
+  inspectTrajectoryNativeSignals,
   parseTrajectoryJsonl,
   summarizeNormalizedEvents,
 } from "../native-evidence.mjs";
@@ -82,11 +83,60 @@ test("native evidence 将 cwd、终态与 Token 保持为空", async (context) =
   assert.equal(evidence.identity.native_cwd, null);
   assert.equal(evidence.identity.workspace_binding.status, "unverified");
   assert.equal(evidence.terminal.status, "unverified");
+  assert.equal(evidence.native_capabilities.terminal.status, "unavailable");
+  assert.equal(evidence.native_capabilities.workspace_binding.status, "unverified");
+  assert.equal(evidence.native_capabilities.workspace_binding.native_cwd, null);
   assert.equal(evidence.trace.completeness, "partial");
   assert.equal(evidence.resources.usage.total_tokens.value, null);
   assert.equal(evidence.resources.tools.call_count, 1);
   assert.equal(evidence.resources.tools.status, "partial");
   assert.deepEqual(evidence.resources.tools.coverage, { numerator: 1, denominator: null });
+});
+
+test("工具完成文本和路径引用不能升级为原生终态或 cwd", () => {
+  const requestedWorkspace = "/private/debug/task";
+  const signals = inspectTrajectoryNativeSignals([
+    {
+      role: "assistant",
+      tool_calls: [{
+        id: "call-1",
+        function: {
+          name: "Write",
+          arguments: { file_path: `${requestedWorkspace}/workspace/index.html` },
+        },
+      }],
+    },
+    {
+      role: "tool",
+      tool_call_id: "call-1",
+      content: `Task finished with final status completed. cwd=${requestedWorkspace}`,
+    },
+  ], { requestedWorkspace });
+  assert.equal(signals.terminal.status, "unavailable");
+  assert.equal(signals.terminal.candidate_event_count, 0);
+  assert.equal(signals.terminal.terminal_like_tool_result_count, 1);
+  assert.equal(signals.terminal.tool_result_text_is_sufficient, false);
+  assert.equal(signals.workspace_binding.status, "unverified");
+  assert.equal(signals.workspace_binding.native_cwd, null);
+  assert.equal(signals.workspace_binding.structured_tool_path_reference_count, 1);
+  assert.equal(signals.workspace_binding.tool_result_path_reference_count, 1);
+  assert.equal(signals.workspace_binding.tool_activity_is_sufficient, false);
+});
+
+test("未知顶层 status 与 cwd 字段只登记候选而不直接信任", () => {
+  const signals = inspectTrajectoryNativeSignals([{
+    role: "assistant",
+    status: "completed",
+    cwd: "/private/debug/task",
+    content: "done",
+  }], { requestedWorkspace: "/private/debug/task" });
+  assert.equal(signals.terminal.status, "unverified");
+  assert.deepEqual(signals.terminal.candidate_top_level_fields, { status: 1 });
+  assert.equal(signals.terminal.authoritative_source, null);
+  assert.equal(signals.workspace_binding.status, "unverified");
+  assert.deepEqual(signals.workspace_binding.candidate_top_level_fields, { cwd: 1 });
+  assert.equal(signals.workspace_binding.native_cwd, null);
+  assert.equal(signals.workspace_binding.authoritative_source, null);
 });
 
 test("损坏行只形成缺口，不吞掉后续有效事件", () => {

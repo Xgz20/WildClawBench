@@ -15,14 +15,113 @@ import { defaultNativeRoots, discoverNativeSources } from "./platform.mjs";
 
 const MAX_TRAJECTORY_BYTES = 16 * 1024 * 1024;
 const MAX_TRAJECTORY_LINES = 50_000;
+const TERMINAL_FIELD_CANDIDATES = new Set([
+  "status",
+  "state",
+  "terminal_status",
+  "event",
+  "event_type",
+  "finish_reason",
+  "completed_at",
+  "ended_at",
+]);
+const WORKSPACE_FIELD_CANDIDATES = new Set([
+  "cwd",
+  "workspace",
+  "workspace_path",
+  "working_directory",
+  "project_path",
+  "root_path",
+]);
 
 function sha256Buffer(value) {
   return createHash("sha256").update(value).digest("hex");
 }
 
-export function parseTrajectoryJsonl(text, source = "trajectory.jsonl") {
+function countStringReferences(value, needle) {
+  if (!needle) return 0;
+  if (typeof value === "string") return value.includes(needle) ? 1 : 0;
+  if (Array.isArray(value)) {
+    return value.reduce((total, item) => total + countStringReferences(item, needle), 0);
+  }
+  if (value && typeof value === "object") {
+    return Object.values(value).reduce((total, item) => total + countStringReferences(item, needle), 0);
+  }
+  return 0;
+}
+
+export function inspectTrajectoryNativeSignals(entries, { requestedWorkspace = null } = {}) {
+  const topLevelFields = new Set();
+  const terminalCandidateFields = new Map();
+  const workspaceCandidateFields = new Map();
+  let requestedWorkspaceReferenceCount = 0;
+  let structuredToolPathReferenceCount = 0;
+  let toolResultPathReferenceCount = 0;
+  let terminalLikeToolResultCount = 0;
+  for (const entry of entries) {
+    for (const field of Object.keys(entry)) {
+      topLevelFields.add(field);
+      if (TERMINAL_FIELD_CANDIDATES.has(field)) {
+        terminalCandidateFields.set(field, (terminalCandidateFields.get(field) || 0) + 1);
+      }
+      if (WORKSPACE_FIELD_CANDIDATES.has(field)) {
+        workspaceCandidateFields.set(field, (workspaceCandidateFields.get(field) || 0) + 1);
+      }
+    }
+    requestedWorkspaceReferenceCount += countStringReferences(entry, requestedWorkspace);
+    if (Array.isArray(entry.tool_calls)) {
+      for (const call of entry.tool_calls) {
+        const filePath = call?.function?.arguments?.file_path;
+        if (typeof filePath === "string" && requestedWorkspace && filePath.includes(requestedWorkspace)) {
+          structuredToolPathReferenceCount += 1;
+        }
+      }
+    }
+    if (entry.role === "tool" && typeof entry.content === "string") {
+      if (requestedWorkspace && entry.content.includes(requestedWorkspace)) toolResultPathReferenceCount += 1;
+      if (/\b(?:completed|finished|succeeded|failed|interrupted|ended)\b/iu.test(entry.content)) {
+        terminalLikeToolResultCount += 1;
+      }
+    }
+  }
+  const terminalCandidateCount = [...terminalCandidateFields.values()]
+    .reduce((total, count) => total + count, 0);
+  const workspaceCandidateCount = [...workspaceCandidateFields.values()]
+    .reduce((total, count) => total + count, 0);
+  return {
+    observed_top_level_fields: [...topLevelFields].sort(),
+    terminal: {
+      status: terminalCandidateCount > 0 ? "unverified" : "unavailable",
+      authoritative_source: null,
+      candidate_top_level_fields: Object.fromEntries([...terminalCandidateFields].sort()),
+      candidate_event_count: terminalCandidateCount,
+      terminal_like_tool_result_count: terminalLikeToolResultCount,
+      tool_result_text_is_sufficient: false,
+      reason: terminalCandidateCount > 0
+        ? "trajectory 存在未经语义验证的终态候选字段，不能直接映射为 Agent 终态"
+        : "trajectory 顶层没有已知 session/turn 终态字段或结束事件",
+    },
+    workspace_binding: {
+      status: "unverified",
+      native_cwd: null,
+      authoritative_source: null,
+      candidate_top_level_fields: Object.fromEntries([...workspaceCandidateFields].sort()),
+      candidate_field_count: workspaceCandidateCount,
+      requested_workspace_reference_count: requestedWorkspaceReferenceCount,
+      structured_tool_path_reference_count: structuredToolPathReferenceCount,
+      tool_result_path_reference_count: toolResultPathReferenceCount,
+      tool_activity_is_sufficient: false,
+      reason: workspaceCandidateCount > 0
+        ? "trajectory 存在未经语义验证的路径候选字段，尚不能作为 session 原生 cwd"
+        : "工具参数或输出中的路径仅证明工具活动，trajectory 没有 session 原生 cwd 字段",
+    },
+  };
+}
+
+export function parseTrajectoryJsonl(text, source = "trajectory.jsonl", options = {}) {
   const events = [];
   const warnings = [];
+  const entries = [];
   const lines = text.split(/\r?\n/);
   if (lines.at(-1) === "") lines.pop();
   if (lines.length > MAX_TRAJECTORY_LINES) {
@@ -47,6 +146,7 @@ export function parseTrajectoryJsonl(text, source = "trajectory.jsonl") {
       });
       continue;
     }
+    entries.push(entry);
     const role = typeof entry.role === "string" ? entry.role : "unknown";
     if (Array.isArray(entry.tool_calls)) {
       for (const call of entry.tool_calls) {
@@ -82,7 +182,12 @@ export function parseTrajectoryJsonl(text, source = "trajectory.jsonl") {
       warnings.push({ code: "UNSUPPORTED_TRAJECTORY_EVENT", source, line: index + 1, role });
     }
   }
-  return { events, warnings, line_count: lines.length };
+  return {
+    events,
+    warnings,
+    line_count: lines.length,
+    native_signals: inspectTrajectoryNativeSignals(entries, options),
+  };
 }
 
 export function summarizeNormalizedEvents(events) {
@@ -205,15 +310,23 @@ export async function buildNativeEvidence({ sessionId, workspace, discovery }) {
   const sources = [];
   const events = [];
   const warnings = [];
+  const nativeSignalSources = [];
   for (const trajectory of discovery.session.trajectories) {
     const info = await validateTrajectoryPath(trajectory, sessionId);
     if (info.size > MAX_TRAJECTORY_BYTES) {
       throw new Error(`${trajectory.relative_path} 超过大小上限`);
     }
     const buffer = await readFile(trajectory.path);
-    const parsed = parseTrajectoryJsonl(buffer.toString("utf8"), trajectory.relative_path);
+    const parsed = parseTrajectoryJsonl(buffer.toString("utf8"), trajectory.relative_path, {
+      requestedWorkspace: workspace,
+    });
     events.push(...parsed.events.map((event) => ({ ...event, agent_id: trajectory.agent_id })));
     warnings.push(...parsed.warnings);
+    nativeSignalSources.push({
+      source: trajectory.relative_path,
+      agent_id: trajectory.agent_id,
+      ...parsed.native_signals,
+    });
     sources.push({
       kind: "doubaowork-session-trajectory",
       relative_path: trajectory.relative_path,
@@ -226,6 +339,33 @@ export async function buildNativeEvidence({ sessionId, workspace, discovery }) {
   }
 
   const summary = summarizeNormalizedEvents(events);
+  const terminalCandidateEventCount = nativeSignalSources
+    .reduce((total, item) => total + item.terminal.candidate_event_count, 0);
+  const nativeCapabilities = {
+    terminal: {
+      status: terminalCandidateEventCount > 0 ? "unverified" : "unavailable",
+      authoritative_source: null,
+      candidate_event_count: terminalCandidateEventCount,
+      tool_result_text_is_sufficient: false,
+      reason: terminalCandidateEventCount > 0
+        ? "发现未经语义验证的终态候选字段；没有已知 DoubaoWork session/turn 完成事件映射"
+        : "已绑定 trajectory 没有 session/turn 终态字段或结束事件；工具子任务文本与 UI idle 均不足以提升终态",
+    },
+    workspace_binding: {
+      status: "unverified",
+      native_cwd: null,
+      authoritative_source: null,
+      requested_workspace_reference_count: nativeSignalSources
+        .reduce((total, item) => total + item.workspace_binding.requested_workspace_reference_count, 0),
+      structured_tool_path_reference_count: nativeSignalSources
+        .reduce((total, item) => total + item.workspace_binding.structured_tool_path_reference_count, 0),
+      tool_result_path_reference_count: nativeSignalSources
+        .reduce((total, item) => total + item.workspace_binding.tool_result_path_reference_count, 0),
+      tool_activity_is_sufficient: false,
+      reason: "工具参数、pwd 输出和写文件路径仅为活动旁证；没有 session 原生 cwd 字段",
+    },
+    sources: nativeSignalSources,
+  };
   const usage = unavailableUsage("trajectory.jsonl 未暴露可验证的模型 usage 或请求事件");
   const traceWarnings = [
     ...warnings,
@@ -269,6 +409,7 @@ export async function buildNativeEvidence({ sessionId, workspace, discovery }) {
       source: null,
       ui_completion_is_sufficient: false,
     },
+    native_capabilities: nativeCapabilities,
     trace: {
       completeness: "partial",
       summary,
