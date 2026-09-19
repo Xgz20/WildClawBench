@@ -36,39 +36,67 @@ function safeDate(value) {
 
 function normalizedToolStatus(value) {
   const status = String(value || "").trim().toLowerCase().replace(/[\s_-]+/gu, "");
-  if (["success", "succeeded", "completed", "complete", "done"].includes(status)) return "success";
+  if (["success", "succeeded", "ok", "passed"].includes(status)) return "success";
   if (["error", "failed", "failure", "denied"].includes(status)) return "error";
   return "unknown";
 }
 
 function toolOutcomes(segmentRows) {
-  const outcomes = new Map();
+  const observations = new Map();
+  const record = (callId, observation) => {
+    const current = observations.get(callId) || [];
+    current.push(observation);
+    observations.set(callId, current);
+  };
   for (const row of segmentRows) {
     const callId = typeof row?.tool_call_id === "string" ? row.tool_call_id : null;
     if (!callId) continue;
     if (row.type === "tool.shell.finished") {
       const aborted = row.data?.aborted === true;
       const exitCode = Number.isSafeInteger(row.data?.exit_code) ? row.data.exit_code : null;
-      outcomes.set(callId, {
+      record(callId, {
+        source_type: row.type,
         status: aborted ? "error" : exitCode === 0 ? "success" : exitCode == null ? "unknown" : "error",
         native_outcome: aborted ? "cancelled" : exitCode === 0 ? "success" : exitCode == null ? "unknown" : "error",
         exit_code: exitCode,
       });
     } else if (row.type === "tool.execution.finished") {
-      const current = outcomes.get(callId) || {};
       const status = normalizedToolStatus(row.data?.status);
-      outcomes.set(callId, {
-        ...current,
-        status: current.status && current.status !== "unknown" ? current.status : status,
-        native_outcome: current.native_outcome || String(row.data?.status || "unknown"),
+      record(callId, {
+        source_type: row.type,
+        status,
+        native_outcome: String(row.data?.status || "unknown"),
       });
     } else if (row.type === "permission.resolved" && row.data?.allowed === false) {
-      outcomes.set(callId, {
+      record(callId, {
+        source_type: row.type,
         status: "error",
         native_outcome: "denied",
         decision_reason: row.data?.decision_reason || null,
       });
     }
+  }
+  const outcomes = new Map();
+  for (const [callId, values] of observations) {
+    const decisive = [...new Set(values.map((value) => value.status).filter((status) => status !== "unknown"))];
+    const conflict = decisive.length > 1;
+    const shell = [...values].reverse().find((value) => value.source_type === "tool.shell.finished");
+    outcomes.set(callId, {
+      status: conflict ? "unknown" : decisive[0] || "unknown",
+      native_outcome: conflict
+        ? "conflict"
+        : values.map((value) => value.native_outcome).find((value) => value && value !== "unknown") || "unknown",
+      ...(shell?.exit_code == null ? {} : { exit_code: shell.exit_code }),
+      ...(values.find((value) => value.decision_reason)?.decision_reason
+        ? { decision_reason: values.find((value) => value.decision_reason).decision_reason }
+        : {}),
+      native_outcomes: values.map((value) => ({
+        source_type: value.source_type,
+        status: value.status,
+        native_outcome: value.native_outcome,
+      })),
+      outcome_conflict: conflict,
+    });
   }
   return outcomes;
 }
@@ -199,6 +227,8 @@ export function normalizeQwenTranscript({
             status: outcome.status || "unknown",
             native_outcome: outcome.native_outcome || "unknown",
             ...(outcome.exit_code == null ? {} : { exit_code: outcome.exit_code }),
+            native_outcomes: outcome.native_outcomes || [],
+            outcome_conflict: outcome.outcome_conflict === true,
           },
         }));
       } else {

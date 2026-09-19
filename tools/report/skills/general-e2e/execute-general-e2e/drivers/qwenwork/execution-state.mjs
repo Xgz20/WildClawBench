@@ -8,9 +8,21 @@ import {
 
 export const GENERAL_EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-execution-state/v1";
 
-function terminalMapping(session, cancellationConfirmed) {
+function attentionMapping() {
+  return { phase: "NEEDS_ATTENTION", business_status: null, error: null, cancellation_confirmed: null };
+}
+
+function terminalMapping(session, { cancellationConfirmed, timeoutReached }) {
   const classification = session?.classification
     || classifyQwenSessionStatus(session?.native_status, session?.stream_id);
+  if (timeoutReached === true) {
+    return {
+      phase: "FAILED",
+      business_status: "timeout",
+      error: { code: "QWENWORK_TIMEOUT", message: "QwenWork attempt reached its frozen deadline after a confirmed stop" },
+      cancellation_confirmed: true,
+    };
+  }
   if (classification.business_status === "completed") {
     return { phase: "COMPLETED", business_status: "completed", error: null, cancellation_confirmed: null };
   }
@@ -46,6 +58,40 @@ function terminalMapping(session, cancellationConfirmed) {
   return { phase: "NEEDS_ATTENTION", business_status: null, error: null, cancellation_confirmed: null };
 }
 
+function assessTerminalObservation({ session, sessionBinding, candidateWorkspace, terminalObservation }) {
+  const observed = terminalObservation && typeof terminalObservation === "object"
+    ? terminalObservation
+    : {};
+  const databaseActiveStream = Boolean(session?.stream_id);
+  const observationActiveStream = typeof observed.active_stream === "boolean"
+    ? observed.active_stream
+    : null;
+  const conflicts = Array.isArray(observed.conflicts)
+    ? observed.conflicts.filter((value) => typeof value === "string" && value.trim())
+    : [];
+  if (observationActiveStream != null && observationActiveStream !== databaseActiveStream) {
+    conflicts.push("active-stream-observation-mismatch");
+  }
+  const cwdMatches = Boolean(
+    sessionBinding.verified
+    && sessionBinding.cwd
+    && resolve(sessionBinding.cwd) === resolve(candidateWorkspace),
+  );
+  const bindingConsistent = observed.binding_consistent === true && cwdMatches;
+  const noActiveStream = observationActiveStream === false && databaseActiveStream === false;
+  const stopConfirmed = observed.stop_confirmed === true;
+  return {
+    observed_at: observed.observed_at || null,
+    source: observed.source || null,
+    database_active_stream: databaseActiveStream,
+    active_stream: observationActiveStream,
+    stop_confirmed: stopConfirmed,
+    binding_consistent: bindingConsistent,
+    conflicts: [...new Set(conflicts)],
+    trusted_terminal: noActiveStream && stopConfirmed && bindingConsistent && conflicts.length === 0,
+  };
+}
+
 export function buildQwenGeneralExecutionState({
   identity,
   dataset,
@@ -59,14 +105,22 @@ export function buildQwenGeneralExecutionState({
   finishedAt = null,
   durationSeconds = null,
   cancellationConfirmed = null,
+  timeoutReached = false,
+  terminalObservation = null,
   humanAssistance = null,
   runtimeIdentity = null,
   recovery = null,
 }) {
   let sessionBinding = buildQwenGeneralSessionBinding(session || {}, bindingEvidence);
-  let mapping = terminalMapping(session || {}, cancellationConfirmed);
+  let mapping = terminalMapping(session || {}, { cancellationConfirmed, timeoutReached });
+  const terminalAssessment = assessTerminalObservation({
+    session: session || {},
+    sessionBinding,
+    candidateWorkspace,
+    terminalObservation,
+  });
   if (prompt?.send_status === "intent_persisted" || prompt?.send_status === "uncertain") {
-    mapping = { phase: "NEEDS_ATTENTION", business_status: null, error: null, cancellation_confirmed: null };
+    mapping = attentionMapping();
   } else if (prompt?.send_status === "not_sent") {
     if (dispatchAttemptCount !== 0) throw new Error("QWENWORK_NOT_SENT_DISPATCH_MISMATCH");
     sessionBinding = {
@@ -87,9 +141,15 @@ export function buildQwenGeneralExecutionState({
   if (prompt?.send_status === "sent" && dispatchAttemptCount !== 1) {
     throw new Error("QWENWORK_SENT_DISPATCH_MISMATCH");
   }
-  if (["COMPLETED", "FAILED"].includes(mapping.phase) && !sessionBinding.verified
-      && prompt?.send_status === "sent") {
-    mapping = { phase: "NEEDS_ATTENTION", business_status: null, error: null, cancellation_confirmed: null };
+  if (prompt?.send_status === "sent") {
+    const classification = session?.classification
+      || classifyQwenSessionStatus(session?.native_status, session?.stream_id);
+    if (classification.kind === "running" && terminalAssessment.conflicts.length) {
+      mapping = attentionMapping();
+    }
+    if (["COMPLETED", "FAILED"].includes(mapping.phase) && !terminalAssessment.trusted_terminal) {
+      mapping = attentionMapping();
+    }
   }
   return {
     schema_version: GENERAL_EXECUTION_STATE_SCHEMA,
@@ -140,6 +200,7 @@ export function buildQwenGeneralExecutionState({
         model_level: session?.model_level || null,
         runtime_identity: runtimeIdentity,
         recovery,
+        terminal_observation: terminalAssessment,
       },
     },
   };

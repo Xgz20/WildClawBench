@@ -53,12 +53,53 @@ test("session selection requires exact cwd plus native identity and never guesse
   assert.equal(selectQwenSessionForAttempt({
     sessions,
     workspace: WORKSPACE,
+    nativeBinding: { local_project_id: "project-fixture-001" },
+    baseline: [],
+  }), null);
+  assert.equal(selectQwenSessionForAttempt({
+    sessions,
+    workspace: WORKSPACE,
     nativeBinding: { session_id: "session-fixture-002" },
   }), null);
   const summary = summarizeQwenSessions(sessions);
   assert.equal(summary.session_count, 3);
   assert.equal(summary.active_or_pending_count, 1);
   assert.equal(summary.stable_identity_coverage.session_id, 3);
+});
+
+test("fresh session binding rejects relative cwd and updated baseline sessions", () => {
+  const sentAt = "2026-09-17T03:00:01.000Z";
+  const fresh = {
+    conversation_id: "conversation-new",
+    sub_chat_id: "sub-chat-new",
+    session_id: "session-new",
+    local_project_id: "project-fixture-001",
+    cwd: WORKSPACE,
+    native_status: "running",
+    created_at_ms: Date.parse(sentAt),
+    updated_at_ms: Date.parse(sentAt),
+  };
+  assert.equal(selectQwenSessionForAttempt({
+    sessions: [{ ...fresh, cwd: "relative/workspace" }],
+    workspace: WORKSPACE,
+    nativeBinding: { local_project_id: "project-fixture-001" },
+    baseline: [],
+    sentAt,
+  }), null);
+  assert.equal(selectQwenSessionForAttempt({
+    sessions: [fresh],
+    workspace: WORKSPACE,
+    nativeBinding: { local_project_id: "project-fixture-001" },
+    baseline: [{ ...fresh, updated_at_ms: Date.parse(sentAt) - 1_000 }],
+    sentAt,
+  }), null);
+  assert.equal(selectQwenSessionForAttempt({
+    sessions: [fresh],
+    workspace: WORKSPACE,
+    nativeBinding: { local_project_id: "project-fixture-001" },
+    baseline: [],
+    sentAt,
+  }).session_id, "session-new");
 });
 
 test("CB-A session binding uses native session ID and leaves nonexistent thread/turn null", async () => {
@@ -96,17 +137,83 @@ test("CB-A state maps completed and ambiguous cancellation without fabricating p
     finishedAt: "2026-09-17T03:00:06Z",
     durationSeconds: 5,
   };
-  const completed = buildQwenGeneralExecutionState({ ...base, session: sessions[0] });
+  const trustedTerminal = {
+    observed_at: "2026-09-17T03:00:06Z",
+    source: "fixture-db+ui",
+    active_stream: false,
+    stop_confirmed: true,
+    binding_consistent: true,
+    conflicts: [],
+  };
+  const completed = buildQwenGeneralExecutionState({
+    ...base,
+    session: sessions[0],
+    terminalObservation: trustedTerminal,
+  });
   assert.equal(completed.phase, "COMPLETED");
   assert.equal(completed.execution.business_status, "completed");
   assert.equal(completed.session.thread_id, null);
   assert.equal(completed.session.turn_id, null);
-  const cancelled = buildQwenGeneralExecutionState({ ...base, session: sessions[1] });
+  const cancelledSession = { ...sessions[1], cwd: WORKSPACE };
+  const cancelled = buildQwenGeneralExecutionState({ ...base, session: cancelledSession });
   assert.equal(cancelled.phase, "NEEDS_ATTENTION");
   assert.equal(cancelled.execution.business_status, null);
-  const confirmed = buildQwenGeneralExecutionState({ ...base, session: sessions[1], cancellationConfirmed: true });
+  const confirmed = buildQwenGeneralExecutionState({
+    ...base,
+    session: cancelledSession,
+    cancellationConfirmed: true,
+    terminalObservation: trustedTerminal,
+  });
   assert.equal(confirmed.phase, "FAILED");
   assert.equal(confirmed.execution.business_status, "cancelled");
+});
+
+test("terminal states require stop, stream, cwd, and binding agreement", async () => {
+  const sessions = await json("sessions-redacted.json");
+  const base = {
+    identity: { batch_id: "batch", unit_id: "qwenwork-macos", task_id: "task", attempt_id: "attempt" },
+    dataset: { id: "dataset", digest: "d".repeat(64) },
+    taskRoot: "/private/tmp/qwenwork-general-fixture",
+    candidateWorkspace: WORKSPACE,
+    prompt: { path: "/private/tmp/qwenwork-general-fixture/prompt.md", sha256: "e".repeat(64), send_status: "sent", sent_at: "2026-09-17T03:00:01Z" },
+    dispatchAttemptCount: 1,
+    bindingEvidence: [{ path: "evidence/binding.json", sha256: "a".repeat(64), size: 10 }],
+    startedAt: "2026-09-17T03:00:01Z",
+    finishedAt: "2026-09-17T03:00:06Z",
+    durationSeconds: 5,
+  };
+  const unconfirmed = buildQwenGeneralExecutionState({
+    ...base,
+    session: sessions[0],
+    terminalObservation: { active_stream: false, stop_confirmed: false, binding_consistent: true, conflicts: [] },
+  });
+  assert.equal(unconfirmed.phase, "NEEDS_ATTENTION");
+  const conflict = buildQwenGeneralExecutionState({
+    ...base,
+    session: sessions[0],
+    terminalObservation: { active_stream: true, stop_confirmed: true, binding_consistent: true, conflicts: [] },
+  });
+  assert.equal(conflict.phase, "NEEDS_ATTENTION");
+  assert.ok(conflict.extensions.qwenwork.terminal_observation.conflicts.includes("active-stream-observation-mismatch"));
+  const failedWithoutStop = buildQwenGeneralExecutionState({
+    ...base,
+    session: { ...sessions[0], native_status: "failed" },
+    terminalObservation: { active_stream: false, stop_confirmed: false, binding_consistent: true, conflicts: [] },
+  });
+  assert.equal(failedWithoutStop.phase, "NEEDS_ATTENTION");
+  const interruptedWithoutStop = buildQwenGeneralExecutionState({
+    ...base,
+    session: { ...sessions[0], native_status: "interrupted" },
+    terminalObservation: { active_stream: false, stop_confirmed: false, binding_consistent: true, conflicts: [] },
+  });
+  assert.equal(interruptedWithoutStop.phase, "NEEDS_ATTENTION");
+  const timeoutWithoutStop = buildQwenGeneralExecutionState({
+    ...base,
+    session: sessions[0],
+    timeoutReached: true,
+    terminalObservation: { active_stream: false, stop_confirmed: false, binding_consistent: true, conflicts: [] },
+  });
+  assert.equal(timeoutWithoutStop.phase, "NEEDS_ATTENTION");
 });
 
 test("read-only probe report keeps current 1.0.6 profile unverified and declares no UI mutation", async () => {

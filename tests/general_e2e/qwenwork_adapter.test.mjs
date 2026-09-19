@@ -179,3 +179,52 @@ test("private adapter evidence keeps native IDs without inventing thread or turn
   assert.equal("thread_id" in evidence.native_identity, false);
   assert.ok(evidence.limitations.includes("not-a-public-trace-index"));
 });
+
+test("tool completion is not success and conflicting decisive outcomes stay explicit", () => {
+  const transcriptRows = [
+    {
+      uuid: "assistant-tool",
+      type: "assistant",
+      timestamp: "2026-09-17T03:00:01Z",
+      sessionId: "session-fixture-001",
+      cwd: WORKSPACE,
+      version: "1.1.32",
+      message: { content: [{ type: "tool_use", id: "tool-complete", name: "shell", input: {} }] },
+    },
+    {
+      uuid: "user-tool",
+      type: "user",
+      timestamp: "2026-09-17T03:00:02Z",
+      sessionId: "session-fixture-001",
+      cwd: WORKSPACE,
+      version: "1.1.32",
+      message: { content: [{ type: "tool_result", tool_use_id: "tool-complete", content: "done" }] },
+    },
+  ];
+  const completedOnly = normalizeQwenTranscript({
+    identity: IDENTITY,
+    transcriptRows,
+    segmentRows: [{ type: "tool.execution.finished", tool_call_id: "tool-complete", data: { status: "completed" } }],
+    sessionId: "session-fixture-001",
+    workspace: WORKSPACE,
+  });
+  const completedResult = completedOnly.events.find((event) => event.type === "tool_result");
+  assert.equal(completedResult.tool.status, "unknown");
+  assert.equal(completedResult.tool.outcome_conflict, false);
+
+  const conflicting = normalizeQwenTranscript({
+    identity: IDENTITY,
+    transcriptRows,
+    segmentRows: [
+      { type: "tool.shell.finished", tool_call_id: "tool-complete", data: { exit_code: 1, aborted: false } },
+      { type: "tool.execution.finished", tool_call_id: "tool-complete", data: { status: "success" } },
+    ],
+    sessionId: "session-fixture-001",
+    workspace: WORKSPACE,
+  });
+  const conflictResult = conflicting.events.find((event) => event.type === "tool_result");
+  assert.equal(conflictResult.tool.status, "unknown");
+  assert.equal(conflictResult.tool.native_outcome, "conflict");
+  assert.equal(conflictResult.tool.outcome_conflict, true);
+  assert.equal(conflictResult.tool.native_outcomes.length, 2);
+});

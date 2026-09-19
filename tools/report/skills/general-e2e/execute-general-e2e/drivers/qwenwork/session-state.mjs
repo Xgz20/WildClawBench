@@ -1,10 +1,10 @@
 import { access, copyFile, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { basename, join, resolve } from "node:path";
+import { basename, isAbsolute, join, resolve } from "node:path";
 
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 
-export const QWENWORK_GENERAL_DRIVER_VERSION = "0.1.0";
+export const QWENWORK_GENERAL_DRIVER_VERSION = "0.2.0";
 export const QWENWORK_SESSION_QUERY = String.raw`
 SELECT
   chats.id AS conversation_id,
@@ -34,6 +34,17 @@ LEFT JOIN local_projects ON local_projects.id = chats.local_project_id
 LEFT JOIN projects ON projects.id = chats.project_id
 WHERE chats.deleted_at IS NULL
 ORDER BY sub_chats.updated_at DESC, sub_chats.id ASC;
+`;
+export const QWENWORK_PROJECT_QUERY = String.raw`
+SELECT
+  id AS project_id,
+  name AS project_name,
+  json_extract(root_paths, '$[0]') AS cwd,
+  CASE WHEN updated_at < 100000000000
+    THEN updated_at * 1000 ELSE updated_at END AS updated_at_ms
+FROM local_projects
+WHERE deleted_at IS NULL
+ORDER BY updated_at DESC, id ASC;
 `;
 
 export function defaultQwenWorkSessionDatabase(home = process.env.HOME) {
@@ -68,12 +79,13 @@ export function classifyQwenSessionStatus(rawStatus, streamId = null) {
 }
 
 function normalizeSession(row) {
+  const rawCwd = typeof row?.cwd === "string" ? row.cwd.trim() : "";
   const session = {
     conversation_id: row?.conversation_id || null,
     sub_chat_id: row?.sub_chat_id || null,
     session_id: row?.session_id || null,
     local_project_id: row?.local_project_id || null,
-    cwd: row?.cwd ? resolve(String(row.cwd)) : null,
+    cwd: rawCwd && isAbsolute(rawCwd) ? resolve(rawCwd) : null,
     native_status: row?.native_status || null,
     stream_id: row?.stream_id || null,
     model_level: row?.model_level || null,
@@ -113,12 +125,16 @@ export function selectQwenSessionForAttempt({
     Number(entry.updated_at_ms || 0),
   ]).filter(([key]) => key));
   const sentAtMs = sentAt ? Date.parse(sentAt) : 0;
+  if (!Number.isFinite(sentAtMs) || sentAtMs <= 0) return null;
   const candidates = normalized.filter((session) => {
     if (session.local_project_id !== nativeBinding.local_project_id) return false;
     const key = snapshotKey(session);
     const previous = key ? baselineMap.get(key) : null;
-    if (previous != null) return Number(session.updated_at_ms || 0) > previous;
-    return Number(session.updated_at_ms || session.created_at_ms || 0) >= Math.floor(sentAtMs / 1000) * 1000;
+    // Updating an old conversation after dispatch is not proof that it belongs
+    // to this attempt. Fresh binding accepts only a stable native identity that
+    // was absent from the complete pre-send baseline.
+    if (previous != null) return false;
+    return Number(session.created_at_ms || 0) >= Math.floor(sentAtMs / 1000) * 1000;
   });
   if (candidates.length > 1) throw new Error("QWENWORK_NEW_SESSION_AMBIGUOUS");
   return candidates[0] || null;
@@ -182,9 +198,9 @@ async function defaultSqliteQuery(database, sql) {
   return result.stdout.trim() ? JSON.parse(result.stdout) : [];
 }
 
-export async function inspectQwenSessionDatabase(sessionDb, overrides = {}) {
+async function querySnapshot(sessionDb, query, overrides = {}) {
   await access(sessionDb);
-  const query = overrides.query || defaultSqliteQuery;
+  const runQuery = overrides.query || defaultSqliteQuery;
   const makeTemp = overrides.mkdtemp || mkdtemp;
   const remove = overrides.rm || rm;
   let lastError = null;
@@ -195,16 +211,10 @@ export async function inspectQwenSessionDatabase(sessionDb, overrides = {}) {
       await copyFile(sessionDb, snapshotDb);
       await copyIfPresent(`${sessionDb}-wal`, `${snapshotDb}-wal`);
       await copyIfPresent(`${sessionDb}-shm`, `${snapshotDb}-shm`);
-      const quickCheck = await query(snapshotDb, "PRAGMA quick_check;");
+      const quickCheck = await runQuery(snapshotDb, "PRAGMA quick_check;");
       const result = String(quickCheck[0]?.quick_check || quickCheck[0]?.integrity_check || "").trim();
       if (result !== "ok") throw new Error(`QWENWORK_DB_QUICK_CHECK_FAILED: ${result || "empty"}`);
-      const rows = await query(snapshotDb, QWENWORK_SESSION_QUERY);
-      return {
-        readable: true,
-        quick_check: "ok",
-        sqlite_backend: overrides.sqliteBackend || "sqlite3-readonly-snapshot",
-        ...summarizeQwenSessions(rows),
-      };
+      return await runQuery(snapshotDb, query);
     } catch (error) {
       lastError = error;
     } finally {
@@ -212,4 +222,32 @@ export async function inspectQwenSessionDatabase(sessionDb, overrides = {}) {
     }
   }
   throw new Error(`QWENWORK_DB_SNAPSHOT_FAILED: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
+}
+
+export async function queryQwenSessionRows(sessionDb, overrides = {}) {
+  const rows = await querySnapshot(sessionDb, QWENWORK_SESSION_QUERY, overrides);
+  return rows.map(normalizeSession);
+}
+
+export async function queryQwenProjectRows(sessionDb, overrides = {}) {
+  const rows = await querySnapshot(sessionDb, QWENWORK_PROJECT_QUERY, overrides);
+  return rows.map((row) => {
+    const rawCwd = typeof row?.cwd === "string" ? row.cwd.trim() : "";
+    return {
+      project_id: row?.project_id || null,
+      project_name: row?.project_name || null,
+      cwd: rawCwd && isAbsolute(rawCwd) ? resolve(rawCwd) : null,
+      updated_at_ms: Number.isFinite(Number(row?.updated_at_ms)) ? Number(row.updated_at_ms) : null,
+    };
+  });
+}
+
+export async function inspectQwenSessionDatabase(sessionDb, overrides = {}) {
+  const rows = await querySnapshot(sessionDb, QWENWORK_SESSION_QUERY, overrides);
+  return {
+    readable: true,
+    quick_check: "ok",
+    sqlite_backend: overrides.sqliteBackend || "sqlite3-readonly-snapshot",
+    ...summarizeQwenSessions(rows),
+  };
 }
