@@ -1,6 +1,6 @@
 # 控制推进记录
 
-维护者：COMMON。更新：2026-09-19 19:07 +08:00。这是控制任务的调度/审查快照，不替代任务卡和技术验收，也不是跨进程桌面锁。
+维护者：COMMON。更新：2026-09-19 19:30 +08:00。这是控制任务的调度/审查快照，不替代任务卡和技术验收，也不是跨进程桌面锁。
 
 ## 第二轮目标
 
@@ -9,11 +9,11 @@
 | 任务 | 已收到的交付 HEAD | 控制任务已安排的下一项 |
 | --- | --- | --- |
 | MAC-WORKBUDDY-GENERAL | `975f21aaf5b356ea2632acca55cf6b7d8cd0439a` | 修复取消/中断和冲突终态映射、原生来源路径和工具成功语义，再完成 P2 journal/执行/恢复入口与离线测试 |
-| MAC-QWENWORK-GENERAL | `dac06696142969195c2af93f7442cd39d5a279fb` | 修复终态/stream冲突、绝对cwd和发送基线选择、工具完成≠成功，再完成 P2 Driver/恢复与离线测试 |
+| MAC-QWENWORK-GENERAL | P2 实现 `0b732fb432674eb2c1fd388018b1e66ede790066`，交接 `2a5c3af` | 25 Node + 3 Python 离线通过；继续修复 stale owner-lock 双接管竞争、装配独立依赖，采用 CB-B 后接正式 collector |
 | MAC-DOUBAOWORK-WEB | `c098a2e386baec6b04ed4af615349bea974f0746` | 修复工具ID作用域/重复统计、损坏轨迹行和来源路径/不可覆盖输出；使用真实 prepare 输入做单题开发采样 |
-| COMMON-CB05 | 已批准接口方案，实现中 | trace-index v2、多raw/binding来源、共用finalizer与旧Astron薄wrapper、可信cleanup hook和脱仓验证 |
+| COMMON-CB05 | `eb23784a7ed25b0f0364db0392783de277b22b96` | 第一批通用机制完成，General 94 + Web 61 组合回归通过；COMMON-002 派发平台接入 |
 
-本轮公共发现源码 `de8b23de3bbffada05e115f365cc70747f490efa` 增加 DoubaoWork macOS 原生应用 Profile，discovery 组件拟 1.2.0；13 项 discovery 测试及实际安装只读检查通过。组件 catalog/绑定版本由 CB-B 负责人统一装配，组合校验前不作为新公开基线。
+本轮推荐源码 `eb23784` 包含 Doubao macOS 原生 discovery 1.2.0、general-contracts 1.2.0 与通用收口。155 项组合测试通过；[COMMON-002](handoffs/COMMON-002.md) 列明全部 Skill 版本和平台动作。三个平台专属代码仍待审查集成，不属于本公共源码的新平台支持声明。
 
 ## 桌面时段
 
@@ -32,6 +32,7 @@
 - DoubaoWork 首轮统计声称唯一 call_id 但按行计数且未隔离 agent；已要求作用域/冲突反例。原生终态、cwd 和清理依然是当前重点采样缺口。
 - prepare 已有 DoubaoWork Harness 名称与通用 slug 支持，不再把准备入口误记为必然缺失；execute/run/metrics 的实际接入分别核验。
 - 新 trace-index v2 保留 v1，原生缺少 thread/turn/lifecycle 时显式 null。新通用收口没有可信、受支持的 cleanup hook 就拒绝正式冻结；旧 Astron 行为需通过兼容回归。
-- general-contracts 拟 1.2.0、collect-general-e2e 拟 0.5.0，版本/发行以最终集成交接为准。未发布版本不能被平台借用作生产证据。
+- general-contracts 1.2.0、collect-general-e2e 0.5.0；其他受影响版本见 COMMON-002。尚未新建生产发行。
+- 三任务实际执行入口必须持有 owner lock，覆盖 journal/UI/send/绑定。除了空锁双 worker，还需 stale 锁双接管反例：不允许后一个回收者移走新建活锁。Qwen 交付存在此竞态，已退回修复；其他两任务同步自查。
 
-Windows 继续消费 COMMON-001；本轮尚无新的已发布公共接口，不因另一个平台分支的未提交代码改变其工作基线。下一次公共提交完成后另发 COMMON-002，列明必须回归的范围。
+Windows 从 COMMON-001/002 和最新 baseline 接续；完成约定基线检查后推进本机 G5-01。未收到 Windows 本机接收与真机记录，不代填通过。

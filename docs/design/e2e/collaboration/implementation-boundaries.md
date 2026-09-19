@@ -9,14 +9,14 @@
 | CB-A：开发接口 | adapter 组件绑定校验、通用 execution-state Schema、旧 AstronStudio 状态兼容、run 状态接收与真实身份/证据校验 | 平台 probe、一次发送/恢复、原生日志解析、规范化输出与 fixtures；使用通过校验的状态登记 execute 阶段 | 不因新状态被接收就宣称正式 collect、评分或完整 E2E 已通过 |
 | CB-B：正式收口 | 公共 finalizer、原始 trace 多 artifact、原生会话身份映射、可信资源来源集合、平台进程清理 hook、发行闭包 | 对接正式 collect receipt，随后验证完整评分/回传/报告 | 未验收的 OS/架构/版本和恢复能力不继承其他平台结论 |
 
-CB-A 代码通过后即可发布首轮开发基线。CB-B 由 COMMON 持续推进，平台不能各自复制整套 AstronStudio finalizer 或降低校验绕过依赖。首次需要正式收口时提交真实/脱敏样本、缺少的接口与预期行为；COMMON 合入后发布下一份交接。额外五项指标的统一扩展另属 COMMON-CM01，不阻塞现有 11 项资源指标、原始数据和适配开发。
+CB-A 已随 COMMON-001 发布，CB-B 第一批通用机制随 [COMMON-002](handoffs/COMMON-002.md) 发布。平台按正式接口实现原生 collector 和可信 cleanup hook，不能复制整套 AstronStudio finalizer 或降低校验绕过依赖。未能表达的真实样本和接口缺项交 COMMON 处理。额外五项指标的统一扩展另属 COMMON-CM01，不阻塞现有 11 项资源指标、原始数据和适配开发。
 
 原生字段调研可从 [Web/General 指标盘点与 Harness 可行性分析](../../general-e2e/Web与通用E2E指标盘点及Harness可行性分析.md)开始；该文附历史来源哈希，平台任务仍需核对本机实际版本和数据，不能继承历史样本的覆盖状态。
 
 当前必须明确的边界：
 
 - 新 Harness 不伪造 AstronStudio 的 thread/turn/session/lifecycle 字段；缺少的原生 ID 明确为空，另用可回溯且哈希绑定的原始证据证明会话与完整 Workspace 的对应。
-- 现有 trace-index 的可选 `session` 对象有 AstronStudio 字段要求；在公共映射扩展前，不把缺失原生字段填成 task ID 或任意 UUID。保留原始证据与规范化 transcript，明确正式 trace-index/collect 尚待 CB-B。
+- 旧 trace-index v1 保留 AstronStudio 兼容边界；新 General 使用 trace-index v2，缺失原生字段可为 null，多个 raw/binding 文件必须有哈希与身份对账。正式 collect 仍需平台真实采集、停止与清理验收。
 - 原生轨迹和 usage 解析留在各 Harness adapter；公共层只负责已约定的输出校验、可信来源、冻结与交接，不把 AstronStudio SQL/事件名变成通用 API。
 - 新增积分、工具结局和任务异常的原始字段可保存为 adapter 证据；严格 resource-metrics v1 仍按现有 Schema 输出，缺失用 null/coverage，不私增公共指标字段。
 - 发行代码只 import 本 Skill 内实现及声明的 vendor 组件，不能依赖另一 Skill 或仓库中的 `eval_general_e2e` 路径恰好存在；构建器负责装配。

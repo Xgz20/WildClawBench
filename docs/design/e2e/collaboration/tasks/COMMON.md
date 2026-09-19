@@ -3,13 +3,13 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 唯一负责人 | 本 macOS 控制任务；ID `01a0b79a-09d7-7271-810a-7796036b8f35` |
-| 工作状态 / 代码交付 | ACTIVE / INTEGRATED；契约与 CB-A 已集成并发布，CB-B 和新增指标待实施 |
+| 工作状态 / 代码交付 | ACTIVE / INTEGRATED；契约、CB-A 与 CB-B 第一批通用机制已集成，平台正式采集接入与新增指标继续推进 |
 | 分支 / worktree | 文档：`feat/e2e-harness-contract` / `<主项目>/.agents/e2e-harness-contract`；CB-A：`feat/e2e-common-adapters` / `<主项目>/.agents/e2e-common-adapters` |
 | 创建 base | `457e35560ea5cd090db1ce8b68c747de95ae3622` |
-| 已采用本轮公共基线 / 实现与集成 SHA | 推荐源码 `ed366b30bc5ddd2ae35ef6361c3ac7c72ce9963a`；CB-A 实现 `abce5da832f16b48cd402ceef04a6abda544a379`，原提交保留 |
+| 已采用本轮公共基线 / 实现与集成 SHA | 推荐源码 `eb23784a7ed25b0f0364db0392783de277b22b96`；CB-A / CB-B 原提交保留，见 COMMON-001/002 |
 | 已读台账的 SYNC_SHA / 实际工作 HEAD | 初始 fetch `3cf2cc02c0c96ac05b3252262a78afc7a379a691`；推荐源码已 push/ls-remote 核验。后续台账提交和实际 HEAD 以 Git 历史为准，避免自指 SHA |
 | 同步来源 | `github/feature/astroncode-eval`，已在本轮 fetch 核验 |
-| 最后更新 | 2026-09-19（Asia/Shanghai），首次开发基线发布 |
+| 最后更新 | 2026-09-19（Asia/Shanghai），CB-B 开发基线发布 |
 
 ## 范围与修改归属
 
@@ -24,13 +24,13 @@
 - [x] **COMMON-CB02**：CB-A 集成于 `ed366b3`；run 0.4.0 / general-contracts 1.1.0；旧 AstronStudio macOS 兼容，新平台通用状态。trace/resource wire 不变，缺失策略保留。
 - [x] **COMMON-CB03**：按实施边界确定公共文件负责人；集成源码 55 项测试通过，含 ZIP 脱仓；核对 GitHub fetch/push URL 和远端源码 SHA。
 - [x] **COMMON-CB04**：推荐源码已发布，实际 SHA 及接收动作见 [COMMON-001](../handoffs/COMMON-001.md)；台账随后续提交同步。三个 Mac 任务已创建并核验绑定；Windows 接收方未代填通过。
-- [ ] **COMMON-CB05**：CB-B 公共正式收口、原生身份映射、多源 trace/provenance 和平台进程清理 hook；新 General adapter 的正式 collect 依赖此项，probe/执行与 fixtures 可先推进。
+- [x] **COMMON-CB05**：CB-B 第一批通用机制提交 `eb23784`，trace v2 / 多来源 / 共用 finalizer / cleanup hook 校验与脱仓执行完成；本轮 General 94 + Web 61 通过。平台真实原生采集和 cleanup 实现及正式闭环尚待各任务验收。
 - [ ] **COMMON-CM01**：公共五项新增指标聚合/报告与 AstronStudio 参考映射，含 fixtures 和实际来源对账；不阻塞依赖已明确的客户端适配。
 - [ ] **COMMON-IN01**：接收平台改动、合入并派发受影响回归；每一批新增交接 ID，不能以本项勾选替代所有后续轮次。
 
 ## 下一项与依赖
 
-COMMON-001 已交付三个 Mac 任务，首轮实现/证据与公共需求已收到。本轮审查修复、P2推进和桌面时段见[控制推进记录](../control-progress.md)。COMMON-CB05 正在独立公共 worktree 实现，未发布的新接口不作为已采用基线。Windows 仍按 COMMON-001 自行开始本机任务并回写接收结果。
+COMMON-001 已交付三个 Mac 任务，首轮实现/证据与公共需求已收到。本轮审查修复、P2推进和桌面时段见[控制推进记录](../control-progress.md)。CB-B 第一批通用机制已完成，[COMMON-002](../handoffs/COMMON-002.md) 明确新版本、155 项测试和平台接入动作。三个 Mac 任务更新组件绑定；Windows 接收 COMMON-001/002 后直接推进本机 G5-01，无需等待 Mac 新 Harness 完成。
 
 随后推进 COMMON-CM01 的指标聚合与 AstronStudio 原始来源对账。客户端适配无需等全部指标完成；正式 General collect 依赖 CB-B，不复制现有 finalizer。
 
@@ -49,4 +49,4 @@ COMMON-001 已交付三个 Mac 任务，首轮实现/证据与公共需求已收
 
 ## 本轮交付
 
-契约与 CB-A 已发布为推荐源码 `ed366b3`，55 项集成测试通过。首条跨平台交接 COMMON-001 明确源码/版本、平台动作、CB-B 依赖和证据边界；真实 Mac 任务 ID/worktree 单列派发记录，Windows 启动 Prompt 与清单随代码可取。文档结构检查与 fixture/脱仓测试不作为新平台真机证据。
+推荐源码更新为 `eb23784`，本轮 155 项测试通过。COMMON-002 交接 trace v2、通用收口和受影响版本；平台 adapter 尚未合入，不冒充完整新 Harness 支持。Qwen P2 已收到，WorkBuddy/Doubao 继续修复与验证；跨进程旧锁接管反例仍需审查。Windows 启动包已增加本轮必读入口。
