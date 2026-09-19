@@ -22,7 +22,7 @@
 - [x] **COMMON-DOC01**：契约、Windows 启动包和跨平台台账提交为 `9f9389e`；已在文档分支合入最新主项目，尚待公共发布。
 - [x] **COMMON-CB01**：核对最终 smoke 提交 `86786e2`，来源任务已完成；collect/submission 和正式包 15 项哈希一致。未知交互/timeout、全量及 Windows 等边界沿用原记录，未提升支持声明。
 - [ ] **COMMON-CB02**：契约与最小公共接口集成，明确 adapter/状态/指标字段版本、兼容和缺失值策略；未实现项如实列出。
-- [ ] **COMMON-CB03**：确定公共文件负责人，完成必要回归；核对两机同步仓库与集成分支。
+- [ ] **COMMON-CB03**：确定公共文件负责人，完成必要回归，核对发布源与集成分支；Windows 接收端核验列入首条交接，不预填已验证。
 - [ ] **COMMON-CB04**：在既有授权内发布可消费基线及交接，登记真实 SHA；此项是四个新平台任务进入适配实施的共同前提。
 - [ ] **COMMON-CB05**：CB-B 公共正式收口、原生身份映射、多源 trace/provenance 和平台进程清理 hook；新 General adapter 的正式 collect 依赖此项，probe/执行与 fixtures 可先推进。
 - [ ] **COMMON-CM01**：公共五项新增指标聚合/报告与 AstronStudio 参考映射，含 fixtures 和实际来源对账；不阻塞依赖已明确的客户端适配。
