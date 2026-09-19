@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, realpath, rm, symlink, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { hostname, tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
@@ -438,6 +438,53 @@ test("attempt lock keeps two concurrent workers to at most one dispatch", async 
     const result = await first;
     assert.equal(result.execution_state.phase, "COMPLETED");
     assert.equal(dispatches, 1);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("two workers refuse the same stale lock instead of racing to replace a new owner", async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "qwen-general-stale-lock-")));
+  try {
+    const config = makeConfig({
+      state_file: join(root, "automation-state.json"),
+      evidence_root: join(root, "evidence"),
+    });
+    const lockPath = `${config.state_file}.lock`;
+    const staleOwner = {
+      schema_version: "wildclawbench.general-e2e-qwenwork-attempt-lock/v1",
+      owner_id: "stale-owner-fixture",
+      attempt_id: config.identity.attempt_id,
+      host: hostname(),
+      pid: 99_999_999,
+      process_start_identity: "stale-process-fixture",
+      acquired_at: "2026-09-19T09:00:00.000Z",
+      driver_version: "0.1.0",
+      state_file: config.state_file,
+    };
+    await writeFile(lockPath, `${JSON.stringify(staleOwner, null, 2)}\n`, "utf8");
+    let dispatches = 0;
+    const dependencies = {
+      prepareUi: async () => ({ project: project(), configuration: configuration() }),
+      verifyPreparedUi: async () => ({ project: project(), configuration: configuration(), prompt_sha256: PROMPT_SHA }),
+      fillPrompt: async () => {},
+      dispatchPrompt: async () => { dispatches += 1; },
+      querySessions: async () => [],
+      verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA }),
+      observeUi: async () => ({ active_stream: false, stop_confirmed: true, conflicts: [] }),
+      writeBindingEvidence: async () => [],
+    };
+    const results = await Promise.allSettled([
+      runQwenGeneralAttempt(config, dependencies),
+      runQwenGeneralAttempt(config, dependencies),
+    ]);
+    assert.equal(results.filter((result) => result.status === "rejected").length, 2);
+    assert.ok(results.every((result) => (
+      result.status === "rejected"
+      && /LOCK_STALE_REQUIRES_CONTROLLED_RECOVERY/u.test(String(result.reason?.message))
+    )));
+    assert.equal(dispatches, 0);
+    assert.equal(JSON.parse(await readFile(lockPath, "utf8")).owner_id, staleOwner.owner_id);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

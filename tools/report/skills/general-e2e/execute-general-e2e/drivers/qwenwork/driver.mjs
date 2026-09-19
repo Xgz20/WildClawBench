@@ -343,9 +343,7 @@ async function acquireQwenAttemptLock(config, overrides = {}) {
     if (!status.stale || status.active || !status.verifiable) {
       throw new Error(`QWENWORK_ATTEMPT_LOCK_ACTIVE: ${status.reason}`);
     }
-    const stalePath = `${lockPath}.stale-${Date.now()}-${randomUUID()}`;
-    await rename(lockPath, stalePath);
-    await create();
+    throw new Error(`QWENWORK_ATTEMPT_LOCK_STALE_REQUIRES_CONTROLLED_RECOVERY: ${status.reason}`);
   }
   return {
     path: lockPath,
