@@ -118,10 +118,12 @@ export function createQwenAttemptJournal({
       prompt_evidence: null,
     },
     attention: null,
+    execution_state: null,
     recovery: {
       resume_count: 0,
       last_decision: "prepare",
       last_resumed_at: null,
+      last_readonly_probe: null,
     },
     created_at: createdAt,
     updated_at: createdAt,
@@ -245,11 +247,29 @@ export function markQwenNeedsAttention(state, { code, message, now }) {
   return state;
 }
 
+export function recordQwenRecoveryProbe(state, probe, now) {
+  if (probe?.verified !== true || !probe?.sha256 || !probe?.path || !probe?.probed_at) {
+    throw new Error("QWENWORK_RECOVERY_PROBE_INVALID");
+  }
+  state.recovery.last_readonly_probe = {
+    path: resolve(probe.path),
+    sha256: probe.sha256,
+    probed_at: probe.probed_at,
+    active_or_pending_count: Number.isInteger(probe.active_or_pending_count)
+      ? probe.active_or_pending_count
+      : null,
+  };
+  state.updated_at = now;
+  appendEvent(state, "RECOVERY_PROBE_VERIFIED", now, state.recovery.last_readonly_probe);
+  return state;
+}
+
 export function applyQwenExecutionProjection(state, executionState, now) {
   if (executionState?.identity?.attempt_id !== state.identity.attempt_id) {
     throw new Error("QWENWORK_PROJECTION_ATTEMPT_MISMATCH");
   }
   state.phase = executionState.phase;
+  state.execution_state = structuredClone(executionState);
   state.updated_at = now;
   if (executionState.phase === "NEEDS_ATTENTION") {
     state.attention ||= {
@@ -282,12 +302,24 @@ export function assertQwenJournalMatches(state, expected) {
     throw new Error("QWENWORK_JOURNAL_PROMPT_MISMATCH");
   }
   if (state.send.dispatch_attempt_count > 1) throw new Error("QWENWORK_DUPLICATE_DISPATCH_DETECTED");
+  if (state.execution_state != null) {
+    if (state.execution_state?.identity?.attempt_id !== state.identity.attempt_id) {
+      throw new Error("QWENWORK_JOURNAL_EXECUTION_ATTEMPT_MISMATCH");
+    }
+    if (state.execution_state.phase !== state.phase) {
+      throw new Error("QWENWORK_JOURNAL_EXECUTION_PHASE_MISMATCH");
+    }
+    if (state.execution_state.send?.dispatch_attempt_count !== state.send.dispatch_attempt_count) {
+      throw new Error("QWENWORK_JOURNAL_EXECUTION_DISPATCH_MISMATCH");
+    }
+  }
   return state;
 }
 
 export function planQwenRecovery(state, now) {
   let action;
-  if (TERMINAL_PHASES.has(state.phase)) action = "return-terminal";
+  if (TERMINAL_PHASES.has(state.phase) && state.execution_state) action = "return-terminal";
+  else if (TERMINAL_PHASES.has(state.phase) && state.session?.verified) action = "observe-bound-session";
   else if (state.session?.verified && state.prompt?.send_status === "sent") action = "observe-bound-session";
   else if (
     state.send?.dispatch_attempt_count === 1

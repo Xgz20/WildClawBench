@@ -9,6 +9,7 @@ export const QWENWORK_SESSION_QUERY = String.raw`
 SELECT
   chats.id AS conversation_id,
   sub_chats.id AS sub_chat_id,
+  sub_chats.name AS sub_chat_name,
   sub_chats.session_id AS session_id,
   chats.local_project_id AS local_project_id,
   COALESCE(
@@ -83,6 +84,7 @@ function normalizeSession(row) {
   const session = {
     conversation_id: row?.conversation_id || null,
     sub_chat_id: row?.sub_chat_id || null,
+    sub_chat_name: row?.sub_chat_name || null,
     session_id: row?.session_id || null,
     local_project_id: row?.local_project_id || null,
     cwd: rawCwd && isAbsolute(rawCwd) ? resolve(rawCwd) : null,

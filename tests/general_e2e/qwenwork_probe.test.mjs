@@ -140,6 +140,7 @@ test("CB-A state maps completed and ambiguous cancellation without fabricating p
   const trustedTerminal = {
     observed_at: "2026-09-17T03:00:06Z",
     source: "fixture-db+ui",
+    target_session_verified: true,
     active_stream: false,
     stop_confirmed: true,
     binding_consistent: true,
@@ -182,6 +183,19 @@ test("terminal states require stop, stream, cwd, and binding agreement", async (
     finishedAt: "2026-09-17T03:00:06Z",
     durationSeconds: 5,
   };
+  const blankPage = buildQwenGeneralExecutionState({
+    ...base,
+    session: sessions[0],
+    terminalObservation: {
+      active_stream: null,
+      stop_confirmed: false,
+      target_session_verified: false,
+      binding_consistent: true,
+      conflicts: [],
+    },
+  });
+  assert.equal(blankPage.phase, "NEEDS_ATTENTION");
+  assert.ok(blankPage.extensions.qwenwork.terminal_observation.conflicts.includes("ui-target-session-unverified"));
   const unconfirmed = buildQwenGeneralExecutionState({
     ...base,
     session: sessions[0],

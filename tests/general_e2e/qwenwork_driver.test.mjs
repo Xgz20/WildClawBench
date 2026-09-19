@@ -1,21 +1,26 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { hostname, tmpdir } from "node:os";
 import { join } from "node:path";
+import { promisify } from "node:util";
 import test from "node:test";
 
 import {
   QWENWORK_CANARY_CONFIG_SCHEMA,
   calculateQwenCanaryConfigDigest,
+  loadQwenCanaryConfig,
   runQwenGeneralAttempt,
   verifyQwenSessionPromptEvidence,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/driver.mjs";
 import {
+  applyQwenExecutionProjection,
   assertQwenJournalMatches,
   atomicWriteQwenJournal,
   confirmQwenDispatchBinding,
   createQwenAttemptJournal,
+  markQwenDispatchReturned,
   planQwenRecovery,
   recordQwenDispatchIntent,
   reserveQwenDispatch,
@@ -24,9 +29,16 @@ import {
 import {
   assertStableQwenUiConfiguration,
   confirmQwenWorkspaceProject,
+  inspectQwenTaskUi,
   readQwenUiConfiguration,
   requireUniqueVisible,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/ui.mjs";
+
+const execFileAsync = promisify(execFile);
+const SELECT_FOLDER = new URL(
+  "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/select-folder.swift",
+  import.meta.url,
+).pathname;
 
 const WORKSPACE = "/private/tmp/qwenwork-general-driver/workspace";
 const PROMPT_SHA = "e".repeat(64);
@@ -71,6 +83,15 @@ function makeConfig(overrides = {}) {
     ...overrides,
   };
   config.config_digest = calculateQwenCanaryConfigDigest(config);
+  if (config.resume) {
+    config.recovery_probe = {
+      verified: true,
+      path: "/private/tmp/qwenwork-general-driver/resume-probe.json",
+      sha256: "f".repeat(64),
+      probed_at: "2026-09-19T10:00:00.000Z",
+      active_or_pending_count: 1,
+    };
+  }
   return config;
 }
 
@@ -94,6 +115,7 @@ function session(id = "session-fixture") {
   return {
     conversation_id: `conversation-${id}`,
     sub_chat_id: `sub-chat-${id}`,
+    sub_chat_name: "Fixture Session",
     session_id: id,
     local_project_id: "project-fixture",
     cwd: WORKSPACE,
@@ -107,6 +129,20 @@ function session(id = "session-fixture") {
 function clock() {
   let tick = 0;
   return () => new Date(Date.parse("2026-09-19T10:00:00.000Z") + tick++ * 1_000).toISOString();
+}
+
+function probeAt(probedAt, activeOrPendingCount = 0) {
+  return {
+    schema_version: "wildclawbench.general-e2e-qwenwork-readonly-probe/v1",
+    probed_at: probedAt,
+    driver: { harness: "qwenwork", platform: "macos" },
+    app: { bundle_id: "cn.qwenwork.desktop.mac", identity_verified: true },
+    ready_for_read_only_mapping: true,
+    native_state: {
+      database: { quick_check: "ok", active_or_pending_count: activeOrPendingCount },
+    },
+    operations_performed: ["read-only-app-discovery", "read-only-native-state"],
+  };
 }
 
 function fakeLocator(elements) {
@@ -145,6 +181,39 @@ test("UI locators fail closed on duplicate controls and configuration drift", as
     () => assertStableQwenUiConfiguration(current, configuration("Qwen Fixture", "full-access")),
     /PERMISSION_DRIFT/u,
   );
+});
+
+test("terminal UI observation binds the visible chat and unique sub-chat before confirming stop", async () => {
+  const target = session();
+  const page = {
+    url: () => `file:///qwenwork/index.html?windowId=main&chat=${target.conversation_id}`,
+    title: async () => target.sub_chat_name,
+    locator: () => fakeLocator([]),
+  };
+  const exact = await inspectQwenTaskUi(page, "2026-09-19T10:00:30.000Z", target, [target]);
+  assert.equal(exact.target_session_verified, true);
+  assert.equal(exact.stop_confirmed, true);
+  assert.equal(exact.active_stream, false);
+  assert.equal(exact.ui_binding.session_id, target.session_id);
+
+  const wrongPage = {
+    ...page,
+    url: () => "file:///qwenwork/index.html?windowId=main",
+    title: async () => "",
+  };
+  const unbound = await inspectQwenTaskUi(wrongPage, "2026-09-19T10:00:31.000Z", target, [target]);
+  assert.equal(unbound.target_session_verified, false);
+  assert.equal(unbound.stop_confirmed, false);
+  assert.equal(unbound.active_stream, null);
+  assert.ok(unbound.conflicts.some((value) => value.startsWith("ui-conversation-mismatch:")));
+
+  const duplicateName = await inspectQwenTaskUi(page, "2026-09-19T10:00:32.000Z", target, [
+    target,
+    { ...session("session-other"), conversation_id: target.conversation_id },
+  ]);
+  assert.equal(duplicateName.target_session_verified, false);
+  assert.equal(duplicateName.stop_confirmed, false);
+  assert.ok(duplicateName.conflicts.includes("ui-sub-chat-identity-count:2"));
 });
 
 test("workspace confirmation uses the complete database root path", () => {
@@ -216,6 +285,124 @@ test("journal persists intent before a single uncertain dispatch reservation", (
   );
 });
 
+test("resume uses a distinct fresh read-only probe without changing the frozen config digest", async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "qwen-general-resume-probe-")));
+  try {
+    const workspace = join(root, "workspace");
+    const promptPath = join(root, "prompt.md");
+    const frozenProbePath = join(root, "probe-initial.json");
+    const resumeProbePath = join(root, "probe-resume.json");
+    const configPath = join(root, "config.json");
+    await mkdir(workspace);
+    const prompt = "fixture prompt";
+    await writeFile(promptPath, prompt, "utf8");
+    const oldTime = new Date(Date.now() - 60 * 60 * 1_000).toISOString();
+    const currentTime = new Date().toISOString();
+    const frozenProbe = `${JSON.stringify(probeAt(oldTime), null, 2)}\n`;
+    const resumeProbe = `${JSON.stringify(probeAt(currentTime, 1), null, 2)}\n`;
+    await writeFile(frozenProbePath, frozenProbe, "utf8");
+    await writeFile(resumeProbePath, resumeProbe, "utf8");
+
+    const config = makeConfig();
+    config.task_root = root;
+    config.candidate_workspace = workspace;
+    config.prompt = {
+      path: promptPath,
+      sha256: createHash("sha256").update(prompt).digest("hex"),
+    };
+    config.state_file = join(root, "automation-state.json");
+    config.evidence_root = join(root, "evidence");
+    config.client = {
+      ...config.client,
+      session_db: join(root, "agents.db"),
+      trace_root: join(root, "trace"),
+    };
+    config.control = {
+      ...config.control,
+      probe_path: frozenProbePath,
+      probe_sha256: createHash("sha256").update(frozenProbe).digest("hex"),
+    };
+    config.config_digest = calculateQwenCanaryConfigDigest(config);
+    const frozenDigest = config.config_digest;
+    await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
+
+    await assert.rejects(loadQwenCanaryConfig(configPath), /PROBE_STALE/u);
+    const loaded = await loadQwenCanaryConfig(configPath, {
+      resume: true,
+      resumeProbePath,
+      resumeProbeSha256: createHash("sha256").update(resumeProbe).digest("hex"),
+    });
+    assert.equal(loaded.config_digest, frozenDigest);
+    assert.equal(loaded.recovery_probe.verified, true);
+    assert.equal(loaded.recovery_probe.active_or_pending_count, 1);
+    assert.equal(calculateQwenCanaryConfigDigest(loaded), frozenDigest);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("terminal journal replay returns the persisted execution projection without observing or resending", async () => {
+  const config = makeConfig({ resume: true });
+  const state = createQwenAttemptJournal({
+    identity: config.identity,
+    dataset: config.dataset,
+    taskRoot: config.task_root,
+    candidateWorkspace: config.candidate_workspace,
+    prompt: config.prompt,
+    configDigest: config.config_digest,
+    now: "2026-09-19T10:00:00.000Z",
+  });
+  recordQwenDispatchIntent(state, {
+    project: project(),
+    configuration: configuration(),
+    baseline: [],
+    now: "2026-09-19T10:00:01.000Z",
+  });
+  reserveQwenDispatch(state, { now: "2026-09-19T10:00:02.000Z", reservationId: "reservation-fixture" });
+  markQwenDispatchReturned(state, { now: "2026-09-19T10:00:03.000Z", method: "fixture-click" });
+  confirmQwenDispatchBinding(state, {
+    session: session(),
+    promptEvidence: { verified: true, prompt_sha256: PROMPT_SHA },
+    now: "2026-09-19T10:00:04.000Z",
+  });
+  const projection = {
+    identity: config.identity,
+    phase: "COMPLETED",
+    send: { dispatch_attempt_count: 1 },
+    execution: { business_status: "completed" },
+  };
+  applyQwenExecutionProjection(state, projection, "2026-09-19T10:00:05.000Z");
+  let stored = structuredClone(state);
+  const forbidden = async () => { throw new Error("terminal replay must not perform live work"); };
+  const result = await runQwenGeneralAttempt(config, {
+    withAttemptLock: async (_config, operation) => operation(),
+    now: clock(),
+    readJournal: async () => structuredClone(stored),
+    writeJournal: async (_path, next) => { stored = structuredClone(next); },
+    prepareUi: forbidden,
+    verifyPreparedUi: forbidden,
+    fillPrompt: forbidden,
+    dispatchPrompt: forbidden,
+    querySessions: forbidden,
+    verifySessionPrompt: forbidden,
+    observeUi: forbidden,
+    writeBindingEvidence: forbidden,
+  });
+  assert.deepEqual(result.execution_state, projection);
+  assert.equal(result.journal.phase, "COMPLETED");
+  assert.equal(result.journal.recovery.last_readonly_probe.sha256, config.recovery_probe.sha256);
+});
+
+test("native folder picker rejects ambiguous and unrelated open-panel ownership", async () => {
+  const { stdout } = await execFileAsync("/usr/bin/swift", [SELECT_FOLDER, "--self-test-owner-binding"], {
+    maxBuffer: 1024 * 1024,
+  });
+  assert.deepEqual(JSON.parse(stdout.trim()), {
+    status: "PASS",
+    owner_binding: "qwen-outer-sheet-frame-overlap",
+  });
+});
+
 test("fresh driver dispatches once, binds the unique new session, and requires trusted stop evidence", async () => {
   const config = makeConfig();
   let stored = null;
@@ -235,6 +422,7 @@ test("fresh driver dispatches once, binds the unique new session, and requires t
     observeUi: async () => ({
       observed_at: now(),
       source: "fixture-db+ui",
+      target_session_verified: true,
       active_stream: false,
       stop_confirmed: true,
       conflicts: [],
@@ -330,7 +518,7 @@ test("same attempt can bind later without resend while a different attempt is re
     dispatchPrompt: async () => { dispatches += 1; },
     querySessions: async () => [session()],
     verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA, match_count: 1 }),
-    observeUi: async () => ({ observed_at: now(), source: "fixture", active_stream: false, stop_confirmed: true, conflicts: [] }),
+    observeUi: async () => ({ observed_at: now(), source: "fixture", target_session_verified: true, active_stream: false, stop_confirmed: true, conflicts: [] }),
     writeBindingEvidence: async () => [{ path: "evidence/binding.json", sha256: "b".repeat(64), size: 10 }],
   });
   assert.equal(result.execution_state.phase, "COMPLETED");
@@ -427,7 +615,7 @@ test("attempt lock keeps two concurrent workers to at most one dispatch", async 
       dispatchPrompt: async () => { dispatches += 1; return { method: "fixture-click" }; },
       querySessions: async () => stored?.send?.dispatch_attempt_count === 1 ? [session()] : [],
       verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA, match_count: 1 }),
-      observeUi: async () => ({ observed_at: now(), source: "fixture", active_stream: false, stop_confirmed: true, conflicts: [] }),
+      observeUi: async () => ({ observed_at: now(), source: "fixture", target_session_verified: true, active_stream: false, stop_confirmed: true, conflicts: [] }),
       writeBindingEvidence: async () => [{ path: "evidence/binding.json", sha256: "b".repeat(64), size: 10 }],
     };
     const first = runQwenGeneralAttempt(config, dependencies);
@@ -471,7 +659,7 @@ test("two workers refuse the same stale lock instead of racing to replace a new 
       dispatchPrompt: async () => { dispatches += 1; },
       querySessions: async () => [],
       verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA }),
-      observeUi: async () => ({ active_stream: false, stop_confirmed: true, conflicts: [] }),
+      observeUi: async () => ({ target_session_verified: true, active_stream: false, stop_confirmed: true, conflicts: [] }),
       writeBindingEvidence: async () => [],
     };
     const results = await Promise.allSettled([

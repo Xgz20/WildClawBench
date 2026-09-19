@@ -260,14 +260,66 @@ export async function dispatchQwenPrompt(page, timeoutMilliseconds = 30_000) {
   return { invoked: true, method: "unique-accessible-send-button" };
 }
 
-export async function inspectQwenTaskUi(page, observedAt) {
+function currentQwenConversationId(address) {
+  try {
+    const parsed = new URL(address);
+    const parameters = new URLSearchParams(parsed.search);
+    if (parsed.hash.length > 1 && parsed.hash.includes("=")) {
+      new URLSearchParams(parsed.hash.slice(1)).forEach((value, key) => parameters.set(key, value));
+    }
+    return parameters.get("chat") || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function inspectQwenTaskUi(page, observedAt, expectedSession = null, sessionRows = []) {
   const stopControls = await visibleLocators(page.locator(QWEN_STOP_SELECTOR));
-  const conflicts = stopControls.length > 1 ? [`visible-stop-control-count:${stopControls.length}`] : [];
+  const address = typeof page.url === "function" ? page.url() : "";
+  const title = visibleValue(typeof page.title === "function" ? await page.title().catch(() => "") : "");
+  const conversationId = currentQwenConversationId(address);
+  const expectedConversationId = expectedSession?.conversation_id || null;
+  const expectedSubChatId = expectedSession?.sub_chat_id || null;
+  const expectedSessionId = expectedSession?.session_id || null;
+  const expectedSubChatName = visibleValue(expectedSession?.sub_chat_name);
+  const peers = Array.isArray(sessionRows) ? sessionRows.filter((entry) => (
+    entry?.conversation_id === expectedConversationId
+    && visibleValue(entry?.sub_chat_name) === expectedSubChatName
+  )) : [];
+  const exactPeer = peers.length === 1
+    && peers[0]?.sub_chat_id === expectedSubChatId
+    && peers[0]?.session_id === expectedSessionId;
+  const targetSessionVerified = Boolean(
+    expectedConversationId
+    && expectedSubChatId
+    && expectedSessionId
+    && expectedSubChatName
+    && conversationId === expectedConversationId
+    && title === expectedSubChatName
+    && exactPeer
+  );
+  const conflicts = [];
+  if (!expectedConversationId || conversationId !== expectedConversationId) {
+    conflicts.push(`ui-conversation-mismatch:${conversationId || "<none>"}`);
+  }
+  if (!expectedSubChatName || title !== expectedSubChatName) {
+    conflicts.push(`ui-sub-chat-title-mismatch:${title || "<none>"}`);
+  }
+  if (!exactPeer) conflicts.push(`ui-sub-chat-identity-count:${peers.length}`);
+  if (stopControls.length > 1) conflicts.push(`visible-stop-control-count:${stopControls.length}`);
   return {
     observed_at: observedAt,
-    source: "electron-cdp-visible-controls",
-    active_stream: stopControls.length === 1,
-    stop_confirmed: stopControls.length === 0,
+    source: "electron-cdp-route-title-visible-controls+sqlite-identity",
+    target_session_verified: targetSessionVerified,
+    ui_binding: {
+      conversation_id: conversationId,
+      sub_chat_id: targetSessionVerified ? expectedSubChatId : null,
+      session_id: targetSessionVerified ? expectedSessionId : null,
+      sub_chat_name: title || null,
+      unique_database_identity: exactPeer,
+    },
+    active_stream: targetSessionVerified ? stopControls.length === 1 : null,
+    stop_confirmed: targetSessionVerified && stopControls.length === 0,
     conflicts,
   };
 }

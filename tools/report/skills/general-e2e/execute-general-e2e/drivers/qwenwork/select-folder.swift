@@ -10,6 +10,8 @@ private enum SelectionError: LocalizedError {
     case appNotRunning(String)
     case timeout(String)
     case missingElement(String)
+    case ambiguousPanelOwner(Int)
+    case unknownPanelOwner(Int)
     case actionFailed(String, AXError)
 
     var errorDescription: String? {
@@ -19,6 +21,8 @@ private enum SelectionError: LocalizedError {
         case let .appNotRunning(bundleID): return "找不到正在运行的应用：\(bundleID)"
         case let .timeout(message): return "等待超时：\(message)"
         case let .missingElement(message): return "找不到原生文件夹选择器元素：\(message)"
+        case let .ambiguousPanelOwner(count): return "QwenWork 文件夹面板归属不唯一：\(count) 个候选"
+        case let .unknownPanelOwner(count): return "无法把原生文件夹面板绑定到 QwenWork 窗口：\(count) 个未归属候选"
         case let .actionFailed(action, error): return "原生文件夹选择器操作失败：\(action)（AXError=\(error.rawValue)）"
         }
     }
@@ -103,6 +107,42 @@ private func elementCenter(_ element: AXUIElement) throws -> CGPoint {
     return CGPoint(x: position.x + size.width / 2, y: position.y + size.height / 2)
 }
 
+private func elementFrame(_ element: AXUIElement) -> CGRect? {
+    guard let positionValue = attribute(element, kAXPositionAttribute),
+          let sizeValue = attribute(element, kAXSizeAttribute),
+          CFGetTypeID(positionValue) == AXValueGetTypeID(),
+          CFGetTypeID(sizeValue) == AXValueGetTypeID() else { return nil }
+    var position = CGPoint.zero
+    var size = CGSize.zero
+    guard AXValueGetValue(positionValue as! AXValue, .cgPoint, &position),
+          AXValueGetValue(sizeValue as! AXValue, .cgSize, &size),
+          size.width > 0,
+          size.height > 0 else { return nil }
+    return CGRect(origin: position, size: size)
+}
+
+private func panelFrameMatchesOwner(_ panel: CGRect, owner: CGRect) -> Bool {
+    let intersection = panel.intersection(owner)
+    guard !intersection.isNull else { return false }
+    let intersectionArea = intersection.width * intersection.height
+    let smallerArea = min(panel.width * panel.height, owner.width * owner.height)
+    return smallerArea > 0 && intersectionArea / smallerArea >= 0.95
+}
+
+private func selectOwnedPanelIndex(candidateFrames: [CGRect?], ownerFrame: CGRect?) throws -> Int? {
+    guard !candidateFrames.isEmpty else { return nil }
+    guard let ownerFrame else { throw SelectionError.unknownPanelOwner(candidateFrames.count) }
+    var matches: [Int] = []
+    for (index, frame) in candidateFrames.enumerated() {
+        if let frame, panelFrameMatchesOwner(frame, owner: ownerFrame) {
+            matches.append(index)
+        }
+    }
+    if matches.count > 1 { throw SelectionError.ambiguousPanelOwner(matches.count) }
+    guard let match = matches.first else { throw SelectionError.unknownPanelOwner(candidateFrames.count) }
+    return match
+}
+
 private func click(_ element: AXUIElement) throws {
     let point = try elementCenter(element)
     guard let mouseDown = CGEvent(
@@ -122,10 +162,10 @@ private func click(_ element: AXUIElement) throws {
     mouseUp.post(tap: .cghidEventTap)
 }
 
-private func waitUntil<T>(timeoutSeconds: Double, description: String, operation: () -> T?) throws -> T {
+private func waitUntil<T>(timeoutSeconds: Double, description: String, operation: () throws -> T?) throws -> T {
     let deadline = Date().addingTimeInterval(timeoutSeconds)
     repeat {
-        if let value = operation() { return value }
+        if let value = try operation() { return value }
         RunLoop.current.run(until: Date().addingTimeInterval(0.1))
     } while Date() < deadline
     throw SelectionError.timeout(description)
@@ -140,31 +180,6 @@ private func postShortcut(processIdentifier: pid_t, virtualKey: CGKeyCode, flags
     keyUp.flags = flags
     keyDown.postToPid(processIdentifier)
     keyUp.postToPid(processIdentifier)
-}
-
-private func postShortcutGlobally(virtualKey: CGKeyCode, flags: CGEventFlags = []) throws {
-    guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: virtualKey, keyDown: true),
-          let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: virtualKey, keyDown: false) else {
-        throw SelectionError.missingElement("无法创建全局键盘事件")
-    }
-    keyDown.flags = flags
-    keyUp.flags = flags
-    keyDown.post(tap: .cghidEventTap)
-    keyUp.post(tap: .cghidEventTap)
-}
-
-private func postText(processIdentifier: pid_t, text: String) throws {
-    guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true),
-          let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false) else {
-        throw SelectionError.missingElement("无法创建文本输入事件")
-    }
-    let characters = Array(text.utf16)
-    characters.withUnsafeBufferPointer { buffer in
-        keyDown.keyboardSetUnicodeString(stringLength: buffer.count, unicodeString: buffer.baseAddress!)
-        keyUp.keyboardSetUnicodeString(stringLength: 0, unicodeString: nil)
-    }
-    keyDown.post(tap: .cghidEventTap)
-    keyUp.post(tap: .cghidEventTap)
 }
 
 private typealias PasteboardSnapshot = [[NSPasteboard.PasteboardType: Data]]
@@ -212,18 +227,23 @@ private func openPanelProcessIdentifiers() -> [pid_t] {
     return output.split(whereSeparator: \.isNewline).compactMap { pid_t($0) }
 }
 
-private func currentOpenPanel() -> OpenPanelContext? {
+private func currentOpenPanel(ownedBy ownerSheet: AXUIElement) throws -> OpenPanelContext? {
+    var candidates: [OpenPanelContext] = []
     for processIdentifier in openPanelProcessIdentifiers().reversed() {
         let root = AXUIElementCreateApplication(processIdentifier)
         let windows = attribute(root, kAXWindowsAttribute) as? [AXUIElement] ?? []
-        if let window = windows.first(where: { candidate in
+        for window in windows.filter({ candidate in
             firstButton(candidate, titles: ["取消", "Cancel"]) != nil
                 && firstButton(candidate, titles: ["打开", "Open"]) != nil
         }) {
-            return OpenPanelContext(processIdentifier: processIdentifier, root: root, window: window)
+            candidates.append(OpenPanelContext(processIdentifier: processIdentifier, root: root, window: window))
         }
     }
-    return nil
+    guard let index = try selectOwnedPanelIndex(
+        candidateFrames: candidates.map { elementFrame($0.window) },
+        ownerFrame: elementFrame(ownerSheet)
+    ) else { return nil }
+    return candidates[index]
 }
 
 private func cancelOpenPanelIfPresent(_ panel: OpenPanelContext) {
@@ -257,7 +277,7 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
             shortcutAttempt += 1
             application.activate(options: [.activateIgnoringOtherApps])
             _ = AXUIElementSetAttributeValue(root, kAXFrontmostAttribute as CFString, kCFBooleanTrue)
-            let panelContext = currentOpenPanel()
+            let panelContext = try currentOpenPanel(ownedBy: outerSheet)
             if let panelContext = panelContext {
                 _ = AXUIElementSetAttributeValue(
                     panelContext.root,
@@ -270,25 +290,23 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
                     kCFBooleanTrue
                 )
             }
-            switch shortcutAttempt % 3 {
+            switch shortcutAttempt % 2 {
             case 1:
                 try postShortcut(
                     processIdentifier: panelContext?.processIdentifier ?? application.processIdentifier,
                     virtualKey: 5,
                     flags: [.maskCommand, .maskShift]
                 )
-            case 2:
+            default:
                 try postShortcut(
                     processIdentifier: application.processIdentifier,
                     virtualKey: 5,
                     flags: [.maskCommand, .maskShift]
                 )
-            default:
-                try postShortcutGlobally(virtualKey: 5, flags: [.maskCommand, .maskShift])
             }
             let attemptDeadline = min(pathFieldDeadline, Date().addingTimeInterval(2))
             repeat {
-                let roots = [outerSheet] + (currentOpenPanel().map { [$0.window] } ?? [])
+                let roots = [outerSheet] + ((try currentOpenPanel(ownedBy: outerSheet)).map { [$0.window] } ?? [])
                 detectedPathField = roots.lazy.compactMap { controlRoot in
                     descendants(controlRoot, role: kAXTextFieldRole).first { field in
                         boolAttribute(field, kAXFocusedAttribute)
@@ -311,9 +329,11 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
         defer { restorePasteboard(pasteboard, snapshot: pasteboardSnapshot) }
         pasteboard.clearContents()
         pasteboard.setString(navigationPath, forType: .string)
-        try postShortcutGlobally(virtualKey: 0, flags: [.maskCommand])
+        let inputProcessIdentifier = try currentOpenPanel(ownedBy: outerSheet)?.processIdentifier
+            ?? application.processIdentifier
+        try postShortcut(processIdentifier: inputProcessIdentifier, virtualKey: 0, flags: [.maskCommand])
         RunLoop.current.run(until: Date().addingTimeInterval(0.2))
-        try postShortcutGlobally(virtualKey: 9, flags: [.maskCommand])
+        try postShortcut(processIdentifier: inputProcessIdentifier, virtualKey: 9, flags: [.maskCommand])
         RunLoop.current.run(until: Date().addingTimeInterval(0.3))
         if stringAttribute(pathField, kAXValueAttribute) != navigationPath {
             let directSetResult = AXUIElementSetAttributeValue(
@@ -336,7 +356,7 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
         }
         RunLoop.current.run(until: Date().addingTimeInterval(0.3))
 
-        let navigationRoots = (currentOpenPanel().map { [$0.window] } ?? []) + [outerSheet]
+        let navigationRoots = ((try currentOpenPanel(ownedBy: outerSheet)).map { [$0.window] } ?? []) + [outerSheet]
         let navigationButtonDescriptions = navigationRoots.flatMap { controlRoot in
             descendants(controlRoot, role: kAXButtonRole).map { button -> String in
                 let title = stringAttribute(button, kAXTitleAttribute)
@@ -347,8 +367,8 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
         }
         let folderName = (folderPath as NSString).lastPathComponent
         var observedRows: [String] = []
-        func findTargetRow() -> AXUIElement? {
-            let roots = (currentOpenPanel().map { [$0.window] } ?? []) + [outerSheet]
+        func findTargetRow() throws -> AXUIElement? {
+            let roots = ((try currentOpenPanel(ownedBy: outerSheet)).map { [$0.window] } ?? []) + [outerSheet]
             let rows = roots.flatMap { descendants($0, role: kAXRowRole) }
             observedRows = rows.map { row in
                 Array(Set(descendantElements(row).flatMap(elementTexts))).sorted().joined(separator: "|")
@@ -357,10 +377,10 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
                 descendantElements(row).flatMap(elementTexts).contains(folderName)
             }
         }
-        func waitForTargetRow(seconds: Double) -> AXUIElement? {
+        func waitForTargetRow(seconds: Double) throws -> AXUIElement? {
             let deadline = Date().addingTimeInterval(seconds)
             repeat {
-                if let row = findTargetRow() { return row }
+                if let row = try findTargetRow() { return row }
                 RunLoop.current.run(until: Date().addingTimeInterval(0.1))
             } while Date() < deadline
             return nil
@@ -369,15 +389,15 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
         var confirmMethod = "unconfirmed"
         var confirmAttempts: [String] = []
         var targetRow: AXUIElement?
-        try postShortcutGlobally(virtualKey: 36)
-        confirmAttempts.append("focused-global-return")
-        targetRow = waitForTargetRow(seconds: 1.5)
-        if targetRow != nil { confirmMethod = "focused-global-return" }
+        try postShortcut(processIdentifier: inputProcessIdentifier, virtualKey: 36)
+        confirmAttempts.append("owned-panel-return")
+        targetRow = try waitForTargetRow(seconds: 1.5)
+        if targetRow != nil { confirmMethod = "owned-panel-return" }
         if targetRow == nil {
             let fieldConfirmResult = AXUIElementPerformAction(pathField, kAXConfirmAction as CFString)
             confirmAttempts.append("text-field-confirm=\(fieldConfirmResult.rawValue)")
             if fieldConfirmResult == .success {
-                targetRow = waitForTargetRow(seconds: 1.5)
+                targetRow = try waitForTargetRow(seconds: 1.5)
                 if targetRow != nil { confirmMethod = "text-field-confirm" }
             }
         }
@@ -388,27 +408,21 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
             if let goButton = innerConfirmButton {
                 try press(goButton, action: "前往目标目录")
                 confirmAttempts.append("go-button")
-                targetRow = waitForTargetRow(seconds: 1.5)
+                targetRow = try waitForTargetRow(seconds: 1.5)
                 if targetRow != nil { confirmMethod = "go-button" }
             }
         }
-        if targetRow == nil, let panelProcessIdentifier = currentOpenPanel()?.processIdentifier {
+        if targetRow == nil, let panelProcessIdentifier = try currentOpenPanel(ownedBy: outerSheet)?.processIdentifier {
             try postShortcut(processIdentifier: panelProcessIdentifier, virtualKey: 36)
             confirmAttempts.append("open-panel-return")
-            targetRow = waitForTargetRow(seconds: 1.5)
+            targetRow = try waitForTargetRow(seconds: 1.5)
             if targetRow != nil { confirmMethod = "open-panel-return" }
         }
         if targetRow == nil {
             try postShortcut(processIdentifier: application.processIdentifier, virtualKey: 36)
             confirmAttempts.append("application-return")
-            targetRow = waitForTargetRow(seconds: 1.5)
+            targetRow = try waitForTargetRow(seconds: 1.5)
             if targetRow != nil { confirmMethod = "application-return" }
-        }
-        if targetRow == nil {
-            try postShortcutGlobally(virtualKey: 36)
-            confirmAttempts.append("global-return")
-            targetRow = waitForTargetRow(seconds: 2)
-            if targetRow != nil { confirmMethod = "global-return" }
         }
         guard let confirmedRow = targetRow else {
             throw SelectionError.missingElement(
@@ -422,7 +436,7 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
         var openButton: AXUIElement?
         var observedButtons: [String] = []
         repeat {
-            let selectionRoots = (currentOpenPanel().map { [$0.window] } ?? []) + [outerSheet]
+            let selectionRoots = ((try currentOpenPanel(ownedBy: outerSheet)).map { [$0.window] } ?? []) + [outerSheet]
             let buttons = selectionRoots.flatMap { descendants($0, role: kAXButtonRole) }
             observedButtons = buttons.map { button in
                 let title = stringAttribute(button, kAXTitleAttribute)
@@ -455,7 +469,33 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
     }
 }
 
+private func runOwnerBindingSelfTest() throws {
+    let owner = CGRect(x: 100, y: 100, width: 800, height: 600)
+    let unrelated = CGRect(x: 1_500, y: 100, width: 500, height: 400)
+    let owned = CGRect(x: 120, y: 120, width: 760, height: 560)
+    guard try selectOwnedPanelIndex(candidateFrames: [unrelated, owned], ownerFrame: owner) == 1 else {
+        throw SelectionError.missingElement("owner binding self-test unique match")
+    }
+    do {
+        _ = try selectOwnedPanelIndex(candidateFrames: [owned, owned], ownerFrame: owner)
+        throw SelectionError.missingElement("owner binding self-test ambiguous candidate accepted")
+    } catch SelectionError.ambiguousPanelOwner(_) {
+        // expected
+    }
+    do {
+        _ = try selectOwnedPanelIndex(candidateFrames: [unrelated], ownerFrame: owner)
+        throw SelectionError.missingElement("owner binding self-test unrelated candidate accepted")
+    } catch SelectionError.unknownPanelOwner(_) {
+        // expected
+    }
+}
+
 do {
+    if CommandLine.arguments.count == 2 && CommandLine.arguments[1] == "--self-test-owner-binding" {
+        try runOwnerBindingSelfTest()
+        print("{\"status\":\"PASS\",\"owner_binding\":\"qwen-outer-sheet-frame-overlap\"}")
+        exit(0)
+    }
     guard CommandLine.arguments.count == 4 else { throw SelectionError.usage }
     let bundleID = CommandLine.arguments[1]
     let folderPath = CommandLine.arguments[2]
@@ -468,6 +508,7 @@ do {
     let output: [String: Any] = [
         "status": "selected",
         "method": "macos-accessibility",
+        "owner_binding": "qwen-outer-sheet-frame-overlap",
         "confirm_method": confirmMethod,
         "folder": folderPath,
     ]

@@ -72,12 +72,14 @@ function assessTerminalObservation({ session, sessionBinding, candidateWorkspace
   if (observationActiveStream != null && observationActiveStream !== databaseActiveStream) {
     conflicts.push("active-stream-observation-mismatch");
   }
+  const targetSessionVerified = observed.target_session_verified === true;
+  if (!targetSessionVerified) conflicts.push("ui-target-session-unverified");
   const cwdMatches = Boolean(
     sessionBinding.verified
     && sessionBinding.cwd
     && resolve(sessionBinding.cwd) === resolve(candidateWorkspace),
   );
-  const bindingConsistent = observed.binding_consistent === true && cwdMatches;
+  const bindingConsistent = observed.binding_consistent === true && targetSessionVerified && cwdMatches;
   const noActiveStream = observationActiveStream === false && databaseActiveStream === false;
   const stopConfirmed = observed.stop_confirmed === true;
   return {
@@ -86,6 +88,7 @@ function assessTerminalObservation({ session, sessionBinding, candidateWorkspace
     database_active_stream: databaseActiveStream,
     active_stream: observationActiveStream,
     stop_confirmed: stopConfirmed,
+    target_session_verified: targetSessionVerified,
     binding_consistent: bindingConsistent,
     conflicts: [...new Set(conflicts)],
     trusted_terminal: noActiveStream && stopConfirmed && bindingConsistent && conflicts.length === 0,

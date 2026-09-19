@@ -19,6 +19,7 @@ import {
   markQwenNeedsAttention,
   planQwenRecovery,
   readQwenJournal,
+  recordQwenRecoveryProbe,
   recordQwenDispatchIntent,
   reserveQwenDispatch,
 } from "./journal.mjs";
@@ -53,11 +54,15 @@ function usage() {
 用法：
   node drivers/qwenwork/driver.mjs --config /absolute/qwenwork-canary.json --validate-only
   node drivers/qwenwork/driver.mjs --config /absolute/qwenwork-canary.json
-  node drivers/qwenwork/driver.mjs --config /absolute/qwenwork-canary.json --resume [--observe-once]
+  node drivers/qwenwork/driver.mjs --config /absolute/qwenwork-canary.json --resume \
+    --resume-probe /absolute/fresh-readonly-probe.json \
+    --resume-probe-sha256 <sha256> [--observe-once]
 
 选项：
   --validate-only   只校验冻结配置、Prompt、Workspace 和 probe，不连接或操作 QwenWork
   --resume          恢复同一 attempt；进入发送临界区后只观察原 session，禁止重发
+  --resume-probe    本次恢复新生成的只读 probe；不参与冻结 config digest
+  --resume-probe-sha256  本次恢复 probe 的独立 SHA-256
   --observe-once    与 --resume 一起使用；只做一次原生状态/UI 观察
   -h, --help        显示帮助
 
@@ -80,6 +85,7 @@ export function calculateQwenCanaryConfigDigest(config) {
   const copy = structuredClone(config);
   delete copy.config_digest;
   delete copy.resume;
+  delete copy.recovery_probe;
   if (copy.prompt) delete copy.prompt.content;
   return sha256(JSON.stringify(stableValue(copy)));
 }
@@ -144,7 +150,12 @@ export function assertQwenCanaryConfig(config, { requireLiveAuthorization = fals
   return config;
 }
 
-export function assertQwenCanaryProbe(probe, config, now = Date.now()) {
+export function assertQwenCanaryProbe(
+  probe,
+  config,
+  now = Date.now(),
+  { requireFresh = true, requireIdle = true } = {},
+) {
   if (probe?.schema_version !== PROBE_SCHEMA) throw new Error("QWENWORK_CANARY_PROBE_SCHEMA_MISMATCH");
   if (probe.driver?.harness !== "qwenwork" || probe.driver?.platform !== "macos") {
     throw new Error("QWENWORK_CANARY_PROBE_DRIVER_MISMATCH");
@@ -156,12 +167,12 @@ export function assertQwenCanaryProbe(probe, config, now = Date.now()) {
       || probe.native_state?.database?.quick_check !== "ok") {
     throw new Error("QWENWORK_CANARY_PROBE_NATIVE_STATE_INVALID");
   }
-  if (probe.native_state?.database?.active_or_pending_count !== 0) {
+  if (requireIdle && probe.native_state?.database?.active_or_pending_count !== 0) {
     throw new Error("QWENWORK_CANARY_PROBE_ACTIVE_SESSION_PRESENT");
   }
   const probedAt = Date.parse(probe.probed_at || "");
   const maximumAge = Number(config.control.probe_max_age_seconds) * 1000;
-  if (!Number.isFinite(probedAt) || probedAt > now || now - probedAt > maximumAge) {
+  if (!Number.isFinite(probedAt) || probedAt > now || (requireFresh && now - probedAt > maximumAge)) {
     throw new Error("QWENWORK_CANARY_PROBE_STALE");
   }
   const forbidden = new Set(probe.operations_performed || []);
@@ -172,11 +183,26 @@ export function assertQwenCanaryProbe(probe, config, now = Date.now()) {
 }
 
 export function parseDriverArgs(argv) {
-  const result = { config: "", resume: false, observeOnce: false, validateOnly: false, help: false };
+  const result = {
+    config: "",
+    resume: false,
+    resumeProbe: "",
+    resumeProbeSha256: "",
+    observeOnce: false,
+    validateOnly: false,
+    help: false,
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
     if (argument === "-h" || argument === "--help") result.help = true;
     else if (argument === "--resume") result.resume = true;
+    else if (argument === "--resume-probe" || argument === "--resume-probe-sha256") {
+      const value = argv[index + 1];
+      if (!value || value.startsWith("--")) throw new Error(`${argument} 缺少值`);
+      if (argument === "--resume-probe") result.resumeProbe = value;
+      else result.resumeProbeSha256 = value;
+      index += 1;
+    }
     else if (argument === "--observe-once") result.observeOnce = true;
     else if (argument === "--validate-only") result.validateOnly = true;
     else if (argument === "--config") {
@@ -187,6 +213,12 @@ export function parseDriverArgs(argv) {
     } else throw new Error(`未知选项：${argument}`);
   }
   if (result.observeOnce && !result.resume) throw new Error("--observe-once 必须与 --resume 一起使用");
+  if (result.resume && (!result.resumeProbe || !result.resumeProbeSha256)) {
+    throw new Error("--resume 必须同时指定 --resume-probe 和 --resume-probe-sha256");
+  }
+  if (!result.resume && (result.resumeProbe || result.resumeProbeSha256)) {
+    throw new Error("--resume-probe 仅可与 --resume 一起使用");
+  }
   if (!result.help && !result.config) throw new Error("必须指定 --config");
   return result;
 }
@@ -201,7 +233,30 @@ export async function loadQwenCanaryConfig(path, options = {}) {
   if (sha256(prompt) !== config.prompt.sha256) throw new Error("QWENWORK_CANARY_PROMPT_DIGEST_MISMATCH");
   if (sha256(probeContent) !== config.control.probe_sha256) throw new Error("QWENWORK_CANARY_PROBE_DIGEST_MISMATCH");
   const probe = JSON.parse(probeContent.toString("utf8"));
-  assertQwenCanaryProbe(probe, config);
+  assertQwenCanaryProbe(probe, config, Date.now(), {
+    requireFresh: options.resume !== true,
+    requireIdle: options.resume !== true,
+  });
+  let recoveryProbe = null;
+  if (options.resume === true) {
+    const recoveryProbePath = absolutePath(options.resumeProbePath, "resume_probe.path");
+    const recoveryProbeSha256 = requiredString(options.resumeProbeSha256, "resume_probe.sha256");
+    if (!/^[a-f0-9]{64}$/u.test(recoveryProbeSha256)) throw new Error("QWENWORK_RESUME_PROBE_DIGEST_INVALID");
+    if (recoveryProbePath === resolve(config.control.probe_path)) {
+      throw new Error("QWENWORK_RESUME_PROBE_MUST_BE_DISTINCT");
+    }
+    const recoveryContent = await readFile(recoveryProbePath);
+    if (sha256(recoveryContent) !== recoveryProbeSha256) throw new Error("QWENWORK_RESUME_PROBE_DIGEST_MISMATCH");
+    const recovery = JSON.parse(recoveryContent.toString("utf8"));
+    assertQwenCanaryProbe(recovery, config, Date.now(), { requireFresh: true, requireIdle: false });
+    recoveryProbe = {
+      verified: true,
+      path: recoveryProbePath,
+      sha256: recoveryProbeSha256,
+      probed_at: recovery.probed_at,
+      active_or_pending_count: Number(recovery.native_state?.database?.active_or_pending_count),
+    };
+  }
   const workspace = await stat(config.candidate_workspace);
   if (!workspace.isDirectory()) throw new Error("QWENWORK_CANARY_WORKSPACE_NOT_DIRECTORY");
   return {
@@ -217,6 +272,7 @@ export async function loadQwenCanaryConfig(path, options = {}) {
       trace_root: resolve(config.client.trace_root),
     },
     prompt: { ...config.prompt, path: resolve(config.prompt.path), content: prompt },
+    recovery_probe: recoveryProbe,
   };
 }
 
@@ -420,6 +476,8 @@ async function observeBoundAttempt(config, state, dependencies) {
   const terminalObservation = {
     ...ui,
     binding_consistent: Boolean(
+      ui.target_session_verified === true
+      &&
       session.session_id === state.session.session_id
       && session.local_project_id === state.workspace.local_project_id
       && session.cwd === state.candidate_workspace
@@ -473,6 +531,8 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
   if (state) {
     if (!config.resume) throw new Error("QWENWORK_EXISTING_JOURNAL_REQUIRES_RESUME");
     assertQwenJournalMatches(state, journalExpectation(config));
+    if (config.recovery_probe?.verified !== true) throw new Error("QWENWORK_RESUME_PROBE_REQUIRED");
+    recordQwenRecoveryProbe(state, config.recovery_probe, dependencies.now());
     action = planQwenRecovery(state, dependencies.now());
     await dependencies.writeJournal(config.state_file, state);
   } else {
@@ -489,7 +549,7 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
     await dependencies.writeJournal(config.state_file, state);
   }
 
-  if (action === "return-terminal") return { journal: state, execution_state: null };
+  if (action === "return-terminal") return { journal: state, execution_state: structuredClone(state.execution_state) };
   if (action === "observe-bound-session") return observeBoundAttempt(config, state, dependencies);
   if (action === "inspect-only") {
     const bound = await bindOrAttend(config, state, dependencies);
@@ -526,6 +586,17 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
         error instanceof Error ? error.message : String(error),
       );
     }
+  }
+
+  if (action === "dispatch-once" && config.resume === true
+      && config.recovery_probe.active_or_pending_count !== 0) {
+    return persistAttention(
+      config,
+      state,
+      dependencies,
+      "QWENWORK_RECOVERY_PROBE_NOT_IDLE_FOR_DISPATCH",
+      "恢复时仍存在活动或待处理原生会话；本 attempt 尚未发送，禁止进入发送临界区",
+    );
   }
 
   try {
@@ -690,7 +761,12 @@ async function createLiveDependencies(config) {
         session,
         prompt,
       }),
-      observeUi: (_session, _state) => inspectQwenTaskUi(page, new Date().toISOString()),
+      observeUi: async (session, _state) => inspectQwenTaskUi(
+        page,
+        new Date().toISOString(),
+        session,
+        await queryQwenSessionRows(config.client.session_db),
+      ),
       writeBindingEvidence: async ({ state, session, terminalObservation }) => {
         const path = join(config.evidence_root, "session-binding.json");
         const result = await atomicWriteJson(path, {
@@ -716,7 +792,12 @@ async function main(argv = process.argv.slice(2)) {
     process.stdout.write(`${usage()}\n`);
     return 0;
   }
-  const config = await loadQwenCanaryConfig(args.config, { requireLiveAuthorization: !args.validateOnly });
+  const config = await loadQwenCanaryConfig(args.config, {
+    requireLiveAuthorization: !args.validateOnly,
+    resume: args.resume,
+    resumeProbePath: args.resumeProbe,
+    resumeProbeSha256: args.resumeProbeSha256,
+  });
   config.resume = args.resume;
   if (args.validateOnly) {
     process.stdout.write(`${JSON.stringify({
