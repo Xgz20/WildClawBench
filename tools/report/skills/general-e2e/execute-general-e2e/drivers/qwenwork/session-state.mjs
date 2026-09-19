@@ -1,4 +1,4 @@
-import { access, copyFile, mkdtemp, rm } from "node:fs/promises";
+import { access, copyFile, lstat, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, isAbsolute, join, resolve } from "node:path";
 
@@ -181,9 +181,9 @@ export function buildQwenGeneralSessionBinding(session, bindingEvidence) {
   };
 }
 
-async function copyIfPresent(source, target) {
+async function copyIfPresent(source, target, copy = copyFile) {
   try {
-    await copyFile(source, target);
+    await copy(source, target);
     return true;
   } catch (error) {
     if (error?.code === "ENOENT") return false;
@@ -200,23 +200,103 @@ async function defaultSqliteQuery(database, sql) {
   return result.stdout.trim() ? JSON.parse(result.stdout) : [];
 }
 
+function fileSignature(info) {
+  if (!info) return null;
+  return {
+    dev: Number(info.dev || 0),
+    ino: Number(info.ino || 0),
+    size: Number(info.size || 0),
+    mtimeMs: Number(info.mtimeMs || 0),
+    mode: Number(info.mode || 0),
+  };
+}
+
+function sameFileSignature(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+async function readFileSignature(path, statFile) {
+  try {
+    return fileSignature(await statFile(path));
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+async function defaultWriterCheck(sessionDb) {
+  try {
+    const result = await runCapture(
+      "/usr/sbin/lsof",
+      ["-F", "pcfn", "--", sessionDb, `${sessionDb}-wal`, `${sessionDb}-shm`],
+      { capture: true, allowFailure: true },
+    );
+    // lsof cannot expose SQLite's lock mode portably. Any holder is therefore
+    // treated as an active/unknown writer and blocks immutable reads.
+    return Boolean(String(result.stdout || "").trim());
+  } catch {
+    // Fail closed when the writer check itself is unavailable.
+    return null;
+  }
+}
+
+function immutableSqliteUri(path) {
+  return `file:${encodeURI(path)}?immutable=1`;
+}
+
 async function querySnapshot(sessionDb, query, overrides = {}) {
   await access(sessionDb);
   const runQuery = overrides.query || defaultSqliteQuery;
   const makeTemp = overrides.mkdtemp || mkdtemp;
   const remove = overrides.rm || rm;
+  const copy = overrides.copyFile || copyFile;
+  const statFile = overrides.lstat || lstat;
+  const writerCheck = overrides.writerCheck || defaultWriterCheck;
+  const sidecars = [`${sessionDb}-wal`, `${sessionDb}-shm`];
   let lastError = null;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     const snapshotRoot = await makeTemp(join(tmpdir(), "qwenwork-general-probe-"));
     const snapshotDb = join(snapshotRoot, basename(sessionDb));
     try {
-      await copyFile(sessionDb, snapshotDb);
-      await copyIfPresent(`${sessionDb}-wal`, `${snapshotDb}-wal`);
-      await copyIfPresent(`${sessionDb}-shm`, `${snapshotDb}-shm`);
-      const quickCheck = await runQuery(snapshotDb, "PRAGMA quick_check;");
+      const before = {
+        main: await readFileSignature(sessionDb, statFile),
+        wal: await readFileSignature(sidecars[0], statFile),
+        shm: await readFileSignature(sidecars[1], statFile),
+      };
+      if (!before.main) throw new Error("QWENWORK_DB_MAIN_MISSING");
+      const hasSidecar = Boolean(before.wal || before.shm);
+      const writer = await writerCheck(sessionDb);
+      if (writer === null) throw new Error("QWENWORK_DB_WRITER_STATE_UNKNOWN");
+
+      // Copy the main file and whatever WAL/SHM files existed in the same
+      // source snapshot. Never create, remove, or checkpoint sidecars in the
+      // user's database directory.
+      await copy(sessionDb, snapshotDb);
+      if (before.wal) await copyIfPresent(sidecars[0], `${snapshotDb}-wal`, copy);
+      if (before.shm) await copyIfPresent(sidecars[1], `${snapshotDb}-shm`, copy);
+
+      const after = {
+        main: await readFileSignature(sessionDb, statFile),
+        wal: await readFileSignature(sidecars[0], statFile),
+        shm: await readFileSignature(sidecars[1], statFile),
+      };
+      if (!sameFileSignature(before.main, after.main)
+        || !sameFileSignature(before.wal, after.wal)
+        || !sameFileSignature(before.shm, after.shm)) {
+        throw new Error("QWENWORK_DB_SNAPSHOT_SOURCE_CHANGED");
+      }
+
+      // A sidecar-free WAL main file is only safe through SQLite's immutable
+      // URI after no process holds the database. Active WAL/SHM snapshots use
+      // ordinary read-only mode so SQLite consumes the copied sidecars.
+      if (writer) throw new Error("QWENWORK_DB_WRITER_PRESENT");
+      const queryDatabase = !hasSidecar && !writer
+        ? immutableSqliteUri(snapshotDb)
+        : snapshotDb;
+      const quickCheck = await runQuery(queryDatabase, "PRAGMA quick_check;");
       const result = String(quickCheck[0]?.quick_check || quickCheck[0]?.integrity_check || "").trim();
       if (result !== "ok") throw new Error(`QWENWORK_DB_QUICK_CHECK_FAILED: ${result || "empty"}`);
-      return await runQuery(snapshotDb, query);
+      return await runQuery(queryDatabase, query);
     } catch (error) {
       lastError = error;
     } finally {
@@ -225,6 +305,8 @@ async function querySnapshot(sessionDb, query, overrides = {}) {
   }
   throw new Error(`QWENWORK_DB_SNAPSHOT_FAILED: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
 }
+
+export { querySnapshot };
 
 export async function queryQwenSessionRows(sessionDb, overrides = {}) {
   const rows = await querySnapshot(sessionDb, QWENWORK_SESSION_QUERY, overrides);

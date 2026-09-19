@@ -136,12 +136,36 @@ export function confirmQwenWorkspaceProject({ projects, workspace, baselineProje
   };
 }
 
-async function selectedProjectTrigger(page) {
-  const candidates = await visibleLocators(page.locator(QWEN_PROJECT_SELECTOR));
+function isQwenProjectAccessibleName(label, expectedProjectName = null, knownProjectNames = []) {
+  const value = visibleValue(label);
+  if (/^(?:选择项目|Select project)$/iu.test(value)) return true;
+  const knownNames = new Set([
+    expectedProjectName,
+    ...knownProjectNames,
+  ].map(visibleValue).filter(Boolean));
+  return knownNames.has(value);
+}
+
+async function selectedProjectTrigger(page, expectedProjectName = null, knownProjectNames = []) {
+  // QwenWork keeps stale/hidden chat roots mounted. Resolve the current new
+  // task view first; a global menu-button count can mix project, workspace,
+  // permission, and hidden-window controls.
+  const taskView = await requireUniqueVisible(
+    page.locator(QWEN_TASK_VIEW_SELECTOR),
+    "task-view",
+  );
+  if (typeof taskView.locator !== "function") {
+    throw new Error("QWENWORK_TASK_VIEW_LOCATOR_UNSUPPORTED");
+  }
+  const candidates = await visibleLocators(taskView.locator(QWEN_PROJECT_SELECTOR));
   const projectSelectors = [];
   for (const candidate of candidates) {
-    const ariaLabel = visibleValue(await candidate.getAttribute("aria-label"));
-    if (ariaLabel !== "选择权限模式") projectSelectors.push(candidate);
+    const label = visibleValue(
+      await candidate.getAttribute("aria-label")
+      || await candidate.getAttribute("title")
+      || await candidate.innerText(),
+    );
+    if (isQwenProjectAccessibleName(label, expectedProjectName, knownProjectNames)) projectSelectors.push(candidate);
   }
   if (projectSelectors.length !== 1) {
     throw new Error(`QWENWORK_UI_CONTROL_COUNT: project-trigger:${projectSelectors.length}`);
@@ -149,15 +173,15 @@ async function selectedProjectTrigger(page) {
   return projectSelectors[0];
 }
 
-export async function readSelectedQwenProjectName(page) {
-  const trigger = await selectedProjectTrigger(page);
+export async function readSelectedQwenProjectName(page, expectedProjectName = null, knownProjectNames = []) {
+  const trigger = await selectedProjectTrigger(page, expectedProjectName, knownProjectNames);
   const value = visibleValue(await trigger.getAttribute("aria-label") || await trigger.innerText());
   if (!value) throw new Error("QWENWORK_PROJECT_READBACK_EMPTY");
   return value;
 }
 
-export async function openQwenProjectByName(page, projectName, timeoutMilliseconds) {
-  const trigger = await selectedProjectTrigger(page);
+export async function openQwenProjectByName(page, projectName, timeoutMilliseconds, knownProjectNames = []) {
+  const trigger = await selectedProjectTrigger(page, projectName, knownProjectNames);
   const current = visibleValue(await trigger.getAttribute("aria-label") || await trigger.innerText());
   if (current === projectName) return { opened: true, method: "already-selected", project_name: projectName };
   await trigger.click({ timeout: timeoutMilliseconds });
@@ -175,7 +199,7 @@ export async function openQwenProjectByName(page, projectName, timeoutMillisecon
   if (await item.count() !== 1) throw new Error("QWENWORK_PROJECT_MENU_STRUCTURE_INVALID");
   await item.click({ timeout: timeoutMilliseconds });
   const readback = await waitForUniqueVisible(
-    async () => (await readSelectedQwenProjectName(page)) === projectName ? [trigger] : [],
+    async () => (await readSelectedQwenProjectName(page, projectName, [projectName])) === projectName ? [trigger] : [],
     timeoutMilliseconds,
     "selected-project-readback",
   );
@@ -230,7 +254,12 @@ export async function createQwenLocalProject({
       throw error;
     }
   }, timeoutMilliseconds, "sqlite-workspace-project");
-  await openQwenProjectByName(page, project.project_name, timeoutMilliseconds);
+  await openQwenProjectByName(
+    page,
+    project.project_name,
+    timeoutMilliseconds,
+    [...before.map((entry) => entry.project_name || entry.name), project.project_name],
+  );
   return project;
 }
 

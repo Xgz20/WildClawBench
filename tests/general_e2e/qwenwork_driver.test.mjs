@@ -30,6 +30,7 @@ import {
   inspectQwenTaskUi,
   QWEN_TASK_VIEW_SELECTOR,
   readQwenUiConfiguration,
+  readSelectedQwenProjectName,
   requireUniqueVisible,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/ui.mjs";
 
@@ -158,6 +159,21 @@ function fakeElement({ visible = true, text = "", attributes = {} } = {}) {
   };
 }
 
+function fakeTaskView(projectControls, { visible = true } = {}) {
+  return {
+    ...fakeElement({ visible }),
+    locator: () => fakeLocator(projectControls),
+  };
+}
+
+function fakeProjectPage(taskViews) {
+  return {
+    locator: (selector) => selector === QWEN_TASK_VIEW_SELECTOR
+      ? fakeLocator(taskViews)
+      : fakeLocator([]),
+  };
+}
+
 test("UI locators fail closed on duplicate controls and configuration drift", async () => {
   await assert.rejects(
     requireUniqueVisible(fakeLocator([fakeElement(), fakeElement()]), "send-button"),
@@ -179,6 +195,42 @@ test("UI locators fail closed on duplicate controls and configuration drift", as
     () => assertStableQwenUiConfiguration(current, configuration("Qwen Fixture", "full-access")),
     /PERMISSION_DRIFT/u,
   );
+});
+
+test("project trigger uses current visible task view and exact project semantics", async () => {
+  const permission = fakeElement({ text: "选择权限模式", attributes: { "aria-haspopup": "menu" } });
+  const workspaceMode = fakeElement({ text: "通用模式", attributes: { "aria-haspopup": "menu" } });
+  const selectedProject = fakeElement({ text: "WCB-GEN-fixture", attributes: { "aria-label": "WCB-GEN-fixture", "aria-haspopup": "menu" } });
+  const hiddenDuplicate = fakeElement({ visible: false, text: "WCB-GEN-fixture", attributes: { "aria-label": "WCB-GEN-fixture", "aria-haspopup": "menu" } });
+
+  const page = fakeProjectPage([
+    fakeTaskView([permission, workspaceMode, selectedProject, hiddenDuplicate]),
+    fakeTaskView([fakeElement({ text: "WCB-GEN-fixture", attributes: { "aria-label": "WCB-GEN-fixture", "aria-haspopup": "menu" } })], { visible: false }),
+  ]);
+  assert.equal(await readSelectedQwenProjectName(page, "WCB-GEN-fixture"), "WCB-GEN-fixture");
+
+  await assert.rejects(
+    readSelectedQwenProjectName(fakeProjectPage([
+      fakeTaskView([selectedProject, fakeElement({ text: "WCB-GEN-fixture", attributes: { "aria-label": "WCB-GEN-fixture", "aria-haspopup": "menu" } })]),
+    ]), "WCB-GEN-fixture"),
+    /project-trigger:2/u,
+  );
+  await assert.rejects(
+    readSelectedQwenProjectName(fakeProjectPage([
+      fakeTaskView([selectedProject]),
+      fakeTaskView([selectedProject]),
+    ]), "WCB-GEN-fixture"),
+    /task-view:2/u,
+  );
+});
+
+test("project trigger accepts the semantic empty-project label without confusing workspace or permission menus", async () => {
+  const page = fakeProjectPage([fakeTaskView([
+    fakeElement({ text: "选择权限模式", attributes: { "aria-label": "选择权限模式", "aria-haspopup": "menu" } }),
+    fakeElement({ text: "通用模式", attributes: { "aria-label": "通用模式", "aria-haspopup": "menu" } }),
+    fakeElement({ text: "选择项目", attributes: { "aria-label": "选择项目", "aria-haspopup": "menu" } }),
+  ])]);
+  assert.equal(await readSelectedQwenProjectName(page), "选择项目");
 });
 
 test("terminal UI observation binds the visible chat and unique sub-chat before confirming stop", async () => {

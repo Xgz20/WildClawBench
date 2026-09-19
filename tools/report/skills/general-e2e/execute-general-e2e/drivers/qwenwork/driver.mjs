@@ -727,13 +727,15 @@ async function createLiveDependencies(config) {
     return JSON.parse(result.stdout.trim());
   };
   const preparedProject = async (state) => {
+    const projects = await queryProjects();
     const project = confirmQwenWorkspaceProject({
-      projects: await queryProjects(),
+      projects,
       workspace: config.candidate_workspace,
       expectedProjectId: state.workspace.local_project_id,
     });
-    if (await readSelectedQwenProjectName(page) !== project.project_name) {
-      await openQwenProjectByName(page, project.project_name, timeout);
+    const knownProjectNames = projects.map((entry) => entry.project_name || entry.name).filter(Boolean);
+    if (await readSelectedQwenProjectName(page, project.project_name, knownProjectNames) !== project.project_name) {
+      await openQwenProjectByName(page, project.project_name, timeout, knownProjectNames);
     }
     return project;
   };

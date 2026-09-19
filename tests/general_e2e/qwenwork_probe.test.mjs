@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, lstat, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
@@ -11,6 +12,7 @@ import {
 import {
   buildQwenGeneralSessionBinding,
   classifyQwenSessionStatus,
+  querySnapshot,
   selectQwenSessionForAttempt,
   summarizeQwenSessions,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/session-state.mjs";
@@ -271,4 +273,93 @@ test("read-only probe report keeps current 1.0.6 profile unverified and declares
   assert.equal(report.runtime.token_metrics_admission, "unverified-null");
   assert.ok(report.operations_not_performed.includes("send-prompt"));
   assert.ok(report.warnings.includes("QWENWORK_RUNTIME_PROFILE_UNVERIFIED"));
+});
+
+async function makeSnapshotFixture({ wal = false, shm = false } = {}) {
+  const root = await mkdtemp(join(tmpdir(), "qwenwork-snapshot-fixture-"));
+  const database = join(root, "agents.db");
+  await writeFile(database, "main", "utf8");
+  if (wal) await writeFile(`${database}-wal`, "wal", "utf8");
+  if (shm) await writeFile(`${database}-shm`, "shm", "utf8");
+  return { root, database };
+}
+
+test("sidecar-free WAL main database uses immutable only on the copied snapshot", async () => {
+  const fixture = await makeSnapshotFixture();
+  const queries = [];
+  try {
+    const rows = await querySnapshot(fixture.database, "SELECT 1", {
+      writerCheck: async () => false,
+      query: async (database, sql) => {
+        queries.push({ database, sql });
+        return sql.includes("quick_check") ? [{ quick_check: "ok" }] : [{ value: 1 }];
+      },
+    });
+    assert.deepEqual(rows, [{ value: 1 }]);
+    assert.ok(queries.every(({ database }) => database.startsWith("file:") && database.endsWith("?immutable=1")));
+    await assert.rejects(access(`${fixture.database}-wal`), { code: "ENOENT" });
+    await assert.rejects(access(`${fixture.database}-shm`), { code: "ENOENT" });
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("active WAL/SHM snapshots copy both sidecars and never use immutable", async () => {
+  const fixture = await makeSnapshotFixture({ wal: true, shm: true });
+  const queries = [];
+  try {
+    const rows = await querySnapshot(fixture.database, "SELECT 1", {
+      writerCheck: async () => false,
+      query: async (database, sql) => {
+        queries.push({ database, sql });
+        if (sql.includes("quick_check")) {
+          await access(`${database}-wal`);
+          await access(`${database}-shm`);
+          return [{ quick_check: "ok" }];
+        }
+        return [{ value: 1 }];
+      },
+    });
+    assert.deepEqual(rows, [{ value: 1 }]);
+    assert.ok(queries.every(({ database }) => !database.includes("immutable=1")));
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("writer detection and unstable source snapshots fail closed after bounded retries", async () => {
+  const writerFixture = await makeSnapshotFixture();
+  try {
+    await assert.rejects(
+      querySnapshot(writerFixture.database, "SELECT 1", {
+        writerCheck: async () => true,
+        query: async () => [{ quick_check: "ok" }],
+      }),
+      /QWENWORK_DB_WRITER_PRESENT/u,
+    );
+  } finally {
+    await rm(writerFixture.root, { recursive: true, force: true });
+  }
+
+  const unstableFixture = await makeSnapshotFixture({ wal: true, shm: true });
+  let mainStatCalls = 0;
+  try {
+    await assert.rejects(
+      querySnapshot(unstableFixture.database, "SELECT 1", {
+        writerCheck: async () => false,
+        lstat: async (path) => {
+          const info = await lstat(path);
+          if (path === unstableFixture.database && mainStatCalls++ % 2 === 1) {
+            return { ...info, mtimeMs: info.mtimeMs + 1 };
+          }
+          return info;
+        },
+        query: async () => [{ quick_check: "ok" }],
+      }),
+      /QWENWORK_DB_SNAPSHOT_SOURCE_CHANGED/u,
+    );
+    assert.equal(mainStatCalls, 6);
+  } finally {
+    await rm(unstableFixture.root, { recursive: true, force: true });
+  }
 });
