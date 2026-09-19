@@ -1,0 +1,121 @@
+{
+  "inspected_at": "2026-09-19T05:00:42.682128+00:00",
+  "scope": "read-only code and existing local samples; no new evaluation run",
+  "repository_head": "dba9700ee33db4fd9c7f404bc27958e0efbef246",
+  "repository_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench",
+  "source_files": [
+    {
+      "path": "tools/report/skills/web-e2e/report-web-e2e/scripts/aggregate_web_e2e_results.py",
+      "sha256": "c34b0fc6d581dd4badd79c8097ea790b9bf399207578e4b83f77bb1ab3a5bdea"
+    },
+    {
+      "path": "tools/report/skills/general-e2e/report-general-e2e/scripts/report_general_e2e.py",
+      "sha256": "24deb44ffc459744e13a91f90648e1c5b0c3fbeddb924a78649025c33a8ecdba"
+    },
+    {
+      "path": "tools/report/e2e-shared/resource-metrics/native-parsers.mjs",
+      "sha256": "8b05b8cfd8665fcdfcc9000ba696be2d155ce607afa121e8f927f088e47a8919"
+    },
+    {
+      "path": "tools/report/skills/web-e2e/execute-web-e2e/drivers/metrics/qwen-profile.mjs",
+      "sha256": "f3bbc3f5135871b04d30da1918fb17802884096a4ea2238489255a2d40e9a75f"
+    },
+    {
+      "path": "eval_general_e2e/contracts/schemas/resource-metrics-v1.schema.json",
+      "sha256": "e44768c78003940c5c90fbc9879eaf0746f53565050ed90486003cf188390397"
+    },
+    {
+      "path": "docs/design/general-e2e/evidence/g2-03/s1/raw/astronstudio-provider-events.jsonl",
+      "sha256": "7181fd47a6811190a0c03854e5bf382b0d99cd2aa90e0962998911a5bd499cd0"
+    }
+  ],
+  "astronstudio_source": {
+    "head": "12d9be52a1745cedd879a724879af2e430a42a53",
+    "runtime_billing_verified": false,
+    "database_read_result": "database is locked; no retry or client interruption",
+    "settled_event": "turn.billing.settled",
+    "settled_value": "payload.chargedPoints"
+  },
+  "workbuddy_sample": {
+    "client_version": "5.5.3",
+    "session_id": "397477a3-4086-4287-ac5d-1c99fa516353",
+    "trace": "/Users/gzx/.workbuddy/projects/Users-gzx-WorkBuddy-2026-09-04-15-36-40/397477a3-4086-4287-ac5d-1c99fa516353.jsonl",
+    "trace_sha256": "25cb1ea07eb003243353c2844ca86ef58fe776945b01ece31b98d86697eb4ccd",
+    "call_count": 173,
+    "result_count": 173,
+    "result_status_counts": {
+      "completed": 173
+    },
+    "results_with_structured_error": 1,
+    "credit_by_request_id": {
+      "218b2a4bf9164fcb8f6c8d546f80ae60": 269.1400000000001
+    },
+    "formal_metric": false,
+    "installed_main_node_js_sha256": "66be0475dddde1654e803fefbaefe83d9346c8b1d2b7bc1d40fd904744a6a0a8",
+    "credit_storage_semantics": "SqliteConversationUsagePort.persistUsage: credit[requestId] = previous + usage.cost.amount; snapshot must not be repeatedly summed"
+  },
+  "qwenwork_sample": {
+    "installed_client_version": "1.0.6",
+    "sample_date": "2026-09-16",
+    "sample_is_current_version_proof": false,
+    "path": "/Users/gzx/.qwenworkcn/logs/sessions/-Users-gzx-Project-GitHub-xgz-ai-evaluate-WildClawBench-WildClawBench-report-workspace-resource-metrics-validation-resource-metrics-smoke-20260916-harnesses-qwenwork-execution-tasks-07-Website-Generat-pzg4z1/d15b68a6-dae5-4db2-80d5-3b3547c8004d/segments/2026-09-16T13-53-01-154+08-00-akbkie-p70677.jsonl",
+    "sha256": "c690d3b2d3e1c352a6ae9fd3204aad7a4ea1bfee96e3d644a2d64b020e44d0e6",
+    "event_types": {
+      "session.config.loaded": 1,
+      "session.phase.started": 11,
+      "session.phase.finished": 13,
+      "input.prompt.received": 1,
+      "attachment.generator.finished": 63,
+      "input.prompt.submitted": 2,
+      "turn.started": 2,
+      "loop.iteration.started": 9,
+      "model.request.started": 9,
+      "tool.requested": 7,
+      "hook.started": 17,
+      "model.response.completed": 9,
+      "hook.finished": 17,
+      "permission.requested": 6,
+      "permission.resolved": 7,
+      "tool.shell.started": 3,
+      "tool.shell.finished": 3,
+      "tool.execution.finished": 7,
+      "loop.iteration.finished": 9,
+      "turn.finished": 2
+    },
+    "tool_terminal_status_counts": {
+      "success": 7
+    },
+    "turn_reasons": [
+      "end_turn",
+      "end_turn"
+    ],
+    "formal_metric": false
+  },
+  "doubaowork_sample": {
+    "client_version": "2.28.12",
+    "conversation_id": "38442617777983746",
+    "source": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/doubaowork-macos-probe/.local/doubaowork-probe/smoke-final-main.txt",
+    "sha256": "1e4eaeb13415a61cba64301a1a76c5881c389771ecf24222a820c658a7741f4e",
+    "observed_label": "消耗 0.46",
+    "unit_verified": false,
+    "settlement_verified": false,
+    "native_usage_verified": false
+  },
+  "external_sources": [
+    {
+      "url": "https://github.com/openai/openai-python/blob/main/src/openai/types/completion_usage.py",
+      "retrieved_via": "GitHub raw or GitHub contents API",
+      "sha256": "505975694e13d13a3cac7e9b2eff707ef8b125f0de91e32ccc89fc4b7c2161a2"
+    },
+    {
+      "url": "https://github.com/anthropics/anthropic-sdk-python/blob/main/src/anthropic/types/usage.py",
+      "retrieved_via": "GitHub raw or GitHub contents API",
+      "sha256": "067d4e2d9fa8b623af5d05010351709078d803234260569b841a0f9ba460c271"
+    },
+    {
+      "url": "https://github.com/anthropics/anthropic-cookbook/blob/main/misc/prompt_caching.ipynb",
+      "retrieved_via": "GitHub raw or GitHub contents API",
+      "sha256": "69bc116de8d9d763e63fd010d0b317dbfa056f5343c408bc65f8abb632e5a535"
+    }
+  ]
+}

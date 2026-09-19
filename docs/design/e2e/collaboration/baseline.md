@@ -5,20 +5,20 @@
 | 字段 | 当前记录 |
 | --- | --- |
 | 集成分支 | `feature/astroncode-eval`，按当前工程工作分支建立协作约定；仅集成负责人合入公共结果 |
-| 本 macOS 检出的 upstream | `github/feature/astroncode-eval`；只读本机 Git 配置所得，未进行远端 fetch 或 push 核验 |
+| 本 macOS 检出的 upstream | `github/feature/astroncode-eval`；2026-09-19 已 fetch 核验，远端仓库为 `github.com/Xgz20/WildClawBench` |
 | Windows remote | 未核验；别名可不同，首次接手核对实际仓库与上述同步源一致并记录在 Windows 任务卡，禁止直接假定 `origin` |
-| 最近只读核验的主项目源码 | `457e35560ea5cd090db1ce8b68c747de95ae3622`；这是文档核验来源，不是已发布的本轮并行开发基线 |
+| 最近核验的主项目源码 | `3cf2cc02c0c96ac05b3252262a78afc7a379a691`；保留最新 Git 同步修复；macOS smoke 证据提交为 `86786e219c29730dba26e28426bcbe3f2414dab8` |
 | 本轮推荐开发基线 SHA | **待登记**：macOS 最终收口、契约及最小公共接口集成后填写 |
 | 本轮基线状态 | `NOT_PUBLISHED`；新卡已初始化，但尚未发起新 Harness 任务 |
-| 契约目标 | `E2E-HARNESS-CONTRACT/0.1` 草案；随本次文档交付核定，不代表全部条款已实现 |
-| 最小公共接口 | 待 COMMON 核对最终 adapter 入口、状态/采集映射和新增指标字段/兼容约定；具体未实现功能需列出 |
-| 现有 macOS 验收参考 | [G4-03 证据](../../general-e2e/evidence/g4-03/README.md)；还需原任务确认最终 smoke 的交付 revision 与受影响项，不能仅据干净 checkout 认定全部收口 |
-| 分发/数据集身份 | 本轮待登记；若暂无新发行包，明确写“开发基线，不是发行候选”，不得沿用未知包 SHA |
+| 契约目标 | `E2E-HARNESS-CONTRACT/0.1`，契约/协作初始提交 `9f9389e`；未实现条款仍按适用能力逐步落地 |
+| 最小公共接口 | CB-A 开发接口在独立 `.agents/e2e-common-adapters` 实现；CB-B 正式收口独立推进，见[实施边界](implementation-boundaries.md) |
+| 现有 macOS 验收参考 | [当前双题 smoke](../../general-e2e/evidence/macos-current-smoke-20260919/README.md)与 [G4-03](../../general-e2e/evidence/g4-03/README.md)已核对；源码 `457e35560ea5cd090db1ce8b68c747de95ae3622` 的受控生产证据不自动继承为新公共接口真机证据 |
+| 分发/数据集身份 | 此轮交付是开发基线，不是新发行候选。既有正式包 `general-macos-production-20260919-141301` 的 source 为 `457e355...`，suite SHA `64208e9828cf32457938abb616bd522a914aaeda3828735d9169236f575059ec`，15 个 manifest 产物哈希已本地核验；后续新代码需重新构建并核验自身身份 |
 | 是否需等待新增指标全量完成 | 否；原始采集、字段映射和 fixture 可并行，公共字段语义/版本先明确 |
 
 首次发布前的清单：
 
-- [ ] 核对最终 AstronStudio macOS 收口提交与证据，并明确旧证据的沿用/复验范围。
+- [x] 核对最终 AstronStudio macOS 收口提交与证据：86786e2，collect/submission 的本地 SHA 与记录一致，正式包 15 项哈希一致；旧真机证据仅按原版本沿用。
 - [ ] 合入接入契约、本协作台账及必要公共接口，记录实际实现/集成 SHA；不存在的接口明确列为后续任务。
 - [ ] 明确哪些能力可直接开发、哪些依赖尚未满足；指标的缺失策略一致。
 - [ ] 写明公共修改的唯一负责人及各任务允许的修改范围。

@@ -3,12 +3,12 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 唯一负责人 | 本 macOS 控制任务；ID `01a0b79a-09d7-7271-810a-7796036b8f35` |
-| 工作状态 / 代码交付 | ACTIVE / LOCAL_ONLY，仅契约与协作文档草案已写入 worktree |
-| 分支 / worktree | `feat/e2e-harness-contract` / `<主项目>/.agents/e2e-harness-contract`；公共代码实现另建 worktree 后再登记 |
+| 工作状态 / 代码交付 | ACTIVE / LOCAL_ONLY，契约已本地提交；公共接口实施中，尚待集成发布 |
+| 分支 / worktree | 文档：`feat/e2e-harness-contract` / `<主项目>/.agents/e2e-harness-contract`；CB-A：`feat/e2e-common-adapters` / `<主项目>/.agents/e2e-common-adapters` |
 | 创建 base | `457e35560ea5cd090db1ce8b68c747de95ae3622` |
-| 已采用本轮公共基线 / 实现与集成 SHA | 未发布 / 未提交、未集成 |
-| 已读台账的 SYNC_SHA / 实际工作 HEAD | 尚未同步本轮远端台账；接手核验后分别记录 |
-| 同步来源 | 主项目 upstream 为 `github/feature/astroncode-eval`，未在本轮访问远端 |
+| 已采用本轮公共基线 / 实现与集成 SHA | 本轮待发布；文档初始提交 `9f9389e`，已在契约 worktree 合入主项目 `3cf2cc0` |
+| 已读台账的 SYNC_SHA / 实际工作 HEAD | 远端同步核验 `3cf2cc02c0c96ac05b3252262a78afc7a379a691`；后续文档/接口提交以 Git 历史为准 |
+| 同步来源 | `github/feature/astroncode-eval`，已在本轮 fetch 核验 |
 | 最后更新 | 2026-09-19（Asia/Shanghai），控制任务初始化记录 |
 
 ## 范围与修改归属
@@ -19,30 +19,31 @@
 
 ## 完成清单
 
-- [x] **COMMON-DOC01**：形成统一契约、Windows 启动包和跨平台协作台账草案；本 worktree 可审阅，尚未提交发布。
-- [ ] **COMMON-CB01**：核对原任务最终 macOS smoke 的实现提交、证据和未决项。
+- [x] **COMMON-DOC01**：契约、Windows 启动包和跨平台台账提交为 `9f9389e`；已在文档分支合入最新主项目，尚待公共发布。
+- [x] **COMMON-CB01**：核对最终 smoke 提交 `86786e2`，来源任务已完成；collect/submission 和正式包 15 项哈希一致。未知交互/timeout、全量及 Windows 等边界沿用原记录，未提升支持声明。
 - [ ] **COMMON-CB02**：契约与最小公共接口集成，明确 adapter/状态/指标字段版本、兼容和缺失值策略；未实现项如实列出。
 - [ ] **COMMON-CB03**：确定公共文件负责人，完成必要回归；核对两机同步仓库与集成分支。
 - [ ] **COMMON-CB04**：在既有授权内发布可消费基线及交接，登记真实 SHA；此项是四个新平台任务进入适配实施的共同前提。
+- [ ] **COMMON-CB05**：CB-B 公共正式收口、原生身份映射、多源 trace/provenance 和平台进程清理 hook；新 General adapter 的正式 collect 依赖此项，probe/执行与 fixtures 可先推进。
 - [ ] **COMMON-CM01**：公共五项新增指标聚合/报告与 AstronStudio 参考映射，含 fixtures 和实际来源对账；不阻塞依赖已明确的客户端适配。
 - [ ] **COMMON-IN01**：接收平台改动、合入并派发受影响回归；每一批新增交接 ID，不能以本项勾选替代所有后续轮次。
 
 ## 下一项与依赖
 
-下一项：完成 COMMON-CB01，核对最终 smoke 的交付 revision，评估契约与接口是否需按最终代码调整；同时可审查本地文档。当前既有 G4-03 证据是参考，尚未由本卡确认“最终收口已完成”。
+下一项：审查并合入 CB-A adapter/state 接口，验证旧 AstronStudio 与脱仓闭包，完成 COMMON-CB02/03/04，派发三个 macOS 独立任务与 Windows 交接。公共接口代码由本控制任务的独立 worktree 实现，不能由平台分支分别改造。
 
 之后完成 COMMON-CB02/03/04。公共指标全实现不是 CB04 的条件；但接口和缺失值语义必须有明确依据，不能把一个文档草案当作通用 adapter 入口已经实现。
 
 ## 本机现场与恢复
 
-文档 worktree 与上述 base 已核验。未在此轮发起 Harness 执行或新开发任务。其他任务的活动运行、桌面占用和最终 smoke 现场未在本轮核验，任何后续桌面操作先检查现场。调试产物继续使用仓库外本地目录；原始候选/轨迹不放进台账。
+文档与公共接口 worktree 已登记；本轮没有发送评测 Prompt。原 General 任务已确认 idle/completed，但这不代表全桌面没有其他工作，任何后续操作先检查现场。三个新 macOS 任务首阶段只做独立开发与只读盘点，真机时段由本控制任务安排。调试产物使用 `/Users/gzx/debug-workspace/e2e-evaluate`，原始候选/轨迹不放进台账。
 
 ## 接收记录
 
 | 交接 ID | 状态 | 已采用集成 SHA | 处理结果与证据 | 下一项 |
 | --- | --- | --- | --- | --- |
-| 尚无正式记录 | — | — | 接手时扫描全部目标含 COMMON/ALL 的正式交接 | COMMON-CB01 |
+| 原 General smoke 收口（历史交付） | VERIFIED | `86786e219c29730dba26e28426bcbe3f2414dab8` | 本地 collect/submission 哈希及生产包 15 项通过；不冒充新接口真机证据 | COMMON-CB02 |
 
 ## 本轮交付
 
-本地协作文档初稿；未发出正式交接、未 commit/push/merge。2026-09-19 本 worktree 文档检查：14 份文档、100 个本地链接有效，5 张任务卡与索引匹配，包含同步/现场/接收/下一项字段；契约仍为 3 章、32 个唯一要求；代码块与行尾检查、`git diff --check` 通过。这些只是文档结构检查，不作为平台真机证据。主项目 HEAD 仍为上述核验基线且工作区干净。
+文档初始提交为 `9f9389e`，已在契约 worktree 合入 `3cf2cc0`；本轮开发基线尚未 push，正式交接待公共接口通过后发布。初始 14 份文档/100 个本地链接、5 张任务卡与索引及契约 3 章/32 个唯一要求校验通过；补充并行实施边界和历史指标盘点后再次检查链接、代码块与 `git diff --check` 通过。这些是文档结构检查，不作为平台真机证据。
