@@ -36,7 +36,7 @@ COMMON-001 已交付三个 Mac 任务，首轮实现/证据与公共需求已收
 
 ## 本机现场与恢复
 
-文档与公共接口 worktree 已登记。三个 Mac 任务沿用原绑定，见[派发记录](../dispatch.md)；第二轮已将唯一桌面时段分配给 DoubaoWork 开发采样，其余任务离线开发。实际发送/活动现场以平台回报为准，不能从时段分配推断已发送或已停止。调试产物使用 `/Users/gzx/debug-workspace/e2e-evaluate`，原始候选/轨迹不放进台账。
+文档与公共接口 worktree 已登记。三个 Mac 任务沿用原绑定，见[派发记录](../dispatch.md)；SLOT01 DoubaoWork 采样已释放；SLOT02 分配 WorkBuddy 的 PRECHECK_ONLY，未放行发送。QwenWork/DoubaoWork 离线收口。实际发送/活动现场以平台回报为准，不能从时段分配推断已发送或已停止。调试产物使用 `/Users/gzx/debug-workspace/e2e-evaluate`，原始候选/轨迹不放进台账。
 
 ## 接收记录
 
@@ -45,6 +45,7 @@ COMMON-001 已交付三个 Mac 任务，首轮实现/证据与公共需求已收
 | 原 General smoke 收口（历史交付） | VERIFIED | `86786e219c29730dba26e28426bcbe3f2414dab8` | 本地 collect/submission 哈希及生产包 15 项通过；不冒充新接口真机证据 | COMMON-CB02 |
 | MAC-WORKBUDDY-GENERAL-001 | SEEN | 未集成 | 已读首轮交付并要求修复状态/来源路径/工具结局，公共需求纳入 CB-B | 复核后集成 |
 | MAC-QWENWORK-GENERAL-001 | SEEN | 未集成 | 已读首轮交付并要求修复终态/会话选择/工具结局，公共需求纳入 CB-B | 复核后集成 |
+| MAC-QWENWORK-GENERAL-002 | SEEN | 未集成 | P2 与锁/依赖修复已读；d9eabf0 已采用公共基线，独立审查四项 live 前问题交回修复 | 目标修复复核 |
 | MAC-DOUBAOWORK-WEB-001 | SEEN | 未集成 | 已读交付；路径/去重反例待修复，分配首个开发采样时段 | 采样与公共接入 |
 
 ## 本轮交付
