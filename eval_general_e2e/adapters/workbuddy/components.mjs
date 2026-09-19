@@ -33,7 +33,7 @@ export const WORKBUDDY_MACOS_INSTALLATION_VARIANTS = Object.freeze([
 
 export const WORKBUDDY_SHARED_COMPONENTS = Object.freeze({
   "desktop-app-discovery": DESKTOP_APP_DISCOVERY_VERSION,
-  "general-contracts": "1.1.0",
+  "general-contracts": "1.2.0",
 });
 
 export {
