@@ -6,8 +6,8 @@
 | 工作状态 / 代码交付 | ACTIVE / INTEGRATED；契约、CB-A/CB-B 与三个平台开发 Driver 已集成；正式采集、真机问题修复与新增指标继续推进 |
 | 分支 / worktree | 文档：`feat/e2e-harness-contract` / `<主项目>/.agents/e2e-harness-contract`；CB-A：`feat/e2e-common-adapters` / `<主项目>/.agents/e2e-common-adapters` |
 | 创建 base | `457e35560ea5cd090db1ce8b68c747de95ae3622` |
-| 已采用本轮公共基线 / 实现与集成 SHA | 推荐源码 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3`；平台与公共原提交保留，见 COMMON-001/002/003 |
-| 已读台账的 SYNC_SHA / 实际工作 HEAD | 初始 fetch `3cf2cc02c0c96ac05b3252262a78afc7a379a691`；上一公共台账 46a23a4 已 push/ls-remote 核验；本轮源码与 COMMON-003 同步发布，实际 SYNC_SHA 由接收方固定，避免自指 SHA |
+| 已采用本轮公共基线 / 实现与集成 SHA | 推荐源码 `2023b4d5d1d703c81ff8ed15e0d5ada29cd0dca4`；平台与公共原提交保留，见 COMMON-001/002/003/004 |
+| 已读台账的 SYNC_SHA / 实际工作 HEAD | 初始 fetch `3cf2cc02c0c96ac05b3252262a78afc7a379a691`；公共台账 82e947b 已 push/ls-remote 核验；本轮输入修复与 COMMON-004 同步发布，实际 SYNC_SHA 由接收方固定，避免自指 SHA |
 | 同步来源 | `github/feature/astroncode-eval`，已在本轮 fetch 核验 |
 | 最后更新 | 2026-09-19（Asia/Shanghai），三个平台开发入口集成与采样交接 |
 
@@ -27,7 +27,8 @@
 - [x] **COMMON-CB05**：CB-B 第一批通用机制提交 `eb23784`，trace v2 / 多来源 / 共用 finalizer / cleanup hook 校验与脱仓执行完成；本轮 General 94 + Web 61 通过。平台真实原生采集和 cleanup 实现及正式闭环尚待各任务验收。
 - [ ] **COMMON-CM01**：公共五项新增指标聚合/报告与 AstronStudio 参考映射，含 fixtures 和实际来源对账；不阻塞依赖已明确的客户端适配。
 - [x] **COMMON-IN01**：接收并审查首批三平台 P2 与修复，保留原提交合入；252 项组合回归通过，新增 COMMON-003。此勾选仅代表本批，不代表完整平台验收。
-- [ ] **COMMON-IN02**：接收 WorkBuddy 真实输入修复、Qwen live/collector、Doubao terminal/cleanup 与公共 Web 复用方案；按范围独立审查后新增交接。
+- [x] **COMMON-IN02**：WorkBuddy 输入修复及 canary 交接已集成，Qwen SLOT04 证据/COMMON-003 接收记录已集成；Web 最小复用方案明确，发布 COMMON-004。
+- [ ] **COMMON-IN03**：WorkBuddy SLOT05 真实结果及专属 collector、Qwen selector/只读 DB/collector、Doubao cleanup 动态反例与等价绑定、COMMON 公共 Web 接线；逐项审查，不因前批已合入而跳过。
 
 ## 下一项与依赖
 
@@ -39,17 +40,17 @@ Windows 接收 COMMON-001/002/003 后直接推进本机 G5-01，无需等待 Mac
 
 ## 本机现场与恢复
 
-控制集成 worktree 为 `.agents/e2e-harness-contract`；三个平台保持原绑定。SLOT01/02/03 已释放，SLOT04 也已释放；当前无桌面持有者，三平台继续离线修复。WorkBuddy 用户草稿已精确恢复，Doubao 候选 HTTP 服务残留不等于安全清理完成。实时状态以平台回报为准；完整调度见[控制推进记录](../control-progress.md)。原始数据位于 `/Users/gzx/debug-workspace/e2e-evaluate`，不写入仓库或 report-workspace。
+控制集成 worktree 为 `.agents/e2e-harness-contract`；三个平台保持原绑定。SLOT01/02/03 已释放，SLOT04 也已释放；WorkBuddy 已获 SLOT05，Qwen/Doubao 继续离线修复。WorkBuddy 用户草稿已精确恢复，Doubao 候选 HTTP 服务残留不等于安全清理完成。实时状态以平台回报为准；完整调度见[控制推进记录](../control-progress.md)。原始数据位于 `/Users/gzx/debug-workspace/e2e-evaluate`，不写入仓库或 report-workspace。
 
 ## 接收记录
 
 | 交接 ID | 状态 | 已采用集成 SHA | 处理结果与证据 | 下一项 |
 | --- | --- | --- | --- | --- |
 | 原 General smoke 收口（历史交付） | VERIFIED | `86786e219c29730dba26e28426bcbe3f2414dab8` | 本地 collect/submission 哈希及生产包 15 项通过；不冒充新接口真机证据 | COMMON-CB02 |
-| MAC-WORKBUDDY-GENERAL-001 及 P2 后续交付 | ADOPTED | merge `8dac427`，含 `b3ac3da` | 源码/fixture 审查和 Node 23/23 通过；SLOT03 发送按钮 disabled，未实际发送，草稿已恢复 | 输入修复、新 handoff 与 collector |
+| MAC-WORKBUDDY-GENERAL-001 及 P2 后续交付 | ADOPTED | merge `8dac427`，含 `b3ac3da` | 源码/fixture 审查和 Node 23/23 通过；SLOT03 发送按钮 disabled，未实际发送，草稿已恢复 | 输入修复 5bea762 与新 handoff 已集成；SLOT05 真机与 collector待验 |
 | MAC-QWENWORK-GENERAL-001/002 及恢复修复 | ADOPTED | merge `c4b1f7b`，含 `9081df5` | Node 32 + Python 3 与 Swift typecheck 通过；CLI 脱仓另修为 `dc5ff64` | 修 selector/关闭库 probe、交接 SLOT04 失败关闭证据与独立 collector |
 | MAC-DOUBAOWORK-WEB-001/002 | ADOPTED | merge `b484085`、`769e9b5`，含 `3a3057c` | Node 39/39；一次发送/绑定、网站生成已核对；可信终态/cleanup/正式闭环未完成 | 原生来源、精确 cleanup 与 Web 公共接入 |
 
 ## 本轮交付
 
-推荐源码 `dc5ff64`，252 项不重复测试通过。General execute 0.8.0、Web execute 1.15.0；其余 COMMON-002 版本保持。COMMON-003 给出各任务固定 SHA 的接收动作与 live 边界；Windows 启动包同步更新。没有新生产发行，也没有把三个客户端标成完整 E2E 通过。
+推荐源码 `2023b4d`。COMMON-003 的252项组合测试通过；本批 WorkBuddy Node25、General Python46 复跑通过。General execute0.8.1、Web execute1.15.0；COMMON-004 给出输入修复、Web等价证据和下一批动作。Doubao 0f6d2c6 因动态进程反例退回，未合入。没有新生产发行，也没有把三个客户端标成完整E2E通过。

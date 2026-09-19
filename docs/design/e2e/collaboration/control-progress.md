@@ -4,7 +4,7 @@
 
 ## 当前交付与下一项
 
-本轮把三个平台的开发 Driver 集成到公共分支，完成 252 项组合测试，推荐源码为 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3`，版本和接收要求见 [COMMON-003](handoffs/COMMON-003.md)。源码全部在 `.agents/e2e-harness-contract` 集成；不把开发 canary 或离线测试写成正式 E2E 完成。
+本轮把三个平台的开发 Driver 集成到公共分支，完成 252 项组合测试，COMMON-003 源码为 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3`；后续输入修复源码 `2023b4d5d1d703c81ff8ed15e0d5ada29cd0dca4` 见 [COMMON-004](handoffs/COMMON-004.md)。源码全部在 `.agents/e2e-harness-contract` 集成；不把开发 canary 或离线测试写成正式 E2E 完成。
 
 | 任务 | 已审查并集成的交付 | 正在推进 |
 | --- | --- | --- |
@@ -13,7 +13,7 @@
 | MAC-DOUBAOWORK-WEB | P2 `47dcaee`、公共 merge `ca7cc2e`、更正 `3a3057c`；Node 39/39 | 离线审计原生 terminal/完整 workspace 绑定、实现精确 cleanup 及反例；COMMON 审查最小 Web 公共接口复用 |
 | COMMON | CB-A/CB-B、三 Driver、发行版本与 Qwen CLI 路径别名修复 | 发布 COMMON-003，接收下一批平台修复/collector；新增五项指标另属 COMMON-CM01 |
 
-公共/平台组合回归：General Python 63、Node 128（公共 34、WorkBuddy 23、Qwen 32、Doubao 39）、Web Python 61。General execute 0.8.0、Web execute 1.15.0；其他 COMMON-002 版本保持。尚未新建生产发行包。
+公共/平台组合回归：General Python 63、Node 128（公共 34、WorkBuddy 23、Qwen 32、Doubao 39）、Web Python 61。General execute 本批升为 0.8.1（WorkBuddy25、General Python46复跑通过）、Web execute 1.15.0；其他 COMMON-002 版本保持。尚未新建生产发行包。
 
 ## 桌面时段
 
@@ -59,4 +59,6 @@ General trace v2 / common finalizer 已由 COMMON-002 提供；平台真实 coll
 
 原生工具 completed 不等于业务成功；缺失指标保持 null、known subtotal、coverage。取消/中断、来源路径、锁 stale 双接管和恢复状态反例已经分别复核，不能以此替代尚未进行的真实恢复/cleanup/评分验收。
 
-Windows 接收 COMMON-001/002/003 和最新 baseline 后继续本机 G5-01，无需等待三个 Mac 或新增指标完成。Windows 真机记录由接收方回写，本控制任务未操作或代填其通过状态。两机以固定 SHA 和新增 handoff 接续，活动批次不切源码/Skill。
+Windows 接收 COMMON-001/002/003/004 和最新 baseline 后继续本机 G5-01，无需等待三个 Mac 或新增指标完成。Windows 真机记录由接收方回写，本控制任务未操作或代填其通过状态。两机以固定 SHA 和新增 handoff 接续，活动批次不切源码/Skill。
+
+Doubao 0f6d2c6 cleanup 独立审查未通过，未合入：父退出后 reparent 子进程丢失、PID复用后再次发信号、归属在信号前过期，以及 ..cache 合法路径/workspace实体变化反例已退回平台。未调用真实canary清理；修复后再复核。
