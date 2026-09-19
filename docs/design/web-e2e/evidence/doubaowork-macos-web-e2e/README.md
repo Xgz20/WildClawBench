@@ -1,6 +1,6 @@
 # DoubaoWork macOS Web E2E P1 只读能力与字段映射
 
-证据日期：2026-09-19（Asia/Shanghai）。任务：`MAC-DOUBAOWORK-WEB`。状态：**P1 完成；P2 及正式 Web 闭环未开始**。
+证据日期：2026-09-19（Asia/Shanghai）。任务：`MAC-DOUBAOWORK-WEB`。状态：**P1 完成；P2 客户端离线 journal 已实现，真机执行及正式 Web 闭环未开始**。
 
 本文记录本任务分支上的只读 probe、旧 smoke 原生证据旁路解析、脱敏 fixture 与公共接口缺口。它不把 2026-09-19 的旧站点生成 smoke 升级为正式 execution/collect/评分证据，也不声明 DoubaoWork 已达到 Web 主流程生产可用。
 
@@ -58,10 +58,13 @@
 - `probe.mjs`：校验 app/Bundle ID、唯一 loopback 监听者、CDP 版本、唯一 page target 和只读 DOM；默认不产出敏感截图/aria。
 - `platform.mjs`：只读应用身份、监听进程和原生 source metadata 发现；session 必须显式传入数字 ID。
 - `native-evidence.mjs`：有界读取显式 session 的普通 `trajectory.jsonl`，输出 adapter 私有旁路证据；不修改源文件或历史 execution。
+- `state.mjs`：客户端专属 automation journal 与恢复决策；保存 Prompt SHA 而非正文，在 UI click 前原子登记唯一 dispatch attempt，并用 UI/native 两组发送前基线失败关闭地绑定新 session。当前不生成正式 execution record。
 - `select-folder.swift`：迁入并加固旧 probe helper；拒绝多主应用、相对/符号链接目录，仍要求客户端 tooltip 完整路径二次回读。当前只通过静态 typecheck，没有在本轮运行。
 - `test/fixtures/`：Prompt、文件内容、工具结果、绝对路径、真实 session/agent ID 均已替换；没有账号、认证、历史侧栏或截图。
 
-Focused checks：Node 14/14 通过；四个 `.mjs` `node --check` 通过；`swiftc -typecheck select-folder.swift` 通过。只读实机 probe 最终退出码 0；原生旁路提取退出码 0。代码/fixture 结果不能替代 P2 真机一次发送、P3 正式收口或评分闭环。
+实现 SHA：P1 `f168f2e4c7e5e447249cfb7e96b0d195b99e3e60`；P2 离线 journal `d183e28f2224aed40fd14ae43d8f7ab9ce6cbb0b`。
+
+Focused checks：Node 23/23 通过；五个 `.mjs` `node --check` 通过；`swiftc -typecheck select-folder.swift` 与 `git diff --check` 通过。只读实机 probe 最终退出码 0；原生旁路提取退出码 0。P2 新增测试全部是 fixture/离线状态测试，不能替代真机一次发送、P3 正式收口或评分闭环。
 
 ## 4. COMMON / CB-B 精确接口需求
 
