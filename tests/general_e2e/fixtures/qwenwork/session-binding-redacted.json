@@ -1,0 +1,22 @@
+{
+  "schema_version": "wildclawbench.general-e2e-qwenwork-session-binding/v1",
+  "identity": {
+    "batch_id": "batch-qwen-collector",
+    "unit_id": "unit-qwen-collector",
+    "task_id": "task-qwen-collector",
+    "attempt_id": "attempt-qwen-collector"
+  },
+  "prompt_sha256": "[REDACTED_SHA256]",
+  "workspace": "/private/tmp/qwenwork-general-fixture/workspace",
+  "local_project_id": "project-fixture-001",
+  "conversation_id": "conversation-fixture-001",
+  "sub_chat_id": "sub-chat-fixture-001",
+  "session_id": "session-fixture-001",
+  "terminal_observation": {
+    "trusted_terminal": true,
+    "target_session_verified": true,
+    "active_stream": false,
+    "stop_confirmed": true,
+    "conflicts": []
+  }
+}
