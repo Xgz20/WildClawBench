@@ -10,6 +10,7 @@ import stat
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
 
@@ -224,7 +225,179 @@ def create_execution_state(unit: Path) -> Path:
     return path
 
 
+def create_general_execution_state(root: Path, harness: str = "workbuddy", platform: str = "macos") -> tuple[Path, Path]:
+    unit = create_unit(root)
+    task_root = unit / "execution/tasks" / TASK_ID
+    workspace = task_root / "workspace"
+    workspace.mkdir(parents=True)
+    prompt = task_root / "prompt.md"
+    prompt.write_text("Create the requested artifact.\n", encoding="utf-8")
+    prompt_digest = sha256_bytes(prompt.read_bytes())
+    manifest = unit_manifest()
+    manifest["unit"]["harness"] = {"id": harness, "platform": platform, "version": "1.0.0"}
+    manifest["tasks"] = [{
+        "task_id": TASK_ID,
+        "workspace": {"path": workspace.relative_to(unit).as_posix()},
+        "prompt": {"path": prompt.relative_to(unit).as_posix(), "sent_sha256": prompt_digest},
+    }]
+    write_json(unit / "manifest.json", manifest)
+    path = create_execution_state(unit)
+    document = json.loads(path.read_text(encoding="utf-8"))
+    binding = path.parent / "session-binding.json"
+    write_json(binding, {"native_session_id": "native-session-1", "cwd": str(workspace), "prompt_sha256": prompt_digest})
+    document.update({
+        "schema_version": MODULE.GENERAL_EXECUTION_STATE_SCHEMA,
+        "driver": {"id": f"{harness}-{platform}", "version": "0.1.0", "harness": harness, "platform": platform},
+        "task_root": str(task_root), "candidate_workspace": str(workspace),
+        "prompt": {"path": str(prompt), "sha256": prompt_digest, "send_status": "sent", "sent_at": "2026-09-18T00:00:00Z"},
+        "session": {"thread_id": None, "turn_id": None, "session_id": "native-session-1", "cwd": str(workspace), "verified": True,
+                    "binding_evidence": [{"path": binding.relative_to(unit).as_posix(), "sha256": sha256_bytes(binding.read_bytes()), "size": binding.stat().st_size}]},
+        "execution": {"business_status": "completed", "started_at": "2026-09-18T00:00:00Z", "finished_at": "2026-09-18T00:01:00Z", "duration_seconds": 60, "error": None, "cancellation_confirmed": None},
+        "human_assistance": {"mode": "automatic", "operation_count": 0, "semantic_intervention_count": 0},
+    })
+    write_json(path, document)
+    MODULE.initialize_state(argparse.Namespace(root=str(unit), scope="unit", stage=["execute,collect-evidence"], input=[]))
+    return unit, path
+
+
 class RunGeneralE2ETests(unittest.TestCase):
+    def test_general_adapter_terminal_states_preserve_native_null_ids(self) -> None:
+        for harness, platform in (("workbuddy", "macos"), ("qwenwork", "macos"), ("astronstudio", "windows")):
+            with self.subTest(harness=harness, platform=platform), tempfile.TemporaryDirectory() as temporary:
+                unit, path = create_general_execution_state(Path(temporary), harness, platform)
+                result = MODULE.record_execution_states(argparse.Namespace(root=str(unit), state=[str(path)]))
+                self.assertEqual(result["state"]["stages"]["execute"], "COMPLETED")
+                self.assertEqual(result["state"]["stages"]["collect-evidence"], "PENDING")
+                self.assertEqual(result["state"]["artifacts"]["execute"]["states"][0]["sha256"], sha256_bytes(path.read_bytes()))
+                self.assertIsNone(json.loads(path.read_text())["session"]["turn_id"])
+
+    def test_general_state_rejects_identity_dispatch_and_binding_failures(self) -> None:
+        changes = [
+            (("schema_version",), "wildclawbench.general-e2e-other/v1", "SCHEMA_UNSUPPORTED"),
+            (("driver", "harness"), "qwenwork", "DRIVER_BINDING"),
+            (("driver", "platform"), "windows", "DRIVER_BINDING"),
+            (("driver", "version"), "dev", "SHAPE_INVALID"),
+            (("identity", "batch_id"), "another", "IDENTITY_MISMATCH"),
+            (("identity", "task_id"), "../another", "IDENTITY_MISMATCH"),
+            (("dataset", "digest"), "f" * 64, "IDENTITY_MISMATCH"),
+            (("phase",), "RUNNING", "NOT_TERMINAL"),
+            (("prompt", "sha256"), "f" * 64, "PROMPT_HASH"),
+            (("send", "dispatch_attempt_count"), 2, "SHAPE_INVALID"),
+            (("send", "dispatch_attempt_count"), True, "SHAPE_INVALID"),
+            (("prompt", "send_status"), "uncertain", "DISPATCH_INVARIANT"),
+            (("session", "verified"), False, "SESSION_BINDING_UNVERIFIED"),
+            (("session", "binding_evidence"), [], "SESSION_BINDING_UNVERIFIED"),
+            (("session", "session_id"), None, "SESSION_BINDING_UNVERIFIED"),
+            (("session", "binding_evidence", 0, "path"), "../escape.json", "EVIDENCE_PATH_INVALID"),
+            (("session", "binding_evidence", 0, "path"), "C:/escape.json", "EVIDENCE_PATH_INVALID"),
+            (("session", "binding_evidence", 0, "sha256"), "f" * 64, "EVIDENCE_HASH_MISMATCH"),
+            (("session", "binding_evidence", 0, "size"), 0, "SHAPE_INVALID"),
+        ]
+        for keys, value, error in changes:
+            with self.subTest(keys=keys, value=value), tempfile.TemporaryDirectory() as temporary:
+                unit, path = create_general_execution_state(Path(temporary))
+                document = json.loads(path.read_text())
+                target = document
+                for key in keys[:-1]:
+                    target = target[key]
+                target[keys[-1]] = value
+                write_json(path, document)
+                with self.assertRaisesRegex(MODULE.FlowError, error):
+                    MODULE.record_execution_states(argparse.Namespace(root=str(unit), state=[str(path)]))
+                self.assertEqual(MODULE.load_state(unit)["stages"]["execute"], "PENDING")
+
+    def test_unsent_failure_requires_explicit_not_sent_infrastructure_status(self) -> None:
+        for send_status in ("not_sent", "intent_persisted", "uncertain"):
+            with self.subTest(send_status=send_status), tempfile.TemporaryDirectory() as temporary:
+                unit, path = create_general_execution_state(Path(temporary))
+                document = json.loads(path.read_text())
+                document["phase"] = "FAILED"
+                document["send"]["dispatch_attempt_count"] = 0
+                document["prompt"].update(send_status=send_status, sent_at=None)
+                document["execution"]["business_status"] = "infrastructure_error"
+                document["session"].update(verified=False, cwd=None, session_id=None, binding_evidence=[])
+                write_json(path, document)
+                if send_status == "not_sent":
+                    result = MODULE.record_execution_states(argparse.Namespace(root=str(unit), state=[str(path)]))
+                    self.assertEqual(result["state"]["stages"]["execute"], "COMPLETED")
+                else:
+                    with self.assertRaisesRegex(MODULE.FlowError, "DISPATCH_INVARIANT"):
+                        MODULE.record_execution_states(argparse.Namespace(root=str(unit), state=[str(path)]))
+
+    def test_dispatched_failure_requires_verified_session_and_cancellation(self) -> None:
+        for status in ("candidate_error", "timeout", "cancelled", "infrastructure_error"):
+            with self.subTest(status=status), tempfile.TemporaryDirectory() as temporary:
+                unit, path = create_general_execution_state(Path(temporary))
+                document = json.loads(path.read_text())
+                document["phase"] = "FAILED"
+                document["execution"].update(business_status=status, cancellation_confirmed=True)
+                document["session"]["verified"] = False
+                write_json(path, document)
+                with self.assertRaisesRegex(MODULE.FlowError, "SESSION_BINDING_UNVERIFIED"):
+                    MODULE.record_execution_states(argparse.Namespace(root=str(unit), state=[str(path)]))
+                document["session"]["verified"] = True
+                if status in {"timeout", "cancelled"}:
+                    document["execution"]["cancellation_confirmed"] = False
+                    write_json(path, document)
+                    with self.assertRaisesRegex(MODULE.FlowError, "CANCELLATION_UNVERIFIED"):
+                        MODULE.record_execution_states(argparse.Namespace(root=str(unit), state=[str(path)]))
+                    document["execution"]["cancellation_confirmed"] = True
+                write_json(path, document)
+                result = MODULE.record_execution_states(argparse.Namespace(root=str(unit), state=[str(path)]))
+                self.assertEqual(result["state"]["artifacts"]["execute"]["states"][0]["business_status"], status)
+
+    def test_general_state_paths_and_hashed_files_remain_locked(self) -> None:
+        for mutation in ("workspace", "cwd", "prompt", "symlink", "duplicate", "missing-null"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as temporary:
+                unit, path = create_general_execution_state(Path(temporary))
+                document = json.loads(path.read_text())
+                if mutation == "workspace":
+                    document["candidate_workspace"] = str(unit)
+                elif mutation == "cwd":
+                    document["session"]["cwd"] = str(unit)
+                elif mutation == "prompt":
+                    Path(document["prompt"]["path"]).write_text("changed")
+                elif mutation == "symlink":
+                    evidence = unit / document["session"]["binding_evidence"][0]["path"]
+                    source = unit.parent / "outside.json"
+                    source.write_bytes(evidence.read_bytes())
+                    evidence.unlink()
+                    evidence.symlink_to(source)
+                elif mutation == "duplicate":
+                    document["session"]["binding_evidence"] *= 2
+                else:
+                    del document["session"]["turn_id"]
+                write_json(path, document)
+                with self.assertRaises(MODULE.FlowError):
+                    MODULE.record_execution_states(argparse.Namespace(root=str(unit), state=[str(path)]))
+
+    def test_state_hash_records_the_validated_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            unit, path = create_general_execution_state(Path(temporary))
+            original = path.read_bytes()
+            digest = sha256_bytes(original)
+            hash_file = MODULE.sha256_file
+            def mutate_after_hash(candidate):
+                current = hash_file(candidate)
+                if candidate.resolve() == path.resolve():
+                    path.write_bytes(original + b" ")
+                return current
+            with mock.patch.object(MODULE, "sha256_file", side_effect=mutate_after_hash):
+                result = MODULE.record_execution_states(argparse.Namespace(root=str(unit), state=[str(path)]))
+            artifact = result["state"]["artifacts"]["execute"]["states"][0]
+            self.assertEqual(artifact["sha256"], digest)
+            self.assertEqual(artifact["size"], len(original))
+            self.assertNotEqual(artifact["sha256"], sha256_bytes(path.read_bytes()))
+
+    def test_legacy_state_cannot_impersonate_another_harness(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            unit, path = create_general_execution_state(Path(temporary))
+            document = json.loads(path.read_text())
+            document["schema_version"] = MODULE.EXECUTION_STATE_SCHEMA
+            write_json(path, document)
+            with self.assertRaisesRegex(MODULE.FlowError, "DRIVER_BINDING_MISMATCH"):
+                MODULE.record_execution_states(argparse.Namespace(root=str(unit), state=[str(path)]))
+
     def test_extract_defers_read_only_directory_modes_until_children_exist(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             destination = (Path(temp_dir) / "imported").resolve()

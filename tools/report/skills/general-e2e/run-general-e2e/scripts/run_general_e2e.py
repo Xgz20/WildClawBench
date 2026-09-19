@@ -62,6 +62,7 @@ RECEIPT_STAGE_MAP = {
     "report": "report",
 }
 EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1"
+GENERAL_EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-execution-state/v1"
 EXECUTION_TERMINAL_PHASES = {"COMPLETED", "FAILED"}
 EXECUTION_BUSINESS_STATUSES = {
     "completed",
@@ -206,20 +207,20 @@ def resolve_directory(path: Path, code: str) -> Path:
     return resolved
 
 
-def load_contract_validator():
+def load_contract_validator(module_file: str = "validator.py"):
     skill_root = Path(__file__).resolve().parents[1]
-    vendored = skill_root / "vendor/e2e-shared/general-contracts/validator.py"
+    vendored = skill_root / "vendor/e2e-shared/general-contracts" / module_file
     candidates = [vendored]
     # Source-checkout fallback; released Skill packages always use the vendored copy.
     for parent in skill_root.parents:
-        candidate = parent / "eval_general_e2e/contracts/validator.py"
+        candidate = parent / "eval_general_e2e/contracts" / module_file
         if candidate.is_file():
             candidates.append(candidate)
             break
     module_path = next((path for path in candidates if path.is_file()), None)
     if module_path is None:
         raise FlowError("GENERAL_CONTRACT_VALIDATOR_UNAVAILABLE")
-    module_name = "wildclawbench_vendored_general_contracts"
+    module_name = f"wildclawbench_vendored_general_contracts_{Path(module_file).stem}"
     spec = importlib.util.spec_from_file_location(module_name, module_path)
     if spec is None or spec.loader is None:
         raise FlowError("GENERAL_CONTRACT_VALIDATOR_UNAVAILABLE")
@@ -593,7 +594,7 @@ def record_execution_states(args: argparse.Namespace) -> dict[str, Any]:
     paths = [resolve_regular_file(Path(value), "EXECUTION_STATE_MISSING") for value in args.state]
     if not paths:
         raise FlowError("EXECUTION_STATE_REQUIRED")
-    by_task: dict[str, tuple[Path, dict[str, Any]]] = {}
+    by_task: dict[str, tuple[Path, dict[str, Any], str, int]] = {}
     expected_dataset = {
         "id": state["identity"]["dataset"]["id"],
         "digest": state["identity"]["dataset"]["digest"],
@@ -601,14 +602,38 @@ def record_execution_states(args: argparse.Namespace) -> dict[str, Any]:
     for path in paths:
         if not _inside(root, path):
             raise FlowError(f"EXECUTION_STATE_OUTSIDE_ROOT: {path}")
-        document = read_json(path, code="EXECUTION_STATE_INVALID")
+        state_bytes = path.read_bytes()
+        state_sha = sha256_bytes(state_bytes)
+        try:
+            document = json.loads(state_bytes)
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise FlowError(f"EXECUTION_STATE_INVALID: {path}") from exc
+        if not isinstance(document, dict):
+            raise FlowError(f"EXECUTION_STATE_INVALID: {path}")
+        schema = document.get("schema_version")
+        if schema == GENERAL_EXECUTION_STATE_SCHEMA:
+            try:
+                load_contract_validator("execution_state.py").validate_terminal_execution_state(
+                    document, unit_root=root, manifest=manifest_for(root, "unit")[1]
+                )
+            except (ValueError, OSError) as exc:
+                raise FlowError(str(exc)) from exc
+        elif schema == EXECUTION_STATE_SCHEMA:
+            harness = state["identity"].get("unit", {}).get("harness", {})
+            platform = harness.get("platform", "")
+            if (harness.get("id") != "astronstudio"
+                    or not (platform == "macos" or platform.startswith("macos-"))):
+                raise FlowError("EXECUTION_DRIVER_BINDING_MISMATCH: legacy state is AstronStudio macOS only")
+        else:
+            raise FlowError(f"EXECUTION_STATE_SCHEMA_UNSUPPORTED: {schema}")
+        if sha256_file(path) != state_sha:
+            raise FlowError(f"EXECUTION_STATE_CHANGED: {path}")
         current_identity = document.get("identity")
         execution = document.get("execution")
         send = document.get("send")
         prompt = document.get("prompt")
         if (
-            document.get("schema_version") != EXECUTION_STATE_SCHEMA
-            or not isinstance(current_identity, dict)
+            not isinstance(current_identity, dict)
             or current_identity.get("batch_id") != state["identity"]["batch_id"]
             or current_identity.get("unit_id") != state["identity"]["unit_id"]
             or current_identity.get("task_id") not in state["identity"]["task_ids"]
@@ -632,7 +657,7 @@ def record_execution_states(args: argparse.Namespace) -> dict[str, Any]:
         task_id = current_identity["task_id"]
         if task_id in by_task:
             raise FlowError(f"EXECUTION_STATE_TASK_DUPLICATE: {task_id}")
-        by_task[task_id] = (path, document)
+        by_task[task_id] = (path, document, state_sha, len(state_bytes))
     if list(by_task) != state["identity"]["task_ids"]:
         raise FlowError(
             "EXECUTION_STATE_SCOPE_MISMATCH: "
@@ -646,8 +671,8 @@ def record_execution_states(args: argparse.Namespace) -> dict[str, Any]:
                 "phase": by_task[task_id][1]["phase"],
                 "business_status": by_task[task_id][1]["execution"]["business_status"],
                 "path": str(by_task[task_id][0]),
-                "sha256": sha256_file(by_task[task_id][0]),
-                "size": by_task[task_id][0].stat().st_size,
+                "sha256": by_task[task_id][2],
+                "size": by_task[task_id][3],
             }
             for task_id in state["identity"]["task_ids"]
         ]

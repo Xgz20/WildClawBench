@@ -1,0 +1,22 @@
+# 首轮任务派发记录
+
+维护方：COMMON。派发日期：2026-09-19，Asia/Shanghai。这里保存归属与启动核验；开发进展和接收结果由各自任务卡维护。
+
+三个 macOS worktree 均从 `03c38f280a64ad9bc9308c768f0f5795050355cc` 创建；随后采用包含 [COMMON-001](handoffs/COMMON-001.md) 的已发布台账与新公共基线。
+
+| 任务 ID | 实际 Codex 任务 ID | 分支 / 主项目内 worktree | 启动核验 |
+| --- | --- | --- | --- |
+| MAC-WORKBUDDY-GENERAL | `01a0b8d2-0ea9-7012-ac4f-c2bd69dc8b7b` | `feat/workbuddy-macos-general-e2e` / `.agents/workbuddy-macos-general-e2e` | 已启动；首轮 cwd/分支/base/clean 检查通过 |
+| MAC-QWENWORK-GENERAL | `01a0b8d2-1cfc-7c11-8d78-3eb34c18b5b6` | `feat/qwenwork-macos-general-e2e` / `.agents/qwenwork-macos-general-e2e` | 已启动；首轮 cwd/分支/base/clean 检查通过 |
+| MAC-DOUBAOWORK-WEB | `01a0b8d2-243e-7551-932d-f203d6842f32` | `feat/doubaowork-macos-web-e2e` / `.agents/doubaowork-macos-web-e2e` | 已启动；首轮 cwd/分支/base/clean 检查通过 |
+| WIN-ASTRONSTUDIO-GENERAL | 尚待 Windows 本机创建/接收 | 计划 `feat/astronstudio-windows-general-e2e` / `.agents/astronstudio-windows-general-e2e` | 启动包与交接已准备；没有 Windows 验证 |
+
+三个客户端选用独立长期任务，便于分别恢复和保存现场。公共接口由有界 subagent 在 COMMON 专属 worktree 实现并交付控制任务审查。
+
+创建接口没有自定义 cwd 参数，托管 worktree 位置不能满足用户指定目录。因此任务 UI 归属主项目，但所有命令/编辑必须显式指向预建 worktree；三个任务均已回报绑定核验，不得在主检出默认 cwd 编辑。
+
+初始范围为只读客户端/日志盘点、脱敏 fixtures 和专属离线开发。**尚未分配桌面时段**：启动/重启、目录选择、配置切换、Prompt 发送与 smoke 均由控制任务安排独占。此记录不是实时锁，也没有配置定时巡检。
+
+集成分支中的平台卡可能仍是最近一次已合入快照。“是否派发/绑定”以上表为准；平台卡改动由负责人提交后审查集成，COMMON 不代填 ADOPTED/VERIFIED。三个任务不自行 push 或合入主分支。
+
+DoubaoWork 可只读复用旧 `.agents/doubaowork-macos-probe` 原型，保留未提交内容；历史本地项目/CDP 证据不等于正式 Web 闭环。

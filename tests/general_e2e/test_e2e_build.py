@@ -579,6 +579,37 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
             + registrar_help.stderr,
         )
 
+    def test_general_execution_schema_and_validation_work_outside_checkout(self) -> None:
+        detached = self.temp_root / "detached-general-state"
+        detached.mkdir()
+        installed = BUILD._safe_extract(self.archive_path("run-general-e2e"), detached / "installed")
+        bundled = json.loads((installed / "bundled-components.json").read_text())
+        self.assertEqual(bundled["skill_version"], "0.4.0")
+        component = next(item for item in bundled["components"] if item["name"] == "general-contracts")
+        self.assertEqual(component["version"], "1.1.0")
+        for relative in ("execution_state.py", "schemas/general-execution-state-v1.schema.json"):
+            self.assertEqual(
+                (installed / "vendor/e2e-shared/general-contracts" / relative).read_bytes(),
+                (REPO_ROOT / "eval_general_e2e/contracts" / relative).read_bytes(),
+            )
+        fixture_spec = importlib.util.spec_from_file_location(
+            "general_state_build_fixture", REPO_ROOT / "tests/general_e2e/test_run_general_e2e.py"
+        )
+        fixture = importlib.util.module_from_spec(fixture_spec)
+        fixture_spec.loader.exec_module(fixture)
+        unit, state_path = fixture.create_general_execution_state(detached / "fixture", "qwenwork", "macos")
+        command = [sys.executable, "-I", str(installed / "scripts/run_general_e2e.py"),
+                   "record-execution", "--root", str(unit), "--state", str(state_path)]
+        completed = subprocess.run(command, cwd=detached, env={"PATH": ""}, capture_output=True, text=True)
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(json.loads(completed.stdout)["state"]["stages"]["execute"], "COMPLETED")
+        value = json.loads(state_path.read_text())
+        value["driver"]["platform"] = "windows"
+        state_path.write_text(json.dumps(value))
+        rejected = subprocess.run(command, cwd=detached, env={"PATH": ""}, capture_output=True, text=True)
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn("EXECUTION_DRIVER_BINDING_MISMATCH", rejected.stderr + rejected.stdout)
+
     def test_general_run_entrypoint_loads_outside_checkout(self) -> None:
         detached = self.temp_root / "detached-general-run"
         detached.mkdir()
