@@ -1,0 +1,118 @@
+{
+  "schema_version": "wildclawbench.general-e2e-qwenwork-canary-evidence/v1",
+  "status": "NEEDS_ATTENTION",
+  "classification": "pre-dispatch-ui-control-ambiguity",
+  "source_revision": "9081df5288d59c83e9e4d34d3bc8b288d96d7568",
+  "desktop_slot_id": "SLOT-MAC-20260919-04",
+  "release": {
+    "id": "qwenwork-p2-9081df5",
+    "suite_sha256": "a43eae29182e073aafadb378c63cb245c05f55758df48edd05853a34e2ff5ed6",
+    "execute_skill": {
+      "version": "0.7.0",
+      "content_sha256": "d35befbe73eab505a6f33ddc07d232a9df11ec3cc0eaec8f6b06ae22d21f5b2b",
+      "zip_sha256": "7caa338786e714f3146bd821ca7c1d8c5f1bc01180a1bdd11818fb4e43b15496"
+    },
+    "collect_skill": {
+      "version": "0.5.0",
+      "content_sha256": "9b15b1bb13a876f04ca887af8bce367d96ea3405f60b5b1e4be3a453343c0a2d",
+      "zip_sha256": "2e1e5fe9fed4351d05905a52f9a4de6d94c87c79834b2eb66d4d9957f5d2a7ea"
+    }
+  },
+  "prepare": {
+    "status": "PASS",
+    "batch_id": "qwenwork-macos-p2-9081df5-social-20260919-202600",
+    "unit_id": "qwenwork-macos-x86-64-slot04",
+    "task_id": "03_Social_Interaction_task_003_colleague_leave_reply",
+    "dataset_id": "general-custom60-v1",
+    "dataset_bundle_sha256": "69562adb0409d4a2495de3343944b9fc829ec800f40d046286841b960e8d29f8",
+    "dataset_digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a",
+    "execution_zip_sha256": "ccb65a2330c2277c00e3106a0f03434588b74159ae612889f464a6ef9dd1e536",
+    "scoring_zip_extracted_to_worker": false
+  },
+  "preflight": {
+    "client": "QwenWorkCN 1.0.6",
+    "architecture": "x86_64",
+    "model": "标准｜Qwen3.8-Flash",
+    "permission": "full-access",
+    "draft_length": 0,
+    "visible_task_view_count": 1,
+    "project_selector": ".new-task-chat-input button[aria-haspopup=\"menu\"]",
+    "visible_project_control_count": 3,
+    "permission_control_exclusion": "aria-label=选择权限模式",
+    "visible_project_candidate_count": 2,
+    "gate_error": "QWENWORK_UI_CONTROL_COUNT: project-trigger:2"
+  },
+  "execution": {
+    "prompt_sent": false,
+    "attempt_journal_created": false,
+    "workspace_project_created": false,
+    "folder_selected": false,
+    "prompt_filled": false,
+    "resume_path_entered": false,
+    "mutations_performed": []
+  },
+  "restore": {
+    "automatic_restore_verified": false,
+    "decisive_exit_action": "user-confirmed-qwenwork-exit-dialog",
+    "final_observed_at": "2026-09-19T20:59:15+0800",
+    "main_process_running": false,
+    "cdp_9250_listening": false,
+    "database_open_writer_count": 0,
+    "wal_present": false,
+    "shm_present": false,
+    "standard_readonly_probe": "FAILED_SQLITE_ERROR_14",
+    "immutable_diagnostic": {
+      "precondition": "no QwenWork process, no 9250 listener, no database writer, no WAL/SHM",
+      "quick_check": "ok",
+      "session_count": 21,
+      "active_or_pending_count": 0,
+      "admission": "diagnostic-only"
+    }
+  },
+  "evidence_files": [
+    {
+      "path": "release/general-e2e-release-manifest.json",
+      "sha256": "c25b1b26a31bce332b370bd54fb3aef6ad45410a0d70ae443762cff99cfa20b8",
+      "size": 2970
+    },
+    {
+      "path": "prepared/qwenwork-macos-p2-9081df5-social-20260919-202600/manifest.json",
+      "sha256": "3c5f8deb7633a026c3c93276ea2a7dcc5369bc42b218734e4f071759378c8a9d",
+      "size": 5689
+    },
+    {
+      "path": "worker/qwenwork-macos-p2-9081df5-social-20260919-202600__qwenwork-macos-x86-64-slot04/manifest.json",
+      "sha256": "be5ec7d99d95309095cce71224121c7b5dcd1ffbb0d0ea9db8bf9bbb3d1a6e1d",
+      "size": 3470
+    },
+    {
+      "path": "probe-before-launch.json",
+      "sha256": "21f8addc73f3e0a05b2eb3c1431b1a8ceba065279b8e5895da1fb8e63a6de1c6",
+      "size": 3151
+    },
+    {
+      "path": "probe-after-launch.json",
+      "sha256": "d71bbd7e73e64797eeb820cee5874e5007a1284de846bc2ce59b20b7bea54460",
+      "size": 3381
+    },
+    {
+      "path": "probe-after-restore.json",
+      "sha256": "3fca9048040743973cc8e4925638989bb81a00cc1062d9e166b42b75161883d2",
+      "size": 3381,
+      "warning": "captured before the final user-confirmed exit; not final restore proof"
+    },
+    {
+      "path": "ui-preflight.json",
+      "sha256": "ecc160e47fb35f753587c63ea4038b843784400d74faef92f1d53cf727b7fdac",
+      "size": 995
+    }
+  ],
+  "claims_not_made": [
+    "task-executed",
+    "model-or-task-failed",
+    "automatic-client-exit-succeeded",
+    "resume-validated",
+    "formal-collection-completed",
+    "production-cleanup-validated"
+  ]
+}
