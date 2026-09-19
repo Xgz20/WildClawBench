@@ -5,9 +5,9 @@
 | 唯一负责人 / 实际任务 ID | 独立开发任务 / `MAC-QWENWORK-GENERAL`；由 COMMON 控制任务派发 |
 | 工作状态 / 代码交付 | ACTIVE / LOCAL_ONLY；P1 已完成，P2 live canary 在发送前门禁失败，正式 collect 未完成 |
 | 计划分支 / worktree | `feat/qwenwork-macos-general-e2e` / `<主项目>/.agents/qwenwork-macos-general-e2e`；绑定已核验 |
-| 创建 base / 已采用公共基线 | `03c38f280a64ad9bc9308c768f0f5795050355cc` / 推荐源码 `ed366b30bc5ddd2ae35ef6361c3ac7c72ce9963a` |
-| 已读台账的 SYNC_SHA / 实际工作 HEAD | `0dd42824cb8eb510ab126fd74553f93312c9f201` / canary Driver `9081df5288d59c83e9e4d34d3bc8b288d96d7568` |
-| 同步源 / 实现与集成 SHA | `github/feature/astroncode-eval`（COMMON 已核验）；CB-A `abce5da832f16b48cd402ceef04a6abda544a379`；P1 `3f4ccbced1e90d71bea66508dfe8cca698bc7bea`；P2 Driver 修复至 `9081df5288d59c83e9e4d34d3bc8b288d96d7568`，均未集成/未 push |
+| 创建 base / 已采用公共基线 | `03c38f280a64ad9bc9308c768f0f5795050355cc` / COMMON-003 推荐源码 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3` |
+| 已读台账的 SYNC_SHA / 实际工作 HEAD | `82e947b926a4525aac7ba2de08b76830ee9c739b` / COMMON-003 merge `7b39dd9`，canary Driver `9081df5` |
+| 同步源 / 实现与集成 SHA | `github/feature/astroncode-eval`；COMMON-003 `82e947b...39b` 已核验并 merge；CB-A `abce5da832f16b48cd402ceef04a6abda544a379`；P1 `3f4ccbced1e90d71bea66508dfe8cca698bc7bea`；P2 Driver 修复至 `9081df5288d59c83e9e4d34d3bc8b288d96d7568`；未 push |
 | 最后更新 | 2026-09-19（Asia/Shanghai），SLOT04 真实 prepare PASS；UI project trigger 重复导致发送前失败关闭，`PROMPT_SENT=0` |
 
 ## 本轮范围与修改归属
@@ -33,7 +33,7 @@ Windows 同号版本、旧 macOS token profile 不能覆盖当前 macOS 运行�
 
 ## 下一项与阻塞
 
-下一项：先离线修复并审查 project trigger 唯一定位与关闭后 sidecar-free WAL 数据库只读 probe；采用父任务 CLI main-guard 修复 `dc5ff64` 后复核脱仓 ZIP。完成后再申请新桌面时段，从全新 attempt 做 UI 回读、一次发送、session/cwd/Prompt 捕获和同 attempt 恢复。
+下一项：先离线修复并审查 project trigger 唯一定位与关闭后 sidecar-free WAL 数据库只读 probe。COMMON-003 与 CLI main-guard 修复 `dc5ff64` 已采用并通过 Qwen/脱仓布局回归；完成 selector/probe 专属修复后再申请新桌面时段，从全新 attempt 做 UI 回读、一次发送、session/cwd/Prompt 捕获和同 attempt 恢复。
 
 当前依赖缺口：两个可见 project trigger 不能按稳定语义唯一定位；客户端完全退出且 WAL/SHM 消失后，现有 probe 对 sidecar-free WAL 主库报 SQLite error 14。CB-A/CB-B 公共基线已存在，但 QwenWork cleanup 仍未真机验收；General Skill 当前未独立装配 `playwright-core`，不得借用 Web Skill 运行时。当前 QwenWorkCN 1.0.6 未命中历史 macOS 1.0.5 Token Profile，严格资源输出保持 null/coverage。SLOT04 已释放，当前无桌面许可。
 
@@ -51,7 +51,8 @@ P2 canary CLI、冻结配置、前置条件和回退方案见 [qwenwork-macos-p2
 | --- | --- | --- | --- | --- |
 | COMMON-001 | VERIFIED | `0dd42824cb8eb510ab126fd74553f93312c9f201`（推荐源码 `ed366b30...963a`） | 无活动 QwenWork 会话后 merge；已按 CB-A 输出 session/cwd/证据，thread/turn 为 null；公共 55/55、新增 Node 12/12、Python 3/3 通过 | P2 真机时段；CB-B 接口交接 |
 | MAC-QWENWORK-GENERAL-003 | OPEN | 未集成 | SLOT04 真实 prepare PASS；发送前 project trigger `2` 个候选失败，`PROMPT_SENT=0`；用户手动确认退出；关闭库 probe error 14 | selector/probe 独立修复审查后申请新 slot |
+| COMMON-003 | VERIFIED | SYNC `82e947b926a4525aac7ba2de08b76830ee9c739b`；推荐源码 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3`；merge `7b39dd9` | GitHub ls-remote 与源码祖先通过；采用 execute `0.8.0` 和 Qwen CLI main-guard 修复；Qwen Node 32/32、Python 3/3、Skill build/layout 24/24 通过 | selector/probe 专属修复；collector 独立审查 |
 
 ## 本轮交付
 
-P1 `3f4ccbced1e90d71bea66508dfe8cca698bc7bea` 完成只读 probe、原生字段/终态映射、adapter/fixtures。P2 Driver 经 `f6076ac`、`39b2109`、`9081df5` 完成恢复、COMMON-002 binding、窗口归属和重复恢复反例。SLOT04 用 `9081df5` 构建 release 并完成单题 prepare，但在发送前 UI 唯一性门禁失败；详见 [MAC-QWENWORK-GENERAL-003](../handoffs/MAC-QWENWORK-GENERAL-003.md) 和 [SLOT04 证据](../../../general-e2e/evidence/qwenwork-macos-slot04-canary-20260919/README.md)。本轮没有 Prompt 发送、attempt、resume、collect、评分或模型能力结论。未 push、未集成。
+P1 `3f4ccbced1e90d71bea66508dfe8cca698bc7bea` 完成只读 probe、原生字段/终态映射、adapter/fixtures。P2 Driver 经 `f6076ac`、`39b2109`、`9081df5` 完成恢复、COMMON-002 binding、窗口归属和重复恢复反例。SLOT04 用 `9081df5` 构建 release 并完成单题 prepare，但在发送前 UI 唯一性门禁失败；详见 [MAC-QWENWORK-GENERAL-003](../handoffs/MAC-QWENWORK-GENERAL-003.md) 和 [SLOT04 证据](../../../general-e2e/evidence/qwenwork-macos-slot04-canary-20260919/README.md)。COMMON-003 已在 `7b39dd9` 采用，Qwen/Skill focused regression 59/59 通过。本轮没有 Prompt 发送、attempt、resume、collect、评分或模型能力结论。未 push。
