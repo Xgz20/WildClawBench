@@ -605,7 +605,7 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
   const dependencies = {
     inspectRuntime: defaultInspectRuntime,
     prepareUi: defaultPrepareUi,
-    fillPrompt: (handle, prompt) => fillWorkBuddyPrompt(handle, prompt),
+    fillPrompt: (handle, prompt) => fillWorkBuddyPrompt(handle, prompt, config.timeoutMs),
     dispatchPrompt: (handle) => dispatchWorkBuddyPrompt(handle),
     snapshotBaseline: snapshotWorkBuddyNativeBaseline,
     selectBinding: selectWorkBuddyNativeBinding,
