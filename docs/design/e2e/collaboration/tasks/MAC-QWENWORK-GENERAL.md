@@ -7,8 +7,8 @@
 | 计划分支 / worktree | `feat/qwenwork-macos-general-e2e` / `<主项目>/.agents/qwenwork-macos-general-e2e`；绑定已核验 |
 | 创建 base / 已采用公共基线 | `03c38f280a64ad9bc9308c768f0f5795050355cc` / COMMON-003 推荐源码 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3` |
 | 已读台账的 SYNC_SHA / 实际工作 HEAD | `82e947b926a4525aac7ba2de08b76830ee9c739b` / `8229e9668b014799829ddaaec91f1e3fabb76025`，canary Driver `9081df5` |
-| 同步源 / 实现与集成 SHA | `github/feature/astroncode-eval`；COMMON-003 `82e947b...39b` 已核验并 merge；CB-A `abce5da832f16b48cd402ceef04a6abda544a379`；P1 `3f4ccbced1e90d71bea66508dfe8cca698bc7bea`；P2 Driver 修复至 `9081df5288d59c83e9e4d34d3bc8b288d96d7568`；selector/DB 加固 `993cdc55bf0ab6cec9aa9b10b7276cfe15b90ad3`；集成 `f0bf24f`/`e646a01`；未 push |
-| 最后更新 | 2026-09-19（Asia/Shanghai），SLOT04 真实 prepare PASS；UI project trigger 重复导致发送前失败关闭，`PROMPT_SENT=0`；离线加固已接收 |
+| 同步源 / 实现与集成 SHA | `github/feature/astroncode-eval`；COMMON-003 `82e947b...39b` 已核验并 merge；CB-A `abce5da832f16b48cd402ceef04a6abda544a379`；P1 `3f4ccbced1e90d71bea66508dfe8cca698bc7bea`；P2 Driver 修复至 `9081df5288d59c83e9e4d34d3bc8b288d96d7568`；selector/DB 加固 `993cdc55bf0ab6cec9aa9b10b7276cfe15b90ad3`；CB-B 源提交 `2c689e1`、`df93b97`、`4c9056f`；集成 `f0bf24f`/`e646a01`/`acfc7a1`/`828bfb0`/`5263890`；未 push |
+| 最后更新 | 2026-09-20（Asia/Shanghai），SLOT04 真实 prepare PASS；UI project trigger 重复导致发送前失败关闭，`PROMPT_SENT=0`；CB-B collector 与 binding 终态兼容修复已接收 |
 
 ## 本轮范围与修改归属
 
@@ -27,7 +27,7 @@ Windows 同号版本、旧 macOS token profile 不能覆盖当前 macOS 运行�
 - [ ] P3：原始轨迹/资源对账与完整单题评分/回传/报告。CB-B Qwen 专属 collector/native-normalizer 已完成脱敏 fixture 层，尚缺真机原始采集、公共 finalizer/cleanup 和评分闭环。
 - [ ] P4：按场景验收三题串行、五题动态补位及声明并发。
 - [ ] P5：受影响故障加固、候选不可变与仓库外发行。
-- [ ] P6：代码/证据/交接集成，必需接收动作完成。
+- [x] P6：代码/证据/交接集成，必需接收动作完成；集成提交为 `acfc7a1`、`828bfb0`、`5263890`。
 
 勾选附实现/集成 SHA 与验收证据；此卡不复制技术验收 PASS 表。
 
@@ -52,8 +52,8 @@ P2 canary CLI、冻结配置、前置条件和回退方案见 [qwenwork-macos-p2
 | COMMON-001 | VERIFIED | `0dd42824cb8eb510ab126fd74553f93312c9f201`（推荐源码 `ed366b30...963a`） | 无活动 QwenWork 会话后 merge；已按 CB-A 输出 session/cwd/证据，thread/turn 为 null；公共 55/55、新增 Node 12/12、Python 3/3 通过 | P2 真机时段；CB-B 接口交接 |
 | MAC-QWENWORK-GENERAL-003 | ADOPTED | `f0bf24f`、`e646a01`（源提交 `993cdc5`、`8229e96`） | SLOT04 真实 prepare PASS；发送前 project trigger `2` 个候选失败，`PROMPT_SENT=0`；用户手动确认退出；关闭库 probe error 14；项目控件与 SQLite 快照加固通过 Qwen Node 37/37 | 新 slot 做 selector/probe 真机验证并继续 CB-B |
 | COMMON-003 | VERIFIED | SYNC `82e947b926a4525aac7ba2de08b76830ee9c739b`；推荐源码 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3`；merge `7b39dd9` | GitHub ls-remote 与源码祖先通过；采用 execute `0.8.0` 和 Qwen CLI main-guard 修复；Qwen Node 32/32、Python 3/3、Skill build/layout 24/24 通过 | selector/probe 专属修复；collector 独立审查 |
-| MAC-QWENWORK-GENERAL-004 | LOCAL_ONLY | `2c689e1` | CB-B Qwen 专属 collector/native-normalizer：trace-index v2、resource-metrics v1、binding/SQLite/segment provenance fail-closed、usage null/coverage、tool completed 不升级 success；Node collector focused 4/4 通过 | 审查后合入 COMMON；再安排新桌面时段做真机采集与 cleanup |
+| MAC-QWENWORK-GENERAL-004 | ADOPTED | `acfc7a1`、`828bfb0`、`5263890`（源提交 `2c689e1`、`df93b97`、`4c9056f`） | CB-B Qwen 专属 collector/native-normalizer：trace-index v2、resource-metrics v1、binding/SQLite/segment provenance fail-closed、usage null/coverage、tool completed 不升级 success；collector 4/4、Qwen 聚焦 41/41 通过；未操作客户端 | 以真机 1.0.6 日志确认 metadata 覆盖，再安排 collect、cleanup 与评分交接 |
 
 ## 本轮交付
 
-P1 `3f4ccbced1e90d71bea66508dfe8cca698bc7bea` 完成只读 probe、原生字段/终态映射、adapter/fixtures。P2 Driver 经 `f6076ac`、`39b2109`、`9081df5` 完成恢复、COMMON-002 binding、窗口归属和重复恢复反例；`993cdc5` 加固当前视图项目语义定位、sidecar 快照和写者/源变化 fail-closed 规则，并新增反例测试。SLOT04 用 `9081df5` 构建 release 并完成单题 prepare，但在发送前 UI 唯一性门禁失败；详见 [MAC-QWENWORK-GENERAL-003](../handoffs/MAC-QWENWORK-GENERAL-003.md) 和 [SLOT04 证据](../../../general-e2e/evidence/qwenwork-macos-slot04-canary-20260919/README.md)。COMMON-003 已在 `7b39dd9` 采用，Qwen/Skill focused regression 59/59 通过；当前 Qwen Node focused regression 为 37/37。CB-B collector/native-normalizer 已补脱敏 fixture 层和 README，focused collector 4/4 通过。上述交付均未操作客户端；本轮没有 Prompt 发送、attempt、resume、真机 collect、评分或模型能力结论。未 push。
+P1 `3f4ccbced1e90d71bea66508dfe8cca698bc7bea` 完成只读 probe、原生字段/终态映射、adapter/fixtures。P2 Driver 经 `f6076ac`、`39b2109`、`9081df5` 完成恢复、COMMON-002 binding、窗口归属和重复恢复反例；`993cdc5` 加固当前视图项目语义定位、sidecar 快照和写者/源变化 fail-closed 规则，并新增反例测试。SLOT04 用 `9081df5` 构建 release 并完成单题 prepare，但在发送前 UI 唯一性门禁失败；详见 [MAC-QWENWORK-GENERAL-003](../handoffs/MAC-QWENWORK-GENERAL-003.md) 和 [SLOT04 证据](../../../general-e2e/evidence/qwenwork-macos-slot04-canary-20260919/README.md)。COMMON-003 已在 `7b39dd9` 采用，Qwen/Skill focused regression 59/59 通过；当前 Qwen 聚焦 Node 41/41。CB-B collector/native-normalizer 已补脱敏 fixture 层和 README，并以 `5263890` 对齐 binding 终态观察字段；collector 4/4 通过。上述交付均未操作客户端；本轮没有 Prompt 发送、attempt、resume、真机 collect、评分或模型能力结论。真实 1.0.6 日志若缺少每行 `sessionId`、绝对 `cwd` 或绑定 segment，collector 将按设计失败关闭，需新时段确认字段覆盖。未 push。
