@@ -14,6 +14,7 @@ import { tmpdir } from "node:os";
 import test from "node:test";
 
 import { collectQwenWorkEvidence } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/collector.mjs";
+import { assessQwenMetadataCoverage } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/metadata-gate.mjs";
 import { normalizeQwenNativeTrace } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/native-normalizer.mjs";
 
 const FIXTURES = new URL("./fixtures/qwenwork/", import.meta.url);
@@ -173,6 +174,13 @@ test("QwenWork collector emits CB-B v2 trace and null usage coverage without pro
     assert.equal(result.resource.metrics.usage.input_tokens.value, null);
     assert.equal(result.resource.metrics.usage.input_tokens.status, "unavailable");
     assert.deepEqual(result.resource.collection.coverage.input_tokens, { known: 0, total: 2, unit: "model_response" });
+    assert.equal(result.trace.metadata_coverage.readiness.ready_for_collect, true);
+    assert.deepEqual(result.trace.metadata_coverage.segments.session_id, {
+      known: 0, total: 15, missing: 15, mismatched: 0,
+    });
+    assert.deepEqual(result.trace.metadata_coverage.segments.cwd, {
+      known: 2, total: 15, missing: 13, mismatched: 0,
+    });
     const toolResult = result.trace.calls[0];
     assert.equal(toolResult.result_sequence != null, true);
     const transcript = (await readFile(result.trace_index, "utf8")).trim();
@@ -180,6 +188,49 @@ test("QwenWork collector emits CB-B v2 trace and null usage coverage without pro
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
+});
+
+test("metadata gate reports partial segment identity without inferring missing values", () => {
+  const result = assessQwenMetadataCoverage({
+    state: { session: { session_id: "session-fixture-001", cwd: "/fixture/workspace" } },
+    transcriptRows: [
+      { sessionId: "session-fixture-001", cwd: "/fixture/workspace" },
+      { sessionId: "session-fixture-001", cwd: "/fixture/workspace" },
+    ],
+    segmentRows: [
+      { data: { project_root: "/fixture/workspace", target_dir: "/fixture/workspace" } },
+      { session_id: "session-fixture-001", data: { project_root: "/fixture/workspace" } },
+    ],
+    segmentDirectoryBound: true,
+  });
+  assert.equal(result.readiness.ready_for_collect, true);
+  assert.deepEqual(result.segments.session_id, {
+    known: 1, total: 2, missing: 1, mismatched: 0,
+  });
+  assert.deepEqual(result.segments.cwd, {
+    known: 2, total: 2, missing: 0, mismatched: 0,
+  });
+});
+
+test("metadata gate blocks missing transcript metadata and relative or mismatched segment cwd", () => {
+  const missingTranscript = assessQwenMetadataCoverage({
+    state: { session: { session_id: "session-fixture-001", cwd: "/fixture/workspace" } },
+    transcriptRows: [
+      { sessionId: "session-fixture-001", cwd: "/fixture/workspace" },
+      { cwd: "/fixture/workspace" },
+    ],
+    segmentRows: [{ data: { project_root: "/fixture/workspace" } }],
+    segmentDirectoryBound: true,
+  });
+  assert.deepEqual(missingTranscript.readiness.blockers, ["transcript_session_id_missing"]);
+
+  const badSegment = assessQwenMetadataCoverage({
+    state: { session: { session_id: "session-fixture-001", cwd: "/fixture/workspace" } },
+    transcriptRows: [{ sessionId: "session-fixture-001", cwd: "/fixture/workspace" }],
+    segmentRows: [{ session_id: "session-fixture-001", data: { project_root: "relative/workspace" } }],
+    segmentDirectoryBound: true,
+  });
+  assert.deepEqual(badSegment.readiness.blockers, ["segment_cwd_mismatch", "segment_cwd_unverified"]);
 });
 
 test("tool execution status completed remains unknown when no shell outcome proves success", () => {
@@ -226,7 +277,7 @@ test("collector rejects binding identity and segment workspace provenance drift"
       clientTraceRoot: badSegmentPaths[2],
       outputRoot: join(await realpath(badSegment.unitRoot), ".general-e2e", "collection", "bad-segment"),
     }),
-    /SEGMENT_WORKSPACE_MISMATCH/u,
+    /METADATA_GATE_BLOCKED: segment_cwd_mismatch/u,
   );
   await rm(badSegment.root, { recursive: true, force: true });
 });

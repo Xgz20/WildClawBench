@@ -23,6 +23,7 @@ import {
   QWENWORK_COLLECTOR_ADAPTER_ID,
   QWENWORK_COLLECTOR_VERSION,
 } from "./native-normalizer.mjs";
+import { assessQwenMetadataCoverage } from "./metadata-gate.mjs";
 
 const JOURNAL_SCHEMA = "wildclawbench.general-e2e-qwenwork-attempt-journal/v1";
 const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-execution-state/v1";
@@ -451,6 +452,17 @@ export async function collectQwenWorkEvidence(options) {
     source,
     `raw/segments/${basename(source.absolute)}`,
   ));
+  const metadataCoverage = assessQwenMetadataCoverage({
+    state,
+    transcriptRows,
+    segmentRows,
+    segmentDirectoryBound: true,
+  });
+  if (!metadataCoverage.readiness.ready_for_collect) {
+    throw new Error(
+      `QWENWORK_METADATA_GATE_BLOCKED: ${metadataCoverage.readiness.blockers.join(",")}`,
+    );
+  }
   assertTranscriptBinding(transcriptRows, state);
   assertSegmentBinding(segmentRows, state);
   const normalized = normalizeQwenNativeTrace({
@@ -496,6 +508,7 @@ export async function collectQwenWorkEvidence(options) {
       filtered_native_event_count: normalized.filtered_native_event_count,
       compatibility_profiles: ["general-e2e-transcript-event-v1", "qwenwork-native-1.0.6-unverified-token-semantics"],
     },
+    metadata_coverage: metadataCoverage,
     completeness: traceCompleteness(normalized.events, calls, segmentRows),
     calls,
   };
