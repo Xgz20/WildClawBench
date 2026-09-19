@@ -1,0 +1,6 @@
+{
+  "role": "tool",
+  "message": "{\"role\":\"tool\",\"content\":[{\"type\":\"tool-result\",\"toolCallId\":\"call-1\",\"toolName\":\"write_file\",\"result\":{\"status\":\"success\",\"success\":true,\"result\":{\"type\":\"tool_result\",\"finalResult\":\"wrote /tmp_workspace/result.txt\",\"toolInfo\":[{\"name\":\"Write File\",\"info\":\"result.txt\",\"toolCallId\":\"nested-call-1\",\"executeStatus\":\"completed\"}],\"usage\":{\"inputTokens\":100,\"outputTokens\":20,\"totalTokens\":120,\"cacheTokens\":60,\"cachedWriteTokens\":5,\"cachedMissTokens\":40,\"credit\":1.25}},\"errorMessage\":\"\"}}]}",
+  "id": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "extra": "{\"requestId\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"modelId\":\"fixture-model\",\"modelName\":\"Fixture Model\",\"traceId\":\"11111111111111111111111111111111\"}"
+}
