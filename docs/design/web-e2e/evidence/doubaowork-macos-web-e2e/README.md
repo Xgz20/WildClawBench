@@ -1,8 +1,8 @@
 # DoubaoWork macOS Web E2E P1 只读能力与字段映射
 
-证据日期：2026-09-19（Asia/Shanghai）。任务：`MAC-DOUBAOWORK-WEB`。状态：**P1 完成；P2 客户端离线 journal 已实现，真机执行及正式 Web 闭环未开始**。
+证据日期：2026-09-19（Asia/Shanghai）。任务：`MAC-DOUBAOWORK-WEB`。状态：**P1 完成；P2 已完成一次开发 canary 的单次发送与 UI/native session 绑定，可信终态、cwd、进程清理和正式 Web 闭环仍未完成**。
 
-本文记录本任务分支上的只读 probe、旧 smoke 原生证据旁路解析、脱敏 fixture 与公共接口缺口。它不把 2026-09-19 的旧站点生成 smoke 升级为正式 execution/collect/评分证据，也不声明 DoubaoWork 已达到 Web 主流程生产可用。
+本文记录本任务分支上的只读 probe、旧 smoke 原生证据旁路解析、脱敏 fixture、`SLOT-MAC-20260919-01` 开发 canary 与公共接口缺口。它不把旧 smoke 或本次 UI 完成候选升级为正式 execution/collect/评分证据，也不声明 DoubaoWork 已达到 Web 主流程生产可用。
 
 ## 1. 当前环境与只读 probe
 
@@ -59,14 +59,27 @@
 - `platform.mjs`：只读应用身份、监听进程和原生 source metadata 发现；session 必须显式传入数字 ID。
 - `native-evidence.mjs`：有界读取显式 session 的普通 `trajectory.jsonl`，输出 adapter 私有旁路证据；不修改源文件或历史 execution。
 - `state.mjs`：客户端专属 automation journal 与恢复决策；保存 Prompt SHA 而非正文，在 UI click 前原子登记唯一 dispatch attempt，并用 UI/native 两组发送前基线失败关闭地绑定新 session。当前不生成正式 execution record。
-- `select-folder.swift`：迁入并加固旧 probe helper；拒绝多主应用、相对/符号链接目录，仍要求客户端 tooltip 完整路径二次回读。当前只通过静态 typecheck，没有在本轮运行。
+- `driver.mjs`：只接受真实 v3 prepared task；选择单题根而非候选 `workspace/`；完整 tooltip、项目 ID、项目名、权限、模型和 Prompt 富文本逐块回读后单次发送；排他锁记录 host/PID/start identity 并拒绝 symlink 祖先、活 worker 和 stale 自动接管；普通恢复只观察。
+- `select-folder.swift`：迁入并加固旧 probe helper；拒绝多主应用、相对/符号链接目录，仍要求客户端 tooltip 完整路径二次回读；本次 canary 已用于选择单题根。
 - `test/fixtures/`：Prompt、文件内容、工具结果、绝对路径、真实 session/agent ID 均已替换；没有账号、认证、历史侧栏或截图。
 
 实现 SHA：P1 `f168f2e4c7e5e447249cfb7e96b0d195b99e3e60`；P2 离线 journal `d183e28f2224aed40fd14ae43d8f7ab9ce6cbb0b`。
 
-Focused checks：Node 23/23 通过；五个 `.mjs` `node --check` 通过；`swiftc -typecheck select-folder.swift` 与 `git diff --check` 通过。只读实机 probe 最终退出码 0；原生旁路提取退出码 0。P2 新增测试全部是 fixture/离线状态测试，不能替代真机一次发送、P3 正式收口或评分闭环。
+Focused checks：Node 39/39 通过；六个 `.mjs` `node --check` 通过；`swiftc -typecheck select-folder.swift` 与 `git diff --check` 通过。只读实机 probe、开发 canary 单次 dispatch/session 绑定和离线 native snapshot 均退出码 0；这些仍不能替代可信原生终态、P3 正式收口或评分闭环。
 
-## 4. COMMON / CB-B 精确接口需求
+## 4. `SLOT-MAC-20260919-01` 开发 canary
+
+仓库内脱敏索引：[canary-slot-mac-20260919-01.json](canary-slot-mac-20260919-01.json)。仓库外原件位于 `<DEBUG_ROOT>/slot-mac-20260919-01-canary/development-run-03/`；真实 conversation/session ID、截图、最终回复、原始 trajectory 和私有 automation state 不进入 Git。
+
+- 输入是 prepare 公共入口生成的真实 `wildclawbench.web-e2e-batch/v3` L1，Prompt SHA-256 为 `04816a6c...c29f`，客户端选择单题根，未暴露 score/private-scoring。
+- 四次发送前失败分别暴露 tooltip 等待/`~/` 规范化、遗留 dialog、项目创建后未进入新对话、ProseMirror 尾部空段问题；每次 `dispatch_attempt_count=0`，原状态 no-clobber 归档后才显式续跑。
+- 唯一实际发送的 attempt 为 `dispatch_attempt_count=1`；实际模型“自动 高”、权限“按需确认”；UI conversation 与 native session directory 的 SHA-256 均为 `a672e6e3...3709c`。恢复只按该绑定观察，没有重发。
+- 11:39:32Z 的早期 observation 仍有当前会话 busy spinner，145 字节回复只是部分状态；其中 `SLOT_RELEASED` 结论已作废。11:47:06Z 最新 observation 的 busy/stop/dialog/question/approval 均为 0，UI 回复候选为 1,893 字节，但仍是 `trusted=false`。
+- live revision 复用了固定回复/截图/native 文件名，因此最新 observation 指向的回复原件仍是早期 145 字节部分内容；索引明确把该引用判为无效，不声称保存了最新 UI 回复/截图。代码已改为每次 observation 唯一文件名，并要求回复文件 SHA/字节数与同次 DOM 一致，但这项修复尚未重新占用桌面验证。
+- 释放桌面后从已绑定 session 只读重建 native snapshot：29 个规范化事件、工具调用 known subtotal 14、coverage denominator 为 `null`；`native_cwd=null`、`terminal.status=unverified`。候选 workspace 仍只有空 `.gitkeep`，没有生成站点。
+- 自动化状态保持 `NEEDS_ATTENTION`，未生成正式 `execution_record.json`、execution receipt、score 或 report。11:47:06Z 已确认无 busy/stop/pending，`SLOT-MAC-20260919-01` 为 `SLOT_RELEASED`，之后未再连接或操作 DoubaoWork UI。
+
+## 5. COMMON / CB-B 精确接口需求
 
 本任务已审阅 COMMON-001 的 General CB-A。`wildclawbench.general-e2e-execution-state/v1` 对 DoubaoWork Web **不适用**，不创建 General adapter，也不把私有 native evidence 填入 General Schema。业务身份、单次发送、真实绑定证据和 unknown 失败关闭原则继续遵守 Web Driver 契约。
 
@@ -79,9 +92,9 @@ Focused checks：Node 23/23 通过；五个 `.mjs` `node --check` 通过；`swif
 5. `tools/report/e2e-shared/desktop-app-discovery/profiles.mjs`、`components.json`、确定性构建装配与 vendored 副本：新增 `doubaowork` 的 macOS app/Bundle ID/端点 Profile，构建时从 canonical 装配，禁止手改 vendor。
 6. Web prepare/run/发行路由：`prepare_web_e2e_workspaces.py` 的 known harness、execute Skill 入口/包布局、`run-web-e2e` macOS application 路由及安装清单需要纳入 DoubaoWork；正式加入前先完成单题 P2/P3，默认 `ui_slots=1/run_slots=1`，不继承其他 Harness 的三槽声明。
 
-## 5. 下一阶段桌面时段申请材料
+## 6. 下一阶段桌面时段申请材料
 
-待 COMMON 分配独占时段后，P2 只覆盖一个全新 L1、本地电脑→新建项目：
+下一次独占时段不重复本次 Prompt；仅在新批次中复验 observation 唯一文件、可信终态/cwd/清理的新实现。若这些依赖仍缺失，继续保持 `NEEDS_ATTENTION`：
 
 - 应用：`/Applications/DoubaoWork.app` 2.28.12，macOS x86_64；不擅自升级、重启或切模型。
 - 操作：先只读枚举 page/session 与是否存在运行/待处理会话；创建本题新项目；运行目录 helper；tooltip 回读完整路径；保持当前非空模型显示和当前权限；写入 intent/Prompt SHA/attempt 后仅发送一次；捕获新 conversation ID；只观察，不评分。

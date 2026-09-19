@@ -138,6 +138,14 @@ async function safeMetadata(pathValue) {
   }
 }
 
+async function requireOrdinaryDirectory(pathValue, label) {
+  const info = await lstat(pathValue);
+  if (!info.isDirectory() || info.isSymbolicLink()) {
+    throw new Error(`${label} 不是普通目录或包含符号链接：${pathValue}`);
+  }
+  return info;
+}
+
 async function listLogMetadata(logsRoot) {
   const output = [];
   const roots = [logsRoot, join(logsRoot, "agent_infra"), join(logsRoot, "agent_infra", "shell_session_host")];
@@ -185,16 +193,28 @@ export async function discoverNativeSources({
   const rootMetadata = await safeMetadata(sessionRoot);
   const trajectories = [];
   if (rootMetadata.exists && rootMetadata.is_directory && !rootMetadata.is_symbolic_link) {
+    await requireOrdinaryDirectory(roots.sessions_root, "DoubaoWork sessions root");
+    await requireOrdinaryDirectory(sessionRoot, "DoubaoWork session root");
     const agentsRoot = join(sessionRoot, "agents");
     let agents = [];
     try {
+      await requireOrdinaryDirectory(agentsRoot, "DoubaoWork agents root");
       agents = await readdir(agentsRoot, { withFileTypes: true });
     } catch (error) {
       if (error?.code !== "ENOENT") throw error;
     }
     for (const agent of agents) {
       if (!agent.isDirectory() || agent.isSymbolicLink()) continue;
-      const trajectory = join(agentsRoot, agent.name, "system", "trajectory.jsonl");
+      const agentRoot = join(agentsRoot, agent.name);
+      const systemRoot = join(agentRoot, "system");
+      await requireOrdinaryDirectory(agentRoot, `DoubaoWork agent ${agent.name}`);
+      try {
+        await requireOrdinaryDirectory(systemRoot, `DoubaoWork agent ${agent.name} system`);
+      } catch (error) {
+        if (error?.code === "ENOENT") continue;
+        throw error;
+      }
+      const trajectory = join(systemRoot, "trajectory.jsonl");
       const metadata = await safeMetadata(trajectory);
       if (metadata.exists && metadata.is_file && !metadata.is_symbolic_link) {
         trajectories.push({
@@ -203,6 +223,7 @@ export async function discoverNativeSources({
           relative_path: relative(roots.sessions_root, trajectory),
           size_bytes: metadata.size_bytes,
           modified_at: metadata.modified_at,
+          path_chain_verified: true,
         });
       }
     }
@@ -216,4 +237,20 @@ export async function discoverNativeSources({
     terminal_status: null,
   };
   return report;
+}
+
+export async function listSessionDirectoryIds({
+  userHome = homedir(),
+  roots = defaultNativeRoots(userHome),
+} = {}) {
+  await requireOrdinaryDirectory(roots.sessions_root, "DoubaoWork sessions root");
+  const entries = await readdir(roots.sessions_root, { withFileTypes: true });
+  const sessionIds = [];
+  for (const entry of entries) {
+    if (!/^[0-9]{1,64}$/.test(entry.name) || !entry.isDirectory() || entry.isSymbolicLink()) continue;
+    const sessionRoot = join(roots.sessions_root, entry.name);
+    await requireOrdinaryDirectory(sessionRoot, `DoubaoWork session ${entry.name}`);
+    sessionIds.push(entry.name);
+  }
+  return sessionIds.sort();
 }

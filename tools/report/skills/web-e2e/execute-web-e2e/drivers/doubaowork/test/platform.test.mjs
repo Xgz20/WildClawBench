@@ -7,6 +7,7 @@ import { test } from "node:test";
 import {
   defaultNativeRoots,
   discoverNativeSources,
+  listSessionDirectoryIds,
   parseLsofRecords,
 } from "../platform.mjs";
 
@@ -43,4 +44,5 @@ test("原生 source discovery 只匹配显式 session 和普通 trajectory 文�
   assert.equal(discovery.session.native_cwd, null);
   assert.equal(discovery.logs.length, 1);
   assert.equal(discovery.logs[0].task_binding, "unbound");
+  assert.deepEqual(await listSessionDirectoryIds({ userHome: root, roots }), ["12345678901234567"]);
 });

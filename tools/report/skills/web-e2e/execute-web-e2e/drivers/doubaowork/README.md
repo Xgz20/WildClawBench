@@ -1,8 +1,8 @@
 # DoubaoWork macOS Web E2E 客户端适配
 
-当前目录是 `MAC-DOUBAOWORK-WEB` 的客户端专属开发面，版本 `0.2.0`。现阶段提供：应用/CDP 身份严格核验的只读 probe、macOS 原生目录选择 helper、显式 session 目录发现、脱敏 fixture、原生 `trajectory.jsonl` 的旁路提取器，以及不触碰客户端的发送意图 journal/恢复决策。
+当前目录是 `MAC-DOUBAOWORK-WEB` 的客户端专属开发面，版本 `0.3.0`。现阶段提供：应用/CDP 身份严格核验的只读 probe、macOS 原生目录选择 helper、显式 session 目录发现、脱敏 fixture、原生 `trajectory.jsonl` 的旁路提取器、发送意图 journal，以及仅用于真机开发 canary 的单次投递与只读恢复入口。
 
-这不是完整生产 Driver。它不会生成正式 `execution_record.json` 或 execution receipt，也没有实现可信原生终态、安全停止、任务进程清理、公共 finalizer、评分交接或发行装配。上述能力分别等待 COMMON 的 CB-A/CB-B 接口和真机验收；不得把本目录测试或旧 smoke 写成完整 Web E2E 通过。
+这不是完整生产 Driver。COMMON 的 General CB-A 对本 Web Driver 不适用；Web 公共接入独立依赖 CB-B、execute/run/metrics 与发行装配。当前实现不会生成正式 `execution_record.json` 或 execution receipt，也没有实现可信原生终态、安全停止、任务进程清理、公共 finalizer 或评分交接；不得把本目录测试或旧 smoke 写成完整 Web E2E 通过。
 
 ## 只读 probe
 
@@ -74,10 +74,43 @@ node native-evidence.mjs \
 
 恢复只在 `READY_TO_SEND + dispatch_attempt_count=0` 时允许首次发送。计数已为 1、会话缺失/多候选、或已绑定 session 无法重新确认时一律 `NEEDS_ATTENTION`/observe-only，禁止自动重发。单测验证状态文件拒绝符号链接、dispatch start 先于 click 落盘和所有发送临界窗口。
 
+开发入口还会在输出目录创建 no-clobber 排他 worker lock，记录 host、PID、进程启动身份和本次实例 ID。输出目录任一既有祖先为符号链接时，在创建、读取或释放 lock 前失败关闭。第二个存活 worker、foreign/stale lock 或不可验证身份一律拒绝；Driver 不自动删除不属于当前实例的 lock。状态加载、journal 写入和 UI 发送都在持锁区间内，`--resume` 只观察已登记一次发送的 attempt。
+
+## 开发 canary 投递与只读恢复
+
+新投递只接受 `wildclawbench.web-e2e-batch/v3` 的真实 prepared execution 单题根目录，自动化输出必须位于单题目录外。输出包含客户端私有状态、截图和脱敏索引，只能放在仓库外 debug root，不得提交：
+
+```bash
+node driver.mjs \
+  --task-root /absolute/batch/harnesses/doubaowork/execution/tasks/<task_id> \
+  --output-dir /absolute/debug-root/development-run-01 \
+  --project-name WCB-DoubaoWork-L1-01
+```
+
+首次进程只完成发送、UI/native session 唯一绑定后退出。随后用同一输出目录只读观察；该入口不会新建项目或重发 Prompt：
+
+```bash
+node driver.mjs --resume \
+  --output-dir /absolute/debug-root/development-run-01 \
+  --observe-seconds 900
+```
+
+若新执行明确在发送意图落盘前失败、`dispatch_attempt_count=0`、session 为空且 workspace tooltip 已精确确认，可在修复根因后显式续跑同一已创建项目：
+
+```bash
+node driver.mjs --resume --retry-pre-send-failure \
+  --output-dir /absolute/debug-root/development-run-01
+```
+
+该路径先把旧状态 no-clobber 归档到 `.attempts/`，重新核对 prepared task/Prompt/manifest、客户端空闲状态、当前唯一项目 ID 与旧状态保存的 project ID 哈希、工具栏项目名，再创建新 attempt。任一身份漂移、旧状态缺 project ID、已进入发送临界区或旧归档冲突都会失败关闭；普通 `--resume` 始终只读。
+
+即使 UI 最终回复稳定出现，当前版本仍把它记录为 `NEEDS_ATTENTION` 的非可信完成候选。停止控件与当前 conversation 的 sidebar busy 标记都属于 running 门禁；两者任一存在时不能释放槽位或采信完成候选。每次完成观察使用同一个 observation ID 生成唯一回复、截图和 native evidence 文件，回复原件的字节数与 SHA-256 必须和同次 DOM 快照一致，禁止复用更早的部分回复。native terminal、精确 cwd、任务进程清理和公共 finalizer 未补齐前，不生成正式 `execution_record.json` 或 execution receipt。
+
 ## 离线验证
 
 ```bash
 npm test
+node --check driver.mjs
 node --check lib.mjs
 node --check platform.mjs
 node --check native-evidence.mjs

@@ -299,6 +299,35 @@ export function confirmModel(state, actualModel, now = new Date()) {
   return transitionAttempt(state, "MODEL_CONFIRMED", { actual_model: actual }, now);
 }
 
+export function recordPreSendBaselines(state, {
+  conversationIds = [],
+  sessionDirectoryIds = [],
+} = {}, now = new Date()) {
+  assertAttemptState(state);
+  if (state.phase !== "MODEL_CONFIRMED") {
+    throw new Error("发送前基线只能在 MODEL_CONFIRMED 后登记");
+  }
+  const at = isoNow(now);
+  state.session.baseline_conversation_ids = validateIdList(
+    conversationIds,
+    "conversationIds",
+  );
+  state.session.baseline_session_directory_ids = validateIdList(
+    sessionDirectoryIds,
+    "sessionDirectoryIds",
+  );
+  state.runtime.heartbeat_at = at;
+  state.history.push({
+    phase: state.phase,
+    event: "PRE_SEND_BASELINES_RECORDED",
+    conversation_count: state.session.baseline_conversation_ids.length,
+    session_directory_count: state.session.baseline_session_directory_ids.length,
+    at,
+  });
+  assertAttemptState(state);
+  return state;
+}
+
 export function recordSendIntent(state, now = new Date()) {
   assertAttemptState(state);
   if (state.phase !== "MODEL_CONFIRMED") throw new Error("发送意图只能从 MODEL_CONFIRMED 落盘");

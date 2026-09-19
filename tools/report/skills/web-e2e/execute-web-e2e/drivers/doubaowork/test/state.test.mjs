@@ -17,6 +17,7 @@ import {
   persistBeforeDispatch,
   readAttemptState,
   recordDispatchStart,
+  recordPreSendBaselines,
   recordPromptAccepted,
   recordSendIntent,
   transitionAttempt,
@@ -53,6 +54,10 @@ function readyState() {
   confirmWorkspaceReadback(state, "~/debug/task/workspace", "/Users/fixture", TIMES.workspace);
   confirmPermission(state, "按需确认", TIMES.permission);
   confirmModel(state, "自动 高", TIMES.model);
+  recordPreSendBaselines(state, {
+    conversationIds: ["11111111111111111"],
+    sessionDirectoryIds: ["11111111111111111"],
+  }, TIMES.model);
   recordSendIntent(state, TIMES.intent);
   return state;
 }
@@ -68,6 +73,10 @@ test("发送前必须完成 workspace、权限和模型回读", () => {
   confirmWorkspaceReadback(state, "~/debug/task/workspace", "/Users/fixture", TIMES.workspace);
   confirmPermission(state, "按需确认", TIMES.permission);
   confirmModel(state, "自动 高", TIMES.model);
+  recordPreSendBaselines(state, {
+    conversationIds: ["11111111111111111"],
+    sessionDirectoryIds: ["11111111111111111"],
+  }, TIMES.model);
   recordSendIntent(state, TIMES.intent);
   assert.equal(state.phase, "READY_TO_SEND");
   assert.equal(state.send.dispatch_attempt_count, 0);

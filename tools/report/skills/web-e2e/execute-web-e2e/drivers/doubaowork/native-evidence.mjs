@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
-import { readFile, rename, stat, writeFile } from "node:fs/promises";
-import { dirname, isAbsolute, join } from "node:path";
-import { mkdir } from "node:fs/promises";
+import { link, lstat, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { basename, dirname, isAbsolute, join, normalize } from "node:path";
 import { homedir } from "node:os";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -37,6 +36,15 @@ export function parseTrajectoryJsonl(text, source = "trajectory.jsonl") {
       entry = JSON.parse(raw);
     } catch {
       warnings.push({ code: "INVALID_JSON_LINE", source, line: index + 1 });
+      continue;
+    }
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      warnings.push({
+        code: "INVALID_JSON_LINE",
+        source,
+        line: index + 1,
+        reason: "trajectory JSON 必须是对象",
+      });
       continue;
     }
     const role = typeof entry.role === "string" ? entry.role : "unknown";
@@ -80,18 +88,110 @@ export function parseTrajectoryJsonl(text, source = "trajectory.jsonl") {
 export function summarizeNormalizedEvents(events) {
   const calls = events.filter((event) => event.kind === "assistant_tool_call");
   const results = events.filter((event) => event.kind === "tool_result");
-  const resultIds = new Set(results.map((event) => event.call_id).filter(Boolean));
-  const matchedResults = calls.filter((event) => event.call_id && resultIds.has(event.call_id)).length;
+  const diagnostics = [];
+  const scopedKey = (event) => {
+    const agentId = typeof event.agent_id === "string" && event.agent_id.trim()
+      ? event.agent_id
+      : null;
+    const callId = typeof event.call_id === "string" && event.call_id.trim()
+      ? event.call_id
+      : null;
+    return agentId && callId ? `${agentId}\u0000${callId}` : null;
+  };
+  const groupByScopedId = (items, kind) => {
+    const groups = new Map();
+    let unscopedCount = 0;
+    for (const event of items) {
+      const key = scopedKey(event);
+      if (!key) {
+        unscopedCount += 1;
+        diagnostics.push({
+          code: kind === "call" ? "TOOL_CALL_SCOPE_MISSING" : "TOOL_RESULT_SCOPE_MISSING",
+          detail: "工具事件缺少 agent_id 或 call_id，不能纳入已知小计或结果匹配",
+          source: event.source ?? null,
+        });
+        continue;
+      }
+      const group = groups.get(key) ?? [];
+      group.push(event);
+      groups.set(key, group);
+    }
+    for (const [key, group] of groups) {
+      if (group.length < 2) continue;
+      const fingerprints = new Set(group.map((event) => JSON.stringify(kind === "call"
+        ? { tool_name: event.tool_name ?? null, arguments: event.arguments ?? null }
+        : { content: event.content ?? null, outcome: event.outcome ?? null })));
+      diagnostics.push({
+        code: fingerprints.size > 1
+          ? `CONFLICTING_SCOPED_TOOL_${kind.toUpperCase()}_ID`
+          : `DUPLICATE_SCOPED_TOOL_${kind.toUpperCase()}_ID`,
+        detail: "同一 session + agent_id + call_id 出现重复来源，已按一个已知 ID 计数",
+        scoped_id_sha256: sha256Buffer(Buffer.from(key)),
+        source_count: group.length,
+        sources: group.map((event) => event.source ?? null),
+      });
+    }
+    return { groups, unscopedCount };
+  };
+  const callIndex = groupByScopedId(calls, "call");
+  const resultIndex = groupByScopedId(results, "result");
+  const matchedResults = [...callIndex.groups.keys()]
+    .filter((key) => resultIndex.groups.has(key)).length;
   const finalAssistant = [...events].reverse().find((event) => event.kind === "assistant_message") ?? null;
   return {
     event_count: events.length,
     user_message_count: events.filter((event) => event.kind === "user_message").length,
     assistant_message_count: events.filter((event) => event.kind === "assistant_message").length,
-    tool_call_known_subtotal: calls.length,
-    tool_result_known_subtotal: results.length,
+    tool_call_event_count: calls.length,
+    tool_result_event_count: results.length,
+    tool_call_known_subtotal: callIndex.groups.size,
+    tool_result_known_subtotal: resultIndex.groups.size,
     matched_tool_result_count: matchedResults,
+    identifier_scope: "session+agent_id+call_id",
+    identifier_coverage: {
+      status: callIndex.unscopedCount === 0 && resultIndex.unscopedCount === 0
+        ? "complete-for-observed-events"
+        : "incomplete",
+      unscoped_tool_call_event_count: callIndex.unscopedCount,
+      unscoped_tool_result_event_count: resultIndex.unscopedCount,
+    },
+    diagnostics,
     final_assistant_in_trajectory: Boolean(finalAssistant?.content),
   };
+}
+
+async function validateTrajectoryPath(trajectory, sessionId) {
+  const expectedRelative = join(
+    sessionId,
+    "agents",
+    trajectory.agent_id,
+    "system",
+    "trajectory.jsonl",
+  );
+  if (normalize(trajectory.relative_path) !== normalize(expectedRelative)) {
+    throw new Error(`trajectory 相对路径不符合显式 session/agent 布局：${trajectory.relative_path}`);
+  }
+  const pathChain = [
+    { path: trajectory.path, kind: "file", label: "trajectory.jsonl" },
+    { path: dirname(trajectory.path), kind: "directory", label: "system" },
+    { path: dirname(dirname(trajectory.path)), kind: "directory", label: "agent" },
+    { path: dirname(dirname(dirname(trajectory.path))), kind: "directory", label: "agents" },
+    { path: dirname(dirname(dirname(dirname(trajectory.path)))), kind: "directory", label: "session" },
+  ];
+  if (basename(pathChain[1].path) !== "system"
+      || basename(pathChain[2].path) !== trajectory.agent_id
+      || basename(pathChain[3].path) !== "agents"
+      || basename(pathChain[4].path) !== sessionId) {
+    throw new Error(`trajectory 绝对路径不符合显式 session/agent 布局：${trajectory.relative_path}`);
+  }
+  for (const item of pathChain) {
+    const info = await lstat(item.path);
+    const typeMatches = item.kind === "file" ? info.isFile() : info.isDirectory();
+    if (info.isSymbolicLink() || !typeMatches) {
+      throw new Error(`${item.label} 不是普通${item.kind === "file" ? "文件" : "目录"}或包含符号链接`);
+    }
+  }
+  return lstat(trajectory.path);
 }
 
 export async function buildNativeEvidence({ sessionId, workspace, discovery }) {
@@ -106,9 +206,9 @@ export async function buildNativeEvidence({ sessionId, workspace, discovery }) {
   const events = [];
   const warnings = [];
   for (const trajectory of discovery.session.trajectories) {
-    const info = await stat(trajectory.path);
-    if (!info.isFile() || info.size > MAX_TRAJECTORY_BYTES) {
-      throw new Error(`${trajectory.relative_path} 不是普通文件或超过大小上限`);
+    const info = await validateTrajectoryPath(trajectory, sessionId);
+    if (info.size > MAX_TRAJECTORY_BYTES) {
+      throw new Error(`${trajectory.relative_path} 超过大小上限`);
     }
     const buffer = await readFile(trajectory.path);
     const parsed = parseTrajectoryJsonl(buffer.toString("utf8"), trajectory.relative_path);
@@ -129,6 +229,7 @@ export async function buildNativeEvidence({ sessionId, workspace, discovery }) {
   const usage = unavailableUsage("trajectory.jsonl 未暴露可验证的模型 usage 或请求事件");
   const traceWarnings = [
     ...warnings,
+    ...summary.diagnostics,
     {
       code: "NATIVE_CWD_UNAVAILABLE",
       detail: "session 目录和 trajectory 未提供 cwd，不能把调用者 workspace 写成原生 cwd",
@@ -179,8 +280,8 @@ export async function buildNativeEvidence({ sessionId, workspace, discovery }) {
       usage,
       tools: {
         call_count: summary.tool_call_known_subtotal,
-        status: summary.tool_call_known_subtotal > 0 ? "partial" : "unavailable",
-        basis: "trajectory.jsonl 中已解析的唯一 call_id 已知小计；无法证明覆盖完整 turn",
+        status: summary.tool_call_event_count > 0 ? "partial" : "unavailable",
+        basis: "trajectory.jsonl 中按 session + agent_id + call_id 去重的已知小计；空 ID、重复/冲突与完整 turn 覆盖均单列诊断",
         known_subtotal: summary.tool_call_known_subtotal,
         coverage: { numerator: summary.matched_tool_result_count, denominator: null },
       },
@@ -200,11 +301,20 @@ export async function buildNativeEvidence({ sessionId, workspace, discovery }) {
   };
 }
 
-async function atomicWriteJson(outputPath, value) {
+export async function atomicWriteJson(outputPath, value) {
   await mkdir(dirname(outputPath), { recursive: true });
   const temporary = `${outputPath}.tmp-${process.pid}`;
-  await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
-  await rename(temporary, outputPath);
+  try {
+    await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
+    await link(temporary, outputPath);
+  } catch (error) {
+    if (error?.code === "EEXIST") {
+      throw new Error(`输出证据已存在，拒绝覆盖：${outputPath}`);
+    }
+    throw error;
+  } finally {
+    await rm(temporary, { force: true }).catch(() => {});
+  }
 }
 
 export async function main(argv = process.argv.slice(2)) {

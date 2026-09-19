@@ -1,11 +1,12 @@
 {
   "name": "wildclawbench-doubaowork-driver",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "DoubaoWork macOS Web E2E probes, native evidence parser, and send journal",
+  "description": "DoubaoWork macOS Web E2E probe, development canary driver, and native evidence parser",
   "scripts": {
     "probe": "node probe.mjs",
+    "driver": "node driver.mjs",
     "extract-native-evidence": "node native-evidence.mjs",
     "test": "node --test test/*.test.mjs"
   },
