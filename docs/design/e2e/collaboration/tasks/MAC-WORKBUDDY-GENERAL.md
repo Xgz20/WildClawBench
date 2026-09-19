@@ -33,9 +33,9 @@
 
 ## 下一项与阻塞
 
-下一项：控制任务标记 SLOT05_RELEASED 后，不再重试本轮清空；采用 COMMON-004 后续 0.8.1 发行身份，继续离线实现 WorkBuddy collector、trace-index v2 与真实 cleanup hook。未来真机须另行明确授予 slot，并先解决安全临时移出/恢复路径，再创建全新 attempt。
+下一项：控制任务标记 SLOT05_RELEASED 后，不再重试本轮清空；采用 COMMON-004 后续 0.8.1 发行身份，先审查并合入离线 collector/trace-index v2，再实现真实 cleanup hook。未来真机须另行明确授予 slot，并先解决安全临时移出/恢复路径，再创建全新 attempt。
 
-当前依赖缺口：COMMON-004 已采用，但 WorkBuddy 专属 collector、原生 v2 输出和经真实子进程验证的 macOS cleanup hook 尚未实现。专属 driver 继续只放行已核验的 `5.5.3 + Electron`，是否公共化由 COMMON 决定。旧 attempt `3e554524-6599-4182-aecc-3257977867c0` 永不重发或重置；SLOT05 未创建新 attempt，清空门禁失败后草稿仍与备份一致。控制任务释放前不得再访问桌面。
+当前依赖缺口：COMMON-004 已采用；WorkBuddy 专属 collector 和 trace-index v2 已完成离线实现，仍待 COMMON 审查/合入，以及真实 WorkBuddy 子进程验证的 macOS cleanup hook 和正式 collect。专属 driver 继续只放行已核验的 `5.5.3 + Electron`，是否公共化由 COMMON 决定。旧 attempt `3e554524-6599-4182-aecc-3257977867c0` 永不重发或重置；SLOT05 未创建新 attempt，清空门禁失败后草稿仍与备份一致。控制任务释放前不得再访问桌面。
 
 ## 本机现场与恢复
 
@@ -53,5 +53,9 @@
 | COMMON-004 | ADOPTED | `73d75565b37fb88626f4239411bd0e7cf95b4687`（SYNC `ddba8d645da18af75d04fad4a7a47ec1aaa1c161`，推荐源码 `2023b4d...ca4`） | execute 0.8.1 与 WorkBuddy 输入修复已进入当前工作树；按要求先冻结 0.8.0 release 做 SLOT05 发送前门禁，因无法安全清空旧草稿停止，未创建新 attempt；公共组合覆盖数校正已核验 | 后续发行采用 0.8.1；不重试本轮清空 |
 
 ## 本轮交付
+
+### CB-B 离线 collector（待 COMMON 合入）
+
+`eval_general_e2e/adapters/workbuddy/native-history.mjs` 新增 `collectWorkBuddyGeneralEvidence()` 和 `buildWorkBuddyTraceIndex()`：从已完成的只读 WorkBuddy history 生成公共 `trace-index:v2`、`transcript.jsonl`、多个 `raw/workbuddy-history/*` 与 `bindings/*` artifact，并为资源字段保留既有 `null + known_subtotal + coverage` 语义。原生 `thread_id`、lifecycle、transport retry、terminal cleanup 和未验证积分不会被推断或补写。离线 fixture 已通过 trace/resource 契约校验；该交付不等于真机正式 collect 或评分准入。
 
 P1 `2112a86450ba2f22fb284d37a20921cd7e65db69` 提供只读 probe/adapter；P2 `e388dfa43c0f38263ebcf57bf022ba1eb2c3cfeb` 提供安全可恢复单题入口；`5bea762` 改用 CDP `Input.insertText` 并将精确回读、唯一 enabled 发送控件前移到 armed 之前。COMMON-004/execute 0.8.1 已采用到当前工作树；冻结的 0.8.0 release prepare/batch verify PASS，但 SLOT05 临时移出失败，未创建新 attempt。WorkBuddy 25/25、General Node 93/93、相关 Python 60/60、组合基线 254/254、专属依赖闭包、语法和 diff 检查通过。证据见 [P1 只读](../../../general-e2e/evidence/workbuddy-macos-readonly-20260919/README.md)和 [P2/canary 收口](../../../general-e2e/evidence/workbuddy-macos-p2-offline-20260919/README.md)；前序交接为 [MAC-WORKBUDDY-GENERAL-002](../handoffs/MAC-WORKBUDDY-GENERAL-002.md)，本轮 SLOT05 阻断交接为 [MAC-WORKBUDDY-GENERAL-003](../handoffs/MAC-WORKBUDDY-GENERAL-003.md)，新失败原件留在 debug 根。真实 canary 没有实际发送、模型执行、原生 session、collect、评分或发行结论；用户现场未被改变。未 push。

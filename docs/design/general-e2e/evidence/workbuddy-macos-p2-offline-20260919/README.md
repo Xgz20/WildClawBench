@@ -50,7 +50,7 @@ git diff --check                                   PASS
 
 新增 fixture 明确断言：`Input.insertText` 只调用一次；DOM 内容正确但发送控件 disabled 时超时；disabled 发生在 armed 前，journal 保持 attempt count 0，dispatch 为 0。隔离开发浏览器的 `data:` fixture 被浏览器安全策略拒绝，且策略禁止改用原始 CDP 或其他浏览器面绕过，因此没有把离线 fixture 写成浏览器事件或真实 WorkBuddy 证明。
 
-COMMON-002 的通用 finalizer、trace-index v2 和 macOS task-process 原语仅完成公共接收回归。本任务尚未实现 WorkBuddy 专属 collector、原生 v2 输出和经真实 WorkBuddy 子进程验证的 cleanup hook；不把公共 fixture PASS 写成 WorkBuddy 正式收口通过。
+COMMON-002 的通用 finalizer、trace-index v2 和 macOS task-process 原语仅完成公共接收回归。本轮新增 WorkBuddy 专属离线 collector 与原生 v2 输出 fixture，已用公共契约校验；仍没有真实 WorkBuddy 子进程验证的 cleanup hook，不把离线 fixture PASS 写成 WorkBuddy 正式收口通过。
 
 ## 真实 prepare 与 canary
 
@@ -103,5 +103,5 @@ canary 前保护的用户旧草稿已恢复。私有恢复证据显示：正文�
 - SLOT05 冻结发行下的真实 `Input.insertText` canary 尚未启动；阻塞点是无法在不改变用户草稿的前提下完成一次安全临时移出。
 - 全新 canary 的一次实际发送、conversation/request/cwd 增量绑定、可信完成态与同 attempt 恢复。
 - 真实授权/追问/失败/取消/超时和停止确认。
-- WorkBuddy trace-index v2、正式资源、候选冻结、cleanup hook、评分/回传/报告。
+- WorkBuddy 真机 trace-index v2、正式资源、候选冻结、cleanup hook、评分/回传/报告；离线 collector 仅证明输入布局和公共 Schema 可消费。
 - 三题串行、五题动态补位和仓库外发行。

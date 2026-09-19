@@ -8,6 +8,7 @@ import test from "node:test";
 
 import {
   assertSafeWorkBuddyNativeId,
+  collectWorkBuddyGeneralEvidence,
   findWorkBuddyWorkspaceHistory,
   loadWorkBuddyConversation,
   normalizeWorkBuddyConversation,
@@ -149,6 +150,71 @@ test("WorkBuddy history normalizes transcript, calls, resources, and coverage", 
       },
     );
     assert.equal(validation.status, 0, validation.stderr);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("WorkBuddy collector emits CB-B trace-index v2 with multiple raw and binding artifacts", async () => {
+  const fixture = await createNativeHistoryFixture();
+  try {
+    const loaded = await loadWorkBuddyConversation({
+      ...fixture,
+      conversationId: CONVERSATION_ID,
+      requestId: REQUEST_ID,
+    });
+    const normalized = normalizeWorkBuddyConversation(loaded, { identity: IDENTITY, redacted: true });
+    const bindingSource = join(fixture.root, "automation-state.json");
+    await writeFile(bindingSource, JSON.stringify({
+      schema_id: "wildclawbench.general-e2e-execution-state/v1",
+      session_id: CONVERSATION_ID,
+      cwd: fixture.workspace,
+    }) + "\n", "utf8");
+    const bindingBytes = await readFile(bindingSource);
+    const outputRoot = join(fixture.root, "trace");
+    const result = await collectWorkBuddyGeneralEvidence({
+      identity: IDENTITY,
+      loaded,
+      normalized,
+      outputRoot,
+      bindingSources: [{ source: { path: bindingSource, sha256: createHash("sha256").update(bindingBytes).digest("hex"), size: bindingBytes.length }, target: "bindings/automation-state.json" }],
+      writeResourceMetrics: true,
+      collectedAt: "2026-09-19T08:01:00.000Z",
+    });
+    assert.equal(result.trace_index.schema_id, "urn:wildclawbench:schema:general-e2e:trace-index:v2");
+    assert.equal(result.trace_index.schema_version, 2);
+    assert.equal(result.trace_index.session.thread_id, null);
+    assert.equal(result.trace_index.session.turn_id, REQUEST_ID);
+    assert.equal(result.trace_index.session.session_id, CONVERSATION_ID);
+    assert.equal(result.trace_index.session.cwd, fixture.workspace);
+    assert.equal(result.trace_index.raw_trace.length, 6);
+    assert.equal(result.trace_index.binding_evidence.length, 1);
+    assert.equal(result.trace_index.transcript.event_count, normalized.events.length);
+    assert.equal(result.trace_index.normalization.native_event_count, normalized.events.length);
+    assert.equal(result.resource_metrics.collection.status, "partial");
+    for (const relativePath of [
+      "trace-index.json",
+      "transcript.jsonl",
+      "raw/workbuddy-history/workspace-index.json",
+      "raw/workbuddy-history/conversation-index.json",
+      "bindings/automation-state.json",
+      "resource-metrics.json",
+    ]) assert.ok((await readFile(join(outputRoot, relativePath))).length > 0, relativePath);
+    for (const artifact of result.raw_trace) {
+      assert.ok((await readFile(join(outputRoot, artifact.path))).length > 0, artifact.path);
+    }
+    const validation = spawnSync(
+      process.env.PYTHON || "python3",
+      ["-c", "import json,sys; from eval_general_e2e.contracts.validator import validate_contract; validate_contract(json.load(sys.stdin))"],
+      { cwd: REPO_ROOT, encoding: "utf8", input: JSON.stringify(result.trace_index) },
+    );
+    assert.equal(validation.status, 0, validation.stderr);
+    const resourceValidation = spawnSync(
+      process.env.PYTHON || "python3",
+      ["-c", "import json,sys; from eval_general_e2e.contracts.validator import validate_contract; validate_contract(json.load(sys.stdin))"],
+      { cwd: REPO_ROOT, encoding: "utf8", input: JSON.stringify(result.resource_metrics) },
+    );
+    assert.equal(resourceValidation.status, 0, resourceValidation.stderr);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }

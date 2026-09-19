@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
-import { lstat, open, readdir, realpath } from "node:fs/promises";
+import { lstat, mkdir, open, readFile, readdir, realpath, writeFile } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 export const WORKBUDDY_HISTORY_ADAPTER_ID = "workbuddy-native-history";
@@ -11,6 +11,9 @@ export const GENERAL_RESOURCE_SCHEMA =
   "urn:wildclawbench:schema:general-e2e:resource-metrics:v1";
 export const GENERAL_TRANSCRIPT_EVENT_SCHEMA =
   "urn:wildclawbench:schema:general-e2e:transcript-event:v1";
+export const GENERAL_TRACE_INDEX_SCHEMA =
+  "urn:wildclawbench:schema:general-e2e:trace-index:v2";
+export const GENERAL_TRACE_INDEX_VERSION = 2;
 
 const SUCCESS_STATES = new Set(["complete", "completed", "success", "succeeded", "done", "finished"]);
 const FAILURE_STATES = new Set(["failed", "failure", "error", "errored", "cancelled", "canceled", "aborted", "interrupted"]);
@@ -604,6 +607,7 @@ export function normalizeWorkBuddyConversation(loaded, { identity, redacted = fa
     calls: [...calls.values()].sort((left, right) => (left.call_sequence ?? Number.MAX_SAFE_INTEGER) - (right.call_sequence ?? Number.MAX_SAFE_INTEGER)),
     normalization: {
       native_message_count: loaded.messages.length,
+      native_event_count: events.length,
       normalized_event_count: events.length,
       filtered_native_event_count: 0,
       compatibility_profiles: ["workbuddy-native-history-5.5.3"],
@@ -614,6 +618,205 @@ export function normalizeWorkBuddyConversation(loaded, { identity, redacted = fa
       missing: uniqueMissing,
     },
     resources,
+  };
+}
+
+function portableArtifactPath(value, label, prefix = null) {
+  assertString(value, label);
+  if ((prefix !== null && !value.startsWith(`${prefix}/`)) || value.includes("\\")
+      || value.split("/").some((part) => !part || part === "." || part === ".." || part.includes(":"))) {
+    throw new Error(`${label} 不是安全的相对路径`);
+  }
+  return value;
+}
+
+function artifactFromBytes(path, bytes, extra = {}) {
+  return {
+    path,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+    size: bytes.length,
+    ...extra,
+  };
+}
+
+function transcriptBytes(normalized) {
+  assertObject(normalized, "normalized");
+  if (!Array.isArray(normalized.events) || normalized.events.length === 0) {
+    throw new Error("WORKBUDDY_TRANSCRIPT_EMPTY");
+  }
+  return Buffer.from(`${normalized.events.map((event) => JSON.stringify(event)).join("\\n")}\\n`, "utf8");
+}
+
+function sourceArtifactList(loaded) {
+  const source = loaded?.source_artifacts;
+  if (!isObject(source) || !source.workspace_index || !source.conversation_index
+      || !Array.isArray(source.messages) || source.messages.length === 0) {
+    throw new Error("WORKBUDDY_NATIVE_SOURCE_ARTIFACTS_INCOMPLETE");
+  }
+  return [
+    { source: source.workspace_index, path: "raw/workbuddy-history/workspace-index.json" },
+    { source: source.conversation_index, path: "raw/workbuddy-history/conversation-index.json" },
+    ...source.messages.map((item) => {
+      const id = assertSafeWorkBuddyNativeId(
+        basename(String(item.path || "")).replace(/\\.json$/u, ""),
+        "WorkBuddy message artifact id",
+      );
+      return { source: item, path: `raw/workbuddy-history/messages/${id}.json` };
+    }),
+  ];
+}
+
+async function readStableArtifact(source, label) {
+  assertObject(source, label);
+  const sourcePath = resolve(assertString(source.path, `${label}.path`));
+  const info = await lstat(sourcePath);
+  if (!info.isFile() || info.isSymbolicLink()) throw new Error(`${label} 不是普通文件`);
+  const bytes = await readFile(sourcePath);
+  const actual = artifactFromBytes(source.path, bytes);
+  if (actual.sha256 !== source.sha256 || actual.size !== source.size) {
+    throw new Error(`${label} 在采集期间发生变化`);
+  }
+  return bytes;
+}
+
+async function writeNewArtifact(root, artifactPath, bytes) {
+  const relativePath = portableArtifactPath(artifactPath, "artifact.path");
+  const destination = join(root, relativePath);
+  await mkdir(dirname(destination), { recursive: true });
+  await writeFile(destination, bytes, { flag: "wx" });
+  return artifactFromBytes(relativePath, bytes);
+}
+
+/**
+ * Build the public CB-B trace-index v2 envelope from a normalized WorkBuddy
+ * request. Native thread/lifecycle values remain null when WorkBuddy does not
+ * expose them; this function never infers terminal/cwd/usage values.
+ */
+export function buildWorkBuddyTraceIndex({
+  identity,
+  loaded,
+  normalized,
+  transcriptArtifact,
+  rawTrace,
+  bindingEvidence,
+  lifecycleGeneration = null,
+  adapterSource = "WorkBuddy native history (read-only)",
+}) {
+  assertObject(identity, "identity");
+  assertObject(loaded, "loaded");
+  assertObject(normalized, "normalized");
+  assertObject(transcriptArtifact, "transcriptArtifact");
+  if (!Array.isArray(rawTrace) || rawTrace.length === 0) throw new Error("WORKBUDDY_RAW_TRACE_EMPTY");
+  if (!Array.isArray(bindingEvidence) || bindingEvidence.length === 0) {
+    throw new Error("WORKBUDDY_BINDING_EVIDENCE_EMPTY");
+  }
+  const sessionId = assertSafeWorkBuddyNativeId(loaded.conversation_id, "conversation_id");
+  const requestId = assertSafeWorkBuddyNativeId(loaded.request_id, "request_id");
+  const cwd = resolve(assertString(loaded.workspace, "loaded.workspace"));
+  const events = normalized.events;
+  const nativeEventCount = Number.isSafeInteger(normalized.normalization?.native_event_count)
+    ? normalized.normalization.native_event_count : events.length;
+  if (nativeEventCount < 1 || events.length < 1) throw new Error("WORKBUDDY_TRANSCRIPT_EMPTY");
+  if (normalized.normalization?.normalized_event_count !== events.length) {
+    throw new Error("WORKBUDDY_NORMALIZATION_COUNT_MISMATCH");
+  }
+  return {
+    schema_id: GENERAL_TRACE_INDEX_SCHEMA,
+    schema_version: GENERAL_TRACE_INDEX_VERSION,
+    identity,
+    adapter: {
+      id: WORKBUDDY_HISTORY_ADAPTER_ID,
+      version: WORKBUDDY_HISTORY_ADAPTER_VERSION,
+      source: adapterSource,
+    },
+    session: {
+      thread_id: null,
+      turn_id: requestId,
+      session_id: sessionId,
+      cwd,
+      lifecycle_generation: lifecycleGeneration,
+    },
+    transcript: { ...transcriptArtifact, path: "transcript.jsonl", event_count: events.length },
+    raw_trace: rawTrace,
+    raw_event_range: { first_sequence: 0, last_sequence: nativeEventCount - 1, event_count: nativeEventCount },
+    normalization: {
+      native_event_count: nativeEventCount,
+      normalized_event_count: events.length,
+      filtered_native_event_count: normalized.normalization?.filtered_native_event_count || 0,
+      compatibility_profiles: normalized.normalization?.compatibility_profiles || ["workbuddy-native-history-5.5.3"],
+    },
+    completeness: normalized.completeness,
+    calls: normalized.calls,
+    binding_evidence: bindingEvidence,
+  };
+}
+
+/**
+ * Copy one verified WorkBuddy history request into a CB-B trace directory.
+ * The returned bundle can be passed directly to the common finalizer after a
+ * caller adds the CB-A state artifact to resource provenance. No native
+ * terminal, cwd, retry, credit, or cleanup value is synthesized here.
+ */
+export async function collectWorkBuddyGeneralEvidence({
+  identity,
+  loaded,
+  normalized = normalizeWorkBuddyConversation(loaded, { identity, redacted: true }),
+  outputRoot,
+  bindingSources,
+  lifecycleGeneration = null,
+  writeResourceMetrics = false,
+  collectedAt = new Date().toISOString(),
+}) {
+  const traceRoot = resolve(assertString(outputRoot, "outputRoot"));
+  await mkdir(traceRoot, { recursive: true });
+  const transcript = transcriptBytes(normalized);
+  const transcriptArtifact = await writeNewArtifact(traceRoot, "transcript.jsonl", transcript);
+  const rawTrace = [];
+  for (const item of sourceArtifactList(loaded)) {
+    const bytes = await readStableArtifact(item.source, `WorkBuddy ${item.path}`);
+    rawTrace.push(await writeNewArtifact(traceRoot, item.path, bytes));
+  }
+  if (!Array.isArray(bindingSources) || bindingSources.length === 0) {
+    throw new Error("WORKBUDDY_BINDING_SOURCES_EMPTY");
+  }
+  const bindingEvidence = [];
+  for (const [index, item] of bindingSources.entries()) {
+    assertObject(item, `bindingSources[${index}]`);
+    const source = item.source || item;
+    const target = item.target || `bindings/source-${index + 1}.json`;
+    const relativeTarget = portableArtifactPath(target, `bindingSources[${index}].target`, "bindings");
+    const bytes = await readStableArtifact(source, `WorkBuddy binding source ${index + 1}`);
+    bindingEvidence.push(await writeNewArtifact(traceRoot, relativeTarget, bytes));
+  }
+  const index = buildWorkBuddyTraceIndex({
+    identity,
+    loaded,
+    normalized,
+    transcriptArtifact,
+    rawTrace,
+    bindingEvidence,
+    lifecycleGeneration,
+  });
+  const indexBytes = Buffer.from(`${JSON.stringify(index, null, 2)}\\n`, "utf8");
+  const traceIndexArtifact = await writeNewArtifact(traceRoot, "trace-index.json", indexBytes);
+  const resourceMetrics = toGeneralResourceMetrics({
+    identity,
+    observation: normalized.resources,
+    sourceArtifact: traceIndexArtifact,
+    collectedAt,
+  });
+  if (writeResourceMetrics) {
+    await writeFile(join(traceRoot, "resource-metrics.json"), `${JSON.stringify(resourceMetrics, null, 2)}\\n`, { flag: "wx" });
+  }
+  return {
+    trace_root: traceRoot,
+    trace_index: index,
+    trace_index_artifact: traceIndexArtifact,
+    transcript_artifact: transcriptArtifact,
+    raw_trace: rawTrace,
+    binding_evidence: bindingEvidence,
+    resource_metrics: resourceMetrics,
+    resource_metrics_path: writeResourceMetrics ? join(traceRoot, "resource-metrics.json") : null,
   };
 }
 
