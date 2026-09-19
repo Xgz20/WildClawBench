@@ -52,7 +52,7 @@ P2 canary CLI、冻结配置、前置条件和回退方案见 [qwenwork-macos-p2
 | COMMON-001 | VERIFIED | `0dd42824cb8eb510ab126fd74553f93312c9f201`（推荐源码 `ed366b30...963a`） | 无活动 QwenWork 会话后 merge；已按 CB-A 输出 session/cwd/证据，thread/turn 为 null；公共 55/55、新增 Node 12/12、Python 3/3 通过 | P2 真机时段；CB-B 接口交接 |
 | MAC-QWENWORK-GENERAL-003 | ADOPTED | `f0bf24f`、`e646a01`（源提交 `993cdc5`、`8229e96`） | SLOT04 真实 prepare PASS；发送前 project trigger `2` 个候选失败，`PROMPT_SENT=0`；用户手动确认退出；关闭库 probe error 14；项目控件与 SQLite 快照加固通过 Qwen Node 37/37 | 新 slot 做 selector/probe 真机验证并继续 CB-B |
 | COMMON-003 | VERIFIED | SYNC `82e947b926a4525aac7ba2de08b76830ee9c739b`；推荐源码 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3`；merge `7b39dd9` | GitHub ls-remote 与源码祖先通过；采用 execute `0.8.0` 和 Qwen CLI main-guard 修复；Qwen Node 32/32、Python 3/3、Skill build/layout 24/24 通过 | selector/probe 专属修复；collector 独立审查 |
-| MAC-QWENWORK-GENERAL-004 | LOCAL_ONLY | 待本地提交 | CB-B Qwen 专属 collector/native-normalizer：trace-index v2、resource-metrics v1、binding/SQLite/segment provenance fail-closed、usage null/coverage、tool completed 不升级 success；Node collector focused 4/4 通过 | 审查后合入 COMMON；再安排新桌面时段做真机采集与 cleanup |
+| MAC-QWENWORK-GENERAL-004 | LOCAL_ONLY | `2c689e1` | CB-B Qwen 专属 collector/native-normalizer：trace-index v2、resource-metrics v1、binding/SQLite/segment provenance fail-closed、usage null/coverage、tool completed 不升级 success；Node collector focused 4/4 通过 | 审查后合入 COMMON；再安排新桌面时段做真机采集与 cleanup |
 
 ## 本轮交付
 
