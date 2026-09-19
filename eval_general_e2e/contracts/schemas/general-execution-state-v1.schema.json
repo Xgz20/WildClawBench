@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:general-e2e:execution-state:v1",
+  "title": "General E2E adapter execution state v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "driver",
+    "identity",
+    "dataset",
+    "phase",
+    "task_root",
+    "candidate_workspace",
+    "prompt",
+    "send",
+    "session",
+    "execution",
+    "human_assistance"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "wildclawbench.general-e2e-execution-state/v1"
+    },
+    "driver": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "harness",
+        "platform"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "harness": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "batch_id",
+        "unit_id",
+        "task_id",
+        "attempt_id"
+      ],
+      "properties": {
+        "batch_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unit_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "task_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attempt_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "digest"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "phase": {
+      "enum": [
+        "PENDING",
+        "RUNNING",
+        "NEEDS_ATTENTION",
+        "COMPLETED",
+        "FAILED"
+      ]
+    },
+    "task_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidate_workspace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "send_status",
+        "sent_at"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "send_status": {
+          "enum": [
+            "not_sent",
+            "intent_persisted",
+            "sent",
+            "uncertain"
+          ]
+        },
+        "sent_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "send": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dispatch_attempt_count"
+      ],
+      "properties": {
+        "dispatch_attempt_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "thread_id",
+        "turn_id",
+        "session_id",
+        "cwd",
+        "verified",
+        "binding_evidence"
+      ],
+      "properties": {
+        "thread_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "turn_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "session_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "cwd": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "binding_evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256",
+              "size"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "business_status",
+        "started_at",
+        "finished_at",
+        "duration_seconds",
+        "error",
+        "cancellation_confirmed"
+      ],
+      "properties": {
+        "business_status": {
+          "enum": [
+            "completed",
+            "candidate_error",
+            "timeout",
+            "infrastructure_error",
+            "cancelled",
+            null
+          ]
+        },
+        "started_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "finished_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "duration_seconds": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "error": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "type": "string",
+              "minLength": 1
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "cancellation_confirmed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "human_assistance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "operation_count",
+        "semantic_intervention_count"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "automatic",
+            "human_assisted"
+          ]
+        },
+        "operation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "semantic_intervention_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "extensions": {
+      "type": "object"
+    }
+  }
+}
