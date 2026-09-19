@@ -76,6 +76,14 @@ canary 使用模型 `xopglm52`、权限 `default-sandbox`，Prompt SHA-256 为 `
 
 本地目录名沿用 `slot02`，本次 canary 对应的控制桌面分配最终状态为 `SLOT03_RELEASED`。目录名不是仍持有 SLOT02/SLOT03 的证据；后续运行必须重新取得 slot 并重新核验进程、CDP、原生 session、UI 空闲、模型和权限。
 
+## SLOT05 冻结发行与发送前门禁
+
+为验证 `Input.insertText`，控制任务另行授予 `SLOT-MAC-20260919-05`。按 COMMON-004 的要求，本次活动先冻结 COMMON-003 时代的 `0eddf84e34f2cd8f738f819eebdd963acda3ae77`，使用 execute Skill `0.8.0` 构建 release `workbuddy-macos-p2-0eddf84`；suite SHA-256 `05107dfc13116e68e6afbe5a27d3ed600463d4f4d943d93f060acaf33f5a5cb5`，dataset bundle SHA-256 `181f718f4309cb85bd009e8eccba6b2581a9e9d1a41df17a4908dcf828e263f0`。独立 `prepare-general-e2e-workspaces` Skill 产生的新 batch `workbuddy-macos-canary-20260919-02` 和 execution/scoring 双包均通过 verify；Prompt SHA 保持 `deb5f6554a69c93afe1e6ad1f1fb6d678adedfc8860dda0875afaa6d4281e621`。
+
+发送前只读 probe 于 `2026-09-19T13:43:42.656Z` 返回 `PASS`：WorkBuddy 5.5.3/x86_64、主进程 PID 33343、CDP `127.0.0.1:9229`、唯一 page target、原生 session index 仅 1 个历史 `Completed`。随后对当前编辑器做哈希和附件门禁：31 字符正文 SHA `48c34111a769d3367a62c87f1b06a90e1e34bdcd5c8f9137c37dd26679844141`、HTML SHA `14263d5c4a28339da5db126c07e6ba2f6e88e31b97079ed33ce86f67197c53a6` 均与私有备份一致；Workspace/conversation 为空，模型/权限为 `xopglm52/default-sandbox`，附件输入/选中文件/可见附件元素均为 0。
+
+按已授权的临时移出路径只尝试一次真实清空：编辑器可聚焦，但 CDP Meta+A/Backspace 后等待 500ms，正文长度和哈希完全不变。没有点击“新建任务”、没有填入 canary Prompt、没有创建新 attempt、没有 click/send，也没有修改旧草稿；失败原件为 `slot05/pre-canary-draft-clear-failure-01.json`。按门禁立即停止，草稿仍与备份一致；SLOT05 应由控制任务标记 `SLOT05_RELEASED`，后续不再重试该清空路径。
+
 ## 用户草稿恢复
 
 canary 前保护的用户旧草稿已恢复。私有恢复证据显示：正文长度 31；正文 SHA-256 `48c34111a769d3367a62c87f1b06a90e1e34bdcd5c8f9137c37dd26679844141`；HTML SHA-256 `14263d5c4a28339da5db126c07e6ba2f6e88e31b97079ed33ce86f67197c53a6`。恢复后正文和 HTML 均与备份一致，属性差异仅为动态 `style`；candidate Prompt 已移除，Workspace/conversation 为空，模型/权限与备份一致。
@@ -92,6 +100,7 @@ canary 前保护的用户旧草稿已恢复。私有恢复证据显示：正文�
 ## 尚未证明
 
 - `5bea762` 的 `Input.insertText + pre-arm enabled` 在真实 WorkBuddy 5.5.3 上能驱动编辑器状态和发送控件。
+- SLOT05 冻结发行下的真实 `Input.insertText` canary 尚未启动；阻塞点是无法在不改变用户草稿的前提下完成一次安全临时移出。
 - 全新 canary 的一次实际发送、conversation/request/cwd 增量绑定、可信完成态与同 attempt 恢复。
 - 真实授权/追问/失败/取消/超时和停止确认。
 - WorkBuddy trace-index v2、正式资源、候选冻结、cleanup hook、评分/回传/报告。
