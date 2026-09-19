@@ -4,13 +4,13 @@
 
 ## 当前交付与下一项
 
-本轮把三个平台的开发 Driver、WorkBuddy/Qwen CB-B collector 和 Doubao driver-side finalizer 集成到公共分支；公共组合基线 254/254 通过，新增聚焦回归 WorkBuddy 26/26、Qwen 41/41、Doubao 60/60 通过。COMMON-003 源码为 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3`；后续输入修复源码 `2023b4d5d1d703c81ff8ed15e0d5ada29cd0dca4` 见 [COMMON-004](handoffs/COMMON-004.md)。源码全部在 `.agents/e2e-harness-contract` 集成；不把开发 canary 或离线测试写成正式 E2E 完成。
+本轮把三个平台的开发 Driver、WorkBuddy/Qwen CB-B collector、WorkBuddy cleanup/readiness gate、Qwen metadata gate 和 Doubao driver-side receipt bridge 集成到公共分支；公共组合基线 254/254 通过，新增聚焦回归 WorkBuddy 33/33、Qwen 43/43、Doubao 62/62 通过。COMMON-003 源码为 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3`；后续输入修复源码 `2023b4d5d1d703c81ff8ed15e0d5ada29cd0dca4` 见 [COMMON-004](handoffs/COMMON-004.md)。源码全部在 `.agents/e2e-harness-contract` 集成；不把开发 canary 或离线测试写成正式 E2E 完成。
 
 | 任务 | 已审查并集成的交付 | 正在推进 |
 | --- | --- | --- |
-| MAC-WORKBUDDY-GENERAL | P2 `e388dfa`、组件绑定 `b3ac3da`；CB-B `be3ca29`；独立 Node 26/26 | SLOT03 发送前失败已安全恢复草稿、释放；输入修复 `5bea762` 审查通过；SLOT05 清空门禁失败已按 `MAC-WORKBUDDY-GENERAL-003` 收口并释放，未创建 attempt；collector 已集成，真实 collect/cleanup 待新时段 |
-| MAC-QWENWORK-GENERAL | `9081df5`；CB-B `acfc7a1`/`828bfb0`/`5263890`；聚焦 Node 41/41 | SLOT04 已释放；项目 trigger 歧义导致 send=0；selector/SQLite 快照与 binding 终态兼容修复已接收；真实 1.0.6 日志采集与 cleanup 待新时段 |
-| MAC-DOUBAOWORK-WEB | P2 `47dcaee`、公共 merge `ca7cc2e`、更正 `3a3057c`；离线加固 `40c2f71`/`2e21a54`/`5d7b6d9`；finalizer `9bb30aa`，集成 Node 60/60 | UI 等价绑定、Prompt 回读、进程重挂、恢复状态与 driver-side finalizer 门禁已加固；公共 route/receipt、cleanup hook 与可信 native terminal/cwd 仍待补齐 |
+| MAC-WORKBUDDY-GENERAL | P2 `e388dfa`、组件绑定 `b3ac3da`；CB-B `be3ca29`；cleanup gate `3783b2b`；独立 Node 33/33 | SLOT03 发送前失败已安全恢复草稿、释放；输入修复 `5bea762` 审查通过；SLOT05 清空门禁失败已按 `MAC-WORKBUDDY-GENERAL-003` 收口并释放，未创建 attempt；collector/cleanup readiness 已集成，真实 collect/cleanup 待新时段 |
+| MAC-QWENWORK-GENERAL | `9081df5`；CB-B `acfc7a1`/`828bfb0`/`5263890`；metadata gate `679a1e3`；聚焦 Node 43/43 | SLOT04 已释放；项目 trigger 歧义导致 send=0；selector/SQLite 快照、binding 终态和 1.0.6 metadata gate 已接收；真实日志采集与 cleanup 待新时段 |
+| MAC-DOUBAOWORK-WEB | P2 `47dcaee`、公共 merge `ca7cc2e`、更正 `3a3057c`；离线加固 `40c2f71`/`2e21a54`/`5d7b6d9`；finalizer `9bb30aa`；bridge `694536d`，集成 Node 62/62 | UI 等价绑定、Prompt 回读、进程重挂、恢复状态、driver-side finalizer 与内存 receipt bridge 已加固；公共 route/receipt、cleanup hook 与可信 native terminal/cwd 仍待补齐 |
 | COMMON | CB-A/CB-B、三 Driver、发行版本与 Qwen CLI 路径别名修复 | 发布 COMMON-003，接收下一批平台修复/collector；新增五项指标另属 COMMON-CM01 |
 
 公共/平台组合回归：General Python 63、Node 130（公共 34、WorkBuddy 25、Qwen 32、Doubao 39）、Web Python 61，合计 254/254。General execute 本批升为 0.8.1、Web execute 1.15.0；尚未新建生产发行包。

@@ -3,12 +3,12 @@
 | 字段 | 当前值 |
 | --- | --- |
 | 唯一负责人 / 实际任务 ID | 独立 Codex 开发任务 / `MAC-DOUBAOWORK-WEB` |
-| 工作状态 / 代码交付 | ACTIVE / INTEGRATED；P1 已完成，P2 已完成一次开发 canary 的单次发送与 session 绑定；0.5.0 等价绑定/候选 cleanup 离线加固已接收，但终态仍为 `NEEDS_ATTENTION`，未正式收口 |
+| 工作状态 / 代码交付 | ACTIVE / INTEGRATED；P1 已完成，P2 已完成一次开发 canary 的单次发送与 session 绑定；0.5.0 等价绑定/候选 cleanup、finalizer 与 receipt bridge 离线加固已接收，但终态仍为 `NEEDS_ATTENTION`，未正式收口 |
 | 分支 / worktree | `feat/doubaowork-macos-web-e2e` / `<主项目>/.agents/doubaowork-macos-web-e2e`，已核验绑定 |
 | 创建 base / 已采用公共基线 | `03c38f280a64ad9bc9308c768f0f5795050355cc` / COMMON-001、COMMON-002 均已 ADOPTED；COMMON-002 merge `ca7cc2ed74e3c8bb148ccd702c385f1ba8f62cb9` |
 | 已读台账的 SYNC_SHA / 必需源码 | `46a23a43572aed34bc2eec457d67423e2bce08af` / `eb23784a7ed25b0f0364db0392783de277b22b96`，均已通过祖先检查 |
 | 同步源 / 实现与集成 SHA | `github/feature/astroncode-eval`；P1 `f168f2e4c7e5e447249cfb7e96b0d195b99e3e60`、P2 journal `d183e28f2224aed40fd14ae43d8f7ab9ce6cbb0b`、canary 事后交付 `47dcaee`、COMMON-002 merge `ca7cc2e`；离线加固源提交 `40c2f71`、`2e21a54`、`5d7b6d9`；集成 `11d0182`、`b57b03e`、`0424174`；未 push |
-| 最后更新 | 2026-09-20（Asia/Shanghai），接收 `MAC-DOUBAOWORK-WEB-003` finalizer 适配；未操作客户端 |
+| 最后更新 | 2026-09-20（Asia/Shanghai），接收 `MAC-DOUBAOWORK-WEB-004` receipt bridge 适配；未操作客户端 |
 
 ## 本轮范围与修改归属
 
@@ -35,7 +35,7 @@ COMMON-001/002 已采用。desktop-app-discovery 1.2.0、execute-web-e2e 1.14.0�
 
 ## 下一项与阻塞
 
-下一项：不再连接或操作 DoubaoWork UI。先补齐 Web metrics、公共 execute/run 路由、可信 terminal/cwd，并把已有 driver-side assessment 与候选 cleanup 接入正式 finalizer/receipt 和发行入口；以后只有在这些实现完成且另行批准新批次/时段后才做真机复验。
+下一项：不再连接或操作 DoubaoWork UI。先补齐 Web metrics、公共 execute/run 路由、可信 terminal/cwd，并把已有 driver-side assessment/receipt bridge 与候选 cleanup 接入正式 finalizer/receipt 和发行入口；以后只有在这些实现完成且另行批准新批次/时段后才做真机复验。
 
 当前依赖缺口：Web metrics 尚未注册 DoubaoWork；execute/run 尚无公共 DoubaoWork 路由；nullable native identity、多 artifact trace、可信终态/cwd、平台精确 cleanup、正式 Web finalizer/receipt 与发行装配尚未闭环。精确需求见 [MAC-DOUBAOWORK-WEB-001](../handoffs/MAC-DOUBAOWORK-WEB-001.md)。缺少可信原生终态/cwd/进程清理时不得生成正式完整回执。
 
@@ -54,7 +54,8 @@ COMMON-001/002 已采用。desktop-app-discovery 1.2.0、execute-web-e2e 1.14.0�
 | COMMON-001 | ADOPTED | merge `6cd5aac76055503380af6380cd203196515de642`；固定 `SYNC_SHA=0dd42824cb8eb510ab126fd74553f93312c9f201`，推荐源码 `ed366b30bc5ddd2ae35ef6361c3ac7c72ce9963a`，CB-A `abce5da832f16b48cd402ceef04a6abda544a379` | 推荐源码与 CB-A 均已核验为 SYNC_SHA 祖先并合入；General Schema 对 Web 不适用，不创建 General adapter | 后续由 COMMON-002 记录承接 |
 | COMMON-002 | ADOPTED | merge `ca7cc2ed74e3c8bb148ccd702c385f1ba8f62cb9`；`SYNC_SHA=46a23a43572aed34bc2eec457d67423e2bce08af`；必需源码 `eb23784a7ed25b0f0364db0392783de277b22b96` | 两个源码均为 HEAD 祖先；采用 discovery 1.2.0、Web execute 1.14.0 / run 1.4.2 / orchestrate 0.3.2，prepare 已支持 DoubaoWork。共享 discovery 测试 3/3 通过，真实安装只读核验 `identity_verified=true`；General finalizer/trace 不作为 Web 正式收口证据 | 补 Web metrics、execute/run 路由、terminal/cwd、cleanup、finalizer/receipt 与发行 |
 | MAC-DOUBAOWORK-WEB-003 | ADOPTED | `11d0182`、`b57b03e`、`0424174`、`9bb30aa`（源提交 `40c2f71`、`2e21a54`、`5d7b6d9`、`6ec2912`） | 等价绑定、Prompt 回读、候选 cleanup 生命周期、恢复状态与 driver-side finalizer 门禁；集成树 Doubao Node 60/60、MJS 检查和 diff 检查通过；未操作客户端，未接公共 route/receipt | Web metrics、可信 native terminal/cwd、公共 cleanup/finalizer/receipt 接线 |
+| MAC-DOUBAOWORK-WEB-004 | ADOPTED | `694536d`（源提交 `2e7c3b8`） | receipt bridge 仅内存映射 Web v1 字段，复用 finalizer 全部门禁；ready/native identity mismatch fixture；Doubao Node 62/62；未生成正式 receipt、未操作客户端 | 公共 route/receipt 接线与真机新 slot 前发行 |
 
 ## 本轮交付
 
-P1 已形成 DoubaoWork 专属只读 probe、共享 discovery 接入、原生 trajectory 旁路解析、macOS 目录 helper、脱敏 fixtures 与证据记录。P2 Driver 0.5.0 已完成唯一 dispatch、严格项目/路径/模型/权限/Prompt 回读、conversation→project→workspace 等价绑定、进程身份锁、候选 cleanup 加固与只观察恢复；`9bb30aa` 增加不直接生成 receipt 的 driver-side finalizer assessment，且仅接受会话级 `prompt_readback.status=verified`。集成树 Doubao Node 60/60，相关 MJS 语法和 `git diff --check` 通过。canary 生成了站点，但因可信终态/cwd、公共 route/receipt 和正式 evidence 收口缺失保持 `NEEDS_ATTENTION`；没有正式 execution/collect/评分/回传/报告或发行证据。未 push、未合主分支。
+P1 已形成 DoubaoWork 专属只读 probe、共享 discovery 接入、原生 trajectory 旁路解析、macOS 目录 helper、脱敏 fixtures 与证据记录。P2 Driver 0.5.0 已完成唯一 dispatch、严格项目/路径/模型/权限/Prompt 回读、conversation→project→workspace 等价绑定、进程身份锁、候选 cleanup 加固与只观察恢复；`9bb30aa` 增加不直接生成 receipt 的 driver-side finalizer assessment，`694536d` 增加只读内存 receipt bridge，且仅接受会话级 `prompt_readback.status=verified`。集成树 Doubao Node 62/62，相关 MJS 语法和 `git diff --check` 通过。canary 生成了站点，但因可信终态/cwd、公共 route/receipt 和正式 evidence 收口缺失保持 `NEEDS_ATTENTION`；没有正式 execution/collect/评分/回传/报告或发行证据。未 push、未合主分支。

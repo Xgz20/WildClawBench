@@ -9,7 +9,7 @@
 | 已采用本轮公共基线 / 实现与集成 SHA | 推荐源码 `2023b4d5d1d703c81ff8ed15e0d5ada29cd0dca4`；平台与公共原提交保留，见 COMMON-001/002/003/004 |
 | 已读台账的 SYNC_SHA / 实际工作 HEAD | 初始 fetch `3cf2cc02c0c96ac05b3252262a78afc7a379a691`；公共台账 82e947b 已 push/ls-remote 核验；本轮输入修复与 COMMON-004 同步发布，实际 SYNC_SHA 由接收方固定，避免自指 SHA |
 | 同步来源 | `github/feature/astroncode-eval`，已在本轮 fetch 核验 |
-| 最后更新 | 2026-09-20（Asia/Shanghai），三个平台离线 collector/finalizer 交付已接收 |
+| 最后更新 | 2026-09-20（Asia/Shanghai），三个平台采集准入与 Web 回执桥接交付已接收 |
 
 ## 范围与修改归属
 
@@ -28,11 +28,11 @@
 - [ ] **COMMON-CM01**：公共五项新增指标聚合/报告与 AstronStudio 参考映射，含 fixtures 和实际来源对账；不阻塞依赖已明确的客户端适配。
 - [x] **COMMON-IN01**：接收并审查首批三平台 P2 与修复，保留原提交合入；COMMON-003 组合回归及本批变更复跑共 254/254，通过新增 COMMON-004。此勾选仅代表本批，不代表完整平台验收。
 - [x] **COMMON-IN02**：WorkBuddy 输入修复及 canary 交接已集成，Qwen SLOT04 证据/COMMON-003 接收记录已集成；Web 最小复用方案明确，发布 COMMON-004。
-- [ ] **COMMON-IN03**：WorkBuddy/Qwen CB-B 离线 collector 与 Doubao driver-side finalizer 已接收；仍缺真实原生采集、公共 Web route/receipt 接线和新桌面验收，COMMON 公共 Web 接线继续逐项审查。
+- [ ] **COMMON-IN03**：WorkBuddy cleanup/readiness gate、Qwen metadata gate、Doubao driver-side receipt bridge 已接收；仍缺真实原生采集、公共 Web route/receipt 接线和新桌面验收，COMMON 公共 Web 接线继续逐项审查。
 
 ## 下一项与依赖
 
-三个开发 Driver、组件绑定、execute 版本与 Qwen CLI 脱仓修复已纳入 [COMMON-003](../handoffs/COMMON-003.md)。WorkBuddy SLOT03 没有实际发送且已恢复用户草稿；SLOT05 清空门禁失败已由 [MAC-WORKBUDDY-GENERAL-003](../handoffs/MAC-WORKBUDDY-GENERAL-003.md) 收口并释放，CB-B collector 已离线合入；Qwen SLOT04 因发送前项目控件歧义退出、已释放，CB-B collector 已离线合入；Doubao 更正了已生成网站的证据并接收 driver-side finalizer 门禁。下一批重点为真实输入、原生采集和公共 Web route/receipt 接线，公共适配范围由 COMMON 集中确定。
+三个开发 Driver、组件绑定、execute 版本与 Qwen CLI 脱仓修复已纳入 [COMMON-003](../handoffs/COMMON-003.md)。WorkBuddy SLOT03 没有实际发送且已恢复用户草稿；SLOT05 清空门禁失败已由 [MAC-WORKBUDDY-GENERAL-003](../handoffs/MAC-WORKBUDDY-GENERAL-003.md) 收口并释放，CB-B collector 与 cleanup/readiness gate 已离线合入；Qwen SLOT04 因发送前项目控件歧义退出、已释放，CB-B collector 与 metadata gate 已离线合入；Doubao 更正了已生成网站的证据并接收 driver-side finalizer 与 receipt bridge。下一批重点为真实输入、原生采集和公共 Web route/receipt 接线，公共适配范围由 COMMON 集中确定。
 
 Windows 接收 COMMON-001/002/003 后直接推进本机 G5-01，无需等待 Mac 新 Harness 完成。活动批次先按原 revision 收口，空闲干净后再采用新源码。
 
@@ -55,7 +55,10 @@ Windows 接收 COMMON-001/002/003 后直接推进本机 G5-01，无需等待 Mac
 | MAC-WORKBUDDY-GENERAL-004 | ADOPTED | `be3ca29` | CB-B WorkBuddy collector/trace-index v2、raw history/binding artifacts 与 null+coverage 资源语义；Node 26/26 通过；未操作客户端 | 真实 collect、cleanup hook 与原生终态核验 |
 | MAC-QWENWORK-GENERAL-004 | ADOPTED | `acfc7a1`、`828bfb0`、`5263890` | CB-B collector/native-normalizer、binding/SQLite/segment provenance fail-closed；collector 4/4、Qwen 聚焦 41/41 通过；未操作客户端 | 真实 1.0.6 日志字段覆盖、collect 与 cleanup |
 | MAC-DOUBAOWORK-WEB-003 | ADOPTED | `11d0182`、`b57b03e`、`0424174`、`9bb30aa` | 等价绑定、Prompt 回读、候选 cleanup 生命周期与 driver-side finalizer 门禁；Doubao Node 60/60；未操作客户端，公共 receipt/route 与可信 native terminal/cwd 仍缺 | Web metrics、公共 finalizer/receipt 接线与真机新 slot 前发行 |
+| MAC-WORKBUDDY-GENERAL-005 | ADOPTED | `3783b2b`（源提交 `a05b793`） | WorkBuddy cleanup/readiness gate：identity、trace v2、资源 null/coverage、cleanup workspace/quiet window 与残留进程 fail-closed；专属 Node 33/33；未操作客户端 | 真实 collect、cleanup hook 接线与原生终态核验 |
+| MAC-QWENWORK-GENERAL-005 | ADOPTED | `679a1e3`（源提交 `172f85b`） | 1.0.6 metadata coverage gate：逐行 sessionId/绝对 cwd、segment workspace/session 绑定，输出 known/total/missing/mismatched；Qwen 43/43；未操作客户端 | 新时段确认真实日志字段覆盖，再 collect/cleanup |
+| MAC-DOUBAOWORK-WEB-004 | ADOPTED | `694536d`（源提交 `2e7c3b8`） | receipt bridge 仅内存映射 Web v1 字段，复用 finalizer 全部门禁；ready/native identity mismatch fixture；Doubao 62/62；未生成正式 receipt、未操作客户端 | 公共 route/receipt 接线与真机新 slot 前发行 |
 
 ## 本轮交付
 
-推荐源码 `2023b4d`。完整集成回归基线 254/254：General Python63、Node130、Web Python61；本批补充 WorkBuddy 26/26、Qwen 聚焦 41/41、Doubao 60/60 通过。General execute0.8.1、Web execute1.15.0；本批接收 WorkBuddy/Qwen CB-B collector 与 Doubao driver-side finalizer，仍未接公共 Web route/receipt，也没有新生产发行或完整 E2E 通过声明。
+推荐源码 `2023b4d`。完整集成回归基线 254/254：General Python63、Node130、Web Python61；本批补充 WorkBuddy 33/33、Qwen 43/43（Driver 19/19）、Doubao 62/62 通过。General execute0.8.1、Web execute1.15.0；本批接收 WorkBuddy cleanup/readiness gate、Qwen metadata gate 与 Doubao receipt bridge，仍未接公共 Web route/receipt，也没有新生产发行或完整 E2E 通过声明。
