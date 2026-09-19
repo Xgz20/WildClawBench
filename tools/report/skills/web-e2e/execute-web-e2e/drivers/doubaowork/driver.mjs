@@ -19,10 +19,12 @@ import {
   DEFAULT_APP_PATH,
   DEFAULT_ENDPOINT,
   classifyDomObservation,
+  normalizePromptReadback,
   parseConversationId,
   parseLoopbackEndpoint,
   selectUniqueChatTarget,
   sha256Text,
+  summarizePromptReadback,
   workspaceReadbackMatches,
 } from "./lib.mjs";
 import {
@@ -36,6 +38,7 @@ import {
   assertAttemptState,
   atomicWriteAttemptState,
   bindConversation,
+  confirmConversationPromptReadback,
   confirmModel,
   confirmPermission,
   confirmWorkspaceReadback,
@@ -300,14 +303,15 @@ export function classifyDevelopmentObservation(snapshot) {
       || snapshot.visible_dialog_count > 0
       || snapshot.approval_count > 0,
     stopControlVisible: snapshot.stop_control_count > 0,
-    running: snapshot.stop_control_count > 0 || snapshot.busy_conversation_count > 0,
+    running: snapshot.stop_control_count > 0
+      || (snapshot.bound_conversation_busy_count ?? snapshot.busy_conversation_count) > 0,
     finalAssistantVisible: snapshot.final_assistant_bytes > 0,
-    replyActionsVisible: snapshot.final_reply_action_count > 0,
+    replyActionsVisible: snapshot.positive_completion_marker_count > 0,
   });
 }
 
-async function inspectPage(page) {
-  const raw = await page.evaluate(() => {
+async function inspectPage(page, { projectName = null } = {}) {
+  const raw = await page.evaluate(({ expectedProjectName }) => {
     const visible = (element) => Boolean(element?.getClientRects().length);
     const stopControls = [...document.querySelectorAll(
       'button[data-testid*="stop" i],button[aria-label*="停止"],button[title*="停止"],button[aria-label*="stop" i]',
@@ -326,10 +330,13 @@ async function inspectPage(page) {
     const conversationItems = [...document.querySelectorAll(
       '[data-testid="conversation-list-v2-item"][data-conversation-id]',
     )];
-    const busyConversationCount = conversationItems.filter((element) => (
-      element.getAttribute("aria-busy") === "true"
-      || element.querySelectorAll('[class*="animate-spin"],[class*="animate-pulse"],[data-loading="true"]').length > 0
-    )).length;
+    const conversationFacts = conversationItems.map((element) => ({
+      id: element.getAttribute("data-conversation-id"),
+      busy: element.getAttribute("aria-busy") === "true"
+        || element.querySelectorAll('[class*="animate-spin"],[class*="animate-pulse"],[data-loading="true"]').length > 0,
+      project_id: element.closest("section[data-project-id]")?.getAttribute("data-project-id") ?? null,
+    }));
+    const busyConversationCount = conversationFacts.filter((item) => item.busy).length;
     const replies = [...document.querySelectorAll('[data-testid="receive_message"]')].filter(visible);
     const finalReply = replies.at(-1) ?? null;
     const replyContainer = finalReply?.closest('[data-testid="union_message"]') ?? finalReply?.parentElement;
@@ -337,6 +344,20 @@ async function inspectPage(page) {
       ? [...replyContainer.querySelectorAll('[data-testid^="message_action_"]')].filter(visible)
       : [];
     const finalText = (finalReply?.innerText || finalReply?.textContent || "").trim();
+    const userMessages = [...new Set([
+      ...document.querySelectorAll('[data-testid="send_message"]'),
+      ...document.querySelectorAll('[data-message-role="user"]'),
+    ])].filter(visible);
+    const latestUser = userMessages.at(-1) ?? null;
+    const latestUserText = latestUser?.innerText || latestUser?.textContent || "";
+    const chatInput = document.querySelector('[data-testid="chat_input"]');
+    const exactProjectControls = expectedProjectName && chatInput
+      ? [...chatInput.querySelectorAll("button")].filter((element) => (
+        visible(element)
+        && element.getAttribute("title") === expectedProjectName
+        && element.getAttribute("aria-label") === expectedProjectName
+      ))
+      : [];
     return {
       visible_dialog_count: dialogs.length,
       user_question_count: questions.length,
@@ -344,15 +365,23 @@ async function inspectPage(page) {
       visible_error_count: errors.length,
       stop_control_count: stopControls.length,
       busy_conversation_count: busyConversationCount,
-      visible_conversation_ids: conversationItems
-        .map((element) => element.getAttribute("data-conversation-id"))
+      conversation_facts: conversationFacts,
+      visible_conversation_ids: conversationFacts
+        .map((item) => item.id)
         .filter((value) => /^[0-9]{1,64}$/.test(value)),
       final_reply_action_count: replyActions.length,
       final_text: finalText,
+      user_message_count: userMessages.length,
+      latest_user_text: latestUserText,
+      exact_project_control_count: exactProjectControls.length,
       current_url: location.href,
     };
-  });
+  }, { expectedProjectName: projectName });
   const finalText = raw.final_text;
+  const latestUserText = normalizePromptReadback(raw.latest_user_text);
+  const currentConversationId = parseConversationId(raw.current_url);
+  const currentConversation = raw.conversation_facts
+    .find((item) => item.id === currentConversationId) ?? null;
   return {
     snapshot: {
       observed_at: new Date().toISOString(),
@@ -362,14 +391,68 @@ async function inspectPage(page) {
       visible_error_count: raw.visible_error_count,
       stop_control_count: raw.stop_control_count,
       busy_conversation_count: raw.busy_conversation_count,
+      bound_conversation_busy_count: currentConversation?.busy ? 1 : 0,
       visible_conversation_count: new Set(raw.visible_conversation_ids).size,
       final_reply_action_count: raw.final_reply_action_count,
+      positive_completion_marker_count: finalText && raw.final_reply_action_count > 0 ? 1 : 0,
       final_assistant_bytes: Buffer.byteLength(finalText),
       final_assistant_sha256: finalText ? sha256Text(finalText) : null,
-      current_conversation_id: parseConversationId(raw.current_url),
+      current_conversation_id: currentConversationId,
+      conversation_project_id_sha256: currentConversation?.project_id
+        ? sha256Text(currentConversation.project_id)
+        : null,
+      current_project_name: raw.exact_project_control_count === 1 ? projectName : null,
+      current_project_control_count: raw.exact_project_control_count,
+      user_message_count: raw.user_message_count,
+      latest_user_message_normalization: summarizePromptReadback(latestUserText).normalization,
+      latest_user_message_sha256: raw.user_message_count > 0 ? sha256Text(latestUserText) : null,
+      latest_user_message_bytes: raw.user_message_count > 0 ? Buffer.byteLength(latestUserText) : null,
     },
     visibleConversationIds: [...new Set(raw.visible_conversation_ids)].sort(),
     finalText,
+    latestUserText,
+  };
+}
+
+export function validateObservationBinding(state, snapshot) {
+  assertAttemptState(state);
+  if (!state.session.conversation_id) throw new Error("观察绑定缺少已持久化 conversation ID");
+  if (snapshot.current_conversation_id !== state.session.conversation_id) {
+    throw new Error("当前页面 conversation 与已绑定 ID 不一致");
+  }
+  if (!/^[0-9a-f]{64}$/.test(state.client.project_id_sha256 ?? "")
+      || snapshot.conversation_project_id_sha256 !== state.client.project_id_sha256) {
+    throw new Error("当前 conversation 不属于已绑定 project ID");
+  }
+  if (!state.client.project_name
+      || snapshot.current_project_control_count !== 1
+      || snapshot.current_project_name !== state.client.project_name) {
+    throw new Error("当前页面未唯一回读已绑定 project 名称");
+  }
+  if (!state.workspace_selection.confirmed
+      || state.workspace_selection.actual_path !== state.workspace
+      || state.workspace_selection.source !== "project-folder-tooltip"
+      || state.workspace_selection.project_id_sha256 !== state.client.project_id_sha256) {
+    throw new Error("project 与完整 tooltip workspace 的归属证据不完整");
+  }
+  if (!state.prompt.readback_sha256
+      || snapshot.latest_user_message_normalization !== state.prompt.readback_normalization
+      || snapshot.latest_user_message_sha256 !== state.prompt.readback_sha256
+      || snapshot.latest_user_message_bytes !== state.prompt.readback_bytes) {
+    throw new Error("绑定 conversation 的最新 user message 与发送前 Prompt 不一致");
+  }
+  return {
+    status: "verified",
+    observed_at: snapshot.observed_at,
+    conversation_id_sha256: sha256Text(state.session.conversation_id),
+    project_id_sha256: state.client.project_id_sha256,
+    project_name: state.client.project_name,
+    workspace_path_sha256: sha256Text(state.workspace),
+    workspace_readback_sha256: state.workspace_selection.display_sha256,
+    workspace_source: state.workspace_selection.source,
+    prompt_sha256: snapshot.latest_user_message_sha256,
+    prompt_bytes: snapshot.latest_user_message_bytes,
+    prompt_normalization: snapshot.latest_user_message_normalization,
   };
 }
 
@@ -503,6 +586,15 @@ async function createProject(page, state, stateFile, config) {
   await page.getByTestId("chat_input").waitFor({ state: "visible" });
   const project = await openProjectConversation(page, config.projectName);
   state.client.project_id_sha256 = project.projectIdSha256;
+  state.workspace_selection.project_id_sha256 = project.projectIdSha256;
+  state.history.push({
+    phase: state.phase,
+    event: "PROJECT_WORKSPACE_BINDING_RECORDED",
+    project_id_sha256: project.projectIdSha256,
+    workspace_path_sha256: sha256Text(state.workspace),
+    workspace_readback_sha256: state.workspace_selection.display_sha256,
+    at: new Date().toISOString(),
+  });
   await atomicWriteAttemptState(stateFile, state);
 }
 
@@ -562,10 +654,10 @@ async function fillPrompt(page, prompt) {
   return send;
 }
 
-async function waitForSessionBinding(page, state, roots, timeoutMs = 60_000) {
+async function waitForSessionBinding(page, state, roots, projectName, promptReadback, timeoutMs = 60_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    const pageObservation = await inspectPage(page);
+    const pageObservation = await inspectPage(page, { projectName });
     const sessionDirectoryIds = await listSessionDirectoryIds({ roots });
     const candidate = findNewConversationCandidate(
       state,
@@ -573,11 +665,26 @@ async function waitForSessionBinding(page, state, roots, timeoutMs = 60_000) {
       sessionDirectoryIds,
     );
     if (candidate.status === "unique") {
+      if (pageObservation.snapshot.current_conversation_id !== candidate.conversation_id) {
+        throw new Error("发送后新 conversation 未成为当前页面，拒绝跨会话绑定");
+      }
+      if (pageObservation.snapshot.conversation_project_id_sha256 !== state.client.project_id_sha256) {
+        throw new Error("发送后 conversation 不属于已确认 project，拒绝绑定");
+      }
+      if (pageObservation.snapshot.current_project_control_count !== 1
+          || pageObservation.snapshot.current_project_name !== projectName) {
+        throw new Error("发送后当前 project 未唯一回读");
+      }
+      if (pageObservation.snapshot.latest_user_message_normalization === promptReadback.normalization
+          && pageObservation.snapshot.latest_user_message_sha256 === promptReadback.sha256
+          && pageObservation.snapshot.latest_user_message_bytes === promptReadback.bytes) {
       return {
         conversationId: candidate.conversation_id,
         visibleConversationIds: pageObservation.visibleConversationIds,
         sessionDirectoryIds,
+        pageObservation,
       };
+      }
     }
     if (candidate.status === "ambiguous" || candidate.status === "mismatch") {
       throw new Error(`发送后 session 绑定失败关闭：${candidate.status}`);
@@ -595,6 +702,9 @@ function sanitizedStateSummary(state) {
     task_id: state.identity.task_id,
     dispatch_attempt_count: state.send.dispatch_attempt_count,
     prompt_sha256: state.prompt.sha256,
+    prompt_readback_sha256: state.prompt.readback_sha256,
+    prompt_readback_bytes: state.prompt.readback_bytes,
+    prompt_readback_normalization: state.prompt.readback_normalization,
     actual_model: state.actual.model,
     actual_permission_mode: state.actual.permission_mode,
     conversation_id_sha256: state.session.conversation_id
@@ -605,6 +715,7 @@ function sanitizedStateSummary(state) {
       : null,
     turn_id: state.session.turn_id,
     native_cwd: state.session.native_cwd,
+    prompt_readback_status: state.session.prompt_readback?.status ?? "unverified",
   };
 }
 
@@ -670,7 +781,7 @@ async function dispatchFromSelectedProject({ client, state, stateFile, config, r
   confirmPermission(state, actual.permission);
   await atomicWriteAttemptState(stateFile, state);
   confirmModel(state, actual.model);
-  const beforeSend = await inspectPage(client.page);
+  const beforeSend = await inspectPage(client.page, { projectName: config.projectName });
   assertNoConflictingActivity(beforeSend.snapshot);
   const beforeSendSessionIds = await listSessionDirectoryIds({ roots });
   recordPreSendBaselines(state, {
@@ -680,6 +791,7 @@ async function dispatchFromSelectedProject({ client, state, stateFile, config, r
   await atomicWriteAttemptState(stateFile, state);
 
   const sendButton = await fillPrompt(client.page, config.prompt);
+  const promptReadback = summarizePromptReadback(config.prompt);
   recordSendIntent(state);
   await atomicWriteAttemptState(stateFile, state);
   const readyScreenshot = await captureScreenshot(client.page, join(config.outputDir, "ready-to-send.png"));
@@ -689,7 +801,13 @@ async function dispatchFromSelectedProject({ client, state, stateFile, config, r
   await atomicWriteAttemptState(stateFile, state);
   const sentScreenshot = await captureScreenshot(client.page, join(config.outputDir, "prompt-sent.png"));
 
-  const binding = await waitForSessionBinding(client.page, state, roots);
+  const binding = await waitForSessionBinding(
+    client.page,
+    state,
+    roots,
+    config.projectName,
+    promptReadback,
+  );
   bindConversation(state, {
     conversationId: binding.conversationId,
     sessionDirectoryId: binding.conversationId,
@@ -706,6 +824,13 @@ async function dispatchFromSelectedProject({ client, state, stateFile, config, r
       },
     ],
   });
+  const bindingEvidence = validateObservationBinding(state, binding.pageObservation.snapshot);
+  state.session.binding_evidence.push(bindingEvidence);
+  confirmConversationPromptReadback(state, {
+    sha256: binding.pageObservation.snapshot.latest_user_message_sha256,
+    bytes: binding.pageObservation.snapshot.latest_user_message_bytes,
+    normalization: binding.pageObservation.snapshot.latest_user_message_normalization,
+  });
   await atomicWriteAttemptState(stateFile, state);
   transitionAttempt(state, "RUNNING", { reason: "tentative-session-bound" });
   await atomicWriteAttemptState(stateFile, state);
@@ -721,6 +846,7 @@ async function dispatchFromSelectedProject({ client, state, stateFile, config, r
       prompt_bytes: config.promptBytes,
     },
     state: sanitizedStateSummary(state),
+    binding: state.session.binding_evidence,
     screenshots: [readyScreenshot, sentScreenshot].map((item) => ({
       file: basename(item.path),
       size_bytes: item.size_bytes,
@@ -853,6 +979,7 @@ async function retryPreSendDevelopmentRun(options) {
     state.client.process = { listener_pid: client.listener.listeners[0].pid };
     state.client.project_name = config.projectName;
     state.client.project_id_sha256 = project.projectIdSha256;
+    state.workspace_selection.project_id_sha256 = project.projectIdSha256;
     state.client.manifest_sha256 = config.manifestSha256;
     transitionAttempt(state, "CLIENT_READY", {
       preflight: {
@@ -971,8 +1098,10 @@ async function resumeDevelopmentRun(options) {
     let stableCompletionHash = null;
     let stableCompletionCount = 0;
     let classification = { kind: "unknown", trusted: false };
+    let bindingEvidence = null;
     while (Date.now() < deadline) {
-      pageObservation = await inspectPage(client.page);
+      pageObservation = await inspectPage(client.page, { projectName: state.client.project_name });
+      bindingEvidence = validateObservationBinding(state, pageObservation.snapshot);
       classification = classifyDevelopmentObservation(pageObservation.snapshot);
       if (classification.kind === "needs-attention" || classification.kind === "failure-candidate") break;
       if (classification.kind === "ui-completion-candidate") {
@@ -990,15 +1119,18 @@ async function resumeDevelopmentRun(options) {
       await client.page.waitForTimeout(2_000);
     }
 
+    bindingEvidence = validateObservationBinding(state, pageObservation.snapshot);
     const running = pageObservation.snapshot.stop_control_count > 0
-      || pageObservation.snapshot.busy_conversation_count > 0;
+      || pageObservation.snapshot.bound_conversation_busy_count > 0;
     const pending = pageObservation.snapshot.visible_dialog_count > 0
       || pageObservation.snapshot.user_question_count > 0
-      || pageObservation.snapshot.approval_count > 0;
+      || pageObservation.snapshot.approval_count > 0
+      || pageObservation.snapshot.visible_error_count > 0;
     const uiCompletion = classification.kind === "ui-completion-candidate"
       && stableCompletionCount >= 3
       && !running
-      && !pending;
+      && !pending
+      && pageObservation.snapshot.positive_completion_marker_count > 0;
     const observationId = Date.now();
     let finalReply = null;
     let screenshot = null;
@@ -1023,12 +1155,12 @@ async function resumeDevelopmentRun(options) {
       nativeEvidence = await collectNativeEvidenceSnapshot(outputDir, state, observationId);
       if (state.phase !== "NEEDS_ATTENTION") {
         transitionAttempt(state, "NEEDS_ATTENTION", {
-          reason: "ui-completion-without-trusted-native-terminal-or-process-cleanup",
+          reason: "ui-equivalent-binding-without-public-finalizer-or-process-cleanup",
         });
       }
       state.error = {
         code: "DEVELOPMENT_UI_COMPLETION_UNVERIFIED",
-        message: "UI 完成候选已稳定，但 native terminal/cwd 与任务进程清理仍不可验证",
+        message: "UI 等价完成证据已稳定，但公共 finalizer/任务进程清理尚未接入",
         at: new Date().toISOString(),
       };
     } else if (pending || classification.kind === "failure-candidate") {
@@ -1041,6 +1173,7 @@ async function resumeDevelopmentRun(options) {
         at: new Date().toISOString(),
       };
     }
+    state.session.binding_evidence.push(bindingEvidence);
     await atomicWriteAttemptState(stateFile, state);
 
     sessionDirectoryIds = await listSessionDirectoryIds({ roots });
@@ -1060,6 +1193,7 @@ async function resumeDevelopmentRun(options) {
         reason: finalDecision.reason,
       },
       ui: pageObservation.snapshot,
+      binding: bindingEvidence,
       classification,
       stable_completion_observations: stableCompletionCount,
       artifacts: {

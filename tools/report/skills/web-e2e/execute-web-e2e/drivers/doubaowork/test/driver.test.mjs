@@ -20,12 +20,21 @@ import {
   classifyDevelopmentObservation,
   selectConfigurationReadback,
   selectWorkspaceReadbackCandidate,
+  validateObservationBinding,
   validateOutputDirectory,
   validatePreparedTaskRoot,
 } from "../driver.mjs";
+import { sha256Text } from "../lib.mjs";
 import {
+  bindConversation,
+  confirmConversationPromptReadback,
+  confirmModel,
+  confirmPermission,
   confirmWorkspaceReadback,
   createAttemptState,
+  recordDispatchStart,
+  recordPromptAccepted,
+  recordSendIntent,
   transitionAttempt,
 } from "../state.mjs";
 
@@ -141,6 +150,7 @@ test("开发终态分类始终保持非可信并对 pending 失败关闭", () =>
     stop_control_count: 0,
     final_assistant_bytes: 42,
     final_reply_action_count: 2,
+    positive_completion_marker_count: 1,
   }), { kind: "ui-completion-candidate", trusted: false });
   assert.deepEqual(classifyDevelopmentObservation({
     visible_error_count: 0,
@@ -151,7 +161,80 @@ test("开发终态分类始终保持非可信并对 pending 失败关闭", () =>
     busy_conversation_count: 1,
     final_assistant_bytes: 42,
     final_reply_action_count: 2,
+    positive_completion_marker_count: 1,
   }), { kind: "running", trusted: false });
+});
+
+test("没有正向完成标识时不把稳定文本当成终态", () => {
+  assert.deepEqual(classifyDevelopmentObservation({
+    visible_error_count: 0,
+    user_question_count: 0,
+    visible_dialog_count: 0,
+    approval_count: 0,
+    stop_control_count: 0,
+    busy_conversation_count: 0,
+    bound_conversation_busy_count: 0,
+    final_assistant_bytes: 42,
+    final_reply_action_count: 2,
+    positive_completion_marker_count: 0,
+  }), { kind: "unknown", trusted: false });
+});
+
+test("每次观察都要验证 conversation-project-workspace-Prompt 等价绑定", () => {
+  const state = createAttemptState({
+    attemptId: "binding-fixture",
+    batchId: "batch-fixture",
+    taskId: "task-fixture",
+    workspace: "/Users/fixture/debug/task-root",
+    promptFile: "/Users/fixture/debug/task-root/PROMPT.md",
+    prompt: "first line\n\nsecond line\n",
+    now: "2026-09-19T00:00:00.000Z",
+  });
+  transitionAttempt(state, "CLIENT_READY", {}, "2026-09-19T00:00:01.000Z");
+  confirmWorkspaceReadback(state, "~/debug/task-root", "/Users/fixture", "2026-09-19T00:00:02.000Z");
+  state.client.project_name = "WCB-Fixture";
+  state.client.project_id_sha256 = sha256Text("42");
+  state.workspace_selection.project_id_sha256 = state.client.project_id_sha256;
+  confirmPermission(state, "按需确认", "2026-09-19T00:00:03.000Z");
+  confirmModel(state, "自动 高", "2026-09-19T00:00:04.000Z");
+  recordSendIntent(state, "2026-09-19T00:00:05.000Z");
+  recordDispatchStart(state, "2026-09-19T00:00:06.000Z");
+  recordPromptAccepted(state, {}, "2026-09-19T00:00:07.000Z");
+  bindConversation(state, {
+    conversationId: "123",
+    sessionDirectoryId: "123",
+  }, "2026-09-19T00:00:08.000Z");
+  const valid = {
+    observed_at: "2026-09-19T00:00:09.000Z",
+    current_conversation_id: "123",
+    conversation_project_id_sha256: sha256Text("42"),
+    current_project_control_count: 1,
+    current_project_name: "WCB-Fixture",
+    latest_user_message_normalization: state.prompt.readback_normalization,
+    latest_user_message_sha256: state.prompt.readback_sha256,
+    latest_user_message_bytes: state.prompt.readback_bytes,
+  };
+  const evidence = validateObservationBinding(state, valid);
+  assert.equal(evidence.status, "verified");
+  confirmConversationPromptReadback(state, {
+    sha256: valid.latest_user_message_sha256,
+    bytes: valid.latest_user_message_bytes,
+    normalization: valid.latest_user_message_normalization,
+  }, "2026-09-19T00:00:10.000Z");
+  assert.equal(state.session.prompt_readback.status, "verified");
+
+  assert.throws(
+    () => validateObservationBinding(state, { ...valid, current_conversation_id: "124" }),
+    /conversation 与已绑定 ID 不一致/,
+  );
+  assert.throws(
+    () => validateObservationBinding(state, { ...valid, conversation_project_id_sha256: sha256Text("99") }),
+    /conversation 不属于已绑定 project ID/,
+  );
+  assert.throws(
+    () => validateObservationBinding(state, { ...valid, latest_user_message_sha256: sha256Text("stale") }),
+    /user message 与发送前 Prompt 不一致/,
+  );
 });
 
 test("配置回读要求本地电脑、项目、权限和非空模型各自唯一", () => {

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { isAbsolute, join, normalize } from "node:path";
 
-export const DRIVER_VERSION = "0.3.0";
+export const DRIVER_VERSION = "0.5.0";
 export const PROBE_SCHEMA = "wildclawbench.doubaowork-readonly-probe/v1";
 export const NATIVE_EVIDENCE_SCHEMA = "wildclawbench.doubaowork-native-evidence/v1";
 export const DEFAULT_APP_PATH = "/Applications/DoubaoWork.app";
@@ -9,9 +9,23 @@ export const DEFAULT_BUNDLE_ID = "com.work.pc.doubao";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9260";
 export const CHAT_HOSTNAME = "doubaowork-chat";
 export const CHAT_PROTOCOLS = new Set(["doubaowork:", "chrome:"]);
+export const PROMPT_READBACK_NORMALIZATION = "crlf-to-lf+strip-trailing-newlines/v1";
 
 export function sha256Text(value) {
   return createHash("sha256").update(String(value)).digest("hex");
+}
+
+export function normalizePromptReadback(value) {
+  return String(value).replace(/\r\n/gu, "\n").replace(/\n+$/u, "");
+}
+
+export function summarizePromptReadback(value) {
+  const normalized = normalizePromptReadback(value);
+  return {
+    normalization: PROMPT_READBACK_NORMALIZATION,
+    sha256: sha256Text(normalized),
+    bytes: Buffer.byteLength(normalized),
+  };
 }
 
 export function parseLoopbackEndpoint(value) {

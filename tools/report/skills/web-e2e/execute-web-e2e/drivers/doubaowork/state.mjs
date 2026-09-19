@@ -7,6 +7,7 @@ import {
   DEFAULT_ENDPOINT,
   DRIVER_VERSION,
   sha256Text,
+  summarizePromptReadback,
   validateSessionId,
   workspaceReadbackMatches,
 } from "./lib.mjs";
@@ -90,6 +91,7 @@ export function createAttemptState({
   );
   const preparedAt = isoNow(now);
   const promptValue = String(prompt);
+  const normalizedPrompt = summarizePromptReadback(promptValue);
   const state = {
     schema_version: AUTOMATION_SCHEMA,
     driver: {
@@ -111,6 +113,9 @@ export function createAttemptState({
       file: normalize(promptFile),
       sha256: sha256Text(promptValue),
       bytes: Buffer.byteLength(promptValue),
+      readback_normalization: normalizedPrompt.normalization,
+      readback_sha256: normalizedPrompt.sha256,
+      readback_bytes: normalizedPrompt.bytes,
       plaintext_persisted: false,
     },
     requested: {
@@ -127,7 +132,9 @@ export function createAttemptState({
     workspace_selection: {
       requested_path: normalize(workspace),
       display_value: null,
+      display_sha256: null,
       actual_path: null,
+      project_id_sha256: null,
       confirmed: false,
       confirmed_at: null,
       source: null,
@@ -139,6 +146,14 @@ export function createAttemptState({
       native_cwd: null,
       binding_status: "unverified",
       binding_evidence: [],
+      prompt_readback: {
+        status: "unverified",
+        normalization: normalizedPrompt.normalization,
+        sha256: null,
+        bytes: null,
+        verified_at: null,
+        source: null,
+      },
       baseline_conversation_ids: baselineConversations,
       baseline_session_directory_ids: baselineDirectories,
     },
@@ -177,6 +192,13 @@ export function assertAttemptState(state) {
   if (!isAbsolute(state.workspace)) throw new Error("state.workspace 必须是绝对路径");
   if (!isAbsolute(state.prompt?.file) || !/^[0-9a-f]{64}$/.test(state.prompt?.sha256 ?? "")) {
     throw new Error("prompt 路径或 SHA-256 无效");
+  }
+  if (state.prompt?.readback_sha256 != null
+      && (!/^[0-9a-f]{64}$/.test(state.prompt.readback_sha256)
+        || !Number.isSafeInteger(state.prompt.readback_bytes)
+        || state.prompt.readback_bytes < 0
+        || !state.prompt.readback_normalization)) {
+    throw new Error("prompt readback 规范化摘要无效");
   }
   if (state.prompt?.plaintext_persisted !== false) throw new Error("automation state 禁止持久化 Prompt 明文");
   validateIdList(state.session?.baseline_conversation_ids ?? [], "baseline_conversation_ids");
@@ -228,6 +250,14 @@ export function assertAttemptState(state) {
       && state.send.dispatch_attempt_count !== 1) {
     throw new Error("发送后 session 绑定必须已有一次发送尝试");
   }
+  if (state.session?.prompt_readback?.status === "verified") {
+    if (state.session.prompt_readback.normalization !== state.prompt.readback_normalization
+        || state.session.prompt_readback.sha256 !== state.prompt.readback_sha256
+        || state.session.prompt_readback.bytes !== state.prompt.readback_bytes
+        || !requireNonEmpty(state.session.prompt_readback.verified_at, "prompt_readback.verified_at")) {
+      throw new Error("session prompt readback 与发送前摘要不一致");
+    }
+  }
   if (Boolean(state.terminal) !== TERMINAL_PHASES.has(state.phase)) {
     throw new Error("terminal 与 phase 不一致");
   }
@@ -271,7 +301,9 @@ export function confirmWorkspaceReadback(state, displayValue, userHome, now = ne
   state.workspace_selection = {
     requested_path: state.workspace,
     display_value: displayValue,
+    display_sha256: sha256Text(displayValue),
     actual_path: state.workspace,
+    project_id_sha256: state.workspace_selection.project_id_sha256 ?? null,
     confirmed: true,
     confirmed_at: at,
     source: "project-folder-tooltip",
@@ -394,6 +426,52 @@ export function bindConversation(state, {
   const at = isoNow(now);
   state.runtime.heartbeat_at = at;
   state.history.push({ phase: state.phase, event: "SESSION_BOUND_TENTATIVE", at });
+  assertAttemptState(state);
+  return state;
+}
+
+export function confirmConversationPromptReadback(state, {
+  sha256,
+  bytes,
+  normalization,
+  source = "bound-conversation-user-message",
+} = {}, now = new Date()) {
+  assertAttemptState(state);
+  if (!state.session.conversation_id || !state.session.session_directory_id) {
+    throw new Error("发送后 Prompt 回读前必须先绑定 conversation/session");
+  }
+  if (!/^[0-9a-f]{64}$/.test(sha256 ?? "")
+      || !Number.isSafeInteger(bytes)
+      || bytes < 0
+      || !normalization) {
+    throw new Error("发送后 Prompt 回读摘要无效");
+  }
+  if (!state.prompt.readback_sha256 || state.prompt.readback_bytes == null) {
+    throw new Error("旧 attempt 缺少发送前规范化 Prompt 摘要，不能补猜绑定");
+  }
+  if (normalization !== state.prompt.readback_normalization
+      || sha256 !== state.prompt.readback_sha256
+      || bytes !== state.prompt.readback_bytes) {
+    throw new Error("绑定 conversation 的 user message 与发送前 Prompt 规范化摘要不一致");
+  }
+  const at = isoNow(now);
+  state.session.prompt_readback = {
+    status: "verified",
+    normalization,
+    sha256,
+    bytes,
+    verified_at: at,
+    source: requireNonEmpty(source, "prompt readback source"),
+  };
+  state.runtime.heartbeat_at = at;
+  state.history.push({
+    phase: state.phase,
+    event: "BOUND_CONVERSATION_PROMPT_VERIFIED",
+    prompt_sha256: sha256,
+    prompt_bytes: bytes,
+    normalization,
+    at,
+  });
   assertAttemptState(state);
   return state;
 }

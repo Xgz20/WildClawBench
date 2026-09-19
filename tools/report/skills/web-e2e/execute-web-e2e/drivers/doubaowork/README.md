@@ -1,8 +1,14 @@
 # DoubaoWork macOS Web E2E 客户端适配
 
-当前目录是 `MAC-DOUBAOWORK-WEB` 的客户端专属开发面，版本 `0.3.0`。现阶段提供：应用/CDP 身份严格核验的只读 probe、macOS 原生目录选择 helper、显式 session 目录发现、脱敏 fixture、原生 `trajectory.jsonl` 的旁路提取器、发送意图 journal，以及仅用于真机开发 canary 的单次投递与只读恢复入口。
+当前目录是 `MAC-DOUBAOWORK-WEB` 的客户端专属开发面，版本 `0.5.0`。现阶段提供：应用/CDP 身份严格核验的只读 probe、macOS 原生目录选择 helper、显式 session 目录发现、脱敏 fixture、原生 `trajectory.jsonl` 的旁路提取器、发送意图 journal、conversation → project → 完整 workspace 等价绑定和每次观察核验、发送后 user message Prompt 回读、仅用于真机开发 canary 的单次投递与只读恢复入口，以及尚未接入公共 finalizer 的 macOS 候选进程枚举/cleanup 平台模块。
 
-这不是完整生产 Driver。COMMON 的 General CB-A 对本 Web Driver 不适用；Web 公共接入独立依赖 CB-B、execute/run/metrics 与发行装配。当前实现不会生成正式 `execution_record.json` 或 execution receipt，也没有实现可信原生终态、安全停止、任务进程清理、公共 finalizer 或评分交接；不得把本目录测试或旧 smoke 写成完整 Web E2E 通过。
+这不是完整生产 Driver。COMMON 的 General CB-A 对本 Web Driver 不适用；Web 公共接入独立依赖 CB-B、execute/run/metrics 与发行装配。当前实现不会生成正式 `execution_record.json` 或 execution receipt，也没有实现可信原生终态、安全停止、公共 finalizer 或评分交接。`process-cleanup.mjs` 只提供待公共 hook 接入的平台能力，未用于历史 canary；不得把本目录测试或旧 smoke 写成完整 Web E2E 通过。
+
+## 等价绑定与每次观察
+
+`validateObservationBinding(state, snapshot)` 是平台侧可消费的严格门禁：当前 URL conversation ID 必须等于已绑定 ID，侧栏会话必须属于已确认 project ID，当前 project 控件必须唯一回读，并且已经以完整 tooltip 回读确认 workspace。发送后最新 user message 按 `crlf-to-lf+strip-trailing-newlines/v1` 明示规范化，以 SHA-256 与字节数与发送前摘要精确比对；错 conversation、错 project、旧回复或 Prompt 不一致均失败关闭。`inspectPage` 在每一次恢复观察都重新返回该快照，不只在导航后检查。
+
+正向 UI 完成标识仅使用可见最终回复操作区与非空最终回复的组合证据，同时要求已绑定会话无 busy/stop/pending/error。稳定文本、工具 `completed`、其他会话 busy 或旧 canary 文件都不能单独升级为成功；公共 finalizer 尚未接入前仍只记录等价证据和 `NEEDS_ATTENTION` 状态。
 
 ## 只读 probe
 
@@ -60,7 +66,19 @@ node native-evidence.mjs \
 - requested workspace 只保留为请求值，`workspace_binding.status=unverified`；
 - 工具次数是 `partial` 的 known subtotal，coverage denominator 为 `null`；
 - UI 最终回复不能把 `terminal.status` 提升为成功；
+- `native_capabilities` 分开登记顶层原生候选字段与工具活动旁证。工具结果中的 `completed`、`pwd` 输出或绝对 `file_path` 即使命中请求目录，也不能单独提升为 Agent 终态或 session 原生 cwd；
 - 原始 trajectory 不复制进输出，只保存规范化事件、相对路径、大小和 SHA-256。完整原始文件仍留本机受限目录。
+
+已绑定的 2.28.12 canary 原始样本中，trajectory 顶层只有 `role/content/tool_calls/tool_call_id`，没有时间戳、cwd、session/turn 状态或结束事件；同一 session 目录内其他文件也没有完整 task root，SDK 日志中没有同时绑定 session ID 与 task root 的文件。因此新增的 `native_capabilities.terminal.status=unavailable`、`native_capabilities.workspace_binding.native_cwd=null`；旧有公共终态占位 `terminal.status` 仍为 `unverified`。这些 native 字段不可用 UI idle 或工具写文件伪造，但也不代表后续不能按 Web Driver 契约使用可归档的 DOM/视觉终态与 workspace 等价证据链收口。
+
+## macOS 候选进程平台能力
+
+`process-cleanup.mjs` 暴露两个待公共 hook 接入的接口：
+
+- `snapshotDoubaoCandidateProcesses(candidateWorkspace)`：要求普通、无符号链接祖先的绝对 workspace，冻结 canonical path、device 与 inode；用两次 `ps` 夹住 `lsof` cwd 读取，只接纳 PID/PPID/PGID/启动时间/可执行文件身份在读取前后稳定的进程。cwd 等于候选目录或位于其下的进程作为 seed，再纳入其后代；相同进程名但 cwd 属于其他任务、路径前缀碰撞或无关进程不会入选。
+- `cleanupDoubaoCandidateProcesses(candidateWorkspace)`：首次接纳时同时核对稳定身份和 cwd/父链归属；接纳后跨 snapshot 保留已验证的 PID+启动身份，即使父进程先退出、子进程重挂或同身份进程改变 cwd 也不会丢失。每次发送 TERM/KILL 前再次核对 workspace 实体与进程身份；PID 一旦复用就永久排除本轮后续信号。workspace 被替换、身份/归属缺失、信号失败、残留或安静窗口不足均失败关闭。结果保留 before/after、跟踪残留、每次信号和拒绝原因。
+
+模块不按 Python、Node、DoubaoWork 或端口名宽泛清理，也不结束整个进程组。当前 Driver 尚未在 UI 终态路径调用它，COMMON 的 hook 签名和 receipt 字段仍待定；历史 canary 的 Bash/Python 残留没有被本模块触碰。
 
 ## 发送意图 journal 与恢复边界
 
@@ -114,9 +132,10 @@ node --check driver.mjs
 node --check lib.mjs
 node --check platform.mjs
 node --check native-evidence.mjs
+node --check process-cleanup.mjs
 node --check probe.mjs
 node --check state.mjs
 swiftc -typecheck select-folder.swift
 ```
 
-fixture 已替换 Prompt、文件内容、工具结果、真实会话/agent ID 和绝对路径，不包含认证信息、历史侧栏或截图。
+fixture 已替换 Prompt、文件内容、工具结果、真实会话/agent ID 和绝对路径，不包含认证信息、历史侧栏或截图。进程 cleanup 真机单测只在唯一临时目录启动并终止测试自身创建的 Node 父子进程，不枚举后按名称清理，也不触碰既有 App 或 canary 残留。
