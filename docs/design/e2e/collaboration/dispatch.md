@@ -22,3 +22,9 @@
 集成分支中的平台卡可能仍是最近一次已合入快照。“是否派发/绑定”以上表为准；平台卡改动由负责人提交后审查集成，COMMON 不代填 ADOPTED/VERIFIED。三个任务不自行 push 或合入主分支。
 
 DoubaoWork 可只读复用旧 `.agents/doubaowork-macos-probe` 原型，保留未提交内容；历史本地项目/CDP 证据不等于正式 Web 闭环。
+
+## v2 派发与串行切换记录（2026-09-20）
+
+三条 v2 worktree 原计划均从控制 HEAD `bd9dbe6c91c98468b12628a68507f0b732d653ab` 创建。实际核验后，WorkBuddy v2 仅补充离线交接文档、QwenWork v2 没有新增代码提交；两者继续运行只会重复校验，已冻结为审计材料。DoubaoWork v2 提交 `3588c16`，控制侧以 `e2c1d9e` 接收，具体变更为 Web metrics 采集、Doubao parser 与 4 个覆盖测试。
+
+后续改为串行：每次只保留一个活动平台 worktree；平台完成并合入控制分支后，以新的控制 HEAD 创建下一平台 worktree。旧 v2 WorkBuddy/Qwen 分支不得直接合入 `e2c1d9e`，如需继续必须重新从 `e2c1d9e` 派发。

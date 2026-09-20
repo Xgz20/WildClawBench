@@ -6,18 +6,20 @@
 
 本轮把三个平台的开发 Driver、WorkBuddy/Qwen CB-B collector、WorkBuddy cleanup/readiness gate 与原生来源门禁、Qwen metadata gate、Doubao driver-side receipt bridge 和 Doubao 离线公共 route 接入集成 worktree；前序公共组合基线 254/254 通过，新增接收提交为 WorkBuddy `0fbdd57`、Qwen `f1d5119`、Doubao `f38b66f`，对应集成提交为 `eec4a2e`、`807a9c1`、`07b31b7`。Doubao route 当前故意拒绝 batch/formal receipt，不能写成正式生产入口。源码全部在 `.agents/e2e-harness-contract` 集成；不把开发 canary 或离线测试写成正式 E2E 完成。
 
+2026-09-20 起改为串行接收。DoubaoWork 从控制基线 `bd9dbe6c91c98468b12628a68507f0b732d653ab` 创建的 v2 分支已提交 `3588c16`，控制侧以 `e2c1d9e` 接收；新增 Web metrics 23/23 与 Doubao Driver 64/64 通过。原 v2 WorkBuddy/Qwen 分支仍基于旧控制基线，只保留审计，不继续叠加；下一项必须从控制 HEAD `e2c1d9e` 新建 worktree。
+
 | 任务 | 已审查并集成的交付 | 正在推进 |
 | --- | --- | --- |
 | MAC-WORKBUDDY-GENERAL | P2 `e388dfa`、组件绑定 `b3ac3da`；CB-B `be3ca29`；cleanup/source gate `3783b2b`/`0fbdd57`；离线预检 `f997200`；独立 Node 33/33，预检 2/2 | SLOT03 发送前失败已安全恢复草稿、释放；SLOT05 清空门禁失败已收口并释放，未创建 attempt；预检已就绪，真实 collect/cleanup 与新时段验收待完成 |
 | MAC-QWENWORK-GENERAL | `9081df5`；CB-B `acfc7a1`/`828bfb0`/`5263890`；metadata gate `679a1e3`；清单 `f1d5119`；真机预检 `e2541aa`；聚焦 Node 43/43 | SLOT04 已释放；项目 trigger 歧义导致 send=0；预检入口已就绪，仍待 1.0.6 真实日志、一次发送/恢复、正式 collect 与 cleanup |
-| MAC-DOUBAOWORK-WEB | P2 `47dcaee`、公共 merge `ca7cc2e`、更正 `3a3057c`；离线加固 `40c2f71`/`2e21a54`/`5d7b6d9`；finalizer/bridge `9bb30aa`/`694536d`；public route `f38b66f`，聚焦 Node 64/64 | UI 等价绑定、Prompt 回读、进程重挂、恢复状态、driver-side finalizer、内存 bridge 和离线 route 已加固；route 暂拒 batch/formal receipt，仍待可信 native terminal/cwd、公共 cleanup/finalizer 接线与新时段真机验收 |
+| MAC-DOUBAOWORK-WEB | P2 `47dcaee`、公共 merge `ca7cc2e`、更正 `3a3057c`；离线加固 `40c2f71`/`2e21a54`/`5d7b6d9`；finalizer/bridge `9bb30aa`/`694536d`；public route `f38b66f`；v2 `3588c16`，控制接收 `e2c1d9e` | UI 等价绑定、Prompt 回读、进程重挂、恢复状态、driver-side finalizer、内存 bridge、离线 route 和原生 metrics 已加固；Driver 64/64、Web metrics 23/23；route 暂拒 batch/formal receipt，仍待可信 native terminal/cwd、公共 cleanup/finalizer 接线与新时段真机验收 |
 | COMMON | CB-A/CB-B、三 Driver、发行版本与 Qwen CLI 路径别名修复 | 发布 COMMON-003，接收下一批平台修复/collector；新增五项指标另属 COMMON-CM01 |
 
-本轮接线后顺序复跑：General Node 144/144，Doubao Driver 64/64，WorkBuddy/Qwen/Doubao 聚焦合计 81/81（含 WorkBuddy 预检 2/2、Qwen metadata 预检 2/2）；Web Python 61/61，General Skill build/shared-components 26/26。General Python 全量仍有既有 `eval_e2e.grade_runs` 导入缺少 `dotenv` 的环境错误，未归因于本轮代码；尚未新建生产发行包。
+本轮接线后顺序复跑：Doubao Driver 64/64，Web metrics 23/23；此前 General Node 144/144、WorkBuddy/Qwen/Doubao 聚焦合计 81/81（含 WorkBuddy 预检 2/2、Qwen metadata 预检 2/2）；Web Python 61/61，General Skill build/shared-components 26/26。General Python 全量仍有既有 `eval_e2e.grade_runs` 导入缺少 `dotenv` 的环境错误，未归因于本轮代码；尚未新建生产发行包。
 
 ## 桌面时段
 
-下一阶段采用[macOS 三 Harness 真机协作计划](mac-live-session-plan.md)：三个独立任务并行准备和等待，真机 slot 按 Harness 串行授予。
+下一阶段采用[macOS 三 Harness 真机协作计划](mac-live-session-plan.md)：改为单 Harness、单 worktree、单控制接收的串行推进；真机 slot 仍按 Harness 独占授予。
 
 后续代码协作统一采用[控制分支派发与回收合并流程](integration-workflow.md)：平台 worktree 从控制分支当前 HEAD 派发，完成后先回收到控制分支并完成组合回归；本轮所有并行任务接收后，控制 HEAD 才成为下一轮派发基线。主工作分支不直接接收平台分支，旧公共基线创建的现有 worktree 需先完成 reconciliation 才能继续复用。
 
