@@ -389,6 +389,7 @@ process.stdout.write(JSON.stringify({{
         self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
         for driver, script, expected in (
             ("workbuddy", "execute.mjs", "--resume"),
+            ("workbuddy", "batch.mjs", "--queue-id"),
             ("qwenwork", "driver.mjs", "--resume"),
             ("qwenwork", "probe.mjs", "--endpoint"),
         ):

@@ -93,6 +93,7 @@ export function parseArgs(argv) {
   const values = {
     unitRoot: "",
     taskId: "",
+    attemptId: "",
     endpoint: "",
     appPath: "",
     expectedModel: "",
@@ -110,6 +111,7 @@ export function parseArgs(argv) {
   const valued = new Map([
     ["--unit-root", "unitRoot"],
     ["--task-id", "taskId"],
+    ["--attempt-id", "attemptId"],
     ["--endpoint", "endpoint"],
     ["--app-path", "appPath"],
     ["--expected-model", "expectedModel"],
@@ -137,6 +139,7 @@ export function parseArgs(argv) {
       index += 1;
     }
   }
+  if (values.attemptId && !/^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$/u.test(values.attemptId)) throw new Error("--attempt-id 不是安全 ID");
   if (values.endpoint) values.endpoint = endpointOrigin(values.endpoint);
   if (values.observeOnce && !values.resume) throw new Error("--observe-once 必须与 --resume 一起使用");
   if (values.observeOnce && values.detachAfterSubmit) {
@@ -308,7 +311,7 @@ function createJournal(config, runtime, nativeIdleEvidence, now) {
       batch_id: config.manifest.batch_id,
       unit_id: config.manifest.unit_id,
       task_id: config.task.task_id,
-      attempt_id: randomUUID(),
+      attempt_id: config.attemptId || randomUUID(),
     },
     dataset: { id: config.manifest.dataset.id, digest: config.manifest.dataset.digest },
     phase: "PENDING",
@@ -368,6 +371,7 @@ function createJournal(config, runtime, nativeIdleEvidence, now) {
 function assertJournalMatches(config, journal) {
   if (journal.schema_version !== WORKBUDDY_EXECUTION_JOURNAL_SCHEMA) throw new Error("dispatch journal schema 不受支持");
   const mismatches = [];
+  if (config.attemptId && journal.identity?.attempt_id !== config.attemptId) mismatches.push("attempt_id");
   if (journal.identity?.batch_id !== config.manifest.batch_id) mismatches.push("batch_id");
   if (journal.identity?.unit_id !== config.manifest.unit_id) mismatches.push("unit_id");
   if (journal.identity?.task_id !== config.task.task_id) mismatches.push("task_id");

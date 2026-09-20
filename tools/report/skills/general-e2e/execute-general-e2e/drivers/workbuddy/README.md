@@ -65,3 +65,16 @@ node collect-general-e2e/drivers/workbuddy/finalize.mjs \
 
 
 资源 `collection.status` 表示绑定原生请求的证据是否完整，逐字段 `metrics.*.status/coverage` 表示数值是否可观测。完整请求的空 usage 不阻断内容评分：token/cache 仍为 `null/unavailable`，工具和 request 数仍保留真实观测。截断轨迹、未知块、部分已知数据或非法数值仍阻断或降级，不能把采集缺失写成完整。
+
+
+## 持久化串行队列
+
+```bash
+node execute-general-e2e/drivers/workbuddy/batch.mjs \
+  --unit-root /absolute/new-execution-unit --queue-id serial-01 \
+  --endpoint http://127.0.0.1:9229 --expected-permission default-sandbox
+```
+
+恢复使用相同参数并增加 `--resume`。队列在 `.general-e2e/queues/workbuddy/` 冻结 manifest、顺序、配置和每题预留 attempt ID。UI 与运行均单槽；遇未知发送或未完成终态停止后续投递。新队列拒绝接管队列外已有 attempt；已完成任务恢复不发送。只有全题完成才返回成功，后台并发尚未声明。
+
+活动或陈旧 owner-lock 均不会自动删除。异常退出后的锁恢复属于值守操作：先核对锁中的主机和 PID 生命周期及真实任务现场，再处理已证明死亡的旧 Worker；不能直接删除未知锁后新建 attempt。尚未验收无人值守恢复。
