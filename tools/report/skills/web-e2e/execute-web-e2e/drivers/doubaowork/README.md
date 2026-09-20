@@ -167,3 +167,18 @@ swiftc -typecheck select-folder.swift
 ```
 
 fixture 已替换 Prompt、文件内容、工具结果、真实会话/agent ID 和绝对路径，不包含认证信息、历史侧栏或截图。进程 cleanup 真机单测只在唯一临时目录启动并终止测试自身创建的 Node 父子进程，不枚举后按名称清理，也不触碰既有 App 或 canary 残留。
+
+## 公共 route 与指标前置清单（离线）
+
+`scripts/run-doubaowork.sh` 是 execute-web-e2e 的公共入口注册，但当前 route 仅允许
+`probe` 和单题 development canary。它会拒绝 `--batch` 与 `--formal-receipt`，因此不会
+绕过 finalizer/receipt bridge 生成 `execution-receipt.json`。接入真机前必须依次具备：
+
+1. 只读 probe 通过且 target 唯一；
+2. native session identity 可按显式 conversation/session 读取；
+3. finalizer assessment 为 `READY_FOR_WEB_RECEIPT`；
+4. receipt bridge 返回 `formal_execution_receipt_allowed=true`；
+5. 公共 execution/metrics 收口经真机验证后再开启 batch。
+
+资源指标已登记 profile `doubaowork-macos-web-v1`，但当前 route 不采集或写入正式执行记录；
+指标仍须遵循 null/unavailable 口径，不能由 UI 或 trajectory 估算 native terminal、cwd 或 usage。
