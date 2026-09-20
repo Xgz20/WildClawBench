@@ -340,6 +340,20 @@ export async function fillWorkBuddyPrompt(client, prompt, timeoutMs = 30_000) {
     );
   }
   await client.send("Input.insertText", { text: prompt });
+  const reconciled = await client.evaluate(expression(`
+    const editors = visibleAll('textarea, [contenteditable="true"]');
+    if (editors.length !== 1) return { dispatched: false, count: editors.length };
+    const event = new InputEvent('input', {
+      inputType: 'insertText',
+      data: __arg,
+      bubbles: true,
+      composed: true,
+    });
+    return { dispatched: editors[0].dispatchEvent(event), count: 1 };
+  `, prompt), { userGesture: true });
+  if (!reconciled?.dispatched) {
+    throw new Error(`WorkBuddy 编辑器状态同步失败：count=${reconciled?.count ?? "unknown"}`);
+  }
   return waitFor(
     () => readWorkBuddyPromptState(client),
     (state) => state.editor_count === 1

@@ -197,6 +197,9 @@ test("WorkBuddy P2 uses CDP real input and requires an enabled send control", as
         this.focused = true;
         return { focused: true, count: 1, initial_content: this.content };
       }
+      if (source.includes("new InputEvent('input'")) {
+        return { dispatched: true, count: 1 };
+      }
       if (source.includes("send_enabled_count")) {
         return {
           editor_count: 1,
