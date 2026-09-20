@@ -66,6 +66,16 @@ function collectorFixture() {
       cwd: WORKSPACE,
       verified: true,
     },
+    extensions: {
+      workbuddy: {
+        identity_mapping: {
+          turn_id_source: "conversation-index.requests[].id",
+          session_id_source: "codebuddy-sessions.vscdb.session:*.conversationId",
+          cwd_source: "codebuddy-sessions.vscdb.session:*.cwd",
+          terminal_status_source: "codebuddy-sessions.vscdb.session:*.status + conversation-index.requests[].state",
+        },
+      },
+    },
   };
   const traceIndex = {
     schema_id: "urn:wildclawbench:schema:general-e2e:trace-index:v2",
@@ -154,6 +164,8 @@ test("WorkBuddy collector readiness fails closed on unknown native terminal/cwd 
     ["terminal", (value) => { value.state.phase = "NEEDS_ATTENTION"; }, /NATIVE_TERMINAL_STATE_UNVERIFIED/u],
     ["cwd", (value) => { value.traceIndex.session.cwd = null; }, /NATIVE_CWD_UNVERIFIED/u],
     ["credit", (value) => { value.resourceMetrics.metrics.credit = unavailable(); }, /CREDIT_MUST_REMAIN_OUTSIDE_PRIMARY_METRICS/u],
+    ["derived-native-source", (value) => { value.state.extensions.workbuddy.identity_mapping.cwd_source = "state.candidate_workspace"; }, /NATIVE_SOURCE_UNVERIFIED/u],
+    ["missing-terminal-source", (value) => { delete value.state.extensions.workbuddy.identity_mapping.terminal_status_source; }, /NATIVE_SOURCE_UNVERIFIED/u],
   ];
   for (const [name, mutate, expected] of cases) {
     const value = structuredClone(fixture);

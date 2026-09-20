@@ -179,6 +179,7 @@ export function buildWorkBuddyExecutionState({
           turn_id_source: "conversation-index.requests[].id",
           session_id_source: "codebuddy-sessions.vscdb.session:*.conversationId",
           cwd_source: "codebuddy-sessions.vscdb.session:*.cwd",
+          terminal_status_source: "codebuddy-sessions.vscdb.session:*.status + conversation-index.requests[].state",
         },
         session_status: sessionSnapshot.status || null,
         request_state: history.binding?.request_state?.raw || null,

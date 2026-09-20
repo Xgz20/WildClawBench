@@ -53,6 +53,18 @@ function assertNullUnavailable(metric, label) {
 function assertNativeSession(state, traceIndex) {
   const session = assertObject(state.session, "state.session");
   const traceSession = assertObject(traceIndex.session, "traceIndex.session");
+  const mapping = assertObject(state.extensions?.workbuddy?.identity_mapping, "state.extensions.workbuddy.identity_mapping");
+  const requiredSources = {
+    turn_id_source: "conversation-index.requests[].id",
+    session_id_source: "codebuddy-sessions.vscdb.session:*.conversationId",
+    cwd_source: "codebuddy-sessions.vscdb.session:*.cwd",
+    terminal_status_source: "codebuddy-sessions.vscdb.session:*.status + conversation-index.requests[].state",
+  };
+  for (const [field, expected] of Object.entries(requiredSources)) {
+    if (mapping[field] !== expected) {
+      throw new Error(`WORKBUDDY_NATIVE_SOURCE_UNVERIFIED: ${field}`);
+    }
+  }
   if (session.thread_id !== null || traceSession.thread_id !== null) {
     throw new Error("WORKBUDDY_THREAD_ID_MUST_REMAIN_NULL");
   }

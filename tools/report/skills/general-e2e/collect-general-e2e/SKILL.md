@@ -19,6 +19,13 @@ python -m eval_general_e2e skills --name collect-general-e2e --json
 
 新增通用 [CB-B 收口接口](references/general-finalization.md) 接受 CB-A 状态与 trace-index v2，保留多个原始文件和 nullable 原生 ID。必须提供真实平台进程清理 hook；WorkBuddy/QwenWork 目前只有脱敏 fixture 验证，仍需原生采集与真机收口验收。
 
+WorkBuddy macOS 的离线门禁还要求 `state.extensions.workbuddy.identity_mapping` 明确列出
+conversation/session/cwd 与 terminal 状态的原生来源。`session.verified=true`、`phase=COMPLETED`
+以及 `session.cwd == candidate_workspace` 只能在这些来源字段同时存在时把
+`native_terminal`/`native_cwd` 标为 `verified`；从 `state.session`、phase 或候选 Workspace
+反推来源会失败关闭并保持未验证。当前只完成了离线契约和反例测试，尚未完成真机 WorkBuddy
+collect/cleanup 收口，因此不能据此宣称该 Harness 已生产可用。
+
 ## 正式收口流程
 
 先用下述两个子能力生成并校验 trace 与 resource metrics，再运行正式收口器：
