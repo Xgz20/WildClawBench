@@ -26,6 +26,17 @@ conversation/session/cwd 与 terminal 状态的原生来源。`session.verified=
 反推来源会失败关闭并保持未验证。当前只完成了离线契约和反例测试，尚未完成真机 WorkBuddy
 collect/cleanup 收口，因此不能据此宣称该 Harness 已生产可用。
 
+真实新时段前可在脱仓的 General Skill 根目录运行 WorkBuddy 只读预检；它不启动客户端、不申请
+slot、不读取历史 canary，只确认 `task-process-cleanup` 共享组件、WorkBuddy source gate 与 CB-B
+输入入口仍在包内：
+
+```bash
+node execute-general-e2e/drivers/workbuddy/preflight.mjs --skill-root /absolute/general-e2e
+```
+
+输出 `status=PASS` 仅表示离线装配完整；仍需真机字段 `conversationId`、`requestId`、原生 `cwd`、
+终态来源、原始 trace 文件、resource metrics 和 cleanup 前后进程快照，才能进入正式 collect。
+
 ## 正式收口流程
 
 先用下述两个子能力生成并校验 trace 与 resource metrics，再运行正式收口器：
