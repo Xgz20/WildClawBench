@@ -143,7 +143,10 @@ const HELPERS = `
     const clone = editor.cloneNode(true);
     clone.querySelectorAll?.('[data-slate-placeholder="true"]').forEach((node) => node.remove());
     const raw = 'value' in clone ? clone.value : (clone.innerText || clone.textContent || '');
-    const normalized = String(raw || '').replace(/\uFEFF/gu, '');
+    const normalized = String(raw || '')
+      .replace(/\uFEFF/gu, '')
+      // Slate renders the final paragraph boundary as one extra newline.
+      .replace(/\n{2,}$/gu, '\n');
     return normalized.trim() ? normalized : '';
   };
   const selectedConversationId = () => {
