@@ -138,6 +138,9 @@ const HELPERS = `
     return style.visibility !== 'hidden' && style.display !== 'none' && rect.width > 0 && rect.height > 0;
   };
   const visibleAll = (selector) => Array.from(document.querySelectorAll(selector)).filter(visible);
+  // Document previews also contain contenteditable blocks. Only the composer
+  // host and Slate textbox identity identify a Prompt target.
+  const promptEditors = () => visibleAll('.cr-input-editor-host [data-slate-editor="true"][role="textbox"][contenteditable="true"]');
   const text = (element) => (element?.innerText || element?.textContent || '').trim();
   const editorContent = (editor) => {
     const clone = editor.cloneNode(true);
@@ -199,7 +202,7 @@ export async function readWorkBuddyUi(client) {
     }
     const models = visibleAll('button.cr-model-selector__trigger[role="combobox"]');
     const permissions = visibleAll('button.cr-permission-setting');
-    const editors = visibleAll('textarea, [contenteditable="true"]');
+    const editors = promptEditors();
     const controls = visibleAll('button[aria-label], button[title], [role="button"][aria-label]');
     const busyControls = controls.filter((control) => /(?:停止|取消|Stop|Cancel)/iu.test(
       (control.getAttribute('aria-label') || control.getAttribute('title') || text(control)).trim()
@@ -306,7 +309,7 @@ export function assertWorkBuddyUiConfiguration(ui, expected) {
 
 export async function readWorkBuddyPromptState(client) {
   return client.evaluate(expression(`
-    const editors = visibleAll('textarea, [contenteditable="true"]');
+    const editors = promptEditors();
     const buttons = visibleAll('button[aria-label], button[title], [role="button"][aria-label]')
       .filter((button) => /(?:发送|Send)/iu.test(
         (button.getAttribute('aria-label') || button.getAttribute('title') || '').trim()
@@ -341,7 +344,7 @@ export async function readWorkBuddyPromptState(client) {
 
 export async function fillWorkBuddyPrompt(client, prompt, timeoutMs = 30_000) {
   const focused = await client.evaluate(expression(`
-    const editors = visibleAll('textarea, [contenteditable="true"]');
+    const editors = promptEditors();
     if (editors.length !== 1) return { focused: false, count: editors.length, initial_content: null };
     const editor = editors[0];
     const initialContent = editorContent(editor);
@@ -385,7 +388,7 @@ export async function fillWorkBuddyPrompt(client, prompt, timeoutMs = 30_000) {
         || state.draft_provider_count !== 1 || state.draft_processing !== false
         || state.send_enabled_count !== 1) throw error;
     await client.evaluate(expression(`
-      const editors = visibleAll('textarea, [contenteditable="true"]');
+      const editors = promptEditors();
       if (editors.length !== 1 || editorContent(editors[0]) !== __arg) throw new Error('WorkBuddy 自有草稿已漂移');
       const editor = editors[0];
       editor.focus();

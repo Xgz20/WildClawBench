@@ -35,3 +35,8 @@ canary-03 使用留存 raw snapshot 重新规范化得到 `execution-state-norma
 冻结发行 `d3bf0f2` 的新批次先后完成 S4、S3、S1，三题均一次发送且正式采集 PASS；S5 在 armed 前发现发送草稿为空并停止（dispatch=0），S2 未投递。新增有界恢复仅对精确匹配的自有 Prompt 做一次真实 Backspace 和后缀还原，再检查 DOM/草稿两份内容，失败仍不发送。真机无发送探针已证实恢复两份内容一致；15/15 执行测试覆盖可恢复及不可恢复草稿。
 
 共享回归中 24 项通过；`test_general_release_prepare` 的 setUpClass 因 checkout 数据集源与旧 manifest lock 不一致而未运行。实际验收使用已验证的版本化 dataset ZIP，prepare 与哈希验证通过；没有修改数据集或放宽冻结校验。
+
+
+## 五题串行 v3 的文档预览识别修复
+
+v3 先完成 S4/S3；第三题在发送前因可编辑文档预览被误算为 Prompt 编辑器而停止，dispatch=0，后两题未投递。真机只读复现为 35 个 contenteditable，其中实际 Prompt 仅 1 个，其余来自 `sc-editor` 文档预览。定位收窄为 `cr-input-editor-host` 下的 Slate textbox，并继续要求唯一目标；修复后同一现场回读 editor=1、nonempty=0、busy=0。36/36 执行、队列、状态、runtime、collector、cleanup 回归通过。旧 v3 终态和冻结发行不改写；用 execute 0.10.2 的新批次验证完整流程。
