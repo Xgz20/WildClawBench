@@ -21,6 +21,8 @@
 
 后续代码协作统一采用[控制分支派发与回收合并流程](integration-workflow.md)：平台 worktree 从控制分支当前 HEAD 派发，完成后先回收到控制分支并完成组合回归；本轮所有并行任务接收后，控制 HEAD 才成为下一轮派发基线。主工作分支不直接接收平台分支，旧公共基线创建的现有 worktree 需先完成 reconciliation 才能继续复用。
 
+流程登记提交：`1d61be3`。在下一轮任务派发前，控制会话应以该提交作为 `control_base_sha`；本轮旧平台 worktree 不自动升级为新任务分支。
+
 | 时段 ID | 独占任务 | 允许范围 | 状态 |
 | --- | --- | --- | --- |
 | SLOT-MAC-20260919-01 | MAC-DOUBAOWORK-WEB | 一题 Web L1，一次发送/同 attempt 恢复 | SLOT_RELEASED；最新有效 UI observation 无 busy/stop/pending；候选 HTTP 服务仍有残留，不等于 cleanup 完成 |
