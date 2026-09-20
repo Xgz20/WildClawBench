@@ -1,7 +1,7 @@
 import { lstat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, relative } from "node:path";
-import { empty, parseAstron, parseWorkBuddy, parseQwen } from "./parsers.mjs";
+import { empty, parseAstron, parseDoubao, parseWorkBuddy, parseQwen } from "./parsers.mjs";
 import { inspectQwenRuntime } from "./qwen-profile.mjs";
 import {
   DEFAULT_MAX_TRACE_BYTES,
@@ -13,11 +13,13 @@ import {
   readTrace,
   sameNativePath,
 } from "../../vendor/e2e-shared/resource-metrics/trace-io.mjs";
+import { defaultNativeRoots, discoverNativeSources } from "../doubaowork/platform.mjs";
+import { buildNativeEvidence } from "../doubaowork/native-evidence.mjs";
 
 export { astronSessionRoots, findAstronTrace, readTrace };
 
 export async function collectLocalMetrics(input) {
-  const { harness, state, workspace, sessionDb, home = homedir() } = input;
+  const { harness, state, workspace, sessionDb, home = homedir(), nativeRoots } = input;
   const session = state.session || {};
   let result, sources = [], sessionId;
   if (harness === "astronstudio") {
@@ -64,6 +66,23 @@ export async function collectLocalMetrics(input) {
     const runtimeIdentity = await inspectQwenRuntime(input.appPath || state.client?.app_path, state.client?.version, transcript.rows);
     result = parseQwen(traces.flatMap(t => t.rows), { runtimeIdentity });
     sources = [transcript.source, ...traces.map(t => t.source)];
+  } else if (harness === "doubaowork") {
+    const conversationId = session.conversation_id;
+    sessionId = session.session_directory_id;
+    if (!isSafeNativeId(conversationId) || !isSafeNativeId(sessionId) || conversationId !== sessionId) {
+      throw new Error("SESSION_IDENTITY_MISMATCH");
+    }
+    if (typeof workspace !== "string" || !workspace.startsWith("/")) {
+      throw new Error("MISSING_STABLE_WORKSPACE");
+    }
+    const roots = nativeRoots || defaultNativeRoots(home);
+    const discovery = await discoverNativeSources({ userHome: home, sessionId, roots });
+    if (!discovery.session?.exists || discovery.session.trajectories.length !== 1) {
+      throw new Error(discovery.session?.trajectories?.length ? "AMBIGUOUS_TRACE" : "MISSING_STABLE_SESSION");
+    }
+    const evidence = await buildNativeEvidence({ sessionId, workspace, discovery });
+    result = parseDoubao(evidence);
+    sources = result.collection.sources;
   } else return empty("UNSUPPORTED_HARNESS");
   result.collection.sources = sources;
   result.collection.collected_at = new Date().toISOString();
