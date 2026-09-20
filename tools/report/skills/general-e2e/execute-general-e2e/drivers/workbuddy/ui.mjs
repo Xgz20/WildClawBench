@@ -146,7 +146,7 @@ const HELPERS = `
     const normalized = String(raw || '')
       .replace(/\uFEFF/gu, '')
       // Slate renders the final paragraph boundary as one extra newline.
-      .replace(/\n{2,}$/gu, '\n');
+      .replace(/\\n{2,}$/gu, '\\n');
     return normalized.trim() ? normalized : '';
   };
   const selectedConversationId = () => {
