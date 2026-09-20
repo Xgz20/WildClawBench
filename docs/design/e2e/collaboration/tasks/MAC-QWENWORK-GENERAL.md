@@ -61,6 +61,7 @@ P2 canary CLI、冻结配置、前置条件和回退方案见 [qwenwork-macos-p2
 | COMMON-003 | VERIFIED | SYNC `82e947b926a4525aac7ba2de08b76830ee9c739b`；推荐源码 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3`；merge `7b39dd9` | GitHub ls-remote 与源码祖先通过；采用 execute `0.8.0` 和 Qwen CLI main-guard 修复；Qwen Node 32/32、Python 3/3、Skill build/layout 24/24 通过 | selector/probe 专属修复；collector 独立审查 |
 | MAC-QWENWORK-GENERAL-004 | LOCAL_ONLY | `2c689e1` | CB-B Qwen 专属 collector/native-normalizer：trace-index v2、resource-metrics v1、binding/SQLite/segment provenance fail-closed、usage null/coverage、tool completed 不升级 success；Node collector focused 4/4 通过 | 审查后合入 COMMON；再安排新桌面时段做真机采集与 cleanup |
 | MAC-QWENWORK-GENERAL-005 | ADOPTED | `679a1e3`、`807a9c1` | metadata coverage gate 逐行校验 sessionId、绝对 cwd、segment workspace/session 绑定，输出 `known/total/missing/mismatched`；补充 1.0.6 真机采集、恢复与交接清单；Qwen 聚焦 43/43 | 新时段确认真实字段覆盖、唯一 project trigger、一次发送/恢复、CB-B 正式 evidence 与 cleanup |
+| MAC-QWENWORK-GENERAL-006 | ADOPTED | `e2541aa`、集成 `82cd3e1` | 新增只读 `tools/qwenwork_metadata_preflight.py`，扫描显式 JSON/JSONL metadata，输出 session/cwd 与 segment coverage；usage/terminal 固定 null；预检 2/2；无真实日志时返回 blocked | 新时段对 QwenWorkCN 1.0.6 原始日志运行预检，再确认唯一 project trigger、一次发送/恢复、CB-B evidence 与 cleanup |
 
 ## 本轮交付
 

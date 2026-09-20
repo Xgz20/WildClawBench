@@ -8,12 +8,12 @@
 
 | 任务 | 已审查并集成的交付 | 正在推进 |
 | --- | --- | --- |
-| MAC-WORKBUDDY-GENERAL | P2 `e388dfa`、组件绑定 `b3ac3da`；CB-B `be3ca29`；cleanup/source gate `3783b2b`/`0fbdd57`；独立 Node 33/33，新增来源反例 7/7 | SLOT03 发送前失败已安全恢复草稿、释放；SLOT05 清空门禁失败已收口并释放，未创建 attempt；真实 collect/cleanup 与新时段验收待完成 |
-| MAC-QWENWORK-GENERAL | `9081df5`；CB-B `acfc7a1`/`828bfb0`/`5263890`；metadata gate `679a1e3`；清单 `f1d5119`；聚焦 Node 43/43 | SLOT04 已释放；项目 trigger 歧义导致 send=0；1.0.6 真实日志、一次发送/恢复、正式 collect 与 cleanup 待新时段 |
+| MAC-WORKBUDDY-GENERAL | P2 `e388dfa`、组件绑定 `b3ac3da`；CB-B `be3ca29`；cleanup/source gate `3783b2b`/`0fbdd57`；离线预检 `f997200`；独立 Node 33/33，预检 2/2 | SLOT03 发送前失败已安全恢复草稿、释放；SLOT05 清空门禁失败已收口并释放，未创建 attempt；预检已就绪，真实 collect/cleanup 与新时段验收待完成 |
+| MAC-QWENWORK-GENERAL | `9081df5`；CB-B `acfc7a1`/`828bfb0`/`5263890`；metadata gate `679a1e3`；清单 `f1d5119`；真机预检 `e2541aa`；聚焦 Node 43/43 | SLOT04 已释放；项目 trigger 歧义导致 send=0；预检入口已就绪，仍待 1.0.6 真实日志、一次发送/恢复、正式 collect 与 cleanup |
 | MAC-DOUBAOWORK-WEB | P2 `47dcaee`、公共 merge `ca7cc2e`、更正 `3a3057c`；离线加固 `40c2f71`/`2e21a54`/`5d7b6d9`；finalizer/bridge `9bb30aa`/`694536d`；public route `f38b66f`，聚焦 Node 64/64 | UI 等价绑定、Prompt 回读、进程重挂、恢复状态、driver-side finalizer、内存 bridge 和离线 route 已加固；route 暂拒 batch/formal receipt，仍待可信 native terminal/cwd、公共 cleanup/finalizer 接线与新时段真机验收 |
 | COMMON | CB-A/CB-B、三 Driver、发行版本与 Qwen CLI 路径别名修复 | 发布 COMMON-003，接收下一批平台修复/collector；新增五项指标另属 COMMON-CM01 |
 
-本轮接线后顺序复跑：General Node 144/144，Doubao Driver 64/64，WorkBuddy/Qwen/Doubao 聚焦合计 79/79；Web Python 61/61，General Skill build/shared-components 26/26。General Python 全量仍有既有 `eval_e2e.grade_runs` 导入缺少 `dotenv` 的环境错误，未归因于本轮代码；尚未新建生产发行包。
+本轮接线后顺序复跑：General Node 144/144，Doubao Driver 64/64，WorkBuddy/Qwen/Doubao 聚焦合计 81/81（含 WorkBuddy 预检 2/2、Qwen metadata 预检 2/2）；Web Python 61/61，General Skill build/shared-components 26/26。General Python 全量仍有既有 `eval_e2e.grade_runs` 导入缺少 `dotenv` 的环境错误，未归因于本轮代码；尚未新建生产发行包。
 
 ## 桌面时段
 

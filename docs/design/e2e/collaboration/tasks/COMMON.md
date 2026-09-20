@@ -62,7 +62,9 @@ Windows 接收 COMMON-001/002/003 后直接推进本机 G5-01，无需等待 Mac
 | MAC-WORKBUDDY-GENERAL-006 | ADOPTED | `0fbdd57`、集成 `eec4a2e` | cleanup/readiness 增加 request/session/cwd/terminal 显式原生来源门禁；来源反例 7/7；未操作客户端 | 新时段真实 collect、cleanup 与正式回执 |
 | MAC-QWENWORK-GENERAL-005 | ADOPTED | `679a1e3`、集成 `807a9c1` | 1.0.6 metadata coverage 门禁与可恢复采集清单；Qwen 聚焦 43/43；未操作客户端 | 新时段确认真实字段覆盖、一次发送/恢复与 cleanup |
 | MAC-DOUBAOWORK-WEB-005 | ADOPTED | `f38b66f`、集成 `07b31b7` | 离线公共 route 注册 metrics 并复用 bridge/finalizer，拒绝 batch/formal receipt；Doubao 64/64；未操作客户端 | 可信 native terminal/cwd、cleanup/finalizer 接线与新时段验收 |
+| MAC-WORKBUDDY-GENERAL-007 | ADOPTED | `f997200`、集成 `a5c824b` | WorkBuddy 只读采集预检核验共享清理组件、CB-B 输入与四项原生 source gate；预检 2/2 | 新时段运行预检并完成真实 collect/cleanup |
+| MAC-QWENWORK-GENERAL-006 | ADOPTED | `e2541aa`、集成 `82cd3e1` | QwenWork 只读 metadata preflight 输出 session/cwd 与 segment coverage；预检 2/2；无真实日志时 blocked | 新时段采集 1.0.6 原始日志并继续正式收口 |
 
 ## 本轮交付
 
-推荐源码 `2023b4d`。本轮接线后顺序复跑 General Node 144/144、WorkBuddy/Qwen/Doubao 聚焦 79/79、Doubao Driver 64/64、Web Python 61/61、General Skill build/shared-components 26/26。General Python 全量仍受环境缺少 `dotenv` 的 legacy import 错误影响；本轮没有新生产发行，也没有完整 E2E 通过声明。
+推荐源码 `2023b4d`。本轮接线后顺序复跑 General Node 144/144、WorkBuddy/Qwen/Doubao 聚焦 81/81、Doubao Driver 64/64、Web Python 61/61、General Skill build/shared-components 26/26。General Python 全量仍受环境缺少 `dotenv` 的 legacy import 错误影响；本轮没有新生产发行，也没有完整 E2E 通过声明。
