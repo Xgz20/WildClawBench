@@ -21,7 +21,7 @@ export const WORKBUDDY_MACOS_APP_PROFILE = Object.freeze({
   id: "workbuddy-macos",
   macos: Object.freeze({
     ...WORKBUDDY_APP_PROFILE.macos,
-    // WorkBuddy 5.5.3 declares the generic Electron binary in Info.plist.
+    // WorkBuddy 5.5.x declares the generic Electron binary in Info.plist.
     // This belongs to the WorkBuddy driver until COMMON decides whether the
     // shared cross-platform profile should accept it for all client versions.
     executableNames: Object.freeze([
@@ -35,6 +35,11 @@ export const WORKBUDDY_MACOS_INSTALLATION_VARIANTS = Object.freeze([
   Object.freeze({
     id: "workbuddy-macos-5.5.3-electron",
     client_versions: Object.freeze(["5.5.3"]),
+    executable_name: "Electron",
+  }),
+  Object.freeze({
+    id: "workbuddy-macos-5.5.6-electron",
+    client_versions: Object.freeze(["5.5.6"]),
     executable_name: "Electron",
   }),
 ]);

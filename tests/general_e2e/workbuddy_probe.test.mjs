@@ -17,15 +17,19 @@ test("WorkBuddy probe arguments reject non-loopback CDP endpoints", () => {
   assert.equal(parseArgs(["--timeout-ms", "1234"]).timeoutMs, 1234);
 });
 
-test("WorkBuddy macOS profile accepts only the verified 5.5.3 Electron variant", () => {
+test("WorkBuddy macOS profile accepts only the verified Electron variants", () => {
   assert.equal(WORKBUDDY_MACOS_APP_PROFILE.macos.executableNames.includes("Electron"), true);
   assert.equal(identifyWorkBuddyMacosInstallation({
     executable_path: "/Applications/WorkBuddy.app/Contents/MacOS/Electron",
     version: "5.5.3",
   }), "workbuddy-macos-5.5.3-electron");
+  assert.equal(identifyWorkBuddyMacosInstallation({
+    executable_path: "/Applications/WorkBuddy.app/Contents/MacOS/Electron",
+    version: "5.5.6",
+  }), "workbuddy-macos-5.5.6-electron");
   assert.throws(() => identifyWorkBuddyMacosInstallation({
     executable_path: "/Applications/WorkBuddy.app/Contents/MacOS/Electron",
-    version: "5.5.4",
+    version: "5.5.7",
   }), /unsupported WorkBuddy macOS installation identity/u);
   assert.equal(identifyWorkBuddyMacosInstallation({
     executable_path: "/Applications/WorkBuddy.app/Contents/MacOS/WorkBuddy",
