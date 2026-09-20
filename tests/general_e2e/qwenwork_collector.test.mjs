@@ -210,6 +210,12 @@ test("metadata gate reports partial segment identity without inferring missing v
   assert.deepEqual(result.segments.cwd, {
     known: 2, total: 2, missing: 0, mismatched: 0,
   });
+  assert.deepEqual(result.claims_withheld, [
+    "per-row-segment-session_id_when_missing",
+    "per-row-segment-cwd_when_missing",
+    "terminal_state_from_metadata_only",
+    "usage_from_metadata_only",
+  ]);
 });
 
 test("metadata gate blocks missing transcript metadata and relative or mismatched segment cwd", () => {
