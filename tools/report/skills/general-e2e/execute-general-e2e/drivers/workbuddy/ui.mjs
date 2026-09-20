@@ -139,6 +139,13 @@ const HELPERS = `
   };
   const visibleAll = (selector) => Array.from(document.querySelectorAll(selector)).filter(visible);
   const text = (element) => (element?.innerText || element?.textContent || '').trim();
+  const editorContent = (editor) => {
+    const clone = editor.cloneNode(true);
+    clone.querySelectorAll?.('[data-slate-placeholder="true"]').forEach((node) => node.remove());
+    const raw = 'value' in clone ? clone.value : (clone.innerText || clone.textContent || '');
+    const normalized = String(raw || '').replace(/\uFEFF/gu, '');
+    return normalized.trim() ? normalized : '';
+  };
   const selectedConversationId = () => {
     const rows = visibleAll('[data-conversation-id]').filter((element) =>
       element.matches(':has(.cb-agent-card[class*="selected"])')
@@ -190,7 +197,6 @@ export async function readWorkBuddyUi(client) {
     const models = visibleAll('button.cr-model-selector__trigger[role="combobox"]');
     const permissions = visibleAll('button.cr-permission-setting');
     const editors = visibleAll('textarea, [contenteditable="true"]');
-    const editorContent = (editor) => ('value' in editor ? editor.value : (editor.innerText || editor.textContent || ''));
     const controls = visibleAll('button[aria-label], button[title], [role="button"][aria-label]');
     const busyControls = controls.filter((control) => /(?:停止|取消|Stop|Cancel)/iu.test(
       (control.getAttribute('aria-label') || control.getAttribute('title') || text(control)).trim()
@@ -303,9 +309,7 @@ export async function readWorkBuddyPromptState(client) {
         (button.getAttribute('aria-label') || button.getAttribute('title') || '').trim()
       ));
     const enabled = buttons.filter((button) => !button.disabled && button.getAttribute('aria-disabled') !== 'true');
-    const content = editors.length === 1
-      ? ('value' in editors[0] ? editors[0].value : (editors[0].innerText || editors[0].textContent || ''))
-      : null;
+    const content = editors.length === 1 ? editorContent(editors[0]) : null;
     return {
       editor_count: editors.length,
       content,
@@ -320,7 +324,7 @@ export async function fillWorkBuddyPrompt(client, prompt, timeoutMs = 30_000) {
     const editors = visibleAll('textarea, [contenteditable="true"]');
     if (editors.length !== 1) return { focused: false, count: editors.length, initial_content: null };
     const editor = editors[0];
-    const initialContent = 'value' in editor ? editor.value : (editor.innerText || editor.textContent || '');
+    const initialContent = editorContent(editor);
     if (initialContent.length !== 0) {
       return { focused: false, count: 1, initial_content: initialContent };
     }

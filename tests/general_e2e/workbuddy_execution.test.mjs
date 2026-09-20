@@ -70,7 +70,7 @@ function runtime() {
     application: {
       path: "/Applications/WorkBuddy.app",
       version: "5.5.3",
-      installation_variant: "workbuddy-macos-5.5.3-electron",
+      installation_variant: "workbuddy-macos-electron",
     },
     captured_at: "2026-09-19T08:00:00.000Z",
     native_sources: {

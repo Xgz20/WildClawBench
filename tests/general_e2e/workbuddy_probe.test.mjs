@@ -5,6 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import {
+  classifyWorkBuddyMacosCompatibility,
   identifyWorkBuddyMacosInstallation,
   inspectWorkBuddyMacos,
   parseArgs,
@@ -17,20 +18,33 @@ test("WorkBuddy probe arguments reject non-loopback CDP endpoints", () => {
   assert.equal(parseArgs(["--timeout-ms", "1234"]).timeoutMs, 1234);
 });
 
-test("WorkBuddy macOS profile accepts only the verified Electron variants", () => {
+test("WorkBuddy macOS profile gates identity and records version compatibility separately", () => {
   assert.equal(WORKBUDDY_MACOS_APP_PROFILE.macos.executableNames.includes("Electron"), true);
   assert.equal(identifyWorkBuddyMacosInstallation({
     executable_path: "/Applications/WorkBuddy.app/Contents/MacOS/Electron",
     version: "5.5.3",
-  }), "workbuddy-macos-5.5.3-electron");
+  }), "workbuddy-macos-electron");
+  assert.deepEqual(classifyWorkBuddyMacosCompatibility({
+    executable_path: "/Applications/WorkBuddy.app/Contents/MacOS/Electron",
+    version: "5.5.7",
+  }), {
+    installation_variant: "workbuddy-macos-electron",
+    observed_version: "5.5.7",
+    compatibility_status: "unverified_version",
+    known_variant: null,
+  });
   assert.equal(identifyWorkBuddyMacosInstallation({
     executable_path: "/Applications/WorkBuddy.app/Contents/MacOS/Electron",
     version: "5.5.6",
-  }), "workbuddy-macos-5.5.6-electron");
-  assert.throws(() => identifyWorkBuddyMacosInstallation({
+  }), "workbuddy-macos-electron");
+  assert.equal(identifyWorkBuddyMacosInstallation({
     executable_path: "/Applications/WorkBuddy.app/Contents/MacOS/Electron",
     version: "5.5.7",
-  }), /unsupported WorkBuddy macOS installation identity/u);
+  }), "workbuddy-macos-electron");
+  assert.throws(() => identifyWorkBuddyMacosInstallation({
+    executable_path: "/Applications/WorkBuddy.app/Contents/MacOS/Unknown",
+    version: "5.5.7",
+  }), /unsupported WorkBuddy macOS executable/u);
   assert.equal(identifyWorkBuddyMacosInstallation({
     executable_path: "/Applications/WorkBuddy.app/Contents/MacOS/WorkBuddy",
     version: "9.9.9",
@@ -105,7 +119,9 @@ test("WorkBuddy probe reads identity and native source layout without starting t
     });
     assert.equal(result.status, "PASS");
     assert.equal(receivedProfile, WORKBUDDY_MACOS_APP_PROFILE);
-    assert.equal(result.application.installation_variant, "workbuddy-macos-5.5.3-electron");
+    assert.equal(result.application.installation_variant, "workbuddy-macos-electron");
+    assert.equal(result.application.observed_version, "5.5.3");
+    assert.equal(result.application.compatibility_status, "verified");
     assert.equal(result.readiness, "DISCOVERED_NOT_CONNECTED");
     assert.equal(result.process.running, false);
     assert.equal(result.cdp.reason, "workbuddy-not-running");

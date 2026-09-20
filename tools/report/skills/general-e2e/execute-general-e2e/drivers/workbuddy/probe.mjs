@@ -19,16 +19,6 @@ import {
 export const WORKBUDDY_MACOS_APP_PROFILE = Object.freeze({
   ...WORKBUDDY_APP_PROFILE,
   id: "workbuddy-macos",
-  macos: Object.freeze({
-    ...WORKBUDDY_APP_PROFILE.macos,
-    // WorkBuddy 5.5.x declares the generic Electron binary in Info.plist.
-    // This belongs to the WorkBuddy driver until COMMON decides whether the
-    // shared cross-platform profile should accept it for all client versions.
-    executableNames: Object.freeze([
-      ...WORKBUDDY_APP_PROFILE.macos.executableNames,
-      "Electron",
-    ]),
-  }),
 });
 
 export const WORKBUDDY_MACOS_INSTALLATION_VARIANTS = Object.freeze([
@@ -403,19 +393,34 @@ async function commandValue(command, args, runCommand) {
 
 export function identifyWorkBuddyMacosInstallation(discovery) {
   const executableName = basename(String(discovery?.executable_path || ""));
-  if (WORKBUDDY_APP_PROFILE.macos.executableNames.includes(executableName)) {
-    return "shared-profile";
+  if (executableName === "Electron") {
+    // The version is evidence for compatibility reporting, not an identity
+    // gate. WorkBuddy releases may keep the same Electron bundle layout while
+    // changing their client version; runtime/UI/source gates decide whether
+    // the driver can proceed.
+    return "workbuddy-macos-electron";
   }
-  const variant = WORKBUDDY_MACOS_INSTALLATION_VARIANTS.find(
-    (item) => item.executable_name === executableName
-      && item.client_versions.includes(String(discovery?.version || "")),
-  );
-  if (!variant) {
+  if (!WORKBUDDY_APP_PROFILE.macos.executableNames.includes(executableName)) {
     throw new Error(
-      `unsupported WorkBuddy macOS installation identity: executable=${executableName || "unavailable"}, version=${discovery?.version || "unavailable"}`,
+      `unsupported WorkBuddy macOS executable: ${executableName || "unavailable"}`,
     );
   }
-  return variant.id;
+  return "shared-profile";
+}
+
+export function classifyWorkBuddyMacosCompatibility(discovery) {
+  const installationVariant = identifyWorkBuddyMacosInstallation(discovery);
+  const version = String(discovery?.version || "");
+  const knownVariant = WORKBUDDY_MACOS_INSTALLATION_VARIANTS.find(
+    (item) => item.executable_name === basename(String(discovery?.executable_path || ""))
+      && item.client_versions.includes(version),
+  );
+  return {
+    installation_variant: installationVariant,
+    observed_version: version || null,
+    compatibility_status: knownVariant ? "verified" : "unverified_version",
+    known_variant: knownVariant?.id || null,
+  };
 }
 
 export async function inspectWorkBuddyMacos(options, overrides = {}) {
@@ -428,7 +433,7 @@ export async function inspectWorkBuddyMacos(options, overrides = {}) {
     environment: overrides.environment || process.env,
     home: overrides.home || homedir(),
   }, { ...overrides, runCommand });
-  const installationVariant = identifyWorkBuddyMacosInstallation(discovery);
+  const compatibility = classifyWorkBuddyMacosCompatibility(discovery);
   const processInfo = await (overrides.inspectProcess || inspectMacDesktopAppProcess)({
     profile: WORKBUDDY_MACOS_APP_PROFILE,
     appPath: discovery.path,
@@ -452,7 +457,7 @@ export async function inspectWorkBuddyMacos(options, overrides = {}) {
     readiness: controlReady ? "READY_FOR_CONTROL_REVIEW" : "DISCOVERED_NOT_CONNECTED",
     captured_at: now().toISOString(),
     platform: { id: "macos", product_version: osVersion, architecture },
-    application: { ...discovery, installation_variant: installationVariant },
+    application: { ...discovery, ...compatibility },
     process: processInfo ? { running: true, ...processInfo } : { running: false },
     cdp,
     native_sources: {

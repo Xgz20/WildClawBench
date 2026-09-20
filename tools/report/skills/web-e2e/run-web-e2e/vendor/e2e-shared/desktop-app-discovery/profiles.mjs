@@ -43,7 +43,9 @@ export const WORKBUDDY_APP_PROFILE = Object.freeze({
   macos: Object.freeze({
     bundleIds: Object.freeze(["com.tencent.workbuddy.mac"]),
     appNames: Object.freeze(["WorkBuddy.app", "CodeBuddy.app"]),
-    executableNames: Object.freeze(["WorkBuddy", "CodeBuddy"]),
+    // WorkBuddy 5.5.x macOS bundles declare the generic Electron runtime in
+    // Info.plist. The bundle ID and required app.asar still gate discovery.
+    executableNames: Object.freeze(["WorkBuddy", "CodeBuddy", "Electron"]),
     requiredRelativePaths: Object.freeze(["Contents/Resources/app.asar"]),
     standardPaths: Object.freeze([
       "/Applications/WorkBuddy.app",

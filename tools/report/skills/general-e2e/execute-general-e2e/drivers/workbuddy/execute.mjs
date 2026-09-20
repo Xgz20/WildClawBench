@@ -321,7 +321,12 @@ function createJournal(config, runtime, nativeIdleEvidence, now) {
     verified_ui: null,
     runtime: {
       app_path: runtime.application.path,
+      expected_client_version: config.manifest.unit.harness.version || null,
       client_version: runtime.application.version,
+      client_version_match: config.manifest.unit.harness.version
+        ? config.manifest.unit.harness.version === runtime.application.version
+        : null,
+      compatibility_status: runtime.application.compatibility_status || "unverified",
       installation_variant: runtime.application.installation_variant,
       endpoint: config.endpoint,
     },
@@ -393,9 +398,6 @@ async function defaultInspectRuntime(config) {
     || report.cdp.endpoint !== config.endpoint
   ) {
     throw new Error(`WorkBuddy 执行前只读检查未通过：status=${report.status}; process=${report.process?.running}; cdp=${report.cdp?.status}`);
-  }
-  if (config.manifest.unit.harness.version && config.manifest.unit.harness.version !== report.application.version) {
-    throw new Error("manifest 与当前 WorkBuddy 客户端版本不一致");
   }
   return report;
 }
