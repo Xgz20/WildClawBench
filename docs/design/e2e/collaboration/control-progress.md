@@ -17,6 +17,8 @@
 
 ## 桌面时段
 
+下一阶段采用[macOS 三 Harness 真机协作计划](mac-live-session-plan.md)：三个独立任务并行准备和等待，真机 slot 按 Harness 串行授予。
+
 | 时段 ID | 独占任务 | 允许范围 | 状态 |
 | --- | --- | --- | --- |
 | SLOT-MAC-20260919-01 | MAC-DOUBAOWORK-WEB | 一题 Web L1，一次发送/同 attempt 恢复 | SLOT_RELEASED；最新有效 UI observation 无 busy/stop/pending；候选 HTTP 服务仍有残留，不等于 cleanup 完成 |
