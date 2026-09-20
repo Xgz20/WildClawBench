@@ -644,7 +644,7 @@ function transcriptBytes(normalized) {
   if (!Array.isArray(normalized.events) || normalized.events.length === 0) {
     throw new Error("WORKBUDDY_TRANSCRIPT_EMPTY");
   }
-  return Buffer.from(`${normalized.events.map((event) => JSON.stringify(event)).join("\\n")}\\n`, "utf8");
+  return Buffer.from(`${normalized.events.map((event) => JSON.stringify(event)).join("\n")}\n`, "utf8");
 }
 
 function sourceArtifactList(loaded) {
@@ -658,7 +658,7 @@ function sourceArtifactList(loaded) {
     { source: source.conversation_index, path: "raw/workbuddy-history/conversation-index.json" },
     ...source.messages.map((item) => {
       const id = assertSafeWorkBuddyNativeId(
-        basename(String(item.path || "")).replace(/\\.json$/u, ""),
+        basename(String(item.path || "")).replace(/\.json$/u, ""),
         "WorkBuddy message artifact id",
       );
       return { source: item, path: `raw/workbuddy-history/messages/${id}.json` };
@@ -797,7 +797,7 @@ export async function collectWorkBuddyGeneralEvidence({
     bindingEvidence,
     lifecycleGeneration,
   });
-  const indexBytes = Buffer.from(`${JSON.stringify(index, null, 2)}\\n`, "utf8");
+  const indexBytes = Buffer.from(`${JSON.stringify(index, null, 2)}\n`, "utf8");
   const traceIndexArtifact = await writeNewArtifact(traceRoot, "trace-index.json", indexBytes);
   const resourceMetrics = toGeneralResourceMetrics({
     identity,
@@ -806,7 +806,7 @@ export async function collectWorkBuddyGeneralEvidence({
     collectedAt,
   });
   if (writeResourceMetrics) {
-    await writeFile(join(traceRoot, "resource-metrics.json"), `${JSON.stringify(resourceMetrics, null, 2)}\\n`, { flag: "wx" });
+    await writeFile(join(traceRoot, "resource-metrics.json"), `${JSON.stringify(resourceMetrics, null, 2)}\n`, { flag: "wx" });
   }
   return {
     trace_root: traceRoot,
