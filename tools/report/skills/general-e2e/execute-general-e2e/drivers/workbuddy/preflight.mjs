@@ -26,11 +26,13 @@ export async function runWorkBuddyOfflinePreflight({ skillRoot = DEFAULT_SKILL_R
   const root = resolve(skillRoot);
   const cleanup = resolve(root, "collect-general-e2e/scripts/lib/macos-task-processes.mjs");
   const finalizer = resolve(root, "collect-general-e2e/scripts/finalize_general_execution.mjs");
+  const collector = resolve(root, "collect-general-e2e/drivers/workbuddy/collector.mjs");
   const driverCleanup = resolve(root, "execute-general-e2e/drivers/workbuddy/cleanup.mjs");
   const state = resolve(root, "execute-general-e2e/drivers/workbuddy/state.mjs");
   const checks = await Promise.all([
     readable(cleanup, "task-process-cleanup shared component"),
     readable(finalizer, "CB-B general finalizer"),
+    readable(collector, "WorkBuddy CB-B collector"),
     readable(driverCleanup, "WorkBuddy cleanup adapter"),
     readable(state, "WorkBuddy execution state adapter"),
   ]);

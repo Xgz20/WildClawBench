@@ -6,8 +6,8 @@
 node execute-general-e2e/drivers/workbuddy/preflight.mjs --skill-root /absolute/general-e2e
 ```
 
-预检只读取包内文件，确认 `task-process-cleanup` 共享组件、WorkBuddy 的四个原生
-source gate 字段和 CB-B 的 state/trace/resource/cleanup 输入仍可装配。输出 `PASS`
+预检只读取包内文件，确认 `task-process-cleanup` 共享组件、WorkBuddy CB-B collector、
+四个原生 source gate 字段和 CB-B 的 state/trace/resource/cleanup 输入仍可装配。输出 `PASS`
 只代表离线包完整，不代表客户端已启动、slot 已取得、历史 canary 已处理或真机
 collect/cleanup 已通过。
 
