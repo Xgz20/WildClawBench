@@ -187,9 +187,10 @@ test("WorkBuddy P2 arguments and UI readback fail closed", () => {
 
 test("WorkBuddy P2 uses CDP real input and requires an enabled send control", async () => {
   class StatefulEditorClient {
-    constructor({ enableOnInsert, syncDraft = true }) {
+    constructor({ enableOnInsert, syncDraft = true, repairAfterInsert = false }) {
       this.content = "";
       this.syncDraft = syncDraft;
+      this.repairAfterInsert = repairAfterInsert;
       this.intent = false;
       this.focused = false;
       this.sendEnabled = false;
@@ -205,6 +206,7 @@ test("WorkBuddy P2 uses CDP real input and requires an enabled send control", as
       if (source.includes("new InputEvent('input'")) {
         return { dispatched: true, count: 1 };
       }
+      if (source.includes("selected_end")) return { selected_end: true };
       if (source.includes("send_enabled_count")) {
         return {
           editor_count: 1,
@@ -222,12 +224,14 @@ test("WorkBuddy P2 uses CDP real input and requires an enabled send control", as
     async send(method, params) {
       if (method === "Input.dispatchKeyEvent") {
         if (params.type === "rawKeyDown") this.intent = true;
+        if (params.type === "keyDown" && params.key === "Backspace") this.content = this.content.slice(0, -1);
         return {};
       }
       assert.equal(method, "Input.insertText");
       assert.equal(this.focused, true);
       this.insertCalls += 1;
-      this.content = params.text;
+      this.content += params.text;
+      if (this.repairAfterInsert && this.insertCalls > 1) this.syncDraft = true;
       this.sendEnabled = this.enableOnInsert;
       return {};
     }
@@ -239,6 +243,11 @@ test("WorkBuddy P2 uses CDP real input and requires an enabled send control", as
   assert.equal(enabled.insertCalls, 1);
   assert.equal(ready.content, prompt);
   assert.equal(ready.send_enabled_count, 1);
+
+  const repaired = new StatefulEditorClient({ enableOnInsert: true, syncDraft: false, repairAfterInsert: true });
+  const recovered = await fillWorkBuddyPrompt(repaired, prompt, 5);
+  assert.equal(recovered.draft_text, prompt);
+  assert.equal(repaired.insertCalls, 2);
 
   const emptyDraft = new StatefulEditorClient({ enableOnInsert: true, syncDraft: false });
   await assert.rejects(fillWorkBuddyPrompt(emptyDraft, prompt, 5), /发送控件启用超时/u);

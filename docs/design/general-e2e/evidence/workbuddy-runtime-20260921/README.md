@@ -28,3 +28,10 @@ canary-03 使用留存 raw snapshot 重新规范化得到 `execution-state-norma
 ## 固定用例暴露的草稿同步修复
 
 首个固定五题批次的 S4 停在 `uncertain/NEEDS_ATTENTION`，未重发且保留旧 unit。只读回读证实 Slate 内容已更新，而 InputBoxStore 的 `draft.content.blocks` 仍为空。真实 `rawKeyDown → Input.insertText → keyUp` 无发送探针能同时更新两者；发送前新增唯一 draft provider、完整 text 和 processing 状态核验，避免仅凭 DOM/按钮启用进入 armed。清理仅作用于精确匹配的本次 S4 草稿，没有改动其他会话。15/15 执行焦点回归通过；新的正式批次继续验证。
+
+
+## 五题串行 v2 的实际边界
+
+冻结发行 `d3bf0f2` 的新批次先后完成 S4、S3、S1，三题均一次发送且正式采集 PASS；S5 在 armed 前发现发送草稿为空并停止（dispatch=0），S2 未投递。新增有界恢复仅对精确匹配的自有 Prompt 做一次真实 Backspace 和后缀还原，再检查 DOM/草稿两份内容，失败仍不发送。真机无发送探针已证实恢复两份内容一致；15/15 执行测试覆盖可恢复及不可恢复草稿。
+
+共享回归中 24 项通过；`test_general_release_prepare` 的 setUpClass 因 checkout 数据集源与旧 manifest lock 不一致而未运行。实际验收使用已验证的版本化 dataset ZIP，prepare 与哈希验证通过；没有修改数据集或放宽冻结校验。

@@ -366,18 +366,49 @@ export async function fillWorkBuddyPrompt(client, prompt, timeoutMs = 30_000) {
   } finally {
     await client.send("Input.dispatchKeyEvent", { type: "keyUp", ...key });
   }
-  return waitFor(
-    () => readWorkBuddyPromptState(client),
-    (state) => state.editor_count === 1
-      && state.content === prompt
-      && state.draft_provider_count === 1
-      && state.draft_text === prompt
-      && state.draft_processing === false
-      && state.send_control_count === 1
-      && state.send_enabled_count === 1,
-    timeoutMs,
-    "等待 WorkBuddy Prompt 真实输入和发送控件启用",
-  );
+  const ready = (state) => state.editor_count === 1
+    && state.content === prompt
+    && state.draft_provider_count === 1
+    && state.draft_text === prompt
+    && state.draft_processing === false
+    && state.send_control_count === 1
+    && state.send_enabled_count === 1;
+  try {
+    return await waitFor(() => readWorkBuddyPromptState(client), ready,
+      Math.min(timeoutMs, 1000), "等待 WorkBuddy Prompt 真实输入和发送控件启用");
+  } catch (error) {
+    const state = await readWorkBuddyPromptState(client);
+    // Repair only our exact, unsent text. A UI/store mount race can miss the
+    // first change notification; one trusted suffix edit produces a fresh
+    // notification without calling application internals or submitting.
+    if (state.editor_count !== 1 || state.content !== prompt || !prompt
+        || state.draft_provider_count !== 1 || state.draft_processing !== false
+        || state.send_enabled_count !== 1) throw error;
+    await client.evaluate(expression(`
+      const editors = visibleAll('textarea, [contenteditable="true"]');
+      if (editors.length !== 1 || editorContent(editors[0]) !== __arg) throw new Error('WorkBuddy 自有草稿已漂移');
+      const editor = editors[0];
+      editor.focus();
+      if ('setSelectionRange' in editor) editor.setSelectionRange(editor.value.length, editor.value.length);
+      else {
+        const range = document.createRange(); range.selectNodeContents(editor); range.collapse(false);
+        const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+      }
+      return { selected_end: true };
+    `, prompt));
+    const backspace = { key: "Backspace", code: "Backspace", windowsVirtualKeyCode: 8 };
+    await client.send("Input.dispatchKeyEvent", { type: "keyDown", ...backspace });
+    await client.send("Input.dispatchKeyEvent", { type: "keyUp", ...backspace });
+    const shortened = await readWorkBuddyPromptState(client);
+    if (shortened.editor_count !== 1 || typeof shortened.content !== "string"
+        || !prompt.startsWith(shortened.content)) throw new Error("WorkBuddy 自有草稿后缀回读失败");
+    const suffix = prompt.slice(shortened.content.length);
+    if (suffix.length < 1 || suffix.length > 4) throw new Error("WorkBuddy 自有草稿后缀长度异常");
+    await client.send("Input.insertText", { text: suffix });
+    return waitFor(() => readWorkBuddyPromptState(client), ready, timeoutMs,
+      "等待 WorkBuddy Prompt 真实输入和发送控件启用");
+  }
+
 }
 
 export async function dispatchWorkBuddyPrompt(client, timeoutMs = 30_000) {
