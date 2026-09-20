@@ -23,6 +23,8 @@
 
 流程登记提交：`1d61be3`。在下一轮任务派发前，控制会话应以该提交作为 `control_base_sha`；本轮旧平台 worktree 不自动升级为新任务分支。
 
+旧平台分支审计已完成：它们共同基于旧公共 SHA `ddba8d6`，直接 merge 到当前控制 HEAD 会在平台任务卡/交接文档以及 WorkBuddy cleanup 依赖上冲突；旧 WorkBuddy 分支还未包含控制侧 `7c01fd0` 修复。后续任务统一从控制 HEAD 新建 worktree，旧分支仅保留用于 source→control 对账。
+
 | 时段 ID | 独占任务 | 允许范围 | 状态 |
 | --- | --- | --- | --- |
 | SLOT-MAC-20260919-01 | MAC-DOUBAOWORK-WEB | 一题 Web L1，一次发送/同 attempt 恢复 | SLOT_RELEASED；最新有效 UI observation 无 busy/stop/pending；候选 HTTP 服务仍有残留，不等于 cleanup 完成 |
