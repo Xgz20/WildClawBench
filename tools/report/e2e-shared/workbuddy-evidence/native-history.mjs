@@ -323,7 +323,11 @@ export function loadWorkBuddyRuntimeBinding({ value, sourceArtifact }) {
 }
 
 function metricObservation(rows, field, { unit, basis, status = "observed" }) {
-  const values = rows.map((row) => numeric(row?.[field]));
+  const values = rows.map((row) => {
+    const value = numeric(row?.[field]);
+    if (row?.[field] != null && value === null) throw new Error(`WORKBUDDY_RESOURCE_VALUE_INVALID: ${field}`);
+    return value;
+  });
   const known = values.filter((value) => value !== null);
   const total = rows.length;
   const knownSubtotal = stableSum(known);
@@ -410,7 +414,7 @@ function nativeToolOutcomes(messages) {
   return outcomes;
 }
 
-export function buildWorkBuddyResourceObservation(loaded, normalizedEvents = []) {
+export function buildWorkBuddyResourceObservation(loaded, normalizedEvents = [], { evidenceComplete = false } = {}) {
   const primaryRows = [loaded.request?.usage || {}];
   const linkedRows = linkedUsageRows(loaded.messages);
   const outcomes = nativeToolOutcomes(loaded.messages);
@@ -475,6 +479,10 @@ export function buildWorkBuddyResourceObservation(loaded, normalizedEvents = [])
     schema_version: WORKBUDDY_HISTORY_OBSERVATION_SCHEMA,
     adapter: { id: WORKBUDDY_HISTORY_ADAPTER_ID, version: WORKBUDDY_HISTORY_ADAPTER_VERSION },
     scope: "bound-conversation-request",
+    evidence_coverage: {
+      status: evidenceComplete ? "complete" : "partial",
+      basis: "All messages in the exact bound request were captured and normalized; metric availability is independent",
+    },
     primary_request: primary,
     linked_tool_usage: linked,
     cache_semantics: {
@@ -599,7 +607,7 @@ export function normalizeWorkBuddyConversation(loaded, { identity, redacted = fa
   if (promptText === null) missing.push("user_prompt");
   if (finalResponse === null) missing.push("final_response");
   const uniqueMissing = [...new Set(missing)].sort();
-  const resources = buildWorkBuddyResourceObservation(loaded, events);
+  const resources = buildWorkBuddyResourceObservation(loaded, events, { evidenceComplete: uniqueMissing.length === 0 });
   return {
     schema_version: WORKBUDDY_HISTORY_OBSERVATION_SCHEMA,
     adapter: { id: WORKBUDDY_HISTORY_ADAPTER_ID, version: WORKBUDDY_HISTORY_ADAPTER_VERSION },
@@ -882,9 +890,9 @@ export function toGeneralResourceMetrics({
     [`${sourceArtifact.path}#/resources/primary_request/${field}`],
   ]));
   const statuses = fields.map((field) => primary[field].status);
-  const collectionStatus = statuses.every((status) => status === "observed")
-    ? "complete"
-    : statuses.every((status) => status === "unavailable") ? "unavailable" : "partial";
+  const collectionStatus = observation.evidence_coverage?.status === "complete"
+    && statuses.every((status) => ["observed", "inferred", "unavailable"].includes(status))
+    ? "complete" : "partial";
   return {
     schema_id: GENERAL_RESOURCE_SCHEMA,
     schema_version: 1,

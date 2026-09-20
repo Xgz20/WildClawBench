@@ -46,8 +46,8 @@ function requestPrompt(request) {
 
 function toolName(item) {
   return String(
-    item?.title
-      || item?._meta?.["codebuddy.ai/toolName"]
+    item?._meta?.["codebuddy.ai/toolName"]
+      || item?.title
       || item?.toolName
       || "tool",
   );
@@ -79,7 +79,9 @@ function runtimeMessages(snapshot) {
     messageIds.push(id);
     messages.push({
       id,
-      metadata: { id, role, isComplete: true, ...metadata },
+      metadata: { id, role, isComplete: ["complete", "completed", "success", "succeeded"].includes(
+        role === "user" ? request.userMessage?.state : request.assistantMessage?.state
+      ), ...metadata },
       envelope: { id, role, message: { role, content }, extra },
       message: { role, content },
       extra,
@@ -93,13 +95,16 @@ function runtimeMessages(snapshot) {
   const assistantContent = Array.isArray(request.assistantMessage?.content)
     ? request.assistantMessage.content : [];
   let toolIndex = 0;
-  const assistantText = [];
+  let textIndex = 0;
   for (const item of assistantContent) {
     if (item?.type === "text") {
-      assistantText.push(item);
+      add(`assistant-text-${textIndex++}`, "assistant", [item]);
       continue;
     }
-    if (item?.type !== "tool" && item?.sessionUpdate !== "tool_call_update") continue;
+    if (item?.type !== "tool" && item?.sessionUpdate !== "tool_call_update") {
+      add(`unsupported-${textIndex++}`, "assistant", [item]);
+      continue;
+    }
     const callId = assertId(item.toolCallId, "runtime toolCallId");
     const name = toolName(item);
     add(`assistant-tool-${toolIndex}`, "assistant", [{
@@ -114,14 +119,14 @@ function runtimeMessages(snapshot) {
       toolName: name,
       result: {
         status: item.status || "unknown",
-        success: item.status === "completed" || item.status === "success",
+        success: ["completed", "success"].includes(item.status) ? true
+          : ["failed", "error", "cancelled"].includes(item.status) ? false : null,
         rawOutput: toolResult(item),
         toolInfo: [],
       },
     }]);
     toolIndex += 1;
   }
-  if (assistantText.length > 0) add("assistant-text", "assistant", assistantText);
   if (messages.length < 2) throw new Error("runtime request 缺少 user/assistant 消息");
   return { messages, messageIds };
 }

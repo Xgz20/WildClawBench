@@ -129,7 +129,7 @@ test("WorkBuddy history normalizes transcript, calls, resources, and coverage", 
       },
       collectedAt: "2026-09-19T08:01:00.000Z",
     });
-    assert.equal(resourceMetrics.collection.status, "partial");
+    assert.equal(resourceMetrics.collection.status, "complete");
     assert.equal(resourceMetrics.metrics.usage.input_tokens.value, 120);
     assert.equal(resourceMetrics.metrics.usage.cache_read_input_tokens.value, null);
     assert.equal(resourceMetrics.metrics.usage.cache_read_input_tokens.status, "unavailable");
@@ -191,7 +191,7 @@ test("WorkBuddy collector emits CB-B trace-index v2 with multiple raw and bindin
     assert.equal(result.trace_index.binding_evidence.length, 1);
     assert.equal(result.trace_index.transcript.event_count, normalized.events.length);
     assert.equal(result.trace_index.normalization.native_event_count, normalized.events.length);
-    assert.equal(result.resource_metrics.collection.status, "partial");
+    assert.equal(result.resource_metrics.collection.status, "complete");
     for (const relativePath of [
       "trace-index.json",
       "transcript.jsonl",

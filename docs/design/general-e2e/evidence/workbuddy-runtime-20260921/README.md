@@ -18,3 +18,8 @@
 运行时解析和 cleanup/readiness 迁至版本化 `workbuddy-evidence@0.1.0`，execute 0.9.0 / collect 0.6.0 的 ZIP 各自 vendoring；脱仓加载覆盖 collector 与 WorkBuddy finalizer。状态平台沿用 manifest 的 `macos-x86-64`，起止时间取原生 request.timestamp/completedAt。
 
 canary-03 使用留存 raw snapshot 重新规范化得到 `execution-state-normalized.json`（修正平台元数据和原生完成时间，未改 Prompt、会话或执行产物），原始状态保留。真实 cleanup/finalizer 与 verify-only 均 PASS，候选 SHA `f52bea2db84f04565cb85d62dc3f078b079d762dffa15a29e0f2b296ff7da974`。该回执仍为 partial，因为当时公共评分门禁把未知资源字段当作证据不完整；该事实没有被覆盖或升级。后续固定数据集新 attempt 验证新 collector 的最终回复归档和资源准入。
+
+
+## 资源可观测性与评分准入
+
+`workbuddy-evidence@0.2.0` 区分原生请求采集完整性与指标可观测性：完整绑定和完整轨迹允许 collect completed，缺失 token/cache 仍为 null/unavailable；部分轨迹、未支持块或非法数值不放行。runtime 保留文本和工具块的原始先后顺序；工具别名优先原生 toolName。新增测试覆盖完整证据与空 usage、非法数值、文本/工具顺序、未知块失败关闭；47/47 WorkBuddy 焦点测试，24/24 布局与独立打包回归。旧 canary partial 回执保留，后续正式数据集新批验证。

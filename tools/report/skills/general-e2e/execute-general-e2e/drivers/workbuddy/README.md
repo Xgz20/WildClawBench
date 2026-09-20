@@ -62,3 +62,6 @@ node collect-general-e2e/drivers/workbuddy/finalize.mjs \
 入口执行真实 macOS Workspace 精确进程清理、默认 5 秒零残留窗口、5 秒文件静默、完整候选冻结和回执哈希校验。禁止覆盖正式 evidence/receipt。当前仍在接入验收，资源覆盖与评分准入、固定数据集完整闭环尚需完成；不能把 canary PASS 解释为全部通用评测生产可用。
 
 `workbuddy-evidence` 是 execute/collect 的共享发行组件；两个 Skill ZIP 各自包含所需依赖，可在无仓库环境加载，控制器不再依赖 `eval_general_e2e` 的仓库路径。
+
+
+资源 `collection.status` 表示绑定原生请求的证据是否完整，逐字段 `metrics.*.status/coverage` 表示数值是否可观测。完整请求的空 usage 不阻断内容评分：token/cache 仍为 `null/unavailable`，工具和 request 数仍保留真实观测。截断轨迹、未知块、部分已知数据或非法数值仍阻断或降级，不能把采集缺失写成完整。

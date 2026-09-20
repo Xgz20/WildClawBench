@@ -15,7 +15,7 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 python -m eval_general_e2e skills --name collect-general-e2e --json
 ```
 
-当前 `0.6.0/operational` 支持 AstronStudio macOS 的完整采集阶段：精确归档原生 turn、生成标准 transcript 和资源指标、收口任务进程、冻结终态候选，并生成正式执行回执。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+当前 `0.6.1/operational` 支持 AstronStudio macOS 的完整采集阶段：精确归档原生 turn、生成标准 transcript 和资源指标、收口任务进程、冻结终态候选，并生成正式执行回执。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
 
 新增通用 [CB-B 收口接口](references/general-finalization.md) 接受 CB-A 状态与 trace-index v2，保留多个原始文件和 nullable 原生 ID。必须提供真实平台进程清理 hook；WorkBuddy 已有运行时采集和真实 macOS cleanup/finalizer canary，入口见 [WorkBuddy 收口入口](drivers/workbuddy/finalize.mjs)；完整评分准入仍待验。QwenWork 仍需原生采集与真机收口验收。
 

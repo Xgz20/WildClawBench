@@ -231,7 +231,7 @@ test("WorkBuddy collector 输出通过通用 finalizer 输入与正式收口", a
       processWaitMilliseconds: 50,
     }, { processCleanup: fixtureHook("workbuddy") });
     assert.equal(result.status, "PASS");
-    assert.equal(result.receipt_status, "partial");
+    assert.equal(result.receipt_status, "completed");
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }

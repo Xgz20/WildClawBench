@@ -638,7 +638,7 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
         detached.mkdir()
         installed = BUILD._safe_extract(self.archive_path("collect-general-e2e"), detached / "installed")
         bundled = json.loads((installed / "bundled-components.json").read_text())
-        self.assertEqual(bundled["skill_version"], "0.6.0")
+        self.assertEqual(bundled["skill_version"], "0.6.1")
         component = next(item for item in bundled["components"] if item["name"] == "general-contracts")
         self.assertEqual(component["version"], "1.2.0")
         for relative in ("collection_validation.py", "schemas/trace-index-v2.schema.json"):

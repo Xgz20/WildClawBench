@@ -5,7 +5,7 @@ import {
   buildWorkBuddyRuntimeSnapshot,
   loadWorkBuddyRuntimeConversation,
 } from "../../eval_general_e2e/adapters/workbuddy/runtime-api.mjs";
-import { normalizeWorkBuddyConversation } from "../../eval_general_e2e/adapters/workbuddy/native-history.mjs";
+import { normalizeWorkBuddyConversation, toGeneralResourceMetrics } from "../../eval_general_e2e/adapters/workbuddy/native-history.mjs";
 import { buildWorkBuddyExecutionState } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/state.mjs";
 
 const identity = {
@@ -147,4 +147,28 @@ test("WorkBuddy 5.5.6 active/idle conversation with completed request is termina
   assert.equal(state.phase, "COMPLETED");
   assert.equal(state.execution.started_at, new Date(snapshot.request.timestamp).toISOString());
   assert.equal(state.execution.finished_at, new Date(snapshot.request.completedAt).toISOString());
+});
+
+
+test("WorkBuddy captures complete evidence while unknown tokens remain unavailable", () => {
+  const snapshot = fixture();
+  const normalized = normalizeWorkBuddyConversation(loadWorkBuddyRuntimeConversation({ snapshot }), { identity });
+  const metrics = toGeneralResourceMetrics({ identity, observation: normalized.resources,
+    sourceArtifact: { path: "raw/runtime.json", sha256: "a".repeat(64), size: 100 } });
+  assert.equal(metrics.collection.status, "complete");
+  assert.equal(metrics.metrics.usage.total_tokens.value, null);
+  assert.equal(metrics.metrics.usage.total_tokens.status, "unavailable");
+  snapshot.request.usage.totalTokens = "invalid";
+  assert.throws(() => normalizeWorkBuddyConversation(loadWorkBuddyRuntimeConversation({ snapshot }), { identity }), /RESOURCE_VALUE_INVALID/u);
+});
+
+test("WorkBuddy runtime preserves text and tool order and flags unknown blocks", () => {
+  const snapshot = fixture();
+  snapshot.request.assistantMessage.content.unshift({ type: "text", text: "先检查" });
+  const normalized = normalizeWorkBuddyConversation(loadWorkBuddyRuntimeConversation({ snapshot }), { identity });
+  assert.deepEqual(normalized.events.map((x) => x.type), ["user_message", "assistant_message", "tool_call", "tool_result", "assistant_message"]);
+  snapshot.request.assistantMessage.content.push({ type: "unknown-native-block" });
+  const incomplete = normalizeWorkBuddyConversation(loadWorkBuddyRuntimeConversation({ snapshot }), { identity });
+  assert.equal(incomplete.completeness.status, "partial");
+  assert.equal(incomplete.resources.evidence_coverage.status, "partial");
 });
