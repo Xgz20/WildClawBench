@@ -66,6 +66,6 @@ git merge --no-ff --no-commit <platform-branch>
 
 ## 当前迁移状态
 
-本流程从控制基线 `b07495007f46e977ca6c183cdf416cfa1c87c031` 开始生效，流程文档提交 `1d61be3` 后，下一轮派发基线为 `1d61be3`。现有 WorkBuddy、QwenWork、DoubaoWork worktree 都以旧公共基线 `ddba8d645da18af75d04fad4a7a47ec1aaa1c161` 为共同祖先；它们的历史接收不能证明已完整同步。后续若需继续使用这些分支，必须先完成 reconciliation；新任务直接从 `1d61be3` 或其后的控制 HEAD 创建。
+本流程从控制基线 `b07495007f46e977ca6c183cdf416cfa1c87c031` 开始生效；流程文档和旧分支审计提交完成后，下一轮派发必须读取并冻结控制分支当时的实际 HEAD，不能复用文档中的旧短 SHA。现有 WorkBuddy、QwenWork、DoubaoWork worktree 都以旧公共基线 `ddba8d645da18af75d04fad4a7a47ec1aaa1c161` 为共同祖先；它们的历史接收不能证明已完整同步。后续若需继续使用这些分支，必须先完成 reconciliation；新任务直接从冻结的控制 HEAD 创建。
 
 当前旧分支审计结论：三个旧平台分支直接合入控制 HEAD 的预检分别在任务卡、交接文档或 WorkBuddy cleanup 文件上产生冲突；WorkBuddy 平台分支还缺控制侧 `7c01fd0` 的执行包清理依赖闭包修复。旧分支保留为审计材料，不作为下一项任务来源，也不直接合入主工作分支。

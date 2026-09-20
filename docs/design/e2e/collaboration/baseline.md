@@ -4,7 +4,7 @@
 
 | 字段 | 当前记录 |
 | --- | --- |
-| 控制集成分支 | `feat/e2e-harness-contract` / 当前阶段基线 `1d61be3`（完整 SHA 见控制推进记录） |
+| 控制集成分支 | `feat/e2e-harness-contract` / 下一轮派发前冻结并登记当前 HEAD |
 | 主工作分支 / 同步仓库 | `feature/astroncode-eval` / `https://github.com/Xgz20/WildClawBench.git` |
 | 已核验 remote | macOS 为 `github`，fetch/push URL 一致；Windows 接收方核对实际 URL，不假定 `origin` |
 | 推荐开发源码基线 | `2023b4d5d1d703c81ff8ed15e0d5ada29cd0dca4` |

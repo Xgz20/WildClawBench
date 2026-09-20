@@ -21,7 +21,7 @@
 
 后续代码协作统一采用[控制分支派发与回收合并流程](integration-workflow.md)：平台 worktree 从控制分支当前 HEAD 派发，完成后先回收到控制分支并完成组合回归；本轮所有并行任务接收后，控制 HEAD 才成为下一轮派发基线。主工作分支不直接接收平台分支，旧公共基线创建的现有 worktree 需先完成 reconciliation 才能继续复用。
 
-流程登记提交：`1d61be3`。在下一轮任务派发前，控制会话应以该提交作为 `control_base_sha`；本轮旧平台 worktree 不自动升级为新任务分支。
+流程登记提交：`1d61be3`；旧平台分支审计提交：`c802ff4`。下一轮任务派发前，控制会话必须重新读取控制分支实际 HEAD，将其写入 `control_base_sha`；本轮旧平台 worktree 不自动升级为新任务分支。
 
 旧平台分支审计已完成：它们共同基于旧公共 SHA `ddba8d6`，直接 merge 到当前控制 HEAD 会在平台任务卡/交接文档以及 WorkBuddy cleanup 依赖上冲突；旧 WorkBuddy 分支还未包含控制侧 `7c01fd0` 修复。后续任务统一从控制 HEAD 新建 worktree，旧分支仅保留用于 source→control 对账。
 
