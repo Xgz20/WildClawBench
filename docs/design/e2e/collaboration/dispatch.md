@@ -1,6 +1,8 @@
-# 首轮任务派发记录
+# 首轮任务派发记录（历史）
 
 维护方：COMMON。派发日期：2026-09-19，Asia/Shanghai。这里保存归属与启动核验；开发进展和接收结果由各自任务卡维护。
+
+本文件只记录首轮派发，不作为后续任务的创建模板。后续任务统一遵循[控制分支派发与回收合并流程](integration-workflow.md)，从控制分支当前 HEAD 创建新的 worktree；已回收的旧平台 worktree 不直接承接下一项需求。
 
 三个 macOS worktree 均从 `03c38f280a64ad9bc9308c768f0f5795050355cc` 创建；随后采用包含 [COMMON-001](handoffs/COMMON-001.md) 的已发布台账与新公共基线。
 
