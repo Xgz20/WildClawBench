@@ -50,7 +50,7 @@
       "name": "execute-general-e2e",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/execute-general-e2e",
-      "components": ["desktop-runtime", "desktop-app-discovery"]
+      "components": ["desktop-runtime", "desktop-app-discovery", "task-process-cleanup"]
     },
     {
       "name": "collect-general-e2e",

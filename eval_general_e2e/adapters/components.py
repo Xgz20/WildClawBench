@@ -33,6 +33,13 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         entrypoints=("process.mjs",),
     ),
     SharedComponentSpec(
+        name="task-process-cleanup",
+        version="0.1.0",
+        source_root="tools/report/e2e-shared/task-process-cleanup",
+        vendor_root="vendor/e2e-shared/task-process-cleanup",
+        entrypoints=("cleanup-evidence.mjs", "macos-task-processes.mjs"),
+    ),
+    SharedComponentSpec(
         name="desktop-app-discovery",
         version="1.2.0",
         source_root="tools/report/e2e-shared/desktop-app-discovery",

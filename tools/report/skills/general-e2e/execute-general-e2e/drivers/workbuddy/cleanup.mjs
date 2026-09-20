@@ -1,11 +1,9 @@
-import {
-  assertCleanupEvidence,
-} from "../../../collect-general-e2e/scripts/finalize_general_execution.mjs";
+import { assertCleanupEvidence } from "../../vendor/e2e-shared/task-process-cleanup/cleanup-evidence.mjs";
 import {
   selectDarwinTaskProcesses,
   snapshotDarwinTaskProcesses,
   terminateDarwinTaskProcesses,
-} from "../../../collect-general-e2e/scripts/lib/macos-task-processes.mjs";
+} from "../../vendor/e2e-shared/task-process-cleanup/macos-task-processes.mjs";
 
 export const WORKBUDDY_CLEANUP_HOOK_ID = "workbuddy-macos-task-processes";
 export const WORKBUDDY_CLEANUP_HOOK_VERSION = "0.1.0";
