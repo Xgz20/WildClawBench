@@ -156,6 +156,19 @@ Dockerfile 重建并重新分发该 tag。
 
 ## Quick Start
 
+### QwenWorkCN 1.0.6 真机前置 metadata 核验
+
+在拿到本轮指定的 QwenWorkCN 原始日志根后，先运行只读 preflight：
+
+```bash
+python3 tools/qwenwork_metadata_preflight.py /绝对/原始日志根
+```
+
+输出会给出日志中显式观测到的 `sessionId`、绝对 `cwd`，以及 segment 的
+`workspace`/`session` 绑定 `known`、`total`、`missing`、`mismatched`。入口不启动
+客户端、不申请 slot、不操作历史 canary；不会从目录名或旁路日志推断，`usage` 与
+`terminal` 保持 `null`。没有真机原始日志时应保留 `blocked`，不能把未知计为零。
+
 ### Install Docker
 
 <details>
