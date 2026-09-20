@@ -4,6 +4,7 @@
   "entrypoint": "eval_general_e2e/adapters/workbuddy/components.mjs",
   "components": {
     "desktop-app-discovery": "1.2.0",
-    "general-contracts": "1.2.0"
+    "general-contracts": "1.2.0",
+    "workbuddy-evidence": "0.1.0"
   }
 }

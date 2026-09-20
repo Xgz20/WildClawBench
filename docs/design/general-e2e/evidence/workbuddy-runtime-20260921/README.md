@@ -11,3 +11,10 @@
 本证据只证明运行时单题执行与采集，尚不证明正式 cleanup/finalizer、原数据集规则/语义评分、串行批量或仓库外发行。下一项是补齐正式收口入口和独立 Skill 依赖。
 
 本地原件与 SHA 见 [evidence-index.json](evidence-index.json)。调试文件位于 `/Users/gzx/debug-workspace/e2e-evaluate/workbuddy-macos-general-e2e/`，不进入生产 report-workspace。
+
+
+## 正式收口入口与独立发行
+
+运行时解析和 cleanup/readiness 迁至版本化 `workbuddy-evidence@0.1.0`，execute 0.9.0 / collect 0.6.0 的 ZIP 各自 vendoring；脱仓加载覆盖 collector 与 WorkBuddy finalizer。状态平台沿用 manifest 的 `macos-x86-64`，起止时间取原生 request.timestamp/completedAt。
+
+canary-03 使用留存 raw snapshot 重新规范化得到 `execution-state-normalized.json`（修正平台元数据和原生完成时间，未改 Prompt、会话或执行产物），原始状态保留。真实 cleanup/finalizer 与 verify-only 均 PASS，候选 SHA `f52bea2db84f04565cb85d62dc3f078b079d762dffa15a29e0f2b296ff7da974`。该回执仍为 partial，因为当时公共评分门禁把未知资源字段当作证据不完整；该事实没有被覆盖或升级。后续固定数据集新 attempt 验证新 collector 的最终回复归档和资源准入。

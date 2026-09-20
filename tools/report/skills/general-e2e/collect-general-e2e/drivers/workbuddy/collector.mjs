@@ -20,7 +20,7 @@ import {
   loadWorkBuddyRuntimeBinding,
   loadWorkBuddyConversation,
   normalizeWorkBuddyConversation,
-} from "../../../../../../../eval_general_e2e/adapters/workbuddy/native-history.mjs";
+} from "../../vendor/e2e-shared/workbuddy-evidence/native-history.mjs";
 
 const JOURNAL_SCHEMA = "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1";
 const STATE_SCHEMA = "wildclawbench.general-e2e-execution-state/v1";
@@ -175,7 +175,7 @@ async function assertFormalState(journal, state, unitRoot) {
   if (!isWithin(unitRoot, taskRoot) || !isWithin(unitRoot, candidateWorkspace)) {
     throw new Error("WORKBUDDY_COLLECTOR_STATE_PATH_OUTSIDE_UNIT");
   }
-  if (state.driver?.harness !== "workbuddy" || state.driver?.platform !== "macos") {
+  if (state.driver?.harness !== "workbuddy" || !/^macos(?:-[a-z0-9-]+)?$/u.test(state.driver?.platform || "")) {
     throw new Error("WORKBUDDY_COLLECTOR_DRIVER_MISMATCH");
   }
   if (state.session?.verified !== true || state.session?.thread_id !== null
@@ -315,7 +315,21 @@ export async function collectWorkBuddyEvidence(options) {
   const stage = await mkdtemp(join(dirname(outputRoot), ".workbuddy-collector-stage-"));
   try {
     await mkdir(join(stage, "execution"), { recursive: true });
-    await writeFile(join(stage, "execution", "automation-state.json"), stateSource.bytes, { flag: "wx", mode: 0o600 });
+    const responseBytes = Buffer.from(normalized.final_response, "utf8");
+    await writeFile(join(stage, "final-response.md"), responseBytes, { flag: "wx", mode: 0o600 });
+    const collectedState = {
+      ...state,
+      extensions: {
+        ...state.extensions,
+        evidence: {
+          ...state.extensions?.evidence,
+          final_response_path: relative(unitRoot, join(outputRoot, "final-response.md")).split(sep).join("/"),
+          final_response_sha256: sha256(responseBytes),
+        },
+      },
+    };
+    const collectedStateBytes = jsonBytes(collectedState);
+    await writeFile(join(stage, "execution", "automation-state.json"), collectedStateBytes, { flag: "wx", mode: 0o600 });
     const evidence = await collectWorkBuddyGeneralEvidence({
       identity: state.identity,
       loaded,
@@ -326,7 +340,7 @@ export async function collectWorkBuddyEvidence(options) {
       writeResourceMetrics: false,
       collectedAt: options.collectedAt || new Date().toISOString(),
     });
-    const resource = rebaseResourceMetrics(evidence.resource_metrics, stateSource, evidence);
+    const resource = rebaseResourceMetrics(evidence.resource_metrics, { bytes: collectedStateBytes }, evidence);
     await writeFile(join(stage, "resource-metrics.json"), jsonBytes(resource), { flag: "wx", mode: 0o600 });
     await rename(stage, outputRoot);
   } catch (error) {

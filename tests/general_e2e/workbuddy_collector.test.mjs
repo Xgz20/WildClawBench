@@ -172,7 +172,10 @@ test("WorkBuddy collector 生成可交给通用 finalizer 的 CB-B 输入", asyn
     assert.equal(resource.collection.sources[0].path, "execution/automation-state.json");
     assert.equal(resource.collection.sources[1].path, "trace/trace-index.json");
     assert.ok(resource.collection.metric_sources.total_tokens[0].startsWith("trace/"));
-    assert.equal(await readFile(result.state_file, "utf8"), await readFile(fixture.statePath, "utf8"));
+    const collectedState = JSON.parse(await readFile(result.state_file, "utf8"));
+    const reply = await readFile(join(fixture.root, collectedState.extensions.evidence.final_response_path));
+    assert.equal(sha256(reply), collectedState.extensions.evidence.final_response_sha256);
+    assert.ok(reply.length > 0);
     await assert.rejects(() => collectWorkBuddyEvidence({
       unitRoot: fixture.root,
       journalFile: fixture.journalPath,
@@ -219,7 +222,7 @@ test("WorkBuddy collector 输出通过通用 finalizer 输入与正式收口", a
     });
     const result = await finalizeGeneralExecution({
       unitRoot: fixture.root,
-      stateFile: fixture.statePath,
+      stateFile: collected.state_file,
       traceIndex: collected.trace_index,
       resourceMetrics: collected.resource_metrics,
       pythonExecutable: process.env.PYTHON || "python3",

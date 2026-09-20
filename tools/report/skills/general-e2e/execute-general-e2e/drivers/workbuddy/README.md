@@ -1,4 +1,4 @@
-# WorkBuddy macOS General 离线预检
+# WorkBuddy macOS General 执行与采集
 
 在真实新时段开始前，从脱仓后的 `general-e2e` Skill 根目录运行：
 
@@ -39,3 +39,26 @@ Prompt digest、一次发送、原生 `conversationId`/`requestId`/`cwd` 和每�
 作为通用 `finalize_general_execution.mjs` 的输入。正式收口仍必须由平台真实 cleanup hook
 完成精确 Workspace 进程清理、静默窗口和不可变 verify-only 校验。未知的 token、credit、
 重试、终端或耗时字段继续保持 `null`/`unavailable`/`unverified`。
+
+
+## runtime API 与正式收口
+
+新版客户端支持 `window.wb.conversations.get(id).requestEntries()` 时，执行器按精确 cwd、会话、request、Prompt SHA 绑定并归档原始运行时快照；collector 读取该快照，无需 `--history-root`。旧 SQLite/history 路径保留。运行时版本只作为元数据，未见过的版本仍按应用身份与实际能力验证。
+
+collector 输出目录中的 `execution/automation-state.json` 带有最终回复的路径和哈希；正式收口须使用这个输出状态，而非执行器的原始状态：
+
+```bash
+node collect-general-e2e/drivers/workbuddy/finalize.mjs \
+  --unit-root /absolute/unit-root \
+  --state-file /absolute/collection/execution/automation-state.json \
+  --trace-index /absolute/collection/trace/trace-index.json \
+  --resource-metrics /absolute/collection/resource-metrics.json \
+  --python /absolute/python3
+
+node collect-general-e2e/drivers/workbuddy/finalize.mjs \
+  --verify-only --unit-root /absolute/unit-root --task-id <完整任务ID>
+```
+
+入口执行真实 macOS Workspace 精确进程清理、默认 5 秒零残留窗口、5 秒文件静默、完整候选冻结和回执哈希校验。禁止覆盖正式 evidence/receipt。当前仍在接入验收，资源覆盖与评分准入、固定数据集完整闭环尚需完成；不能把 canary PASS 解释为全部通用评测生产可用。
+
+`workbuddy-evidence` 是 execute/collect 的共享发行组件；两个 Skill ZIP 各自包含所需依赖，可在无仓库环境加载，控制器不再依赖 `eval_general_e2e` 的仓库路径。

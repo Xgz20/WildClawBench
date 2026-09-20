@@ -128,6 +128,8 @@ test("WorkBuddy 5.5.6 active/idle conversation with completed request is termina
     },
     history: {
       ...normalized,
+      request: snapshot.request,
+      conversation: snapshot.conversation,
       binding: {
         ...normalized.binding,
         source_kind: "workbuddy-runtime-api",
@@ -143,4 +145,6 @@ test("WorkBuddy 5.5.6 active/idle conversation with completed request is termina
     bindingEvidence: [{ path: "binding.json", sha256: "a".repeat(64), size: 1 }],
   });
   assert.equal(state.phase, "COMPLETED");
+  assert.equal(state.execution.started_at, new Date(snapshot.request.timestamp).toISOString());
+  assert.equal(state.execution.finished_at, new Date(snapshot.request.completedAt).toISOString());
 });

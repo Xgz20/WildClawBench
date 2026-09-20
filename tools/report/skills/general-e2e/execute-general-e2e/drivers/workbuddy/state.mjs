@@ -52,6 +52,7 @@ function durationSeconds(startedAt, finishedAt) {
 export function buildWorkBuddyExecutionState({
   identity,
   dataset,
+  platform = "macos",
   taskRoot,
   candidateWorkspace,
   prompt,
@@ -62,6 +63,7 @@ export function buildWorkBuddyExecutionState({
   cancellationConfirmed = false,
   humanAssistance = { mode: "automatic", operation_count: 0, semantic_intervention_count: 0 },
 }) {
+  if (!/^macos(?:-[a-z0-9-]+)?$/u.test(platform)) throw new Error("WORKBUDDY_PLATFORM_UNSUPPORTED");
   assertObject(identity, "identity");
   assertObject(dataset, "dataset");
   assertObject(prompt, "prompt");
@@ -136,10 +138,11 @@ export function buildWorkBuddyExecutionState({
     };
   }
 
-  const startedAt = isoFromEpoch(history.request?.startedAt)
+  const startedAt = isoFromEpoch(history.request?.startedAt ?? history.request?.timestamp)
     || isoTimestamp(prompt.sent_at);
   const finishedAt = new Set(["COMPLETED", "FAILED"]).has(phase)
-    ? isoTimestamp(history.conversation?.lastMessageAt)
+    ? (isoFromEpoch(history.request?.completedAt ?? history.request?.finishTimestamp)
+      || isoTimestamp(history.conversation?.lastMessageAt))
     : null;
   return {
     schema_version: WORKBUDDY_EXECUTION_STATE_SCHEMA,
@@ -147,7 +150,7 @@ export function buildWorkBuddyExecutionState({
       id: WORKBUDDY_DRIVER_ID,
       version: WORKBUDDY_DRIVER_VERSION,
       harness: "workbuddy",
-      platform: "macos",
+      platform,
     },
     identity,
     dataset,

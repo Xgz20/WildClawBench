@@ -82,6 +82,7 @@ class E2EBuildTests(unittest.TestCase):
                 "dataset-bundle-verifier",
                 "grading-core",
                 "general-contracts",
+                "workbuddy-evidence",
             },
         )
         self.assertEqual(self.manifest["skill_count"], 13)
@@ -441,6 +442,8 @@ process.stdout.write(JSON.stringify({{
             (root / "vendor/e2e-shared/handoff/workspace-integrity.mjs").is_file()
         )
         for entrypoint, marker in (
+            (root / "drivers/workbuddy/collector.mjs", "WorkBuddy"),
+            (root / "drivers/workbuddy/finalize.mjs", "WorkBuddy"),
             (archive, "轨迹归档器"),
             (query, "只读检索"),
             (resources, "资源指标采集器"),
@@ -635,7 +638,7 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
         detached.mkdir()
         installed = BUILD._safe_extract(self.archive_path("collect-general-e2e"), detached / "installed")
         bundled = json.loads((installed / "bundled-components.json").read_text())
-        self.assertEqual(bundled["skill_version"], "0.5.0")
+        self.assertEqual(bundled["skill_version"], "0.6.0")
         component = next(item for item in bundled["components"] if item["name"] == "general-contracts")
         self.assertEqual(component["version"], "1.2.0")
         for relative in ("collection_validation.py", "schemas/trace-index-v2.schema.json"):

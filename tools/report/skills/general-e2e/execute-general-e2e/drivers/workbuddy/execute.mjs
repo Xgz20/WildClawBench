@@ -245,6 +245,9 @@ export async function resolveExecutionConfig(parsed) {
   ) {
     throw new Error("unit root 不是 WorkBuddy General E2E execution 包");
   }
+  if (!/^macos(?:-[a-z0-9-]+)?$/u.test(manifest.unit.harness.platform || "")) {
+    throw new Error("WORKBUDDY_PLATFORM_UNSUPPORTED");
+  }
   const matches = (manifest.tasks || []).filter((item) => item.task_id === parsed.taskId);
   if (matches.length !== 1) throw new Error(`manifest 中任务数量异常：${matches.length}`);
   const task = matches[0];
@@ -494,6 +497,7 @@ async function buildAndPersistPublicState(config, journal, binding, bindingEvide
   const state = buildWorkBuddyExecutionState({
     identity: journal.identity,
     dataset: journal.dataset,
+    platform: config.manifest.unit.harness.platform,
     taskRoot: config.taskRoot,
     candidateWorkspace: config.candidateWorkspace,
     prompt: journal.prompt,
@@ -502,6 +506,12 @@ async function buildAndPersistPublicState(config, journal, binding, bindingEvide
     history: binding.history,
     bindingEvidence,
   });
+  state.extensions.client = {
+    version: journal.runtime.client_version,
+    model: journal.verified_ui?.model || null,
+    permission: journal.verified_ui?.permission || null,
+    reasoning_effort: null,
+  };
   await atomicWriteJson(config.stateFile, state, config.unitRoot);
   return state;
 }

@@ -15,16 +15,15 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 python -m eval_general_e2e skills --name collect-general-e2e --json
 ```
 
-当前 `0.5.0/operational` 支持 AstronStudio macOS 的完整采集阶段：精确归档原生 turn、生成标准 transcript 和资源指标、收口任务进程、冻结终态候选，并生成正式执行回执。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+当前 `0.6.0/operational` 支持 AstronStudio macOS 的完整采集阶段：精确归档原生 turn、生成标准 transcript 和资源指标、收口任务进程、冻结终态候选，并生成正式执行回执。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
 
-新增通用 [CB-B 收口接口](references/general-finalization.md) 接受 CB-A 状态与 trace-index v2，保留多个原始文件和 nullable 原生 ID。必须提供真实平台进程清理 hook；WorkBuddy/QwenWork 目前只有脱敏 fixture 验证，仍需原生采集与真机收口验收。
+新增通用 [CB-B 收口接口](references/general-finalization.md) 接受 CB-A 状态与 trace-index v2，保留多个原始文件和 nullable 原生 ID。必须提供真实平台进程清理 hook；WorkBuddy 已有运行时采集和真实 macOS cleanup/finalizer canary，入口见 [WorkBuddy 收口入口](drivers/workbuddy/finalize.mjs)；完整评分准入仍待验。QwenWork 仍需原生采集与真机收口验收。
 
 WorkBuddy macOS 的离线门禁还要求 `state.extensions.workbuddy.identity_mapping` 明确列出
 conversation/session/cwd 与 terminal 状态的原生来源。`session.verified=true`、`phase=COMPLETED`
 以及 `session.cwd == candidate_workspace` 只能在这些来源字段同时存在时把
 `native_terminal`/`native_cwd` 标为 `verified`；从 `state.session`、phase 或候选 Workspace
-反推来源会失败关闭并保持未验证。当前只完成了离线契约和反例测试，尚未完成真机 WorkBuddy
-collect/cleanup 收口，因此不能据此宣称该 Harness 已生产可用。
+反推来源会失败关闭并保持未验证。真机 WorkBuddy collect/cleanup 已完成 canary；完整数据集评分、报告与发行使用仍需分别验收。
 
 真实新时段前可在脱仓的 General Skill 根目录运行 WorkBuddy 只读预检；它不启动客户端、不申请
 slot、不读取历史 canary，只确认 `task-process-cleanup` 共享组件、WorkBuddy source gate 与 CB-B
@@ -101,7 +100,7 @@ Token 使用逐次原生 `last*` 增量求和并与累计 `total*` 对账；工�
 - 输出：冻结候选、原始/标准轨迹、资源指标、证据清单和执行回执。
 - 校验 attempt 身份、Prompt digest、原生会话绑定及候选完整性。
 - 未知指标保留 `null` 和来源状态；不能按零值填充。
-- 只支持 AstronStudio macOS 正式收口；其他平台必须明确失败，不得伪造进程清理成功。
+- 支持 AstronStudio 和 WorkBuddy macOS 平台收口；其他平台必须明确失败，不得伪造进程清理成功。
 - `completed` 必须提供 trace 和 resource metrics；非成功终态只归档实际存在的部分证据。
 - `timeout/cancelled` 必须已有执行阶段确认的取消结果，避免后台任务继续写入候选。
 - 不调度评分、不判定 criterion、不导入管理员侧回传包。

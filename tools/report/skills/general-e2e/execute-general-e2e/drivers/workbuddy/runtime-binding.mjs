@@ -4,7 +4,7 @@ import {
   WORKBUDDY_RUNTIME_API_SCHEMA,
   WORKBUDDY_RUNTIME_API_SOURCE_KIND,
   buildWorkBuddyRuntimeSnapshot,
-} from "../../../../../../../eval_general_e2e/adapters/workbuddy/runtime-api.mjs";
+} from "../../vendor/e2e-shared/workbuddy-evidence/runtime-api.mjs";
 
 const SAFE_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$/u;
 

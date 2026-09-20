@@ -37,7 +37,7 @@ export async function runWorkBuddyOfflinePreflight({ skillRoot = DEFAULT_SKILL_R
     readable(state, "WorkBuddy execution state adapter"),
   ]);
   const [cleanupSource, stateSource] = await Promise.all([
-    readFile(driverCleanup, "utf8").catch(() => ""),
+    readFile(resolve(root, "execute-general-e2e/vendor/e2e-shared/workbuddy-evidence/cleanup.mjs"), "utf8").catch(() => ""),
     readFile(state, "utf8").catch(() => ""),
   ]);
   const sourceGate = Object.entries(SOURCE_FIELDS).map(([field, value]) => ({
