@@ -52,7 +52,12 @@ function assertNativeSession(state, traceIndex) {
   const session = assertObject(state.session, "state.session");
   const traceSession = assertObject(traceIndex.session, "traceIndex.session");
   const mapping = assertObject(state.extensions?.workbuddy?.identity_mapping, "state.extensions.workbuddy.identity_mapping");
-  const requiredSources = {
+  const requiredSources = mapping.binding_source === "workbuddy-runtime-api" ? {
+    turn_id_source: "runtime.conversations.current.requestEntries().requests[].id",
+    session_id_source: "runtime.conversations.current.info.id",
+    cwd_source: "runtime.conversations.current.info.space.cwd",
+    terminal_status_source: "runtime.conversations.current.info.state/lifecycle + requestEntries().requests[].state + message.state",
+  } : {
     turn_id_source: "conversation-index.requests[].id",
     session_id_source: "codebuddy-sessions.vscdb.session:*.conversationId",
     cwd_source: "codebuddy-sessions.vscdb.session:*.cwd",

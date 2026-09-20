@@ -86,15 +86,25 @@ export function buildWorkBuddyExecutionState({
 
   const sessionKind = classify(sessionSnapshot.status);
   const requestKind = classify(history.binding?.request_state?.raw);
+  const runtimeTerminal = history.binding?.source_kind === "workbuddy-runtime-api"
+    ? history.runtime_terminal || null
+    : null;
+  const runtimeSuccess = !runtimeTerminal || (
+    runtimeTerminal.request_state === "success"
+    && runtimeTerminal.user_message_state === "success"
+    && runtimeTerminal.assistant_message_state === "success"
+    && !["failure", "interrupted", "cancelled", "unknown"].includes(runtimeTerminal.conversation_state)
+    && !["failure", "interrupted", "cancelled", "unknown"].includes(runtimeTerminal.conversation_lifecycle)
+  );
   let phase = "NEEDS_ATTENTION";
   let businessStatus = null;
   let error = null;
-  if (sessionKind === "success" && requestKind === "success" && history.completeness?.status === "complete") {
+  if (sessionKind === "success" && requestKind === "success" && history.completeness?.status === "complete" && runtimeSuccess) {
     phase = "COMPLETED";
     businessStatus = "completed";
   } else if (sessionKind === "running" && requestKind === "running") {
     phase = "RUNNING";
-  } else if (sessionKind === "failure" && requestKind === "failure") {
+  } else if (sessionKind === "failure" && requestKind === "failure" && runtimeSuccess) {
     phase = "FAILED";
     businessStatus = "candidate_error";
     error = {
@@ -176,10 +186,19 @@ export function buildWorkBuddyExecutionState({
       workbuddy: {
         identity_mapping: {
           thread_id: null,
-          turn_id_source: "conversation-index.requests[].id",
-          session_id_source: "codebuddy-sessions.vscdb.session:*.conversationId",
-          cwd_source: "codebuddy-sessions.vscdb.session:*.cwd",
-          terminal_status_source: "codebuddy-sessions.vscdb.session:*.status + conversation-index.requests[].state",
+          turn_id_source: history.binding?.source_kind === "workbuddy-runtime-api"
+            ? "runtime.conversations.current.requestEntries().requests[].id"
+            : "conversation-index.requests[].id",
+          session_id_source: history.binding?.source_kind === "workbuddy-runtime-api"
+            ? "runtime.conversations.current.info.id"
+            : "codebuddy-sessions.vscdb.session:*.conversationId",
+          cwd_source: history.binding?.source_kind === "workbuddy-runtime-api"
+            ? "runtime.conversations.current.info.space.cwd"
+            : "codebuddy-sessions.vscdb.session:*.cwd",
+        terminal_status_source: history.binding?.source_kind === "workbuddy-runtime-api"
+          ? "runtime.conversations.current.info.state/lifecycle + requestEntries().requests[].state + message.state"
+          : "codebuddy-sessions.vscdb.session:*.status + conversation-index.requests[].state",
+        binding_source: history.binding?.source_kind || "workbuddy-native-history",
         },
         session_status: sessionSnapshot.status || null,
         request_state: history.binding?.request_state?.raw || null,

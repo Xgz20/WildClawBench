@@ -1,5 +1,18 @@
 # MAC-WORKBUDDY-GENERAL：WorkBuddy macOS General
 
+## 当前串行迭代进度（2026-09-21，优先于下方历史记录）
+
+由控制任务直接在 `.agents/e2e-harness-contract` / `feat/e2e-harness-contract` 迭代，不再分派 worktree，也不需要桌面 slot。客户端版本只记录兼容性元数据，不设精确版本白名单。
+
+- [x] 5.5.6 runtime API 单题首次发送、终态绑定、恢复不重发和 collector；45/45 焦点回归，[真机证据](../../../general-e2e/evidence/workbuddy-runtime-20260921/README.md)。
+- [ ] 正式 cleanup/finalizer 与不可变回执，独立 Skill 发行依赖。
+- [ ] 固定 S1–S5 的文件/纯回复/轨迹规则、三类评分、回传和同源报告。
+- [ ] 持久化串行批量与恢复、适用故障验证和操作手册。
+
+当前未声明后台并发或无人值守；首个生产目标是值守单槽通用闭环。原始失败 attempt 保留，不重置。
+
+## 历史并行任务记录
+
 | 字段 | 当前值 |
 | --- | --- |
 | 唯一负责人 / 实际任务 ID | 独立开发任务 / `01a0b8d2-0ea9-7012-ac4f-c2bd69dc8b7b`；由 COMMON 控制任务派发 |

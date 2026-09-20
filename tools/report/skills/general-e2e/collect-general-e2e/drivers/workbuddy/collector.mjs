@@ -17,6 +17,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   collectWorkBuddyGeneralEvidence,
+  loadWorkBuddyRuntimeBinding,
   loadWorkBuddyConversation,
   normalizeWorkBuddyConversation,
 } from "../../../../../../../eval_general_e2e/adapters/workbuddy/native-history.mjs";
@@ -34,7 +35,7 @@ function usage() {
     --unit-root /absolute/unit-root \\
     --journal-file /absolute/unit-root/.general-e2e/execution/<task>/workbuddy/dispatch-journal.json \\
     --state-file /absolute/unit-root/.general-e2e/execution/<task>/workbuddy/execution-state.json \\
-    --history-root /absolute/WorkBuddyExtension/Data \\
+    --history-root /absolute/WorkBuddyExtension/Data (legacy history；runtime API 证据可省略) \\
     --output-root /absolute/unit-root/.general-e2e/collection/<attempt>
 
 只读取已终态的 WorkBuddy journal、execution state 和原生 history，输出 CB-B
@@ -134,7 +135,7 @@ function parseArgs(argv) {
     } else throw new Error(`未知选项：${argument}`);
   }
   if (!result.help) {
-    for (const field of ["unitRoot", "journalFile", "stateFile", "historyRoot", "outputRoot"]) {
+    for (const field of ["unitRoot", "journalFile", "stateFile", "outputRoot"]) {
       if (!result[field]) throw new Error(`缺少参数：${field}`);
     }
   }
@@ -197,12 +198,19 @@ async function assertFormalState(journal, state, unitRoot) {
     throw new Error("WORKBUDDY_COLLECTOR_BINDING_EVIDENCE_MISSING");
   }
   const mapping = state.extensions?.workbuddy?.identity_mapping;
-  for (const [field, expected] of Object.entries({
+  const runtimeSource = mapping?.binding_source === "workbuddy-runtime-api";
+  const expectedMapping = runtimeSource ? {
+    turn_id_source: "runtime.conversations.current.requestEntries().requests[].id",
+    session_id_source: "runtime.conversations.current.info.id",
+    cwd_source: "runtime.conversations.current.info.space.cwd",
+    terminal_status_source: "runtime.conversations.current.info.state/lifecycle + requestEntries().requests[].state + message.state",
+  } : {
     turn_id_source: "conversation-index.requests[].id",
     session_id_source: "codebuddy-sessions.vscdb.session:*.conversationId",
     cwd_source: "codebuddy-sessions.vscdb.session:*.cwd",
     terminal_status_source: "codebuddy-sessions.vscdb.session:*.status + conversation-index.requests[].state",
-  })) {
+  };
+  for (const [field, expected] of Object.entries(expectedMapping)) {
     if (mapping?.[field] !== expected) throw new Error(`WORKBUDDY_COLLECTOR_NATIVE_SOURCE_UNVERIFIED: ${field}`);
   }
 }
@@ -219,9 +227,17 @@ async function loadBindingSources(unitRoot, state) {
     if (source.sha256 !== item.sha256 || source.size !== item.size) {
       throw new Error(`WORKBUDDY_COLLECTOR_BINDING_DIGEST_MISMATCH: ${relativePath}`);
     }
+    let value = null;
+    try {
+      value = JSON.parse(source.bytes.toString("utf8"));
+    } catch {
+      // The digest check above remains authoritative; native binding evidence
+      // is opaque JSON to the legacy collector.
+    }
     return {
       source: { path: source.absolute, sha256: source.sha256, size: source.size },
       target: `bindings/${String(index + 1).padStart(2, "0")}-${basename(relativePath)}`,
+      value,
     };
   }));
 }
@@ -264,14 +280,26 @@ export async function collectWorkBuddyEvidence(options) {
   const journal = journalSource.value;
   const state = stateSource.value;
   await assertFormalState(journal, state, unitRoot);
-  const historyRoot = await realpath(resolve(requireString(options?.historyRoot, "historyRoot")));
   const bindingSources = await loadBindingSources(unitRoot, state);
-  const loaded = await loadWorkBuddyConversation({
-    dataRoot: historyRoot,
-    workspace: state.session.cwd,
-    conversationId: state.session.session_id,
-    requestId: state.session.turn_id,
-  });
+  const runtimeEvidence = bindingSources.find((item) => (
+    item.value?.source_kind === "workbuddy-runtime-api"
+      && item.value?.runtime_snapshot
+  ));
+  let loaded;
+  if (runtimeEvidence) {
+    loaded = loadWorkBuddyRuntimeBinding({
+      value: runtimeEvidence.value,
+      sourceArtifact: runtimeEvidence.source,
+    });
+  } else {
+    const historyRoot = await realpath(resolve(requireString(options?.historyRoot, "historyRoot")));
+    loaded = await loadWorkBuddyConversation({
+      dataRoot: historyRoot,
+      workspace: state.session.cwd,
+      conversationId: state.session.session_id,
+      requestId: state.session.turn_id,
+    });
+  }
   if (resolve(loaded.workspace) !== resolve(state.session.cwd)
       || loaded.conversation_id !== state.session.session_id
       || loaded.request_id !== state.session.turn_id) {

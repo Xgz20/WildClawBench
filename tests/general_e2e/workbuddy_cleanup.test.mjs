@@ -228,3 +228,23 @@ test("WorkBuddy cleanup evidence rejects wrong workspace and impossible quiet wi
     /TASK_PROCESS_CLEANUP_EVIDENCE_INVALID/u,
   );
 });
+
+
+test("WorkBuddy runtime mapping passes readiness and rejects derived source fields", () => {
+  const fixture = collectorFixture();
+  const mapping = fixture.state.extensions.workbuddy.identity_mapping;
+  Object.assign(mapping, {
+    binding_source: "workbuddy-runtime-api",
+    turn_id_source: "runtime.conversations.current.requestEntries().requests[].id",
+    session_id_source: "runtime.conversations.current.info.id",
+    cwd_source: "runtime.conversations.current.info.space.cwd",
+    terminal_status_source: "runtime.conversations.current.info.state/lifecycle + requestEntries().requests[].state + message.state",
+  });
+  const cleanupHook = createWorkBuddyCleanupHook();
+  assert.equal(assertWorkBuddyCollectorReadiness({ ...fixture, cleanupHook }).status, "READY_FOR_GENERAL_FINALIZER");
+  for (const field of ["turn_id_source", "session_id_source", "cwd_source", "terminal_status_source"]) {
+    const invalid = structuredClone(fixture);
+    invalid.state.extensions.workbuddy.identity_mapping[field] = "state.session";
+    assert.throws(() => assertWorkBuddyCollectorReadiness({ ...invalid, cleanupHook }), /NATIVE_SOURCE_UNVERIFIED/u);
+  }
+});

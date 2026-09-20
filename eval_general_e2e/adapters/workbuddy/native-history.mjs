@@ -2,9 +2,13 @@ import { createHash } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
 import { lstat, mkdir, open, readFile, readdir, realpath, writeFile } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import {
+  WORKBUDDY_RUNTIME_API_SOURCE_KIND,
+  loadWorkBuddyRuntimeConversation,
+} from "./runtime-api.mjs";
 
 export const WORKBUDDY_HISTORY_ADAPTER_ID = "workbuddy-native-history";
-export const WORKBUDDY_HISTORY_ADAPTER_VERSION = "0.1.0";
+export const WORKBUDDY_HISTORY_ADAPTER_VERSION = "0.2.0";
 export const WORKBUDDY_HISTORY_OBSERVATION_SCHEMA =
   "wildclawbench.workbuddy-native-history-observation/v1";
 export const GENERAL_RESOURCE_SCHEMA =
@@ -289,6 +293,7 @@ export async function loadWorkBuddyConversation({
     });
   }
   return {
+    source_kind: "workbuddy-native-history",
     ...located,
     conversation_id: conversationId,
     request_id: requestId,
@@ -308,6 +313,13 @@ export async function loadWorkBuddyConversation({
       messages: messages.map((item) => item.artifact),
     },
   };
+}
+
+export function loadWorkBuddyRuntimeBinding({ value, sourceArtifact }) {
+  return loadWorkBuddyRuntimeConversation({
+    snapshot: value.runtime_snapshot || value,
+    sourceArtifact,
+  });
 }
 
 function metricObservation(rows, field, { unit, basis, status = "observed" }) {
@@ -610,7 +622,9 @@ export function normalizeWorkBuddyConversation(loaded, { identity, redacted = fa
       native_event_count: events.length,
       normalized_event_count: events.length,
       filtered_native_event_count: 0,
-      compatibility_profiles: ["workbuddy-native-history-5.5.3"],
+      compatibility_profiles: loaded.source_kind === WORKBUDDY_RUNTIME_API_SOURCE_KIND
+        ? ["workbuddy-runtime-api"]
+        : ["workbuddy-native-history-5.5.3"],
     },
     completeness: {
       status: uniqueMissing.length === 0 ? "complete" : "partial",
@@ -648,6 +662,11 @@ function transcriptBytes(normalized) {
 }
 
 function sourceArtifactList(loaded) {
+  if (loaded?.source_kind === WORKBUDDY_RUNTIME_API_SOURCE_KIND) {
+    const runtime = loaded.source_artifacts?.runtime;
+    if (!runtime) throw new Error("WORKBUDDY_RUNTIME_SOURCE_ARTIFACT_MISSING");
+    return [{ source: runtime, path: "raw/workbuddy-runtime/runtime-binding.json" }];
+  }
   const source = loaded?.source_artifacts;
   if (!isObject(source) || !source.workspace_index || !source.conversation_index
       || !Array.isArray(source.messages) || source.messages.length === 0) {
@@ -821,7 +840,13 @@ export async function collectWorkBuddyGeneralEvidence({
 }
 
 function metricFromObservation(metric) {
-  return { value: metric.value, status: metric.status, basis: metric.basis };
+  return {
+    value: metric.value,
+    status: metric.status,
+    basis: metric.basis,
+    known_subtotal: metric.known_subtotal,
+    coverage: metric.coverage,
+  };
 }
 
 export function toGeneralResourceMetrics({

@@ -15,6 +15,10 @@ import {
   selectWorkBuddyNativeBinding,
   snapshotWorkBuddyNativeBaseline,
 } from "./native-binding.mjs";
+import {
+  selectWorkBuddyRuntimeBinding,
+  snapshotWorkBuddyRuntimeBaseline,
+} from "./runtime-binding.mjs";
 import { buildWorkBuddyExecutionState } from "./state.mjs";
 import {
   WorkBuddyCdpClient,
@@ -457,18 +461,25 @@ async function defaultPrepareUi(config) {
   }
 }
 
+async function defaultConnectRuntime(config) {
+  const target = await discoverWorkBuddyMainTarget(config.endpoint, config.timeoutMs);
+  return WorkBuddyCdpClient.connect(target.webSocketDebuggerUrl, config.timeoutMs);
+}
+
 export async function closeWorkBuddyUiHandle(handle) {
   await handle?.close();
 }
 
 async function writeBindingEvidence(config, journal, binding) {
   const evidence = {
-    schema_version: "wildclawbench.general-e2e-workbuddy-native-binding/v1",
+    schema_version: "wildclawbench.general-e2e-workbuddy-native-binding/v2",
+    source_kind: binding.source_kind || "workbuddy-native-history",
     identity: journal.identity,
     workspace: config.candidateWorkspace,
     conversation_id: binding.session_snapshot.conversation_id,
     request_id: binding.history.binding.request_id,
     source_artifacts: binding.artifacts,
+    runtime_snapshot: binding.runtime_snapshot || null,
   };
   await atomicWriteJson(config.bindingFile, evidence, config.unitRoot);
   const bytes = await readFile(config.bindingFile);
@@ -495,7 +506,7 @@ async function buildAndPersistPublicState(config, journal, binding, bindingEvide
   return state;
 }
 
-async function captureBinding(config, journal, dependencies) {
+async function captureBinding(config, journal, dependencies, runtimeClient = null) {
   const deadline = dependencies.nowMilliseconds() + config.identityTimeoutMs;
   let lastError = null;
   while (dependencies.nowMilliseconds() <= deadline) {
@@ -507,7 +518,7 @@ async function captureBinding(config, journal, dependencies) {
         baseline: journal.native.baseline,
         boundConversationId: journal.native.conversation_id,
         boundRequestId: journal.native.request_id,
-      });
+      }, { runtimeClient, promptSha256: config.promptSha256 });
       if (selected.ambiguous) throw new Error(`原生 conversation/request 绑定不唯一：${selected.match_count}`);
       if (selected.binding) return selected.binding;
     } catch (error) {
@@ -524,8 +535,8 @@ async function captureBinding(config, journal, dependencies) {
   return null;
 }
 
-async function bindAndObserve(config, journal, dependencies) {
-  let binding = await captureBinding(config, journal, dependencies);
+async function bindAndObserve(config, journal, dependencies, runtimeClient = null) {
+  let binding = await captureBinding(config, journal, dependencies, runtimeClient);
   if (!binding) {
     journal.prompt.send_status = "uncertain";
     journal.execution.error = {
@@ -551,7 +562,7 @@ async function bindAndObserve(config, journal, dependencies) {
   journal.native.last_observed_at = dependencies.now();
   journal.prompt.send_status = "sent";
   journal.prompt.sent_at ||= journal.send.dispatch_returned_at || journal.send.dispatch_armed_at;
-  const evidence = await writeBindingEvidence(config, journal, binding);
+  let evidence = await writeBindingEvidence(config, journal, binding);
   let state = await buildAndPersistPublicState(config, journal, binding, evidence);
   transition(journal, state.phase, "NATIVE_BINDING_OBSERVED", dependencies.now(), {
     conversation_id: journal.native.conversation_id,
@@ -584,7 +595,7 @@ async function bindAndObserve(config, journal, dependencies) {
       baseline: journal.native.baseline,
       boundConversationId: journal.native.conversation_id,
       boundRequestId: journal.native.request_id,
-    });
+    }, { runtimeClient, promptSha256: config.promptSha256 });
     if (!selected.binding || selected.ambiguous) {
       journal.execution.error = {
         code: "WORKBUDDY_NATIVE_BINDING_DRIFT",
@@ -596,6 +607,7 @@ async function bindAndObserve(config, journal, dependencies) {
     }
     binding = selected.binding;
     journal.native.last_observed_at = dependencies.now();
+    evidence = await writeBindingEvidence(config, journal, binding);
     state = await buildAndPersistPublicState(config, journal, binding, evidence);
     transition(journal, state.phase, "NATIVE_STATE_OBSERVED", dependencies.now());
     await persistJournal(config, journal);
@@ -608,9 +620,28 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
     inspectRuntime: defaultInspectRuntime,
     prepareUi: defaultPrepareUi,
     fillPrompt: (handle, prompt) => fillWorkBuddyPrompt(handle, prompt, config.timeoutMs),
-    dispatchPrompt: (handle) => dispatchWorkBuddyPrompt(handle),
+    dispatchPrompt: (handle) => dispatchWorkBuddyPrompt(handle, config.timeoutMs),
     snapshotBaseline: snapshotWorkBuddyNativeBaseline,
-    selectBinding: selectWorkBuddyNativeBinding,
+    snapshotRuntimeBaseline: snapshotWorkBuddyRuntimeBaseline,
+    connectRuntime: defaultConnectRuntime,
+    selectBinding: async (args, runtime = {}) => {
+      if (runtime.runtimeClient) {
+        try {
+          const selected = await selectWorkBuddyRuntimeBinding({
+            client: runtime.runtimeClient,
+            workspace: args.workspace,
+            baseline: args.baseline?.runtime,
+            boundConversationId: args.boundConversationId,
+            boundRequestId: args.boundRequestId,
+            promptSha256: runtime.promptSha256 || null,
+          });
+          if (selected.binding || selected.ambiguous) return selected;
+        } catch (error) {
+          if (runtime.runtimeOnly === true) throw error;
+        }
+      }
+      return selectWorkBuddyNativeBinding(args);
+    },
     closeUi: closeWorkBuddyUiHandle,
     sleep: (milliseconds) => new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds)),
     now: () => new Date().toISOString(),
@@ -618,6 +649,7 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
     ...overrides,
   };
   let journal = await readJsonIfPresent(config.journalFile, config.unitRoot);
+  let runtimeClient = null;
   if (journal) {
     if (!config.resume) throw new Error("已有 dispatch journal；必须使用 --resume，禁止新建 attempt 或重发");
     assertJournalMatches(config, journal);
@@ -626,7 +658,16 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
     }
     const runtime = await dependencies.inspectRuntime(config);
     if (journal.send.dispatch_attempt_count === 1) {
-      return bindAndObserve(config, journal, dependencies);
+      try {
+        runtimeClient = await dependencies.connectRuntime(config);
+      } catch {
+        runtimeClient = null;
+      }
+      try {
+        return await bindAndObserve(config, journal, dependencies, runtimeClient);
+      } finally {
+        await dependencies.closeUi(runtimeClient);
+      }
     }
     if (journal.send.dispatch_attempt_count !== 0 || journal.prompt.send_status !== "not_sent") {
       throw new Error("dispatch journal 发送边界无效，拒绝恢复");
@@ -654,6 +695,20 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
       dataRoot: config.dataRoot,
       workspace: config.candidateWorkspace,
     });
+    try {
+      journal.native.baseline.runtime = await dependencies.snapshotRuntimeBaseline(
+        handle,
+        config.candidateWorkspace,
+      );
+    } catch (error) {
+      journal.native.baseline.runtime = null;
+      journal.history.push({
+        phase: journal.phase,
+        event: "RUNTIME_API_BASELINE_UNAVAILABLE",
+        at: dependencies.now(),
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
     await dependencies.fillPrompt(handle, config.prompt);
     journal.prompt.send_status = "intent_persisted";
     journal.send.dispatch_attempt_count = 1;
@@ -676,7 +731,7 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
       transition(journal, "RUNNING", "PROMPT_DISPATCH_THROWN", dependencies.now());
       await persistJournal(config, journal);
     }
-    return bindAndObserve(config, journal, dependencies);
+    return await bindAndObserve(config, journal, dependencies, handle);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (journal.send.dispatch_attempt_count > 0) {

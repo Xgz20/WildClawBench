@@ -1,0 +1,35 @@
+{
+  "identity": {
+    "batch_id": "workbuddy-macos-canary-20260921-03",
+    "unit_id": "workbuddy-macos-xopglm52-canary-20260921-03",
+    "task_id": "workbuddy_canary_runtime_20260921_v3",
+    "attempt_id": "c5d03ace-42c0-45bf-9d22-728de681960c"
+  },
+  "evidence": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/workbuddy-macos-general-e2e/canary-20260921-03/execute-result.json",
+      "size": 1898,
+      "sha256": "b451260f970699ae1772ff5bf821b7eb2ae9e72ea5a0ff06eeaa48cc3283516c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/workbuddy-macos-general-e2e/canary-20260921-03/.general-e2e/execution/workbuddy_canary_runtime_20260921_v3/workbuddy/dispatch-journal.json",
+      "size": 5893,
+      "sha256": "22133c55a6006b1e49743ab7efa9bca89456f8aad73dad04e375112c24307e02"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/workbuddy-macos-general-e2e/canary-20260921-03/.general-e2e/execution/workbuddy_canary_runtime_20260921_v3/workbuddy/execution-state.json",
+      "size": 3059,
+      "sha256": "9babcf8a8b8198179d8beda39b9754a9f9d086b907527b828e1749dd5d27521a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/workbuddy-macos-general-e2e/canary-20260921-03/.general-e2e/collection/runtime-pass/trace/trace-index.json",
+      "size": 1909,
+      "sha256": "9f6605e4d80a6152408e232fa65cd84b99aa77ce4c54d48e772f4cbed2deacaa"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/workbuddy-macos-general-e2e/canary-20260921-03/.general-e2e/collection/runtime-pass/resource-metrics.json",
+      "size": 7982,
+      "sha256": "4dd33febabb2e14b879dd2a2cc2c44b5fb862a86468a278ceeb90b584e1dfcf9"
+    }
+  ]
+}

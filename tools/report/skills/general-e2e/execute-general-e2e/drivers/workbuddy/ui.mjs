@@ -365,17 +365,61 @@ export async function fillWorkBuddyPrompt(client, prompt, timeoutMs = 30_000) {
   );
 }
 
-export async function dispatchWorkBuddyPrompt(client) {
-  const result = await client.evaluate(expression(`
+export async function dispatchWorkBuddyPrompt(client, timeoutMs = 30_000) {
+  await client.send("Page.bringToFront");
+  let previousPoint = null;
+  let stableSince = 0;
+  const result = await waitFor(() => client.evaluate(expression(`
     const buttons = visibleAll('button[aria-label], button[title], [role="button"][aria-label]')
       .filter((button) => /(?:发送|Send)/iu.test(
         (button.getAttribute('aria-label') || button.getAttribute('title') || '').trim()
       ));
     const enabled = buttons.filter((button) => !button.disabled && button.getAttribute('aria-disabled') !== 'true');
     if (enabled.length !== 1) return { clicked: false, count: enabled.length, selected_conversation_id: selectedConversationId() };
-    enabled[0].click();
-    return { clicked: true, count: 1, selected_conversation_id: selectedConversationId() };
-  `), { userGesture: true });
+    const button = enabled[0];
+    const rect = button.getBoundingClientRect();
+    const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    return {
+      clicked: Boolean(hit && button.contains(hit)),
+      count: 1,
+      selected_conversation_id: selectedConversationId(),
+      point: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+    };
+  `), { userGesture: true }), (value) => {
+    if (!value?.clicked || !value.point) {
+      previousPoint = null;
+      stableSince = 0;
+      return false;
+    }
+    const point = JSON.stringify(value.point);
+    if (point !== previousPoint) {
+      previousPoint = point;
+      stableSince = Date.now();
+      return false;
+    }
+    return Date.now() - stableSince >= 200;
+  }, timeoutMs, "等待 WorkBuddy 唯一发送控件可点击且位置稳定", 50);
   if (!result?.clicked) throw new Error(`WorkBuddy 发送按钮数量异常：${result?.count ?? "unknown"}`);
-  return result;
+  // Use trusted Chromium input for the final user gesture. React's synthetic
+  // HTMLElement.click() can leave the 5.5.x composer unchanged when the
+  // window is backgrounded even though the button is enabled in the DOM.
+  if (!result.point || !Number.isFinite(result.point.x) || !Number.isFinite(result.point.y)) {
+    throw new Error("WorkBuddy 发送按钮坐标不可用");
+  }
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved", x: result.point.x, y: result.point.y,
+  });
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mousePressed", x: result.point.x, y: result.point.y, button: "left", clickCount: 1,
+  });
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseReleased", x: result.point.x, y: result.point.y, button: "left", clickCount: 1,
+  });
+  const after = await waitFor(
+    () => readWorkBuddyUi(client),
+    (value) => Boolean(value.selected_conversation_id) || value.editor_nonempty_count === 0,
+    timeoutMs,
+    "等待 WorkBuddy 发送后的会话状态",
+  );
+  return { ...result, selected_conversation_id: after.selected_conversation_id || null };
 }

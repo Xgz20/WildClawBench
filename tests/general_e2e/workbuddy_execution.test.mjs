@@ -18,6 +18,7 @@ import {
   assertWorkBuddyUiConfiguration,
   assertWorkBuddyUiIdle,
   fillWorkBuddyPrompt,
+  dispatchWorkBuddyPrompt,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/ui.mjs";
 
 function sha256(value) {
@@ -146,6 +147,8 @@ function dependencies(config, counters, selectedBinding) {
       return { selected_conversation_id: null };
     },
     snapshotBaseline: async () => ({ workspace: config.candidateWorkspace, sessions: [], request_ids: {} }),
+    snapshotRuntimeBaseline: async () => ({ workspace: config.candidateWorkspace, conversations: [], request_ids: {} }),
+    connectRuntime: async () => null,
     selectBinding: async () => ({ binding: selectedBinding(), ambiguous: false, match_count: 1 }),
     closeUi: async () => { counters.close += 1; },
     sleep: async () => {},
@@ -533,4 +536,66 @@ test("WorkBuddy P2 rejects symlinked state leaves and ancestors", async () => {
   } finally {
     await rm(ancestorFixture.root, { recursive: true, force: true });
   }
+});
+
+
+test("WorkBuddy observation refreshes binding bytes and digest at terminal state", async () => {
+  const fixture = await createExecutionUnit();
+  try {
+    const config = { ...fixture.config, detachAfterSubmit: false };
+    const counters = { prepare: 0, fill: 0, dispatch: 0, close: 0 };
+    let observations = 0;
+    const result = await executeWorkBuddyTask(config, dependencies(config, counters, () => {
+      const value = binding(config, observations++ === 0 ? "running" : "complete");
+      value.runtime_snapshot = { observation: observations };
+      return value;
+    }));
+    assert.equal(result.state.phase, "COMPLETED");
+    assert.equal(counters.dispatch, 1);
+    const bytes = await readFile(config.bindingFile);
+    assert.equal(JSON.parse(bytes).runtime_snapshot.observation, 2);
+    assert.equal(result.state.session.binding_evidence[0].sha256, sha256(bytes));
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+
+test("WorkBuddy keeps the runtime connection open until binding and observation finish", async () => {
+  const fixture = await createExecutionUnit();
+  try {
+    const counters = { prepare: 0, fill: 0, dispatch: 0, close: 0 };
+    const deps = dependencies(fixture.config, counters, () => binding(fixture.config, "complete"));
+    deps.selectBinding = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      assert.equal(counters.close, 0, "runtime client must stay open across awaited binding");
+      return { binding: binding(fixture.config, "complete"), ambiguous: false, match_count: 1 };
+    };
+    const result = await executeWorkBuddyTask(fixture.config, deps);
+    assert.equal(result.state.phase, "COMPLETED");
+    assert.equal(counters.close, 1);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+
+test("WorkBuddy dispatch waits for stable hit-tested control and clicks once", async () => {
+  const sent = [];
+  let samples = 0;
+  const client = {
+    send: async (method, params) => { sent.push({ method, params }); },
+    evaluate: async (source) => {
+      if (source.includes("document.elementFromPoint")) {
+        samples += 1;
+        return { clicked: samples > 1, count: 1, point: { x: 100, y: samples < 3 ? 100 : 150 } };
+      }
+      return { selected_conversation_id: "new-conversation", editor_nonempty_count: 0 };
+    },
+  };
+  await dispatchWorkBuddyPrompt(client, 1000);
+  assert.ok(samples >= 6);
+  assert.equal(sent[0].method, "Page.bringToFront");
+  assert.deepEqual(sent.slice(1).map((entry) => entry.params.type), ["mouseMoved", "mousePressed", "mouseReleased"]);
+  assert.ok(sent.slice(1).every((entry) => entry.params.y === 150));
 });
