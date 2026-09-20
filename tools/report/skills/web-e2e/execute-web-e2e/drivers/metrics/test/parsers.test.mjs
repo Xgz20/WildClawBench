@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseAstron, parseWorkBuddy, parseQwen } from "../parsers.mjs";
+import { parseAstron, parseDoubao, parseWorkBuddy, parseQwen } from "../parsers.mjs";
 import { captureResourceMetrics } from "../capture.mjs";
 import { QWEN_PROFILE, QWEN_WINDOWS_PROFILE, QWEN_WINDOWS_1_0_6_PROFILE } from "../qwen-profile.mjs";
 import { EventEmitter } from "node:events";
@@ -126,6 +126,47 @@ test("Qwen 重复事件只计一次，终值冲突和缓存大于输入不提供
   assert.equal(parse().usage.cache_read_input_tokens, null);
   assert.equal(parse().collection.metrics.cache_read_input_tokens.status, "unverified");
 });
+
+test("Doubao 原生证据只暴露去重工具小计，usage、terminal 和 cwd 缺失保持不可用", () => {
+  const result = parseDoubao({
+    identity: {
+      conversation_id: "12345678901234567",
+      session_directory_id: "12345678901234567",
+      workspace_binding: { status: "unverified", native_cwd: null },
+    },
+    terminal: { status: "unverified" },
+    native_capabilities: {
+      terminal: { status: "unavailable" },
+      workspace_binding: { status: "unverified", native_cwd: null },
+    },
+    trace: {
+      completeness: "partial",
+      sources: [{ relative_path: "session/agents/a/system/trajectory.jsonl" }],
+    },
+    resources: {
+      usage: {
+        total_tokens: { value: null, status: "unavailable" },
+      },
+      tools: {
+        known_subtotal: 2,
+        call_count: 2,
+        status: "partial",
+        coverage: { numerator: 1, denominator: null },
+      },
+    },
+  });
+  assert.equal(result.usage.total_tokens, null);
+  assert.equal(result.tools.call_count, 2);
+  assert.equal(result.collection.metrics.call_count.status, "partial");
+  assert.deepEqual(result.collection.known_subtotals, { call_count: 2 });
+  assert.equal(result.collection.native_terminal_status, "unverified");
+  assert.equal(result.collection.native_workspace_binding.status, "unverified");
+  assert.deepEqual(result.collection.tool_coverage, { numerator: 1, denominator: null });
+  assert.ok(result.collection.warnings.includes("NATIVE_TERMINAL_UNAVAILABLE"));
+  assert.ok(result.collection.warnings.includes("NATIVE_CWD_UNAVAILABLE"));
+  assert.ok(result.collection.warnings.includes("PARTIAL_TOOL_COVERAGE"));
+});
+
 test("Qwen 缺响应、混合遮蔽、缺终态或字段保留 partial 与小计", () => {
   for (const change of [
     rows => rows.push({ type: "model.request.started", turn_id: "main", request_id: "missing" }),

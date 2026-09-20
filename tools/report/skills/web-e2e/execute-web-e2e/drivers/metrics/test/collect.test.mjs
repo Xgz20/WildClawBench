@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, writeFile, symlink, rm } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, readFile, writeFile, symlink, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
@@ -138,4 +138,71 @@ test("cwd 和 session 不一致、符号链接与坏 JSON 失败关闭", async t
   const target = join(project, "other.jsonl"); await writeFile(target, "{}");
   await symlink(target, file);
   await assert.rejects(collectLocalMetrics(input), /AMBIGUOUS_TRACE/);
+});
+
+test("Doubao 只绑定唯一数字 session trajectory，并保持 native terminal/cwd 缺失", async t => {
+  const home = await mkdtemp(join(tmpdir(), "web-resource-doubao-"));
+  t.after(() => rm(home, { recursive: true, force: true }));
+  const sessionId = "12345678901234567";
+  const workspace = join(home, "task", "workspace");
+  const roots = {
+    profile_root: join(home, "profile"),
+    sessions_root: join(home, "sessions"),
+    logs_root: join(home, "logs"),
+  };
+  const trajectory = join(roots.sessions_root, sessionId, "agents", "agent_fixture", "system", "trajectory.jsonl");
+  await mkdir(workspace, { recursive: true });
+  await mkdir(join(trajectory, ".."), { recursive: true });
+  await writeFile(trajectory, [
+    JSON.stringify({ role: "assistant", tool_calls: [{ id: "call-1", function: { name: "Write", arguments: { file_path: `${workspace}/index.html` } } }] }),
+    JSON.stringify({ role: "tool", tool_call_id: "call-1", content: "ok" }),
+  ].join("\n") + "\n");
+  const result = await collectLocalMetrics({
+    harness: "doubaowork",
+    home,
+    nativeRoots: roots,
+    workspace,
+    state: {
+      attempt_id: "attempt-doubao",
+      session: { conversation_id: sessionId, session_directory_id: sessionId },
+    },
+  });
+  assert.equal(result.collection.session_id, sessionId);
+  assert.equal(result.tools.call_count, 1);
+  assert.equal(result.collection.metrics.call_count.status, "partial");
+  assert.equal(result.usage.total_tokens, null);
+  assert.equal(result.execution.agent_duration_seconds, null);
+  assert.equal(result.collection.native_terminal_status, "unverified");
+  assert.equal(result.collection.native_workspace_binding.status, "unverified");
+  assert.ok(result.collection.warnings.includes("NATIVE_TERMINAL_UNAVAILABLE"));
+  assert.ok(result.collection.warnings.includes("NATIVE_CWD_UNAVAILABLE"));
+  assert.equal(result.collection.sources.length, 1);
+  assert.match(result.collection.sources[0].sha256, /^[a-f0-9]{64}$/);
+});
+
+test("Doubao session identity、trajectory 数量和原生 session 缺失时失败关闭", async t => {
+  const home = await mkdtemp(join(tmpdir(), "web-resource-doubao-gate-"));
+  t.after(() => rm(home, { recursive: true, force: true }));
+  const roots = {
+    profile_root: join(home, "profile"),
+    sessions_root: join(home, "sessions"),
+    logs_root: join(home, "logs"),
+  };
+  const sessionId = "12345678901234567";
+  await mkdir(roots.sessions_root, { recursive: true });
+  const base = {
+    harness: "doubaowork",
+    home,
+    nativeRoots: roots,
+    workspace: join(home, "workspace"),
+    state: { attempt_id: "attempt-doubao", session: { conversation_id: sessionId, session_directory_id: "76543210987654321" } },
+  };
+  await assert.rejects(collectLocalMetrics(base), /SESSION_IDENTITY_MISMATCH/);
+  const missing = { ...base, state: { ...base.state, session: { conversation_id: sessionId, session_directory_id: sessionId } } };
+  await assert.rejects(collectLocalMetrics(missing), /MISSING_STABLE_SESSION/);
+  const trajectory = join(roots.sessions_root, sessionId, "agents", "agent_fixture", "system", "trajectory.jsonl");
+  await mkdir(join(trajectory, ".."), { recursive: true });
+  await writeFile(trajectory, "{\"role\":\"assistant\"}\n");
+  await cp(trajectory, join(roots.sessions_root, sessionId, "agents", "agent_second", "system", "trajectory.jsonl"));
+  await assert.rejects(collectLocalMetrics(missing), /AMBIGUOUS_TRACE/);
 });
