@@ -23,3 +23,8 @@ canary-03 使用留存 raw snapshot 重新规范化得到 `execution-state-norma
 ## 资源可观测性与评分准入
 
 `workbuddy-evidence@0.2.0` 区分原生请求采集完整性与指标可观测性：完整绑定和完整轨迹允许 collect completed，缺失 token/cache 仍为 null/unavailable；部分轨迹、未支持块或非法数值不放行。runtime 保留文本和工具块的原始先后顺序；工具别名优先原生 toolName。新增测试覆盖完整证据与空 usage、非法数值、文本/工具顺序、未知块失败关闭；47/47 WorkBuddy 焦点测试，24/24 布局与独立打包回归。旧 canary partial 回执保留，后续正式数据集新批验证。
+
+
+## 固定用例暴露的草稿同步修复
+
+首个固定五题批次的 S4 停在 `uncertain/NEEDS_ATTENTION`，未重发且保留旧 unit。只读回读证实 Slate 内容已更新，而 InputBoxStore 的 `draft.content.blocks` 仍为空。真实 `rawKeyDown → Input.insertText → keyUp` 无发送探针能同时更新两者；发送前新增唯一 draft provider、完整 text 和 processing 状态核验，避免仅凭 DOM/按钮启用进入 armed。清理仅作用于精确匹配的本次 S4 草稿，没有改动其他会话。15/15 执行焦点回归通过；新的正式批次继续验证。

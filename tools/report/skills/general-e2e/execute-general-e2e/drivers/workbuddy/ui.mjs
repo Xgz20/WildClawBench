@@ -313,9 +313,26 @@ export async function readWorkBuddyPromptState(client) {
       ));
     const enabled = buttons.filter((button) => !button.disabled && button.getAttribute('aria-disabled') !== 'true');
     const content = editors.length === 1 ? editorContent(editors[0]) : null;
+    const stores = new Set();
+    if (editors.length === 1) {
+      const key = Object.keys(editors[0]).find((name) => name.startsWith('__reactFiber$'));
+      let fiber = key ? editors[0][key] : null;
+      while (fiber) {
+        if (fiber.memoizedProps?.store?.getSnapshot) stores.add(fiber.memoizedProps.store);
+        fiber = fiber.return;
+      }
+    }
+    const draft = stores.size === 1 ? [...stores][0].getSnapshot()?.draft?.content : null;
+    const blocks = Array.isArray(draft?.blocks) ? draft.blocks : null;
+    const draftText = blocks && blocks.every((block) => block.type === 'text')
+      ? blocks.map((block) => String(block.text || '')).join('') : null;
+
     return {
       editor_count: editors.length,
       content,
+      draft_provider_count: stores.size,
+      draft_text: draftText,
+      draft_processing: draft?.hasProcessingContent ?? null,
       send_control_count: buttons.length,
       send_enabled_count: enabled.length
     };
@@ -339,25 +356,23 @@ export async function fillWorkBuddyPrompt(client, prompt, timeoutMs = 30_000) {
       `WorkBuddy Prompt 编辑器不可安全聚焦：count=${focused?.count ?? "unknown"}; initial_length=${focused?.initial_content?.length ?? "unknown"}`,
     );
   }
-  await client.send("Input.insertText", { text: prompt });
-  const reconciled = await client.evaluate(expression(`
-    const editors = visibleAll('textarea, [contenteditable="true"]');
-    if (editors.length !== 1) return { dispatched: false, count: editors.length };
-    const event = new InputEvent('input', {
-      inputType: 'insertText',
-      data: __arg,
-      bubbles: true,
-      composed: true,
-    });
-    return { dispatched: editors[0].dispatchEvent(event), count: 1 };
-  `, prompt), { userGesture: true });
-  if (!reconciled?.dispatched) {
-    throw new Error(`WorkBuddy 编辑器状态同步失败：count=${reconciled?.count ?? "unknown"}`);
+  // Slate tracks user input intent on keydown. insertText alone can update
+  // the DOM while the WorkBuddy send store stays empty. No text is emitted by
+  // rawKeyDown; the complete Prompt is inserted exactly once below.
+  const key = { key: "a", code: "KeyA", windowsVirtualKeyCode: 65 };
+  await client.send("Input.dispatchKeyEvent", { type: "rawKeyDown", ...key });
+  try {
+    await client.send("Input.insertText", { text: prompt });
+  } finally {
+    await client.send("Input.dispatchKeyEvent", { type: "keyUp", ...key });
   }
   return waitFor(
     () => readWorkBuddyPromptState(client),
     (state) => state.editor_count === 1
       && state.content === prompt
+      && state.draft_provider_count === 1
+      && state.draft_text === prompt
+      && state.draft_processing === false
       && state.send_control_count === 1
       && state.send_enabled_count === 1,
     timeoutMs,

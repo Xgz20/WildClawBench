@@ -187,8 +187,10 @@ test("WorkBuddy P2 arguments and UI readback fail closed", () => {
 
 test("WorkBuddy P2 uses CDP real input and requires an enabled send control", async () => {
   class StatefulEditorClient {
-    constructor({ enableOnInsert }) {
+    constructor({ enableOnInsert, syncDraft = true }) {
       this.content = "";
+      this.syncDraft = syncDraft;
+      this.intent = false;
       this.focused = false;
       this.sendEnabled = false;
       this.enableOnInsert = enableOnInsert;
@@ -207,6 +209,9 @@ test("WorkBuddy P2 uses CDP real input and requires an enabled send control", as
         return {
           editor_count: 1,
           content: this.content,
+          draft_provider_count: 1,
+          draft_text: this.syncDraft && this.intent ? this.content : "",
+          draft_processing: false,
           send_control_count: 1,
           send_enabled_count: this.sendEnabled ? 1 : 0,
         };
@@ -215,6 +220,10 @@ test("WorkBuddy P2 uses CDP real input and requires an enabled send control", as
     }
 
     async send(method, params) {
+      if (method === "Input.dispatchKeyEvent") {
+        if (params.type === "rawKeyDown") this.intent = true;
+        return {};
+      }
       assert.equal(method, "Input.insertText");
       assert.equal(this.focused, true);
       this.insertCalls += 1;
@@ -230,6 +239,9 @@ test("WorkBuddy P2 uses CDP real input and requires an enabled send control", as
   assert.equal(enabled.insertCalls, 1);
   assert.equal(ready.content, prompt);
   assert.equal(ready.send_enabled_count, 1);
+
+  const emptyDraft = new StatefulEditorClient({ enableOnInsert: true, syncDraft: false });
+  await assert.rejects(fillWorkBuddyPrompt(emptyDraft, prompt, 5), /发送控件启用超时/u);
 
   const domOnly = new StatefulEditorClient({ enableOnInsert: false });
   await assert.rejects(
