@@ -7,7 +7,7 @@
 | 控制集成分支 | `feat/e2e-harness-contract` / 后续直接在本分支串行迭代，不再派发平台 worktree |
 | 主工作分支 / 同步仓库 | `feature/astroncode-eval` / `https://github.com/Xgz20/WildClawBench.git` |
 | 已核验 remote | macOS 为 `github`，fetch/push URL 一致；Windows 接收方核对实际 URL，不假定 `origin` |
-| 推荐开发源码基线 | 本次控制分支合并结果；父提交为 `73edb63` 与 `e17c11c`，精确合并 SHA 在提交完成后登记 |
+| 推荐开发源码基线 | `4537fff2c64600395ca499f7def0e2f579af386a`；包含父提交 `73edb63` 与 `e17c11c` |
 | 基线状态 | `DEVELOPMENT_LOCAL_VALIDATED`；本轮提交尚未推送，接收方暂不能仅靠 fetch 取得；这不是新平台生产准入 |
 | 当前必读交接 | [COMMON-001](handoffs/COMMON-001.md)、[COMMON-002](handoffs/COMMON-002.md)、[COMMON-003](handoffs/COMMON-003.md)、[COMMON-004](handoffs/COMMON-004.md)、[WorkBuddy 当前任务卡](tasks/MAC-WORKBUDDY-GENERAL.md)，以及本页登记的 2026-09-21 超时语义变更 |
 | 实现提交 | CB-A `abce5da8`；CB-B `eb23784a`；WorkBuddy 五题收口至 `645d9ca`；迟到评分恢复 `73edb63`；无 Harness 总执行时限 `0563b94`、`7a2142a`、`9885a4c` |
@@ -30,7 +30,7 @@
 
 | 基线标识 | 可消费源码 SHA | 交接 ID | 必需动作 | 发布结果 |
 | --- | --- | --- | --- | --- |
-| E2E-DEV-20260921-A | 本次合并提交（父 `73edb63`、`e17c11c`） | 当前台账 | 采用无 Harness 总执行时限、迟到评分恢复和控制分支现有平台能力；旧真机证据保持原 revision | DEVELOPMENT_LOCAL_VALIDATED |
+| E2E-DEV-20260921-A | `4537fff2c64600395ca499f7def0e2f579af386a` | 当前台账 | 采用无 Harness 总执行时限、迟到评分恢复和控制分支现有平台能力；旧真机证据保持原 revision | DEVELOPMENT_LOCAL_VALIDATED |
 | E2E-DEV-20260919-D | `2023b4d5d1d703c81ff8ed15e0d5ada29cd0dca4` | COMMON-004 | WorkBuddy 输入修复、execute 0.8.1、Web 等价绑定方案；当前 live 按原身份收口 | DEVELOPMENT_PUBLISHED |
 | E2E-DEV-20260919-C | `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3` | COMMON-003 | 采用三个开发 Driver 与 execute 版本；处理真机限制及 CLI 修复；活动 attempt 不切版本 | DEVELOPMENT_PUBLISHED |
 | E2E-DEV-20260919-B | `eb23784a7ed25b0f0364db0392783de277b22b96` | COMMON-002 | 更新组件绑定与受影响 Skill；接入 trace v2 / cleanup hook；平台真机另验 | DEVELOPMENT_PUBLISHED |
