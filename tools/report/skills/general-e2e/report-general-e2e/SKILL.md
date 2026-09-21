@@ -15,7 +15,7 @@ description: 校验并汇总 General E2E submission 和回传包，生成同源 
 python -m eval_general_e2e skills --name report-general-e2e --json
 ```
 
-`0.3.1/operational` 支持从批次导入选择生成正式报告，以及 WorkBuddy 已冻结评分后的 JSONL 和原生耗时补采。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
+`0.3.2/operational` 支持从批次导入选择生成正式报告，以及 WorkBuddy 已冻结评分后的 JSONL 和原生耗时补采，Excel 耗时依据自动适配行高。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
 
 ## 责任边界
 

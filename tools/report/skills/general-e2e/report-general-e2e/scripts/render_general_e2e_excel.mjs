@@ -323,6 +323,12 @@ function buildCoverage(workbook, data) {
     data.lineage.selected_imports.map(row => [row.unit_id, row.package_id, row.archive_sha256, row.package_manifest_sha256, row.submission_sha256, row.import_receipt_sha256]),
   );
   widths(sheet, { A: 58, B: 28, C: 24, D: 16, E: 16, F: 16, G: 14, H: 14, I: 14, J: 16, K: 58, L: 16, M: 16 });
+  // Native timing adds explicit lifecycle/queue semantics; fit its source text.
+  rows.forEach((row, index) => {
+    if (["duration_seconds", "agent_duration_seconds"].includes(row[1]) && row[3] === "observed") {
+      sheet.getRange(`K${index + 5}`).format.autofitRows();
+    }
+  });
   sheet.freezePanes.freezeRows(4);
   sheet.freezePanes.freezeColumns(1);
   return sheet;
