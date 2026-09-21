@@ -2,14 +2,15 @@
 
 ## 当前串行迭代进度（2026-09-21，优先于下方历史记录）
 
-由控制任务直接在 `.agents/e2e-harness-contract` / `feat/e2e-harness-contract` 迭代，不再分派 worktree，也不需要桌面 slot。客户端版本只记录兼容性元数据，不设精确版本白名单。
+由控制任务直接在 `.agents/e2e-harness-contract` / `feat/e2e-harness-contract` 迭代，不再分派 worktree，也不需要桌面 slot。客户端版本只记录兼容性元数据，不设精确版本白名单。本轮固定验收身份为 `WORKBUDDY-MACOS-GENERAL-20260921-V4`，客户端为 WorkBuddy 5.5.6、macOS x86_64，值守单槽执行。
 
-- [x] 5.5.6 runtime API 单题首次发送、终态绑定、恢复不重发和 collector；45/45 焦点回归，[真机证据](../../../general-e2e/evidence/workbuddy-runtime-20260921/README.md)。
-- [ ] 正式 cleanup/finalizer 与不可变回执，独立 Skill 发行依赖。
-- [ ] 固定 S1–S5 的文件/纯回复/轨迹规则、三类评分、回传和同源报告。
-- [ ] 持久化串行批量与恢复、适用故障验证和操作手册。
+- [x] 5.5.6 runtime API 单题首次发送、终态绑定、恢复不重发和 collector；49/49 WorkBuddy 专属测试、24/24 Skill/layout 回归、v4 发行构建通过。
+- [x] 五题真机执行与正式 `collect-evidence` 收口：5/5 `completed`，每题 `dispatch_attempt_count=1`，无重复发送；正式 finalizer、不可变回执、队列恢复和五份 dispatch journal SHA 对账通过。
+- [x] 回传链路已验证：`build-submission`、unit `record-submission`、`package-return`、batch `import-return`、report 输入校验和 JSON/Markdown/Excel 同源报告均通过。
+- [ ] 评分闭环尚未全量完成：4/5 题 `valid`（Retro 0.8875、Support handoff 1.0、Temperature CLI 1.0、Suspicious installer 1.0）；Colleague leave 的原评分线程最终返回有效分 1.0，但晚于冻结 deadline，按契约记为 `THREAD_FAILED/unscored`，未纳入 submission。
+- [ ] 生产准入仍待处理该评分超时边界；不能以已有但超时后的 `score.json` 取代合法 submission，也不能重跑 Harness。
 
-当前未声明后台并发或无人值守；首个生产目标是值守单槽通用闭环。原始失败 attempt 保留，不重置。
+当前可声明的是“macOS x86_64、WorkBuddy 5.5.6、值守单槽、固定五题执行/采集通过，4/5 评分有效”的受控验收结果；不声明全五题生产闭环、后台并发、无人值守恢复、Windows、Apple Silicon 或 60 题全量。原始失败 attempt 和本轮 `unscored` 证据保留，不重置。
 
 ## 历史并行任务记录
 
@@ -36,19 +37,19 @@
 硬依赖：[COMMON](COMMON.md) 的 COMMON-CB04 已发布，且本任务的 adapter/状态/指标接口约定可取得。**不依赖 COMMON-CM01 的全部新增指标实现。** 基线未发布时可继续只读环境盘点、已有日志/fixture 分析和差异清单；不自创公共字段或依赖未合入 worktree。
 
 - [x] P1：本机只读 probe、原生身份与字段/能力映射。实现 `2112a86450ba2f22fb284d37a20921cd7e65db69`；证据：[workbuddy-macos-readonly-20260919](../../../general-e2e/evidence/workbuddy-macos-readonly-20260919/README.md)。
-- [ ] P2：单题一次发送、可信终态、恢复和正式证据收口。离线入口与 `Input.insertText + pre-arm enabled` 修复已完成，WorkBuddy 25/25；旧 SLOT03 只消耗 reservation，SLOT05 在临时移出前失败，所有新 attempt/click/send/native session 均为 0，尚不能勾选。
-- [ ] P3：原始轨迹/资源对账与完整单题评分/回传/报告。
-- [ ] P4：按场景验收三题串行、五题动态补位及声明并发。
-- [ ] P5：受影响故障加固、候选不可变与仓库外发行。
+- [x] P2：单题一次发送、可信终态、恢复和正式证据收口。v4 五题均 `dispatch_attempt_count=1`，正式 collector/finalizer、trace-index、cleanup/readiness gate 和不可变回执通过。
+- [ ] P3：原始轨迹/资源对账与完整单题评分/回传/报告。v4 已生成正式回传和同源 JSON/Markdown/Excel，但评分为 4/5 valid；Colleague leave 因评分线程超过 deadline 保留 `unscored`。
+- [x] P4：按场景验收三题串行、五题动态补位及声明并发。五题串行队列、恢复前后 dispatch journal SHA 对账通过；生产声明仍限定值守单槽。
+- [ ] P5：受影响故障加固、候选不可变与仓库外发行。发行构建、候选/回执哈希和回传导入通过；待评分恢复后再做最终生产准入。
 - [x] P6：代码/证据/交接集成，必需接收动作完成；集成提交为 `be3ca29`。
 
 勾选附实现/集成 SHA 与验收证据；此卡不复制技术验收 PASS 表。
 
 ## 下一项与阻塞
 
-下一项：控制任务标记 SLOT05_RELEASED 后，不再重试本轮清空；采用 COMMON-004 后续 0.8.1 发行身份，CB-B collector 与 cleanup/readiness gate 已审查并合入，下一阶段是受控真机 collect/cleanup 验收。未来真机须另行明确授予 slot，并先解决安全临时移出/恢复路径，再创建全新 attempt。
+下一项：先处理 v4 评分编排 deadline 过期造成的 `unscored`。保留现有 Harness 执行和五题正式证据，按控制器契约决定是否创建一个独立、延长 deadline 的**评分恢复 attempt**；不得修改原 attempt 的 deadline、不得把超时后的结果回填为 valid，也不得重跑 Harness。恢复成功后必须重新生成 submission、return package 和同源报告，再判断生产准入。
 
-当前依赖缺口：COMMON-004 已采用；WorkBuddy 专属 collector、trace-index v2 和 cleanup/readiness gate 已离线合入，仍待真实 WorkBuddy 子进程验证、正式 collect 和评分闭环。专属 driver 继续只放行已核验的 `5.5.3 + Electron`，是否公共化由 COMMON 决定。旧 attempt `3e554524-6599-4182-aecc-3257977867c0` 永不重发或重置；SLOT05 未创建新 attempt，清空门禁失败后草稿仍与备份一致。控制任务释放前不得再访问桌面。
+当前依赖缺口：WorkBuddy 专属 collector、trace-index v2、cleanup/readiness gate、五题真机执行与正式回执均已完成；缺口只剩评分编排的超时恢复和完整 submission。当前五题报告已生成于本地 debug 根，资源 token/耗时字段保持 `null/unavailable`，请求数 5、工具调用数 23 为可观测小计。专属 driver 不再用精确 Harness 版本白名单阻断，当前版本作为兼容性元数据记录。旧失败 attempt `3e554524-6599-4182-aecc-3257977867c0` 永不重发或重置；控制任务释放前不得再次访问桌面。
 
 ## 本机现场与恢复
 
@@ -75,4 +76,4 @@
 
 `eval_general_e2e/adapters/workbuddy/native-history.mjs` 新增 `collectWorkBuddyGeneralEvidence()` 和 `buildWorkBuddyTraceIndex()`；`cleanup.mjs` 以公共 macOS task-process primitive 校验 identity、trace/resource readiness、cleanup quiet-window/残留进程，并在 `0fbdd57` 增加原生 request/session/cwd/terminal 来源门禁。未知 `thread_id`、lifecycle、transport retry、terminal cleanup 和未验证积分不会被推断或补写。离线 fixture 已通过 trace/resource/cleanup 契约校验；该交付不等于真机正式 collect 或评分准入。
 
-P1 `2112a86450ba2f22fb284d37a20921cd7e65db69` 提供只读 probe/adapter；P2 `e388dfa43c0f38263ebcf57bf022ba1eb2c3cfeb` 提供安全可恢复单题入口；`5bea762` 改用 CDP `Input.insertText` 并将精确回读、唯一 enabled 发送控件前移到 armed 之前。COMMON-004/execute 0.8.1 已采用到当前工作树；冻结的 0.8.0 release prepare/batch verify PASS，但 SLOT05 临时移出失败，未创建新 attempt。WorkBuddy 25/25、General Node 93/93、相关 Python 60/60、组合基线 254/254、专属依赖闭包、语法和 diff 检查通过。证据见 [P1 只读](../../../general-e2e/evidence/workbuddy-macos-readonly-20260919/README.md)和 [P2/canary 收口](../../../general-e2e/evidence/workbuddy-macos-p2-offline-20260919/README.md)；前序交接为 [MAC-WORKBUDDY-GENERAL-002](../handoffs/MAC-WORKBUDDY-GENERAL-002.md)，本轮 SLOT05 阻断交接为 [MAC-WORKBUDDY-GENERAL-003](../handoffs/MAC-WORKBUDDY-GENERAL-003.md)，新失败原件留在 debug 根。真实 canary 没有实际发送、模型执行、原生 session、collect、评分或发行结论；用户现场未被改变。未 push。
+P1 `2112a86450ba2f22fb284d37a20921cd7e65db69` 提供只读 probe/adapter；P2 `e388dfa43c0f38263ebcf57bf022ba1eb2c3cfeb` 提供安全可恢复单题入口；`5bea762` 改用 CDP `Input.insertText` 并将精确回读、唯一 enabled 发送控件前移到 armed 之前。COMMON-004/execute 0.8.1 已采用到当前工作树；v4 发行构建与五题本机执行已完成。WorkBuddy 49/49、Skill/layout 24/24、五题 verify-only 5/5、正式 collect/finalizer 5/5、队列恢复和回传/报告输入校验均通过。正式产物位于 `/Users/gzx/debug-workspace/e2e-evaluate/workbuddy-macos-general-e2e/acceptance-20260921-v4`；当前报告如实保留 1 个 `unscored`，因此尚不能写生产 PASS。前序离线证据见 [P1 只读](../../../general-e2e/evidence/workbuddy-macos-readonly-20260919/README.md)和 [P2/canary 收口](../../../general-e2e/evidence/workbuddy-macos-p2-offline-20260919/README.md)；未 push。
