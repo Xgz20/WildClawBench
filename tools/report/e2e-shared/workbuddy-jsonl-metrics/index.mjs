@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { createNativeResourceMetricParsers } from "../resource-metrics/native-parsers.mjs";
 import { findTraceFiles } from "../resource-metrics/trace-io.mjs";
 
+// Version of the frozen JSONL supplement algorithm, retained for old packages.
 export const VERSION = "0.1.0";
 export const SUPPLEMENT_SCHEMA = "wildclawbench.workbuddy-resource-supplement/v1";
 const MAX_BYTES = 64 * 1024 * 1024;
@@ -199,11 +200,12 @@ export async function originalResources(unitRoot, executionPath) {
     if (sha(bytes) !== ref.sha256 || bytes.length !== ref.size) fail("ORIGINAL_TRACE_DRIFT");
     if (ref.path.endsWith(".json")) {
       const value = JSON.parse(bytes);
-      if (value.runtime_snapshot) candidates.push(value.runtime_snapshot);
+      if (value.runtime_snapshot) candidates.push({ snapshot: value.runtime_snapshot,
+        source: artifact(relative(unitRoot, join(traceRoot, ref.path)), bytes) });
     }
   }
   if (candidates.length !== 1) fail("ORIGINAL_RUNTIME_MISSING_OR_AMBIGUOUS");
-  return { record, base: JSON.parse(metricsBytes), snapshot: candidates[0],
+  return { record, base: JSON.parse(metricsBytes), snapshot: candidates[0].snapshot, snapshotSource: candidates[0].source,
     execution: artifact(relative(unitRoot, executionPath), executionBytes),
     resource: artifact(record.resource_metrics_path, metricsBytes) };
 }

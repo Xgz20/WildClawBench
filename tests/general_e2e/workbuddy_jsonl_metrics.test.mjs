@@ -7,6 +7,8 @@ import { join } from "node:path";
 import { parseBoundJsonl, applyJsonlMetrics, artifact, jsonBytes, verifySupplement, discoverJsonl,
   withoutModelResponseCount } from "../../tools/report/e2e-shared/workbuddy-jsonl-metrics/index.mjs";
 import { supplementWorkBuddyResources } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/workbuddy/supplement-resources.mjs";
+import { supplementWorkBuddyTiming } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/workbuddy/supplement-timing.mjs";
+import { workBuddyTiming, verifyTimingSupplement } from "../../tools/report/e2e-shared/workbuddy-jsonl-metrics/timing.mjs";
 import { collectWorkBuddyEvidence } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/workbuddy/collector.mjs";
 import { finalizeGeneralExecution } from "../../tools/report/skills/general-e2e/collect-general-e2e/scripts/finalize_general_execution.mjs";
 import { fixtureHook } from "./helpers/general-collection-fixture.mjs";
@@ -20,12 +22,12 @@ function fixture(workspace = "/fixture/workspace") {
   const prompt = "Do the fixture task.";
   const snapshot = buildWorkBuddyRuntimeSnapshot({
     conversation: { id: session.session_id, space: { cwd: session.cwd }, state: "idle", lifecycle: "active" },
-    request: { id: session.turn_id, traceId: "trace-fixture", state: "completed", timestamp: 1,
+    request: { id: session.turn_id, traceId: "trace-fixture", state: "completed", timestamp: Date.parse("2026-09-21T00:00:01Z"),
       userMessage: { state: "completed", content: [{ type: "text", text: prompt }] },
       assistantMessage: { state: "completed", content: [
         ...["call-1", "call-2"].map(toolCallId => ({ type: "tool", toolCallId, title: "Read", status: "completed" })),
         { type: "text", text: "Done." },
-      ] }, usage: {}, completedAt: 5000 },
+      ] }, usage: {}, completedAt: Date.parse("2026-09-21T00:00:05Z"), finishTimestamp: Date.parse("2026-09-21T00:00:04.980Z") },
     requestEntries: { totalRequests: 1, historyReady: true }, capturedAt: "2026-09-21T00:00:00Z",
   });
   const usage = (input, output) => ({ requests: 1, inputTokens: input, outputTokens: output, totalTokens: input + output,
@@ -96,9 +98,16 @@ test("WorkBuddy fresh collector archives JSONL and passes the formal finalizer w
     const metrics = JSON.parse(await readFile(collected.resource_metrics));
     assert.equal(metrics.metrics.requests.request_count.value, 2);
     assert.equal(metrics.metrics.usage.total_tokens.value, 350);
+    assert.equal(metrics.metrics.timing.duration_seconds.value, 5);
+    assert.equal(metrics.metrics.timing.agent_duration_seconds.value, 4);
     const finalized = await finalizeGeneralExecution({ unitRoot: unit, stateFile: collected.state_file, traceIndex: collected.trace_index,
       resourceMetrics: collected.resource_metrics, pythonExecutable: process.env.PYTHON || "python3", stabilityMilliseconds: 1, processQuietMilliseconds: 5, processWaitMilliseconds: 50 }, { processCleanup: fixtureHook("workbuddy") });
     assert.equal(finalized.status, "PASS");
+    const missing = await collectWorkBuddyEvidence({ unitRoot: unit, journalFile: journalPath, stateFile: statePath,
+      nativeProjectsRoot: join(unit, "missing"), outputRoot: join(unit, ".general-e2e/collection/no-jsonl") });
+    const withoutJsonl = JSON.parse(await readFile(missing.resource_metrics));
+    assert.equal(withoutJsonl.metrics.requests.request_count.value, null);
+    assert.equal(withoutJsonl.metrics.timing.agent_duration_seconds.value, 4);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -145,7 +154,7 @@ test("WorkBuddy supplement leaves frozen records intact and recomputes metrics o
     const resource = jsonBytes(f.base), resourcePath = "evidence/tasks/task/attempt/resource-metrics.json";
     await write(resourcePath, resource);
     const record = { identity: f.identity, dataset: { id: "dataset", digest: "d".repeat(64) }, harness: { id: "workbuddy" }, phase: "COMPLETED",
-      session: f.session, prompt: { sha256: f.options.promptSha256 }, resource_metrics_path: resourcePath, evidence: { trace_index_path: trace + "/trace-index.json" } };
+      session: f.session, prompt: { sha256: f.options.promptSha256, sent_at: "2026-09-21T00:00:00Z" }, resource_metrics_path: resourcePath, evidence: { trace_index_path: trace + "/trace-index.json" } };
     const recordBytes = jsonBytes(record), recordRelative = "evidence/tasks/task/attempt/execution-record.json";
     const path = await write(recordRelative, recordBytes);
     const evidenceManifest = jsonBytes({ artifacts: [artifact(resourcePath, resource), artifact(trace + "/trace-index.json", traceBytes)] });
@@ -154,11 +163,37 @@ test("WorkBuddy supplement leaves frozen records intact and recomputes metrics o
     await write("receipts/collect-evidence-receipt.json", jsonBytes({ status: "completed", stage: "collect-evidence", scope: { batch_id: "batch", unit_id: "unit" }, artifacts: [artifact(recordRelative, recordBytes), artifact(evidenceManifestPath, evidenceManifest)] }));
     await mkdir(join(projects, "workspace"), { recursive: true });
     await writeFile(join(projects, "workspace", f.session.session_id + ".jsonl"), f.bytes());
+    const timingOnly = await supplementWorkBuddyTiming({ unitRoot: unit, executionRecord: path });
+    assert.equal(timingOnly.token_supplement_sha256, null);
+    assert.equal(JSON.parse(await readFile(timingOnly.resource_metrics_path)).metrics.timing.agent_duration_seconds.value, 4);
+    await rm(join(unit, "evidence/timing-supplements/task"), { recursive: true });
     const result = await supplementWorkBuddyResources({ unitRoot: unit, executionRecord: path, nativeProjectsRoot: projects });
     assert.equal(result.status, "PASS");
     assert.deepEqual(await readFile(path), recordBytes);
     assert.deepEqual(await readFile(join(unit, resourcePath)), resource);
     await assert.rejects(() => supplementWorkBuddyResources({ unitRoot: unit, executionRecord: path, nativeProjectsRoot: projects }), /EEXIST/);
+    const tokenBefore = await readFile(result.resource_metrics_path);
+    const timing = await supplementWorkBuddyTiming({ unitRoot: unit, executionRecord: path });
+    assert.equal(timing.status, "PASS");
+    assert.equal(timing.token_supplement_sha256, result.supplement_sha256);
+    assert.deepEqual(await readFile(path), recordBytes);
+    assert.deepEqual(await readFile(result.resource_metrics_path), tokenBefore);
+    const timed = JSON.parse(await readFile(timing.resource_metrics_path));
+    assert.equal(timed.metrics.usage.total_tokens.value, 350);
+    assert.equal(timed.metrics.timing.agent_duration_seconds.value, 4);
+    assert.equal(timed.metrics.timing.duration_seconds.value, 5);
+    await assert.rejects(() => supplementWorkBuddyTiming({ unitRoot: unit, executionRecord: path }), /EEXIST/);
+    // Re-hashing a forged metric must not bypass recomputation from frozen evidence.
+    timed.metrics.timing.agent_duration_seconds.value++;
+    const forged = jsonBytes(timed), timingManifestPath = join(unit, "evidence/timing-supplements/task/supplement.json");
+    await writeFile(timing.resource_metrics_path, forged);
+    const timingManifest = JSON.parse(await readFile(timingManifestPath));
+    timingManifest.resource = artifact("resource-metrics.json", forged);
+    await writeFile(timingManifestPath, jsonBytes(timingManifest));
+    await assert.rejects(() => verifyTimingSupplement(unit, "task", path), /METRICS_MISMATCH/);
+    await writeFile(join(unit, trace, "binding.json"), jsonBytes({ runtime_snapshot: { ...f.snapshot, request: { ...f.snapshot.request, completedAt: 1 } } }));
+    await assert.rejects(() => verifyTimingSupplement(unit, "task", path), /ORIGINAL_TRACE_DRIFT/);
+    await writeFile(join(unit, trace, "binding.json"), binding);
     const metrics = JSON.parse(await readFile(result.resource_metrics_path)); metrics.metrics.usage.total_tokens.value++;
     const changed = jsonBytes(metrics); await writeFile(result.resource_metrics_path, changed);
     const manifestPath = join(unit, "evidence/resource-supplements/task/supplement.json");
@@ -168,4 +203,47 @@ test("WorkBuddy supplement leaves frozen records intact and recomputes metrics o
     await mkdir(join(projects, "other")); await writeFile(join(projects, "other", f.session.session_id + ".jsonl"), f.bytes());
     await assert.rejects(() => discoverJsonl(projects, f.session.session_id), /AMBIGUOUS/);
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+test("WorkBuddy native timing distinguishes flow from native lifetime and accepts earlier internal finish", () => {
+  const f = fixture();
+  const binding = { ...f.options, prompt: { sha256: f.options.promptSha256, sent_at: "2026-09-21T00:00:00Z" } };
+  let values = workBuddyTiming(binding);
+  assert.equal(values.duration_seconds.value, 5);
+  assert.equal(values.agent_duration_seconds.value, 4);
+  delete f.snapshot.request.completedAt;
+  assert.equal(workBuddyTiming(binding).agent_duration_seconds.value, 3.98);
+  f.snapshot.request.startedAt = f.snapshot.request.finishTimestamp;
+  assert.equal(workBuddyTiming(binding).agent_duration_seconds.value, 0);
+  delete f.snapshot.request.finishTimestamp;
+  values = workBuddyTiming(binding);
+  assert.equal(values.duration_seconds.value, null);
+  assert.equal(values.agent_duration_seconds.status, "unavailable");
+  f.snapshot.request.completedAt = Date.parse("2026-09-21T00:00:05Z");
+  delete f.snapshot.request.startedAt; delete f.snapshot.request.timestamp;
+  assert.equal(workBuddyTiming(binding).agent_duration_seconds.value, null);
+  assert.equal(workBuddyTiming(binding).duration_seconds.value, 5);
+  delete binding.prompt.sent_at;
+  assert.equal(workBuddyTiming(binding).duration_seconds.value, null);
+});
+
+test("WorkBuddy timing rejects invalid, reversed, conflicting timestamps and wrong identity", () => {
+  const changes = [
+    b => { b.snapshot.request.timestamp = "2026-09-21T00:00:01Z"; },
+    b => { b.snapshot.request.timestamp = NaN; },
+    b => { b.snapshot.request.timestamp = -1; },
+    b => { b.snapshot.request.timestamp = 1.5; },
+    b => { b.snapshot.request.completedAt = b.snapshot.request.timestamp - 1; },
+    b => { b.snapshot.request.finishTimestamp = b.snapshot.request.completedAt + 1; },
+    b => { b.prompt.sent_at = "2026-09-21T00:00:02Z"; },
+    b => { b.prompt.sent_at = "invalid"; },
+    b => { b.session = { ...b.session, turn_id: "wrong" }; },
+    b => { b.session = { ...b.session, cwd: "/wrong" }; },
+    b => { b.prompt.sha256 = "f".repeat(64); },
+  ];
+  for (const change of changes) {
+    const f = fixture(), binding = { ...f.options, prompt: { sha256: f.options.promptSha256, sent_at: "2026-09-21T00:00:00Z" } };
+    change(binding);
+    assert.throws(() => workBuddyTiming(binding), /WORKBUDDY_TIMING_/);
+  }
 });

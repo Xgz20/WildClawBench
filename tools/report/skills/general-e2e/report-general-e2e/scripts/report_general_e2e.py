@@ -387,12 +387,13 @@ def validate_selected_return(
     ):
         raise ReportError(f"RETURN_IDENTITY_MISMATCH: {unit['unit_id']}")
     validate_return_entries(target, package_manifest)
-    supplements = target / "unit/evidence/resource-supplements"
-    if supplements.exists() and (
-        unit.get("harness", {}).get("id") != "workbuddy"
-        or any(p.name not in unit["task_ids"] or not p.is_dir() or p.is_symlink() for p in supplements.iterdir())
-    ):
-        raise ReportError("RESOURCE_SUPPLEMENT_SCOPE_INVALID")
+    for kind in ("resource-supplements", "timing-supplements"):
+        supplements = target / "unit/evidence" / kind
+        if supplements.exists() and (
+            unit.get("harness", {}).get("id") != "workbuddy"
+            or any(p.name not in unit["task_ids"] or not p.is_dir() or p.is_symlink() for p in supplements.iterdir())
+        ):
+            raise ReportError("RESOURCE_SUPPLEMENT_SCOPE_INVALID")
     sources = package_manifest.get("sources") or {}
     unit_manifest_path = target / "unit/manifest.json"
     collect_receipt_path = target / "unit/receipts/collect-evidence-receipt.json"
@@ -544,15 +545,16 @@ def metric_observation(metrics: Mapping[str, Any] | None, field: str) -> dict[st
     }
 
 
-def workbuddy_resource_supplement(root: Path, task_id: str, execution_path: Path) -> dict[str, Any] | None:
+def workbuddy_resource_supplement(root: Path, task_id: str, execution_path: Path, *, timing: bool = False) -> dict[str, Any] | None:
     unit_root = root / "unit"
-    directory = unit_root / "evidence/resource-supplements" / task_id
+    directory = unit_root / "evidence" / ("timing-supplements" if timing else "resource-supplements") / task_id
     if not directory.exists():
         return None
-    script = Path(__file__).resolve().parents[1] / "vendor/e2e-shared/workbuddy-jsonl-metrics/index.mjs"
+    entry = "timing.mjs" if timing else "index.mjs"
+    script = Path(__file__).resolve().parents[1] / "vendor/e2e-shared/workbuddy-jsonl-metrics" / entry
     if not script.is_file():
         # Source checkout only; standalone Skill packages use the frozen vendor.
-        repo_script = Path(__file__).resolve().parents[4] / "e2e-shared/workbuddy-jsonl-metrics/index.mjs"
+        repo_script = Path(__file__).resolve().parents[4] / "e2e-shared/workbuddy-jsonl-metrics" / entry
         if repo_script.is_file():
             script = repo_script
     try:
@@ -632,15 +634,23 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
         if metrics.get("identity") != expected_identity:
             raise ReportError(f"RESOURCE_IDENTITY_MISMATCH: {unit['unit_id']}:{task_id}")
     supplement = None
-    if (root / "unit/evidence/resource-supplements" / task_id).exists():
+    timing_supplement = None
+    for timing in (False, True):
+        kind = "timing-supplements" if timing else "resource-supplements"
+        if not (root / "unit/evidence" / kind / task_id).exists():
+            continue
         original_record = resolve_file(
             root / "unit", f"evidence/tasks/{task_id}/{expected_identity['attempt_id']}/execution-record.json",
             "supplement original execution record",
         )
         if sha256_file(original_record) != sha256_file(execution_path):
             raise ReportError("RESOURCE_SUPPLEMENT_EXECUTION_DRIFT")
-        supplement = workbuddy_resource_supplement(root, task_id, original_record)
-        metrics_path = Path(supplement["resource_metrics_path"])
+        verified = workbuddy_resource_supplement(root, task_id, original_record, timing=timing)
+        if timing:
+            timing_supplement = verified
+        else:
+            supplement = verified
+        metrics_path = Path(verified["resource_metrics_path"])
         metrics = validate_contract(metrics_path, RESOURCE_SCHEMA)
         if metrics.get("identity") != expected_identity:
             raise ReportError("RESOURCE_SUPPLEMENT_IDENTITY_MISMATCH")
@@ -692,7 +702,8 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
             "score_sha256": sha256_file(score_path) if score_path else None,
             "resource_metrics_sha256": sha256_file(metrics_path) if metrics_path else None,
             "resource_supplement_sha256": supplement["supplement_sha256"] if supplement else None,
-            "base_resource_metrics_sha256": supplement["base_resource_sha256"] if supplement else None,
+            "timing_supplement_sha256": timing_supplement["supplement_sha256"] if timing_supplement else None,
+            "base_resource_metrics_sha256": (timing_supplement or supplement or {}).get("base_resource_sha256"),
         },
     }
 

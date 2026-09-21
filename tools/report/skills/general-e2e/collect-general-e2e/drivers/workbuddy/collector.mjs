@@ -16,6 +16,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "nod
 import { fileURLToPath } from "node:url";
 import { homedir } from "node:os";
 import { discoverJsonl, parseBoundJsonl, applyJsonlMetrics, withoutModelResponseCount } from "../../vendor/e2e-shared/workbuddy-jsonl-metrics/index.mjs";
+import { applyWorkBuddyTiming } from "../../vendor/e2e-shared/workbuddy-jsonl-metrics/timing.mjs";
 
 import {
   collectWorkBuddyGeneralEvidence,
@@ -360,6 +361,12 @@ export async function collectWorkBuddyEvidence(options) {
         resource = rebaseResourceMetrics(resource, { bytes: collectedStateBytes }, evidence);
         resource = applyJsonlMetrics(resource, parsed, artifact(`trace/${name}`, native.bytes));
       }
+    }
+    if (runtimeEvidence) {
+      resource = applyWorkBuddyTiming(resource, {
+        snapshot: runtimeEvidence.value.runtime_snapshot, session: state.session, prompt: state.prompt,
+      }, [artifact("execution/automation-state.json", collectedStateBytes),
+        artifact(`trace/${runtimeEvidence.target}`, await readFile(runtimeEvidence.source.path))]);
     }
     await writeFile(join(stage, "resource-metrics.json"), jsonBytes(resource), { flag: "wx", mode: 0o600 });
     await rename(stage, outputRoot);
