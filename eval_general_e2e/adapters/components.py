@@ -41,7 +41,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="workbuddy-evidence",
-        version="0.2.0",
+        version="0.3.0",
         source_root="tools/report/e2e-shared/workbuddy-evidence",
         vendor_root="vendor/e2e-shared/workbuddy-evidence",
         entrypoints=("native-history.mjs", "runtime-api.mjs", "cleanup.mjs"),

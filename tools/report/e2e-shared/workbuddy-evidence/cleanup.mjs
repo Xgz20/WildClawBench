@@ -36,16 +36,21 @@ function assertIdentityAligned(state, traceIndex, resourceMetrics) {
   }
 }
 
-function assertNullUnavailable(metric, label) {
-  if (!isObject(metric) || metric.value !== null || metric.status !== "unavailable") {
-    throw new Error(`WORKBUDDY_METRIC_MUST_REMAIN_UNAVAILABLE: ${label}`);
-  }
-  if (!isObject(metric.coverage)
-      || metric.coverage.known !== 0
-      || metric.coverage.total < 1
+function metricStatus(metric, label) {
+  if (!isObject(metric)
+      || !new Set(["observed", "inferred", "partial", "unverified", "unavailable"]).has(metric.status)
+      || !isObject(metric.coverage)
+      || !Number.isInteger(metric.coverage.known)
+      || !Number.isInteger(metric.coverage.total)
+      || metric.coverage.known < 0
+      || metric.coverage.total < metric.coverage.known
       || typeof metric.coverage.unit !== "string") {
-    throw new Error(`WORKBUDDY_METRIC_COVERAGE_INVALID: ${label}`);
+    throw new Error(`WORKBUDDY_METRIC_STATUS_INVALID: ${label}`);
   }
+  if (metric.status === "unavailable" && (metric.value !== null || metric.coverage.known !== 0)) {
+    throw new Error(`WORKBUDDY_METRIC_UNAVAILABLE_INVALID: ${label}`);
+  }
+  return metric.status;
 }
 
 function assertNativeSession(state, traceIndex) {
@@ -140,12 +145,14 @@ export function assertWorkBuddyCollectorReadiness({ state, traceIndex, resourceM
   const requests = resourceMetrics.metrics?.requests;
   const usage = resourceMetrics.metrics?.usage;
   const timing = resourceMetrics.metrics?.timing;
-  assertNullUnavailable(requests?.request_attempt_count, "request_attempt_count");
-  assertNullUnavailable(usage?.cache_read_input_tokens, "cache_read_input_tokens");
-  assertNullUnavailable(usage?.cache_creation_input_tokens, "cache_creation_input_tokens");
-  assertNullUnavailable(usage?.reasoning_output_tokens, "reasoning_output_tokens");
-  assertNullUnavailable(timing?.duration_seconds, "duration_seconds");
-  assertNullUnavailable(timing?.agent_duration_seconds, "agent_duration_seconds");
+  const metricStatuses = {
+    request_attempt_count: metricStatus(requests?.request_attempt_count, "request_attempt_count"),
+    cache_read_input_tokens: metricStatus(usage?.cache_read_input_tokens, "cache_read_input_tokens"),
+    cache_creation_input_tokens: metricStatus(usage?.cache_creation_input_tokens, "cache_creation_input_tokens"),
+    reasoning_output_tokens: metricStatus(usage?.reasoning_output_tokens, "reasoning_output_tokens"),
+    duration_seconds: metricStatus(timing?.duration_seconds, "duration_seconds"),
+    agent_duration_seconds: metricStatus(timing?.agent_duration_seconds, "agent_duration_seconds"),
+  };
   if (Object.prototype.hasOwnProperty.call(resourceMetrics.metrics || {}, "credit")
       || Object.prototype.hasOwnProperty.call(resourceMetrics.metrics?.usage || {}, "credit")) {
     throw new Error("WORKBUDDY_CREDIT_MUST_REMAIN_OUTSIDE_PRIMARY_METRICS");
@@ -157,8 +164,9 @@ export function assertWorkBuddyCollectorReadiness({ state, traceIndex, resourceM
     cleanup_hook: { id: hook.id, version: hook.version, platform: hook.platform },
     native_terminal: "verified",
     native_cwd: "verified",
-    transport_retry: "unavailable",
+    transport_retry: metricStatuses.request_attempt_count,
     credit: "unverified",
+    optional_metric_statuses: metricStatuses,
   };
 }
 

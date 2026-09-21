@@ -20,6 +20,15 @@ function unavailable() {
   };
 }
 
+function observed(value, unit = "conversation_request") {
+  return {
+    value,
+    status: "observed",
+    basis: "synthetic native evidence",
+    coverage: { known: 1, total: 1, unit },
+  };
+}
+
 function cleanupEvidence(workspace = WORKSPACE) {
   const snapshot = {
     supported: true,
@@ -155,6 +164,29 @@ test("WorkBuddy collector readiness preserves unavailable retry/credit fields", 
   assert.equal(result.status, "READY_FOR_GENERAL_FINALIZER");
   assert.equal(result.transport_retry, "unavailable");
   assert.equal(result.credit, "unverified");
+});
+
+test("WorkBuddy collector readiness accepts verified JSONL and native timing metrics", () => {
+  const fixture = collectorFixture();
+  fixture.resourceMetrics.collection.status = "complete";
+  fixture.resourceMetrics.metrics.usage.cache_read_input_tokens = observed(32, "model_response");
+  fixture.resourceMetrics.metrics.timing.duration_seconds = observed(5, "task");
+  fixture.resourceMetrics.metrics.timing.agent_duration_seconds = observed(4, "task");
+  const result = assertWorkBuddyCollectorReadiness({
+    ...fixture,
+    cleanupHook: createWorkBuddyCleanupHook({ run: async () => cleanupEvidence() }),
+  });
+  assert.equal(result.optional_metric_statuses.cache_read_input_tokens, "observed");
+  assert.equal(result.optional_metric_statuses.duration_seconds, "observed");
+  const invalid = structuredClone(fixture);
+  invalid.resourceMetrics.metrics.timing.duration_seconds.coverage.known = 2;
+  assert.throws(
+    () => assertWorkBuddyCollectorReadiness({
+      ...invalid,
+      cleanupHook: createWorkBuddyCleanupHook({ run: async () => cleanupEvidence() }),
+    }),
+    /METRIC_STATUS_INVALID/u,
+  );
 });
 
 test("WorkBuddy collector readiness fails closed on unknown native terminal/cwd and primary credit", () => {
