@@ -1,5 +1,7 @@
 # COMMON-004：WorkBuddy 输入修复与下一轮平台加固
 
+> 历史档案（2026-09-21 冻结）：仅供提交与证据追溯，旧派发、时段、负责人、下一项和跨平台并行安排均已退役。当前状态和操作以 [General E2E 接续入口](../../../general-e2e/README.md) 为准；本文件不再例行更新。
+
 | 字段 | 值 |
 | --- | --- |
 | 来源 / 目标 | COMMON → MAC-WORKBUDDY-GENERAL、MAC-QWENWORK-GENERAL、MAC-DOUBAOWORK-WEB、WIN-ASTRONSTUDIO-GENERAL |

@@ -1,5 +1,7 @@
 # macOS 三 Harness 真机协作计划
 
+> 历史档案（2026-09-21 冻结）：仅供提交与证据追溯，旧派发、时段、负责人、下一项和跨平台并行安排均已退役。当前状态和操作以 [General E2E 接续入口](../../general-e2e/README.md) 为准；本文件不再例行更新。
+
 ## 角色和并行边界
 
 当前控制会话负责公共集成、slot 授予、源码 SHA、交接台账和最终准入判断。三个独立任务分别负责 WorkBuddy General、QwenWork General、DoubaoWork Web；每个任务只使用自己的 Git worktree、证据根和 Harness 客户端。

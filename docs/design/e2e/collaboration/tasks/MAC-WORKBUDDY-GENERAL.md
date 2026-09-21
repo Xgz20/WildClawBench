@@ -1,5 +1,7 @@
 # MAC-WORKBUDDY-GENERAL：WorkBuddy macOS General
 
+> 历史档案（2026-09-21 冻结）：仅供提交与证据追溯，旧派发、时段、负责人、下一项和跨平台并行安排均已退役。当前状态和操作以 [General E2E 接续入口](../../../general-e2e/README.md) 为准；本文件不再例行更新。
+
 ## 当前串行迭代进度（2026-09-21，优先于下方历史记录）
 
 由控制任务直接在 `.agents/e2e-harness-contract` / `feat/e2e-harness-contract` 迭代，不再分派 worktree，也不需要桌面 slot。客户端版本只记录兼容性元数据，不设精确版本白名单。本轮固定验收身份为 `WORKBUDDY-MACOS-GENERAL-20260921-V4`，客户端为 WorkBuddy 5.5.6、macOS x86_64，值守单槽执行。
