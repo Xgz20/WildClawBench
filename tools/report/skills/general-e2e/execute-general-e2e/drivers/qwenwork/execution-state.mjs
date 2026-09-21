@@ -12,17 +12,9 @@ function attentionMapping() {
   return { phase: "NEEDS_ATTENTION", business_status: null, error: null, cancellation_confirmed: null };
 }
 
-function terminalMapping(session, { cancellationConfirmed, timeoutReached }) {
+function terminalMapping(session, { cancellationConfirmed }) {
   const classification = session?.classification
     || classifyQwenSessionStatus(session?.native_status, session?.stream_id);
-  if (timeoutReached === true) {
-    return {
-      phase: "FAILED",
-      business_status: "timeout",
-      error: { code: "QWENWORK_TIMEOUT", message: "QwenWork attempt reached its frozen deadline after a confirmed stop" },
-      cancellation_confirmed: true,
-    };
-  }
   if (classification.business_status === "completed") {
     return { phase: "COMPLETED", business_status: "completed", error: null, cancellation_confirmed: null };
   }
@@ -108,14 +100,13 @@ export function buildQwenGeneralExecutionState({
   finishedAt = null,
   durationSeconds = null,
   cancellationConfirmed = null,
-  timeoutReached = false,
   terminalObservation = null,
   humanAssistance = null,
   runtimeIdentity = null,
   recovery = null,
 }) {
   let sessionBinding = buildQwenGeneralSessionBinding(session || {}, bindingEvidence);
-  let mapping = terminalMapping(session || {}, { cancellationConfirmed, timeoutReached });
+  let mapping = terminalMapping(session || {}, { cancellationConfirmed });
   const terminalAssessment = assessTerminalObservation({
     session: session || {},
     sessionBinding,

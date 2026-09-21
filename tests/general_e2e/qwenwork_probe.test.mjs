@@ -221,13 +221,20 @@ test("terminal states require stop, stream, cwd, and binding agreement", async (
     terminalObservation: { active_stream: false, stop_confirmed: false, binding_consistent: true, conflicts: [] },
   });
   assert.equal(interruptedWithoutStop.phase, "NEEDS_ATTENTION");
-  const timeoutWithoutStop = buildQwenGeneralExecutionState({
+  const completedWithLegacyTimeoutField = buildQwenGeneralExecutionState({
     ...base,
     session: sessions[0],
     timeoutReached: true,
-    terminalObservation: { active_stream: false, stop_confirmed: false, binding_consistent: true, conflicts: [] },
+    terminalObservation: {
+      active_stream: false,
+      stop_confirmed: true,
+      target_session_verified: true,
+      binding_consistent: true,
+      conflicts: [],
+    },
   });
-  assert.equal(timeoutWithoutStop.phase, "NEEDS_ATTENTION");
+  assert.equal(completedWithLegacyTimeoutField.phase, "COMPLETED");
+  assert.equal(completedWithLegacyTimeoutField.execution.business_status, "completed");
 });
 
 test("read-only probe report keeps current 1.0.6 profile unverified and declares no UI mutation", async () => {

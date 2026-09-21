@@ -486,7 +486,7 @@ async function observeBoundAttempt(config, state, dependencies) {
   const bindingEvidence = await dependencies.writeBindingEvidence({ state, session, terminalObservation });
   const classification = session.classification || {};
   const now = dependencies.now();
-  const isNativeTerminal = classification.kind === "terminal" || ui.timeout_reached === true;
+  const isNativeTerminal = classification.kind === "terminal";
   const executionState = buildQwenGeneralExecutionState({
     identity: config.identity,
     dataset: config.dataset,
@@ -502,7 +502,6 @@ async function observeBoundAttempt(config, state, dependencies) {
       ? Math.max(0, (Date.parse(now) - Date.parse(state.send.invoking_at)) / 1000)
       : null,
     cancellationConfirmed: classification.business_status === "cancelled" && terminalObservation.stop_confirmed === true,
-    timeoutReached: ui.timeout_reached === true,
     terminalObservation,
     recovery: state.recovery,
   });
