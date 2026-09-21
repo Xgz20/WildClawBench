@@ -42,16 +42,26 @@ class GeneralReportViewsTests(unittest.TestCase):
                            "cache_read_input_tokens": 300, "cache_creation_input_tokens": 0}.items():
             resources[key]["total"] = value
         table = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]
-        self.assertEqual(table["rows"][0][1:], [440, 110, 400, 40, 300, 0, .75])
+        self.assertEqual(table["rows"][0][1:], [440, 110, 100, 300, 0, 40, .75])
+        resources["cache_creation_input_tokens"]["total"] = 20
+        row = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["rows"][0]
+        self.assertEqual(row[3:7], [80, 300, 20, 40])
+        self.assertEqual(sum(row[3:7]), row[1])
         resources["total_tokens"]["total"] = None
         resources["cache_creation_input_tokens"]["total"] = None
         resources["input_tokens"]["total"] = 0
         resources["cache_read_input_tokens"]["total"] = 0
         row = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["rows"][0]
         self.assertEqual(row[1:3], [None, None])
-        self.assertIsNone(row[6])
+        self.assertIsNone(row[3])
+        self.assertIsNone(row[5])
         self.assertIsNone(row[7])
         resources["cache_read_input_tokens"]["total"] = 1
+        with self.assertRaisesRegex(ValueError, "CACHE_EXCEEDS_INPUT"):
+            VIEWS.build_views(self.data, self.references)
+        resources["input_tokens"]["total"] = 10
+        resources["cache_read_input_tokens"]["total"] = 6
+        resources["cache_creation_input_tokens"]["total"] = 5
         with self.assertRaisesRegex(ValueError, "CACHE_EXCEEDS_INPUT"):
             VIEWS.build_views(self.data, self.references)
 

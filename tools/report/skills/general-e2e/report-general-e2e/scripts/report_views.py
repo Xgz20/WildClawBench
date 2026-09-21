@@ -181,11 +181,13 @@ def build_views(data, references):
                          n, completed, errors, anomalies, completed/n if n else None,
                          score["valid_score_count"], score["unscored_count"], total("total_tokens"), total("request_count"),
                          total("agent_duration_seconds"), total("duration_seconds"), total("call_count")])
-        cached, inputs = total("cache_read_input_tokens"), total("input_tokens")
-        if cached is not None and inputs is not None and cached > inputs:
+        cached, inputs, writes = total("cache_read_input_tokens"), total("input_tokens"), total("cache_creation_input_tokens")
+        if inputs is not None and ((cached is not None and cached > inputs) or (writes is not None and writes > inputs)
+                                   or (cached is not None and writes is not None and cached + writes > inputs)):
             raise ValueError("REPORT_CACHE_EXCEEDS_INPUT")
+        ordinary = inputs - cached - writes if inputs is not None and cached is not None and writes is not None else None
         efficiency.append([label, total("total_tokens"), total("total_tokens")/n if total("total_tokens") is not None and n else None,
-                           inputs, total("output_tokens"), cached, total("cache_creation_input_tokens"),
+                           ordinary, cached, writes, total("output_tokens"),
                            cached/inputs if cached is not None and inputs is not None and inputs > 0 else None])
         caps[unit["unit_id"]] = capability_scores(rows, references["capabilities"])
         grouped, known = Counter(), 0
@@ -207,11 +209,11 @@ def build_views(data, references):
                       ["得分为百分制，均值只含有效评分；真实零分保留，评测异常和未评分不补零。",
                        "完成率=原生正常完成数/冻结用例数；执行情况与评分状态分别统计，异常数按任务去重，各列不要求相加等于用例数。",
                        "任务耗时=原生请求耗时之和；流程耗时包含发送及等待。总请求数按客户端可观测模型响应/请求口径，来源详见资源覆盖。"]),
-        "效率对比": table(["模型@Harness", "总token", "平均token", "输入token", "输出token", "缓存输入token", "缓存输出token（Cache Write）", "缓存命中率"],
+        "效率对比": table(["模型@Harness", "总 Token", "平均 Token", "普通输入 Token", "缓存命中输入 Token", "缓存写入输入 Token", "输出 Token", "缓存命中率"],
                           efficiency, {"2": "#,##0.00", "7": "0.00%"},
-                          ["平均token=总token/冻结任务运行数；输入已包含缓存读取，缓存不再次加到总token。",
-                           "缓存输入token=缓存读取输入token；缓存命中率=缓存读取输入token总量/输入token总量，不是逐题比率平均。",
-                           "缓存输出token按本报告约定指 Cache Write，映射缓存写入输入token；有可信原生字段才统计，缺失显示-。资源不全时总量及相关派生值显示-，已知小计见资源覆盖。"]),
+                          ["平均 Token=总 Token/冻结任务运行数。普通输入=归一化输入总量−缓存命中输入−缓存写入输入；三项完整可观测时才计算。",
+                           "缓存命中输入为 Cache Read，缓存写入输入为 Cache Write；缺失显示-，不默认零。写入或命中缺失且无独立普通输入字段时，普通输入也显示-。",
+                           "缓存命中率=缓存命中输入 Token 总量/含缓存的输入 Token 总量，不平均逐题比例。缓存已计入输入总量，不再次加到总 Token。"]),
     }
     for name, key, names in [("分类对比", "category", CATEGORIES), ("难度对比", "difficulty", {}), ("模态对比", "modality", MODALITIES)]:
         groups = sorted({row.get(key) or "unknown" for row in data["tasks"]})

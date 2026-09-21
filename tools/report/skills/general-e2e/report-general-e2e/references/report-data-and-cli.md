@@ -35,13 +35,13 @@
 
 缓存读取和推理输出可能是输入/输出的子集，报告不把它们再次加到总 Token。
 
-## 单元对比视图（report 0.4.0）
+## 单元对比视图（report 0.4.1）
 
 Excel 顺序固定为总览、效率对比、分类对比、难度对比、Agent能力对比、模态对比、工具调用对比、用例明细、资源覆盖与异常。前七张表由 `presentation.tables` 同源渲染到领导版 Markdown。评分展示为百分制，原始 `total_score` 及 CLI adapter 保持 0–1；未知量显示 `-`。
 
 总览无成本、超时数和工具成功率等推断指标；`agent_duration_seconds` 展示为任务耗时，`duration_seconds` 展示为流程耗时，两者均为任务总和，不代替批次墙钟。原生完成数、执行错误数与评分有效性分别统计；评测异常取执行基础设施异常和评分异常任务的并集，取消、未评分和历史 timeout 仍在审计记录保留。
 
-效率表平均 Token 使用全部冻结任务运行作为分母；仅有完整总 Token 时计算，不使用已知小计冒充总量。缓存输入映射 `cache_read_input_tokens`，缓存输出按用户约定指 Cache Write、映射 `cache_creation_input_tokens`，缺少原生字段则为空。缓存命中率使用完整缓存输入总量/完整输入总量，分母 0 或覆盖不全时为空。
+效率表平均 Token 使用全部冻结任务运行作为分母；仅有完整总 Token 时计算，不使用已知小计冒充总量。Token 明细依次为普通输入、缓存命中输入（Cache Read）、缓存写入输入（Cache Write）、输出。普通输入由归一化输入总量减去完整缓存读取、完整缓存写入得到；任一依赖未知时不默认 0，而是空值。两项缓存分别映射 `cache_read_input_tokens`、`cache_creation_input_tokens`。缓存命中率使用完整缓存命中输入总量/含缓存的完整输入总量，分母 0 或覆盖不全时为空。
 
 七维能力映射随报告 Skill 冻结。自动规则读取被 score.evidence 的 SHA 绑定的 `rule-component.json/raw_scores`，语义读取 `evaluation.criteria`，按检查点命名空间对齐；同题维度内均值再取任务均值。缺失映射检查点的任务不参与该维度，同时保留涉及数和有效数。标准轨迹的工具调用按 task/call ID 去重、按工具名统计，明细与资源总数一致且轨迹完整才标为完整覆盖。均不需要新评分或 Harness 运行。
 

@@ -15,7 +15,7 @@ description: 校验并汇总 General E2E submission 和回传包，生成同源 
 python -m eval_general_e2e skills --name report-general-e2e --json
 ```
 
-`0.4.0/operational` 支持按模型@Harness 展示 General 结果、效率和维度对比，生成不含根因分析的领导版 Markdown、Excel 与单独审计报告。保留 WorkBuddy 已冻结评分后的 JSONL 和耗时补采。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
+`0.4.1/operational` 支持按模型@Harness 展示 General 结果、效率和维度对比，生成不含根因分析的领导版 Markdown、Excel 与单独审计报告。保留 WorkBuddy 已冻结评分后的 JSONL 和耗时补采。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
 
 ## 责任边界
 
@@ -84,7 +84,7 @@ python scripts/report_general_e2e.py generate \
 
 - 总览每个 `模型@Harness` 一行，优先使用执行记录中已核验的实际模型；无法确认显示“未知模型”，单个 unit 中实际模型混杂时显式显示“混合模型”。显示名重复时加 unit ID，不能自动合并。
 - 总览不展示成本、超时数；拆分“任务耗时(s)”（原生请求/Agent 耗时之和）与“流程耗时(s)”（含发送及等待）。保留有效评分数、未评分数；评测异常数按执行基础设施异常或评分异常的任务并集计数。完成率仅指原生正常完成率，不是正确率。
-- 效率对比：总 token、平均 token、输入、输出、缓存输入、缓存输出（Cache Write）、缓存命中率。平均 token 分母为冻结任务运行数；Cache Write 映射 `cache_creation_input_tokens`，有可信数据才统计，缺失显示 `-`。输入缓存命中率是缓存读取输入 token 总量除以输入 token 总量，输入为 0 或覆盖不全时为空；不能平均逐题命中率或把缓存再次加入总 token。
+- 效率对比：模型@Harness、总 Token、平均 Token、普通输入 Token、缓存命中输入 Token、缓存写入输入 Token、输出 Token、缓存命中率。普通输入=归一化输入总量−Cache Read−Cache Write；三项完整可观测时才计算，未知缓存不能按 0 扣减。Cache Read/Write 分别映射 `cache_read_input_tokens`/`cache_creation_input_tokens`，缺失显示 `-`。平均 Token 分母为冻结任务运行数；缓存命中率仍使用缓存命中输入/含缓存的输入总量，不能改除普通输入。输入为 0 或覆盖不全时为空，不平均逐题比例或重复累加缓存。
 - 工具指标本版只展示调用数与按工具名分组的已知数量，标准 transcript 中每题 call ID 去重，与原指标对账后标注明细覆盖。`completed` 不等于工具成功；不实现格式准确率、执行成功率、不确定占比。
 - 七维能力复用公共 `checkpoint_capability_map7.yaml`。自动检查点来自评分引用并带 SHA 的 `rule-component.json/raw_scores`；语义检查点来自 score.criteria，按规则/语义命名空间对齐。任务内映射检查点均值再对任务取均值，缺少任一映射检查点的该任务不进入该维度；同时披露有效/涉及样本数，缺失不补零。不重做判分、不把任务总分替代未映射检查点。
 - 构建时冻结公共实体显示名和能力映射为 `data/report-reference.json`，随包携带 canonical YAML 及 SHA；脱仓报告无需 PyYAML。公共字典来源在 JSON 和资源审计表保留。
