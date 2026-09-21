@@ -354,6 +354,31 @@ test("fresh execution dispatches exactly once and binds all native identities", 
   }
 });
 
+test("task timeout_seconds does not stop AstronStudio before its native terminal state", async () => {
+  const config = await fixture();
+  const clickCounter = { count: 0 };
+  try {
+    // A one-second dataset value must not become the Harness execution
+    // deadline. The fake clock is already beyond it while the native turn is
+    // still running, then the next observation reaches completed.
+    config.task.timeout_seconds = 1;
+    config.runTimeoutSeconds = 1;
+    const dependencies = commonDependencies(
+      config,
+      [[], [nativeSession("running")], [nativeSession("running")], [nativeSession("completed")]],
+      clickCounter,
+    );
+    dependencies.nowMilliseconds = () => Date.parse("2026-09-17T15:00:00.000Z") + 120_000;
+    const result = await executeSingleTask(config, dependencies);
+    assert.equal(result.phase, "COMPLETED");
+    assert.equal(result.execution.business_status, "completed");
+    assert.equal(result.execution.deadline_at, null);
+    assert.equal(result.history.some((item) => item.event === "EXECUTION_DEADLINE_REACHED"), false);
+  } finally {
+    await rm(config.unitRoot, { recursive: true, force: true });
+  }
+});
+
 test("resume observes the same attempt without a second prompt dispatch", async () => {
   const config = await fixture();
   const clickCounter = { count: 0 };

@@ -139,7 +139,11 @@
         "finished_at": {"$ref": "#/$defs/nullableString"},
         "duration_seconds": {"type": ["number", "null"], "minimum": 0},
         "agent_duration_seconds": {"type": ["number", "null"], "minimum": 0},
-        "deadline_at": {"type": "string", "format": "date-time"},
+        "deadline_at": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "Compatibility field; null for General E2E because task timeout_seconds is not an execution deadline."
+        },
         "error": {
           "oneOf": [
             {"type": "null"},

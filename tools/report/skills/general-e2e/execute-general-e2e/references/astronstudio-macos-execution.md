@@ -4,7 +4,7 @@
 
 `scripts/execute_astronstudio_macos.mjs` 接收一个已解压的 General E2E execution unit、一个完整 task ID 和 G2-01 冻结运行配置。它完成单题 Prompt 一次发送、`thread_id / turn_id / session_id / cwd` 绑定和原生终态观察。
 
-当前实现不负责超时停止、候选冻结、轨迹归档、资源采集、评分或报告。串行批量由 [macOS 队列入口](astronstudio-macos-queue.md) 调用本执行器；采集与正式回执由 `collect-general-e2e` 负责。执行器输出的 `execution-record.json` 因此固定为 `evidence.completeness=partial`、`candidate.drift_status=not_frozen`、`resource_metrics_path=null`，不能直接作为评分准入回执。
+当前实现不负责任务级超时停止、候选冻结、轨迹归档、资源采集、评分或报告。题目 metadata 的 `timeout_seconds` 只作为数据集兼容字段，不参与被测 Harness 的执行 deadline；执行状态中的 `execution.deadline_at` 固定为 `null`。`--timeout-ms`、`--identity-timeout-ms` 和轮询间隔只服务于 CDP/UI 操作、网络探测和发送后身份绑定。串行批量由 [macOS 队列入口](astronstudio-macos-queue.md) 调用本执行器；采集与正式回执由 `collect-general-e2e` 负责。执行器输出的 `execution-record.json` 因此固定为 `evidence.completeness=partial`、`candidate.drift_status=not_frozen`、`resource_metrics_path=null`，不能直接作为评分准入回执。
 
 ## 调用
 
@@ -49,7 +49,7 @@ node scripts/execute_astronstudio_macos.mjs \
 
 ## 终态
 
-`projection_turns.state=completed` 是可信成功终态，不要求 workspace 必须发生变化，因此纯回复任务也能完成。`error/failed` 映射为 `infrastructure_error`，`interrupted/cancelled` 映射为 `cancelled`。达到任务时限时 G2-02 只进入 `NEEDS_ATTENTION` 并保留现场；可信停止、静默窗口、任务进程收口和 `timeout` 候选冻结属于 G2-05。
+`projection_turns.state=completed` 是可信成功终态，不要求 workspace 必须发生变化，因此纯回复任务也能完成。`error/failed` 映射为 `infrastructure_error`，`interrupted/cancelled` 映射为 `cancelled`。执行器会持续观察到可信原生终态或需要人工关注的状态，不会因为题目 `timeout_seconds` 到期而停止被测 Harness；可信停止、静默窗口、任务进程收口和 `timeout` 候选冻结属于采集/故障处理契约，而非题目执行 deadline。
 
 退出码：
 

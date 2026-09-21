@@ -321,10 +321,8 @@ test("batch only forwards retry flags to tasks with an existing automation state
   assert.equal(recoveryArgs.includes("--retry-pre-send-failure"), true);
   assert.equal(recoveryArgs.includes("--detach-after-submit"), true);
   assert.equal(recoveryArgs.includes("--observe-once"), false);
-  assert.deepEqual(
-    recoveryArgs.slice(recoveryArgs.indexOf("--post-cancel-quiescence-seconds"), recoveryArgs.indexOf("--post-cancel-quiescence-seconds") + 2),
-    ["--post-cancel-quiescence-seconds", "5"],
-  );
+  assert.equal(recoveryArgs.includes("--run-timeout-seconds"), false);
+  assert.equal(recoveryArgs.includes("--post-cancel-quiescence-seconds"), false);
 });
 
 test("active conversations are observed once without resending the prompt", () => {

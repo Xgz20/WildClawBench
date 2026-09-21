@@ -51,9 +51,7 @@ function usage() {
   --permission-mode <模式>         current（保持现状）或 full-access（显式开启完全访问）
   --model-id <ID>                  execution_record 模型身份；已有记录时仅校验
   --batch-id <ID> --task-id <ID>   没有 manifest/record 时必须显式提供
-  --run-timeout-seconds <秒>       Agent 总执行超时，默认 3600
   --poll-interval-seconds <秒>     终态轮询间隔，默认 2
-  --post-cancel-quiescence-seconds <秒> 超时停止后的 workspace 静默观察，默认 5
   --resume                         从已有 automation_state 恢复，禁止重复发送
   --detach-after-submit            捕获稳定 thread/turn/cwd 后退出观察，供批次 Worker 后台并发
   --observe-once                   恢复原 thread，只执行一次终态观察
@@ -1252,7 +1250,7 @@ export async function readSessionsWithDiagnostics(state, readSessions, overrides
   }
 }
 
-async function observeAttemptFromDatabase(config, state, identityInfo, deadline) {
+async function observeAttemptFromDatabase(config, state, identityInfo) {
   const database = await readSessionsWithDiagnostics(
     state,
     () => querySessions(config.sessionDb),
@@ -1264,15 +1262,6 @@ async function observeAttemptFromDatabase(config, state, identityInfo, deadline)
       clientVersion: state.client.version,
       execution: { status: "pending", error: null },
     });
-    if (Date.now() >= deadline) {
-      return persistNeedsAttention(
-        config,
-        state,
-        identityInfo,
-        "state-database-unreadable-at-deadline",
-        `${database.error}；执行时限已到，但无法从 AstronStudio 状态库确认原会话终态`,
-      );
-    }
     return null;
   }
   const session = chooseAttemptSession(database.sessions, state, config.workspace);
@@ -1311,7 +1300,7 @@ async function observeAttemptFromDatabase(config, state, identityInfo, deadline)
       `无法识别 AstronStudio session 状态：${session.status}`,
     );
   }
-  if (classification.kind === "running" && Date.now() < deadline) {
+  if (classification.kind === "running") {
     await persistRunningObservation(config, state, identityInfo, session);
     return state;
   }
@@ -1331,95 +1320,6 @@ async function persistNeedsAttention(config, state, identityInfo, reason, error,
   return state;
 }
 
-export async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom, deadlineAt, overrides = {}) {
-  const dependencies = {
-    visibleLocators,
-    querySessions,
-    inspectDom,
-    snapshotTree,
-    sleep,
-    persistNeedsAttention,
-    takeScreenshot,
-    finalize,
-    now: () => new Date().toISOString(),
-    ...overrides,
-  };
-  const stopButtons = await dependencies.visibleLocators(page.locator('button[aria-label="停止生成"], button[aria-label="Stop generation"]'));
-  if (stopButtons.length !== 1) {
-    return dependencies.persistNeedsAttention(
-      config,
-      state,
-      identityInfo,
-      "timeout-stop-control-unavailable",
-      `超过 ${config.runTimeoutSeconds} 秒，但无法唯一确认 AstronStudio 停止按钮`,
-      page,
-      "10-timeout-stop-unavailable.png",
-    );
-  }
-  const stopRequestedAt = dependencies.now();
-  await stopButtons[0].click({ timeout: config.timeoutSeconds * 1000 });
-  const stopDeadline = Date.now() + config.timeoutSeconds * 1000;
-  let stopped = false;
-  let stopConfirmedAt = null;
-  while (Date.now() < stopDeadline) {
-    const session = chooseAttemptSession(await dependencies.querySessions(config.sessionDb), state, config.workspace);
-    if (session) updateObservedSession(state, session);
-    const dom = await dependencies.inspectDom(page);
-    if (session && classifySessionStatus(session.status).kind !== "running" && !dom.running) {
-      stopped = true;
-      stopConfirmedAt = dependencies.now();
-      break;
-    }
-    await dependencies.sleep(500);
-  }
-  if (!stopped) {
-    return dependencies.persistNeedsAttention(
-      config,
-      state,
-      identityInfo,
-      "timeout-stop-unconfirmed",
-      `超过 ${config.runTimeoutSeconds} 秒，已请求停止但无法确认 AstronStudio 不再运行`,
-      page,
-      "10-timeout-stop-unconfirmed.png",
-    );
-  }
-  const quietBefore = await dependencies.snapshotTree(config.candidateWorkspace);
-  await dependencies.sleep(config.postCancelQuiescenceSeconds * 1000);
-  const quietAfter = await dependencies.snapshotTree(config.candidateWorkspace);
-  if (quietBefore.sha256 !== quietAfter.sha256) {
-    return dependencies.persistNeedsAttention(
-      config,
-      state,
-      identityInfo,
-      "timeout-workspace-not-quiescent",
-      "AstronStudio 已停止，但候选 workspace 在静默观察窗口内仍发生变化",
-      page,
-      "10-timeout-workspace-active.png",
-    );
-  }
-  state.timeout = {
-    deadline_at: new Date(deadlineAt).toISOString(),
-    stop_requested_at: stopRequestedAt,
-    stop_confirmed_at: stopConfirmedAt,
-    stop_confirmed: true,
-    workspace_quiescent: true,
-    cancellation_confirmed: true,
-    quiescence: {
-      stable: true,
-      before_sha256: quietBefore.sha256,
-      after_sha256: quietAfter.sha256,
-      observed_seconds: config.postCancelQuiescenceSeconds,
-    },
-    last_dom_running: lastDom.running,
-  };
-  await dependencies.takeScreenshot(page, config, state, "10-timeout.png");
-  return dependencies.finalize(config, state, identityInfo, "TIMEOUT", {
-    terminalSource: "astudio-session-db+stop-confirmation+workspace-quiescence",
-    error: `超过 ${config.runTimeoutSeconds} 秒，已确认 AstronStudio 停止且 workspace 保持静默`,
-    finalText: lastDom.finalText,
-  });
-}
-
 export async function observeAttemptOnce(page, config, state, identityInfo, overrides = {}) {
   const dependencies = {
     inspectDom,
@@ -1429,29 +1329,14 @@ export async function observeAttemptOnce(page, config, state, identityInfo, over
     finalize,
     persistNeedsAttention,
     persistRunningObservation,
-    cancelTimedOutAttempt,
-    nowMilliseconds: () => Date.now(),
     ...overrides,
   };
-  const runStartedAt = Date.parse(state.timing.sent_at || state.timing.started_at || new Date().toISOString());
-  const deadline = runStartedAt + config.runTimeoutSeconds * 1000;
   state.runtime.heartbeat_at = new Date().toISOString();
   const dom = await dependencies.inspectDom(page);
   const database = await readSessionsWithDiagnostics(
     state,
     () => dependencies.querySessions(config.sessionDb),
   );
-  if (database.error && dependencies.nowMilliseconds() >= deadline) {
-    return dependencies.persistNeedsAttention(
-      config,
-      state,
-      identityInfo,
-      "state-database-unreadable-at-deadline",
-      `${database.error}；执行时限已到，但无法从 AstronStudio 状态库确认原会话终态`,
-      page,
-      "09-state-database-unreadable.png",
-    );
-  }
   const session = database.sessions
     ? chooseAttemptSession(database.sessions, state, config.workspace)
     : null;
@@ -1523,9 +1408,6 @@ export async function observeAttemptOnce(page, config, state, identityInfo, over
   await dependencies.persistRunningObservation(config, state, identityInfo, session, {
     allowTransition: Boolean(session || dom.running),
   });
-  if (dependencies.nowMilliseconds() >= deadline) {
-    return dependencies.cancelTimedOutAttempt(page, config, state, identityInfo, dom, deadline);
-  }
   return state;
 }
 
@@ -1561,12 +1443,10 @@ async function resumeAutomation(config, state, identityInfo) {
       }
     }
     if (config.observeOnce && !config.restartApp) {
-      const runStartedAt = Date.parse(state.timing.sent_at || state.timing.started_at || new Date().toISOString());
       const databaseObserved = await observeAttemptFromDatabase(
         config,
         state,
         identityInfo,
-        runStartedAt + config.runTimeoutSeconds * 1000,
       );
       if (databaseObserved) return databaseObserved;
     }

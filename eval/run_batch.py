@@ -25,6 +25,7 @@ from src.agents.claudecode import ClaudeCodeAgent
 from src.agents.codex import CodexAgent
 from src.agents.deepseek_harness import DeepSeekHarnessAgent
 from src.agents.hermesagent import HermesAgentAgent
+from src.agents.minimax_code import MiniMaxCodeAgent
 from src.agents.opencode import OpenCodeAgent
 from src.agents.openclaw import OpenClawAgent
 from src.utils.cli_args import parse_run_batch_args
@@ -114,6 +115,7 @@ GRADE_ON_ERROR_BACKENDS = (
     OpenCodeAgent,
     OpenClawAgent,
     DeepSeekHarnessAgent,
+    MiniMaxCodeAgent,
     HermesAgentAgent,
 )
 
@@ -123,6 +125,7 @@ WORKSPACE_CHANGE_BACKENDS = (
     AstronCodeAgent,
     OpenCodeAgent,
     DeepSeekHarnessAgent,
+    MiniMaxCodeAgent,
 )
 
 _RUN_CONFIG_CREDENTIAL_ENV_NAMES = (
@@ -253,7 +256,11 @@ def _build_run_configuration(
             "rerun_error": bool(getattr(args, "rerun_error", False)),
             "rerun_anomalous": bool(getattr(args, "rerun_anomalous", False)),
             "pass_threshold": getattr(args, "pass_threshold", None),
-            "requested_api": getattr(args, "dsh_api", None),
+            "requested_api": (
+                getattr(args, "mcode_api", None)
+                if getattr(args, "agent_backend", None) == "minimax-code"
+                else getattr(args, "dsh_api", None)
+            ),
             "api": getattr(backend, "api", None),
             "image": getattr(backend, "image", None),
             "image_model": getattr(args, "openclaw_image_model", None),
@@ -409,6 +416,8 @@ def _build_agent_backend(args) -> BaseAgent:
         return OpenCodeAgent()
     if args.agent_backend == "deepseek-harness":
         return DeepSeekHarnessAgent(api=args.dsh_api)
+    if args.agent_backend == "minimax-code":
+        return MiniMaxCodeAgent(api=args.mcode_api)
     if args.agent_backend == "hermesagent":
         return HermesAgentAgent(
             openrouter_api_key=OPENROUTER_API_KEY,

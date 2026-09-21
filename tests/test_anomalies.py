@@ -806,6 +806,41 @@ class AnomalyDetectionTest(unittest.TestCase):
             "error": "session export failed",
         }), "evaluation_anomaly")
 
+    def test_minimax_code_native_trace_exposes_model_api_rate_limit(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            trace = [
+                {
+                    "schemaVersion": 1,
+                    "sequence": 1,
+                    "timestampMs": 1,
+                    "runId": "run-1",
+                    "sessionId": "session-1",
+                    "turnId": "turn-1",
+                    "type": "turn.failed",
+                    "status": "failed",
+                    "error": {
+                        "category": "runtime",
+                        "code": "PROVIDER_ERROR",
+                        "message": "HTTP 429 too many requests",
+                    },
+                    "durationMs": 100,
+                }
+            ]
+            (run_dir / "minimax_code_trace.jsonl").write_text(
+                "\n".join(json.dumps(event) for event in trace) + "\n",
+                encoding="utf-8",
+            )
+
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "MODEL_API_RATE_LIMIT")
+
+            self.assertIsNotNone(item)
+            self.assertEqual(item["attribution"], "external_service")
+            self.assertEqual(item["validity_impact"], "review")
+        finally:
+            temp_dir.cleanup()
+
     def test_docker_failure_while_running_harness_requires_rerun(self) -> None:
         temp_dir, run_dir = self.make_run(events=[])
         try:

@@ -36,7 +36,7 @@ import {
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
 export const QUEUE_STATE_REVISION = 3;
-export const QUEUE_WORKER_VERSION = "1.9.0";
+export const QUEUE_WORKER_VERSION = "1.10.0";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 
@@ -46,7 +46,7 @@ const BATCH_PROFILES = Object.freeze({
     harnessId: "astronstudio",
     displayName: "AstronStudio",
     workerId: "astronstudio-background-concurrent",
-    workerVersion: "1.11.0",
+    workerVersion: "1.12.0",
     driverFile: resolve(SCRIPT_DIR, "../astronstudio/driver.mjs"),
     lockFileName: "astronstudio-ui.lock",
     defaultRunSlots: 3,
@@ -59,7 +59,7 @@ const BATCH_PROFILES = Object.freeze({
     harnessId: "qwenwork",
     displayName: "QwenWork",
     workerId: "qwenwork-background-concurrent",
-    workerVersion: "1.11.0",
+    workerVersion: "1.12.0",
     driverFile: resolve(SCRIPT_DIR, "../qwenwork/driver.mjs"),
     lockFileName: "qwenwork-ui.lock",
     defaultRunSlots: 3,
@@ -109,17 +109,15 @@ function usage() {
   --endpoint <本机CDP地址>         可选；覆盖 Driver 默认 CDP 地址，并在队列中冻结
   --app-path <主程序路径>          可选；显式指定桌面主程序完整路径，并在队列中冻结
   --permission-mode <模式>         current（保持现状）或 full-access（显式开启完全访问）
-  --run-timeout-seconds <秒>       每题 Agent 总执行超时，默认：3600
   --poll-interval-seconds <秒>     每题终态轮询间隔，默认：2
-  --post-cancel-quiescence-seconds <秒> 超时停止后的 workspace 静默观察，默认：5
-  --run-slots <1..${BATCH_PROFILE.maxRunSlots}>              Agent 并发数，默认：${BATCH_PROFILE.defaultRunSlots}；UI 始终单路
+${BATCH_PROFILE.harnessId === "qwenwork" ? "  --post-cancel-quiescence-seconds <秒> 显式停止问卷后的 workspace 静默观察，默认：5\n" : ""}  --run-slots <1..${BATCH_PROFILE.maxRunSlots}>              Agent 并发数，默认：${BATCH_PROFILE.defaultRunSlots}；UI 始终单路
   --restart-app-first              只在第一题前重启 ${BATCH_PROFILE.displayName}${BATCH_PROFILE.restartAppFirstByDefault ? "（新队列默认启用）" : ""}
   --restart-app-on-resume          恢复运行中题目时重启 ${BATCH_PROFILE.displayName}，并定位原会话
   --resume                         恢复同一 run-id 的未完成队列
   --retry-pre-send-failure          仅归档并重试发送前、产物零变化的 INFRA_FAILED
   --mark-manual <任务 ID>          记录人工介入并恢复检查；不绕过 Driver 终态门禁
   --status                         只读取并打印队列状态
-  --continue-on-terminal-failure   单题明确失败/超时后继续下一题
+  --continue-on-terminal-failure   单题明确失败后继续下一题（兼容旧 TIMEOUT）
   -h, --help                       显示帮助`;
 }
 
@@ -138,7 +136,6 @@ export function parseBatchArgs(argv) {
     endpoint: "",
     appPath: "",
     permissionMode: "current",
-    runTimeoutSeconds: 3600,
     pollIntervalSeconds: 2,
     postCancelQuiescenceSeconds: 5,
     runSlots: BATCH_PROFILE.defaultRunSlots,
@@ -159,7 +156,6 @@ export function parseBatchArgs(argv) {
     ["--endpoint", "endpoint"],
     ["--app-path", "appPath"],
     ["--permission-mode", "permissionMode"],
-    ["--run-timeout-seconds", "runTimeoutSeconds"],
     ["--poll-interval-seconds", "pollIntervalSeconds"],
     ["--post-cancel-quiescence-seconds", "postCancelQuiescenceSeconds"],
     ["--run-slots", "runSlots"],
@@ -189,7 +185,6 @@ export function parseBatchArgs(argv) {
       index += 1;
     }
   }
-  values.runTimeoutSeconds = positiveNumber(values.runTimeoutSeconds, "--run-timeout-seconds");
   values.pollIntervalSeconds = positiveNumber(values.pollIntervalSeconds, "--poll-interval-seconds");
   values.postCancelQuiescenceSeconds = positiveNumber(values.postCancelQuiescenceSeconds, "--post-cancel-quiescence-seconds");
   values.runSlots = positiveNumber(values.runSlots, "--run-slots");
@@ -509,10 +504,11 @@ export function buildDriverArgs(args, task, index, existingAutomation = null, op
     "--workspace", task.taskRoot,
     "--quiet",
     "--permission-mode", args.permissionMode,
-    "--run-timeout-seconds", String(args.runTimeoutSeconds),
     "--poll-interval-seconds", String(args.pollIntervalSeconds),
-    "--post-cancel-quiescence-seconds", String(args.postCancelQuiescenceSeconds),
   ];
+  if (BATCH_PROFILE.harnessId === "qwenwork") {
+    driverArgs.push("--post-cancel-quiescence-seconds", String(args.postCancelQuiescenceSeconds));
+  }
   if (args.model) driverArgs.push("--model", args.model);
   if (args.endpoint) driverArgs.push("--endpoint", args.endpoint);
   if (args.appPath) driverArgs.push("--app-path", args.appPath);

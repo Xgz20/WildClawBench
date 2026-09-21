@@ -34,7 +34,6 @@ import {
 } from "../platform.mjs";
 import {
   addProjectByManualPath,
-  cancelTimedOutAttempt,
   collectTerminalProcessCleanup,
   connectAstudioBrowser,
   dismissOpenMenus,
@@ -157,12 +156,14 @@ test("parseArgs uses AstronStudio defaults without changing model or reasoning",
   assert.equal(parsed.sessionDb, defaultAstronSessionDb());
   assert.equal(parsed.model, "");
   assert.equal(parsed.permissionMode, "current");
+  assert.equal("runTimeoutSeconds" in parsed, false);
   assert.equal(parsed.detachAfterSubmit, false);
   assert.equal(parseArgs(["--probe", "--detach-after-submit"]).detachAfterSubmit, true);
   assert.equal(
     parseArgs(["--probe", "--session-db", "C:\\custom\\state.sqlite"]).sessionDb,
     "C:\\custom\\state.sqlite",
   );
+  assert.throws(() => parseArgs(["--probe", "--run-timeout-seconds", "1"]), /未知参数/);
 });
 
 test("Windows AstronStudio state database keeps the legacy path and falls back to the current-user data directory", () => {
@@ -258,7 +259,8 @@ test("AstronStudio keeps observing from DOM during a transient state database sn
     {
       sessionDb: "/tmp/state.sqlite",
       workspace: "/tmp/task-1",
-      runTimeoutSeconds: 60,
+      task: { timeout_seconds: 1 },
+      runTimeoutSeconds: 1,
     },
     state,
     { taskId: "task-1" },
@@ -269,8 +271,6 @@ test("AstronStudio keeps observing from DOM during a transient state database sn
         persistence = { session, options };
         return currentState;
       },
-      nowMilliseconds: () => sentAt + 1_000,
-      cancelTimedOutAttempt: async () => { throw new Error("must not cancel before deadline"); },
     },
   );
   assert.equal(result, state);
@@ -280,7 +280,7 @@ test("AstronStudio keeps observing from DOM during a transient state database sn
   assert.deepEqual(persistence, { session: null, options: { allowTransition: true } });
 });
 
-test("AstronStudio requires attention when its state database is still unreadable at the deadline", async () => {
+test("AstronStudio does not turn elapsed task metadata into an execution deadline", async () => {
   const sentAt = Date.parse("2026-09-14T10:00:00.000Z");
   const state = {
     phase: "RUNNING",
@@ -296,20 +296,24 @@ test("AstronStudio requires attention when its state database is still unreadabl
     {
       sessionDb: "/tmp/state.sqlite",
       workspace: "/tmp/task-1",
-      runTimeoutSeconds: 60,
+      task: { timeout_seconds: 1 },
+      runTimeoutSeconds: 1,
     },
     state,
     { taskId: "task-1" },
     {
       inspectDom: async () => ({ running: false, attention: [], finalText: "" }),
       querySessions: async () => { throw new Error("database disk image is malformed"); },
-      nowMilliseconds: () => sentAt + 60_000,
-      persistNeedsAttention: async (_config, _state, _identity, reason, error) => ({ reason, error }),
-      cancelTimedOutAttempt: async () => { throw new Error("must not cancel without database confirmation"); },
+      persistRunningObservation: async (_config, currentState, _identity, session, options) => {
+        assert.equal(session, null);
+        assert.deepEqual(options, { allowTransition: false });
+        return currentState;
+      },
     },
   );
-  assert.equal(result.reason, "state-database-unreadable-at-deadline");
-  assert.match(result.error, /无法从 AstronStudio 状态库确认原会话终态/);
+  assert.equal(result, state);
+  assert.equal(result.phase, "RUNNING");
+  assert.equal(result.evidence.state_database_observation.consecutive_failures, 1);
 });
 
 test("Windows AstronStudio discovery prefers the registered install location", async () => {
@@ -734,7 +738,7 @@ test("AstronStudio terminal --resume backfills cleanup without resending the pro
   }), 0);
   const recovered = JSON.parse(await readFile(config.stateFile, "utf8"));
   assert.equal(recovered.phase, "SUCCEEDED");
-  assert.equal(recovered.driver.version, "1.11.0");
+  assert.equal(recovered.driver.version, "1.12.0");
   assert.equal(recovered.terminal_process_cleanup.supported, false);
   assert.equal(recovered.terminal_process_cleanup.success, true);
   assert.equal(recovered.terminal_process_cleanup.backfill_verification.unchanged, true);
@@ -1440,78 +1444,4 @@ test("restart refuses to force-terminate a different process during retry cleanu
     /启动重试清理超时后进程身份已变化，拒绝强制终止：原 PID 321，当前 PID 456/,
   );
   assert.equal(terminateCalls, 0);
-});
-
-test("timeout records the stop request before confirmation and persists the stopped session", async () => {
-  const stopButton = {
-    click: async () => {},
-  };
-  const state = {
-    session: {
-      conversation_id: "thread-1",
-      dom_conversation_id: "thread-1",
-      cwd: "C:\\task-1",
-      raw_status: "running",
-      turn_id: "turn-1",
-      updated_at_ms: 100,
-    },
-    timeout: null,
-  };
-  const stoppedSession = {
-    conversationId: "thread-1",
-    cwd: "C:\\task-1",
-    status: "interrupted",
-    sessionStatus: "stopped",
-    activeTurnId: null,
-    turnId: "turn-1",
-    updatedAt: 200,
-  };
-  const timestamps = [
-    "2026-09-10T12:00:00.000Z",
-    "2026-09-10T12:00:01.000Z",
-  ];
-  let finalized = null;
-  const result = await cancelTimedOutAttempt(
-    { locator: () => ({}) },
-    {
-      workspace: "C:\\task-1",
-      candidateWorkspace: "C:\\task-1\\workspace",
-      sessionDb: "C:\\AStudio Data\\state.sqlite",
-      timeoutSeconds: 1,
-      runTimeoutSeconds: 20,
-      postCancelQuiescenceSeconds: 5,
-    },
-    state,
-    { batchId: "batch-1", taskId: "task-1" },
-    { running: true, finalText: "partial response" },
-    Date.parse("2026-09-10T11:59:59.000Z"),
-    {
-      visibleLocators: async () => [stopButton],
-      querySessions: async () => [stoppedSession],
-      inspectDom: async () => ({ running: false }),
-      snapshotTree: async () => ({ sha256: "same-workspace" }),
-      sleep: async () => {},
-      takeScreenshot: async () => {},
-      finalize: async (_config, currentState, _identityInfo, phase, options) => {
-        finalized = { phase, options };
-        return currentState;
-      },
-      now: () => timestamps.shift(),
-    },
-  );
-  assert.equal(result, state);
-  assert.equal(state.session.raw_status, "interrupted");
-  assert.equal(state.session.updated_at_ms, 200);
-  assert.equal(state.timeout.stop_requested_at, "2026-09-10T12:00:00.000Z");
-  assert.equal(state.timeout.stop_confirmed_at, "2026-09-10T12:00:01.000Z");
-  assert.equal(state.timeout.quiescence.before_sha256, "same-workspace");
-  assert.equal(state.timeout.quiescence.after_sha256, "same-workspace");
-  assert.deepEqual(finalized, {
-    phase: "TIMEOUT",
-    options: {
-      terminalSource: "astudio-session-db+stop-confirmation+workspace-quiescence",
-      error: "超过 20 秒，已确认 AstronStudio 停止且 workspace 保持静默",
-      finalText: "partial response",
-    },
-  });
 });

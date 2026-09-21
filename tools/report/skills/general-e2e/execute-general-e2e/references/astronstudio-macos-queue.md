@@ -21,7 +21,7 @@ node scripts/run_astronstudio_macos_batch.mjs \
 - `.general-e2e/queues/<queue-id>/queue-receipt.json`，仅在队列完成时生成；
 - `.general-e2e/queues/<queue-id>/worker.lock`，仅在 Worker 存活时存在。
 
-queue digest 覆盖 batch/unit、dataset、manifest SHA、运行配置 digest、任务顺序、UI/后台槽位、明确失败后的继续策略，以及传给单题 Driver 的超时参数。恢复时任一项变化都会被拒绝。
+queue digest 覆盖 batch/unit、dataset、manifest SHA、运行配置 digest、任务顺序、UI/后台槽位、明确失败后的继续策略，以及传给单题 Driver 的 CDP/UI/身份绑定控制参数。它不冻结或执行题目 metadata 的 `timeout_seconds`；恢复时任一项变化都会被拒绝。
 
 ## 一次发送和切题门禁
 

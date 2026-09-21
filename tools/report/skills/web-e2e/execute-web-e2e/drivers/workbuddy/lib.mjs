@@ -24,7 +24,7 @@ import {
 
 export const AUTOMATION_SCHEMA = "wildclawbench.web-e2e-automation-state/v1";
 export const EXECUTION_SCHEMA = "wildclawbench.web-e2e-execution/v1";
-export const DRIVER_VERSION = "1.9.0";
+export const DRIVER_VERSION = "1.10.0";
 export const DEFAULT_APP_PATH = defaultWorkBuddyAppPath();
 export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9229";
@@ -85,7 +85,6 @@ export function parseArgs(argv) {
     executionRecord: "",
     sessionDb: defaultWorkBuddySessionDb(),
     timeoutSeconds: 30,
-    runTimeoutSeconds: 3600,
     pollIntervalSeconds: 2,
     postCancelQuiescenceSeconds: 5,
     restartApp: false,
@@ -115,7 +114,6 @@ export function parseArgs(argv) {
     ["--execution-record", "executionRecord"],
     ["--session-db", "sessionDb"],
     ["--timeout-seconds", "timeoutSeconds"],
-    ["--run-timeout-seconds", "runTimeoutSeconds"],
     ["--poll-interval-seconds", "pollIntervalSeconds"],
     ["--post-cancel-quiescence-seconds", "postCancelQuiescenceSeconds"],
   ]);
@@ -143,7 +141,6 @@ export function parseArgs(argv) {
   }
 
   values.timeoutSeconds = numberOption(values.timeoutSeconds, "timeoutSeconds");
-  values.runTimeoutSeconds = numberOption(values.runTimeoutSeconds, "runTimeoutSeconds");
   values.pollIntervalSeconds = numberOption(values.pollIntervalSeconds, "pollIntervalSeconds");
   values.postCancelQuiescenceSeconds = numberOption(values.postCancelQuiescenceSeconds, "postCancelQuiescenceSeconds");
   if (!PERMISSION_MODES.has(values.permissionMode)) {

@@ -351,7 +351,7 @@ macOS 在干净 worktree `6988b5252bc9140e86dae139fdffbcfc964bcfbf` 上生成了
 | V12 | 原控制任务硬中断后，另一个独立 Codex 任务沿用 worker/queue/thread/cursor/attempt，不重发 Prompt | 中断前后 worker identity、cursor、接管审计 |
 | V13 | 先持久化再触发被评 Harness 重启；单活动会话安全恢复，无法证明安全或多并发崩溃时失败关闭 | restart 状态、原会话 ID、恢复/NEEDS_ATTENTION 证据 |
 | V14 | 使用平台托管重启入口重启 Codex，恢复后沿用原评分任务和状态 | restart status/log、原 thread/cursor、恢复结果 |
-| V15 | 安全超时不伪造成功；发送前失败只在证明 Prompt 未被接收后重试一次；评分 deadline 与轮询超时可区分 | timeout/retry 计数、deadline、错误回执 |
+| V15 | 题目 `timeout_seconds` 与旧 `--run-timeout-seconds` 不限制被测 Harness；发送前失败只在证明 Prompt 未被接收后重试一次；评分 deadline 与轮询超时可区分 | 超短题目 metadata 下仍等待原生终态、无自动停止、retry 计数、评分 deadline、错误回执 |
 | V16 | 失败 attempt 的 `private-scoring` 原子归档，生成结构化错误回执；候选未修改，重试从干净私有输入开始 | attempt archive、error receipt/SHA、候选 SHA 对比 |
 | V17 | 在 submission 临时发布边界中断后可幂等收口；已发布文件丢失或漂移时失败关闭 | 中断点、恢复输出、最终 submission SHA |
 

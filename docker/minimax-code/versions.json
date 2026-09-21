@@ -1,0 +1,15 @@
+{
+  "default": "v0.0",
+  "versions": {
+    "v0.0": {
+      "image": "wildclawbench-minimax-code-ubuntu:v0.0",
+      "context": "v1",
+      "dockerfile": "v1/Dockerfile",
+      "build_args": {
+        "MCODE_VERSION": "0.4.12",
+        "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0",
+        "NODE_RUNTIME_IMAGE": "node:24-bookworm-slim"
+      }
+    }
+  }
+}

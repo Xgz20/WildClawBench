@@ -32,16 +32,15 @@ PREPARED
   -> SUCCEEDED
 
 任意非终态 -> NEEDS_ATTENTION / INFRA_FAILED
-PROMPT_SENT / RUNNING -> TIMEOUT
 ```
 
-终态只有 `SUCCEEDED`、`INFRA_FAILED` 和 `TIMEOUT`。`NEEDS_ATTENTION` 不是完成；控制面必须等待人工处理或显式恢复。
+新执行终态只有 `SUCCEEDED` 和 `INFRA_FAILED`。`NEEDS_ATTENTION` 不是完成；控制面必须等待人工处理或显式恢复。旧 Driver 已生成的 `TIMEOUT` 仍作为历史终态兼容读取和补录，但新 Driver 不得产生该状态。
 
 Prompt 发送采用失败关闭语义：写入 `READY_TO_SEND` 后到确认 conversation ID 之间发生中断时，恢复流程必须先查 Harness session。不能因为没有及时写入 `PROMPT_SENT` 就再次点击发送。
 
 控制 Worker 必须持久化自身和当前 Driver 的精确 PID。优雅中断只终止观察 Driver，不终止 Harness 内正在执行的任务；恢复前若遗留 Driver 仍存活，必须拒绝启动第二个 Driver。客户端重启恢复必须依赖发送后捕获的稳定会话 ID，不能按标题、时间或当前页面猜测。
 
-`TIMEOUT` 只有在 Driver 已请求停止、Harness 明确进入非运行态、平台要求的候选后台进程已清理，并且候选 workspace 在限定观察窗口内保持静默时才是安全终态。任何一项无法确认都进入 `NEEDS_ATTENTION`，控制面不得继续下一题。
+Driver 不读取题目或数据集 `timeout_seconds` 来计算执行 deadline，也不接受控制端 Harness 总执行超时。它持续观察原 attempt，直到可信原生终态、明确异常或需要人工处理。CDP/UI 单次操作、客户端启停、发送后身份捕获、进程收口与评分 Worker 可以各自设置有界控制超时；这些边界不得触发停止被评测 Harness 或把做题结果标记为 `timeout`。
 
 任一终态还必须在候选冻结前完成任务级进程收口，并把结果持久化为 `terminal_process_cleanup`。Windows WorkBuddy 会话宿主必须同时满足可执行文件名、`--serve`、`--session-id` 和任务根完整绝对路径四项精确约束；Windows AstronStudio 当前按候选 workspace 的完整绝对路径精确约束相关进程。不得按 Harness、Node 或浏览器进程名宽泛清理；多匹配、清理后仍有残留或规定安静窗口内出现迟到进程且未再次收口都必须失败关闭。平台尚未实现等价任务进程枚举时必须显式记录 `supported=false`，并说明该平台没有执行进程终止；不能伪造进程清理目标。执行回执只有在每题清理证据成功且满足当前平台契约时才能声明 `integrity.valid=true`。
 
@@ -70,7 +69,7 @@ Harness 级 Worker 使用 `wildclawbench.web-e2e-execution-receipt/v1` 汇总完
 | --- | --- |
 | `SUCCEEDED` | `completed` |
 | `INFRA_FAILED` | `execution_error` |
-| `TIMEOUT` | `timeout` |
+| `TIMEOUT`（仅旧状态兼容） | `timeout` |
 | 其他 | `pending` |
 
 若正式记录不存在，Driver 只能从批次 `manifest.json` 的精确路径映射，或从调用者显式提供的 `batch_id`、`task_id` 和模型身份创建；不得根据目录 basename 猜测身份。

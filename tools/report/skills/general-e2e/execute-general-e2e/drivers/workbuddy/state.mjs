@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 
 export const WORKBUDDY_EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-execution-state/v1";
 export const WORKBUDDY_DRIVER_ID = "workbuddy-macos-general";
-export const WORKBUDDY_DRIVER_VERSION = "0.1.0";
+export const WORKBUDDY_DRIVER_VERSION = "0.3.0";
 
 const SUCCESS_STATES = new Set(["complete", "completed", "success", "succeeded"]);
 const FAILURE_STATES = new Set(["failed", "failure", "error", "errored"]);

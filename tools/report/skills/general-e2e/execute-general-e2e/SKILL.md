@@ -15,7 +15,7 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.10.2/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.10.3/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## WorkBuddy / QwenWork macOS 开发入口
 
@@ -61,7 +61,9 @@ node scripts/run_astronstudio_macos_batch.mjs \
   --queue-id <稳定ID>
 ```
 
-Worker 中断后使用相同参数并增加 `--resume`。队列冻结 manifest、运行配置、任务顺序、失败策略和单题 Driver 参数的 digest；每题第一次观察到的 `attempt_id` 会登记为唯一选择。恢复必须沿用该 attempt 及其原生会话和原 deadline，发现状态文件被替换为其他 attempt 时失败关闭。当前题未得到可信终态时，下一题保持 `PENDING`。
+Worker 中断后使用相同参数并增加 `--resume`。队列冻结 manifest、运行配置、任务顺序、失败策略和单题 Driver 参数的 digest；每题第一次观察到的 `attempt_id` 会登记为唯一选择。恢复必须沿用该 attempt 及其原生会话；General E2E 不把题目 metadata 中的 `timeout_seconds` 转成被测 Harness 的执行 deadline。发现状态文件被替换为其他 attempt 时失败关闭。当前题未得到可信终态时，下一题保持 `PENDING`。
+
+`--timeout-ms`、`--poll-interval-ms` 和 `--identity-timeout-ms` 只控制 CDP/UI 操作、轮询节奏和发送后原生身份绑定，不限制被测 Harness 完成任务的时间。评分阶段的 `score_timeout_seconds`/规则 Worker 超时是独立的评分基础设施边界。
 
 `--run-slots` 默认 `3`，接受 `1–8`。队列逐题串行执行 UI 发送动作，后台已绑定的原生 Agent 最多并行到冻结槽位；任一任务完成后按 manifest 顺序补位。完整状态、恢复、客户端中断和多 attempt 边界见 [AstronStudio macOS 队列契约](references/astronstudio-macos-queue.md)。
 

@@ -72,9 +72,7 @@ function usage() {
   --permission-mode <模式>         current（保持现状）或 full-access（显式开启完全访问）
   --model-id <ID>                  execution_record 模型身份；已有记录时仅校验
   --batch-id <ID> --task-id <ID>   没有 manifest/record 时必须显式提供
-  --run-timeout-seconds <秒>       Agent 总执行超时，默认 3600
   --poll-interval-seconds <秒>     终态轮询间隔，默认 2
-  --post-cancel-quiescence-seconds <秒> 超时停止后的 workspace 静默观察，默认 5
   --resume                         从已有 automation_state 恢复，禁止重复发送
   --retry-pre-send-failure          仅归档并重试发送前、产物零变化的 INFRA_FAILED
   --detach-after-submit            捕获稳定 conversation ID 后退出，由队列后台观察
@@ -1106,178 +1104,6 @@ async function persistNeedsAttention(config, state, identityInfo, reason, error,
   return state;
 }
 
-async function cancelTimedOutAttempt(page, config, state, identityInfo, lastDom, deadlineAt) {
-  state.timeout = {
-    deadline_at: new Date(deadlineAt).toISOString(),
-    triggered_at: new Date().toISOString(),
-    stop_requested_at: null,
-    cancellation_confirmed: false,
-    cancellation_source: null,
-    quiescence: null,
-  };
-  await takeScreenshot(page, config, state, "10-timeout-before-stop.png");
-  const currentDom = await inspectDom(page);
-  const session = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
-  if (session) {
-    const classification = classifySessionStatus(session.status);
-    if (classification.kind === "success") {
-      await takeScreenshot(page, config, state, "10-succeeded-at-timeout-boundary.png");
-      return finalize(config, state, identityInfo, "SUCCEEDED", {
-        terminalSource: "workbuddy-session-db",
-        finalText: currentDom.finalText || lastDom.finalText,
-      });
-    }
-    if (classification.kind === "failure") {
-      await takeScreenshot(page, config, state, "10-failed-at-timeout-boundary.png");
-      return finalize(config, state, identityInfo, "INFRA_FAILED", {
-        terminalSource: "workbuddy-session-db",
-        error: `WorkBuddy conversation 终态：${session.status}`,
-        finalText: currentDom.finalText || lastDom.finalText,
-      });
-    }
-  }
-  if (hasTrustedDomCompletion({
-    ...currentDom,
-    finalText: currentDom.finalText || lastDom.finalText,
-  })) {
-    await takeScreenshot(page, config, state, "10-succeeded-at-timeout-boundary.png");
-    return finalize(config, state, identityInfo, "SUCCEEDED", {
-      terminalSource: "workbuddy-dom-completion",
-      finalText: currentDom.finalText || lastDom.finalText,
-    });
-  }
-  if (currentDom.status.kind === "failure") {
-    await takeScreenshot(page, config, state, "10-failed-at-timeout-boundary.png");
-    return finalize(config, state, identityInfo, "INFRA_FAILED", {
-      terminalSource: "workbuddy-dom-completion",
-      error: "WorkBuddy 页面在超时边界显示执行失败终态",
-      finalText: currentDom.finalText || lastDom.finalText,
-    });
-  }
-
-  const stopButtons = await visibleLocators(page.locator('button[aria-label*="停止"]:visible, button[title*="停止"]:visible, button[aria-label*="Stop"]:visible, button[title*="Stop"]:visible'));
-  if (!currentDom.running || stopButtons.length !== 1) {
-    return persistNeedsAttention(
-      config,
-      state,
-      identityInfo,
-      "timeout-stop-control-unavailable",
-      `超过 ${config.runTimeoutSeconds} 秒，但无法唯一确认并停止当前 WorkBuddy 会话`,
-      page,
-      "10-timeout-stop-unavailable.png",
-    );
-  }
-
-  state.timeout.stop_requested_at = new Date().toISOString();
-  await stopButtons[0].click({ timeout: config.timeoutSeconds * 1000 });
-  await saveState(config, state);
-  await takeScreenshot(page, config, state, "10-timeout-stop-requested.png");
-
-  const cancelDeadline = Date.now() + config.timeoutSeconds * 1000;
-  let stableNonRunningPolls = 0;
-  let cancellationSource = null;
-  let finalText = currentDom.finalText || lastDom.finalText;
-  while (Date.now() < cancelDeadline) {
-    const dom = await inspectDom(page);
-    finalText = dom.finalText || finalText;
-    const currentSession = chooseAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
-    if (currentSession) {
-      const classification = classifySessionStatus(currentSession.status);
-      if (classification.kind === "success") {
-        cancellationSource = "workbuddy-session-db-terminal-after-stop";
-        break;
-      }
-      if (classification.kind === "failure") {
-        cancellationSource = "workbuddy-session-db";
-        break;
-      }
-    }
-    if (dom.status.kind === "success") {
-      cancellationSource = "workbuddy-dom-terminal-after-stop";
-      break;
-    }
-    if (dom.status.kind === "failure") {
-      cancellationSource = "workbuddy-dom-cancelled";
-      break;
-    }
-    if (!dom.running) stableNonRunningPolls += 1;
-    else stableNonRunningPolls = 0;
-    if (stableNonRunningPolls >= 2) {
-      cancellationSource = "workbuddy-dom-non-running";
-      break;
-    }
-    await sleep(config.pollIntervalSeconds * 1000);
-  }
-  if (!cancellationSource) {
-    return persistNeedsAttention(
-      config,
-      state,
-      identityInfo,
-      "timeout-cancellation-unconfirmed",
-      `超过 ${config.runTimeoutSeconds} 秒，已请求停止但无法确认 WorkBuddy 不再运行`,
-      page,
-      "10-timeout-cancellation-unconfirmed.png",
-    );
-  }
-
-  state.timeout.cancellation_source = cancellationSource;
-  state.timeout.cancellation_observed_at = new Date().toISOString();
-  try {
-    state.timeout.process_cleanup = await terminateCandidateWorkspaceProcesses(config.candidateWorkspace, {
-      taskRoot: config.workspace,
-      includeSessionHost: true,
-      quietMilliseconds: 45_000,
-      waitMilliseconds: 60_000,
-    });
-  } catch (error) {
-    state.timeout.process_cleanup = {
-      supported: process.platform === "win32",
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-  await saveState(config, state);
-  if (!state.timeout.process_cleanup.success) {
-    return persistNeedsAttention(
-      config,
-      state,
-      identityInfo,
-      "timeout-candidate-process-cleanup-failed",
-      `WorkBuddy 已停止，但无法确认候选 workspace 的后台进程全部退出：${state.timeout.process_cleanup.error || "仍检测到残留进程"}`,
-      page,
-      "10-timeout-process-cleanup-failed.png",
-    );
-  }
-  const before = await snapshotTree(config.candidateWorkspace);
-  await sleep(config.postCancelQuiescenceSeconds * 1000);
-  const after = await snapshotTree(config.candidateWorkspace);
-  state.timeout.quiescence = {
-    observed_seconds: config.postCancelQuiescenceSeconds,
-    before_sha256: before.sha256,
-    after_sha256: after.sha256,
-    stable: before.sha256 === after.sha256,
-  };
-  if (!state.timeout.quiescence.stable) {
-    return persistNeedsAttention(
-      config,
-      state,
-      identityInfo,
-      "post-timeout-workspace-still-changing",
-      "WorkBuddy 已停止，但候选 workspace 在静默观察窗口内仍发生变化",
-      page,
-      "10-timeout-workspace-changing.png",
-    );
-  }
-  state.timeout.cancellation_confirmed = true;
-  state.timeout.cancellation_confirmed_at = new Date().toISOString();
-  await takeScreenshot(page, config, state, "10-timeout-cancelled.png");
-  return finalize(config, state, identityInfo, "TIMEOUT", {
-    terminalSource: "driver-timeout+cancellation-confirmed",
-    error: `超过 ${config.runTimeoutSeconds} 秒，已确认 WorkBuddy 停止且 workspace 保持静默`,
-    finalText,
-  });
-}
-
 async function inspectApprovalPanels(page, candidateWorkspace) {
   const panels = await visibleLocators(page.locator('[data-testid="pending-sandbox-panel"]'));
   const approvals = [];
@@ -1452,8 +1278,6 @@ async function finalize(config, state, identityInfo, phase, { error = null, term
 }
 
 export async function observeAttemptOnce(page, config, state, identityInfo) {
-  const runStartedAt = Date.parse(state.timing.sent_at || state.timing.started_at || new Date().toISOString());
-  const deadline = runStartedAt + config.runTimeoutSeconds * 1000;
   state.runtime ||= {};
   state.runtime.heartbeat_at = new Date().toISOString();
   const approvalResult = await handleExpectedApprovals(page, config, state);
@@ -1560,9 +1384,6 @@ export async function observeAttemptOnce(page, config, state, identityInfo) {
     clientVersion: state.client.version,
     execution: { status: "pending", error: null },
   });
-  if (Date.now() >= deadline) {
-    return cancelTimedOutAttempt(page, config, state, identityInfo, dom, deadline);
-  }
   return state;
 }
 
@@ -2102,7 +1923,6 @@ export async function main(argv) {
       retryPreSendFailure: config.retryPreSendFailure,
       detachAfterSubmit: config.detachAfterSubmit,
       observeOnce: config.observeOnce,
-      postCancelQuiescenceSeconds: config.postCancelQuiescenceSeconds,
       dryRun: config.dryRun,
     };
     if (!config.quiet) console.log(JSON.stringify(safeConfig, null, 2));
