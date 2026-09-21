@@ -2,6 +2,8 @@
 
 核对日期：2026-09-19。范围为 AstronStudio、WorkBuddy、QwenWork、DoubaoWork 的本地桌面评测；不涉及云电脑执行。
 
+2026-09-21 更新：WorkBuddy General 已接入与 Web 共用的原生 session JSONL 解析，v8 五题模型响应、输入/输出/总 Token 与缓存读取已补采并进入新版报告，详见[指标更正证据](evidence/workbuddy-jsonl-metrics-20260921/README.md)。下文仍保留初始盘点；新增五项指标的统一聚合另按 COMMON-CM01 推进。
+
 交接说明：本文及哈希清单从原 probe worktree 原样保留事实与证据范围，纳入跨平台开发基线供新任务读取。它是下述 revision/文件哈希对应的历史盘点，不是最新客户端或新接口已验证的声明；运行字段以 [统一接入契约](../e2e/端到端自动化评测Harness接入契约.md)、实际 Schema 和新平台样本复核为准。
 
 ## 1. 结论

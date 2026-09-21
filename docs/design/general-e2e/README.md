@@ -22,7 +22,7 @@
 
 原三条并行开发的已接收代码及其控制分支提交映射均已进入当前工作区。Qwen selector/SQLite 加固源 `993cdc5` 对应控制提交 `f0bf24f`；collector/metadata 为 `acfc7a1`、`5263890`、`679a1e3`、`82cd3e1`。Doubao Web finalizer/bridge/route/metrics 为 `9bb30aa`、`694536d`、`07b31b7`、`e2c1d9e`。后续从当前树继续，不能因源提交不是祖先再次 cherry-pick；旧 worktree 仅作审计，暂不删除。
 
-当前七个 General Skill：prepare `0.2.0`、execute `0.10.4`、collect `0.6.1`、orchestrate `0.9.2`、score `0.8.1`、report `0.2.2`、run `0.5.0`。execute `0.10.4` 的 WorkBuddy 默认三路队列和队列内活动会话门禁已由 v8 五题真机验收。后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准；不要把新源码/包版本倒填进旧 smoke。
+当前七个 General Skill：prepare `0.2.0`、execute `0.10.4`、collect `0.7.0`、orchestrate `0.9.2`、score `0.8.1`、report `0.3.0`、run `0.5.0`。WorkBuddy 默认三路已由 v8 真机验收；`d688326` 新增 JSONL 模型响应/Token 采集与不改评分的指标补采。v8 已补采为模型响应 21、工具 19、总 Token 773465、缓存读取 703040，原 5/5 valid 和均分 0.8275 不变。[补采证据与新报告](evidence/workbuddy-jsonl-metrics-20260921/README.md)记录新发行、原件哈希与覆盖范围。后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准；不要把新包身份倒填进旧 smoke。
 
 本机 Python 使用 `/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python`；Node 测试启动 Python 子进程时同时设置 `PYTHON` 并将本工作区 `.venv/bin` 放到 PATH 前部，避免回落到旧系统 Python。各 Driver 使用自身 package-lock 安装依赖，不借用旧平台 worktree 的 node_modules。
 

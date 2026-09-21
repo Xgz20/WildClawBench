@@ -2,6 +2,8 @@
 
 记录日期：2026-09-21。验收标识：`WORKBUDDY-MACOS-GENERAL-THREE-SLOT-20260921-V8`。
 
+指标更正：本页保留初始 collector/report 的冻结结果。其中“请求数 5、Token unavailable”已由[原生 JSONL 补采](../workbuddy-jsonl-metrics-20260921/README.md)更正为模型响应 21、总 Token 773465；执行与评分证据原样保留，请使用补采索引中的新版报告。
+
 ## 结论
 
 WorkBuddy 5.5.6 / macOS x86_64 / xopglm52 / default-sandbox 已完成五题默认三路后台执行的 execution → collect → score → return/import → report 全链路。UI 操作始终单槽；队列观测到最大后台并发 3，完成 2 次动态补位，五题各发送一次且均为 `COMPLETED`。完成后使用同一队列参数 `--resume`，五份 dispatch journal SHA-256 均未改变。
