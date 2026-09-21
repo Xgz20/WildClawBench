@@ -22,7 +22,9 @@
 
 原三条并行开发的已接收代码及其控制分支提交映射均已进入当前工作区。Qwen selector/SQLite 加固源 `993cdc5` 对应控制提交 `f0bf24f`；collector/metadata 为 `acfc7a1`、`5263890`、`679a1e3`、`82cd3e1`。Doubao Web finalizer/bridge/route/metrics 为 `9bb30aa`、`694536d`、`07b31b7`、`e2c1d9e`。后续从当前树继续，不能因源提交不是祖先再次 cherry-pick；旧 worktree 仅作审计，暂不删除。
 
-当前七个 General Skill：prepare `0.2.0`、execute `0.10.4`、collect `0.7.1`、orchestrate `0.9.2`、score `0.8.1`、report `0.3.2`、run `0.5.0`。`d688326` 接入 JSONL 模型响应/Token，`5631cbd` 接入原生请求与流程耗时，`f681a42` 修复 Excel 耗时依据截断。v8 补采得到模型响应 21、工具 19、总 Token 773465、缓存读取 703040；平均原生请求耗时 61.259 秒、平均流程耗时 102.2896 秒，原 5/5 valid 和均分 0.8275 不变。当前报告、发行、并发口径更正见[耗时补采证据](evidence/workbuddy-native-timing-20260921/README.md)，此前 [Token 补采](evidence/workbuddy-jsonl-metrics-20260921/README.md)和原件均保留。后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准；不要把新包身份倒填进旧 smoke。
+当前七个 General Skill：prepare `0.2.0`、execute `0.10.4`、collect `0.7.1`、orchestrate `0.9.2`、score `0.8.1`、report `0.4.2`、run `0.5.0`。`d688326` 接入 JSONL 模型响应/Token，`5631cbd` 接入原生请求与流程耗时。v8 补采得到模型响应 21、工具 19、总 Token 773465、缓存读取 703040；平均原生请求耗时 61.259 秒、平均流程耗时 102.2896 秒，原 5/5 valid 和均分 0.8275 不变。[耗时补采证据](evidence/workbuddy-native-timing-20260921/README.md)、[Token 补采](evidence/workbuddy-jsonl-metrics-20260921/README.md)和原件均保留。后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准；不要把新包身份倒填进旧 smoke。
+
+当前报告发行与产物见[单元对比报告证据](evidence/general-report-comparison-20260921/README.md)。`f34bcda`、`a6eca00`、`3ff8ea9` 将 Excel 改为九表，并生成同源无根因领导版 Markdown；总览每个模型@Harness 一行，不显示成本与超时数，拆分任务/流程耗时。效率明细按普通输入、缓存命中输入、缓存写入输入、输出四类展示，保留总 Token、平均 Token 和缓存命中率；未知缓存不能按零推算普通输入。v8 平均 Token 154693、缓存命中率 91.4086%；缓存写入与精确普通输入仍未知。分类/难度/模态、七维检查点评分和工具次数已接入，工具质量比率本阶段按用户要求暂缓。此次只更新报告，没有新增 Harness 或评分执行，原生三路并发结论不变。
 
 本机 Python 使用 `/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python`；Node 测试启动 Python 子进程时同时设置 `PYTHON` 并将本工作区 `.venv/bin` 放到 PATH 前部，避免回落到旧系统 Python。各 Driver 使用自身 package-lock 安装依赖，不借用旧平台 worktree 的 node_modules。
 
@@ -68,7 +70,7 @@ v8 保持 UI 单槽，配置 `run_slots=3`、发送后未结束峰值 3、原生
 macOS 四个 Harness 达到声明范围的全链路准入后，使用冻结数据集和发行先做 canary，再进入实际批次；新客户端可以随已支持客户端分别形成评测结果。60 题全量是评测/扩容阶段，不要求先补齐双平台或无人值守才开始。
 
 - Windows：整体暂缓，macOS 四个 General 收口后再启动；先 AstronStudio，其他三个按需求串行。保留[Windows 实施清单](AstronStudio-Windows通用E2E开发启动包.md)，没有 Windows 真机证据就保持 NOT_RUN。
-- COMMON-CM01：异常率、工具调用成功率、平均积分、输入缓存命中率、平均 Token 的统一实现/原生对账仍未完成；[指标盘点](Web与通用E2E指标盘点及Harness可行性分析.md)是历史分析。它不阻塞已明确接口的客户端接入；已知小计、coverage、null 语义继续保留，不能把工具 completed 当成业务 success。
+- COMMON-CM01：General 报告已支持平均 Token、输入缓存命中率、任务/流程耗时和工具调用数；常规指标在各 Harness 的完整原生对账仍需分别验证。工具格式准确率/执行成功率/不确定占比本阶段暂缓，平均积分与统一异常率等未完成；[指标盘点](Web与通用E2E指标盘点及Harness可行性分析.md)是历史分析。已知小计、coverage、null 语义继续保留，不能把工具 completed 当成业务 success。
 - 默认三路执行是各新 Harness 单槽闭环后的接入目标；WorkBuddy 已验证三槽调度，原生三路重叠仍待验收。更高并发、无人值守恢复、Apple Silicon、裁判校准分别立项。
 
 ## 新会话 Prompt
