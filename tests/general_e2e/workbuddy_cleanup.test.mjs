@@ -172,6 +172,11 @@ test("WorkBuddy collector readiness accepts verified JSONL and native timing met
   fixture.resourceMetrics.metrics.usage.cache_read_input_tokens = observed(32, "model_response");
   fixture.resourceMetrics.metrics.timing.duration_seconds = observed(5, "task");
   fixture.resourceMetrics.metrics.timing.agent_duration_seconds = observed(4, "task");
+  fixture.resourceMetrics.collection.coverage = {};
+  for (const [group, field] of [["usage", "cache_read_input_tokens"], ["timing", "duration_seconds"], ["timing", "agent_duration_seconds"]]) {
+    fixture.resourceMetrics.collection.coverage[field] = fixture.resourceMetrics.metrics[group][field].coverage;
+    delete fixture.resourceMetrics.metrics[group][field].coverage;
+  }
   const result = assertWorkBuddyCollectorReadiness({
     ...fixture,
     cleanupHook: createWorkBuddyCleanupHook({ run: async () => cleanupEvidence() }),
@@ -179,7 +184,7 @@ test("WorkBuddy collector readiness accepts verified JSONL and native timing met
   assert.equal(result.optional_metric_statuses.cache_read_input_tokens, "observed");
   assert.equal(result.optional_metric_statuses.duration_seconds, "observed");
   const invalid = structuredClone(fixture);
-  invalid.resourceMetrics.metrics.timing.duration_seconds.coverage.known = 2;
+  invalid.resourceMetrics.collection.coverage.duration_seconds.known = 2;
   assert.throws(
     () => assertWorkBuddyCollectorReadiness({
       ...invalid,

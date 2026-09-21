@@ -36,18 +36,19 @@ function assertIdentityAligned(state, traceIndex, resourceMetrics) {
   }
 }
 
-function metricStatus(metric, label) {
+function metricStatus(metric, coverage, label) {
+  const actualCoverage = coverage || metric?.coverage;
   if (!isObject(metric)
       || !new Set(["observed", "inferred", "partial", "unverified", "unavailable"]).has(metric.status)
-      || !isObject(metric.coverage)
-      || !Number.isInteger(metric.coverage.known)
-      || !Number.isInteger(metric.coverage.total)
-      || metric.coverage.known < 0
-      || metric.coverage.total < metric.coverage.known
-      || typeof metric.coverage.unit !== "string") {
+      || !isObject(actualCoverage)
+      || !Number.isInteger(actualCoverage.known)
+      || !Number.isInteger(actualCoverage.total)
+      || actualCoverage.known < 0
+      || actualCoverage.total < actualCoverage.known
+      || typeof actualCoverage.unit !== "string") {
     throw new Error(`WORKBUDDY_METRIC_STATUS_INVALID: ${label}`);
   }
-  if (metric.status === "unavailable" && (metric.value !== null || metric.coverage.known !== 0)) {
+  if (metric.status === "unavailable" && (metric.value !== null || actualCoverage.known !== 0)) {
     throw new Error(`WORKBUDDY_METRIC_UNAVAILABLE_INVALID: ${label}`);
   }
   return metric.status;
@@ -145,13 +146,14 @@ export function assertWorkBuddyCollectorReadiness({ state, traceIndex, resourceM
   const requests = resourceMetrics.metrics?.requests;
   const usage = resourceMetrics.metrics?.usage;
   const timing = resourceMetrics.metrics?.timing;
+  const coverage = resourceMetrics.collection?.coverage || {};
   const metricStatuses = {
-    request_attempt_count: metricStatus(requests?.request_attempt_count, "request_attempt_count"),
-    cache_read_input_tokens: metricStatus(usage?.cache_read_input_tokens, "cache_read_input_tokens"),
-    cache_creation_input_tokens: metricStatus(usage?.cache_creation_input_tokens, "cache_creation_input_tokens"),
-    reasoning_output_tokens: metricStatus(usage?.reasoning_output_tokens, "reasoning_output_tokens"),
-    duration_seconds: metricStatus(timing?.duration_seconds, "duration_seconds"),
-    agent_duration_seconds: metricStatus(timing?.agent_duration_seconds, "agent_duration_seconds"),
+    request_attempt_count: metricStatus(requests?.request_attempt_count, coverage.request_attempt_count, "request_attempt_count"),
+    cache_read_input_tokens: metricStatus(usage?.cache_read_input_tokens, coverage.cache_read_input_tokens, "cache_read_input_tokens"),
+    cache_creation_input_tokens: metricStatus(usage?.cache_creation_input_tokens, coverage.cache_creation_input_tokens, "cache_creation_input_tokens"),
+    reasoning_output_tokens: metricStatus(usage?.reasoning_output_tokens, coverage.reasoning_output_tokens, "reasoning_output_tokens"),
+    duration_seconds: metricStatus(timing?.duration_seconds, coverage.duration_seconds, "duration_seconds"),
+    agent_duration_seconds: metricStatus(timing?.agent_duration_seconds, coverage.agent_duration_seconds, "agent_duration_seconds"),
   };
   if (Object.prototype.hasOwnProperty.call(resourceMetrics.metrics || {}, "credit")
       || Object.prototype.hasOwnProperty.call(resourceMetrics.metrics?.usage || {}, "credit")) {
