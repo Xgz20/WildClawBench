@@ -35,9 +35,50 @@ import {
 
 export const WORKBUDDY_EXECUTION_JOURNAL_SCHEMA =
   "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1";
-export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.4.0";
+export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.0";
+export const WORKBUDDY_PROJECT_COMPONENT_MAX_BYTES = 255;
+export const WORKBUDDY_PROJECT_PATH_MAX_BYTES = 1024;
 const PROCESS_STARTED_AT = new Date().toISOString();
 const PROCESS_START_IDENTITY = `${hostname()}:${process.pid}:${PROCESS_STARTED_AT}:${randomUUID()}`;
+
+export function workBuddyProjectDirectoryName(workspace) {
+  if (typeof workspace !== "string" || !workspace.startsWith("/")) {
+    throw new Error("WORKBUDDY_PROJECT_PATH_WORKSPACE_INVALID");
+  }
+  return workspace.replace(/^\/+|\/+$/gu, "").replace(/\/+|\\+/gu, "-");
+}
+
+export function assertWorkBuddyProjectPath(
+  workspace,
+  projectsRoot = join(homedir(), ".workbuddy", "projects"),
+) {
+  const directory_name = workBuddyProjectDirectoryName(workspace);
+  const component_bytes = Buffer.byteLength(directory_name, "utf8");
+  const projected_path = join(projectsRoot, directory_name);
+  const projected_path_bytes = Buffer.byteLength(
+    join(projected_path, `${"0".repeat(36)}.jsonl`),
+    "utf8",
+  );
+  const evidence = {
+    algorithm: "strip-leading-slashes+replace-separators-with-hyphen/v1",
+    projects_root: projectsRoot,
+    directory_name,
+    component_bytes,
+    component_max_bytes: WORKBUDDY_PROJECT_COMPONENT_MAX_BYTES,
+    projected_path_bytes,
+    path_max_bytes: WORKBUDDY_PROJECT_PATH_MAX_BYTES,
+    verified: component_bytes > 0
+      && component_bytes <= WORKBUDDY_PROJECT_COMPONENT_MAX_BYTES
+      && projected_path_bytes <= WORKBUDDY_PROJECT_PATH_MAX_BYTES,
+  };
+  if (!evidence.verified) {
+    throw new Error(
+      `WORKBUDDY_NATIVE_PROJECT_PATH_TOO_LONG: component=${component_bytes}/${WORKBUDDY_PROJECT_COMPONENT_MAX_BYTES}; `
+      + `path=${projected_path_bytes}/${WORKBUDDY_PROJECT_PATH_MAX_BYTES}; use a shorter unit root before sending`,
+    );
+  }
+  return evidence;
+}
 
 function usage() {
   return `WorkBuddy General E2E macOS 单题执行器
@@ -290,6 +331,9 @@ export async function resolveExecutionConfig(parsed) {
   if (promptSha256 !== task.prompt.sent_sha256) throw new Error("Prompt digest 与 manifest 不一致");
   const expectedModel = parsed.expectedModel || String(manifest.unit.model?.requested_id || "").trim();
   if (!expectedModel) throw new Error("缺少 WorkBuddy 预期模型 UI 显示值");
+  // WorkBuddy flattens the absolute Workspace path into one directory name.
+  // Reject an overlong component before creating an attempt or touching UI.
+  const nativeProjectPath = assertWorkBuddyProjectPath(candidateWorkspace);
   const controlRoot = join(unitRoot, ".general-e2e", "execution", parsed.taskId, "workbuddy");
   await assertNoSymlinkPath(unitRoot, controlRoot, "WorkBuddy control root");
   await mkdir(controlRoot, { recursive: true });
@@ -306,6 +350,7 @@ export async function resolveExecutionConfig(parsed) {
     promptSha256,
     expectedModel,
     expectedPermission: parsed.expectedPermission,
+    nativeProjectPath,
     controlRoot,
     journalFile: join(controlRoot, "dispatch-journal.json"),
     stateFile: join(controlRoot, "execution-state.json"),
@@ -358,6 +403,7 @@ function createJournal(config, runtime, nativeIdleEvidence, now) {
     preflight: {
       native_sessions: nativeIdleEvidence,
       ui_idle: null,
+      native_project_path: config.nativeProjectPath,
     },
     send: {
       dispatch_attempt_count: 0,
@@ -498,7 +544,7 @@ async function loadManagedQueueContext(config) {
   await assertNoSymlinkPath(config.unitRoot, config.queueStateFile, "WorkBuddy queue state");
   const state = await readJson(config.queueStateFile);
   const mismatches = [];
-  if (state.schema_version !== "wildclawbench.general-e2e-workbuddy-execution-queue/v2") mismatches.push("schema_version");
+  if (state.schema_version !== "wildclawbench.general-e2e-workbuddy-execution-queue/v3") mismatches.push("schema_version");
   if (state.queue_id !== config.managedQueueId) mismatches.push("queue_id");
   if (state.frozen?.unit_root !== config.unitRoot) mismatches.push("unit_root");
   if (state.frozen?.batch_id !== config.manifest.batch_id) mismatches.push("batch_id");

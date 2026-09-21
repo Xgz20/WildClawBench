@@ -23,11 +23,13 @@ async function fixture(task_ids = ["one", "two", "three"]) {
   const calls = [];
   const args = ["--unit-root", root, "--queue-id", "serial", "--endpoint", "http://127.0.0.1:9229", "--expected-permission", "default-sandbox"];
   let clock = Date.parse("2026-09-21T06:00:00.000Z");
+  const nativeStarts = new Map();
   const writeAttempt = async (task, attempt, phase) => {
     const control = join(root, ".general-e2e", "execution", task, "workbuddy");
     const conversation = `conversation-${task}`;
     const cwd = join(root, "execution", "tasks", task, "workspace");
     clock += 1_000;
+    if (!nativeStarts.has(task)) nativeStarts.set(task, clock - 250);
     await writeFile(join(control, "dispatch-journal.json"), JSON.stringify({
       identity: { task_id: task, attempt_id: attempt },
       phase,
@@ -41,6 +43,18 @@ async function fixture(task_ids = ["one", "two", "three"]) {
       phase,
       session: { session_id: conversation, cwd },
       execution: { finished_at: phase === "COMPLETED" ? new Date(clock).toISOString() : null, error: null },
+    }));
+    await writeFile(join(control, "native-binding.json"), JSON.stringify({
+      identity: { task_id: task, attempt_id: attempt },
+      workspace: cwd,
+      conversation_id: conversation,
+      request_id: `request-${task}`,
+      runtime_snapshot: {
+        request: {
+          timestamp: nativeStarts.get(task),
+          completedAt: phase === "COMPLETED" ? clock : null,
+        },
+      },
     }));
   };
   const execute = async (argv) => {
@@ -134,9 +148,50 @@ test("WorkBuddy queue defaults to three background slots and refills after a ter
     const receipt = JSON.parse(await readFile(result.receipt_file, "utf8"));
     assert.equal(receipt.run_slots, 3);
     assert.equal(receipt.observed_max_concurrency, 3);
+    assert.equal(receipt.native_observed_max_concurrency, 3);
+    assert.deepEqual(receipt.native_interval_coverage, { known: 5, total: 5, unit: "task" });
     assert.equal(receipt.integrity.no_duplicate_dispatch, true);
     assert.equal(receipt.integrity.dynamic_refill_observed, true);
     assert.equal(receipt.integrity.valid, true);
+    assert.equal(receipt.concurrency_evidence.status, "PASS");
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test("WorkBuddy completed queue remains valid when short tasks do not overlap natively", async () => {
+  const f = await fixture();
+  try {
+    const result = await runWorkBuddyBatch(f.args, { execute: f.execute });
+    const receipt = JSON.parse(await readFile(result.receipt_file, "utf8"));
+    assert.equal(receipt.integrity.valid, true);
+    assert.equal(receipt.native_observed_max_concurrency, 1);
+    assert.equal(receipt.integrity.observed_requested_concurrency, false);
+    assert.equal(receipt.concurrency_evidence.status, "INSUFFICIENT_EVIDENCE");
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test("WorkBuddy queue keeps native timing unavailable separate and rejects binding drift", async () => {
+  const f = await fixture(["one"]);
+  try {
+    const bindingPath = join(f.root, ".general-e2e/execution/one/workbuddy/native-binding.json");
+    const executeWithoutBinding = async (argv) => {
+      const code = await f.execute(argv);
+      await rm(bindingPath);
+      return code;
+    };
+    const result = await runWorkBuddyBatch(f.args, { execute: executeWithoutBinding });
+    const noTiming = JSON.parse(await readFile(result.receipt_file, "utf8"));
+    assert.equal(noTiming.integrity.valid, true);
+    assert.equal(noTiming.native_interval_coverage.known, 0);
+    assert.equal(noTiming.concurrency_evidence.status, "INSUFFICIENT_EVIDENCE");
+
+    await f.writeAttempt("one", result.tasks[0].attempt_id, "COMPLETED");
+    const binding = JSON.parse(await readFile(bindingPath, "utf8"));
+    binding.request_id = "foreign-request";
+    await writeFile(bindingPath, JSON.stringify(binding));
+    await assert.rejects(
+      runWorkBuddyBatch([...f.args, "--resume"], { execute: f.execute }),
+      /BINDING_DRIFT/u,
+    );
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 

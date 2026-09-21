@@ -10,10 +10,12 @@ import {
   executeWorkBuddyTask,
   assertWorkBuddyNativeAvailability,
   assertWorkBuddyUiAvailable,
+  assertWorkBuddyProjectPath,
   closeWorkBuddyUiHandle,
   main,
   parseArgs,
   resolveExecutionConfig,
+  workBuddyProjectDirectoryName,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/execute.mjs";
 import {
   assertWorkBuddyRuntimeSupport,
@@ -184,6 +186,25 @@ test("WorkBuddy P2 arguments and UI readback fail closed", () => {
   assert.throws(
     () => assertWorkBuddyUiIdle({ ...rawUi("/workspace"), busy_control_count: 1 }),
     /活动或未知交互/u,
+  );
+});
+
+test("WorkBuddy preflights the flattened native project path before dispatch", () => {
+  const workspace = "/Users/test/含 空格/project/workspace";
+  assert.equal(
+    workBuddyProjectDirectoryName(workspace),
+    "Users-test-含 空格-project-workspace",
+  );
+  const accepted = assertWorkBuddyProjectPath(workspace, "/tmp/projects");
+  assert.equal(accepted.verified, true);
+  assert.equal(accepted.component_bytes, Buffer.byteLength(accepted.directory_name));
+  assert.throws(
+    () => assertWorkBuddyProjectPath(`/${"segment/".repeat(40)}workspace`, "/tmp/projects"),
+    /WORKBUDDY_NATIVE_PROJECT_PATH_TOO_LONG/u,
+  );
+  assert.throws(
+    () => assertWorkBuddyProjectPath("relative/workspace", "/tmp/projects"),
+    /WORKBUDDY_PROJECT_PATH_WORKSPACE_INVALID/u,
   );
 });
 

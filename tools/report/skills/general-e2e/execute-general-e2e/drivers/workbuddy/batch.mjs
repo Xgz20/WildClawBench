@@ -6,8 +6,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { main as execute, parseArgs, resolveExecutionConfig } from "./execute.mjs";
 
-export const WORKBUDDY_QUEUE_SCHEMA = "wildclawbench.general-e2e-workbuddy-execution-queue/v2";
-export const WORKBUDDY_QUEUE_VERSION = "0.2.0";
+export const WORKBUDDY_QUEUE_SCHEMA = "wildclawbench.general-e2e-workbuddy-execution-queue/v3";
+export const WORKBUDDY_QUEUE_VERSION = "0.3.0";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 const TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
@@ -78,6 +78,7 @@ function executionPaths(root, taskId) {
   return {
     journal: join(controlRoot, "dispatch-journal.json"),
     state: join(controlRoot, "execution-state.json"),
+    binding: join(controlRoot, "native-binding.json"),
   };
 }
 
@@ -95,6 +96,9 @@ function terminalAt(journal, publicState) {
 
 async function synchronizeRow(root, row) {
   const paths = executionPaths(root, row.task_id);
+  for (const name of ["dispatch-journal.json", "execution-state.json", "native-binding.json"]) {
+    await assertPlainPath(root, [".general-e2e", "execution", row.task_id, "workbuddy", name]);
+  }
   const journal = await optionalJson(paths.journal);
   const publicState = await optionalJson(paths.state);
   if (!journal) {
@@ -114,17 +118,41 @@ async function synchronizeRow(root, row) {
   row.conversation_id = journal.native?.conversation_id || null;
   row.request_id = journal.native?.request_id || null;
   row.cwd = journal.native?.cwd || null;
-  row.started_at ||= journal.prompt?.sent_at || journal.execution?.started_at || null;
+  row.dispatch_started_at ||= journal.prompt?.sent_at || journal.execution?.started_at || null;
+  row.started_at ||= row.dispatch_started_at;
   row.finished_at = terminalAt(journal, publicState);
+  const binding = await optionalJson(paths.binding);
+  if (binding) {
+    const identity = binding.identity || {};
+    if (identity.task_id !== row.task_id || identity.attempt_id !== row.attempt_id
+        || binding.conversation_id !== row.conversation_id || binding.request_id !== row.request_id
+        || binding.workspace !== row.cwd) throw new Error("WORKBUDDY_QUEUE_BINDING_DRIFT");
+    const request = binding.runtime_snapshot?.request || {};
+    const start = request.startedAt ?? request.timestamp;
+    const finish = request.completedAt ?? request.finishTimestamp;
+    const iso = (value, field) => {
+      if (value == null) return null;
+      if (!Number.isSafeInteger(value) || value < 0 || !Number.isFinite(new Date(value).getTime())) {
+        throw new Error(`WORKBUDDY_QUEUE_NATIVE_TIME_INVALID: ${field}`);
+      }
+      return new Date(value).toISOString();
+    };
+    row.native_started_at = iso(start, "start");
+    row.native_finished_at = iso(finish, "finish");
+    if (row.native_started_at && row.native_finished_at
+        && Date.parse(row.native_finished_at) < Date.parse(row.native_started_at)) {
+      throw new Error("WORKBUDDY_QUEUE_NATIVE_TIME_REVERSED");
+    }
+  }
   row.error = journal.execution?.error || publicState?.execution?.error || null;
   return row;
 }
 
-function observedConcurrency(tasks) {
+function observedConcurrency(tasks, startField, finishField) {
   const points = [];
   for (const task of tasks) {
-    const start = Date.parse(task.started_at || "");
-    const finish = Date.parse(task.finished_at || "");
+    const start = Date.parse(task[startField] || "");
+    const finish = Date.parse(task[finishField] || "");
     if (!Number.isFinite(start) || !Number.isFinite(finish) || finish < start) continue;
     points.push({ at: start, delta: 1 }, { at: finish, delta: -1 });
   }
@@ -135,21 +163,23 @@ function observedConcurrency(tasks) {
     current += point.delta;
     maximum = Math.max(maximum, current);
   }
-  return maximum;
+  return { maximum, known_intervals: points.length / 2 };
 }
 
 function buildReceipt(state) {
-  const maxConcurrency = observedConcurrency(state.tasks);
+  const dispatch = observedConcurrency(state.tasks, "dispatch_started_at", "finished_at");
+  const native = observedConcurrency(state.tasks, "native_started_at", "native_finished_at");
   const refillEvents = state.events.filter((event) => (
     event.event === "TASK_DISPATCH_RETURNED" && event.completed_before_dispatch > 0
   ));
   const allTerminal = state.tasks.every((row) => TERMINAL_PHASES.has(row.phase));
   const attemptsUnique = new Set(state.tasks.map((row) => row.attempt_id)).size === state.tasks.length;
   const noDuplicateDispatch = state.tasks.every((row) => row.dispatch_attempt_count === 1);
-  const observedRequestedConcurrency = maxConcurrency === Math.min(state.frozen.run_slots, state.tasks.length);
+  const requestedConcurrency = Math.min(state.frozen.run_slots, state.tasks.length);
+  const observedRequestedConcurrency = native.maximum === requestedConcurrency;
   const dynamicRefillObserved = state.tasks.length <= state.frozen.run_slots || refillEvents.length > 0;
   return {
-    schema_version: "wildclawbench.general-e2e-workbuddy-execution-queue-receipt/v1",
+    schema_version: "wildclawbench.general-e2e-workbuddy-execution-queue-receipt/v2",
     generated_at: new Date().toISOString(),
     identity: {
       queue_id: state.queue_id,
@@ -160,7 +190,14 @@ function buildReceipt(state) {
     phase: state.phase,
     ui_slots: 1,
     run_slots: state.frozen.run_slots,
-    observed_max_concurrency: maxConcurrency,
+    observed_max_concurrency: dispatch.maximum,
+    observed_max_concurrency_basis: "prompt-sent-to-terminal-dispatch-occupancy",
+    native_observed_max_concurrency: native.maximum,
+    native_interval_coverage: {
+      known: native.known_intervals,
+      total: state.tasks.filter((row) => row.dispatch_attempt_count === 1).length,
+      unit: "task",
+    },
     dynamic_refill_count: refillEvents.length,
     tasks: state.tasks.map((row) => ({
       task_id: row.task_id,
@@ -171,7 +208,10 @@ function buildReceipt(state) {
       request_id: row.request_id,
       cwd: row.cwd,
       started_at: row.started_at,
+      dispatch_started_at: row.dispatch_started_at,
       finished_at: row.finished_at,
+      native_started_at: row.native_started_at,
+      native_finished_at: row.native_finished_at,
       error: row.error,
     })),
     integrity: {
@@ -180,8 +220,20 @@ function buildReceipt(state) {
       no_duplicate_dispatch: noDuplicateDispatch,
       observed_requested_concurrency: observedRequestedConcurrency,
       dynamic_refill_observed: dynamicRefillObserved,
-      valid: allTerminal && attemptsUnique && noDuplicateDispatch
-        && observedRequestedConcurrency && dynamicRefillObserved,
+      valid: allTerminal && attemptsUnique && noDuplicateDispatch,
+    },
+    concurrency_evidence: {
+      requested_slots: requestedConcurrency,
+      dispatch_occupancy_peak: dispatch.maximum,
+      native_execution_peak: native.maximum,
+      native_interval_coverage: {
+        known: native.known_intervals,
+        total: state.tasks.filter((row) => row.dispatch_attempt_count === 1).length,
+      },
+      requested_native_concurrency_observed: observedRequestedConcurrency,
+      dynamic_refill_observed: dynamicRefillObserved,
+      status: observedRequestedConcurrency && dynamicRefillObserved
+        ? "PASS" : "INSUFFICIENT_EVIDENCE",
     },
   };
 }
@@ -276,7 +328,10 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
           request_id: null,
           cwd: null,
           started_at: null,
+          dispatch_started_at: null,
           finished_at: null,
+          native_started_at: null,
+          native_finished_at: null,
           error: null,
           exit_code: null,
         })),

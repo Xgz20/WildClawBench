@@ -78,6 +78,8 @@ node execute-general-e2e/drivers/workbuddy/batch.mjs \
 
 `--run-slots` 默认 3、范围 1–8。UI 创建任务、选目录和发送始终单槽；绑定后的原生 Agent 最多按冻结槽位后台运行，任一题取得可信终态后按 manifest 顺序动态补位。每次新发送前，Driver 从队列状态重验所有活动 conversation/cwd/attempt，只允许本队列已经登记且仍为 `RUNNING` 的会话；额外活动会话、身份漂移、未知 UI busy 或达到槽位上限均失败关闭。
 
-恢复使用相同参数并增加 `--resume`。队列在 `.general-e2e/queues/workbuddy/` 冻结 manifest、顺序、槽位、Driver 摘要和每题预留 attempt ID。新队列拒绝接管队列外已有 attempt；恢复只观察原 attempt，不重发已发送 Prompt。完成后生成 `*-receipt.json`，记录每题时间、发送计数、观察到的最大并发和动态补位次数；该回执证明队列调度，不替代正式 collect receipt。
+发送前还按 WorkBuddy 实际规则把绝对 Workspace 去掉开头 `/` 并把路径分隔符替换为 `-`，校验单个 native project 目录不超过 255 UTF-8 字节，并为 session JSONL 校验 macOS 1024 字节路径上限。越限在创建 attempt、占用发送 reservation 或操作 UI 之前失败，提示改用更短的 unit 根；短路径 smoke 通过不代替此预检。
+
+恢复使用相同参数并增加 `--resume`。队列在 `.general-e2e/queues/workbuddy/` 冻结 manifest、顺序、槽位、Driver 摘要和每题预留 attempt ID。新队列拒绝接管队列外已有 attempt；恢复只观察原 attempt，不重发已发送 Prompt。完成后生成 `*-receipt.json`：`observed_max_concurrency` 明确为 Prompt 已发送至终态的调度占用峰值，`native_observed_max_concurrency` 来自 runtime request 起止区间，并带原生区间覆盖率；两者不能互换。`integrity.valid` 只校验终态、attempt 唯一和无重复发送，并发是否达到请求槽位在 `concurrency_evidence` 独立报告。该回执证明队列调度，不替代正式 collect receipt。
 
 活动或陈旧 owner-lock 均不会自动删除。异常退出后的锁恢复属于值守操作：先核对锁中的主机和 PID 生命周期及真实任务现场，再处理已证明死亡的旧 Worker；不能直接删除未知锁后新建 attempt。尚未验收无人值守恢复。
