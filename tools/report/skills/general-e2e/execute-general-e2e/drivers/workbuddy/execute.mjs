@@ -31,7 +31,7 @@ import {
 
 export const WORKBUDDY_EXECUTION_JOURNAL_SCHEMA =
   "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1";
-export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.2.0";
+export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.3.0";
 const PROCESS_STARTED_AT = new Date().toISOString();
 const PROCESS_START_IDENTITY = `${hostname()}:${process.pid}:${PROCESS_STARTED_AT}:${randomUUID()}`;
 
@@ -289,7 +289,6 @@ export async function resolveExecutionConfig(parsed) {
     bindingFile: join(controlRoot, "native-binding.json"),
     lockFile: join(controlRoot, "driver.lock"),
     uiLockFile: join(unitRoot, ".general-e2e", "workbuddy-ui.lock"),
-    runTimeoutSeconds: Number(task.timeout_seconds || 3600),
   };
 }
 
@@ -346,7 +345,10 @@ function createJournal(config, runtime, nativeIdleEvidence, now) {
     },
     execution: {
       started_at: now,
-      deadline_at: new Date(Date.parse(now) + config.runTimeoutSeconds * 1000).toISOString(),
+      // General E2E does not impose the task metadata timeout_seconds on the
+      // assessed Harness. Keep a nullable compatibility field in the private
+      // journal, but never derive a stop deadline from the dataset.
+      deadline_at: null,
       error: null,
     },
     history: [{ phase: "PENDING", event: "ATTEMPT_CREATED", at: now }],
@@ -558,22 +560,9 @@ async function bindAndObserve(config, journal, dependencies) {
   await persistJournal(config, journal);
   if (config.detachAfterSubmit || config.observeOnce || state.phase !== "RUNNING") return { journal, state };
 
+  // Do not derive a task deadline from dataset metadata. Continue observing
+  // until WorkBuddy reports a trusted terminal state or attention is required.
   for (;;) {
-    if (dependencies.nowMilliseconds() >= Date.parse(journal.execution.deadline_at)) {
-      journal.execution.error = {
-        code: "WORKBUDDY_EXECUTION_DEADLINE_REACHED",
-        message: "执行时限已到；未实现可信停止确认，保留现场且禁止重发",
-      };
-      transition(journal, "NEEDS_ATTENTION", "EXECUTION_DEADLINE_REACHED", dependencies.now());
-      state.phase = "NEEDS_ATTENTION";
-      state.execution.business_status = null;
-      state.execution.error = { ...journal.execution.error };
-      state.execution.finished_at = null;
-      state.execution.duration_seconds = null;
-      await atomicWriteJson(config.stateFile, state, config.unitRoot);
-      await persistJournal(config, journal);
-      return { journal, state };
-    }
     await dependencies.sleep(config.pollIntervalMs);
     const selected = await dependencies.selectBinding({
       sessionDb: config.sessionDb,

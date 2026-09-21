@@ -33,7 +33,7 @@ import {
 import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery/index.mjs";
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.2.0";
+export const EXECUTION_DRIVER_VERSION = "0.3.0";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -308,7 +308,6 @@ export async function resolveExecutionConfig(parsed) {
     expectedModel: runConfig.tested_model.display_name,
     expectedReasoning: runConfig.tested_model.reasoning_display,
     expectedPermission: runConfig.tested_model.permission_display,
-    runTimeoutSeconds: Number(task.timeout_seconds),
   };
 }
 
@@ -422,7 +421,11 @@ function createInitialState(config, now) {
       finished_at: null,
       duration_seconds: null,
       agent_duration_seconds: null,
-      deadline_at: new Date(Date.parse(now) + config.runTimeoutSeconds * 1000).toISOString(),
+      // General E2E deliberately has no task-level execution deadline. Keep
+      // the field for the AstronStudio v1 state envelope, but leave it null so
+      // downstream consumers cannot mistake dataset timeout_seconds for a
+      // controller-enforced Harness timeout.
+      deadline_at: null,
       error: null,
     },
     evidence: {
@@ -740,6 +743,9 @@ async function observeOnce(config, state, dependencies) {
 
 async function waitForTerminal(config, state, dependencies) {
   let lastObservationError = null;
+  // There is intentionally no task-level deadline here. The loop ends only
+  // at a trusted native terminal state or an explicit NEEDS_ATTENTION result;
+  // task.timeout_seconds belongs to the dataset contract, not Harness control.
   for (;;) {
     let result;
     try {
@@ -759,17 +765,6 @@ async function waitForTerminal(config, state, dependencies) {
       result = state;
     }
     if (new Set(["COMPLETED", "FAILED", "NEEDS_ATTENTION"]).has(result.phase)) return result;
-    if (dependencies.nowMilliseconds() >= Date.parse(state.execution.deadline_at)) {
-      return persistAttention(
-        config,
-        state,
-        "EXECUTION_DEADLINE_REACHED",
-        `执行时限已到；G2-02 尚未实现可信停止与候选冻结，保留现场且不重发 Prompt${
-          lastObservationError ? `；最近一次原生状态读取失败：${lastObservationError}` : ""
-        }`,
-        dependencies,
-      );
-    }
     await dependencies.sleep(config.pollIntervalMs);
   }
 }

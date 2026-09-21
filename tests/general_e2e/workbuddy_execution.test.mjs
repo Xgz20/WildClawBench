@@ -328,6 +328,30 @@ test("WorkBuddy P2 persists intent before exactly one dispatch and binds native 
   }
 });
 
+test("WorkBuddy ignores task timeout_seconds while polling the native terminal state", async () => {
+  const fixture = await createExecutionUnit();
+  try {
+    fixture.config.task.timeout_seconds = 1;
+    fixture.config.runTimeoutSeconds = 1;
+    fixture.config.detachAfterSubmit = false;
+    const counters = { prepare: 0, fill: 0, dispatch: 0, close: 0 };
+    let bindingCalls = 0;
+    const deps = dependencies(fixture.config, counters, () => {
+      bindingCalls += 1;
+      return binding(fixture.config, bindingCalls === 1 ? "running" : "complete");
+    });
+    deps.nowMilliseconds = () => Date.parse("2026-09-19T08:00:00.000Z") + 120_000;
+    const result = await executeWorkBuddyTask(fixture.config, deps);
+    assert.equal(result.state.phase, "COMPLETED");
+    assert.equal(result.state.execution.business_status, "completed");
+    assert.equal(result.journal.execution.deadline_at, null);
+    assert.equal(result.journal.history.some((item) => item.event === "EXECUTION_DEADLINE_REACHED"), false);
+    assert.equal(bindingCalls >= 2, true);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
 test("WorkBuddy P2 resume observes the same attempt without redispatch", async () => {
   const fixture = await createExecutionUnit();
   try {
