@@ -10,12 +10,12 @@
 
 | 任务 | 已审查并集成的交付 | 正在推进 |
 | --- | --- | --- |
-| MAC-WORKBUDDY-GENERAL | WorkBuddy 5.5.6 值守单槽五题执行/正式 collect 5/5，通过回传和同源报告链路；评分 4/5 valid；代码已支持迟到完成恢复 | 对 Colleague leave 复用冻结执行证据和现有有效 score 显式恢复，不重跑 Harness；随后重建 submission、return package 和报告并决定生产准入 |
+| MAC-WORKBUDDY-GENERAL | WorkBuddy 5.5.6 值守单槽五题 execution→collect→score→return→import→report 全链路完成，5/5 valid，均分 0.9775；旧 4/5 submission/return 保留，迟到恢复审计完整 | **主流程受控生产可用**；首个正式批次先跑 3–5 个 L1 canary，后台并发、无人值守、Apple Silicon 与 60 题另行扩容 |
 | MAC-QWENWORK-GENERAL | `9081df5`；CB-B `acfc7a1`/`828bfb0`/`5263890`；metadata gate `679a1e3`；清单 `f1d5119`；真机预检 `e2541aa`；聚焦 Node 43/43 | SLOT04 已释放；项目 trigger 歧义导致 send=0；预检入口已就绪，仍待 1.0.6 真实日志、一次发送/恢复、正式 collect 与 cleanup |
 | MAC-DOUBAOWORK-WEB | P2 `47dcaee`、公共 merge `ca7cc2e`、更正 `3a3057c`；离线加固 `40c2f71`/`2e21a54`/`5d7b6d9`；finalizer/bridge `9bb30aa`/`694536d`；public route `f38b66f`；v2 `3588c16`，控制接收 `e2c1d9e` | UI 等价绑定、Prompt 回读、进程重挂、恢复状态、driver-side finalizer、内存 bridge、离线 route 和原生 metrics 已加固；Driver 64/64、Web metrics 23/23；route 暂拒 batch/formal receipt，仍待可信 native terminal/cwd、公共 cleanup/finalizer 接线与新时段真机验收 |
-| COMMON | CB-A/CB-B、三 Driver、平台 collector/cleanup/finalizer、MiniMax Code、无 Harness 总执行时限与评分恢复入口已在 `4537fff` 汇合 | 推送前维持本地基线身份；新增五项指标另属 COMMON-CM01 |
+| COMMON | CB-A/CB-B、三 Driver、平台 collector/cleanup/finalizer、MiniMax Code、无 Harness 总执行时限与评分恢复入口已在 `4537fff` 汇合；`414beef` 增加迟到恢复后的受控 submission 刷新 | 推送前维持本地基线身份；新增五项指标另属 COMMON-CM01 |
 
-合并后 E2E 组合回归 578/578：General Node 162、General Python 80、Web Node 275、Web Python 61；MiniMax 新增测试 19/19、相关 tool/layout 67/67，Skill 查询和布局检查通过。更宽 anomaly 套件仍有 1 个既有 AstronClaw 样本断言失败，未归因于本次 E2E 合并。WorkBuddy v4 保持执行/采集 5/5、评分 4/5；尚未新建采用本次合并源码的生产发行包。
+合并后 E2E 组合回归 578/578：General Node 162、General Python 80、Web Node 275、Web Python 61；MiniMax 新增测试 19/19、相关 tool/layout 67/67，Skill 查询和布局检查通过。迟到 submission 刷新增补 orchestration/layout/build 42/42；更宽 anomaly 套件仍有 1 个既有 AstronClaw 样本断言失败，未归因于本次 E2E 合并。WorkBuddy v4 当前执行/采集/评分/回传/报告均为 5/5；生产 suite `general-macos-workbuddy-production-20260921-122448` 的目录与套件校验均为 PASS，source revision `414beef`，suite SHA-256 `1697bc6d4b695dea9e92b5b8d9b2d7ec61755d1251094f08c9effa1bdf9f5e83`。
 
 ## 历史桌面时段与并行协作记录
 
