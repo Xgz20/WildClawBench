@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import hashlib
 import importlib.util
@@ -186,18 +187,27 @@ def _read_json(path: Path, code: str = "JSON_INVALID") -> dict[str, Any]:
 def _validate_contract(
     document: Mapping[str, Any], *, expected_schema_id: str
 ) -> None:
-    vendor = (
-        Path(__file__).resolve().parents[1]
-        / "vendor/e2e-shared/general-contracts/validator.py"
-    )
+    skill_root = Path(__file__).resolve().parents[1]
+    candidates = [
+        skill_root / "vendor/e2e-shared/general-contracts/validator.py"
+    ]
+    # Development checkout fallback. Deterministic Skill packages always use
+    # the vendored validator and never depend on the repository package path.
+    for parent in skill_root.parents:
+        candidate = parent / "eval_general_e2e/contracts/validator.py"
+        if candidate.is_file():
+            candidates.append(candidate)
+            break
+    validator_path = next((path for path in candidates if path.is_file()), None)
     try:
-        if vendor.is_file():
+        if validator_path is not None:
             spec = importlib.util.spec_from_file_location(
-                "wildclawbench_general_contracts_vendor", vendor
+                "wildclawbench_general_contracts_vendor", validator_path
             )
             if spec is None or spec.loader is None:
-                raise ImportError(str(vendor))
+                raise ImportError(str(validator_path))
             module = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = module
             spec.loader.exec_module(module)
             validate_contract = module.validate_contract
         else:
@@ -927,6 +937,7 @@ def initialize(
             },
             "tasks": tasks,
             "submission": None,
+            "submission_replacements": [],
         }
         state["queue_digest"] = _queue_digest(state)
         _write_new_json(staging / "orchestration-state.json", state)
@@ -1185,6 +1196,7 @@ def initialize_rescore(
             },
             "tasks": tasks,
             "submission": None,
+            "submission_replacements": [],
         }
         state["queue_digest"] = _queue_digest(state)
         _write_new_json(staging / "orchestration-state.json", state)
@@ -1364,7 +1376,145 @@ def _submission_document(
     return document
 
 
-def _verify_state(root: Path) -> dict[str, Any]:
+def _late_completion_submission_recovery(
+    root: Path,
+    state: Mapping[str, Any],
+    submission_document: Mapping[str, Any],
+) -> tuple[dict[str, Any], list[str]]:
+    created_at = _required_string(
+        submission_document.get("created_at"), "submission.created_at"
+    )
+    submission_created_at = _parse_timestamp(created_at, "submission.created_at")
+    previous_state = deepcopy(state)
+    recovered_task_ids: list[str] = []
+    for task in previous_state["tasks"]:
+        late_events = [
+            event
+            for event in task.get("history", [])
+            if isinstance(event, dict)
+            and event.get("event") == "SCORE_RECORDED_LATE_COMPLETION"
+            and _parse_timestamp(event.get("at"), "late completion event.at")
+            > submission_created_at
+        ]
+        if not late_events:
+            continue
+        if len(late_events) != 1:
+            raise OrchestrationError("SUBMISSION_CONTENT_MISMATCH")
+        event = late_events[0]
+        thread = task.get("thread")
+        score = task.get("score")
+        if (
+            task.get("phase") != "SCORE_RECORDED"
+            or not isinstance(thread, dict)
+            or thread.get("status") != "COMPLETED"
+            or not thread.get("timed_out_at")
+            or not thread.get("finished_at")
+            or not isinstance(score, dict)
+            or event.get("valid") is not score.get("valid")
+            or event.get("deadline_at") != thread.get("deadline_at")
+            or event.get("timed_out_at") != thread.get("timed_out_at")
+            or event.get("thread_finished_at") != thread.get("finished_at")
+        ):
+            raise OrchestrationError("SUBMISSION_CONTENT_MISMATCH")
+        task["phase"] = "THREAD_FAILED"
+        task["score"] = None
+        recovered_task_ids.append(str(task["task_id"]))
+    if not recovered_task_ids:
+        raise OrchestrationError("SUBMISSION_CONTENT_MISMATCH")
+    previous_document = _submission_document(
+        root, previous_state, created_at=created_at
+    )
+    if submission_document != previous_document:
+        raise OrchestrationError("SUBMISSION_CONTENT_MISMATCH")
+    return previous_document, recovered_task_ids
+
+
+def _verify_submission_replacements(
+    root: Path,
+    state: Mapping[str, Any],
+) -> None:
+    replacements = state.get("submission_replacements", [])
+    if not isinstance(replacements, list):
+        raise OrchestrationError("SUBMISSION_REPLACEMENT_AUDIT_INVALID")
+    previous_replacement: Mapping[str, Any] | None = None
+    known_task_ids = {str(task["task_id"]) for task in state["tasks"]}
+    for index, replacement in enumerate(replacements):
+        if (
+            not isinstance(replacement, dict)
+            or set(replacement)
+            != {
+                "event",
+                "at",
+                "recovered_task_ids",
+                "previous",
+                "replacement",
+            }
+            or replacement.get("event")
+            != "SUBMISSION_REPLACED_AFTER_LATE_COMPLETION"
+        ):
+            raise OrchestrationError("SUBMISSION_REPLACEMENT_AUDIT_INVALID")
+        _parse_timestamp(replacement.get("at"), f"submission replacement {index}.at")
+        recovered_task_ids = replacement.get("recovered_task_ids")
+        if (
+            not isinstance(recovered_task_ids, list)
+            or not recovered_task_ids
+            or not all(isinstance(task_id, str) for task_id in recovered_task_ids)
+            or len(recovered_task_ids) != len(set(recovered_task_ids))
+            or any(task_id not in known_task_ids for task_id in recovered_task_ids)
+        ):
+            raise OrchestrationError("SUBMISSION_REPLACEMENT_AUDIT_INVALID")
+        previous = replacement.get("previous")
+        current = replacement.get("replacement")
+        if not isinstance(previous, dict) or not isinstance(current, dict):
+            raise OrchestrationError("SUBMISSION_REPLACEMENT_AUDIT_INVALID")
+        for label, item in (("previous", previous), ("replacement", current)):
+            if set(item) != {"path", "sha256", "created_at"}:
+                raise OrchestrationError("SUBMISSION_REPLACEMENT_AUDIT_INVALID")
+            if not isinstance(item.get("sha256"), str) or not SHA256_RE.fullmatch(
+                str(item["sha256"])
+            ):
+                raise OrchestrationError("SUBMISSION_REPLACEMENT_AUDIT_INVALID")
+            _parse_timestamp(
+                item.get("created_at"),
+                f"submission replacement {index}.{label}.created_at",
+            )
+        expected_archive = (
+            Path("submission-history") / f"{previous['sha256']}.json"
+        ).as_posix()
+        archive = root / str(previous.get("path"))
+        if (
+            previous.get("path") != expected_archive
+            or not _inside(root, archive.resolve())
+            or archive.is_symlink()
+            or not archive.is_file()
+            or _sha256_file(archive) != previous.get("sha256")
+        ):
+            raise OrchestrationError("SUBMISSION_REPLACEMENT_AUDIT_INVALID")
+        archived_document = _read_json(
+            archive, "SUBMISSION_REPLACEMENT_AUDIT_INVALID"
+        )
+        _validate_contract(archived_document, expected_schema_id=SUBMISSION_SCHEMA)
+        if archived_document.get("created_at") != previous.get("created_at"):
+            raise OrchestrationError("SUBMISSION_REPLACEMENT_AUDIT_INVALID")
+        if current.get("path") != "submission.json":
+            raise OrchestrationError("SUBMISSION_REPLACEMENT_AUDIT_INVALID")
+        if previous_replacement is not None and (
+            previous.get("sha256") != previous_replacement.get("sha256")
+            or previous.get("created_at")
+            != previous_replacement.get("created_at")
+        ):
+            raise OrchestrationError("SUBMISSION_REPLACEMENT_AUDIT_INVALID")
+        previous_replacement = current
+    submission = state.get("submission")
+    if replacements and previous_replacement != submission:
+        raise OrchestrationError("SUBMISSION_REPLACEMENT_AUDIT_INVALID")
+
+
+def _verify_state(
+    root: Path,
+    *,
+    allow_late_submission_recovery: bool = False,
+) -> dict[str, Any]:
     state = _read_json(root / "orchestration-state.json", "ORCHESTRATION_STATE_INVALID")
     if state.get("schema_version") != STATE_SCHEMA or state.get("revision") != STATE_REVISION:
         raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "schema or revision")
@@ -1628,7 +1778,13 @@ def _verify_state(root: Path) -> dict[str, Any]:
             root, state, created_at=_required_string(created_at, "submission.created_at")
         )
         if submission_document != expected_submission:
-            raise OrchestrationError("SUBMISSION_CONTENT_MISMATCH")
+            if allow_late_submission_recovery:
+                _late_completion_submission_recovery(
+                    root, state, submission_document
+                )
+            else:
+                raise OrchestrationError("SUBMISSION_CONTENT_MISMATCH")
+    _verify_submission_replacements(root, state)
     return state
 
 
@@ -1820,6 +1976,9 @@ def _public_view(root: Path, state: Mapping[str, Any], now: datetime) -> dict[st
             if state.get("submission") is not None
             else None
         ),
+        "submission_replacement_count": len(
+            state.get("submission_replacements", [])
+        ),
         "tasks": [
             {
                 "task_id": task["task_id"],
@@ -1857,14 +2016,81 @@ def status(orchestration_root: Path, *, now: datetime | None = None) -> dict[str
 def build_submission(
     orchestration_root: Path,
     *,
+    replace_after_late_completion: bool = False,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     root = _state_root(orchestration_root)
-    state = _verify_state(root)
+    state = _verify_state(
+        root,
+        allow_late_submission_recovery=replace_after_late_completion,
+    )
     if any(task.get("phase") not in TERMINAL_PHASES for task in state["tasks"]):
         raise OrchestrationError("SUBMISSION_TASKS_NOT_TERMINAL")
     if state.get("submission") is not None:
-        return _public_view(root, state, now or _now())
+        if not replace_after_late_completion:
+            return _public_view(root, state, now or _now())
+        destination = root / "submission.json"
+        previous_metadata = state["submission"]
+        previous_document = _read_json(
+            destination, "SUBMISSION_DOCUMENT_INVALID"
+        )
+        current_document = _submission_document(
+            root,
+            state,
+            created_at=_required_string(
+                previous_metadata.get("created_at"), "submission.created_at"
+            ),
+        )
+        if previous_document == current_document:
+            return _public_view(root, state, now or _now())
+        _, recovered_task_ids = _late_completion_submission_recovery(
+            root, state, previous_document
+        )
+        previous_sha = _required_string(
+            previous_metadata.get("sha256"), "submission.sha256"
+        )
+        archive = root / "submission-history" / f"{previous_sha}.json"
+        archive.parent.mkdir(parents=True, exist_ok=True)
+        if archive.exists() or archive.is_symlink():
+            if (
+                archive.is_symlink()
+                or not archive.is_file()
+                or _sha256_file(archive) != previous_sha
+            ):
+                raise OrchestrationError(
+                    "SUBMISSION_ARCHIVE_CONFLICT", str(archive)
+                )
+        else:
+            _write_new_json(archive, previous_document)
+            if _sha256_file(archive) != previous_sha:
+                raise OrchestrationError("SUBMISSION_ARCHIVE_MISMATCH")
+        event_time = now or _now()
+        created_at = _timestamp(event_time)
+        replacement_document = _submission_document(
+            root, state, created_at=created_at
+        )
+        _atomic_write_json(destination, replacement_document)
+        replacement_metadata = {
+            "path": destination.relative_to(root).as_posix(),
+            "sha256": _sha256_file(destination),
+            "created_at": created_at,
+        }
+        audit = {
+            "event": "SUBMISSION_REPLACED_AFTER_LATE_COMPLETION",
+            "at": created_at,
+            "recovered_task_ids": recovered_task_ids,
+            "previous": {
+                "path": archive.relative_to(root).as_posix(),
+                "sha256": previous_sha,
+                "created_at": previous_metadata["created_at"],
+            },
+            "replacement": replacement_metadata,
+        }
+        state.setdefault("submission_replacements", []).append(audit)
+        state["submission"] = replacement_metadata
+        result = _save(root, state, event_time)
+        result["submission_replacement"] = audit
+        return result
     destination = root / "submission.json"
     if destination.exists() or destination.is_symlink():
         raise OrchestrationError("SUBMISSION_OUTPUT_CONFLICT", str(destination))
@@ -2362,6 +2588,7 @@ def main(argv: list[str] | None = None) -> int:
 
     build = subparsers.add_parser("build-submission")
     _parse_common(build)
+    build.add_argument("--replace-after-late-completion", action="store_true")
 
     project = subparsers.add_parser("record-project")
     _parse_common(project)
@@ -2454,7 +2681,10 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command in {"status", "resume"}:
             result = status(args.orchestration_root)
         elif args.command == "build-submission":
-            result = build_submission(args.orchestration_root)
+            result = build_submission(
+                args.orchestration_root,
+                replace_after_late_completion=args.replace_after_late_completion,
+            )
         elif args.command == "record-project":
             result = record_project(
                 args.orchestration_root,

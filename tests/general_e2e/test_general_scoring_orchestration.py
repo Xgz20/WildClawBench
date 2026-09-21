@@ -1091,6 +1091,102 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         history = json.loads(late_state_path.read_text(encoding="utf-8"))["tasks"][0]["history"]
         self.assertEqual(history[-1]["event"], "SCORE_RECORDED_LATE_COMPLETION")
 
+    def test_late_completion_replaces_only_the_strictly_reproducible_submission(self) -> None:
+        fixture = Fixture(self.root, task_ids=("task-one",))
+        view = fixture.initialize(timeout=10, now=self.t0)
+        view = self._record_first_project(fixture, view)
+        root = Path(view["orchestration_root"])
+        ORCHESTRATOR.preflight(
+            root,
+            task_id="task-one",
+            desktop_version="2026.918.1",
+            now=self.t0,
+        )
+        ORCHESTRATOR.record_thread(
+            root,
+            task_id="task-one",
+            thread_id="thread-late",
+            host_id="host-local",
+            now=self.t0,
+        )
+        ORCHESTRATOR.record_wait(
+            root,
+            task_id="task-one",
+            wait_sequence=1,
+            wait_cursor="cursor-late-terminal",
+            wait_status="COMPLETED",
+            now=self.t0 + timedelta(seconds=11),
+        )
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            side_effect=self._fixture_score_command,
+        ):
+            ORCHESTRATOR.build_submission(
+                root, now=self.t0 + timedelta(seconds=12)
+            )
+        previous_submission = (root / "submission.json").read_bytes()
+        previous_sha = hashlib.sha256(previous_submission).hexdigest()
+        self.assertEqual(
+            json.loads(previous_submission)["tasks"][0]["score_status"],
+            "unscored",
+        )
+
+        self._record_fixture_score(
+            root, "task-one", valid=True, total_score=0.8
+        )
+        state_path = root / "orchestration-state.json"
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        state["tasks"][0]["phase"] = "THREAD_FAILED"
+        state["tasks"][0]["score"] = None
+        state["status"] = ORCHESTRATOR._state_status(state)
+        state_path.write_text(json.dumps(state), encoding="utf-8")
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            side_effect=self._fixture_score_command,
+        ):
+            ORCHESTRATOR.record_score(
+                root,
+                task_id="task-one",
+                allow_late_completion=True,
+                now=self.t0 + timedelta(seconds=13),
+            )
+            with self.assertRaisesRegex(
+                ORCHESTRATOR.OrchestrationError,
+                "SUBMISSION_CONTENT_MISMATCH",
+            ):
+                ORCHESTRATOR.status(root, now=self.t0 + timedelta(seconds=14))
+            replaced = ORCHESTRATOR.build_submission(
+                root,
+                replace_after_late_completion=True,
+                now=self.t0 + timedelta(seconds=14),
+            )
+            repeated = ORCHESTRATOR.build_submission(
+                root,
+                replace_after_late_completion=True,
+                now=self.t0 + timedelta(seconds=15),
+            )
+
+        archive = root / "submission-history" / f"{previous_sha}.json"
+        self.assertEqual(archive.read_bytes(), previous_submission)
+        replacement = json.loads((root / "submission.json").read_text())
+        self.assertEqual(replacement["tasks"][0]["score_status"], "valid")
+        self.assertEqual(replaced["completed_count"], 1)
+        self.assertEqual(repeated["submission_path"], replaced["submission_path"])
+        audit = json.loads(state_path.read_text())["submission_replacements"]
+        self.assertEqual(len(audit), 1)
+        self.assertEqual(
+            audit[0]["event"],
+            "SUBMISSION_REPLACED_AFTER_LATE_COMPLETION",
+        )
+        self.assertEqual(audit[0]["recovered_task_ids"], ["task-one"])
+        self.assertEqual(audit[0]["previous"]["sha256"], previous_sha)
+        self.assertEqual(
+            audit[0]["replacement"]["sha256"],
+            hashlib.sha256((root / "submission.json").read_bytes()).hexdigest(),
+        )
+
     def test_configuration_backend_and_concurrency_fail_closed(self) -> None:
         api_fixture = Fixture(self.root / "api", protocol="api-judge-v1")
         with self.assertRaisesRegex(
@@ -1282,6 +1378,14 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
                 ORCHESTRATOR.OrchestrationError, "SUBMISSION_CONTENT_MISMATCH"
             ):
                 ORCHESTRATOR.status(root, now=self.t0)
+            with self.assertRaisesRegex(
+                ORCHESTRATOR.OrchestrationError, "SUBMISSION_CONTENT_MISMATCH"
+            ):
+                ORCHESTRATOR.build_submission(
+                    root,
+                    replace_after_late_completion=True,
+                    now=self.t0,
+                )
 
     def test_incomplete_evidence_is_unscored_without_judge_attempt(self) -> None:
         fixture = Fixture(self.root, task_ids=("task-one",))

@@ -153,6 +153,8 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py record-score \
 
 该入口只允许 `thread.status=COMPLETED` 且已有 `timed_out_at` 的任务，写入 `SCORE_RECORDED_LATE_COMPLETION` 历史并保留 deadline/完成时间；不会修改原 attempt 或重跑 Harness。未知终态、缺少 score 或校验失败仍失败关闭。
 
+如果恢复发生前已经生成 submission，恢复后的 state 与旧 submission 会有意形成不一致。不要删除或手工修改旧文件；按 [submission 与重评分编排](submission-and-rescore.md) 使用显式受控替换入口归档旧版本并生成新版本。
+
 ## 恢复与失败关闭
 
 控制任务重启后只运行：
