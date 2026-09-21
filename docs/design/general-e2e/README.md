@@ -47,6 +47,8 @@ DoubaoWork Web 的历史进展单独保留：一次开发 canary 已发送且产
 
 ## 下一会话直接做什么
 
+**新 Harness 的集成任务必须包含加固实现与验收。** 开始任务时使用[统一接入契约 0.2 的任务范围模板](../e2e/端到端自动化评测Harness接入契约.md#integration-task-template)，将[CV01–CV17 共用矩阵](../e2e/端到端自动化评测Harness接入契约.md#hardening-matrix)和相应 GV/WV 纳入本客户端的现有进度/证据记录。分开记录实现、自动化/模拟、真机结果；基础必需项未通过，完整集成保持未完成。并发和无人值守按声明范围加验，不要求先做完所有平台或可选指标。本文维护各客户端实际进展，矩阵要求与模板只在统一契约维护；旧并行任务卡不再作为新任务模板。
+
 ### WorkBuddy：受控主流程可用，剩余生产工程收尾与一次新包 canary
 
 v8 保持 UI 单槽，配置 `run_slots=3`、发送后未结束峰值 3、原生请求实际重叠峰值 2、2 次动态补位、每题一次发送，并完成 collect、评分、回传、报告。耗时补采仅使用冻结原件，不重跑 Harness/Judge。原生三路同时执行仍未证明：下一次验证应分开记录发送/排队与原生开始，选足够长的三题观测请求区间，禁止仅以 `run_slots` 或旧队列峰值宣称通过。此次未启动新验证或任何平台任务。旧 v4/v8 产物和成绩保持原身份；长路径失败及短路径要求见[证据索引](evidence/workbuddy-macos-general-v8-three-slot-20260921/README.md)。
@@ -97,6 +99,7 @@ macOS 四个 Harness 达到声明范围的全链路准入后，使用冻结数�
 唯一修改目录：/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench
 分支：feature/astroncode-eval。
 先检查该工作区的 Git 状态，读取 docs/design/general-e2e/README.md，按其中“下一会话直接做什么”完成 WorkBuddy 并发回执/路径预检工程收尾与新包 canary，再进入 QwenWork General 的真实单题闭环。
+新增或继续 Harness 集成时，读取统一接入契约 0.2 第1.9/1.10节，将 CV01–CV17 和 General GV 纳入本客户端任务，包含基础加固代码、反例测试及适用真机故障验证；基础必需项未通过不得关闭完整接入。
 如果 README 已记录该项完成，则执行其下一项；以仓库当前记录和本机证据为准，不依赖旧聊天。
 直接在当前工作区分支串行迭代，不创建平台任务、subagent 或 worktree，不申请桌面时段，不 push。
 每完成一个事项，补充真实证据和 README 对应进度，运行必要检查并单独提交中文 Conventional Commit。
