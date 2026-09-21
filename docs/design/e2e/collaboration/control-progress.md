@@ -1,21 +1,23 @@
 # 控制推进记录
 
-维护者：COMMON。更新：2026-09-19 21:10 +08:00。这是控制任务的调度/审查快照，不替代平台卡与技术验收，也不是跨进程桌面锁。没有配置定时巡检。
+维护者：COMMON。更新：2026-09-21 +08:00。这是控制任务的调度/审查快照，不替代平台卡与技术验收，也不是跨进程桌面锁。没有配置定时巡检。
 
 ## 当前交付与下一项
 
-本轮把三个平台的开发 Driver 集成到公共分支，完成 254 项组合测试，COMMON-003 源码为 `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3`；后续输入修复源码 `2023b4d5d1d703c81ff8ed15e0d5ada29cd0dca4` 见 [COMMON-004](handoffs/COMMON-004.md)。源码全部在 `.agents/e2e-harness-contract` 集成；不把开发 canary 或离线测试写成正式 E2E 完成。
+当前直接在 `feature/astroncode-eval` 控制分支逐项迭代，不再并行派发平台 worktree。本轮统一题目 `timeout_seconds` 的执行语义：它不限制被评测 Harness 的运行时长；执行持续到可信原生终态、明确异常或需要人工处理。CDP/UI 单次操作、应用启动/停止与身份绑定、终态进程清理、评分 Worker/API 仍保留各自基础设施超时。
 
 | 任务 | 已审查并集成的交付 | 正在推进 |
 | --- | --- | --- |
-| MAC-WORKBUDDY-GENERAL | P2 `e388dfa`、组件绑定 `b3ac3da`；独立 Node 23/23 | SLOT03 发送前失败已安全恢复草稿、释放；输入修复 `5bea762` 审查通过，Node 25/25 与 VM guards 7/7；SLOT05 新 canary 已授予，先采用 COMMON-003/冻结身份；collector 独立推进 |
-| MAC-QWENWORK-GENERAL | `9081df5`；独立 Node 32 + Python 3；Swift typecheck | SLOT04 已释放；项目 trigger 歧义导致 send=0；修可见控件 selector、关闭数据库的只读 probe；collector 独立交付 |
-| MAC-DOUBAOWORK-WEB | P2 `47dcaee`、公共 merge `ca7cc2e`、更正 `3a3057c`；Node 39/39 | 离线审计原生 terminal/完整 workspace 绑定、实现精确 cleanup 及反例；COMMON 审查最小 Web 公共接口复用 |
-| COMMON | CB-A/CB-B、三 Driver、发行版本与 Qwen CLI 路径别名修复 | 发布 COMMON-003，接收下一批平台修复/collector；新增五项指标另属 COMMON-CM01 |
+| MAC-WORKBUDDY-GENERAL | 原开发 Driver、输入修复与既有真机证据保持原 revision 身份 | General Driver 0.3.0 去除题目执行 deadline 后，重新做只读 probe 与 L1 smoke，再继续正式收口 |
+| MAC-QWENWORK-GENERAL | 原 Driver 与 selector/SQLite 加固保留；旧 SLOT04 `send=0` 边界不变 | General Driver 0.3.0 删除旧超时终态注入入口；仍需 selector/关闭库 probe 和新版本 L1 smoke |
+| MAC-DOUBAOWORK-WEB | 原 Web Driver、receipt 接入与既有 canary 证据保持原 revision 身份 | `--observe-seconds` 仅是开发期只读观察窗口；继续完成精确 cleanup、正式 collect/finalizer/评分/报告验收 |
+| COMMON | General `0563b94`、Web `7a2142a`、QwenWork General `9885a4c` 已本地提交 | 推送前维持本地基线身份；各平台新版本 probe + L1 smoke 后再更新生产准入，新增五项指标另属 COMMON-CM01 |
 
-公共/平台组合回归：General Python 63、Node 130（公共 34、WorkBuddy 25、Qwen 32、Doubao 39）、Web Python 61，合计 254/254。General execute 本批升为 0.8.1、Web execute 1.15.0；尚未新建生产发行包。
+本轮聚焦回归 369/369：General Python 63、General Node 57（QwenWork 32、AstronStudio/WorkBuddy 25）、Web Node 188（WorkBuddy 94、QwenWork 45、AstronStudio 49）、Web Python 61。General execute 升为 0.8.3，Web execute 升为 1.16.0；正式 Driver 实现不再包含旧 Harness 总执行超时逻辑。尚未新建生产发行包，也没有把旧真机结果提升为新版本准入。
 
-## 桌面时段
+## 历史桌面时段（2026-09-19）
+
+以下表格只保留原始调试审计链，不代表当前仍有独占安排。当前没有并行平台任务，也没有活动桌面时段授权；后续真机验证在控制分支逐项执行。
 
 | 时段 ID | 独占任务 | 允许范围 | 状态 |
 | --- | --- | --- | --- |
@@ -23,9 +25,9 @@
 | SLOT-MAC-20260919-02 | MAC-WORKBUDDY-GENERAL | 启动/CDP/配置/原生状态与草稿检查 | SLOT_RELEASED；发现原 31 字草稿，未发送 |
 | SLOT-MAC-20260919-03 | MAC-WORKBUDDY-GENERAL | 私有备份核验后临时移出草稿、一次开发尝试、精确恢复 | SLOT03_RELEASED；reservation=1、实际 click=0/send=0；原草稿正文/HTML SHA 已恢复 |
 | SLOT-MAC-20260919-04 | MAC-QWENWORK-GENERAL | 无活动冲突后启动 QwenWork 9250；真实 General 单题、keep-current、一次发送/观察恢复 | SLOT04_RELEASED；send=0、无 attempt；最后由用户确认退出，9250/主进程/DB 写者均已消失 |
-| SLOT-MAC-20260919-05 | MAC-WORKBUDDY-GENERAL | 输入修复后新调试 attempt、原草稿私有核验与恢复、真实单题一次发送/观察 | 已授予；在新文档/COMMON-003 合并并冻结源码后开始；待明确安全释放 |
+| SLOT-MAC-20260919-05 | MAC-WORKBUDDY-GENERAL | 输入修复后新调试 attempt、原草稿私有核验与恢复、真实单题一次发送/观察 | 历史授权，不延续到当前控制分支；当前无活动独占时段 |
 
-SLOT05 仅 WorkBuddy 可操作桌面，Qwen/Doubao 继续离线修复/collector。后续时段由控制任务在修复审查后明确授予，不能自动开始。不可为补证据重发不确定发送，不代答未知对话框。结束时必须报告真实 task/session/attempt、未停止状态、残留进程和恢复路径；只有安全交接后才分配下一时段。
+历史时段不能作为当前操作授权。不可为补证据重发不确定发送，不代答未知对话框。每次真机验证仍须报告真实 task/session/attempt、未停止状态、残留进程和恢复路径。
 
 ## WorkBuddy SLOT03
 
@@ -33,7 +35,7 @@ attempt `3e554524-6599-4182-aecc-3257977867c0` 在发送前已冻结 628 字符 
 
 同 attempt 只读 resume 没有重发，仍无 native 身份。未发送 Prompt 已移出，原 31 字用户草稿正文与 HTML SHA 均恢复；只有动态 style 属性不同。备份、恢复截图和证据权限为 0600，正文不入 Git。WorkBuddy 保持本轮启动的 PID 33343 / CDP 9229，模型 xopglm52、权限 default-sandbox；再次操作前必须重验现场，不能把此快照当作实时状态。
 
-平台修复 `5bea762` 使用 Input.insertText 并在 armed 前确认 enabled，不绕过 disabled。独立 Node 25/25、实际 DOM 表达式 VM guards 7/7 通过；这些不是 React 真机证据。SLOT05 已授予，重新核验私有草稿备份与当前内容后才临时移出，新建调试 attempt 验证，旧 attempt 计数不重置。
+平台修复 `5bea762` 使用 Input.insertText 并在 armed 前确认 enabled，不绕过 disabled。独立 Node 25/25、实际 DOM 表达式 VM guards 7/7 通过；这些不是 React 真机证据。SLOT05 当时曾授予，当前授权已失效；若复核该历史 attempt，旧 attempt 计数仍不得重置。
 
 ## QwenWork SLOT04
 
@@ -59,6 +61,6 @@ General trace v2 / common finalizer 已由 COMMON-002 提供；平台真实 coll
 
 原生工具 completed 不等于业务成功；缺失指标保持 null、known subtotal、coverage。取消/中断、来源路径、锁 stale 双接管和恢复状态反例已经分别复核，不能以此替代尚未进行的真实恢复/cleanup/评分验收。
 
-Windows 接收 COMMON-001/002/003/004 和最新 baseline 后继续本机 G5-01，无需等待三个 Mac 或新增指标完成。Windows 真机记录由接收方回写，本控制任务未操作或代填其通过状态。两机以固定 SHA 和新增 handoff 接续，活动批次不切源码/Skill。
+Windows 接收 COMMON-001/002/003/004、最新 baseline 和本轮三笔代码提交后继续本机 G5-01，无需等待 Mac 平台新 smoke 或新增指标完成。由于当前本地提交尚未推送，Windows 暂不能把 `9885a4c` 记为已采用；推送后以固定 SHA 同步。Windows 真机记录由接收方回写，本控制任务未操作或代填其通过状态。活动批次不切源码/Skill。
 
 Doubao 0f6d2c6 cleanup 独立审查未通过，未合入：父退出后 reparent 子进程丢失、PID复用后再次发信号、归属在信号前过期，以及 ..cache 合法路径/workspace实体变化反例已退回平台。未调用真实canary清理；修复后再复核。

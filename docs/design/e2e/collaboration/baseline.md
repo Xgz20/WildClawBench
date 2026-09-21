@@ -1,20 +1,20 @@
 # 公共基线与同步约定
 
-维护方：COMMON。更新日期：2026-09-19。本文登记可消费基线；各平台自行回写采用和验证。
+维护方：COMMON。更新日期：2026-09-21。本文登记可消费基线；各平台自行回写采用和验证。
 
 | 字段 | 当前记录 |
 | --- | --- |
 | 集成分支 / 同步仓库 | `feature/astroncode-eval` / `https://github.com/Xgz20/WildClawBench.git` |
 | 已核验 remote | macOS 为 `github`，fetch/push URL 一致；Windows 接收方核对实际 URL，不假定 `origin` |
-| 推荐开发源码基线 | `2023b4d5d1d703c81ff8ed15e0d5ada29cd0dca4` |
-| 基线状态 | `DEVELOPMENT_PUBLISHED`；COMMON-004 随本轮台账发布；接收方 fetch 后核验推荐源码祖先关系，不是新平台生产准入 |
-| 当前必读交接 | [COMMON-001](handoffs/COMMON-001.md)、[COMMON-002](handoffs/COMMON-002.md)、[COMMON-003](handoffs/COMMON-003.md)、[COMMON-004](handoffs/COMMON-004.md)；须取得含全部适用交接的最新台账提交 |
-| 实现提交 | CB-A `abce5da832f16b48cd402ceef04a6abda544a379`；CB-B `eb23784a7ed25b0f0364db0392783de277b22b96`，均保留原提交 |
-| 契约 / 版本 | `E2E-HARNESS-CONTRACT/0.1` / `run-general-e2e@0.5.0` / `general-contracts@1.2.0`；General execute 0.8.1 / Web execute 1.15.0；完整版本见 COMMON-003/004 |
+| 推荐开发源码基线 | `9885a4c50eadba89bba399f63abb907ea73fd258`；当前仅为本地已验证基线，尚未推送 |
+| 基线状态 | `DEVELOPMENT_LOCAL_VALIDATED`；接收方暂不能仅靠 fetch 取得本轮三笔提交，推送后再核验推荐源码祖先关系；这不是新平台生产准入 |
+| 当前必读交接 | [COMMON-001](handoffs/COMMON-001.md)、[COMMON-002](handoffs/COMMON-002.md)、[COMMON-003](handoffs/COMMON-003.md)、[COMMON-004](handoffs/COMMON-004.md)，以及本页登记的 2026-09-21 超时语义变更；须取得含全部适用交接和代码提交的最新台账提交 |
+| 实现提交 | CB-A `abce5da832f16b48cd402ceef04a6abda544a379`；CB-B `eb23784a7ed25b0f0364db0392783de277b22b96`；本轮 General `0563b94fec611fb0f4a53c5ad1db9e5b2ec278d6`、Web `7a2142a12312110eddbd51a8f39f1389defc7059`、QwenWork General `9885a4c50eadba89bba399f63abb907ea73fd258` |
+| 契约 / 版本 | `E2E-HARNESS-CONTRACT/0.1` / `run-general-e2e@0.5.0` / `general-contracts@1.2.0`；General execute 0.8.3 / Web execute 1.16.0；完整历史版本见 COMMON-003/004 |
 | 开发接口 | [通用执行状态接口](../../../../tools/report/skills/general-e2e/run-general-e2e/references/adapter-execution-state.md)，已集成 CB-A；CB-B 通用 finalizer / trace v2 已可消费，平台原生采集与真实 cleanup hook 仍需分别实现验证 |
-| 验证范围 | COMMON-003 及本批输入修复组合回归 254/254（General Python 63、Node 130、Web Python 61）；无新 Harness/Windows 正式闭环声明 |
-| 并行任务 | 三个 macOS 独立任务已启动并核验 worktree 绑定，见[派发记录](dispatch.md)；平台卡由各自负责人更新后交付集成 |
-| 未完成公共项 | WorkBuddy 输入真机验证、Qwen selector/关闭库 probe、Doubao cleanup 加固、各平台正式收口与验收、COMMON-CM01 新增五项指标；不阻塞已有接口的独立开发 |
+| 验证范围 | 本轮聚焦回归 369/369：General Python 63、General Node 57（QwenWork 32、AstronStudio/WorkBuddy 25）、Web Node 188（WorkBuddy 94、QwenWork 45、AstronStudio 49）、Web Python 61；Skill 查询、General 布局和静态残余门禁通过；无新 Harness/Windows 正式闭环声明 |
+| 并行任务 | 当前不再并行派发平台 worktree；后续直接在控制分支逐项迭代并单独提交。历史派发记录仅见[派发记录](dispatch.md) |
+| 未完成公共项 | 各受影响平台须基于新 Driver 重新完成只读 probe 与 L1 smoke；Qwen selector/关闭库 probe、Doubao cleanup 加固、各平台正式收口与验收、COMMON-CM01 新增五项指标仍按各自证据推进 |
 | macOS 既有 smoke | [双题 smoke](../../general-e2e/evidence/macos-current-smoke-20260919/README.md)、[G4-03](../../general-e2e/evidence/g4-03/README.md)；证据提交 `86786e219c29730dba26e28426bcbe3f2414dab8`，实际执行源码 `457e35560ea5cd090db1ce8b68c747de95ae3622` |
 | 发行身份 | 本轮未新建生产包；旧包 `general-macos-production-20260919-141301` 的 suite SHA 为 `64208e9828cf32457938abb616bd522a914aaeda3828735d9169236f575059ec`，15 个产物哈希已核验；新代码不得借用旧身份或真机证据 |
 
@@ -28,6 +28,7 @@
 
 | 基线标识 | 可消费源码 SHA | 交接 ID | 必需动作 | 发布结果 |
 | --- | --- | --- | --- | --- |
+| E2E-DEV-20260921-A | `9885a4c50eadba89bba399f63abb907ea73fd258` | 当前台账 | 采用无 Harness 总执行时限语义；各平台在新版本上重做 probe 与 L1 smoke，旧真机证据不迁移 | DEVELOPMENT_LOCAL_VALIDATED |
 | E2E-DEV-20260919-D | `2023b4d5d1d703c81ff8ed15e0d5ada29cd0dca4` | COMMON-004 | WorkBuddy 输入修复、execute 0.8.1、Web 等价绑定方案；当前 live 按原身份收口 | DEVELOPMENT_PUBLISHED |
 | E2E-DEV-20260919-C | `dc5ff64c3d7b91ae0ecc6669583f5bd3d69c13c3` | COMMON-003 | 采用三个开发 Driver 与 execute 版本；处理真机限制及 CLI 修复；活动 attempt 不切版本 | DEVELOPMENT_PUBLISHED |
 | E2E-DEV-20260919-B | `eb23784a7ed25b0f0364db0392783de277b22b96` | COMMON-002 | 更新组件绑定与受影响 Skill；接入 trace v2 / cleanup hook；平台真机另验 | DEVELOPMENT_PUBLISHED |
