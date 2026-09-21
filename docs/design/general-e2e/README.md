@@ -60,6 +60,12 @@ v8 保持 UI 单槽，配置 `run_slots=3`、发送后未结束峰值 3、原生
 
 无人值守 Worker 崩溃自动恢复、Apple Silicon、Windows、更高并发、60 题全量与裁判校准仍属后续扩容，不作为当前短路径、值守小批次的统一前置条件。缓存写入/精确普通输入未知以及用户暂缓的工具质量比率也不阻塞现有评分与报告。
 
+**加固边界复核（2026-09-21）**：当前已完成身份/目录/Prompt 绑定、发送意图持久化与不确定不重发、排他锁、UI/内部草稿一致性、原生终态检查、轨迹/资源 provenance、候选冻结与哈希复验、评分隔离及回传/报告校验。真实故障证据包括 CDP 提前关闭后同 attempt 恢复且未重发、发送控件/草稿不同步时停止、文档预览被误识别后的定位修复，以及 v4 迟到评分恢复。v8 证明五题完整闭环与完成态 resume，不等于完成故障注入矩阵。
+
+- 进程收口尤其不能笼统写作“杀进程分支已真机验收”：本次读取 `workbuddy-macos-general-e2e` 和 `wb3` 两个调试根下的正式 `evidence/tasks/**/process-cleanup.json`，排除 return 副本后共 14 条去重回执，均无 `termination_attempts`。v8 五题 before/after targets 均为 0，真实安静窗口约 5.1–6.5 秒。已有证据支持无残留检查与冻结；残留进程 TERM、拒绝退出后的 KILL、无关进程保护等真实故障回收分支仍需独立验证。代码和模拟反例已经存在，不能把模拟等同于上述真机证据。
+- 发送临界点强杀 Worker、客户端重启/重连、未知授权/追问、基础设施操作超时后的处理尚未形成完整 WorkBuddy 真机矩阵。当前策略以暂停并保留现场为主，stale lock 不自动抢占；不宣称无人值守自恢复。
+- 下一轮在两处工程修复和主流程 canary 外，补最小的防重发/残留进程故障验证；故障注入作为技术验收单独标记，不混入能力评分。AstronStudio 历史 MAC 表不能直接作为 WorkBuddy 通过依据；题目 `timeout_seconds` 继续不限制执行或参与评分。
+
 ### 1. QwenWork General：完成真实单题，再扩到小批
 
 1. 检查当前工作区/分支/dirty 状态，读取 `execute-general-e2e/SKILL.md`；代码在 `tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/`，采集在 `eval_general_e2e/adapters/qwenwork/`，只读原生字段预检入口为 `tools/qwenwork_metadata_preflight.py`。该 Skill 取自当前工作区的 canonical 路径，避免读取旧控制/平台 worktree 的同名 Skill。
