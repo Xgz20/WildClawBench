@@ -231,8 +231,10 @@ async function defaultWriterCheck(sessionDb) {
       ["-F", "pcfn", "--", sessionDb, `${sessionDb}-wal`, `${sessionDb}-shm`],
       { capture: true, allowFailure: true },
     );
-    // lsof cannot expose SQLite's lock mode portably. Any holder is therefore
-    // treated as an active/unknown writer and blocks immutable reads.
+    // lsof cannot expose SQLite's lock mode portably. A holder is therefore
+    // treated as an active/unknown writer. Active WAL/SHM snapshots can still
+    // be queried from a copied three-file snapshot after source stability is
+    // verified; sidecar-free snapshots remain blocked while held.
     return Boolean(String(result.stdout || "").trim());
   } catch {
     // Fail closed when the writer check itself is unavailable.
@@ -289,7 +291,7 @@ async function querySnapshot(sessionDb, query, overrides = {}) {
       // A sidecar-free WAL main file is only safe through SQLite's immutable
       // URI after no process holds the database. Active WAL/SHM snapshots use
       // ordinary read-only mode so SQLite consumes the copied sidecars.
-      if (writer) throw new Error("QWENWORK_DB_WRITER_PRESENT");
+      if (writer && !hasSidecar) throw new Error("QWENWORK_DB_WRITER_PRESENT");
       const queryDatabase = !hasSidecar && !writer
         ? immutableSqliteUri(snapshotDb)
         : snapshotDb;

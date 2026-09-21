@@ -334,6 +334,31 @@ test("active WAL/SHM snapshots copy both sidecars and never use immutable", asyn
   }
 });
 
+test("active writer with stable WAL/SHM snapshot is queryable without mutating source", async () => {
+  const fixture = await makeSnapshotFixture({ wal: true, shm: true });
+  const queries = [];
+  try {
+    const rows = await querySnapshot(fixture.database, "SELECT 1", {
+      writerCheck: async () => true,
+      query: async (database, sql) => {
+        queries.push({ database, sql });
+        if (sql.includes("quick_check")) {
+          await access(`${database}-wal`);
+          await access(`${database}-shm`);
+          return [{ quick_check: "ok" }];
+        }
+        return [{ value: 1 }];
+      },
+    });
+    assert.deepEqual(rows, [{ value: 1 }]);
+    assert.ok(queries.every(({ database }) => !database.includes("immutable=1")));
+    await access(`${fixture.database}-wal`);
+    await access(`${fixture.database}-shm`);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
 test("writer detection and unstable source snapshots fail closed after bounded retries", async () => {
   const writerFixture = await makeSnapshotFixture();
   try {

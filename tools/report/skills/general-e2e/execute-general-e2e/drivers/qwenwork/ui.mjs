@@ -267,12 +267,20 @@ export async function findQwenPromptEditor(page) {
   return requireUniqueVisible(page.locator(QWEN_PROMPT_SELECTOR), "prompt-editor");
 }
 
+export function normalizeQwenPromptText(value) {
+  return String(value || "")
+    .replace(/\r\n?/gu, "\n")
+    .replace(/\n{3,}/gu, "\n\n");
+}
+
 export async function readQwenPrompt(page) {
   const editor = await findQwenPromptEditor(page);
-  const value = await editor.inputValue().catch(async () => (
-    await editor.textContent().catch(() => "")
+  const value = await editor.innerText().catch(async () => (
+    await editor.inputValue().catch(async () => (
+      await editor.textContent().catch(() => "")
+    ))
   ));
-  return String(value || "");
+  return normalizeQwenPromptText(value);
 }
 
 export async function fillQwenPrompt(page, prompt, timeoutMilliseconds = 30_000) {

@@ -32,6 +32,7 @@ import {
   readQwenUiConfiguration,
   readSelectedQwenProjectName,
   requireUniqueVisible,
+  normalizeQwenPromptText,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/ui.mjs";
 
 const SELECT_FOLDER = new URL(
@@ -41,6 +42,10 @@ const SELECT_FOLDER = new URL(
 
 const WORKSPACE = "/private/tmp/qwenwork-general-driver/workspace";
 const PROMPT_SHA = "e".repeat(64);
+
+test("contenteditable prompt readback normalizes macOS paragraph boundaries", () => {
+  assert.equal(normalizeQwenPromptText("第一段\n\n\n第二段\r\n\r\n第三段"), "第一段\n\n第二段\n\n第三段");
+});
 
 function makeConfig(overrides = {}) {
   const config = {
