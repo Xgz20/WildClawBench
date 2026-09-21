@@ -6,6 +6,8 @@
 
 当前真实评分模型与推理强度仍须在批次 `report-config.json` 中明确配置。fixture 响应只验证协议和代码，不能作为真实语义评分证据。
 
+任务中的 `timeout_seconds` 或控制器 thread deadline 不属于语义评分 Rubric。语义裁判不能仅因耗时超限改变 criterion 分值；如果最终线程已确认完成，仍按冻结候选和完整证据判分。控制器的超时只影响执行编排状态，迟到完成必须由控制任务按 recovery 入口显式登记并保留审计；终态不明或证据不足时保持 `unresolved`/评测异常。
+
 控制 Prompt 必须给出冻结 Skill 根、入口、版本和入口 SHA，评分会话先读取该绝对路径下的 `SKILL.md`，不得使用项目、仓库或自动发现路径中的同名副本。普通生产运行不含 validation 标记；显式验收运行的 acceptance ID 必须与 `attempt-manifest.json` 完全相同。目录、身份、哈希或验收标记不一致时停止，不生成或导入语义响应。
 
 ## 单题流程

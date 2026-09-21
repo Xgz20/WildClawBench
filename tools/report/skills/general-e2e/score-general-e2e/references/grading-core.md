@@ -1,6 +1,6 @@
 # General E2E 评分 core 接口
 
-`score-general-e2e` 0.8.0 装配 `grading-core` 0.2.0。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、本地进程运行时、模型调用或任务调度。
+`score-general-e2e` 0.8.1 装配 `grading-core` 0.2.0。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、本地进程运行时、模型调用或任务调度。
 
 发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。core 仅依赖 Python 标准库；任务规则所需的 PyYAML、Playwright 和 Chromium 属于 G3-02 专用评分虚拟环境，不安装到控制 Harness 使用的 Python 环境。
 

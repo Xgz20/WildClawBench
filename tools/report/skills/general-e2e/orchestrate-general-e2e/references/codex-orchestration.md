@@ -142,6 +142,17 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py record-score \
 
 `record-score` 调用冻结的 score Skill `verify-score`，复核标准 score、审计、语义查询日志和来源 SHA；有效能力分和合法的 `evaluation_error / total_score=null` 都可记录。只有评分产物通过校验后该槽才按冻结顺序动态补位。线程完成但缺少、篡改或未通过校验的 score 继续占用当前槽位。
 
+题目 `timeout_seconds` 不参与评分 Rubric。若 thread 已晚于编排 deadline 才返回，但原生状态明确为 `COMPLETED` 且 `verify-score` 通过，控制任务可在已确认用户要求忽略该运行 deadline 时显式登记：
+
+```bash
+python <skill-dir>/scripts/orchestrate_general_e2e.py record-score \
+  --orchestration-root /absolute/path/to/orchestration \
+  --task-id TASK_ID \
+  --allow-late-completion
+```
+
+该入口只允许 `thread.status=COMPLETED` 且已有 `timed_out_at` 的任务，写入 `SCORE_RECORDED_LATE_COMPLETION` 历史并保留 deadline/完成时间；不会修改原 attempt 或重跑 Harness。未知终态、缺少 score 或校验失败仍失败关闭。
+
 ## 恢复与失败关闭
 
 控制任务重启后只运行：

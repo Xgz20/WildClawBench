@@ -1065,6 +1065,32 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         self.assertEqual(late_terminal["status"], "COMPLETED_WITH_FAILURES")
         self.assertEqual(late_terminal["failed_count"], 1)
 
+        # A user-authorized recovery may accept a late but explicitly completed
+        # thread after re-verifying its frozen score. The default deadline
+        # behavior above remains fail-closed.
+        self._record_fixture_score(late_root, "task-one", valid=True, total_score=0.8)
+        late_state_path = late_root / "orchestration-state.json"
+        late_state = json.loads(late_state_path.read_text(encoding="utf-8"))
+        late_task = late_state["tasks"][0]
+        late_task["phase"] = "THREAD_FAILED"
+        late_task["score"] = None
+        late_state["status"] = ORCHESTRATOR._state_status(late_state)
+        late_state_path.write_text(json.dumps(late_state), encoding="utf-8")
+        with patch.object(
+            ORCHESTRATOR,
+            "_run_score_command",
+            side_effect=self._fixture_score_command,
+        ):
+            recovered = ORCHESTRATOR.record_score(
+                late_root,
+                task_id="task-one",
+                allow_late_completion=True,
+                now=self.t0 + timedelta(seconds=13),
+            )
+        self.assertEqual(recovered["tasks"][0]["phase"], "SCORE_RECORDED")
+        history = json.loads(late_state_path.read_text(encoding="utf-8"))["tasks"][0]["history"]
+        self.assertEqual(history[-1]["event"], "SCORE_RECORDED_LATE_COMPLETION")
+
     def test_configuration_backend_and_concurrency_fail_closed(self) -> None:
         api_fixture = Fixture(self.root / "api", protocol="api-judge-v1")
         with self.assertRaisesRegex(

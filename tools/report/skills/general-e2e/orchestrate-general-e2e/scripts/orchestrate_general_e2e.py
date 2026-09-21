@@ -2099,15 +2099,26 @@ def record_score(
     orchestration_root: Path,
     *,
     task_id: str,
+    allow_late_completion: bool = False,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     root = _state_root(orchestration_root)
     state = _verify_state(root)
     task_id = _identifier(task_id, "task_id")
     task = _task_by_id(state, task_id)
+    late_completion = False
     if task.get("grading_type") != "automated":
-        task = _require_active(state, task_id)
-    if task.get("phase") != "SCORE_VERIFICATION_PENDING":
+        if (
+            allow_late_completion
+            and task.get("phase") == "THREAD_FAILED"
+            and isinstance(task.get("thread"), dict)
+            and task["thread"].get("status") == "COMPLETED"
+            and task["thread"].get("timed_out_at")
+        ):
+            late_completion = True
+        else:
+            task = _require_active(state, task_id)
+    if task.get("phase") != "SCORE_VERIFICATION_PENDING" and not late_completion:
         raise OrchestrationError("SCORE_VERIFICATION_NOT_EXPECTED", task_id)
     attempt = (root / task["attempt_path"]).resolve(strict=True)
     verification = _run_score_command(
@@ -2129,8 +2140,21 @@ def record_score(
     task["history"].append(
         {
             "at": _timestamp(event_time),
-            "event": "SCORE_RECORDED",
+            "event": (
+                "SCORE_RECORDED_LATE_COMPLETION"
+                if late_completion
+                else "SCORE_RECORDED"
+            ),
             "valid": score["result"]["valid"],
+            **(
+                {
+                    "deadline_at": task["thread"].get("deadline_at"),
+                    "timed_out_at": task["thread"].get("timed_out_at"),
+                    "thread_finished_at": task["thread"].get("finished_at"),
+                }
+                if late_completion
+                else {}
+            ),
         }
     )
     return _save(root, state, event_time)
@@ -2374,6 +2398,14 @@ def main(argv: list[str] | None = None) -> int:
     score = subparsers.add_parser("record-score")
     _parse_common(score)
     score.add_argument("--task-id", required=True)
+    score.add_argument(
+        "--allow-late-completion",
+        action="store_true",
+        help=(
+            "已确认线程最终为 COMPLETED 时，忽略编排 deadline 仅登记已验证 score；"
+            "保留迟到审计，不适用于未知线程终态"
+        ),
+    )
 
     rule_score = subparsers.add_parser("run-rule-score")
     _parse_common(rule_score)
@@ -2464,6 +2496,7 @@ def main(argv: list[str] | None = None) -> int:
             result = record_score(
                 args.orchestration_root,
                 task_id=args.task_id,
+                allow_late_completion=args.allow_late_completion,
             )
         elif args.command == "run-rule-score":
             result = run_rule_score_task(
