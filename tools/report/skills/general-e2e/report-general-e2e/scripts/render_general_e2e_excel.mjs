@@ -259,14 +259,14 @@ async function main() {
     throw new Error(`不兼容的报告数据 schema: ${data.schema_version}`);
   }
   const workbook = Workbook.create();
-  for (const [name, view] of Object.entries(data.presentation.tables)) buildView(workbook, name, view);
+  for (const name of data.presentation.sheet_order) buildView(workbook, name, data.presentation.tables[name]);
   buildDetails(workbook, data);
   buildCoverage(workbook, data);
   workbook.recalculate();
 
   await fs.mkdir(path.dirname(args.output), { recursive: true });
   await fs.mkdir(args["preview-dir"], { recursive: true });
-  const sheetNames = [...Object.keys(data.presentation.tables), "用例明细", "资源覆盖与异常"];
+  const sheetNames = [...data.presentation.sheet_order, "用例明细", "资源覆盖与异常"];
   if (args["skip-preview"] !== "true") {
     for (const sheetName of sheetNames) {
       const image = await workbook.render({ sheetName, autoCrop: "all", scale: 1, format: "png" });
@@ -282,7 +282,7 @@ async function main() {
   });
   const rangeChecks = [];
   for (const [sheetId, range] of [
-    ...Object.entries(data.presentation.tables).map(([name, view]) => [name, `A1:${columnName(view.headers.length)}${view.rows.length + 1}`]),
+    ...data.presentation.sheet_order.map(name => [name, `A1:${columnName(data.presentation.tables[name].headers.length)}${data.presentation.tables[name].rows.length + 1}`]),
     ["用例明细", `A1:N${1 + data.tasks.length}`],
     ["资源覆盖与异常", `A1:M${10 + data.tasks.length * 11}`],
   ]) {

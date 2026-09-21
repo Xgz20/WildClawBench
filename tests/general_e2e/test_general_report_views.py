@@ -25,6 +25,11 @@ class GeneralReportViewsTests(unittest.TestCase):
     def test_overview_has_requested_columns_and_valid_score_denominator(self):
         tables = self.data["presentation"]["tables"]
         self.assertEqual(list(tables)[:2], ["总览", "效率对比"])
+        persisted = json.loads(REPORT.pretty_json_bytes(self.data))
+        self.assertEqual(persisted["presentation"]["sheet_order"][:2], ["总览", "效率对比"])
+        markdown = REPORT.render_markdown(persisted)
+        self.assertLess(markdown.index("## 总览"), markdown.index("## 效率对比"))
+        self.assertLess(markdown.index("## 效率对比"), markdown.index("## Agent能力对比"))
         overview = tables["总览"]
         values = dict(zip(overview["headers"], overview["rows"][0]))
         self.assertEqual(values["总平均分"], 40)

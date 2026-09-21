@@ -243,6 +243,7 @@ def build_views(data, references):
     views["工具调用对比"] = table(["模型@Harness", "工具", "调用数", "明细覆盖"], tools, notes=["仅统计调用次数。调用结束不等于执行成功；本版不计算格式准确率、执行成功率、不确定占比。"])
     order = ["总览", "效率对比", "分类对比", "难度对比", "Agent能力对比", "模态对比", "工具调用对比"]
     return {"schema_version": "wildclawbench.general-report-views/v1", "tables": {key: views[key] for key in order},
+            "sheet_order": order,
             "unit_labels": labels_by_id, "dimension_coverage": dimension_coverage, "unit_metadata": metadata,
             "reference_sources": references["sources"],
             "capability_coverage": caps}

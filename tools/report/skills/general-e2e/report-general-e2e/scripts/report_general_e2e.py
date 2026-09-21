@@ -994,7 +994,8 @@ def render_markdown(data: Mapping[str, Any]) -> str:
         "模态对比": "按任务声明的模态分组。",
         "工具调用对比": "展示实际工具调用数量；调用次数不表示调用质量或任务正确性。",
     }
-    for name, view in data["presentation"]["tables"].items():
+    for name in data["presentation"]["sheet_order"]:
+        view = data["presentation"]["tables"][name]
         rows = []
         for row in view["rows"]:
             cells = []
