@@ -28,8 +28,12 @@ PACKAGE_SCHEMA = "urn:wildclawbench:schema:general-e2e:package-manifest:v1"
 SCORE_SCHEMA = "urn:wildclawbench:schema:general-e2e:score:v1"
 SUBMISSION_SCHEMA = "urn:wildclawbench:schema:general-e2e:submission:v1"
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
-PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v4"
+PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v5"
 LEGACY_CODEX_PROMPT_PROTOCOLS = {"general-e2e-codex-scoring-prompt/v3"}
+FROZEN_SKILL_PROMPT_PROTOCOLS = {
+    "general-e2e-codex-scoring-prompt/v4",
+    PROMPT_PROTOCOL,
+}
 API_PROMPT_PROTOCOL = "general-e2e-api-scoring-orchestration/v1"
 ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
@@ -561,7 +565,7 @@ def _prompt_text(
         skill_instruction = "使用 `$score-general-e2e` 对当前 Codex 项目中的唯一 General E2E 任务进行评分。"
         frozen_skill_identity = ""
         skill_usage = "严格遵循已安装 `$score-general-e2e` 的能力门禁和证据要求"
-    elif prompt_protocol == PROMPT_PROTOCOL:
+    elif prompt_protocol in FROZEN_SKILL_PROMPT_PROTOCOLS:
         if score_skill is None:
             raise OrchestrationError("SCORE_SKILL_LOCK_MISSING")
         score_skill_root = _required_string(score_skill.get("path"), "score_skill.path")
@@ -612,6 +616,11 @@ def _prompt_text(
 {rule_instruction}
 
 使用分页查询逐 criterion 查找支持证据和反例，把结构化判定写入新的响应文件并导入；必要证据不足时保留 `unresolved`，不得补零。只有 `verify-score` 通过后才把评分任务报告为完成。
+
+评分运行注意事项：
+
+- 若出现 `Selected model is at capacity. Please try a different model.`，这是当前 Codex 评分任务的容量重试过程；Codex 本身会在同一任务内最多重试 5 次。不要要求控制器新建评分任务、切换模型、创建替代会话或重复提交本题。只有当前任务经过自身重试后形成明确终态，控制器才按该终态继续。
+- 候选本身没有产物、产物错误或内容不满足题目，是被评测结果的一部分。按冻结 rubric 和现有证据给出零分、部分分或合法 unresolved；不得因此终止控制会话、停止后续题目、重跑 Harness 或补造产物。评测基础设施身份/证据损坏才按评测异常处理。
 """
 
 
@@ -1528,7 +1537,7 @@ def _verify_state(
     expected_prompt_protocol = (
         prompt_protocol == API_PROMPT_PROTOCOL
         if judge_protocol == "api-judge-v1"
-        else prompt_protocol in {PROMPT_PROTOCOL, *LEGACY_CODEX_PROMPT_PROTOCOLS}
+        else prompt_protocol in {*FROZEN_SKILL_PROMPT_PROTOCOLS, *LEGACY_CODEX_PROMPT_PROTOCOLS}
     )
     if (
         judge_protocol not in {"codex-agent-judge-v1", "api-judge-v1"}

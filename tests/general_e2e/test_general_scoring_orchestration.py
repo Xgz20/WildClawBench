@@ -603,6 +603,11 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         )
         self.assertIn("不得使用项目、仓库或自动发现路径中的同名 Skill", prompt)
         self.assertNotIn("使用 `$score-general-e2e`", prompt)
+        self.assertIn("Selected model is at capacity. Please try a different model.", prompt)
+        self.assertIn("同一任务内最多重试 5 次", prompt)
+        self.assertIn("不要要求控制器新建评分任务", prompt)
+        self.assertIn("候选本身没有产物", prompt)
+        self.assertIn("不得因此终止控制会话、停止后续题目", prompt)
         changed = json.loads(json.dumps(state))
         changed["validation"] = {"mode": "acceptance", "acceptance_id": "G4-04"}
         self.assertNotEqual(state["queue_digest"], ORCHESTRATOR._queue_digest(changed))
@@ -626,6 +631,30 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         self.assertTrue(prompt.startswith("使用 `$score-general-e2e`"))
         self.assertIn("prompt_protocol：`general-e2e-codex-scoring-prompt/v3`", prompt)
         self.assertNotIn("score_skill_root", prompt)
+
+    def test_legacy_v4_prompt_keeps_frozen_score_skill_identity(self) -> None:
+        prompt = ORCHESTRATOR._prompt_text(
+            "task-one",
+            "attempt-one",
+            {
+                "protocol": "codex-agent-judge-v1",
+                "model": "gpt-fixture",
+                "reasoning_effort": "high",
+            },
+            "llm_judge",
+            None,
+            {
+                "path": str(SCORE_SKILL.resolve()),
+                "version": "0.8.1",
+                "implementation_status": "operational",
+                "entrypoint": str(SCORE_RUNTIME_PATH.resolve()),
+                "entrypoint_sha256": ORCHESTRATOR._sha256_file(SCORE_RUNTIME_PATH),
+            },
+            prompt_protocol="general-e2e-codex-scoring-prompt/v4",
+        )
+        self.assertIn("score_skill_root", prompt)
+        self.assertIn("prompt_protocol：`general-e2e-codex-scoring-prompt/v4`", prompt)
+        self.assertNotIn("使用 `$score-general-e2e`", prompt)
 
     def test_acceptance_marker_mismatch_and_api_backend_fail_closed(self) -> None:
         fixture = Fixture(self.root / "acceptance-mismatch", task_ids=("task-one",))

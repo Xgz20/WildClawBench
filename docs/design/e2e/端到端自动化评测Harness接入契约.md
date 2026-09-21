@@ -95,6 +95,8 @@
 | 被测 Harness 执行中崩溃/重启 | 先落盘所有活动 attempt、原生身份、deadline 和重启意图；不将非本批次会话纳入清理 | 按原身份恢复观察；原生 cancelled/interrupted 可以安全失败收口，不强求恢复成功、不重发 |
 | 控制/评分客户端重启 | 保存 worker/queue、评分 thread/cursor 与交接状态；采用可独立于被重启客户端存活的托管入口 | 核对原 worker 是否存活，避免第二个控制者；沿用原评分任务而非新建替代任务 |
 
+评分期间出现 `Selected model is at capacity. Please try a different model.` 时，沿用当前 Codex 评分任务的内置最多 5 次重试，不新建会话、不切换模型、不创建替代 attempt。候选本身无产物、产物错误或未满足题意是被评测结果，按 rubric 评分或保留合法 unresolved；控制会话不能因此终止整批、跳过后续题目或重跑 Harness。只有评分基础设施身份、冻结证据或 Skill 契约损坏才按评测异常处理。
+
 当前共享 [macOS 调试重启入口](../../../tools/report/e2e-shared/desktop-debug/restart_macos_desktop_debug.sh)只支持 Codex，不能宣称它已经支持重启全部 Harness。被测应用的安全重启属于各 Driver 的能力；新平台需实现等价策略。多活动会话不能证明安全时，进入 NEEDS_ATTENTION 并保留现场。
 
 **C11｜观察结束、业务终态和进程静默分别确认。** 控制 Worker 退出不等于 Harness 已停止；poll/基础设施操作超时不等于任务执行超时；Workspace 稳定不等于 Agent 完成。只有明确终态、目标任务停止、相关进程按身份收口、限定窗口内 Workspace 不再变化，才能冻结候选。停止操作超时且无法确认停止时保留待处理状态，不能继续投递以制造更多未收口任务。此条不为 General 题目增加执行总时限。
