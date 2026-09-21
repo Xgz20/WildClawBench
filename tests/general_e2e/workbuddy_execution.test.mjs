@@ -201,6 +201,9 @@ test("WorkBuddy managed queue accepts only its exact active native and UI conver
   const evidence = assertWorkBuddyNativeAvailability(report, queue);
   assert.equal(evidence.verified, true);
   assert.equal(evidence.allowed_active_session_count, 1);
+  const lagging = runtime();
+  assert.equal(assertWorkBuddyNativeAvailability(lagging, queue).verified, true);
+  assert.equal(assertWorkBuddyNativeAvailability(lagging, queue).missing_allowed_session_count, 1);
   assert.equal(assertWorkBuddyUiAvailable({
     ...rawUi("/workspace/one"),
     busy_control_count: 1,

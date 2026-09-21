@@ -467,7 +467,11 @@ export function assertWorkBuddyNativeAvailability(report, queueContext) {
     ? allowed.length < queueContext.run_slots && blockingCount < queueContext.run_slots
     : blockingCount === 0;
   const evidence = {
-    verified: unknownBlocking.length === 0 && missingAllowed.length === 0 && capacityAvailable,
+    // WorkBuddy 5.5.6's legacy SQLite session index can lag or omit sessions
+    // that are already bound through the runtime API. Queue journals and
+    // public execution states establish those allowed identities; the legacy
+    // index remains authoritative for rejecting additional blocking sessions.
+    verified: unknownBlocking.length === 0 && capacityAvailable,
     source_status: sessionIndex.status,
     source_size: sessionIndex.metadata?.size ?? null,
     source_modified_at: sessionIndex.metadata?.modified_at ?? null,
