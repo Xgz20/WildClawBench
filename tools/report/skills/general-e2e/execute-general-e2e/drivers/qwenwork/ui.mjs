@@ -9,6 +9,7 @@ export const QWEN_SEND_SELECTOR = [
   'button[title="发送"]:visible',
   'button[aria-label="Send"]:visible',
   'button[title="Send"]:visible',
+  '[data-chat-input-surface="new-task"] button[type="button"].bg-text:visible',
 ].join(", ");
 export const QWEN_STOP_SELECTOR = [
   'button[aria-label*="停止"]:not([disabled]):not([aria-disabled="true"]):visible',
