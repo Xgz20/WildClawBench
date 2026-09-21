@@ -447,7 +447,7 @@ test("parseArgs supplies safe single-run defaults", () => {
   const parsed = parseArgs(["--workspace", "/tmp/task"]);
   assert.equal(parsed.model, "");
   assert.equal(parsed.permissionMode, "current");
-  assert.equal(parsed.runTimeoutSeconds, 3600);
+  assert.equal("runTimeoutSeconds" in parsed, false);
   assert.equal(parsed.pollIntervalSeconds, 2);
   assert.equal(parsed.postCancelQuiescenceSeconds, 5);
   assert.equal(parsed.resume, false);
@@ -608,14 +608,14 @@ test("pre-send retry requires resume", () => {
 
 test("parseArgs supports probe and recovery controls", () => {
   const parsed = parseArgs([
-    "--probe", "--resume", "--run-timeout-seconds", "90", "--poll-interval-seconds", "0.5",
+    "--probe", "--resume", "--poll-interval-seconds", "0.5",
     "--post-cancel-quiescence-seconds", "3",
   ]);
   assert.equal(parsed.probe, true);
   assert.equal(parsed.resume, true);
-  assert.equal(parsed.runTimeoutSeconds, 90);
   assert.equal(parsed.pollIntervalSeconds, 0.5);
   assert.equal(parsed.postCancelQuiescenceSeconds, 3);
+  assert.throws(() => parseArgs(["--probe", "--run-timeout-seconds", "90"]), /未知参数/);
 });
 
 test("resolveConfig keeps state outside the candidate task", async () => {
@@ -775,7 +775,7 @@ test("resume state validates prompt and execution identity", async () => {
   const state = createInitialState(config, info.identity, snapshot);
   assert.equal(state.schema_version, AUTOMATION_SCHEMA);
   assert.equal(state.requested_permission_mode, "current");
-  assert.equal(state.driver.version, "1.9.0");
+  assert.equal(state.driver.version, "1.10.0");
   assert.equal(state.session.dom_conversation_id, null);
   assert.equal(state.timeout, null);
   assert.equal(state.runtime.driver_pid, process.pid);

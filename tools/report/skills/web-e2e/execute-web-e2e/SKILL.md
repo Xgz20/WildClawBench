@@ -7,6 +7,8 @@ description: 在 WorkBuddy、AstronStudio、QwenWork 等桌面 Harness 中执行
 
 本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 WorkBuddy、AstronStudio、QwenWork 的单题 Driver 和后台并发队列；其他 Harness Driver 仍按 Roadmap 逐步接入。先读取 execution 包 `manifest.json` 的 `harness.id`，再选择同名 Driver，不能按文件名或客户端外观猜测。
 
+Web E2E 不给被评测 Harness 设置任务级执行时限。题目或数据集中的 `timeout_seconds` 只作为兼容元数据保留，不生成执行 deadline；旧入口的 `--run-timeout-seconds` 已移除。Driver 会持续观察可信原生终态、明确异常或需要人工处理的状态。CDP/UI 单次操作、客户端启停、会话身份捕获、终态进程收口和评分 Worker 仍使用各自独立的有界控制参数，这些参数不限制 Harness 完成题目的总时长。
+
 ## DoubaoWork macOS 开发入口
 
 `drivers/doubaowork/driver.mjs` 只提供单题开发 canary 和已发送 attempt 的只读恢复；依赖在该 Driver 目录通过 `npm ci` 安装。输入必须是 prepare 生成的真实 DoubaoWork Web execution 单题根，选择“本地电脑 → 新建项目”，完整路径与当前模型/权限回读后最多发送一次。没有公共 run 路由、可信原生终态/cwd 和已验证的进程清理时，不产生有效正式 execution record/receipt，不进入评分或批量调度。使用与限制见 [Driver 说明](drivers/doubaowork/README.md)。
@@ -52,7 +54,7 @@ Windows 使用相同参数和原生入口：
 .agents\skills\execute-web-e2e\scripts\run-astronstudio-batch.cmd C:\absolute\batch__astronstudio --run-id queue-1 --task-id task-1 --task-id task-2 --run-slots 3 --permission-mode full-access
 ```
 
-Windows 入口、平台探测和状态库读取已在目标 Windows 机器完成过真机验证。Driver 1.10.18 在 1.10.16 的发送后会话身份捕获基础上，隔离 Windows 启动时由控制 Harness 注入的 `CODEX_*`、`CHATGPT_*` 和 Node IPC 环境变量，并只记录被删除的变量名；用户的 PATH、代理和模型凭据保持不变。当前 Driver 1.11.0 又引入共享动态应用发现和冻结路径复核，因此旧版本的单题、三题串行和默认三路并发证据均需重验；必须先显式使用 `--run-slots 1`，通过只读探针、单题和三题串行后再测试并发。活跃 SQLite 文件复制仍使用 10 秒硬超时，遇到 Windows 长时间文件锁时终止复制子进程、记录读库失败并回退到同一 thread 的 DOM 观察，不得卡死队列或重发 Prompt。当前单题尚未重新通过时，不得把静态测试或旧 Driver 结果表述为本版 Windows 生产验证。
+Windows 入口、平台探测和状态库读取已在目标 Windows 机器完成过真机验证。Driver 1.10.18 在 1.10.16 的发送后会话身份捕获基础上，隔离 Windows 启动时由控制 Harness 注入的 `CODEX_*`、`CHATGPT_*` 和 Node IPC 环境变量，并只记录被删除的变量名；用户的 PATH、代理和模型凭据保持不变。Driver 1.11.0 引入共享动态应用发现和冻结路径复核；当前 Driver 1.12.0 又移除 Harness 总执行 deadline，因此旧版本的单题、三题串行和默认三路并发证据均需重验。必须先显式使用 `--run-slots 1`，通过只读探针、单题和三题串行后再测试并发。活跃 SQLite 文件复制仍使用 10 秒硬超时，遇到 Windows 长时间文件锁时终止复制子进程、记录读库失败并回退到同一 thread 的 DOM 观察，不得卡死队列或重发 Prompt。当前单题尚未重新通过时，不得把静态测试或旧 Driver 结果表述为本版 Windows 生产验证。
 
 AstronStudio 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、模型/权限回读、Prompt 发送和 thread 切换仍由同一个 Driver 串行操作。发送后在有界 120–180 秒窗口内，只有 AstronStudio 当前或已持久化路由、本地 SQLite 的发送后 session、非空 turn 和精确 cwd 共同确认时才释放 Driver；Worker 轮流恢复各 thread 做一次性观察。任一题到达明确终态并通过 automation/execution 一致性检查后释放槽位并动态补入下一题。队列必须覆盖 manifest 的完整 task ID 集合，才可能生成 `integrity.valid=true` 的 `execution-receipt.json`。
 
@@ -63,9 +65,9 @@ Worker 或 Driver 中断后，用完全相同的批次参数增加 `--resume`。
 如果 Prompt 发送前因 CDP 或 UI 自动化错误进入 `INFRA_FAILED`，且候选 workspace 经哈希确认完全未变化，可使用相同参数增加 `--resume --retry-pre-send-failure`。旧 attempt 会隔离归档；发送后失败或产物已有任何变化时拒绝自动重试。
 
 AstronStudio 的终态优先读取本地 SQLite 的 thread session、turn、open turn 和 pending interaction 投影，DOM 只补充可见运行态、交互和最终回复。workspace 稳定不能单独判定完成。
-活跃 WAL 写入期间若某次 SQLite 快照不一致，Driver 会把失败次数、最近错误和恢复时间记录到 `evidence.state_database_observation`，并在执行时限内基于 DOM 保持等待；后续快照恢复后继续按原 thread/turn/cwd 判定。到达 deadline 时状态库仍不可读则进入 `NEEDS_ATTENTION`，不会把 DOM 或 workspace 稳定误当作成功，也不会重发 Prompt。
+活跃 WAL 写入期间若某次 SQLite 快照不一致，Driver 会把失败次数、最近错误和恢复时间记录到 `evidence.state_database_observation`，并基于 DOM 保持原 attempt 的运行观察；后续快照恢复后继续按原 thread/turn/cwd 判定。状态库持续不可读不会触发题目级 deadline、停止 Harness、伪造成功或重发 Prompt；控制任务可中断观察进程，之后使用同一 attempt 恢复。
 
-AstronStudio 任一终态（成功、明确失败或安全超时）在冻结候选 workspace 前都必须写入 `terminal_process_cleanup`。Windows 只按候选 workspace 的完整绝对路径精确识别、终止相关进程并回读零残留；不得按 AstronStudio、Node 或浏览器进程名宽泛清理。macOS 当前没有等价的任务进程枚举实现，显式记录 `supported=false, success=true`，不能伪装成已执行进程终止。清理失败进入 `NEEDS_ATTENTION`，队列不得补位，也不能生成有效回执；`TIMEOUT` 同时复用该证据到 `timeout.process_cleanup`。
+AstronStudio 的成功或明确失败终态在冻结候选 workspace 前都必须写入 `terminal_process_cleanup`。Windows 只按候选 workspace 的完整绝对路径精确识别、终止相关进程并回读零残留；不得按 AstronStudio、Node 或浏览器进程名宽泛清理。macOS 当前没有等价的任务进程枚举实现，显式记录 `supported=false, success=true`，不能伪装成已执行进程终止。清理失败进入 `NEEDS_ATTENTION`，队列不得补位，也不能生成有效回执。旧 Driver 已产生的 `TIMEOUT` 只作为历史状态兼容读取和补录，不再由新执行产生。
 
 若旧终态由此前 Driver 版本产生且缺少清理证据，可以用完全相同的单题或队列参数增加 `--resume` 补录。补录前后必须把当前候选 SHA-256 与原终态冻结 SHA-256 精确匹配；冻结值缺失或候选已有漂移时失败关闭。该路径只补录终态证据、更新 Driver 版本，不创建项目、不恢复新会话，也不重发 Prompt。
 
@@ -108,9 +110,9 @@ Windows 使用相同参数和原生入口：
 
 QwenWork 的 Token 暴露由 Driver 管理，用户和控制 Harness 都不需要预先设置环境变量。全新单题默认执行一次安全客户端重启；全新批次默认只在第一题前安全重启。Driver 在新客户端子进程中同时注入本机 CDP 参数和 `QODERCN_EXPOSE_TOKEN_USAGE=1`，不修改控制 Harness 的全局环境。重启前若状态库或存活进程表明存在活动任务，立即停止并进入人工处理。已有客户端进程不能在运行中补加该变量，因此禁止为了省略重启而复用无法证明已带开关的旧进程。
 
-开关只允许原生 usage 出现在 transcript 中，不能绕过指标 Profile。采集器仍须精确核对平台、QwenWork 客户端、SDK、transcript 版本和 runtime SHA；未知身份保持 `unverified`，历史 `masked` 样本不得回填。资源字段、状态和 QwenWork Profile 的详细口径见[资源指标参考](references/resource-metrics.md)。execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 首次引入自动注入；当前源码候选为 execute 1.15.0 / Driver 1.11.0 / collector 1.1.3，并新增共享动态应用发现、冻结路径复核、无 Apple Events 的 macOS 进程收口和统一确定性 Skill 构建。生产真机证据仍绑定旧版本，发布包必须重新通过 probe 和一个全新 L1 后才能继承既有生产准入。
+开关只允许原生 usage 出现在 transcript 中，不能绕过指标 Profile。采集器仍须精确核对平台、QwenWork 客户端、SDK、transcript 版本和 runtime SHA；未知身份保持 `unverified`，历史 `masked` 样本不得回填。资源字段、状态和 QwenWork Profile 的详细口径见[资源指标参考](references/resource-metrics.md)。execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 首次引入自动注入；当前源码候选为 execute 1.16.0 / Driver 1.12.0 / collector 1.1.3，并新增共享动态应用发现、冻结路径复核、无 Apple Events 的 macOS 进程收口、统一确定性 Skill 构建和无 Harness 总执行 deadline 的执行语义。生产真机证据仍绑定旧版本，发布包必须重新通过 probe 和一个全新 L1 后才能继承既有生产准入。
 
-QwenWorkCN 1.0.5.0 的历史 Windows 身份已覆盖动态路径、进程、SQLite、CDP 启动、页面识别、串行、并发和部分恢复边界。当前主流程与资源指标证据以生产验收清单为准：QwenWorkCN 1.0.6.0 已在 `ff5d476...` 完成带指标的全新单 L1 闭环，四个核心 Token 均为 `observed`；当前源码候选为 execute 1.15.0 / Driver 1.11.0 / collector 1.1.3，生产真机证据仍绑定旧 execute/Driver 组合，重验前不得把旧证据直接升级到新身份。验收模型为 `标准｜Qwen3.8-Flash`，权限为 `full-access`；更换客户端大版本、Driver 核心实现或模型后仍须从只读 probe 和一至三个 L1 smoke 开始回归。
+QwenWorkCN 1.0.5.0 的历史 Windows 身份已覆盖动态路径、进程、SQLite、CDP 启动、页面识别、串行、并发和部分恢复边界。当前主流程与资源指标证据以生产验收清单为准：QwenWorkCN 1.0.6.0 已在 `ff5d476...` 完成带指标的全新单 L1 闭环，四个核心 Token 均为 `observed`；当前源码候选为 execute 1.16.0 / Driver 1.12.0 / collector 1.1.3，生产真机证据仍绑定旧 execute/Driver 组合，重验前不得把旧证据直接升级到新身份。验收模型为 `标准｜Qwen3.8-Flash`，权限为 `full-access`；更换客户端大版本、Driver 核心实现或模型后仍须从只读 probe 和一至三个 L1 smoke 开始回归。
 
 QwenWork 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、目录选择、权限/模型回读和 Prompt 发送始终由一个 Driver 串行完成；捕获稳定 `session_id`、`stream_id`、`local_project_id` 和绝对 cwd 后释放 UI Driver，由 Worker 轮流恢复原会话做一次性观察。任一题明确终态后释放后台槽位并动态补入下一题。
 
@@ -128,7 +130,7 @@ Windows `.cmd`、终端或宿主进程可能直接结束 Worker，导致 Node �
 
 QwenWork 客户端崩溃且本地 CDP 端口已经关闭时，使用相同参数增加 `--resume --restart-app-on-resume`。Driver 只重启一次客户端，并从数据库确认唯一项目、原 `session_id` 和侧栏中的原 conversation 后继续观察；项目名称同时出现在侧栏和新任务选择器属于同一数据库项目的两个视图，恢复只使用侧栏项目树定位。若 QwenWork 把原 session 恢复为运行或完成状态，沿用原 attempt 收口；若客户端明确把它标记为 `interrupted`，则记录 `INFRA_FAILED`，不得重发 Prompt 或伪造恢复成功。数据库存在多个项目、多个会话或 cwd 不一致时仍停在 `NEEDS_ATTENTION`。
 
-QwenWork 达到执行时限后必须唯一定位并点击当前会话停止控件，以数据库或连续非运行态确认取消，再按候选 workspace 完整绝对路径精确收口相关进程并观察 workspace 静默。终态进程清理证据同时写入 `terminal_process_cleanup` 和 `timeout.process_cleanup`；只有取消确认、进程零残留和静默哈希稳定均成立时才记录 `TIMEOUT`，任何一项缺失都停在 `NEEDS_ATTENTION`。
+QwenWork 正常执行没有总时长上限，Driver 不会因题目 metadata 或控制端计时自动点击停止。只有操作者明确对已核对的问卷任务使用 `--resume --abandon-user-question` 时，才按原 session 身份请求停止并将其记录为结构化 `INFRA_FAILED`；该显式故障收口不是任务 timeout。
 
 ## WorkBuddy 单题
 
@@ -217,17 +219,17 @@ Worker 从 Harness 根目录的 `manifest.json` 按精确 task ID 解析工作�
 
 模型下拉框完成唯一回读后，Driver 必须在发送 Prompt 前把实际模型写入 `execution_record.json.model`。显式模式记录 `mode=explicit` 及请求/实际模型；保持当前配置时记录 `mode=current`、`requested_model=null` 和实际模型。若执行记录预先声明了不同模型则失败关闭。最终回执的顶层 `model`、逐题 `model_selection` 和 execution record 必须一致，不能等到报告阶段再补模型身份。
 
-队列出现 `NEEDS_ATTENTION` 后停止补入新题，但继续收口已经投递的其他活动题；活动题全部结束后再返回阻塞状态。先处理或扩充经过审查的安全规则，再使用完全相同的参数加 `--resume`。默认遇到 `INFRA_FAILED` 或 `TIMEOUT` 也停止补题；只有明确需要验证失败隔离时才使用 `--continue-on-terminal-failure`。
+队列出现 `NEEDS_ATTENTION` 后停止补入新题，但继续收口已经投递的其他活动题；活动题全部结束后再返回阻塞状态。先处理或扩充经过审查的安全规则，再使用完全相同的参数加 `--resume`。默认遇到 `INFRA_FAILED` 也停止补题；只有明确需要验证失败隔离时才使用 `--continue-on-terminal-failure`。旧状态中的 `TIMEOUT` 仍按终态兼容读取，但新执行不会产生该状态。
 
 客户端崩溃后恢复时使用 `--resume --restart-app-on-resume`。一次恢复只重启 WorkBuddy 一次，随后串行定位所有活动 conversation。只有发送后已经捕获稳定 conversation ID 时才允许重启并从侧栏恢复原会话；缺少 ID 或无法唯一定位时停在 `NEEDS_ATTENTION`，不创建新任务。
 
-Windows 重启恢复还会等待原 conversation 对应的唯一 WorkBuddy 会话宿主重新出现。若客户端只恢复出数据库中的陈旧 `working` 状态，但 60 秒内没有恢复会话宿主，则按 `workbuddy-client-restart-unrecovered` 记录结构化 `INFRA_FAILED`；不能继续等待到普通执行超时，更不能把陈旧状态伪装成恢复成功。若数据库明确把原会话标记为 `interrupted`，同样保留为结构化执行失败且不重发 Prompt。
+Windows 重启恢复还会等待原 conversation 对应的唯一 WorkBuddy 会话宿主重新出现。若客户端只恢复出数据库中的陈旧 `working` 状态，但 60 秒内没有恢复会话宿主，则按 `workbuddy-client-restart-unrecovered` 记录结构化 `INFRA_FAILED`；这 60 秒是重启后身份恢复窗口，不是 Harness 做题时限，也不能把陈旧状态伪装成恢复成功。若数据库明确把原会话标记为 `interrupted`，同样保留为结构化执行失败且不重发 Prompt。
 
 人工处理 `NEEDS_ATTENTION` 后可在恢复参数中增加 `--mark-manual <task_id>`。该参数只在队列和 Harness 回执中记录人工介入原因，随后仍由 Driver 检查原会话终态；它不能把未知状态直接改成成功，也不能绕过 Prompt 幂等和终态证据门禁。
 
-达到执行时限后 Driver 必须点击当前会话的停止按钮，确认 WorkBuddy 已进入非运行态，并验证候选 workspace 在静默观察窗口内不再变化。Windows 还必须按候选 workspace 完整绝对路径发现后台种子进程，只终止这些种子及其后代并回读零残留；进程清理摘要写入 `timeout.process_cleanup`，不能用进程名做宽泛清理。只有停止确认、进程清理和 workspace 静默三项证据齐全时才记录 `TIMEOUT`；否则记录 `NEEDS_ATTENTION`。即使指定 `--continue-on-terminal-failure`，任一条件未确认的超时任务也不能进入下一题。
+WorkBuddy 正常执行没有总时长上限；Driver 持续观察原 conversation，直到可信成功、明确失败或需要人工处理，不会因题目 `timeout_seconds` 或控制端累计时长自动点击停止。
 
-WorkBuddy 任一终态（成功、明确失败或安全超时）在冻结候选 workspace 前，还必须收口当前任务的会话宿主及其进程树。Windows 只能同时依据 WorkBuddy `--serve`、`--session-id` 和任务根完整绝对路径唯一定位会话宿主，并保留候选 workspace 进程匹配作为补充；不得按 WorkBuddy/Node 进程名宽泛终止。首次回读零残留后还要保持 45 秒安静观察，普通终态最多观察 120 秒，期间出现的迟到候选进程必须按精确路径再次清除并重新计算安静窗口；这样可覆盖 WorkBuddy 在首轮清理接近一分钟时才投递的预览进程。清理结果写入 `terminal_process_cleanup` 并进入 execution receipt；清理失败、安静窗口不足或匹配到多个宿主时进入 `NEEDS_ATTENTION`，禁止批次补位或生成有效回执。
+WorkBuddy 的成功或明确失败终态在冻结候选 workspace 前，还必须收口当前任务的会话宿主及其进程树。Windows 只能同时依据 WorkBuddy `--serve`、`--session-id` 和任务根完整绝对路径唯一定位会话宿主，并保留候选 workspace 进程匹配作为补充；不得按 WorkBuddy/Node 进程名宽泛终止。首次回读零残留后还要保持 45 秒安静观察，普通终态最多观察 120 秒，期间出现的迟到候选进程必须按精确路径再次清除并重新计算安静窗口；这样可覆盖 WorkBuddy 在首轮清理接近一分钟时才投递的预览进程。清理结果写入 `terminal_process_cleanup` 并进入 execution receipt；清理失败、安静窗口不足或匹配到多个宿主时进入 `NEEDS_ATTENTION`，禁止批次补位或生成有效回执。旧 Driver 已产生的 `TIMEOUT` 仅为历史兼容终态。
 
 若 `NEEDS_ATTENTION` 的最后原因仅为 `terminal-task-process-cleanup-failed`，同一 run-id 的 `--resume` 可以自动重新观察原 conversation 并再次执行精确收口；该恢复路径不得重发 Prompt，也不能跳过终态、进程零残留或安静窗口门禁。
 
@@ -253,7 +255,7 @@ WorkBuddy 任一终态（成功、明确失败或安全超时）在冻结候选 
 - “允许完全访问”只决定 WorkBuddy 创建任务时的权限模式；若运行中仍出现授权面板，Driver 继续按下面的严格命令白名单处理，不会因为客户端已开启完全访问而自动批准未知操作。
 - 生产跑批前由测试人员按指导手册设置 Harness 的默认模型和推理强度。执行自动化只在显式提供 `--model` 时切换模型；推理强度始终沿用 Harness 当前配置，不由 Playwright 选择或校验。
 - 只允许 Driver 对显式白名单且严格限定在候选 `workspace/` 内的普通操作自动选择一次性“允许”；当前唯一规则是清理该目录下的 `.DS_Store`。其他命令（包括同类命令的路径或参数变化）一律停在 `NEEDS_ATTENTION`。
-- `SUCCEEDED`、`INFRA_FAILED`、已确认停止的 `TIMEOUT` 分别映射为 `execution_record.json` 的 `completed`、`execution_error`、`timeout`；没有生成有效站点仍是正常完成，由评分阶段判低分。
+- 新执行只将 `SUCCEEDED`、`INFRA_FAILED` 分别映射为 `execution_record.json` 的 `completed`、`execution_error`；旧 Driver 已确认停止的 `TIMEOUT` 仍可按 `timeout` 读取。没有生成有效站点仍是正常完成，由评分阶段判低分。
 - WorkBuddy、AstronStudio 和 QwenWork 始终保持 `ui_slots: 1`；新队列技术默认 `run_slots: 3`、最大 8。这里的并发只指已投递 Agent 在客户端后台并行运行，禁止同时启动多个 Playwright Driver 抢占窗口。QwenWork 当前生产 canary 显式使用 `--run-slots 1`；首次换机、升级 Harness/Skill 或切换模型后也先用 3 个 L1 串行冒烟，通过真实隔离验证后再恢复并发。
 
 实现或审查其他 Driver 时，完整读取 [Driver 契约](references/driver-contract.md)。

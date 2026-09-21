@@ -63,10 +63,12 @@ test("QwenWork 参数默认使用独立应用、CDP 端口和状态库", () => {
   assert.equal(parsed.endpoint, DEFAULT_ENDPOINT);
   assert.equal(parsed.sessionDb, DEFAULT_SESSION_DB);
   assert.equal(parsed.restartApp, false);
+  assert.equal("runTimeoutSeconds" in parsed, false);
   const freshExecution = parseArgs(["--workspace", "C:\\tasks\\one"]);
   assert.equal(freshExecution.restartApp, true);
   assert.equal(freshExecution.restartReason, "driver-managed-token-usage-exposure");
   assert.equal(parseArgs(["--workspace", "C:\\tasks\\one", "--resume"]).restartApp, false);
+  assert.throws(() => parseArgs(["--probe", "--run-timeout-seconds", "1"]), /未知参数/);
 });
 
 test("QwenWork automation state 使用独立 Driver profile", () => {
@@ -87,7 +89,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.11.0");
+  assert.equal(state.driver.version, "1.12.0");
 });
 
 test("QwenWork 原生目录选择等待异步更新后的目录标签", async () => {
