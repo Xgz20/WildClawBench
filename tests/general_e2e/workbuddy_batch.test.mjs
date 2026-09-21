@@ -4,11 +4,13 @@ import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promi
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { runWorkBuddyBatch } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/batch.mjs";
+import {
+  parseBatchArgs,
+  runWorkBuddyBatch,
+} from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/batch.mjs";
 
-async function fixture() {
+async function fixture(task_ids = ["one", "two", "three"]) {
   const root = await realpath(await mkdtemp(join(tmpdir(), "workbuddy-queue-")));
-  const task_ids = ["one", "two", "three"];
   const prompt = "fixture";
   const tasks = [];
   for (const task_id of task_ids) {
@@ -20,15 +22,35 @@ async function fixture() {
   await writeFile(join(root, "manifest.json"), JSON.stringify({ schema_id: "urn:wildclawbench:schema:general-e2e:package-manifest:v1", manifest_kind: "execution", batch_id: "b", unit_id: "u", dataset: { id: "d", digest: "d".repeat(64) }, unit: { harness: { id: "workbuddy", platform: "macos" }, model: { requested_id: "fixture" } }, task_ids, tasks }));
   const calls = [];
   const args = ["--unit-root", root, "--queue-id", "serial", "--endpoint", "http://127.0.0.1:9229", "--expected-permission", "default-sandbox"];
+  let clock = Date.parse("2026-09-21T06:00:00.000Z");
+  const writeAttempt = async (task, attempt, phase) => {
+    const control = join(root, ".general-e2e", "execution", task, "workbuddy");
+    const conversation = `conversation-${task}`;
+    const cwd = join(root, "execution", "tasks", task, "workspace");
+    clock += 1_000;
+    await writeFile(join(control, "dispatch-journal.json"), JSON.stringify({
+      identity: { task_id: task, attempt_id: attempt },
+      phase,
+      prompt: { sent_at: new Date(clock - 500).toISOString() },
+      send: { dispatch_attempt_count: 1 },
+      native: { conversation_id: conversation, request_id: `request-${task}`, cwd },
+      execution: { started_at: new Date(clock - 500).toISOString(), error: null },
+      history: [{ phase, at: new Date(clock).toISOString() }],
+    }));
+    await writeFile(join(control, "execution-state.json"), JSON.stringify({
+      phase,
+      session: { session_id: conversation, cwd },
+      execution: { finished_at: phase === "COMPLETED" ? new Date(clock).toISOString() : null, error: null },
+    }));
+  };
   const execute = async (argv) => {
     const task = argv[argv.indexOf("--task-id") + 1];
     const attempt = argv[argv.indexOf("--attempt-id") + 1];
     calls.push({ task, attempt, resume: argv.includes("--resume") });
-    const path = join(root, ".general-e2e", "execution", task, "workbuddy", "dispatch-journal.json");
-    await writeFile(path, JSON.stringify({ identity: { attempt_id: attempt }, phase: "COMPLETED" }));
+    await writeAttempt(task, attempt, "COMPLETED");
     return 0;
   };
-  return { root, calls, args, execute };
+  return { root, calls, args, execute, writeAttempt };
 }
 
 test("WorkBuddy serial queue freezes scope and resumes without dispatching completed tasks", async () => {
@@ -70,5 +92,62 @@ test("WorkBuddy queue stops on uncertain send and resumes only the reserved atte
     assert.equal(resumed.phase, "COMPLETED");
     assert.equal(f.calls[1].resume, true);
     assert.equal(f.calls[1].attempt, f.calls[0].attempt);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test("WorkBuddy queue defaults to three background slots and refills after a terminal task", async () => {
+  const f = await fixture(["one", "two", "three", "four", "five"]);
+  const observations = new Map();
+  let active = 0;
+  let maximum = 0;
+  try {
+    const execute = async (argv) => {
+      const task = argv[argv.indexOf("--task-id") + 1];
+      const attempt = argv[argv.indexOf("--attempt-id") + 1];
+      const resume = argv.includes("--resume");
+      f.calls.push({ task, attempt, resume });
+      if (!resume) {
+        active += 1;
+        maximum = Math.max(maximum, active);
+        await f.writeAttempt(task, attempt, "RUNNING");
+        return 4;
+      }
+      const count = (observations.get(task) || 0) + 1;
+      observations.set(task, count);
+      const shouldComplete = task === "one" || count >= 2;
+      if (shouldComplete) {
+        active -= 1;
+        await f.writeAttempt(task, attempt, "COMPLETED");
+        return 0;
+      }
+      await f.writeAttempt(task, attempt, "RUNNING");
+      return 4;
+    };
+    const result = await runWorkBuddyBatch(f.args, { execute, sleep: async () => {} });
+    assert.equal(result.phase, "COMPLETED");
+    assert.equal(result.frozen.run_slots, 3);
+    assert.equal(maximum, 3);
+    const dispatches = f.calls.filter((call) => !call.resume).map((call) => call.task);
+    assert.deepEqual(dispatches, ["one", "two", "three", "four", "five"]);
+    const fourth = result.events.find((event) => event.event === "TASK_DISPATCH_RETURNED" && event.task_id === "four");
+    assert.ok(fourth.completed_before_dispatch > 0);
+    const receipt = JSON.parse(await readFile(result.receipt_file, "utf8"));
+    assert.equal(receipt.run_slots, 3);
+    assert.equal(receipt.observed_max_concurrency, 3);
+    assert.equal(receipt.integrity.no_duplicate_dispatch, true);
+    assert.equal(receipt.integrity.dynamic_refill_observed, true);
+    assert.equal(receipt.integrity.valid, true);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test("WorkBuddy queue freezes run slots and rejects a changed concurrency on resume", async () => {
+  const f = await fixture();
+  try {
+    await runWorkBuddyBatch(f.args, { execute: f.execute });
+    await assert.rejects(
+      runWorkBuddyBatch([...f.args, "--run-slots", "2", "--resume"], { execute: f.execute }),
+      /CONFIG_DRIFT/u,
+    );
+    assert.throws(() => parseBatchArgs([...f.args, "--run-slots", "9"]), /1–8/u);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });

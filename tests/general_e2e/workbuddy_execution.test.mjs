@@ -8,6 +8,8 @@ import test from "node:test";
 
 import {
   executeWorkBuddyTask,
+  assertWorkBuddyNativeAvailability,
+  assertWorkBuddyUiAvailable,
   closeWorkBuddyUiHandle,
   main,
   parseArgs,
@@ -183,6 +185,36 @@ test("WorkBuddy P2 arguments and UI readback fail closed", () => {
     () => assertWorkBuddyUiIdle({ ...rawUi("/workspace"), busy_control_count: 1 }),
     /活动或未知交互/u,
   );
+});
+
+test("WorkBuddy managed queue accepts only its exact active native and UI conversations", () => {
+  const queue = {
+    queue_id: "managed-three",
+    run_slots: 3,
+    active_sessions: [{ conversation_id: "active-one", cwd: "/workspace/one" }],
+  };
+  const report = runtime();
+  report.native_sources.session_index.sessions = [
+    { conversation_id: "active-one", cwd: "/workspace/one", status: "Running" },
+    { conversation_id: "old", cwd: "/workspace/old", status: "Completed" },
+  ];
+  const evidence = assertWorkBuddyNativeAvailability(report, queue);
+  assert.equal(evidence.verified, true);
+  assert.equal(evidence.allowed_active_session_count, 1);
+  assert.equal(assertWorkBuddyUiAvailable({
+    ...rawUi("/workspace/one"),
+    busy_control_count: 1,
+    selected_conversation_id: "active-one",
+  }, queue).managed_active_conversation, true);
+  assert.throws(() => assertWorkBuddyUiAvailable({
+    ...rawUi("/workspace/other"),
+    busy_control_count: 1,
+    selected_conversation_id: "other",
+  }, queue), /不属于当前托管队列/u);
+  report.native_sources.session_index.sessions.push(
+    { conversation_id: "foreign", cwd: "/workspace/foreign", status: "Running" },
+  );
+  assert.throws(() => assertWorkBuddyNativeAvailability(report, queue), /unknown=1/u);
 });
 
 test("WorkBuddy P2 uses CDP real input and requires an enabled send control", async () => {

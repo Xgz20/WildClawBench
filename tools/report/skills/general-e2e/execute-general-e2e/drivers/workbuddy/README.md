@@ -67,14 +67,17 @@ node collect-general-e2e/drivers/workbuddy/finalize.mjs \
 资源 `collection.status` 表示绑定原生请求的证据是否完整，逐字段 `metrics.*.status/coverage` 表示数值是否可观测。完整请求的空 usage 不阻断内容评分：token/cache 仍为 `null/unavailable`，工具和 request 数仍保留真实观测。截断轨迹、未知块、部分已知数据或非法数值仍阻断或降级，不能把采集缺失写成完整。
 
 
-## 持久化串行队列
+## 持久化三路队列
 
 ```bash
 node execute-general-e2e/drivers/workbuddy/batch.mjs \
   --unit-root /absolute/new-execution-unit --queue-id serial-01 \
-  --endpoint http://127.0.0.1:9229 --expected-permission default-sandbox
+  --endpoint http://127.0.0.1:9229 --expected-permission default-sandbox \
+  --run-slots 3
 ```
 
-恢复使用相同参数并增加 `--resume`。队列在 `.general-e2e/queues/workbuddy/` 冻结 manifest、顺序、配置和每题预留 attempt ID。UI 与运行均单槽；遇未知发送或未完成终态停止后续投递。新队列拒绝接管队列外已有 attempt；已完成任务恢复不发送。只有全题完成才返回成功，后台并发尚未声明。
+`--run-slots` 默认 3、范围 1–8。UI 创建任务、选目录和发送始终单槽；绑定后的原生 Agent 最多按冻结槽位后台运行，任一题取得可信终态后按 manifest 顺序动态补位。每次新发送前，Driver 从队列状态重验所有活动 conversation/cwd/attempt，只允许本队列已经登记且仍为 `RUNNING` 的会话；额外活动会话、身份漂移、未知 UI busy 或达到槽位上限均失败关闭。
+
+恢复使用相同参数并增加 `--resume`。队列在 `.general-e2e/queues/workbuddy/` 冻结 manifest、顺序、槽位、Driver 摘要和每题预留 attempt ID。新队列拒绝接管队列外已有 attempt；恢复只观察原 attempt，不重发已发送 Prompt。完成后生成 `*-receipt.json`，记录每题时间、发送计数、观察到的最大并发和动态补位次数；该回执证明队列调度，不替代正式 collect receipt。
 
 活动或陈旧 owner-lock 均不会自动删除。异常退出后的锁恢复属于值守操作：先核对锁中的主机和 PID 生命周期及真实任务现场，再处理已证明死亡的旧 Worker；不能直接删除未知锁后新建 attempt。尚未验收无人值守恢复。

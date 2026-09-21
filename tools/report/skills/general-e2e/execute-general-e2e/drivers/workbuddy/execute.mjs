@@ -35,7 +35,7 @@ import {
 
 export const WORKBUDDY_EXECUTION_JOURNAL_SCHEMA =
   "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1";
-export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.3.0";
+export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.4.0";
 const PROCESS_STARTED_AT = new Date().toISOString();
 const PROCESS_START_IDENTITY = `${hostname()}:${process.pid}:${PROCESS_STARTED_AT}:${randomUUID()}`;
 
@@ -57,6 +57,8 @@ function usage() {
   --resume                         恢复同一 attempt；dispatch_attempt_count=1 时禁止重发
   --detach-after-submit            绑定 conversation/request/cwd 后退出
   --observe-once                   仅恢复后观察一次原生状态
+  --managed-queue-id <ID>          仅供 WorkBuddy 队列传入冻结队列身份
+  --managed-run-slots <1-8>        仅供队列传入冻结后台槽位
   --timeout-ms <毫秒>              UI 单步超时，默认 30000
   --identity-timeout-ms <毫秒>     发送后原生绑定时限，默认 120000
   --poll-interval-ms <毫秒>        原生终态轮询间隔，默认 1000
@@ -103,6 +105,8 @@ export function parseArgs(argv) {
     resume: false,
     detachAfterSubmit: false,
     observeOnce: false,
+    managedQueueId: "",
+    managedRunSlots: 0,
     timeoutMs: 30_000,
     identityTimeoutMs: 120_000,
     pollIntervalMs: 1_000,
@@ -121,6 +125,8 @@ export function parseArgs(argv) {
     ["--timeout-ms", "timeoutMs"],
     ["--identity-timeout-ms", "identityTimeoutMs"],
     ["--poll-interval-ms", "pollIntervalMs"],
+    ["--managed-queue-id", "managedQueueId"],
+    ["--managed-run-slots", "managedRunSlots"],
   ]);
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -133,7 +139,7 @@ export function parseArgs(argv) {
       if (!key) throw new Error(`未知选项：${arg}`);
       const value = argv[index + 1];
       if (!value || value.startsWith("--")) throw new Error(`${arg} 缺少值`);
-      values[key] = new Set(["timeoutMs", "identityTimeoutMs", "pollIntervalMs"]).has(key)
+      values[key] = new Set(["timeoutMs", "identityTimeoutMs", "pollIntervalMs", "managedRunSlots"]).has(key)
         ? positiveInteger(value, arg)
         : value;
       index += 1;
@@ -145,6 +151,13 @@ export function parseArgs(argv) {
   if (values.observeOnce && values.detachAfterSubmit) {
     throw new Error("--observe-once 与 --detach-after-submit 不能同时使用");
   }
+  if (Boolean(values.managedQueueId) !== Boolean(values.managedRunSlots)) {
+    throw new Error("--managed-queue-id 与 --managed-run-slots 必须同时指定");
+  }
+  if (values.managedQueueId && !/^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$/u.test(values.managedQueueId)) {
+    throw new Error("--managed-queue-id 不是安全 ID");
+  }
+  if (values.managedRunSlots > 8) throw new Error("--managed-run-slots 必须在 1–8 之间");
   if (values.identityTimeoutMs < 120_000 || values.identityTimeoutMs > 180_000) {
     throw new Error("--identity-timeout-ms 必须在 120000–180000 之间");
   }
@@ -299,6 +312,9 @@ export async function resolveExecutionConfig(parsed) {
     bindingFile: join(controlRoot, "native-binding.json"),
     lockFile: join(controlRoot, "driver.lock"),
     uiLockFile: join(unitRoot, ".general-e2e", "workbuddy-ui.lock"),
+    queueStateFile: parsed.managedQueueId
+      ? join(unitRoot, ".general-e2e", "queues", "workbuddy", `${parsed.managedQueueId}.json`)
+      : null,
   };
 }
 
@@ -422,31 +438,98 @@ const NATIVE_TERMINAL_STATES = new Set([
 ]);
 
 export function assertWorkBuddyNativeIdle(report) {
+  return assertWorkBuddyNativeAvailability(report, null);
+}
+
+export function assertWorkBuddyNativeAvailability(report, queueContext) {
   const sessionIndex = report?.native_sources?.session_index;
   if (sessionIndex?.status !== "observed" || !Array.isArray(sessionIndex.sessions)) {
     throw new Error("WorkBuddy 原生 session index 不可用，禁止首次发送");
   }
   const statusCounts = {};
-  let blockingCount = 0;
+  const blockingSessions = [];
   for (const session of sessionIndex.sessions) {
     const status = String(session?.status || "missing").trim().toLowerCase() || "missing";
     statusCounts[status] = (statusCounts[status] || 0) + 1;
-    if (!NATIVE_TERMINAL_STATES.has(status)) blockingCount += 1;
+    if (!NATIVE_TERMINAL_STATES.has(status)) blockingSessions.push(session);
   }
+  const allowed = queueContext?.active_sessions || [];
+  const allowedKeys = new Set(allowed.map((session) => `${session.conversation_id}\u0000${session.cwd}`));
+  const observedKeys = new Set(sessionIndex.sessions.map((session) => `${session.conversation_id}\u0000${session.cwd}`));
+  const unknownBlocking = blockingSessions.filter((session) => (
+    !allowedKeys.has(`${session.conversation_id}\u0000${session.cwd}`)
+  ));
+  const missingAllowed = allowed.filter((session) => (
+    !observedKeys.has(`${session.conversation_id}\u0000${session.cwd}`)
+  ));
+  const blockingCount = blockingSessions.length;
+  const capacityAvailable = queueContext
+    ? allowed.length < queueContext.run_slots && blockingCount < queueContext.run_slots
+    : blockingCount === 0;
   const evidence = {
-    verified: blockingCount === 0,
+    verified: unknownBlocking.length === 0 && missingAllowed.length === 0 && capacityAvailable,
     source_status: sessionIndex.status,
     source_size: sessionIndex.metadata?.size ?? null,
     source_modified_at: sessionIndex.metadata?.modified_at ?? null,
     captured_at: report.captured_at || null,
     session_count: sessionIndex.sessions.length,
     blocking_session_count: blockingCount,
+    managed_queue_id: queueContext?.queue_id || null,
+    managed_run_slots: queueContext?.run_slots || null,
+    allowed_active_session_count: allowed.length,
+    unknown_blocking_session_count: unknownBlocking.length,
+    missing_allowed_session_count: missingAllowed.length,
     status_counts: Object.fromEntries(Object.entries(statusCounts).sort(([left], [right]) => left.localeCompare(right))),
   };
-  if (blockingCount > 0) {
-    throw new Error(`WorkBuddy 存在活动或未知原生 session：${blockingCount}`);
+  if (!evidence.verified) {
+    throw new Error(
+      `WorkBuddy 存在活动或未知原生 session，且不符合队列：blocking=${blockingCount}; allowed=${allowed.length}; unknown=${unknownBlocking.length}; missing=${missingAllowed.length}; slots=${queueContext?.run_slots || 1}`,
+    );
   }
   return evidence;
+}
+
+async function loadManagedQueueContext(config) {
+  if (!config.managedQueueId) return null;
+  await assertNoSymlinkPath(config.unitRoot, config.queueStateFile, "WorkBuddy queue state");
+  const state = await readJson(config.queueStateFile);
+  const mismatches = [];
+  if (state.schema_version !== "wildclawbench.general-e2e-workbuddy-execution-queue/v2") mismatches.push("schema_version");
+  if (state.queue_id !== config.managedQueueId) mismatches.push("queue_id");
+  if (state.frozen?.unit_root !== config.unitRoot) mismatches.push("unit_root");
+  if (state.frozen?.batch_id !== config.manifest.batch_id) mismatches.push("batch_id");
+  if (state.frozen?.unit_id !== config.manifest.unit_id) mismatches.push("unit_id");
+  if (state.frozen?.endpoint !== config.endpoint) mismatches.push("endpoint");
+  if (state.frozen?.run_slots !== config.managedRunSlots) mismatches.push("run_slots");
+  const target = state.tasks?.find((row) => row.task_id === config.task.task_id);
+  if (!target || target.attempt_id !== config.attemptId) mismatches.push("target_attempt");
+  if (mismatches.length) throw new Error(`WORKBUDDY_MANAGED_QUEUE_DRIFT: ${mismatches.join(",")}`);
+  const activeSessions = [];
+  for (const row of state.tasks.filter((item) => item.task_id !== config.task.task_id && item.phase === "RUNNING")) {
+    const paths = join(config.unitRoot, ".general-e2e", "execution", row.task_id, "workbuddy");
+    const journal = await readJson(join(paths, "dispatch-journal.json"));
+    const publicState = await readJson(join(paths, "execution-state.json"));
+    if (
+      journal.identity?.attempt_id !== row.attempt_id
+      || journal.phase !== "RUNNING"
+      || publicState.phase !== "RUNNING"
+      || journal.send?.dispatch_attempt_count !== 1
+      || !journal.native?.conversation_id
+      || !journal.native?.cwd
+      || publicState.session?.session_id !== journal.native.conversation_id
+      || publicState.session?.cwd !== journal.native.cwd
+    ) {
+      throw new Error(`WORKBUDDY_MANAGED_ACTIVE_IDENTITY_INVALID: ${row.task_id}`);
+    }
+    activeSessions.push({
+      task_id: row.task_id,
+      attempt_id: row.attempt_id,
+      conversation_id: journal.native.conversation_id,
+      cwd: journal.native.cwd,
+    });
+  }
+  if (activeSessions.length >= config.managedRunSlots) throw new Error("WORKBUDDY_MANAGED_QUEUE_FULL");
+  return { queue_id: config.managedQueueId, run_slots: config.managedRunSlots, active_sessions: activeSessions };
 }
 
 async function defaultPrepareUi(config) {
@@ -454,7 +537,7 @@ async function defaultPrepareUi(config) {
   const client = await WorkBuddyCdpClient.connect(target.webSocketDebuggerUrl, config.timeoutMs);
   try {
     const initialUi = await readWorkBuddyUi(client);
-    const uiIdle = assertWorkBuddyUiIdle(initialUi);
+    const uiIdle = assertWorkBuddyUiAvailable(initialUi, config.managedQueueContext);
     await createFreshWorkBuddyTask(client, config.timeoutMs);
     await selectWorkBuddyWorkspace(client, config.candidateWorkspace, config.timeoutMs);
     const ui = await readWorkBuddyUi(client);
@@ -468,6 +551,24 @@ async function defaultPrepareUi(config) {
     client.close();
     throw error;
   }
+}
+
+export function assertWorkBuddyUiAvailable(ui, queueContext) {
+  if (!queueContext?.active_sessions?.length) return assertWorkBuddyUiIdle(ui);
+  const allowed = new Set(queueContext.active_sessions.map((session) => session.conversation_id));
+  const knownBusy = ui.busy_control_count === 1 && allowed.has(ui.selected_conversation_id);
+  const evidence = {
+    verified: ui.editor_count <= 1
+      && ui.editor_nonempty_count === 0
+      && (ui.busy_control_count === 0 || knownBusy),
+    editor_count: ui.editor_count,
+    editor_nonempty_count: ui.editor_nonempty_count,
+    busy_control_count: ui.busy_control_count,
+    selected_conversation_id: ui.selected_conversation_id,
+    managed_active_conversation: knownBusy,
+  };
+  if (!evidence.verified) throw new Error("WorkBuddy UI 活动交互不属于当前托管队列");
+  return evidence;
 }
 
 async function defaultConnectRuntime(config) {
@@ -653,6 +754,7 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
   };
   let journal = await readJsonIfPresent(config.journalFile, config.unitRoot);
   let runtimeClient = null;
+  config.managedQueueContext = await loadManagedQueueContext(config);
   if (journal) {
     if (!config.resume) throw new Error("已有 dispatch journal；必须使用 --resume，禁止新建 attempt 或重发");
     assertJournalMatches(config, journal);
@@ -676,11 +778,11 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
       throw new Error("dispatch journal 发送边界无效，拒绝恢复");
     }
     journal.preflight ||= { native_sessions: null, ui_idle: null };
-    journal.preflight.native_sessions = assertWorkBuddyNativeIdle(runtime);
+    journal.preflight.native_sessions = assertWorkBuddyNativeAvailability(runtime, config.managedQueueContext);
   } else {
     if (config.resume) throw new Error("--resume 要求已有 dispatch-journal.json");
     const runtime = await dependencies.inspectRuntime(config);
-    const nativeIdle = assertWorkBuddyNativeIdle(runtime);
+    const nativeIdle = assertWorkBuddyNativeAvailability(runtime, config.managedQueueContext);
     journal = createJournal(config, runtime, nativeIdle, dependencies.now());
     await persistJournal(config, journal);
   }
