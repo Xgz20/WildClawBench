@@ -716,7 +716,10 @@ async function createLiveDependencies(config) {
   page.setDefaultTimeout(timeout);
   await page.bringToFront();
   const queryProjects = () => queryQwenProjectRows(config.client.session_db);
-  const projectName = `WCB-GEN-${config.identity.task_id.slice(-40)}-${config.identity.attempt_id.slice(0, 8)}`;
+  // Attempt IDs used by prepared canaries may share a common prefix. Include
+  // the frozen config digest so repeated attempts can never select an older
+  // project with the same visible name.
+  const projectName = `WCB-GEN-${config.identity.task_id.slice(-40)}-${config.config_digest.slice(0, 8)}`;
   const selectNativeFolder = async (workspace) => {
     const result = await runCapture(
       "/usr/bin/swift",
