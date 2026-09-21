@@ -26,6 +26,8 @@
 
 当前报告发行与产物见[用例对比及单元评分详情证据](evidence/general-report-details-20260921/README.md)。`89d13d0` 在既有[单元对比报告](evidence/general-report-comparison-20260921/README.md)基础上，将工具数移到请求数后，明细改为每题各单元得分并列，并增加每单元评分详情，共九张公共表加每单元一张详情；v8 为 10 Sheet。题面、规则和判词读取 SHA 绑定的冻结评分包，缺失不从当前任务源码补齐。总览不显示成本与超时数，双耗时与无根因领导版 Markdown 保留。效率明细按普通输入、缓存命中输入、缓存写入输入、输出四类展示，保留总 Token、平均 Token 和命中率；v8 平均 Token 154693、命中率 91.4086%，缓存写入与精确普通输入仍未知。分类/难度/模态、七维评分和工具次数已接入，工具质量比率暂缓。此次只更新报告，没有新增 Harness 或评分执行，原生三路并发结论不变。
 
+2026-09-21 报告跨 Harness 只读复核：使用独立 report `0.5.0` 对 AstronStudio 已有批次 `general-macos-current-smoke-20260919-141301` 执行输入验证与内存聚合，通过；2/2 valid、均分 0.9125 保持不变，两题题面/工具轨迹完整，生成用例对比与 `评分详情_Spark X2.5@AstronStudio` 数据。没有重跑 Harness/Judge，也没有重生成该批 Excel。报告展示与评分元数据读取是公共链路；WorkBuddy 专有代码仅用于其原生指标补采。QwenWork collector 输出公共契约，但尚无真实完整回传可做相同验证，不能由报告支持推导其执行链路已经可用。此次改动范围是 General 报告，Web 报告另行维护。
+
 本机 Python 使用 `/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python`；Node 测试启动 Python 子进程时同时设置 `PYTHON` 并将本工作区 `.venv/bin` 放到 PATH 前部，避免回落到旧系统 Python。各 Driver 使用自身 package-lock 安装依赖，不借用旧平台 worktree 的 node_modules。
 
 本次工作区迁移验证：General Node 162/162、DoubaoWork/Web metrics Node 87/87、Python layout/orchestration/build/metadata 44/44，共 293/293；7 Skill 布局和文档链接检查通过。首次检查暴露旧系统 Python 与本工作区缺少 playwright-core，已使用仓库 Python 3.11，并按 QwenWork/DoubaoWork 各自锁文件离线 npm ci 后重验；未修改锁文件、未运行被测 Harness 或评分。
@@ -45,9 +47,18 @@ DoubaoWork Web 的历史进展单独保留：一次开发 canary 已发送且产
 
 ## 下一会话直接做什么
 
-### WorkBuddy：耗时已补齐，剩余原生三路重叠验收
+### WorkBuddy：受控主流程可用，剩余生产工程收尾与一次新包 canary
 
 v8 保持 UI 单槽，配置 `run_slots=3`、发送后未结束峰值 3、原生请求实际重叠峰值 2、2 次动态补位、每题一次发送，并完成 collect、评分、回传、报告。耗时补采仅使用冻结原件，不重跑 Harness/Judge。原生三路同时执行仍未证明：下一次验证应分开记录发送/排队与原生开始，选足够长的三题观测请求区间，禁止仅以 `run_slots` 或旧队列峰值宣称通过。此次未启动新验证或任何平台任务。旧 v4/v8 产物和成绩保持原身份；长路径失败及短路径要求见[证据索引](evidence/workbuddy-macos-general-v8-three-slot-20260921/README.md)。
+
+2026-09-21 对源码与发行证据复核后，以下事项仍未完成，不能只保留“三路实跑”一项：
+
+1. **并发回执口径与有效性解耦（代码待修）**：`execute-general-e2e/drivers/workbuddy/batch.mjs` 的 `synchronizeRow` 优先用 `prompt.sent_at` 填 `started_at`，`observed_max_concurrency` 仍为发送后未结束峰值。`integrity.valid` 还要求达到请求槽数且观察到补位，短任务全部正常结束也可能不满足。应分别记录调度占用与原生请求区间，并发观测不足单独标记，不能自动等同于执行回执无效。
+2. **长路径发送前检查（代码待补）**：v7 已出现 `ENAMETOOLONG`，v8 使用短根规避；当前 General prepare/WorkBuddy preflight 尚无扁平化 history 目录长度检查。应在发送前检查实际编码后的目录名长度并给出可操作错误。已声明的短根值守范围可以使用，不等于任意输出路径都已支持。
+3. **合并为一次新包 canary**：修复上述两项后冻结发行，用一轮 3–5 题同时验证新任务正常采集 Token/原生耗时、三个较长任务的原生重叠、动态补位、恢复不重发、正式 collect/评分/回传/最新报告。当前 collect 0.7.1 的真数据验证是 v8 补采，正常首次采集主要为 fixture；report 0.5.0 已实测冻结回传，不必为每次格式变化重复跑 Harness。实际原生并发若达不到 3，记录真实支持范围，不把所有可用模式都阻塞。
+4. **同步 Driver 说明**：执行 Driver README 仍含 Token/耗时不可得、完整闭环待验等旧描述；随上述代码事项更新，并保留原证据 revision。无需新建平台会话或 worktree。
+
+无人值守 Worker 崩溃自动恢复、Apple Silicon、Windows、更高并发、60 题全量与裁判校准仍属后续扩容，不作为当前短路径、值守小批次的统一前置条件。缓存写入/精确普通输入未知以及用户暂缓的工具质量比率也不阻塞现有评分与报告。
 
 ### 1. QwenWork General：完成真实单题，再扩到小批
 
@@ -79,7 +90,7 @@ macOS 四个 Harness 达到声明范围的全链路准入后，使用冻结数�
 继续 WildClawBench 的 macOS General E2E 串行开发。
 唯一修改目录：/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench
 分支：feature/astroncode-eval。
-先检查该工作区的 Git 状态，读取 docs/design/general-e2e/README.md，按其中“下一会话直接做什么”推进 WorkBuddy 原生三路重叠验收，再进入 QwenWork General 的真实单题闭环。
+先检查该工作区的 Git 状态，读取 docs/design/general-e2e/README.md，按其中“下一会话直接做什么”完成 WorkBuddy 并发回执/路径预检工程收尾与新包 canary，再进入 QwenWork General 的真实单题闭环。
 如果 README 已记录该项完成，则执行其下一项；以仓库当前记录和本机证据为准，不依赖旧聊天。
 直接在当前工作区分支串行迭代，不创建平台任务、subagent 或 worktree，不申请桌面时段，不 push。
 每完成一个事项，补充真实证据和 README 对应进度，运行必要检查并单独提交中文 Conventional Commit。
