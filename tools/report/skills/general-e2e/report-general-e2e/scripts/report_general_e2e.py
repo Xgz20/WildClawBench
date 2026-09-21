@@ -21,6 +21,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import report_views
+import report_case_views
 
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
 IMPORT_INDEX_SCHEMA = "wildclawbench.general-e2e-import-index/v1"
@@ -671,6 +672,7 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
     try:
         checkpoint_values = report_views.checkpoints(score, score_path, resolve_file, sha256_file)
         tool_calls = report_views.trace_tools(root / "unit", execution, resolve_file, sha256_file)
+        task_definition = report_case_views.frozen_task_definition(task_meta, execution, score, score_path, resolve_file, sha256_file)
     except (ValueError, KeyError, OSError) as exc:
         raise ReportError(f"REPORT_EVIDENCE_INVALID: {task_id}: {exc}") from exc
     return {
@@ -688,6 +690,7 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
         "execution_attempt_id": expected_identity["attempt_id"],
         "execution_phase": execution["phase"],
         "execution_status": submission_task["execution_status"],
+        "execution_error": execution["execution"].get("error"),
         "execution_started_at": execution["execution"]["started_at"],
         "execution_finished_at": execution["execution"]["finished_at"],
         "evidence_completeness": execution["evidence"]["completeness"],
@@ -702,6 +705,7 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
         "resource": resource,
         "checkpoints": checkpoint_values,
         "tool_calls": tool_calls,
+        "task_definition": task_definition,
         "lineage": {
             "package_id": selected["package_id"],
             "package_manifest_sha256": sha256_file(selected["package_manifest_path"]),

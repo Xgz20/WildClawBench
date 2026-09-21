@@ -167,19 +167,33 @@ function buildView(workbook, name, view) {
 }
 
 
-function buildDetails(workbook, data) {
-  const headers = ["模型@Harness", "用例名称", "分类", "难度", "模态", "得分", "执行状态", "评分状态",
-    "总token", "模型请求数", "任务耗时(s)", "流程耗时(s)", "工具调用数", "运行ID"];
-  const rows = data.tasks.map(row => [
-    data.presentation.unit_labels[row.unit_id], row.task_name, row.category, row.difficulty, row.modality,
-    row.total_score === null ? null : row.total_score * 100, row.execution_status, row.score_status,
-    ...["total_tokens", "request_count", "agent_duration_seconds", "duration_seconds", "call_count"].map(key => row.resource[key].complete ? row.resource[key].value : null),
-    row.run_id,
-  ]);
-  const sheet = buildView(workbook, "用例明细", { headers, rows, formats: {"5": "0.00", "10": "#,##0.000", "11": "#,##0.000"},
-    notes: ["各资源仅展示完整观测值；部分值和证据来源见资源覆盖与异常。"] });
-  widths(sheet, { B: 36, C: 27, N: 62 });
-  if (rows.length) scoreScale(sheet, `F2:F${rows.length + 1}`, 100);
+function buildCaseView(workbook, name, view) {
+  const sheet = buildView(workbook, name, view);
+  const comparison = view.layout === "case_compare";
+  const sizes = comparison
+    ? [22, 40, 30, 8, 12, 24, 45, 45, 45, 35, ...Array(view.headers.length - 12).fill(34), 26, 12]
+    : [18, 40, 30, 8, 12, 24, 45, 45, 45, 45, 38, 20, 20, 30, 16, 12, 40, 40, 45, 40, 14, 12, 14, 16, 16, 60, 18];
+  sizes.forEach((width, i) => { sheet.getRange(`${columnName(i + 1)}:${columnName(i + 1)}`).format.columnWidth = width; });
+  if (view.rows.length) {
+    const body = sheet.getRange(`A2:${columnName(view.headers.length)}${view.rows.length + 1}`);
+    body.format.wrapText = true;
+    body.format.verticalAlignment = "top";
+    view.rows.forEach((row, index) => {
+      const lines = Math.max(...row.map((value, col) => String(value ?? "-").split("\n").reduce((sum, line) => {
+        const width = [...line].reduce((n, char) => n + (char.codePointAt(0) > 127 ? 2 : 1), 0);
+        return sum + Math.max(1, Math.ceil(width / Math.max(6, sizes[col] - 2)));
+      }, 0)));
+      sheet.getRange(`A${index + 2}:${columnName(view.headers.length)}${index + 2}`).format.rowHeight = Math.min(400, Math.max(48, lines * 14 + 10));
+      if (comparison) {
+        view.unit_scores[index].forEach((score, i) => {
+          if (score !== null) sheet.getRange(`${columnName(11 + i)}${index + 2}`).format.fill =
+            score >= 1 ? COLORS.green : score <= 0 ? COLORS.red : COLORS.amber;
+        });
+      }
+    });
+    if (!comparison) scoreScale(sheet, `P2:P${view.rows.length + 1}`, 100);
+  }
+  sheet.freezePanes.freezeColumns(2);
   return sheet;
 }
 
@@ -260,13 +274,14 @@ async function main() {
   }
   const workbook = Workbook.create();
   for (const name of data.presentation.sheet_order) buildView(workbook, name, data.presentation.tables[name]);
-  buildDetails(workbook, data);
+  buildCaseView(workbook, "用例对比明细", data.presentation.case_comparison);
+  for (const name of data.presentation.score_detail_order) buildCaseView(workbook, name, data.presentation.score_details[name]);
   buildCoverage(workbook, data);
   workbook.recalculate();
 
   await fs.mkdir(path.dirname(args.output), { recursive: true });
   await fs.mkdir(args["preview-dir"], { recursive: true });
-  const sheetNames = [...data.presentation.sheet_order, "用例明细", "资源覆盖与异常"];
+  const sheetNames = [...data.presentation.sheet_order, "用例对比明细", ...data.presentation.score_detail_order, "资源覆盖与异常"];
   if (args["skip-preview"] !== "true") {
     for (const sheetName of sheetNames) {
       const image = await workbook.render({ sheetName, autoCrop: "all", scale: 1, format: "png" });
@@ -283,7 +298,8 @@ async function main() {
   const rangeChecks = [];
   for (const [sheetId, range] of [
     ...data.presentation.sheet_order.map(name => [name, `A1:${columnName(data.presentation.tables[name].headers.length)}${data.presentation.tables[name].rows.length + 1}`]),
-    ["用例明细", `A1:N${1 + data.tasks.length}`],
+    ["用例对比明细", `A1:${columnName(data.presentation.case_comparison.headers.length)}${data.presentation.case_comparison.rows.length + 1}`],
+    ...data.presentation.score_detail_order.map(name => [name, `A1:${columnName(data.presentation.score_details[name].headers.length)}${data.presentation.score_details[name].rows.length + 1}`]),
     ["资源覆盖与异常", `A1:M${10 + data.tasks.length * 11}`],
   ]) {
     const inspection = await workbook.inspect({

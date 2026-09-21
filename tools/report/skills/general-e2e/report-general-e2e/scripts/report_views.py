@@ -109,6 +109,7 @@ def trace_tools(root, execution, resolve_file, sha256_file):
         calls[call_id] = name
     status = "complete" if index.get("completeness", {}).get("status") == "complete" else "partial"
     return {"status": status, "by_tool": dict(sorted(Counter(calls.values()).items())), "total": len(calls),
+            "transcript_path": transcript.relative_to(root).as_posix(),
             "basis": "标准轨迹 tool_call 按单题 call_id 去重，不从 completed 推断工具成功",
             "trace_index_sha256": sha256_file(path), "transcript_sha256": ref["sha256"]}
 
@@ -152,6 +153,7 @@ def table(headers, rows, formats=None, notes=None):
 
 
 def build_views(data, references):
+    import report_case_views
     units = sorted(data["units"], key=lambda u: (u["score"]["mean_score"] is None, -(u["score"]["mean_score"] or 0), u["unit_id"]))
     prepared, labels = [], Counter()
     for unit in units:
@@ -180,7 +182,7 @@ def build_views(data, references):
         overview.append([label, score["mean_score"] * 100 if score["mean_score"] is not None else None,
                          n, completed, errors, anomalies, completed/n if n else None,
                          score["valid_score_count"], score["unscored_count"], total("total_tokens"), total("request_count"),
-                         total("agent_duration_seconds"), total("duration_seconds"), total("call_count")])
+                         total("call_count"), total("agent_duration_seconds"), total("duration_seconds")])
         cached, inputs, writes = total("cache_read_input_tokens"), total("input_tokens"), total("cache_creation_input_tokens")
         if inputs is not None and ((cached is not None and cached > inputs) or (writes is not None and writes > inputs)
                                    or (cached is not None and writes is not None and cached + writes > inputs)):
@@ -204,8 +206,8 @@ def build_views(data, references):
                          " / ".join(str(unit["harness"].get(key) or "-") for key in ("id", "platform", "version")), judges])
     views = {
         "总览": table(["模型@Harness", "总平均分", "用例数", "正常完成数", "执行错误数", "评测异常数", "完成率", "有效评分数", "未评分数",
-                       "总tokens", "总请求数", "任务耗时(s)", "流程耗时(s)", "工具调用数"], overview,
-                      {"1": "0.00", "6": "0.00%", "11": "#,##0.000", "12": "#,##0.000"},
+                       "总tokens", "总请求数", "工具调用数", "任务耗时(s)", "流程耗时(s)"], overview,
+                      {"1": "0.00", "6": "0.00%", "12": "#,##0.000", "13": "#,##0.000"},
                       ["得分为百分制，均值只含有效评分；真实零分保留，评测异常和未评分不补零。",
                        "完成率=原生正常完成数/冻结用例数；执行情况与评分状态分别统计，异常数按任务去重，各列不要求相加等于用例数。",
                        "任务耗时=原生请求耗时之和；流程耗时包含发送及等待。总请求数按客户端可观测模型响应/请求口径，来源详见资源覆盖。"]),
@@ -243,6 +245,7 @@ def build_views(data, references):
     views["工具调用对比"] = table(["模型@Harness", "工具", "调用数", "明细覆盖"], tools, notes=["仅统计调用次数。调用结束不等于执行成功；本版不计算格式准确率、执行成功率、不确定占比。"])
     order = ["总览", "效率对比", "分类对比", "难度对比", "Agent能力对比", "模态对比", "工具调用对比"]
     return {"schema_version": "wildclawbench.general-report-views/v1", "tables": {key: views[key] for key in order},
+            **report_case_views.build_case_views(data, units, labels_by_id, table, CATEGORIES, MODALITIES),
             "sheet_order": order,
             "unit_labels": labels_by_id, "dimension_coverage": dimension_coverage, "unit_metadata": metadata,
             "reference_sources": references["sources"],

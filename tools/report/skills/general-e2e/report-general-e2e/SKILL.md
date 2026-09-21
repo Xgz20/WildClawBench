@@ -15,7 +15,7 @@ description: 校验并汇总 General E2E submission 和回传包，生成同源 
 python -m eval_general_e2e skills --name report-general-e2e --json
 ```
 
-`0.4.2/operational` 支持按模型@Harness 展示 General 结果、效率和维度对比，生成不含根因分析的领导版 Markdown、Excel 与单独审计报告。保留 WorkBuddy 已冻结评分后的 JSONL 和耗时补采。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
+`0.5.0/operational` 支持按模型@Harness 展示 General 结果、效率和维度对比、每题各单元并列的用例对比明细，以及每单元独立评分详情，生成不含根因分析的领导版 Markdown、Excel 与单独审计报告。保留 WorkBuddy 已冻结评分后的 JSONL 和耗时补采。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
 
 ## 责任边界
 
@@ -57,7 +57,7 @@ python scripts/report_general_e2e.py generate \
   --node-modules /absolute/path/to/node_modules
 ```
 
-默认渲染九个工作表及其 PNG 预览，顺序为：总览、效率对比、分类对比、难度对比、Agent能力对比、模态对比、工具调用对比、用例明细、资源覆盖与异常。只有明确不需要预览时才传 `--skip-preview`；这不会跳过工作簿结构、关键范围和公式错误扫描。
+默认渲染 `9 + 单元数` 个工作表及其 PNG 预览，顺序为：总览、效率对比、分类对比、难度对比、Agent能力对比、模态对比、工具调用对比、用例对比明细、各单元评分详情、资源覆盖与异常。只有明确不需要预览时才传 `--skip-preview`；这不会跳过工作簿结构、关键范围和公式错误扫描。
 
 `--output-dir` 必须位于 batch root 内，使 report receipt 的 artifact 路径能由 `run-general-e2e` 以 batch root 为基准重验。最终目录必须不存在或为空；生成器使用同父目录暂存并原子发布。
 
@@ -66,7 +66,7 @@ python scripts/report_general_e2e.py generate \
 - `general_e2e_report_data.json`：唯一可复算数据源。
 - `通用场景端到端自动化评测报告.md`：不带根因分析的领导版报告，与 Excel 使用同一组单元对比表。
 - `通用场景端到端评测审计.md`：执行状态、裁判协议、资源覆盖及谱系，保留异常、未评分和历史状态。
-- `通用场景端到端自动化评测报告.xlsx`：九 Sheet 报告。
+- `通用场景端到端自动化评测报告.xlsx`：九张公共表加每单元一张评分详情。
 - `previews/excel-validation.json`：Sheet、关键范围和公式错误扫描记录。
 - `previews/*.png`：各 Sheet 视觉检查图（未使用 `--skip-preview` 时）。
 - `cli-adapter/`：`score.json / usage.json / execution_status.json / task_output.json` 兼容视图；异常和缺失仍为 `null`，不会补零。
@@ -89,5 +89,14 @@ python scripts/report_general_e2e.py generate \
 - 七维能力复用公共 `checkpoint_capability_map7.yaml`。自动检查点来自评分引用并带 SHA 的 `rule-component.json/raw_scores`；语义检查点来自 score.criteria，按规则/语义命名空间对齐。任务内映射检查点均值再对任务取均值，缺少任一映射检查点的该任务不进入该维度；同时披露有效/涉及样本数，缺失不补零。不重做判分、不把任务总分替代未映射检查点。
 - 构建时冻结公共实体显示名和能力映射为 `data/report-reference.json`，随包携带 canonical YAML 及 SHA；脱仓报告无需 PyYAML。公共字典来源在 JSON 和资源审计表保留。
 - 分数展示统一为 0–100；底层评分与 CLI adapter 保持 0–1。Excel 和领导 Markdown 都读取 `presentation.tables`，禁止在渲染层另算分数。单元题目范围不同或模型/Harness 同时改变时，明确属于组合对照，不做单因果归因。
+
+## 用例对比与单元评分详情
+
+- 总览“工具调用数”紧随“总请求数”，后接任务耗时与流程耗时。
+- 用例对比明细沿用常规报告前十列：分类、用例ID、用例名称、难度、模态、标签、输入(Prompt)、预期行为、评分标准、检查点；后接每个模型@Harness 的总分与检查点明细，以及最优单元、最大分差。每题一行，缺席/无效评分不补零；至少两个有效单元才计算最优和分差，并列最优全部保留。
+- 从已选 return 的 scoring attempt 读取 `attempt-manifest.json`，核对 dataset、执行/评分身份与 task/contract SHA，再读取冻结 `private/task.md` 和 `contract.json`。不读取当前仓库题目补写历史；旧包缺少题面时显示 `-`。同题不同单元的题面哈希或基础元数据冲突时失败关闭。
+- 评分详情每 unit 一张，名称 `评分详情_<模型@Harness>`，超过 Excel 31 字限制或发生重名时截断并加 unit 摘要；`presentation.score_detail_sheet_names` 保留精确映射。
+- 详情可展示冻结题面、预期、规则、Workspace/Skills/Env/Warmup 声明，执行/评分状态、总分、检查点、失分点、裁判判词、执行/评分错误、Token/请求/工具数、双耗时、标准 JSONL 引用。Env 仅为题目声明，不读取运行期环境变量值。未加入超时、多轮统计、根因分析或工具质量比率。
+- 题面、规则和判词等长字段显示明确标注的节选，全文保留报告 JSON；执行记录展示回传包内标准 JSONL 路径，不将整段轨迹塞进单元格。对比格以总分背景色提示，不使用颜色推断各检查点结论。组件总分和诊断计数不冒充检查点或失分点。
 
 更多字段说明见 [报告数据与 CLI 适配](references/report-data-and-cli.md)。

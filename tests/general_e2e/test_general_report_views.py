@@ -9,6 +9,7 @@ import unittest
 from tests.general_e2e.test_report_general_e2e import REPORT, Fixture, write_json, sha256
 
 VIEWS = REPORT.report_views
+CASES = REPORT.report_case_views
 
 
 class GeneralReportViewsTests(unittest.TestCase):
@@ -40,6 +41,8 @@ class GeneralReportViewsTests(unittest.TestCase):
             self.assertNotIn(key, overview["headers"])
         self.assertIn("任务耗时(s)", values)
         self.assertIn("流程耗时(s)", values)
+        request = overview["headers"].index("总请求数")
+        self.assertEqual(overview["headers"][request + 1], "工具调用数")
 
     def test_efficiency_uses_total_denominator_and_distinguishes_cache_write_zero(self):
         resources = self.data["units"][0]["resources"]
@@ -136,6 +139,86 @@ class GeneralReportViewsTests(unittest.TestCase):
         row["execution_status"] = "infrastructure_error"
         view = VIEWS.build_views(self.data, self.references)["tables"]["总览"]
         self.assertEqual(view["rows"][0][5], 1)
+
+    def test_case_comparison_uses_one_row_per_task_and_parallel_unit_scores(self):
+        unit = copy.deepcopy(self.data["units"][0]); unit["unit_id"] = "second"
+        copied = copy.deepcopy(self.data["tasks"])
+        for row in copied:
+            row["unit_id"] = "second"
+            if row["task_id"] == "task-zero":
+                row["total_score"] = .5
+        self.data["units"].append(unit); self.data["tasks"].extend(copied)
+        views = VIEWS.build_views(self.data, self.references)
+        compare = views["case_comparison"]
+        self.assertEqual(compare["headers"][:10], ["分类", "用例ID", "用例名称", "难度", "模态", "标签", "输入(Prompt)", "预期行为", "评分标准", "检查点"])
+        self.assertEqual(len(compare["rows"]), 4)
+        row = next(r for r in compare["rows"] if r[1] == "task-zero")
+        self.assertIn("总分：0.00 / 100", row[10])
+        self.assertIn("总分：50.00 / 100", row[11])
+        self.assertEqual(row[-1], 50)
+        self.assertEqual(row[-2], views["unit_labels"]["second"])
+        tied = next(r for r in compare["rows"] if r[1] == "task-valid")
+        self.assertEqual(tied[-1], 0)
+        self.assertIn(views["unit_labels"]["second"], tied[-2])
+        self.assertIn(views["unit_labels"][self.fixture.unit_id], tied[-2])
+        missing = next(r for r in compare["rows"] if r[1] == "task-error")
+        self.assertEqual(missing[-2:], [None, None])
+        self.assertEqual(len(views["score_details"]), 2)
+        for name, detail in views["score_details"].items():
+            self.assertTrue(name.startswith("评分详情_")); self.assertLessEqual(len(name), 31)
+            self.assertEqual(len(detail["rows"]), 4)
+            self.assertNotIn("根因分析", detail["headers"])
+            self.assertIn("裁判判词", detail["headers"])
+
+    def test_single_unit_never_claims_best_and_conflicting_definitions_fail(self):
+        self.assertTrue(all(row[-2:] == [None, None] for row in self.data["presentation"]["case_comparison"]["rows"]))
+        row = copy.deepcopy(self.data["tasks"][0]); row["unit_id"] = "second"
+        row["task_definition"] = {"status": "complete", "task_sha256": "a", "contract_sha256": "a"}
+        self.data["tasks"][0]["task_definition"] = {"status": "complete", "task_sha256": "b", "contract_sha256": "b"}
+        self.data["tasks"].append(row)
+        with self.assertRaisesRegex(ValueError, "TASK_DEFINITION_CONFLICT"):
+            VIEWS.build_views(self.data, self.references)
+
+    def test_frozen_definition_checks_identity_and_sha_without_repository_fallback(self):
+        identity = {"batch_id": "batch", "unit_id": "unit", "task_id": "task", "attempt_id": "exec"}
+        execution = {"identity": identity, "dataset": {"id": "dataset", "digest": "d"}}
+        score = {"identity": {**identity, "attempt_id": "judge"}}
+        task = self.root / "task.md"
+        task.write_text('---\nid: task\ntags:\n  - custom\n---\n## Prompt\nOriginal task\n```text\n## Expected Behavior\nquoted heading\n```\n## Expected Behavior\nExpected\n## Skills\nNone\n', encoding="utf-8")
+        contract = self.root / "contract.json"
+        write_json(contract, {"task_id": "task", "expected_behavior": "Expected", "grading_criteria": "Rubric", "automated_checks": "return 1"})
+        write_json(self.root / "attempt-manifest.json", {"identity": {"batch_id": "batch", "unit_id": "unit", "task_id": "task", "execution_attempt_id": "exec", "scoring_attempt_id": "judge"},
+                   "dataset": execution["dataset"], "paths": {"task": "task.md", "contract": "contract.json"},
+                   "digests": {"task_sha256": sha256(task), "contract_sha256": sha256(contract)}})
+        definition = CASES.frozen_task_definition({"task_id": "task"}, execution, score, self.root / "score.json", REPORT.resolve_file, sha256)
+        self.assertEqual(definition["tags"], "custom")
+        self.assertIn("quoted heading", definition["prompt"])
+        self.assertEqual(definition["expected"], "Expected")
+        self.assertEqual(definition["skills"], "None")
+        self.assertIsNone(CASES.declaration("```bash\n```"))
+        self.assertEqual(CASES.declaration("```text\nworkspace/task\n```"), "workspace/task")
+        task.write_text(task.read_text() + "drift")
+        with self.assertRaisesRegex(ValueError, "TASK_DEFINITION_DRIFT"):
+            CASES.frozen_task_definition({"task_id": "task"}, execution, score, self.root / "score.json", REPORT.resolve_file, sha256)
+
+    def test_detail_sheet_names_are_unique_legal_and_length_bounded(self):
+        units = [{"unit_id": "one"}, {"unit_id": "two"}, {"unit_id": "three"}]
+        labels = {"one": "model[]:" * 8, "two": "model[]:" * 8, "three": "valid@Harness"}
+        names = CASES.detail_sheet_names(units, labels)
+        self.assertEqual(len({n.casefold() for n in names.values()}), 3)
+        for name in names.values():
+            self.assertLessEqual(len(name), 31)
+            self.assertNotRegex(name, r"[\\/*?:\[\]]")
+
+    def test_checkpoint_details_exclude_component_totals_and_diagnostics(self):
+        row = {"score_status": "valid", "checkpoints": {"values": {"overall_score": .6, "automated.overall_score": .6,
+                "x_earned": 2, "x_max": 5, "tool_calls": 0, "ok": 1, "partial": .5}}}
+        text = CASES.checkpoint_text(row, lost_only=True)
+        self.assertIn("x_earned: 2", text)
+        self.assertIn("partial: 0.5", text)
+        self.assertNotIn("overall_score", text)
+        self.assertNotIn("tool_calls", text)
+        self.assertNotIn("ok", text)
 
 
 if __name__ == "__main__":
