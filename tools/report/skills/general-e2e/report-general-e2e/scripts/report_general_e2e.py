@@ -387,6 +387,12 @@ def validate_selected_return(
     ):
         raise ReportError(f"RETURN_IDENTITY_MISMATCH: {unit['unit_id']}")
     validate_return_entries(target, package_manifest)
+    supplements = target / "unit/evidence/resource-supplements"
+    if supplements.exists() and (
+        unit.get("harness", {}).get("id") != "workbuddy"
+        or any(p.name not in unit["task_ids"] or not p.is_dir() or p.is_symlink() for p in supplements.iterdir())
+    ):
+        raise ReportError("RESOURCE_SUPPLEMENT_SCOPE_INVALID")
     sources = package_manifest.get("sources") or {}
     unit_manifest_path = target / "unit/manifest.json"
     collect_receipt_path = target / "unit/receipts/collect-evidence-receipt.json"
@@ -538,6 +544,33 @@ def metric_observation(metrics: Mapping[str, Any] | None, field: str) -> dict[st
     }
 
 
+def workbuddy_resource_supplement(root: Path, task_id: str, execution_path: Path) -> dict[str, Any] | None:
+    unit_root = root / "unit"
+    directory = unit_root / "evidence/resource-supplements" / task_id
+    if not directory.exists():
+        return None
+    script = Path(__file__).resolve().parents[1] / "vendor/e2e-shared/workbuddy-jsonl-metrics/index.mjs"
+    if not script.is_file():
+        # Source checkout only; standalone Skill packages use the frozen vendor.
+        repo_script = Path(__file__).resolve().parents[4] / "e2e-shared/workbuddy-jsonl-metrics/index.mjs"
+        if repo_script.is_file():
+            script = repo_script
+    try:
+        run = subprocess.run(
+            [os.environ.get("GENERAL_E2E_NODE", "node"), str(script), "--verify-supplement",
+             str(unit_root), task_id, str(execution_path)],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        if run.returncode:
+            raise ReportError(f"RESOURCE_SUPPLEMENT_INVALID: {task_id}: {run.stderr[-1000:]}")
+        result = json.loads(run.stdout)
+        if result.get("status") != "PASS":
+            raise ValueError("supplement verifier did not pass")
+        return result
+    except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
+        raise ReportError(f"RESOURCE_SUPPLEMENT_INVALID: {task_id}: {exc}") from exc
+
+
 def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], submission_task: Mapping[str, Any]) -> dict[str, Any]:
     root = selected["root"]
     unit = selected["unit"]
@@ -598,6 +631,26 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
         metrics = validate_contract(metrics_path, RESOURCE_SCHEMA)
         if metrics.get("identity") != expected_identity:
             raise ReportError(f"RESOURCE_IDENTITY_MISMATCH: {unit['unit_id']}:{task_id}")
+    supplement = None
+    if (root / "unit/evidence/resource-supplements" / task_id).exists():
+        original_record = resolve_file(
+            root / "unit", f"evidence/tasks/{task_id}/{expected_identity['attempt_id']}/execution-record.json",
+            "supplement original execution record",
+        )
+        if sha256_file(original_record) != sha256_file(execution_path):
+            raise ReportError("RESOURCE_SUPPLEMENT_EXECUTION_DRIFT")
+        supplement = workbuddy_resource_supplement(root, task_id, original_record)
+        metrics_path = Path(supplement["resource_metrics_path"])
+        metrics = validate_contract(metrics_path, RESOURCE_SCHEMA)
+        if metrics.get("identity") != expected_identity:
+            raise ReportError("RESOURCE_SUPPLEMENT_IDENTITY_MISMATCH")
+    if metrics and unit["harness"]["id"] == "workbuddy" and supplement is None:
+        request_metric = metrics.get("metrics", {}).get("requests", {}).get("request_count", {})
+        if request_metric.get("basis") == "One exact WorkBuddy native request is bound":
+            # Older collectors counted the user turn, not model responses.
+            request_metric.update(value=None, status="unavailable", basis="Legacy WorkBuddy top-level request count is not a model response count; JSONL supplement required")
+            metrics["collection"].setdefault("coverage", {})["request_count"] = {"known": 0, "total": None, "unit": "model_response"}
+            metrics["collection"].get("known_subtotals", {}).pop("request_count", None)
     resource = {field: metric_observation(metrics, field) for field, _, _ in RESOURCE_FIELDS}
     judge = score.get("judge") if score else None
     components = score.get("components") if score else None
@@ -638,6 +691,8 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
             "execution_record_sha256": sha256_file(execution_path),
             "score_sha256": sha256_file(score_path) if score_path else None,
             "resource_metrics_sha256": sha256_file(metrics_path) if metrics_path else None,
+            "resource_supplement_sha256": supplement["supplement_sha256"] if supplement else None,
+            "base_resource_metrics_sha256": supplement["base_resource_sha256"] if supplement else None,
         },
     }
 

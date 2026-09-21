@@ -2,6 +2,13 @@
   "schema_version": "wildclawbench.e2e-shared-source-catalog/v1",
   "components": [
     {
+      "name": "workbuddy-jsonl-metrics",
+      "version": "0.1.0",
+      "source_root": "tools/report/e2e-shared/workbuddy-jsonl-metrics",
+      "vendor_root": "vendor/e2e-shared/workbuddy-jsonl-metrics",
+      "entrypoints": ["index.mjs"]
+    },
+    {
       "name": "desktop-runtime",
       "version": "1.0.0",
       "source_root": "tools/report/e2e-shared/desktop-runtime",

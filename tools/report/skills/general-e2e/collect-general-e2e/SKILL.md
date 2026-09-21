@@ -15,7 +15,7 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 python -m eval_general_e2e skills --name collect-general-e2e --json
 ```
 
-当前 `0.6.1/operational` 支持 AstronStudio macOS 的完整采集阶段：精确归档原生 turn、生成标准 transcript 和资源指标、收口任务进程、冻结终态候选，并生成正式执行回执。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+当前 `0.7.0/operational` 支持 AstronStudio 与 WorkBuddy macOS 采集；WorkBuddy 新增原生 session JSONL 的模型响应数、Token 和缓存读取归档。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
 
 新增通用 [CB-B 收口接口](references/general-finalization.md) 接受 CB-A 状态与 trace-index v2，保留多个原始文件和 nullable 原生 ID。必须提供真实平台进程清理 hook；WorkBuddy 已有运行时采集和真实 macOS cleanup/finalizer canary，入口见 [WorkBuddy 收口入口](drivers/workbuddy/finalize.mjs)；完整评分准入仍待验。QwenWork 仍需原生采集与真机收口验收。
 
@@ -37,6 +37,10 @@ node execute-general-e2e/drivers/workbuddy/preflight.mjs --skill-root /absolute/
 终态来源、原始 trace 文件、resource metrics 和 cleanup 前后进程快照，才能进入正式 collect。
 
 ## 正式收口流程
+
+WorkBuddy collector 默认在 `~/.workbuddy/projects` 查找唯一 `<sessionId>.jsonl`，可用 `--native-projects-root` 指定安装数据根。校验 session/cwd、运行时 trace ID、原始 Prompt（或客户端 user_query 包装）、工具调用集合和回复一致后，复用公共解析器按 `providerData.messageId` 去重。一个响应中的多个工具只算一次模型响应，usage 的 raw/归一化副本不重复相加。`request_count` 是已落盘模型响应数，HTTP 失败重试另为 unavailable；缓存读取是输入 Token 的子集。JSONL 缺失时模型响应数为 null，不能用顶层会话请求数代替；错会话、Prompt 或 usage 冲突失败关闭。
+
+对已经冻结且评分完成的 unit，使用[WorkBuddy 指标补采](drivers/workbuddy/README.md)新增独立补充证据。它不覆盖 execution record、候选、评分或旧回执；将新增 evidence 随 `package-return` 交付，使用 report `>=0.3.0` 复算并生成新报告。
 
 先用下述两个子能力生成并校验 trace 与 resource metrics，再运行正式收口器：
 

@@ -56,7 +56,7 @@
       "name": "collect-general-e2e",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/collect-general-e2e",
-      "components": ["desktop-runtime", "resource-metrics", "workspace-integrity", "general-contracts", "task-process-cleanup", "workbuddy-evidence"]
+      "components": ["desktop-runtime", "resource-metrics", "workspace-integrity", "general-contracts", "task-process-cleanup", "workbuddy-evidence", "workbuddy-jsonl-metrics"]
     },
     {
       "name": "orchestrate-general-e2e",
@@ -74,7 +74,7 @@
       "name": "report-general-e2e",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/report-general-e2e",
-      "components": ["general-contracts"]
+      "components": ["general-contracts", "resource-metrics", "workbuddy-jsonl-metrics"]
     },
     {
       "name": "run-general-e2e",

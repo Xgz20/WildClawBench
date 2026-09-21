@@ -15,7 +15,7 @@ description: 校验并汇总 General E2E submission 和回传包，生成同源 
 python -m eval_general_e2e skills --name report-general-e2e --json
 ```
 
-`0.2.2/operational` 已支持从批次导入选择生成正式报告，并兼容 UI 展示的推理强度大小写与 manifest 规范值。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
+`0.3.0/operational` 支持从批次导入选择生成正式报告，以及 WorkBuddy 已冻结评分后的 JSONL 指标补采。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
 
 ## 责任边界
 
@@ -42,6 +42,8 @@ python scripts/report_general_e2e.py validate-inputs \
 ```
 
 校验会重算已选 package 的成员 SHA、package ID、unit manifest、collect/package/import receipt、submission、execution record、score 和 resource metrics；导入后的漂移仍会失败。
+
+若回传包含 `unit/evidence/resource-supplements/<task-id>/`，报告端用随包 `workbuddy-jsonl-metrics` 组件重验原 execution/resource/collect receipt 的 SHA、session/cwd/Prompt/请求归属，并复算每个补采数值。验证命令需要 Node（默认 PATH，可用 `GENERAL_E2E_NODE` 指定）。失败不能回退为旧值。补采仅替换报告的资源观测；score、submission 与原 execution record 保持原哈希，JSON lineage 同时保留新旧指标及补充清单哈希。旧 WorkBuddy 顶层 request=1 不能继续冒充模型调用次数，未补采时该值展示为 unavailable。
 
 ## 生成报告
 

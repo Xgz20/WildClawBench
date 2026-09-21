@@ -14,6 +14,8 @@ import {
 } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { homedir } from "node:os";
+import { discoverJsonl, parseBoundJsonl, applyJsonlMetrics, withoutModelResponseCount } from "../../vendor/e2e-shared/workbuddy-jsonl-metrics/index.mjs";
 
 import {
   collectWorkBuddyGeneralEvidence,
@@ -121,6 +123,7 @@ function parseArgs(argv) {
     ["--journal-file", "journalFile"],
     ["--state-file", "stateFile"],
     ["--history-root", "historyRoot"],
+    ["--native-projects-root", "nativeProjectsRoot"],
     ["--output-root", "outputRoot"],
   ]);
   for (let index = 0; index < argv.length; index += 1) {
@@ -340,7 +343,24 @@ export async function collectWorkBuddyEvidence(options) {
       writeResourceMetrics: false,
       collectedAt: options.collectedAt || new Date().toISOString(),
     });
-    const resource = rebaseResourceMetrics(evidence.resource_metrics, { bytes: collectedStateBytes }, evidence);
+    let resource = rebaseResourceMetrics(evidence.resource_metrics, { bytes: collectedStateBytes }, evidence);
+    resource = withoutModelResponseCount(resource);
+    if (runtimeEvidence) {
+      const native = await discoverJsonl(options.nativeProjectsRoot || join(homedir(), ".workbuddy/projects"), state.session.session_id);
+      if (native) {
+        const parsed = parseBoundJsonl(native.bytes, {
+          snapshot: runtimeEvidence.value.runtime_snapshot, session: state.session, promptSha256: state.prompt.sha256,
+        });
+        const name = "raw/workbuddy-session.jsonl";
+        await writeFile(join(stage, "trace", name), native.bytes, { flag: "wx", mode: 0o600 });
+        evidence.trace_index.raw_trace.push(artifact(name, native.bytes));
+        const indexBytes = jsonBytes(evidence.trace_index);
+        await writeFile(join(stage, "trace/trace-index.json"), indexBytes);
+        evidence.trace_index_artifact = artifact("trace-index.json", indexBytes);
+        resource = rebaseResourceMetrics(resource, { bytes: collectedStateBytes }, evidence);
+        resource = applyJsonlMetrics(resource, parsed, artifact(`trace/${name}`, native.bytes));
+      }
+    }
     await writeFile(join(stage, "resource-metrics.json"), jsonBytes(resource), { flag: "wx", mode: 0o600 });
     await rename(stage, outputRoot);
   } catch (error) {
