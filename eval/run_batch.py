@@ -28,6 +28,7 @@ from src.agents.hermesagent import HermesAgentAgent
 from src.agents.minimax_code import MiniMaxCodeAgent
 from src.agents.opencode import OpenCodeAgent
 from src.agents.openclaw import OpenClawAgent
+from src.agents.zcode import ZCodeAgent
 from src.utils.cli_args import parse_run_batch_args
 from src.utils.endpoint_utils import (
     normalize_openrouter_base_url_for_claudecode,
@@ -116,6 +117,7 @@ GRADE_ON_ERROR_BACKENDS = (
     OpenClawAgent,
     DeepSeekHarnessAgent,
     MiniMaxCodeAgent,
+    ZCodeAgent,
     HermesAgentAgent,
 )
 
@@ -126,6 +128,7 @@ WORKSPACE_CHANGE_BACKENDS = (
     OpenCodeAgent,
     DeepSeekHarnessAgent,
     MiniMaxCodeAgent,
+    ZCodeAgent,
 )
 
 _RUN_CONFIG_CREDENTIAL_ENV_NAMES = (
@@ -257,9 +260,13 @@ def _build_run_configuration(
             "rerun_anomalous": bool(getattr(args, "rerun_anomalous", False)),
             "pass_threshold": getattr(args, "pass_threshold", None),
             "requested_api": (
-                getattr(args, "mcode_api", None)
-                if getattr(args, "agent_backend", None) == "minimax-code"
-                else getattr(args, "dsh_api", None)
+                getattr(args, "zcode_api", None)
+                if getattr(args, "agent_backend", None) == "zcode"
+                else (
+                    getattr(args, "mcode_api", None)
+                    if getattr(args, "agent_backend", None) == "minimax-code"
+                    else getattr(args, "dsh_api", None)
+                )
             ),
             "api": getattr(backend, "api", None),
             "image": getattr(backend, "image", None),
@@ -418,6 +425,8 @@ def _build_agent_backend(args) -> BaseAgent:
         return DeepSeekHarnessAgent(api=args.dsh_api)
     if args.agent_backend == "minimax-code":
         return MiniMaxCodeAgent(api=args.mcode_api)
+    if args.agent_backend == "zcode":
+        return ZCodeAgent(api=args.zcode_api)
     if args.agent_backend == "hermesagent":
         return HermesAgentAgent(
             openrouter_api_key=OPENROUTER_API_KEY,

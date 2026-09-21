@@ -32,7 +32,7 @@ from typing import Callable
 
 CATEGORIES = ("success", "failure", "format_error", "unclear")
 REPORT_FORMAT_HARNESSES = frozenset(
-    {"opencode", "deepseek-harness", "hermesagent", "minimax-code"}
+    {"opencode", "deepseek-harness", "hermesagent", "minimax-code", "zcode"}
 )
 
 # classifier 签名：(tool_name, content, status) -> category(∈ CATEGORIES)
@@ -887,6 +887,19 @@ def classify_minimax_code(tool_name: str, content: str, status: str = "") -> str
     return "success" if content else "unclear"
 
 
+def classify_zcode(tool_name: str, content: str, status: str = "") -> str:
+    """ZCode：使用原生 tool.updated 终态转换出的 status。"""
+    _ = tool_name
+    st = (status or "").strip().lower()
+    if st in {"completed", "success", "ok"}:
+        return "success"
+    if st in {"error", "failed", "failure", "denied"}:
+        return "failure"
+    if st in {"running", "pending"}:
+        return "unclear"
+    return "success" if content else "unclear"
+
+
 def classify_hermesagent(tool_name: str, content: str, status: str = "") -> str:
     """HermesAgent：优先读取工具结果 JSON 中的 status/success 字段。"""
     _ = tool_name
@@ -938,6 +951,7 @@ register_classifier(("opencode",), classify_opencode)
 register_classifier(("openclaw", "astronclaw"), classify_openclaw)
 register_classifier(("deepseek-harness",), classify_deepseek_harness)
 register_classifier(("minimax-code",), classify_minimax_code)
+register_classifier(("zcode",), classify_zcode)
 register_classifier(("hermesagent",), classify_hermesagent)
 register_classifier(("claudecode",), classify_claudecode)
 

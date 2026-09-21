@@ -50,7 +50,7 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
         choices=[
             "openclaw", "astronclaw", "claudecode", "codex",
             "hermesagent", "astroncode", "opencode", "deepseek-harness",
-            "minimax-code",
+            "minimax-code", "zcode",
         ],
         help="Agent backend implementation (default: openclaw)",
     )
@@ -70,6 +70,15 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
         help=(
             "MiniMax Code provider wire API; falls back to MCODE_API, "
             "then openai-completions"
+        ),
+    )
+    parser.add_argument(
+        "--zcode-api",
+        choices=["openai-responses", "openai-chat-completions", "anthropic-messages"],
+        default=None,
+        help=(
+            "ZCode provider wire API; falls back to ZCODE_API, "
+            "then openai-responses"
         ),
     )
     parser.add_argument(

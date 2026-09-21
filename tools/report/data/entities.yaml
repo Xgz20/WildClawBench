@@ -199,3 +199,8 @@ harnesses:
     family: MiniMax Code
     aliases: []
     capabilities: {}
+  zcode:
+    display_name: ZCode
+    family: ZCode
+    aliases: []
+    capabilities: {}

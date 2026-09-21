@@ -1,0 +1,77 @@
+#!/bin/sh
+set -eu
+
+: "${ZCODE_MODEL_ID:?ZCODE_MODEL_ID is required}"
+: "${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required}"
+: "${OPENROUTER_BASE_URL:?OPENROUTER_BASE_URL is required}"
+
+ZCODE_API="${ZCODE_API:-openai-responses}"
+ZCODE_TIMEOUT_SECONDS="${ZCODE_TIMEOUT_SECONDS:-300}"
+ZCODE_RUNTIME_ROOT="${ZCODE_RUNTIME_ROOT:-/tmp/wildclaw_zcode}"
+
+case "${ZCODE_API}" in
+  openai-responses) provider_kind=openai ;;
+  openai-chat-completions) provider_kind=openai-compatible ;;
+  anthropic-messages) provider_kind=anthropic ;;
+  *)
+    echo "ZCODE_API must be openai-responses, openai-chat-completions, or anthropic-messages" >&2
+    exit 2
+    ;;
+esac
+case "${ZCODE_TIMEOUT_SECONDS}" in
+  ''|*[!0-9]*|0)
+    echo "ZCODE_TIMEOUT_SECONDS must be a positive integer" >&2
+    exit 2
+    ;;
+esac
+
+mkdir -p /root/.zcode/cli "${ZCODE_RUNTIME_ROOT}" /tmp_workspace
+export ZCODE_DATA_BASE_DIR="${ZCODE_RUNTIME_ROOT}"
+export ZCODE_STORAGE_DIR="${ZCODE_RUNTIME_ROOT}/storage"
+export ZCODE_PROVIDER_KIND="${provider_kind}"
+
+# The legacy standalone config is an officially supported one-time import
+# boundary. Both this file and the canonical personal overlay it creates live
+# only in the task container and are never exported by the WildClawBench runner.
+node <<'NODE'
+const fs = require('node:fs');
+const model = process.env.ZCODE_MODEL_ID;
+const config = {
+  model: { main: `wildclawbench/${model}` },
+  provider: {
+    wildclawbench: {
+      source: 'custom',
+      kind: process.env.ZCODE_PROVIDER_KIND,
+      name: 'WildClawBench',
+      options: {
+        apiKey: process.env.OPENROUTER_API_KEY,
+        baseURL: process.env.OPENROUTER_BASE_URL,
+      },
+      models: {
+        [model]: {
+          id: model,
+          name: model,
+          tool_call: true,
+          contextWindow: 262144,
+        },
+      },
+    },
+  },
+  features: { mcp: false, memory: false, skill: true },
+  plugins: { enabled: false },
+};
+fs.writeFileSync('/root/.zcode/cli/config.json', JSON.stringify(config, null, 2), {
+  encoding: 'utf8',
+  mode: 0o600,
+});
+NODE
+
+# ZCode custom providers do not yet expose a stable CLI reasoning-level flag.
+# ZCODE_THINKING_REQUESTED is retained for execution_status provenance only.
+exec timeout --signal=TERM --kill-after=10s "${ZCODE_TIMEOUT_SECONDS}s" \
+  zcode \
+  --prompt "$1" \
+  --cwd /tmp_workspace \
+  --mode yolo \
+  --output-format stream-json \
+  --no-color

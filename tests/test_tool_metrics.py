@@ -717,6 +717,19 @@ class ParseIntegrationTest(unittest.TestCase):
         self.assertEqual(report_metrics["success"], 1)
         self.assertEqual(report_metrics["unclear"], 1)
 
+    def test_zcode_uses_native_tool_updated_status(self):
+        lines = [
+            _codex_line("assistant", _tool_use("z1", "Bash", {"command": "true"})),
+            _codex_line("user", _tool_result("z1", "ok", "completed")),
+            _codex_line("assistant", _tool_use("z2", "Read", {"path": "missing"})),
+            _codex_line("user", _tool_result("z2", "not found", "error")),
+        ]
+        path = self._write("chat_zcode.jsonl", "\n".join(lines) + "\n")
+        metrics = parse_tool_metrics(path, "zcode")
+        self.assertEqual(metrics["total"], 2)
+        self.assertEqual(metrics["success"], 1)
+        self.assertEqual(metrics["failure"], 1)
+
     def test_deepseek_report_format_uses_native_request_schema(self):
         run_dir = Path(self.tmp.name) / "run"
         session_dir = run_dir / "dsh_sessions" / "session-1"

@@ -841,6 +841,36 @@ class AnomalyDetectionTest(unittest.TestCase):
         finally:
             temp_dir.cleanup()
 
+    def test_zcode_native_trace_exposes_model_api_rate_limit(self) -> None:
+        temp_dir, run_dir = self.make_run()
+        try:
+            event = {
+                "type": "turn.failed",
+                "eventId": "event-1",
+                "sessionId": "session-1",
+                "turnId": "turn-1",
+                "traceId": "trace-1",
+                "seq": 1,
+                "timestamp": 1,
+                "payload": {
+                    "turnPhase": "model",
+                    "error": {
+                        "type": "provider",
+                        "message": "HTTP 429 too many requests",
+                    },
+                },
+            }
+            (run_dir / "zcode_trace.jsonl").write_text(
+                json.dumps(event) + "\n", encoding="utf-8"
+            )
+            report = scan_run_dir(run_dir)
+            item = self.item(report, "MODEL_API_RATE_LIMIT")
+            self.assertIsNotNone(item)
+            self.assertEqual(item["attribution"], "external_service")
+            self.assertEqual(item["validity_impact"], "review")
+        finally:
+            temp_dir.cleanup()
+
     def test_docker_failure_while_running_harness_requires_rerun(self) -> None:
         temp_dir, run_dir = self.make_run(events=[])
         try:
