@@ -597,6 +597,9 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         self.assertIn("validation_mode：`acceptance`", prompt)
         self.assertIn("acceptance_id：`G4-03`", prompt)
         self.assertIn("仍须完整执行所有证据、查询、结构化判定、合分", prompt)
+        self.assertIn("每个 `evidence_id` 都必须出现在对应 `query_ids` 的实际返回集合中", prompt)
+        self.assertIn("`SEMANTIC_CITATION_NOT_QUERIED`", prompt)
+        self.assertIn("`SEMANTIC_ABSENCE_COVERAGE_REQUIRED`", prompt)
         self.assertIn(f"score_skill_root：`{SCORE_SKILL.resolve()}`", prompt)
         self.assertIn(
             f"score_skill_entrypoint：`{SCORE_RUNTIME_PATH.resolve()}`", prompt

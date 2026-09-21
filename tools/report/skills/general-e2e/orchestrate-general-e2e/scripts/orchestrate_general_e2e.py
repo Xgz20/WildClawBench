@@ -615,7 +615,7 @@ def _prompt_text(
 
 {rule_instruction}
 
-使用分页查询逐 criterion 查找支持证据和反例，把结构化判定写入新的响应文件并导入；必要证据不足时保留 `unresolved`，不得补零。只有 `verify-score` 通过后才把评分任务报告为完成。
+使用分页查询逐 criterion 查找支持证据和反例，把结构化判定写入新的响应文件并导入；必要证据不足时保留 `unresolved`，不得补零。提交响应前逐项执行以下自检：每个 `evidence_id` 都必须出现在对应 `query_ids` 的实际返回集合中；每个 `judged` criterion 都必须同时标记已检查支持证据和反例；任何“未发生”结论都必须使用无过滤条件分页覆盖完整 transcript，并将 `absence_claim` 与 `complete_event_range_checked` 都设为 `true`。若自检失败，先修正本题响应文件，不要提交会触发 `SEMANTIC_CITATION_NOT_QUERIED` 或 `SEMANTIC_ABSENCE_COVERAGE_REQUIRED` 的响应。只有 `verify-score` 通过后才把评分任务报告为完成。
 
 评分运行注意事项：
 

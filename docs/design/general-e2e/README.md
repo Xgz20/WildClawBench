@@ -22,7 +22,7 @@
 
 原三条并行开发的已接收代码及其控制分支提交映射均已进入当前工作区。Qwen selector/SQLite 加固源 `993cdc5` 对应控制提交 `f0bf24f`；collector/metadata 为 `acfc7a1`、`5263890`、`679a1e3`、`82cd3e1`。Doubao Web finalizer/bridge/route/metrics 为 `9bb30aa`、`694536d`、`07b31b7`、`e2c1d9e`。后续从当前树继续，不能因源提交不是祖先再次 cherry-pick；旧 worktree 仅作审计，暂不删除。
 
-当前七个 General Skill：prepare `0.2.0`、execute `0.10.7`、collect `0.7.3`、orchestrate `0.9.3`、score `0.8.1`、report `0.5.0`、run `0.5.0`。`d688326` 接入 JSONL 模型响应/Token，`5631cbd` 接入原生请求与流程耗时；`dc22851`、`5f6275d`、`957e278` 完成 WorkBuddy 并发回执、路径预检和正式资源收口。v2 5 题 canary 得到模型响应 47、工具 66、总 Token 2,318,336、缓存读取 2,196,992；原生任务耗时 1,230.418 秒、流程耗时 1,415.750 秒，5/5 执行和采集通过，原生请求峰值 3、动态补位 2。评分/回传/报告保留 2 个有效分、2 个评测异常和 1 个容量未评分。[v2 加固 canary](evidence/workbuddy-hardening-20260921/README.md)与原件均保留。后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准；不要把新包身份倒填进旧 smoke。
+当前七个 General Skill：prepare `0.2.0`、execute `0.10.7`、collect `0.7.3`、orchestrate `0.9.4`、score `0.8.1`、report `0.5.0`、run `0.5.0`。`d688326` 接入 JSONL 模型响应/Token，`5631cbd` 接入原生请求与流程耗时；`dc22851`、`5f6275d`、`957e278` 完成 WorkBuddy 并发回执、路径预检和正式资源收口。v2 5 题 canary 得到模型响应 47、工具 66、总 Token 2,318,336、缓存读取 2,196,992；原生任务耗时 1,230.418 秒、流程耗时 1,415.750 秒，5/5 执行和采集通过，原生请求峰值 3、动态补位 2。评分/回传/报告保留 2 个有效分、2 个评测异常和 1 个容量未评分。[v2 加固 canary](evidence/workbuddy-hardening-20260921/README.md)与原件均保留。后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准；不要把新包身份倒填进旧 smoke。
 
 当前报告发行与产物见[用例对比及单元评分详情证据](evidence/general-report-details-20260921/README.md)。`89d13d0` 在既有[单元对比报告](evidence/general-report-comparison-20260921/README.md)基础上，将工具数移到请求数后，明细改为每题各单元得分并列，并增加每单元评分详情，共九张公共表加每单元一张详情；v8 为 10 Sheet。题面、规则和判词读取 SHA 绑定的冻结评分包，缺失不从当前任务源码补齐。总览不显示成本与超时数，双耗时与无根因领导版 Markdown 保留。效率明细按普通输入、缓存命中输入、缓存写入输入、输出四类展示，保留总 Token、平均 Token 和命中率；v8 平均 Token 154693、命中率 91.4086%，缓存写入与精确普通输入仍未知。分类/难度/模态、七维评分和工具次数已接入，工具质量比率暂缓。此次只更新报告，没有新增 Harness 或评分执行，原生三路并发结论不变。
 
@@ -39,7 +39,7 @@
 | Harness | macOS General | Windows General | 下一步与证据 |
 | --- | --- | --- | --- |
 | AstronStudio | **受控生产可用**，x86_64；AStudio 3.3.1；G4-03 五题三槽全链路，后续 `457e355` 双题 smoke 2/2 valid，均分 0.9125 | **暂缓 / NOT_RUN**；共享发现、部分 Windows 代码路径与方案存在，原生执行/采集/评分闭环未验收 | 保留现有结果；新公共基线正式使用前做受影响 canary。[双题证据](evidence/macos-current-smoke-20260919/README.md)、[五题证据](evidence/g4-03/README.md) |
-| WorkBuddy | **5 题 canary 已完成**，5.5.6 / x86_64 / xopglm52 / default-sandbox；5/5 执行和 collect，3 路原生请求峰值、2 次动态补位、每题一次发送，评分/回传/报告闭环；2 个有效分、2 个评测异常、1 个容量未评分，不能把本轮写成 5/5 valid | **暂缓 / NOT_RUN**；现有 Web/共享 Windows 能力不能证明 General 已支持 | 主流程代码与短路径发行已验证。剩余客户端重启/重连、未知授权/追问安全暂停，以及评分异常修复与必要真机回归。[v2 加固 canary](evidence/workbuddy-hardening-20260921/README.md) |
+| WorkBuddy | **5 题 canary 已完成**，5.5.6 / x86_64 / xopglm52 / default-sandbox；5/5 执行和 collect，3 路原生请求峰值、2 次动态补位、每题一次发送，评分/回传/报告闭环；2 个有效分、2 个评测异常、1 个容量未评分，不能把本轮写成 5/5 valid | **暂缓 / NOT_RUN**；现有 Web/共享 Windows 能力不能证明 General 已支持 | 主流程代码、短路径发行和 WorkBuddy 重启故障验证已完成。剩余未知授权/追问安全暂停，以及 0.9.4 新包评分稳定性回归。[v2 加固 canary](evidence/workbuddy-hardening-20260921/README.md) |
 | QwenWork | **开发中，尚无真实发送闭环**；专属 Driver、恢复锁、selector/SQLite 快照、CB-B collector 和 metadata 预检已接入。最近 SLOT04 真机在项目控件歧义处退出，`PROMPT_SENT=0`，无 attempt | **暂缓 / NOT_RUN**；尚无本 General 接入的 Windows 实现交付与真机证据 | WorkBuddy 剩余项之后：验证 selector/probe → 一次发送/同 attempt 恢复 → 正式 collect/cleanup → 评分/回传/报告。[旧失败证据](evidence/qwenwork-macos-slot04-canary-20260919/README.md) |
 | DoubaoWork | **General 尚未接入**；当前 `eval_general_e2e/adapters/` 只有 astronstudio、workbuddy、qwenwork。可复用 discovery 与 Web 专属控制/原生解析经验，但尚无 General Driver、collector/正式回执与闭环 | **暂缓 / NOT_RUN**；Windows 可通过 CDP 自动化是可行性线索，不等于 General 已实现 | QwenWork 收口后接 General；先梳理可复用底层和 General 注册/发行缺口，不直接套 Web receipt |
 
@@ -58,14 +58,14 @@ v2 配置 `run_slots=3`，5 题执行和正式 collect 均通过，原生请求�
 1. **并发回执口径与有效性解耦：已完成**。v2 已分别记录调度占用和原生请求区间，原生峰值 3；并发观测不足不再自动令执行回执无效。
 2. **长路径发送前检查：已完成**。attempt 创建和 UI 操作前均检查扁平化 native project 路径，长路径失败在发送前收口。
 3. **新包 canary：已完成**。仅 5 题、3 路并发；Token/原生耗时、动态补位、恢复不重发、正式 collect、评分、回传和最新报告均已留证。它不是 60 题全量测试，也不替代剩余真机故障矩阵。
-4. **剩余加固**：补 WorkBuddy 客户端执行中重启/重连、未知授权/追问安全暂停与同 attempt 恢复的真机证据；评分侧保留容量错误原 thread、不新开会话，并继续修复评分证据查询错误。Driver README 与本证据已同步，后续不创建平台 worktree。
+4. **剩余加固**：WorkBuddy 客户端执行中重启/重连已完成最小真机验证；仍需补未知授权/追问安全暂停与同 attempt 恢复，以及使用 0.9.4 Prompt 的新包评分稳定性验证。评分侧保留容量错误原 thread、不新开会话。Codex 重启验证暂缓，避免远程控制链路中断。Driver README 与本证据已同步，后续不创建平台 worktree。
 
 无人值守 Worker 崩溃自动恢复、Apple Silicon、Windows、更高并发、60 题全量与裁判校准仍属后续扩容，不作为当前短路径、值守小批次的统一前置条件。缓存写入/精确普通输入未知以及用户暂缓的工具质量比率也不阻塞现有评分与报告。
 
 **加固边界复核（2026-09-21）**：当前已完成身份/目录/Prompt 绑定、发送意图持久化与不确定不重发、排他锁、UI/内部草稿一致性、原生终态检查、轨迹/资源 provenance、候选冻结与哈希复验、评分隔离及回传/报告校验。真实故障证据包括 CDP 提前关闭后同 attempt 恢复且未重发、发送控件/草稿不同步时停止、文档预览被误识别后的定位修复，以及 v4 迟到评分恢复。v8 证明五题完整闭环与完成态 resume，不等于完成故障注入矩阵。
 
 - 进程收口的真实 TERM/KILL 和无关进程保护证据位于 `/Users/gzx/debug-workspace/e2e-evaluate/wb-hardening-20260921/faults/process-cleanup/`；发送临界点强杀 Worker 后同 attempt 不重发证据位于 `/Users/gzx/debug-workspace/e2e-evaluate/wbh1/faults/worker-kill/`。这些是故障验收证据，不混入能力评分。
-- 客户端执行中重启/重连、未知授权/追问、stale lock 无人值守自动恢复仍未形成完整 WorkBuddy 真机矩阵；当前策略是暂停并保留现场，不自动抢占陈旧锁。
+- WorkBuddy 客户端执行中重启/重连已有最小真机证据；未知授权/追问、stale lock 无人值守自动恢复仍未形成完整矩阵，当前策略是暂停并保留现场，不自动抢占陈旧锁。Codex 重启项因远程控制风险暂缓。
 - 下一步只补上述最小真机故障验证和评分稳定性，不扩展到 60 题全量。AstronStudio 历史 MAC 表不能直接作为 WorkBuddy 通过依据；题目 `timeout_seconds` 继续不限制执行或参与评分。
 
 ### 1. QwenWork General：完成真实单题，再扩到小批
