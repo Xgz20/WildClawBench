@@ -4,11 +4,13 @@
 
 指标更正：本页保留初始 collector/report 的冻结结果。其中“请求数 5、Token unavailable”已由[原生 JSONL 补采](../workbuddy-jsonl-metrics-20260921/README.md)更正为模型响应 21、总 Token 773465；执行与评分证据原样保留，请使用补采索引中的新版报告。
 
+耗时与并发更正：后续[原生耗时复核](../workbuddy-native-timing-20260921/README.md)补齐五题原生请求耗时，并确认下表起点是 `prompt.sent_at`。旧 `observed_max_concurrency=3` 表示发送后未结束的任务数；按 `request.timestamp → completedAt` 重算，原生请求重叠峰值为 **2**。本页的三路结论仅限三槽调度，原生三路同时执行仍待验收；原队列回执不改写。最新报告见耗时复核索引。
+
 ## 结论
 
-WorkBuddy 5.5.6 / macOS x86_64 / xopglm52 / default-sandbox 已完成五题默认三路后台执行的 execution → collect → score → return/import → report 全链路。UI 操作始终单槽；队列观测到最大后台并发 3，完成 2 次动态补位，五题各发送一次且均为 `COMPLETED`。完成后使用同一队列参数 `--resume`，五份 dispatch journal SHA-256 均未改变。
+WorkBuddy 5.5.6 / macOS x86_64 / xopglm52 / default-sandbox 已完成五题三槽调度的 execution → collect → score → return/import → report 全链路。UI 操作始终单槽；发送后未结束峰值 3，原生请求峰值 2，完成 2 次动态补位，五题各发送一次且均为 `COMPLETED`。完成后使用同一队列参数 `--resume`，五份 dispatch journal SHA-256 均未改变。
 
-正式 collect、五题 verify-only、回传导入和报告均通过。5/5 为有效评分，`evaluation_error=0`、`unscored=0`，均分 0.8275。该结果证明当前客户端与配置的值守三路主流程；不外推 Apple Silicon、Windows、60 题、无人值守 Worker 崩溃恢复或更高并发。
+正式 collect、五题 verify-only、回传导入和报告均通过。5/5 为有效评分，`evaluation_error=0`、`unscored=0`，均分 0.8275。该结果证明当前客户端与配置的值守三槽调度主流程；不证明原生三路同时执行，不外推 Apple Silicon、Windows、60 题、无人值守 Worker 崩溃恢复或更高并发。
 
 ## 代码和发行身份
 
@@ -21,7 +23,7 @@ WorkBuddy 5.5.6 / macOS x86_64 / xopglm52 / default-sandbox 已完成五题默�
 - catalog digest：`9e5198d76702d0ba7879c7253532bbe7a99a396f4c5c9880682335a08b28fbf7`。
 - 正式分发目录：`report-workspace/general-e2e/releases/workbuddy-three-slot-20260921-v7`。目录和 suite 双重验证通过；生产目录 suite 与真机使用 suite 的 SHA 完全一致。
 
-代码回归：General Node 165/165、布局与打包 Python 24/24；7 Skill 布局、Node 语法和 diff 检查通过。以上回归属于代码证据；真实三路结论来自下述 v8 批次。
+代码回归：General Node 165/165、布局与打包 Python 24/24；7 Skill 布局、Node 语法和 diff 检查通过。以上回归属于代码证据；三槽调度结论来自下述 v8 批次。
 
 ## 执行与并发证据
 
@@ -29,7 +31,7 @@ WorkBuddy 5.5.6 / macOS x86_64 / xopglm52 / default-sandbox 已完成五题默�
 
 队列回执：`x/wb3-v8__wb3/.general-e2e/queues/workbuddy/wb3-v8-receipt.json`，SHA-256 `e0249fe449501fbb8f2021e28ea5a931437d9184c92c43c733cf226f5ca2f76e`。
 
-| task ID | 开始时间 UTC | 完成时间 UTC | dispatch |
+| task ID | 发送时间 UTC（非原生开始） | 完成时间 UTC | dispatch |
 | --- | --- | --- | ---: |
 | `01_Productivity_Flow_task_003_retro_agenda` | 06:51:09.005 | 06:52:10.637 | 1 |
 | `01_Productivity_Flow_task_005_support_handoff` | 06:51:52.415 | 06:54:32.890 | 1 |

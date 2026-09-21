@@ -4,13 +4,13 @@
 
 ## 当前路线与工作边界
 
-先串行完成 **macOS：AstronStudio → WorkBuddy → QwenWork → DoubaoWork 的 General E2E**，进入实际评测，再开展 Windows 支持。AstronStudio 与 WorkBuddy 已有受控生产证据；WorkBuddy 五题默认三路也已完成，下一项是 QwenWork。DoubaoWork 原任务是 Web，现改为优先建设 General；Web 后续收口暂缓。
+先串行完成 **macOS：AstronStudio → WorkBuddy → QwenWork → DoubaoWork 的 General E2E**，进入实际评测，再开展 Windows 支持。AstronStudio 与 WorkBuddy 已有受控生产证据；WorkBuddy 五题三槽调度和报告已闭环，原生请求实际最大重叠为 2，原生三路同时执行尚待独立验收。DoubaoWork 原任务是 Web，现改为优先建设 General；Web 后续收口暂缓。
 
 - 唯一开发目录：`/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench`；分支 `feature/astroncode-eval`。后续直接在当前主工作区开发、验证和提交；控制 worktree 已完成汇入，仅保留审计。
 - 直接在工作区分支串行修改；不创建平台任务、subagent 或新 worktree，不恢复旧并行任务。桌面验证无需申请时段，但操作前检查真实活动任务、草稿、进程和 CDP 身份，保留无关现场。该约束针对开发派发，评分所需的独立 Judge 任务仍按阶段 Skill 创建。
 - 每完成一个可验收事项，更新本文对应行和必要证据索引，运行受影响检查，单独提交中文 `type(scope): 中文说明`。本地提交；当前不 push。
 - 调试、smoke、临时包、运行与评分产物：`/Users/gzx/debug-workspace/e2e-evaluate`。正式发行：主检出的 `report-workspace`。任务产物均在本地。
-- 先用值守单槽验证全链路，再验证五题默认三路执行、动态补位和恢复不重发。**开发串行不等于评测串行**。WorkBuddy 已完成该范围；无人值守 Worker 崩溃恢复、Apple Silicon、更高并发和全量 60 题另行扩容。
+- 先用值守单槽验证全链路，再验证五题默认三路执行、动态补位和恢复不重发。**开发串行不等于评测串行**。WorkBuddy 已完成三槽调度、补位和完成态恢复，不能由发送后未结束的任务数推定原生执行并发；无人值守 Worker 崩溃恢复、Apple Silicon、更高并发和全量 60 题另行扩容。
 - 客户端版本记录为兼容性元数据，不设精确版本白名单；根据实际能力、原生字段、UI 行为与回归证据判断兼容性。冻结的运行/评分包身份仍需校验。
 - 题目 `timeout_seconds` 仅为兼容元数据，**不限制被评测 Harness 总执行时长，也不参与能力评分**。执行等待可信终态、明确异常或人工处理；UI/CDP 操作、启动/停止、身份绑定、进程清理、评分 Worker/API/线程 deadline 继续独立生效。
 
@@ -22,7 +22,7 @@
 
 原三条并行开发的已接收代码及其控制分支提交映射均已进入当前工作区。Qwen selector/SQLite 加固源 `993cdc5` 对应控制提交 `f0bf24f`；collector/metadata 为 `acfc7a1`、`5263890`、`679a1e3`、`82cd3e1`。Doubao Web finalizer/bridge/route/metrics 为 `9bb30aa`、`694536d`、`07b31b7`、`e2c1d9e`。后续从当前树继续，不能因源提交不是祖先再次 cherry-pick；旧 worktree 仅作审计，暂不删除。
 
-当前七个 General Skill：prepare `0.2.0`、execute `0.10.4`、collect `0.7.0`、orchestrate `0.9.2`、score `0.8.1`、report `0.3.0`、run `0.5.0`。WorkBuddy 默认三路已由 v8 真机验收；`d688326` 新增 JSONL 模型响应/Token 采集与不改评分的指标补采。v8 已补采为模型响应 21、工具 19、总 Token 773465、缓存读取 703040，原 5/5 valid 和均分 0.8275 不变。[补采证据与新报告](evidence/workbuddy-jsonl-metrics-20260921/README.md)记录新发行、原件哈希与覆盖范围。后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准；不要把新包身份倒填进旧 smoke。
+当前七个 General Skill：prepare `0.2.0`、execute `0.10.4`、collect `0.7.1`、orchestrate `0.9.2`、score `0.8.1`、report `0.3.2`、run `0.5.0`。`d688326` 接入 JSONL 模型响应/Token，`5631cbd` 接入原生请求与流程耗时，`f681a42` 修复 Excel 耗时依据截断。v8 补采得到模型响应 21、工具 19、总 Token 773465、缓存读取 703040；平均原生请求耗时 61.259 秒、平均流程耗时 102.2896 秒，原 5/5 valid 和均分 0.8275 不变。当前报告、发行、并发口径更正见[耗时补采证据](evidence/workbuddy-native-timing-20260921/README.md)，此前 [Token 补采](evidence/workbuddy-jsonl-metrics-20260921/README.md)和原件均保留。后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准；不要把新包身份倒填进旧 smoke。
 
 本机 Python 使用 `/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python`；Node 测试启动 Python 子进程时同时设置 `PYTHON` 并将本工作区 `.venv/bin` 放到 PATH 前部，避免回落到旧系统 Python。各 Driver 使用自身 package-lock 安装依赖，不借用旧平台 worktree 的 node_modules。
 
@@ -35,17 +35,17 @@
 | Harness | macOS General | Windows General | 下一步与证据 |
 | --- | --- | --- | --- |
 | AstronStudio | **受控生产可用**，x86_64；AStudio 3.3.1；G4-03 五题三槽全链路，后续 `457e355` 双题 smoke 2/2 valid，均分 0.9125 | **暂缓 / NOT_RUN**；共享发现、部分 Windows 代码路径与方案存在，原生执行/采集/评分闭环未验收 | 保留现有结果；新公共基线正式使用前做受影响 canary。[双题证据](evidence/macos-current-smoke-20260919/README.md)、[五题证据](evidence/g4-03/README.md) |
-| WorkBuddy | **主流程受控生产可用**，5.5.6 / x86_64 / xopglm52 / default-sandbox；五题默认三路执行、2 次动态补位、collect、评分、回传和报告完成，5/5 valid，均分 0.8275 | **暂缓 / NOT_RUN**；现有 Web/共享 Windows 能力不能证明 General 已支持 | 三路发行可用于正式批次前 canary；无人值守 Worker 崩溃恢复等另验。[三路 v8 证据](evidence/workbuddy-macos-general-v8-three-slot-20260921/README.md)、[单槽 v4 证据](evidence/workbuddy-macos-general-v4-20260921/README.md) |
-| QwenWork | **开发中，尚无真实发送闭环**；专属 Driver、恢复锁、selector/SQLite 快照、CB-B collector 和 metadata 预检已接入。最近 SLOT04 真机在项目控件歧义处退出，`PROMPT_SENT=0`，无 attempt | **暂缓 / NOT_RUN**；尚无本 General 接入的 Windows 实现交付与真机证据 | **当前下一项**：验证 selector/probe → 一次发送/同 attempt 恢复 → 正式 collect/cleanup → 评分/回传/报告。[旧失败证据](evidence/qwenwork-macos-slot04-canary-20260919/README.md) |
+| WorkBuddy | **主流程受控生产可用**，5.5.6 / x86_64 / xopglm52 / default-sandbox；五题三槽调度、2 次动态补位、collect、评分、回传和报告完成，5/5 valid，均分 0.8275；原生请求最大重叠 **2**，原生三路未验收 | **暂缓 / NOT_RUN**；现有 Web/共享 Windows 能力不能证明 General 已支持 | 耗时已补齐；剩余原生三路重叠验收，不影响已声明范围使用。无人值守 Worker 崩溃恢复等另验。[耗时与并发复核](evidence/workbuddy-native-timing-20260921/README.md)、[单槽 v4 证据](evidence/workbuddy-macos-general-v4-20260921/README.md) |
+| QwenWork | **开发中，尚无真实发送闭环**；专属 Driver、恢复锁、selector/SQLite 快照、CB-B collector 和 metadata 预检已接入。最近 SLOT04 真机在项目控件歧义处退出，`PROMPT_SENT=0`，无 attempt | **暂缓 / NOT_RUN**；尚无本 General 接入的 Windows 实现交付与真机证据 | WorkBuddy 剩余项之后：验证 selector/probe → 一次发送/同 attempt 恢复 → 正式 collect/cleanup → 评分/回传/报告。[旧失败证据](evidence/qwenwork-macos-slot04-canary-20260919/README.md) |
 | DoubaoWork | **General 尚未接入**；当前 `eval_general_e2e/adapters/` 只有 astronstudio、workbuddy、qwenwork。可复用 discovery 与 Web 专属控制/原生解析经验，但尚无 General Driver、collector/正式回执与闭环 | **暂缓 / NOT_RUN**；Windows 可通过 CDP 自动化是可行性线索，不等于 General 已实现 | QwenWork 收口后接 General；先梳理可复用底层和 General 注册/发行缺口，不直接套 Web receipt |
 
 DoubaoWork Web 的历史进展单独保留：一次开发 canary 已发送且产生 `countdown/index.html`，仍为 `NEEDS_ATTENTION`；UI 等价绑定、Prompt 回读、cleanup 候选模块、driver-side finalizer、内存 receipt bridge、公共路由和 metrics 已有离线实现。公共 route 仍拒绝 batch/formal receipt；可信终态/工作目录证据、真实 cleanup、正式 execution/receipt、评分/报告均未闭环。它既不是 Web 生产准入，也不是 General 完成。详见[历史 Web 任务卡](../e2e/collaboration/tasks/MAC-DOUBAOWORK-WEB.md)和[等价证据方案](../e2e/collaboration/doubaowork-web-integration.md)，其中旧调度安排不再执行。
 
 ## 下一会话直接做什么
 
-### 已完成：WorkBuddy General 五题默认三路执行
+### WorkBuddy：耗时已补齐，剩余原生三路重叠验收
 
-v8 保持 UI 单槽，真实观测 `run_slots=3`、最大并发 3、2 次动态补位、每题一次发送，并完成 collect、评分、回传、报告和与真机同 SHA 的正式发行。旧 v4 单槽产物和成绩保持原身份。长路径失败批次及短路径要求见[证据索引](evidence/workbuddy-macos-general-v8-three-slot-20260921/README.md)。
+v8 保持 UI 单槽，配置 `run_slots=3`、发送后未结束峰值 3、原生请求实际重叠峰值 2、2 次动态补位、每题一次发送，并完成 collect、评分、回传、报告。耗时补采仅使用冻结原件，不重跑 Harness/Judge。原生三路同时执行仍未证明：下一次验证应分开记录发送/排队与原生开始，选足够长的三题观测请求区间，禁止仅以 `run_slots` 或旧队列峰值宣称通过。此次未启动新验证或任何平台任务。旧 v4/v8 产物和成绩保持原身份；长路径失败及短路径要求见[证据索引](evidence/workbuddy-macos-general-v8-three-slot-20260921/README.md)。
 
 ### 1. QwenWork General：完成真实单题，再扩到小批
 
@@ -69,7 +69,7 @@ macOS 四个 Harness 达到声明范围的全链路准入后，使用冻结数�
 
 - Windows：整体暂缓，macOS 四个 General 收口后再启动；先 AstronStudio，其他三个按需求串行。保留[Windows 实施清单](AstronStudio-Windows通用E2E开发启动包.md)，没有 Windows 真机证据就保持 NOT_RUN。
 - COMMON-CM01：异常率、工具调用成功率、平均积分、输入缓存命中率、平均 Token 的统一实现/原生对账仍未完成；[指标盘点](Web与通用E2E指标盘点及Harness可行性分析.md)是历史分析。它不阻塞已明确接口的客户端接入；已知小计、coverage、null 语义继续保留，不能把工具 completed 当成业务 success。
-- 默认三路执行是各新 Harness 单槽闭环后的接入目标；WorkBuddy 已完成。更高并发、无人值守恢复、Apple Silicon、裁判校准分别立项。
+- 默认三路执行是各新 Harness 单槽闭环后的接入目标；WorkBuddy 已验证三槽调度，原生三路重叠仍待验收。更高并发、无人值守恢复、Apple Silicon、裁判校准分别立项。
 
 ## 新会话 Prompt
 
@@ -77,7 +77,7 @@ macOS 四个 Harness 达到声明范围的全链路准入后，使用冻结数�
 继续 WildClawBench 的 macOS General E2E 串行开发。
 唯一修改目录：/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench
 分支：feature/astroncode-eval。
-先检查该工作区的 Git 状态，读取 docs/design/general-e2e/README.md，按其中“下一会话直接做什么”推进 QwenWork General 的真实单题闭环。
+先检查该工作区的 Git 状态，读取 docs/design/general-e2e/README.md，按其中“下一会话直接做什么”推进 WorkBuddy 原生三路重叠验收，再进入 QwenWork General 的真实单题闭环。
 如果 README 已记录该项完成，则执行其下一项；以仓库当前记录和本机证据为准，不依赖旧聊天。
 直接在当前工作区分支串行迭代，不创建平台任务、subagent 或 worktree，不申请桌面时段，不 push。
 每完成一个事项，补充真实证据和 README 对应进度，运行必要检查并单独提交中文 Conventional Commit。

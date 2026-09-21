@@ -2,6 +2,8 @@
 
 2026-09-21，在工作区分支 `feature/astroncode-eval` 完成采集修复及 v8 旧产物补采。实现提交 `d6883269eb2a94799e27e8fcdd951edb72bb3e92`；collect Skill `0.7.0`、report Skill `0.3.0`、新增共享组件 `workbuddy-jsonl-metrics 0.1.0`。
 
+后续[原生耗时补采](../workbuddy-native-timing-20260921/README.md)已生成包含 Token 与耗时的新报告；本页 Token 数据、补采目录及旧包均保留。原生请求重叠峰值复核为 2，历史“默认三路已验收”收窄为三槽调度已验收。
+
 ## 更正与验证范围
 
 旧 General collector 只读取 runtime API 的顶层 `request.usage={}`，并把一个用户请求计为一个模型请求。客户端实际已把每次模型响应的 `providerData.rawUsage / usage` 写入 `~/.workbuddy/projects/<编码工作目录>/<sessionId>.jsonl`。本次复用公共解析器，以 session/cwd、runtime trace ID、原 Prompt/user_query、工具调用集合和回复内容核对归属，按 `providerData.messageId` 去重；多个工具和三种 usage 镜像不重复累加。
@@ -40,4 +42,4 @@
 
 General Node 170/170；Python 布局/打包/报告/回传 47/47；源码布局和 diff 检查通过。新增测试覆盖多工具去重、缺失覆盖、raw/normalized 冲突、跨会话/请求/Prompt/工具集合/回复污染、补采不可覆盖，以及修改指标并重算清单哈希仍被复算拒绝。新 collector 生成的含 JSONL 证据通过通用 finalizer；真实 v8 补采五题及新回传报告验证通过。Excel 四 Sheet、四个关键范围、公式扫描和四张预览通过。
 
-本次验收是已有原生日志的采集/补采/回传/报告验证；没有用新 suite 再执行五题。既有三路真机结论仍对应 v8 原执行源码与冻结身份。
+本次验收是已有原生日志的采集/补采/回传/报告验证；没有用新 suite 再执行五题。既有三槽调度真机结论仍对应 v8 原执行源码与冻结身份，不证明原生三路请求同时执行。
