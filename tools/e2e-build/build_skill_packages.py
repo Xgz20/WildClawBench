@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import runpy
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -314,6 +315,12 @@ def stage_skill(
         component_target = destination / component["vendor_root"]
         _copy_regular_tree(component_source, component_target)
         component_rows.append(_component_manifest_row(repo_root, component, source_revision))
+
+    if "report-reference-data" in skill["components"]:
+        # Compile canonical YAML once; standalone report runtimes need no PyYAML.
+        helper = runpy.run_path(str(source / "scripts/report_views.py"))
+        reference = helper["reference_payload"](repo_root / components["report-reference-data"]["source_root"])
+        write_json(destination / "data/report-reference.json", reference)
 
     bundled_components = {
         "schema_version": BUNDLED_COMPONENTS_SCHEMA,

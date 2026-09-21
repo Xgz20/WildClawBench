@@ -15,7 +15,7 @@ description: 校验并汇总 General E2E submission 和回传包，生成同源 
 python -m eval_general_e2e skills --name report-general-e2e --json
 ```
 
-`0.3.2/operational` 支持从批次导入选择生成正式报告，以及 WorkBuddy 已冻结评分后的 JSONL 和原生耗时补采，Excel 耗时依据自动适配行高。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
+`0.4.0/operational` 支持按模型@Harness 展示 General 结果、效率和维度对比，生成不含根因分析的领导版 Markdown、Excel 与单独审计报告。保留 WorkBuddy 已冻结评分后的 JSONL 和耗时补采。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
 
 ## 责任边界
 
@@ -57,15 +57,16 @@ python scripts/report_general_e2e.py generate \
   --node-modules /absolute/path/to/node_modules
 ```
 
-默认渲染四个工作表及其 PNG 预览。只有明确不需要预览时才传 `--skip-preview`；这不会跳过工作簿结构、关键范围和公式错误扫描。
+默认渲染九个工作表及其 PNG 预览，顺序为：总览、效率对比、分类对比、难度对比、Agent能力对比、模态对比、工具调用对比、用例明细、资源覆盖与异常。只有明确不需要预览时才传 `--skip-preview`；这不会跳过工作簿结构、关键范围和公式错误扫描。
 
 `--output-dir` 必须位于 batch root 内，使 report receipt 的 artifact 路径能由 `run-general-e2e` 以 batch root 为基准重验。最终目录必须不存在或为空；生成器使用同父目录暂存并原子发布。
 
 ## 输出
 
 - `general_e2e_report_data.json`：唯一可复算数据源。
-- `通用场景端到端自动化评测报告.md`：读者版报告。
-- `通用场景端到端自动化评测报告.xlsx`：四 Sheet 报告。
+- `通用场景端到端自动化评测报告.md`：不带根因分析的领导版报告，与 Excel 使用同一组单元对比表。
+- `通用场景端到端评测审计.md`：执行状态、裁判协议、资源覆盖及谱系，保留异常、未评分和历史状态。
+- `通用场景端到端自动化评测报告.xlsx`：九 Sheet 报告。
 - `previews/excel-validation.json`：Sheet、关键范围和公式错误扫描记录。
 - `previews/*.png`：各 Sheet 视觉检查图（未使用 `--skip-preview` 时）。
 - `cli-adapter/`：`score.json / usage.json / execution_status.json / task_output.json` 兼容视图；异常和缺失仍为 `null`，不会补零。
@@ -78,5 +79,15 @@ python scripts/report_general_e2e.py generate \
 - 分类、难度、unit 与裁判协议均复用同一任务运行集合；裁判按 protocol、model、reasoning effort 分组。
 - 每个资源字段独立统计。仅所有任务运行均完整覆盖时写 `total`；否则为 `null`，并展示 `known_subtotal`、任务运行覆盖和原生事件覆盖。
 - 批次壁钟按最早任务开始至最晚任务结束计算；任务耗时之和单独展示。
+
+## 对比报告口径
+
+- 总览每个 `模型@Harness` 一行，优先使用执行记录中已核验的实际模型；无法确认显示“未知模型”，单个 unit 中实际模型混杂时显式显示“混合模型”。显示名重复时加 unit ID，不能自动合并。
+- 总览不展示成本、超时数；拆分“任务耗时(s)”（原生请求/Agent 耗时之和）与“流程耗时(s)”（含发送及等待）。保留有效评分数、未评分数；评测异常数按执行基础设施异常或评分异常的任务并集计数。完成率仅指原生正常完成率，不是正确率。
+- 效率对比：总 token、平均 token、输入、输出、缓存输入、缓存输出（Cache Write）、缓存命中率。平均 token 分母为冻结任务运行数；Cache Write 映射 `cache_creation_input_tokens`，有可信数据才统计，缺失显示 `-`。输入缓存命中率是缓存读取输入 token 总量除以输入 token 总量，输入为 0 或覆盖不全时为空；不能平均逐题命中率或把缓存再次加入总 token。
+- 工具指标本版只展示调用数与按工具名分组的已知数量，标准 transcript 中每题 call ID 去重，与原指标对账后标注明细覆盖。`completed` 不等于工具成功；不实现格式准确率、执行成功率、不确定占比。
+- 七维能力复用公共 `checkpoint_capability_map7.yaml`。自动检查点来自评分引用并带 SHA 的 `rule-component.json/raw_scores`；语义检查点来自 score.criteria，按规则/语义命名空间对齐。任务内映射检查点均值再对任务取均值，缺少任一映射检查点的该任务不进入该维度；同时披露有效/涉及样本数，缺失不补零。不重做判分、不把任务总分替代未映射检查点。
+- 构建时冻结公共实体显示名和能力映射为 `data/report-reference.json`，随包携带 canonical YAML 及 SHA；脱仓报告无需 PyYAML。公共字典来源在 JSON 和资源审计表保留。
+- 分数展示统一为 0–100；底层评分与 CLI adapter 保持 0–1。Excel 和领导 Markdown 都读取 `presentation.tables`，禁止在渲染层另算分数。单元题目范围不同或模型/Harness 同时改变时，明确属于组合对照，不做单因果归因。
 
 更多字段说明见 [报告数据与 CLI 适配](references/report-data-and-cli.md)。

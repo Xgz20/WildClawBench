@@ -447,8 +447,12 @@ class ReportGeneralE2ETests(unittest.TestCase):
     def test_markdown_and_receipt_use_the_same_aggregate(self) -> None:
         data = self.data()
         markdown = REPORT.render_markdown(data)
-        self.assertIn("有效评分 | 评测异常 | 未评分", markdown)
-        self.assertIn("0.4", markdown)
+        self.assertIn("模型@Harness | 总平均分", markdown)
+        self.assertIn("40.00", markdown)
+        self.assertIn("## 效率对比", markdown)
+        self.assertNotIn("总成本", markdown)
+        self.assertNotIn("超时数", markdown)
+        self.assertNotIn("/Users/", markdown)
         output = self.root / "artifacts"
         output.mkdir()
         data_path = output / "general_e2e_report_data.json"

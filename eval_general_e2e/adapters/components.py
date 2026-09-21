@@ -26,6 +26,13 @@ class SharedComponentSpec:
 
 EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     SharedComponentSpec(
+        name="report-reference-data",
+        version="1.0.0",
+        source_root="tools/report/data",
+        vendor_root="vendor/e2e-shared/report-reference-data",
+        entrypoints=("entities.yaml", "checkpoint_capability_map7.yaml"),
+    ),
+    SharedComponentSpec(
         name="workbuddy-jsonl-metrics",
         version="0.2.0",
         source_root="tools/report/e2e-shared/workbuddy-jsonl-metrics",

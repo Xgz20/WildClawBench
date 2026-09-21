@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import hashlib
 from pathlib import Path, PurePosixPath
 import shutil
 import stat
@@ -79,6 +80,7 @@ class E2EBuildTests(unittest.TestCase):
                 "desktop-debug",
                 "resource-metrics",
                 "workbuddy-jsonl-metrics",
+                "report-reference-data",
                 "workspace-integrity",
                 "dataset-bundle-verifier",
                 "grading-core",
@@ -132,6 +134,21 @@ class E2EBuildTests(unittest.TestCase):
                                 f"{skill_name}/{component['vendor_root']}/{relative}"
                             )
                             self.assertEqual(archive.read(archived), source.read_bytes())
+
+    def test_report_reference_snapshot_is_standalone_without_pyyaml(self) -> None:
+        root = BUILD._safe_extract(self.archive_path("report-general-e2e"), self.temp_root / "report-references")
+        helper = root / "scripts/report_views.py"
+        completed = subprocess.run(
+            [sys.executable, "-I", "-S", "-c",
+             "import runpy,sys,json; module=runpy.run_path(sys.argv[1]); data=module['load_references'](); print(json.dumps(data['sources'],sort_keys=True))", str(helper)],
+            capture_output=True, text=True, check=True,
+        )
+        sources = json.loads(completed.stdout)
+        for name, digest in sources.items():
+            self.assertEqual(digest, hashlib.sha256((REPO_ROOT / "tools/report/data" / name).read_bytes()).hexdigest())
+        snapshot = json.loads((root / "data/report-reference.json").read_text())
+        self.assertEqual(snapshot["models"]["xopglm52"], "GLM-5.2")
+        self.assertIn("01_Productivity_Flow_task_003_retro_agenda", snapshot["capabilities"])
 
     def test_general_orchestrator_vendors_managed_macos_restart(self) -> None:
         with zipfile.ZipFile(self.archive_path("orchestrate-general-e2e")) as archive:

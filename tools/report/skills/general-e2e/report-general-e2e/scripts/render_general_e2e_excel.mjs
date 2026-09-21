@@ -33,7 +33,8 @@ function columnName(number) {
 
 
 function display(value) {
-  return value === null || value === undefined ? "n.a." : value;
+  if (typeof value === "string" && value.startsWith("=")) return "'" + value;
+  return value === null || value === undefined ? "-" : value;
 }
 
 
@@ -116,165 +117,69 @@ function widths(sheet, values) {
 }
 
 
-function scoreScale(sheet, address) {
+function scoreScale(sheet, address, maximum = 1) {
   sheet.getRange(address).conditionalFormats.add("colorScale", {
-    thresholds: [0, 0.5, 1],
+    thresholds: [0, maximum / 2, maximum],
     colors: ["#F8696B", "#FFEB84", "#63BE7B"],
   });
 }
 
 
-function buildOverview(workbook, data) {
-  const sheet = workbook.worksheets.add("总览");
+function buildView(workbook, name, view) {
+  const sheet = workbook.worksheets.add(name);
   sheet.showGridLines = false;
-  title(sheet, 1, 10, `${data.title} · ${data.batch_id}`);
-  section(sheet, 3, 10, "范围与评分分母");
-  const score = data.overall.score;
-  table(sheet, 4,
-    ["唯一任务", "任务运行", "单元", "有效评分", "评测异常", "未评分", "有效0分", "有效均分", "分数合计", "有效分母"],
-    [[data.scope.unique_task_count, data.scope.task_run_count, data.scope.unit_count,
-      score.valid_score_count, score.evaluation_error_count, score.unscored_count,
-      score.valid_zero_score_count, score.mean_score, score.score_sum, score.score_denominator]],
-  );
-  sheet.getRange("H5:I5").format.numberFormat = "0.0000";
-  scoreScale(sheet, "H5:H5");
-
-  section(sheet, 7, 10, "执行状态");
-  const statusRows = Object.entries(score.execution_status_counts).map(([status, count]) => [status, count]);
-  table(sheet, 8, ["状态", "数量"], statusRows);
-
-  const resourceRow = 11 + statusRows.length;
-  section(sheet, resourceRow, 10, "资源总览（未知不补零）");
-  const resourceRows = Object.entries(data.overall.resources).map(([key, item]) => [
-    key, item.label, item.status, item.total, item.known_subtotal,
-    item.coverage.known, item.coverage.total, item.partial_case_count,
-    Object.entries(item.status_counts).map(([status, count]) => `${status}:${count}`).join("; "),
-    item.source_coverage.total === null
-      ? `${item.source_coverage.known}/?`
-      : `${item.source_coverage.known}/${item.source_coverage.total}`,
-  ]);
-  const resourceEnd = table(sheet, resourceRow + 1,
-    ["字段", "指标", "聚合状态", "完整总量", "已知小计", "完整覆盖数", "任务运行分母", "部分记录", "来源状态", "原生覆盖"],
-    resourceRows,
-  );
-  if (resourceRows.length) {
-    sheet.getRange(`D${resourceRow + 2}:E${resourceEnd}`).format.numberFormat = "#,##0.000";
-    sheet.getRange(`F${resourceRow + 2}:H${resourceEnd}`).format.numberFormat = "0";
+  const end = table(sheet, 1, view.headers, view.rows);
+  const last = columnName(view.headers.length);
+  sheet.getRange(`A1:${last}${Math.max(end, 1)}`).format.font.name = "Arial";
+  sheet.getRange(`A1:${last}${Math.max(end, 1)}`).format.font.size = 11;
+  sheet.getRange(`A1:${last}1`).format.rowHeight = 38;
+  sheet.getRange("A:A").format.columnWidth = 31;
+  for (let i = 1; i < view.headers.length; i++) {
+    const col = columnName(i + 1);
+    sheet.getRange(`${col}:${col}`).format.columnWidth = view.headers[i].includes("Cache Write") ? 24 : 18;
+    if (view.rows.length) {
+      sheet.getRange(`${col}2:${col}${end}`).format.numberFormat = view.formats[String(i)] || "#,##0";
+      sheet.getRange(`${col}2:${col}${end}`).format.horizontalAlignment = view.rows.some(row => typeof row[i] === "string") ? "left" : "right";
+    }
   }
-
-  const timingRow = resourceEnd + 2;
-  section(sheet, timingRow, 10, "耗时口径");
-  table(sheet, timingRow + 1,
-    ["批次壁钟(s)", "壁钟覆盖", "任务耗时完整总量(s)", "任务耗时已知小计(s)", "说明"],
-    [[data.overall.timing.batch_wall_clock_seconds,
-      `${data.overall.timing.batch_wall_clock_coverage.known}/${data.overall.timing.batch_wall_clock_coverage.total}`,
-      data.overall.resources.duration_seconds.total,
-      data.overall.resources.duration_seconds.known_subtotal,
-      data.overall.timing.note]],
-  );
-  sheet.getRange(`A${timingRow + 2}:D${timingRow + 2}`).format.numberFormat = "#,##0.000";
-  sheet.getRange(`E${timingRow + 2}:E${timingRow + 2}`).format.wrapText = true;
-  widths(sheet, { A: 20, B: 24, C: 16, D: 16, E: 18, F: 14, G: 16, H: 14, I: 40, J: 16 });
-  sheet.freezePanes.freezeRows(4);
-  return sheet;
-}
-
-
-function buildGroups(workbook, data) {
-  const sheet = workbook.worksheets.add("分类与难度");
-  sheet.showGridLines = false;
-  title(sheet, 1, 8, "分类、难度与裁判协议");
-  section(sheet, 3, 8, "六类能力");
-  const categoryRows = data.overall.categories.map(row => [
-    row.category, row.frozen_task_run_count, row.valid_score_count, row.mean_score,
-    row.valid_zero_score_count, row.evaluation_error_count, row.unscored_count,
-    `${row.valid_score_count}/${row.frozen_task_run_count}`,
-  ]);
-  let end = table(sheet, 4,
-    ["分类", "冻结运行", "有效分母", "有效均分", "有效0分", "评测异常", "未评分", "有效覆盖"],
-    categoryRows,
-  );
-  if (categoryRows.length) {
-    sheet.getRange(`D5:D${end}`).format.numberFormat = "0.0000";
-    scoreScale(sheet, `D5:D${end}`);
+  if (view.rows.length) {
+    sheet.getRange(`A2:${last}${end}`).format.rowHeight = 26;
+    if (["总览", "分类对比", "难度对比", "Agent能力对比", "模态对比"].includes(name)) {
+      const scoreLast = name === "总览" ? "B" : last;
+      scoreScale(sheet, `B2:${scoreLast}${end}`, 100);
+    }
   }
-
-  const difficultyRow = end + 2;
-  section(sheet, difficultyRow, 8, "难度");
-  const difficultyRows = data.overall.difficulties.map(row => [
-    row.difficulty, row.frozen_task_run_count, row.valid_score_count, row.mean_score,
-    row.valid_zero_score_count, row.evaluation_error_count, row.unscored_count,
-    `${row.valid_score_count}/${row.frozen_task_run_count}`,
-  ]);
-  end = table(sheet, difficultyRow + 1,
-    ["难度", "冻结运行", "有效分母", "有效均分", "有效0分", "评测异常", "未评分", "有效覆盖"],
-    difficultyRows,
-  );
-  if (difficultyRows.length) {
-    sheet.getRange(`D${difficultyRow + 2}:D${end}`).format.numberFormat = "0.0000";
-    scoreScale(sheet, `D${difficultyRow + 2}:D${end}`);
-  }
-
-  const judgeRow = end + 2;
-  section(sheet, judgeRow, 9, "裁判协议分组（协议、模型、推理强度不静默合并）");
-  const judgeRows = data.overall.judge_groups.map(row => [
-    row.protocol, row.model, row.reasoning_effort, row.frozen_task_run_count,
-    row.valid_score_count, row.mean_score, row.evaluation_error_count,
-    row.unscored_count, row.valid_zero_score_count,
-  ]);
-  end = table(sheet, judgeRow + 1,
-    ["协议", "模型", "推理强度", "冻结运行", "有效分母", "有效均分", "评测异常", "未评分", "有效0分"],
-    judgeRows,
-  );
-  if (judgeRows.length) {
-    sheet.getRange(`F${judgeRow + 2}:F${end}`).format.numberFormat = "0.0000";
-    scoreScale(sheet, `F${judgeRow + 2}:F${end}`);
-  }
-  widths(sheet, { A: 32, B: 24, C: 16, D: 14, E: 14, F: 14, G: 14, H: 14, I: 14 });
-  sheet.freezePanes.freezeRows(4);
+  const noteLast = columnName(Math.min(view.headers.length, 7));
+  view.notes.forEach((note, i) => {
+    const row = end + 3 + i;
+    sheet.mergeCells(`A${row}:${noteLast}${row}`);
+    sheet.getRange(`A${row}`).values = [[note]];
+    sheet.getRange(`A${row}:${noteLast}${row}`).format = {
+      font: { size: 10, color: COLORS.text }, wrapText: true, verticalAlignment: "center",
+    };
+    const textWidth = [...note].reduce((sum, char) => sum + (char.codePointAt(0) > 127 ? 2 : 1), 0);
+    const width = 31 + 18 * (Math.min(view.headers.length, 7) - 1);
+    sheet.getRange(`A${row}:${noteLast}${row}`).format.rowHeight = Math.max(26, Math.ceil(textWidth / width) * 16);
+  });
+  sheet.freezePanes.freezeRows(1);
+  sheet.freezePanes.freezeColumns(1);
   return sheet;
 }
 
 
 function buildDetails(workbook, data) {
-  const sheet = workbook.worksheets.add("用例明细");
-  sheet.showGridLines = false;
-  const resourceKeys = [
-    "input_tokens", "output_tokens", "total_tokens", "cache_read_input_tokens",
-    "cache_creation_input_tokens", "reasoning_output_tokens", "request_count",
-    "request_attempt_count", "call_count", "duration_seconds", "agent_duration_seconds",
-  ];
-  const headers = [
-    "运行ID", "用例ID", "用例名称", "分类", "难度", "Unit", "Harness", "平台",
-    "模型", "推理强度", "执行模式", "执行状态", "证据完整性", "评分状态", "总分",
-    "裁判协议", "裁判模型", "裁判推理强度", "执行attempt", "评分attempt",
-    ...resourceKeys.map(key => data.overall.resources[key].label),
-    "Package ID", "Submission SHA", "Score SHA", "Resource SHA",
-  ];
-  title(sheet, 1, headers.length, "用例明细");
+  const headers = ["模型@Harness", "用例名称", "分类", "难度", "模态", "得分", "执行状态", "评分状态",
+    "总token", "模型请求数", "任务耗时(s)", "流程耗时(s)", "工具调用数", "运行ID"];
   const rows = data.tasks.map(row => [
-    row.run_id, row.task_id, row.task_name, row.category, row.difficulty, row.unit_id,
-    row.harness.id, row.harness.platform, row.model.actual_id ?? row.model.requested_id,
-    row.model.reasoning_effort, row.execution_mode, row.execution_status,
-    row.evidence_completeness, row.score_status, row.total_score,
-    row.judge?.protocol, row.judge?.model, row.judge?.reasoning_effort,
-    row.execution_attempt_id, row.scoring_attempt_id,
-    ...resourceKeys.map(key => row.resource[key].value ?? row.resource[key].known_subtotal),
-    row.lineage.package_id, row.lineage.submission_sha256, row.lineage.score_sha256,
-    row.lineage.resource_metrics_sha256,
+    data.presentation.unit_labels[row.unit_id], row.task_name, row.category, row.difficulty, row.modality,
+    row.total_score === null ? null : row.total_score * 100, row.execution_status, row.score_status,
+    ...["total_tokens", "request_count", "agent_duration_seconds", "duration_seconds", "call_count"].map(key => row.resource[key].complete ? row.resource[key].value : null),
+    row.run_id,
   ]);
-  const end = table(sheet, 3, headers, rows);
-  if (rows.length) {
-    sheet.getRange(`O4:O${end}`).format.numberFormat = "0.0000";
-    scoreScale(sheet, `O4:O${end}`);
-    sheet.getRange(`U4:AE${end}`).format.numberFormat = "#,##0.000";
-    sheet.getRange(`A4:${columnName(headers.length)}${end}`).format.rowHeight = 34;
-  }
-  widths(sheet, { A: 58, B: 58, C: 28, D: 26, E: 10, F: 24, G: 18, H: 18, I: 20, J: 14, K: 16, L: 18, M: 16, N: 18, O: 12, P: 22, Q: 24, R: 18, S: 36, T: 36 });
-  for (let column = 21; column <= 31; column += 1) sheet.getRange(`${columnName(column)}:${columnName(column)}`).format.columnWidth = 18;
-  for (let column = 32; column <= headers.length; column += 1) sheet.getRange(`${columnName(column)}:${columnName(column)}`).format.columnWidth = 36;
-  sheet.freezePanes.freezeRows(3);
-  sheet.freezePanes.freezeColumns(2);
+  const sheet = buildView(workbook, "用例明细", { headers, rows, formats: {"5": "0.00", "10": "#,##0.000", "11": "#,##0.000"},
+    notes: ["各资源仅展示完整观测值；部分值和证据来源见资源覆盖与异常。"] });
+  widths(sheet, { B: 36, C: 27, N: 62 });
+  if (rows.length) scoreScale(sheet, `F2:F${rows.length + 1}`, 100);
   return sheet;
 }
 
@@ -307,7 +212,7 @@ function buildCoverage(workbook, data) {
   }
   const exceptionRow = end + 2;
   section(sheet, exceptionRow, 8, "评测异常与未评分");
-  const exceptions = data.tasks.filter(row => row.score_status !== "valid").map(row => [
+  const exceptions = data.tasks.filter(row => row.score_status !== "valid" || row.execution_status !== "completed").map(row => [
     row.run_id, row.execution_status, row.score_status, row.invalid_reason,
     row.evidence_completeness, row.judge?.protocol, row.scoring_attempt_id,
     "不进入有效均分，不补零",
@@ -317,12 +222,24 @@ function buildCoverage(workbook, data) {
     exceptions,
   );
   const lineageRow = end + 2;
-  section(sheet, lineageRow, 6, "输入谱系");
-  table(sheet, lineageRow + 1,
+  section(sheet, lineageRow, 6, "输入谱系（哈希显示前12位，完整值见报告JSON）");
+  end = table(sheet, lineageRow + 1,
     ["Unit", "Package ID", "归档SHA", "Package manifest SHA", "Submission SHA", "导入回执SHA"],
-    data.lineage.selected_imports.map(row => [row.unit_id, row.package_id, row.archive_sha256, row.package_manifest_sha256, row.submission_sha256, row.import_receipt_sha256]),
+    data.lineage.selected_imports.map(row => [row.unit_id, ...[row.package_id, row.archive_sha256, row.package_manifest_sha256, row.submission_sha256, row.import_receipt_sha256].map(value => value?.slice(0, 12) || null)]),
   );
+  section(sheet, end + 2, 5, "维度有效样本覆盖");
+  end = table(sheet, end + 3, ["模型@Harness", "对比表", "维度", "有效样本数", "涉及样本数"], data.presentation.dimension_coverage);
+  section(sheet, end + 2, 5, "单元身份与裁判协议");
+  const metadataStart = end + 4;
+  end = table(sheet, end + 3, ["Unit", "模型@Harness", "配置模型", "Harness 身份", "裁判分组"], data.presentation.unit_metadata);
+  if (data.presentation.unit_metadata.length) {
+    sheet.getRange(`C${metadataStart}:E${end}`).format.wrapText = true;
+    sheet.getRange(`A${metadataStart}:E${end}`).format.rowHeight = 110;
+  }
+  section(sheet, end + 2, 2, "公共报告字典来源");
+  table(sheet, end + 3, ["文件", "SHA-256（前12位）"], Object.entries(data.presentation.reference_sources).map(([name, hash]) => [name, hash.slice(0, 12)]));
   widths(sheet, { A: 58, B: 28, C: 24, D: 16, E: 16, F: 16, G: 14, H: 14, I: 14, J: 16, K: 58, L: 16, M: 16 });
+  if (data.presentation.unit_metadata.length) sheet.getRange(`C${metadataStart}:E${end}`).format.autofitRows();
   // Native timing adds explicit lifecycle/queue semantics; fit its source text.
   rows.forEach((row, index) => {
     if (["duration_seconds", "agent_duration_seconds"].includes(row[1]) && row[3] === "observed") {
@@ -342,15 +259,14 @@ async function main() {
     throw new Error(`不兼容的报告数据 schema: ${data.schema_version}`);
   }
   const workbook = Workbook.create();
-  buildOverview(workbook, data);
-  buildGroups(workbook, data);
+  for (const [name, view] of Object.entries(data.presentation.tables)) buildView(workbook, name, view);
   buildDetails(workbook, data);
   buildCoverage(workbook, data);
   workbook.recalculate();
 
   await fs.mkdir(path.dirname(args.output), { recursive: true });
   await fs.mkdir(args["preview-dir"], { recursive: true });
-  const sheetNames = ["总览", "分类与难度", "用例明细", "资源覆盖与异常"];
+  const sheetNames = [...Object.keys(data.presentation.tables), "用例明细", "资源覆盖与异常"];
   if (args["skip-preview"] !== "true") {
     for (const sheetName of sheetNames) {
       const image = await workbook.render({ sheetName, autoCrop: "all", scale: 1, format: "png" });
@@ -366,9 +282,8 @@ async function main() {
   });
   const rangeChecks = [];
   for (const [sheetId, range] of [
-    ["总览", "A1:J20"],
-    ["分类与难度", "A1:I30"],
-    ["用例明细", `A1:AI${3 + data.tasks.length}`],
+    ...Object.entries(data.presentation.tables).map(([name, view]) => [name, `A1:${columnName(view.headers.length)}${view.rows.length + 1}`]),
+    ["用例明细", `A1:N${1 + data.tasks.length}`],
     ["资源覆盖与异常", `A1:M${10 + data.tasks.length * 11}`],
   ]) {
     const inspection = await workbook.inspect({

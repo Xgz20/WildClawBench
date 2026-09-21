@@ -2,6 +2,13 @@
   "schema_version": "wildclawbench.e2e-shared-source-catalog/v1",
   "components": [
     {
+      "name": "report-reference-data",
+      "version": "1.0.0",
+      "source_root": "tools/report/data",
+      "vendor_root": "vendor/e2e-shared/report-reference-data",
+      "entrypoints": ["entities.yaml", "checkpoint_capability_map7.yaml"]
+    },
+    {
       "name": "workbuddy-jsonl-metrics",
       "version": "0.2.0",
       "source_root": "tools/report/e2e-shared/workbuddy-jsonl-metrics",

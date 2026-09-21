@@ -19,6 +19,8 @@ import sys
 import tempfile
 from typing import Any, Iterable, Mapping, Sequence
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import report_views
 
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
 IMPORT_INDEX_SCHEMA = "wildclawbench.general-e2e-import-index/v1"
@@ -44,7 +46,7 @@ RESOURCE_FIELDS: tuple[tuple[str, str, str], ...] = (
     ("request_attempt_count", "requests", "HTTP 尝试数"),
     ("call_count", "tools", "工具调用数"),
     ("duration_seconds", "timing", "流程耗时（秒）"),
-    ("agent_duration_seconds", "timing", "智能体耗时（秒）"),
+    ("agent_duration_seconds", "timing", "任务耗时（原生请求，秒）"),
 )
 RESOURCE_LABELS = {key: label for key, _, label in RESOURCE_FIELDS}
 RESOURCE_GROUPS = {key: group for key, group, _ in RESOURCE_FIELDS}
@@ -666,6 +668,11 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
     components = score.get("components") if score else None
     evaluation = score.get("evaluation") if score else None
     result = score.get("result") if score else None
+    try:
+        checkpoint_values = report_views.checkpoints(score, score_path, resolve_file, sha256_file)
+        tool_calls = report_views.trace_tools(root / "unit", execution, resolve_file, sha256_file)
+    except (ValueError, KeyError, OSError) as exc:
+        raise ReportError(f"REPORT_EVIDENCE_INVALID: {task_id}: {exc}") from exc
     return {
         "run_id": f"{unit['unit_id']}::{task_id}",
         "unit_id": unit["unit_id"],
@@ -693,6 +700,8 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
         "invalid_reason": result.get("invalid_reason") if result else None,
         "resource_collection_status": (metrics.get("collection") or {}).get("status") if metrics else "unavailable",
         "resource": resource,
+        "checkpoints": checkpoint_values,
+        "tool_calls": tool_calls,
         "lineage": {
             "package_id": selected["package_id"],
             "package_manifest_sha256": sha256_file(selected["package_manifest_path"]),
@@ -835,7 +844,7 @@ def aggregate(validated: Mapping[str, Any], generated_at: str) -> dict[str, Any]
         }
         for item in validated["selected"]
     ]
-    return {
+    data = {
         "schema_version": REPORT_DATA_SCHEMA,
         "generated_at": generated_at,
         "title": config.get("report", {}).get("title") or "通用场景端到端自动化评测报告",
@@ -871,6 +880,11 @@ def aggregate(validated: Mapping[str, Any], generated_at: str) -> dict[str, Any]
             "judge_grouping": "按 protocol、model、reasoning_effort 分组，不做无提示合并。",
         },
     }
+    try:
+        data["presentation"] = report_views.build_views(data, report_views.load_references())
+    except (ValueError, KeyError, OSError) as exc:
+        raise ReportError(f"REPORT_PRESENTATION_INVALID: {exc}") from exc
+    return data
 
 
 def shown(value: object, digits: int = 4) -> str:
@@ -888,7 +902,7 @@ def markdown_table(headers: Sequence[str], rows: Sequence[Sequence[object]]) -> 
     return output
 
 
-def render_markdown(data: Mapping[str, Any]) -> str:
+def render_audit_markdown(data: Mapping[str, Any]) -> str:
     overall = data["overall"]
     score = overall["score"]
     lines = [
@@ -964,6 +978,46 @@ def render_markdown(data: Mapping[str, Any]) -> str:
         "- 本 Markdown 与 Excel 均由同目录报告 JSON 生成。",
         "",
     ]
+    return "\n".join(lines)
+
+
+def render_markdown(data: Mapping[str, Any]) -> str:
+    """Leader preview: the exact same unit tables as Excel, no root-cause claims."""
+    lines = ["# 通用场景端到端评测报告", "", f"批次：{data['batch_id']}。范围：{data['scope']['unit_count']} 个单元、{data['scope']['unique_task_count']} 道题。",
+             "本报告不包含根因分析。分数按百分制展示，各表与 Excel 使用同一份数据。", ""]
+    summaries = {
+        "总览": "各单元的结果、执行情况与资源总量如下。正常结束与能力得分分别统计。",
+        "效率对比": "Token 总量及平均值仅在完整覆盖时展示；缓存命中率按 Token 总量加权。",
+        "分类对比": "分类得分由对应任务的有效评分聚合。样本范围不同的单元不直接作为受控排名。",
+        "难度对比": "按题目难度分层统计有效得分。",
+        "Agent能力对比": "七维能力分来自已冻结的检查点评分，无需重新评分。未涉及的维度不推断能力。",
+        "模态对比": "按任务声明的模态分组。",
+        "工具调用对比": "展示实际工具调用数量；调用次数不表示调用质量或任务正确性。",
+    }
+    for name, view in data["presentation"]["tables"].items():
+        rows = []
+        for row in view["rows"]:
+            cells = []
+            for i, value in enumerate(row):
+                fmt = view["formats"].get(str(i), "#,##0")
+                if value is None:
+                    cells.append("-")
+                elif isinstance(value, (int, float)):
+                    digits = len(fmt.split(".")[1].replace("%", "")) if "." in fmt else 0
+                    cells.append(f"{value * 100 if '%' in fmt else value:,.{digits}f}" + ("%" if "%" in fmt else ""))
+                else:
+                    cells.append(value)
+            rows.append(cells)
+        summary = summaries[name]
+        if name == "总览" and len(rows) == 1:
+            summary = f"{rows[0][0]} 本批次平均得分 {rows[0][1]}，{rows[0][3]}/{rows[0][2]} 道题正常完成。"
+        if name == "效率对比" and len(rows) == 1:
+            summary = f"该单元平均消耗 {rows[0][2]} Token，输入缓存命中率为 {rows[0][7]}。缺失的缓存写入数据保持空缺。"
+        lines.extend([f"## {name}", "", summary, "", *markdown_table(view["headers"], rows), "", *view["notes"], ""])
+    score = data["overall"]["score"]
+    lines.extend(["## 结论与范围", "", f"本批次共有 {score['frozen_task_run_count']} 次任务运行，有效评分 {score['valid_score_count']} 次，未评分 {score['unscored_count']} 次。",
+                  "结果仅覆盖本批次题目和客户端配置。多单元同时改变模型与 Harness 时，属于组合对照，不能把分差归因于单一因素。",
+                  "详细覆盖、执行状态、裁判协议及证据哈希见配套审计报告与报告 JSON。", ""])
     return "\n".join(lines)
 
 
@@ -1199,10 +1253,12 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
     try:
         data_path = staging / "general_e2e_report_data.json"
         markdown_path = staging / "通用场景端到端自动化评测报告.md"
+        audit_path = staging / "通用场景端到端评测审计.md"
         excel_path = staging / "通用场景端到端自动化评测报告.xlsx"
         preview_dir = staging / "previews"
         write_json(data_path, data)
         write_text(markdown_path, render_markdown(data))
+        write_text(audit_path, render_audit_markdown(data))
         cli_manifest_path = write_cli_adapter(staging, data)
         cli_manifest = read_json(cli_manifest_path)
         cli_manifest["source_report_data_sha256"] = sha256_file(data_path)
@@ -1220,7 +1276,7 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
         receipt = build_report_receipt(
             data,
             batch_root,
-            [data_path, markdown_path, excel_path, cli_manifest_path, validation_path],
+            [data_path, markdown_path, audit_path, excel_path, cli_manifest_path, validation_path],
             staged_output_root=staging,
             published_output_root=output_root,
         )
@@ -1247,6 +1303,7 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
         "output_dir": str(output_root),
         "report_data": str(data_path),
         "markdown": str(markdown_path),
+        "audit_markdown": str(output_root / "通用场景端到端评测审计.md"),
         "excel": str(excel_path),
         "receipt": str(receipt_path),
         "cli_adapter_manifest": str(cli_manifest_path),
