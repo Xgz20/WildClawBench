@@ -6,7 +6,7 @@
       "context": "v1",
       "dockerfile": "v1/Dockerfile",
       "build_args": {
-        "ZCODE_VERSION": "0.1.0",
+        "ZCODE_VERSION": "0.16.9",
         "ZCODE_SOURCE_COMMIT": "872ad960de7ec172591f7e1952f7849229f94521",
         "ZCODE_REPOSITORY": "https://github.com/Xgz20/ZCode.git",
         "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0",

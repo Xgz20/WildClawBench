@@ -3,7 +3,7 @@ ARG EVAL_BASE_IMAGE=wildclawbench-codex-ubuntu:v0.0
 
 FROM ${NODE_BUILDER_IMAGE} AS zcode-builder
 
-ARG ZCODE_VERSION=0.1.0
+ARG ZCODE_VERSION=0.16.9
 ARG ZCODE_SOURCE_COMMIT=872ad960de7ec172591f7e1952f7849229f94521
 ARG ZCODE_REPOSITORY=https://github.com/Xgz20/ZCode.git
 ARG NPM_REGISTRY=https://registry.npmjs.org/
@@ -16,7 +16,7 @@ RUN git clone --filter=blob:none --no-checkout "${ZCODE_REPOSITORY}" /opt/zcode-
     && cd /opt/zcode-src \
     && git checkout --detach "${ZCODE_SOURCE_COMMIT}" \
     && test "$(git rev-parse HEAD)" = "${ZCODE_SOURCE_COMMIT}" \
-    && python3 -c 'from pathlib import Path; m="supportedArchitectures:\\n"; replacement="supportedArchitectures:\\n  os:\\n    - linux\\n  cpu:\\n    - x64\\n  libc:\\n    - glibc\\n"; [p.write_text((t := p.read_text(encoding="utf-8")).split(m, 1)[0] + replacement if m in t else t, encoding="utf-8") for p in (Path("/opt/zcode-src/pnpm-workspace.yaml"), Path("/opt/zcode-src/apps/zcode-cli/pnpm-workspace.yaml"))]' \
+    && python3 -c 'from pathlib import Path; m="supportedArchitectures:\\n"; replacement="supportedArchitectures:\\n  os:\\n    - linux\\n  cpu:\\n    - x64\\n  libc:\\n    - glibc\\n"; f=lambda p: p.write_text((lambda t: t.split(m, 1)[0] + replacement if m in t else t)(p.read_text(encoding="utf-8")), encoding="utf-8"); [f(p) for p in (Path("/opt/zcode-src/pnpm-workspace.yaml"), Path("/opt/zcode-src/apps/zcode-cli/pnpm-workspace.yaml"))]' \
     && if [ "${NPM_REGISTRY}" != "https://registry.npmjs.org/" ]; then \
          sed -i "s#https://registry.npmjs.org/#${NPM_REGISTRY%/}/#g" pnpm-lock.yaml apps/zcode-cli/pnpm-lock.yaml; \
        fi
@@ -25,8 +25,9 @@ WORKDIR /opt/zcode-src
 
 RUN corepack enable \
     && corepack prepare pnpm@10.33.2 --activate \
+    && sed -i "s#^registry=.*#registry=${NPM_REGISTRY%/}#" .npmrc \
     && pnpm config set registry "${NPM_REGISTRY}" \
-    && pnpm install --frozen-lockfile \
+    && npm_config_nodedir=/usr/local pnpm install --frozen-lockfile \
        --filter '@zcode/cli...' \
        --filter '@zcode/node-repl-host...' \
        --filter '@zcode/browser-use-plugin...' \
@@ -42,7 +43,7 @@ RUN corepack enable \
 
 FROM ${EVAL_BASE_IMAGE}
 
-ARG ZCODE_VERSION=0.1.0
+ARG ZCODE_VERSION=0.16.9
 ARG ZCODE_SOURCE_COMMIT=872ad960de7ec172591f7e1952f7849229f94521
 
 LABEL org.opencontainers.image.title="WildClawBench ZCode evaluation image" \

@@ -16,7 +16,7 @@ class ZCodeDockerContractTests(unittest.TestCase):
         self.assertIn("ARG EVAL_BASE_IMAGE=wildclawbench-codex-ubuntu:v0.0", dockerfile)
         self.assertIn("ARG NODE_BUILDER_IMAGE=node:24.14.0-bookworm-slim", dockerfile)
         self.assertIn("FROM ${EVAL_BASE_IMAGE}", dockerfile)
-        self.assertIn("ARG ZCODE_VERSION=0.1.0", dockerfile)
+        self.assertIn("ARG ZCODE_VERSION=0.16.9", dockerfile)
         self.assertIn("872ad960de7ec172591f7e1952f7849229f94521", dockerfile)
         self.assertIn("build-sea.mjs", dockerfile)
         self.assertIn("zcode --version", dockerfile)
@@ -26,7 +26,7 @@ class ZCodeDockerContractTests(unittest.TestCase):
         entry = manifest["versions"]["v0.0"]
         self.assertEqual(manifest["default"], "v0.0")
         self.assertEqual(entry["image"], "wildclawbench-zcode-ubuntu:v0.0")
-        self.assertEqual(entry["build_args"]["ZCODE_VERSION"], "0.1.0")
+        self.assertEqual(entry["build_args"]["ZCODE_VERSION"], "0.16.9")
         self.assertEqual(
             entry["build_args"]["EVAL_BASE_IMAGE"],
             "wildclawbench-codex-ubuntu:v0.0",

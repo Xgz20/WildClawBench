@@ -1,6 +1,6 @@
 # ZCode evaluation image
 
-`wildclawbench-zcode-ubuntu:v0.0` pins the ZCode CLI runtime `0.1.0` at source commit
+`wildclawbench-zcode-ubuntu:v0.0` pins the ZCode CLI runtime `0.16.9` at source commit
 `872ad960de7ec172591f7e1952f7849229f94521`. The final evaluation layer is
 based on `wildclawbench-codex-ubuntu:v0.0`; a Node 24.14 builder produces the
 self-contained Linux x64 SEA binary.

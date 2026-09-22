@@ -211,7 +211,7 @@ class ImageVersionManifestTest(unittest.TestCase):
         self.assertEqual("wildclawbench-zcode-ubuntu:v0.0", entry["image"])
         self.assertEqual("v1", entry["context"])
         self.assertEqual("v1/Dockerfile", entry["dockerfile"])
-        self.assertEqual("0.1.0", entry["build_args"]["ZCODE_VERSION"])
+        self.assertEqual("0.16.9", entry["build_args"]["ZCODE_VERSION"])
         self.assertEqual(
             "872ad960de7ec172591f7e1952f7849229f94521",
             entry["build_args"]["ZCODE_SOURCE_COMMIT"],
