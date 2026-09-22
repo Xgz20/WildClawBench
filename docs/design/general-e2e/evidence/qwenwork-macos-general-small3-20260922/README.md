@@ -24,4 +24,6 @@
 
 后续 r13 运行根 `/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-macos-general-20260922-five3-queue-r13` 已完成五题执行队列：5/5 `COMPLETED`，五个唯一 attempt，`dispatch_attempt_count=1`，第三题及其余延迟 session 均通过同 attempt resume 收口。receipt：`observed_max_concurrency=1`、`dynamic_refill_count=0`、`native_interval_coverage=0/5`、`concurrency_evidence.status=INSUFFICIENT_EVIDENCE`；该批次未进行正式 collect、评分、回传或报告。
 
+对 r13 五题逐题运行 Qwen CB-B collector 时，五题均在 metadata gate 以 `QWENWORK_METADATA_GATE_BLOCKED: transcript_cwd_missing` 停止；因此没有生成正式 execution receipt，也没有继续评分或报告。这是当前 QwenWorkCN 1.2.0 原生 transcript provenance 不满足 General 收口契约的基础设施阻塞，不计为模型能力失败。
+
 下一步仍是 fresh probe + 第三题同 attempt resume；在当前客户端重新提供可归属的 CDP 独占时段后，先完成五题默认三路/动态补位和正式 collect，再补发送临界中断、客户端重启、未知授权/追问安全暂停及进程清理故障矩阵。Codex 重启仍按用户要求暂缓。Token/cache profile 继续保持 unavailable，直到当前 QwenWork runtime 的原生语义得到独立验证。
