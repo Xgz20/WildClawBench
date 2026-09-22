@@ -550,7 +550,9 @@ def validate_receipt_for_state(
     scope, dataset, task_ids = expected_scope(state)
     if (
         receipt.get("stage") != RECEIPT_STAGE_MAP[stage]
-        or receipt.get("status") != "completed"
+        # A valid collect receipt may be partial when only unsupported
+        # resource fields are unavailable; preserve its coverage in unit flow.
+        or receipt.get("status") not in {"completed", "partial"}
         or receipt.get("scope") != scope
         or receipt.get("dataset") != dataset
         or receipt.get("task_ids") != task_ids
