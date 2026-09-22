@@ -441,10 +441,18 @@ def _execution_summary(
             "message": f"execution phase is {record.get('phase')!r}",
         }
     elif evidence.get("completeness") != "complete":
-        failure = {
-            "code": "EXECUTION_EVIDENCE_INCOMPLETE",
-            "message": "complete execution evidence is required for scoring",
-        }
+        missing = evidence.get("missing")
+        resource_only_partial = (
+            evidence.get("completeness") == "partial"
+            and isinstance(missing, list)
+            and missing
+            and set(missing) <= {"resource_metrics_complete_coverage"}
+        )
+        if not resource_only_partial:
+            failure = {
+                "code": "EXECUTION_EVIDENCE_INCOMPLETE",
+                "message": "complete execution evidence is required for scoring",
+            }
     elif candidate.get("drift_status") != "stable" or candidate_sha is None:
         failure = {
             "code": "EXECUTION_CANDIDATE_NOT_STABLE",
