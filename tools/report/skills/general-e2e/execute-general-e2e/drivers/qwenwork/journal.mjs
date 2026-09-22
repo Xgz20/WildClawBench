@@ -348,7 +348,19 @@ export function planQwenRecovery(state, now) {
     && state.prompt?.send_status === "intent_persisted"
     && state.send?.dispatch_attempt_count === 0
   ) action = "dispatch-once";
-  else if (state.phase === "PREPARING" && state.send?.dispatch_attempt_count === 0) action = "prepare";
+  else if (
+    state.send?.dispatch_attempt_count === 0
+    && state.send?.state === "not_reserved"
+    && state.prompt?.send_status === "not_sent"
+    && (state.phase === "PREPARING" || (
+      state.phase === "NEEDS_ATTENTION"
+      && state.attention?.code === "QWENWORK_PRE_SEND_PREPARATION_FAILED"
+    ))
+  ) {
+    action = "prepare";
+    state.phase = "PREPARING";
+    state.attention = null;
+  }
   else action = "inspect-only";
   state.recovery.resume_count += 1;
   state.recovery.last_decision = action;

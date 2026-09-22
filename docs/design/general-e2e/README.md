@@ -75,10 +75,12 @@ v2 配置 `run_slots=3`，5 题执行和正式 collect 均通过，原生请求�
 ### 1. QwenWork General：三题单槽已闭环，队列代码已接入，等待真实三路验收
 
 1. 以[三题正式证据](evidence/qwenwork-macos-general-small3-20260922/README.md)为恢复点，先使用提交后重建的独立发行验证 Skill/package 身份；不要复用旧 v5/v6 调试 collection。
-2. `execute-general-e2e 0.10.11` 已加入 QwenWork `batch.mjs`：默认 `run_slots=3`、manifest/attempt/config 冻结、动态补位、同 attempt resume、不确定发送不重发和队列外 active-session fail-closed；离线 52 项 Qwen Node 回归、19 项 scoring orchestration、19 项脱仓构建通过。
+2. `execute-general-e2e 0.10.12` 已加入 QwenWork `batch.mjs`：默认 `run_slots=3`、manifest/attempt/config 冻结、动态补位、同 attempt resume、不确定发送不重发和队列外 active-session fail-closed；离线 52 项 Qwen Node 回归、19 项 scoring orchestration、19 项脱仓构建通过。
 3. 继续使用固定 smoke 覆盖文件/纯回复与 automated、hybrid、llm_judge 的小批；保持用户当前模型/权限，每题只发送一次，缺失 usage 继续保留 null/coverage。当前五题 r7 第三题应先 fresh probe + 原 attempt resume，禁止新发。
 4. 在当前客户端重新提供可归属 CDP 独占时段后，按 `run_slots=3` 验证默认三路执行、动态补位、同 attempt 恢复不重发和 Qwen 原生实际重叠；随后补发送临界中断、客户端重启、未知授权/追问安全暂停、真实残留进程清理及无关进程保护。Codex 重启仍按用户要求暂缓。
 5. 三题小批已完成 collector/finalizer、评分、return/import 和同源报告；真实五题队列与故障矩阵完成后再更新声明范围并转入 DoubaoWork General；Apple Silicon、Windows、60 题全量和无人值守扩容另验。
+
+当前 1.2.0 真机五题执行队列已完成 5/5、每题一次发送、同 attempt 延迟绑定恢复和唯一 session/cwd；但实际 dispatch peak 为 `1`，dynamic refill 未观察到，native timing coverage 为 `0/5`，receipt 明确为 `INSUFFICIENT_EVIDENCE`。session_id 在发送后延迟落库是当前版本的主要并发观测阻塞；该批次只证明串行执行和恢复安全，不提升默认三路准入，也尚未进入正式 collect/评分/报告。
 
 历史证据根：`/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-macos-general-e2e/`。SLOT04 未建 attempt，退出最终由用户确认；关闭库 probe 当时报 error 14，后续修复只有离线证据。本轮整理未操作客户端，不把历史“进程已退出”当作当前现场。
 

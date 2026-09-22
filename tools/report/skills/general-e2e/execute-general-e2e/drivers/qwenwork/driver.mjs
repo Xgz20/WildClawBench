@@ -65,6 +65,8 @@ function usage() {
   --resume          恢复同一 attempt；进入发送临界区后只观察原 session，禁止重发
   --resume-probe    本次恢复新生成的只读 probe；不参与冻结 config digest
   --resume-probe-sha256  本次恢复 probe 的独立 SHA-256
+  --initial-probe    托管队列本次初始发送使用的 fresh probe；不改冻结配置
+  --initial-probe-sha256  initial probe 文件的 SHA-256
   --observe-once    与 --resume 一起使用；只做一次原生状态/UI 观察
   --managed-queue-id  由 QwenWork 批量队列传入的稳定队列 ID
   --allowed-active-session-id  批量队列当前允许保持 running 的原生 session；可重复
@@ -90,6 +92,8 @@ export function calculateQwenCanaryConfigDigest(config) {
   delete copy.config_digest;
   delete copy.resume;
   delete copy.recovery_probe;
+  delete copy.managed_queue_id;
+  delete copy.allowed_active_session_ids;
   if (copy.prompt) delete copy.prompt.content;
   return sha256(JSON.stringify(stableValue(copy)));
 }
@@ -195,6 +199,8 @@ export function parseDriverArgs(argv) {
     resume: false,
     resumeProbe: "",
     resumeProbeSha256: "",
+    initialProbe: "",
+    initialProbeSha256: "",
     observeOnce: false,
     validateOnly: false,
     managedQueueId: "",
@@ -210,6 +216,13 @@ export function parseDriverArgs(argv) {
       if (!value || value.startsWith("--")) throw new Error(`${argument} 缺少值`);
       if (argument === "--resume-probe") result.resumeProbe = value;
       else result.resumeProbeSha256 = value;
+      index += 1;
+    }
+    else if (argument === "--initial-probe" || argument === "--initial-probe-sha256") {
+      const value = argv[index + 1];
+      if (!value || value.startsWith("--")) throw new Error(`${argument} 缺少值`);
+      if (argument === "--initial-probe") result.initialProbe = value;
+      else result.initialProbeSha256 = value;
       index += 1;
     }
     else if (argument === "--observe-once") result.observeOnce = true;
@@ -240,6 +253,10 @@ export function parseDriverArgs(argv) {
   if (!result.resume && (result.resumeProbe || result.resumeProbeSha256)) {
     throw new Error("--resume-probe 仅可与 --resume 一起使用");
   }
+  if ((result.initialProbe && !result.initialProbeSha256)
+      || (!result.initialProbe && result.initialProbeSha256)) {
+    throw new Error("--initial-probe 与 --initial-probe-sha256 必须同时指定");
+  }
   if (!result.help && !result.config) throw new Error("必须指定 --config");
   if (result.allowedActiveSessionIds.length && !result.managedQueueId) {
     throw new Error("--allowed-active-session-id 必须与 --managed-queue-id 一起使用");
@@ -250,12 +267,16 @@ export function parseDriverArgs(argv) {
 export async function loadQwenCanaryConfig(path, options = {}) {
   const config = JSON.parse(await readFile(resolve(path), "utf8"));
   assertQwenCanaryConfig(config, options);
+  const probePath = options.initialProbePath
+    ? absolutePath(options.initialProbePath, "initial_probe.path")
+    : absolutePath(config.control.probe_path, "control.probe_path");
+  const probeSha256 = options.initialProbeSha256 || config.control.probe_sha256;
   const [prompt, probeContent] = await Promise.all([
     readFile(config.prompt.path, "utf8"),
-    readFile(config.control.probe_path),
+    readFile(probePath),
   ]);
   if (sha256(prompt) !== config.prompt.sha256) throw new Error("QWENWORK_CANARY_PROMPT_DIGEST_MISMATCH");
-  if (sha256(probeContent) !== config.control.probe_sha256) throw new Error("QWENWORK_CANARY_PROBE_DIGEST_MISMATCH");
+  if (sha256(probeContent) !== probeSha256) throw new Error("QWENWORK_CANARY_PROBE_DIGEST_MISMATCH");
   const probe = JSON.parse(probeContent.toString("utf8"));
   assertQwenCanaryProbe(probe, config, Date.now(), {
     requireFresh: options.resume !== true,
@@ -896,6 +917,8 @@ async function main(argv = process.argv.slice(2)) {
     resume: args.resume,
     resumeProbePath: args.resumeProbe,
     resumeProbeSha256: args.resumeProbeSha256,
+    initialProbePath: args.initialProbe,
+    initialProbeSha256: args.initialProbeSha256,
     managedQueueId: args.managedQueueId,
   });
   config.resume = args.resume;

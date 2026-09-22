@@ -254,6 +254,29 @@ test("QwenWork queue resumes an attention task with the same attempt and never r
   }
 });
 
+test("QwenWork queue never converts an attention-only queue into COMPLETED", async () => {
+  const f = await fixture(["one"]);
+  try {
+    let first = true;
+    const execute = async (argv) => {
+      const identity = await identityFrom(argv);
+      if (first) {
+        first = false;
+        await writeJournal(f.root, identity.task_id, identity.attempt_id, "NEEDS_ATTENTION", { sendStatus: "uncertain" });
+        return 3;
+      }
+      await writeJournal(f.root, identity.task_id, identity.attempt_id, "COMPLETED");
+      return 0;
+    };
+    const attention = await runQwenWorkBatch(f.args, { execute });
+    assert.equal(attention.phase, "NEEDS_ATTENTION");
+    const completed = await runQwenWorkBatch([...f.args, "--resume"], { execute });
+    assert.equal(completed.phase, "COMPLETED");
+  } finally {
+    await rm(f.root, { recursive: true, force: true });
+  }
+});
+
 test("QwenWork queue freezes run slots and rejects config and attempt drift on resume", async () => {
   const f = await fixture(["one"]);
   try {

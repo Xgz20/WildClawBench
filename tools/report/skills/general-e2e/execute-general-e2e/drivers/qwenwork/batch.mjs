@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash, randomUUID } from "node:crypto";
-import { lstat, mkdir, open, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
+import { lstat, mkdir, open, readFile, readdir, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { hostname } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -65,11 +65,12 @@ export function parseBatchArgs(argv) {
   let traceRoot = "";
   let probe = "";
   let probeSha256 = "";
+  let configDir = "";
   let resume = false;
   let status = false;
   for (let index = 0; index < args.length;) {
     const arg = args[index];
-    if (["--queue-id", "--run-slots", "--endpoint", "--session-db", "--trace-root", "--probe", "--probe-sha256"].includes(arg)) {
+    if (["--queue-id", "--run-slots", "--endpoint", "--session-db", "--trace-root", "--probe", "--probe-sha256", "--config-dir"].includes(arg)) {
       const value = args[index + 1];
       if (!value || value.startsWith("--")) throw new Error(`${arg} 缺少值`);
       if (arg === "--queue-id") queueId = value;
@@ -78,6 +79,7 @@ export function parseBatchArgs(argv) {
       else if (arg === "--session-db") sessionDb = value;
       else if (arg === "--trace-root") traceRoot = value;
       else if (arg === "--probe") probe = value;
+      else if (arg === "--config-dir") configDir = value;
       else probeSha256 = value;
       args.splice(index, 2);
     } else if (arg === "--resume" || arg === "--status") {
@@ -104,6 +106,7 @@ export function parseBatchArgs(argv) {
     traceRoot: traceRoot ? resolve(traceRoot) : "",
     probe: resolve(probe),
     probeSha256,
+    configDir: configDir ? resolve(configDir) : "",
     resume,
     status,
   };
@@ -142,6 +145,31 @@ async function readManifest(root) {
   const tasks = new Map((manifest.tasks || []).map((task) => [task.task_id, task]));
   if (taskIds.some((id) => !tasks.has(id))) throw new Error("QWENWORK_QUEUE_TASK_DEFINITION_MISSING");
   return { manifest, taskIds, tasks, bytes };
+}
+
+async function loadExistingConfigs(configDir, taskIds, manifest) {
+  await assertPlainPath(configDir, []);
+  const entries = (await readdir(configDir, { withFileTypes: true }))
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"));
+  const byTask = new Map();
+  for (const entry of entries) {
+    const path = join(configDir, entry.name);
+    const config = await readJson(path);
+    const taskId = config.identity?.task_id;
+    if (!taskIds.includes(taskId)) continue;
+    if (byTask.has(taskId)) throw new Error(`QWENWORK_QUEUE_CONFIG_DUPLICATE: ${taskId}`);
+    if (config.identity?.batch_id !== manifest.batch_id || config.identity?.unit_id !== manifest.unit_id) {
+      throw new Error(`QWENWORK_QUEUE_CONFIG_IDENTITY_MISMATCH: ${taskId}`);
+    }
+    if (calculateQwenCanaryConfigDigest(config) !== config.config_digest) {
+      throw new Error(`QWENWORK_QUEUE_CONFIG_DIGEST_MISMATCH: ${taskId}`);
+    }
+    byTask.set(taskId, { path, config, sha256: sha256(await readFile(path)) });
+  }
+  if (taskIds.some((taskId) => !byTask.has(taskId))) {
+    throw new Error("QWENWORK_QUEUE_CONFIG_MISSING");
+  }
+  return byTask;
 }
 
 async function buildTaskConfig(root, manifestInfo, taskId, attemptId, options, frozen) {
@@ -217,8 +245,13 @@ function terminalAt(journal) {
 
 async function synchronizeRow(root, row) {
   const paths = executionPaths(root, row.task_id, row.attempt_id);
-  await assertPlainPath(root, [".general-e2e", "execution", row.task_id, "qwenwork"]);
-  const journal = await optionalJson(paths.journal);
+  const journalPath = row.state_file || paths.journal;
+  const relativeJournal = relative(root, resolve(journalPath));
+  if (!relativeJournal || relativeJournal.startsWith("..") || relativeJournal.includes("\\")) {
+    throw new Error(`QWENWORK_QUEUE_STATE_OUTSIDE_ROOT: ${row.task_id}`);
+  }
+  await assertPlainPath(root, relativeJournal.split("/").filter(Boolean));
+  const journal = await optionalJson(journalPath);
   if (!journal) {
     if (!["PENDING", "DISPATCHING"].includes(row.phase)) {
       throw new Error(`QWENWORK_QUEUE_ATTEMPT_MISSING: ${row.task_id}`);
@@ -336,7 +369,11 @@ function activeSessionArgs(state) {
 
 async function runQwenTask(configPath, row, state, options, dependencies, { resume = false, probe = null } = {}) {
   const args = ["--config", configPath];
-  if (resume) args.push("--resume", "--observe-once", "--resume-probe", probe.path, "--resume-probe-sha256", probe.sha256);
+  if (resume) {
+    args.push("--resume", "--observe-once", "--resume-probe", probe.path, "--resume-probe-sha256", probe.sha256);
+  } else {
+    args.push("--initial-probe", options.probe, "--initial-probe-sha256", options.probeSha256);
+  }
   args.push("--managed-queue-id", state.queue_id, ...activeSessionArgs(state));
   if (dependencies.execute) return dependencies.execute(args);
   const result = await runCapture(process.execPath, [DRIVER_PATH, ...args], { capture: true, allowFailure: true });
@@ -362,6 +399,9 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
   const statePath = join(queueRoot, `${batch.queueId}.json`);
   const receiptPath = join(queueRoot, `${batch.queueId}-receipt.json`);
   const ownerPath = join(queueRoot, "owner-lock.json");
+  const existingConfigs = batch.configDir
+    ? await loadExistingConfigs(batch.configDir, manifestInfo.taskIds, manifestInfo.manifest)
+    : null;
   const manifestHash = sha256(manifestInfo.bytes);
   const frozen = {
     batch_id: manifestInfo.manifest.batch_id,
@@ -372,7 +412,10 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
     endpoint: batch.endpoint,
     session_db: batch.sessionDb,
     trace_root: batch.traceRoot,
-    probe_sha256: batch.probeSha256,
+    config_dir: batch.configDir || null,
+    config_sources: existingConfigs
+      ? manifestInfo.taskIds.map((taskId) => ({ task_id: taskId, sha256: existingConfigs.get(taskId).sha256 }))
+      : null,
     ui_slots: 1,
     run_slots: batch.runSlots,
     driver_sha256: sha256(await readFile(DRIVER_PATH)),
@@ -396,9 +439,15 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
       for (let index = 0; index < manifestInfo.taskIds.length; index += 1) {
         const taskId = manifestInfo.taskIds[index];
         const attemptId = `${manifestInfo.manifest.batch_id}-${String(index + 1).padStart(3, "0")}`;
-        const built = await buildTaskConfig(root, manifestInfo, taskId, attemptId, batch, frozen);
+        const existing = existingConfigs?.get(taskId);
+        const built = existing
+          ? { paths: executionPaths(root, taskId, existing.config.identity.attempt_id), config: existing.config }
+          : await buildTaskConfig(root, manifestInfo, taskId, attemptId, batch, frozen);
         tasks.push({
-          task_id: taskId, attempt_id: attemptId, config_path: built.paths.config,
+          task_id: taskId,
+          attempt_id: existing?.config.identity.attempt_id || attemptId,
+          config_path: existing?.path || built.paths.config,
+          state_file: existing?.config.state_file || built.paths.journal,
           phase: "PENDING", dispatch_attempt_count: 0, session_id: null,
           conversation_id: null, sub_chat_id: null, cwd: null, started_at: null,
           dispatch_started_at: null, finished_at: null, native_started_at: null,
@@ -461,6 +510,13 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
       }
       running = state.tasks.filter((row) => row.phase === "RUNNING");
       const pending = state.tasks.filter((row) => row.phase === "PENDING");
+      const attentionAfterObservation = state.tasks.filter((row) => row.phase === "NEEDS_ATTENTION");
+      if (attentionAfterObservation.length) {
+        state.phase = "NEEDS_ATTENTION";
+        state.active_task_ids = running.map((row) => row.task_id);
+        await persist(statePath, state);
+        return { ...state, state_file: statePath, receipt_file: receiptPath };
+      }
       if (!running.length && !pending.length) {
         const failed = state.tasks.filter((row) => row.phase === "FAILED");
         state.phase = failed.length ? "COMPLETED_WITH_FAILURES" : "COMPLETED";

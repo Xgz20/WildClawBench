@@ -280,6 +280,17 @@ export async function createQwenLocalProject({
   selectNativeFolder,
   timeoutMilliseconds = 30_000,
 }) {
+  // Recover only the dialog whose exact name belongs to this attempt.
+  const dialogs = await visibleLocators(page.getByRole("dialog", { name: "新建个人项目" }));
+  if (dialogs.length > 1) throw new Error("QWENWORK_PROJECT_DIALOG_AMBIGUOUS");
+  if (dialogs.length === 1) {
+    const ownDialog = dialogs[0];
+    const name = await ownDialog.getByRole("textbox", { name: "项目名称" }).inputValue();
+    if (name !== projectName) throw new Error("QWENWORK_FOREIGN_PROJECT_DIALOG");
+    const cancel = await requireUniqueVisible(ownDialog.getByRole("button", { name: "取消", exact: true }), "own-project-dialog-cancel");
+    await cancel.click({ timeout: timeoutMilliseconds });
+    await ownDialog.waitFor({ state: "hidden", timeout: timeoutMilliseconds });
+  }
   const before = await queryProjects();
   const knownProjectNames = before.map((entry) => entry.project_name || entry.name).filter(Boolean);
   await ensureQwenNewTaskView(page, timeoutMilliseconds, projectName, knownProjectNames);
@@ -311,11 +322,16 @@ export async function createQwenLocalProject({
     "new-project-dialog",
   );
   await dialog.getByRole("textbox", { name: "项目名称" }).fill(projectName, { timeout: timeoutMilliseconds });
-  const picker = dialog.locator('[data-slot="path-picker-trigger"]');
-  if (await picker.count() !== 1) throw new Error("QWENWORK_FOLDER_PICKER_COUNT_INVALID");
+  const selectedPickers = dialog.locator('[data-slot="path-picker-root"][data-selected="true"] [data-slot="path-picker-trigger"]');
+  const picker = await requireUniqueVisible(
+    (await visibleLocators(selectedPickers)).length ? selectedPickers : dialog.locator('[data-slot="path-picker-trigger"]'),
+    "folder-picker",
+  );
   await picker.evaluate((element) => element.click());
   await selectNativeFolder(resolve(workspace));
-  const label = dialog.locator('[data-slot="path-picker-value"]');
+  const label = dialog.locator(
+    '[data-slot="path-picker-root"][data-selected="true"] [data-slot="path-picker-value"]',
+  );
   const expectedLabel = basename(workspace);
   await waitForUniqueVisible(async () => {
     const actual = visibleValue(await label.innerText().catch(() => ""));
