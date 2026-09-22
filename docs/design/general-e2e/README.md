@@ -20,6 +20,8 @@
 
 最近实现提交 `414beeff50ad456a4624038f4519dd0a9b8412d8` 及之前 WorkBuddy/QwenWork/DoubaoWork 已接收代码均已进入主工作区；合并代码不提升未完成的真机验收结论。此次未 push。
 
+QwenWork 单题正式闭环实现提交为 `56584119fb9e2b316359f0ecf7b7008a453bfd04`。其独立 release `qwenwork-macos-general-5658411` 和 suite SHA-256 `ad21c166cbcacfa0fed452ab3a92c1dfb3f6bdcbef9c39d0cfe973809f03d6b9` 已通过验包；包内 run/report 0.5.1 对冻结单题重建出与工作区一致的 return package 和 10 Sheet 报告。本地尚未 push。
+
 原三条并行开发的已接收代码及其控制分支提交映射均已进入当前工作区。Qwen selector/SQLite 加固源 `993cdc5` 对应控制提交 `f0bf24f`；collector/metadata 为 `acfc7a1`、`5263890`、`679a1e3`、`82cd3e1`。Doubao Web finalizer/bridge/route/metrics 为 `9bb30aa`、`694536d`、`07b31b7`、`e2c1d9e`。后续从当前树继续，不能因源提交不是祖先再次 cherry-pick；旧 worktree 仅作审计，暂不删除。
 
 当前七个 General Skill：prepare `0.2.0`、execute `0.10.7`、collect `0.7.3`、orchestrate `0.9.5`、score `0.8.2`、report `0.5.1`、run `0.5.1`。run/report 0.5.1 放行身份与哈希有效的 partial collect receipt，并按完整多级 score path 仅打包目标评分 attempt，避免把 runtime 带入回传。`d688326` 接入 JSONL 模型响应/Token，`5631cbd` 接入原生请求与流程耗时；`dc22851`、`5f6275d`、`957e278` 完成 WorkBuddy 并发回执、路径预检和正式资源收口。后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准；不要把新包身份倒填进旧 smoke。
