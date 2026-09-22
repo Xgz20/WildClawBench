@@ -375,10 +375,15 @@ async function discoverSegments(clientTraceRoot, sessionId) {
 function assertTranscriptBinding(rows, state) {
   const expectedWorkspace = resolve(state.session.cwd);
   for (const [index, row] of rows.entries()) {
+    if (isQwenTranscriptMetadataRow(row)) {
+      if (row.sessionId != null && row.sessionId !== state.session.session_id) {
+        throw new Error(`QWENWORK_COLLECTOR_TRANSCRIPT_SESSION_MISMATCH: line=${row.__raw_line || index + 1}`);
+      }
+      continue;
+    }
     if (row.sessionId !== state.session.session_id) {
       throw new Error(`QWENWORK_COLLECTOR_TRANSCRIPT_SESSION_MISMATCH: line=${row.__raw_line || index + 1}`);
     }
-    if (isQwenTranscriptMetadataRow(row)) continue;
     if (!isAbsolute(row.cwd || "") || resolve(row.cwd) !== expectedWorkspace) {
       throw new Error(`QWENWORK_COLLECTOR_TRANSCRIPT_WORKSPACE_MISMATCH: line=${row.__raw_line || index + 1}`);
     }

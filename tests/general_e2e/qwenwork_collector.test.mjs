@@ -222,11 +222,35 @@ test("metadata gate reports partial segment identity without inferring missing v
     known: 2, total: 2, missing: 0, mismatched: 0,
   });
   assert.deepEqual(result.claims_withheld, [
+    "per-row-transcript-metadata-session_id_and_cwd_when_missing",
     "per-row-segment-session_id_when_missing",
     "per-row-segment-cwd_when_missing",
     "terminal_state_from_metadata_only",
     "usage_from_metadata_only",
   ]);
+});
+
+test("file history snapshots may omit row identity while content rows stay exact", () => {
+  const result = assessQwenMetadataCoverage({
+    state: { session: { session_id: "session-fixture-001", cwd: "/fixture/workspace" } },
+    transcriptRows: [
+      { type: "user", sessionId: "session-fixture-001", cwd: "/fixture/workspace" },
+      { type: "assistant", sessionId: "session-fixture-001", cwd: "/fixture/workspace" },
+      { type: "file-history-snapshot", snapshot: { trackedFileBackups: {} } },
+    ],
+    segmentRows: [
+      { session_id: "session-fixture-001", data: { project_root: "/fixture/workspace" } },
+    ],
+    segmentDirectoryBound: true,
+  });
+  assert.equal(result.readiness.ready_for_collect, true);
+  assert.equal(result.readiness.status, "partial");
+  assert.deepEqual(result.transcript.content_session_id, {
+    known: 2, total: 2, missing: 0, mismatched: 0,
+  });
+  assert.deepEqual(result.transcript.session_id, {
+    known: 2, total: 3, missing: 1, mismatched: 0,
+  });
 });
 
 test("metadata gate blocks missing transcript metadata and relative or mismatched segment cwd", () => {

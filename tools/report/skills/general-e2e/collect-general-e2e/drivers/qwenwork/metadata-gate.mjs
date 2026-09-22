@@ -6,6 +6,7 @@ const TRANSCRIPT_METADATA_TYPES = new Set([
   "workspace-directories",
   "active-leaf",
   "last-prompt",
+  "file-history-snapshot",
 ]);
 
 export function isQwenTranscriptMetadataRow(row) {
@@ -109,7 +110,9 @@ function binding(known, total, unit, source) {
 /**
  * Assess raw metadata before a QwenWork collection is archived.
  *
- * Transcript identity and cwd are required on every row. Segment files are
+ * Transcript identity and cwd are required on every content row. QwenWork
+ * system metadata rows may omit both; their coverage remains explicit and
+ * they never become normalized content evidence. Segment files are
  * structurally bound by the discovered `<session_id>/segments` directory;
  * per-row session/cwd fields are reported with coverage and are never filled
  * in from that directory. At least one explicit segment workspace claim is
@@ -134,6 +137,7 @@ export function assessQwenMetadataCoverage({
     metadata_rows: transcriptMetadataRows.length,
     metadata_types: [...new Set(transcriptMetadataRows.map((row) => row?.type))].sort(),
     session_id: coverage(transcriptRows, (row) => row?.sessionId, sessionId),
+    content_session_id: coverage(transcriptContentRows, (row) => row?.sessionId, sessionId),
     cwd: coverage(transcriptContentRows, (row) => row?.cwd, workspace, { workspace: true }),
   };
   transcript.binding = binding(
@@ -163,7 +167,7 @@ export function assessQwenMetadataCoverage({
 
   const blockers = [];
   if (transcriptRows.length === 0) blockers.push("transcript_empty");
-  if (transcript.session_id.missing > 0) blockers.push("transcript_session_id_missing");
+  if (transcript.content_session_id.missing > 0) blockers.push("transcript_session_id_missing");
   if (transcript.session_id.mismatched > 0) blockers.push("transcript_session_id_mismatch");
   if (transcript.cwd.missing > 0) blockers.push("transcript_cwd_missing");
   if (transcript.cwd.mismatched > 0) blockers.push("transcript_cwd_mismatch");
@@ -189,6 +193,7 @@ export function assessQwenMetadataCoverage({
     transcript,
     segments,
     claims_withheld: [
+      "per-row-transcript-metadata-session_id_and_cwd_when_missing",
       "per-row-segment-session_id_when_missing",
       "per-row-segment-cwd_when_missing",
       "terminal_state_from_metadata_only",

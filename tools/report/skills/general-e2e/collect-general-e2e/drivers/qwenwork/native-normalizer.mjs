@@ -1,5 +1,5 @@
 export const QWENWORK_COLLECTOR_ADAPTER_ID = "qwenwork-native-general";
-export const QWENWORK_COLLECTOR_VERSION = "0.1.0";
+export const QWENWORK_COLLECTOR_VERSION = "0.1.1";
 export const RESOURCE_SCHEMA = "urn:wildclawbench:schema:general-e2e:resource-metrics:v1";
 const TOKEN_FIELDS = Object.freeze([
   "input_tokens",

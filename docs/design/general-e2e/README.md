@@ -24,7 +24,7 @@ QwenWork 单题正式闭环实现提交为 `56584119fb9e2b316359f0ecf7b7008a453b
 
 原三条并行开发的已接收代码及其控制分支提交映射均已进入当前工作区。Qwen selector/SQLite 加固源 `993cdc5` 对应控制提交 `f0bf24f`；collector/metadata 为 `acfc7a1`、`5263890`、`679a1e3`、`82cd3e1`。Doubao Web finalizer/bridge/route/metrics 为 `9bb30aa`、`694536d`、`07b31b7`、`e2c1d9e`。后续从当前树继续，不能因源提交不是祖先再次 cherry-pick；旧 worktree 仅作审计，暂不删除。
 
-当前七个 General Skill：prepare `0.2.0`、execute `0.10.8`、collect `0.7.3`、orchestrate `0.9.5`、score `0.8.2`、report `0.5.1`、run `0.5.1`。execute 0.10.8 补齐 QwenWork 从旧会话进入唯一“新任务”页及未发送项目恢复；run/report 0.5.1 放行身份与哈希有效的 partial collect receipt，并按完整多级 score path 仅打包目标评分 attempt，避免把 runtime 带入回传。后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准；不要把新包身份倒填进旧 smoke。
+当前七个 General Skill：prepare `0.2.0`、execute `0.10.8`、collect `0.7.4`、orchestrate `0.9.5`、score `0.8.2`、report `0.5.1`、run `0.5.1`。execute 0.10.8 补齐 QwenWork 从旧会话进入唯一“新任务”页及未发送项目恢复；collect 0.7.4 识别 Qwen 文件任务的 `file-history-snapshot` 系统 metadata，内容行身份门禁保持不变；run/report 0.5.1 放行身份与哈希有效的 partial collect receipt，并按完整多级 score path 仅打包目标评分 attempt。后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准。
 
 当前报告发行与产物见[用例对比及单元评分详情证据](evidence/general-report-details-20260921/README.md)。`89d13d0` 在既有[单元对比报告](evidence/general-report-comparison-20260921/README.md)基础上，将工具数移到请求数后，明细改为每题各单元得分并列，并增加每单元评分详情，共九张公共表加每单元一张详情；v8 为 10 Sheet。题面、规则和判词读取 SHA 绑定的冻结评分包，缺失不从当前任务源码补齐。总览不显示成本与超时数，双耗时与无根因领导版 Markdown 保留。效率明细按普通输入、缓存命中输入、缓存写入输入、输出四类展示，保留总 Token、平均 Token 和命中率；v8 平均 Token 154693、命中率 91.4086%，缓存写入与精确普通输入仍未知。分类/难度/模态、七维评分和工具次数已接入，工具质量比率暂缓。此次只更新报告，没有新增 Harness 或评分执行，原生三路并发结论不变。
 
