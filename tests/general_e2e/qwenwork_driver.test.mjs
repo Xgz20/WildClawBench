@@ -9,6 +9,7 @@ import {
   QWENWORK_CANARY_CONFIG_SCHEMA,
   calculateQwenCanaryConfigDigest,
   loadQwenCanaryConfig,
+  parseDriverArgs,
   runQwenGeneralAttempt,
   verifyQwenSessionPromptEvidence,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/driver.mjs";
@@ -436,6 +437,36 @@ test("resume uses a distinct fresh read-only probe without changing the frozen c
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("managed queue rejects an active session outside its allow-list before UI preparation", async () => {
+  const config = makeConfig({
+    managed_queue_id: "qwen-queue-fixture",
+    allowed_active_session_ids: ["session-allowed"],
+  });
+  let stored = null;
+  let prepared = 0;
+  const result = await runQwenGeneralAttempt(config, {
+    withAttemptLock: async (_config, operation) => operation(),
+    now: clock(),
+    readJournal: async () => stored,
+    writeJournal: async (_path, next) => { stored = structuredClone(next); },
+    prepareUi: async () => { prepared += 1; return { project: project(), configuration: configuration() }; },
+    verifyPreparedUi: async () => ({ project: project(), configuration: configuration(), prompt_sha256: PROMPT_SHA }),
+    fillPrompt: async () => {},
+    dispatchPrompt: async () => ({ method: "fixture-click" }),
+    querySessions: async () => [{ session_id: "session-foreign", classification: { kind: "running" } }],
+    verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA, match_count: 1 }),
+    observeUi: async () => ({ target_session_verified: true, active_stream: false, stop_confirmed: true, conflicts: [] }),
+    writeBindingEvidence: async () => [],
+  });
+  assert.equal(result.journal.phase, "NEEDS_ATTENTION");
+  assert.equal(result.journal.attention.code, "QWENWORK_MANAGED_ACTIVE_SESSION_NOT_ALLOWED");
+  assert.equal(prepared, 0);
+  assert.deepEqual(parseDriverArgs([
+    "--config", "/tmp/config.json", "--managed-queue-id", "qwen-queue-fixture",
+    "--allowed-active-session-id", "session-allowed",
+  ]).allowedActiveSessionIds, ["session-allowed"]);
 });
 
 test("terminal journal replay returns the persisted execution projection without observing or resending", async () => {

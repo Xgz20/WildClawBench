@@ -18,4 +18,8 @@
 
 这轮证明 QwenWork macOS General 已具备三题单槽的执行、恢复、原生采集、候选冻结、评分、回传和报告闭环。它没有证明默认三路后台并发、动态补位、客户端重启、发送临界中断、未知授权/追问安全暂停、真实残留进程保护、Apple Silicon、Windows 或全量 60 题。
 
-下一步按固定五题 smoke 验证默认三路、动态补位和恢复不重发，再补 QwenWork 适用故障矩阵；Codex 重启仍按用户要求暂缓。Token/cache profile 继续保持 unavailable，直到 QwenWork 1.0.6 原生语义得到独立验证。
+代码接续已补齐 QwenWork 专属批量入口 `drivers/qwenwork/batch.mjs`（execute-general-e2e `0.10.11`）：冻结 manifest/attempt/config，默认 `run_slots=3`，按可信终态动态补位，恢复只复用原 attempt，并对队列外 active session fail-closed。Qwen focused Driver/Probe/Collector/Adapter 加队列与 active-session 反例共 52 项 Node 测试、General scoring orchestration 19 项 Python 测试、脱仓 execute 构建 19 项 Python 测试通过；这些是离线实现证据，未提升真实并发准入。
+
+五题 smoke 的本地运行根 `/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-macos-general-20260922-five3-r7` 目前只有前两题正式完成；第三题曾在发送后即时查询竞态中进入 `NEEDS_ATTENTION`，随后数据库读到唯一已完成 session，应使用原 attempt 的 fresh-probe resume 继续收口，禁止新发；第四、第五题尚未开始。当前现场只读复核（`probe-current-followup-20260922.json`）显示 QwenWorkCN `1.2.0`、SDK `1.0.46`、x86_64、active/pending `0`，但 CDP `9250` 不可用且 runtime profile 未匹配，因此本轮没有继续 UI 操作或 Prompt 发送。
+
+下一步仍是 fresh probe + 第三题同 attempt resume；在当前客户端重新提供可归属的 CDP 独占时段后，先完成五题默认三路/动态补位和正式 collect，再补发送临界中断、客户端重启、未知授权/追问安全暂停及进程清理故障矩阵。Codex 重启仍按用户要求暂缓。Token/cache profile 继续保持 unavailable，直到当前 QwenWork runtime 的原生语义得到独立验证。

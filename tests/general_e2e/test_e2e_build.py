@@ -409,6 +409,7 @@ process.stdout.write(JSON.stringify({{
             ("workbuddy", "execute.mjs", "--resume"),
             ("workbuddy", "batch.mjs", "--queue-id"),
             ("qwenwork", "driver.mjs", "--resume"),
+            ("qwenwork", "batch.mjs", "--queue-id"),
             ("qwenwork", "probe.mjs", "--endpoint"),
         ):
             with self.subTest(driver=driver, script=script):

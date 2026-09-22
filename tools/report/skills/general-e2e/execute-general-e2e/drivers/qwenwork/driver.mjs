@@ -66,6 +66,8 @@ function usage() {
   --resume-probe    本次恢复新生成的只读 probe；不参与冻结 config digest
   --resume-probe-sha256  本次恢复 probe 的独立 SHA-256
   --observe-once    与 --resume 一起使用；只做一次原生状态/UI 观察
+  --managed-queue-id  由 QwenWork 批量队列传入的稳定队列 ID
+  --allowed-active-session-id  批量队列当前允许保持 running 的原生 session；可重复
   -h, --help        显示帮助
 
 Driver 不启动、重启或退出 QwenWork，不切换模型或权限。live 模式要求配置中登记独占桌面时段和显式执行授权。`;
@@ -195,6 +197,8 @@ export function parseDriverArgs(argv) {
     resumeProbeSha256: "",
     observeOnce: false,
     validateOnly: false,
+    managedQueueId: "",
+    allowedActiveSessionIds: [],
     help: false,
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -209,6 +213,18 @@ export function parseDriverArgs(argv) {
       index += 1;
     }
     else if (argument === "--observe-once") result.observeOnce = true;
+    else if (argument === "--managed-queue-id") {
+      const value = argv[index + 1];
+      if (!value || value.startsWith("--")) throw new Error("--managed-queue-id 缺少值");
+      result.managedQueueId = value;
+      index += 1;
+    }
+    else if (argument === "--allowed-active-session-id") {
+      const value = argv[index + 1];
+      if (!value || value.startsWith("--")) throw new Error("--allowed-active-session-id 缺少值");
+      result.allowedActiveSessionIds.push(value);
+      index += 1;
+    }
     else if (argument === "--validate-only") result.validateOnly = true;
     else if (argument === "--config") {
       const value = argv[index + 1];
@@ -225,6 +241,9 @@ export function parseDriverArgs(argv) {
     throw new Error("--resume-probe 仅可与 --resume 一起使用");
   }
   if (!result.help && !result.config) throw new Error("必须指定 --config");
+  if (result.allowedActiveSessionIds.length && !result.managedQueueId) {
+    throw new Error("--allowed-active-session-id 必须与 --managed-queue-id 一起使用");
+  }
   return result;
 }
 
@@ -240,7 +259,11 @@ export async function loadQwenCanaryConfig(path, options = {}) {
   const probe = JSON.parse(probeContent.toString("utf8"));
   assertQwenCanaryProbe(probe, config, Date.now(), {
     requireFresh: options.resume !== true,
-    requireIdle: options.resume !== true,
+    // A managed queue deliberately keeps already-bound native sessions alive
+    // while it fills the remaining slots. The live driver performs the
+    // stronger allow-list check against a fresh SQLite query before any UI
+    // action; standalone attempts retain the idle gate.
+    requireIdle: options.resume !== true && !options.managedQueueId,
   });
   let recoveryProbe = null;
   if (options.resume === true) {
@@ -542,6 +565,18 @@ async function observeBoundAttempt(config, state, dependencies) {
   return { journal: state, execution_state: executionState };
 }
 
+async function assertManagedActiveSessions(config, state, dependencies) {
+  if (!config.managed_queue_id) return;
+  const rows = await dependencies.querySessions();
+  const active = rows.filter((row) => row?.classification?.kind === "running");
+  const allowed = new Set(config.allowed_active_session_ids || []);
+  if (state.session?.session_id) allowed.add(state.session.session_id);
+  const unknown = active.filter((row) => !row.session_id || !allowed.has(row.session_id));
+  if (unknown.length) {
+    throw new Error(`QWENWORK_MANAGED_ACTIVE_SESSION_NOT_ALLOWED: ${unknown.map((row) => row.session_id || "<missing>").join(",")}`);
+  }
+}
+
 async function runQwenGeneralAttemptLocked(config, overrides = {}) {
   assertQwenCanaryConfig(config, { requireLiveAuthorization: true });
   const dependencies = {
@@ -591,6 +626,18 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
       dependencies,
       "QWENWORK_RECOVERY_PROBE_NOT_IDLE_FOR_UNSENT_ATTEMPT",
       "恢复时仍存在活动或待处理原生会话；本 attempt 尚未发送，禁止准备或进入发送临界区",
+    );
+  }
+
+  try {
+    await assertManagedActiveSessions(config, state, dependencies);
+  } catch (error) {
+    return persistAttention(
+      config,
+      state,
+      dependencies,
+      "QWENWORK_MANAGED_ACTIVE_SESSION_NOT_ALLOWED",
+      `${error instanceof Error ? error.message : String(error)}；禁止发送或切换会话`,
     );
   }
 
@@ -849,8 +896,11 @@ async function main(argv = process.argv.slice(2)) {
     resume: args.resume,
     resumeProbePath: args.resumeProbe,
     resumeProbeSha256: args.resumeProbeSha256,
+    managedQueueId: args.managedQueueId,
   });
   config.resume = args.resume;
+  config.managed_queue_id = args.managedQueueId || null;
+  config.allowed_active_session_ids = [...args.allowedActiveSessionIds];
   if (args.validateOnly) {
     process.stdout.write(`${JSON.stringify({
       status: "VALID",

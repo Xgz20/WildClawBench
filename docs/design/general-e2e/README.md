@@ -72,13 +72,13 @@ v2 配置 `run_slots=3`，5 题执行和正式 collect 均通过，原生请求�
 - WorkBuddy 客户端执行中重启/重连已有最小真机证据；未知授权/追问、stale lock 无人值守自动恢复仍未形成完整矩阵，当前策略是暂停并保留现场，不自动抢占陈旧锁。Codex 重启项因远程控制风险暂缓。
 - 下一步只补上述最小真机故障验证和评分稳定性，不扩展到 60 题全量。AstronStudio 历史 MAC 表不能直接作为 WorkBuddy 通过依据；题目 `timeout_seconds` 继续不限制执行或参与评分。
 
-### 1. QwenWork General：三题单槽已闭环，扩到默认三路
+### 1. QwenWork General：三题单槽已闭环，队列代码已接入，等待真实三路验收
 
 1. 以[三题正式证据](evidence/qwenwork-macos-general-small3-20260922/README.md)为恢复点，先使用提交后重建的独立发行验证 Skill/package 身份；不要复用旧 v5/v6 调试 collection。
-2. 准备固定 smoke 中覆盖文件/纯回复与 automated、hybrid、llm_judge 的小批；保持用户当前模型/权限，每题只发送一次，缺失 usage 继续保留 null/coverage。
-3. 单槽复核文件任务的 candidate freeze、规则评分与工具轨迹；再按 `run_slots=3` 验证默认三路执行、动态补位、同 attempt 恢复不重发和 Qwen 原生实际重叠。
-4. 补 QwenWork 适用故障矩阵：发送临界中断、客户端重启、未知授权/追问安全暂停、真实残留进程清理及无关进程保护。Codex 重启仍按用户要求暂缓。
-5. 三题小批已完成 collector/finalizer、评分、return/import 和同源报告；下一项是五题默认三路、动态补位和故障矩阵，之后再更新声明范围并转入 DoubaoWork General；Apple Silicon、Windows、60 题全量和无人值守扩容另验。
+2. `execute-general-e2e 0.10.11` 已加入 QwenWork `batch.mjs`：默认 `run_slots=3`、manifest/attempt/config 冻结、动态补位、同 attempt resume、不确定发送不重发和队列外 active-session fail-closed；离线 52 项 Qwen Node 回归、19 项 scoring orchestration、19 项脱仓构建通过。
+3. 继续使用固定 smoke 覆盖文件/纯回复与 automated、hybrid、llm_judge 的小批；保持用户当前模型/权限，每题只发送一次，缺失 usage 继续保留 null/coverage。当前五题 r7 第三题应先 fresh probe + 原 attempt resume，禁止新发。
+4. 在当前客户端重新提供可归属 CDP 独占时段后，按 `run_slots=3` 验证默认三路执行、动态补位、同 attempt 恢复不重发和 Qwen 原生实际重叠；随后补发送临界中断、客户端重启、未知授权/追问安全暂停、真实残留进程清理及无关进程保护。Codex 重启仍按用户要求暂缓。
+5. 三题小批已完成 collector/finalizer、评分、return/import 和同源报告；真实五题队列与故障矩阵完成后再更新声明范围并转入 DoubaoWork General；Apple Silicon、Windows、60 题全量和无人值守扩容另验。
 
 历史证据根：`/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-macos-general-e2e/`。SLOT04 未建 attempt，退出最终由用户确认；关闭库 probe 当时报 error 14，后续修复只有离线证据。本轮整理未操作客户端，不把历史“进程已退出”当作当前现场。
 

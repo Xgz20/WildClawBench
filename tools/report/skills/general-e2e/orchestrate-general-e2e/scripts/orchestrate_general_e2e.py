@@ -726,12 +726,15 @@ def initialize(
     execution_records: Mapping[str, Path] | None = None,
     api_runtime_config: Path | None = None,
     acceptance_id: str | None = None,
-    score_timeout_seconds: int = 7200,
+    score_timeout_seconds: int | None = None,
     score_slots: int = DEFAULT_SCORE_SLOTS,
     now: datetime | None = None,
 ) -> dict[str, Any]:
-    if score_timeout_seconds < 1:
-        raise OrchestrationError("SCORE_TIMEOUT_INVALID")
+    # General E2E deliberately has no task-level scoring deadline.  Keep the
+    # parameter for callers that still pass the pre-v7 compatibility option,
+    # but never persist or enforce that value.  Low-level transport/worker
+    # safeguards remain independent runtime protections.
+    score_timeout_seconds = None
     if not 1 <= score_slots <= MAX_SCORE_SLOTS:
         raise OrchestrationError(
             "SCORE_SLOTS_UNSUPPORTED", f"expected 1..{MAX_SCORE_SLOTS}"
@@ -976,12 +979,14 @@ def initialize_rescore(
     task_ids: Sequence[str] = (),
     api_runtime_config: Path | None = None,
     acceptance_id: str | None = None,
-    score_timeout_seconds: int = 7200,
+    score_timeout_seconds: int | None = None,
     score_slots: int = DEFAULT_SCORE_SLOTS,
     now: datetime | None = None,
 ) -> dict[str, Any]:
-    if score_timeout_seconds < 1:
-        raise OrchestrationError("SCORE_TIMEOUT_INVALID")
+    # See initialize(): scoring threads are not stopped by an orchestration
+    # deadline.  The legacy argument is accepted only for state compatibility
+    # and is intentionally discarded.
+    score_timeout_seconds = None
     if not 1 <= score_slots <= MAX_SCORE_SLOTS:
         raise OrchestrationError(
             "SCORE_SLOTS_UNSUPPORTED", f"expected 1..{MAX_SCORE_SLOTS}"
@@ -1923,8 +1928,22 @@ def _recommended_actions_for_task(
             }
         ]
     thread = task.get("thread") or {}
-    deadline = _parse_timestamp(thread.get("deadline_at"), "thread.deadline_at")
-    if phase in {"THREAD_RUNNING", "NEEDS_ATTENTION"} and now >= deadline and not thread.get("timed_out_at"):
+    # New General E2E orchestrations set deadline_at=null.  In that mode a
+    # scoring thread remains active until Codex reports a terminal state.
+    # Retain the deadline branch only for old state files that already contain
+    # a concrete deadline, so recovery of an older run stays deterministic.
+    deadline_value = thread.get("deadline_at")
+    deadline = (
+        _parse_timestamp(deadline_value, "thread.deadline_at")
+        if deadline_value is not None
+        else None
+    )
+    if (
+        deadline is not None
+        and phase in {"THREAD_RUNNING", "NEEDS_ATTENTION"}
+        and now >= deadline
+        and not thread.get("timed_out_at")
+    ):
         return [
             {
                 "action": "MARK_TIMEOUT",
@@ -2258,7 +2277,6 @@ def record_thread(
     if task.get("phase") != "PREFLIGHT_PASSED":
         raise OrchestrationError("THREAD_NOT_EXPECTED", task_id)
     event_time = now or _now()
-    deadline = event_time + timedelta(seconds=int(state["score_timeout_seconds"]))
     host_id = _required_string(host_id, "host_id")
     if host_id != task["project"]["host_id"]:
         raise OrchestrationError("THREAD_HOST_MISMATCH", host_id)
@@ -2266,7 +2284,7 @@ def record_thread(
         "thread_id": _required_string(thread_id, "thread_id"),
         "host_id": host_id,
         "started_at": _timestamp(event_time),
-        "deadline_at": _timestamp(deadline),
+        "deadline_at": None,
         "cursor": None,
         "wait_sequence": 0,
         "status": "RUNNING",
@@ -2304,8 +2322,13 @@ def record_wait(
     if wait_status not in WAIT_STATUSES:
         raise OrchestrationError("WAIT_STATUS_INVALID", wait_status)
     event_time = now or _now()
-    deadline = _parse_timestamp(thread.get("deadline_at"), "thread.deadline_at")
-    if event_time >= deadline and not thread.get("timed_out_at"):
+    deadline_value = thread.get("deadline_at")
+    deadline = (
+        _parse_timestamp(deadline_value, "thread.deadline_at")
+        if deadline_value is not None
+        else None
+    )
+    if deadline is not None and event_time >= deadline and not thread.get("timed_out_at"):
         thread["timed_out_at"] = _timestamp(event_time)
         task["history"].append(
             {"at": _timestamp(event_time), "event": "DEADLINE_REACHED_DURING_WAIT"}
@@ -2548,6 +2571,8 @@ def mark_timeout(
     if not isinstance(thread, dict):
         raise OrchestrationError("THREAD_STATE_INVALID", task_id)
     event_time = now or _now()
+    if thread.get("deadline_at") is None:
+        raise OrchestrationError("SCORING_DEADLINE_DISABLED", task_id)
     deadline = _parse_timestamp(thread.get("deadline_at"), "thread.deadline_at")
     if event_time < deadline:
         raise OrchestrationError("THREAD_DEADLINE_NOT_REACHED", thread["deadline_at"])
@@ -2583,7 +2608,12 @@ def main(argv: list[str] | None = None) -> int:
     init.add_argument("--execution-record", action="append", default=[])
     init.add_argument("--api-runtime-config", type=Path)
     init.add_argument("--acceptance-id")
-    init.add_argument("--score-timeout-seconds", type=int, default=7200)
+    init.add_argument(
+        "--score-timeout-seconds",
+        type=int,
+        default=None,
+        help="兼容旧脚本的参数；General E2E 评分不设置任务级超时，传入值会被忽略",
+    )
     init.add_argument("--score-slots", type=int, default=DEFAULT_SCORE_SLOTS)
 
     init_rescore = subparsers.add_parser("init-rescore")
@@ -2597,7 +2627,12 @@ def main(argv: list[str] | None = None) -> int:
     init_rescore.add_argument("--task-id", action="append", default=[])
     init_rescore.add_argument("--api-runtime-config", type=Path)
     init_rescore.add_argument("--acceptance-id")
-    init_rescore.add_argument("--score-timeout-seconds", type=int, default=7200)
+    init_rescore.add_argument(
+        "--score-timeout-seconds",
+        type=int,
+        default=None,
+        help="兼容旧脚本的参数；General E2E 评分不设置任务级超时，传入值会被忽略",
+    )
     init_rescore.add_argument("--score-slots", type=int, default=DEFAULT_SCORE_SLOTS)
 
     for name in ("status", "resume"):

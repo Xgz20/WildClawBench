@@ -894,7 +894,7 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             host_id="host-local",
             now=self.t0,
         )
-        deadline = view["tasks"][0]["deadline_at"]
+        self.assertIsNone(view["tasks"][0]["deadline_at"])
         view = ORCHESTRATOR.record_wait(
             root,
             task_id=task_id,
@@ -907,7 +907,7 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         self.assertEqual(wait["action"], "WAIT_EXISTING_THREAD")
         self.assertEqual(wait["after_cursor"], "cursor-one")
         self.assertEqual(wait["next_wait_sequence"], 2)
-        self.assertEqual(view["tasks"][0]["deadline_at"], deadline)
+        self.assertIsNone(view["tasks"][0]["deadline_at"])
         resumed = ORCHESTRATOR.status(root, now=self.t0 + timedelta(seconds=10))
         self.assertEqual(resumed["recommended_actions"], view["recommended_actions"])
         with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError, "WAIT_SEQUENCE_MISMATCH"):
@@ -1025,7 +1025,7 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             )
         )
 
-    def test_deadline_does_not_create_replacement_before_original_thread_is_terminal(self) -> None:
+    def test_scoring_thread_has_no_task_deadline_and_waits_for_native_terminal_state(self) -> None:
         fixture = Fixture(self.root, task_ids=("task-one",))
         view = fixture.initialize(timeout=10, now=self.t0)
         view = self._record_first_project(fixture, view)
@@ -1041,87 +1041,26 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             host_id="host-local",
             now=self.t0,
         )
+        due = ORCHESTRATOR.status(root, now=self.t0 + timedelta(days=30))
+        self.assertEqual(due["recommended_actions"][0]["action"], "WAIT_EXISTING_THREAD")
         with self.assertRaisesRegex(
-            ORCHESTRATOR.OrchestrationError, "THREAD_DEADLINE_NOT_REACHED"
+            ORCHESTRATOR.OrchestrationError, "SCORING_DEADLINE_DISABLED"
         ):
             ORCHESTRATOR.mark_timeout(
-                root, task_id=task_id, now=self.t0 + timedelta(seconds=9)
+                root, task_id=task_id, now=self.t0 + timedelta(days=30)
             )
-        due = ORCHESTRATOR.status(root, now=self.t0 + timedelta(seconds=11))
-        self.assertEqual(due["recommended_actions"][0]["action"], "MARK_TIMEOUT")
-        timed_out = ORCHESTRATOR.mark_timeout(
-            root, task_id=task_id, now=self.t0 + timedelta(seconds=11)
-        )
-        action = timed_out["recommended_actions"][0]
-        self.assertEqual(action["action"], "WAIT_EXISTING_THREAD_AFTER_DEADLINE")
-        self.assertEqual(action["thread_id"], "thread-one")
         terminal = ORCHESTRATOR.record_wait(
             root,
             task_id=task_id,
             wait_sequence=1,
             wait_cursor="cursor-terminal",
             wait_status="COMPLETED",
-            now=self.t0 + timedelta(seconds=12),
+            now=self.t0 + timedelta(days=30),
         )
-        self.assertEqual(terminal["status"], "COMPLETED_WITH_FAILURES")
-        self.assertEqual(terminal["failed_count"], 1)
+        self.assertEqual(terminal["status"], "RUNNING")
         self.assertEqual(
-            terminal["recommended_actions"][0]["action"], "BUILD_SUBMISSION"
+            terminal["recommended_actions"][0]["action"], "VERIFY_SCORE"
         )
-
-        late_fixture = Fixture(self.root / "late", task_ids=("task-one",))
-        late = late_fixture.initialize(timeout=10, now=self.t0)
-        late = self._record_first_project(late_fixture, late)
-        late_root = Path(late["orchestration_root"])
-        ORCHESTRATOR.preflight(
-            late_root,
-            task_id="task-one",
-            desktop_version="2026.918.1",
-            now=self.t0,
-        )
-        ORCHESTRATOR.record_thread(
-            late_root,
-            task_id="task-one",
-            thread_id="thread-late",
-            host_id="host-local",
-            now=self.t0,
-        )
-        late_terminal = ORCHESTRATOR.record_wait(
-            late_root,
-            task_id="task-one",
-            wait_sequence=1,
-            wait_cursor="cursor-late-terminal",
-            wait_status="COMPLETED",
-            now=self.t0 + timedelta(seconds=11),
-        )
-        self.assertEqual(late_terminal["status"], "COMPLETED_WITH_FAILURES")
-        self.assertEqual(late_terminal["failed_count"], 1)
-
-        # A user-authorized recovery may accept a late but explicitly completed
-        # thread after re-verifying its frozen score. The default deadline
-        # behavior above remains fail-closed.
-        self._record_fixture_score(late_root, "task-one", valid=True, total_score=0.8)
-        late_state_path = late_root / "orchestration-state.json"
-        late_state = json.loads(late_state_path.read_text(encoding="utf-8"))
-        late_task = late_state["tasks"][0]
-        late_task["phase"] = "THREAD_FAILED"
-        late_task["score"] = None
-        late_state["status"] = ORCHESTRATOR._state_status(late_state)
-        late_state_path.write_text(json.dumps(late_state), encoding="utf-8")
-        with patch.object(
-            ORCHESTRATOR,
-            "_run_score_command",
-            side_effect=self._fixture_score_command,
-        ):
-            recovered = ORCHESTRATOR.record_score(
-                late_root,
-                task_id="task-one",
-                allow_late_completion=True,
-                now=self.t0 + timedelta(seconds=13),
-            )
-        self.assertEqual(recovered["tasks"][0]["phase"], "SCORE_RECORDED")
-        history = json.loads(late_state_path.read_text(encoding="utf-8"))["tasks"][0]["history"]
-        self.assertEqual(history[-1]["event"], "SCORE_RECORDED_LATE_COMPLETION")
 
     def test_late_completion_replaces_only_the_strictly_reproducible_submission(self) -> None:
         fixture = Fixture(self.root, task_ids=("task-one",))
@@ -1141,6 +1080,15 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             host_id="host-local",
             now=self.t0,
         )
+        # Exercise recovery compatibility for a state created by the former
+        # deadline-based controller. New orchestrations never create this
+        # field with a timestamp.
+        legacy_state_path = root / "orchestration-state.json"
+        legacy_state = json.loads(legacy_state_path.read_text(encoding="utf-8"))
+        legacy_state["tasks"][0]["thread"]["deadline_at"] = ORCHESTRATOR._timestamp(
+            self.t0 + timedelta(seconds=10)
+        )
+        legacy_state_path.write_text(json.dumps(legacy_state), encoding="utf-8")
         ORCHESTRATOR.record_wait(
             root,
             task_id="task-one",
