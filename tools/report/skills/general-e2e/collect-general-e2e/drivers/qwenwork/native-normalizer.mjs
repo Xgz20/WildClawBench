@@ -92,6 +92,10 @@ function pending({ eventId, occurredAt, type, sourceValue, role = null, content 
   };
 }
 
+function isInjectedSystemReminder(text) {
+  return typeof text === "string" && /^<system-reminder>\s/u.test(text);
+}
+
 export function normalizeQwenNativeTrace({ identity, transcriptRows, segmentRows, redacted = false }) {
   const outcomes = collectToolOutcomes(segmentRows);
   const events = [];
@@ -114,6 +118,10 @@ export function normalizeQwenNativeTrace({ identity, transcriptRows, segmentRows
         sourceValue: source(row, redacted),
       };
       if (row.type === "user" && part.type === "text") {
+        if (isInjectedSystemReminder(part.text)) {
+          filteredNativeEventCount += 1;
+          continue;
+        }
         append(pending({ ...base, type: "user_message", role: "user", content: part.text ?? null }));
       } else if (row.type === "assistant" && part.type === "text") {
         append(pending({ ...base, type: "assistant_message", role: "assistant", content: part.text ?? null }));

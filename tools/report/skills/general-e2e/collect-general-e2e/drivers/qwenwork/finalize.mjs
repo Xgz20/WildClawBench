@@ -27,7 +27,7 @@ export async function finalizeQwenWorkExecution(options) {
   const [state, traceIndex, resourceMetrics] = await Promise.all(
     [options.stateFile, options.traceIndex, options.resourceMetrics].map(async (path) => JSON.parse(await readFile(path, "utf8"))),
   );
-  if (state?.driver?.harness !== "qwenwork" || state?.driver?.platform !== "macos") {
+  if (state?.driver?.harness !== "qwenwork" || !String(state?.driver?.platform || "").startsWith("macos")) {
     throw new Error("QWENWORK_FINALIZER_STATE_IDENTITY_INVALID");
   }
   return finalizeGeneralExecution({

@@ -256,6 +256,18 @@ async function normalizeFormalState(journal, unitRoot) {
       || state.phase !== journal.phase || !sameIdentity(state.identity, journal.identity)) {
     throw new Error("QWENWORK_COLLECTOR_EXECUTION_STATE_INVALID");
   }
+  const manifest = JSON.parse(await readFile(join(unitRoot, "manifest.json"), "utf8"));
+  const manifestHarness = manifest?.unit?.harness;
+  if (manifestHarness?.id !== "qwenwork" || typeof manifestHarness.platform !== "string") {
+    throw new Error("QWENWORK_COLLECTOR_MANIFEST_HARNESS_INVALID");
+  }
+  if (state.driver.harness !== manifestHarness.id
+      || !String(manifestHarness.platform).startsWith("macos")) {
+    throw new Error("QWENWORK_COLLECTOR_DRIVER_PLATFORM_INVALID");
+  }
+  // CB-A uses the OS-level macOS label; formal General contracts bind the
+  // execution state to the prepared unit's precise platform identity.
+  state.driver.platform = manifestHarness.platform;
   if (state.send?.dispatch_attempt_count !== 1 || journal.send?.dispatch_attempt_count !== 1
       || state.prompt?.send_status !== "sent" || state.session?.verified !== true) {
     throw new Error("QWENWORK_COLLECTOR_DISPATCH_OR_SESSION_UNVERIFIED");
@@ -484,6 +496,8 @@ export async function collectQwenWorkEvidence(options) {
     source.bytes,
   ));
   const stateBytes = jsonBytes(state);
+  const metadataCoverageBytes = jsonBytes(metadataCoverage);
+  const metadataCoverageArtifact = artifact("raw/metadata-coverage.json", metadataCoverageBytes);
   const index = {
     schema_id: TRACE_INDEX_SCHEMA,
     schema_version: 2,
@@ -501,7 +515,7 @@ export async function collectQwenWorkEvidence(options) {
       lifecycle_generation: null,
     },
     transcript: artifact("transcript.jsonl", transcriptBytes, { event_count: normalized.events.length }),
-    raw_trace: rawArtifacts,
+    raw_trace: [...rawArtifacts, metadataCoverageArtifact],
     binding_evidence: bindingArtifacts,
     normalization: {
       native_event_count: normalized.native_event_count,
@@ -509,7 +523,6 @@ export async function collectQwenWorkEvidence(options) {
       filtered_native_event_count: normalized.filtered_native_event_count,
       compatibility_profiles: ["general-e2e-transcript-event-v1", "qwenwork-native-1.0.6-unverified-token-semantics"],
     },
-    metadata_coverage: metadataCoverage,
     completeness: traceCompleteness(normalized.events, calls, segmentRows),
     calls,
   };
@@ -517,6 +530,7 @@ export async function collectQwenWorkEvidence(options) {
   const resourceSources = [
     artifact("execution/automation-state.json", stateBytes),
     artifact("trace/trace-index.json", indexBytes),
+    { ...metadataCoverageArtifact, path: `trace/${metadataCoverageArtifact.path}` },
     ...rawArtifacts.slice(1).map((item) => ({ ...item, path: `trace/${item.path}` })),
   ];
   const resource = buildQwenStrictResourceMetrics({
@@ -547,6 +561,7 @@ export async function collectQwenWorkEvidence(options) {
     }
     await writeFile(join(stage, "trace", "transcript.jsonl"), transcriptBytes, { flag: "wx", mode: 0o600 });
     await writeFile(join(stage, "trace", "trace-index.json"), indexBytes, { flag: "wx", mode: 0o600 });
+    await writeFile(join(stage, "trace", "raw", "metadata-coverage.json"), metadataCoverageBytes, { flag: "wx", mode: 0o600 });
     await writeFile(join(stage, "resource-metrics.json"), resourceBytes, { flag: "wx", mode: 0o600 });
     await rename(stage, outputRoot);
   } catch (error) {
@@ -560,7 +575,7 @@ export async function collectQwenWorkEvidence(options) {
     trace_index: join(outputRoot, "trace", "trace-index.json"),
     resource_metrics: join(outputRoot, "resource-metrics.json"),
     identity: state.identity,
-    trace: index,
+    trace: { ...index, metadata_coverage: metadataCoverage },
     resource,
   };
 }
