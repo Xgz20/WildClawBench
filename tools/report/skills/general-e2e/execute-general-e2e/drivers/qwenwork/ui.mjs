@@ -326,6 +326,10 @@ export async function inspectQwenTaskUi(page, observedAt, expectedSession = null
     entry?.conversation_id === expectedConversationId
     && visibleValue(entry?.sub_chat_name) === expectedSubChatName
   )) : [];
+  const taskHeading = taskViews.length === 1
+    ? visibleValue((await taskViews[0].innerText().catch(() => "")).split(/\r?\n/u)[0])
+    : "";
+  const uiSubChatName = taskHeading || title;
   const exactPeer = peers.length === 1
     && peers[0]?.sub_chat_id === expectedSubChatId
     && peers[0]?.session_id === expectedSessionId;
@@ -335,7 +339,7 @@ export async function inspectQwenTaskUi(page, observedAt, expectedSession = null
     && expectedSessionId
     && expectedSubChatName
     && conversationId === expectedConversationId
-    && title === expectedSubChatName
+    && uiSubChatName === expectedSubChatName
     && exactPeer
     && taskViews.length === 1
   );
@@ -343,8 +347,8 @@ export async function inspectQwenTaskUi(page, observedAt, expectedSession = null
   if (!expectedConversationId || conversationId !== expectedConversationId) {
     conflicts.push(`ui-conversation-mismatch:${conversationId || "<none>"}`);
   }
-  if (!expectedSubChatName || title !== expectedSubChatName) {
-    conflicts.push(`ui-sub-chat-title-mismatch:${title || "<none>"}`);
+  if (!expectedSubChatName || uiSubChatName !== expectedSubChatName) {
+    conflicts.push(`ui-sub-chat-title-mismatch:${uiSubChatName || "<none>"}`);
   }
   if (!exactPeer) conflicts.push(`ui-sub-chat-identity-count:${peers.length}`);
   if (taskViews.length !== 1) conflicts.push(`ui-task-view-count:${taskViews.length}`);
@@ -357,7 +361,7 @@ export async function inspectQwenTaskUi(page, observedAt, expectedSession = null
       conversation_id: conversationId,
       sub_chat_id: targetSessionVerified ? expectedSubChatId : null,
       session_id: targetSessionVerified ? expectedSessionId : null,
-      sub_chat_name: title || null,
+      sub_chat_name: uiSubChatName || null,
       unique_database_identity: exactPeer,
     },
     active_stream: targetSessionVerified ? stopControls.length === 1 : null,

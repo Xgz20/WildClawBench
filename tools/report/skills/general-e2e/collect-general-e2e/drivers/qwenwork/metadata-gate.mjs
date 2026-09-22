@@ -1,6 +1,13 @@
 export const QWENWORK_METADATA_GATE_SCHEMA =
   "wildclawbench.general-e2e-qwenwork-metadata-gate/v1";
 
+const TRANSCRIPT_METADATA_TYPES = new Set([
+  "runtime-config",
+  "workspace-directories",
+  "active-leaf",
+  "last-prompt",
+]);
+
 function expectedString(value, label) {
   if (typeof value !== "string" || !value.trim()) {
     throw new Error(`QWENWORK_METADATA_GATE_EXPECTED_VALUE_MISSING: ${label}`);
@@ -116,14 +123,18 @@ export function assessQwenMetadataCoverage({
     throw new Error("QWENWORK_METADATA_GATE_ROWS_INVALID");
   }
 
+  const transcriptContentRows = transcriptRows.filter((row) => !TRANSCRIPT_METADATA_TYPES.has(row?.type));
+  const transcriptMetadataRows = transcriptRows.filter((row) => TRANSCRIPT_METADATA_TYPES.has(row?.type));
   const transcript = {
     rows: transcriptRows.length,
+    metadata_rows: transcriptMetadataRows.length,
+    metadata_types: [...new Set(transcriptMetadataRows.map((row) => row?.type))].sort(),
     session_id: coverage(transcriptRows, (row) => row?.sessionId, sessionId),
-    cwd: coverage(transcriptRows, (row) => row?.cwd, workspace, { workspace: true }),
+    cwd: coverage(transcriptContentRows, (row) => row?.cwd, workspace, { workspace: true }),
   };
   transcript.binding = binding(
-    transcriptRows.filter((row) => row?.sessionId === sessionId && sameWorkspace(row?.cwd, workspace)).length,
-    transcriptRows.length,
+    transcriptContentRows.filter((row) => row?.sessionId === sessionId && sameWorkspace(row?.cwd, workspace)).length,
+    transcriptContentRows.length,
     "transcript_row",
     "explicit_session_id_and_cwd",
   );
