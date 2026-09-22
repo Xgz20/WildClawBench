@@ -951,7 +951,14 @@ def prepare_attempt(
         or not isinstance(execution.get("execution"), dict)
         or execution["execution"].get("business_status") != "completed"
         or not isinstance(execution.get("evidence"), dict)
-        or execution["evidence"].get("completeness") != "complete"
+        or (
+            execution["evidence"].get("completeness") != "complete"
+            and not (
+                execution["evidence"].get("completeness") == "partial"
+                and set(execution["evidence"].get("missing") or [])
+                <= {"resource_metrics_complete_coverage"}
+            )
+        )
     ):
         raise ScoringRuntimeError("EXECUTION_NOT_SCORABLE")
     batch_id = _identifier(identity.get("batch_id"), "batch_id")
