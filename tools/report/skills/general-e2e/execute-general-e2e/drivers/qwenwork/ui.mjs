@@ -18,6 +18,7 @@ export const QWEN_STOP_SELECTOR = [
   'button[title*="Stop"]:not([disabled]):not([aria-disabled="true"]):visible',
 ].join(", ");
 export const QWEN_TASK_VIEW_SELECTOR = ".agents-chat-view-root";
+export const QWEN_NEW_TASK_SELECTOR = 'button[aria-label="新任务"]';
 
 function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
@@ -174,6 +175,32 @@ async function selectedProjectTrigger(page, expectedProjectName = null, knownPro
   return projectSelectors[0];
 }
 
+export async function ensureQwenNewTaskView(
+  page,
+  timeoutMilliseconds,
+  expectedProjectName = null,
+  knownProjectNames = [],
+) {
+  try {
+    return await selectedProjectTrigger(page, expectedProjectName, knownProjectNames);
+  } catch (error) {
+    if (!/QWENWORK_UI_CONTROL_COUNT: project-trigger:0/u.test(String(error?.message))) throw error;
+  }
+  const newTask = await requireUniqueVisible(
+    page.locator(QWEN_NEW_TASK_SELECTOR),
+    "new-task-button",
+  );
+  await newTask.click({ timeout: timeoutMilliseconds });
+  return waitForUniqueVisible(async () => {
+    try {
+      return [await selectedProjectTrigger(page, expectedProjectName, knownProjectNames)];
+    } catch (error) {
+      if (/QWENWORK_UI_CONTROL_COUNT: project-trigger:0/u.test(String(error?.message))) return [];
+      throw error;
+    }
+  }, timeoutMilliseconds, "new-task-project-trigger");
+}
+
 export async function readSelectedQwenProjectName(page, expectedProjectName = null, knownProjectNames = []) {
   const trigger = await selectedProjectTrigger(page, expectedProjectName, knownProjectNames);
   const value = visibleValue(await trigger.getAttribute("aria-label") || await trigger.innerText());
@@ -217,8 +244,26 @@ export async function createQwenLocalProject({
   timeoutMilliseconds = 30_000,
 }) {
   const before = await queryProjects();
-  if (before.some((project) => project.cwd && resolve(String(project.cwd)) === resolve(workspace))) {
-    throw new Error("QWENWORK_WORKSPACE_PROJECT_ALREADY_EXISTS");
+  const knownProjectNames = before.map((entry) => entry.project_name || entry.name).filter(Boolean);
+  await ensureQwenNewTaskView(page, timeoutMilliseconds, projectName, knownProjectNames);
+  const existing = before.filter((project) => (
+    project.cwd && resolve(String(project.cwd)) === resolve(workspace)
+  ));
+  if (existing.length) {
+    const project = confirmQwenWorkspaceProject({ projects: before, workspace });
+    if (project.project_name !== projectName) {
+      throw new Error("QWENWORK_EXISTING_WORKSPACE_PROJECT_NAME_MISMATCH");
+    }
+    await openQwenProjectByName(
+      page,
+      project.project_name,
+      timeoutMilliseconds,
+      knownProjectNames,
+    );
+    return {
+      ...project,
+      verification_method: `${project.verification_method}+exact-deterministic-name-recovery`,
+    };
   }
   const baselineProjectIds = before.map((project) => project.project_id || project.projectId).filter(Boolean);
   const createButton = await requireUniqueVisible(page.locator('button[aria-label="新建项目"]'), "new-project-button");
@@ -259,7 +304,7 @@ export async function createQwenLocalProject({
     page,
     project.project_name,
     timeoutMilliseconds,
-    [...before.map((entry) => entry.project_name || entry.name), project.project_name],
+    [...knownProjectNames, project.project_name],
   );
   return project;
 }

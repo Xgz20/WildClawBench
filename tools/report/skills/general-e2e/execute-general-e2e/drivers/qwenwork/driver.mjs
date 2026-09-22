@@ -43,7 +43,7 @@ import {
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.0";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.1";
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
 const PROBE_SCHEMA = "wildclawbench.general-e2e-qwenwork-readonly-probe/v1";

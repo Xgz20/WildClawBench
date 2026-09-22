@@ -108,7 +108,7 @@ Token 使用逐次原生 `last*` 增量求和并与累计 `total*` 对账；工�
 - 输出：冻结候选、原始/标准轨迹、资源指标、证据清单和执行回执。
 - 校验 attempt 身份、Prompt digest、原生会话绑定及候选完整性。
 - 未知指标保留 `null` 和来源状态；不能按零值填充。
-- 支持 AstronStudio 和 WorkBuddy macOS 平台收口；其他平台必须明确失败，不得伪造进程清理成功。
+- 支持 AstronStudio、WorkBuddy 和 QwenWork macOS 平台收口；其他平台必须明确失败，不得伪造进程清理成功。
 - `completed` 必须提供 trace 和 resource metrics；非成功终态只归档实际存在的部分证据。
 - `timeout/cancelled` 必须已有执行阶段确认的取消结果，避免后台任务继续写入候选。
 - 不调度评分、不判定 criterion、不导入管理员侧回传包。

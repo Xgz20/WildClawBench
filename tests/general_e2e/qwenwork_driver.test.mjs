@@ -27,7 +27,9 @@ import {
 import {
   assertStableQwenUiConfiguration,
   confirmQwenWorkspaceProject,
+  ensureQwenNewTaskView,
   inspectQwenTaskUi,
+  QWEN_NEW_TASK_SELECTOR,
   QWEN_TASK_VIEW_SELECTOR,
   readQwenUiConfiguration,
   readSelectedQwenProjectName,
@@ -156,11 +158,12 @@ function fakeLocator(elements) {
   };
 }
 
-function fakeElement({ visible = true, text = "", attributes = {} } = {}) {
+function fakeElement({ visible = true, text = "", attributes = {}, onClick = null } = {}) {
   return {
     isVisible: async () => visible,
     innerText: async () => text,
     getAttribute: async (name) => attributes[name] ?? null,
+    click: async () => { if (onClick) await onClick(); },
   };
 }
 
@@ -236,6 +239,34 @@ test("project trigger accepts the semantic empty-project label without confusing
     fakeElement({ text: "选择项目", attributes: { "aria-label": "选择项目", "aria-haspopup": "menu" } }),
   ])]);
   assert.equal(await readSelectedQwenProjectName(page), "选择项目");
+});
+
+test("completed conversation route navigates through the unique new-task control", async () => {
+  const projectControls = [];
+  const selectedProject = fakeElement({
+    text: "选择项目",
+    attributes: { "aria-label": "选择项目", "aria-haspopup": "menu" },
+  });
+  let clickCount = 0;
+  const newTask = fakeElement({
+    attributes: { "aria-label": "新任务" },
+    onClick: () => {
+      clickCount += 1;
+      projectControls.push(selectedProject);
+    },
+  });
+  const taskView = fakeTaskView(projectControls);
+  const page = {
+    locator: (selector) => {
+      if (selector === QWEN_TASK_VIEW_SELECTOR) return fakeLocator([taskView]);
+      if (selector === QWEN_NEW_TASK_SELECTOR) return fakeLocator([newTask]);
+      return fakeLocator([]);
+    },
+  };
+
+  const result = await ensureQwenNewTaskView(page, 100);
+  assert.equal(result, selectedProject);
+  assert.equal(clickCount, 1);
 });
 
 test("terminal UI observation binds the visible chat and unique sub-chat before confirming stop", async () => {
@@ -842,7 +873,7 @@ test("two workers refuse the same stale lock instead of racing to replace a new 
       pid: 99_999_999,
       process_start_identity: "stale-process-fixture",
       acquired_at: "2026-09-19T09:00:00.000Z",
-      driver_version: "0.1.0",
+      driver_version: "0.1.1",
       state_file: config.state_file,
     };
     await writeFile(lockPath, `${JSON.stringify(staleOwner, null, 2)}\n`, "utf8");
