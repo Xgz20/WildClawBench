@@ -38,13 +38,14 @@ import {
   fillQwenPrompt,
   inspectQwenTaskUi,
   openQwenProjectByName,
+  openQwenTaskByProjectAndName,
   readQwenUiConfiguration,
   readQwenPrompt,
   readSelectedQwenProjectName,
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.2";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.3";
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
 const PROBE_SCHEMA = "wildclawbench.general-e2e-qwenwork-readonly-probe/v1";
@@ -476,6 +477,19 @@ async function observeBoundAttempt(config, state, dependencies) {
       "已持久化的原生 session/cwd/local project 无法精确回读；禁止选择其他会话或重发",
     );
   }
+  if (typeof dependencies.navigateToSession === "function") {
+    try {
+      await dependencies.navigateToSession(session);
+    } catch (error) {
+      return persistAttention(
+        config,
+        state,
+        dependencies,
+        "QWENWORK_SESSION_UI_UNVERIFIED",
+        `${error instanceof Error ? error.message : String(error)}；禁止重发`,
+      );
+    }
+  }
   try {
     const promptEvidence = await dependencies.verifySessionPrompt(session, config.prompt);
     refreshQwenPromptEvidence(state, promptEvidence, dependencies.now());
@@ -759,6 +773,18 @@ async function createLiveDependencies(config) {
     }
     return project;
   };
+  const navigateToSession = async (session) => {
+    const projects = await queryProjects();
+    const project = projects.find((entry) => entry.project_id === session.local_project_id);
+    if (!project?.project_name) throw new Error("QWENWORK_SESSION_PROJECT_NAME_MISSING");
+    return openQwenTaskByProjectAndName(
+      page,
+      project.project_name,
+      session.sub_chat_name,
+      session.conversation_id,
+      timeout,
+    );
+  };
   return {
     browser,
     dependencies: {
@@ -786,6 +812,7 @@ async function createLiveDependencies(config) {
         session,
         prompt,
       }),
+      navigateToSession,
       observeUi: async (session, _state) => inspectQwenTaskUi(
         page,
         new Date().toISOString(),

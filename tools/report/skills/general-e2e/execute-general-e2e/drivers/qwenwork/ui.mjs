@@ -235,6 +235,43 @@ export async function openQwenProjectByName(page, projectName, timeoutMillisecon
   return { opened: true, method: "project-menu-selection", project_name: projectName };
 }
 
+export async function openQwenTaskByProjectAndName(
+  page,
+  projectName,
+  subChatName,
+  conversationId,
+  timeoutMilliseconds = 30_000,
+) {
+  if (!subChatName) throw new Error("QWENWORK_SUB_CHAT_NAME_MISSING");
+  const currentConversation = currentQwenConversationId(page.url());
+  if (currentConversation === conversationId) return { opened: true, method: "already-selected" };
+  const projectToggle = await requireUniqueVisible(
+    page.getByRole("button", { name: `展开或折叠项目「${projectName}」`, exact: true }),
+    "project-sidebar-toggle",
+  );
+  const section = projectToggle.locator("xpath=../..");
+  let task = section.getByRole("button", { name: subChatName, exact: true });
+  if (await visibleLocators(task).then((items) => items.length) !== 1) {
+    await projectToggle.click({ timeout: timeoutMilliseconds });
+    await waitForUniqueVisible(
+      () => visibleLocators(section.getByRole("button", { name: subChatName, exact: true })),
+      timeoutMilliseconds,
+      "project-sidebar-task",
+    );
+  }
+  task = await requireUniqueVisible(
+    section.getByRole("button", { name: subChatName, exact: true }),
+    "project-sidebar-task",
+  );
+  await task.click({ timeout: timeoutMilliseconds });
+  await waitForUniqueVisible(
+    () => page.url().includes(`chat=${conversationId}`) ? [task] : [],
+    timeoutMilliseconds,
+    "project-sidebar-task-route",
+  );
+  return { opened: true, method: "project-sidebar-task" };
+}
+
 export async function createQwenLocalProject({
   page,
   workspace,
