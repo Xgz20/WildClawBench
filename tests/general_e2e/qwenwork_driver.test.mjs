@@ -550,7 +550,14 @@ test("a lost bound session clears a stale RUNNING projection and can complete on
     fillPrompt: async () => { throw new Error("must not fill"); },
     dispatchPrompt: async () => { dispatches += 1; },
     querySessions: async () => visibleSessions,
-    verifySessionPrompt: async () => { throw new Error("must not rebind prompt"); },
+    verifySessionPrompt: async () => ({
+      verified: true,
+      prompt_sha256: PROMPT_SHA,
+      transcript_path: "/private/tmp/qwenwork-general-driver/session.jsonl",
+      transcript_sha256: "c".repeat(64),
+      transcript_size: 42,
+      match_count: 1,
+    }),
     observeUi: async () => ({
       observed_at: now(),
       source: "fixture",

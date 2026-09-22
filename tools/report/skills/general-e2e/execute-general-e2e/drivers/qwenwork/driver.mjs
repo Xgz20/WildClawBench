@@ -22,6 +22,7 @@ import {
   recordQwenRecoveryProbe,
   recordQwenDispatchIntent,
   reserveQwenDispatch,
+  refreshQwenPromptEvidence,
 } from "./journal.mjs";
 import {
   queryQwenProjectRows,
@@ -43,7 +44,7 @@ import {
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.1";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.2";
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
 const PROBE_SCHEMA = "wildclawbench.general-e2e-qwenwork-readonly-probe/v1";
@@ -473,6 +474,19 @@ async function observeBoundAttempt(config, state, dependencies) {
       dependencies,
       "QWENWORK_BOUND_SESSION_MISSING",
       "已持久化的原生 session/cwd/local project 无法精确回读；禁止选择其他会话或重发",
+    );
+  }
+  try {
+    const promptEvidence = await dependencies.verifySessionPrompt(session, config.prompt);
+    refreshQwenPromptEvidence(state, promptEvidence, dependencies.now());
+    await dependencies.writeJournal(config.state_file, state);
+  } catch (error) {
+    return persistAttention(
+      config,
+      state,
+      dependencies,
+      "QWENWORK_SESSION_PROMPT_UNVERIFIED",
+      `${error instanceof Error ? error.message : String(error)}；禁止重发`,
     );
   }
   const ui = await dependencies.observeUi(session, state);

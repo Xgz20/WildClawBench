@@ -235,6 +235,22 @@ export function confirmQwenDispatchBinding(state, { session, promptEvidence, now
   return state;
 }
 
+export function refreshQwenPromptEvidence(state, promptEvidence, now) {
+  if (state?.session?.verified !== true || state?.prompt?.send_status !== "sent") {
+    throw new Error("QWENWORK_PROMPT_EVIDENCE_REFRESH_STATE_INVALID");
+  }
+  if (promptEvidence?.verified !== true || promptEvidence?.prompt_sha256 !== state.prompt.sha256) {
+    throw new Error("QWENWORK_SESSION_PROMPT_MISMATCH");
+  }
+  state.session.prompt_evidence = structuredClone(promptEvidence);
+  state.updated_at = now;
+  appendEvent(state, "PROMPT_EVIDENCE_REFRESHED", now, {
+    transcript_sha256: promptEvidence.transcript_sha256,
+    transcript_size: promptEvidence.transcript_size,
+  });
+  return state;
+}
+
 export function markQwenNeedsAttention(state, { code, message, now }) {
   state.phase = "NEEDS_ATTENTION";
   state.execution_state = null;
