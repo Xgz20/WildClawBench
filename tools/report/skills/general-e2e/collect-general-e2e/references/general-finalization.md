@@ -1,6 +1,6 @@
 # General 通用正式收口接口（CB-B 第一批）
 
-`collect-general-e2e@0.5.0`、`general-contracts@1.2.0` 提供通用采集验证与冻结接口。当前证明范围是脱敏 WorkBuddy/QwenWork fixtures、旧 AstronStudio 回归和仓库外 Skill 执行；**没有证明新 Harness 的真机采集、停止/恢复或生产准入**。
+`collect-general-e2e`、`general-contracts@1.2.0` 提供通用采集验证与冻结接口。除脱敏 fixture、AstronStudio 回归和仓库外 Skill 执行外，WorkBuddy 与 QwenWorkCN 1.0.6 已各有明确范围的 macOS 真机收口证据；这些证据只证明对应批次、版本元数据和运行方式，不能自动外推到其他平台、并发层级或新客户端行为。
 
 ## 输入与 wire 版本
 

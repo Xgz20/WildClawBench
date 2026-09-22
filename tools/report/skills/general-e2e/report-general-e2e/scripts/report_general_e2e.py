@@ -436,7 +436,10 @@ def validate_selected_return(
         or submission.get("task_ids") != identity["task_ids"]
         or not submission.get("integrity", {}).get("valid")
         or collect_receipt.get("stage") != "collect-evidence"
-        or collect_receipt.get("status") != "completed"
+        # Resource coverage may be partial by contract (for example when the
+        # Harness does not expose token semantics).  Keep the receipt and
+        # publish known subtotals/coverage instead of rejecting the return.
+        or collect_receipt.get("status") not in {"completed", "partial"}
         or collect_receipt.get("scope") != expected_scope
         or collect_receipt.get("dataset") != expected_dataset
         or collect_receipt.get("task_ids") != identity["task_ids"]

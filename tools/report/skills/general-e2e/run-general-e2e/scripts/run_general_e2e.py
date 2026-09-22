@@ -920,9 +920,13 @@ def collect_package_entries(
         if score_path is None:
             continue
         relative = safe_relative(score_path, "submission score path")
-        if len(relative.parts) < 3 or relative.parts[0] != "attempts":
+        if (
+            len(relative.parts) < 3
+            or relative.parts[0] != "attempts"
+            or relative.name != "score.json"
+        ):
             raise FlowError(f"SUBMISSION_SCORE_PATH_INVALID: {relative}")
-        attempt_roots.add(PurePosixPath(*relative.parts[:2]))
+        attempt_roots.add(relative.parent)
     for relative in sorted(attempt_roots, key=lambda item: item.as_posix()):
         source = orchestration_root.joinpath(*relative.parts)
         if not source.is_dir() or source.is_symlink():
@@ -943,7 +947,11 @@ def validate_collect_receipt(unit_root: Path, identity: Mapping[str, Any]) -> tu
     validate_contract(receipt, RECEIPT_SCHEMA)
     if (
         receipt.get("stage") != "collect-evidence"
-        or receipt.get("status") != "completed"
+        # A valid collection may be partial when the Harness deliberately
+        # leaves unsupported resource fields unavailable.  The report stage
+        # preserves that coverage instead of turning it into a package
+        # failure; identity, task scope and integrity remain hard gates.
+        or receipt.get("status") not in {"completed", "partial"}
         or receipt.get("scope") != {"batch_id": identity["batch_id"], "unit_id": identity["unit_id"]}
         or receipt.get("dataset") != {"id": identity["dataset"]["id"], "digest": identity["dataset"]["digest"]}
         or receipt.get("task_ids") != identity["task_ids"]

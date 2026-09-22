@@ -90,7 +90,7 @@ Web 的 Token 均值要求当前报告所选任务行全部有可用数值，否
 
 General 仅把 `score_status=valid` 的能力分纳入均值，真实零分保留；`evaluation_error / unscored` 不补零。执行异常的任务仍可能按任务规则形成有效能力分，二者要分别展示。
 
-当前 General 的正式桌面适配范围是 AstronStudio；WorkBuddy、QwenWork、DoubaoWork 的 General 接入尚不能按已完成能力列出。报告的 task run 与所选回传包也不天然覆盖所有被替换的历史 attempt。
+当前 General 已有明确范围的 AstronStudio、WorkBuddy 和 QwenWork macOS 证据；三者的题量、并发层级和故障覆盖不同，不能合并为同一支持声明。DoubaoWork General 尚未接入。报告的 task run 与所选回传包也不天然覆盖所有被替换的历史 attempt。
 
 ## 4. 五项补充指标的建议口径
 
@@ -183,7 +183,7 @@ Web 已有按当前任务行计算的三种 Token 均值；General 可以在已�
 | --- | --- | --- | --- | --- |
 | AstronStudio | 可扩展：原生 turn 终态与执行回执 | 可扩展：item ID、状态、exitCode；需覆盖各工具类型 | 源码候选明确：`turn.billing.settled`、`chargedPoints`；本次未完成运行时对账 | Web/General 已有基础采集，满足覆盖条件后可派生 |
 | WorkBuddy | 可扩展：驱动终态与原生会话；仍需异常样本验收 | 可扩展：callId、result、结构化 error；completed 不够 | 可行性高：安装包累加逻辑和非空 `session_usage.credit_json` 均已发现 | Web 已有归一化采集；General 需接入共享能力 |
-| QwenWork | 历史样本有 `turn.finished.reason`，数据库有 status/taskStatus；需当前版本及异常样本验收 | 历史样本有 `tool.execution.finished.status` 和 shell exit_code | 本次检查的事件/消息未确认任务扣积分字段，保留未知 | 有基础实现但严格依赖已验证版本；当前 macOS 1.0.6 尚不在名单 |
+| QwenWork | macOS 1.0.6 已验证正常终态、数据库 status/taskStatus 与 `turn.finished.reason`；异常样本仍待扩充 | 已接入 `tool.requested`、`tool.execution.finished` 和 shell exit_code；本次单题为零工具 | 当前证据未确认任务扣积分字段，保留未知 | macOS 1.0.6 单题请求数和双耗时已验证；Token/cache 语义未验证，保持 unavailable |
 | DoubaoWork | 目前仅本地任务 UI 终态；需补原生终态与故障证据 | 未验证稳定调用 ID、工具结果及错误语义 | 保存的目标会话 UI 出现“消耗 0.46”；单位、精度、归属和结算时间未验证 | 尚未验证本地原生 usage 来源；不能从“消耗”反推 Token |
 
 ### AstronStudio
@@ -210,7 +210,7 @@ credit[requestId] = (credit[requestId] ?? 0) + usage.cost.amount
 
 现有 2026-09-16 的资源冒烟日志包含 `tool.requested`、`tool.execution.finished`、`tool.shell.finished`、`model.response.completed`、`turn.finished`；成功工具的 status 为 success，shell 有 exit_code，正常 turn 的 reason 为 end_turn。消息数据库样本还有 completed/cancelled 等状态。读取到的 `session_event_log` 没有记录，因此应优先沿现有 `.qwenworkcn` 会话与 segment 日志采集。
 
-已提交的 macOS Token 验证 Profile 为客户端 1.0.5、SDK 1.0.28、轨迹 1.1.32，并绑定 runtime SHA。Windows 的 1.0.6.0 Profile 不能证明 macOS 1.0.6；本机当前客户端是 1.0.6（26091603）。需要对该版本重新核对开关、非零响应、主 turn 汇总和字段公式。原始默认零值、`QODERCN_EXPOSE_TOKEN_USAGE=1` 或版本号相近都不够。
+QwenWorkCN 1.0.6 / macOS x86_64 已完成一次正式单题采集：原生请求数 1、工具调用数 0、原生 turn 耗时 8.097 秒、流程耗时 111.967 秒。当前日志没有足够证据验证 Token/cache 字段公式，因此 input/output/total/cache read/cache write 均保持 `null/unavailable`，并保留 model-response 覆盖分母。旧 macOS 1.0.5 和 Windows 1.0.6.0 Profile 都不能替代当前运行时语义验证；原始默认零值、`QODERCN_EXPOSE_TOKEN_USAGE=1` 或版本号相近仍不够。
 
 ### DoubaoWork
 
@@ -221,11 +221,11 @@ credit[requestId] = (credit[requestId] ?? 0) + usage.cost.amount
 ## 6. 落地顺序与并行边界
 
 1. **公共口径先定**：冻结 attempt 主键、执行终态、工具结果分类、资源 scope、积分结算记录和 null/coverage 契约。补平均 Token 与缓存命中率的聚合，不改变评分分母。
-2. **接入可验证来源**：AstronStudio 与 WorkBuddy 先补终态异常、工具结果及积分；QwenWork 先补 macOS 当前版本验证，再复用聚合。
+2. **接入可验证来源**：AstronStudio 与 WorkBuddy 继续补终态异常、工具结果及积分；QwenWork 已接入 macOS 1.0.6 单题的请求/工具/双耗时，下一步补异常样本和 Token 语义验证。
 3. **DoubaoWork 补证据链**：原生任务身份、终态、工具结果、消费与 usage。若部分来源暂缺，其余指标仍可独立接入。
 4. **固定回归样本**：正常完成、工具失败后恢复、最终错误、超时、取消、重复事件、未知终态、零工具、真实零值与掩码零值。积分另验延迟结算和重复快照；缓存验包含/不包含缓存的两种协议。已有样本可先做解析验收，最终仍需目标客户端真实运行对账。
 
-多个 Harness 可以在独立 worktree 并行开发适配器、专属 fixtures 和版本验证记录；公共 Schema、原生解析接口和报告聚合最好由一个任务修改。这样冲突主要集中在少量注册项。若各分支分别修改公共公式，即使 Git 能自动合并，也可能出现分母、去重或缺失值语义冲突，代价高于文本冲突。
+当前按 Harness 串行推进并直接在工作区分支修改，公共 Schema、原生解析接口和报告聚合随同一基线前进。后续若重新启用并行，平台专属 adapter/fixture 可以隔离到 `.agents/` worktree，但公共公式只由控制基线单点修改，避免分母、去重和缺失值语义漂移。
 
 ## 7. 主要依据
 

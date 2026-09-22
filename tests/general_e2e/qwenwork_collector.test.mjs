@@ -50,6 +50,17 @@ async function createFixture({ mutateBinding = null, mutateSegment = null } = {}
   const promptPath = join(unitRoot, "prompt.md");
   const prompt = Buffer.from("[REDACTED_USER_PROMPT]", "utf8");
   await writeFile(promptPath, prompt);
+  await writeFile(join(unitRoot, "manifest.json"), `${JSON.stringify({
+    batch_id: identity.batch_id,
+    unit_id: identity.unit_id,
+    dataset: { id: "dataset-qwen-fixture", digest: "d".repeat(64) },
+    task_ids: [identity.task_id],
+    unit: {
+      unit_id: identity.unit_id,
+      task_ids: [identity.task_id],
+      harness: { id: "qwenwork", platform: "macos-x86-64", version: "1.0.6" },
+    },
+  }, null, 2)}\n`);
   const transcriptPath = join(projectRoot, "session-fixture-001.jsonl");
   const transcript = Buffer.from(
     (await readFile(new URL("transcript-redacted.jsonl", FIXTURES), "utf8"))

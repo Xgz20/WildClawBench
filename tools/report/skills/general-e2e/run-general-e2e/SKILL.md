@@ -16,7 +16,7 @@ python -m eval_general_e2e skills --json
 python -m eval_general_e2e check-layout
 ```
 
-只执行用户明确选择且对应单阶段 Skill 已具备所需能力的阶段。当前 `0.5.0/operational` 已实现批次/单元两级状态恢复、冻结输入校验、标准回传打包、安全导入、幂等与冲突选择；G4-03 已完成 AstronStudio macOS 五题执行、默认三槽评分、回传和同源报告闭环。该状态不外推 Windows、其他 Harness 或 60 题全量。不要以 Web E2E 或旧 `eval_e2e` 替代 General 阶段，也不要因“一条 Prompt”扩大用户授权。
+只执行用户明确选择且对应单阶段 Skill 已具备所需能力的阶段。当前 `0.5.1/operational` 已实现批次/单元两级状态恢复、冻结输入校验、标准回传打包、安全导入、幂等与冲突选择；支持资源覆盖不完整但身份和哈希有效的采集回执，并按 submission 中的完整多级路径只打包目标评分 attempt。G4-03 已完成 AstronStudio macOS 五题执行、默认三槽评分、回传和同源报告闭环；QwenWork macOS 1.0.6 已完成单题 return/import/report 闭环。该状态不外推 Windows、其他 Harness、并发或 60 题全量。
 
 新增 Harness 可按 [通用执行状态接口](references/adapter-execution-state.md) 接入 `record-execution`。该入口验证终态、业务身份、Workspace、原生会话证据与发送状态；公共 CB-B 首批接口已提供，新的 Harness 仍须完成原生采集和真实平台清理 hook 的接入验证，不因状态登记成功而宣称已具备生产准入。
 
@@ -43,6 +43,8 @@ python scripts/run_general_e2e.py package-return \
   --orchestration-root /absolute/orchestration-root \
   --output-dir /absolute/returns
 ```
+
+collect receipt 的身份、任务范围、哈希和完整性仍是硬门禁；当客户端不暴露 Token 等资源字段时，合法的 `partial` receipt 也可进入回传，报告端必须保留缺失覆盖，不能补零。
 
 管理员侧导入时会手工解析 ZIP，拒绝越界路径、重复成员、未知类型、哈希漂移和越界符号链接。相同 archive SHA 幂等；同一批次单元的不同内容分别保存在 `returns/<unit-id>/<package-id>/`，并清除当前选择。只有显式 `select-import` 后，冲突单元才能继续报告阶段。
 

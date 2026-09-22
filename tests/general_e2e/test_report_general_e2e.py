@@ -47,7 +47,7 @@ def sha256(path: Path) -> str:
 
 
 class Fixture:
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, *, partial_collect: bool = False) -> None:
         self.root = root
         self.batch = root / "batch"
         self.unit_id = "astronstudio-macos"
@@ -55,6 +55,7 @@ class Fixture:
         self.target = self.batch / "returns" / self.unit_id / ".pending"
         self.dataset = {"id": "general-custom60-v1", "digest": DATASET_DIGEST, "bundle_sha256": "3" * 64}
         self.release = {"id": "release-one", "catalog_digest": RELEASE_DIGEST, "catalog_sha256": "4" * 64, "suite_sha256": "5" * 64}
+        self.partial_collect = partial_collect
         self.unit = {
             "unit_id": self.unit_id,
             "task_ids": TASKS,
@@ -249,10 +250,14 @@ class Fixture:
             "scope": {"batch_id": "batch-report", "unit_id": self.unit_id},
             "dataset": {"id": self.dataset["id"], "digest": self.dataset["digest"]},
             "stage": "collect-evidence",
-            "status": "completed",
+            "status": "partial" if self.partial_collect else "completed",
             "created_at": "2026-09-18T01:09:00+00:00",
             "task_ids": TASKS,
-            "tasks": [{"task_id": task_id, "attempt_id": f"exec-{index + 1}", "status": "completed"} for index, task_id in enumerate(TASKS)],
+            "tasks": [{
+                "task_id": task_id,
+                "attempt_id": f"exec-{index + 1}",
+                "status": "partial" if self.partial_collect else "completed",
+            } for index, task_id in enumerate(TASKS)],
             "artifacts": [],
             "integrity": {"scope_matches": True, "identities_match": True, "hashes_verified": True, "valid": True},
             "error": None,
@@ -417,6 +422,13 @@ class ReportGeneralE2ETests(unittest.TestCase):
         write_json(path, index)
         with self.assertRaisesRegex(REPORT.ReportError, "IMPORT_SELECTION_REQUIRED"):
             REPORT.validate_batch_inputs(self.fixture.batch)
+
+    def test_valid_partial_collect_receipt_is_reportable(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="general-e2e-partial-report-") as temporary:
+            fixture = Fixture(Path(temporary), partial_collect=True)
+            validated = REPORT.validate_batch_inputs(fixture.batch)
+            data = REPORT.aggregate(validated, "2026-09-18T02:00:00Z")
+            self.assertEqual(data["overall"]["score"]["frozen_task_run_count"], 4)
 
     def test_post_import_file_drift_fails_closed(self) -> None:
         score_path = self.fixture.target / "scoring/attempts/score-1/score.json"

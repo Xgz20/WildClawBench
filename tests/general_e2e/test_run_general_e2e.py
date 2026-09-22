@@ -142,9 +142,14 @@ def create_unit(root: Path) -> Path:
     return unit
 
 
-def create_orchestration(root: Path, marker: str) -> Path:
+def create_orchestration(root: Path, marker: str, *, nested_attempt: bool = False) -> Path:
     orchestration = root / f"orchestration-{marker}"
-    score_path = orchestration / "attempts/orch-001/score.json"
+    attempt_relative = (
+        Path("attempts/unit-one/task-one/orch-001")
+        if nested_attempt
+        else Path("attempts/orch-001")
+    )
+    score_path = orchestration / attempt_relative / "score.json"
     score_bytes = (json.dumps({"marker": marker}, sort_keys=True) + "\n").encode()
     score_path.parent.mkdir(parents=True)
     score_path.write_bytes(score_bytes)
@@ -175,7 +180,7 @@ def create_orchestration(root: Path, marker: str) -> Path:
                 "scoring_attempt_id": "orch-001",
                 "judge_protocol": "codex-agent-judge-v1",
                 "score_status": "valid",
-                "score_path": "attempts/orch-001/score.json",
+                "score_path": (attempt_relative / "score.json").as_posix(),
                 "score_sha256": sha256_bytes(score_bytes),
                 "candidate_sha256": "6" * 64,
                 "evidence_sha256": "7" * 64,
@@ -553,6 +558,41 @@ class RunGeneralE2ETests(unittest.TestCase):
                 "scoring/attempts/orch-001/candidate-original/workspace/result-link",
                 names,
             )
+            self.assertFalse(any("/runtime/" in f"/{name}/" for name in names))
+
+    def test_return_package_accepts_valid_partial_collection(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            unit = create_unit(root)
+            receipt_path = unit / "receipts/collect-evidence-receipt.json"
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["status"] = "partial"
+            receipt["tasks"][0]["status"] = "partial"
+            write_json(receipt_path, receipt)
+            orchestration = create_orchestration(root, "partial-collection")
+
+            package = MODULE.package_return(
+                package_args(unit, orchestration, root / "returns")
+            )
+            self.assertTrue(Path(package["archive"]).is_file())
+
+    def test_nested_attempt_packages_only_exact_attempt_and_excludes_runtime(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            unit = create_unit(root)
+            orchestration = create_orchestration(
+                root, "nested", nested_attempt=True
+            )
+
+            package = MODULE.package_return(
+                package_args(unit, orchestration, root / "returns")
+            )
+            verified = MODULE.inspect_return_archive(
+                Path(package["archive"]), Path(package["receipt"])
+            )
+            names = set(verified["members"])
+            score = "scoring/attempts/unit-one/task-one/orch-001/score.json"
+            self.assertIn(score, names)
             self.assertFalse(any("/runtime/" in f"/{name}/" for name in names))
 
     def test_import_is_idempotent_and_conflict_requires_selection(self) -> None:

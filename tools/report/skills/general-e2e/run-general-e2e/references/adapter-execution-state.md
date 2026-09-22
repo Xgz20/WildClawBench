@@ -4,7 +4,7 @@
 
 ## 1. 接入与兼容
 
-运行期唯一 Schema 是本 Skill 内的 `vendor/e2e-shared/general-contracts/schemas/general-execution-state-v1.schema.json`，校验器是 同目录的 `execution_state.py`。两者从 canonical `eval_general_e2e/contracts/` 构建进入 `general-contracts@1.2.0`，运行时直接读取 Schema 并验证其所用关键字；未知关键字失败关闭。Skill 版本为 `run-general-e2e@0.5.0`。
+运行期唯一 Schema 是本 Skill 内的 `vendor/e2e-shared/general-contracts/schemas/general-execution-state-v1.schema.json`，校验器是 同目录的 `execution_state.py`。两者从 canonical `eval_general_e2e/contracts/` 构建进入 `general-contracts@1.2.0`，运行时直接读取 Schema 并验证其所用关键字；未知关键字失败关闭。Skill 版本为 `run-general-e2e@0.5.1`。
 
 旧 `wildclawbench.general-e2e-astronstudio-execution-state/v1` 保留既有字段检查，只能登记到 AstronStudio macOS 单元（`platform=macos` 或 `macos-*`）。新 Windows 实现使用通用 Schema，不伪装为旧 Mac Driver。
 

@@ -27,6 +27,6 @@ QwenWorkCN 1.0.6 真机采集前，按可恢复顺序执行以下清单：
 
 工具状态只按原生完成证据归一化：shell `exit_code=0` 才是 `success`，`tool.execution.finished.status=completed` 单独不会升级为成功；冲突或缺失保持 `unknown`。当前 QwenWork 1.0.6 token profile 尚未验证，因此所有 usage 值保持 `null/status=unavailable`，并以 `coverage` 保留 model-response 分母，不补零。
 
-本目录的 fixture/test 只证明脱敏文件的契约和失败关闭规则，不代表 QwenWork 真机采集、cleanup、评分或生产准入已经验收。
+本目录的 fixture/test 只证明脱敏文件的契约和失败关闭规则。QwenWorkCN 1.0.6 / macOS x86_64 的单题真机 collector、cleanup/finalizer、评分、回传和报告证据见仓库 `docs/design/general-e2e/evidence/qwenwork-macos-general-20260921/README.md`；并发、Apple Silicon、Windows 和 60 题仍未由该证据覆盖。
 
 QwenWork macOS 正式收口使用 `drivers/qwenwork/finalize.mjs`，接入公共 General finalizer 和共享 macOS workspace 进程清理原语。它不关闭或重启 QwenWork 客户端；只清理由本题 workspace 绑定的候选子进程，并在 state/trace/resource 通过完整校验后冻结回执。

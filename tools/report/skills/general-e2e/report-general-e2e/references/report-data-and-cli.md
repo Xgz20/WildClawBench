@@ -35,7 +35,7 @@
 
 缓存读取和推理输出可能是输入/输出的子集，报告不把它们再次加到总 Token。
 
-## 单元对比视图（report 0.5.0）
+## 单元对比视图（report 0.5.1）
 
 Excel 顺序固定为总览、效率对比、分类对比、难度对比、Agent能力对比、模态对比、工具调用对比、用例对比明细、各单元评分详情、资源覆盖与异常，共 `9 + unit 数` 张表。前七张表由 `presentation.tables` 同源渲染到领导版 Markdown，使用独立 `presentation.sheet_order` 固定顺序，不依赖 JSON 对象键的序列化顺序。评分展示为百分制，原始 `total_score` 及 CLI adapter 保持 0–1；未知量显示 `-`。
 

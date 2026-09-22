@@ -43,7 +43,7 @@ python scripts/run_general_e2e.py record-submission \
 
 ## 回传包
 
-`package-return` 同时校验 execution manifest、collect receipt、submission 和 submission 引用的 score。ZIP 使用固定时间、权限、顺序和无压缩存储；相同冻结输入产生相同 package ID 和 archive SHA。包内含：
+`package-return` 同时校验 execution manifest、collect receipt、submission 和 submission 引用的 score。资源字段缺失导致的合法 `partial` collect receipt 可以回传，但身份、范围、哈希和完整性仍须全部通过；报告端继续按字段披露覆盖率。ZIP 使用固定时间、权限、顺序和无压缩存储；相同冻结输入产生相同 package ID 和 archive SHA。包内含：
 
 - `package-manifest.json`：身份、来源 SHA、成员类型/权限/SHA/大小。
 - `receipts/package-receipt.json`：标准 `receipt-v1` package 回执。
