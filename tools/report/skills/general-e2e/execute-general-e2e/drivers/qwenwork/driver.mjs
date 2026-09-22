@@ -131,6 +131,9 @@ export function assertQwenCanaryConfig(config, { requireLiveAuthorization = fals
   absolutePath(config.evidence_root, "evidence_root");
   absolutePath(config.client?.session_db, "client.session_db");
   absolutePath(config.client?.trace_root, "client.trace_root");
+  if (config.client?.platform !== undefined && typeof config.client.platform !== "string") {
+    throw new Error("QWENWORK_CANARY_PLATFORM_INVALID");
+  }
   loopbackEndpoint(config.client?.endpoint);
   if (config.client?.bundle_id !== BUNDLE_ID) throw new Error("QWENWORK_CANARY_BUNDLE_ID_MISMATCH");
   requiredString(config.control?.desktop_slot_id, "control.desktop_slot_id");
@@ -504,6 +507,7 @@ async function observeBoundAttempt(config, state, dependencies) {
     cancellationConfirmed: classification.business_status === "cancelled" && terminalObservation.stop_confirmed === true,
     terminalObservation,
     recovery: state.recovery,
+    platform: config.client.platform || "macos",
   });
   applyQwenExecutionProjection(state, executionState, now);
   await dependencies.writeJournal(config.state_file, state);

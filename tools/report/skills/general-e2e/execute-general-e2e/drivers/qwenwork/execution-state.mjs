@@ -104,6 +104,7 @@ export function buildQwenGeneralExecutionState({
   humanAssistance = null,
   runtimeIdentity = null,
   recovery = null,
+  platform = "macos",
 }) {
   let sessionBinding = buildQwenGeneralSessionBinding(session || {}, bindingEvidence);
   let mapping = terminalMapping(session || {}, { cancellationConfirmed });
@@ -151,7 +152,7 @@ export function buildQwenGeneralExecutionState({
       id: "qwenwork-macos-general",
       version: QWENWORK_GENERAL_DRIVER_VERSION,
       harness: "qwenwork",
-      platform: "macos",
+      platform,
     },
     identity: {
       batch_id: identity.batch_id,

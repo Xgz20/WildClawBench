@@ -8,6 +8,10 @@ const TRANSCRIPT_METADATA_TYPES = new Set([
   "last-prompt",
 ]);
 
+export function isQwenTranscriptMetadataRow(row) {
+  return TRANSCRIPT_METADATA_TYPES.has(row?.type);
+}
+
 function expectedString(value, label) {
   if (typeof value !== "string" || !value.trim()) {
     throw new Error(`QWENWORK_METADATA_GATE_EXPECTED_VALUE_MISSING: ${label}`);
@@ -123,8 +127,8 @@ export function assessQwenMetadataCoverage({
     throw new Error("QWENWORK_METADATA_GATE_ROWS_INVALID");
   }
 
-  const transcriptContentRows = transcriptRows.filter((row) => !TRANSCRIPT_METADATA_TYPES.has(row?.type));
-  const transcriptMetadataRows = transcriptRows.filter((row) => TRANSCRIPT_METADATA_TYPES.has(row?.type));
+  const transcriptContentRows = transcriptRows.filter((row) => !isQwenTranscriptMetadataRow(row));
+  const transcriptMetadataRows = transcriptRows.filter(isQwenTranscriptMetadataRow);
   const transcript = {
     rows: transcriptRows.length,
     metadata_rows: transcriptMetadataRows.length,

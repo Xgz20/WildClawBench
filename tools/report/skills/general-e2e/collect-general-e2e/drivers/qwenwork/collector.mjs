@@ -23,7 +23,7 @@ import {
   QWENWORK_COLLECTOR_ADAPTER_ID,
   QWENWORK_COLLECTOR_VERSION,
 } from "./native-normalizer.mjs";
-import { assessQwenMetadataCoverage } from "./metadata-gate.mjs";
+import { assessQwenMetadataCoverage, isQwenTranscriptMetadataRow } from "./metadata-gate.mjs";
 
 const JOURNAL_SCHEMA = "wildclawbench.general-e2e-qwenwork-attempt-journal/v1";
 const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-execution-state/v1";
@@ -366,6 +366,7 @@ function assertTranscriptBinding(rows, state) {
     if (row.sessionId !== state.session.session_id) {
       throw new Error(`QWENWORK_COLLECTOR_TRANSCRIPT_SESSION_MISMATCH: line=${row.__raw_line || index + 1}`);
     }
+    if (isQwenTranscriptMetadataRow(row)) continue;
     if (!isAbsolute(row.cwd || "") || resolve(row.cwd) !== expectedWorkspace) {
       throw new Error(`QWENWORK_COLLECTOR_TRANSCRIPT_WORKSPACE_MISMATCH: line=${row.__raw_line || index + 1}`);
     }
