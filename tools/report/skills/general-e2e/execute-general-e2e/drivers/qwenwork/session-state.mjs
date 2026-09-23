@@ -4,7 +4,7 @@ import { basename, isAbsolute, join, resolve } from "node:path";
 
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 
-export const QWENWORK_GENERAL_DRIVER_VERSION = "0.3.4";
+export const QWENWORK_GENERAL_DRIVER_VERSION = "0.3.5";
 const SNAPSHOT_RETRY_LIMIT = 8;
 const SNAPSHOT_RETRY_BACKOFF_MS = 25;
 export const QWENWORK_SESSION_QUERY = String.raw`

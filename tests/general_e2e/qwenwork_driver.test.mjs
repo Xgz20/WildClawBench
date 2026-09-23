@@ -34,7 +34,9 @@ import {
   QWEN_TASK_VIEW_SELECTOR,
   readQwenUiConfiguration,
   readSelectedQwenProjectName,
+  restoreQwenPreparedProject,
   requireUniqueVisible,
+  skipQwenClarification,
   normalizeQwenPromptText,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/ui.mjs";
 
@@ -268,6 +270,48 @@ test("completed conversation route navigates through the unique new-task control
   const result = await ensureQwenNewTaskView(page, 100);
   assert.equal(result, selectedProject);
   assert.equal(clickCount, 1);
+});
+
+test("prepared project dispatch restores the new-task route before project readback", async () => {
+  const projectName = "WCB-GEN-target-project";
+  const projectControls = [];
+  const project = fakeElement({ text: projectName, attributes: { "aria-label": projectName, "aria-haspopup": "menu" } });
+  let clickCount = 0;
+  const newTask = fakeElement({
+    attributes: { "aria-label": "新任务" },
+    onClick: () => { clickCount += 1; projectControls.push(project); },
+  });
+  const taskView = fakeTaskView(projectControls);
+  const page = {
+    locator: (selector) => {
+      if (selector === QWEN_TASK_VIEW_SELECTOR) return fakeLocator([taskView]);
+      if (selector === QWEN_NEW_TASK_SELECTOR) return fakeLocator([newTask]);
+      return fakeLocator([]);
+    },
+  };
+  const result = await restoreQwenPreparedProject(page, projectName, 100, [projectName]);
+  assert.equal(result.method, "already-selected");
+  assert.equal(clickCount, 1);
+});
+
+test("active task clarification skips only the unique question card in its own conversation", async () => {
+  const conversationId = "conversation-fixture";
+  let visible = true;
+  let clicks = 0;
+  const skip = { ...fakeElement(), isVisible: async () => visible, click: async () => { clicks += 1; visible = false; } };
+  const next = fakeElement({ text: "下一题" });
+  const taskView = {
+    ...fakeTaskView([]),
+    getByRole: (_role, options) => fakeLocator(options.name === "跳过" ? [skip] : [next]),
+  };
+  const page = {
+    url: () => `file:///qwenwork/index.html?windowId=main&chat=${conversationId}`,
+    locator: () => fakeLocator([taskView]),
+  };
+  await assert.rejects(skipQwenClarification(page, "other-conversation", 100), /CONVERSATION_MISMATCH/u);
+  assert.equal(clicks, 0);
+  assert.equal((await skipQwenClarification(page, conversationId, 100)).skipped, true);
+  assert.equal(clicks, 1);
 });
 
 test("terminal UI observation binds the visible chat and unique sub-chat before confirming stop", async () => {
@@ -724,6 +768,7 @@ test("fresh driver dispatches once, binds the unique new session, and requires t
     dispatchPrompt: async () => { dispatches += 1; return { method: "fixture-click" }; },
     querySessions: async () => (++sessionReads === 1 ? [] : [session()]),
     verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA, match_count: 1 }),
+    skipClarification: async () => ({ skipped: true, method: "unique-clarification-skip" }),
     observeUi: async () => ({
       observed_at: now(),
       source: "fixture-db+ui",
@@ -738,6 +783,7 @@ test("fresh driver dispatches once, binds the unique new session, and requires t
   assert.equal(result.journal.send.dispatch_attempt_count, 1);
   assert.equal(result.journal.session.session_id, "session-fixture");
   assert.equal(result.execution_state.phase, "COMPLETED");
+  assert.equal(result.journal.events.filter((event) => event.type === "USER_AUTHORIZED_CLARIFICATION_SKIPPED").length, 1);
 });
 
 test("invoking recovery inspects only and never resends when no session or two sessions exist", async () => {

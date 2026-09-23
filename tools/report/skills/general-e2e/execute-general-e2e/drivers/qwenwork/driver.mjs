@@ -37,15 +37,15 @@ import {
   dispatchQwenPrompt,
   fillQwenPrompt,
   inspectQwenTaskUi,
-  openQwenProjectByName,
   openQwenTaskByProjectAndName,
   readQwenUiConfiguration,
   readQwenPrompt,
-  readSelectedQwenProjectName,
+  restoreQwenPreparedProject,
+  skipQwenClarification,
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.4";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.5";
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
 const PROBE_SCHEMA = "wildclawbench.general-e2e-qwenwork-readonly-probe/v1";
@@ -155,6 +155,10 @@ export function assertQwenCanaryConfig(config, { requireLiveAuthorization = fals
     throw new Error("QWENWORK_CANARY_CONFIGURATION_POLICY_INVALID");
   }
   if (config.control?.create_new_project !== true) throw new Error("QWENWORK_CANARY_NEW_PROJECT_REQUIRED");
+  if (config.control?.clarification_policy !== undefined
+      && !new Set(["manual", "skip-question-card"]).has(config.control.clarification_policy)) {
+    throw new Error("QWENWORK_CANARY_CLARIFICATION_POLICY_INVALID");
+  }
   const probeMaxAge = Number(config.control?.probe_max_age_seconds);
   if (!Number.isInteger(probeMaxAge) || probeMaxAge < 1 || probeMaxAge > 900) {
     throw new Error("QWENWORK_CANARY_PROBE_MAX_AGE_INVALID");
@@ -619,6 +623,25 @@ async function observeBoundAttempt(config, state, dependencies) {
       `${error instanceof Error ? error.message : String(error)}；禁止重发`,
     );
   }
+  if (typeof dependencies.skipClarification === "function") {
+    try {
+      const skipped = await dependencies.skipClarification(session);
+      if (skipped?.skipped) {
+        state.events.push({
+          type: "USER_AUTHORIZED_CLARIFICATION_SKIPPED",
+          at: dependencies.now(),
+          details: { conversation_id: session.conversation_id, method: skipped.method },
+        });
+        await dependencies.writeJournal(config.state_file, state);
+      }
+    } catch (error) {
+      return persistAttention(
+        config, state, dependencies,
+        "QWENWORK_CLARIFICATION_SKIP_UNVERIFIED",
+        `${error instanceof Error ? error.message : String(error)}；禁止重发`,
+      );
+    }
+  }
   const ui = await dependencies.observeUi(session, state);
   const terminalObservation = {
     ...ui,
@@ -940,9 +963,7 @@ async function createLiveDependencies(config) {
       expectedProjectId: state.workspace.local_project_id,
     });
     const knownProjectNames = projects.map((entry) => entry.project_name || entry.name).filter(Boolean);
-    if (await readSelectedQwenProjectName(page, project.project_name, knownProjectNames) !== project.project_name) {
-      await openQwenProjectByName(page, project.project_name, timeout, knownProjectNames);
-    }
+    await restoreQwenPreparedProject(page, project.project_name, timeout, knownProjectNames);
     return project;
   };
   const navigateToSession = async (session) => {
@@ -985,6 +1006,9 @@ async function createLiveDependencies(config) {
         prompt,
       }),
       navigateToSession,
+      skipClarification: config.control.clarification_policy === "skip-question-card"
+        ? (session) => skipQwenClarification(page, session.conversation_id, timeout)
+        : undefined,
       observeUi: async (session, _state) => inspectQwenTaskUi(
         page,
         new Date().toISOString(),

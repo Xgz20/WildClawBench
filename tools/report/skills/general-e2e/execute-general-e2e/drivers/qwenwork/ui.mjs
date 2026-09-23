@@ -235,6 +235,30 @@ export async function openQwenProjectByName(page, projectName, timeoutMillisecon
   return { opened: true, method: "project-menu-selection", project_name: projectName };
 }
 
+export async function restoreQwenPreparedProject(page, projectName, timeoutMilliseconds, knownProjectNames = []) {
+  await ensureQwenNewTaskView(page, timeoutMilliseconds, projectName, knownProjectNames);
+  return openQwenProjectByName(page, projectName, timeoutMilliseconds, knownProjectNames);
+}
+
+export async function skipQwenClarification(page, conversationId, timeoutMilliseconds = 30_000) {
+  if (currentQwenConversationId(page.url()) !== conversationId) {
+    throw new Error("QWENWORK_CLARIFICATION_CONVERSATION_MISMATCH");
+  }
+  const taskView = await requireUniqueVisible(page.locator(QWEN_TASK_VIEW_SELECTOR), "task-view");
+  const skipButtons = await visibleLocators(taskView.getByRole("button", { name: "跳过", exact: true }));
+  if (skipButtons.length === 0) return { skipped: false };
+  if (skipButtons.length !== 1) throw new Error(`QWENWORK_CLARIFICATION_SKIP_COUNT: ${skipButtons.length}`);
+  const nextButtons = await visibleLocators(taskView.getByRole("button", { name: /^下一题/u }));
+  if (nextButtons.length !== 1) throw new Error(`QWENWORK_CLARIFICATION_NEXT_COUNT: ${nextButtons.length}`);
+  await skipButtons[0].click({ timeout: timeoutMilliseconds });
+  const deadline = Date.now() + timeoutMilliseconds;
+  while (await skipButtons[0].isVisible().catch(() => false)) {
+    if (Date.now() >= deadline) throw new Error("QWENWORK_CLARIFICATION_SKIP_NOT_DISMISSED");
+    await sleep(100);
+  }
+  return { skipped: true, method: "unique-clarification-skip", conversation_id: conversationId };
+}
+
 export async function openQwenTaskByProjectAndName(
   page,
   projectName,
