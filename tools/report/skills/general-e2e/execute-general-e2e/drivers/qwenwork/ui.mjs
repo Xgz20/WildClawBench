@@ -242,20 +242,47 @@ export async function restoreQwenPreparedProject(page, projectName, timeoutMilli
   return openQwenProjectByName(page, projectName, timeoutMilliseconds, knownProjectNames);
 }
 
+async function readQwenUiBinding(page, expectedSession, sessionRows, allowProvisional = false) {
+  const readRows = typeof sessionRows === "function" ? sessionRows : async () => sessionRows;
+  const deadline = Date.now() + (typeof sessionRows === "function" ? 2_000 : 0);
+  for (;;) {
+    const rows = await readRows();
+    const views = await visibleLocators(page.locator(QWEN_TASK_VIEW_SELECTOR));
+    const heading = views.length === 1
+      ? visibleValue((await views[0].innerText().catch(() => "")).split(/\r?\n/u)[0]) : "";
+    const title = visibleValue(typeof page.title === "function" ? await page.title().catch(() => "") : "");
+    const conversationId = currentQwenConversationId(typeof page.url === "function" ? page.url() : "");
+    const exact = Array.isArray(rows) ? rows.filter((row) => expectedSession?.conversation_id && expectedSession?.sub_chat_id
+      && expectedSession?.local_project_id && expectedSession?.cwd
+      && row.conversation_id === expectedSession.conversation_id
+      && row.sub_chat_id === expectedSession.sub_chat_id
+      && row.local_project_id === expectedSession.local_project_id && row.cwd === expectedSession.cwd
+      && (expectedSession.session_id ? row.session_id === expectedSession.session_id : allowProvisional)) : [];
+    const nativeName = exact.length === 1 ? visibleValue(exact[0].sub_chat_name) : "";
+    const peers = Array.isArray(rows) ? rows.filter((row) => row.conversation_id === expectedSession?.conversation_id
+      && visibleValue(row.sub_chat_name) === nativeName) : [];
+    const uiName = heading || title;
+    const exactPeer = exact.length === 1 && peers.length === 1;
+    const routeMatches = Boolean(expectedSession?.conversation_id && conversationId === expectedSession.conversation_id);
+    const titleMatches = Boolean(nativeName && nativeName === uiName);
+    if (typeof sessionRows === "function" && exactPeer && routeMatches && views.length === 1
+        && !titleMatches && Date.now() < deadline) {
+      await sleep(100);
+      continue;
+    }
+    return { taskView: views.length === 1 ? views[0] : null, viewCount: views.length,
+      conversationId, uiName, nativeName, peerCount: peers.length, exactPeer,
+      routeMatches, titleMatches,
+      verified: exactPeer && routeMatches && titleMatches && views.length === 1
+        && Boolean(allowProvisional || expectedSession?.session_id) };
+  }
+}
+
 export async function inspectQwenPendingInteraction(page, expectedSession, sessionRows) {
-  if (currentQwenConversationId(page.url()) !== expectedSession.conversation_id) {
-    throw new Error("QWENWORK_INTERACTION_CONVERSATION_MISMATCH");
-  }
-  const taskView = await requireUniqueVisible(page.locator(QWEN_TASK_VIEW_SELECTOR), "task-view");
-  const heading = visibleValue((await taskView.innerText()).split(/\r?\n/u)[0]);
-  const name = heading || visibleValue(await page.title());
-  const peers = sessionRows.filter((row) => row.conversation_id === expectedSession.conversation_id
-    && row.sub_chat_name === expectedSession.sub_chat_name);
-  if (!name || name !== expectedSession.sub_chat_name || peers.length !== 1
-      || peers[0].sub_chat_id !== expectedSession.sub_chat_id
-      || peers[0].session_id !== expectedSession.session_id) {
-    throw new Error("QWENWORK_INTERACTION_SUBCHAT_UNVERIFIED");
-  }
+  const binding = await readQwenUiBinding(page, expectedSession, sessionRows, true);
+  if (!binding.routeMatches) throw new Error("QWENWORK_INTERACTION_CONVERSATION_MISMATCH");
+  if (!binding.verified) throw new Error("QWENWORK_INTERACTION_SUBCHAT_UNVERIFIED");
+  const taskView = binding.taskView;
   const questions = await visibleLocators(taskView.locator(QWEN_QUESTION_SELECTOR));
   const panels = await visibleLocators(page.locator(QWEN_INTERACTION_SELECTOR));
   let unknownPanels = 0;
@@ -473,59 +500,29 @@ function currentQwenConversationId(address) {
 }
 
 export async function inspectQwenTaskUi(page, observedAt, expectedSession = null, sessionRows = []) {
+  const binding = await readQwenUiBinding(page, expectedSession, sessionRows);
   const stopControls = await visibleLocators(page.locator(QWEN_STOP_SELECTOR));
-  const taskViews = await visibleLocators(page.locator(QWEN_TASK_VIEW_SELECTOR));
-  const address = typeof page.url === "function" ? page.url() : "";
-  const title = visibleValue(typeof page.title === "function" ? await page.title().catch(() => "") : "");
-  const conversationId = currentQwenConversationId(address);
-  const expectedConversationId = expectedSession?.conversation_id || null;
-  const expectedSubChatId = expectedSession?.sub_chat_id || null;
-  const expectedSessionId = expectedSession?.session_id || null;
-  const expectedSubChatName = visibleValue(expectedSession?.sub_chat_name);
-  const peers = Array.isArray(sessionRows) ? sessionRows.filter((entry) => (
-    entry?.conversation_id === expectedConversationId
-    && visibleValue(entry?.sub_chat_name) === expectedSubChatName
-  )) : [];
-  const taskHeading = taskViews.length === 1
-    ? visibleValue((await taskViews[0].innerText().catch(() => "")).split(/\r?\n/u)[0])
-    : "";
-  const uiSubChatName = taskHeading || title;
-  const exactPeer = peers.length === 1
-    && peers[0]?.sub_chat_id === expectedSubChatId
-    && peers[0]?.session_id === expectedSessionId;
-  const targetSessionVerified = Boolean(
-    expectedConversationId
-    && expectedSubChatId
-    && expectedSessionId
-    && expectedSubChatName
-    && conversationId === expectedConversationId
-    && uiSubChatName === expectedSubChatName
-    && exactPeer
-    && taskViews.length === 1
-  );
   const conflicts = [];
-  if (!expectedConversationId || conversationId !== expectedConversationId) {
-    conflicts.push(`ui-conversation-mismatch:${conversationId || "<none>"}`);
-  }
-  if (!expectedSubChatName || uiSubChatName !== expectedSubChatName) {
-    conflicts.push(`ui-sub-chat-title-mismatch:${uiSubChatName || "<none>"}`);
-  }
-  if (!exactPeer) conflicts.push(`ui-sub-chat-identity-count:${peers.length}`);
-  if (taskViews.length !== 1) conflicts.push(`ui-task-view-count:${taskViews.length}`);
+  if (!binding.routeMatches) conflicts.push(`ui-conversation-mismatch:${binding.conversationId || "<none>"}`);
+  if (!binding.titleMatches) conflicts.push(`ui-sub-chat-title-mismatch:${binding.uiName || "<none>"}`);
+  if (!binding.exactPeer) conflicts.push(`ui-sub-chat-identity-count:${binding.peerCount}`);
+  if (binding.viewCount !== 1) conflicts.push(`ui-task-view-count:${binding.viewCount}`);
   if (stopControls.length > 1) conflicts.push(`visible-stop-control-count:${stopControls.length}`);
   return {
     observed_at: observedAt,
     source: "electron-cdp-route-title-task-container-visible-controls+sqlite-identity",
-    target_session_verified: targetSessionVerified,
+    target_session_verified: binding.verified,
     ui_binding: {
-      conversation_id: conversationId,
-      sub_chat_id: targetSessionVerified ? expectedSubChatId : null,
-      session_id: targetSessionVerified ? expectedSessionId : null,
-      sub_chat_name: uiSubChatName || null,
-      unique_database_identity: exactPeer,
+      conversation_id: binding.conversationId,
+      sub_chat_id: binding.verified ? expectedSession.sub_chat_id : null,
+      session_id: binding.verified ? expectedSession.session_id : null,
+      sub_chat_name: binding.uiName || null,
+      native_sub_chat_name: binding.nativeName || null,
+      title_refreshed_from_database: Boolean(binding.exactPeer && binding.nativeName !== expectedSession?.sub_chat_name),
+      unique_database_identity: binding.exactPeer,
     },
-    active_stream: targetSessionVerified ? stopControls.length === 1 : null,
-    stop_confirmed: targetSessionVerified && stopControls.length === 0,
+    active_stream: binding.verified ? stopControls.length === 1 : null,
+    stop_confirmed: binding.verified && stopControls.length === 0,
     conflicts,
   };
 }

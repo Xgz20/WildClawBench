@@ -1219,3 +1219,37 @@ for (const outcome of ["completed", "persistent-conflict", "different-session", 
     if (outcome === "new-approval") assert.equal(result.journal.attention.code, "QWENWORK_PENDING_INTERACTION");
   });
 }
+
+test("auto-renamed title is accepted only for the same full native identity", async () => {
+  const expected = session();
+  const renamed = { ...expected, sub_chat_name: "自动生成的新标题" };
+  const view = { ...fakeElement({ text: renamed.sub_chat_name }), locator: () => fakeLocator([]) };
+  const page = { url: () => `file:///qwenwork/index.html?chat=${expected.conversation_id}`, title: async () => "千问办公",
+    locator: (selector) => fakeLocator(selector === QWEN_TASK_VIEW_SELECTOR ? [view] : []) };
+  const ui = await inspectQwenTaskUi(page, "2026-09-23T11:00:00Z", expected, [renamed]);
+  assert.equal(ui.target_session_verified, true);
+  assert.equal(ui.ui_binding.title_refreshed_from_database, true);
+  assert.equal(ui.ui_binding.native_sub_chat_name, renamed.sub_chat_name);
+  assert.equal((await inspectQwenPendingInteraction(page, expected, [renamed])).kind, "none");
+  for (const field of ["session_id", "sub_chat_id", "local_project_id", "cwd"]) {
+    const drift = { ...renamed, [field]: "foreign" };
+    assert.equal((await inspectQwenTaskUi(page, "2026-09-23T11:00:00Z", expected, [drift])).target_session_verified, false);
+    await assert.rejects(inspectQwenPendingInteraction(page, expected, [drift]), /SUBCHAT_UNVERIFIED/u);
+  }
+  const duplicate = { ...renamed, session_id: "other-session", sub_chat_id: "other-subchat" };
+  assert.equal((await inspectQwenTaskUi(page, "2026-09-23T11:00:00Z", expected, [renamed, duplicate])).target_session_verified, false);
+});
+
+test("live title rendering settles against refreshed native identity within a bounded UI window", async () => {
+  const expected = session();
+  let reads = 0;
+  const view = { ...fakeElement(), innerText: async () => reads < 2 ? "旧渲染标题" : "已刷新标题", locator: () => fakeLocator([]) };
+  const page = { url: () => `file:///qwenwork/index.html?chat=${expected.conversation_id}`, title: async () => "千问办公",
+    locator: (selector) => fakeLocator(selector === QWEN_TASK_VIEW_SELECTOR ? [view] : []) };
+  const result = await inspectQwenTaskUi(page, "2026-09-23T11:00:00Z", expected, async () => {
+    reads += 1; return [{ ...expected, sub_chat_name: "已刷新标题" }];
+  });
+  assert.equal(reads, 2);
+  assert.equal(result.target_session_verified, true);
+  assert.equal(result.stop_confirmed, true);
+});

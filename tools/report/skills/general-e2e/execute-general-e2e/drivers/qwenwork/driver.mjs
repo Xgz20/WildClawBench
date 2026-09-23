@@ -1098,7 +1098,7 @@ export async function createLiveDependencies(config) {
       }),
       navigateToSession,
       inspectPendingInteraction: async (session) => inspectQwenPendingInteraction(
-        page, session, await queryQwenSessionRows(config.client.session_db, snapshotOptions),
+        page, session, () => queryQwenSessionRows(config.client.session_db, snapshotOptions),
       ),
       skipClarification: config.control.clarification_policy === "skip-question-card"
         ? (session) => skipQwenClarification(page, session.conversation_id, timeout)
@@ -1107,7 +1107,7 @@ export async function createLiveDependencies(config) {
         page,
         new Date().toISOString(),
         session,
-        await queryQwenSessionRows(config.client.session_db, snapshotOptions),
+        () => queryQwenSessionRows(config.client.session_db, snapshotOptions),
       ),
       writeBindingEvidence: async ({ state, session, terminalObservation }) => {
         const path = join(config.evidence_root, "session-binding.json");
