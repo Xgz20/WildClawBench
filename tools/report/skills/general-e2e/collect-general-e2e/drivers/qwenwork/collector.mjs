@@ -24,6 +24,7 @@ import {
   QWENWORK_COLLECTOR_VERSION,
 } from "./native-normalizer.mjs";
 import { assessQwenMetadataCoverage, isQwenTranscriptMetadataRow } from "./metadata-gate.mjs";
+import { matchQwenTokenProfile, qwenCanaryConfigDigest } from "./token-profile.mjs";
 
 const JOURNAL_SCHEMA = "wildclawbench.general-e2e-qwenwork-attempt-journal/v1";
 const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-execution-state/v1";
@@ -146,6 +147,54 @@ async function readJson(path) {
   } catch (error) {
     throw new Error(`QWENWORK_COLLECTOR_JSON_INVALID: ${source.absolute}: ${error.message}`);
   }
+}
+
+async function readFrozenTokenContext({ journal, journalFile, unitRoot, clientTraceRoot, transcriptRows }) {
+  const configPath = join(dirname(resolve(journalFile)), "config.json");
+  if (!isWithin(unitRoot, configPath)) throw new Error("QWENWORK_TOKEN_CONFIG_OUTSIDE_UNIT");
+  try {
+    await lstat(configPath);
+  } catch (error) {
+    if (error?.code === "ENOENT") return null;
+    throw error;
+  }
+  const configSource = await readJson(configPath);
+  const config = configSource.value;
+  if (config?.control?.require_token_usage_exposure !== true) return null;
+  if (!sameIdentity(config.identity, journal.identity)
+      || config.config_digest !== journal.config_digest
+      || qwenCanaryConfigDigest(config) !== config.config_digest
+      || resolve(config.state_file || "/") !== resolve(journalFile)
+      || resolve(config.client?.trace_root || "/") !== clientTraceRoot) {
+    throw new Error("QWENWORK_TOKEN_CONFIG_PROVENANCE_INVALID");
+  }
+  const sentAt = Date.parse(journal.send?.invoking_at || "");
+  if (!Number.isFinite(sentAt)) throw new Error("QWENWORK_TOKEN_SEND_TIME_MISSING");
+  const sendProbes = (journal.events || [])
+    .filter((event) => event?.type === "RECOVERY_PROBE_VERIFIED"
+      && Number.isFinite(Date.parse(event.at || "")) && Date.parse(event.at) <= sentAt)
+    .sort((left, right) => Date.parse(right.at) - Date.parse(left.at));
+  const reference = sendProbes[0]?.details || {
+    path: config.control.probe_path,
+    sha256: config.control.probe_sha256,
+  };
+  const probeSource = await readJson(requireString(reference.path, "token probe path"));
+  if (probeSource.sha256 !== reference.sha256) throw new Error("QWENWORK_TOKEN_PROBE_DIGEST_MISMATCH");
+  const probe = probeSource.value;
+  const age = sentAt - Date.parse(probe.probed_at || "");
+  if (!isAbsolute(probe.app?.path || "")
+      || probe.app?.identity_verified !== true
+      || probe.app?.bundle_id !== config.client.bundle_id
+      || probe.app?.token_usage_exposure?.status !== "enabled"
+      || !Number.isSafeInteger(probe.app?.token_usage_exposure?.listener_pid)
+      || !Number.isFinite(age) || age < 0 || age > 900_000) {
+    throw new Error("QWENWORK_TOKEN_SEND_PROBE_UNVERIFIED");
+  }
+  return {
+    configSource,
+    probeSource,
+    profile: matchQwenTokenProfile(probe, transcriptRows),
+  };
 }
 
 function parseJsonLines(source, rawPath) {
@@ -466,6 +515,13 @@ export async function collectQwenWorkEvidence(options) {
   const segmentSources = await discoverSegments(clientTraceRoot, sessionId);
 
   const transcriptRows = parseJsonLines(transcriptSource, "raw/transcript.jsonl");
+  const tokenContext = await readFrozenTokenContext({
+    journal: journalSource.value,
+    journalFile: journalSource.absolute,
+    unitRoot,
+    clientTraceRoot,
+    transcriptRows,
+  });
   const segmentRows = segmentSources.flatMap((source) => parseJsonLines(
     source,
     `raw/segments/${basename(source.absolute)}`,
@@ -496,6 +552,11 @@ export async function collectQwenWorkEvidence(options) {
   for (const source of segmentSources) {
     rawArtifacts.push(artifact(`raw/segments/${basename(source.absolute)}`, source.bytes));
   }
+  const tokenArtifacts = tokenContext ? [
+    artifact("raw/token-config.json", tokenContext.configSource.bytes),
+    artifact("raw/token-probe.json", tokenContext.probeSource.bytes),
+  ] : [];
+  rawArtifacts.push(...tokenArtifacts);
   const bindingArtifacts = bindingSources.map((source, index) => artifact(
     `bindings/${String(index + 1).padStart(2, "0")}-${basename(source.absolute)}`,
     source.bytes,
@@ -526,7 +587,8 @@ export async function collectQwenWorkEvidence(options) {
       native_event_count: normalized.native_event_count,
       normalized_event_count: normalized.normalized_event_count,
       filtered_native_event_count: normalized.filtered_native_event_count,
-      compatibility_profiles: ["general-e2e-transcript-event-v1", "qwenwork-native-1.0.6-unverified-token-semantics"],
+      compatibility_profiles: ["general-e2e-transcript-event-v1",
+        tokenContext?.profile?.id || "qwenwork-token-semantics-unverified"],
     },
     completeness: traceCompleteness(normalized.events, calls, segmentRows),
     calls,
@@ -544,6 +606,7 @@ export async function collectQwenWorkEvidence(options) {
     sources: resourceSources,
     traceCalls: calls,
     collectedAt: options.collectedAt || new Date().toISOString(),
+    tokenProfile: tokenContext?.profile || null,
   });
   const resourceBytes = jsonBytes(resource);
 
@@ -556,6 +619,12 @@ export async function collectQwenWorkEvidence(options) {
     await writeFile(join(stage, "trace", "raw", "transcript.jsonl"), transcriptSource.bytes, { flag: "wx", mode: 0o600 });
     for (const source of segmentSources) {
       await writeFile(join(stage, "trace", "raw", "segments", basename(source.absolute)), source.bytes, { flag: "wx", mode: 0o600 });
+    }
+    if (tokenContext) {
+      await writeFile(join(stage, "trace", "raw", "token-config.json"), tokenContext.configSource.bytes,
+        { flag: "wx", mode: 0o600 });
+      await writeFile(join(stage, "trace", "raw", "token-probe.json"), tokenContext.probeSource.bytes,
+        { flag: "wx", mode: 0o600 });
     }
     for (let indexValue = 0; indexValue < bindingSources.length; indexValue += 1) {
       await writeFile(

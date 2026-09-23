@@ -16,6 +16,10 @@ import test from "node:test";
 import { collectQwenWorkEvidence } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/collector.mjs";
 import { assessQwenMetadataCoverage } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/metadata-gate.mjs";
 import { normalizeQwenNativeTrace } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/native-normalizer.mjs";
+import {
+  QWENWORK_MACOS_1_2_0_TOKEN_PROFILE,
+  qwenCanaryConfigDigest,
+} from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/token-profile.mjs";
 
 const FIXTURES = new URL("./fixtures/qwenwork/", import.meta.url);
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
@@ -37,7 +41,7 @@ async function copyFixture(name, target) {
   await cp(new URL(name, FIXTURES), target);
 }
 
-async function createFixture({ mutateBinding = null, mutateSegment = null } = {}) {
+async function createFixture({ mutateBinding = null, mutateSegment = null, tokenProfile = false } = {}) {
   const root = await mkdtemp(join(tmpdir(), "qwenwork-collector-"));
   const unitRoot = join(root, "unit");
   const workspace = join(unitRoot, "workspace");
@@ -58,13 +62,14 @@ async function createFixture({ mutateBinding = null, mutateSegment = null } = {}
     unit: {
       unit_id: identity.unit_id,
       task_ids: [identity.task_id],
-      harness: { id: "qwenwork", platform: "macos-x86-64", version: "1.0.6" },
+      harness: { id: "qwenwork", platform: "macos-x86-64", version: tokenProfile ? "1.2.0" : "1.0.6" },
     },
   }, null, 2)}\n`);
   const transcriptPath = join(projectRoot, "session-fixture-001.jsonl");
   const transcript = Buffer.from(
     (await readFile(new URL("transcript-redacted.jsonl", FIXTURES), "utf8"))
-      .replaceAll("/private/tmp/qwenwork-general-fixture/workspace", workspace),
+      .replaceAll("/private/tmp/qwenwork-general-fixture/workspace", workspace)
+      .replaceAll("1.1.32", tokenProfile ? "1.1.59" : "1.1.32"),
     "utf8",
   );
   const segmentPath = join(segmentRoot, "0001.jsonl");
@@ -157,9 +162,79 @@ async function createFixture({ mutateBinding = null, mutateSegment = null } = {}
     },
   };
   const journalPath = join(unitRoot, "qwenwork-attempt-journal.json");
+  let probePath = null;
+  if (tokenProfile) {
+    probePath = join(await realpath(unitRoot), "token-probe.json");
+    const profile = QWENWORK_MACOS_1_2_0_TOKEN_PROFILE;
+    const probe = {
+      probed_at: "2026-09-17T03:00:00.000Z",
+      app: { path: "/Applications/QwenWorkCN.app", identity_verified: true,
+        bundle_id: "cn.qwenwork.desktop.mac", version: profile.client_version,
+        token_usage_exposure: { status: "enabled", listener_pid: 12345 } },
+      runtime: { identity: {
+        platform: profile.platform, client_version: profile.client_version,
+        sdk_name: profile.sdk_name, sdk_version: profile.sdk_version,
+        runtime_sha256: profile.runtime_sha256,
+      } },
+    };
+    const probeBytes = Buffer.from(`${JSON.stringify(probe, null, 2)}\n`);
+    await writeFile(probePath, probeBytes);
+    const config = {
+      identity, state_file: join(await realpath(unitRoot), "qwenwork-attempt-journal.json"),
+      client: { bundle_id: "cn.qwenwork.desktop.mac", trace_root: await realpath(traceRoot) },
+      control: { require_token_usage_exposure: true,
+        probe_path: probePath, probe_sha256: sha256(probeBytes) },
+    };
+    config.config_digest = qwenCanaryConfigDigest(config);
+    await writeFile(join(unitRoot, "config.json"), `${JSON.stringify(config, null, 2)}\n`);
+    journal.config_digest = config.config_digest;
+    journal.send.invoking_at = "2026-09-17T03:00:01.000Z";
+    journal.events = [{ type: "RECOVERY_PROBE_VERIFIED", at: "2026-09-17T03:00:00.500Z",
+      details: { path: probePath, sha256: sha256(probeBytes) } }];
+  }
   await writeFile(journalPath, `${JSON.stringify(journal, null, 2)}\n`);
-  return { root, unitRoot, traceRoot, journalPath, state };
+  return { root, unitRoot, traceRoot, journalPath, state, probePath };
 }
+
+test("QwenWork 1.2.0 exposed Token profile reconciles response sums with the main turn", async () => {
+  const fixture = await createFixture({ tokenProfile: true });
+  try {
+    const unitRoot = await realpath(fixture.unitRoot);
+    const result = await collectQwenWorkEvidence({
+      unitRoot, journalFile: await realpath(fixture.journalPath),
+      clientTraceRoot: await realpath(fixture.traceRoot),
+      outputRoot: join(unitRoot, ".general-e2e", "collection", "token-profile"),
+      redacted: true, collectedAt: "2026-09-17T03:00:10.000Z",
+    });
+    const usage = result.resource.metrics.usage;
+    assert.equal(usage.input_tokens.value, 250);
+    assert.equal(usage.output_tokens.value, 50);
+    assert.equal(usage.total_tokens.value, 300);
+    assert.equal(usage.cache_read_input_tokens.value, 200);
+    assert.equal(usage.cache_creation_input_tokens.value, null);
+    assert.equal(result.resource.collection.coverage.input_tokens.known, 2);
+    assert.ok(result.trace.raw_trace.some((source) => source.path === "raw/token-probe.json"));
+    assert.ok(result.trace.normalization.compatibility_profiles.includes(QWENWORK_MACOS_1_2_0_TOKEN_PROFILE.id));
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("QwenWork Token profile refuses a changed send probe", async () => {
+  const fixture = await createFixture({ tokenProfile: true });
+  try {
+    await writeFile(fixture.probePath, "{}\n");
+    const unitRoot = await realpath(fixture.unitRoot);
+    await assert.rejects(collectQwenWorkEvidence({
+      unitRoot, journalFile: await realpath(fixture.journalPath),
+      clientTraceRoot: await realpath(fixture.traceRoot),
+      outputRoot: join(unitRoot, ".general-e2e", "collection", "changed-probe"),
+      redacted: true,
+    }), /QWENWORK_TOKEN_PROBE_DIGEST_MISMATCH/u);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
 
 test("QwenWork collector emits CB-B v2 trace and null usage coverage without promoting completed", async () => {
   const fixture = await createFixture();

@@ -1,5 +1,7 @@
+import { QWENWORK_MACOS_1_2_0_TOKEN_PROFILE } from "./token-profile.mjs";
+
 export const QWENWORK_COLLECTOR_ADAPTER_ID = "qwenwork-native-general";
-export const QWENWORK_COLLECTOR_VERSION = "0.1.1";
+export const QWENWORK_COLLECTOR_VERSION = "0.1.2";
 export const RESOURCE_SCHEMA = "urn:wildclawbench:schema:general-e2e:resource-metrics:v1";
 const TOKEN_FIELDS = Object.freeze([
   "input_tokens",
@@ -259,13 +261,17 @@ function uniqueIds(rows, field) {
   return new Set(values);
 }
 
-export function buildQwenStrictResourceMetrics({ state, segmentRows, sources, collectedAt, traceCalls = null }) {
+export function buildQwenStrictResourceMetrics({
+  state, segmentRows, sources, collectedAt, traceCalls = null, tokenProfile = null,
+}) {
   const mainStarts = segmentRows.filter((row) => row.type === "turn.started" && !row.data?.is_subagent);
   const mainTurnIds = [...new Set(mainStarts.map((row) => row.turn_id).filter(Boolean))];
   if (mainTurnIds.length !== 1) throw new Error("QWENWORK_MAIN_TURN_AMBIGUOUS");
   const turnId = mainTurnIds[0];
   const selected = segmentRows.filter((row) => row.turn_id === turnId);
   const requests = uniqueIds(selected.filter((row) => row.type === "model.request.started"), "request_id");
+  const responses = selected.filter((row) => row.type === "model.response.completed");
+  const responseIds = uniqueIds(responses, "request_id");
   const calls = uniqueIds(selected.filter((row) => row.type === "tool.requested"), "tool_call_id");
   if (traceCalls) {
     const normalizedCallIds = new Set(traceCalls.map((call) => call.call_id));
@@ -279,16 +285,51 @@ export function buildQwenStrictResourceMetrics({ state, segmentRows, sources, co
   const duration = Number(state.execution?.duration_seconds);
   const agentDuration = Number(finish.data?.duration_ms) / 1000;
   const refs = sources.map((source) => source.path);
-  const unavailableToken = (field) => metric(
-    null,
-    "unavailable",
-    `QwenWork current runtime token semantics are unverified; ${field} withheld from strict General v1`,
-  );
-  const usage = Object.fromEntries(TOKEN_FIELDS.map((field) => [field, unavailableToken(field)]));
-  const coverageMap = Object.fromEntries(TOKEN_FIELDS.map((field) => [
-    field,
-    coverage(0, requests.size, "model_response"),
+  const tokenFields = ["input_tokens", "output_tokens", "cache_read_input_tokens"];
+  const safeCount = (value) => Number.isSafeInteger(value) && value >= 0;
+  const values = responses.map((row) => row.data || {});
+  const nonzero = values.some((value) => tokenFields.some((field) => safeCount(value[field]) && value[field] > 0));
+  const matched = requests.size > 0 && responseIds.size === requests.size
+    && [...requests].every((id) => responseIds.has(id));
+  const validResponses = values.length > 0 && values.every((value) => (
+    value.provider === "qoder"
+    && safeCount(value.input_tokens) && safeCount(value.output_tokens)
+    && safeCount(value.cache_read_input_tokens)
+    && value.input_tokens + value.output_tokens > 0
+    && value.cache_read_input_tokens <= value.input_tokens
+  ));
+  const totals = Object.fromEntries(tokenFields.map((field) => [
+    field, values.reduce((sum, value) => sum + (safeCount(value[field]) ? value[field] : 0), 0),
   ]));
+  const reconciled = tokenFields.every((field) => safeCount(finish.data?.[field])
+    && finish.data[field] === totals[field]);
+  const tokenObserved = Boolean(tokenProfile?.id === QWENWORK_MACOS_1_2_0_TOKEN_PROFILE.id
+    && nonzero && matched && validResponses && reconciled);
+  const unavailableToken = (field) => metric(null, "unavailable",
+    `QwenWork ${field} has no admitted native coverage`);
+  const usage = Object.fromEntries(TOKEN_FIELDS.map((field) => [field, unavailableToken(field)]));
+  const coverageMap = Object.fromEntries(TOKEN_FIELDS.map((field) => [field,
+    coverage(0, requests.size, "model_response")]));
+  if (tokenObserved) {
+    for (const field of tokenFields) {
+      usage[field] = metric(totals[field], "observed",
+        `${tokenProfile.id}: unique Qoder response sum reconciled with main turn; input includes cache read`);
+      coverageMap[field] = coverage(responses.length, requests.size, "model_response");
+    }
+    usage.total_tokens = metric(totals.input_tokens + totals.output_tokens, "observed",
+      `${tokenProfile.id}: cache-inclusive input + output; cache read not added twice`);
+    coverageMap.total_tokens = coverage(responses.length, requests.size, "model_response");
+  } else if (nonzero && tokenProfile) {
+    const status = !matched ? "partial" : "unverified";
+    for (const field of [...tokenFields, "total_tokens"]) {
+      usage[field] = metric(null, status,
+        "QwenWork native request/response or turn usage did not reconcile");
+    }
+  } else if (responses.length && tokenProfile) {
+    for (const field of [...tokenFields, "total_tokens"]) {
+      usage[field] = metric(null, "masked", "QwenWork native response usage is hidden zero, not observed zero");
+    }
+  }
   Object.assign(coverageMap, {
     request_count: coverage(requests.size, requests.size, "model_request"),
     request_attempt_count: coverage(0, requests.size, "native_request"),
@@ -314,7 +355,9 @@ export function buildQwenStrictResourceMetrics({ state, segmentRows, sources, co
       status: "partial",
       collected_at: collectedAt,
       sources,
-      warnings: ["QWEN_TOKEN_SEMANTICS_UNVERIFIED"],
+      warnings: tokenObserved ? ["QWEN_CACHE_WRITE_UNVERIFIED", "QWEN_REASONING_USAGE_UNAVAILABLE"]
+        : [tokenProfile ? (nonzero ? "QWEN_TOKEN_RESPONSE_MISMATCH" : "QWEN_TOKEN_USAGE_MASKED")
+          : "QWEN_TOKEN_SEMANTICS_UNVERIFIED"],
       excluded_scope: [
         "judge-usage",
         "control-usage",

@@ -27,6 +27,8 @@ QwenWorkCN 1.0.6 真机采集前，按可恢复顺序执行以下清单：
 
 工具状态只按原生完成证据归一化：shell `exit_code=0` 才是 `success`，`tool.execution.finished.status=completed` 单独不会升级为成功；冲突或缺失保持 `unknown`。当前 QwenWork 1.0.6 token profile 尚未验证，因此所有 usage 值保持 `null/status=unavailable`，并以 `coverage` 保留 model-response 分母，不补零。
 
+QwenWorkCN 1.2.0 / macOS x86_64 的新会话可在启动客户端时设置 `QODERCN_EXPOSE_TOKEN_USAGE=1`。General 执行器冻结精确 9250 监听进程的开关探针；collector 将发送前 probe 与 config 按 SHA 归档，要求 SDK `1.0.46`、transcript `1.1.59`、runtime SHA-256 `8dc1dc0b107f37837cf76ef7e2be4f0dd2fdbd90ff8391a3f1f9e965e9f3fb02` 精确匹配，主 turn 请求/响应 ID 全覆盖、每个响应输入/输出非零、Cache Read 不超过输入，且逐响应三项求和等于唯一主 `turn.finished` 终值，才把输入、输出、总 Token 和 Cache Read 记为 `observed`。总 Token = 包含 Cache Read 的输入 + 输出，不重复添加缓存读取。原生 Cache Write 的零值是适配器默认值，仍记为 `null/unavailable`；推理 Token 和 HTTP 请求尝试也不可用。开关未启用、Profile 不匹配或历史 masked 记录均不能事后回填。
+
 本目录的 fixture/test 只证明脱敏文件的契约和失败关闭规则。QwenWorkCN 1.0.6 / macOS x86_64 的单题真机 collector、cleanup/finalizer、评分、回传和报告证据见仓库 `docs/design/general-e2e/evidence/qwenwork-macos-general-20260921/README.md`；并发、Apple Silicon、Windows 和 60 题仍未由该证据覆盖。
 
 QwenWork macOS 正式收口使用 `drivers/qwenwork/finalize.mjs`，接入公共 General finalizer 和共享 macOS workspace 进程清理原语。它不关闭或重启 QwenWork 客户端；只清理由本题 workspace 绑定的候选子进程，并在 state/trace/resource 通过完整校验后冻结回执。
