@@ -45,7 +45,7 @@ import {
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.5";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.6";
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
 const PROBE_SCHEMA = "wildclawbench.general-e2e-qwenwork-readonly-probe/v1";
@@ -715,6 +715,10 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
   }
 
   let state = await dependencies.readJournal(config.state_file);
+  const recordDispatchStage = async (stage) => {
+    state.events.push({ type: "DISPATCH_STAGE_OBSERVED", at: dependencies.now(), details: { stage } });
+    await dependencies.writeJournal(config.state_file, state);
+  };
   let action = "prepare";
   if (state) {
     if (!config.resume) throw new Error("QWENWORK_EXISTING_JOURNAL_REQUIRES_RESUME");
@@ -763,6 +767,8 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
       `${error instanceof Error ? error.message : String(error)}；禁止发送或切换会话`,
     );
   }
+
+  if (action === "dispatch-once") await recordDispatchStage("managed-active-check-completed");
 
   if (action === "return-terminal") return { journal: state, execution_state: structuredClone(state.execution_state) };
   if (action === "observe-bound-session") return observeBoundAttempt(config, state, dependencies);
@@ -816,7 +822,9 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
       // The queue may have prepared several projects before dispatch. Navigate
       // to this exact project and restore its frozen prompt before readback.
       await dependencies.verifyPreparedUi(config, state);
+      await recordDispatchStage("prepared-project-restored");
       await dependencies.fillPrompt(config.prompt.content);
+      await recordDispatchStage("frozen-prompt-filled");
     } catch (error) {
       return persistAttention(
         config, state, dependencies, "QWENWORK_PRE_DISPATCH_READBACK_FAILED",
@@ -828,6 +836,7 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
   try {
     const prepared = await dependencies.verifyPreparedUi(config, state);
     samePreparedProject(state, prepared);
+    if (action === "dispatch-once") await recordDispatchStage("final-readback-verified");
   } catch (error) {
     return persistAttention(
       config,

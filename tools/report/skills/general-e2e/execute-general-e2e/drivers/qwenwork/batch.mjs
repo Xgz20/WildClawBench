@@ -10,7 +10,7 @@ import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs"
 import { calculateQwenCanaryConfigDigest } from "./driver.mjs";
 
 export const QWENWORK_QUEUE_SCHEMA = "wildclawbench.general-e2e-qwenwork-execution-queue/v1";
-export const QWENWORK_QUEUE_VERSION = "0.2.0";
+export const QWENWORK_QUEUE_VERSION = "0.2.1";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 const TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
@@ -568,6 +568,9 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
           const baseConfig = await readJson(pending.config_path);
           dispatchProbe = await refreshProbe(baseConfig,
             join(queueRoot, "probes", `dispatch-${pending.task_id}-${Date.now()}.json`));
+          state.events.push({ event: "TASK_DISPATCH_PROBE_READY", at: now(), task_id: pending.task_id,
+            probe_sha256: dispatchProbe.sha256 });
+          await persist(statePath, state);
         }
         pending.exit_code = await runQwenTask(pending.config_path, pending, state, batch, dependencies,
           pending.prepared ? { resume: true, probe: dispatchProbe || { path: batch.probe, sha256: batch.probeSha256 } } : {});

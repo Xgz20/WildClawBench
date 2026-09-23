@@ -552,6 +552,14 @@ test("managed queue prepares a project without sending, then dispatches the same
   assert.equal(completed.journal.send.dispatch_attempt_count, 1);
   assert.equal(dispatches, 1);
   assert.equal(fills, 2);
+  assert.deepEqual(completed.journal.events
+    .filter((event) => event.type === "DISPATCH_STAGE_OBSERVED")
+    .map((event) => event.details.stage), [
+    "managed-active-check-completed",
+    "prepared-project-restored",
+    "frozen-prompt-filled",
+    "final-readback-verified",
+  ]);
 });
 
 test("terminal journal replay returns the persisted execution projection without observing or resending", async () => {
