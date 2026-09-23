@@ -6,6 +6,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import {
+  acquireQwenQueueOwner,
   activeSessionArgs,
   parseBatchArgs,
   runQwenWorkBatch,
@@ -17,6 +18,48 @@ import {
 
 const QUEUE_TASKS = ["one", "two", "three", "four", "five"];
 const PROBE = "probe.json";
+
+test("QwenWork queue recovers only an explicitly verified stale owner and archives it", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qwenwork-owner-"));
+  const path = join(root, "owner-lock.json");
+  const previous = { schema_version: "wildclawbench.general-e2e-qwenwork-queue-owner/v1",
+    owner_id: "old-owner", queue_id: "queue-fixture", frozen_sha256: "a".repeat(64),
+    pid: 101, host: "fixture-host", process_start_identity: "old-start", acquired_at: "2026-09-23T00:00:00Z" };
+  try {
+    await writeFile(path, `${JSON.stringify(previous)}\n`);
+    const current = await acquireQwenQueueOwner(path, {
+      queueId: "queue-fixture", frozenSha256: "a".repeat(64), recoverStale: true,
+    }, { hostname: "fixture-host", pid: 202, ownerId: "new-owner",
+      processStartIdentity: async (pid) => pid === 202 ? "new-start" : "old-start",
+      processAlive: async () => false });
+    assert.equal(current.recovered.reason, "pid-not-running");
+    assert.deepEqual(JSON.parse(await readFile(current.recovered.archive_path, "utf8")), previous);
+    assert.equal(JSON.parse(await readFile(path, "utf8")).owner_id, "new-owner");
+    await current.release();
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("QwenWork queue owner recovery refuses an active owner and any attempt lock", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qwenwork-owner-"));
+  const path = join(root, "owner-lock.json");
+  const attemptLock = join(root, "attempt.lock");
+  const previous = { schema_version: "wildclawbench.general-e2e-qwenwork-queue-owner/v1",
+    owner_id: "old-owner", queue_id: "queue-fixture", frozen_sha256: "a".repeat(64),
+    pid: 101, host: "fixture-host", process_start_identity: "old-start", acquired_at: "2026-09-23T00:00:00Z" };
+  const options = { queueId: "queue-fixture", frozenSha256: "a".repeat(64),
+    recoverStale: true, attemptLocks: [attemptLock] };
+  const overrides = { hostname: "fixture-host", pid: 202, ownerId: "new-owner",
+    processStartIdentity: async (pid) => pid === 202 ? "new-start" : "old-start" };
+  try {
+    await writeFile(path, `${JSON.stringify(previous)}\n`);
+    await assert.rejects(acquireQwenQueueOwner(path, options,
+      { ...overrides, processAlive: async () => true }), /STILL_ACTIVE_OR_UNVERIFIABLE/u);
+    await writeFile(attemptLock, "fixture");
+    await assert.rejects(acquireQwenQueueOwner(path, options,
+      { ...overrides, processAlive: async () => false }), /ATTEMPT_LOCK_BLOCKS_QUEUE_RECOVERY/u);
+    assert.deepEqual(JSON.parse(await readFile(path, "utf8")), previous);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 test("queue observation allow-list retains only sent queue-owned attention bindings", () => {
   const args = activeSessionArgs({ tasks: [
@@ -266,6 +309,53 @@ test("QwenWork queue resumes an attention task with the same attempt and never r
   } finally {
     await rm(f.root, { recursive: true, force: true });
   }
+});
+
+test("QwenWork queue recovers a stale owner only with a fresh idle probe and original attempt", async () => {
+  const f = await fixture(["one"]);
+  let first = true;
+  const calls = [];
+  try {
+    const execute = async (argv) => {
+      const identity = await identityFrom(argv);
+      calls.push({ attemptId: identity.attempt_id, resume: argv.includes("--resume") });
+      if (first) {
+        first = false;
+        await writeJournal(f.root, identity.task_id, identity.attempt_id, "NEEDS_ATTENTION",
+          { sendStatus: "uncertain" });
+        return 3;
+      }
+      await writeJournal(f.root, identity.task_id, identity.attempt_id, "COMPLETED");
+      return 0;
+    };
+    const attention = await runQwenWorkBatch(f.args, { execute });
+    assert.equal(attention.phase, "NEEDS_ATTENTION");
+    const ownerPath = join(f.root, ".general-e2e", "queues", "qwenwork", "owner-lock.json");
+    await writeJson(ownerPath, {
+      schema_version: "wildclawbench.general-e2e-qwenwork-queue-owner/v1",
+      owner_id: "stale-owner", queue_id: "qwen-fixture", frozen_sha256: attention.frozen_sha256,
+      pid: 101, host: "fixture-host", process_start_identity: "old-start",
+      acquired_at: "2026-09-23T00:00:00Z",
+    });
+    const probe = JSON.parse(await readFile(f.probePath, "utf8"));
+    probe.probed_at = new Date().toISOString();
+    probe.app.cdp = { ready: true, browser_identity_present: true };
+    await writeJson(f.probePath, probe);
+    const args = [...f.args];
+    args[args.indexOf("--probe-sha256") + 1] = sha256(`${JSON.stringify(probe, null, 2)}\n`);
+    const resumed = await runQwenWorkBatch([...args, "--resume", "--recover-stale-owner"], {
+      execute,
+      ownerOverrides: { hostname: "fixture-host", pid: 202, ownerId: "new-owner",
+        processStartIdentity: async (pid) => pid === 202 ? "new-start" : "old-start",
+        processAlive: async () => false },
+    });
+    assert.equal(resumed.phase, "COMPLETED");
+    assert.ok(resumed.events.some((event) => event.event === "QUEUE_STALE_OWNER_RECOVERED"));
+    assert.deepEqual(calls, [
+      { attemptId: calls[0].attemptId, resume: false },
+      { attemptId: calls[0].attemptId, resume: true },
+    ]);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 
 test("QwenWork queue never converts an attention-only queue into COMPLETED", async () => {

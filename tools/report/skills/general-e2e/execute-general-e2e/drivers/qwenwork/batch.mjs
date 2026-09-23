@@ -10,7 +10,7 @@ import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs"
 import { calculateQwenCanaryConfigDigest } from "./driver.mjs";
 
 export const QWENWORK_QUEUE_SCHEMA = "wildclawbench.general-e2e-qwenwork-execution-queue/v1";
-export const QWENWORK_QUEUE_VERSION = "0.2.3";
+export const QWENWORK_QUEUE_VERSION = "0.2.4";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 const TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
@@ -22,7 +22,7 @@ const BUNDLE_ID = "cn.qwenwork.desktop.mac";
 const DRIVER_SOURCE_FILES = [
   "batch.mjs", "driver.mjs", "execution-state.mjs", "journal.mjs",
   "probe.mjs", "runtime-profile.mjs", "select-folder.swift",
-  "session-state.mjs", "ui.mjs", "package-lock.json",
+  "session-state.mjs", "token-launch.mjs", "token-process.mjs", "ui.mjs", "package-lock.json",
 ];
 
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
@@ -74,6 +74,7 @@ export function parseBatchArgs(argv) {
   let preprepareProjects = false;
   let skipClarifications = false;
   let requireTokenExposure = false;
+  let recoverStaleOwner = false;
   let resume = false;
   let status = false;
   for (let index = 0; index < args.length;) {
@@ -103,11 +104,15 @@ export function parseBatchArgs(argv) {
     } else if (arg === "--require-token-exposure") {
       requireTokenExposure = true;
       args.splice(index, 1);
+    } else if (arg === "--recover-stale-owner") {
+      recoverStaleOwner = true;
+      args.splice(index, 1);
     } else index += 1;
   }
   if (!safeId(queueId)) throw new Error("--queue-id 必须是安全的非空 ID");
   if (runSlots > MAX_RUN_SLOTS) throw new Error(`--run-slots 必须在 1–${MAX_RUN_SLOTS} 之间`);
   if (resume && status) throw new Error("--resume 与 --status 不能同时使用");
+  if (recoverStaleOwner && !resume) throw new Error("--recover-stale-owner 只允许与 --resume 一起使用");
   if (!probe || !probeSha256) throw new Error("--probe 与 --probe-sha256 必须同时指定");
   if (!/^[a-f0-9]{64}$/u.test(probeSha256)) throw new Error("--probe-sha256 必须是 SHA-256");
   const parsedEndpoint = new URL(endpoint);
@@ -127,6 +132,7 @@ export function parseBatchArgs(argv) {
     preprepareProjects,
     skipClarifications,
     requireTokenExposure,
+    recoverStaleOwner,
     resume,
     status,
   };
@@ -426,14 +432,121 @@ async function runQwenTask(configPath, row, state, options, dependencies, {
   return result.code;
 }
 
-async function acquireOwner(path) {
+async function processStartIdentity(pid) {
+  const result = await runCapture("/bin/ps", ["-o", "lstart=", "-p", String(pid)],
+    { capture: true, allowFailure: true });
+  return result.code === 0 ? String(result.stdout || "").trim() || null : null;
+}
+
+function processAlive(pid) {
+  try { process.kill(pid, 0); return true; } catch (error) { return error?.code === "EPERM"; }
+}
+
+export async function acquireQwenQueueOwner(path, {
+  queueId, frozenSha256, recoverStale = false, attemptLocks = [],
+}, overrides = {}) {
+  const host = overrides.hostname || hostname();
+  const pid = overrides.pid || process.pid;
+  const startIdentity = overrides.processStartIdentity
+    ? await overrides.processStartIdentity(pid) : await processStartIdentity(pid);
+  if (!startIdentity) throw new Error("QWENWORK_QUEUE_OWNER_PROCESS_IDENTITY_UNAVAILABLE");
+  const owner = {
+    schema_version: "wildclawbench.general-e2e-qwenwork-queue-owner/v1",
+    owner_id: overrides.ownerId || randomUUID(),
+    queue_id: queueId, frozen_sha256: frozenSha256,
+    pid, host, process_start_identity: startIdentity,
+    acquired_at: new Date().toISOString(),
+  };
   await mkdir(dirname(path), { recursive: true });
-  const handle = await open(path, "wx", 0o600).catch((error) => {
-    if (error?.code === "EEXIST") throw new Error("QWENWORK_QUEUE_OWNER_EXISTS: 不自动删除活动或陈旧锁");
-    throw error;
-  });
-  await handle.writeFile(JSON.stringify({ pid: process.pid, host: hostname(), acquired_at: new Date().toISOString() }));
-  return async () => { await handle.close(); await rm(path, { force: true }); };
+  const create = async () => {
+    const handle = await open(path, "wx", 0o600);
+    try { await handle.writeFile(`${JSON.stringify(owner)}\n`); } finally { await handle.close(); }
+  };
+  let recovered = null;
+  try {
+    await create();
+  } catch (error) {
+    if (error?.code !== "EEXIST") throw error;
+    if (!recoverStale) throw new Error("QWENWORK_QUEUE_OWNER_EXISTS: 需显式核验陈旧锁");
+    const guardPath = `${path}.recovery`;
+    const guard = await open(guardPath, "wx", 0o600).catch((guardError) => {
+      if (guardError?.code === "EEXIST") throw new Error("QWENWORK_QUEUE_OWNER_RECOVERY_ACTIVE");
+      throw guardError;
+    });
+    try {
+      const info = await lstat(path);
+      if (!info.isFile() || info.isSymbolicLink()) throw new Error("QWENWORK_QUEUE_OWNER_LOCK_INVALID");
+      const beforeBytes = await readFile(path);
+      let previous;
+      try { previous = JSON.parse(beforeBytes.toString("utf8")); }
+      catch { throw new Error("QWENWORK_QUEUE_OWNER_LOCK_UNREADABLE"); }
+      if (previous?.schema_version !== owner.schema_version
+          || previous.queue_id !== queueId || previous.frozen_sha256 !== frozenSha256
+          || previous.host !== host || !Number.isSafeInteger(previous.pid)
+          || !previous.process_start_identity
+          || typeof previous.owner_id !== "string"
+          || !/^[A-Za-z0-9-]{1,64}$/u.test(previous.owner_id)) {
+        throw new Error("QWENWORK_QUEUE_OWNER_RECOVERY_IDENTITY_MISMATCH");
+      }
+      const alive = overrides.processAlive ? await overrides.processAlive(previous.pid)
+        : processAlive(previous.pid);
+      const currentStart = overrides.processStartIdentity
+        ? await overrides.processStartIdentity(previous.pid)
+        : await processStartIdentity(previous.pid);
+      if (alive && (!currentStart || currentStart === previous.process_start_identity)) {
+        throw new Error("QWENWORK_QUEUE_OWNER_STILL_ACTIVE_OR_UNVERIFIABLE");
+      }
+      for (const attemptLock of attemptLocks) {
+        try { await lstat(attemptLock); throw new Error("QWENWORK_ATTEMPT_LOCK_BLOCKS_QUEUE_RECOVERY"); }
+        catch (lockError) { if (lockError?.code !== "ENOENT") throw lockError; }
+      }
+      if (!Buffer.from(await readFile(path)).equals(beforeBytes)) {
+        throw new Error("QWENWORK_QUEUE_OWNER_CHANGED_DURING_RECOVERY");
+      }
+      const archive = `${path}.stale-${previous.owner_id}.json`;
+      try { await lstat(archive); throw new Error("QWENWORK_QUEUE_OWNER_ARCHIVE_EXISTS"); }
+      catch (archiveError) { if (archiveError?.code !== "ENOENT") throw archiveError; }
+      await rename(path, archive);
+      if (!Buffer.from(await readFile(archive)).equals(beforeBytes)) {
+        throw new Error("QWENWORK_QUEUE_OWNER_CHANGED_DURING_ARCHIVE");
+      }
+      await create();
+      recovered = { previous_owner_id: previous.owner_id, previous_pid: previous.pid,
+        archive_path: archive, reason: alive ? "pid-reused" : "pid-not-running" };
+    } finally {
+      await guard.close();
+      await rm(guardPath, { force: false });
+    }
+  }
+  return {
+    recovered,
+    release: async () => {
+      const current = await readJson(path);
+      if (current?.owner_id !== owner.owner_id) throw new Error("QWENWORK_QUEUE_OWNER_CHANGED_BEFORE_RELEASE");
+      await rm(path, { force: false });
+    },
+  };
+}
+
+async function assertQueueRecoveryProbe(batch) {
+  const bytes = await readFile(batch.probe);
+  if (sha256(bytes) !== batch.probeSha256) throw new Error("QWENWORK_QUEUE_RECOVERY_PROBE_DIGEST_MISMATCH");
+  const probe = JSON.parse(bytes.toString("utf8"));
+  const age = Date.now() - Date.parse(probe.probed_at || "");
+  if (probe.schema_version !== "wildclawbench.general-e2e-qwenwork-readonly-probe/v1"
+      || probe.app?.bundle_id !== BUNDLE_ID || probe.app?.identity_verified !== true
+      || probe.app?.cdp?.ready !== true || probe.app?.cdp?.browser_identity_present !== true
+      || (batch.requireTokenExposure && probe.app?.token_usage_exposure?.status !== "enabled")
+      || probe.native_state?.database?.quick_check !== "ok"
+      || probe.native_state?.database?.active_or_pending_count !== 0
+      || !Number.isFinite(age) || age < 0 || age > 900_000) {
+      throw new Error("QWENWORK_QUEUE_RECOVERY_PROBE_NOT_IDLE_OR_VERIFIED");
+  }
+  const performed = new Set(probe.operations_performed || []);
+  if (["send-prompt", "change-model-or-permissions", "select-project-or-workspace"]
+    .some((operation) => performed.has(operation))) {
+    throw new Error("QWENWORK_QUEUE_RECOVERY_PROBE_MUTATION_DETECTED");
+  }
 }
 
 export async function runQwenWorkBatch(argv, dependencies = {}) {
@@ -476,13 +589,30 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
     if (state.schema_version !== QWENWORK_QUEUE_SCHEMA || state.frozen_sha256 !== digest) throw new Error("QWENWORK_QUEUE_CONFIG_DRIFT");
     return { ...state, state_file: statePath, receipt_file: receiptPath };
   }
-  const releaseOwner = await acquireOwner(ownerPath);
+  if (batch.recoverStaleOwner) {
+    if (!state || state.schema_version !== QWENWORK_QUEUE_SCHEMA || state.frozen_sha256 !== digest) {
+      throw new Error("QWENWORK_QUEUE_RECOVERY_CONFIG_DRIFT");
+    }
+    if (["COMPLETED", "COMPLETED_WITH_FAILURES"].includes(state.phase)) {
+      throw new Error("QWENWORK_QUEUE_RECOVERY_ALREADY_TERMINAL");
+    }
+    await assertQueueRecoveryProbe(batch);
+  }
+  const queueOwner = await acquireQwenQueueOwner(ownerPath, {
+    queueId: batch.queueId, frozenSha256: digest,
+    recoverStale: batch.recoverStaleOwner,
+    attemptLocks: (state?.tasks || []).map((row) => `${executionPaths(root, row.task_id, row.attempt_id).journal}.lock`),
+  }, dependencies.ownerOverrides || {});
   const sleep = dependencies.sleep || ((milliseconds) => new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds)));
   const now = dependencies.now || (() => new Date().toISOString());
   try {
     if (state && !batch.resume) throw new Error("QWENWORK_QUEUE_EXISTS: 使用 --resume，禁止重建队列");
     if (!state && batch.resume) throw new Error("QWENWORK_QUEUE_MISSING");
     if (state && (state.schema_version !== QWENWORK_QUEUE_SCHEMA || state.frozen_sha256 !== digest)) throw new Error("QWENWORK_QUEUE_CONFIG_DRIFT");
+    if (queueOwner.recovered) {
+      state.events.push({ event: "QUEUE_STALE_OWNER_RECOVERED", at: now(), ...queueOwner.recovered });
+      await persist(statePath, state);
+    }
     if (!state) {
       const tasks = [];
       for (let index = 0; index < manifestInfo.taskIds.length; index += 1) {
@@ -637,13 +767,13 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
       if (!changed) await sleep(1000);
     }
   } finally {
-    await releaseOwner();
+    await queueOwner.release();
   }
 }
 
 if (process.argv[1] && await realpath(resolve(process.argv[1])) === await realpath(fileURLToPath(import.meta.url))) {
   if (process.argv.includes("--help")) {
-    console.log("QwenWork macOS General 队列：node drivers/qwenwork/batch.mjs --unit-root PATH --queue-id ID --endpoint http://127.0.0.1:9250 --session-db PATH --trace-root PATH --probe PATH --probe-sha256 SHA [--run-slots 1-8] [--preprepare-projects] [--skip-clarifications] [--require-token-exposure] [--resume|--status]。UI 单槽，后台默认三路并按可信终态动态补位。");
+    console.log("QwenWork macOS General 队列：node drivers/qwenwork/batch.mjs --unit-root PATH --queue-id ID --endpoint http://127.0.0.1:9250 --session-db PATH --trace-root PATH --probe PATH --probe-sha256 SHA [--run-slots 1-8] [--preprepare-projects] [--skip-clarifications] [--require-token-exposure] [--resume [--recover-stale-owner]|--status]。UI 单槽，后台默认三路并按可信终态动态补位。");
   } else {
     runQwenWorkBatch(process.argv.slice(2)).then((result) => {
       console.log(JSON.stringify(result, null, 2));
