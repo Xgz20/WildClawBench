@@ -45,7 +45,7 @@ import {
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.6";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.7";
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
 const PROBE_SCHEMA = "wildclawbench.general-e2e-qwenwork-readonly-probe/v1";
@@ -155,6 +155,10 @@ export function assertQwenCanaryConfig(config, { requireLiveAuthorization = fals
     throw new Error("QWENWORK_CANARY_CONFIGURATION_POLICY_INVALID");
   }
   if (config.control?.create_new_project !== true) throw new Error("QWENWORK_CANARY_NEW_PROJECT_REQUIRED");
+  if (config.control?.require_token_usage_exposure !== undefined
+      && typeof config.control.require_token_usage_exposure !== "boolean") {
+    throw new Error("QWENWORK_CANARY_TOKEN_EXPOSURE_POLICY_INVALID");
+  }
   if (config.control?.clarification_policy !== undefined
       && !new Set(["manual", "skip-question-card"]).has(config.control.clarification_policy)) {
     throw new Error("QWENWORK_CANARY_CLARIFICATION_POLICY_INVALID");
@@ -181,6 +185,11 @@ export function assertQwenCanaryProbe(
   }
   if (probe.app?.bundle_id !== config.client.bundle_id || probe.app?.identity_verified !== true) {
     throw new Error("QWENWORK_CANARY_PROBE_APP_MISMATCH");
+  }
+  if (config.control?.require_token_usage_exposure === true
+      && (probe.app?.token_usage_exposure?.status !== "enabled"
+        || !Number.isSafeInteger(probe.app?.token_usage_exposure?.listener_pid))) {
+    throw new Error("QWENWORK_CANARY_TOKEN_EXPOSURE_REQUIRED");
   }
   if (probe.ready_for_read_only_mapping !== true
       || probe.native_state?.database?.quick_check !== "ok") {

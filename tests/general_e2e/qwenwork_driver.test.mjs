@@ -7,6 +7,7 @@ import test from "node:test";
 
 import {
   QWENWORK_CANARY_CONFIG_SCHEMA,
+  assertQwenCanaryProbe,
   calculateQwenCanaryConfigDigest,
   loadQwenCanaryConfig,
   parseDriverArgs,
@@ -153,6 +154,16 @@ function probeAt(probedAt, activeOrPendingCount = 0) {
     operations_performed: ["read-only-app-discovery", "read-only-native-state"],
   };
 }
+
+test("opt-in Token exposure gate requires a verified exact listener in the fresh probe", () => {
+  const config = makeConfig();
+  config.control.require_token_usage_exposure = true;
+  const probe = probeAt("2026-09-19T10:00:00.000Z");
+  const now = Date.parse("2026-09-19T10:00:01.000Z");
+  assert.throws(() => assertQwenCanaryProbe(probe, config, now), /TOKEN_EXPOSURE_REQUIRED/u);
+  probe.app.token_usage_exposure = { status: "enabled", listener_pid: 12345 };
+  assert.equal(assertQwenCanaryProbe(probe, config, now), probe);
+});
 
 function fakeLocator(elements) {
   return {

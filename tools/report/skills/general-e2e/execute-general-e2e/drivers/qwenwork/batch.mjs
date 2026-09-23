@@ -10,7 +10,7 @@ import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs"
 import { calculateQwenCanaryConfigDigest } from "./driver.mjs";
 
 export const QWENWORK_QUEUE_SCHEMA = "wildclawbench.general-e2e-qwenwork-execution-queue/v1";
-export const QWENWORK_QUEUE_VERSION = "0.2.1";
+export const QWENWORK_QUEUE_VERSION = "0.2.2";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 const TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
@@ -73,6 +73,7 @@ export function parseBatchArgs(argv) {
   let configDir = "";
   let preprepareProjects = false;
   let skipClarifications = false;
+  let requireTokenExposure = false;
   let resume = false;
   let status = false;
   for (let index = 0; index < args.length;) {
@@ -99,6 +100,9 @@ export function parseBatchArgs(argv) {
     } else if (arg === "--skip-clarifications") {
       skipClarifications = true;
       args.splice(index, 1);
+    } else if (arg === "--require-token-exposure") {
+      requireTokenExposure = true;
+      args.splice(index, 1);
     } else index += 1;
   }
   if (!safeId(queueId)) throw new Error("--queue-id 必须是安全的非空 ID");
@@ -122,6 +126,7 @@ export function parseBatchArgs(argv) {
     configDir: configDir ? resolve(configDir) : "",
     preprepareProjects,
     skipClarifications,
+    requireTokenExposure,
     resume,
     status,
   };
@@ -245,6 +250,7 @@ async function buildTaskConfig(root, manifestInfo, taskId, attemptId, options, f
       probe_max_age_seconds: 900,
       live_execution_authorized: true,
       clarification_policy: options.skipClarifications ? "skip-question-card" : "manual",
+      require_token_usage_exposure: options.requireTokenExposure,
     },
   };
   config.config_digest = calculateQwenCanaryConfigDigest(config);
@@ -455,6 +461,7 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
     run_slots: batch.runSlots,
     preprepare_projects: batch.preprepareProjects,
     clarification_policy: batch.skipClarifications ? "skip-question-card" : "manual",
+    require_token_usage_exposure: batch.requireTokenExposure,
     driver_sha256: await driverSourceDigest(),
   };
   const digest = sha256(JSON.stringify(frozen));
@@ -631,7 +638,7 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
 
 if (process.argv[1] && await realpath(resolve(process.argv[1])) === await realpath(fileURLToPath(import.meta.url))) {
   if (process.argv.includes("--help")) {
-    console.log("QwenWork macOS General 队列：node drivers/qwenwork/batch.mjs --unit-root PATH --queue-id ID --endpoint http://127.0.0.1:9250 --session-db PATH --trace-root PATH --probe PATH --probe-sha256 SHA [--run-slots 1-8] [--preprepare-projects] [--skip-clarifications] [--resume|--status]。UI 单槽，后台默认三路并按可信终态动态补位。");
+    console.log("QwenWork macOS General 队列：node drivers/qwenwork/batch.mjs --unit-root PATH --queue-id ID --endpoint http://127.0.0.1:9250 --session-db PATH --trace-root PATH --probe PATH --probe-sha256 SHA [--run-slots 1-8] [--preprepare-projects] [--skip-clarifications] [--require-token-exposure] [--resume|--status]。UI 单槽，后台默认三路并按可信终态动态补位。");
   } else {
     runQwenWorkBatch(process.argv.slice(2)).then((result) => {
       console.log(JSON.stringify(result, null, 2));

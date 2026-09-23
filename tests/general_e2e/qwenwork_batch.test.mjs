@@ -338,11 +338,14 @@ test("QwenWork queue prepares all projects before its first prompt dispatch", as
         prepareOnly ? { dispatchAttemptCount: 0, sendStatus: "intent_persisted", finished: false } : {});
       return 0;
     };
-    const result = await runQwenWorkBatch([...f.args, "--preprepare-projects", "--skip-clarifications"], { execute });
+    const result = await runQwenWorkBatch([...f.args, "--preprepare-projects", "--skip-clarifications", "--require-token-exposure"], { execute });
     assert.equal(result.phase, "COMPLETED");
     assert.equal(result.frozen.clarification_policy, "skip-question-card");
     assert.equal(JSON.parse(await readFile(result.tasks[0].config_path, "utf8")).control.clarification_policy,
       "skip-question-card");
+    assert.equal(result.frozen.require_token_usage_exposure, true);
+    assert.equal(JSON.parse(await readFile(result.tasks[0].config_path, "utf8")).control.require_token_usage_exposure,
+      true);
     assert.deepEqual(calls.map((row) => [row.task, row.prepareOnly]), [
       ["one", true], ["two", true], ["three", true],
       ["one", false], ["two", false], ["three", false],

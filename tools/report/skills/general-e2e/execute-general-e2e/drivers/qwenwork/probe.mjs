@@ -22,6 +22,7 @@ import {
   inspectDriverRuntimeIdentity,
   matchDriverRuntimeProfile,
 } from "./runtime-profile.mjs";
+import { readQwenTokenListener } from "./token-process.mjs";
 
 export const QWENWORK_PROBE_SCHEMA = "wildclawbench.general-e2e-qwenwork-readonly-probe/v1";
 const MAX_TRANSCRIPT_BYTES = 32 * 1024 * 1024;
@@ -208,6 +209,7 @@ export async function buildReadOnlyProbe(config, overrides = {}) {
   const inspectProcess = overrides.inspectProcess || inspectQwenProcess;
   const inspectEndpoint = overrides.inspectEndpoint || inspectLoopbackEndpoint;
   const inspectExecutable = overrides.inspectArchitecture || inspectArchitecture;
+  const inspectTokenListener = overrides.inspectTokenListener || readQwenTokenListener;
 
   const discovery = await discover({
     profile: QWENWORK_APP_PROFILE,
@@ -228,6 +230,9 @@ export async function buildReadOnlyProbe(config, overrides = {}) {
     transcriptVersions: trace.transcript_versions,
     platform: "darwin",
   });
+  const tokenListener = endpoint.ready
+    ? await inspectTokenListener({ appPath: discovery.path, port: Number(new URL(config.endpoint).port) })
+    : null;
   const normalizationProfile = matchDriverRuntimeProfile(runtime);
   const warnings = [...trace.warnings];
   if (!normalizationProfile) warnings.push("QWENWORK_RUNTIME_PROFILE_UNVERIFIED");
@@ -266,6 +271,11 @@ export async function buildReadOnlyProbe(config, overrides = {}) {
       architecture,
       process: processInfo,
       cdp: endpoint,
+      token_usage_exposure: {
+        status: tokenListener ? (tokenListener.token_usage_exposed ? "enabled" : "disabled") : "unavailable",
+        listener_pid: tokenListener?.pid || null,
+        source: "exact-loopback-listener-process-environment",
+      },
     },
     native_state: {
       session_database: config.sessionDb,
@@ -285,6 +295,7 @@ export async function buildReadOnlyProbe(config, overrides = {}) {
       "sqlite-snapshot-read",
       "trace-metadata-read",
       "runtime-identity-read",
+      "exact-listener-token-switch-read",
     ],
     operations_not_performed: [
       "launch-or-restart-client",

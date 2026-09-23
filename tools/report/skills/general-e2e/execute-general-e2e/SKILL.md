@@ -15,7 +15,7 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.10.15/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.10.16/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## WorkBuddy / QwenWork macOS 开发入口
 
@@ -24,6 +24,19 @@ python -m eval_general_e2e skills --name execute-general-e2e --json
 WorkBuddy 已有五题值守闭环；`0.10.7` 修正队列回执、长路径预检和新版资源 finalizer 装配，仍须用新批次验证三路原生重叠、动态补位、恢复与正式 collect，不能只凭 fixture 或本 Skill 为 operational 提升并发支持声明。`0.10.13` 增加 QwenWork 项目预建、SQLite 在线备份和延迟 session_id 恢复；`0.10.14` 在预建项目发送前恢复唯一“新任务”页。用户明确授权时，队列传入 `--skip-clarifications`，才会对已绑定会话中具有唯一“跳过”和“下一题”控件的追问卡片点击“跳过”并记录 journal 事件；其他弹窗不适用此规则。项目预建在发送前为每题落盘 journal，随后仍按 manifest 顺序单槽发送。后台槽位与原生重叠分别留证，真实三路重叠尚需新批次证明。原生字段或停止确认不足时保留 NEEDS_ATTENTION，正式采集接入通用 finalizer 和真实平台 cleanup hook。
 
 `0.10.15` 为 QwenWork 预建后发送加入 probe 完成、项目恢复、Prompt 重填和最终回读的时间事件，仅用于定位 r20 真机原生峰值仍为 2 的原因，不改变一次发送或验收门禁。新增事件不能替代原始 segment 的主 turn 时间。
+
+`0.10.16` 增加 QwenWork Token 暴露的独立安全启动入口和 `--require-token-exposure` 队列门禁。Web 端已验证客户端进程必须在启动时设置 `QODERCN_EXPOSE_TOKEN_USAGE=1`；General 只向新 QwenWork 子进程注入该变量，不修改全局环境。启动器要求无活动原生会话、精确 9250 监听 PID、应用路径与进程启动身份一致，TERM 超时后再次核对身份才允许 KILL。启动后必须核对新监听 PID、进程开关与同一应用/runtime；无法证明时停止。**开关可见不等于 Token 指标已通过**：1.2.0 仍需新会话非零 usage、请求/响应与主 turn 终值对账，以及精确 runtime Profile，旧 masked 批次不得回填。
+
+```bash
+node drivers/qwenwork/token-launch.mjs \
+  --app-path /Applications/QwenWorkCN.app \
+  --session-db "/Users/$USER/Library/Application Support/QwenWorkCN/data/agents.db" \
+  --trace-root "/Users/$USER/.qwenworkcn" \
+  --endpoint http://127.0.0.1:9250 \
+  --output /absolute/new/token-launch.json
+```
+
+之后重新生成只读 probe，并在新的 QwenWork 队列中传 `--require-token-exposure`；已有队列只沿原配置恢复，不能中途更改开关。
 
 QwenWork 批量入口示例：
 
@@ -37,7 +50,8 @@ node drivers/qwenwork/batch.mjs \
   --probe /absolute/fresh-probe.json \
   --probe-sha256 <sha256> \
   --preprepare-projects \
-  --skip-clarifications
+  --skip-clarifications \
+  --require-token-exposure
 ```
 
 队列只为当前队列中已绑定的 running session 放行 active-session；发现队列外或缺失原生 ID 时停止并写入 `NEEDS_ATTENTION`。每题 `dispatch_attempt_count` 必须为 1；`native_interval_coverage` 缺失时保持 `null/unavailable`，不把队列槽位或轮询次数当作原生并发和 Token 证据。当前 QwenWork 三题单槽已有正式闭环，默认三路与动态补位仍需在真实桌面时段验收。

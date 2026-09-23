@@ -272,10 +272,13 @@ test("read-only probe report keeps current 1.0.6 profile unverified and declares
     }),
     inspectRuntime: async () => runtime,
     inspectProcess: async () => ({ running: false, unique_main_process: false, process_count: 0, processes: [] }),
-    inspectEndpoint: async () => ({ ready: false, status: null, browser_identity_present: false }),
+    inspectEndpoint: async () => ({ ready: true, status: 200, browser_identity_present: true }),
+    inspectTokenListener: async () => ({ pid: 12345, token_usage_exposed: true }),
     inspectArchitecture: async () => ({ architectures: ["x86_64"], universal: false }),
   });
   assert.equal(report.ready_for_read_only_mapping, true);
+  assert.equal(report.app.token_usage_exposure.status, "enabled");
+  assert.equal(report.runtime.normalization_profile, null);
   assert.equal(report.ready_for_automated_execution, false);
   assert.equal(report.runtime.normalization_profile, null);
   assert.equal(report.runtime.token_metrics_admission, "unverified-null");
