@@ -76,6 +76,50 @@ r30 从 `f07d0b39225c4ffdfe6885077fd0a1e07df0cbf8` / execute `0.10.24` 独立发
 
 证据根 `/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-macos-general-interaction-r30/`，`automatic-observer-result.json` 保存完整状态序列，`interaction-audit.json` 绑定 config/journal/transcript SHA。本用例是未评分的独立技术验收，不混入正式五题的成功率、Token 或报告分母。它验证当前跳过链路无需人工恢复，不代表所有故障均可无人值守恢复。
 
+## r31–r33：路径、未知授权与真实收口故障
+
+实现提交 `87d39cb95fab03d6d99c2732f106ecca3a8622e9` / execute `0.10.25`；发行 `qwenwork-hardening-87d39cb`，suite SHA `fbbe24c6e4a4f4909e793585867ecc7feaa2990ef7c0bde1502595023eaf0b54`。release-root/suite、prepare/verify 与锁定依赖安装通过。源码不依赖 Web Driver；裁判配置仍为 `gpt-6-sol/high`，本轮技术故障用例不评分。
+
+### CV17：实际编码与发送前拒绝
+
+- 从已安装 SDK 静态确认 ASCII 映射、200 字符前缀和 DJB2 XOR/base36 后缀算法，绑定 runtime SHA；按能力识别，不以客户端版本白名单放行。发送前读取 Workspace/trace 根的 `NAME_MAX=255`、`PATH_MAX=1024`，后者包含末尾 NUL；检查原始控制路径、编码后 project 目录和 native transcript/segment 路径预算。未知编码、越界、链接、不可写或越限在 CDP/UI 操作前拒绝。
+- r31 在真实“技术 用例”目录执行完成，原 attempt/session、Prompt 匹配与发送均为 1；原生 transcript 目录与预检复算完全一致，证据 `/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-important-hardening-r31/native-path-audit.json`。
+- 同机预检覆盖数据集最长 ID `04_Search_Retrieval_task_008_procurement_clause_version_lookup`（62 字符）与中文/空格。组件 258/255 字节、原始路径 1306+1/1024 字节、原生日志路径越限、Workspace 越界、Workspace 符号链接五个负例全部拒绝；每个负例无 journal、无匹配的原生项目、发送 0。`path-cases-result.json` 保存实际边界和错误。Node 边界测试另覆盖 NAME_MAX/PATH_MAX 恰好有效及首个越限值、emoji 的 UTF-16 编码、同前缀不同路径哈希、编码实现变化和原生目录链接。
+- r31 首次新建项目遇到前台焦点丢失，在发送前暂停（次数 0）；沿原 attempt 恢复后才发送 1 次。此安全暂停保留，未绕过原生键盘焦点门禁。
+
+### CV08：未知授权不批准，人工拒绝后原会话完成
+
+r31 的原“完全访问”配置下，删除本次创建的空目录直接执行，不能作为未知授权弹窗证据。r32 单独技术样本暂时改为“默认权限”，发送同类请求，实际出现“高危操作 / Shell 想要执行一个命令 / 拒绝 / 允许”卡片。Driver 返回 `NEEDS_ATTENTION / QWENWORK_PENDING_INTERACTION`，未点允许，目标空目录保持存在，发送仍为 1。控制端保存截图和原生卡片 ID 后，只拒绝这次本方技术请求；原 session `a3fc218a-0fe7-4dc6-89e5-a201dc6ca4ef` 完成并回复“权限未获批准，验收结束”。待全部原生任务空闲后，已恢复原“完全访问”设置。
+
+证据根 `/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-important-hardening-r32/`：`approval-audit.json`、`unknown-approval.json/png`、`manual-rejection.json`、`permission-setup.json`、`permission-restored.json`。这是未知授权自动暂停 + 明示人工拒绝的受控分支；不是自动批准能力，不把它计入正式题目成绩。
+
+### CV09/CV13：原 CLI、真实 OS 对象、原候选哈希
+
+r33 从同发行新建固定题 `support_handoff`，执行根含“运行 空间”；发送 1 次、Prompt 匹配 1、原 session `1da7bdce-9049-441b-9cd6-cf997e0b5845` 完成并由正式 collector 首次采集。运行中曾因 native stream 与 UI 观察时差暂停，fresh probe 后恢复同一 attempt，未重发。后续故障均调用**未修改的正式 QwenWork finalizer CLI**，没有 signal、clock 或 cleanup hook 替换。
+
+| 注入 | 结果 | 不变量 |
+| --- | --- | --- |
+| 本方父进程持续重建 Workspace cwd 子进程，使零残留静默窗口无法成立 | `TASK_PROCESS_CLEANUP_FAILED`，拒绝冻结 | 未发布 candidate/receipt；原 Workspace 字节不变；目录外对照存活 |
+| 本方目录外写入进程持续更新候选中的独立测试标记 | `WORKSPACE_NOT_STABLE`，拒绝冻结 | 未发布 candidate/receipt；停止写入并仅移除本次标记后恢复原源目录哈希 |
+| Workspace cwd 进程忽略 TERM；被 KILL 后再启动一个迟到子进程 | 初始 PID `50594` 记录 TERM→KILL，迟到 PID `51195` 被发现并清理，`late_process_detected=true` | 正式 cleanup success、零残留与静默窗口通过；目录外 PID `46740` 未选中且在收口后仍存活 |
+| 成功冻结后，仅向源 Workspace 新增本方标记 | verify-only 拒绝 `verify:source-workspace` 漂移 | 冻结证据未改；移除本方标记后原 candidate/evidence/record/receipt 四个 SHA 全部重新验证通过 |
+
+证据根 `/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-important-hardening-r33/`。`cleanup-fault-results.json` 保存前三项及所有本方进程生命周期；`postfreeze-drift-audit.json` 保存第四项。首轮控制脚本只匹配英文错误码，而正式校验器正确返回中文“候选产物发生漂移”，因此脚本最后一条断言失败；原日志和前三项结果保留，随后按实际错误与原哈希独立复查通过，没有改写冻结证据。全部本方测试进程已退出。
+
+最终正式 candidate SHA `49a4c82a1ddad6194b2874f13f83687c4e83ad24fcaf1ac1a6e10dcf2ea6d476`，evidence manifest SHA `95db36c0866bc05c6ab9606415b44c2dfbd35e810125bd9af603ddc7d79afe21`，execution record SHA `64f735de87130d765709d6394e7799a1b58a8c42f7c82cc07f42775d01cf26fd`，receipt SHA `d964ac6375ba276b6a217af5bce1429ce9a8779c40a0a5149150df50b9b9a9ea`。最后 `verify-after-owned-marker-removal.log` 为 PASS。这些故障发生在执行终态之后，不修改原生任务耗时或评测分母。
+
+## r34/r35：终态快照与自动标题同步
+
+r33 捕获到真实时差：SQLite snapshot 仍为 running/有 stream，但随后 UI 已无停止控件。`abb1646` / execute `0.10.26` 在原生身份已验证的前提下只复查一次同会话，重读 Prompt 与待交互状态；持续冲突仍暂停，不重发。r34 使用独立技术脚本（只等待 20 秒并输出 SYNC_END），延迟一次真实 UI 观察直到原生任务结束，实测触发 `STREAM_OBSERVATION_RECHECK`。期间又遇到客户端自动生成新标题，旧标题核对安全暂停；原 attempt 恢复后完成，现场 `title-mismatch-audit.json` 保留此边界。
+
+`190406ce8dc61eb0b8ef6b0ed0c6a521d3da7888` / execute `0.10.27` 改为用同一 conversation/sub-chat/session/project/cwd 的最新数据库标题核对 UI，允许 2 秒 UI 标题一致性窗口；重复同名、原生身份或 cwd 漂移仍失败关闭。四个 stream 复查反例覆盖完成、持续冲突、不同 session、新授权；标题测试覆盖自动改名、各原生身份漂移、重复同名和渲染滞后。
+
+r35 从该 revision 独立发行，新项目/新 attempt 重复同一技术场景。原生 session `d577e187-c347-4ec9-98ae-991bc23694eb`，自动观察 `RUNNING → RUNNING → COMPLETED`，发送/Prompt 匹配均 1，终态复查事件 1，原生工具结果包含 SYNC_END，最后回复“终态同步完成”。没有 NEEDS_ATTENTION 或人工恢复。故障只延迟控制侧一次 UI 读取，没有伪造 UI/数据库结果，也没有设置题目执行 deadline。
+
+r34/r35 根分别为 `/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-important-hardening-r34/` 与 `qwenwork-important-hardening-r35/`；各自 `terminal-recheck-audit.json` 绑定原 attempt/session、native transcript、journal、binding SHA，r34 的暂停和 r35 的自动完成分开保留。技术脚本不评分，不并入正式五题结果。
+
+当前发行 `report-workspace/general-e2e/releases/qwenwork-hardening-190406c`，suite SHA `5ddbc2c1905e5d181cd0ec7a590080a7a3df8bc95596b05769b253d830f0875c`，release-root/suite 独立验包通过。Qwen 聚焦 Node **115/115**、发行/布局 Python **16/16**，布局和 diff 检查 PASS。collect/orchestrate/score/report 未改版本；旧 r21/r23 报告及旧冻结证据未覆盖。
+
 ## 声明范围与 CV/GV 符合性记录
 
 本轮目标为 **macOS x86_64 / QwenWorkCN 1.2.0 / 值守控制 / UI 单槽 / 默认三路 / Codex gpt-6-sol high**。不声明 Apple Silicon、Windows、60 题全量、自动批准未知授权、活动客户端自动重启或无人值守自动抢锁。下表 `PARTIAL` 包括尚缺分支证据，不能当作不适用。实际模型 ID、Cache Write、reasoning Token、HTTP attempts 继续为 unknown/null，不以这些可选字段阻断有效评分。
@@ -88,17 +132,17 @@ r30 从 `f07d0b39225c4ffdfe6885077fd0a1e07df0cbf8` / execute `0.10.24` 独立发
 | CV04 发送中断 | intent/reservation/invoking、不确定不重发，缺失/歧义 session 反例 | r25 部分现场；r26 发现队列缺陷；r27 修复后恢复并正式收口 | PASS（值守基础范围）；r25 不当作有效执行 |
 | CV05 owner/竞争 | 活锁拒绝、两个 Driver/恢复者竞争、旧归档保护、字节漂移拒绝 | r27 两把锁精确归档，原 queue/attempt 恢复 | PASS（显式值守恢复）；不承诺无人值守抢锁 |
 | CV06 断连/重启 | Driver 非正常退出保留基础设施错误、显式 resume | r28/r29 CDP 断开→暂停→重连原 session；r27 活动任务拒绝 Token 重启 | PASS（断连安全暂停范围）；客户端实际重启与 Codex 重启未验/未声明 |
-| CV07 原生终态 | 完成/失败/取消/未知分开；不按文件稳定判断完成 | 文件任务 r21/r23；纯回复题正式 collect/report；r28 问卷完成 | PARTIAL；最终错误、工具失败后恢复等真机分支需逐项对账 |
-| CV08 待交互 | 精确会话/问卷页脚；unknown/approval/manual pause 反例 | r28/r29 原生问卷跳过与原会话完成；r30 自动续观至完成 | PARTIAL；未知授权卡片的真实安全暂停仍待验；不提供自动批准白名单 |
-| CV09 清理/冻结 | 通用 finalizer、静默窗口、残留/漂移拒绝 | r24 正式 finalizer 注入目标 sleep + 目录外对照，目标终止、对照存活；r27 正常收口 | PARTIAL；TERM→KILL、停不掉拒绝冻结、迟到写入须补分支记录。**自然残留复现不是额外前置门禁** |
+| CV07 原生终态 | 完成/失败/取消/未知分开；不按文件稳定判断完成 | 文件任务 r21/r23；纯回复题正式 collect/report；r28 问卷完成 | PARTIAL；r32 已验工具权限拒绝后完成，r35 已验终态时差；最终错误等剩余真机分支继续对账 |
+| CV08 待交互 | 精确会话/问卷页脚；unknown/approval/manual pause 反例 | r30 自动跳过至完成；r32 原生高危卡片自动暂停，人工拒绝后原 session 完成，设置已恢复 | PASS（声明范围）；不提供自动批准白名单 |
+| CV09 清理/冻结 | 通用 finalizer、静默窗口、残留/漂移拒绝 | r24 优雅终止与目录外对照；r33 原 CLI 验证持续残留拒绝、迟到写入拒绝、TERM→KILL、迟到子进程和冻结后漂移 | PASS（当前 macOS 收口分支）；本方对照受保护，测试进程已退出。自然残留复现不另设门禁 |
 | CV10 串行/并发 | 单 UI 槽、三后台槽、补位、同 attempt 恢复 | 三题单槽；r21 五题原生峰值 3、补位 2；r23 另批峰值 2 | PASS，峰值不足不计能力异常；不外推更高并发 |
 | CV11 原始轨迹 | 一致 SQLite 备份、session/cwd/Prompt、缺失/冲突拒绝 | r15/r16 热写故障恢复；r21/r23 正式原始/标准轨迹 | PARTIAL；截断/乱序/孤立结果/子代理混入须逐分支核对覆盖 |
 | CV12 指标 | 精确 runtime Profile、逐 request ID 与 turn 终值对账、掩码零不发布 | r22/r23 核心 Token、请求/工具、原生/流程耗时；旧批次 null 保留 | PASS（已声明字段）；可选未知量不补零 |
-| CV13 候选与证据 | 通用候选/manifest/hash、越界/链接和漂移拒绝 | r21/r23/r27 正式 freeze + verify-only | PARTIAL；目标路径的冻结前后故障注入记录仍需补齐 |
+| CV13 候选与证据 | 通用候选/manifest/hash、越界/链接和漂移拒绝 | r21/r23/r27 正式 freeze + verify-only | PARTIAL；r33 已补目标路径冻结前后写入故障，缺文件/同名不同内容/受限链接等分支继续核对索引 |
 | CV14 评分/回传恢复 | 独立 attempt、发布/重复导入/冲突拒绝的公共测试 | 三题 Judge capacity 原 thread 恢复；r20 sol 独立重评分；r21/r23 return/import | PARTIAL；submission 发布窗口中断的本范围证据待核对 |
 | CV15 正式闭环 | 七阶段契约与独立发行 | r21 与 r23 各自同发行执行→首次 collect→评分→回传→导入→报告闭环 | PASS；r27/r28 新故障样本按变更影响复验，不改写旧报告 |
-| CV16 平台 | 平台显式为 macos-x86-64，Token Profile 精确 runtime | QwenWorkCN 1.2.0 / SDK 1.0.46；r21–r30 | PASS（本平台）；其它平台 NOT_RUN |
-| CV17 路径预算 | 已有绝对 cwd、state 越界/链接拒绝 | 当前短调试根成功；QwenWork 自身会缩短原生 project 目录 | TODO；缺客户端编码后字节预算的发送前自动预检及中文/空格/极限长度边界验证 |
+| CV16 平台 | 平台显式为 macos-x86-64，Token Profile 精确 runtime | QwenWorkCN 1.2.0 / SDK 1.0.46；r21–r35 | PASS（本平台）；其它平台 NOT_RUN |
+| CV17 路径预算 | SDK 纯编码能力确认、实际 getconf 限制、原始/编码后字节预算、目录权限/链接检查 | r31 中文/空格真实路径与原生编码匹配；最长 ID 62 字符预检；五类负例均发送 0 | PASS（macOS 当前编码能力）；未知编码实现仍拒绝，未外推其他平台 |
 
 | General 项 | 当前证据 | 结论/剩余项 |
 | --- | --- | --- |
@@ -111,4 +155,4 @@ r30 从 `f07d0b39225c4ffdfe6885077fd0a1e07df0cbf8` / execute `0.10.24` 独立发
 | GV07 阶段恢复与报告 | r21/r23 submission、return/import、同源 JSON/Markdown/Excel | PASS |
 | GV08 小批/并发 | r21 原生三路五题，r23 五题核心 Token、同机闭环 | PASS（固定五题/本机）；不声明跨机或全量 |
 
-因此仍是“主流程有限可用、加固进行中”，完整接入任务保持 IN_PROGRESS。下一轮优先 CV17 自动预检、CV08 未知授权和 CV09 剩余收口故障。上述矩阵为人工证据审计，不代表已有自动符合性校验器。
+因此仍是“主流程有限可用、加固进行中”，完整接入任务保持 IN_PROGRESS。本轮已补齐 CV17、CV08、CV09 的上述重点；其余 PARTIAL 行继续按证据表审计，不以本轮三项通过替代全部准入。上述矩阵为人工证据审计，不代表已有自动符合性校验器。
