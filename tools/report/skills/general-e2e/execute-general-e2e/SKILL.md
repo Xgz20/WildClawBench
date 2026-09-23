@@ -15,23 +15,37 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.10.19/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.10.20/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## WorkBuddy / QwenWork macOS 开发入口
 
 `drivers/workbuddy/execute.mjs` 与 `drivers/qwenwork/driver.mjs` 提供受控单题开发入口；`drivers/workbuddy/batch.mjs` 与 `drivers/qwenwork/batch.mjs` 提供按 manifest 顺序冻结的队列入口。先读取对应 `--help`、只读 probe 与本机配置，再确认没有冲突的活动任务。WorkBuddy 要求 Node ≥22，使用原生 WebSocket/CDP；QwenWork 在其 Driver 目录 `npm ci` 安装锁定的 playwright-core。QwenWork 恢复使用独立的 fresh probe，不能改冻结配置来绕过 journal 校验。两者都在发送前落盘且禁止不确定发送后的重发。
 
-WorkBuddy 已有五题值守闭环；`0.10.7` 修正队列回执、长路径预检和新版资源 finalizer 装配，仍须用新批次验证三路原生重叠、动态补位、恢复与正式 collect，不能只凭 fixture 或本 Skill 为 operational 提升并发支持声明。`0.10.13` 增加 QwenWork 项目预建、SQLite 在线备份和延迟 session_id 恢复；`0.10.14` 在预建项目发送前恢复唯一“新任务”页。用户明确授权时，队列传入 `--skip-clarifications`，才会对已绑定会话中具有唯一“跳过”和“下一题”控件的追问卡片点击“跳过”并记录 journal 事件；其他弹窗不适用此规则。项目预建在发送前为每题落盘 journal，随后仍按 manifest 顺序单槽发送。后台槽位与原生重叠分别留证，真实三路重叠尚需新批次证明。原生字段或停止确认不足时保留 NEEDS_ATTENTION，正式采集接入通用 finalizer 和真实平台 cleanup hook。
+WorkBuddy 已有五题值守闭环；`0.10.7` 修正队列回执、长路径预检和新版资源 finalizer 装配，仍须用新批次验证三路原生重叠、动态补位、恢复与正式 collect，不能只凭 fixture 或本 Skill 为 operational 提升并发支持声明。`0.10.13` 增加 QwenWork 项目预建、SQLite 在线备份和延迟 session_id 恢复；`0.10.14` 在预建项目发送前恢复唯一“新任务”页。用户明确授权时，队列传入 `--skip-clarifications`，才会对已绑定会话中具有唯一“跳过”和“下一题”控件的追问卡片点击“跳过”并记录 journal 事件；其他弹窗不适用此规则。项目预建在发送前为每题落盘 journal，随后仍按 manifest 顺序单槽发送。后台槽位与原生重叠分别留证；r21 固定五题已有哈希绑定的原生三路重叠和动态补位证据。原生字段或停止确认不足时保留 NEEDS_ATTENTION，正式采集接入通用 finalizer 和真实平台 cleanup hook。
 
 `0.10.15` 为 QwenWork 预建后发送加入 probe 完成、项目恢复、Prompt 重填和最终回读的时间事件，仅用于定位 r20 真机原生峰值仍为 2 的原因，不改变一次发送或验收门禁。新增事件不能替代原始 segment 的主 turn 时间。
 
-`0.10.16` 增加 QwenWork Token 暴露的独立安全启动入口和 `--require-token-exposure` 队列门禁。Web 端已验证客户端进程必须在启动时设置 `QODERCN_EXPOSE_TOKEN_USAGE=1`；General 只向新 QwenWork 子进程注入该变量，不修改全局环境。启动器要求无活动原生会话、精确 9250 监听 PID、应用路径与进程启动身份一致，TERM 超时后再次核对身份才允许 KILL。启动后必须核对新监听 PID、进程开关与同一应用/runtime；无法证明时停止。**开关可见不等于 Token 指标已通过**：1.2.0 仍需新会话非零 usage、请求/响应与主 turn 终值对账，以及精确 runtime Profile，旧 masked 批次不得回填。
+`0.10.16` 增加 QwenWork Token 暴露的独立安全启动入口和 `--require-token-exposure` 队列门禁。Web 端已验证客户端进程必须在启动时设置 `QODERCN_EXPOSE_TOKEN_USAGE=1`；General 只向新 QwenWork 子进程注入该变量，不修改全局环境。启动器要求无活动原生会话、精确 9250 监听 PID、应用路径与进程启动身份一致，TERM 超时后再次核对身份才允许 KILL。启动后必须核对新监听 PID、进程开关与同一应用/runtime；无法证明时停止。**开关可见不等于 Token 指标已通过**：collect 0.7.6 已对精确 1.2.0 runtime Profile 完成逐请求/响应与主 turn 对账，r23 新五题的 Input、Output、Total、Cache Read 全部 observed。后续运行仍须逐题校验；旧 masked 批次不得回填，Cache Write、reasoning Token 和 HTTP attempts 仍保持 null。
 
 `0.10.17` 在某题终态观察短暂进入 `NEEDS_ATTENTION` 后，继续把该题已发送且队列绑定的 session/conversation 留在活动会话观察白名单中；只供其它已发送题目的恢复观察，队列仍在 attention 时停止补发，未知会话仍失败关闭。
 
-`0.10.18` 对批量 Worker 硬中断留下的 owner lock 提供**显式** `--resume --recover-stale-owner`。只接受同一冻结队列、fresh 且空闲的只读 probe、同一 host 上已证实退出或 PID 复用的 owner；任何 attempt lock 存在、owner 仍活动、身份/配置漂移都拒绝。旧 owner 原件归档，新 owner 以排他文件取得，恢复后仍逐题读取原 journal 并禁止再次发送已尝试 Prompt。没有这些条件时保持锁，不手删。该能力不自动恢复被杀死的单题 Driver 锁，后者仍须受控排查。
+`0.10.18` 对批量 Worker 硬中断留下的 owner lock 提供**显式** `--resume --recover-stale-owner`。只接受同一冻结队列、fresh 且空闲的只读 probe、同一 host 上已证实退出或 PID 复用的 owner；任何 attempt lock 存在、owner 仍活动、身份/配置漂移都拒绝。旧 owner 原件归档，新 owner 以排他文件取得，恢复后仍逐题读取原 journal 并禁止再次发送已尝试 Prompt。没有这些条件时保持锁，不手删。单题 Driver 锁须先用下述独立工具核验恢复，队列不自动删除它。
 
 `0.10.19` 针对已点击发送、只有 conversation/sub-chat/cwd 临时绑定却始终没有原生 session ID 的情况：如果 60 秒的**基础设施身份落库观察窗**后仍无活动 stream，转入 `NEEDS_ATTENTION` 并保留原 attempt，不重发、不补零；原生确在运行时即使超过该窗口也继续等待。它不是题目执行 deadline，不能据此判定模型能力失败。
+
+`0.10.20` 增加单题陈旧锁的独立受控恢复入口。必须确认原 Driver 和队列 owner 均已退出，提供精确 owner ID、原冻结配置及 fresh 空闲 probe；工具排他归档旧锁、校验 journal 字节不变，不发送 Prompt、不修改 journal。活进程、未知身份、已有归档、竞争恢复、链接路径或配置漂移一律拒绝。恢复工具可独立用于旧发行留下的锁；后续 batch 仍必须沿用原发行与原参数，以免冻结源码摘要漂移。
+
+```bash
+node drivers/qwenwork/recover-lock.mjs \
+  --unit-root /absolute/extracted-unit \
+  --config /absolute/original/config.json \
+  --expected-owner-id <锁内精确owner_id> \
+  --probe /absolute/new/idle-probe.json \
+  --probe-sha256 <sha256> \
+  --output /absolute/new/lock-recovery.json
+```
+
+确认回执为 `RECOVERED` 后，用原队列命令增加 `--resume --recover-stale-owner` 并传入 fresh probe；仅队列 owner 已释放时省略 `--recover-stale-owner`。不确定发送始终只观察原 attempt。恢复失败保留现场，不手删锁。
 
 ```bash
 node drivers/qwenwork/token-launch.mjs \
@@ -60,7 +74,7 @@ node drivers/qwenwork/batch.mjs \
   --require-token-exposure
 ```
 
-队列只为当前队列中已绑定的 running session 放行 active-session；发现队列外或缺失原生 ID 时停止并写入 `NEEDS_ATTENTION`。每题 `dispatch_attempt_count` 必须为 1；`native_interval_coverage` 缺失时保持 `null/unavailable`，不把队列槽位或轮询次数当作原生并发和 Token 证据。当前 QwenWork 三题单槽已有正式闭环，默认三路与动态补位仍需在真实桌面时段验收。
+队列只为当前队列中已绑定的 running session 放行 active-session；发现队列外或缺失原生 ID 时停止并写入 `NEEDS_ATTENTION`。每题 `dispatch_attempt_count` 必须为 1；`native_interval_coverage` 缺失时保持 `null/unavailable`，不把队列槽位或轮询次数当作原生并发和 Token 证据。QwenWork r21 已有五题原生三路、动态补位和正式闭环，r23 已有五题核心 Token 和固定 gpt-6-sol/high 报告；故障加固的剩余边界见仓库证据记录，不能据此声明无人值守恢复。
 
 QwenWork 1.2.0 可能在 Prompt 发送后先写入 conversation/sub-chat/stream，再延迟补齐 `session_id`。托管队列只在唯一原生 conversation/sub-chat/project/cwd 绑定时暂占后台槽位；完整 session ID 和 Prompt transcript 校验仍是正式终态和 collect 的门禁。队列恢复 probe 的 SHA 不属于冻结 queue digest；初始托管 probe 通过 `--initial-probe` 传入，不改写 task config 的冻结 digest。托管队列在高频 WAL 写入期间用 SQLite 只读源连接的在线备份生成一致快照；普通单题/只读探针仍使用严格的源文件稳定性检查。
 

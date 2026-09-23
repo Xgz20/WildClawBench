@@ -410,7 +410,7 @@ async function processStartIdentity(pid) {
   return result.code === 0 ? String(result.stdout || "").trim() || null : null;
 }
 
-async function inspectLockOwner(owner) {
+export async function inspectLockOwner(owner) {
   if (!owner || owner.host !== hostname() || !Number.isInteger(owner.pid) || owner.pid <= 0) {
     return { stale: false, active: false, verifiable: false, reason: "owner-not-locally-verifiable" };
   }
