@@ -31,6 +31,9 @@ import {
   confirmQwenWorkspaceProject,
   ensureQwenNewTaskView,
   inspectQwenTaskUi,
+  inspectQwenPendingInteraction,
+  QWEN_QUESTION_SELECTOR,
+  QWEN_INTERACTION_SELECTOR,
   QWEN_NEW_TASK_SELECTOR,
   QWEN_TASK_VIEW_SELECTOR,
   readQwenUiConfiguration,
@@ -311,10 +314,11 @@ test("active task clarification skips only the unique question card in its own c
   let clicks = 0;
   const skip = { ...fakeElement(), isVisible: async () => visible, click: async () => { clicks += 1; visible = false; } };
   const next = fakeElement({ text: "下一题" });
-  const taskView = {
-    ...fakeTaskView([]),
+  const card = {
+    ...fakeElement(),
     getByRole: (_role, options) => fakeLocator(options.name === "跳过" ? [skip] : [next]),
   };
+  const taskView = { ...fakeTaskView([]), locator: () => fakeLocator([card]) };
   const page = {
     url: () => `file:///qwenwork/index.html?windowId=main&chat=${conversationId}`,
     locator: () => fakeLocator([taskView]),
@@ -822,6 +826,8 @@ test("PREPARING resume requires an idle recovery probe before any UI work", asyn
 
 test("fresh driver dispatches once, binds the unique new session, and requires trusted stop evidence", async () => {
   const config = makeConfig();
+  config.control.clarification_policy = "skip-question-card";
+  config.config_digest = calculateQwenCanaryConfigDigest(config);
   let stored = null;
   let dispatches = 0;
   let sessionReads = 0;
@@ -836,6 +842,7 @@ test("fresh driver dispatches once, binds the unique new session, and requires t
     dispatchPrompt: async () => { dispatches += 1; return { method: "fixture-click" }; },
     querySessions: async () => (++sessionReads === 1 ? [] : [session()]),
     verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA, match_count: 1 }),
+    inspectPendingInteraction: async () => ({ kind: "clarification" }),
     skipClarification: async () => ({ skipped: true, method: "unique-clarification-skip" }),
     observeUi: async () => ({
       observed_at: now(),
@@ -1096,3 +1103,63 @@ test("two workers refuse the same stale lock instead of racing to replace a new 
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("interaction inspection binds the subchat and blocks approval or unknown dialogs without clicks", async () => {
+  const target = session();
+  const questions = [];
+  const panels = [];
+  const taskView = { ...fakeElement({ text: target.sub_chat_name }), locator: () => fakeLocator(questions) };
+  const page = {
+    url: () => `file:///qwenwork/index.html?chat=${target.conversation_id}`,
+    title: async () => target.sub_chat_name,
+    locator: (selector) => fakeLocator(selector === QWEN_TASK_VIEW_SELECTOR ? [taskView] : panels),
+  };
+  assert.equal((await inspectQwenPendingInteraction(page, target, [target])).kind, "none");
+  questions.push(fakeElement());
+  assert.equal((await inspectQwenPendingInteraction(page, target, [target])).kind, "clarification");
+  panels.push({ ...fakeElement(), getByRole: () => fakeLocator([fakeElement({ text: "允许" })]), locator: () => fakeLocator(questions) });
+  assert.equal((await inspectQwenPendingInteraction(page, target, [target])).kind, "approval");
+  panels[0] = { ...fakeElement(), getByRole: () => fakeLocator([]), locator: () => fakeLocator([]) };
+  assert.equal((await inspectQwenPendingInteraction(page, target, [target])).kind, "unknown");
+  await assert.rejects(inspectQwenPendingInteraction(page, target, [target, { ...target, sub_chat_id: "other" }]), /SUBCHAT_UNVERIFIED/u);
+  await assert.rejects(inspectQwenPendingInteraction({ ...page, url: () => 'file:///qwenwork/index.html?chat=other' }, target, [target]), /CONVERSATION_MISMATCH/u);
+});
+
+test("an unrelated skip button outside a question card is never clicked", async () => {
+  let clicks = 0;
+  const taskView = { ...fakeElement(), locator: () => fakeLocator([]),
+    getByRole: () => fakeLocator([fakeElement({ text: "跳过", onClick: () => { clicks += 1; } })]) };
+  const page = { url: () => "file:///qwenwork/index.html?chat=target", locator: () => fakeLocator([taskView]) };
+  assert.deepEqual(await skipQwenClarification(page, "target"), { skipped: false });
+  assert.equal(clicks, 0);
+});
+
+for (const [kind, policy, expectSkip] of [["clarification", "skip-question-card", true], ["clarification", "manual", false], ["approval", "skip-question-card", false], ["unknown", "skip-question-card", false]]) {
+  test(`provisional session handles ${kind} under ${policy} before the inactive window`, async () => {
+    const config = makeConfig({ resume: true, managed_queue_id: "queue" });
+    config.control.clarification_policy = policy;
+    config.config_digest = calculateQwenCanaryConfigDigest(config);
+    const state = createQwenAttemptJournal({ identity: config.identity, dataset: config.dataset, taskRoot: config.task_root,
+      candidateWorkspace: config.candidate_workspace, prompt: config.prompt, configDigest: config.config_digest, now: "2026-09-19T10:00:00.000Z" });
+    recordQwenDispatchIntent(state, { project: project(), configuration: configuration(), baseline: [], now: "2026-09-19T10:00:01.000Z" });
+    reserveQwenDispatch(state, { now: "2026-09-19T10:00:02.000Z", reservationId: "reservation" });
+    markQwenDispatchReturned(state, { now: "2026-09-19T10:00:03.000Z", method: "click" });
+    const provisional = { ...session(), session_id: null, native_status: "ready", stream_id: null, classification: { kind: "unknown" } };
+    let skips = 0;
+    const forbidden = async () => { throw new Error("unexpected UI mutation"); };
+    const result = await runQwenGeneralAttempt(config, {
+      withAttemptLock: async (_config, fn) => fn(), now: () => "2026-09-19T10:02:00.000Z",
+      readJournal: async () => structuredClone(state), writeJournal: async () => {},
+      prepareUi: forbidden, verifyPreparedUi: forbidden, fillPrompt: forbidden, dispatchPrompt: forbidden,
+      querySessions: async () => [provisional], verifySessionPrompt: async () => { throw new Error("QWENWORK_SESSION_ID_UNSAFE_FOR_TRACE_LOOKUP"); },
+      observeUi: forbidden, writeBindingEvidence: async () => [], navigateToSession: async () => {},
+      inspectPendingInteraction: async () => ({ kind }),
+      skipClarification: async () => { skips += 1; return { skipped: true, method: "unique-clarification-skip" }; },
+    });
+    assert.equal(skips, expectSkip ? 1 : 0);
+    assert.equal(result.journal.send.dispatch_attempt_count, 1);
+    assert.equal(result.journal.phase, expectSkip ? "RUNNING" : "NEEDS_ATTENTION");
+    if (!expectSkip) assert.equal(result.journal.attention.code, "QWENWORK_PENDING_INTERACTION");
+    else assert.ok(result.journal.events.some((event) => event.type === "USER_AUTHORIZED_CLARIFICATION_SKIPPED"));
+  });
+}

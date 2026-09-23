@@ -37,6 +37,7 @@ import {
   dispatchQwenPrompt,
   fillQwenPrompt,
   inspectQwenTaskUi,
+  inspectQwenPendingInteraction,
   openQwenTaskByProjectAndName,
   readQwenUiConfiguration,
   readQwenPrompt,
@@ -587,6 +588,18 @@ async function persistProvisionalSession(config, state, dependencies, session) {
 }
 
 async function provisionalSessionOrAttend(config, state, dependencies, session) {
+  if (typeof dependencies.inspectPendingInteraction === "function") {
+    try {
+      await dependencies.navigateToSession(session);
+    } catch (error) {
+      return persistAttention(config, state, dependencies, "QWENWORK_SESSION_UI_UNVERIFIED", error.message);
+    }
+    const interaction = await handlePendingInteraction(config, state, dependencies, session);
+    if (interaction?.journal) return interaction;
+    // The cached SQLite row predates the authorized skip. Reobserve before
+    // applying the inactive identity window to it.
+    if (interaction?.skipped) return persistProvisionalSession(config, state, dependencies, session);
+  }
   const sinceSend = Date.parse(state.send?.returned_at || state.send?.invoking_at || "");
   const observedAt = Date.parse(dependencies.now());
   if (!Number.isFinite(sinceSend) || !Number.isFinite(observedAt) || observedAt < sinceSend) {
@@ -600,6 +613,27 @@ async function provisionalSessionOrAttend(config, state, dependencies, session) 
       "发送后仅有 conversation/sub-chat/cwd，原生 session_id 与活动 stream 长时间未出现；保留原 attempt 并禁止重发");
   }
   return persistProvisionalSession(config, state, dependencies, session);
+}
+
+async function handlePendingInteraction(config, state, dependencies, session) {
+  if (typeof dependencies.inspectPendingInteraction !== "function") return null;
+  try {
+    const pending = await dependencies.inspectPendingInteraction(session);
+    if (pending.kind === "none") return null;
+    if (pending.kind === "clarification" && config.control.clarification_policy === "skip-question-card"
+        && typeof dependencies.skipClarification === "function") {
+      const result = await dependencies.skipClarification(session);
+      if (!result?.skipped) throw new Error("QWENWORK_CLARIFICATION_NOT_SKIPPED");
+      state.events.push({ type: "USER_AUTHORIZED_CLARIFICATION_SKIPPED", at: dependencies.now(),
+        details: { conversation_id: session.conversation_id, sub_chat_id: session.sub_chat_id, method: result.method } });
+      await dependencies.writeJournal(config.state_file, state);
+      return result;
+    }
+    return persistAttention(config, state, dependencies, "QWENWORK_PENDING_INTERACTION",
+      `当前会话等待 ${pending.kind}；保持原 attempt，不自动批准或代答`);
+  } catch (error) {
+    return persistAttention(config, state, dependencies, "QWENWORK_INTERACTION_UNVERIFIED", error.message);
+  }
 }
 
 async function observeBoundAttempt(config, state, dependencies) {
@@ -649,25 +683,8 @@ async function observeBoundAttempt(config, state, dependencies) {
       `${error instanceof Error ? error.message : String(error)}；禁止重发`,
     );
   }
-  if (typeof dependencies.skipClarification === "function") {
-    try {
-      const skipped = await dependencies.skipClarification(session);
-      if (skipped?.skipped) {
-        state.events.push({
-          type: "USER_AUTHORIZED_CLARIFICATION_SKIPPED",
-          at: dependencies.now(),
-          details: { conversation_id: session.conversation_id, method: skipped.method },
-        });
-        await dependencies.writeJournal(config.state_file, state);
-      }
-    } catch (error) {
-      return persistAttention(
-        config, state, dependencies,
-        "QWENWORK_CLARIFICATION_SKIP_UNVERIFIED",
-        `${error instanceof Error ? error.message : String(error)}；禁止重发`,
-      );
-    }
-  }
+  const interaction = await handlePendingInteraction(config, state, dependencies, session);
+  if (interaction?.journal) return interaction;
   const ui = await dependencies.observeUi(session, state);
   const terminalObservation = {
     ...ui,
@@ -969,7 +986,7 @@ export async function verifyQwenSessionPromptEvidence({ traceRoot, session, prom
   };
 }
 
-async function createLiveDependencies(config) {
+export async function createLiveDependencies(config) {
   const { chromium } = await import("playwright-core");
   const timeout = Number(config.control.timeout_ms || 30_000);
   const browser = await chromium.connectOverCDP(config.client.endpoint, { timeout });
@@ -1041,6 +1058,9 @@ async function createLiveDependencies(config) {
         prompt,
       }),
       navigateToSession,
+      inspectPendingInteraction: async (session) => inspectQwenPendingInteraction(
+        page, session, await queryQwenSessionRows(config.client.session_db, snapshotOptions),
+      ),
       skipClarification: config.control.clarification_policy === "skip-question-card"
         ? (session) => skipQwenClarification(page, session.conversation_id, timeout)
         : undefined,

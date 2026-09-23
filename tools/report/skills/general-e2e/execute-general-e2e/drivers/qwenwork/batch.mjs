@@ -314,6 +314,10 @@ async function synchronizeRow(root, row) {
   row.native_started_at = journal.native?.started_at || journal.execution_state?.native?.started_at || null;
   row.native_finished_at = journal.native?.finished_at || journal.execution_state?.native?.finished_at || null;
   row.error = journal.attention?.message || journal.execution?.error || journal.execution_state?.execution?.error || null;
+  if (row.driver_error) {
+    row.phase = "NEEDS_ATTENTION";
+    row.error = row.driver_error;
+  }
   return row;
 }
 
@@ -427,9 +431,13 @@ async function runQwenTask(configPath, row, state, options, dependencies, {
   }
   if (prepareOnly) args.push("--prepare-only");
   args.push("--managed-queue-id", state.queue_id, ...activeSessionArgs(state));
-  if (dependencies.execute) return dependencies.execute(args);
-  const result = await runCapture(process.execPath, [DRIVER_PATH, ...args], { capture: true, allowFailure: true });
-  return result.code;
+  const code = dependencies.execute ? await dependencies.execute(args)
+    : (await runCapture(process.execPath, [DRIVER_PATH, ...args], { capture: true, allowFailure: true })).code;
+  // A disconnected CDP client can exit before updating the journal. Preserve
+  // that infrastructure failure rather than polling a stale RUNNING row forever.
+  // 3 is a persisted attention/failure result, 4 is an observed running turn.
+  row.driver_error = [0, 3, 4].includes(code) ? null : `QWENWORK_DRIVER_EXIT: ${code}; resume original attempt`;
+  return code;
 }
 
 async function processStartIdentity(pid) {

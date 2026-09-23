@@ -479,7 +479,7 @@ for (const phase of ["DISPATCH_UNCERTAIN", "PREPARING"]) {
       };
       const first = await runQwenWorkBatch(f.args, { execute });
       assert.equal(first.phase, "NEEDS_ATTENTION");
-      assert.deepEqual(first.tasks.map((row) => row.phase), ["DISPATCHING", "PENDING"]);
+      assert.deepEqual(first.tasks.map((row) => row.phase), ["NEEDS_ATTENTION", "PENDING"]);
       assert.equal(calls.length, 1);
       await assert.rejects(readFile(first.receipt_file), { code: "ENOENT" });
       const resumed = await runQwenWorkBatch([...f.args, "--resume"], { execute });
@@ -518,5 +518,28 @@ test("legacy completed queue with a nonterminal journal is rejected without rewr
     await writeJournal(f.root, "one", result.tasks[0].attempt_id, "DISPATCH_UNCERTAIN", { sendStatus: "uncertain" });
     await assert.rejects(runQwenWorkBatch([...f.args, "--resume"]), /TERMINAL_TASK_MISMATCH/u);
     assert.deepEqual(await readFile(result.receipt_file), receipt);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test("a disconnected Driver pauses a stale RUNNING journal and explicit resume clears only that infrastructure error", async () => {
+  const f = await fixture(["one"]);
+  let calls = 0;
+  try {
+    const execute = async (argv) => {
+      calls += 1;
+      const identity = await identityFrom(argv);
+      if (calls === 2) return 1; // CDP disappeared before the Driver could update its journal.
+      await writeJournal(f.root, identity.task_id, identity.attempt_id, calls === 1 ? "RUNNING" : "COMPLETED");
+      return 0;
+    };
+    const paused = await runQwenWorkBatch(f.args, { execute });
+    assert.equal(paused.phase, "NEEDS_ATTENTION");
+    assert.match(paused.tasks[0].driver_error, /DRIVER_EXIT/u);
+    assert.equal(calls, 2);
+    const resumed = await runQwenWorkBatch([...f.args, "--resume"], { execute });
+    assert.equal(resumed.phase, "COMPLETED");
+    assert.equal(resumed.tasks[0].driver_error, null);
+    assert.equal(resumed.tasks[0].attempt_id, paused.tasks[0].attempt_id);
+    assert.equal(calls, 3);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });

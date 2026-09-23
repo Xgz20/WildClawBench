@@ -19,6 +19,8 @@ export const QWEN_STOP_SELECTOR = [
 ].join(", ");
 export const QWEN_TASK_VIEW_SELECTOR = ".agents-chat-view-root";
 export const QWEN_NEW_TASK_SELECTOR = 'button[aria-label="新任务"]';
+export const QWEN_QUESTION_SELECTOR = '[data-slot="user-question"]';
+export const QWEN_INTERACTION_SELECTOR = '[data-pending-interaction-id], [data-testid="pending-sandbox-panel"], [role="dialog"], [role="alertdialog"]';
 
 function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
@@ -240,15 +242,48 @@ export async function restoreQwenPreparedProject(page, projectName, timeoutMilli
   return openQwenProjectByName(page, projectName, timeoutMilliseconds, knownProjectNames);
 }
 
+export async function inspectQwenPendingInteraction(page, expectedSession, sessionRows) {
+  if (currentQwenConversationId(page.url()) !== expectedSession.conversation_id) {
+    throw new Error("QWENWORK_INTERACTION_CONVERSATION_MISMATCH");
+  }
+  const taskView = await requireUniqueVisible(page.locator(QWEN_TASK_VIEW_SELECTOR), "task-view");
+  const heading = visibleValue((await taskView.innerText()).split(/\r?\n/u)[0]);
+  const name = heading || visibleValue(await page.title());
+  const peers = sessionRows.filter((row) => row.conversation_id === expectedSession.conversation_id
+    && row.sub_chat_name === expectedSession.sub_chat_name);
+  if (!name || name !== expectedSession.sub_chat_name || peers.length !== 1
+      || peers[0].sub_chat_id !== expectedSession.sub_chat_id
+      || peers[0].session_id !== expectedSession.session_id) {
+    throw new Error("QWENWORK_INTERACTION_SUBCHAT_UNVERIFIED");
+  }
+  const questions = await visibleLocators(taskView.locator(QWEN_QUESTION_SELECTOR));
+  const panels = await visibleLocators(page.locator(QWEN_INTERACTION_SELECTOR));
+  let unknownPanels = 0;
+  for (const panel of panels) {
+    const approvals = await visibleLocators(panel.getByRole("button", {
+      name: /^(?:允许|批准|确认执行|始终允许|拒绝|Allow|Approve|Deny)$/iu,
+    }));
+    if (approvals.length) return { kind: "approval", question_count: questions.length, auto_approve: false };
+    // A pending-interaction wrapper around the recognized question is expected.
+    // Any other dialog remains a blocker, even without a known button label.
+    if ((await visibleLocators(panel.locator(QWEN_QUESTION_SELECTOR))).length !== 1) unknownPanels += 1;
+  }
+  if (unknownPanels || questions.length > 1) return { kind: "unknown", question_count: questions.length, panel_count: unknownPanels };
+  return { kind: questions.length === 1 ? "clarification" : "none", question_count: questions.length };
+}
+
 export async function skipQwenClarification(page, conversationId, timeoutMilliseconds = 30_000) {
   if (currentQwenConversationId(page.url()) !== conversationId) {
     throw new Error("QWENWORK_CLARIFICATION_CONVERSATION_MISMATCH");
   }
   const taskView = await requireUniqueVisible(page.locator(QWEN_TASK_VIEW_SELECTOR), "task-view");
-  const skipButtons = await visibleLocators(taskView.getByRole("button", { name: "跳过", exact: true }));
+  const cards = await visibleLocators(taskView.locator(QWEN_QUESTION_SELECTOR));
+  if (cards.length === 0) return { skipped: false };
+  if (cards.length !== 1) throw new Error(`QWENWORK_CLARIFICATION_CARD_COUNT: ${cards.length}`);
+  const skipButtons = await visibleLocators(cards[0].getByRole("button", { name: "跳过", exact: true }));
   if (skipButtons.length === 0) return { skipped: false };
   if (skipButtons.length !== 1) throw new Error(`QWENWORK_CLARIFICATION_SKIP_COUNT: ${skipButtons.length}`);
-  const nextButtons = await visibleLocators(taskView.getByRole("button", { name: /^下一题/u }));
+  const nextButtons = await visibleLocators(cards[0].getByRole("button", { name: /^下一题/u }));
   if (nextButtons.length !== 1) throw new Error(`QWENWORK_CLARIFICATION_NEXT_COUNT: ${nextButtons.length}`);
   await skipButtons[0].click({ timeout: timeoutMilliseconds });
   const deadline = Date.now() + timeoutMilliseconds;
