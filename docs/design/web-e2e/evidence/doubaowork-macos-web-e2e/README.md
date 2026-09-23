@@ -1,5 +1,7 @@
 # DoubaoWork macOS Web E2E 能力与 canary 证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 证据日期：2026-09-19（Asia/Shanghai）。任务：`MAC-DOUBAOWORK-WEB`。状态：**P1 完成；P2 已完成一次开发 canary 的单次发送、UI/native session 绑定和站点文件生成，可信终态、cwd、进程清理和正式 Web 闭环仍未完成**。
 
 本文记录本任务分支上的只读 probe、旧 smoke 原生证据旁路解析、脱敏 fixture、`SLOT-MAC-20260919-01` 开发 canary 与公共接口缺口。它不把旧 smoke 或本次 UI 完成候选升级为正式 execution/collect/评分证据，也不声明 DoubaoWork 已达到 Web 主流程生产可用。

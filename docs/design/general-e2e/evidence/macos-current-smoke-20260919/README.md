@@ -1,5 +1,7 @@
 # AstronStudio macOS 当前版本双题生产准入 smoke 证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 ## 结论
 
 2026-09-19，在源码 revision `457e35560ea5cd090db1ce8b68c747de95ae3622` 上完成 AstronStudio macOS 当前版本双题真实闭环。文件型自动规则任务和纯回复语义任务均只发送一次 Prompt，取得唯一原生会话身份和 `completed` 终态；原始 rollout、标准 transcript、资源指标、候选冻结、规则评分、Codex 语义评分、submission、回传导入及 JSON/Markdown/Excel 报告全部有效。

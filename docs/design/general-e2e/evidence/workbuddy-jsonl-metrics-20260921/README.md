@@ -1,5 +1,7 @@
 # WorkBuddy v8 原生模型响应与 Token 补采
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 2026-09-21，在工作区分支 `feature/astroncode-eval` 完成采集修复及 v8 旧产物补采。实现提交 `d6883269eb2a94799e27e8fcdd951edb72bb3e92`；collect Skill `0.7.0`、report Skill `0.3.0`、新增共享组件 `workbuddy-jsonl-metrics 0.1.0`。
 
 后续[原生耗时补采](../workbuddy-native-timing-20260921/README.md)已生成包含 Token 与耗时的新报告；本页 Token 数据、补采目录及旧包均保留。原生请求重叠峰值复核为 2，历史“默认三路已验收”收窄为三槽调度已验收。

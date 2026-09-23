@@ -1,5 +1,7 @@
 # G3-04 Codex 语义评分实现证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 2026-09-18 在 macOS 开发机完成 `codex-agent-judge-v1` 的协议实现和 fixture 验证。`score-general-e2e` 升级为 `0.4.0/interface_only`，`orchestrate-general-e2e` 升级为 `0.3.0/interface_only`。
 
 本项没有创建真实 Codex Judge task。O-01 的评分模型与推理强度尚未冻结，测试中的模型名、语义分和证据结论均为 fixture；它们证明契约、分页取证、失败关闭和合分代码，不证明裁判准确性或真实生产准入。Windows 真机同样为 NOT_RUN。

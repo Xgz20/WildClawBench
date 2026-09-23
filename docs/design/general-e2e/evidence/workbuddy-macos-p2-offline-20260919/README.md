@@ -1,5 +1,7 @@
 # WorkBuddy macOS General P2 离线门禁与 canary 收口证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 日期：2026-09-19（Asia/Shanghai）。任务：`MAC-WORKBUDDY-GENERAL`。范围：单题一次发送入口、原生绑定、恢复、状态语义、锁与路径安全的离线实现，以及一次真实客户端 canary 的发送边界和用户草稿恢复。本文不证明 Prompt 已发送、模型已执行、真机终态、正式 collect、评分或生产准入。
 
 ## 结论

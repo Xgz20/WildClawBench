@@ -1,14 +1,16 @@
 # 端到端自动化评测 Harness 接入契约
 
-文档标识：`E2E-HARNESS-CONTRACT`；版本：`0.2`；状态：现行接入与验收基线（人工符合性审核，统一自动校验器尚未实现）；更新：2026-09-21。
+文档标识：`E2E-HARNESS-CONTRACT`；版本：`0.3`；状态：现行接入与验收基线（人工符合性审核，统一自动校验器尚未实现）；更新：2026-09-23。
 
-适用对象：接入或升级桌面 Harness 的开发、验证与发布人员。包含本地执行的 General 与 Web 站点两个场景，按声明的 OS/架构与实际客户端能力验收，版本作为证据身份记录。现有实现核对基线：`4818918a3633614b38a94951010cc0157e9860c7`。
+适用对象：接入或升级桌面 Harness 的开发、验证与发布人员。包含本地执行的 General 与 Web 站点两个场景，按声明的 OS/架构与实际客户端能力验收，版本作为证据身份记录。当前状态按第 5 章逐项绑定源码/发行/平台证据；文档重组不改变任何运行身份。
 
-本文集中定义“需要实现什么、如何验证、用什么证据声明支持”。具体 JSON 字段继续由场景 Schema 定义，当前支持状态继续由场景验收清单维护。本文发布不代表客户端已满足所有要求，也不自动改变既有评分协议。新指标和统一符合性检查尚未实现的部分在正文明确标出。
+本文是 Web 与通用场景共用的唯一集成契约，维护 Driver 控制能力、具体集成步骤、场景差异、验收要求及各 Harness 进度。Driver 的创建任务、Workspace 绑定、配置回读、一次发送、观察、停止与恢复遵守同一套控制规则；数据包、证据交接、评分和报告差异由场景策略/adapter 表达。
 
-2026-09-21 开发顺序调整：以 [General E2E 接续入口](../general-e2e/README.md)为当前进度与恢复入口，优先在当前工作区分支串行完成 macOS 四个 Harness 的 General 并开始评测，Windows 暂缓。原 `collaboration/` 仅作历史档案；本文的跨平台接口、证据与运行期隔离要求继续有效。
+当前 Web/General 的 CLI 与回执 adapter 仍分别存在，公共底层通过 `tools/report/e2e-shared/` 装配。共享控制段在相同实现与运行身份下可引用既有证据；场景的数据包、采集 adapter、评分和回执闭环分别验收。本次整理不改运行代码。技术架构和轨迹分析分别见 [Web 技术方案](../web-e2e/Web站点端到端自动化评测技术方案.md)、[通用技术方案](../general-e2e/通用场景端到端自动化评测技术方案.md)；字段和公式见各场景指标说明。
 
-0.2 把加固明确纳入每个新 Harness 集成任务的必需范围：第 1.9 节维护共用 CV 验收项，第 1.10 节提供任务模板和完成条件。不得另挂为可省略的“以后再加固”任务。已有证据保留当时契约/源码身份，本次文档更新不自动升级或撤销已有有限范围结论；未覆盖的新要求进入对应 Harness 的待办，不填为已通过。
+阅读顺序：[共用要求](#1-共用契约) → 对应场景差异 → [集成步骤](#integration-steps) → [当前进度](#integration-progress)。导航见 [README](README.md)，旧计划、ADR、验收台账与协作文件已归入 `archive/`，不再各自维护“当前进度”。
+
+0.3 将文档职责、集成步骤和各 Harness 当前进度统一到本文；保留 C/G/W/CV/GV/WV 编号与既有验收门槛，不新增协议或运行结论。此前 0.2 把加固明确纳入每个新 Harness 集成任务的必需范围：第 1.9 节维护共用 CV 验收项，第 1.10 节提供任务模板和完成条件。不得另挂为可省略的“以后再加固”任务。已有证据保留当时契约/源码身份，本次文档更新不自动升级或撤销已有有限范围结论；未覆盖的新要求进入对应 Harness 的待办，不填为已通过。
 
 ## 1. 共用契约
 
@@ -18,10 +20,12 @@
 
 | 资料 | 维护内容 | 不应重复维护的内容 |
 | --- | --- | --- |
-| 本文 | 跨场景不变量、接入步骤、指标语义、验证要求及场景差异 | 每个客户端的滚动进度、某批次通过数 |
-| 场景 Schema / Driver 契约 | 精确字段、枚举、版本兼容、接口与命令 | 另起一套同名但不同语义的字段 |
-| Harness × 场景 × OS × 架构验收记录 | 客户端/Driver/依赖身份、能力状态、证据与准入层级 | 没有证据的支持承诺 |
-| General E2E 接续入口 | 当前基线、Harness/平台进度、唯一下一项、证据入口与新会话 Prompt | 复制底层证据或把旧并行档案当作操作要求 |
+| 本文 | 跨场景 Driver 控制规则、集成步骤、场景差异、验收门槛、各 Harness 当前进度与下一步 | 完整原始轨迹、逐批运行日志和所有历史包 SHA |
+| 场景 Schema / 实现接口参考 | 精确字段、枚举、版本兼容、接口与命令 | 另起一套同名但不同语义的字段 |
+| 场景技术方案 | 架构、数据流、轨迹采集与归一化分析、实现入口 | 第二份接入步骤或当前进度表 |
+| 场景指标说明 | 指标定义、公式、原生字段映射、覆盖和报告解释 | 第二份 Harness 集成状态 |
+| evidence / archive | 前者保留运行事实与原件索引；后者保留历史方案、台账和决策 | 作为当前调度指令或覆盖本文件第 5 章 |
+| README | 导航和文档职责 | 滚动进度、版本及待办副本 |
 | 用户指导手册 | 已支持版本的安装、运行、恢复和交接操作 | 开发状态、故障注入历史、内部阻塞清单 |
 
 “必须”是声明对应能力的条件；“不适用”必须有场景或能力依据；没有做完的项目记录待验证，不能填不适用。可选资源字段不可用时允许降级；任务评分所必需的轨迹、身份或候选证据缺失时，按场景契约阻断相关评分。
@@ -49,6 +53,18 @@
 当前在当前工作区分支串行实现 Harness adapter、fixtures 和验收证据。公共 Schema、指标公式、队列语义与发行仍保持单一来源；公共变更运行受影响回归，不要求平台 worktree 或派发/回收流程。
 
 共享变更在当前接续记录中注明实现 SHA、兼容影响和受影响旧证据，直接完成必要回归；无需另建交接文件或等待接收方。代码集成、远端发布与目标平台验收分别记录，不能互相代替。
+
+### 共用控制与场景差异速查
+
+| 层面 | 共用部分 | General 场景 | Web 场景 |
+| --- | --- | --- | --- |
+| Driver 控制 | 应用/端点、唯一控件、Workspace、配置、一次发送、观察、停止、恢复、精确进程清理 | 由 General prepared unit/adapter 提供参数与输出映射 | 由 Web prepared task/adapter 提供参数与输出映射 |
+| 数据与候选 | 公私材料隔离、冻结身份与哈希 | 文件和纯回复；按任务保留 Git/二进制/受限链接 | 网站候选；Web `.git`/运行时目录策略 |
+| 采集交接 | 原生来源、去重、覆盖、未知不补造 | 独立 collect-evidence、正式 raw/标准 transcript、trace-index v2 与 receipt | 终态 execution record、Web collection/provenance 与 execution receipt |
+| 评分 | 独立评分 attempt、候选保护、错误与真实性区分 | 原规则 + 指定语义后端，按 automated/hybrid/llm_judge | Browser 交互取证，按详细/ArtifactsBench Profile |
+| 报告 | 原件可复核、哈希与分母披露、指标来源状态 | valid/evaluation_error/unscored，有效均值 | 保留已发布 Web 分数/异常零值规则与独立美观度 |
+
+场景决定输入包、产物、评分和序列化，不为同一 Harness 另定义一套 UI 发送/恢复规则。当前两条入口已有的实现差异须在能力映射中登记，不能靠统一文档宣称代码或准入已经等价。
 
 ### 1.3 身份、运行配置与任务隔离
 
@@ -220,10 +236,10 @@ CV09 必须按上述分支保存结果。适用真实终止分支时，至少有
 
 每个新 Harness 的集成任务同时交付：能力/字段映射、Driver 与平台适配、原始样本和解析 fixtures、场景回执映射、依赖及发行更新、C/G/W 要求及 CV01–CV17 的逐项记录、适用基础加固实现和真机证据、支持边界与恢复操作。引用公共实现不免除本客户端接线和适用性核对。仅实现 Web 或 General 时，另一章标为未声明支持，不能填写已通过。
 
-必须留下**人工符合性记录**，可按下列模板填写或映射到现有验收表，不要求另建平行台账。下面只展示一项的格式，实际记录必须覆盖 CV01–CV17，并保留适用场景 GV/WV；各 Harness 的实际状态仍放在场景接续记录/验收清单及 `evidence/`。当前没有统一 JSON Schema 或自动符合性校验器，这些是集成任务完成条件，由交付审核逐项核对；不能宣称工具已经自动强制执行。
+必须留下**人工符合性记录**，可按下列模板填写或映射到现有验收表，不要求另建平行台账。下面只展示一项的格式，实际记录必须覆盖 CV01–CV17，并保留适用场景 GV/WV；各 Harness 的当前状态统一放在本文第 5 章，`evidence/` 保存运行事实和原件索引。当前没有统一 JSON Schema 或自动符合性校验器，这些是集成任务完成条件，由交付审核逐项核对；不能宣称工具已经自动强制执行。
 
 ```yaml
-contract: E2E-HARNESS-CONTRACT/0.2
+contract: E2E-HARNESS-CONTRACT/0.3
 scope: <Harness + 场景 + OS + 架构 + 客户端版本>
 identity: <Driver/Skill/组件/依赖/数据集/配置的版本与哈希清单>
 claimed_capabilities: <执行、轨迹、指标、评分交接、串行、并发、恢复>
@@ -261,7 +277,7 @@ validation_records:
 
 ```text
 接入 <Harness> 的 <General/Web>，平台 <OS/架构>，目标支持范围 <值守单槽/并发/无人值守>。
-1. 阅读 E2E-HARNESS-CONTRACT/0.2：共用章及对应场景章；记录实际能力、源码/包与客户端身份。
+1. 阅读 E2E-HARNESS-CONTRACT/0.3：共用章及对应场景章；记录实际能力、源码/包与客户端身份。
 2. 在本客户端的现有进度/证据记录中展开 CV01–CV17，以及 General GV01–GV08 或 Web WV01–WV08。
    每项标记适用性、实现落点、自动化结果、真机结果、证据与下一步；不适用须有依据。
 3. 完成 Driver、原生身份/终态、轨迹/指标、精确收口、正式回执和公共评分/报告接入。
@@ -269,7 +285,7 @@ validation_records:
 4. 执行适用的反例测试和最小真机故障验证，覆盖发送临界、未知交互安全暂停、真实受管进程清理及无关进程保护。
    按声明补验并发与自动恢复；故障注入独立标记，不混入能力评分，不修改题目 timeout。
 5. 冻结并验证独立发行，用新任务完成首次采集至评分/回传/报告的 canary；核对分母、缺失值及证据链。
-6. 更新场景接续入口、验收清单和证据索引。基础必需项未通过不得将完整接入标为 DONE。
+6. 更新本文第 5 章对应 Harness/场景/平台进度，并追加 evidence 索引。基础必需项未通过不得将完整接入标为 DONE。
    保留阶段成果、未验证范围和恢复步骤；不因文档或单测通过自动提升平台准入。
 ```
 
@@ -277,7 +293,7 @@ validation_records:
 
 ### 2.1 数据集、阶段与任务语义
 
-**G01｜General 使用独立任务协议。** 以 [契约决策记录](../general-e2e/通用场景端到端自动化评测契约决策记录.md)、[运行契约](../../../eval_general_e2e/contracts/README.md)和 [技术方案](../general-e2e/通用场景端到端自动化评测技术方案.md)为精确依据。数据集 manifest 冻结任务全集与顺序、Prompt、初始 Workspace、私有评分材料和 digest；题意、rubric、规则与权重不随 Harness 改变。路径改写仅按现有确定性映射并保留前后 SHA。
+**G01｜General 使用独立任务协议。** 以本文 G 条款、[运行契约](../../../eval_general_e2e/contracts/README.md)和 [技术方案](../general-e2e/通用场景端到端自动化评测技术方案.md)为精确依据。数据集 manifest 冻结任务全集与顺序、Prompt、初始 Workspace、私有评分材料和 digest；题意、rubric、规则与权重不随 Harness 改变。路径改写仅按现有确定性映射并保留前后 SHA。
 
 审计每题 Env、Skills、Warmup、网络、命令、素材、链接类型、轨迹要求及平台差异。实际需要而未满足的前置条件不能当作模型能力失败；不通过修改题目或放宽 grader 来让新客户端接入。
 
@@ -314,9 +330,9 @@ validation_records:
 | GV07 | G02、G05–G07 | 显式阶段恢复到 submission/return/import/report；JSON/Markdown/Excel 与回执同源 |
 | GV08 | G01–G07 | 声明平台的完整小批与并发验证；跨机评分与本机闭环分别声明；扩大范围后保留全部失败题 |
 
-固定 smoke 复用 [实现计划与验收清单](../general-e2e/通用场景端到端自动化评测实现计划与验收清单.md) 的 S1–S5：文件修复、工具过程安全、hybrid 交接、纯回复、第五题动态补位；登记完整 task ID 与 digest，不另造五道近似题。题目 `timeout_seconds` 仅保留兼容元数据，不限制被评测 Harness 总执行时间，也不纳入评分；基础设施/评分控制超时注入使用独立验收批次。实现要求按本文 GV 与已有 G/MAC/WIN 验收 ID 映射。
+固定 smoke 使用第 4 章的 S1–S5（保持原 ID）：文件修复、工具过程安全、hybrid 交接、纯回复、第五题动态补位；登记完整 task ID 与 digest，不另造五道近似题。题目 `timeout_seconds` 仅保留兼容元数据，不限制被评测 Harness 总执行时间，也不纳入评分；基础设施/评分控制超时注入使用独立验收批次。实现要求按本文 GV 与归档的 G/MAC/WIN 验收 ID 映射，固定五题见第 4 章。
 
-小批通过只支持对应场景/平台/版本的接入结论，不替代既有方案要求的全量与裁判校准。更新 [General 验收清单](../general-e2e/通用场景端到端自动化评测实现计划与验收清单.md) 中对应 Harness 的记录；不把 AstronStudio 或某个平台的通过状态复制给新客户端。
+小批通过只支持对应场景/平台/版本的接入结论，不替代既有方案要求的全量与裁判校准。更新本文第 5 章对应 Harness 的 General 记录；不把 AstronStudio 或某个平台的通过状态复制给新客户端。
 
 ## 3. Web 站点专有契约
 
@@ -357,4 +373,141 @@ validation_records:
 | WV07 | W02、W06 | Profile/criterion/截图缺失、候选漂移、目录策略、浏览器 profile 泄漏均被拒绝；报告分母符合当前协议 |
 | WV08 | W01–W06 | 单 Prompt 串联执行、评分、submission、return、import/report；失败评分/控制重启和发布中断按原 attempt 恢复 |
 
-现有 [Web 生产验收清单](../web-e2e/Web站点端到端自动化评测生产验收清单.md) 的 V00–V17 及资源 P6–P9 继续有效，接入记录映射到 CV/WV，不另复制一份滚动状态。主流程生产可用、并发生产可用、无人值守高可用按其分层门槛声明；首个正式批次保留 3–5 个 L1 canary。恢复、并发或特定平台未验收时，明确值守/单槽范围，不能把“已能点击生成站点”写成完整生产支持。
+归档的 [Web 生产验收清单](archive/web/生产验收历史-20260923.md) 的 V00–V17 及资源 P6–P9 继续有效，接入记录映射到 CV/WV，不另复制一份滚动状态。主流程生产可用、并发生产可用、无人值守高可用按其分层门槛声明；首个正式批次保留 3–5 个 L1 canary。恢复、并发或特定平台未验收时，明确值守/单槽范围，不能把“已能点击生成站点”写成完整生产支持。
+
+
+<a id="integration-steps"></a>
+## 4. 具体集成步骤
+
+步骤面向一个 Harness 核心 Driver。接入第二个场景时复用控制能力，另验该场景的数据、回执、评分和报告；共享控制代码发生变化时，两条实际入口都需按影响回归。文档中的步骤不是两个 Driver 副本的复制模板。
+
+| 步骤 | 实施与检查 | 可审查交付物 / 门禁 |
+| --- | --- | --- |
+| 1. 冻结范围 | 选择 Harness、场景、OS/架构、值守/并发/无人值守、模型/权限、Judge；记录安装/源码/包/依赖身份 | 本章状态行及 C/G/W、CV/GV/WV 的适用性记录；未声明范围不提前 PASS |
+| 2. 只读探测 | 发现唯一应用和控制端点，验证进程、版本、GUI/锁屏、依赖、活动任务、原生状态/日志来源、路径预算 | probe 与负例；本步不创建任务、不发送 Prompt |
+| 3. 接入 Driver | 唯一 UI 控件定位、完整 Workspace 回读、配置冻结、意图落盘、一次发送、原生 session/cwd 绑定 | 单题 journal/发送计数/Prompt SHA；同步做 CV03–CV05 中断和锁竞争 |
+| 4. 接入观察与恢复 | 正常/错误/待交互/未知分开；原会话续观；只处理已授权交互；停止需原生确认 | 正常、失败、纯回复及未知交互的真实证据；不确定时暂停而非重发 |
+| 5. 接入原生证据 | 只归档绑定会话/turn 的原始数据，保留 SHA、范围、标准事件、缺失与重复；映射可观测指标 | 解析 fixtures 与原始/标准对账；轨迹需求按场景 grader 验证 |
+| 6. 接入收口 | 精确终止任务进程、保护对照进程，检查静默/迟到写入并冻结候选 | 真实 TERM/KILL 或声明的停止分支、失败拒绝发布、正式回执和 verify-only |
+| 7. 接入场景后半程 | General 规则/语义与 Web Browser 取证分别对接；独立评分 attempt，生成 submission、return、import、报告 | 同一身份的首次执行→首次采集→评分→回传→报告闭环；异常不伪装成绩 |
+| 8. 扩到声明并发 | 先串行，再五题默认槽位与补位；UI 单槽；原生重叠和调度占用分别计算 | 五题身份/终态、真实并发、无串题/重发及评分隔离 |
+| 9. 发行并判定 | 构建独立 Skill/suite，仓库外安装；按变更复验公共组件与客户端分支 | 清单/内容/ZIP SHA、真实新任务、声明范围和未完成项 |
+| 10. 更新唯一进度 | 仅更新第 5 章的对应行和 evidence；失败与旧身份保留 | 不创建新的“当前进度”文件；历史台账移入 archive |
+
+| General smoke | 完整 task ID | 评分类型 / 覆盖 |
+| --- | --- | --- |
+| S1 | `02_Code_Intelligence_task_001_temperature_cli_fix` | automated；文件修改、测试 |
+| S2 | `06_Safety_Alignment_task_001_suspicious_installer` | automated；工具参数/时序、安全副作用 |
+| S3 | `01_Productivity_Flow_task_005_support_handoff` | hybrid；文件与语义合分 |
+| S4 | `01_Productivity_Flow_task_003_retro_agenda` | llm_judge；最终回复 |
+| S5 | `03_Social_Interaction_task_003_colleague_leave_reply` | llm_judge；第五题补位与独立评分 |
+
+执行次序服从冻结 manifest，不按上表重排任务。Web 使用对应 Profile 的 L1 小批；旧 V00–V17 定义与原始验收身份保留在[Web 历史台账](archive/web/生产验收历史-20260923.md)，新任务仍展开共用 CV 与 Web WV，不改写旧记录。
+
+<a id="integration-progress"></a>
+## 5. Harness 集成进度与当前任务
+
+更新：2026-09-23。以下依据现有源码和运行记录归并，本次未运行 Harness/Judge。状态必须同时带场景、平台、源码/包和支持范围；当前源码版本不自动继承旧发布的真机结论。历史声明仍仅对其已验身份有效。
+
+### 5.1 源码与运行身份
+
+开发在当前仓库工作区 `feature/astroncode-eval` 串行进行，不恢复旧协作档案的派发、平台 worktree 或人工桌面排期。评测运行仍可使用已验的执行/评分并发。当前用户约定：调试产物置于 `/Users/gzx/debug-workspace/e2e-evaluate`，正式分发置于仓库 `report-workspace`，不 push，不主动重启承载控制的 Codex Desktop。
+
+- General 源码 Skill 版本：`collect-general-e2e 0.7.6`、`execute-general-e2e 0.10.27`、`orchestrate-general-e2e 0.9.5`、`prepare-general-e2e-workspaces 0.2.0`、`report-general-e2e 0.5.1`、`run-general-e2e 0.5.2`、`score-general-e2e 0.8.2`。
+- Web 源码 Skill 版本：`execute-web-e2e 1.16.0`、`orchestrate-web-e2e 0.3.2`、`prepare-web-e2e-workspaces 4.4.0`、`report-web-e2e 1.1.1`、`run-web-e2e 1.4.2`、`score-web-e2e 4.5.4`。
+
+- QwenWork General 最近执行实现 `190406c`，独立发行 `qwenwork-hardening-190406c`，execute 0.10.27；Qwen 聚焦 Node 115/115、发行/布局 Python 16/16。记录证明对应变更与 canary，不代表全部准入已完成。
+- Web 最近已有分发索引为 `dba9700...` 的 `20260919-125641` 自建 40 / 开源 120 包；历史功能/资源验收另有 `6988b525...`、`ee70a67...`、`24771ce...`、`ff5d476...`、`c257fbd...` 身份。当前源码与这些包按内容 SHA/影响核验，不能只凭重打包继承支持层级。
+
+### 5.2 General 场景
+
+| Harness / 平台 | 已验证范围 | 尚未完成 / 当前判定 | 依据 |
+| --- | --- | --- | --- |
+| AstronStudio / macOS Intel | G4-03 五题三槽执行/评分/回传/报告；后续双题 smoke 2/2 valid | 已有对应身份的受控生产证据；公共新版本按影响复验 | [五题](../general-e2e/evidence/g4-03/README.md)、[双题](../general-e2e/evidence/macos-current-smoke-20260919/README.md) |
+| WorkBuddy / macOS Intel | v8 为 5/5 valid、原生峰值 2；v2 加固 canary 为原生峰值 3、2 次补位，评分 2 valid/2 异常/1 容量未评分 | 不把不同批次拼成 5/5 valid 且峰值 3；未知授权/追问、评分稳定性等收尾，完整接入 IN_PROGRESS | [v8](../general-e2e/evidence/workbuddy-macos-general-v8-three-slot-20260921/README.md)、[v2 加固](../general-e2e/evidence/workbuddy-hardening-20260921/README.md) |
+| QwenWork / macOS Intel / 1.2.0 | r21 原生三路五题闭环；r23 核心 Token 5/5 与正式报告；r31–r35 路径、授权、清理、终态/标题加固 | 主流程有限可用，完整接入 IN_PROGRESS；剩余七项见下文 | [运行证据](../general-e2e/evidence/qwenwork-macos-five3-20260923/README.md) |
+| DoubaoWork / macOS | General 尚无专属 adapter、正式 collector/receipt 全链路交付 | TODO；QwenWork 收口后接入，不能继承 Web 开发 canary | [Web 证据仅供复用分析](../web-e2e/evidence/doubaowork-macos-web-e2e/README.md) |
+| 全部 Harness / Windows、Apple Silicon | 当前 General 台账没有相应完整真机准入 | Windows 暂缓；Apple Silicon 单独验证；不外推 Intel 结果 | [历史 Windows 实施范围](archive/general/AstronStudio-Windows后续实施清单.md) |
+
+### 5.3 Web 场景
+
+| Harness / 平台 | 已有证据边界 | 当前缺口 / 不应外推 |
+| --- | --- | --- |
+| AstronStudio / Windows | `6988b525...` 对应身份 V00–V17，历史声明无人值守高可用；`ff5d476...` 另验资源 | 后续发行的影响项、跨平台同 revision 包对账仍需明确重绑 |
+| WorkBuddy / Windows | `ee70a67...` 对应 5.5.6.0 身份 V00–V17；`ff5d476...` 另验资源 | 同上；旧双路样本不能自动证明当前默认三路 |
+| QwenWork / Windows | `24771ce...` 单 L1 执行→评分→return 主流程；`c257fbd...` 1.0.6.0 自动 Token 开关与新 L1 采集 | 当前身份串行/并发、管理员 import/report、V12–V17 未全重绑；不声明并发或无人值守全覆盖 |
+| AstronStudio / macOS Intel | `6988b525...` 的独立 macOS 包有单 L1 全流程，历史主流程生产声明 | 与 Windows 包身份不同；新发行并发/恢复和双平台字节对账不自动继承 |
+| WorkBuddy / macOS Intel | 有旧执行/并发功能证据及发布 smoke | 后半程与恢复项在原 Web 矩阵为 STALE/待重验，不按 General 成果升级 |
+| QwenWork / macOS Intel | 1.0.5 历史执行与资源样本；已有 L1 执行记录 | 1.2.0 General 的 Token/并发/加固不等于 Web 同版本准入，需 Web 入口单独验证 |
+| DoubaoWork / macOS | 有开发 canary、绑定/轨迹小计与离线实现 | 原生终态/cwd、正式 collect/finalizer、评分回传仍未闭环，保持 NEEDS_ATTENTION |
+| DoubaoWork / Windows；其他未声明架构 | 无本场景完整证据 | NOT_RUN，不凭共用接口推定支持 |
+
+Web 逐项 V00–V17、P0–P10、客户端/Skill/包 SHA 和运行路径见[历史验收记录](archive/web/生产验收历史-20260923.md)；DoubaoWork 专属现场见[证据索引](../web-e2e/evidence/doubaowork-macos-web-e2e/README.md)。历史台账停止滚动更新，新的进度仅改本表并追加 evidence。
+
+### 5.4 当前推进顺序
+
+当前先收口 QwenWork General 的剩余准入，再按声明范围推进 DoubaoWork General；其他已有 Harness 保留各自证据与缺口。Windows 新开发暂缓，历史 Web Windows 结论保留。评分配置在各批次冻结，当前 QwenWork General 后续批次固定 `gpt-6-sol/high`，不回填旧 astra/high 结果。题目时长不作为能力评分条件，不为覆盖状态表改题或逼模型产生指定分数。
+
+### QwenWork 剩余生产准入事项
+
+
+范围为 macOS Intel / QwenWorkCN 1.2.0 / 值守 / 默认三路。r31 路径预算、r32 未知授权、r33 关键进程收口、r35 终态/标题同步已验证，不再作为未完成项。下面七项区分实现缺口与验收证据缺口；不能把所有 PARTIAL 都解释为功能未实现。
+
+| 事项 | 类型 | 具体收口要求 | 对应记录 |
+| --- | --- | --- | --- |
+| 环境异常门禁 | 补实现并补测 | Qwen General probe/执行入口尚无显式锁屏或 GUI 会话状态检查，只有原生选目录时的前台焦点保护；补门禁，再验端口占用、陈旧端点、多安装和锁屏/未知状态 | CV02 |
+| 目标与配置防串题 | 客户端真机补测 | 同名不同 Workspace、发送前模型/权限漂移时拒绝发送；保留实际发送数 0 和原身份 | CV03 |
+| 异常终态 | 客户端真机补测 | 最终错误、中断/取消、未知状态与原生轨迹/正式回执逐项对账，不误报完成、不当作能力零分；工具被拒后完成和终态时差已覆盖 | CV07 |
+| 轨迹异常与必需证据 | 故障补测及证据审计 | 截断/乱序/重复/孤立结果/子代理混入的处理，以及缺必需轨迹时实际 grader 的拒绝证据 | CV11、GV03 |
+| 候选材料边界 | 材料验证及证据审计 | 缺文件、同名不同内容、Git/二进制/受限链接等；r33 冻结前后写入漂移已通过 | CV13、GV04 |
+| 评分结果发布中断 | 公共组件故障补测 | submission 发布窗口中断、原子发布与恢复；已有重复导入、冲突拒绝测试按同版本复用 | CV14 |
+| 报告分母核验 | 公共测试与 Qwen 回传接线审计 | 对齐已有有效零分/评测异常/未评分测试与正式回传、报告分母，保留有效性和缺失值语义 | GV06 |
+
+锁屏缺口依据：[Qwen probe](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/probe.mjs)、[执行入口](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/driver.mjs)和[原生文件夹选择器](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/select-folder.swift)；`frontmostApplication` 焦点检查不等于锁屏检测，共享组件存在能力也不等于本 Driver 已接入。
+
+先完成前三项；后四项优先引用同 revision/运行内容的公共测试与已有真实材料，只补缺失分支。成功的五题执行、Token、评分报告无需为文档收口重跑。实际模型 ID 和未支持的可选指标继续披露 unknown/null；Apple Silicon、Windows、60 题全量及无人值守重启不作为当前 Intel 值守范围的前置门槛。
+
+
+### QwenWork General 验收逐项记录
+
+
+本轮目标为 **macOS x86_64 / QwenWorkCN 1.2.0 / 值守控制 / UI 单槽 / 默认三路 / Codex gpt-6-sol high**。不声明 Apple Silicon、Windows、60 题全量、自动批准未知授权、活动客户端自动重启或无人值守自动抢锁。下表 `PARTIAL` 包括尚缺分支证据，不能当作不适用。实际模型 ID、Cache Write、reasoning Token、HTTP attempts 继续为 unknown/null，不以这些可选字段阻断有效评分。
+
+| 验收项 | 实现/自动化证据 | QwenWork 真机证据 | 当前结论与剩余项 |
+| --- | --- | --- | --- |
+| CV01 包与隔离 | prepare/release/layout 正反例；独立七 Skill 闭包 | r21/r23/r27 仓库外 prepare/verify、execution/scoring 分离 | PASS，后续发行仍逐包验 SHA |
+| CV02 只读探针 | loopback、身份、快照、Token 开关门禁 | r27 当前 PID/端点、空闲与活动两种 probe，活动启动拒绝 | PARTIAL；锁屏/GUI 会话检测为当前实现缺口（仅有选目录前台焦点保护）；补门禁，并逐项验证端口占用/陈旧端点/多安装/锁屏负例 |
+| CV03 UI/配置/Prompt | 唯一语义控件、项目/Workspace、配置漂移与发送禁用反例 | r19 未发送即暂停；r21/r23 一次发送；r28 同名导航/页脚定位反例 | PARTIAL；同名不同 Workspace、模型/权限不符的目标客户端负例未齐 |
+| CV04 发送中断 | intent/reservation/invoking、不确定不重发，缺失/歧义 session 反例 | r25 部分现场；r26 发现队列缺陷；r27 修复后恢复并正式收口 | PASS（值守基础范围）；r25 不当作有效执行 |
+| CV05 owner/竞争 | 活锁拒绝、两个 Driver/恢复者竞争、旧归档保护、字节漂移拒绝 | r27 两把锁精确归档，原 queue/attempt 恢复 | PASS（显式值守恢复）；不承诺无人值守抢锁 |
+| CV06 断连/重启 | Driver 非正常退出保留基础设施错误、显式 resume | r28/r29 CDP 断开→暂停→重连原 session；r27 活动任务拒绝 Token 重启 | PASS（断连安全暂停范围）；客户端实际重启与 Codex 重启未验/未声明 |
+| CV07 原生终态 | 完成/失败/取消/未知分开；不按文件稳定判断完成 | 文件任务 r21/r23；纯回复题正式 collect/report；r28 问卷完成 | PARTIAL；r32 已验工具权限拒绝后完成，r35 已验终态时差；最终错误等剩余真机分支继续对账 |
+| CV08 待交互 | 精确会话/问卷页脚；unknown/approval/manual pause 反例 | r30 自动跳过至完成；r32 原生高危卡片自动暂停，人工拒绝后原 session 完成，设置已恢复 | PASS（声明范围）；不提供自动批准白名单 |
+| CV09 清理/冻结 | 通用 finalizer、静默窗口、残留/漂移拒绝 | r24 优雅终止与目录外对照；r33 原 CLI 验证持续残留拒绝、迟到写入拒绝、TERM→KILL、迟到子进程和冻结后漂移 | PASS（当前 macOS 收口分支）；本方对照受保护，测试进程已退出。自然残留复现不另设门禁 |
+| CV10 串行/并发 | 单 UI 槽、三后台槽、补位、同 attempt 恢复 | 三题单槽；r21 五题原生峰值 3、补位 2；r23 另批峰值 2 | PASS，峰值不足不计能力异常；不外推更高并发 |
+| CV11 原始轨迹 | 一致 SQLite 备份、session/cwd/Prompt、缺失/冲突拒绝 | r15/r16 热写故障恢复；r21/r23 正式原始/标准轨迹 | PARTIAL；截断/乱序/孤立结果/子代理混入须逐分支核对覆盖 |
+| CV12 指标 | 精确 runtime Profile、逐 request ID 与 turn 终值对账、掩码零不发布 | r22/r23 核心 Token、请求/工具、原生/流程耗时；旧批次 null 保留 | PASS（已声明字段）；可选未知量不补零 |
+| CV13 候选与证据 | 通用候选/manifest/hash、越界/链接和漂移拒绝 | r21/r23/r27 正式 freeze + verify-only | PARTIAL；r33 已补目标路径冻结前后写入故障，缺文件/同名不同内容/受限链接等分支继续核对索引 |
+| CV14 评分/回传恢复 | 独立 attempt、发布/重复导入/冲突拒绝的公共测试 | 三题 Judge capacity 原 thread 恢复；r20 sol 独立重评分；r21/r23 return/import | PARTIAL；submission 发布窗口中断的本范围证据待核对 |
+| CV15 正式闭环 | 七阶段契约与独立发行 | r21 与 r23 各自同发行执行→首次 collect→评分→回传→导入→报告闭环 | PASS；r27/r28 新故障样本按变更影响复验，不改写旧报告 |
+| CV16 平台 | 平台显式为 macos-x86-64，Token Profile 精确 runtime | QwenWorkCN 1.2.0 / SDK 1.0.46；r21–r35 | PASS（本平台）；其它平台 NOT_RUN |
+| CV17 路径预算 | SDK 纯编码能力确认、实际 getconf 限制、原始/编码后字节预算、目录权限/链接检查 | r31 中文/空格真实路径与原生编码匹配；最长 ID 62 字符预检；五类负例均发送 0 | PASS（macOS 当前编码能力）；未知编码实现仍拒绝，未外推其他平台 |
+
+| General 项 | 当前证据 | 结论/剩余项 |
+| --- | --- | --- |
+| GV01 准备与阶段边界 | r21/r23/r27 prepare/verify 与独立执行/评分包 | PASS |
+| GV02 文件/纯回复 | support_handoff、temperature 与 colleague_leave_reply 正式 collect | PASS |
+| GV03 工具轨迹 grader | 五题中的轨迹题与自动规则、原始 call/result 采集 | PARTIAL；缺必需轨迹拒绝需与实际 grader 逐项关联 |
+| GV04 Git/二进制/链接与冻结 | 公共 exact-all freeze/链接反例，Qwen verify-only | PARTIAL；本客户端相应材料与故障样本需补索引 |
+| GV05 三种评分 | r21/r23 automated、hybrid、llm_judge，固定 sol/high | PASS；本轮只声明 Codex 语义后端 |
+| GV06 分母与失败隔离 | 公共异常/缺证据/零分测试，r20 独立重评分、旧评分保留 | PARTIAL；已有公共有效零分/异常/未评分测试，需与 Qwen 正式回传接线和分母对应收口，不要求为补索引重复运行模型 |
+| GV07 阶段恢复与报告 | r21/r23 submission、return/import、同源 JSON/Markdown/Excel | PASS |
+| GV08 小批/并发 | r21 原生三路五题，r23 五题核心 Token、同机闭环 | PASS（固定五题/本机）；不声明跨机或全量 |
+
+因此仍是“主流程有限可用、加固进行中”，完整接入任务保持 IN_PROGRESS。本轮已补齐 CV17、CV08、CV09 的上述重点；其余 PARTIAL 行按[剩余七项](#qwenwork-剩余生产准入事项)分别补实现、真机负例或公共证据审计，不以本轮三项通过替代全部准入。上述矩阵为人工证据审计，不代表已有自动符合性校验器。
+
+### 5.5 进度更新规则与接续
+
+新增记录须提供日期、场景/Harness/OS、源码和包身份、task/attempt、真实断言、失败或未验证范围及 evidence 链接。公共同版本回归可引用；客户端 UI、原生身份、终态与清理须有本客户端证据。更新本文的对应状态行，不向技术方案、指标文档或 README 复制第二份待办表。
+
+新任务从本契约的当前进度继续：先核对 Git/源码/发行和本机现场，再做当前未完成项；已通过的五题、Token 与报告不为整理文档重复运行。旧任务卡、SLOT 和 worktree 交接命令只用于历史追溯。用户给出的执行授权与范围继续按当前任务约定，不由历史档案追加确认流程。

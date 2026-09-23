@@ -1,5 +1,7 @@
 # G4-02 独立报告实现证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 ## 结论
 
 `report-general-e2e 0.2.0/operational` 已实现独立回传校验、聚合、同源 JSON/Markdown/Excel、资源覆盖与 CLI 结果适配。当前结论来自 macOS 开发机上的离线 fixture、Artifact Tool 实际工作簿和独立 Skill ZIP；未启动 AstronStudio、未调用真实 Codex/API Judge、未启动 Docker，不能据此声明 G4-03 或 Windows 真机通过。

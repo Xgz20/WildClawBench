@@ -1,5 +1,7 @@
 # WorkBuddy macOS General v4 收口与发行证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 记录日期：2026-09-21；验收标识 `WORKBUDDY-MACOS-GENERAL-20260921-V4`。本索引整理既有真实运行与迟到评分恢复产物，没有重新执行 Harness 或评分。
 
 ## 准入结论与身份
@@ -38,7 +40,7 @@ Colleague leave 原评分线程在 deadline 后完成；用户已授权恢复，
 
 ## 最终报告与生产包
 
-[最终报告目录](/Users/gzx/debug-workspace/e2e-evaluate/workbuddy-macos-general-e2e/acceptance-20260921-v4/batch/workbuddy-general-acceptance-20260921-v4/reports/workbuddy-macos-general-20260921-v4-recovered-5of5) 下为同源 JSON、Markdown、四 Sheet Excel、四张预览、`previews/excel-validation.json` 和 `receipts/report-receipt.json`。原收口轮次已检查关键范围、公式错误与预览；本次仅重读数据和核对文件哈希，不宣称重新完成视觉验收。
+[最终报告目录](../../../../../../../../../../../../debug-workspace/e2e-evaluate/workbuddy-macos-general-e2e/acceptance-20260921-v4/batch/workbuddy-general-acceptance-20260921-v4/reports/workbuddy-macos-general-20260921-v4-recovered-5of5) 下为同源 JSON、Markdown、四 Sheet Excel、四张预览、`previews/excel-validation.json` 和 `receipts/report-receipt.json`。原收口轮次已检查关键范围、公式错误与预览；本次仅重读数据和核对文件哈希，不宣称重新完成视觉验收。
 
 | 文件 | SHA-256 |
 | --- | --- |
@@ -55,4 +57,4 @@ Colleague leave 原评分线程在 deadline 后完成；用户已授权恢复，
 
 **新包仅完成目录与 suite 校验，没有用它重新跑一轮五题。** v4 保留原冻结执行/评分身份，当前 orchestrator 仅用于已授权恢复。首个正式批次先做 3–5 个 L1 canary，不能将原 v4 真机结论自动升级为新包逐字节验收。
 
-原提交验证：orchestration/layout 24/24，packaging 18/18，共 42/42；不是本次文档整理重跑的测试。当前开发顺序与后续事项只在 [接续入口](../../README.md)维护。
+原提交验证：orchestration/layout 24/24，packaging 18/18，共 42/42；不是本次文档整理重跑的测试。当前开发顺序与后续事项只在 [接续入口](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)维护。

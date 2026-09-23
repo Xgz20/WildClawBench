@@ -1,5 +1,7 @@
 # G2-06 AstronStudio macOS 串行队列与恢复证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 ## 结论
 
 2026-09-18 在 AstronStudio 3.3.1、GLM-5.2 / High / 完全访问、macOS 26.6.2 x86_64 上，使用 `execute-general-e2e` `0.4.0` 的独立 Skill ZIP 完成四个固定 smoke 的单槽串行执行。四题均为 `COMPLETED`，各自只有一个显式登记 attempt，`dispatch_attempt_count=1`，queue receipt 的四项完整性检查全部为 true。

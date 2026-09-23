@@ -1,6 +1,6 @@
 # QwenWork macOS General E2E 只读能力与字段映射证据
 
-> 历史快照：本文的版本、结果和“当前/下一步”仅对应所列日期及 revision，保留原结论，不作为现在的执行指令。最新进度见[接续入口](../../README.md#qwenwork-剩余生产准入事项)，后续三路、Token 与加固证据见[五题及 r21–r35 记录](../qwenwork-macos-five3-20260923/README.md)。
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
 
 日期：2026-09-19（Asia/Shanghai）。任务：`MAC-QWENWORK-GENERAL`。范围：P1 只读 probe、原生身份/终态/轨迹/资源字段映射、CB-A 状态 fixture；不包含 Prompt 发送、客户端启动/重启、UI 操作、正式 collect、评分、并发或发行验收。
 

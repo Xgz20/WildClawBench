@@ -1,5 +1,7 @@
 # G2-02 AstronStudio macOS 单题执行证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 ## 结论
 
 2026-09-17 在 AstronStudio 3.3.1、GLM-5.2、High、完全访问、macOS 26.6.2/x86_64 上真实执行 S1 与 S4。两题均只发送一次 Prompt，并绑定唯一 `thread_id / turn_id / provider session_id / cwd` 后取得原生 `completed` 终态。S1 覆盖文件修改任务；S4 覆盖不要求 Workspace 变化的纯回复任务。

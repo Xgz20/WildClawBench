@@ -1,5 +1,7 @@
 # G2-03 AstronStudio 轨迹归档、标准化与检索证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 ## 结论
 
 2026-09-18 在已完成的 AStudio 3.3.1 / GLM-5.2 / High / 完全访问真机 attempt 上，使用 `collect-general-e2e` `0.2.0` 的轨迹子能力完成只读归档：

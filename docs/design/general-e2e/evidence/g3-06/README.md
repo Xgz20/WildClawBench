@@ -1,5 +1,7 @@
 # G3-06 验收证据索引
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 ## 结论
 
 - `score-general-e2e 0.6.0/interface_only` 可从通过 `verify-score` 的终态源 attempt 创建独立重评分 attempt，冻结 lineage 并重建干净 runtime。

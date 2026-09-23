@@ -1,5 +1,7 @@
 # WorkBuddy macOS General 五题三路执行验收
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 记录日期：2026-09-21。验收标识：`WORKBUDDY-MACOS-GENERAL-THREE-SLOT-20260921-V8`。
 
 指标更正：本页保留初始 collector/report 的冻结结果。其中“请求数 5、Token unavailable”已由[原生 JSONL 补采](../workbuddy-jsonl-metrics-20260921/README.md)更正为模型响应 21、总 Token 773465；执行与评分证据原样保留，请使用补采索引中的新版报告。

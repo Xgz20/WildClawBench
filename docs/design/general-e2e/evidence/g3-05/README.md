@@ -1,5 +1,7 @@
 # G3-05 API Judge 验收证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 2026-09-18 在 macOS 开发机完成 `api-judge-v1` 的三种 transport、独立审计和真实 API smoke。`score-general-e2e` 升级为 `0.5.0/interface_only`，`orchestrate-general-e2e` 升级为 `0.4.0/interface_only`。General E2E 评分仍不依赖 Docker。
 
 ## 已实现边界

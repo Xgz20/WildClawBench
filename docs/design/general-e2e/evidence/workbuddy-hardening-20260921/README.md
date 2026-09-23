@@ -1,5 +1,7 @@
 # WorkBuddy macOS General v2 加固 canary
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 日期：2026-09-21（Asia/Shanghai）。本证据只覆盖 WorkBuddy macOS x86_64 的 5 题 canary，不是 60 题全量评测，也不扩大 Windows、Apple Silicon 或其他 Harness 的支持范围。
 
 ## 冻结身份

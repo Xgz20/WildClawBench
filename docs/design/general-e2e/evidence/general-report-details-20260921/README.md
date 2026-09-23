@@ -1,5 +1,7 @@
 # 用例对比明细与单元评分详情
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 2026-09-21，直接在 `feature/astroncode-eval` 完成。源码提交 `89d13d0657ffecf9d26117ec2969403b44d47b62`，report Skill `0.5.0`。本轮只读取已有 v8 冻结回传和评分，未启动 Harness、发送 Prompt、重判或 push。
 
 ## 本次变化

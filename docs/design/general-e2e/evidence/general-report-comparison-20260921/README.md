@@ -1,5 +1,7 @@
 # General 单元对比报告与效率指标
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 2026-09-21，在 `feature/astroncode-eval` 串行完成。仅更新报告层，复用 WorkBuddy v8 冻结回传，未启动 Harness、发送 Prompt、重做评分或 push。
 
 ## 实现与发行

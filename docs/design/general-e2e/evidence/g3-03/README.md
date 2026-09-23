@@ -1,5 +1,7 @@
 # G3-03 Codex 评分任务编排证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 ## 结论
 
 2026-09-18 在 macOS 开发机上完成 `orchestrate-general-e2e` `0.2.0/interface_only` 的 Codex Desktop 项目注册与可恢复单题任务编排子能力。控制器可以从正式 execution record 和独立 scoring ZIP 创建每题私有评分 attempt，冻结 Judge 配置，并持久化 project、thread、host、cursor、wait sequence 和 deadline。

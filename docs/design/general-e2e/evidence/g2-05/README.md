@@ -1,5 +1,7 @@
 # G2-05 AstronStudio 候选冻结与正式执行回执证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 ## 结论
 
 2026-09-18 使用 `collect-general-e2e` 正式收口器，对 G2-02 已完成、G2-03/G2-04 已归档轨迹与资源指标的 S1、S4 真机 attempt 完成任务进程零残留确认、5 秒 Workspace 静默、exact-all 候选冻结、证据清单和正式 collect receipt。两题均通过 `--verify-only`，正式 execution record 与 collect receipt 也通过 General E2E 契约验证。

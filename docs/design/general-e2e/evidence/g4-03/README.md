@@ -1,5 +1,7 @@
 # G4-03 AstronStudio macOS 五题三槽完整闭环证据
 
+> 证据边界：本文只记录所列日期、批次和 revision 的事实，保留原失败与未知项。当前集成进度和下一步统一见[集成契约](../../../e2e/端到端自动化评测Harness接入契约.md#integration-progress)，不从本文旧“当前/下一步”推导最新支持状态。
+
 ## 结论
 
 2026-09-18 至 2026-09-19，AstronStudio macOS 五题验收批次完成执行、证据收口、自动规则、三路 Codex 语义评分、确定性合分、submission、回传导入及 JSON/Markdown/Excel 报告。五题执行和评分均有效，`evaluation_error=0`、`unscored=0`，有效均分为 `0.9425`。
