@@ -1183,3 +1183,39 @@ for (const [kind, policy, expectSkip] of [["clarification", "skip-question-card"
     else assert.ok(result.journal.events.some((event) => event.type === "USER_AUTHORIZED_CLARIFICATION_SKIPPED"));
   });
 }
+
+for (const outcome of ["completed", "persistent-conflict", "different-session", "new-approval"]) {
+  test(`stream snapshot recheck handles ${outcome} once without resending or relaxing identity`, async () => {
+    const config = makeConfig({ resume: true });
+    const initial = createQwenAttemptJournal({ identity: config.identity, dataset: config.dataset,
+      taskRoot: config.task_root, candidateWorkspace: config.candidate_workspace, prompt: config.prompt,
+      configDigest: config.config_digest, now: "2026-09-19T10:00:00Z" });
+    recordQwenDispatchIntent(initial, { project: project(), configuration: configuration(), baseline: [], now: "2026-09-19T10:00:01Z" });
+    reserveQwenDispatch(initial, { now: "2026-09-19T10:00:02Z", reservationId: "reservation" });
+    markQwenDispatchReturned(initial, { now: "2026-09-19T10:00:03Z", method: "click" });
+    confirmQwenDispatchBinding(initial, { session: session(), promptEvidence: { verified: true, prompt_sha256: PROMPT_SHA }, now: "2026-09-19T10:00:04Z" });
+    let stored = initial;
+    let queries = 0;
+    const forbidden = async () => { throw new Error("unexpected dispatch/preparation"); };
+    const result = await runQwenGeneralAttempt(config, {
+      withAttemptLock: async (_config, fn) => fn(), now: clock(),
+      readJournal: async () => structuredClone(stored), writeJournal: async (_path, value) => { stored = structuredClone(value); },
+      prepareUi: forbidden, verifyPreparedUi: forbidden, fillPrompt: forbidden, dispatchPrompt: forbidden,
+      querySessions: async () => {
+        queries += 1;
+        if (queries === 1 || outcome === "persistent-conflict") return [{ ...session(), native_status: "running", stream_id: "active-stream" }];
+        return [outcome === "different-session" ? session("foreign") : session()];
+      },
+      verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA, match_count: 1 }),
+      inspectPendingInteraction: async () => ({ kind: queries > 1 && outcome === "new-approval" ? "approval" : "none" }),
+      observeUi: async () => ({ observed_at: "2026-09-19T10:01:00Z", target_session_verified: true, active_stream: false, stop_confirmed: true, conflicts: [] }),
+      writeBindingEvidence: async () => [{ path: "evidence/binding.json", sha256: "b".repeat(64), size: 10 }],
+    });
+    assert.equal(queries, 2);
+    assert.equal(result.journal.events.filter((event) => event.type === "STREAM_OBSERVATION_RECHECK").length, 1);
+    assert.equal(result.journal.send.dispatch_attempt_count, 1);
+    assert.equal(result.journal.session.session_id, session().session_id);
+    assert.equal(result.journal.phase, outcome === "completed" ? "COMPLETED" : "NEEDS_ATTENTION");
+    if (outcome === "new-approval") assert.equal(result.journal.attention.code, "QWENWORK_PENDING_INTERACTION");
+  });
+}

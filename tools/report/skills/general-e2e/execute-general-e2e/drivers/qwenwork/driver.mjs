@@ -653,7 +653,7 @@ async function handlePendingInteraction(config, state, dependencies, session) {
   }
 }
 
-async function observeBoundAttempt(config, state, dependencies) {
+async function observeBoundAttempt(config, state, dependencies, recheckStreamMismatch = true) {
   const session = await selectAttemptSession(config, state, dependencies);
   if (!session) {
     return persistAttention(
@@ -706,6 +706,19 @@ async function observeBoundAttempt(config, state, dependencies) {
   // the queue reobserve it rather than treating that stale row as a conflict.
   if (interaction?.skipped) return { journal: state, execution_state: null };
   const ui = await dependencies.observeUi(session, state);
+  if (recheckStreamMismatch && ui.target_session_verified === true
+      && typeof ui.active_stream === "boolean" && Boolean(session.stream_id) !== ui.active_stream) {
+    // The turn can finish while transcript/UI reads are in progress. Requery
+    // the same native binding once; persistent conflicts still fail closed.
+    const at = dependencies.now();
+    state.events.push({ type: "STREAM_OBSERVATION_RECHECK", at, details: {
+      session_id: session.session_id, native_status: session.native_status,
+      database_active_stream: Boolean(session.stream_id), ui_active_stream: ui.active_stream,
+    } });
+    state.updated_at = at;
+    await dependencies.writeJournal(config.state_file, state);
+    return observeBoundAttempt(config, state, dependencies, false);
+  }
   const terminalObservation = {
     ...ui,
     binding_consistent: Boolean(
