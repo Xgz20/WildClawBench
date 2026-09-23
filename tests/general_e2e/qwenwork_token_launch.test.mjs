@@ -86,6 +86,7 @@ test("exact listener inspection never infers token exposure from an unrelated co
   const runCommand = async (_command, args) => {
     if (args.includes("lstart=")) return { code: 0, stdout: "Wed Sep 23 13:00:00 2026\n" };
     if (args.includes("command=")) return { code: 0, stdout: `${APP_PATH}/Contents/MacOS/QwenWorkCN --remote-debugging-port=9250\n` };
+    if (args.includes("pid=")) return { code: 0, stdout: "101\n" };
     return { code: 0, stdout: "PID COMMAND\n101 QODERCN_EXPOSE_TOKEN_USAGE=1\n" };
   };
   const identity = await readQwenTokenProcess(101, { appPath: APP_PATH, port: 9250, runCommand });
@@ -93,4 +94,14 @@ test("exact listener inspection never infers token exposure from an unrelated co
   assert.equal(sameQwenTokenProcess(identity, { ...identity, pid: 102 }), false);
   await assert.rejects(readQwenTokenProcess(101, { appPath: APP_PATH, port: 9240, runCommand }),
     /PROCESS_IDENTITY_MISMATCH/u);
+});
+
+test("process inspection treats exit during ps reads as absent but keeps live identity mismatch closed", async () => {
+  const runCommand = async (_command, args) => {
+    if (args.includes("lstart=")) return { code: 0, stdout: "Wed Sep 23 13:00:00 2026\n" };
+    if (args.includes("command=")) return { code: 0, stdout: "\n" };
+    if (args.includes("pid=")) return { code: 1, stdout: "" };
+    return { code: 0, stdout: "PID COMMAND\n" };
+  };
+  assert.equal(await readQwenTokenProcess(101, { appPath: APP_PATH, port: 9250, runCommand }), null);
 });

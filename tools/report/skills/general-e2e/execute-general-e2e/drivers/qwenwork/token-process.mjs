@@ -21,8 +21,14 @@ export async function readQwenTokenProcess(pid, { appPath, port, runCommand = ru
     runCommand("/bin/ps", ["-p", String(pid), "-o", "command="], { capture: true, allowFailure: true }),
     runCommand("/bin/ps", ["eww", "-p", String(pid)], { capture: true, allowFailure: true }),
   ]);
+  const stillExists = async () => {
+    const current = await runCommand("/bin/ps", ["-p", String(pid), "-o", "pid="],
+      { capture: true, allowFailure: true });
+    return current.code === 0 && String(current.stdout || "").trim() === String(pid);
+  };
   if (started.code !== 0 && commandResult.code !== 0) return null;
   if (started.code !== 0 || commandResult.code !== 0 || environmentResult.code !== 0) {
+    if (!(await stillExists())) return null;
     throw new Error("QWEN_TOKEN_PROCESS_INSPECTION_INCOMPLETE");
   }
   const startIdentity = String(started.stdout || "").trim();
@@ -30,6 +36,7 @@ export async function readQwenTokenProcess(pid, { appPath, port, runCommand = ru
   const executable = expectedExecutable(appPath);
   if (!startIdentity || !command.startsWith(`${executable} `)
       || !command.split(/\s+/u).includes(`--remote-debugging-port=${port}`)) {
+    if (!(await stillExists())) return null;
     throw new Error("QWEN_TOKEN_PROCESS_IDENTITY_MISMATCH");
   }
   const exposure = String(environmentResult.stdout || "")
