@@ -6,6 +6,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import {
+  activeSessionArgs,
   parseBatchArgs,
   runQwenWorkBatch,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/batch.mjs";
@@ -16,6 +17,19 @@ import {
 
 const QUEUE_TASKS = ["one", "two", "three", "four", "five"];
 const PROBE = "probe.json";
+
+test("queue observation allow-list retains only sent queue-owned attention bindings", () => {
+  const args = activeSessionArgs({ tasks: [
+    { phase: "RUNNING", dispatch_attempt_count: 1, session_id: "session-a", conversation_id: "conversation-a" },
+    { phase: "NEEDS_ATTENTION", dispatch_attempt_count: 1, session_id: "session-b", conversation_id: "conversation-b" },
+    { phase: "NEEDS_ATTENTION", dispatch_attempt_count: 0, session_id: "stale-unsent" },
+    { phase: "PENDING", dispatch_attempt_count: 0, session_id: null },
+  ] });
+  assert.deepEqual(args, [
+    "--allowed-active-session-id", "session-a", "--allowed-active-conversation-id", "conversation-a",
+    "--allowed-active-session-id", "session-b", "--allowed-active-conversation-id", "conversation-b",
+  ]);
+});
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");

@@ -10,7 +10,7 @@ import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs"
 import { calculateQwenCanaryConfigDigest } from "./driver.mjs";
 
 export const QWENWORK_QUEUE_SCHEMA = "wildclawbench.general-e2e-qwenwork-execution-queue/v1";
-export const QWENWORK_QUEUE_VERSION = "0.2.2";
+export const QWENWORK_QUEUE_VERSION = "0.2.3";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 const TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
@@ -396,8 +396,13 @@ async function refreshProbe(config, destination) {
   return { path: destination, sha256: sha256(content) };
 }
 
-function activeSessionArgs(state) {
-  return state.tasks.filter((row) => row.phase === "RUNNING")
+export function activeSessionArgs(state) {
+  // A queue-owned task can briefly need attention while its native session is
+  // still running. Keep its frozen binding on the observation allow-list so
+  // other already-sent tasks can be inspected without treating it as foreign.
+  // This never releases a slot or permits another dispatch past attention.
+  return state.tasks.filter((row) => row.dispatch_attempt_count === 1
+    && ["RUNNING", "NEEDS_ATTENTION"].includes(row.phase))
     .flatMap((row) => [
       ...(row.session_id ? ["--allowed-active-session-id", row.session_id] : []),
       ...(row.conversation_id ? ["--allowed-active-conversation-id", row.conversation_id] : []),
