@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
 import { createHash, randomUUID } from "node:crypto";
-import { lstat, open, readFile, readdir, realpath, stat, writeFile, mkdir, rename, rm } from "node:fs/promises";
+import { lstat, open, readFile, readdir, realpath, writeFile, mkdir, rename, rm } from "node:fs/promises";
 import { hostname } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 import { buildQwenGeneralExecutionState } from "./execution-state.mjs";
+import { preflightQwenExecutionPaths } from "./path-preflight.mjs";
 import {
   applyQwenExecutionProjection,
   assertNoSymlinkPath,
@@ -100,6 +101,7 @@ export function calculateQwenCanaryConfigDigest(config) {
   delete copy.allowed_active_session_ids;
   delete copy.allowed_active_conversation_ids;
   delete copy.prepare_only;
+  delete copy.path_preflight;
   if (copy.prompt) delete copy.prompt.content;
   return sha256(JSON.stringify(stableValue(copy)));
 }
@@ -296,12 +298,14 @@ export function parseDriverArgs(argv) {
 }
 
 export async function loadQwenCanaryConfig(path, options = {}) {
+  await assertNoSymlinkPath(path, { requireLeaf: true });
   const config = JSON.parse(await readFile(resolve(path), "utf8"));
   assertQwenCanaryConfig(config, options);
   const probePath = options.initialProbePath
     ? absolutePath(options.initialProbePath, "initial_probe.path")
     : absolutePath(config.control.probe_path, "control.probe_path");
   const probeSha256 = options.initialProbeSha256 || config.control.probe_sha256;
+  await assertNoSymlinkPath(config.prompt.path, { requireLeaf: true });
   const [prompt, probeContent] = await Promise.all([
     readFile(config.prompt.path, "utf8"),
     readFile(probePath),
@@ -318,6 +322,7 @@ export async function loadQwenCanaryConfig(path, options = {}) {
     requireIdle: options.resume !== true && !options.managedQueueId,
   });
   let recoveryProbe = null;
+  let pathProbe = probe;
   if (options.resume === true) {
     const recoveryProbePath = absolutePath(options.resumeProbePath, "resume_probe.path");
     const recoveryProbeSha256 = requiredString(options.resumeProbeSha256, "resume_probe.sha256");
@@ -329,6 +334,7 @@ export async function loadQwenCanaryConfig(path, options = {}) {
     if (sha256(recoveryContent) !== recoveryProbeSha256) throw new Error("QWENWORK_RESUME_PROBE_DIGEST_MISMATCH");
     const recovery = JSON.parse(recoveryContent.toString("utf8"));
     assertQwenCanaryProbe(recovery, config, Date.now(), { requireFresh: true, requireIdle: false });
+    pathProbe = recovery;
     recoveryProbe = {
       verified: true,
       path: recoveryProbePath,
@@ -337,8 +343,11 @@ export async function loadQwenCanaryConfig(path, options = {}) {
       active_or_pending_count: Number(recovery.native_state?.database?.active_or_pending_count),
     };
   }
-  const workspace = await stat(config.candidate_workspace);
-  if (!workspace.isDirectory()) throw new Error("QWENWORK_CANARY_WORKSPACE_NOT_DIRECTORY");
+  const encoding = pathProbe.runtime?.identity?.path_encoding;
+  if (!encoding?.source_sha256 || encoding.source_sha256 !== pathProbe.runtime?.identity?.runtime_sha256) {
+    throw new Error("QWENWORK_PATH_ENCODING_RUNTIME_MISMATCH");
+  }
+  const pathPreflight = await preflightQwenExecutionPaths(config, encoding);
   return {
     ...config,
     task_root: resolve(config.task_root),
@@ -353,6 +362,7 @@ export async function loadQwenCanaryConfig(path, options = {}) {
     },
     prompt: { ...config.prompt, path: resolve(config.prompt.path), content: prompt },
     recovery_probe: recoveryProbe,
+    path_preflight: pathPreflight,
   };
 }
 
@@ -794,6 +804,11 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
     await dependencies.writeJournal(config.state_file, state);
   }
 
+  if (config.path_preflight?.verified === true) {
+    state.events.push({ type: "PATH_PREFLIGHT_VERIFIED", at: dependencies.now(), details: config.path_preflight });
+    await dependencies.writeJournal(config.state_file, state);
+  }
+
   if (
     config.resume === true
     && state.send.dispatch_attempt_count === 0
@@ -997,6 +1012,7 @@ export async function verifyQwenSessionPromptEvidence({ traceRoot, session, prom
 }
 
 export async function createLiveDependencies(config) {
+  if (config.path_preflight?.verified !== true) throw new Error("QWENWORK_PATH_PREFLIGHT_REQUIRED");
   const { chromium } = await import("playwright-core");
   const timeout = Number(config.control.timeout_ms || 30_000);
   const browser = await chromium.connectOverCDP(config.client.endpoint, { timeout });

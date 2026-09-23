@@ -26,7 +26,7 @@ QwenWork 三题单槽正式 canary 已在 `1f018446a5a0be60487c40405ce6f9863b2d2
 
 原三条并行开发的已接收代码及其控制分支提交映射均已进入当前工作区。Qwen selector/SQLite 加固源 `993cdc5` 对应控制提交 `f0bf24f`；collector/metadata 为 `acfc7a1`、`5263890`、`679a1e3`、`82cd3e1`。Doubao Web finalizer/bridge/route/metrics 为 `9bb30aa`、`694536d`、`07b31b7`、`e2c1d9e`。后续从当前树继续，不能因源提交不是祖先再次 cherry-pick；旧 worktree 仅作审计，暂不删除。
 
-当前七个 General Skill：prepare `0.2.0`、execute `0.10.24`、collect `0.7.6`、orchestrate `0.9.5`、score `0.8.2`、report `0.5.1`、run `0.5.2`。execute 增加 QwenWork 队列项目预建、SQLite 在线备份、延迟 session_id 同 attempt 绑定，并修复预建项目发送前的新任务页导航；用户授权的追问“跳过”通过显式队列开关启用。`0.10.15` 加入发送前阶段时间事件；`0.10.16` 增加精确 9250 监听进程的 Token 开关安全启动与冻结探针门禁。collect `0.7.6` 对 QwenWorkCN 1.2.0 新会话的精确 runtime/开关与非零逐响应 usage 对账后才发布四个核心 Token，旧 masked 批次仍保持不可用；内容行 session/cwd 门禁不变。已发布的旧发行与验收结果仍绑定各自源码 revision；后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准。
+当前七个 General Skill：prepare `0.2.0`、execute `0.10.25`、collect `0.7.6`、orchestrate `0.9.5`、score `0.8.2`、report `0.5.1`、run `0.5.2`。execute 增加 QwenWork 队列项目预建、SQLite 在线备份、延迟 session_id 同 attempt 绑定，并修复预建项目发送前的新任务页导航；用户授权的追问“跳过”通过显式队列开关启用。`0.10.15` 加入发送前阶段时间事件；`0.10.16` 增加精确 9250 监听进程的 Token 开关安全启动与冻结探针门禁。collect `0.7.6` 对 QwenWorkCN 1.2.0 新会话的精确 runtime/开关与非零逐响应 usage 对账后才发布四个核心 Token，旧 masked 批次仍保持不可用；内容行 session/cwd 门禁不变。已发布的旧发行与验收结果仍绑定各自源码 revision；后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准。
 
 当前报告发行与产物见[用例对比及单元评分详情证据](evidence/general-report-details-20260921/README.md)。`89d13d0` 在既有[单元对比报告](evidence/general-report-comparison-20260921/README.md)基础上，将工具数移到请求数后，明细改为每题各单元得分并列，并增加每单元评分详情，共九张公共表加每单元一张详情；v8 为 10 Sheet。题面、规则和判词读取 SHA 绑定的冻结评分包，缺失不从当前任务源码补齐。总览不显示成本与超时数，双耗时与无根因领导版 Markdown 保留。效率明细按普通输入、缓存命中输入、缓存写入输入、输出四类展示，保留总 Token、平均 Token 和命中率；v8 平均 Token 154693、命中率 91.4086%，缓存写入与精确普通输入仍未知。分类/难度/模态、七维评分和工具次数已接入，工具质量比率暂缓。此次只更新报告，没有新增 Harness 或评分执行，原生三路并发结论不变。
 
@@ -78,7 +78,7 @@ v2 配置 `run_slots=3`，5 题执行和正式 collect 均通过，原生请求�
 2. r23 在新客户端进程启用 `QODERCN_EXPOSE_TOKEN_USAGE=1` 后，对五题逐响应与主 turn 完整对账，输入/输出/总 Token/Cache Read 均 5/5 observed；报告总 Token 1,611,922。旧 r20/r21 隐藏零值不可回填。Cache Write、推理 Token、HTTP 尝试和实际模型 ID 仍未知。
 3. 后续裁判配置固定为 `gpt-6-sol/high`；原 r20 astra/high 评分保留为历史 submission，不覆盖它。题目 `timeout_seconds` 不限制 QwenWork 或评分 thread。
 4. r27 使用 `9f94ef7` 新发行，在发送临界中断队列与 Driver 后，精确归档两把锁，恢复原 attempt/session，发送和 Prompt 匹配数均为 1；正式 collector/finalizer/verify-only PASS。r26 的“队列完成但子任务 DISPATCHING”无效回执保留，已修复，不当作通过证据。
-5. r28 独立技术问卷验证 CDP 断连安全暂停、原 session 重连、自动页脚“跳过”及原生最终回复；execute `0.10.23` 修复临时标题缺失时的身份保留，并按 `user-question-footer` 排除同名页头箭头。r29 同源码新 attempt 已复验临时身份、断连重连和跳过终态。`f07d0b3` / 0.10.24 消除跳过后的旧状态冲突，r30 新批次自动 RUNNING→COMPLETED、一次跳过、一次发送、人工 resume=0；正式 release 为 `qwenwork-question-f07d0b3`。
+5. r28 独立技术问卷验证 CDP 断连安全暂停、原 session 重连、自动页脚“跳过”及原生最终回复；execute `0.10.23` 修复临时标题缺失时的身份保留，并按 `user-question-footer` 排除同名页头箭头。r29 同源码新 attempt 已复验临时身份、断连重连和跳过终态。`f07d0b3` / 0.10.25 消除跳过后的旧状态冲突，r30 新批次自动 RUNNING→COMPLETED、一次跳过、一次发送、人工 resume=0；正式 release 为 `qwenwork-question-f07d0b3`。
 6. [五题证据中的 CV01–CV17/GV01–GV08 表](evidence/qwenwork-macos-five3-20260923/README.md#声明范围与-cvgv-符合性记录)已展开。优先补 CV17 客户端编码后的路径预算预检、CV08 未知授权真机暂停、CV09 TERM→KILL/停不掉/迟到写入分支。r24 受控真实进程注入已满足对应 TERM 与无关进程保护验证，不增加“自然残留复现”门禁。实际模型 ID 和可选未知指标不阻塞评分。Codex 重启按用户要求暂缓，Apple Silicon/Windows/60 题/无人值守另验。
 7. 2026-09-23 本轮公共回归一度因本机磁盘耗尽报 `ENOSPC`，当时只读检查剩余约 150 MiB；之后外部可用空间恢复至约 2.1 GiB，失败单项已通过重验。已有故障证据、冻结候选、发行与报告均保留。
 

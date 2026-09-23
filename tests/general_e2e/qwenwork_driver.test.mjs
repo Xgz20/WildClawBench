@@ -151,6 +151,9 @@ function probeAt(probedAt, activeOrPendingCount = 0) {
     driver: { harness: "qwenwork", platform: "macos" },
     app: { bundle_id: "cn.qwenwork.desktop.mac", identity_verified: true },
     ready_for_read_only_mapping: true,
+    runtime: { identity: { runtime_sha256: "a".repeat(64), path_encoding: {
+      verified: true, algorithm: "qoder-ascii-prefix-djb2-xor/v1", prefix_chars: 200, source_sha256: "a".repeat(64),
+    } } },
     native_state: {
       database: { quick_check: "ok", active_or_pending_count: activeOrPendingCount },
     },
@@ -453,6 +456,7 @@ test("resume uses a distinct fresh read-only probe without changing the frozen c
     const resumeProbePath = join(root, "probe-resume.json");
     const configPath = join(root, "config.json");
     await mkdir(workspace);
+    await mkdir(join(root, "trace"));
     const prompt = "fixture prompt";
     await writeFile(promptPath, prompt, "utf8");
     const oldTime = new Date(Date.now() - 60 * 60 * 1_000).toISOString();

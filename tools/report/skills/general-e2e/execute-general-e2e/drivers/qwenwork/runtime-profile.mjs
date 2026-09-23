@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { lstat, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { inspectQwenProjectEncoding } from "./path-preflight.mjs";
 
 export const QWENWORK_DRIVER_MACOS_1_0_5_PROFILE = Object.freeze({
   id: "qwenwork-macos-1.0.5-qoder-cache-inclusive-v1",
@@ -70,5 +71,6 @@ export async function inspectDriverRuntimeIdentity({
     sdk_version: typeof packageJson.version === "string" ? packageJson.version : null,
     runtime_size: runtimeFile.info.size,
     runtime_sha256: createHash("sha256").update(runtimeFile.bytes).digest("hex"),
+    path_encoding: inspectQwenProjectEncoding(runtimeFile.bytes.toString("utf8")),
   };
 }
