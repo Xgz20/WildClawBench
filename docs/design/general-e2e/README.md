@@ -30,7 +30,7 @@ QwenWork 三题单槽正式 canary 已在 `1f018446a5a0be60487c40405ce6f9863b2d2
 
 当前报告发行与产物见[用例对比及单元评分详情证据](evidence/general-report-details-20260921/README.md)。`89d13d0` 在既有[单元对比报告](evidence/general-report-comparison-20260921/README.md)基础上，将工具数移到请求数后，明细改为每题各单元得分并列，并增加每单元评分详情，共九张公共表加每单元一张详情；v8 为 10 Sheet。题面、规则和判词读取 SHA 绑定的冻结评分包，缺失不从当前任务源码补齐。总览不显示成本与超时数，双耗时与无根因领导版 Markdown 保留。效率明细按普通输入、缓存命中输入、缓存写入输入、输出四类展示，保留总 Token、平均 Token 和命中率；v8 平均 Token 154693、命中率 91.4086%，缓存写入与精确普通输入仍未知。分类/难度/模态、七维评分和工具次数已接入，工具质量比率暂缓。此次只更新报告，没有新增 Harness 或评分执行，原生三路并发结论不变。
 
-2026-09-21 报告跨 Harness 只读复核：使用独立 report `0.5.0` 对 AstronStudio 已有批次 `general-macos-current-smoke-20260919-141301` 执行输入验证与内存聚合，通过；2/2 valid、均分 0.9125 保持不变，两题题面/工具轨迹完整，生成用例对比与 `评分详情_Spark X2.5@AstronStudio` 数据。没有重跑 Harness/Judge，也没有重生成该批 Excel。报告展示与评分元数据读取是公共链路；WorkBuddy 专有代码仅用于其原生指标补采。QwenWork collector 输出公共契约，但尚无真实完整回传可做相同验证，不能由报告支持推导其执行链路已经可用。此次改动范围是 General 报告，Web 报告另行维护。
+2026-09-21 报告跨 Harness 只读复核：使用独立 report `0.5.0` 对 AstronStudio 已有批次 `general-macos-current-smoke-20260919-141301` 执行输入验证与内存聚合，通过；2/2 valid、均分 0.9125 保持不变，两题题面/工具轨迹完整，生成用例对比与 `评分详情_Spark X2.5@AstronStudio` 数据。没有重跑 Harness/Judge，也没有重生成该批 Excel。报告展示与评分元数据读取是公共链路；WorkBuddy 专有代码仅用于其原生指标补采。当时 QwenWork 尚无真实完整回传；后续 r21/r23 已完成各自的正式报告，见[五题证据](evidence/qwenwork-macos-five3-20260923/README.md)。该历史报告改动本身不构成 Qwen 执行验收。此次改动范围是 General 报告，Web 报告另行维护。
 
 本机 Python 使用 `/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python`；Node 测试启动 Python 子进程时同时设置 `PYTHON` 并将本工作区 `.venv/bin` 放到 PATH 前部，避免回落到旧系统 Python。各 Driver 使用自身 package-lock 安装依赖，不借用旧平台 worktree 的 node_modules。
 
@@ -80,8 +80,26 @@ v2 配置 `run_slots=3`，5 题执行和正式 collect 均通过，原生请求�
 4. r27 使用 `9f94ef7` 新发行，在发送临界中断队列与 Driver 后，精确归档两把锁，恢复原 attempt/session，发送和 Prompt 匹配数均为 1；正式 collector/finalizer/verify-only PASS。r26 的“队列完成但子任务 DISPATCHING”无效回执保留，已修复，不当作通过证据。
 5. r28 独立技术问卷验证 CDP 断连安全暂停、原 session 重连、自动页脚“跳过”及原生最终回复；execute `0.10.23` 修复临时标题缺失时的身份保留，并按 `user-question-footer` 排除同名页头箭头。r29 同源码新 attempt 已复验临时身份、断连重连和跳过终态。`f07d0b3` / 0.10.24 消除跳过后的旧状态冲突，r30 新批次自动 RUNNING→COMPLETED、一次跳过、一次发送、人工 resume=0；正式 release 为 `qwenwork-question-f07d0b3`。
 6. 本轮重要加固已验证：r31 发送前原始/编码路径预算、中文/空格与最长任务 ID/越限负例；r32 未知授权自动暂停、人工拒绝后原会话完成且恢复原权限；r33 正式 finalizer CLI 的持续残留拒绝、迟到写入拒绝、TERM→KILL、迟到子进程和冻结后漂移。见[CV/GV 证据表](evidence/qwenwork-macos-five3-20260923/README.md#声明范围与-cvgv-符合性记录)。
-7. 当前执行发行为 `qwenwork-hardening-190406c`，execute `0.10.27`；r35 新 attempt 验证终态快照复查和自动标题同步，RUNNING→COMPLETED、发送/匹配 1、复查 1，无人工恢复；Qwen Node 115/115、发行/布局 16/16 PASS。剩余 CV02/03/07/11/13/14 与 GV03/04/06 的部分异常分支继续做证据审计，完整接入保持 IN_PROGRESS。实际模型 ID 和可选未知指标不阻塞评分；Codex 重启暂缓，Apple Silicon/Windows/60 题/无人值守另验。
+7. 当前执行发行为 `qwenwork-hardening-190406c`，execute `0.10.27`；r35 新 attempt 验证终态快照复查和自动标题同步，RUNNING→COMPLETED、发送/匹配 1、复查 1，无人工恢复；Qwen Node 115/115、发行/布局 16/16 PASS。剩余七项见下表，其中锁屏/GUI 状态门禁需要补实现，其余按真机补测与证据审计收口；完整接入保持 IN_PROGRESS。实际模型 ID 和可选未知指标不阻塞评分；Codex 重启暂缓，Apple Silicon/Windows/60 题/无人值守另验。
 8. 2026-09-23 前轮公共回归一度因本机磁盘耗尽报 `ENOSPC`，当时只读检查剩余约 150 MiB；之后外部可用空间恢复至约 2.1 GiB，失败单项已通过重验。已有故障证据、冻结候选、发行与报告均保留。
+
+### QwenWork 剩余生产准入事项
+
+范围为 macOS Intel / QwenWorkCN 1.2.0 / 值守 / 默认三路。r31 路径预算、r32 未知授权、r33 关键进程收口、r35 终态/标题同步已验证，不再作为未完成项。下面七项区分实现缺口与验收证据缺口；不能把所有 PARTIAL 都解释为功能未实现。
+
+| 事项 | 类型 | 具体收口要求 | 对应记录 |
+| --- | --- | --- | --- |
+| 环境异常门禁 | 补实现并补测 | Qwen General probe/执行入口尚无显式锁屏或 GUI 会话状态检查，只有原生选目录时的前台焦点保护；补门禁，再验端口占用、陈旧端点、多安装和锁屏/未知状态 | CV02 |
+| 目标与配置防串题 | 客户端真机补测 | 同名不同 Workspace、发送前模型/权限漂移时拒绝发送；保留实际发送数 0 和原身份 | CV03 |
+| 异常终态 | 客户端真机补测 | 最终错误、中断/取消、未知状态与原生轨迹/正式回执逐项对账，不误报完成、不当作能力零分；工具被拒后完成和终态时差已覆盖 | CV07 |
+| 轨迹异常与必需证据 | 故障补测及证据审计 | 截断/乱序/重复/孤立结果/子代理混入的处理，以及缺必需轨迹时实际 grader 的拒绝证据 | CV11、GV03 |
+| 候选材料边界 | 材料验证及证据审计 | 缺文件、同名不同内容、Git/二进制/受限链接等；r33 冻结前后写入漂移已通过 | CV13、GV04 |
+| 评分结果发布中断 | 公共组件故障补测 | submission 发布窗口中断、原子发布与恢复；已有重复导入、冲突拒绝测试按同版本复用 | CV14 |
+| 报告分母核验 | 公共测试与 Qwen 回传接线审计 | 对齐已有有效零分/评测异常/未评分测试与正式回传、报告分母，保留有效性和缺失值语义 | GV06 |
+
+锁屏缺口依据：[Qwen probe](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/probe.mjs)、[执行入口](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/driver.mjs)和[原生文件夹选择器](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/select-folder.swift)；`frontmostApplication` 焦点检查不等于锁屏检测，共享组件存在能力也不等于本 Driver 已接入。
+
+先完成前三项；后四项优先引用同 revision/运行内容的公共测试与已有真实材料，只补缺失分支。成功的五题执行、Token、评分报告无需为文档收口重跑。实际模型 ID 和未支持的可选指标继续披露 unknown/null；Apple Silicon、Windows、60 题全量及无人值守重启不作为当前 Intel 值守范围的前置门槛。
 
 历史证据根：`/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-macos-general-e2e/`。SLOT04 未建 attempt，退出最终由用户确认；关闭库 probe 当时报 error 14，后续修复只有离线证据。本轮整理未操作客户端，不把历史“进程已退出”当作当前现场。
 
@@ -96,7 +114,7 @@ v2 配置 `run_slots=3`，5 题执行和正式 collect 均通过，原生请求�
 macOS 四个 Harness 达到声明范围的全链路准入后，使用冻结数据集和发行先做 canary，再进入实际批次；新客户端可以随已支持客户端分别形成评测结果。60 题全量是评测/扩容阶段，不要求先补齐双平台或无人值守才开始。
 
 - Windows：整体暂缓，macOS 四个 General 收口后再启动；先 AstronStudio，其他三个按需求串行。保留[Windows 实施清单](AstronStudio-Windows通用E2E开发启动包.md)，没有 Windows 真机证据就保持 NOT_RUN。
-- COMMON-CM01：General 报告已支持平均 Token、输入缓存命中率、任务/流程耗时和工具调用数；常规指标在各 Harness 的完整原生对账仍需分别验证。工具格式准确率/执行成功率/不确定占比本阶段暂缓，平均积分与统一异常率等未完成；[指标盘点](Web与通用E2E指标盘点及Harness可行性分析.md)是历史分析。已知小计、coverage、null 语义继续保留，不能把工具 completed 当成业务 success。
+- COMMON-CM01：General 报告已支持平均 Token、输入缓存命中率、任务/流程耗时和工具调用数；常规指标在各 Harness 的完整原生对账仍需分别验证。工具格式准确率/执行成功率/不确定占比本阶段暂缓，平均积分与统一异常率等未完成；[指标盘点](Web与通用E2E指标盘点及Harness可行性分析.md)按章节标注源码与运行证据，Qwen 部分已同步 r23 正式报告。已知小计、coverage、null 语义继续保留，不能把工具 completed 当成业务 success。
 - 默认三路执行是各新 Harness 单槽闭环后的接入目标；WorkBuddy 已验证三槽调度，原生三路重叠仍待验收。更高并发、无人值守恢复、Apple Silicon、裁判校准分别立项。
 
 ## 新会话 Prompt
@@ -105,9 +123,9 @@ macOS 四个 Harness 达到声明范围的全链路准入后，使用冻结数�
 继续 WildClawBench 的 macOS General E2E 串行开发。
 唯一修改目录：/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench
 分支：feature/astroncode-eval。
-先检查该工作区的 Git 状态，读取 docs/design/general-e2e/README.md，按其中“下一会话直接做什么”完成 WorkBuddy 并发回执/路径预检工程收尾与新包 canary，再进入 QwenWork General 的真实单题闭环。
+先检查 Git 状态，读取 docs/design/general-e2e/README.md 的“QwenWork 剩余生产准入事项”和最新 Qwen 证据。当前执行源码 190406c / execute 0.10.27，r21/r23 主链路和 r31–r35 重点加固已验；优先补锁屏/GUI 状态门禁、目标/配置负例和异常终态，再集中审计轨迹、材料、发布中断与报告分母，不重做已完成的单题/三路/Token 链路。
 新增或继续 Harness 集成时，读取统一接入契约 0.2 第1.9/1.10节，将 CV01–CV17 和 General GV 纳入本客户端任务，包含基础加固代码、反例测试及适用真机故障验证；基础必需项未通过不得关闭完整接入。
-如果 README 已记录该项完成，则执行其下一项；以仓库当前记录和本机证据为准，不依赖旧聊天。
+裁判固定 gpt-6-sol/high；追问按既有授权仅点唯一问卷“跳过”，未知授权安全暂停。以仓库当前记录和本机证据为准，历史 evidence 的“下一步”不作为新指令。QwenWork 收口后再按 README 转入下一 Harness。
 直接在当前工作区分支串行迭代，不创建平台任务、subagent 或 worktree，不申请桌面时段，不 push。
 每完成一个事项，补充真实证据和 README 对应进度，运行必要检查并单独提交中文 Conventional Commit。
 优先完成 macOS 四个 Harness 的 General 并开始评测，Windows 和 DoubaoWork Web 后续收口暂缓。

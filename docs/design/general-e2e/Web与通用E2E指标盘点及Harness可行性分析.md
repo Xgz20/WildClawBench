@@ -2,13 +2,13 @@
 
 核对日期：2026-09-23（Asia/Shanghai）。范围为本地 AstronStudio、WorkBuddy、QwenWork、DoubaoWork 的桌面 E2E 采集与报告。
 
-本文按当前实现更新，不再沿用 2026-09-19 的待开发清单。核对基线为 `feature/astroncode-eval` 的 `555e1ac` 及当时工作区中尚未提交的 QwenWork Token collector/normalizer/profile 修改。后者已有 r22 原生非零样本和采集结果，本文分别标明源码、采集样本和正式报告的证据边界；新提交或发行仍需按实际哈希复核。旧[指标证据清单](e2e-metrics-analysis-evidence-20260919.json)仅用于历史字段与积分线索追溯，不作为本次源码的哈希清单。
+本次将 QwenWork 部分同步至已提交的 Token 实现 `508d23c` / collect `0.7.6`、执行源码 `190406c` / execute `0.10.27`，并只读核对 r23 正式报告与回执。原 `555e1ac` 工作区/r22 盘点作为历史采集样本保留；其他 Harness 和 Web 部分沿用原核对范围，不据此次文档更新提升验收状态。旧[指标证据清单](e2e-metrics-analysis-evidence-20260919.json)仅用于历史字段与积分线索追溯，不作为本次源码的哈希清单。
 
 ## 1. 当前结论
 
 **General E2E 已按标准 WildClawBench 通用评测报告的单元、分组、检查点与逐题对比方式组织指标。** 总览、效率对比、分类、难度、Agent 能力、模态、工具调用、用例对比明细和各单元评分详情均已实现。平均 Token、缓存命中率、原生任务耗时与流程耗时已进入报告，不能再写成待派生指标。
 
-**QwenWork 可以统计 Token。** 当前 macOS 1.2.0 已通过客户端进程开关 `QODERCN_EXPOSE_TOKEN_USAGE=1` 暴露非零原生用量；General 工作区新增解析可在来源、运行时语义和请求/响应对账通过后输出输入、输出、总 Token 与缓存读取。开关关闭、来源未绑定或对账失败的旧/新样本仍保留缺失状态。Cache Write 尚未被验证，不能因日志默认值为 0 就报告“写入 0”。
+**QwenWork 可以统计 Token。** 当前 macOS 1.2.0 已通过客户端进程开关 `QODERCN_EXPOSE_TOKEN_USAGE=1` 暴露非零原生用量；General collect 0.7.6 在来源、运行时语义和请求/响应对账通过后输出输入、输出、总 Token 与缓存读取；r23 五题已完成正式采集、评分回传与 10 Sheet 报告，四字段覆盖均为 5/5。开关关闭、来源未绑定或对账失败的旧/新样本仍保留缺失状态。Cache Write 尚未被验证，不能因日志默认值为 0 就报告“写入 0”。
 
 | 指标 | General 当前实现 | Web 当前实现 |
 | --- | --- | --- |
@@ -119,7 +119,7 @@ General 总平均分 = Σ有效任务分 / 有效评分任务数 × 100
 | --- | --- | --- | --- | --- |
 | AstronStudio | Web/General 已有输入、输出、总 Token、缓存读取及可观测推理 Token；Cache Write 未暴露时为 null | General 请求数由 usage 增量与累计量对账推断；工具按原生 item/call 身份统计 | 原生 turn 与执行状态时间 | 未接入正式指标；历史源码有结算字段线索 |
 | WorkBuddy | Web/General 已接入原生 session JSONL；输入含缓存读取；Cache Write 和无原始证据的推理量未知 | 模型响应按 `providerData.messageId` 去重；工具按 `callId`，不是“一条用户消息=一次模型调用” | request 原生开始/完成与 Prompt 发送时间，均已支持 | 历史 SQLite 有 `session_usage.credit_json`，尚未映射到正式评测积分 |
-| QwenWork | 开关开启且来源/语义/对账通过后可统计 input/output/total/cache read；General 1.2.0 新采集已得到非零结果，Cache Write/推理未知 | 主 turn 的 `model.request.started` ID 和 `tool.requested` ID，响应参与 Token 对账 | `turn.finished.duration_ms` 与 Driver 流程时间 | 尚无正式字段 |
+| QwenWork | 开关开启且来源/语义/对账通过后可统计 input/output/total/cache read；r23 五题正式报告四字段均 5/5 observed，Cache Write/推理未知 | 主 turn 的 `model.request.started` ID 和 `tool.requested` ID，响应参与 Token 对账 | `turn.finished.duration_ms` 与 Driver 流程时间 | 尚无正式字段 |
 | DoubaoWork | 当前 Web parser 未取得可信 Token/cache；General 尚未接入 | Web 已能从显式 session trajectory 提取去重工具已知小计；完整分母、请求和工具成功率未验证 | 原生完整耗时未验证 | 历史 UI “消耗”仅为线索，单位/归属/结算未确认 |
 
 模型请求数小于工具调用数可以是正常现象：一次模型响应可同时发起多个工具调用。WorkBuddy 以模型响应 ID 计数，QwenWork 以原生请求事件计数，都不要求与工具次数相等；二者也不等于 HTTP 总尝试数。
@@ -181,14 +181,14 @@ SQLite 的 usage/上下文容量快照不能替代逐响应累积 Token；`.db-w
 
 开关必须注入 **QwenWork 客户端进程**，仅在控制终端设置环境变量并不能证明已运行客户端启用。General 已有 `token-launch.mjs`：只在空闲且客户端/CDP 身份确认后处理精确监听进程，使用 `open -na ... --env QODERCN_EXPOSE_TOKEN_USAGE=1 --args ...` 启动，并通过 `token-process.mjs` 回读对应进程的开关。队列的 `--require-token-exposure` 将此要求冻结进运行配置；probe 记录 `app.token_usage_exposure.status=enabled`。
 
-General 新增 Token 采集还检查：
+General collect 0.7.6 的 Token 采集还检查：
 
 1. 冻结 config/journal/task/attempt/trace root 一致，发送前 probe 的 SHA、时间和精确监听进程开关通过校验。
 2. 当前 profile 匹配 macOS 1.2.0、`@ali/qodercn-agent-sdk-next` 1.0.46、目标 assistant transcript 1.1.59 与 runtime SHA。profile 约束的是 Token 字段语义，不是对整个 Harness 执行设置客户端版本白名单。
 3. 只选唯一主 turn，模型 request/response ID 集合一致、无重复，Qoder 响应字段为合法计数且不是默认全零，缓存读取不超过输入。
 4. 逐响应输入/输出/缓存读取之和与 `turn.finished` 累计量一致；输入已含缓存读取，`total=input+output`。
 
-本次只读复算了 `qwenwork-macos-general-token-smoke-20260923-r22` 的 `01_Productivity_Flow_task_005_support_handoff`，核对 6 份指标来源文件的 SHA/size、11 个请求/响应 ID 及主 turn 汇总：
+早期盘点只读复算了 `qwenwork-macos-general-token-smoke-20260923-r22` 的 `01_Productivity_Flow_task_005_support_handoff`，核对 6 份指标来源文件的 SHA/size、11 个请求/响应 ID 及主 turn 汇总：
 
 | 指标 | r22 新采集结果 |
 | --- | ---: |
@@ -203,7 +203,21 @@ General 新增 Token 采集还检查：
 
 原件为本地调试根下 `qwenwork-macos-general-token-smoke-20260923-r22/worker/qwenwork-macos-general-token-smoke-20260923-r22__qwenwork-macos-x86-64/.general-e2e/collection-token/01_Productivity_Flow_task_005_support_handoff/resource-metrics.json`；调试根为 `/Users/gzx/debug-workspace/e2e-evaluate`，该文件 SHA-256 为 `b1d7882fa697031e31ac4fb4818afffd2bc731c12be441e2fa00b06801a35c0f`。
 
-这是新 Token 采集与对账证据；核对时 collector/normalizer/profile 尚有未提交修改，不能仅据此宣称正式发行、评分回传与 Excel 已全部更新。[r20 五题正式报告](evidence/qwenwork-macos-five3-20260923/README.md)中的 Token/cache 仍为 unavailable，已验证请求 23、工具 21、任务耗时 180.759 秒、流程耗时 617.23 秒。旧包与旧报告不改写；新能力应通过新采集/回传与报告留证。
+r22 对应首次采集验证，当时的未提交状态不再代表当前交付。`508d23c` 已发布 collect 0.7.6；r23 从该发行执行新五题，正式 collector/finalizer、评分、return/import 与 JSON/Markdown/Excel 闭环，固定裁判 `gpt-6-sol/high`，有效评分 5/5、均分 0.86。
+
+| 指标 | r23 五题正式报告 | 覆盖 |
+| --- | ---: | --- |
+| 输入 Token（含缓存） | 1,589,384 | 5/5 |
+| 输出 Token | 22,538 | 5/5 |
+| 总 Token | 1,611,922 | 5/5 |
+| 缓存读取输入 Token | 1,408,504 | 5/5 |
+| 模型请求数 / 工具调用数 | 35 / 34 | 5/5 |
+| 原生任务耗时 / 流程耗时（秒） | 355.659 / 1291.589 | 5/5 |
+| 缓存写入 / 推理 Token / HTTP 尝试数 | null / unavailable | 0/5 |
+
+正式报告位于调试根 `qwenwork-macos-general-five3-token-r23/prepared/qwenwork-macos-general-20260923-five3-token-r23/reports/qwenwork-r23-gpt6-sol-high/`；`general_e2e_report_data.json` SHA-256 为 `70a841bc07f4c7629da88532dcf6c2817e45d6752ea7d5e4c3c8aa263bd38417`。本次只读核对报告总量、5/5 coverage、`report-receipt.json` 的 completed/valid 及 Excel validation PASS；未重跑或重建报告。完整发行、回传 SHA 与证据见[五题记录](evidence/qwenwork-macos-five3-20260923/README.md)。
+
+[r20 五题历史报告](evidence/qwenwork-macos-five3-20260923/README.md)的 Token/cache 仍为 unavailable，请求 23、工具 21、任务耗时 180.759 秒、流程耗时 617.23 秒保持不变。r21 原生三路与 r23 Token 五题是不同批次，不能拼成同一批结论；最新执行器加固不会追溯改变旧指标或报告。
 
 Web 的 `drivers/metrics/qwen-profile.mjs` 当前登记的是 macOS 1.0.5、Windows 1.0.5.0/1.0.6.0 Profile；不能由 General 新增的 macOS 1.2.0 解析，推定 Web 同版本也已完成采集准入。未命中 Profile、掩码全零或对账不一致时，应分别保留 unavailable/masked/partial/unverified，而不是承诺“开了开关就无条件完整统计”。
 
@@ -253,8 +267,10 @@ Web 完成率要求执行 `completed` 或历史 `not_recorded`，且评分 `comp
 | [公共原生解析器](../../../tools/report/e2e-shared/resource-metrics/native-parsers.mjs)；[AstronStudio General 采集](../../../tools/report/skills/general-e2e/collect-general-e2e/scripts/collect_astronstudio_resource_metrics.mjs) | Token 归一化、响应/usage 增量计数 |
 | [WorkBuddy JSONL 采集与补采](../../../tools/report/skills/general-e2e/collect-general-e2e/drivers/workbuddy/README.md) | 已实现用量和双耗时、冻结补采 |
 | [Qwen Token 启动](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/token-launch.mjs)、[进程校验](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/token-process.mjs)、[队列](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/batch.mjs) | 开关注入、精确 PID 回读与 `--require-token-exposure` |
-| [Qwen General collector](../../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/collector.mjs)：`readFrozenTokenContext`；同目录 `token-profile.mjs`、[native-normalizer.mjs](../../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/native-normalizer.mjs)：`buildQwenStrictResourceMetrics` | 工作区新增 Profile、provenance、请求/响应与 turn 对账；核对时含未提交文件 |
+| [Qwen General collector](../../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/collector.mjs)：`readFrozenTokenContext`；同目录 `token-profile.mjs`、[native-normalizer.mjs](../../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/native-normalizer.mjs)：`buildQwenStrictResourceMetrics` | 已提交 collect 0.7.6 的 Profile、provenance、请求/响应与 turn 对账；r23 正式五题报告已验证 |
 | [Web 聚合器](../../../tools/report/skills/web-e2e/report-web-e2e/scripts/aggregate_web_e2e_results.py)；[Web Qwen Profile](../../../tools/report/skills/web-e2e/execute-web-e2e/drivers/metrics/qwen-profile.mjs)；[Doubao parser](../../../tools/report/skills/web-e2e/execute-web-e2e/drivers/metrics/parsers.mjs)：`parseDoubao` | Web 指标、Profile 范围与 Doubao 工具小计 |
 | [General 指标 Schema](../../../eval_general_e2e/contracts/schemas/resource-metrics-v1.schema.json) | 11 项基础字段与状态契约 |
 
-本次验证：`tests.general_e2e.test_general_report_views`、`tests.general_e2e.test_report_general_e2e`、`tests.test_report_web_e2e` 共 38 项通过；另对 r22 现存原始 segment 与采集来源执行只读复算。没有重跑 Harness、Judge 或生成新报告，也没有修改采集/评分源码。
+原盘点验证：`tests.general_e2e.test_general_report_views`、`tests.general_e2e.test_report_general_e2e`、`tests.test_report_web_e2e` 共 38 项通过；另对 r22 现存原始 segment 与采集来源执行只读复算。没有重跑 Harness、Judge 或生成新报告，也没有修改采集/评分源码。
+
+2026-09-23 文档同步另核对当前 Skill 元数据、Qwen Profile 与 r23 报告原件；没有执行新 Harness/Judge、回归测试或报告渲染。生产准入剩余项见 [README](README.md#qwenwork-剩余生产准入事项)，指标可观测不等于全部准入完成。

@@ -62,7 +62,7 @@ r28 是独立技术用例，Prompt 明确禁止文件/命令操作，仅要求 Q
 3. 在原 session `69eaa730-25f5-440a-b7cf-75d13e64f07d` 上关闭**控制 Driver 的 CDP 连接**，不退出 QwenWork；真实观察报 `Target page, context or browser has been closed`，持久化 `NEEDS_ATTENTION`。`disconnect-evidence.json` 记录原身份、客户端 PID 和未重启边界。这不等于客户端重启或进程崩溃验证。
 4. 新独立恢复工具包保持原 config/Prompt/attempt，重连原 session 后在 `08:56:51.674Z` 自动点唯一页脚“跳过”，写入 `USER_AUTHORIZED_CLARIFICATION_SKIPPED`；再次观察得到 `COMPLETED`、attention=null，原生回复为“已跳过问卷，验收结束”。发送尝试 1、Prompt 匹配 1。`interaction-audit.json` 记录新旧源码 revision 与哈希；旧安装包未热改。本项是跨工具版本的受控恢复证据，不冒充全程同 revision 的新批次。
 
-最终执行源码 `d43dadf55831098043987ebb99438eb710a79b1e`；发行 `report-workspace/general-e2e/releases/qwenwork-question-d43dadf`，suite SHA `5338497dbd72cb7161f08d2b1a064422ffb9e53d65ff1a9311b3b12a49a2ac03`。Qwen 聚焦 Node 102/102、发行/布局 Python 16/16 PASS。r28 新建时的发送仅发生于 `391b5a9`；`d43dadf` 的临时标题分支目前为自动化验证，页脚跳过和原会话终态已有上述真机证据。
+最终执行源码 `d43dadf55831098043987ebb99438eb710a79b1e`；发行 `report-workspace/general-e2e/releases/qwenwork-question-d43dadf`，suite SHA `5338497dbd72cb7161f08d2b1a064422ffb9e53d65ff1a9311b3b12a49a2ac03`。Qwen 聚焦 Node 102/102、发行/布局 Python 16/16 PASS。r28 新建时的发送仅发生于 `391b5a9`；截至 r28，`d43dadf` 的临时标题分支只有自动化验证；后续 r29 的新 attempt 复验见下文。页脚跳过和原会话终态由 r28 提供证据。
 
 ## r29：最新版新 attempt 的身份与断连复验
 
@@ -127,7 +127,7 @@ r34/r35 根分别为 `/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-important
 | 验收项 | 实现/自动化证据 | QwenWork 真机证据 | 当前结论与剩余项 |
 | --- | --- | --- | --- |
 | CV01 包与隔离 | prepare/release/layout 正反例；独立七 Skill 闭包 | r21/r23/r27 仓库外 prepare/verify、execution/scoring 分离 | PASS，后续发行仍逐包验 SHA |
-| CV02 只读探针 | loopback、身份、快照、Token 开关门禁 | r27 当前 PID/端点、空闲与活动两种 probe，活动启动拒绝 | PARTIAL；端口占用/陈旧端点/多安装/锁屏负例仍需逐项登记 |
+| CV02 只读探针 | loopback、身份、快照、Token 开关门禁 | r27 当前 PID/端点、空闲与活动两种 probe，活动启动拒绝 | PARTIAL；锁屏/GUI 会话检测为当前实现缺口（仅有选目录前台焦点保护）；补门禁，并逐项验证端口占用/陈旧端点/多安装/锁屏负例 |
 | CV03 UI/配置/Prompt | 唯一语义控件、项目/Workspace、配置漂移与发送禁用反例 | r19 未发送即暂停；r21/r23 一次发送；r28 同名导航/页脚定位反例 | PARTIAL；同名不同 Workspace、模型/权限不符的目标客户端负例未齐 |
 | CV04 发送中断 | intent/reservation/invoking、不确定不重发，缺失/歧义 session 反例 | r25 部分现场；r26 发现队列缺陷；r27 修复后恢复并正式收口 | PASS（值守基础范围）；r25 不当作有效执行 |
 | CV05 owner/竞争 | 活锁拒绝、两个 Driver/恢复者竞争、旧归档保护、字节漂移拒绝 | r27 两把锁精确归档，原 queue/attempt 恢复 | PASS（显式值守恢复）；不承诺无人值守抢锁 |
@@ -151,8 +151,8 @@ r34/r35 根分别为 `/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-important
 | GV03 工具轨迹 grader | 五题中的轨迹题与自动规则、原始 call/result 采集 | PARTIAL；缺必需轨迹拒绝需与实际 grader 逐项关联 |
 | GV04 Git/二进制/链接与冻结 | 公共 exact-all freeze/链接反例，Qwen verify-only | PARTIAL；本客户端相应材料与故障样本需补索引 |
 | GV05 三种评分 | r21/r23 automated、hybrid、llm_judge，固定 sol/high | PASS；本轮只声明 Codex 语义后端 |
-| GV06 分母与失败隔离 | 公共异常/缺证据/零分测试，r20 独立重评分、旧评分保留 | PARTIAL；真机有效零分等样本尚未全部覆盖 |
+| GV06 分母与失败隔离 | 公共异常/缺证据/零分测试，r20 独立重评分、旧评分保留 | PARTIAL；已有公共有效零分/异常/未评分测试，需与 Qwen 正式回传接线和分母对应收口，不要求为补索引重复运行模型 |
 | GV07 阶段恢复与报告 | r21/r23 submission、return/import、同源 JSON/Markdown/Excel | PASS |
 | GV08 小批/并发 | r21 原生三路五题，r23 五题核心 Token、同机闭环 | PASS（固定五题/本机）；不声明跨机或全量 |
 
-因此仍是“主流程有限可用、加固进行中”，完整接入任务保持 IN_PROGRESS。本轮已补齐 CV17、CV08、CV09 的上述重点；其余 PARTIAL 行继续按证据表审计，不以本轮三项通过替代全部准入。上述矩阵为人工证据审计，不代表已有自动符合性校验器。
+因此仍是“主流程有限可用、加固进行中”，完整接入任务保持 IN_PROGRESS。本轮已补齐 CV17、CV08、CV09 的上述重点；其余 PARTIAL 行按[剩余七项](../../README.md#qwenwork-剩余生产准入事项)分别补实现、真机负例或公共证据审计，不以本轮三项通过替代全部准入。上述矩阵为人工证据审计，不代表已有自动符合性校验器。

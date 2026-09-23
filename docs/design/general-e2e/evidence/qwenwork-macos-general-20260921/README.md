@@ -1,5 +1,7 @@
 # QwenWork macOS General 集成 canary
 
+> 历史快照：本文的版本、结果和“当前/下一步”仅对应所列日期及 revision，保留原结论，不作为现在的执行指令。最新进度见[接续入口](../../README.md#qwenwork-剩余生产准入事项)，后续三路、Token 与加固证据见[五题及 r21–r35 记录](../qwenwork-macos-five3-20260923/README.md)。
+
 日期：2026-09-22（Asia/Shanghai）。本证据覆盖 QwenWorkCN 1.0.6 / macOS x86_64 的单题 live integration canary，不是 5 题或 60 题正式评测。
 
 ## 已完成
