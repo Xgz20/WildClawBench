@@ -204,3 +204,8 @@ harnesses:
     family: ZCode
     aliases: []
     capabilities: {}
+  mimocode:
+    display_name: MiMoCode
+    family: MiMoCode
+    aliases: []
+    capabilities: {}

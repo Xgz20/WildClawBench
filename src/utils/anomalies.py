@@ -175,6 +175,9 @@ def _raw_session_files(run_dir: Path) -> list[Path]:
     zcode_trace = run_dir / "zcode_trace.jsonl"
     if zcode_trace.is_file():
         result.append(zcode_trace)
+    mimocode_trace = run_dir / "mimocode_trace.jsonl"
+    if mimocode_trace.is_file():
+        result.append(mimocode_trace)
     return result
 
 

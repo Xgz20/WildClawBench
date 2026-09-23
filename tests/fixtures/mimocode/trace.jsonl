@@ -1,0 +1,5 @@
+{"type":"step_start","sessionID":"session-1","part":{"id":"start-1","type":"step-start"}}
+{"type":"text","sessionID":"session-1","part":{"id":"text-1","type":"text","text":"I will inspect the workspace."}}
+{"type":"reasoning","sessionID":"session-1","part":{"id":"reasoning-1","type":"reasoning","text":"Need inspect."}}
+{"type":"tool_use","sessionID":"session-1","part":{"id":"part-1","type":"tool","tool":"bash","callID":"call-1","state":{"status":"completed","input":{"command":"ls"},"output":"README.md\n"}}}
+{"type":"step_finish","sessionID":"session-1","part":{"id":"finish-1","type":"step-finish","reason":"stop","tokens":{"total":20,"input":10,"output":4,"reasoning":2,"cache":{"read":3,"write":1}},"cost":0.1}}

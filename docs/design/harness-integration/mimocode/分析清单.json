@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "harness_name": "MiMoCode",
+  "harness_slug": "mimocode",
+  "source_dir": "/Users/gzx/Project/GitHub/xgz/ai/agent-harness/MiMo-Code",
+  "output_language": "zh-CN",
+  "source_vcs": {"type": "git", "commit": "799e5052362d1067e8eb795528460023fbb3d07f", "branch": "main", "dirty": false},
+  "analysis": {
+    "mode": "focused",
+    "depth": "overview",
+    "requested_modules": ["config-auth", "model-runtime", "observability-storage"],
+    "runtime_probe": "safe",
+    "runtime_commands_executed": ["docker run --rm --entrypoint mimo wildclawbench-mimocode-ubuntu:v0.0 --version", "WCB_MIMOCODE_DOCKER_TESTS=1 .venv/bin/python -m unittest tests.test_mimocode_wire -v"]
+  },
+  "documents": ["README.md", "源码地图.md", "协议与采集.md", "证据与待验证项.md"],
+  "modules": {
+    "config-auth": {"status": "detected", "catalog": "canonical", "output": "协议与采集.md"},
+    "model-runtime": {"status": "detected", "catalog": "canonical", "output": "协议与采集.md"},
+    "observability-storage": {"status": "partial", "catalog": "canonical", "output": "协议与采集.md", "reason": "CLI 主会话事件与 SQLite 备份可采集，非完整 wire 录制；后台总用量仍有范围限制"}
+  },
+  "excluded_paths": [".git", "node_modules", "dist", "build"],
+  "generated_at": "2026-09-23T14:58:00+08:00"
+}

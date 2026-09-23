@@ -26,6 +26,7 @@ from src.agents.codex import CodexAgent
 from src.agents.deepseek_harness import DeepSeekHarnessAgent
 from src.agents.hermesagent import HermesAgentAgent
 from src.agents.minimax_code import MiniMaxCodeAgent
+from src.agents.mimocode import MiMoCodeAgent
 from src.agents.opencode import OpenCodeAgent
 from src.agents.openclaw import OpenClawAgent
 from src.agents.zcode import ZCodeAgent
@@ -119,6 +120,7 @@ GRADE_ON_ERROR_BACKENDS = (
     MiniMaxCodeAgent,
     ZCodeAgent,
     HermesAgentAgent,
+    MiMoCodeAgent,
 )
 
 WORKSPACE_CHANGE_BACKENDS = (
@@ -129,6 +131,7 @@ WORKSPACE_CHANGE_BACKENDS = (
     DeepSeekHarnessAgent,
     MiniMaxCodeAgent,
     ZCodeAgent,
+    MiMoCodeAgent,
 )
 
 _RUN_CONFIG_CREDENTIAL_ENV_NAMES = (
@@ -233,6 +236,15 @@ def _build_run_configuration(
 
     mode = "task" if getattr(args, "task", None) else "category"
     selection_value = getattr(args, "task", None) or getattr(args, "category", None)
+    backend_name = getattr(args, "agent_backend", None)
+    if backend_name == "zcode":
+        requested_api = getattr(args, "zcode_api", None)
+    elif backend_name == "minimax-code":
+        requested_api = getattr(args, "mcode_api", None)
+    elif backend_name == "mimocode":
+        requested_api = getattr(args, "mimocode_api", None)
+    else:
+        requested_api = getattr(args, "dsh_api", None)
     return {
         "schema_version": 1,
         "invocation": {
@@ -259,15 +271,7 @@ def _build_run_configuration(
             "rerun_error": bool(getattr(args, "rerun_error", False)),
             "rerun_anomalous": bool(getattr(args, "rerun_anomalous", False)),
             "pass_threshold": getattr(args, "pass_threshold", None),
-            "requested_api": (
-                getattr(args, "zcode_api", None)
-                if getattr(args, "agent_backend", None) == "zcode"
-                else (
-                    getattr(args, "mcode_api", None)
-                    if getattr(args, "agent_backend", None) == "minimax-code"
-                    else getattr(args, "dsh_api", None)
-                )
-            ),
+            "requested_api": requested_api,
             "api": getattr(backend, "api", None),
             "image": getattr(backend, "image", None),
             "image_model": getattr(args, "openclaw_image_model", None),
@@ -427,6 +431,8 @@ def _build_agent_backend(args) -> BaseAgent:
         return MiniMaxCodeAgent(api=args.mcode_api)
     if args.agent_backend == "zcode":
         return ZCodeAgent(api=args.zcode_api)
+    if args.agent_backend == "mimocode":
+        return MiMoCodeAgent(api=args.mimocode_api)
     if args.agent_backend == "hermesagent":
         return HermesAgentAgent(
             openrouter_api_key=OPENROUTER_API_KEY,

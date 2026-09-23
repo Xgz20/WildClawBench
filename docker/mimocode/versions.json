@@ -1,0 +1,14 @@
+{
+  "default": "v0.0",
+  "versions": {
+    "v0.0": {
+      "image": "wildclawbench-mimocode-ubuntu:v0.0",
+      "context": "v1",
+      "dockerfile": "v1/Dockerfile",
+      "build_args": {
+        "MIMOCODE_VERSION": "0.1.14",
+        "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0"
+      }
+    }
+  }
+}

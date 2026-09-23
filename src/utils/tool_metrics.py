@@ -32,7 +32,7 @@ from typing import Callable
 
 CATEGORIES = ("success", "failure", "format_error", "unclear")
 REPORT_FORMAT_HARNESSES = frozenset(
-    {"opencode", "deepseek-harness", "hermesagent", "minimax-code", "zcode"}
+    {"opencode", "deepseek-harness", "hermesagent", "minimax-code", "zcode", "mimocode"}
 )
 
 # classifier 签名：(tool_name, content, status) -> category(∈ CATEGORIES)
@@ -952,6 +952,7 @@ register_classifier(("openclaw", "astronclaw"), classify_openclaw)
 register_classifier(("deepseek-harness",), classify_deepseek_harness)
 register_classifier(("minimax-code",), classify_minimax_code)
 register_classifier(("zcode",), classify_zcode)
+register_classifier(("mimocode",), classify_minimax_code)
 register_classifier(("hermesagent",), classify_hermesagent)
 register_classifier(("claudecode",), classify_claudecode)
 

@@ -50,7 +50,7 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
         choices=[
             "openclaw", "astronclaw", "claudecode", "codex",
             "hermesagent", "astroncode", "opencode", "deepseek-harness",
-            "minimax-code", "zcode",
+            "minimax-code", "zcode", "mimocode",
         ],
         help="Agent backend implementation (default: openclaw)",
     )
@@ -78,6 +78,17 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
         default=None,
         help=(
             "ZCode provider wire API; falls back to ZCODE_API, "
+            "then openai-responses"
+        ),
+    )
+    parser.add_argument(
+        "--mimocode-api",
+        "--mimo-api",
+        dest="mimocode_api",
+        choices=["openai-responses", "openai-chat-completions", "anthropic-messages"],
+        default=None,
+        help=(
+            "MiMoCode provider wire API; falls back to MIMOCODE_API, "
             "then openai-responses"
         ),
     )
