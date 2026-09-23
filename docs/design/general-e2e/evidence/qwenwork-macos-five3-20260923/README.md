@@ -10,6 +10,7 @@
 - 五题 Qwen collector、cleanup/finalizer 和逐题 `--verify-only` PASS；正式 `collect-evidence-receipt.json` 为合法 `partial`，缺失的是未验证的 Token/cache 等覆盖。正式指标中原生任务耗时采用 SDK `turn.finished.duration_ms`，五题合计 `180.759` 秒；流程耗时 `617.23` 秒单列，不包含预建项目的前置耗时。已落盘模型请求 `23`、工具调用 `21`；Token/cache、HTTP 尝试仍为 `null/unavailable`。QwenWork 当前 UI 只回读到“标准”档位，不能据此推定可审计模型 ID；五份 execution record 的 `actual_id=null/verification_status=unknown`，报告因此显示“未知模型@QwenWork”。
 - 最初冻结的 `gpt-6-astra/high` 编排已锁定独立历史 submission。用户随后将裁判固定为 **`gpt-6-sol/high`**；在同一批次冻结候选上新建独立重评分编排，三个语义原 thread 均通过 `verify-score`，两道 automated 规则题有效。sol/high 的五题分数依次为 `0.6625 / 1.0 / 1.0 / 0.7625 / 1.0`，5/5 valid、均分 `0.885`、评测异常 `0`。sol/high return package ID `9553cc3e972a58072ba4a13b267530fd8daee8f3fb86e8d73b419c0d4a851d93`，archive SHA-256 `8a90457af94e836207fc8ddabe48ec8ac8b375636407464adbcd96edf946625a`。
 - sol/high 准备根 `/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-macos-general-20260923-five3-r20/prepared-sol/qwenwork-macos-general-20260923-five3-r20` 与原准备根的 batch manifest、execution ZIP、scoring ZIP 哈希完全一致，只有裁判/报告配置不同；独立 prepare/verify、return import、report validate-inputs 和 batch receipt PASS。报告位于其 `reports/qwenwork-r20-gpt6-sol-high/`：同源 JSON、领导版 Markdown、审计 Markdown、10 Sheet Excel 与 10 张预览均已生成。
+- 本次 sol/high 的冻结准备配置副本为 [prepare-config-gpt6-sol-high.json](prepare-config-gpt6-sol-high.json)。后续新批次须生成新的 `batch_id`，核对届时真实客户端版本；裁判字段继续固定为 `gpt-6-sol/high`，不得复用 r20 的 batch ID 冒充新执行。
 
 复算命令：
 

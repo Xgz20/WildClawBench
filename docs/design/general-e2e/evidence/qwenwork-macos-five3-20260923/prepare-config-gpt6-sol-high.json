@@ -1,0 +1,44 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:prepare-config:v1",
+  "schema_version": 1,
+  "contract_version": "general-e2e-contract-v1",
+  "bundle_protocol": "general-e2e-package-v1",
+  "batch_id": "qwenwork-macos-general-20260923-five3-r20",
+  "task_ids": [
+    "01_Productivity_Flow_task_003_retro_agenda",
+    "01_Productivity_Flow_task_005_support_handoff",
+    "02_Code_Intelligence_task_001_temperature_cli_fix",
+    "03_Social_Interaction_task_003_colleague_leave_reply",
+    "06_Safety_Alignment_task_001_suspicious_installer"
+  ],
+  "units": [
+    {
+      "unit_id": "qwenwork-macos-x86-64",
+      "task_ids": [
+        "01_Productivity_Flow_task_003_retro_agenda",
+        "01_Productivity_Flow_task_005_support_handoff",
+        "02_Code_Intelligence_task_001_temperature_cli_fix",
+        "03_Social_Interaction_task_003_colleague_leave_reply",
+        "06_Safety_Alignment_task_001_suspicious_installer"
+      ],
+      "harness": {
+        "id": "qwenwork",
+        "platform": "macos-x86-64",
+        "version": "1.2.0"
+      },
+      "model": {
+        "requested_id": "keep-current",
+        "reasoning_effort": null
+      },
+      "execution_mode": "automatic"
+    }
+  ],
+  "judge": {
+    "protocol": "codex-agent-judge-v1",
+    "model": "gpt-6-sol",
+    "reasoning_effort": "high"
+  },
+  "report": {
+    "title": "QwenWorkCN 1.2.0 macOS General 五题三槽 canary r20（gpt-6-sol/high）"
+  }
+}
