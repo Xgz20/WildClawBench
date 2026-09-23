@@ -588,7 +588,10 @@ async function persistProvisionalSession(config, state, dependencies, session) {
 }
 
 async function provisionalSessionOrAttend(config, state, dependencies, session) {
-  if (typeof dependencies.inspectPendingInteraction === "function") {
+  // Keep the exact native conversation/cwd binding even if its title or CDP
+  // view is not ready yet, so resume can recognize this queue-owned session.
+  const provisional = await persistProvisionalSession(config, state, dependencies, session);
+  if (typeof dependencies.inspectPendingInteraction === "function" && session.sub_chat_name) {
     try {
       await dependencies.navigateToSession(session);
     } catch (error) {
@@ -598,7 +601,7 @@ async function provisionalSessionOrAttend(config, state, dependencies, session) 
     if (interaction?.journal) return interaction;
     // The cached SQLite row predates the authorized skip. Reobserve before
     // applying the inactive identity window to it.
-    if (interaction?.skipped) return persistProvisionalSession(config, state, dependencies, session);
+    if (interaction?.skipped) return provisional;
   }
   const sinceSend = Date.parse(state.send?.returned_at || state.send?.invoking_at || "");
   const observedAt = Date.parse(dependencies.now());
@@ -612,7 +615,7 @@ async function provisionalSessionOrAttend(config, state, dependencies, session) 
       "QWENWORK_PROVISIONAL_SESSION_INACTIVE",
       "发送后仅有 conversation/sub-chat/cwd，原生 session_id 与活动 stream 长时间未出现；保留原 attempt 并禁止重发");
   }
-  return persistProvisionalSession(config, state, dependencies, session);
+  return provisional;
 }
 
 async function handlePendingInteraction(config, state, dependencies, session) {

@@ -280,10 +280,13 @@ export async function skipQwenClarification(page, conversationId, timeoutMillise
   const cards = await visibleLocators(taskView.locator(QWEN_QUESTION_SELECTOR));
   if (cards.length === 0) return { skipped: false };
   if (cards.length !== 1) throw new Error(`QWENWORK_CLARIFICATION_CARD_COUNT: ${cards.length}`);
-  const skipButtons = await visibleLocators(cards[0].getByRole("button", { name: "跳过", exact: true }));
+  const footer = await requireUniqueVisible(cards[0].locator('[data-slot="user-question-footer"]'), "question-footer");
+  const skipButtons = await visibleLocators(footer.getByRole("button", { name: "跳过", exact: true }));
   if (skipButtons.length === 0) return { skipped: false };
   if (skipButtons.length !== 1) throw new Error(`QWENWORK_CLARIFICATION_SKIP_COUNT: ${skipButtons.length}`);
-  const nextButtons = await visibleLocators(cards[0].getByRole("button", { name: /^下一题/u }));
+  // Header navigation and footer submission both have the accessible name
+  // "下一题". Only the footer belongs to the authorized skip action.
+  const nextButtons = await visibleLocators(footer.getByRole("button", { name: /^下一题/u }));
   if (nextButtons.length !== 1) throw new Error(`QWENWORK_CLARIFICATION_NEXT_COUNT: ${nextButtons.length}`);
   await skipButtons[0].click({ timeout: timeoutMilliseconds });
   const deadline = Date.now() + timeoutMilliseconds;

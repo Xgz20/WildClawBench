@@ -314,10 +314,12 @@ test("active task clarification skips only the unique question card in its own c
   let clicks = 0;
   const skip = { ...fakeElement(), isVisible: async () => visible, click: async () => { clicks += 1; visible = false; } };
   const next = fakeElement({ text: "下一题" });
-  const card = {
+  const footer = {
     ...fakeElement(),
     getByRole: (_role, options) => fakeLocator(options.name === "跳过" ? [skip] : [next]),
   };
+  const card = { ...fakeElement(), locator: () => fakeLocator([footer]),
+    getByRole: () => fakeLocator([next, fakeElement({ text: "下一题" })]) };
   const taskView = { ...fakeTaskView([]), locator: () => fakeLocator([card]) };
   const page = {
     url: () => `file:///qwenwork/index.html?windowId=main&chat=${conversationId}`,
@@ -578,7 +580,7 @@ test("managed queue prepares a project without sending, then dispatches the same
 });
 
 test("provisional QwenWork binding pauses after an inactive identity settle window but never resends", async () => {
-  for (const kind of ["unknown", "running"]) {
+  for (const kind of ["unknown", "running", "title-pending"]) {
     const config = makeConfig({ resume: true, managed_queue_id: "qwen-queue-fixture" });
     const state = createQwenAttemptJournal({
       identity: config.identity, dataset: config.dataset, taskRoot: config.task_root,
@@ -590,9 +592,10 @@ test("provisional QwenWork binding pauses after an inactive identity settle wind
     reserveQwenDispatch(state, { now: "2026-09-19T10:00:02.000Z", reservationId: "reservation-fixture" });
     markQwenDispatchReturned(state, { now: "2026-09-19T10:00:03.000Z", method: "fixture-click" });
     const provisional = { ...session(), session_id: null,
-      native_status: kind === "running" ? "running" : "ready",
-      stream_id: kind === "running" ? "stream-fixture" : null,
-      classification: { kind } };
+      sub_chat_name: kind === "title-pending" ? null : session().sub_chat_name,
+      native_status: kind !== "unknown" ? "running" : "ready",
+      stream_id: kind !== "unknown" ? "stream-fixture" : null,
+      classification: { kind: kind === "title-pending" ? "running" : kind } };
     state.phase = "RUNNING";
     state.prompt.send_status = "uncertain";
     state.session = { ...state.session, conversation_id: provisional.conversation_id,
@@ -612,10 +615,14 @@ test("provisional QwenWork binding pauses after an inactive identity settle wind
       querySessions: async () => [provisional],
       verifySessionPrompt: async () => { throw new Error("QWENWORK_SESSION_ID_UNSAFE_FOR_TRACE_LOOKUP"); },
       observeUi: async () => { throw new Error("must not observe unverified session"); },
+      inspectPendingInteraction: kind === "title-pending"
+        ? async () => { throw new Error("must wait for title before inspecting controls"); } : undefined,
+      navigateToSession: async () => { throw new Error("must not navigate without title"); },
       writeBindingEvidence: async () => [],
     });
     assert.equal(dispatches, 0);
     assert.equal(result.journal.send.dispatch_attempt_count, 1);
+    assert.equal(result.journal.session.conversation_id, provisional.conversation_id);
     if (kind === "unknown") {
       assert.equal(result.journal.phase, "NEEDS_ATTENTION");
       assert.equal(result.journal.attention.code, "QWENWORK_PROVISIONAL_SESSION_INACTIVE");

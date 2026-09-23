@@ -15,7 +15,7 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.10.22/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.10.23/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## WorkBuddy / QwenWork macOS 开发入口
 
@@ -32,6 +32,8 @@ WorkBuddy 已有五题值守闭环；`0.10.7` 修正队列回执、长路径预�
 `0.10.18` 对批量 Worker 硬中断留下的 owner lock 提供**显式** `--resume --recover-stale-owner`。只接受同一冻结队列、fresh 且空闲的只读 probe、同一 host 上已证实退出或 PID 复用的 owner；任何 attempt lock 存在、owner 仍活动、身份/配置漂移都拒绝。旧 owner 原件归档，新 owner 以排他文件取得，恢复后仍逐题读取原 journal 并禁止再次发送已尝试 Prompt。没有这些条件时保持锁，不手删。单题 Driver 锁须先用下述独立工具核验恢复，队列不自动删除它。
 
 `0.10.19` 针对已点击发送、只有 conversation/sub-chat/cwd 临时绑定却始终没有原生 session ID 的情况：如果 60 秒的**基础设施身份落库观察窗**后仍无活动 stream，转入 `NEEDS_ATTENTION` 并保留原 attempt，不重发、不补零；原生确在运行时即使超过该窗口也继续等待。它不是题目执行 deadline，不能据此判定模型能力失败。
+
+`0.10.23` 先持久化临时 conversation/sub-chat/cwd，再等待标题与 UI 就绪，避免短暂缺标题后丢失活动会话白名单。问卷定位进一步限定 `user-question-footer`，区分同名的页头导航箭头和页脚提交按钮，仍只点击唯一“跳过”。
 
 `0.10.22` 在已绑定与临时会话中都检查当前 conversation/sub-chat 的待交互状态；只有同一问卷容器内唯一“跳过/下一题”才执行用户授权的跳过。未知授权、未知弹窗、歧义与未授权追问均记录 `NEEDS_ATTENTION`，不代答、不自动批准。Driver 连接失败等异常退出会让队列安全暂停，保留原 attempt；正常运行返回码 4 与已落盘关注状态返回码 3 单独处理，避免无限轮询旧 RUNNING journal。
 
