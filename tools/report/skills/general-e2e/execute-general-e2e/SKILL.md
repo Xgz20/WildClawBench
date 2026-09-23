@@ -15,7 +15,7 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.10.20/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.10.21/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## WorkBuddy / QwenWork macOS 开发入口
 
@@ -32,6 +32,8 @@ WorkBuddy 已有五题值守闭环；`0.10.7` 修正队列回执、长路径预�
 `0.10.18` 对批量 Worker 硬中断留下的 owner lock 提供**显式** `--resume --recover-stale-owner`。只接受同一冻结队列、fresh 且空闲的只读 probe、同一 host 上已证实退出或 PID 复用的 owner；任何 attempt lock 存在、owner 仍活动、身份/配置漂移都拒绝。旧 owner 原件归档，新 owner 以排他文件取得，恢复后仍逐题读取原 journal 并禁止再次发送已尝试 Prompt。没有这些条件时保持锁，不手删。单题 Driver 锁须先用下述独立工具核验恢复，队列不自动删除它。
 
 `0.10.19` 针对已点击发送、只有 conversation/sub-chat/cwd 临时绑定却始终没有原生 session ID 的情况：如果 60 秒的**基础设施身份落库观察窗**后仍无活动 stream，转入 `NEEDS_ATTENTION` 并保留原 attempt，不重发、不补零；原生确在运行时即使超过该窗口也继续等待。它不是题目执行 deadline，不能据此判定模型能力失败。
+
+`0.10.21` 修复发送临界中断后 `DISPATCHING` 行被遗漏的问题：恢复先观察原 attempt，未绑定或仍不确定时暂停补发；只有全部行真实终态才发布完成回执，旧的“队列完成但子任务未终态”状态明确拒绝。
 
 `0.10.20` 增加单题陈旧锁的独立受控恢复入口。必须确认原 Driver 和队列 owner 均已退出，提供精确 owner ID、原冻结配置及 fresh 空闲 probe；工具排他归档旧锁、校验 journal 字节不变，不发送 Prompt、不修改 journal。活进程、未知身份、已有归档、竞争恢复、链接路径或配置漂移一律拒绝。恢复工具可独立用于旧发行留下的锁；后续 batch 仍必须沿用原发行与原参数，以免冻结源码摘要漂移。
 

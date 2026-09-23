@@ -643,6 +643,9 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
     }
     if (TERMINAL_PHASES.has(state.phase) || state.phase === "COMPLETED_WITH_FAILURES") {
       for (const row of state.tasks) await synchronizeRow(root, row);
+      if (!state.tasks.every((row) => TERMINAL_PHASES.has(row.phase))) {
+        throw new Error("QWENWORK_QUEUE_TERMINAL_TASK_MISMATCH");
+      }
       return { ...state, state_file: statePath, receipt_file: receiptPath };
     }
     state.phase = "RUNNING";
@@ -652,7 +655,9 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
     for (;;) {
       for (const row of state.tasks) await synchronizeRow(root, row);
       let running = state.tasks.filter((row) => row.phase === "RUNNING");
-      let attention = state.tasks.filter((row) => row.phase === "NEEDS_ATTENTION");
+      // A killed Driver may leave only the sending intent. It must enter the
+      // original attempt's resume path before any new task can be dispatched.
+      let attention = state.tasks.filter((row) => ["NEEDS_ATTENTION", "DISPATCHING"].includes(row.phase));
       if (batch.resume) {
         for (const row of attention.filter((item) => !recoveredAttention.has(item.task_id))) {
           recoveredAttention.add(row.task_id);
@@ -668,7 +673,7 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
           await persist(statePath, state);
         }
         running = state.tasks.filter((row) => row.phase === "RUNNING");
-        attention = state.tasks.filter((row) => row.phase === "NEEDS_ATTENTION");
+        attention = state.tasks.filter((row) => ["NEEDS_ATTENTION", "DISPATCHING"].includes(row.phase));
       }
       if (attention.length) {
         state.phase = "NEEDS_ATTENTION";
@@ -719,19 +724,18 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
         await synchronizeRow(root, pending);
         state.events.push({ event: "TASK_DISPATCH_RETURNED", at: now(), task_id: pending.task_id, task_phase: pending.phase, exit_code: pending.exit_code, active_before_dispatch: running.length, completed_before_dispatch: state.tasks.filter((row) => row.phase === "COMPLETED").length });
         await persist(statePath, state);
-        if (["NEEDS_ATTENTION", "FAILED"].includes(pending.phase)) break;
+        if (!["RUNNING", "COMPLETED"].includes(pending.phase)) break;
         running = state.tasks.filter((row) => row.phase === "RUNNING");
       }
       running = state.tasks.filter((row) => row.phase === "RUNNING");
-      const pending = state.tasks.filter((row) => row.phase === "PENDING");
-      const attentionAfterObservation = state.tasks.filter((row) => row.phase === "NEEDS_ATTENTION");
+      const attentionAfterObservation = state.tasks.filter((row) => ["NEEDS_ATTENTION", "DISPATCHING"].includes(row.phase));
       if (attentionAfterObservation.length) {
         state.phase = "NEEDS_ATTENTION";
         state.active_task_ids = running.map((row) => row.task_id);
         await persist(statePath, state);
         return { ...state, state_file: statePath, receipt_file: receiptPath };
       }
-      if (!running.length && !pending.length) {
+      if (state.tasks.every((row) => TERMINAL_PHASES.has(row.phase))) {
         const failed = state.tasks.filter((row) => row.phase === "FAILED");
         state.phase = failed.length ? "COMPLETED_WITH_FAILURES" : "COMPLETED";
         state.active_task_ids = [];

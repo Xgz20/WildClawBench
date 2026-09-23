@@ -460,3 +460,63 @@ test("QwenWork queue prepares all projects before its first prompt dispatch", as
     await rm(f.root, { recursive: true, force: true });
   }
 });
+
+for (const phase of ["DISPATCH_UNCERTAIN", "PREPARING"]) {
+  test(`QwenWork queue pauses ${phase} and resumes only its original attempt before refill`, async () => {
+    const f = await fixture(["one", "two"]);
+    const calls = [];
+    try {
+      const execute = async (argv) => {
+        const identity = await identityFrom(argv);
+        const resume = argv.includes("--resume");
+        calls.push({ task: identity.task_id, attempt: identity.attempt_id, resume });
+        const interrupted = calls.length === 1;
+        await writeJournal(f.root, identity.task_id, identity.attempt_id, interrupted ? phase : "COMPLETED", {
+          sendStatus: interrupted ? "uncertain" : "sent",
+          dispatchAttemptCount: interrupted && phase === "PREPARING" ? 0 : 1,
+        });
+        return interrupted ? 1 : 0;
+      };
+      const first = await runQwenWorkBatch(f.args, { execute });
+      assert.equal(first.phase, "NEEDS_ATTENTION");
+      assert.deepEqual(first.tasks.map((row) => row.phase), ["DISPATCHING", "PENDING"]);
+      assert.equal(calls.length, 1);
+      await assert.rejects(readFile(first.receipt_file), { code: "ENOENT" });
+      const resumed = await runQwenWorkBatch([...f.args, "--resume"], { execute });
+      assert.equal(resumed.phase, "COMPLETED");
+      assert.deepEqual(calls.map((row) => [row.task, row.resume]), [["one", false], ["one", true], ["two", false]]);
+      assert.equal(calls[0].attempt, calls[1].attempt);
+    } finally { await rm(f.root, { recursive: true, force: true }); }
+  });
+}
+
+test("unresolved sending intent never publishes a completion receipt after resume", async () => {
+  const f = await fixture(["one"]);
+  try {
+    const execute = async (argv) => {
+      const identity = await identityFrom(argv);
+      await writeJournal(f.root, identity.task_id, identity.attempt_id, "DISPATCH_UNCERTAIN", { sendStatus: "uncertain" });
+      return 3;
+    };
+    const first = await runQwenWorkBatch(f.args, { execute });
+    const resumed = await runQwenWorkBatch([...f.args, "--resume"], { execute });
+    assert.equal(first.phase, "NEEDS_ATTENTION");
+    assert.equal(resumed.phase, "NEEDS_ATTENTION");
+    await assert.rejects(readFile(resumed.receipt_file), { code: "ENOENT" });
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test("legacy completed queue with a nonterminal journal is rejected without rewriting its receipt", async () => {
+  const f = await fixture(["one"]);
+  try {
+    const result = await runQwenWorkBatch(f.args, { execute: async (argv) => {
+      const identity = await identityFrom(argv);
+      await writeJournal(f.root, identity.task_id, identity.attempt_id, "COMPLETED");
+      return 0;
+    } });
+    const receipt = await readFile(result.receipt_file);
+    await writeJournal(f.root, "one", result.tasks[0].attempt_id, "DISPATCH_UNCERTAIN", { sendStatus: "uncertain" });
+    await assert.rejects(runQwenWorkBatch([...f.args, "--resume"]), /TERMINAL_TASK_MISMATCH/u);
+    assert.deepEqual(await readFile(result.receipt_file), receipt);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
