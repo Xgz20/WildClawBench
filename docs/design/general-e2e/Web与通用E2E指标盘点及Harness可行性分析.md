@@ -1,248 +1,260 @@
 # Web 与通用 E2E 指标盘点及 Harness 可行性分析
 
-核对日期：2026-09-19。范围为 AstronStudio、WorkBuddy、QwenWork、DoubaoWork 的本地桌面评测；不涉及云电脑执行。
+核对日期：2026-09-23（Asia/Shanghai）。范围为本地 AstronStudio、WorkBuddy、QwenWork、DoubaoWork 的桌面 E2E 采集与报告。
 
-2026-09-21 更新：WorkBuddy General 已接入与 Web 共用的原生 session JSONL 解析，v8 五题模型响应、输入/输出/总 Token 与缓存读取已补采并进入新版报告，详见[指标更正证据](evidence/workbuddy-jsonl-metrics-20260921/README.md)。下文仍保留初始盘点；新增五项指标的统一聚合另按 COMMON-CM01 推进。
+本文按当前实现更新，不再沿用 2026-09-19 的待开发清单。核对基线为 `feature/astroncode-eval` 的 `555e1ac` 及当时工作区中尚未提交的 QwenWork Token collector/normalizer/profile 修改。后者已有 r22 原生非零样本和采集结果，本文分别标明源码、采集样本和正式报告的证据边界；新提交或发行仍需按实际哈希复核。旧[指标证据清单](e2e-metrics-analysis-evidence-20260919.json)仅用于历史字段与积分线索追溯，不作为本次源码的哈希清单。
 
-交接说明：本文及哈希清单从原 probe worktree 原样保留事实与证据范围，纳入跨平台开发基线供新任务读取。它是下述 revision/文件哈希对应的历史盘点，不是最新客户端或新接口已验证的声明；运行字段以 [统一接入契约](../e2e/端到端自动化评测Harness接入契约.md)、实际 Schema 和新平台样本复核为准。
+## 1. 当前结论
 
-## 1. 结论
+**General E2E 已按标准 WildClawBench 通用评测报告的单元、分组、检查点与逐题对比方式组织指标。** 总览、效率对比、分类、难度、Agent 能力、模态、工具调用、用例对比明细和各单元评分详情均已实现。平均 Token、缓存命中率、原生任务耗时与流程耗时已进入报告，不能再写成待派生指标。
 
-这五项指标适合补充，但需要先统一统计范围和缺失数据处理。当前 Web 和 General 已具备 11 项资源、请求、工具和耗时字段的契约；契约存在不代表每个 Harness 都能采集全部字段。
+**QwenWork 可以统计 Token。** 当前 macOS 1.2.0 已通过客户端进程开关 `QODERCN_EXPOSE_TOKEN_USAGE=1` 暴露非零原生用量；General 工作区新增解析可在来源、运行时语义和请求/响应对账通过后输出输入、输出、总 Token 与缓存读取。开关关闭、来源未绑定或对账失败的旧/新样本仍保留缺失状态。Cache Write 尚未被验证，不能因日志默认值为 0 就报告“写入 0”。
 
-| 拟补充指标 | Web 当前情况 | General 当前情况 | 判断 |
-| --- | --- | --- | --- |
-| 任务执行异常率 | 有执行错误、超时、未记录等计数，没有独立统一异常率 | 有执行状态分布，没有独立异常率 | 需统一终态分类、执行次数分母及异常证据 |
-| 工具调用成功率 | 只有调用次数；另有格式正确率字段 | 只有调用次数 | 需增加调用结果分类；“执行结束”不等于“成功” |
-| 平均任务积分 | 无统一字段；`cost_usd` 为另一种费用字段 | 无积分字段 | AstronStudio、WorkBuddy 有明确接入线索；其余需继续核对 |
-| 输入缓存命中率 | 已有输入与缓存读取 Token，没有独立比率 | 同左 | 可派生，但必须先保证分子分母口径一致 |
-| 平均任务 Token | 已计算总/输入/输出 Token 均值 | 已汇总总量与覆盖率，尚无均值字段 | 优先复用原始指标；另补全部执行尝试的统计视图 |
-
-资源指标契约和聚合公式由公共实现维护，各 Harness adapter 负责原生字段映射；当前直接在当前工作区分支串行修改，无需分配平台 worktree。COMMON-CM01 的当前待办范围见 [接续入口](README.md)。Web 与 General 的能力评分仍分别按各自任务协议计算。
-
-## 2. 核对范围与证据等级
-
-本次读取原工程当前文件，记录的 HEAD 为 `dd51eb6a4e03080f7a9f96917d06861df6001306`。另一个任务正在修改原工程，因此以附带证据清单的文件 SHA-256 为准确快照依据。
-
-本分析与证据清单写在 `.agents/doubaowork-macos-probe`，分支 `feat/doubaowork-macos-probe`。该 worktree 基线早于上述 HEAD；不能把其中旧版公共代码当成本次盘点对象。本次没有修改采集器、修改原工作分支或新增评测运行。
-
-证据分为三种：
-
-- **当前实现**：Schema、采集器、聚合器和报告渲染器已有对应逻辑。
-- **原始样本**：本机已有日志、冻结执行证据或 UI 快照实际出现字段。历史样本不自动证明新版本兼容。
-- **候选来源**：源码或安装包提供可接入字段，但尚未完成指定任务的采集、对账与回执验证。
-
-可复核索引：[字段、版本与源文件哈希](e2e-metrics-analysis-evidence-20260919.json)。样本统计只用于验证字段语义，不构成正式评测结果。
-
-## 3. 当前指标清单
-
-### 3.1 两种 E2E 的公共资源指标
-
-| 类别 | 字段 | 现有语义与限制 |
+| 指标 | General 当前实现 | Web 当前实现 |
 | --- | --- | --- |
-| Token | `input_tokens` | 归一化后包含缓存读取的输入 Token |
-| Token | `output_tokens` | 输出 Token；若推理 Token 已包含在内，不重复相加 |
-| Token | `total_tokens` | 输入加输出；不再额外加缓存或推理子集 |
-| 缓存 | `cache_read_input_tokens` | 读取缓存的输入 Token |
-| 缓存 | `cache_creation_input_tokens` | 写入缓存的输入 Token；未暴露时为 null |
-| 推理 | `reasoning_output_tokens` | 推理输出子集；不是所有客户端都暴露 |
-| 请求 | `request_count` | 按原生响应 ID、请求事件或 usage 增量统计；存在 observed/inferred 差异 |
-| 请求 | `request_attempt_count` | HTTP 尝试次数契约；当前上述采集路径没有完整重试层证据 |
-| 工具 | `call_count` | 按原生调用 ID 去重的调用数量，不把 result 再算一次 |
-| 耗时 | `duration_seconds` | 评测执行流程耗时，包括控制与收口开销 |
-| 耗时 | `agent_duration_seconds` | 原生任务执行耗时，或明确标记为 inferred 的时间差 |
+| 任务执行情况 | 已有正常完成、执行错误、评测异常、完成率及有效/未评分数；未输出独立“任务执行异常率” | 已有完成、执行错误、历史超时、未记录、评测异常与完成率；未输出统一异常率 |
+| 工具调用数 | 已实现总数和按工具名对比 | 已实现调用次数；DoubaoWork 当前主要提供已知小计 |
+| 工具成功率/格式准确率/不确定占比 | 本阶段暂缓；有工具结果事件不等于已有可靠比率 | `format_accuracy` 为兼容字段，不能视为各 Harness 已实现工具成功率 |
+| 平均任务积分 | 无统一采集/报告字段；保留来源线索 | 同左；`cost_usd` 不等同于积分 |
+| 输入缓存命中率 | 已实现：完整缓存读取总量 / 完整含缓存输入总量 | 有基础字段；当前 Web 聚合器未输出独立缓存命中率 |
+| 平均任务 Token | 已实现：完整总 Token / 冻结任务运行数 | 已实现总/输入/输出 Token 的任务均值 |
 
-Web 将请求计数放在 `usage`，耗时放在 `execution`；General 分为 `usage / requests / tools / timing`，每个指标携带 value、status、来源和覆盖信息。概念一致，JSON 结构目前并不完全相同。
+两种 E2E 使用不同评分与报告入口。General 对齐标准通用报告的组织方式和七维能力映射，但保留 E2E 的有效性、缺失值和双耗时语义；Web 继续使用详细/ArtifactsBench Profile，不能把 General 的新 Sheet 或指标默认算作 Web 已交付。
 
-公共聚合均保留全量总值、已知小计和覆盖率。全量数据不完整时，总值为 null；状态包括 `observed / inferred / partial / masked / unverified / unavailable`，Web 还兼容历史 `legacy` 数据。`masked` 的原始零值不表示实际零消耗。
+## 2. 与标准 WildClawBench 通用报告的对齐
 
-当前 Token 范围主要为目标主任务/主 turn。子代理、后台记忆整理、不可见重试等并非全部归入主任务总量，部分仅单列后台操作信息。因此这些 Token 总量不能直接当作账户计费总量。
+标准报告入口为 [`generate_eval_report.py`](../../../tools/report/scripts/generate_eval_report.py)；General 的正式入口为 [`report_general_e2e.py`](../../../tools/report/skills/general-e2e/report-general-e2e/scripts/report_general_e2e.py)，由 `report_views.py`、`report_case_views.py` 和 Excel 渲染器生成同源 JSON、领导版 Markdown、审计 Markdown 与 Excel。General 不通过运行旧 CLI 评分流程来生成这些表。
 
-### 3.2 Web 当前报告指标
+### 2.1 总览列及口径
 
-| 类别 | 已有指标 |
+当前 General 总览列顺序固定如下，**工具调用数紧跟总请求数**：
+
+| 列 | 当前统计口径 |
 | --- | --- |
-| 规模和状态 | 用例数、完成数、执行错误数、超时数、执行状态未记录数、评分错误数 |
-| 汇总表现 | 平均总分/得分率、完成率、严格满分率 |
-| 内容与功能 | 自建详细 Profile 的内容与结构、交互与功能、视觉与布局三级主维度及对应细项 |
-| 审美 | 审美分、有效样本数；渲染完整性、布局层级、配色排版、组件状态、响应式、调性契合六项主维度，以及检查项达标分布 |
-| 资源 | 上述 11 项的总量/小计/覆盖信息；输入、输出、总 Token 平均值；工具总次数、请求总次数 |
-| 时间 | 平均流程耗时、P50、P90、流程总耗时、智能体总耗时 |
-| 费用与格式 | `average_cost_usd / total_cost_usd` 和 `format_accuracy` 字段；默认可为 null，不代表桌面采集器已取得真实费用或格式判定 |
+| 模型@Harness | 使用已验证实际模型和友好 Harness 名称；模型未确认显示“未知模型@Harness”，不把裁判模型或 UI 档位当作被测模型 |
+| 总平均分 | `score_status=valid` 的任务分算术平均后乘 100；真实 0 分保留，评测异常和未评分不补零 |
+| 用例数 | 当前单元所选 submission 的冻结任务运行数 |
+| 正常完成数 | `execution_status=completed` 的数量，独立于评分有效性 |
+| 执行错误数 | `execution_status=candidate_error` 的数量 |
+| 评测异常数 | 执行 `infrastructure_error` 或评分 `evaluation_error` 的任务并集，同题只计一次 |
+| 完成率 | 正常完成数 / 冻结用例数；不是正确率，也不是有效评分率 |
+| 有效评分数 / 未评分数 | 分别按 `valid` / `unscored` 统计 |
+| 总tokens | 全部所选任务均完整可观测时累加 `total_tokens` |
+| 总请求数 | 累加各客户端已验证的 `request_count`；具体是响应数、请求事件数或 usage 推进次数，见第 4 节 |
+| 工具调用数 | 累加每题 `call_count`；标准轨迹按 `call_id` 去重，不将 result 再计一次 |
+| 任务耗时(s) | 累加 `agent_duration_seconds`，表示原生请求/主 turn 生命周期，包含工具与客户端处理，不是纯模型推理时长 |
+| 流程耗时(s) | 累加 `duration_seconds`，按 Driver 记录的发送/执行起点至完成点计时；起止点见原生来源，不包含整个评分和报告阶段 |
 
-ArtifactsBench 轻量 Profile 与自建详细 Profile 分开，不能给轻量 Profile 强行填充详细维度。
+General 总览不展示总成本、超时数及暂缓的工具质量比率。标准 CLI 当前还有首 Token 响应时间、成本、多轮与工具质量指标；这些没有全部接入 General，本文不把 CLI 已有列列作 E2E 已支持。CLI 的执行四态归类与 General 的执行/评分双状态也不同，不能仅因列名近似就混用分母。
 
-当前 Web 的 `completion_rate` 条件是执行状态为 `completed` 或历史兼容 `not_recorded`，并且评分完成。因此它不是纯 Harness 正常终止率，不能用 `1 - completion_rate` 作为任务执行异常率。Web 对部分执行/评分异常还存在强制零分逻辑，和 General 的有效分母不同；盘点这些行为不表示建议统一为补零。
+### 2.2 效率对比及其余 Sheet
 
-Web 的 Token 均值要求当前报告所选任务行全部有可用数值，否则为 null。它没有静默用“有数据的几道题”替代全批次均值。但当前报告输入是选定 submission 的任务行，并非所有历史重试尝试的账本。
+效率表紧随总览，列顺序为：
 
-### 3.3 General 当前报告指标
+| 模型@Harness | 总 Token | 平均 Token | 普通输入 Token | 缓存命中输入 Token | 缓存写入输入 Token | 输出 Token | 缓存命中率 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 每单元一行 | input + output | 总 Token / 冻结任务运行数 | input − cache read − cache write | Cache Read | Cache Write | output | cache read / input |
 
-| 类别 | 已有指标 |
+“缓存写入输入 Token”指 **Cache Write**，属于输入，不是输出。三类输入都已取得可信数值时才能用减法计算普通输入；当前渲染器没有独立普通输入字段回退。Cache Write 缺失时显示 `-`，普通输入也显示 `-`，但已完整可观测的总 Token、平均 Token 和缓存命中率仍可展示。
+
+| Sheet | 当前实现 |
 | --- | --- |
-| 规模 | 唯一任务数、任务运行数、unit 数 |
-| 分数 | 有效分数量、有效零分数、评分错误数、未评分数、有效分总和、有效分平均值及分母 |
-| 执行状态 | `completed / candidate_error / timeout / infrastructure_error / cancelled` 分布 |
-| 分组 | unit、任务类别、难度、裁判协议/模型/推理配置分组 |
-| 资源 | 11 项字段的全量总值、已知小计、任务覆盖、原生来源覆盖和状态分布 |
-| 时间 | 任务流程耗时之和、批次最早开始到最晚结束的壁钟耗时及覆盖率 |
-| 溯源 | 逐任务运行、执行/评分状态、所选回传包和输入文件 SHA |
+| 分类对比 / 难度对比 / 模态对比 | 各单元百分制总平均分及分组有效均分，保留有效/冻结样本覆盖 |
+| Agent能力对比 | 复用标准报告 `checkpoint_capability_map7.yaml`；代码生成、工具调用、数据处理、检索验证、推理规划、内容生成、验证交付七维。先求每题映射检查点均值，再跨任务平均；缺失映射检查点不补零、不用整题总分替代 |
+| 工具调用对比 | 按模型@Harness 展示全部工具总量、工具名调用数和明细覆盖；覆盖不足时仅给已知小计 |
+| 用例对比明细 | 一题一行，各单元得分并列；含分类、ID、名称、难度、模态、标签、Prompt、预期、规则、检查点、最优单元和最大分差；不足两个有效单元不判最优 |
+| 评分详情_<单元> | 每单元独立 Sheet，含冻结题面、规则、Workspace/Skills/Env/Warmup、执行/评分状态、检查点、失分点、判词、错误、Token/请求/工具、双耗时和标准 JSONL 引用 |
+| 资源覆盖与异常 | 11 项指标覆盖与缺失状态、维度分母、评测异常/未评分及来源信息 |
 
-General 仅把 `score_status=valid` 的能力分纳入均值，真实零分保留；`evaluation_error / unscored` 不补零。执行异常的任务仍可能按任务规则形成有效能力分，二者要分别展示。
+共 **9 张公共表 + 每单元 1 张评分详情表**，单单元为 10 Sheet。题面与规则来自经 SHA 校验的冻结评分材料，旧包缺字段不从当前仓库题目补写。领导版 Markdown 不含根因分析；判词、失分点不是另行生成的根因诊断。
 
-当前 General 已有明确范围的 AstronStudio、WorkBuddy 和 QwenWork macOS 证据；三者的题量、并发层级和故障覆盖不同，不能合并为同一支持声明。DoubaoWork General 尚未接入。报告的 task run 与所选回传包也不天然覆盖所有被替换的历史 attempt。
+## 3. 公共指标模型与聚合公式
 
-## 4. 五项补充指标的建议口径
+### 3.1 11 项基础指标
 
-### 4.1 任务执行异常率
+| 类别 | 字段 | 语义 |
+| --- | --- | --- |
+| Token | `input_tokens` | 归一化后的输入总量；已纳入的缓存读取/写入不再额外累加 |
+| Token | `output_tokens` | 输出 Token；已包含的推理子集不重复累加 |
+| Token | `total_tokens` | 输入 + 输出 |
+| 缓存 | `cache_read_input_tokens` | 缓存命中输入 Token |
+| 缓存 | `cache_creation_input_tokens` | 缓存写入输入 Token；缺少可信来源时为 null |
+| 推理 | `reasoning_output_tokens` | 可观测的输出子集，缺少来源时为 null |
+| 请求 | `request_count` | 原生模型请求/响应或已核实的 usage 推进计数，需保留 observed/inferred 与来源 |
+| 请求 | `request_attempt_count` | HTTP 层尝试计数；当前所核对的采集路径不能完整恢复失败重试 |
+| 工具 | `call_count` | 原生调用 ID 去重计数，不将结果事件重复计入 |
+| 耗时 | `agent_duration_seconds` | 原生任务生命周期耗时 |
+| 耗时 | `duration_seconds` | Driver 记录的任务执行流程耗时 |
 
-推荐名称为“任务执行异常率”，统计单位是**实际执行尝试**。一题一轮且无重跑时，尝试数等于任务数；同一题重跑必须保留不同 attempt，不得只保留最后成功的一次。
+Web 将请求字段放在 `usage`、耗时放在 `execution`；General 分为 `usage / requests / tools / timing`，每项附 value/status/basis，并通过 collection 记录来源和覆盖。可出现 `observed / inferred / partial / masked / unverified / unavailable`；Web 另兼容历史 `legacy`。掩码零值不能当作真实零消耗。
 
-```text
-任务执行异常率 = 非正常终止的执行尝试数 / 实际开始执行的尝试数
-```
-
-完整率应在统计窗口内的尝试都已确认终态后给出。正在运行、终态未知或日志缺失时，保留分母清单和已知异常数，全量比率为 null；可另给“已确认终态子集异常率”，同时标明覆盖数/已开始数。未开始的计划任务不进入执行异常分母，应单列“未启动/准备失败”。执行开始以统一的 attempt 开始事件为准，另记录是否已发送给 Harness，以定位故障发生阶段。
-
-建议异常计数按原因展开：Harness/候选执行错误、超时、评测基础设施故障、取消。取消再区分人工取消与异常中断。主“非正常终止率”可以包含全部非正常终态，但跨 Harness 归因时须同时展示这些分项，不能把评分器故障、人为取消或控制器故障都归因于 Harness。
-
-红色图标可以作为证据入口，但应绑定目标会话、turn 和观察时间，并核对它是否对应最终终态。不能扫描日志里任意 `error` 单词来判异常：它可能来自被读取的文件、失败测试、工具返回或已恢复的重试。
-
-建议另列“过程异常发生率”：执行过程中出现过异常事件的尝试数/尝试数。它与最终异常率分别回答“是否遇到异常”和“是否异常结束”。
-
-**实证反例**：现有 AstronStudio `g2-03/s1` 原始证据中，两次命令工具以 `failed`、exitCode 1/2 结束，后续调用恢复成功，最终 `turn.completed.payload.state=completed`。这些调用属于工具失败，不能直接把该任务算为异常终止。
-
-### 4.2 工具调用成功率
-
-用户给出的“执行完成数/调用总数”更准确的名称是“工具调用完成率”。建议同时保留：
+### 3.2 已实现的派生统计
 
 ```text
-工具调用成功率 = 明确成功的调用数 / 全部原生工具调用尝试数
-工具终态覆盖率 = 已确认终态的调用数 / 全部原生工具调用尝试数
+General 总平均分 = Σ有效任务分 / 有效评分任务数 × 100
+平均任务 Token = Σ所选任务 total_tokens / 冻结任务运行数
+输入 Token 缓存命中率 = Σcache_read_input_tokens / Σinput_tokens
+普通输入 Token = input_tokens − cache_read_input_tokens − cache_creation_input_tokens
+批次墙钟耗时 = 最晚执行完成时间 − 最早执行开始时间
 ```
 
-调用结局至少区分 `success / error / cancelled / timeout / unknown`。收到 result 或状态写着 `completed`，只证明协议结束，仍需检查工具的结构化错误、退出码及该工具定义的成功条件。非零退出码也需按工具语义判断，例如检索命令“没有匹配”不必一律归为工具故障。
+- 缓存命中率按 Token 总量加权，不能平均逐题命中率；Cache Write 不属于缓存命中。输入总量为 0 或任一侧覆盖不足时，比率为 null。
+- 平均 Token 的分母包含所选范围内的失败/未评分任务；若其用量缺失，全量平均为 null，不用已知小计除以全部任务数，也不只挑成功题。
+- 每项指标仅在所有任务完整覆盖时展示总量；另保留 `known_subtotal`、任务覆盖、原生来源覆盖和状态分布。`collection.status=partial` 不意味着每一项都不可用：例如未知 Cache Write 不阻止已核实输入/输出总量参与聚合。
+- 任务耗时总和、流程耗时总和与批次墙钟分别统计；执行并发会让总和大于墙钟。队列占槽峰值、原生 turn 重叠峰值是并发验收证据，不是请求数或工具数。
+- 当前报告统计**选定回传包/submission 的任务运行**，没有覆盖所有被替换历史 attempt 的消费账本。若要统计“所有重跑花费”，还需独立全 attempt 聚合。
+- 用量范围一般是目标主任务/主 turn，不包含 Judge、控制器以及无法绑定的子代理、后台服务或隐藏 HTTP 重试；不能直接当账户计费总量。
 
-**实证反例**：WorkBuddy 本机一个历史会话有 173 条 `function_call_result`，全部 `status=completed`，但其中一条 Write 的 `providerData.toolResult.error` 非空。直接按 completed 算成功会把已知业务错误计成成功；这里也不能据此断言其余 172 条都成功。
+原始协议要先归一化。OpenAI Chat Completions 的 `prompt_tokens` 包含其 cached token 子集；Anthropic Messages 的含缓存输入为 `input_tokens + cache_creation_input_tokens + cache_read_input_tokens`。当前已验证的 AstronStudio、WorkBuddy 和 QwenWork 路径中，归一化输入已含缓存读取；不能因字段名类似就再次加缓存。供应商接口差异由 adapter 处理，报告只消费归一化指标。
 
-去重键应包含 Harness、session/turn、原生 call ID。重复落盘的同一调用只算一次；重新发起且 ID 不同的重试各算一次；孤立 result 不算新调用。主代理、子代理、后台工具应分别标记范围，不能只扩充分子或分母一侧。
+### 3.3 执行时限与评分边界
 
-存在未知结局时，正式全量成功率为 null；可报告已知成功数、已知失败数、未知数与覆盖率，以及明确标为下界的“已知成功数/全部调用数”。完全无工具调用时比率为 null/不适用，不填 100%。成功执行工具也不代表模型选对工具或完成了任务，能力评分继续独立。
+题目 `timeout_seconds` 不控制 E2E 被测 Harness 的任务截止时间，也不进入能力评分。当前 General 新建评分编排的 `score_timeout_seconds`、thread `deadline_at` 均为 null，旧参数不再设置任务级评分时限。历史 timeout 状态与旧 deadline 恢复逻辑仍保留用于审计；低层 CDP/UI、HTTP、规则 Worker 和进程清理保护不能解释为题目时长评分。
 
-### 4.3 平均任务积分
+执行状态、资源完整性和评分有效性分别保留。General 均分只接受 `valid`，未知量为 null；不能扫描日志任意 `error` 或仅凭某个工具失败就认定整个任务异常。最终完成的任务也可能有工具失败后恢复的轨迹。
 
-```text
-平均每次执行积分 = 所有执行尝试的已结算积分总量 / 执行尝试数
-```
+## 4. 各 Harness 的实际采集能力
 
-每次失败、超时、取消或重跑实际消耗的积分都应保留。没有发生扣费与没有取得扣费记录不同；只有明确无收费结算证据才能记 0。结算尚未到账时为 pending/unavailable，不能在模型结束瞬间把积分冻结成零。
-
-建议记录 `amount / unit / source / settlement_status / settlement_id / billing_scope`。账户余额、预估积分、定价倍率、请求扣费增量、会话累计积分需要分别识别。累计值只能取指定范围的最终快照或经核实的差值，不能对多次轮询快照求和。
-
-不同 Harness 的积分定价、赠送额度、工具收费与模型倍率不同。积分可用于各产品内成本比较，但不能跨产品直接按数值排“谁更便宜”。`cost_usd` 也不能替代原生积分；基于 Token 和价格表估算的费用需另列为估算。
-
-### 4.4 输入缓存命中率
-
-用户公式合理，建议准确命名为“**输入 Token 缓存命中率**”：
-
-```text
-输入 Token 缓存命中率 = Σ缓存读取输入 Token / Σ全部输入 Token（含缓存）
-```
-
-这是按 Token 加权的比例，不能简单平均每个任务的命中率。缓存写入不属于缓存命中。另有“请求缓存命中率”（至少命中一部分缓存的请求数/请求数），它是另一个指标，不能混用。
-
-供应商原始字段需要归一化：
-
-| 原始协议/来源 | 分母 |
-| --- | --- |
-| OpenAI Chat Completions | `prompt_tokens`；分子为 `prompt_tokens_details.cached_tokens` |
-| Anthropic Messages | `input_tokens + cache_creation_input_tokens + cache_read_input_tokens`；按该协议三类输入相加 |
-| 当前已验证的 AstronStudio、WorkBuddy、QwenWork 归一化结果 | `input_tokens` 已含缓存读取，不能再加一次 `cache_read_input_tokens` |
-
-已读取 OpenAI 官方 SDK 的 `CompletionUsage / PromptTokensDetails` 定义，以及 Anthropic 官方 SDK 和 Prompt Caching 示例。Anthropic 示例中同一约 187,364 Token 的输入，在缓存命中时为 `input_tokens=3`、`cache_read_input_tokens=187361`；因此直接拿缓存读取除以原始 `input_tokens` 会得到不合理的大于 100% 的比例。Qwen 字段名虽相似，当前验证的适配器语义却是缓存已包含在 input 中，不能套用 Anthropic 加法。
-
-分子分母必须来自相同请求/任务范围。任意一侧数据缺失，不能用不同覆盖子集的总和计算。全量不完整时为 null，可另给成对完整样本的比率及覆盖；输入总量为 0 时为 null。缓存冷热、任务顺序、并发、TTL、公共系统提示和重复运行会影响该指标，比较时应记录这些条件。它不等于任务质量，也不直接等于费用节省率。
-
-### 4.5 平均任务 Token
-
-```text
-平均每次执行 Token = Σ执行尝试的归一化 total_tokens / 执行尝试数
-```
-
-同时展示平均输入、平均输出 Token；缓存与推理子集单列，不重复加到 total。失败执行消耗的 Token 也保留，不能只平均成功任务。
-
-Web 已有按当前任务行计算的三种 Token 均值；General 可以在已有完整总量上派生。若需要用户所说的“所有执行次数”，两者都应增加全 attempt 消耗视图，避免重跑后旧消耗随 submission 替换而消失。还可另列“每个唯一任务的全流程 Token”，但必须与“每次尝试平均 Token”区分。
-
-缺失数据时正式均值为 null，并显示已知小计与覆盖率。可额外给明确标注的完整样本均值，不能用已知小计除以全体任务数。跨模型 tokenizer 不同，Token 数也不完全等同于相同信息量。
-
-## 5. 四个 Harness 的可行性
-
-表中“可扩展”表示已有足够明确的数据来源，尚不表示新指标已接入正式报告。
-
-| Harness | 任务异常率 | 工具成功率 | 平均积分 | 缓存命中率 / 平均 Token |
+| Harness | Token 与缓存 | 请求 / 工具 | 耗时 | 原生积分 |
 | --- | --- | --- | --- | --- |
-| AstronStudio | 可扩展：原生 turn 终态与执行回执 | 可扩展：item ID、状态、exitCode；需覆盖各工具类型 | 源码候选明确：`turn.billing.settled`、`chargedPoints`；本次未完成运行时对账 | Web/General 已有基础采集，满足覆盖条件后可派生 |
-| WorkBuddy | 可扩展：驱动终态与原生会话；仍需异常样本验收 | 可扩展：callId、result、结构化 error；completed 不够 | 可行性高：安装包累加逻辑和非空 `session_usage.credit_json` 均已发现 | Web 已有归一化采集；General 需接入共享能力 |
-| QwenWork | macOS 1.0.6 已验证正常终态、数据库 status/taskStatus 与 `turn.finished.reason`；异常样本仍待扩充 | 已接入 `tool.requested`、`tool.execution.finished` 和 shell exit_code；本次单题为零工具 | 当前证据未确认任务扣积分字段，保留未知 | macOS 1.0.6 单题请求数和双耗时已验证；Token/cache 语义未验证，保持 unavailable |
-| DoubaoWork | 目前仅本地任务 UI 终态；需补原生终态与故障证据 | 未验证稳定调用 ID、工具结果及错误语义 | 保存的目标会话 UI 出现“消耗 0.46”；单位、精度、归属和结算时间未验证 | 尚未验证本地原生 usage 来源；不能从“消耗”反推 Token |
+| AstronStudio | Web/General 已有输入、输出、总 Token、缓存读取及可观测推理 Token；Cache Write 未暴露时为 null | General 请求数由 usage 增量与累计量对账推断；工具按原生 item/call 身份统计 | 原生 turn 与执行状态时间 | 未接入正式指标；历史源码有结算字段线索 |
+| WorkBuddy | Web/General 已接入原生 session JSONL；输入含缓存读取；Cache Write 和无原始证据的推理量未知 | 模型响应按 `providerData.messageId` 去重；工具按 `callId`，不是“一条用户消息=一次模型调用” | request 原生开始/完成与 Prompt 发送时间，均已支持 | 历史 SQLite 有 `session_usage.credit_json`，尚未映射到正式评测积分 |
+| QwenWork | 开关开启且来源/语义/对账通过后可统计 input/output/total/cache read；General 1.2.0 新采集已得到非零结果，Cache Write/推理未知 | 主 turn 的 `model.request.started` ID 和 `tool.requested` ID，响应参与 Token 对账 | `turn.finished.duration_ms` 与 Driver 流程时间 | 尚无正式字段 |
+| DoubaoWork | 当前 Web parser 未取得可信 Token/cache；General 尚未接入 | Web 已能从显式 session trajectory 提取去重工具已知小计；完整分母、请求和工具成功率未验证 | 原生完整耗时未验证 | 历史 UI “消耗”仅为线索，单位/归属/结算未确认 |
 
-### AstronStudio
+模型请求数小于工具调用数可以是正常现象：一次模型响应可同时发起多个工具调用。WorkBuddy 以模型响应 ID 计数，QwenWork 以原生请求事件计数，都不要求与工具次数相等；二者也不等于 HTTP 总尝试数。
 
-冻结样本已证明 `thread.token-usage.updated`、`item.started / item.completed`、`turn.started / turn.completed` 可用于资源和执行分析。
+### 4.1 指标从哪里读取：原生文件、表和归档路径
 
-积分字段不能直接认定为 `credits`。本地桌面源码 `12d9be52a1745cedd879a724879af2e430a42a53` 中，`TurnBillingReactor.settledBillingActivityCommand` 把 `billingTurnId / chargedPoints / settledAt` 写入 `turn.billing.settled`；前端按 turn ID 读取 `chargedPoints` 展示本轮积分。结算契约还有 `rated_points / charged_points`，账户的余额或通用 provider credits 不是同一概念。
+下面的相对路径使用三个基准，`<…>` 是待替换的身份或目录名，不是固定值：
 
-后续应按目标 root turn/billingTurnId 读取最终结算结果，以结算 ID 去重，核对 billed scope 是否包含子代理等额外消耗。本次对 `~/.acode/acode/userdata/state.sqlite` 的只读访问遇到 database is locked，未打断客户端或绕过锁；因此结论仍为源码级可行，不能宣称已在已安装版本取得真实积分。
+- **用户目录 H**：macOS 当前用户目录；例如 `H/.qwenworkcn` 对应 `~/.qwenworkcn`。
+- **执行单元 U**：解压的 `<batch-id>__<unit-id>/` 根目录；每题独立 Workspace 位于 `U/execution/tasks/<task-id>/workspace/`。
+- **正式证据 E**：`U/evidence/tasks/<task-id>/<attempt-id>/`；采集暂存根 C 由 collector 的 `--output-root` 指定，例如 `U/.general-e2e/collection-token/<task-id>/`。下表的 `trace/...` 均相对 C 或正式归档 E，以实际 `trace-index.json` 引用为准。
 
-### WorkBuddy
+#### 原生来源与计算分工
 
-安装版本 5.5.3。`app.asar/main/node.js` 中 `SqliteConversationUsagePort.persistUsage` 明确执行：
+| Harness / 场景 | 原生来源（相对 H 的路径示例） | 从此来源计算或核对的指标 | 计算入口（相对仓库根） |
+| --- | --- | --- | --- |
+| AstronStudio General | `.acode/acode/userdata/state.sqlite` 的只读快照；`provider_runtime_events` 表，按 `thread_id + turn_id` 筛选 | Token/cache/推理量来自 `thread.token-usage.updated.payload.usage` 的 `last*` 与 `total*`；请求数为通过对账的 usage 推进次数；工具数来自 `item.started` 唯一 ID；任务耗时来自 `turn.started/turn.completed` | `tools/report/skills/general-e2e/collect-general-e2e/scripts/archive_astronstudio_trace.mjs::queryBoundNativeTrace` → `collect_astronstudio_resource_metrics.mjs` |
+| AstronStudio General | 同一 SQLite 的 `projection_turns / projection_threads / projection_projects`；Driver 的 `automation-state.json` | SQLite 核对 turn 终态、原生身份和 Workspace；Driver 开始/结束时间计算流程耗时 | `tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs` 与上述归档/指标脚本 |
+| AstronStudio Web | SQLite 反查原生 session/cwd；随后读取 `.acode/sessions/<年>/<月>/<日>/*-<session-id>.jsonl`，或 `.acode/acode/acode-home-overlay/sessions/` 下同类布局 | Web 的资源从原生 rollout JSONL 解析，SQLite 主要承担身份定位；不能把 General 的 SQLite 事件查询与 Web 的 rollout 解析视为同一路实现 | `tools/report/skills/web-e2e/execute-web-e2e/drivers/metrics/collect.mjs::collectLocalMetrics` → `tools/report/e2e-shared/resource-metrics/native-parsers.mjs::parseAstron`；`trace-io.mjs::astronSessionRoots` |
+| WorkBuddy General/Web | `.workbuddy/projects/<编码工作目录>/<session-id>.jsonl` | 模型响应数、input/output/total/cache read；General 校验 `providerData.usage/rawUsage` 镜像；工具 `function_call` 按 `callId` 去重，并与绑定的 runtime 调用集合核对 | `tools/report/e2e-shared/workbuddy-jsonl-metrics/index.mjs::parseBoundJsonl`；`tools/report/e2e-shared/resource-metrics/native-parsers.mjs::parseWorkBuddy` |
+| WorkBuddy General | 客户端 runtime API 的冻结 `runtime_snapshot`，落盘为 attempt 的 `native-binding.json`；不是另一个原生 JSONL | 原生 request 状态、`startedAt/timestamp/completedAt/finishTimestamp`、工具内容和回复用于终态/轨迹核对；与 Prompt 发送时间组合计算双耗时 | `tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/runtime-binding.mjs` → `tools/report/skills/general-e2e/collect-general-e2e/drivers/workbuddy/collector.mjs`；`tools/report/e2e-shared/workbuddy-jsonl-metrics/timing.mjs` |
+| WorkBuddy probe / 历史积分线索 | `Library/Application Support/WorkBuddy/codebuddy-sessions.vscdb` 的 `ItemTable`、`session:%`；另有 `.workbuddy/workbuddy.db` 的 `session_usage` 历史线索 | 前者用于会话发现/状态前检；后者 `credit_json` 尚未接入积分指标。当前 Token 与耗时不从数据库文件大小、mtime、WAL 或 `used/size` 快照计算 | `tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/probe.mjs::queryWorkBuddySessions`；积分仅见历史证据清单 |
+| QwenWork General/Web | `Library/Application Support/QwenWorkCN/data/agents.db`；`sub_chats / chats / local_projects / projects` | 绑定 session/conversation/sub-chat/project/cwd，检查 `stream_id`、`chats.ext.taskStatus`；**该数据库不是当前 Token 求和源** | `tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/session-state.mjs::QWENWORK_SESSION_QUERY` |
+| QwenWork General/Web | `.qwenworkcn/projects/<编码工作目录>/<session-id>.jsonl` | Prompt、assistant transcript 版本、session/cwd 和会话内容 provenance；用于配合原生 segment 确定指标范围，不与 segment 中相同消费重复累加 | `tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/collector.mjs`；Web `drivers/metrics/collect.mjs` |
+| QwenWork General/Web | `.qwenworkcn/logs/sessions/<编码工作目录>/<session-id>/segments/<segment>.jsonl` | General 从唯一主 turn 的 `model.request.started` 计请求、`model.response.completed.data` 累加 Token/cache read、`tool.requested` 计工具；`turn.finished` 用量对账和 `duration_ms` 计原生耗时。Web 使用独立 `parseQwen` 及其 Profile | `tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/native-normalizer.mjs::buildQwenStrictResourceMetrics`；Web `tools/report/e2e-shared/resource-metrics/native-parsers.mjs::parseQwen` |
+| DoubaoWork Web | `Library/Application Support/DoubaoWork/Default/.doubaowork/agent_mode/workspace/.sessions/<session-id>/agents/<agent-id>/system/trajectory.jsonl` | 按 session + agent + call ID 去重的工具已知小计；不能从这些轨迹推定完整 Token、请求数或原生耗时 | `tools/report/skills/web-e2e/execute-web-e2e/drivers/doubaowork/native-evidence.mjs::parseTrajectoryJsonl/buildNativeEvidence` → `drivers/metrics/parsers.mjs::parseDoubao` |
 
-```text
-credit[requestId] = (credit[requestId] ?? 0) + usage.cost.amount
-```
+AstronStudio General 的原始数据来源是 **SQLite 原生事件表**，之后导出成 JSONL 供可复算采集；WorkBuddy 的用量来自 **session JSONL**、原生耗时来自 **runtime 快照**；QwenWork 的用量来自 **session segment 日志**、SQLite 用于会话身份/状态；DoubaoWork 当前只有 **trajectory 的工具小计**。数据库文件或日志存在，不表示其中每种指标都已实现。
 
-数据库 `session_usage.credit_json` 是按 requestId 累加的字典。本次历史会话读取到约 269.14 的非空记录，证明本机确有此数据，不能把它当作正式评测任务的平均积分。
+#### 采集结果与报告读取路径
 
-安装包 CLI 的用量发布逻辑还有模型、子代理/团队、生成工具等积分来源，所以只加主代理 Token 费用可能对不上积分。正式接入需映射 `conversationRequestId / requestId` 到执行 attempt，等待完整结算并核对 UI；不要每轮轮询都把累计字典再次相加。`session_usage.used / size` 为用量/上下文容量快照，不能代替累积任务 Token。
+| 内容 | 相对路径示例 | 后续如何消费 |
+| --- | --- | --- |
+| AstronStudio 导出的原始事件 | `E/trace/raw/astronstudio-provider-events.jsonl` | 保留 SQLite sequence/event/thread/turn 身份；指标来源可追溯到具体 JSONL 行 |
+| WorkBuddy 原生用量与 runtime 绑定 | `E/trace/raw/workbuddy-session.jsonl`、`E/trace/bindings/01-native-binding.json` | 前者算 Token/模型响应；后者 `runtime_snapshot.request` 算原生耗时，编号以 `trace-index` 为准 |
+| QwenWork 原始 transcript/segments | `E/trace/raw/transcript.jsonl`、`E/trace/raw/segments/<segment>.jsonl`、`E/trace/bindings/01-session-binding.json` | transcript/绑定确定归属，segments 求和并对账；r22 实例 segment 文件名为 `2026-09-23T14-03-08-569+08-00-9y7wsf-p61550.jsonl` |
+| QwenWork Token 开关和配置证据 | `C/trace/raw/token-config.json`、`C/trace/raw/token-probe.json` | 绑定发送前进程开关、运行时身份和 config digest；正式归档按 trace-index 携带这些来源 |
+| General 标准化资源 | `E/resource-metrics.json` | 报告通过 execution record 的 `resource_metrics_path` 读取 `metrics.usage/requests/tools/timing` 及覆盖；不是生成报告时重扫用户的活动数据库 |
+| 执行状态 / 标准工具轨迹 | `E/execution-record.json`、`E/trace/trace-index.json`、`E/trace/transcript.jsonl` | 状态计数来自 execution record；按工具名明细来自经过哈希验证的标准 `tool_call`，并与 `call_count` 对账 |
+| WorkBuddy 旧任务补采 | `U/evidence/resource-supplements/<task-id>/native.jsonl`、同目录 `resource-metrics.json/supplement.json`；`U/evidence/timing-supplements/<task-id>/` | 新回传包选择后，报告校验补采与旧回执绑定并复算，不改旧评分 |
+| 分数 / 分组 / 评分详情 | 所选 `submission.json`、其 `tasks[].score_path` 指向的 `<scoring-attempt>/score.json` 与冻结 `task.md/contract.json`；unit `manifest.json` | 分数和判词来自独立 Judge/规则结果；类别、难度、模态来自冻结任务定义，七维映射来自标准报告数据，均不从客户端 SQLite 推测 |
 
-### QwenWork
+`E` 是正式 finalizer 发布目录；`.general-e2e/collection*` 是采集工作目录，二者不能仅凭文件名相同视为已完成正式回传。Web 原始来源另记录在采集结果的 `collection.sources` 中，聚合器从 Web submission 的 `usage/tools/execution` 读取；不要求它使用 General 的 `E` 布局。具体路径随配置、平台和 attempt 变化，应跟随冻结 config、trace-index、execution record 和 submission 的相对引用。
 
-现有 2026-09-16 的资源冒烟日志包含 `tool.requested`、`tool.execution.finished`、`tool.shell.finished`、`model.response.completed`、`turn.finished`；成功工具的 status 为 success，shell 有 exit_code，正常 turn 的 reason 为 end_turn。消息数据库样本还有 completed/cancelled 等状态。读取到的 `session_event_log` 没有记录，因此应优先沿现有 `.qwenworkcn` 会话与 segment 日志采集。
+### 4.2 WorkBuddy：已实现，不再列为 General 待接入
 
-QwenWorkCN 1.0.6 / macOS x86_64 已完成一次正式单题采集：原生请求数 1、工具调用数 0、原生 turn 耗时 8.097 秒、流程耗时 111.967 秒。当前日志没有足够证据验证 Token/cache 字段公式，因此 input/output/total/cache read/cache write 均保持 `null/unavailable`，并保留 model-response 覆盖分母。旧 macOS 1.0.5 和 Windows 1.0.6.0 Profile 都不能替代当前运行时语义验证；原始默认零值、`QODERCN_EXPOSE_TOKEN_USAGE=1` 或版本号相近仍不够。
+collector 从 `~/.workbuddy/projects/<编码目录>/<sessionId>.jsonl` 读取与 runtime session/cwd/Prompt/工具集合/最终回复绑定的日志，`providerData.usage` 与 `rawUsage` 对账，镜像 usage 不重复累加。原生时间从冻结 runtime snapshot 读取，不依赖 JSONL 是否存在或 SQLite/日志的更新时间：
 
-### DoubaoWork
+| 字段 | 当前起止点 |
+| --- | --- |
+| `agent_duration_seconds` | `request.startedAt`，缺失回退 `timestamp`，至 `completedAt`，缺失回退 `finishTimestamp` |
+| `duration_seconds` | `prompt.sent_at` 至同一原生完成点 |
 
-本地 2.28.12 的 CDP + Playwright 控制已经完成单题站点冒烟；本次没有新增执行。既有会话 `38442617777983746` 的保存快照含“消耗 0.46”，仅证明 UI 有消费数值。当前主进程日志中与该会话匹配的记录主要是导航等信息，不能据此恢复完整工具轨迹或 Token。
+[五题 Token 补采证据](evidence/workbuddy-jsonl-metrics-20260921/README.md)记录输入 769,118、输出 4,347、总 Token 773,465、缓存读取 703,040、模型响应 21、工具 19；[报告详情证据](evidence/general-report-details-20260921/README.md)对应平均 Token 154,693、缓存命中率 91.4086%。[原生耗时补采](evidence/workbuddy-native-timing-20260921/README.md)已验证任务耗时 306.295 秒、流程耗时 511.448 秒。它们证明指定冻结批次的采集与报告，不能扩成其它运行的数值。
 
-后续先验证消费明细的单位、对应 turn/attempt、结算时点和可持久化来源，再决定是否纳入积分。若长期只能读到四舍五入的 UI 值，应明确记录 UI 来源和精度；没有真实 Token 字段时，保留 unavailable。
+SQLite 的 usage/上下文容量快照不能替代逐响应累积 Token；`.db-wal` 是 SQLite WAL 文件，不是独立的 Token 指标接口。JSONL 缺失且没有可信补采时，模型用量保留 unavailable。
 
-## 6. 落地顺序与并行边界
+### 4.3 QwenWork：开关、采集准入与实测值
 
-1. **公共口径先定**：冻结 attempt 主键、执行终态、工具结果分类、资源 scope、积分结算记录和 null/coverage 契约。补平均 Token 与缓存命中率的聚合，不改变评分分母。
-2. **接入可验证来源**：AstronStudio 与 WorkBuddy 继续补终态异常、工具结果及积分；QwenWork 已接入 macOS 1.0.6 单题的请求/工具/双耗时，下一步补异常样本和 Token 语义验证。
-3. **DoubaoWork 补证据链**：原生任务身份、终态、工具结果、消费与 usage。若部分来源暂缺，其余指标仍可独立接入。
-4. **固定回归样本**：正常完成、工具失败后恢复、最终错误、超时、取消、重复事件、未知终态、零工具、真实零值与掩码零值。积分另验延迟结算和重复快照；缓存验包含/不包含缓存的两种协议。已有样本可先做解析验收，最终仍需目标客户端真实运行对账。
+开关必须注入 **QwenWork 客户端进程**，仅在控制终端设置环境变量并不能证明已运行客户端启用。General 已有 `token-launch.mjs`：只在空闲且客户端/CDP 身份确认后处理精确监听进程，使用 `open -na ... --env QODERCN_EXPOSE_TOKEN_USAGE=1 --args ...` 启动，并通过 `token-process.mjs` 回读对应进程的开关。队列的 `--require-token-exposure` 将此要求冻结进运行配置；probe 记录 `app.token_usage_exposure.status=enabled`。
 
-当前按 Harness 串行推进并直接在工作区分支修改，公共 Schema、原生解析接口和报告聚合随同一基线前进。后续若重新启用并行，平台专属 adapter/fixture 可以隔离到 `.agents/` worktree，但公共公式只由控制基线单点修改，避免分母、去重和缺失值语义漂移。
+General 新增 Token 采集还检查：
 
-## 7. 主要依据
+1. 冻结 config/journal/task/attempt/trace root 一致，发送前 probe 的 SHA、时间和精确监听进程开关通过校验。
+2. 当前 profile 匹配 macOS 1.2.0、`@ali/qodercn-agent-sdk-next` 1.0.46、目标 assistant transcript 1.1.59 与 runtime SHA。profile 约束的是 Token 字段语义，不是对整个 Harness 执行设置客户端版本白名单。
+3. 只选唯一主 turn，模型 request/response ID 集合一致、无重复，Qoder 响应字段为合法计数且不是默认全零，缓存读取不超过输入。
+4. 逐响应输入/输出/缓存读取之和与 `turn.finished` 累计量一致；输入已含缓存读取，`total=input+output`。
 
-仓库路径均相对本次读取的原工程根，准确内容以证据清单中的 SHA 为准：
+本次只读复算了 `qwenwork-macos-general-token-smoke-20260923-r22` 的 `01_Productivity_Flow_task_005_support_handoff`，核对 6 份指标来源文件的 SHA/size、11 个请求/响应 ID 及主 turn 汇总：
 
-- `tools/report/skills/web-e2e/execute-web-e2e/references/resource-metrics.md`
-- `tools/report/e2e-shared/resource-metrics/native-parsers.mjs`
-- `tools/report/skills/web-e2e/execute-web-e2e/drivers/metrics/qwen-profile.mjs`
-- `tools/report/skills/web-e2e/report-web-e2e/scripts/aggregate_web_e2e_results.py`：`resource_summary / complete_values / unit_summary`
-- `tools/report/skills/web-e2e/score-web-e2e/scripts/finalize_score.mjs`：费用和格式字段默认值、评分状态处理
-- `eval_general_e2e/contracts/schemas/resource-metrics-v1.schema.json`
-- `eval_general_e2e/contracts/schemas/execution-record-v1.schema.json`
-- `tools/report/skills/general-e2e/report-general-e2e/scripts/report_general_e2e.py`：`score_summary / resource_summary / timing_summary`
-- `docs/design/general-e2e/evidence/g2-03/s1/raw/astronstudio-provider-events.jsonl`
-- AstronStudio 桌面源码：`apps/server/src/turnBilling/TurnBillingReactor.ts`、`TurnBillingOutbox.ts`、`apps/web/src/components/chat/turnBillingPresentation.ts`
-- [OpenAI 官方 SDK：用量及缓存字段](https://github.com/openai/openai-python/blob/main/src/openai/types/completion_usage.py)
-- [Anthropic 官方 SDK：Usage](https://github.com/anthropics/anthropic-sdk-python/blob/main/src/anthropic/types/usage.py)
-- [Anthropic 官方 Prompt Caching 示例](https://github.com/anthropics/anthropic-cookbook/blob/main/misc/prompt_caching.ipynb)
+| 指标 | r22 新采集结果 |
+| --- | ---: |
+| 输入 Token（含缓存） | 474537 |
+| 输出 Token | 9589 |
+| 总 Token | 484126 |
+| 缓存命中输入 Token | 425379 |
+| 输入缓存命中率（由原生总量复算） | 89.6408% |
+| 模型请求数 / 工具调用数 | 11 / 14 |
+| 任务耗时(s) / 流程耗时(s) | 122.852 / 280.088 |
+| 缓存写入输入 / 普通输入 / 推理 Token / HTTP 尝试数 | 未知，不补 0 |
 
-官方文档站点本次分别返回访问限制/地区页面，因此外部字段核对采用上述成功读取的官方 GitHub 源码和示例；示例时间与定价不作为本报告的评测性能或成本结论。
+原件为本地调试根下 `qwenwork-macos-general-token-smoke-20260923-r22/worker/qwenwork-macos-general-token-smoke-20260923-r22__qwenwork-macos-x86-64/.general-e2e/collection-token/01_Productivity_Flow_task_005_support_handoff/resource-metrics.json`；调试根为 `/Users/gzx/debug-workspace/e2e-evaluate`，该文件 SHA-256 为 `b1d7882fa697031e31ac4fb4818afffd2bc731c12be441e2fa00b06801a35c0f`。
+
+这是新 Token 采集与对账证据；核对时 collector/normalizer/profile 尚有未提交修改，不能仅据此宣称正式发行、评分回传与 Excel 已全部更新。[r20 五题正式报告](evidence/qwenwork-macos-five3-20260923/README.md)中的 Token/cache 仍为 unavailable，已验证请求 23、工具 21、任务耗时 180.759 秒、流程耗时 617.23 秒。旧包与旧报告不改写；新能力应通过新采集/回传与报告留证。
+
+Web 的 `drivers/metrics/qwen-profile.mjs` 当前登记的是 macOS 1.0.5、Windows 1.0.5.0/1.0.6.0 Profile；不能由 General 新增的 macOS 1.2.0 解析，推定 Web 同版本也已完成采集准入。未命中 Profile、掩码全零或对账不一致时，应分别保留 unavailable/masked/partial/unverified，而不是承诺“开了开关就无条件完整统计”。
+
+## 5. Web 当前报告边界
+
+`aggregate_web_e2e_results.py::unit_summary/resource_summary` 仍按 Web submission 汇总：
+
+| 类别 | 已有内容 |
+| --- | --- |
+| 结果与状态 | 平均总分/得分率、严格满分率、完成率、执行错误、历史超时、执行未记录和评测异常计数 |
+| 详细 Profile | 内容与结构、交互与功能、视觉与布局及细项；审美得分/有效样本数及主次维度 |
+| ArtifactsBench | 独立轻量 Profile；不强填详细维度 |
+| 资源 | 11 项基础指标的总量/已知小计/覆盖；总/输入/输出 Token 均值、模型请求数、工具次数 |
+| 时间 | 平均流程耗时、P50/P90、流程总耗时与智能体耗时总量 |
+| 兼容字段 | `average_cost_usd / total_cost_usd / format_accuracy`；缺字段时可为 null，不表示已采到真实费用或完成工具质量判定 |
+
+Web 完成率要求执行 `completed` 或历史 `not_recorded`，且评分 `completed`。General 完成率仅看原生执行完成，二者不能直接互换，更不能统一用 `1 - completion_rate` 代替执行异常率。Web 当前聚合保留对缺失分数取零及发布协议下的异常零分行为；General 保留有效分母。本文只更新事实，不更改任一评分协议。
+
+## 6. 尚未实现或暂缓的指标
+
+以下为后续建议，不属于当前正式报告已交付指标。
+
+| 指标 | 建议口径 | 当前缺口 |
+| --- | --- | --- |
+| 独立任务执行异常率 | 确认非正常终态的执行尝试数 / 实际开始执行的尝试数；分开候选、Harness、基础设施和人工取消原因 | 当前主要是状态计数与完成率；全 attempt 分母与统一异常归因未落地，终态未知不能填完整比率 |
+| 工具调用成功率 | 明确成功调用数 / 全部原生调用尝试数，同时披露 unknown 与终态覆盖 | 本阶段暂缓；协议 completed 不代表业务 success，需各工具错误/退出码语义 |
+| 平均任务积分 | 所有被纳入尝试的已结算积分 / 执行尝试数，单位与结算范围明确 | 缺公共字段、attempt 绑定、去重和延迟结算对账 |
+| 全 attempt 消费视图 | 同题所有执行尝试的 Token/积分分别汇总 | 当前报告基于所选回传，不汇总所有被替换重跑 |
+
+积分来源保留为历史线索，不能写成已采集指标：
+
+- AstronStudio：历史源码 revision `12d9be52a1745cedd879a724879af2e430a42a53` 的 `TurnBillingReactor` 将 `billingTurnId / chargedPoints / settledAt` 写入 `turn.billing.settled`。不是看到 `credits` 名称就可以使用，仍需目标 turn 的真实结算对账。
+- WorkBuddy：历史 5.5.3 安装包 `SqliteConversationUsagePort.persistUsage` 按 `credit[requestId] += usage.cost.amount` 累计至 `session_usage.credit_json`；历史样本约 269.14 仅证明来源存在。必须绑定评测 request/attempt，不能累加多次轮询同一累计快照。
+- QwenWork：当前未确认正式任务积分来源。
+- DoubaoWork：历史 2.28.12 目标 UI 出现“消耗 0.46”，尚未确认单位、结算范围和精度，不能反推 Token。
+
+后续优先把已实现采集纳入可复核发行和正式报告，再补真实缺项。工具质量比率、平均积分、全 attempt 账本按用户优先级推进；不再把 General 平均 Token、缓存命中率和 WorkBuddy 原生耗时重复列作待开发。各 Harness 的上线状态与故障验收单独见[接续入口](README.md)，不从某个指标可采推导整个客户端生产就绪。
+
+## 7. 可复核依据
+
+| 依据 | 本文对应结论 |
+| --- | --- |
+| [标准报告入口](../../../tools/report/scripts/generate_eval_report.py)：`write_overview_sheet` 与用例/工具/能力表 | 常规报告的布局与字段；CLI 特有指标的边界 |
+| [General 聚合器](../../../tools/report/skills/general-e2e/report-general-e2e/scripts/report_general_e2e.py)：`score_summary/resource_summary/timing_summary` | 有效分母、完整总量、覆盖、批次墙钟 |
+| [General 展示表](../../../tools/report/skills/general-e2e/report-general-e2e/scripts/report_views.py)：`build_views/capability_scores/trace_tools` | 总览顺序、效率公式、七维映射和工具次数 |
+| [用例与详情表](../../../tools/report/skills/general-e2e/report-general-e2e/scripts/report_case_views.py)：`build_case_views`；[Excel 渲染](../../../tools/report/skills/general-e2e/report-general-e2e/scripts/render_general_e2e_excel.mjs) | 对比明细、单元详情、9+N Sheet |
+| [公共原生解析器](../../../tools/report/e2e-shared/resource-metrics/native-parsers.mjs)；[AstronStudio General 采集](../../../tools/report/skills/general-e2e/collect-general-e2e/scripts/collect_astronstudio_resource_metrics.mjs) | Token 归一化、响应/usage 增量计数 |
+| [WorkBuddy JSONL 采集与补采](../../../tools/report/skills/general-e2e/collect-general-e2e/drivers/workbuddy/README.md) | 已实现用量和双耗时、冻结补采 |
+| [Qwen Token 启动](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/token-launch.mjs)、[进程校验](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/token-process.mjs)、[队列](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/batch.mjs) | 开关注入、精确 PID 回读与 `--require-token-exposure` |
+| [Qwen General collector](../../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/collector.mjs)：`readFrozenTokenContext`；同目录 `token-profile.mjs`、[native-normalizer.mjs](../../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/native-normalizer.mjs)：`buildQwenStrictResourceMetrics` | 工作区新增 Profile、provenance、请求/响应与 turn 对账；核对时含未提交文件 |
+| [Web 聚合器](../../../tools/report/skills/web-e2e/report-web-e2e/scripts/aggregate_web_e2e_results.py)；[Web Qwen Profile](../../../tools/report/skills/web-e2e/execute-web-e2e/drivers/metrics/qwen-profile.mjs)；[Doubao parser](../../../tools/report/skills/web-e2e/execute-web-e2e/drivers/metrics/parsers.mjs)：`parseDoubao` | Web 指标、Profile 范围与 Doubao 工具小计 |
+| [General 指标 Schema](../../../eval_general_e2e/contracts/schemas/resource-metrics-v1.schema.json) | 11 项基础字段与状态契约 |
+
+本次验证：`tests.general_e2e.test_general_report_views`、`tests.general_e2e.test_report_general_e2e`、`tests.test_report_web_e2e` 共 38 项通过；另对 r22 现存原始 segment 与采集来源执行只读复算。没有重跑 Harness、Judge 或生成新报告，也没有修改采集/评分源码。
