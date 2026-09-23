@@ -45,7 +45,8 @@ import {
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.7";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.8";
+const PROVISIONAL_SESSION_SETTLE_MS = 60_000;
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
 const PROBE_SCHEMA = "wildclawbench.general-e2e-qwenwork-readonly-probe/v1";
@@ -535,7 +536,7 @@ async function bindOrAttend(config, state, dependencies) {
       && session.cwd === state.candidate_workspace
       && /QWENWORK_SESSION_ID_UNSAFE_FOR_TRACE_LOOKUP/u.test(String(error?.message))
     ) {
-      return persistProvisionalSession(config, state, dependencies, session);
+      return provisionalSessionOrAttend(config, state, dependencies, session);
     }
     return persistAttention(
       config,
@@ -585,6 +586,22 @@ async function persistProvisionalSession(config, state, dependencies, session) {
   return { journal: state, session, provisional: true };
 }
 
+async function provisionalSessionOrAttend(config, state, dependencies, session) {
+  const sinceSend = Date.parse(state.send?.returned_at || state.send?.invoking_at || "");
+  const observedAt = Date.parse(dependencies.now());
+  if (!Number.isFinite(sinceSend) || !Number.isFinite(observedAt) || observedAt < sinceSend) {
+    return persistAttention(config, state, dependencies,
+      "QWENWORK_PROVISIONAL_SESSION_TIME_INVALID", "发送时间无法对账；禁止重发");
+  }
+  if (observedAt - sinceSend >= PROVISIONAL_SESSION_SETTLE_MS
+      && session.classification?.kind !== "running" && !session.stream_id) {
+    return persistAttention(config, state, dependencies,
+      "QWENWORK_PROVISIONAL_SESSION_INACTIVE",
+      "发送后仅有 conversation/sub-chat/cwd，原生 session_id 与活动 stream 长时间未出现；保留原 attempt 并禁止重发");
+  }
+  return persistProvisionalSession(config, state, dependencies, session);
+}
+
 async function observeBoundAttempt(config, state, dependencies) {
   const session = await selectAttemptSession(config, state, dependencies);
   if (!session) {
@@ -604,7 +621,7 @@ async function observeBoundAttempt(config, state, dependencies) {
     && session.local_project_id
     && session.cwd === state.candidate_workspace
   ) {
-    return persistProvisionalSession(config, state, dependencies, session);
+    return provisionalSessionOrAttend(config, state, dependencies, session);
   }
   if (typeof dependencies.navigateToSession === "function") {
     try {

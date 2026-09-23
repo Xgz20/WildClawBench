@@ -573,6 +573,55 @@ test("managed queue prepares a project without sending, then dispatches the same
   ]);
 });
 
+test("provisional QwenWork binding pauses after an inactive identity settle window but never resends", async () => {
+  for (const kind of ["unknown", "running"]) {
+    const config = makeConfig({ resume: true, managed_queue_id: "qwen-queue-fixture" });
+    const state = createQwenAttemptJournal({
+      identity: config.identity, dataset: config.dataset, taskRoot: config.task_root,
+      candidateWorkspace: config.candidate_workspace, prompt: config.prompt,
+      configDigest: config.config_digest, now: "2026-09-19T10:00:00.000Z",
+    });
+    recordQwenDispatchIntent(state, { project: project(), configuration: configuration(),
+      baseline: [], now: "2026-09-19T10:00:01.000Z" });
+    reserveQwenDispatch(state, { now: "2026-09-19T10:00:02.000Z", reservationId: "reservation-fixture" });
+    markQwenDispatchReturned(state, { now: "2026-09-19T10:00:03.000Z", method: "fixture-click" });
+    const provisional = { ...session(), session_id: null,
+      native_status: kind === "running" ? "running" : "ready",
+      stream_id: kind === "running" ? "stream-fixture" : null,
+      classification: { kind } };
+    state.phase = "RUNNING";
+    state.prompt.send_status = "uncertain";
+    state.session = { ...state.session, conversation_id: provisional.conversation_id,
+      sub_chat_id: provisional.sub_chat_id, local_project_id: provisional.local_project_id,
+      cwd: provisional.cwd, session_id: null, verified: false };
+    let stored = structuredClone(state);
+    let dispatches = 0;
+    const result = await runQwenGeneralAttempt(config, {
+      withAttemptLock: async (_config, operation) => operation(),
+      now: () => "2026-09-19T10:02:05.000Z",
+      readJournal: async () => structuredClone(stored),
+      writeJournal: async (_path, next) => { stored = structuredClone(next); },
+      prepareUi: async () => { throw new Error("must not prepare"); },
+      verifyPreparedUi: async () => { throw new Error("must not read back before binding"); },
+      fillPrompt: async () => { throw new Error("must not refill"); },
+      dispatchPrompt: async () => { dispatches += 1; },
+      querySessions: async () => [provisional],
+      verifySessionPrompt: async () => { throw new Error("QWENWORK_SESSION_ID_UNSAFE_FOR_TRACE_LOOKUP"); },
+      observeUi: async () => { throw new Error("must not observe unverified session"); },
+      writeBindingEvidence: async () => [],
+    });
+    assert.equal(dispatches, 0);
+    assert.equal(result.journal.send.dispatch_attempt_count, 1);
+    if (kind === "unknown") {
+      assert.equal(result.journal.phase, "NEEDS_ATTENTION");
+      assert.equal(result.journal.attention.code, "QWENWORK_PROVISIONAL_SESSION_INACTIVE");
+    } else {
+      assert.equal(result.journal.phase, "RUNNING");
+      assert.equal(result.journal.attention.code, "QWENWORK_SESSION_ID_PENDING");
+    }
+  }
+});
+
 test("terminal journal replay returns the persisted execution projection without observing or resending", async () => {
   const config = makeConfig({ resume: true });
   const state = createQwenAttemptJournal({
