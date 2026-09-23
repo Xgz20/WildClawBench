@@ -77,7 +77,7 @@ v2 配置 `run_slots=3`，5 题执行和正式 collect 均通过，原生请求�
 1. 使用[五题证据](evidence/qwenwork-macos-five3-20260923/README.md)核对 r21 的同批次 5/5 一次发送、原始主 turn 真正三路、两次动态补位、同 attempt 恢复、正式采集、`gpt-6-sol/high` 三路语义评分、回传和 10 Sheet 报告。r20 短题轮次只观察到峰值 2，不能抹掉或改写；预建是可选执行策略，不把 UI 准备或队列占槽计入原生任务耗时。
 2. r23 在新客户端进程启用 `QODERCN_EXPOSE_TOKEN_USAGE=1` 后，对五题逐响应与主 turn 完整对账，输入/输出/总 Token/Cache Read 均 5/5 observed；报告总 Token 1,611,922。旧 r20/r21 隐藏零值不可回填。Cache Write、推理 Token、HTTP 尝试和实际模型 ID 仍未知。
 3. 后续裁判配置固定为 `gpt-6-sol/high`；原 r20 astra/high 评分保留为历史 submission，不覆盖它。题目 `timeout_seconds` 不限制 QwenWork 或评分 thread。
-4. 补 QwenWork 适用故障矩阵：发送临界中断、活动任务期间客户端重启/重连、未知授权/追问自动处理及客户端自然残留复现。r24 已在正式 QwenWork finalizer 中注入真实 Workspace cwd 残留并验证精确终止和目录外进程保护；它不冒充自然残留或活动任务重启通过。Codex Desktop 重启仍按用户要求暂缓；Apple Silicon、Windows、60 题全量和无人值守扩容另验。
+4. 补 QwenWork 适用故障矩阵：r25 已在发送尝试后硬中断队列控制进程，验证原 attempt、一次发送与显式陈旧 owner 恢复；该尝试没有原生 session，按未闭环故障证据保留，`e72a770` 的安全暂停修复仍待同类真机复验。活动任务客户端重启/重连、未知授权/追问自动处理及自然残留复现仍待验。r24 正式 finalizer 的受控 Workspace 进程注入已证明精确终止和目录外进程保护，不冒充自然残留。Codex Desktop 重启仍按用户要求暂缓；Apple Silicon、Windows、60 题全量和无人值守扩容另验。
 
 历史证据根：`/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-macos-general-e2e/`。SLOT04 未建 attempt，退出最终由用户确认；关闭库 probe 当时报 error 14，后续修复只有离线证据。本轮整理未操作客户端，不把历史“进程已退出”当作当前现场。
 
