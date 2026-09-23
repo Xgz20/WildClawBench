@@ -45,7 +45,7 @@ import {
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.3";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.4";
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
 const PROBE_SCHEMA = "wildclawbench.general-e2e-qwenwork-readonly-probe/v1";
@@ -67,9 +67,11 @@ function usage() {
   --resume-probe-sha256  本次恢复 probe 的独立 SHA-256
   --initial-probe    托管队列本次初始发送使用的 fresh probe；不改冻结配置
   --initial-probe-sha256  initial probe 文件的 SHA-256
+  --prepare-only    托管队列只创建并核验本题项目和草稿，发送留给同 attempt resume
   --observe-once    与 --resume 一起使用；只做一次原生状态/UI 观察
   --managed-queue-id  由 QwenWork 批量队列传入的稳定队列 ID
   --allowed-active-session-id  批量队列当前允许保持 running 的原生 session；可重复
+  --allowed-active-conversation-id  session_id 延迟落库时允许保持 running 的 conversation；可重复
   -h, --help        显示帮助
 
 Driver 不启动、重启或退出 QwenWork，不切换模型或权限。live 模式要求配置中登记独占桌面时段和显式执行授权。`;
@@ -94,6 +96,8 @@ export function calculateQwenCanaryConfigDigest(config) {
   delete copy.recovery_probe;
   delete copy.managed_queue_id;
   delete copy.allowed_active_session_ids;
+  delete copy.allowed_active_conversation_ids;
+  delete copy.prepare_only;
   if (copy.prompt) delete copy.prompt.content;
   return sha256(JSON.stringify(stableValue(copy)));
 }
@@ -203,8 +207,10 @@ export function parseDriverArgs(argv) {
     initialProbeSha256: "",
     observeOnce: false,
     validateOnly: false,
+    prepareOnly: false,
     managedQueueId: "",
     allowedActiveSessionIds: [],
+    allowedActiveConversationIds: [],
     help: false,
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -238,7 +244,14 @@ export function parseDriverArgs(argv) {
       result.allowedActiveSessionIds.push(value);
       index += 1;
     }
+    else if (argument === "--allowed-active-conversation-id") {
+      const value = argv[index + 1];
+      if (!value || value.startsWith("--")) throw new Error("--allowed-active-conversation-id 缺少值");
+      result.allowedActiveConversationIds.push(value);
+      index += 1;
+    }
     else if (argument === "--validate-only") result.validateOnly = true;
+    else if (argument === "--prepare-only") result.prepareOnly = true;
     else if (argument === "--config") {
       const value = argv[index + 1];
       if (!value || value.startsWith("--")) throw new Error("--config 缺少值");
@@ -260,6 +273,9 @@ export function parseDriverArgs(argv) {
   if (!result.help && !result.config) throw new Error("必须指定 --config");
   if (result.allowedActiveSessionIds.length && !result.managedQueueId) {
     throw new Error("--allowed-active-session-id 必须与 --managed-queue-id 一起使用");
+  }
+  if (result.prepareOnly && !result.managedQueueId) {
+    throw new Error("--prepare-only 只能由托管队列使用");
   }
   return result;
 }
@@ -497,6 +513,17 @@ async function bindOrAttend(config, state, dependencies) {
   try {
     promptEvidence = await dependencies.verifySessionPrompt(session, config.prompt);
   } catch (error) {
+    if (
+      config.managed_queue_id
+      && !session.session_id
+      && session.conversation_id
+      && session.sub_chat_id
+      && session.local_project_id
+      && session.cwd === state.candidate_workspace
+      && /QWENWORK_SESSION_ID_UNSAFE_FOR_TRACE_LOOKUP/u.test(String(error?.message))
+    ) {
+      return persistProvisionalSession(config, state, dependencies, session);
+    }
     return persistAttention(
       config,
       state,
@@ -510,6 +537,41 @@ async function bindOrAttend(config, state, dependencies) {
   return { journal: state, session };
 }
 
+async function persistProvisionalSession(config, state, dependencies, session) {
+  const now = dependencies.now();
+  state.session = {
+    ...state.session,
+    conversation_id: session.conversation_id,
+    sub_chat_id: session.sub_chat_id,
+    session_id: null,
+    local_project_id: session.local_project_id,
+    cwd: session.cwd,
+    verified: false,
+    captured_at: now,
+    prompt_evidence: null,
+  };
+  state.prompt.send_status = "uncertain";
+  state.send.state = "attempted";
+  state.phase = "RUNNING";
+  state.attention = {
+    code: "QWENWORK_SESSION_ID_PENDING",
+    message: "原生 session_id 尚未落库；保留 conversation/sub-chat/cwd 临时绑定，resume 时补齐，禁止重发",
+    at: now,
+  };
+  state.updated_at = now;
+  state.events.push({
+    type: "PROVISIONAL_SESSION_BOUND",
+    at: now,
+    details: {
+      conversation_id: session.conversation_id,
+      sub_chat_id: session.sub_chat_id,
+      cwd: session.cwd,
+    },
+  });
+  await dependencies.writeJournal(config.state_file, state);
+  return { journal: state, session, provisional: true };
+}
+
 async function observeBoundAttempt(config, state, dependencies) {
   const session = await selectAttemptSession(config, state, dependencies);
   if (!session) {
@@ -520,6 +582,16 @@ async function observeBoundAttempt(config, state, dependencies) {
       "QWENWORK_BOUND_SESSION_MISSING",
       "已持久化的原生 session/cwd/local project 无法精确回读；禁止选择其他会话或重发",
     );
+  }
+  if (
+    config.managed_queue_id
+    && !session.session_id
+    && session.conversation_id
+    && session.sub_chat_id
+    && session.local_project_id
+    && session.cwd === state.candidate_workspace
+  ) {
+    return persistProvisionalSession(config, state, dependencies, session);
   }
   if (typeof dependencies.navigateToSession === "function") {
     try {
@@ -591,10 +663,16 @@ async function assertManagedActiveSessions(config, state, dependencies) {
   const rows = await dependencies.querySessions();
   const active = rows.filter((row) => row?.classification?.kind === "running");
   const allowed = new Set(config.allowed_active_session_ids || []);
+  const allowedConversations = new Set(config.allowed_active_conversation_ids || []);
   if (state.session?.session_id) allowed.add(state.session.session_id);
-  const unknown = active.filter((row) => !row.session_id || !allowed.has(row.session_id));
+  if (state.session?.conversation_id) allowedConversations.add(state.session.conversation_id);
+  const unknown = active.filter((row) => (
+    row.session_id
+      ? !allowed.has(row.session_id) && !allowedConversations.has(row.conversation_id)
+      : !row.conversation_id || !allowedConversations.has(row.conversation_id)
+  ));
   if (unknown.length) {
-    throw new Error(`QWENWORK_MANAGED_ACTIVE_SESSION_NOT_ALLOWED: ${unknown.map((row) => row.session_id || "<missing>").join(",")}`);
+    throw new Error(`QWENWORK_MANAGED_ACTIVE_SESSION_NOT_ALLOWED: ${unknown.map((row) => row.session_id || row.conversation_id || "<missing>").join(",")}`);
   }
 }
 
@@ -639,6 +717,7 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
   if (
     config.resume === true
     && state.send.dispatch_attempt_count === 0
+    && !config.managed_queue_id
     && config.recovery_probe.active_or_pending_count !== 0
   ) {
     return persistAttention(
@@ -667,6 +746,7 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
   if (action === "inspect-only") {
     const bound = await bindOrAttend(config, state, dependencies);
     if (!bound.session) return bound;
+    if (bound.provisional === true) return { journal: state, execution_state: null };
     return observeBoundAttempt(config, state, dependencies);
   }
 
@@ -696,6 +776,27 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
         state,
         dependencies,
         "QWENWORK_PRE_SEND_PREPARATION_FAILED",
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  }
+
+  if (config.prepare_only) {
+    if (state.phase !== "READY_TO_DISPATCH" || state.send.dispatch_attempt_count !== 0) {
+      throw new Error("QWENWORK_PREPARE_ONLY_STATE_INVALID");
+    }
+    return { journal: state, execution_state: null };
+  }
+
+  if (action === "dispatch-once") {
+    try {
+      // The queue may have prepared several projects before dispatch. Navigate
+      // to this exact project and restore its frozen prompt before readback.
+      await dependencies.verifyPreparedUi(config, state);
+      await dependencies.fillPrompt(config.prompt.content);
+    } catch (error) {
+      return persistAttention(
+        config, state, dependencies, "QWENWORK_PRE_DISPATCH_READBACK_FAILED",
         error instanceof Error ? error.message : String(error),
       );
     }
@@ -732,11 +833,13 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
       }
       return bound;
     }
+    if (bound.provisional === true) return { journal: state, execution_state: null };
     return observeBoundAttempt(config, state, dependencies);
   }
 
   const bound = await bindOrAttend(config, state, dependencies);
   if (!bound.session) return bound;
+  if (bound.provisional === true) return { journal: state, execution_state: null };
   return observeBoundAttempt(config, state, dependencies);
 }
 
@@ -815,7 +918,8 @@ async function createLiveDependencies(config) {
   const page = await chooseQwenWorkMainPage(browser, timeout);
   page.setDefaultTimeout(timeout);
   await page.bringToFront();
-  const queryProjects = () => queryQwenProjectRows(config.client.session_db);
+  const snapshotOptions = { consistentOnlineBackup: Boolean(config.managed_queue_id) };
+  const queryProjects = () => queryQwenProjectRows(config.client.session_db, snapshotOptions);
   // Attempt IDs used by prepared canaries may share a common prefix. Include
   // the frozen config digest so repeated attempts can never select an older
   // project with the same visible name.
@@ -856,7 +960,7 @@ async function createLiveDependencies(config) {
   return {
     browser,
     dependencies: {
-      prepareUi: async () => ({
+    prepareUi: async () => ({
         project: await createQwenLocalProject({
           page,
           workspace: config.candidate_workspace,
@@ -874,7 +978,7 @@ async function createLiveDependencies(config) {
       }),
       fillPrompt: (prompt) => fillQwenPrompt(page, prompt, timeout),
       dispatchPrompt: () => dispatchQwenPrompt(page, timeout),
-      querySessions: () => queryQwenSessionRows(config.client.session_db),
+      querySessions: () => queryQwenSessionRows(config.client.session_db, snapshotOptions),
       verifySessionPrompt: (session, prompt) => verifyQwenSessionPromptEvidence({
         traceRoot: config.client.trace_root,
         session,
@@ -885,7 +989,7 @@ async function createLiveDependencies(config) {
         page,
         new Date().toISOString(),
         session,
-        await queryQwenSessionRows(config.client.session_db),
+        await queryQwenSessionRows(config.client.session_db, snapshotOptions),
       ),
       writeBindingEvidence: async ({ state, session, terminalObservation }) => {
         const path = join(config.evidence_root, "session-binding.json");
@@ -924,6 +1028,8 @@ async function main(argv = process.argv.slice(2)) {
   config.resume = args.resume;
   config.managed_queue_id = args.managedQueueId || null;
   config.allowed_active_session_ids = [...args.allowedActiveSessionIds];
+  config.allowed_active_conversation_ids = [...args.allowedActiveConversationIds];
+  config.prepare_only = args.prepareOnly;
   if (args.validateOnly) {
     process.stdout.write(`${JSON.stringify({
       status: "VALID",
@@ -940,7 +1046,8 @@ async function main(argv = process.argv.slice(2)) {
   try {
     const result = await runQwenGeneralAttempt(config, live.dependencies);
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
-    return result.journal.phase === "COMPLETED" ? 0 : result.journal.phase === "RUNNING" ? 4 : 3;
+    return result.journal.phase === "COMPLETED" || (args.prepareOnly && result.journal.phase === "READY_TO_DISPATCH")
+      ? 0 : result.journal.phase === "RUNNING" ? 4 : 3;
   } finally {
     await live.browser.close().catch(() => {});
   }

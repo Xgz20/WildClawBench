@@ -324,3 +324,29 @@ test("QwenWork queue keeps native timing unavailable separate from valid executi
     await rm(f.root, { recursive: true, force: true });
   }
 });
+
+test("QwenWork queue prepares all projects before its first prompt dispatch", async () => {
+  const f = await fixture(["one", "two", "three"]);
+  const calls = [];
+  try {
+    const execute = async (argv) => {
+      const identity = await identityFrom(argv);
+      const prepareOnly = argv.includes("--prepare-only");
+      calls.push({ task: identity.task_id, prepareOnly, resume: argv.includes("--resume") });
+      await writeJournal(f.root, identity.task_id, identity.attempt_id,
+        prepareOnly ? "READY_TO_DISPATCH" : "COMPLETED",
+        prepareOnly ? { dispatchAttemptCount: 0, sendStatus: "intent_persisted", finished: false } : {});
+      return 0;
+    };
+    const result = await runQwenWorkBatch([...f.args, "--preprepare-projects"], { execute });
+    assert.equal(result.phase, "COMPLETED");
+    assert.deepEqual(calls.map((row) => [row.task, row.prepareOnly]), [
+      ["one", true], ["two", true], ["three", true],
+      ["one", false], ["two", false], ["three", false],
+    ]);
+    assert.ok(calls.slice(3).every((row) => row.resume));
+    assert.deepEqual(result.tasks.map((row) => row.dispatch_attempt_count), [1, 1, 1]);
+  } finally {
+    await rm(f.root, { recursive: true, force: true });
+  }
+});

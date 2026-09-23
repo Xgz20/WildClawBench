@@ -4,7 +4,9 @@ import { basename, isAbsolute, join, resolve } from "node:path";
 
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 
-export const QWENWORK_GENERAL_DRIVER_VERSION = "0.3.3";
+export const QWENWORK_GENERAL_DRIVER_VERSION = "0.3.4";
+const SNAPSHOT_RETRY_LIMIT = 8;
+const SNAPSHOT_RETRY_BACKOFF_MS = 25;
 export const QWENWORK_SESSION_QUERY = String.raw`
 SELECT
   chats.id AS conversation_id,
@@ -246,6 +248,23 @@ function immutableSqliteUri(path) {
   return `file:${encodeURI(path)}?immutable=1`;
 }
 
+async function defaultOnlineBackup(source, target) {
+  // SQLite owns the read transaction while copying WAL frames. Copying the
+  // three live files separately cannot guarantee that they belong to one
+  // committed snapshot when QwenWork is writing continuously.
+  const script = String.raw`
+import pathlib
+import sqlite3
+import sys
+
+source_path, target_path = sys.argv[1:]
+with sqlite3.connect(pathlib.Path(source_path).as_uri() + "?mode=ro", uri=True, timeout=5) as source:
+    with sqlite3.connect(target_path, timeout=5) as target:
+        source.backup(target, pages=0, sleep=0.05)
+`;
+  await runCapture("/usr/bin/python3", ["-c", script, source, target], { capture: true });
+}
+
 async function querySnapshot(sessionDb, query, overrides = {}) {
   await access(sessionDb);
   const runQuery = overrides.query || defaultSqliteQuery;
@@ -254,12 +273,21 @@ async function querySnapshot(sessionDb, query, overrides = {}) {
   const copy = overrides.copyFile || copyFile;
   const statFile = overrides.lstat || lstat;
   const writerCheck = overrides.writerCheck || defaultWriterCheck;
+  const onlineBackup = overrides.onlineBackup || defaultOnlineBackup;
   const sidecars = [`${sessionDb}-wal`, `${sessionDb}-shm`];
   let lastError = null;
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
+  for (let attempt = 1; attempt <= SNAPSHOT_RETRY_LIMIT; attempt += 1) {
     const snapshotRoot = await makeTemp(join(tmpdir(), "qwenwork-general-probe-"));
     const snapshotDb = join(snapshotRoot, basename(sessionDb));
     try {
+      if (overrides.consistentOnlineBackup === true) {
+        await onlineBackup(sessionDb, snapshotDb);
+        const snapshotUri = immutableSqliteUri(snapshotDb);
+        const quickCheck = await runQuery(snapshotUri, "PRAGMA quick_check;");
+        const result = String(quickCheck[0]?.quick_check || quickCheck[0]?.integrity_check || "").trim();
+        if (result !== "ok") throw new Error(`QWENWORK_DB_QUICK_CHECK_FAILED: ${result || "empty"}`);
+        return await runQuery(snapshotUri, query);
+      }
       const before = {
         main: await readFileSignature(sessionDb, statFile),
         wal: await readFileSignature(sidecars[0], statFile),
@@ -282,9 +310,10 @@ async function querySnapshot(sessionDb, query, overrides = {}) {
         wal: await readFileSignature(sidecars[0], statFile),
         shm: await readFileSignature(sidecars[1], statFile),
       };
-      if (!sameFileSignature(before.main, after.main)
+      const sourceChanged = !sameFileSignature(before.main, after.main)
         || !sameFileSignature(before.wal, after.wal)
-        || !sameFileSignature(before.shm, after.shm)) {
+        || !sameFileSignature(before.shm, after.shm);
+      if (sourceChanged) {
         throw new Error("QWENWORK_DB_SNAPSHOT_SOURCE_CHANGED");
       }
 
@@ -301,6 +330,9 @@ async function querySnapshot(sessionDb, query, overrides = {}) {
       return await runQuery(queryDatabase, query);
     } catch (error) {
       lastError = error;
+      if (attempt < SNAPSHOT_RETRY_LIMIT) {
+        await new Promise((resolvePromise) => setTimeout(resolvePromise, SNAPSHOT_RETRY_BACKOFF_MS));
+      }
     } finally {
       await remove(snapshotRoot, { recursive: true, force: true }).catch(() => {});
     }
@@ -333,7 +365,9 @@ export async function inspectQwenSessionDatabase(sessionDb, overrides = {}) {
   return {
     readable: true,
     quick_check: "ok",
-    sqlite_backend: overrides.sqliteBackend || "sqlite3-readonly-snapshot",
+    sqlite_backend: overrides.sqliteBackend || (overrides.consistentOnlineBackup
+      ? "sqlite3-online-backup"
+      : "sqlite3-readonly-snapshot"),
     ...summarizeQwenSessions(rows),
   };
 }

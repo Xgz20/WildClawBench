@@ -40,6 +40,7 @@ Options:
   --endpoint <url>        Loopback CDP endpoint to inspect; default http://127.0.0.1:9250
   --output <path>         Optional JSON report path
   --replace               Replace an existing output file atomically
+  --online-snapshot      Managed queue probe: use SQLite's consistent online backup
   -h, --help              Show this help
 
 This command never launches/restarts QwenWork, changes a project/model/permission,
@@ -55,6 +56,7 @@ export function parseProbeArgs(argv) {
     endpoint: "http://127.0.0.1:9250",
     output: "",
     replace: false,
+    onlineSnapshot: false,
     help: false,
   };
   const valued = new Map([
@@ -68,6 +70,7 @@ export function parseProbeArgs(argv) {
     const arg = argv[index];
     if (arg === "-h" || arg === "--help") output.help = true;
     else if (arg === "--replace") output.replace = true;
+    else if (arg === "--online-snapshot") output.onlineSnapshot = true;
     else {
       const key = valued.get(arg);
       if (!key) throw new Error(`unknown option: ${arg}`);
@@ -214,7 +217,7 @@ export async function buildReadOnlyProbe(config, overrides = {}) {
   });
   const [trace, database, processInfo, endpoint, architecture] = await Promise.all([
     inspectTrace(config.traceRoot),
-    inspectDatabase(config.sessionDb),
+    inspectDatabase(config.sessionDb, { consistentOnlineBackup: config.onlineSnapshot === true }),
     inspectProcess(discovery.executable_path),
     inspectEndpoint(config.endpoint),
     inspectExecutable(discovery.executable_path),

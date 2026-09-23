@@ -230,6 +230,32 @@ test("metadata gate reports partial segment identity without inferring missing v
   ]);
 });
 
+test("QwenWork 1.2 worktree-state is system metadata while content still needs cwd", () => {
+  const state = { session: { session_id: "session-fixture-001", cwd: "/fixture/workspace" } };
+  const valid = assessQwenMetadataCoverage({
+    state,
+    transcriptRows: [
+      { type: "worktree-state", sessionId: "session-fixture-001", worktreeSession: null },
+      { type: "user", sessionId: "session-fixture-001", cwd: "/fixture/workspace" },
+    ],
+    segmentRows: [{ type: "turn.started", data: { project_root: "/fixture/workspace" } }],
+    segmentDirectoryBound: true,
+  });
+  assert.equal(valid.readiness.ready_for_collect, true);
+  assert.equal(valid.transcript.metadata_rows, 1);
+  assert.deepEqual(valid.transcript.cwd, { known: 1, total: 1, missing: 0, mismatched: 0 });
+  const invalid = assessQwenMetadataCoverage({
+    state,
+    transcriptRows: [
+      { type: "worktree-state", sessionId: "session-fixture-001" },
+      { type: "assistant", sessionId: "session-fixture-001" },
+    ],
+    segmentRows: [{ type: "turn.started", data: { project_root: "/fixture/workspace" } }],
+    segmentDirectoryBound: true,
+  });
+  assert.ok(invalid.readiness.blockers.includes("transcript_cwd_missing"));
+});
+
 test("file history snapshots may omit row identity while content rows stay exact", () => {
   const result = assessQwenMetadataCoverage({
     state: { session: { session_id: "session-fixture-001", cwd: "/fixture/workspace" } },

@@ -6,6 +6,7 @@ const TRANSCRIPT_METADATA_TYPES = new Set([
   "workspace-directories",
   "active-leaf",
   "last-prompt",
+  "worktree-state",
   "file-history-snapshot",
 ]);
 

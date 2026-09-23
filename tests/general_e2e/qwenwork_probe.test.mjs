@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import { access, lstat, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
@@ -390,8 +391,44 @@ test("writer detection and unstable source snapshots fail closed after bounded r
       }),
       /QWENWORK_DB_SNAPSHOT_SOURCE_CHANGED/u,
     );
-    assert.equal(mainStatCalls, 6);
+    assert.equal(mainStatCalls, 16);
   } finally {
     await rm(unstableFixture.root, { recursive: true, force: true });
+  }
+});
+
+test("online backup reads committed WAL rows while the writer connection remains open", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qwenwork-online-backup-"));
+  const database = join(root, "agents.db");
+  const writer = spawn("/usr/bin/python3", ["-u", "-c", String.raw`
+import sqlite3
+import sys
+
+database = sqlite3.connect(sys.argv[1])
+database.execute("PRAGMA journal_mode=WAL")
+database.execute("CREATE TABLE sessions (id TEXT PRIMARY KEY)")
+database.execute("INSERT INTO sessions VALUES ('wal-only')")
+database.commit()
+print("READY", flush=True)
+sys.stdin.readline()
+database.close()
+`, database], { stdio: ["pipe", "pipe", "pipe"] });
+  try {
+    await new Promise((resolvePromise, rejectPromise) => {
+      writer.once("error", rejectPromise);
+      writer.stdout.once("data", (chunk) => {
+        if (String(chunk).includes("READY")) resolvePromise();
+        else rejectPromise(new Error(`unexpected writer output: ${chunk}`));
+      });
+      writer.once("exit", (code) => rejectPromise(new Error(`writer exited before backup: ${code}`)));
+    });
+    await access(`${database}-wal`);
+    const rows = await querySnapshot(database, "SELECT id FROM sessions", { consistentOnlineBackup: true });
+    assert.deepEqual(rows, [{ id: "wal-only" }]);
+    await access(`${database}-wal`);
+  } finally {
+    writer.stdin.end();
+    await new Promise((resolvePromise) => writer.once("exit", resolvePromise));
+    await rm(root, { recursive: true, force: true });
   }
 });

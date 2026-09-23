@@ -10,7 +10,7 @@ import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs"
 import { calculateQwenCanaryConfigDigest } from "./driver.mjs";
 
 export const QWENWORK_QUEUE_SCHEMA = "wildclawbench.general-e2e-qwenwork-execution-queue/v1";
-export const QWENWORK_QUEUE_VERSION = "0.1.0";
+export const QWENWORK_QUEUE_VERSION = "0.2.0";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 const TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
@@ -19,6 +19,11 @@ const DRIVER_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const DRIVER_PATH = join(DRIVER_DIR, "driver.mjs");
 const PROBE_PATH = join(DRIVER_DIR, "probe.mjs");
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
+const DRIVER_SOURCE_FILES = [
+  "batch.mjs", "driver.mjs", "execution-state.mjs", "journal.mjs",
+  "probe.mjs", "runtime-profile.mjs", "select-folder.swift",
+  "session-state.mjs", "ui.mjs", "package-lock.json",
+];
 
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 const safeId = (value) => typeof value === "string" && /^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$/u.test(value);
@@ -66,6 +71,7 @@ export function parseBatchArgs(argv) {
   let probe = "";
   let probeSha256 = "";
   let configDir = "";
+  let preprepareProjects = false;
   let resume = false;
   let status = false;
   for (let index = 0; index < args.length;) {
@@ -85,6 +91,9 @@ export function parseBatchArgs(argv) {
     } else if (arg === "--resume" || arg === "--status") {
       if (arg === "--resume") resume = true;
       else status = true;
+      args.splice(index, 1);
+    } else if (arg === "--preprepare-projects") {
+      preprepareProjects = true;
       args.splice(index, 1);
     } else index += 1;
   }
@@ -107,6 +116,7 @@ export function parseBatchArgs(argv) {
     probe: resolve(probe),
     probeSha256,
     configDir: configDir ? resolve(configDir) : "",
+    preprepareProjects,
     resume,
     status,
   };
@@ -145,6 +155,15 @@ async function readManifest(root) {
   const tasks = new Map((manifest.tasks || []).map((task) => [task.task_id, task]));
   if (taskIds.some((id) => !tasks.has(id))) throw new Error("QWENWORK_QUEUE_TASK_DEFINITION_MISSING");
   return { manifest, taskIds, tasks, bytes };
+}
+
+async function driverSourceDigest() {
+  const parts = [];
+  for (const file of DRIVER_SOURCE_FILES) {
+    parts.push(Buffer.from(file + "\0"));
+    parts.push(Buffer.from(sha256(await readFile(join(DRIVER_DIR, file))), "hex"));
+  }
+  return sha256(Buffer.concat(parts));
 }
 
 async function loadExistingConfigs(configDir, taskIds, manifest) {
@@ -228,6 +247,7 @@ async function buildTaskConfig(root, manifestInfo, taskId, attemptId, options, f
 }
 
 function phaseFrom(journal) {
+  if (journal?.phase === "READY_TO_DISPATCH") return "PENDING";
   if (journal?.phase === "NEEDS_ATTENTION") return "NEEDS_ATTENTION";
   if (journal?.phase === "COMPLETED") return "COMPLETED";
   if (journal?.phase === "FAILED") return "FAILED";
@@ -264,6 +284,7 @@ async function synchronizeRow(root, row) {
   const phase = phaseFrom(journal);
   if (!QUEUE_PHASES.has(phase)) throw new Error(`QWENWORK_QUEUE_PHASE_INVALID: ${row.task_id}: ${phase}`);
   row.phase = phase;
+  row.prepared = journal.phase === "READY_TO_DISPATCH";
   row.dispatch_attempt_count = Number(journal.send?.dispatch_attempt_count || 0);
   row.session_id = journal.session?.session_id || null;
   row.conversation_id = journal.session?.conversation_id || null;
@@ -356,6 +377,7 @@ async function refreshProbe(config, destination) {
     "--endpoint", config.client.endpoint,
     "--output", destination,
     "--replace",
+    "--online-snapshot",
   ], { capture: true, allowFailure: true });
   if (result.code !== 0) throw new Error(`QWENWORK_QUEUE_PROBE_FAILED: ${result.stderr || result.stdout}`);
   const content = await readFile(destination);
@@ -363,17 +385,24 @@ async function refreshProbe(config, destination) {
 }
 
 function activeSessionArgs(state) {
-  return state.tasks.filter((row) => row.phase === "RUNNING" && row.session_id)
-    .map((row) => ["--allowed-active-session-id", row.session_id]).flat();
+  return state.tasks.filter((row) => row.phase === "RUNNING")
+    .flatMap((row) => [
+      ...(row.session_id ? ["--allowed-active-session-id", row.session_id] : []),
+      ...(row.conversation_id ? ["--allowed-active-conversation-id", row.conversation_id] : []),
+    ]);
 }
 
-async function runQwenTask(configPath, row, state, options, dependencies, { resume = false, probe = null } = {}) {
+async function runQwenTask(configPath, row, state, options, dependencies, {
+  resume = false, probe = null, prepareOnly = false, initialProbe = null,
+} = {}) {
   const args = ["--config", configPath];
   if (resume) {
     args.push("--resume", "--observe-once", "--resume-probe", probe.path, "--resume-probe-sha256", probe.sha256);
   } else {
-    args.push("--initial-probe", options.probe, "--initial-probe-sha256", options.probeSha256);
+    args.push("--initial-probe", initialProbe?.path || options.probe,
+      "--initial-probe-sha256", initialProbe?.sha256 || options.probeSha256);
   }
+  if (prepareOnly) args.push("--prepare-only");
   args.push("--managed-queue-id", state.queue_id, ...activeSessionArgs(state));
   if (dependencies.execute) return dependencies.execute(args);
   const result = await runCapture(process.execPath, [DRIVER_PATH, ...args], { capture: true, allowFailure: true });
@@ -418,7 +447,8 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
       : null,
     ui_slots: 1,
     run_slots: batch.runSlots,
-    driver_sha256: sha256(await readFile(DRIVER_PATH)),
+    preprepare_projects: batch.preprepareProjects,
+    driver_sha256: await driverSourceDigest(),
   };
   const digest = sha256(JSON.stringify(frozen));
   let state = await optionalJson(statePath);
@@ -448,7 +478,7 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
           attempt_id: existing?.config.identity.attempt_id || attemptId,
           config_path: existing?.path || built.paths.config,
           state_file: existing?.config.state_file || built.paths.journal,
-          phase: "PENDING", dispatch_attempt_count: 0, session_id: null,
+          phase: "PENDING", prepared: false, dispatch_attempt_count: 0, session_id: null,
           conversation_id: null, sub_chat_id: null, cwd: null, started_at: null,
           dispatch_started_at: null, finished_at: null, native_started_at: null,
           native_finished_at: null, error: null, exit_code: null,
@@ -480,7 +510,10 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
           const baseConfig = await readJson(row.config_path);
           const probePath = join(queueRoot, "probes", `${row.task_id}-${Date.now()}.json`);
           const probe = dependencies.execute ? { path: batch.probe, sha256: batch.probeSha256 } : await refreshProbe(baseConfig, probePath);
-          row.exit_code = await runQwenTask(row.config_path, row, state, batch, dependencies, { resume: true, probe });
+          row.exit_code = await runQwenTask(row.config_path, row, state, batch, dependencies, {
+            resume: true, probe,
+            prepareOnly: batch.preprepareProjects && row.dispatch_attempt_count === 0,
+          });
           await synchronizeRow(root, row);
           state.events.push({ event: "TASK_ATTENTION_RECOVERY_RETURNED", at: now(), task_id: row.task_id, task_phase: row.phase, exit_code: row.exit_code });
           await persist(statePath, state);
@@ -494,6 +527,28 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
         await persist(statePath, state);
         return { ...state, state_file: statePath, receipt_file: receiptPath };
       }
+      if (batch.preprepareProjects) {
+        for (const row of state.tasks.filter((item) => item.phase === "PENDING" && !item.prepared)) {
+          const baseConfig = await readJson(row.config_path);
+          const probePath = join(queueRoot, "probes", `prepare-${row.task_id}-${Date.now()}.json`);
+          const probe = dependencies.execute
+            ? { path: batch.probe, sha256: batch.probeSha256 }
+            : await refreshProbe(baseConfig, probePath);
+          row.exit_code = await runQwenTask(row.config_path, row, state, batch, dependencies, {
+            prepareOnly: true, initialProbe: probe,
+          });
+          await synchronizeRow(root, row);
+          state.events.push({ event: "TASK_PREPARATION_RETURNED", at: now(),
+            task_id: row.task_id, task_phase: row.phase, prepared: row.prepared, exit_code: row.exit_code });
+          await persist(statePath, state);
+          if (!row.prepared) {
+            state.phase = "NEEDS_ATTENTION";
+            state.active_task_ids = running.map((item) => item.task_id);
+            await persist(statePath, state);
+            return { ...state, state_file: statePath, receipt_file: receiptPath };
+          }
+        }
+      }
       while (running.length < state.frozen.run_slots) {
         const pending = state.tasks.find((row) => row.phase === "PENDING");
         if (!pending) break;
@@ -501,7 +556,14 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
         state.active_task_ids = [...running.map((row) => row.task_id), pending.task_id];
         state.events.push({ event: "TASK_DISPATCH_REQUESTED", at: now(), task_id: pending.task_id, active_before_dispatch: running.length, completed_before_dispatch: state.tasks.filter((row) => row.phase === "COMPLETED").length });
         await persist(statePath, state);
-        pending.exit_code = await runQwenTask(pending.config_path, pending, state, batch, dependencies);
+        let dispatchProbe = null;
+        if (pending.prepared && !dependencies.execute) {
+          const baseConfig = await readJson(pending.config_path);
+          dispatchProbe = await refreshProbe(baseConfig,
+            join(queueRoot, "probes", `dispatch-${pending.task_id}-${Date.now()}.json`));
+        }
+        pending.exit_code = await runQwenTask(pending.config_path, pending, state, batch, dependencies,
+          pending.prepared ? { resume: true, probe: dispatchProbe || { path: batch.probe, sha256: batch.probeSha256 } } : {});
         await synchronizeRow(root, pending);
         state.events.push({ event: "TASK_DISPATCH_RETURNED", at: now(), task_id: pending.task_id, task_phase: pending.phase, exit_code: pending.exit_code, active_before_dispatch: running.length, completed_before_dispatch: state.tasks.filter((row) => row.phase === "COMPLETED").length });
         await persist(statePath, state);
@@ -559,7 +621,7 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
 
 if (process.argv[1] && await realpath(resolve(process.argv[1])) === await realpath(fileURLToPath(import.meta.url))) {
   if (process.argv.includes("--help")) {
-    console.log("QwenWork macOS General 队列：node drivers/qwenwork/batch.mjs --unit-root PATH --queue-id ID --endpoint http://127.0.0.1:9250 --session-db PATH --trace-root PATH --probe PATH --probe-sha256 SHA [--run-slots 1-8] [--resume|--status]。UI 单槽，后台默认三路并按可信终态动态补位。");
+    console.log("QwenWork macOS General 队列：node drivers/qwenwork/batch.mjs --unit-root PATH --queue-id ID --endpoint http://127.0.0.1:9250 --session-db PATH --trace-root PATH --probe PATH --probe-sha256 SHA [--run-slots 1-8] [--preprepare-projects] [--resume|--status]。UI 单槽，后台默认三路并按可信终态动态补位。");
   } else {
     runQwenWorkBatch(process.argv.slice(2)).then((result) => {
       console.log(JSON.stringify(result, null, 2));

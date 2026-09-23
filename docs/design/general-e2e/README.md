@@ -26,7 +26,7 @@ QwenWork 三题单槽正式 canary 已在 `1f018446a5a0be60487c40405ce6f9863b2d2
 
 原三条并行开发的已接收代码及其控制分支提交映射均已进入当前工作区。Qwen selector/SQLite 加固源 `993cdc5` 对应控制提交 `f0bf24f`；collector/metadata 为 `acfc7a1`、`5263890`、`679a1e3`、`82cd3e1`。Doubao Web finalizer/bridge/route/metrics 为 `9bb30aa`、`694536d`、`07b31b7`、`e2c1d9e`。后续从当前树继续，不能因源提交不是祖先再次 cherry-pick；旧 worktree 仅作审计，暂不删除。
 
-当前七个 General Skill：prepare `0.2.0`、execute `0.10.10`、collect `0.7.4`、orchestrate `0.9.5`、score `0.8.2`、report `0.5.1`、run `0.5.2`。execute 0.10.10 补齐 QwenWork 从旧会话进入唯一“新任务”页、未发送项目恢复、终态 Prompt/transcript provenance 刷新和恢复时目标任务路由；collect 0.7.4 识别 Qwen 文件任务的 `file-history-snapshot` 系统 metadata，内容行身份门禁保持不变；run 0.5.2 让合法 partial collect receipt 贯穿 unit flow，report 0.5.1 继续按完整多级 score path 仅打包目标评分 attempt。后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准。
+当前七个 General Skill：prepare `0.2.0`、execute `0.10.13`、collect `0.7.5`、orchestrate `0.9.5`、score `0.8.2`、report `0.5.1`、run `0.5.2`。execute 增加 QwenWork 队列项目预建、SQLite 在线备份、延迟 session_id 同 attempt 绑定；collect 仅把 1.2.0 的 `worktree-state` 归为已知系统 metadata，内容行 session/cwd 门禁保持不变。已发布的旧发行与验收结果仍绑定各自源码 revision；后续以 `eval_general_e2e/stages.py` 和各 `skill-metadata.json` 为准。
 
 当前报告发行与产物见[用例对比及单元评分详情证据](evidence/general-report-details-20260921/README.md)。`89d13d0` 在既有[单元对比报告](evidence/general-report-comparison-20260921/README.md)基础上，将工具数移到请求数后，明细改为每题各单元得分并列，并增加每单元评分详情，共九张公共表加每单元一张详情；v8 为 10 Sheet。题面、规则和判词读取 SHA 绑定的冻结评分包，缺失不从当前任务源码补齐。总览不显示成本与超时数，双耗时与无根因领导版 Markdown 保留。效率明细按普通输入、缓存命中输入、缓存写入输入、输出四类展示，保留总 Token、平均 Token 和命中率；v8 平均 Token 154693、命中率 91.4086%，缓存写入与精确普通输入仍未知。分类/难度/模态、七维评分和工具次数已接入，工具质量比率暂缓。此次只更新报告，没有新增 Harness 或评分执行，原生三路并发结论不变。
 
@@ -44,7 +44,7 @@ QwenWork 三题单槽正式 canary 已在 `1f018446a5a0be60487c40405ce6f9863b2d2
 | --- | --- | --- | --- |
 | AstronStudio | **受控生产可用**，x86_64；AStudio 3.3.1；G4-03 五题三槽全链路，后续 `457e355` 双题 smoke 2/2 valid，均分 0.9125 | **暂缓 / NOT_RUN**；共享发现、部分 Windows 代码路径与方案存在，原生执行/采集/评分闭环未验收 | 保留现有结果；新公共基线正式使用前做受影响 canary。[双题证据](evidence/macos-current-smoke-20260919/README.md)、[五题证据](evidence/g4-03/README.md) |
 | WorkBuddy | **5 题 canary 已完成**，5.5.6 / x86_64 / xopglm52 / default-sandbox；5/5 执行和 collect，3 路原生请求峰值、2 次动态补位、每题一次发送，评分/回传/报告闭环；2 个有效分、2 个评测异常、1 个容量未评分，不能把本轮写成 5/5 valid | **暂缓 / NOT_RUN**；现有 Web/共享 Windows 能力不能证明 General 已支持 | 主流程代码、短路径发行和 WorkBuddy 重启故障验证已完成。剩余未知授权/追问安全暂停，以及 0.9.4 新包评分稳定性回归。[v2 加固 canary](evidence/workbuddy-hardening-20260921/README.md) |
-| QwenWork | **三题单槽正式 canary 完成，继续并发/故障验收**；1.0.6 / x86_64，三题一次发送、同 attempt 恢复、session/cwd/project 绑定、终态、CB-B collector/finalizer、Judge、return/import 和 10 Sheet 报告全部通过；均分 0.9625，Token/cache 保持 null/unavailable | **暂缓 / NOT_RUN**；尚无本 General 接入的 Windows 实现交付与真机证据 | 验证五题默认三路、动态补位和适用故障矩阵。[三题正式证据](evidence/qwenwork-macos-general-small3-20260922/README.md) |
+| QwenWork | **三题单槽正式闭环；1.2.0 五题开发批次完成评分/报告，三路原生执行仍待验**。r13 五题 5/5 valid、均分 0.8975，三个语义评分 thread 真正重叠；r18 发送占槽峰值 3、动态补位 2，原生主 turn 重叠峰值 2。Token/cache 保持 null/unavailable | **暂缓 / NOT_RUN**；尚无本 General 接入的 Windows 实现交付与真机证据 | 以 1.2.0 重新发行并验证五题原生三路、正式收口和故障矩阵。[三题正式证据](evidence/qwenwork-macos-general-small3-20260922/README.md)、[五题开发证据](evidence/qwenwork-macos-five3-20260923/README.md) |
 | DoubaoWork | **General 尚未接入**；当前 `eval_general_e2e/adapters/` 只有 astronstudio、workbuddy、qwenwork。可复用 discovery 与 Web 专属控制/原生解析经验，但尚无 General Driver、collector/正式回执与闭环 | **暂缓 / NOT_RUN**；Windows 可通过 CDP 自动化是可行性线索，不等于 General 已实现 | QwenWork 收口后接 General；先梳理可复用底层和 General 注册/发行缺口，不直接套 Web receipt |
 
 DoubaoWork Web 的历史进展单独保留：一次开发 canary 已发送且产生 `countdown/index.html`，仍为 `NEEDS_ATTENTION`；UI 等价绑定、Prompt 回读、cleanup 候选模块、driver-side finalizer、内存 receipt bridge、公共路由和 metrics 已有离线实现。公共 route 仍拒绝 batch/formal receipt；可信终态/工作目录证据、真实 cleanup、正式 execution/receipt、评分/报告均未闭环。它既不是 Web 生产准入，也不是 General 完成。详见[历史 Web 任务卡](../e2e/collaboration/tasks/MAC-DOUBAOWORK-WEB.md)和[等价证据方案](../e2e/collaboration/doubaowork-web-integration.md)，其中旧调度安排不再执行。
@@ -72,15 +72,12 @@ v2 配置 `run_slots=3`，5 题执行和正式 collect 均通过，原生请求�
 - WorkBuddy 客户端执行中重启/重连已有最小真机证据；未知授权/追问、stale lock 无人值守自动恢复仍未形成完整矩阵，当前策略是暂停并保留现场，不自动抢占陈旧锁。Codex 重启项因远程控制风险暂缓。
 - 下一步只补上述最小真机故障验证和评分稳定性，不扩展到 60 题全量。AstronStudio 历史 MAC 表不能直接作为 WorkBuddy 通过依据；题目 `timeout_seconds` 继续不限制执行或参与评分。
 
-### 1. QwenWork General：三题单槽已闭环，队列代码已接入，等待真实三路验收
+### 1. QwenWork General：五题闭环与评分三路已有开发证据，补原生执行三路和加固验收
 
-1. 以[三题正式证据](evidence/qwenwork-macos-general-small3-20260922/README.md)为恢复点，先使用提交后重建的独立发行验证 Skill/package 身份；不要复用旧 v5/v6 调试 collection。
-2. `execute-general-e2e 0.10.12` 已加入 QwenWork `batch.mjs`：默认 `run_slots=3`、manifest/attempt/config 冻结、动态补位、同 attempt resume、不确定发送不重发和队列外 active-session fail-closed；离线 52 项 Qwen Node 回归、19 项 scoring orchestration、19 项脱仓构建通过。
-3. 继续使用固定 smoke 覆盖文件/纯回复与 automated、hybrid、llm_judge 的小批；保持用户当前模型/权限，每题只发送一次，缺失 usage 继续保留 null/coverage。当前五题 r7 第三题应先 fresh probe + 原 attempt resume，禁止新发。
-4. 在当前客户端重新提供可归属 CDP 独占时段后，按 `run_slots=3` 验证默认三路执行、动态补位、同 attempt 恢复不重发和 Qwen 原生实际重叠；随后补发送临界中断、客户端重启、未知授权/追问安全暂停、真实残留进程清理及无关进程保护。Codex 重启仍按用户要求暂缓。
-5. 三题小批已完成 collector/finalizer、评分、return/import 和同源报告；真实五题队列与故障矩阵完成后再更新声明范围并转入 DoubaoWork General；Apple Silicon、Windows、60 题全量和无人值守扩容另验。
-
-当前 1.2.0 真机五题执行队列已完成 5/5、每题一次发送、同 attempt 延迟绑定恢复和唯一 session/cwd；但实际 dispatch peak 为 `1`，dynamic refill 未观察到，native timing coverage 为 `0/5`，receipt 明确为 `INSUFFICIENT_EVIDENCE`。session_id 在发送后延迟落库是当前版本的主要并发观测阻塞；该批次只证明串行执行和恢复安全，不提升默认三路准入，也尚未进入正式 collect/评分/报告。
+1. 使用[五题开发证据](evidence/qwenwork-macos-five3-20260923/README.md)核对 r13 的 5/5 有效评分、回传/10 Sheet 报告，以及 r18 的发送占槽峰值 3、两次补位和原生主 turn 峰值 2。两批均基于旧包（Harness 版本字段 1.0.6），不可提升为当前 1.2.0 的正式发行准入。
+2. 以当前提交重建七个 General Skill 和 1.2.0 五题包。QwenWork `batch.mjs --preprepare-projects` 先为五题冻结项目/草稿，再单槽发送，缩短相邻原生 turn 启动间隔；用原始 segment 中匹配主 turn 的起止时间证明原生峰值 3，缺失/冲突保持 unavailable。
+3. 同一批次验证五题各只发送一次、唯一 session/cwd、动态补位、同 attempt 恢复、正式 collector/finalizer/verify-only、三路语义评分、submission、return/import 和同源报告。题目 `timeout_seconds` 不限制 QwenWork 或评分 thread，Token/cache 未验证时继续保持 null。
+4. 补 QwenWork 适用故障矩阵：发送临界中断、客户端重启/重连、未知授权/追问安全暂停、真实残留进程清理及无关进程保护。Codex Desktop 重启仍按用户要求暂缓；Apple Silicon、Windows、60 题全量和无人值守扩容另验。
 
 历史证据根：`/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-macos-general-e2e/`。SLOT04 未建 attempt，退出最终由用户确认；关闭库 probe 当时报 error 14，后续修复只有离线证据。本轮整理未操作客户端，不把历史“进程已退出”当作当前现场。
 

@@ -469,6 +469,47 @@ test("managed queue rejects an active session outside its allow-list before UI p
   ]).allowedActiveSessionIds, ["session-allowed"]);
 });
 
+test("managed queue prepares a project without sending, then dispatches the same attempt once", async () => {
+  const config = makeConfig({ managed_queue_id: "qwen-queue-fixture", prepare_only: true });
+  let stored = null;
+  let dispatches = 0;
+  let fills = 0;
+  const now = clock();
+  const dependencies = {
+    withAttemptLock: async (_config, operation) => operation(),
+    now,
+    readJournal: async () => structuredClone(stored),
+    writeJournal: async (_path, next) => { stored = structuredClone(next); },
+    prepareUi: async () => ({ project: project(), configuration: configuration() }),
+    verifyPreparedUi: async () => ({ project: project(), configuration: configuration(), prompt_sha256: PROMPT_SHA }),
+    fillPrompt: async () => { fills += 1; },
+    dispatchPrompt: async () => { dispatches += 1; return { method: "fixture-click" }; },
+    querySessions: async () => dispatches ? [session()] : [],
+    verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA, match_count: 1 }),
+    observeUi: async () => ({ observed_at: now(), target_session_verified: true, active_stream: false, stop_confirmed: true, conflicts: [] }),
+    writeBindingEvidence: async () => [{ path: "evidence/binding.json", sha256: "b".repeat(64), size: 10 }],
+  };
+  const prepared = await runQwenGeneralAttempt(config, dependencies);
+  assert.equal(prepared.journal.phase, "READY_TO_DISPATCH");
+  assert.equal(prepared.journal.send.dispatch_attempt_count, 0);
+  assert.equal(dispatches, 0);
+  config.resume = true;
+  config.prepare_only = false;
+  config.recovery_probe = {
+    verified: true,
+    path: "/private/tmp/qwenwork-general-driver/resume-probe.json",
+    sha256: "f".repeat(64),
+    probed_at: "2026-09-19T10:00:05.000Z",
+    active_or_pending_count: 0,
+  };
+  const completed = await runQwenGeneralAttempt(config, dependencies);
+  assert.equal(completed.journal.phase, "COMPLETED");
+  assert.equal(completed.journal.identity.attempt_id, prepared.journal.identity.attempt_id);
+  assert.equal(completed.journal.send.dispatch_attempt_count, 1);
+  assert.equal(dispatches, 1);
+  assert.equal(fills, 2);
+});
+
 test("terminal journal replay returns the persisted execution projection without observing or resending", async () => {
   const config = makeConfig({ resume: true });
   const state = createQwenAttemptJournal({
