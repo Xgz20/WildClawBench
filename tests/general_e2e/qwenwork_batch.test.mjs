@@ -543,3 +543,34 @@ test("a disconnected Driver pauses a stale RUNNING journal and explicit resume c
     assert.equal(calls, 3);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
+
+test("two stale queue-owner reclaimers cannot replace each other's ownership", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qwenwork-owner-race-"));
+  const path = join(root, "owner-lock.json");
+  const previous = { schema_version: "wildclawbench.general-e2e-qwenwork-queue-owner/v1",
+    owner_id: "old-owner", queue_id: "queue-fixture", frozen_sha256: "a".repeat(64),
+    pid: 101, host: "fixture-host", process_start_identity: "old-start" };
+  const options = { queueId: "queue-fixture", frozenSha256: "a".repeat(64), recoverStale: true };
+  let releaseInspection, entered;
+  const wait = new Promise((resolve) => { releaseInspection = resolve; });
+  const inspecting = new Promise((resolve) => { entered = resolve; });
+  try {
+    await writeJson(path, previous);
+    const first = acquireQwenQueueOwner(path, options, {
+      hostname: "fixture-host", pid: 202, ownerId: "first",
+      processStartIdentity: async () => "new-start",
+      processAlive: async () => { entered(); await wait; return false; },
+    });
+    await inspecting;
+    try {
+      await assert.rejects(acquireQwenQueueOwner(path, options, {
+        hostname: "fixture-host", pid: 303, ownerId: "second",
+        processStartIdentity: async () => "second-start", processAlive: async () => false,
+      }), /OWNER_RECOVERY_ACTIVE/u);
+    } finally { releaseInspection(); }
+    const lock = await first;
+    assert.equal(JSON.parse(await readFile(path)).owner_id, "first");
+    assert.deepEqual(JSON.parse(await readFile(lock.recovered.archive_path)), previous);
+    await lock.release();
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
