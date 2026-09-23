@@ -627,6 +627,10 @@ async function handlePendingInteraction(config, state, dependencies, session) {
         && typeof dependencies.skipClarification === "function") {
       const result = await dependencies.skipClarification(session);
       if (!result?.skipped) throw new Error("QWENWORK_CLARIFICATION_NOT_SKIPPED");
+      state.phase = "RUNNING";
+      state.execution_state = null;
+      state.attention = null;
+      state.updated_at = dependencies.now();
       state.events.push({ type: "USER_AUTHORIZED_CLARIFICATION_SKIPPED", at: dependencies.now(),
         details: { conversation_id: session.conversation_id, sub_chat_id: session.sub_chat_id, method: result.method } });
       await dependencies.writeJournal(config.state_file, state);
@@ -688,6 +692,9 @@ async function observeBoundAttempt(config, state, dependencies) {
   }
   const interaction = await handlePendingInteraction(config, state, dependencies, session);
   if (interaction?.journal) return interaction;
+  // The skip changed native state after selectAttemptSession's snapshot. Let
+  // the queue reobserve it rather than treating that stale row as a conflict.
+  if (interaction?.skipped) return { journal: state, execution_state: null };
   const ui = await dependencies.observeUi(session, state);
   const terminalObservation = {
     ...ui,

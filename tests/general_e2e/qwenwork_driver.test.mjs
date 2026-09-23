@@ -838,8 +838,9 @@ test("fresh driver dispatches once, binds the unique new session, and requires t
   let stored = null;
   let dispatches = 0;
   let sessionReads = 0;
+  let interactionReads = 0;
   const now = clock();
-  const result = await runQwenGeneralAttempt(config, {
+  const dependencies = {
     now,
     readJournal: async () => stored,
     writeJournal: async (_path, state) => { stored = structuredClone(state); },
@@ -849,7 +850,7 @@ test("fresh driver dispatches once, binds the unique new session, and requires t
     dispatchPrompt: async () => { dispatches += 1; return { method: "fixture-click" }; },
     querySessions: async () => (++sessionReads === 1 ? [] : [session()]),
     verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA, match_count: 1 }),
-    inspectPendingInteraction: async () => ({ kind: "clarification" }),
+    inspectPendingInteraction: async () => ({ kind: interactionReads++ === 0 ? "clarification" : "none" }),
     skipClarification: async () => ({ skipped: true, method: "unique-clarification-skip" }),
     observeUi: async () => ({
       observed_at: now(),
@@ -860,7 +861,15 @@ test("fresh driver dispatches once, binds the unique new session, and requires t
       conflicts: [],
     }),
     writeBindingEvidence: async () => [{ path: "evidence/binding.json", sha256: "b".repeat(64), size: 10 }],
-  });
+  };
+  const skipped = await runQwenGeneralAttempt(config, dependencies);
+  assert.equal(skipped.journal.phase, "RUNNING");
+  assert.equal(skipped.execution_state, null);
+  assert.equal(skipped.journal.attention, null);
+  config.resume = true;
+  config.recovery_probe = { verified: true, path: "/private/tmp/fresh-probe.json", sha256: "f".repeat(64),
+    probed_at: "2026-09-19T10:00:01Z", active_or_pending_count: 0 };
+  const result = await runQwenGeneralAttempt(config, dependencies);
   assert.equal(dispatches, 1);
   assert.equal(result.journal.send.dispatch_attempt_count, 1);
   assert.equal(result.journal.session.session_id, "session-fixture");
