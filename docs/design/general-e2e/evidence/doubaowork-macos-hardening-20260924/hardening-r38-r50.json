@@ -1,0 +1,1058 @@
+{
+  "schema": "wildclawbench.doubaowork-hardening-evidence/v1",
+  "date": "2026-09-24",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-resumed-hardening-20260924",
+  "source_baseline": "a2b6577ddd19de9c4d277d17a7051474bd3968ef",
+  "source_worktree": "uncommitted related changes; package manifests bind exact contents",
+  "platform": "macos-x86-64",
+  "client_versions_observed": [
+    "2.31.3",
+    "2.31.6"
+  ],
+  "current_client_version": "2.31.6",
+  "full_production_admission": false,
+  "versions": {
+    "shared_doubaowork": "0.6.13",
+    "general_execute": "0.11.16",
+    "general_adapter": "0.2.12",
+    "general_collect": "0.8.18",
+    "doubao_collector": "0.2.7",
+    "web_execute": "1.17.15",
+    "web_driver": "0.6.13"
+  },
+  "environment": {
+    "real_lock_unlocked": "PASS on 2.31.3; General/Web standalone probe and final-send gate rejected, no CDP page connection and no sends",
+    "console_owner_gate": "shared desktop-gui1.0.0; same source carried into 2.31.6",
+    "new_client_restart": "user explicitly confirmed idle; only exact verified main/browser identities restarted to restore9260",
+    "new_client_probe": "2.31.6 General and Web PASS",
+    "unknown_login_and_process_reuse": "offline negative tests; not promoted to real cross-user evidence"
+  },
+  "duplicate_projects": {
+    "same_real_names": 2,
+    "different_full_directories": 2,
+    "driver_rejected": true,
+    "send_counts": [
+      0,
+      0
+    ],
+    "full_paths_revalidated_via_owned_project_edit_tooltips": true,
+    "owned_test_project_renamed_unique": true,
+    "client_version": "2.31.3"
+  },
+  "cross_entry_lock": {
+    "general_holder_web_cli": "real General prepare held shared UI lock; actual Web CLI refused before task validation",
+    "web_holder_general_cli": "real Web shared entry held validation barrier; actual General CLI refused before UI",
+    "lock_and_journal_unchanged": true,
+    "all_owned_locks_released": true,
+    "successful_web_execution_claim": false,
+    "managed_queue_owner_recovery_claim": false
+  },
+  "click_window": {
+    "mechanism": "trusted native click capture debugger barrier before application handler; SIGKILL only exact Driver PID/start/command; resume native event once",
+    "prompt_sent": 1,
+    "native_messages_modified": false,
+    "journal_unchanged_at_barrier": true,
+    "click_returned_at_remains_null": true,
+    "original_attempt_recovered_without_resend": true,
+    "injected_barrier_not_uninjected_accidental_crash": true
+  },
+  "final_error": {
+    "client_version": "2.31.6",
+    "sdk_abort_reason": "heartbeat_timeout",
+    "sdk_retry_policy_modified": false,
+    "sdk_max_retry_attempts": 20,
+    "controlled_owned_connection_resets": 20,
+    "native_status": 4,
+    "native_stage": 1,
+    "native_final_status": {
+      "message": "Error",
+      "session": "Error"
+    },
+    "native_error_code": 710020702,
+    "native_messages_or_events_fabricated": false,
+    "native_foreground_and_background_idle": true,
+    "fault_route_removed": true,
+    "controlled_resets_are_model_or_http_attempt_metrics": false,
+    "scope": "actual SDK transport failure after normal acknowledgement; not all error codes or server-side faults"
+  },
+  "empty_trajectory": {
+    "real_empty_native_snapshot_sha256": "2a84ec408159e3749a30b04e2e562f300eb569ecb5d10de4c32bef0f19aedd2d",
+    "native_snapshot_bytes": 0,
+    "initial_collector_rejected": "DOUBAOWORK_TRAJECTORY_PROMPT_MISMATCH",
+    "later_snapshot_prompt_matches": true,
+    "same_code_same_attempt_retry": "PASS; journal unchanged",
+    "initial_capture_root_cause": "empty native file was retained in preceding controller snapshot; exact failed collector bytes were not archived",
+    "r49_policy": "verified non-success only may retain empty or absent native trace as partial; successful/foreign/nonempty mismatch still rejected",
+    "r49_empty_branch_validation": "offline negative tests plus real prior empty snapshot; no claim of fresh full live run on final package"
+  },
+  "nonqualifying_attempts": [
+    "r38/r38b cancellation observer could not reach verified stop; tasks completed naturally, not cancellation PASS",
+    "r40 transient network pulse left original SSE alive; task completed normally, no error PASS",
+    "r41 SSE prefix interception failed before accepted native conversation binding; dispatch uncertain, no resend, no error PASS",
+    "r44 new2.31.6 mode menu not yet visible; zero sends; wait fix verified by new r45 normal run",
+    "r45 observer output-name conflict prevented injection; normally completed sample has valid normal receipt, not error PASS",
+    "r46 initial journal lacked native request ID; observer did not inject; fresh native identity used in r47",
+    "one long naturally completed technical sample retained CROSS_SOURCE_RESULT_CONFLICT rejection; not promoted"
+  ],
+  "final_package_iteration": "r50; documentation-only change from r49, code/config equivalence verified",
+  "formal_cases": [
+    {
+      "sample": "cancel2313",
+      "client_version": "2.31.3",
+      "execution_package": "r39",
+      "first_formal_collection_package": "r40",
+      "cross_version": true,
+      "task_id": "02_Code_Intelligence_task_913_cancel",
+      "attempt_id_sha256": "0fef68d745a70bbca2b0a97efe80c00d1a51d4dbe0f0cc851076c5c6c1db8584",
+      "native_id_sha256": {
+        "conversation_id": "d8926edfa0567d400c5d77a6e5c629346f6fa4d696fdd801e2020f220b57753e",
+        "native_request_session_id": "0959e7740c2fc9e9427618d59103b2d15c313193b875a067cf6cc1c62344b6cf"
+      },
+      "dispatch_count": 1,
+      "stop_click_count": 1,
+      "recovered_click_returned_at": "2026-09-24T12:51:30.765Z",
+      "business_status": "cancelled",
+      "cancellation_confirmed": true,
+      "raw_terminal": {
+        "profile": "native-im-live/v1",
+        "final_status": {
+          "message": "Broken",
+          "session": "Broken"
+        },
+        "status": 3,
+        "stage": 1,
+        "is_finish": "1",
+        "finish_reason_chat": null
+      },
+      "collect_finalize_verify": "PASS",
+      "receipt_status": "completed",
+      "receipt_sha256": "95bf34b82b72f677c0a8cf6990496d10cab63dcb37ad098e2eca8b8a5268a217",
+      "execution_record_sha256": "564e4fa7ec322a7438e8410a101d72960ee0ce24a4037bcfa6fa353ac41e9bc3",
+      "candidate_sha256": "7fd01922a481aa195d0926cd1b6ce188c800c31409aeafce355ff46ef1e692c8",
+      "trace_completeness": {
+        "status": "partial",
+        "omitted_event_count": 0,
+        "missing": [
+          "native-task-cancelled-before-complete-trace",
+          "cancelled-tool-display-without-execution-evidence",
+          "final-assistant-text-unavailable"
+        ]
+      },
+      "metrics": {
+        "usage": {
+          "input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "total_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_read_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_creation_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "reasoning_output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "requests": {
+          "request_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "request_attempt_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "tools": {
+          "call_count": {
+            "value": null,
+            "status": "partial",
+            "basis": "Unique calls in the bound trajectory; provider total coverage unknown"
+          }
+        },
+        "timing": {
+          "duration_seconds": {
+            "value": 9.743,
+            "status": "observed",
+            "basis": "Dispatch to observed native cancellation and idle runtime; includes controller observation delay, not agent runtime"
+          },
+          "agent_duration_seconds": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "Native elapsed_block end_time_s - start_time_s"
+          }
+        }
+      },
+      "known_subtotals": {
+        "call_count": 0
+      },
+      "in_capability_denominator": false,
+      "scored": false
+    },
+    {
+      "sample": "click2313",
+      "client_version": "2.31.3",
+      "execution_package": "r39",
+      "first_formal_collection_package": "r40",
+      "cross_version": true,
+      "task_id": "02_Code_Intelligence_task_915_click_window",
+      "attempt_id_sha256": "91fc44aca89353a7ef6c9322f176fcc1a932596bce485a173557ca2ce9778242",
+      "native_id_sha256": {
+        "conversation_id": "f94a478c5d635ccc39dc6f601d610d0fd2f958aec9724289d6588f5b158473df",
+        "native_request_session_id": "97eb14e62a5dd7915d494ef2d07e0a4284cb01282ead96e038fb6838e360ce79"
+      },
+      "dispatch_count": 1,
+      "stop_click_count": null,
+      "recovered_click_returned_at": null,
+      "business_status": "completed",
+      "cancellation_confirmed": null,
+      "raw_terminal": {
+        "profile": "native-im-live/v1",
+        "final_status": {
+          "session": "Success"
+        },
+        "status": 1,
+        "stage": 4,
+        "is_finish": "1",
+        "finish_reason_chat": null
+      },
+      "collect_finalize_verify": "PASS",
+      "receipt_status": "partial",
+      "receipt_sha256": "e89c8385636558bb0d97e976144166e87de7cd0aca099184ed6864cb0500e28e",
+      "execution_record_sha256": "4cfc16090f6ef89707b5114f49a554fcc6f44ca7fda0650091e25c716ddba058",
+      "candidate_sha256": "f2e803541fe626bc37d7dbdfe972e8a00cb05d2a9506574d2152fedfb4659ad1",
+      "trace_completeness": {
+        "status": "complete",
+        "omitted_event_count": 0,
+        "missing": []
+      },
+      "metrics": {
+        "usage": {
+          "input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "total_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_read_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_creation_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "reasoning_output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "requests": {
+          "request_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "request_attempt_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "tools": {
+          "call_count": {
+            "value": 0,
+            "status": "observed",
+            "basis": "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance"
+          }
+        },
+        "timing": {
+          "duration_seconds": {
+            "value": 5.769,
+            "status": "observed",
+            "basis": "Dispatch boundary to native-checkpoint.receivedMessages.extra.local_info.perf_mark_samples.task_finish.receiveTimestamp"
+          },
+          "agent_duration_seconds": {
+            "value": 4,
+            "status": "observed",
+            "basis": "Native elapsed_block end_time_s - start_time_s"
+          }
+        }
+      },
+      "known_subtotals": {},
+      "in_capability_denominator": false,
+      "scored": false
+    },
+    {
+      "sample": "normal2316",
+      "client_version": "2.31.6",
+      "execution_package": "r45",
+      "first_formal_collection_package": "r45",
+      "cross_version": false,
+      "task_id": "02_Code_Intelligence_task_914_final_error",
+      "attempt_id_sha256": "fbcd0d7c59ec00850856b45048388e0174101c27be444e4be519286c0580e8e7",
+      "native_id_sha256": {
+        "conversation_id": "8da8f7dee8112b001dd457bf20e674b7315b5c05b19ad937bd50f9b57b4f90e9",
+        "native_request_session_id": "ce7553fae479d5c58b31ee4bdd3e11342720eb8ed4cbfe4ac09bcf9840f7b87b"
+      },
+      "dispatch_count": 1,
+      "stop_click_count": null,
+      "recovered_click_returned_at": "2026-09-24T14:30:02.640Z",
+      "business_status": "completed",
+      "cancellation_confirmed": null,
+      "raw_terminal": {
+        "profile": "native-im-live/v1",
+        "final_status": {
+          "session": "Success"
+        },
+        "status": 1,
+        "stage": 4,
+        "is_finish": "1",
+        "finish_reason_chat": null
+      },
+      "collect_finalize_verify": "PASS",
+      "receipt_status": "partial",
+      "receipt_sha256": "718fdca9e6f16e55b3d2d51e331a108c5425736f96e0e19130cb498795250fae",
+      "execution_record_sha256": "ae3e745a728f94f04c05366332d96d3eee5f22066fdd191259b391d056abe1eb",
+      "candidate_sha256": "b6f79597325dec18785f274450fccd1b05795c1b30c78bbfdfe2e7c52acaf521",
+      "trace_completeness": {
+        "status": "complete",
+        "omitted_event_count": 0,
+        "missing": []
+      },
+      "metrics": {
+        "usage": {
+          "input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "total_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_read_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_creation_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "reasoning_output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "requests": {
+          "request_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "request_attempt_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "tools": {
+          "call_count": {
+            "value": 2,
+            "status": "observed",
+            "basis": "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance"
+          }
+        },
+        "timing": {
+          "duration_seconds": {
+            "value": 33.425,
+            "status": "observed",
+            "basis": "Dispatch boundary to native-checkpoint.receivedMessages.extra.local_info.perf_mark_samples.task_finish.receiveTimestamp"
+          },
+          "agent_duration_seconds": {
+            "value": 12,
+            "status": "observed",
+            "basis": "Native elapsed_block end_time_s - start_time_s"
+          }
+        }
+      },
+      "known_subtotals": {},
+      "in_capability_denominator": false,
+      "scored": false
+    },
+    {
+      "sample": "error2316",
+      "client_version": "2.31.6",
+      "execution_package": "r45",
+      "first_formal_collection_package": "r48",
+      "cross_version": true,
+      "task_id": "02_Code_Intelligence_task_914_final_error",
+      "attempt_id_sha256": "48e69e2a6c3444b82cb3c7d04b592044a9fdb2c321fb3f660c9d8a3b9724e7bb",
+      "native_id_sha256": {
+        "conversation_id": "893cfafe77af808b3e5bc28e1e7b0cc567bce074d79703647db610894d7f0e8a",
+        "native_request_session_id": "71e8468f217db18a24f8e6bf0612f8afb8a12acde4a9d02ae2a68f8f2fec6471"
+      },
+      "dispatch_count": 1,
+      "stop_click_count": null,
+      "recovered_click_returned_at": "2026-09-24T14:41:08.396Z",
+      "business_status": "infrastructure_error",
+      "cancellation_confirmed": null,
+      "raw_terminal": {
+        "profile": "native-im-live/v1",
+        "final_status": {
+          "message": "Error",
+          "session": "Error"
+        },
+        "status": 4,
+        "stage": 1,
+        "finish_reason_chat": null,
+        "error_code": 710020702
+      },
+      "collect_finalize_verify": "PASS",
+      "receipt_status": "partial",
+      "receipt_sha256": "b01ed496f89793bb68854cf401cb38f061c166b6be8e124b487e4407d57ba135",
+      "execution_record_sha256": "0c64988e4d8fb789a82b6f4a14d047159b8e3b8da93bdd751bc4d2486a745c37",
+      "candidate_sha256": "b6f79597325dec18785f274450fccd1b05795c1b30c78bbfdfe2e7c52acaf521",
+      "trace_completeness": {
+        "status": "partial",
+        "omitted_event_count": 0,
+        "missing": [
+          "native-task-failed-before-complete-trace",
+          "final-assistant-text-unavailable"
+        ]
+      },
+      "metrics": {
+        "usage": {
+          "input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "total_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_read_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_creation_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "reasoning_output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "requests": {
+          "request_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "request_attempt_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "tools": {
+          "call_count": {
+            "value": null,
+            "status": "partial",
+            "basis": "Unique calls in the bound trajectory; provider total coverage unknown"
+          }
+        },
+        "timing": {
+          "duration_seconds": {
+            "value": 940.886,
+            "status": "observed",
+            "basis": "Dispatch to observed native terminal and idle runtime; includes controller observation delay, not agent runtime"
+          },
+          "agent_duration_seconds": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "Native elapsed_block end_time_s - start_time_s"
+          }
+        }
+      },
+      "known_subtotals": {
+        "call_count": 2
+      },
+      "in_capability_denominator": false,
+      "scored": false
+    },
+    {
+      "sample": "cancel2316",
+      "client_version": "2.31.6",
+      "execution_package": "r48",
+      "first_formal_collection_package": "r48",
+      "cross_version": false,
+      "task_id": "02_Code_Intelligence_task_913_cancel",
+      "attempt_id_sha256": "dd355819497d1fa27039c7fdcec87553d97ef916affa214ecd7230aac28cfadd",
+      "native_id_sha256": {
+        "conversation_id": "b0ddb7c9f7d58abadad32c31fecbbe76e9924ac2c2eb69c95dbfdeeb55fe4aea",
+        "native_request_session_id": "09028e7d841583347d45e588279ee0efcd2d97a8b63430702fc494e48d5b5a13"
+      },
+      "dispatch_count": 1,
+      "stop_click_count": 1,
+      "recovered_click_returned_at": "2026-09-24T15:02:36.744Z",
+      "business_status": "cancelled",
+      "cancellation_confirmed": true,
+      "raw_terminal": {
+        "profile": "native-im-live/v1",
+        "final_status": {
+          "message": "Broken",
+          "session": "Broken"
+        },
+        "status": 3,
+        "stage": 1,
+        "is_finish": "1",
+        "finish_reason_chat": null,
+        "error_code": null
+      },
+      "collect_finalize_verify": "PASS",
+      "receipt_status": "completed",
+      "receipt_sha256": "bdebaf95ac0bfe756559f7951645dd18531298a4f9e82d92d6bb07e0c1497e4e",
+      "execution_record_sha256": "fd5e81cc595c102bd1049f4201be2d92f640e072c69208fc4599f537a81ffc70",
+      "candidate_sha256": "7fd01922a481aa195d0926cd1b6ce188c800c31409aeafce355ff46ef1e692c8",
+      "trace_completeness": {
+        "status": "partial",
+        "omitted_event_count": 0,
+        "missing": [
+          "native-task-cancelled-before-complete-trace",
+          "final-assistant-text-unavailable"
+        ]
+      },
+      "metrics": {
+        "usage": {
+          "input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "total_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_read_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_creation_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "reasoning_output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "requests": {
+          "request_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "request_attempt_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "tools": {
+          "call_count": {
+            "value": null,
+            "status": "partial",
+            "basis": "Unique calls in the bound trajectory; provider total coverage unknown"
+          }
+        },
+        "timing": {
+          "duration_seconds": {
+            "value": 20.802,
+            "status": "observed",
+            "basis": "Dispatch to observed native terminal and idle runtime; includes controller observation delay, not agent runtime"
+          },
+          "agent_duration_seconds": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "Native elapsed_block end_time_s - start_time_s"
+          }
+        }
+      },
+      "known_subtotals": {
+        "call_count": 1
+      },
+      "in_capability_denominator": false,
+      "scored": false
+    }
+  ],
+  "r49_regression": [
+    {
+      "sample": "cancel2313",
+      "new_collector": "PASS",
+      "original_immutable_receipt_verify": "PASS",
+      "original_receipt_rewritten": false,
+      "cross_version_regression": true
+    },
+    {
+      "sample": "click2313",
+      "new_collector": "PASS",
+      "original_immutable_receipt_verify": "PASS",
+      "original_receipt_rewritten": false,
+      "cross_version_regression": true
+    },
+    {
+      "sample": "normal2316",
+      "new_collector": "PASS",
+      "original_immutable_receipt_verify": "PASS",
+      "original_receipt_rewritten": false,
+      "cross_version_regression": true
+    },
+    {
+      "sample": "error2316",
+      "new_collector": "PASS",
+      "original_immutable_receipt_verify": "PASS",
+      "original_receipt_rewritten": false,
+      "cross_version_regression": true
+    },
+    {
+      "sample": "cancel2316",
+      "new_collector": "PASS",
+      "original_immutable_receipt_verify": "PASS",
+      "original_receipt_rewritten": false,
+      "cross_version_regression": true
+    }
+  ],
+  "validation": {
+    "node_passed": 136,
+    "node_failed": 0,
+    "python_passed": 29,
+    "python_failed": 0,
+    "three_independent_packages": "PASS",
+    "complete_general_suite": "PASS",
+    "web_read_only_probe_2316": "PASS",
+    "web_formal_route_guards": "refused before dispatch",
+    "web_prompts_sent": 0
+  },
+  "final_health": {
+    "version": "2.31.6",
+    "foreground_active": 0,
+    "background_active": 0,
+    "online": true,
+    "observer_keys": {
+      "chat": [],
+      "background": []
+    },
+    "ui_lock_present": false,
+    "mode": "local mode selected for authorized E2E; current model and permission kept",
+    "codex_restarted": false
+  },
+  "artifacts": [
+    {
+      "path": "r50-code-equivalence.json",
+      "sha256": "d4a8f9d233625191f320e6ffbaca17ee57b8fa296135a603a1986798c8fd839d",
+      "size": 236
+    },
+    {
+      "path": "release-r50-build.json",
+      "sha256": "82fb949a1b47367ec2f8e4906168b3845f3e49b0fb60156c9868491c6824003b",
+      "size": 677
+    },
+    {
+      "path": "packages-r50/skills-build-manifest.json",
+      "sha256": "7424fd76c57931913fb0bd20194ff2a359e4f75f40e589f99fa187ce0b15fc67",
+      "size": 14823
+    },
+    {
+      "path": "verify-packages-r50.json",
+      "sha256": "61499e6c961745e7c55574babd8b63484ee4747e37af6023387b20178476ed8b",
+      "size": 1533
+    },
+    {
+      "path": "verify-release-r50.json",
+      "sha256": "f45f2706fea677b5209015e0552042832ec534175f1446353914c8a709ef436f",
+      "size": 27300
+    },
+    {
+      "path": "r50-web-probe-2316/probe.json",
+      "sha256": "09650d6a0104d4e7fa4c11e6a322c407fd03f208d30e062ad61616c61af0bce2",
+      "size": 3736
+    },
+    {
+      "path": "baseline-probe.json",
+      "sha256": "485eaae842b3ba15af8d9f92dc39f17aacc522c88c9afc710e435bd0d460d23d",
+      "size": 3394
+    },
+    {
+      "path": "baseline-activity.json",
+      "sha256": "1b3610054a2128cc92edbca7a3df68d898e1437d1ce15d35541fb21aad19cd8e",
+      "size": 765
+    },
+    {
+      "path": "r38-lock-unlock-result.json",
+      "sha256": "4fa080ba5d2eb25929c3db57bdce9b8a88240c0e50450c3a194fe27374fd7f27",
+      "size": 1315
+    },
+    {
+      "path": "r38-duplicate-project-paths.json",
+      "sha256": "3f2e3cc5608597d9b23cc46e1c119914d779c9a7ca4525978669cc90a8cf1671",
+      "size": 1662
+    },
+    {
+      "path": "r38-duplicate-name-restored.json",
+      "sha256": "39f93a181726f55a86e1f5ebdfbe7e10e06ddc8a1682767076ac71a6b57b1c10",
+      "size": 194
+    },
+    {
+      "path": "r38-general-holds-web-rejected.json",
+      "sha256": "1848032cd5e7d18d6287d3c6b5891a71fa5e8806a26f50b81d3af331c244db50",
+      "size": 660
+    },
+    {
+      "path": "r42-web-holds-general-rejected.json",
+      "sha256": "0c3b88e1aa5dca2ee734645a7c294f53ebf8a63e1b783cf50fefdddbe94a68d4",
+      "size": 721
+    },
+    {
+      "path": "r38c-cancel-intent.json",
+      "sha256": "e9c9bada9d592f10fd061306ca0d70601ecb25b33fe421ae33c100d77113eaea",
+      "size": 4912
+    },
+    {
+      "path": "r38c-cancel-click-returned.json",
+      "sha256": "1ceb83659abbe906814f3c922e2b98a7d5a1947a78966535aa1dab70ca499b46",
+      "size": 145
+    },
+    {
+      "path": "r38c-cancel-after-native.json",
+      "sha256": "93975dd790b798d9774f2f6d073aeb7ce49b0a7c87e234104f37e3b24e58c60c",
+      "size": 39176
+    },
+    {
+      "path": "r38c-exploratory-observers-restored.json",
+      "sha256": "b8a297dc527b1e134c7b4eb6e1806b9e802b34e6558ab3b516a3cf6388d7da88",
+      "size": 6222
+    },
+    {
+      "path": "r39-cancel-collect.json",
+      "sha256": "0821f14397353ee3100a421bc4a424e396d639eb90cdb5c76816f8ae161111e0",
+      "size": 46
+    },
+    {
+      "path": "r39-repeat-cancel-rejected.json",
+      "sha256": "4762a70946426a02322b09becb9c7cb3bcddb0eee5253ca155c341ff5bfeb2d2",
+      "size": 223
+    },
+    {
+      "path": "r40-cancel-collect.json",
+      "sha256": "4f4ea613fe81b3ca011a3c558810a165e92733bff5e5378fdfb3c63d3d133a93",
+      "size": 494
+    },
+    {
+      "path": "r40-cancel-finalize.json",
+      "sha256": "5005b418e3009ad13b0a934e16b08f288db768674aa7796802aff818dc7ed67e",
+      "size": 977
+    },
+    {
+      "path": "r40-cancel-verify.json",
+      "sha256": "8129e1b7651a18e8e211fe96ae3ccac26c96cc0d9fb8b1e2ef72791ed53603b4",
+      "size": 1409
+    },
+    {
+      "path": "r42-click-window-fault-intent.json",
+      "sha256": "1696e6227f57b078b7cddfa947ba3686283464456ce8d177cf9ec22d5d73a1ed",
+      "size": 942
+    },
+    {
+      "path": "r42-click-window-kill-confirmed.json",
+      "sha256": "2757d8e838cfdc6024b18bb94e113827717ff7f819b927b3b11bb7803aaab440",
+      "size": 129
+    },
+    {
+      "path": "r42-click-window-native-after.json",
+      "sha256": "b02742a59f17a33bb1761621bf80e65fffa333bf6777c308d1df05e1ac148e61",
+      "size": 43706
+    },
+    {
+      "path": "r42-click-lock-recovery.json",
+      "sha256": "d06b13dc16f8c33d21502321f1c973d99ad429348f57360696e7dab578085617",
+      "size": 407
+    },
+    {
+      "path": "r42-click-resume.json",
+      "sha256": "49a19c269b0a2c473bb0762654a7e424d322da6ad1712f3471b19617b03b558d",
+      "size": 1189
+    },
+    {
+      "path": "r42-click-collect.json",
+      "sha256": "02a242df21c0a6ea2c2acfa8b31962a8292f8394412aaaca9a93c2e32c2f0fda",
+      "size": 524
+    },
+    {
+      "path": "r42-click-finalize.json",
+      "sha256": "c808048d20cb0c7508b58516f4e6a88f992077d9917767d60686395920a7e0f0",
+      "size": 1011
+    },
+    {
+      "path": "r42-click-verify.json",
+      "sha256": "225bf882e4490d94c76d9af14af78aa588b0f2a9b04617df8a267207caf29a82",
+      "size": 1431
+    },
+    {
+      "path": "r40-transport-fault-cleanup.json",
+      "sha256": "025d75f26da626a47115a3d8b55d53ebe151588836d6bc0312e97d4926e32a9d",
+      "size": 320
+    },
+    {
+      "path": "r41-sse-fault-cleanup.json",
+      "sha256": "00cf1f6b81cba8f0e4e68a889d6bdab74e772f048a72186362b5752d33b1bf81",
+      "size": 1262
+    },
+    {
+      "path": "r41-postfault-idle.json",
+      "sha256": "a1c34686861229b6dc395d976062750d606a054d342e873eda32bf75596a8244",
+      "size": 691
+    },
+    {
+      "path": "r41-failed-transport-observers-restored.json",
+      "sha256": "bfd7433774e4557c943f693ce4e3f7b82f634d75a297c2b8f47f891cad80fab7",
+      "size": 10907
+    },
+    {
+      "path": "r43-debug-2316-restart-result.json",
+      "sha256": "019f132a3c9048eb3f15e6f53e63ffe5e49497b47e9a9c7364ca9629a89ce180",
+      "size": 1257
+    },
+    {
+      "path": "r44-2316-baseline-probe.json",
+      "sha256": "dc733ffc7c0d6f722e3aa44f9a07d0979bc4c0e9ba6df411869df8c7fc2b8632",
+      "size": 3435
+    },
+    {
+      "path": "r44-2316-native-profile.json",
+      "sha256": "15e15af38ba2dcecebaee721594929bf11d0222facb2c69c89f8f7b61886bc9c",
+      "size": 28144
+    },
+    {
+      "path": "r44-error-2316-dispatch.json",
+      "sha256": "9a1361ad917974b780cd23184c6b84fda24e0c745f6986c02b17de505810ebd7",
+      "size": 31
+    },
+    {
+      "path": "r44-2316-mode-open-items.json",
+      "sha256": "ff58423bedcc584f2a5eb9cc181ca590e91bf443fdc6d5a474d327179dfb5a3d",
+      "size": 53
+    },
+    {
+      "path": "r45-owned-mode-picker-closed.json",
+      "sha256": "9a4d7385ed990ce4e6b9c371d3434d8ddb30f01e63447d3354615283b0248bef",
+      "size": 98
+    },
+    {
+      "path": "r45-2316-normal-collect.json",
+      "sha256": "bba5207bb105649057e6d4e2c360d970bd38ed162ad94e0a4bf28fe80829a8be",
+      "size": 516
+    },
+    {
+      "path": "r45-2316-normal-finalize.json",
+      "sha256": "d80677e291a8f94dc86a3592e1e13c7961f2f81b5a06f9f26c59567d9f9bc857",
+      "size": 1001
+    },
+    {
+      "path": "r45-2316-normal-verify.json",
+      "sha256": "eeabfd7ab54002f5dbccd1d490d98af3601558176b3616f7bc61abc8cf137183",
+      "size": 1425
+    },
+    {
+      "path": "r46-fault-observer.log",
+      "sha256": "3a6ea682d0871a7b1239a1e3ee68c6be4e832b8131fd288887bc7fb7ac33abbf",
+      "size": 59
+    },
+    {
+      "path": "r47-recovery-fault-intent.json",
+      "sha256": "413a66ee18ab364eee96d03fc956f8a5c0ec7ddc54bfe1e05691480addae7b3d",
+      "size": 4765
+    },
+    {
+      "path": "r47-recovery-fault-action.json",
+      "sha256": "c8f2e15f99dc64180d481f9d039df0bde4e2ebac66ae19abb40b55975525757c",
+      "size": 458
+    },
+    {
+      "path": "r47-recovery-error-native.json",
+      "sha256": "22d391ccdbbffd1e24cc4c6e32e1a52bca6ada67e6ca5cc8452108dbd08c9760",
+      "size": 39624
+    },
+    {
+      "path": "r47-recovery-error-result.json",
+      "sha256": "c471ec5296a6f85c87a416e7bd3445febb388a511963f133bc8c07e18f96e5e7",
+      "size": 4513
+    },
+    {
+      "path": "r47-recovery-fault-cleanup.json",
+      "sha256": "dde059d153cc2f85e716b93a7a90f230d109b6a4a2ad570b9654fd5630b5a9e5",
+      "size": 3915
+    },
+    {
+      "path": "r48-native-error-resume.json",
+      "sha256": "5195546a1dc02a718a827eb3145fefa71f8f09d27c7a9d11e527a3a7a5b32730",
+      "size": 1181
+    },
+    {
+      "path": "r48-native-error-collect.json",
+      "sha256": "076ff26beb29ecda449e574c94fd77b35d9187597975a03544d800c2e81ffc9e",
+      "size": 517
+    },
+    {
+      "path": "r48-native-error-finalize.json",
+      "sha256": "b33ac1addab097c9481c709d44f7929170c3831bc1293ed602f620e132e34fd0",
+      "size": 1001
+    },
+    {
+      "path": "r48-native-error-verify.json",
+      "sha256": "011b33e39043e196bc32115e656d9a728da964a0493b1a342feff6c474f28b61",
+      "size": 1425
+    },
+    {
+      "path": "r48-2316-cancel-collect.json",
+      "sha256": "a19224ff13ba2dac916d49a6c94275a6bdd62d976e52979360218baa241226cf",
+      "size": 38
+    },
+    {
+      "path": "r48-2316-cancel-retry-collect.json",
+      "sha256": "1c70ca157730ed4c521f0827f9a24fd35073fa5a8704b7e010f77400bcc053b4",
+      "size": 520
+    },
+    {
+      "path": "r48-2316-cancel-finalize.json",
+      "sha256": "2bf18678c5cef49cafc73ac32580b35f98ab02f7cc852d965f5c930dfaf2e690",
+      "size": 997
+    },
+    {
+      "path": "r48-2316-cancel-verify.json",
+      "sha256": "506e50d82e5aa636925b38b55db1a75db9b70bf8166c1c0bda969f3e903fdc27",
+      "size": 1419
+    },
+    {
+      "path": "r48-2316-cancel-retry-boundary.json",
+      "sha256": "79b6072c401848d268831313dca14a6e8ab4c8af71f72c41365d33fd49ee2c44",
+      "size": 421
+    },
+    {
+      "path": "r49-real-artifact-regression.json",
+      "sha256": "55d8fa1f6b830f7727e77c46d4166115e2eab7e87226f6d6dd82194ed926042b",
+      "size": 966
+    },
+    {
+      "path": "r49-web-probe-2316/probe.json",
+      "sha256": "06f3bcea0239fd57fed4cdf76cd1734f0936543380088bfa995fbbb41ff0c475",
+      "size": 3736
+    },
+    {
+      "path": "r49-web-frozen-route.json",
+      "sha256": "2e064c3e233d97028e639fdaab0c6840ce6223566381988866dd13dff41255c7",
+      "size": 2296
+    },
+    {
+      "path": "r49-final-health.json",
+      "sha256": "9b4868d5d2bbbb5e3798d5d39828b83279d25ab6baf065888c1037b3876734c1",
+      "size": 1655
+    },
+    {
+      "path": "node-r49.log",
+      "sha256": "e7415c63337338b40a9cb0c56d4dca6b8343d0814f0b8069963085c5d84b16ba",
+      "size": 12488
+    },
+    {
+      "path": "python-r49.log",
+      "sha256": "f05bbb0bd0e550107d1db11de73039a1a14bebd538625017be703fbeba2fd639",
+      "size": 129
+    },
+    {
+      "path": "release-r49-build.json",
+      "sha256": "e4850c993c73d8e0b931967081b8a88611b8891c096b853875b33c5756cff004",
+      "size": 677
+    },
+    {
+      "path": "packages-r49/skills-build-manifest.json",
+      "sha256": "0e9ec9954d6b5d968caa8c17c2d190cc620525a0241e3be4f5fbc0f2ea5d9bb6",
+      "size": 14823
+    },
+    {
+      "path": "verify-packages-r49.json",
+      "sha256": "42e4b5a078aab136dadcfdb775051bc19986ef66eb839e8a361d91d139292a51",
+      "size": 1533
+    },
+    {
+      "path": "verify-release-r49.json",
+      "sha256": "80fd3c3a6d9b92561e74db7abb27af8c4622e734f4eee6909382d0e13fcd121e",
+      "size": 27300
+    },
+    {
+      "path": "runs-cancel-2316-r48/doubaowork-cancel-2316-r48__doubaowork-macos/.general-e2e/execution/02_Code_Intelligence_task_913_cancel/doubaowork/native-evidence-1790262177323.json",
+      "sha256": "2a84ec408159e3749a30b04e2e562f300eb569ecb5d10de4c32bef0f19aedd2d",
+      "size": 6938
+    }
+  ]
+}

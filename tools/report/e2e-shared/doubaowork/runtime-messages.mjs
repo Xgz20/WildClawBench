@@ -104,6 +104,15 @@ export function normalizeRuntimeMessages(snapshot, state) {
     && (persisted ? assistant.final_status.message === "Success" && assistant.ext?.finish_reason_chat === "succeed:completion" : assistant.stage === 4)
     && assistant.ext?.is_finish === "1"
     && blocks.length > 0 && blocks.every(b => b.is_finish === true);
+  // Observed on 2.31.3 after native Stop. Broken alone does not prove an
+  // intentional cancellation: the scenario collector requires its bound stop
+  // intent, click acknowledgement and independent idle observation as well.
+  const interrupted = ["2.31.3", "2.31.6"].includes(state.client.version) && !persisted && assistant.final_status?.message === "Broken"
+    && assistant.final_status?.session === "Broken" && assistant.status === 3
+    && assistant.stage === 1 && assistant.ext?.is_finish === "1";
+  const failed = state.client.version === "2.31.6" && !persisted && assistant.status === 4 && assistant.stage === 1
+    && assistant.final_status?.message === "Error" && assistant.final_status?.session === "Error"
+    && assistant.error_details?.has_error === true && assistant.error_details.error_code === 710020702;
   const texts = blocks.filter(b => b.block_type === 10000 && typeof b.content?.text_block?.text === "string");
   const finalText = completed ? texts.at(-1)?.content.text_block.text ?? null : null;
   const finishEvents = (assistant.local_info?.perf_mark_samples || []).filter(p => p.answerId === assistant.message_id
@@ -123,9 +132,10 @@ export function normalizeRuntimeMessages(snapshot, state) {
   return {
     conversation_id: id, user_message_id: user.message_id, reply_message_id: assistant.message_id,
     native_request_session_id: requestId, native_cwd: state.workspace, project_id: project,
-    prompt, terminal: completed && finalText ? "completed" : "unverified",
+    prompt, terminal: completed && finalText ? "completed" : interrupted ? "interrupted" : failed ? "failed" : "unverified",
     raw_terminal: { profile: terminalProfile, final_status: assistant.final_status, status: assistant.status, stage: assistant.stage ?? null,
-      is_finish: assistant.ext?.is_finish, finish_reason_chat: assistant.ext?.finish_reason_chat ?? null },
+      is_finish: assistant.ext?.is_finish, finish_reason_chat: assistant.ext?.finish_reason_chat ?? null,
+      error_code: failed ? assistant.error_details.error_code : null },
     final_text: finalText, finished_at: finished === null ? null : new Date(finished).toISOString(),
     started_at: Number.isFinite(started) ? new Date(started).toISOString() : null,
     agent_duration_seconds: agentDuration,
@@ -133,9 +143,11 @@ export function normalizeRuntimeMessages(snapshot, state) {
     agent_finished_at: agentDuration === null ? null : new Date(agentEnd * 1000).toISOString(),
     sources: { prompt: "user.content_blocks_v2.text_block.text", cwd: "user+assistant.ext.general_task_param.client_option.workspace+agent_task_param.workspace",
       request_identity: persisted ? "user+assistant.ext.reply_unique_key" : "assistant.session_id",
-      terminal: persisted ? "assistant.final_status.message+session+status+ext.is_finish+finish_reason_chat+content_blocks_v2.is_finish"
+      terminal: failed ? "assistant.final_status.message+session+status+stage+error_details.has_error+error_code"
+        : interrupted ? "assistant.final_status.message+session+status+stage+ext.is_finish"
+        : persisted ? "assistant.final_status.message+session+status+ext.is_finish+finish_reason_chat+content_blocks_v2.is_finish"
         : "assistant.final_status.session+status+stage+ext.is_finish+content_blocks_v2.is_finish",
-      finished_at: persisted ? "assistant.ext.finish_time_ms (native server completion)" : "assistant.local_info.perf_mark_samples.task_finish.receiveTimestamp" },
+      finished_at: finished === null ? null : persisted ? "assistant.ext.finish_time_ms (native server completion)" : "assistant.local_info.perf_mark_samples.task_finish.receiveTimestamp" },
   };
 }
 

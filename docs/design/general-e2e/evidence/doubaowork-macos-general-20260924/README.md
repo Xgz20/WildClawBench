@@ -2,6 +2,8 @@
 
 日期：2026-09-23 至 24。范围：macOS x86_64、DoubaoWork 2.31.3、本地电脑、值守；包含单题与五题三槽开发验证。当前进度与验收项只在[统一接入契约](../../../e2e/端到端自动化评测Harness接入契约.md)维护。脱敏索引：[s1-development.json](s1-development.json)。
 
+本记录保留至 r37b 的历史范围；后续锁屏、同名目录、点击内部中断、跨入口互斥，以及更新至 2.31.6 后的正常/取消/错误回执见[优先加固证据](../doubaowork-macos-hardening-20260924/README.md)。旧包、原始成绩和回执未改写。
+
 早期 r4–r9 开发链路从当前工作区 `feature/astroncode-eval` 的 `9310a96` 开始，工作区有未提交实现。每阶段实际代码由仓库外 Skill ZIP/content SHA 固定，`source_revision` 仅表示基线。它是跨开发版本完成的一次单题链路，**不满足同一发行的新任务 CV15 生产验收**。
 
 原件根：`/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923`。原始消息、完整目录、截图和原生会话 ID 不入仓。2.28.12 的只读探测在用户手动更新前完成；随后重新探测 2.31.3 和新监听进程，后续运行均属于新版本。

@@ -69,8 +69,16 @@ test("General resume rejects cross-scene and frozen configuration drift", async 
 });
 
 test("GUI probe does not interpret locked or unavailable state as unlocked", async () => {
-  for (const [stdout, unlocked] of [['"IOConsoleLocked" = No', true], ['"IOConsoleLocked" = Yes', false], ["", false]]) {
-    assert.equal((await inspectGuiSession({ run: async () => ({ stdout }) })).unlocked, unlocked);
+  const user = { kCGSSessionOnConsoleKey: true, kCGSessionLoginDoneKey: true, kCGSSessionUserIDKey: 501 };
+  for (const [registry, unlocked] of [
+    [{ IORegistryEntryName: "Root", IOConsoleLocked: false, IOConsoleUsers: [user] }, true],
+    [{ IORegistryEntryName: "Root", IOConsoleLocked: true, IOConsoleUsers: [user] }, false],
+    [{ IORegistryEntryName: "Root", IOConsoleLocked: false, IOConsoleUsers: [{ ...user, kCGSSessionUserIDKey: 502 }] }, false],
+    [{ IORegistryEntryName: "Root", IOConsoleLocked: false, IOConsoleUsers: [{ ...user, kCGSessionLoginDoneKey: false }] }, false],
+    [{}, false],
+  ]) {
+    assert.equal((await inspectGuiSession({ platform: "darwin", effectiveUid: 501,
+      readRegistry: async () => registry, readConsoleUid: async () => 501 })).unlocked, unlocked);
   }
 });
 

@@ -507,30 +507,32 @@ Web 逐项 V00–V17、P0–P10、客户端/Skill/包 SHA 和运行路径见[历
 
 ### DoubaoWork 接续范围与验收记录（2026-09-24）
 
-范围：macOS x86_64 / DoubaoWork 2.31.3 / 本地 / 值守。用户在本轮手动从 2.28.12 更新；新进程已重新只读核验。共享源码为 `tools/report/e2e-shared/doubaowork/`，两个 execute Skill 与 General collect 按组件清单装配，Web 与 General 的包校验/正式回执 adapter 独立。当前版本均为工作区开发实现，运行内容以各阶段的 ZIP/content SHA 为准。不得把基线 revision 或下表的自动化测试写成生产 PASS。
+范围：macOS x86_64 / 本地 / 值守。原五题及r37以前证据属于DoubaoWork 2.31.3；r38–r50加固期间客户端又更新为2.31.6，经用户确认空闲后恢复调试启动并重新probe。2.31.6已有正常单题、显式取消和限定传输错误的材料闭环；旧版本成绩和并发证据不自动迁移。共享源码为 `tools/report/e2e-shared/doubaowork/`，两个 execute Skill 与 General collect 按组件清单装配，Web 与 General 的包校验/正式回执 adapter 独立。当前版本均为工作区开发实现，运行内容以各阶段的 ZIP/content SHA 为准。不得把基线 revision 或下表的自动化测试写成生产 PASS。
 
 C01–C19 全部适用；G01–G07 全部纳入 General 接入；W01–W06 全部纳入后续 Web 接续。未声明 Windows、Apple Silicon、无人值守自动重启/抢锁和自动批准未知交互。UI 槽固定 1；开发队列允许 1–3 个执行槽，默认 1，原生并发须独立验证。General S1 默认模型模式的实际显示值为“自动 高”；底层模型版本未知。S1 仅自动规则，不调用语义 Judge；后续语义配置在批次中冻结为 `gpt-6-sol/high`。
 
 事实与包原件索引见[接续证据](../general-e2e/evidence/doubaowork-macos-general-20260924/README.md)。以下为当前唯一进度，不继承旧 SLOT 或旧 canary。 r30–r37的新故障证据详见同目录的发送恢复、清理/账本、交互/重启与并发索引。r37原包的内部Driver标记仍为0.6.8，r37b只修正为组件目录声明的0.6.9并重建摘要，行为代码无差异；原包/回执保留，不称r37b重新执行通过。
 
+r38–r50的锁屏、同名目录、点击内部中断、跨入口互斥、两版取消、新版错误及失败尝试见[优先加固证据](../general-e2e/evidence/doubaowork-macos-hardening-20260924/README.md)。以下未另标客户端版本的r28–r37记录仍属于2.31.3。
+
 | 验收项 | 当前实现/证据 | 当前结论与接续 |
 | --- | --- | --- |
-| CV01 包/隔离 | r37 General execute0.11.9/collect0.8.9、Web execute1.17.9独立ZIP；r37b修正内部Driver版本标记为共享目录的0.6.9，19份文件三路同源；完整General候选suite已构建 | PASS（本地装配/独立包）；r37b未发布，版本标记修正不算新执行闭环 |
-| CV02 probe | 2.31.3应用/监听者/CDP；r28 foreign/关闭端点拒绝；r34真实第二安装副本连原安装端点，在CDP前拒绝、发送0；r37受控重启后General/Web独立probe通过 | PARTIAL；多安装负例已补；锁屏真机负例仍待齐 |
-| CV03 目标/配置/Prompt | 云模式、项目残留、编辑器差异均发送0；r34真实UI在send intent后切换权限，最终发送门禁拒绝、发送0；原生Prompt/project/workspace同身份 | PARTIAL；最终配置漂移已验；同名不同完整目录实际UI负例仍待齐 |
-| CV04 发送中断 | r30/r31/r33在intent前、intent后、点击前、点击返回后、接受确认后真实SIGKILL；有发送沿原attempt恢复一次，无发送只读暂停；r33明确零发送重试新attempt并首次collect/finalize/verify | PARTIAL；恢复不补造click_returned_at；r30执行/r31采集属跨版本；点击调用内部中断等未覆盖窗口不外推 |
-| CV05 锁/竞争 | 跨General/Web全局UI锁；单题owner写journal、同机PID生命周期验证、两次fresh空闲检查、原inode独占归档、journal字节不变；r31活动原生请求时恢复拒绝 | PARTIAL；仅有owner证明的单题受控恢复；托管队列owner、旧无证明journal和完整跨入口UI竞争仍未准入 |
-| CV06 断连/重启 | r31仅断开Driver自己的CDP，先持久化清除旧完成再连接；collector拒绝，重连同attempt且不重发；r37原生前台空闲但仅本测试orphan残留时，精确身份受控重启后前台/后台/pending均0 | PARTIAL；受控重启只作现场清理证据，不算无人值守或活动生产任务重启恢复 |
-| CV07 终态 | 正常原生Success映射；r37新增dispatcher.current/pending核验，前台完成但后台交付活动保持NEEDS_ATTENTION；同会话/目录/请求ID匹配的活跃peer才可放行 | PARTIAL；r35真实orphan已阻断新发送与原题完成；原生最终错误/取消Profile仍待验 |
+| CV01 包/隔离 | r50 General execute0.11.16/collect0.8.18、Web execute1.17.15独立ZIP及完整General suite；共享0.6.13的20份文件三路同源 | PASS（本地装配/独立包）；候选未发布；跨包实测与新collector回归分开记录 |
+| CV02 probe | r38真实锁屏时General/Web独立probe在CDP连接前拒绝，最终发送门禁拒绝，发送0；增加控制台登录用户与监听进程启动身份/命令摘要复查；2.31.6 General/Web fresh probe通过 | PASS（已列本机环境门禁）；真实锁屏负例为2.31.3，同内容平台门禁沿用；不标成2.31.6全负例重跑 |
+| CV03 目标/配置/Prompt | r34权限漂移发送0；r38两个真实同名不同完整目录项目使Driver拒绝、发送0，并按原生项目ID回验路径；2.31.6菜单可见性等待后新单题一次发送和正式回执通过 | PASS（已列目标/配置范围）；同名负例为2.31.3，新版未放宽唯一性；模型/权限保持当前值 |
+| CV04 发送中断 | r30–r33原窗口保留；r42在可信点击事件capture阶段、应用处理前注入barrier并只杀精确Driver，恢复原事件一次；归档旧锁、原attempt恢复和正式collect/finalize/verify通过 | PASS（2.31.3已列注入窗口）；发送1、click_returned_at仍null；r39执行/r40采集，不外推无注入自然崩溃或所有可能窗口 |
+| CV05 锁/竞争 | r38实际General持锁时Web CLI拒绝；r42 Web共享入口校验barrier持锁时实际General CLI拒绝；锁/journal字节不变，全部本方锁释放 | PARTIAL；双向入口互斥已补，反向明确含校验barrier；托管队列owner与旧无证明journal恢复仍未准入 |
+| CV06 断连/重启 | r31只断本Driver CDP并清除旧完成观察；r37精确受控清理孤立交付；客户端升级2.31.6后，经用户确认空闲，仅重启核验过的本应用主/浏览器进程并恢复9260 | PARTIAL；不称活动任务重启恢复或无人值守重启；未重启Codex |
+| CV07 终态 | 新增独立取消意图/一次停止/同request空闲证明；2.31.3及2.31.6取消均正式收口；2.31.6真实SDK重试耗尽产生Error/Error、status4、错误码710020702，r48正式回执与verify通过；r49重采五份真实材料及旧回执复验 | PASS（已列取消及传输错误Profile）；未知错误继续暂停；取消首次空轨迹被拒后同代码重采通过，保留失败；跨开发版本不算同发行全面准入 |
 | CV08 待交互 | r34陌生可见弹窗拒绝且保留，不再通用Escape；r35真实文件授权位于CDN iframe，侧栏pending-confirmation及原生10080/scene2/actions1010/1011绑定请求；观察标记持久保留，自动collector拒绝 | PARTIAL；未批准、未写外部标记文件、fixture不计分；真实追问及人工介入正式回执仍待验 |
 | CV09 清理/冻结 | r18精确TERM/KILL与对照、r19迟到进程；r33真实ps/lsof配合时序barrier覆盖父进程退出后子进程重挂；目录inode替换拒绝且对照存活；r31真实执行材料finalizer遇cleanup失败拒绝发布，恢复原inode后verify通过 | PARTIAL；不把时序注入称完全无注入；PID复用等未获本范围真机证据的分支仍保留 |
 | CV10 串行/并发 | r11三题串行；r28五题原生峰值3与补位；r37新后台门禁下两题各一次发送、原生峰值2，首次collect/finalize/verify均complete | PASS（上述固定样本/本机）；不外推更高槽位、跨机或全量 |
 | CV11 原始轨迹 | 显式trajectory、started/settled和uploaded账本对账；r26/r28完整轨迹；r31实际约35分钟延迟后首次collect/finalize/verify，5条记录均在原TTL内首次保存，采集时已超过TTL阈值 | PARTIAL；此次原生Map仍保留5条，未观察真实淘汰；不等于35分钟执行任务；旧partial不改写 |
-| CV12 指标 | r28五题任务383s/流程395.3s/工具23次，覆盖5/5；r37两题任务32s/8s、流程35.428s/10.223s、工具6/0均可核验；延迟采集等待未混入执行耗时 | PARTIAL；既有26份轨迹/8380行文本审计未见累计Token，二进制日志未解码；Token/模型请求/重试仍null，窗口占用不换算 |
+| CV12 指标 | r28/r37已验证任务/流程/工具口径；新增非成功终态保持原生结束/智能体耗时null，流程时间明确包含控制器观察等待，工具缺口只保留小计 | PARTIAL；2.31.6未新增可发布Token/模型请求/HTTP尝试Profile；20次受控连接失败不是这些指标，窗口占用不换算 |
 | CV13 材料/候选 | 通用exact-all、General保留Git；r28候选篡改/原轨迹缺失/越界链接/source迟到写入/receipt漂移拒绝；r31实际cleanup故障不发布候选，r33重试与r37两题首次冻结/verify通过 | PARTIAL；Git/二进制实料及发布窗口仍待齐 |
 | CV14 评分恢复/回传 | r28三题独立sol/high自动创建评分任务，verify-score均通过；正式return/import和重复导入幂等已验；公共评分编排19/19 | PARTIAL；发布窗口中断和本范围冲突选择待齐；迁移batch副本的MANIFEST_DRIFT拒绝不算幂等证据 |
-| CV15 新发行完整闭环 | r28五题在原suite完成执行→首次采集→automated/hybrid/llm_judge→回传→导入→三种报告；5/5有效，均分96.5 | PASS（r28固定五题/本平台）；report0.5.4单独修正显示舍入，原始分数/分母/资源/lineage不变，旧报告保留；不替代加固或全量准入 |
-| CV16 平台 | 当前仅 macOS x86_64 / 2.31.3 | IN_PROGRESS；其他平台 NOT_RUN，不外推 |
+| CV15 新发行完整闭环 | 2.31.3 r28五题同suite执行至评分、回传、导入和报告；2.31.6 r45正常单题及r48取消同发行材料闭环，原生错误为r45执行/r48识别采集 | PASS（各自列明范围）；技术故障样本不评分，不把2.31.3五题成绩或新材料回归升为2.31.6完整生产通过 |
+| CV16 平台 | macOS x86_64；2.31.3历史证据与当前2.31.6新证据分别绑定 | IN_PROGRESS；其它平台NOT_RUN，不外推 |
 | CV17 路径 | r27真实getconf NAME_MAX=255/PATH_MAX=1024，按UTF-8字节及终止NUL检查；中文/空格项目准备阶段真实选择回读发送0，随后S2一次发送并完成首次采集/评分；数据集最长ID62字节预算；6类真实文件系统负例发送0 | PARTIAL；已覆盖已知控制/原生路径，任意未来候选文件仍由collector验证；最长ID实际UI/运行与其余平台未外推 |
 | GV01 准备/隔离 | r28固定五题独立execution/scoring包，真实准备/首次采集与私有评分；r29候选构建校验 | PASS（固定范围/本机）；未发布生产分发 |
 | GV02 文件/回复 | r28 S1/S2/S3文件产物与S4/S5纯回复均正式收口、独立评分 | PASS（固定五题/本机） |
@@ -540,8 +542,11 @@ C01–C19 全部适用；G01–G07 全部纳入 General 接入；W01–W06 全�
 | GV06 分母 | r19保留全集5题、3有效/2未评分；r28全集5题、5有效/0未评分、均分96.5；资源各自覆盖，未知Token不补零 | PARTIAL；公共真实零/异常测试已验，本范围真实异常组合仍按证据收口 |
 | GV07 阶段恢复 | 原attempt只读恢复；r28分两次首次采集后完整回执、三题独立语义、submission/return/import/三种报告，重复导入幂等 | PASS（已验主链路）；发布中断仍在CV14待验 |
 | GV08 小批 | r28当前核心五题三槽、原生峰值3与补位；首次collect/verify5/5 complete；三种评分及回传/报告完成 | PASS（固定五题/本机）；不外推完整60题或其他平台 |
-| WV01–WV08 | 共享源码三份vendor保持一致；r37 General/shared67/67、Web64/64；r37b Python发行/布局21/21；独立Web包真机只读probe通过，正式receipt/batch路由仍拒绝 | IN_PROGRESS；本轮仅受影响入口回归，Web正式闭环及每项独立验收未完成 |
+| WV01–WV08 | r49三路共用核心同源，General/Web共136项Node及29项Python回归；2.31.6独立Web probe通过，正式receipt/batch门禁仍拒绝，Web发送0 | IN_PROGRESS；General高优先已列分支已补，下一步接续Web单题正式回执适配和独立验收；不继承General通过 |
 
+
+
+本轮优先项的已列分支已有证据，整体仍不是全面生产准入。2.31.6的并发、能力评分及报告不继承2.31.3旧结果；托管队列owner、人工交互正式回执、轨迹/候选边界、发布中断和报告异常分母等既有PARTIAL继续保留。Web从本契约和既有适配接续，不恢复旧SLOT派发流程。
 
 ### 5.5 进度更新规则与接续
 

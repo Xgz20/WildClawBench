@@ -6,14 +6,20 @@
       "version": "1.0.0",
       "source_root": "tools/report/data",
       "vendor_root": "vendor/e2e-shared/report-reference-data",
-      "entrypoints": ["entities.yaml", "checkpoint_capability_map7.yaml"]
+      "entrypoints": [
+        "entities.yaml",
+        "checkpoint_capability_map7.yaml"
+      ]
     },
     {
       "name": "workbuddy-jsonl-metrics",
       "version": "0.2.0",
       "source_root": "tools/report/e2e-shared/workbuddy-jsonl-metrics",
       "vendor_root": "vendor/e2e-shared/workbuddy-jsonl-metrics",
-      "entrypoints": ["index.mjs", "timing.mjs"]
+      "entrypoints": [
+        "index.mjs",
+        "timing.mjs"
+      ]
     },
     {
       "name": "desktop-runtime",
@@ -117,7 +123,7 @@
     },
     {
       "name": "doubaowork",
-      "version": "0.6.9",
+      "version": "0.6.13",
       "source_root": "tools/report/e2e-shared/doubaowork",
       "vendor_root": "vendor/e2e-shared/doubaowork",
       "entrypoints": [

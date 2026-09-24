@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { normalizeRuntimeMessages, normalizeRuntimePrompt } from "../../tools/report/e2e-shared/doubaowork/runtime-messages.mjs";
 import { sha256Text, summarizePromptReadback } from "../../tools/report/e2e-shared/doubaowork/lib.mjs";
+import { CANCELLATION_SCHEMA, TERMINAL_OBSERVATION_SCHEMA, verifyCancellationEvidence, verifyFailureEvidence } from "../../tools/report/e2e-shared/doubaowork/terminal-evidence.mjs";
 
 function fixture() {
   const prompt = "Fix `project/example.py`.\n", id = "123456789", workspace = "/private/fixture/workspace";
@@ -45,6 +46,77 @@ test("A partial/unknown native finish never becomes success", () => {
   for (const alter of [a => a.final_status = {}, a => a.final_status.session = "Error", a => a.ext.is_finish = "0", a => a.content_blocks_v2[0].is_finish = false, a => a.stage = 3]) {
     const f = fixture(); alter(f.assistant);
     assert.equal(normalizeRuntimeMessages(f.seal(), f.state).terminal, "unverified");
+  }
+});
+
+test("Native Broken requires a bound acknowledged Stop and quiet runtime before cancellation admission", () => {
+  const f = fixture(), at = ms => new Date(ms).toISOString();
+  f.state.client.version = "2.31.3"; f.state.attempt_id = "attempt"; f.state.timing = { sent_at: at(1000) };
+  f.snapshot.observed_at = at(2000);
+  const before = structuredClone(f.seal());
+  before.maps.messageMap[101].final_status = {};
+  before.maps.messageMap[101].ext.is_finish = "0";
+  before.maps.messageMap[101].stage = 1;
+  before.payload_sha256 = sha256Text(JSON.stringify({ conversation_id: before.conversation_id, maps: before.maps }));
+  f.assistant.final_status = { message: "Broken", session: "Broken" };
+  f.assistant.status = 3; f.assistant.stage = 1; f.assistant.content_blocks_v2[0].is_finish = false;
+  f.snapshot.observed_at = at(5000);
+  const native = normalizeRuntimeMessages(f.seal(), f.state);
+  assert.equal(native.terminal, "interrupted"); assert.equal(native.finished_at, null); assert.equal(native.agent_duration_seconds, null);
+  assert.equal(native.final_text, null);
+  f.state.cancellation = { requested_at: at(3000), click_started_at: at(3500), click_returned_at: at(4000),
+    click_attempt_count: 1, conversation_id: "123456789", user_message_id: "100", native_request_session_id: "native-request" };
+  const intent = { schema: CANCELLATION_SCHEMA, operation: "click-bound-native-stop", selector: "chat_input_local_break_button",
+    attempt_id: "attempt", workspace: f.state.workspace, requested_at: at(3000), runtime: before,
+    frontend: { initialized: true, active: [{ session_id: "native-request", conversation_ids: ["123456789"] }] } };
+  const observation = { schema: TERMINAL_OBSERVATION_SCHEMA, attempt_id: "attempt", workspace: f.state.workspace,
+    conversation_id: "123456789", native_request_session_id: "native-request", observed_at: at(6000),
+    native_payload_sha256: f.snapshot.payload_sha256, frontend: { initialized: true, active: [] },
+    background: { initialized: true, active: [] }, stop_control_count: 0, pending: false };
+  const args = { state: f.state, native, runtime: f.snapshot, intent, observation };
+  assert.equal(verifyCancellationEvidence(args).cancellation_confirmed, true);
+  for (const mutate of [x => x.state.cancellation.click_returned_at = null,
+    x => x.state.cancellation.native_request_session_id = "other", x => x.intent.attempt_id = "other",
+    x => x.observation.background.active.push({}), x => x.observation.frontend.active.push({}),
+    x => x.observation.native_payload_sha256 = "other", x => x.observation.pending = true,
+    x => x.observation.observed_at = at(3000)]) {
+    const bad = structuredClone(args); mutate(bad); assert.throws(() => verifyCancellationEvidence(bad), /CANCELLATION_/);
+  }
+  f.state.client.version = "unknown";
+  assert.equal(normalizeRuntimeMessages(f.seal(), f.state).terminal, "unverified");
+});
+
+test("2.31.6 transport Error is provisional until its exact native request is quiet", () => {
+  const f = fixture(), at = ms => new Date(ms).toISOString();
+  f.state.client.version = "2.31.6"; f.state.attempt_id = "attempt"; f.state.timing = { sent_at: at(1000) };
+  f.snapshot.observed_at = at(5000);
+  Object.assign(f.assistant, { status: 4, stage: 1, final_status: { message: "Error", session: "Error" },
+    error_details: { has_error: true, error_code: 710020702, error_message: "Failed to fetch" } });
+  delete f.assistant.ext.is_finish;
+  f.assistant.content_blocks_v2[0].is_finish = false;
+  const native = normalizeRuntimeMessages(f.seal(), f.state);
+  assert.equal(native.terminal, "failed"); assert.equal(native.finished_at, null);
+  assert.equal(native.agent_duration_seconds, null); assert.equal(native.final_text, null);
+  assert.equal(native.raw_terminal.error_code, 710020702);
+  const observation = { schema: TERMINAL_OBSERVATION_SCHEMA, attempt_id: "attempt", workspace: f.state.workspace,
+    conversation_id: native.conversation_id, native_request_session_id: native.native_request_session_id,
+    observed_at: at(6000), native_payload_sha256: f.snapshot.payload_sha256,
+    frontend: { initialized: true, active: [] }, background: { initialized: true, active: [] },
+    stop_control_count: 0, pending: false };
+  const args = { state: f.state, native, runtime: f.snapshot, observation };
+  assert.equal(verifyFailureEvidence(args).business_status, "infrastructure_error");
+  for (const mutate of [x => x.observation.frontend.active.push({}), x => x.observation.background.active.push({}),
+    x => x.observation.native_request_session_id = "other", x => x.observation.native_payload_sha256 = "other",
+    x => x.observation.pending = true, x => x.observation.observed_at = at(4000)]) {
+    const bad = structuredClone(args); mutate(bad); assert.throws(() => verifyFailureEvidence(bad), /FAILURE_/);
+  }
+  for (const mutate of [x => x.assistant.error_details.error_code = 1, x => x.assistant.error_details.has_error = false,
+    x => x.assistant.final_status.session = "PanicError", x => x.assistant.stage = 4,
+    x => x.state.client.version = "unknown"]) {
+    const bad = fixture(); bad.state.client.version = "2.31.6";
+    Object.assign(bad.assistant, { status: 4, stage: 1, final_status: { message: "Error", session: "Error" },
+      error_details: { has_error: true, error_code: 710020702 } });
+    mutate(bad); assert.equal(normalizeRuntimeMessages(bad.seal(), bad.state).terminal, "unverified");
   }
 });
 

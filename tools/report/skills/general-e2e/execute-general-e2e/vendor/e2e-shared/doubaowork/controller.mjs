@@ -33,6 +33,7 @@ import {
   listSessionDirectoryIds,
   readDoubaoWorkAppIdentity,
   inspectGuiSession,
+  verifyExecutionEnvironment,
 } from "./platform.mjs";
 import {
   assertAttemptState,
@@ -65,6 +66,7 @@ import { readNativeActivity, assertNativeActivityAllowed } from "./runtime-activ
 import { installNativeLifecycleObserver, bindNativeLifecycleObserver, collectNativeLifecycleObserver, normalizeNativeLifecycle } from "./runtime-lifecycle.mjs";
 import { preflightDoubaoPaths } from "./path-preflight.mjs";
 import { inspectNativeAuthorizationHistory, summarizePendingConfirmations } from "./interactions.mjs";
+import { CANCELLATION_SCHEMA, TERMINAL_OBSERVATION_SCHEMA, hasCancellationRequest } from "./terminal-evidence.mjs";
 
 const execFile = promisify(execFileCallback);
 const DRIVER_DIR = dirname(fileURLToPath(import.meta.url));
@@ -233,10 +235,17 @@ async function connectClient(endpointValue, appPath, connect) {
     throw new Error("CDP 端口监听者不是唯一且可核验的 DoubaoWork Browser 进程");
   }
   const browser = await connect(endpoint.origin, { timeout: 10_000 });
-  const pages = browser.contexts().flatMap((context) => context.pages());
-  const page = selectUniqueChatTarget(pages.map((item) => ({ url: item.url(), page: item }))).page;
-  page.setDefaultTimeout(10_000);
-  return { browser, page, endpoint: endpoint.origin, app, listener };
+  try {
+    const pages = browser.contexts().flatMap((context) => context.pages());
+    const page = selectUniqueChatTarget(pages.map((item) => ({ url: item.url(), page: item }))).page;
+    page.setDefaultTimeout(10_000);
+    const client = { browser, page, endpoint: endpoint.origin, app, listener };
+    await verifyExecutionEnvironment(client);
+    return client;
+  } catch (error) {
+    await browser.close();
+    throw error;
+  }
 }
 
 async function assertExecutionActivityAllowed(client, config) {
@@ -262,19 +271,27 @@ export function classifyDevelopmentObservation(snapshot) {
   });
 }
 
-export function canAcceptNativeCompletion(snapshot, native) {
-  return native?.terminal === "completed" && snapshot.stop_control_count === 0
+function isQuietTerminalUi(snapshot) {
+  return snapshot.stop_control_count === 0
     && snapshot.bound_conversation_busy_count === 0 && snapshot.visible_dialog_count === 0
     && snapshot.user_question_count === 0 && snapshot.approval_count === 0
     && snapshot.bound_native_confirmation_pending !== true && !(snapshot.native_confirmation_unknown_count > 0)
     && snapshot.bound_tool_delivery_active !== true;
 }
 
+export function canAcceptNativeCompletion(snapshot, native) {
+  return native?.terminal === "completed" && isQuietTerminalUi(snapshot);
+}
+
+export function canAcceptNativeFailure(snapshot, native) {
+  return native?.terminal === "failed" && isQuietTerminalUi(snapshot);
+}
+
 export async function inspectPage(page, { projectName = null } = {}) {
   const raw = await page.evaluate(({ expectedProjectName }) => {
     const visible = (element) => Boolean(element?.getClientRects().length);
     const stopControls = [...document.querySelectorAll(
-      'button[data-testid*="stop" i],button[aria-label*="停止"],button[title*="停止"],button[aria-label*="stop" i]',
+      'button[data-testid*="stop" i],button[aria-label*="停止"],button[title*="停止"],button[aria-label*="stop" i],[data-testid="chat_input_local_break_button"]',
     )].filter(visible);
     const dialogs = [...document.querySelectorAll('[role="dialog"],[data-slot="dialog-content"]')]
       .filter(visible);
@@ -914,6 +931,7 @@ async function dispatchFromSelectedProject({ client, state, stateFile, config, r
     await atomicWriteAttemptState(stateFile, state);
     await mode.click();
     const local = client.page.getByRole("menuitem", { name: "工作任务 本地电脑", exact: true });
+    await local.waitFor({ state: "visible" });
     if (await local.count() !== 1) throw new Error("本地电脑菜单项不唯一");
     await local.click();
   } else if (currentMode !== "本地电脑") {
@@ -957,6 +975,11 @@ async function dispatchFromSelectedProject({ client, state, stateFile, config, r
   if (finalConfig.model !== state.actual.model || finalConfig.permission !== state.actual.permission_mode) {
     throw new Error("DOUBAOWORK_PRE_SEND_CONFIGURATION_DRIFT");
   }
+  const environment = await verifyExecutionEnvironment(client);
+  state.history.push({ phase: state.phase, event: "PRE_SEND_ENVIRONMENT_VERIFIED", at: environment.observed_at,
+    gui: environment.gui, listener_pid: environment.listener.listeners[0].pid,
+    process_start_identity: environment.listener.listeners[0].process_start_identity,
+    command_sha256: environment.listener.listeners[0].command_sha256 });
   await persistBeforeDispatch(stateFile, state);
   await sendButton.click();
   recordPromptAccepted(state);
@@ -1077,6 +1100,7 @@ async function startDevelopmentRunUnlocked(options) {
       },
     });
     await atomicWriteAttemptState(stateFile, state);
+    await verifyExecutionEnvironment(client);
     await createProject(client.page, state, stateFile, config);
     if (options.prepareOnly) {
       state.prepared_project = true;
@@ -1262,6 +1286,67 @@ async function navigateToConversation(page, conversationId) {
   await page.waitForURL((url) => parseConversationId(url.toString()) === conversationId);
 }
 
+async function cancelDevelopmentRunUnlocked(options) {
+  const outputDir = resolve(options.outputDir), stateFile = join(outputDir, STATE_FILE);
+  const releaseLock = await acquireExclusiveWorkerLock(outputDir);
+  let client;
+  try {
+    const state = await readAttemptState(stateFile);
+    assertAttemptState(state);
+    if ((state.scene ?? "web") !== (options.scene ?? "web")) throw new Error("DOUBAOWORK_SCENE_MISMATCH");
+    if (options.validateResume) await options.validateResume(state);
+    if (state.send.dispatch_attempt_count !== 1 || !state.session.conversation_id
+        || state.session.prompt_readback?.status !== "verified"
+        || state.prepared?.managed_queue_id || state.cancellation) throw new Error("DOUBAOWORK_CANCEL_NOT_BOUND_OR_ALREADY_ATTEMPTED");
+    client = await connectClient(state.client.endpoint, state.client.app_path, options.connect);
+    if (client.app.version !== state.client.version) throw new Error("DOUBAOWORK_APP_VERSION_DRIFT");
+    await navigateToConversation(client.page, state.session.conversation_id);
+    const current = await inspectPage(client.page, { projectName: state.client.project_name });
+    await enrichRuntimeObservation(client.page, state, current);
+    validateObservationBinding(state, current.snapshot);
+    if (current.snapshot.visible_dialog_count || current.snapshot.user_question_count || current.snapshot.approval_count || current.snapshot.bound_native_confirmation_pending
+        || current.snapshot.native_confirmation_unknown_count || current.snapshot.native_authorization_history_count) {
+      throw new Error("DOUBAOWORK_CANCEL_PENDING_INTERACTION");
+    }
+    const acknowledged = normalizeRuntimePrompt(current.nativeRuntime, state);
+    if (!acknowledged.native_request_session_id) throw new Error("DOUBAOWORK_CANCEL_REQUEST_ID_NOT_READY");
+    const frontend = await readNativeActivity(client.page);
+    if (frontend.initialized !== true || frontend.active.length !== 1
+        || frontend.active[0].session_id !== acknowledged.native_request_session_id
+        || !frontend.active[0].conversation_ids.includes(state.session.conversation_id)) throw new Error("DOUBAOWORK_CANCEL_NATIVE_REQUEST_NOT_ACTIVE");
+    if (!state.session.native_request_session_id) state.session.native_request_session_id = acknowledged.native_request_session_id;
+    const stop = client.page.getByTestId("chat_input").getByTestId("chat_input_local_break_button");
+    if (await stop.count() !== 1 || !(await stop.isVisible())) throw new Error("DOUBAOWORK_CANCEL_CONTROL_AMBIGUOUS");
+    const requestedAt = new Date().toISOString();
+    const intent = { schema: CANCELLATION_SCHEMA, operation: "click-bound-native-stop", attempt_id: state.attempt_id,
+      workspace: state.workspace, requested_at: requestedAt, selector: "chat_input_local_break_button",
+      runtime: current.nativeRuntime, frontend };
+    const intentFile = `cancellation-intent-${randomUUID()}.json`;
+    await atomicWriteJson(join(outputDir, intentFile), intent);
+    const bytes = await readFile(join(outputDir, intentFile));
+    state.native_observation = null;
+    state.cancellation = { requested_at: requestedAt, native_request_session_id: acknowledged.native_request_session_id,
+      conversation_id: state.session.conversation_id, user_message_id: acknowledged.user_message_id,
+      click_attempt_count: 0, click_started_at: null, click_returned_at: null,
+      intent_artifact: { file: intentFile, sha256: sha256Buffer(bytes), size_bytes: bytes.length } };
+    state.runtime.lock_owner = { ...releaseLock.owner };
+    state.runtime.driver_pid = process.pid;
+    state.runtime.heartbeat_at = new Date().toISOString();
+    await atomicWriteAttemptState(stateFile, state);
+    await verifyExecutionEnvironment(client);
+    state.cancellation.click_attempt_count = 1;
+    state.cancellation.click_started_at = new Date().toISOString();
+    await atomicWriteAttemptState(stateFile, state);
+    await stop.click();
+    state.cancellation.click_returned_at = new Date().toISOString();
+    state.history.push({ phase: state.phase, event: "NATIVE_CANCEL_REQUESTED", at: state.cancellation.click_returned_at });
+    await atomicWriteAttemptState(stateFile, state);
+    return { state: sanitizedStateSummary(state), cancellation_requested: true, cancellation_confirmed: false };
+  } finally {
+    try { if (client?.browser) await client.browser.close(); } finally { await releaseLock(); }
+  }
+}
+
 async function collectNativeEvidenceSnapshot(outputDir, state, observationId) {
   const pathValue = join(outputDir, `native-evidence-${observationId}.json`);
   const discovery = await discoverNativeSources({ sessionId: state.session.session_directory_id });
@@ -1379,7 +1464,10 @@ async function resumeDevelopmentRunUnlocked(options) {
         state.error = null;
         await atomicWriteAttemptState(stateFile, state);
       }
-      if (canAcceptNativeCompletion(pageObservation.snapshot, pageObservation.nativeNormalized)) {
+      if (canAcceptNativeCompletion(pageObservation.snapshot, pageObservation.nativeNormalized)
+          || canAcceptNativeFailure(pageObservation.snapshot, pageObservation.nativeNormalized)
+          || hasCancellationRequest(state, pageObservation.nativeNormalized) && pageObservation.snapshot.stop_control_count === 0
+            && pageObservation.snapshot.bound_conversation_busy_count === 0) {
         const background = await readNativeToolActivity(client.browser);
         const blocked = taskToolDeliveries(background, { workspace: state.workspace, conversationId: state.session.conversation_id });
         if (blocked.length) {
@@ -1389,7 +1477,31 @@ async function resumeDevelopmentRunUnlocked(options) {
           await atomicWriteAttemptState(stateFile, state);
           break;
         }
-        classification = { kind: "native-completion", trusted: true };
+        const cancellation = hasCancellationRequest(state, pageObservation.nativeNormalized);
+        const failure = pageObservation.nativeNormalized.terminal === "failed";
+        if (cancellation || failure) {
+          const frontend = await readNativeActivity(client.page);
+          if (frontend.initialized !== true || frontend.active.length || background.active.length) {
+            classification = { kind: "needs-attention", trusted: false, reason: "native-terminal-not-quiet" };
+            break;
+          }
+          const observation = { schema: TERMINAL_OBSERVATION_SCHEMA, attempt_id: state.attempt_id, workspace: state.workspace,
+            conversation_id: state.session.conversation_id, native_request_session_id: state.session.native_request_session_id,
+            observed_at: new Date().toISOString(), native_payload_sha256: pageObservation.nativeRuntime.payload_sha256,
+            frontend, background, stop_control_count: 0, pending: false };
+          const file = `native-terminal-observation-${randomUUID()}.json`;
+          await atomicWriteJson(join(outputDir, file), observation);
+          const bytes = await readFile(join(outputDir, file));
+          const artifact = { file, sha256: sha256Buffer(bytes), size_bytes: bytes.length };
+          if (cancellation) {
+            state.cancellation.terminal_observation = artifact;
+            state.cancellation.terminal_observed_at = observation.observed_at;
+          } else {
+            state.native_failure_observation = artifact;
+            state.native_failure_observed_at = observation.observed_at;
+          }
+        }
+        classification = { kind: cancellation ? "native-cancellation" : failure ? "native-failure" : "native-completion", trusted: true };
         break;
       }
       if (classification.kind === "failure-candidate") break;
@@ -1420,7 +1532,9 @@ async function resumeDevelopmentRunUnlocked(options) {
       || pageObservation.snapshot.bound_native_confirmation_pending
       || pageObservation.snapshot.native_confirmation_unknown_count > 0
       || pageObservation.snapshot.bound_tool_delivery_active === true;
-    const nativeCompletion = classification.kind === "native-completion" && !running && !pending;
+    const nativeCancellation = classification.kind === "native-cancellation" && !running && !pending;
+    const nativeFailure = classification.kind === "native-failure" && !running && !pending;
+    const nativeCompletion = (classification.kind === "native-completion" || nativeCancellation || nativeFailure) && !running && !pending;
     const uiCompletion = nativeCompletion || classification.kind === "ui-completion-candidate"
       && stableCompletionCount >= 3
       && !running
@@ -1436,7 +1550,7 @@ async function resumeDevelopmentRunUnlocked(options) {
     let nativeLifecycle = null;
     if (uiCompletion) {
       const replyPath = join(outputDir, `${nativeCompletion ? "native" : "ui"}-final-reply-${observationId}.txt`);
-      const finalText = nativeCompletion ? pageObservation.nativeNormalized.final_text : pageObservation.finalText;
+      const finalText = nativeCompletion ? pageObservation.nativeNormalized.final_text ?? "" : pageObservation.finalText;
       await writeFile(replyPath, finalText, { encoding: "utf8", flag: "wx", mode: 0o600 });
       const replyBuffer = await readFile(replyPath);
       const replySha256 = sha256Buffer(replyBuffer);
@@ -1489,7 +1603,8 @@ async function resumeDevelopmentRunUnlocked(options) {
         try {
           const normalized = normalizeNativeToolEvents(toolSnapshot, { attemptId: state.attempt_id, workspace: state.workspace,
             agentId: pageObservation.nativeNormalized.native_request_session_id, conversationId: state.session.conversation_id,
-            sentAt: state.timing.sent_at, finishedAt: pageObservation.nativeNormalized.finished_at });
+            sentAt: state.timing.sent_at, finishedAt: nativeCancellation ? state.cancellation.terminal_observed_at
+              : nativeFailure ? state.native_failure_observed_at : pageObservation.nativeNormalized.finished_at });
           coverage = { status: normalized.status, call_count: normalized.known_subtotal, scope: normalized.scope };
         } catch (error) { coverage = { status: "partial", error: error.message }; }
         if (cached) nativeTools = { ...cached.artifact, coverage };
@@ -1529,9 +1644,9 @@ async function resumeDevelopmentRunUnlocked(options) {
         });
       }
       state.error = {
-        code: nativeCompletion ? state.native_interactions?.confirmation_seen ? "NATIVE_COMPLETED_WITH_UNACCOUNTED_INTERACTION"
+        code: nativeFailure ? "NATIVE_FAILED_AWAITING_COLLECTION" : nativeCancellation ? "NATIVE_CANCELLED_AWAITING_COLLECTION" : nativeCompletion ? state.native_interactions?.confirmation_seen ? "NATIVE_COMPLETED_WITH_UNACCOUNTED_INTERACTION"
           : "NATIVE_COMPLETED_AWAITING_COLLECTION" : "DEVELOPMENT_UI_COMPLETION_UNVERIFIED",
-        message: nativeCompletion ? state.native_interactions?.confirmation_seen
+        message: nativeFailure ? "原生错误和前后台空闲已核验，等待异常证据采集与进程收口" : nativeCancellation ? "原生停止和前后台空闲已核验，等待取消证据采集与进程收口" : nativeCompletion ? state.native_interactions?.confirmation_seen
           ? "原生会话已结束，但确认交互尚无可核验的介入回执；自动收口与评分未准入"
           : "原生业务完成已核验，等待场景 collector 和进程收口" : "UI 完成候选没有可信原生终态",
         at: new Date().toISOString(),
@@ -1665,4 +1780,9 @@ export async function resumeDevelopmentRun(options) {
 export async function dispatchPreparedRun(options) {
   const release = await acquireExclusiveWorkerLock(join(homedir(), ".wildclawbench", "locks", "doubaowork-ui"));
   try { return await dispatchPreparedRunUnlocked(options); } finally { await release(); }
+}
+
+export async function cancelDevelopmentRun(options) {
+  const release = await acquireExclusiveWorkerLock(join(homedir(), ".wildclawbench", "locks", "doubaowork-ui"));
+  try { return await cancelDevelopmentRunUnlocked(options); } finally { await release(); }
 }

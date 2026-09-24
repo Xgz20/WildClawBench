@@ -15,7 +15,7 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 python -m eval_general_e2e skills --name collect-general-e2e --json
 ```
 
-当前 `0.8.12/operational` 支持 AstronStudio、WorkBuddy 与 QwenWork macOS 采集；WorkBuddy 支持原生 session JSONL 的模型响应数、Token、缓存读取及运行时请求耗时。QwenWork 对用户/助手/附件等内容行继续要求显式 session/cwd 一致；1.2.0 的 `worktree-state` 与 `file-history-snapshot` 等已知系统 metadata 行可缺少行内 cwd，并保留覆盖与 withheld claim。QwenWorkCN 1.2.0 / SDK 1.0.46 / transcript 1.1.59 的新 Profile 只在冻结的发送前 probe 证明 Token 开关、精确 runtime SHA 匹配，且逐响应非零 usage 与主 turn 终值按 request ID 完整对账时发布输入、输出、总 Token 和 Cache Read；Cache Write、推理 Token、HTTP 尝试仍不可用，旧 masked 样本不回填。finalizer 按正式 `collection.coverage` 和字段状态接受已验证的 observed/partial/unavailable 指标，不再把历史 unavailable 当作固定门禁。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+当前 `0.8.18/operational` 支持 AstronStudio、WorkBuddy 与 QwenWork macOS 采集；WorkBuddy 支持原生 session JSONL 的模型响应数、Token、缓存读取及运行时请求耗时。QwenWork 对用户/助手/附件等内容行继续要求显式 session/cwd 一致；1.2.0 的 `worktree-state` 与 `file-history-snapshot` 等已知系统 metadata 行可缺少行内 cwd，并保留覆盖与 withheld claim。QwenWorkCN 1.2.0 / SDK 1.0.46 / transcript 1.1.59 的新 Profile 只在冻结的发送前 probe 证明 Token 开关、精确 runtime SHA 匹配，且逐响应非零 usage 与主 turn 终值按 request ID 完整对账时发布输入、输出、总 Token 和 Cache Read；Cache Write、推理 Token、HTTP 尝试仍不可用，旧 masked 样本不回填。finalizer 按正式 `collection.coverage` 和字段状态接受已验证的 observed/partial/unavailable 指标，不再把历史 unavailable 当作固定门禁。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
 
 新增通用 [CB-B 收口接口](references/general-finalization.md) 接受 CB-A 状态与 trace-index v2，保留多个原始文件和 nullable 原生 ID。必须提供真实平台进程清理 hook；WorkBuddy 已有运行时采集和真实 macOS cleanup/finalizer canary，入口见 [WorkBuddy 收口入口](drivers/workbuddy/finalize.mjs)。QwenWorkCN 1.0.6 / macOS x86_64 已完成单题原生采集、真实 cleanup/finalizer、评分、回传和报告闭环；该证据不外推并发、Apple Silicon、Windows 或全量评测。
 
@@ -38,13 +38,19 @@ node execute-general-e2e/drivers/workbuddy/preflight.mjs --skill-root /absolute/
 
 QwenWork 正式采集还要求数据库终态、执行回执和绑定主 turn 的 `turn.finished.reason` 一致；取消必须有明确停止确认及原生 `abort`，未知或冲突原因拒绝。普通工具失败不能替代智能体最终错误，子代理结束不能替代主任务结束。
 
-客户端中断可能没有落盘 `turn.finished`。`0.8.12` 只对 `FAILED / infrastructure_error / QWENWORK_INTERRUPTED` 增加专门的采集分支：collector 从冻结配置指定的数据库生成新鲜只读在线备份，独立核验完整 session/conversation/sub-chat/project/cwd、原生 `interrupted` 和空 stream，并归档选中原生行及快照来源摘要。仍须有唯一主 turn start 与原始 Prompt/轨迹绑定；不能把执行器的中断声明单独当作证据，也不补造原生结束事件。缺失主 turn 结束时，Token、模型请求数及工具数总量保持 null/partial，实际已验证数据放入 `known_subtotals`，智能体耗时为 null；发送至观察到中断的流程耗时包含恢复停机时间。此分支不放宽完成或取消的结束证据要求。
+客户端中断可能没有落盘 `turn.finished`。`0.8.18` 只对 `FAILED / infrastructure_error / QWENWORK_INTERRUPTED` 增加专门的采集分支：collector 从冻结配置指定的数据库生成新鲜只读在线备份，独立核验完整 session/conversation/sub-chat/project/cwd、原生 `interrupted` 和空 stream，并归档选中原生行及快照来源摘要。仍须有唯一主 turn start 与原始 Prompt/轨迹绑定；不能把执行器的中断声明单独当作证据，也不补造原生结束事件。缺失主 turn 结束时，Token、模型请求数及工具数总量保持 null/partial，实际已验证数据放入 `known_subtotals`，智能体耗时为 null；发送至观察到中断的流程耗时包含恢复停机时间。此分支不放宽完成或取消的结束证据要求。
 
 ## 正式收口流程
 
-`0.8.12` 提供 DoubaoWork macOS 开发接线：`drivers/doubaowork/collector.mjs --unit-root ABS --journal-file ABS --output-root ABS` 重新校验原生消息、Prompt/project/workspace、一次发送和完成事件，输出 General execution-state、trace-index v2 与资源记录。随后用 `drivers/doubaowork/finalize.mjs` 的 `--state-file / --trace-index / --resource-metrics / --python` 接入公共 finalizer；`--verify-only` 复核冻结材料。输出根必须位于 unit 的 `.general-e2e/collection/`，已存在的采集/正式证据不可覆盖。
+`0.8.18` 提供 DoubaoWork macOS 开发接线：`drivers/doubaowork/collector.mjs --unit-root ABS --journal-file ABS --output-root ABS` 重新校验原生消息、Prompt/project/workspace、一次发送和完成事件，输出 General execution-state、trace-index v2 与资源记录。随后用 `drivers/doubaowork/finalize.mjs` 的 `--state-file / --trace-index / --resource-metrics / --python` 接入公共 finalizer；`--verify-only` 复核冻结材料。输出根必须位于 unit 的 `.general-e2e/collection/`，已存在的采集/正式证据不可覆盖。
 
 2.31.3 原生 IM 消息提供业务终态、workspace、回复与任务完成时间；完整工具轨迹还要求发送前安装的原生 started/settled 回调与同 agent 的结果账本对账。已在原生 TTL 内观察并保存的 uploaded 账本可在客户端淘汰后验证；缺首次观测证明、过期后才采集、内容冲突或覆盖不全仍拒绝。旧快照继续采用原严格规则。
+
+2.31.3/2.31.6 的显式单题取消另行核对发送前身份、取消意图、停止点击回执、原生 `Broken/Broken` 和同请求前后台空闲证明；仅有 Broken 或点击返回均不能收口。取消可保留不完整内容块、缺少轨迹或最终回复，并明确标记 partial，不补造助手文本或原生结束时间。流程耗时为发送至观察到取消且空闲的时间，包含观察等待；缺失的原生智能体耗时、Token 和工具总量仍为 null。
+
+原生轨迹文件刚创建但尚无内容时，只有已独立核验的非成功终态可按缺失证据保留 partial；成功任务缺 Prompt 轨迹、任何非空错误内容或实际 Prompt 不匹配仍拒绝。
+
+2.31.6 的传输错误 Profile 限定 `status=4 / stage=1 / Error/Error / error_details.has_error=true / error_code=710020702`。还须独立核验同 request 的原生前台/后台空闲和原始快照摘要，才形成基础设施异常回执；工具错误、UI 错误文字或控制器连接失败不替代它。原生结束时间缺失时只保留观察到错误且空闲的流程时间，明确包含控制器观察等待，智能体耗时继续为 null。工具展示与真实派发之间被中断的缺口保留为 partial，不能补造工具调用。其它错误码、状态组合及未知版本仍拒绝，不外推全部错误类型。
 
 collector 合并显式 session trajectory；相同工具 ID/内容的回放去重，不同内容冲突拒绝。只有单份完整原生模型轨迹覆盖全部已见调用/结果且逐项对账时，才使用其模型事件顺序；本地执行时点另存，不将并行工具的实际完成顺序强加到模型轨迹。其他跨来源时序无法证明时保留 partial，不能从最终文件补造事件。
 

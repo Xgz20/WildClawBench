@@ -3,6 +3,8 @@ import { promisify } from "node:util";
 import { homedir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { lstat, readdir, realpath, stat } from "node:fs/promises";
+import { inspectMacGuiSession } from "../desktop-gui/macos.mjs";
+import { createHash } from "node:crypto";
 
 import {
   DEFAULT_APP_PATH,
@@ -101,11 +103,16 @@ export async function inspectEndpointListener(endpointValue, appIdentity, overri
   }
   const listeners = [];
   for (const record of parseLsofRecords(stdout)) {
+    const before = (await run("/bin/ps", ["-p", String(record.pid), "-o", "lstart="], overrides)).stdout.trim();
     const result = await run("/bin/ps", ["-p", String(record.pid), "-o", "command="], overrides);
     const command = result.stdout.trim();
+    const after = (await run("/bin/ps", ["-p", String(record.pid), "-o", "lstart="], overrides)).stdout.trim();
+    if (!before || before !== after) throw new Error("DOUBAOWORK_LISTENER_PROCESS_CHANGED");
     listeners.push({
       ...record,
       command,
+      process_start_identity: before,
+      command_sha256: createHash("sha256").update(command).digest("hex"),
       expected_app: command === appIdentity.browser_executable
         || command.startsWith(`${appIdentity.browser_executable} `),
       loopback: record.address?.startsWith("127.0.0.1:")
@@ -257,7 +264,17 @@ export async function listSessionDirectoryIds({
 
 // Unknown lock state is never treated as an unlocked desktop.
 export async function inspectGuiSession(overrides = {}) {
-  const { stdout } = await run("/usr/sbin/ioreg", ["-n", "Root", "-d1"], overrides);
-  const match = stdout.match(/"IOConsoleLocked"\s*=\s*(Yes|No)/u);
-  return { screen_locked: match ? match[1] === "Yes" : null, unlocked: match?.[1] === "No", source: "ioreg.IOConsoleLocked" };
+  return inspectMacGuiSession(overrides);
+}
+
+export async function verifyExecutionEnvironment(client, overrides = {}) {
+  const gui = await (overrides.inspectGui ?? inspectGuiSession)();
+  if (!gui.unlocked) throw new Error("DOUBAOWORK_GUI_LOCKED_OR_UNKNOWN");
+  const listener = await (overrides.inspectListener ?? inspectEndpointListener)(client.endpoint, client.app);
+  const previous = client.listener?.listeners?.[0], current = listener.listeners?.[0];
+  if (!listener.unique_expected_listener || !previous || !current
+      || !previous.process_start_identity || !previous.command_sha256
+      || current.pid !== previous.pid || current.process_start_identity !== previous.process_start_identity
+      || current.command_sha256 !== previous.command_sha256) throw new Error("DOUBAOWORK_EXECUTION_ENVIRONMENT_CHANGED");
+  return { gui, listener, observed_at: new Date().toISOString() };
 }

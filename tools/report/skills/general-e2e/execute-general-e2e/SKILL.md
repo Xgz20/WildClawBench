@@ -15,13 +15,19 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.11.12/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.11.16/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## DoubaoWork macOS 开发入口
 
-`0.11.12` 提供 `drivers/doubaowork/driver.mjs` 与只读 `probe.mjs`；其控制与原生消息读取来自共用 `doubaowork` 组件，Web 入口使用同一源码。先在该 Driver 目录 `npm ci`，再运行 probe；General 只接受自身 execution manifest，不使用 Web prepared task 校验。单题入口为 `--unit-root ABS --task-id ID --project-name NAME`，默认保持当前权限并要求模型匹配 manifest；CLI 不选择模型或提升权限。
+`0.11.16` 提供 `drivers/doubaowork/driver.mjs` 与只读 `probe.mjs`；其控制与原生消息读取来自共用 `doubaowork` 组件，Web 入口使用同一源码。先在该 Driver 目录 `npm ci`，再运行 probe；General 只接受自身 execution manifest，不使用 Web prepared task 校验。单题入口为 `--unit-root ABS --task-id ID --project-name NAME`，默认保持当前权限并要求模型匹配 manifest；CLI 不选择模型或提升权限。
 
 更新客户端后必须重新 probe，并用与新版本匹配的新包；恢复拒绝版本、manifest、Prompt、场景与目录漂移。2.31.3 的模型控件和 ProseMirror 编辑器按唯一语义/作用域定位；新建任务后输入区仍可能保留旧项目，必须明确选择目标项目并回读。发送前检查 GUI 锁屏状态、完整目录、模型/权限与 Prompt，持久化意图后只发送一次；两个场景共享运行期 UI 锁。
+
+共享 GUI 门禁核对锁屏状态、已登录控制台用户与执行用户一致；连接后及最终发送前重新核对监听 PID、启动时间和命令摘要。2.31.3 的本地停止控件为 `chat_input_local_break_button`，观察器同时识别这个非 button 元素。
+
+明确要求停止单题时，可对已发送并完整绑定的独立 attempt 使用 `--resume --cancel`。控制器核对原生用户确认、当前项目、完整目录、唯一活动 request 及可见停止控件，先保存取消意图和调用边界，再点击一次。已有取消记录、未绑定任务、未知交互或托管队列均拒绝；取消调用不确定时不重试。随后普通 `--resume` 观察原任务，只有原生 Broken、取消回执及前后台空闲一致才交给 collector；点击返回本身不等于已取消。Web 尚无正式取消回执准入。
+
+2.31.6 的本地模式菜单按唯一语义条目等待可见后选择；菜单迟到不按 DOM 顺序猜测。首次用户消息确认后原生 request ID 可能稍晚出现，取消前会重新读取原生消息补齐同一身份，缺失或冲突仍拒绝。已验证的原生传输最终错误与前后台空闲可以交给 General collector；其它错误 Profile 保持 NEEDS_ATTENTION。
 
 `--resume` 仅恢复观察。只有已确认发送 0 次、未落盘发送意图、完整项目/目录身份仍匹配的发送前失败，才可显式传 `--resume --retry-pre-send-failure`；重试先通过原 project ID 的编辑对话框重新读取完整目录，不能只复用旧 tooltip；原失败 journal 先归档。已发送或不确定发送不适用。原生 Prompt 从绑定 conversation 的 IM message Store 读取，不把 Markdown 渲染文本当成原文。
 
@@ -33,7 +39,7 @@ python -m eval_general_e2e skills --name execute-general-e2e --json
 
 发送前同时核对前台请求与后台工具交付。并发只放行同队列、同会话、完整 Workspace 和原生请求 ID 一致且前台仍活动的交付；孤立或归属未知的后台交付阻断发送和陈旧锁恢复。原生会话完成但后台交付未结束时保持 `NEEDS_ATTENTION`，不得收口。
 
-`0.11.12` 将每次单题 Worker 的锁 owner 写入私有 journal；只读恢复先持久化清除旧完成观察，再进行连接与目录检查，避免中断留下旧成功可采集。若原点击结果未落盘，只有已绑定的原生成功用户消息与 Prompt/project/workspace 一致，才补记“恢复时观察到接受”；发送边界沿用原 dispatch 时间，未知 click_returned_at 不补造，不再次发送。
+`0.11.16` 将每次单题 Worker 的锁 owner 写入私有 journal；只读恢复先持久化清除旧完成观察，再进行连接与目录检查，避免中断留下旧成功可采集。若原点击结果未落盘，只有已绑定的原生成功用户消息与 Prompt/project/workspace 一致，才补记“恢复时观察到接受”；发送边界沿用原 dispatch 时间，未知 click_returned_at 不补造，不再次发送。
 
 单题 Driver 硬中断后，可显式恢复已核验退出的同机 owner：
 
