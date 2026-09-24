@@ -59,14 +59,14 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("execute-general-e2e").version,
                 get_skill_spec("execute-general-e2e").implementation_status,
             ),
-            ("0.11.11", "operational"),
+            ("0.11.12", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("collect-general-e2e").version,
                 get_skill_spec("collect-general-e2e").implementation_status,
             ),
-            ("0.8.10", "operational"),
+            ("0.8.12", "operational"),
         )
         self.assertEqual(
             (
@@ -109,7 +109,7 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
         self.assertEqual(report["expected_skill_count"], 7)
         self.assertTrue(report["legacy_eval_e2e"]["preserved"])
         self.assertEqual(report["shared_components"]["status"], "PASS")
-        self.assertEqual(len(report["shared_components"]["components"]), 14)
+        self.assertEqual(len(report["shared_components"]["components"]), 15)
         self.assertTrue(all(item["valid"] for item in report["skills"]))
 
     def test_cli_exposes_machine_readable_registry(self) -> None:

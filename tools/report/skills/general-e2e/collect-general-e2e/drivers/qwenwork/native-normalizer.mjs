@@ -1,7 +1,7 @@
 import { QWENWORK_MACOS_1_2_0_TOKEN_PROFILE } from "./token-profile.mjs";
 
 export const QWENWORK_COLLECTOR_ADAPTER_ID = "qwenwork-native-general";
-export const QWENWORK_COLLECTOR_VERSION = "0.1.3";
+export const QWENWORK_COLLECTOR_VERSION = "0.1.5";
 export const RESOURCE_SCHEMA = "urn:wildclawbench:schema:general-e2e:resource-metrics:v1";
 const TOKEN_FIELDS = Object.freeze([
   "input_tokens",
@@ -280,10 +280,14 @@ export function buildQwenStrictResourceMetrics({
     }
   }
   const finishes = selected.filter((row) => row.type === "turn.finished");
-  if (finishes.length !== 1) throw new Error(`QWENWORK_MAIN_TURN_FINISH_COUNT: ${finishes.length}`);
+  const interrupted = state.extensions?.qwenwork?.native_terminal_reconciliation?.mode === "native-interruption-without-finish"
+    && state.extensions.qwenwork.native_terminal_reconciliation.verified === true
+    && state.execution?.business_status === "infrastructure_error"
+    && state.execution.error?.code === "QWENWORK_INTERRUPTED";
+  if (finishes.length !== 1 && !(interrupted && finishes.length === 0)) throw new Error(`QWENWORK_MAIN_TURN_FINISH_COUNT: ${finishes.length}`);
   const finish = finishes[0];
-  const duration = Number(state.execution?.duration_seconds);
-  const agentDuration = Number(finish.data?.duration_ms) / 1000;
+  const duration = typeof state.execution?.duration_seconds === "number" ? state.execution.duration_seconds : NaN;
+  const agentDuration = typeof finish?.data?.duration_ms === "number" ? finish.data.duration_ms / 1000 : NaN;
   const refs = sources.map((source) => source.path);
   const tokenFields = ["input_tokens", "output_tokens", "cache_read_input_tokens"];
   const safeCount = (value) => Number.isSafeInteger(value) && value >= 0;
@@ -301,7 +305,7 @@ export function buildQwenStrictResourceMetrics({
   const totals = Object.fromEntries(tokenFields.map((field) => [
     field, values.reduce((sum, value) => sum + (safeCount(value[field]) ? value[field] : 0), 0),
   ]));
-  const reconciled = tokenFields.every((field) => safeCount(finish.data?.[field])
+  const reconciled = tokenFields.every((field) => safeCount(finish?.data?.[field])
     && finish.data[field] === totals[field]);
   const tokenObserved = Boolean(tokenProfile?.id === QWENWORK_MACOS_1_2_0_TOKEN_PROFILE.id
     && nonzero && matched && validResponses && reconciled);
@@ -330,10 +334,24 @@ export function buildQwenStrictResourceMetrics({
       usage[field] = metric(null, "masked", "QwenWork native response usage is hidden zero, not observed zero");
     }
   }
+  const knownSubtotals = {};
+  if (interrupted) {
+    knownSubtotals.request_count = requests.size;
+    knownSubtotals.call_count = calls.size;
+    for (const field of TOKEN_FIELDS) coverageMap[field] = coverage(0, null, "model_response");
+    if (tokenProfile?.id === QWENWORK_MACOS_1_2_0_TOKEN_PROFILE.id && nonzero && validResponses
+        && [...responseIds].every(id => requests.has(id))) {
+      for (const field of [...tokenFields, "total_tokens"]) {
+        usage[field] = metric(null, "partial", "Verified native responses before interruption; main-turn total unavailable");
+        knownSubtotals[field] = field === "total_tokens" ? totals.input_tokens + totals.output_tokens : totals[field];
+        coverageMap[field] = coverage(responses.length, null, "model_response");
+      }
+    }
+  }
   Object.assign(coverageMap, {
-    request_count: coverage(requests.size, requests.size, "model_request"),
-    request_attempt_count: coverage(0, requests.size, "native_request"),
-    call_count: coverage(1, 1, "attempt"),
+    request_count: coverage(requests.size, interrupted ? null : requests.size, "model_request"),
+    request_attempt_count: coverage(0, interrupted ? null : requests.size, "native_request"),
+    call_count: interrupted ? coverage(calls.size, null, "tool_call") : coverage(1, 1, "attempt"),
     duration_seconds: coverage(Number.isFinite(duration) && duration >= 0 ? 1 : 0, 1, "attempt"),
     agent_duration_seconds: coverage(Number.isFinite(agentDuration) && agentDuration >= 0 ? 1 : 0, 1, "attempt"),
   });
@@ -355,7 +373,8 @@ export function buildQwenStrictResourceMetrics({
       status: "partial",
       collected_at: collectedAt,
       sources,
-      warnings: tokenObserved ? ["QWEN_CACHE_WRITE_UNVERIFIED", "QWEN_REASONING_USAGE_UNAVAILABLE"]
+      warnings: interrupted ? ["QWEN_NATIVE_MAIN_TURN_FINISH_MISSING", "QWEN_RESOURCE_TOTALS_PARTIAL"]
+        : tokenObserved ? ["QWEN_CACHE_WRITE_UNVERIFIED", "QWEN_REASONING_USAGE_UNAVAILABLE"]
         : [tokenProfile ? (nonzero ? "QWEN_TOKEN_RESPONSE_MISMATCH" : "QWEN_TOKEN_USAGE_MASKED")
           : "QWEN_TOKEN_SEMANTICS_UNVERIFIED"],
       excluded_scope: [
@@ -367,19 +386,22 @@ export function buildQwenStrictResourceMetrics({
       ],
       coverage: coverageMap,
       metric_sources: metricSources,
+      ...(interrupted ? { known_subtotals: knownSubtotals } : {}),
     },
     metrics: {
       usage,
       requests: {
-        request_count: metric(requests.size, "observed", "unique main-turn model.request.started IDs; not HTTP attempts"),
+        request_count: interrupted ? metric(null, "partial", "Available model.request.started IDs are a subtotal; native main-turn finish missing")
+          : metric(requests.size, "observed", "unique main-turn model.request.started IDs; not HTTP attempts"),
         request_attempt_count: metric(null, "unavailable", "QwenWork does not expose transport-level attempts"),
       },
       tools: {
-        call_count: metric(calls.size, "observed", "unique main-turn tool.requested IDs"),
+        call_count: interrupted ? metric(null, "partial", "Available tool.requested IDs are a subtotal; native main-turn finish missing")
+          : metric(calls.size, "observed", "unique main-turn tool.requested IDs"),
       },
       timing: {
         duration_seconds: Number.isFinite(duration) && duration >= 0
-          ? metric(duration, "observed", "CB-A execution state wall-clock duration")
+          ? metric(duration, "observed", interrupted ? "Dispatch to observed native interruption, including recovery downtime; not agent runtime" : "CB-A execution state wall-clock duration")
           : metric(null, "unavailable", "CB-A execution duration unavailable"),
         agent_duration_seconds: Number.isFinite(agentDuration) && agentDuration >= 0
           ? metric(agentDuration, "observed", "SDK turn.finished.duration_ms")

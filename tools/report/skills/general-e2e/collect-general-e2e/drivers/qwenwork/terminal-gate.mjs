@@ -1,15 +1,27 @@
 // Reconcile the execution projection with the bound native main-turn log.
 // Tool errors alone are not final agent errors, and an aborted turn is not a
 // successful execution even when a stale state file says COMPLETED.
-export function verifyQwenNativeTerminal(state, rows) {
+import { verifyQwenSessionSnapshot } from "../../vendor/e2e-shared/qwenwork-native-state/index.mjs";
+
+export function verifyQwenNativeTerminal(state, rows, { nativeSnapshot = null } = {}) {
   const starts = rows.filter(row => row.type === "turn.started" && row.data?.is_subagent !== true);
   const turnIds = [...new Set(starts.map(row => row.turn_id).filter(Boolean))];
   if (turnIds.length !== 1) throw Error("QWENWORK_TERMINAL_MAIN_TURN_AMBIGUOUS");
   const finishes = rows.filter(row => row.type === "turn.finished" && row.turn_id === turnIds[0]);
-  if (finishes.length !== 1) throw Error("QWENWORK_TERMINAL_FINISH_UNVERIFIED");
-  const finish = finishes[0], reason = finish.data?.reason;
   const native = String(state.extensions?.qwenwork?.native_status || "").toLowerCase().replace(/[\s_-]+/gu, "");
   const business = state.execution?.business_status;
+  if (native === "interrupted") {
+    verifyQwenSessionSnapshot(nativeSnapshot, state);
+    if (finishes.length === 0 && state.phase === "FAILED" && business === "infrastructure_error"
+        && state.execution.error?.code === "QWENWORK_INTERRUPTED") {
+      return { verified: true, mode: "native-interruption-without-finish", native_turn_id: turnIds[0],
+        finish_reason: null, native_status: native, business_status: business,
+        raw_ref: "raw/native-session-snapshot.json", raw_line: null,
+        native_finish_present: false, metrics_complete: false };
+    }
+  }
+  if (finishes.length !== 1) throw Error("QWENWORK_TERMINAL_FINISH_UNVERIFIED");
+  const finish = finishes[0], reason = finish.data?.reason;
   let matched = false;
   if (business === "completed") {
     matched = state.phase === "COMPLETED" && ["end_turn", "completed"].includes(reason)

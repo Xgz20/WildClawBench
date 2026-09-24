@@ -26,6 +26,11 @@ class SharedComponentSpec:
 
 EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     SharedComponentSpec(
+        name="qwenwork-native-state", version="1.0.0",
+        source_root="tools/report/e2e-shared/qwenwork-native-state",
+        vendor_root="vendor/e2e-shared/qwenwork-native-state", entrypoints=("index.mjs",),
+    ),
+    SharedComponentSpec(
         name="desktop-gui", version="1.0.0",
         source_root="tools/report/e2e-shared/desktop-gui",
         vendor_root="vendor/e2e-shared/desktop-gui", entrypoints=("macos.mjs",),

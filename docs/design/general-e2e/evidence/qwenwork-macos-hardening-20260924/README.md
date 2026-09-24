@@ -9,3 +9,5 @@
 - **Web接续准备**：复用GUI组件。独立Web只读probe先因遗留浏览器中继进程被误认主进程而拒绝；修正为仅排除精确安装路径的中继脚本，真正多主进程及未知参数继续拒绝。Driver1.12.2的新独立包probe通过，未发送Web任务、未评分、未声明Web准入。
 
 最终工作区候选：General execute0.11.11 / collect0.8.10，Web execute1.17.11，共享GUI1.0.0；独立包和完整General suite均在仓库外构建。172项Node、32项Python通过。r36/r36b、r37和r38/r39各自包身份保留；不把跨迭代负例合并为同发行完整生产通过，也不重复运行既有五题、Token和报告。
+
+本记录保留 r36–r39 的验收时点。后续客户端中断、原生最终错误及新 collector 回归见[终态加固证据](../qwenwork-terminal-hardening-20260924/README.md)，不改写上述历史包和回执。

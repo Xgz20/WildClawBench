@@ -22,7 +22,7 @@ const PROBE_PATH = join(DRIVER_DIR, "probe.mjs");
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
 const DRIVER_SOURCE_FILES = [
   "batch.mjs", "driver.mjs", "execution-state.mjs", "journal.mjs",
-  "probe.mjs", "environment.mjs", "../../vendor/e2e-shared/desktop-gui/macos.mjs", "runtime-profile.mjs", "path-preflight.mjs", "select-folder.swift",
+  "probe.mjs", "environment.mjs", "../../vendor/e2e-shared/desktop-gui/macos.mjs", "../../vendor/e2e-shared/qwenwork-native-state/index.mjs", "runtime-profile.mjs", "path-preflight.mjs", "select-folder.swift",
   "session-state.mjs", "token-launch.mjs", "token-process.mjs", "ui.mjs", "package-lock.json",
 ];
 

@@ -136,6 +136,15 @@
       "entrypoints": [
         "macos.mjs"
       ]
+    },
+    {
+      "name": "qwenwork-native-state",
+      "version": "1.0.0",
+      "source_root": "tools/report/e2e-shared/qwenwork-native-state",
+      "vendor_root": "vendor/e2e-shared/qwenwork-native-state",
+      "entrypoints": [
+        "index.mjs"
+      ]
     }
   ]
 }

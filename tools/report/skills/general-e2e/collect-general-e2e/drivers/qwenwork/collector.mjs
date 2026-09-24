@@ -26,6 +26,7 @@ import {
 import { assessQwenMetadataCoverage, isQwenTranscriptMetadataRow } from "./metadata-gate.mjs";
 import { matchQwenTokenProfile, qwenCanaryConfigDigest } from "./token-profile.mjs";
 import { verifyQwenNativeTerminal } from "./terminal-gate.mjs";
+import { captureQwenSessionSnapshot } from "../../vendor/e2e-shared/qwenwork-native-state/index.mjs";
 
 const JOURNAL_SCHEMA = "wildclawbench.general-e2e-qwenwork-attempt-journal/v1";
 const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-execution-state/v1";
@@ -540,7 +541,19 @@ export async function collectQwenWorkEvidence(options) {
   }
   assertTranscriptBinding(transcriptRows, state);
   assertSegmentBinding(segmentRows, state);
-  state.extensions.qwenwork.native_terminal_reconciliation = verifyQwenNativeTerminal(state, segmentRows);
+  let nativeSnapshotBytes = null, nativeSnapshot = null;
+  if (state.extensions.qwenwork.native_status === "interrupted") {
+    const config = (await readJson(join(dirname(journalSource.absolute), "config.json"))).value;
+    if (!sameIdentity(config.identity, journalSource.value.identity)
+        || config.config_digest !== journalSource.value.config_digest
+        || qwenCanaryConfigDigest(config) !== config.config_digest
+        || resolve(config.state_file || "/") !== journalSource.absolute
+        || !isAbsolute(config.client?.session_db || "")) throw Error("QWENWORK_NATIVE_SNAPSHOT_CONFIG_INVALID");
+    nativeSnapshot = await captureQwenSessionSnapshot({ databasePath: config.client.session_db,
+      sessionId: state.session.session_id, workspace: state.session.cwd });
+    nativeSnapshotBytes = jsonBytes(nativeSnapshot);
+  }
+  state.extensions.qwenwork.native_terminal_reconciliation = verifyQwenNativeTerminal(state, segmentRows, { nativeSnapshot });
   const normalized = normalizeQwenNativeTrace({
     identity: state.identity,
     transcriptRows,
@@ -554,6 +567,7 @@ export async function collectQwenWorkEvidence(options) {
   for (const source of segmentSources) {
     rawArtifacts.push(artifact(`raw/segments/${basename(source.absolute)}`, source.bytes));
   }
+  if (nativeSnapshotBytes) rawArtifacts.push(artifact("raw/native-session-snapshot.json", nativeSnapshotBytes));
   const tokenArtifacts = tokenContext ? [
     artifact("raw/token-config.json", tokenContext.configSource.bytes),
     artifact("raw/token-probe.json", tokenContext.probeSource.bytes),
@@ -622,6 +636,7 @@ export async function collectQwenWorkEvidence(options) {
     for (const source of segmentSources) {
       await writeFile(join(stage, "trace", "raw", "segments", basename(source.absolute)), source.bytes, { flag: "wx", mode: 0o600 });
     }
+    if (nativeSnapshotBytes) await writeFile(join(stage, "trace", "raw", "native-session-snapshot.json"), nativeSnapshotBytes, { flag: "wx", mode: 0o600 });
     if (tokenContext) {
       await writeFile(join(stage, "trace", "raw", "token-config.json"), tokenContext.configSource.bytes,
         { flag: "wx", mode: 0o600 });

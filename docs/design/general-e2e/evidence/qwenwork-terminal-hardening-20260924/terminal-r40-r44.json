@@ -1,0 +1,451 @@
+{
+  "schema": "wildclawbench.qwenwork-general-terminal-evidence/v1",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-terminal-hardening-20260924",
+  "source_baseline": "9869dd7378cba25e537f2c006eeb7e34b2be27e2",
+  "source_worktree": "related uncommitted changes; release manifests bind packaged content",
+  "date": "2026-09-24",
+  "scope": "macOS x86_64 / QwenWorkCN 1.2.0 / attended controlled technical fixtures",
+  "full_production_admission": false,
+  "in_capability_denominator": false,
+  "scoring_performed": false,
+  "versions": {
+    "shared_native_state": "1.0.0",
+    "general_execute": "0.11.12",
+    "general_driver": "0.3.12",
+    "general_collect": "0.8.12",
+    "qwen_collector": "0.1.5",
+    "web_execute": "1.17.11",
+    "web_driver": "1.12.2"
+  },
+  "interruption": {
+    "execution_package": "r40",
+    "first_collection_package": "r41",
+    "cross_version": true,
+    "dispatch_count": 1,
+    "native_state": "interrupted",
+    "native_stream_present": false,
+    "native_finish_present": false,
+    "other_task_state_changes": 0,
+    "terminal": "FAILED / infrastructure_error / QWENWORK_INTERRUPTED",
+    "fresh_independent_database_snapshot": true,
+    "native_events_fabricated": false,
+    "native_id_sha256": {
+      "session_id": "1dabaebfd3bc484455e7bac8d688f36bf52ac61fb8883c46ccca822c5ce95195"
+    },
+    "first_collect_finalize_verify": "PASS",
+    "receipt_sha256": "2fa8299a51d190ec7d2aa66e3fd425934074a22766685a36ee129a781f7bb109",
+    "trace_completeness": {
+      "status": "partial",
+      "omitted_event_count": 0,
+      "missing": [
+        "main_turn_finished",
+        "tool_result:call_ce322b83cb3640e6956f819b"
+      ]
+    },
+    "known_subtotals": {
+      "request_count": 2,
+      "call_count": 2,
+      "input_tokens": 73239,
+      "output_tokens": 638,
+      "cache_read_input_tokens": 36424,
+      "total_tokens": 73877
+    },
+    "metrics": {
+      "usage": {
+        "input_tokens": {
+          "value": null,
+          "status": "partial",
+          "basis": "Verified native responses before interruption; main-turn total unavailable"
+        },
+        "output_tokens": {
+          "value": null,
+          "status": "partial",
+          "basis": "Verified native responses before interruption; main-turn total unavailable"
+        },
+        "total_tokens": {
+          "value": null,
+          "status": "partial",
+          "basis": "Verified native responses before interruption; main-turn total unavailable"
+        },
+        "cache_read_input_tokens": {
+          "value": null,
+          "status": "partial",
+          "basis": "Verified native responses before interruption; main-turn total unavailable"
+        },
+        "cache_creation_input_tokens": {
+          "value": null,
+          "status": "unavailable",
+          "basis": "QwenWork cache_creation_input_tokens has no admitted native coverage"
+        },
+        "reasoning_output_tokens": {
+          "value": null,
+          "status": "unavailable",
+          "basis": "QwenWork reasoning_output_tokens has no admitted native coverage"
+        }
+      },
+      "requests": {
+        "request_count": {
+          "value": null,
+          "status": "partial",
+          "basis": "Available model.request.started IDs are a subtotal; native main-turn finish missing"
+        },
+        "request_attempt_count": {
+          "value": null,
+          "status": "unavailable",
+          "basis": "QwenWork does not expose transport-level attempts"
+        }
+      },
+      "tools": {
+        "call_count": {
+          "value": null,
+          "status": "partial",
+          "basis": "Available tool.requested IDs are a subtotal; native main-turn finish missing"
+        }
+      },
+      "timing": {
+        "duration_seconds": {
+          "value": 497.504,
+          "status": "observed",
+          "basis": "Dispatch to observed native interruption, including recovery downtime; not agent runtime"
+        },
+        "agent_duration_seconds": {
+          "value": null,
+          "status": "unavailable",
+          "basis": "SDK main turn duration unavailable"
+        }
+      }
+    },
+    "timing_boundary": "dispatch to observed native interruption includes recovery downtime; agent runtime unavailable"
+  },
+  "final_error": {
+    "batch": "r43",
+    "execution_and_first_collection_package": "r41",
+    "same_frozen_release": true,
+    "dispatch_count": 1,
+    "native_state": "failed",
+    "native_finish_reason": "error",
+    "terminal": "FAILED / infrastructure_error / QWENWORK_NATIVE_FAILURE",
+    "native_error_name": "CustomProviderAccessError",
+    "native_status_code": 403,
+    "native_error_message": "The account changed while preparing the model request.",
+    "retryable": false,
+    "attempt_had_payload": false,
+    "mechanism": "after a verified owned main turn completed a Read tool, change supported server endpoint in its SDK worker at an inference address lookup; SDK itself rejected the account/provider context and emitted final error",
+    "worker_original_endpoint_restored": true,
+    "native_events_fabricated": false,
+    "network_retry_validation": false,
+    "native_id_sha256": {
+      "session_id": "76f27df121b5aa52478873a42342c4c99a7dfe094bb9ed4fc66a68f989e017f5",
+      "turn_id": "7a598a479dd98ef4a2b547e6ea7bdf3e09699f770c962173f5f45cd09dbaff08"
+    },
+    "first_collect_finalize_verify": "PASS",
+    "receipt_sha256": "35a86754f4455a021df774e2e3bceecde491fe2d72bd193a45d1992710cd70df",
+    "trace_completeness": {
+      "status": "complete",
+      "omitted_event_count": 0,
+      "missing": []
+    },
+    "metrics": {
+      "usage": {
+        "input_tokens": {
+          "value": null,
+          "status": "partial",
+          "basis": "QwenWork native request/response or turn usage did not reconcile"
+        },
+        "output_tokens": {
+          "value": null,
+          "status": "partial",
+          "basis": "QwenWork native request/response or turn usage did not reconcile"
+        },
+        "total_tokens": {
+          "value": null,
+          "status": "partial",
+          "basis": "QwenWork native request/response or turn usage did not reconcile"
+        },
+        "cache_read_input_tokens": {
+          "value": null,
+          "status": "partial",
+          "basis": "QwenWork native request/response or turn usage did not reconcile"
+        },
+        "cache_creation_input_tokens": {
+          "value": null,
+          "status": "unavailable",
+          "basis": "QwenWork cache_creation_input_tokens has no admitted native coverage"
+        },
+        "reasoning_output_tokens": {
+          "value": null,
+          "status": "unavailable",
+          "basis": "QwenWork reasoning_output_tokens has no admitted native coverage"
+        }
+      },
+      "requests": {
+        "request_count": {
+          "value": 2,
+          "status": "observed",
+          "basis": "unique main-turn model.request.started IDs; not HTTP attempts"
+        },
+        "request_attempt_count": {
+          "value": null,
+          "status": "unavailable",
+          "basis": "QwenWork does not expose transport-level attempts"
+        }
+      },
+      "tools": {
+        "call_count": {
+          "value": 1,
+          "status": "observed",
+          "basis": "unique main-turn tool.requested IDs"
+        }
+      },
+      "timing": {
+        "duration_seconds": {
+          "value": 44.443,
+          "status": "observed",
+          "basis": "CB-A execution state wall-clock duration"
+        },
+        "agent_duration_seconds": {
+          "value": 6.944,
+          "status": "observed",
+          "basis": "SDK turn.finished.duration_ms"
+        }
+      }
+    }
+  },
+  "failed_or_nonqualifying_attempts": [
+    {
+      "label": "r40 final-error preflight",
+      "prompt_sent": 0,
+      "reason": "client environment incomplete; not final error evidence"
+    },
+    {
+      "label": "r41 endpoint override at client startup",
+      "prompt_sent": 1,
+      "reason": "SDK initialization stalled without native session ID; cleaned up and restored; not final error evidence"
+    },
+    {
+      "label": "r42 locked and transient environment preparation",
+      "prompt_sent_before_recovery": 0,
+      "reason": "fail-closed before reservation; same attempt resumed after fresh checks"
+    },
+    {
+      "label": "r42 inference injection",
+      "prompt_sent": 1,
+      "reason": "worker already had a client-provided endpoint; guard rejected before mutation; native task completed normally; not final error evidence"
+    }
+  ],
+  "r44_regression": {
+    "fresh_collection_of_both_original_samples": "PASS",
+    "metrics_equal_to_original": true,
+    "verify_original_immutable_receipts": "PASS",
+    "original_receipts_rewritten": false,
+    "same_release_live_claim": false,
+    "subtotal_negative_cases": [
+      "response without matching request ID",
+      "unrecognized token profile",
+      "null duration remains null"
+    ]
+  },
+  "cleanup": {
+    "owned_fault_server_stopped": true,
+    "temporary_node_inspector_port_closed": true,
+    "normal_client_restarted": true,
+    "client_server_endpoint_override": null,
+    "token_usage_exposure_retained": true,
+    "global_model_and_permission_settings_unchanged": true,
+    "aggregate_local_tcp_connections": 92,
+    "tcp_count_is_sample_or_http_retry_metric": false
+  },
+  "validation": {
+    "general_node": {
+      "passed": 127,
+      "failed": 0
+    },
+    "general_python": {
+      "passed": 28,
+      "failed": 0
+    },
+    "web_node": {
+      "passed": 47,
+      "failed": 0
+    },
+    "web_python_layout": {
+      "passed": 4,
+      "failed": 0
+    },
+    "independent_general_execute_collect_and_web_execute_packages": "PASS",
+    "complete_general_suite": "PASS",
+    "web_prompt_sent": 0
+  },
+  "artifacts": [
+    {
+      "path": "r40-interruption-intent.json",
+      "sha256": "7823cf9d4df9e3cda92f0f6232e2ac6602a59effd14e9bccbe96f45c310d81ff",
+      "size": 3068
+    },
+    {
+      "path": "r40-interruption-signal.json",
+      "sha256": "30c3cff54b946a73e6bb49893a4d7e87392bcc3c7b5c4f8a9fff361cca01c799",
+      "size": 120
+    },
+    {
+      "path": "r40-restart-result.json",
+      "sha256": "d4ec489d4800c9eb65163cb90070aae82a109ebe8095da1687e82a67cea0988f",
+      "size": 1831
+    },
+    {
+      "path": "r40-postrestart-resume.json",
+      "sha256": "a25eb82cacf23157cc064f2a218220e70096e904585281d30858497da7154d5f",
+      "size": 45699
+    },
+    {
+      "path": "r41-interrupted-collect.json",
+      "sha256": "cdf35dd43996abafeefda59f25ebf48a0f3620d320dbf22b0f7d1b821ff8fd1d",
+      "size": 16486
+    },
+    {
+      "path": "r41-interrupted-finalize.json",
+      "sha256": "ea526a424e4caa9133e5c618135262ba0c71efe7203d5d6bedca52010150596e",
+      "size": 1027
+    },
+    {
+      "path": "r41-interrupted-verify.json",
+      "sha256": "9c905fa53e09b69464d2ce77d1bc78ea6d67cf8c4fe1d2e44938c5e5180f0868",
+      "size": 1447
+    },
+    {
+      "path": "r41-fault-startup.json",
+      "sha256": "5df54b36c51a77ec063e12f89c7d02f87631fb55addb27f47462dca19b8de4be",
+      "size": 6661
+    },
+    {
+      "path": "r42-prepare-unlocked.json",
+      "sha256": "0afd9f1ca21cd9201c821a94bf3feffe824b25f580fc15ba8bcbdb4583500231",
+      "size": 890
+    },
+    {
+      "path": "r42-inspector-events.json",
+      "sha256": "2aa8420935a4fc0aee41d53583a76fb5e0e15a8d2ba27428b3f88bf2728bdb4d",
+      "size": 121
+    },
+    {
+      "path": "r42b-inspector-events.json",
+      "sha256": "17fb736933ee33b8a6259f82309844fa08008a04b7a710d3b5653a968ff21994",
+      "size": 1944
+    },
+    {
+      "path": "r42b-observe1.json",
+      "sha256": "514888b6dedaff266bb2f33610dc0b3b1f13f85caec7c4d2428cdebc0a3efd76",
+      "size": 50937
+    },
+    {
+      "path": "r43-model-fault-injected.json",
+      "sha256": "2781ff123a7218759ceb9fa1f5381cf0c2a372a6a821a846b3b80068b6c22fab",
+      "size": 2299
+    },
+    {
+      "path": "r43-model-fault-restored.json",
+      "sha256": "099e316db8ba691b3f9ac07d2839c24eaa432a6a48ddf42246675c351f180a86",
+      "size": 97
+    },
+    {
+      "path": "r43-inspector-events.json",
+      "sha256": "a4fc5604b1bf71753819fd0032baa4a94006b632ab2c53b5af54d614b89b8920",
+      "size": 1354
+    },
+    {
+      "path": "r43-final-error-collect.json",
+      "sha256": "e019d16cfe64f3d795b314b71bf01d7b221e79544f45f4fafcc3c58262da1e92",
+      "size": 14904
+    },
+    {
+      "path": "r43-final-error-finalize.json",
+      "sha256": "99f3e2ce2403a0d105c1c64882e9654cb6aa118deeb29839a5859b46cbc5c42e",
+      "size": 1021
+    },
+    {
+      "path": "r43-final-error-verify.json",
+      "sha256": "9221cfaf188c952a14f751de32e9c33f5b1077ac33d63596378c738539d72546",
+      "size": 1441
+    },
+    {
+      "path": "r43-normal-client-restored.json",
+      "sha256": "423b74fdfd9751ce3966c9578e64f9c5334b29b0d870628f0c725968d55397b1",
+      "size": 7301
+    },
+    {
+      "path": "r41-local-fault-server-result.json",
+      "sha256": "4805043e2e8d1a6ada1581f4144ac54deae5eb1fd5ca985633ddc71209ae1ae3",
+      "size": 107
+    },
+    {
+      "path": "r44-live-artifact-regression.json",
+      "sha256": "97eef71e12b096b83910101339e40bd0c35022ff4240a8aea23b2a0777aaadac",
+      "size": 434
+    },
+    {
+      "path": "r44-interruption-collect.json",
+      "sha256": "cc70543616e6dca573e236305fac54407ae022980d7316ada4fb37adf79643bd",
+      "size": 16490
+    },
+    {
+      "path": "r44-interruption-verify.json",
+      "sha256": "00859257ef6b528ca8d1018838f5de1b39325846fe8fdb132a507f7bb4e8c921",
+      "size": 1447
+    },
+    {
+      "path": "r44-final-error-collect.json",
+      "sha256": "9d78c8e484171eab9c9fd32eb9cc663ddb150eb9e7e05096a2b2e734cfd25ca9",
+      "size": 14876
+    },
+    {
+      "path": "r44-final-error-verify.json",
+      "sha256": "a3f70a9d27e7822545e952f23e1c22d2deca52872a37055619b0ceebac014d22",
+      "size": 1441
+    },
+    {
+      "path": "node-r44.log",
+      "sha256": "f0c2d83828fe7d05af25af5ae77eab05e0c9d29605b26b500d8312141ad6bb94",
+      "size": 11986
+    },
+    {
+      "path": "python-r44.log",
+      "sha256": "ee4f537ac8808ede07a6a8be5737a7d12d0a76c93a74c03926ce491259d4bf1c",
+      "size": 127
+    },
+    {
+      "path": "web-node-r43.log",
+      "sha256": "cc69dd20836233a6a40e7a8687a42f0a5626d4aaa6706b7c4278a43374fb1972",
+      "size": 4010
+    },
+    {
+      "path": "web-python-r43.log",
+      "sha256": "7448ba70490bbc4caa5d0fb75f4aa70e0708b80c605e272c10b8476aa60338c1",
+      "size": 102
+    },
+    {
+      "path": "release-r41-build.json",
+      "sha256": "0ddee4c611ad2ecab30fb2f8da79b9763e92341db22a9a74b6b312fad9b55e16",
+      "size": 673
+    },
+    {
+      "path": "release-r44-build.json",
+      "sha256": "48bba703434e88cdfe22e78c799a9f280cee5a7d2a0aad375a81083163e6240b",
+      "size": 673
+    },
+    {
+      "path": "affected-r44/skills-build-manifest.json",
+      "sha256": "ea84e093b589c70b0ab9b5e5d8ba0469786d337f4d195c7a4d3b8061f81f6ab4",
+      "size": 14301
+    },
+    {
+      "path": "verify-packages-r44.json",
+      "sha256": "94088a21c38511e5cbcfe407ea99b3b7b48902f35a2b8c1433b4155c17dfe42c",
+      "size": 1533
+    },
+    {
+      "path": "verify-release-r44.json",
+      "sha256": "128417e1d9cd6ac46d29841484398331c31e0cfc829ab3022c14b1de44599c62",
+      "size": 26750
+    }
+  ]
+}
