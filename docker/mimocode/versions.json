@@ -1,12 +1,23 @@
 {
-  "default": "v0.0",
+  "default": "v0.1",
   "versions": {
     "v0.0": {
+      "buildable": false,
+      "build_unavailable_reason": "@mimo-ai/cli@0.1.14 is no longer available from npm (checked 2026-09-24). Load an existing v0.0 image for historical evaluations, or build v0.1; do not replace the historical CLI version.",
       "image": "wildclawbench-mimocode-ubuntu:v0.0",
       "context": "v1",
       "dockerfile": "v1/Dockerfile",
       "build_args": {
         "MIMOCODE_VERSION": "0.1.14",
+        "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0"
+      }
+    },
+    "v0.1": {
+      "image": "wildclawbench-mimocode-ubuntu:v0.1",
+      "context": "v2",
+      "dockerfile": "v2/Dockerfile",
+      "build_args": {
+        "MIMOCODE_VERSION": "0.1.15",
         "EVAL_BASE_IMAGE": "wildclawbench-codex-ubuntu:v0.0"
       }
     }

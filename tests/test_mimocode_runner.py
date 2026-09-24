@@ -39,6 +39,7 @@ class MiMoCodeRunnerTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             defaults = resolve_mimocode_config()
         self.assertEqual(defaults.image, DEFAULT_IMAGE)
+        self.assertEqual(DEFAULT_IMAGE, "wildclawbench-mimocode-ubuntu:v0.1")
         self.assertEqual(defaults.api, DEFAULT_MIMOCODE_API)
 
     def test_container_command_contains_protocol_and_credentials(self) -> None:
@@ -134,7 +135,7 @@ class MiMoCodeRunnerTests(unittest.TestCase):
                         stack.enter_context(patch.object(agent, name))
                     stack.enter_context(
                         patch.object(
-                            agent, "_probe_harness_version", return_value="0.1.14"
+                            agent, "_probe_harness_version", return_value="0.1.15"
                         )
                     )
                     stack.enter_context(
@@ -155,7 +156,7 @@ class MiMoCodeRunnerTests(unittest.TestCase):
                 )
                 self.assertEqual(status["status"], expected)
                 self.assertEqual(status["timed_out"], rc == 124)
-                self.assertEqual(status["harness_version"], "0.1.14")
+                self.assertEqual(status["harness_version"], "0.1.15")
                 self.assertEqual(export.call_args.kwargs["exit_code"], rc)
 
     def test_native_stdout_is_not_modified_by_runner(self):

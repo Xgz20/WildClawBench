@@ -28,6 +28,8 @@ version = requested or manifest["default"]
 entry = manifest["versions"].get(version)
 if entry is None:
     raise SystemExit(f"Unknown MiMoCode image version: {version}")
+if entry.get("buildable") is False:
+    raise SystemExit(f"MiMoCode {version} cannot be rebuilt: {entry['build_unavailable_reason']}")
 args = entry["build_args"]
 print("\x1f".join((version, entry["image"], entry["context"], entry["dockerfile"], args["MIMOCODE_VERSION"], args["EVAL_BASE_IMAGE"])))
 PY
@@ -35,6 +37,10 @@ PY
 IFS=$'\x1f' read -r VERSION IMAGE_REF CONTEXT_REL DOCKERFILE_REL PINNED_MIMOCODE_VERSION PINNED_EVAL_BASE_IMAGE <<< "${VERSION_RECORD}"
 BUILD_CONTEXT="${HARNESS_DIR}/${CONTEXT_REL}"
 DOCKERFILE="${HARNESS_DIR}/${DOCKERFILE_REL}"
+[[ -z "${MIMOCODE_VERSION:-}" || "${MIMOCODE_VERSION}" == "${PINNED_MIMOCODE_VERSION}" ]] || {
+  echo "MIMOCODE_VERSION must be ${PINNED_MIMOCODE_VERSION} for ${IMAGE_REF}; select the image with --version" >&2
+  exit 2
+}
 docker image inspect "${PINNED_EVAL_BASE_IMAGE}" >/dev/null 2>&1 || { echo "Missing required base image: ${PINNED_EVAL_BASE_IMAGE}" >&2; exit 2; }
 
 BUILD_ARGS=(

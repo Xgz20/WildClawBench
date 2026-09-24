@@ -226,14 +226,18 @@ class ImageVersionManifestTest(unittest.TestCase):
         )
         self.assertTrue((ZCODE_DIR / entry["dockerfile"]).is_file())
 
-    def test_mimocode_manifest_binds_v00_to_pinned_cli_and_base(self):
+    def test_mimocode_manifest_defaults_to_v01_and_preserves_v00(self):
         manifest = self._load_manifest(MIMOCODE_MANIFEST)
-        self.assertEqual("v0.0", manifest["default"])
-        entry = manifest["versions"]["v0.0"]
-        self.assertEqual("wildclawbench-mimocode-ubuntu:v0.0", entry["image"])
-        self.assertEqual("0.1.14", entry["build_args"]["MIMOCODE_VERSION"])
+        self.assertEqual("v0.1", manifest["default"])
+        self.assertEqual({"v0.0", "v0.1"}, set(manifest["versions"]))
+        entry = manifest["versions"]["v0.1"]
+        self.assertEqual("wildclawbench-mimocode-ubuntu:v0.1", entry["image"])
+        self.assertEqual("0.1.15", entry["build_args"]["MIMOCODE_VERSION"])
         self.assertEqual("wildclawbench-codex-ubuntu:v0.0", entry["build_args"]["EVAL_BASE_IMAGE"])
+        self.assertEqual("v2/Dockerfile", entry["dockerfile"])
         self.assertTrue((MIMOCODE_DIR / entry["dockerfile"]).is_file())
+        self.assertEqual("0.1.14", manifest["versions"]["v0.0"]["build_args"]["MIMOCODE_VERSION"])
+        self.assertFalse(manifest["versions"]["v0.0"]["buildable"])
 
     def test_harness_directories_do_not_duplicate_version_contexts_under_releases(self):
         self.assertFalse((ASTRONCODE_DIR / "releases").exists())

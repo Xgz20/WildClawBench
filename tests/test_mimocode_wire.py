@@ -291,7 +291,7 @@ class MiMoCodeWireTests(unittest.TestCase):
                             f"OPENROUTER_BASE_URL=http://host.docker.internal:{server.server_port}/v1",
                             os.environ.get(
                                 "DOCKER_IMAGE_MIMOCODE",
-                                "wildclawbench-mimocode-ubuntu:v0.0",
+                                "wildclawbench-mimocode-ubuntu:v0.1",
                             ),
                             "Execute the requested shell tool, then give the final answer.",
                         ],

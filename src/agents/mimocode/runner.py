@@ -33,7 +33,7 @@ SUPPORTED_MIMOCODE_APIS = (
     "anthropic-messages",
 )
 DEFAULT_MIMOCODE_API = "openai-responses"
-DEFAULT_IMAGE = "wildclawbench-mimocode-ubuntu:v0.0"
+DEFAULT_IMAGE = "wildclawbench-mimocode-ubuntu:v0.1"
 OPENCLAW_TRANSCRIPT_PATH = "/root/.openclaw/agents/main/sessions/chat.jsonl"
 MIMOCODE_HOME = "/tmp/wildclaw_mimocode"
 MIMOCODE_SKILLS_DIR = "/root/.agents/skills"

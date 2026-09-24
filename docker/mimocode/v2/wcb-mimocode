@@ -1,0 +1,79 @@
+#!/bin/bash
+set -euo pipefail
+
+: "${MIMOCODE_MODEL_ID:?MIMOCODE_MODEL_ID is required}"
+: "${OPENROUTER_API_KEY:?OPENROUTER_API_KEY is required}"
+: "${OPENROUTER_BASE_URL:?OPENROUTER_BASE_URL is required}"
+
+MIMOCODE_API="${MIMOCODE_API:-openai-responses}"
+MIMOCODE_TIMEOUT_SECONDS="${MIMOCODE_TIMEOUT_SECONDS:-300}"
+case "${MIMOCODE_TIMEOUT_SECONDS}" in
+  ''|*[!0-9]*|0) echo "MIMOCODE_TIMEOUT_SECONDS must be a positive integer" >&2; exit 2 ;;
+esac
+MIMOCODE_HOME="${MIMOCODE_HOME:-/tmp/wildclaw_mimocode}"
+export MIMOCODE_HOME
+# Keep credentials and runtime state out of the graded workspace. Do not share
+# sessions or import configuration/credentials from other Harnesses in the base.
+export MIMOCODE_DISABLE_AUTOUPDATE=true
+export MIMOCODE_DISABLE_PROJECT_CONFIG=true
+export MIMOCODE_DISABLE_CLAUDE_CODE_MCP=true
+export MIMOCODE_ENABLE_ANALYSIS=false
+
+case "${MIMOCODE_API}" in
+  openai-responses) PROVIDER_ID=openai; PROVIDER_NPM='@ai-sdk/openai' ;;
+  openai-chat-completions) PROVIDER_ID=wildclawbench; PROVIDER_NPM='@ai-sdk/openai-compatible' ;;
+  anthropic-messages) PROVIDER_ID=anthropic; PROVIDER_NPM='@ai-sdk/anthropic' ;;
+  *) echo "MIMOCODE_API must be openai-responses, openai-chat-completions, or anthropic-messages" >&2; exit 2 ;;
+esac
+export MIMOCODE_PROVIDER_ID="${PROVIDER_ID}"
+export MIMOCODE_PROVIDER_NPM="${PROVIDER_NPM}"
+
+mkdir -p "${MIMOCODE_HOME}/config" /tmp_workspace
+node <<'NODE'
+const fs = require("node:fs")
+const path = require("node:path")
+const model = process.env.MIMOCODE_MODEL_ID
+const provider = process.env.MIMOCODE_PROVIDER_ID
+const outputLimit = Number(process.env.MIMOCODE_OUTPUT_LIMIT)
+const config = {
+  $schema: "https://opencode.ai/config.json",
+  model: `${provider}/${model}`,
+  small_model: `${provider}/${model}`,
+  enabled_providers: [provider],
+  share: "disabled",
+  autoupdate: false,
+  provider: {
+    [provider]: {
+      name: "WildClawBench",
+      npm: process.env.MIMOCODE_PROVIDER_NPM,
+      api: process.env.OPENROUTER_BASE_URL,
+      only_configured_models: true,
+      options: {
+        apiKey: process.env.OPENROUTER_API_KEY,
+        baseURL: process.env.OPENROUTER_BASE_URL,
+        timeout: false,
+      },
+      models: {
+        [model]: {
+          id: model,
+          name: model,
+          tool_call: true,
+          reasoning: true,
+          limit: { context: 262144, output: Number.isFinite(outputLimit) && outputLimit > 0 ? outputLimit : 32768 },
+          modalities: { input: ["text"], output: ["text"] },
+        },
+      },
+    },
+  },
+}
+fs.writeFileSync(path.join(process.env.MIMOCODE_HOME, "config", "mimocode.json"), JSON.stringify(config, null, 2), { mode: 0o600 })
+NODE
+
+exec timeout --signal=TERM --kill-after=10s "${MIMOCODE_TIMEOUT_SECONDS}s" \
+  mimo run \
+  --model "${PROVIDER_ID}/${MIMOCODE_MODEL_ID}" \
+  --format json \
+  --thinking \
+  --dir /tmp_workspace \
+  --dangerously-skip-permissions \
+  "$1"

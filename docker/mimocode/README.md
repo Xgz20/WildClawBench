@@ -1,18 +1,26 @@
 # MiMoCode 评测镜像
 
-`wildclawbench-mimocode-ubuntu:v0.0` 基于 `wildclawbench-codex-ubuntu:v0.0`，
-通过 npm 固定安装 `@mimo-ai/cli@0.1.14`。无需构建 MiMoCode 源码。
+默认镜像 `wildclawbench-mimocode-ubuntu:v0.1` 基于 `wildclawbench-codex-ubuntu:v0.0`，
+通过 npm 固定安装 `@mimo-ai/cli@0.1.15`。无需构建 MiMoCode 源码。
 
 在仓库根目录执行：
 
 ```bash
-bash docker/mimocode/build.sh --skip-save
-docker run --rm --entrypoint mimo wildclawbench-mimocode-ubuntu:v0.0 --version
+bash docker/mimocode/build.sh --version v0.1 --skip-save
+docker run --rm --entrypoint mimo wildclawbench-mimocode-ubuntu:v0.1 --version
 ```
 
-省略 `--skip-save` 时导出 `Images/wildclawbench-mimocode-ubuntu_v0.0.tar.gz`。
+版本检查应输出 `0.1.15`。省略 `--version` 同样构建默认 `v0.1`。
+省略 `--skip-save` 时导出 `Images/wildclawbench-mimocode-ubuntu_v0.1.tar.gz`。
 脚本每次执行 `docker build`，会复用构建缓存并更新同名 tag。可用
 `NPM_REGISTRY=https://registry.npmmirror.com` 指定 npm 源。
+
+旧 `v0.0` 固定对应 CLI `0.1.14`，不覆盖为新 CLI。2026-09-24 官方 npm 与
+npmmirror 均已无法按该版本安装，因此旧清单保留为 `buildable=false`，
+`--version v0.0` 会在调用 Docker 前报明原因。历史评测可载入已有离线镜像，
+新评测使用 `v0.1`；版本变更记录见 [镜像更新日志](MiMoCode镜像更新日志.md)。
+评测新版时使用新的轮次或版本结果目录，避免与旧 CLI 的结果混合汇总。
+禁止通过 `MIMOCODE_VERSION` 改写某个镜像 tag 的 CLI 版本；选择版本请使用 `--version`。
 
 ## 评测入口
 
@@ -21,7 +29,7 @@ docker run --rm --entrypoint mimo wildclawbench-mimocode-ubuntu:v0.0 --version
 即便选择 Anthropic 协议也不自动借用裁判凭据。
 
 ```bash
-DOCKER_IMAGE_MIMOCODE=wildclawbench-mimocode-ubuntu:v0.0 \
+DOCKER_IMAGE_MIMOCODE=wildclawbench-mimocode-ubuntu:v0.1 \
 uv run eval/run_batch.py --agent-backend mimocode \
   --mimocode-api openai-chat-completions \
   --task tasks/03_Social_Interaction/03_Social_Interaction_task_2_chat_action_extraction.md \
@@ -66,6 +74,7 @@ CLI 的 `--thinking` 仅用于导出推理文本，不代表强制开启高推�
 WCB_MIMOCODE_DOCKER_TESTS=1 uv run python -m unittest tests.test_mimocode_wire -v
 ```
 
-GLM5.2 + MaaS 的 Chat 冒烟已跑通。Responses 冒烟出现反复 `tool-calls` 而无工具完成事件并超时，
-尚未定位到网关、SDK 或 Harness 的具体责任层；不能将该组合标为已验收。Anthropic Messages
-目前为本地协议测试通过，尚未做真实模型完整评测。
+`v0.1 / CLI 0.1.15` 的 GLM5.2 + MaaS Chat 冒烟已跑通（0.9613，裁判审计成功，
+anomalies PASS），详见镜像更新日志。旧 CLI 0.1.14 的 Responses 冒烟出现反复
+`tool-calls` 而无工具完成事件并超时；0.1.15 尚未重跑这一远端组合，不能因为升级
+就宣称该问题已解决。Anthropic Messages 目前为本地协议测试通过，尚未做真实模型完整评测。
