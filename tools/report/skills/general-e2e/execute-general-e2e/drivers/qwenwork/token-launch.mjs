@@ -5,6 +5,7 @@ import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
+import { assertQwenExecutionEnvironment } from "./environment.mjs";
 import { buildReadOnlyProbe } from "./probe.mjs";
 import {
   QWEN_TOKEN_USAGE_ENV_NAME,
@@ -26,6 +27,7 @@ function loopbackPort(endpoint) {
 }
 
 function assertSafeProbe(probe, expectedPath) {
+  assertQwenExecutionEnvironment(probe?.execution_environment);
   if (probe?.app?.path !== expectedPath || probe.app?.identity_verified !== true
       || probe.app?.bundle_id !== "cn.qwenwork.desktop.mac"
       || probe.app?.cdp?.ready !== true

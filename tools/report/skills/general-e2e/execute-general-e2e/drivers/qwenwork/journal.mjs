@@ -344,9 +344,11 @@ export function planQwenRecovery(state, now) {
     || new Set(["invoking", "attempted"]).has(state.send?.state)
   ) action = "inspect-only";
   else if (
-    state.phase === "READY_TO_DISPATCH"
+    (state.phase === "READY_TO_DISPATCH" || state.phase === "NEEDS_ATTENTION"
+      && ["QWENWORK_PRE_SEND_ENVIRONMENT_CHANGED", "QWENWORK_EXECUTION_ENVIRONMENT_BLOCKED"].includes(state.attention?.code))
     && state.prompt?.send_status === "intent_persisted"
     && state.send?.dispatch_attempt_count === 0
+    && state.send?.state === "not_reserved"
   ) action = "dispatch-once";
   else if (
     state.send?.dispatch_attempt_count === 0
@@ -354,7 +356,7 @@ export function planQwenRecovery(state, now) {
     && state.prompt?.send_status === "not_sent"
     && (state.phase === "PREPARING" || (
       state.phase === "NEEDS_ATTENTION"
-      && state.attention?.code === "QWENWORK_PRE_SEND_PREPARATION_FAILED"
+      && ["QWENWORK_PRE_SEND_PREPARATION_FAILED", "QWENWORK_EXECUTION_ENVIRONMENT_BLOCKED"].includes(state.attention?.code)
     ))
   ) {
     action = "prepare";
@@ -362,6 +364,10 @@ export function planQwenRecovery(state, now) {
     state.attention = null;
   }
   else action = "inspect-only";
+  if (action === "dispatch-once" && state.phase === "NEEDS_ATTENTION") {
+    state.phase = "READY_TO_DISPATCH";
+    state.attention = null;
+  }
   state.recovery.resume_count += 1;
   state.recovery.last_decision = action;
   state.recovery.last_resumed_at = now;

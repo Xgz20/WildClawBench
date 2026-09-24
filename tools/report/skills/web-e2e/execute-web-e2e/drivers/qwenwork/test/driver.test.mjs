@@ -89,7 +89,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.12.0");
+  assert.equal(state.driver.version, "1.12.2");
 });
 
 test("QwenWork 原生目录选择等待异步更新后的目录标签", async () => {

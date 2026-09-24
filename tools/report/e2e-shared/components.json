@@ -127,6 +127,15 @@
         "process-cleanup.mjs",
         "select-folder.swift"
       ]
+    },
+    {
+      "name": "desktop-gui",
+      "version": "1.0.0",
+      "source_root": "tools/report/e2e-shared/desktop-gui",
+      "vendor_root": "vendor/e2e-shared/desktop-gui",
+      "entrypoints": [
+        "macos.mjs"
+      ]
     }
   ]
 }

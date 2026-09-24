@@ -14,7 +14,7 @@
       "name": "execute-web-e2e",
       "scene": "web-e2e",
       "source_root": "tools/report/skills/web-e2e/execute-web-e2e",
-      "components": ["desktop-runtime", "desktop-app-discovery", "resource-metrics", "doubaowork"]
+      "components": ["desktop-runtime", "desktop-gui", "desktop-app-discovery", "resource-metrics", "doubaowork"]
     },
     {
       "name": "orchestrate-web-e2e",
@@ -50,7 +50,7 @@
       "name": "execute-general-e2e",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/execute-general-e2e",
-      "components": ["desktop-runtime", "desktop-app-discovery", "task-process-cleanup", "workbuddy-evidence", "doubaowork"]
+      "components": ["desktop-runtime", "desktop-gui", "desktop-app-discovery", "task-process-cleanup", "workbuddy-evidence", "doubaowork"]
     },
     {
       "name": "collect-general-e2e",

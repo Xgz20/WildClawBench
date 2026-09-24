@@ -1,0 +1,322 @@
+{
+  "schema": "wildclawbench.qwenwork-general-hardening-evidence/v1",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/qwenwork-general-hardening-20260924",
+  "source_baseline": "a7262a8",
+  "date": "2026-09-24",
+  "scope": "macOS x86_64 / QwenWorkCN 1.2.0 / attended controlled acceptance fixtures",
+  "full_production_admission": false,
+  "versions": {
+    "shared_desktop_gui": "1.0.0",
+    "general_execute": "0.11.11",
+    "general_driver": "0.3.11",
+    "general_collect": "0.8.10",
+    "qwen_collector": "0.1.3",
+    "web_execute": "1.17.11",
+    "web_driver": "1.12.2"
+  },
+  "environment": {
+    "unlocked_console_owner": "verified",
+    "real_lock": "kernel IOConsoleLocked=true and production CLI rejected before UI; journal unchanged; no sends",
+    "unlock_observed": true,
+    "foreign_listener": "rejected before HTTP request; actual request count 0",
+    "closed_endpoint": "rejected without listener",
+    "second_install": "real APFS copy with matching Info.plist; wrong process path rejected; only owned copy removed",
+    "unknown_and_foreign_console": "offline negative tests; not promoted to real lock evidence",
+    "resume": "r38 fixes explicit same-attempt recovery only before dispatch reservation; tested no duplicate send"
+  },
+  "configuration": {
+    "model": "real standard -> advanced after first prepared readback; final gate refused; standard restored",
+    "permission": "real full-access -> default-sandbox; final gate refused; native global confirmation used only to restore original setting",
+    "duplicate_names": "two native project IDs with the same visible name and different absolute cwd; production driver refused before dispatch; control name restored using exact native project ID",
+    "actual_sends_per_case": 0
+  },
+  "terminal": {
+    "cancel_attempt_id": "25e16cbb-5adb-4660-a6c5-944d8efb5d8c",
+    "business_status": "cancelled",
+    "cancellation_confirmed": true,
+    "native_finish": {
+      "verified": true,
+      "finish_reason": "abort",
+      "native_status": "cancelled",
+      "business_status": "cancelled",
+      "raw_ref": "raw/segments/2026-09-24T15-13-48-937+08-00-cn86gv-p61550.jsonl",
+      "raw_line": 26,
+      "native_turn_id_sha256": "0059cc39f5a83fa9ad685f83233a2fe8cfe2aed11bad16d1a9cd8ae8255fa20c"
+    },
+    "dispatch_count": 1,
+    "cancel_mechanism": "native client agent.cancelStream for the exact verified sub_chat_id; renderer source SHA and native prompt/session/project/cwd verified; no fabricated native result",
+    "same_release_r37": true,
+    "first_collect_finalize_verify": "PASS",
+    "receipt_sha256": "330b81ed274aa716afff6c8c1fff6020be5eb92da322a4d7e2d7ca68cbb167bf",
+    "trace_completeness": {
+      "status": "partial",
+      "omitted_event_count": 0,
+      "missing": [
+        "assistant_message",
+        "user_message_count"
+      ]
+    },
+    "score": null,
+    "in_capability_denominator": false,
+    "false_completion_projection": "separate deliberately modified control journal/config with unchanged real abort log; collector rejected before publication",
+    "permission_fault": "only test workspace access removed after final readback, exact mode/inode restored; client handled tool error and completed; not native final-error evidence"
+  },
+  "web": {
+    "preparation_only": true,
+    "first_probe": "blocked by multiple roots; known browser-extension-relay processes misclassified",
+    "fix": "exclude only exact installed relay-script command; real duplicates and unknown script arguments remain rejected",
+    "independent_frozen_probe": "PASS",
+    "excluded_known_relays": 3,
+    "new_task_sent": false,
+    "formal_web_admission": false
+  },
+  "regression": {
+    "node_general_and_web_pass": 172,
+    "python_layout_release_adapter_pass": 32,
+    "shared_gui_vendors": 2
+  },
+  "limits": [
+    "Native final error and actual client interruption still lack a complete current-version live receipt.",
+    "The first UI-stop attempt safely refused because native running and visible stop state disagreed; it finished naturally and is not cancellation evidence.",
+    "The first cancellation was in a three-task fixture unit; per-task freeze passed but unit verify lacked a receipt because other tasks were not run. The independent r37 one-task batch supplies the complete cancellation receipt.",
+    "Initial permission-test selector and restoration timing assertions failed; original logs preserved and only actual driver refusal plus subsequent restoration are certified.",
+    "r36/r36b environment and configuration probes, r37 cancellation/collection, and r38/r39 follow-up code are separate frozen artifacts. No full new General scoring/report or Web execution is claimed."
+  ],
+  "artifacts": [
+    {
+      "path": "r36-environment-negatives.json",
+      "sha256": "9c1e3d945d0fc2b860af245872d26f86bae589ab4689a0fe51fb12f4537986c6",
+      "size": 2486
+    },
+    {
+      "path": "r36-test-install-cleanup.json",
+      "sha256": "0c0230f95bb5f1ced7f32660c4f7ed023361e24f9c2133777c87f7f9afa5d5c9",
+      "size": 179
+    },
+    {
+      "path": "probe-r36-initial.json",
+      "sha256": "2284b6f6a7efc920b7e4995bb0d51234bcaef83d072c9b9825ff7a0ece271353",
+      "size": 5251
+    },
+    {
+      "path": "r36-lockscreen-ready.json",
+      "sha256": "9584f91d548a68438cce36909a11a8856e5754312ecd49513aafbc16a4622388",
+      "size": 148
+    },
+    {
+      "path": "r36-real2-locked-probe.json",
+      "sha256": "4cbf1c0fbf814ad9a6fe1e12a2d16d297d1cb3b45ab9b6842dd535d18113c30c",
+      "size": 4942
+    },
+    {
+      "path": "r36-real2-lockscreen-refusal.json",
+      "sha256": "b922b7dfe4dd1e6895a12a1eaa113ddaf9a86925b716a6ccb54efed6e20e3f46",
+      "size": 1162
+    },
+    {
+      "path": "r36-real2-unlocked-proof.json",
+      "sha256": "aff97b85d4c35432698a605118436b068921712017da58649d85d69fb4e74c6d",
+      "size": 330
+    },
+    {
+      "path": "r36-model-drift-proof.json",
+      "sha256": "13ea5d3d23e333e9faf90e5341bc060b66a0051890bea7d246fba63834928c5c",
+      "size": 1735
+    },
+    {
+      "path": "r36-permission-drift-proof.json",
+      "sha256": "978b01b995fef543c829910b3a0ccab7af98c0be3c6c4022110d087160550574",
+      "size": 903
+    },
+    {
+      "path": "r36-permission-drift.log",
+      "sha256": "a9b686f3d9104eefe137abc382130e39dc39f406d143e3d0c875fdb0696e2cb0",
+      "size": 694
+    },
+    {
+      "path": "r36-permission2-drift.log",
+      "sha256": "b6cdae1ae897527b7e2298878766e92a1cfd33113e6f7fef9fe364bbe11466cc",
+      "size": 497
+    },
+    {
+      "path": "r36-duplicate-name-native-projects.json",
+      "sha256": "23bcdc7529819c73564a7a469393d2705a9bf53e4e51454ad4f2df8f1a20e8dc",
+      "size": 674
+    },
+    {
+      "path": "r36-same-name-refusal.json",
+      "sha256": "d24093514eb3158d71369872cbaa33ed8fb29fe29df5035a4589d2c9c9af85f4",
+      "size": 1107
+    },
+    {
+      "path": "r36-same-name-restored.json",
+      "sha256": "c6a4ef6bd3aa286486b0363610a2d1d7d67bd3fbf12f1ec22bf43616db87d81a",
+      "size": 804
+    },
+    {
+      "path": "r36-native-stop-source-spans.json",
+      "sha256": "76809ca0bf92eb13a9188f81388382f06826bcf32b411ed344ae1d3ad04511af",
+      "size": 4133
+    },
+    {
+      "path": "r36-native-api-cancel.json",
+      "sha256": "80dabd2d8081ff9b05a4d74a432592628e2c981ec169de743dc49ce4d3969f1c",
+      "size": 2849
+    },
+    {
+      "path": "r36-cancel2.log",
+      "sha256": "f3e500ec23acda0b528722c53e65e80122e75a287bb4beb27aa9519fa2991737",
+      "size": 713
+    },
+    {
+      "path": "r37-cancel-finalize.json",
+      "sha256": "3f6b1b4b647fd2ed4339772e1358181522bd21570362453ea0a16069687bb9af",
+      "size": 560
+    },
+    {
+      "path": "r37-cancel-verify.json",
+      "sha256": "2da12ea02b53668f0178829992a66e3dc86f81e68f5b0c9b993b1ebb56c98f15",
+      "size": 212
+    },
+    {
+      "path": "prepare-cancel-r37.json",
+      "sha256": "bac566d3bb30dc4ec2159132da0d0a288944f644aac1351297fb7d8d1ba3f355",
+      "size": 912
+    },
+    {
+      "path": "r37-native-api-cancel.json",
+      "sha256": "68bb70b67b10ec313ccc94389b27a3d2eccd996f5d4530aa8b40d6239703cb79",
+      "size": 2849
+    },
+    {
+      "path": "r37-cancel-execution.log",
+      "sha256": "ca26bed1637c06f3120d2c1a5011f6f09879d9d34dcfd56df0c8652c06de534d",
+      "size": 713
+    },
+    {
+      "path": "r37-single-cancel-collect.json",
+      "sha256": "842871c280b774e83b5325d7222732cc761f2ff6af52254bbc410fea30b5cafc",
+      "size": 14607
+    },
+    {
+      "path": "r37-single-cancel-finalize.json",
+      "sha256": "ff1d98ea425d75443b14234a67b57082561d91029a137a83ad51ab5c00191d9c",
+      "size": 981
+    },
+    {
+      "path": "r37-single-cancel-verify.json",
+      "sha256": "77a1489a7db669de56a9427f1d930aa06786450b6eab4e8b64b01949fa9e65d9",
+      "size": 1417
+    },
+    {
+      "path": "r37-terminal-conflict-refused.json",
+      "sha256": "99b919d30b55af8f0e053b924a7b6d7d33f78a5f2e079840d73cac8cb7c0d590",
+      "size": 475
+    },
+    {
+      "path": "r36-native-workspace-fault.json",
+      "sha256": "a91e48207c4bee53cbba8666e7fface43f05bce26f56dbbfee4e4d705d597b76",
+      "size": 1231
+    },
+    {
+      "path": "r36-native-workspace-fault.log",
+      "sha256": "d835fc22f447be4323b39ecc2c1e7ff985b0a4a15941d5224b5225457107b1e2",
+      "size": 372
+    },
+    {
+      "path": "recovery-r38-tests-fixed.log",
+      "sha256": "bc8b64ab11b4b8ef0dfdd639b47c0e28aef03b1b57a164c232e774d9d1f19ba1",
+      "size": 4250
+    },
+    {
+      "path": "focused-r39-final.log",
+      "sha256": "430d7d64ffa3f49762b6c15f3751311a79b42899042c2a0e08c6b72c39ff72e2",
+      "size": 15648
+    },
+    {
+      "path": "python-r39.log",
+      "sha256": "450602046cba05fddd91eb694a10deb1c9d6474d4922a1b572717361587c95dd",
+      "size": 131
+    },
+    {
+      "path": "web-probe-r38.json",
+      "sha256": "9162b0f465a4e315172a27d10a98b8f4f67608c5273fc21c04989269cd36bd3a",
+      "size": 264
+    },
+    {
+      "path": "web-probe-r39.json",
+      "sha256": "c529be10e2f27bcbf07648f04129ebf3aa59ddc625092a7a1540126ae29248e5",
+      "size": 2553
+    },
+    {
+      "path": "web-probe-r39.stderr",
+      "sha256": "428b5fec86bf297b7d7429e3b0c69699524ff8881ed7f22e226105b0d17336e6",
+      "size": 169
+    },
+    {
+      "path": "final-idle-r39.json",
+      "sha256": "59b77ba52df24975b63fe01b422e7532ccf3097fc7ec3f29d894724c7a59da47",
+      "size": 1233
+    },
+    {
+      "path": "fixture.dataset.zip",
+      "sha256": "222932fcd1f963474292b94c1f0e434d03b4eaa908337127fe0a3faaa7b480bf",
+      "size": 26667
+    },
+    {
+      "path": "release-r36b/general-e2e-suite-qwenwork-general-r36b.zip",
+      "sha256": "dc2c6e26d090b2df337b463391a24251b0fd2b7e0e3d47f09374e5ca6b29afad",
+      "size": 3351823
+    },
+    {
+      "path": "release-r37/general-e2e-suite-qwenwork-general-r37.zip",
+      "sha256": "7f44db08f64ea4d2ba4b9e254b779344e05758d9f19df103e4e10458eead74a9",
+      "size": 3354575
+    },
+    {
+      "path": "release-r39/general-e2e-suite-qwenwork-general-r39.zip",
+      "sha256": "a1eeab54d72b7a4fb7ed646a405ee4aa5af0f01f026ce4c3d0b09a809c73e0a7",
+      "size": 3355463
+    },
+    {
+      "path": "affected-r39/collect-general-e2e-skill-v0.8.10.zip",
+      "sha256": "7ecc15b804aa5743c81433202f7a0d162f803775b19e465e8144b483f2d6e664",
+      "size": 830235
+    },
+    {
+      "path": "affected-r39/execute-web-e2e-skill-v1.17.11.zip",
+      "sha256": "a941ff7bf4d9a43f7afbc2c30a64a5c24d8dab55fc08fef9a27c19c0ef93ce58",
+      "size": 943619
+    },
+    {
+      "path": "affected-r39/execute-general-e2e-skill-v0.11.11.zip",
+      "sha256": "fa846abe38d1a59258232f022d09063449e7ae59775cf08dfd9ed50aa1aeb668",
+      "size": 1009148
+    },
+    {
+      "path": "cancel-r37/qwenwork-cancel-r37__qwenwork-macos-x86-64/.general-e2e/collection/formal/execution/automation-state.json",
+      "sha256": "c8e212bc8fd90e8841df03b7b69b40cbc9b5cab59debae16a802fa3182bc0618",
+      "size": 3821
+    },
+    {
+      "path": "cancel-r37/qwenwork-cancel-r37__qwenwork-macos-x86-64/.general-e2e/collection/formal/trace/trace-index.json",
+      "sha256": "a30e9e905f6293e5386097288f9838e659583181c66ddb5ba7148c8349333b9c",
+      "size": 2444
+    },
+    {
+      "path": "cancel-r37/qwenwork-cancel-r37__qwenwork-macos-x86-64/.general-e2e/collection/formal/resource-metrics.json",
+      "sha256": "622ca9a832dc2666bca8cb2f0e3d540ef4482be86f1b9f10261ab4dbdd672eed",
+      "size": 8481
+    },
+    {
+      "path": "release-r37/skills/collect-general-e2e-skill-v0.8.10.zip",
+      "sha256": "5d80b87fc7d157504e39fa3f97ff47ae0a08af06217f96434f84ce5c78b00c83",
+      "size": 830235
+    },
+    {
+      "path": "release-r37/skills/execute-general-e2e-skill-v0.11.10.zip",
+      "sha256": "0ec2719417e70865296ae34dded388d4eebc19f25d153727068ef13ae6f9622c",
+      "size": 1008260
+    }
+  ]
+}

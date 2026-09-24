@@ -1,3 +1,4 @@
+import { gui } from "./fixtures/qwenwork/environment.mjs";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { access, lstat, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -272,7 +273,8 @@ test("read-only probe report keeps current 1.0.6 profile unverified and declares
     }),
     inspectRuntime: async () => runtime,
     inspectProcess: async () => ({ running: false, unique_main_process: false, process_count: 0, processes: [] }),
-    inspectEndpoint: async () => ({ ready: true, status: 200, browser_identity_present: true }),
+    inspectGui: async () => gui(),
+    inspectEndpoint: async () => ({ ready: true, status: 200, browser_identity_present: true, websocket_verified: true }),
     inspectTokenListener: async () => ({ pid: 12345, token_usage_exposed: true }),
     inspectArchitecture: async () => ({ architectures: ["x86_64"], universal: false }),
   });

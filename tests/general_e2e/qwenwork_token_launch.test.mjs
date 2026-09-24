@@ -1,3 +1,4 @@
+import { environment } from "./fixtures/qwenwork/environment.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -17,6 +18,7 @@ const OPTIONS = {
 
 function probe(active = 0) {
   return {
+    execution_environment: environment(),
     app: { path: APP_PATH, identity_verified: true, bundle_id: "cn.qwenwork.desktop.mac",
       version: "1.2.0", cdp: { ready: true, browser_identity_present: true } },
     native_state: { database: { quick_check: "ok", active_or_pending_count: active } },

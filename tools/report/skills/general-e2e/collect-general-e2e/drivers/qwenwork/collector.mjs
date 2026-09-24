@@ -25,6 +25,7 @@ import {
 } from "./native-normalizer.mjs";
 import { assessQwenMetadataCoverage, isQwenTranscriptMetadataRow } from "./metadata-gate.mjs";
 import { matchQwenTokenProfile, qwenCanaryConfigDigest } from "./token-profile.mjs";
+import { verifyQwenNativeTerminal } from "./terminal-gate.mjs";
 
 const JOURNAL_SCHEMA = "wildclawbench.general-e2e-qwenwork-attempt-journal/v1";
 const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-execution-state/v1";
@@ -539,6 +540,7 @@ export async function collectQwenWorkEvidence(options) {
   }
   assertTranscriptBinding(transcriptRows, state);
   assertSegmentBinding(segmentRows, state);
+  state.extensions.qwenwork.native_terminal_reconciliation = verifyQwenNativeTerminal(state, segmentRows);
   const normalized = normalizeQwenNativeTrace({
     identity: state.identity,
     transcriptRows,

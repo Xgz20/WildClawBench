@@ -425,7 +425,7 @@ validation_records:
 | --- | --- | --- | --- |
 | AstronStudio / macOS Intel | G4-03 五题三槽执行/评分/回传/报告；后续双题 smoke 2/2 valid | 已有对应身份的受控生产证据；公共新版本按影响复验 | [五题](../general-e2e/evidence/g4-03/README.md)、[双题](../general-e2e/evidence/macos-current-smoke-20260919/README.md) |
 | WorkBuddy / macOS Intel | v8 为 5/5 valid、原生峰值 2；v2 加固 canary 为原生峰值 3、2 次补位，评分 2 valid/2 异常/1 容量未评分 | 不把不同批次拼成 5/5 valid 且峰值 3；未知授权/追问、评分稳定性等收尾，完整接入 IN_PROGRESS | [v8](../general-e2e/evidence/workbuddy-macos-general-v8-three-slot-20260921/README.md)、[v2 加固](../general-e2e/evidence/workbuddy-hardening-20260921/README.md) |
-| QwenWork / macOS Intel / 1.2.0 | r21 原生三路五题闭环；r23 核心 Token 5/5 与正式报告；r31–r35 路径、授权、清理、终态/标题加固 | 主流程有限可用，完整接入 IN_PROGRESS；剩余七项见下文 | [运行证据](../general-e2e/evidence/qwenwork-macos-five3-20260923/README.md) |
+| QwenWork / macOS Intel / 1.2.0 | r21 原生三路五题闭环；r23 核心 Token 5/5 与正式报告；r31–r35 路径/交互/清理；r36–r39 环境、配置防串题与取消回执 | 主流程有限可用，完整接入 IN_PROGRESS；剩余终态分支与四项证据补齐见下文 | [运行证据](../general-e2e/evidence/qwenwork-macos-five3-20260923/README.md) |
 | DoubaoWork / macOS Intel / 2.31.3 | 共享 Driver/原生证据核心、General adapter；r10 S1 与 r12 S2 各自同发行闭环有效 1.0；r11 三题串行、r19/r20 五题原生三路及补位完成 | IN_PROGRESS；r20 S1/S2 自动评分1.0；S3/S4 多源顺序 partial、独立语义评分与完整加固及 Web 闭环未完成 | [本轮证据](../general-e2e/evidence/doubaowork-macos-general-20260924/README.md) |
 | 全部 Harness / Windows、Apple Silicon | 当前 General 台账没有相应完整真机准入 | Windows 暂缓；Apple Silicon 单独验证；不外推 Intel 结果 | [历史 Windows 实施范围](archive/general/AstronStudio-Windows后续实施清单.md) |
 
@@ -438,7 +438,7 @@ validation_records:
 | QwenWork / Windows | `24771ce...` 单 L1 执行→评分→return 主流程；`c257fbd...` 1.0.6.0 自动 Token 开关与新 L1 采集 | 当前身份串行/并发、管理员 import/report、V12–V17 未全重绑；不声明并发或无人值守全覆盖 |
 | AstronStudio / macOS Intel | `6988b525...` 的独立 macOS 包有单 L1 全流程，历史主流程生产声明 | 与 Windows 包身份不同；新发行并发/恢复和双平台字节对账不自动继承 |
 | WorkBuddy / macOS Intel | 有旧执行/并发功能证据及发布 smoke | 后半程与恢复项在原 Web 矩阵为 STALE/待重验，不按 General 成果升级 |
-| QwenWork / macOS Intel | 1.0.5 历史执行与资源样本；已有 L1 执行记录 | 1.2.0 General 的 Token/并发/加固不等于 Web 同版本准入，需 Web 入口单独验证 |
+| QwenWork / macOS Intel | 1.0.5 历史执行与资源样本；r39 Web Driver1.12.2接入共用GUI并修正中继辅助进程识别，1.2.0独立包只读probe通过 | 接续准备已开始；未发送新Web题，General证据不外推Web正式闭环 |
 | DoubaoWork / macOS | 已提取与 General 共用的 Driver/原生证据源码；Web 初次提取聚焦回归 64/64 | Web 自身正式 collect/finalizer、评分回传仍未闭环，保持 NEEDS_ATTENTION；General 的 2.31.3 原生映射不自动升级 Web 准入 |
 | DoubaoWork / Windows；其他未声明架构 | 无本场景完整证据 | NOT_RUN，不凭共用接口推定支持 |
 
@@ -446,26 +446,24 @@ Web 逐项 V00–V17、P0–P10、客户端/Skill/包 SHA 和运行路径见[历
 
 ### 5.4 当前推进顺序
 
-本任务按用户 2026-09-23 指定顺序推进 DoubaoWork General，再收口 Web；QwenWork 的剩余准入保留原状态。其他已有 Harness 保留各自证据与缺口。Windows 新开发暂缓，历史 Web Windows 结论保留。评分配置在各批次冻结，当前 QwenWork General 后续批次固定 `gpt-6-sol/high`，不回填旧 astra/high 结果。题目时长不作为能力评分条件，不为覆盖状态表改题或逼模型产生指定分数。
+2026-09-23先推进DoubaoWork General；2026-09-24按用户后续指令优先补QwenWork General高优先加固，再接续QwenWork Web。DoubaoWork已有结果保留，各场景独立验收。其他已有 Harness 保留各自证据与缺口。Windows 新开发暂缓，历史 Web Windows 结论保留。评分配置在各批次冻结，当前 QwenWork General 后续批次固定 `gpt-6-sol/high`，不回填旧 astra/high 结果。题目时长不作为能力评分条件，不为覆盖状态表改题或逼模型产生指定分数。
 
 ### QwenWork 剩余生产准入事项
 
 
-范围为 macOS Intel / QwenWorkCN 1.2.0 / 值守 / 默认三路。r31 路径预算、r32 未知授权、r33 关键进程收口、r35 终态/标题同步已验证，不再作为未完成项。下面七项区分实现缺口与验收证据缺口；不能把所有 PARTIAL 都解释为功能未实现。
+范围为 macOS Intel / QwenWorkCN 1.2.0 / 值守 / 默认三路。r31路径预算、r32未知授权、r33关键进程收口、r35终态/标题同步，以及r36–r39环境门禁和目标/配置防串题已补齐声明范围。当前高优先剩余项是原生最终错误、客户端中断的真实终态与正式回执；取消分支已完成同发行单题收口。下面五项区分实现与证据缺口，不把所有PARTIAL解释为功能未实现。
 
 | 事项 | 类型 | 具体收口要求 | 对应记录 |
 | --- | --- | --- | --- |
-| 环境异常门禁 | 补实现并补测 | Qwen General probe/执行入口尚无显式锁屏或 GUI 会话状态检查，只有原生选目录时的前台焦点保护；补门禁，再验端口占用、陈旧端点、多安装和锁屏/未知状态 | CV02 |
-| 目标与配置防串题 | 客户端真机补测 | 同名不同 Workspace、发送前模型/权限漂移时拒绝发送；保留实际发送数 0 和原身份 | CV03 |
-| 异常终态 | 客户端真机补测 | 最终错误、中断/取消、未知状态与原生轨迹/正式回执逐项对账，不误报完成、不当作能力零分；工具被拒后完成和终态时差已覆盖 | CV07 |
+| 异常终态（高优先） | 客户端真机补测 | r37取消、原生abort和正式回执已对账；最终错误、客户端中断仍待真实原件与正式收口。r36目录权限故障被客户端正常处理，不算最终错误；未知状态继续暂停，不计能力零分 | CV07 |
 | 轨迹异常与必需证据 | 故障补测及证据审计 | 截断/乱序/重复/孤立结果/子代理混入的处理，以及缺必需轨迹时实际 grader 的拒绝证据 | CV11、GV03 |
 | 候选材料边界 | 材料验证及证据审计 | 缺文件、同名不同内容、Git/二进制/受限链接等；r33 冻结前后写入漂移已通过 | CV13、GV04 |
 | 评分结果发布中断 | 公共组件故障补测 | submission 发布窗口中断、原子发布与恢复；已有重复导入、冲突拒绝测试按同版本复用 | CV14 |
 | 报告分母核验 | 公共测试与 Qwen 回传接线审计 | 对齐已有有效零分/评测异常/未评分测试与正式回传、报告分母，保留有效性和缺失值语义 | GV06 |
 
-锁屏缺口依据：[Qwen probe](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/probe.mjs)、[执行入口](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/driver.mjs)和[原生文件夹选择器](../../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/select-folder.swift)；`frontmostApplication` 焦点检查不等于锁屏检测，共享组件存在能力也不等于本 Driver 已接入。
+本轮源码、独立包、真实锁屏/配置负例、取消回执和Web只读回归见[2026-09-24加固证据](../general-e2e/evidence/qwenwork-macos-hardening-20260924/README.md)。原始日志在仓库外，172项Node、32项Python及构建结果均按各自冻结内容记录；跨r36–r39的证据不合并成同发行完整生产通过。
 
-先完成前三项；后四项优先引用同 revision/运行内容的公共测试与已有真实材料，只补缺失分支。成功的五题执行、Token、评分报告无需为文档收口重跑。实际模型 ID 和未支持的可选指标继续披露 unknown/null；Apple Silicon、Windows、60 题全量及无人值守重启不作为当前 Intel 值守范围的前置门槛。
+继续优先补最终错误与客户端中断分支；Web已完成共用GUI接线和本版本独立只读probe，正式单题尚未开始。后四项优先引用同revision/运行内容的公共测试与已有真实材料，只补缺失分支。成功的五题执行、Token、评分报告无需为文档收口重跑。实际模型 ID 和未支持的可选指标继续披露 unknown/null；Apple Silicon、Windows、60 题全量及无人值守重启不作为当前 Intel 值守范围的前置门槛。
 
 
 ### QwenWork General 验收逐项记录
@@ -475,13 +473,13 @@ Web 逐项 V00–V17、P0–P10、客户端/Skill/包 SHA 和运行路径见[历
 
 | 验收项 | 实现/自动化证据 | QwenWork 真机证据 | 当前结论与剩余项 |
 | --- | --- | --- | --- |
-| CV01 包与隔离 | prepare/release/layout 正反例；独立七 Skill 闭包 | r21/r23/r27 仓库外 prepare/verify、execution/scoring 分离 | PASS，后续发行仍逐包验 SHA |
-| CV02 只读探针 | loopback、身份、快照、Token 开关门禁 | r27 当前 PID/端点、空闲与活动两种 probe，活动启动拒绝 | PARTIAL；锁屏/GUI 会话检测为当前实现缺口（仅有选目录前台焦点保护）；补门禁，并逐项验证端口占用/陈旧端点/多安装/锁屏负例 |
-| CV03 UI/配置/Prompt | 唯一语义控件、项目/Workspace、配置漂移与发送禁用反例 | r19 未发送即暂停；r21/r23 一次发送；r28 同名导航/页脚定位反例 | PARTIAL；同名不同 Workspace、模型/权限不符的目标客户端负例未齐 |
+| CV01 包与隔离 | prepare/release/layout；独立七Skill闭包；新desktop-gui组件由General/Web各自打包 | r21/r23/r27 prepare/verify；r39 General execute0.11.11/collect0.8.10、独立Web execute1.17.11及完整General suite构建 | PASS（装配）；r39候选未发布，不继承旧版完整准入 |
+| CV02 只读探针 | 共用desktop-gui核验锁屏/控制台用户；精确监听PID/启动身份与browser WebSocket；连接及UI操作前fresh门禁；明确reservation前零发送可显式恢复 | r36真实锁屏时CLI拒绝、journal不变、发送0；外部监听/关闭端点/第二安装错配拒绝，测试安装已移除 | PASS（本机值守入口与声明负例）；未知/控制台身份反例为离线测试，未外推跨用户/平台 |
+| CV03 UI/配置/Prompt | 唯一语义控件、完整目录/原生项目；新增同名项目歧义拒绝，发送前冻结配置比较 | r36两个真实同名不同目录项目、标准→高级、完全访问→默认权限均发送0；原模型/权限及测试项目名已恢复 | PASS（本机受控负例）；不按同名或DOM顺序猜测目标 |
 | CV04 发送中断 | intent/reservation/invoking、不确定不重发，缺失/歧义 session 反例 | r25 部分现场；r26 发现队列缺陷；r27 修复后恢复并正式收口 | PASS（值守基础范围）；r25 不当作有效执行 |
 | CV05 owner/竞争 | 活锁拒绝、两个 Driver/恢复者竞争、旧归档保护、字节漂移拒绝 | r27 两把锁精确归档，原 queue/attempt 恢复 | PASS（显式值守恢复）；不承诺无人值守抢锁 |
 | CV06 断连/重启 | Driver 非正常退出保留基础设施错误、显式 resume | r28/r29 CDP 断开→暂停→重连原 session；r27 活动任务拒绝 Token 重启 | PASS（断连安全暂停范围）；客户端实际重启与 Codex 重启未验/未声明 |
-| CV07 原生终态 | 完成/失败/取消/未知分开；不按文件稳定判断完成 | 文件任务 r21/r23；纯回复题正式 collect/report；r28 问卷完成 | PARTIAL；r32 已验工具权限拒绝后完成，r35 已验终态时差；最终错误等剩余真机分支继续对账 |
+| CV07 原生终态 | 完成/失败/取消/未知分开；collector独立核对数据库声明、执行状态与绑定主turn.finished原因；工具错误不充当最终错误 | r35终态时差；r37新单题通过原生取消接口得cancelled/abort，首次collect/finalize/单题receipt/verify通过；实际abort日志拒绝独立伪completed控制材料 | PARTIAL；取消回执已补；最终错误及客户端中断真实收口仍待验，r36普通工具错误后完成不替代该证据 |
 | CV08 待交互 | 精确会话/问卷页脚；unknown/approval/manual pause 反例 | r30 自动跳过至完成；r32 原生高危卡片自动暂停，人工拒绝后原 session 完成，设置已恢复 | PASS（声明范围）；不提供自动批准白名单 |
 | CV09 清理/冻结 | 通用 finalizer、静默窗口、残留/漂移拒绝 | r24 优雅终止与目录外对照；r33 原 CLI 验证持续残留拒绝、迟到写入拒绝、TERM→KILL、迟到子进程和冻结后漂移 | PASS（当前 macOS 收口分支）；本方对照受保护，测试进程已退出。自然残留复现不另设门禁 |
 | CV10 串行/并发 | 单 UI 槽、三后台槽、补位、同 attempt 恢复 | 三题单槽；r21 五题原生峰值 3、补位 2；r23 另批峰值 2 | PASS，峰值不足不计能力异常；不外推更高并发 |
@@ -504,7 +502,9 @@ Web 逐项 V00–V17、P0–P10、客户端/Skill/包 SHA 和运行路径见[历
 | GV07 阶段恢复与报告 | r21/r23 submission、return/import、同源 JSON/Markdown/Excel | PASS |
 | GV08 小批/并发 | r21 原生三路五题，r23 五题核心 Token、同机闭环 | PASS（固定五题/本机）；不声明跨机或全量 |
 
-因此仍是“主流程有限可用、加固进行中”，完整接入任务保持 IN_PROGRESS。本轮已补齐 CV17、CV08、CV09 的上述重点；其余 PARTIAL 行按[剩余七项](#qwenwork-剩余生产准入事项)分别补实现、真机负例或公共证据审计，不以本轮三项通过替代全部准入。上述矩阵为人工证据审计，不代表已有自动符合性校验器。
+因此仍是“主流程有限可用、加固进行中”，完整接入任务保持 IN_PROGRESS。CV17、CV08、CV09及本轮CV02、CV03的声明范围已有证据；CV07取消分支新增正式回执，其余PARTIAL按[剩余事项](#qwenwork-剩余生产准入事项)继续补齐，不以局部通过替代全部准入。上述矩阵为人工证据审计，不代表已有自动符合性校验器。
+
+
 
 ### DoubaoWork 接续范围与验收记录（2026-09-24）
 

@@ -22,7 +22,8 @@ import {
   inspectDriverRuntimeIdentity,
   matchDriverRuntimeProfile,
 } from "./runtime-profile.mjs";
-import { readQwenTokenListener } from "./token-process.mjs";
+import { inspectQwenExecutionEnvironment } from "./environment.mjs";
+export { inspectLoopbackEndpoint } from "./environment.mjs";
 
 export const QWENWORK_PROBE_SCHEMA = "wildclawbench.general-e2e-qwenwork-readonly-probe/v1";
 const MAX_TRANSCRIPT_BYTES = 32 * 1024 * 1024;
@@ -173,26 +174,6 @@ export async function inspectQwenProcess(executablePath, overrides = {}) {
   };
 }
 
-export async function inspectLoopbackEndpoint(endpoint, overrides = {}) {
-  const request = overrides.fetch || fetch;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 1500);
-  try {
-    const response = await request(`${endpoint}/json/version`, { signal: controller.signal });
-    if (!response.ok) return { ready: false, status: response.status, browser_identity_present: false };
-    const payload = await response.json();
-    return {
-      ready: Boolean(payload.webSocketDebuggerUrl || payload.Browser),
-      status: response.status,
-      browser_identity_present: Boolean(payload.Browser),
-    };
-  } catch {
-    return { ready: false, status: null, browser_identity_present: false };
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 async function inspectArchitecture(executablePath, overrides = {}) {
   const capture = overrides.runCapture || runCapture;
   const result = await capture("/usr/bin/file", [executablePath], { capture: true, allowFailure: true });
@@ -207,9 +188,7 @@ export async function buildReadOnlyProbe(config, overrides = {}) {
   const inspectDatabase = overrides.inspectDatabase || inspectQwenSessionDatabase;
   const inspectRuntime = overrides.inspectRuntime || inspectDriverRuntimeIdentity;
   const inspectProcess = overrides.inspectProcess || inspectQwenProcess;
-  const inspectEndpoint = overrides.inspectEndpoint || inspectLoopbackEndpoint;
   const inspectExecutable = overrides.inspectArchitecture || inspectArchitecture;
-  const inspectTokenListener = overrides.inspectTokenListener || readQwenTokenListener;
 
   const discovery = await discover({
     profile: QWENWORK_APP_PROFILE,
@@ -217,11 +196,10 @@ export async function buildReadOnlyProbe(config, overrides = {}) {
     endpoint: null,
     platform: "darwin",
   });
-  const [trace, database, processInfo, endpoint, architecture] = await Promise.all([
+  const [trace, database, processInfo, architecture] = await Promise.all([
     inspectTrace(config.traceRoot),
     inspectDatabase(config.sessionDb, { consistentOnlineBackup: config.onlineSnapshot === true }),
     inspectProcess(discovery.executable_path),
-    inspectEndpoint(config.endpoint),
     inspectExecutable(discovery.executable_path),
   ]);
   const runtime = await inspectRuntime({
@@ -230,14 +208,15 @@ export async function buildReadOnlyProbe(config, overrides = {}) {
     transcriptVersions: trace.transcript_versions,
     platform: "darwin",
   });
-  const tokenListener = endpoint.ready
-    ? await inspectTokenListener({ appPath: discovery.path, port: Number(new URL(config.endpoint).port) })
-    : null;
+  const environment = await inspectQwenExecutionEnvironment({ appPath: discovery.path, endpoint: config.endpoint },
+    { inspectGui: overrides.inspectGui, inspectListener: overrides.inspectTokenListener, inspectEndpoint: overrides.inspectEndpoint });
+  const tokenListener = environment.listener, endpoint = environment.cdp;
   const normalizationProfile = matchDriverRuntimeProfile(runtime);
   const warnings = [...trace.warnings];
   if (!normalizationProfile) warnings.push("QWENWORK_RUNTIME_PROFILE_UNVERIFIED");
   if (database.active_or_pending_count > 0) warnings.push("QWENWORK_ACTIVE_SESSION_PRESENT");
   if (!endpoint.ready) warnings.push("QWENWORK_CDP_NOT_AVAILABLE");
+  if (!environment.verified) warnings.push(environment.error || "QWENWORK_EXECUTION_ENVIRONMENT_UNVERIFIED");
   return {
     schema_version: QWENWORK_PROBE_SCHEMA,
     driver: {
@@ -254,6 +233,7 @@ export async function buildReadOnlyProbe(config, overrides = {}) {
       && database.quick_check === "ok"
       && trace.root_exists
     ),
+    execution_environment: environment,
     ready_for_automated_execution: false,
     execution_blockers: [
       "desktop-exclusive-slot-not-assigned",
@@ -291,11 +271,10 @@ export async function buildReadOnlyProbe(config, overrides = {}) {
     operations_performed: [
       "application-discovery",
       "process-list-read",
-      "loopback-cdp-status-read",
       "sqlite-snapshot-read",
       "trace-metadata-read",
       "runtime-identity-read",
-      "exact-listener-token-switch-read",
+      ...environment.operations_performed,
     ],
     operations_not_performed: [
       "launch-or-restart-client",

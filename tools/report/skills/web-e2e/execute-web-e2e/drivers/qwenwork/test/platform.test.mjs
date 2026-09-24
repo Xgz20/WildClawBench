@@ -176,3 +176,27 @@ test("Token 暴露由 Driver 自动注入新进程且不修改调用者环境", 
   });
   assert.deepEqual(environment, { PATH: "fixture", QODERCN_EXPOSE_TOKEN_USAGE: "false" });
 });
+
+test('macOS GUI admission consumes the shared console ownership and lock proof', async () => {
+  for (const gui of [{screen_locked:true,console_session_verified:true,unlocked:false},
+    {screen_locked:false,console_session_verified:false,unlocked:false},
+    {screen_locked:null,console_session_verified:false,unlocked:false}]) {
+    assert.equal((await qwenWorkGuiSessionStatus({platform:'darwin',inspectMacGui:async()=>gui})).unlocked,false);
+  }
+  const good=await qwenWorkGuiSessionStatus({platform:'darwin',inspectMacGui:async()=>({screen_locked:false,console_session_verified:true,unlocked:true})});
+  assert.equal(good.unlocked,true);
+});
+
+test('macOS main identity excludes only the exact native relay script and refuses real duplicate roots', async () => {
+  const app='/Applications/QwenWorkCN.app',exe=app+'/Contents/MacOS/QwenWorkCN',relay=app+'/Contents/Resources/app.asar/out/main/browser-extension-relay-worker.js';
+  let other=`${exe} ${relay}`;
+  const overrides={platform:'darwin',realpathPath:async x=>x,runCommand:async(_cmd,args)=>{
+    if(args.includes('-axo'))return{code:0,stdout:`10 1 ${exe}\n11 1 ${exe}\n`};
+    if(args.includes('lstart='))return{code:0,stdout:'Wed Sep 23 13:54:14 2026'};
+    return{code:0,stdout:args[1]==='10'?`${exe} --remote-debugging-port=9250`:other};
+  }};
+  const identity=await qwenWorkProcessIdentity(app,overrides);assert.equal(identity.pid,10);assert.equal(identity.excluded_auxiliary_processes[0].pid,11);
+  for(const command of [`${exe} --remote-debugging-port=9251`,`${exe} ${relay} --unknown`,`${exe} /other/browser-extension-relay-worker.js`]){
+    other=command;await assert.rejects(qwenWorkProcessIdentity(app,overrides),/multiple QwenWork root processes/);
+  }
+});

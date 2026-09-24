@@ -26,6 +26,11 @@ class SharedComponentSpec:
 
 EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     SharedComponentSpec(
+        name="desktop-gui", version="1.0.0",
+        source_root="tools/report/e2e-shared/desktop-gui",
+        vendor_root="vendor/e2e-shared/desktop-gui", entrypoints=("macos.mjs",),
+    ),
+    SharedComponentSpec(
         name="doubaowork",
         version="0.6.9",
         source_root="tools/report/e2e-shared/doubaowork",

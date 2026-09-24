@@ -1,3 +1,4 @@
+import { environment } from "./fixtures/qwenwork/environment.mjs";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { lstat, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
@@ -32,7 +33,7 @@ async function fixture(t) {
   const probe = { schema_version: "wildclawbench.general-e2e-qwenwork-readonly-probe/v1", probed_at: new Date().toISOString(),
     driver: { harness: "qwenwork", platform: "macos" },
     app: { bundle_id: "cn.qwenwork.desktop.mac", identity_verified: true, cdp: { ready: true, browser_identity_present: true } },
-    ready_for_read_only_mapping: true, native_state: { database: { quick_check: "ok", active_or_pending_count: 0 } }, operations_performed: ["read-only-native-state"] };
+    execution_environment: environment(), ready_for_read_only_mapping: true, native_state: { database: { quick_check: "ok", active_or_pending_count: 0 } }, operations_performed: ["read-only-native-state"] };
   const updateProbe = async () => {
     await save(probePath, probe);
     config.recovery_probe = { verified: true, path: probePath, sha256: sha(await readFile(probePath)), probed_at: probe.probed_at, active_or_pending_count: probe.native_state.database.active_or_pending_count };

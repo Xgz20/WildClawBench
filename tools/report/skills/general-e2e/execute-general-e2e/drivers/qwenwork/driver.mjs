@@ -7,6 +7,7 @@ import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
+import { inspectQwenExecutionEnvironment, assertQwenExecutionEnvironment } from "./environment.mjs";
 import { buildQwenGeneralExecutionState } from "./execution-state.mjs";
 import { preflightQwenExecutionPaths } from "./path-preflight.mjs";
 import {
@@ -102,6 +103,7 @@ export function calculateQwenCanaryConfigDigest(config) {
   delete copy.allowed_active_conversation_ids;
   delete copy.prepare_only;
   delete copy.path_preflight;
+  delete copy.execution_environment;
   if (copy.prompt) delete copy.prompt.content;
   return sha256(JSON.stringify(stableValue(copy)));
 }
@@ -190,6 +192,7 @@ export function assertQwenCanaryProbe(
   if (probe.app?.bundle_id !== config.client.bundle_id || probe.app?.identity_verified !== true) {
     throw new Error("QWENWORK_CANARY_PROBE_APP_MISMATCH");
   }
+  if (requireFresh) assertQwenExecutionEnvironment(probe.execution_environment);
   if (config.control?.require_token_usage_exposure === true
       && (probe.app?.token_usage_exposure?.status !== "enabled"
         || !Number.isSafeInteger(probe.app?.token_usage_exposure?.listener_pid))) {
@@ -361,6 +364,7 @@ export async function loadQwenCanaryConfig(path, options = {}) {
       trace_root: resolve(config.client.trace_root),
     },
     prompt: { ...config.prompt, path: resolve(config.prompt.path), content: prompt },
+    execution_environment: pathProbe.execution_environment,
     recovery_probe: recoveryProbe,
     path_preflight: pathPreflight,
   };
@@ -838,6 +842,15 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
   }
 
   try {
+    if (dependencies.checkEnvironment) {
+      const environment = await dependencies.checkEnvironment();
+      state.events.push({ type: "EXECUTION_ENVIRONMENT_VERIFIED", at: dependencies.now(), details: environment });
+      await dependencies.writeJournal(config.state_file, state);
+    }
+  } catch (error) {
+    return persistAttention(config, state, dependencies, "QWENWORK_EXECUTION_ENVIRONMENT_BLOCKED", error.message);
+  }
+  try {
     await assertManagedActiveSessions(config, state, dependencies);
   } catch (error) {
     return persistAttention(
@@ -928,6 +941,14 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
     );
   }
 
+  if (dependencies.checkEnvironment) {
+    try {
+      const environment = await dependencies.checkEnvironment();
+      state.events.push({ type: "EXECUTION_ENVIRONMENT_VERIFIED", at: dependencies.now(), details: environment });
+    } catch (error) {
+      return persistAttention(config, state, dependencies, "QWENWORK_PRE_SEND_ENVIRONMENT_CHANGED", error.message);
+    }
+  }
   reserveQwenDispatch(state, { now: dependencies.now() });
   await dependencies.writeJournal(config.state_file, state);
   try {
@@ -1026,12 +1047,24 @@ export async function verifyQwenSessionPromptEvidence({ traceRoot, session, prom
 
 export async function createLiveDependencies(config) {
   if (config.path_preflight?.verified !== true) throw new Error("QWENWORK_PATH_PREFLIGHT_REQUIRED");
+  const environmentConfig = { appPath: config.execution_environment?.app_path, endpoint: config.client.endpoint };
+  if (!environmentConfig.appPath) throw Error("QWENWORK_EXECUTION_ENVIRONMENT_REQUIRED");
+  const checkEnvironment = async () => assertQwenExecutionEnvironment(
+    await inspectQwenExecutionEnvironment(environmentConfig), config.execution_environment);
+  await checkEnvironment();
   const { chromium } = await import("playwright-core");
   const timeout = Number(config.control.timeout_ms || 30_000);
   const browser = await chromium.connectOverCDP(config.client.endpoint, { timeout });
-  const page = await chooseQwenWorkMainPage(browser, timeout);
-  page.setDefaultTimeout(timeout);
-  await page.bringToFront();
+  let page;
+  try {
+    page = await chooseQwenWorkMainPage(browser, timeout);
+    page.setDefaultTimeout(timeout);
+    await checkEnvironment();
+    await page.bringToFront();
+  } catch (error) {
+    await browser.close().catch(() => {});
+    throw error;
+  }
   const snapshotOptions = { consistentOnlineBackup: Boolean(config.managed_queue_id) };
   const queryProjects = () => queryQwenProjectRows(config.client.session_db, snapshotOptions);
   // Attempt IDs used by prepared canaries may share a common prefix. Include
@@ -1039,6 +1072,7 @@ export async function createLiveDependencies(config) {
   // project with the same visible name.
   const projectName = `WCB-GEN-${config.identity.task_id.slice(-40)}-${config.config_digest.slice(0, 8)}`;
   const selectNativeFolder = async (workspace) => {
+    await checkEnvironment();
     const result = await runCapture(
       "/usr/bin/swift",
       [join(SCRIPT_DIR, "select-folder.swift"), BUNDLE_ID, workspace, String(Math.ceil(timeout / 1000))],
@@ -1069,9 +1103,9 @@ export async function createLiveDependencies(config) {
       timeout,
     );
   };
-  return {
-    browser,
-    dependencies: {
+  const guard = action => async (...args) => { await checkEnvironment(); return action(...args); };
+  const dependencies = {
+    checkEnvironment,
     prepareUi: async () => ({
         project: await createQwenLocalProject({
           page,
@@ -1124,8 +1158,12 @@ export async function createLiveDependencies(config) {
         });
         return [{ path, sha256: result.sha256, size: result.size }];
       },
-    },
   };
+  for (const key of ["prepareUi", "verifyPreparedUi", "fillPrompt", "dispatchPrompt", "navigateToSession",
+    "inspectPendingInteraction", "skipClarification", "observeUi"]) {
+    if (dependencies[key]) dependencies[key] = guard(dependencies[key]);
+  }
+  return { browser, dependencies };
 }
 
 async function main(argv = process.argv.slice(2)) {

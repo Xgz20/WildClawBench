@@ -15,7 +15,7 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 python -m eval_general_e2e skills --name collect-general-e2e --json
 ```
 
-当前 `0.8.9/operational` 支持 AstronStudio、WorkBuddy 与 QwenWork macOS 采集；WorkBuddy 支持原生 session JSONL 的模型响应数、Token、缓存读取及运行时请求耗时。QwenWork 对用户/助手/附件等内容行继续要求显式 session/cwd 一致；1.2.0 的 `worktree-state` 与 `file-history-snapshot` 等已知系统 metadata 行可缺少行内 cwd，并保留覆盖与 withheld claim。QwenWorkCN 1.2.0 / SDK 1.0.46 / transcript 1.1.59 的新 Profile 只在冻结的发送前 probe 证明 Token 开关、精确 runtime SHA 匹配，且逐响应非零 usage 与主 turn 终值按 request ID 完整对账时发布输入、输出、总 Token 和 Cache Read；Cache Write、推理 Token、HTTP 尝试仍不可用，旧 masked 样本不回填。finalizer 按正式 `collection.coverage` 和字段状态接受已验证的 observed/partial/unavailable 指标，不再把历史 unavailable 当作固定门禁。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+当前 `0.8.10/operational` 支持 AstronStudio、WorkBuddy 与 QwenWork macOS 采集；WorkBuddy 支持原生 session JSONL 的模型响应数、Token、缓存读取及运行时请求耗时。QwenWork 对用户/助手/附件等内容行继续要求显式 session/cwd 一致；1.2.0 的 `worktree-state` 与 `file-history-snapshot` 等已知系统 metadata 行可缺少行内 cwd，并保留覆盖与 withheld claim。QwenWorkCN 1.2.0 / SDK 1.0.46 / transcript 1.1.59 的新 Profile 只在冻结的发送前 probe 证明 Token 开关、精确 runtime SHA 匹配，且逐响应非零 usage 与主 turn 终值按 request ID 完整对账时发布输入、输出、总 Token 和 Cache Read；Cache Write、推理 Token、HTTP 尝试仍不可用，旧 masked 样本不回填。finalizer 按正式 `collection.coverage` 和字段状态接受已验证的 observed/partial/unavailable 指标，不再把历史 unavailable 当作固定门禁。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
 
 新增通用 [CB-B 收口接口](references/general-finalization.md) 接受 CB-A 状态与 trace-index v2，保留多个原始文件和 nullable 原生 ID。必须提供真实平台进程清理 hook；WorkBuddy 已有运行时采集和真实 macOS cleanup/finalizer canary，入口见 [WorkBuddy 收口入口](drivers/workbuddy/finalize.mjs)。QwenWorkCN 1.0.6 / macOS x86_64 已完成单题原生采集、真实 cleanup/finalizer、评分、回传和报告闭环；该证据不外推并发、Apple Silicon、Windows 或全量评测。
 
@@ -36,9 +36,11 @@ node execute-general-e2e/drivers/workbuddy/preflight.mjs --skill-root /absolute/
 输出 `status=PASS` 仅表示离线装配完整；仍需真机字段 `conversationId`、`requestId`、原生 `cwd`、
 终态来源、原始 trace 文件、resource metrics 和 cleanup 前后进程快照，才能进入正式 collect。
 
+QwenWork 正式采集还要求数据库终态、执行回执和绑定主 turn 的 `turn.finished.reason` 一致；取消必须有明确停止确认及原生 `abort`，未知或冲突原因拒绝。普通工具失败不能替代智能体最终错误，子代理结束不能替代主任务结束。
+
 ## 正式收口流程
 
-`0.8.9` 提供 DoubaoWork macOS 开发接线：`drivers/doubaowork/collector.mjs --unit-root ABS --journal-file ABS --output-root ABS` 重新校验原生消息、Prompt/project/workspace、一次发送和完成事件，输出 General execution-state、trace-index v2 与资源记录。随后用 `drivers/doubaowork/finalize.mjs` 的 `--state-file / --trace-index / --resource-metrics / --python` 接入公共 finalizer；`--verify-only` 复核冻结材料。输出根必须位于 unit 的 `.general-e2e/collection/`，已存在的采集/正式证据不可覆盖。
+`0.8.10` 提供 DoubaoWork macOS 开发接线：`drivers/doubaowork/collector.mjs --unit-root ABS --journal-file ABS --output-root ABS` 重新校验原生消息、Prompt/project/workspace、一次发送和完成事件，输出 General execution-state、trace-index v2 与资源记录。随后用 `drivers/doubaowork/finalize.mjs` 的 `--state-file / --trace-index / --resource-metrics / --python` 接入公共 finalizer；`--verify-only` 复核冻结材料。输出根必须位于 unit 的 `.general-e2e/collection/`，已存在的采集/正式证据不可覆盖。
 
 2.31.3 原生 IM 消息提供业务终态、workspace、回复与任务完成时间；完整工具轨迹还要求发送前安装的原生 started/settled 回调与同 agent 的结果账本对账。已在原生 TTL 内观察并保存的 uploaded 账本可在客户端淘汰后验证；缺首次观测证明、过期后才采集、内容冲突或覆盖不全仍拒绝。旧快照继续采用原严格规则。
 

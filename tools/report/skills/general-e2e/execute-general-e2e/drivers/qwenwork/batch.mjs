@@ -7,6 +7,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
+import { assertQwenExecutionEnvironment } from "./environment.mjs";
 import { calculateQwenCanaryConfigDigest } from "./driver.mjs";
 
 export const QWENWORK_QUEUE_SCHEMA = "wildclawbench.general-e2e-qwenwork-execution-queue/v1";
@@ -21,7 +22,7 @@ const PROBE_PATH = join(DRIVER_DIR, "probe.mjs");
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
 const DRIVER_SOURCE_FILES = [
   "batch.mjs", "driver.mjs", "execution-state.mjs", "journal.mjs",
-  "probe.mjs", "runtime-profile.mjs", "path-preflight.mjs", "select-folder.swift",
+  "probe.mjs", "environment.mjs", "../../vendor/e2e-shared/desktop-gui/macos.mjs", "runtime-profile.mjs", "path-preflight.mjs", "select-folder.swift",
   "session-state.mjs", "token-launch.mjs", "token-process.mjs", "ui.mjs", "package-lock.json",
 ];
 
@@ -540,6 +541,7 @@ async function assertQueueRecoveryProbe(batch) {
   const bytes = await readFile(batch.probe);
   if (sha256(bytes) !== batch.probeSha256) throw new Error("QWENWORK_QUEUE_RECOVERY_PROBE_DIGEST_MISMATCH");
   const probe = JSON.parse(bytes.toString("utf8"));
+  assertQwenExecutionEnvironment(probe.execution_environment);
   const age = Date.now() - Date.parse(probe.probed_at || "");
   if (probe.schema_version !== "wildclawbench.general-e2e-qwenwork-readonly-probe/v1"
       || probe.app?.bundle_id !== BUNDLE_ID || probe.app?.identity_verified !== true

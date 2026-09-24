@@ -1,12 +1,12 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { access } from "node:fs/promises";
+import { access, realpath } from "node:fs/promises";
 import { homedir } from "node:os";
 import * as systemPath from "node:path";
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
+import { inspectMacGuiSession } from "../../vendor/e2e-shared/desktop-gui/macos.mjs";
 import {
   discoverDesktopApp,
-  inspectMacDesktopAppProcess,
 } from "../../vendor/e2e-shared/desktop-app-discovery/index.mjs";
 import {
   QWENWORK_APP_PROFILE,
@@ -176,18 +176,14 @@ export async function qwenWorkGuiSessionStatus(overrides = {}) {
       };
     }
   }
-  const registry = await runCommand(
-    "/usr/sbin/ioreg",
-    ["-n", "Root", "-d1"],
-    { capture: true, allowFailure: true },
-  );
-  const lockMatch = registry.stdout.match(/"IOConsoleLocked"\s*=\s*(Yes|No)/u);
-  const screenLocked = lockMatch ? lockMatch[1] === "Yes" : null;
+  const gui = await (overrides.inspectMacGui || inspectMacGuiSession)();
   return {
     frontmost_application: "unknown",
-    screen_locked: screenLocked,
-    lock_source: lockMatch ? "ioreg.IOConsoleLocked" : "ioreg-unavailable",
-    unlocked: screenLocked === false,
+    screen_locked: gui.screen_locked,
+    lock_source: gui.source,
+    console_session_verified: gui.console_session_verified,
+    unlocked: gui.unlocked === true && gui.console_session_verified === true,
+    error: gui.error,
   };
 }
 
@@ -253,10 +249,41 @@ export async function qwenWorkProcessIdentity(appPath, overrides = {}) {
       captured_at: new Date().toISOString(),
     };
   }
-  return inspectMacDesktopAppProcess({
-    profile: QWENWORK_APP_PROFILE,
-    appPath,
-  }, { ...overrides, runCommand });
+  const canonical = await (overrides.realpathPath || realpath)(appPath);
+  const expected = new Set(QWENWORK_APP_PROFILE.macos.executableNames.map(name =>
+    systemPath.join(canonical, "Contents", "MacOS", name)));
+  const table = await runCommand("/bin/ps", ["-axo", "pid=,ppid=,comm="], { capture: true, allowFailure: true });
+  if (table.code !== 0) throw Error("QWENWORK_MAC_PROCESS_TABLE_UNAVAILABLE");
+  const matching = [], excluded = [];
+  for (const line of table.stdout.split(/\r?\n/u)) {
+    const match = line.match(/^\s*(\d+)\s+(\d+)\s+(.+)$/u);
+    if (!match || !expected.has(match[3])) continue;
+    const pid = Number(match[1]), ppid = Number(match[2]), executable = match[3];
+    const command = await runCommand("/bin/ps", ["-p", String(pid), "-o", "command="], { capture: true, allowFailure: true });
+    if (command.code !== 0) throw Error("QWENWORK_MAC_PROCESS_CHANGED_DURING_INSPECTION");
+    const argv = command.stdout.trim();
+    // QwenWork 1.2.0 uses its main executable to run this auxiliary script.
+    // Orphaned relay workers have ppid=1; they are not additional desktop roots.
+    // Only the exact installed script invocation is excluded. Unknown commands
+    // and actual multiple app instances still fail closed.
+    const relay = systemPath.join(canonical, "Contents", "Resources", "app.asar", "out", "main", "browser-extension-relay-worker.js");
+    if (argv === `${executable} ${relay}`) {
+      excluded.push({ pid, kind: "browser-extension-relay", executable_path: executable });
+      continue;
+    }
+    if (argv !== executable && !argv.startsWith(`${executable} `)) throw Error("QWENWORK_MAC_PROCESS_COMMAND_MISMATCH");
+    matching.push({ pid, ppid, executable_path: executable, command: argv });
+  }
+  const pids = new Set(matching.map(row => row.pid));
+  const roots = matching.filter(row => !pids.has(row.ppid));
+  if (roots.length > 1) throw Error(`multiple QwenWork root processes match ${canonical}`);
+  if (!roots.length) return null;
+  const root = roots[0];
+  const start = await runCommand("/bin/ps", ["-p", String(root.pid), "-o", "lstart="], { capture: true, allowFailure: true });
+  const stamp = Date.parse(start.stdout.trim());
+  if (start.code !== 0 || !Number.isFinite(stamp)) throw Error("QWENWORK_MAC_PROCESS_START_UNVERIFIED");
+  return { ...root, bundle_id: MACOS_BUNDLE_ID, started_at: new Date(stamp).toISOString(), platform: "darwin",
+    captured_at: new Date().toISOString(), excluded_auxiliary_processes: excluded };
 }
 
 export async function gracefulQuitQwenWork(processInfo, overrides = {}) {

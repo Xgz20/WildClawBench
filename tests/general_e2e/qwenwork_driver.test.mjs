@@ -1,3 +1,4 @@
+import { environment } from "./fixtures/qwenwork/environment.mjs";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
@@ -150,7 +151,7 @@ function probeAt(probedAt, activeOrPendingCount = 0) {
     probed_at: probedAt,
     driver: { harness: "qwenwork", platform: "macos" },
     app: { bundle_id: "cn.qwenwork.desktop.mac", identity_verified: true },
-    ready_for_read_only_mapping: true,
+    execution_environment: environment(), ready_for_read_only_mapping: true,
     runtime: { identity: { runtime_sha256: "a".repeat(64), path_encoding: {
       verified: true, algorithm: "qoder-ascii-prefix-djb2-xor/v1", prefix_chars: 200, source_sha256: "a".repeat(64),
     } } },
@@ -1252,4 +1253,38 @@ test("live title rendering settles against refreshed native identity within a bo
   assert.equal(reads, 2);
   assert.equal(result.target_session_verified, true);
   assert.equal(result.stop_confirmed, true);
+});
+
+test('same project name at two native paths is rejected even with an exact expected project ID', () => {
+  const projects = [{ project_id: 'target', project_name: 'shared-name', cwd: WORKSPACE },
+    { project_id: 'other', project_name: 'shared-name', cwd: WORKSPACE + '-other' }];
+  assert.throws(() => confirmQwenWorkspaceProject({ projects, workspace: WORKSPACE, expectedProjectId: 'target' }), /PROJECT_NAME_AMBIGUOUS/);
+});
+
+for (const failAt of [1, 2]) test(`GUI or listener loss at environment check ${failAt} prevents dispatch`, async () => {
+  let stored = null, checks = 0, fills = 0, dispatches = 0;
+  const config = makeConfig(), dependencies = {
+    withAttemptLock: async (_config, action) => action(), now: clock(),
+    readJournal: async () => stored,
+    writeJournal: async (_path, state) => { stored = structuredClone(state); },
+    checkEnvironment: async () => { if (++checks === failAt) throw Error('MACOS_GUI_LOCKED_OR_UNVERIFIED'); return environment(); },
+    prepareUi: async () => ({ project: project(), configuration: configuration() }),
+    verifyPreparedUi: async () => ({ project: project(), configuration: configuration(), prompt_sha256: PROMPT_SHA }),
+    fillPrompt: async () => { fills++; }, dispatchPrompt: async () => { dispatches++; },
+    querySessions: async () => dispatches ? [session()] : [],
+    verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA, match_count: 1 }),
+    observeUi: async () => ({ observed_at: new Date().toISOString(), target_session_verified: true, active_stream: false, stop_confirmed: true, conflicts: [] }),
+    writeBindingEvidence: async () => [{ path: "binding.json", sha256: "a".repeat(64), size: 1 }],
+  };
+  const result = await runQwenGeneralAttempt(config, dependencies);
+  assert.equal(result.journal.phase, 'NEEDS_ATTENTION');
+  assert.equal(result.journal.send.dispatch_attempt_count, 0);
+  assert.equal(dispatches, 0);
+  assert.equal(fills, failAt === 1 ? 0 : 1);
+  assert.match(result.journal.attention.message, /GUI_LOCKED_OR_UNVERIFIED/);
+  config.resume = true; config.recovery_probe = { verified: true, path: '/fresh/probe.json', sha256: 'f'.repeat(64), probed_at: '2026-09-19T10:00:10.000Z', active_or_pending_count: 0 };
+  const resumed = await runQwenGeneralAttempt(config, dependencies);
+  assert.equal(resumed.journal.identity.attempt_id, result.journal.identity.attempt_id);
+  assert.equal(resumed.journal.send.dispatch_attempt_count, 1);
+  assert.equal(dispatches, 1);
 });

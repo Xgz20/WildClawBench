@@ -15,11 +15,11 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.11.9/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.11.11/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## DoubaoWork macOS 开发入口
 
-`0.11.9` 提供 `drivers/doubaowork/driver.mjs` 与只读 `probe.mjs`；其控制与原生消息读取来自共用 `doubaowork` 组件，Web 入口使用同一源码。先在该 Driver 目录 `npm ci`，再运行 probe；General 只接受自身 execution manifest，不使用 Web prepared task 校验。单题入口为 `--unit-root ABS --task-id ID --project-name NAME`，默认保持当前权限并要求模型匹配 manifest；CLI 不选择模型或提升权限。
+`0.11.11` 提供 `drivers/doubaowork/driver.mjs` 与只读 `probe.mjs`；其控制与原生消息读取来自共用 `doubaowork` 组件，Web 入口使用同一源码。先在该 Driver 目录 `npm ci`，再运行 probe；General 只接受自身 execution manifest，不使用 Web prepared task 校验。单题入口为 `--unit-root ABS --task-id ID --project-name NAME`，默认保持当前权限并要求模型匹配 manifest；CLI 不选择模型或提升权限。
 
 更新客户端后必须重新 probe，并用与新版本匹配的新包；恢复拒绝版本、manifest、Prompt、场景与目录漂移。2.31.3 的模型控件和 ProseMirror 编辑器按唯一语义/作用域定位；新建任务后输入区仍可能保留旧项目，必须明确选择目标项目并回读。发送前检查 GUI 锁屏状态、完整目录、模型/权限与 Prompt，持久化意图后只发送一次；两个场景共享运行期 UI 锁。
 
@@ -33,7 +33,7 @@ python -m eval_general_e2e skills --name execute-general-e2e --json
 
 发送前同时核对前台请求与后台工具交付。并发只放行同队列、同会话、完整 Workspace 和原生请求 ID 一致且前台仍活动的交付；孤立或归属未知的后台交付阻断发送和陈旧锁恢复。原生会话完成但后台交付未结束时保持 `NEEDS_ATTENTION`，不得收口。
 
-`0.11.9` 将每次单题 Worker 的锁 owner 写入私有 journal；只读恢复先持久化清除旧完成观察，再进行连接与目录检查，避免中断留下旧成功可采集。若原点击结果未落盘，只有已绑定的原生成功用户消息与 Prompt/project/workspace 一致，才补记“恢复时观察到接受”；发送边界沿用原 dispatch 时间，未知 click_returned_at 不补造，不再次发送。
+`0.11.11` 将每次单题 Worker 的锁 owner 写入私有 journal；只读恢复先持久化清除旧完成观察，再进行连接与目录检查，避免中断留下旧成功可采集。若原点击结果未落盘，只有已绑定的原生成功用户消息与 Prompt/project/workspace 一致，才补记“恢复时观察到接受”；发送边界沿用原 dispatch 时间，未知 click_returned_at 不补造，不再次发送。
 
 单题 Driver 硬中断后，可显式恢复已核验退出的同机 owner：
 
@@ -49,6 +49,8 @@ node drivers/doubaowork/recover-lock.mjs \
 原生“待确认”按侧栏状态与稳定 conversation ID 绑定；文件授权还读取已绑定请求的原生 quick_reply block（scene 2、action 1010/1011），覆盖按钮在 CDN iframe 内、主 DOM 没有 approval 标签的情况。未知授权不自动批准，存在待确认时停止新派发并进入 NEEDS_ATTENTION。记录过原生确认或存在原生授权历史的 attempt 不得假定人工操作数为0；当前不提供人工授权后继续自动收口/评分的准入。
 
 ## WorkBuddy / QwenWork macOS 开发入口
+
+QwenWork 的 fresh probe、新建/恢复和最终发送均要求 GUI 已解锁、当前控制台用户已登录且与执行用户一致，并核对精确安装路径的监听 PID/启动身份及同端点 browser WebSocket。锁屏、未知状态、外部监听者或过程身份漂移均拒绝继续；明确发生在 reservation 前的环境暂停保留原 attempt，只有 fresh probe 与最终身份、配置、Prompt 回读重新通过后才允许显式 resume，一旦调用过发送则不适用该分支；原生只读探针仍保留实际观察及阻断原因。
 
 `drivers/workbuddy/execute.mjs` 与 `drivers/qwenwork/driver.mjs` 提供受控单题开发入口；`drivers/workbuddy/batch.mjs` 与 `drivers/qwenwork/batch.mjs` 提供按 manifest 顺序冻结的队列入口。先读取对应 `--help`、只读 probe 与本机配置，再确认没有冲突的活动任务。WorkBuddy 要求 Node ≥22，使用原生 WebSocket/CDP；QwenWork 在其 Driver 目录 `npm ci` 安装锁定的 playwright-core。QwenWork 恢复使用独立的 fresh probe，不能改冻结配置来绕过 journal 校验。两者都在发送前落盘且禁止不确定发送后的重发。
 

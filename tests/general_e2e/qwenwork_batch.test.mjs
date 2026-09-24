@@ -1,3 +1,4 @@
+import { environment } from "./fixtures/qwenwork/environment.mjs";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -130,7 +131,7 @@ async function fixture(taskIds = QUEUE_TASKS) {
     probed_at: "2026-09-22T06:00:00.000Z",
     driver: { harness: "qwenwork", platform: "macos" },
     app: { bundle_id: "cn.qwenwork.desktop.mac", identity_verified: true },
-    ready_for_read_only_mapping: true,
+    execution_environment: environment(), ready_for_read_only_mapping: true,
     native_state: { database: { quick_check: "ok", active_or_pending_count: 0 } },
     operations_performed: ["read-only-native-state"],
   };

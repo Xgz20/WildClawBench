@@ -119,6 +119,7 @@ async function createFixture({ mutateBinding = null, mutateSegment = null, token
     extensions: {
       qwenwork: {
         local_project_id: "project-fixture-001",
+        native_status: "completed",
         terminal_observation: terminalObservation,
       },
     },

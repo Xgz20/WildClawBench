@@ -134,6 +134,11 @@ export function confirmQwenWorkspaceProject({ projects, workspace, baselineProje
   if (!matches[0].project_id || !matches[0].project_name) {
     throw new Error("QWENWORK_WORKSPACE_PROJECT_IDENTITY_MISSING");
   }
+  // The UI selector exposes the project name, not its native ID. A unique
+  // database path alone cannot prove which same-named UI project is selected.
+  if (normalized.filter(project => visibleValue(project.project_name) === visibleValue(matches[0].project_name)).length !== 1) {
+    throw new Error("QWENWORK_PROJECT_NAME_AMBIGUOUS");
+  }
   return {
     ...matches[0],
     verification_method: "agents-sqlite-local_projects.root_paths[0]",
@@ -381,6 +386,10 @@ export async function createQwenLocalProject({
     await ownDialog.waitFor({ state: "hidden", timeout: timeoutMilliseconds });
   }
   const before = await queryProjects();
+  if (before.some(project => visibleValue(project.project_name || project.name) === visibleValue(projectName)
+      && (!project.cwd || resolve(String(project.cwd)) !== resolve(workspace)))) {
+    throw new Error("QWENWORK_PROJECT_NAME_AMBIGUOUS");
+  }
   const knownProjectNames = before.map((entry) => entry.project_name || entry.name).filter(Boolean);
   await ensureQwenNewTaskView(page, timeoutMilliseconds, projectName, knownProjectNames);
   const existing = before.filter((project) => (
