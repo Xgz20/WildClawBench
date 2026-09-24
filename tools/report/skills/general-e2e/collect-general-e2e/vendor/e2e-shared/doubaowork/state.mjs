@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { lstat, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
-import { dirname, isAbsolute, normalize } from "node:path";
+import { basename, dirname, isAbsolute, normalize } from "node:path";
 
 import {
   DEFAULT_APP_PATH,
@@ -400,6 +400,35 @@ export function recordPromptAccepted(state, { clickReturnedAt = null } = {}, now
   state.send.accepted_at = at;
   state.timing.sent_at = state.send.dispatch_started_at;
   return transitionAttempt(state, "PROMPT_SENT", { send_accepted_at: at }, at);
+}
+
+export function recordRecoveredPromptAcknowledgement(state, native, artifact, observedAt) {
+  assertAttemptState(state);
+  if (state.send.accepted_at) return false;
+  requireTimestamp(observedAt, "recovery.observed_at");
+  const at = isoNow(observedAt);
+  if (state.send.dispatch_attempt_count !== 1 || !state.send.dispatch_started_at
+      || Date.parse(at) < Date.parse(state.send.dispatch_started_at)
+      || state.send.click_returned_at !== null || native?.binding_status !== "acknowledged-user-input"
+      || native.conversation_id !== state.session.conversation_id || !native.user_message_id
+      || native.prompt?.sha256 !== state.prompt.readback_sha256 || native.prompt?.bytes !== state.prompt.readback_bytes
+      || native.prompt?.normalization !== state.prompt.readback_normalization
+      || state.session.prompt_readback?.status !== "verified"
+      || !artifact?.file || basename(artifact.file) !== artifact.file || !/^[0-9a-f]{64}$/u.test(artifact.sha256 || "")
+      || !Number.isSafeInteger(artifact.size_bytes) || artifact.size_bytes <= 0
+      || !["READY_TO_SEND", "NEEDS_ATTENTION"].includes(state.phase)) throw new Error("DOUBAOWORK_RECOVERED_ACK_UNVERIFIED");
+  state.send.accepted_at = at;
+  state.send.acceptance_source = "native-im-user-acknowledgement-observed-during-recovery";
+  state.send.recovery_ack = { artifact, conversation_id: native.conversation_id, user_message_id: native.user_message_id,
+    native_request_session_id: native.native_request_session_id, observed_at: at };
+  // The dispatch boundary was already durably recorded before the original
+  // click. Its return time remains unknown; do not synthesize click_returned_at.
+  state.timing.sent_at = state.send.dispatch_started_at;
+  state.history.push({ phase: state.phase, event: "ORIGINAL_DISPATCH_ACKNOWLEDGED_FROM_NATIVE_MESSAGE", at,
+    artifact_sha256: artifact.sha256 });
+  if (state.phase === "READY_TO_SEND") transitionAttempt(state, "PROMPT_SENT", { native_ack_observed_at: at }, at);
+  assertAttemptState(state);
+  return true;
 }
 
 export function bindConversation(state, {

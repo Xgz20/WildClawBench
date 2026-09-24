@@ -64,6 +64,34 @@ export function operateNativeObserver(token, cfg) {
   if (!manager || !(manager.resultLedger?.finalizedByKey instanceof Map)
       || !(manager.executionContextRegistry?.contextsBySandboxId instanceof Map)
       || typeof manager.setDebugStreaming !== "function") throw new Error("NATIVE_TOOL_RUNTIME_UNSUPPORTED");
+  if (cfg.operation === "activity") {
+    const dispatcher = manager.toolCallPipeline?.dispatcher;
+    if (!(dispatcher?.current instanceof Map) || !(dispatcher.pending instanceof Set)
+        || typeof dispatcher.hasActiveDelivery !== "function") throw new Error("NATIVE_TOOL_ACTIVITY_UNSUPPORTED");
+    const contexts = [...new Set(manager.executionContextRegistry.contextsBySandboxId.values())];
+    if (contexts.length > 1000 || dispatcher.current.size > 1000 || dispatcher.pending.size > 1000) throw new Error("NATIVE_TOOL_ACTIVITY_LIMIT");
+    // Enumerate the dispatcher itself: a delivery can outlive its context and
+    // foreground task. Never mistake a missing registry row for an idle runtime.
+    const active = [...dispatcher.current].map(([key, delivery]) => {
+      let identity;
+      try { identity = JSON.parse(key); } catch { throw new Error("NATIVE_TOOL_ACTIVITY_IDENTITY_INVALID"); }
+      if (!Array.isArray(identity) || identity.length !== 3 || identity.some(v => typeof v !== "string")) throw new Error("NATIVE_TOOL_ACTIVITY_IDENTITY_INVALID");
+      const matches = contexts.filter(c => c.instanceId === delivery?.entry?.sandboxId);
+      const c = matches.length === 1 ? matches[0] : null;
+      const ids = [identity[1], c?.legacyExecutionState?.scopeKey, delivery?.entry?.sandboxScopeKey]
+        .map(scope => /^conversation:([0-9]{1,64})$/u.exec(scope || "")?.[1]);
+      ids.push(c?.sendContext?.conversationId, delivery?.entry?.sendContext?.conversationId);
+      return { instance_id: delivery?.entry?.sandboxId ?? null, native_cwd: c?.cwd ?? null,
+        sandbox_id: c?.sandboxId ?? null, native_request_session_id: identity[0] === "agent" ? identity[2] : null,
+        tool_call_id: delivery?.toolCallId ?? null, context_verified: matches.length === 1,
+        conversation_ids: [...new Set(ids.filter(id => typeof id === "string" && /^[1-9][0-9]{0,63}$/u.test(id)))] };
+    });
+    // Replaced or settling deliveries may remain in pending after leaving current.
+    if (dispatcher.pending.size !== active.length) throw new Error("NATIVE_TOOL_ACTIVITY_PENDING_UNACCOUNTED");
+    return { schema: "wildclawbench.doubaowork-native-tool-activity/v1", initialized: true, profile,
+      profile_sha256: cfg.profileSha, source: "dispatcher.current+pending+executionContextRegistry",
+      observed_at: new Date().toISOString(), pending_count: dispatcher.pending.size, active };
+  }
   const contextFor = instanceId => {
     const candidates = [...new Set(manager.executionContextRegistry.contextsBySandboxId.values())].filter(c => c.instanceId === instanceId);
     if (candidates.length !== 1) return null;
@@ -193,6 +221,28 @@ export function operateNativeObserver(token, cfg) {
 export async function installNativeToolObserver(browser, { attemptId, workspace }) {
   if (!isAbsolute(workspace) || !attemptId) throw new Error("NATIVE_TOOL_OBSERVER_INPUT_INVALID");
   return backendCall(browser, "install", { attemptId, workspace });
+}
+export const readNativeToolActivity = browser => backendCall(browser, "activity", {});
+
+export function assertNativeToolActivityAllowed(activity, peers = [], frontend) {
+  if (activity?.initialized !== true || !Array.isArray(activity.active)) throw new Error("DOUBAOWORK_TOOL_ACTIVITY_UNVERIFIED");
+  for (const row of activity.active) {
+    if (row.context_verified !== true || row.conversation_ids?.length !== 1 || !isAbsolute(row.native_cwd || "")
+        || !row.native_request_session_id || !row.tool_call_id) throw new Error("DOUBAOWORK_TOOL_ACTIVITY_SCOPE_UNVERIFIED");
+    const matches = peers.filter(peer => peer.conversation_id === row.conversation_ids[0] && peer.workspace === row.native_cwd
+      && peer.native_request_session_id === row.native_request_session_id);
+    if (matches.length !== 1) throw new Error("DOUBAOWORK_UNREGISTERED_TOOL_DELIVERY");
+    const peer = matches[0];
+    if (frontend?.initialized !== true || !frontend.active?.some(task =>
+      task.session_id === peer.native_request_session_id && task.conversation_ids?.includes(peer.conversation_id))) throw new Error("DOUBAOWORK_ORPHAN_TOOL_DELIVERY");
+  }
+}
+
+export function taskToolDeliveries(activity, { workspace, conversationId }) {
+  if (activity?.initialized !== true || !Array.isArray(activity.active)) throw new Error("DOUBAOWORK_TOOL_ACTIVITY_UNVERIFIED");
+  return activity.active.filter(row => row.native_cwd === workspace || row.conversation_ids?.includes(conversationId)
+    || row.context_verified !== true || row.conversation_ids?.length !== 1 || !isAbsolute(row.native_cwd || "")
+    || !row.native_request_session_id || !row.tool_call_id);
 }
 export async function collectNativeToolObserver(browser, { attemptId, workspace, agentId, restore = false, unsent = false }) {
   return backendCall(browser, unsent ? "discard-unsent" : "collect", { attemptId, workspace, agentId, restore });

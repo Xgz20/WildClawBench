@@ -1,0 +1,108 @@
+{
+  "schema": "wildclawbench.doubaowork-general-hardening-evidence/v1",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "platform": "macos-x86-64",
+  "app_version": "2.31.3",
+  "source_baseline": "e91f22a",
+  "full_harness_admission": false,
+  "scope": "actual delayed collection, real process ownership races and finalizer refusal",
+  "delayed_collection": {
+    "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+    "attempt_id": "98459ede-8727-4db8-beaf-3135ef963ca5",
+    "retained_records": 5,
+    "records_still_in_native_map": 5,
+    "record_age_at_collection_minutes": [
+      34.66075,
+      34.92511666666667
+    ],
+    "first_observed_within_native_ttl": true,
+    "real_native_eviction_observed": false,
+    "execution_duration_minutes_over_30": false,
+    "first_collect_finalize_verify": "PASS"
+  },
+  "process_cleanup": {
+    "reparenting": {
+      "result": true,
+      "control_alive": true,
+      "injection": "readInventory adds a timing barrier; ps/lsof and signals are real"
+    },
+    "inode_replacement": {
+      "refused": true,
+      "target_and_control_alive": true
+    },
+    "actual_finalizer_refusal": {
+      "rejected": "TASK_PROCESS_CLEANUP_FAILED: residual task process or quiet window incomplete",
+      "candidate_not_published": true,
+      "target_alive_after_refusal": true,
+      "control_alive_after_refusal": true,
+      "source_workspace_original_inode_restored": true,
+      "source_files_unchanged": true
+    }
+  },
+  "limits": [
+    "35-minute delayed collection is not a 35-minute agent task or proof of native eviction.",
+    "PID reuse and additional drift branches retain their separate offline/live boundaries."
+  ],
+  "artifacts": [
+    {
+      "path": "r31-ledger-before-expiry.json",
+      "sha256": "edfa3c92d6fe2c45b81af9e7d99a3971cfaa5bed7fbcf6be7deda6aae598496f",
+      "size": 2097
+    },
+    {
+      "path": "r31-ledger-after-expiry.json",
+      "sha256": "207fbc7d6b6c1ef716c9e17b53c85b015b97167445d9a29c0a5f6a7ec774fc1d",
+      "size": 2097
+    },
+    {
+      "path": "r31-ledger-delayed-observation.json",
+      "sha256": "8d8b17a55cc539870b0769e4315ba211bea85afeb5a7d027741e9c3e4f2bcab3",
+      "size": 1170
+    },
+    {
+      "path": "r31-ledger-collection.json",
+      "sha256": "9901b09cdbb3b72371ab4be0c4c88639a29809fa98153273104733f7b62c474d",
+      "size": 492
+    },
+    {
+      "path": "r31-ledger-finalize.json",
+      "sha256": "cd752cf1de3bf7de2aaf2093ab977567e7f9bde3b8a5c4576d61e1f0f632689a",
+      "size": 969
+    },
+    {
+      "path": "r31-ledger-verify.json",
+      "sha256": "62f0646294429f318e2c50b3d9065cc0de2f031ee68d076252ccd8b6de663fb7",
+      "size": 1419
+    },
+    {
+      "path": "cleanup-races-r33.mjs",
+      "sha256": "8781c274a216d87bd37c05b214d9bcb1abeacf5586e66da72b801ca19759a5c0",
+      "size": 4980
+    },
+    {
+      "path": "cleanup-races-r33/reparent/result.json",
+      "sha256": "71296b76375acb29444bb9fbacd9a80f5d97ca9f7cc1ef7c5e99cee111d80eb9",
+      "size": 5555
+    },
+    {
+      "path": "cleanup-races-r33/inode-swap/result.json",
+      "sha256": "563599ce0a0332c45056ea6abcecab5f76c3d3ef046dad7f50cc6c6cf198fd89",
+      "size": 4252
+    },
+    {
+      "path": "finalizer-inode-refusal-r31/result.json",
+      "sha256": "c27090168d68915468736b6e8b6f7fdfe809268302b28fdb7f3fe889d11a81ac",
+      "size": 5712
+    },
+    {
+      "path": "r31-after-ack-finalize.json",
+      "sha256": "42d9348a2138a4be8df9e9ef09db3249a3d809bb57b86c6d306ba446999b1e47",
+      "size": 993
+    },
+    {
+      "path": "r31-after-ack-verify.json",
+      "sha256": "744c2916b092f228fd0a527c2713de0609adc322a32892de620264a0b8acf84c",
+      "size": 1431
+    }
+  ]
+}

@@ -71,7 +71,7 @@ async function save(path, value) {
 }
 async function sourceDigest() {
   const names = ["driver.mjs", "batch.mjs", "prepared-task.mjs", "managed-queue.mjs", "package-lock.json",
-    ...["controller.mjs", "path-preflight.mjs", "runtime-messages.mjs", "runtime-stream.mjs", "runtime-tools.mjs", "runtime-lifecycle.mjs", "runtime-activity.mjs", "trajectory-archive.mjs", "native-evidence.mjs", "state.mjs", "lib.mjs", "platform.mjs", "select-folder.swift"].map(n => `../../vendor/e2e-shared/doubaowork/${n}`)];
+    ...["controller.mjs", "interactions.mjs", "path-preflight.mjs", "runtime-messages.mjs", "runtime-stream.mjs", "runtime-tools.mjs", "runtime-lifecycle.mjs", "runtime-activity.mjs", "trajectory-archive.mjs", "native-evidence.mjs", "state.mjs", "lib.mjs", "platform.mjs", "select-folder.swift"].map(n => `../../vendor/e2e-shared/doubaowork/${n}`)];
   return sha(JSON.stringify(await Promise.all(names.map(async n => [n, sha(await readFile(join(HERE, n)))]))));
 }
 

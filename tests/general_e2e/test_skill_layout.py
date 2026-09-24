@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -24,6 +25,19 @@ EXPECTED_NAMES = (
 
 
 class GeneralE2ESkillLayoutTests(unittest.TestCase):
+    def test_doubaowork_runtime_and_distribution_version_agree(self) -> None:
+        catalog = json.loads((REPO_ROOT / "tools/report/e2e-shared/components.json").read_text())
+        component = next(row for row in catalog["components"] if row["name"] == "doubaowork")
+        source = REPO_ROOT / component["source_root"] / "lib.mjs"
+        version = re.search(r'export const DRIVER_VERSION = "([^"]+)";', source.read_text())
+        self.assertIsNotNone(version)
+        self.assertEqual(version.group(1), component["version"])
+        for scene, skill in [("general-e2e", "execute-general-e2e"),
+                            ("general-e2e", "collect-general-e2e"),
+                            ("web-e2e", "execute-web-e2e")]:
+            vendored = REPO_ROOT / "tools/report/skills" / scene / skill / component["vendor_root"] / "lib.mjs"
+            self.assertEqual(vendored.read_bytes(), source.read_bytes())
+
     def test_locked_registry_has_seven_unique_public_names(self) -> None:
         names = tuple(spec.name for spec in GENERAL_E2E_SKILLS)
         self.assertEqual(names, EXPECTED_NAMES)
@@ -45,14 +59,14 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("execute-general-e2e").version,
                 get_skill_spec("execute-general-e2e").implementation_status,
             ),
-            ("0.11.2", "operational"),
+            ("0.11.9", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("collect-general-e2e").version,
                 get_skill_spec("collect-general-e2e").implementation_status,
             ),
-            ("0.8.2", "operational"),
+            ("0.8.9", "operational"),
         )
         self.assertEqual(
             (

@@ -17,7 +17,7 @@ export async function managedPeerConversations(config, queueId) {
   if (queue.schema !== "wildclawbench.doubaowork-general-queue/v1" || queue.config.unit_root !== config.unitRoot
       || queue.config.queue_id !== queueId || queue.config.manifest_sha256 !== config.manifestSha256
       || !queue.tasks.some(t => t.task_id === config.taskId)) throw new Error("DOUBAOWORK_MANAGED_QUEUE_BINDING_MISMATCH");
-  const ids = [], sessions = [];
+  const ids = [], sessions = [], peers = [];
   for (const row of queue.tasks) {
     if (row.task_id === config.taskId || !["RUNNING", "DISPATCHING", "NEEDS_ATTENTION"].includes(row.phase)) continue;
     if (!/^[A-Za-z0-9][A-Za-z0-9_-]+$/u.test(row.task_id)) throw new Error("DOUBAOWORK_MANAGED_PEER_TASK_INVALID");
@@ -27,8 +27,10 @@ export async function managedPeerConversations(config, queueId) {
         || journal.send.dispatch_attempt_count !== 1 || journal.session.prompt_readback.status !== "verified"
         || !/^[0-9]{1,64}$/u.test(journal.session.conversation_id || "")) throw new Error("DOUBAOWORK_MANAGED_PEER_UNBOUND");
     ids.push(journal.session.conversation_id);
+    peers.push({ conversation_id: journal.session.conversation_id, workspace: journal.workspace,
+      native_request_session_id: journal.session.native_request_session_id ?? null });
     if (journal.session.native_request_session_id) sessions.push(journal.session.native_request_session_id);
   }
   if (new Set(ids).size !== ids.length) throw new Error("DOUBAOWORK_MANAGED_PEER_DUPLICATE");
-  return { conversationIds: ids, sessionIds: sessions };
+  return { conversationIds: ids, sessionIds: sessions, peers };
 }

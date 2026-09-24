@@ -4,7 +4,7 @@ import { lstat, mkdir, readFile, realpath, rename, writeFile } from "node:fs/pro
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
-import { normalizeRuntimeMessages } from "../../vendor/e2e-shared/doubaowork/runtime-messages.mjs";
+import { normalizeRuntimeMessages, normalizeRuntimePrompt } from "../../vendor/e2e-shared/doubaowork/runtime-messages.mjs";
 import { normalizeNativeToolEvents } from "../../vendor/e2e-shared/doubaowork/runtime-tools.mjs";
 import { normalizeNativeLifecycle } from "../../vendor/e2e-shared/doubaowork/runtime-lifecycle.mjs";
 import { inspectNativeResourceObservations } from "../../vendor/e2e-shared/doubaowork/resource-observations.mjs";
@@ -12,8 +12,9 @@ import { discoverNativeSources, defaultNativeRoots } from "../../vendor/e2e-shar
 import { buildNativeEvidence, deduplicateTrajectoryEvents, parseTrajectoryJsonl } from "../../vendor/e2e-shared/doubaowork/native-evidence.mjs";
 import { summarizePromptReadback } from "../../vendor/e2e-shared/doubaowork/lib.mjs";
 import { mergeNativeToolTimeline, mergeObservedToolTimeline } from "../../vendor/e2e-shared/doubaowork/trajectory-merge.mjs";
+import { inspectNativeAuthorizationHistory } from "../../vendor/e2e-shared/doubaowork/interactions.mjs";
 
-const ADAPTER = "doubaowork-native-evidence", VERSION = "0.2.1";
+const ADAPTER = "doubaowork-native-evidence", VERSION = "0.2.3";
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 const json = value => Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
 const artifact = (path, bytes, extra = {}) => ({ path, sha256: sha(bytes), size: bytes.length, ...extra });
@@ -30,10 +31,32 @@ async function boundArtifact(control, row) {
   return bytes;
 }
 
+export function verifyRecoveredDispatchAcknowledgement(snapshot, journal, native) {
+  // The user's acknowledgement can precede exposure of the request ID. Bind
+  // its user/conversation/Prompt now; compare any exposed request ID below.
+  const proof = journal.send.recovery_ack, acknowledged = normalizeRuntimePrompt(snapshot,
+    { ...journal, session: { ...journal.session, native_request_session_id: null } });
+  if (journal.send.acceptance_source !== "native-im-user-acknowledgement-observed-during-recovery"
+      || !proof || journal.send.click_returned_at !== null
+      || snapshot.observed_at !== proof.observed_at || journal.send.accepted_at !== proof.observed_at
+      || !Number.isFinite(Date.parse(proof.observed_at)) || !Number.isFinite(Date.parse(journal.send.dispatch_started_at))
+      || Date.parse(proof.observed_at) < Date.parse(journal.send.dispatch_started_at)
+      || journal.timing.sent_at !== journal.send.dispatch_started_at
+      || acknowledged.conversation_id !== native.conversation_id || proof.conversation_id !== native.conversation_id
+      || acknowledged.user_message_id !== native.user_message_id || proof.user_message_id !== native.user_message_id
+      || acknowledged.native_request_session_id !== proof.native_request_session_id
+      || acknowledged.native_request_session_id && acknowledged.native_request_session_id !== native.native_request_session_id) {
+    throw new Error("DOUBAOWORK_RECOVERY_ACK_BINDING_INVALID");
+  }
+  return { source: journal.send.acceptance_source, observed_at: proof.observed_at,
+    raw_ref: "raw/recovered-send-ack.json", click_returned_at: null };
+}
+
 export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }) {
   unitRoot = await realpath(unitRoot); journalFile = resolve(journalFile); outputRoot = resolve(outputRoot);
   if (!within(unitRoot, journalFile) || !within(unitRoot, outputRoot) || !relative(unitRoot, outputRoot).startsWith(".general-e2e/collection/")) throw new Error("DOUBAOWORK_COLLECTION_SCOPE_INVALID");
   const journalBytes = await readRegular(journalFile), journal = JSON.parse(journalBytes);
+  if (journal.native_interactions?.confirmation_seen) throw new Error("DOUBAOWORK_NATIVE_INTERACTION_UNACCOUNTED: automatic collection cannot assume no human intervention");
   if (journal.scene !== "general" || journal.send.dispatch_attempt_count !== 1
       || journal.session.prompt_readback.status !== "verified" || !journal.native_observation) throw new Error("DOUBAOWORK_NATIVE_EXECUTION_NOT_VERIFIED");
   const manifestBytes = await readRegular(join(unitRoot, "manifest.json")), manifest = JSON.parse(manifestBytes);
@@ -48,7 +71,13 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
       || sha(await readRegular(promptPath)) !== journal.prompt.sha256 || task.prompt.sent_sha256 !== journal.prompt.sha256) throw new Error("DOUBAOWORK_COLLECTOR_TASK_DRIFT");
   const control = dirname(journalFile), runtimeBytes = await boundArtifact(control, journal.native_observation.artifact);
   const runtime = JSON.parse(runtimeBytes), native = normalizeRuntimeMessages(runtime, journal);
+  if (inspectNativeAuthorizationHistory(runtime, native.native_request_session_id).length) throw new Error("DOUBAOWORK_NATIVE_AUTHORIZATION_HISTORY_UNACCOUNTED");
   if (native.terminal !== "completed" || !native.finished_at) throw new Error("DOUBAOWORK_NATIVE_TERMINAL_OR_TIME_UNAVAILABLE");
+  let recoveryAckBytes = null, recoveryAcknowledgement = null;
+  if (journal.send.recovery_ack || journal.send.acceptance_source) {
+    recoveryAckBytes = await boundArtifact(control, journal.send.recovery_ack?.artifact);
+    recoveryAcknowledgement = verifyRecoveredDispatchAcknowledgement(JSON.parse(recoveryAckBytes), journal, native);
+  }
   let lifecycleBytes = null, lifecycle = null;
   if (journal.native_observation.native_lifecycle_artifact) {
     lifecycleBytes = await boundArtifact(control, journal.native_observation.native_lifecycle_artifact);
@@ -145,13 +174,15 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const write = async (name, bytes) => { await mkdir(dirname(join(staging, name)), { recursive: true }); await writeFile(join(staging, name), bytes, { flag: "wx", mode: 0o600 }); return artifact(name, bytes); };
   const raw = [await write("raw/runtime-messages.json", runtimeBytes), await write("raw/trajectory.jsonl", trajectory)];
   raw.push(await write("raw/native-resource-observations.json", json(nativeResourceObservations)));
+  if (recoveryAckBytes) raw.push(await write("raw/recovered-send-ack.json", recoveryAckBytes));
   if (lifecycleBytes) raw.push(await write("raw/native-lifecycle.json", lifecycleBytes));
   for (const row of archiveRaw) raw.push(await write(row.path, row.bytes));
   if (nativeToolBytes) raw.push(await write("raw/native-tools.json", nativeToolBytes));
   raw.push(await write("raw/normalization-diagnostics.json", json({ duplicate_events: legacy.duplicates, cross_source_order_unknown: crossSourceOrderUnknown,
     tool_order_basis: timeline.basis, shared_call_count: timeline.shared_call_count ?? null })));
   const binding = await write("bindings/runtime-messages.json", runtimeBytes);
-  await write("bindings/dispatch-journal.json", journalBytes);
+  const dispatchBinding = await write("bindings/dispatch-journal.json", journalBytes);
+  const bindings = [binding, dispatchBinding];
   const response = await write("final-response.txt", finalBytes);
   const session = { thread_id: null, turn_id: native.reply_message_id, session_id: native.conversation_id, cwd: workspace, lifecycle_generation: null };
   const state = {
@@ -161,7 +192,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
     prompt: { path: promptPath, sha256: journal.prompt.sha256, send_status: "sent", sent_at: journal.timing.sent_at },
     send: { dispatch_attempt_count: 1 },
     session: { thread_id: null, turn_id: native.reply_message_id, session_id: native.conversation_id, cwd: workspace, verified: true,
-      binding_evidence: [{ ...binding, path: relative(unitRoot, join(outputRoot, binding.path)) }] },
+      binding_evidence: bindings.map(row => ({ ...row, path: relative(unitRoot, join(outputRoot, row.path)) })) },
     execution: { business_status: "completed", started_at: journal.timing.sent_at, finished_at: native.finished_at,
       duration_seconds: lifecycle?.status === "observed" ? lifecycle.duration_seconds : native.raw_terminal.profile === "native-im-api-history/v1" ? null
         : (Date.parse(native.finished_at) - Date.parse(journal.timing.sent_at)) / 1000, error: null, cancellation_confirmed: null },
@@ -171,6 +202,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
       doubaowork: { native_sources: native.sources, native_request_session_id: native.native_request_session_id,
         raw_terminal: native.raw_terminal, agent_duration_seconds: native.agent_duration_seconds, source_journal_sha256: sha(journalBytes),
         lifecycle_timing: lifecycle, server_or_store_finished_at: native.server_or_store_finished_at ?? null,
+        recovered_send_acknowledgement: recoveryAcknowledgement,
         tool_trace_scope: nativeTools?.scope ?? null, tool_trace_status: nativeTools?.status ?? "partial" } },
   };
   const events = [], calls = new Map();
@@ -216,7 +248,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const transcript = await write("transcript.jsonl", Buffer.from(events.map(e => JSON.stringify(e)).join("\n") + "\n"));
   const index = { schema_id: "urn:wildclawbench:schema:general-e2e:trace-index:v2", schema_version: 2, identity,
     adapter: { id: ADAPTER, version: VERSION, source: "Bound native IM messages and explicit session trajectory" }, session,
-    transcript: { ...transcript, event_count: events.length }, raw_trace: raw, binding_evidence: [binding],
+    transcript: { ...transcript, event_count: events.length }, raw_trace: raw, binding_evidence: bindings,
     completeness: { status: completeToolTrace ? "complete" : "partial", omitted_event_count: 0,
       missing: completeToolTrace ? [] : [...(!nativeTools ? ["native-tool-trajectory-incomplete"] : []), ...(unknownBlocks.length ? ["unmapped-native-message-block"] : []),
         ...(crossSourceOrderUnknown ? ["cross-source-tool-order-unavailable"] : []),

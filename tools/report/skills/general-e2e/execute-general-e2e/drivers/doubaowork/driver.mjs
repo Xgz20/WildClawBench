@@ -27,6 +27,7 @@ export async function main(argv = process.argv.slice(2)) {
     const peers = await managedPeerConversations(config, v["managed-queue-id"]);
     config.allowedActiveConversationIds = peers.conversationIds;
     config.allowedActiveSessionIds = peers.sessionIds;
+    config.allowedNativePeers = peers.peers;
   }
   const observeSeconds = Number(v["observe-seconds"]);
   if (!Number.isFinite(observeSeconds) || observeSeconds <= 0 || observeSeconds > 900) throw new Error("Invalid observation window");

@@ -58,3 +58,10 @@
 
 - **r28当前核心五题闭环**：五题各发送一次，原生峰值3与动态补位，首次采集/冻结/verify全部trace complete。S1/S2自动规则1.0；控制任务按已授权全流程自动创建三个独立sol/high评分任务，S3 hybrid=1.0、S4=0.95、S5=0.875，均通过verify-score。完整submission、回传、导入、重复导入幂等与三种报告完成，5有效/5，均分96.5/100。任务耗时383秒、流程耗时395.3秒、工具23次，覆盖均5/5；Token/模型请求/重试仍null。[完整证据与包SHA](five-same-release-r28.json)。
 - **报告显示修正**：r28原suite使用report0.5.3，发现L1均分95.625在Markdown显示95.62、Excel显示95.63。report0.5.4统一十进制ROUND_HALF_UP，另建`r28-report054`，未覆盖旧报告；原始overall/units/tasks/presentation/lineage完全一致，显示现为95.63，29项回归、10张表/10范围/公式扫描和全部视图检查通过。该补丁与r28原suite分开留证，不改写执行、评分或旧回执。`release-candidate-r29`纳入此报告补丁并完成构建，尚未发布，也不表示所有加固项通过。
+
+
+- **r30–r33 发送边界与恢复**：五个真实 SIGKILL 窗口覆盖 intent 前后、点击前后及接受确认后。点击返回后未落盘的发送仅凭原生用户确认恢复，同 attempt 不重发，未知点击返回时间保留 null；有 owner 证明的单题锁独占归档，journal 字节不变。已发送原请求活动时拒绝恢复；不确定零发送只读暂停。r33 在明确零发送后显式重试，新 attempt 一次发送，首次 collect/finalize/verify 完成。r30 执行与 r31 采集属于跨开发版本，不替代同发行验收。[发送恢复索引](interruptions-recovery-r30-r33.json)。
+- **r31 延迟采集、r33 清理故障**：真实约35分钟后采集5条工具账本，首次观测均在原TTL内，首次collect/finalize/verify完成；原生Map仍保留记录，未证明真实淘汰或35分钟任务。实际ps/lsof加时序barrier覆盖子进程重挂；真实inode替换使cleanup及正式finalizer拒绝发布，对照存活，原inode与文件恢复后verify通过。[账本与清理索引](cleanup-ledger-r31-r34.json)。
+- **r34–r37 交互与后台交付**：真实权限漂移、陌生弹窗、第二安装端点错配均发送0；陌生弹窗由Driver保留。独立授权fixture真实出现CDN iframe，新增原生授权与侧栏标记绑定，自动collector拒绝缺人工介入回执的结果。前台Success后仍残留后台Write，新门禁阻断新发送并拒绝原题完成；精确Abort未清除残留，保留证据后受控重启DoubaoWork，前台/后台/pending均0，权限恢复原值，外部标记文件始终不存在。未重启Codex、未重发Prompt，fixture不计能力分。[交互与重启索引](interactions-restart-r34-r37.json)。
+- **r37 正常与并发回归**：S1与纯回复S4各发送一次，原生峰值2，首次collect/finalize/verify均complete。任务耗时32/8秒、流程35.428/10.223秒、工具6/0次；Token与模型请求/重试仍不可用。本轮未评分或生成新报告。共享/General67项、Web64项测试通过，独立Web包真机probe通过，正式receipt/batch路由继续拒绝。[回归、包与指标索引](concurrency-packaging-r37.json)。
+- **r37b 发行候选**：修正r37内部Driver版本标记0.6.8与目录声明0.6.9的不一致，只改变lib.mjs常量和生成的组件摘要；三个独立包及完整General suite重新构建，三份vendor的19个文件保持同源，新增版本一致性检查后Python发行/布局21项通过。候选未发布，原r37包和执行材料未改写，未把版本标记修正记为新增真机执行。

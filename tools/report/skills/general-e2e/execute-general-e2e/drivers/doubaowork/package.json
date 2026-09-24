@@ -1,6 +1,6 @@
 {
   "name": "wildclawbench-doubaowork-general-adapter",
-  "version": "0.2.1",
+  "version": "0.2.8",
   "private": true,
   "type": "module",
   "dependencies": {

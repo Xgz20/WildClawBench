@@ -1,0 +1,296 @@
+{
+  "schema": "wildclawbench.doubaowork-general-hardening-evidence/v1",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "platform": "macos-x86-64",
+  "app_version": "2.31.3",
+  "source_baseline": "e91f22a",
+  "full_harness_admission": false,
+  "scope": "five dispatch boundaries, single-attempt owned stale-lock recovery, disconnect and explicit zero-send retry",
+  "windows": [
+    {
+      "revision": "r30",
+      "window": "after-click",
+      "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+      "attempt_id": "1d4aae78-a2ff-4679-b242-415ca12a8f03",
+      "durable_phase": "READY_TO_SEND",
+      "durable_send": {
+        "intent_persisted_at": "2026-09-24T03:25:42.068Z",
+        "dispatch_started_at": "2026-09-24T03:25:42.275Z",
+        "click_returned_at": null,
+        "accepted_at": null,
+        "dispatch_attempt_count": 1
+      },
+      "actual_prompt_sends": 1,
+      "injection": "test-only timing wrapper and real SIGKILL; original frozen driver performs UI calls"
+    },
+    {
+      "revision": "r31",
+      "window": "after-ack",
+      "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+      "attempt_id": "bdfdf6ab-5f8f-424a-b3ba-253b18392f3d",
+      "durable_phase": "PROMPT_SENT",
+      "durable_send": {
+        "intent_persisted_at": "2026-09-24T03:38:06.777Z",
+        "dispatch_started_at": "2026-09-24T03:38:06.989Z",
+        "click_returned_at": "2026-09-24T03:38:07.122Z",
+        "accepted_at": "2026-09-24T03:38:07.122Z",
+        "dispatch_attempt_count": 1
+      },
+      "actual_prompt_sends": 1,
+      "injection": "test-only timing wrapper and real SIGKILL; original frozen driver performs UI calls"
+    },
+    {
+      "revision": "r31",
+      "window": "intent",
+      "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+      "attempt_id": "d28cd727-ec89-44aa-9d70-ccd8d7a5e7a3",
+      "durable_phase": "READY_TO_SEND",
+      "durable_send": {
+        "intent_persisted_at": "2026-09-24T03:41:07.427Z",
+        "dispatch_started_at": null,
+        "click_returned_at": null,
+        "accepted_at": null,
+        "dispatch_attempt_count": 0
+      },
+      "actual_prompt_sends": 0,
+      "injection": "test-only timing wrapper and real SIGKILL; original frozen driver performs UI calls"
+    },
+    {
+      "revision": "r31",
+      "window": "before-click",
+      "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+      "attempt_id": "1ca9c2d4-d5ea-4bd6-8bc0-4551f30c50f9",
+      "durable_phase": "READY_TO_SEND",
+      "durable_send": {
+        "intent_persisted_at": "2026-09-24T03:40:46.391Z",
+        "dispatch_started_at": "2026-09-24T03:40:46.593Z",
+        "click_returned_at": null,
+        "accepted_at": null,
+        "dispatch_attempt_count": 1
+      },
+      "actual_prompt_sends": 0,
+      "injection": "test-only timing wrapper and real SIGKILL; original frozen driver performs UI calls"
+    },
+    {
+      "revision": "r33",
+      "window": "before-intent",
+      "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+      "attempt_id": "8ba156e1-29c8-4ba9-882c-7cd8617c54d0",
+      "durable_phase": "MODEL_CONFIRMED",
+      "durable_send": {
+        "intent_persisted_at": null,
+        "dispatch_started_at": null,
+        "click_returned_at": null,
+        "accepted_at": null,
+        "dispatch_attempt_count": 0
+      },
+      "actual_prompt_sends": 0,
+      "injection": "test-only timing wrapper and real SIGKILL; original frozen driver performs UI calls"
+    }
+  ],
+  "assertions": {
+    "same_attempt_no_resend": [
+      "after-click",
+      "after-ack"
+    ],
+    "uncertain_zero_send_readonly_resume": "paused without resend; durable dispatch count is not proof of an actual click",
+    "recovery_journal_bytes_unchanged": true,
+    "active_native_task_recovery": "rejected before reclaiming lock",
+    "recovered_click_returned_at": null,
+    "disconnect": "only the driver CDP connection was closed; old native success was invalidated on disk before connecting; collector refused until reconnect",
+    "explicit_retry": {
+      "old_attempt_id": "8ba156e1-29c8-4ba9-882c-7cd8617c54d0",
+      "new_attempt_id": "0d6c919a-f18a-4851-a67b-33224778ea8e",
+      "old_actual_sends": 0,
+      "new_actual_sends": 1,
+      "first_collect_finalize_verify": "PASS"
+    }
+  },
+  "formal_verification": {
+    "r30-verify-with-r31.json": "PASS",
+    "r31-after-ack-verify.json": "PASS",
+    "r33-retry-verify.json": "PASS"
+  },
+  "limits": [
+    "r30 execution and r31 collection are cross-development-version evidence.",
+    "Only same-host single-attempt locks with journal owner provenance can be recovered.",
+    "Managed queue stale-owner recovery, unproven historical owners and unattended recovery are not admitted."
+  ],
+  "artifacts": [
+    {
+      "path": "r30-fault-after-click-marker.json",
+      "sha256": "a2a6439a69ae6012b262bbb8e253bba881e2f5d089df4de40dfae75b28e560cc",
+      "size": 942
+    },
+    {
+      "path": "r30-after-click-recovery.json",
+      "sha256": "8ebe42407169969849e0d8f8f245167a800d4f6f9400f9218d26688d3ff17f4e",
+      "size": 386
+    },
+    {
+      "path": "r30-after-click-resume.json",
+      "sha256": "4828c5dbe7b87ceb6bcc3de7360caf02f020e1bdf7f9415a859d915fc0174b4e",
+      "size": 1170
+    },
+    {
+      "path": "r30-collect-with-r31.json",
+      "sha256": "4ec2db1a78a05d14ca1467118bd71b51e7ead2da9a92b34244a3d17c0d9f7381",
+      "size": 495
+    },
+    {
+      "path": "r30-finalize-with-r31.json",
+      "sha256": "592447ade4e2bdb9cd20cd2cd1ba8329a7b365ea051b767d740ae1c05db86bec",
+      "size": 969
+    },
+    {
+      "path": "r30-verify-with-r31.json",
+      "sha256": "9ea80406df056ddee2b2016b92e4f722ea6c1f24e85d8a669abc33153a53dcfc",
+      "size": 1419
+    },
+    {
+      "path": "r31-after-ack-marker.json",
+      "sha256": "3441f62a56612742fc79267dbd70b1c74350f473d390fe1186cb40c49f19734b",
+      "size": 1005
+    },
+    {
+      "path": "r31-after-ack-active-recovery.log",
+      "sha256": "f98c558c47a5a9e552440ae0a685b681a7b6ce994f8e2dea0e6a83de054cca69",
+      "size": 40
+    },
+    {
+      "path": "r31-after-ack-idle-recovery.json",
+      "sha256": "54f227ab69d79946677014c75123a263f02568046be13cea2205273a2ff2c423",
+      "size": 398
+    },
+    {
+      "path": "r31-after-ack-resume.json",
+      "sha256": "3575e8dcd43a3f737a6abb768dd620399519e79c22ebc3627261abfc5cc80bbb",
+      "size": 1182
+    },
+    {
+      "path": "r31-after-ack-collection.json",
+      "sha256": "00f547328770f93db010d4c1e131635c049c92f2f51344a59aec2cbb74b54de4",
+      "size": 501
+    },
+    {
+      "path": "r31-after-ack-finalize.json",
+      "sha256": "42d9348a2138a4be8df9e9ef09db3249a3d809bb57b86c6d306ba446999b1e47",
+      "size": 993
+    },
+    {
+      "path": "r31-after-ack-verify.json",
+      "sha256": "744c2916b092f228fd0a527c2713de0609adc322a32892de620264a0b8acf84c",
+      "size": 1431
+    },
+    {
+      "path": "r31-intent-marker.json",
+      "sha256": "1bb8e80fcbb4b436f9fcac63eaffa4e5bcfeba1e445c48315e09eb2bfbf46538",
+      "size": 900
+    },
+    {
+      "path": "r31-intent-recovery.json",
+      "sha256": "1eb65fe3044fae4a0fc940f01a77ee572cd376894264d6992182686ba88534ba",
+      "size": 395
+    },
+    {
+      "path": "r31-intent-zero-send-proof.json",
+      "sha256": "afc50bd8400a8cf0cd50945b6e6dd2cea2d1ab30be50b03f2b7d770c32d5250b",
+      "size": 2261
+    },
+    {
+      "path": "r31-before-click-marker.json",
+      "sha256": "14ae5dd5b289b6e6da0ae0b892213efe8eb8b0af4cb145f1d9e4ef41b4412885",
+      "size": 930
+    },
+    {
+      "path": "r31-before-click-recovery.json",
+      "sha256": "f224677a9b82e2cdb3044261cffea732cfb0fa5ee7a1aa897100912daba1e4f8",
+      "size": 401
+    },
+    {
+      "path": "r31-before-click-zero-send-proof.json",
+      "sha256": "2a827df20c4bd038e5188ee741192aa585ac77acfa862050b1ccb74164c52892",
+      "size": 2273
+    },
+    {
+      "path": "r31-disconnect-marker.json",
+      "sha256": "2a0a5e20fc19fcb3d9fc059965c635e89af52cfe1c5ce589014fbee0944e5d80",
+      "size": 400
+    },
+    {
+      "path": "r31-disconnect-collection-rejected.log",
+      "sha256": "bcb1b00796218487ec24e76fd95c3138bf39b97ac86aaff668628a8041db7e56",
+      "size": 41
+    },
+    {
+      "path": "r31-reconnect.json",
+      "sha256": "3575e8dcd43a3f737a6abb768dd620399519e79c22ebc3627261abfc5cc80bbb",
+      "size": 1182
+    },
+    {
+      "path": "r33-before-intent-marker.json",
+      "sha256": "4644df7b1b155357fd9f8d13d2ec3b0c1fd9cdfbff1ce28890864c1d8bd4b305",
+      "size": 902
+    },
+    {
+      "path": "r33-before-intent-recovery.json",
+      "sha256": "a501836a01fb56d88631d13c57a87407d74aa48ebe492a13155cea4592a562aa",
+      "size": 386
+    },
+    {
+      "path": "r33-before-intent-readonly-resume.log",
+      "sha256": "92e11ad72e10086d361c1ebfc9fcad57218bf88c2ba7d552c5fe8c8a30461bdc",
+      "size": 91
+    },
+    {
+      "path": "r33-before-intent-explicit-zero-send-retry.json",
+      "sha256": "3bcea2e9eb645273e6671ff62686db510af579a44fe113e95feed7fe6b53446d",
+      "size": 956
+    },
+    {
+      "path": "r33-retry-collect.json",
+      "sha256": "7623c95e4b0590d675af0655b74ed0b8bbba607b53200348bb7ea8f6a53124d6",
+      "size": 489
+    },
+    {
+      "path": "r33-retry-finalize.json",
+      "sha256": "907ebc26635c67c199bbe98d4e36f01a6812c57deeee34adf5ac6cf786fe2315",
+      "size": 969
+    },
+    {
+      "path": "r33-retry-verify.json",
+      "sha256": "14cfa1ead297a3063951825d1f2dd437b98aa653ba56e103d438c32a71008b9f",
+      "size": 1419
+    },
+    {
+      "path": "release-r30/skills/execute-general-e2e-skill-v0.11.3.zip",
+      "sha256": "d33405a16fdbbc39c02ba12e96f231aa6ac8ce4d1e03f18867fe0331b717b29e",
+      "size": 982379
+    },
+    {
+      "path": "release-r30/skills/collect-general-e2e-skill-v0.8.3.zip",
+      "sha256": "fe57910f1ce236467fb6433d3529b94b06aa77abe115e54f44593368d1d77169",
+      "size": 813176
+    },
+    {
+      "path": "release-r31/skills/execute-general-e2e-skill-v0.11.4.zip",
+      "sha256": "b37acdadf63c8590a5df4bf503bb0297d2dff8d29767b7a7db10973d8989d491",
+      "size": 983865
+    },
+    {
+      "path": "release-r31/skills/collect-general-e2e-skill-v0.8.4.zip",
+      "sha256": "ed814f053602031adadfa49d7efd3b878a5bc15b14ed2f8e5aea365e08f8bfba",
+      "size": 815832
+    },
+    {
+      "path": "release-r33/skills/execute-general-e2e-skill-v0.11.6.zip",
+      "sha256": "26920939b6381a4c0fae8145a1dc84ababe4322c152c3997ae1fb8f21e229094",
+      "size": 987041
+    },
+    {
+      "path": "release-r33/skills/collect-general-e2e-skill-v0.8.6.zip",
+      "sha256": "c6e36fb9892b3f7771156c28558e32d589d26b5b78a0f59e857b25152cc31fea",
+      "size": 816214
+    }
+  ]
+}

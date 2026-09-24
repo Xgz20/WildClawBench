@@ -56,6 +56,7 @@ export function normalizeRuntimePrompt(snapshot, state) {
   if (config.runtime_type !== 2 || config.agent_task_param?.runtime_type !== 2) throw new Error("DOUBAOWORK_NATIVE_RUNTIME_NOT_LOCAL");
   const assistant = messages.find(m => m.user_type === 2);
   const requestId = !assistant || assistant.reply_id === user.message_id ? requestIdentity(user, assistant) : null;
+  if (state.session.native_request_session_id && state.session.native_request_session_id !== requestId) throw new Error("DOUBAOWORK_RUNTIME_REQUEST_ID_MISMATCH");
   return { conversation_id: id, user_message_id: user.message_id, native_request_session_id: requestId, prompt, native_cwd: null, terminal: "unverified",
     binding_status: "acknowledged-user-input", final_text: null, finished_at: null, agent_duration_seconds: null };
 }

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { isAbsolute, join, normalize } from "node:path";
 
-export const DRIVER_VERSION = "0.6.2";
+export const DRIVER_VERSION = "0.6.9";
 export const PROBE_SCHEMA = "wildclawbench.doubaowork-readonly-probe/v1";
 export const NATIVE_EVIDENCE_SCHEMA = "wildclawbench.doubaowork-native-evidence/v1";
 export const DEFAULT_APP_PATH = "/Applications/DoubaoWork.app";

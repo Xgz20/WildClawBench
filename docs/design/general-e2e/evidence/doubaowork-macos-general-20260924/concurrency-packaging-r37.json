@@ -1,0 +1,350 @@
+{
+  "schema": "wildclawbench.doubaowork-general-hardening-evidence/v1",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "platform": "macos-x86-64",
+  "app_version": "2.31.3",
+  "source_baseline": "e91f22a",
+  "full_harness_admission": false,
+  "scope": "two new General tasks with background gate, standalone Web probe and route regression",
+  "same_release_execution_collection": true,
+  "new_scoring_or_report": false,
+  "versions": {
+    "shared_catalog": "0.6.9",
+    "execute_general": "0.11.9",
+    "collect_general": "0.8.9",
+    "execute_web": "1.17.9",
+    "r37_internal_driver_label": "0.6.8",
+    "r37b_internal_driver_label": "0.6.9",
+    "r37b_change": "only lib.mjs DRIVER_VERSION and generated component digest; r37 originals preserved"
+  },
+  "tasks": [
+    {
+      "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+      "attempt_id": "1b3ac452-0bde-4b97-889e-0f621fb9c9ba",
+      "dispatch_attempt_count": 1,
+      "trace_completeness": {
+        "status": "complete",
+        "omitted_event_count": 0,
+        "missing": []
+      },
+      "metrics": {
+        "usage": {
+          "input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "total_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_read_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_creation_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "reasoning_output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "requests": {
+          "request_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "request_attempt_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "tools": {
+          "call_count": {
+            "value": 6,
+            "status": "observed",
+            "basis": "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance"
+          }
+        },
+        "timing": {
+          "duration_seconds": {
+            "value": 35.428,
+            "status": "observed",
+            "basis": "Dispatch boundary to native-checkpoint.receivedMessages.extra.local_info.perf_mark_samples.task_finish.receiveTimestamp"
+          },
+          "agent_duration_seconds": {
+            "value": 32,
+            "status": "observed",
+            "basis": "Native elapsed_block end_time_s - start_time_s"
+          }
+        }
+      },
+      "first_collect_finalize_verify": "PASS",
+      "candidate_sha256": "402946787f5781e4d8bf180f52ada5379b88b6dfbfda3be61d71590767fd75ed",
+      "execution_record_sha256": "f2f8281968bf1c932982cef9581b9b01f43cc554cc7e476384e54fcb680766ff"
+    },
+    {
+      "task_id": "03_Social_Interaction_task_003_colleague_leave_reply",
+      "attempt_id": "7b36830a-5eb0-45dc-8570-62372cda2514",
+      "dispatch_attempt_count": 1,
+      "trace_completeness": {
+        "status": "complete",
+        "omitted_event_count": 0,
+        "missing": []
+      },
+      "metrics": {
+        "usage": {
+          "input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "total_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_read_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "cache_creation_input_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "reasoning_output_tokens": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "requests": {
+          "request_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          },
+          "request_attempt_count": {
+            "value": null,
+            "status": "unavailable",
+            "basis": "No verified native accounting profile for this metric"
+          }
+        },
+        "tools": {
+          "call_count": {
+            "value": 0,
+            "status": "observed",
+            "basis": "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance"
+          }
+        },
+        "timing": {
+          "duration_seconds": {
+            "value": 10.223,
+            "status": "observed",
+            "basis": "Dispatch boundary to native-checkpoint.receivedMessages.extra.local_info.perf_mark_samples.task_finish.receiveTimestamp"
+          },
+          "agent_duration_seconds": {
+            "value": 8,
+            "status": "observed",
+            "basis": "Native elapsed_block end_time_s - start_time_s"
+          }
+        }
+      },
+      "first_collect_finalize_verify": "PASS",
+      "candidate_sha256": "1ac1d99d2123fd4eaa234d95e989f85787d08473cd4e6b3d66648ade5af65592",
+      "execution_record_sha256": "5f92d0a3833a4e2f9dc5872c01b69427795eb293c18faefc9cedc02340096b50"
+    }
+  ],
+  "concurrency": {
+    "configured_run_slots": 2,
+    "ui_slots": 1,
+    "scheduling_occupancy": {
+      "value": 2,
+      "known_lower_bound": 2,
+      "covered_tasks": 2,
+      "missing_task_ids": []
+    },
+    "native_agent_overlap": {
+      "value": 2,
+      "known_lower_bound": 2,
+      "covered_tasks": 2,
+      "missing_task_ids": []
+    },
+    "native_source": "bound assistant elapsed_block.start_time_s/end_time_s",
+    "native_resolution_seconds": 1
+  },
+  "regression": {
+    "node_general_shared": {
+      "pass": 67,
+      "fail": 0
+    },
+    "node_web": {
+      "pass": 64,
+      "fail": 0
+    },
+    "python_layout_release": {
+      "pass": 21,
+      "fail": 0
+    },
+    "web_independent_probe": "PASS",
+    "web_formal_and_batch_routes": "still rejected",
+    "vendor_shared_files": 19
+  },
+  "limits": [
+    "r37 is an execution/collection regression, not a new scoring/report or full production closure.",
+    "r37b is an unpublished candidate with a version-label correction; no model rerun was attributed to it.",
+    "The post-run activity sampler observed no active tool deliveries; it does not establish positive peer-tool admission by itself."
+  ],
+  "artifacts": [
+    {
+      "path": "r37-batch.json",
+      "sha256": "c2719a86a5363cd4aba431d31f37320feb365d76c5aa813c1d1a09a3e9614ba3",
+      "size": 1218
+    },
+    {
+      "path": "r37-focused-node.log",
+      "sha256": "d41861d6e633296d58bdd2c6a68a232564b04ec0f094555ec69d93fa5132f95a",
+      "size": 6702
+    },
+    {
+      "path": "r37-web-node.log",
+      "sha256": "c7c076de90126648f115169158d38e0cf566e79bd82ec5abc2f018d36b71e54a",
+      "size": 5382
+    },
+    {
+      "path": "r37b-layout-release-tests.log",
+      "sha256": "78486888ad837c06aa8dfe5b9102eebaf44ef023a7d4d2df88e518dd2b273a6e",
+      "size": 120
+    },
+    {
+      "path": "r37b-package-delta.json",
+      "sha256": "fa6352d85effd6ecb8ee1ee47d72889a37dcd593b3111777d9ab6c09157c3fb7",
+      "size": 617
+    },
+    {
+      "path": "r37-web-frozen-route.json",
+      "sha256": "ff42b01448e8b6876a2ce9984586931b6fc6569044a29dbdcd795508da9c0b52",
+      "size": 203
+    },
+    {
+      "path": "probe-web-r37/probe.json",
+      "sha256": "da3b4d9cd7e6ec56b4cb9426514ae920d3aacd5383edecbed120041902eb8c97",
+      "size": 3394
+    },
+    {
+      "path": "r37-final-idle-proof.json",
+      "sha256": "311ea05b48f4f71e746f6e270e212bf219735057612efdd7992eb827063910cb",
+      "size": 629
+    },
+    {
+      "path": "r37b-suite-build.json",
+      "sha256": "028cb115294f28de123293a69222e3de28cf3341f5709bb4389cdd52335a7045",
+      "size": 681
+    },
+    {
+      "path": "r37-collect-02_Code_Intelligence_task_001_temperature_cli_fix.json",
+      "sha256": "866aa8f66750bfa8b97d3c80933986572fb62463414dd0868bdb5e2a3027b5c2",
+      "size": 539
+    },
+    {
+      "path": "r37-finalize-02_Code_Intelligence_task_001_temperature_cli_fix.json",
+      "sha256": "6bd4e5c2ab42ac946f6393cf0179e3f1d67598b29d442cacd996290c752118f7",
+      "size": 562
+    },
+    {
+      "path": "r37-verify-complete-02_Code_Intelligence_task_001_temperature_cli_fix.json",
+      "sha256": "4772b4969a8c43c9a2b2ca57ea8b73a3fa7219f3f696386935522e454820ef17",
+      "size": 1419
+    },
+    {
+      "path": "runs-r37/doubaowork-general-r37__doubaowork-macos/.general-e2e/collection/formal/02_Code_Intelligence_task_001_temperature_cli_fix/trace-index.json",
+      "sha256": "2979d4c52d1305aecaf2de80f07ad412e2350a36e2eebf8d2a5a709627d14f53",
+      "size": 3912
+    },
+    {
+      "path": "runs-r37/doubaowork-general-r37__doubaowork-macos/.general-e2e/collection/formal/02_Code_Intelligence_task_001_temperature_cli_fix/resource-metrics.json",
+      "sha256": "ab50d9768ca64dfcc8b89a5300f4c6356f8b7a2456312252e4441688f01f12ad",
+      "size": 5930
+    },
+    {
+      "path": "r37-collect-03_Social_Interaction_task_003_colleague_leave_reply.json",
+      "sha256": "014fe0fceee2aa12bd6851da27492828109c12bbe9963c4d66e326efec162106",
+      "size": 544
+    },
+    {
+      "path": "r37-finalize-03_Social_Interaction_task_003_colleague_leave_reply.json",
+      "sha256": "0d0d02d1f51ba1c39b08987a471e15b8060009bb0cb2e8829708b1d19a9f7878",
+      "size": 975
+    },
+    {
+      "path": "r37-verify-complete-03_Social_Interaction_task_003_colleague_leave_reply.json",
+      "sha256": "1d59e9feb2629a2645837a743af32915b440904a72eacb0a2da1911732e21982",
+      "size": 1421
+    },
+    {
+      "path": "runs-r37/doubaowork-general-r37__doubaowork-macos/.general-e2e/collection/formal/03_Social_Interaction_task_003_colleague_leave_reply/trace-index.json",
+      "sha256": "acb20474f9ac1c8f544c3e5f352571103327693e2bcad0eb282fb1d64ad11875",
+      "size": 2763
+    },
+    {
+      "path": "runs-r37/doubaowork-general-r37__doubaowork-macos/.general-e2e/collection/formal/03_Social_Interaction_task_003_colleague_leave_reply/resource-metrics.json",
+      "sha256": "4ffd90e22053d142676614107178cb1d8a7b0b626eb0d31d1bf60a9a45d7c515",
+      "size": 5492
+    },
+    {
+      "path": "affected-r37/collect-general-e2e-skill-v0.8.9.zip",
+      "sha256": "c99ffd79b90fb18e95e34ffae6e144d37914ddc24ae623b9fa4854fc06672d0b",
+      "size": 827461
+    },
+    {
+      "path": "affected-r37/execute-general-e2e-skill-v0.11.9.zip",
+      "sha256": "d02a63cb73465d02909f0dfa12df32d8e0db9fea9f11fbcb4990d0679c714652",
+      "size": 999055
+    },
+    {
+      "path": "affected-r37/execute-web-e2e-skill-v1.17.9.zip",
+      "sha256": "05c1e768aaa413528f904ee594f2ff1aefc664c887aa543d0b130dedb276e6c6",
+      "size": 937829
+    },
+    {
+      "path": "affected-r37b/collect-general-e2e-skill-v0.8.9.zip",
+      "sha256": "b9fd1c2e36669025f90925adf32439c3e5d3dcf262dfb823608db162e33195db",
+      "size": 827461
+    },
+    {
+      "path": "affected-r37b/execute-general-e2e-skill-v0.11.9.zip",
+      "sha256": "f87218489ae7393a2039560bcd4543723df986a46c1036d21bbf99e4a4ca0b47",
+      "size": 999055
+    },
+    {
+      "path": "affected-r37b/execute-web-e2e-skill-v1.17.9.zip",
+      "sha256": "2d9f4a7d17c6a2a8e45dda086f452b227b40097643f21be4b54dc0c9214b19d9",
+      "size": 937829
+    },
+    {
+      "path": "release-candidate-r37b/general-e2e-suite-doubaowork-general-r37b.zip",
+      "sha256": "fcbbd89bc4b7c83129248eb2ffc95e812a88beca8a673987f6680c8d3c89fe8b",
+      "size": 3341630
+    }
+  ]
+}
