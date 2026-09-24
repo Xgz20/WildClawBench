@@ -11,6 +11,8 @@ Web E2E 不给被评测 Harness 设置任务级执行时限。题目或数据集
 
 ## DoubaoWork macOS 开发入口
 
+`1.17.2` 将 DoubaoWork UI/一次发送/恢复/原生消息/清理核心迁入共享 `doubaowork` 组件，由构建器装配；本入口仍独立验证 Web prepared task 并使用 Web finalizer/回执门禁。General 的新运行和原生状态映射不代表 Web 已获生产准入，正式 receipt/batch 的现有拒绝条件仍保留。客户端更新后重新 probe；当前共享核心已适配 2.31.3 的本地模式、项目选择、模型按钮和 ProseMirror 编辑器，并提供路径字节预算预检、原生完成时点及工具账本留存。各采集能力仍需由场景 adapter 显式接入并独立验收。
+
 `drivers/doubaowork/driver.mjs` 只提供单题开发 canary 和已发送 attempt 的只读恢复；依赖在该 Driver 目录通过 `npm ci` 安装。输入必须是 prepare 生成的真实 DoubaoWork Web execution 单题根，选择“本地电脑 → 新建项目”，完整路径与当前模型/权限回读后最多发送一次。没有公共 run 路由、可信原生终态/cwd 和已验证的进程清理时，不产生有效正式 execution record/receipt，不进入评分或批量调度。使用与限制见 [Driver 说明](drivers/doubaowork/README.md)。
 
 ## AstronStudio

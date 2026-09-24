@@ -3,6 +3,7 @@ from collections import Counter
 import hashlib
 import json
 import re
+from report_display import fixed_number
 
 SECTION_KEYS = {"Prompt": "prompt", "Expected Behavior": "expected", "Grading Criteria": "criteria",
                 "Automated Checks": "checks", "Workspace Path": "workspace", "Skills": "skills",
@@ -138,7 +139,7 @@ def score_cell(row):
     if row is None:
         return None
     total = row["total_score"]
-    head = f"总分：{total * 100:.2f} / 100" if row["score_status"] == "valid" else f"总分：-（{row['score_status']}）"
+    head = f"总分：{fixed_number(total, multiplier=100)} / 100" if row["score_status"] == "valid" else f"总分：-（{row['score_status']}）"
     detail = checkpoint_text(row)
     return head + ("\n检查点得分（原始量纲）：\n" + detail if detail else "")
 

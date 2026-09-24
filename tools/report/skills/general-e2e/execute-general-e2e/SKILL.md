@@ -15,7 +15,21 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.10.27/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.11.2/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+
+## DoubaoWork macOS 开发入口
+
+`0.11.2` 提供 `drivers/doubaowork/driver.mjs` 与只读 `probe.mjs`；其控制与原生消息读取来自共用 `doubaowork` 组件，Web 入口使用同一源码。先在该 Driver 目录 `npm ci`，再运行 probe；General 只接受自身 execution manifest，不使用 Web prepared task 校验。单题入口为 `--unit-root ABS --task-id ID --project-name NAME`，默认保持当前权限并要求模型匹配 manifest；CLI 不选择模型或提升权限。
+
+更新客户端后必须重新 probe，并用与新版本匹配的新包；恢复拒绝版本、manifest、Prompt、场景与目录漂移。2.31.3 的模型控件和 ProseMirror 编辑器按唯一语义/作用域定位；新建任务后输入区仍可能保留旧项目，必须明确选择目标项目并回读。发送前检查 GUI 锁屏状态、完整目录、模型/权限与 Prompt，持久化意图后只发送一次；两个场景共享运行期 UI 锁。
+
+`--resume` 仅恢复观察。只有已确认发送 0 次、未落盘发送意图、完整项目/目录身份仍匹配的发送前失败，才可显式传 `--resume --retry-pre-send-failure`；原失败 journal 先归档。已发送或不确定发送不适用。原生 Prompt 从绑定 conversation 的 IM message Store 读取，不把 Markdown 渲染文本当成原文。
+
+开发队列入口为 `drivers/doubaowork/batch.mjs --unit-root ABS --queue-id ID --expected-permission LABEL --run-slots N`，N 接受 1–3，默认 1。先按 manifest 顺序预建全部项目并保存零发送 journal，再从每个精确 project 的编辑对话框只读回验完整目录（取消关闭），随后单槽发送并动态补位。恢复使用原冻结发行与 `--resume`；不确定发送不重发，未知活动会话或待交互暂停队列。原生并发按绑定助手的 elapsed 区间核算，字段缺失则 null，不能用槽位代替。
+
+发送前读取本机文件系统 NAME_MAX/PATH_MAX，按 UTF-8 字节校验 Workspace、Prompt、控制产物和原生 session 路径预算；拒绝链接、不可写目录及未知限制。发送前重试和恢复重新检查，未初始化的原生活动状态不能当作空闲。
+
+原生 Success、workspace、回复及按 cwd 隔离的本地工具回调交给 General collector；原生 checkpoint 的 task_finish.receiveTimestamp 只在完整身份绑定和时钟校验后用于流程耗时。发送前安装工具 observer，每秒只读留存本 attempt 已观察调用的 uploaded 结果账本，并保留首次观测时间；不刷新客户端 30 分钟 TTL，不改工具行为。完成后恢复回调、订阅和采样定时器。窗口占用和订阅显示另存原件，不能充当累计 Token。未完成场景收口时私有 journal 保留 attention。实际真机范围、独立发行和剩余准入项见仓库统一接入契约。
 
 ## WorkBuddy / QwenWork macOS 开发入口
 

@@ -1,0 +1,35 @@
+{
+  "schema": "wildclawbench.doubaowork-token-source-audit/v1",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "scope": "macOS x86_64 / DoubaoWork 2.31.3 / bound evaluation sessions",
+  "bound_conversations": 23,
+  "trajectory_files": 23,
+  "runtime_snapshots": 23,
+  "correlated_readable_log_lines": 4555,
+  "native_token_accounting_found": false,
+  "context_window_snapshots": 23,
+  "subscription_display_snapshots": 11,
+  "usage_name_false_positives": {
+    "moa_skill_usage": 5,
+    "meaning": "list of used skill names and paths; no token counts"
+  },
+  "uninspected_binary_logs": 2,
+  "conclusion": "No cumulative input/output/cache/total token accounting in inspected readable evidence. Context occupancy and unit-unspecified subscription display are not token usage. Binary alaudalog remains undecoded.",
+  "artifacts": [
+    {
+      "path": "audit-session-token-fields.py",
+      "sha256": "0baa94a665c13b32ba8f385c10fea80a83c5e89f761f2196396f1b367f5ec562",
+      "size": 6056
+    },
+    {
+      "path": "session-token-audit-r24.json",
+      "sha256": "118ca6af6a44e868598b59a34009425842e5c35b102432103f52b81f52b93cbd",
+      "size": 24767
+    },
+    {
+      "path": "session-token-audit-r24-expanded.json",
+      "sha256": "205eabfb602ea82d1ce429dd64833428c442b31af1dd2de44c2e59b5f8301398",
+      "size": 25885
+    }
+  ]
+}

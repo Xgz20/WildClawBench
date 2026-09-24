@@ -219,6 +219,9 @@ test("每次观察都要验证 conversation-project-workspace-Prompt 等价绑�
   assert.equal(confirmResumePromptReadback(state, valid, evidence), true);
   assert.equal(state.session.prompt_readback.status, "verified");
   assert.equal(confirmResumePromptReadback(state, valid, evidence), false);
+  state.workspace_selection.source = "unverified-path";
+  assert.throws(() => validateObservationBinding(state, valid), /workspace 回读/);
+  state.workspace_selection.source = "project-folder-tooltip";
 
   assert.throws(
     () => validateObservationBinding(state, { ...valid, current_conversation_id: "124" }),

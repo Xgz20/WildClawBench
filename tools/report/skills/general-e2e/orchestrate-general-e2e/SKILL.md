@@ -21,6 +21,8 @@ python -m eval_general_e2e skills --name orchestrate-general-e2e --json
 
 ## 责任边界
 
+`0.9.6` 把已绑定但仅工具轨迹不完整的窄范围情形交给冻结 score Skill 的 `prepare` 判定。编排器不自行降低轨迹要求；score `>=0.8.3` 仅允许已确认候选文件专用的 automated 规则，其余仍形成明确未评分状态。旧编排和旧回执不覆盖；新增评分入口或准入策略使用新的 orchestration/attempt。
+
 - 输入：有效执行回执、scoring 包和冻结裁判配置。
 - 输出：独立评分工作空间、评分队列、裁判任务状态和有效 submission。
 - 单题评分会话相互隔离；编排器负责调度，单题评分 Agent 不调度下一题。

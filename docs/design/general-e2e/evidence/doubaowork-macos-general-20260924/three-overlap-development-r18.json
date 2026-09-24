@@ -1,0 +1,74 @@
+{
+  "schema": "wildclawbench.doubaowork-general-queue-evidence/v1",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "batch_id": "doubaowork-general-r18",
+  "status": "NEEDS_ATTENTION",
+  "same_release_closure": false,
+  "configured_run_slots": 3,
+  "native_overlap_first_three": 3,
+  "dynamic_replenishment_verified": false,
+  "sent_task_count": 3,
+  "unsent_task_count": 2,
+  "tasks": [
+    {
+      "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+      "attempt_id": "65833bdd-f291-40e2-b531-3a8b519ac66e",
+      "dispatch_attempt_count": 1,
+      "terminal": "completed",
+      "native_started_at": "2026-09-23T19:36:08.000Z",
+      "native_finished_at": "2026-09-23T19:38:03.000Z",
+      "native_terminal_profile": "native-im-api-history/v1"
+    },
+    {
+      "task_id": "01_Productivity_Flow_task_005_support_handoff",
+      "attempt_id": "2e4f0aea-b5fb-41c6-9921-8a4c61246fd5",
+      "dispatch_attempt_count": 1,
+      "terminal": "completed",
+      "native_started_at": "2026-09-23T19:36:21.000Z",
+      "native_finished_at": "2026-09-23T19:38:50.000Z",
+      "native_terminal_profile": "native-im-api-history/v1"
+    },
+    {
+      "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+      "attempt_id": "ca299121-074a-433a-99da-70628fffb121",
+      "dispatch_attempt_count": 1,
+      "terminal": "completed",
+      "native_started_at": "2026-09-23T19:36:33.000Z",
+      "native_finished_at": "2026-09-23T19:37:03.000Z",
+      "native_terminal_profile": "native-im-api-history/v1"
+    }
+  ],
+  "recovery": "new native API-history reader; same original attempts; no resend",
+  "artifacts": [
+    {
+      "path": "runs-r18/doubaowork-general-r18__doubaowork-macos/.general-e2e/execution/01_Productivity_Flow_task_003_retro_agenda/doubaowork/automation_state.json",
+      "sha256": "8a2703df189fbd9e8ae491347e51fbfc5019e396652e989c9c382fbd0ab293d6",
+      "size": 24147
+    },
+    {
+      "path": "r18-readonly-recovery-01_Productivity_Flow_task_003_retro_agenda.json",
+      "sha256": "e5d58dba7d6186791c6100918d7e622367228453338fb95c6f07a51161d5d3f8",
+      "size": 5271
+    },
+    {
+      "path": "runs-r18/doubaowork-general-r18__doubaowork-macos/.general-e2e/execution/01_Productivity_Flow_task_005_support_handoff/doubaowork/automation_state.json",
+      "sha256": "045b508cbc33bee31b7a7fb1d7f69bd74c3d6771487c2d6a2d3ae15fd8c21b81",
+      "size": 23268
+    },
+    {
+      "path": "r18-readonly-recovery-01_Productivity_Flow_task_005_support_handoff.json",
+      "sha256": "c719089e5c3ef3bf3250e2f61236a7ba08b2ebbe8c46c57bc63c414cdc47e379",
+      "size": 5281
+    },
+    {
+      "path": "runs-r18/doubaowork-general-r18__doubaowork-macos/.general-e2e/execution/02_Code_Intelligence_task_001_temperature_cli_fix/doubaowork/automation_state.json",
+      "sha256": "0c22587a666dfdab23956a9b677b46028eb15c441a3c99028aa3544f0f68eaa2",
+      "size": 23356
+    },
+    {
+      "path": "r18-readonly-recovery-02_Code_Intelligence_task_001_temperature_cli_fix.json",
+      "sha256": "6b7cc030623994618b8b82d12ae8ec31c24e13f7167a113a08760db54da293bc",
+      "size": 5284
+    }
+  ]
+}

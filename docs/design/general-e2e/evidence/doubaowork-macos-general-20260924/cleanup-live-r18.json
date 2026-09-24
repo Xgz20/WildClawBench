@@ -1,0 +1,41 @@
+{
+  "schema": "wildclawbench.doubaowork-live-cleanup-evidence/v1",
+  "scope": "macos-x86-64 shared cleanup, owned synthetic processes",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "success": true,
+  "real_system_calls": true,
+  "signal_override": false,
+  "before_target_count": 2,
+  "after_target_count": 0,
+  "signals": [
+    "SIGTERM",
+    "SIGTERM",
+    "SIGKILL"
+  ],
+  "control_alive_after": true,
+  "quiet_observed_milliseconds": 9069,
+  "late_process_detected": false,
+  "full_harness_admission": false,
+  "artifacts": [
+    {
+      "path": "cleanup-live-r18.mjs",
+      "sha256": "6b23e14278de30e55c6b5c28da687a09e007ac022d608cc08516fd682c61936b",
+      "size": 2304
+    },
+    {
+      "path": "cleanup-live-r18/result.json",
+      "sha256": "83ac0b447646422600253703c2f41d000c8c167bd2e8837dbf7fdd05532ede16",
+      "size": 4170
+    },
+    {
+      "path": "cleanup-live-r18.log",
+      "sha256": "cbaa8506ad067f60edd3bcefb928e746bfb36a992c44c83d09da78af43a046fb",
+      "size": 226
+    },
+    {
+      "path": "skills-r18/collect-general-e2e/vendor/e2e-shared/doubaowork/process-cleanup.mjs",
+      "sha256": "ff93b2816a4db0fecc9f729a76305b4af62f3cfafef41ccd60145ec45de68397",
+      "size": 25233
+    }
+  ]
+}

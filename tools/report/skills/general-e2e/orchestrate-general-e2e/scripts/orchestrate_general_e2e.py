@@ -442,18 +442,23 @@ def _execution_summary(
         }
     elif evidence.get("completeness") != "complete":
         missing = evidence.get("missing")
-        resource_only_partial = (
+        # Only the frozen score Skill can decide whether this task's original
+        # rule requires the missing trace. Defer that narrow case to prepare;
+        # it rejects semantic/trace-consuming rules and validates raw hashes.
+        partial_admission_candidate = (
             evidence.get("completeness") == "partial"
             and isinstance(missing, list)
             and missing
-            and set(missing) <= {"resource_metrics_complete_coverage"}
+            and set(missing) <= {"resource_metrics_complete_coverage", "provider-request-coverage-unavailable", "native-tool-trajectory-incomplete"}
+            and (set(missing) <= {"resource_metrics_complete_coverage"}
+                 or (evidence.get("transcript_path") and evidence.get("trace_index_path")))
         )
-        if not resource_only_partial:
+        if not partial_admission_candidate:
             failure = {
                 "code": "EXECUTION_EVIDENCE_INCOMPLETE",
                 "message": "complete execution evidence is required for scoring",
             }
-    elif candidate.get("drift_status") != "stable" or candidate_sha is None:
+    if failure is None and (candidate.get("drift_status") != "stable" or candidate_sha is None):
         failure = {
             "code": "EXECUTION_CANDIDATE_NOT_STABLE",
             "message": "a stable frozen candidate is required for scoring",

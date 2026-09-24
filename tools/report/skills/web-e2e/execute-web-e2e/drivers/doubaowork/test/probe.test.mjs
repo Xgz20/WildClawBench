@@ -31,6 +31,7 @@ test("probe 只读核验应用、监听者和唯一 chat target", async () => {
     outputDir: "/private/evidence",
     captureSensitiveArtifacts: false,
   }, {
+    inspectGui: async () => ({ unlocked: true }),
     readAppIdentity: async () => ({
       app_path: "/Applications/DoubaoWork.app",
       bundle_id: "com.work.pc.doubao",

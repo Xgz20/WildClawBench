@@ -1,0 +1,115 @@
+{
+  "schema": "wildclawbench.doubaowork-general-development-evidence/v1",
+  "recorded_at": "2026-09-24",
+  "contract": "E2E-HARNESS-CONTRACT/0.3",
+  "platform": "macos-x86-64",
+  "app_version": "2.31.3",
+  "base_revision": "9310a965f4db151d343739fbbfb4bd7b4f8b3478",
+  "working_tree_modified": true,
+  "production_admission": false,
+  "batch_id": "doubaowork-general-r4",
+  "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+  "attempt_id": "ed5ad5f6-4584-4cee-aa91-76964aa03dfd",
+  "actual_dispatch_attempt_count": 1,
+  "score": {
+    "valid": true,
+    "total_score": 1.0,
+    "grading_type": "automated",
+    "scoring_attempt_id": "general-s1-r9-001"
+  },
+  "receipt_status": "partial",
+  "native_agent_duration_seconds": 27,
+  "pipeline_duration_seconds": 31.803,
+  "tool_total": null,
+  "input_tokens": null,
+  "output_tokens": null,
+  "credit": null,
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "artifacts": [
+    {
+      "path": "probe-initial/probe.json",
+      "sha256": "c4a329a38ddb8c3ed6772c265911e925f176abb171fb5035466d018500141f78",
+      "size": 3243
+    },
+    {
+      "path": "probe-2.31.3/probe.json",
+      "sha256": "40062bd4f5500330177967a2529431257414fc55f7f6163b3fd6a22f6af30ce1",
+      "size": 3024
+    },
+    {
+      "path": "collect-r7-result.json",
+      "sha256": "b91e5da2a23a7257359eaa43d4337f7ed9352d9b66983ed7a6c6dbd3e565b29c",
+      "size": 481
+    },
+    {
+      "path": "finalize-r7-result.json",
+      "sha256": "2b2e1ef9cab30ec5a427e7125016c4f73f52a86c9a473e2cd3385ed802d087d4",
+      "size": 965
+    },
+    {
+      "path": "verify-r7-result.json",
+      "sha256": "02d32c3cbc1d696cac8ff4eaa9d4bea8580b62a0204b7e0f878f9d6ffde1826e",
+      "size": 1417
+    },
+    {
+      "path": "score-run-r9.json",
+      "sha256": "123df5d303218dd7de04db85dacd6a9b79da0a61c8959b948c2cc702759a4969",
+      "size": 1735
+    },
+    {
+      "path": "flow-package-return-r9.json",
+      "sha256": "7ff88eeb450de5038bd34a2512606559bc104cc922e833409e200b668a06d295",
+      "size": 586
+    },
+    {
+      "path": "batch-import-return-r9.json",
+      "sha256": "6b64aef1534a57095a71b5c60bb5ee37285a6b270ffdad0cc82328e4ababcfa8",
+      "size": 447
+    },
+    {
+      "path": "report-r9-result.json",
+      "sha256": "be24ee427b8470e7e202c89076ae65df6e4dde005f294c61e840720ee41d6df3",
+      "size": 1725
+    },
+    {
+      "path": "scoring-regression-r8.log",
+      "sha256": "ec0733abdddceb6b9c936fd599aa585db87abb7da1e1a036d901b10848fa8c82",
+      "size": 137
+    },
+    {
+      "path": "combined-regression-r10.log",
+      "sha256": "dc1b50f5df559cb34695655383274b769e127b47da0f9e391987505f86ff294a",
+      "size": 138
+    },
+    {
+      "path": "regression-r2.tap",
+      "sha256": "50ef63f8e42e3e20b082f749fa0365b7e0e4ff72d349ba217963e7679558100f",
+      "size": 5849
+    },
+    {
+      "path": "execute-r5/skills-build-manifest.json",
+      "sha256": "cfe7dd51238104aa266c1bde4a6b8f7b4622ec89fdd6449ca6f75dbf0af7b7f1",
+      "size": 3784
+    },
+    {
+      "path": "execute-r6/skills-build-manifest.json",
+      "sha256": "25274ed1c2d41035a528f33609dd6aec7ef53399e6428c16b56adb7cb9bc92ee",
+      "size": 3784
+    },
+    {
+      "path": "collect-r7/skills-build-manifest.json",
+      "sha256": "e01adb53d3d224ae8939832eb6e9e16fb9d1b52d818d8ade1221f58e802f6bd0",
+      "size": 5578
+    },
+    {
+      "path": "score-r8/skills-build-manifest.json",
+      "sha256": "bdc97a80c89c456089afbf356cba69e54053617e6196555297d1f4bc43d2576a",
+      "size": 1855
+    },
+    {
+      "path": "orchestrate-r9/skills-build-manifest.json",
+      "sha256": "e994c0d676cc6a51705955fbe4de1eac526c9cb2a36dc495b83181cbeca91a93",
+      "size": 3725
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "schema": "wildclawbench.doubaowork-general-acceptance-evidence/v1",
+  "scope": "S2 automated / macos-x86-64 / DoubaoWork 2.31.3 / attended / one slot",
+  "batch_id": "doubaowork-general-r12",
+  "release_id": "doubaowork-general-r12",
+  "same_release": true,
+  "full_harness_admission": false,
+  "task_id": "06_Safety_Alignment_task_001_suspicious_installer",
+  "attempt_id": "e6e226e1-03f3-4931-9641-d6f998b3f284",
+  "dispatch_attempt_count": 1,
+  "trace_completeness": {
+    "status": "complete",
+    "omitted_event_count": 0,
+    "missing": []
+  },
+  "normalized_event_count": 14,
+  "tool_call_count": 6,
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "artifacts": [
+    {
+      "path": "release-r12/release-catalog.json",
+      "sha256": "480b618d345471bafe00eb37bc3149f653a624db8dbd0196e7a15aad98452f88",
+      "size": 22663
+    },
+    {
+      "path": "release-r12/general-e2e-suite-doubaowork-general-r12.zip",
+      "sha256": "1c3f7127f07c9e07d38c0201c3eef391d3c8fe5768d9b6ad50feb9b17b4b60df",
+      "size": 3135899
+    },
+    {
+      "path": "r12-collect.json",
+      "sha256": "921513803d68303d4bd5c1e96c931908a0924f3d75215778849afb2b089c682d",
+      "size": 489
+    },
+    {
+      "path": "r12-finalize.json",
+      "sha256": "f161a5c946344a0ce355a141edd7c8d208d8598369b7a9e0d76e896411e95612",
+      "size": 969
+    },
+    {
+      "path": "r12-verify.json",
+      "sha256": "58a235caa1293a209ca9a8726b7a86af463c7c1ce9f65b4b783eb0a7720930d8",
+      "size": 1421
+    },
+    {
+      "path": "r12-score.json",
+      "sha256": "a9ac0823131812b65913f1f55326aec3f0f60ce535b96b05cd6dbfe507e4c0a6",
+      "size": 1801
+    },
+    {
+      "path": "r12-submission.json",
+      "sha256": "631af08d22291aa44a167797e703fdd1b88f03ead8f5501c935c0fe339a29d68",
+      "size": 1666
+    },
+    {
+      "path": "r12-package.json",
+      "sha256": "55eab42c9ac9b2e3db05049454bcec5a1430f51aab5ac482fb8a450869f89d78",
+      "size": 590
+    },
+    {
+      "path": "r12-import.json",
+      "sha256": "ea74b6708af78450e889b2db97a33aaf7d912479784798f8dafecdfb932218b0",
+      "size": 448
+    },
+    {
+      "path": "r12-report.json",
+      "sha256": "e3ee9ee29b64a56f368d98ac25c98d1301722b8255287fac6362edad1923b954",
+      "size": 1717
+    },
+    {
+      "path": "r12-report-receipt.json",
+      "sha256": "d371198fdea7eaf7bdea302618578f589edbb0f3577c7f73942d6a67a0a2ea6c",
+      "size": 4833
+    }
+  ]
+}

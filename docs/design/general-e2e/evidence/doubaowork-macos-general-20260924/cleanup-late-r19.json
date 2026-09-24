@@ -1,0 +1,40 @@
+{
+  "schema": "wildclawbench.doubaowork-live-cleanup-evidence/v1",
+  "scope": "macos-x86-64 shared cleanup, late owned process enters isolated workspace",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "success": true,
+  "real_system_calls": true,
+  "signal_override": false,
+  "before_target_count": 0,
+  "after_target_count": 0,
+  "signals": [
+    "SIGTERM",
+    "SIGKILL"
+  ],
+  "control_alive_after": true,
+  "quiet_observed_milliseconds": 14625,
+  "late_process_detected": true,
+  "full_harness_admission": false,
+  "artifacts": [
+    {
+      "path": "cleanup-late-r19.mjs",
+      "sha256": "97739101965654c2c3c3e202c863473908b18f9af1aa1204c62f8f2f3c4baba1",
+      "size": 2042
+    },
+    {
+      "path": "cleanup-late-r19/result.json",
+      "sha256": "780d45472ec39f9cb2bac14b1878fde54481e195c7aca3ee7cd58cc7d273e795",
+      "size": 2630
+    },
+    {
+      "path": "cleanup-late-r19.log",
+      "sha256": "0517dd6a498a8b75ccd863a06938059c381fc569949ccc3d700222e1752ddb36",
+      "size": 98
+    },
+    {
+      "path": "skills-r19/collect-general-e2e/vendor/e2e-shared/doubaowork/process-cleanup.mjs",
+      "sha256": "ff93b2816a4db0fecc9f729a76305b4af62f3cfafef41ccd60145ec45de68397",
+      "size": 25233
+    }
+  ]
+}

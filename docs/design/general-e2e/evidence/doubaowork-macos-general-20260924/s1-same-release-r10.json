@@ -1,0 +1,78 @@
+{
+  "schema": "wildclawbench.doubaowork-general-acceptance-evidence/v1",
+  "scope": "S1 automated / macos-x86-64 / DoubaoWork 2.31.3 / attended / one slot",
+  "batch_id": "doubaowork-general-r10",
+  "same_release": true,
+  "release_id": "doubaowork-general-r10",
+  "base_revision": "9310a965f4db151d343739fbbfb4bd7b4f8b3478",
+  "working_tree_modified": true,
+  "full_harness_admission": false,
+  "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+  "score": {
+    "valid": true,
+    "total_score": 1.0
+  },
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "artifacts": [
+    {
+      "path": "release-r10/release-catalog.json",
+      "sha256": "fe4b4d5c7cef1de378f86b69b7564267b6734360ee59ee84be85b47a9336fa1c",
+      "size": 22663
+    },
+    {
+      "path": "release-r10/general-e2e-suite-doubaowork-general-r10.zip",
+      "sha256": "5ed8ed1cdc36bbac2617a7b93194f074e7ac54e6b798495f6d6405925dbb905b",
+      "size": 3078248
+    },
+    {
+      "path": "r10-collect.json",
+      "sha256": "9b0705eb9b7a1ccf308d3b2a68d77b63eb549d6d035678263d2fb4e0e600c425",
+      "size": 484
+    },
+    {
+      "path": "r10-finalize.json",
+      "sha256": "e8534b73e343b7469cbce63743693f7c61c7e62e6ef956c184606093cfc08f88",
+      "size": 969
+    },
+    {
+      "path": "r10-verify.json",
+      "sha256": "da7e97a8be167314efac74bdabba71afbe430cb05135d6f669e300c2c29e2845",
+      "size": 1419
+    },
+    {
+      "path": "r10-score.json",
+      "sha256": "7bbee5774a15d90783f2c3c40e7fd473e22a78425fbb1c85cef78173c5c94476",
+      "size": 1745
+    },
+    {
+      "path": "r10-submission.json",
+      "sha256": "19f753b94632652489419d1b3ee585f1b00dc75bca3b1a6a0bcd159cf7262efb",
+      "size": 1610
+    },
+    {
+      "path": "r10-package.json",
+      "sha256": "4cbb63371dbbf13e4f76aee88221f2abda9adb143b8c7545774f2ffa44680137",
+      "size": 590
+    },
+    {
+      "path": "r10-import.json",
+      "sha256": "84bb2824ec39ee6d0739cf39cfd3f669d8b76b6374e97edfaa2a514ae9318c0f",
+      "size": 448
+    },
+    {
+      "path": "r10-report.json",
+      "sha256": "aae40961c774f453f93316a8f113c3fa97cdc0f4828c850c5108806fe0f699ab",
+      "size": 1744
+    },
+    {
+      "path": "r10-report-receipt.json",
+      "sha256": "4f16e450fb5d049dde1b436ad98775affcc157b8380ce424e879683f306ba918",
+      "size": 4836
+    },
+    {
+      "path": "full-doubao-regression-r10.tap",
+      "sha256": "2bf54215490880abede16770dd13d35afd33ff61a738f31dbec441e3a9241b13",
+      "size": 6731
+    }
+  ]
+}

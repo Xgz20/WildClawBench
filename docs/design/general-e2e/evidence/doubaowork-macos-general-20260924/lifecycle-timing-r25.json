@@ -1,0 +1,132 @@
+{
+  "schema": "wildclawbench.doubaowork-general-acceptance-evidence/v1",
+  "scope": "r25 two native concurrent tasks / same-release initial collect and verify / no scoring requested",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "same_release": true,
+  "full_harness_admission": false,
+  "tasks": [
+    {
+      "identity": {
+        "batch_id": "doubaowork-general-r25",
+        "unit_id": "doubaowork-macos",
+        "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+        "attempt_id": "f2f1a21f-5880-464a-809b-208034d977a9"
+      },
+      "dispatch_attempt_count": 1,
+      "trace_completeness": {
+        "status": "complete",
+        "omitted_event_count": 0,
+        "missing": []
+      },
+      "timing": {
+        "duration_seconds": {
+          "value": 29.698,
+          "status": "observed",
+          "basis": "Dispatch boundary to native-checkpoint.receivedMessages.extra.local_info.perf_mark_samples.task_finish.receiveTimestamp"
+        },
+        "agent_duration_seconds": {
+          "value": 27,
+          "status": "observed",
+          "basis": "Native elapsed_block end_time_s - start_time_s"
+        }
+      },
+      "tools": {
+        "call_count": {
+          "value": 5,
+          "status": "observed",
+          "basis": "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance"
+        }
+      }
+    },
+    {
+      "identity": {
+        "batch_id": "doubaowork-general-r25",
+        "unit_id": "doubaowork-macos",
+        "task_id": "03_Social_Interaction_task_003_colleague_leave_reply",
+        "attempt_id": "5c2f13ba-43c9-4ca7-a546-6c44304f386c"
+      },
+      "dispatch_attempt_count": 1,
+      "trace_completeness": {
+        "status": "complete",
+        "omitted_event_count": 0,
+        "missing": []
+      },
+      "timing": {
+        "duration_seconds": {
+          "value": 12.398,
+          "status": "observed",
+          "basis": "Dispatch boundary to native-checkpoint.receivedMessages.extra.local_info.perf_mark_samples.task_finish.receiveTimestamp"
+        },
+        "agent_duration_seconds": {
+          "value": 10,
+          "status": "observed",
+          "basis": "Native elapsed_block end_time_s - start_time_s"
+        }
+      },
+      "tools": {
+        "call_count": {
+          "value": 0,
+          "status": "observed",
+          "basis": "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance"
+        }
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "release-r25/release-catalog.json",
+      "sha256": "20eae4a9c58aa8f5cbe8b221255d43f237eee2ef86dd62ef0db5545c9b662a5c",
+      "size": 22663
+    },
+    {
+      "path": "release-r25/general-e2e-suite-doubaowork-general-r25.zip",
+      "sha256": "f2be06a877541ee98b88485fc51c6cb49c937dbee1046a77df92f528c7ae7d1a",
+      "size": 3258163
+    },
+    {
+      "path": "r25-history-timing-proof.json",
+      "sha256": "e2894e660e46b7b701f4303d26af18a4c8ca564955bf3b8887206ed0085542a8",
+      "size": 463348
+    },
+    {
+      "path": "runs-r25/doubaowork-general-r25__doubaowork-macos/.general-e2e/collection/formal/02_Code_Intelligence_task_001_temperature_cli_fix/trace-index.json",
+      "sha256": "fc842c9503f8768818f670b33f0963cfaab4a3d65cb5025a7fe55958bea4abf3",
+      "size": 3622
+    },
+    {
+      "path": "runs-r25/doubaowork-general-r25__doubaowork-macos/.general-e2e/collection/formal/02_Code_Intelligence_task_001_temperature_cli_fix/resource-metrics.json",
+      "sha256": "0bd744a838e2853f0434f013741a5ce0afaf58579963d9d1d82b4fa5063e75e6",
+      "size": 5930
+    },
+    {
+      "path": "r25-finalize-02_Code_Intelligence_task_001_temperature_cli_fix.json",
+      "sha256": "197023669d251ab30722cec593c4da30ab9e671f01d6f2923ba239c9f46777db",
+      "size": 562
+    },
+    {
+      "path": "r25-verify-02_Code_Intelligence_task_001_temperature_cli_fix.json",
+      "sha256": "86f9b8a0b02f062b031affe62bd55f5abb88dec47c7ecc38e76c2891a73ceee7",
+      "size": 1419
+    },
+    {
+      "path": "runs-r25/doubaowork-general-r25__doubaowork-macos/.general-e2e/collection/formal/03_Social_Interaction_task_003_colleague_leave_reply/trace-index.json",
+      "sha256": "986c9add5a50e11ed488cad41411ff5cc8e1da6e5eb35b1fc00d12008ea07fe8",
+      "size": 2597
+    },
+    {
+      "path": "runs-r25/doubaowork-general-r25__doubaowork-macos/.general-e2e/collection/formal/03_Social_Interaction_task_003_colleague_leave_reply/resource-metrics.json",
+      "sha256": "b4d8798e40c099fa6cdd89f1662def6d8c4670835f36d48a9514b72aee715652",
+      "size": 5492
+    },
+    {
+      "path": "r25-finalize-03_Social_Interaction_task_003_colleague_leave_reply.json",
+      "sha256": "98238e0f3443313973f39e86ba5d94d470a1239ac2044a6dd1177d79f007a895",
+      "size": 975
+    },
+    {
+      "path": "r25-verify-03_Social_Interaction_task_003_colleague_leave_reply.json",
+      "sha256": "4bc55a3ad3ecdae76afca8e9f56dae02edbe02c34ac7405b3604e6b4b457d965",
+      "size": 1421
+    }
+  ]
+}

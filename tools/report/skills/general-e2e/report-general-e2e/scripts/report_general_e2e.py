@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 import hashlib
@@ -22,6 +23,7 @@ from typing import Any, Iterable, Mapping, Sequence
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import report_views
 import report_case_views
+from report_display import fixed_number
 
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
 IMPORT_INDEX_SCHEMA = "wildclawbench.general-e2e-import-index/v1"
@@ -579,6 +581,62 @@ def workbuddy_resource_supplement(root: Path, task_id: str, execution_path: Path
         raise ReportError(f"RESOURCE_SUPPLEMENT_INVALID: {task_id}: {exc}") from exc
 
 
+def doubao_resource_projection(unit_root: Path, execution: Mapping[str, Any], metrics: Mapping[str, Any], metrics_path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], bool]:
+    """Withhold unsupported historical claims without changing frozen files."""
+    projected = copy.deepcopy(metrics)
+    collection = projected["collection"]
+    if collection.get("collector") != "doubaowork-native-evidence":
+        raise ReportError("DOUBAOWORK_REPORT_COLLECTOR_UNSUPPORTED")
+
+    def bound_source(relative: str) -> tuple[dict[str, Any], str]:
+        refs = [r for r in collection.get("sources", []) if r.get("path") == relative]
+        if len(refs) != 1:
+            raise ReportError("DOUBAOWORK_REPORT_SOURCE_AMBIGUOUS")
+        ref = refs[0]
+        path = resolve_file(metrics_path.parent, relative, "Doubao resource source")
+        if sha256_file(path) != ref.get("sha256") or path.stat().st_size != ref.get("size"):
+            raise ReportError("DOUBAOWORK_REPORT_SOURCE_DRIFT")
+        document = read_json(path)
+        if document.get("identity") != execution.get("identity"):
+            raise ReportError("DOUBAOWORK_REPORT_SOURCE_IDENTITY_MISMATCH")
+        return document, ref["sha256"]
+
+    trace, trace_sha = bound_source("trace/trace-index.json")
+    trace_path = resolve_file(unit_root, execution["evidence"]["trace_index_path"], "Doubao trace index")
+    if trace_path != resolve_file(metrics_path.parent, "trace/trace-index.json", "Doubao metric trace"):
+        raise ReportError("DOUBAOWORK_REPORT_TRACE_SCOPE_MISMATCH")
+    state, state_sha = bound_source("execution/automation-state.json")
+    adjustments = []
+    call_metric = projected["metrics"]["tools"]["call_count"]
+    if trace.get("completeness", {}).get("status") != "complete":
+        known = numeric(call_metric.get("value"))
+        if known is not None:
+            call_ids = [item.get("call_id") for item in trace.get("calls", [])]
+            if any(not isinstance(cid, str) or not cid for cid in call_ids) or len(set(call_ids)) != len(call_ids) or known != len(call_ids):
+                raise ReportError("DOUBAOWORK_REPORT_TOOL_SUBTOTAL_MISMATCH")
+            known = len(call_ids)
+            adjustments.append({"field": "call_count", "original": copy.deepcopy(call_metric),
+                "reason": "Partial Doubao trace does not certify a tool total", "source_sha256": trace_sha})
+            collection.setdefault("known_subtotals", {})["call_count"] = known
+            call_metric.update(value=None, status="partial", basis="Partial native trace; retained tool count is a known subtotal")
+            collection.setdefault("coverage", {})["call_count"] = {"known": known, "total": None, "unit": "tool-call"}
+    finish_source = state.get("extensions", {}).get("doubaowork", {}).get("native_sources", {}).get("finished_at")
+    comparable = finish_source in {
+        "assistant.local_info.perf_mark_samples.task_finish.receiveTimestamp",
+        "native-checkpoint.receivedMessages.extra.local_info.perf_mark_samples.task_finish.receiveTimestamp",
+    }
+    if not comparable:
+        metric = projected["metrics"]["timing"]["duration_seconds"]
+        adjustments.append({"field": "duration_seconds", "original": copy.deepcopy(metric),
+            "reason": "Client dispatch and native finish do not have a verified common clock", "source_sha256": state_sha})
+        metric.update(value=None, status="unavailable", basis="Client dispatch and native server finish have different or unverified clock domains")
+        collection.setdefault("coverage", {})["duration_seconds"] = {"known": 0, "total": None, "unit": "turn"}
+        collection.setdefault("known_subtotals", {}).pop("duration_seconds", None)
+    if adjustments:
+        collection["status"] = "partial"
+    return projected, adjustments, comparable
+
+
 def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], submission_task: Mapping[str, Any]) -> dict[str, Any]:
     root = selected["root"]
     unit = selected["unit"]
@@ -667,6 +725,10 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
             request_metric.update(value=None, status="unavailable", basis="Legacy WorkBuddy top-level request count is not a model response count; JSONL supplement required")
             metrics["collection"].setdefault("coverage", {})["request_count"] = {"known": 0, "total": None, "unit": "model_response"}
             metrics["collection"].get("known_subtotals", {}).pop("request_count", None)
+    resource_adjustments = []
+    timing_clock_comparable = unit["harness"]["id"] != "doubaowork"
+    if metrics and unit["harness"]["id"] == "doubaowork":
+        metrics, resource_adjustments, timing_clock_comparable = doubao_resource_projection(root / "unit", execution, metrics, metrics_path)
     resource = {field: metric_observation(metrics, field) for field, _, _ in RESOURCE_FIELDS}
     judge = score.get("judge") if score else None
     components = score.get("components") if score else None
@@ -696,6 +758,7 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
         "execution_error": execution["execution"].get("error"),
         "execution_started_at": execution["execution"]["started_at"],
         "execution_finished_at": execution["execution"]["finished_at"],
+        "timing_clock_comparable": timing_clock_comparable,
         "evidence_completeness": execution["evidence"]["completeness"],
         "score_status": submission_task["score_status"],
         "scoring_attempt_id": submission_task["scoring_attempt_id"],
@@ -720,6 +783,7 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
             "resource_supplement_sha256": supplement["supplement_sha256"] if supplement else None,
             "timing_supplement_sha256": timing_supplement["supplement_sha256"] if timing_supplement else None,
             "base_resource_metrics_sha256": (timing_supplement or supplement or {}).get("base_resource_sha256"),
+            "report_resource_adjustments": resource_adjustments,
         },
     }
 
@@ -801,7 +865,8 @@ def resource_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
 def timing_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     starts = [parse_timestamp(row.get("execution_started_at")) for row in rows]
     finishes = [parse_timestamp(row.get("execution_finished_at")) for row in rows]
-    observed_pairs = [(start, finish) for start, finish in zip(starts, finishes) if start and finish and finish >= start]
+    observed_pairs = [(start, finish) for row, start, finish in zip(rows, starts, finishes)
+                      if row.get("timing_clock_comparable", True) and start and finish and finish >= start]
     wall_clock = None
     if len(observed_pairs) == len(rows) and observed_pairs:
         wall_clock = (max(finish for _, finish in observed_pairs) - min(start for start, _ in observed_pairs)).total_seconds()
@@ -898,7 +963,7 @@ def shown(value: object, digits: int = 4) -> str:
     if value is None:
         return "—"
     if isinstance(value, float):
-        return f"{value:.{digits}f}".rstrip("0").rstrip(".")
+        return fixed_number(value, digits).rstrip("0").rstrip(".")
     return str(value)
 
 
@@ -1012,7 +1077,8 @@ def render_markdown(data: Mapping[str, Any]) -> str:
                     cells.append("-")
                 elif isinstance(value, (int, float)):
                     digits = len(fmt.split(".")[1].replace("%", "")) if "." in fmt else 0
-                    cells.append(f"{value * 100 if '%' in fmt else value:,.{digits}f}" + ("%" if "%" in fmt else ""))
+                    cells.append(fixed_number(value, digits, grouping=True, multiplier=100 if '%' in fmt else 1)
+                                 + ("%" if "%" in fmt else ""))
                 else:
                     cells.append(value)
             rows.append(cells)

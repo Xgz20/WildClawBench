@@ -476,6 +476,21 @@ class ReportGeneralE2ETests(unittest.TestCase):
         self.assertEqual(receipt["scope"]["unit_id"], "batch")
         self.assertEqual(receipt["task_ids"], TASKS)
 
+    def test_display_rounding_matches_excel_without_changing_source_values(self) -> None:
+        # Real r28 L1 average: Python's default .2f rounded this to 95.62,
+        # whereas Excel's 0.00 number format displays 95.63.
+        data = self.data()
+        view = data["presentation"]["tables"]["难度对比"]
+        view["rows"][0][1] = 95.625
+        before = copy.deepcopy(data)
+        self.assertIn("95.63", REPORT.render_markdown(data))
+        self.assertEqual(data, before)
+        self.assertEqual(REPORT.fixed_number(0.95625, multiplier=100), "95.63")
+        self.assertEqual(REPORT.fixed_number(0.145, 0, multiplier=100), "15")
+        self.assertEqual(REPORT.fixed_number(0), "0.00")
+        self.assertEqual(REPORT.fixed_number(1234.565, grouping=True), "1,234.57")
+        self.assertEqual(REPORT.fixed_number(-95.625), "-95.63")
+
     def test_resource_summary_distinguishes_full_and_fully_missing(self) -> None:
         complete_rows = []
         missing_rows = []
@@ -574,6 +589,58 @@ class ReportGeneralE2ETests(unittest.TestCase):
             )
         )
         self.assertEqual(recorded["state"]["stages"]["report"], "COMPLETED")
+
+
+class DoubaoResourceProjectionTests(unittest.TestCase):
+    def fixture(self, root, *, complete=False, live=False):
+        identity = {"task_id": "task", "attempt_id": "attempt"}
+        metrics_root = root / "evidence/task/attempt"
+        trace = {"identity": identity, "completeness": {"status": "complete" if complete else "partial"},
+                 "calls": [{"call_id": f"call-{i}"} for i in range(0 if complete else 13)]}
+        state = {"identity": identity, "extensions": {"doubaowork": {"native_sources": {"finished_at":
+            "assistant.local_info.perf_mark_samples.task_finish.receiveTimestamp" if live else "assistant.ext.finish_time_ms (native server completion)"}}}}
+        sources = []
+        for relative, value in [("trace/trace-index.json", trace), ("execution/automation-state.json", state)]:
+            path = metrics_root / relative
+            write_json(path, value)
+            sources.append({"path": relative, "sha256": sha256(path), "size": path.stat().st_size})
+        metrics = {"collection": {"collector": "doubaowork-native-evidence", "status": "partial", "sources": sources,
+            "coverage": {}, "known_subtotals": {}}, "metrics": {"tools": {"call_count": {"value": 13, "status": "observed", "basis": "legacy"}},
+            "timing": {"duration_seconds": {"value": 100, "status": "observed", "basis": "legacy"},
+                "agent_duration_seconds": {"value": 90, "status": "observed", "basis": "native same-clock interval"}}}}
+        execution = {"identity": identity, "evidence": {"trace_index_path": "evidence/task/attempt/trace/trace-index.json"}}
+        return execution, metrics, metrics_root / "resource-metrics.json"
+
+    def test_withholds_partial_total_and_cross_clock_duration_without_changing_original(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            execution, metrics, path = self.fixture(root)
+            original = copy.deepcopy(metrics)
+            projected, adjustments, comparable = REPORT.doubao_resource_projection(root, execution, metrics, path)
+            self.assertEqual(metrics, original)
+            self.assertIsNone(projected["metrics"]["tools"]["call_count"]["value"])
+            self.assertEqual(projected["collection"]["known_subtotals"]["call_count"], 13)
+            self.assertIsNone(projected["metrics"]["timing"]["duration_seconds"]["value"])
+            self.assertEqual(projected["metrics"]["timing"]["agent_duration_seconds"]["value"], 90)
+            self.assertFalse(comparable)
+            self.assertEqual(len(adjustments), 2)
+            row = {"execution_started_at": "2026-09-23T00:00:00Z", "execution_finished_at": "2026-09-23T00:01:40Z",
+                "timing_clock_comparable": comparable, "resource": {field: REPORT.metric_observation(projected, field) for field, _, _ in REPORT.RESOURCE_FIELDS}}
+            self.assertIsNone(REPORT.timing_summary([row])["batch_wall_clock_seconds"])
+
+    def test_complete_live_zero_is_preserved_and_source_drift_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            execution, metrics, path = self.fixture(root, complete=True, live=True)
+            metrics["metrics"]["tools"]["call_count"]["value"] = 0
+            projected, adjustments, comparable = REPORT.doubao_resource_projection(root, execution, metrics, path)
+            self.assertEqual(projected["metrics"]["tools"]["call_count"]["value"], 0)
+            self.assertEqual(projected["metrics"]["timing"]["duration_seconds"]["value"], 100)
+            self.assertTrue(comparable)
+            self.assertEqual(adjustments, [])
+            (path.parent / "execution/automation-state.json").write_text("{}")
+            with self.assertRaisesRegex(REPORT.ReportError, "SOURCE_DRIFT"):
+                REPORT.doubao_resource_projection(root, execution, metrics, path)
 
 
 if __name__ == "__main__":

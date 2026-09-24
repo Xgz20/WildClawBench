@@ -413,8 +413,8 @@ validation_records:
 
 开发在当前仓库工作区 `feature/astroncode-eval` 串行进行，不恢复旧协作档案的派发、平台 worktree 或人工桌面排期。评测运行仍可使用已验的执行/评分并发。当前用户约定：调试产物置于 `/Users/gzx/debug-workspace/e2e-evaluate`，正式分发置于仓库 `report-workspace`，不 push，不主动重启承载控制的 Codex Desktop。
 
-- General 源码 Skill 版本：`collect-general-e2e 0.7.6`、`execute-general-e2e 0.10.27`、`orchestrate-general-e2e 0.9.5`、`prepare-general-e2e-workspaces 0.2.0`、`report-general-e2e 0.5.1`、`run-general-e2e 0.5.2`、`score-general-e2e 0.8.2`。
-- Web 源码 Skill 版本：`execute-web-e2e 1.16.0`、`orchestrate-web-e2e 0.3.2`、`prepare-web-e2e-workspaces 4.4.0`、`report-web-e2e 1.1.1`、`run-web-e2e 1.4.2`、`score-web-e2e 4.5.4`。
+- General 源码 Skill 版本：`collect-general-e2e 0.8.0`、`execute-general-e2e 0.11.0`、`orchestrate-general-e2e 0.9.6`、`prepare-general-e2e-workspaces 0.2.0`、`report-general-e2e 0.5.1`、`run-general-e2e 0.5.2`、`score-general-e2e 0.8.3`。
+- Web 源码 Skill 版本：`execute-web-e2e 1.17.0`、`orchestrate-web-e2e 0.3.2`、`prepare-web-e2e-workspaces 4.4.0`、`report-web-e2e 1.1.1`、`run-web-e2e 1.4.2`、`score-web-e2e 4.5.4`。
 
 - QwenWork General 最近执行实现 `190406c`，独立发行 `qwenwork-hardening-190406c`，execute 0.10.27；Qwen 聚焦 Node 115/115、发行/布局 Python 16/16。记录证明对应变更与 canary，不代表全部准入已完成。
 - Web 最近已有分发索引为 `dba9700...` 的 `20260919-125641` 自建 40 / 开源 120 包；历史功能/资源验收另有 `6988b525...`、`ee70a67...`、`24771ce...`、`ff5d476...`、`c257fbd...` 身份。当前源码与这些包按内容 SHA/影响核验，不能只凭重打包继承支持层级。
@@ -426,7 +426,7 @@ validation_records:
 | AstronStudio / macOS Intel | G4-03 五题三槽执行/评分/回传/报告；后续双题 smoke 2/2 valid | 已有对应身份的受控生产证据；公共新版本按影响复验 | [五题](../general-e2e/evidence/g4-03/README.md)、[双题](../general-e2e/evidence/macos-current-smoke-20260919/README.md) |
 | WorkBuddy / macOS Intel | v8 为 5/5 valid、原生峰值 2；v2 加固 canary 为原生峰值 3、2 次补位，评分 2 valid/2 异常/1 容量未评分 | 不把不同批次拼成 5/5 valid 且峰值 3；未知授权/追问、评分稳定性等收尾，完整接入 IN_PROGRESS | [v8](../general-e2e/evidence/workbuddy-macos-general-v8-three-slot-20260921/README.md)、[v2 加固](../general-e2e/evidence/workbuddy-hardening-20260921/README.md) |
 | QwenWork / macOS Intel / 1.2.0 | r21 原生三路五题闭环；r23 核心 Token 5/5 与正式报告；r31–r35 路径、授权、清理、终态/标题加固 | 主流程有限可用，完整接入 IN_PROGRESS；剩余七项见下文 | [运行证据](../general-e2e/evidence/qwenwork-macos-five3-20260923/README.md) |
-| DoubaoWork / macOS | General 尚无专属 adapter、正式 collector/receipt 全链路交付 | TODO；QwenWork 收口后接入，不能继承 Web 开发 canary | [Web 证据仅供复用分析](../web-e2e/evidence/doubaowork-macos-web-e2e/README.md) |
+| DoubaoWork / macOS Intel / 2.31.3 | 共享 Driver/原生证据核心、General adapter；r10 S1 与 r12 S2 各自同发行闭环有效 1.0；r11 三题串行、r19/r20 五题原生三路及补位完成 | IN_PROGRESS；r20 S1/S2 自动评分1.0；S3/S4 多源顺序 partial、独立语义评分与完整加固及 Web 闭环未完成 | [本轮证据](../general-e2e/evidence/doubaowork-macos-general-20260924/README.md) |
 | 全部 Harness / Windows、Apple Silicon | 当前 General 台账没有相应完整真机准入 | Windows 暂缓；Apple Silicon 单独验证；不外推 Intel 结果 | [历史 Windows 实施范围](archive/general/AstronStudio-Windows后续实施清单.md) |
 
 ### 5.3 Web 场景
@@ -439,14 +439,14 @@ validation_records:
 | AstronStudio / macOS Intel | `6988b525...` 的独立 macOS 包有单 L1 全流程，历史主流程生产声明 | 与 Windows 包身份不同；新发行并发/恢复和双平台字节对账不自动继承 |
 | WorkBuddy / macOS Intel | 有旧执行/并发功能证据及发布 smoke | 后半程与恢复项在原 Web 矩阵为 STALE/待重验，不按 General 成果升级 |
 | QwenWork / macOS Intel | 1.0.5 历史执行与资源样本；已有 L1 执行记录 | 1.2.0 General 的 Token/并发/加固不等于 Web 同版本准入，需 Web 入口单独验证 |
-| DoubaoWork / macOS | 有开发 canary、绑定/轨迹小计与离线实现 | 原生终态/cwd、正式 collect/finalizer、评分回传仍未闭环，保持 NEEDS_ATTENTION |
+| DoubaoWork / macOS | 已提取与 General 共用的 Driver/原生证据源码；Web 初次提取聚焦回归 64/64 | Web 自身正式 collect/finalizer、评分回传仍未闭环，保持 NEEDS_ATTENTION；General 的 2.31.3 原生映射不自动升级 Web 准入 |
 | DoubaoWork / Windows；其他未声明架构 | 无本场景完整证据 | NOT_RUN，不凭共用接口推定支持 |
 
 Web 逐项 V00–V17、P0–P10、客户端/Skill/包 SHA 和运行路径见[历史验收记录](archive/web/生产验收历史-20260923.md)；DoubaoWork 专属现场见[证据索引](../web-e2e/evidence/doubaowork-macos-web-e2e/README.md)。历史台账停止滚动更新，新的进度仅改本表并追加 evidence。
 
 ### 5.4 当前推进顺序
 
-当前先收口 QwenWork General 的剩余准入，再按声明范围推进 DoubaoWork General；其他已有 Harness 保留各自证据与缺口。Windows 新开发暂缓，历史 Web Windows 结论保留。评分配置在各批次冻结，当前 QwenWork General 后续批次固定 `gpt-6-sol/high`，不回填旧 astra/high 结果。题目时长不作为能力评分条件，不为覆盖状态表改题或逼模型产生指定分数。
+本任务按用户 2026-09-23 指定顺序推进 DoubaoWork General，再收口 Web；QwenWork 的剩余准入保留原状态。其他已有 Harness 保留各自证据与缺口。Windows 新开发暂缓，历史 Web Windows 结论保留。评分配置在各批次冻结，当前 QwenWork General 后续批次固定 `gpt-6-sol/high`，不回填旧 astra/high 结果。题目时长不作为能力评分条件，不为覆盖状态表改题或逼模型产生指定分数。
 
 ### QwenWork 剩余生产准入事项
 
@@ -505,6 +505,43 @@ Web 逐项 V00–V17、P0–P10、客户端/Skill/包 SHA 和运行路径见[历
 | GV08 小批/并发 | r21 原生三路五题，r23 五题核心 Token、同机闭环 | PASS（固定五题/本机）；不声明跨机或全量 |
 
 因此仍是“主流程有限可用、加固进行中”，完整接入任务保持 IN_PROGRESS。本轮已补齐 CV17、CV08、CV09 的上述重点；其余 PARTIAL 行按[剩余七项](#qwenwork-剩余生产准入事项)分别补实现、真机负例或公共证据审计，不以本轮三项通过替代全部准入。上述矩阵为人工证据审计，不代表已有自动符合性校验器。
+
+### DoubaoWork 接续范围与验收记录（2026-09-24）
+
+范围：macOS x86_64 / DoubaoWork 2.31.3 / 本地 / 值守。用户在本轮手动从 2.28.12 更新；新进程已重新只读核验。共享源码为 `tools/report/e2e-shared/doubaowork/`，两个 execute Skill 与 General collect 按组件清单装配，Web 与 General 的包校验/正式回执 adapter 独立。当前版本均为工作区开发实现，运行内容以各阶段的 ZIP/content SHA 为准。不得把基线 revision 或下表的自动化测试写成生产 PASS。
+
+C01–C19 全部适用；G01–G07 全部纳入 General 接入；W01–W06 全部纳入后续 Web 接续。未声明 Windows、Apple Silicon、无人值守自动重启/抢锁和自动批准未知交互。UI 槽固定 1；开发队列允许 1–3 个执行槽，默认 1，原生并发须独立验证。General S1 默认模型模式的实际显示值为“自动 高”；底层模型版本未知。S1 仅自动规则，不调用语义 Judge；后续语义配置在批次中冻结为 `gpt-6-sol/high`。
+
+事实与包原件索引见[接续证据](../general-e2e/evidence/doubaowork-macos-general-20260924/README.md)。以下为当前唯一进度，不继承旧 SLOT 或旧 canary。
+
+| 验收项 | 当前实现/证据 | 当前结论与接续 |
+| --- | --- | --- |
+| CV01 包/隔离 | r28独立General suite完成五题；Web execute1.17.2独立ZIP及三份同源vendor已校验；r29候选纳入report0.5.4 | PASS（本地装配/独立包）；r29仅构建未发布，完整准入仍受其余项约束 |
+| CV02 probe | 2.31.3 应用/监听者/CDP 真机通过；共享 GUI 锁屏未知即拒绝 | PARTIAL；r28真实foreign listener/关闭端点均在CDP连接前拒绝、发送0；多安装/锁屏真机负例待齐 |
+| CV03 目标/配置/Prompt | 云模式、项目残留、编辑器差异均发送 0；一次发送；原生 Prompt/project/workspace 同身份 | IN_PROGRESS；同名不同目录、最终配置漂移真机负例待齐 |
+| CV04 发送中断 | 发送前归档门禁；r5 发送后绑定超时，r6 原 attempt 恢复、不重发 | IN_PROGRESS；受控中断窗口仍待逐项覆盖 |
+| CV05 锁/竞争 | 复用原 owner 生命周期锁；新增跨 General/Web 的全局 UI 锁 | PARTIAL；r28独立General/Web包共享锁在真实进程竞争、dead owner和release owner变更时拒绝，原锁保留；未主动打断活动全局UI，跨入口完整UI竞争待验 |
+| CV06 断连/重启 | 客户端版本漂移拒绝，恢复只观察 | NOT_RUN；断连原身份恢复/安全暂停真机待验 |
+| CV07 终态 | 原生 Success/cwd/回复/完成时间映射；S1/S2 与 r13 纯回复正常完成 | PARTIAL；最终错误、取消等分支待验 |
+| CV08 待交互 | 未批准未知授权或追问，沿用 attention 门禁 | NOT_RUN；目标客户端实际负例待验 |
+| CV09 清理/冻结 | S1 真机 0→0 targets；r18 受控真实进程 TERM/KILL、跨目录同类进程对照存活，静默9069ms；r19 迟到进入目录的进程被识别并清理，对照存活、静默14625ms | PARTIAL；迟到文件写入、重挂父子、目录/PID漂移等分支待验 |
+| CV10 串行/并发 | r11三题串行各一次发送；r28当前核心五题各一次发送、原生峰值3、动态补位、首次采集5/5 complete | PASS（上述固定样本/本机）；不外推更高槽位、跨机或全量 |
+| CV11 原始轨迹 | 原生消息、显式 session trajectory、滚动归档与 started/settled/结果账本对账；r26 S3 首次 collect/verify 为 complete，12工具/26事件 | PARTIAL；单份完整模型轨迹覆盖证明可优先保留原生顺序，缺相对顺序仍拒绝；r19/r20 旧 partial 不改写；r27 S2的5条账本均在终态前留存、完整采集并恢复observer；超过30分钟真机尚未验 |
+| CV12 指标 | r25首次本机生命周期计时；r28五题任务耗时383s、流程耗时395.3s、工具23次，三项覆盖均5/5；两类耗时及批次壁钟独立记账 | PARTIAL；26份会话轨迹/8380行关联文本日志审计未见原生累计Token；窗口占用/订阅显示/first-token时点不可替代；二进制日志未解码，Token/模型请求/重试仍null |
+| CV13 材料/候选 | 通用 exact-all finalizer；General 保留 Git；S1 冻结/verify-only | PARTIAL；r28本入口复核r27正式副本，候选篡改、原始轨迹缺失、越界链接、source迟到写入和receipt身份漂移均拒绝；Git/二进制实料与发布窗口待齐 |
+| CV14 评分恢复/回传 | r28三题独立sol/high自动创建评分任务，verify-score均通过；正式return/import和重复导入幂等已验；公共评分编排19/19 | PARTIAL；发布窗口中断和本范围冲突选择待齐；迁移batch副本的MANIFEST_DRIFT拒绝不算幂等证据 |
+| CV15 新发行完整闭环 | r28五题在原suite完成执行→首次采集→automated/hybrid/llm_judge→回传→导入→三种报告；5/5有效，均分96.5 | PASS（r28固定五题/本平台）；report0.5.4单独修正显示舍入，原始分数/分母/资源/lineage不变，旧报告保留；不替代加固或全量准入 |
+| CV16 平台 | 当前仅 macOS x86_64 / 2.31.3 | IN_PROGRESS；其他平台 NOT_RUN，不外推 |
+| CV17 路径 | r27真实getconf NAME_MAX=255/PATH_MAX=1024，按UTF-8字节及终止NUL检查；中文/空格项目准备阶段真实选择回读发送0，随后S2一次发送并完成首次采集/评分；数据集最长ID62字节预算；6类真实文件系统负例发送0 | PARTIAL；已覆盖已知控制/原生路径，任意未来候选文件仍由collector验证；最长ID实际UI/运行与其余平台未外推 |
+| GV01 准备/隔离 | r28固定五题独立execution/scoring包，真实准备/首次采集与私有评分；r29候选构建校验 | PASS（固定范围/本机）；未发布生产分发 |
+| GV02 文件/回复 | r28 S1/S2/S3文件产物与S4/S5纯回复均正式收口、独立评分 | PASS（固定五题/本机） |
+| GV03 必需工具轨迹 | r12 S2原过程grader有效1.0；r26 S3工具完整、原自动规则及独立语义均1.0，首次回执不降门禁 | PARTIAL；混合来源缺顺序仍partial，长任务账本与故障覆盖待齐 |
+| GV04 候选类型 | 复用通用冻结，不套 Web 禁止 Git 策略 | IN_PROGRESS；Git/二进制/链接分支待验 |
+| GV05 评分类型 | r28同发行automated S1/S2=1.0；hybrid S3=1.0；独立sol/high的llm_judge S4=0.95、S5=0.875，均verify-score | PASS（固定五题/本机）；不等于完整生产准入 |
+| GV06 分母 | r19保留全集5题、3有效/2未评分；r28全集5题、5有效/0未评分、均分96.5；资源各自覆盖，未知Token不补零 | PARTIAL；公共真实零/异常测试已验，本范围真实异常组合仍按证据收口 |
+| GV07 阶段恢复 | 原attempt只读恢复；r28分两次首次采集后完整回执、三题独立语义、submission/return/import/三种报告，重复导入幂等 | PASS（已验主链路）；发布中断仍在CV14待验 |
+| GV08 小批 | r28当前核心五题三槽、原生峰值3与补位；首次collect/verify5/5 complete；三种评分及回传/报告完成 | PASS（固定五题/本机）；不外推完整60题或其他平台 |
+| WV01–WV08 | 保留现有Web入口与旧证据；r27共享/General/Web聚焦114/114，Python发行/布局/准入/报告31/31，独立Web execute包构建通过 | IN_PROGRESS；仅受影响入口回归，Web正式闭环及每项独立验收未完成 |
 
 ### 5.5 进度更新规则与接续
 

@@ -15,7 +15,11 @@ description: 校验并汇总 General E2E submission 和回传包，生成同源 
 python -m eval_general_e2e skills --name report-general-e2e --json
 ```
 
-`0.5.1/operational` 支持按模型@Harness 展示 General 结果、效率和维度对比、每题各单元并列的用例对比明细，以及每单元独立评分详情，生成不含根因分析的领导版 Markdown、Excel 与单独审计报告。合法 `partial` collect receipt 可进入报告，未知 Token/cache 等字段继续显示为不可用，不补零。保留 WorkBuddy 已冻结评分后的 JSONL 和耗时补采。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
+`0.5.4/operational` 支持按模型@Harness 展示 General 结果、效率和维度对比、每题各单元并列的用例对比明细，以及每单元独立评分详情，生成不含根因分析的领导版 Markdown、Excel 与单独审计报告。合法 `partial` collect receipt 可进入报告，未知 Token/cache 等字段继续显示为不可用，不补零。保留 WorkBuddy 已冻结评分后的 JSONL 和耗时补采。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
+
+DoubaoWork 历史回执的资源展示另做保守复核：按原 source SHA 验证 trace-index 和 execution-state，partial 工具轨迹只保留已知调用小计；只有同一本机时钟的原生完成接收事件才与 dispatch 相减，支持经绑定原件证明的 checkpoint perf_mark_samples.task_finish.receiveTimestamp。服务端完成时间或未知时钟不计流程耗时及批次壁钟覆盖。报告 JSON 的 lineage 记录旧值、原因和证据 SHA；原 execution/resource/score 文件及评分分母保持冻结。
+
+`0.5.4` 将 Markdown、审计和单题文字分数的显示舍入统一为十进制 ROUND_HALF_UP，与 Excel 数字格式一致；只改变显示，不改报告 JSON 中的原始分数、聚合分母或资源值。
 
 ## 责任边界
 

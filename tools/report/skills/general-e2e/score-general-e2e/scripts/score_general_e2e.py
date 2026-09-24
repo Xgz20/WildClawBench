@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 import hashlib
@@ -914,6 +915,84 @@ def _freeze_judge_config(
     }
 
 
+def _workspace_only_automated_rule(contract: Mapping[str, Any]) -> bool:
+    """Conservative admission for partial optional trace; never changes a rubric.
+
+    A frozen automated rule must consume only kwargs.get('workspace_path').
+    Aliases, forwarded kwargs, dynamic keys, extra arguments and trace/reply
+    references are deliberately unsupported. Unknown rules remain blocked.
+    """
+    if contract.get("grading_type") != "automated" or contract.get("llm_judge_rubric"):
+        return False
+    source = contract.get("automated_checks")
+    if not isinstance(source, str) or not source.strip():
+        return False
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return False
+    grades = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "grade"]
+    if len(grades) != 1:
+        return False
+    args = grades[0].args
+    if args.args or args.posonlyargs or args.kwonlyargs or args.vararg or not args.kwarg:
+        return False
+    name = args.kwarg.arg
+    parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
+    uses = 0
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and any(
+            word in node.value.lower() for word in ("transcript", "chat_openclaw", "final_response", "task_output", "trace-index")
+        ):
+            return False
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in {
+            "eval", "exec", "globals", "locals", "vars", "__import__"
+        }:
+            return False
+        if isinstance(node, ast.Name) and node.id == name:
+            parent = parents.get(node)
+            call = parents.get(parent)
+            if (not isinstance(node.ctx, ast.Load) or not isinstance(parent, ast.Attribute)
+                or parent.attr != "get" or not isinstance(call, ast.Call) or call.func is not parent
+                or not 1 <= len(call.args) <= 2 or call.keywords
+                or not isinstance(call.args[0], ast.Constant) or call.args[0].value != "workspace_path"):
+                return False
+            uses += 1
+    return uses > 0
+
+
+def _validate_evidence_admission(execution: Mapping[str, Any], contract: Mapping[str, Any]) -> str:
+    evidence = execution["evidence"]
+    missing = set(evidence.get("missing") or [])
+    if evidence.get("completeness") == "complete" or (
+        evidence.get("completeness") == "partial" and missing <= {"resource_metrics_complete_coverage"}
+    ):
+        return "standard"
+    if (evidence.get("completeness") == "partial"
+        and evidence.get("transcript_path") and evidence.get("trace_index_path")
+        and missing <= {"resource_metrics_complete_coverage", "provider-request-coverage-unavailable", "native-tool-trajectory-incomplete"}
+        and _workspace_only_automated_rule(contract)):
+        return "automated-workspace-only/v1"
+    raise ScoringRuntimeError("EXECUTION_NOT_SCORABLE", "required execution evidence is incomplete")
+
+
+def _verify_partial_trace_bundle(unit_root: Path, execution: Mapping[str, Any]) -> None:
+    index_path = _resolve_within(unit_root, execution["evidence"]["trace_index_path"], "trace_index_path")
+    index = _read_json(index_path, code="TRACE_INDEX_INVALID")
+    if (index.get("schema_id") != "urn:wildclawbench:schema:general-e2e:trace-index:v2"
+        or index.get("identity") != execution.get("identity")
+        or index.get("completeness", {}).get("status") != "partial"
+        or not index.get("raw_trace") or not index.get("binding_evidence")):
+        raise ScoringRuntimeError("TRACE_INDEX_INVALID", "partial trace must retain bound raw evidence")
+    for row in [index.get("transcript", {}), *index["raw_trace"], *index["binding_evidence"]]:
+        path = _resolve_within(index_path.parent, row.get("path"), "trace artifact")
+        if path.is_symlink() or not path.is_file() or path.stat().st_size != row.get("size") or _sha256_file(path) != row.get("sha256"):
+            raise ScoringRuntimeError("TRACE_ARTIFACT_DRIFT")
+    transcript_path = _resolve_within(unit_root, execution["evidence"]["transcript_path"], "transcript_path")
+    if transcript_path != _resolve_within(index_path.parent, index["transcript"]["path"], "transcript_path"):
+        raise ScoringRuntimeError("TRACE_TRANSCRIPT_BINDING_MISMATCH")
+
+
 def prepare_attempt(
     *,
     unit_root: Path,
@@ -951,14 +1030,6 @@ def prepare_attempt(
         or not isinstance(execution.get("execution"), dict)
         or execution["execution"].get("business_status") != "completed"
         or not isinstance(execution.get("evidence"), dict)
-        or (
-            execution["evidence"].get("completeness") != "complete"
-            and not (
-                execution["evidence"].get("completeness") == "partial"
-                and set(execution["evidence"].get("missing") or [])
-                <= {"resource_metrics_complete_coverage"}
-            )
-        )
     ):
         raise ScoringRuntimeError("EXECUTION_NOT_SCORABLE")
     batch_id = _identifier(identity.get("batch_id"), "batch_id")
@@ -1014,6 +1085,9 @@ def prepare_attempt(
         raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", str(exc)) from exc
     if not isinstance(contract, dict) or contract.get("task_id") != task_id:
         raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", "task_id")
+    evidence_admission = _validate_evidence_admission(execution, contract)
+    if evidence_admission != "standard":
+        _verify_partial_trace_bundle(unit_root, execution)
 
     transcript_source: Path | None = None
     transcript_count = 0
@@ -1090,6 +1164,7 @@ def prepare_attempt(
         manifest = {
             "schema_version": ATTEMPT_SCHEMA,
             "created_at": _now(),
+            "evidence_admission": evidence_admission,
             "identity": {
                 "batch_id": batch_id,
                 "unit_id": unit_id,
@@ -1260,6 +1335,13 @@ def verify_attempt(attempt_root: Path) -> dict[str, Any]:
         path = _resolve_within(root, paths.get(key), key)
         if not path.is_file() or path.is_symlink() or _sha256_file(path) != digests.get(digest_key):
             raise ScoringRuntimeError("ATTEMPT_PRIVATE_MATERIAL_DRIFT", key)
+    if manifest.get("evidence_admission") is not None:
+        admitted = _validate_evidence_admission(
+            _read_json(_resolve_within(root, paths["execution_record"], "execution_record"), code="EXECUTION_RECORD_INVALID"),
+            _read_json(_resolve_within(root, paths["contract"], "contract"), code="SCORING_CONTRACT_INVALID"),
+        )
+        if admitted != manifest["evidence_admission"]:
+            raise ScoringRuntimeError("EVIDENCE_ADMISSION_DRIFT")
     judge_config_relative = paths.get("judge_config")
     if judge_config_relative is not None:
         judge_config_path = _resolve_within(

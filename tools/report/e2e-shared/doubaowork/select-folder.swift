@@ -64,13 +64,34 @@ private func descendants(
 }
 
 private func firstDescendant(_ element: AXUIElement, role: String) -> AXUIElement? {
-    return descendants(element, role: role).first
+    let matches = descendants(element, role: role)
+    return matches.count == 1 ? matches[0] : nil
 }
 
 private func firstButton(_ element: AXUIElement, titles: Set<String>) -> AXUIElement? {
-    return descendants(element, role: kAXButtonRole).first {
+    let matches = descendants(element, role: kAXButtonRole).filter {
         titles.contains(stringAttribute($0, kAXTitleAttribute))
     }
+    return matches.count == 1 ? matches[0] : nil
+}
+
+private func outerSheets(_ element: AXUIElement, depth: Int = 0) -> [AXUIElement] {
+    if depth > 18 { return [] }
+    if stringAttribute(element, kAXRoleAttribute) == kAXSheetRole { return [element] }
+    return children(element).flatMap { outerSheets($0, depth: depth + 1) }
+}
+
+private func uniqueOpenPanel(_ root: AXUIElement) -> (AXUIElement, AXUIElement)? {
+    let windows = (attribute(root, kAXWindowsAttribute) as? [AXUIElement]) ?? []
+    let pairs = windows.flatMap { window in outerSheets(window).compactMap { sheet -> (AXUIElement, AXUIElement)? in
+        guard firstButton(sheet, titles: ["选择", "Choose", "选取", "Select", "打开", "Open"]) != nil else { return nil }
+        return (window, sheet)
+    } }
+    return pairs.count == 1 ? pairs[0] : nil
+}
+
+private func phase(_ value: String) {
+    FileHandle.standardError.write(Data("folder-helper phase=\(value)\n".utf8))
 }
 
 private func press(_ element: AXUIElement, action: String) throws {
@@ -147,7 +168,9 @@ private func focusPathField(_ field: AXUIElement, application: NSRunningApplicat
 }
 
 private func cancelOuterPanelIfPresent(_ window: AXUIElement) {
-    guard let outerSheet = descendants(window, role: kAXSheetRole).first,
+    let sheets = outerSheets(window)
+    guard sheets.count == 1,
+          let outerSheet = sheets.first,
           let cancelButton = firstButton(outerSheet, titles: ["取消", "Cancel"]) else { return }
     _ = AXUIElementPerformAction(cancelButton, kAXPressAction as CFString)
 }
@@ -176,25 +199,34 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
     guard !matchingApplications.isEmpty else { throw SelectionError.appNotRunning(bundleID) }
     guard matchingApplications.count == 1 else { throw SelectionError.ambiguousApp(matchingApplications.count) }
     let application = matchingApplications[0]
+    phase("APPLICATION_VERIFIED")
 
     application.activate(options: [])
     RunLoop.current.run(until: Date().addingTimeInterval(0.3))
     let root = AXUIElementCreateApplication(application.processIdentifier)
-    let window = try waitUntil(timeoutSeconds: timeoutSeconds, description: "DoubaoWork 主窗口") {
-        (attribute(root, kAXWindowsAttribute) as? [AXUIElement])?.first
+    let (window, outerSheet) = try waitUntil(timeoutSeconds: timeoutSeconds, description: "唯一原生文件夹选择面板") {
+        uniqueOpenPanel(root)
     }
+    phase("OPEN_PANEL_VERIFIED")
     do {
-        let outerSheet = try waitUntil(timeoutSeconds: timeoutSeconds, description: "外层打开文件夹面板") {
-            descendants(window, role: kAXSheetRole).first
+        let raised = AXUIElementPerformAction(window, kAXRaiseAction as CFString)
+        guard raised == .success else { throw SelectionError.actionFailed("激活已确认的文件夹窗口", raised) }
+        application.activate(options: [])
+        RunLoop.current.run(until: Date().addingTimeInterval(0.3))
+        guard NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier else {
+            throw SelectionError.missingElement("文件夹窗口未处于前台，拒绝发送全局快捷键")
         }
         try postShortcut(
             processIdentifier: application.processIdentifier,
             key: 5,
-            flags: [.maskCommand, .maskShift]
+            flags: [.maskCommand, .maskShift],
+            global: true
         )
         let innerSheet = try waitUntil(timeoutSeconds: timeoutSeconds, description: "前往文件夹面板") {
-            descendants(outerSheet, role: kAXSheetRole).first
+            let matches = children(outerSheet).flatMap { descendants($0, role: kAXSheetRole) }
+            return matches.count == 1 ? matches[0] : nil
         }
+        phase("GO_TO_FOLDER_VERIFIED")
         RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         guard let pathField = firstDescendant(innerSheet, role: kAXTextFieldRole) else {
             throw SelectionError.missingElement("前往文件夹路径输入框")
@@ -242,19 +274,21 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
         let currentRoot = AXUIElementCreateApplication(application.processIdentifier)
         let currentSheets = descendants(currentRoot, role: kAXSheetRole)
         if currentSheets.count > 1 {
-            guard let freshField = currentSheets.last.flatMap({ firstDescendant($0, role: kAXTextFieldRole) }),
+            let nested = children(outerSheet).flatMap { descendants($0, role: kAXSheetRole) }
+            guard nested.count == 1, let freshField = firstDescendant(nested[0], role: kAXTextFieldRole),
                   stringAttribute(freshField, kAXValueAttribute) == folderPath else {
                 throw SelectionError.missingElement("目标文件夹完整路径回读不一致")
             }
             try postShortcut(processIdentifier: application.processIdentifier, key: 36, global: true)
         }
+        phase("PATH_READBACK_VERIFIED")
         let _: Bool = try waitUntil(timeoutSeconds: timeoutSeconds, description: "前往文件夹面板关闭") {
             let freshRoot = AXUIElementCreateApplication(application.processIdentifier)
             return descendants(freshRoot, role: kAXSheetRole).count == 1 ? true : nil
         }
         let _: Bool = try waitUntil(timeoutSeconds: timeoutSeconds, description: "目标目录位置回读") {
             let freshRoot = AXUIElementCreateApplication(application.processIdentifier)
-            guard let currentSheet = descendants(freshRoot, role: kAXSheetRole).first else { return nil }
+            guard let (_, currentSheet) = uniqueOpenPanel(freshRoot) else { return nil }
             let expectedName = URL(fileURLWithPath: folderPath).lastPathComponent
             return descendants(currentSheet, role: kAXPopUpButtonRole).contains {
                 stringAttribute($0, kAXValueAttribute) == expectedName
@@ -265,7 +299,7 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
             description: "已启用的选择按钮"
         ) {
             let freshRoot = AXUIElementCreateApplication(application.processIdentifier)
-            guard let currentOuterSheet = descendants(freshRoot, role: kAXSheetRole).first,
+            guard let (_, currentOuterSheet) = uniqueOpenPanel(freshRoot),
                   let button = firstButton(
                     currentOuterSheet,
                     titles: ["选择", "Choose", "选取", "Select", "打开", "Open"]
@@ -274,6 +308,7 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
             return button
         }
         try press(openButton, action: "选择目标目录")
+        phase("SELECT_PRESSED")
         let _: Bool = try waitUntil(timeoutSeconds: timeoutSeconds, description: "外层打开文件夹面板关闭") {
             let freshRoot = AXUIElementCreateApplication(application.processIdentifier)
             return descendants(freshRoot, role: kAXSheetRole).isEmpty ? true : nil

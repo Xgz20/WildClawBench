@@ -21,6 +21,8 @@ python -m eval_general_e2e skills --name score-general-e2e --json
 
 ## 责任边界
 
+`0.8.3` 按冻结 grader 的证据需求增加保守准入：纯 automated 规则的 `grade(**kwargs)` 仅以常量键 `workspace_path` 读取输入、无动态/转交参数、无轨迹或回复引用时，可接受带绑定原始证据的 partial 工具轨迹。候选、原始轨迹/绑定文件/标准轨迹 SHA 仍须有效，原回执不改成 complete；判定策略写入 attempt manifest 并在 verify 时复算。hybrid、llm_judge、读取轨迹的规则、未知参数形式及缺失身份/候选等仍拒绝。此分支不改变题目或评分规则，也不从最终文件补造工具事件。
+
 - 输入：单题评分工作空间、冻结候选/轨迹和裁判配置。
 - 输出：自动规则分、语义分、证据引用、评分审计和标准 `score.json`。
 - 保持任务原规则、rubric、权重和分值锚点；缺证据时保留未判定或评测错误。

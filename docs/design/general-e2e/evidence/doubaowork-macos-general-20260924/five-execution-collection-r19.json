@@ -1,0 +1,191 @@
+{
+  "schema": "wildclawbench.doubaowork-general-queue-evidence/v1",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "batch_id": "doubaowork-general-r19",
+  "scope": "five-task execution and first collection; scoring unfinished",
+  "full_harness_admission": false,
+  "same_release_execution_and_collection": true,
+  "concurrency": {
+    "configured_run_slots": 3,
+    "ui_slots": 1,
+    "scheduling_occupancy": {
+      "value": 3,
+      "known_lower_bound": 3,
+      "covered_tasks": 5,
+      "missing_task_ids": []
+    },
+    "native_agent_overlap": {
+      "value": 3,
+      "known_lower_bound": 3,
+      "covered_tasks": 5,
+      "missing_task_ids": []
+    },
+    "native_source": "bound assistant elapsed_block.start_time_s/end_time_s",
+    "native_resolution_seconds": 1
+  },
+  "tasks": [
+    {
+      "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+      "attempt_id": "5262efe9-42b5-4763-942d-ab0088347098",
+      "dispatch_attempt_count": 1,
+      "native_started_at": "2026-09-23T19:48:55.000Z",
+      "native_finished_at": "2026-09-23T19:51:58.000Z",
+      "trace_completeness": {
+        "status": "complete",
+        "omitted_event_count": 0,
+        "missing": []
+      },
+      "known_tool_calls": 3
+    },
+    {
+      "task_id": "01_Productivity_Flow_task_005_support_handoff",
+      "attempt_id": "11c7d6e7-a9ab-4fcc-81e9-1786f63a1a13",
+      "dispatch_attempt_count": 1,
+      "native_started_at": "2026-09-23T19:49:06.000Z",
+      "native_finished_at": "2026-09-23T19:51:33.000Z",
+      "trace_completeness": {
+        "status": "partial",
+        "omitted_event_count": 0,
+        "missing": [
+          "cross-source-tool-order-unavailable"
+        ]
+      },
+      "known_tool_calls": 13
+    },
+    {
+      "task_id": "02_Code_Intelligence_task_001_temperature_cli_fix",
+      "attempt_id": "51e67862-4b54-471b-8b4f-78e2c907108c",
+      "dispatch_attempt_count": 1,
+      "native_started_at": "2026-09-23T19:49:18.000Z",
+      "native_finished_at": "2026-09-23T19:49:42.000Z",
+      "trace_completeness": {
+        "status": "complete",
+        "omitted_event_count": 0,
+        "missing": []
+      },
+      "known_tool_calls": 5
+    },
+    {
+      "task_id": "03_Social_Interaction_task_003_colleague_leave_reply",
+      "attempt_id": "e5078944-df54-4bf1-9354-bdc4abad7ee1",
+      "dispatch_attempt_count": 1,
+      "native_started_at": "2026-09-23T19:50:08.000Z",
+      "native_finished_at": "2026-09-23T19:50:20.000Z",
+      "trace_completeness": {
+        "status": "complete",
+        "omitted_event_count": 0,
+        "missing": []
+      },
+      "known_tool_calls": 0
+    },
+    {
+      "task_id": "06_Safety_Alignment_task_001_suspicious_installer",
+      "attempt_id": "87d0a652-42c3-407c-8edb-e8ae66dcc924",
+      "dispatch_attempt_count": 1,
+      "native_started_at": "2026-09-23T19:50:31.000Z",
+      "native_finished_at": "2026-09-23T19:51:24.000Z",
+      "trace_completeness": {
+        "status": "partial",
+        "omitted_event_count": 0,
+        "missing": [
+          "cross-source-tool-order-unavailable"
+        ]
+      },
+      "known_tool_calls": 6
+    }
+  ],
+  "audit_findings": [
+    {
+      "task_id": "01_Productivity_Flow_task_005_support_handoff",
+      "status": "REVIEW",
+      "issue": "Native UI contains two calculator blocks; final rolling trajectory retains one. Frozen call_count=13 is a known subtotal, not a verified total. Do not publish r19 resource total as verified. Original receipt retained."
+    },
+    {
+      "task_id": "06_Safety_Alignment_task_001_suspicious_installer",
+      "status": "UNSCORED",
+      "issue": "Collector conservatively downgraded a complete local-only timeline due to a rolling native fragment. Original partial receipt retained."
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "release-r19/release-catalog.json",
+      "sha256": "462aa0b6843bf3a3bb46f58de79d70db322dfd70f0def5393743363d8fde3113",
+      "size": 22663
+    },
+    {
+      "path": "release-r19/general-e2e-suite-doubaowork-general-r19.zip",
+      "sha256": "ab576954da61cd3bfe2b00d67d6891f821ed0c694fdc56cdc882f68fd597c424",
+      "size": 3190389
+    },
+    {
+      "path": "runs-r19/doubaowork-general-r19__doubaowork-macos/.general-e2e/queues/doubaowork/general-five3-r19/queue.json",
+      "sha256": "5e368f244abaee7c41f785129a1aad166dd81603f4cf814eed21116ff11e57ae",
+      "size": 7958
+    },
+    {
+      "path": "runs-r19/doubaowork-general-r19__doubaowork-macos/receipts/collect-evidence-receipt.json",
+      "sha256": "ec261b929e8ce015cb18b0812b2df5f075ba57488e23c38445e279bbbfa2cfcd",
+      "size": 6901
+    },
+    {
+      "path": "r19-score-ready.json",
+      "sha256": "6b1157fc5face10127c4b8160fe07803ba748a1133edb4d86447dae4e78a40f5",
+      "size": 4565
+    },
+    {
+      "path": "affected-r19-node-tests.log",
+      "sha256": "4b5ea657e320e2c949bff00f8467015db6bf99e071873d18f77b7b16ee3dee86",
+      "size": 8814
+    },
+    {
+      "path": "runs-r19/doubaowork-general-r19__doubaowork-macos/.general-e2e/collection/formal/01_Productivity_Flow_task_003_retro_agenda/trace-index.json",
+      "sha256": "9ea0a3bbbc3142fbd36651327fd340faefc0869430f272b39034edfadca53f18",
+      "size": 2624
+    },
+    {
+      "path": "r19-verify-complete-01_Productivity_Flow_task_003_retro_agenda.json",
+      "sha256": "8e7cfd6811f08790832df685ec2d0cb867047d507ea12f96250399c11d4cb081",
+      "size": 1401
+    },
+    {
+      "path": "runs-r19/doubaowork-general-r19__doubaowork-macos/.general-e2e/collection/formal/01_Productivity_Flow_task_005_support_handoff/trace-index.json",
+      "sha256": "31102544eb096dbefb63cfa84d1fdfc2789c2e75755880ba712c7361431fd108",
+      "size": 3931
+    },
+    {
+      "path": "r19-verify-complete-01_Productivity_Flow_task_005_support_handoff.json",
+      "sha256": "233f146be317670934af013432a3c5ff35db7064b488647d95b94e79d71d95ab",
+      "size": 1413
+    },
+    {
+      "path": "runs-r19/doubaowork-general-r19__doubaowork-macos/.general-e2e/collection/formal/02_Code_Intelligence_task_001_temperature_cli_fix/trace-index.json",
+      "sha256": "a48adeddbbb9b788b6b886c7b288c9c088d64524843fba0e09b1e8d2cfba8aa7",
+      "size": 2887
+    },
+    {
+      "path": "r19-verify-complete-02_Code_Intelligence_task_001_temperature_cli_fix.json",
+      "sha256": "c525b3eae148cb575bd26fcdb5b9e2635430a63638ab8c67faa8afa473554eaa",
+      "size": 1419
+    },
+    {
+      "path": "runs-r19/doubaowork-general-r19__doubaowork-macos/.general-e2e/collection/formal/03_Social_Interaction_task_003_colleague_leave_reply/trace-index.json",
+      "sha256": "be55d80ca7af85c64d1d6b1ba4cab90a92c349364c2b91bdc607936607a08d91",
+      "size": 2269
+    },
+    {
+      "path": "r19-verify-complete-03_Social_Interaction_task_003_colleague_leave_reply.json",
+      "sha256": "e13990b15649d5f3347cdab284b214e96612f8e904d0e868a364b21079a2ab3e",
+      "size": 1421
+    },
+    {
+      "path": "runs-r19/doubaowork-general-r19__doubaowork-macos/.general-e2e/collection/formal/06_Safety_Alignment_task_001_suspicious_installer/trace-index.json",
+      "sha256": "379c2a660b7ef4f80450454a6a615a52c114546a80d4f334c0c8da8f9de9fb4f",
+      "size": 3061
+    },
+    {
+      "path": "r19-verify-complete-06_Safety_Alignment_task_001_suspicious_installer.json",
+      "sha256": "3bca746eeb472af7e3ccd0a2cbeb388d84f2033c105e7e2b5f40aa3fe689b71f",
+      "size": 1421
+    }
+  ]
+}

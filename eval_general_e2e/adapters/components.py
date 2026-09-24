@@ -26,6 +26,13 @@ class SharedComponentSpec:
 
 EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     SharedComponentSpec(
+        name="doubaowork",
+        version="0.6.2",
+        source_root="tools/report/e2e-shared/doubaowork",
+        vendor_root="vendor/e2e-shared/doubaowork",
+        entrypoints=("controller.mjs", "native-evidence.mjs", "probe.mjs", "process-cleanup.mjs", "select-folder.swift"),
+    ),
+    SharedComponentSpec(
         name="report-reference-data",
         version="1.0.0",
         source_root="tools/report/data",

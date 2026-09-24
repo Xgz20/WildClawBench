@@ -1,0 +1,95 @@
+{
+  "schema": "wildclawbench.doubaowork-general-boundary-evidence/v1",
+  "scope": "r28 frozen General/Web shared lock code, copies of r27 formal artifacts; no target app or global UI lock mutations",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "full_harness_admission": false,
+  "formal_verify": {
+    "unchanged_copy": "PASS",
+    "rejected": [
+      "candidate content drift",
+      "raw trace removal",
+      "outside symlink",
+      "source workspace late write",
+      "receipt identity drift"
+    ]
+  },
+  "locks": {
+    "live_process_owner_contention": "rejected and original preserved",
+    "after_owner_release": "next owner succeeds",
+    "dead_owner": "rejected and original preserved",
+    "changed_release_owner": "deletion rejected"
+  },
+  "regression": {
+    "common_finalizer": {
+      "pass": 15,
+      "fail": 0
+    },
+    "scoring_orchestration": {
+      "pass": 19,
+      "fail": 0
+    },
+    "initial_finalizer_invocation": "wrong system Python 3.8; retained initial failure log; rerun with repository Python 3.11 passed"
+  },
+  "artifacts": [
+    {
+      "path": "verification-boundaries-r28/results.json",
+      "sha256": "2eaf41e5f2496e04664c67ce2a40f65694d46be9b9ffa0e9c0e466f3b861f595",
+      "size": 1350
+    },
+    {
+      "path": "lock-boundaries-r28b/results.json",
+      "sha256": "5d9c3de4822db6b371d904d46c3920b356eded448186664736bed0319b23452c",
+      "size": 977
+    },
+    {
+      "path": "verify-lock-boundaries-r28.mjs",
+      "sha256": "1f0c51967c6dcacd4c59ea9df2b802f23aa8983b8a11c54059c33d5a652d4d6e",
+      "size": 3721
+    },
+    {
+      "path": "r28-common-finalizer-tests.log",
+      "sha256": "b91eb807ef8b9ba4f7e23718967c996a2fe84f399f9824140bbebdd2fe61b5db",
+      "size": 12494
+    },
+    {
+      "path": "r28-common-finalizer-tests-py311.log",
+      "sha256": "30b4f3c7786b5af5f27355fa7ea25211ce97811bebb817a4e80d959509e7f46c",
+      "size": 1471
+    },
+    {
+      "path": "r28-orchestration-tests.log",
+      "sha256": "55d813a8ab2c586c4cd15c28fd17346843c50c210640187040da11badd39f4f0",
+      "size": 119
+    },
+    {
+      "path": "verify-endpoint-boundaries-r28.mjs",
+      "sha256": "ab2e0c4e3b7c1f9ab9ca565e576bbff1127b67e618a8314a55d0ab75641603e9",
+      "size": 1861
+    },
+    {
+      "path": "r28-endpoint-boundaries.json",
+      "sha256": "6fb818c3470331875a958b10457e2bd72159e5d0e004a3121f7ae3299cfa985c",
+      "size": 680
+    },
+    {
+      "path": "r28-probe-foreign-listener.json",
+      "sha256": "c457f1eb8a52cb50a8f4a6ba66ed71c06fa7f6e7d2d5c91e3e8921d2fd00de49",
+      "size": 956
+    },
+    {
+      "path": "r28-probe-closed-endpoint.json",
+      "sha256": "7baa7170023e1807eae70fd630fb296684bc464c401ec60ea1e28a1b4a518186",
+      "size": 657
+    }
+  ],
+  "endpoint": {
+    "foreign_listener": "rejected before CDP connection",
+    "closed_endpoint": "rejected before CDP connection",
+    "prompt_sent": 0
+  },
+  "limits": [
+    "A relocated batch flow copy was rejected as MANIFEST_DRIFT before duplicate import; this does not prove idempotent import for this Doubao batch.",
+    "No forced client restart, GUI lock or active-task interruption was performed.",
+    "Full UI cross-entry contention and publication interruption are not established by shared lock/component checks."
+  ]
+}

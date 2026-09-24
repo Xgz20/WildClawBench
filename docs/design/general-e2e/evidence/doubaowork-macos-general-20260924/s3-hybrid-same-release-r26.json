@@ -1,0 +1,193 @@
+{
+  "schema": "wildclawbench.doubaowork-general-acceptance-evidence/v1",
+  "scope": "S3 hybrid / macOS x86_64 / DoubaoWork 2.31.3 / attended / one slot",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "same_release": true,
+  "full_harness_admission": false,
+  "identity": {
+    "batch_id": "doubaowork-general-r26",
+    "unit_id": "doubaowork-macos",
+    "task_id": "01_Productivity_Flow_task_005_support_handoff",
+    "attempt_id": "e45e9e72-e315-4b5f-9d21-118683de1865"
+  },
+  "dispatch_attempt_count": 1,
+  "trace_completeness": {
+    "status": "complete",
+    "omitted_event_count": 0,
+    "missing": []
+  },
+  "normalized_event_count": 26,
+  "metrics": {
+    "usage": {
+      "input_tokens": {
+        "value": null,
+        "status": "unavailable",
+        "basis": "No verified native accounting profile for this metric"
+      },
+      "output_tokens": {
+        "value": null,
+        "status": "unavailable",
+        "basis": "No verified native accounting profile for this metric"
+      },
+      "total_tokens": {
+        "value": null,
+        "status": "unavailable",
+        "basis": "No verified native accounting profile for this metric"
+      },
+      "cache_read_input_tokens": {
+        "value": null,
+        "status": "unavailable",
+        "basis": "No verified native accounting profile for this metric"
+      },
+      "cache_creation_input_tokens": {
+        "value": null,
+        "status": "unavailable",
+        "basis": "No verified native accounting profile for this metric"
+      },
+      "reasoning_output_tokens": {
+        "value": null,
+        "status": "unavailable",
+        "basis": "No verified native accounting profile for this metric"
+      }
+    },
+    "requests": {
+      "request_count": {
+        "value": null,
+        "status": "unavailable",
+        "basis": "No verified native accounting profile for this metric"
+      },
+      "request_attempt_count": {
+        "value": null,
+        "status": "unavailable",
+        "basis": "No verified native accounting profile for this metric"
+      }
+    },
+    "tools": {
+      "call_count": {
+        "value": 12,
+        "status": "observed",
+        "basis": "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance"
+      }
+    },
+    "timing": {
+      "duration_seconds": {
+        "value": 1185.805,
+        "status": "observed",
+        "basis": "Dispatch boundary to native-checkpoint.receivedMessages.extra.local_info.perf_mark_samples.task_finish.receiveTimestamp"
+      },
+      "agent_duration_seconds": {
+        "value": 1183,
+        "status": "observed",
+        "basis": "Native elapsed_block end_time_s - start_time_s"
+      }
+    }
+  },
+  "score": {
+    "grading_type": "hybrid",
+    "rule_score": 1.0,
+    "semantic_score": 1.0,
+    "total_score": 1.0,
+    "valid": true,
+    "judge_model": "gpt-6-sol",
+    "judge_reasoning": "high",
+    "thread_id": "01a0d13e-9588-7731-ba05-b4969df0a037",
+    "verify_score": "PASS"
+  },
+  "pipeline": [
+    "prepare",
+    "execute",
+    "collect-evidence",
+    "score",
+    "package",
+    "import-return",
+    "report"
+  ],
+  "excel": {
+    "sheets": 10,
+    "key_range_checks": 10,
+    "formula_error_scan": "PASS",
+    "visual_review": "all 10 generated previews reviewed"
+  },
+  "artifacts": [
+    {
+      "path": "release-r26/release-catalog.json",
+      "sha256": "621e69c76a7b153f475b62e69931e6850203c2e5271aa6fa7fa2a4975e68dc9d",
+      "size": 22663
+    },
+    {
+      "path": "release-r26/general-e2e-suite-doubaowork-general-r26.zip",
+      "sha256": "4298d08ef43d22b98806dfe31300752fa751dff9ade51002d613ee2f5028fb33",
+      "size": 3261409
+    },
+    {
+      "path": "r26-queue.json",
+      "sha256": "61716c7d210cd2c0d0bb6e43d4a062e4463cd1c276e25844222efbcc4fab851f",
+      "size": 644
+    },
+    {
+      "path": "r26-collect.json",
+      "sha256": "d69f714214b38adf1a03b13f641d47a7241660449e2c0a55a669948f909363e2",
+      "size": 532
+    },
+    {
+      "path": "r26-finalize.json",
+      "sha256": "12978f3e4f94f6ddca9bb745f388f43e85be11ff91dd1edda74b8580bcde13b4",
+      "size": 961
+    },
+    {
+      "path": "r26-verify.json",
+      "sha256": "5305afd71c55b9e6b94776a6ef20811cfe805f2a09948e91ca9d54255fe08fa1",
+      "size": 1413
+    },
+    {
+      "path": "r26-score-record.json",
+      "sha256": "582312180eb0ecf2f8b778bd1138f760c50174b450091e8622c4fd9658a98421",
+      "size": 1844
+    },
+    {
+      "path": "r26-submission.json",
+      "sha256": "a93bc4df1cebe0a7a8804150dfb31b15c63bd826e55e423c8c10de149ebd6194",
+      "size": 1709
+    },
+    {
+      "path": "r26-package.json",
+      "sha256": "948c4fe74da126c145c80b3ebb382115114ec2e4ed93739b527429bf6ee64d4d",
+      "size": 590
+    },
+    {
+      "path": "r26-import.json",
+      "sha256": "06114f7cfeecfa7bf63138b256c18cd8892d386db992878f853ca3f314da1d20",
+      "size": 448
+    },
+    {
+      "path": "r26-report.json",
+      "sha256": "29b55480ed030d31ac2760f2c679caa5f8f7d20cb3c8c50a4fe91fe9e48b1ffd",
+      "size": 1717
+    },
+    {
+      "path": "r26-report-receipt.json",
+      "sha256": "3cdad82ae2328062a2e691df1d4e466286a329093c4f4041abbd6fe3ed13a760",
+      "size": 4825
+    },
+    {
+      "path": "runs-r26/doubaowork-general-r26__doubaowork-macos/.general-e2e/collection/formal/01_Productivity_Flow_task_005_support_handoff/trace-index.json",
+      "sha256": "e3925f1fab76eead5ff04f499e884231bb81a9364239109af82ef9cfa60bd58a",
+      "size": 5209
+    },
+    {
+      "path": "runs-r26/doubaowork-general-r26__doubaowork-macos/.general-e2e/collection/formal/01_Productivity_Flow_task_005_support_handoff/resource-metrics.json",
+      "sha256": "a796024e1722a858e0a0e17fba2659cecba9385ec8a657717b000067971b1178",
+      "size": 6700
+    },
+    {
+      "path": "batches/doubaowork-general-r26/reports/r26/general_e2e_report_data.json",
+      "sha256": "9b03d1fbb6103dec5ce0c00515c9df7f8707909df7472ff304823a3c3ee42646",
+      "size": 55825
+    },
+    {
+      "path": "batches/doubaowork-general-r26/reports/r26/previews/excel-validation.json",
+      "sha256": "c96b18521622301fe73a22358ee874dff028ea4e9ce57e9188fbd3f4efa2a59b",
+      "size": 15988
+    }
+  ]
+}

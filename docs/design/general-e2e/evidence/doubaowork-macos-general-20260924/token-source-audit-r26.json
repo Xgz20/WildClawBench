@@ -1,0 +1,30 @@
+{
+  "schema": "wildclawbench.doubaowork-token-source-audit/v1",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "scope": "macOS x86_64 / DoubaoWork 2.31.3 / bound evaluation sessions through r26",
+  "bound_conversations": 26,
+  "trajectory_files": 26,
+  "runtime_snapshots": 26,
+  "correlated_readable_log_lines": 8380,
+  "native_token_accounting_found": false,
+  "context_window_snapshots": 26,
+  "subscription_display_snapshots": 11,
+  "usage_name_false_positives": {
+    "moa_skill_usage": 6,
+    "meaning": "skill names and paths, not token usage"
+  },
+  "uninspected_binary_logs": 2,
+  "conclusion": "No verified cumulative Token fields in inspected readable evidence. Context occupancy, subscription display and first-token timing are not token usage. Binary alaudalog remains undecoded.",
+  "artifacts": [
+    {
+      "path": "audit-session-token-fields-r26.py",
+      "sha256": "2be47924988ee37582f9ed43e9cdadcd927610fda1d7919c42a5177ed9ae4832",
+      "size": 6052
+    },
+    {
+      "path": "session-token-audit-r26.json",
+      "sha256": "71e5a35820cf92d697171bf5660691cf6a9ba4c0e2d9a3c334ac63c98f87e083",
+      "size": 29083
+    }
+  ]
+}

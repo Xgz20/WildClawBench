@@ -1,0 +1,131 @@
+{
+  "schema": "wildclawbench.doubaowork-general-semantic-closure/v1",
+  "batch_id": "doubaowork-general-r19",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/doubaowork-general-20260923",
+  "authorized_by_user": "创建两个独立评分任务",
+  "judge": {
+    "model": "gpt-6-sol",
+    "reasoning_effort": "high"
+  },
+  "threads": [
+    {
+      "task_id": "01_Productivity_Flow_task_003_retro_agenda",
+      "thread_id": "01a0d09f-c2a7-7ea1-9e01-4a2860948c77",
+      "score": 0.55
+    },
+    {
+      "task_id": "03_Social_Interaction_task_003_colleague_leave_reply",
+      "thread_id": "01a0d0a0-215a-7542-9e90-6ca3b9b8667f",
+      "score": 0.875
+    }
+  ],
+  "completed_stages": [
+    "semantic-score",
+    "verify-score",
+    "submission",
+    "package-return",
+    "import-return",
+    "report"
+  ],
+  "frozen_task_count": 5,
+  "valid_score_count": 3,
+  "unscored_count": 2,
+  "mean_valid_score": 0.8083333333333332,
+  "report_skill_version": "0.5.2",
+  "resource_projection": "partial trace tool totals withheld; cross-clock flow/wall time withheld; frozen originals retained",
+  "full_harness_admission": false,
+  "same_release_full_closure": false,
+  "artifacts": [
+    {
+      "path": "r19-submission.json",
+      "sha256": "9aad98378fe191dcf43fa4c2e0d7946624bf3f2cdb54a8384fb5ac0d22248b94",
+      "size": 4190
+    },
+    {
+      "path": "scoring/general-five3-r19/submission.json",
+      "sha256": "7e5c7bd9febca4ad4566c975b26274cfe46e3bd6cbb411140392377ea8574f74",
+      "size": 4137
+    },
+    {
+      "path": "r19-package.json",
+      "sha256": "e2b0018bd7f8442ab91e581564247a14032f15d2ea962ca727cf97f1701c65ca",
+      "size": 591
+    },
+    {
+      "path": "r19-import.json",
+      "sha256": "64c363581e85f61568d5e85722286a72b96ff0b0ee11b4acbc966d0b5ee8a3a4",
+      "size": 448
+    },
+    {
+      "path": "r19-report052.json",
+      "sha256": "de12a00743cbbc848e635ef8d12e8be3a5c34d41db08d90f1a1ffed053a1883f",
+      "size": 1807
+    },
+    {
+      "path": "r19-report052-receipt.json",
+      "sha256": "80dc2bdcdbecac1075f9a45cc12f7608e68a97d109364daea558efdfc5faf5e1",
+      "size": 5332
+    },
+    {
+      "path": "report-052-final-tests.log",
+      "sha256": "faf3def2b947bee26572a35bbb404d7a4936cb58834b2b35284ce60ae19307db",
+      "size": 139
+    },
+    {
+      "path": "report-052-build/skills-build-manifest.json",
+      "sha256": "7217f683ab90605a5d8902ddba14c93689868d57e620b5a0d84e2bcb0b291278",
+      "size": 3227
+    },
+    {
+      "path": "r19-record-score-01_Productivity_Flow_task_003_retro_agenda.json",
+      "sha256": "bc5b6d94a9d147db33a5cd5a17a3c23345abc24d8bb1c2c9d1af7ee574d8ebe5",
+      "size": 4172
+    },
+    {
+      "path": "r19-record-score-03_Social_Interaction_task_003_colleague_leave_reply.json",
+      "sha256": "fdbdfc19ac3d155b113b172edb72eb64d21de54af6281e792bc9c27213947060",
+      "size": 4325
+    },
+    {
+      "path": "batches/doubaowork-general-r19/reports/r19-report052/general_e2e_report_data.json",
+      "sha256": "9db75f4051f8af131c4bfd8fbe033401a82398498bd22ba1283dc4336bcd8b95",
+      "size": 122490
+    },
+    {
+      "path": "batches/doubaowork-general-r19/reports/r19-report052/通用场景端到端自动化评测报告.xlsx",
+      "sha256": "dd9e687acb89ecc7553be415cb98b9329ab5dd59cbde9f6c2a560c9b5975208a",
+      "size": 29754
+    },
+    {
+      "path": "batches/doubaowork-general-r19/reports/r19-report052/通用场景端到端自动化评测报告.md",
+      "sha256": "e8fa0e4ba454d8d54b30a1c3bbddbc9b16d0b75c6ac9a9dd5dcb8e78a4d8b34e",
+      "size": 4760
+    },
+    {
+      "path": "batches/doubaowork-general-r19/reports/r19-report052/通用场景端到端评测审计.md",
+      "sha256": "3743bd84dabc3682586a7a315154603a47bcca33ca2329030f37a3060edb4f77",
+      "size": 4072
+    },
+    {
+      "path": "batches/doubaowork-general-r19/reports/r19-report052/previews/excel-validation.json",
+      "sha256": "9dc7986b61c3d5efa200de104d419f56deb6eb86e8a74bbee4269a0f2e76d305",
+      "size": 23027
+    },
+    {
+      "path": "release-candidate-r22/release-catalog.json",
+      "sha256": "03cc6ea662289efb4da3669da70ba77a2be9da9afa0671e77e364f9fd68a1efd",
+      "size": 22682
+    },
+    {
+      "path": "release-candidate-r22-verify.json",
+      "sha256": "92d0d8008a14141d3062de1124f089076a66c3768d3c2edb94d2817d3364d6cc",
+      "size": 25117
+    },
+    {
+      "path": "report-052-build-verify.json",
+      "sha256": "b05f71b5331c4cd1eef5de7fa5b6ecff1c2886152eb72f4fb5db1ed798f927b0",
+      "size": 637
+    }
+  ],
+  "controller_note": "The already-PREFLIGHT_PASSED S4 rejects a duplicate preflight action; resume still returned CREATE_THREAD, and both judges independently rechecked the frozen Skill identity before scoring."
+}
