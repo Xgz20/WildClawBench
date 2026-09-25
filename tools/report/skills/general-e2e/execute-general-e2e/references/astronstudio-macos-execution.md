@@ -43,6 +43,8 @@ node scripts/execute_astronstudio_macos.mjs \
 
 `0.11.25` 在发送点击前同次回读唯一可见的 Prompt、完整 Workspace、无遮挡发送按钮和未知对话框数量；点击改为 CDP 鼠标移动/按下/释放事件。点击动作返回不代表客户端已受理，仍以原生 thread/turn/session/cwd 为准。校验失败或发送后无原生身份都保留一次发送意图并暂停，不自动补点或重置计数。
 
+`0.11.26` 只对编辑器自动生成的 `role=link / contenteditable=false` URL chip，在冻结 Prompt 中按 DOM 顺序找到完全相同的 `http(s)` `title`，用 chip 的可见文本重建期望显示值；正文其他字符仍要求完全一致。发送前的同次回读与填入后的回读使用同一规则，缺失 title、未知协议或不一致均失败关闭。超时诊断只记录长度与 chip 数，不再输出完整草稿文本。
+
 状态查询只读取主状态库的临时副本及同批复制的 WAL/SHM，不写源库。AStudio 热写入导致副本 `quick_check` 或查询短暂失败时，单次查询先退避重试；Prompt 已发送并绑定身份后，终态轮询继续保留同一 attempt 重试，不因此创建新任务或再次发送。`--resume --observe-once` 仍只尝试一次上层观察；该次读取失败会持久化 `NATIVE_STATE_READ_FAILED / NEEDS_ATTENTION`，可再次恢复。
 
 执行锁遗留时，只有 `--resume` 且记录的 PID 已不存活才允许清除陈旧锁；普通新运行不会接管锁。单题 Driver 同时持有 unit 级 `astronstudio-ui.lock` 和 task 级 `driver.lock`，因此即使绕过队列直接启动多个单题入口，也只有一个进程可以操作 AStudio UI。

@@ -182,9 +182,28 @@ async function editorState(client) {
     return {
       thread_id: threadId(),
       editor_count: editors.length,
-      editor_text: editors.length === 1 ? (editors[0].innerText || "").trim() : null
+      editor_text: editors.length === 1 ? (editors[0].innerText || "").trim() : null,
+      link_chips: editors.length === 1
+        ? Array.from(editors[0].querySelectorAll('[role="link"][contenteditable="false"]'))
+          .map((chip) => ({ title: chip.getAttribute('title'), display: chip.innerText || '' }))
+        : []
     };
   `));
+}
+
+export function renderExpectedPrompt(expected, linkChips) {
+  if (typeof expected !== "string" || !Array.isArray(linkChips)) return null;
+  let cursor = 0;
+  let rendered = "";
+  for (const chip of linkChips) {
+    if (typeof chip?.title !== "string" || !/^https?:\/\//u.test(chip.title)
+      || typeof chip?.display !== "string" || !chip.display) return null;
+    const index = expected.indexOf(chip.title, cursor);
+    if (index < 0) return null;
+    rendered += expected.slice(cursor, index) + chip.display;
+    cursor = index + chip.title.length;
+  }
+  return rendered + expected.slice(cursor);
 }
 
 export async function clickNewTask(client) {
@@ -229,10 +248,18 @@ export async function createFreshTask(client, timeoutMs) {
   }
   if (!clicked.clicked) throw new Error(`AstronStudio 新建任务按钮数量异常：${clicked.count}`);
   return waitFor(
-    () => editorState(client),
+    async () => {
+      const state = await editorState(client);
+      return {
+        thread_id: state.thread_id,
+        editor_count: state.editor_count,
+        editor_empty: state.editor_text === "",
+        editor_length: state.editor_text?.length ?? null,
+      };
+    },
     (value) => value.editor_count === 1
       && Boolean(value.thread_id)
-      && value.editor_text === ""
+      && value.editor_empty
       && (value.thread_id !== before.thread_id || before.editor_text === ""),
     timeoutMs,
     "等待 AstronStudio 空白任务路由",
@@ -402,7 +429,15 @@ export async function fillPrompt(client, prompt, timeoutMs) {
   return waitFor(
     async () => {
       const state = await editorState(client);
-      return { ...state, matches: String(state.editor_text || "").replaceAll("\r\n", "\n") === expected };
+      const rendered = renderExpectedPrompt(expected, state.link_chips);
+      return {
+        thread_id: state.thread_id,
+        editor_count: state.editor_count,
+        editor_length: state.editor_text?.length ?? null,
+        link_chip_count: state.link_chips.length,
+        matches: rendered !== null
+          && String(state.editor_text || "").replaceAll("\r\n", "\n") === rendered,
+      };
     },
     (value) => value.editor_count === 1 && value.matches,
     timeoutMs,
@@ -410,11 +445,12 @@ export async function fillPrompt(client, prompt, timeoutMs) {
   );
 }
 
-export async function clickSend(client, prompt, workspace) {
+export async function inspectSendTarget(client, prompt, workspace) {
   const expectedPrompt = prompt.trim().replaceAll("\r\n", "\n");
-  const target = await client.evaluate(expression(`
+  return client.evaluate(expression(`
     const expectedPrompt = ${JSON.stringify(expectedPrompt)};
     const expectedWorkspace = ${JSON.stringify(workspace)};
+    const renderExpected = ${renderExpectedPrompt.toString()};
     const editors = Array.from(document.querySelectorAll('[data-testid="composer-editor"]')).filter(visible);
     const workspaces = ['workspace-picker-trigger', 'project-picker-trigger']
       .flatMap((testId) => Array.from(document.querySelectorAll('[data-testid="' + testId + '"]')))
@@ -425,14 +461,20 @@ export async function clickSend(client, prompt, workspace) {
     )).filter(visible).filter((button) => !button.disabled);
     const editorText = editors.length === 1
       ? (editors[0].innerText || '').replaceAll('\\r\\n', '\\n').trim() : null;
+    const linkChips = editors.length === 1
+      ? Array.from(editors[0].querySelectorAll('[role="link"][contenteditable="false"]'))
+        .map((chip) => ({ title: chip.getAttribute('title'), display: chip.innerText || '' }))
+      : [];
+    const renderedExpected = renderExpected(expectedPrompt, linkChips);
+    const promptMatches = renderedExpected !== null && editorText === renderedExpected;
     const workspacePath = workspaces.length === 1
       ? (workspaces[0].getAttribute('title') || '').trim() : null;
-    if (editors.length !== 1 || editorText !== expectedPrompt
+    if (editors.length !== 1 || !promptMatches
       || workspaces.length !== 1 || workspacePath !== expectedWorkspace
       || dialogs.length !== 0 || buttons.length !== 1) {
       return {
         ready: false, count: buttons.length, editor_count: editors.length,
-        prompt_matches: editorText === expectedPrompt,
+        prompt_matches: promptMatches, link_chip_count: linkChips.length,
         workspace_count: workspaces.length, workspace_matches: workspacePath === expectedWorkspace,
         dialog_count: dialogs.length
       };
@@ -446,6 +488,10 @@ export async function clickSend(client, prompt, workspace) {
     }
     return { ready: true, count: 1, x, y, thread_id: threadId() };
   `));
+}
+
+export async function clickSend(client, prompt, workspace) {
+  const target = await inspectSendTarget(client, prompt, workspace);
   if (!target.ready) return { clicked: false, ...target };
   await client.send("Input.dispatchMouseEvent", {
     type: "mouseMoved", x: target.x, y: target.y,

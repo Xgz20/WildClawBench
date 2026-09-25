@@ -7,6 +7,8 @@ import test from "node:test";
 import {
   clickNewTask,
   clickSend,
+  fillPrompt,
+  renderExpectedPrompt,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs";
 import {
   withStateSnapshot,
@@ -155,6 +157,50 @@ function commonDependencies(config, sessions, clickCounter) {
     nowMilliseconds: () => clock,
   };
 }
+
+test("URL chips preserve full frozen links during composer readback", async () => {
+  const prompt = "参考 https://flk.npc.gov.cn/detail?id=1 和 https://www.gov.cn/a";
+  const chips = [
+    { title: "https://flk.npc.gov.cn/detail?id=1", display: "flk.npc.gov.cn/detail?id=1" },
+    { title: "https://www.gov.cn/a", display: "gov.cn/a" },
+  ];
+  const rendered = "参考 flk.npc.gov.cn/detail?id=1 和 gov.cn/a";
+  assert.equal(renderExpectedPrompt(prompt, chips), rendered);
+  assert.equal(renderExpectedPrompt(prompt, [{ title: "https://other.example/a", display: "other.example/a" }]), null);
+  assert.equal(renderExpectedPrompt(prompt, [{ title: "file:///tmp/secret", display: "secret" }]), null);
+
+  let evaluations = 0;
+  const sends = [];
+  const client = {
+    evaluate: async () => {
+      evaluations += 1;
+      return evaluations === 1
+        ? { ready: true, count: 1 }
+        : { thread_id: "thread-1", editor_count: 1, editor_text: rendered, link_chips: chips };
+    },
+    send: async (...args) => sends.push(args),
+  };
+  const result = await fillPrompt(client, prompt, 100);
+  assert.equal(result.matches, true);
+  assert.equal(result.link_chip_count, 2);
+  assert.equal("editor_text" in result, false);
+  assert.deepEqual(sends.map(([method]) => method), ["Input.insertText"]);
+});
+
+test("composer mismatch diagnostics do not echo draft content", async () => {
+  let reads = 0;
+  const client = {
+    evaluate: async () => reads++ === 0
+      ? { ready: true, count: 1 }
+      : { thread_id: "thread-1", editor_count: 1, editor_text: "PRIVATE_DRAFT_VALUE", link_chips: [] },
+    send: async () => {},
+  };
+  await assert.rejects(
+    fillPrompt(client, "expected text", 1),
+    (error) => !error.message.includes("PRIVATE_DRAFT_VALUE")
+      && error.message.includes("editor_length"),
+  );
+});
 
 test("send uses one CDP mouse click after exact UI validation", async () => {
   const calls = [];
