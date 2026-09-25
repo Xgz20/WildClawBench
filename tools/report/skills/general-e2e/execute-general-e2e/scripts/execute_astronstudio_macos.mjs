@@ -33,7 +33,7 @@ import {
 import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery/index.mjs";
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.3.0";
+export const EXECUTION_DRIVER_VERSION = "0.3.1";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -855,9 +855,9 @@ export async function executeSingleTask(config, overrides = {}) {
 
     let sendResult;
     try {
-      sendResult = await dependencies.clickSend(client);
+      sendResult = await dependencies.clickSend(client, config.prompt, config.candidateWorkspace);
       if (!sendResult?.clicked) {
-        throw new Error(`AstronStudio 发送按钮数量异常：${sendResult?.count ?? "unknown"}`);
+        throw new Error(`AstronStudio 发送前 UI 校验失败：${JSON.stringify(sendResult || null)}`);
       }
       state.send.dispatch_completed_at = dependencies.now();
       state.prompt.send_status = "sent";

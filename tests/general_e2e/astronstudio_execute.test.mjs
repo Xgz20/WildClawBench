@@ -6,6 +6,7 @@ import test from "node:test";
 
 import {
   clickNewTask,
+  clickSend,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs";
 import {
   withStateSnapshot,
@@ -154,6 +155,43 @@ function commonDependencies(config, sessions, clickCounter) {
     nowMilliseconds: () => clock,
   };
 }
+
+test("send uses one CDP mouse click after exact UI validation", async () => {
+  const calls = [];
+  let reads = 0;
+  const client = {
+    evaluate: async (expression) => {
+      if (reads++ === 0) {
+        assert.match(expression, /expectedPrompt/u);
+        assert.match(expression, /expectedWorkspace/u);
+        return { ready: true, count: 1, x: 14, y: 28, thread_id: "before" };
+      }
+      return { thread_id: "after", editor_count: 1, editor_text: "" };
+    },
+    send: async (method, params) => calls.push({ method, params }),
+  };
+  const result = await clickSend(client, "prompt", "/tmp/target-workspace");
+  assert.equal(result.clicked, true);
+  assert.equal(result.thread_id, "after");
+  assert.deepEqual(calls.map((item) => item.params.type),
+    ["mouseMoved", "mousePressed", "mouseReleased"]);
+  assert.equal(calls.filter((item) => item.params.type === "mousePressed").length, 1);
+});
+
+test("unsafe send UI never dispatches a mouse event", async () => {
+  const calls = [];
+  const client = {
+    evaluate: async () => ({
+      ready: false, count: 1, prompt_matches: true,
+      workspace_matches: false, dialog_count: 0,
+    }),
+    send: async (...args) => calls.push(args),
+  };
+  const result = await clickSend(client, "prompt", "/tmp/target-workspace");
+  assert.equal(result.clicked, false);
+  assert.equal(result.workspace_matches, false);
+  assert.deepEqual(calls, []);
+});
 
 test("CLI requires resume for observation and keeps identity timeout bounded", () => {
   assert.throws(() => parseArgs(["--observe-once"]), /--observe-once/u);

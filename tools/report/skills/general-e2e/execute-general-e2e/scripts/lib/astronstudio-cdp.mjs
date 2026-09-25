@@ -410,15 +410,53 @@ export async function fillPrompt(client, prompt, timeoutMs) {
   );
 }
 
-export async function clickSend(client) {
-  return client.evaluate(expression(`
+export async function clickSend(client, prompt, workspace) {
+  const expectedPrompt = prompt.trim().replaceAll("\r\n", "\n");
+  const target = await client.evaluate(expression(`
+    const expectedPrompt = ${JSON.stringify(expectedPrompt)};
+    const expectedWorkspace = ${JSON.stringify(workspace)};
+    const editors = Array.from(document.querySelectorAll('[data-testid="composer-editor"]')).filter(visible);
+    const workspaces = ['workspace-picker-trigger', 'project-picker-trigger']
+      .flatMap((testId) => Array.from(document.querySelectorAll('[data-testid="' + testId + '"]')))
+      .filter(visible);
+    const dialogs = Array.from(document.querySelectorAll('[role="dialog"], [aria-modal="true"]')).filter(visible);
     const buttons = Array.from(document.querySelectorAll(
       'button[type="submit"][aria-label="发送消息"], button[type="submit"][aria-label="Send message"]'
     )).filter(visible).filter((button) => !button.disabled);
-    if (buttons.length !== 1) return { clicked: false, count: buttons.length };
-    buttons[0].click();
-    return { clicked: true, count: 1, thread_id: threadId() };
+    const editorText = editors.length === 1
+      ? (editors[0].innerText || '').replaceAll('\\r\\n', '\\n').trim() : null;
+    const workspacePath = workspaces.length === 1
+      ? (workspaces[0].getAttribute('title') || '').trim() : null;
+    if (editors.length !== 1 || editorText !== expectedPrompt
+      || workspaces.length !== 1 || workspacePath !== expectedWorkspace
+      || dialogs.length !== 0 || buttons.length !== 1) {
+      return {
+        ready: false, count: buttons.length, editor_count: editors.length,
+        prompt_matches: editorText === expectedPrompt,
+        workspace_count: workspaces.length, workspace_matches: workspacePath === expectedWorkspace,
+        dialog_count: dialogs.length
+      };
+    }
+    const rect = buttons[0].getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const hit = document.elementFromPoint(x, y);
+    if (!hit || (hit !== buttons[0] && !buttons[0].contains(hit))) {
+      return { ready: false, count: 1, reason: 'send-button-obscured' };
+    }
+    return { ready: true, count: 1, x, y, thread_id: threadId() };
   `));
+  if (!target.ready) return { clicked: false, ...target };
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved", x: target.x, y: target.y,
+  });
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mousePressed", x: target.x, y: target.y, button: "left", clickCount: 1,
+  });
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseReleased", x: target.x, y: target.y, button: "left", clickCount: 1,
+  });
+  return { clicked: true, count: 1, thread_id: await currentThreadId(client) };
 }
 
 export async function currentThreadId(client) {
