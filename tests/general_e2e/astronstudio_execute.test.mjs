@@ -134,9 +134,12 @@ function commonDependencies(config, sessions, clickCounter) {
     prepareExecutionUi: async () => ({
       task: { thread_id: "thread-1" },
       workspace: { method: "exact-path-selection", path: config.candidateWorkspace },
-      ui: { model: "GLM-5.2", reasoning: "High", permission: "完全访问" },
+      ui: { thread_id: "thread-1", model: "GLM-5.2", reasoning: "High", permission: "完全访问" },
     }),
     fillPrompt: async () => ({ editor_count: 1, matches: true }),
+    waitForThreadStreamLease: async ({ threadId }) => ({
+      threadId, leaseId: "lease-1", admittedAt: Date.parse("2026-09-17T15:00:00Z"),
+    }),
     clickSend: async () => {
       clickCounter.count += 1;
       return { clicked: true, count: 1, thread_id: "thread-1" };
@@ -543,6 +546,26 @@ test("an ambiguous dispatch error stops without retrying", async () => {
     assert.equal(result.send.dispatch_attempt_count, 1);
     assert.equal(clickCounter.count, 1);
     assert.equal(result.execution.error.code, "PROMPT_SEND_UNCERTAIN");
+  } finally {
+    await rm(config.unitRoot, { recursive: true, force: true });
+  }
+});
+
+test("stream admission failure stops before arming a Prompt send", async () => {
+  const config = await fixture();
+  const clickCounter = { count: 0 };
+  try {
+    const dependencies = commonDependencies(config, [[]], clickCounter);
+    dependencies.waitForThreadStreamLease = async () => {
+      throw new Error("stream unavailable");
+    };
+    const result = await executeSingleTask(config, dependencies);
+    assert.equal(result.phase, "FAILED");
+    assert.equal(result.execution.business_status, "infrastructure_error");
+    assert.equal(result.execution.error.code, "PRE_SEND_DRIVER_ERROR");
+    assert.equal(result.prompt.send_status, "not_sent");
+    assert.equal(result.send.dispatch_attempt_count, 0);
+    assert.equal(clickCounter.count, 0);
   } finally {
     await rm(config.unitRoot, { recursive: true, force: true });
   }

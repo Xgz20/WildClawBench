@@ -30,10 +30,11 @@ import {
   queryFinalResponse,
   queryNativeSessions,
 } from "./lib/astronstudio-state.mjs";
+import { waitForThreadStreamLease } from "./lib/astronstudio-stream.mjs";
 import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery/index.mjs";
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.3.2";
+export const EXECUTION_DRIVER_VERSION = "0.3.3";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -811,6 +812,7 @@ export async function executeSingleTask(config, overrides = {}) {
     probeAstronStudio,
     queryNativeSessions,
     queryFinalResponse,
+    waitForThreadStreamLease,
     discoverMainTarget,
     connectCdp: (url, timeout) => CdpClient.connect(url, timeout),
     prepareExecutionUi,
@@ -840,10 +842,29 @@ export async function executeSingleTask(config, overrides = {}) {
     const prepared = await dependencies.prepareExecutionUi(client, config);
     state.client.ui_verification = prepared.ui;
     state.client.workspace_selection = prepared.workspace;
-    state.send.pre_send_route_thread_id = prepared.task.thread_id;
+    state.send.pre_send_route_thread_id = prepared.ui.thread_id;
+    if (!state.send.pre_send_route_thread_id) {
+      throw new Error("AstronStudio 目标 Workspace 的 UI thread ID 缺失");
+    }
     const sessions = await dependencies.queryNativeSessions(config.stateDatabase);
     state.session.baseline = baselineRows(sessions, config.candidateWorkspace);
     await dependencies.fillPrompt(client, config.prompt, config.timeoutMs);
+    const stream = await dependencies.waitForThreadStreamLease({
+      logPath: join(dirname(config.stateDatabase), "logs", "server.log"),
+      threadId: state.send.pre_send_route_thread_id,
+      sinceEpochMs: Date.parse(state.execution.started_at),
+      timeoutMs: 120_000,
+      minStableMs: 1_500,
+    });
+    state.history.push({
+      phase: "PENDING",
+      at: dependencies.now(),
+      event: "TARGET_THREAD_STREAM_READY",
+      thread_id: stream.threadId,
+      lease_id: stream.leaseId,
+      admitted_at: new Date(stream.admittedAt).toISOString(),
+    });
+    await persist(config, state);
     state.prompt.send_status = "intent_persisted";
     state.send.dispatch_armed_at = dependencies.now();
     state.send.dispatch_attempt_count = 1;
