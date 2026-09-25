@@ -34,11 +34,13 @@ export async function validateFormalResume(state) {
 
 export function projectWebMetrics(proof, calls) {
   const result = empty("NATIVE_TOKEN_AND_REQUEST_ACCOUNTING_UNAVAILABLE");
+  const knownSubtotal = proof.nativeToolCoverageDiagnostic ? proof.nativeTools.known_subtotal : calls;
   const known = !proof.nonSuccess && Boolean(proof.nativeTools) && !proof.unknownBlocks.length && proof.remoteCoverageVerified;
   setMetric(result, "tools", "call_count", known ? calls : null, known ? "observed" : "partial", "Bound native tool IDs and session trajectory union");
   if (!known) {
     result.collection.metrics.call_count.status = "partial";
-    result.collection.known_subtotals = { call_count: calls };
+    result.collection.known_subtotals = { call_count: knownSubtotal };
+    if (proof.nativeToolCoverageDiagnostic) result.collection.warnings.push("NATIVE_TOOL_UPLOAD_FAILED_BEFORE_TERMINAL");
   }
   setMetric(result, "execution", "agent_duration_seconds", proof.native.agent_duration_seconds, "observed", "Native elapsed_block duration");
   const duration = proof.nonSuccess ? (Date.parse(proof.nonSuccess.observed_at) - Date.parse(proof.journal.timing.sent_at)) / 1000
@@ -49,7 +51,7 @@ export function projectWebMetrics(proof, calls) {
   result.collection.metrics.duration_seconds = { status: duration === null ? "unavailable" : "observed",
     basis: proof.nonSuccess ? "Dispatch to terminal observation; includes observer delay, not agent runtime"
       : proof.lifecycle?.status === "observed" ? proof.lifecycle.source : duration === null ? "Different native and controller clock domains" : proof.native.sources.finished_at };
-  result.collection.tool_coverage = { numerator: calls, denominator: known ? calls : null };
+  result.collection.tool_coverage = { numerator: knownSubtotal, denominator: known ? calls : null };
   result.collection.trace_completeness = proof.completeToolTrace ? "complete" : "partial";
   result.collection.session_id = proof.native.conversation_id;
   result.collection.native_terminal_status = "verified";
@@ -148,7 +150,9 @@ export async function finalizeWebObservation({ state, record, outputDir, stateFi
   await write("finalizer.json", json({ assessment, bridge, cleanup }));
   await write("trace-index.json", json({ schema: "wildclawbench.doubaowork-web-trace/v1", attempt_id: state.attempt_id,
     identity: state.identity, raw: [...raw], completeness: proof.completeToolTrace ? "complete" : "partial", tool_order_basis: proof.timeline.basis,
-    tool_known_subtotal: callIds.size, duplicate_events: proof.legacy.duplicates, multimodal_result_content_unverified: proof.multimodalBypassCount }));
+    tool_known_subtotal: proof.nativeToolCoverageDiagnostic ? proof.nativeTools.known_subtotal : callIds.size,
+    native_tool_upload: proof.nativeToolCoverageDiagnostic, duplicate_events: proof.legacy.duplicates,
+    multimodal_result_content_unverified: proof.multimodalBypassCount }));
   await assertStable(config, state, stateFile, journalBytes, proof, candidate);
   const phase = proof.nonSuccess ? "INFRA_FAILED" : "SUCCEEDED";
   const finishedAt = proof.nonSuccess?.observed_at ?? proof.native.finished_at;

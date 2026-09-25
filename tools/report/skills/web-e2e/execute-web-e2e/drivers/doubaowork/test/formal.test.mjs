@@ -36,6 +36,12 @@ test("Web metrics keep unavailable token totals and distinguish tool subtotal an
   assert.equal(metrics.duration_seconds, null); assert.equal(metrics.execution.agent_duration_seconds, 4);
   assert.equal(metrics.tools.call_count, null); assert.equal(metrics.collection.known_subtotals.call_count, 3);
   assert.equal(metrics.collection.tool_coverage.denominator, null);
+  const failedUpload = projectWebMetrics({ ...proof, nonSuccess: { observed_at: "2026-09-25T00:00:05Z" },
+    nativeTools: { known_subtotal: 18 }, nativeToolCoverageDiagnostic: { status: "partial", failed_upload_count: 2 } }, 20);
+  assert.equal(failedUpload.tools.call_count, null);
+  assert.equal(failedUpload.collection.known_subtotals.call_count, 18);
+  assert.deepEqual(failedUpload.collection.tool_coverage, { numerator: 18, denominator: null });
+  assert.ok(failedUpload.collection.warnings.includes("NATIVE_TOOL_UPLOAD_FAILED_BEFORE_TERMINAL"));
 });
 async function transactionFixture(t) {
   const root = await mkdtemp(join(tmpdir(), "doubao-web-publication-"));

@@ -1,6 +1,6 @@
 # DoubaoWork macOS Web E2E
 
-Driver `0.7.6` 由 Web `execute-web-e2e 1.20.3` 独立发行。共用源码位于 `tools/report/e2e-shared/doubaowork/`，发行包自带 vendor；不需要安装 General Skill。Web 的 prepared task、正式记录、候选冻结和评分交接由本目录适配。真机准入范围以统一 Harness 接入契约与当次包 SHA 为准，历史 canary 和单测不代表生产通过。
+Driver `0.7.7` 由 Web `execute-web-e2e 1.20.4` 独立发行。共用源码位于 `tools/report/e2e-shared/doubaowork/`，发行包自带 vendor；不需要安装 General Skill。Web 的 prepared task、正式记录、候选冻结和评分交接由本目录适配。真机准入范围以统一 Harness 接入契约与当次包 SHA 为准，历史 canary 和单测不代表生产通过。
 
 ## 单题执行
 

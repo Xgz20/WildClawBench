@@ -281,7 +281,7 @@ export async function main(argv = process.argv.slice(2)) {
   try {
     const state = old ?? createBatchState(plan, args);
     if (state.driver_version !== DRIVER_VERSION) {
-      const allowedUpgrade = ({ "0.7.2": "0.7.3", "0.7.4": "0.7.5", "0.7.5": "0.7.6" })[state.driver_version] === DRIVER_VERSION;
+      const allowedUpgrade = ({ "0.7.2": "0.7.3", "0.7.4": "0.7.5", "0.7.5": "0.7.6", "0.7.6": "0.7.7" })[state.driver_version] === DRIVER_VERSION;
       if (!args.adoptDriverVersion || !allowedUpgrade)
         throw new Error("DOUBAOWORK_WEB_BATCH_VERSION_DRIFT");
       assertStateMatches(state, plan, args, { allowVersionDrift: true });

@@ -7,7 +7,7 @@ import { pathToFileURL } from "node:url";
 import { readBoundNativeEvidence, readRegular } from "../../vendor/e2e-shared/doubaowork/bound-evidence.mjs";
 export { verifyTrajectoryPrompt, verifyRecoveredDispatchAcknowledgement } from "../../vendor/e2e-shared/doubaowork/bound-evidence.mjs";
 
-const ADAPTER = "doubaowork-native-evidence", VERSION = "0.2.7";
+const ADAPTER = "doubaowork-native-evidence", VERSION = "0.2.8";
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 const json = value => Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
 const artifact = (path, bytes, extra = {}) => ({ path, sha256: sha(bytes), size: bytes.length, ...extra });
@@ -29,7 +29,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const taskRoot = join(unitRoot, "execution/tasks", task.task_id);
   if (!within(taskRoot, promptPath) || !within(taskRoot, workspace) || workspace !== journal.workspace || promptPath !== journal.prompt.file
       || sha(await readRegular(promptPath)) !== journal.prompt.sha256 || task.prompt.sent_sha256 !== journal.prompt.sha256) throw new Error("DOUBAOWORK_COLLECTOR_TASK_DRIFT");
-  const { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown } = await readBoundNativeEvidence({ journalFile, journal, workspace });
+  const { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, nativeToolCoverageDiagnostic, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown } = await readBoundNativeEvidence({ journalFile, journal, workspace });
   const identity = { batch_id: manifest.batch_id, unit_id: manifest.unit.unit_id, task_id: task.task_id, attempt_id: journal.attempt_id };
   await mkdir(dirname(outputRoot), { recursive: true });
   if (await realpath(dirname(outputRoot)) !== dirname(outputRoot)) throw new Error("DOUBAOWORK_COLLECTION_SYMLINK_PARENT");
@@ -49,7 +49,8 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   raw.push(await write("raw/normalization-diagnostics.json", json({ duplicate_events: legacy.duplicates, cross_source_order_unknown: crossSourceOrderUnknown,
     tool_order_basis: timeline.basis, shared_call_count: timeline.shared_call_count ?? null,
     trajectory_prompt_binding: trajectoryPromptBinding,
-    non_success_tool_displays_without_execution: missingToolDisplays })));
+    non_success_tool_displays_without_execution: missingToolDisplays,
+    native_tool_coverage_diagnostic: nativeToolCoverageDiagnostic })));
   const binding = await write("bindings/runtime-messages.json", runtimeBytes);
   const dispatchBinding = await write("bindings/dispatch-journal.json", journalBytes);
   const bindings = [binding, dispatchBinding];
@@ -128,6 +129,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
     completeness: { status: completeToolTrace ? "complete" : "partial", omitted_event_count: 0,
       missing: completeToolTrace ? [] : [...(cancellation ? ["native-task-cancelled-before-complete-trace"] : failure ? ["native-task-failed-before-complete-trace"] : []), ...(!trajectory ? ["native-trajectory-unavailable"] : []),
         ...(multimodalBypassCount ? ["multimodal-tool-result-content-unverified"] : []),
+        ...(nativeToolCoverageDiagnostic ? ["native-tool-upload-failed-before-terminal"] : []),
         ...(trajectoryPromptBinding.status !== "verified" ? [trajectoryPromptBinding.reason] : []),
         ...(missingToolDisplays.length ? ["non-success-tool-display-without-execution-evidence"] : []),
         ...(!native.final_text ? ["final-assistant-text-unavailable"] : []), ...(!nativeTools ? ["native-tool-trajectory-incomplete"] : []), ...(unknownBlocks.length ? ["unmapped-native-message-block"] : []),
@@ -143,6 +145,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const usageFields = ["input_tokens", "output_tokens", "total_tokens", "cache_read_input_tokens", "cache_creation_input_tokens", "reasoning_output_tokens"];
   const fields = [...usageFields, "request_count", "request_attempt_count", "call_count", "duration_seconds", "agent_duration_seconds"];
   const toolCountKnown = !nonSuccess && Boolean(nativeTools) && unknownBlocks.length === 0 && remoteCoverageVerified;
+  const knownToolSubtotal = nativeToolCoverageDiagnostic ? nativeTools.known_subtotal : calls.size;
   const metrics = { usage: Object.fromEntries(usageFields.map(k => [k, metric()])), requests: { request_count: metric(), request_attempt_count: metric() },
     tools: { call_count: toolCountKnown ? metric(calls.size, "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance")
       : { value: null, status: "partial", basis: "Unique calls in the bound trajectory; provider total coverage unknown" } },
@@ -156,14 +159,14 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
       sources: [{ ...stateArtifact, path: "execution/automation-state.json" }, { ...indexArtifact, path: "trace/trace-index.json" }, ...raw.map(r => ({ ...r, path: `trace/${r.path}` }))],
       warnings: ["Token/request accounting unavailable; context-window occupancy is not cumulative token consumption; subscription display has no verified unit.", ...(toolCountKnown ? [] : ["Tool count is a known subtotal."])], excluded_scope: ["unbound native logs", "other conversations", "unexposed provider-internal requests/reasoning"],
       coverage: Object.fromEntries(fields.map(k => [k, k === "call_count"
-        ? { known: calls.size, total: toolCountKnown ? calls.size : null, unit: "tool-call" }
+        ? { known: knownToolSubtotal, total: toolCountKnown ? knownToolSubtotal : null, unit: "tool-call" }
         : { known: flat[k].status === "observed" ? 1 : 0, total: flat[k].status === "observed" ? 1 : null, unit: "turn" }])),
-      known_subtotals: toolCountKnown ? {} : { call_count: calls.size } } };
+      known_subtotals: toolCountKnown ? {} : { call_count: knownToolSubtotal } } };
   await write("resource-metrics.json", json(resource));
   if (sha(await readRegular(journalFile)) !== sha(journalBytes) || trajectoryPath && sha(await readRegular(trajectoryPath)) !== source.sha256) throw new Error("DOUBAOWORK_COLLECTION_INPUT_CHANGED");
   if (archiveIndexBytes && sha(await readRegular(archiveIndexPath)) !== sha(archiveIndexBytes)) throw new Error("DOUBAOWORK_ARCHIVE_CHANGED_DURING_COLLECTION");
   await rename(staging, outputRoot);
-  return { status: "COLLECTED_NOT_FINALIZED", output_root: outputRoot, identity, trace_event_count: events.length, tool_known_subtotal: calls.size };
+  return { status: "COLLECTED_NOT_FINALIZED", output_root: outputRoot, identity, trace_event_count: events.length, tool_known_subtotal: knownToolSubtotal };
 }
 
 export async function main(argv = process.argv.slice(2)) {

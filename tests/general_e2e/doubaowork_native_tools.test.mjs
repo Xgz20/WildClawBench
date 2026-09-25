@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { normalizeVerifiedNonSuccessToolSubset } from "../../tools/report/e2e-shared/doubaowork/bound-evidence.mjs";
 import { operateNativeObserver, normalizeNativeToolEvents } from "../../tools/report/e2e-shared/doubaowork/runtime-tools.mjs";
 
 function fixture() {
@@ -78,6 +79,18 @@ test("Periodic uploaded-ledger observations survive native TTL eviction without 
   const opts = { attemptId: "attempt", workspace: f.workspace, agentId: "agent", conversationId: "123",
     sentAt: installed.installed_at, finishedAt: new Date().toISOString() };
   assert.equal(normalizeNativeToolEvents(snapshot, opts).known_subtotal, 1);
+  const withFailedUpload = structuredClone(snapshot);
+  withFailedUpload.ledger.push({ ...nativeRow, toolCallId: "failed-upload", uploadState: "failed" });
+  assert.throws(() => normalizeNativeToolEvents(withFailedUpload, opts), /NATIVE_TOOL_LEDGER_INVALID/);
+  const partial = normalizeVerifiedNonSuccessToolSubset(withFailedUpload, opts, { nonSuccessVerified: true });
+  assert.equal(partial.status, "partial");
+  assert.equal(partial.known_subtotal, 1);
+  assert.equal(partial.dropped_failed_upload_count, 1);
+  assert.throws(() => normalizeVerifiedNonSuccessToolSubset(withFailedUpload, opts), /NATIVE_TOOL_LEDGER_INVALID/);
+  const malformed = structuredClone(withFailedUpload); malformed.ledger[0].result.content = "drift";
+  assert.throws(() => normalizeVerifiedNonSuccessToolSubset(malformed, opts, { nonSuccessVerified: true }), /NATIVE_TOOL_RESULT_LEDGER_MISMATCH/);
+  const unsupported = structuredClone(withFailedUpload); unsupported.ledger[1].uploadState = "uploading";
+  assert.throws(() => normalizeVerifiedNonSuccessToolSubset(unsupported, opts, { nonSuccessVerified: true }), /NATIVE_TOOL_LEDGER_INVALID/);
   assert.equal(snapshot.ledger.length, 1);
   assert.equal(snapshot.ledger_samples[0].observed_at_ms, start + 1000);
   assert.equal(snapshot.ledger[0].cachedAtMs, start);

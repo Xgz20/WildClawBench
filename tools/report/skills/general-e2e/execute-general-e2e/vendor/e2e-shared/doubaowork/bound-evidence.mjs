@@ -62,6 +62,26 @@ export function verifyRecoveredDispatchAcknowledgement(snapshot, journal, native
 }
 
 
+export function normalizeVerifiedNonSuccessToolSubset(snapshot, options, { nonSuccessVerified = false } = {}) {
+  try { return { ...normalizeNativeToolEvents(snapshot, options), dropped_failed_upload_count: 0 }; }
+  catch (error) {
+    if (!nonSuccessVerified || error.message !== "NATIVE_TOOL_LEDGER_INVALID"
+        || !snapshot.ledger_observation_policy || !Array.isArray(snapshot.ledger)
+        || !Array.isArray(snapshot.ledger_samples) || !Array.isArray(snapshot.events)) throw error;
+    const uploaded = snapshot.ledger.filter(row => row.uploadState === "uploaded");
+    const failed = snapshot.ledger.filter(row => row.uploadState !== "uploaded");
+    const sampled = new Set(snapshot.ledger_samples.map(row => row.row?.toolCallId));
+    if (!failed.length || failed.some(row => row.uploadState !== "failed" || !row.toolCallId || sampled.has(row.toolCallId))) throw error;
+    const ids = new Set(uploaded.map(row => row.toolCallId));
+    const strictSubset = { ...snapshot, ledger: uploaded,
+      ledger_samples: snapshot.ledger_samples.filter(row => ids.has(row.row?.toolCallId)),
+      events: snapshot.events.filter(row => ids.has(row.tool_call_id)) };
+    const verified = normalizeNativeToolEvents(strictSubset, options);
+    return { ...verified, status: "partial", scope: "bound-native-agent-uploaded-tool-subset",
+      dropped_failed_upload_count: failed.length };
+  }
+}
+
 export async function readBoundNativeEvidence({ journalFile, journal, workspace = journal.workspace }) {
   if (journal.native_interactions?.confirmation_seen) throw new Error("DOUBAOWORK_NATIVE_INTERACTION_UNACCOUNTED");
   if (journal.send?.dispatch_attempt_count !== 1 || journal.session?.prompt_readback?.status !== "verified" || !journal.native_observation) throw new Error("DOUBAOWORK_NATIVE_EXECUTION_NOT_VERIFIED");
@@ -105,10 +125,14 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
     nativeToolBytes = await boundArtifact(control, journal.native_observation.native_tools_artifact);
     const snapshot = JSON.parse(nativeToolBytes);
     if (snapshot.profile_sha256 !== journal.native_tool_observer?.profile_sha256) throw new Error("DOUBAOWORK_NATIVE_TOOL_PROFILE_DRIFT");
-    nativeTools = normalizeNativeToolEvents(snapshot, { attemptId: journal.attempt_id, workspace,
+    nativeTools = normalizeVerifiedNonSuccessToolSubset(snapshot, { attemptId: journal.attempt_id, workspace,
       agentId: native.native_request_session_id, conversationId: native.conversation_id,
-      sentAt: journal.timing.sent_at, finishedAt: nonSuccess?.observed_at ?? native.finished_at });
+      sentAt: journal.timing.sent_at, finishedAt: nonSuccess?.observed_at ?? native.finished_at },
+    { nonSuccessVerified: nonSuccess?.verified === true });
   }
+  const nativeToolCoverageDiagnostic = nativeTools?.dropped_failed_upload_count
+    ? { status: "partial", reason: "native-tool-upload-failed-before-terminal", uploaded_count: nativeTools.known_subtotal,
+      failed_upload_count: nativeTools.dropped_failed_upload_count } : null;
   const assistant = Object.values(runtime.maps.messageMap).find(m => m.message_id === native.reply_message_id);
   const supportedBlocks = new Set(["text_block", "thinking_block", "elapsed_block", "file_operation_block", "local_file_block", "generic_tool_block"]);
   const unknownBlocks = (assistant.content_blocks_v2 || []).filter(b => Object.entries(b.content || {}).some(([k, v]) => !supportedBlocks.has(k)
@@ -183,5 +207,5 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
     : mergeNativeToolTimeline(legacy.events, nativeTools?.events || []);
   const crossSourceOrderUnknown = !timeline.order_verified;
   if (crossSourceOrderUnknown) completeToolTrace = false;
-  return { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown };
+  return { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, nativeToolCoverageDiagnostic, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown };
 }

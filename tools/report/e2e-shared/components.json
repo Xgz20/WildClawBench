@@ -123,7 +123,7 @@
     },
     {
       "name": "doubaowork",
-      "version": "0.7.6",
+      "version": "0.7.7",
       "source_root": "tools/report/e2e-shared/doubaowork",
       "vendor_root": "vendor/e2e-shared/doubaowork",
       "entrypoints": [

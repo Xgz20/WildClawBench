@@ -11,7 +11,9 @@ Web E2E 不给被评测 Harness 设置任务级执行时限。题目或数据集
 
 ## DoubaoWork macOS 单题入口
 
-`1.20.3` 使用共享 `doubaowork 0.7.6` 的 UI、一次发送、恢复与原生证据核心，Web adapter 独立生成 execution record、候选冻结及正式回执。General 的运行材料不代表 Web 通过；本版真机验收范围查统一接入契约，不能用离线测试替代。
+`1.20.4` 使用共享 `doubaowork 0.7.7` 的 UI、一次发送、恢复与原生证据核心，Web adapter 独立生成 execution record、候选冻结及正式回执。General 的运行材料不代表 Web 通过；本版真机验收范围查统一接入契约，不能用离线测试替代。
+
+原生错误已独立核验且账本存在未采样的 `uploadState=failed` 行时，只保留严格核验的已上传工具子集与缺口诊断；工具总量为 null，业务能力分数不从异常终态推断。
 
 在 Driver 目录执行 `npm ci`。输入为 prepare 生成的真实 Web execution 单题根，正式模式要求 manifest 恰好一题，控制目录位于 Harness 根内、单题根外。保持当前模型和权限，最多发送一次。示例：
 
