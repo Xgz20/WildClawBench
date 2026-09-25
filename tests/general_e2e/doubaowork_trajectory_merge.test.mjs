@@ -84,3 +84,91 @@ test("Native Write create facts reconcile only the exact successful rendered res
   t[1].content = "File created successfully at: /other";
   assert.throws(() => mergeNativeToolTimeline(t, l), /RESULT_CONFLICT/);
 });
+
+
+test("Native Edit success reconciles only the exact path and diff-backed rendered result", () => {
+  const facts = { kind: "edit_success", toolName: "Edit", filePath: "/a", replaceAll: false,
+    userModified: false, unifiedDiff: "--- /a\n+++ /a\n@@ -1 +1 @@\n-old\n+new\n" };
+  const local = [{ phase: "started", tool_call_id: "e", tool_name: "Edit", input: { file_path: "/a", old_string: "old", new_string: "new" } },
+    { phase: "settled", tool_call_id: "e", tool_name: "Edit", output: { status: "success", content: "",
+      structuredResultFacts: { localFileMutationV2: facts } } }];
+  const trace = [{ kind: "assistant_tool_call", call_id: "e", tool_name: "Edit", arguments: local[0].input },
+    { kind: "tool_result", call_id: "e", content: "The file /a has been updated successfully." }];
+  assert.equal(mergeNativeToolTimeline(trace, local).order_verified, true);
+  trace[1].content = "The file /other has been updated successfully.";
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /RESULT_CONFLICT/);
+  trace[1].content = "The file /a has been updated successfully.";
+  local[1].output.structuredResultFacts.localFileMutationV2.unifiedDiff = "--- /b\n+++ /b\n";
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /RESULT_CONFLICT/);
+  local[1].output.structuredResultFacts.localFileMutationV2.unifiedDiff = "--- /a\n+++ /a\n";
+  local[1].output.status = "error";
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /RESULT_CONFLICT/);
+});
+
+test("Image Read bypass matches only exact path-bound successful native and model wrappers", () => {
+  const path = "/workspace/render.jpg";
+  const local = [{ phase: "started", tool_call_id: "image", tool_name: "Read", input: { file_path: path, thumbnail_size: "full" } },
+    { phase: "settled", tool_call_id: "image", tool_name: "Read", output: { status: "success",
+      content: `Read "${path}" as image for upload.`, structuredResultFacts: { localFileReadV2Bypass: { reason: "image" } } } }];
+  const trace = [{ kind: "assistant_tool_call", call_id: "image", tool_name: "Read", arguments: { file_path: path } },
+    { kind: "tool_result", call_id: "image", content: `Read media file ${path} (image). See the attachment in the multimodal content that follows.` }];
+  assert.equal(mergeNativeToolTimeline(trace, local).order_verified, true);
+  trace[1].content = `Read media file /other.jpg (image). See the attachment in the multimodal content that follows.`;
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /RESULT_CONFLICT/);
+  trace[1].content = `Read media file ${path} (image). See the attachment in the multimodal content that follows.`;
+  local[1].output.structuredResultFacts.localFileReadV2Bypass.reason = "unknown";
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /TOOL_CONFLICT/);
+  local[1].output.structuredResultFacts.localFileReadV2Bypass.reason = "image";
+  local[1].output.content = "Read wrong image";
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /TOOL_CONFLICT/);
+});
+
+test("Native Edit FILE_NOT_FOUND maps only the same failed call and cwd note", () => {
+  const path = "/missing/page.html", cwd = "/workspace/task";
+  const local = [{ phase: "started", tool_call_id: "missing", tool_name: "Edit", input: { file_path: path } },
+    { phase: "settled", tool_call_id: "missing", tool_name: "Edit", output: { status: "error", content: "",
+      structuredResultFacts: { localFileMutationV2: { kind: "failure", toolName: "Edit", error: { code: "FILE_NOT_FOUND",
+        message: "File does not exist.", details: { cwd, filePath: path } } } } } }];
+  const trace = [{ kind: "assistant_tool_call", call_id: "missing", tool_name: "Edit", arguments: { file_path: path } },
+    { kind: "tool_result", call_id: "missing", content: `File does not exist. Note: your current working directory is ${cwd}.` }];
+  assert.equal(mergeNativeToolTimeline(trace, local).order_verified, true);
+  trace[1].content = "File does not exist. Note: your current working directory is /other.";
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /RESULT_CONFLICT/);
+  trace[1].content = `File does not exist. Note: your current working directory is ${cwd}.`;
+  local[1].output.structuredResultFacts.localFileMutationV2.error.details.filePath = "/other";
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /RESULT_CONFLICT/);
+  local[1].output.structuredResultFacts.localFileMutationV2.error.details.filePath = path;
+  local[1].output.status = "success";
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /RESULT_CONFLICT/);
+});
+
+test("Native Write update maps only the exact successful diff-backed rendered path", () => {
+  const path = "/workspace/page.html";
+  const local = [{ phase: "started", tool_call_id: "update", tool_name: "Write", input: { file_path: path } },
+    { phase: "settled", tool_call_id: "update", tool_name: "Write", output: { status: "success", content: "",
+      structuredResultFacts: { localFileMutationV2: { kind: "write_success", toolName: "Write", type: "update", created: false,
+        filePath: path, unifiedDiff: `--- ${path}\n+++ ${path}\n@@ -1 +1 @@\n-old\n+new\n` } } } }];
+  const trace = [{ kind: "assistant_tool_call", call_id: "update", tool_name: "Write", arguments: { file_path: path } },
+    { kind: "tool_result", call_id: "update", content: `The file ${path} has been updated successfully.` }];
+  assert.equal(mergeNativeToolTimeline(trace, local).order_verified, true);
+  trace[1].content = "The file /foreign has been updated successfully.";
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /RESULT_CONFLICT/);
+  trace[1].content = `The file ${path} has been updated successfully.`;
+  local[1].output.structuredResultFacts.localFileMutationV2.unifiedDiff = "--- /foreign\n+++ /foreign\n";
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /RESULT_CONFLICT/);
+});
+
+test("Native TaskOutput wrapper reconciles only identical task ID, success and stdout bytes", () => {
+  const taskId = "11111111-1111-4111-8111-111111111111", stdout = "line one\nline two";
+  const local = [{ phase: "started", tool_call_id: "task-output", tool_name: "TaskOutput", input: { task_id: taskId, block: true, timeout: 1000 } },
+    { phase: "settled", tool_call_id: "task-output", tool_name: "TaskOutput", output: { status: "success",
+      content: `Shell task '${taskId}' is completed.exit code 0. stdout: ${stdout}` } }];
+  const trace = [{ kind: "assistant_tool_call", call_id: "task-output", tool_name: "TaskOutput", arguments: local[0].input },
+    { kind: "tool_result", call_id: "task-output", content: `Task ${taskId} has finished with final status completed, exit code 0. The result has been consumed; do not query the same task_id again.\nstdout:\n${stdout}` }];
+  assert.equal(mergeNativeToolTimeline(trace, local).order_verified, true);
+  trace[1].content += "\nextra";
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /RESULT_CONFLICT/);
+  trace[1].content = `Task ${taskId} has finished with final status completed, exit code 0. The result has been consumed; do not query the same task_id again.\nstdout:\n${stdout}`;
+  local[1].output.status = "error";
+  assert.throws(() => mergeNativeToolTimeline(trace, local), /RESULT_CONFLICT/);
+});

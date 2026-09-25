@@ -222,6 +222,14 @@ test("每次观察都要验证 conversation-project-workspace-Prompt 等价绑�
   state.workspace_selection.source = "unverified-path";
   assert.throws(() => validateObservationBinding(state, valid), /workspace 回读/);
   state.workspace_selection.source = "project-folder-tooltip";
+  const withoutChip = { ...valid, current_project_control_count: 0, current_project_name: null };
+  assert.throws(() => validateObservationBinding(state, withoutChip), /project 名称/);
+  const revalidated = { ...withoutChip, sidebar_project_revalidation: { status: "verified",
+    project_id_sha256: state.client.project_id_sha256, project_name: state.client.project_name,
+    workspace_path_sha256: sha256Text(state.workspace), source: "project-edit-dialog-folder-tooltip" } };
+  assert.equal(validateObservationBinding(state, revalidated).project_readback_source, "project-edit-dialog-folder-tooltip");
+  assert.throws(() => validateObservationBinding(state, { ...revalidated, sidebar_project_revalidation:
+    { ...revalidated.sidebar_project_revalidation, workspace_path_sha256: sha256Text("/foreign") } }), /project 名称/);
 
   assert.throws(
     () => validateObservationBinding(state, { ...valid, current_conversation_id: "124" }),

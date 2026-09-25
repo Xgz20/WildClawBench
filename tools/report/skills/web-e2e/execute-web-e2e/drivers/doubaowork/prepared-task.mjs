@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { lstat, readdir, readFile } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import { snapshotTree } from "../workbuddy/lib.mjs";
 import { sha256Text } from "./lib.mjs";
 const FORBIDDEN_WORKSPACE_NAMES = new Set([".git", "eval", "gt", "private-scoring"]);
 const sha256Buffer = value => createHash("sha256").update(value).digest("hex");
@@ -13,7 +14,7 @@ async function requireOrdinary(pathValue, type, label) {
   return info;
 }
 
-async function inspectWorkspaceTree(root, relative = "") {
+async function inspectWorkspaceTree(root, relative = "", allowRuntime = false) {
   const current = relative ? join(root, relative) : root;
   const entries = await readdir(current, { withFileTypes: true });
   for (const entry of entries) {
@@ -21,11 +22,12 @@ async function inspectWorkspaceTree(root, relative = "") {
     if (FORBIDDEN_WORKSPACE_NAMES.has(entry.name)) {
       throw new Error(`workspace 包含禁止目录：${join(relative, entry.name)}`);
     }
-    if (entry.isDirectory()) await inspectWorkspaceTree(root, join(relative, entry.name));
+    if (allowRuntime && entry.isDirectory() && new Set([".cache", ".vite", "node_modules"]).has(entry.name)) continue;
+    if (entry.isDirectory()) await inspectWorkspaceTree(root, join(relative, entry.name), allowRuntime);
   }
 }
 
-export async function validatePreparedTaskRoot(taskRootValue) {
+export async function validatePreparedTaskRoot(taskRootValue, { resume = false, formal = false, batch = false, runId = null } = {}) {
   if (typeof taskRootValue !== "string" || !taskRootValue.trim()) {
     throw new Error("--task-root 必填，且必须是 prepared execution 单题根目录的绝对路径");
   }
@@ -36,7 +38,7 @@ export async function validatePreparedTaskRoot(taskRootValue) {
   const candidateWorkspace = join(taskRoot, "workspace");
   await requireOrdinary(promptFile, "file", "PROMPT.md");
   await requireOrdinary(candidateWorkspace, "directory", "workspace");
-  await inspectWorkspaceTree(candidateWorkspace);
+  await inspectWorkspaceTree(candidateWorkspace, "", resume);
   const prompt = await readFile(promptFile, "utf8");
   if (!prompt.trim()) throw new Error("PROMPT.md 不能为空");
 
@@ -51,13 +53,20 @@ export async function validatePreparedTaskRoot(taskRootValue) {
     throw new Error(`manifest harness 必须是 doubaowork，实际为 ${manifest.harness?.id ?? "<missing>"}`);
   }
   const taskId = basename(taskRoot);
-  const task = manifest.tasks?.find((item) => item.task_id === taskId);
+  const matches = manifest.tasks?.filter((item) => item.task_id === taskId) ?? [];
+  if (matches.length !== 1) throw new Error("DOUBAOWORK_WEB_TASK_AMBIGUOUS");
+  if (formal && !batch && manifest.tasks.length !== 1) throw new Error("DOUBAOWORK_WEB_FORMAL_SINGLE_TASK_ONLY");
+  const task = matches[0];
   if (!task) throw new Error(`manifest 未声明当前 task：${taskId}`);
   if (resolve(harnessRoot, task.execution_dir) !== taskRoot
       || resolve(harnessRoot, task.prompt_file) !== promptFile) {
     throw new Error("manifest 中 execution_dir 或 prompt_file 与当前单题不一致");
   }
   return {
+    scene: "web",
+    harnessRoot, manifest, task,
+    frozenIdentity: formal && !resume ? { mode: batch ? "web-native-batch-task/v1" : "web-native-single/v1",
+      initial: await snapshotTree(candidateWorkspace), ...(batch ? { run_id: runId, task_ids: manifest.tasks.map(t => t.task_id) } : {}) } : null,
     taskRoot,
     workspace: taskRoot,
     candidateWorkspace,

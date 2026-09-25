@@ -52,8 +52,8 @@ export function mapDoubaoAssessmentToWebReceiptBridge({
       task_id: taskId,
       batch_id: batchId,
       attempt_id: attemptId,
-      automation_phase: gate.valid ? "SUCCEEDED" : "NEEDS_ATTENTION",
-      execution_status: gate.valid ? "completed" : "pending",
+      automation_phase: gate.valid ? assessment.execution_status === "execution_error" ? "INFRA_FAILED" : "SUCCEEDED" : "NEEDS_ATTENTION",
+      execution_status: gate.valid ? assessment.execution_status ?? "completed" : "pending",
       model: model || null,
       terminal: {
         status: terminalStatus,

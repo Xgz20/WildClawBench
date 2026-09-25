@@ -6,6 +6,8 @@
 
 本文记录本任务分支上的只读 probe、旧 smoke 原生证据旁路解析、脱敏 fixture、`SLOT-MAC-20260919-01` 开发 canary 与公共接口缺口。它不把旧 smoke 或本次 UI 完成候选升级为正式 execution/collect/评分证据，也不声明 DoubaoWork 已达到 Web 主流程生产可用。
 
+后续 2.31.6 单题证据见[2026-09-25 续验](../doubaowork-macos-web-20260925/README.md)。本文件仅记录旧版本历史，不反向升级旧 canary。
+
 ## 1. 当前环境与只读 probe
 
 | 项目 | 当前只读实测 |

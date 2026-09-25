@@ -1,0 +1,132 @@
+{
+  "schema": "wildclawbench.doubaowork-web-evidence-index/v1",
+  "client": {
+    "platform": "macos-x86_64",
+    "version": "2.31.6"
+  },
+  "repository_base_commit": "81312dd",
+  "repository_worktree_note": "Web changes uncommitted after requested General commit; package content and ZIP hashes are authoritative",
+  "prepared_input": {
+    "task_id": "07_Website_Generation_task_035_today_and_all_todos",
+    "difficulty": "L1",
+    "metric_profile": "web-e2e-detailed-v1"
+  },
+  "same_code_release_r7": {
+    "score-web-e2e": {
+      "version": "4.5.4",
+      "content_sha256": "16f29453ecc3cf43189a41a5226871891ebc8d02976a3f0cab82c1fb6092b3f3",
+      "zip_sha256": "1e5e0ecc691fa1c73f7be732496a439bb690afea3178cee8068dd4f985507927"
+    },
+    "report-web-e2e": {
+      "version": "1.1.1",
+      "content_sha256": "bfb12633a6150dd7fbcfe777cacf77b634a88756db82935895e5016351067219",
+      "zip_sha256": "4fb89537c18f10fcd0e4241c77c5eb63d3e3c11f65276076a6fc72341765a930"
+    },
+    "orchestrate-web-e2e": {
+      "version": "0.3.4",
+      "content_sha256": "994fb415740bcb6af62848f3d9e85b247d5ec8167e45b5acdc1d6a41ba1431d8",
+      "zip_sha256": "e41c1decbd9c4e17f92c1f1980e9a8afb8a01458b76c7fef923d23714bcc8b67"
+    },
+    "execute-web-e2e": {
+      "version": "1.18.3",
+      "content_sha256": "7105cf152a33d31bc97a2bfb994f5604ac0163bb26bc8a1f17dea599de5d198d",
+      "zip_sha256": "49a8277fa1af6b9fdeb9073062f34b96fa872ebe231e5e05fa83db81c09fb82b"
+    },
+    "run-web-e2e": {
+      "version": "1.4.2",
+      "content_sha256": "ea405ea30df52607136053d374c095946009e9454495ab3ea6005f75264065e5",
+      "zip_sha256": "45210188bdad1ad8bf3367f19f3db13967c3eb83d59ea85d07a2e42e9a35848c"
+    }
+  },
+  "r5_cross_version_execution": {
+    "execute": "1.18.2",
+    "formal_resume": "1.18.3",
+    "batch_id": "dw-web-l1-r5-20260925",
+    "send_attempts": 1,
+    "attempt_id_sha256": "b1094a38207ceda9a31aab6d5ab405c4ead1679fa20f1eb818d76d2c1c51e764",
+    "client_version": "2.31.6",
+    "actual_model_ui": "自动 高",
+    "underlying_model_id": "unavailable",
+    "actual_permission_mode": "全部允许",
+    "native_terminal": "Success",
+    "receipt_sha256": "17e1397ec6d6f0e0d0bff7faf527b64bee77550489db9ab0d226873ee6a2ca3a",
+    "receipt_integrity_valid": true,
+    "task_phase": "SUCCEEDED",
+    "execution_status": "completed",
+    "candidate_sha256": "17445e82f4ab58475173fd07fa5025e8755d985579b668c6f776fc24c1641b3c",
+    "candidate_receipt_check_matches": true,
+    "cleanup_success": true,
+    "execution_record_sha256": "7ad1b775438dc026466ac3f0ef75eb81447f04e09f90c5d713ee54ffa0a90864",
+    "duration_seconds": 277.06,
+    "agent_duration_seconds": 260,
+    "tool_call_count": null,
+    "tool_known_subtotal": 24,
+    "total_tokens": null,
+    "request_count": null,
+    "submission_sha256": "3803b9aa800b432ad6485750a568337dba0aa5d20d7e3869c200007d79e67890",
+    "submission_schema": "wildclawbench.web-e2e-submission/v1",
+    "task_score_sha256": "6e8592fb2a20d9ee0c0a3818ef6b9dec40d08abceceaee1d9c6ff373c873200f",
+    "report_data_sha256": "67417da49a652eba6e4ec79f8861d74fc51b3c084d8eb6de423787c6e50d70b6",
+    "report_markdown_sha256": "b8951b9134cd0647fa4796aa2ad00387469b5432c554088e9d94a4794044ca84",
+    "report_xlsx_sha256": "ce99fb62f389b38a6f6f79df5d584ad57f2eab866131af0b89275f837fb3ce0e",
+    "functional_score": 100.0,
+    "aesthetic_score": 89.42
+  },
+  "r7_same_release_execution": {
+    "execute": "1.18.3",
+    "formal_resume": "1.18.3",
+    "batch_id": "dw-web-l1-r7-20260925",
+    "send_attempts": 1,
+    "attempt_id_sha256": "ab8368bd1639563d8f27cc41f4a1be756999e0b5cb5c1da45dfada85c4755e43",
+    "client_version": "2.31.6",
+    "actual_model_ui": "自动 高",
+    "underlying_model_id": "unavailable",
+    "actual_permission_mode": "全部允许",
+    "native_terminal": "Success",
+    "receipt_sha256": "2174b8c40e0f037695bad48d9165794ee22987e50f561051ac73922bb7d36624",
+    "receipt_integrity_valid": true,
+    "task_phase": "SUCCEEDED",
+    "execution_status": "completed",
+    "candidate_sha256": "cfd7d495d24a6bc19097597cd7b8c3d20dd2bc37962d392fb68a8cb88e48d31b",
+    "candidate_receipt_check_matches": true,
+    "cleanup_success": true,
+    "execution_record_sha256": "eeb10b83ae07497275befd2563bdd476c3b23cde4e20485972fa9f2b6d378e15",
+    "duration_seconds": 258.425,
+    "agent_duration_seconds": 244,
+    "tool_call_count": 15,
+    "tool_known_subtotal": null,
+    "total_tokens": null,
+    "request_count": null,
+    "submission_sha256": "d80d118ec6584ff2e8e293258d6b66cf471b3fbf7b83ef18d5f365d821b75c49",
+    "submission_schema": "wildclawbench.web-e2e-submission/v1",
+    "task_score_sha256": "3bc69d5701b660936993840930423a9cd5c4df5f5ae6add8a2bd5a76fba5b0bb",
+    "report_data_sha256": "bca629dcee61fbff1e34e6f42696cea9fbaab3f16effabc869cacfbea80f52f7",
+    "report_markdown_sha256": "8efc658d5627e4231d2633149a9826720e6be69ee61f122dd0d178585b653ab1",
+    "report_xlsx_sha256": "bac0101695df00bb47740496bb09b15eddeae235f540a94dacb1d8df0d98d7e3",
+    "functional_score": 100.0,
+    "aesthetic_score": 90.25,
+    "return_zip_sha256": "d93fa3f81d4e383364739b926776fe7921df3aec9a25e97ad96316608aca0b8d"
+  },
+  "validation": {
+    "node_tests": "171/171",
+    "python_tests": "17/17",
+    "general_real_artifact_recollection": "5/5 under shared refactor; no score promotion",
+    "skill_package_verification": "PASS",
+    "web_r3_missing_tool_observer": "REJECTED",
+    "web_r5_first_collector_cross_source_edit_rendering": "REJECTED; r6 narrow Edit mapping and original-attempt resumption passed",
+    "web_r7_single_task": "FORMAL_RECEIPT_VERIFIED; independent score/submission/report completed",
+    "post_run_health": "PASS: app2.31.6, frontend/background0, no observers, no UI lock, online",
+    "batch_route_rejected_before_send": "PASS",
+    "shared_source_files_equal_all_three_vendors": 21,
+    "general_independent_release": "PASS",
+    "general_release_suite_sha256": "281f9fe58d6d6063f0d13eae9bc63db235fa81030121c74b23697c6c9cfbe52d",
+    "return_import": "PASS",
+    "return_reimport": "IDEMPOTENT"
+  },
+  "scope_limits": [
+    "Single task only; no Web batch or managed concurrency acceptance",
+    "General 2.31.3 scores and parallel evidence do not transfer to 2.31.6",
+    "Native model ID and token/request totals unavailable; do not substitute UI label or zero",
+    "Historical canary remains NEEDS_ATTENTION"
+  ]
+}

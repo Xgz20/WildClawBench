@@ -9,11 +9,32 @@ description: 在 WorkBuddy、AstronStudio、QwenWork 等桌面 Harness 中执行
 
 Web E2E 不给被评测 Harness 设置任务级执行时限。题目或数据集中的 `timeout_seconds` 只作为兼容元数据保留，不生成执行 deadline；旧入口的 `--run-timeout-seconds` 已移除。Driver 会持续观察可信原生终态、明确异常或需要人工处理的状态。CDP/UI 单次操作、客户端启停、会话身份捕获、终态进程收口和评分 Worker 仍使用各自独立的有界控制参数，这些参数不限制 Harness 完成题目的总时长。
 
-## DoubaoWork macOS 开发入口
+## DoubaoWork macOS 单题入口
 
-`1.17.15` 将 DoubaoWork UI/一次发送/恢复/原生消息/清理核心迁入共享 `doubaowork` 组件，由构建器装配；本入口仍独立验证 Web prepared task 并使用 Web finalizer/回执门禁。General 的新运行和原生状态映射不代表 Web 已获生产准入，正式 receipt/batch 的现有拒绝条件仍保留。客户端更新后重新 probe；共享核心包含 2.31.3/2.31.6 的本地模式、项目选择、模型按钮、停止控件和 ProseMirror 编辑器适配，并提供控制台用户/进程门禁、路径字节预算预检、原生完成时点及工具账本留存。2.31.6 的 Web 证据当前仅为独立只读 probe；各采集能力仍需由场景 adapter 显式接入并独立验收。
+`1.20.3` 使用共享 `doubaowork 0.7.6` 的 UI、一次发送、恢复与原生证据核心，Web adapter 独立生成 execution record、候选冻结及正式回执。General 的运行材料不代表 Web 通过；本版真机验收范围查统一接入契约，不能用离线测试替代。
 
-`drivers/doubaowork/driver.mjs` 只提供单题开发 canary 和已发送 attempt 的只读恢复；依赖在该 Driver 目录通过 `npm ci` 安装。输入必须是 prepare 生成的真实 DoubaoWork Web execution 单题根，选择“本地电脑 → 新建项目”，完整路径与当前模型/权限回读后最多发送一次。没有公共 run 路由、可信原生终态/cwd 和已验证的进程清理时，不产生有效正式 execution record/receipt，不进入评分或批量调度。使用与限制见 [Driver 说明](drivers/doubaowork/README.md)。
+在 Driver 目录执行 `npm ci`。输入为 prepare 生成的真实 Web execution 单题根，正式模式要求 manifest 恰好一题，控制目录位于 Harness 根内、单题根外。保持当前模型和权限，最多发送一次。示例：
+
+```bash
+bash <skill-dir>/scripts/run-doubaowork.sh <harness-root>/execution/tasks/<task_id> \
+  --output-dir <harness-root>/.execute-web-e2e/doubao-single \
+  --project-name WCB-Doubao-Web-L1 --formal-receipt
+bash <skill-dir>/scripts/run-doubaowork.sh --resume --formal-receipt \
+  --output-dir <harness-root>/.execute-web-e2e/doubao-single --observe-seconds 60
+```
+
+多题 prepared manifest 使用串行队列；队列固定 `ui_slots=1/run_slots=1`，默认按 manifest 有序执行，只有全部任务收口后才发布完整根回执。队列状态位于 Harness 根下 `.execute-web-e2e/doubaowork-batch/<run-id>/`，同一 run 的恢复必须显式 `--resume`，每题仍由自身一次发送 journal 决定是否只读观察：
+
+```bash
+bash <skill-dir>/scripts/run-doubaowork.sh --batch --harness-root <harness-root> \
+  --run-id web-serial-01 --run-slots 1
+bash <skill-dir>/scripts/run-doubaowork.sh --batch --harness-root <harness-root> \
+  --run-id web-serial-01 --run-slots 1 --resume
+```
+
+队列发现旧子进程仍存活、journal 缺失或待人工处理时失败关闭；显式 `--resume --continue-attention` 仅观察已登记一次发送的原 attempt。默认项目名包含根路径与 run ID 摘要，避免与其他批次同名。`--run-slots 2` 或 `3` 只在原生同伴绑定、前后台隔离与动态补位的对应发行包真机验收后准入；未验收时保持 1。
+
+持续对原 attempt 执行 `--resume`，观察窗口不是 Harness 超时。原生会话/请求/完整目录/Prompt、当前空闲、原始轨迹及来源一致性通过后才清理本题进程、冻结候选、写回执。遇到人工确认或发送不确定停止自动推进，禁止重发。原生错误映射为 `execution_error` 并禁止评分；缺失 Token/请求账本保留 null，不用上下文占用率代替消耗。发布中断可从冻结事务恢复；已发布则只读复验，不覆盖回执。批量入口继续拒绝。详见 [Driver 说明](drivers/doubaowork/README.md)。
 
 ## AstronStudio
 

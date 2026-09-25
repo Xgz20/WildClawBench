@@ -1,0 +1,196 @@
+{
+  "schema": "wildclawbench.doubaowork-web-batch-evidence/v1",
+  "platform": "macos-x86_64",
+  "client_version": "2.31.6",
+  "repository_base_commit": "81312dd",
+  "source_note": "Current Web code is uncommitted; package content hashes identify distributed bytes.",
+  "serial_three": {
+    "batch_id": "serial3-20260925",
+    "queue_phase": "COMPLETED",
+    "configured_run_slots": 1,
+    "worker_version": "1.0.0",
+    "shared_driver_version": "0.7.3",
+    "cross_version_adoptions": [
+      {
+        "event": "DRIVER_VERSION_ADOPTED",
+        "from": "0.7.2",
+        "to": "0.7.3"
+      }
+    ],
+    "tasks": [
+      {
+        "task_id": "07_Website_Generation_task_001_daymark_product_website",
+        "queue_phase": "SUCCEEDED",
+        "launch_count": 15,
+        "send_attempt_count": 1,
+        "attempt_id_sha256": "6bacbd6ce03552e23470a9eb38e410edfeacd716430c3259630ec7f2f632cd37",
+        "task_formal_publication": true,
+        "candidate_sha256": "f80a37c8f412643ca1aa2be5557e701a12248a0f23b3f8a0e4324911b706675e",
+        "execution_status": "completed",
+        "duration_seconds": 795.828,
+        "agent_duration_seconds": 778,
+        "tool_call_count": 39,
+        "tool_known_subtotal": null,
+        "total_tokens": null,
+        "score_file_sha256": "501e16d9900b454198fb60533a32e91e8069e368fc2b44446a71221f83f287a8"
+      },
+      {
+        "task_id": "07_Website_Generation_task_002_focus_pomodoro_clock",
+        "queue_phase": "SUCCEEDED",
+        "launch_count": 6,
+        "send_attempt_count": 1,
+        "attempt_id_sha256": "e32e94ee3f9cc2ebb4334bcf9203927ba4f9a7d55f04911df6a27637e72a7d54",
+        "task_formal_publication": true,
+        "candidate_sha256": "a1284c9ac29daa00fd16f671f0ca8bbf1df0f1b85af798540bfa06816e263bf3",
+        "execution_status": "completed",
+        "duration_seconds": 297.914,
+        "agent_duration_seconds": 282,
+        "tool_call_count": 14,
+        "tool_known_subtotal": null,
+        "total_tokens": null,
+        "score_file_sha256": "25d34d9a63e2c03e18c0df8aa3413398b903589a7decdf66b51b5786e5441164"
+      },
+      {
+        "task_id": "07_Website_Generation_task_035_today_and_all_todos",
+        "queue_phase": "SUCCEEDED",
+        "launch_count": 8,
+        "send_attempt_count": 1,
+        "attempt_id_sha256": "40d38f36bf7692b2a46b043a4c86c268cb16b1ec4b672623d19e62bf12f91cff",
+        "task_formal_publication": true,
+        "candidate_sha256": "987f7a982c5d8a65c64079bd319ec2dea85b766d9652a1486485613bb5a8660d",
+        "execution_status": "completed",
+        "duration_seconds": 418.048,
+        "agent_duration_seconds": 400,
+        "tool_call_count": 23,
+        "tool_known_subtotal": null,
+        "total_tokens": null,
+        "score_file_sha256": "222522b5ed27d9188eb38a312a2cdbc067633ec20b7ae7d867dafeb1027728cf"
+      }
+    ],
+    "receipt_sha256": "6be4c45d49af08b632c79db9c08ecd83b167a34a7a44e9a7936f63dc7fb42857",
+    "receipt_integrity_valid": true,
+    "submission_sha256": null,
+    "concurrency": null,
+    "scoring_control_phase": "NEEDS_ATTENTION",
+    "valid_submission_present": false,
+    "late_score_rejected_at_mark_complete": true,
+    "score_failure_reason": "POMODORO_SCORE_PAST_DEADLINE"
+  },
+  "concurrent_five": {
+    "batch_id": "five3-20260925",
+    "queue_phase": "WORKER_INTERRUPTED",
+    "configured_run_slots": 3,
+    "worker_version": "1.1.1",
+    "shared_driver_version": "0.7.6",
+    "cross_version_adoptions": [
+      {
+        "event": "BATCH_WORKER_VERSION_ADOPTED",
+        "from": "1.1.0",
+        "to": "1.1.1"
+      },
+      {
+        "event": "DRIVER_VERSION_ADOPTED",
+        "from": "0.7.4",
+        "to": "0.7.5"
+      },
+      {
+        "event": "DRIVER_VERSION_ADOPTED",
+        "from": "0.7.5",
+        "to": "0.7.6"
+      }
+    ],
+    "tasks": [
+      {
+        "task_id": "07_Website_Generation_task_002_focus_pomodoro_clock",
+        "queue_phase": "SUCCEEDED",
+        "launch_count": 12,
+        "send_attempt_count": 1,
+        "attempt_id_sha256": "d989c31c72a6038aa6b6308372dfcee5a28b6ae9af9a0426c3f667dcbf858b07",
+        "task_formal_publication": true,
+        "candidate_sha256": "d139adbd872433bae84df30a2877c444f4fe673284042f6d513a5692bbf4818e",
+        "execution_status": "completed",
+        "duration_seconds": 809.68,
+        "agent_duration_seconds": 791,
+        "tool_call_count": null,
+        "tool_known_subtotal": 33,
+        "total_tokens": null,
+        "score_file_sha256": null
+      },
+      {
+        "task_id": "07_Website_Generation_task_021_dorm_duty_roster",
+        "queue_phase": "SUCCEEDED",
+        "launch_count": 6,
+        "send_attempt_count": 1,
+        "attempt_id_sha256": "477f2ca96493d51d24d9d08d3283bc7a7bad4dfd3df8efa7753a97cfc5abf73b",
+        "task_formal_publication": true,
+        "candidate_sha256": "041351619f1352c80ce728c94294c59076825e933cb555188bf02b8dafb1a256",
+        "execution_status": "completed",
+        "duration_seconds": 433.881,
+        "agent_duration_seconds": 423,
+        "tool_call_count": null,
+        "tool_known_subtotal": 30,
+        "total_tokens": null,
+        "score_file_sha256": null
+      },
+      {
+        "task_id": "07_Website_Generation_task_022_trip_aa_split",
+        "queue_phase": "RUNNING",
+        "launch_count": 20,
+        "send_attempt_count": 1,
+        "attempt_id_sha256": "195e8ebfc5492d5cb63a7303a24c4dae1e5b7687b35331e08784b2e22f068f7d",
+        "task_formal_publication": false,
+        "candidate_sha256": null,
+        "execution_status": "pending",
+        "duration_seconds": null,
+        "agent_duration_seconds": null,
+        "tool_call_count": null,
+        "tool_known_subtotal": null,
+        "total_tokens": null,
+        "score_file_sha256": null
+      },
+      {
+        "task_id": "07_Website_Generation_task_023_important_day_countdown",
+        "queue_phase": "SUCCEEDED",
+        "launch_count": 10,
+        "send_attempt_count": 1,
+        "attempt_id_sha256": "6a21f15ff765e80a8d721f3cf7d35cc15ee7df8955e293c3a59eabb72af28bb8",
+        "task_formal_publication": true,
+        "candidate_sha256": "2d57af086a9983b9b4ecc081145378a468a88831367787735dd8c41bba0b572d",
+        "execution_status": "completed",
+        "duration_seconds": 721.661,
+        "agent_duration_seconds": 710,
+        "tool_call_count": null,
+        "tool_known_subtotal": 38,
+        "total_tokens": null,
+        "score_file_sha256": null
+      },
+      {
+        "task_id": "07_Website_Generation_task_035_today_and_all_todos",
+        "queue_phase": "SUCCEEDED",
+        "launch_count": 5,
+        "send_attempt_count": 1,
+        "attempt_id_sha256": "5cf603eef420fff0b79fed624839df8b559faca6a2e553c684bcedecba6618a0",
+        "task_formal_publication": true,
+        "candidate_sha256": "181e533580e86c5eed5bb4f047a0c98c1ac916aad8ff006a4c19f5e3c067e5a6",
+        "execution_status": "completed",
+        "duration_seconds": 313.127,
+        "agent_duration_seconds": 302,
+        "tool_call_count": 15,
+        "tool_known_subtotal": null,
+        "total_tokens": null,
+        "score_file_sha256": null
+      }
+    ],
+    "receipt_sha256": null,
+    "receipt_integrity_valid": null,
+    "submission_sha256": null,
+    "concurrency": null
+  },
+  "validation_boundaries": [
+    "Historical canary remains NEEDS_ATTENTION",
+    "Cross-version technical batches are not same-release production acceptance",
+    "Unknown token/request totals remain null",
+    "A running native request without assistant terminal remains unscored",
+    "A late scoring thread result is preserved but mark-complete rejected it; no valid three-task submission."
+  ]
+}

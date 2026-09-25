@@ -439,7 +439,7 @@ validation_records:
 | AstronStudio / macOS Intel | `6988b525...` 的独立 macOS 包有单 L1 全流程，历史主流程生产声明 | 与 Windows 包身份不同；新发行并发/恢复和双平台字节对账不自动继承 |
 | WorkBuddy / macOS Intel | 有旧执行/并发功能证据及发布 smoke | 后半程与恢复项在原 Web 矩阵为 STALE/待重验，不按 General 成果升级 |
 | QwenWork / macOS Intel | 1.0.5 历史执行与资源样本；r39 Web Driver1.12.2接入共用GUI并修正中继辅助进程识别，1.2.0独立包只读probe通过 | 接续准备已开始；未发送新Web题，General证据不外推Web正式闭环 |
-| DoubaoWork / macOS | 已提取与 General 共用的 Driver/原生证据源码；Web 初次提取聚焦回归 64/64 | Web 自身正式 collect/finalizer、评分回传仍未闭环，保持 NEEDS_ATTENTION；General 的 2.31.3 原生映射不自动升级 Web 准入 |
+| DoubaoWork / macOS Intel / 2.31.6 | Web R7 execute1.18.3/共享0.7.2同包单题一次发送、原生终态、进程清理、候选冻结、正式回执通过；R5跨版本单题独立评分、submission与报告已完成 | R7自身独立评分、submission、return/import幂等与报告已完成；batch、并发和人工交互正式回执未验，General历史成绩不外推；见[新证据](../web-e2e/evidence/doubaowork-macos-web-20260925/README.md) |
 | DoubaoWork / Windows；其他未声明架构 | 无本场景完整证据 | NOT_RUN，不凭共用接口推定支持 |
 
 Web 逐项 V00–V17、P0–P10、客户端/Skill/包 SHA 和运行路径见[历史验收记录](archive/web/生产验收历史-20260923.md)；DoubaoWork 专属现场见[证据索引](../web-e2e/evidence/doubaowork-macos-web-e2e/README.md)。历史台账停止滚动更新，新的进度仅改本表并追加 evidence。
@@ -517,7 +517,7 @@ r38–r50的锁屏、同名目录、点击内部中断、跨入口互斥、两�
 
 | 验收项 | 当前实现/证据 | 当前结论与接续 |
 | --- | --- | --- |
-| CV01 包/隔离 | r50 General execute0.11.16/collect0.8.18、Web execute1.17.15独立ZIP及完整General suite；共享0.6.13的20份文件三路同源 | PASS（本地装配/独立包）；候选未发布；跨包实测与新collector回归分开记录 |
+| CV01 包/隔离 | r50历史General execute0.11.16/collect0.8.18、Web execute1.17.15；新共享0.7.2的21份文件三路同源，General execute0.11.19/collect0.8.21独立包和完整suite r9构建/验包PASS，Web execute1.18.3独立ZIP验包PASS | PASS（本地装配/独立包）；不同发行材料各自归属，不用基线commit代替运行内容SHA；候选尚未发布至生产分发 |
 | CV02 probe | r38真实锁屏时General/Web独立probe在CDP连接前拒绝，最终发送门禁拒绝，发送0；增加控制台登录用户与监听进程启动身份/命令摘要复查；2.31.6 General/Web fresh probe通过 | PASS（已列本机环境门禁）；真实锁屏负例为2.31.3，同内容平台门禁沿用；不标成2.31.6全负例重跑 |
 | CV03 目标/配置/Prompt | r34权限漂移发送0；r38两个真实同名不同完整目录项目使Driver拒绝、发送0，并按原生项目ID回验路径；2.31.6菜单可见性等待后新单题一次发送和正式回执通过 | PASS（已列目标/配置范围）；同名负例为2.31.3，新版未放宽唯一性；模型/权限保持当前值 |
 | CV04 发送中断 | r30–r33原窗口保留；r42在可信点击事件capture阶段、应用处理前注入barrier并只杀精确Driver，恢复原事件一次；归档旧锁、原attempt恢复和正式collect/finalize/verify通过 | PASS（2.31.3已列注入窗口）；发送1、click_returned_at仍null；r39执行/r40采集，不外推无注入自然崩溃或所有可能窗口 |
@@ -542,7 +542,7 @@ r38–r50的锁屏、同名目录、点击内部中断、跨入口互斥、两�
 | GV06 分母 | r19保留全集5题、3有效/2未评分；r28全集5题、5有效/0未评分、均分96.5；资源各自覆盖，未知Token不补零 | PARTIAL；公共真实零/异常测试已验，本范围真实异常组合仍按证据收口 |
 | GV07 阶段恢复 | 原attempt只读恢复；r28分两次首次采集后完整回执、三题独立语义、submission/return/import/三种报告，重复导入幂等 | PASS（已验主链路）；发布中断仍在CV14待验 |
 | GV08 小批 | r28当前核心五题三槽、原生峰值3与补位；首次collect/verify5/5 complete；三种评分及回传/报告完成 | PASS（固定五题/本机）；不外推完整60题或其他平台 |
-| WV01–WV08 | r49三路共用核心同源，General/Web共136项Node及29项Python回归；2.31.6独立Web probe通过，正式receipt/batch门禁仍拒绝，Web发送0 | IN_PROGRESS；General高优先已列分支已补，下一步接续Web单题正式回执适配和独立验收；不继承General通过 |
+| WV01–WV08 | R7 Web1.18.3同包单题评分、submission、return/import和报告闭环；新三题单槽完整范围回执通过，五题三槽真实峰值3且完成两次动态补位；多题记录为显式跨版本技术材料，详见[接续证据](../web-e2e/evidence/doubaowork-macos-web-batches-20260925/README.md) | PARTIAL；五题最后一个原生request仍运行，未生成全批根回执；三题评分有一题评测异常且迟到结果被拒，未生成submission；五题末题上次观察未终态，多题同发行、回传、人工交互等需分别验收，不升级旧canary |
 
 
 

@@ -184,7 +184,10 @@ async function confirmProjectTrust(page, project, timeout) {
   if (!trustDialogMatchesProject(await dialog.innerText(), project)) {
     throw new Error(`文件夹信任对话框未完整回显目标绝对路径：${project}`);
   }
-  await trust.click({ timeout, noWaitAfter: true });
+  try { await trust.click({ timeout, noWaitAfter: true }); }
+  catch (error) {
+    if (error?.name !== "TimeoutError" || await dialog.isVisible()) throw error;
+  }
   await dialog.waitFor({ state: "hidden", timeout });
   return true;
 }
@@ -208,7 +211,10 @@ async function dismissStaleProjectDialog(page, timeout) {
   }
   const cancel = dialogs[0].getByRole("button", { name: /^(Cancel|取消)$/i });
   if (await cancel.count() !== 1) throw new Error("已有创建项目对话框无法安全关闭");
-  await cancel.click({ timeout, noWaitAfter: true });
+  try { await cancel.click({ timeout, noWaitAfter: true }); }
+  catch (error) {
+    if (error?.name !== "TimeoutError" || await dialogs[0].isVisible()) throw error;
+  }
   await dialogs[0].waitFor({ state: "hidden", timeout });
 }
 
@@ -231,7 +237,16 @@ async function beginProjectRegistration(page, timeout) {
   if (createMatches.length === 1) {
     // 新版 Desktop 的侧栏收缩层可能覆盖图标命中区域；该定位器已经按唯一
     // aria-label 锁定按钮，force 只绕过装饰层的 pointer-events 拦截。
-    await createMatches[0].click({ timeout, noWaitAfter: true, force: true });
+    try {
+      await createMatches[0].click({ timeout, noWaitAfter: true, force: true });
+    } catch (error) {
+      // Desktop 26.917 can open the project dialog before its click promise
+      // resolves. Accept that timeout only after a unique visible create
+      // dialog has appeared; any other timeout remains a hard failure.
+      if (error?.name !== "TimeoutError") throw error;
+      const opened = await visible(page.getByRole("dialog"));
+      if (opened.length !== 1 || !/^(创建项目|Create project)/i.test((await opened[0].innerText()).trim())) throw error;
+    }
     const dialog = page.getByRole("dialog");
     await dialog.waitFor({ state: "visible", timeout });
     const local = dialog.getByRole("radio", { name: /^(Local|本地)(\s|$)/i });
@@ -262,7 +277,12 @@ async function beginProjectRegistration(page, timeout) {
       sourceFolderLocators = [dialog.getByRole("button", { name: /^(Add|添加)$/i })];
     }
     const sourceFolder = await uniqueVisible(sourceFolderLocators, "源文件夹选择入口");
-    await sourceFolder.click({ timeout, noWaitAfter: true, force: true });
+    try { await sourceFolder.click({ timeout, noWaitAfter: true, force: true }); }
+    catch (error) {
+      // The following native folder helper must positively identify the
+      // macOS picker; a click timeout alone never confirms selection.
+      if (error?.name !== "TimeoutError") throw error;
+    }
     return {
       method: localCount === 1 ? "create-local-project-dialog" : "create-project-dialog-on-this-computer",
       finalize: true,
@@ -317,7 +337,10 @@ async function finalizeProjectRegistration(page, project, timeout) {
   const create = dialog.getByRole("button", { name: /^(Create project|创建项目)$/i });
   await create.waitFor({ state: "visible", timeout });
   if (!(await create.isEnabled())) throw new Error("选择源文件夹后创建项目按钮仍不可用");
-  await create.click({ timeout, noWaitAfter: true });
+  try { await create.click({ timeout, noWaitAfter: true }); }
+  catch (error) {
+    if (error?.name !== "TimeoutError" || await dialog.isVisible()) throw error;
+  }
   await dialog.waitFor({ state: "hidden", timeout });
 }
 

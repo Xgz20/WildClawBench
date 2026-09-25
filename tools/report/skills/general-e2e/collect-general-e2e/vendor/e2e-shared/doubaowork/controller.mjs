@@ -429,9 +429,14 @@ export function validateObservationBinding(state, snapshot) {
       || snapshot.conversation_project_id_sha256 !== state.client.project_id_sha256) {
     throw new Error("当前 conversation 不属于已绑定 project ID");
   }
-  if (!state.client.project_name
-      || snapshot.current_project_control_count !== 1
-      || snapshot.current_project_name !== state.client.project_name) {
+  const toolbarProject = snapshot.current_project_control_count === 1
+    && snapshot.current_project_name === state.client.project_name;
+  const sidebarProject = snapshot.current_project_control_count === 0
+    && snapshot.sidebar_project_revalidation?.status === "verified"
+    && snapshot.sidebar_project_revalidation?.project_id_sha256 === state.client.project_id_sha256
+    && snapshot.sidebar_project_revalidation?.workspace_path_sha256 === sha256Text(state.workspace)
+    && snapshot.sidebar_project_revalidation?.project_name === state.client.project_name;
+  if (!state.client.project_name || !(toolbarProject || sidebarProject)) {
     throw new Error("当前页面未唯一回读已绑定 project 名称");
   }
   if (!state.workspace_selection.confirmed
@@ -456,6 +461,7 @@ export function validateObservationBinding(state, snapshot) {
     conversation_id_sha256: sha256Text(state.session.conversation_id),
     project_id_sha256: state.client.project_id_sha256,
     project_name: state.client.project_name,
+    project_readback_source: toolbarProject ? "composer-project-control" : "project-edit-dialog-folder-tooltip",
     workspace_path_sha256: sha256Text(state.workspace),
     workspace_readback_sha256: state.workspace_selection.display_sha256,
     workspace_source: state.workspace_selection.source,
@@ -1425,6 +1431,23 @@ async function resumeDevelopmentRunUnlocked(options) {
       await dismissKnownInformationalDialog(client.page, state, stateFile);
       pageObservation = await inspectPage(client.page, { projectName: state.client.project_name });
       await enrichRuntimeObservation(client.page, state, pageObservation);
+      if (pageObservation.snapshot.current_project_control_count === 0
+          && pageObservation.nativeNormalized?.terminal === "completed"
+          && pageObservation.snapshot.current_conversation_id === state.session.conversation_id
+          && pageObservation.snapshot.conversation_project_id_sha256 === state.client.project_id_sha256) {
+        // After completion, 2.31.6 can omit the composer project chip. Verify
+        // the persisted project's exact ID, name and full folder via its edit
+        // dialog, then re-read the conversation before accepting the binding.
+        await verifyPreparedProjectWorkspace(client.page, state);
+        await atomicWriteAttemptState(stateFile, state);
+        pageObservation = await inspectPage(client.page, { projectName: state.client.project_name });
+        await enrichRuntimeObservation(client.page, state, pageObservation);
+        pageObservation.snapshot.sidebar_project_revalidation = {
+          status: "verified", project_id_sha256: state.client.project_id_sha256,
+          project_name: state.client.project_name, workspace_path_sha256: sha256Text(state.workspace),
+          source: "project-edit-dialog-folder-tooltip", observed_at: pageObservation.snapshot.observed_at,
+        };
+      }
       bindingEvidence = validateObservationBinding(state, pageObservation.snapshot);
       if (confirmResumePromptReadback(state, pageObservation.snapshot, bindingEvidence)) {
         await atomicWriteAttemptState(stateFile, state);
@@ -1477,6 +1500,8 @@ async function resumeDevelopmentRunUnlocked(options) {
           await atomicWriteAttemptState(stateFile, state);
           break;
         }
+        pageObservation.snapshot.bound_tool_delivery_active = false;
+        state.native_background_activity = background;
         const cancellation = hasCancellationRequest(state, pageObservation.nativeNormalized);
         const failure = pageObservation.nativeNormalized.terminal === "failed";
         if (cancellation || failure) {
@@ -1727,7 +1752,7 @@ async function resumeDevelopmentRunUnlocked(options) {
       },
       finalizer: finalizerAssessment,
       terminal: {
-        status: nativeCompletion ? "completed" : "unverified",
+        status: nativeFailure ? "failed" : nativeCancellation ? "cancelled" : nativeCompletion ? "completed" : "unverified",
         trusted_native_terminal: nativeCompletion,
       },
       terminal_process_cleanup: {
@@ -1740,6 +1765,9 @@ async function resumeDevelopmentRunUnlocked(options) {
     };
     const observationPath = join(outputDir, `development-observation-${observationId}.json`);
     await atomicWriteJson(observationPath, record);
+    if (options.finalizeObservation && nativeCompletion) {
+      record.formal_result = await options.finalizeObservation({ state, record, outputDir, stateFile, observationPath, client });
+    }
     return record;
   } catch (error) {
     primaryError = error;

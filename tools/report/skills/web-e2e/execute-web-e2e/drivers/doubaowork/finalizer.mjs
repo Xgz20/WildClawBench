@@ -190,3 +190,47 @@ export function assessDoubaoWebFinalization({
     ],
   };
 }
+
+// Formal Web v2 uses the verified shared native projection, never a legacy UI candidate.
+export function assessDoubaoNativeWebFinalization({ state, observation, native, nonSuccess = null, cleanup, candidate, allowedBackgroundPeers = [] }) {
+  const ui = observation?.ui;
+  const terminal = native?.terminal === "completed" && Boolean(native.finished_at)
+    || nonSuccess?.verified === true && new Set(["failed", "interrupted"]).has(native?.terminal);
+  const bound = state?.scene === "web" && state?.send?.dispatch_attempt_count === 1
+    && state?.session?.prompt_readback?.status === "verified"
+    && observation?.binding?.status === "verified" && observation?.classification?.trusted === true
+    && native?.conversation_id === state?.session?.conversation_id
+    && native?.native_cwd === state?.workspace
+    && native?.native_request_session_id === state?.session?.native_request_session_id
+    && ui?.current_conversation_id === native?.conversation_id;
+  const idle = ui && ["stop_control_count", "bound_conversation_busy_count", "visible_dialog_count", "user_question_count", "approval_count", "native_confirmation_unknown_count"]
+    .every(key => ui[key] === 0)
+    && ui.bound_native_confirmation_pending === false && ui.bound_tool_delivery_active === false
+    && observation.native_frontend_activity?.initialized === true
+    && Array.isArray(observation.native_frontend_activity.active)
+    && observation.native_frontend_activity.active.every(row => allowedBackgroundPeers.some(peer =>
+      row.session_id === peer.native_request_session_id && row.conversation_ids?.length === 1
+        && row.conversation_ids[0] === peer.conversation_id))
+    && observation.native_background_activity?.initialized === true
+    && Array.isArray(observation.native_background_activity.active)
+    && observation.native_background_activity.active.every(row => row.context_verified === true
+      && allowedBackgroundPeers.filter(peer => peer.conversation_id === row.conversation_ids?.[0]
+        && peer.native_request_session_id === row.native_request_session_id && peer.workspace === row.native_cwd).length === 1);
+  const reasons = [];
+  if (!bound) reasons.push("NATIVE_WEB_BINDING_UNVERIFIED");
+  if (!terminal) reasons.push("NATIVE_WEB_TERMINAL_UNVERIFIED");
+  if (!idle) reasons.push("NATIVE_WEB_IDLE_UNVERIFIED");
+  if (!assessCleanup(cleanup).verified) reasons.push("PROCESS_CLEANUP_UNVERIFIED");
+  if (!assessCandidate(candidate).verified) reasons.push("CANDIDATE_FREEZE_UNVERIFIED");
+  const valid = reasons.length === 0;
+  return {
+    schema: "wildclawbench.doubaowork-web-finalizer-assessment/v2",
+    status: valid ? "READY_FOR_WEB_RECEIPT" : "NEEDS_ATTENTION", formal_execution_receipt_allowed: valid,
+    identity: { ...state.identity, attempt_id: state.attempt_id },
+    native: { terminal_status: terminal ? "verified" : "unverified", cwd_status: bound ? "verified" : "unverified", cwd_verified: Boolean(bound) },
+    process_cleanup: assessCleanup(cleanup), candidate: assessCandidate(candidate), reasons,
+    execution_status: nonSuccess ? "execution_error" : "completed",
+    integrity: { valid, equivalent_web_binding: Boolean(bound && idle), native_terminal_verified: Boolean(terminal),
+      native_cwd_verified: Boolean(bound), process_cleanup_verified: assessCleanup(cleanup).verified, candidate_frozen: assessCandidate(candidate).verified },
+  };
+}

@@ -714,7 +714,7 @@ function receiptRelativePath(plan, path) {
   return value && !value.startsWith("..") && !isAbsolute(value) ? value.split("\\").join("/") : null;
 }
 
-export async function buildExecutionReceipt(plan, state) {
+export async function buildExecutionReceipt(plan, state, { harnessId = BATCH_PROFILE.harnessId, readRecord = readJsonIfExists } = {}) {
   const manifestTaskIds = (plan.manifest.tasks || []).map((task) => task.task_id);
   const requestedTaskIds = plan.tasks.map((task) => task.taskId);
   const sameScope = JSON.stringify([...manifestTaskIds].sort()) === JSON.stringify([...requestedTaskIds].sort());
@@ -728,15 +728,15 @@ export async function buildExecutionReceipt(plan, state) {
   let noForbiddenDirectories = true;
   for (const task of plan.tasks) {
     const queueTask = state.tasks.find((item) => item.task_id === task.taskId);
-    const automation = await readJsonIfExists(task.automationStateFile);
-    const execution = await readJsonIfExists(task.executionRecordFile);
+    const automation = await readRecord(task.automationStateFile);
+    const execution = await readRecord(task.executionRecordFile);
     if (!automation || !execution) recordsPresent = false;
     if (automation && (automation.identity?.batch_id !== plan.manifest.batch_id
       || automation.identity?.task_id !== task.taskId
-      || automation.identity?.harness_id !== BATCH_PROFILE.harnessId)) identitiesMatch = false;
+      || automation.identity?.harness_id !== harnessId)) identitiesMatch = false;
     if (execution && (execution.batch_id !== plan.manifest.batch_id
       || execution.task_id !== task.taskId
-      || execution.harness?.id !== BATCH_PROFILE.harnessId)) identitiesMatch = false;
+      || execution.harness?.id !== harnessId)) identitiesMatch = false;
     const actualUiModel = automation?.model_selection?.actual_model || automation?.model_selection?.model || null;
     const selectionMode = automation?.model_selection?.mode
       || (automation?.requested_ui_model ? "explicit" : "current");
@@ -837,6 +837,7 @@ export async function buildExecutionReceipt(plan, state) {
       requested_app_path: state.requested_app_path || null,
       requested_permission_mode: state.requested_permission_mode,
       state_path: receiptRelativePath(plan, plan.queueStateFile),
+      ...(state.concurrency ? { concurrency: state.concurrency } : {}),
     },
     scope: {
       manifest_task_ids: manifestTaskIds,

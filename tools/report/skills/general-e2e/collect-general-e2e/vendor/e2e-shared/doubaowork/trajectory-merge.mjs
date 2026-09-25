@@ -7,7 +7,13 @@ function inputMatches(event, native, result) {
   // Admit only this observed difference for an actually returned text Read;
   // both original payloads remain archived, all other arguments must match.
   if (event.tool_name !== "Read" || event.arguments?.thumbnail_size !== undefined
-      || native.input?.thumbnail_size !== "full" || result?.output?.structuredResultFacts?.localFileReadV2?.kind !== "text") return false;
+      || native.input?.thumbnail_size !== "full") return false;
+  const text = result.output?.structuredResultFacts?.localFileReadV2?.kind === "text";
+  const image = result.output?.status === "success"
+    && result.output?.structuredResultFacts?.localFileReadV2Bypass?.reason === "image"
+    && typeof native.input.file_path === "string"
+    && result.output.content === `Read "${native.input.file_path}" as image for upload.`;
+  if (!text && !image) return false;
   const { thumbnail_size, ...rest } = native.input;
   return equal(event.arguments, rest);
 }
@@ -70,12 +76,55 @@ export function mergeObservedToolTimeline(snapshots, local) {
   return { order_verified: true, basis: "unique-native-order+same-host-observation-upper-bounds", entries };
 }
 
-function resultMatches(native, content) {
+function resultMatches(native, content, start) {
   if (typeof native.output?.content === "string" && native.output.content === content) return true;
   const mutation = native.output?.structuredResultFacts?.localFileMutationV2;
   if (native.tool_name === "Write" && native.output.status === "success" && mutation?.kind === "write_success"
       && mutation.toolName === "Write" && mutation.type === "create" && mutation.created === true
       && typeof mutation.filePath === "string" && `File created successfully at: ${mutation.filePath}` === content) return true;
+  // 2.31.6 serializes a successful local Edit as a fixed model-visible
+  // sentence while the local result ledger retains the diff and exact path.
+  // Require the same call ID (checked by the caller), success, tool identity,
+  // path, diff header and rendered sentence; other shapes stay conflicting.
+  if (native.tool_name === "Edit" && native.output?.status === "success"
+      && mutation?.kind === "edit_success" && mutation.toolName === "Edit"
+      && mutation.userModified === false && mutation.replaceAll === false
+      && typeof mutation.filePath === "string"
+      && typeof mutation.unifiedDiff === "string"
+      && mutation.unifiedDiff.startsWith(`--- ${mutation.filePath}\n+++ ${mutation.filePath}\n`)
+      && content === `The file ${mutation.filePath} has been updated successfully.`) return true;
+  // Native image Read bypasses the text reader. Match only the bound input
+  // path and the two exact successful protocol wrappers. Raw multimodal bytes
+  // remain archived; the normalized result content is explicitly partial.
+  const image = native.output?.structuredResultFacts?.localFileReadV2Bypass;
+  const imagePath = start?.input?.file_path;
+  if (native.tool_name === "Read" && native.output?.status === "success" && image?.reason === "image"
+      && typeof imagePath === "string"
+      && native.output.content === `Read "${imagePath}" as image for upload.`
+      && content === `Read media file ${imagePath} (image). See the attachment in the multimodal content that follows.`) return true;
+  const failure = native.output?.structuredResultFacts?.localFileMutationV2;
+  const error = failure?.error, details = error?.details;
+  if (native.tool_name === "Edit" && native.output?.status === "error" && native.output.content === ""
+      && failure?.kind === "failure" && failure.toolName === "Edit"
+      && error?.code === "FILE_NOT_FOUND" && error.message === "File does not exist."
+      && typeof details?.cwd === "string" && details.cwd.startsWith("/")
+      && details.filePath === start?.input?.file_path
+      && content === `File does not exist. Note: your current working directory is ${details.cwd}.`) return true;
+  if (native.tool_name === "Write" && native.output?.status === "success"
+      && mutation?.kind === "write_success" && mutation.toolName === "Write"
+      && mutation.type === "update" && mutation.created === false
+      && typeof mutation.filePath === "string"
+      && typeof mutation.unifiedDiff === "string"
+      && mutation.unifiedDiff.startsWith(`--- ${mutation.filePath}\n+++ ${mutation.filePath}\n`)
+      && content === `The file ${mutation.filePath} has been updated successfully.`) return true;
+  if (native.tool_name === "TaskOutput" && native.output?.status === "success"
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u.test(start?.input?.task_id || "")) {
+    const taskId = start.input.task_id;
+    const nativePrefix = `Shell task '${taskId}' is completed.exit code 0. stdout: `;
+    const modelPrefix = `Task ${taskId} has finished with final status completed, exit code 0. The result has been consumed; do not query the same task_id again.\nstdout:\n`;
+    if (typeof native.output.content === "string" && native.output.content.startsWith(nativePrefix)
+        && content === modelPrefix + native.output.content.slice(nativePrefix.length)) return true;
+  }
   const read = native.output?.structuredResultFacts?.localFileReadV2;
   // Native Read v2 renders this footer only for an untruncated text EOF.
   return native.tool_name === "Read" && read?.kind === "text" && read.truncated === false
@@ -99,7 +148,7 @@ export function mergeNativeToolTimeline(trajectory, local) {
       shared.add(e.call_id);
     } else if (e.kind === "tool_result") {
       const n = results.get(e.call_id);
-      if (!n || !resultMatches(n, e.content)) throw new Error("DOUBAOWORK_CROSS_SOURCE_RESULT_CONFLICT");
+      if (!n || !resultMatches(n, e.content, starts.get(e.call_id))) throw new Error("DOUBAOWORK_CROSS_SOURCE_RESULT_CONFLICT");
       sharedResults.add(e.call_id);
     }
   }

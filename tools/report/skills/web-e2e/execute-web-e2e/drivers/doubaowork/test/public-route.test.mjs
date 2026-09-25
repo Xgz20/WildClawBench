@@ -6,10 +6,10 @@ test("public route registers metrics and consumes the existing bridge", () => {
   assert.equal(DOUBAOWORK_WEB_ROUTE.id, "doubaowork");
   assert.equal(DOUBAOWORK_WEB_ROUTE.metrics.registered, true);
   assert.equal(DOUBAOWORK_WEB_ROUTE.receipt_bridge, "./drivers/doubaowork/receipt-bridge.mjs");
-  assert.equal(resolveDoubaoWorkWebRoute().formal_execution_receipt, false);
+  assert.equal(resolveDoubaoWorkWebRoute().formal_execution_receipt, true);
 });
 
-test("public route rejects batch and formal receipt paths", () => {
-  assert.throws(() => resolveDoubaoWorkWebRoute({ batch: true }), /禁止 batch/);
-  assert.throws(() => resolveDoubaoWorkWebRoute({ formalReceipt: true }), /正式 execution receipt/);
+test("public route allows serial batch and explicit single-task receipts", () => {
+  assert.equal(resolveDoubaoWorkWebRoute({ batch: true }).run_slots, 1);
+  assert.equal(resolveDoubaoWorkWebRoute({ formalReceipt: true }).formal_execution_receipt, true);
 });
