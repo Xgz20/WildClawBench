@@ -53,6 +53,8 @@ node scripts/execute_astronstudio_macos.mjs \
 
 `0.11.30` 对项目导航与路径控件异步出现的竞态补充二次回读：若目标完整路径已经在当前空白路由可见，且原生 thread→project→cwd 唯一一致，则直接接受当前路由；点击目标项目“新建对话”后即使路由 ID 不变，也只在相同 UI 与原生身份门禁通过时接受。没有正证据仍在发送意图落盘前停止。
 
+`0.11.31` 在项目选择列表找不到目标 Workspace 后，先用 Escape 关闭选择菜单，并新鲜确认没有可见 dialog/option，再操作侧边栏的“添加项目”。若菜单未关闭，发送前失败，不在遮挡层下点击添加入口或意外触发 macOS 原生目录选择器。
+
 状态查询只读取主状态库的临时副本及同批复制的 WAL/SHM，不写源库。AStudio 热写入导致副本 `quick_check` 或查询短暂失败时，单次查询先退避重试；Prompt 已发送并绑定身份后，终态轮询继续保留同一 attempt 重试，不因此创建新任务或再次发送。`--resume --observe-once` 仍只尝试一次上层观察；该次读取失败会持久化 `NATIVE_STATE_READ_FAILED / NEEDS_ATTENTION`，可再次恢复。
 
 执行锁遗留时，只有 `--resume` 且记录的 PID 已不存活才允许清除陈旧锁；普通新运行不会接管锁。单题 Driver 同时持有 unit 级 `astronstudio-ui.lock` 和 task 级 `driver.lock`，因此即使绕过队列直接启动多个单题入口，也只有一个进程可以操作 AStudio UI。

@@ -559,6 +559,19 @@ export async function selectWorkspace(client, workspace, timeoutMs, stateDatabas
     if (!existing.selected) {
       await client.send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape" });
       await client.send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape" });
+      await waitFor(
+        () => client.evaluate(expression(`
+          const dialogs = Array.from(document.querySelectorAll(
+            '[role="dialog"], [aria-modal="true"]'
+          )).filter(visible);
+          const options = Array.from(document.querySelectorAll('[role="option"]'))
+            .filter(visible);
+          return { dialog_count: dialogs.length, option_count: options.length };
+        `)),
+        (value) => value.dialog_count === 0 && value.option_count === 0,
+        Math.min(timeoutMs, 5_000),
+        "等待 AstronStudio 项目选择菜单关闭",
+      );
       await addWorkspace(client, workspace, timeoutMs);
     }
   } else {
