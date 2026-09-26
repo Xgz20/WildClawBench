@@ -20,7 +20,9 @@ docs/design/
     evidence/          # Web 运行事实与证据索引
   general-e2e/         # 通用技术方案、指标说明
     evidence/          # 通用运行事实、冻结样本与证据索引
-docs/guides/web-e2e/    # 面向用户的操作手册
+docs/guides/
+  web-e2e/             # Web 站点用户操作手册
+  general-e2e/         # 通用场景用户操作手册
 ```
 
 执行控制按 Harness 维护共用能力；场景差异写入唯一集成契约的 General/Web 章节。现有代码入口仍按各场景的包与回执协议装配，本次目录整理不改运行行为。
@@ -31,6 +33,7 @@ docs/guides/web-e2e/    # 面向用户的操作手册
 
 - [Web 自动化评测指导手册](../../guides/web-e2e/Web站点端到端自动化评测指导手册.md)
 - [Web 人机结合使用手册](../../guides/web-e2e/Web站点端到端评测使用手册（人机结合）.md)
+- [通用场景自动化评测指导手册](../../guides/general-e2e/通用场景端到端自动化评测指导手册.md)
 - [历史档案索引](archive/README.md)
 
 原 `general-e2e/README.md` 的进度/待办已并入共用契约；通用计划/ADR/Windows 启动包和 Web 生产验收清单已归档；跨场景指标盘点已拆成两份指标说明，采集分析进入各自技术方案。证据目录保持原路径，JSON/JSONL 和采集脚本内容不因本次整理改写。
