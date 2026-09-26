@@ -15,7 +15,7 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.11.31/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。AstronStudio 切换 Workspace 时先确认项目选择菜单已关闭，再使用侧边栏添加路径；若添加项目后当前对话未切入目标 Workspace，会用原生项目 ID 定位唯一侧边栏项目，从该项目的“新建对话”入口建立空白目标路由并重新核对完整路径；若正确路径在导航期间延迟出现，仍须同时核对原生 route→project→cwd 后才接受，未完成身份回读时不发送 Prompt。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.11.32/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。AstronStudio 切换 Workspace 时先确认项目选择菜单已关闭，再使用侧边栏添加路径；若添加项目后当前对话未切入目标 Workspace，会用原生项目 ID 定位唯一侧边栏项目，从该项目的“新建对话”入口建立空白目标路由并重新核对完整路径；若正确路径在导航期间延迟出现，仍须同时核对原生 route→project→cwd 后才接受，未完成身份回读时不发送 Prompt。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## DoubaoWork macOS 开发入口
 

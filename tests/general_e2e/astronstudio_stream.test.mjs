@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 
 import {
@@ -66,4 +69,37 @@ test("a lease released before stability does not admit a send", async () => {
     }),
     /remained unavailable/u,
   );
+});
+
+test("stream gate finds a live admission across server log rotation", async () => {
+  const root = await mkdtemp(join(tmpdir(), "astron-stream-"));
+  try {
+    const logPath = join(root, "server.log");
+    await writeFile(`${logPath}.1`, event(BASE + 1000, "admitted", THREAD, "rotated-lease"));
+    await writeFile(logPath, "");
+    const result = await waitForThreadStreamLease({
+      logPath, threadId: THREAD, sinceEpochMs: BASE,
+      timeoutMs: 0, minStableMs: 1500, now: () => BASE + 3000,
+    });
+    assert.equal(result.leaseId, "rotated-lease");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("stream gate honors a release after rotation", async () => {
+  const root = await mkdtemp(join(tmpdir(), "astron-stream-"));
+  try {
+    const logPath = join(root, "server.log");
+    await writeFile(`${logPath}.1`, event(BASE + 1000, "admitted", THREAD, "rotated-lease"));
+    await writeFile(logPath, event(BASE + 2000, "released", THREAD, "rotated-lease"));
+    let clock = BASE + 3000;
+    await assert.rejects(waitForThreadStreamLease({
+      logPath, threadId: THREAD, sinceEpochMs: BASE,
+      timeoutMs: 500, minStableMs: 1500, now: () => clock,
+      sleep: async (milliseconds) => { clock += milliseconds; },
+    }), /remained unavailable/u);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
