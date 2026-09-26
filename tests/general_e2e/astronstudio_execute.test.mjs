@@ -7,6 +7,7 @@ import test from "node:test";
 import {
   clickNewTask,
   clickSend,
+  ensureSendTargetReady,
   fillPrompt,
   renderExpectedPrompt,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs";
@@ -137,6 +138,7 @@ function commonDependencies(config, sessions, clickCounter) {
       ui: { thread_id: "thread-1", model: "GLM-5.2", reasoning: "High", permission: "完全访问" },
     }),
     fillPrompt: async () => ({ editor_count: 1, matches: true }),
+    ensureSendTargetReady: async () => ({ ready: true, count: 1 }),
     waitForThreadStreamLease: async ({ threadId }) => ({
       threadId, leaseId: "lease-1", admittedAt: Date.parse("2026-09-17T15:00:00Z"),
     }),
@@ -240,6 +242,40 @@ test("unsafe send UI never dispatches a mouse event", async () => {
   assert.equal(result.clicked, false);
   assert.equal(result.workspace_matches, false);
   assert.deepEqual(calls, []);
+});
+
+test("pre-arm check moves away from a preview card and requires an unobscured send target", async () => {
+  const calls = [];
+  let reads = 0;
+  const client = {
+    evaluate: async () => {
+      reads += 1;
+      return reads === 1
+        ? { width: 1344, height: 810 }
+        : { ready: true, count: 1, x: 1200, y: 535, thread_id: "thread-1" };
+    },
+    send: async (method, params) => calls.push({ method, params }),
+  };
+  const ready = await ensureSendTargetReady(client, "prompt", "/tmp/target-workspace");
+  assert.equal(ready.ready, true);
+  assert.deepEqual(calls.map(({ params }) => params.type), ["mouseMoved"]);
+  assert.equal(calls[0].params.x, 806);
+  assert.equal(calls[0].params.y, 100);
+});
+
+test("pre-arm check fails before mouse press when the send button remains obscured", async () => {
+  const calls = [];
+  const client = {
+    evaluate: async (expression) => expression.includes("innerWidth")
+      ? { width: 1344, height: 810 }
+      : { ready: false, count: 1, reason: "send-button-obscured" },
+    send: async (method, params) => calls.push({ method, params }),
+  };
+  await assert.rejects(
+    ensureSendTargetReady(client, "prompt", "/tmp/target-workspace"),
+    /send-button-obscured/u,
+  );
+  assert.deepEqual(calls.map(({ params }) => params.type), ["mouseMoved"]);
 });
 
 test("CLI requires resume for observation and keeps identity timeout bounded", () => {
@@ -565,6 +601,27 @@ test("stream admission failure stops before arming a Prompt send", async () => {
     assert.equal(result.execution.error.code, "PRE_SEND_DRIVER_ERROR");
     assert.equal(result.prompt.send_status, "not_sent");
     assert.equal(result.send.dispatch_attempt_count, 0);
+    assert.equal(clickCounter.count, 0);
+  } finally {
+    await rm(config.unitRoot, { recursive: true, force: true });
+  }
+});
+
+test("obscured send target fails before persisting a send intent", async () => {
+  const config = await fixture();
+  const clickCounter = { count: 0 };
+  try {
+    const dependencies = commonDependencies(config, [[]], clickCounter);
+    dependencies.ensureSendTargetReady = async () => {
+      throw new Error("send-button-obscured");
+    };
+    const result = await executeSingleTask(config, dependencies);
+    assert.equal(result.phase, "FAILED");
+    assert.equal(result.execution.business_status, "infrastructure_error");
+    assert.equal(result.execution.error.code, "PRE_SEND_DRIVER_ERROR");
+    assert.equal(result.prompt.send_status, "not_sent");
+    assert.equal(result.send.dispatch_attempt_count, 0);
+    assert.equal(result.history.some((item) => item.event === "PROMPT_DISPATCH_ARMED"), false);
     assert.equal(clickCounter.count, 0);
   } finally {
     await rm(config.unitRoot, { recursive: true, force: true });

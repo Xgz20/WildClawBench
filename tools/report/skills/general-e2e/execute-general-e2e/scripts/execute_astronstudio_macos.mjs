@@ -23,6 +23,7 @@ import {
   clickSend,
   currentThreadId,
   discoverMainTarget,
+  ensureSendTargetReady,
   fillPrompt,
   prepareExecutionUi,
 } from "./lib/astronstudio-cdp.mjs";
@@ -34,7 +35,7 @@ import { waitForThreadStreamLease } from "./lib/astronstudio-stream.mjs";
 import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery/index.mjs";
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.3.3";
+export const EXECUTION_DRIVER_VERSION = "0.3.4";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -816,6 +817,7 @@ export async function executeSingleTask(config, overrides = {}) {
     discoverMainTarget,
     connectCdp: (url, timeout) => CdpClient.connect(url, timeout),
     prepareExecutionUi,
+    ensureSendTargetReady,
     fillPrompt,
     clickSend,
     currentThreadId,
@@ -865,6 +867,7 @@ export async function executeSingleTask(config, overrides = {}) {
       admitted_at: new Date(stream.admittedAt).toISOString(),
     });
     await persist(config, state);
+    await dependencies.ensureSendTargetReady(client, config.prompt, config.candidateWorkspace);
     state.prompt.send_status = "intent_persisted";
     state.send.dispatch_armed_at = dependencies.now();
     state.send.dispatch_attempt_count = 1;

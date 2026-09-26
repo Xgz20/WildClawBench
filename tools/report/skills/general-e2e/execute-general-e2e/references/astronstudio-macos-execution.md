@@ -47,6 +47,8 @@ node scripts/execute_astronstudio_macos.mjs \
 
 `0.11.27` 发送前还要求当前目标 thread 的本地 `server.log` 中有未释放、持续至少 1.5 秒的精确 `orchestration.thread:<thread-id>` 流租约。按目标 route 和 attempt 创建时间过滤结构化 `admitted/released` 事件，不把其它订阅的 active lease 列表当作该 thread 的准入。最多只读等待 120 秒；未取得正证据时在发送意图落盘前失败，`dispatch_attempt_count=0`，不点击按钮。此门禁不替代发送后的原生 thread/turn/session/cwd 绑定。
 
+`0.11.28` 在发送意图落盘前先移开项目预览悬停卡片，并按唯一 Prompt、Workspace、弹窗和发送按钮无遮挡回读目标。此时未就绪属于发送前失败，`dispatch_attempt_count=0`；只有通过该检查后才持久化一次发送意图。落盘后的最终点击仍重新检查目标；若此时出现竞态或断连，保留 `PROMPT_SEND_UNCERTAIN` 且绝不补点。项目本地显示别名不改变 Prompt 或 Workspace 身份。
+
 状态查询只读取主状态库的临时副本及同批复制的 WAL/SHM，不写源库。AStudio 热写入导致副本 `quick_check` 或查询短暂失败时，单次查询先退避重试；Prompt 已发送并绑定身份后，终态轮询继续保留同一 attempt 重试，不因此创建新任务或再次发送。`--resume --observe-once` 仍只尝试一次上层观察；该次读取失败会持久化 `NATIVE_STATE_READ_FAILED / NEEDS_ATTENTION`，可再次恢复。
 
 执行锁遗留时，只有 `--resume` 且记录的 PID 已不存活才允许清除陈旧锁；普通新运行不会接管锁。单题 Driver 同时持有 unit 级 `astronstudio-ui.lock` 和 task 级 `driver.lock`，因此即使绕过队列直接启动多个单题入口，也只有一个进程可以操作 AStudio UI。

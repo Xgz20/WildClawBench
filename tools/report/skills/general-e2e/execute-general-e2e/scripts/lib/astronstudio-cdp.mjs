@@ -490,6 +490,29 @@ export async function inspectSendTarget(client, prompt, workspace) {
   `));
 }
 
+export async function ensureSendTargetReady(client, prompt, workspace) {
+  // Project preview cards can cover the composer after selecting a Workspace.
+  // Verify the exact target before persisting any send intent. A failed check
+  // here is provably before the first mouse press.
+  const viewport = await client.evaluate("({ width: innerWidth, height: innerHeight })");
+  if (!Number.isFinite(viewport?.width) || !Number.isFinite(viewport?.height)
+    || viewport.width < 200 || viewport.height < 200) {
+    throw new Error("AstronStudio 发送前视口尺寸不可用");
+  }
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: Math.floor(viewport.width * 0.6),
+    y: Math.min(100, Math.floor(viewport.height * 0.2)),
+    button: "none",
+  });
+  await sleep(500);
+  const target = await inspectSendTarget(client, prompt, workspace);
+  if (!target.ready) {
+    throw new Error(`AstronStudio 发送前目标未就绪：${JSON.stringify(target)}`);
+  }
+  return target;
+}
+
 export async function clickSend(client, prompt, workspace) {
   const target = await inspectSendTarget(client, prompt, workspace);
   if (!target.ready) return { clicked: false, ...target };
