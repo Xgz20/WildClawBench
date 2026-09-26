@@ -1,3 +1,5 @@
+import { queryExactProjectsForWorkspace, queryProjectForThread } from "./astronstudio-state.mjs";
+
 function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
 }
@@ -317,6 +319,26 @@ async function clickExactButton(client, patternSource, description) {
 
 async function addWorkspace(client, workspace, timeoutMs) {
   await clickExactButton(client, "^(?:项目|Projects)$", "AstronStudio 项目标签");
+  await waitFor(
+    () => client.evaluate(expression(`
+      const pickers = Array.from(document.querySelectorAll('.sidebar-segmented-picker'))
+        .filter(visible);
+      const tabs = pickers.length === 1 ? Array.from(pickers[0].querySelectorAll('button')) : [];
+      const projects = tabs.filter((button) => /^(?:项目|Projects)$/iu.test(
+        (button.innerText || '').trim()
+      ));
+      const adds = Array.from(document.querySelectorAll(
+        'button[aria-label="添加项目"], button[aria-label="Add project"]'
+      )).filter(visible).filter((button) => !button.disabled);
+      return { picker_count: pickers.length, project_tab_count: projects.length,
+        project_selected: projects.length === 1 && projects[0].classList.contains('font-semibold'),
+        add_count: adds.length };
+    `)),
+    (value) => value.picker_count === 1 && value.project_tab_count === 1
+      && value.project_selected && value.add_count === 1,
+    timeoutMs,
+    "等待 AstronStudio 项目标签切换完成",
+  );
   const add = await client.evaluate(expression(`
     const buttons = Array.from(document.querySelectorAll(
       'button[aria-label="添加项目"], button[aria-label="Add project"]'
@@ -372,7 +394,142 @@ async function addWorkspace(client, workspace, timeoutMs) {
   if (!submitted.clicked) throw new Error("AstronStudio 项目路径提交失败");
 }
 
-export async function selectWorkspace(client, workspace, timeoutMs) {
+async function exactProjectId(stateDatabase, workspace) {
+  const rows = await queryExactProjectsForWorkspace(stateDatabase, workspace);
+  if (rows.length !== 1 || typeof rows[0].project_id !== "string") {
+    throw new Error(`AstronStudio 目标项目原生身份不唯一：${rows.length}`);
+  }
+  return rows[0].project_id;
+}
+
+export async function openExactProjectConversation(client, workspace, stateDatabase, timeoutMs) {
+  if (!stateDatabase) throw new Error("AstronStudio 目标项目导航缺少原生状态库路径");
+  const projectId = await exactProjectId(stateDatabase, workspace);
+  const initialRoute = await currentThreadId(client);
+  const activity = await client.evaluate(expression(`
+    const editors = Array.from(document.querySelectorAll('[data-testid="composer-editor"]'))
+      .filter(visible);
+    const buttons = Array.from(document.querySelectorAll('button')).filter(visible);
+    return { editor_count: editors.length,
+      editor_empty: editors.length === 1 && (editors[0].innerText || '').trim() === '',
+      dialog_count: Array.from(document.querySelectorAll(
+        '[role="dialog"], [aria-modal="true"]'
+      )).filter(visible).length,
+      stop_count: buttons.filter((button) => /^(?:停止生成|Stop generating)$/iu.test(
+        (button.getAttribute('aria-label') || '').trim()
+      )).length };
+  `));
+  if (activity.editor_count !== 1 || !activity.editor_empty
+    || activity.dialog_count !== 0 || activity.stop_count !== 0) {
+    throw new Error("AstronStudio 目标项目导航时存在草稿、弹窗或活动任务");
+  }
+  const sidebar = await waitFor(
+    () => client.evaluate(expression(`
+      const rows = Array.from(document.querySelectorAll(
+        '[data-project-hover-anchor="${projectId}"]'
+      ));
+      const motion = rows.length === 1 ? rows[0].closest('[data-slot="sidebar-content-motion"]') : null;
+      return { count: rows.length, inert: motion?.inert ?? null,
+        hidden: motion?.getAttribute('aria-hidden') ?? null };
+    `)),
+    (value) => value.count === 1,
+    timeoutMs,
+    "等待 AstronStudio 目标项目行",
+  );
+  if (sidebar.inert || sidebar.hidden === "true") {
+    const opened = await clickSidebarToggle(client);
+    if (!opened.clicked) throw new Error(`AstronStudio 目标项目侧边栏按钮数量异常：${opened.count}`);
+  }
+  await waitFor(
+    () => client.evaluate(expression(`
+      const rows = Array.from(document.querySelectorAll(
+        '[data-project-hover-anchor="${projectId}"]'
+      ));
+      const motion = rows.length === 1 ? rows[0].closest('[data-slot="sidebar-content-motion"]') : null;
+      return { count: rows.length, interactive: Boolean(motion) && !motion.inert
+        && motion.getAttribute('aria-hidden') !== 'true' };
+    `)),
+    (value) => value.count === 1 && value.interactive,
+    timeoutMs,
+    "等待 AstronStudio 目标项目侧边栏可交互",
+  );
+  await client.evaluate(expression(`
+    document.querySelector('[data-project-hover-anchor="${projectId}"]')
+      ?.scrollIntoView({ block: 'center', inline: 'nearest' });
+  `));
+  await sleep(150);
+  const point = await client.evaluate(expression(`
+    const row = document.querySelector('[data-project-hover-anchor="${projectId}"]');
+    const buttons = row ? Array.from(row.querySelectorAll('button[aria-label]'))
+      .filter((button) => /^(?:在 .+ 中新建对话|New chat in .+)$/iu.test(
+        (button.getAttribute('aria-label') || '').trim()
+      )) : [];
+    const rect = buttons.length === 1 ? buttons[0].getBoundingClientRect() : null;
+    return { count: buttons.length, x: rect ? rect.x + rect.width / 2 : null,
+      y: rect ? rect.y + rect.height / 2 : null, viewport_width: innerWidth,
+      viewport_height: innerHeight };
+  `));
+  if (point.count !== 1 || point.x <= 0 || point.x >= point.viewport_width
+    || point.y <= 0 || point.y >= point.viewport_height) {
+    throw new Error(`AstronStudio 目标项目新建对话按钮不唯一或不可见：${JSON.stringify(point)}`);
+  }
+  await client.send("Input.dispatchMouseEvent", {
+    type: "mouseMoved", x: point.x, y: point.y, button: "none",
+  });
+  const clicked = await client.evaluate(expression(`
+    const dialogs = Array.from(document.querySelectorAll(
+      '[role="dialog"], [aria-modal="true"]'
+    )).filter(visible);
+    const stops = Array.from(document.querySelectorAll('button[aria-label]'))
+      .filter(visible).filter((button) => /^(?:停止生成|Stop generating)$/iu.test(
+        (button.getAttribute('aria-label') || '').trim()
+      ));
+    if (dialogs.length || stops.length) {
+      return { clicked: false, dialogs: dialogs.length, stops: stops.length };
+    }
+    const rows = Array.from(document.querySelectorAll(
+      '[data-project-hover-anchor="${projectId}"]'
+    ));
+    const buttons = rows.length === 1 ? Array.from(rows[0].querySelectorAll('button[aria-label]'))
+      .filter((button) => /^(?:在 .+ 中新建对话|New chat in .+)$/iu.test(
+        (button.getAttribute('aria-label') || '').trim()
+      )) : [];
+    if (buttons.length !== 1 || buttons[0].disabled || buttons[0].closest('[inert]')) {
+      return { clicked: false, rows: rows.length, buttons: buttons.length };
+    }
+    const rect = buttons[0].getBoundingClientRect();
+    const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+    if (hit !== buttons[0] && !buttons[0].contains(hit)) {
+      return { clicked: false, rows: 1, buttons: 1, hit: false };
+    }
+    buttons[0].click();
+    return { clicked: true, rows: 1, buttons: 1 };
+  `));
+  if (!clicked.clicked) {
+    throw new Error(`AstronStudio 目标项目新建对话按钮被遮挡或身份歧义：${JSON.stringify(clicked)}`);
+  }
+  const confirmed = await waitFor(
+    async () => {
+      const editor = await editorState(client);
+      const selected = await workspaceState(client);
+      return { thread_id: editor.thread_id, editor_count: editor.editor_count,
+        editor_empty: editor.editor_text === "", ...selected };
+    },
+    (value) => value.thread_id && value.thread_id !== initialRoute
+      && value.editor_count === 1 && value.editor_empty
+      && value.count === 1 && value.path === workspace,
+    timeoutMs,
+    "等待 AstronStudio 目标项目新对话路由和绝对路径",
+  );
+  const native = await queryProjectForThread(stateDatabase, confirmed.thread_id);
+  if (native.length !== 1 || native[0].project_id !== projectId
+    || native[0].workspace_root !== workspace) {
+    throw new Error("AstronStudio 新对话原生项目与目标 Workspace 不一致");
+  }
+  return { method: "exact-project-new-conversation", project_id: projectId, ...confirmed };
+}
+
+export async function selectWorkspace(client, workspace, timeoutMs, stateDatabase) {
   const before = await workspaceState(client);
   if (before.count > 1) throw new Error(`AstronStudio 项目选择按钮数量异常：${before.count}`);
   if (before.count === 1 && before.path === workspace) return { method: "visible-current-value", ...before };
@@ -392,6 +549,22 @@ export async function selectWorkspace(client, workspace, timeoutMs) {
     }
   } else {
     await addWorkspace(client, workspace, timeoutMs);
+  }
+  let immediate = await workspaceState(client);
+  if (immediate.count === 0) {
+    try {
+      immediate = await waitFor(
+        () => workspaceState(client),
+        (value) => value.count !== 0,
+        Math.min(timeoutMs, 1_500),
+        "等待 AstronStudio 项目选择控件出现",
+      );
+    } catch {
+      immediate = await workspaceState(client);
+    }
+  }
+  if (immediate.count === 0) {
+    return openExactProjectConversation(client, workspace, stateDatabase, timeoutMs);
   }
   const confirmed = await waitFor(
     () => workspaceState(client),
@@ -536,7 +709,8 @@ export async function currentThreadId(client) {
 export async function prepareExecutionUi(client, config) {
   await client.send("Page.bringToFront");
   const task = await createFreshTask(client, config.timeoutMs);
-  const workspace = await selectWorkspace(client, config.candidateWorkspace, config.timeoutMs);
+  const workspace = await selectWorkspace(client, config.candidateWorkspace,
+    config.timeoutMs, config.stateDatabase);
   const ui = await readUiConfiguration(client);
   if (ui.model_count !== 1 || ui.model !== config.expectedModel) {
     throw new Error(`AstronStudio 当前模型不匹配：${ui.model || "unknown"} vs ${config.expectedModel}`);

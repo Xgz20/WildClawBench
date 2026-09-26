@@ -200,6 +200,24 @@ export async function queryNativeSessions(stateDatabase, overrides = {}) {
   );
 }
 
+export async function queryExactProjectsForWorkspace(stateDatabase, workspace, overrides = {}) {
+  return withStateSnapshot(stateDatabase, (snapshot) => querySnapshot(snapshot, `
+SELECT project_id, workspace_root
+FROM projection_projects
+WHERE workspace_root = ${sqlString(workspace)} AND deleted_at IS NULL;
+`, overrides), overrides);
+}
+
+export async function queryProjectForThread(stateDatabase, threadId, overrides = {}) {
+  return withStateSnapshot(stateDatabase, (snapshot) => querySnapshot(snapshot, `
+SELECT projects.project_id, projects.workspace_root
+FROM projection_threads AS threads
+JOIN projection_projects AS projects ON projects.project_id = threads.project_id
+WHERE threads.thread_id = ${sqlString(threadId)}
+  AND threads.deleted_at IS NULL AND projects.deleted_at IS NULL;
+`, overrides), overrides);
+}
+
 export async function queryFinalResponse(stateDatabase, threadId, turnId, overrides = {}) {
   if (!threadId || !turnId) return "";
   return withStateSnapshot(stateDatabase, async (snapshot) => {
