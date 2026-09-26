@@ -423,6 +423,19 @@ export async function openExactProjectConversation(client, workspace, stateDatab
     || activity.dialog_count !== 0 || activity.stop_count !== 0) {
     throw new Error("AstronStudio 目标项目导航时存在草稿、弹窗或活动任务");
   }
+  const lateWorkspace = await workspaceState(client);
+  if (lateWorkspace.count === 1 && lateWorkspace.path === workspace) {
+    const native = await queryProjectForThread(stateDatabase, initialRoute);
+    if (native.length !== 1 || native[0].project_id !== projectId
+      || native[0].workspace_root !== workspace) {
+      throw new Error("AstronStudio 延迟出现的项目路径与原生路由不一致");
+    }
+    return { method: "late-visible-current-value", project_id: projectId,
+      thread_id: initialRoute, editor_count: 1, editor_empty: true, ...lateWorkspace };
+  }
+  if (lateWorkspace.count > 1 || (lateWorkspace.count === 1 && lateWorkspace.path !== workspace)) {
+    throw new Error(`AstronStudio 目标项目导航前路径歧义：${JSON.stringify(lateWorkspace)}`);
+  }
   const sidebar = await waitFor(
     () => client.evaluate(expression(`
       const rows = Array.from(document.querySelectorAll(
@@ -515,8 +528,7 @@ export async function openExactProjectConversation(client, workspace, stateDatab
       return { thread_id: editor.thread_id, editor_count: editor.editor_count,
         editor_empty: editor.editor_text === "", ...selected };
     },
-    (value) => value.thread_id && value.thread_id !== initialRoute
-      && value.editor_count === 1 && value.editor_empty
+    (value) => value.thread_id && value.editor_count === 1 && value.editor_empty
       && value.count === 1 && value.path === workspace,
     timeoutMs,
     "等待 AstronStudio 目标项目新对话路由和绝对路径",
@@ -526,7 +538,9 @@ export async function openExactProjectConversation(client, workspace, stateDatab
     || native[0].workspace_root !== workspace) {
     throw new Error("AstronStudio 新对话原生项目与目标 Workspace 不一致");
   }
-  return { method: "exact-project-new-conversation", project_id: projectId, ...confirmed };
+  return { method: confirmed.thread_id === initialRoute
+    ? "late-visible-current-value" : "exact-project-new-conversation",
+    project_id: projectId, ...confirmed };
 }
 
 export async function selectWorkspace(client, workspace, timeoutMs, stateDatabase) {
