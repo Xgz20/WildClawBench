@@ -556,6 +556,61 @@ def _compare_candidate_entries(
         raise ScoringRuntimeError("CANDIDATE_ENTRY_MISMATCH")
 
 
+def _workspace_path_resolution(
+    *,
+    unit_root: Path,
+    unit_manifest: Mapping[str, Any],
+    execution: Mapping[str, Any],
+    task_id: str,
+    candidate_entries: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Resolve the prompt's frozen /tmp_workspace mapping without editing the candidate."""
+    direct = {
+        "policy": "frozen-prompt-mapping-aware/v1",
+        "mode": "direct",
+        "workspace_argument": "runtime/workspace",
+        "prompt_sha256": None,
+        "root_result_count": 0,
+        "mapped_result_count": 0,
+    }
+    rows = [row for row in unit_manifest.get("tasks", [])
+            if isinstance(row, dict) and row.get("task_id") == task_id]
+    if len(rows) != 1:
+        return direct
+    prompt_meta = rows[0].get("prompt")
+    if not isinstance(prompt_meta, dict) or prompt_meta.get("mapping") != [
+        {"from": "/tmp_workspace", "to": "./workspace"}
+    ]:
+        return direct
+    prompt_path = _resolve_within(unit_root, prompt_meta.get("path"), "mapped prompt")
+    expected_sha = _sha256(prompt_meta.get("sent_sha256"), "mapped prompt SHA")
+    if (not prompt_path.is_file() or prompt_path.is_symlink()
+            or _sha256_file(prompt_path) != expected_sha):
+        raise ScoringRuntimeError("MAPPED_PROMPT_DRIFT")
+    execution_prompt = execution.get("prompt")
+    if isinstance(execution_prompt, dict) and execution_prompt.get("sha256") != expected_sha:
+        raise ScoringRuntimeError("MAPPED_PROMPT_DRIFT", "execution record")
+    prompt = prompt_path.read_text(encoding="utf-8")
+    if "./workspace/results/" not in prompt:
+        return {**direct, "prompt_sha256": expected_sha}
+    output_paths = [str(row.get("path") or "") for row in candidate_entries
+                    if row.get("type") in {"file", "symlink"}]
+    root_count = sum(path.startswith("results/") for path in output_paths)
+    mapped_count = sum(path.startswith("workspace/results/") for path in output_paths)
+    if root_count and mapped_count:
+        raise ScoringRuntimeError("WORKSPACE_RESULTS_AMBIGUOUS", task_id)
+    return {
+        **direct,
+        "mode": "mapped-nested" if mapped_count else "direct",
+        "workspace_argument": (
+            "runtime/workspace/workspace" if mapped_count else "runtime/workspace"
+        ),
+        "prompt_sha256": expected_sha,
+        "root_result_count": root_count,
+        "mapped_result_count": mapped_count,
+    }
+
+
 def _assert_read_only_tree(root: Path) -> None:
     for path in (root, *root.rglob("*")):
         if path.is_symlink():
@@ -1062,6 +1117,13 @@ def prepare_attempt(
         raise ScoringRuntimeError("UNIT_IDENTITY_MISMATCH")
     if task_id not in unit_manifest.get("task_ids", []):
         raise ScoringRuntimeError("UNIT_TASK_MISMATCH")
+    path_resolution = _workspace_path_resolution(
+        unit_root=unit_root,
+        unit_manifest=unit_manifest,
+        execution=execution,
+        task_id=task_id,
+        candidate_entries=entries,
+    )
 
     _, package_members, scoring_manifest = _read_scoring_package(scoring_package)
     if scoring_manifest.get("batch_id") != batch_id or scoring_manifest.get("unit_id") != unit_id:
@@ -1140,9 +1202,17 @@ def prepare_attempt(
         _copy_inventory(original_workspace, runtime_workspace, entries)
         if os.path.lexists(runtime_workspace / "gt"):
             raise ScoringRuntimeError("RUNTIME_GT_COLLISION")
+        mapped_runtime = runtime_workspace / "workspace"
+        if path_resolution["mode"] == "mapped-nested" and (
+            not mapped_runtime.is_dir() or mapped_runtime.is_symlink()
+            or os.path.lexists(mapped_runtime / "gt")
+        ):
+            raise ScoringRuntimeError("MAPPED_RUNTIME_WORKSPACE_INVALID")
         gt_private = private_root / "gt"
         _write_gt(gt_private, gt_entries)
         shutil.copytree(gt_private, runtime_workspace / "gt", symlinks=True)
+        if path_resolution["mode"] == "mapped-nested":
+            shutil.copytree(gt_private, mapped_runtime / "gt", symlinks=True)
         private_gt_entries, private_gt_sha = _inventory_tree(gt_private)
         _, runtime_initial_sha = _inventory_tree(runtime_workspace)
         (private_root / "contract.json").write_bytes(contract_bytes)
@@ -1224,7 +1294,8 @@ def prepare_attempt(
             "runtime": {
                 "kind": "local-managed-python-worker",
                 "logical_workspace_root": "/tmp_workspace",
-                "workspace_argument": "runtime/workspace",
+                "workspace_argument": path_resolution["workspace_argument"],
+                "path_resolution": path_resolution,
                 "gt_injected_after_execution": True,
                 "docker_required": False,
                 "lock": runtime_lock,
@@ -1401,6 +1472,37 @@ def verify_attempt(attempt_root: Path) -> dict[str, Any]:
     runtime = _resolve_within(root, paths.get("runtime_workspace"), "runtime_workspace")
     if not runtime.is_dir() or runtime.is_symlink() or not (runtime / "gt").is_dir():
         raise ScoringRuntimeError("RUNTIME_WORKSPACE_INVALID")
+    runtime_info = manifest.get("runtime")
+    if not isinstance(runtime_info, dict):
+        raise ScoringRuntimeError("RUNTIME_WORKSPACE_INVALID", "runtime metadata")
+    path_resolution = runtime_info.get("path_resolution")
+    if path_resolution is not None:
+        if (not isinstance(path_resolution, dict)
+            or path_resolution.get("policy") != "frozen-prompt-mapping-aware/v1"
+            or path_resolution.get("mode") not in {"direct", "mapped-nested"}
+            or path_resolution.get("workspace_argument") != runtime_info.get("workspace_argument")):
+            raise ScoringRuntimeError("WORKSPACE_PATH_RESOLUTION_INVALID")
+        root_count = sum(str(entry.get("path") or "").startswith("results/")
+                         for entry in entries if entry.get("type") in {"file", "symlink"})
+        mapped_count = sum(str(entry.get("path") or "").startswith("workspace/results/")
+                           for entry in entries if entry.get("type") in {"file", "symlink"})
+        if (root_count != path_resolution.get("root_result_count")
+            or mapped_count != path_resolution.get("mapped_result_count")):
+            raise ScoringRuntimeError("WORKSPACE_PATH_RESOLUTION_DRIFT")
+        if path_resolution["mode"] == "mapped-nested":
+            if root_count or not mapped_count or not path_resolution.get("prompt_sha256"):
+                raise ScoringRuntimeError("WORKSPACE_PATH_RESOLUTION_INVALID")
+            expected_argument = f"{paths['runtime_workspace']}/workspace"
+        else:
+            expected_argument = paths["runtime_workspace"]
+    else:
+        expected_argument = paths["runtime_workspace"]
+    if runtime_info.get("workspace_argument") != expected_argument:
+        raise ScoringRuntimeError("WORKSPACE_PATH_RESOLUTION_INVALID", "workspace argument")
+    rule_workspace = _resolve_within(root, expected_argument, "rule_workspace")
+    if (not rule_workspace.is_dir() or rule_workspace.is_symlink()
+        or not (rule_workspace / "gt").is_dir()):
+        raise ScoringRuntimeError("RUNTIME_WORKSPACE_INVALID", "rule workspace")
     return {
         "status": "PASS",
         "attempt_root": str(root),
@@ -1989,6 +2091,9 @@ def run_rules_attempt(
     runtime_workspace = _resolve_within(
         attempt_root, manifest["paths"]["runtime_workspace"], "runtime_workspace"
     ).resolve(strict=True)
+    rule_workspace = _resolve_within(
+        attempt_root, manifest["runtime"]["workspace_argument"], "rule_workspace"
+    ).resolve(strict=True)
     _, runtime_initial_sha = _inventory_tree(runtime_workspace)
     if runtime_initial_sha != manifest["digests"].get("runtime_initial_sha256"):
         raise ScoringRuntimeError("RUNTIME_WORKSPACE_DRIFT")
@@ -2026,7 +2131,7 @@ def run_rules_attempt(
         component = run_rules(
             automated_checks,
             executor=executor if automated_checks.strip() else None,
-            workspace_path=str(runtime_workspace),
+            workspace_path=str(rule_workspace),
             transcript=transcript,
             expected_keys=None,
         )
@@ -2068,6 +2173,7 @@ def run_rules_attempt(
             "final_sha256": runtime_final_sha,
             "drifted": runtime_final_sha != runtime_initial_sha,
         },
+        "path_resolution": manifest["runtime"].get("path_resolution"),
         "criterion_evidence": {
             "policy": "per-criterion-rule-source-and-worker-result/v1",
             "complete": bool(component) and component.get("status") == "completed",
@@ -2635,6 +2741,14 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
                     "catalog_sha256": catalog_sha,
                     "index_digest": evidence_index["digest"],
                     "transcript_event_count": len(transcript),
+                    **({
+                        "path_resolution": {
+                            "mode": "mapped-nested",
+                            "logical_results_root": "/tmp_workspace/results",
+                            "candidate_results_root": "candidate-original/workspace/workspace/results",
+                            "prompt_sha256": manifest["runtime"]["path_resolution"]["prompt_sha256"],
+                        }
+                    } if manifest["runtime"].get("path_resolution", {}).get("mode") == "mapped-nested" else {}),
                 },
                 "requirements": {
                     "score_each_declared_criterion": True,

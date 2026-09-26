@@ -10,6 +10,8 @@
 
 控制 Prompt 必须给出冻结 Skill 根、入口、版本和入口 SHA，评分会话先读取该绝对路径下的 `SKILL.md`，不得使用项目、仓库或自动发现路径中的同名副本。普通生产运行不含 validation 标记；显式验收运行的 acceptance ID 必须与 `attempt-manifest.json` 完全相同。目录、身份、哈希或验收标记不一致时停止，不生成或导入语义响应。
 
+当 `attempt-manifest.json` 的 `runtime.path_resolution.mode` 为 `mapped-nested`，且 `semantic/request.json` 的 `evidence.path_resolution` 明确列出候选结果目录时，冻结 Prompt 的 `/tmp_workspace/results` 对应该目录。读取和引用 `candidate-original/workspace/workspace/results/` 中的原始文件，证据路径仍写实际相对路径；文件内容和其他 rubric 条件照常核对。已证明的 `/tmp_workspace → ./workspace` 映射多出一层目录不构成交付位置缺失。仅当上述两份冻结记录一致时使用此解释；`direct` 或目录歧义均不得自行推断别名。
+
 ## 单题流程
 
 项目根就是私有评分 attempt。先复核输入：

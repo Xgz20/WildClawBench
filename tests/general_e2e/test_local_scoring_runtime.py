@@ -86,6 +86,17 @@ def grade(transcript, workspace_path):
     return {"fixture": score, "overall_score": score}
 """.strip()
 
+MAPPED_RESULTS_RULE = """
+def grade(transcript, workspace_path):
+    import json
+    from pathlib import Path
+    root = Path(workspace_path)
+    expected = json.loads((root / "gt/expected.json").read_text(encoding="utf-8"))
+    delivered = (root / "results/answer.txt").read_text(encoding="utf-8")
+    score = float(delivered == expected["answer"])
+    return {"fixture": score, "overall_score": score}
+""".strip()
+
 
 TIMEOUT_RULE = """
 def grade(transcript, workspace_path):
@@ -111,6 +122,8 @@ class Fixture:
         grading_type: str = "automated",
         grading_weights: dict | None = None,
         llm_judge_rubric: str = "",
+        mapped_nested_results: bool = False,
+        dual_results: bool = False,
     ):
         self.root = root
         self.grading_type = grading_type
@@ -129,6 +142,14 @@ class Fixture:
         self.candidate = self.unit_root / "evidence/candidate/workspace"
         self.candidate.mkdir(parents=True)
         (self.candidate / "answer.txt").write_text("ready\n", encoding="utf-8")
+        if mapped_nested_results:
+            nested_results = self.candidate / "workspace/results"
+            nested_results.mkdir(parents=True)
+            (nested_results / "answer.txt").write_text("ready\n", encoding="utf-8")
+            if dual_results:
+                root_results = self.candidate / "results"
+                root_results.mkdir()
+                (root_results / "answer.txt").write_text("ready\n", encoding="utf-8")
         if gt_collision:
             (self.candidate / "gt").mkdir()
         entries, candidate_sha = RUNTIME._inventory_tree(self.candidate)
@@ -163,6 +184,23 @@ class Fixture:
                 "drift_status": "stable",
             },
         }
+        prompt_metadata = None
+        if mapped_nested_results:
+            prompt_bytes = b"Write ./workspace/results/answer.txt\n"
+            prompt_path = f"execution/tasks/{self.task_id}/PROMPT.md"
+            target = self.unit_root / prompt_path
+            target.parent.mkdir(parents=True)
+            target.write_bytes(prompt_bytes)
+            prompt_sha = sha256_bytes(prompt_bytes)
+            execution["prompt"] = {"sha256": prompt_sha}
+            prompt_metadata = {
+                "task_id": self.task_id,
+                "prompt": {
+                    "path": prompt_path,
+                    "sent_sha256": prompt_sha,
+                    "mapping": [{"from": "/tmp_workspace", "to": "./workspace"}],
+                },
+            }
         self.execution_record.write_text(json.dumps(execution), encoding="utf-8")
         unit_manifest = {
             "batch_id": self.batch_id,
@@ -171,6 +209,8 @@ class Fixture:
             "dataset": self.dataset,
             "release": self.release,
         }
+        if prompt_metadata is not None:
+            unit_manifest["tasks"] = [prompt_metadata]
         (self.unit_root / "manifest.json").write_text(
             json.dumps(unit_manifest), encoding="utf-8"
         )
@@ -313,6 +353,7 @@ class LocalScoringRuntimeTests(unittest.TestCase):
             timeout_seconds=10,
         )
         self.assertEqual(result["rule_component"]["score"], 1.0)
+
         component = result["rule_component"]
         self.assertEqual(
             component["schema_version"],
@@ -360,6 +401,39 @@ class LocalScoringRuntimeTests(unittest.TestCase):
             {"rule_result", "rule_worker_result", "rule_source"},
         )
         self.assertTrue(RUNTIME.verify_score_attempt(attempt)["score_valid"])
+
+    def test_mapped_nested_results_use_frozen_prompt_path_without_mutating_candidate(self) -> None:
+        fixture = Fixture(self.root, rule=MAPPED_RESULTS_RULE, mapped_nested_results=True)
+        attempt = fixture.prepare()
+        manifest = json.loads((attempt / "attempt-manifest.json").read_text())
+        resolution = manifest["runtime"]["path_resolution"]
+        self.assertEqual(resolution["mode"], "mapped-nested")
+        self.assertEqual(manifest["runtime"]["workspace_argument"], "runtime/workspace/workspace")
+        self.assertTrue((attempt / "candidate-original/workspace/workspace/results/answer.txt").is_file())
+        self.assertFalse((attempt / "candidate-original/workspace/results").exists())
+        self.assertTrue((attempt / "runtime/workspace/workspace/gt/expected.json").is_file())
+        self.assertEqual(RUNTIME.verify_attempt(attempt)["status"], "PASS")
+        result = RUNTIME.run_rules_attempt(
+            attempt_root=attempt,
+            runtime_python=self.runtime_python,
+            timeout_seconds=10,
+        )
+        self.assertEqual(result["rule_component"]["score"], 1.0)
+        audit = json.loads((attempt / "rule-audit.json").read_text())
+        self.assertEqual(audit["path_resolution"]["mode"], "mapped-nested")
+        semantic = RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+        self.assertEqual(semantic["semantic_status"], "not_required")
+        score = RUNTIME.finalize_score_attempt(attempt_root=attempt)["score"]
+        self.assertEqual(score["result"]["total_score"], 1.0)
+        self.assertTrue(RUNTIME.verify_score_attempt(attempt)["score_valid"])
+
+    def test_mapped_and_root_results_together_fail_closed(self) -> None:
+        fixture = Fixture(
+            self.root, rule=MAPPED_RESULTS_RULE,
+            mapped_nested_results=True, dual_results=True,
+        )
+        with self.assertRaisesRegex(Exception, "WORKSPACE_RESULTS_AMBIGUOUS"):
+            fixture.prepare()
 
     def test_attempt_is_not_overwritten_and_candidate_drift_fails_closed(self) -> None:
         fixture = Fixture(self.root)

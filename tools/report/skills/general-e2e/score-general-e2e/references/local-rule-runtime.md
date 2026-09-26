@@ -42,6 +42,8 @@ python scripts/score_general_e2e.py prepare \
 
 `prepare` 只接受已完成且 evidence complete、候选状态 stable 的执行记录。它复核 batch/unit/task/dataset/release 锁、候选树和 scoring ZIP 的路径、类型与 SHA-256，然后创建不可覆盖的私有 attempt：
 
+冻结 execution manifest 若将 `/tmp_workspace` 映射为 `./workspace`，而候选仅在 `workspace/results/` 有文件，`0.8.4` 会逐项核对已发送 Prompt SHA 与候选清单，把内层目录作为规则 Worker 的逻辑工作区，并在内层注入相同的私有 GT。外层候选原件保持只读，规则运行副本和路径选择写入 attempt manifest 与审计。根目录和内层目录同时有结果时拒绝歧义，不自动合并文件。
+
 - `candidate-original/`：候选只读原件；
 - `runtime/workspace/`：一次性可写副本，GT 在执行阶段之后注入 `gt/`；
 - `private/`：冻结 contract、task、GT、transcript、execution record 与 runtime lock；

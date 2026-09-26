@@ -7,7 +7,7 @@ import unittest
 import zipfile
 
 from eval_general_e2e.contracts import validate_contract_file
-from tests.general_e2e.test_local_scoring_runtime import Fixture, RUNTIME
+from tests.general_e2e.test_local_scoring_runtime import Fixture, MAPPED_RESULTS_RULE, RUNTIME
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -147,6 +147,39 @@ class GeneralSemanticScoringTests(unittest.TestCase):
         self.assertEqual(score["result"]["total_score"], 0.0)
         self.assertEqual(score["judge"]["protocol"], "not-required")
         validate_contract_file(attempt / "score.json", expected_schema_id=RUNTIME.SCORE_SCHEMA_ID)
+
+    def test_mapped_nested_results_are_explicit_in_semantic_request(self) -> None:
+        fixture = Fixture(
+            self.root / "mapped-hybrid",
+            rule=MAPPED_RESULTS_RULE,
+            grading_type="hybrid",
+            grading_weights={"automated": 0.5, "llm_judge": 0.5},
+            llm_judge_rubric=RUBRIC,
+            mapped_nested_results=True,
+        )
+        attempt = fixture.prepare("score-mapped-hybrid")
+        rule_component = {
+            "schema_version": "wildclawbench.general-e2e-rule-component/v1",
+            "status": "completed", "score": 1.0,
+            "criteria": [{"key": "fixture_rule", "status": "judged", "score": 1.0}],
+            "raw_scores": {"fixture_rule": 1.0, "overall_score": 1.0},
+            "dependencies": {"imports": [], "stdlib": [], "external": []},
+            "error": None,
+        }
+        (attempt / "rule-component.json").write_text(json.dumps(rule_component), encoding="utf-8")
+        prepared = RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+        self.assertEqual(prepared["semantic_status"], "awaiting_response")
+        request = json.loads((attempt / "semantic/request.json").read_text())
+        resolution = request["evidence"]["path_resolution"]
+        self.assertEqual(resolution["mode"], "mapped-nested")
+        self.assertEqual(resolution["logical_results_root"], "/tmp_workspace/results")
+        self.assertEqual(
+            resolution["candidate_results_root"],
+            "candidate-original/workspace/workspace/results",
+        )
+        catalog = json.loads((attempt / "semantic/evidence-catalog.json").read_text())
+        paths = [item["reference"].get("path") for item in catalog["evidence_index"]["entries"]]
+        self.assertIn("candidate-original/workspace/workspace/results/answer.txt", paths)
 
     def test_hybrid_codex_response_is_queried_validated_combined_and_verified(self) -> None:
         attempt = self._hybrid_attempt()
