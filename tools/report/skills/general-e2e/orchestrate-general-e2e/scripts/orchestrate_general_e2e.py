@@ -2457,6 +2457,41 @@ def run_rule_score_task(
         )
         _save(root, state, event_time)
     rule_component = attempt / "rule-component.json"
+    failed_audit_path = attempt / "rule-audit.json"
+    if (
+        grading_type == "automated"
+        and task["phase"] == "RULES_NEEDS_ATTENTION"
+        and not rule_component.exists()
+        and failed_audit_path.is_file()
+    ):
+        audit = _read_json(failed_audit_path, code="RULE_AUDIT_INVALID")
+        manifest = _read_json(attempt / "attempt-manifest.json", code="ATTEMPT_MANIFEST_INVALID")
+        if (
+            audit.get("status") != "failed"
+            or not isinstance(audit.get("error"), dict)
+            or audit.get("identity") != manifest.get("identity")
+        ):
+            raise OrchestrationError("RULE_FAILURE_AUDIT_INVALID", task_id)
+        _run_score_command(state["score_skill"], ["verify", "--attempt-root", str(attempt)])
+        semantic_audit = attempt / "semantic/semantic-audit.json"
+        if not semantic_audit.is_file():
+            _run_score_command(
+                state["score_skill"], ["prepare-semantics", "--attempt-root", str(attempt)]
+            )
+        score_path = attempt / "score.json"
+        if not score_path.is_file():
+            _run_score_command(state["score_skill"], ["finalize", "--attempt-root", str(attempt)])
+        task["history"].append(
+            {
+                "at": _timestamp(event_time),
+                "event": "RULE_FAILURE_FINALIZED_AS_EVALUATION_ERROR",
+                "rule_audit_sha256": _sha256_file(failed_audit_path),
+                "error_code": audit["error"].get("code"),
+            }
+        )
+        task["phase"] = "SCORE_VERIFICATION_PENDING"
+        _save(root, state, event_time)
+        return record_score(root, task_id=task_id, now=event_time)
     if not rule_component.is_file():
         arguments = [
             "run-rules",
