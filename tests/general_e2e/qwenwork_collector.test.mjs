@@ -13,7 +13,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 
-import { collectQwenWorkEvidence } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/collector.mjs";
+import { assertSegmentBinding, collectQwenWorkEvidence } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/collector.mjs";
 import { assessQwenMetadataCoverage } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/metadata-gate.mjs";
 import { normalizeQwenNativeTrace } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/native-normalizer.mjs";
 import {
@@ -393,6 +393,11 @@ test("metadata gate treats a nested shell cwd as execution location, not another
     segmentDirectoryBound: true,
   });
   assert.deepEqual(outside.readiness.blockers, ["segment_cwd_mismatch"]);
+  const bindingState = { session: { session_id: "session-fixture-001", cwd: "/fixture/workspace" } };
+  assert.doesNotThrow(() => assertSegmentBinding([exactRoot, nested], bindingState));
+  assert.throws(() => assertSegmentBinding([
+    exactRoot, { type: "tool.shell.started", data: { cwd: "/fixture/other" } },
+  ], bindingState), /SEGMENT_WORKSPACE_MISMATCH/u);
 });
 
 test("tool execution status completed remains unknown when no shell outcome proves success", () => {

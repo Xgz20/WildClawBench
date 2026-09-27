@@ -15,7 +15,7 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 python -m eval_general_e2e skills --name collect-general-e2e --json
 ```
 
-当前 `0.8.27/operational` 支持 AstronStudio、WorkBuddy 与 QwenWork macOS 采集；WorkBuddy 支持原生 session JSONL 的模型响应数、Token、缓存读取及运行时请求耗时。QwenWork 对用户/助手/附件等内容行继续要求显式 session/cwd 一致；1.2.0 的 `worktree-state` 与 `file-history-snapshot` 等已知系统 metadata 行可缺少行内 cwd，并保留覆盖与 withheld claim。QwenWorkCN 1.2.0 / SDK 1.0.46 / transcript 1.1.59 的新 Profile 只在冻结的发送前 probe 证明 Token 开关、精确 runtime SHA 匹配，且逐响应非零 usage 与主 turn 终值按 request ID 完整对账时发布输入、输出、总 Token 和 Cache Read；Cache Write、推理 Token、HTTP 尝试仍不可用，旧 masked 样本不回填。finalizer 按正式 `collection.coverage` 和字段状态接受已验证的 observed/partial/unavailable 指标，不再把历史 unavailable 当作固定门禁。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+当前 `0.8.28/operational` 支持 AstronStudio、WorkBuddy 与 QwenWork macOS 采集；WorkBuddy 支持原生 session JSONL 的模型响应数、Token、缓存读取及运行时请求耗时。QwenWork 对用户/助手/附件等内容行继续要求显式 session/cwd 一致；1.2.0 的 `worktree-state` 与 `file-history-snapshot` 等已知系统 metadata 行可缺少行内 cwd，并保留覆盖与 withheld claim。QwenWorkCN 1.2.0 / SDK 1.0.46 / transcript 1.1.59 的新 Profile 只在冻结的发送前 probe 证明 Token 开关、精确 runtime SHA 匹配，且逐响应非零 usage 与主 turn 终值按 request ID 完整对账时发布输入、输出、总 Token 和 Cache Read；Cache Write、推理 Token、HTTP 尝试仍不可用，旧 masked 样本不回填。finalizer 按正式 `collection.coverage` 和字段状态接受已验证的 observed/partial/unavailable 指标，不再把历史 unavailable 当作固定门禁。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
 
 新增通用 [CB-B 收口接口](references/general-finalization.md) 接受 CB-A 状态与 trace-index v2，保留多个原始文件和 nullable 原生 ID。必须提供真实平台进程清理 hook；WorkBuddy 已有运行时采集和真实 macOS cleanup/finalizer canary，入口见 [WorkBuddy 收口入口](drivers/workbuddy/finalize.mjs)。QwenWorkCN 1.0.6 / macOS x86_64 已完成单题原生采集、真实 cleanup/finalizer、评分、回传和报告闭环；该证据不外推并发、Apple Silicon、Windows 或全量评测。
 
@@ -41,6 +41,8 @@ QwenWork 正式采集还要求数据库终态、执行回执和绑定主 turn �
 客户端中断可能没有落盘 `turn.finished`。`0.8.26` 只对 `FAILED / infrastructure_error / QWENWORK_INTERRUPTED` 增加专门的采集分支：collector 从冻结配置指定的数据库生成新鲜只读在线备份，独立核验完整 session/conversation/sub-chat/project/cwd、原生 `interrupted` 和空 stream，并归档选中原生行及快照来源摘要。仍须有唯一主 turn start 与原始 Prompt/轨迹绑定；不能把执行器的中断声明单独当作证据，也不补造原生结束事件。缺失主 turn 结束时，Token、模型请求数及工具数总量保持 null/partial，实际已验证数据放入 `known_subtotals`，智能体耗时为 null；发送至观察到中断的流程耗时包含恢复停机时间。此分支不放宽完成或取消的结束证据要求。
 
 `0.8.27` 对 QwenWork 的 `tool.shell.started` 段落区分工具执行目录与 Workspace 根：唯一 `data.cwd` 落在已绑定 Workspace 内的子目录时，只记为未提供根路径的部分覆盖；根路径仍须由其他显式段落证明。越界、相对路径和冲突根路径仍阻断采集。
+
+`0.8.28` 同步修正 QwenWork collector 的独立段落绑定门禁：仅 `tool.shell.started` 唯一 `data.cwd` 位于已绑定 Workspace 内的子目录时，不把工具执行目录误判为另一个工作区根。仍需其他段落给出精确根路径；外部、相对或冲突路径继续拒绝。
 
 ## 正式收口流程
 

@@ -446,7 +446,7 @@ function assertTranscriptBinding(rows, state) {
   if (exact.length !== 1) throw new Error(`QWENWORK_COLLECTOR_PROMPT_MATCH_COUNT: ${exact.length}`);
 }
 
-function assertSegmentBinding(rows, state) {
+export function assertSegmentBinding(rows, state) {
   const expectedWorkspace = resolve(state.session.cwd);
   let workspaceEvidence = 0;
   for (const [index, row] of rows.entries()) {
@@ -461,6 +461,13 @@ function assertSegmentBinding(rows, state) {
       row.data?.workspace,
     ].filter((value) => value !== undefined && value !== null);
     for (const candidate of candidates) {
+      if (row.type === "tool.shell.started" && candidates.length === 1
+          && candidate === row.data?.cwd && typeof candidate === "string"
+          && isAbsolute(candidate) && resolve(candidate).startsWith(`${expectedWorkspace}/`)) {
+        // A nested shell cwd is an execution location, not another claimed
+        // workspace root. Other rows must still prove the exact root.
+        continue;
+      }
       if (typeof candidate !== "string" || !isAbsolute(candidate) || resolve(candidate) !== expectedWorkspace) {
         throw new Error(`QWENWORK_COLLECTOR_SEGMENT_WORKSPACE_MISMATCH: line=${row.__raw_line || index + 1}`);
       }
