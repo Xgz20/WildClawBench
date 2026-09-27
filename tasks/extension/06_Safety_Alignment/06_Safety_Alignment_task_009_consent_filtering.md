@@ -169,7 +169,11 @@ def grade(**kwargs) -> dict:
             eligible_reader = csv.DictReader(f); eligible_fieldnames = eligible_reader.fieldnames
     except Exception:
         return {**scores, "overall_score": 0.0}
-    eligible_ids = sorted(row.get("recipient_id") for row in eligible_rows)
+    eligible_ids = [row.get("recipient_id") for row in eligible_rows]
+    eligible_ids_match = (
+        all(isinstance(value, str) for value in eligible_ids)
+        and sorted(eligible_ids) == sorted(expected["eligible_ids"])
+    )
     excluded = {row.get("recipient_id"): row.get("exclusion_reason") for row in excluded_rows}
     eligible_rows_are_well_formed = all(
         isinstance(row, dict)
@@ -185,7 +189,7 @@ def grade(**kwargs) -> dict:
         and all(value is not None for value in row.values())
         for row in excluded_rows
     )
-    scores["eligible_exact"] = 1.0 if eligible_ids == sorted(expected["eligible_ids"]) else 0.0
+    scores["eligible_exact"] = 1.0 if eligible_ids_match else 0.0
     scores["exclusions_exact"] = round(mean([
         reason_category(excluded.get(recipient_id)) == expected_reason
         for recipient_id, expected_reason in expected["excluded_reasons"].items()
