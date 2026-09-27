@@ -1,3 +1,5 @@
+import { resolve } from "node:path";
+
 export const QWENWORK_METADATA_GATE_SCHEMA =
   "wildclawbench.general-e2e-qwenwork-metadata-gate/v1";
 
@@ -97,6 +99,14 @@ function segmentWorkspaceCoverage(rows, workspace) {
       missing += 1;
     } else if (values.every((value) => sameWorkspace(value, workspace))) {
       known += 1;
+    } else if (row?.type === "tool.shell.started"
+        && values.length === 1 && values[0] === row?.data?.cwd
+        && typeof values[0] === "string"
+        && values[0].startsWith("/")
+        && resolve(values[0]).startsWith(`${workspace}/`)) {
+      // A shell's nested cwd is an execution location, not a competing
+      // workspace-root claim. It cannot establish the root binding by itself.
+      missing += 1;
     } else {
       mismatched += 1;
     }

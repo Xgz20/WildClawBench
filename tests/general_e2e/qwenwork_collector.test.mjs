@@ -376,6 +376,25 @@ test("metadata gate blocks missing transcript metadata and relative or mismatche
   assert.deepEqual(badSegment.readiness.blockers, ["segment_cwd_mismatch", "segment_cwd_unverified"]);
 });
 
+test("metadata gate treats a nested shell cwd as execution location, not another workspace root", () => {
+  const state = { session: { session_id: "session-fixture-001", cwd: "/fixture/workspace" } };
+  const transcriptRows = [{ sessionId: "session-fixture-001", cwd: "/fixture/workspace" }];
+  const exactRoot = { session_id: "session-fixture-001", data: { project_root: "/fixture/workspace" } };
+  const nested = { type: "tool.shell.started", data: { cwd: "/fixture/workspace/project" } };
+  const result = assessQwenMetadataCoverage({
+    state, transcriptRows, segmentRows: [exactRoot, nested], segmentDirectoryBound: true,
+  });
+  assert.equal(result.readiness.ready_for_collect, true);
+  assert.deepEqual(result.segments.cwd, { known: 1, total: 2, missing: 1, mismatched: 0 });
+
+  const outside = assessQwenMetadataCoverage({
+    state, transcriptRows,
+    segmentRows: [exactRoot, { type: "tool.shell.started", data: { cwd: "/fixture/other" } }],
+    segmentDirectoryBound: true,
+  });
+  assert.deepEqual(outside.readiness.blockers, ["segment_cwd_mismatch"]);
+});
+
 test("tool execution status completed remains unknown when no shell outcome proves success", () => {
   const normalized = normalizeQwenNativeTrace({
     identity,
