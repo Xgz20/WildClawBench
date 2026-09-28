@@ -52,49 +52,49 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("prepare-general-e2e-workspaces").version,
                 get_skill_spec("prepare-general-e2e-workspaces").implementation_status,
             ),
-            ("0.2.0", "operational"),
+            ("0.3.0", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("execute-general-e2e").version,
                 get_skill_spec("execute-general-e2e").implementation_status,
             ),
-            ("0.11.27", "operational"),
+            ("0.12.0", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("collect-general-e2e").version,
                 get_skill_spec("collect-general-e2e").implementation_status,
             ),
-            ("0.8.26", "operational"),
+            ("0.9.0", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("orchestrate-general-e2e").version,
                 get_skill_spec("orchestrate-general-e2e").implementation_status,
             ),
-            ("0.9.6", "operational"),
+            ("0.10.0", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("score-general-e2e").version,
                 get_skill_spec("score-general-e2e").implementation_status,
             ),
-            ("0.8.3", "operational"),
+            ("0.9.0", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("run-general-e2e").version,
                 get_skill_spec("run-general-e2e").implementation_status,
             ),
-            ("0.5.2", "operational"),
+            ("0.6.0", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("report-general-e2e").version,
                 get_skill_spec("report-general-e2e").implementation_status,
             ),
-            ("0.5.4", "operational"),
+            ("0.6.0", "operational"),
         )
         self.assertTrue(
             all(
@@ -109,7 +109,7 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
         self.assertEqual(report["expected_skill_count"], 7)
         self.assertTrue(report["legacy_eval_e2e"]["preserved"])
         self.assertEqual(report["shared_components"]["status"], "PASS")
-        self.assertEqual(len(report["shared_components"]["components"]), 15)
+        self.assertEqual(len(report["shared_components"]["components"]), 16)
         self.assertTrue(all(item["valid"] for item in report["skills"]))
 
     def test_cli_exposes_machine_readable_registry(self) -> None:

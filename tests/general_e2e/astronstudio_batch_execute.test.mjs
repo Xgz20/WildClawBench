@@ -48,6 +48,7 @@ async function fixture(taskIds = TASK_IDS, extraArgs = []) {
     "--unit-root", unitRoot,
     "--run-config", runConfigPath,
     "--queue-id", "g4-03-test",
+    "--run-slots", "3",
     ...extraArgs,
   ]);
   return { unitRoot, runConfigPath, args, plan: await resolveBatchPlan(args) };
@@ -88,13 +89,13 @@ async function writeAutomation(plan, taskId, value) {
   await writeFile(join(root, "automation-state.json"), `${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
-test("batch CLI defaults to three slots, accepts eight, and rejects nine", () => {
+test("batch CLI defaults to the admitted single slot and preserves explicit algorithm limits", () => {
   const base = [
     "--unit-root", "/tmp/unit",
     "--run-config", "/tmp/config.json",
     "--queue-id", "queue",
   ];
-  assert.equal(parseBatchArgs(base).runSlots, 3);
+  assert.equal(parseBatchArgs(base).runSlots, 1);
   assert.equal(parseBatchArgs([...base, "--run-slots", "8"]).runSlots, 8);
   assert.throws(() => parseBatchArgs([...base, "--run-slots", "9"]), /1–8/u);
   assert.throws(

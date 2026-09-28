@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { DatabaseSync } from "node:sqlite";
+import { createResourceSupplement, verifyResourceSupplement } from "../../tools/report/e2e-shared/general-resource-supplements/index.mjs";
 
 import {
   archiveAstronStudioTrace,
@@ -366,4 +367,24 @@ test("query refuses a transcript changed after indexing", async () => {
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
+});
+
+test("offline resource supplementation preserves execution bytes and rejects changed supplements", async () => {
+  const f = await createFixture();
+  try {
+    f.state.execution = {started_at:"2026-09-17T10:00:01.000Z",finished_at:"2026-09-17T10:00:07.000Z",duration_seconds:6};
+    f.state.session.native_status = "completed";
+    await writeFile(f.stateFile, JSON.stringify(f.state));
+    await archiveAstronStudioTrace({stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir});
+    const unitRoot = await realpath(join(f.root,"unit")),record=join(unitRoot,"record.json");
+    const execution={identity:f.state.identity,harness:{id:"astronstudio"},session:f.state.session,prompt:f.state.prompt,evidence:{},resource_metrics_path:null};
+    const before=JSON.stringify(execution);await writeFile(record,before);
+    const result=await createResourceSupplement({unitRoot,executionRecord:record,stateFile:f.stateFile,traceIndex:join(f.outputDir,"trace-index.json")});
+    assert.equal(result.status,"PASS");assert.equal(result.metrics.metrics.tools.call_count.value,1);
+    assert.equal(await readFile(record,"utf8"),before);
+    await assert.rejects(()=>createResourceSupplement({unitRoot,executionRecord:record,stateFile:f.stateFile,traceIndex:join(f.outputDir,"trace-index.json")}),/SUPPLEMENT_ALREADY_EXISTS/);
+    const p=join(unitRoot,"evidence/resource-supplements",TASK_ID,"resource-metrics.json");
+    await writeFile(p,"{}");
+    await assert.rejects(()=>verifyResourceSupplement({unitRoot,taskId:TASK_ID,executionRecord:record}),/SUPPLEMENT_ARTIFACT_DRIFT/);
+  } finally { await rm(f.root,{recursive:true,force:true}); }
 });

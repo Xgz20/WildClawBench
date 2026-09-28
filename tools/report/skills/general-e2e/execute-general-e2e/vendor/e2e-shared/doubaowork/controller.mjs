@@ -587,9 +587,28 @@ async function readWorkspaceTooltip(page, dialog, workspace) {
   throw new Error("项目目录 tooltip 未在 3 秒内回读匹配的完整绝对路径");
 }
 
-async function openProjectConversation(page, projectName) {
+export async function ensureProjectVisible(page, projectName, timeoutMilliseconds = 60000) {
   const grouped = page.getByTestId("project-grouped-section");
+  if (await grouped.count() !== 1) throw new Error("DOUBAOWORK_PROJECT_SIDEBAR_AMBIGUOUS");
   const projectTitle = grouped.getByTitle(projectName, { exact: true });
+  const deadline = Date.now() + timeoutMilliseconds;
+  for (let clicks = 0; await projectTitle.count() === 0 && clicks < 20 && Date.now() < deadline; clicks += 1) {
+    const expand = grouped.getByRole("button", { name: "展开更多项目", exact: true });
+    if (await expand.count() !== 1 || !await expand.isVisible()) throw new Error("DOUBAOWORK_PROJECT_EXPAND_AMBIGUOUS");
+    const before = await grouped.locator("section[data-project-id]").count();
+    await expand.click();
+    const stepDeadline = Math.min(deadline, Date.now() + 5000);
+    while (await projectTitle.count() === 0 && await grouped.locator("section[data-project-id]").count() <= before && Date.now() < stepDeadline) {
+      await page.waitForTimeout(200);
+    }
+    if (await projectTitle.count() === 0 && await grouped.locator("section[data-project-id]").count() <= before) throw new Error("DOUBAOWORK_PROJECT_EXPAND_NO_PROGRESS");
+  }
+  if (await projectTitle.count() !== 1) throw new Error("DOUBAOWORK_PROJECT_NOT_UNIQUE_AFTER_EXPANSION");
+  return projectTitle;
+}
+
+async function openProjectConversation(page, projectName) {
+  const projectTitle = await ensureProjectVisible(page, projectName);
   const section = projectTitle.locator("xpath=ancestor::section[@data-project-id]");
   if (await section.count() !== 1) throw new Error("新建项目在侧栏中不唯一");
   const projectId = await section.getAttribute("data-project-id");
@@ -772,14 +791,20 @@ async function waitForSessionBinding(page, state, roots, projectName, promptRead
     );
     if (candidate.status === "unique") {
       if (pageObservation.snapshot.current_conversation_id !== candidate.conversation_id) {
-        throw new Error("发送后新 conversation 未成为当前页面，拒绝跨会话绑定");
+        // The native conversation can become unique before the renderer routes
+        // to it. Keep the original send boundary and wait; never bind another
+        // route or send the Prompt again.
+        await page.waitForTimeout(1_000);
+        continue;
       }
       if (pageObservation.snapshot.conversation_project_id_sha256 !== state.client.project_id_sha256) {
-        throw new Error("发送后 conversation 不属于已确认 project，拒绝绑定");
+        await page.waitForTimeout(1_000);
+        continue;
       }
       if (pageObservation.snapshot.current_project_control_count !== 1
           || pageObservation.snapshot.current_project_name !== projectName) {
-        throw new Error("发送后当前 project 未唯一回读");
+        await page.waitForTimeout(1_000);
+        continue;
       }
       try { await enrichRuntimeObservation(page, state, pageObservation); }
       catch (error) {

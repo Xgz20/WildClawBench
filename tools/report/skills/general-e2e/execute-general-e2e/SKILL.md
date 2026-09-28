@@ -15,7 +15,7 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.11.32/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt 发送固定单槽，后台 Agent 默认 3 槽、可配置 1–8，并按可信终态动态补位。AstronStudio 切换 Workspace 时先确认项目选择菜单已关闭，再使用侧边栏添加路径；若添加项目后当前对话未切入目标 Workspace，会用原生项目 ID 定位唯一侧边栏项目，从该项目的“新建对话”入口建立空白目标路由并重新核对完整路径；若正确路径在导航期间延迟出现，仍须同时核对原生 route→project→cwd 后才接受，未完成身份回读时不发送 Prompt。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.12.0/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt发送固定单槽。AstronStudio默认1个后台槽；WorkBuddy/QwenWork默认3槽，队列算法支持1–8，并按可信终态动态补位。AstronStudio 切换 Workspace 时先确认项目选择菜单已关闭，再使用侧边栏添加路径；若添加项目后当前对话未切入目标 Workspace，会用原生项目 ID 定位唯一侧边栏项目，从该项目的“新建对话”入口建立空白目标路由并重新核对完整路径；若正确路径在导航期间延迟出现，仍须同时核对原生 route→project→cwd 后才接受，未完成身份回读时不发送 Prompt。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## DoubaoWork macOS 开发入口
 
@@ -31,7 +31,7 @@ python -m eval_general_e2e skills --name execute-general-e2e --json
 
 `--resume` 仅恢复观察。只有已确认发送 0 次、未落盘发送意图、完整项目/目录身份仍匹配的发送前失败，才可显式传 `--resume --retry-pre-send-failure`；重试先通过原 project ID 的编辑对话框重新读取完整目录，不能只复用旧 tooltip；原失败 journal 先归档。已发送或不确定发送不适用。原生 Prompt 从绑定 conversation 的 IM message Store 读取，不把 Markdown 渲染文本当成原文。
 
-开发队列入口为 `drivers/doubaowork/batch.mjs --unit-root ABS --queue-id ID --expected-permission LABEL --run-slots N`，N 接受 1–3，默认 1。先按 manifest 顺序预建全部项目并保存零发送 journal，再从每个精确 project 的编辑对话框只读回验完整目录（取消关闭），随后单槽发送并动态补位。恢复使用原冻结发行与 `--resume`；不确定发送不重发，未知活动会话或待交互暂停队列；失败收尾不再向页面发送通用 Escape，未知弹窗须保留，不静默取消。原生并发按绑定助手的 elapsed 区间核算，字段缺失则 null，不能用槽位代替。
+开发队列入口为 `drivers/doubaowork/batch.mjs --unit-root ABS --queue-id ID --expected-permission LABEL --run-slots N`，N接受1–3，默认3。先按 manifest 顺序预建全部项目并保存零发送 journal，再从每个精确 project 的编辑对话框只读回验完整目录（取消关闭），随后单槽发送并动态补位。恢复使用原冻结发行与 `--resume`；不确定发送不重发，未知活动会话或待交互暂停队列；失败收尾不再向页面发送通用 Escape，未知弹窗须保留，不静默取消。原生并发按绑定助手的 elapsed 区间核算，字段缺失则 null，不能用槽位代替。
 
 发送前读取本机文件系统 NAME_MAX/PATH_MAX，按 UTF-8 字节校验 Workspace、Prompt、控制产物和原生 session 路径预算；拒绝链接、不可写目录及未知限制。发送前重试和恢复重新检查，未初始化的原生活动状态不能当作空闲。
 
@@ -173,7 +173,7 @@ Worker 中断后使用相同参数并增加 `--resume`。队列冻结 manifest�
 
 `--timeout-ms`、`--poll-interval-ms` 和 `--identity-timeout-ms` 只控制 CDP/UI 操作、轮询节奏和发送后原生身份绑定，不限制被测 Harness 完成任务的时间。评分规则 Worker 的进程超时是独立的基础设施保护；新的 General 评分编排不设置任务级 deadline。
 
-`--run-slots` 默认 `3`，接受 `1–8`。队列逐题串行执行 UI 发送动作，后台已绑定的原生 Agent 最多并行到冻结槽位；任一任务完成后按 manifest 顺序补位。完整状态、恢复、客户端中断和多 attempt 边界见 [AstronStudio macOS 队列契约](references/astronstudio-macos-queue.md)。
+AstronStudio的`--run-slots`默认`1`，队列算法接受`1–8`但不得超过冻结配置上限；更高并发需目标客户端实证，不能由fixture推断。队列逐题串行执行 UI 发送动作，后台已绑定的原生 Agent 最多并行到冻结槽位；任一任务完成后按 manifest 顺序补位。完整状态、恢复、客户端中断和多 attempt 边界见 [AstronStudio macOS 队列契约](references/astronstudio-macos-queue.md)。
 
 ## 责任边界
 
@@ -183,3 +183,9 @@ Worker 中断后使用相同参数并增加 `--resume`。队列冻结 manifest�
 - 支持 `automated` 与 `human_assisted`，人工语义干预必须单独记录。
 - 不读取 scoring 包，不冻结正式候选，不启动裁判或汇总报告。
 - execute 输出仍是采集前记录；只有 `collect-general-e2e` 完成轨迹、资源、候选冻结和正式回执后才能进入评分。
+
+## 修复运行时与本地项目别名
+
+QwenWork/DoubaoWork队列可用`--source-repair-manifest`在`--resume`时冻结原队列SHA和原/新源码SHA，保留原attempt及修复历史，不允许借此改题序、并发或重发未知Prompt。QwenWork敏感输出默认人工处理，仅明确的单任务授权文件及SHA允许`allow-original-on-this-task`，实际操作写入人工介入审计。
+
+AstronStudio正式收口并空闲后可运行`scripts/rename_astronstudio_projects.mjs --unit-root ABS --frozen-config ABS [--task-id ID ...]`，按原生project/cwd设本地task_id别名，不改变Workspace或Prompt。

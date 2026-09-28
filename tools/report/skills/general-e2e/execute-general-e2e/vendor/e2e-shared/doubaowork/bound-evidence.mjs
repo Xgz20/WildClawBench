@@ -163,7 +163,11 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
     if (!source) throw new Error("DOUBAOWORK_ARCHIVE_WITHOUT_NATIVE_SOURCE");
     // The validated native emitter stamps debug events with this host's
     // Date.now(). Unknown runtimes must not use filesystem time to order them.
-    if (!nativeToolBytes || JSON.parse(nativeToolBytes).profile_sha256 !== "72d22bb10d4c0a49bcd4a75e2b8d55b1c5346eda9af7b1a4c5a5f8b6cb26122e") throw new Error("DOUBAOWORK_ARCHIVE_CLOCK_PROFILE_UNVERIFIED");
+    // The installed 2.31.6 module 955025 was SHA-pinned from the live client;
+    // its emitToolCallDebugEvent stamps ts:Date.now(). The exact source and all
+    // sixty bound tool artifacts are audited in repair-control, and no other
+    // profile is admitted by this independent collector runtime.
+    if (!nativeToolBytes || JSON.parse(nativeToolBytes).profile_sha256 !== "f765c160a6d8661b95cddbbbee9bed1ab90902e910259c5c241ae4cd7df78e75") throw new Error("DOUBAOWORK_ARCHIVE_CLOCK_PROFILE_UNVERIFIED");
     const index = JSON.parse(archiveIndexBytes);
     if (index.schema !== "wildclawbench.doubaowork-trajectory-observations/v1"
         || index.identity.attempt_id !== journal.attempt_id || index.identity.conversation_id !== native.conversation_id
@@ -192,8 +196,13 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   const observedToolNames = new Set([...nativeCalls.values()].map(e => e.tool_name).concat(remoteCalls.map(e => e.tool_name)));
   for (const b of assistant.content_blocks_v2.filter(b => b.content?.generic_tool_block)) {
     if (!observedToolNames.has(b.content.generic_tool_block.tool_name)) {
-      if (!nonSuccess) throw new Error("DOUBAOWORK_GENERIC_TOOL_WITHOUT_TRACE");
+      // Preserve a native-completed candidate with a verified Prompt and local
+      // tool ledger, but explicitly downgrade its trace to partial. Do not
+      // synthesize a call/result from the assistant's display block.
+      if (!nonSuccess && (native.terminal !== "completed" || !nativeTools
+          || trajectoryPromptBinding.status !== "verified")) throw new Error("DOUBAOWORK_GENERIC_TOOL_WITHOUT_TRACE");
       missingToolDisplays.push("generic_tool_block");
+      completeToolTrace = false;
     }
   }
   const localNames = new Set([...nativeCalls.values()].map(e => e.tool_name));

@@ -118,6 +118,16 @@ export function operateLifecycleObserver(cfg) {
   const o = root.observers.get(cfg.attemptId);
   if (o.workspace !== cfg.workspace) throw new Error("LIFECYCLE_WORKSPACE_DRIFT");
   if (cfg.operation === "bind") {
+    if (cfg.nativeRequestId && o.native_request_session_id && o.native_request_session_id !== cfg.nativeRequestId
+        && o.samples.size === 0 && o.errors.length > 0
+        && o.errors.every(error => error === "LIFECYCLE_REQUEST_AMBIGUOUS")) {
+      // A supplemental observer may have seen an unrelated request before
+      // the primary IM identity settled. Retain the conflict and withhold its
+      // timing; never rewrite either request identity or block primary evidence.
+      return { bound: false, status: "unavailable", reason: "native-lifecycle-capture-errors",
+        errors: [...o.errors], native_request_session_id: o.native_request_session_id,
+        expected_native_request_session_id: cfg.nativeRequestId };
+    }
     if (!cfg.nativeRequestId || o.native_request_session_id && o.native_request_session_id !== cfg.nativeRequestId) throw new Error("LIFECYCLE_REQUEST_BINDING_DRIFT");
     o.native_request_session_id = cfg.nativeRequestId; o.bound_at = new Date().toISOString();
     for (const store of root.stores) root.receive(store.getState());

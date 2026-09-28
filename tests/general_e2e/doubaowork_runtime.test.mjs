@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { normalizeRuntimeMessages, normalizeRuntimePrompt } from "../../tools/report/e2e-shared/doubaowork/runtime-messages.mjs";
 import { sha256Text, summarizePromptReadback } from "../../tools/report/e2e-shared/doubaowork/lib.mjs";
 import { CANCELLATION_SCHEMA, TERMINAL_OBSERVATION_SCHEMA, verifyCancellationEvidence, verifyFailureEvidence } from "../../tools/report/e2e-shared/doubaowork/terminal-evidence.mjs";
+import { countBoundTools } from "../../tools/report/e2e-shared/doubaowork/tool-counts.mjs";
 
 function fixture() {
   const prompt = "Fix `project/example.py`.\n", id = "123456789", workspace = "/private/fixture/workspace";
@@ -20,6 +21,39 @@ function fixture() {
   const seal = () => { snapshot.payload_sha256 = sha256Text(JSON.stringify({ conversation_id: id, maps: snapshot.maps })); return snapshot; };
   return { snapshot, state, seal, user, assistant, config };
 }
+
+test("only the older exact assistant shadow is optional after a canonical terminal reply", () => {
+  const f=fixture();f.state.client={...f.state.client,version:"2.31.6"};
+  Object.assign(f.assistant,{create_time:"100",update_time:"102",bot_id:"bot",is_delta:false,local_message_id:"",final_status:{message:"Success",session:"Success"}});
+  const shadow={...structuredClone(f.assistant),local_message_id:f.assistant.message_id,status:4,update_time:"101",final_status:{}};
+  f.snapshot.maps.localMessageMap={[f.assistant.message_id]:shadow};
+  assert.equal(normalizeRuntimeMessages(f.seal(),f.state).local_shadow.status,"admitted-stale-assistant-shadow");
+  for(const change of [x=>x.update_time="103",x=>x.reply_id="foreign",x=>x.conversation_id="foreign",x=>x.is_delta=true]){
+    const before=structuredClone(shadow);change(shadow);assert.throws(()=>normalizeRuntimeMessages(f.seal(),f.state),/LOCAL_SHADOW_UNVERIFIED/);Object.assign(shadow,before);
+  }
+  f.state.client.version="unknown";assert.throws(()=>normalizeRuntimeMessages(f.seal(),f.state),/LOCAL_SHADOW_UNVERIFIED/);
+});
+
+test("remote invocation block counting is independent of missing provider arguments and process order", () => {
+  const f=fixture(),identity={batch_id:"b",unit_id:"u",task_id:"t",attempt_id:"a"};
+  f.assistant.content_blocks_v2.push(...["block-1","block-2"].map(block_id=>({block_id,is_finish:true,
+    content:{generic_tool_block:{tool_name:"calculator"}}})));
+  Object.assign(f.state,{identity,workspace:f.state.workspace,timing:{sent_at:"1970-01-01T00:00:00.500Z"},
+    native_tool_observer:{profile_sha256:"a".repeat(64)}});
+  const nativeSnapshot={schema:"wildclawbench.doubaowork-native-tool-events/v1",profile:"doubaowork-local-tool-debug-sink/v1",
+    profile_sha256:"a".repeat(64),attempt_id:"a",workspace:f.state.workspace,native_agent_id:"native-request",
+    installed_at:"1970-01-01T00:00:00.000Z",collected_at:"1970-01-01T00:00:03.000Z",errors:[],contexts:[],events:[],ledger:[]};
+  const input={execution:{identity,execution:{business_status:"completed"}},state:{identity,phase:"COMPLETED"},
+    runtime:f.seal(),journal:f.state,nativeSnapshot,transcript:[],index:{calls:[],completeness:{status:"partial",missing:["remote-tool-event-coverage-incomplete"]}}};
+  const result=countBoundTools(input);
+  assert.equal(result.status,"complete");assert.equal(result.total,2);assert.deepEqual(result.by_tool,{calculator:2});
+  assert.ok(result.catalog.every(r=>r.provider_call_id===null&&r.arguments_or_results_synthesized===false));
+  f.assistant.content_blocks_v2.at(-1).block_id="block-1";input.runtime=f.seal();
+  assert.throws(()=>countBoundTools(input),/NATIVE_BLOCK_ID_DUPLICATE/);
+  f.assistant.content_blocks_v2.at(-1).block_id="block-2";
+  f.assistant.content_blocks_v2.at(-1).content.generic_tool_block.tool_name="unsupported";input.runtime=f.seal();
+  assert.throws(()=>countBoundTools(input),/REMOTE_TOOL_PROFILE_UNSUPPORTED/);
+});
 
 test("Native Prompt, reply, local workspace and terminal form one verified identity", () => {
   const f = fixture(), n = normalizeRuntimeMessages(f.seal(), f.state);

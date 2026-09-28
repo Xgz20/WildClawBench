@@ -1,0 +1,198 @@
+{
+  "schema_version": "wildclawbench.reviewed-scoring-evidence-policy/v1",
+  "review_basis": "Frozen grader and rubric reviewed against the original evidence; tool history is optional for these output-only criteria.",
+  "source_audit_sha256": "d15121549229184d21d9a61d60bdce4b7fc2d2099fc4432fe46f4a855b6d5317",
+  "profiles": {
+    "aa0ea772cb109220b3b10231d1ec7d0ad38ceaa978cc82abe301e69daed84937": {
+      "task_id": "01_Productivity_Flow_task_001_expense_policy_check",
+      "grading_type": "automated",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "4387cde14609fd7e439d551604121d67012c2a30d628d2d5cb3e15c745bd75b7"
+    },
+    "585c6f69ddf4686fe2d08cb4e3562e17368b8b9bd3da7f15f8a1399d39f70294": {
+      "task_id": "01_Productivity_Flow_task_005_support_handoff",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "ec3ad6076e0e319812cd6d673a61bd301de09ad34b468607ca97b4b8d970902a"
+    },
+    "0412624c24f929a47f0a5b88a46c47981cbecce53e3db38d9815919d73d4a72a": {
+      "task_id": "01_Productivity_Flow_task_006_holiday_calendar",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "9dc8b272b38eefbcc8f95a44c4a625b63a3ddfba8033ed4155ba354cd5a96f39"
+    },
+    "6ae3a421d4ceecbacc903efd3a0b1c21ca3ab6e843689b55e2864ba439d678f3": {
+      "task_id": "01_Productivity_Flow_task_007_sec_filing_preread",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "07de4d813dfef926fceebc64ebe732dc053fbff9e1ea2860a72476a5f91d6ff6"
+    },
+    "cf5bb1c01ac39694d62130aaec7edced90fbd1eff9250e90561ac6066b2ae680": {
+      "task_id": "01_Productivity_Flow_task_008_paper_reading_pack",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "43aabea53ea94025eee9c4ad5ccb679b27d93b385997668287a0c233197fdc7b"
+    },
+    "084e43a44a813add5ceb646bfc187eb584e3687cc5f74d10f0b2f6ed09c50b0f": {
+      "task_id": "01_Productivity_Flow_task_010_launch_program_pack",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "5ba235b5b028d60036339b742cc5c579fb1a5b25438f04243eeab7c501cf6edf"
+    },
+    "1607c13415fdeaccc63a0fe9e3c7064645fa028ec2883f983921ec5a33cc1ca6": {
+      "task_id": "02_Code_Intelligence_task_006_tomllib_reader",
+      "grading_type": "automated",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "d9b0e2ff7d5995beb6425ccd1f282874bdd735014d19a8b41e6c1c8dc151cfd1"
+    },
+    "14aab8533dc2cbb75793ff863c8455423d1f8d73d315735dfc25269a44d7429b": {
+      "task_id": "02_Code_Intelligence_task_010_idempotent_event_pipeline",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "3f65d0ba2dd46f2e3edbd10f32f8a1fdc24158df5ffa3ad5e4d0c1427bcb2c43"
+    },
+    "a19160db6deaa8b81b784fd2084b760275245f90235cf755914127105898e9e6": {
+      "task_id": "03_Social_Interaction_task_001_meeting_reschedule_draft",
+      "grading_type": "automated",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "3ccc3abd06bf5d752684cd06c41d4851b7048d6c69dd40a225f61c2ec4dfa6f4"
+    },
+    "b90d88be11b5946a1a216e3283e4fd9bbb47f10d9a75294959315e4d37557a3f": {
+      "task_id": "04_Search_Retrieval_task_004_pipl_article13_verification",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "2c8c8899cf309975fa9965a99e4d7d959ae83a7a69a4b2865e753feb47310770"
+    },
+    "9bbccfbe2866487dfb383d4394f1c2c647c656cf4e972518f1bfd77f096959d7": {
+      "task_id": "04_Search_Retrieval_task_005_apple_2023_segment_revenue",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "65e855585da8a20871249cc96d4dee2b36d6c7da80416c8aac8fa4a797ac7839"
+    },
+    "b2195db2caaab10f48e7f6232c99c3eccad3ca0a366f372072f26a5d117198dc": {
+      "task_id": "04_Search_Retrieval_task_006_rfc_http_obsolescence",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "42ee3077c4bfdb61082cd11e878e39c6447353b885a0ebf102cdbbcda6f61d9e"
+    },
+    "ef99977af618865f0a6fa499e014404a92b5b5749a0627695370b30c1f226d6c": {
+      "task_id": "04_Search_Retrieval_task_007_census_province_change",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "2614108d9bd554a8333e4c9954a12305c6b8d8c842844dede119425e5812c6ac"
+    },
+    "67e7b09efa98611ac0b2fc5ebc7a08e6618631d5187e40c3a23fbe4bde84845b": {
+      "task_id": "04_Search_Retrieval_task_009_sse_annual_report_metrics",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "1020289a3714bad6b42cf2f5b5e70d126bd1f5e6f115dfcca720b8e20d40ecce"
+    },
+    "6aa691b142fed71261f1b1121aced7cd168958ea0786a9b01f4e3e482dacc068": {
+      "task_id": "04_Search_Retrieval_task_010_node_statfs_release_trace",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "40dd331e6c7bdfcd049826f76138aae5a86818919b08e424bc42dbf8829d36ea"
+    },
+    "0c7057422f16ef7c2c955a15d0655c43c50f529115452e10434e7db17c33b8d9": {
+      "task_id": "04_Search_Retrieval_task_011_nist_sha1_transition",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "88b5a10859de31a0ca82455dba5952f25672c0e3b5a82348cfd1fd650234a282"
+    },
+    "820ab2812bfb65897718ffeaa1330c4ecd0d5dc15411756a66a1f3fbcc29b945": {
+      "task_id": "04_Search_Retrieval_task_012_personal_pension_policy_timeline",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "cfdb89ed8778f1c222361571e2f9c58f27abc37a8190753838f31795b69e5d66"
+    },
+    "796939fe79b2dff258e13b0a4bf58d2c5e3417168a1d70429f3b9506c13eb966": {
+      "task_id": "05_Creative_Synthesis_task_008_accessible_timeline_microsite",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_html_with_judge_browser_probe_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "e6c366237e69bccb42ac27a2528bd517804aed4ec0f6ea99ea086940e113c4c6"
+    },
+    "f96b3489ee7bf77ca15b80030d51497e848836a19178fbc56317545e21960d34": {
+      "task_id": "05_Creative_Synthesis_task_009_accessibility_law_cards",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "final_assistant_text_and_fixed_source_material",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "379b1647f7add7354ac873f4e27f801661728e130aaa3514469b53ccf2742623"
+    },
+    "99c2be6ae457e544d5248e3edc0ed04a02460076fc9fac3d446e88971e530a36": {
+      "task_id": "05_Creative_Synthesis_task_010_apollo_museum_narrative",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "final_assistant_text_and_fixed_source_material",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "b907e30e0faf1b18627247db55f0cffafa216c956fd600df76ac90d65fac3347"
+    },
+    "97f3189ce6e1f17ee74bd6ab8473b81def87eaa50c60516c7578b86374003078": {
+      "task_id": "05_Creative_Synthesis_task_007_survey_campaign_pack",
+      "grading_type": "hybrid",
+      "scoring_input_scope": "candidate_workspace_and_fixed_inputs",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "c05fee4688e9919ac6701b1f0357069b5aec7b9982f00cdfe3e9ab281be4722d",
+      "harness": "astronstudio",
+      "trace_schema_version": 1
+    }
+  }
+}

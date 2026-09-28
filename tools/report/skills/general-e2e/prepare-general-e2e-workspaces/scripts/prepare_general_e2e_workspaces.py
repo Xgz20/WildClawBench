@@ -573,8 +573,9 @@ def _required_skill_rows(catalog: Mapping[str, Any], names: Sequence[str]) -> li
 
 
 def map_prompt_workspace(prompt: str) -> tuple[str, list[dict[str, str]]]:
-    mapped, count = PROMPT_WORKSPACE_RE.subn("./workspace", prompt)
-    mapping = [{"from": PROMPT_WORKSPACE, "to": "./workspace"}] if count else []
+    # The desktop client's cwd is already execution/tasks/<task>/workspace.
+    mapped, count = PROMPT_WORKSPACE_RE.subn(".", prompt)
+    mapping = [{"from": PROMPT_WORKSPACE, "to": "."}] if count else []
     return mapped, mapping
 
 

@@ -69,13 +69,35 @@ async function save(path, value) {
   await writeFile(temp, `${JSON.stringify(value, null, 2)}\n`, { flag: "wx", mode: 0o600 });
   await rename(temp, path);
 }
-async function sourceDigest() {
+export async function sourceDigest() {
   const names = ["driver.mjs", "batch.mjs", "prepared-task.mjs", "managed-queue.mjs", "package-lock.json",
     ...["controller.mjs", "interactions.mjs", "path-preflight.mjs", "runtime-messages.mjs", "runtime-stream.mjs", "runtime-tools.mjs", "runtime-lifecycle.mjs", "runtime-activity.mjs", "trajectory-archive.mjs", "native-evidence.mjs", "state.mjs", "lib.mjs", "platform.mjs", "select-folder.swift"].map(n => `../../vendor/e2e-shared/doubaowork/${n}`)];
   return sha(JSON.stringify(await Promise.all(names.map(async n => [n, sha(await readFile(join(HERE, n)))]))));
 }
 
+export function applyQueueSourceRepair(state, config, repair, originalBytes, at = now()) {
+  const withoutSource = value => Object.fromEntries(Object.entries(value).filter(([key]) => !["source_root", "source_digest"].includes(key)).sort(([a],[b]) => a.localeCompare(b)));
+  if (repair?.schema_version !== 1 || typeof repair.reason !== "string" || !repair.reason.trim()
+      || state.schema !== "wildclawbench.doubaowork-general-queue/v1"
+      || ![repair.original_source_sha256, repair.patched_source_sha256, repair.original_queue_sha256].every(value => /^[a-f0-9]{64}$/u.test(value || ""))
+      || repair.queue_id !== config.queue_id || repair.unit_root !== config.unit_root
+      || state.status !== "NEEDS_ATTENTION" || repair.original_queue_sha256 !== sha(originalBytes)
+      || repair.original_source_sha256 !== state.config.source_digest || repair.patched_source_sha256 !== config.source_digest
+      || repair.preserve_attempts !== true || state.config_digest !== sha(JSON.stringify(state.config))
+      || JSON.stringify(state.tasks.map(row => row.task_id)) !== JSON.stringify(config.task_ids)
+      || JSON.stringify(withoutSource(state.config)) !== JSON.stringify(withoutSource(config))) {
+    throw new Error("DOUBAOWORK_QUEUE_SOURCE_REPAIR_INVALID");
+  }
+  const updated = structuredClone(state);
+  updated.history.push({ event: "QUEUE_SOURCE_REPAIR_ACTIVATED", at, reason: repair.reason,
+    original_queue_sha256: repair.original_queue_sha256, original_source_sha256: repair.original_source_sha256,
+    patched_source_sha256: repair.patched_source_sha256, manifest_sha256: sha(JSON.stringify(repair)), attempts_preserved: true });
+  updated.config = config; updated.config_digest = sha(JSON.stringify(config));
+  return updated;
+}
+
 export async function runSerialQueue(options) {
+  if (options.sourceRepairManifest && !options.resume) throw new Error("DOUBAOWORK_SOURCE_REPAIR_REQUIRES_RESUME");
   if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/u.test(options.queueId || "")) throw new Error("DOUBAOWORK_QUEUE_ID_INVALID");
   if (!Number.isInteger(options.runSlots) || options.runSlots < 1 || options.runSlots > 3) throw new Error("DOUBAOWORK_CONCURRENCY_NOT_ADMITTED: run-slots must be 1–3");
   if (!options.expectedPermission || options.expectedPermission === "current") throw new Error("DOUBAOWORK_QUEUE_EXPLICIT_PERMISSION_REQUIRED");
@@ -95,8 +117,15 @@ export async function runSerialQueue(options) {
     try {
       const st = await lstat(stateFile);
       if (!st.isFile() || st.isSymbolicLink()) throw new Error("DOUBAOWORK_QUEUE_STATE_UNSAFE");
-      state = JSON.parse(await readFile(stateFile, "utf8"));
+      const originalBytes = await readFile(stateFile);
+      state = JSON.parse(originalBytes);
       if (!options.resume) throw new Error("DOUBAOWORK_QUEUE_EXISTS_USE_RESUME");
+      if (options.sourceRepairManifest && state.config.source_digest !== config.source_digest) {
+        const repair = await readJournal(options.sourceRepairManifest);
+        state = applyQueueSourceRepair(state, config, repair, originalBytes);
+        await writeFile(join(queueRoot, `queue-before-source-repair-${repair.original_queue_sha256}.json`), originalBytes, { flag: "wx", mode: 0o600 });
+        await save(stateFile, state);
+      }
       if (state.config_digest !== sha(JSON.stringify(config)) || sha(JSON.stringify(state.config)) !== state.config_digest
           || JSON.stringify(state.tasks.map(r => r.task_id)) !== JSON.stringify(taskIds)) throw new Error("DOUBAOWORK_QUEUE_CONFIG_DRIFT");
     } catch (e) {
@@ -224,13 +253,14 @@ export async function runSerialQueue(options) {
 
 export async function main(argv = process.argv.slice(2)) {
   const { values: v } = parseArgs({ args: argv, options: {
-    "unit-root": { type: "string" }, "queue-id": { type: "string" }, "run-slots": { type: "string", default: "1" },
+    "unit-root": { type: "string" }, "queue-id": { type: "string" }, "run-slots": { type: "string", default: "3" },
+    "source-repair-manifest": { type: "string" },
     "expected-permission": { type: "string" }, "app-path": { type: "string", default: DEFAULT_APP_PATH },
     endpoint: { type: "string", default: DEFAULT_ENDPOINT }, resume: { type: "boolean" }, help: { type: "boolean" },
   } });
   if (v.help) { console.log("DoubaoWork General queue (development admission): --unit-root ABS --queue-id ID --expected-permission LABEL [--resume] [--run-slots 1–3]. No task deadline; unknown dispatch never repeats."); return; }
   const result = await runSerialQueue({ unitRoot: v["unit-root"], queueId: v["queue-id"], runSlots: Number(v["run-slots"]),
-    expectedPermission: v["expected-permission"], appPath: v["app-path"], endpoint: v.endpoint, resume: v.resume });
+    expectedPermission: v["expected-permission"], appPath: v["app-path"], endpoint: v.endpoint, resume: v.resume, sourceRepairManifest: v["source-repair-manifest"] });
   console.log(JSON.stringify({ status: result.status, tasks: result.tasks, error: result.error ?? null }, null, 2));
   if (result.status === "NEEDS_ATTENTION") process.exitCode = 3;
 }

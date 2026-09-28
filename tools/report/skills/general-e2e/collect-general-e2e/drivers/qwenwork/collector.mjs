@@ -519,6 +519,40 @@ export async function collectQwenWorkEvidence(options) {
   const outputRoot = await ensureNewOutput(unitRoot, requireString(options?.outputRoot, "outputRoot"));
   const journalSource = await readJson(requireString(options?.journalFile, "journalFile"));
   const { state, bindingSources } = await normalizeFormalState(journalSource.value, unitRoot);
+  const uiModel = journalSource.value.configuration?.model;
+  const verifiedAt = Date.parse(journalSource.value.configuration?.verified_at);
+  if (typeof uiModel?.actual_model === "string" && uiModel.actual_model.trim()) {
+    const verified = uiModel.method === "visible-current-value" && uiModel.changed === false
+      && Number.isFinite(verifiedAt) && verifiedAt <= Date.parse(state.prompt.sent_at);
+    state.extensions.client = { ...(state.extensions.client || {}), model: uiModel.actual_model,
+      model_verification_status: verified ? "verified" : "unverified",
+      model_evidence_sha256: journalSource.sha256, model_identity_kind: "client-ui-option" };
+  }
+  const authorizationSources = [];
+  const configSource = await readJson(join(dirname(journalSource.absolute), "config.json"))
+    .catch(error => { if (error.code === "ENOENT") return null; throw error; });
+  if (journalSource.value.authorized_interactions?.length
+      && configSource?.value.control?.sensitive_output_policy !== "allow-original-on-this-task") {
+    throw Error("QWENWORK_AUTHORIZED_INTERACTION_EVIDENCE_MISSING");
+  }
+  if (configSource?.value.control?.sensitive_output_policy === "allow-original-on-this-task") {
+    const config = configSource.value;
+    const auth = await readJson(config.control.sensitive_output_authorization_path);
+    const operations = journalSource.value.authorized_interactions || [];
+    if (qwenCanaryConfigDigest(config) !== config.config_digest
+        || config.config_digest !== journalSource.value.config_digest
+        || auth.sha256 !== config.control.sensitive_output_authorization_sha256
+        || auth.value.task_id !== state.identity.task_id || resolve(auth.value.unit_root) !== unitRoot
+        || auth.value.sensitive_output_confirmation !== "allow-original-on-this-task"
+        || state.human_assistance.operation_count !== operations.length
+        || operations.some(op => op.approved !== true || op.button !== "允许原文提供"
+          || op.conversation_id !== journalSource.value.session.conversation_id
+          || op.sub_chat_id !== journalSource.value.session.sub_chat_id
+          || op.authorization_sha256 !== auth.sha256)) {
+      throw Error("QWENWORK_AUTHORIZED_INTERACTION_EVIDENCE_INVALID");
+    }
+    authorizationSources.push(journalSource, configSource, auth);
+  }
   const sessionId = requireString(state.session.session_id, "state.session.session_id");
   const transcriptSource = await discoverTranscript(journalSource.value, clientTraceRoot, sessionId);
   const segmentSources = await discoverSegments(clientTraceRoot, sessionId);
@@ -549,7 +583,7 @@ export async function collectQwenWorkEvidence(options) {
   assertTranscriptBinding(transcriptRows, state);
   assertSegmentBinding(segmentRows, state);
   let nativeSnapshotBytes = null, nativeSnapshot = null;
-  if (state.extensions.qwenwork.native_status === "interrupted") {
+  if (["interrupted", "failed"].includes(state.extensions.qwenwork.native_status)) {
     const config = (await readJson(join(dirname(journalSource.absolute), "config.json"))).value;
     if (!sameIdentity(config.identity, journalSource.value.identity)
         || config.config_digest !== journalSource.value.config_digest
@@ -560,7 +594,7 @@ export async function collectQwenWorkEvidence(options) {
       sessionId: state.session.session_id, workspace: state.session.cwd });
     nativeSnapshotBytes = jsonBytes(nativeSnapshot);
   }
-  state.extensions.qwenwork.native_terminal_reconciliation = verifyQwenNativeTerminal(state, segmentRows, { nativeSnapshot });
+  state.extensions.qwenwork.native_terminal_reconciliation = verifyQwenNativeTerminal(state, segmentRows, { nativeSnapshot, transcriptRows });
   const normalized = normalizeQwenNativeTrace({
     identity: state.identity,
     transcriptRows,
@@ -580,6 +614,8 @@ export async function collectQwenWorkEvidence(options) {
     artifact("raw/token-probe.json", tokenContext.probeSource.bytes),
   ] : [];
   rawArtifacts.push(...tokenArtifacts);
+  rawArtifacts.push(artifact("raw/dispatch-journal.json", journalSource.bytes));
+  rawArtifacts.push(...authorizationSources.map(source => artifact(`raw/authorization/${basename(source.absolute)}`, source.bytes)));
   const bindingArtifacts = bindingSources.map((source, index) => artifact(
     `bindings/${String(index + 1).padStart(2, "0")}-${basename(source.absolute)}`,
     source.bytes,
@@ -640,6 +676,7 @@ export async function collectQwenWorkEvidence(options) {
     await mkdir(join(stage, "trace", "bindings"), { recursive: true });
     await writeFile(join(stage, "execution", "automation-state.json"), stateBytes, { flag: "wx", mode: 0o600 });
     await writeFile(join(stage, "trace", "raw", "transcript.jsonl"), transcriptSource.bytes, { flag: "wx", mode: 0o600 });
+    await writeFile(join(stage, "trace", "raw", "dispatch-journal.json"), journalSource.bytes, { flag: "wx", mode: 0o600 });
     for (const source of segmentSources) {
       await writeFile(join(stage, "trace", "raw", "segments", basename(source.absolute)), source.bytes, { flag: "wx", mode: 0o600 });
     }
@@ -649,6 +686,12 @@ export async function collectQwenWorkEvidence(options) {
         { flag: "wx", mode: 0o600 });
       await writeFile(join(stage, "trace", "raw", "token-probe.json"), tokenContext.probeSource.bytes,
         { flag: "wx", mode: 0o600 });
+    }
+    if (authorizationSources.length) {
+      await mkdir(join(stage, "trace", "raw", "authorization"), { recursive: true });
+      for (const source of authorizationSources) {
+        await writeFile(join(stage, "trace", "raw", "authorization", basename(source.absolute)), source.bytes, { flag: "wx", mode: 0o600 });
+      }
     }
     for (let indexValue = 0; indexValue < bindingSources.length; indexValue += 1) {
       await writeFile(

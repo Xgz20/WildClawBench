@@ -11,7 +11,10 @@ export const QWEN_SEND_SELECTOR = [
   'button[title="Send"]:visible',
   '[data-chat-input-surface="new-task"] button[type="button"].bg-text:visible',
 ].join(", ");
+// Exact unlabeled rounded-square stop icon observed on QwenWorkCN 1.2.0.
+// Read-only observation only; never used to click the control.
 export const QWEN_STOP_SELECTOR = [
+  '.agents-chat-view-root button[type="button"].bg-text:not([disabled]):not([aria-disabled="true"]):visible:has(svg path[d="M3 10.2556C3 7.15979 3 6.03969 3.43597 5.18404C3.81947 4.43139 4.43139 3.81947 5.18404 3.43597C6.03969 3 7.15979 3 10.2556 3H13.7444C16.8402 3 17.9603 3 18.816 3.43597C19.5686 3.81947 20.1805 4.43139 20.564 5.18404C21 6.03969 21 7.15979 21 10.2556V13.7444C21 16.8402 21 17.9603 20.564 18.816C20.1805 19.5686 19.5686 20.1805 18.816 20.564C17.9603 21 16.8402 21 13.7444 21H10.2556C7.15979 21 6.03969 21 5.18404 20.564C4.43139 20.1805 3.81947 19.5686 3.43597 18.816C3 17.9603 3 16.8402 3 13.7444V10.2556Z"])',
   'button[aria-label*="停止"]:not([disabled]):not([aria-disabled="true"]):visible',
   'button[title*="停止"]:not([disabled]):not([aria-disabled="true"]):visible',
   'button[aria-label*="Stop"]:not([disabled]):not([aria-disabled="true"]):visible',
@@ -292,6 +295,13 @@ export async function inspectQwenPendingInteraction(page, expectedSession, sessi
   const panels = await visibleLocators(page.locator(QWEN_INTERACTION_SELECTOR));
   let unknownPanels = 0;
   for (const panel of panels) {
+    const sensitiveAllow = await visibleLocators(panel.getByRole("button", { name: "允许原文提供", exact: true }));
+    const sensitiveDeny = await visibleLocators(panel.getByRole("button", { name: "禁止提供", exact: true }));
+    if (sensitiveAllow.length === 1 && sensitiveDeny.length === 1
+        && (await panel.innerText()).includes("检测到敏感数据")) {
+      return { kind: "sensitive-output-confirmation", question_count: questions.length,
+        conversation_id: binding.conversationId, auto_approve: false };
+    }
     const approvals = await visibleLocators(panel.getByRole("button", {
       name: /^(?:允许|批准|确认执行|始终允许|拒绝|Allow|Approve|Deny)$/iu,
     }));
@@ -302,6 +312,25 @@ export async function inspectQwenPendingInteraction(page, expectedSession, sessi
   }
   if (unknownPanels || questions.length > 1) return { kind: "unknown", question_count: questions.length, panel_count: unknownPanels };
   return { kind: questions.length === 1 ? "clarification" : "none", question_count: questions.length };
+}
+
+export async function allowQwenSensitiveOutput(page, expectedSession, sessionRows, timeoutMilliseconds = 30000) {
+  const binding = await readQwenUiBinding(page, expectedSession, sessionRows, true);
+  if (!binding.verified) throw new Error("QWENWORK_SENSITIVE_CONFIRMATION_SESSION_UNVERIFIED");
+  const candidates = [];
+  for (const panel of await visibleLocators(page.locator(QWEN_INTERACTION_SELECTOR))) {
+    const buttons = await visibleLocators(panel.getByRole("button", { name: "允许原文提供", exact: true }));
+    const deny = await visibleLocators(panel.getByRole("button", { name: "禁止提供", exact: true }));
+    if (buttons.length === 1 && deny.length === 1 && (await panel.innerText()).includes("检测到敏感数据")) {
+      candidates.push({ panel, button: buttons[0] });
+    }
+  }
+  if (candidates.length !== 1) throw new Error(`QWENWORK_SENSITIVE_CONFIRMATION_COUNT:${candidates.length}`);
+  await candidates[0].button.click({ timeout: timeoutMilliseconds });
+  await candidates[0].button.waitFor({ state: "hidden", timeout: timeoutMilliseconds });
+  return { skipped: true, approved: true, method: "unique-bound-sensitive-output-allow-original",
+    conversation_id: expectedSession.conversation_id, sub_chat_id: expectedSession.sub_chat_id,
+    session_id: expectedSession.session_id, button: "允许原文提供" };
 }
 
 export async function skipQwenClarification(page, conversationId, timeoutMilliseconds = 30_000) {
@@ -346,7 +375,9 @@ export async function openQwenTaskByProjectAndName(
   const section = projectToggle.locator("xpath=../..");
   let task = section.getByRole("button", { name: subChatName, exact: true });
   if (await visibleLocators(task).then((items) => items.length) !== 1) {
-    await projectToggle.click({ timeout: timeoutMilliseconds });
+    const expanded = await projectToggle.getAttribute("aria-expanded");
+    if (expanded === "false") await projectToggle.click({ timeout: timeoutMilliseconds });
+    else if (expanded !== "true") throw new Error("QWENWORK_PROJECT_SIDEBAR_EXPANSION_UNKNOWN");
     await waitForUniqueVisible(
       () => visibleLocators(section.getByRole("button", { name: subChatName, exact: true })),
       timeoutMilliseconds,

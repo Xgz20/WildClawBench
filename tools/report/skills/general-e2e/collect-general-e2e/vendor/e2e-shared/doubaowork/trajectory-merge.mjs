@@ -1,10 +1,10 @@
 import { canonicalNativePayload, deduplicateTrajectoryEvents } from "./native-evidence.mjs";
 
 const equal = (a, b) => JSON.stringify(canonicalNativePayload(a)) === JSON.stringify(canonicalNativePayload(b));
-function inputMatches(event, native, result) {
+export function inputMatches(event, native, result) {
   if (equal(event.arguments, native.input)) return true;
-  // The persisted model call can omit the protocol's image thumbnail hint.
-  // Admit only this observed difference for an actually returned text Read;
+  // The persisted model call can omit the protocol's thumbnail hint.
+  // Admit only observed Read result profiles bound to the same full input;
   // both original payloads remain archived, all other arguments must match.
   if (event.tool_name !== "Read" || event.arguments?.thumbnail_size !== undefined
       || native.input?.thumbnail_size !== "full") return false;
@@ -13,7 +13,11 @@ function inputMatches(event, native, result) {
     && result.output?.structuredResultFacts?.localFileReadV2Bypass?.reason === "image"
     && typeof native.input.file_path === "string"
     && result.output.content === `Read "${native.input.file_path}" as image for upload.`;
-  if (!text && !image) return false;
+  const pdf = result.output?.status === "success"
+    && result.output?.structuredResultFacts?.localFileReadV2?.kind === "pdf_pages"
+    && result.output.structuredResultFacts.localFileReadV2.filePath === native.input.file_path
+    && native.input.pages === `${result.output.structuredResultFacts.localFileReadV2.requestedStartPage}-${result.output.structuredResultFacts.localFileReadV2.requestedEndPage}`;
+  if (!text && !image && !pdf) return false;
   const { thumbnail_size, ...rest } = native.input;
   return equal(event.arguments, rest);
 }
@@ -76,7 +80,7 @@ export function mergeObservedToolTimeline(snapshots, local) {
   return { order_verified: true, basis: "unique-native-order+same-host-observation-upper-bounds", entries };
 }
 
-function resultMatches(native, content, start) {
+export function resultMatches(native, content, start) {
   if (typeof native.output?.content === "string" && native.output.content === content) return true;
   const mutation = native.output?.structuredResultFacts?.localFileMutationV2;
   if (native.tool_name === "Write" && native.output.status === "success" && mutation?.kind === "write_success"
@@ -102,6 +106,40 @@ function resultMatches(native, content, start) {
       && typeof imagePath === "string"
       && native.output.content === `Read "${imagePath}" as image for upload.`
       && content === `Read media file ${imagePath} (image). See the attachment in the multimodal content that follows.`) return true;
+  const glob = native.output?.structuredResultFacts?.localFileGlobV2;
+  if (native.tool_name === "Glob" && native.output?.status === "success"
+      && glob?.kind === "matched" && Array.isArray(glob.paths) && glob.paths.length > 0
+      && glob.paths.length <= 500 && glob.paths.every(path => typeof path === "string")
+      && typeof start?.input?.pattern === "string" && typeof start.input.path === "string"
+      && native.output.content === `Glob '${start.input.pattern}' in "${start.input.path}": found ${glob.paths.length} file(s).\n\n${glob.paths.join("\n")}`
+      && content === glob.paths.join("\n")) return true;
+  if (native.tool_name === "Glob" && native.output?.status === "success"
+      && glob?.kind === "empty" && start?.input?.path === undefined
+      && typeof start?.input?.pattern === "string"
+      && native.output.content === `Glob '${start.input.pattern}': found 0 file(s).`
+      && content === "No files found") return true;
+  if (native.tool_name === "Grep" && native.output?.status === "success"
+      && typeof start?.input?.pattern === "string"
+      && native.output.content === `Found 0 match(es) for '${start.input.pattern}'.`
+      && content === "Found 0 match(es). This is not a tool failure; adjust the pattern or the search directory.") return true;
+  const read = native.output?.structuredResultFacts?.localFileReadV2;
+  if (native.tool_name === "Read" && native.output?.status === "success"
+      && native.output.content === "" && read?.kind === "pdf_pages"
+      && start?.input?.file_path === read.filePath
+      && start.input.pages === `${read.requestedStartPage}-${read.requestedEndPage}`
+      && Number.isInteger(read.requestedStartPage) && Number.isInteger(read.requestedEndPage)
+      && read.requestedStartPage > 0 && read.requestedEndPage >= read.requestedStartPage
+      && Array.isArray(read.urls) && read.urls.length === read.requestedEndPage - read.requestedStartPage + 1
+      && read.mimeType === "image/jpeg" && Number.isSafeInteger(read.fileSizeBytes) && read.fileSizeBytes > 0
+      && content === `PDF pages extracted: pages ${read.requestedStartPage}-${read.requestedEndPage} (${read.urls.length} pages) from ${read.filePath} (${(read.fileSizeBytes / 1_000_000).toFixed(1)} MB)`) return true;
+  if (native.tool_name === "Read" && native.output?.status === "success"
+      && native.output.content === "" && read?.kind === "text" && read.truncated === false
+      && read.lineNumbersIncluded === true && start?.input?.file_path === read.filePath
+      && typeof read.body === "string" && read.body.length > 4096) {
+    const full = `${read.body}\n\n[End of file.]`;
+    const rendered = `<tool-output-truncated>\nOutput too large (${Math.round(full.length / 1000)}K characters, ${Buffer.byteLength(full)} bytes) from tool \`Read\`.\n\nHead (first 2K characters):\n${full.slice(0, 2048)}\n\n...\nTail (last 2K characters):\n${full.slice(-2048)}\n</tool-output-truncated>`;
+    if (content === rendered) return true;
+  }
   const failure = native.output?.structuredResultFacts?.localFileMutationV2;
   const error = failure?.error, details = error?.details;
   if (native.tool_name === "Edit" && native.output?.status === "error" && native.output.content === ""
@@ -125,7 +163,13 @@ function resultMatches(native, content, start) {
     if (typeof native.output.content === "string" && native.output.content.startsWith(nativePrefix)
         && content === modelPrefix + native.output.content.slice(nativePrefix.length)) return true;
   }
-  const read = native.output?.structuredResultFacts?.localFileReadV2;
+  if (native.tool_name === "TaskOutput" && native.output?.status === "error"
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u.test(start?.input?.task_id || "")) {
+    const taskId = start.input.task_id;
+    const match = new RegExp(`^Shell task '${taskId}' is failed\\.exit code ([1-9][0-9]*)\\. stdout: ([\\s\\S]*)$`, "u")
+      .exec(native.output.content || "");
+    if (match && content === `Task ${taskId} has finished with final status failed, exit code ${match[1]}. The result has been consumed; do not query the same task_id again.\nstdout:\n${match[2]}`) return true;
+  }
   // Native Read v2 renders this footer only for an untruncated text EOF.
   return native.tool_name === "Read" && read?.kind === "text" && read.truncated === false
     && Number.isInteger(read.offset) && Number.isInteger(read.returnedLineCount) && Number.isInteger(read.totalLines)

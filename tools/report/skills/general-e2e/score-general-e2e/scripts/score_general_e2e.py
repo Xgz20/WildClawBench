@@ -28,6 +28,9 @@ from urllib.parse import urlsplit, urlunsplit
 import zipfile
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import failure_evidence
+
 ATTEMPT_SCHEMA = "wildclawbench.general-e2e-local-scoring-attempt/v1"
 AUDIT_SCHEMA = "wildclawbench.general-e2e-rule-runtime-audit/v1"
 JUDGE_CONFIG_SCHEMA = "wildclawbench.general-e2e-judge-config/v1"
@@ -579,9 +582,10 @@ def _workspace_path_resolution(
     if len(rows) != 1:
         return direct
     prompt_meta = rows[0].get("prompt")
-    if not isinstance(prompt_meta, dict) or prompt_meta.get("mapping") != [
-        {"from": "/tmp_workspace", "to": "./workspace"}
-    ]:
+    if not isinstance(prompt_meta, dict) or prompt_meta.get("mapping") not in (
+        [{"from": "/tmp_workspace", "to": "./workspace"}],
+        [{"from": "/tmp_workspace", "to": "."}],
+    ):
         return direct
     prompt_path = _resolve_within(unit_root, prompt_meta.get("path"), "mapped prompt")
     expected_sha = _sha256(prompt_meta.get("sent_sha256"), "mapped prompt SHA")
@@ -592,6 +596,8 @@ def _workspace_path_resolution(
     if isinstance(execution_prompt, dict) and execution_prompt.get("sha256") != expected_sha:
         raise ScoringRuntimeError("MAPPED_PROMPT_DRIFT", "execution record")
     prompt = prompt_path.read_text(encoding="utf-8")
+    if prompt_meta["mapping"] == [{"from": "/tmp_workspace", "to": "."}]:
+        return {**direct, "prompt_sha256": expected_sha}
     if "./workspace/results/" not in prompt:
         return {**direct, "prompt_sha256": expected_sha}
     output_paths = [str(row.get("path") or "") for row in candidate_entries
@@ -1017,13 +1023,50 @@ def _workspace_only_automated_rule(contract: Mapping[str, Any]) -> bool:
     return uses > 0
 
 
+REVIEWED_EVIDENCE_POLICY_SHA256 = "169dc2d1652450565eba7b9ceae6b397f224aac3fca49673df5be2e1b3acd1a1"
+OPTIONAL_PROCESS_EVIDENCE = {
+    "resource_metrics_complete_coverage", "provider-request-coverage-unavailable",
+    "native-tool-trajectory-incomplete", "displayed-tool-without-execution-evidence",
+    "remote-tool-event-coverage-incomplete", "unmapped-native-message-block",
+    "cross-source-tool-order-unavailable", "multimodal-tool-result-content-unverified",
+    "unsupported_item_type:dynamicToolCall",
+}
+
+
+def _reviewed_output_profile(contract: Mapping[str, Any]) -> tuple[str, dict[str, Any]] | None:
+    path = Path(__file__).resolve().parents[1] / "references/reviewed-evidence-policy.json"
+    if not path.is_file() or path.is_symlink() or _sha256_file(path) != REVIEWED_EVIDENCE_POLICY_SHA256:
+        raise ScoringRuntimeError("EVIDENCE_POLICY_DRIFT")
+    policy = _read_json(path, code="EVIDENCE_POLICY_INVALID")
+    digest = _sha256_bytes(json.dumps(dict(contract), ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode())
+    profile = policy.get("profiles", {}).get(digest)
+    if profile is None:
+        return None
+    if (policy.get("schema_version") != "wildclawbench.reviewed-scoring-evidence-policy/v1"
+        or profile.get("task_id") != contract.get("task_id")
+        or profile.get("grading_type") != contract.get("grading_type")
+        or profile.get("tool_history_required") is not False
+        or profile.get("final_response_required") is not True
+        or profile.get("candidate_required") is not True):
+        raise ScoringRuntimeError("EVIDENCE_PROFILE_INVALID")
+    return digest, profile
+
+
 def _validate_evidence_admission(execution: Mapping[str, Any], contract: Mapping[str, Any]) -> str:
+    if execution.get("failure_evidence") is not None:
+        return failure_evidence.profile(execution, contract)
     evidence = execution["evidence"]
     missing = set(evidence.get("missing") or [])
     if evidence.get("completeness") == "complete" or (
         evidence.get("completeness") == "partial" and missing <= {"resource_metrics_complete_coverage"}
     ):
         return "standard"
+    profile = _reviewed_output_profile(contract)
+    if (profile and evidence.get("completeness") == "partial"
+        and missing and missing <= OPTIONAL_PROCESS_EVIDENCE
+        and evidence.get("transcript_path") and evidence.get("trace_index_path")
+        and evidence.get("final_response_path")):
+        return "reviewed-output-evidence/v1:" + profile[0]
     if (evidence.get("completeness") == "partial"
         and evidence.get("transcript_path") and evidence.get("trace_index_path")
         and missing <= {"resource_metrics_complete_coverage", "provider-request-coverage-unavailable", "native-tool-trajectory-incomplete"}
@@ -1032,15 +1075,157 @@ def _validate_evidence_admission(execution: Mapping[str, Any], contract: Mapping
     raise ScoringRuntimeError("EXECUTION_NOT_SCORABLE", "required execution evidence is incomplete")
 
 
-def _verify_partial_trace_bundle(unit_root: Path, execution: Mapping[str, Any]) -> None:
+def _reviewed_evidence_files(unit_root: Path, execution: Mapping[str, Any]) -> dict[str, bytes]:
+    index_path = _resolve_within(unit_root, execution["evidence"]["trace_index_path"], "trace_index")
+    index = _read_json(index_path, code="TRACE_INDEX_INVALID")
+    files = {"trace-index.json": index_path.read_bytes()}
+    for row in [index["transcript"], *index["raw_trace"], *index.get("binding_evidence", [])]:
+        source = _resolve_within(index_path.parent, row["path"], "trace_artifact")
+        files[row["path"]] = source.read_bytes()
+    final_path = _resolve_within(unit_root, execution["evidence"]["final_response_path"], "final_response")
+    if final_path.is_symlink() or not final_path.is_file():
+        raise ScoringRuntimeError("FINAL_RESPONSE_UNAVAILABLE")
+    files["final-response-bound.txt"] = final_path.read_bytes()
+    if index.get("adapter", {}).get("id") == "astronstudio-provider-runtime-events":
+        base = index_path.parent.parent
+        for relative_name, source in [("bindings/execution-state.json", base / "execution/automation-state.json"),
+                                      ("bindings/evidence-manifest.json", base / "evidence-manifest.json")]:
+            if source.is_symlink() or not source.is_file():
+                raise ScoringRuntimeError("ASTRON_BINDING_EVIDENCE_MISSING")
+            files[relative_name] = source.read_bytes()
+    return files
+
+
+def _validate_astron_reviewed_evidence(execution, profile, index, files):
+    if (execution.get("harness", {}).get("id") != "astronstudio"
+        or index.get("schema_id") != "urn:wildclawbench:schema:general-e2e:trace-index:v1"
+        or index.get("adapter", {}).get("id") != "astronstudio-provider-runtime-events"):
+        raise ScoringRuntimeError("ASTRON_EVIDENCE_PROFILE_MISMATCH")
+    state = json.loads(files["bindings/execution-state.json"])
+    manifest = json.loads(files["bindings/evidence-manifest.json"])
+    if state["identity"] != execution["identity"] or manifest["identity"] != execution["identity"]:
+        raise ScoringRuntimeError("ASTRON_BINDING_IDENTITY_MISMATCH")
+    state_rows = [r for r in manifest["artifacts"] if r["path"].endswith("/execution/automation-state.json")]
+    if len(state_rows) != 1 or state_rows[0]["sha256"] != _sha256_bytes(files["bindings/execution-state.json"]):
+        raise ScoringRuntimeError("ASTRON_STATE_SHA_MISMATCH")
+    if (state["phase"] != "COMPLETED" or state["execution"]["business_status"] != "completed"
+        or state["session"].get("verified") is not True or state["session"].get("native_status") != "completed"
+        or state["prompt"]["send_status"] != "sent" or state["prompt"]["sha256"] != execution["prompt"]["sha256"]):
+        raise ScoringRuntimeError("ASTRON_TERMINAL_BINDING_MISMATCH")
+    for key in ["thread_id", "turn_id", "session_id", "cwd"]:
+        if state["session"][key] != index["session"][key] or execution["session"][key] != index["session"][key]:
+            raise ScoringRuntimeError("ASTRON_SESSION_BINDING_MISMATCH")
+    events = [json.loads(l) for l in files[index["transcript"]["path"]].decode().splitlines() if l.strip()]
+    raw_name = "raw/astronstudio-provider-events.jsonl"
+    raw = [json.loads(l) for l in files[raw_name].decode().splitlines() if l.strip()]
+    session = index["session"]
+    for row in raw:
+        if (row["thread_id"] != session["thread_id"] or row["turn_id"] != session["turn_id"]
+            or row["lifecycle_generation"] != session["lifecycle_generation"]
+            or row["event"]["providerRefs"]["providerThreadId"] != session["session_id"]):
+            raise ScoringRuntimeError("ASTRON_NATIVE_IDENTITY_MISMATCH")
+    users = [e for e in events if e["type"] == "user_message"]
+    finals = [e for e in events if e["type"] == "assistant_message"]
+    if len(users) != 1 or not finals or _sha256_bytes(users[0]["content"].encode()) != execution["prompt"]["sha256"]:
+        raise ScoringRuntimeError("ASTRON_PROMPT_OR_FINAL_MISSING")
+    for event in [users[0], finals[-1]]:
+        match = re.fullmatch(re.escape(raw_name) + r"#L([1-9][0-9]*)", event["source"]["raw_ref"])
+        if not match or event["identity"] != execution["identity"]:
+            raise ScoringRuntimeError("ASTRON_NATIVE_REFERENCE_INVALID")
+        row = raw[int(match[1]) - 1]
+        if row["event_id"] != event["event_id"] or row["event"]["payload"].get("detail") != event["content"]:
+            raise ScoringRuntimeError("ASTRON_NATIVE_TEXT_MISMATCH")
+    terminals = [r for r in raw if r["event_type"] == "turn.completed"]
+    if len(terminals) != 1 or terminals[0]["event"]["payload"].get("state") != "completed":
+        raise ScoringRuntimeError("ASTRON_NATIVE_TERMINAL_MISSING")
+    final = finals[-1]["content"]
+    saved = files["final-response-bound.txt"].decode()
+    if saved not in [final, final + "\n"]:
+        raise ScoringRuntimeError("REQUIRED_FINAL_RESPONSE_MISMATCH")
+    return {"schema_version": "wildclawbench.reviewed-output-evidence-receipt/v1",
+        "identity": execution["identity"], "policy_sha256": REVIEWED_EVIDENCE_POLICY_SHA256,
+        "contract_canonical_sha256": profile[0], "profile": profile[1],
+        "original_evidence_completeness": execution["evidence"]["completeness"], "original_missing": execution["evidence"]["missing"],
+        "dimensions": {"prompt_binding": "verified", "native_trajectory_binding": "verified", "native_terminal": "verified",
+            "final_response": "verified-optional-single-trailing-LF", "candidate": "verified-by-standard-candidate-tree-check",
+            "tool_history": "partial-optional-for-frozen-rubric"},
+        "final_response_sha256": _sha256_bytes(final.encode()),
+        "files": [{"path": k, "sha256": _sha256_bytes(v), "size": len(v)} for k, v in sorted(files.items())]}
+
+
+def _validate_reviewed_evidence(execution: Mapping[str, Any], contract: Mapping[str, Any], files: Mapping[str, bytes]) -> dict[str, Any]:
+    profile = _reviewed_output_profile(contract)
+    if profile is None:
+        raise ScoringRuntimeError("EVIDENCE_PROFILE_MISSING")
+    try:
+        index = json.loads(files["trace-index.json"])
+        if index["identity"] != execution["identity"]:
+            raise ScoringRuntimeError("TRACE_IDENTITY_MISMATCH")
+        for row in [index["transcript"], *index["raw_trace"], *index.get("binding_evidence", [])]:
+            data = files[row["path"]]
+            if len(data) != row["size"] or _sha256_bytes(data) != row["sha256"]:
+                raise ScoringRuntimeError("TRACE_ARTIFACT_DRIFT")
+        if profile[1].get("harness") == "astronstudio":
+            return _validate_astron_reviewed_evidence(execution, profile, index, files)
+        runtime = json.loads(files["raw/runtime-messages.json"])
+        journal = json.loads(files["bindings/dispatch-journal.json"])
+        events = [json.loads(line) for line in files[index["transcript"]["path"]].decode().splitlines() if line.strip()]
+        users = [m for m in runtime["maps"]["messageMap"].values() if m.get("user_type") == 1]
+        replies = [m for m in runtime["maps"]["messageMap"].values() if m.get("message_id") == index["session"]["turn_id"]]
+        if len(users) != 1 or len(replies) != 1:
+            raise ScoringRuntimeError("REQUIRED_CONVERSATION_AMBIGUOUS")
+        conv = str(index["session"]["session_id"])
+        if (any(str(m.get("conversation_id")) != conv for m in [users[0], replies[0]])
+            or str(journal["session"]["conversation_id"]) != conv
+            or journal["attempt_id"] != execution["identity"]["attempt_id"]
+            or journal["identity"]["task_id"] != execution["identity"]["task_id"]
+            or journal["workspace"] != execution["session"]["cwd"]
+            or journal["native_observation"]["terminal"] != "completed"
+            or journal["session"]["prompt_readback"]["status"] != "verified"):
+            raise ScoringRuntimeError("REQUIRED_CONVERSATION_BINDING_MISMATCH")
+        prompt_blocks = [b["content"]["text_block"]["text"] for b in users[0]["content_blocks_v2"] if b.get("block_type") == 10000]
+        texts = [b["content"]["text_block"]["text"] for b in replies[0]["content_blocks_v2"] if b.get("block_type") == 10000 and isinstance(b.get("content", {}).get("text_block", {}).get("text"), str)]
+        finals = [e.get("content") for e in events if e.get("type") == "assistant_message"]
+        normalized_users = [e.get("content") for e in events if e.get("type") == "user_message"]
+        if len(prompt_blocks) != 1 or normalized_users != prompt_blocks:
+            raise ScoringRuntimeError("REQUIRED_PROMPT_MISMATCH")
+        prompt_hash = _sha256_bytes(prompt_blocks[0].replace("\r\n", "\n").rstrip("\n").encode())
+        if prompt_hash != journal["prompt"]["readback_sha256"]:
+            raise ScoringRuntimeError("REQUIRED_PROMPT_MISMATCH")
+        native_rows = [json.loads(line) for line in files["raw/trajectory.jsonl"].decode().splitlines() if line.strip()]
+        native_users = [r.get("content") for r in native_rows if r.get("role") == "user"]
+        if not native_users or any(not isinstance(t, str) or _sha256_bytes(t.replace("\r\n", "\n").rstrip("\n").encode()) != prompt_hash for t in native_users):
+            raise ScoringRuntimeError("NATIVE_TRAJECTORY_PROMPT_MISMATCH")
+        if (not texts or not texts[-1].strip() or not finals or finals[-1] != texts[-1]
+            or files["final-response-bound.txt"].decode() != texts[-1]):
+            raise ScoringRuntimeError("REQUIRED_FINAL_RESPONSE_MISMATCH")
+    except (KeyError, TypeError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ScoringRuntimeError("REQUIRED_EVIDENCE_INVALID", str(exc)) from exc
+    return {"schema_version": "wildclawbench.reviewed-output-evidence-receipt/v1",
+        "identity": execution["identity"], "policy_sha256": REVIEWED_EVIDENCE_POLICY_SHA256,
+        "contract_canonical_sha256": profile[0], "profile": profile[1],
+        "original_evidence_completeness": execution["evidence"]["completeness"],
+        "original_missing": execution["evidence"]["missing"],
+        "dimensions": {"prompt_binding": "verified", "native_trajectory_binding": "verified",
+            "final_response": "verified", "candidate": "verified-by-standard-candidate-tree-check",
+            "tool_history": "partial-optional-for-frozen-rubric", "intermediate_messages": "partial-optional-for-frozen-rubric"},
+        "final_response_sha256": _sha256_bytes(texts[-1].encode()),
+        "files": [{"path": k, "sha256": _sha256_bytes(v), "size": len(v)} for k, v in sorted(files.items())]}
+
+
+def _verify_partial_trace_bundle(unit_root: Path, execution: Mapping[str, Any], contract=None) -> None:
     index_path = _resolve_within(unit_root, execution["evidence"]["trace_index_path"], "trace_index_path")
     index = _read_json(index_path, code="TRACE_INDEX_INVALID")
-    if (index.get("schema_id") != "urn:wildclawbench:schema:general-e2e:trace-index:v2"
+    profile = _reviewed_output_profile(contract) if contract is not None else None
+    astron_v1 = (profile is not None and profile[1].get("harness") == "astronstudio"
+                 and index.get("schema_id") == "urn:wildclawbench:schema:general-e2e:trace-index:v1"
+                 and index.get("adapter", {}).get("id") == "astronstudio-provider-runtime-events")
+    if (not astron_v1 and index.get("schema_id") != "urn:wildclawbench:schema:general-e2e:trace-index:v2"
         or index.get("identity") != execution.get("identity")
         or index.get("completeness", {}).get("status") != "partial"
-        or not index.get("raw_trace") or not index.get("binding_evidence")):
+        or not index.get("raw_trace") or not astron_v1 and not index.get("binding_evidence")):
         raise ScoringRuntimeError("TRACE_INDEX_INVALID", "partial trace must retain bound raw evidence")
-    for row in [index.get("transcript", {}), *index["raw_trace"], *index["binding_evidence"]]:
+    for row in [index.get("transcript", {}), *index["raw_trace"], *index.get("binding_evidence", [])]:
         path = _resolve_within(index_path.parent, row.get("path"), "trace artifact")
         if path.is_symlink() or not path.is_file() or path.stat().st_size != row.get("size") or _sha256_file(path) != row.get("sha256"):
             raise ScoringRuntimeError("TRACE_ARTIFACT_DRIFT")
@@ -1082,9 +1267,9 @@ def prepare_attempt(
     if identity.get("task_id") != task_id:
         raise ScoringRuntimeError("EXECUTION_TASK_MISMATCH")
     if (
-        execution.get("phase") != "COMPLETED"
+        not (execution.get("phase") == "COMPLETED" and execution.get("execution", {}).get("business_status") == "completed"
+             or execution.get("phase") == "FAILED" and execution.get("execution", {}).get("business_status") == "candidate_error" and execution.get("failure_evidence"))
         or not isinstance(execution.get("execution"), dict)
-        or execution["execution"].get("business_status") != "completed"
         or not isinstance(execution.get("evidence"), dict)
     ):
         raise ScoringRuntimeError("EXECUTION_NOT_SCORABLE")
@@ -1149,8 +1334,17 @@ def prepare_attempt(
     if not isinstance(contract, dict) or contract.get("task_id") != task_id:
         raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", "task_id")
     evidence_admission = _validate_evidence_admission(execution, contract)
-    if evidence_admission != "standard":
-        _verify_partial_trace_bundle(unit_root, execution)
+    if evidence_admission not in {"standard", failure_evidence.ADMISSION}:
+        _verify_partial_trace_bundle(unit_root, execution, contract)
+    reviewed_files = None
+    reviewed_receipt = None
+    if evidence_admission.startswith("reviewed-output-evidence/v1:"):
+        reviewed_files = _reviewed_evidence_files(unit_root, execution)
+        reviewed_receipt = _validate_reviewed_evidence(execution, contract, reviewed_files)
+
+    if evidence_admission == failure_evidence.ADMISSION:
+        reviewed_files = failure_evidence.read_files(unit_root, execution)
+        reviewed_receipt = failure_evidence.validate(execution, contract, reviewed_files)
 
     transcript_source: Path | None = None
     transcript_count = 0
@@ -1232,10 +1426,19 @@ def prepare_attempt(
             transcript_sha = _sha256_file(transcript_target)
 
         shutil.copyfile(execution_record_path, private_root / "execution-record.json")
+        if reviewed_files is not None:
+            for relative_name, content in reviewed_files.items():
+                relative_path = _safe_relative(relative_name, "reviewed_evidence")
+                destination_file = (private_root / "admission-evidence").joinpath(*relative_path.parts)
+                destination_file.parent.mkdir(parents=True, exist_ok=True)
+                destination_file = _resolve_within(private_root / "admission-evidence", relative_name, "reviewed_evidence")
+                destination_file.write_bytes(content)
+            _write_new_json(private_root / "evidence-admission.json", reviewed_receipt)
         manifest = {
             "schema_version": ATTEMPT_SCHEMA,
             "created_at": _now(),
             "evidence_admission": evidence_admission,
+            "reviewed_evidence_receipt_sha256": _sha256_file(private_root / "evidence-admission.json") if reviewed_receipt else None,
             "identity": {
                 "batch_id": batch_id,
                 "unit_id": unit_id,
@@ -1414,6 +1617,24 @@ def verify_attempt(attempt_root: Path) -> dict[str, Any]:
         )
         if admitted != manifest["evidence_admission"]:
             raise ScoringRuntimeError("EVIDENCE_ADMISSION_DRIFT")
+        if admitted.startswith("reviewed-output-evidence/v1:") or admitted == failure_evidence.ADMISSION:
+            receipt_path = root / "private/evidence-admission.json"
+            if _sha256_file(receipt_path) != manifest.get("reviewed_evidence_receipt_sha256"):
+                raise ScoringRuntimeError("EVIDENCE_ADMISSION_RECEIPT_DRIFT")
+            receipt = _read_json(receipt_path, code="EVIDENCE_ADMISSION_RECEIPT_INVALID")
+            files = {}
+            for row in receipt["files"]:
+                source = _resolve_within(root / "private/admission-evidence", row["path"], "reviewed_evidence")
+                if source.is_symlink() or not source.is_file():
+                    raise ScoringRuntimeError("EVIDENCE_ADMISSION_ARTIFACT_DRIFT")
+                files[row["path"]] = source.read_bytes()
+                if len(files[row["path"]]) != row["size"] or _sha256_bytes(files[row["path"]]) != row["sha256"]:
+                    raise ScoringRuntimeError("EVIDENCE_ADMISSION_ARTIFACT_DRIFT")
+            recomputed = (failure_evidence.validate if admitted == failure_evidence.ADMISSION else _validate_reviewed_evidence)(
+                _read_json(root / paths["execution_record"], code="EXECUTION_RECORD_INVALID"),
+                _read_json(root / paths["contract"], code="SCORING_CONTRACT_INVALID"), files)
+            if recomputed != receipt:
+                raise ScoringRuntimeError("EVIDENCE_ADMISSION_RECEIPT_DRIFT")
     judge_config_relative = paths.get("judge_config")
     if judge_config_relative is not None:
         judge_config_path = _resolve_within(

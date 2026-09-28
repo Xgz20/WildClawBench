@@ -126,9 +126,11 @@ function scoreScale(sheet, address, maximum = 1) {
 
 
 function buildView(workbook, name, view) {
+  if (view.layout === "grouped_tools") return buildGroupedTools(workbook, name, view);
   const sheet = workbook.worksheets.add(name);
   sheet.showGridLines = false;
-  const end = table(sheet, 1, view.headers, view.rows);
+  const headings = name === "分类对比" ? view.headers.map(h => h.replace("平均分(", "平均分\n(")) : view.headers;
+  const end = table(sheet, 1, headings, view.rows);
   const last = columnName(view.headers.length);
   sheet.getRange(`A1:${last}${Math.max(end, 1)}`).format.font.name = "Arial";
   sheet.getRange(`A1:${last}${Math.max(end, 1)}`).format.font.size = 11;
@@ -142,11 +144,21 @@ function buildView(workbook, name, view) {
       sheet.getRange(`${col}2:${col}${end}`).format.horizontalAlignment = view.rows.some(row => typeof row[i] === "string") ? "left" : "right";
     }
   }
+  if (name === "效率对比") sheet.getRange("I:I").format.columnWidth = 25;
+  if (name === "分类对比") sheet.getRange("C:H").format.columnWidth = 24;
   if (view.rows.length) {
     sheet.getRange(`A2:${last}${end}`).format.rowHeight = 26;
     if (["总览", "分类对比", "难度对比", "Agent能力对比", "模态对比"].includes(name)) {
       const scoreLast = name === "总览" ? "B" : last;
       scoreScale(sheet, `B2:${scoreLast}${end}`, 100);
+    }
+  }
+  for (const [key, annotation] of Object.entries(view.cell_annotations || {})) {
+    const [row, col] = key.split(":").map(Number);
+    if (annotation.status === "partial" && typeof view.rows[row]?.[col] === "number") {
+      // Keep supported numeric formats and numeric cell types. Literal-star
+      // number formats render as General in this artifact runtime.
+      sheet.getRange(`${columnName(col + 1)}${row + 2}`).format.fill = COLORS.amber;
     }
   }
   const noteLast = columnName(Math.min(view.headers.length, 7));
@@ -161,7 +173,52 @@ function buildView(workbook, name, view) {
     const width = 31 + 18 * (Math.min(view.headers.length, 7) - 1);
     sheet.getRange(`A${row}:${noteLast}${row}`).format.rowHeight = Math.max(26, Math.ceil(textWidth / width) * 16);
   });
+  if (view.coverage_table) {
+    const start = end + view.notes.length + 5;
+    section(sheet, start, view.coverage_table.headers.length, "指标覆盖：完整用例 / 冻结用例，部分统计单列");
+    table(sheet, start + 1, view.coverage_table.headers, view.coverage_table.rows);
+    const range = sheet.getRange(`A${start + 1}:${columnName(view.coverage_table.headers.length)}${start + 1 + view.coverage_table.rows.length}`);
+    range.format.font.name = "Arial";
+    range.format.font.size = 10;
+    range.format.wrapText = true;
+    range.format.rowHeight = 36;
+  }
   sheet.freezePanes.freezeRows(1);
+  sheet.freezePanes.freezeColumns(1);
+  return sheet;
+}
+
+
+function buildGroupedTools(workbook, name, view) {
+  const sheet = workbook.worksheets.add(name);
+  sheet.showGridLines = false;
+  widths(sheet, { A: 31, B: 54, C: 18, D: 28 });
+  for (const group of view.groups) {
+    section(sheet, group.title_row, group.headers.length, group.title);
+    table(sheet, group.header_row, group.headers, group.rows);
+    const body = sheet.getRange(`A${group.data_start_row}:D${group.data_end_row}`);
+    body.format.font.name = "Arial";
+    body.format.font.size = 11;
+    body.format.rowHeight = 26;
+    sheet.getRange(`B${group.data_start_row}:B${group.data_end_row}`).format.wrapText = true;
+    sheet.getRange(`C${group.data_start_row}:C${group.data_end_row}`).format.numberFormat = "#,##0";
+    sheet.getRange(`C${group.data_start_row}:C${group.data_end_row}`).format.horizontalAlignment = "right";
+    sheet.getRange(`D${group.data_start_row}:D${group.data_end_row}`).format.horizontalAlignment = "center";
+    sheet.getRange(`A${group.data_start_row}:D${group.data_start_row}`).format.font.bold = true;
+    group.rows.forEach((row, i) => {
+      if (String(row[1]).length > 50) sheet.getRange(`A${group.data_start_row + i}:D${group.data_start_row + i}`).format.rowHeight = 42;
+    });
+    if (group.cell_annotations?.["0:2"]?.status === "partial") sheet.getRange(`C${group.data_start_row}`).format.fill = COLORS.amber;
+    sheet.getRange(`A${group.data_end_row + 1}:D${group.data_end_row + 1}`).format.rowHeight = 18;
+  }
+  let row = view.groups.at(-1).data_end_row + 3;
+  for (const note of view.notes) {
+    sheet.mergeCells(`A${row}:D${row}`);
+    sheet.getRange(`A${row}`).values = [[note]];
+    sheet.getRange(`A${row}:D${row}`).format = { font: { name: "Arial", size: 10 }, wrapText: true, rowHeight: 34 };
+    row += 1;
+  }
+  sheet.freezePanes.freezeRows(2);
   sheet.freezePanes.freezeColumns(1);
   return sheet;
 }
@@ -235,6 +292,10 @@ function buildCoverage(workbook, data) {
     ["运行ID", "执行状态", "评分状态", "无效原因", "证据完整性", "裁判协议", "评分attempt", "分母处理"],
     exceptions,
   );
+  if (exceptions.length) {
+    sheet.getRange(`A${exceptionRow + 2}:H${end}`).format.wrapText = true;
+    sheet.getRange(`A${exceptionRow + 2}:H${end}`).format.rowHeight = 72;
+  }
   const lineageRow = end + 2;
   section(sheet, lineageRow, 6, "输入谱系（哈希显示前12位，完整值见报告JSON）");
   end = table(sheet, lineageRow + 1,
@@ -282,10 +343,39 @@ async function main() {
   await fs.mkdir(path.dirname(args.output), { recursive: true });
   await fs.mkdir(args["preview-dir"], { recursive: true });
   const sheetNames = [...data.presentation.sheet_order, "用例对比明细", ...data.presentation.score_detail_order, "资源覆盖与异常"];
+  const previewFiles = [];
   if (args["skip-preview"] !== "true") {
     for (const sheetName of sheetNames) {
-      const image = await workbook.render({ sheetName, autoCrop: "all", scale: 1, format: "png" });
-      await fs.writeFile(path.join(args["preview-dir"], `${sheetName}.png`), new Uint8Array(await image.arrayBuffer()));
+      const view = data.presentation.tables[sheetName]
+        || (sheetName === "用例对比明细" ? data.presentation.case_comparison : data.presentation.score_details[sheetName]);
+      const columns = sheetName === "资源覆盖与异常" ? 13 : view.headers.length;
+      const rows = view?.layout === "grouped_tools" ? view.render_row_count
+        : view?.coverage_table ? view.rows.length + view.notes.length + view.coverage_table.rows.length + 7
+        : sheetName === "资源覆盖与异常" ? 20
+        : Math.min(view.rows.length + 1, sheetName === "用例对比明细"
+          || data.presentation.score_details[sheetName] ? 8 : 20);
+      // Whole-sheet rendering exceeds the image engine's height limit for
+      // sixty-case detail and 2,640 resource rows. Bound visual previews while
+      // exporting and validating every full sheet in the workbook itself.
+      const left = `A1:${columnName(Math.min(columns, 12))}${rows}`;
+      const image = await workbook.render({ sheetName, range: left, scale: 1, format: "png" });
+      const filename = `${sheetName}.png`;
+      await fs.writeFile(path.join(args["preview-dir"], filename), new Uint8Array(await image.arrayBuffer()));
+      previewFiles.push(filename);
+      if (columns > 12) {
+        const right = `${columnName(columns - 11)}1:${columnName(columns)}${rows}`;
+        const extra = await workbook.render({ sheetName, range: right, scale: 1, format: "png" });
+        const extraName = `${sheetName}-右侧.png`;
+        await fs.writeFile(path.join(args["preview-dir"], extraName), new Uint8Array(await extra.arrayBuffer()));
+        previewFiles.push(extraName);
+      }
+      if (sheetName === "资源覆盖与异常") {
+        const start = 4 + data.tasks.length * 11 + 2;
+        const exception = await workbook.render({ sheetName, range: `A${start}:H${start + 8}`, scale: 1, format: "png" });
+        const exceptionName = `${sheetName}-异常.png`;
+        await fs.writeFile(path.join(args["preview-dir"], exceptionName), new Uint8Array(await exception.arrayBuffer()));
+        previewFiles.push(exceptionName);
+      }
     }
   }
   const sheetInspection = await workbook.inspect({ kind: "sheet", include: "id,name", maxChars: 3000 });
@@ -318,7 +408,7 @@ async function main() {
     sheets: sheetInspection.ndjson,
     formula_error_scan: formulaErrors.ndjson,
     key_range_checks: rangeChecks,
-    previews: args["skip-preview"] === "true" ? [] : sheetNames.map(name => `${name}.png`),
+    previews: previewFiles,
   }, null, 2) + "\n");
   process.stdout.write(JSON.stringify({
     status: "PASS",

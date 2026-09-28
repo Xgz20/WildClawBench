@@ -134,11 +134,17 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
     }
     guard apps.count == 1, let application = apps.first else { throw SelectionError.appNotRunning(bundleID) }
     application.activate(options: [])
+    _ = try waitUntil(timeoutSeconds: timeoutSeconds, description: "QwenWork 前台焦点") {
+        NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier ? true : nil
+    }
     let root = AXUIElementCreateApplication(application.processIdentifier)
     let outerSheet = try waitUntil(timeoutSeconds: timeoutSeconds, description: "QwenWork 唯一文件选择面板") {
         let windows = attribute(root, kAXWindowsAttribute) as? [AXUIElement] ?? []
         return try unique(windows.flatMap { children($0).filter { stringAttribute($0, kAXRoleAttribute) == kAXSheetRole } }, "outer-sheet")
     }
+    // Raise only the uniquely owned AX sheet before sending a PID-scoped
+    // shortcut. Unsupported Raise does not authorize a global key event.
+    _ = AXUIElementPerformAction(outerSheet, kAXRaiseAction as CFString)
     do {
         if sheetDescendants(outerSheet).isEmpty {
             try postShortcut(processIdentifier: application.processIdentifier, virtualKey: 5, flags: [.maskCommand, .maskShift])

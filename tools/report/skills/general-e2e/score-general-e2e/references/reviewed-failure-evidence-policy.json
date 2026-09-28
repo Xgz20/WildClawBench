@@ -1,0 +1,14 @@
+{
+  "schema_version": "wildclawbench.failed-output-evidence-policy/v1",
+  "review_basis": "A verified native terminal failure may still be graded by the frozen output contract. This policy never assigns a score or treats unknown/framework failures as zero.",
+  "profiles": {
+    "b90d88be11b5946a1a216e3283e4fd9bbb47f10d9a75294959315e4d37557a3f": {
+      "task_id": "04_Search_Retrieval_task_004_pipl_article13_verification",
+      "grading_type": "hybrid",
+      "candidate_required": true,
+      "tool_history_required": false,
+      "final_response_required": false,
+      "basis": "Frozen rules and rubric evaluate results/pipl_article13.json and results/review_note.md against fixed texts; missing delivery is judged by those criteria. A protection dialog stop is not admitted by this profile."
+    }
+  }
+}

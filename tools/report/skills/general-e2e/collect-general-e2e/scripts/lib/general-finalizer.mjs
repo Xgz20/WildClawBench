@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash, randomUUID } from "node:crypto";
-import { realpathSync } from "node:fs";
+import { constants as fsConstants, createReadStream, realpathSync } from "node:fs";
 import {
   chmod,
   copyFile,
@@ -199,6 +199,19 @@ async function readJsonFile(path) {
   }
 }
 
+async function hashRegularFile(path) {
+  const absolute = resolve(path), before = await lstat(absolute);
+  if (!before.isFile() || before.isSymbolicLink()) throw new Error(`UNSAFE_FILE: ${absolute}`);
+  const hash = createHash("sha256");
+  let size = 0;
+  for await (const chunk of createReadStream(absolute)) { hash.update(chunk); size += chunk.length; }
+  const after = await lstat(absolute);
+  if (size !== before.size || after.size !== before.size || after.mtimeMs !== before.mtimeMs || after.ino !== before.ino) {
+    throw new Error(`ARTIFACT_CHANGED_DURING_READ: ${absolute}`);
+  }
+  return { absolute, sha256: hash.digest("hex"), size };
+}
+
 function sameIdentity(left, right) {
   return ["batch_id", "unit_id", "task_id", "attempt_id"]
     .every((field) => typeof left?.[field] === "string" && left[field] === right?.[field]);
@@ -304,7 +317,7 @@ async function loadTraceBundle(indexPath, state, profile) {
     seen.add(artifactRelative);
     const artifactPath = resolveWithin(root, artifactRelative, "trace artifact");
     if (!isWithin(root, await realpath(artifactPath))) throw new Error("TRACE_ARTIFACT_OUTSIDE_ROOT");
-    const source = await readRegularFile(artifactPath);
+    const source = await hashRegularFile(artifactPath);
     assertArtifact(source, item, artifactRelative);
     traceArtifacts.push({ relative: artifactRelative, source });
   }
@@ -342,6 +355,7 @@ async function loadResourceMetrics(path, stateSource, traceBundle, profile) {
 }
 
 async function loadFinalResponse(unitRoot, state) {
+  if (state.phase !== "COMPLETED") return null;
   const evidence = state.evidence || state.extensions?.evidence;
   const path = evidence?.final_response_path;
   if (!path) return null;
@@ -516,7 +530,7 @@ async function assertNoOtherCollectedAttempt(unitRoot, taskId, attemptId) {
 }
 
 async function fileArtifact(unitRoot, path) {
-  const source = await readRegularFile(path);
+  const source = await hashRegularFile(path);
   return artifact(unitRelative(unitRoot, source.absolute, "artifact"), source);
 }
 
@@ -537,8 +551,8 @@ async function inventoryEvidence(root, evidenceRootRelative, excluded = new Set(
         const bytes = Buffer.from(target, "utf8");
         artifacts.push({ path: unitPath, sha256: sha256(bytes), size: bytes.length, type: "symlink", target });
       } else if (info.isFile()) {
-        const bytes = await readFile(path);
-        artifacts.push({ path: unitPath, sha256: sha256(bytes), size: bytes.length, type: "file" });
+        const source = await hashRegularFile(path);
+        artifacts.push({ path: unitPath, sha256: source.sha256, size: source.size, type: "file" });
       } else throw new Error(`EVIDENCE_SPECIAL_FILE_UNSUPPORTED: ${unitPath}`);
     }
   }
@@ -589,6 +603,10 @@ function buildExecutionRecord({
   const requestedModel = manifest.unit?.model?.requested_id;
   const client = state.client || state.extensions?.client || {};
   const actualModel = client.model || null;
+  const keptUiModelVerified = requestedModel === "keep-current" && state.driver?.harness === "qwenwork"
+    && client.model_verification_status === "verified" && client.model_identity_kind === "client-ui-option"
+    && traceBundle?.traceArtifacts.some(item => item.relative === "raw/dispatch-journal.json"
+      && item.source.sha256 === client.model_evidence_sha256);
   return {
     schema_id: EXECUTION_RECORD_SCHEMA,
     schema_version: 1,
@@ -604,7 +622,7 @@ function buildExecutionRecord({
       requested_id: requestedModel,
       actual_id: actualModel,
       reasoning_effort: client.reasoning || manifest.unit?.model?.reasoning_effort || null,
-      verification_status: actualModel && actualModel === requestedModel ? "verified" : actualModel ? "unverified" : "unknown",
+      verification_status: actualModel && (actualModel === requestedModel || keptUiModelVerified) ? "verified" : actualModel ? "unverified" : "unknown",
     },
     execution: {
       business_status: state.execution.business_status,
@@ -975,7 +993,9 @@ export async function finalizeExecution(options, profile, overrides = {}) {
       await writeFile(join(staging, "trace", "transcript.jsonl"), traceBundle.transcriptSource.bytes, { flag: "wx" });
       for (const item of traceBundle.traceArtifacts) {
         await mkdir(join(staging, "trace", dirname(item.relative)), { recursive: true });
-        await writeFile(join(staging, "trace", item.relative), item.source.bytes, { flag: "wx" });
+        const destination = join(staging, "trace", item.relative);
+        await copyFile(item.source.absolute, destination, fsConstants.COPYFILE_EXCL | fsConstants.COPYFILE_FICLONE);
+        assertArtifact(await hashRegularFile(destination), item.source, "copied trace artifact");
       }
     }
     if (resolvedResource) {
@@ -1002,6 +1022,35 @@ export async function finalizeExecution(options, profile, overrides = {}) {
     const stageStatus = collectionStageStatus(state, record.evidence.completeness);
     const manifestPath = `${evidenceRootRelative}/evidence-manifest.json`;
     const recordPath = `${evidenceRootRelative}/execution-record.json`;
+    if (record.harness.id === "astronstudio" && state.phase === "FAILED"
+        && state.execution.business_status === "candidate_error"
+        && state.prompt.send_status === "sent" && state.send.dispatch_attempt_count === 1
+        && state.session.verified === true && ["error", "failed"].includes(state.session.native_status)) {
+      // Freeze a native-failure proof independently of scoring. The scorer
+      // decides whether the exact frozen contract permits output-only grading.
+      const proofRoot = join(staging, "failure-proof");
+      const originalBytes = prettyJson(record);
+      const originalManifest = { identity, artifacts: await inventoryEvidence(staging, evidenceRootRelative) };
+      const sources = new Map([
+        ["original-execution-record.json", originalBytes],
+        ["original-evidence-manifest.json", prettyJson(originalManifest)],
+        ["original-state.json", stateSource.bytes],
+        ["candidate-artifact.json", prettyJson(candidateArtifact)],
+        ["PROMPT.md", promptSource.bytes],
+      ]);
+      await mkdir(proofRoot);
+      const files = [];
+      for (const [path, bytes] of sources) {
+        await writeFile(join(proofRoot, path), bytes, { flag: "wx" });
+        files.push({ path, sha256: sha256(bytes), size: bytes.length });
+      }
+      const proof = { schema: "verified-failed-output-evidence/v1", identity,
+        source_record_sha256: sha256(originalBytes), files };
+      const proofBytes = prettyJson(proof);
+      await writeFile(join(proofRoot, "proof.json"), proofBytes, { flag: "wx" });
+      record.failure_evidence = { schema: proof.schema,
+        path: `${evidenceRootRelative}/failure-proof/proof.json`, sha256: sha256(proofBytes) };
+    }
     const evidenceArtifacts = await inventoryEvidence(staging, evidenceRootRelative, new Set([manifestPath, recordPath]));
     const evidenceManifest = {
       schema_version: EVIDENCE_MANIFEST_SCHEMA,

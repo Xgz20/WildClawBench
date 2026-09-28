@@ -61,6 +61,28 @@ export function normalizeRuntimePrompt(snapshot, state) {
     binding_status: "acknowledged-user-input", final_text: null, finished_at: null, agent_duration_seconds: null };
 }
 
+export function admittedStaleLocalShadow(localMap, messageMap, user, assistant, version) {
+  const entries = Object.entries(localMap || {});
+  if (!entries.length) return { status: "none" };
+  if (version !== "2.31.6" || entries.length !== 1) throw new Error("DOUBAOWORK_RUNTIME_LOCAL_SHADOW_UNVERIFIED");
+  const [key, shadow] = entries[0], canonical = messageMap?.[key];
+  const oldTime = Number(shadow?.update_time), finalTime = Number(canonical?.update_time);
+  if (canonical !== assistant || key !== assistant.message_id
+      || shadow?.user_type !== 2 || canonical.user_type !== 2
+      || shadow.message_id !== key || shadow.local_message_id !== key
+      || canonical.local_message_id !== "" || shadow.conversation_id !== canonical.conversation_id
+      || shadow.reply_id !== user.message_id || canonical.reply_id !== user.message_id
+      || shadow.create_time !== canonical.create_time || shadow.bot_id !== canonical.bot_id
+      || shadow.is_delta !== false || canonical.is_delta !== false
+      || shadow.status !== 4 || canonical.status !== 1
+      || shadow.final_status?.message || shadow.final_status?.session
+      || canonical.final_status?.message !== "Success" || canonical.final_status?.session !== "Success"
+      || !Number.isSafeInteger(oldTime) || !Number.isSafeInteger(finalTime)
+      || oldTime >= finalTime) throw new Error("DOUBAOWORK_RUNTIME_LOCAL_SHADOW_UNVERIFIED");
+  return { status: "admitted-stale-assistant-shadow", message_id_sha256: sha(key),
+    local_update_time: oldTime, canonical_update_time: finalTime };
+}
+
 export function normalizeRuntimeMessages(snapshot, state) {
   const id = validateSessionId(snapshot?.conversation_id);
   if (snapshot.schema !== "wildclawbench.doubaowork-runtime-messages/v1"
@@ -71,12 +93,14 @@ export function normalizeRuntimeMessages(snapshot, state) {
   if (state.session.conversation_id && state.session.conversation_id !== id) throw new Error("DOUBAOWORK_RUNTIME_SESSION_MISMATCH");
   const messages = Object.values(snapshot.maps.messageMap || {});
   const list = snapshot.maps.messageListStatusMap;
-  if (!list || list.hasMore !== false || list.inIniting !== false || list.inLoadingMore !== false
-      || Object.keys(snapshot.maps.localMessageMap || {}).length) throw new Error("DOUBAOWORK_RUNTIME_MESSAGE_RANGE_INCOMPLETE");
+  if (!list || list.hasMore !== false || list.inIniting !== false || list.inLoadingMore !== false)
+    throw new Error("DOUBAOWORK_RUNTIME_MESSAGE_RANGE_INCOMPLETE");
   if (!messages.length || messages.some(m => m.conversation_id !== id)) throw new Error("DOUBAOWORK_RUNTIME_MESSAGE_SCOPE_INVALID");
   const users = messages.filter(m => m.user_type === 1), assistants = messages.filter(m => m.user_type === 2);
   if (users.length !== 1 || assistants.length !== 1 || messages.length !== 2) throw new Error("DOUBAOWORK_RUNTIME_TURN_AMBIGUOUS");
   const user = users[0], assistant = assistants[0];
+  const localShadow = admittedStaleLocalShadow(snapshot.maps.localMessageMap,
+    snapshot.maps.messageMap, user, assistant, state.client?.version);
   const requestId = requestIdentity(user, assistant);
   if (!assistant.message_id || !requestId || !assistant.reply_id) throw new Error("DOUBAOWORK_RUNTIME_REPLY_INCOMPLETE");
   if (assistant.reply_id !== user.message_id) throw new Error("DOUBAOWORK_RUNTIME_REPLY_BINDING_INVALID");
@@ -131,6 +155,7 @@ export function normalizeRuntimeMessages(snapshot, state) {
   if (persisted && finished !== null && agentDuration !== null && finished < agentEnd * 1000) throw new Error("DOUBAOWORK_NATIVE_TIMING_INVALID");
   return {
     conversation_id: id, user_message_id: user.message_id, reply_message_id: assistant.message_id,
+    local_shadow: localShadow,
     native_request_session_id: requestId, native_cwd: state.workspace, project_id: project,
     prompt, terminal: completed && finalText ? "completed" : interrupted ? "interrupted" : failed ? "failed" : "unverified",
     raw_terminal: { profile: terminalProfile, final_status: assistant.final_status, status: assistant.status, stage: assistant.stage ?? null,

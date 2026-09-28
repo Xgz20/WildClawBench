@@ -5,10 +5,10 @@
 | 项目 | 值 |
 | --- | --- |
 | 数据集 | `general-custom60-v1` |
-| dataset digest | `119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a` |
+| dataset digest | `73f186f77daff39edfaa8084a182d1cd7ce761c32c16f2212f171cf4f5a7c1bd` |
 | contract | `general-e2e-contract-v1` |
-| source revision | `d23f0048263bf18b13b6f4717af5c3dab018d499` |
-| audit digest | `a93ef89fc2c5847e8d375835e4e66a845cebe6ea8092b4cd80c5e2b4fc9a86c1` |
+| source revision | `c064bd224a73a1b56fae280e3e39f31569503e26` |
+| audit digest | `e12eac3d30157ec92244507cb0fb85f7c22286278d3326b8c578d3bfa2401330` |
 | 用例数 | 60 |
 
 ## 1. 结论

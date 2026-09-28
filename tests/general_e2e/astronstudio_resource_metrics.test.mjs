@@ -243,18 +243,17 @@ test("missing token fields keep null plus known subtotal and independent metrics
   assert.equal(result.metrics.timing.duration_seconds.value, 10);
 });
 
-test("partial trace downgrades event-derived values but preserves wall-clock duration", () => {
+test("partial process trace preserves independently reconciled usage and native timing", () => {
   const rows = fixtureRows().map((entry, index) => ({ ...entry, raw_line: index + 1 }));
   const index = traceIndex(rows, "partial");
   const result = buildAstronStudioResourceMetrics({
     state: state(), traceIndex: index, rows, sources: sources(),
   });
-  assert.equal(result.metrics.usage.total_tokens.value, null);
-  assert.equal(result.metrics.usage.total_tokens.status, "partial");
-  assert.equal(result.collection.known_subtotals.total_tokens, 35);
+  assert.equal(result.metrics.usage.total_tokens.value, 35);
+  assert.equal(result.metrics.usage.total_tokens.status, "observed");
   assert.equal(result.metrics.tools.call_count.value, null);
   assert.equal(result.collection.known_subtotals.call_count, 1);
-  assert.equal(result.metrics.timing.agent_duration_seconds.value, null);
+  assert.equal(result.metrics.timing.agent_duration_seconds.value, 5);
   assert.equal(result.metrics.timing.duration_seconds.value, 10);
 });
 
@@ -301,4 +300,33 @@ test("semantic conflicts and indexed artifact tampering fail closed", async () =
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }
+});
+
+test("native failed turns retain verified timing and count dynamic tool calls", () => {
+  const rows = fixtureRows().map((entry, i) => ({ ...entry, raw_line: i + 1 }));
+  const failed = state(); failed.phase = "FAILED"; failed.session.native_status = "error";
+  const end = rows.find(r => r.event_type === "turn.completed"); end.event.payload.state = "failed";
+  for (const r of rows) if (r.event?.payload?.data?.item?.type === "commandExecution") r.event.payload.data.item.type = "dynamicToolCall";
+  const result = buildAstronStudioResourceMetrics({ state: failed, traceIndex: traceIndex(rows), rows, sources: sources() });
+  assert.equal(result.metrics.timing.agent_duration_seconds.value, 5);
+  assert.equal(result.metrics.tools.call_count.value, 1);
+  assert.equal(result.metrics.usage.total_tokens.value, 35);
+});
+
+test("raw event files above 64 MiB are hashed completely without loading text deltas into metrics memory", async () => {
+  const base = fixtureRows();
+  const padding = "x".repeat(65536);
+  const deltas = Array.from({length: 1030}, (_, i) => row(i + 20, "content.delta", {
+    createdAt: "2026-09-18T00:00:06.000Z", payload: { delta: padding, streamKind: "reasoning" },
+  }));
+  const rows = [...base.slice(0, -1), ...deltas, base.at(-1)].map((r, i) => ({ ...r, sequence: i + 1,
+    event_id: `large-${i}`, event: { ...r.event, eventId: `large-${i}` } }));
+  const f = await createFixture(rows);
+  try {
+    const index = JSON.parse(await readFile(f.indexPath, "utf8"));
+    assert.ok(index.raw_trace[0].size > 64 * 1024 * 1024);
+    const result = await collectAstronStudioResourceMetrics({ stateFile: f.statePath, traceIndex: f.indexPath, output: f.output });
+    assert.equal(result.metrics.usage.total_tokens.value, 35);
+    assert.equal(result.metrics.requests.request_count.value, 2);
+  } finally { await rm(f.root, {recursive:true, force:true}); }
 });

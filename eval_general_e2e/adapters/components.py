@@ -26,6 +26,12 @@ class SharedComponentSpec:
 
 EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     SharedComponentSpec(
+        name="general-resource-supplements", version="1.0.0",
+        source_root="tools/report/e2e-shared/general-resource-supplements",
+        vendor_root="vendor/e2e-shared/general-resource-supplements",
+        entrypoints=("index.mjs", "archive_astronstudio_trace.mjs", "collect_astronstudio_resource_metrics.mjs"),
+    ),
+    SharedComponentSpec(
         name="qwenwork-native-state", version="1.0.0",
         source_root="tools/report/e2e-shared/qwenwork-native-state",
         vendor_root="vendor/e2e-shared/qwenwork-native-state", entrypoints=("index.mjs",),
@@ -37,10 +43,10 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="doubaowork",
-        version="0.7.7",
+        version="0.8.0",
         source_root="tools/report/e2e-shared/doubaowork",
         vendor_root="vendor/e2e-shared/doubaowork",
-        entrypoints=("controller.mjs", "native-evidence.mjs", "probe.mjs", "process-cleanup.mjs", "select-folder.swift"),
+        entrypoints=("controller.mjs", "native-evidence.mjs", "probe.mjs", "process-cleanup.mjs", "select-folder.swift", "tool-counts.mjs"),
     ),
     SharedComponentSpec(
         name="report-reference-data",
@@ -121,7 +127,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="general-contracts",
-        version="1.2.0",
+        version="1.3.0",
         source_root="eval_general_e2e/contracts",
         vendor_root="vendor/e2e-shared/general-contracts",
         entrypoints=("validator.py", "execution_state.py", "schemas/general-execution-state-v1.schema.json",

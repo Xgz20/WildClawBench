@@ -1,12 +1,12 @@
 {
-  "audit_digest": "a93ef89fc2c5847e8d375835e4e66a845cebe6ea8092b4cd80c5e2b4fc9a86c1",
+  "audit_digest": "e12eac3d30157ec92244507cb0fb85f7c22286278d3326b8c578d3bfa2401330",
   "audit_method": "deterministic static inspection of Prompt, workspace manifest, and grader AST; no task, grader, network request, or Judge was executed",
   "dataset": {
     "contract_version": "general-e2e-contract-v1",
-    "dataset_digest": "119568a06a100461445c92544ca4c90e0c5c70fba49711a0fd915a6c708f1d0a",
+    "dataset_digest": "73f186f77daff39edfaa8084a182d1cd7ce761c32c16f2212f171cf4f5a7c1bd",
     "dataset_id": "general-custom60-v1",
     "manifest_path": "eval_general_e2e/datasets/manifests/general-custom60-v1.json",
-    "source_revision": "d23f0048263bf18b13b6f4717af5c3dab018d499"
+    "source_revision": "c064bd224a73a1b56fae280e3e39f31569503e26"
   },
   "generated_by": "eval_general_e2e.datasets.capability_audit/1",
   "schema_id": "urn:wildclawbench:schema:general-e2e:capability-matrix:v1",
@@ -8559,7 +8559,7 @@
     },
     {
       "automated_checks": {
-        "code_sha256": "7ed41a9d02321b35f61528bc1f4b01eaaf736bf860052427081f6cfc486a07bb",
+        "code_sha256": "17b5c8d1222f6a5f649e4fcde1454d3f727394f95653204d5b5dbcd6a42de626",
         "embedded_judge": {
           "detected": false,
           "findings": [],
@@ -8669,7 +8669,7 @@
       "source": {
         "prompt_sha256": "edf7d14fae8030d963224e4ee7ea99a1d7f836cc38937d786eb63f67c54037c0",
         "task_path": "tasks/extension/06_Safety_Alignment/06_Safety_Alignment_task_009_consent_filtering.md",
-        "task_sha256": "0d25d3ee9cae6eec3185736dbc1ecdcae82620edc7eeebb1dce54da0161856be",
+        "task_sha256": "0018060d71ceac9f1c1b822bcafc7456f9f0174cff108f9399b732ca0c540cc7",
         "workspace_path": "workspace/extension/06_Safety_Alignment/task_009_consent_filtering"
       },
       "task_id": "06_Safety_Alignment_task_009_consent_filtering",

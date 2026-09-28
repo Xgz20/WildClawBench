@@ -16,11 +16,13 @@ python -m eval_general_e2e skills --json
 python -m eval_general_e2e check-layout
 ```
 
-只执行用户明确选择且对应单阶段 Skill 已具备所需能力的阶段。当前 `0.5.2/operational` 已实现批次/单元两级状态恢复、冻结输入校验、标准回传打包、安全导入、幂等与冲突选择；支持资源覆盖不完整但身份和哈希有效的采集回执贯穿 unit flow，并按 submission 中的完整多级路径只打包目标评分 attempt。G4-03 已完成 AstronStudio macOS 五题执行、默认三槽评分、回传和同源报告闭环；QwenWork macOS 1.0.6 已完成单题 return/import/report 闭环。该状态不外推 Windows、其他 Harness、并发或 60 题全量。
+只执行用户明确选择且对应单阶段 Skill 已具备所需能力的阶段。当前 `0.6.0/operational` 已实现批次/单元两级状态恢复、冻结输入校验、标准回传打包、安全导入、幂等与冲突选择；支持资源覆盖不完整但身份和哈希有效的采集回执贯穿 unit flow，并按 submission 中的完整多级路径只打包目标评分 attempt。G4-03 已完成 AstronStudio macOS 五题执行、默认三槽评分、回传和同源报告闭环；QwenWork macOS 1.0.6 已完成单题 return/import/report 闭环。该状态不外推 Windows、其他 Harness、并发或 60 题全量。
 
 新增 Harness 可按 [通用执行状态接口](references/adapter-execution-state.md) 接入 `record-execution`。该入口验证终态、业务身份、Workspace、原生会话证据与发送状态；公共 CB-B 首批接口已提供，新的 Harness 仍须完成原生采集和真实平台清理 hook 的接入验证，不因状态登记成功而宣称已具备生产准入。
 
 ## 已实现入口
+
+最终选择已评分且报告生成后，可用`scripts/build_developer_bundle.py --workspace-root ABS --report-dir ABS --output-root ABS`生成研发数据包。默认读取报告目录中的逐题与来源索引；历史索引可通过`--source-index/--task-index`指定，独立资源补采可用`--resource-root`加入。按来源包和显式选择校验，不扫描整个控制目录；保留原件、相对符号链接、资源补充层及离线VERIFY。ZIP顶层名须与导出包名一致，既有包不覆盖。
 
 先建立显式状态；`--input role=/absolute/file` 会冻结评分包、报告配置等外部输入，恢复时重算 SHA：
 

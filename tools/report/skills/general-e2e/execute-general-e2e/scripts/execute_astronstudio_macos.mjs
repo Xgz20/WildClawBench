@@ -317,7 +317,9 @@ export function classifyNativeState(session) {
   const state = String(session?.turn_state || session?.status || "").trim().toLowerCase();
   if (state === "completed") return { kind: "completed", businessStatus: "completed" };
   if (state === "error" || state === "failed") {
-    return { kind: "failed", businessStatus: "infrastructure_error" };
+    // A uniquely bound native turn failed inside the evaluated client. Driver
+    // read/dispatch failures are classified separately as infrastructure errors.
+    return { kind: "failed", businessStatus: "candidate_error" };
   }
   if (state === "interrupted" || state === "cancelled" || state === "canceled") {
     return { kind: "failed", businessStatus: "cancelled" };
@@ -646,11 +648,11 @@ async function finalize(config, state, session, classification, dependencies) {
   recordSession(state, session, now);
   let finalResponse = "";
   try {
-    finalResponse = await dependencies.queryFinalResponse(
+    finalResponse = classification.kind === "completed" ? await dependencies.queryFinalResponse(
       config.stateDatabase,
       session.thread_id,
       session.turn_id,
-    );
+    ) : "";
   } catch (error) {
     state.history.push({
       phase: state.phase,

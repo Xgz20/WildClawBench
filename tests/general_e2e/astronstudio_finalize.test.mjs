@@ -425,11 +425,30 @@ test("timeout keeps partial trace and infrastructure failure remains a partial s
     });
     assert.equal(result.receipt_status, "partial");
     const record = JSON.parse(await readFile(join(result.evidence_root, "execution-record.json"), "utf8"));
-    assert.equal(record.evidence.completeness, "partial");
+    assert.equal(record.evidence.completeness, "unavailable");
+    assert.equal(record.evidence.final_response_path, null);
     assert.equal(record.execution.business_status, "infrastructure_error");
   } finally {
     await rm(infrastructure.root, { recursive: true, force: true });
   }
+});
+
+test("a bound native candidate failure freezes its proof without relabelling an intermediate reply as final", async () => {
+  const value=await fixture({businessStatus:"candidate_error",includeResource:false,attemptId:"native-failure-proof"});
+  try{
+    const state=JSON.parse(await readFile(value.statePath,"utf8"));
+    state.session.native_status="error";state.execution.error={code:"ASTRONSTUDIO_TURN_ERROR",message:"native max_output_tokens"};
+    await writeJson(value.statePath,state);
+    const result=await finalizeAstronStudioExecution(options(value),{terminateProcesses:async()=>successfulCleanup()});
+    const record=JSON.parse(await readFile(join(result.evidence_root,"execution-record.json"),"utf8"));
+    assert.equal(record.execution.business_status,"candidate_error");assert.equal(record.evidence.final_response_path,null);
+    assert.equal(record.failure_evidence.schema,"verified-failed-output-evidence/v1");
+    const proofBytes=await readFile(join(value.root,record.failure_evidence.path));
+    assert.equal(digest(proofBytes),record.failure_evidence.sha256);
+    const proof=JSON.parse(proofBytes);assert.deepEqual(proof.identity,record.identity);
+    const verified=await verifyAstronStudioCollection({unitRoot:value.root,taskId:value.taskId});
+    assert.equal(verified.status,"PASS");
+  }finally{await rm(value.root,{recursive:true,force:true});}
 });
 
 test("candidate freeze rejects an escaping symlink", async () => {

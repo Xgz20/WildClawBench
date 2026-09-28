@@ -345,7 +345,8 @@ export function planQwenRecovery(state, now) {
   ) action = "inspect-only";
   else if (
     (state.phase === "READY_TO_DISPATCH" || state.phase === "NEEDS_ATTENTION"
-      && ["QWENWORK_PRE_SEND_ENVIRONMENT_CHANGED", "QWENWORK_EXECUTION_ENVIRONMENT_BLOCKED"].includes(state.attention?.code))
+      && ["QWENWORK_PRE_SEND_ENVIRONMENT_CHANGED", "QWENWORK_EXECUTION_ENVIRONMENT_BLOCKED",
+        "QWENWORK_PRE_DISPATCH_READBACK_FAILED"].includes(state.attention?.code))
     && state.prompt?.send_status === "intent_persisted"
     && state.send?.dispatch_attempt_count === 0
     && state.send?.state === "not_reserved"

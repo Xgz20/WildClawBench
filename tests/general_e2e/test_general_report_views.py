@@ -45,31 +45,36 @@ class GeneralReportViewsTests(unittest.TestCase):
         self.assertEqual(overview["headers"][request + 1], "工具调用数")
 
     def test_efficiency_uses_total_denominator_and_distinguishes_cache_write_zero(self):
-        resources = self.data["units"][0]["resources"]
+        def set_metric(key, value):
+            for task in self.data["tasks"]:
+                task["resource"][key].update(value=None if value is None else value / len(self.data["tasks"]),
+                    known_subtotal=None, status="unavailable" if value is None else "observed", complete=value is not None,
+                    coverage={"known": 0 if value is None else 1, "total": 1, "unit": "response"})
+            self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
         for key, value in {"total_tokens": 440, "input_tokens": 400, "output_tokens": 40,
                            "cache_read_input_tokens": 300, "cache_creation_input_tokens": 0}.items():
-            resources[key]["total"] = value
+            set_metric(key, value)
         table = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]
-        self.assertEqual(table["rows"][0][1:], [440, 110, 100, 300, 0, 40, .75])
-        resources["cache_creation_input_tokens"]["total"] = 20
+        self.assertEqual(table["rows"][0][1:], [440, 110, 400, 100, 300, 0, 40, .75])
+        set_metric("cache_creation_input_tokens", 20)
         row = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["rows"][0]
-        self.assertEqual(row[3:7], [80, 300, 20, 40])
-        self.assertEqual(sum(row[3:7]), row[1])
-        resources["total_tokens"]["total"] = None
-        resources["cache_creation_input_tokens"]["total"] = None
-        resources["input_tokens"]["total"] = 0
-        resources["cache_read_input_tokens"]["total"] = 0
+        self.assertEqual(row[4:8], [80, 300, 20, 40])
+        self.assertEqual(sum(row[4:8]), row[1])
+        set_metric("total_tokens", None)
+        set_metric("cache_creation_input_tokens", None)
+        set_metric("input_tokens", 0)
+        set_metric("cache_read_input_tokens", 0)
         row = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["rows"][0]
         self.assertEqual(row[1:3], [None, None])
-        self.assertIsNone(row[3])
-        self.assertIsNone(row[5])
-        self.assertIsNone(row[7])
-        resources["cache_read_input_tokens"]["total"] = 1
+        self.assertIsNone(row[4])
+        self.assertIsNone(row[6])
+        self.assertIsNone(row[8])
+        set_metric("cache_read_input_tokens", 1)
         with self.assertRaisesRegex(ValueError, "CACHE_EXCEEDS_INPUT"):
             VIEWS.build_views(self.data, self.references)
-        resources["input_tokens"]["total"] = 10
-        resources["cache_read_input_tokens"]["total"] = 6
-        resources["cache_creation_input_tokens"]["total"] = 5
+        set_metric("input_tokens", 10)
+        set_metric("cache_read_input_tokens", 6)
+        set_metric("cache_creation_input_tokens", 5)
         with self.assertRaisesRegex(ValueError, "CACHE_EXCEEDS_INPUT"):
             VIEWS.build_views(self.data, self.references)
 

@@ -75,12 +75,13 @@ export function parseBatchArgs(argv) {
   let preprepareProjects = false;
   let skipClarifications = false;
   let requireTokenExposure = false;
+  let sourceRepairManifest = "";
   let recoverStaleOwner = false;
   let resume = false;
   let status = false;
   for (let index = 0; index < args.length;) {
     const arg = args[index];
-    if (["--queue-id", "--run-slots", "--endpoint", "--session-db", "--trace-root", "--probe", "--probe-sha256", "--config-dir"].includes(arg)) {
+    if (["--queue-id", "--run-slots", "--endpoint", "--session-db", "--trace-root", "--probe", "--probe-sha256", "--config-dir", "--source-repair-manifest"].includes(arg)) {
       const value = args[index + 1];
       if (!value || value.startsWith("--")) throw new Error(`${arg} 缺少值`);
       if (arg === "--queue-id") queueId = value;
@@ -90,6 +91,7 @@ export function parseBatchArgs(argv) {
       else if (arg === "--trace-root") traceRoot = value;
       else if (arg === "--probe") probe = value;
       else if (arg === "--config-dir") configDir = value;
+      else if (arg === "--source-repair-manifest") sourceRepairManifest = value;
       else probeSha256 = value;
       args.splice(index, 2);
     } else if (arg === "--resume" || arg === "--status") {
@@ -113,6 +115,7 @@ export function parseBatchArgs(argv) {
   if (!safeId(queueId)) throw new Error("--queue-id 必须是安全的非空 ID");
   if (runSlots > MAX_RUN_SLOTS) throw new Error(`--run-slots 必须在 1–${MAX_RUN_SLOTS} 之间`);
   if (resume && status) throw new Error("--resume 与 --status 不能同时使用");
+  if (sourceRepairManifest && (!resume || status)) throw new Error("--source-repair-manifest 仅用于原队列恢复");
   if (recoverStaleOwner && !resume) throw new Error("--recover-stale-owner 只允许与 --resume 一起使用");
   if (!probe || !probeSha256) throw new Error("--probe 与 --probe-sha256 必须同时指定");
   if (!/^[a-f0-9]{64}$/u.test(probeSha256)) throw new Error("--probe-sha256 必须是 SHA-256");
@@ -133,6 +136,7 @@ export function parseBatchArgs(argv) {
     preprepareProjects,
     skipClarifications,
     requireTokenExposure,
+    sourceRepairManifest,
     recoverStaleOwner,
     resume,
     status,
@@ -354,6 +358,8 @@ function buildReceipt(state) {
     generated_at: new Date().toISOString(),
     identity: { queue_id: state.queue_id, frozen_sha256: state.frozen_sha256, batch_id: state.frozen.batch_id, unit_id: state.frozen.unit_id },
     phase: state.phase,
+    source_repair: state.source_repair || null,
+    source_repair_history: state.source_repair_history || [],
     ui_slots: 1,
     run_slots: state.frozen.run_slots,
     observed_max_concurrency: dispatch.maximum,
@@ -572,6 +578,18 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
     ? await loadExistingConfigs(batch.configDir, manifestInfo.taskIds, manifestInfo.manifest)
     : null;
   const manifestHash = sha256(manifestInfo.bytes);
+  const actualDriverSha256 = await driverSourceDigest();
+  const sourceRepairPath = batch.sourceRepairManifest ? resolve(batch.sourceRepairManifest) : null;
+  const sourceRepairBytes = sourceRepairPath ? await readFile(sourceRepairPath) : null;
+  const sourceRepair = sourceRepairBytes ? JSON.parse(sourceRepairBytes.toString("utf8")) : null;
+  const sourceRepairSha256 = sourceRepairBytes ? sha256(sourceRepairBytes) : null;
+  if (sourceRepair && (sourceRepair.schema_version !== 1
+      || !sourceRepair.reason?.trim() || sourceRepair.queue_id !== batch.queueId
+      || sourceRepair.unit_root !== root
+      || sourceRepair.patched_driver_sha256 !== actualDriverSha256
+      || !/^[a-f0-9]{64}$/u.test(sourceRepair.original_driver_sha256 || ""))) {
+    throw new Error("QWENWORK_QUEUE_SOURCE_REPAIR_INVALID");
+  }
   const frozen = {
     batch_id: manifestInfo.manifest.batch_id,
     unit_id: manifestInfo.manifest.unit_id,
@@ -590,10 +608,38 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
     preprepare_projects: batch.preprepareProjects,
     clarification_policy: batch.skipClarifications ? "skip-question-card" : "manual",
     require_token_usage_exposure: batch.requireTokenExposure,
-    driver_sha256: await driverSourceDigest(),
+    driver_sha256: sourceRepair?.original_driver_sha256 || actualDriverSha256,
   };
   const digest = sha256(JSON.stringify(frozen));
   let state = await optionalJson(statePath);
+  if (sourceRepair && state) {
+    if (state.frozen?.driver_sha256 !== sourceRepair.original_driver_sha256) {
+      throw new Error("QWENWORK_QUEUE_SOURCE_REPAIR_ORIGINAL_MISMATCH");
+    }
+    if (state.source_repair) {
+      const sameRepair = state.source_repair.manifest_sha256 === sourceRepairSha256
+        && state.source_repair.patched_driver_sha256 === actualDriverSha256;
+      const upgradedRepair = sourceRepair.prior_manifest_sha256 === state.source_repair.manifest_sha256
+        && sourceRepair.prior_patched_driver_sha256 === state.source_repair.patched_driver_sha256
+        && sha256(await readFile(statePath)) === sourceRepair.original_queue_state_sha256
+        && state.phase === "NEEDS_ATTENTION";
+      if (!sameRepair && !upgradedRepair) {
+        throw new Error("QWENWORK_QUEUE_SOURCE_REPAIR_CHANGED");
+      }
+    } else {
+      const stateBytes = await readFile(statePath);
+      const taskJournal = await readJson(sourceRepair.anchor_journal_path);
+      if (sha256(stateBytes) !== sourceRepair.original_queue_state_sha256
+          || sha256(await readFile(sourceRepair.anchor_journal_path)) !== sourceRepair.anchor_journal_sha256
+          || !manifestInfo.taskIds.includes(sourceRepair.anchor_task_id) || taskJournal.identity?.task_id !== sourceRepair.anchor_task_id
+          || taskJournal.identity?.attempt_id !== state.tasks.find(t => t.task_id === sourceRepair.anchor_task_id)?.attempt_id
+          || taskJournal.phase !== "COMPLETED"
+          || taskJournal.send?.dispatch_attempt_count !== 1
+          || taskJournal.session?.verified !== true) {
+        throw new Error("QWENWORK_QUEUE_SOURCE_REPAIR_BOUNDARY_INVALID");
+      }
+    }
+  }
   if (batch.status) {
     if (!state) throw new Error("QWENWORK_QUEUE_MISSING");
     if (state.schema_version !== QWENWORK_QUEUE_SCHEMA || state.frozen_sha256 !== digest) throw new Error("QWENWORK_QUEUE_CONFIG_DRIFT");
@@ -619,6 +665,20 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
     if (state && !batch.resume) throw new Error("QWENWORK_QUEUE_EXISTS: 使用 --resume，禁止重建队列");
     if (!state && batch.resume) throw new Error("QWENWORK_QUEUE_MISSING");
     if (state && (state.schema_version !== QWENWORK_QUEUE_SCHEMA || state.frozen_sha256 !== digest)) throw new Error("QWENWORK_QUEUE_CONFIG_DRIFT");
+    if (state && sourceRepair && state.source_repair?.manifest_sha256 !== sourceRepairSha256) {
+      const previousRepair = state.source_repair || null;
+      if (previousRepair) state.source_repair_history = [...(state.source_repair_history || []), previousRepair];
+      state.source_repair = {
+        manifest_sha256: sourceRepairSha256,
+        original_driver_sha256: sourceRepair.original_driver_sha256,
+        patched_driver_sha256: actualDriverSha256,
+        activated_at: now(),
+      };
+      state.events.push({ event: previousRepair ? "QUEUE_SOURCE_REPAIR_UPGRADED" : "QUEUE_SOURCE_REPAIR_ACTIVATED", at: now(),
+        prior_manifest_sha256: previousRepair?.manifest_sha256 || null,
+        manifest_sha256: sourceRepairSha256, patched_driver_sha256: actualDriverSha256 });
+      await persist(statePath, state);
+    }
     if (queueOwner.recovered) {
       state.events.push({ event: "QUEUE_STALE_OWNER_RECOVERED", at: now(), ...queueOwner.recovered });
       await persist(statePath, state);

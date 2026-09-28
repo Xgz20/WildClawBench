@@ -19,7 +19,7 @@ export const QUEUE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-qu
 export const QUEUE_WORKER_VERSION = "0.1.0";
 export const QUEUE_REVISION = 1;
 export const UI_SLOTS = 1;
-export const RUN_SLOTS = 3;
+export const RUN_SLOTS = 1;
 export const MAX_RUN_SLOTS = 8;
 
 const SINGLE_TASK_SCRIPT = resolve(
@@ -40,7 +40,7 @@ function usage() {
   --resume                       恢复同一 queue 和已登记 attempt；不重发 Prompt
   --status                       只读取持久化队列状态
   --continue-on-terminal-failure 明确失败终态后继续下一题
-  --run-slots <1-8>              后台 Agent 槽位，默认 3
+  --run-slots <1-8>              后台 Agent 槽位，默认 1；更高值需客户端准入实证
   --timeout-ms <毫秒>            传给单题执行器，默认 30000
   --poll-interval-ms <毫秒>      传给单题执行器，默认 1000
   --identity-timeout-ms <毫秒>   传给单题执行器，默认 120000

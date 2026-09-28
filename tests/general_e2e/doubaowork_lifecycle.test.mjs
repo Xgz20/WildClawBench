@@ -42,6 +42,24 @@ test("An observer ignores foreign workspaces and refuses ambiguous requests for 
   } finally { if (previous === undefined) delete globalThis.window; else globalThis.window = previous; }
 });
 
+test("an empty ambiguous supplemental lifecycle never overwrites the primary request identity", () => {
+  const previous=globalThis.window;globalThis.window={};
+  const listeners=new Set(),store={subscribe(fn){listeners.add(fn);return()=>listeners.delete(fn);}};
+  const host={stores:[store]},cfg={attemptId:"a",workspace:"/task",prompt:"prompt",profileSha:"b".repeat(64)};
+  const task={sentMessages:{user:{extra:{message_id:"user",text:"prompt",workspace:"/task"}}}};
+  try{
+    operateLifecycleObserver.call(host,{...cfg,operation:"install"});
+    for(const fn of listeners)fn({mainTaskDataMap:{one:task,two:task}});
+    const before=operateLifecycleObserver.call(host,{...cfg,operation:"collect"});
+    const result=operateLifecycleObserver.call(host,{...cfg,operation:"bind",nativeRequestId:"primary"});
+    assert.equal(result.status,"unavailable");assert.equal(result.bound,false);
+    const after=operateLifecycleObserver.call(host,{...cfg,operation:"collect",restore:true});
+    assert.equal(after.native_request_session_id,before.native_request_session_id);
+    assert.deepEqual(after.errors,["LIFECYCLE_REQUEST_AMBIGUOUS"]);assert.deepEqual(after.samples,[]);
+    assert.equal(after.observer_restored,true);
+  }finally{if(previous===undefined)delete globalThis.window;else globalThis.window=previous;}
+});
+
 test("Context occupancy and subscription display never become token consumption or money", () => {
   const runtime = { maps: { messageMap: { reply: { message_id: "reply", conversation_id: "123", ext: {
     context_window_usage: '{"messages":1000,"system_prompt":100,"total_window_size":256000}',

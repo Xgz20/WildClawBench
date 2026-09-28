@@ -608,7 +608,25 @@ def doubao_resource_projection(unit_root: Path, execution: Mapping[str, Any], me
     state, state_sha = bound_source("execution/automation-state.json")
     adjustments = []
     call_metric = projected["metrics"]["tools"]["call_count"]
-    if trace.get("completeness", {}).get("status") != "complete":
+    count_refs = [r for r in trace.get("raw_trace", []) if r.get("path") == "raw/tool-count-summary.json"]
+    if count_refs:
+        if len(count_refs) != 1:
+            raise ReportError("DOUBAOWORK_COUNT_PROOF_AMBIGUOUS")
+        count_path = resolve_file(trace_path.parent, count_refs[0]["path"], "tool count proof")
+        if sha256_file(count_path) != count_refs[0]["sha256"] or count_path.stat().st_size != count_refs[0]["size"]:
+            raise ReportError("DOUBAOWORK_COUNT_PROOF_DRIFT")
+        script = Path(__file__).resolve().parents[1] / "vendor/e2e-shared/doubaowork/tool-counts.mjs"
+        if not script.is_file():
+            script = Path(__file__).resolve().parents[4] / "e2e-shared/doubaowork/tool-counts.mjs"
+        result = subprocess.run([os.environ.get("GENERAL_E2E_NODE", "node"), str(script), "--state-file",
+                                 str(resolve_file(metrics_path.parent, "execution/automation-state.json", "count state")),
+                                 "--trace-index", str(trace_path)], capture_output=True, text=True, timeout=60, check=False)
+        if result.returncode:
+            raise ReportError("DOUBAOWORK_COUNT_RECOMPUTATION_FAILED: " + result.stderr[-1000:])
+        counted = json.loads(result.stdout)
+        if counted != read_json(count_path) or counted["status"] != "complete" or counted["total"] != call_metric.get("value"):
+            raise ReportError("DOUBAOWORK_COUNT_RECOMPUTATION_MISMATCH")
+    elif trace.get("completeness", {}).get("status") != "complete":
         known = numeric(call_metric.get("value"))
         if known is not None:
             call_ids = [item.get("call_id") for item in trace.get("calls", [])]
@@ -635,6 +653,25 @@ def doubao_resource_projection(unit_root: Path, execution: Mapping[str, Any], me
     if adjustments:
         collection["status"] = "partial"
     return projected, adjustments, comparable
+
+
+def general_resource_supplement(root: Path, task_id: str, execution_path: Path) -> dict[str, Any] | None:
+    unit_root = root / "unit"
+    manifest = unit_root / "evidence/resource-supplements" / task_id / "supplement.json"
+    if not manifest.exists():
+        return None
+    script = Path(__file__).resolve().parents[1] / "vendor/e2e-shared/general-resource-supplements/index.mjs"
+    if not script.is_file():
+        script = Path(__file__).resolve().parents[4] / "e2e-shared/general-resource-supplements/index.mjs"
+    result = subprocess.run([os.environ.get("GENERAL_E2E_NODE", "node"), str(script), "verify",
+                             "--unit-root", str(unit_root), "--task-id", task_id,
+                             "--execution-record", str(execution_path)], capture_output=True, text=True, timeout=180, check=False)
+    if result.returncode:
+        raise ReportError("GENERAL_RESOURCE_SUPPLEMENT_INVALID: " + result.stderr[-1000:])
+    verified = json.loads(result.stdout)
+    if verified.get("status") != "PASS" or verified.get("manifest_sha256") != sha256_file(manifest):
+        raise ReportError("GENERAL_RESOURCE_SUPPLEMENT_RECOMPUTATION_FAILED")
+    return verified
 
 
 def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], submission_task: Mapping[str, Any]) -> dict[str, Any]:
@@ -699,7 +736,10 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
             raise ReportError(f"RESOURCE_IDENTITY_MISMATCH: {unit['unit_id']}:{task_id}")
     supplement = None
     timing_supplement = None
+    general_supplement = general_resource_supplement(root, task_id, execution_path)
     for timing in (False, True):
+        if unit["harness"]["id"] != "workbuddy":
+            break
         kind = "timing-supplements" if timing else "resource-supplements"
         if not (root / "unit/evidence" / kind / task_id).exists():
             continue
@@ -730,6 +770,16 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
     if metrics and unit["harness"]["id"] == "doubaowork":
         metrics, resource_adjustments, timing_clock_comparable = doubao_resource_projection(root / "unit", execution, metrics, metrics_path)
     resource = {field: metric_observation(metrics, field) for field, _, _ in RESOURCE_FIELDS}
+    original_resource = copy.deepcopy(resource)
+    if general_supplement:
+        if general_supplement["identity"] != execution["identity"]:
+            raise ReportError("GENERAL_RESOURCE_SUPPLEMENT_IDENTITY")
+        corrected = general_supplement["metrics"]
+        for group in corrected["metrics"].values():
+            for field in group:
+                if field not in RESOURCE_GROUPS:
+                    raise ReportError("GENERAL_RESOURCE_SUPPLEMENT_UNKNOWN_FIELD")
+                resource[field] = metric_observation(corrected, field)
     judge = score.get("judge") if score else None
     components = score.get("components") if score else None
     evaluation = score.get("evaluation") if score else None
@@ -737,6 +787,14 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
     try:
         checkpoint_values = report_views.checkpoints(score, score_path, resolve_file, sha256_file)
         tool_calls = report_views.trace_tools(root / "unit", execution, resolve_file, sha256_file)
+        if general_supplement:
+            view_execution = copy.deepcopy(execution)
+            for field in ("trace_index_path", "transcript_path"):
+                view_execution["evidence"][field] = general_supplement[field]
+            tool_calls = report_views.trace_tools(root / "unit", view_execution, resolve_file, sha256_file)
+            counted = general_supplement["metrics"].get("tool_counts")
+            if counted:
+                tool_calls.update(status=counted["status"], by_tool=counted["by_tool"], total=counted["total"], basis=counted["basis"])
         task_definition = report_case_views.frozen_task_definition(task_meta, execution, score, score_path, resolve_file, sha256_file)
     except (ValueError, KeyError, OSError) as exc:
         raise ReportError(f"REPORT_EVIDENCE_INVALID: {task_id}: {exc}") from exc
@@ -767,7 +825,7 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
         "evaluation": evaluation,
         "total_score": result.get("total_score") if result else None,
         "invalid_reason": result.get("invalid_reason") if result else None,
-        "resource_collection_status": (metrics.get("collection") or {}).get("status") if metrics else "unavailable",
+        "resource_collection_status": general_supplement["metrics"]["collection"]["status"] if general_supplement else (metrics.get("collection") or {}).get("status") if metrics else "unavailable",
         "resource": resource,
         "checkpoints": checkpoint_values,
         "tool_calls": tool_calls,
@@ -784,6 +842,10 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
             "timing_supplement_sha256": timing_supplement["supplement_sha256"] if timing_supplement else None,
             "base_resource_metrics_sha256": (timing_supplement or supplement or {}).get("base_resource_sha256"),
             "report_resource_adjustments": resource_adjustments,
+            "general_resource_supplement_sha256": general_supplement["manifest_sha256"] if general_supplement else None,
+            "general_resource_supplement_changes": {"original_resource": original_resource,
+                "changed_fields": [key for key in resource if resource[key] != original_resource[key]],
+                "execution_and_score_preserved": True} if general_supplement else None,
         },
     }
 
@@ -920,6 +982,7 @@ def aggregate(validated: Mapping[str, Any], generated_at: str) -> dict[str, Any]
         "schema_version": REPORT_DATA_SCHEMA,
         "generated_at": generated_at,
         "title": config.get("report", {}).get("title") or "通用场景端到端自动化评测报告",
+        "display_overrides": config.get("report", {}).get("display_overrides", {}),
         "batch_id": manifest["batch_id"],
         "dataset": manifest["dataset"],
         "release": manifest["release"],
@@ -1059,7 +1122,7 @@ def render_markdown(data: Mapping[str, Any]) -> str:
              "本报告不包含根因分析。分数按百分制展示，各表与 Excel 使用同一份数据。", ""]
     summaries = {
         "总览": "各单元的结果、执行情况与资源总量如下。正常结束与能力得分分别统计。",
-        "效率对比": "Token 总量及平均值仅在完整覆盖时展示；缓存命中率按 Token 总量加权。",
+        "效率对比": "展示已验证的 Token 统计与覆盖范围；带 * 的值为已知小计或已知样本指标，完整总量仍保持未知。",
         "分类对比": "分类得分由对应任务的有效评分聚合。样本范围不同的单元不直接作为受控排名。",
         "难度对比": "按题目难度分层统计有效得分。",
         "Agent能力对比": "七维能力分来自已冻结的检查点评分，无需重新评分。未涉及的维度不推断能力。",
@@ -1069,7 +1132,7 @@ def render_markdown(data: Mapping[str, Any]) -> str:
     for name in data["presentation"]["sheet_order"]:
         view = data["presentation"]["tables"][name]
         rows = []
-        for row in view["rows"]:
+        for row_index, row in enumerate(view["rows"]):
             cells = []
             for i, value in enumerate(row):
                 fmt = view["formats"].get(str(i), "#,##0")
@@ -1081,13 +1144,27 @@ def render_markdown(data: Mapping[str, Any]) -> str:
                                  + ("%" if "%" in fmt else ""))
                 else:
                     cells.append(value)
+                if value is not None and view.get("cell_annotations", {}).get(f"{row_index}:{i}", {}).get("status") == "partial":
+                    cells[-1] = str(cells[-1]) + "\\*"
             rows.append(cells)
         summary = summaries[name]
         if name == "总览" and len(rows) == 1:
             summary = f"{rows[0][0]} 本批次平均得分 {rows[0][1]}，{rows[0][3]}/{rows[0][2]} 道题正常完成。"
         if name == "效率对比" and len(rows) == 1:
-            summary = f"该单元平均消耗 {rows[0][2]} Token，输入缓存命中率为 {rows[0][7]}。缺失的缓存写入数据保持空缺。"
-        lines.extend([f"## {name}", "", summary, "", *markdown_table(view["headers"], rows), "", *view["notes"], ""])
+            summary = f"该单元的 Token/冻结用例数为 {rows[0][2]}，输入缓存命中率为 {rows[0][8]}。带 * 的值仅基于已知统计。"
+        if view.get("layout") == "grouped_tools":
+            lines.extend([f"## {name}", "", summary, ""])
+            offset = 0
+            for group in view["groups"]:
+                count = len(group["rows"])
+                lines.extend([f"### {group['title']}", "", *markdown_table(group["headers"], rows[offset:offset + count]), ""])
+                offset += count
+            lines.extend([*view["notes"], ""])
+        else:
+            lines.extend([f"## {name}", "", summary, "", *markdown_table(view["headers"], rows), "", *view["notes"], ""])
+        if view.get("coverage_table"):
+            coverage = view["coverage_table"]
+            lines.extend(["完整统计用例数 / 冻结用例数；部分统计单列：", "", *markdown_table(coverage["headers"], coverage["rows"]), ""])
     score = data["overall"]["score"]
     lines.extend(["## 结论与范围", "", f"本批次共有 {score['frozen_task_run_count']} 次任务运行，有效评分 {score['valid_score_count']} 次，未评分 {score['unscored_count']} 次。",
                   "结果仅覆盖本批次题目和客户端配置。多单元同时改变模型与 Harness 时，属于组合对照，不能把分差归因于单一因素。",
@@ -1294,6 +1371,40 @@ def generated_at_value(value: str | None) -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def excel_report_filename(generated_at: str) -> str:
+    from zoneinfo import ZoneInfo
+    instant = datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
+    if instant.tzinfo is None:
+        instant = instant.replace(tzinfo=timezone.utc)
+    stamp = instant.astimezone(ZoneInfo("Asia/Shanghai")).strftime("%Y%m%d_%H%M%S")
+    return f"通用场景端到端自动化评测报告_{stamp}.xlsx"
+
+
+def write_developer_indexes(validated, output_root):
+    sources = {"schema_version": "wildclawbench.general-e2e-developer-sources/v1", "imports": {}}
+    tasks = []
+    for selected in validated["selected"]:
+        root = selected["root"]
+        unit_id = selected["unit"]["unit_id"]
+        sources["imports"][unit_id] = {"target": str(root), "package_id": selected["package_id"],
+            "package_manifest_sha256": sha256_file(selected["package_manifest_path"])}
+        for row in selected["submission"]["tasks"]:
+            task_id = row["task_id"]
+            record = root / "unit/evidence/tasks" / task_id / row["execution_attempt_id"] / "execution-record.json"
+            scoring_record = root / "scoring/execution-records" / f"{task_id}.json"
+            if record.exists() and sha256_file(record) != sha256_file(scoring_record):
+                raise ReportError("DEVELOPER_EXECUTION_COPY_DRIFT")
+            tasks.append({"unit_id": unit_id, "task_id": task_id,
+                "execution_record": str(record if record.exists() else scoring_record),
+                "score_file": str(root / "scoring" / row["score_path"]) if row.get("score_path") else None})
+    source_path = output_root / "developer-source-index.json"
+    task_path = output_root / "developer-task-index.json"
+    write_json(source_path, sources)
+    write_json(task_path, {"schema_version": "wildclawbench.general-e2e-developer-selection/v1",
+                          "source_index_sha256": sha256_file(source_path), "selected_tasks": tasks})
+    return [source_path, task_path]
+
+
 def command_validate(args: argparse.Namespace) -> dict[str, Any]:
     validated = validate_batch_inputs(Path(args.batch_root))
     return {
@@ -1312,6 +1423,14 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
     validated = validate_batch_inputs(Path(args.batch_root))
     generated_at = generated_at_value(args.generated_at)
     data = aggregate(validated, generated_at)
+    if getattr(args, "target_unit", None):
+        if args.target_unit not in data["presentation"]["unit_labels"]:
+            raise ReportError("REPORT_TARGET_UNIT_NOT_FOUND")
+        data["leader_config"] = {"target_unit_id": args.target_unit, "mode": "preview", "style": "eval-report-target-focused"}
+    excel_name = excel_report_filename(generated_at)
+    data["artifact_filenames"] = {"excel": excel_name, "leader_markdown": "通用场景端到端自动化评测报告.md", "audit_markdown": "通用场景端到端评测审计.md"}
+    if getattr(args, "target_unit", None):
+        data["artifact_filenames"]["leader_data"] = "general_e2e_leader_data.json"
     output_root = Path(args.output_dir).expanduser().resolve()
     batch_root = validated["batch_root"]
     if output_root == batch_root or not inside(batch_root, output_root):
@@ -1328,9 +1447,10 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
         data_path = staging / "general_e2e_report_data.json"
         markdown_path = staging / "通用场景端到端自动化评测报告.md"
         audit_path = staging / "通用场景端到端评测审计.md"
-        excel_path = staging / "通用场景端到端自动化评测报告.xlsx"
+        excel_path = staging / excel_name
         preview_dir = staging / "previews"
         write_json(data_path, data)
+        developer_indexes = write_developer_indexes(validated, staging)
         write_text(markdown_path, render_markdown(data))
         write_text(audit_path, render_audit_markdown(data))
         cli_manifest_path = write_cli_adapter(staging, data)
@@ -1345,12 +1465,20 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
             node_modules=Path(args.node_modules),
             skip_preview=args.skip_preview,
         )
+        leader_artifacts = []
+        if getattr(args, "target_unit", None):
+            import leader_report
+            leader = leader_report.extract(excel_path, data, args.target_unit)
+            leader_path = staging / "general_e2e_leader_data.json"
+            write_json(leader_path, leader)
+            write_text(markdown_path, leader_report.render(leader))
+            leader_artifacts.append(leader_path)
         validation_path = Path(excel_result["validation"])
         receipt_path = staging / "receipts/report-receipt.json"
         receipt = build_report_receipt(
             data,
             batch_root,
-            [data_path, markdown_path, audit_path, excel_path, cli_manifest_path, validation_path],
+            [data_path, markdown_path, audit_path, excel_path, cli_manifest_path, validation_path, *leader_artifacts, *developer_indexes],
             staged_output_root=staging,
             published_output_root=output_root,
         )
@@ -1366,7 +1494,7 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
         raise
     data_path = output_root / "general_e2e_report_data.json"
     markdown_path = output_root / "通用场景端到端自动化评测报告.md"
-    excel_path = output_root / "通用场景端到端自动化评测报告.xlsx"
+    excel_path = output_root / excel_name
     receipt_path = output_root / "receipts/report-receipt.json"
     cli_manifest_path = output_root / "cli-adapter/manifest.json"
     excel_result["output"] = str(excel_path)
@@ -1396,6 +1524,7 @@ def build_parser() -> argparse.ArgumentParser:
     generate.add_argument("--batch-root", required=True)
     generate.add_argument("--output-dir", required=True)
     generate.add_argument("--generated-at")
+    generate.add_argument("--target-unit", help="目标 unit ID；从导出的 Excel 提取领导版数据，生成目标单元总结")
     generate.add_argument("--node", default=os.environ.get("GENERAL_E2E_NODE", "node"))
     generate.add_argument(
         "--node-modules",

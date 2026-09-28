@@ -85,6 +85,7 @@ class E2EBuildTests(unittest.TestCase):
                 "dataset-bundle-verifier",
                 "grading-core",
                 "general-contracts",
+                "general-resource-supplements",
                 "workbuddy-evidence",
                 "desktop-gui",
                 "doubaowork",
@@ -629,9 +630,9 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
         detached.mkdir()
         installed = BUILD._safe_extract(self.archive_path("run-general-e2e"), detached / "installed")
         bundled = json.loads((installed / "bundled-components.json").read_text())
-        self.assertEqual(bundled["skill_version"], "0.5.2")
+        self.assertEqual(bundled["skill_version"], "0.6.0")
         component = next(item for item in bundled["components"] if item["name"] == "general-contracts")
-        self.assertEqual(component["version"], "1.2.0")
+        self.assertEqual(component["version"], "1.3.0")
         for relative in ("execution_state.py", "schemas/general-execution-state-v1.schema.json"):
             self.assertEqual(
                 (installed / "vendor/e2e-shared/general-contracts" / relative).read_bytes(),
@@ -661,9 +662,9 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
         detached.mkdir()
         installed = BUILD._safe_extract(self.archive_path("collect-general-e2e"), detached / "installed")
         bundled = json.loads((installed / "bundled-components.json").read_text())
-        self.assertEqual(bundled["skill_version"], "0.8.26")
+        self.assertEqual(bundled["skill_version"], "0.9.0")
         component = next(item for item in bundled["components"] if item["name"] == "general-contracts")
-        self.assertEqual(component["version"], "1.2.0")
+        self.assertEqual(component["version"], "1.3.0")
         for relative in ("collection_validation.py", "schemas/trace-index-v2.schema.json"):
             self.assertEqual(
                 (installed / "vendor/e2e-shared/general-contracts" / relative).read_bytes(),

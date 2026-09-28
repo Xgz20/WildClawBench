@@ -573,13 +573,13 @@ test("managed queue prepares a project without sending, then dispatches the same
   assert.equal(completed.journal.identity.attempt_id, prepared.journal.identity.attempt_id);
   assert.equal(completed.journal.send.dispatch_attempt_count, 1);
   assert.equal(dispatches, 1);
-  assert.equal(fills, 2);
+  assert.equal(fills, 1);
   assert.deepEqual(completed.journal.events
     .filter((event) => event.type === "DISPATCH_STAGE_OBSERVED")
     .map((event) => event.details.stage), [
     "managed-active-check-completed",
     "prepared-project-restored",
-    "frozen-prompt-filled",
+    "frozen-prompt-already-exact",
     "final-readback-verified",
   ]);
 });
@@ -1216,7 +1216,11 @@ for (const outcome of ["completed", "persistent-conflict", "different-session", 
     assert.equal(result.journal.events.filter((event) => event.type === "STREAM_OBSERVATION_RECHECK").length, 1);
     assert.equal(result.journal.send.dispatch_attempt_count, 1);
     assert.equal(result.journal.session.session_id, session().session_id);
-    assert.equal(result.journal.phase, outcome === "completed" ? "COMPLETED" : "NEEDS_ATTENTION");
+    assert.equal(result.journal.phase, outcome === "completed" ? "COMPLETED" : outcome === "persistent-conflict" ? "RUNNING" : "NEEDS_ATTENTION");
+    if (outcome === "persistent-conflict") {
+      assert.equal(result.journal.events.filter(e => e.type === "NATIVE_RUNNING_UI_STREAM_NOT_VISIBLE").length, 1);
+      assert.equal(result.execution_state, null);
+    }
     if (outcome === "new-approval") assert.equal(result.journal.attention.code, "QWENWORK_PENDING_INTERACTION");
   });
 }
@@ -1239,6 +1243,37 @@ test("auto-renamed title is accepted only for the same full native identity", as
   }
   const duplicate = { ...renamed, session_id: "other-session", sub_chat_id: "other-subchat" };
   assert.equal((await inspectQwenTaskUi(page, "2026-09-23T11:00:00Z", expected, [renamed, duplicate])).target_session_verified, false);
+});
+
+test("sensitive-output confirmation stays manual unless this task has an explicit frozen policy", async () => {
+  for (const allowed of [false,true]) {
+    const config=makeConfig({resume:true});
+    if(allowed)Object.assign(config.control,{sensitive_output_policy:"allow-original-on-this-task",
+      sensitive_output_authorization_path:"/private/fixture/authorization.json",sensitive_output_authorization_sha256:"a".repeat(64)});
+    config.config_digest=calculateQwenCanaryConfigDigest(config);
+    const initial=createQwenAttemptJournal({identity:config.identity,dataset:config.dataset,taskRoot:config.task_root,
+      candidateWorkspace:config.candidate_workspace,prompt:config.prompt,configDigest:config.config_digest,now:"2026-09-19T10:00:00Z"});
+    recordQwenDispatchIntent(initial,{project:project(),configuration:configuration(),baseline:[],now:"2026-09-19T10:00:01Z"});
+    reserveQwenDispatch(initial,{now:"2026-09-19T10:00:02Z",reservationId:"one"});
+    markQwenDispatchReturned(initial,{now:"2026-09-19T10:00:03Z",method:"click"});
+    confirmQwenDispatchBinding(initial,{session:session(),promptEvidence:{verified:true,prompt_sha256:PROMPT_SHA},now:"2026-09-19T10:00:04Z"});
+    let stored=initial,approvals=0;
+    const forbidden=async()=>{throw Error("must never resend or prepare");};
+    const result=await runQwenGeneralAttempt(config,{withAttemptLock:async(_,fn)=>fn(),now:clock(),
+      readJournal:async()=>structuredClone(stored),writeJournal:async(_,v)=>{stored=structuredClone(v);},
+      querySessions:async()=>[{...session(),native_status:"running",stream_id:"active"}],
+      prepareUi:forbidden,verifyPreparedUi:forbidden,fillPrompt:forbidden,dispatchPrompt:forbidden,
+      verifySessionPrompt:async()=>({verified:true,prompt_sha256:PROMPT_SHA,match_count:1}),
+      inspectPendingInteraction:async()=>({kind:approvals?"none":"sensitive-output-confirmation"}),
+      allowSensitiveOutput:async bound=>{approvals++;return {skipped:true,approved:true,button:"允许原文提供",session_id:bound.session_id,conversation_id:bound.conversation_id,sub_chat_id:bound.sub_chat_id};},
+      observeUi:async()=>({observed_at:"2026-09-19T10:01:00Z",target_session_verified:true,active_stream:true,stop_confirmed:false,conflicts:[]}),
+      writeBindingEvidence:async()=>[{path:"binding.json",sha256:"b".repeat(64),size:1}],
+    });
+    assert.equal(result.journal.send.dispatch_attempt_count,1);
+    assert.equal(approvals,allowed?1:0);
+    assert.equal(result.journal.phase,allowed?"RUNNING":"NEEDS_ATTENTION");
+    if(allowed)assert.equal(result.journal.authorized_interactions[0].authorization_sha256,"a".repeat(64));
+  }
 });
 
 test("live title rendering settles against refreshed native identity within a bounded UI window", async () => {

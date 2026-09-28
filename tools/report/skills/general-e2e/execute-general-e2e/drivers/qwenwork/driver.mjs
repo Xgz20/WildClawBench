@@ -45,6 +45,7 @@ import {
   readQwenPrompt,
   restoreQwenPreparedProject,
   skipQwenClarification,
+  allowQwenSensitiveOutput,
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
@@ -168,6 +169,16 @@ export function assertQwenCanaryConfig(config, { requireLiveAuthorization = fals
   if (config.control?.clarification_policy !== undefined
       && !new Set(["manual", "skip-question-card"]).has(config.control.clarification_policy)) {
     throw new Error("QWENWORK_CANARY_CLARIFICATION_POLICY_INVALID");
+  }
+  if (config.control?.sensitive_output_policy !== undefined
+      && !["manual", "allow-original-on-this-task"].includes(config.control.sensitive_output_policy)) {
+    throw new Error("QWENWORK_SENSITIVE_OUTPUT_POLICY_INVALID");
+  }
+  if (config.control?.sensitive_output_policy === "allow-original-on-this-task") {
+    absolutePath(config.control.sensitive_output_authorization_path, "sensitive_output_authorization_path");
+    if (!/^[a-f0-9]{64}$/u.test(config.control.sensitive_output_authorization_sha256 || "")) {
+      throw new Error("QWENWORK_SENSITIVE_OUTPUT_AUTHORIZATION_INVALID");
+    }
   }
   const probeMaxAge = Number(config.control?.probe_max_age_seconds);
   if (!Number.isInteger(probeMaxAge) || probeMaxAge < 1 || probeMaxAge > 900) {
@@ -304,6 +315,18 @@ export async function loadQwenCanaryConfig(path, options = {}) {
   await assertNoSymlinkPath(path, { requireLeaf: true });
   const config = JSON.parse(await readFile(resolve(path), "utf8"));
   assertQwenCanaryConfig(config, options);
+  if (config.control.sensitive_output_policy === "allow-original-on-this-task") {
+    const authPath = absolutePath(config.control.sensitive_output_authorization_path, "sensitive_output_authorization_path");
+    await assertNoSymlinkPath(authPath, { requireLeaf: true });
+    const bytes = await readFile(authPath);
+    const auth = JSON.parse(bytes);
+    if (sha256(bytes) !== config.control.sensitive_output_authorization_sha256
+        || auth.task_id !== config.identity.task_id
+        || auth.sensitive_output_confirmation !== "allow-original-on-this-task"
+        || config.candidate_workspace !== join(auth.unit_root, "execution", "tasks", auth.task_id, "workspace")) {
+      throw new Error("QWENWORK_SENSITIVE_OUTPUT_AUTHORIZATION_INVALID");
+    }
+  }
   const probePath = options.initialProbePath
     ? absolutePath(options.initialProbePath, "initial_probe.path")
     : absolutePath(config.control.probe_path, "control.probe_path");
@@ -637,6 +660,23 @@ async function handlePendingInteraction(config, state, dependencies, session) {
   try {
     const pending = await dependencies.inspectPendingInteraction(session);
     if (pending.kind === "none") return null;
+    if (pending.kind === "sensitive-output-confirmation"
+        && config.control.sensitive_output_policy === "allow-original-on-this-task"
+        && config.control.sensitive_output_authorization_sha256
+        && typeof dependencies.allowSensitiveOutput === "function") {
+      const result = await dependencies.allowSensitiveOutput(session);
+      if (!result?.approved) throw new Error("QWENWORK_SENSITIVE_OUTPUT_NOT_APPROVED");
+      state.authorized_interactions ||= [];
+      state.authorized_interactions.push({ at: dependencies.now(), ...result,
+        authorization_sha256: config.control.sensitive_output_authorization_sha256 });
+      state.phase = "RUNNING";
+      state.execution_state = null;
+      state.attention = null;
+      state.updated_at = dependencies.now();
+      state.events.push({ type: "USER_AUTHORIZED_SENSITIVE_OUTPUT_ALLOWED", at: dependencies.now(), details: result });
+      await dependencies.writeJournal(config.state_file, state);
+      return result;
+    }
     if (pending.kind === "clarification" && config.control.clarification_policy === "skip-question-card"
         && typeof dependencies.skipClarification === "function") {
       const result = await dependencies.skipClarification(session);
@@ -723,6 +763,25 @@ async function observeBoundAttempt(config, state, dependencies, recheckStreamMis
     await dependencies.writeJournal(config.state_file, state);
     return observeBoundAttempt(config, state, dependencies, false);
   }
+  if (!recheckStreamMismatch && ui.target_session_verified === true
+      && session.classification?.kind === "running" && Boolean(session.stream_id)
+      && ui.active_stream === false) {
+    const first = state.events.find((event) => event.type === "NATIVE_RUNNING_UI_STREAM_NOT_VISIBLE"
+      && event.details?.session_id === session.session_id);
+    const at = dependencies.now();
+    const age = first ? Date.parse(at) - Date.parse(first.at) : 0;
+    if (!Number.isFinite(age) || age < 0) throw new Error("QWENWORK_UI_STREAM_CONFLICT_TIME_INVALID");
+    if (age < 180_000) {
+      state.events.push({ type: "NATIVE_RUNNING_UI_STREAM_NOT_VISIBLE", at, details: {
+        session_id: session.session_id, native_status: session.native_status,
+        database_active_stream: true, ui_active_stream: false,
+        observation_window_ms: age,
+      } });
+      state.updated_at = at;
+      await dependencies.writeJournal(config.state_file, state);
+      return { journal: state, execution_state: null };
+    }
+  }
   const terminalObservation = {
     ...ui,
     binding_consistent: Boolean(
@@ -753,6 +812,10 @@ async function observeBoundAttempt(config, state, dependencies, recheckStreamMis
       : null,
     cancellationConfirmed: classification.business_status === "cancelled" && terminalObservation.stop_confirmed === true,
     terminalObservation,
+    humanAssistance: state.authorized_interactions?.length ? {
+      mode: "human_assisted", operation_count: state.authorized_interactions.length,
+      semantic_intervention_count: 0,
+    } : undefined,
     recovery: state.recovery,
     platform: config.client.platform || "macos",
   });
@@ -915,10 +978,17 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
     try {
       // The queue may have prepared several projects before dispatch. Navigate
       // to this exact project and restore its frozen prompt before readback.
-      await dependencies.verifyPreparedUi(config, state);
+      const beforeFill = await dependencies.verifyPreparedUi(config, state);
+      if (![sha256(""), config.prompt.sha256].includes(beforeFill.prompt_sha256)) {
+        throw new Error("QWENWORK_PRE_DISPATCH_DRAFT_DRIFT");
+      }
       await recordDispatchStage("prepared-project-restored");
-      await dependencies.fillPrompt(config.prompt.content);
-      await recordDispatchStage("frozen-prompt-filled");
+      if (beforeFill.prompt_sha256 !== config.prompt.sha256) {
+        await dependencies.fillPrompt(config.prompt.content);
+        await recordDispatchStage("frozen-prompt-filled");
+      } else {
+        await recordDispatchStage("frozen-prompt-already-exact");
+      }
     } catch (error) {
       return persistAttention(
         config, state, dependencies, "QWENWORK_PRE_DISPATCH_READBACK_FAILED",
@@ -1137,6 +1207,10 @@ export async function createLiveDependencies(config) {
       skipClarification: config.control.clarification_policy === "skip-question-card"
         ? (session) => skipQwenClarification(page, session.conversation_id, timeout)
         : undefined,
+      allowSensitiveOutput: config.control.sensitive_output_policy === "allow-original-on-this-task"
+        ? (session) => allowQwenSensitiveOutput(page, session,
+            () => queryQwenSessionRows(config.client.session_db, snapshotOptions), timeout)
+        : undefined,
       observeUi: async (session, _state) => inspectQwenTaskUi(
         page,
         new Date().toISOString(),
@@ -1160,7 +1234,7 @@ export async function createLiveDependencies(config) {
       },
   };
   for (const key of ["prepareUi", "verifyPreparedUi", "fillPrompt", "dispatchPrompt", "navigateToSession",
-    "inspectPendingInteraction", "skipClarification", "observeUi"]) {
+    "inspectPendingInteraction", "skipClarification", "allowSensitiveOutput", "observeUi"]) {
     if (dependencies[key]) dependencies[key] = guard(dependencies[key]);
   }
   return { browser, dependencies };

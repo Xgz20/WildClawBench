@@ -99,7 +99,7 @@
     },
     {
       "name": "general-contracts",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "source_root": "eval_general_e2e/contracts",
       "vendor_root": "vendor/e2e-shared/general-contracts",
       "entrypoints": [
@@ -123,7 +123,7 @@
     },
     {
       "name": "doubaowork",
-      "version": "0.7.7",
+      "version": "0.8.0",
       "source_root": "tools/report/e2e-shared/doubaowork",
       "vendor_root": "vendor/e2e-shared/doubaowork",
       "entrypoints": [
@@ -131,7 +131,8 @@
         "native-evidence.mjs",
         "probe.mjs",
         "process-cleanup.mjs",
-        "select-folder.swift"
+        "select-folder.swift",
+        "tool-counts.mjs"
       ]
     },
     {
@@ -150,6 +151,17 @@
       "vendor_root": "vendor/e2e-shared/qwenwork-native-state",
       "entrypoints": [
         "index.mjs"
+      ]
+    },
+    {
+      "name": "general-resource-supplements",
+      "version": "1.0.0",
+      "source_root": "tools/report/e2e-shared/general-resource-supplements",
+      "vendor_root": "vendor/e2e-shared/general-resource-supplements",
+      "entrypoints": [
+        "index.mjs",
+        "archive_astronstudio_trace.mjs",
+        "collect_astronstudio_resource_metrics.mjs"
       ]
     }
   ]

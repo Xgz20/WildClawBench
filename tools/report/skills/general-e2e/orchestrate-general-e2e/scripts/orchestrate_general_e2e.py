@@ -430,7 +430,9 @@ def _execution_summary(
             raise OrchestrationError("EVIDENCE_MANIFEST_IDENTITY_MISMATCH", task_id)
         evidence_sha = _sha256_file(evidence_manifest)
     failure: dict[str, str] | None = None
-    if business_status != "completed":
+    if business_status == "candidate_error" and record.get("phase") == "FAILED" and record.get("failure_evidence", {}).get("schema") == "verified-failed-output-evidence/v1":
+        pass  # Frozen score Skill independently verifies every native source.
+    elif business_status != "completed":
         failure = {
             "code": "EXECUTION_NOT_COMPLETED",
             "message": f"execution business status is {business_status}",
@@ -449,7 +451,7 @@ def _execution_summary(
             evidence.get("completeness") == "partial"
             and isinstance(missing, list)
             and missing
-            and set(missing) <= {"resource_metrics_complete_coverage", "provider-request-coverage-unavailable", "native-tool-trajectory-incomplete"}
+            and set(missing) <= {"resource_metrics_complete_coverage", "provider-request-coverage-unavailable", "native-tool-trajectory-incomplete", "displayed-tool-without-execution-evidence", "remote-tool-event-coverage-incomplete", "unmapped-native-message-block", "cross-source-tool-order-unavailable", "multimodal-tool-result-content-unverified", "unsupported_item_type:dynamicToolCall"}
             and (set(missing) <= {"resource_metrics_complete_coverage"}
                  or (evidence.get("transcript_path") and evidence.get("trace_index_path")))
         )
@@ -627,6 +629,8 @@ def _prompt_text(
 项目根目录就是本题私有评分 attempt。先读取 `attempt-manifest.json`，再{skill_usage}。只处理本题，不创建或调度其他任务，不执行被测 Harness，不修改 `candidate-original/`，不把自动规则组件冒充完整分数。{readiness_instruction}
 
 {rule_instruction}
+
+若 attempt-manifest.json 的 evidence_admission 为 reviewed-output-evidence/v1，先读取 private/evidence-admission.json：该题冻结 rubric 已逐项确认以候选产物或最终回复为评分输入，工具/中间消息轨迹 partial 已单独保留。必须按原 rubric 评价所需证据，不因可选工具轨迹 partial 拒绝整题、不增加过程评分项；网页题仍须独立验证交互。无法核验的过程行为不作未发生断言。
 
 使用分页查询逐 criterion 查找支持证据和反例，把结构化判定写入新的响应文件并导入；必要证据不足时保留 `unresolved`，不得补零。提交响应前逐项执行以下自检：每个 `evidence_id` 都必须出现在对应 `query_ids` 的实际返回集合中；每个 `judged` criterion 都必须同时标记已检查支持证据和反例；任何“未发生”结论都必须使用无过滤条件分页覆盖完整 transcript，并将 `absence_claim` 与 `complete_event_range_checked` 都设为 `true`。若自检失败，先修正本题响应文件，不要提交会触发 `SEMANTIC_CITATION_NOT_QUERIED` 或 `SEMANTIC_ABSENCE_COVERAGE_REQUIRED` 的响应。只有 `verify-score` 通过后才把评分任务报告为完成。
 

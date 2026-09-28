@@ -5,6 +5,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "nod
 import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
 import { readBoundNativeEvidence, readRegular } from "../../vendor/e2e-shared/doubaowork/bound-evidence.mjs";
+import { countBoundTools } from "../../vendor/e2e-shared/doubaowork/tool-counts.mjs";
 export { verifyTrajectoryPrompt, verifyRecoveredDispatchAcknowledgement } from "../../vendor/e2e-shared/doubaowork/bound-evidence.mjs";
 
 const ADAPTER = "doubaowork-native-evidence", VERSION = "0.2.8";
@@ -131,7 +132,8 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
         ...(multimodalBypassCount ? ["multimodal-tool-result-content-unverified"] : []),
         ...(nativeToolCoverageDiagnostic ? ["native-tool-upload-failed-before-terminal"] : []),
         ...(trajectoryPromptBinding.status !== "verified" ? [trajectoryPromptBinding.reason] : []),
-        ...(missingToolDisplays.length ? ["non-success-tool-display-without-execution-evidence"] : []),
+        ...(missingToolDisplays.length ? [nonSuccess ? "non-success-tool-display-without-execution-evidence"
+          : "displayed-tool-without-execution-evidence"] : []),
         ...(!native.final_text ? ["final-assistant-text-unavailable"] : []), ...(!nativeTools ? ["native-tool-trajectory-incomplete"] : []), ...(unknownBlocks.length ? ["unmapped-native-message-block"] : []),
         ...(crossSourceOrderUnknown ? ["cross-source-tool-order-unavailable"] : []),
         ...(!remoteCoverageVerified ? ["remote-tool-event-coverage-incomplete"] : [])] }, calls: [...calls.values()],
@@ -139,15 +141,27 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
       normalized_event_count: events.length,
       filtered_native_event_count: allNativeEvents.length + (nativeTools?.events.length || 0) + 2 - events.length,
       compatibility_profiles: ["doubaowork-native-im/v1", "doubaowork-trajectory-replay-dedup/v1", ...(nativeTools ? ["doubaowork-local-tool-debug-sink/v1"] : [])] } };
+  let toolCounts = null;
+  if (!nonSuccess && nativeToolBytes && trajectoryPromptBinding.status === "verified") {
+    try {
+      toolCounts = countBoundTools({ execution: { identity, execution: state.execution }, state, index,
+        transcript: events, runtime, journal, nativeSnapshot: JSON.parse(nativeToolBytes) });
+      raw.push(await write("raw/tool-count-summary.json", json(toolCounts)));
+    } catch (error) {
+      // Unknown display profiles can still have valid outputs and partial
+      // process evidence. Identity, duplicate-ID and reconciliation errors fail.
+      if (!["UNKNOWN_NATIVE_BLOCK", "REMOTE_TOOL_PROFILE_UNSUPPORTED", "UNMATCHED_PROVIDER_TOOL_PROFILE", "NATIVE_BLOCK_ID_MISSING"].includes(error.message)) throw error;
+    }
+  }
   const indexArtifact = await write("trace-index.json", json(index));
   const stateArtifact = await write("execution-state.json", json(state));
   const metric = (value = null, basis = "No verified native accounting profile for this metric") => ({ value, status: value === null ? "unavailable" : "observed", basis });
   const usageFields = ["input_tokens", "output_tokens", "total_tokens", "cache_read_input_tokens", "cache_creation_input_tokens", "reasoning_output_tokens"];
   const fields = [...usageFields, "request_count", "request_attempt_count", "call_count", "duration_seconds", "agent_duration_seconds"];
-  const toolCountKnown = !nonSuccess && Boolean(nativeTools) && unknownBlocks.length === 0 && remoteCoverageVerified;
-  const knownToolSubtotal = nativeToolCoverageDiagnostic ? nativeTools.known_subtotal : calls.size;
+  const toolCountKnown = toolCounts?.status === "complete" || !nonSuccess && Boolean(nativeTools) && unknownBlocks.length === 0 && remoteCoverageVerified;
+  const knownToolSubtotal = toolCounts?.total ?? (nativeToolCoverageDiagnostic ? nativeTools.known_subtotal : calls.size);
   const metrics = { usage: Object.fromEntries(usageFields.map(k => [k, metric()])), requests: { request_count: metric(), request_attempt_count: metric() },
-    tools: { call_count: toolCountKnown ? metric(calls.size, "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance")
+    tools: { call_count: toolCountKnown ? metric(knownToolSubtotal, toolCounts?.basis || "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance")
       : { value: null, status: "partial", basis: "Unique calls in the bound trajectory; provider total coverage unknown" } },
     timing: { duration_seconds: metric(state.execution.duration_seconds, nonSuccess ? "Dispatch to observed native terminal and idle runtime; includes controller observation delay, not agent runtime"
       : lifecycle?.status === "observed" ? `Dispatch boundary to ${lifecycle.source}` : native.raw_terminal.profile === "native-im-api-history/v1"

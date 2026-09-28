@@ -159,42 +159,42 @@ class GeneralReleasePrepareTests(unittest.TestCase):
         }
         self.assertEqual(
             readiness["prepare-general-e2e-workspaces"],
-            ("0.2.0", "operational"),
+            ("0.3.0", "operational"),
         )
         self.assertEqual(
             readiness["execute-general-e2e"],
-            ("0.11.27", "operational"),
+            ("0.12.0", "operational"),
         )
         self.assertEqual(
             readiness["collect-general-e2e"],
-            ("0.8.26", "operational"),
+            ("0.9.0", "operational"),
         )
         self.assertEqual(
             readiness["score-general-e2e"],
-            ("0.8.3", "operational"),
+            ("0.9.0", "operational"),
         )
         self.assertEqual(
             readiness["orchestrate-general-e2e"],
-            ("0.9.6", "operational"),
+            ("0.10.0", "operational"),
         )
         self.assertEqual(
             readiness["run-general-e2e"],
-            ("0.5.2", "operational"),
+            ("0.6.0", "operational"),
         )
         self.assertEqual(
             readiness["report-general-e2e"],
-            ("0.5.4", "operational"),
+            ("0.6.0", "operational"),
         )
         self.assertEqual(
             set(readiness.values()),
             {
-                ("0.2.0", "operational"),
-                ("0.5.2", "operational"),
-                ("0.5.4", "operational"),
-                ("0.8.3", "operational"),
-                ("0.8.26", "operational"),
-                ("0.9.6", "operational"),
-                ("0.11.27", "operational"),
+                ("0.3.0", "operational"),
+                ("0.6.0", "operational"),
+                ("0.6.0", "operational"),
+                ("0.9.0", "operational"),
+                ("0.9.0", "operational"),
+                ("0.10.0", "operational"),
+                ("0.12.0", "operational"),
             },
         )
 
@@ -377,11 +377,11 @@ class GeneralReleasePrepareTests(unittest.TestCase):
         )
         self.assertEqual(
             mapped,
-            "读 ./workspace/input.txt，但保留 /tmp_workspace_backup/input.txt",
+            "读 ./input.txt，但保留 /tmp_workspace_backup/input.txt",
         )
         self.assertEqual(
             mapping,
-            [{"from": "/tmp_workspace", "to": "./workspace"}],
+            [{"from": "/tmp_workspace", "to": "."}],
         )
 
     def test_release_catalog_and_skill_tampering_fail_closed(self) -> None:

@@ -6,6 +6,24 @@
   "additionalProperties": false,
   "required": ["schema_id", "schema_version", "identity", "dataset", "phase", "harness", "model", "execution", "prompt", "session", "evidence", "candidate", "resource_metrics_path", "human_assistance"],
   "properties": {
+    "collection_revision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "source_execution_record_sha256", "original_business_status", "no_prompt_resent"],
+      "properties": {
+        "kind": {"const": "native-failure-classification-repair"},
+        "source_execution_record_sha256": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/sha256"},
+        "original_business_status": {"const": "infrastructure_error"},
+        "no_prompt_resent": {"const": true}
+      }
+    },
+    "failure_evidence": {
+      "type": "object", "additionalProperties": false, "required": ["schema", "path", "sha256"],
+      "properties": {
+        "schema": {"const": "verified-failed-output-evidence/v1"},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/sha256"}
+      }
+    },
     "schema_id": {"const": "urn:wildclawbench:schema:general-e2e:execution-record:v1"},
     "schema_version": {"const": 1},
     "identity": {"$ref": "urn:wildclawbench:schema:general-e2e:common:v1#/$defs/taskIdentity"},

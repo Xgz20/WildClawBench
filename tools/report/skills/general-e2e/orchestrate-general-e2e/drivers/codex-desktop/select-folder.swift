@@ -140,11 +140,18 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
         return windows.isEmpty ? nil : windows
     }
     do {
-        let outerSheet = try waitUntil(timeoutSeconds: timeoutSeconds, description: "外层打开文件夹面板") {
-            applicationWindows(root).lazy.compactMap {
-                descendants($0, role: kAXSheetRole).first
-            }.first
+        let selection: (AXUIElement, AXUIElement) = try waitUntil(timeoutSeconds: timeoutSeconds, description: "唯一外层打开文件夹面板") {
+            let matches = applicationWindows(root).flatMap { window in
+                descendants(window, role: kAXSheetRole).map { (window, $0) }
+            }
+            return matches.count == 1 ? matches[0] : nil
         }
+        let (ownerWindow, outerSheet) = selection
+        // An active detached Codex window can otherwise receive Cmd-Shift-G.
+        // Focus the unique window that actually owns the observed folder panel.
+        let raised = AXUIElementPerformAction(ownerWindow, kAXRaiseAction as CFString)
+        guard raised == .success else { throw SelectionError.actionFailed("聚焦文件选择器所属窗口", raised) }
+        _ = AXUIElementSetAttributeValue(root, kAXFocusedWindowAttribute as CFString, ownerWindow)
         RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         try postGoToFolderShortcut()
         let innerSheet = try waitUntil(timeoutSeconds: timeoutSeconds, description: "前往文件夹面板") {
