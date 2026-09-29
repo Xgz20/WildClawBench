@@ -17,6 +17,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ROLLOUT_PATH, readRolloutFile, analyzeRollout, discoverRollout } from "./astronstudio-rollout.mjs";
 
 export const TRACE_ADAPTER_ID = "astronstudio-provider-runtime-events";
 export const TRACE_ADAPTER_VERSION = "0.1.1";
@@ -56,6 +57,8 @@ export function parseArgs(argv) {
     ["--state-file", "stateFile"],
     ["--state-db", "stateDb"],
     ["--output-dir", "outputDir"],
+    ["--rollout-file", "rolloutFile"],
+    ["--rollout-root", "rolloutRoot"],
   ]);
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -716,7 +719,10 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   const rawPath = join(outputDir, "raw", "astronstudio-provider-events.jsonl");
   const transcriptPath = join(outputDir, "transcript.jsonl");
   const indexPath = join(outputDir, "trace-index.json");
-  await assertWritableTargets([rawPath, transcriptPath, indexPath], Boolean(options.replace));
+  const rolloutPath = join(outputDir, ROLLOUT_PATH);
+  const rollout = options.rolloutFile ? await readRolloutFile(options.rolloutFile) : null;
+  if (rollout) analyzeRollout(rollout.bytes, state);
+  await assertWritableTargets([rawPath, transcriptPath, indexPath, ...(rollout ? [rolloutPath] : [])], Boolean(options.replace));
 
   await mkdir(join(outputDir, "raw"), { recursive: true });
   const native = await withStateSnapshot(
@@ -774,7 +780,7 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     transcript: artifact("transcript.jsonl", transcriptBytes, {
       event_count: normalized.events.length,
     }),
-    raw_trace: [native.raw_artifact],
+    raw_trace: [native.raw_artifact, ...(rollout ? [artifact(ROLLOUT_PATH, rollout.bytes)] : [])],
     raw_event_range: native.raw_event_range,
     normalization: { ...normalized.normalization, native_event_count: native.raw_event_range.event_count,
       filtered_native_event_count: native.raw_event_range.event_count - normalized.events.length },
@@ -785,6 +791,7 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   await mkdir(join(outputDir, "raw"), { recursive: true });
   await rename(native.temporary_raw, rawPath);
   await atomicWrite(transcriptPath, transcriptBytes);
+  if (rollout) await atomicWrite(rolloutPath, rollout.bytes);
   await atomicWrite(indexPath, indexBytes);
   return {
     status: "PASS",
@@ -809,6 +816,10 @@ export async function main() {
   if (parsed.help) {
     process.stdout.write(`${usage()}\n`);
     return;
+  }
+  if (!parsed.rolloutFile) {
+    const state = await readJson(resolve(parsed.stateFile));
+    parsed.rolloutFile = await discoverRollout(state.session.session_id, parsed.rolloutRoot);
   }
   const result = await archiveAstronStudioTrace(parsed);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);

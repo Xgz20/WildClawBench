@@ -206,6 +206,8 @@ def build_html(tasks, summaries, report_excel):
                  link(row["transcript"], "会话轨迹"), link(row["raw_trace_directory"]+"/" if row["raw_trace_directory"] else None,"原始轨迹"),
                  link(row["score_file"],"评分"), link(row.get("resource_supplement") or row["resource_metrics"],"资源统计"), link(row["grading_contract"],"评分标准"),
                  link(row["scoring_directory"]+"/", "评分过程")]
+        if row.get("rollout"):
+            links.insert(3, link(row["rollout"], "rollout 原件"))
         trs.append(f'<tr data-unit="{row["harness"]}" data-search="{search}"><td>{row["harness"]}</td><td>{row["ordinal"]:02d}</td>'
                    f'<td><strong>{html.escape(row["task_name"])}</strong><small>{html.escape(row["task_id"])}</small></td>'
                    f'<td>{status}</td><td class="score">{row["score_100"]:.2f}</td><td class="links">'+" · ".join(links)+"</td></tr>")
@@ -318,8 +320,14 @@ def main(argv=None):
                 mapped = None
                 for uid, imported in index["imports"].items():
                     package = Path(imported["target"])
-                    if original.is_relative_to(package):
-                        mapped = (Path(UNITS[uid]) / original.relative_to(package)).as_posix()
+                    # A byte-verified frozen copy may replace an actively edited
+                    # source directory. Keep the original provenance path as an
+                    # explicit alias; the destination SHA is still checked below.
+                    for source_root in [package, Path(imported.get("original_target", package))]:
+                        if original.is_relative_to(source_root):
+                            mapped = (Path(UNITS[uid]) / original.relative_to(source_root)).as_posix()
+                            break
+                    if mapped is not None:
                         break
                 if mapped is None:
                     mapped = artifact_lookup.get((source["sha256"],source["size"]))
@@ -366,6 +374,25 @@ def main(argv=None):
         task["effective_resource"] = r["resource"]
         if task["resource_supplement"] and RESOURCE is not None:
             sup = load(staging / task["resource_supplement"])
+            if sup.get("rollout_path"):
+                task["rollout"] = (PurePosixPath(task["resource_supplement"]).parent / sup["rollout_path"]).as_posix()
+                assert sha(staging/task["rollout"]) == r["tool_calls"]["rollout_sha256"]
+                task["raw_trace_files"].append(task["rollout"])
+            if sup.get("base_supplement"):
+                base_manifest = PurePosixPath(task["resource_supplement"]).parent / safe_rel(sup["base_supplement"]["path"])
+                assert sha(staging/base_manifest) == sup["base_supplement"]["sha256"]
+                base_trace = base_manifest.parent / "trace/trace-index.json"
+                if (staging/base_trace).is_file():
+                    base_index = load(staging/base_trace)
+                    assert base_index["identity"] == ex["identity"]
+                    task["original_transcript"] = task["transcript"]
+                    task["original_trace_index"] = task["trace_index"]
+                    task["transcript"] = (base_trace.parent / safe_rel(base_index["transcript"]["path"])).as_posix()
+                    assert sha(staging/task["transcript"]) == base_index["transcript"]["sha256"]
+                    task["trace_index"] = base_trace.as_posix()
+                    task["raw_trace_files"] += [(base_trace.parent/safe_rel(a["path"])).as_posix() for a in base_index["raw_trace"]]
+                    task["raw_trace_directory"] = (base_trace.parent/"raw").as_posix()
+                    task["trace_completeness"] = base_index["completeness"]
             if sup.get("trace_supplement"):
                 task["original_transcript"] = task["transcript"]
                 task["original_trace_index"] = task["trace_index"]
@@ -405,7 +432,8 @@ def main(argv=None):
                           "zero_scores":sum(x["score_0_1"]==0 for x in rr),"transcript_present":sum(bool(x["transcript"]) for x in rr),
                           "raw_trace_present":sum(bool(x["raw_trace_files"]) for x in rr)})
     write_json(staging/"TASK_INDEX.json",{"schema_version":1,"report_version":REPORT.name,"tasks":tasks})
-    csv_fields=[k for k in tasks[0] if k not in ["raw_trace_files","trace_completeness","effective_resource"]]
+    csv_fields=list(dict.fromkeys(k for row in tasks for k in row
+                                  if k not in ["raw_trace_files","trace_completeness","effective_resource"]))
     with (staging/"TASK_INDEX.csv").open("w",encoding="utf-8-sig",newline="") as f:
         writer=csv.DictWriter(f,fieldnames=csv_fields,extrasaction="ignore");writer.writeheader();writer.writerows(tasks)
     write_json(staging/"SELECTION.json",{"schema_version":1,"selection_rule":"one final execution and score per unit/task selected by the supplied report",

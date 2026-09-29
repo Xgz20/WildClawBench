@@ -305,7 +305,9 @@ async function loadTraceBundle(indexPath, state, profile) {
   const transcriptRelative = safeRelativePath(index.transcript?.path, "trace transcript");
   const transcriptSource = await readRegularFile(resolve(root, transcriptRelative));
   assertArtifact(transcriptSource, index.transcript, "trace transcript");
-  if (!Array.isArray(index.raw_trace) || (!profile.generic && index.raw_trace.length !== 1)
+  const astronRawPaths = new Set(["raw/astronstudio-provider-events.jsonl", "raw/astronstudio-rollout.jsonl"]);
+  if (!Array.isArray(index.raw_trace) || (!profile.generic && (!index.raw_trace.length
+      || index.raw_trace.length > 2 || index.raw_trace.some(r=>!astronRawPaths.has(r.path))))
       || (profile.generic && index.raw_trace.length === 0)) {
     throw new Error("TRACE_RAW_ARTIFACT_AMBIGUOUS");
   }

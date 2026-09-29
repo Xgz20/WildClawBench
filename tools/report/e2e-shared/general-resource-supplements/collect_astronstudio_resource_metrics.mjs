@@ -14,6 +14,7 @@ import {
 } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ROLLOUT_PATH, analyzeIndexedRollout } from "./astronstudio-rollout.mjs";
 
 export const RESOURCE_SCHEMA = "urn:wildclawbench:schema:general-e2e:resource-metrics:v1";
 export const RESOURCE_COLLECTOR = "astronstudio-provider-runtime-resource-metrics";
@@ -166,7 +167,11 @@ function assertTraceBinding(state, index) {
   if (index.adapter?.id !== TRACE_ADAPTER_ID) throw new Error("TRACE_ADAPTER_UNSUPPORTED");
   if (!sameIdentity(state.identity, index.identity)) throw new Error("TRACE_IDENTITY_MISMATCH");
   if (!sameSession(state, index)) throw new Error("TRACE_SESSION_MISMATCH");
-  if (!Array.isArray(index.raw_trace) || index.raw_trace.length !== 1) {
+  const allowed = new Set(["raw/astronstudio-provider-events.jsonl", ROLLOUT_PATH]);
+  if (!Array.isArray(index.raw_trace) || ![1,2].includes(index.raw_trace.length)
+      || new Set(index.raw_trace.map(r=>r.path)).size !== index.raw_trace.length
+      || index.raw_trace.some(r=>!allowed.has(r.path))
+      || !index.raw_trace.some(r=>r.path==="raw/astronstudio-provider-events.jsonl")) {
     throw new Error("RAW_TRACE_AMBIGUOUS");
   }
 }
@@ -184,7 +189,7 @@ function safeRelativePath(value) {
 
 async function readIndexedRawTrace(traceIndexPath, index) {
   const root = await realpath(dirname(resolve(traceIndexPath)));
-  const rawArtifact = index.raw_trace[0];
+  const rawArtifact = index.raw_trace.find(r=>r.path==="raw/astronstudio-provider-events.jsonl");
   const rawRelative = safeRelativePath(rawArtifact.path);
   const candidate = resolve(root, rawRelative);
   const resolved = await realpath(candidate);
@@ -597,6 +602,20 @@ export async function collectAstronStudioResourceMetrics(options) {
     rows: rawSource.rows,
     sources,
   });
+  if (indexSource.value.raw_trace.some(r=>r.path===ROLLOUT_PATH)) {
+    const rollout = await analyzeIndexedRollout(indexSource.absolute, stateSource.value);
+    document.collection.sources.push({...rollout.source, path:`trace/${ROLLOUT_PATH}`});
+    for (const [group, values] of Object.entries(rollout.metrics)) {
+      Object.assign(document.metrics[group], values);
+      for (const field of Object.keys(values)) {
+        document.collection.coverage[field] = rollout.collection.coverage[field];
+        delete document.collection.known_subtotals[field];
+        if (field in rollout.collection.known_subtotals) document.collection.known_subtotals[field]=rollout.collection.known_subtotals[field];
+        document.collection.metric_sources[field]=[`trace/${ROLLOUT_PATH}`];
+      }
+    }
+    document.collection.warnings.push(...rollout.collection.warnings);
+  }
   const bytes = Buffer.from(`${JSON.stringify(document, null, 2)}\n`, "utf8");
   await atomicWrite(outputPath, bytes);
   return {

@@ -6,6 +6,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { DatabaseSync } from "node:sqlite";
 import { createResourceSupplement, verifyResourceSupplement } from "../../tools/report/e2e-shared/general-resource-supplements/index.mjs";
+import { collectAstronStudioResourceMetrics } from "../../tools/report/e2e-shared/general-resource-supplements/collect_astronstudio_resource_metrics.mjs";
 
 import {
   archiveAstronStudioTrace,
@@ -386,5 +387,33 @@ test("offline resource supplementation preserves execution bytes and rejects cha
     const p=join(unitRoot,"evidence/resource-supplements",TASK_ID,"resource-metrics.json");
     await writeFile(p,"{}");
     await assert.rejects(()=>verifyResourceSupplement({unitRoot,taskId:TASK_ID,executionRecord:record}),/SUPPLEMENT_ARTIFACT_DRIFT/);
+  } finally { await rm(f.root,{recursive:true,force:true}); }
+});
+
+test("rollout is archived byte-for-byte and overrides protocol tool/request counts", async () => {
+  const f=await createFixture();
+  try {
+    f.state.execution={started_at:'2026-09-17T10:00:01.000Z',finished_at:'2026-09-17T10:00:09.000Z',duration_seconds:8};
+    f.state.session.native_status='completed';
+    await writeFile(f.stateFile,JSON.stringify(f.state));
+    const first=await archiveAstronStudioTrace({stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir});
+    const row=(type,payload)=>({type,payload});
+    const usage={input_tokens:10,cached_input_tokens:2,output_tokens:3,reasoning_output_tokens:1,total_tokens:13};
+    const rows=[row('session_meta',{id:SESSION_ID,cwd:f.workspace}),
+      row('event_msg',{type:'task_started',turn_id:TURN_ID}),row('turn_context',{turn_id:TURN_ID,cwd:f.workspace}),
+      row('event_msg',{type:'user_message',message:'请修复温度换算程序。'}),
+      ...first.trace_index.calls.map(c=>row('response_item',{type:'function_call',call_id:c.call_id,name:'bash',arguments:'{}'})),
+      row('response_item',{type:'function_call',call_id:'read-not-in-desktop-events',name:'read',arguments:'{}'}),
+      row('event_msg',{type:'token_count',info:{total_token_usage:usage,last_token_usage:usage}}),
+      row('event_msg',{type:'task_complete',turn_id:TURN_ID})];
+    const rollout=join(f.root,'rollout.jsonl'),original=Buffer.from(rows.map(JSON.stringify).join('\n')+'\n');
+    await writeFile(rollout,original);
+    const captured=await archiveAstronStudioTrace({stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir,rolloutFile:rollout,replace:true});
+    assert.equal(captured.trace_index.raw_trace.length,2);
+    assert.deepEqual(await readFile(join(f.outputDir,'raw/astronstudio-rollout.jsonl')),original);
+    const result=await collectAstronStudioResourceMetrics({stateFile:f.stateFile,traceIndex:join(f.outputDir,'trace-index.json'),output:join(f.root,'metrics.json')});
+    assert.equal(result.metrics.tools.call_count.value,first.trace_index.calls.length+1);
+    assert.equal(result.metrics.requests.request_count.value,1);
+    assert.equal(result.metrics.requests.request_attempt_count.value,null);
   } finally { await rm(f.root,{recursive:true,force:true}); }
 });

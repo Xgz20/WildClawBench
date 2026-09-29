@@ -34,7 +34,7 @@ def verify_source_package(root,expected,unit_id,task_ids):
             require(b.decode("utf-8",errors="surrogateescape")==e["link_target"],"SELECTION_LINK_DRIFT")
         else:
             require(e["kind"]=="file" and stat.S_ISREG(mode) and q.resolve().is_relative_to(root),"SELECTION_FILE")
-            require(q.stat().st_size==e["size"] and sha(q)==e["sha256"],"SELECTION_MEMBER_SHA_DRIFT")
+            require(q.stat().st_size==e["size"] and sha(q)==e["sha256"],f"SELECTION_MEMBER_SHA_DRIFT:{q}")
             members[rel]=e;continue
         require(len(b)==e["size"] and hashlib.sha256(b).hexdigest()==e["sha256"],"SELECTION_MEMBER_SHA_DRIFT")
         members[rel]=e
@@ -58,6 +58,10 @@ def apply_external_resources(row,args,ref,manifest_sha):
     for group in verified["metrics"]["metrics"].values():
         for field in group:row["resource"][field]=report.metric_observation(verified["metrics"],field)
     row["tool_calls"].update(verified["tool_counts"])
+    supplement=load(path)
+    if supplement.get("rollout_path"):
+        row["tool_calls"]["rollout_path"]="ResourceSupplements/"+(path.parent/supplement["rollout_path"]).relative_to(root).as_posix()
+        row["tool_calls"]["rollout_sha256"]=sha(path.parent/supplement["rollout_path"])
     row["resource_collection_status"]=verified["metrics"]["collection"]["status"]
     if (path.parent/"trace/transcript.jsonl").is_file():
         row["tool_calls"]["transcript_path"]="ResourceSupplements/"+(path.parent/"trace/transcript.jsonl").relative_to(root).as_posix()

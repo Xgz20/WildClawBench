@@ -11,6 +11,7 @@ import { parseArgs } from "node:util";
 import { normalizeTraceRows } from "./archive_astronstudio_trace.mjs";
 import { collectAstronStudioResourceMetrics } from "./collect_astronstudio_resource_metrics.mjs";
 import { recountArchivedTools } from "../doubaowork/tool-counts.mjs";
+import { SUPPLEMENT_SCHEMA as ROLLOUT_SCHEMA, verifyRolloutSupplement } from "./astronstudio-rollout.mjs";
 
 export const SCHEMA = "wildclawbench.general-e2e-resource-supplement/v1";
 const ensure = (ok, code) => { if (!ok) throw Error(code); };
@@ -47,8 +48,9 @@ async function inventory(root) {
   await walk(root);return out.sort((a,b)=>a.path.localeCompare(b.path));
 }
 async function normalizeAstron(root,state,originalIndex) {
-  ensure(originalIndex.raw_trace?.length===1,"SUPPLEMENT_ASTRON_RAW_AMBIGUOUS");
-  const raw=child(join(root,"trace"),originalIndex.raw_trace[0].path), rows=[];
+  const providers=originalIndex.raw_trace?.filter(r=>r.path==="raw/astronstudio-provider-events.jsonl");
+  ensure(providers?.length===1,"SUPPLEMENT_ASTRON_RAW_AMBIGUOUS");
+  const raw=child(join(root,"trace"),providers[0].path), rows=[];
   let lineNo=0,last=-1,first=null;
   for await(const line of createInterface({input:createReadStream(raw),crlfDelay:Infinity})){
     lineNo++;ensure(Buffer.byteLength(line)<2*1024*1024,"SUPPLEMENT_EVENT_OVERSIZED");
@@ -142,6 +144,17 @@ export async function verifyExternalResourceSupplement({unitRoot, executionRecor
   workspaceRoot=resolve(workspaceRoot);directory=resolve(directory);
   ensure(inside(workspaceRoot,directory),"EXTERNAL_SUPPLEMENT_SCOPE");
   const doc=await load(join(directory,"resource-supplement.json")),ex=await load(executionRecord);
+  if(doc.schema_version===ROLLOUT_SCHEMA){
+    const rollout=await verifyRolloutSupplement({directory,executionRecord});
+    for(const a of doc.artifacts)ensure(same(await hashFile(child(directory,a.path)),{sha256:a.sha256,size:a.size}),"ROLLOUT_SUPPLEMENT_ARTIFACT_DRIFT");
+    if(!doc.base_supplement)return rollout;
+    const base=await verifyExternalResourceSupplement({unitRoot,executionRecord,directory:join(directory,"base"),workspaceRoot,sourceMap});
+    for(const [group,fields] of Object.entries(rollout.metrics.metrics))Object.assign(base.metrics.metrics[group]??={},fields);
+    Object.assign(base.metrics.collection.coverage,rollout.metrics.collection.coverage);
+    for(const field of Object.keys(rollout.metrics.collection.coverage))delete base.metrics.collection.known_subtotals[field];
+    Object.assign(base.metrics.collection.known_subtotals,rollout.metrics.collection.known_subtotals);
+    return {...rollout,metrics:base.metrics};
+  }
   ensure(doc.schema_version==="general-e2e-resource-supplement/v1"&&same(doc.identity,ex.identity)
     &&doc.execution_record_sha256===(await hashFile(executionRecord)).sha256&&doc.score_changed===false
     &&doc.zero_imputation_used!==true,"EXTERNAL_SUPPLEMENT_IDENTITY");

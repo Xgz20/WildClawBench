@@ -5,11 +5,21 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 
 # 采集 General E2E 证据
 
+## AstronStudio rollout 统计
+
+归档 CLI 同时保存桌面 provider events 与绑定的 AstronCode rollout。可用 `--rollout-file ABS` 指定原件，或 `--rollout-root ABS` 指定 sessions 目录；默认检索 `~/.acode/acode/acode-home-overlay/sessions` 中唯一匹配 session ID 的文件。缺失或歧义拒绝新采集，不把其他会话补入当前 attempt。
+
+工具名读取 rollout 的 `response_item.function_call/custom_tool_call.name`，保留 `bash`、`exec_command`、`read`、`write`、`edit` 及完整 MCP 名称。原生 `tool_search_call` 按协议工具 `tool_search` 计入。每个绑定 turn 内按 `call_id` 去重，返回事件不计，冲突拒绝；不按 Bash 的读写操作推断工具类别。
+
+请求数按 rollout `token_count` 累计值的有效推进计数，并与每次 `last_token_usage` 增量对账。重复快照排除，缺失/不一致保留 null 与小计。这表示可观测模型响应数，HTTP 尝试与未暴露重试仍为 unavailable。历史 provider-only 记录保留其原统计来源，不能据此声称已覆盖全部真实工具名。
+
+已冻结执行可用共享组件 `astronstudio-rollout.mjs create --execution-record ABS --state-file ABS --rollout-file ABS --output-dir NEW_ABS` 生成独立、可复算补充层；`verify` 重验绑定、SHA和统计。`--base-directory ABS` 可叠加既有资源补充层。补充层不改变执行、候选、评分或旧轨迹。
+
 将一次执行 attempt 收口为冻结候选和可审计证据，阶段名固定为 `collect-evidence`，不与 `import-return` 混用。
 
 ## 能力门禁
 
-`0.9.0` 补充：AstronStudio支持动态工具调用、失败turn资源统计、流式大轨迹归档及收口；已绑定的被评端原生失败保存独立失败证明。QwenWork保留经验证的UI模型选项和任务授权原件，并核对保护停止终态。DoubaoWork区分调用计数与参数/结果/顺序覆盖，按原生call ID或远端block ID去重；不补造工具内容。
+`0.9.1` 补充：AstronStudio支持动态工具调用、失败turn资源统计、流式大轨迹归档及收口；已绑定的被评端原生失败保存独立失败证明。QwenWork保留经验证的UI模型选项和任务授权原件，并核对保护停止终态。DoubaoWork区分调用计数与参数/结果/顺序覆盖，按原生call ID或远端block ID去重；不补造工具内容。
 
 评分完成后，AstronStudio/DoubaoWork可运行`scripts/supplement_resources.mjs create --unit-root ABS --execution-record ABS --state-file ABS --trace-index ABS`创建不可变补充层，再用`verify --unit-root ABS --execution-record ABS --task-id ID`独立复算。原执行、候选、评分、旧回执不改写。共享实现为`general-resource-supplements`，原有归档和指标CLI仍兼容。
 
@@ -19,7 +29,7 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 python -m eval_general_e2e skills --name collect-general-e2e --json
 ```
 
-当前 `0.9.0/operational` 支持 AstronStudio、WorkBuddy 与 QwenWork macOS 采集；WorkBuddy 支持原生 session JSONL 的模型响应数、Token、缓存读取及运行时请求耗时。QwenWork 对用户/助手/附件等内容行继续要求显式 session/cwd 一致；1.2.0 的 `worktree-state` 与 `file-history-snapshot` 等已知系统 metadata 行可缺少行内 cwd，并保留覆盖与 withheld claim。QwenWorkCN 1.2.0 / SDK 1.0.46 / transcript 1.1.59 的新 Profile 只在冻结的发送前 probe 证明 Token 开关、精确 runtime SHA 匹配，且逐响应非零 usage 与主 turn 终值按 request ID 完整对账时发布输入、输出、总 Token 和 Cache Read；Cache Write、推理 Token、HTTP 尝试仍不可用，旧 masked 样本不回填。finalizer 按正式 `collection.coverage` 和字段状态接受已验证的 observed/partial/unavailable 指标，不再把历史 unavailable 当作固定门禁。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+当前 `0.9.1/operational` 支持 AstronStudio、WorkBuddy 与 QwenWork macOS 采集；WorkBuddy 支持原生 session JSONL 的模型响应数、Token、缓存读取及运行时请求耗时。QwenWork 对用户/助手/附件等内容行继续要求显式 session/cwd 一致；1.2.0 的 `worktree-state` 与 `file-history-snapshot` 等已知系统 metadata 行可缺少行内 cwd，并保留覆盖与 withheld claim。QwenWorkCN 1.2.0 / SDK 1.0.46 / transcript 1.1.59 的新 Profile 只在冻结的发送前 probe 证明 Token 开关、精确 runtime SHA 匹配，且逐响应非零 usage 与主 turn 终值按 request ID 完整对账时发布输入、输出、总 Token 和 Cache Read；Cache Write、推理 Token、HTTP 尝试仍不可用，旧 masked 样本不回填。finalizer 按正式 `collection.coverage` 和字段状态接受已验证的 observed/partial/unavailable 指标，不再把历史 unavailable 当作固定门禁。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
 
 新增通用 [CB-B 收口接口](references/general-finalization.md) 接受 CB-A 状态与 trace-index v2，保留多个原始文件和 nullable 原生 ID。必须提供真实平台进程清理 hook；WorkBuddy 已有运行时采集和真实 macOS cleanup/finalizer canary，入口见 [WorkBuddy 收口入口](drivers/workbuddy/finalize.mjs)。QwenWorkCN 1.0.6 / macOS x86_64 已完成单题原生采集、真实 cleanup/finalizer、评分、回传和报告闭环；该证据不外推并发、Apple Silicon、Windows 或全量评测。
 
@@ -46,7 +56,7 @@ QwenWork 正式采集还要求数据库终态、执行回执和绑定主 turn �
 
 `0.8.27` 对 QwenWork 的 `tool.shell.started` 段落区分工具执行目录与 Workspace 根：唯一 `data.cwd` 落在已绑定 Workspace 内的子目录时，只记为未提供根路径的部分覆盖；根路径仍须由其他显式段落证明。越界、相对路径和冲突根路径仍阻断采集。
 
-`0.9.0` 同步修正 QwenWork collector 的独立段落绑定门禁：仅 `tool.shell.started` 唯一 `data.cwd` 位于已绑定 Workspace 内的子目录时，不把工具执行目录误判为另一个工作区根。仍需其他段落给出精确根路径；外部、相对或冲突路径继续拒绝。
+`0.9.1` 同步修正 QwenWork collector 的独立段落绑定门禁：仅 `tool.shell.started` 唯一 `data.cwd` 位于已绑定 Workspace 内的子目录时，不把工具执行目录误判为另一个工作区根。仍需其他段落给出精确根路径；外部、相对或冲突路径继续拒绝。
 
 ## 正式收口流程
 

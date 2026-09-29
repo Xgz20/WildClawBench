@@ -6,6 +6,8 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import os
+import subprocess
 
 CAPABILITIES = {
     "code_generation": "代码生成", "tool_use": "工具调用", "data_processing": "数据处理",
@@ -94,6 +96,20 @@ def trace_tools(root, execution, resolve_file, sha256_file):
     transcript = resolve_file(path.parent, ref["path"], "transcript")
     if sha256_file(transcript) != ref["sha256"] or transcript.stat().st_size != ref["size"]:
         raise ValueError("REPORT_TRANSCRIPT_DRIFT")
+    if any(r.get("path") == "raw/astronstudio-rollout.jsonl" for r in index.get("raw_trace", [])):
+        script = Path(__file__).resolve().parents[1] / "vendor/e2e-shared/general-resource-supplements/astronstudio-rollout.mjs"
+        if not script.is_file():
+            script = Path(__file__).resolve().parents[4] / "e2e-shared/general-resource-supplements/astronstudio-rollout.mjs"
+        run = subprocess.run([os.environ.get("GENERAL_E2E_NODE", "node"), str(script), "verify-index",
+                              "--trace-index", str(path), "--binding", json.dumps(execution)],
+                             capture_output=True, text=True, timeout=60)
+        if run.returncode:
+            raise ValueError("REPORT_ROLLOUT_REPLAY_FAILED: " + run.stderr[-1000:])
+        verified = json.loads(run.stdout)
+        return {**verified["tool_counts"], "transcript_path": transcript.relative_to(root).as_posix(),
+                "rollout_path": (path.parent / "raw/astronstudio-rollout.jsonl").relative_to(root).as_posix(),
+                "rollout_sha256": verified["source"]["sha256"], "trace_index_sha256": sha256_file(path),
+                "transcript_sha256": ref["sha256"]}
     calls = {}
     for line in transcript.read_text(encoding="utf-8").splitlines():
         if not line.strip():
