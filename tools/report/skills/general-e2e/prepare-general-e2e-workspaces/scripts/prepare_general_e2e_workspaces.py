@@ -761,6 +761,11 @@ def _unit_packages(
     execution_entries.append(
         ZipEntry(f"{unit_root}/manifest.json", pretty_json_bytes(execution_manifest))
     )
+    execution_entries.append(ZipEntry(f"{unit_root}/.general-e2e/round-unit.json",pretty_json_bytes({
+        "schema_version":"wildclawbench.general-e2e-round-workspace/v1",
+        "batch_id":batch_id,"unit_id":unit_id,"harness":unit["harness"]["id"],
+        "task_ids":list(unit["task_ids"]),"requires_scoring_trace_bundle":True,
+    })))
     scoring_manifest = {
         "schema_id": PACKAGE_SCHEMA_ID,
         "schema_version": 1,
@@ -931,6 +936,12 @@ def _verify_execution_archive(path: Path, batch_manifest: Mapping[str, Any]) -> 
         "score",
         ".general-e2e",
     }
+    marker=members.get(".general-e2e/round-unit.json")
+    if marker is not None:
+        binding=_load_json_bytes(marker.data,label="round unit marker")
+        if marker.kind!="file" or binding.get("batch_id")!=manifest.get("batch_id") or binding.get("unit_id")!=manifest.get("unit_id") or binding.get("requires_scoring_trace_bundle") is not True:
+            raise PrepareError("ROUND_UNIT_MARKER_INVALID")
+        expected.add(".general-e2e/round-unit.json")
     for task in manifest.get("tasks", []):
         task_id = task["task_id"]
         prompt = task["prompt"]

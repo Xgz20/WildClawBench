@@ -5,6 +5,8 @@ description: 校验并汇总 General E2E submission 和回传包，生成同源 
 
 # 汇总 General E2E 报告
 
+稳定轮次使用 Harness/execution/tasks 与 Harness/score/tasks，报告位于根目录 reports。历史归档可通过 run Skill 的 archive_round.py replay 在临时目录重建输入；selected_report.py 的 --data-output 输出已验证 JSON，不必重新渲染 Excel。原执行、评分、资源与 SHA 均须一致，路径迁移另记映射，不能修改已冻结原件。
+
 AstronStudio 归档含 `raw/astronstudio-rollout.jsonl` 时，工具统计从已验证 rollout 复算真实工具名和唯一调用 ID，不能继续按 `commandExecution/fileChange` 分类。原生工具搜索也计入；结果事件不计。模型请求数为已对账的用量推进次数，区别于 HTTP 尝试。`selected_report.py --resource-root` 支持独立 rollout 补充层及其既有资源补充链，保留原执行和评分 SHA，报告记录新旧指标与 rollout 路径/哈希。
 
 rollout profile 2 同时提供 Token 和原生任务耗时。Token 从去重并对账后的单次用量累计；任务耗时直接采用原生 `duration_ms`。流程耗时仍采用执行器起止。报告必须按补充记录中的 profile 复算：旧 profile 1 的冻结统计保持原样，新评测和新补采使用 profile 2；缺失字段保留 unavailable，不从桌面事件静默回填。
@@ -13,7 +15,7 @@ rollout profile 2 同时提供 Token 和原生任务耗时。Token 从去重并�
 
 ## 当前能力
 
-`0.6.2` 增加：分组工具表头、逐字段覆盖及部分小计、中文分类与用例数、秒级Excel名称，以及`--target-unit`领导版。目标单元用于文字总结，各表保留全部参评单元。`report.display_overrides.unit_model_labels`可带`label/reason`修改展示，不改原模型验证信息。采集后的通用资源补充层会在报告时重新核验并复算。
+`0.7.0` 增加：分组工具表头、逐字段覆盖及部分小计、中文分类与用例数、秒级Excel名称，以及`--target-unit`领导版。目标单元用于文字总结，各表保留全部参评单元。`report.display_overrides.unit_model_labels`可带`label/reason`修改展示，不改原模型验证信息。采集后的通用资源补充层会在报告时重新核验并复算。
 
 不同冻结来源使用`scripts/selected_report.py --workspace-root ABS --batch-root ABS --source-index ABS --task-index ABS`显式逐题选择；默认只读，追加输出目录与Excel运行时才发布。保留每条原批次/attempt身份和资源修正谱系。普通报告同时生成`developer-source-index.json`及`developer-task-index.json`供研发打包。
 
@@ -23,11 +25,11 @@ rollout profile 2 同时提供 Token 和原生任务耗时。Token 从去重并�
 python -m eval_general_e2e skills --name report-general-e2e --json
 ```
 
-`0.6.2/operational` 支持按模型@Harness 展示 General 结果、效率和维度对比、每题各单元并列的用例对比明细，以及每单元独立评分详情，生成不含根因分析的领导版 Markdown、Excel 与单独审计报告。合法 `partial` collect receipt 可进入报告，未知 Token/cache 等字段继续显示为不可用，不补零。保留 WorkBuddy 已冻结评分后的 JSONL 和耗时补采。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
+`0.7.0/operational` 支持按模型@Harness 展示 General 结果、效率和维度对比、每题各单元并列的用例对比明细，以及每单元独立评分详情，生成不含根因分析的领导版 Markdown、Excel 与单独审计报告。合法 `partial` collect receipt 可进入报告，未知 Token/cache 等字段继续显示为不可用，不补零。保留 WorkBuddy 已冻结评分后的 JSONL 和耗时补采。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
 
 DoubaoWork 历史回执的资源展示另做保守复核：按原 source SHA 验证 trace-index 和 execution-state，partial 工具轨迹只保留已知调用小计；只有同一本机时钟的原生完成接收事件才与 dispatch 相减，支持经绑定原件证明的 checkpoint perf_mark_samples.task_finish.receiveTimestamp。服务端完成时间或未知时钟不计流程耗时及批次壁钟覆盖。报告 JSON 的 lineage 记录旧值、原因和证据 SHA；原 execution/resource/score 文件及评分分母保持冻结。
 
-`0.6.2` 将 Markdown、审计和单题文字分数的显示舍入统一为十进制 ROUND_HALF_UP，与 Excel 数字格式一致；只改变显示，不改报告 JSON 中的原始分数、聚合分母或资源值。
+`0.7.0` 将 Markdown、审计和单题文字分数的显示舍入统一为十进制 ROUND_HALF_UP，与 Excel 数字格式一致；只改变显示，不改报告 JSON 中的原始分数、聚合分母或资源值。
 
 ## 责任边界
 

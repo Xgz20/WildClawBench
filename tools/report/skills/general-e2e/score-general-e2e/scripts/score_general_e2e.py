@@ -30,6 +30,7 @@ import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import failure_evidence
+import trace_handoff
 
 ATTEMPT_SCHEMA = "wildclawbench.general-e2e-local-scoring-attempt/v1"
 AUDIT_SCHEMA = "wildclawbench.general-e2e-rule-runtime-audit/v1"
@@ -1249,6 +1250,7 @@ def prepare_attempt(
     judge_attempt_id: str | None = None,
     api_runtime_config_path: Path | None = None,
     acceptance_id: str | None = None,
+    require_trace_bundle: bool = False,
 ) -> dict[str, Any]:
     unit_root = unit_root.expanduser().resolve(strict=True)
     if not unit_root.is_dir() or unit_root.is_symlink():
@@ -1426,6 +1428,8 @@ def prepare_attempt(
             transcript_sha = _sha256_file(transcript_target)
 
         shutil.copyfile(execution_record_path, private_root / "execution-record.json")
+        trace_bundle = trace_handoff.freeze(unit_root, execution, staging,
+            required=require_trace_bundle and evidence_admission != failure_evidence.ADMISSION)
         if reviewed_files is not None:
             for relative_name, content in reviewed_files.items():
                 relative_path = _safe_relative(relative_name, "reviewed_evidence")
@@ -1491,6 +1495,7 @@ def prepare_attempt(
                 "judge_config_sha256": judge_config_sha,
             },
             "transcript_event_count": transcript_count,
+            "trace_bundle": trace_bundle,
             "private_scoring": {
                 "entries": scoring_task["private_scoring"]["entries"],
                 "workspace_entries": private_gt_entries,
@@ -1533,7 +1538,7 @@ def prepare_attempt(
     }
 
 
-def verify_attempt(attempt_root: Path) -> dict[str, Any]:
+def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[str, Any]:
     root = attempt_root.expanduser().resolve(strict=True)
     manifest = _read_json(root / "attempt-manifest.json", code="ATTEMPT_MANIFEST_INVALID")
     if manifest.get("schema_version") != ATTEMPT_SCHEMA:
@@ -1543,6 +1548,11 @@ def verify_attempt(attempt_root: Path) -> dict[str, Any]:
     digests = manifest.get("digests")
     if not isinstance(paths, dict) or not isinstance(digests, dict):
         raise ScoringRuntimeError("ATTEMPT_MANIFEST_INVALID", "shape")
+    if manifest.get("trace_bundle"):
+        execution = _read_json(_resolve_within(root, paths.get("execution_record"), "execution_record"))
+        trace = trace_handoff.verify(root, manifest["trace_bundle"], execution)
+        if paths.get("transcript") and _sha256_file(root/paths["transcript"]) != trace_handoff.sha(root/"trace"/trace["transcript"]):
+            raise ScoringRuntimeError("SCORING_TRANSCRIPT_COPY_DRIFT")
     lineage = manifest.get("lineage")
     if lineage is not None:
         required_lineage_keys = {
@@ -1633,6 +1643,17 @@ def verify_attempt(attempt_root: Path) -> dict[str, Any]:
             recomputed = (failure_evidence.validate if admitted == failure_evidence.ADMISSION else _validate_reviewed_evidence)(
                 _read_json(root / paths["execution_record"], code="EXECUTION_RECORD_INVALID"),
                 _read_json(root / paths["contract"], code="SCORING_CONTRACT_INVALID"), files)
+            if not require_runtime and "policy_sha256" in recomputed:
+                # Archived receipt bytes are already locked by the original
+                # manifest. Revalidate all evidence under current rules while
+                # retaining the historical policy identity, not rewriting it.
+                if "policy_sha256" not in receipt and admitted == failure_evidence.ADMISSION:
+                    # The original v1 failed-output receipt predates this field.
+                    recomputed.pop("policy_sha256")
+                elif not SHA256_RE.fullmatch(str(receipt.get("policy_sha256", ""))):
+                    raise ScoringRuntimeError("EVIDENCE_ADMISSION_RECEIPT_INVALID", "policy hash")
+                else:
+                    recomputed["policy_sha256"] = receipt["policy_sha256"]
             if recomputed != receipt:
                 raise ScoringRuntimeError("EVIDENCE_ADMISSION_RECEIPT_DRIFT")
     judge_config_relative = paths.get("judge_config")
@@ -1691,9 +1712,11 @@ def verify_attempt(attempt_root: Path) -> dict[str, Any]:
         private_scoring.get("workspace_entries"),
         compare_mode=os.name != "nt",
     )
-    runtime = _resolve_within(root, paths.get("runtime_workspace"), "runtime_workspace")
-    if not runtime.is_dir() or runtime.is_symlink() or not (runtime / "gt").is_dir():
-        raise ScoringRuntimeError("RUNTIME_WORKSPACE_INVALID")
+    _safe_relative(paths.get("runtime_workspace"), "runtime_workspace")
+    if require_runtime:
+        runtime = _resolve_within(root, paths.get("runtime_workspace"), "runtime_workspace")
+        if not runtime.is_dir() or runtime.is_symlink() or not (runtime / "gt").is_dir():
+            raise ScoringRuntimeError("RUNTIME_WORKSPACE_INVALID")
     runtime_info = manifest.get("runtime")
     if not isinstance(runtime_info, dict):
         raise ScoringRuntimeError("RUNTIME_WORKSPACE_INVALID", "runtime metadata")
@@ -1721,10 +1744,11 @@ def verify_attempt(attempt_root: Path) -> dict[str, Any]:
         expected_argument = paths["runtime_workspace"]
     if runtime_info.get("workspace_argument") != expected_argument:
         raise ScoringRuntimeError("WORKSPACE_PATH_RESOLUTION_INVALID", "workspace argument")
-    rule_workspace = _resolve_within(root, expected_argument, "rule_workspace")
-    if (not rule_workspace.is_dir() or rule_workspace.is_symlink()
-        or not (rule_workspace / "gt").is_dir()):
-        raise ScoringRuntimeError("RUNTIME_WORKSPACE_INVALID", "rule workspace")
+    if require_runtime:
+        rule_workspace = _resolve_within(root, expected_argument, "rule_workspace")
+        if (not rule_workspace.is_dir() or rule_workspace.is_symlink()
+            or not (rule_workspace / "gt").is_dir()):
+            raise ScoringRuntimeError("RUNTIME_WORKSPACE_INVALID", "rule workspace")
     return {
         "status": "PASS",
         "attempt_root": str(root),
@@ -2630,6 +2654,11 @@ def _semantic_reference_inputs(
     rule_audit = attempt_root / "rule-audit.json"
     if rule_audit.is_file() and not rule_audit.is_symlink():
         add_file("rule_audit", rule_audit)
+    if manifest.get("trace_bundle"):
+        bundle = _read_json(attempt_root / manifest["trace_bundle"]["path"])
+        add_file("trace_index", attempt_root / "trace" / bundle["trace_index"])
+        for relative in bundle["raw_trace"]:
+            add_file("raw_trace", attempt_root / "trace" / relative)
     transcript_relative = manifest["paths"].get("transcript")
     if transcript_relative is not None:
         transcript_path = attempt_root / transcript_relative
@@ -2744,7 +2773,13 @@ def _api_evidence_sources(
             else:
                 path = _resolve_within(root, relative, "api evidence")
                 try:
-                    content = path.read_text(encoding="utf-8")
+                    if reference["type"] == "raw_trace":
+                        with path.open(encoding="utf-8") as handle:
+                            content = handle.read(MAX_EVIDENCE_TEXT_PAGE_CHARS)
+                        if path.stat().st_size > len(content.encode("utf-8")):
+                            content += "\n[原始轨迹节选；完整原件保存在评分目录 trace/raw。]"
+                    else:
+                        content = path.read_text(encoding="utf-8")
                 except UnicodeDecodeError:
                     content = None
                     status = "binary_or_non_utf8"
@@ -4858,9 +4893,9 @@ def finalize_score_attempt(*, attempt_root: Path) -> dict[str, Any]:
     }
 
 
-def verify_score_attempt(attempt_root: Path) -> dict[str, Any]:
+def verify_score_attempt(attempt_root: Path, *, archived: bool = False) -> dict[str, Any]:
     root = attempt_root.expanduser().resolve(strict=True)
-    verify_attempt(root)
+    verify_attempt(root, require_runtime=not archived)
     score = _read_json(root / "score.json", code="SCORE_DOCUMENT_INVALID")
     audit = _read_json(root / "score-audit.json", code="SCORE_AUDIT_INVALID")
     _validate_standard_score_document(score)
@@ -5038,6 +5073,10 @@ def prepare_rescore_attempt(
                 transcript_target,
             )
             transcript_sha = _sha256_file(transcript_target)
+        trace_bundle = None
+        if source_manifest.get("trace_bundle"):
+            trace_bundle = trace_handoff.copy_frozen(source_root, staging, source_manifest["trace_bundle"],
+                _read_json(private_root/"execution-record.json"))
         transcript_count = (
             _validate_transcript(transcript_target)
             if transcript_target is not None
@@ -5103,6 +5142,7 @@ def prepare_rescore_attempt(
                 "judge_config_sha256": judge_config_sha,
             },
             "transcript_event_count": transcript_count,
+            "trace_bundle": trace_bundle,
             "private_scoring": {
                 "entries": source_private_scoring.get("entries"),
                 "workspace_entries": private_gt_entries,
@@ -5351,6 +5391,7 @@ def main(argv: list[str] | None = None) -> int:
     prepare.add_argument("--judge-attempt-id")
     prepare.add_argument("--api-runtime-config", type=Path)
     prepare.add_argument("--acceptance-id")
+    prepare.add_argument("--legacy-transcript-only", action="store_true", help="Only for frozen legacy evidence without a raw trace index")
 
     prepare_rescore = subparsers.add_parser("prepare-rescore")
     prepare_rescore.add_argument("--source-attempt-root", required=True, type=Path)
@@ -5408,6 +5449,7 @@ def main(argv: list[str] | None = None) -> int:
 
     verify_score = subparsers.add_parser("verify-score")
     verify_score.add_argument("--attempt-root", required=True, type=Path)
+    verify_score.add_argument("--archived", action="store_true", help="Verify frozen score evidence after disposable runtime/ has been omitted")
 
     probe = subparsers.add_parser("probe-runtime")
     probe.add_argument("--runtime-python", required=True, type=Path)
@@ -5438,6 +5480,7 @@ def main(argv: list[str] | None = None) -> int:
                 judge_attempt_id=args.judge_attempt_id,
                 api_runtime_config_path=args.api_runtime_config,
                 acceptance_id=args.acceptance_id,
+                require_trace_bundle=not args.legacy_transcript_only,
             )
         elif args.command == "prepare-rescore":
             result = prepare_rescore_attempt(
@@ -5493,7 +5536,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "finalize":
             result = finalize_score_attempt(attempt_root=args.attempt_root)
         elif args.command == "verify-score":
-            result = verify_score_attempt(args.attempt_root)
+            result = verify_score_attempt(args.attempt_root, archived=args.archived)
         elif args.command == "probe-runtime":
             result = probe_runtime(
                 runtime_python=args.runtime_python,

@@ -5,6 +5,16 @@ description: 按用户明确选择的阶段串联 General E2E 准备、执行、
 
 # 运行 General E2E 全流程
 
+## 默认工作空间布局
+
+评测根目录未指定时使用控制 Harness 会话项目的当前工作目录；显式 `--round-root` 时采用用户路径。调用本 Skill 的绝对脚本路径，不 cd 到安装目录。新评测不创建顶层 rerun-execution-units、score-attempts、repair-control 等多套工作区。
+
+收到单端 execution ZIP 后使用 `scripts/run_general_e2e.py install-unit --execution-package ABS`；完整冻结批次可用 `init-round --batch-root ABS`。两者均在评测根建立 Harness/execution/tasks 和 Harness/score/tasks，内部状态在 .general-e2e。已有输入 ZIP 和用户说明保留，冲突拒绝覆盖；单端安装无需提前收到私有评分包。
+
+正式采集后运行 `prepare-score --harness AstronStudio --orchestration-id score-001 --scoring-package ABS --report-config ABS`，返回同一 Harness 内的编排根。新轮次评分必须交接标准轨迹、原始日志、trace-index、候选与私有标准，再按 orchestrate-general-e2e 推荐动作调度独立评分。历史失败证据例外显式保留。
+
+修复留在对应单元/单题内，使用新 attempt 和显式选择，不自动重建整批。完成后的轮次可用 scripts/archive_round.py 的 import-final/verify/replay 迁移、校验和脱离旧目录复算，再按明确保留清单清理。
+
 组合已实现的单阶段能力，支持单 Prompt 自动链路与人机协作交接，同时保持阶段级恢复和失败关闭。
 
 ## 当前能力门禁
@@ -16,7 +26,7 @@ python -m eval_general_e2e skills --json
 python -m eval_general_e2e check-layout
 ```
 
-只执行用户明确选择且对应单阶段 Skill 已具备所需能力的阶段。当前 `0.6.1/operational` 已实现批次/单元两级状态恢复、冻结输入校验、标准回传打包、安全导入、幂等与冲突选择；支持资源覆盖不完整但身份和哈希有效的采集回执贯穿 unit flow，并按 submission 中的完整多级路径只打包目标评分 attempt。G4-03 已完成 AstronStudio macOS 五题执行、默认三槽评分、回传和同源报告闭环；QwenWork macOS 1.0.6 已完成单题 return/import/report 闭环。该状态不外推 Windows、其他 Harness、并发或 60 题全量。
+只执行用户明确选择且对应单阶段 Skill 已具备所需能力的阶段。当前 `0.7.0/operational` 已实现批次/单元两级状态恢复、冻结输入校验、标准回传打包、安全导入、幂等与冲突选择；支持资源覆盖不完整但身份和哈希有效的采集回执贯穿 unit flow，并按 submission 中的完整多级路径只打包目标评分 attempt。G4-03 已完成 AstronStudio macOS 五题执行、默认三槽评分、回传和同源报告闭环；QwenWork macOS 1.0.6 已完成单题 return/import/report 闭环。该状态不外推 Windows、其他 Harness、并发或 60 题全量。
 
 新增 Harness 可按 [通用执行状态接口](references/adapter-execution-state.md) 接入 `record-execution`。该入口验证终态、业务身份、Workspace、原生会话证据与发送状态；公共 CB-B 首批接口已提供，新的 Harness 仍须完成原生采集和真实平台清理 hook 的接入验证，不因状态登记成功而宣称已具备生产准入。
 

@@ -178,6 +178,7 @@ def main(argv=None):
     for name in ["workspace-root","batch-root","source-index","task-index"]:parser.add_argument("--"+name,type=Path,required=True)
     parser.add_argument("--resource-root",type=Path);parser.add_argument("--display-config",type=Path)
     parser.add_argument("--target-unit");parser.add_argument("--output-dir",type=Path)
+    parser.add_argument("--data-output",type=Path,help="Write verified report JSON without rendering a workbook; must be a new file inside workspace-root")
     parser.add_argument("--node",default=os.environ.get("GENERAL_E2E_NODE","node"));parser.add_argument("--node-modules",type=Path)
     args=parser.parse_args(argv);ROOT=args.workspace_root.resolve();BATCH=args.batch_root.resolve()
     batch=load(safe_file(BATCH/"manifest.json",ROOT));source=load(safe_file(args.source_index,ROOT));selection=load(safe_file(args.task_index,ROOT))
@@ -239,6 +240,9 @@ def main(argv=None):
         for entry in data["display_overrides"].get("unit_model_labels",{}).values():entry.setdefault("reason",entry.get("source"))
     data["presentation"]=report.report_views.build_views(data,report.report_views.load_references())
     if args.target_unit:require(args.target_unit in data["presentation"]["unit_labels"],"SELECTION_TARGET_UNKNOWN")
+    if args.data_output:
+        target=args.data_output.resolve();require(target.is_relative_to(ROOT) and not target.exists(),"SELECTION_DATA_OUTPUT_UNSAFE")
+        report.write_json(target,data)
     if args.output_dir:
         require(args.node_modules and args.node_modules.is_dir(),"SELECTION_EXCEL_RUNTIME_REQUIRED")
         out=args.output_dir.resolve();require(out.is_relative_to(BATCH) and not out.exists(),"SELECTION_OUTPUT_UNSAFE_OR_EXISTS")

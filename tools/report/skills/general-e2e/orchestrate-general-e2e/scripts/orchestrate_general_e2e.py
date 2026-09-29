@@ -628,6 +628,8 @@ def _prompt_text(
 
 项目根目录就是本题私有评分 attempt。先读取 `attempt-manifest.json`，再{skill_usage}。只处理本题，不创建或调度其他任务，不执行被测 Harness，不修改 `candidate-original/`，不把自动规则组件冒充完整分数。{readiness_instruction}
 
+若 manifest 含 trace_bundle，评分工作空间的 trace/ 内含标准轨迹、trace-index 和原始会话。需要核验工具调用或过程行为时，使用 catalog 的 raw_trace 条目和 file 分页查询读取原件；桌面协议投影不代表模型会话的全部工具调用，不得只因标准轨迹缺少某事件便断言未发生。保留原始工具名与调用ID，不把命令的读写操作重命名为另一个工具。
+
 {rule_instruction}
 
 若 attempt-manifest.json 的 evidence_admission 为 reviewed-output-evidence/v1，先读取 private/evidence-admission.json：该题冻结 rubric 已逐项确认以候选产物或最终回复为评分输入，工具/中间消息轨迹 partial 已单独保留。必须按原 rubric 评价所需证据，不因可选工具轨迹 partial 拒绝整题、不增加过程评分项；网页题仍须独立验证交互。无法核验的过程行为不作未发生断言。
@@ -849,6 +851,10 @@ def initialize(
                     "--judge-attempt-id",
                     attempt_id,
                 ]
+            if not (unit_root / ".general-e2e/round-unit.json").is_file():
+                # Existing frozen units predate the round layout. Managed new
+                # rounds always retain the strict, self-contained trace gate.
+                prepare_arguments.append("--legacy-transcript-only")
             if api_runtime_config is not None:
                 prepare_arguments.extend(
                     ["--api-runtime-config", str(api_runtime_config)]

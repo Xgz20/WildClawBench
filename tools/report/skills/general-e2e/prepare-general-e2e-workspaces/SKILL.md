@@ -5,6 +5,8 @@ description: 从版本化数据集构建 General E2E 批次、执行包和私有
 
 # 准备 General E2E 工作空间
 
+分发目录与执行工作区分开。控制端用 run-general-e2e 的 install-unit/init-round 安装到稳定的 Harness/execution/tasks 和 Harness/score/tasks。评测根默认是当前控制会话项目目录，用户指定时覆盖；框架修复不应默认重新 prepare 整批。
+
 从冻结的 dataset bundle 生成可审计批次，并保持执行材料与私有评分材料隔离。
 
 ## 输入与入口
@@ -35,6 +37,6 @@ python scripts/prepare_general_e2e_workspaces.py verify-batch \
 - 对 dataset digest、任务全集、目标 Harness 和冻结配置做失败关闭校验。
 - execution 包不得包含 GT、rubric、grader 或其他私有评分材料。
 - scoring 包不得包含候选 Workspace 或执行 Prompt。
-- `/tmp_workspace` 只允许确定性映射为 `./workspace`，并记录原始与发送 Prompt SHA。
+- 新包 `/tmp_workspace` 映射为 `.`（被评客户端 cwd 是本题 workspace），记录原始与发送 Prompt SHA；旧冻结包的 `./workspace` 映射保持原样。
 - 保持 dataset manifest 的任务顺序和 ZIP 中受限符号链接元数据；不跟随链接读取宿主文件。
 - 不启动桌面客户端，不产生执行回执，不决定任何分数。

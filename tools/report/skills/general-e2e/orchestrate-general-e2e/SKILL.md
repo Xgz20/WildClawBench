@@ -5,6 +5,10 @@ description: 将有效 General E2E 执行回执交接为独立单题评分工作
 
 # 编排 General E2E 评分
 
+新轮次优先由 run-general-e2e prepare-score 建立编排，根目录默认当前控制 Harness 会话项目，显式 round-root 覆盖。状态写入 Harness/score/.orchestrations，单题入口为 Harness/score/tasks/<task_id>/current。带 .general-e2e/round-unit.json 的新单元启用完整 trace 交接门禁；旧单元保留显式 legacy 兼容。
+
+新评分任务可以在本题目录读取标准轨迹和 raw_trace 原件。移走原执行目录后仍必须能校验、查询和评分，不把全局 repair-control 或临时运行目录作为评分数据依赖。
+
 为每个任务建立隔离评分 attempt，冻结裁判配置并维护可恢复的评分队列。
 
 ## 当前能力门禁
@@ -21,7 +25,7 @@ python -m eval_general_e2e skills --name orchestrate-general-e2e --json
 
 ## 责任边界
 
-`0.10.0` 把已绑定但仅工具轨迹不完整的窄范围情形交给冻结 score Skill 的 `prepare` 判定。编排器不自行降低轨迹要求；score `>=0.8.3` 仅允许已确认候选文件专用的 automated 规则，其余仍形成明确未评分状态。旧编排和旧回执不覆盖；新增评分入口或准入策略使用新的 orchestration/attempt。
+`0.11.0` 把已绑定但仅工具轨迹不完整的窄范围情形交给冻结 score Skill 的 `prepare` 判定。编排器不自行降低轨迹要求；score `>=0.8.3` 仅允许已确认候选文件专用的 automated 规则，其余仍形成明确未评分状态。旧编排和旧回执不覆盖；新增评分入口或准入策略使用新的 orchestration/attempt。
 
 - 输入：有效执行回执、scoring 包和冻结裁判配置。
 - 输出：独立评分工作空间、评分队列、裁判任务状态和有效 submission。

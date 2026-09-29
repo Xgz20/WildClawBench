@@ -547,6 +547,9 @@ class RunGeneralE2ETests(unittest.TestCase):
             root = Path(temp_dir)
             unit = create_unit(root)
             orchestration = create_orchestration(root, "one")
+            frozen_cache = orchestration / "attempts/orch-001/candidate-original/workspace/__pycache__/frozen.pyc"
+            frozen_cache.parent.mkdir()
+            frozen_cache.write_bytes(b"part of the frozen candidate")
             first = MODULE.package_return(package_args(unit, orchestration, root / "out-one"))
             second = MODULE.package_return(package_args(unit, orchestration, root / "out-two"))
             self.assertEqual(first["archive_sha256"], second["archive_sha256"])
@@ -559,6 +562,7 @@ class RunGeneralE2ETests(unittest.TestCase):
                 names,
             )
             self.assertFalse(any("/runtime/" in f"/{name}/" for name in names))
+            self.assertIn("scoring/attempts/orch-001/candidate-original/workspace/__pycache__/frozen.pyc", names)
 
     def test_return_package_accepts_valid_partial_collection(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

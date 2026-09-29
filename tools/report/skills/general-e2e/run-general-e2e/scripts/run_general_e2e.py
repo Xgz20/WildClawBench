@@ -880,7 +880,14 @@ def walk_tree(
         except OSError as exc:
             raise FlowError(f"PACKAGE_TREE_UNREADABLE: {directory}: {exc}") from exc
         for child in children:
-            if child.name in EXCLUDED_NAMES or child.name.endswith(".pyc"):
+            # Frozen candidates/private inputs/evidence are hash-bound trees.
+            # A cache-looking filename may be part of that immutable input.
+            frozen = (
+                "candidate-original" in prefix.parts
+                or "private" in prefix.parts
+                or prefix.parts[:2] == ("unit", "evidence")
+            )
+            if not frozen and (child.name in EXCLUDED_NAMES or child.name.endswith(".pyc")):
                 continue
             if exclude_runtime and depth == 0 and child.name == "runtime":
                 continue
@@ -1726,6 +1733,18 @@ def sync_import_stage(batch_root: Path, state: dict[str, Any]) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="串联并恢复 General E2E 阶段")
     subparsers = parser.add_subparsers(dest="command", required=True)
+    suite_root=Path(__file__).resolve().parents[2]
+    entry=subparsers.add_parser("init-round",help="Install a frozen batch into stable Harness directories")
+    entry.add_argument("--round-root",type=Path,default=Path.cwd())
+    entry.add_argument("--batch-root",type=Path,required=True)
+    entry.add_argument("--prepare-skill",type=Path,default=suite_root/"prepare-general-e2e-workspaces")
+    entry=subparsers.add_parser("install-unit",help="Install one execution ZIP into the control project; scoring ZIP can arrive later")
+    entry.add_argument("--round-root",type=Path,default=Path.cwd());entry.add_argument("--execution-package",type=Path,required=True)
+    entry.add_argument("--prepare-skill",type=Path,default=suite_root/"prepare-general-e2e-workspaces")
+    entry=subparsers.add_parser("prepare-score",help="Create trace-complete scoring attempts under the same Harness")
+    entry.add_argument("--round-root",type=Path,default=Path.cwd());entry.add_argument("--harness",required=True)
+    entry.add_argument("--skill-root",type=Path,default=suite_root);entry.add_argument("--orchestration-id",required=True)
+    entry.add_argument("--task-id",action="append",default=[]);entry.add_argument("--scoring-package",type=Path);entry.add_argument("--report-config",type=Path)
 
     init = subparsers.add_parser("init")
     init.add_argument("--scope", required=True, choices=tuple(SCOPE_STAGES))
@@ -1781,7 +1800,13 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        if args.command == "init":
+        if args.command in {"init-round","install-unit","prepare-score"}:
+            sys.path.insert(0,str(Path(__file__).resolve().parent))
+            import round_workspace
+            if args.command=="init-round":result=round_workspace.init_round(args.round_root,args.batch_root,args.prepare_skill)
+            elif args.command=="install-unit":result=round_workspace.install_unit(args.round_root,args.execution_package,args.prepare_skill)
+            else:result=round_workspace.prepare_score(args.round_root,args.harness,args.skill_root,args.orchestration_id,args.task_id,args.scoring_package,args.report_config)
+        elif args.command == "init":
             result = initialize_state(args)
         elif args.command in {"status", "resume"}:
             result = command_status(args)
