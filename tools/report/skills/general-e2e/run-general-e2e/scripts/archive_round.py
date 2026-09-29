@@ -160,9 +160,11 @@ def import_final(archive,output_root,batch_root):
         shutil.copy2(str(archive)+'.sha256',str(archive_target)+'.sha256') if Path(str(archive)+'.sha256').exists() else None
         write(out/'TASK_INDEX.json',{'schema_version':1,'kind':'archived-round','tasks':new_tasks})
         write_index(out,new_tasks,report)
-        source_map=load(out/'.general-e2e/resources/SOURCE_MAP.json')
-        for entry in source_map['sources'].values():entry['archive_path']=map_path(entry['archive_path'])
-        write(out/'.general-e2e/source-map-relocated.json',source_map)
+        source_map_path=out/'.general-e2e/resources/SOURCE_MAP.json'
+        if source_map_path.is_file():
+            source_map=load(source_map_path)
+            for entry in source_map['sources'].values():entry['archive_path']=map_path(entry['archive_path'])
+            write(out/'.general-e2e/source-map-relocated.json',source_map)
         units=[{'harness':h,'directory':label,'task_ids':[t['task_id'] for t in new_tasks if t['harness']==label]} for h,label in LABELS.items()]
         units=[u for u in units if u['task_ids']]
         doc={'schema_version':ARCHIVE_SCHEMA,'kind':'archived','candidate_permission_policy':'restore-read-only-without-changing-bytes','source_archive':str(archive_target.relative_to(out)),
@@ -218,14 +220,18 @@ def replay(root,report_skill,node):
             for k in ('execution_record','score_file'):
                 if row.get(k):row[k]=str(Path(sources['imports'][row['unit_id']]['target'])/Path(row[k]).relative_to(old_targets[row['unit_id']]))
         write(temp/'sources.json',sources);selection['source_index_sha256']=sha(temp/'sources.json');write(temp/'tasks.json',selection)
-        resource=original/'ResourceSupplements';sm=load(resource/'supplement-manifest.json');sm['source_execution_selection_sha256']=sha(temp/'tasks.json');write(resource/'supplement-manifest.json',sm)
-        mapping=load(resource/'SOURCE_MAP.json')
-        for entry in mapping['sources'].values():entry['archive_path']=(original.relative_to(temp)/entry['archive_path']).as_posix()
-        write(resource/'SOURCE_MAP.json',mapping)
+        resource=original/'ResourceSupplements'
+        if resource.is_dir():
+            sm=load(resource/'supplement-manifest.json');sm['source_execution_selection_sha256']=sha(temp/'tasks.json');write(resource/'supplement-manifest.json',sm)
+            if (resource/'SOURCE_MAP.json').is_file():
+                mapping=load(resource/'SOURCE_MAP.json')
+                for entry in mapping['sources'].values():entry['archive_path']=(original.relative_to(temp)/entry['archive_path']).as_posix()
+                write(resource/'SOURCE_MAP.json',mapping)
         prior=load(original/'Reports/general_e2e_report_data.json');write(temp/'display.json',prior.get('display_overrides',{}))
         command=[sys.executable,str(Path(report_skill)/'scripts/selected_report.py'),'--workspace-root',str(temp),'--batch-root',str(batch),
-            '--source-index',str(temp/'sources.json'),'--task-index',str(temp/'tasks.json'),'--resource-root',str(resource),
+            '--source-index',str(temp/'sources.json'),'--task-index',str(temp/'tasks.json'),
             '--display-config',str(temp/'display.json'),'--node',str(node),'--data-output',str(temp/'replayed.json')]
+        if resource.is_dir():command+=['--resource-root',str(resource)]
         p=subprocess.run(command,capture_output=True,text=True);require(p.returncode==0,'ARCHIVED_REPORT_REPLAY_FAILED:'+p.stderr[-2000:])
         result=load(temp/'replayed.json');old={r['run_id']:r for r in prior['tasks']};new={r['run_id']:r for r in result['tasks']};require(old.keys()==new.keys(),'ARCHIVED_REPLAY_SCOPE')
         for key,row in new.items():
