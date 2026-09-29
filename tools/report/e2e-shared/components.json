@@ -155,7 +155,7 @@
     },
     {
       "name": "general-resource-supplements",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "source_root": "tools/report/e2e-shared/general-resource-supplements",
       "vendor_root": "vendor/e2e-shared/general-resource-supplements",
       "entrypoints": [

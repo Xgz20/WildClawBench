@@ -24,7 +24,7 @@ function fixture(){return [
   event('response_item',{type:'custom_tool_call',call_id:'write',name:'write',input:'content'}),
   event('response_item',{type:'tool_search_call',call_id:'search',id:'search',execution:'client',status:'completed',arguments:{query:'browser'}}),
   event('response_item',{type:'tool_search_output',call_id:'search',tools:[]}),token(3),token(3),token(4),
-  event('event_msg',{type:'task_complete',turn_id:'t1'}),
+  event('event_msg',{type:'task_complete',turn_id:'t1',duration_ms:12345,started_at:10,completed_at:99}),
 ];}
 const bytes=rows=>Buffer.from(rows.map(JSON.stringify).join('\n')+'\n');
 test('rollout keeps real names, includes native tool search, excludes results and prior turns',()=>{
@@ -33,6 +33,14 @@ test('rollout keeps real names, includes native tool search, excludes results an
   assert.equal(r.tool_counts.total,5);assert.equal(r.metrics.requests.request_count.value,2);
   assert.equal(r.usage_reconciliation.repeated_snapshots,1);assert.equal(r.metrics.requests.request_attempt_count.value,null);
   assert.equal(r.usage_reconciliation.summed_usage.total_tokens,24);
+  assert.equal(r.metrics.usage.input_tokens.value,20);
+  assert.equal(r.metrics.usage.cache_read_input_tokens.value,8);
+  assert.equal(r.metrics.usage.output_tokens.value,4);
+  assert.equal(r.metrics.usage.reasoning_output_tokens.value,2);
+  assert.equal(r.metrics.usage.total_tokens.value,24);
+  assert.equal(r.metrics.usage.cache_creation_input_tokens.value,null);
+  assert.equal(r.metrics.timing.agent_duration_seconds.value,12.345);
+  assert.equal(r.metrics.timing.duration_seconds,undefined);
 });
 test('rollout deduplicates exact call replays but rejects same ID with different name/arguments',()=>{
   const rows=fixture();rows.splice(9,0,structuredClone(rows[7]));assert.equal(analyzeRollout(bytes(rows),state).tool_counts.total,5);
@@ -50,10 +58,34 @@ test('unreconciled usage does not publish a complete request total',()=>{
   const rows=fixture();rows[16]=token(5);const r=analyzeRollout(bytes(rows),state);
   assert.equal(r.metrics.requests.request_count.value,null);assert.equal(r.collection.known_subtotals.request_count,2);
   assert.equal(r.tool_counts.total,5);
+  assert.equal(r.metrics.usage.total_tokens.value,null);
+  assert.equal(r.collection.known_subtotals.total_tokens,24);
+  assert.equal(r.metrics.timing.agent_duration_seconds.value,12.345);
 });
 test('failed native terminal retains tool call intents without inventing successes',()=>{
   const rows=fixture();rows[17]=event('event_msg',{type:'error',message:'native turn failed'});
   assert.equal(analyzeRollout(bytes(rows),{...state,phase:'FAILED'}).tool_counts.total,5);
+  assert.equal(analyzeRollout(bytes(rows),{...state,phase:'FAILED'}).metrics.timing.agent_duration_seconds.value,null);
+});
+test('native completion duration also applies to a bound failed turn without changing its status',()=>{
+  const failed={...state,phase:'FAILED'};
+  assert.equal(analyzeRollout(bytes(fixture()),failed).metrics.timing.agent_duration_seconds.value,12.345);
+  assert.equal(failed.phase,'FAILED');
+});
+test('native timing keeps zero, rejects negative/ambiguous values and never subtracts rounded clocks',()=>{
+  const rows=fixture();rows[17].payload.duration_ms=0;
+  assert.equal(analyzeRollout(bytes(rows),state).metrics.timing.agent_duration_seconds.value,0);
+  delete rows[17].payload.duration_ms;
+  assert.equal(analyzeRollout(bytes(rows),state).metrics.timing.agent_duration_seconds.value,null);
+  rows[17].payload.duration_ms=-1;assert.throws(()=>analyzeRollout(bytes(rows),state),/DURATION_INVALID/);
+  rows[17].payload.duration_ms=12;rows.push(event('event_msg',{type:'task_complete',turn_id:'t1',duration_ms:13}));
+  assert.throws(()=>analyzeRollout(bytes(rows),state),/DURATION_AMBIGUOUS/);
+});
+test('old rollout supplement profile remains an exact tools/requests-only projection',()=>{
+  const r=analyzeRollout(bytes(fixture()),state,{profileVersion:1});
+  assert.equal(r.metrics.usage,undefined);assert.equal(r.metrics.timing,undefined);
+  assert.equal(r.profile_version,undefined);assert.equal(r.collection.metric_sources,undefined);
+  assert.equal(r.metrics.requests.request_count.value,2);
 });
 test('immutable rollout supplement recomputes and rejects raw/summary tampering',async()=>{
   const root=await mkdtemp(join(tmpdir(),'astron-rollout-test-'));

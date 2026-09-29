@@ -52,9 +52,11 @@ function usage() {
 选项：
   --output /absolute/resource-metrics.json  默认写入 trace-index 同目录
   --replace                                原子覆盖已有输出
+  --legacy-provider-only                   仅用于旧冻结证据复算
   -h, --help                               显示帮助
 
-本工具只读取已归档且通过哈希校验的精确 turn 轨迹。未知缓存写入和
+新采集要求已归档且通过哈希校验的绑定 rollout，工具、请求、Token和任务耗时
+由 rollout 计算，流程耗时来自执行器。未知缓存写入和
 HTTP 尝试保持 null；它不冻结候选、不生成正式执行回执。`;
 }
 
@@ -75,6 +77,7 @@ export function parseArgs(argv) {
     const arg = argv[index];
     if (arg === "-h" || arg === "--help") values.help = true;
     else if (arg === "--replace") values.replace = true;
+    else if (arg === "--legacy-provider-only") values.legacyProviderOnly = true;
     else {
       const key = valued.get(arg);
       if (!key) throw new Error(`未知选项：${arg}`);
@@ -588,6 +591,8 @@ export async function collectAstronStudioResourceMetrics(options) {
   const indexSource = await readJsonFile(options.traceIndex);
   assertExecutionState(stateSource.value);
   assertTraceBinding(stateSource.value, indexSource.value);
+  const hasRollout=indexSource.value.raw_trace.some(r=>r.path===ROLLOUT_PATH);
+  if(!hasRollout&&!options.legacyProviderOnly)throw Error("ROLLOUT_REQUIRED_FOR_NEW_COLLECTION");
   const rawSource = await readIndexedRawTrace(indexSource.absolute, indexSource.value);
   const outputPath = resolve(options.output || resolve(dirname(indexSource.absolute), "resource-metrics.json"));
   await assertWritableTarget(outputPath, Boolean(options.replace));
@@ -596,15 +601,35 @@ export async function collectAstronStudioResourceMetrics(options) {
     artifact("trace/trace-index.json", indexSource.bytes),
     { ...rawSource.artifact, path: "trace/raw/astronstudio-provider-events.jsonl" },
   ];
-  const document = buildAstronStudioResourceMetrics({
+  const replayLegacy=options.legacyProviderOnly&&indexSource.value.adapter.version!=="0.2.0";
+  const rollout=hasRollout?await analyzeIndexedRollout(indexSource.absolute,stateSource.value,{profileVersion:replayLegacy?1:2}):null;
+  if(rollout)sources.push({...rollout.source,path:`trace/${ROLLOUT_PATH}`});
+  let document;
+  if(rollout?.profile_version===2){
+    const flowSubtotals={},flowCoverage={},flowSources={};
+    const timing=parseTimingMetrics(rawSource.rows,stateSource.value,flowSubtotals,flowCoverage,flowSources);
+    const metrics=structuredClone(rollout.metrics);
+    metrics.timing.duration_seconds=timing.duration_seconds;
+    const coverage={...rollout.collection.coverage,duration_seconds:flowCoverage.duration_seconds};
+    const metricSources={...rollout.collection.metric_sources,duration_seconds:flowSources.duration_seconds};
+    const complete=[...Object.values(metrics.usage).filter(v=>v!==metrics.usage.cache_creation_input_tokens),
+      metrics.tools.call_count,metrics.requests.request_count,...Object.values(metrics.timing)]
+      .every(v=>v.value!==null&&['observed','inferred'].includes(v.status));
+    const at=stateSource.value.execution.finished_at||stateSource.value.session.last_observed_at;
+    if(!Number.isFinite(Date.parse(at)))throw Error("COLLECTION_TIMESTAMP_UNAVAILABLE");
+    document={schema_id:RESOURCE_SCHEMA,schema_version:1,identity:{...stateSource.value.identity},metrics,
+      collection:{collector:"astronstudio-rollout-resource-metrics",version:"0.2.0",status:complete?"complete":"partial",
+        collected_at:at,sources,warnings:[...rollout.collection.warnings],
+        excluded_scope:["judge_usage","control_usage","client_background_services","unobserved_http_retries","cache_creation_input_tokens","request_attempt_count"],
+        coverage,known_subtotals:{...rollout.collection.known_subtotals},metric_sources:metricSources}};
+  }else{
+  document = buildAstronStudioResourceMetrics({
     state: stateSource.value,
     traceIndex: indexSource.value,
     rows: rawSource.rows,
     sources,
   });
-  if (indexSource.value.raw_trace.some(r=>r.path===ROLLOUT_PATH)) {
-    const rollout = await analyzeIndexedRollout(indexSource.absolute, stateSource.value);
-    document.collection.sources.push({...rollout.source, path:`trace/${ROLLOUT_PATH}`});
+  if (rollout) {
     for (const [group, values] of Object.entries(rollout.metrics)) {
       Object.assign(document.metrics[group], values);
       for (const field of Object.keys(values)) {
@@ -615,6 +640,7 @@ export async function collectAstronStudioResourceMetrics(options) {
       }
     }
     document.collection.warnings.push(...rollout.collection.warnings);
+  }
   }
   const bytes = Buffer.from(`${JSON.stringify(document, null, 2)}\n`, "utf8");
   await atomicWrite(outputPath, bytes);

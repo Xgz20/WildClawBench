@@ -657,12 +657,40 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
         self.assertIn("EXECUTION_DRIVER_BINDING_MISMATCH", rejected.stderr + rejected.stdout)
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required")
+    def test_rollout_metrics_profile_runs_from_detached_collect_skill(self) -> None:
+        detached = self.temp_root / "detached-rollout-profile"
+        installed = BUILD._safe_extract(self.archive_path("collect-general-e2e"), detached)
+        entry = installed / "vendor/e2e-shared/general-resource-supplements/astronstudio-rollout.mjs"
+        source = f"""
+import {{ analyzeRollout }} from {json.dumps(entry.as_uri())};
+import {{ createHash }} from 'node:crypto';
+const row=(type,payload)=>({{type,payload}});
+const usage={{input_tokens:100,cached_input_tokens:40,output_tokens:20,reasoning_output_tokens:5,total_tokens:120}};
+const state={{phase:'COMPLETED',prompt:{{send_status:'sent',sha256:createHash('sha256').update('task').digest('hex')}},
+  session:{{session_id:'session',turn_id:'turn',cwd:'/workspace',verified:true}}}};
+const rows=[row('session_meta',{{id:'session',cwd:'/workspace'}}),row('event_msg',{{type:'task_started',turn_id:'turn'}}),
+  row('event_msg',{{type:'user_message',message:'task'}}),row('response_item',{{type:'function_call',name:'read',call_id:'c',arguments:'{{}}'}}),
+  row('event_msg',{{type:'token_count',info:{{total_token_usage:usage,last_token_usage:usage}}}}),
+  row('event_msg',{{type:'task_complete',turn_id:'turn',duration_ms:1234}})];
+console.log(JSON.stringify(analyzeRollout(Buffer.from(rows.map(JSON.stringify).join('\\n')),state)));
+"""
+        result = subprocess.run([shutil.which("node"), "--input-type=module", "-e", source],
+                                cwd=detached, env={"PATH": ""}, text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        metrics = json.loads(result.stdout)
+        self.assertEqual(metrics["profile_version"], 2)
+        self.assertEqual(metrics["metrics"]["usage"]["total_tokens"]["value"], 120)
+        self.assertEqual(metrics["metrics"]["timing"]["agent_duration_seconds"]["value"], 1.234)
+        self.assertEqual(metrics["metrics"]["requests"]["request_count"]["value"], 1)
+        self.assertEqual(metrics["tool_counts"]["by_tool"], {"read": 1})
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required")
     def test_generic_collection_and_trace_v2_run_from_detached_skill(self) -> None:
         detached = self.temp_root / "detached-general-collection-v2"
         detached.mkdir()
         installed = BUILD._safe_extract(self.archive_path("collect-general-e2e"), detached / "installed")
         bundled = json.loads((installed / "bundled-components.json").read_text())
-        self.assertEqual(bundled["skill_version"], "0.9.1")
+        self.assertEqual(bundled["skill_version"], "0.9.2")
         component = next(item for item in bundled["components"] if item["name"] == "general-contracts")
         self.assertEqual(component["version"], "1.3.0")
         for relative in ("collection_validation.py", "schemas/trace-index-v2.schema.json"):

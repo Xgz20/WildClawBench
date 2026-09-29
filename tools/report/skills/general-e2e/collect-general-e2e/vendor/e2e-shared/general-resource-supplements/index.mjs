@@ -75,7 +75,9 @@ async function compute(root,execution,{output}={}) {
   if(execution.harness.id==="astronstudio"){
     const temporary=await mkdtemp(join(tmpdir(),"general-resource-verify-"));
     try{
-      await collectAstronStudioResourceMetrics({stateFile,traceIndex,output:join(temporary,"resource.json"),replace:false});
+      // Versioned, frozen supplements may predate rollout capture. New collect
+      // entrypoints require rollout; legacy replay is explicit here only.
+      await collectAstronStudioResourceMetrics({stateFile,traceIndex,output:join(temporary,"resource.json"),replace:false,legacyProviderOnly:true});
       return await load(join(temporary,"resource.json"));
     }finally{await rm(temporary,{recursive:true,force:true});}
   }
@@ -153,6 +155,10 @@ export async function verifyExternalResourceSupplement({unitRoot, executionRecor
     Object.assign(base.metrics.collection.coverage,rollout.metrics.collection.coverage);
     for(const field of Object.keys(rollout.metrics.collection.coverage))delete base.metrics.collection.known_subtotals[field];
     Object.assign(base.metrics.collection.known_subtotals,rollout.metrics.collection.known_subtotals);
+    if(rollout.metrics.profile_version===2){
+      Object.assign(base.metrics.collection.metric_sources??={},rollout.metrics.collection.metric_sources);
+      base.metrics.collection.warnings=[...new Set([...(base.metrics.collection.warnings||[]),...rollout.metrics.collection.warnings])];
+    }
     return {...rollout,metrics:base.metrics};
   }
   ensure(doc.schema_version==="general-e2e-resource-supplement/v1"&&same(doc.identity,ex.identity)

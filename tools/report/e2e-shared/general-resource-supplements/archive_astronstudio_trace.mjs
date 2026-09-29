@@ -38,10 +38,13 @@ function usage() {
 选项：
   --state-db /absolute/state.sqlite  覆盖运行配置中的状态库路径
   --output-dir /absolute/evidence   默认为执行状态目录下的 trace/
-  --replace                         原子覆盖已有的三个轨迹产物
+  --rollout-file /absolute/rollout.jsonl  显式绑定模型会话原件
+  --rollout-root /absolute/sessions      默认检索 AStudio overlay sessions
+  --legacy-provider-only            仅用于旧证据兼容，不用于新评测
+  --replace                         原子覆盖已有轨迹产物
   -h, --help                        显示帮助
 
-本工具只读 AstronStudio SQLite 快照，只归档执行状态精确绑定的
+本工具只读 AstronStudio SQLite 快照与 rollout，只归档执行状态精确绑定的
 thread/turn/provider session/cwd。它不冻结候选、不生成资源指标或正式执行回执。`;
 }
 
@@ -64,6 +67,7 @@ export function parseArgs(argv) {
     const arg = argv[index];
     if (arg === "-h" || arg === "--help") values.help = true;
     else if (arg === "--replace") values.replace = true;
+    else if (arg === "--legacy-provider-only") values.legacyProviderOnly = true;
     else {
       const key = valued.get(arg);
       if (!key) throw new Error(`未知选项：${arg}`);
@@ -720,7 +724,9 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   const transcriptPath = join(outputDir, "transcript.jsonl");
   const indexPath = join(outputDir, "trace-index.json");
   const rolloutPath = join(outputDir, ROLLOUT_PATH);
-  const rollout = options.rolloutFile ? await readRolloutFile(options.rolloutFile) : null;
+  if(options.legacyProviderOnly&&options.rolloutFile)throw Error("ROLLOUT_LEGACY_MODE_CONFLICT");
+  const rolloutFile=options.rolloutFile||(options.legacyProviderOnly?null:await discoverRollout(state.session.session_id,options.rolloutRoot));
+  const rollout = rolloutFile ? await readRolloutFile(rolloutFile) : null;
   if (rollout) analyzeRollout(rollout.bytes, state);
   await assertWritableTargets([rawPath, transcriptPath, indexPath, ...(rollout ? [rolloutPath] : [])], Boolean(options.replace));
 
@@ -767,8 +773,8 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     identity: { ...state.identity },
     adapter: {
       id: TRACE_ADAPTER_ID,
-      version: TRACE_ADAPTER_VERSION,
-      source: "provider_runtime_events",
+      version: rollout ? "0.2.0" : TRACE_ADAPTER_VERSION,
+      source: rollout ? "provider_runtime_events+bound_rollout" : "provider_runtime_events",
     },
     session: {
       thread_id: state.session.thread_id,
@@ -816,10 +822,6 @@ export async function main() {
   if (parsed.help) {
     process.stdout.write(`${usage()}\n`);
     return;
-  }
-  if (!parsed.rolloutFile) {
-    const state = await readJson(resolve(parsed.stateFile));
-    parsed.rolloutFile = await discoverRollout(state.session.session_id, parsed.rolloutRoot);
   }
   const result = await archiveAstronStudioTrace(parsed);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);

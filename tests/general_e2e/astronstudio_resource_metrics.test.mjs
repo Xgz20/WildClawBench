@@ -178,6 +178,13 @@ async function createFixture(rows = fixtureRows(), completeness = "complete") {
   return { root, rawPath, statePath, indexPath, output: join(traceRoot, "resource-metrics.json") };
 }
 
+test("new collection requires rollout instead of silently publishing provider metrics", async () => {
+  const f=await createFixture();
+  try{
+    await assert.rejects(collectAstronStudioResourceMetrics({stateFile:f.statePath,traceIndex:f.indexPath,output:f.output}),/ROLLOUT_REQUIRED/);
+  }finally{await rm(f.root,{recursive:true,force:true});}
+});
+
 test("CLI requires state and trace index", () => {
   assert.throws(() => parseArgs([]), /--state-file/u);
   assert.throws(() => parseArgs(["--state-file", "/tmp/state.json"]), /--trace-index/u);
@@ -269,7 +276,7 @@ test("semantic conflicts and indexed artifact tampering fail closed", async () =
 
   const fixture = await createFixture();
   try {
-    const result = await collectAstronStudioResourceMetrics({
+    const result = await collectAstronStudioResourceMetrics({legacyProviderOnly:true,
       stateFile: fixture.statePath,
       traceIndex: fixture.indexPath,
       output: fixture.output,
@@ -279,7 +286,7 @@ test("semantic conflicts and indexed artifact tampering fail closed", async () =
     const document = JSON.parse(await readFile(fixture.output, "utf8"));
     assert.equal(document.metrics.usage.total_tokens.value, 35);
     await assert.rejects(
-      collectAstronStudioResourceMetrics({
+      collectAstronStudioResourceMetrics({legacyProviderOnly:true,
         stateFile: fixture.statePath,
         traceIndex: fixture.indexPath,
         output: fixture.output,
@@ -289,7 +296,7 @@ test("semantic conflicts and indexed artifact tampering fail closed", async () =
     );
     await writeFile(fixture.rawPath, "{}\n");
     await assert.rejects(
-      collectAstronStudioResourceMetrics({
+      collectAstronStudioResourceMetrics({legacyProviderOnly:true,
         stateFile: fixture.statePath,
         traceIndex: fixture.indexPath,
         output: join(fixture.root, "tampered.json"),
@@ -325,7 +332,7 @@ test("raw event files above 64 MiB are hashed completely without loading text de
   try {
     const index = JSON.parse(await readFile(f.indexPath, "utf8"));
     assert.ok(index.raw_trace[0].size > 64 * 1024 * 1024);
-    const result = await collectAstronStudioResourceMetrics({ stateFile: f.statePath, traceIndex: f.indexPath, output: f.output });
+    const result = await collectAstronStudioResourceMetrics({legacyProviderOnly:true, stateFile: f.statePath, traceIndex: f.indexPath, output: f.output });
     assert.equal(result.metrics.usage.total_tokens.value, 35);
     assert.equal(result.metrics.requests.request_count.value, 2);
   } finally { await rm(f.root, {recursive:true, force:true}); }

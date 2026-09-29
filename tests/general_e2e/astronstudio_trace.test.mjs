@@ -217,7 +217,7 @@ test("archive CLI requires a state file and query CLI bounds pagination", () => 
 test("exact bound turn archives raw and normalized events without cross-session pollution", async () => {
   const fixture = await createFixture();
   try {
-    const result = await archiveAstronStudioTrace({
+    const result = await archiveAstronStudioTrace({legacyProviderOnly:true,
       stateFile: fixture.stateFile,
       stateDb: fixture.stateDatabase,
       outputDir: fixture.outputDir,
@@ -268,7 +268,7 @@ test("exact bound turn archives raw and normalized events without cross-session 
 test("read-only query returns total hits pagination and exact locations", async () => {
   const fixture = await createFixture();
   try {
-    await archiveAstronStudioTrace({
+    await archiveAstronStudioTrace({legacyProviderOnly:true,
       stateFile: fixture.stateFile,
       stateDb: fixture.stateDatabase,
       outputDir: fixture.outputDir,
@@ -336,7 +336,7 @@ test("provider session mismatch fails closed", async () => {
       .run(JSON.stringify(event), "event-result");
     database.close();
     await assert.rejects(
-      archiveAstronStudioTrace({
+      archiveAstronStudioTrace({legacyProviderOnly:true,
         stateFile: fixture.stateFile,
         stateDb: fixture.stateDatabase,
         outputDir: fixture.outputDir,
@@ -352,7 +352,7 @@ test("provider session mismatch fails closed", async () => {
 test("query refuses a transcript changed after indexing", async () => {
   const fixture = await createFixture();
   try {
-    await archiveAstronStudioTrace({
+    await archiveAstronStudioTrace({legacyProviderOnly:true,
       stateFile: fixture.stateFile,
       stateDb: fixture.stateDatabase,
       outputDir: fixture.outputDir,
@@ -376,7 +376,7 @@ test("offline resource supplementation preserves execution bytes and rejects cha
     f.state.execution = {started_at:"2026-09-17T10:00:01.000Z",finished_at:"2026-09-17T10:00:07.000Z",duration_seconds:6};
     f.state.session.native_status = "completed";
     await writeFile(f.stateFile, JSON.stringify(f.state));
-    await archiveAstronStudioTrace({stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir});
+    await archiveAstronStudioTrace({legacyProviderOnly:true,stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir});
     const unitRoot = await realpath(join(f.root,"unit")),record=join(unitRoot,"record.json");
     const execution={identity:f.state.identity,harness:{id:"astronstudio"},session:f.state.session,prompt:f.state.prompt,evidence:{},resource_metrics_path:null};
     const before=JSON.stringify(execution);await writeFile(record,before);
@@ -390,13 +390,13 @@ test("offline resource supplementation preserves execution bytes and rejects cha
   } finally { await rm(f.root,{recursive:true,force:true}); }
 });
 
-test("rollout is archived byte-for-byte and overrides protocol tool/request counts", async () => {
+test("new capture discovers rollout and uses its tools/requests/tokens/native duration", async () => {
   const f=await createFixture();
   try {
     f.state.execution={started_at:'2026-09-17T10:00:01.000Z',finished_at:'2026-09-17T10:00:09.000Z',duration_seconds:8};
     f.state.session.native_status='completed';
     await writeFile(f.stateFile,JSON.stringify(f.state));
-    const first=await archiveAstronStudioTrace({stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir});
+    const first=await archiveAstronStudioTrace({legacyProviderOnly:true,stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir});
     const row=(type,payload)=>({type,payload});
     const usage={input_tokens:10,cached_input_tokens:2,output_tokens:3,reasoning_output_tokens:1,total_tokens:13};
     const rows=[row('session_meta',{id:SESSION_ID,cwd:f.workspace}),
@@ -405,15 +405,30 @@ test("rollout is archived byte-for-byte and overrides protocol tool/request coun
       ...first.trace_index.calls.map(c=>row('response_item',{type:'function_call',call_id:c.call_id,name:'bash',arguments:'{}'})),
       row('response_item',{type:'function_call',call_id:'read-not-in-desktop-events',name:'read',arguments:'{}'}),
       row('event_msg',{type:'token_count',info:{total_token_usage:usage,last_token_usage:usage}}),
-      row('event_msg',{type:'task_complete',turn_id:TURN_ID})];
-    const rollout=join(f.root,'rollout.jsonl'),original=Buffer.from(rows.map(JSON.stringify).join('\n')+'\n');
+      row('event_msg',{type:'task_complete',turn_id:TURN_ID,started_at:10,completed_at:99,duration_ms:7234})];
+    const rollout=join(f.root,`rollout-2026-09-17T10-00-00-${SESSION_ID}.jsonl`),original=Buffer.from(rows.map(JSON.stringify).join('\n')+'\n');
     await writeFile(rollout,original);
-    const captured=await archiveAstronStudioTrace({stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir,rolloutFile:rollout,replace:true});
+    const captured=await archiveAstronStudioTrace({stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir,rolloutRoot:f.root,replace:true});
     assert.equal(captured.trace_index.raw_trace.length,2);
     assert.deepEqual(await readFile(join(f.outputDir,'raw/astronstudio-rollout.jsonl')),original);
     const result=await collectAstronStudioResourceMetrics({stateFile:f.stateFile,traceIndex:join(f.outputDir,'trace-index.json'),output:join(f.root,'metrics.json')});
     assert.equal(result.metrics.tools.call_count.value,first.trace_index.calls.length+1);
     assert.equal(result.metrics.requests.request_count.value,1);
     assert.equal(result.metrics.requests.request_attempt_count.value,null);
+    assert.equal(result.metrics.usage.total_tokens.value,13);
+    assert.equal(result.metrics.usage.input_tokens.value,10);
+    assert.equal(result.metrics.usage.cache_read_input_tokens.value,2);
+    assert.equal(result.metrics.timing.agent_duration_seconds.value,7.234);
+    assert.equal(result.metrics.timing.duration_seconds.value,8);
+    const metrics=JSON.parse(await readFile(join(f.root,'metrics.json'),'utf8'));
+    assert.equal(metrics.collection.collector,'astronstudio-rollout-resource-metrics');
+    assert(metrics.collection.metric_sources.total_tokens.every(s=>s.includes('astronstudio-rollout.jsonl')));
   } finally { await rm(f.root,{recursive:true,force:true}); }
+});
+
+test("new capture cannot silently omit the rollout when discovery has no match", async()=>{
+  const f=await createFixture();
+  try{
+    await assert.rejects(archiveAstronStudioTrace({stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir,rolloutRoot:f.root}),/ROLLOUT_FILE_NOT_UNIQUE/);
+  }finally{await rm(f.root,{recursive:true,force:true});}
 });
