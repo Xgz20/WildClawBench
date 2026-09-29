@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createHash } from 'node:crypto';
-import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, readFile, rm, symlink } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { analyzeRollout, createRolloutSupplement, verifyRolloutSupplement } from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-rollout.mjs';
@@ -94,6 +96,10 @@ test('immutable rollout supplement recomputes and rejects raw/summary tampering'
     await writeFile(ep,JSON.stringify(state));await writeFile(sp,JSON.stringify(state));await writeFile(rp,bytes(fixture()));
     const r=await createRolloutSupplement({executionRecord:ep,stateFile:sp,rolloutFile:rp,outputDir:out});assert.equal(r.tool_counts.total,5);
     assert.equal((await verifyRolloutSupplement({directory:out,executionRecord:ep})).status,'PASS');
+    const linked=join(root,'linked-rollout.mjs');
+    await symlink(fileURLToPath(new URL('../../tools/report/e2e-shared/general-resource-supplements/astronstudio-rollout.mjs',import.meta.url)),linked);
+    const cli=JSON.parse(execFileSync(process.execPath,[linked,'verify','--directory',out,'--execution-record',ep],{encoding:'utf8'}));
+    assert.equal(cli.status,'PASS');assert.equal(cli.metrics.profile_version,2);
     await assert.rejects(createRolloutSupplement({executionRecord:ep,stateFile:sp,rolloutFile:rp,outputDir:out}),/EXISTS/);
     const native=join(out,'raw/astronstudio-rollout.jsonl');await writeFile(native,(await readFile(native)).toString().replace('"read"','"edit"'));
     await assert.rejects(verifyRolloutSupplement({directory:out,executionRecord:ep}),/SHA_MISMATCH/);

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Model tool identities come from rollout response items, not desktop item types.
 import { createHash, randomUUID } from 'node:crypto';
+import { realpathSync } from 'node:fs';
 import { readFile, lstat, mkdir, writeFile, rename, rm, readdir } from 'node:fs/promises';
 import { dirname, resolve, join, sep, isAbsolute } from 'node:path';
 import { homedir } from 'node:os';
@@ -253,4 +254,4 @@ export async function main(argv=process.argv.slice(2)) {
   }else result=await(cmd==='create'?createRolloutSupplement(opts):verifyRolloutSupplement(opts));
   console.log(JSON.stringify(result));
 }
-if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(e=>{console.error(e.message);process.exitCode=1});
+if(process.argv[1]&&realpathSync(resolve(process.argv[1]))===realpathSync(fileURLToPath(import.meta.url)))main().catch(e=>{console.error(e.message);process.exitCode=1});
