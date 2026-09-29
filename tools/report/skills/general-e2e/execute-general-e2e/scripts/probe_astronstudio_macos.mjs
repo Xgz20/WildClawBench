@@ -855,7 +855,7 @@ export function buildFrozenRunConfig(observation) {
       endpoint: observation.cdp.endpoint,
       endpoint_source: observation.cdp.endpoint_source,
       ui_slots: 1,
-      execution_concurrency: 1,
+      execution_concurrency: 3,
       maximum_execution_concurrency: 8,
     },
     state_database: {

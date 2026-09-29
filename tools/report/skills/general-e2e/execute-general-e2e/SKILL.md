@@ -15,7 +15,7 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.12.0/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt发送固定单槽。AstronStudio默认1个后台槽；WorkBuddy/QwenWork默认3槽，队列算法支持1–8，并按可信终态动态补位。AstronStudio 切换 Workspace 时先确认项目选择菜单已关闭，再使用侧边栏添加路径；若添加项目后当前对话未切入目标 Workspace，会用原生项目 ID 定位唯一侧边栏项目，从该项目的“新建对话”入口建立空白目标路由并重新核对完整路径；若正确路径在导航期间延迟出现，仍须同时核对原生 route→project→cwd 后才接受，未完成身份回读时不发送 Prompt。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.12.1/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt发送固定单槽。AstronStudio/WorkBuddy/QwenWork默认3个后台槽，队列算法支持1–8，并按可信终态动态补位。AstronStudio 切换 Workspace 时先确认项目选择菜单已关闭，再使用侧边栏添加路径；若添加项目后当前对话未切入目标 Workspace，会用原生项目 ID 定位唯一侧边栏项目，从该项目的“新建对话”入口建立空白目标路由并重新核对完整路径；若正确路径在导航期间延迟出现，仍须同时核对原生 route→project→cwd 后才接受，未完成身份回读时不发送 Prompt。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## DoubaoWork macOS 开发入口
 
@@ -173,7 +173,7 @@ Worker 中断后使用相同参数并增加 `--resume`。队列冻结 manifest�
 
 `--timeout-ms`、`--poll-interval-ms` 和 `--identity-timeout-ms` 只控制 CDP/UI 操作、轮询节奏和发送后原生身份绑定，不限制被测 Harness 完成任务的时间。评分规则 Worker 的进程超时是独立的基础设施保护；新的 General 评分编排不设置任务级 deadline。
 
-AstronStudio的`--run-slots`默认`1`，队列算法接受`1–8`但不得超过冻结配置上限；更高并发需目标客户端实证，不能由fixture推断。队列逐题串行执行 UI 发送动作，后台已绑定的原生 Agent 最多并行到冻结槽位；任一任务完成后按 manifest 顺序补位。完整状态、恢复、客户端中断和多 attempt 边界见 [AstronStudio macOS 队列契约](references/astronstudio-macos-queue.md)。
+AstronStudio的`--run-slots`默认`3`，可显式配置`1–8`但不得超过冻结配置上限。新 probe 的 execution_concurrency 与 initial_concurrency 均为3；已有队列沿用原冻结发行和槽位。实际原生重叠以执行证据为准，不能由配置值或fixture推断。队列逐题串行执行 UI 发送动作，后台已绑定的原生 Agent 最多并行到冻结槽位；任一任务完成后按 manifest 顺序补位。完整状态、恢复、客户端中断和多 attempt 边界见 [AstronStudio macOS 队列契约](references/astronstudio-macos-queue.md)。
 
 ## 责任边界
 

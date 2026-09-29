@@ -53,7 +53,7 @@ function usage() {
   --resume                       恢复同一 attempt；禁止重复发送 Prompt
   --detach-after-submit          绑定 thread/turn/session/cwd 后退出观察
   --observe-once                 恢复后只执行一次原生状态观察
-  --managed-run-slots <1-8>     批队列冻结的后台 Agent 槽位，默认 1
+  --managed-run-slots <1-8>     批队列传入冻结槽位；独立单题默认 1
   --allowed-active-session-id   批队列已登记的活动 session，可重复
   --timeout-ms <毫秒>            单次 UI/CDP 操作超时，默认 30000
   --poll-interval-ms <毫秒>      终态轮询间隔，默认 1000

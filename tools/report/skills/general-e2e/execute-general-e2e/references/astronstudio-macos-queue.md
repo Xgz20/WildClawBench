@@ -2,7 +2,7 @@
 
 ## 适用范围
 
-`scripts/run_astronstudio_macos_batch.mjs` 在一个已解压的 General E2E execution unit 内，按冻结顺序调用单题执行器。当前发布范围为 `ui_slots=1`、后台`run_slots`默认1；算法可配置1–8，但提高槽位须经目标客户端实证并满足冻结配置及逐thread流租约门禁；旧的单槽冻结配置继续支持。fixture 验证不替代目标客户端的五题三槽真机证据。
+`scripts/run_astronstudio_macos_batch.mjs` 在一个已解压的 General E2E execution unit 内，按冻结顺序调用单题执行器。新队列默认为 `ui_slots=1`、后台 `run_slots=3`，可显式配置1–8，并满足冻结配置及逐thread流租约门禁。probe 的 execution_concurrency 和 initial_concurrency 均为3；已有队列沿用原冻结发行和槽位，包括显式单槽配置。真实原生重叠由执行证据确认，默认值及fixture不代表真机并发结论。
 
 ## 调用与状态
 
@@ -11,7 +11,7 @@ node scripts/run_astronstudio_macos_batch.mjs \
   --unit-root /absolute/extracted-unit \
   --run-config /absolute/frozen-run-config.json \
   --queue-id <稳定ID> \
-  [--run-slots 1] \
+  [--run-slots 3] \
   [--task-id <完整任务ID> ...]
 ```
 
