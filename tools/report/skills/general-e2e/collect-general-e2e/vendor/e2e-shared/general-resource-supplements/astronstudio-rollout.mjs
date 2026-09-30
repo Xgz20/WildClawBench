@@ -41,7 +41,7 @@ export function analyzeRollout(bytes, state, {profileVersion=ROLLOUT_METRICS_PRO
   ensure(target&&session.session_id&&session.cwd&&state.prompt.sha256,'ROLLOUT_BINDING_MISSING');
   let metaCount=0,current=null,starts=0,ended=false,promptMatches=0,usageEvents=0,repeated=0,requests=0;
   let previous=zero(),usageComplete=true;
-  const calls=new Map(),sums=zero(),usageLines=[],warnings=[],terminals=[];
+  const calls=new Map(),sums=zero(),usageLines=[],warnings=[],terminals=[],interactionSeries=[];
   const lines=bytes.toString('utf8').split('\n');
   for(let i=0;i<lines.length;i++) {
     if(!lines[i].trim())continue;
@@ -75,6 +75,20 @@ export function analyzeRollout(bytes, state, {profileVersion=ROLLOUT_METRICS_PRO
         if(!FIELDS.every(k=>total[k]===previous[k]+last[k]))usageComplete=false;
         requests++;usageLines.push(line);
         for(const k of FIELDS)sums[k]+=last[k];
+        interactionSeries.push({
+          interaction_index: requests,
+          raw_line: line,
+          input_tokens: last.input_tokens,
+          cached_input_tokens: last.cached_input_tokens,
+          output_tokens: last.output_tokens,
+          reasoning_output_tokens: last.reasoning_output_tokens,
+          total_tokens: last.total_tokens,
+          cumulative_input_tokens: sums.input_tokens,
+          cumulative_cached_input_tokens: sums.cached_input_tokens,
+          cumulative_output_tokens: sums.output_tokens,
+          cumulative_reasoning_output_tokens: sums.reasoning_output_tokens,
+          cumulative_total_tokens: sums.total_tokens,
+        });
       }
       previous={...total};
     }
@@ -124,7 +138,7 @@ export function analyzeRollout(bytes, state, {profileVersion=ROLLOUT_METRICS_PRO
       request_attempt_count:{known:0,total:null,unit:'http_attempt'}},
       known_subtotals:!requestKnown&&requests?{request_count:requests}:{},warnings},
     usage_reconciliation:{usage_events:usageEvents,advancing_updates:requests,repeated_snapshots:repeated,
-      reconciled:requestKnown,summed_usage:sums,source_lines:usageLines}};
+      reconciled:requestKnown,summed_usage:sums,source_lines:usageLines,interaction_series:interactionSeries}};
   if(profileVersion===1)return result; // Frozen v9 receipts retain their exact projection.
   const coverage=result.collection.coverage,subtotals=result.collection.known_subtotals;
   const sources=result.collection.metric_sources={};

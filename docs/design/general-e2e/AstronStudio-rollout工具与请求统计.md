@@ -13,6 +13,7 @@
 - 按 call_id 去重完全一致的回放；同 ID 内容冲突拒绝；所有 output 记录均排除。保留原始行号和内容摘要用于核对，不从 Bash 命令语义拆出 Read/Write。
 - 请求数是累计 token_count 的推进次数；每次推进都要求累计值与 last_token_usage 对账。重复累计快照排除，前一 turn 的累计量作为基线。缺失/不一致只留小计与 null；HTTP 请求尝试及内部重试仍不可观测。
 - Token 与请求数共用去重/累计对账。输入包含缓存，输出包含推理；缓存写入未暴露时保持 null。任务耗时只使用绑定终态的 `duration_ms / 1000`，不采用秒级时钟相减或回填 provider 事件耗时；缺失保持 unavailable，负数和冲突拒绝。
+- 每个有效 usage advance 同时落盘 `interaction_series`，包含请求序号、单次 input/cache/output/reasoning/total 和累计值，用于分析题目内上下文是否滚雪球。该序列来自 rollout 的 `last_token_usage`，provider events 不参与回填。
 - 流程耗时保持执行器起止时间。原生任务耗时与流程耗时分开。失败执行即使发出 task_complete，仍保持原执行状态。
 - 旧执行、评分与证据保持冻结。独立补充层绑定原执行 SHA、状态、rollout SHA，并在报告时重读原件复算。新补充层明确使用 profile_version 2（工具、请求、Token、任务耗时），旧 profile 1 保持原来的工具/请求投影并按原版本校验。
 
