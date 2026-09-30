@@ -433,6 +433,44 @@ function buildWebsiteSheet(workbook, data) {
 }
 
 
+function metricCoverage(unit, key) {
+  const metric = unit.resource_metrics?.[key];
+  return metric ? `${metric.covered_cases}/${metric.total_cases}` : "-";
+}
+
+
+function buildEfficiencySheet(workbook, data) {
+  const sheet = workbook.worksheets.add("效率对比");
+  sheet.showGridLines = false;
+  const headers = [
+    "模型@Harness", "总Token", "平均Token", "输入Token", "输出Token", "缓存读取Token", "缓存写入Token",
+    "模型请求数", "工具调用数", "总耗时(s)", "智能体耗时(s)", "Token覆盖", "请求覆盖", "工具覆盖", "耗时覆盖",
+  ];
+  styleTitle(sheet, 1, headers.length, `Web 站点效率与资源对比 · ${data.batch_id}`);
+  styleSection(sheet, 3, headers.length, "效率与资源指标（总量仅在完整覆盖时展示，已知小计保留在资源覆盖表）");
+  const rows = data.units.map(unit => [
+    unit.unit, unit.total_tokens, unit.average_total_tokens, unit.total_input_tokens, unit.total_output_tokens,
+    unit.total_cache_read_input_tokens, unit.total_cache_creation_input_tokens, unit.total_requests,
+    unit.tool_call_count, unit.total_duration_seconds, unit.total_agent_duration_seconds,
+    metricCoverage(unit, "total_tokens"), metricCoverage(unit, "request_count"),
+    metricCoverage(unit, "call_count"), metricCoverage(unit, "duration_seconds"),
+  ]);
+  writeTable(sheet, 4, headers, rows);
+  if (rows.length) {
+    const end = 4 + rows.length;
+    sheet.getRange(`B5:I${end}`).format.numberFormat = "#,##0";
+    sheet.getRange(`J5:J${end}`).format.numberFormat = "#,##0.000";
+    sheet.getRange(`K5:K${end}`).format.numberFormat = "#,##0.000";
+    sheet.getRange(`A5:O${end}`).format.wrapText = true;
+    sheet.getRange(`A5:O${end}`).format.rowHeight = 32;
+  }
+  applyWidths(sheet, { A: 30, B: 16, C: 16, D: 16, E: 16, F: 18, G: 18, H: 16, I: 16, J: 16, K: 18, L: 12, M: 12, N: 12, O: 12 });
+  sheet.freezePanes.freezeRows(4);
+  sheet.freezePanes.freezeColumns(1);
+  return sheet;
+}
+
+
 function buildDifficultySheet(workbook, data) {
   const sheet = workbook.worksheets.add("难度对比");
   sheet.showGridLines = false;
@@ -532,6 +570,7 @@ async function main() {
 
   const workbook = Workbook.create();
   buildWebsiteSheet(workbook, data);
+  buildEfficiencySheet(workbook, data);
   buildDifficultySheet(workbook, data);
   buildDetailSheet(workbook, data);
   workbook.recalculate();
@@ -539,7 +578,7 @@ async function main() {
   await fs.mkdir(path.dirname(args.output), { recursive: true });
   await fs.mkdir(args["preview-dir"], { recursive: true });
   if (!skipPreview) {
-    for (const sheetName of ["站点评测指标", "难度对比", "用例对比明细"]) {
+    for (const sheetName of ["站点评测指标", "效率对比", "难度对比", "用例对比明细"]) {
       const preview = await workbook.render({ sheetName, autoCrop: "all", scale: 1, format: "png" });
       await fs.writeFile(
         path.join(args["preview-dir"], `${sheetName}.png`),
@@ -563,6 +602,7 @@ async function main() {
     ["站点评测指标", data.metric_profile === ARTIFACTSBENCH_PROFILE
       ? `A1:U${4 + data.units.length}`
       : `A1:${columnName(Math.max(31, 2 + Object.keys(data.labels.secondary).length, 2 + Object.keys(data.labels.aesthetic_secondary ?? {}).length))}${18 + 5 * data.units.length}`],
+    ["效率对比", `A1:O${4 + data.units.length}`],
     ["难度对比", `A1:${columnName(2 + data.difficulty_values.length)}${3 + data.difficulty_rows.length}`],
     ["用例对比明细", `A1:${columnName((data.metric_profile === ARTIFACTSBENCH_PROFILE ? 22 : 23) + Object.keys(data.labels.primary).length + Object.keys(data.labels.secondary).length)}${3 + data.detail_rows.length}`],
   ];

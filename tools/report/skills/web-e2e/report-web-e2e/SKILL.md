@@ -1,6 +1,6 @@
 ---
 name: report-web-e2e
-description: 汇总多个独立 Web E2E 评分回传包，校验批次、Profile 与用例范围，按自建详细指标或 ArtifactsBench 总分/难度 Profile 生成领导版 Markdown、报告 JSON 和三 Sheet Excel；不调用 WildClawBench 既有评分流程。
+description: 汇总多个独立 Web E2E 评分回传包，校验批次、Profile 与用例范围，按自建详细指标或 ArtifactsBench 总分/难度 Profile 生成领导版 Markdown、报告 JSON 和四 Sheet Excel；不调用 WildClawBench 既有评分流程。
 ---
 
 # 汇总 Web E2E 报告
@@ -18,7 +18,7 @@ description: 汇总多个独立 Web E2E 评分回传包，校验批次、Profile
 
 - `web_e2e_report_data.json`：可复算的统一数据源；
 - `Web站点端到端评测领导版.md`：详细 Profile 含“结论、总览、难度等级、一级维度、二级维度”；ArtifactsBench Profile 只含前三节；
-- `Web站点端到端评测报告.xlsx`：仅含 `站点评测指标`、`难度对比`、`用例对比明细`。
+- `Web站点端到端评测报告.xlsx`：包含 `站点评测指标`、`效率对比`、`难度对比`、`用例对比明细`。
 
 以下功能与美观度规则仅适用于 `web-e2e-detailed-v1`。页面美观度与总分并列展示，但永远不参与总分、得分率或满分率。`站点评测指标` 的结果与效率表在得分率、满分率之后展示“美观度总分”，并在站点一级/二级维度表之后增加“美观度一级维度汇总”和“美观度二级维度汇总”。
 
@@ -49,9 +49,9 @@ node "$REPORT_SKILL_DIR/scripts/build_web_e2e_workbook.mjs" \
   --preview-dir /tmp/web-e2e-report-preview
 ```
 
-若 Windows 上 `artifact-tool` 的 `workbook.render()` 发生原生进程崩溃，可在已复现最小用例后追加 `--skip-preview true` 仅跳过内置预览。此时构建结果会明确返回 `preview_status=EXTERNAL_REQUIRED`，必须再用可用的独立只读渲染器逐表生成并检查三张预览；不得把跳过渲染本身当作视觉验收通过。
+若 Windows 上 `artifact-tool` 的 `workbook.render()` 发生原生进程崩溃，可在已复现最小用例后追加 `--skip-preview true` 仅跳过内置预览。此时构建结果会明确返回 `preview_status=EXTERNAL_REQUIRED`，必须再用可用的独立只读渲染器逐表生成并检查四张预览；不得把跳过渲染本身当作视觉验收通过。
 
-生成后检查三张 Sheet 名称和顺序，逐表渲染预览，扫描公式错误，并核对 Excel 总平均分、完成率和用例数与 JSON/Markdown 一致。
+生成后检查四张 Sheet 名称和顺序，逐表渲染预览，扫描公式错误，并核对 Excel 总平均分、完成率、用例数和效率指标与 JSON/Markdown 一致。
 
 ## 统计边界
 
