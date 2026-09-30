@@ -163,15 +163,15 @@ class GeneralReleasePrepareTests(unittest.TestCase):
         )
         self.assertEqual(
             readiness["execute-general-e2e"],
-            ("0.12.1", "operational"),
+            ("0.12.2", "operational"),
         )
         self.assertEqual(
             readiness["collect-general-e2e"],
-            ("0.9.2", "operational"),
+            ("0.9.3", "operational"),
         )
         self.assertEqual(
             readiness["score-general-e2e"],
-            ("0.10.0", "operational"),
+            ("0.10.1", "operational"),
         )
         self.assertEqual(
             readiness["orchestrate-general-e2e"],
@@ -191,10 +191,10 @@ class GeneralReleasePrepareTests(unittest.TestCase):
                 ("0.3.1", "operational"),
                 ("0.7.0", "operational"),
                 ("0.7.0", "operational"),
-                ("0.9.2", "operational"),
-                ("0.10.0", "operational"),
+                ("0.9.3", "operational"),
+                ("0.10.1", "operational"),
                 ("0.11.0", "operational"),
-                ("0.12.1", "operational"),
+                ("0.12.2", "operational"),
             },
         )
 

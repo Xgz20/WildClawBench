@@ -516,8 +516,19 @@ async function captureScreenshot(page, pathValue) {
 async function revealAndOpenProjectDialog(page) {
   const trigger = page.getByTestId("conversation-list-v2-project-create-menu-trigger");
   if (await trigger.count() !== 1) throw new Error("新建项目入口不唯一");
+  await trigger.scrollIntoViewIfNeeded();
+  const header = page.locator('div[class*="group/section-header flex"]').filter({ has: trigger });
+  if (await header.count() !== 1 || !(await header.isVisible())) {
+    throw new Error("新建项目所属标题栏不唯一或不可见");
+  }
+  await header.hover();
   const box = await trigger.boundingBox();
   if (!box) throw new Error("新建项目入口没有可交互坐标");
+  const viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
+  if (box.x < 0 || box.y < 0
+      || box.x + box.width > viewport.width || box.y + box.height > viewport.height) {
+    throw new Error("新建项目入口不在当前视口内");
+  }
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   if (!(await trigger.isVisible())) throw new Error("新建项目入口悬停后仍不可见");
   await trigger.click();
@@ -624,6 +635,7 @@ async function openProjectConversation(page, projectName) {
     if (await newConversation.count() !== 1) throw new Error("项目新对话入口不唯一");
     await newConversation.waitFor({ state: "visible" });
     await newConversation.click();
+    await currentProject.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
     // New drafts can retain the previous composer project in 2.31.x. Select
     // the exact project through the visible picker and require readback again.
     if (await currentProject.count() !== 1 || !(await currentProject.isVisible())) {
@@ -657,6 +669,20 @@ export function selectComposerProjectControl(controls) {
 }
 
 async function createProject(page, state, stateFile, config) {
+  const existing = page.getByTestId("project-grouped-section").getByTitle(config.projectName, { exact: true });
+  if (await existing.count() > 1) throw new Error("同名项目不唯一，拒绝复用");
+  if (await existing.count() === 1) {
+    const project = await openProjectConversation(page, config.projectName);
+    state.client.project_id_sha256 = project.projectIdSha256;
+    state.workspace_selection.project_id_sha256 = project.projectIdSha256;
+    const readback = await verifyPreparedProjectWorkspace(page, state);
+    confirmWorkspaceReadback(state, readback, homedir());
+    state.history.push({ phase: state.phase, event: "EXISTING_PROJECT_REUSED_AFTER_ZERO_SEND_FAILURE",
+      project_id_sha256: project.projectIdSha256, workspace_path_sha256: sha256Text(state.workspace),
+      at: new Date().toISOString() });
+    await atomicWriteAttemptState(stateFile, state);
+    return;
+  }
   const dialog = await revealAndOpenProjectDialog(page);
   await dialog.getByTestId("project-shared-create-project-name-input").fill(config.projectName);
   await dialog.getByRole("button", { name: "添加本地文件夹", exact: true }).click();
@@ -704,10 +730,11 @@ async function verifyPreparedProjectWorkspace(page, state) {
   const dialog = page.getByTestId("project-shared-rename-project-dialog");
   await dialog.waitFor({ state: "visible" });
   if (await dialog.count() !== 1) throw new Error("DOUBAOWORK_PREPARED_PROJECT_DIALOG_AMBIGUOUS");
+  let readback;
   try {
     const name = dialog.getByRole("textbox");
     if (await name.count() !== 1 || await name.inputValue() !== state.client.project_name) throw new Error("DOUBAOWORK_PREPARED_PROJECT_NAME_DRIFT");
-    const readback = await readWorkspaceTooltip(page, dialog, state.workspace);
+    readback = await readWorkspaceTooltip(page, dialog, state.workspace);
     state.workspace_selection.display_value = readback;
     state.workspace_selection.display_sha256 = sha256Text(readback);
     state.workspace_selection.source = "project-folder-tooltip";
@@ -720,6 +747,7 @@ async function verifyPreparedProjectWorkspace(page, state) {
     await cancel.click();
     await dialog.waitFor({ state: "hidden" });
   }
+  return readback;
 }
 
 export function selectConfigurationReadback(controls, projectName) {

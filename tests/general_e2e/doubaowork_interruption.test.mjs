@@ -28,6 +28,34 @@ test("A native acknowledgement recovers the original dispatch boundary without i
   assert.throws(() => recordDispatchStart(f.state), /READY_TO_SEND|第二次/);
 });
 
+test("Doubao split model badge whitespace is admitted only for 自动高", () => {
+  const f = fixture();
+  f.state.phase = "PERMISSION_CONFIRMED";
+  f.state.terminal = false;
+  f.state.error = null;
+  f.state.send = { intent_persisted_at: null, dispatch_started_at: null, click_returned_at: null,
+    accepted_at: null, dispatch_attempt_count: 0 };
+  f.state.timing.sent_at = null;
+  f.state.session.conversation_id = null;
+  f.state.session.session_directory_id = null;
+  f.state.requested.model = "自动高";
+  confirmModel(f.state, "自动 高", new Date(f.at));
+  assert.equal(f.state.actual.model, "自动 高");
+  assert.equal(f.state.history.some(entry => entry.event === "MODEL_DISPLAY_WHITESPACE_EQUIVALENCE"), true);
+
+  const rejected = fixture();
+  rejected.state.phase = "PERMISSION_CONFIRMED";
+  rejected.state.terminal = false;
+  rejected.state.error = null;
+  rejected.state.send = { intent_persisted_at: null, dispatch_started_at: null, click_returned_at: null,
+    accepted_at: null, dispatch_attempt_count: 0 };
+  rejected.state.timing.sent_at = null;
+  rejected.state.session.conversation_id = null;
+  rejected.state.session.session_directory_id = null;
+  rejected.state.requested.model = "自动高";
+  assert.throws(() => confirmModel(rejected.state, "其他模型", new Date(rejected.at)), /实际模型与请求不一致/);
+});
+
 test("Unverified, foreign, unbound and pre-dispatch acknowledgements cannot certify a send", () => {
   for (const mutate of [f => f.native.binding_status = "unknown", f => f.native.conversation_id = "999",
     f => f.native.prompt.sha256 = "b".repeat(64), f => f.state.session.prompt_readback.status = "unverified",

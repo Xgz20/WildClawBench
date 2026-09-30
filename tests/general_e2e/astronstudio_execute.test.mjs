@@ -10,6 +10,7 @@ import {
   ensureSendTargetReady,
   fillPrompt,
   renderExpectedPrompt,
+  shouldOpenExactProjectConversation,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs";
 import {
   withStateSnapshot,
@@ -24,6 +25,13 @@ import {
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs";
 
 const TASK_ID = "02_Code_Intelligence_task_001_temperature_cli_fix";
+
+test("workspace trigger without a visible absolute path uses exact native project routing", () => {
+  assert.equal(shouldOpenExactProjectConversation({ count: 0, path: null }), true);
+  assert.equal(shouldOpenExactProjectConversation({ count: 1, path: null }), true);
+  assert.equal(shouldOpenExactProjectConversation({ count: 1, path: "/tmp/workspace" }), false);
+  assert.equal(shouldOpenExactProjectConversation({ count: 2, path: null }), false);
+});
 
 class FakeElement {
   constructor(text = "") {

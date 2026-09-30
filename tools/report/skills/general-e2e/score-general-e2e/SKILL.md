@@ -21,19 +21,19 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 python -m eval_general_e2e skills --name score-general-e2e --json
 ```
 
-当前 `0.10.0/operational` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、中文理由门禁、合分审计和 `verify-score`。自动规则组件会为每个检查点记录中文分值解释，并绑定冻结规则源码、候选清单、轨迹与 Worker 原始返回键值。终态评分可复用冻结候选创建独立重评分 attempt；题目 `timeout_seconds` 与控制线程 deadline 不进入能力评分 Rubric。G4-03 已完成固定 `gpt-6-astra/high` 的三题真实 Codex 语义评分并纳入五题闭环；该生产状态不表示 Windows 或其他 Harness 已验收。
+当前 `0.10.1/operational` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、中文理由门禁、合分审计和 `verify-score`。自动规则组件会为每个检查点记录中文分值解释，并绑定冻结规则源码、候选清单、轨迹与 Worker 原始返回键值。终态评分可复用冻结候选创建独立重评分 attempt；题目 `timeout_seconds` 与控制线程 deadline 不进入能力评分 Rubric。G4-03 已完成固定 `gpt-6-astra/high` 的三题真实 Codex 语义评分并纳入五题闭环；该生产状态不表示 Windows 或其他 Harness 已验收。
 
 评分 Prompt 必须冻结并显式给出本 Skill 根、入口、版本和入口 SHA；不得从项目或仓库中的同名 Skill 猜测入口。普通生产运行的 manifest 不含 validation 标记；显式验收运行仍要求 Prompt 的 acceptance ID 与 `attempt-manifest.json` 完全相同。两种模式都不得省略证据查询、反例检查、合分或 `verify-score`。
 
 ## 责任边界
 
-`0.10.0` 支持两类显式证据政策。`references/reviewed-evidence-policy.json`按冻结契约SHA审核输出型任务所需证据，允许非必需工具轨迹缺口，仍核验原生会话、Prompt、原始trajectory、最终回复及候选。`references/reviewed-failure-evidence-policy.json`只为已审核的输出契约准入有原生失败证明的`candidate_error`；证明绑定原记录、状态、候选、Prompt和文件SHA，不写死某次运行ID。采集器不决定分数，缺产物仍由原规则和Judge判断。保护确认阻断、未知发送和基础设施错误不进入这个原生失败评分准入分支。
+`0.10.1` 支持两类显式证据政策。`references/reviewed-evidence-policy.json`按冻结契约SHA审核输出型任务所需证据，允许非必需工具轨迹缺口，仍核验原生会话、Prompt、原始trajectory、最终回复及候选。`references/reviewed-failure-evidence-policy.json`只为已审核的输出契约准入有原生失败证明的`candidate_error`；证明绑定原记录、状态、候选、Prompt和文件SHA，不写死某次运行ID。采集器不决定分数，缺产物仍由原规则和Judge判断。保护确认阻断、未知发送和基础设施错误不进入这个原生失败评分准入分支。
 
 原有自动规则准入仍保留：纯 automated 规则的 `grade(**kwargs)` 仅以常量键 `workspace_path` 读取输入、无动态/转交参数、无轨迹或回复引用时，可接受带绑定原始证据的 partial 工具轨迹。候选及原始/标准轨迹SHA必须有效，回执不改成complete。除此推断分支外，hybrid/llm_judge只有命中上述审核政策且通过独立证据核验时才准入。读取缺失轨迹的规则、未知参数形式和缺身份/候选仍拒绝。
 
 `0.8.4` 对冻结 Prompt 明确映射 `/tmp_workspace → ./workspace`、且候选仅在嵌套 `workspace/results/` 产出文件的任务，按已核验的 Prompt SHA 将该目录作为规则 Worker 的逻辑 `/tmp_workspace`。候选原件不改动；attempt manifest、规则审计和语义请求均记录实际路径。若根目录与嵌套目录同时有结果，直接拒绝路径歧义。语义裁判须按 [Codex 语义评分协议](references/codex-agent-judge.md)引用原始路径并评价内容，不因已证明的映射多出一层目录而扣交付位置分。
 
-`0.10.0` 仅对第 58 题已冻结且 SHA 精确匹配的旧规则应用经审核的缺失 `recipient_id` 修正。Worker 请求使用修正源码，原 contract 保持不可变；独立修正记录、规则审计、检查点证据和标准评分均绑定原始与实际执行源码 SHA，`verify-score` 逐项复核。其他任务或源码 SHA 不匹配时不应用修正。
+`0.10.1` 仅对第 58 题已冻结且 SHA 精确匹配的旧规则应用经审核的缺失 `recipient_id` 修正。Worker 请求使用修正源码，原 contract 保持不可变；独立修正记录、规则审计、检查点证据和标准评分均绑定原始与实际执行源码 SHA，`verify-score` 逐项复核。其他任务或源码 SHA 不匹配时不应用修正。
 
 - 输入：单题评分工作空间、冻结候选/轨迹和裁判配置。
 - 输出：自动规则分、语义分、证据引用、评分审计和标准 `score.json`。

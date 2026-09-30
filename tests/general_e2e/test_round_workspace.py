@@ -11,6 +11,21 @@ from tests.general_e2e.test_local_scoring_runtime import Fixture, RUNTIME
 from tests.general_e2e import test_general_release_prepare as PREPARE_TESTS
 
 class TraceHandoffTests(unittest.TestCase):
+    def test_copy_file_supports_shutil_copytree_string_destinations(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);source=root/'source';target=root/'target'
+            source.mkdir();(source/'trace.jsonl').write_text('{"event":"bound"}\n')
+            trace_handoff = importlib.util.module_from_spec(
+                importlib.util.spec_from_file_location(
+                    'trace_handoff_copytree',
+                    ROOT/'tools/report/skills/general-e2e/score-general-e2e/scripts/trace_handoff.py',
+                )
+            )
+            spec=trace_handoff.__spec__;assert spec and spec.loader
+            spec.loader.exec_module(trace_handoff)
+            shutil.copytree(source,target,copy_function=trace_handoff.copy_file)
+            self.assertEqual((target/'trace.jsonl').read_text(),'{"event":"bound"}\n')
+
     def test_private_raw_trace_survives_source_removal_and_is_queryable(self):
         with tempfile.TemporaryDirectory() as d:
             f=Fixture(Path(d),grading_type='llm_judge',llm_judge_rubric='### Evidence (key: evidence, weight: 1.0)\nScore 1.0: correct\nScore 0.0: incorrect')

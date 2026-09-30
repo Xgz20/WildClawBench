@@ -570,13 +570,17 @@ def _workspace_path_resolution(
     candidate_entries: Sequence[Mapping[str, Any]],
 ) -> dict[str, Any]:
     """Resolve the prompt's frozen /tmp_workspace mapping without editing the candidate."""
+    output_paths = [str(row.get("path") or "") for row in candidate_entries
+                    if row.get("type") in {"file", "symlink"}]
+    root_count = sum(path.startswith("results/") for path in output_paths)
+    mapped_count = sum(path.startswith("workspace/results/") for path in output_paths)
     direct = {
         "policy": "frozen-prompt-mapping-aware/v1",
         "mode": "direct",
         "workspace_argument": "runtime/workspace",
         "prompt_sha256": None,
-        "root_result_count": 0,
-        "mapped_result_count": 0,
+        "root_result_count": root_count,
+        "mapped_result_count": mapped_count,
     }
     rows = [row for row in unit_manifest.get("tasks", [])
             if isinstance(row, dict) and row.get("task_id") == task_id]
@@ -601,10 +605,6 @@ def _workspace_path_resolution(
         return {**direct, "prompt_sha256": expected_sha}
     if "./workspace/results/" not in prompt:
         return {**direct, "prompt_sha256": expected_sha}
-    output_paths = [str(row.get("path") or "") for row in candidate_entries
-                    if row.get("type") in {"file", "symlink"}]
-    root_count = sum(path.startswith("results/") for path in output_paths)
-    mapped_count = sum(path.startswith("workspace/results/") for path in output_paths)
     if root_count and mapped_count:
         raise ScoringRuntimeError("WORKSPACE_RESULTS_AMBIGUOUS", task_id)
     return {

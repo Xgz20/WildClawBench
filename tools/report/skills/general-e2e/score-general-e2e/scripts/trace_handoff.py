@@ -22,10 +22,12 @@ def child(root, name):
     return path
 
 def copy_file(src,dst):
+    src,dst=Path(src),Path(dst)
     dst.parent.mkdir(parents=True,exist_ok=True)
     if sys.platform=='darwin':
         subprocess.run(['/bin/cp','-c',str(src),str(dst)],check=True,capture_output=True)
     else:shutil.copy2(src,dst)
+    return str(dst)
 
 def freeze(unit_root, execution, attempt_root, *, required=False):
     index_name=execution.get('evidence',{}).get('trace_index_path')

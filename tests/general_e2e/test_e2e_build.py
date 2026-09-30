@@ -407,7 +407,7 @@ process.stdout.write(JSON.stringify({{
             text=True,
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
-        self.assertIn("串行队列 Worker", completed.stdout)
+        self.assertIn("并发队列 Worker", completed.stdout)
         self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
         for driver, script, expected in (
             ("workbuddy", "execute.mjs", "--resume"),
@@ -690,7 +690,7 @@ console.log(JSON.stringify(analyzeRollout(Buffer.from(rows.map(JSON.stringify).j
         detached.mkdir()
         installed = BUILD._safe_extract(self.archive_path("collect-general-e2e"), detached / "installed")
         bundled = json.loads((installed / "bundled-components.json").read_text())
-        self.assertEqual(bundled["skill_version"], "0.9.2")
+        self.assertEqual(bundled["skill_version"], "0.9.3")
         component = next(item for item in bundled["components"] if item["name"] == "general-contracts")
         self.assertEqual(component["version"], "1.3.0")
         for relative in ("collection_validation.py", "schemas/trace-index-v2.schema.json"):

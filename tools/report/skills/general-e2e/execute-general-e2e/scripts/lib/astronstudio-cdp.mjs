@@ -433,7 +433,8 @@ export async function openExactProjectConversation(client, workspace, stateDatab
     return { method: "late-visible-current-value", project_id: projectId,
       thread_id: initialRoute, editor_count: 1, editor_empty: true, ...lateWorkspace };
   }
-  if (lateWorkspace.count > 1 || (lateWorkspace.count === 1 && lateWorkspace.path !== workspace)) {
+  if (lateWorkspace.count > 1 || (lateWorkspace.count === 1
+    && lateWorkspace.path !== null && lateWorkspace.path !== workspace)) {
     throw new Error(`AstronStudio 目标项目导航前路径歧义：${JSON.stringify(lateWorkspace)}`);
   }
   const sidebar = await waitFor(
@@ -578,7 +579,7 @@ export async function selectWorkspace(client, workspace, timeoutMs, stateDatabas
     await addWorkspace(client, workspace, timeoutMs);
   }
   let immediate = await workspaceState(client);
-  if (immediate.count === 0) {
+  if (immediate.count === 0 || (immediate.count === 1 && immediate.path === null)) {
     try {
       immediate = await waitFor(
         () => workspaceState(client),
@@ -590,7 +591,7 @@ export async function selectWorkspace(client, workspace, timeoutMs, stateDatabas
       immediate = await workspaceState(client);
     }
   }
-  if (immediate.count === 0) {
+  if (shouldOpenExactProjectConversation(immediate)) {
     return openExactProjectConversation(client, workspace, stateDatabase, timeoutMs);
   }
   const confirmed = await waitFor(
@@ -600,6 +601,11 @@ export async function selectWorkspace(client, workspace, timeoutMs, stateDatabas
     "等待 AstronStudio 项目绝对路径回读",
   );
   return { method: "exact-path-selection", ...confirmed };
+}
+
+export function shouldOpenExactProjectConversation(workspaceStateValue) {
+  return workspaceStateValue?.count === 0
+    || (workspaceStateValue?.count === 1 && workspaceStateValue?.path === null);
 }
 
 export async function fillPrompt(client, prompt, timeoutMs) {

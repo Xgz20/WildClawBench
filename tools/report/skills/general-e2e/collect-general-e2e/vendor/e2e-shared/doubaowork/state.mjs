@@ -324,8 +324,13 @@ export function confirmPermission(state, actualMode, now = new Date()) {
 export function confirmModel(state, actualModel, now = new Date()) {
   if (state.phase !== "PERMISSION_CONFIRMED") throw new Error("只能在 PERMISSION_CONFIRMED 确认模型");
   const actual = requireNonEmpty(actualModel, "actual model");
-  if (state.requested.model && actual !== state.requested.model) {
+  const splitBadgeEquivalent = state.requested.model === "自动高" && actual === "自动 高";
+  if (state.requested.model && actual !== state.requested.model && !splitBadgeEquivalent) {
     throw new Error("DoubaoWork 实际模型与请求不一致");
+  }
+  if (splitBadgeEquivalent) {
+    state.history.push({ phase: state.phase, event: "MODEL_DISPLAY_WHITESPACE_EQUIVALENCE",
+      requested_model: state.requested.model, actual_model: actual, at: now.toISOString() });
   }
   state.actual.model = actual;
   return transitionAttempt(state, "MODEL_CONFIRMED", { actual_model: actual }, now);

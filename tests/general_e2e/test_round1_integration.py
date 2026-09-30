@@ -40,6 +40,19 @@ class Round1IntegrationTests(unittest.TestCase):
             p.write_text('changed')
             with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,'MAPPED_PROMPT_DRIFT'):
                 RUNTIME._workspace_path_resolution(unit_root=root,unit_manifest=manifest,execution=execution,task_id='t',candidate_entries=[])
+
+    def test_direct_prompt_mapping_records_existing_root_results(self):
+        from tests.general_e2e.test_local_scoring_runtime import RUNTIME
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);prompt=b"Write ./results/answer.json";p=root/'PROMPT.md';p.write_bytes(prompt)
+            manifest={'tasks':[{'task_id':'t','prompt':{'mapping':[{'from':'/tmp_workspace','to':'./workspace'}],
+                'path':'PROMPT.md','sent_sha256':sha(prompt)}}]}
+            execution={'prompt':{'sha256':sha(prompt)}}
+            result=RUNTIME._workspace_path_resolution(unit_root=root,unit_manifest=manifest,execution=execution,task_id='t',
+                candidate_entries=[{'type':'file','path':'results/answer.json'}])
+            self.assertEqual(result['mode'],'direct')
+            self.assertEqual(result['root_result_count'],1)
+            self.assertEqual(result['mapped_result_count'],0)
     def test_leadership_supports_one_or_multiple_units_missing_metrics_and_no_fixed_task_count(self):
         def data(peers):
             labels=['Target@Harness',*peers]
