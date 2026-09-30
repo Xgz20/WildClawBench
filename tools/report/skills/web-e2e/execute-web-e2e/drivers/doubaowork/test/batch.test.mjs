@@ -29,20 +29,33 @@ test("DoubaoWork resume inherits frozen slots when --run-slots is omitted", () =
   applyFrozenRunSlots(explicit, { run_slots: 1 });
   assert.equal(explicit.runSlots, 3);
 });
-async function fixture(t) {
+async function fixture(t, taskIds = ids) {
   const raw = await mkdtemp(join(tmpdir(), "doubao-web-batch-"));
   const { realpath } = await import("node:fs/promises"); const root = await realpath(raw);
   t.after(() => rm(root, { recursive: true, force: true }));
-  for (const id of ids) {
+  for (const id of taskIds) {
     await mkdir(join(root, "execution", "tasks", id, "workspace"), { recursive: true });
     await writeFile(join(root, "execution", "tasks", id, "PROMPT.md"), `Build ${id}.\n`);
     await writeFile(join(root, "execution", "tasks", id, "workspace", ".gitkeep"), "");
   }
   const manifest = { schema_version: "wildclawbench.web-e2e-batch/v3", batch_id: "fixture", harness: { id: "doubaowork" },
-    tasks: ids.map(id => ({ task_id: id, execution_dir: `execution/tasks/${id}`, prompt_file: `execution/tasks/${id}/PROMPT.md` })) };
+    tasks: taskIds.map(id => ({ task_id: id, execution_dir: `execution/tasks/${id}`, prompt_file: `execution/tasks/${id}/PROMPT.md` })) };
   await writeFile(join(root, "manifest.json"), JSON.stringify(manifest));
   return root;
 }
+
+test("DoubaoWork supports a ten-task manifest with three slots and exact resume scope", async t => {
+  const ten = Array.from({ length: 10 }, (_, n) => `07_Website_Generation_task_fixture_${n + 1}`);
+  const root = await fixture(t, ten);
+  const args = parseBatchArgs(["--harness-root", root, "--run-id", "ten"]);
+  const plan = await planFor(args), state = createBatchState(plan, args);
+  assert.equal(state.tasks.length, 10);
+  assert.equal(state.run_slots, 3);
+  const resumed = await planFor({ ...args, resume: true });
+  assertStateMatches(state, resumed, args);
+  state.tasks.pop();
+  assert.throws(() => assertStateMatches(state, resumed, args), /PLAN_DRIFT/);
+});
 
 test("Batch freezes exactly the manifest task order and resumes without treating produced files as initial input", async t => {
   const root = await fixture(t);

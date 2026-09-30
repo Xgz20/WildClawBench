@@ -695,6 +695,14 @@ async function openProjectByName(page, projectName, timeout) {
     if (projectSelectors.length > 1) break;
 
     if (!navigationMethod) {
+      const newTaskButtons = await visibleLocators(page.locator('button[aria-label="新任务"], button[aria-label="New task"]'));
+      if (newTaskButtons.length > 1) throw new Error(`QwenWork 全局新任务按钮数量异常：${newTaskButtons.length}`);
+      if (newTaskButtons.length === 1) {
+        await newTaskButtons[0].evaluate((element) => element.click());
+        navigationMethod = "global-new-task";
+        await sleep(250);
+        continue;
+      }
       // The same project name may also be visible in the new-task project
       // selector. Scope recovery to the sidebar tree so that two legitimate
       // renderings of one database project are not treated as two projects.
