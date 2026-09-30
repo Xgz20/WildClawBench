@@ -223,6 +223,8 @@ def _percentile(values: list[float | int | None], quantile: float) -> float | No
 
 def _curve(summaries: list[dict[str, Any]], points: int = 11) -> list[dict[str, Any]]:
     result = []
+    baseline_values = [summary["series"][0]["input_tokens"] for summary in summaries if summary["series"]]
+    baseline = _median(baseline_values)
     for point in range(points):
         values = []
         fraction = point / (points - 1)
@@ -232,7 +234,10 @@ def _curve(summaries: list[dict[str, Any]], points: int = 11) -> list[dict[str, 
                 continue
             index = round(fraction * (len(series) - 1))
             values.append(series[index]["input_tokens"])
-        result.append({"normalized_progress": fraction, "median_input_tokens": _median(values), "task_count": len(values)})
+        median_input = _median(values)
+        result.append({"normalized_progress": fraction, "median_input_tokens": median_input,
+                       "delta_from_zero_tokens": None if median_input is None or baseline is None else median_input - baseline,
+                       "baseline_zero_progress_median": baseline, "task_count": len(values)})
     return result
 
 
@@ -363,9 +368,11 @@ def render_markdown(data: dict[str, Any]) -> str:
     ]
     lines += ["", "## 三端上下文滚雪球趋势", "", "下面按每题交互进度归一化到0%–100%，每个点先在每题内取最近的请求，再跨题取中位数。它展示典型任务的输入上下文如何随交互推进。", ""]
     for harness, group in data["harnesses"].items():
-        lines += [f"### {harness}", "", "| 交互进度 | 典型输入 Token 中位数 | 任务数 |", "| ---: | ---: | ---: |"]
+        lines += [f"### {harness}", "", "| 交互进度 | 典型输入 Token 中位数 | 相对0%增量(Token) | 任务数 |", "| ---: | ---: | ---: | ---: |"]
         for point in group["median_input_curve"]:
-            lines.append(f"| {point['normalized_progress']:.0%} | {fmt(point['median_input_tokens'])} | {point['task_count']} |")
+            delta = point["delta_from_zero_tokens"]
+            delta_text = "unavailable" if delta is None else f"{delta:+.0f}"
+            lines.append(f"| {point['normalized_progress']:.0%} | {fmt(point['median_input_tokens'])} | {delta_text} | {point['task_count']} |")
         lines.append("")
     lines += ["## 每题级汇总", "", "每行是一题；`interaction_count` 是该题内有效模型请求数。首轮、末轮、增长倍数、斜率和累计字段均来自该题自己的请求序列。", "", "| Harness | task_id | 请求数 | 首轮输入 | 末轮输入 | 增长倍数 | 输入斜率 | 累计输入 | 累计缓存读取 | 累计输出 | 累计推理输出 |", "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
     for row in data["tasks"]:
