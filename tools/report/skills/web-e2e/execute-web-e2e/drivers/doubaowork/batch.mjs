@@ -27,14 +27,14 @@ const driverFile = fileURLToPath(new URL("./driver.mjs", import.meta.url));
 
 export function isAllowedDriverUpgrade(previous, current = DRIVER_VERSION) {
   return ({ "0.7.2": "0.7.3", "0.7.4": "0.7.5", "0.7.5": "0.7.6", "0.7.6": "0.7.7",
-    "0.7.7": "0.8.0", "0.8.0": "0.8.1" })[previous] === current;
+    "0.7.7": "0.8.0", "0.8.0": "0.8.1", "0.8.1": "0.8.2" })[previous] === current;
 }
 
 export function parseBatchArgs(argv) {
-  const result = { resume: false, status: false, continueAttention: false, recoverStaleLock: false, adoptDriverVersion: false, adoptBatchVersion: false, runSlots: 3, runSlotsExplicit: false, observeSeconds: 60, projectPrefix: null };
+  const result = { resume: false, status: false, continueAttention: false, retryPreSendFailure: false, recoverStaleLock: false, adoptDriverVersion: false, adoptBatchVersion: false, runSlots: 3, runSlotsExplicit: false, observeSeconds: 60, projectPrefix: null };
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i];
-    if (["--resume", "--status", "--continue-attention", "--recover-stale-lock", "--adopt-driver-version", "--adopt-batch-version"].includes(key)) { result[{ "--resume": "resume", "--status": "status", "--continue-attention": "continueAttention", "--recover-stale-lock": "recoverStaleLock", "--adopt-driver-version": "adoptDriverVersion", "--adopt-batch-version": "adoptBatchVersion" }[key]] = true; continue; }
+    if (["--resume", "--status", "--continue-attention", "--retry-pre-send-failure", "--recover-stale-lock", "--adopt-driver-version", "--adopt-batch-version"].includes(key)) { result[{ "--resume": "resume", "--status": "status", "--continue-attention": "continueAttention", "--retry-pre-send-failure": "retryPreSendFailure", "--recover-stale-lock": "recoverStaleLock", "--adopt-driver-version": "adoptDriverVersion", "--adopt-batch-version": "adoptBatchVersion" }[key]] = true; continue; }
     if (!["--harness-root", "--run-id", "--run-slots", "--observe-seconds", "--project-prefix", "--endpoint", "--app-path"].includes(key)
         || i + 1 >= argv.length) throw new Error(`DOUBAOWORK_WEB_BATCH_ARG_INVALID:${key}`);
     const value = argv[++i];
@@ -43,6 +43,7 @@ export function parseBatchArgs(argv) {
       "--project-prefix": "projectPrefix", "--endpoint": "endpoint", "--app-path": "appPath" }[key]] = value;
   }
   result.runSlots = Number(result.runSlots); result.observeSeconds = Number(result.observeSeconds);
+  if (result.retryPreSendFailure && !result.resume) throw new Error("DOUBAOWORK_WEB_BATCH_RETRY_REQUIRES_RESUME");
   if (!result.projectPrefix && result.harnessRoot && safeRunId(result.runId)) {
     result.projectPrefix = `WCB-DW-Web-${sha(Buffer.from(`${resolve(result.harnessRoot)}\0${result.runId}`)).slice(0, 10)}`;
   }
@@ -146,9 +147,11 @@ export function assertStateMatches(state, plan, args, { allowVersionDrift = fals
 
 function driverArgs(task, state, paths, args, resume) {
   const argv = ["--output-dir", taskOutput(paths, task.task_id), "--formal-receipt", "--managed-run-id", state.run_id];
-  if (resume) argv.push("--resume", "--observe-seconds", String(args.observeSeconds));
-  else argv.push("--task-root", task.task_root, "--project-name", task.project_name);
-  if (!resume && state.model) argv.push("--expected-ui-model", state.model);
+  const retryPreSend = Boolean(task.retry_pre_send_failure && resume);
+  if (resume || retryPreSend) argv.push("--resume", "--observe-seconds", String(args.observeSeconds));
+  if (retryPreSend) argv.push("--retry-pre-send-failure");
+  else if (!resume) argv.push("--task-root", task.task_root, "--project-name", task.project_name);
+  if (!resume && !retryPreSend && state.model) argv.push("--expected-ui-model", state.model);
   if (args.endpoint) argv.push("--endpoint", args.endpoint);
   if (args.appPath) argv.push("--app-path", args.appPath);
   return argv;
@@ -188,11 +191,18 @@ async function acquireQueueLock(paths, state, args) {
 }
 export function selectBatchTaskAction(state, journals, slots, cursor = 0) {
   if (!Number.isInteger(slots) || slots < 1 || slots > 3) throw new Error("DOUBAOWORK_WEB_RUN_SLOTS_INVALID");
+  const active = state.tasks.filter(t => t.phase === "RUNNING");
   const blocked = state.tasks.find(t => t.phase === "NEEDS_ATTENTION");
-  if (blocked) return { action: "pause", task_id: blocked.task_id };
+  if (blocked) {
+    const blockedJournal = journals[blocked.task_id];
+    if (active.length && (blockedJournal?.phase === "INFRA_FAILED" && blockedJournal.send?.dispatch_attempt_count === 0
+      || blocked.retry_pre_send_failure && !blockedJournal)) {
+      return { action: "resume", task_id: active[cursor % active.length].task_id, blocked_task_id: blocked.task_id };
+    }
+    return { action: "pause", task_id: blocked.task_id };
+  }
   const recovering = state.tasks.find(t => t.phase === "DISPATCHING");
   if (recovering) return nextTaskAction({ tasks: [recovering] }, journals);
-  const active = state.tasks.filter(t => t.phase === "RUNNING");
   const pending = state.tasks.find(t => t.phase === "PENDING");
   const peersBound = active.every(t => {
     const j = journals[t.task_id];
@@ -364,6 +374,20 @@ export async function main(argv = process.argv.slice(2)) {
         await save("ATTENTION_EXPLICIT_RESUME", { task_id: next.task_id });
         next = selectBatchTaskAction(state, journals, state.run_slots, state.history.filter(x => x.event === "TASK_RESUME_INTENT").length);
       }
+      if (next.action === "pause" && args.retryPreSendFailure) {
+        const retryTask = state.tasks.find(t => t.task_id === next.task_id);
+        const retryJournal = journals[next.task_id];
+        if (retryTask?.phase === "NEEDS_ATTENTION"
+            && (retryJournal?.phase === "INFRA_FAILED" && retryJournal.send?.dispatch_attempt_count === 0
+              || retryTask.retry_pre_send_failure && !retryJournal)) {
+          retryTask.phase = "PENDING";
+          retryTask.retry_pre_send_failure = true;
+          state.phase = "RUNNING";
+          args.retryPreSendFailure = false;
+          await save("PRE_SEND_RETRY_INTENT", { task_id: retryTask.task_id });
+          next = selectBatchTaskAction(state, journals, state.run_slots, state.history.filter(x => x.event === "TASK_RESUME_INTENT").length);
+        }
+      }
       if (next.action === "receipt") return publishBatchReceipt(plan, state, save);
       if (next.action === "pause") { state.phase = "NEEDS_ATTENTION"; await save("QUEUE_PAUSED", { task_id: next.task_id, reason: next.reason ?? "task-attention" });
         return { status: "NEEDS_ATTENTION", task_id: next.task_id, reason: next.reason ?? "task-attention" }; }
@@ -374,7 +398,9 @@ export async function main(argv = process.argv.slice(2)) {
         if (initial.sha256 !== task.initial_sha256 || initial.forbidden_directories.length) throw new Error("DOUBAOWORK_WEB_BATCH_PRE_SEND_CANDIDATE_DRIFT");
         task.phase = "DISPATCHING"; state.phase = "RUNNING"; await save("TASK_LAUNCH_INTENT", { task_id: task.task_id });
       } else { task.phase = "RUNNING"; state.phase = "RUNNING"; await save("TASK_RESUME_INTENT", { task_id: task.task_id }); }
-      const exitCode = await runDriver(task, state, plan, args, next.action === "resume", save);
+      const retryJournal = await readOrdinaryJson(join(taskOutput(plan.paths, task.task_id), "automation_state.json"));
+      const driverResume = next.action === "resume" || Boolean(task.retry_pre_send_failure && retryJournal);
+      const exitCode = await runDriver(task, state, plan, args, driverResume, save);
       if (await readOrdinaryJson(join(taskOutput(plan.paths, task.task_id), "formal-publication.json"))) { await completeTask(task, state, plan, save); continue; }
       const journal = await readOrdinaryJson(join(taskOutput(plan.paths, task.task_id), "automation_state.json"));
       if (journal?.send?.dispatch_attempt_count === 1 && journal.session?.prompt_readback?.status === "verified") {
@@ -383,6 +409,7 @@ export async function main(argv = process.argv.slice(2)) {
         if (state.model && state.model !== journal.actual?.model) throw new Error("DOUBAOWORK_WEB_BATCH_MODEL_DRIFT");
         if (state.client_version && state.client_version !== journal.client?.version) throw new Error("DOUBAOWORK_WEB_BATCH_CLIENT_VERSION_DRIFT");
         task.attempt_id_sha256 = digest;
+        task.retry_pre_send_failure = false;
         state.model ??= journal.actual.model; state.client_version ??= journal.client.version;
         await save("TASK_BOUND", { task_id: task.task_id, attempt_id_sha256: digest });
       }

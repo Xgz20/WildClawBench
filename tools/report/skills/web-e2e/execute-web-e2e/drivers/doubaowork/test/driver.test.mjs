@@ -272,7 +272,7 @@ test("配置回读要求本地电脑、项目、权限和非空模型各自唯�
   );
 });
 
-test("发送前重试只接受 workspace 已确认且 dispatch 为零的失败 attempt", () => {
+test("发送前重试只接受未进入发送临界区的失败 attempt", () => {
   const state = createAttemptState({
     attemptId: "pre-send-retry-fixture",
     batchId: "batch-fixture",
@@ -303,6 +303,11 @@ test("发送前重试只接受 workspace 已确认且 dispatch 为零的失败 a
   const missingProjectId = structuredClone(state);
   missingProjectId.client.project_id_sha256 = null;
   assert.throws(() => assertPreSendRetryEligible(missingProjectId), /只允许/);
+  const folderSelectionFailure = structuredClone(state);
+  folderSelectionFailure.workspace_selection.confirmed = false;
+  folderSelectionFailure.workspace_selection.actual_path = null;
+  folderSelectionFailure.client.project_id_sha256 = null;
+  assert.equal(assertPreSendRetryEligible(folderSelectionFailure), folderSelectionFailure);
 });
 
 test("排他 worker lock 记录 host PID start identity 并拒绝第二个活 worker", async (context) => {

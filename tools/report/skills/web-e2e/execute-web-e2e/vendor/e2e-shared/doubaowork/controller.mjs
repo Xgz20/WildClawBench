@@ -958,9 +958,9 @@ export function assertPreSendRetryEligible(state) {
       || state.timing.sent_at
       || state.session.conversation_id
       || state.session.session_directory_id
-      || !state.workspace_selection.confirmed
-      || state.workspace_selection.actual_path !== state.workspace
-      || !/^[0-9a-f]{64}$/.test(state.client.project_id_sha256 ?? "")) {
+      || (state.workspace_selection.confirmed
+        && (state.workspace_selection.actual_path !== state.workspace
+        || !/^[0-9a-f]{64}$/.test(state.client.project_id_sha256 ?? "")))) {
     throw new Error("发送前重试只允许 workspace 已确认且从未进入发送临界区的 INFRA_FAILED attempt");
   }
   return state;
@@ -1251,6 +1251,47 @@ async function retryPreSendDevelopmentRunUnlocked(options) {
     config.projectName = previous.client.project_name;
     config.outputDir = outputDir;
     config.pathPreflight = await preflightDoubaoPaths({ workspace: config.workspace, promptFile: config.promptFile, outputDir });
+
+    if (!previous.workspace_selection.confirmed || !previous.client.project_id_sha256) {
+      await archiveAttemptState(outputDir, stateFile, previous);
+      await rm(stateFile, { force: true });
+      client = await connectClient(previous.client.endpoint, previous.client.app_path, options.connect);
+      await assertExecutionActivityAllowed(client, config);
+      if (config.expectedAppVersion && client.app.version !== config.expectedAppVersion) throw new Error("DOUBAOWORK_APP_VERSION_DRIFT");
+      const preflight = await inspectPage(client.page);
+      assertNoConflictingActivity(preflight.snapshot, config.allowedActiveConversationIds);
+      const roots = defaultNativeRoots(homedir());
+      const sessionDirectoryIds = await listSessionDirectoryIds({ roots });
+      state = createAttemptState({
+        attemptId: randomUUID(), batchId: config.batchId, taskId: config.taskId,
+        workspace: config.workspace, promptFile: config.promptFile, prompt: config.prompt,
+        requestedModel: config.requestedModel ?? null,
+        requestedPermissionMode: config.requestedPermissionMode ?? "current",
+        appPath: client.app.app_path, endpoint: client.endpoint,
+        baselineConversationIds: preflight.visibleConversationIds,
+        baselineSessionDirectoryIds: sessionDirectoryIds,
+      });
+      state.scene = config.scene ?? "web";
+      state.runtime.lock_owner = { ...releaseLock.owner };
+      state.prepared = config.frozenIdentity ?? null;
+      state.path_preflight = config.pathPreflight;
+      state.client.version = client.app.version;
+      state.client.process = { listener_pid: client.listener.listeners[0].pid };
+      state.client.project_name = config.projectName;
+      state.client.manifest_sha256 = config.manifestSha256;
+      transitionAttempt(state, "CLIENT_READY", {
+        preflight: {
+          visible_conversation_count: preflight.snapshot.visible_conversation_count,
+          native_session_directory_count: sessionDirectoryIds.length,
+          conflicting_activity: false,
+        },
+        retry_of_attempt_sha256: sha256Text(previous.attempt_id),
+      });
+      await atomicWriteAttemptState(stateFile, state);
+      await verifyExecutionEnvironment(client);
+      await createProject(client.page, state, stateFile, config);
+      return await dispatchFromSelectedProject({ client, state, stateFile, config, roots });
+    }
 
     client = await connectClient(previous.client.endpoint, previous.client.app_path, options.connect);
     await assertExecutionActivityAllowed(client, config);

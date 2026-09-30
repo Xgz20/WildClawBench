@@ -15,8 +15,37 @@ async function ordinaryJson(file) {
   return JSON.parse(await readFile(file, "utf8"));
 }
 async function startIdentity(pid) {
-  try { const { stdout } = await execFileAsync("ps", ["-p", String(pid), "-o", "lstart="], { timeout: 3000 }); return stdout.trim(); }
+  try {
+    const { stdout } = await execFileAsync("ps", ["-p", String(pid), "-o", "lstart="], { timeout: 3000 });
+    return stdout.trim().replace(/\s+/gu, " ");
+  }
   catch { return null; }
+}
+
+async function parentPid(pid) {
+  try {
+    const { stdout } = await execFileAsync("ps", ["-p", String(pid), "-o", "ppid="], { timeout: 3000 });
+    const value = Number(stdout.trim());
+    return Number.isSafeInteger(value) && value > 0 ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+async function ownerIsProcessAncestor(owner) {
+  let current = process.pid;
+  const seen = new Set();
+  const ancestry = [];
+  for (let depth = 0; depth < 32 && current && !seen.has(current); depth += 1) {
+    seen.add(current);
+    const identity = await startIdentity(current);
+    ancestry.push({ pid: current, identity });
+    if (current === owner.pid) return { valid: identity === owner.process_start_identity, ancestry };
+    const next = await parentPid(current);
+    if (!next || next === current) break;
+    current = next;
+  }
+  return { valid: false, ancestry };
 }
 
 export function validateManagedPeers({ queue, ownTaskId, journals, manifestSha, runId, batchId }) {
@@ -47,8 +76,10 @@ export function validateManagedPeers({ queue, ownTaskId, journals, manifestSha, 
 export async function managedPeerConversations(config, runId) {
   const root = join(config.harnessRoot, ".execute-web-e2e", "doubaowork-batch", runId);
   const owner = await readWorkerLock(join(root, ".doubaowork-driver.lock"));
-  if (owner.host !== hostname() || owner.pid !== process.ppid
-      || await startIdentity(owner.pid) !== owner.process_start_identity) throw new Error("DOUBAOWORK_WEB_PEER_OWNER_MISMATCH");
+  const ownerCheck = await ownerIsProcessAncestor(owner);
+  if (owner.host !== hostname() || !ownerCheck.valid) {
+    throw new Error("DOUBAOWORK_WEB_PEER_OWNER_MISMATCH");
+  }
   const queue = await ordinaryJson(join(root, "state.json"));
   const journals = {};
   for (const row of queue.tasks.filter(t => t.task_id !== config.taskId && t.phase === "RUNNING")) {

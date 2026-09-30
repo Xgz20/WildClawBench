@@ -122,6 +122,27 @@ export function resultMatches(native, content, start) {
       && typeof start?.input?.pattern === "string"
       && native.output.content === `Found 0 match(es) for '${start.input.pattern}'.`
       && content === "Found 0 match(es). This is not a tool failure; adjust the pattern or the search directory.") return true;
+  if (native.tool_name === "Grep" && native.output?.status === "success"
+      && typeof native.output.content === "string" && typeof content === "string"
+      && typeof start?.input?.pattern === "string") {
+    const newline = native.output.content.indexOf("\n");
+    const header = newline >= 0 ? native.output.content.slice(0, newline) : native.output.content;
+    const match = /^Found (\d+) match\(es\) for '([\s\S]*)':$/u.exec(header);
+    if (match && match[2] === start.input.pattern
+        && content === `Found ${match[1]} match(es):${native.output.content.slice(newline)}`) return true;
+  }
+  // DoubaoWork 2.31.6 appends a structured match payload to successful Grep
+  // output while the model-visible trajectory keeps only the human-readable
+  // prefix. Preserve the structured payload in the raw ledger and reconcile
+  // only when the prefix is byte-identical and the suffix is valid JSON.
+  if (native.tool_name === "Grep" && native.output?.status === "success"
+      && typeof native.output.content === "string" && typeof content === "string") {
+    const marker = "\n{\"data\":";
+    const index = native.output.content.indexOf(marker);
+    if (index > 0 && native.output.content.slice(0, index) === content) {
+      try { if (JSON.parse(native.output.content.slice(index + 1))?.data) return true; } catch { /* keep conflicting */ }
+    }
+  }
   const read = native.output?.structuredResultFacts?.localFileReadV2;
   if (native.tool_name === "Read" && native.output?.status === "success"
       && native.output.content === "" && read?.kind === "pdf_pages"
@@ -142,6 +163,15 @@ export function resultMatches(native, content, start) {
   }
   const failure = native.output?.structuredResultFacts?.localFileMutationV2;
   const error = failure?.error, details = error?.details;
+  if (native.tool_name === "Edit" && native.output?.status === "error"
+      && failure?.kind === "failure" && failure.toolName === "Edit"
+      && typeof details?.oldString === "string" && typeof content === "string") {
+    if (error?.code === "MATCH_NOT_UNIQUE" && Number.isInteger(details.matchCount)
+        && content.startsWith(`Found ${details.matchCount} matches of the string to replace, but replace_all is false.`)
+        && content.includes(`\nString: ${details.oldString}`)) return true;
+    if (error?.code === "MATCH_NOT_FOUND"
+        && content.startsWith(`String to replace not found in file.\nString: ${details.oldString}`)) return true;
+  }
   if (native.tool_name === "Edit" && native.output?.status === "error" && native.output.content === ""
       && failure?.kind === "failure" && failure.toolName === "Edit"
       && error?.code === "FILE_NOT_FOUND" && error.message === "File does not exist."

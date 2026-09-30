@@ -11,6 +11,7 @@ const ids = ["07_Website_Generation_task_fixture_1", "07_Website_Generation_task
 test("DoubaoWork batch adopts only explicit adjacent Driver releases", () => {
   assert.equal(isAllowedDriverUpgrade("0.7.7", "0.8.0"), true);
   assert.equal(isAllowedDriverUpgrade("0.8.0", "0.8.1"), true);
+  assert.equal(isAllowedDriverUpgrade("0.8.1", "0.8.2"), true);
   assert.equal(isAllowedDriverUpgrade("0.7.7", "0.8.1"), false);
   assert.equal(isAllowedDriverUpgrade("0.8.1", "0.8.1"), false);
 });
@@ -19,6 +20,8 @@ test("DoubaoWork batch defaults to three background execution slots", () => {
   const args = parseBatchArgs(["--harness-root", "/tmp/harness", "--run-id", "fixture-run"]);
   assert.equal(args.runSlots, 3);
   assert.equal(parseBatchArgs(["--harness-root", "/tmp/harness", "--run-id", "fixture-run", "--run-slots", "1"]).runSlots, 1);
+  assert.equal(parseBatchArgs(["--harness-root", "/tmp/harness", "--run-id", "fixture-run", "--resume", "--retry-pre-send-failure"]).retryPreSendFailure, true);
+  assert.throws(() => parseBatchArgs(["--harness-root", "/tmp/harness", "--run-id", "fixture-run", "--retry-pre-send-failure"]), /RETRY_REQUIRES_RESUME/);
 });
 
 test("DoubaoWork resume inherits frozen slots when --run-slots is omitted", () => {
@@ -129,6 +132,19 @@ test("Concurrent selector waits for exact peer binding and refills after complet
   assert.deepEqual(selectBatchTaskAction(state, journals, 3, 1), { action: "resume", task_id: ids[2] });
   tasks[1].phase = "SUCCEEDED"; tasks[2].phase = "SUCCEEDED";
   assert.equal(selectBatchTaskAction(state, journals, 3).action, "receipt");
+});
+
+test("pre-send attention drains bound active peers before retrying", () => {
+  const tasks = [
+    { task_id: ids[0], phase: "RUNNING", attempt_id_sha256: hashAttempt("a") },
+    { task_id: ids[1], phase: "NEEDS_ATTENTION", attempt_id_sha256: null },
+  ];
+  const active = { send: { dispatch_attempt_count: 1 }, attempt_id: "a",
+    session: { prompt_readback: { status: "verified" }, conversation_id: "123", native_request_session_id: "11111111-1111-4111-8111-111111111111" } };
+  const blocked = { phase: "INFRA_FAILED", send: { dispatch_attempt_count: 0 } };
+  assert.deepEqual(selectBatchTaskAction({ tasks }, { [ids[0]]: active, [ids[1]]: blocked }, 3), {
+    action: "resume", task_id: ids[0], blocked_task_id: ids[1],
+  });
 });
 function hashAttempt(value) { return createHash("sha256").update(value).digest("hex"); }
 
