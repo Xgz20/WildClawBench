@@ -124,7 +124,7 @@ Skill 包目录：/absolute/path/<batch_id>/packages
 2. 解压题目包，建立独立 worker 工作目录。
 3. 自动检查和安装执行、评分所需的锁定依赖。
 4. 使用题目包声明的被评测 Harness，以客户端当前模型和推理强度执行全部题目，权限使用 `full-access`。
-5. AstronStudio、WorkBuddy、QwenWork、DoubaoWork 四个 Harness 的默认值均为 3 路执行并发、最大 8；DoubaoWork 当前正式队列仍按其已验收边界使用单槽。任一题明确结束并通过回执校验后动态补入下一题。
+5. AstronStudio、WorkBuddy、QwenWork、DoubaoWork 四个 Harness 的默认值均为 3 路执行并发、最大 8；UI 操作始终保持单槽，后台 Agent 按已绑定会话动态补位。任一题明确结束并通过回执校验后动态补入下一题。
 6. 校验执行回执后合入评分包。
 7. 默认创建 3 个并发 Codex Desktop 评分任务，每题使用独立项目、任务、Browser 和端口。
 8. 生成 `submission.json`、完整回传 ZIP 和外部 SHA-256 回执。
