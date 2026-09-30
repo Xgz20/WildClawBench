@@ -213,6 +213,14 @@ def _mean(values: list[float | int | None]) -> float | None:
     return statistics.mean(valid) if valid else None
 
 
+def _percentile(values: list[float | int | None], quantile: float) -> float | None:
+    valid = sorted(float(value) for value in values if value is not None)
+    if not valid:
+        return None
+    rank = max(0, min(len(valid) - 1, math.ceil(quantile * len(valid)) - 1))
+    return valid[rank]
+
+
 def _curve(summaries: list[dict[str, Any]], points: int = 11) -> list[dict[str, Any]]:
     result = []
     for point in range(points):
@@ -257,13 +265,13 @@ def analyze(round_root: Path, report_json: Path, include_doubao: bool = False) -
         group["coverage"] = {"known_tasks": sum(bool(s["series"]) for s in summaries), "total_tasks": len(summaries)}
         group["aggregate"] = {
             "median_first_input_tokens": _median([s["first_input_tokens"] for s in summaries]),
-            "mean_first_input_tokens": _mean([s["first_input_tokens"] for s in summaries]),
+            "p90_first_input_tokens": _percentile([s["first_input_tokens"] for s in summaries], 0.90),
             "median_last_input_tokens": _median([s["last_input_tokens"] for s in summaries]),
-            "mean_last_input_tokens": _mean([s["last_input_tokens"] for s in summaries]),
+            "p90_last_input_tokens": _percentile([s["last_input_tokens"] for s in summaries], 0.90),
             "median_last_to_first_input_ratio": _median([s["last_to_first_input_ratio"] for s in summaries]),
-            "mean_last_to_first_input_ratio": _mean([s["last_to_first_input_ratio"] for s in summaries]),
+            "p90_last_to_first_input_ratio": _percentile([s["last_to_first_input_ratio"] for s in summaries], 0.90),
             "median_input_slope_tokens_per_interaction": _median([s["input_slope_tokens_per_interaction"] for s in summaries]),
-            "mean_input_slope_tokens_per_interaction": _mean([s["input_slope_tokens_per_interaction"] for s in summaries]),
+            "p90_input_slope_tokens_per_interaction": _percentile([s["input_slope_tokens_per_interaction"] for s in summaries], 0.90),
             "sum_input_tokens": sum(s["input_tokens_sum"] or 0 for s in summaries),
             "sum_cached_input_tokens": sum(s["cached_input_tokens_sum"] or 0 for s in summaries),
             "sum_output_tokens": sum(s["output_tokens_sum"] or 0 for s in summaries),
@@ -280,6 +288,7 @@ def analyze(round_root: Path, report_json: Path, include_doubao: bool = False) -
             "first_input_tokens": "该 task_run 的第一个有效模型请求 input_tokens",
             "last_input_tokens": "该 task_run 的最后一个有效模型请求 input_tokens",
             "median_across_tasks": "先对每个 task_run 求首轮/末轮值，再在 Harness 内跨 task_run 求 median；偶数样本取中间两个排序值的算术平均",
+            "p90_across_tasks": "先对每个 task_run 求值，再取排序后的最近秩 P90；用于展示长尾任务，不代表平均任务",
             "last_to_first_input_ratio": "last_input_tokens / first_input_tokens；首轮为0时 unavailable",
             "input_slope_tokens_per_interaction": "对每个 task_run 使用普通最小二乘拟合 input_tokens(k)=a+b*k，k=1..n；再在 Harness 内对各 task_run 的 b 求 median；n<2 不纳入斜率",
             "input_tokens_definition": "每次模型请求的输入 Token，包含缓存读取 Token；cache_read 单独统计，不能从 input_tokens 中扣除后再称为输入总量",
@@ -310,19 +319,19 @@ def render_markdown(data: dict[str, Any]) -> str:
         "",
         "## Harness 汇总",
         "",
-        "下表的中位数和均值都是先按每题计算，再在同一 Harness 的任务集合上聚合。默认汇总使用中位数，均值单独列出。",
+        "下表以任务级中位数描述典型题目，以P90描述长尾题目；总量描述整个Harness的实际消耗。平均值不作为主指标，以免被少数超长任务主导。",
         "",
-        "| Harness | 任务覆盖 | 首轮输入中位数 | 首轮输入均值 | 末轮输入中位数 | 末轮输入均值 | 末轮/首轮中位数 | 斜率中位数 | 斜率均值 | 输入总量 | 缓存读取 | 输出总量 | 推理输出总量 |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| Harness | 任务覆盖 | 首轮输入中位数 | 首轮输入P90 | 末轮输入中位数 | 末轮输入P90 | 末轮/首轮中位数 | 末轮/首轮P90 | 斜率中位数 | 斜率P90 | 输入总量 | 缓存读取 | 输出总量 | 推理输出总量 |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for harness, group in data["harnesses"].items():
         a = group["aggregate"]
         lines.append(
             f"| {harness} | {group['coverage']['known_tasks']}/{group['coverage']['total_tasks']} | "
-            f"{fmt(a['median_first_input_tokens'])} | {fmt(a['mean_first_input_tokens'])} | "
-            f"{fmt(a['median_last_input_tokens'])} | {fmt(a['mean_last_input_tokens'])} | "
-            f"{fmt(a['median_last_to_first_input_ratio'])} | {fmt(a['median_input_slope_tokens_per_interaction'])} | "
-            f"{fmt(a['mean_input_slope_tokens_per_interaction'])} | {fmt(a['sum_input_tokens'])} | "
+            f"{fmt(a['median_first_input_tokens'])} | {fmt(a['p90_first_input_tokens'])} | "
+            f"{fmt(a['median_last_input_tokens'])} | {fmt(a['p90_last_input_tokens'])} | "
+            f"{fmt(a['median_last_to_first_input_ratio'])} | {fmt(a['p90_last_to_first_input_ratio'])} | "
+            f"{fmt(a['median_input_slope_tokens_per_interaction'])} | {fmt(a['p90_input_slope_tokens_per_interaction'])} | {fmt(a['sum_input_tokens'])} | "
             f"{fmt(a['sum_cached_input_tokens'])} | {fmt(a['sum_output_tokens'])} | "
             f"{fmt(a['sum_reasoning_output_tokens'])} |"
         )
@@ -349,7 +358,7 @@ def render_markdown(data: dict[str, Any]) -> str:
                 f"{fmt(point['cumulative_input_tokens'])} | {fmt(point['cumulative_cached_input_tokens'])} | {fmt(point['cumulative_output_tokens'])} | "
                 f"{fmt(point['cumulative_reasoning_output_tokens'])} | {fmt(point['cumulative_total_tokens'])} |"
             )
-    lines += ["", "## 统计口径", "", "- `首轮输入中位数`和`末轮输入中位数`不是60题所有请求混合后的中位数，而是先逐题取首轮/末轮，再对60个题级值取中位数；60题为偶数时取排序后第30和第31个值的算术平均。", "- `首轮输入均值`和`末轮输入均值`同样先逐题取值，再对60题级值做算术平均；它们受少数超长任务影响更大。", "- 每题斜率使用普通最小二乘拟合 `input_tokens(k) = a + b × k`，`k=1..n`；随后对题级斜率取中位数和均值。少于2次请求的题目不纳入斜率。", "- 输入 Token 包含缓存读取 Token；缓存读取单独列出，不能从输入中扣除后再次相加。输出 Token、推理输出 Token、请求数和工具调用数分别统计。", "- `末轮/首轮`用于观察上下文滚雪球，不等于系统提示词增长倍数。", "", "## 数据来源", "", "- AstronStudio：绑定 `astronstudio-rollout.jsonl` 的 `last_token_usage`，累计值和单次值对账后去重。", "- WorkBuddy：冻结 `workbuddy-session.jsonl` 中每个模型响应的 usage。", "- QwenWork：冻结 `transcript.jsonl` 中每个模型响应的 usage。", "- AstronStudio 的 `astronstudio-provider-events.jsonl` 只用于独立核对，不作为正式 Token 来源。", "- DoubaoWork 默认排除，因为当前没有可比较的 Token usage。", "", "## 证据边界", "", "精确拆分系统提示词、开发者提示词、工具 Schema、历史消息和工具结果，需要完整 outbound request 的 role 级 payload；当前证据不足时不估算。"]
+    lines += ["", "## 统计口径", "", "- `首轮输入中位数`和`末轮输入中位数`不是60题所有请求混合后的中位数，而是先逐题取首轮/末轮，再对60个题级值取中位数；60题为偶数时取排序后第30和第31个值的算术平均。", "- `P90`同样先逐题取值，再按最近秩取排序后的P90，用来表示长尾题目；它不是平均值。", "- 每题斜率使用普通最小二乘拟合 `input_tokens(k) = a + b × k`，`k=1..n`；随后对题级斜率取中位数和P90。少于2次请求的题目不纳入斜率。", "- 主分析不使用跨题平均值，因为少数超长代码/搜索任务会显著拉高均值；整体资源负担直接看输入总量、缓存读取总量、输出总量和推理输出总量。", "- 输入 Token 包含缓存读取 Token；缓存读取单独列出，不能从输入中扣除后再次相加。输出 Token、推理输出 Token、请求数和工具调用数分别统计。", "- `末轮/首轮`用于观察上下文滚雪球，不等于系统提示词增长倍数。", "", "## 数据来源", "", "- AstronStudio：绑定 `astronstudio-rollout.jsonl` 的 `last_token_usage`，累计值和单次值对账后去重。", "- WorkBuddy：冻结 `workbuddy-session.jsonl` 中每个模型响应的 usage。", "- QwenWork：冻结 `transcript.jsonl` 中每个模型响应的 usage。", "- AstronStudio 的 `astronstudio-provider-events.jsonl` 只用于独立核对，不作为正式 Token 来源。", "- DoubaoWork 默认排除，因为当前没有可比较的 Token usage。", "", "## 证据边界", "", "精确拆分系统提示词、开发者提示词、工具 Schema、历史消息和工具结果，需要完整 outbound request 的 role 级 payload；当前证据不足时不估算。"]
     return "\n".join(lines) + "\n"
 
 
