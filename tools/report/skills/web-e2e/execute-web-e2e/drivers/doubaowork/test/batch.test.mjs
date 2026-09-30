@@ -4,9 +4,16 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createBatchState, nextTaskAction, selectBatchTaskAction, summarizeBatchConcurrency, parseBatchArgs, planFor, assertStateMatches } from "../batch.mjs";
+import { createBatchState, nextTaskAction, selectBatchTaskAction, summarizeBatchConcurrency, parseBatchArgs, planFor, assertStateMatches, isAllowedDriverUpgrade } from "../batch.mjs";
 
 const ids = ["07_Website_Generation_task_fixture_1", "07_Website_Generation_task_fixture_2", "07_Website_Generation_task_fixture_3"];
+
+test("DoubaoWork batch adopts only explicit adjacent Driver releases", () => {
+  assert.equal(isAllowedDriverUpgrade("0.7.7", "0.8.0"), true);
+  assert.equal(isAllowedDriverUpgrade("0.8.0", "0.8.1"), true);
+  assert.equal(isAllowedDriverUpgrade("0.7.7", "0.8.1"), false);
+  assert.equal(isAllowedDriverUpgrade("0.8.1", "0.8.1"), false);
+});
 async function fixture(t) {
   const raw = await mkdtemp(join(tmpdir(), "doubao-web-batch-"));
   const { realpath } = await import("node:fs/promises"); const root = await realpath(raw);

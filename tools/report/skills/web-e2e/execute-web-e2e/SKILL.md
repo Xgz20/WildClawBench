@@ -1,17 +1,17 @@
 ---
 name: execute-web-e2e
-description: 在 WorkBuddy、AstronStudio、QwenWork 等桌面 Harness 中执行单个或批量 Web E2E 用例，持久化可恢复状态、终态证据和 execution_record；用于自动做题阶段，不负责评分或报告。
+description: 在 AstronStudio、WorkBuddy、QwenWork、DoubaoWork 等桌面 Harness 中执行单个或批量 Web E2E 用例，持久化可恢复状态、终态证据和 execution_record；用于自动做题阶段，不负责评分或报告。
 ---
 
 # 执行 Web E2E 用例
 
-本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 WorkBuddy、AstronStudio、QwenWork 的单题 Driver 和后台并发队列；其他 Harness Driver 仍按 Roadmap 逐步接入。先读取 execution 包 `manifest.json` 的 `harness.id`，再选择同名 Driver，不能按文件名或客户端外观猜测。
+本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 AstronStudio、WorkBuddy、QwenWork、DoubaoWork 的单题 Driver 和对应队列入口；先读取 execution 包 `manifest.json` 的 `harness.id`，再选择同名 Driver，不能按文件名或客户端外观猜测。
 
 Web E2E 不给被评测 Harness 设置任务级执行时限。题目或数据集中的 `timeout_seconds` 只作为兼容元数据保留，不生成执行 deadline；旧入口的 `--run-timeout-seconds` 已移除。Driver 会持续观察可信原生终态、明确异常或需要人工处理的状态。CDP/UI 单次操作、客户端启停、会话身份捕获、终态进程收口和评分 Worker 仍使用各自独立的有界控制参数，这些参数不限制 Harness 完成题目的总时长。
 
 ## DoubaoWork macOS 单题入口
 
-`1.20.4` 使用共享 `doubaowork 0.7.7` 的 UI、一次发送、恢复与原生证据核心，Web adapter 独立生成 execution record、候选冻结及正式回执。General 的运行材料不代表 Web 通过；本版真机验收范围查统一接入契约，不能用离线测试替代。
+`1.20.4` 使用共享 `doubaowork 0.8.1` 的 UI、一次发送、恢复与原生证据核心，Web adapter 独立生成 execution record、候选冻结及正式回执。General 的运行材料不代表 Web 通过；本版真机验收范围查统一接入契约，不能用离线测试替代。
 
 原生错误已独立核验且账本存在未采样的 `uploadState=failed` 行时，只保留严格核验的已上传工具子集与缺口诊断；工具总量为 null，业务能力分数不从异常终态推断。
 

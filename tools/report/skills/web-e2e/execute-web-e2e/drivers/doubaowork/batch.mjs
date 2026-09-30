@@ -25,6 +25,11 @@ const terminal = new Set(["SUCCEEDED", "INFRA_FAILED"]);
 const safeRunId = value => /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/u.test(value || "");
 const driverFile = fileURLToPath(new URL("./driver.mjs", import.meta.url));
 
+export function isAllowedDriverUpgrade(previous, current = DRIVER_VERSION) {
+  return ({ "0.7.2": "0.7.3", "0.7.4": "0.7.5", "0.7.5": "0.7.6", "0.7.6": "0.7.7",
+    "0.7.7": "0.8.0", "0.8.0": "0.8.1" })[previous] === current;
+}
+
 export function parseBatchArgs(argv) {
   const result = { resume: false, status: false, continueAttention: false, recoverStaleLock: false, adoptDriverVersion: false, adoptBatchVersion: false, runSlots: 1, observeSeconds: 60, projectPrefix: null };
   for (let i = 0; i < argv.length; i++) {
@@ -281,7 +286,7 @@ export async function main(argv = process.argv.slice(2)) {
   try {
     const state = old ?? createBatchState(plan, args);
     if (state.driver_version !== DRIVER_VERSION) {
-      const allowedUpgrade = ({ "0.7.2": "0.7.3", "0.7.4": "0.7.5", "0.7.5": "0.7.6", "0.7.6": "0.7.7" })[state.driver_version] === DRIVER_VERSION;
+      const allowedUpgrade = isAllowedDriverUpgrade(state.driver_version);
       if (!args.adoptDriverVersion || !allowedUpgrade)
         throw new Error("DOUBAOWORK_WEB_BATCH_VERSION_DRIFT");
       assertStateMatches(state, plan, args, { allowVersionDrift: true });
