@@ -290,7 +290,7 @@ def analyze(round_root: Path, report_json: Path, include_doubao: bool = False) -
             "median_across_tasks": "先对每个 task_run 求首轮/末轮值，再在 Harness 内跨 task_run 求 median；偶数样本取中间两个排序值的算术平均",
             "p90_across_tasks": "先对每个 task_run 求值，再取排序后的最近秩 P90；用于展示长尾任务，不代表平均任务",
             "last_to_first_input_ratio": "last_input_tokens / first_input_tokens；首轮为0时 unavailable",
-            "input_slope_tokens_per_interaction": "对每个 task_run 使用普通最小二乘拟合 input_tokens(k)=a+b*k，k=1..n；再在 Harness 内对各 task_run 的 b 求 median；n<2 不纳入斜率",
+            "input_slope_tokens_per_interaction": "每题以k=1..n为有效请求序号、y_k为单次input_tokens，拟合y_hat_k=a+b*k；b=Σ((k-k_bar)*(y_k-y_bar))/Σ((k-k_bar)^2)，a=y_bar-b*k_bar。a是k=0的拟合截距，不是首轮输入或系统提示词Token；b单位为Token/交互。Harness汇总对题级b取中位数和P90，n<2不纳入斜率",
             "input_tokens_definition": "每次模型请求的输入 Token，包含缓存读取 Token；cache_read 单独统计，不能从 input_tokens 中扣除后再称为输入总量",
             "source_policy": "AstronStudio 使用绑定 rollout 的 last_token_usage；WorkBuddy/QwenWork 使用冻结轨迹 usage；provider events 不用于 AstronStudio正式Token统计",
         },
@@ -335,6 +335,32 @@ def render_markdown(data: dict[str, Any]) -> str:
             f"{fmt(a['sum_cached_input_tokens'])} | {fmt(a['sum_output_tokens'])} | "
             f"{fmt(a['sum_reasoning_output_tokens'])} |"
         )
+    lines += [
+        "", "## 输入斜率：a、b、k 的含义与计算", "",
+        "对每题分别用全部有效请求的数据拟合直线 `ŷ_k = a + b × k`。`ŷ_k` 是拟合值，实际输入量 `y_k` 可以高于或低于这条直线。",
+        "",
+        "| 符号 | 取值与含义 | 单位 |",
+        "| --- | --- | --- |",
+        "| `n` | 该题有效模型请求数，即 `interaction_count` | 次 |",
+        "| `k` | 该题内的请求序号 `1, 2, …, n`，即 `interaction_index`；每道题从1重新编号 | 次 |",
+        "| `y_k` | 第k次请求实际记录的 `input_tokens`，包含缓存读取；不是截至第k次的累计输入 | Token |",
+        "| `b` | 利用全部n个点计算的最小二乘斜率，表示每增加一次请求时输入上下文的线性增长趋势 | Token/交互 |",
+        "| `a` | 拟合直线在k=0处的截距，由本题数据计算；不是预设常量，不是首轮实际输入，也不是系统提示词Token | Token |",
+        "",
+        "计算公式（求和范围均为 `k=1..n`）：", "",
+        "```text",
+        "k̄ = (n + 1) / 2                  # 本题请求序号的均值",
+        "ȳ = Σ y_k / n                    # 本题单次输入Token的均值",
+        "b = Σ[(k − k̄)(y_k − ȳ)] / Σ[(k − k̄)²]",
+        "a = ȳ − b × k̄",
+        "ŷ_k = a + b × k",
+        "```", "",
+        "计算示例（仅演示公式，不是本轮真实用例）：某题4次请求的输入为 `[1000, 1400, 1600, 2200]`，对应 `k=[1,2,3,4]`。此时 `k̄=2.5`、`ȳ=1550`，斜率分子为1900、分母为5，因此 `b=380 Token/交互`，`a=600 Token`，拟合直线为 `ŷ_k=600+380×k`。首轮实际输入仍为1000 Token，不能用截距600替代。",
+        "",
+        "这里的b描述整体线性趋势，不保证相邻两次请求都恰好增加b。它使用全部请求点，也不等于只用首尾两点计算的 `(末轮−首轮)/(n−1)`；上述示例的首尾平均增量是400，而拟合斜率是380。b为负时表示整体下降趋势；压缩、裁剪或其他上下文变化的原因须回查轨迹。",
+        "",
+        "代码先通过 `_slope` 计算每题的b，再对有效题级b取中位数与P90；不会把60题请求拼成一条长序列拟合。n小于2时斜率为unavailable并排除，不补0。a仅用于解释拟合直线，当前汇总指标保存的是b。本题拟合所用的均值与跨60题报告是否展示平均值是不同层次的计算。",
+    ]
     lines += ["", "## 三端上下文滚雪球趋势", "", "下面按每题交互进度归一化到0%–100%，每个点先在每题内取最近的请求，再跨题取中位数。它展示典型任务的输入上下文如何随交互推进。", ""]
     for harness, group in data["harnesses"].items():
         lines += [f"### {harness}", "", "| 交互进度 | 典型输入 Token 中位数 | 任务数 |", "| ---: | ---: | ---: |"]
@@ -358,7 +384,7 @@ def render_markdown(data: dict[str, Any]) -> str:
                 f"{fmt(point['cumulative_input_tokens'])} | {fmt(point['cumulative_cached_input_tokens'])} | {fmt(point['cumulative_output_tokens'])} | "
                 f"{fmt(point['cumulative_reasoning_output_tokens'])} | {fmt(point['cumulative_total_tokens'])} |"
             )
-    lines += ["", "## 统计口径", "", "- `首轮输入中位数`和`末轮输入中位数`不是60题所有请求混合后的中位数，而是先逐题取首轮/末轮，再对60个题级值取中位数；60题为偶数时取排序后第30和第31个值的算术平均。", "- `P90`同样先逐题取值，再按最近秩取排序后的P90，用来表示长尾题目；它不是平均值。", "- 每题斜率使用普通最小二乘拟合 `input_tokens(k) = a + b × k`，`k=1..n`；随后对题级斜率取中位数和P90。少于2次请求的题目不纳入斜率。", "- 主分析不使用跨题平均值，因为少数超长代码/搜索任务会显著拉高均值；整体资源负担直接看输入总量、缓存读取总量、输出总量和推理输出总量。", "- 输入 Token 包含缓存读取 Token；缓存读取单独列出，不能从输入中扣除后再次相加。输出 Token、推理输出 Token、请求数和工具调用数分别统计。", "- `末轮/首轮`用于观察上下文滚雪球，不等于系统提示词增长倍数。", "", "## 数据来源", "", "- AstronStudio：绑定 `astronstudio-rollout.jsonl` 的 `last_token_usage`，累计值和单次值对账后去重。", "- WorkBuddy：冻结 `workbuddy-session.jsonl` 中每个模型响应的 usage。", "- QwenWork：冻结 `transcript.jsonl` 中每个模型响应的 usage。", "- AstronStudio 的 `astronstudio-provider-events.jsonl` 只用于独立核对，不作为正式 Token 来源。", "- DoubaoWork 默认排除，因为当前没有可比较的 Token usage。", "", "## 证据边界", "", "精确拆分系统提示词、开发者提示词、工具 Schema、历史消息和工具结果，需要完整 outbound request 的 role 级 payload；当前证据不足时不估算。"]
+    lines += ["", "## 统计口径", "", "- `首轮输入中位数`和`末轮输入中位数`不是60题所有请求混合后的中位数，而是先逐题取首轮/末轮，再对60个题级值取中位数；60题为偶数时取排序后第30和第31个值的算术平均。", "- `P90`同样先逐题取值，再按最近秩取排序后的P90，用来表示长尾题目；它不是平均值。", "- 每题斜率使用普通最小二乘拟合 `ŷ_k = a + b × k`，符号和公式见前文；随后对题级斜率b取中位数和P90。少于2次请求的题目不纳入斜率。", "- 主分析不使用跨题平均值，因为少数超长代码/搜索任务会显著拉高均值；整体资源负担直接看输入总量、缓存读取总量、输出总量和推理输出总量。", "- 输入 Token 包含缓存读取 Token；缓存读取单独列出，不能从输入中扣除后再次相加。输出 Token、推理输出 Token、请求数和工具调用数分别统计。", "- `末轮/首轮`用于观察上下文滚雪球，不等于系统提示词增长倍数。", "", "## 数据来源", "", "- AstronStudio：绑定 `astronstudio-rollout.jsonl` 的 `last_token_usage`，累计值和单次值对账后去重。", "- WorkBuddy：冻结 `workbuddy-session.jsonl` 中每个模型响应的 usage。", "- QwenWork：冻结 `transcript.jsonl` 中每个模型响应的 usage。", "- AstronStudio 的 `astronstudio-provider-events.jsonl` 只用于独立核对，不作为正式 Token 来源。", "- DoubaoWork 默认排除，因为当前没有可比较的 Token usage。", "", "## 证据边界", "", "精确拆分系统提示词、开发者提示词、工具 Schema、历史消息和工具结果，需要完整 outbound request 的 role 级 payload；当前证据不足时不估算。"]
     return "\n".join(lines) + "\n"
 
 
