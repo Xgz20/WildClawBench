@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { access, mkdtemp, rm } from "node:fs/promises";
+import { access, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -216,22 +216,14 @@ export function copySqliteSnapshot(source, destination, overrides = {}) {
 
 const SESSION_QUERY = `
 WITH latest_turn AS (
-  SELECT ranked.*
-  FROM (
-    SELECT
-      turns.*,
-      ROW_NUMBER() OVER (
-        PARTITION BY turns.thread_id
-        ORDER BY
-          CASE WHEN turns.turn_id = threads.latest_turn_id THEN 0 ELSE 1 END,
-          turns.requested_at DESC,
-          turns.row_id DESC
-      ) AS row_rank
-    FROM projection_turns AS turns
-    INNER JOIN projection_threads AS threads ON threads.thread_id = turns.thread_id
-    WHERE turns.checkpoint_turn_count IS NULL
-  ) AS ranked
-  WHERE ranked.row_rank = 1
+  SELECT turns.*
+  FROM projection_turns AS turns
+  INNER JOIN projection_threads AS threads
+    ON threads.thread_id = turns.thread_id
+   AND threads.latest_turn_id = turns.turn_id
+  INNER JOIN projection_projects AS projects
+    ON projects.project_id = threads.project_id
+  WHERE turns.checkpoint_turn_count IS NULL
 )
 SELECT
   sessions.thread_id AS conversationId,
@@ -279,12 +271,35 @@ async function querySnapshot(snapshotDb, overrides = {}) {
   // quick_check scans every row and turns the read-only probe into an
   // unbounded operation; bounded quick_check still validates the snapshot
   // header and a sample of each table before the identity query.
-  const integrityRows = await querySqlite(snapshotDb, "PRAGMA quick_check(1);", overrides);
-  const integrity = Object.values(integrityRows[0] || {})[0];
-  if (integrity !== "ok") {
-    throw new Error(`AstronStudio 状态库快照校验失败：${integrity || "无结果"}`);
+  const snapshotSize = (await stat(snapshotDb)).size;
+  if (snapshotSize > 256 * 1024 * 1024) {
+    const schemaRows = await querySqlite(snapshotDb, `
+      SELECT COUNT(*) AS table_count
+      FROM sqlite_master
+      WHERE type = 'table'
+        AND name IN (
+          'projection_projects', 'projection_threads',
+          'projection_thread_sessions', 'projection_turns',
+          'projection_pending_interactions', 'provider_runtime_open_turns'
+        );
+    `, overrides);
+    if (Number(schemaRows[0]?.table_count || 0) !== 6) {
+      throw new Error("AstronStudio 状态库快照缺少必需投影表");
+    }
+  } else {
+    const integrityRows = await querySqlite(snapshotDb, "PRAGMA quick_check(1);", overrides);
+    const integrity = Object.values(integrityRows[0] || {})[0];
+    if (integrity !== "ok") {
+      throw new Error(`AstronStudio 状态库快照校验失败：${integrity || "无结果"}`);
+    }
   }
-  const rows = await querySqlite(snapshotDb, SESSION_QUERY, overrides);
+  const workspaceFilter = overrides.workspaceRoot
+    ? `\n  AND projects.workspace_root = '${String(overrides.workspaceRoot).replaceAll("'", "''")}'`
+    : "";
+  const query = SESSION_QUERY
+    .replace("WHERE turns.checkpoint_turn_count IS NULL", `WHERE turns.checkpoint_turn_count IS NULL${workspaceFilter}`)
+    .replace("ORDER BY updatedAtIso DESC, sessions.thread_id ASC;", `${workspaceFilter}\nORDER BY updatedAtIso DESC, sessions.thread_id ASC;`);
+  const rows = await querySqlite(snapshotDb, query, overrides);
   return rows.map((row) => ({
     ...row,
     updatedAt: Date.parse(row.updatedAtIso || "") || 0,

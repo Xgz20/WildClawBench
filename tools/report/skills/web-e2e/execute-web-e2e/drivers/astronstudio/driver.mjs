@@ -323,6 +323,8 @@ async function visibleLocators(locator) {
 async function pointerReachableLocators(locators) {
   const matches = [];
   for (const candidate of locators) {
+    if (typeof candidate.isEnabled === "function"
+      && !(await candidate.isEnabled().catch(() => false))) continue;
     const reachable = typeof candidate.evaluate !== "function"
       ? true
       : await candidate.evaluate((element) => {
@@ -907,7 +909,7 @@ export async function captureAttemptThread(page, config, state, timeout, overrid
   const deadline = dependencies.nowMilliseconds() + timeout;
   while (dependencies.nowMilliseconds() < deadline) {
     const routeThreadId = threadIdFromUrl(page.url());
-    const sessions = await dependencies.querySessions(config.sessionDb);
+    const sessions = await dependencies.querySessions(config.sessionDb, { workspaceRoot: config.workspace });
     const match = selectRouteConfirmedAttemptSession(sessions, state, config.workspace, routeThreadId);
     if (match) return recordRouteConfirmedAttempt(state, match, routeThreadId, dependencies.now());
     await dependencies.sleep(250);
@@ -922,7 +924,7 @@ export async function recoverAttemptThreadIdentityFromDatabase(config, state, ov
     now: () => new Date().toISOString(),
     ...overrides,
   };
-  const sessions = await dependencies.querySessions(config.sessionDb);
+  const sessions = await dependencies.querySessions(config.sessionDb, { workspaceRoot: config.workspace });
   const match = selectRouteConfirmedAttemptSession(sessions, state, config.workspace);
   if (!match) return null;
   const conversationId = recordRouteConfirmedAttempt(state, match, null, dependencies.now());
@@ -1270,7 +1272,7 @@ export async function readSessionsWithDiagnostics(state, readSessions, overrides
 async function observeAttemptFromDatabase(config, state, identityInfo) {
   const database = await readSessionsWithDiagnostics(
     state,
-    () => querySessions(config.sessionDb),
+    () => querySessions(config.sessionDb, { workspaceRoot: config.workspace }),
   );
   if (database.error) {
     state.runtime.heartbeat_at = new Date().toISOString();
@@ -1352,7 +1354,7 @@ export async function observeAttemptOnce(page, config, state, identityInfo, over
   const dom = await dependencies.inspectDom(page);
   const database = await readSessionsWithDiagnostics(
     state,
-    () => dependencies.querySessions(config.sessionDb),
+    () => dependencies.querySessions(config.sessionDb, { workspaceRoot: config.workspace }),
   );
   const session = database.sessions
     ? chooseAttemptSession(database.sessions, state, config.workspace)
@@ -1653,7 +1655,7 @@ async function runAutomation(config, identityInfo, overrides = {}) {
     await editor.click({ timeout });
     await editor.fill(config.prompt, { timeout });
     await takeScreenshot(page, config, state, "07-prompt-filled.png");
-    state.session.baseline = (await querySessions(config.sessionDb))
+    state.session.baseline = (await querySessions(config.sessionDb, { workspaceRoot: config.workspace }))
       .filter((session) => resolve(String(session.cwd || "")) === config.workspace)
       .map((session) => ({
         conversation_id: session.conversationId,

@@ -887,6 +887,29 @@ test("covered new-thread nodes are ignored in favor of the pointer-reachable but
   assert.deepEqual(await findNewTaskButtons(page), [reachable]);
 });
 
+test("disabled new-thread nodes are ignored in favor of an enabled button", async () => {
+  const disabled = {
+    isVisible: async () => true,
+    isEnabled: async () => false,
+    evaluate: async () => true,
+  };
+  const enabled = {
+    isVisible: async () => true,
+    isEnabled: async () => true,
+    evaluate: async () => true,
+  };
+  const page = {
+    getByTestId: (testId) => {
+      assert.equal(testId, "new-thread-button");
+      return locatorFor([disabled, enabled]);
+    },
+    locator: () => ({ filter: () => locatorFor([]) }),
+    getByRole: () => locatorFor([]),
+  };
+
+  assert.deepEqual(await findNewTaskButtons(page), [enabled]);
+});
+
 test("sidebar toggle discovery survives Electron titlebar hit-test overlays", async () => {
   const coveredDuplicate = {
     isVisible: async () => true,
@@ -1125,6 +1148,8 @@ test("SQLite projection states normalize completion, running and pending interac
   const sessions = await querySessions(db);
   const statuses = Object.fromEntries(sessions.map((session) => [session.conversationId, session.status]));
   assert.deepEqual(statuses, { t3: "needs_attention", t2: "running", t1: "completed" });
+  const scoped = await querySessions(db, { workspaceRoot: "/tmp/one" });
+  assert.deepEqual(scoped.map((session) => session.conversationId), ["t1"]);
   assert.equal(await queryFinalResponse(db, "t1", "turn1"), "final response");
 });
 
