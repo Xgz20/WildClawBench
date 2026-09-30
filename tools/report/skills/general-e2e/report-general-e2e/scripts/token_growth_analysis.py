@@ -208,6 +208,11 @@ def _median(values: list[float | int | None]) -> float | None:
     return statistics.median(valid) if valid else None
 
 
+def _mean(values: list[float | int | None]) -> float | None:
+    valid = [float(value) for value in values if value is not None]
+    return statistics.mean(valid) if valid else None
+
+
 def _curve(summaries: list[dict[str, Any]], points: int = 11) -> list[dict[str, Any]]:
     result = []
     for point in range(points):
@@ -252,9 +257,13 @@ def analyze(round_root: Path, report_json: Path, include_doubao: bool = False) -
         group["coverage"] = {"known_tasks": sum(bool(s["series"]) for s in summaries), "total_tasks": len(summaries)}
         group["aggregate"] = {
             "median_first_input_tokens": _median([s["first_input_tokens"] for s in summaries]),
+            "mean_first_input_tokens": _mean([s["first_input_tokens"] for s in summaries]),
             "median_last_input_tokens": _median([s["last_input_tokens"] for s in summaries]),
+            "mean_last_input_tokens": _mean([s["last_input_tokens"] for s in summaries]),
             "median_last_to_first_input_ratio": _median([s["last_to_first_input_ratio"] for s in summaries]),
+            "mean_last_to_first_input_ratio": _mean([s["last_to_first_input_ratio"] for s in summaries]),
             "median_input_slope_tokens_per_interaction": _median([s["input_slope_tokens_per_interaction"] for s in summaries]),
+            "mean_input_slope_tokens_per_interaction": _mean([s["input_slope_tokens_per_interaction"] for s in summaries]),
             "sum_input_tokens": sum(s["input_tokens_sum"] or 0 for s in summaries),
             "sum_cached_input_tokens": sum(s["cached_input_tokens_sum"] or 0 for s in summaries),
             "sum_output_tokens": sum(s["output_tokens_sum"] or 0 for s in summaries),
@@ -266,6 +275,16 @@ def analyze(round_root: Path, report_json: Path, include_doubao: bool = False) -
         "schema_version": "wildclawbench.general-e2e-token-growth/v1",
         "report_source": str(report_json),
         "scope": {"selected_task_runs": len(task_rows), "excluded_harnesses": [] if include_doubao else ["DoubaoWork"]},
+        "methodology": {
+            "interaction_unit": "同一 task_run 内按 usage advance 排序的模型请求；interaction_index 从1开始",
+            "first_input_tokens": "该 task_run 的第一个有效模型请求 input_tokens",
+            "last_input_tokens": "该 task_run 的最后一个有效模型请求 input_tokens",
+            "median_across_tasks": "先对每个 task_run 求首轮/末轮值，再在 Harness 内跨 task_run 求 median；偶数样本取中间两个排序值的算术平均",
+            "last_to_first_input_ratio": "last_input_tokens / first_input_tokens；首轮为0时 unavailable",
+            "input_slope_tokens_per_interaction": "对每个 task_run 使用普通最小二乘拟合 input_tokens(k)=a+b*k，k=1..n；再在 Harness 内对各 task_run 的 b 求 median；n<2 不纳入斜率",
+            "input_tokens_definition": "每次模型请求的输入 Token，包含缓存读取 Token；cache_read 单独统计，不能从 input_tokens 中扣除后再称为输入总量",
+            "source_policy": "AstronStudio 使用绑定 rollout 的 last_token_usage；WorkBuddy/QwenWork 使用冻结轨迹 usage；provider events 不用于 AstronStudio正式Token统计",
+        },
         "attribution": {
             "system_prompt_tokens": {"status": "unavailable", "reason": "完整 outbound request 的 role 级 payload 未随当前证据冻结，不能从 usage 反推"},
             "static_baseline_proxy": {"status": "observed", "definition": "首个模型请求的 input_tokens；包含系统、工具定义、任务Prompt和首轮上下文，不能当作纯系统Prompt"},
@@ -277,11 +296,60 @@ def analyze(round_root: Path, report_json: Path, include_doubao: bool = False) -
 
 
 def render_markdown(data: dict[str, Any]) -> str:
-    lines = ["# General E2E 模型交互 Token 增长分析", "", "当前分析按题目内模型请求序号统计；系统提示词精确拆分在缺少完整 outbound request 时保持 unavailable。", "", "## Harness 汇总", "", "| Harness | 任务覆盖 | 首轮输入中位数 | 末轮输入中位数 | 末轮/首轮 | 输入斜率 | 输入总量 | 缓存读取 | 输出总量 |", "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
+    def fmt(value: Any) -> str:
+        if value is None:
+            return "unavailable"
+        if isinstance(value, float):
+            return f"{value:.3f}"
+        return str(value)
+
+    lines = [
+        "# General E2E 模型交互 Token 增长分析",
+        "",
+        "当前分析按题目内模型请求序号统计；系统提示词精确拆分在缺少完整 outbound request 时保持 unavailable。",
+        "",
+        "## Harness 汇总",
+        "",
+        "下表的中位数和均值都是先按每题计算，再在同一 Harness 的任务集合上聚合。默认汇总使用中位数，均值单独列出。",
+        "",
+        "| Harness | 任务覆盖 | 首轮输入中位数 | 首轮输入均值 | 末轮输入中位数 | 末轮输入均值 | 末轮/首轮中位数 | 斜率中位数 | 斜率均值 | 输入总量 | 缓存读取 | 输出总量 | 推理输出总量 |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ]
     for harness, group in data["harnesses"].items():
         a = group["aggregate"]
-        lines.append(f"| {harness} | {group['coverage']['known_tasks']}/{group['coverage']['total_tasks']} | {a['median_first_input_tokens']} | {a['median_last_input_tokens']} | {a['median_last_to_first_input_ratio']} | {a['median_input_slope_tokens_per_interaction']} | {a['sum_input_tokens']} | {a['sum_cached_input_tokens']} | {a['sum_output_tokens']} |")
-    lines += ["", "## 口径", "", "- AstronStudio 仅读取绑定的 `astronstudio-rollout.jsonl`；不读取 `astronstudio-provider-events.jsonl` 作为正式 Token 来源。", "- WorkBuddy 使用冻结评分轨迹中的 session JSONL，QwenWork 使用冻结 transcript JSONL。", "- `首轮输入`是动态系统/工具/任务混合基线，不能等同于系统提示词大小。", "- `末轮/首轮`和输入斜率用于判断滚雪球；请求数、输出和推理输出单独统计，不重复相加。", "- DoubaoWork 默认排除，因为当前没有可比较的 Token usage。", "", "## 证据边界", "", "精确拆分系统提示词、开发者提示词、工具 Schema、历史消息和工具结果，需要保存完整 outbound request 的角色级 payload；当前证据不足时不估算。"]
+        lines.append(
+            f"| {harness} | {group['coverage']['known_tasks']}/{group['coverage']['total_tasks']} | "
+            f"{fmt(a['median_first_input_tokens'])} | {fmt(a['mean_first_input_tokens'])} | "
+            f"{fmt(a['median_last_input_tokens'])} | {fmt(a['mean_last_input_tokens'])} | "
+            f"{fmt(a['median_last_to_first_input_ratio'])} | {fmt(a['median_input_slope_tokens_per_interaction'])} | "
+            f"{fmt(a['mean_input_slope_tokens_per_interaction'])} | {fmt(a['sum_input_tokens'])} | "
+            f"{fmt(a['sum_cached_input_tokens'])} | {fmt(a['sum_output_tokens'])} | "
+            f"{fmt(a['sum_reasoning_output_tokens'])} |"
+        )
+    lines += ["", "## 三端上下文滚雪球趋势", "", "下面按每题交互进度归一化到0%–100%，每个点先在每题内取最近的请求，再跨题取中位数。它展示典型任务的输入上下文如何随交互推进。", ""]
+    for harness, group in data["harnesses"].items():
+        lines += [f"### {harness}", "", "| 交互进度 | 典型输入 Token 中位数 | 任务数 |", "| ---: | ---: | ---: |"]
+        for point in group["median_input_curve"]:
+            lines.append(f"| {point['normalized_progress']:.0%} | {fmt(point['median_input_tokens'])} | {point['task_count']} |")
+        lines.append("")
+    lines += ["## 每题级汇总", "", "每行是一题；`interaction_count` 是该题内有效模型请求数。首轮、末轮、增长倍数、斜率和累计字段均来自该题自己的请求序列。", "", "| Harness | task_id | 请求数 | 首轮输入 | 末轮输入 | 增长倍数 | 输入斜率 | 累计输入 | 累计缓存读取 | 累计输出 | 累计推理输出 |", "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
+    for row in data["tasks"]:
+        lines.append(
+            f"| {row['harness']} | {row['task_id']} | {row['interaction_count']} | {fmt(row['first_input_tokens'])} | "
+            f"{fmt(row['last_input_tokens'])} | {fmt(row['last_to_first_input_ratio'])} | {fmt(row['input_slope_tokens_per_interaction'])} | "
+            f"{fmt(row['input_tokens_sum'])} | {fmt(row['cached_input_tokens_sum'])} | {fmt(row['output_tokens_sum'])} | "
+            f"{fmt(row['reasoning_output_tokens_sum'])} |"
+        )
+    lines += ["", "## 每题请求级明细", "", "下表保留每题内第几次模型请求，以及单次和累计输入、缓存读取、输出、推理输出和总 Token。AstronStudio 的这些行来自 rollout，其他两端来自冻结标准轨迹。", "", "| Harness | task_id | 交互序号 | 单次输入 | 单次缓存读取 | 单次输出 | 单次推理输出 | 单次总量 | 累计输入 | 累计缓存读取 | 累计输出 | 累计推理输出 | 累计总量 |", "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"]
+    for row in data["tasks"]:
+        for point in row["series"]:
+            lines.append(
+                f"| {row['harness']} | {row['task_id']} | {point['interaction_index']} | {fmt(point['input_tokens'])} | "
+                f"{fmt(point['cached_input_tokens'])} | {fmt(point['output_tokens'])} | {fmt(point['reasoning_output_tokens'])} | {fmt(point['total_tokens'])} | "
+                f"{fmt(point['cumulative_input_tokens'])} | {fmt(point['cumulative_cached_input_tokens'])} | {fmt(point['cumulative_output_tokens'])} | "
+                f"{fmt(point['cumulative_reasoning_output_tokens'])} | {fmt(point['cumulative_total_tokens'])} |"
+            )
+    lines += ["", "## 统计口径", "", "- `首轮输入中位数`和`末轮输入中位数`不是60题所有请求混合后的中位数，而是先逐题取首轮/末轮，再对60个题级值取中位数；60题为偶数时取排序后第30和第31个值的算术平均。", "- `首轮输入均值`和`末轮输入均值`同样先逐题取值，再对60题级值做算术平均；它们受少数超长任务影响更大。", "- 每题斜率使用普通最小二乘拟合 `input_tokens(k) = a + b × k`，`k=1..n`；随后对题级斜率取中位数和均值。少于2次请求的题目不纳入斜率。", "- 输入 Token 包含缓存读取 Token；缓存读取单独列出，不能从输入中扣除后再次相加。输出 Token、推理输出 Token、请求数和工具调用数分别统计。", "- `末轮/首轮`用于观察上下文滚雪球，不等于系统提示词增长倍数。", "", "## 数据来源", "", "- AstronStudio：绑定 `astronstudio-rollout.jsonl` 的 `last_token_usage`，累计值和单次值对账后去重。", "- WorkBuddy：冻结 `workbuddy-session.jsonl` 中每个模型响应的 usage。", "- QwenWork：冻结 `transcript.jsonl` 中每个模型响应的 usage。", "- AstronStudio 的 `astronstudio-provider-events.jsonl` 只用于独立核对，不作为正式 Token 来源。", "- DoubaoWork 默认排除，因为当前没有可比较的 Token usage。", "", "## 证据边界", "", "精确拆分系统提示词、开发者提示词、工具 Schema、历史消息和工具结果，需要完整 outbound request 的 role 级 payload；当前证据不足时不估算。"]
     return "\n".join(lines) + "\n"
 
 
