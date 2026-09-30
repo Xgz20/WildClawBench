@@ -79,7 +79,7 @@ Windows 使用相同参数和原生入口：
 .agents\skills\execute-web-e2e\scripts\run-astronstudio-batch.cmd C:\absolute\batch__astronstudio --run-id queue-1 --task-id task-1 --task-id task-2 --run-slots 3 --permission-mode full-access
 ```
 
-Windows 入口、平台探测和状态库读取已在目标 Windows 机器完成过真机验证。Driver 1.10.18 在 1.10.16 的发送后会话身份捕获基础上，隔离 Windows 启动时由控制 Harness 注入的 `CODEX_*`、`CHATGPT_*` 和 Node IPC 环境变量，并只记录被删除的变量名；用户的 PATH、代理和模型凭据保持不变。Driver 1.11.0 引入共享动态应用发现和冻结路径复核；当前 Driver 1.12.0 又移除 Harness 总执行 deadline，因此旧版本的单题、三题串行和默认三路并发证据均需重验。必须先显式使用 `--run-slots 1`，通过只读探针、单题和三题串行后再测试并发。活跃 SQLite 文件复制仍使用 10 秒硬超时，遇到 Windows 长时间文件锁时终止复制子进程、记录读库失败并回退到同一 thread 的 DOM 观察，不得卡死队列或重发 Prompt。当前单题尚未重新通过时，不得把静态测试或旧 Driver 结果表述为本版 Windows 生产验证。
+Windows 入口、平台探测和状态库读取已在目标 Windows 机器完成过真机验证。Driver 1.10.18 在 1.10.16 的发送后会话身份捕获基础上，隔离 Windows 启动时由控制 Harness 注入的 `CODEX_*`、`CHATGPT_*` 和 Node IPC 环境变量，并只记录被删除的变量名；用户的 PATH、代理和模型凭据保持不变。Driver 1.11.0 引入共享动态应用发现和冻结路径复核；当前 Driver 1.12.3 又移除 Harness 总执行 deadline，因此旧版本的单题、三题串行和默认三路并发证据均需重验。必须先显式使用 `--run-slots 1`，通过只读探针、单题和三题串行后再测试并发。活跃 SQLite 文件复制默认允许 120 秒，遇到长时间文件锁时终止复制子进程、记录读库失败并回退到同一 thread 的 DOM 观察，不得卡死队列或重发 Prompt。当前单题尚未重新通过时，不得把静态测试或旧 Driver 结果表述为本版生产验证。
 
 AstronStudio 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、模型/权限回读、Prompt 发送和 thread 切换仍由同一个 Driver 串行操作。发送后在有界 120–180 秒窗口内，只有 AstronStudio 当前或已持久化路由、本地 SQLite 的发送后 session、非空 turn 和精确 cwd 共同确认时才释放 Driver；Worker 轮流恢复各 thread 做一次性观察。任一题到达明确终态并通过 automation/execution 一致性检查后释放槽位并动态补入下一题。队列必须覆盖 manifest 的完整 task ID 集合，才可能生成 `integrity.valid=true` 的 `execution-receipt.json`。
 

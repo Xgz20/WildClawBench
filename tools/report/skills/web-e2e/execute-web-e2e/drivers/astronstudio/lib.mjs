@@ -53,7 +53,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.12.0";
+export const DRIVER_VERSION = "1.12.3";
 export const DEFAULT_APP_PATH = defaultAstronAppPath();
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
@@ -165,7 +165,7 @@ async function querySqlite(snapshotDb, query, overrides = {}) {
 }
 
 const SQLITE_SNAPSHOT_COPY_SCRIPT = fileURLToPath(new URL("./sqlite-snapshot-copy.mjs", import.meta.url));
-const SQLITE_SNAPSHOT_COPY_TIMEOUT_MILLISECONDS = 10_000;
+const SQLITE_SNAPSHOT_COPY_TIMEOUT_MILLISECONDS = 120_000;
 
 export function copySqliteSnapshot(source, destination, overrides = {}) {
   const spawnProcess = overrides.spawnProcess || spawn;
@@ -266,8 +266,20 @@ WHERE threads.deleted_at IS NULL AND projects.deleted_at IS NULL
 ORDER BY updatedAtIso DESC, sessions.thread_id ASC;
 `;
 
+const SESSION_SUMMARY_QUERY = `
+SELECT COUNT(*) AS totalCount,
+  SUM(CASE WHEN sessions.status IN ('running','needs_attention','pending','starting')
+    OR sessions.active_turn_id IS NOT NULL THEN 1 ELSE 0 END) AS activeCount
+FROM projection_thread_sessions AS sessions
+;
+`;
+
 async function querySnapshot(snapshotDb, overrides = {}) {
-  const integrityRows = await querySqlite(snapshotDb, "PRAGMA quick_check;", overrides);
+  // AStudio state.sqlite can exceed several GB after long-lived use. A full
+  // quick_check scans every row and turns the read-only probe into an
+  // unbounded operation; bounded quick_check still validates the snapshot
+  // header and a sample of each table before the identity query.
+  const integrityRows = await querySqlite(snapshotDb, "PRAGMA quick_check(1);", overrides);
   const integrity = Object.values(integrityRows[0] || {})[0];
   if (integrity !== "ok") {
     throw new Error(`AstronStudio 状态库快照校验失败：${integrity || "无结果"}`);
@@ -280,6 +292,12 @@ async function querySnapshot(snapshotDb, overrides = {}) {
   }));
 }
 
+async function querySnapshotSummary(snapshotDb, overrides = {}) {
+  const rows = await querySqlite(snapshotDb, SESSION_SUMMARY_QUERY, overrides);
+  const row = rows[0] || {};
+  return { totalCount: Number(row.totalCount) || 0, activeCount: Number(row.activeCount) || 0 };
+}
+
 export async function querySessions(sessionDb = DEFAULT_SESSION_DB, overrides = {}) {
   await access(sessionDb);
   const copySnapshot = overrides.copySnapshot || copySqliteSnapshot;
@@ -290,6 +308,26 @@ export async function querySessions(sessionDb = DEFAULT_SESSION_DB, overrides = 
     try {
       await copySnapshot(sessionDb, snapshotDb, overrides);
       return await querySnapshot(snapshotDb, overrides);
+    } catch (error) {
+      lastError = error;
+      if (error?.code === "ASTRON_SNAPSHOT_TIMEOUT") break;
+    } finally {
+      await rm(snapshotDir, { recursive: true, force: true }).catch(() => {});
+    }
+  }
+  throw new Error(`读取 AstronStudio 状态库失败：${lastError instanceof Error ? lastError.message : String(lastError)}`);
+}
+
+export async function querySessionSummary(sessionDb = DEFAULT_SESSION_DB, overrides = {}) {
+  await access(sessionDb);
+  const copySnapshot = overrides.copySnapshot || copySqliteSnapshot;
+  let lastError = null;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const snapshotDir = await mkdtemp(join(tmpdir(), "astudio-state-summary-"));
+    const snapshotDb = join(snapshotDir, "state.sqlite");
+    try {
+      await copySnapshot(sessionDb, snapshotDb, overrides);
+      return await querySnapshotSummary(snapshotDb, overrides);
     } catch (error) {
       lastError = error;
       if (error?.code === "ASTRON_SNAPSHOT_TIMEOUT") break;

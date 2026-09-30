@@ -738,7 +738,7 @@ test("AstronStudio terminal --resume backfills cleanup without resending the pro
   }), 0);
   const recovered = JSON.parse(await readFile(config.stateFile, "utf8"));
   assert.equal(recovered.phase, "SUCCEEDED");
-  assert.equal(recovered.driver.version, "1.12.0");
+  assert.equal(recovered.driver.version, "1.12.3");
   assert.equal(recovered.terminal_process_cleanup.supported, false);
   assert.equal(recovered.terminal_process_cleanup.success, true);
   assert.equal(recovered.terminal_process_cleanup.backfill_verification.unchanged, true);
@@ -1005,8 +1005,6 @@ test("manual project entry uses Windows-compatible ARIA selectors and bypasses c
     method: "sidebar-manual-path",
   });
   assert.deepEqual(calls, [
-    "project-tab-click",
-    "add-project-dom-click",
     "type-path-dom-click",
     ["set-native-value", workspace],
     "submit-project-dom-click",

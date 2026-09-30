@@ -20,6 +20,7 @@ import {
   diffSnapshots,
   parseArgs,
   queryFinalResponse,
+  querySessionSummary,
   querySessions,
   readJsonIfExists,
   resolveConfig,
@@ -409,15 +410,29 @@ function threadIdFromUrl(url) {
   }
 }
 
+export async function findActiveProjectNewTaskButtons(page) {
+  if (typeof page.url !== "function") return [];
+  const threadId = threadIdFromUrl(page.url());
+  if (!threadId) return [];
+  const actions = page.getByTestId(`thread-hover-actions-${threadId}`);
+  if (await actions.count() !== 1) return [];
+  const projectRoot = actions.locator('xpath=ancestor::div[contains(@class,"group/collapsible")][1]');
+  return pointerReachableLocators(await visibleLocators(projectRoot.getByTestId("new-thread-button")));
+}
+
 export async function findNewTaskButtons(page) {
+  const activeProjectButtons = await findActiveProjectNewTaskButtons(page);
+  if (activeProjectButtons.length === 1) return activeProjectButtons;
   const byTestId = await pointerReachableLocators(
     await visibleLocators(page.getByTestId("new-thread-button")),
   );
   if (byTestId.length === 1) return byTestId;
 
-  const byText = await pointerReachableLocators(
-    await visibleLocators(page.locator("button").filter({ hasText: /^(?:新建任务|New task)$/i })),
-  );
+  const textCandidates = await visibleLocators(page.locator("button").filter({ hasText: /^(?:新建任务|New task)$/i }));
+  for (const candidate of textCandidates) {
+    if (typeof candidate.scrollIntoViewIfNeeded === "function") await candidate.scrollIntoViewIfNeeded().catch(() => {});
+  }
+  const byText = await pointerReachableLocators(textCandidates);
   const exactText = [];
   for (const candidate of byText) {
     if (/^(?:新建任务|New task)$/i.test((await candidate.innerText()).trim())) exactText.push(candidate);
@@ -549,39 +564,41 @@ async function closeProjectPicker(page, timeout) {
 }
 
 export async function addProjectByManualPath(page, workspace, timeout) {
-  const projectTab = await waitForUniqueVisible(
-    async () => {
-      const matches = await visibleLocators(page.locator("button").filter({ hasText: /^(?:项目|Projects)$/i }));
-      const exact = [];
-      for (const button of matches) {
-        if (/^(?:项目|Projects)$/i.test((await button.innerText()).trim())) exact.push(button);
-      }
-      return exact;
-    },
-    timeout,
-    "AstronStudio 项目侧栏标签",
+  const typePathLocator = () => visibleLocators(
+    page.locator("button").filter({ hasText: /^(?:输入路径|Type path)$/i }),
   );
-  await projectTab.click({ timeout });
-  const addProject = await waitForUniqueVisible(
-    () => visibleLocators(page.locator(
-      'button[aria-label="添加项目"], button[aria-label="Add project"]',
-    )),
-    timeout,
-    "AstronStudio 添加项目侧栏按钮",
-  );
-  if (!(await addProject.isEnabled())) throw new Error("AstronStudio 添加项目侧栏按钮未启用");
-  await addProject.evaluate((button) => button.click());
-  const typePath = await waitForUniqueVisible(
-    async () => {
-      const matches = await visibleLocators(
-        page.locator("button").filter({ hasText: /^(?:输入路径|Type path)$/i }),
+  let typePathButtons = await typePathLocator();
+  if (typePathButtons.length === 0) {
+    const projectTab = await waitForUniqueVisible(
+      async () => {
+        const matches = await visibleLocators(page.locator("button").filter({ hasText: /^(?:项目|Projects)$/i }));
+        const exact = [];
+        for (const button of matches) {
+          if (/^(?:项目|Projects)$/i.test((await button.innerText()).trim())) exact.push(button);
+        }
+        return exact;
+      },
+      timeout,
+      "AstronStudio 项目侧栏标签",
+    );
+    await projectTab.click({ timeout });
+    typePathButtons = await typePathLocator();
+    if (typePathButtons.length === 0) {
+      const addProject = await waitForUniqueVisible(
+        () => visibleLocators(page.locator(
+          'button[aria-label="添加项目"], button[aria-label="Add project"]',
+        )),
+        timeout,
+        "AstronStudio 添加项目侧栏按钮",
       );
-      const exact = [];
-      for (const button of matches) {
-        if (/^(?:输入路径|Type path)$/i.test((await button.innerText()).trim())) exact.push(button);
-      }
-      return exact;
-    },
+      if (!(await addProject.isEnabled())) throw new Error("AstronStudio 添加项目侧栏按钮未启用");
+      await addProject.evaluate((button) => button.click());
+      typePathButtons = await typePathLocator();
+    }
+  }
+  if (typePathButtons.length !== 1) throw new Error(`AstronStudio 输入项目路径按钮数量异常：${typePathButtons.length}`);
+  const typePath = await waitForUniqueVisible(
+    typePathLocator,
     timeout,
     "AstronStudio 输入项目路径按钮",
   );
@@ -1735,12 +1752,10 @@ async function probe(config) {
     composer_available: false,
   };
   try {
-    const sessions = await querySessions(config.sessionDb);
+    const summary = await querySessionSummary(config.sessionDb);
     checks.state_database_readable = true;
-    checks.session_count = sessions.length;
-    checks.active_session_count = sessions.filter((session) =>
-      new Set(["running", "needs_attention", "pending", "starting"]).has(String(session.status)),
-    ).length;
+    checks.session_count = summary.totalCount;
+    checks.active_session_count = summary.activeCount;
   } catch (error) {
     checks.state_database_error = error instanceof Error ? error.message : String(error);
   }
