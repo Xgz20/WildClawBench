@@ -49,7 +49,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.12.2";
+export const DRIVER_VERSION = "1.12.4";
 export const DEFAULT_APP_PATH = defaultQwenWorkAppPath();
 export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9250";
@@ -79,8 +79,11 @@ export function parseArgs(argv) {
   if (!optionWasProvided(argv, "--endpoint")) parsed.endpoint = DEFAULT_ENDPOINT;
   if (!optionWasProvided(argv, "--session-db")) parsed.sessionDb = DEFAULT_SESSION_DB;
   if (!parsed.help && !parsed.probe && !parsed.resume) {
-    parsed.restartApp = true;
-    parsed.restartReason = "driver-managed-token-usage-exposure";
+    // Batch explicitly requests restart on its first dispatch. Later detached
+    // dispatches must reuse that client so active peer tasks are not interrupted.
+    parsed.requireTokenExposure = process.platform === "darwin" && parsed.detachAfterSubmit && !parsed.restartApp;
+    parsed.restartApp = !parsed.requireTokenExposure;
+    parsed.restartReason = parsed.requireTokenExposure ? "managed-batch-token-client-reuse" : "driver-managed-token-usage-exposure";
   }
   return parsed;
 }

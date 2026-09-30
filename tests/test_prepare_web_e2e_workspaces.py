@@ -180,9 +180,9 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
             scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
             score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.4.zip"
-            report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.1.1.zip"
+            report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.2.0.zip"
             orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.3.4.zip"
-            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.20.4.zip"
+            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.21.0.zip"
             run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.4.2.zip"
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
             skills_build_manifest_path = batch_root / "packages/skills-build-manifest.json"
@@ -353,7 +353,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             )
             self.assertEqual(
                 batch_manifest["execute_skill_archive"],
-                "packages/execute-web-e2e-skill-v1.20.4.zip",
+                "packages/execute-web-e2e-skill-v1.21.0.zip",
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],
@@ -487,7 +487,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             )
             self.assertEqual(
                 manifest["report_skill_archive"],
-                "packages/report-web-e2e-skill-v1.1.1.zip",
+                "packages/report-web-e2e-skill-v1.2.0.zip",
             )
             self.assertEqual(manifest["report_config"], "web-smoke__report-config.yaml")
             self.assertTrue(manifest["report_config_ready"])

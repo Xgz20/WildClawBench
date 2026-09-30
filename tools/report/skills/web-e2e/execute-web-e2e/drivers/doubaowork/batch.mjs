@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Conservative DoubaoWork Web queue: one UI/agent slot, exact manifest scope.
+// DoubaoWork Web queue: one UI slot and three native background slots.
 import { createHash, randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import { execFile } from "node:child_process";
@@ -71,7 +71,7 @@ export async function planFor(args) {
   const raw = await readFile(join(root, "manifest.json"));
   const manifest = JSON.parse(raw);
   if (manifest.schema_version !== "wildclawbench.web-e2e-batch/v3" || manifest.harness?.id !== "doubaowork"
-      || !Array.isArray(manifest.tasks) || manifest.tasks.length < 2 || manifest.tasks.length > 8) throw new Error("DOUBAOWORK_WEB_BATCH_MANIFEST_INVALID");
+      || !Array.isArray(manifest.tasks) || manifest.tasks.length < 2 || manifest.tasks.length > 1000) throw new Error("DOUBAOWORK_WEB_BATCH_MANIFEST_INVALID");
   const seen = new Set(), tasks = [];
   for (const entry of manifest.tasks) {
     if (!entry.task_id || seen.has(entry.task_id)) throw new Error("DOUBAOWORK_WEB_BATCH_TASK_DUPLICATE");

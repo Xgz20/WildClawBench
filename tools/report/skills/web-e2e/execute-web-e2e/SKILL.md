@@ -11,7 +11,7 @@ Web E2E 不给被评测 Harness 设置任务级执行时限。题目或数据集
 
 ## DoubaoWork macOS 单题入口
 
-`1.20.4` 使用共享 `doubaowork 0.8.1` 的 UI、一次发送、恢复与原生证据核心，Web adapter 独立生成 execution record、候选冻结及正式回执。General 的运行材料不代表 Web 通过；本版真机验收范围查统一接入契约，不能用离线测试替代。
+`1.21.0` 使用共享 `doubaowork 0.8.1` 的 UI、一次发送、恢复与原生证据核心，Web adapter 独立生成 execution record、候选冻结及正式回执。General 的运行材料不代表 Web 通过；本版真机验收范围查统一接入契约，不能用离线测试替代。
 
 原生错误已独立核验且账本存在未采样的 `uploadState=failed` 行时，只保留严格核验的已上传工具子集与缺口诊断；工具总量为 null，业务能力分数不从异常终态推断。
 
@@ -135,9 +135,9 @@ Windows 使用相同参数和原生入口：
 
 QwenWork 的 Token 暴露由 Driver 管理，用户和控制 Harness 都不需要预先设置环境变量。全新单题默认执行一次安全客户端重启；全新批次默认只在第一题前安全重启。Driver 在新客户端子进程中同时注入本机 CDP 参数和 `QODERCN_EXPOSE_TOKEN_USAGE=1`，不修改控制 Harness 的全局环境。重启前若状态库或存活进程表明存在活动任务，立即停止并进入人工处理。已有客户端进程不能在运行中补加该变量，因此禁止为了省略重启而复用无法证明已带开关的旧进程。
 
-开关只允许原生 usage 出现在 transcript 中，不能绕过指标 Profile。采集器仍须精确核对平台、QwenWork 客户端、SDK、transcript 版本和 runtime SHA；未知身份保持 `unverified`，历史 `masked` 样本不得回填。资源字段、状态和 QwenWork Profile 的详细口径见[资源指标参考](references/resource-metrics.md)。execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 首次引入自动注入；当前源码候选为 execute 1.17.15 / Driver 1.12.2 / collector 1.1.3，并新增共享动态应用发现、冻结路径复核、无 Apple Events 的 macOS 进程收口、统一确定性 Skill 构建和无 Harness 总执行 deadline 的执行语义。生产真机证据仍绑定旧版本，发布包必须重新通过 probe 和一个全新 L1 后才能继承既有生产准入。
+开关只允许原生 usage 出现在 transcript 中，不能绕过指标 Profile。采集器仍须精确核对平台、QwenWork 客户端、SDK、transcript 版本和 runtime SHA；未知身份保持 `unverified`，历史 `masked` 样本不得回填。资源字段、状态和 QwenWork Profile 的详细口径见[资源指标参考](references/resource-metrics.md)。execute-web-e2e 1.12.4 / QwenWork Driver 1.10.15 首次引入自动注入；当前源码候选为 execute 1.21.0 / Driver 1.12.4 / collector 1.1.3，并新增共享动态应用发现、冻结路径复核、无 Apple Events 的 macOS 进程收口、统一确定性 Skill 构建和无 Harness 总执行 deadline 的执行语义。生产真机证据仍绑定旧版本，发布包必须重新通过 probe 和一个全新 L1 后才能继承既有生产准入。
 
-QwenWorkCN 1.0.5.0 的历史 Windows 身份已覆盖动态路径、进程、SQLite、CDP 启动、页面识别、串行、并发和部分恢复边界。当前主流程与资源指标证据以生产验收清单为准：QwenWorkCN 1.0.6.0 已在 `ff5d476...` 完成带指标的全新单 L1 闭环，四个核心 Token 均为 `observed`；当前源码候选为 execute 1.17.15 / Driver 1.12.2 / collector 1.1.3，生产真机证据仍绑定旧 execute/Driver 组合，重验前不得把旧证据直接升级到新身份。验收模型为 `标准｜Qwen3.8-Flash`，权限为 `full-access`；更换客户端大版本、Driver 核心实现或模型后仍须从只读 probe 和一至三个 L1 smoke 开始回归。
+QwenWorkCN 1.0.5.0 的历史 Windows 身份已覆盖动态路径、进程、SQLite、CDP 启动、页面识别、串行、并发和部分恢复边界。当前主流程与资源指标证据以生产验收清单为准：QwenWorkCN 1.0.6.0 已在 `ff5d476...` 完成带指标的全新单 L1 闭环，四个核心 Token 均为 `observed`；当前源码候选为 execute 1.21.0 / Driver 1.12.4 / collector 1.1.3，生产真机证据仍绑定旧 execute/Driver 组合，重验前不得把旧证据直接升级到新身份。验收模型为 `标准｜Qwen3.8-Flash`，权限为 `full-access`；更换客户端大版本、Driver 核心实现或模型后仍须从只读 probe 和一至三个 L1 smoke 开始回归。
 
 QwenWork 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、目录选择、权限/模型回读和 Prompt 发送始终由一个 Driver 串行完成；捕获稳定 `session_id`、`stream_id`、`local_project_id` 和绝对 cwd 后释放 UI Driver，由 Worker 轮流恢复原会话做一次性观察。任一题明确终态后释放后台槽位并动态补入下一题。
 

@@ -43,6 +43,7 @@ import {
   terminateQwenWorkProcess,
 } from "./platform.mjs";
 import { terminateCandidateWorkspaceProcesses } from "../workbuddy/platform.mjs";
+import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const QWEN_APPROVAL_PANEL_SELECTOR = [
@@ -129,11 +130,34 @@ export async function waitForQwenFolderSelectionLabel(
   const deadline = Date.now() + timeout;
   let selectedLabel = "";
   while (Date.now() <= deadline) {
-    selectedLabel = (await valueLocator.innerText().catch(() => "")).trim();
-    if (selectedLabel === expectedLabel) return selectedLabel;
+    const labels = [];
+    if (typeof valueLocator.count === "function" && typeof valueLocator.nth === "function") {
+      const count = await valueLocator.count();
+      for (let index = 0; index < count; index += 1) {
+        const candidate = valueLocator.nth(index);
+        labels.push((await candidate.innerText().catch(() => "")).trim());
+      }
+    } else {
+      labels.push((await valueLocator.innerText().catch(() => "")).trim());
+    }
+    const matches = labels.filter(label => label === expectedLabel);
+    if (matches.length > 1) throw new Error("QWENWORK_FOLDER_LABEL_AMBIGUOUS");
+    if (matches.length === 1) return expectedLabel;
+    selectedLabel = labels.find(Boolean) || "";
     await sleep(Math.min(pollInterval, Math.max(1, deadline - Date.now())));
   }
   throw new Error(`QwenWork 原生目录选择回读不一致：${selectedLabel || "<空>"} vs ${expectedLabel}`);
+}
+
+export async function selectQwenProjectPathPicker(dialog) {
+  const candidates = await visibleLocators(dialog.locator('[data-slot="path-picker-trigger"]'));
+  const projectPickers = [];
+  for (const candidate of candidates) {
+    const label = (await candidate.innerText().catch(() => "")).trim();
+    if (!/^(?:添加文件夹|Add folder)$/iu.test(label)) projectPickers.push(candidate);
+  }
+  if (projectPickers.length !== 1) throw new Error(`QwenWork 新建项目目录选择器数量异常：${projectPickers.length}`);
+  return projectPickers[0];
 }
 
 export function hasTrustedDomCompletion(dom) {
@@ -518,7 +542,23 @@ export async function prepareClientForNewAttempt(config, state, overrides = {}) 
   if (!(await isEndpointReady(config.endpoint))) {
     throw new Error(`QwenWork 未开放调试端口 ${config.endpoint}；请添加 --restart-app，或手工以 --remote-debugging-port 启动`);
   }
+  if (config.requireTokenExposure) {
+    state.client.token_reuse = await verifyRunningTokenClient(config, overrides);
+  }
   return null;
+}
+
+export async function verifyRunningTokenClient(config, overrides = {}) {
+  const identity = overrides.processIdentity || (() => qwenWorkProcessIdentity(config.appPath));
+  const runCommand = overrides.runCommand || runCapture;
+  const before = await identity();
+  if (!before?.pid || !before.started_at || !before.command
+      || !before.command.includes(`--remote-debugging-port=${new URL(config.endpoint).port}`)) throw new Error("QWENWORK_TOKEN_REUSE_IDENTITY_INVALID");
+  const env = await runCommand("/bin/ps", ["eww", "-p", String(before.pid)], { capture: true, allowFailure: true });
+  const after = await identity();
+  if (!after || before.pid !== after.pid || before.started_at !== after.started_at || before.command !== after.command) throw new Error("QWENWORK_TOKEN_REUSE_PROCESS_DRIFT");
+  if (env.code !== 0 || !/(?:^|\s)QODERCN_EXPOSE_TOKEN_USAGE=1(?:\s|$)/u.test(env.stdout || "")) throw new Error("QWENWORK_TOKEN_REUSE_EXPOSURE_UNVERIFIED");
+  return { verified: true, pid: before.pid, started_at: before.started_at, command_sha256: createHash("sha256").update(before.command).digest("hex"), token_usage_exposed: true };
 }
 
 async function visibleLocators(locator) {
@@ -743,8 +783,7 @@ async function createQwenProject(page, config, state, identityInfo, timeout) {
   const projectName = projectNameForAttempt(identityInfo, state);
   await dialog.getByRole("textbox", { name: "项目名称" }).fill(projectName, { timeout });
 
-  const pathPicker = dialog.locator('[data-slot="path-picker-trigger"]');
-  if (await pathPicker.count() !== 1) throw new Error("QwenWork 新建项目对话框缺少唯一的目录选择器");
+  const pathPicker = await selectQwenProjectPathPicker(dialog);
   await pathPicker.evaluate((element) => element.click());
   const native = await selectNativeFolder(config.appPath, config.workspace, config.timeoutSeconds);
   const expectedLabel = basename(config.workspace);

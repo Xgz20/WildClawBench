@@ -23,6 +23,8 @@ import {
   validateAbandonmentConnection,
   validateUserQuestionAbandonmentState,
   waitForQwenFolderSelectionLabel,
+  selectQwenProjectPathPicker,
+  verifyRunningTokenClient,
   waitForUniqueVisible,
   withOperationTimeout,
 } from "../driver.mjs";
@@ -89,7 +91,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.12.2");
+  assert.equal(state.driver.version, "1.12.4");
 });
 
 test("QwenWork 原生目录选择等待异步更新后的目录标签", async () => {
@@ -100,6 +102,40 @@ test("QwenWork 原生目录选择等待异步更新后的目录标签", async ()
     },
   };
   assert.equal(await waitForQwenFolderSelectionLabel(locator, "task-a", 100, 1), "task-a");
+});
+
+test("QwenWork 原生目录选择在多个控件中匹配唯一目标目录", async () => {
+  const values = ["", "task-a", "添加文件夹"];
+  const locator = {
+    count: async () => 3,
+    nth: index => ({ innerText: async () => values[index] }),
+  };
+  assert.equal(await waitForQwenFolderSelectionLabel(locator, "task-a", 100, 1), "task-a");
+});
+
+test("QwenWork 新建项目只选择工作目录控件并排除添加文件夹控件", async () => {
+  const project = { isVisible: async () => true, innerText: async () => "" };
+  const attachment = { isVisible: async () => true, innerText: async () => "添加文件夹" };
+  const dialog = { locator: selector => {
+    assert.equal(selector, '[data-slot="path-picker-trigger"]');
+    return { count: async () => 2, nth: index => index === 0 ? project : attachment };
+  } };
+  assert.equal(await selectQwenProjectPathPicker(dialog), project);
+});
+
+test("QwenWork queue reuses only a stable process with token exposure", async () => {
+  const cfg = { appPath: "/Applications/QwenWorkCN.app", endpoint: "http://127.0.0.1:9250" };
+  const proc = { pid: 17, started_at: "2026-10-01T00:00:00Z", command: "QwenWorkCN --remote-debugging-port=9250" };
+  const deps = { processIdentity: async () => proc, runCommand: async () => ({ code: 0, stdout: "QODERCN_EXPOSE_TOKEN_USAGE=1" }) };
+  assert.equal((await verifyRunningTokenClient(cfg, deps)).token_usage_exposed, true);
+  await assert.rejects(() => verifyRunningTokenClient(cfg, { ...deps, runCommand: async () => ({ code: 0, stdout: "" }) }), /EXPOSURE_UNVERIFIED/);
+  let reads = 0;
+  await assert.rejects(() => verifyRunningTokenClient(cfg, { ...deps, processIdentity: async () => ++reads === 1 ? proc : { ...proc, pid: 18 } }), /PROCESS_DRIFT/);
+});
+
+test("QwenWork refuses duplicated selected folder labels", async () => {
+  const locator = { count: async () => 2, nth: () => ({ innerText: async () => "task-a" }) };
+  await assert.rejects(() => waitForQwenFolderSelectionLabel(locator, "task-a", 100), /AMBIGUOUS/);
 });
 
 test("QwenWork 原生目录选择标签持续不一致时失败关闭", async () => {
