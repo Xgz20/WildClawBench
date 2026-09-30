@@ -9,7 +9,7 @@ export const DOUBAOWORK_WEB_ROUTE = Object.freeze({
   finalizer: "./drivers/doubaowork/finalizer.mjs",
   formal_execution_receipt: true,
   batch: true,
-  run_slots: 1,
+  run_slots: 3,
   max_run_slots: 3,
   metrics: {
     registered: true,

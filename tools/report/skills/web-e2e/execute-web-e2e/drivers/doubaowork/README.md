@@ -21,7 +21,13 @@ bash <skill-dir>/scripts/run-doubaowork.sh --resume --formal-receipt \
   --output-dir <harness-root>/.execute-web-e2e/doubao-single --observe-seconds 60
 ```
 
-持续恢复同一 attempt，直到正式回执或明确需要处理的状态。观察窗口不是任务时限；发送不确定不能重发。未传 `--formal-receipt` 仍为开发观察路径。多题串行入口为 `run-doubaowork.sh --batch --harness-root <根> --run-id <ID> --run-slots 1`；它按 manifest 顺序逐题调用同一 Driver，完整任务集合收口后才发布根回执。恢复加 `--resume`，已发送题不重发。并发执行槽保持关闭。
+持续恢复同一 attempt，直到正式回执或明确需要处理的状态。观察窗口不是任务时限；发送不确定不能重发。未传 `--formal-receipt` 仍为开发观察路径。多题入口默认使用 `runSlots=3`（`ui_slots=1`，后台执行槽为3），可显式传 `--run-slots 1` 回退串行：
+
+```bash
+bash <skill-dir>/scripts/run-doubaowork.sh --batch --harness-root <根> --run-id web-batch-01 --run-slots 3
+```
+
+它按 manifest 顺序派发 UI 操作，按绑定的原生会话动态补位，完整任务集合收口后才发布根回执。恢复加 `--resume`，已发送题不重发；并发执行仅在当前发行的前后台绑定和隔离证据通过后使用。
 
 ## 原生证据与收口
 

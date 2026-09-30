@@ -25,16 +25,16 @@ bash <skill-dir>/scripts/run-doubaowork.sh --resume --formal-receipt \
   --output-dir <harness-root>/.execute-web-e2e/doubao-single --observe-seconds 60
 ```
 
-多题 prepared manifest 使用串行队列；队列固定 `ui_slots=1/run_slots=1`，默认按 manifest 有序执行，只有全部任务收口后才发布完整根回执。队列状态位于 Harness 根下 `.execute-web-e2e/doubaowork-batch/<run-id>/`，同一 run 的恢复必须显式 `--resume`，每题仍由自身一次发送 journal 决定是否只读观察：
+多题 prepared manifest 使用队列；`ui_slots=1`、默认 `run_slots=3`（可显式回退到1），按 manifest 顺序派发 UI 操作并按绑定原生会话动态补位，只有全部任务收口后才发布完整根回执。队列状态位于 Harness 根下 `.execute-web-e2e/doubaowork-batch/<run-id>/`，同一 run 的恢复必须显式 `--resume`，每题仍由自身一次发送 journal 决定是否只读观察：
 
 ```bash
 bash <skill-dir>/scripts/run-doubaowork.sh --batch --harness-root <harness-root> \
-  --run-id web-serial-01 --run-slots 1
+  --run-id web-batch-01 --run-slots 3
 bash <skill-dir>/scripts/run-doubaowork.sh --batch --harness-root <harness-root> \
-  --run-id web-serial-01 --run-slots 1 --resume
+  --run-id web-batch-01 --run-slots 3 --resume
 ```
 
-队列发现旧子进程仍存活、journal 缺失或待人工处理时失败关闭；显式 `--resume --continue-attention` 仅观察已登记一次发送的原 attempt。默认项目名包含根路径与 run ID 摘要，避免与其他批次同名。`--run-slots 2` 或 `3` 只在原生同伴绑定、前后台隔离与动态补位的对应发行包真机验收后准入；未验收时保持 1。
+队列发现旧子进程仍存活、journal 缺失或待人工处理时失败关闭；显式 `--resume --continue-attention` 仅观察已登记一次发送的原 attempt。默认项目名包含根路径与 run ID 摘要，避免与其他批次同名。DoubaoWork 的3槽默认值只有在当前发行的原生同伴绑定、前后台隔离与动态补位验收完成后用于生产批次；验证阶段可显式使用 `--run-slots 1`。
 
 持续对原 attempt 执行 `--resume`，观察窗口不是 Harness 超时。原生会话/请求/完整目录/Prompt、当前空闲、原始轨迹及来源一致性通过后才清理本题进程、冻结候选、写回执。遇到人工确认或发送不确定停止自动推进，禁止重发。原生错误映射为 `execution_error` 并禁止评分；缺失 Token/请求账本保留 null，不用上下文占用率代替消耗。发布中断可从冻结事务恢复；已发布则只读复验，不覆盖回执。批量入口继续拒绝。详见 [Driver 说明](drivers/doubaowork/README.md)。
 

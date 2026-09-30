@@ -31,13 +31,14 @@ export function isAllowedDriverUpgrade(previous, current = DRIVER_VERSION) {
 }
 
 export function parseBatchArgs(argv) {
-  const result = { resume: false, status: false, continueAttention: false, recoverStaleLock: false, adoptDriverVersion: false, adoptBatchVersion: false, runSlots: 1, observeSeconds: 60, projectPrefix: null };
+  const result = { resume: false, status: false, continueAttention: false, recoverStaleLock: false, adoptDriverVersion: false, adoptBatchVersion: false, runSlots: 3, runSlotsExplicit: false, observeSeconds: 60, projectPrefix: null };
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i];
     if (["--resume", "--status", "--continue-attention", "--recover-stale-lock", "--adopt-driver-version", "--adopt-batch-version"].includes(key)) { result[{ "--resume": "resume", "--status": "status", "--continue-attention": "continueAttention", "--recover-stale-lock": "recoverStaleLock", "--adopt-driver-version": "adoptDriverVersion", "--adopt-batch-version": "adoptBatchVersion" }[key]] = true; continue; }
     if (!["--harness-root", "--run-id", "--run-slots", "--observe-seconds", "--project-prefix", "--endpoint", "--app-path"].includes(key)
         || i + 1 >= argv.length) throw new Error(`DOUBAOWORK_WEB_BATCH_ARG_INVALID:${key}`);
     const value = argv[++i];
+    if (key === "--run-slots") result.runSlotsExplicit = true;
     result[{ "--harness-root": "harnessRoot", "--run-id": "runId", "--run-slots": "runSlots", "--observe-seconds": "observeSeconds",
       "--project-prefix": "projectPrefix", "--endpoint": "endpoint", "--app-path": "appPath" }[key]] = value;
   }
@@ -113,6 +114,14 @@ export function createBatchState(plan, args) {
     tasks: plan.tasks.map(t => ({ ...t, phase: "PENDING", manual_interventions: [], child_pid: null,
       child_start_identity: null, launch_count: 0, attempt_id_sha256: null, final_sha256: null })),
     history: [{ event: "QUEUE_CREATED", at: new Date().toISOString() }] };
+}
+
+export function applyFrozenRunSlots(args, state) {
+  if (args.resume && state && !args.runSlotsExplicit) {
+    if (!Number.isInteger(state.run_slots) || state.run_slots < 1 || state.run_slots > 3) throw new Error("DOUBAOWORK_WEB_BATCH_FROZEN_SLOTS_INVALID");
+    args.runSlots = state.run_slots;
+  }
+  return args;
 }
 
 async function processStart(pid) {
@@ -270,7 +279,8 @@ async function publishBatchReceipt(plan, state, save) {
 
 export async function main(argv = process.argv.slice(2)) {
   const args = parseBatchArgs(argv), plan = await planFor(args);
-  const old = await readOrdinaryJson(plan.paths.stateFile);
+  let old = await readOrdinaryJson(plan.paths.stateFile);
+  applyFrozenRunSlots(args, old);
   if (args.status) { if (!old) throw new Error("DOUBAOWORK_WEB_BATCH_STATE_MISSING"); assertStateMatches(old, plan, args, { allowVersionDrift: true, allowWorkerVersionDrift: true });
     return { phase: old.phase, tasks: old.tasks.map(t => ({ task_id: t.task_id, phase: t.phase })), run_id: old.run_id }; }
   if (args.adoptBatchVersion && !args.resume) throw new Error("DOUBAOWORK_WEB_BATCH_WORKER_ADOPTION_REQUIRES_RESUME");

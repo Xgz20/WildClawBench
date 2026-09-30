@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createBatchState, nextTaskAction, selectBatchTaskAction, summarizeBatchConcurrency, parseBatchArgs, planFor, assertStateMatches, isAllowedDriverUpgrade } from "../batch.mjs";
+import { applyFrozenRunSlots, createBatchState, nextTaskAction, selectBatchTaskAction, summarizeBatchConcurrency, parseBatchArgs, planFor, assertStateMatches, isAllowedDriverUpgrade } from "../batch.mjs";
 
 const ids = ["07_Website_Generation_task_fixture_1", "07_Website_Generation_task_fixture_2", "07_Website_Generation_task_fixture_3"];
 
@@ -13,6 +13,21 @@ test("DoubaoWork batch adopts only explicit adjacent Driver releases", () => {
   assert.equal(isAllowedDriverUpgrade("0.8.0", "0.8.1"), true);
   assert.equal(isAllowedDriverUpgrade("0.7.7", "0.8.1"), false);
   assert.equal(isAllowedDriverUpgrade("0.8.1", "0.8.1"), false);
+});
+
+test("DoubaoWork batch defaults to three background execution slots", () => {
+  const args = parseBatchArgs(["--harness-root", "/tmp/harness", "--run-id", "fixture-run"]);
+  assert.equal(args.runSlots, 3);
+  assert.equal(parseBatchArgs(["--harness-root", "/tmp/harness", "--run-id", "fixture-run", "--run-slots", "1"]).runSlots, 1);
+});
+
+test("DoubaoWork resume inherits frozen slots when --run-slots is omitted", () => {
+  const args = parseBatchArgs(["--harness-root", "/tmp/harness", "--run-id", "fixture-run", "--resume"]);
+  applyFrozenRunSlots(args, { run_slots: 1 });
+  assert.equal(args.runSlots, 1);
+  const explicit = parseBatchArgs(["--harness-root", "/tmp/harness", "--run-id", "fixture-run", "--resume", "--run-slots", "3"]);
+  applyFrozenRunSlots(explicit, { run_slots: 1 });
+  assert.equal(explicit.runSlots, 3);
 });
 async function fixture(t) {
   const raw = await mkdtemp(join(tmpdir(), "doubao-web-batch-"));
@@ -37,6 +52,7 @@ test("Batch freezes exactly the manifest task order and resumes without treating
   assertStateMatches(state, plan, args);
   await writeFile(join(root, "execution", "tasks", ids[0], "workspace", "generated.html"), "<h1>done</h1>");
   const resumedArgs = parseBatchArgs(["--harness-root", root, "--run-id", "fixture-run", "--resume"]);
+  applyFrozenRunSlots(resumedArgs, state);
   const resumed = await planFor(resumedArgs);
   assert.equal(resumed.tasks[0].initial_sha256, null);
   assertStateMatches(state, resumed, resumedArgs);

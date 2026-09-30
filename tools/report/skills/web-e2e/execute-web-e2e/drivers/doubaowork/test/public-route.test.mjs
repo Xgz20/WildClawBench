@@ -10,6 +10,6 @@ test("public route registers metrics and consumes the existing bridge", () => {
 });
 
 test("public route allows serial batch and explicit single-task receipts", () => {
-  assert.equal(resolveDoubaoWorkWebRoute({ batch: true }).run_slots, 1);
+  assert.equal(resolveDoubaoWorkWebRoute({ batch: true }).run_slots, 3);
   assert.equal(resolveDoubaoWorkWebRoute({ formalReceipt: true }).formal_execution_receipt, true);
 });

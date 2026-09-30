@@ -124,7 +124,7 @@ Skill 包目录：/absolute/path/<batch_id>/packages
 2. 解压题目包，建立独立 worker 工作目录。
 3. 自动检查和安装执行、评分所需的锁定依赖。
 4. 使用题目包声明的被评测 Harness，以客户端当前模型和推理强度执行全部题目，权限使用 `full-access`。
-5. 三个 Harness 的默认值均为 3 路执行并发、最大 8。任一题明确结束并通过回执校验后动态补入下一题。
+5. AstronStudio、WorkBuddy、QwenWork、DoubaoWork 四个 Harness 的默认值均为 3 路执行并发、最大 8；DoubaoWork 当前正式队列仍按其已验收边界使用单槽。任一题明确结束并通过回执校验后动态补入下一题。
 6. 校验执行回执后合入评分包。
 7. 默认创建 3 个并发 Codex Desktop 评分任务，每题使用独立项目、任务、Browser 和端口。
 8. 生成 `submission.json`、完整回传 ZIP 和外部 SHA-256 回执。
@@ -235,10 +235,10 @@ QwenWork 执行并发和 Codex Desktop 评分并发都设为 1。
 保持并回读 WorkBuddy 当前模型，不修改推理强度，权限使用 full-access。
 执行和评分均使用默认并发 3；Codex Desktop CDP 使用 http://127.0.0.1:9230。
 准备完成后从 execution ZIP 解压独立 worker 根，不要直接使用管理员 staging 根做题或评分。
-最终生成并校验回传 ZIP、外部回执、报告 JSON、领导版 Markdown 和三 Sheet Excel。
+最终生成并校验回传 ZIP、外部回执、报告 JSON、领导版 Markdown 和四 Sheet Excel；Excel 包含总览、效率对比、难度对比和用例对比明细。
 ```
 
-如果本次包含资源指标，Prompt 还应明确要求：执行 Driver 在终态采集 `execution_record.json`，评分与回传只透传资源字段，报告阶段检查三个 Harness 的资源覆盖率。报告总量只接受 `observed`/`inferred`/`legacy`；`masked`、`unverified`、`partial` 和 `unavailable` 必须显示为空值、已知小计及覆盖率，不能补成 0。核心字段包括输入/输出/总 Token、缓存读取 Token、执行流程耗时、智能体耗时、模型请求数和工具调用数；没有可靠原生来源的缓存写入 Token、推理输出 Token 和完整 HTTP 尝试次数保持为空。
+如果本次包含资源指标，Prompt 还应明确要求：执行 Driver 在终态采集 `execution_record.json`，评分与回传只透传资源字段，报告阶段检查四个 Harness 的资源覆盖率。报告总量只接受 `observed`/`inferred`/`legacy`；`masked`、`unverified`、`partial` 和 `unavailable` 必须显示为空值、已知小计及覆盖率，不能补成 0。核心字段包括输入/输出/总 Token、缓存读取 Token、执行流程耗时、智能体耗时、模型请求数和工具调用数；没有可靠原生来源的缓存写入 Token、推理输出 Token 和完整 HTTP 尝试次数保持为空。Excel 的 `效率对比` Sheet 与总览都必须呈现这些字段及覆盖状态。
 
 控制 Harness 会在仓库自身环境和 Skill Driver 目录准备必要依赖，不会在候选网站目录安装依赖。完整流程结束后会返回：
 
@@ -402,7 +402,7 @@ Codex Desktop CDP：http://127.0.0.1:9230
 
 ### 5. `report-web-e2e`
 
-功能：汇总一个或多个已校验回传包，生成报告数据 JSON、领导版 Markdown 和三 Sheet Excel。
+功能：汇总一个或多个已校验回传包，生成报告数据 JSON、领导版 Markdown 和四 Sheet Excel；效率对比 Sheet 展示 Token、模型请求数、工具调用数、任务耗时及智能体耗时，并保留覆盖率。
 
 ```text
 请使用 $report-web-e2e 汇总下面 Web E2E 回传包：
