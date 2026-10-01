@@ -66,10 +66,15 @@ export function normalizeVerifiedNonSuccessToolSubset(snapshot, options, { nonSu
   try { return { ...normalizeNativeToolEvents(snapshot, options), dropped_failed_upload_count: 0 }; }
   catch (error) {
     if (!nonSuccessVerified && error.message === "NATIVE_TOOL_CAPTURE_INCOMPLETE"
-        && Array.isArray(snapshot?.events) && Array.isArray(snapshot?.ledger)) {
+        && Array.isArray(snapshot?.events) && Array.isArray(snapshot?.ledger)
+        && Array.isArray(snapshot.errors) && snapshot.errors.length === 0
+        && snapshot.unknown_context_events === 0
+        && Array.isArray(snapshot.contexts) && !snapshot.contexts.some(c => c.active_delivery)) {
       const started = new Set(snapshot.events.filter(e => e.phase === "started").map(e => e.tool_call_id));
       const settled = new Set(snapshot.events.filter(e => e.phase === "settled").map(e => e.tool_call_id));
       const completeIds = new Set([...started].filter(id => settled.has(id)));
+      const sourceIds = new Set([...snapshot.ledger.map(row => row.toolCallId), ...snapshot.events.map(row => row.tool_call_id)]);
+      const retainedIndexes = snapshot.events.flatMap((event, index) => completeIds.has(event.tool_call_id) ? [index] : []);
       const ledger = snapshot.ledger.filter(row => completeIds.has(row.toolCallId));
       const samples = Array.isArray(snapshot.ledger_samples)
         ? snapshot.ledger_samples.filter(sample => completeIds.has(sample.row?.toolCallId)) : undefined;
@@ -91,15 +96,18 @@ export function normalizeVerifiedNonSuccessToolSubset(snapshot, options, { nonSu
           errors: Array.isArray(snapshot.errors) ? [...snapshot.errors] : [],
           unknown_context_events: Number.isInteger(snapshot.unknown_context_events) ? snapshot.unknown_context_events : 0,
           ledger_at_capacity: snapshot.ledger_at_capacity === true,
+          contexts: structuredClone(snapshot.contexts),
           source_ledger_count: snapshot.ledger.length,
           verified_ledger_count: ledger.length,
           source_event_count: Array.isArray(snapshot.events) ? snapshot.events.length : 0,
           verified_event_count: partial.events.length,
         };
-        return { ...verified, status: "partial", scope: "bound-native-agent-capture-complete-subset",
+        return { ...verified,
+          events: verified.events.map((event, index) => ({ ...event, raw_event_index: retainedIndexes[index] })),
+          status: "partial", scope: "bound-native-agent-capture-complete-subset",
           capture_incomplete: true,
           capture_diagnostics: captureDiagnostics,
-          dropped_incomplete_tool_count: Math.max(0, snapshot.ledger.length - ledger.length),
+          dropped_incomplete_tool_count: sourceIds.size - ledger.length,
           dropped_failed_upload_count: 0 };
       } catch {
         // Preserve the strict failure if the complete subset cannot be bound.
@@ -128,13 +136,6 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   const control = dirname(journalFile), runtimeBytes = await boundArtifact(control, journal.native_observation.artifact);
   const runtime = JSON.parse(runtimeBytes), native = normalizeRuntimeMessages(runtime, journal);
   if (inspectNativeAuthorizationHistory(runtime, native.native_request_session_id).length) throw new Error("DOUBAOWORK_NATIVE_AUTHORIZATION_HISTORY_UNACCOUNTED");
-  // The native message projection can omit cwd even though the bound runtime
-  // session captured it before the client refreshed its message store. Keep
-  // the exact journal binding when it matches the prepared workspace.
-  if (!native.native_cwd && journal.session?.native_cwd === workspace) {
-    native.native_cwd = workspace;
-    native.sources.native_cwd = "journal.session.native_cwd";
-  }
   let lifecycleBytes = null, lifecycle = null;
   if (journal.native_observation.native_lifecycle_artifact) {
     lifecycleBytes = await boundArtifact(control, journal.native_observation.native_lifecycle_artifact);
@@ -157,12 +158,7 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   } else if (native.terminal === "failed") {
     terminalObservationBytes = await boundArtifact(control, journal.native_failure_observation);
     failure = verifyFailureEvidence({ state: journal, native, runtime, observation: JSON.parse(terminalObservationBytes) });
-  } else if (native.terminal === "completed" && native.finished_at) {
-    // already verified by the message projection
-  } else if (lifecycle?.status === "observed" && lifecycle.finished_at && native.terminal === "unverified") {
-    native.terminal = "completed";
-    native.sources.terminal = "native-checkpoint-lifecycle";
-  } else throw new Error("DOUBAOWORK_NATIVE_TERMINAL_OR_TIME_UNAVAILABLE");
+  } else if (native.terminal !== "completed" || !native.finished_at) throw new Error("DOUBAOWORK_NATIVE_TERMINAL_OR_TIME_UNAVAILABLE");
   const nonSuccess = cancellation ?? failure;
   let recoveryAckBytes = null, recoveryAcknowledgement = null;
   if (journal.send.recovery_ack || journal.send.acceptance_source) {
@@ -182,16 +178,19 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
       sentAt: journal.timing.sent_at, finishedAt: nonSuccess?.observed_at ?? native.finished_at },
     { nonSuccessVerified: nonSuccess?.verified === true });
   }
-  const nativeToolCoverageDiagnostic = nativeTools?.dropped_failed_upload_count
-    ? { status: "partial", reason: "native-tool-upload-failed-before-terminal", uploaded_count: nativeTools.known_subtotal,
-      failed_upload_count: nativeTools.dropped_failed_upload_count } : null;
+  const nativeToolCoverageDiagnostic = nativeTools?.capture_incomplete
+    ? { status: "partial", reason: "native-tool-capture-incomplete", verified_count: nativeTools.known_subtotal,
+      dropped_incomplete_tool_count: nativeTools.dropped_incomplete_tool_count, capture: nativeTools.capture_diagnostics }
+    : nativeTools?.dropped_failed_upload_count
+      ? { status: "partial", reason: "native-tool-upload-failed-before-terminal", uploaded_count: nativeTools.known_subtotal,
+        failed_upload_count: nativeTools.dropped_failed_upload_count } : null;
   const assistant = Object.values(runtime.maps.messageMap).find(m => m.message_id === native.reply_message_id);
   const supportedBlocks = new Set(["text_block", "thinking_block", "elapsed_block", "file_operation_block", "local_file_block", "generic_tool_block"]);
   const unknownBlocks = (assistant.content_blocks_v2 || []).filter(b => Object.entries(b.content || {}).some(([k, v]) => !supportedBlocks.has(k)
     && !(k === "pc_event_block" && v === "")));
   const multimodalBypassCount = (nativeTools?.events || []).filter(e => e.phase === "settled"
     && e.output?.structuredResultFacts?.localFileReadV2Bypass?.reason === "image").length;
-  let completeToolTrace = !nonSuccess && Boolean(nativeTools) && unknownBlocks.length === 0 && multimodalBypassCount === 0;
+  let completeToolTrace = !nonSuccess && Boolean(nativeTools) && nativeTools.status !== "partial" && unknownBlocks.length === 0 && multimodalBypassCount === 0;
   const missingToolDisplays = [];
   if (nativeTools && nativeTools.known_subtotal === 0 && assistant.content_blocks_v2.some(b => b.content?.file_operation_block)) {
     if (!nonSuccess) throw new Error("DOUBAOWORK_TOOL_DISPLAY_WITHOUT_NATIVE_EVENTS");

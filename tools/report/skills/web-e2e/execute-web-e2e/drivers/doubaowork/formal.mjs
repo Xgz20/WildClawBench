@@ -35,12 +35,16 @@ export async function validateFormalResume(state) {
 export function projectWebMetrics(proof, calls) {
   const result = empty("NATIVE_TOKEN_AND_REQUEST_ACCOUNTING_UNAVAILABLE");
   const knownSubtotal = proof.nativeToolCoverageDiagnostic ? proof.nativeTools.known_subtotal : calls;
-  const known = !proof.nonSuccess && Boolean(proof.nativeTools) && !proof.unknownBlocks.length && proof.remoteCoverageVerified;
+  const known = !proof.nonSuccess && Boolean(proof.nativeTools) && proof.nativeTools.status !== "partial" && !proof.unknownBlocks.length && proof.remoteCoverageVerified;
   setMetric(result, "tools", "call_count", known ? calls : null, known ? "observed" : "partial", "Bound native tool IDs and session trajectory union");
   if (!known) {
     result.collection.metrics.call_count.status = "partial";
     result.collection.known_subtotals = { call_count: knownSubtotal };
-    if (proof.nativeToolCoverageDiagnostic) result.collection.warnings.push("NATIVE_TOOL_UPLOAD_FAILED_BEFORE_TERMINAL");
+    if (proof.nativeToolCoverageDiagnostic) {
+      result.collection.warnings.push(proof.nativeTools.capture_incomplete
+        ? "NATIVE_TOOL_CAPTURE_INCOMPLETE" : "NATIVE_TOOL_UPLOAD_FAILED_BEFORE_TERMINAL");
+      result.collection.native_tool_coverage_diagnostic = proof.nativeToolCoverageDiagnostic;
+    }
   }
   setMetric(result, "execution", "agent_duration_seconds", proof.native.agent_duration_seconds, "observed", "Native elapsed_block duration");
   const duration = proof.nonSuccess ? (Date.parse(proof.nonSuccess.observed_at) - Date.parse(proof.journal.timing.sent_at)) / 1000

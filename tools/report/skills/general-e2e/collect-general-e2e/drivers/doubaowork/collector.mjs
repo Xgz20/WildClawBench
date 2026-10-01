@@ -130,7 +130,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
     completeness: { status: completeToolTrace ? "complete" : "partial", omitted_event_count: 0,
       missing: completeToolTrace ? [] : [...(cancellation ? ["native-task-cancelled-before-complete-trace"] : failure ? ["native-task-failed-before-complete-trace"] : []), ...(!trajectory ? ["native-trajectory-unavailable"] : []),
         ...(multimodalBypassCount ? ["multimodal-tool-result-content-unverified"] : []),
-        ...(nativeToolCoverageDiagnostic ? ["native-tool-upload-failed-before-terminal"] : []),
+        ...(nativeToolCoverageDiagnostic ? [nativeToolCoverageDiagnostic.reason] : []),
         ...(trajectoryPromptBinding.status !== "verified" ? [trajectoryPromptBinding.reason] : []),
         ...(missingToolDisplays.length ? [nonSuccess ? "non-success-tool-display-without-execution-evidence"
           : "displayed-tool-without-execution-evidence"] : []),
@@ -142,7 +142,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
       filtered_native_event_count: allNativeEvents.length + (nativeTools?.events.length || 0) + 2 - events.length,
       compatibility_profiles: ["doubaowork-native-im/v1", "doubaowork-trajectory-replay-dedup/v1", ...(nativeTools ? ["doubaowork-local-tool-debug-sink/v1"] : [])] } };
   let toolCounts = null;
-  if (!nonSuccess && nativeToolBytes && trajectoryPromptBinding.status === "verified") {
+  if (!nonSuccess && nativeToolBytes && nativeTools?.status !== "partial" && trajectoryPromptBinding.status === "verified") {
     try {
       toolCounts = countBoundTools({ execution: { identity, execution: state.execution }, state, index,
         transcript: events, runtime, journal, nativeSnapshot: JSON.parse(nativeToolBytes) });
@@ -158,7 +158,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const metric = (value = null, basis = "No verified native accounting profile for this metric") => ({ value, status: value === null ? "unavailable" : "observed", basis });
   const usageFields = ["input_tokens", "output_tokens", "total_tokens", "cache_read_input_tokens", "cache_creation_input_tokens", "reasoning_output_tokens"];
   const fields = [...usageFields, "request_count", "request_attempt_count", "call_count", "duration_seconds", "agent_duration_seconds"];
-  const toolCountKnown = toolCounts?.status === "complete" || !nonSuccess && Boolean(nativeTools) && unknownBlocks.length === 0 && remoteCoverageVerified;
+  const toolCountKnown = toolCounts?.status === "complete" || !nonSuccess && Boolean(nativeTools) && nativeTools.status !== "partial" && unknownBlocks.length === 0 && remoteCoverageVerified;
   const knownToolSubtotal = toolCounts?.total ?? (nativeToolCoverageDiagnostic ? nativeTools.known_subtotal : calls.size);
   const metrics = { usage: Object.fromEntries(usageFields.map(k => [k, metric()])), requests: { request_count: metric(), request_attempt_count: metric() },
     tools: { call_count: toolCountKnown ? metric(knownToolSubtotal, toolCounts?.basis || "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance")

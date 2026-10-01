@@ -93,8 +93,8 @@ test("Periodic uploaded-ledger observations survive native TTL eviction without 
   assert.throws(() => normalizeVerifiedNonSuccessToolSubset(unsupported, opts, { nonSuccessVerified: true }), /NATIVE_TOOL_LEDGER_INVALID/);
   const incomplete = structuredClone(snapshot);
   incomplete.overflow = true;
-  incomplete.errors = ["NATIVE_TOOL_DEBUG_SINK_REPLACED"];
-  incomplete.unknown_context_events = 2;
+  incomplete.errors = [];
+  incomplete.unknown_context_events = 0;
   incomplete.ledger_at_capacity = true;
   incomplete.ledger.push({ ...nativeRow, toolCallId: "incomplete-call" });
   const incompletePartial = normalizeVerifiedNonSuccessToolSubset(incomplete, opts);
@@ -103,16 +103,29 @@ test("Periodic uploaded-ledger observations survive native TTL eviction without 
   assert.equal(incompletePartial.dropped_incomplete_tool_count, 1);
   assert.deepEqual(incompletePartial.capture_diagnostics, {
     overflow: true,
-    errors: ["NATIVE_TOOL_DEBUG_SINK_REPLACED"],
-    unknown_context_events: 2,
+    errors: [],
+    unknown_context_events: 0,
     ledger_at_capacity: true,
+    contexts: structuredClone(incomplete.contexts),
     source_ledger_count: 2,
     verified_ledger_count: 1,
     source_event_count: 2,
     verified_event_count: 2,
   });
-  assert.equal(incomplete.errors.length, 1);
+  assert.equal(incomplete.errors.length, 0);
   assert.equal(incomplete.ledger_at_capacity, true);
+  for (const mutate of [s => s.errors.push("NATIVE_TOOL_RETAINED_LEDGER_CONFLICT"),
+    s => s.unknown_context_events = 1, s => s.contexts[0].active_delivery = true,
+    s => s.installed_at = new Date(start + 1).toISOString(),
+    s => s.events[0].native_cwd = "/foreign", s => s.ledger[0].result.content = "drift"]) {
+    const invalid = structuredClone(incomplete); mutate(invalid);
+    assert.throws(() => normalizeVerifiedNonSuccessToolSubset(invalid, opts), /NATIVE_TOOL_/);
+  }
+  const gap = structuredClone(incomplete);
+  gap.events.unshift({ ...gap.events[0], tool_call_id: "orphan-start" });
+  const gapPartial = normalizeVerifiedNonSuccessToolSubset(gap, opts);
+  assert.deepEqual(gapPartial.events.map(e => e.raw_event_index), [1, 2]);
+  assert.equal(gapPartial.dropped_incomplete_tool_count, 2);
   assert.equal(snapshot.ledger.length, 1);
   assert.equal(snapshot.ledger_samples[0].observed_at_ms, start + 1000);
   assert.equal(snapshot.ledger[0].cachedAtMs, start);
