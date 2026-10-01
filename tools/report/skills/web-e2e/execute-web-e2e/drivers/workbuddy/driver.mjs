@@ -791,15 +791,15 @@ async function findPromptEditor(page, timeout) {
   throw new Error("找不到 Prompt 输入框");
 }
 
-async function fillPromptEditor(editor, prompt, timeout) {
+async function fillPromptEditor(page, editor, prompt, timeout) {
   try {
     await editor.fill(prompt, { timeout });
     return "fill";
   } catch (error) {
     await editor.click({ timeout });
-    await editor.press("ControlOrMeta+A", { timeout });
-    await editor.type(prompt, { timeout });
-    return "type-fallback";
+    await page.keyboard.press("ControlOrMeta+A");
+    await page.keyboard.insertText(prompt);
+    return "keyboard-insert-fallback";
   }
 }
 
@@ -1701,7 +1701,7 @@ async function runAutomation(config, identityInfo) {
     await takeScreenshot(page, config, state, "06-model-selected.png");
     const editor = await findPromptEditor(page, timeout);
     await editor.click({ timeout });
-    state.prompt_input_method = await fillPromptEditor(editor, config.prompt, timeout);
+    state.prompt_input_method = await fillPromptEditor(page, editor, config.prompt, timeout);
     await takeScreenshot(page, config, state, "07-prompt-filled.png");
 
     state.session.baseline = (await querySessions(config.sessionDb))

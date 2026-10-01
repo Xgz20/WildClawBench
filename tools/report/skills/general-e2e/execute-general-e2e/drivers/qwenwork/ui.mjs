@@ -517,8 +517,8 @@ export async function fillQwenPrompt(page, prompt, timeoutMilliseconds = 30_000)
     await editor.fill(prompt, { timeout: timeoutMilliseconds });
   } catch (error) {
     await editor.click({ timeout: timeoutMilliseconds });
-    await editor.press("ControlOrMeta+A", { timeout: timeoutMilliseconds });
-    await editor.type(prompt, { timeout: timeoutMilliseconds });
+    await page.keyboard.press("ControlOrMeta+A");
+    await page.keyboard.insertText(prompt);
   }
   const readback = await readQwenPrompt(page);
   if (readback !== prompt) throw new Error("QWENWORK_PROMPT_READBACK_MISMATCH");
