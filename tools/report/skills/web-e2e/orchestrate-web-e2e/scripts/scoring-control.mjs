@@ -1573,7 +1573,17 @@ export async function prepareRetry(packageRoot, taskId, retryReason, options = {
   const { plan, state } = await loadControl(packageRoot);
   const task = requireTask(state, taskId);
   const attempt = currentAttempt(task);
-  if (!new Set(["FAILED", "TIMED_OUT"]).has(task.phase)) throw new Error(`当前任务状态不能重试：${task.phase}`);
+  let completedEvaluationError = false;
+  if (task.phase === "COMPLETED") {
+    const score = await loadJson(task.score_file).catch((error) => {
+      if (error?.code === "ENOENT") return null;
+      throw error;
+    });
+    completedEvaluationError = score?.evaluation?.status === "evaluation_error";
+  }
+  if (!new Set(["FAILED", "TIMED_OUT"]).has(task.phase) && !completedEvaluationError) {
+    throw new Error(`当前任务状态不能重试：${task.phase}`);
+  }
   if (!attempt?.terminal_status) throw new Error("原评分任务终态尚未确认，禁止创建重试任务");
   if (task.retry_count >= task.max_retries) throw new Error(`评分任务已达到最大重试次数：${task.max_retries}`);
   const privateRoot = join(task.score_dir, "private-scoring");

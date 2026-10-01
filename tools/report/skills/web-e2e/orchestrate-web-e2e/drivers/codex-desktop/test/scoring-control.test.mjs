@@ -949,6 +949,29 @@ test("a completed final score atomically builds submission exactly once", async 
   assert.deepEqual(submission.task_ids, ["task-1"]);
 });
 
+test("completed evaluation_error scores remain retryable and archive the failed attempt", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
+  await writeValidScore(root, "task-1");
+  const scoreFile = join(root, "score", "tasks", "task-1", "private-scoring", "task_score.json");
+  const score = JSON.parse(await readFile(scoreFile, "utf8"));
+  score.evaluation = { status: "evaluation_error", error: "Codex Desktop Browser unavailable", criteria: [] };
+  await writeJson(scoreFile, score);
+  const completed = await markComplete(root, "task-1");
+  assert.equal(completed.tasks[0].phase, "COMPLETED");
+  const retry = await prepareRetry(root, "task-1", "retry after temporary Browser unavailability");
+  assert.equal(retry.tasks[0].phase, "PROJECT_REGISTERED");
+  assert.equal(retry.tasks[0].retry_count, 1);
+  const receiptPath = join(root, retry.tasks[0].attempts[0].error_receipt.path);
+  const receipt = JSON.parse(await readFile(receiptPath, "utf8"));
+  assert.equal(receipt.retry.reason, "retry after temporary Browser unavailability");
+  assert.equal(retry.tasks[0].preflight.status, "PENDING");
+});
+
 test("submission resumes idempotently after interruption at the publish boundary", async () => {
   const root = await fixture();
   const { state } = await initialize(root);
