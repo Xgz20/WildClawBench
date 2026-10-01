@@ -398,7 +398,7 @@ Codex Desktop CDP：http://127.0.0.1:9230
 严格按 private-scoring/task_contract.json 操作网站并保存证据，只访问当前项目，不访问父目录或其他题目。候选 workspace 只读；评分完成后生成 private-scoring/task_score.json。
 ```
 
-如果浏览器不可用、站点无法安全启动或证据不足，Skill 会记录 `evaluation_error`，不会把评分基础设施问题伪装成候选零分。
+如果浏览器不可用、站点无法安全启动或证据不足，Skill 会记录 `evaluation_error`，不会把评分基础设施问题伪装成候选零分。该结果可以由编排器归档为独立 attempt 后重试；重试会恢复评分初始输入并重新执行 preflight，只有产生有效 `task_score.json` 才进入正式 submission。
 
 ### 5. `report-web-e2e`
 
@@ -427,6 +427,7 @@ Codex Desktop CDP：http://127.0.0.1:9230
 - AstronStudio、WorkBuddy、QwenWork、DoubaoWork 的默认执行并发均为 3、UI 操作始终只有一路；前三端最大 8，DoubaoWork 最大 3。新机器、新模型或客户端升级后可先显式设为 1 小批量运行。
 - Codex Desktop 评分并发：新批次默认 3，最大 8；每题使用独立项目、任务、Browser 和端口。
 - 同一批次执行期间不要人工切换模型、权限或关闭正在运行的客户端。
+- 如果 macOS 客户端已经显示唯一 Prompt 编辑器，但编辑器尚未进入可直接填充状态，Driver 会在同一控件上聚焦、全选并使用键盘插入回退；这不会选择其他输入框，也不会改变一次发送和原生会话绑定规则。若仍无法确认发送边界，流程会保留 `NEEDS_ATTENTION`，不能手工重发。
 
 ## 候选产物保护
 
