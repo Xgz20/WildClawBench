@@ -791,6 +791,18 @@ async function findPromptEditor(page, timeout) {
   throw new Error("找不到 Prompt 输入框");
 }
 
+async function fillPromptEditor(editor, prompt, timeout) {
+  try {
+    await editor.fill(prompt, { timeout });
+    return "fill";
+  } catch (error) {
+    await editor.click({ timeout });
+    await editor.press("ControlOrMeta+A", { timeout });
+    await editor.type(prompt, { timeout });
+    return "type-fallback";
+  }
+}
+
 async function clickSend(page, editor, timeout) {
   const labelled = page.locator('button[aria-label*="发送"]:visible, button[title*="发送"]:visible, [role="button"][aria-label*="发送"]:visible, button[aria-label*="Send"]:visible');
   const labelledMatches = await visibleLocators(labelled);
@@ -1689,7 +1701,7 @@ async function runAutomation(config, identityInfo) {
     await takeScreenshot(page, config, state, "06-model-selected.png");
     const editor = await findPromptEditor(page, timeout);
     await editor.click({ timeout });
-    await editor.fill(config.prompt, { timeout });
+    state.prompt_input_method = await fillPromptEditor(editor, config.prompt, timeout);
     await takeScreenshot(page, config, state, "07-prompt-filled.png");
 
     state.session.baseline = (await querySessions(config.sessionDb))

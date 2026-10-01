@@ -513,7 +513,13 @@ export async function readQwenPrompt(page) {
 
 export async function fillQwenPrompt(page, prompt, timeoutMilliseconds = 30_000) {
   const editor = await findQwenPromptEditor(page);
-  await editor.fill(prompt, { timeout: timeoutMilliseconds });
+  try {
+    await editor.fill(prompt, { timeout: timeoutMilliseconds });
+  } catch (error) {
+    await editor.click({ timeout: timeoutMilliseconds });
+    await editor.press("ControlOrMeta+A", { timeout: timeoutMilliseconds });
+    await editor.type(prompt, { timeout: timeoutMilliseconds });
+  }
   const readback = await readQwenPrompt(page);
   if (readback !== prompt) throw new Error("QWENWORK_PROMPT_READBACK_MISMATCH");
   return editor;
