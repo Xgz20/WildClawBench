@@ -65,6 +65,46 @@ export function verifyRecoveredDispatchAcknowledgement(snapshot, journal, native
 export function normalizeVerifiedNonSuccessToolSubset(snapshot, options, { nonSuccessVerified = false } = {}) {
   try { return { ...normalizeNativeToolEvents(snapshot, options), dropped_failed_upload_count: 0 }; }
   catch (error) {
+    if (!nonSuccessVerified && error.message === "NATIVE_TOOL_CAPTURE_INCOMPLETE"
+        && Array.isArray(snapshot?.events) && Array.isArray(snapshot?.ledger)) {
+      const started = new Set(snapshot.events.filter(e => e.phase === "started").map(e => e.tool_call_id));
+      const settled = new Set(snapshot.events.filter(e => e.phase === "settled").map(e => e.tool_call_id));
+      const completeIds = new Set([...started].filter(id => settled.has(id)));
+      const ledger = snapshot.ledger.filter(row => completeIds.has(row.toolCallId));
+      const samples = Array.isArray(snapshot.ledger_samples)
+        ? snapshot.ledger_samples.filter(sample => completeIds.has(sample.row?.toolCallId)) : undefined;
+      const partial = {
+        ...snapshot,
+        overflow: false,
+        errors: [],
+        unknown_context_events: 0,
+        ledger_at_capacity: false,
+        contexts: [],
+        ledger,
+        ...(samples ? { ledger_samples: samples } : {}),
+        events: snapshot.events.filter(e => completeIds.has(e.tool_call_id)),
+      };
+      try {
+        const verified = normalizeNativeToolEvents(partial, options);
+        const captureDiagnostics = {
+          overflow: snapshot.overflow === true,
+          errors: Array.isArray(snapshot.errors) ? [...snapshot.errors] : [],
+          unknown_context_events: Number.isInteger(snapshot.unknown_context_events) ? snapshot.unknown_context_events : 0,
+          ledger_at_capacity: snapshot.ledger_at_capacity === true,
+          source_ledger_count: snapshot.ledger.length,
+          verified_ledger_count: ledger.length,
+          source_event_count: Array.isArray(snapshot.events) ? snapshot.events.length : 0,
+          verified_event_count: partial.events.length,
+        };
+        return { ...verified, status: "partial", scope: "bound-native-agent-capture-complete-subset",
+          capture_incomplete: true,
+          capture_diagnostics: captureDiagnostics,
+          dropped_incomplete_tool_count: Math.max(0, snapshot.ledger.length - ledger.length),
+          dropped_failed_upload_count: 0 };
+      } catch {
+        // Preserve the strict failure if the complete subset cannot be bound.
+      }
+    }
     if (!nonSuccessVerified || error.message !== "NATIVE_TOOL_LEDGER_INVALID"
         || !snapshot.ledger_observation_policy || !Array.isArray(snapshot.ledger)
         || !Array.isArray(snapshot.ledger_samples) || !Array.isArray(snapshot.events)) throw error;
@@ -88,21 +128,12 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   const control = dirname(journalFile), runtimeBytes = await boundArtifact(control, journal.native_observation.artifact);
   const runtime = JSON.parse(runtimeBytes), native = normalizeRuntimeMessages(runtime, journal);
   if (inspectNativeAuthorizationHistory(runtime, native.native_request_session_id).length) throw new Error("DOUBAOWORK_NATIVE_AUTHORIZATION_HISTORY_UNACCOUNTED");
-  let cancellation = null, failure = null, cancellationIntentBytes = null, terminalObservationBytes = null;
-  if (native.terminal === "interrupted") {
-    cancellationIntentBytes = await boundArtifact(control, journal.cancellation?.intent_artifact);
-    terminalObservationBytes = await boundArtifact(control, journal.cancellation?.terminal_observation);
-    cancellation = verifyCancellationEvidence({ state: journal, native, runtime,
-      intent: JSON.parse(cancellationIntentBytes), observation: JSON.parse(terminalObservationBytes) });
-  } else if (native.terminal === "failed") {
-    terminalObservationBytes = await boundArtifact(control, journal.native_failure_observation);
-    failure = verifyFailureEvidence({ state: journal, native, runtime, observation: JSON.parse(terminalObservationBytes) });
-  } else if (native.terminal !== "completed" || !native.finished_at) throw new Error("DOUBAOWORK_NATIVE_TERMINAL_OR_TIME_UNAVAILABLE");
-  const nonSuccess = cancellation ?? failure;
-  let recoveryAckBytes = null, recoveryAcknowledgement = null;
-  if (journal.send.recovery_ack || journal.send.acceptance_source) {
-    recoveryAckBytes = await boundArtifact(control, journal.send.recovery_ack?.artifact);
-    recoveryAcknowledgement = verifyRecoveredDispatchAcknowledgement(JSON.parse(recoveryAckBytes), journal, native);
+  // The native message projection can omit cwd even though the bound runtime
+  // session captured it before the client refreshed its message store. Keep
+  // the exact journal binding when it matches the prepared workspace.
+  if (!native.native_cwd && journal.session?.native_cwd === workspace) {
+    native.native_cwd = workspace;
+    native.sources.native_cwd = "journal.session.native_cwd";
   }
   let lifecycleBytes = null, lifecycle = null;
   if (journal.native_observation.native_lifecycle_artifact) {
@@ -116,6 +147,27 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
       native.finished_at = lifecycle.finished_at;
       native.sources.finished_at = lifecycle.source;
     }
+  }
+  let cancellation = null, failure = null, cancellationIntentBytes = null, terminalObservationBytes = null;
+  if (native.terminal === "interrupted") {
+    cancellationIntentBytes = await boundArtifact(control, journal.cancellation?.intent_artifact);
+    terminalObservationBytes = await boundArtifact(control, journal.cancellation?.terminal_observation);
+    cancellation = verifyCancellationEvidence({ state: journal, native, runtime,
+      intent: JSON.parse(cancellationIntentBytes), observation: JSON.parse(terminalObservationBytes) });
+  } else if (native.terminal === "failed") {
+    terminalObservationBytes = await boundArtifact(control, journal.native_failure_observation);
+    failure = verifyFailureEvidence({ state: journal, native, runtime, observation: JSON.parse(terminalObservationBytes) });
+  } else if (native.terminal === "completed" && native.finished_at) {
+    // already verified by the message projection
+  } else if (lifecycle?.status === "observed" && lifecycle.finished_at && native.terminal === "unverified") {
+    native.terminal = "completed";
+    native.sources.terminal = "native-checkpoint-lifecycle";
+  } else throw new Error("DOUBAOWORK_NATIVE_TERMINAL_OR_TIME_UNAVAILABLE");
+  const nonSuccess = cancellation ?? failure;
+  let recoveryAckBytes = null, recoveryAcknowledgement = null;
+  if (journal.send.recovery_ack || journal.send.acceptance_source) {
+    recoveryAckBytes = await boundArtifact(control, journal.send.recovery_ack?.artifact);
+    recoveryAcknowledgement = verifyRecoveredDispatchAcknowledgement(JSON.parse(recoveryAckBytes), journal, native);
   }
   const nativeResourceObservations = inspectNativeResourceObservations(runtime, native);
   const finalBytes = await boundArtifact(control, journal.native_observation.final_reply);

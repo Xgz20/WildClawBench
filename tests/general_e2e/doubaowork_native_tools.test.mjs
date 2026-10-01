@@ -91,6 +91,28 @@ test("Periodic uploaded-ledger observations survive native TTL eviction without 
   assert.throws(() => normalizeVerifiedNonSuccessToolSubset(malformed, opts, { nonSuccessVerified: true }), /NATIVE_TOOL_RESULT_LEDGER_MISMATCH/);
   const unsupported = structuredClone(withFailedUpload); unsupported.ledger[1].uploadState = "uploading";
   assert.throws(() => normalizeVerifiedNonSuccessToolSubset(unsupported, opts, { nonSuccessVerified: true }), /NATIVE_TOOL_LEDGER_INVALID/);
+  const incomplete = structuredClone(snapshot);
+  incomplete.overflow = true;
+  incomplete.errors = ["NATIVE_TOOL_DEBUG_SINK_REPLACED"];
+  incomplete.unknown_context_events = 2;
+  incomplete.ledger_at_capacity = true;
+  incomplete.ledger.push({ ...nativeRow, toolCallId: "incomplete-call" });
+  const incompletePartial = normalizeVerifiedNonSuccessToolSubset(incomplete, opts);
+  assert.equal(incompletePartial.status, "partial");
+  assert.equal(incompletePartial.capture_incomplete, true);
+  assert.equal(incompletePartial.dropped_incomplete_tool_count, 1);
+  assert.deepEqual(incompletePartial.capture_diagnostics, {
+    overflow: true,
+    errors: ["NATIVE_TOOL_DEBUG_SINK_REPLACED"],
+    unknown_context_events: 2,
+    ledger_at_capacity: true,
+    source_ledger_count: 2,
+    verified_ledger_count: 1,
+    source_event_count: 2,
+    verified_event_count: 2,
+  });
+  assert.equal(incomplete.errors.length, 1);
+  assert.equal(incomplete.ledger_at_capacity, true);
   assert.equal(snapshot.ledger.length, 1);
   assert.equal(snapshot.ledger_samples[0].observed_at_ms, start + 1000);
   assert.equal(snapshot.ledger[0].cachedAtMs, start);
