@@ -7,7 +7,7 @@
 | 术语 | 定义 |
 | --- | --- |
 | 控制 Harness | 用来接收用户 Prompt、调用 Web E2E Skill 并统筹执行、评分、回传和报告的 Harness。推荐使用 Codex Desktop。 |
-| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork。 |
+| 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。 |
 | 评分 Harness | 为被评测 Harness 的候选网站打分的 Agent。当前使用 Codex Desktop，并依赖其桌面内置 Browser 操作网站和保存证据。 |
 | 管理员 | 选择用例和被评测 Harness、准备评测包、收集各机器回传包并生成报告的人员。 |
 | 执行人员 | 接收管理员分发的题目包和评分包，在本机完成一个 `Harness（模型）` 单元的执行、评分和回传。 |
@@ -22,7 +22,7 @@
 | --- | --- | --- |
 | `prepare-web-e2e-workspaces` | 管理员 | 从 WildClawBench 用例生成题目包、评分包、报告配置和 5 个可分发 Skill ZIP。它是仓库内的准备 Skill，不计入批次分发的 5 个 ZIP。 |
 | `run-web-e2e` | 管理员或执行人员 | 推荐的全局入口。只组合 Prompt 中明确要求的准备、执行、评分、打包回传、收集和报告阶段。 |
-| `execute-web-e2e` | 执行人员 | 操作被评测 Harness 做题。WorkBuddy、AstronStudio 和 QwenWork 的默认后台并发均为 3，最大均为 8，UI 操作保持单路。 |
+| `execute-web-e2e` | 执行人员 | 操作被评测 Harness 做题。AstronStudio、WorkBuddy、QwenWork、DoubaoWork 的默认后台并发均为 3，UI 操作保持单路；前三端最大 8，DoubaoWork 最大 3。 |
 | `orchestrate-web-e2e` | 执行人员或评分控制人员 | 校验执行结果、准备只读评分副本、注册 Codex Desktop 项目并调度多个评分任务。 |
 | `score-web-e2e` | Codex Desktop 单题评分任务 | 使用桌面内置 Browser 对一个用例评分并生成标准评分 JSON。通常由 `orchestrate-web-e2e` 自动调用，也支持人工单题调用。 |
 | `report-web-e2e` | 管理员 | 汇总一个或多个 Harness 回传包，生成 JSON、Markdown 和 Excel 报告。 |
@@ -39,7 +39,7 @@
 
 #### 1. 准备被评测 Harness
 
-在本轮被评测 Harness（WorkBuddy、AstronStudio 或 QwenWork）中完成以下设置：
+在本轮被评测 Harness（AstronStudio、WorkBuddy、QwenWork 或 DoubaoWork）中完成以下设置：
 
 1. 选择本轮评测模型，例如 GLM5.2 对应的客户端模型选项。
 2. 设置该模型的推理强度。
@@ -67,11 +67,11 @@
 
 采集器会核对客户端和原生记录身份。无法可靠归属的用量保持为未知，不会补零或写入其他用例。
 
-WorkBuddy、AstronStudio 和 QwenWork 的默认后台执行并发均为 3，最大均为 8，UI 操作保持单路。首次在新机器上使用、升级 Harness/Skill 或切换模型后，建议先以并发 1 运行 1–3 个用例，确认模型、权限、产物和回执正常后再使用默认并发。
+AstronStudio、WorkBuddy、QwenWork、DoubaoWork 的默认后台执行并发均为 3，UI 操作保持单路；前三端最大 8，DoubaoWork 最大 3。首次在新机器上使用、升级 Harness/Skill 或切换模型后，建议先以并发 1 运行 1–3 个用例，确认模型、权限、产物和回执正常后再使用默认并发。
 
 #### 2. 自动准备桌面客户端调试模式
 
-`run-web-e2e` 在进入执行或评分阶段前会自动检查 Codex Desktop 和本轮选择的 AstronStudio、WorkBuddy 或 QwenWork。有效 CDP 端点会原样复用；缺少调试模式时只关闭并重启需要的客户端，无需人工退出、重新打开。除 Windows Codex 继续从 MSIX manifest 解析真实入口外，两端统一按“显式路径 → 当前运行进程 → 系统登记 → 标准目录”发现应用；macOS 校验 Bundle ID 和包内文件，Windows 覆盖 HKCU/HKLM、App Paths、四类卸载注册表与标准目录。Windows 还会核对监听者和待停止进程的完整可执行路径；macOS 在重启已运行的 WorkBuddy/QwenWork 前会只读核对状态库，无法证明没有活动任务时停止并提示人工处理。
+`run-web-e2e` 在进入执行或评分阶段前会自动检查 Codex Desktop 和本轮选择的 AstronStudio、WorkBuddy、QwenWork 或 DoubaoWork。有效 CDP 端点会原样复用；缺少调试模式时只关闭并重启需要的客户端，无需人工退出、重新打开。除 Windows Codex 继续从 MSIX manifest 解析真实入口外，两端统一按“显式路径 → 当前运行进程 → 系统登记 → 标准目录”发现应用；macOS 校验 Bundle ID 和包内文件，Windows 覆盖 HKCU/HKLM、App Paths、四类卸载注册表与标准目录。Windows 还会核对监听者和待停止进程的完整可执行路径；macOS 在重启已运行的 WorkBuddy/QwenWork/DoubaoWork 前会只读核对状态库，无法证明没有活动任务时停止并提示人工处理。
 
 默认 Codex Desktop 使用 `127.0.0.1:9230`，AstronStudio 使用 `127.0.0.1:9240`，WorkBuddy 使用 `127.0.0.1:9229`，QwenWork 使用 `127.0.0.1:9250`，且都只监听本机。若 Codex Desktop 本身承载当前控制任务，Skill 会在持久化状态后使用一次性托管任务重启；当前回合可能中断，客户端恢复后必须继续原任务，不要重新初始化。
 
@@ -423,8 +423,8 @@ Codex Desktop CDP：http://127.0.0.1:9230
 - Prompt 未指定被评测模型：保持并回读客户端当前模型。
 - Prompt 显式指定模型：使用客户端 UI 中的精确显示名，选择后回读一致才开始执行。
 - 推理强度：始终由用户提前在被评测 Harness 中设置，执行自动化不修改。
-- WorkBuddy、AstronStudio、QwenWork 权限：生产评测使用 `full-access`，发送题目 Prompt 前会回读确认。
-- WorkBuddy、AstronStudio 和 QwenWork 的默认执行并发均为 3、最大 8；UI 操作始终只有一路。新机器、新模型或客户端升级后可先显式设为 1 小批量运行。
+- AstronStudio、WorkBuddy、QwenWork、DoubaoWork 权限：生产评测使用 `full-access`，发送题目 Prompt 前会回读确认。
+- AstronStudio、WorkBuddy、QwenWork、DoubaoWork 的默认执行并发均为 3、UI 操作始终只有一路；前三端最大 8，DoubaoWork 最大 3。新机器、新模型或客户端升级后可先显式设为 1 小批量运行。
 - Codex Desktop 评分并发：新批次默认 3，最大 8；每题使用独立项目、任务、Browser 和端口。
 - 同一批次执行期间不要人工切换模型、权限或关闭正在运行的客户端。
 
@@ -446,7 +446,7 @@ Codex Desktop CDP：http://127.0.0.1:9230
 
 - [ ] 已安装本场景所需 Skill。
 - [ ] 被评测 Harness 的模型、推理强度和权限已经设置。
-- [ ] 允许 `run-web-e2e` 自动检查并按需重启 Codex Desktop 和本轮选择的 AstronStudio、WorkBuddy 或 QwenWork 调试模式。
+- [ ] 允许 `run-web-e2e` 自动检查并按需重启 Codex Desktop 和本轮选择的 AstronStudio、WorkBuddy、QwenWork 或 DoubaoWork 调试模式。
 - [ ] 题目包和评分包来自同一批次、同一 Harness。
 - [ ] 当前没有需要保留的运行中任务。
 - [ ] 已安装该批次随包提供的 Skill，版本和内容 SHA-256 校验通过。
