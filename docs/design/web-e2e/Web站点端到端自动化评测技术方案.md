@@ -79,7 +79,7 @@ QwenWork 的进程级 Token 开关只对新客户端进程生效。Web Driver �
 
 ## 6. 2026-10-01 实现与验收边界
 
-当前仓库 HEAD 的 Web Skill 版本为：`run-web-e2e 1.4.2`、`execute-web-e2e 1.21.2`、`orchestrate-web-e2e 0.3.6`、`score-web-e2e 4.5.4`、`report-web-e2e 1.2.0`。DoubaoWork Web Driver 为 `0.8.2`，共享 `doubaowork` 组件目录版本为 `0.8.1`。当前源码重新构建的 13 个 General/Web Skill ZIP 已通过依赖闭包、内容 SHA 和 ZIP SHA 校验；分发前仍需按批次重新生成 `skills-manifest.json`，并要求安装检查 `all_current=true`。
+当前仓库 HEAD 的 Web Skill 版本为：`run-web-e2e 1.4.3`、`execute-web-e2e 1.21.2`、`orchestrate-web-e2e 0.3.6`、`score-web-e2e 4.5.4`、`report-web-e2e 1.2.0`。DoubaoWork Web Driver 为 `0.8.2`，共享 `doubaowork` 组件目录版本为 `0.8.1`。当前源码重新构建的 13 个 General/Web Skill ZIP 已通过依赖闭包、内容 SHA 和 ZIP SHA 校验；分发前仍需按批次重新生成 `skills-manifest.json`，并要求安装检查 `all_current=true`。
 
 Prompt 输入属于共用发送边界：WorkBuddy、QwenWork 在 macOS 对唯一可见编辑器先尝试受控填充；客户端暴露 contenteditable 但尚未进入可填充状态时，Driver 在同一元素上执行聚焦、全选和键盘插入回退，随后仍必须通过原有 Prompt 回读、一次发送和原生 session 绑定门禁。输入回退不能选择第二个编辑器，也不能把 DOM 文本变化单独当作发送成功。评分控制器对 `evaluation_error` 保留异常语义，并允许在 `max_retries` 范围内归档当前 attempt、恢复评分初始输入、重新 preflight 和创建新评分线程；该路径不改变候选哈希，也不把基础设施异常转换成能力零分。
 
@@ -88,5 +88,7 @@ Prompt 输入属于共用发送边界：WorkBuddy、QwenWork 在 macOS 对唯一
 DoubaoWork 当前调试批次的 10/10 执行题已具有 `execution-receipt.json` 且 `integrity.valid=true`，但其评分控制曾因 429/超时进入 `NEEDS_ATTENTION`，没有正式 `submission.json` 或报告，不能把这批执行单独表述为四端生产通过。Codex Desktop 26.928.20755 已对该批次 10 个评分目录逐题完成真实 UI 注册，并按完整路径回读到 10 个独立 `projectId`；这只证明评分项目隔离链路可用，不代表已创建评分线程或完成评分。
 
 因此，四个 Harness 的 Web 站点端到端目前属于“代码与分发链路基本完备、生产评测尚未整体放行”：需要先让 WorkBuddy 新鲜 probe 达到 `ready=true`，再用当前 Skill/客户端身份按声明顺序完成四端的串行、默认三路并发和恢复抽样；每端都要形成有效 execution receipt、独立评分任务、`submission.json`、return/import receipt 和四 Sheet 报告。任何缺失的 Token、请求数、工具数或耗时继续保留 `null`/`partial`/`unavailable`，不得从上下文占用或订阅显示换算。
+
+2026-10-04 补充：`run-web-e2e 1.4.3` 在创建回传目录前解析绝对路径并拒绝 Harness 根目录内的输出（包括指回根目录的符号链接），避免 ZIP 递归包含自身；该检查只作用于 Web 回传打包，不修改 General 契约。评分控制 `0.3.6` 允许记录 Desktop 返回的原生终态时间以区分评分完成和轮询观察时间。DoubaoWork 旧 2.31.6 批次已有 10 题 submission、return 和 import，006 的独立美观度仍为 `evaluation_error`，完整功能评分不能表述为美观度全部通过；本机客户端已更新为 2.31.10，旧结果不转为新版本准入。其他三端及四端报告仍未完成。
 
 源码入口：[Web Driver 契约](../../../tools/report/skills/web-e2e/execute-web-e2e/references/driver-contract.md)、[资源采集接口](../../../tools/report/skills/web-e2e/execute-web-e2e/references/resource-metrics.md)、[评分 JSON 契约](../../../tools/report/skills/web-e2e/score-web-e2e/references/scoring-contract.md)、[浏览器取证](../../../tools/report/skills/web-e2e/score-web-e2e/references/browser-interaction-scoring.md)。历史运行细节保留在 evidence/archive，当前进度只更新共用契约。

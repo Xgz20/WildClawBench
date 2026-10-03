@@ -429,6 +429,8 @@ Codex Desktop CDP：http://127.0.0.1:9230
 - 同一批次执行期间不要人工切换模型、权限或关闭正在运行的客户端。
 - 如果 macOS 客户端已经显示唯一 Prompt 编辑器，但编辑器尚未进入可直接填充状态，Driver 会在同一控件上聚焦、全选并使用键盘插入回退；这不会选择其他输入框，也不会改变一次发送和原生会话绑定规则。若仍无法确认发送边界，流程会保留 `NEEDS_ATTENTION`，不能手工重发。
 
+回传 ZIP 和外部回执必须输出到 Harness 根目录之外，例如同级 `offline-return/`。不要把回传输出目录放进 execution、score 或 Harness 根目录中；工具会拒绝这类路径，避免归档包含自身。
+
 ## 候选产物保护
 
 被评测 Harness 结束后，候选网站即被冻结。执行、评分、编排和报告 Agent 都不能修改 `execution/tasks/*/workspace/` 或 `score/tasks/*/workspace/`。

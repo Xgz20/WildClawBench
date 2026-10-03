@@ -274,6 +274,36 @@ class RunWebE2ETest(unittest.TestCase):
             self.assertEqual(before, (harness / "execution/tasks/task-1/workspace/index.html").read_bytes())
             self.assertTrue((batch / "returns/workbuddy/submission.json").is_file())
 
+    def test_export_rejects_output_inside_package_before_creating_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            _, harness = materialize_batch(Path(tmp))
+            materialize_results(harness)
+            before = {p.relative_to(harness): p.read_bytes() for p in harness.rglob("*") if p.is_file()}
+            for output in (harness, harness / "offline-return", harness / "new" / "nested"):
+                with self.subTest(output=output), self.assertRaisesRegex(ValueError, "package-root 之外"):
+                    run_module.export_return(argparse.Namespace(
+                        package_root=str(harness), output_dir=str(output),
+                    ))
+            self.assertFalse((harness / "offline-return").exists())
+            self.assertFalse((harness / "new").exists())
+            self.assertEqual(before, {p.relative_to(harness): p.read_bytes() for p in harness.rglob("*") if p.is_file()})
+
+    def test_export_rejects_output_symlink_resolving_inside_package(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _, harness = materialize_batch(base)
+            materialize_results(harness)
+            link = base / "output-link"
+            try:
+                link.symlink_to(harness, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlink creation unavailable")
+            with self.assertRaisesRegex(ValueError, "package-root 之外"):
+                run_module.export_return(argparse.Namespace(
+                    package_root=str(harness), output_dir=str(link / "offline-return"),
+                ))
+            self.assertFalse((harness / "offline-return").exists())
+
     def test_export_clamps_pre_1980_timestamps_without_touching_candidates(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)

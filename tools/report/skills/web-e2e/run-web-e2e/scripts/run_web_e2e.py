@@ -537,6 +537,8 @@ def should_exclude(relative: Path, browser_profile_roots: set[Path] | None = Non
 def export_return(args: argparse.Namespace) -> dict:
     root = Path(args.package_root).expanduser().resolve()
     output = Path(args.output_dir).expanduser().resolve()
+    if output == root or root in output.parents:
+        raise ValueError("回传输出目录必须位于 package-root 之外，避免归档递归包含自身")
     _, manifest = manifest_for(root, "unit")
     execution = validate_execution_receipt(root, manifest)
     submission_result = validate_submission(root, manifest)
