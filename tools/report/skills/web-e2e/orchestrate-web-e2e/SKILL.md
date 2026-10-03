@@ -119,10 +119,11 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
      --task-id <task_id> \
      --wait-sequence <next_wait_sequence> \
      --wait-cursor <poll.cursor> \
-     --wait-status <RUNNING|POLL_TIMEOUT|NEEDS_ATTENTION|COMPLETED|FAILED|CANCELLED|INTERRUPTED>
+     --wait-status <RUNNING|POLL_TIMEOUT|NEEDS_ATTENTION|COMPLETED|FAILED|CANCELLED|INTERRUPTED> \
+     [--finished-at <Desktop 返回的终态完成时间>]
    ```
 
-   `POLL_TIMEOUT` 只表示这次 `wait_threads` 没等到变化，不是评分超时；控制面只有到达该 attempt 的独立 `deadline_at` 后才执行 `mark-timeout`。某题失败后继续等待已经活动的其他题，但暂停补充新题，先按动作处理失败题。超时后原 `threadId` 状态仍不明时必须继续查询，禁止立即创建第二个任务。只有原任务已记录 `COMPLETED`、`FAILED`、`CANCELLED` 或 `INTERRUPTED` 终态，才可执行 `prepare-retry --retry-reason <说明>`，重新通过该题 preflight 后创建下一 attempt。
+   `POLL_TIMEOUT` 只表示这次 `wait_threads` 没等到变化，不是评分超时；控制面只有到达该 attempt 的独立 `deadline_at` 后才执行 `mark-timeout`。Desktop 返回已结束的评分线程时，应把其 `completedAt` 转成 `--finished-at` 一并记录；控制面用这个原生终态时间判断 deadline，不能把控制器晚到的轮询时间当成评分完成时间。某题失败后继续等待已经活动的其他题，但暂停补充新题，先按动作处理失败题。超时后原 `threadId` 状态仍不明时必须继续查询，禁止立即创建第二个任务。只有原任务已记录 `COMPLETED`、`FAILED`、`CANCELLED` 或 `INTERRUPTED` 终态，才可执行 `prepare-retry --retry-reason <说明>`，重新通过该题 preflight 后创建下一 attempt。
 
    `prepare-retry` 不删除失败现场。它先复核候选与评分初始输入，并要求受管评分服务和截图接收器已经进入可信终态；存在无 `runtime-state.json` 的运行时副本、仍为 `RUNNING` 的服务/接收器或身份不匹配的状态文件时一律禁止归档。门禁通过后，把旧 `private-scoring/` 原子迁入 `score/.orchestrate-web-e2e/attempts/<task>/attempt-<n>/private-scoring/`，再按初始化时冻结的文件清单恢复干净的 `task_contract.json`、`candidate_artifact.json` 和可选 fixtures。归档目录内生成 `attempt-error-receipt.json`，记录失败终态、deadline、cursor、错误、重试原因、候选复核结果以及所有归档文件的路径、大小和 SHA-256；状态中的 attempt 保存该回执 SHA。归档中断由 `pending-attempt-archives/` journal 恢复，回执或归档后续漂移会在 preflight/submission 阶段失败关闭。所有 attempt、cursor、poll 次数和 retry 次数均保留在状态中。
 

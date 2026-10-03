@@ -87,7 +87,7 @@ export function usage() {
   node scoring-control.mjs record-project --package-root <目录> --task-id <ID> --project-id <ID> --project-path <目录> --host-id <ID> --desktop-version <版本> --registration-method <方式>
   node scoring-control.mjs preflight --package-root <目录> [--task-id <ID>] --desktop-version <版本> --score-skill-dir <目录> [--allow-renderer-bridge]
   node scoring-control.mjs record-thread --package-root <目录> --task-id <ID> --thread-id <ID> --host-id <ID>
-  node scoring-control.mjs record-wait --package-root <目录> --task-id <ID> --wait-sequence <序号> --wait-cursor <游标> --wait-status <状态> [--wait-error <说明>]
+  node scoring-control.mjs record-wait --package-root <目录> --task-id <ID> --wait-sequence <序号> --wait-cursor <游标> --wait-status <状态> [--wait-error <说明>] [--finished-at <终态时间>]
   node scoring-control.mjs mark-timeout --package-root <目录> --task-id <ID>
   node scoring-control.mjs prepare-retry --package-root <目录> --task-id <ID> --retry-reason <说明>
   node scoring-control.mjs mark-complete --package-root <目录> --task-id <ID>
@@ -120,6 +120,7 @@ export function parseArgs(argv) {
     else if (token === "--wait-cursor") values.waitCursor = argv[++index] || "";
     else if (token === "--wait-status") values.waitStatus = String(argv[++index] || "").toUpperCase();
     else if (token === "--wait-error") values.waitError = argv[++index] || "";
+    else if (token === "--finished-at") values.finishedAt = argv[++index] || "";
     else if (token === "--retry-reason") values.retryReason = argv[++index] || "";
     else if (token === "--help" || token === "-h") values.help = true;
     else throw new Error(`未知参数：${token}`);
@@ -1308,6 +1309,11 @@ export async function recordWait(packageRoot, taskId, observation, options = {})
   if (!WAIT_STATUSES.has(waitStatus)) throw new Error(`waitStatus 无效：${waitStatus || "空"}`);
   if (!waitCursor) throw new Error("waitCursor 不能为空");
   if (!Number.isInteger(waitSequence) || waitSequence < 1) throw new Error("waitSequence 必须是正整数");
+  const terminalStatus = TERMINAL_THREAD_STATUSES.has(waitStatus);
+  const finishedAt = observation.finishedAt ? asDate(observation.finishedAt) : null;
+  if (observation.finishedAt && !terminalStatus) throw new Error("finishedAt 只允许与终态 waitStatus 一起提供");
+  const observedAt = asDate(options.now);
+  if (finishedAt && finishedAt.getTime() > observedAt.getTime()) throw new Error("finishedAt 不能晚于本次观察时间");
   const expectedSequence = attempt.wait_count + 1;
   if (waitSequence === attempt.last_wait_sequence) {
     if (attempt.wait_cursor === waitCursor
@@ -1316,7 +1322,8 @@ export async function recordWait(packageRoot, taskId, observation, options = {})
     throw new Error(`waitSequence ${waitSequence} 已记录但内容不一致`);
   }
   if (waitSequence !== expectedSequence) throw new Error(`waitSequence 应为 ${expectedSequence}，实际为 ${waitSequence}`);
-  const now = asDate(options.now).toISOString();
+  const now = observedAt.toISOString();
+  const terminalAt = (finishedAt || observedAt).toISOString();
   attempt.wait_count = waitSequence;
   attempt.last_wait_sequence = waitSequence;
   attempt.wait_cursor = waitCursor;
@@ -1334,7 +1341,9 @@ export async function recordWait(packageRoot, taskId, observation, options = {})
     wait_status: waitStatus,
     error: observation.waitError || null,
   });
-  if (!attempt.deadline_exceeded_at && attempt.deadline_at && asDate(now).getTime() >= asDate(attempt.deadline_at).getTime()) {
+  const terminalBeforeDeadline = terminalStatus
+    && (!attempt.deadline_at || (finishedAt || observedAt).getTime() < asDate(attempt.deadline_at).getTime());
+  if (!terminalBeforeDeadline && !attempt.deadline_exceeded_at && attempt.deadline_at && observedAt.getTime() >= asDate(attempt.deadline_at).getTime()) {
     attempt.deadline_exceeded_at = now;
     task.phase = "TIMED_OUT";
     task.error = `评分任务超过 deadline：${attempt.deadline_at}`;
@@ -1347,13 +1356,13 @@ export async function recordWait(packageRoot, taskId, observation, options = {})
       deadline_at: attempt.deadline_at,
     });
   }
-  if (TERMINAL_THREAD_STATUSES.has(waitStatus)) {
+  if (terminalStatus) {
     attempt.terminal_status = waitStatus;
-    attempt.finished_at = now;
+    attempt.finished_at = terminalAt;
     if (waitStatus !== "COMPLETED" && !attempt.deadline_exceeded_at) {
       task.phase = "FAILED";
       task.error = observation.waitError || `评分任务终态：${waitStatus}`;
-      task.timing.finished_at = now;
+      task.timing.finished_at = terminalAt;
     }
   }
   await saveControl(plan, state);
@@ -1926,6 +1935,7 @@ async function main() {
         waitCursor: args.waitCursor,
         waitStatus: args.waitStatus,
         waitError: args.waitError,
+        finishedAt: args.finishedAt,
       });
       else if (args.command === "mark-timeout") result = await markTimeout(args.packageRoot, taskId);
       else if (args.command === "prepare-retry") result = await prepareRetry(args.packageRoot, taskId, args.retryReason);

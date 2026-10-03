@@ -715,6 +715,26 @@ test("poll timeout is distinct from scoring deadline timeout", async () => {
   assert.equal(second.tasks[0].thread_id, "thread-2");
 });
 
+test("delayed completed observation uses the Desktop terminal time for deadline admission", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root, [], { scoreTimeoutSeconds: 60 });
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" }, { now: "2026-09-07T00:00:00.000Z" });
+  const delayed = await recordWait(root, "task-1", {
+    waitSequence: 1,
+    waitCursor: "cursor-1",
+    waitStatus: "COMPLETED",
+    finishedAt: "2026-09-07T00:00:30.000Z",
+  }, { now: "2026-09-07T00:01:01.000Z" });
+  assert.equal(delayed.tasks[0].phase, "SCORING");
+  assert.equal(delayed.tasks[0].attempts[0].deadline_exceeded_at, null);
+  assert.equal(delayed.tasks[0].attempts[0].finished_at, "2026-09-07T00:00:30.000Z");
+  await writeValidScore(root, "task-1");
+  const completed = await markComplete(root, "task-1");
+  assert.equal(completed.tasks[0].phase, "COMPLETED");
+});
+
 test("failed attempts archive partial scoring outputs and emit a structured error receipt", async () => {
   const root = await fixture();
   const preparedPrivateRoot = join(root, "score", "tasks", "task-1", "private-scoring");
