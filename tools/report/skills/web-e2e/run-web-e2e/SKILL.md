@@ -164,7 +164,7 @@ python3 <skill-dir>/scripts/run_web_e2e.py export-return \
   --output-dir /absolute/offline-return
 ```
 
-该命令生成 `<batch_id>__<harness>__return.zip` 和外部 `return-receipt.json`。回执绑定 ZIP SHA-256、批次、源码 revision、Profile、模型、Harness 和完整 task IDs。目标存在时拒绝覆盖。ZIP 不含 `.git`、`.cache`、`.vite`、`node_modules`、密钥、评分运行时副本、`.run-web-e2e` 控制状态，也不含动态识别出的 Chromium 浏览器用户数据目录（Cookies、Login Data、Local State、Crashpad 等）；过滤只作用于 ZIP，不清理 execution/score 原件。导入端会再次拒绝包含此类 profile 树的外部 ZIP。只有声明兼容策略的执行回执才允许 execution workspace 中存在可忽略运行时目录，score workspace 中出现同名目录仍失败关闭。
+该命令生成 `<batch_id>__<harness>__return.zip` 和外部 `return-receipt.json`。回执绑定 ZIP SHA-256、批次、源码 revision、Profile、模型、Harness 和完整 task IDs。输出目录必须位于 Harness 根目录之外，例如同级 `offline-return/`；根目录本身、任何子目录或解析后指回根目录的符号链接都会在创建文件前被拒绝。目标存在时拒绝覆盖。ZIP 不含 `.git`、`.cache`、`.vite`、`node_modules`、密钥、评分运行时副本、`.run-web-e2e` 控制状态，也不含动态识别出的 Chromium 浏览器用户数据目录（Cookies、Login Data、Local State、Crashpad 等）；过滤只作用于 ZIP，不清理 execution/score 原件。导入端会再次拒绝包含此类 profile 树的外部 ZIP。只有声明兼容策略的执行回执才允许 execution workspace 中存在可忽略运行时目录，score workspace 中出现同名目录仍失败关闭。
 
 管理员离线收到 ZIP 和回执后导入：
 
