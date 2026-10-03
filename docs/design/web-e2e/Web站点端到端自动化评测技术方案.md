@@ -91,4 +91,6 @@ DoubaoWork 当前调试批次的 10/10 执行题已具有 `execution-receipt.jso
 
 2026-10-04 补充：`run-web-e2e 1.4.3` 在创建回传目录前解析绝对路径并拒绝 Harness 根目录内的输出（包括指回根目录的符号链接），避免 ZIP 递归包含自身；该检查只作用于 Web 回传打包，不修改 General 契约。评分控制 `0.3.6` 允许记录 Desktop 返回的原生终态时间以区分评分完成和轮询观察时间。DoubaoWork 旧 2.31.6 批次已有 10 题 submission、return 和 import，006 的独立美观度仍为 `evaluation_error`，完整功能评分不能表述为美观度全部通过；本机客户端已更新为 2.31.10，旧结果不转为新版本准入。其他三端及四端报告仍未完成。
 
+2026-10-04 live 状态：AstronStudio 3.3.1 的只读 probe 已 `ready=true`，当前 HEAD 新 run 使用默认 3 槽已发送 001；002 因新任务控件在并发准备窗口中不可用记录为 `INFRA_FAILED`，不能重发。QwenWorkCN 1.2.0 的只读 probe 已 `ready=true`，9250 端点恢复，001/002 已发送并处于原生 `running`，003 已准备待发送。WorkBuddy 新原生库仍有 2 个 `working` 会话，安全重启门禁继续拒绝；不能依据旧库中的 Completed 记录放行。三端尚未产生有效完整 execution receipt，当前不能生成四端报告。
+
 源码入口：[Web Driver 契约](../../../tools/report/skills/web-e2e/execute-web-e2e/references/driver-contract.md)、[资源采集接口](../../../tools/report/skills/web-e2e/execute-web-e2e/references/resource-metrics.md)、[评分 JSON 契约](../../../tools/report/skills/web-e2e/score-web-e2e/references/scoring-contract.md)、[浏览器取证](../../../tools/report/skills/web-e2e/score-web-e2e/references/browser-interaction-scoring.md)。历史运行细节保留在 evidence/archive，当前进度只更新共用契约。
