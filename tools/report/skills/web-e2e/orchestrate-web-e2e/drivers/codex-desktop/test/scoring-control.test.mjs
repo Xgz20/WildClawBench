@@ -721,12 +721,18 @@ test("delayed completed observation uses the Desktop terminal time for deadline 
   await registerTask(root, state.tasks[0]);
   await passPreflight(root);
   await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" }, { now: "2026-09-07T00:00:00.000Z" });
+  const expired = await recordWait(root, "task-1", {
+    waitSequence: 1,
+    waitCursor: "cursor-1",
+    waitStatus: "COMPLETED",
+  }, { now: "2026-09-07T00:01:01.000Z" });
+  assert.equal(expired.tasks[0].phase, "TIMED_OUT");
   const delayed = await recordWait(root, "task-1", {
     waitSequence: 1,
     waitCursor: "cursor-1",
     waitStatus: "COMPLETED",
     finishedAt: "2026-09-07T00:00:30.000Z",
-  }, { now: "2026-09-07T00:01:01.000Z" });
+  }, { now: "2026-09-07T00:01:02.000Z" });
   assert.equal(delayed.tasks[0].phase, "SCORING");
   assert.equal(delayed.tasks[0].attempts[0].deadline_exceeded_at, null);
   assert.equal(delayed.tasks[0].attempts[0].finished_at, "2026-09-07T00:00:30.000Z");

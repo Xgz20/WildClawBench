@@ -1318,7 +1318,33 @@ export async function recordWait(packageRoot, taskId, observation, options = {})
   if (waitSequence === attempt.last_wait_sequence) {
     if (attempt.wait_cursor === waitCursor
       && attempt.last_wait_status === waitStatus
-      && (attempt.last_wait_error || "") === String(observation.waitError || "")) return publicStatus(state);
+      && (attempt.last_wait_error || "") === String(observation.waitError || "")) {
+      if (finishedAt && terminalStatus && attempt.terminal_status === waitStatus) {
+        if (attempt.deadline_at && finishedAt.getTime() >= asDate(attempt.deadline_at).getTime()) {
+          throw new Error(`finishedAt 仍在评分 deadline 之后：${attempt.deadline_at}`);
+        }
+        const previousFinishedAt = attempt.finished_at;
+        const wasTimedOut = Boolean(attempt.deadline_exceeded_at);
+        attempt.finished_at = finishedAt.toISOString();
+        if (wasTimedOut) {
+          attempt.deadline_exceeded_at = null;
+          if (task.phase === "TIMED_OUT") task.phase = "SCORING";
+          task.error = null;
+        }
+        state.history.push({
+          event: "THREAD_TERMINAL_TIME_CORRECTED",
+          at: observedAt.toISOString(),
+          task_id: taskId,
+          attempt_number: attempt.attempt_number,
+          thread_id: attempt.thread_id,
+          previous_finished_at: previousFinishedAt,
+          finished_at: attempt.finished_at,
+          cleared_deadline_exceeded: wasTimedOut,
+        });
+        await saveControl(plan, state);
+      }
+      return publicStatus(state);
+    }
     throw new Error(`waitSequence ${waitSequence} 已记录但内容不一致`);
   }
   if (waitSequence !== expectedSequence) throw new Error(`waitSequence 应为 ${expectedSequence}，实际为 ${waitSequence}`);
