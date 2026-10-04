@@ -342,6 +342,7 @@ test("QwenWork 客户端重启后按原 conversation ID 打开侧栏会话", asy
     isVisible: async () => true,
     locator: (selector) => {
       if (selector === 'xpath=ancestor::*[@data-slot="collapsible-menu-item"][1]') return projectGroup;
+      if (selector === 'xpath=ancestor::*[@data-local-project-row][1]') throw new Error("legacy fixture");
       if (selector === "xpath=ancestor::button[1]") return expander;
       throw new Error(`unexpected selector: ${selector}`);
     },

@@ -622,7 +622,15 @@ export async function openQwenProjectConversation(
     }
     if (projectLabels.length === 1) {
       const projectLabel = projectLabels[0];
-      const projectGroup = projectLabel.locator('xpath=ancestor::*[@data-slot="collapsible-menu-item"][1]');
+      let projectGroup;
+      try {
+        const currentGroup = projectLabel.locator('xpath=ancestor::*[@data-local-project-row][1]');
+        projectGroup = await currentGroup.count() === 1
+          ? currentGroup
+          : projectLabel.locator('xpath=ancestor::*[@data-slot="collapsible-menu-item"][1]');
+      } catch {
+        projectGroup = projectLabel.locator('xpath=ancestor::*[@data-slot="collapsible-menu-item"][1]');
+      }
       if (await projectGroup.count() !== 1) throw new Error(`QwenWork 侧栏项目“${projectName}”结构异常`);
       const expander = projectLabel.locator("xpath=ancestor::button[1]");
       if (await expander.count() !== 1) throw new Error(`QwenWork 侧栏项目“${projectName}”展开按钮结构异常`);
