@@ -1046,9 +1046,30 @@ export function canTrustExactTerminalSession(session, expectedConversationId) {
 async function inspectDom(page) {
   const stop = page.locator('button[aria-label*="停止"]:visible, button[title*="停止"]:visible, button[aria-label*="Stop"]:visible, button[title*="Stop"]:visible');
   const running = (await visibleLocators(stop)).length > 0;
-  const attentionButtons = page.getByRole("button", { name: /允许|批准|确认执行|始终允许|Allow|Approve|Deny|拒绝/ });
+  // WorkBuddy renders sidebar conversation cards as `div[role="button"]`. Their
+  // titles can contain words such as “拒绝”, which must never be treated as a
+  // pending approval in the active conversation. Restrict this fallback probe
+  // to native buttons and exclude the sidebar/input chrome; real sandbox
+  // approvals are handled first by `pending-sandbox-panel` above.
+  const attentionButtons = page.locator("button:visible").filter({
+    hasText: /允许|批准|确认执行|始终允许|Allow|Approve|Deny|拒绝/,
+  });
   const attention = [];
   for (const button of await visibleLocators(attentionButtons)) {
+    const excluded = await button.evaluate((node) => Boolean(
+      node.closest([
+        ".conversation-item",
+        ".conversation-section-content",
+        ".conversation-list",
+        '[role="tab"]',
+        "[data-cr-input-toolbar-selector]",
+        ".cr-status-chips",
+        "aside",
+        "nav",
+      ].join(","))
+      || /允许完全访问|full.?access/i.test((node.textContent || "").trim()),
+    )).catch(() => true);
+    if (excluded) continue;
     const name = (await button.innerText().catch(() => "")) || (await button.getAttribute("aria-label")) || "";
     if (name.trim()) attention.push(name.trim());
   }
