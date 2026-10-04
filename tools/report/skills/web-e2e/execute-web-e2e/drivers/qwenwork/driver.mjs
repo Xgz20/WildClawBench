@@ -1028,19 +1028,36 @@ async function clickSend(page, editor, timeout) {
     return "accessible-label";
   }
   const editorBox = await editor.boundingBox();
-  const nearby = [];
-  for (const candidate of await visibleLocators(page.locator('button:visible, [role="button"]:visible'))) {
-    const box = await candidate.boundingBox();
-    if (!box || !editorBox) continue;
-    const centerY = box.y + box.height / 2;
-    if (centerY >= editorBox.y - 20 && centerY <= editorBox.y + editorBox.height + 20 && box.x >= editorBox.x + editorBox.width * 0.65) {
-      nearby.push({ candidate, x: box.x });
-    }
-  }
-  nearby.sort((left, right) => right.x - left.x);
-  for (const { candidate } of nearby) {
-    if (await candidate.isEnabled().catch(() => false)) {
-      await candidate.click({ timeout });
+  if (editorBox) {
+    // The current QwenWork page can expose ~1,000 visible sidebar buttons.
+    // Reading every bounding box through Playwright turns this fallback into a
+    // multi-minute send gate. Compute geometry in one page evaluation, then
+    // click the unique right-side composer candidate by its stable list index.
+    const candidates = page.locator('button:visible, [role="button"]:visible');
+    const nearby = await candidates.evaluateAll((elements, box) => elements
+      .map((element, index) => {
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        return {
+          index,
+          x: rect.x,
+          y: rect.y,
+          width: rect.width,
+          height: rect.height,
+          centerY: rect.y + rect.height / 2,
+          disabled: element.hasAttribute("disabled")
+            || element.getAttribute("aria-disabled") === "true"
+            || style.pointerEvents === "none",
+        };
+      })
+      .filter((candidate) => !candidate.disabled
+        && candidate.width > 0 && candidate.height > 0
+        && candidate.centerY >= box.y - 20
+        && candidate.centerY <= box.y + box.height + 20
+        && candidate.x >= box.x + box.width * 0.65)
+      .sort((left, right) => right.x - left.x), editorBox);
+    if (nearby.length) {
+      await candidates.nth(nearby[0].index).click({ timeout });
       return "rightmost-composer-button";
     }
   }
