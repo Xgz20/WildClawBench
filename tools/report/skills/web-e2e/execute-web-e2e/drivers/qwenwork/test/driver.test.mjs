@@ -303,7 +303,7 @@ test("QwenWork 项目恢复只匹配侧栏标签，不混入新任务项目选�
   };
   assert.equal(qwenProjectSidebarLabel(page, "project-a"), expected);
   assert.deepEqual(calls, [
-    ["locator", '[data-slot="collapsible-menu-item-label"]'],
+    ["locator", '[data-slot="collapsible-menu-item-label"], [data-slot="list-label"] [data-slot="menu-item-label-text"]'],
     ["getByText", "project-a", { exact: true }],
   ]);
 });
@@ -353,7 +353,7 @@ test("QwenWork 客户端重启后按原 conversation ID 打开侧栏会话", asy
   const page = {
     url: () => currentUrl,
     locator: (selector) => {
-      assert.equal(selector, '[data-slot="collapsible-menu-item-label"]');
+      assert.equal(selector, '[data-slot="collapsible-menu-item-label"], [data-slot="list-label"] [data-slot="menu-item-label-text"]');
       return {
         getByText: (value, options) => {
           assert.equal(value, "project-a");

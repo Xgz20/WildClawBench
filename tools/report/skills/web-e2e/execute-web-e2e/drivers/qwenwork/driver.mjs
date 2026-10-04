@@ -586,7 +586,7 @@ async function clickExactText(page, value, timeout) {
 
 export function qwenProjectSidebarLabel(page, projectName) {
   return page
-    .locator('[data-slot="collapsible-menu-item-label"]')
+    .locator('[data-slot="collapsible-menu-item-label"], [data-slot="list-label"] [data-slot="menu-item-label-text"]')
     .getByText(projectName, { exact: true });
 }
 
