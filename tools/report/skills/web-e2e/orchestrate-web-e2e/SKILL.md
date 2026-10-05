@@ -125,7 +125,19 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
 
    `POLL_TIMEOUT` 只表示这次 `wait_threads` 没等到变化，不是评分超时；控制面只有到达该 attempt 的独立 `deadline_at` 后才执行 `mark-timeout`。Desktop 返回已结束的评分线程时，应把其 `completedAt` 转成 `--finished-at` 一并记录；控制面用这个原生终态时间判断 deadline，不能把控制器晚到的轮询时间当成评分完成时间。某题失败后继续等待已经活动的其他题，但暂停补充新题，先按动作处理失败题。超时后原 `threadId` 状态仍不明时必须继续查询，禁止立即创建第二个任务。只有原任务已记录 `COMPLETED`、`FAILED`、`CANCELLED` 或 `INTERRUPTED` 终态，才可执行 `prepare-retry --retry-reason <说明>`，重新通过该题 preflight 后创建下一 attempt。
 
+   推荐将 `wait_threads` 返回的当前题完整 poll 原样保存为 JSON，然后使用原生终态入口；`completedAt` 按 Unix 秒自动转换，无需手工换算 UTC。该入口校验 thread/host、终态与时间，复制原始观察到控制目录并记录 SHA-256，后续恢复会复核；不得与手工 cursor/status/time 参数混用：
+
+   ```bash
+   node <skill-dir>/scripts/scoring-control.mjs record-wait \
+     --package-root <harness-root> --task-id <task_id> \
+     --wait-sequence <next_wait_sequence> --terminal-observation <absolute-poll.json>
+   ```
+
+   已到 deadline 但仍活动的原评分线程可以记为 `TIMED_OUT`，同时继续等待其真实终态；该标记不会停止线程，也不释放槽位。不得因观察超时再派发同题。
+
    `prepare-retry` 不删除失败现场。它先复核候选与评分初始输入，并要求受管评分服务和截图接收器已经进入可信终态；存在无 `runtime-state.json` 的运行时副本、仍为 `RUNNING` 的服务/接收器或身份不匹配的状态文件时一律禁止归档。门禁通过后，把旧 `private-scoring/` 原子迁入 `score/.orchestrate-web-e2e/attempts/<task>/attempt-<n>/private-scoring/`，再按初始化时冻结的文件清单恢复干净的 `task_contract.json`、`candidate_artifact.json` 和可选 fixtures。归档目录内生成 `attempt-error-receipt.json`，记录失败终态、deadline、cursor、错误、重试原因、候选复核结果以及所有归档文件的路径、大小和 SHA-256；状态中的 attempt 保存该回执 SHA。归档中断由 `pending-attempt-archives/` journal 恢复，回执或归档后续漂移会在 preflight/submission 阶段失败关闭。所有 attempt、cursor、poll 次数和 retry 次数均保留在状态中。
+
+   自动重试耗尽后，若 Desktop 原生 FAILED poll 明确报告模型容量不足或 `exceeded retry limit, last status: 429 Too Many Requests`，可在服务恢复后调用 `grant-capacity-retry --terminal-observation <absolute-poll.json> --retry-reason <说明>`，为该题授予唯一一次额外恢复机会，再走 `prepare-retry` 与 preflight。该入口保留冻结的 `max_retries`，核验原 attempt 的 thread/host/完成时间、候选与初始评分材料及服务已停止，并保存原始 poll 的 SHA-256；它不接受 Browser 错误、任意含 429 的文字或未知终态。额外机会再次失败仍为 `NEEDS_ATTENTION`，不得循环增加次数或切换裁判模型。
 
    一个评分任务必须实际使用 Codex Desktop 内置 Browser，并由 `$score-web-e2e` 生成 `private-scoring/task_score.json`。评分任务只能写 `private-scoring/`；候选 `workspace/` 是只读输入。站点端口冲突时优先改启动参数或环境变量；只有受管启动日志已证明冲突且端口无法外部覆盖时，评分 Skill 才能通过 `managed_runtime.mjs port-override` 修改运行时副本中的唯一数字端口并落审计。execution/score 候选原件仍不可修改，其他源码调整仍禁止。
 5. 完成后让控制脚本校验身份、哈希、执行状态和证据路径：

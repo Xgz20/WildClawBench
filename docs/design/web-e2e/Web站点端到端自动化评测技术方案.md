@@ -69,6 +69,8 @@ QwenWork 的进程级 Token 开关只对新客户端进程生效。Web Driver �
 
 每题只注册精确的评分目录到 Codex Desktop 项目，独立任务、Browser、端口、evidence 和 private-scoring。失败评分 attempt 单独归档；恢复使用原 thread/cursor/attempt，不用新任务掩盖不确定性。
 
+评分控制 0.3.7 支持直接导入 Desktop 原生终态 poll：核验 thread/host/状态，以 Unix 秒解析 `completedAt`，并固化观察文件及 SHA-256。默认自动重试预算仍冻结；耗尽后仅对原生容量错误或明确 429 限流提供一次有证据的额外恢复，继续执行候选、初始评分材料、运行时停止和失败归档门禁。该恢复不会把失败 attempt 改为成功，也不修改 General 执行或评分协议。
+
 ## 5. 评分、回传和报告
 
 - 详细 Profile：内容、交互、视觉功能分与独立美观度；美观度与功能异常互不覆盖。
@@ -92,5 +94,7 @@ DoubaoWork 当前调试批次的 10/10 执行题已具有 `execution-receipt.jso
 2026-10-04 补充：`run-web-e2e 1.4.3` 在创建回传目录前解析绝对路径并拒绝 Harness 根目录内的输出（包括指回根目录的符号链接），避免 ZIP 递归包含自身；该检查只作用于 Web 回传打包，不修改 General 契约。评分控制 `0.3.6` 允许记录 Desktop 返回的原生终态时间以区分评分完成和轮询观察时间。DoubaoWork 旧 2.31.6 批次已有 10 题 submission、return 和 import，006 的独立美观度仍为 `evaluation_error`，完整功能评分不能表述为美观度全部通过；本机客户端已更新为 2.31.10，旧结果不转为新版本准入。其他三端及四端报告仍未完成。
 
 2026-10-04 live 状态：AstronStudio 3.3.1 的只读 probe 已 `ready=true`，当前 HEAD 新 run 使用默认 3 槽已完成 001，002–004 正在运行；002 的首次发送前 UI 失败已按同一 run 恢复，不能重发 001。QwenWorkCN 1.2.0 的只读 probe 已 `ready=true`，9250 端点恢复，003 已成功；001/002 的原生 session、项目和 cwd 仍在 agents.db，但旧侧栏定位器不兼容 1.2.0 的 `list-label/menu-item-label-text` 结构，修复后的 Driver 需要沿原 attempt 只读恢复。WorkBuddy 新原生库仍有 2 个 `working` 会话，安全重启门禁继续拒绝；不能依据旧库中的 Completed 记录放行。三端尚未产生有效完整 execution receipt，当前不能生成四端报告。
+
+本轮验收范围调整为每个客户端 5 题，执行与评分均默认并发 3；客户端依次串行完成有效执行、独立评分、submission、回传和报告后，才进入下一客户端。四端验收全部通过后另建 10 题正式批次，历史 10 题调试材料不直接变更为正式结果。2026-10-05 的 DoubaoWork 五题批次 `web-macos-doubao-smoke-20261005` 在发送前被 `DOUBAOWORK_BACKGROUND_PROFILE_UNAVAILABLE` 拦截：2.31.10 后台模块与旧工具账本接口不匹配，当前候选仍为空，尚无执行回执或生产准入。需修复共用原生证据适配并回归 General/Web 后，沿原批次恢复。
 
 源码入口：[Web Driver 契约](../../../tools/report/skills/web-e2e/execute-web-e2e/references/driver-contract.md)、[资源采集接口](../../../tools/report/skills/web-e2e/execute-web-e2e/references/resource-metrics.md)、[评分 JSON 契约](../../../tools/report/skills/web-e2e/score-web-e2e/references/scoring-contract.md)、[浏览器取证](../../../tools/report/skills/web-e2e/score-web-e2e/references/browser-interaction-scoring.md)。历史运行细节保留在 evidence/archive，当前进度只更新共用契约。

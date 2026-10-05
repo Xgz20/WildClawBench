@@ -14,6 +14,7 @@ import {
 
 import {
   buildSubmissionControl,
+  grantCapacityRetry,
   initialize,
   markComplete,
   markTimeout,
@@ -739,6 +740,125 @@ test("delayed completed observation uses the Desktop terminal time for deadline 
   await writeValidScore(root, "task-1");
   const completed = await markComplete(root, "task-1");
   assert.equal(completed.tasks[0].phase, "COMPLETED");
+});
+
+function nativePoll(threadId, status = "completed", completedAt = 1791162718) {
+  return {
+    schemaVersion: 1, cursor: `native-${threadId}`,
+    thread: { id: threadId, hostId: "local" },
+    latestTurn: { id: `turn-${threadId}`, status, completedAt, error: null },
+  };
+}
+
+test("native terminal poll uses Unix seconds, persists evidence, and rejects evidence drift", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" }, { now: "2026-10-05T00:39:56Z" });
+  const filename = join(root, "poll.json");
+  await writeJson(filename, nativePoll("thread-1"));
+  const observed = await recordWait(root, "task-1", { waitSequence: 1, terminalObservation: filename }, { now: "2026-10-05T03:40:00Z" });
+  const attempt = observed.tasks[0].attempts[0];
+  assert.equal(attempt.finished_at, "2026-10-05T01:11:58.000Z");
+  assert.equal(attempt.deadline_exceeded_at, null);
+  assert.equal(observed.tasks[0].phase, "SCORING");
+  assert.equal((await resume(root)).tasks[0].attempts[0].wait_count, 1);
+  await writeJson(join(root, attempt.terminal_observation.observation_file), nativePoll("wrong-thread"));
+  await assert.rejects(() => status(root), /终态证据发生漂移/);
+});
+
+test("native terminal poll refuses wrong identity, nonterminal, fractional, future and mixed fields", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  const filename = join(root, "poll.json");
+  for (const poll of [nativePoll("other"), nativePoll("thread-1", "inProgress"), nativePoll("thread-1", "completed", 1.2),
+    { ...nativePoll("thread-1"), thread: { id: "thread-1", hostId: "remote" } }]) {
+    await writeJson(filename, poll);
+    await assert.rejects(() => recordWait(root, "task-1", { waitSequence: 1, terminalObservation: filename }), /原生终态证据/);
+  }
+  await writeJson(filename, nativePoll("thread-1"));
+  await assert.rejects(() => recordWait(root, "task-1", { waitSequence: 1, terminalObservation: filename }, { now: "2026-10-05T00:00:00Z" }), /晚于本次观察时间/);
+  await assert.rejects(() => recordWait(root, "task-1", { waitSequence: 1, terminalObservation: filename, finishedAt: "2026-10-05T00:00:00Z" }), /不能与手工终态字段混用/);
+  assert.equal((await status(root)).tasks[0].attempts[0].wait_count, 0);
+});
+
+test("native correction preserves its source and late terminal observations replay idempotently", async () => {
+  for (const late of [false, true]) {
+    const root = await fixture();
+    const { state } = await initialize(root);
+    await registerTask(root, state.tasks[0]);
+    await passPreflight(root);
+    await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" }, { now: "2026-10-05T00:00:00Z" });
+    const filename = join(root, "poll.json");
+    const poll = nativePoll("thread-1", "completed", late ? 1791170519 : 1791162718);
+    await writeJson(filename, poll);
+    if (!late) await recordWait(root, "task-1", { waitSequence: 1, waitStatus: "COMPLETED", waitCursor: poll.cursor }, { now: "2026-10-05T04:00:00Z" });
+    const observation = { waitSequence: 1, terminalObservation: filename };
+    const observed = await recordWait(root, "task-1", observation, { now: "2026-10-05T04:00:01Z" });
+    assert.ok(observed.tasks[0].attempts[0].terminal_observation);
+    assert.equal(observed.tasks[0].phase, late ? "TIMED_OUT" : "SCORING");
+    const replayed = await recordWait(root, "task-1", observation, { now: "2026-10-05T04:00:02Z" });
+    assert.equal(replayed.tasks[0].attempts[0].wait_count, 1);
+    assert.equal(replayed.tasks[0].phase, observed.tasks[0].phase);
+  }
+});
+
+async function exhaustedCapacityFixture(message) {
+  const root = await fixture();
+  const { state } = await initialize(root, [], { maxRetries: 0 });
+  await registerTask(root, state.tasks[0]);
+  const skillRoot = await scoreSkillFixture();
+  await passPreflight(root, { scoreSkillDir: skillRoot });
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" }, { now: "2026-10-05T00:39:56Z" });
+  const poll = nativePoll("thread-1", "failed");
+  poll.latestTurn.error = { message };
+  const filename = join(root, "poll.json");
+  await writeJson(filename, poll);
+  await recordWait(root, "task-1", { waitSequence: 1, terminalObservation: filename }, { now: "2026-10-05T01:15:00Z" });
+  return { root, filename, poll, skillRoot };
+}
+
+test("capacity and native 429 failures get at most one audited recovery without altering retry budget", async () => {
+  for (const message of ["Selected model is at capacity. Please try a different model.",
+    "exceeded retry limit, last status: 429 Too Many Requests, request id: test-request-123"]) {
+    const { root, filename, skillRoot } = await exhaustedCapacityFixture(message);
+    const duplicate = await recordWait(root, "task-1", { waitSequence: 1, terminalObservation: filename });
+    assert.equal(duplicate.tasks[0].attempts[0].wait_count, 1);
+    const granted = await grantCapacityRetry(root, "task-1", filename, "服务恢复后重试");
+    assert.equal(granted.max_retries, 0);
+    assert.equal(granted.tasks[0].attempts[0].terminal_status, "FAILED");
+    assert.equal(granted.recommended_action.type, "PREPARE_RETRY");
+    const retried = await prepareRetry(root, "task-1", "服务恢复后重试");
+    assert.ok(retried.tasks[0].attempts[0].error_receipt);
+    await passPreflight(root, { scoreSkillDir: skillRoot });
+    await recordThread(root, "task-1", { threadId: "thread-2", hostId: "local" });
+    await recordWait(root, "task-1", { waitSequence: 1, waitCursor: "cursor-2", waitStatus: "FAILED" });
+    await assert.rejects(() => grantCapacityRetry(root, "task-1", filename, "再次重试"), /唯一/);
+    await assert.rejects(() => prepareRetry(root, "task-1", "再次重试"), /最大重试次数/);
+    const ref = granted.tasks[0].capacity_retry_grant;
+    await writeFile(join(root, ref.observation_file), "{}\n");
+    await assert.rejects(() => resume(root), /容量故障终态证据发生漂移/);
+  }
+});
+
+test("capacity recovery refuses unrelated errors, wrong completion times and live runtimes", async () => {
+  const unrelated = await exhaustedCapacityFixture("network failure mentions 429 but is not a native rate limit");
+  await assert.rejects(() => grantCapacityRetry(unrelated.root, "task-1", unrelated.filename, "retry"), /不能证明/);
+  const { root, filename, poll } = await exhaustedCapacityFixture("Selected model is at capacity. Please try a different model.");
+  await writeJson(filename, { ...poll, latestTurn: { ...poll.latestTurn, completedAt: poll.latestTurn.completedAt + 1 } });
+  await assert.rejects(() => grantCapacityRetry(root, "task-1", filename, "retry"), /不能证明/);
+  await writeJson(filename, poll);
+  const current = await status(root);
+  await writeJson(join(root, "score/tasks/task-1/private-scoring/runtime-state.json"), {
+    schema_version: "wildclawbench.web-e2e-scoring-runtime/v1", task_id: "task-1",
+    candidate_sha256: current.tasks[0].candidate_integrity.expected_sha256, service: { status: "RUNNING" },
+  });
+  await assert.rejects(() => grantCapacityRetry(root, "task-1", filename, "retry"), /运行|终态|停止/);
+  assert.equal((await status(root)).tasks[0].capacity_retry_grant, undefined);
 });
 
 test("failed attempts archive partial scoring outputs and emit a structured error receipt", async () => {

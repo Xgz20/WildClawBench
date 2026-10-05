@@ -59,6 +59,8 @@ const TERMINAL_THREAD_STATUSES = new Set(["COMPLETED", "FAILED", "CANCELLED", "I
 const TERMINAL_SCORING_SERVICE_STATUSES = new Set(["STOPPED", "START_FAILED_STOPPED"]);
 const TERMINAL_SCREENSHOT_RECEIVER_STATUSES = new Set(["COMPLETED", "STOPPED", "TIMED_OUT", "FAILED", "LOST"]);
 const LEGACY_SCORING_INPUT_ROOTS = new Set(["candidate_artifact.json", "fixtures", "task_contract.json"]);
+const CAPACITY_ERROR = "Selected model is at capacity. Please try a different model.";
+const CAPACITY_GRANT_SCHEMA = "wildclawbench.web-e2e-capacity-retry-grant/v1";
 const KNOWN_ATTEMPT_OUTPUT_ROOTS = new Set([
   "evidence",
   "runtime-logs",
@@ -88,8 +90,10 @@ export function usage() {
   node scoring-control.mjs preflight --package-root <目录> [--task-id <ID>] --desktop-version <版本> --score-skill-dir <目录> [--allow-renderer-bridge]
   node scoring-control.mjs record-thread --package-root <目录> --task-id <ID> --thread-id <ID> --host-id <ID>
   node scoring-control.mjs record-wait --package-root <目录> --task-id <ID> --wait-sequence <序号> --wait-cursor <游标> --wait-status <状态> [--wait-error <说明>] [--finished-at <终态时间>]
+  node scoring-control.mjs record-wait --package-root <目录> --task-id <ID> --wait-sequence <序号> --terminal-observation <Desktop poll JSON>
   node scoring-control.mjs mark-timeout --package-root <目录> --task-id <ID>
   node scoring-control.mjs prepare-retry --package-root <目录> --task-id <ID> --retry-reason <说明>
+  node scoring-control.mjs grant-capacity-retry --package-root <目录> --task-id <ID> --terminal-observation <Desktop poll JSON> --retry-reason <说明>
   node scoring-control.mjs mark-complete --package-root <目录> --task-id <ID>
   node scoring-control.mjs mark-failed --package-root <目录> --task-id <ID> --error <说明>
   node scoring-control.mjs build-submission --package-root <目录> [--score-skill-dir <目录>]
@@ -122,6 +126,7 @@ export function parseArgs(argv) {
     else if (token === "--wait-error") values.waitError = argv[++index] || "";
     else if (token === "--finished-at") values.finishedAt = argv[++index] || "";
     else if (token === "--retry-reason") values.retryReason = argv[++index] || "";
+    else if (token === "--terminal-observation") values.terminalObservation = argv[++index] || "";
     else if (token === "--help" || token === "-h") values.help = true;
     else throw new Error(`未知参数：${token}`);
   }
@@ -136,6 +141,7 @@ export function parseArgs(argv) {
     "record-wait",
     "mark-timeout",
     "prepare-retry",
+    "grant-capacity-retry",
     "mark-complete",
     "mark-failed",
     "build-submission",
@@ -470,13 +476,17 @@ function normalizeState(state) {
     }
     task.attempts = task.attempts.map((attempt) => normalizeAttempt(attempt, task, state));
     task.retry_count = Math.max(task.retry_count, Math.max(0, task.attempts.length - 1));
-    if (task.retry_count > task.max_retries) throw new Error(`评分状态的 retry_count 超限：${task.task_id}`);
+    if (task.retry_count > retryLimit(task)) throw new Error(`评分状态的 retry_count 超限：${task.task_id}`);
   }
   return state;
 }
 
 function currentAttempt(task) {
   return task.attempts?.at(-1) || null;
+}
+
+function retryLimit(task) {
+  return task.max_retries + (task.capacity_retry_grant ? 1 : 0);
 }
 
 function promptForTask(taskId, scoringPort) {
@@ -765,7 +775,7 @@ function activeTaskAction(task, at) {
 
 function attentionTaskAction(task) {
   const attempt = currentAttempt(task);
-  const retryAvailable = task.retry_count < task.max_retries;
+  const retryAvailable = task.retry_count < retryLimit(task);
   if (attempt?.terminal_status && retryAvailable) {
     return {
       type: "PREPARE_RETRY",
@@ -990,7 +1000,116 @@ async function loadControl(packageRoot) {
   const state = normalizeState(await loadJson(plan.stateFile));
   if (state.schema_version !== STATE_SCHEMA || state.batch_id !== plan.manifest.batch_id) throw new Error("评分状态身份不一致");
   await verifyAttemptErrorReceipts(plan, state);
+  await verifyCapacityRetryGrants(plan, state);
+  await verifyTerminalObservations(plan, state);
   return { plan, state };
+}
+
+function terminalObservationFields(poll, attempt) {
+  const waitStatus = String(poll?.latestTurn?.status || "").toUpperCase();
+  if (poll?.schemaVersion !== 1 || typeof poll.cursor !== "string" || !poll.cursor
+    || poll.thread?.id !== attempt.thread_id || poll.thread?.hostId !== attempt.host_id
+    || !TERMINAL_THREAD_STATUSES.has(waitStatus) || !poll.latestTurn.id
+    || !Number.isSafeInteger(poll.latestTurn.completedAt) || poll.latestTurn.completedAt <= 0) {
+    throw new Error("Desktop poll 缺少匹配当前 attempt 的原生终态证据");
+  }
+  return {
+    waitStatus, waitCursor: poll.cursor, waitError: poll.latestTurn.error?.message || null,
+    finishedAt: asDate(poll.latestTurn.completedAt * 1000).toISOString(),
+  };
+}
+
+async function readObservationFile(filename) {
+  const info = await lstat(filename);
+  if (!info.isFile() || info.isSymbolicLink() || info.size > 65536) throw new Error("终态证据文件无效");
+  return readFile(filename);
+}
+
+async function preserveObservation(plan, directory, filename, raw) {
+  const root = join(plan.controlRoot, directory);
+  await mkdir(root, { recursive: true });
+  if ((await lstat(root)).isSymbolicLink()) throw new Error("终态证据目录不能为符号链接");
+  const destination = join(root, filename);
+  await writeFile(destination, raw, { flag: "wx", mode: 0o600 }).catch(async (error) => {
+    if (error.code !== "EEXIST" || !(await readObservationFile(destination)).equals(raw)) throw error;
+  });
+  return { observation_file: relativePackagePath(plan, destination), observation_sha256: sha256(raw) };
+}
+
+async function verifyTerminalObservations(plan, state) {
+  for (const task of state.tasks) for (const attempt of task.attempts) {
+    const ref = attempt.terminal_observation;
+    if (!ref) continue;
+    const filename = resolve(plan.root, ref.observation_file || "");
+    if (!inside(join(plan.controlRoot, "terminal-observations"), filename)) throw new Error("终态证据路径越界");
+    const raw = await readObservationFile(filename);
+    if (sha256(raw) !== ref.observation_sha256) throw new Error("终态证据发生漂移");
+    const fields = terminalObservationFields(JSON.parse(raw), attempt);
+    if (fields.waitStatus !== attempt.terminal_status || fields.finishedAt !== attempt.finished_at) {
+      throw new Error("终态证据与 attempt 状态不一致");
+    }
+  }
+}
+
+function validateCapacityObservation(poll, attempt) {
+  const fields = terminalObservationFields(poll, attempt);
+  const capacityError = fields.waitError === CAPACITY_ERROR
+    || /^exceeded retry limit, last status: 429 Too Many Requests(?:, request id: [A-Za-z0-9-]+)?$/.test(fields.waitError || "");
+  if (fields.waitStatus !== "FAILED" || !capacityError
+    || attempt.terminal_status !== "FAILED"
+    || asDate(attempt.finished_at).getTime() !== poll.latestTurn.completedAt * 1000) {
+    throw new Error("Desktop 终态证据不能证明原 attempt 因模型容量不足或 429 限流失败");
+  }
+}
+
+async function verifyCapacityRetryGrants(plan, state) {
+  for (const task of state.tasks) {
+    const grant = task.capacity_retry_grant;
+    if (!grant) continue;
+    const sourceAttempt = task.attempts.find((a) => a.attempt_number === grant.attempt_number);
+    const filename = resolve(plan.root, grant.observation_file || "");
+    if (grant.schema_version !== CAPACITY_GRANT_SCHEMA || !sourceAttempt
+      || grant.thread_id !== sourceAttempt.thread_id || !grant.reason
+      || !inside(join(plan.controlRoot, "capacity-retry-observations"), filename)) {
+      throw new Error(`容量故障恢复授权身份无效：${task.task_id}`);
+    }
+    const info = await lstat(filename);
+    if (!info.isFile() || info.isSymbolicLink()) throw new Error("容量故障终态证据不是普通文件");
+    const raw = await readFile(filename);
+    if (sha256(raw) !== grant.observation_sha256) throw new Error("容量故障终态证据发生漂移");
+    validateCapacityObservation(JSON.parse(raw.toString("utf8")), sourceAttempt);
+  }
+}
+
+// One explicit recovery credit per task, independent of the frozen automatic
+// retry budget. It never adopts a score or changes a failed thread to success.
+export async function grantCapacityRetry(packageRoot, taskId, observationFile, retryReason) {
+  if (!retryReason?.trim() || !observationFile) throw new Error("终态证据和恢复原因均不能为空");
+  const { plan, state } = await loadControl(packageRoot);
+  const task = requireTask(state, taskId);
+  if (task.capacity_retry_grant) throw new Error("本题已使用唯一的容量故障额外恢复机会");
+  if (task.phase !== "FAILED" || task.retry_count !== task.max_retries) {
+    throw new Error("容量故障额外恢复只允许默认重试次数已耗尽的 FAILED 任务");
+  }
+  const attempt = currentAttempt(task);
+  const raw = await readObservationFile(observationFile);
+  validateCapacityObservation(JSON.parse(raw.toString("utf8")), attempt);
+  await verifyScoringInputs(task, { allowAttemptOutputs: true });
+  await verifyTaskCandidateOrFail(plan, state, task, "capacity-retry-grant");
+  await assertAttemptRuntimeQuiescent(task, join(task.score_dir, "private-scoring"));
+  const evidence = await preserveObservation(plan, "capacity-retry-observations", `${archiveTaskKey(taskId)}-${attempt.attempt_number}.json`, raw);
+  task.capacity_retry_grant = {
+    schema_version: CAPACITY_GRANT_SCHEMA,
+    attempt_number: attempt.attempt_number,
+    thread_id: attempt.thread_id,
+    ...evidence,
+    reason: retryReason,
+    granted_at: new Date().toISOString(),
+  };
+  state.history.push({ event: "SCORING_CAPACITY_RETRY_GRANTED", task_id: taskId,
+    at: task.capacity_retry_grant.granted_at, grant: task.capacity_retry_grant });
+  await saveControl(plan, state);
+  return publicStatus(state);
 }
 
 function requireTask(state, taskId) {
@@ -1302,7 +1421,21 @@ export async function recordWait(packageRoot, taskId, observation, options = {})
   const task = requireTask(state, taskId);
   const attempt = currentAttempt(task);
   if (!attempt || !attempt.thread_id) throw new Error("任务没有已记录的评分会话");
-  if (!new Set(["SCORING", "TIMED_OUT"]).has(task.phase)) throw new Error(`当前任务状态不能记录等待结果：${task.phase}`);
+  let nativeRaw = null;
+  if (observation.terminalObservation) {
+    if (["waitStatus", "waitCursor", "waitError", "finishedAt"].some((key) => observation[key] !== undefined)) {
+      throw new Error("原生终态 poll 不能与手工终态字段混用");
+    }
+    nativeRaw = await readObservationFile(observation.terminalObservation);
+    observation = { ...observation, ...terminalObservationFields(JSON.parse(nativeRaw), attempt) };
+  }
+  if (!new Set(["SCORING", "TIMED_OUT"]).has(task.phase)) {
+    if (Number(observation.waitSequence) === attempt.last_wait_sequence
+      && observation.waitCursor === attempt.wait_cursor && observation.waitStatus === attempt.last_wait_status
+      && (observation.waitError || "") === (attempt.last_wait_error || "")
+      && (!observation.finishedAt || observation.finishedAt === attempt.finished_at)) return publicStatus(state);
+    throw new Error(`当前任务状态不能记录等待结果：${task.phase}`);
+  }
   const waitStatus = String(observation.waitStatus || "").toUpperCase();
   const waitCursor = String(observation.waitCursor || "");
   const waitSequence = Number(observation.waitSequence);
@@ -1314,17 +1447,24 @@ export async function recordWait(packageRoot, taskId, observation, options = {})
   if (observation.finishedAt && !terminalStatus) throw new Error("finishedAt 只允许与终态 waitStatus 一起提供");
   const observedAt = asDate(options.now);
   if (finishedAt && finishedAt.getTime() > observedAt.getTime()) throw new Error("finishedAt 不能晚于本次观察时间");
+  if (attempt.terminal_observation && (attempt.terminal_status !== waitStatus
+    || attempt.finished_at !== finishedAt?.toISOString())) throw new Error("已有原生终态证据，不能改写终态");
   const expectedSequence = attempt.wait_count + 1;
   if (waitSequence === attempt.last_wait_sequence) {
     if (attempt.wait_cursor === waitCursor
       && attempt.last_wait_status === waitStatus
       && (attempt.last_wait_error || "") === String(observation.waitError || "")) {
       if (finishedAt && terminalStatus && attempt.terminal_status === waitStatus) {
+        if (attempt.terminal_observation && attempt.finished_at === finishedAt.toISOString()) return publicStatus(state);
         if (attempt.deadline_at && finishedAt.getTime() >= asDate(attempt.deadline_at).getTime()) {
           throw new Error(`finishedAt 仍在评分 deadline 之后：${attempt.deadline_at}`);
         }
         const previousFinishedAt = attempt.finished_at;
         const wasTimedOut = Boolean(attempt.deadline_exceeded_at);
+        if (nativeRaw) {
+          attempt.terminal_observation = await preserveObservation(plan, "terminal-observations",
+            `${archiveTaskKey(taskId)}-${attempt.attempt_number}-${waitSequence}.json`, nativeRaw);
+        }
         attempt.finished_at = finishedAt.toISOString();
         if (wasTimedOut) {
           attempt.deadline_exceeded_at = null;
@@ -1340,6 +1480,7 @@ export async function recordWait(packageRoot, taskId, observation, options = {})
           previous_finished_at: previousFinishedAt,
           finished_at: attempt.finished_at,
           cleared_deadline_exceeded: wasTimedOut,
+          ...(attempt.terminal_observation ? { terminal_observation: attempt.terminal_observation } : {}),
         });
         await saveControl(plan, state);
       }
@@ -1348,6 +1489,10 @@ export async function recordWait(packageRoot, taskId, observation, options = {})
     throw new Error(`waitSequence ${waitSequence} 已记录但内容不一致`);
   }
   if (waitSequence !== expectedSequence) throw new Error(`waitSequence 应为 ${expectedSequence}，实际为 ${waitSequence}`);
+  if (nativeRaw) {
+    attempt.terminal_observation = await preserveObservation(plan, "terminal-observations",
+      `${archiveTaskKey(taskId)}-${attempt.attempt_number}-${waitSequence}.json`, nativeRaw);
+  }
   const now = observedAt.toISOString();
   const terminalAt = (finishedAt || observedAt).toISOString();
   attempt.wait_count = waitSequence;
@@ -1366,6 +1511,7 @@ export async function recordWait(packageRoot, taskId, observation, options = {})
     wait_cursor: waitCursor,
     wait_status: waitStatus,
     error: observation.waitError || null,
+    ...(attempt.terminal_observation ? { terminal_observation: attempt.terminal_observation } : {}),
   });
   const terminalBeforeDeadline = terminalStatus
     && (!attempt.deadline_at || (finishedAt || observedAt).getTime() < asDate(attempt.deadline_at).getTime());
@@ -1620,7 +1766,7 @@ export async function prepareRetry(packageRoot, taskId, retryReason, options = {
     throw new Error(`当前任务状态不能重试：${task.phase}`);
   }
   if (!attempt?.terminal_status) throw new Error("原评分任务终态尚未确认，禁止创建重试任务");
-  if (task.retry_count >= task.max_retries) throw new Error(`评分任务已达到最大重试次数：${task.max_retries}`);
+  if (task.retry_count >= retryLimit(task)) throw new Error(`评分任务已达到最大重试次数：${retryLimit(task)}`);
   const privateRoot = join(task.score_dir, "private-scoring");
   const archivePaths = attemptArchivePaths(plan, task, attempt);
   const recoveryInProgress = Boolean(
@@ -1956,7 +2102,11 @@ async function main() {
         registrationMethod: args.registrationMethod,
       });
       else if (args.command === "record-thread") result = await recordThread(args.packageRoot, taskId, { threadId: args.threadId, hostId: args.hostId });
-      else if (args.command === "record-wait") result = await recordWait(args.packageRoot, taskId, {
+      else if (args.command === "record-wait") result = await recordWait(args.packageRoot, taskId, args.terminalObservation ? {
+        waitSequence: args.waitSequence,
+        terminalObservation: args.terminalObservation,
+        ...Object.fromEntries(["waitCursor", "waitStatus", "waitError", "finishedAt"].filter((key) => args[key] !== undefined).map((key) => [key, args[key]])),
+      } : {
         waitSequence: args.waitSequence,
         waitCursor: args.waitCursor,
         waitStatus: args.waitStatus,
@@ -1965,6 +2115,7 @@ async function main() {
       });
       else if (args.command === "mark-timeout") result = await markTimeout(args.packageRoot, taskId);
       else if (args.command === "prepare-retry") result = await prepareRetry(args.packageRoot, taskId, args.retryReason);
+      else if (args.command === "grant-capacity-retry") result = await grantCapacityRetry(args.packageRoot, taskId, args.terminalObservation, args.retryReason);
       else if (args.command === "mark-complete") result = await markComplete(args.packageRoot, taskId);
       else result = await markFailed(args.packageRoot, taskId, args.error);
     }
