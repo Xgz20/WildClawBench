@@ -63,7 +63,7 @@ export function verifyRecoveredDispatchAcknowledgement(snapshot, journal, native
 
 
 export function normalizeVerifiedNonSuccessToolSubset(snapshot, options, { nonSuccessVerified = false } = {}) {
-  try { return { ...normalizeNativeToolEvents(snapshot, options), dropped_failed_upload_count: 0 }; }
+  try { return { ...normalizeNativeToolEvents(snapshot, options), profile: snapshot.profile, dropped_failed_upload_count: 0 }; }
   catch (error) {
     if (!nonSuccessVerified && error.message === "NATIVE_TOOL_CAPTURE_INCOMPLETE"
         && Array.isArray(snapshot?.events) && Array.isArray(snapshot?.ledger)
@@ -193,7 +193,9 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   let completeToolTrace = !nonSuccess && Boolean(nativeTools) && nativeTools.status !== "partial" && unknownBlocks.length === 0 && multimodalBypassCount === 0;
   const missingToolDisplays = [];
   if (nativeTools && nativeTools.known_subtotal === 0 && assistant.content_blocks_v2.some(b => b.content?.file_operation_block)) {
-    if (!nonSuccess) throw new Error("DOUBAOWORK_TOOL_DISPLAY_WITHOUT_NATIVE_EVENTS");
+    if (!nonSuccess && nativeTools.profile !== "doubaowork-modern-file-execution/v1") {
+      throw new Error("DOUBAOWORK_TOOL_DISPLAY_WITHOUT_NATIVE_EVENTS");
+    }
     missingToolDisplays.push("file_operation_block");
   }
   const discovery = await discoverNativeSources({ sessionId: native.conversation_id });
@@ -251,6 +253,7 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
       // tool ledger, but explicitly downgrade its trace to partial. Do not
       // synthesize a call/result from the assistant's display block.
       if (!nonSuccess && (native.terminal !== "completed" || !nativeTools
+          || nativeTools.profile !== "doubaowork-modern-file-execution/v1"
           || trajectoryPromptBinding.status !== "verified")) throw new Error("DOUBAOWORK_GENERIC_TOOL_WITHOUT_TRACE");
       missingToolDisplays.push("generic_tool_block");
       completeToolTrace = false;

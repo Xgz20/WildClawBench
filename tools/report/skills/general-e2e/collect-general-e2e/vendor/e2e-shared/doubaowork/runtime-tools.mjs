@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { isAbsolute } from "node:path";
 
 const PROFILE = "doubaowork-local-tool-debug-sink/v1";
+const MODERN_PROFILE = "doubaowork-modern-file-execution/v1";
 
 // Inspect only the already initialized background runtime. Loading a module or
 // calling an initializer, exporter, injector, permission or tool API is forbidden.
@@ -53,6 +54,102 @@ async function backendCall(browser, operation, value) {
     await cdp.send("Runtime.releaseObjectGroup", { objectGroup: group }).catch(() => {});
     await cdp.detach();
   }
+}
+
+// DoubaoWork 2.31.10 moved local-file execution to the new SSE runtime. The
+// old resultLedger/debug-sink is absent, but the shared execution snapshot
+// still exposes the bound agent, conversation, workspace mutations and active
+// execution lifecycle. Keep this adapter conservative: it reports the native
+// file-execution scope and explicitly leaves per-tool result coverage partial.
+async function modernBackendCall(browser, operation, value) {
+  const pages = browser.contexts().flatMap(c => c.pages()).filter(p => {
+    try { return new URL(p.url()).hostname === "doubaowork-background"; } catch { return false; }
+  });
+  if (pages.length !== 1) throw new Error("DOUBAOWORK_BACKGROUND_TARGET_AMBIGUOUS");
+  const cdp = await pages[0].context().newCDPSession(pages[0]), group = `wcb-modern-tools-${randomUUID()}`;
+  try {
+    const root = await cdp.send("Runtime.evaluate", { objectGroup: group, expression: `(() => {
+      const chunks = window["@flow-web/desktop:stable"];
+      if (!Array.isArray(chunks)) throw new Error("DOUBAOWORK_BACKGROUND_LOADER_UNAVAILABLE");
+      let require; const item = [["wcb-modern-reader-" + crypto.randomUUID()], {}, r => { require = r; }];
+      chunks.push(item); if (chunks.at(-1) === item) chunks.pop();
+      for (const [id, mod] of Object.entries(require?.m || {})) {
+        const source = String(mod || "");
+        if (!source.includes("local-file-local-tools-sse-wiring.ts")) continue;
+        return { entry: require(id).default, source, moduleId: id };
+      }
+      throw new Error("DOUBAOWORK_MODERN_BACKGROUND_PROFILE_UNAVAILABLE");
+    })()` });
+    if (root.exceptionDetails || !root.result?.objectId) throw new Error("DOUBAOWORK_MODERN_BACKGROUND_PROFILE_UNAVAILABLE");
+    const rootProps = await cdp.send("Runtime.getProperties", { objectId: root.result.objectId, ownProperties: true });
+    const entry = rootProps.result.find(p => p.name === "entry")?.value;
+    const source = rootProps.result.find(p => p.name === "source")?.value?.value;
+    if (!entry?.objectId || typeof source !== "string") throw new Error("DOUBAOWORK_MODERN_BACKGROUND_ENTRY_UNAVAILABLE");
+    const entryProps = await cdp.send("Runtime.getProperties", { objectId: entry.objectId });
+    const scope = entryProps.internalProperties?.find(p => p.name === "[[Scopes]]")?.value?.objectId;
+    if (!scope) throw new Error("DOUBAOWORK_MODERN_BACKGROUND_SCOPES_UNAVAILABLE");
+    const scopes = await cdp.send("Runtime.getProperties", { objectId: scope });
+    const closure = scopes.result.find(p => p.value?.description?.startsWith("Closure"));
+    if (!closure?.value?.objectId) throw new Error("DOUBAOWORK_MODERN_BACKGROUND_CLOSURE_UNAVAILABLE");
+    const vars = await cdp.send("Runtime.getProperties", { objectId: closure.value.objectId, ownProperties: true });
+    const wi = vars.result.find(p => p.name === "wi")?.value;
+    if (!wi?.objectId) throw new Error("DOUBAOWORK_MODERN_BACKGROUND_STORE_UNAVAILABLE");
+    const managerResult = await cdp.send("Runtime.callFunctionOn", {
+      objectId: wi.objectId, objectGroup: group, returnByValue: false,
+      functionDeclaration: "function(){ return this.oC; }",
+    });
+    if (managerResult.exceptionDetails || !managerResult.result?.objectId) throw new Error("DOUBAOWORK_MODERN_BACKGROUND_MANAGER_UNAVAILABLE");
+    const result = await cdp.send("Runtime.callFunctionOn", {
+      objectId: managerResult.result.objectId, objectGroup: group, returnByValue: true, awaitPromise: true,
+      arguments: [{ value: { ...value, operation, profileSha: createHash("sha256").update(source).digest("hex") } }],
+      functionDeclaration: operateModernObserver.toString(),
+    });
+    if (result.exceptionDetails || !result.result?.value) throw new Error(`DOUBAOWORK_MODERN_OPERATION_FAILED: ${result.exceptionDetails?.exception?.description || operation}`);
+    return result.result.value;
+  } finally {
+    await cdp.send("Runtime.releaseObjectGroup", { objectGroup: group }).catch(() => {});
+    await cdp.detach();
+  }
+}
+
+export function operateModernObserver(cfg) {
+  const key = "__wcbDoubaoModernNativeTools", profile = "doubaowork-modern-file-execution/v1";
+  let root = globalThis[key];
+  const executions = () => [...(this.executions?.values?.() || [])];
+  const workspaceFor = execution => {
+    const paths = (execution.fileKeys || []).map(k => this.files?.get?.(k)?.absolutePath).filter(Boolean);
+    const path = paths[0]; const marker = path?.indexOf("/workspace/");
+    return marker >= 0 ? path.slice(0, marker) : null;
+  };
+  const active = () => executions().filter(e => e && e.endedAtMs === undefined && workspaceFor(e)).map(e => ({
+    execution_key: e.executionKey, instance_id: e.sandboxId, sandbox_id: e.sandboxId,
+    native_request_session_id: e.agentId, conversation_ids: e.conversationId ? [e.conversationId] : [],
+    native_cwd: workspaceFor(e), context_verified: Boolean(e.agentId && e.conversationId && workspaceFor(e)),
+    tool_call_id: e.executionKey,
+  }));
+  if (cfg.operation === "activity") return { schema: "wildclawbench.doubaowork-native-tool-activity/v2", initialized: true,
+    profile, profile_sha256: cfg.profileSha, active: active(), observed_at: new Date().toISOString() };
+  if (root && (root.manager !== this || root.profile_sha256 !== cfg.profileSha)) throw new Error("NATIVE_TOOL_OBSERVER_RUNTIME_CHANGED");
+  if (cfg.operation === "install") {
+    root ||= { manager: this, profile_sha256: cfg.profileSha, observers: new Map() };
+    if (root.observers.has(cfg.attemptId) || [...root.observers.values()].some(o => o.workspace === cfg.workspace)) throw new Error("NATIVE_TOOL_OBSERVER_ALREADY_EXISTS");
+    const observer = { attempt_id: cfg.attemptId, workspace: cfg.workspace, installed_at: new Date().toISOString() };
+    root.observers.set(cfg.attemptId, observer); globalThis[key] = root;
+    return { installed: true, attempt_id: cfg.attemptId, installed_at: observer.installed_at, profile, profile_sha256: cfg.profileSha };
+  }
+  if (!root?.observers?.has(cfg.attemptId)) return { status: "unavailable", reason: "native-observer-not-installed", attempt_id: cfg.attemptId };
+  const observer = root.observers.get(cfg.attemptId);
+  if (cfg.operation === "discard-unsent") return { ...observer, schema: "wildclawbench.doubaowork-native-tool-events/v2", profile,
+    profile_sha256: cfg.profileSha, status: "discarded", events: [], ledger: [], collected_at: new Date().toISOString(), native_agent_id: cfg.agentId ?? null };
+  if (cfg.operation !== "collect") throw new Error("NATIVE_TOOL_OBSERVER_OPERATION_INVALID");
+  const snapshot = this.snapshot?.() || { executions: [], files: [] };
+  const result = { schema: "wildclawbench.doubaowork-native-tool-events/v2", profile,
+    profile_sha256: cfg.profileSha, attempt_id: cfg.attemptId, workspace: cfg.workspace, native_agent_id: cfg.agentId ?? null,
+    installed_at: observer.installed_at, collected_at: new Date().toISOString(), events: [], ledger: [],
+    execution_snapshot: snapshot, contexts: [], status: "captured-not-normalized", warnings: ["modern-runtime-tool-result-ledger-unavailable"] };
+  if (cfg.restore) root.observers.delete(cfg.attemptId);
+  if (cfg.restore && root.observers.size === 0) delete globalThis[key];
+  return result;
 }
 
 // This function runs inside the target's background JS world. The debug callback
@@ -220,12 +317,23 @@ export function operateNativeObserver(token, cfg) {
 
 export async function installNativeToolObserver(browser, { attemptId, workspace }) {
   if (!isAbsolute(workspace) || !attemptId) throw new Error("NATIVE_TOOL_OBSERVER_INPUT_INVALID");
-  return backendCall(browser, "install", { attemptId, workspace });
+  try { return await backendCall(browser, "install", { attemptId, workspace }); }
+  catch (error) {
+    if (!/BACKGROUND_PROFILE|BACKGROUND_ENTRY|BACKGROUND_SCOPES|BACKGROUND_RUNTIME|NATIVE_TOOL_RUNTIME_UNSUPPORTED/u.test(error.message)) throw error;
+    return modernBackendCall(browser, "install", { attemptId, workspace });
+  }
 }
-export const readNativeToolActivity = browser => backendCall(browser, "activity", {});
+export async function readNativeToolActivity(browser) {
+  try { return await backendCall(browser, "activity", {}); }
+  catch (error) {
+    if (!/BACKGROUND_PROFILE|BACKGROUND_ENTRY|BACKGROUND_SCOPES|BACKGROUND_RUNTIME|NATIVE_TOOL_RUNTIME_UNSUPPORTED/u.test(error.message)) throw error;
+    return modernBackendCall(browser, "activity", {});
+  }
+}
 
 export function assertNativeToolActivityAllowed(activity, peers = [], frontend) {
   if (activity?.initialized !== true || !Array.isArray(activity.active)) throw new Error("DOUBAOWORK_TOOL_ACTIVITY_UNVERIFIED");
+  const modern = activity.profile === MODERN_PROFILE;
   for (const row of activity.active) {
     if (row.context_verified !== true || row.conversation_ids?.length !== 1 || !isAbsolute(row.native_cwd || "")
         || !row.native_request_session_id || !row.tool_call_id) throw new Error("DOUBAOWORK_TOOL_ACTIVITY_SCOPE_UNVERIFIED");
@@ -240,15 +348,29 @@ export function assertNativeToolActivityAllowed(activity, peers = [], frontend) 
 
 export function taskToolDeliveries(activity, { workspace, conversationId }) {
   if (activity?.initialized !== true || !Array.isArray(activity.active)) throw new Error("DOUBAOWORK_TOOL_ACTIVITY_UNVERIFIED");
+  if (activity.profile === MODERN_PROFILE) {
+    return activity.active.filter(row => row.native_cwd === workspace
+      && !row.conversation_ids?.includes(conversationId));
+  }
   return activity.active.filter(row => row.native_cwd === workspace || row.conversation_ids?.includes(conversationId)
     || row.context_verified !== true || row.conversation_ids?.length !== 1 || !isAbsolute(row.native_cwd || "")
     || !row.native_request_session_id || !row.tool_call_id);
 }
 export async function collectNativeToolObserver(browser, { attemptId, workspace, agentId, restore = false, unsent = false }) {
-  return backendCall(browser, unsent ? "discard-unsent" : "collect", { attemptId, workspace, agentId, restore });
+  try { return await backendCall(browser, unsent ? "discard-unsent" : "collect", { attemptId, workspace, agentId, restore }); }
+  catch (error) {
+    if (!/BACKGROUND_PROFILE|BACKGROUND_ENTRY|BACKGROUND_SCOPES|BACKGROUND_RUNTIME|NATIVE_TOOL_RUNTIME_UNSUPPORTED/u.test(error.message)) throw error;
+    return modernBackendCall(browser, unsent ? "discard-unsent" : "collect", { attemptId, workspace, agentId, restore });
+  }
 }
 
 export function normalizeNativeToolEvents(snapshot, { attemptId, workspace, agentId, conversationId, sentAt, finishedAt }) {
+  if (snapshot?.schema === "wildclawbench.doubaowork-native-tool-events/v2" && snapshot.profile === MODERN_PROFILE) {
+    if (snapshot.attempt_id !== attemptId || snapshot.workspace !== workspace || snapshot.native_agent_id !== agentId
+      || ![snapshot.installed_at, snapshot.collected_at, sentAt, finishedAt].every(t => Number.isFinite(Date.parse(t)))
+      || Date.parse(finishedAt) < Date.parse(sentAt)) throw new Error("NATIVE_TOOL_MODERN_EVIDENCE_IDENTITY_MISMATCH");
+    return { events: [], calls: [], known_subtotal: 0, scope: "modern-runtime-file-execution", status: "partial" };
+  }
   if (snapshot?.schema !== "wildclawbench.doubaowork-native-tool-events/v1" || snapshot.profile !== PROFILE
       || snapshot.attempt_id !== attemptId || snapshot.workspace !== workspace || snapshot.native_agent_id !== agentId) throw new Error("NATIVE_TOOL_EVIDENCE_IDENTITY_MISMATCH");
   if (![snapshot.installed_at, snapshot.collected_at, sentAt, finishedAt].every(t => Number.isFinite(Date.parse(t)))

@@ -367,12 +367,20 @@ export async function main(argv = process.argv.slice(2)) {
       }
       let next = selectBatchTaskAction(state, journals, state.run_slots, state.history.filter(x => x.event === "TASK_RESUME_INTENT").length);
       if (next.action === "pause" && args.continueAttention && state.tasks.find(t => t.task_id === next.task_id)?.phase === "NEEDS_ATTENTION"
-          && journals[next.task_id]?.send?.dispatch_attempt_count === 1) {
-        state.tasks.find(t => t.task_id === next.task_id).phase = "RUNNING";
+          && (journals[next.task_id]?.send?.dispatch_attempt_count === 1 || !journals[next.task_id])) {
+        const activeTask = state.tasks.find(t => t.phase === "RUNNING");
+        if (!activeTask) {
+          state.phase = "NEEDS_ATTENTION";
+          await save("QUEUE_PAUSED", { task_id: next.task_id, reason: "task-attention" });
+          return { status: "NEEDS_ATTENTION", task_id: next.task_id, reason: "task-attention" };
+        }
+        // A pre-send failure has no journal and must remain blocked; continue
+        // only the already-sent peer so it can be collected and cleaned up.
+        if (journals[next.task_id]?.send?.dispatch_attempt_count === 1) state.tasks.find(t => t.task_id === next.task_id).phase = "RUNNING";
         state.phase = "RUNNING";
         args.continueAttention = false;
         await save("ATTENTION_EXPLICIT_RESUME", { task_id: next.task_id });
-        next = selectBatchTaskAction(state, journals, state.run_slots, state.history.filter(x => x.event === "TASK_RESUME_INTENT").length);
+        next = { action: "resume", task_id: activeTask.task_id };
       }
       if (next.action === "pause" && args.retryPreSendFailure) {
         const retryTask = state.tasks.find(t => t.task_id === next.task_id);
@@ -415,6 +423,7 @@ export async function main(argv = process.argv.slice(2)) {
       }
       if (!journal || journal.send?.dispatch_attempt_count !== 1 || exitCode !== 0 || journal.phase === "NEEDS_ATTENTION") {
         task.phase = "NEEDS_ATTENTION"; state.phase = "NEEDS_ATTENTION";
+        if (!journal || journal.send?.dispatch_attempt_count === 0) task.retry_pre_send_failure = true;
         await save("TASK_NEEDS_ATTENTION", { task_id: task.task_id, exit_code: exitCode,
           send_count: journal?.send?.dispatch_attempt_count ?? null });
         return { status: "NEEDS_ATTENTION", task_id: task.task_id, send_count: journal?.send?.dispatch_attempt_count ?? null };
