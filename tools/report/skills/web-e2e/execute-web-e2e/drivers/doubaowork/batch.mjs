@@ -374,13 +374,12 @@ export async function main(argv = process.argv.slice(2)) {
           await save("QUEUE_PAUSED", { task_id: next.task_id, reason: "task-attention" });
           return { status: "NEEDS_ATTENTION", task_id: next.task_id, reason: "task-attention" };
         }
-        // A pre-send failure has no journal and must remain blocked; continue
-        // only the already-sent peer so it can be collected and cleaned up.
-        if (journals[next.task_id]?.send?.dispatch_attempt_count === 1) state.tasks.find(t => t.task_id === next.task_id).phase = "RUNNING";
+        const sentBlocked = journals[next.task_id]?.send?.dispatch_attempt_count === 1;
+        if (sentBlocked) state.tasks.find(t => t.task_id === next.task_id).phase = "RUNNING";
         state.phase = "RUNNING";
         args.continueAttention = false;
         await save("ATTENTION_EXPLICIT_RESUME", { task_id: next.task_id });
-        next = { action: "resume", task_id: activeTask.task_id };
+        next = { action: "resume", task_id: sentBlocked ? next.task_id : activeTask.task_id };
       }
       if (next.action === "pause" && args.retryPreSendFailure) {
         const retryTask = state.tasks.find(t => t.task_id === next.task_id);
