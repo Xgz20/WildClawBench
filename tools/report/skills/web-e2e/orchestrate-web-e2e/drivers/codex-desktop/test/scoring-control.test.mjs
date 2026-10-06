@@ -207,6 +207,8 @@ test("init defaults to three scoring slots and assigns immutable per-task ports"
   assert.deepEqual(state.tasks.map((task) => task.task_id), ["task-2", "task-1"]);
   assert.match(await readFile(state.tasks[0].scoring_prompt_file, "utf8"), /\$score-web-e2e/);
   assert.match(await readFile(state.tasks[0].scoring_prompt_file, "utf8"), /独占本地评分端口 4173/);
+  assert.match(await readFile(state.tasks[0].scoring_prompt_file, "utf8"), /open_in_codex/);
+  assert.match(await readFile(state.tasks[0].scoring_prompt_file, "utf8"), /省略 threadId/);
   await assert.rejects(() => initialize(root, ["task-1", "task-2"]), /任务范围或顺序不可变/);
 });
 
