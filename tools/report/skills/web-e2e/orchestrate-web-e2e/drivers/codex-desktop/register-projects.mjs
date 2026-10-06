@@ -182,7 +182,11 @@ async function confirmProjectTrust(page, project, timeout) {
   if (matches.length !== 1) throw new Error(`文件夹信任对话框必须唯一可见，实际 ${matches.length} 个`);
   const { dialog, trust } = matches[0];
   if (!trustDialogMatchesProject(await dialog.innerText(), project)) {
-    throw new Error(`文件夹信任对话框未完整回显目标绝对路径：${project}`);
+    const cancel = dialog.getByRole("button", { name: /^(Cancel|取消)$/i });
+    if (await cancel.count() !== 1) throw new Error(`文件夹信任对话框未完整回显目标绝对路径且缺少取消按钮：${project}`);
+    await cancel.click({ timeout, noWaitAfter: true });
+    await dialog.waitFor({ state: "hidden", timeout });
+    return false;
   }
   try { await trust.click({ timeout, noWaitAfter: true }); }
   catch (error) {
@@ -199,6 +203,14 @@ async function dismissStaleProjectDialog(page, timeout) {
     throw new Error("Codex Desktop 存在未知对话框，拒绝继续注册项目");
   }
   const dialogText = await dialogs[0].innerText();
+  const trustButton = dialogs[0].getByRole("button", { name: /^(Trust folder|信任文件夹)$/i });
+  if (await trustButton.count() === 1) {
+    const cancelTrust = dialogs[0].getByRole("button", { name: /^(Cancel|取消)$/i });
+    if (await cancelTrust.count() !== 1) throw new Error("已有文件夹信任对话框缺少唯一取消按钮");
+    await cancelTrust.click({ timeout, noWaitAfter: true });
+    await dialogs[0].waitFor({ state: "hidden", timeout });
+    return;
+  }
   if (/将设备连接到此 Mac|Connect (?:a )?device to this Mac/i.test(dialogText)) {
     const later = dialogs[0].getByRole("button", { name: /^(稍后|Not now|Maybe later)$/i });
     if (await later.count() !== 1) throw new Error("Desktop 设备连接引导缺少唯一的稍后按钮");

@@ -101,7 +101,8 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
 
 1. 读取该题生成的 `scoring_prompt_file`。
 2. 确认当前题的 `preflight.status=PASSED` 后，调用 Desktop 内置 `create_thread`，目标为已记录的 `projectId`，环境固定为 `{type: "local"}`。除非用户显式指定，不覆盖模型与推理强度。
-3. 把返回的 `threadId`、`hostId` 记录到状态：
+3. `create_thread` 返回后，控制任务必须马上调用 Desktop 内置 `open_in_codex`，目标为 `{type: "browser", url: "http://127.0.0.1:<该题评分端口>/"}`，并传入刚返回的 `threadId`；返回 `queued` 只表示请求已入队，不表示 Browser 路由已就绪。评分线程先按 `score-web-e2e` 启动受管站点并确认实际入口可访问，再用自己的 `cua.getState` 确认存在 `type=iab` 的 Browser，且 `metadata.codexSessionId` 与当前评分线程一致；若仍为空，评分线程自己再调用一次 `open_in_codex`（同一 URL，省略 `threadId` 以使用当前评分线程）并复查一次，不能把 `source_thread_id` 或父会话 ID 传给该工具，然后绑定该路由打开实际入口。不得让评分线程改用父会话、Chrome、headless 或自建浏览器。Browser 路由不存在时保留 `evaluation_error`，由控制任务按恢复契约归档重试。
+4. 把返回的 `threadId`、`hostId` 记录到状态：
 
    ```bash
    node <skill-dir>/scripts/scoring-control.mjs record-thread \
@@ -111,7 +112,7 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
      --host-id <host_id>
    ```
 
-4. 把全部活动评分任务组成一次 `wait_threads` 调用；需要诊断时再用 `read_thread`。每个目标都从对应 `recommended_actions` 项读取 `thread_id`、`host_id`、`after_cursor` 和 `next_wait_sequence`，返回后立即逐题串行持久化 poll 的 cursor 与状态：
+5. 把全部活动评分任务组成一次 `wait_threads` 调用；需要诊断时再用 `read_thread`。每个目标都从对应 `recommended_actions` 项读取 `thread_id`、`host_id`、`after_cursor` 和 `next_wait_sequence`，返回后立即逐题串行持久化 poll 的 cursor 与状态：
 
    ```bash
    node <skill-dir>/scripts/scoring-control.mjs record-wait \

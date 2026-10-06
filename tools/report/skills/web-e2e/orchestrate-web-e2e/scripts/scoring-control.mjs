@@ -524,6 +524,7 @@ function promptForTask(taskId, scoringPort) {
     `使用 $score-web-e2e 对当前项目中的唯一 Web E2E 用例 ${taskId} 进行完整评分。`,
     "必须使用 Codex Desktop 内置 Browser，按照 private-scoring/task_contract.json 逐项实际操作和截图取证，并生成 private-scoring/task_score.json。",
     `本题独占本地评分端口 ${scoringPort}；启动站点和打开 Browser 时必须使用该端口，不得使用其他题目的端口。若该端口冲突，只能按评分 Skill 的受管端口冲突流程处理并保留审计。`,
+    `创建评分线程后，控制会话必须立即调用 Codex Desktop 的 open_in_codex，把该线程绑定到本题的 Browser 路由（target.type=browser，URL 使用 http://127.0.0.1:${scoringPort}/，threadId 使用刚返回的 threadId）；仅 create_thread 返回成功不代表 Browser 已建立。评分线程先按 score-web-e2e 启动受管站点并确认实际入口可访问，再用自己的 cua.getState 确认 type=iab 且 metadata.codexSessionId 与当前线程一致；若 browsers 仍为空，评分线程自己调用 open_in_codex（target.type=browser、同一 URL，省略 threadId 以使用当前评分线程）后再复查一次。不得把 source_thread_id 或父会话 ID 传给 open_in_codex。只有建立当前线程路由后才能用该 Browser 打开实际入口。禁止使用父会话、Chrome、headless 或自建浏览器替代，并按评分 Skill 记录 evaluation_error。`,
     "workspace/ 是被评 Harness 已冻结的只读候选产物，严禁编辑、格式化、安装依赖、构建或生成任何文件；需要写入时只能使用 private-scoring/runtime-workspace/ 临时副本。",
     "不要访问当前项目目录之外的文件，不要创建或调度其他 Codex 任务；只用评分 Skill 的精确 PID 管理工具启动和停止本站服务，证据不足或浏览器不可用时按 Skill 契约记录 evaluation_error。",
     "完成全部评分文件后结束当前任务。",

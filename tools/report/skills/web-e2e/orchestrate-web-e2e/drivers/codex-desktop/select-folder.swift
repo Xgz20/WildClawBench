@@ -37,6 +37,7 @@ private func stringAttribute(_ element: AXUIElement, _ name: String) -> String {
 
 private func boolAttribute(_ element: AXUIElement, _ name: String) -> Bool {
     guard let value = attribute(element, name) else { return false }
+    guard CFGetTypeID(value) == CFBooleanGetTypeID() else { return false }
     return CFBooleanGetValue((value as! CFBoolean))
 }
 
