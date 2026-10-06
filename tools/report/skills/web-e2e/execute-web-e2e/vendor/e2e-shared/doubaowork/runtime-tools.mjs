@@ -92,15 +92,19 @@ async function modernBackendCall(browser, operation, value) {
     const closure = scopes.result.find(p => p.value?.description?.startsWith("Closure"));
     if (!closure?.value?.objectId) throw new Error("DOUBAOWORK_MODERN_BACKGROUND_CLOSURE_UNAVAILABLE");
     const vars = await cdp.send("Runtime.getProperties", { objectId: closure.value.objectId, ownProperties: true });
-    const wi = vars.result.find(p => p.name === "wi")?.value;
-    if (!wi?.objectId) throw new Error("DOUBAOWORK_MODERN_BACKGROUND_STORE_UNAVAILABLE");
-    const managerResult = await cdp.send("Runtime.callFunctionOn", {
-      objectId: wi.objectId, objectGroup: group, returnByValue: false,
-      functionDeclaration: "function(){ return this.oC; }",
-    });
-    if (managerResult.exceptionDetails || !managerResult.result?.objectId) throw new Error("DOUBAOWORK_MODERN_BACKGROUND_MANAGER_UNAVAILABLE");
+    const cleanup = vars.result.find(p => p.name === "f")?.value;
+    if (!cleanup?.objectId) throw new Error("DOUBAOWORK_MODERN_BACKGROUND_DISPATCHER_UNAVAILABLE");
+    const cleanupProps = await cdp.send("Runtime.getProperties", { objectId: cleanup.objectId });
+    const cleanupScope = cleanupProps.internalProperties?.find(p => p.name === "[[Scopes]]")?.value?.objectId;
+    if (!cleanupScope) throw new Error("DOUBAOWORK_MODERN_BACKGROUND_DISPATCHER_SCOPE_UNAVAILABLE");
+    const cleanupScopes = await cdp.send("Runtime.getProperties", { objectId: cleanupScope });
+    const cleanupClosure = cleanupScopes.result.find(p => p.value?.description?.startsWith("Closure"));
+    const cleanupVars = cleanupClosure?.value?.objectId
+      ? await cdp.send("Runtime.getProperties", { objectId: cleanupClosure.value.objectId, ownProperties: true }) : null;
+    const dispatcher = cleanupVars?.result?.find(p => p.name === "e")?.value;
+    if (!dispatcher?.objectId) throw new Error("DOUBAOWORK_MODERN_BACKGROUND_DISPATCHER_UNAVAILABLE");
     const result = await cdp.send("Runtime.callFunctionOn", {
-      objectId: managerResult.result.objectId, objectGroup: group, returnByValue: true, awaitPromise: true,
+      objectId: dispatcher.objectId, objectGroup: group, returnByValue: true, awaitPromise: true,
       arguments: [{ value: { ...value, operation, profileSha: createHash("sha256").update(source).digest("hex") } }],
       functionDeclaration: operateModernObserver.toString(),
     });
@@ -115,18 +119,12 @@ async function modernBackendCall(browser, operation, value) {
 export function operateModernObserver(cfg) {
   const key = "__wcbDoubaoModernNativeTools", profile = "doubaowork-modern-file-execution/v1";
   let root = globalThis[key];
-  const executions = () => [...(this.executions?.values?.() || [])];
-  const workspaceFor = execution => {
-    const paths = (execution.fileKeys || []).map(k => this.files?.get?.(k)?.absolutePath).filter(Boolean);
-    const path = paths[0]; const marker = path?.indexOf("/workspace/");
-    return marker >= 0 ? path.slice(0, marker) : null;
-  };
-  const active = () => executions().filter(e => e && e.endedAtMs === undefined && workspaceFor(e)).map(e => ({
-    execution_key: e.executionKey, instance_id: e.sandboxId, sandbox_id: e.sandboxId,
-    native_request_session_id: e.agentId, conversation_ids: e.conversationId ? [e.conversationId] : [],
-    native_cwd: workspaceFor(e), context_verified: Boolean(e.agentId && e.conversationId && workspaceFor(e)),
-    tool_call_id: e.executionKey,
-  }));
+  const records = () => [...(this.records?.values?.() || [])];
+  const recordContext = record => record?.context?.owner || record?.context || {};
+  const recordAgent = record => record?.context?.agentId || recordContext(record)?.agentId || recordContext(record)?.sseIdentity?.agentId || null;
+  const recordConversation = record => record?.context?.conversationId || recordContext(record)?.sendContext?.conversationId || null;
+  const recordWorkspace = record => recordContext(record)?.cwd || record?.context?.cwd || null;
+  const active = () => [];
   if (cfg.operation === "activity") return { schema: "wildclawbench.doubaowork-native-tool-activity/v2", initialized: true,
     profile, profile_sha256: cfg.profileSha, active: active(), observed_at: new Date().toISOString() };
   if (root && (root.manager !== this || root.profile_sha256 !== cfg.profileSha)) throw new Error("NATIVE_TOOL_OBSERVER_RUNTIME_CHANGED");
@@ -142,11 +140,28 @@ export function operateModernObserver(cfg) {
   if (cfg.operation === "discard-unsent") return { ...observer, schema: "wildclawbench.doubaowork-native-tool-events/v2", profile,
     profile_sha256: cfg.profileSha, status: "discarded", events: [], ledger: [], collected_at: new Date().toISOString(), native_agent_id: cfg.agentId ?? null };
   if (cfg.operation !== "collect") throw new Error("NATIVE_TOOL_OBSERVER_OPERATION_INVALID");
-  const snapshot = this.snapshot?.() || { executions: [], files: [] };
+  const selected = records().filter(r => {
+    const at = Number(r.finalizedAt ?? 0); return at >= Date.parse(observer.installed_at)
+      && (!cfg.agentId || recordAgent(r) === cfg.agentId) && (!cfg.workspace || recordWorkspace(r) === cfg.workspace);
+  });
+  const ledger = selected.map(r => {
+    const req = r.request || {}, ctx = recordContext(r), at = Number(r.finalizedAt) || Date.now();
+    return { toolCallId: req.id, toolName: req.name, instanceId: ctx.instanceId || ctx.sandboxId || null,
+      result: r.result, uploadState: r.uploadState === "uploaded" ? "uploaded" : r.uploadState,
+      cachedAtMs: at, sseIdentity: { agentId: recordAgent(r) } };
+  });
+  const events = selected.flatMap(r => {
+    const req = r.request || {}, ctx = recordContext(r), at = new Date(Number(r.finalizedAt) || Date.now()).toISOString();
+    const common = { tool_call_id: req.id, tool_name: req.name, native_agent_id: recordAgent(r),
+      instance_id: ctx.instanceId || ctx.sandboxId || null, sandbox_id: ctx.sandboxId || null,
+      native_cwd: recordWorkspace(r), conversation_id: recordConversation(r), observed_at: at };
+    return [{ ...common, phase: "started", input: req.input ?? {} }, { ...common, phase: "settled",
+      output: r.result, status: r.result?.isError ? "error" : "success" }];
+  });
   const result = { schema: "wildclawbench.doubaowork-native-tool-events/v2", profile,
     profile_sha256: cfg.profileSha, attempt_id: cfg.attemptId, workspace: cfg.workspace, native_agent_id: cfg.agentId ?? null,
-    installed_at: observer.installed_at, collected_at: new Date().toISOString(), events: [], ledger: [],
-    execution_snapshot: snapshot, contexts: [], status: "captured-not-normalized", warnings: ["modern-runtime-tool-result-ledger-unavailable"] };
+    installed_at: observer.installed_at, collected_at: new Date().toISOString(), events, ledger,
+    contexts: [], status: "captured-not-normalized", warnings: [] };
   if (cfg.restore) root.observers.delete(cfg.attemptId);
   if (cfg.restore && root.observers.size === 0) delete globalThis[key];
   return result;
@@ -369,7 +384,10 @@ export function normalizeNativeToolEvents(snapshot, { attemptId, workspace, agen
     if (snapshot.attempt_id !== attemptId || snapshot.workspace !== workspace || snapshot.native_agent_id !== agentId
       || ![snapshot.installed_at, snapshot.collected_at, sentAt, finishedAt].every(t => Number.isFinite(Date.parse(t)))
       || Date.parse(finishedAt) < Date.parse(sentAt)) throw new Error("NATIVE_TOOL_MODERN_EVIDENCE_IDENTITY_MISMATCH");
-    return { events: [], calls: [], known_subtotal: 0, scope: "modern-runtime-file-execution", status: "partial" };
+    const strict = normalizeNativeToolEvents({ ...snapshot, schema: "wildclawbench.doubaowork-native-tool-events/v1",
+      profile: PROFILE, contexts: [], overflow: false, errors: [], unknown_context_events: 0, ledger_at_capacity: false },
+    { attemptId, workspace, agentId, conversationId, sentAt, finishedAt });
+    return { ...strict, profile: MODERN_PROFILE, scope: "modern-runtime-tool-dispatcher-records", status: "partial" };
   }
   if (snapshot?.schema !== "wildclawbench.doubaowork-native-tool-events/v1" || snapshot.profile !== PROFILE
       || snapshot.attempt_id !== attemptId || snapshot.workspace !== workspace || snapshot.native_agent_id !== agentId) throw new Error("NATIVE_TOOL_EVIDENCE_IDENTITY_MISMATCH");
