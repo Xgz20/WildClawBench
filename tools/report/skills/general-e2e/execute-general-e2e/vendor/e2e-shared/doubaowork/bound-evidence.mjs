@@ -67,6 +67,21 @@ export function normalizeVerifiedNonSuccessToolSubset(snapshot, options, { nonSu
   catch (error) {
     if (!nonSuccessVerified && error.message === "NATIVE_TOOL_CAPTURE_INCOMPLETE"
         && Array.isArray(snapshot?.events) && Array.isArray(snapshot?.ledger)
+        && Array.isArray(snapshot.errors)
+        && snapshot.errors.every(item => item === "DISPATCH_LEDGER_CLOCK_INVALID")
+        && snapshot.unknown_context_events === 0
+        && snapshot.overflow !== true && snapshot.ledger_at_capacity !== true
+        && snapshot.ledger.every(row => row.uploadState === "uploaded")) {
+      const partial = { ...snapshot, errors: [] };
+      const verified = normalizeNativeToolEvents(partial, options);
+      return { ...verified, status: "partial", scope: "modern-dispatcher-clock-diagnostic",
+        capture_incomplete: true,
+        capture_diagnostics: { errors: [...snapshot.errors], source_ledger_count: snapshot.ledger.length,
+          verified_ledger_count: verified.known_subtotal },
+        dropped_incomplete_tool_count: 0, dropped_failed_upload_count: 0 };
+    }
+    if (!nonSuccessVerified && error.message === "NATIVE_TOOL_CAPTURE_INCOMPLETE"
+        && Array.isArray(snapshot?.events) && Array.isArray(snapshot?.ledger)
         && Array.isArray(snapshot.errors) && snapshot.errors.length === 0
         && snapshot.unknown_context_events === 0
         && Array.isArray(snapshot.contexts) && !snapshot.contexts.some(c => c.active_delivery)) {

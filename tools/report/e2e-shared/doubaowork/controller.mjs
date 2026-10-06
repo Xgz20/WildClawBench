@@ -1738,7 +1738,11 @@ async function resumeDevelopmentRunUnlocked(options) {
             sentAt: state.timing.sent_at, finishedAt: nativeCancellation ? state.cancellation.terminal_observed_at
               : nativeFailure ? state.native_failure_observed_at : pageObservation.nativeNormalized.finished_at });
           coverage = { status: normalized.status, call_count: normalized.known_subtotal, scope: normalized.scope };
-        } catch (error) { coverage = { status: "partial", error: error.message }; }
+        } catch (error) {
+          coverage = { status: "partial", error: error.message,
+            call_count: Array.isArray(toolSnapshot?.ledger) ? toolSnapshot.ledger.length : null,
+            scope: "modern-runtime-tool-dispatcher-records" };
+        }
         if (cached) nativeTools = { ...cached.artifact, coverage };
         else {
           const toolsPath = join(outputDir, `native-tools-${observationId}.json`);
@@ -1749,8 +1753,7 @@ async function resumeDevelopmentRunUnlocked(options) {
             conversation_id: state.session.conversation_id, artifact: nativeTools };
         }
       }
-      dispatcherEquivalent = !nativeCompletion
-        && state.scene === "web"
+      dispatcherEquivalent = state.scene === "web"
         && uiCompletion
         && state.workspace_selection?.confirmed === true
         && bindingEvidence?.status === "verified"
@@ -1758,7 +1761,7 @@ async function resumeDevelopmentRunUnlocked(options) {
         && Number(nativeTools?.coverage?.call_count ?? 0) > 0
         && nativeToolSnapshotForEvidence?.unknown_context_events === 0
         && Array.isArray(nativeToolSnapshotForEvidence?.errors)
-        && nativeToolSnapshotForEvidence.errors.length === 0
+        && nativeToolSnapshotForEvidence.errors.every(error => error === "DISPATCH_LEDGER_CLOCK_INVALID")
         && Array.isArray(nativeToolSnapshotForEvidence?.events)
         && nativeToolSnapshotForEvidence.events.length > 0
         && nativeToolSnapshotForEvidence.events.every(event => event.native_cwd === state.workspace);

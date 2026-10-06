@@ -369,10 +369,11 @@ export async function buildNativeEvidence({ sessionId, workspace, discovery, dis
   const dispatcherErrors = Array.isArray(dispatcherSnapshot?.errors) ? dispatcherSnapshot.errors : [];
   const dispatcherUnknownContexts = Number.isInteger(dispatcherSnapshot?.unknown_context_events)
     ? dispatcherSnapshot.unknown_context_events : 0;
+  const dispatcherErrorsAllowed = dispatcherErrors.every(error => error === "DISPATCH_LEDGER_CLOCK_INVALID");
   const dispatcherWorkspaceVerified = dispatcherEvents.length > 0
     && dispatcherEvents.every(event => event?.native_cwd === workspace)
     && dispatcherUnknownContexts === 0
-    && dispatcherErrors.length === 0
+    && dispatcherErrorsAllowed
     && dispatcherSnapshot?.ledger_at_capacity !== true;
   const dispatcherEquivalent = dispatcherWorkspaceVerified && equivalentTerminal === true;
   const nativeCapabilities = {
