@@ -35,7 +35,7 @@ node <skill-dir>/scripts/scoring-control.mjs init \
 
 省略 `--task-id` 时使用 manifest 中的全部题目。新批次默认 `score_slots=3`，最多 8 路；显式传 `--score-slots 1` 可回退串行。每题固定使用 `score_port_base + task_index` 的独占端口。旧 revision 3 状态恢复时继续保持原 `score_slots=1` 和旧 Prompt，不自动升级。评分槽位、端口基数、deadline（默认 7200 秒）和失败终态重试数（默认 1 次）在同一批次初始化后均不可变。状态和逐题评分 Prompt 保存到 `score/.orchestrate-web-e2e/`，不写入候选 `workspace/`。
 
-macOS 的 Codex Desktop Browser 路由必须单独验收。`score_slots` 是控制面上限，不代表当前 Desktop 会话一定提供同等数量的 `iab` 实例；若一次只读探测只能得到一个与评分线程绑定的 Browser，生产批次必须在 `init` 时使用 `--score-slots 1`，按题串行评分。不要在同一个 macOS 会话中盲目创建三路评分线程，再把 `browsers=[]` 或 `Browser unavailable` 转成题目分数；这属于评分基础设施异常，不能占用正式生产结果。
+macOS 的 Codex Desktop Browser 路由必须单独验收。`score_slots=3` 是本协议的生产默认值，执行与评分都必须按三路并发控制；它不代表当前 Desktop 会话一定已经提供三个 `iab` 实例。评分线程创建后，控制任务必须核对每个线程的 Browser 路由与 `metadata.codexSessionId`；少于三路时停止评分、保留 `evaluation_error`，并在新的控制会话中重新建立 Browser 路由。不得把路由缺失静默降级为串行，也不得把 `browsers=[]` 或 `Browser unavailable` 转成题目能力分数。
 
 ## 2. 用 Playwright 注册 Codex Desktop 项目
 
