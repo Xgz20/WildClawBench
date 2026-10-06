@@ -61,6 +61,7 @@ const TERMINAL_SCREENSHOT_RECEIVER_STATUSES = new Set(["COMPLETED", "STOPPED", "
 const LEGACY_SCORING_INPUT_ROOTS = new Set(["candidate_artifact.json", "fixtures", "task_contract.json"]);
 const CAPACITY_ERROR = "Selected model is at capacity. Please try a different model.";
 const CAPACITY_GRANT_SCHEMA = "wildclawbench.web-e2e-capacity-retry-grant/v1";
+const EVALUATION_ERROR_GRANT_SCHEMA = "wildclawbench.web-e2e-evaluation-error-retry-grant/v1";
 const KNOWN_ATTEMPT_OUTPUT_ROOTS = new Set([
   "evidence",
   "runtime-logs",
@@ -94,6 +95,7 @@ export function usage() {
   node scoring-control.mjs mark-timeout --package-root <目录> --task-id <ID>
   node scoring-control.mjs prepare-retry --package-root <目录> --task-id <ID> --retry-reason <说明>
   node scoring-control.mjs grant-capacity-retry --package-root <目录> --task-id <ID> --terminal-observation <Desktop poll JSON> --retry-reason <说明>
+  node scoring-control.mjs grant-evaluation-error-retry --package-root <目录> --task-id <ID> --retry-reason <说明>
   node scoring-control.mjs mark-complete --package-root <目录> --task-id <ID>
   node scoring-control.mjs mark-failed --package-root <目录> --task-id <ID> --error <说明>
   node scoring-control.mjs build-submission --package-root <目录> [--score-skill-dir <目录>]
@@ -142,6 +144,7 @@ export function parseArgs(argv) {
     "mark-timeout",
     "prepare-retry",
     "grant-capacity-retry",
+    "grant-evaluation-error-retry",
     "mark-complete",
     "mark-failed",
     "build-submission",
@@ -411,6 +414,30 @@ function submissionState() {
   };
 }
 
+async function invalidateSubmissionForRetry(plan, state, taskId) {
+  if (!state.submission || state.submission.status === "PENDING") return;
+  const previous = state.submission;
+  const outputFile = previous.output_file || join(plan.root, "submission.json");
+  const raw = await readFile(outputFile).catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
+  let archived = null;
+  if (raw) {
+    const archiveDir = join(plan.controlRoot, "stale-submissions");
+    await mkdir(archiveDir, { recursive: true });
+    const archiveFile = join(archiveDir, `submission-${Date.now()}-${sha256(raw).slice(0, 12)}.json`);
+    await rename(outputFile, archiveFile);
+    archived = relativePackagePath(plan, archiveFile);
+  }
+  state.submission = submissionState();
+  state.history.push({
+    event: "SUBMISSION_INVALIDATED_BY_RETRY",
+    at: new Date().toISOString(),
+    task_id: taskId,
+    previous_status: previous.status,
+    previous_sha256: previous.sha256 || null,
+    archived_file: archived,
+  });
+}
+
 function normalizeAttempt(attempt, task, state) {
   attempt.attempt_number ||= 1;
   attempt.thread_id ||= task.thread_id || null;
@@ -486,7 +513,10 @@ function currentAttempt(task) {
 }
 
 function retryLimit(task) {
-  return task.max_retries + (task.capacity_retry_grant ? 1 : 0);
+  const evaluationGrantCount = Number.isInteger(task.evaluation_error_retry_grant_count)
+    ? task.evaluation_error_retry_grant_count
+    : (task.evaluation_error_retry_grant ? 1 : 0);
+  return task.max_retries + (task.capacity_retry_grant ? 1 : 0) + evaluationGrantCount;
 }
 
 function promptForTask(taskId, scoringPort) {
@@ -1001,6 +1031,7 @@ async function loadControl(packageRoot) {
   if (state.schema_version !== STATE_SCHEMA || state.batch_id !== plan.manifest.batch_id) throw new Error("评分状态身份不一致");
   await verifyAttemptErrorReceipts(plan, state);
   await verifyCapacityRetryGrants(plan, state);
+  await verifyEvaluationErrorRetryGrants(plan, state);
   await verifyTerminalObservations(plan, state);
   return { plan, state };
 }
@@ -1081,6 +1112,36 @@ async function verifyCapacityRetryGrants(plan, state) {
   }
 }
 
+async function verifyEvaluationErrorRetryGrants(plan, state) {
+  for (const task of state.tasks) {
+    const grant = task.evaluation_error_retry_grant;
+    if (!grant) continue;
+    // Once the granted retry has been prepared, the old score is archived
+    // and the new attempt may legitimately rewrite task_score.json.  The
+    // original hash is retained in the grant and verified while the task is
+    // still COMPLETED; later phases only need the grant identity.
+    const sourceAttempt = task.attempts.find((a) => a.attempt_number === grant.attempt_number);
+    // After prepare-retry, the current attempt number advances and its score
+    // is expected to differ from the original evaluation_error snapshot.
+    if (task.phase !== "COMPLETED" || currentAttempt(task)?.attempt_number !== grant.attempt_number) continue;
+    if (grant.schema_version !== EVALUATION_ERROR_GRANT_SCHEMA || !sourceAttempt
+      || grant.thread_id !== sourceAttempt.thread_id || !grant.reason
+      || !/^[a-f0-9]{64}$/.test(String(grant.score_sha256 || ""))) {
+      throw new Error(`评测基础设施恢复授权身份无效：${task.task_id}`);
+    }
+    const scoreRaw = await readFile(task.score_file).catch((error) => {
+      if (error?.code === "ENOENT" && task.phase !== "COMPLETED") return null;
+      throw error;
+    });
+    if (!scoreRaw) continue;
+    if (sha256(scoreRaw) !== grant.score_sha256) throw new Error(`评测基础设施恢复评分结果发生漂移：${task.task_id}`);
+    const score = JSON.parse(scoreRaw.toString("utf8"));
+    if (score?.evaluation?.status !== "evaluation_error") {
+      throw new Error(`评测基础设施恢复授权的评分状态已改变：${task.task_id}`);
+    }
+  }
+}
+
 // One explicit recovery credit per task, independent of the frozen automatic
 // retry budget. It never adopts a score or changes a failed thread to success.
 export async function grantCapacityRetry(packageRoot, taskId, observationFile, retryReason) {
@@ -1110,6 +1171,53 @@ export async function grantCapacityRetry(packageRoot, taskId, observationFile, r
     at: task.capacity_retry_grant.granted_at, grant: task.capacity_retry_grant });
   await saveControl(plan, state);
   return publicStatus(state);
+}
+
+// Browser provisioning and other scorer-side infrastructure failures are
+// distinct from model-capacity failures.  Allow one auditable recovery after
+// the normal retry budget is exhausted, but only when the completed score is
+// explicitly marked evaluation_error.  The subsequent prepare-retry call
+// archives the failed attempt before a new scoring thread is created.
+export async function grantEvaluationErrorRetry(packageRoot, taskId, retryReason) {
+  if (!retryReason?.trim()) throw new Error("恢复原因不能为空");
+  const { plan, state } = await loadControl(packageRoot);
+  const task = requireTask(state, taskId);
+  const grantCount = Number.isInteger(task.evaluation_error_retry_grant_count)
+    ? task.evaluation_error_retry_grant_count
+    : (task.evaluation_error_retry_grant ? 1 : 0);
+  if (grantCount >= 2) throw new Error("本题已使用评测基础设施恢复上限");
+  const allowedRetryCount = task.max_retries + grantCount;
+  if (task.phase !== "COMPLETED" || task.retry_count !== allowedRetryCount) {
+    throw new Error("评测基础设施额外恢复只允许当前重试次数已耗尽的 COMPLETED 任务");
+  }
+  const attempt = currentAttempt(task);
+  if (!attempt?.terminal_status) throw new Error("原评分任务终态尚未确认，禁止创建恢复任务");
+  const score = await loadJson(task.score_file);
+  if (score?.evaluation?.status !== "evaluation_error") {
+    throw new Error("当前评分结果不是 evaluation_error，禁止使用基础设施恢复机会");
+  }
+  await verifyScoringInputs(task, { allowAttemptOutputs: true });
+  await verifyTaskCandidateOrFail(plan, state, task, "evaluation-error-retry-grant");
+  await assertAttemptRuntimeQuiescent(task, join(task.score_dir, "private-scoring"));
+  const scoreRaw = await readFile(task.score_file);
+  task.evaluation_error_retry_grant_count = grantCount + 1;
+  task.evaluation_error_retry_grant = {
+    schema_version: EVALUATION_ERROR_GRANT_SCHEMA,
+    attempt_number: attempt.attempt_number,
+    thread_id: attempt.thread_id,
+    score_sha256: sha256(scoreRaw),
+    reason: retryReason.trim(),
+    grant_count: task.evaluation_error_retry_grant_count,
+    granted_at: new Date().toISOString(),
+  };
+  state.history.push({
+    event: "SCORING_EVALUATION_ERROR_RETRY_GRANTED",
+    at: task.evaluation_error_retry_grant.granted_at,
+    task_id: taskId,
+    grant: task.evaluation_error_retry_grant,
+  });
+  await saveControl(plan, state);
+  return prepareRetry(packageRoot, taskId, retryReason);
 }
 
 function requireTask(state, taskId) {
@@ -1793,6 +1901,7 @@ export async function prepareRetry(packageRoot, taskId, retryReason, options = {
   task.timing.finished_at = null;
   task.preflight = { status: "PENDING", checked_at: null, task_id: taskId };
   state.preflight = task.preflight;
+  await invalidateSubmissionForRetry(plan, state, taskId);
   state.history.push({
     event: "SCORING_RETRY_PREPARED",
     at: now,
@@ -2116,6 +2225,7 @@ async function main() {
       else if (args.command === "mark-timeout") result = await markTimeout(args.packageRoot, taskId);
       else if (args.command === "prepare-retry") result = await prepareRetry(args.packageRoot, taskId, args.retryReason);
       else if (args.command === "grant-capacity-retry") result = await grantCapacityRetry(args.packageRoot, taskId, args.terminalObservation, args.retryReason);
+      else if (args.command === "grant-evaluation-error-retry") result = await grantEvaluationErrorRetry(args.packageRoot, taskId, args.retryReason);
       else if (args.command === "mark-complete") result = await markComplete(args.packageRoot, taskId);
       else result = await markFailed(args.packageRoot, taskId, args.error);
     }

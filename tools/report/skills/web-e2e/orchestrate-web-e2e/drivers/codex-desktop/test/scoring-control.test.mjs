@@ -15,6 +15,7 @@ import {
 import {
   buildSubmissionControl,
   grantCapacityRetry,
+  grantEvaluationErrorRetry,
   initialize,
   markComplete,
   markTimeout,
@@ -1116,6 +1117,30 @@ test("completed evaluation_error scores remain retryable and archive the failed 
   const receipt = JSON.parse(await readFile(receiptPath, "utf8"));
   assert.equal(receipt.retry.reason, "retry after temporary Browser unavailability");
   assert.equal(retry.tasks[0].preflight.status, "PENDING");
+});
+
+test("evaluation_error recovery grant records an auditable retry after the normal budget", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
+  await writeValidScore(root, "task-1");
+  const scoreFile = join(root, "score", "tasks", "task-1", "private-scoring", "task_score.json");
+  const score = JSON.parse(await readFile(scoreFile, "utf8"));
+  score.evaluation = { status: "evaluation_error", error: "Browser provisioning unavailable", criteria: [] };
+  await writeJson(scoreFile, score);
+  const stateFile = join(root, "score", ".orchestrate-web-e2e", "scoring-automation-state.json");
+  const exhausted = JSON.parse(await readFile(stateFile, "utf8"));
+  exhausted.tasks[0].retry_count = exhausted.tasks[0].max_retries;
+  await writeJson(stateFile, exhausted);
+  await markComplete(root, "task-1");
+  const retry = await grantEvaluationErrorRetry(root, "task-1", "恢复评分 Browser 后重试");
+  assert.equal(retry.tasks[0].phase, "PROJECT_REGISTERED");
+  assert.equal(retry.tasks[0].retry_count, 2);
+  assert.equal(retry.tasks[0].evaluation_error_retry_grant_count, 1);
+  assert.equal(retry.tasks[0].evaluation_error_retry_grant.grant_count, 1);
 });
 
 test("submission resumes idempotently after interruption at the publish boundary", async () => {

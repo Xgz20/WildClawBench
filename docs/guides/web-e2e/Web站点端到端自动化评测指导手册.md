@@ -8,7 +8,7 @@
 | --- | --- |
 | 控制 Harness | 用来接收用户 Prompt、调用 Web E2E Skill 并统筹执行、评分、回传和报告的 Harness。推荐使用 Codex Desktop。 |
 | 被评测 Harness | 实际完成题目的桌面 Agent 客户端，例如 AstronStudio、WorkBuddy、QwenWork、DoubaoWork。 |
-| 评分 Harness | 为被评测 Harness 的候选网站打分的 Agent。当前使用 Codex Desktop，并依赖其桌面内置 Browser 操作网站和保存证据。 |
+| 评分 Harness | 为被评测 Harness 的候选网站打分的 Agent。当前使用 Codex Desktop，并依赖其桌面内置 Browser 操作网站和保存证据；评分线程必须建立自己的 Browser 路由。 |
 | 管理员 | 选择用例和被评测 Harness、准备评测包、收集各机器回传包并生成报告的人员。 |
 | 执行人员 | 接收管理员分发的题目包和评分包，在本机完成一个 `Harness（模型）` 单元的执行、评分和回传。 |
 | 批次 | 一次带时间戳的评测集合。批次固定用例范围、源码版本和指标 Profile。 |

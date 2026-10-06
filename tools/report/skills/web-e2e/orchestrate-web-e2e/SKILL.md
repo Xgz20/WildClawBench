@@ -139,6 +139,8 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
 
    自动重试耗尽后，若 Desktop 原生 FAILED poll 明确报告模型容量不足或 `exceeded retry limit, last status: 429 Too Many Requests`，可在服务恢复后调用 `grant-capacity-retry --terminal-observation <absolute-poll.json> --retry-reason <说明>`，为该题授予唯一一次额外恢复机会，再走 `prepare-retry` 与 preflight。该入口保留冻结的 `max_retries`，核验原 attempt 的 thread/host/完成时间、候选与初始评分材料及服务已停止，并保存原始 poll 的 SHA-256；它不接受 Browser 错误、任意含 429 的文字或未知终态。额外机会再次失败仍为 `NEEDS_ATTENTION`，不得循环增加次数或切换裁判模型。
 
+   Browser 面板没有实例、线程无法绑定 Codex Desktop Browser、或截图/交互因评分基础设施失联时，评分 Agent 必须生成 `evaluation_error`，这不代表候选能力得分。控制任务在确认该题已记录 `COMPLETED` 终态、评分文件仍为 `evaluation_error` 且受管服务已清理后，可调用 `grant-evaluation-error-retry --retry-reason <说明>`，为一次基础设施恢复归档旧 attempt、重新回到 `PROJECT_REGISTERED`，然后重新 preflight 和创建独立评分线程。该恢复最多允许两次，仍失败时保留 `evaluation_error` 并停止，不得把离线或父会话取证升级为生产评分。
+
    一个评分任务必须实际使用 Codex Desktop 内置 Browser，并由 `$score-web-e2e` 生成 `private-scoring/task_score.json`。评分任务只能写 `private-scoring/`；候选 `workspace/` 是只读输入。站点端口冲突时优先改启动参数或环境变量；只有受管启动日志已证明冲突且端口无法外部覆盖时，评分 Skill 才能通过 `managed_runtime.mjs port-override` 修改运行时副本中的唯一数字端口并落审计。execution/score 候选原件仍不可修改，其他源码调整仍禁止。
 5. 完成后让控制脚本校验身份、哈希、执行状态和证据路径：
 

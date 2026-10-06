@@ -69,7 +69,7 @@ QwenWork 的进程级 Token 开关只对新客户端进程生效。Web Driver �
 
 每题只注册精确的评分目录到 Codex Desktop 项目，独立任务、Browser、端口、evidence 和 private-scoring。失败评分 attempt 单独归档；恢复使用原 thread/cursor/attempt，不用新任务掩盖不确定性。
 
-评分控制 0.3.7 支持直接导入 Desktop 原生终态 poll：核验 thread/host/状态，以 Unix 秒解析 `completedAt`，并固化观察文件及 SHA-256。默认自动重试预算仍冻结；耗尽后仅对原生容量错误或明确 429 限流提供一次有证据的额外恢复，继续执行候选、初始评分材料、运行时停止和失败归档门禁。该恢复不会把失败 attempt 改为成功，也不修改 General 执行或评分协议。
+评分控制 0.3.8 支持直接导入 Desktop 原生终态 poll：核验 thread/host/状态，以 Unix 秒解析 `completedAt`，并固化观察文件及 SHA-256。评分线程启动前必须确认当前线程已建立 Codex Desktop Browser 路由；日志出现 `No ChatGPT browser route is available` 时只能记录 `evaluation_error`，不能用父会话、headless 或自建浏览器替代。默认自动重试预算仍冻结；耗尽后可对已归档的 Browser/评分基础设施 `evaluation_error` 使用有审计的恢复机会，继续执行候选、初始评分材料、运行时停止和失败归档门禁。该恢复不会把失败 attempt 改为成功，也不修改 General 执行或评分协议。
 
 ## 5. 评分、回传和报告
 
