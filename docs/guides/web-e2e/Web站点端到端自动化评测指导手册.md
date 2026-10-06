@@ -238,7 +238,7 @@ QwenWork 执行并发和 Codex Desktop 评分并发都设为 1。
 最终生成并校验回传 ZIP、外部回执、报告 JSON、领导版 Markdown 和四 Sheet Excel；Excel 包含总览、效率对比、难度对比和用例对比明细。
 ```
 
-如果本次包含资源指标，Prompt 还应明确要求：执行 Driver 在终态采集 `execution_record.json`，评分与回传只透传资源字段，报告阶段检查四个 Harness 的资源覆盖率。报告总量只接受 `observed`/`inferred`/`legacy`；`masked`、`unverified`、`partial` 和 `unavailable` 必须显示为空值、已知小计及覆盖率，不能补成 0。核心字段包括输入/输出/总 Token、缓存读取 Token、执行流程耗时、智能体耗时、模型请求数和工具调用数；没有可靠原生来源的缓存写入 Token、推理输出 Token 和完整 HTTP 尝试次数保持为空。Excel 的 `效率对比` Sheet 与总览都必须呈现这些字段及覆盖状态。
+如果本次包含资源指标，Prompt 还应明确要求：执行 Driver 在终态采集 `execution_record.json`，评分与回传只透传资源字段，报告阶段检查四个 Harness 的资源覆盖率。报告总量只接受 `observed`/`inferred`/`legacy`；`masked`、`unverified`、`partial` 和 `unavailable` 必须显示为空值、已知小计及覆盖率，不能补成 0。核心字段包括输入/输出/总 Token、缓存读取 Token、执行流程耗时、智能体耗时、模型请求数和工具调用数；没有可靠原生来源的缓存写入 Token、推理输出 Token 和完整 HTTP 尝试次数保持为空。Excel 的 `效率对比` Sheet 与总览都必须呈现这些字段及覆盖状态。 当前 DoubaoWork 2.31.10 的新版 dispatcher 适配已将工具结果写入共用原生证据；Tokens/模型请求数仍只在客户端原生暴露时呈现，缺失保持 unavailable。
 
 控制 Harness 会在仓库自身环境和 Skill Driver 目录准备必要依赖，不会在候选网站目录安装依赖。完整流程结束后会返回：
 

@@ -2,6 +2,42 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { normalizeVerifiedNonSuccessToolSubset } from "../../tools/report/e2e-shared/doubaowork/bound-evidence.mjs";
 import { operateNativeObserver, normalizeNativeToolEvents } from "../../tools/report/e2e-shared/doubaowork/runtime-tools.mjs";
+import { operateDispatcherObserver, DISPATCHER_PROFILE, DISPATCHER_SOURCE_SHA256 } from "../../tools/report/e2e-shared/doubaowork/runtime-dispatcher.mjs";
+
+test("2.31.10 dispatcher records are bound and normalized as a partial native trace", () => {
+  const workspace = "/private/fixture/task", dispatcher = {
+    destroyed: false, pending: new Set(), current: new Map(), currentCallIds: new WeakMap(),
+    dispatch() {}, records: new Map(),
+  };
+  const store = { contextsBySandboxId: new Map() };
+  const installed = operateDispatcherObserver.call(dispatcher, store, {
+    operation: "install", attemptId: "modern-attempt", workspace, profileSha: DISPATCHER_SOURCE_SHA256,
+  });
+  dispatcher.dispatch({ id: "call", name: "Bash", sandboxId: "sandbox", input: { command: "pwd" } }, null,
+    { track: "agent", agentId: "agent", conversationId: "123", owner: { cwd: workspace } },
+    { sandboxId: "sandbox", cwd: workspace, sendContext: { conversationId: "123" } });
+  const finalizedAt = Date.now();
+  dispatcher.records.set("sandbox::call", {
+    request: { id: "call", name: "Bash", input: { command: "pwd" }, sandboxId: "sandbox" },
+    result: { content: [{ type: "text", text: "ok" }], isError: false },
+    uploadState: "uploaded", finalizedAt,
+    context: { agentId: "agent", conversationId: "123", owner: { cwd: workspace, instanceId: "instance", sandboxId: "sandbox" } },
+  });
+  const snapshot = operateDispatcherObserver.call(dispatcher, store, {
+    operation: "collect", attemptId: "modern-attempt", workspace, agentId: "agent", profileSha: DISPATCHER_SOURCE_SHA256, restore: true,
+  });
+  assert.equal(snapshot.profile, DISPATCHER_PROFILE);
+  assert.equal(snapshot.events.length, 2);
+  assert.equal(snapshot.ledger.length, 1);
+  assert.equal(snapshot.ledger[0].toolCallId, "call");
+  assert.equal(dispatcher.dispatch.name, "dispatch");
+  const normalized = normalizeNativeToolEvents(snapshot, {
+    attemptId: "modern-attempt", workspace, agentId: "agent", conversationId: "123",
+    sentAt: installed.installed_at, finishedAt: new Date(finalizedAt + 1000).toISOString(),
+  });
+  assert.equal(normalized.status, "partial");
+  assert.equal(normalized.known_subtotal, 1);
+});
 
 function fixture() {
   const workspace = "/private/fixture/workspace", context = { cwd: workspace, instanceId: "instance", sandboxId: "sandbox",

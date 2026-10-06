@@ -251,11 +251,7 @@ async function connectClient(endpointValue, appPath, connect) {
 async function assertExecutionActivityAllowed(client, config) {
   const frontend = await readNativeActivity(client.page);
   assertNativeActivityAllowed(frontend, config.allowedActiveConversationIds, config.allowedActiveSessionIds);
-  let background = await readNativeToolActivity(client.browser);
-  if (background.profile === "doubaowork-modern-file-execution/v1") {
-    const peerIds = new Set((config.allowedNativePeers || []).map(peer => peer.native_request_session_id));
-    background = { ...background, active: background.active.filter(row => peerIds.has(row.native_request_session_id)) };
-  }
+  const background = await readNativeToolActivity(client.browser);
   assertNativeToolActivityAllowed(background, config.allowedNativePeers, frontend);
 }
 
@@ -1025,11 +1021,10 @@ async function dispatchFromSelectedProject({ client, state, stateFile, config, r
     try {
       state.native_lifecycle_observer = await installNativeLifecycleObserver(client.page, { attemptId: state.attempt_id, workspace: config.workspace, prompt: config.prompt });
     } catch (error) {
-      // DoubaoWork 2.31.10 removed the checkpoint store used by the older
-      // lifecycle adapter. Preserve the explicit unavailable boundary and let
-      // the common execution/trajectory evidence decide the final status.
-      state.native_lifecycle_observer = { installed: false, status: "unavailable", error: error.message };
-      state.history.push({ phase: state.phase, event: "NATIVE_LIFECYCLE_PROFILE_UNAVAILABLE", at: new Date().toISOString(), error: error.message });
+      if (state.native_tool_observer?.profile !== "doubaowork-tool-dispatch-observer/v1"
+        || error.message !== "DOUBAOWORK_LIFECYCLE_PROFILE_UNAVAILABLE") throw error;
+      state.native_lifecycle_observer = { installed: false, status: "unavailable", error: error.message,
+        reason: "validated-dispatcher-runtime-without-legacy-checkpoint-profile" };
     }
     await atomicWriteAttemptState(stateFile, state);
   }

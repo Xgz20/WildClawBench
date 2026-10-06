@@ -1018,7 +1018,14 @@ async function dispatchFromSelectedProject({ client, state, stateFile, config, r
     await atomicWriteAttemptState(stateFile, state);
   }
   if (config.captureNativeLifecycle) {
-    state.native_lifecycle_observer = await installNativeLifecycleObserver(client.page, { attemptId: state.attempt_id, workspace: config.workspace, prompt: config.prompt });
+    try {
+      state.native_lifecycle_observer = await installNativeLifecycleObserver(client.page, { attemptId: state.attempt_id, workspace: config.workspace, prompt: config.prompt });
+    } catch (error) {
+      if (state.native_tool_observer?.profile !== "doubaowork-tool-dispatch-observer/v1"
+        || error.message !== "DOUBAOWORK_LIFECYCLE_PROFILE_UNAVAILABLE") throw error;
+      state.native_lifecycle_observer = { installed: false, status: "unavailable", error: error.message,
+        reason: "validated-dispatcher-runtime-without-legacy-checkpoint-profile" };
+    }
     await atomicWriteAttemptState(stateFile, state);
   }
   if (config.captureResponseStream) {

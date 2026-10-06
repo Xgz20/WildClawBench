@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { isAbsolute } from "node:path";
+import { dispatcherCall, DISPATCHER_PROFILE, DISPATCHER_SOURCE_SHA256 } from "./runtime-dispatcher.mjs";
 
 const PROFILE = "doubaowork-local-tool-debug-sink/v1";
 
@@ -220,9 +221,16 @@ export function operateNativeObserver(token, cfg) {
 
 export async function installNativeToolObserver(browser, { attemptId, workspace }) {
   if (!isAbsolute(workspace) || !attemptId) throw new Error("NATIVE_TOOL_OBSERVER_INPUT_INVALID");
-  return backendCall(browser, "install", { attemptId, workspace });
+  return callSupportedBackend(browser, "install", { attemptId, workspace });
 }
-export const readNativeToolActivity = browser => backendCall(browser, "activity", {});
+async function callSupportedBackend(browser, operation, values) {
+  try { return await backendCall(browser, operation, values); }
+  catch (error) {
+    if (error.message !== "DOUBAOWORK_BACKGROUND_PROFILE_UNAVAILABLE") throw error;
+    return dispatcherCall(browser, operation, values);
+  }
+}
+export const readNativeToolActivity = browser => callSupportedBackend(browser, "activity", {});
 
 export function assertNativeToolActivityAllowed(activity, peers = [], frontend) {
   if (activity?.initialized !== true || !Array.isArray(activity.active)) throw new Error("DOUBAOWORK_TOOL_ACTIVITY_UNVERIFIED");
@@ -245,11 +253,12 @@ export function taskToolDeliveries(activity, { workspace, conversationId }) {
     || !row.native_request_session_id || !row.tool_call_id);
 }
 export async function collectNativeToolObserver(browser, { attemptId, workspace, agentId, restore = false, unsent = false }) {
-  return backendCall(browser, unsent ? "discard-unsent" : "collect", { attemptId, workspace, agentId, restore });
+  return callSupportedBackend(browser, unsent ? "discard-unsent" : "collect", { attemptId, workspace, agentId, restore });
 }
 
 export function normalizeNativeToolEvents(snapshot, { attemptId, workspace, agentId, conversationId, sentAt, finishedAt }) {
-  if (snapshot?.schema !== "wildclawbench.doubaowork-native-tool-events/v1" || snapshot.profile !== PROFILE
+  const supportedProfile = snapshot?.profile === PROFILE || snapshot?.profile === DISPATCHER_PROFILE && snapshot.profile_sha256 === DISPATCHER_SOURCE_SHA256;
+  if (snapshot?.schema !== "wildclawbench.doubaowork-native-tool-events/v1" || !supportedProfile
       || snapshot.attempt_id !== attemptId || snapshot.workspace !== workspace || snapshot.native_agent_id !== agentId) throw new Error("NATIVE_TOOL_EVIDENCE_IDENTITY_MISMATCH");
   if (![snapshot.installed_at, snapshot.collected_at, sentAt, finishedAt].every(t => Number.isFinite(Date.parse(t)))
       || Date.parse(finishedAt) < Date.parse(sentAt)) throw new Error("NATIVE_TOOL_CAPTURE_TIME_INVALID");
@@ -295,5 +304,6 @@ export function normalizeNativeToolEvents(snapshot, { attemptId, workspace, agen
   }
   if (starts.size !== ledger.size || results.size !== ledger.size) throw new Error("NATIVE_TOOL_LEDGER_COVERAGE_INCOMPLETE");
   return { events, calls: [...starts.keys()].map(id => ({ call_id: id, start_index: starts.get(id), result_index: results.get(id) })),
-    known_subtotal: ledger.size, scope: "bound-native-agent-local-tool-protocol", status: "complete-for-protocol" };
+    known_subtotal: ledger.size, scope: snapshot.profile === DISPATCHER_PROFILE ? "modern-runtime-tool-dispatcher-records" : "bound-native-agent-local-tool-protocol",
+    status: snapshot.profile === DISPATCHER_PROFILE ? "partial" : "complete-for-protocol" };
 }
