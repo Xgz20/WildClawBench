@@ -1143,6 +1143,24 @@ test("evaluation_error recovery grant records an auditable retry after the norma
   assert.equal(retry.tasks[0].evaluation_error_retry_grant.grant_count, 1);
 });
 
+test("aesthetic evaluation_error can be archived for a Browser evidence retry", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-aesthetic-1", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
+  await writeValidScore(root, "task-1");
+  const scoreFile = join(root, "score", "tasks", "task-1", "private-scoring", "task_score.json");
+  const score = JSON.parse(await readFile(scoreFile, "utf8"));
+  score.evaluation.aesthetic = { status: "evaluation_error", error: "Browser viewport override unavailable" };
+  await writeJson(scoreFile, score);
+  await markComplete(root, "task-1");
+  const retry = await prepareRetry(root, "task-1", "restore viewport override");
+  assert.equal(retry.tasks[0].phase, "PROJECT_REGISTERED");
+  assert.equal(retry.tasks[0].retry_count, 1);
+});
+
 test("submission resumes idempotently after interruption at the publish boundary", async () => {
   const root = await fixture();
   const { state } = await initialize(root);

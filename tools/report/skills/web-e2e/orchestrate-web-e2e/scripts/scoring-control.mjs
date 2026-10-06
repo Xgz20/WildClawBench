@@ -1136,7 +1136,8 @@ async function verifyEvaluationErrorRetryGrants(plan, state) {
     if (!scoreRaw) continue;
     if (sha256(scoreRaw) !== grant.score_sha256) throw new Error(`评测基础设施恢复评分结果发生漂移：${task.task_id}`);
     const score = JSON.parse(scoreRaw.toString("utf8"));
-    if (score?.evaluation?.status !== "evaluation_error") {
+    if (score?.evaluation?.status !== "evaluation_error"
+      && score?.evaluation?.aesthetic?.status !== "evaluation_error") {
       throw new Error(`评测基础设施恢复授权的评分状态已改变：${task.task_id}`);
     }
   }
@@ -1193,8 +1194,10 @@ export async function grantEvaluationErrorRetry(packageRoot, taskId, retryReason
   const attempt = currentAttempt(task);
   if (!attempt?.terminal_status) throw new Error("原评分任务终态尚未确认，禁止创建恢复任务");
   const score = await loadJson(task.score_file);
-  if (score?.evaluation?.status !== "evaluation_error") {
-    throw new Error("当前评分结果不是 evaluation_error，禁止使用基础设施恢复机会");
+  const scoreHasEvaluationError = score?.evaluation?.status === "evaluation_error"
+    || score?.evaluation?.aesthetic?.status === "evaluation_error";
+  if (!scoreHasEvaluationError) {
+    throw new Error("当前评分结果未标记评测基础设施异常，禁止使用基础设施恢复机会");
   }
   await verifyScoringInputs(task, { allowAttemptOutputs: true });
   await verifyTaskCandidateOrFail(plan, state, task, "evaluation-error-retry-grant");
@@ -1868,7 +1871,8 @@ export async function prepareRetry(packageRoot, taskId, retryReason, options = {
       if (error?.code === "ENOENT") return null;
       throw error;
     });
-    completedEvaluationError = score?.evaluation?.status === "evaluation_error";
+    completedEvaluationError = score?.evaluation?.status === "evaluation_error"
+      || score?.evaluation?.aesthetic?.status === "evaluation_error";
   }
   if (!new Set(["FAILED", "TIMED_OUT"]).has(task.phase) && !completedEvaluationError) {
     throw new Error(`当前任务状态不能重试：${task.phase}`);
