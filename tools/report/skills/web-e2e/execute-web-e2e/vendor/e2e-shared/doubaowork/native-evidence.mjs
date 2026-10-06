@@ -323,7 +323,7 @@ async function validateTrajectoryPath(trajectory, sessionId) {
   return lstat(trajectory.path);
 }
 
-export async function buildNativeEvidence({ sessionId, workspace, discovery }) {
+export async function buildNativeEvidence({ sessionId, workspace, discovery, dispatcherSnapshot = null, equivalentTerminal = false }) {
   validateSessionId(sessionId);
   if (!isAbsolute(workspace)) throw new Error("--workspace 必须是绝对路径");
   if (!discovery.session?.exists) throw new Error(`未找到显式 DoubaoWork session：${sessionId}`);
@@ -365,28 +365,42 @@ export async function buildNativeEvidence({ sessionId, workspace, discovery }) {
   const summary = summarizeNormalizedEvents(events);
   const terminalCandidateEventCount = nativeSignalSources
     .reduce((total, item) => total + item.terminal.candidate_event_count, 0);
+  const dispatcherEvents = Array.isArray(dispatcherSnapshot?.events) ? dispatcherSnapshot.events : [];
+  const dispatcherErrors = Array.isArray(dispatcherSnapshot?.errors) ? dispatcherSnapshot.errors : [];
+  const dispatcherUnknownContexts = Number.isInteger(dispatcherSnapshot?.unknown_context_events)
+    ? dispatcherSnapshot.unknown_context_events : 0;
+  const dispatcherWorkspaceVerified = dispatcherEvents.length > 0
+    && dispatcherEvents.every(event => event?.native_cwd === workspace)
+    && dispatcherUnknownContexts === 0
+    && dispatcherErrors.length === 0
+    && dispatcherSnapshot?.ledger_at_capacity !== true;
+  const dispatcherEquivalent = dispatcherWorkspaceVerified && equivalentTerminal === true;
   const nativeCapabilities = {
     terminal: {
-      status: terminalCandidateEventCount > 0 ? "unverified" : "unavailable",
-      authoritative_source: null,
+      status: dispatcherEquivalent ? "verified" : terminalCandidateEventCount > 0 ? "unverified" : "unavailable",
+      authoritative_source: dispatcherEquivalent ? "modern-dispatcher+ui-final+quiet-frontend" : null,
       candidate_event_count: terminalCandidateEventCount,
       tool_result_text_is_sufficient: false,
-      reason: terminalCandidateEventCount > 0
+      reason: dispatcherEquivalent
+        ? "现代 ToolCallManager 完整绑定且 UI 项目/最终回复/前后台空闲共同确认"
+        : terminalCandidateEventCount > 0
         ? "发现未经语义验证的终态候选字段；没有已知 DoubaoWork session/turn 完成事件映射"
         : "已绑定 trajectory 没有 session/turn 终态字段或结束事件；工具子任务文本与 UI idle 均不足以提升终态",
     },
     workspace_binding: {
-      status: "unverified",
-      native_cwd: null,
-      authoritative_source: null,
+      status: dispatcherEquivalent ? "verified" : "unverified",
+      native_cwd: dispatcherEquivalent ? workspace : null,
+      authoritative_source: dispatcherEquivalent ? "modern-dispatcher-tool-context+ui-project-readback" : null,
       requested_workspace_reference_count: nativeSignalSources
         .reduce((total, item) => total + item.workspace_binding.requested_workspace_reference_count, 0),
       structured_tool_path_reference_count: nativeSignalSources
         .reduce((total, item) => total + item.workspace_binding.structured_tool_path_reference_count, 0),
       tool_result_path_reference_count: nativeSignalSources
         .reduce((total, item) => total + item.workspace_binding.tool_result_path_reference_count, 0),
-      tool_activity_is_sufficient: false,
-      reason: "工具参数、pwd 输出和写文件路径仅为活动旁证；没有 session 原生 cwd 字段",
+      tool_activity_is_sufficient: dispatcherEquivalent,
+      reason: dispatcherEquivalent
+        ? "dispatcher 每个工具事件的 owner cwd 与 UI 精确项目路径一致"
+        : "工具参数、pwd 输出和写文件路径仅为活动旁证；没有 session 原生 cwd 字段",
     },
     sources: nativeSignalSources,
   };
@@ -418,24 +432,27 @@ export async function buildNativeEvidence({ sessionId, workspace, discovery }) {
       conversation_id: sessionId,
       session_directory_id: sessionId,
       turn_id: null,
-      native_cwd: null,
+      native_cwd: dispatcherEquivalent ? workspace : null,
       requested_workspace: workspace,
       workspace_binding: {
-        status: "unverified",
+        status: dispatcherEquivalent ? "verified" : "unverified",
         requested_path: workspace,
-        native_path: null,
-        reason: "当前原生 session/trajectory 不含 cwd；必须依赖客户端完整路径回读并等待公共可信映射",
+        native_path: dispatcherEquivalent ? workspace : null,
+        authoritative_source: dispatcherEquivalent ? "modern-dispatcher-tool-context+ui-project-readback" : null,
+        reason: dispatcherEquivalent
+          ? "现代 dispatcher context 与 UI project-folder-tooltip 精确绑定"
+          : "当前原生 session/trajectory 不含 cwd；必须依赖客户端完整路径回读并等待公共可信映射",
       },
     },
     terminal: {
-      status: "unverified",
-      raw_status: null,
-      source: null,
-      ui_completion_is_sufficient: false,
+      status: dispatcherEquivalent ? "verified" : "unverified",
+      raw_status: dispatcherEquivalent ? "modern-dispatcher-ui-equivalent" : null,
+      source: dispatcherEquivalent ? "modern-dispatcher+ui-final" : null,
+      ui_completion_is_sufficient: dispatcherEquivalent,
     },
     native_capabilities: nativeCapabilities,
     trace: {
-      completeness: "partial",
+    completeness: dispatcherEquivalent ? "partial-modern-dispatcher" : "partial",
       summary,
       events,
       sources,

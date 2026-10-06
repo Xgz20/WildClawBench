@@ -1454,7 +1454,7 @@ async function cancelDevelopmentRunUnlocked(options) {
   }
 }
 
-async function collectNativeEvidenceSnapshot(outputDir, state, observationId) {
+async function collectNativeEvidenceSnapshot(outputDir, state, observationId, options = {}) {
   const pathValue = join(outputDir, `native-evidence-${observationId}.json`);
   const discovery = await discoverNativeSources({ sessionId: state.session.session_directory_id });
   if (!discovery.session?.trajectories?.length) return null;
@@ -1462,6 +1462,8 @@ async function collectNativeEvidenceSnapshot(outputDir, state, observationId) {
     sessionId: state.session.session_directory_id,
     workspace: state.workspace,
     discovery,
+    dispatcherSnapshot: options.dispatcherSnapshot ?? null,
+    equivalentTerminal: options.equivalentTerminal === true,
   });
   await atomicWriteJson(pathValue, evidence);
   const buffer = await readFile(pathValue);
@@ -1660,7 +1662,7 @@ async function resumeDevelopmentRunUnlocked(options) {
       || pageObservation.snapshot.bound_tool_delivery_active === true;
     const nativeCancellation = classification.kind === "native-cancellation" && !running && !pending;
     const nativeFailure = classification.kind === "native-failure" && !running && !pending;
-    const nativeCompletion = (classification.kind === "native-completion" || nativeCancellation || nativeFailure) && !running && !pending;
+    let nativeCompletion = (classification.kind === "native-completion" || nativeCancellation || nativeFailure) && !running && !pending;
     const uiCompletion = nativeCompletion || classification.kind === "ui-completion-candidate"
       && stableCompletionCount >= 3
       && !running
@@ -1674,9 +1676,13 @@ async function resumeDevelopmentRunUnlocked(options) {
     let runtimeStream = null;
     let nativeTools = null;
     let nativeLifecycle = null;
+    let nativeToolSnapshotForEvidence = null;
+    let dispatcherEquivalent = false;
     if (uiCompletion) {
       const replyPath = join(outputDir, `${nativeCompletion ? "native" : "ui"}-final-reply-${observationId}.txt`);
-      const finalText = nativeCompletion ? pageObservation.nativeNormalized.final_text ?? "" : pageObservation.finalText;
+      const finalText = nativeCompletion
+        ? pageObservation.nativeNormalized.final_text ?? pageObservation.finalText ?? ""
+        : pageObservation.finalText;
       await writeFile(replyPath, finalText, { encoding: "utf8", flag: "wx", mode: 0o600 });
       const replyBuffer = await readFile(replyPath);
       const replySha256 = sha256Buffer(replyBuffer);
@@ -1693,7 +1699,6 @@ async function resumeDevelopmentRunUnlocked(options) {
       };
       const screenshotPath = join(outputDir, `ui-completion-candidate-${observationId}.png`);
       screenshot = await captureScreenshot(client.page, screenshotPath);
-      nativeEvidence = await collectNativeEvidenceSnapshot(outputDir, state, observationId);
       try {
         const runtime = pageObservation.nativeRuntime;
         const runtimePath = join(outputDir, `runtime-messages-${observationId}.json`);
@@ -1710,7 +1715,7 @@ async function resumeDevelopmentRunUnlocked(options) {
         const bytes = await readFile(streamPath);
         runtimeStream = { file: basename(streamPath), sha256: sha256Buffer(bytes), size_bytes: bytes.length, status: stream.status };
       }
-      if (nativeCompletion && state.native_tool_observer?.installed) {
+      if ((nativeCompletion || uiCompletion) && state.native_tool_observer?.installed) {
         let toolSnapshot, cached = state.native_tool_capture;
         if (cached) {
           if (cached.agent_id !== pageObservation.nativeNormalized.native_request_session_id
@@ -1725,6 +1730,7 @@ async function resumeDevelopmentRunUnlocked(options) {
             agentId: pageObservation.nativeNormalized.native_request_session_id, restore: true,
           });
         }
+        nativeToolSnapshotForEvidence = toolSnapshot;
         let coverage;
         try {
           const normalized = normalizeNativeToolEvents(toolSnapshot, { attemptId: state.attempt_id, workspace: state.workspace,
@@ -1743,6 +1749,34 @@ async function resumeDevelopmentRunUnlocked(options) {
             conversation_id: state.session.conversation_id, artifact: nativeTools };
         }
       }
+      dispatcherEquivalent = !nativeCompletion
+        && state.scene === "web"
+        && uiCompletion
+        && state.workspace_selection?.confirmed === true
+        && bindingEvidence?.status === "verified"
+        && nativeTools?.coverage?.status === "partial"
+        && Number(nativeTools?.coverage?.call_count ?? 0) > 0
+        && nativeToolSnapshotForEvidence?.unknown_context_events === 0
+        && Array.isArray(nativeToolSnapshotForEvidence?.errors)
+        && nativeToolSnapshotForEvidence.errors.length === 0
+        && Array.isArray(nativeToolSnapshotForEvidence?.events)
+        && nativeToolSnapshotForEvidence.events.length > 0
+        && nativeToolSnapshotForEvidence.events.every(event => event.native_cwd === state.workspace);
+      if (dispatcherEquivalent) {
+        nativeCompletion = true;
+        pageObservation.nativeNormalized.native_cwd = state.workspace;
+        pageObservation.nativeNormalized.terminal = "completed";
+        pageObservation.nativeNormalized.finished_at = pageObservation.snapshot.observed_at;
+        pageObservation.nativeNormalized.sources = {
+          ...(pageObservation.nativeNormalized.sources ?? {}),
+          finished_at: "modern-dispatcher+ui-final",
+          native_cwd: "modern-dispatcher-tool-context+ui-project-readback",
+        };
+      }
+      nativeEvidence = await collectNativeEvidenceSnapshot(outputDir, state, observationId, {
+        dispatcherSnapshot: nativeToolSnapshotForEvidence,
+        equivalentTerminal: dispatcherEquivalent,
+      });
       if (nativeCompletion && state.native_lifecycle_observer?.installed) {
         const cached = state.native_lifecycle_capture;
         let snapshot;
@@ -1812,7 +1846,9 @@ async function resumeDevelopmentRunUnlocked(options) {
     }) : null;
     state.session.binding_evidence.push(bindingEvidence);
     if (nativeCompletion) {
-      state.native_observation = { ...pageObservation.nativeNormalized, final_text: undefined, artifact: runtimeMessages, final_reply: finalReply, stream_artifact: runtimeStream, native_tools_artifact: nativeTools, native_lifecycle_artifact: nativeLifecycle };
+      state.native_observation = { ...pageObservation.nativeNormalized, final_text: undefined, artifact: runtimeMessages, final_reply: finalReply, stream_artifact: runtimeStream, native_tools_artifact: nativeTools, native_lifecycle_artifact: nativeLifecycle,
+        equivalent_web_binding: dispatcherEquivalent,
+        equivalent_finished_at: dispatcherEquivalent ? pageObservation.snapshot.observed_at : null };
       state.session.native_cwd = pageObservation.nativeNormalized.native_cwd;
       state.session.turn_id = pageObservation.nativeNormalized.reply_message_id;
     }

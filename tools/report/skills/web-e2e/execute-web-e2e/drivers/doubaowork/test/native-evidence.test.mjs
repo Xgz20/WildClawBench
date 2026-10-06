@@ -93,6 +93,33 @@ test("native evidence 将 cwd、终态与 Token 保持为空", async (context) =
   assert.deepEqual(evidence.resources.tools.coverage, { numerator: 1, denominator: null });
 });
 
+test("现代 dispatcher 工具上下文与 UI final 可提升 Web 等价证据", async (context) => {
+  const fixture = await createNativeFixture(context);
+  const workspace = "/private/debug/task/workspace";
+  const dispatcher = {
+    events: [
+      { phase: "started", native_cwd: workspace, tool_call_id: "call-1", tool_name: "Write" },
+      { phase: "settled", native_cwd: workspace, tool_call_id: "call-1", tool_name: "Write" },
+    ],
+    unknown_context_events: 0,
+    errors: [],
+    ledger_at_capacity: false,
+  };
+  const evidence = await buildNativeEvidence({
+    sessionId: SESSION_ID,
+    workspace,
+    discovery: fixture.discovery,
+    dispatcherSnapshot: dispatcher,
+    equivalentTerminal: true,
+  });
+  assert.equal(evidence.identity.native_cwd, workspace);
+  assert.equal(evidence.identity.workspace_binding.status, "verified");
+  assert.equal(evidence.terminal.status, "verified");
+  assert.equal(evidence.native_capabilities.workspace_binding.authoritative_source,
+    "modern-dispatcher-tool-context+ui-project-readback");
+  assert.equal(evidence.trace.completeness, "partial-modern-dispatcher");
+});
+
 test("工具完成文本和路径引用不能升级为原生终态或 cwd", () => {
   const requestedWorkspace = "/private/debug/task";
   const signals = inspectTrajectoryNativeSignals([

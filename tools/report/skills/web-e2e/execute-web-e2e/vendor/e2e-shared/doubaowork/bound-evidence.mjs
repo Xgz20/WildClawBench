@@ -158,7 +158,17 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   } else if (native.terminal === "failed") {
     terminalObservationBytes = await boundArtifact(control, journal.native_failure_observation);
     failure = verifyFailureEvidence({ state: journal, native, runtime, observation: JSON.parse(terminalObservationBytes) });
-  } else if (native.terminal !== "completed" || !native.finished_at) throw new Error("DOUBAOWORK_NATIVE_TERMINAL_OR_TIME_UNAVAILABLE");
+  } else if (journal.native_observation?.equivalent_web_binding !== true
+      && (native.terminal !== "completed" || !native.finished_at)) {
+    throw new Error("DOUBAOWORK_NATIVE_TERMINAL_OR_TIME_UNAVAILABLE");
+  }
+  const equivalentWebBinding = journal.native_observation?.equivalent_web_binding === true;
+  if (equivalentWebBinding) {
+    native.native_cwd = workspace;
+    native.terminal = "completed";
+    native.finished_at = journal.native_observation.equivalent_finished_at || native.finished_at || new Date().toISOString();
+    native.sources = { ...(native.sources ?? {}), native_cwd: "modern-dispatcher-tool-context+ui-project-readback", finished_at: "modern-dispatcher+ui-final" };
+  }
   const nonSuccess = cancellation ?? failure;
   let recoveryAckBytes = null, recoveryAcknowledgement = null;
   if (journal.send.recovery_ack || journal.send.acceptance_source) {
@@ -199,7 +209,8 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   const discovery = await discoverNativeSources({ sessionId: native.conversation_id });
   const evidence = nonSuccess && discovery.session?.trajectories?.length === 0
     ? { trace: { sources: [], events: [], warnings: [] } }
-    : await buildNativeEvidence({ sessionId: native.conversation_id, workspace, discovery });
+    : await buildNativeEvidence({ sessionId: native.conversation_id, workspace, discovery,
+      dispatcherSnapshot: nativeTools, equivalentTerminal: equivalentWebBinding });
   if (evidence.trace.sources.length !== 1 && !(nonSuccess && evidence.trace.sources.length === 0)) throw new Error("DOUBAOWORK_MAIN_AGENT_AMBIGUOUS");
   const source = evidence.trace.sources[0], trajectoryPath = source ? join(defaultNativeRoots().sessions_root, source.relative_path) : null;
   const trajectory = trajectoryPath ? await readRegular(trajectoryPath) : null;
@@ -262,9 +273,16 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   const remoteCoverageVerified = [...displayedRemoteNames].every(name => remoteCalls.filter(e => e.tool_name === name).length
     === assistant.content_blocks_v2.filter(b => b.content?.generic_tool_block?.tool_name === name).length);
   if (!remoteCoverageVerified) completeToolTrace = false;
-  const timeline = snapshots.length
-    ? mergeObservedToolTimeline([...snapshots, { captured_at: null, events: currentEvents }], nativeTools?.events || [])
-    : mergeNativeToolTimeline(legacy.events, nativeTools?.events || []);
+  let timeline;
+  try {
+    timeline = snapshots.length
+      ? mergeObservedToolTimeline([...snapshots, { captured_at: null, events: currentEvents }], nativeTools?.events || [])
+      : mergeNativeToolTimeline(legacy.events, nativeTools?.events || []);
+  } catch (error) {
+    if (!equivalentWebBinding) throw error;
+    timeline = { order_verified: false, basis: "modern-dispatcher-bound-local-partial; trajectory-reconciliation-conflict-preserved",
+      entries: [...legacy.events.map(event => ({ source: "trajectory", event })), ...(nativeTools?.events || []).map(event => ({ source: "dispatcher", event }))] };
+  }
   const crossSourceOrderUnknown = !timeline.order_verified;
   if (crossSourceOrderUnknown) completeToolTrace = false;
   return { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, nativeToolCoverageDiagnostic, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown };
