@@ -523,3 +523,5 @@ launchctl bootout gui/$(id -u)/com.wildclawbench.desktop-debug-restart.codex
 ### 流程进入 `NEEDS_ATTENTION`
 
 让控制 Harness说明具体阻塞原因，并只处理该原因。未知授权、身份不一致、候选漂移、原任务终态不明或依赖安装失败都不能跳过门禁。
+
+如果评分线程返回 `application network permission was revoked`、`401 Unauthorized` 或 `Missing bearer`，先保留原线程终态、候选哈希和评分输入，停止并清理受管站点；不要把它转成能力分数，也不要在同一个失效应用会话中循环创建评分线程。待 Codex Desktop 应用网络权限和认证恢复后，从原批次状态执行受审计的 retry/preflight，保持默认评分并发 3。
