@@ -89,7 +89,7 @@ Prompt 输入属于共用发送边界：WorkBuddy、QwenWork 在 macOS 对唯一
 
 DoubaoWork 最新 5 题批次 `web-macos-doubao-production-20261007` 已完成完整闭环：`execution-receipt.json` 的 `integrity.valid=true`，5/5 为 `SUCCEEDED/completed`，默认调度占用为 3；评分控制状态为 `COMPLETED`，已生成正式 `submission.json`、JSON/Markdown/四 Sheet Excel 报告。该批次模型回读为“自动 高”、权限为“全部允许”；Token、模型请求数和成本均为 `unavailable`，工具调用为 `partial`（已知小计 176），智能体耗时 5/5 有效（3838 秒），执行流程耗时仅部分覆盖，均不得补零。
 
-当前四个 Harness 仍未整体放行。基于当前 HEAD 新准备的 10 题生产模拟批次 `web-macos-four-harness-production-20261007` 已启动 AstronStudio 串行验收：前 3 题成功，随后第 4、6 题的原生 turn 因 provider 返回 `no valid authorization / insufficient quota` 进入 `INFRA_FAILED`，批次安全终止，未生成有效 execution receipt；这不是候选 workspace 或 Driver 重发问题，失败题 Prompt 已发送且保留完整证据。WorkBuddy、QwenWork、DoubaoWork 的 10 题正式模拟必须在 AstronStudio 通过后按同一批次顺序继续，历史 10 题目录不替代当前批次。
+当前四个 Harness 仍未整体放行。基于当前 HEAD 新准备的 10 题生产模拟批次 `web-macos-four-harness-production-20261007` 已启动 AstronStudio 串行验收：前 3 题成功，第 4、6、7 题的原生 turn 因 provider 返回 `no valid authorization / insufficient quota` 进入 `INFRA_FAILED`，批次安全终止，未生成有效 execution receipt；这不是候选 workspace 或 Driver 重发问题，失败题 Prompt 已发送且保留完整证据。WorkBuddy、QwenWork、DoubaoWork 的 10 题正式模拟必须在 AstronStudio 通过后按同一批次顺序继续，历史 10 题目录不替代当前批次。
 
 生产放行条件保持不变：每个 Harness 必须依次完成新鲜 10 题的有效 execution receipt、默认三路独立评分、`submission.json`、return/import receipt 和四 Sheet 报告。任何缺失的 Token、请求数、工具数或耗时继续保留 `null`/`partial`/`unavailable`，不得从上下文占用或订阅显示换算。当前 AstronStudio 的外部配额/认证错误需要先恢复，或由管理员明确授权切换到其他可用模型，才能继续该串行验收。
 
