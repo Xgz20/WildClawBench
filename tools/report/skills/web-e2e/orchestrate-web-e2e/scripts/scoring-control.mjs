@@ -62,6 +62,14 @@ const LEGACY_SCORING_INPUT_ROOTS = new Set(["candidate_artifact.json", "fixtures
 const CAPACITY_ERROR = "Selected model is at capacity. Please try a different model.";
 const CAPACITY_GRANT_SCHEMA = "wildclawbench.web-e2e-capacity-retry-grant/v1";
 const EVALUATION_ERROR_GRANT_SCHEMA = "wildclawbench.web-e2e-evaluation-error-retry-grant/v1";
+const SCORING_INFRASTRUCTURE_GRANT_SCHEMA = "wildclawbench.web-e2e-scoring-infrastructure-retry-grant/v1";
+const SCORING_INFRASTRUCTURE_ERRORS = [
+  /application network permission was revoked/i,
+  /401\s+Unauthorized.*(?:Missing bearer|authentication)/i,
+  /Missing bearer/i,
+  /评分线程应用网络权限被撤销/,
+  /评分\s*API\s*返回\s*401.*缺少认证头/,
+];
 const KNOWN_ATTEMPT_OUTPUT_ROOTS = new Set([
   "evidence",
   "runtime-logs",
@@ -95,6 +103,7 @@ export function usage() {
   node scoring-control.mjs mark-timeout --package-root <目录> --task-id <ID>
   node scoring-control.mjs prepare-retry --package-root <目录> --task-id <ID> --retry-reason <说明>
   node scoring-control.mjs grant-capacity-retry --package-root <目录> --task-id <ID> --terminal-observation <Desktop poll JSON> --retry-reason <说明>
+  node scoring-control.mjs grant-scoring-infrastructure-retry --package-root <目录> --task-id <ID> --retry-reason <说明>
   node scoring-control.mjs grant-evaluation-error-retry --package-root <目录> --task-id <ID> --retry-reason <说明>
   node scoring-control.mjs mark-complete --package-root <目录> --task-id <ID>
   node scoring-control.mjs mark-failed --package-root <目录> --task-id <ID> --error <说明>
@@ -144,6 +153,7 @@ export function parseArgs(argv) {
     "mark-timeout",
     "prepare-retry",
     "grant-capacity-retry",
+    "grant-scoring-infrastructure-retry",
     "grant-evaluation-error-retry",
     "mark-complete",
     "mark-failed",
@@ -516,7 +526,10 @@ function retryLimit(task) {
   const evaluationGrantCount = Number.isInteger(task.evaluation_error_retry_grant_count)
     ? task.evaluation_error_retry_grant_count
     : (task.evaluation_error_retry_grant ? 1 : 0);
-  return task.max_retries + (task.capacity_retry_grant ? 1 : 0) + evaluationGrantCount;
+  const infrastructureGrantCount = Number.isInteger(task.scoring_infrastructure_retry_grant_count)
+    ? task.scoring_infrastructure_retry_grant_count
+    : (task.scoring_infrastructure_retry_grant ? 1 : 0);
+  return task.max_retries + (task.capacity_retry_grant ? 1 : 0) + evaluationGrantCount + infrastructureGrantCount;
 }
 
 function promptForTask(taskId, scoringPort) {
@@ -1032,6 +1045,7 @@ async function loadControl(packageRoot) {
   if (state.schema_version !== STATE_SCHEMA || state.batch_id !== plan.manifest.batch_id) throw new Error("评分状态身份不一致");
   await verifyAttemptErrorReceipts(plan, state);
   await verifyCapacityRetryGrants(plan, state);
+  await verifyScoringInfrastructureRetryGrants(plan, state);
   await verifyEvaluationErrorRetryGrants(plan, state);
   await verifyTerminalObservations(plan, state);
   return { plan, state };
@@ -1113,6 +1127,27 @@ async function verifyCapacityRetryGrants(plan, state) {
   }
 }
 
+function isScoringInfrastructureError(message) {
+  return SCORING_INFRASTRUCTURE_ERRORS.some((pattern) => pattern.test(String(message || "")));
+}
+
+async function verifyScoringInfrastructureRetryGrants(plan, state) {
+  for (const task of state.tasks) {
+    const grant = task.scoring_infrastructure_retry_grant;
+    if (!grant) continue;
+    const sourceAttempt = task.attempts.find((attempt) => attempt.attempt_number === grant.attempt_number);
+    if (grant.schema_version !== SCORING_INFRASTRUCTURE_GRANT_SCHEMA
+      || !sourceAttempt || grant.thread_id !== sourceAttempt.thread_id
+      || !grant.reason || !isScoringInfrastructureError(grant.error)) {
+      throw new Error(`评分基础设施恢复授权身份无效：${task.task_id}`);
+    }
+    if (task.phase === "FAILED" && currentAttempt(task)?.attempt_number === grant.attempt_number
+      && !isScoringInfrastructureError(currentAttempt(task)?.last_wait_error)) {
+      throw new Error(`评分基础设施恢复原始错误已发生漂移：${task.task_id}`);
+    }
+  }
+}
+
 async function verifyEvaluationErrorRetryGrants(plan, state) {
   for (const task of state.tasks) {
     const grant = task.evaluation_error_retry_grant;
@@ -1173,6 +1208,47 @@ export async function grantCapacityRetry(packageRoot, taskId, observationFile, r
     at: task.capacity_retry_grant.granted_at, grant: task.capacity_retry_grant });
   await saveControl(plan, state);
   return publicStatus(state);
+}
+
+// One audited retry for scorer application authentication/network failures
+// that cannot produce a task_score.json. This is separate from model-capacity
+// recovery and never accepts arbitrary FAILED text.
+export async function grantScoringInfrastructureRetry(packageRoot, taskId, retryReason) {
+  if (!retryReason?.trim()) throw new Error("恢复原因不能为空");
+  const { plan, state } = await loadControl(packageRoot);
+  const task = requireTask(state, taskId);
+  const grantCount = Number.isInteger(task.scoring_infrastructure_retry_grant_count)
+    ? task.scoring_infrastructure_retry_grant_count
+    : (task.scoring_infrastructure_retry_grant ? 1 : 0);
+  if (grantCount >= 1) throw new Error("本题已使用评分应用基础设施恢复机会");
+  if (task.phase !== "FAILED" || task.retry_count !== task.max_retries) {
+    throw new Error("评分应用基础设施恢复只允许默认重试次数已耗尽的 FAILED 任务");
+  }
+  const attempt = currentAttempt(task);
+  if (!attempt?.terminal_status || !isScoringInfrastructureError(attempt.last_wait_error)) {
+    throw new Error("当前失败终态不是受支持的评分应用网络/认证错误");
+  }
+  await verifyScoringInputs(task, { allowAttemptOutputs: true });
+  await verifyTaskCandidateOrFail(plan, state, task, "scoring-infrastructure-retry-grant");
+  await assertAttemptRuntimeQuiescent(task, join(task.score_dir, "private-scoring"));
+  task.scoring_infrastructure_retry_grant_count = grantCount + 1;
+  task.scoring_infrastructure_retry_grant = {
+    schema_version: SCORING_INFRASTRUCTURE_GRANT_SCHEMA,
+    attempt_number: attempt.attempt_number,
+    thread_id: attempt.thread_id,
+    error: attempt.last_wait_error,
+    reason: retryReason.trim(),
+    grant_count: task.scoring_infrastructure_retry_grant_count,
+    granted_at: new Date().toISOString(),
+  };
+  state.history.push({
+    event: "SCORING_INFRASTRUCTURE_RETRY_GRANTED",
+    at: task.scoring_infrastructure_retry_grant.granted_at,
+    task_id: taskId,
+    grant: task.scoring_infrastructure_retry_grant,
+  });
+  await saveControl(plan, state);
+  return prepareRetry(packageRoot, taskId, retryReason);
 }
 
 // Browser provisioning and other scorer-side infrastructure failures are
@@ -2230,6 +2306,7 @@ async function main() {
       else if (args.command === "mark-timeout") result = await markTimeout(args.packageRoot, taskId);
       else if (args.command === "prepare-retry") result = await prepareRetry(args.packageRoot, taskId, args.retryReason);
       else if (args.command === "grant-capacity-retry") result = await grantCapacityRetry(args.packageRoot, taskId, args.terminalObservation, args.retryReason);
+      else if (args.command === "grant-scoring-infrastructure-retry") result = await grantScoringInfrastructureRetry(args.packageRoot, taskId, args.retryReason);
       else if (args.command === "grant-evaluation-error-retry") result = await grantEvaluationErrorRetry(args.packageRoot, taskId, args.retryReason);
       else if (args.command === "mark-complete") result = await markComplete(args.packageRoot, taskId);
       else result = await markFailed(args.packageRoot, taskId, args.error);

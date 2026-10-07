@@ -15,6 +15,7 @@ import {
 import {
   buildSubmissionControl,
   grantCapacityRetry,
+  grantScoringInfrastructureRetry,
   grantEvaluationErrorRetry,
   initialize,
   markComplete,
@@ -862,6 +863,37 @@ test("capacity recovery refuses unrelated errors, wrong completion times and liv
   });
   await assert.rejects(() => grantCapacityRetry(root, "task-1", filename, "retry"), /运行|终态|停止/);
   assert.equal((await status(root)).tasks[0].capacity_retry_grant, undefined);
+});
+
+test("scoring application authentication failures get one audited retry without a task score", async () => {
+  for (const [waitError, reason] of [
+    ["unexpected status 401 Unauthorized: Missing bearer or basic authentication in header", "恢复评分应用网络权限后重试"],
+    ["评分 API 返回 401，缺少认证头", "恢复评分 API 认证头后重试"],
+    ["评分线程应用网络权限被撤销", "恢复评分应用网络权限后重试"],
+  ]) {
+    const root = await fixture();
+    const { state } = await initialize(root, [], { maxRetries: 0 });
+    await registerTask(root, state.tasks[0]);
+    const skillRoot = await scoreSkillFixture();
+    await passPreflight(root, { scoreSkillDir: skillRoot });
+    await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+    await recordWait(root, "task-1", {
+      waitSequence: 1,
+      waitCursor: "cursor-auth",
+      waitStatus: "FAILED",
+      waitError,
+    });
+    const granted = await grantScoringInfrastructureRetry(root, "task-1", reason);
+    assert.equal(granted.tasks[0].scoring_infrastructure_retry_grant_count, 1);
+    assert.equal(granted.recommended_action.type, "RUN_PREFLIGHT");
+    const retried = await passPreflight(root, { scoreSkillDir: skillRoot });
+    assert.equal(retried.tasks[0].phase, "PROJECT_REGISTERED");
+    assert.equal(retried.tasks[0].retry_count, 1);
+    await assert.rejects(
+      () => grantScoringInfrastructureRetry(root, "task-1", "再次重试"),
+      /当前任务状态不能|已使用|评分应用基础设施恢复/,
+    );
+  }
 });
 
 test("failed attempts archive partial scoring outputs and emit a structured error receipt", async () => {
