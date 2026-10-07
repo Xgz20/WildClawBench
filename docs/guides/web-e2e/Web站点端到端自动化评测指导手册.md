@@ -512,6 +512,8 @@ launchctl bootout gui/$(id -u)/com.wildclawbench.desktop-debug-restart.codex
 
 确认评分任务由 Codex Desktop 内置任务接口创建，且项目目录是单个 `score/tasks/<task_id>/`。不要使用裸 CLI 或独立 App Server 会话代替 Desktop 评分任务。
 
+新批次默认创建 3 个并发评分任务；每个任务都必须取得与自身 `metadata.codexSessionId` 匹配的独立 `iab` Browser 路由。若三路中任一路由没有建立，停止该批次并记录 `evaluation_error`，不要把父会话 Browser、Chrome、headless 或自建浏览器当作替代，也不要把评分并发静默降级为串行。
+
 ### 站点无法启动或 Browser 无法取证
 
 该情况应记录为 `evaluation_error`，不是候选功能全部为零。保留错误和现场，由管理员决定是否重试基础设施。

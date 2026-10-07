@@ -69,7 +69,7 @@ QwenWork 的进程级 Token 开关只对新客户端进程生效。Web Driver �
 
 每题只注册精确的评分目录到 Codex Desktop 项目，独立任务、Browser、端口、evidence 和 private-scoring。失败评分 attempt 单独归档；恢复使用原 thread/cursor/attempt，不用新任务掩盖不确定性。
 
-评分控制 0.3.8 支持直接导入 Desktop 原生终态 poll：核验 thread/host/状态，以 Unix 秒解析 `completedAt`，并固化观察文件及 SHA-256。评分线程启动前必须确认当前线程已建立 Codex Desktop Browser 路由；日志出现 `No ChatGPT browser route is available` 时只能记录 `evaluation_error`，不能用父会话、headless 或自建浏览器替代。默认自动重试预算仍冻结；耗尽后可对已归档的 Browser/评分基础设施 `evaluation_error` 使用有审计的恢复机会，继续执行候选、初始评分材料、运行时停止和失败归档门禁。该恢复不会把失败 attempt 改为成功，也不修改 General 执行或评分协议。
+评分控制 0.3.11 支持直接导入 Desktop 原生终态 poll：核验 thread/host/状态，以 Unix 秒解析 `completedAt`，并固化观察文件及 SHA-256。评分线程启动前必须确认当前线程已建立 Codex Desktop Browser 路由；每个评分线程都要核对与自身 `metadata.codexSessionId` 匹配的 `iab` Browser。默认评分并发固定为 3；如果当前 Desktop 会话提供的匹配路由少于三路，必须停止评分并保留 `evaluation_error`，不能静默降级为串行，也不能用父会话、headless 或自建浏览器替代。默认自动重试预算仍冻结；耗尽后可对已归档的 Browser/评分基础设施 `evaluation_error` 使用有审计的恢复机会，继续执行候选、初始评分材料、运行时停止和失败归档门禁。该恢复不会把失败 attempt 改为成功，也不修改 General 执行或评分协议。
 
 ## 5. 评分、回传和报告
 
@@ -79,21 +79,17 @@ QwenWork 的进程级 Token 开关只对新客户端进程生效。Web Driver �
 - submission 原子生成，return ZIP + 外部 receipt 固定身份/成员 SHA；管理员导入幂等，冲突拒绝覆盖。
 - report 按同批次/Profile/用例范围生成 JSON、Markdown 和四 Sheet Excel（站点评测指标、效率对比、难度对比、用例对比明细）。效率对比必须透传 Token、模型请求数、工具调用数、任务耗时和智能体耗时，并保留每项覆盖状态；Web 既有异常零分语义与 General 有效分母不同，详见指标说明；不得在整理文档时改变协议。
 
-## 6. 2026-10-01 实现与验收边界
+## 6. 2026-10-07 实现与验收边界
 
-当前仓库 HEAD 的 Web Skill 版本为：`run-web-e2e 1.4.3`、`execute-web-e2e 1.21.4`、`orchestrate-web-e2e 0.3.6`、`score-web-e2e 4.5.4`、`report-web-e2e 1.2.0`。DoubaoWork Web Driver 为 `0.8.2`，共享 `doubaowork` 组件目录版本为 `0.8.2`；2.31.10 使用新版 Local File SSE ToolCall dispatcher 记录，旧 `resultLedger` 适配只作为兼容路径。当前源码重新构建的 13 个 General/Web Skill ZIP 已通过依赖闭包、内容 SHA 和 ZIP SHA 校验；分发前仍需按批次重新生成 `skills-manifest.json`，并要求安装检查 `all_current=true`。
+当前仓库 HEAD 的 Web Skill 版本为：`run-web-e2e 1.4.3`、`execute-web-e2e 1.21.6`、`orchestrate-web-e2e 0.3.11`、`score-web-e2e 4.5.4`、`report-web-e2e 1.2.0`。DoubaoWork Web Driver 为 `0.8.2`，共享 `doubaowork` 组件目录版本为 `0.8.2`；2.31.10 使用新版 Local File SSE ToolCall dispatcher 记录，旧 `resultLedger` 适配只作为兼容路径。最近改动只涉及 Web 编排、Codex Desktop 项目注册兼容和 QwenWork Web 异步测试等待，不修改 General Driver、共用资源指标解析器或 General 评分契约；General QwenWork 回归 43/43 通过，Web 共享指标回归 23/23 通过，Web Codex 编排回归 62/62 通过。
 
 Prompt 输入属于共用发送边界：WorkBuddy、QwenWork 在 macOS 对唯一可见编辑器先尝试受控填充；客户端暴露 contenteditable 但尚未进入可填充状态时，Driver 在同一元素上执行聚焦、全选和键盘插入回退，随后仍必须通过原有 Prompt 回读、一次发送和原生 session 绑定门禁。输入回退不能选择第二个编辑器，也不能把 DOM 文本变化单独当作发送成功。评分控制器对 `evaluation_error` 保留异常语义，并允许在 `max_retries` 范围内归档当前 attempt、恢复评分初始输入、重新 preflight 和创建新评分线程；该路径不改变候选哈希，也不把基础设施异常转换成能力零分。
 
 本机只读检查得到的状态如下：AstronStudio Driver `1.12.3`、客户端 `3.3.1`，端点、状态库、模型/权限控件和无活动任务检查通过；QwenWork Driver `1.12.5`、客户端 `1.2.0`，端点、agents 数据库、项目选择器、模型/权限和原生文件夹助手通过；DoubaoWork Driver `0.8.2`、客户端 `2.31.10`，端点、原生来源、页面和锁屏检查通过；WorkBuddy Driver `1.10.0`、客户端 `5.5.6` 虽端点和数据库可读，但当前工作区输入控件未在前台页面，probe 返回 `ready=false`，因此不能进入生产执行门禁。
 
-DoubaoWork 当前调试批次的 10/10 执行题已具有 `execution-receipt.json` 且 `integrity.valid=true`，但其评分控制曾因 429/超时进入 `NEEDS_ATTENTION`，没有正式 `submission.json` 或报告，不能把这批执行单独表述为四端生产通过。Codex Desktop 26.928.20755 已对该批次 10 个评分目录逐题完成真实 UI 注册，并按完整路径回读到 10 个独立 `projectId`；这只证明评分项目隔离链路可用，不代表已创建评分线程或完成评分。
+DoubaoWork 最新 5 题批次 `web-macos-doubao-production-20261007` 的 `execution-receipt.json` 已通过 `integrity.valid=true`，5/5 为 `SUCCEEDED/completed`，调度占用为 3、原生 Agent 重叠为 3；模型回读为“自动 高”，权限为“全部允许”。每题 `execution_record.json` 均保留资源覆盖状态：Token 和模型请求数为 `unavailable`，工具调用为 `partial`，耗时按原生数据分别保留 `observed` 或 `unavailable`，不得补零。该批次评分项目均已注册且 preflight 通过，但评分线程受到 Codex Desktop Browser 路由缺失和 429/401 外部服务错误影响，尚无正式 `submission.json` 或报告。
 
-因此，四个 Harness 的 Web 站点端到端目前属于“代码与分发链路基本完备、生产评测尚未整体放行”：需要先让 WorkBuddy 新鲜 probe 达到 `ready=true`，再用当前 Skill/客户端身份按声明顺序完成四端的串行、默认三路并发和恢复抽样；每端都要形成有效 execution receipt、独立评分任务、`submission.json`、return/import receipt 和四 Sheet 报告。任何缺失的 Token、请求数、工具数或耗时继续保留 `null`/`partial`/`unavailable`，不得从上下文占用或订阅显示换算。
-
-2026-10-04 补充：`run-web-e2e 1.4.3` 在创建回传目录前解析绝对路径并拒绝 Harness 根目录内的输出（包括指回根目录的符号链接），避免 ZIP 递归包含自身；该检查只作用于 Web 回传打包，不修改 General 契约。评分控制 `0.3.6` 允许记录 Desktop 返回的原生终态时间以区分评分完成和轮询观察时间。DoubaoWork 旧 2.31.6 批次已有 10 题 submission、return 和 import，006 的独立美观度仍为 `evaluation_error`，完整功能评分不能表述为美观度全部通过；本机客户端已更新为 2.31.10，旧结果不转为新版本准入。其他三端及四端报告仍未完成。
-
-2026-10-04 live 状态：AstronStudio 3.3.1 的只读 probe 已 `ready=true`，当前 HEAD 新 run 使用默认 3 槽已完成 001，002–004 正在运行；002 的首次发送前 UI 失败已按同一 run 恢复，不能重发 001。QwenWorkCN 1.2.0 的只读 probe 已 `ready=true`，9250 端点恢复，003 已成功；001/002 的原生 session、项目和 cwd 仍在 agents.db，但旧侧栏定位器不兼容 1.2.0 的 `list-label/menu-item-label-text` 结构，修复后的 Driver 需要沿原 attempt 只读恢复。WorkBuddy 新原生库仍有 2 个 `working` 会话，安全重启门禁继续拒绝；不能依据旧库中的 Completed 记录放行。三端尚未产生有效完整 execution receipt，当前不能生成四端报告。
+因此，四个 Harness 的 Web 站点端到端仍属于“代码与分发链路基本完备、生产评测尚未整体放行”：AstronStudio、WorkBuddy、QwenWork 当前没有基于最新共享核心完成的新鲜 5 题评分闭环；DoubaoWork 已完成最新 5 题执行，但评分尚未形成 submission。四端必须依次完成新鲜 5 题的有效 execution receipt、默认三路独立评分、`submission.json`、return/import receipt 和四 Sheet 报告后，才可另建 10 题正式批次。任何缺失的 Token、请求数、工具数或耗时继续保留 `null`/`partial`/`unavailable`，不得从上下文占用或订阅显示换算。
 
 本轮验收范围调整为每个客户端 5 题，执行与评分均默认并发 3；客户端依次串行完成有效执行、独立评分、submission、回传和报告后，才进入下一客户端。四端验收全部通过后另建 10 题正式批次，历史 10 题调试材料不直接变更为正式结果。2.31.10 新版适配已通过五题执行门禁：`web-macos-doubao-smoke-20261005` 的 001、002、003、005、007 均为 `SUCCEEDED/completed`，队列实测调度占用 3、原生重叠占用 3，execution receipt `integrity.valid=true`。当前评分工作空间已完成项目注册，尚未完成五题评分/submission，因此 DoubaoWork 仍未达到生产放行。该批次 Token 与模型请求数按原生契约为 `unavailable`，工具调用为 partial 已知小计，任务耗时/智能体耗时分别按执行记录保留，报告不得补零。
 
