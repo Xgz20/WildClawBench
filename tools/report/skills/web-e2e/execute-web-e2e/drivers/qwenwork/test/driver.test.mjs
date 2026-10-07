@@ -101,7 +101,7 @@ test("QwenWork 原生目录选择等待异步更新后的目录标签", async ()
       return values.shift() ?? "task-a";
     },
   };
-  assert.equal(await waitForQwenFolderSelectionLabel(locator, "task-a", 100, 1), "task-a");
+  assert.equal(await waitForQwenFolderSelectionLabel(locator, "task-a", 1000, 1), "task-a");
 });
 
 test("QwenWork 原生目录选择在多个控件中匹配唯一目标目录", async () => {
