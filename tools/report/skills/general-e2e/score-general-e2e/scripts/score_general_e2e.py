@@ -1058,6 +1058,8 @@ def _validate_evidence_admission(execution: Mapping[str, Any], contract: Mapping
         return failure_evidence.profile(execution, contract)
     evidence = execution["evidence"]
     missing = set(evidence.get("missing") or [])
+    if evidence.get("completeness") == "partial" and not missing:
+        raise ScoringRuntimeError("EXECUTION_NOT_SCORABLE", "partial evidence must declare its missing items")
     if evidence.get("completeness") == "complete" or (
         evidence.get("completeness") == "partial" and missing <= {"resource_metrics_complete_coverage"}
     ):
@@ -1070,7 +1072,7 @@ def _validate_evidence_admission(execution: Mapping[str, Any], contract: Mapping
         return "reviewed-output-evidence/v1:" + profile[0]
     if (evidence.get("completeness") == "partial"
         and evidence.get("transcript_path") and evidence.get("trace_index_path")
-        and missing <= {"resource_metrics_complete_coverage", "provider-request-coverage-unavailable", "native-tool-trajectory-incomplete"}
+        and missing <= {"resource_metrics_complete_coverage", "provider-request-coverage-unavailable", "native-tool-trajectory-incomplete", "native-tool-capture-incomplete"}
         and _workspace_only_automated_rule(contract)):
         return "automated-workspace-only/v1"
     raise ScoringRuntimeError("EXECUTION_NOT_SCORABLE", "required execution evidence is incomplete")

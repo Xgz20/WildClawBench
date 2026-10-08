@@ -598,7 +598,10 @@ function buildExecutionRecord({
     : evidenceAvailable ? "partial" : "unavailable";
   const missing = [];
   if (!traceBundle) missing.push("raw_trace", "transcript", "trace_index");
-  else if (!traceComplete) missing.push(...(traceBundle.index.completeness?.missing || ["trace_completeness"]));
+  else if (!traceComplete) {
+    const traceMissing = traceBundle.index.completeness?.missing;
+    missing.push(...(Array.isArray(traceMissing) && traceMissing.length ? traceMissing : ["trace_completeness"]));
+  }
   if (!resource) missing.push("resource_metrics");
   else if (!resourceComplete) missing.push("resource_metrics_complete_coverage");
   const agentDuration = resource?.value?.metrics?.timing?.agent_duration_seconds?.value ?? null;

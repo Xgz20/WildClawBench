@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   attemptSessionCaptureTimeout,
+  fillPromptEditor,
   chooseQwenAttemptSession,
   capturePageScreenshot,
   handleExpectedApprovals,
@@ -39,6 +40,18 @@ import {
   gracefulQuitQwenWork,
   terminateQwenWorkProcess,
 } from "../platform.mjs";
+
+test("Web input fallback refuses focus drift before editing or inserting", async () => {
+  for (const failAt of [0, 1, 2]) {
+    let checks = 0, inserted = 0;
+    const editor = { fill: async () => { throw new Error("fixture fill failure"); }, click: async () => {},
+      evaluate: async () => ++checks !== failAt };
+    const page = { keyboard: { press: async () => {}, insertText: async () => { inserted++; } } };
+    const action = fillPromptEditor(page, editor, "fixture", 100);
+    if (failAt) { await assert.rejects(action, /FOCUS_MISMATCH/); assert.equal(inserted, 0); }
+    else { assert.equal(await action, "keyboard-insert-fallback"); assert.equal(inserted, 1); }
+  }
+});
 
 test("macOS QwenWork termination uses exact PID signals without Apple Events", async () => {
   const commands = [];

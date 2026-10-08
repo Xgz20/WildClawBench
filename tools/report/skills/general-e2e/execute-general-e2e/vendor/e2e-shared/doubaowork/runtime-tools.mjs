@@ -303,7 +303,8 @@ export function normalizeNativeToolEvents(snapshot, { attemptId, workspace, agen
     map.set(e.tool_call_id, index); events.push({ ...e, raw_event_index: index });
   }
   if (starts.size !== ledger.size || results.size !== ledger.size) throw new Error("NATIVE_TOOL_LEDGER_COVERAGE_INCOMPLETE");
-  return { events, calls: [...starts.keys()].map(id => ({ call_id: id, start_index: starts.get(id), result_index: results.get(id) })),
+  return { profile: snapshot.profile, profile_sha256: snapshot.profile_sha256,
+    events, calls: [...starts.keys()].map(id => ({ call_id: id, start_index: starts.get(id), result_index: results.get(id) })),
     known_subtotal: ledger.size, scope: snapshot.profile === DISPATCHER_PROFILE ? "modern-runtime-tool-dispatcher-records" : "bound-native-agent-local-tool-protocol",
     status: snapshot.profile === DISPATCHER_PROFILE ? "partial" : "complete-for-protocol" };
 }

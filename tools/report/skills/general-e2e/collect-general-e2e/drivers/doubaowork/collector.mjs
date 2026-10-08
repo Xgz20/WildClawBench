@@ -8,7 +8,7 @@ import { readBoundNativeEvidence, readRegular } from "../../vendor/e2e-shared/do
 import { countBoundTools } from "../../vendor/e2e-shared/doubaowork/tool-counts.mjs";
 export { verifyTrajectoryPrompt, verifyRecoveredDispatchAcknowledgement } from "../../vendor/e2e-shared/doubaowork/bound-evidence.mjs";
 
-const ADAPTER = "doubaowork-native-evidence", VERSION = "0.2.8";
+const ADAPTER = "doubaowork-native-evidence", VERSION = "0.2.9";
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 const json = value => Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
 const artifact = (path, bytes, extra = {}) => ({ path, sha256: sha(bytes), size: bytes.length, ...extra });
@@ -92,7 +92,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const addLocal = (e, orderRef = null) => {
     const ref = `raw/native-tools.json#/events/${e.raw_event_index}`;
     const extra = { occurred_at: e.observed_at, native: { agent_id: native.native_request_session_id, instance_id: e.instance_id,
-      source_profile: "doubaowork-local-tool-debug-sink/v1", scope: nativeTools.scope, native_order_ref: orderRef } };
+      source_profile: nativeTools.profile, scope: nativeTools.scope, native_order_ref: orderRef } };
     if (e.phase === "started") {
       calls.set(e.tool_call_id, { call_id: e.tool_call_id, call_sequence: events.length, result_sequence: null });
       add("tool_call", "assistant", null, ref, { ...extra, tool: { call_id: e.tool_call_id, name: e.tool_name, arguments: e.input, result: null, status: "unknown" } });
@@ -140,7 +140,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
     normalization: { native_event_count: allNativeEvents.length + (nativeTools?.events.length || 0) + 2,
       normalized_event_count: events.length,
       filtered_native_event_count: allNativeEvents.length + (nativeTools?.events.length || 0) + 2 - events.length,
-      compatibility_profiles: ["doubaowork-native-im/v1", "doubaowork-trajectory-replay-dedup/v1", ...(nativeTools ? ["doubaowork-local-tool-debug-sink/v1"] : [])] } };
+      compatibility_profiles: ["doubaowork-native-im/v1", "doubaowork-trajectory-replay-dedup/v1", ...(nativeTools ? [nativeTools.profile] : [])] } };
   let toolCounts = null;
   if (!nonSuccess && nativeToolBytes && nativeTools?.status !== "partial" && trajectoryPromptBinding.status === "verified") {
     try {
@@ -159,7 +159,8 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const usageFields = ["input_tokens", "output_tokens", "total_tokens", "cache_read_input_tokens", "cache_creation_input_tokens", "reasoning_output_tokens"];
   const fields = [...usageFields, "request_count", "request_attempt_count", "call_count", "duration_seconds", "agent_duration_seconds"];
   const toolCountKnown = toolCounts?.status === "complete" || !nonSuccess && Boolean(nativeTools) && nativeTools.status !== "partial" && unknownBlocks.length === 0 && remoteCoverageVerified;
-  const knownToolSubtotal = toolCounts?.total ?? (nativeToolCoverageDiagnostic ? nativeTools.known_subtotal : calls.size);
+  const knownToolSubtotal = toolCounts?.total ?? (nativeToolCoverageDiagnostic
+    && nativeToolCoverageDiagnostic.reason !== "native-tool-trajectory-incomplete" ? nativeTools.known_subtotal : calls.size);
   const metrics = { usage: Object.fromEntries(usageFields.map(k => [k, metric()])), requests: { request_count: metric(), request_attempt_count: metric() },
     tools: { call_count: toolCountKnown ? metric(knownToolSubtotal, toolCounts?.basis || "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance")
       : { value: null, status: "partial", basis: "Unique calls in the bound trajectory; provider total coverage unknown" } },

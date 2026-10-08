@@ -1,4 +1,5 @@
 import { basename, resolve } from "node:path";
+import { createHash } from "node:crypto";
 
 export const QWEN_MODEL_SELECTOR = ".new-task-model-selector button";
 export const QWEN_PERMISSION_SELECTOR = 'button[aria-label="选择权限模式"]';
@@ -511,13 +512,21 @@ export async function readQwenPrompt(page) {
   return normalizeQwenPromptText(value);
 }
 
-export async function fillQwenPrompt(page, prompt, timeoutMilliseconds = 30_000) {
+export async function fillQwenPrompt(page, prompt, timeoutMilliseconds = 30_000, onFallback = async () => {}) {
   const editor = await findQwenPromptEditor(page);
   try {
     await editor.fill(prompt, { timeout: timeoutMilliseconds });
   } catch (error) {
+    await onFallback({ method: "keyboard-insert-text", reason: "editor-fill-failed", error_name: error?.name ?? "UnknownError",
+      error_sha256: createHash("sha256").update(String(error?.message ?? error)).digest("hex") });
     await editor.click({ timeout: timeoutMilliseconds });
+    const requireFocus = async () => {
+      if (!await editor.evaluate(element => element === element.ownerDocument.activeElement
+          || element.contains(element.ownerDocument.activeElement))) throw new Error("QWENWORK_PROMPT_FOCUS_MISMATCH");
+    };
+    await requireFocus();
     await page.keyboard.press("ControlOrMeta+A");
+    await requireFocus();
     await page.keyboard.insertText(prompt);
   }
   const readback = await readQwenPrompt(page);

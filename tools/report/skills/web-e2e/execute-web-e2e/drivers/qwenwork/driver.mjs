@@ -1008,13 +1008,19 @@ async function findPromptEditor(page, timeout) {
   throw new Error("找不到 Prompt 输入框");
 }
 
-async function fillPromptEditor(page, editor, prompt, timeout) {
+export async function fillPromptEditor(page, editor, prompt, timeout) {
   try {
     await editor.fill(prompt, { timeout });
     return "fill";
   } catch (error) {
     await editor.click({ timeout });
+    const requireFocus = async () => {
+      if (!await editor.evaluate(element => element === element.ownerDocument.activeElement
+          || element.contains(element.ownerDocument.activeElement))) throw new Error("QWENWORK_PROMPT_FOCUS_MISMATCH");
+    };
+    await requireFocus();
     await page.keyboard.press("ControlOrMeta+A");
+    await requireFocus();
     await page.keyboard.insertText(prompt);
     return "keyboard-insert-fallback";
   }

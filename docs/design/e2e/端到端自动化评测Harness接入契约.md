@@ -550,6 +550,10 @@ r38–r50的锁屏、同名目录、点击内部中断、跨入口互斥、两�
 
 ### 5.5 进度更新规则与接续
 
+2026-10-08 共用核心兼容性加固：DoubaoWork 核心0.8.3在读取侧隔离General/Web终态政策，明确partial轨迹缺失原因及实际工具Profile，保持零发送恢复的活动journal，并保留已在TTL内核实结果的首次观测。QwenWork General/Web键盘兜底增加焦点门禁。General execute/collect/score/orchestrate/report分别为0.12.4/0.9.5/0.10.2/0.11.1/0.7.3，Web execute为1.21.7；独立包仍为验收草稿，未作为新生产发行安装或替换round1冻结安装。
+
+该次验证包括664项General与受影响Web Driver离线回归、123项General及57项Web Python回归、60份General冻结原件正规化回放与5份Web终态证明回放。DoubaoWork 2.31.10/自动 高/全部允许的新单题 `02_Code_Intelligence_task_001_temperature_cli_fix`（执行attempt `5cb3e62c-9e10-4322-b48d-7fbc7d9aafff`）只发送一次，原生completed，无Web等价标记；正式cleanup/collect通过，14条事件、工具已知小计6且总量partial，流程耗时36.409秒、原生智能体耗时33秒，Token/请求仍unavailable。评分attempt `compat-automated-002` 按Workspace-only自动规则得到1.0且verify-score通过；首个审计顺序失败attempt保留。证据见 `/Users/gzx/debug-workspace/e2e-evaluate/web-e2e/general-compatibility-audit-20261008/implementation/`。该记录只证明修复项和此单题，不提升2.31.10取消/错误、真实30分钟长任务或四端当前发行的整体验收状态。
+
 新增记录须提供日期、场景/Harness/OS、源码和包身份、task/attempt、真实断言、失败或未验证范围及 evidence 链接。公共同版本回归可引用；客户端 UI、原生身份、终态与清理须有本客户端证据。更新本文的对应状态行，不向技术方案、指标文档或 README 复制第二份待办表。
 
 新任务从本契约的当前进度继续：先核对 Git/源码/发行和本机现场，再做当前未完成项；已通过的五题、Token 与报告不为整理文档重复运行。旧任务卡、SLOT 和 worktree 交接命令只用于历史追溯。用户给出的执行授权与范围继续按当前任务约定，不由历史档案追加确认流程。

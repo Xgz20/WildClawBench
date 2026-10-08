@@ -111,14 +111,14 @@ export function operateDispatcherObserver(store, cfg) {
           for (const [id, r] of dispatcher.records) {
             const start = o.calls.get(id); if (!start || r.uploadState !== "uploaded") continue;
             const now = Date.now();
-            if (!Number.isFinite(r.finalizedAt) || r.finalizedAt < Date.parse(start.observed_at)
-              || r.finalizedAt > now || now - r.finalizedAt > 1800000) throw new Error("DISPATCH_LEDGER_CLOCK_INVALID");
             if (r.context?.agentId !== start.native_agent_id || r.context?.conversationId !== start.conversation_id
               || r.context?.owner?.cwd !== o.workspace || r.request?.id !== start.tool_call_id || r.request?.name !== start.tool_name) throw new Error("DISPATCH_RESULT_BINDING_MISMATCH");
             const row = { toolCallId: r.request.id, toolName: r.request.name, instanceId: start.instance_id,
               sseIdentity: { agentId: r.context.agentId }, uploadState: "uploaded", cachedAtMs: r.finalizedAt, result: clone(r.result) };
             const previous = o.ledger.get(id);
             if (previous) { if (JSON.stringify(previous.row) !== JSON.stringify(row)) throw new Error("DISPATCH_LEDGER_CONFLICT"); continue; }
+            if (!Number.isFinite(r.finalizedAt) || r.finalizedAt < Date.parse(start.observed_at)
+              || r.finalizedAt > now || now - r.finalizedAt > 1800000) throw new Error("DISPATCH_LEDGER_CLOCK_INVALID");
             const event = { ...start, phase: "settled", observed_at: new Date(r.finalizedAt).toISOString(),
               input: undefined, output: row.result, status: r.result?.isError ? "error" : "success" };
             const bytes = new TextEncoder().encode(JSON.stringify(row)).byteLength * 2;

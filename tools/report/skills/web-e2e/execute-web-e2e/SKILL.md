@@ -11,7 +11,7 @@ Web E2E 不给被评测 Harness 设置任务级执行时限。题目或数据集
 
 ## DoubaoWork macOS 单题入口
 
-`1.21.2` 使用共享 `doubaowork 0.8.2` 的 UI、一次发送、恢复与原生证据核心，Web adapter 独立生成 execution record、候选冻结及正式回执。General 的运行材料不代表 Web 通过；本版真机验收范围查统一接入契约，不能用离线测试替代。
+`1.21.7` 使用共享 `doubaowork 0.8.3` 的 UI、一次发送、恢复与原生证据核心，Web adapter 独立生成 execution record、候选冻结及正式回执。等价终态只适用于 Web，并核验绑定观察时间，不以当前采集时刻补齐；失败或取消不得提升为完成。General 的运行材料不代表 Web 通过；本版真机验收范围查统一接入契约，不能用离线测试替代。
 
 原生错误已独立核验且账本存在未采样的 `uploadState=failed` 行时，只保留严格核验的已上传工具子集与缺口诊断；工具总量为 null，业务能力分数不从异常终态推断。
 

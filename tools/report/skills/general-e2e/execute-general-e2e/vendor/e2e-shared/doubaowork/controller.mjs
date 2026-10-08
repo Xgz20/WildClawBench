@@ -1261,7 +1261,7 @@ async function retryPreSendDevelopmentRunUnlocked(options) {
 
     if (!previous.workspace_selection.confirmed || !previous.client.project_id_sha256) {
       await archiveAttemptState(outputDir, stateFile, previous);
-      await rm(stateFile, { force: true });
+      // Keep the zero-send journal recoverable until its replacement is durable.
       client = await connectClient(previous.client.endpoint, previous.client.app_path, options.connect);
       await assertExecutionActivityAllowed(client, config);
       if (config.expectedAppVersion && client.app.version !== config.expectedAppVersion) throw new Error("DOUBAOWORK_APP_VERSION_DRIFT");

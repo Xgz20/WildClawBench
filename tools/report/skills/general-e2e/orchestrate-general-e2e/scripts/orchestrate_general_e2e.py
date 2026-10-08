@@ -451,7 +451,7 @@ def _execution_summary(
             evidence.get("completeness") == "partial"
             and isinstance(missing, list)
             and missing
-            and set(missing) <= {"resource_metrics_complete_coverage", "provider-request-coverage-unavailable", "native-tool-trajectory-incomplete", "displayed-tool-without-execution-evidence", "remote-tool-event-coverage-incomplete", "unmapped-native-message-block", "cross-source-tool-order-unavailable", "multimodal-tool-result-content-unverified", "unsupported_item_type:dynamicToolCall"}
+            and set(missing) <= {"resource_metrics_complete_coverage", "provider-request-coverage-unavailable", "native-tool-trajectory-incomplete", "native-tool-capture-incomplete", "displayed-tool-without-execution-evidence", "remote-tool-event-coverage-incomplete", "unmapped-native-message-block", "cross-source-tool-order-unavailable", "multimodal-tool-result-content-unverified", "unsupported_item_type:dynamicToolCall"}
             and (set(missing) <= {"resource_metrics_complete_coverage"}
                  or (evidence.get("transcript_path") and evidence.get("trace_index_path")))
         )

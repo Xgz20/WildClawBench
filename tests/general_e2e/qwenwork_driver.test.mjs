@@ -43,6 +43,7 @@ import {
   requireUniqueVisible,
   skipQwenClarification,
   normalizeQwenPromptText,
+  fillQwenPrompt,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/ui.mjs";
 
 const SELECT_FOLDER = new URL(
@@ -55,6 +56,25 @@ const PROMPT_SHA = "e".repeat(64);
 
 test("contenteditable prompt readback normalizes macOS paragraph boundaries", () => {
   assert.equal(normalizeQwenPromptText("第一段\n\n\n第二段\r\n\r\n第三段"), "第一段\n\n第二段\n\n第三段");
+});
+
+test("keyboard fallback verifies focus twice, records a diagnostic and preserves readback", async () => {
+  for (const mode of ["fill", "fallback", "focus-before-select", "focus-before-insert", "wrong-readback"]) {
+    let value = "", checks = 0, keys = 0, inserted = 0;
+    const diagnostics = [];
+    const editor = { isVisible: async () => true, click: async () => {}, innerText: async () => value,
+      fill: async text => { if (mode === "fill") value = text; else throw new Error("fixture fill failure"); },
+      evaluate: async () => { checks++; return !(mode === "focus-before-select" || mode === "focus-before-insert" && checks === 2); } };
+    const page = { locator: () => ({ count: async () => 1, nth: () => editor }), keyboard: {
+      press: async () => { keys++; }, insertText: async text => { inserted++; value = mode === "wrong-readback" ? "other" : text; } } };
+    const action = fillQwenPrompt(page, "desired", 100, async row => diagnostics.push(row));
+    if (mode.startsWith("focus-")) { await assert.rejects(action, /FOCUS_MISMATCH/); assert.equal(inserted, 0); }
+    else if (mode === "wrong-readback") await assert.rejects(action, /READBACK_MISMATCH/);
+    else await action;
+    assert.equal(diagnostics.length, mode === "fill" ? 0 : 1);
+    assert.equal(keys, mode === "fill" || mode === "focus-before-select" ? 0 : 1);
+    if (diagnostics.length) assert.match(diagnostics[0].error_sha256, /^[a-f0-9]{64}$/);
+  }
 });
 
 function makeConfig(overrides = {}) {

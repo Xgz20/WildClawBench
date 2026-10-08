@@ -85,3 +85,20 @@ test("late results first seen after TTL and unobserved history never become comp
   assert.ok(snapshot.errors.includes("DISPATCH_LEDGER_CLOCK_INVALID"));
   assert.throws(() => normalizeNativeToolEvents(snapshot, { ...f.options, finishedAt: new Date().toISOString() }), /CAPTURE_INCOMPLETE/);
 });
+
+test("previously witnessed results survive TTL while changed retained results remain conflicting", t => {
+  const f = fixture(t);
+  f.call("install"); f.dispatch();
+  f.manager.records.set("sandbox::call", { finalizedAt: Date.now(), uploadState: "uploaded", request: { id: "call", name: "Bash" },
+    result: { text: "ok" }, context: { owner: f.owner, agentId: "agent", conversationId: "123" } });
+  t.mock.timers.tick(1000);
+  const first = f.call("collect", { agentId: "agent" });
+  t.mock.timers.tick(1800001);
+  const later = f.call("collect", { agentId: "agent" });
+  assert.deepEqual(later.errors, []);
+  assert.equal(later.ledger_samples[0].observed_at_ms, first.ledger_samples[0].observed_at_ms);
+  assert.equal(normalizeNativeToolEvents(later, { ...f.options, finishedAt: new Date().toISOString() }).known_subtotal, 1);
+  f.manager.records.get("sandbox::call").result.text = "changed";
+  const conflict = f.call("collect", { agentId: "agent", restore: true });
+  assert.ok(conflict.errors.includes("DISPATCH_LEDGER_CONFLICT"));
+});

@@ -12,6 +12,7 @@ test("DoubaoWork batch adopts only explicit adjacent Driver releases", () => {
   assert.equal(isAllowedDriverUpgrade("0.7.7", "0.8.0"), true);
   assert.equal(isAllowedDriverUpgrade("0.8.0", "0.8.1"), true);
   assert.equal(isAllowedDriverUpgrade("0.8.1", "0.8.2"), true);
+  assert.equal(isAllowedDriverUpgrade("0.8.2", "0.8.3"), true);
   assert.equal(isAllowedDriverUpgrade("0.7.7", "0.8.1"), false);
   assert.equal(isAllowedDriverUpgrade("0.8.1", "0.8.1"), false);
 });

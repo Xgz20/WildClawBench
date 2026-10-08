@@ -145,11 +145,28 @@ export function normalizeVerifiedNonSuccessToolSubset(snapshot, options, { nonSu
   }
 }
 
+export function verifyEquivalentWebTerminal(journal, runtime, native) {
+  if (journal.native_observation?.equivalent_web_binding !== true) return null;
+  if (journal.scene !== "web") throw new Error("DOUBAOWORK_EQUIVALENT_TERMINAL_SCENE_MISMATCH");
+  const finished = journal.native_observation.equivalent_finished_at;
+  const times = [journal.timing?.sent_at, finished, runtime.observed_at].map(value => Date.parse(value));
+  if (!times.every(Number.isFinite) || times[1] < times[0] || times[1] > times[2]
+      || ["failed", "interrupted"].includes(native.terminal)) {
+    throw new Error("DOUBAOWORK_EQUIVALENT_TERMINAL_TIME_OR_STATUS_INVALID");
+  }
+  return finished;
+}
+
 export async function readBoundNativeEvidence({ journalFile, journal, workspace = journal.workspace }) {
+  if (journal.native_observation?.equivalent_web_binding === true && journal.scene !== "web") {
+    throw new Error("DOUBAOWORK_EQUIVALENT_TERMINAL_SCENE_MISMATCH");
+  }
   if (journal.native_interactions?.confirmation_seen) throw new Error("DOUBAOWORK_NATIVE_INTERACTION_UNACCOUNTED");
   if (journal.send?.dispatch_attempt_count !== 1 || journal.session?.prompt_readback?.status !== "verified" || !journal.native_observation) throw new Error("DOUBAOWORK_NATIVE_EXECUTION_NOT_VERIFIED");
   const control = dirname(journalFile), runtimeBytes = await boundArtifact(control, journal.native_observation.artifact);
   const runtime = JSON.parse(runtimeBytes), native = normalizeRuntimeMessages(runtime, journal);
+  const equivalentFinishedAt = verifyEquivalentWebTerminal(journal, runtime, native);
+  const equivalentWebBinding = equivalentFinishedAt !== null;
   if (inspectNativeAuthorizationHistory(runtime, native.native_request_session_id).length) throw new Error("DOUBAOWORK_NATIVE_AUTHORIZATION_HISTORY_UNACCOUNTED");
   let lifecycleBytes = null, lifecycle = null;
   if (journal.native_observation.native_lifecycle_artifact) {
@@ -173,15 +190,14 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   } else if (native.terminal === "failed") {
     terminalObservationBytes = await boundArtifact(control, journal.native_failure_observation);
     failure = verifyFailureEvidence({ state: journal, native, runtime, observation: JSON.parse(terminalObservationBytes) });
-  } else if (journal.native_observation?.equivalent_web_binding !== true
+  } else if (!equivalentWebBinding
       && (native.terminal !== "completed" || !native.finished_at)) {
     throw new Error("DOUBAOWORK_NATIVE_TERMINAL_OR_TIME_UNAVAILABLE");
   }
-  const equivalentWebBinding = journal.native_observation?.equivalent_web_binding === true;
   if (equivalentWebBinding) {
     native.native_cwd = workspace;
     native.terminal = "completed";
-    native.finished_at = journal.native_observation.equivalent_finished_at || native.finished_at || new Date().toISOString();
+    native.finished_at = equivalentFinishedAt;
     native.sources = { ...(native.sources ?? {}), native_cwd: "modern-dispatcher-tool-context+ui-project-readback", finished_at: "modern-dispatcher+ui-final" };
   }
   const nonSuccess = cancellation ?? failure;
@@ -208,7 +224,10 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
       dropped_incomplete_tool_count: nativeTools.dropped_incomplete_tool_count, capture: nativeTools.capture_diagnostics }
     : nativeTools?.dropped_failed_upload_count
       ? { status: "partial", reason: "native-tool-upload-failed-before-terminal", uploaded_count: nativeTools.known_subtotal,
-        failed_upload_count: nativeTools.dropped_failed_upload_count } : null;
+        failed_upload_count: nativeTools.dropped_failed_upload_count }
+      : nativeTools?.status === "partial"
+        ? { status: "partial", reason: "native-tool-trajectory-incomplete", verified_count: nativeTools.known_subtotal,
+          source_profile: nativeTools.profile, scope: nativeTools.scope } : null;
   const assistant = Object.values(runtime.maps.messageMap).find(m => m.message_id === native.reply_message_id);
   const supportedBlocks = new Set(["text_block", "thinking_block", "elapsed_block", "file_operation_block", "local_file_block", "generic_tool_block"]);
   const unknownBlocks = (assistant.content_blocks_v2 || []).filter(b => Object.entries(b.content || {}).some(([k, v]) => !supportedBlocks.has(k)

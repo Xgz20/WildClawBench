@@ -49,7 +49,7 @@ import {
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.8";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.9";
 const PROVISIONAL_SESSION_SETTLE_MS = 60_000;
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
@@ -862,6 +862,10 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
     state.events.push({ type: "DISPATCH_STAGE_OBSERVED", at: dependencies.now(), details: { stage } });
     await dependencies.writeJournal(config.state_file, state);
   };
+  const recordPromptFallback = async details => {
+    state.events.push({ type: "PROMPT_INPUT_FALLBACK", at: dependencies.now(), details });
+    await dependencies.writeJournal(config.state_file, state);
+  };
   let action = "prepare";
   if (state) {
     if (!config.resume) throw new Error("QWENWORK_EXISTING_JOURNAL_REQUIRES_RESUME");
@@ -940,7 +944,7 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
     let prepared;
     try {
       prepared = await dependencies.prepareUi(config, state);
-      await dependencies.fillPrompt(config.prompt.content);
+      await dependencies.fillPrompt(config.prompt.content, recordPromptFallback);
       const verified = await dependencies.verifyPreparedUi(config, state, prepared);
       assertStableQwenUiConfiguration(prepared.configuration, verified.configuration);
       if (prepared.project.project_id !== verified.project.project_id
@@ -984,7 +988,7 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
       }
       await recordDispatchStage("prepared-project-restored");
       if (beforeFill.prompt_sha256 !== config.prompt.sha256) {
-        await dependencies.fillPrompt(config.prompt.content);
+        await dependencies.fillPrompt(config.prompt.content, recordPromptFallback);
         await recordDispatchStage("frozen-prompt-filled");
       } else {
         await recordDispatchStage("frozen-prompt-already-exact");
@@ -1192,7 +1196,7 @@ export async function createLiveDependencies(config) {
         configuration: await readQwenUiConfiguration(page),
         prompt_sha256: sha256(await readQwenPrompt(page)),
       }),
-      fillPrompt: (prompt) => fillQwenPrompt(page, prompt, timeout),
+      fillPrompt: (prompt, onFallback) => fillQwenPrompt(page, prompt, timeout, onFallback),
       dispatchPrompt: () => dispatchQwenPrompt(page, timeout),
       querySessions: () => queryQwenSessionRows(config.client.session_db, snapshotOptions),
       verifySessionPrompt: (session, prompt) => verifyQwenSessionPromptEvidence({

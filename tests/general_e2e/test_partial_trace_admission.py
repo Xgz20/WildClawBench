@@ -9,6 +9,21 @@ RULE = "def grade(**kwargs):\n    from pathlib import Path\n    p = Path(kwargs.
 
 
 class PartialTraceAdmissionTests(unittest.TestCase):
+    def test_partial_without_missing_reason_is_never_standard(self):
+        execution = {"evidence": {"completeness": "partial", "missing": []}}
+        for grading_type in ["automated", "llm_judge", "hybrid"]:
+            with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "EXECUTION_NOT_SCORABLE"):
+                RUNTIME._validate_evidence_admission(execution, {"grading_type": grading_type, "automated_checks": RULE})
+
+    def test_capture_subset_admits_only_workspace_automated_rules(self):
+        execution = {"evidence": {"completeness": "partial", "missing": ["native-tool-capture-incomplete"],
+                                 "transcript_path": "trace", "trace_index_path": "index"}}
+        self.assertEqual(RUNTIME._validate_evidence_admission(execution, {"grading_type": "automated", "automated_checks": RULE}),
+                         "automated-workspace-only/v1")
+        for grading_type in ["llm_judge", "hybrid"]:
+            with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "EXECUTION_NOT_SCORABLE"):
+                RUNTIME._validate_evidence_admission(execution, {"grading_type": grading_type, "automated_checks": RULE})
+
     def test_only_workspace_inputs_are_allowed(self):
         contract = {"grading_type": "automated", "automated_checks": RULE}
         self.assertTrue(RUNTIME._workspace_only_automated_rule(contract))

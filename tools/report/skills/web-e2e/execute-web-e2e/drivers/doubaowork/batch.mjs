@@ -27,7 +27,7 @@ const driverFile = fileURLToPath(new URL("./driver.mjs", import.meta.url));
 
 export function isAllowedDriverUpgrade(previous, current = DRIVER_VERSION) {
   return ({ "0.7.2": "0.7.3", "0.7.4": "0.7.5", "0.7.5": "0.7.6", "0.7.6": "0.7.7",
-    "0.7.7": "0.8.0", "0.8.0": "0.8.1", "0.8.1": "0.8.2" })[previous] === current;
+    "0.7.7": "0.8.0", "0.8.0": "0.8.1", "0.8.1": "0.8.2", "0.8.2": "0.8.3" })[previous] === current;
 }
 
 export function parseBatchArgs(argv) {

@@ -15,7 +15,7 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.12.2/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt发送固定单槽。AstronStudio/WorkBuddy/QwenWork默认3个后台槽，队列算法支持1–8，并按可信终态动态补位。AstronStudio 切换 Workspace 时先确认项目选择菜单已关闭，再使用侧边栏添加路径；若项目选择控件已经出现但绝对路径尚未显示，会转入原生项目 ID、目标项目行和新对话路由核验，确认 route→project→cwd 一致后才接受；未完成身份回读时不发送 Prompt。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.12.4/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt发送固定单槽。AstronStudio/WorkBuddy/QwenWork默认3个后台槽，队列算法支持1–8，并按可信终态动态补位。AstronStudio 切换 Workspace 时先确认项目选择菜单已关闭，再使用侧边栏添加路径；若项目选择控件已经出现但绝对路径尚未显示，会转入原生项目 ID、目标项目行和新对话路由核验，确认 route→project→cwd 一致后才接受；未完成身份回读时不发送 Prompt。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## DoubaoWork macOS 开发入口
 
@@ -29,7 +29,7 @@ python -m eval_general_e2e skills --name execute-general-e2e --json
 
 2.31.6 的本地模式菜单按唯一语义条目等待可见后选择；菜单迟到不按 DOM 顺序猜测。首次用户消息确认后原生 request ID 可能稍晚出现，取消前会重新读取原生消息补齐同一身份，缺失或冲突仍拒绝。已验证的原生传输最终错误与前后台空闲可以交给 General collector；其它错误 Profile 保持 NEEDS_ATTENTION。
 
-`--resume` 仅恢复观察。只有已确认发送 0 次、未落盘发送意图、完整项目/目录身份仍匹配的发送前失败，才可显式传 `--resume --retry-pre-send-failure`；重试先通过原 project ID 的编辑对话框重新读取完整目录，不能只复用旧 tooltip；原失败 journal 先归档。已发送或不确定发送不适用。原生 Prompt 从绑定 conversation 的 IM message Store 读取，不把 Markdown 渲染文本当成原文。
+`--resume` 仅恢复观察。只有已确认发送 0 次且未落盘发送意图的发送前失败，才可显式传 `--resume --retry-pre-send-failure`；已确认项目的重试先通过原 project ID 的编辑对话框重新读取完整目录，不能只复用旧 tooltip。目录选择尚未完成时须重新准备并验证项目，仍不允许直接发送。原失败 journal 先归档，在替代 attempt 持久化之前保留活动状态，重连失败后可以从原入口再次恢复。已发送或不确定发送不适用。原生 Prompt 从绑定 conversation 的 IM message Store 读取，不把 Markdown 渲染文本当成原文。
 
 开发队列入口为 `drivers/doubaowork/batch.mjs --unit-root ABS --queue-id ID --expected-permission LABEL --run-slots N`，N接受1–3，默认3。先按 manifest 顺序预建全部项目并保存零发送 journal，再从每个精确 project 的编辑对话框只读回验完整目录（取消关闭），随后单槽发送并动态补位。恢复使用原冻结发行与 `--resume`；不确定发送不重发，未知活动会话或待交互暂停队列；失败收尾不再向页面发送通用 Escape，未知弹窗须保留，不静默取消。原生并发按绑定助手的 elapsed 区间核算，字段缺失则 null，不能用槽位代替。
 
@@ -55,6 +55,8 @@ node drivers/doubaowork/recover-lock.mjs \
 原生“待确认”按侧栏状态与稳定 conversation ID 绑定；文件授权还读取已绑定请求的原生 quick_reply block（scene 2、action 1010/1011），覆盖按钮在 CDN iframe 内、主 DOM 没有 approval 标签的情况。未知授权不自动批准，存在待确认时停止新派发并进入 NEEDS_ATTENTION。记录过原生确认或存在原生授权历史的 attempt 不得假定人工操作数为0；当前不提供人工授权后继续自动收口/评分的准入。
 
 ## WorkBuddy / QwenWork macOS 开发入口
+
+QwenWork Prompt 的 fill 失败可回退到键盘插入，但选择文本和插入前均须确认焦点仍在唯一目标编辑器；焦点漂移或完整回读不一致拒绝发送。General journal 的 `PROMPT_INPUT_FALLBACK` 记录方法、原始错误类型与消息 SHA，不保存可能含敏感输入的错误全文。
 
 QwenWork 的 fresh probe、新建/恢复和最终发送均要求 GUI 已解锁、当前控制台用户已登录且与执行用户一致，并核对精确安装路径的监听 PID/启动身份及同端点 browser WebSocket。锁屏、未知状态、外部监听者或过程身份漂移均拒绝继续；明确发生在 reservation 前的环境暂停保留原 attempt，只有 fresh probe 与最终身份、配置、Prompt 回读重新通过后才允许显式 resume，一旦调用过发送则不适用该分支；原生只读探针仍保留实际观察及阻断原因。
 
