@@ -91,6 +91,8 @@ DoubaoWork 最新 5 题批次 `web-macos-doubao-production-20261007` 已完成�
 
 当前四个 Harness 仍未整体放行。基于当前 HEAD 新准备的 10 题生产模拟批次 `web-macos-four-harness-production-20261007` 已启动 AstronStudio 串行验收：前 3 题成功，第 4、6、7 题的原生 turn 因 provider 返回 `no valid authorization / insufficient quota` 进入 `INFRA_FAILED`，批次安全终止，未生成有效 execution receipt；这不是候选 workspace 或 Driver 重发问题，失败题 Prompt 已发送且保留完整证据。WorkBuddy、QwenWork、DoubaoWork 的 10 题正式模拟必须在 AstronStudio 通过后按同一批次顺序继续，历史 10 题目录不替代当前批次。
 
+WorkBuddy 当前 HEAD 的 5 题执行回执已通过 `integrity.valid=true`，实际模型为 `xopglm52`、默认执行槽位为 3；评分已完成 001、003、004、005，Task 002 的默认评分 attempt、一次容量恢复 attempt 和唯一额外容量恢复机会均返回 `Selected model is at capacity. Please try a different model.`，因此 WorkBuddy 暂无有效 submission。该失败现场保留在评分状态和 attempt 归档中，不把它转换为候选能力零分。
+
 生产放行条件保持不变：每个 Harness 必须依次完成新鲜 10 题的有效 execution receipt、默认三路独立评分、`submission.json`、return/import receipt 和四 Sheet 报告。任何缺失的 Token、请求数、工具数或耗时继续保留 `null`/`partial`/`unavailable`，不得从上下文占用或订阅显示换算。当前 AstronStudio 的外部配额/认证错误需要先恢复，或由管理员明确授权切换到其他可用模型，才能继续该串行验收。
 
 源码入口：[Web Driver 契约](../../../tools/report/skills/web-e2e/execute-web-e2e/references/driver-contract.md)、[资源采集接口](../../../tools/report/skills/web-e2e/execute-web-e2e/references/resource-metrics.md)、[评分 JSON 契约](../../../tools/report/skills/web-e2e/score-web-e2e/references/scoring-contract.md)、[浏览器取证](../../../tools/report/skills/web-e2e/score-web-e2e/references/browser-interaction-scoring.md)。历史运行细节保留在 evidence/archive，当前进度只更新共用契约。

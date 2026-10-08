@@ -174,10 +174,17 @@ export function trustDialogMatchesProject(dialogText, project) {
 
 async function confirmProjectTrust(page, project, timeout) {
   const matches = [];
-  for (const dialog of await visible(page.getByRole("dialog"))) {
-    const trust = dialog.getByRole("button", { name: /^(Trust folder|信任文件夹)$/i });
-    if (await trust.count() === 1) matches.push({ dialog, trust });
-  }
+  const deadline = Date.now() + Math.min(timeout, 5000);
+  do {
+    matches.length = 0;
+    for (const dialog of await visible(page.getByRole("dialog"))) {
+      const trust = dialog.getByRole("button", { name: /^(Trust folder|信任文件夹)$/i });
+      if (await trust.count() === 1) matches.push({ dialog, trust });
+    }
+    if (matches.length > 0) break;
+    if (Date.now() >= deadline) break;
+    await page.waitForTimeout(100);
+  } while (true);
   if (!matches.length) return false;
   if (matches.length !== 1) throw new Error(`文件夹信任对话框必须唯一可见，实际 ${matches.length} 个`);
   const { dialog, trust } = matches[0];
@@ -303,6 +310,8 @@ async function beginProjectRegistration(page, timeout) {
 
   const addPattern = /^(Add project|添加项目|New project|新建项目|Open project|打开项目)$/i;
   const trigger = await uniqueVisible([
+    page.locator('[data-app-action-sidebar-project-create]'),
+    page.getByRole("button", { name: /^(Add new project|添加新项目)$/i }),
     page.getByRole("button", { name: addPattern }),
     page.getByRole("menuitem", { name: addPattern }),
   ], "添加项目入口");
@@ -320,16 +329,15 @@ async function registerWithRendererBridge(page, project) {
     () => typeof window.electronBridge?.sendMessageFromView === "function",
   );
   if (!available) throw new Error("Codex Desktop 未暴露 renderer bridge，不能使用 --renderer-bridge");
-  await page.evaluate(async (root) => {
-    await window.electronBridge.sendMessageFromView({
-      type: "electron-add-new-workspace-root-option",
-      root,
+  await page.evaluate((root) => {
+    void window.electronBridge.sendMessageFromView({
+      type: "electron-pick-workspace-root-option",
+      allowMultiple: false,
     });
-  }, project);
+  });
   return {
     method: "renderer-bridge",
     finalize: false,
-    nativeSelection: { folder: project, method: "renderer-bridge", status: "registered" },
   };
 }
 
@@ -427,8 +435,11 @@ export async function run(args) {
           project,
           timeoutSeconds: args.timeoutSeconds,
         });
-        if (registration.finalize) await finalizeProjectRegistration(page, project, args.timeoutSeconds * 1000);
-        await confirmProjectTrust(page, project, args.timeoutSeconds * 1000);
+        const trustedAfterSelection = await confirmProjectTrust(page, project, args.timeoutSeconds * 1000);
+        if (registration.finalize && !trustedAfterSelection) {
+          await finalizeProjectRegistration(page, project, args.timeoutSeconds * 1000);
+          await confirmProjectTrust(page, project, args.timeoutSeconds * 1000);
+        }
       }
       await page.waitForTimeout(1000);
       const evidenceDir = args.output ? dirname(resolve(args.output)) : "";
