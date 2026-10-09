@@ -18,8 +18,10 @@ import {
   classifySessionStatus,
   createInitialState,
   diffSnapshots,
+  isQuiescentThreadEvidence,
   parseArgs,
   queryFinalResponse,
+  queryQuiescentThreadEvidence,
   querySessionSummary,
   querySessions,
   readJsonIfExists,
@@ -132,6 +134,7 @@ function matchesTrackedRecoverySession(session, recoverySession) {
 export async function restartAstudio(config, overrides = {}, recoverySession = null) {
   const dependencies = {
     querySessions,
+    queryQuiescentThreadEvidence,
     processIdentity: () => astronProcessIdentity(config.appPath),
     endpointReady,
     gracefulQuit: gracefulQuitAstron,
@@ -152,15 +155,36 @@ export async function restartAstudio(config, overrides = {}, recoverySession = n
     tracked_cwd: recoverySession?.cwd || null,
     active_session_count: null,
     tracked_session_matched: false,
+    quiescent_open_turn_evidence: [],
   };
   const currentProcess = await dependencies.processIdentity();
   if (currentProcess) {
     const currentPlatform = currentProcess.platform || process.platform;
     const gracefulMethod = currentPlatform === "win32" ? "close-main-window" : "sigterm";
     const forcedMethod = currentPlatform === "win32" ? "taskkill-after-close-timeout" : "sigkill-after-term-timeout";
-    const active = (await dependencies.querySessions(config.sessionDb)).filter((session) =>
+    const candidates = (await dependencies.querySessions(config.sessionDb)).filter((session) =>
       new Set(["running", "needs_attention", "pending", "starting"]).has(String(session.status)),
     );
+    const active = [];
+    for (const session of candidates) {
+      // Native session/turn completion alone is insufficient; runtime stopped,
+      // terminal open turns and no pending work must agree on two fresh reads.
+      const eligible = session.status === "running" && session.sessionStatus === "ready"
+        && !session.activeTurnId && session.turnState === "completed";
+      const evidence = eligible
+        ? await dependencies.queryQuiescentThreadEvidence(config.sessionDb, session.conversationId).catch(() => null)
+        : null;
+      const rechecked = evidence
+        ? await dependencies.queryQuiescentThreadEvidence(config.sessionDb, session.conversationId).catch(() => null)
+        : null;
+      if (isQuiescentThreadEvidence(evidence, session.conversationId)
+        && isQuiescentThreadEvidence(rechecked, session.conversationId)
+        && JSON.stringify(evidence) === JSON.stringify(rechecked)) {
+        restartSafety.quiescent_open_turn_evidence.push(rechecked);
+      } else {
+        active.push(session);
+      }
+    }
     restartSafety.active_session_count = active.length;
     restartSafety.tracked_session_matched = active.length === 1
       && matchesTrackedRecoverySession(active[0], recoverySession);
@@ -412,6 +436,34 @@ function threadIdFromUrl(url) {
   }
 }
 
+function reachableNewTaskControlsInDom(root) {
+  const scope = root || document;
+  const doc = scope.ownerDocument || scope;
+  return Array.from(scope.querySelectorAll('[data-testid="new-thread-button"]')).filter((element) => {
+    const style = doc.defaultView.getComputedStyle(element);
+    if (style.display === "none" || ["hidden", "collapse"].includes(style.visibility)) return false;
+    if (element.matches(":disabled") || element.closest('[aria-disabled="true"]')) return false;
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return false;
+    const target = doc.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    return target === element || element.contains(target);
+  });
+}
+
+async function elementMatchesFromHandle(handle) {
+  try {
+    const matches = [];
+    for (const value of (await handle.getProperties()).values()) {
+      const element = value.asElement();
+      if (element) matches.push(element);
+      else await value.dispose();
+    }
+    return matches;
+  } finally {
+    await handle.dispose();
+  }
+}
+
 export async function findActiveProjectNewTaskButtons(page) {
   if (typeof page.url !== "function") return [];
   const threadId = threadIdFromUrl(page.url());
@@ -419,15 +471,33 @@ export async function findActiveProjectNewTaskButtons(page) {
   const actions = page.getByTestId(`thread-hover-actions-${threadId}`);
   if (await actions.count() !== 1) return [];
   const projectRoot = actions.locator('xpath=ancestor::div[contains(@class,"group/collapsible")][1]');
+  if (typeof projectRoot.evaluateHandle === "function") {
+    if (await projectRoot.count() !== 1) return [];
+    return elementMatchesFromHandle(await projectRoot.evaluateHandle(reachableNewTaskControlsInDom));
+  }
   return pointerReachableLocators(await visibleLocators(projectRoot.getByTestId("new-thread-button")));
 }
 
+export async function inspectConversationSidebarState(page) {
+  if (typeof page.evaluate !== "function") return null;
+  const states = await page.evaluate(() => Array.from(
+    document.querySelectorAll('[data-slot="sidebar"][data-side="left"]'),
+    (element) => element.getAttribute("data-state"),
+  ));
+  if (!Array.isArray(states)) throw new Error("AstronStudio 对话侧边栏状态无法核验");
+  if (states.length > 1) throw new Error("AstronStudio 对话侧边栏身份不唯一");
+  return states.length === 1 && ["collapsed", "expanded"].includes(states[0]) ? states[0] : null;
+}
+
 export async function findNewTaskButtons(page) {
+  // Collapsed sidebars retain mounted project buttons. Avoid scrolling their
+  // hidden contents before the unique sidebar toggle can be reached.
+  if (await inspectConversationSidebarState(page) === "collapsed") return [];
   const activeProjectButtons = await findActiveProjectNewTaskButtons(page);
   if (activeProjectButtons.length === 1) return activeProjectButtons;
-  const byTestId = await pointerReachableLocators(
-    await visibleLocators(page.getByTestId("new-thread-button")),
-  );
+  const byTestId = typeof page.evaluateHandle === "function"
+    ? await elementMatchesFromHandle(await page.evaluateHandle(reachableNewTaskControlsInDom))
+    : await pointerReachableLocators(await visibleLocators(page.getByTestId("new-thread-button")));
   if (byTestId.length === 1) return byTestId;
 
   const textCandidates = await visibleLocators(page.locator("button").filter({ hasText: /^(?:新建任务|New task)$/i }));
@@ -449,7 +519,9 @@ export async function findNewTaskButtons(page) {
 }
 
 export async function findConversationSidebarToggles(page) {
-  const candidates = await visibleLocators(page.locator("button[aria-label]"));
+  const candidates = await visibleLocators(page.locator(
+    'button[aria-label="切换对话侧边栏"], button[aria-label="Toggle conversation sidebar" i]',
+  ));
   const matches = [];
   for (const candidate of candidates) {
     const label = (await candidate.getAttribute("aria-label") || "").trim();
@@ -466,7 +538,7 @@ export async function isReusableEmptyTaskRoute(page) {
   return (await editors[0].innerText()).trim() === "";
 }
 
-async function createFreshTask(page, timeout) {
+export async function createFreshTask(page, timeout) {
   const previousThreadId = threadIdFromUrl(page.url());
   const entryDeadline = Date.now() + timeout;
   const sidebarToggleEligibleAt = Date.now() + Math.min(3000, Math.floor(timeout / 3));
@@ -478,7 +550,9 @@ async function createFreshTask(page, timeout) {
     if (sidebarToggles.length > 1) {
       throw new Error(`AstronStudio 对话侧边栏切换按钮数量异常：${sidebarToggles.length}`);
     }
-    if (sidebarToggles.length === 1 && Date.now() >= nextSidebarToggleAttemptAt) {
+    const sidebarState = await inspectConversationSidebarState(page);
+    if (sidebarToggles.length === 1 && sidebarState !== "expanded"
+      && Date.now() >= nextSidebarToggleAttemptAt) {
       await sidebarToggles[0].click({ timeout, force: true });
       nextSidebarToggleAttemptAt = Date.now() + sidebarToggleRetryMilliseconds;
     }

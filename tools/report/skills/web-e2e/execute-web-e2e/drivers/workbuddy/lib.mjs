@@ -24,7 +24,7 @@ import {
 
 export const AUTOMATION_SCHEMA = "wildclawbench.web-e2e-automation-state/v1";
 export const EXECUTION_SCHEMA = "wildclawbench.web-e2e-execution/v1";
-export const DRIVER_VERSION = "1.10.0";
+export const DRIVER_VERSION = "1.10.1";
 export const DEFAULT_APP_PATH = defaultWorkBuddyAppPath();
 export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9229";
@@ -74,6 +74,7 @@ export function parseArgs(argv) {
     model: DEFAULT_MODEL,
     permissionMode: DEFAULT_PERMISSION_MODE,
     modelId: "",
+    expectedUiModel: "",
     modelDisplayName: "",
     batchId: "",
     taskId: "",
@@ -104,6 +105,7 @@ export function parseArgs(argv) {
     ["--model", "model"],
     ["--permission-mode", "permissionMode"],
     ["--model-id", "modelId"],
+    ["--expected-ui-model", "expectedUiModel"],
     ["--model-display-name", "modelDisplayName"],
     ["--batch-id", "batchId"],
     ["--task-id", "taskId"],
@@ -551,6 +553,9 @@ export async function updateExecutionRecord(config, identityInfo, update, profil
   record.harness.version = update.clientVersion || record.harness.version || "";
   const actualUiModel = String(update.modelSelection?.actual_model || "").trim();
   if (actualUiModel) {
+    if (config.expectedUiModel && actualUiModel !== config.expectedUiModel) {
+      throw new Error(`${profile.displayName} 当前模型偏离批次首次回读值：${actualUiModel} vs ${config.expectedUiModel}`);
+    }
     if (config.model && actualUiModel !== config.model) {
       throw new Error(`${profile.displayName} 实际模型与请求不一致：${actualUiModel} vs ${config.model}`);
     }

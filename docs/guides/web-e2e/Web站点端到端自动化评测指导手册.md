@@ -484,7 +484,11 @@ Codex Desktop CDP：http://127.0.0.1:9230
 
 ### Codex Desktop CDP 连接失败
 
-先重新运行 `run-web-e2e` 的桌面 CDP 前置准备；它会复用健康实例，或自动关闭并以调试参数重启 Codex Desktop。若端口被无关进程占用、应用未安装或重启后仍无真实 target，流程会进入 `NEEDS_ATTENTION` 并保留现场。
+先重新运行 `run-web-e2e` 的桌面 CDP 前置检查；健康实例会直接复用。承载当前控制任务的 Codex Desktop 不得由该任务退出或重启；需要恢复调试启动时，先保存状态，再由用户或独立外部启动器恢复，回来后继续原队列。若端口被无关进程占用、应用未安装或恢复后仍无真实 target，流程会进入 `NEEDS_ATTENTION` 并保留现场。
+
+### 项目注册提示“添加项目入口实际 0 个”
+
+先让控制会话运行注册器的 `--probe`，核对选中的 `desktop_page.url`。Codex 的预热 Page 窗口也可能使用 ChatGPT 标题；应选择真实主窗口。新版注册器会优先选择无路由参数的主窗口；旧冻结包可在确认后传 `--page-url 'app://-/index.html'` 精确指定，再通过可见 UI 和文件夹选择器注册，并用 `list_projects` 回读完整评分目录。URL 重复时停止，不猜测窗口，也不静默切换私有 bridge。
 
 ### Codex Desktop 反复重启且无法停止
 
@@ -513,6 +517,8 @@ launchctl bootout gui/$(id -u)/com.wildclawbench.desktop-debug-restart.codex
 确认评分任务由 Codex Desktop 内置任务接口创建，且项目目录是单个 `score/tasks/<task_id>/`。不要使用裸 CLI 或独立 App Server 会话代替 Desktop 评分任务。
 
 新批次默认创建 3 个并发评分任务；每个任务都必须取得与自身 `metadata.codexSessionId` 匹配的独立 `iab` Browser 路由。若三路中任一路由没有建立，停止该批次并记录 `evaluation_error`，不要把父会话 Browser、Chrome、headless 或自建浏览器当作替代，也不要把评分并发静默降级为串行。
+
+编排 Skill 0.3.18 新生成的评分任务会在站点启动前做最多 60 秒的就绪检查：最多 3 次发现，空清单时分别等待 2 秒、5 秒，再进行一次官方 about:blank 创建并核验本线程归属及实际页面。该保护不修改 Codex 内部的 5 秒等待。任一题出现功能或美观度 `evaluation_error` 后，控制器暂停派发新题，继续收口已运行的题；恢复后使用原有受限重试预算。包含异常的 submission 可用于审计，整批仍为 `NEEDS_ATTENTION`。已有冻结批次的 Prompt 和预算保持原值。
 
 ### 站点无法启动或 Browser 无法取证
 

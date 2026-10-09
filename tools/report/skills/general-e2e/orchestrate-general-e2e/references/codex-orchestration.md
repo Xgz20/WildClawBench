@@ -48,6 +48,8 @@ bash <skill-dir>/scripts/run-codex-project-registrar.sh \
 
 Windows 使用 `run-codex-project-registrar.cmd`。Driver 与 Web E2E 使用相同的 `wildclawbench.codex-project-registration/v1` 契约，但随 General Skill 独立分发；默认通过可见 UI 和原生文件夹选择器注册，不使用 Computer Use 操作 Codex 自己。只有测试人员明确接受当前 Desktop 版本私有接口风险时才可传 `--renderer-bridge`。
 
+多窗口探针应选择无路由查询参数的主窗口，不能因预热 Page 窗口的 ChatGPT 标题而优先选中它。候选同等或 URL 不唯一时失败关闭；可在确认主窗口后传 `--page-url <完整URL>` 精确指定。
+
 如果 macOS 当前控制任务就承载在需要补开 CDP 的 Codex Desktop 中，只能先持久化编排状态，再调用一次性托管入口：
 
 ```bash

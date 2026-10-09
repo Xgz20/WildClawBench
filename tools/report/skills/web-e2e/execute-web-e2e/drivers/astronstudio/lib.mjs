@@ -53,7 +53,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.12.3";
+export const DRIVER_VERSION = "1.12.8";
 export const DEFAULT_APP_PATH = defaultAstronAppPath();
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
@@ -351,6 +351,55 @@ export async function querySessionSummary(sessionDb = DEFAULT_SESSION_DB, overri
     }
   }
   throw new Error(`读取 AstronStudio 状态库失败：${lastError instanceof Error ? lastError.message : String(lastError)}`);
+}
+
+export function isQuiescentThreadEvidence(evidence, threadId) {
+  if (!threadId || evidence?.thread_id !== threadId) return false;
+  return evidence.session_status === "ready"
+    && evidence.active_turn_id === null
+    && evidence.runtime_status === "stopped"
+    && typeof evidence.lifecycle_generation === "string" && evidence.lifecycle_generation.length > 0
+    && ["completed", "interrupted", "error", "cancelled"].includes(evidence.latest_turn_state)
+    && Number.isFinite(Date.parse(evidence.latest_turn_completed_at || ""))
+    && Number.isInteger(evidence.open_turn_count) && evidence.open_turn_count > 0
+    && evidence.unclosed_open_turn_count === 0
+    && evidence.nonterminal_turn_count === 0
+    && evidence.pending_interaction_count === 0;
+}
+
+// A stopped runtime can retain an old open-turn projection after all native
+// turns have finished. Only this positive, same-thread proof permits restart;
+// absent tables, unknown lifecycle state or any live/pending turn remain blocked.
+export async function queryQuiescentThreadEvidence(sessionDb, threadId, overrides = {}) {
+  const snapshotDir = await mkdtemp(join(tmpdir(), "astudio-quiescent-snapshot-"));
+  const snapshotDb = join(snapshotDir, "state.sqlite");
+  try {
+    await (overrides.copySnapshot || copySqliteSnapshot)(sessionDb, snapshotDb, overrides);
+    const rows = await querySqlite(snapshotDb, `
+SELECT s.thread_id, s.status AS session_status, s.active_turn_id,
+  r.status AS runtime_status, r.lifecycle_generation,
+  t.state AS latest_turn_state, t.completed_at AS latest_turn_completed_at,
+  (SELECT COUNT(*) FROM provider_runtime_open_turns o
+    WHERE o.thread_id=s.thread_id) AS open_turn_count,
+  (SELECT COUNT(*) FROM provider_runtime_open_turns o
+    LEFT JOIN projection_turns ot ON ot.thread_id=o.thread_id AND ot.turn_id=o.turn_id
+    WHERE o.thread_id=s.thread_id AND (ot.state IS NULL OR ot.completed_at IS NULL
+      OR ot.state NOT IN ('completed','interrupted','error','cancelled'))) AS unclosed_open_turn_count,
+  (SELECT COUNT(*) FROM projection_turns nt WHERE nt.thread_id=s.thread_id
+    AND nt.checkpoint_turn_count IS NULL AND (nt.state IS NULL OR nt.completed_at IS NULL
+      OR nt.state NOT IN ('completed','interrupted','error','cancelled'))) AS nonterminal_turn_count,
+  (SELECT COUNT(*) FROM projection_pending_interactions pi
+    WHERE pi.thread_id=s.thread_id AND pi.status='pending') AS pending_interaction_count
+FROM projection_thread_sessions s
+JOIN projection_threads th ON th.thread_id=s.thread_id
+JOIN projection_turns t ON t.thread_id=s.thread_id AND t.turn_id=th.latest_turn_id
+JOIN provider_session_runtime r ON r.thread_id=s.thread_id
+WHERE s.thread_id=${sqlStringLiteral(threadId)};
+`, overrides);
+    return rows.length === 1 && isQuiescentThreadEvidence(rows[0], threadId) ? rows[0] : null;
+  } finally {
+    await rm(snapshotDir, { recursive: true, force: true }).catch(() => {});
+  }
 }
 
 function sqlStringLiteral(value) {

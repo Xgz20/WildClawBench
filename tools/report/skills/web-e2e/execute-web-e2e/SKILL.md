@@ -11,7 +11,7 @@ Web E2E 不给被评测 Harness 设置任务级执行时限。题目或数据集
 
 ## DoubaoWork macOS 单题入口
 
-`1.21.7` 使用共享 `doubaowork 0.8.3` 的 UI、一次发送、恢复与原生证据核心，Web adapter 独立生成 execution record、候选冻结及正式回执。等价终态只适用于 Web，并核验绑定观察时间，不以当前采集时刻补齐；失败或取消不得提升为完成。General 的运行材料不代表 Web 通过；本版真机验收范围查统一接入契约，不能用离线测试替代。
+`1.21.14` 沿用共享 `doubaowork 0.8.3` 的 UI、一次发送、恢复与原生证据核心，Web adapter 独立生成 execution record、候选冻结及正式回执。等价终态只适用于 Web，并核验绑定观察时间，不以当前采集时刻补齐；失败或取消不得提升为完成。General 的运行材料不代表 Web 通过；本版真机验收范围查统一接入契约，不能用离线测试替代。
 
 原生错误已独立核验且账本存在未采样的 `uploadState=failed` 行时，只保留严格核验的已上传工具子集与缺口诊断；工具总量为 null，业务能力分数不从异常终态推断。
 
@@ -39,6 +39,10 @@ bash <skill-dir>/scripts/run-doubaowork.sh --batch --harness-root <harness-root>
 持续对原 attempt 执行 `--resume`，观察窗口不是 Harness 超时。原生会话/请求/完整目录/Prompt、当前空闲、原始轨迹及来源一致性通过后才清理本题进程、冻结候选、写回执。遇到人工确认或发送不确定停止自动推进，禁止重发。原生错误映射为 `execution_error` 并禁止评分；缺失 Token/请求账本保留 null，不用上下文占用率代替消耗。发布中断可从冻结事务恢复；已发布则只读复验，不覆盖回执。批量入口继续拒绝。详见 [Driver 说明](drivers/doubaowork/README.md)。
 
 ## AstronStudio
+
+Web execute 1.21.14 / AstronStudio Driver 1.12.8 在新建任务前先读取唯一侧栏的展开状态。已收起时不扫描、滚动历史项目按钮；展开后在一次 DOM 快照中筛选可见、启用且中心点击可命中的新建按钮，避免按历史项目逐个往返 CDP；只定位精确语义的侧栏切换按钮，展开后重新核验新建入口。侧栏已展开但入口仍缺失时保持观察，不反复收起/展开。多个侧栏或多个可点击切换按钮仍失败关闭。该修复仅属于 Web Driver；当前冻结批次不在运行中替换安装，本版真机范围须另行记录。
+
+安全重启遇到旧 open-turn 投影残留时，只读核验同一 thread 的最新及全部 turn 均有正式终态、session 为 ready 且无 active turn、runtime 已 stopped、生命周期非空、无待处理交互；两次新快照一致才记录休止证明并允许重启。未知或变化证据仍阻断，不删除原生状态库。
 
 依赖由调用本 Skill 的控制 Harness 在 AstronStudio Driver 目录执行锁定安装，不进入候选 workspace：
 
@@ -79,7 +83,7 @@ Windows 使用相同参数和原生入口：
 .agents\skills\execute-web-e2e\scripts\run-astronstudio-batch.cmd C:\absolute\batch__astronstudio --run-id queue-1 --task-id task-1 --task-id task-2 --run-slots 3 --permission-mode full-access
 ```
 
-Windows 入口、平台探测和状态库读取已在目标 Windows 机器完成过真机验证。Driver 1.10.18 在 1.10.16 的发送后会话身份捕获基础上，隔离 Windows 启动时由控制 Harness 注入的 `CODEX_*`、`CHATGPT_*` 和 Node IPC 环境变量，并只记录被删除的变量名；用户的 PATH、代理和模型凭据保持不变。Driver 1.11.0 引入共享动态应用发现和冻结路径复核；当前 Driver 1.12.4 又移除 Harness 总执行 deadline，因此旧版本的单题、三题串行和默认三路并发证据均需重验。必须先显式使用 `--run-slots 1`，通过只读探针、单题和三题串行后再测试并发。活跃 SQLite 文件复制默认允许 120 秒，遇到长时间文件锁时终止复制子进程、记录读库失败并回退到同一 thread 的 DOM 观察，不得卡死队列或重发 Prompt。当前单题尚未重新通过时，不得把静态测试或旧 Driver 结果表述为本版生产验证。
+Windows 入口、平台探测和状态库读取已在目标 Windows 机器完成过真机验证。Driver 1.10.18 在 1.10.16 的发送后会话身份捕获基础上，隔离 Windows 启动时由控制 Harness 注入的 `CODEX_*`、`CHATGPT_*` 和 Node IPC 环境变量，并只记录被删除的变量名；用户的 PATH、代理和模型凭据保持不变。Driver 1.11.0 引入共享动态应用发现和冻结路径复核；Driver 1.12.4 移除 Harness 总执行 deadline，当前 1.12.7 沿用此执行语义并加固侧栏恢复，因此旧版本的单题、三题串行和默认三路并发证据均需重验。必须先显式使用 `--run-slots 1`，通过只读探针、单题和三题串行后再测试并发。活跃 SQLite 文件复制默认允许 120 秒，遇到长时间文件锁时终止复制子进程、记录读库失败并回退到同一 thread 的 DOM 观察，不得卡死队列或重发 Prompt。当前单题尚未重新通过时，不得把静态测试或旧 Driver 结果表述为本版生产验证。
 
 AstronStudio 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式 `--run-slots 1` 可回退为串行。项目创建、模型/权限回读、Prompt 发送和 thread 切换仍由同一个 Driver 串行操作。发送后在有界 120–180 秒窗口内，只有 AstronStudio 当前或已持久化路由、本地 SQLite 的发送后 session、非空 turn 和精确 cwd 共同确认时才释放 Driver；Worker 轮流恢复各 thread 做一次性观察。任一题到达明确终态并通过 automation/execution 一致性检查后释放槽位并动态补入下一题。队列必须覆盖 manifest 的完整 task ID 集合，才可能生成 `integrity.valid=true` 的 `execution-receipt.json`。
 
@@ -284,3 +288,11 @@ WorkBuddy 的成功或明确失败终态在冻结候选 workspace 前，还必�
 - WorkBuddy、AstronStudio 和 QwenWork 始终保持 `ui_slots: 1`；新队列技术默认 `run_slots: 3`、最大 8。这里的并发只指已投递 Agent 在客户端后台并行运行，禁止同时启动多个 Playwright Driver 抢占窗口。QwenWork 当前生产 canary 显式使用 `--run-slots 1`；首次换机、升级 Harness/Skill 或切换模型后也先用 3 个 L1 串行冒烟，通过真实隔离验证后再恢复并发。
 
 实现或审查其他 Driver 时，完整读取 [Driver 契约](references/driver-contract.md)。
+
+版本 1.21.14 的三端共用队列修复恢复优先时的补位忙循环。保持当前模型的批次在每次新派发前读取先前已进入发送边界的实际模型，向单题 Driver 传入只读预期值；回读漂移会在 Prompt 发送前失败关闭，不自动切换模型。观察原会话不受当前 UI 模型变化影响。QwenWork macOS 1.2.5 由资源采集器 1.1.4 的独立精确 Profile 接纳；旧冻结记录仍保持原版本和 null/unverified，旁路审计不能代替回执。
+
+QwenWork Web Driver1.12.7 在 macOS/Windows 均使用绑定页面的有界 CDP Page.captureScreenshot，避免高层截图等待字体/布局阻断发送后脱离与并发补位；仍必须取得截图并保留方法/时间，不能跳过证据。跨版本恢复只观察原attempt，旧冻结manifest与一次发送记录不改写。
+
+execute 1.21.16 / QwenWork Web Driver 1.12.9 在正常执行、恢复和 probe 结束时，用 Playwright `connectOverCDP` 返回对象的公开 `close()` 有界断开调试传输，再退出 Driver。此连接路径只关闭 WebSocket，不发送关闭 Electron 的 `Browser.close` 命令，也不调用 page/context 的关闭接口。执行/恢复记录 `runtime.cdp_disconnect`，probe 记录同名检查结果；断开异常保留诊断，不覆盖原会话终态或重发 Prompt。该变更只属于 Web，General 安装与冻结批次保持原身份；客户端活动期 CDP 失联是否因此恢复仍须真机验证，不以单元测试代替三路验收。
+
+恢复入口必须 await 观察、attention 收口或最终采集完成后才断开传输，确保异步观察错误进入原 try/catch。1.21.15 的首次真机恢复暴露了提前执行 finally 的问题，该版不准入生产；1.21.16 修正执行顺序，仍按原 attempt 验证。

@@ -108,6 +108,19 @@ export async function withOperationTimeout(operation, timeoutMilliseconds, descr
   }
 }
 
+export async function disconnectQwenWorkCdp(browser, timeoutMilliseconds = 2_000) {
+  if (!browser) return { status: "not-connected" };
+  // For connectOverCDP, Playwright's public close() closes the transport;
+  // it does not send the Browser.close command used for a launched browser.
+  // Finish that handshake before the CLI exits instead of dropping its socket.
+  try {
+    await withOperationTimeout(browser.close(), timeoutMilliseconds, "断开 QwenWork CDP 连接");
+    return { status: "disconnected", method: "playwright-connectOverCDP-close" };
+  } catch (error) {
+    return { status: "disconnect-failed", error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
 export async function waitForUniqueVisible(readVisible, timeout, description, pollInterval = 250) {
   const deadline = Date.now() + timeout;
   let lastCount = 0;
@@ -1522,11 +1535,9 @@ async function saveState(config, state) {
 }
 
 export async function capturePageScreenshot(page, path, overrides = {}) {
-  const platform = overrides.platform || process.platform;
-  if (platform !== "win32") {
-    await page.screenshot({ path });
-    return { method: "playwright" };
-  }
+  // Both macOS and Windows renderers can stall Playwright's font/layout
+  // screenshot wait after submit. Keep the same bound page and evidence gate,
+  // with bounded native CDP capture instead of a platform-dependent fallback.
   const timeoutMilliseconds = overrides.timeoutMilliseconds || 15_000;
   const session = await withOperationTimeout(
     page.context().newCDPSession(page),
@@ -1828,7 +1839,7 @@ async function resumeAutomation(config, state, identityInfo) {
     }
   }
   if (config.restartApp && !hasStableConversationId(state)) {
-    return persistNeedsAttention(
+    return await persistNeedsAttention(
       config,
       state,
       identityInfo,
@@ -1837,6 +1848,7 @@ async function resumeAutomation(config, state, identityInfo) {
     );
   }
   let page = null;
+  let browser = null;
   try {
     await requireUnlockedGui();
     if (config.restartApp) {
@@ -1846,7 +1858,7 @@ async function resumeAutomation(config, state, identityInfo) {
     else if (!(await endpointReady(config.endpoint))) throw new Error(`QwenWork 未开放调试端口 ${config.endpoint}`);
     state.client.process = await qwenWorkProcessIdentity(config.appPath);
     const { chromium } = await import("playwright-core");
-    const browser = await chromium.connectOverCDP(config.endpoint, { timeout: config.timeoutSeconds * 1000 });
+    browser = await chromium.connectOverCDP(config.endpoint, { timeout: config.timeoutSeconds * 1000 });
     page = await chooseQwenWorkPage(browser, config.timeoutSeconds * 1000);
     page.setDefaultTimeout(config.timeoutSeconds * 1000);
     await withOperationTimeout(page.bringToFront(), config.timeoutSeconds * 1000, "激活 QwenWork 主页面");
@@ -1855,7 +1867,7 @@ async function resumeAutomation(config, state, identityInfo) {
       const opened = await openAttemptConversation(page, config, state, config.timeoutSeconds * 1000);
       state.session.resume_navigation = { ...opened, at: new Date().toISOString() };
       if (!opened.opened) {
-        return persistNeedsAttention(
+        return await persistNeedsAttention(
           config,
           state,
           identityInfo,
@@ -1869,10 +1881,10 @@ async function resumeAutomation(config, state, identityInfo) {
     const session = chooseQwenAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
     const dom = await inspectDom(page);
     if (config.abandonUserQuestion) {
-      return abandonUserQuestion(page, config, state, identityInfo);
+      return await abandonUserQuestion(page, config, state, identityInfo);
     }
     if (stableConversationAvailable && !session && dom.emptyConversation) {
-      return persistNeedsAttention(
+      return await persistNeedsAttention(
         config,
         state,
         identityInfo,
@@ -1896,13 +1908,13 @@ async function resumeAutomation(config, state, identityInfo) {
       transitionState(state, "PROMPT_SENT", { recovered_from_dom: dom.status.status });
     }
     await saveState(config, state);
-    return config.observeOnce
+    return await (config.observeOnce
       ? observeAttemptOnce(page, config, state, identityInfo)
-      : waitForTerminal(page, config, state, identityInfo);
+      : waitForTerminal(page, config, state, identityInfo));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const reason = observationFailureReason(error);
-    return persistNeedsAttention(
+    return await persistNeedsAttention(
       config,
       state,
       identityInfo,
@@ -1912,8 +1924,8 @@ async function resumeAutomation(config, state, identityInfo) {
       "09-resume-observation-failed.png",
     );
   } finally {
-    // 入口会在状态落盘后退出进程。不能调用 browser.close()，否则会关闭
-    // 用户正在运行的 QwenWork；Playwright 私有连接也不作为稳定 API 使用。
+    state.runtime.cdp_disconnect = { driver_version: DRIVER_VERSION, ...await disconnectQwenWorkCdp(browser), at: new Date().toISOString() };
+    await saveState(config, state);
   }
 }
 
@@ -2094,9 +2106,10 @@ async function runAutomation(config, identityInfo) {
       await updateExecutionRecord(config, identityInfo, { clientVersion: state.client.version, execution: { status: "pending", error: state.error } });
       return state;
     }
-    return finalize(config, state, identityInfo, "INFRA_FAILED", { terminalSource: "driver-error", error: message });
+    return await finalize(config, state, identityInfo, "INFRA_FAILED", { terminalSource: "driver-error", error: message });
   } finally {
-    // 仅附着 CDP；进程退出时释放连接，不能关闭目标 Electron 浏览器。
+    state.runtime.cdp_disconnect = { driver_version: DRIVER_VERSION, ...await disconnectQwenWorkCdp(browser), at: new Date().toISOString() };
+    await saveState(config, state);
   }
 }
 
@@ -2141,9 +2154,10 @@ async function probe(config) {
     checks.session_database_error = error instanceof Error ? error.message : String(error);
   }
   if (checks.endpoint_ready) {
+    let browser = null;
     try {
       const { chromium } = await import("playwright-core");
-      const browser = await chromium.connectOverCDP(config.endpoint, { timeout: config.timeoutSeconds * 1000 });
+      browser = await chromium.connectOverCDP(config.endpoint, { timeout: config.timeoutSeconds * 1000 });
       const page = await chooseQwenWorkPage(browser, config.timeoutSeconds * 1000);
       checks.blocking_dialog_count = (await visibleLocators(page.locator('[role="dialog"]'))).length;
       checks.new_project_action_available = (await visibleLocators(page.locator('button[aria-label="新建项目"]'))).length > 0;
@@ -2154,6 +2168,8 @@ async function probe(config) {
       checks.permission_setting_available = checks.permission_setting.available;
     } catch (error) {
       checks.ui_error = error instanceof Error ? error.message : String(error);
+    } finally {
+      checks.cdp_disconnect = await disconnectQwenWorkCdp(browser);
     }
   }
   return {

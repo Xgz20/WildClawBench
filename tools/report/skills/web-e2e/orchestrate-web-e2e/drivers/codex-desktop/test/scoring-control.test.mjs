@@ -210,6 +210,18 @@ test("init defaults to three scoring slots and assigns immutable per-task ports"
   assert.match(await readFile(state.tasks[0].scoring_prompt_file, "utf8"), /独占本地评分端口 4173/);
   assert.match(await readFile(state.tasks[0].scoring_prompt_file, "utf8"), /open_in_codex/);
   assert.match(await readFile(state.tasks[0].scoring_prompt_file, "utf8"), /省略 threadId/);
+  const prompt = await readFile(state.tasks[0].scoring_prompt_file, "utf8");
+  assert.match(prompt, /cua\.createBrowserTab/);
+  assert.match(prompt, /空清单不证明初始化失败/);
+  assert.match(prompt, /暖启动窗口为60秒，最多3次发现检查/);
+  assert.match(prompt, /browser-readiness\.mjs/);
+  assert.match(prompt, /只有返回READY才能/);
+  assert.match(prompt, /启动站点、安装或构建依赖、开始功能与美观度评分之前/);
+  assert.match(prompt, /允许只读访问当前已独立安装的 score-web-e2e Skill/);
+  assert.match(prompt, /SKILL\.md、references\/、scripts\/、vendor\//);
+  assert.match(prompt, /不得访问其他项目、当前题的父目录或其他用例/);
+  assert.match(prompt, /只能写入当前项目的 private-scoring\//);
+  assert.doesNotMatch(prompt, /不要访问当前项目目录之外的文件/);
   await assert.rejects(() => initialize(root, ["task-1", "task-2"]), /任务范围或顺序不可变/);
 });
 
@@ -790,6 +802,33 @@ test("native terminal poll refuses wrong identity, nonterminal, fractional, futu
   assert.equal((await status(root)).tasks[0].attempts[0].wait_count, 0);
 });
 
+test("wait接口失联时只接纳最新空闲会话的原生read_thread终态并留存原件", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" }, { now: "2026-10-05T00:39:56Z" });
+  const filename = join(root, "read-thread.json");
+  const original = { schemaVersion: 1, thread: { id: "thread-1", kind: "codex", hostId: "local", status: { type: "idle" } },
+    page: { order: "newest_first", limit: 1 }, turns: [{ id: "native-turn", status: "completed", completedAt: 1791162718, error: null }] };
+  for (const value of [
+    { ...original, page: { order: "oldest_first", limit: 1 } },
+    { ...original, thread: { ...original.thread, status: { type: "active" } } },
+    { ...original, thread: { ...original.thread, id: "wrong-thread" } },
+    { ...original, turns: [{ ...original.turns[0], status: "inProgress" }] },
+  ]) {
+    await writeJson(filename, value);
+    await assert.rejects(() => recordWait(root, "task-1", { waitSequence: 1, terminalObservation: filename }), /原生终态证据/);
+  }
+  await writeJson(filename, original);
+  const result = await recordWait(root, "task-1", { waitSequence: 1, terminalObservation: filename }, { now: "2026-10-05T03:40:00Z" });
+  const attempt = result.tasks[0].attempts[0];
+  assert.equal(attempt.finished_at, "2026-10-05T01:11:58.000Z");
+  assert.equal(attempt.wait_cursor, "native-turn");
+  assert.deepEqual(JSON.parse(await readFile(join(root, attempt.terminal_observation.observation_file), "utf8")), original);
+  assert.equal((await resume(root)).tasks[0].attempts[0].wait_count, 1);
+});
+
 test("native correction preserves its source and late terminal observations replay idempotently", async () => {
   for (const late of [false, true]) {
     const root = await fixture();
@@ -1144,13 +1183,99 @@ test("completed evaluation_error scores remain retryable and archive the failed 
   await writeJson(scoreFile, score);
   const completed = await markComplete(root, "task-1");
   assert.equal(completed.tasks[0].phase, "COMPLETED");
+  assert.equal(completed.phase, "NEEDS_ATTENTION");
+  assert.equal(completed.submission.status, "COMPLETED");
+  assert.equal(completed.recommended_action.reason, "SCORING_INFRASTRUCTURE_ERROR");
+  assert.ok(completed.recommended_actions.every((action) => action.type !== "DONE"));
   const retry = await prepareRetry(root, "task-1", "retry after temporary Browser unavailability");
   assert.equal(retry.tasks[0].phase, "PROJECT_REGISTERED");
   assert.equal(retry.tasks[0].retry_count, 1);
+  assert.equal(retry.max_retries, 1);
+  assert.equal(retry.tasks[0].scoring_result, null);
+  assert.equal(retry.tasks[0].attempts[0].scoring_result.evaluation_status, "evaluation_error");
   const receiptPath = join(root, retry.tasks[0].attempts[0].error_receipt.path);
   const receipt = JSON.parse(await readFile(receiptPath, "utf8"));
   assert.equal(receipt.retry.reason, "retry after temporary Browser unavailability");
   assert.equal(retry.tasks[0].preflight.status, "PENDING");
+});
+
+test("functional and aesthetic infrastructure errors stop refill but retain active waits", async () => {
+  for (const kind of ["functional", "aesthetic"]) {
+    const root = await fixture(["task-1", "task-2", "task-3", "task-4"]);
+    const { state } = await initialize(root);
+    for (const task of state.tasks.slice(0, 3)) await registerTask(root, task);
+    const scoreSkillDir = await scoreSkillFixture();
+    for (const task of state.tasks.slice(0, 3)) await passPreflight(root, { taskId: task.task_id, scoreSkillDir });
+    await recordThread(root, "task-1", { threadId: "thread-1", hostId: "local" });
+    await recordThread(root, "task-2", { threadId: "thread-2", hostId: "local" });
+    await recordCompletedWait(root, "task-1");
+    await writeValidScore(root, "task-1");
+    const file = join(root, "score/tasks/task-1/private-scoring/task_score.json");
+    const score = JSON.parse(await readFile(file, "utf8"));
+    if (kind === "functional") score.evaluation.status = "evaluation_error";
+    else score.evaluation.aesthetic = { status: "evaluation_error" };
+    await writeJson(file, score);
+    const result = await markComplete(root, "task-1");
+    assert.equal(result.phase, "NEEDS_ATTENTION");
+    assert.deepEqual(result.scoring_infrastructure_errors, ["task-1"]);
+    assert.deepEqual(result.recommended_actions.map((action) => action.type), ["NEEDS_ATTENTION", "WAIT_EXISTING_THREAD"]);
+    assert.equal(result.recommended_actions[1].thread_id, "thread-2");
+    assert.equal(result.next_task, null);
+    await assert.rejects(() => recordThread(root, "task-3", { threadId: "forbidden-refill", hostId: "local" }), /暂不补充评分槽位/);
+    const recovered = await prepareRetry(root, "task-1", "Browser health recovered");
+    assert.deepEqual(recovered.scoring_infrastructure_errors, []);
+    assert.equal(recovered.max_retries, 1);
+    assert.equal(recovered.score_timeout_seconds, 7200);
+    assert.equal(recovered.tasks[0].scoring_result, null);
+    assert.equal(recovered.tasks[0].attempts[0].scoring_result.score_sha256.length, 64);
+    await recordThread(root, "task-3", { threadId: "allowed-after-recovery", hostId: "local" });
+  }
+});
+
+test("legacy completed evaluation_error is classified read-only without rewriting frozen state", async () => {
+  const root = await fixture(["task-1", "task-2"]);
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root, { taskId: "task-1" });
+  await recordThread(root, "task-1", { threadId: "legacy-thread", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
+  await writeValidScore(root, "task-1");
+  const scoreFile = join(root, "score/tasks/task-1/private-scoring/task_score.json");
+  const score = JSON.parse(await readFile(scoreFile, "utf8"));
+  score.evaluation.status = "evaluation_error";
+  await writeJson(scoreFile, score);
+  await markComplete(root, "task-1");
+  const stateFile = join(root, "score/.orchestrate-web-e2e/scoring-automation-state.json");
+  const legacy = JSON.parse(await readFile(stateFile, "utf8"));
+  delete legacy.tasks[0].scoring_result;
+  delete legacy.tasks[0].attempts[0].scoring_result;
+  legacy.phase = "PREPARED";
+  await writeJson(stateFile, legacy);
+  const files = [stateFile, scoreFile, ...state.tasks.map((task) => task.scoring_prompt_file)];
+  const before = await Promise.all(files.map((file) => readFile(file)));
+  const result = await status(root);
+  assert.equal(result.phase, "NEEDS_ATTENTION");
+  assert.equal(result.recommended_action.reason, "SCORING_INFRASTRUCTURE_ERROR");
+  assert.deepEqual(await Promise.all(files.map((file) => readFile(file))), before);
+});
+
+test("ordinary imperfect candidate scores permit the next task", async () => {
+  const root = await fixture(["task-1", "task-2"]);
+  const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root, { taskId: "task-1" });
+  await recordThread(root, "task-1", { threadId: "thread-imperfect", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
+  await writeValidScore(root, "task-1");
+  const file = join(root, "score/tasks/task-1/private-scoring/task_score.json");
+  const score = JSON.parse(await readFile(file, "utf8"));
+  score.evaluation.status = "completed";
+  score.evaluation.criteria[0].status = "failed";
+  await writeJson(file, score);
+  const result = await markComplete(root, "task-1");
+  assert.deepEqual(result.scoring_infrastructure_errors, []);
+  assert.equal(result.recommended_action.type, "REGISTER_PROJECT");
+  assert.equal(result.recommended_action.task_id, "task-2");
 });
 
 test("evaluation_error recovery grant records an auditable retry after the normal budget", async () => {
@@ -1193,6 +1318,31 @@ test("aesthetic evaluation_error can be archived for a Browser evidence retry", 
   const retry = await prepareRetry(root, "task-1", "restore viewport override");
   assert.equal(retry.tasks[0].phase, "PROJECT_REGISTERED");
   assert.equal(retry.tasks[0].retry_count, 1);
+});
+
+test("认证恢复后仍可按独立预算恢复美观度基础设施异常", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root, [], { maxRetries: 0 });
+  await registerTask(root, state.tasks[0]);
+  const skillRoot = await scoreSkillFixture();
+  await passPreflight(root, { scoreSkillDir: skillRoot });
+  await recordThread(root, "task-1", { threadId: "thread-auth", hostId: "local" });
+  await recordWait(root, "task-1", { waitSequence: 1, waitCursor: "auth-failed", waitStatus: "FAILED", waitError: "评分 API 返回 401，缺少认证头" });
+  await grantScoringInfrastructureRetry(root, "task-1", "认证恢复");
+  await passPreflight(root, { scoreSkillDir: skillRoot });
+  await recordThread(root, "task-1", { threadId: "thread-viewport", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
+  await writeValidScore(root, "task-1");
+  const file = join(root, "score/tasks/task-1/private-scoring/task_score.json");
+  const score = JSON.parse(await readFile(file, "utf8"));
+  score.evaluation.aesthetic = { status: "evaluation_error", error: "Browser viewport override unavailable" };
+  await writeJson(file, score);
+  await markComplete(root, "task-1");
+  const retry = await grantEvaluationErrorRetry(root, "task-1", "重启后恢复窄屏取证");
+  assert.equal(retry.tasks[0].retry_count, 2);
+  assert.equal(retry.tasks[0].scoring_infrastructure_retry_grant_count, 1);
+  assert.equal(retry.tasks[0].evaluation_error_retry_grant_count, 1);
+  assert.ok(retry.tasks[0].attempts[1].error_receipt);
 });
 
 test("submission resumes idempotently after interruption at the publish boundary", async () => {

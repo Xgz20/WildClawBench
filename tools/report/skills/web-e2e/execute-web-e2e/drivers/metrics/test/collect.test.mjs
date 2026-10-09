@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import test from "node:test";
 import { collectLocalMetrics, findAstronTrace, readTrace } from "../collect.mjs";
 import { empty } from "../parsers.mjs";
-import { inspectQwenRuntime, QWEN_PROFILE, QWEN_WINDOWS_PROFILE, QWEN_WINDOWS_1_0_6_PROFILE, verifiedQwenProfile } from "../qwen-profile.mjs";
+import { inspectQwenRuntime, QWEN_PROFILE, QWEN_WINDOWS_PROFILE, QWEN_WINDOWS_1_0_6_PROFILE, QWEN_MACOS_1_2_5_PROFILE, verifiedQwenProfile } from "../qwen-profile.mjs";
 import { updateExecutionRecord, createExecutionRecord } from "../../workbuddy/lib.mjs";
 import { queryResourceIdentity } from "../../astronstudio/lib.mjs";
 
@@ -59,6 +59,18 @@ test("统一记录写入器透传资源，不改变执行状态、模型和工�
   await updateExecutionRecord({ executionRecord: file }, info, { execution: { error: null } });
   assert.equal(info.existing.usage.total_tokens, 123);
 });
+test("批次当前模型漂移在模型回读写入前拒绝，原记录不变", async t => {
+  const root = await mkdtemp(join(tmpdir(), "web-model-drift-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const identity = { batchId: "batch", taskId: "task", harness: { id: "qwenwork" } };
+  const record = createExecutionRecord(identity);
+  const file = join(root, "execution_record.json");
+  await writeFile(file, JSON.stringify(record));
+  const before = await readFile(file, "utf8");
+  await assert.rejects(updateExecutionRecord({ executionRecord: file, expectedUiModel: "高级" },
+    { identity, existing: structuredClone(record) }, { modelSelection: { actual_model: "标准" } }), /偏离批次首次回读值/);
+  assert.equal(await readFile(file, "utf8"), before);
+});
 
 test("Astron 原生身份查询限定 thread 和 turn，非唯一映射拒绝", async () => {
   let rows = [{ cursor: JSON.stringify({ threadId: "native-session" }), cwd: "/task" }];
@@ -109,6 +121,14 @@ test("Qwen Windows 仅接受已核对的客户端和相同 runtime 身份", () =
   assert.equal(verifiedQwenProfile({ ...QWEN_WINDOWS_1_0_6_PROFILE, client_version: "1.0.7.0" }), null);
   assert.equal(verifiedQwenProfile({ ...QWEN_WINDOWS_PROFILE, runtime_sha256: "unknown" }), null);
   assert.equal(verifiedQwenProfile({ ...QWEN_WINDOWS_PROFILE, transcript_version: "next" }), null);
+});
+test("Qwen macOS 1.2.5 逐字段核验新 Profile，不扩大旧身份范围", () => {
+  assert.equal(verifiedQwenProfile(QWEN_MACOS_1_2_5_PROFILE), QWEN_MACOS_1_2_5_PROFILE.id);
+  for (const key of ["platform", "client_version", "sdk_name", "sdk_version", "transcript_version", "runtime_sha256"]) {
+    assert.equal(verifiedQwenProfile({ ...QWEN_MACOS_1_2_5_PROFILE, [key]: "unknown" }), null, key);
+  }
+  assert.equal(verifiedQwenProfile({ ...QWEN_MACOS_1_2_5_PROFILE, client_version: "1.2.0" }), null);
+  assert.equal(verifiedQwenProfile(QWEN_PROFILE), QWEN_PROFILE.id);
 });
 test("Astron 日志发现支持 Windows AStudio Data 并拒绝跨根重复命中", async t => {
   const home = await mkdtemp(join(tmpdir(), "web-resource-astron-"));

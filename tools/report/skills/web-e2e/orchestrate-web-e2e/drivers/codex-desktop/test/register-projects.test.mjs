@@ -72,6 +72,18 @@ test("multiple equal app pages require an exact URL", () => {
   assert.equal(choosePageInventory(pages, "app://-/two").index, 1);
 });
 
+test("task-titled main window outranks a Page prewarm window", () => {
+  const pages = [
+    { index: 0, title: "ChatGPT", url: "app://-/detached-window.html?initialRoute=%2Fdetached-window" },
+    { index: 1, title: "ChatGPT", url: "app://-/index.html?initialRoute=%2Fspace%2Flocal-page-9f48da39%3Fwindow%3Dpage%26prewarm%3D1" },
+    { index: 2, title: "DoubaoWork macOS E2E 集成", url: "app://-/index.html" },
+  ];
+  assert.equal(choosePageInventory(pages).index, 2);
+  assert.equal(choosePageInventory(pages, pages[1].url).index, 1);
+  assert.throws(() => choosePageInventory([...pages, { ...pages[2], index: 3 }]), /多个同等候选/);
+  assert.throws(() => choosePageInventory([...pages, { ...pages[2], index: 3 }], pages[2].url), /必须唯一匹配/);
+});
+
 test("Codex CDP retries Playwright with Electron download defaults when browser contexts are active", async () => {
   const calls = [];
   const expectedBrowser = { contexts: () => [] };

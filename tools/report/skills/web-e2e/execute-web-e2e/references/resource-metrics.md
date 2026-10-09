@@ -48,6 +48,8 @@ call <execute-skill>\scripts\run-qwenwork.cmd <全新单题根目录>
 
 采集器 1.1.3 已核对 macOS QwenWork 1.0.5，以及 Windows QwenWorkCN 1.0.5.0、1.0.6.0 的精确客户端身份，并兼容 Windows Node 18 对超过 `MAX_PATH` 的日志文件无法直接 `realpath(file)` 的限制；采集器会真实解析受信根和父目录，文件叶节点仍须为普通非符号链接。三种客户端身份的 SDK 均为 `@ali/qodercn-agent-sdk-next@1.0.28`、transcript 版本均要求 `1.1.32`，且 qoder provider runtime SHA-256 完全相同。`drivers/metrics/qwen-profile.mjs` 分平台和客户端版本冻结精确身份，1.0.6.0 使用独立 Profile ID；采集时只读当前应用比对，客户端版本、SDK、transcript 版本、平台或哈希不同均不放行 Token 归一化。应用已升级或迁移后的历史采集可能因无法复核原运行时而保留 unverified，不能用环境开关强制放行。Windows 1.0.6.0 的非零 Token 已完成全新 L1 与下述对账门禁；历史 masked 样本不会因新增 Profile 被改写。自动注入的新 Driver 身份仍须重新完成至少一个全新 L1，不能仅凭代码测试继承实机 `PASSED`。
 
+2026-10-09 采集器 1.1.4 新增 macOS Intel QwenWorkCN 1.2.5 精确 Profile：SDK `@ali/qodercn-agent-sdk-next@1.0.46`、transcript `1.1.59`、runtime SHA-256 `8dc1dc0b107f37837cf76ef7e2be4f0dd2fdbd90ff8391a3f1f9e965e9f3fb02`。四份真实 Web 主任务均通过 Prompt/session/cwd、源稳定 SHA、请求/响应和主 turn 终值对账，覆盖分别为 20/20、37/37、16/16、15/15。源码公式确认 input 包含缓存；只匹配该平台及版本，不按相同 SDK 自动放行 1.2.0 或未来客户端。旧冻结回执与安装不改写；完整准入审计位于调试根 acceptance-20261008/qwenwork-125-token-profile-live-admission.json，不作为替换回执或同模型并发验收。
+
 该版本的原生 `input_tokens` 直接来自 `prompt_tokens`，**已经包含缓存读取**；总 Token = input + output，不再加 cache read。须按 request ID 去重并核对请求/响应集合、逐响应有效非零输入/输出、缓存不大于输入，以及 `turn.finished` 终值。缺响应、混入隐藏零值、缺终态/字段时保留 partial 与已知小计；终值冲突保留 unverified。请求数、工具数、耗时独立判断，不因 Token 不可用一起丢失。`cache_creation_input_tokens=0` 是适配器默认值，标准缓存写入量仍为 null；不声称已观察到真实零写入。
 
 2026-09-16 隔离单题实测：8 请求、7 工具、输入 293981、输出 3115、缓存读取 281792、总 Token 297096、原生耗时 108.356 秒；主任务后的记忆整理另有 1 请求，排除于主任务汇总。该样本证明 macOS 指定运行时口径，不代表所有模型/客户端版本或 Windows 生产验收通过。

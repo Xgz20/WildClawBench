@@ -533,13 +533,16 @@ function retryLimit(task) {
 }
 
 function promptForTask(taskId, scoringPort) {
+  const readinessHelper = fileURLToPath(new URL("./browser-readiness.mjs", import.meta.url));
   return [
     `使用 $score-web-e2e 对当前项目中的唯一 Web E2E 用例 ${taskId} 进行完整评分。`,
     "必须使用 Codex Desktop 内置 Browser，按照 private-scoring/task_contract.json 逐项实际操作和截图取证，并生成 private-scoring/task_score.json。",
     `本题独占本地评分端口 ${scoringPort}；启动站点和打开 Browser 时必须使用该端口，不得使用其他题目的端口。若该端口冲突，只能按评分 Skill 的受管端口冲突流程处理并保留审计。`,
-    `创建评分线程后，控制会话必须立即调用 Codex Desktop 的 open_in_codex，把该线程绑定到本题的 Browser 路由（target.type=browser，URL 使用 http://127.0.0.1:${scoringPort}/，threadId 使用刚返回的 threadId）；仅 create_thread 返回成功不代表 Browser 已建立。评分线程先按 score-web-e2e 启动受管站点并确认实际入口可访问，再用自己的 cua.getState 确认 type=iab 且 metadata.codexSessionId 与当前线程一致；若 browsers 仍为空，评分线程自己调用 open_in_codex（target.type=browser、同一 URL，省略 threadId 以使用当前评分线程）后再复查一次。不得把 source_thread_id 或父会话 ID 传给 open_in_codex。只有建立当前线程路由后才能用该 Browser 打开实际入口。禁止使用父会话、Chrome、headless 或自建浏览器替代，并按评分 Skill 记录 evaluation_error。`,
+    `创建评分线程后，控制会话必须立即调用 Codex Desktop 的 open_in_codex，把该线程绑定到本题 Browser 路由（target.type=browser，URL=about:blank，threadId=刚返回的 threadId）。评分线程在启动站点、安装或构建依赖、开始功能与美观度评分之前，先完成独立的 Browser 暖启动检查。仅 create_thread 或 open_in_codex 返回 queued 不代表 Browser 可用。`,
+    `暖启动窗口为60秒，最多3次发现检查：先记录 started_at，再调用公开 cua.getState；空清单可在2秒、5秒退避后复查，仍限总窗口。第一次空清单时可自行 open_in_codex（URL=about:blank，省略 threadId）；不得把 source_thread_id 或父会话ID传入。发现唯一type=iab且metadata.codexSessionId匹配本线程，或三次发现仍为空但窗口尚未耗尽时，仅一次实际 cua.createBrowserTab("iab","about:blank",{visible:false})，并复查清单及实际AX页面。空清单不证明初始化失败，实际创建后仍必须核验本线程归属。归属不匹配、创建失败或窗口耗尽时按Skill收口evaluation_error、结束本attempt；不得启动站点、重发评分指令或自行扩大重试预算。禁止使用父会话、Chrome、headless、替代运行时或私有管道。`,
+    `允许只读运行已安装编排Skill的受管健康校验脚本 ${readinessHelper}；将本题task_id、实际thread_id、started_at、discoveries数组（每次started_at/finished_at/state原始清单）、creation（attempt_count=1/success/tab_id/started_at/finished_at）、verification（finished_at/state原始清单）、readback（finished_at/url/ax_state实际观察，可用创建返回的AX状态）保存到private-scoring/evidence/browser-readiness-input.json，再运行 node "${readinessHelper}" --task-root . --thread-id <本线程实际ID> --input private-scoring/evidence/browser-readiness-input.json。只有返回READY才能按score-web-e2e启动受管站点，并用同一归属Browser打开本题实际http://127.0.0.1:${scoringPort}/入口。脚本只核验记录，不调用浏览器或替代实际取证；不得伪造原始观察。外层60秒不会修改Codex运行时内置的5秒等待，也不是增加一次评分重试。`,
     "workspace/ 是被评 Harness 已冻结的只读候选产物，严禁编辑、格式化、安装依赖、构建或生成任何文件；需要写入时只能使用 private-scoring/runtime-workspace/ 临时副本。",
-    "不要访问当前项目目录之外的文件，不要创建或调度其他 Codex 任务；只用评分 Skill 的精确 PID 管理工具启动和停止本站服务，证据不足或浏览器不可用时按 Skill 契约记录 evaluation_error。",
+    "允许只读访问当前已独立安装的 score-web-e2e Skill，包括 SKILL.md、references/、scripts/、vendor/ 和运行其受管工具必需的依赖；这是本次评分授权的一部分，无需另行确认。不得访问其他项目、当前题的父目录或其他用例；本题结果、证据、日志和运行时副本只能写入当前项目的 private-scoring/。不要创建或调度其他 Codex 任务；只用评分 Skill 的精确 PID 管理工具启动和停止本站服务，证据不足或浏览器不可用时按 Skill 契约记录 evaluation_error。",
     "完成全部评分文件后结束当前任务。",
     "",
   ].join("\n");
@@ -764,8 +767,13 @@ async function validatePreparedTask(
   };
 }
 
+function hasEvaluationError(task) {
+  return task.phase === "COMPLETED" && (task.scoring_result?.evaluation_status === "evaluation_error"
+    || task.scoring_result?.aesthetic_status === "evaluation_error");
+}
+
 function nextTask(state) {
-  if (state.tasks.some((task) => new Set(["FAILED", "TIMED_OUT"]).has(task.phase))) return null;
+  if (state.tasks.some((task) => new Set(["FAILED", "TIMED_OUT"]).has(task.phase) || hasEvaluationError(task))) return null;
   return state.tasks.find((task) => task.phase !== "COMPLETED") || null;
 }
 
@@ -842,18 +850,24 @@ function attentionTaskAction(task) {
 }
 
 function recommendedActions(state, at = new Date()) {
+  const evaluationErrors = state.tasks.filter(hasEvaluationError);
+  const infrastructureActions = evaluationErrors.map((task) => ({ type: "NEEDS_ATTENTION", task_id: task.task_id,
+    reason: "SCORING_INFRASTRUCTURE_ERROR", error: task.scoring_result,
+    recovery: "确认评分基础设施恢复后按原预算 prepare-retry 或申请已有受限恢复机会" }));
   if (state.tasks.every((task) => task.phase === "COMPLETED")) {
-    if (state.submission?.status === "COMPLETED") return [{ type: "DONE", submission: state.submission }];
-    if (state.submission?.status === "FAILED") return [{ type: "RETRY_SUBMISSION", error: state.submission.error }];
-    return [{ type: "BUILD_SUBMISSION" }];
+    if (state.submission?.status === "COMPLETED") return infrastructureActions.length
+      ? infrastructureActions : [{ type: "DONE", submission: state.submission }];
+    if (state.submission?.status === "FAILED") return [...infrastructureActions, { type: "RETRY_SUBMISSION", error: state.submission.error }];
+    return [...infrastructureActions, { type: "BUILD_SUBMISSION" }];
   }
   const attentionTasks = state.tasks.filter((task) => new Set(["FAILED", "TIMED_OUT"]).has(task.phase));
   const activeTasks = activeScoringTasks(state);
   const actions = [
+    ...infrastructureActions,
     ...attentionTasks.map(attentionTaskAction),
     ...activeTasks.filter((task) => !attentionTasks.includes(task)).map((task) => activeTaskAction(task, at)),
   ];
-  if (attentionTasks.length) return actions;
+  if (attentionTasks.length || evaluationErrors.length) return actions;
 
   const availableSlots = Math.max(0, state.score_slots - activeTasks.length);
   const candidates = state.tasks
@@ -869,6 +883,7 @@ function recommendedActions(state, at = new Date()) {
 }
 
 function publicStatus(state) {
+  refreshPhase(state);
   const activeTasks = activeScoringTasks(state);
   const actions = recommendedActions(state);
   return {
@@ -889,6 +904,7 @@ function publicStatus(state) {
     available_score_slots: Math.max(0, state.score_slots - activeTasks.length),
     score_timeout_seconds: state.score_timeout_seconds,
     max_retries: state.max_retries,
+    scoring_infrastructure_errors: state.tasks.filter(hasEvaluationError).map((task) => task.task_id),
     preflight: state.preflight || null,
     score_skill: state.score_skill || null,
     submission: state.submission || null,
@@ -900,7 +916,8 @@ function publicStatus(state) {
 }
 
 function refreshPhase(state) {
-  if (state.tasks.some((task) => new Set(["FAILED", "TIMED_OUT"]).has(task.phase))) {
+  if (state.tasks.some((task) => new Set(["FAILED", "TIMED_OUT"]).has(task.phase))
+    || state.tasks.some(hasEvaluationError)) {
     state.phase = "NEEDS_ATTENTION";
   } else if (state.tasks.every((task) => task.phase === "COMPLETED")) {
     if (state.submission?.status === "COMPLETED") {
@@ -1048,10 +1065,39 @@ async function loadControl(packageRoot) {
   await verifyScoringInfrastructureRetryGrants(plan, state);
   await verifyEvaluationErrorRetryGrants(plan, state);
   await verifyTerminalObservations(plan, state);
+  // Classify legacy validated scores in memory only. Do not rewrite frozen
+  // prompts, budgets or score statistics when status/resume reads an old run.
+  for (const task of state.tasks) {
+    if (task.phase === "COMPLETED" && !task.scoring_result && await loadJsonIfExists(task.score_file)) {
+      const score = await validateTaskScore(plan, task);
+      task.scoring_result = {
+        evaluation_status: score.evaluation?.status ?? null,
+        aesthetic_status: score.evaluation?.aesthetic?.status ?? null,
+        score_sha256: sha256(await readFile(task.score_file)),
+      };
+    }
+  }
   return { plan, state };
 }
 
 function terminalObservationFields(poll, attempt) {
+  // read_thread is a native diagnostic fallback when wait_threads cannot
+  // resolve a host. Accept only its newest, terminal, idle Codex thread view;
+  // keep the raw response and use the native turn ID as the delivery key.
+  // This key is never a wait_threads pagination cursor (the attempt is terminal).
+  if (poll?.schemaVersion === 1 && poll.thread?.kind === "codex"
+    && poll.page?.order === "newest_first" && poll.page?.limit === 1
+    && poll.thread?.status?.type === "idle" && poll.turns?.length === 1) {
+    const turn = poll.turns[0];
+    const status = String(turn.status || "").toUpperCase();
+    if (poll.thread.id !== attempt.thread_id || poll.thread.hostId !== attempt.host_id
+      || !TERMINAL_THREAD_STATUSES.has(status) || !turn.id
+      || !Number.isSafeInteger(turn.completedAt) || turn.completedAt <= 0) {
+      throw new Error("Desktop read_thread 缺少匹配当前 attempt 的原生终态证据");
+    }
+    return { waitStatus: status, waitCursor: turn.id, waitError: turn.error?.message || null,
+      finishedAt: asDate(turn.completedAt * 1000).toISOString() };
+  }
   const waitStatus = String(poll?.latestTurn?.status || "").toUpperCase();
   if (poll?.schemaVersion !== 1 || typeof poll.cursor !== "string" || !poll.cursor
     || poll.thread?.id !== attempt.thread_id || poll.thread?.hostId !== attempt.host_id
@@ -1264,7 +1310,7 @@ export async function grantEvaluationErrorRetry(packageRoot, taskId, retryReason
     ? task.evaluation_error_retry_grant_count
     : (task.evaluation_error_retry_grant ? 1 : 0);
   if (grantCount >= 2) throw new Error("本题已使用评测基础设施恢复上限");
-  const allowedRetryCount = task.max_retries + grantCount;
+  const allowedRetryCount = retryLimit(task);
   if (task.phase !== "COMPLETED" || task.retry_count !== allowedRetryCount) {
     throw new Error("评测基础设施额外恢复只允许当前重试次数已耗尽的 COMPLETED 任务");
   }
@@ -1548,7 +1594,7 @@ export async function recordThread(packageRoot, taskId, thread, options = {}) {
   if (task.phase === "COMPLETED" && task.thread_id === thread.threadId && task.thread_host_id === thread.hostId) return publicStatus(state);
   if (task.phase === "SCORING" && task.thread_id === thread.threadId && task.thread_host_id === thread.hostId) return publicStatus(state);
   if (task.phase !== "PROJECT_REGISTERED") throw new Error(`当前任务状态不能创建评分会话：${task.phase}`);
-  const attention = state.tasks.find((entry) => new Set(["FAILED", "TIMED_OUT"]).has(entry.phase));
+  const attention = state.tasks.find((entry) => new Set(["FAILED", "TIMED_OUT"]).has(entry.phase) || hasEvaluationError(entry));
   if (attention) throw new Error(`存在待处理失败任务，暂不补充评分槽位：${attention.task_id}`);
   const active = activeScoringTasks(state);
   if (active.length >= state.score_slots) {
@@ -1974,6 +2020,7 @@ export async function prepareRetry(packageRoot, taskId, retryReason, options = {
   const now = new Date().toISOString();
   attempt.error_receipt = errorReceipt;
   task.retry_count += 1;
+  task.scoring_result = null;
   task.thread_id = null;
   task.thread_host_id = null;
   task.phase = "PROJECT_REGISTERED";
@@ -2040,13 +2087,20 @@ export async function markComplete(packageRoot, taskId, options = {}) {
     throw new Error(`必须先记录评分任务 COMPLETED 终态：${attempt?.terminal_status || "未记录"}`);
   }
   await verifyTaskCandidateOrFail(plan, state, task, "mark-complete");
-  await validateTaskScore(plan, task);
+  const score = await validateTaskScore(plan, task);
   const privateRoot = join(task.score_dir, "private-scoring");
   await assertAttemptRuntimeQuiescent(task, privateRoot);
   const runtimeWorkspace = await lstat(join(privateRoot, "runtime-workspace"))
     .catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
   if (runtimeWorkspace) throw new Error(`评分运行时副本尚未清理，禁止释放槽位：${task.task_id}`);
+  task.scoring_result = {
+    evaluation_status: score.evaluation?.status ?? null,
+    aesthetic_status: score.evaluation?.aesthetic?.status ?? null,
+    score_sha256: sha256(await readFile(task.score_file)),
+  };
+  attempt.scoring_result = task.scoring_result;
   if (task.phase === "COMPLETED") {
+    await saveControl(plan, state);
     if (state.tasks.every((entry) => entry.phase === "COMPLETED") && state.submission.status !== "COMPLETED") {
       return buildSubmissionFromState(plan, state, options);
     }

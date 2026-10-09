@@ -58,6 +58,8 @@ Windows 使用同一 CDP 契约和原生入口：
 <skill-dir>\scripts\run-codex-project-registrar.cmd --probe --endpoint http://127.0.0.1:9230
 ```
 
+多窗口探针应选择无路由查询参数的主窗口，不能因预热 Page 窗口的 ChatGPT 标题而优先选中它。候选同等或 URL 不唯一时失败关闭；可在确认主窗口后传 `--page-url <完整URL>` 精确指定。
+
 每题注册前先调用 Codex Desktop 内置 `list_projects`。若规范化绝对路径已经存在，直接复用其 `projectId`；否则一次只注册一个目录：
 
 ```bash
@@ -102,8 +104,21 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
 禁止通过 Computer Use 点击 Codex 自身，也不要从外部启动裸 `codex app-server` thread。循环处理 `status` 或 `resume` 返回的 `recommended_actions`；`recommended_action` 只是数组第一项的串行兼容视图。状态文件只能由一个控制任务串行修改，评分任务本身可以并发运行：
 
 1. 读取该题生成的 `scoring_prompt_file`。
+   题目隔离限制不禁止读取已独立安装的 `score-web-e2e` Skill、参考文档、受管脚本及其运行依赖；生成的 Prompt 必须明确这项只读授权。不得访问其他项目、父目录或其他用例，所有本题写入仍限定在 `private-scoring/`，候选 `workspace/` 保持只读。
 2. 确认当前题的 `preflight.status=PASSED` 后，调用 Desktop 内置 `create_thread`，目标为已记录的 `projectId`，环境固定为 `{type: "local"}`。除非用户显式指定，不覆盖模型与推理强度。
-3. `create_thread` 返回后，控制任务必须马上调用 Desktop 内置 `open_in_codex`，目标为 `{type: "browser", url: "http://127.0.0.1:<该题评分端口>/"}`，并传入刚返回的 `threadId`；返回 `queued` 只表示请求已入队，不表示 Browser 路由已就绪。评分线程先按 `score-web-e2e` 启动受管站点并确认实际入口可访问，再用自己的 `cua.getState` 确认存在 `type=iab` 的 Browser，且 `metadata.codexSessionId` 与当前评分线程一致；若仍为空，评分线程自己再调用一次 `open_in_codex`（同一 URL，省略 `threadId` 以使用当前评分线程）并复查一次，不能把 `source_thread_id` 或父会话 ID 传给该工具，然后绑定该路由打开实际入口。不得让评分线程改用父会话、Chrome、headless 或自建浏览器。Browser 路由不存在时保留 `evaluation_error`，由控制任务按恢复契约归档重试。
+3. `create_thread` 返回后，控制任务必须马上调用 Desktop 内置 `open_in_codex`，目标为 `{type: "browser", url: "about:blank"}`，并传入刚返回的 `threadId`；返回 `queued` 只表示请求已入队。0.3.18 新生成的 Prompt 要求在安装依赖、构建、启动站点及评分之前先完成 Browser 就绪检查；既有冻结 Prompt 不改写。
+
+   就绪窗口为 60 秒，发现检查最多 3 次，第一次 CUA 调用遵循工具要求，只调用 `cua.getState()`。第一次为空时，评分线程可自己调用一次 `open_in_codex`（`about:blank`，省略 `threadId`）；后续空清单分别退避 2 秒和 5 秒再发现，全部检查仍受总窗口约束。发现唯一属于本线程的 `iab` 后，或三次发现仍为空但窗口尚未耗尽时，仅一次用公开 `cua.createBrowserTab("iab", "about:blank", {visible:false})` 实际初始化，再核验本线程 `metadata.codexSessionId`、创建的唯一 tab 和实际 AX 页面。空清单不证明创建不可用；外国会话、重复 iab、创建失败或窗口耗尽必须停止。禁止父会话 Browser、Chrome、headless、替代运行时及私有管道。
+
+   评分线程将原始观察保存到本题 `private-scoring/evidence/browser-readiness-input.json`，字段为 `task_id`、实际 `thread_id`、`started_at`、`discoveries`（每次 `started_at/finished_at/state`）、`creation`（`attempt_count=1/success/tab_id/started_at/finished_at`）、`verification`（`finished_at/state`）及 `readback`（`finished_at/url/ax_state`，可使用创建返回的实际 AX 状态）。时间使用实际 ISO 时间；未发生的创建或复查省略，不能补造。生成的 Prompt 明确允许读取和运行本次独立安装的编排 helper：
+
+   ```bash
+   node <installed-orchestrate-web-e2e-dir>/scripts/browser-readiness.mjs \
+     --task-root . --thread-id <actual-thread-id> \
+     --input private-scoring/evidence/browser-readiness-input.json
+   ```
+
+   helper 原子写入 `browser-readiness.json`，返回 `RETRY_DISCOVERY`、`CHECKING`、`READY` 或 `BLOCKED`；它只核验记录，不操作 Browser。只有 `READY` 才按 `score-web-e2e` 启动受管站点，并让同一 Browser 打开本题固定评分端口的实际入口。`BLOCKED`、校验错误或实际工具失败按评分 Skill 生成 `evaluation_error` 并结束当前 attempt。60 秒是外层有界预热，不修改 Codex 内置 5 秒信息等待，不增加评分 attempt 或恢复预算，也不要求修改 Desktop 安装文件。
 4. 把返回的 `threadId`、`hostId` 记录到状态：
 
    ```bash
@@ -136,6 +151,8 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
      --wait-sequence <next_wait_sequence> --terminal-observation <absolute-poll.json>
    ```
 
+   当 `wait_threads` 明确无法解析 host，但 `read_thread` 可访问同一线程时，0.3.16 允许将该工具原样返回的 JSON 通过同一 `--terminal-observation` 入口留存。必须是 Codex 同 thread/host、`page.order=newest_first`、`limit=1`、单个最新终态 turn，且线程为 idle；完成时间仍取原生 `completedAt`。该回执使用真实 turn ID 作终态投递键，不能把它当作 wait_threads 分页 cursor；仍活动、旧页、未知终态或身份不匹配均拒绝。不得手工拼装 Desktop poll、补完成时间或绕过哈希门禁。
+
    已到 deadline 但仍活动的原评分线程可以记为 `TIMED_OUT`，同时继续等待其真实终态；该标记不会停止线程，也不释放槽位。不得因观察超时再派发同题。
 
    `prepare-retry` 不删除失败现场。它先复核候选与评分初始输入，并要求受管评分服务和截图接收器已经进入可信终态；存在无 `runtime-state.json` 的运行时副本、仍为 `RUNNING` 的服务/接收器或身份不匹配的状态文件时一律禁止归档。门禁通过后，把旧 `private-scoring/` 原子迁入 `score/.orchestrate-web-e2e/attempts/<task>/attempt-<n>/private-scoring/`，再按初始化时冻结的文件清单恢复干净的 `task_contract.json`、`candidate_artifact.json` 和可选 fixtures。归档目录内生成 `attempt-error-receipt.json`，记录失败终态、deadline、cursor、错误、重试原因、候选复核结果以及所有归档文件的路径、大小和 SHA-256；状态中的 attempt 保存该回执 SHA。归档中断由 `pending-attempt-archives/` journal 恢复，回执或归档后续漂移会在 preflight/submission 阶段失败关闭。所有 attempt、cursor、poll 次数和 retry 次数均保留在状态中。
@@ -153,9 +170,11 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
      --task-id <task_id>
    ```
 
-   `mark-complete` 只接受已经通过 `record-wait` 保存 `COMPLETED` 终态、且未超过 deadline 的 attempt；它会再次核对 execution 与 score 两份候选 SHA、要求受管站点和截图接收器进入可信终态、确认 `runtime-workspace` 已清理，并要求 `task_score.identity.model` 与执行回执的实际模型一致。门禁通过后才释放该题槽位并补入下一题；完成顺序可以与 manifest 不同。状态不明时先查询已有 `threadId`，不能重复创建评分任务。
+   `mark-complete` 只接受已经通过 `record-wait` 保存 `COMPLETED` 终态、且未超过 deadline 的 attempt；它会再次核对 execution 与 score 两份候选 SHA、要求受管站点和截图接收器进入可信终态、确认 `runtime-workspace` 已清理，并要求 `task_score.identity.model` 与执行回执的实际模型一致。0.3.18 保存评分结果状态与文件 SHA：功能或美观度为 `evaluation_error` 时，整批返回 `NEEDS_ATTENTION/SCORING_INFRASTRUCTURE_ERROR`，暂停新题注册/创建建议，`record-thread` 也拒绝补位；已活动任务仍继续等待、校验和收口。普通候选失分不会触发此保护。确认基础设施恢复后，仅按原有预算归档重试，旧结果随 attempt 保留；状态不明时不能重复创建。
 
 最后一题通过 `mark-complete` 后，控制脚本会自动调用 preflight 已绑定的 `score-web-e2e/scripts/build_submission.mjs`，以临时文件和 SHA-256 状态原子发布根目录 `submission.json`。重复调用不会重复生成；进程在发布中断后可通过 `build-submission` 收口，已完成文件丢失或漂移时失败关闭。该步骤会执行最后一次双副本哈希复检并验证端口冲突审计；不得让单题评分任务访问 Harness 根目录或其他题目，管理任务也不得修改候选 workspace。
+
+包含 `evaluation_error` 的 submission 仍可导出用于审计，但整批保持 `NEEDS_ATTENTION`，不返回 `DONE`，不代表生产验收通过。旧状态缺少评分结果字段时，只读 `status` 在内存中核验并分类已有分数，不重写状态、冻结 Prompt、评分文件或预算；新就绪流程仅用于新生成的 Prompt。
 
 控制任务重启后执行：
 

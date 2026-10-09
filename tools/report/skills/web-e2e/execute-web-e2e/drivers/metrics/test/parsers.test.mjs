@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parseAstron, parseDoubao, parseWorkBuddy, parseQwen } from "../parsers.mjs";
 import { captureResourceMetrics } from "../capture.mjs";
-import { QWEN_PROFILE, QWEN_WINDOWS_PROFILE, QWEN_WINDOWS_1_0_6_PROFILE } from "../qwen-profile.mjs";
+import { QWEN_PROFILE, QWEN_WINDOWS_PROFILE, QWEN_WINDOWS_1_0_6_PROFILE, QWEN_MACOS_1_2_5_PROFILE } from "../qwen-profile.mjs";
 import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
 
@@ -112,6 +112,18 @@ test("Qwen 不能用布尔开关、未知运行时或 provider 放行", () => {
   }
   const rows = qwen(10); rows[2].data.provider = "other";
   assert.equal(parseQwen(rows, { runtimeIdentity: QWEN_PROFILE }).usage.total_tokens, null);
+});
+test("Qwen macOS 1.2.5 仍要求请求覆盖及主终态对账，缓存不重复计入", () => {
+  const rows = qwen(10);
+  const options = { runtimeIdentity: QWEN_MACOS_1_2_5_PROFILE };
+  const result = parseQwen(rows, options);
+  assert.equal(result.usage.total_tokens, 20);
+  assert.equal(result.collection.normalization_profile, QWEN_MACOS_1_2_5_PROFILE.id);
+  rows[4].data.output_tokens = 11;
+  assert.equal(parseQwen(rows, options).usage.total_tokens, null);
+  rows[4].data.output_tokens = 10;
+  rows.splice(2, 1);
+  assert.equal(parseQwen(rows, options).usage.total_tokens, null);
 });
 test("Qwen 重复事件只计一次，终值冲突和缓存大于输入不提供完整值", () => {
   const rows = qwen(10);

@@ -26,10 +26,23 @@ export const QWEN_WINDOWS_1_0_6_PROFILE = Object.freeze({
   client_version: "1.0.6.0",
 });
 
+// macOS 1.2.5: runtime formula and bound nonzero Web sessions were audited
+// independently. Do not match future client versions by SDK/hash alone.
+export const QWEN_MACOS_1_2_5_PROFILE = Object.freeze({
+  id: "qwenwork-macos-1.2.5-qoder-cache-inclusive-v1",
+  platform: "darwin",
+  client_version: "1.2.5",
+  sdk_name: "@ali/qodercn-agent-sdk-next",
+  sdk_version: "1.0.46",
+  transcript_version: "1.1.59",
+  runtime_sha256: "8dc1dc0b107f37837cf76ef7e2be4f0dd2fdbd90ff8391a3f1f9e965e9f3fb02",
+});
+
 export const QWEN_PROFILES = Object.freeze([
   QWEN_PROFILE,
   QWEN_WINDOWS_PROFILE,
   QWEN_WINDOWS_1_0_6_PROFILE,
+  QWEN_MACOS_1_2_5_PROFILE,
 ]);
 
 export function verifiedQwenProfile(identity) {

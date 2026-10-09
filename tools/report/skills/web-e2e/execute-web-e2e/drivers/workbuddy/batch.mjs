@@ -36,7 +36,7 @@ import {
 
 export const QUEUE_SCHEMA = "wildclawbench.web-e2e-execution-queue/v1";
 export const QUEUE_STATE_REVISION = 3;
-export const QUEUE_WORKER_VERSION = "1.10.0";
+export const QUEUE_WORKER_VERSION = "1.10.3";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 
@@ -46,7 +46,7 @@ const BATCH_PROFILES = Object.freeze({
     harnessId: "astronstudio",
     displayName: "AstronStudio",
     workerId: "astronstudio-background-concurrent",
-    workerVersion: "1.12.0",
+    workerVersion: "1.12.3",
     driverFile: resolve(SCRIPT_DIR, "../astronstudio/driver.mjs"),
     lockFileName: "astronstudio-ui.lock",
     defaultRunSlots: 3,
@@ -59,7 +59,7 @@ const BATCH_PROFILES = Object.freeze({
     harnessId: "qwenwork",
     displayName: "QwenWork",
     workerId: "qwenwork-background-concurrent",
-    workerVersion: "1.12.0",
+    workerVersion: "1.12.3",
     driverFile: resolve(SCRIPT_DIR, "../qwenwork/driver.mjs"),
     lockFileName: "qwenwork-ui.lock",
     defaultRunSlots: 3,
@@ -515,6 +515,9 @@ export function buildDriverArgs(args, task, index, existingAutomation = null, op
   const mode = operation || (existingAutomation
     ? (args.retryPreSendFailure && existingAutomation.phase === "INFRA_FAILED" ? "retry-dispatch" : "observe")
     : "dispatch");
+  if (args.expectedUiModel && new Set(["dispatch", "retry-dispatch"]).has(mode)) {
+    driverArgs.push("--expected-ui-model", args.expectedUiModel);
+  }
   if (args.restartAppFirst && index === 0 && mode === "dispatch") driverArgs.push("--restart-app");
   if (existingAutomation) {
     driverArgs.push("--resume");
@@ -529,6 +532,14 @@ export function buildDriverArgs(args, task, index, existingAutomation = null, op
     if (BATCH_PROFILE.detachedDispatch) driverArgs.push("--detach-after-submit");
   }
   return driverArgs;
+}
+
+export function observedBatchUiModel(automations) {
+  const models = [...new Set(automations.filter(s => s && (s.timing?.sent_at
+    || s.history?.some(h => h.phase === "PROMPT_SENT")))
+    .map(s => s.model_selection?.actual_model).filter(Boolean))];
+  if (models.length > 1) throw new Error("批次已有多个实际模型，禁止继续派发");
+  return models[0] || null;
 }
 
 export function recordTaskOrchestrationFailure(state, queueTask, task, index, error, driverResult = null) {
@@ -917,6 +928,13 @@ export function shouldPrioritizeResumeBeforeDispatch(state, restartOnResumeAvail
   return Boolean(restartOnResumeAvailable && state.tasks.some((task) => isActiveTaskPhase(task.phase)));
 }
 
+export function shouldRefillBeforeObservation(state, dispatchPaused, restartOnResumeAvailable) {
+  return !shouldPrioritizeResumeBeforeDispatch(state, restartOnResumeAvailable)
+    && !dispatchPaused
+    && state.available_run_slots > 0
+    && state.tasks.some((task) => new Set(["PENDING", "RETRY_PENDING"]).has(task.phase));
+}
+
 async function synchronizeQueueTasks(plan, state, args, resumeNeedsAttentionTaskId = "") {
   let dispatchPaused = false;
   let blockerPhase = null;
@@ -1128,6 +1146,13 @@ async function runQueue(plan, args) {
         actionArgs.restartAppOnResume = false;
         if (existingAutomation && requestedMode === "observe") operation = "observe-without-restart";
       }
+      if (requestedMode === "dispatch" && !args.model) {
+        // Read the first persisted selection before each new dispatch. The
+        // Driver checks this value before send without changing the UI model.
+        actionArgs.expectedUiModel = observedBatchUiModel(await Promise.all(
+          plan.tasks.map(t => readJsonIfExists(t.automationStateFile)),
+        ));
+      }
       const driverArgs = buildDriverArgs(actionArgs, task, index, existingAutomation, operation);
       state.current_index = index;
       queueTask.started_at ||= new Date().toISOString();
@@ -1255,10 +1280,9 @@ async function runQueue(plan, args) {
         refreshQueueSlots(state);
       }
       if (interruptSignal) continue;
-      const canFillAnotherSlot = !dispatchPaused
-        && state.available_run_slots > 0
-        && state.tasks.some((task) => new Set(["PENDING", "RETRY_PENDING"]).has(task.phase));
-      if (canFillAnotherSlot) continue;
+      // 重启恢复必须先观察原任务并消耗一次重启机会；此时 dispatchIndexes
+      // 被刻意置空，不能因仍有空槽和待发题目而在观察前同步空转。
+      if (shouldRefillBeforeObservation(state, dispatchPaused, restartOnResumeAvailable)) continue;
 
       const activeIndexes = state.tasks
         .map((task, index) => ({ task, index }))

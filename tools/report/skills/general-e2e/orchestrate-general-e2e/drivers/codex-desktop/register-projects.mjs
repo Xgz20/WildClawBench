@@ -123,6 +123,8 @@ export function pageRank({ title, url }) {
   let score = 0;
   if (/^app:\/\//i.test(url)) score += 100;
   if (/^app:\/\/-\/(?:index\.html)?(?:[?#]|$)/i.test(url)) score += 200;
+  // 主窗口可使用聊天标题；Page 预热窗口的 ChatGPT 标题不能覆盖其优先级。
+  if (/^app:\/\/-\/(?:index\.html)?$/i.test(url)) score += 100;
   if (/codex|chatgpt/i.test(title)) score += 40;
   if (/detached-window|initialRoute=.*(?:avatar-overlay|detached-window)/i.test(url)) score -= 250;
   if (/settings|browser/i.test(title)) score -= 10;

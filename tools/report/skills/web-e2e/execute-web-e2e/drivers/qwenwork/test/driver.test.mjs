@@ -6,6 +6,7 @@ import {
   fillPromptEditor,
   chooseQwenAttemptSession,
   capturePageScreenshot,
+  disconnectQwenWorkCdp,
   handleExpectedApprovals,
   hasStableConversationId,
   inspectApprovalPanels,
@@ -104,7 +105,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.12.5");
+  assert.equal(state.driver.version, "1.12.9");
 });
 
 test("QwenWork 原生目录选择等待异步更新后的目录标签", async () => {
@@ -693,10 +694,11 @@ test("QwenWork Windows 主页面识别兼容中文标题和 hash windowId", () =
   }), false);
 });
 
-test("QwenWork Windows 截图使用直接 CDP Page.captureScreenshot", async () => {
+test("QwenWork macOS/Windows 均直接采集绑定页面，不进入高层字体等待", async () => {
   const calls = [];
   let detached = false;
   const page = {
+    screenshot() { throw new Error("高层截图不应被调用"); },
     context() {
       return {
         async newCDPSession(actualPage) {
@@ -712,12 +714,22 @@ test("QwenWork Windows 截图使用直接 CDP Page.captureScreenshot", async () 
       };
     },
   };
-  const target = new URL("./screenshot-fixture.png", import.meta.url);
-  const result = await capturePageScreenshot(page, target, { platform: "win32" });
-  assert.equal(result.method, "cdp-page-captureScreenshot");
+  for (const platform of ["darwin", "win32"]) {
+    detached = false;
+    const target = new URL(`./screenshot-fixture-${platform}.png`, import.meta.url);
+    const result = await capturePageScreenshot(page, target, { platform });
+    assert.equal(result.method, "cdp-page-captureScreenshot");
+    assert.equal(detached, true);
+    await import("node:fs/promises").then(({ rm }) => rm(target, { force: true }));
+  }
   assert.equal(calls[0][0], "Page.captureScreenshot");
-  assert.equal(detached, true);
-  await import("node:fs/promises").then(({ rm }) => rm(target, { force: true }));
+});
+
+test("QwenWork macOS 页面会话初始化不返回时有界失败，不写伪造截图", async () => {
+  const target = new URL("./never-written-screenshot.png", import.meta.url);
+  const page = { context: () => ({ newCDPSession: () => new Promise(() => {}) }) };
+  await assert.rejects(capturePageScreenshot(page, target, { platform: "darwin", timeoutMilliseconds: 5 }), /创建 QwenWork 页面 CDP 会话超过 5/);
+  await assert.rejects(import("node:fs/promises").then(({ access }) => access(target)), /ENOENT/);
 });
 
 test("QwenWork Windows CDP 操作超时后失败关闭", async () => {
@@ -725,6 +737,22 @@ test("QwenWork Windows CDP 操作超时后失败关闭", async () => {
     withOperationTimeout(new Promise(() => {}), 5, "截图测试"),
     /截图测试超过 5 毫秒未返回/,
   );
+});
+
+test("QwenWork CDP 结束使用公开断开接口，未连接时不操作客户端", async () => {
+  let closed = 0;
+  const result = await disconnectQwenWorkCdp({ async close() { closed += 1; } });
+  assert.equal(closed, 1);
+  assert.deepEqual(result, { status: "disconnected", method: "playwright-connectOverCDP-close" });
+  assert.deepEqual(await disconnectQwenWorkCdp(null), { status: "not-connected" });
+});
+
+test("QwenWork CDP 断开卡住或拒绝时保留诊断，不阻止 Driver 落盘退出", async () => {
+  const stalled = await disconnectQwenWorkCdp({ close: () => new Promise(() => {}) }, 5);
+  assert.equal(stalled.status, "disconnect-failed");
+  assert.match(stalled.error, /断开 QwenWork CDP 连接超过 5/);
+  const rejected = await disconnectQwenWorkCdp({ async close() { throw new Error("transport gone"); } });
+  assert.deepEqual(rejected, { status: "disconnect-failed", error: "transport gone" });
 });
 
 test("QwenWork 终态进程收口为普通终态保留完整安静窗口", () => {

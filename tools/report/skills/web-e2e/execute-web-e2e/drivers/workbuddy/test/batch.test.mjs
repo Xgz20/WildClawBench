@@ -14,6 +14,7 @@ import {
   assertQueueState,
   buildExecutionReceipt,
   buildDriverArgs,
+  observedBatchUiModel,
   canAutomaticallyResumeAttention,
   canAdvanceTask,
   createQueueState,
@@ -30,7 +31,22 @@ import {
   resolveQueuePlan,
   selectPendingTaskIndexes,
   shouldPrioritizeResumeBeforeDispatch,
+  shouldRefillBeforeObservation,
 } from "../batch.mjs";
+
+test("保持当前模型批次在发送前传递首次回读约束，原会话观察不受UI变化影响", () => {
+  const sent = model => ({ timing: { sent_at: "2026-10-09T00:00:00Z" }, model_selection: { actual_model: model } });
+  const unsentDrift = { phase: "INFRA_FAILED", model_selection: { actual_model: "标准" } };
+  assert.equal(observedBatchUiModel([null, sent("高级"), unsentDrift]), "高级");
+  assert.equal(observedBatchUiModel([unsentDrift]), null);
+  assert.throws(() => observedBatchUiModel([
+    sent("高级"), sent("标准"),
+  ]), /禁止继续派发/);
+  const args = { ...parseBatchArgs(["--harness-root", "/tmp/root", "--run-id", "model-gate"]), expectedUiModel: "高级" };
+  const dispatch = buildDriverArgs(args, { taskRoot: "/tmp/task" }, 1);
+  assert.equal(dispatch[dispatch.indexOf("--expected-ui-model") + 1], "高级");
+  assert.equal(buildDriverArgs(args, { taskRoot: "/tmp/task" }, 1, { phase: "RUNNING" }, "observe").includes("--expected-ui-model"), false);
+});
 
 test("Windows queue resume accepts case-only differences in a revalidated frozen app path", async () => {
   const state = {
@@ -416,6 +432,20 @@ test("restart recovery observes an existing task before dispatching pending work
   assert.equal(shouldPrioritizeResumeBeforeDispatch(state, false), false);
   state.tasks[0].phase = "SUCCEEDED";
   assert.equal(shouldPrioritizeResumeBeforeDispatch(state, true), false);
+});
+
+test("restart recovery with free slots reaches observation instead of refilling an intentionally empty dispatch pass", () => {
+  const state = {
+    available_run_slots: 1,
+    tasks: [{ phase: "RUNNING" }, { phase: "RUNNING" }, { phase: "PENDING" }],
+  };
+  assert.equal(shouldPrioritizeResumeBeforeDispatch(state, true), true);
+  assert.equal(shouldRefillBeforeObservation(state, false, true), false);
+  // 观察旧任务消耗重启机会后，正常补位仍可进行。
+  assert.equal(shouldRefillBeforeObservation(state, false, false), true);
+  assert.equal(shouldRefillBeforeObservation(state, true, false), false);
+  state.available_run_slots = 0;
+  assert.equal(shouldRefillBeforeObservation(state, false, false), false);
 });
 
 test("worker interruption keeps the current task recoverable and records the exact driver", async () => {

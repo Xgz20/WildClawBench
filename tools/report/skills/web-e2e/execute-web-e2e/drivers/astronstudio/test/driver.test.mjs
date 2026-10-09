@@ -12,6 +12,8 @@ import {
   copySqliteSnapshot,
   createInitialState,
   parseArgs,
+  isQuiescentThreadEvidence,
+  queryQuiescentThreadEvidence,
   queryFinalResponse,
   querySessions,
   resolveConfig,
@@ -36,12 +38,14 @@ import {
   addProjectByManualPath,
   collectTerminalProcessCleanup,
   connectAstudioBrowser,
+  createFreshTask,
   dismissOpenMenus,
   ensureModel,
   ensurePermissionMode,
   findConversationSidebarToggles,
   findNewTaskButtons,
   hasStableThreadIdentity,
+  inspectConversationSidebarState,
   inspectWorkspace,
   isProbeReady,
   isReusableEmptyTaskRoute,
@@ -738,7 +742,7 @@ test("AstronStudio terminal --resume backfills cleanup without resending the pro
   }), 0);
   const recovered = JSON.parse(await readFile(config.stateFile, "utf8"));
   assert.equal(recovered.phase, "SUCCEEDED");
-  assert.equal(recovered.driver.version, "1.12.3");
+  assert.equal(recovered.driver.version, "1.12.8");
   assert.equal(recovered.terminal_process_cleanup.supported, false);
   assert.equal(recovered.terminal_process_cleanup.success, true);
   assert.equal(recovered.terminal_process_cleanup.backfill_verification.unchanged, true);
@@ -923,12 +927,163 @@ test("sidebar toggle discovery survives Electron titlebar hit-test overlays", as
   };
   const page = {
     locator: (selector) => {
-      assert.equal(selector, "button[aria-label]");
+      assert.equal(selector, 'button[aria-label="切换对话侧边栏"], button[aria-label="Toggle conversation sidebar" i]');
       return locatorFor([coveredDuplicate, reachableToggle]);
     },
   };
 
   assert.deepEqual(await findConversationSidebarToggles(page), [reachableToggle]);
+});
+
+test("collapsed sidebars do not scan or scroll mounted historical project controls", async () => {
+  const page = {
+    evaluate: async () => ["collapsed"],
+    getByTestId: () => { throw new Error("historical project controls must not be scanned"); },
+    locator: () => { throw new Error("historical controls must not be scrolled"); },
+  };
+  assert.deepEqual(await findNewTaskButtons(page), []);
+  await assert.rejects(
+    inspectConversationSidebarState({ evaluate: async () => ["collapsed", "expanded"] }),
+    /侧边栏身份不唯一/,
+  );
+});
+
+function sidebarDomFixture(options) {
+  const controls = [];
+  const hits = new Map();
+  const doc = {
+    defaultView: { getComputedStyle: (element) => element.style },
+    elementFromPoint: (x) => hits.get(x) || null,
+    querySelectorAll: (selector) => {
+      assert.equal(selector, '[data-testid="new-thread-button"]');
+      return controls;
+    },
+  };
+  for (const [index, option] of options.entries()) {
+    const left = index * 20;
+    const element = {
+      ownerDocument: doc,
+      style: { display: option.hidden ? "none" : "block", visibility: "visible" },
+      matches: (selector) => { assert.equal(selector, ":disabled"); return Boolean(option.disabled); },
+      closest: () => null,
+      getBoundingClientRect: () => ({ left, top: 0, width: 10, height: 10 }),
+      contains: (target) => target === element,
+      click: option.click || (async () => {}),
+    };
+    controls.push(element);
+    hits.set(left + 5, option.covered ? {} : element);
+  }
+  const handleFor = (elements) => ({
+    getProperties: async () => new Map(elements.map((element, index) => [String(index), { asElement: () => element }])),
+    dispose: async () => {},
+  });
+  return { doc, controls, handleFor };
+}
+
+test("new-task discovery batches thousands of historical controls without per-control CDP calls", async () => {
+  const fixture = sidebarDomFixture([
+    ...Array.from({ length: 2000 }, () => ({ covered: true })),
+    { disabled: true }, { hidden: true }, {},
+  ]);
+  let calls = 0;
+  const page = {
+    evaluateHandle: async (select) => { calls += 1; return fixture.handleFor(select(fixture.doc)); },
+    getByTestId: () => { throw new Error("per-control enumeration is forbidden"); },
+  };
+  assert.deepEqual(await findNewTaskButtons(page), [fixture.controls.at(-1)]);
+  assert.equal(calls, 1);
+});
+
+test("batched discovery retains the active-project semantic scope", async () => {
+  const fixture = sidebarDomFixture([{}, {}]);
+  const project = {
+    count: async () => 1,
+    evaluateHandle: async (select) => fixture.handleFor(select({
+      ownerDocument: fixture.doc,
+      querySelectorAll: () => [fixture.controls[1]],
+    })),
+  };
+  const page = {
+    url: () => "acode://app/index.html#/active",
+    getByTestId: (id) => {
+      assert.equal(id, "thread-hover-actions-active");
+      return { count: async () => 1, locator: () => project };
+    },
+    evaluateHandle: () => { throw new Error("active project must win before global discovery"); },
+  };
+  assert.deepEqual(await findNewTaskButtons(page), [fixture.controls[1]]);
+});
+
+test("multiple pointer-reachable task controls remain ambiguous and cannot create a task", async () => {
+  let clicks = 0;
+  const fixture = sidebarDomFixture([{ click: async () => { clicks += 1; } }, { click: async () => { clicks += 1; } }]);
+  const page = {
+    url: () => "acode://app/index.html#/previous",
+    getByTestId: () => locatorFor([]),
+    getByRole: () => locatorFor([]),
+    locator: () => ({ filter: () => locatorFor([]) }),
+    evaluateHandle: async (select) => fixture.handleFor(select(fixture.doc)),
+  };
+  assert.equal((await findNewTaskButtons(page)).length, 2);
+  await assert.rejects(createFreshTask(page, 50), /新建任务按钮/);
+  assert.equal(clicks, 0);
+});
+
+test("fresh task creation opens the collapsed sidebar once and waits for a new route", async () => {
+  let state = "collapsed";
+  let route = "acode://app/index.html#/previous";
+  let toggles = 0;
+  let newTasks = 0;
+  const toggle = {
+    isVisible: async () => true,
+    getAttribute: async () => "切换对话侧边栏",
+    evaluate: async () => true,
+    click: async () => { toggles += 1; state = "expanded"; },
+  };
+  const button = {
+    isVisible: async () => true,
+    evaluate: async () => true,
+    click: async () => { newTasks += 1; route = "acode://app/index.html#/fresh"; },
+  };
+  const page = {
+    url: () => route,
+    evaluate: async () => [state],
+    locator: (selector) => {
+      assert.match(selector, /button\[aria-label=/);
+      return locatorFor([toggle]);
+    },
+    getByTestId: (id) => {
+      if (id === "new-thread-button") return locatorFor(state === "expanded" ? [button] : []);
+      if (id === "composer-editor") return locatorFor([{ isVisible: async () => true }]);
+      return locatorFor([]);
+    },
+  };
+  const created = await createFreshTask(page, 1500);
+  assert.equal(created.thread_id_candidate, "fresh");
+  assert.equal(created.previous_thread_id, "previous");
+  assert.equal(toggles, 1);
+  assert.equal(newTasks, 1);
+});
+
+test("an expanded sidebar with a missing entry is never toggled closed", async () => {
+  let clicked = 0;
+  const toggle = {
+    isVisible: async () => true,
+    getAttribute: async () => "切换对话侧边栏",
+    evaluate: async () => true,
+    click: async () => { clicked += 1; },
+  };
+  const page = {
+    url: () => "acode://app/index.html#/previous",
+    evaluate: async () => ["expanded"],
+    getByTestId: () => locatorFor([]),
+    getByRole: () => locatorFor([]),
+    locator: (selector) => selector === "button"
+      ? { filter: () => locatorFor([]) }
+      : locatorFor([toggle]),
+  };
+  await assert.rejects(createFreshTask(page, 50), /未在限定时间内加载新建任务入口/);
+  assert.equal(clicked, 0);
 });
 
 test("workspace readback accepts the project-bound trigger after adding a project", async () => {
@@ -1197,6 +1352,7 @@ test("restart recovery allows only the single tracked active AstronStudio sessio
     tracked_cwd: "/tmp/task-1",
     active_session_count: 1,
     tracked_session_matched: true,
+    quiescent_open_turn_evidence: [],
     shutdown: { method: "sigterm", pid: 123 },
   });
 });
@@ -1222,6 +1378,79 @@ test("restart recovery refuses an active AstronStudio session outside the tracke
     /仍有 1 个活动或待处理任务，拒绝重启/,
   );
   assert.equal(mutationCalls, 0);
+});
+
+test("quiescent proof rejects live, pending, unknown and mismatched native evidence", () => {
+  const evidence = {
+    thread_id: "thread-closed", session_status: "ready", active_turn_id: null,
+    runtime_status: "stopped", lifecycle_generation: "generation-1",
+    latest_turn_state: "completed", latest_turn_completed_at: "2026-10-08T02:57:59Z",
+    open_turn_count: 1, unclosed_open_turn_count: 0, nonterminal_turn_count: 0,
+    pending_interaction_count: 0,
+  };
+  assert.equal(isQuiescentThreadEvidence(evidence, "thread-closed"), true);
+  for (const update of [
+    { thread_id: "other" }, { session_status: "running" }, { active_turn_id: "live" },
+    { runtime_status: "running" }, { lifecycle_generation: null }, { latest_turn_state: "running" },
+    { latest_turn_completed_at: null }, { unclosed_open_turn_count: 1 },
+    { nonterminal_turn_count: 1 }, { pending_interaction_count: 1 }, { open_turn_count: null },
+  ]) assert.equal(isQuiescentThreadEvidence({ ...evidence, ...update }, "thread-closed"), false);
+});
+
+test("native stopped runtime and terminal old open turn allow audited restart without DB mutation", async () => {
+  const root = await mkdtemp(join(tmpdir(), "astronstudio-quiescent-"));
+  const databasePath = join(root, "state.sqlite");
+  await initializeSqlite(databasePath, `
+    CREATE TABLE projection_thread_sessions(thread_id TEXT, status TEXT, active_turn_id TEXT);
+    CREATE TABLE projection_threads(thread_id TEXT, latest_turn_id TEXT);
+    CREATE TABLE projection_turns(thread_id TEXT, turn_id TEXT, state TEXT, completed_at TEXT, checkpoint_turn_count INTEGER);
+    CREATE TABLE provider_session_runtime(thread_id TEXT, status TEXT, lifecycle_generation TEXT);
+    CREATE TABLE provider_runtime_open_turns(thread_id TEXT, turn_id TEXT);
+    CREATE TABLE projection_pending_interactions(thread_id TEXT, status TEXT);
+    INSERT INTO projection_thread_sessions VALUES('closed','ready',NULL);
+    INSERT INTO projection_threads VALUES('closed','new-turn');
+    INSERT INTO projection_turns VALUES('closed','old-turn','completed','2026-09-23T04:33:59Z',NULL);
+    INSERT INTO projection_turns VALUES('closed','new-turn','completed','2026-10-08T02:57:59Z',NULL);
+    INSERT INTO provider_session_runtime VALUES('closed','stopped','generation-1');
+    INSERT INTO provider_runtime_open_turns VALUES('closed','old-turn');
+  `);
+  const before = await readFile(databasePath);
+  const witness = await queryQuiescentThreadEvidence(databasePath, "closed");
+  assert.equal(witness.open_turn_count, 1);
+  let shutdowns = 0;
+  const result = await restartAstudio(
+    { endpoint: "http://127.0.0.1:9240", appPath: "/Applications/AStudio.app", sessionDb: databasePath },
+    {
+      processIdentity: async () => ({ pid: 123 }),
+      querySessions: async () => [{ conversationId: "closed", status: "running",
+        sessionStatus: "ready", activeTurnId: null, turnState: "completed" }],
+      gracefulQuit: async () => { shutdowns += 1; },
+      waitForStopped: async () => {}, waitForEndpoint: async () => {},
+      launchApp: async () => ({ code: 0 }),
+    },
+  );
+  assert.equal(shutdowns, 1);
+  assert.equal(result.restart_safety.active_session_count, 0);
+  assert.deepEqual(result.restart_safety.quiescent_open_turn_evidence, [witness]);
+  assert.deepEqual(await readFile(databasePath), before);
+  await initializeSqlite(databasePath, "UPDATE provider_session_runtime SET status='running';");
+  assert.equal(await queryQuiescentThreadEvidence(databasePath, "closed"), null);
+});
+
+test("quiescent evidence changing between reads blocks restart", async () => {
+  let reads = 0;
+  let shutdowns = 0;
+  await assert.rejects(restartAstudio(
+    { endpoint: "http://127.0.0.1:9240", appPath: "/Applications/AStudio.app", sessionDb: "/tmp/state.sqlite" },
+    {
+      processIdentity: async () => ({ pid: 123 }),
+      querySessions: async () => [{ conversationId: "closed", status: "running",
+        sessionStatus: "ready", activeTurnId: null, turnState: "completed" }],
+      queryQuiescentThreadEvidence: async () => reads++ === 0 ? { thread_id: "closed" } : null,
+      gracefulQuit: async () => { shutdowns += 1; },
+    },
+  ), /活动或待处理任务，拒绝重启/);
+  assert.equal(shutdowns, 0);
 });
 
 test("restart safely falls back to SIGKILL only for the same verified AstronStudio PID", async () => {
