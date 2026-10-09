@@ -62,6 +62,8 @@ const LEGACY_SCORING_INPUT_ROOTS = new Set(["candidate_artifact.json", "fixtures
 const CAPACITY_ERROR = "Selected model is at capacity. Please try a different model.";
 const CAPACITY_GRANT_SCHEMA = "wildclawbench.web-e2e-capacity-retry-grant/v1";
 const EVALUATION_ERROR_GRANT_SCHEMA = "wildclawbench.web-e2e-evaluation-error-retry-grant/v1";
+const USER_RETRY_AUTHORIZATION_SCHEMA = "wildclawbench.web-e2e-user-retry-authorization/v1";
+const USER_RETRY_GRANT_SCHEMA = "wildclawbench.web-e2e-user-retry-grant/v1";
 const SCORING_INFRASTRUCTURE_GRANT_SCHEMA = "wildclawbench.web-e2e-scoring-infrastructure-retry-grant/v1";
 const SCORING_INFRASTRUCTURE_ERRORS = [
   /application network permission was revoked/i,
@@ -100,11 +102,14 @@ export function usage() {
   node scoring-control.mjs record-thread --package-root <目录> --task-id <ID> --thread-id <ID> --host-id <ID>
   node scoring-control.mjs record-wait --package-root <目录> --task-id <ID> --wait-sequence <序号> --wait-cursor <游标> --wait-status <状态> [--wait-error <说明>] [--finished-at <终态时间>]
   node scoring-control.mjs record-wait --package-root <目录> --task-id <ID> --wait-sequence <序号> --terminal-observation <Desktop poll JSON>
+  node scoring-control.mjs record-thread-interruption --package-root <目录> --task-id <ID> --terminal-observation <Desktop interrupted poll JSON>
+  node scoring-control.mjs record-desktop-upgrade --package-root <目录> --desktop-probe <注册器probe JSON> --project-observation <list_projects JSON> --upgrade-reason <说明>
   node scoring-control.mjs mark-timeout --package-root <目录> --task-id <ID>
   node scoring-control.mjs prepare-retry --package-root <目录> --task-id <ID> --retry-reason <说明>
   node scoring-control.mjs grant-capacity-retry --package-root <目录> --task-id <ID> --terminal-observation <Desktop poll JSON> --retry-reason <说明>
   node scoring-control.mjs grant-scoring-infrastructure-retry --package-root <目录> --task-id <ID> --retry-reason <说明>
   node scoring-control.mjs grant-evaluation-error-retry --package-root <目录> --task-id <ID> --retry-reason <说明>
+  node scoring-control.mjs grant-user-authorized-retry --package-root <目录> --task-id <ID> --authorization-file <用户授权记录JSON> --retry-reason <说明>
   node scoring-control.mjs mark-complete --package-root <目录> --task-id <ID>
   node scoring-control.mjs mark-failed --package-root <目录> --task-id <ID> --error <说明>
   node scoring-control.mjs build-submission --package-root <目录> [--score-skill-dir <目录>]
@@ -138,6 +143,10 @@ export function parseArgs(argv) {
     else if (token === "--finished-at") values.finishedAt = argv[++index] || "";
     else if (token === "--retry-reason") values.retryReason = argv[++index] || "";
     else if (token === "--terminal-observation") values.terminalObservation = argv[++index] || "";
+    else if (token === "--authorization-file") values.authorizationFile = argv[++index] || "";
+    else if (token === "--desktop-probe") values.desktopProbe = argv[++index] || "";
+    else if (token === "--project-observation") values.projectObservation = argv[++index] || "";
+    else if (token === "--upgrade-reason") values.upgradeReason = argv[++index] || "";
     else if (token === "--help" || token === "-h") values.help = true;
     else throw new Error(`未知参数：${token}`);
   }
@@ -150,11 +159,14 @@ export function parseArgs(argv) {
     "preflight",
     "record-thread",
     "record-wait",
+    "record-thread-interruption",
+    "record-desktop-upgrade",
     "mark-timeout",
     "prepare-retry",
     "grant-capacity-retry",
     "grant-scoring-infrastructure-retry",
     "grant-evaluation-error-retry",
+    "grant-user-authorized-retry",
     "mark-complete",
     "mark-failed",
     "build-submission",
@@ -529,7 +541,8 @@ function retryLimit(task) {
   const infrastructureGrantCount = Number.isInteger(task.scoring_infrastructure_retry_grant_count)
     ? task.scoring_infrastructure_retry_grant_count
     : (task.scoring_infrastructure_retry_grant ? 1 : 0);
-  return task.max_retries + (task.capacity_retry_grant ? 1 : 0) + evaluationGrantCount + infrastructureGrantCount;
+  return task.max_retries + (task.capacity_retry_grant ? 1 : 0) + evaluationGrantCount + infrastructureGrantCount
+    + (task.user_authorized_retry_grant ? 1 : 0);
 }
 
 function promptForTask(taskId, scoringPort) {
@@ -539,8 +552,8 @@ function promptForTask(taskId, scoringPort) {
     "必须使用 Codex Desktop 内置 Browser，按照 private-scoring/task_contract.json 逐项实际操作和截图取证，并生成 private-scoring/task_score.json。",
     `本题独占本地评分端口 ${scoringPort}；启动站点和打开 Browser 时必须使用该端口，不得使用其他题目的端口。若该端口冲突，只能按评分 Skill 的受管端口冲突流程处理并保留审计。`,
     `创建评分线程后，控制会话必须立即调用 Codex Desktop 的 open_in_codex，把该线程绑定到本题 Browser 路由（target.type=browser，URL=about:blank，threadId=刚返回的 threadId）。评分线程在启动站点、安装或构建依赖、开始功能与美观度评分之前，先完成独立的 Browser 暖启动检查。仅 create_thread 或 open_in_codex 返回 queued 不代表 Browser 可用。`,
-    `暖启动窗口为60秒，最多3次发现检查：先记录 started_at，再调用公开 cua.getState；空清单可在2秒、5秒退避后复查，仍限总窗口。第一次空清单时可自行 open_in_codex（URL=about:blank，省略 threadId）；不得把 source_thread_id 或父会话ID传入。发现唯一type=iab且metadata.codexSessionId匹配本线程，或三次发现仍为空但窗口尚未耗尽时，仅一次实际 cua.createBrowserTab("iab","about:blank",{visible:false})，并复查清单及实际AX页面。空清单不证明初始化失败，实际创建后仍必须核验本线程归属。归属不匹配、创建失败或窗口耗尽时按Skill收口evaluation_error、结束本attempt；不得启动站点、重发评分指令或自行扩大重试预算。禁止使用父会话、Chrome、headless、替代运行时或私有管道。`,
-    `允许只读运行已安装编排Skill的受管健康校验脚本 ${readinessHelper}；将本题task_id、实际thread_id、started_at、discoveries数组（每次started_at/finished_at/state原始清单）、creation（attempt_count=1/success/tab_id/started_at/finished_at）、verification（finished_at/state原始清单）、readback（finished_at/url/ax_state实际观察，可用创建返回的AX状态）保存到private-scoring/evidence/browser-readiness-input.json，再运行 node "${readinessHelper}" --task-root . --thread-id <本线程实际ID> --input private-scoring/evidence/browser-readiness-input.json。只有返回READY才能按score-web-e2e启动受管站点，并用同一归属Browser打开本题实际http://127.0.0.1:${scoringPort}/入口。脚本只核验记录，不调用浏览器或替代实际取证；不得伪造原始观察。外层60秒不会修改Codex运行时内置的5秒等待，也不是增加一次评分重试。`,
+    `暖启动前先读完评分Skill和本次helper文档；随后开始180秒就绪窗口，最多3次发现检查：先记录 started_at，在发现前仅一次公开 mcp__cua_repl.js_reset 并记录reset(attempt_count=1/started_at/finished_at)，之后首次CUA js仅调用公开 cua.getState（允许赋给变量）；首次调用返回后立即记录外部观察时间为finished_at_upper_bound，保留精确finished_at未知，不用工具耗时反推完成时间；空清单可在2秒、5秒退避后复查，仍限总窗口。第一次空清单时可自行 open_in_codex（URL=about:blank，省略 threadId）；不得把 source_thread_id 或父会话ID传入。发现唯一type=iab且metadata.codexSessionId匹配本线程，或三次发现仍为空但窗口尚未耗尽时，仅一次实际 cua.createBrowserTab("iab","about:blank",{visible:false})，并复查清单及实际AX页面。空清单不证明初始化失败，实际创建后仍必须核验本线程归属。归属不匹配、创建失败或窗口耗尽时按Skill收口evaluation_error、结束本attempt；不得启动站点、重发评分指令或自行扩大重试预算。禁止使用父会话、Chrome、headless、替代运行时或私有管道。`,
+    `允许只读运行已安装编排Skill的受管健康校验脚本 ${readinessHelper}；将本题task_id、实际thread_id、started_at、reset及discoveries数组（每次started_at/finished_at/state原始清单；首调用精确结束时间未知时保留null并提供实际观察到的finished_at_upper_bound）、creation（attempt_count=1/success/tab_id/started_at/finished_at）、verification（finished_at/state原始清单）、readback（finished_at/url/ax_state实际观察，可用创建返回的AX状态）保存到private-scoring/evidence/browser-readiness-input.json，再运行 node "${readinessHelper}" --task-root . --thread-id <本线程实际ID> --input private-scoring/evidence/browser-readiness-input.json。只有返回READY才能按score-web-e2e启动受管站点，并用同一归属Browser打开本题实际http://127.0.0.1:${scoringPort}/入口。脚本只核验记录，不调用浏览器或替代实际取证；不得伪造原始观察。外层180秒不会修改Codex运行时内置的5秒等待；最终健康证明仍只在60秒内有效，也不是增加一次评分重试。`,
     "workspace/ 是被评 Harness 已冻结的只读候选产物，严禁编辑、格式化、安装依赖、构建或生成任何文件；需要写入时只能使用 private-scoring/runtime-workspace/ 临时副本。",
     "允许只读访问当前已独立安装的 score-web-e2e Skill，包括 SKILL.md、references/、scripts/、vendor/ 和运行其受管工具必需的依赖；这是本次评分授权的一部分，无需另行确认。不得访问其他项目、当前题的父目录或其他用例；本题结果、证据、日志和运行时副本只能写入当前项目的 private-scoring/。不要创建或调度其他 Codex 任务；只用评分 Skill 的精确 PID 管理工具启动和停止本站服务，证据不足或浏览器不可用时按 Skill 契约记录 evaluation_error。",
     "完成全部评分文件后结束当前任务。",
@@ -1064,7 +1077,15 @@ async function loadControl(packageRoot) {
   await verifyCapacityRetryGrants(plan, state);
   await verifyScoringInfrastructureRetryGrants(plan, state);
   await verifyEvaluationErrorRetryGrants(plan, state);
+  await verifyUserAuthorizedRetryGrants(plan, state);
   await verifyTerminalObservations(plan, state);
+  for (const upgrade of state.desktop_upgrades || []) {
+    for (const ref of [upgrade.probe, upgrade.projects]) {
+      const filename = resolve(plan.root, ref?.observation_file || "");
+      if (!inside(join(plan.controlRoot, "desktop-upgrades"), filename)
+        || sha256(await readObservationFile(filename)) !== ref?.observation_sha256) throw new Error("Desktop 升级观察证据发生漂移");
+    }
+  }
   // Classify legacy validated scores in memory only. Do not rewrite frozen
   // prompts, budgets or score statistics when status/resume reads an old run.
   for (const task of state.tasks) {
@@ -1130,6 +1151,16 @@ async function preserveObservation(plan, directory, filename, raw) {
 
 async function verifyTerminalObservations(plan, state) {
   for (const task of state.tasks) for (const attempt of task.attempts) {
+    for (const interruption of attempt.thread_interruptions || []) {
+      const filename = resolve(plan.root, interruption.observation_file || "");
+      if (!inside(join(plan.controlRoot, "thread-interruptions"), filename)) throw new Error("会话中断证据路径越界");
+      const raw = await readObservationFile(filename);
+      if (sha256(raw) !== interruption.observation_sha256) throw new Error("会话中断证据发生漂移");
+      const fields = terminalObservationFields(JSON.parse(raw), attempt);
+      if (fields.waitStatus !== "INTERRUPTED" || fields.finishedAt !== interruption.interrupted_at) {
+        throw new Error("会话中断证据与记录不一致");
+      }
+    }
     const ref = attempt.terminal_observation;
     if (!ref) continue;
     const filename = resolve(plan.root, ref.observation_file || "");
@@ -1177,6 +1208,84 @@ function isScoringInfrastructureError(message) {
   return SCORING_INFRASTRUCTURE_ERRORS.some((pattern) => pattern.test(String(message || "")));
 }
 
+function validateUserRetryAuthorization(authorization, state, task) {
+  if (authorization?.schema_version !== USER_RETRY_AUTHORIZATION_SCHEMA
+    || authorization.batch_id !== state.batch_id || authorization.harness_id !== state.harness_id
+    || authorization.decision !== "approved" || authorization.additional_attempts_per_task !== 1
+    || !Array.isArray(authorization.task_ids) || !authorization.task_ids.includes(task.task_id)
+    || new Set(authorization.task_ids).size !== authorization.task_ids.length
+    || authorization.task_ids.some((id) => !state.tasks.some((t) => t.task_id === id))
+    || authorization.source?.kind !== "direct-human-user-reply"
+    || !authorization.source.controller_thread_id || !authorization.source.question_item_id
+    || !authorization.source.question?.trim() || !authorization.source.answer?.trim()
+    || !Number.isFinite(Date.parse(authorization.recorded_at || ""))) {
+    throw new Error(`用户单次评分恢复授权不匹配：${task.task_id}`);
+  }
+  // The controller must have received the actual human reply. This artifact
+  // binds and preserves that reply; a local JSON file cannot authenticate a user.
+}
+
+async function verifyUserAuthorizedRetryGrants(plan, state) {
+  for (const task of state.tasks) {
+    const grant = task.user_authorized_retry_grant;
+    if (!grant) continue;
+    const source = task.attempts.find((a) => a.attempt_number === grant.attempt_number);
+    const filename = resolve(plan.root, grant.observation_file || "");
+    if (grant.schema_version !== USER_RETRY_GRANT_SCHEMA || !source
+      || source.thread_id !== grant.thread_id || source.terminal_status !== "COMPLETED"
+      || grant.additional_attempts !== 1 || !grant.reason
+      || !/^[a-f0-9]{64}$/.test(String(grant.score_sha256 || ""))
+      || !inside(join(plan.controlRoot, "user-retry-authorizations"), filename)) {
+      throw new Error(`用户单次评分恢复授权身份无效：${task.task_id}`);
+    }
+    const raw = await readObservationFile(filename);
+    if (sha256(raw) !== grant.observation_sha256) throw new Error("用户评分恢复授权记录发生漂移");
+    validateUserRetryAuthorization(JSON.parse(raw.toString("utf8")), state, task);
+    const scoreFile = source.error_receipt
+      ? resolve(plan.root, source.error_receipt.archive_root, "private-scoring", "task_score.json")
+      : task.score_file;
+    if (source.error_receipt || currentAttempt(task)?.attempt_number === source.attempt_number) {
+      const scoreRaw = source.error_receipt ? await readFile(scoreFile) : await readRetrySourceScore(plan, task, source);
+      if (sha256(scoreRaw) !== grant.score_sha256) throw new Error("用户恢复授权绑定的原评分发生漂移");
+      const score = JSON.parse(scoreRaw.toString("utf8"));
+      if (score.evaluation?.status !== "evaluation_error"
+        && score.evaluation?.aesthetic?.status !== "evaluation_error") throw new Error("用户恢复授权的原评分不是评测异常");
+    }
+  }
+}
+
+export async function grantUserAuthorizedRetry(packageRoot, taskId, authorizationFile, retryReason) {
+  if (!authorizationFile || !retryReason?.trim()) throw new Error("用户授权记录和恢复原因均不能为空");
+  const { plan, state } = await loadControl(packageRoot);
+  const task = requireTask(state, taskId);
+  if (task.user_authorized_retry_grant) throw new Error("本题已登记唯一的用户额外恢复机会");
+  if (task.phase !== "COMPLETED" || task.retry_count !== retryLimit(task)) {
+    throw new Error("用户额外恢复只允许既有预算已耗尽的 COMPLETED 评测异常任务");
+  }
+  const attempt = currentAttempt(task);
+  if (attempt?.terminal_status !== "COMPLETED") throw new Error("用户恢复前必须确认原评分任务 COMPLETED 终态");
+  const authorizationRaw = await readObservationFile(authorizationFile);
+  validateUserRetryAuthorization(JSON.parse(authorizationRaw.toString("utf8")), state, task);
+  const score = await validateTaskScore(plan, task);
+  if (score.evaluation?.status !== "evaluation_error" && score.evaluation?.aesthetic?.status !== "evaluation_error") {
+    throw new Error("当前评分不是评测基础设施异常，不能使用用户额外恢复");
+  }
+  await verifyScoringInputs(task, { allowAttemptOutputs: true });
+  await verifyTaskCandidateOrFail(plan, state, task, "user-authorized-retry-grant");
+  await assertAttemptRuntimeQuiescent(task, join(task.score_dir, "private-scoring"));
+  const evidence = await preserveObservation(plan, "user-retry-authorizations", `${archiveTaskKey(taskId)}.json`, authorizationRaw);
+  task.user_authorized_retry_grant = {
+    schema_version: USER_RETRY_GRANT_SCHEMA, additional_attempts: 1,
+    attempt_number: attempt.attempt_number, thread_id: attempt.thread_id,
+    score_sha256: sha256(await readFile(task.score_file)), ...evidence,
+    reason: retryReason.trim(), granted_at: new Date().toISOString(),
+  };
+  state.history.push({ event: "SCORING_USER_RETRY_GRANTED", task_id: taskId,
+    at: task.user_authorized_retry_grant.granted_at, grant: task.user_authorized_retry_grant });
+  await saveControl(plan, state);
+  return publicStatus(state);
+}
+
 async function verifyScoringInfrastructureRetryGrants(plan, state) {
   for (const task of state.tasks) {
     const grant = task.scoring_infrastructure_retry_grant;
@@ -1211,7 +1320,7 @@ async function verifyEvaluationErrorRetryGrants(plan, state) {
       || !/^[a-f0-9]{64}$/.test(String(grant.score_sha256 || ""))) {
       throw new Error(`评测基础设施恢复授权身份无效：${task.task_id}`);
     }
-    const scoreRaw = await readFile(task.score_file).catch((error) => {
+    const scoreRaw = await readRetrySourceScore(plan, task, sourceAttempt).catch((error) => {
       if (error?.code === "ENOENT" && task.phase !== "COMPLETED") return null;
       throw error;
     });
@@ -1482,6 +1591,50 @@ export async function recordProject(packageRoot, taskId, project) {
   registry.updated_at = now;
   await atomicWriteJson(plan.registryFile, registry);
   await saveControl(plan, state);
+  return publicStatus(state);
+}
+
+export async function recordDesktopUpgrade(packageRoot, probeFile, projectObservationFile, reason) {
+  if (!reason?.trim()) throw new Error("升级恢复原因不能为空");
+  const { plan, state } = await loadControl(packageRoot);
+  const probeRaw = await readObservationFile(probeFile);
+  const projectsRaw = await readObservationFile(projectObservationFile);
+  const probe = JSON.parse(probeRaw), observed = JSON.parse(projectsRaw);
+  if (probe.schema_version !== "wildclawbench.codex-project-registration/v1" || probe.status !== "PROBED"
+    || !probe.desktop_version || !probe.app_discovery?.identity_verified
+    || probe.app_discovery.version !== probe.desktop_version || !Array.isArray(observed.projects)) {
+    throw new Error("Desktop 升级需要有效注册器 probe 与原生 list_projects 观察");
+  }
+  const registry = await loadJson(plan.registryFile);
+  for (const task of state.tasks.filter(t => t.project_id)) {
+    const matches = observed.projects.filter(p => p.projectId === task.project_id && p.hostId === task.project_host_id);
+    if (matches.length !== 1 || await realpath(matches[0].path) !== await realpath(task.score_dir)) {
+      throw new Error(`Desktop 升级项目身份回读不一致：${task.task_id}`);
+    }
+    await verifyTaskCandidateOrFail(plan, state, task, "record-desktop-upgrade");
+  }
+  if (registry.desktop_version === probe.desktop_version) return publicStatus(state);
+  const previous = registry.desktop_version;
+  const observedAt = new Date().toISOString();
+  const key = `${sha256(probeRaw).slice(0,16)}-${sha256(projectsRaw).slice(0,16)}`;
+  const record = { from_version: previous, to_version: probe.desktop_version, recorded_at: observedAt, reason: reason.trim(),
+    probe: await preserveObservation(plan,"desktop-upgrades",key+"-probe.json",probeRaw),
+    projects: await preserveObservation(plan,"desktop-upgrades",key+"-projects.json",projectsRaw),
+    previous_project_registry: registry.projects.map(p => ({...p})),
+  };
+  registry.desktop_version = probe.desktop_version;
+  registry.desktop_upgrades ||= []; registry.desktop_upgrades.push(record);
+  registry.updated_at = observedAt;
+  for (const task of state.tasks.filter(t => t.project_id && t.phase !== "COMPLETED")) {
+    task.project_desktop_version = probe.desktop_version;
+    const project = registry.projects.find(p=>p.task_id === task.task_id);
+    if (!project) throw new Error(`Desktop 升级缺少项目登记：${task.task_id}`);
+    project.desktop_version = probe.desktop_version;
+    if (task.phase === "PROJECT_REGISTERED") task.preflight = {status:"PENDING",task_id:task.task_id,checked_at:null};
+  }
+  state.desktop_upgrades ||= []; state.desktop_upgrades.push(record);
+  state.history.push({event:"SCORING_DESKTOP_UPGRADE_RECORDED",at:observedAt,upgrade:record});
+  await atomicWriteJson(plan.registryFile,registry); await saveControl(plan,state);
   return publicStatus(state);
 }
 
@@ -1775,6 +1928,41 @@ export async function recordWait(packageRoot, taskId, observation, options = {})
   return publicStatus(state);
 }
 
+// A Desktop restart ends a turn, but the user may continue the same scoring
+// thread and unfinished attempt. Preserve that native interruption separately
+// from the final scoring turn; keep the original slot, deadline and budgets.
+export async function recordThreadInterruption(packageRoot, taskId, observationFile, options = {}) {
+  const { plan, state } = await loadControl(packageRoot);
+  const task = requireTask(state, taskId);
+  const attempt = currentAttempt(task);
+  if (task.phase !== "SCORING" || !attempt || attempt.terminal_status) {
+    throw new Error("仅允许继续尚未终结的 SCORING attempt");
+  }
+  const raw = await readObservationFile(observationFile);
+  const poll = JSON.parse(raw);
+  const fields = terminalObservationFields(poll, attempt);
+  const turnId = poll.latestTurn?.id || poll.turns?.[0]?.id;
+  const now = asDate(options.now);
+  if (fields.waitStatus !== "INTERRUPTED" || !turnId) throw new Error("必须提供原线程的原生 INTERRUPTED turn");
+  if (asDate(fields.finishedAt).getTime() > now.getTime()) throw new Error("中断时间不能在未来");
+  if (attempt.deadline_exceeded_at || now.getTime() >= asDate(attempt.deadline_at).getTime()) {
+    throw new Error("原评分 deadline 已过，不能续评原 attempt");
+  }
+  if (attempt.thread_interruptions?.some((entry) => entry.native_turn_id === turnId)) return publicStatus(state);
+  await verifyScoringInputs(task, { allowAttemptOutputs: true });
+  await verifyTaskCandidateOrFail(plan, state, task, "record-thread-interruption");
+  const evidence = await preserveObservation(plan, "thread-interruptions",
+    `${archiveTaskKey(taskId)}-${attempt.attempt_number}-${sha256(turnId).slice(0,12)}.json`, raw);
+  const record = { native_turn_id: turnId, interrupted_at: fields.finishedAt,
+    recorded_at: now.toISOString(), ...evidence };
+  attempt.thread_interruptions ||= [];
+  attempt.thread_interruptions.push(record);
+  state.history.push({ event: "SCORING_THREAD_INTERRUPTION_RECORDED", task_id: taskId,
+    thread_id: attempt.thread_id, attempt_number: attempt.attempt_number, at: now.toISOString(), interruption: record });
+  await saveControl(plan, state);
+  return publicStatus(state);
+}
+
 export async function markTimeout(packageRoot, taskId, options = {}) {
   const { plan, state } = await loadControl(packageRoot);
   const task = requireTask(state, taskId);
@@ -1811,6 +1999,20 @@ function attemptArchivePaths(plan, task, attempt) {
     journalFile: join(plan.controlRoot, "pending-attempt-archives", `${archiveTaskKey(task.task_id)}-${attemptName}.json`),
     restoreRoot: join(task.score_dir, `.private-scoring-restore-${attemptName}`),
   };
+}
+
+async function readRetrySourceScore(plan, task, attempt) {
+  try { return await readFile(task.score_file); }
+  catch (error) {
+    if (error?.code !== "ENOENT" || !attempt) throw error;
+    const paths = attemptArchivePaths(plan, task, attempt);
+    const pending = await loadJsonIfExists(paths.journalFile);
+    const receipt = await loadJsonIfExists(paths.receiptFile);
+    if (!pending && !receipt) throw error;
+    // Interrupted atomic archive: original score stays in the same attempt's
+    // journal-bound artifacts. Grant SHA and archive journal checks still apply.
+    return readFile(join(paths.artifactsRoot, "task_score.json"));
+  }
 }
 
 function relativePackagePath(plan, filename) {
@@ -1990,7 +2192,7 @@ export async function prepareRetry(packageRoot, taskId, retryReason, options = {
   const attempt = currentAttempt(task);
   let completedEvaluationError = false;
   if (task.phase === "COMPLETED") {
-    const score = await loadJson(task.score_file).catch((error) => {
+    const score = await readRetrySourceScore(plan, task, attempt).then((raw) => JSON.parse(raw.toString("utf8"))).catch((error) => {
       if (error?.code === "ENOENT") return null;
       throw error;
     });
@@ -2317,7 +2519,8 @@ async function main() {
       return;
     }
     let result;
-    if (args.command === "init") result = publicStatus((await initialize(args.packageRoot, args.taskIds, {
+    if (args.command === "record-desktop-upgrade") result = await recordDesktopUpgrade(args.packageRoot, args.desktopProbe, args.projectObservation, args.upgradeReason);
+    else if (args.command === "init") result = publicStatus((await initialize(args.packageRoot, args.taskIds, {
       scoreSlots: args.scoreSlots,
       scorePortBase: args.scorePortBase,
       scoreTimeoutSeconds: args.scoreTimeoutSeconds,
@@ -2358,10 +2561,12 @@ async function main() {
         finishedAt: args.finishedAt,
       });
       else if (args.command === "mark-timeout") result = await markTimeout(args.packageRoot, taskId);
+      else if (args.command === "record-thread-interruption") result = await recordThreadInterruption(args.packageRoot, taskId, args.terminalObservation);
       else if (args.command === "prepare-retry") result = await prepareRetry(args.packageRoot, taskId, args.retryReason);
       else if (args.command === "grant-capacity-retry") result = await grantCapacityRetry(args.packageRoot, taskId, args.terminalObservation, args.retryReason);
       else if (args.command === "grant-scoring-infrastructure-retry") result = await grantScoringInfrastructureRetry(args.packageRoot, taskId, args.retryReason);
       else if (args.command === "grant-evaluation-error-retry") result = await grantEvaluationErrorRetry(args.packageRoot, taskId, args.retryReason);
+      else if (args.command === "grant-user-authorized-retry") result = await grantUserAuthorizedRetry(args.packageRoot, taskId, args.authorizationFile, args.retryReason);
       else if (args.command === "mark-complete") result = await markComplete(args.packageRoot, taskId);
       else result = await markFailed(args.packageRoot, taskId, args.error);
     }

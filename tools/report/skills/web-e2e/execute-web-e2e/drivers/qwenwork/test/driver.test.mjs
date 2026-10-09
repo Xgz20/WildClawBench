@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   attemptSessionCaptureTimeout,
   fillPromptEditor,
+  findPromptEditor,
   chooseQwenAttemptSession,
   capturePageScreenshot,
   disconnectQwenWorkCdp,
@@ -105,7 +106,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.12.9");
+  assert.equal(state.driver.version, "1.12.11");
 });
 
 test("QwenWork 原生目录选择等待异步更新后的目录标签", async () => {
@@ -789,4 +790,24 @@ test("唯一可见元素等待器拒绝歧义", async () => {
     waitForUniqueVisible(async () => [{}, {}], 5, "测试控件", 1),
     /数量异常：2/,
   );
+});
+
+
+test("QwenWork Prompt uses a unique accessible textbox without positional selection", async () => {
+  const textbox = { count: async () => 1, filter(options) { assert.deepEqual(options, {visible: true}); return this; } };
+  const empty = { count: async () => 0, filter() { return this; } };
+  const page = { getByRole(role, options) { assert.equal(role, "textbox"); assert.ok(options.name.test("描述任务，输入/调用技能")); return textbox; }, locator: () => empty, getByPlaceholder: () => empty };
+  assert.equal(await findPromptEditor(page, 100), textbox);
+});
+
+test("QwenWork ambiguous Prompt editors fail closed instead of choosing the last match", async () => {
+  const ambiguous = { count: async () => 2, filter() { return this; } };
+  const page = { getByRole: () => ambiguous, locator: () => ambiguous, getByPlaceholder: () => ambiguous };
+  await assert.rejects(findPromptEditor(page, 100), /身份不唯一/);
+});
+
+test("QwenWork stalled editor identity lookup remains bounded", async () => {
+  const stalled = { count: () => new Promise(() => {}), filter() { return this; } };
+  const page = { getByRole: () => stalled, locator: () => stalled, getByPlaceholder: () => stalled };
+  await assert.rejects(findPromptEditor(page, 5), /核验 QwenWork Prompt 输入框超过/);
 });

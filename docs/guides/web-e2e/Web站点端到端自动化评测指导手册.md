@@ -518,7 +518,7 @@ launchctl bootout gui/$(id -u)/com.wildclawbench.desktop-debug-restart.codex
 
 新批次默认创建 3 个并发评分任务；每个任务都必须取得与自身 `metadata.codexSessionId` 匹配的独立 `iab` Browser 路由。若三路中任一路由没有建立，停止该批次并记录 `evaluation_error`，不要把父会话 Browser、Chrome、headless 或自建浏览器当作替代，也不要把评分并发静默降级为串行。
 
-编排 Skill 0.3.18 新生成的评分任务会在站点启动前做最多 60 秒的就绪检查：最多 3 次发现，空清单时分别等待 2 秒、5 秒，再进行一次官方 about:blank 创建并核验本线程归属及实际页面。该保护不修改 Codex 内部的 5 秒等待。任一题出现功能或美观度 `evaluation_error` 后，控制器暂停派发新题，继续收口已运行的题；恢复后使用原有受限重试预算。包含异常的 submission 可用于审计，整批仍为 `NEEDS_ATTENTION`。已有冻结批次的 Prompt 和预算保持原值。
+编排 Skill 0.3.23 新生成的评分任务会在站点启动前做最多 180 秒的就绪检查：最多 3 次发现，空清单时分别等待 2 秒、5 秒，再进行一次官方 about:blank 创建并核验本线程归属及实际页面。发现前先做一次公开REPL复位；首次发现允许保存实际外部完成界限，精确时间未知时保持 null；最终健康证明仍只在 60 秒内有效。该保护不修改 Codex 内部的 5 秒等待。任一题出现功能或美观度 `evaluation_error` 后，控制器暂停派发新题，继续收口已运行的题；恢复后使用原有受限重试预算。包含异常的 submission 可用于审计，整批仍为 `NEEDS_ATTENTION`。已有冻结批次的 Prompt 和预算保持原值。
 
 ### 站点无法启动或 Browser 无法取证
 

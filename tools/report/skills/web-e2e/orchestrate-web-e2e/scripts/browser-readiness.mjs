@@ -5,7 +5,8 @@ import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 
 export const BROWSER_READINESS_SCHEMA = "wildclawbench.web-e2e-browser-readiness/v1";
-export const BROWSER_WARMUP_SECONDS = 60;
+export const BROWSER_WARMUP_SECONDS = 180;
+export const BROWSER_PROOF_MAX_AGE_SECONDS = 60;
 export const MAX_BROWSER_DISCOVERIES = 3;
 
 function time(value, name) {
@@ -34,10 +35,20 @@ export function evaluateBrowserReadiness(input, threadId, now = Date.now()) {
   }
   const deadline = started + BROWSER_WARMUP_SECONDS * 1000;
   let lastEnd = started;
+  if (input.reset) {
+    if (input.reset.attempt_count !== 1) throw new Error("公开 REPL 复位最多一次");
+    const resetBegin = time(input.reset.started_at, "复位 started_at");
+    const resetEnd = time(input.reset.finished_at, "复位 finished_at");
+    if (resetBegin < started || resetEnd < resetBegin || resetEnd > now) throw new Error("复位时间顺序错误");
+    lastEnd = resetEnd;
+  }
   let browser = null;
   for (const [index, observation] of discoveries.entries()) {
     const begin = time(observation.started_at, "发现 started_at");
-    const end = time(observation.finished_at, "发现 finished_at");
+    // The first CUA invocation cannot contain a second operation to timestamp
+    // its return. Accept a subsequently observed upper bound, never synthesize
+    // an exact API completion time from reported duration.
+    const end = time(observation.finished_at ?? (index === 0 ? observation.finished_at_upper_bound : null), "发现 finished_at 或首调用外部完成界限");
     if (begin < lastEnd || end < begin || end > now) throw new Error("发现记录时间顺序错误");
     if (index && !browser && begin < lastEnd + (index === 1 ? 2000 : 5000)) throw new Error("发现复查未遵守退避时间");
     lastEnd = end;
@@ -46,7 +57,10 @@ export function evaluateBrowserReadiness(input, threadId, now = Date.now()) {
   const result = { schema_version: BROWSER_READINESS_SCHEMA, thread_id: threadId,
     started_at: input.started_at, deadline_at: new Date(deadline).toISOString(),
     warmup_seconds: BROWSER_WARMUP_SECONDS, discovery_count: discoveries.length,
-    max_discoveries: MAX_BROWSER_DISCOVERIES, internal_info_timeout_changed: false };
+    max_discoveries: MAX_BROWSER_DISCOVERIES, proof_max_age_seconds: BROWSER_PROOF_MAX_AGE_SECONDS,
+    public_reset_count: input.reset ? 1 : 0,
+    first_discovery_timing_precision: discoveries[0].finished_at == null ? "external-upper-bound" : "recorded-timestamp",
+    internal_info_timeout_changed: false };
   const blocked = (reason) => ({ ...result, status: "BLOCKED", reason, action: "STOP_SCORING_INFRASTRUCTURE" });
   if (!browser && !input.creation) {
     if (now >= deadline) return blocked("warmup-window-expired");
@@ -84,7 +98,7 @@ export function evaluateBrowserReadiness(input, threadId, now = Date.now()) {
   if (readAt < creationEnd || readAt > now) throw new Error("页面回读时间顺序错误");
   const proofAt = Math.max(verifiedAt, readAt);
   if (proofAt > deadline) return blocked("warmup-window-expired");
-  if (now - proofAt > BROWSER_WARMUP_SECONDS * 1000) return blocked("stale-health-proof");
+  if (now - proofAt > BROWSER_PROOF_MAX_AGE_SECONDS * 1000) return blocked("stale-health-proof");
   return { ...result, status: "READY", action: "START_MANAGED_SITE", browser_id: verified.id,
     tab_id: creation.tab_id, metadata: verified.metadata, verified_at: new Date(proofAt).toISOString() };
 }

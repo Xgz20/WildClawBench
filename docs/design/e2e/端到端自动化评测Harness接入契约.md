@@ -437,8 +437,8 @@ validation_records:
 | WorkBuddy / Windows | `ee70a67...` 对应 5.5.6.0 身份 V00–V17；`ff5d476...` 另验资源 | 同上；旧双路样本不能自动证明当前默认三路 |
 | QwenWork / Windows | `24771ce...` 单 L1 执行→评分→return 主流程；`c257fbd...` 1.0.6.0 自动 Token 开关与新 L1 采集 | 当前身份串行/并发、管理员 import/report、V12–V17 未全重绑；不声明并发或无人值守全覆盖 |
 | AstronStudio / macOS Intel / 3.3.1 | 20261008 r3 五题执行、功能/美观度评分、return/import幂等及三件套报告完成；Spark X2.5 High/full-access，原生三路峰值有证据 | 当前五题值守及受控恢复范围PASS；保留031控制干预和028前三次Browser失败，不外推新源码自动恢复或10题正式批次 |
-| WorkBuddy / macOS Intel / 5.5.6 | 原五题执行完成，四份有效评分保留；g1已复验真实计时与候选缺陷 | 002提示音/真实hidden状态取证仍为evaluation_error，4/5有效评分，未放行生产 |
-| QwenWork / macOS Intel / 1.2.5 | r2快速五题各正式SUCCEEDED，每题一次发送；核心Token五份真实轨迹对账，最后028在collector1.1.4正式收口 | 模型4高级/1标准，整批models_match=false/integrity.valid=false，评分禁止；缺原生三路峰值。新模型门禁离线通过，仍待新批次真机验收 |
+| WorkBuddy / macOS Intel / 5.5.6 | 20261009 r2 快速五题执行与功能/美观度评分5/5，原生执行/评分turn重叠峰值均3；submission、return/import幂等和四表报告校验通过，功能78.72、美观82.57 | 当前五题值守及显式受控恢复范围PASS；031/033各一次用户额外授权、中断turn和Codex升级登记均保留；旧002取证异常不改写，不外推无人值守或10题 |
+| QwenWork / macOS Intel / 1.2.5 | r3五题正式SUCCEEDED、同为标准、每题一次发送，完整回执有效；r4原生402与r7/r8后续错误按精确session留证；新Web输入/启动竞态修复58项测试通过 | r3原生峰值1，不满足三路验收；r7/r8各首题一次发送后原生failed且正式收口待处理。用户明确因额度暂停新派发，评分/回传报告未通过，仍不放行生产 |
 | DoubaoWork / macOS Intel / 2.31.10 | 当前五题完整执行、功能/美观度评分、submission、return/import幂等与JSON/Markdown/四Sheet报告均完成；原生Agent重叠峰值3 | 值守及受控恢复五题范围PASS；保留002窄屏/Browser失败及跨Codex版本恢复，不外推无人值守、10题或未测架构 |
 | DoubaoWork / Windows；其他未声明架构 | 无本场景完整证据 | NOT_RUN，不凭共用接口推定支持 |
 
@@ -606,3 +606,12 @@ WorkBuddy原生wait_threads此后已恢复compact终态可读，故在该真实�
 
 
 2026-10-09 Web 编排加固独立发行0.3.18：新生成的评分Prompt在依赖安装、构建及站点启动前先进行60秒Browser就绪检查，最多3次发现、2秒/5秒退避和一次官方about:blank创建；空清单仍允许一次初始化，最终须核对本线程唯一iab、tab和真实AX页面。脚本仅核验原始记录并写本题evidence，不修改Codex内置5000毫秒等待。功能或美观度evaluation_error后暂停补位，已活动线程继续收口；含异常的submission可审计，整批仍为NEEDS_ATTENTION，不返回DONE。原有deadline和受限恢复预算不变，旧状态只读分类，旧Prompt、旧安装、评分Rubric和General生产材料不替换。63项Node与31项独立构建/Web/General布局测试通过，独立ZIP验包通过；历史031/033健康回放READY、旧031失败回放BLOCKED，035缺原始AX字段未补造。此为加固源码/发行验证，尚未运行新策略的完整评分，四端准入结论保持。材料见codex-browser-root-cause-20261009/browser-readiness-hardening-release-20261009与专项诊断文档。
+
+
+2026-10-09 WorkBuddy r2新恢复：原031/033已到既有恢复上限，用户通过当前控制会话明确授权两题各追加且仅追加一次；0.3.20将原问答按批次/题号留存SHA，单次grant不改max_retries，归档旧异常后preflight通过，031/033为attempt5，035用原恢复预算为attempt3。三条旧线程公开reset健康复核均READY（033/035中间capacity失败为诊断turn，未计入评分预算）；三个新评分线程分别重新取得本线程唯一iab、实际tab/AX与180秒就绪门禁，通过后启动56476/56477/56478实际站点。当前三题正在评分，028尚未启动；已有001分数/冻结Prompt/候选/执行回执保留，不提前放行。71项评分/就绪与31项构建布局测试、独立0.3.20验包通过；General生产安装与round1不替换。调试材料见workbuddy-r2-resume-20261009/current-scoring-status.json及user-authorization-031-033-once.json。QwenWork按用户明确额度阻断指令暂停新派发，r7/r8各首题已一次发送、原生failed，正式收口仍有待处理项；其余题保持未发送，不将HTTP200错误包或历史404/end_turn串作当前成功证据。
+
+
+同轮用户调试重启升级Codex到26.1007.21159，三个在评分turn被原生标记INTERRUPTED。新增0.3.21中断观察入口留存真实turn/SHA，按原thread/attempt/7200秒deadline续评，retry_count不变；0.3.22升级登记要求本机registrar probe和原生projectId/host/完整目录回读，保留旧registry快照并更新未完成项目，028新版本preflight通过。三个评分线程已继续，033功能76.93/美观86.08和035功能16.66/美观63.88均正式completed，候选缺陷按实际Rubric计分，异常恢复不是候选满分。028通过公开codex app PATH注册并由list_projects唯一回读，首次独立评分已启动；031继续手机端取证。当前源码0.3.23同步完整操作契约，75项评分/就绪测试及独立发行验包通过；完整五题回传报告仍待验。
+
+
+2026-10-09 WorkBuddy r2最终验收：同一冻结五题执行回执integrity.valid=true、原生主任务峰值3，功能和美观度5/5正式completed。031/033用户各一次额外授权完整留存，033/035/031在用户重启Codex后沿原thread/attempt/deadline续评，中断turn和升级26.1007.21159的原项目快照及观察SHA均保留；重启接续没有再增加恢复次数，用户两题各一次授权另有记录，旧失败状态保留。028首次评分完整收口并发布submission，root控制器COMPLETED/active=0。功能均分78.72、美观82.57、完成率100%，独立评分turn峰值3、动态补位完成；035候选语法错误产生真实失分16.66，不是评测异常占位分。正式return ZIP SHA为540eef9995139cbe20947dc4dc12df1866ced8212877ab561bee15e36788349f，管理员import和重复导入幂等、报告JSON/Markdown/XLSX四表预览与XML/公式扫描均PASS，公式错误0。Token总量9987368、请求138、工具138、执行壁钟总量4002.779秒、原生智能体推导总量3712.543秒均5/5覆盖；成本、缓存写入和HTTP尝试仍null/unavailable。原001分数、五份冻结Prompt、manifest和执行回执8项SHA未变，旧失败attempt和budget原值保留。准入为当前本机值守及受控恢复范围PASSED_SCOPED，未外推10题或无人值守；当前已通过AstronStudio/WorkBuddy/DoubaoWork三端，Qwen按用户额度指令暂停，十题正式未启动。最终材料为workbuddy-r2-acceptance-status-final-20261009.json、workbuddy-r2-report-verification-final-20261009.json、workbuddy-r2-offline-return-final-20261009及workbuddy-r2-report-final-20261009；源码orchestrate0.3.23的75项评分/就绪和31项构建布局验证通过、独立验包通过，General生产安装与round1未替换。

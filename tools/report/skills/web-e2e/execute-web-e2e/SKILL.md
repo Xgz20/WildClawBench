@@ -296,3 +296,6 @@ QwenWork Web Driver1.12.7 在 macOS/Windows 均使用绑定页面的有界 CDP P
 execute 1.21.16 / QwenWork Web Driver 1.12.9 在正常执行、恢复和 probe 结束时，用 Playwright `connectOverCDP` 返回对象的公开 `close()` 有界断开调试传输，再退出 Driver。此连接路径只关闭 WebSocket，不发送关闭 Electron 的 `Browser.close` 命令，也不调用 page/context 的关闭接口。执行/恢复记录 `runtime.cdp_disconnect`，probe 记录同名检查结果；断开异常保留诊断，不覆盖原会话终态或重发 Prompt。该变更只属于 Web，General 安装与冻结批次保持原身份；客户端活动期 CDP 失联是否因此恢复仍须真机验证，不以单元测试代替三路验收。
 
 恢复入口必须 await 观察、attention 收口或最终采集完成后才断开传输，确保异步观察错误进入原 try/catch。1.21.15 的首次真机恢复暴露了提前执行 finally 的问题，该版不准入生产；1.21.16 修正执行顺序，仍按原 attempt 验证。
+
+
+execute 1.21.18 / QwenWork Web Driver 1.12.11 优先以可访问 textbox 名称“描述任务”等语义定位唯一可见 Prompt 编辑器，再兼容实际可编辑的 voice-target 控件、placeholder、textarea 和 contenteditable。多个可见匹配一律失败关闭，不用首个/末个位置猜测；查询身份本身也受当前 UI 操作窗口约束。项目入口也会在客户端重启后有界等待唯一新建项目按钮，避免首屏加载竞态；该变更只影响 Web Qwen 入口，General 和已冻结批次不改写；零发送失败、候选无变化且旧 Driver 已退出时仍按既有发送前恢复门禁处理。源码测试不等于新发行真机通过。

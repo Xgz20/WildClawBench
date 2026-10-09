@@ -83,7 +83,7 @@ General/Web 的项目注册器各自独立分发，并采用相同的主窗口�
 
 ## 6. 实现版本与历史验收边界
 
-2026-10-09 当前源码的 Web Skill 版本为：`run-web-e2e 1.4.3`、`execute-web-e2e 1.21.16`、`orchestrate-web-e2e 0.3.18`、`score-web-e2e 4.5.4`、`report-web-e2e 1.2.0`；AstronStudio Driver为`1.12.8`，DoubaoWork Web Driver与共享组件为`0.8.3`。General orchestrate源码为`0.11.2`，只同步本次项目主窗口选择修复，评分契约未变。Web评分Prompt明确允许只读访问独立安装的评分Skill及其受管脚本、参考文档和运行依赖，其他项目、父目录和其他用例仍不可访问，本题写入仍限于`private-scoring/`。当前AstronStudio r3冻结包仍使用orchestrate`0.3.12`并明确指定主窗口URL，General生产安装与round1材料不替换。DoubaoWork 2.31.10使用新版Local File SSE ToolCall dispatcher记录，旧`resultLedger`适配只作为兼容路径。当前逐端验收进度、失败现场和生产准入以[统一接入契约](../e2e/端到端自动化评测Harness接入契约.md)第5章为准，以下客户端状态为2026-10-07历史材料，不外推当前发行通过。
+2026-10-09 当前源码的 Web Skill 版本为：`run-web-e2e 1.4.3`、`execute-web-e2e 1.21.18`、`orchestrate-web-e2e 0.3.23`、`score-web-e2e 4.5.4`、`report-web-e2e 1.2.0`；AstronStudio Driver为`1.12.8`，DoubaoWork Web Driver与共享组件为`0.8.3`。General orchestrate源码为`0.11.2`，只同步本次项目主窗口选择修复，评分契约未变。Web评分Prompt明确允许只读访问独立安装的评分Skill及其受管脚本、参考文档和运行依赖，其他项目、父目录和其他用例仍不可访问，本题写入仍限于`private-scoring/`。当前AstronStudio r3冻结包仍使用orchestrate`0.3.12`并明确指定主窗口URL，General生产安装与round1材料不替换。DoubaoWork 2.31.10使用新版Local File SSE ToolCall dispatcher记录，旧`resultLedger`适配只作为兼容路径。当前逐端验收进度、失败现场和生产准入以[统一接入契约](../e2e/端到端自动化评测Harness接入契约.md)第5章为准，以下客户端状态为2026-10-07历史材料，不外推当前发行通过。
 
 Prompt 输入属于共用发送边界：WorkBuddy、QwenWork 在 macOS 对唯一可见编辑器先尝试受控填充；客户端暴露 contenteditable 但尚未进入可填充状态时，Driver 在同一元素上执行聚焦、全选和键盘插入回退，随后仍必须通过原有 Prompt 回读、一次发送和原生 session 绑定门禁。输入回退不能选择第二个编辑器，也不能把 DOM 文本变化单独当作发送成功。评分控制器对 `evaluation_error` 保留异常语义，并允许在 `max_retries` 范围内归档当前 attempt、恢复评分初始输入、重新 preflight 和创建新评分线程；该路径不改变候选哈希，也不把基础设施异常转换成能力零分。
 
@@ -110,3 +110,9 @@ execute1.21.16/Qwen Web Driver1.12.9 在正常执行、恢复及probe结束时�
 Codex Desktop评分路由的预热不等于可评分。2026-10-09进一步核验发现，失败时正确会话后端存在，信息答复晚于5秒发现窗口；扫描其他会话时的路由拒绝包含正常隔离行为，同时出现的thread/read格式错误没有被证明直接导致Browser发现失败。完整宿主重建及相近配置刷新后，031/033/035均通过实际about:blank创建和自身归属检查，原分数SHA未变；只证明三条Browser健康恢复，WorkBuddy有效评分仍为1/5。详细证据和根因边界见[专项诊断](Codex浏览器评分异常诊断与恢复验证-20261009.md)。
 
 编排0.3.18新增站点启动前的60秒Browser就绪窗口，最多3次发现，空清单退避2秒/5秒，实际创建最多一次；只有本线程唯一iab、唯一创建tab和实际AX状态全部通过校验后才启动站点。外层策略不会改变Codex内置5000毫秒等待。功能或美观度evaluation_error触发暂停补位，保留已活动线程的等待/校验动作及原预算；异常submission仍可审计，但整批保持NEEDS_ATTENTION。旧Prompt不改写，旧结果字段仅在读取时分类；修改限于Web编排，General和评分Rubric不变。
+
+
+0.3.19对就绪记录作真机修正：外层窗口180秒，文档在计时前读取；首调用精确结束时间未知时允许保存实际外部完成界限并标记精度，不反推精确时间。最终健康证明有效期仍60秒，3次发现/一次创建、归属、deadline与评分预算不变。WorkBuddy r2新线程回归仍为空清单，显示线程的只读对照也未恢复；031/033已达既有恢复上限，整批未通过。具体现场、独立发行验证和剩余门禁见专项诊断及共用契约。
+
+
+0.3.20就绪流程增加窗口内一次公开REPL复位，并为收到明确人类授权的指定题提供仅一次额外评分恢复记录入口；默认预算保持，授权与原分数SHA持续复核。WorkBuddy新三个评分线程已各自READY并进入真实评分，完整收口仍待验；生产状态以统一契约及实际回执为准。

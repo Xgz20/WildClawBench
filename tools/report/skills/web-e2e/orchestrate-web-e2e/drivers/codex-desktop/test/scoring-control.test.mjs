@@ -17,6 +17,7 @@ import {
   grantCapacityRetry,
   grantScoringInfrastructureRetry,
   grantEvaluationErrorRetry,
+  grantUserAuthorizedRetry,
   initialize,
   markComplete,
   markTimeout,
@@ -25,6 +26,8 @@ import {
   recordProject,
   recordThread,
   recordWait,
+  recordThreadInterruption,
+  recordDesktopUpgrade,
   resume,
   status,
 } from "../../../scripts/scoring-control.mjs";
@@ -195,6 +198,105 @@ async function recordCompletedWait(root, taskId, sequence = 1, cursor = `cursor-
   }, { now });
 }
 
+async function userRetryFixture() {
+  const root = await fixture();
+  const { state } = await initialize(root, [], { maxRetries: 0 });
+  await registerTask(root, state.tasks[0]);
+  await passPreflight(root);
+  await recordThread(root, "task-1", { threadId: "thread-before-user-grant", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
+  await writeValidScore(root, "task-1");
+  const scoreFile = join(root, "score/tasks/task-1/private-scoring/task_score.json");
+  const score = JSON.parse(await readFile(scoreFile, "utf8"));
+  score.evaluation.status = "evaluation_error";
+  await writeJson(scoreFile, score);
+  await markComplete(root, "task-1");
+  const file = join(root, "human-authorization.json");
+  const authorization = {
+    schema_version: "wildclawbench.web-e2e-user-retry-authorization/v1",
+    batch_id: "batch-1", harness_id: "workbuddy", task_ids: ["task-1"],
+    decision: "approved", additional_attempts_per_task: 1,
+    recorded_at: new Date().toISOString(),
+    source: { kind: "direct-human-user-reply", controller_thread_id: "controller",
+      question_item_id: "question-1", question: "是否授权本题额外一次评分恢复？", answer: "授权一次" },
+  };
+  await writeJson(file, authorization);
+  return { root, file, authorization, scoreFile };
+}
+
+test("explicit user grant preserves frozen budgets and permits exactly one archived recovery", async () => {
+  const { root, file, scoreFile } = await userRetryFixture();
+  const before = await readFile(scoreFile);
+  const grant = await grantUserAuthorizedRetry(root, "task-1", file, "用户明确授权一次");
+  assert.equal(grant.max_retries, 0);
+  assert.equal(grant.score_timeout_seconds, 7200);
+  assert.equal(grant.tasks[0].retry_count, 0);
+  assert.equal(grant.tasks[0].phase, "COMPLETED");
+  assert.equal(grant.tasks[0].user_authorized_retry_grant.additional_attempts, 1);
+  assert.deepEqual(await readFile(scoreFile), before);
+  await assert.rejects(grantUserAuthorizedRetry(root, "task-1", file, "again"), /唯一的用户/);
+  const retry = await prepareRetry(root, "task-1", "Browser 已恢复");
+  assert.equal(retry.tasks[0].retry_count, 1);
+  assert.equal(retry.tasks[0].max_retries, 0);
+  const archive = retry.tasks[0].attempts[0].error_receipt.archive_root;
+  assert.deepEqual(await readFile(join(root, archive, "private-scoring/task_score.json")), before);
+  await passPreflight(root, { scoreSkillDir: grant.score_skill.path });
+  await recordThread(root, "task-1", { threadId: "thread-user-once", hostId: "local" });
+  await recordCompletedWait(root, "task-1");
+  await writeValidScore(root, "task-1");
+  const score = JSON.parse(await readFile(scoreFile, "utf8")); score.evaluation.status = "evaluation_error";
+  await writeJson(scoreFile, score);
+  await markComplete(root, "task-1");
+  await assert.rejects(prepareRetry(root, "task-1", "second"), /最大重试次数/);
+  await assert.rejects(grantUserAuthorizedRetry(root, "task-1", file, "second"), /唯一的用户/);
+});
+
+test("user grant rejects absent approval, wrong scope and more than one attempt without writing state", async () => {
+  const { root, file, authorization } = await userRetryFixture();
+  const stateFile = join(root, "score/.orchestrate-web-e2e/scoring-automation-state.json");
+  const before = await readFile(stateFile);
+  for (const change of [{ decision: "pending" }, { batch_id: "other" }, { harness_id: "qwenwork" },
+    { task_ids: ["other-task"] }, { additional_attempts_per_task: 2 },
+    { source: { ...authorization.source, kind: "agent-inference" } },
+    { source: { ...authorization.source, answer: "" } }]) {
+    await writeJson(file, { ...authorization, ...change });
+    await assert.rejects(grantUserAuthorizedRetry(root, "task-1", file, "wrong"), /授权不匹配/);
+    assert.deepEqual(await readFile(stateFile), before);
+  }
+});
+
+test("user grant is revalidated after source file loss and refuses preserved receipt drift", async () => {
+  const { root, file } = await userRetryFixture();
+  const result = await grantUserAuthorizedRetry(root, "task-1", file, "一次恢复");
+  await rm(file);
+  assert.equal((await status(root)).tasks[0].user_authorized_retry_grant.additional_attempts, 1);
+  const preserved = join(root, result.tasks[0].user_authorized_retry_grant.observation_file);
+  await writeFile(preserved, "{}\n");
+  await assert.rejects(status(root), /授权记录发生漂移/);
+});
+
+test("user-authorized retry recovers an interrupted archive without consuming a second opportunity", async () => {
+  const { root, file } = await userRetryFixture();
+  await grantUserAuthorizedRetry(root, "task-1", file, "用户一次授权");
+  await assert.rejects(prepareRetry(root, "task-1", "archive recovery", { failAfterArchiveMove: true }), /归档/);
+  const retry = await prepareRetry(root, "task-1", "archive recovery");
+  assert.equal(retry.tasks[0].retry_count, 1);
+  assert.equal(retry.tasks[0].user_authorized_retry_grant.additional_attempts, 1);
+  assert.ok(retry.tasks[0].attempts[0].error_receipt);
+  assert.equal((await status(root)).tasks[0].phase, "PROJECT_REGISTERED");
+});
+
+test("user grant rejects ordinary candidate loss and live scoring runtime", async () => {
+  const { root, file, scoreFile } = await userRetryFixture();
+  const score = JSON.parse(await readFile(scoreFile, "utf8"));
+  score.evaluation.status = "completed";
+  await writeJson(scoreFile, score);
+  await assert.rejects(grantUserAuthorizedRetry(root, "task-1", file, "candidate loss"), /不是评测基础设施异常/);
+  score.evaluation.status = "evaluation_error"; await writeJson(scoreFile, score);
+  await mkdir(join(root, "score/tasks/task-1/private-scoring/runtime-workspace"));
+  await assert.rejects(grantUserAuthorizedRetry(root, "task-1", file, "live runtime"), /runtime-state|运行时/);
+});
+
 test("init defaults to three scoring slots and assigns immutable per-task ports", async () => {
   const root = await fixture(["task-1", "task-2"]);
   const { state } = await initialize(root, ["task-2", "task-1"]);
@@ -213,9 +315,11 @@ test("init defaults to three scoring slots and assigns immutable per-task ports"
   const prompt = await readFile(state.tasks[0].scoring_prompt_file, "utf8");
   assert.match(prompt, /cua\.createBrowserTab/);
   assert.match(prompt, /空清单不证明初始化失败/);
-  assert.match(prompt, /暖启动窗口为60秒，最多3次发现检查/);
+  assert.match(prompt, /180秒就绪窗口，最多3次发现检查/);
   assert.match(prompt, /browser-readiness\.mjs/);
   assert.match(prompt, /只有返回READY才能/);
+  assert.match(prompt, /finished_at_upper_bound/);
+  assert.match(prompt, /不用工具耗时反推完成时间/);
   assert.match(prompt, /启动站点、安装或构建依赖、开始功能与美观度评分之前/);
   assert.match(prompt, /允许只读访问当前已独立安装的 score-web-e2e Skill/);
   assert.match(prompt, /SKILL\.md、references\/、scripts\/、vendor\//);
@@ -765,6 +869,74 @@ function nativePoll(threadId, status = "completed", completedAt = 1791162718) {
     latestTurn: { id: `turn-${threadId}`, status, completedAt, error: null },
   };
 }
+
+test("Desktop restart interruption preserves the original attempt and allows its continued turn to finish", async () => {
+  const root = await fixture(); const { state } = await initialize(root);
+  await registerTask(root, state.tasks[0]); await passPreflight(root);
+  const initial = await recordThread(root, "task-1", { threadId: "same-thread", hostId: "local" });
+  const deadline = initial.tasks[0].attempts[0].deadline_at;
+  const filename = join(root, "interrupted.json");
+  const poll = nativePoll("same-thread", "interrupted", Math.floor(Date.now()/1000));
+  await writeJson(filename, poll);
+  await recordThreadInterruption(root, "task-1", filename);
+  const repeated = await recordThreadInterruption(root, "task-1", filename);
+  assert.equal(repeated.tasks[0].phase, "SCORING");
+  assert.equal(repeated.tasks[0].attempts.length, 1);
+  assert.equal(repeated.tasks[0].retry_count, 0);
+  assert.equal(repeated.tasks[0].attempts[0].deadline_at, deadline);
+  assert.equal(repeated.tasks[0].attempts[0].thread_interruptions.length, 1);
+  assert.equal(repeated.active_score_tasks.length, 1);
+  await recordCompletedWait(root, "task-1"); await writeValidScore(root, "task-1");
+  const completed = await markComplete(root, "task-1");
+  assert.equal(completed.phase, "COMPLETED");
+  const evidence = completed.tasks[0].attempts[0].thread_interruptions[0];
+  await writeFile(join(root, evidence.observation_file), "{}\n");
+  await assert.rejects(status(root), /中断证据发生漂移/);
+});
+
+test("continued attempt rejects failed turns, foreign identity and expired deadlines", async () => {
+  const root=await fixture(); const {state}=await initialize(root);
+  await registerTask(root,state.tasks[0]); await passPreflight(root);
+  await recordThread(root,"task-1",{threadId:"same-thread",hostId:"local"});
+  const filename=join(root,"interrupted.json");
+  await writeJson(filename,nativePoll("same-thread","failed",Math.floor(Date.now()/1000)));
+  await assert.rejects(recordThreadInterruption(root,"task-1",filename),/INTERRUPTED/);
+  await writeJson(filename,nativePoll("other-thread","interrupted",Math.floor(Date.now()/1000)));
+  await assert.rejects(recordThreadInterruption(root,"task-1",filename),/匹配当前 attempt/);
+  await writeJson(filename,nativePoll("same-thread","interrupted",Math.floor(Date.now()/1000)));
+  const deadline=(await status(root)).tasks[0].attempts[0].deadline_at;
+  await assert.rejects(recordThreadInterruption(root,"task-1",filename,{now:new Date(Date.parse(deadline)+1000)}),/deadline 已过/);
+});
+
+test("explicit Desktop upgrade binds native project paths, preserves old registration and resets pending preflight", async () => {
+  const root=await fixture(["task-1","task-2"]);const {state}=await initialize(root);
+  await registerTask(root,state.tasks[0]);const scoreSkillDir=await scoreSkillFixture();await passPreflight(root,{scoreSkillDir});
+  const p=join(root,"probe.json"),l=join(root,"projects.json");
+  await writeJson(p,{schema_version:"wildclawbench.codex-project-registration/v1",status:"PROBED",desktop_version:"new-version",app_discovery:{identity_verified:true,version:"new-version"}});
+  const projects={projects:[{projectId:"project-task-1",hostId:"local",path:state.tasks[0].score_dir}]};
+  await writeJson(l,projects);
+  const upgraded=await recordDesktopUpgrade(root,p,l,"用户升级并要求续评");
+  assert.equal(upgraded.tasks[0].project_desktop_version,"new-version");
+  assert.equal(upgraded.tasks[0].preflight.status,"PENDING");
+  assert.equal(upgraded.score_timeout_seconds,7200);assert.equal(upgraded.max_retries,1);
+  const disk=JSON.parse(await readFile(join(root,"score/.orchestrate-web-e2e/scoring-automation-state.json"),"utf8"));
+  assert.equal(disk.desktop_upgrades[0].previous_project_registry[0].desktop_version,"26.901.51231");
+  const before=await readFile(join(root,"score/.orchestrate-web-e2e/scoring-automation-state.json"));
+  await recordDesktopUpgrade(root,p,l,"repeat");assert.deepEqual(await readFile(join(root,"score/.orchestrate-web-e2e/scoring-automation-state.json")),before);
+  const passed=await preflight(root,{taskId:"task-1",desktopVersion:"new-version",scoreSkillDir});assert.equal(passed.tasks[0].preflight.status,"PASSED");
+  const ref=disk.desktop_upgrades[0].projects;await writeFile(join(root,ref.observation_file),"{}\n");
+  await assert.rejects(status(root),/升级观察证据发生漂移/);
+});
+
+test("Desktop upgrade refuses an altered project mapping without touching registry or budgets", async () => {
+  const root=await fixture();const {state}=await initialize(root);await registerTask(root,state.tasks[0]);
+  const p=join(root,"probe.json"),l=join(root,"projects.json");
+  await writeJson(p,{schema_version:"wildclawbench.codex-project-registration/v1",status:"PROBED",desktop_version:"new-version",app_discovery:{identity_verified:true,version:"new-version"}});
+  await writeJson(l,{projects:[{projectId:"project-task-1",hostId:"local",path:root}]});
+  const f=join(root,"score/.orchestrate-web-e2e/project-registry.json"),before=await readFile(f);
+  await assert.rejects(recordDesktopUpgrade(root,p,l,"bad identity"),/项目身份回读不一致/);
+  assert.deepEqual(await readFile(f),before);
+});
 
 test("native terminal poll uses Unix seconds, persists evidence, and rejects evidence drift", async () => {
   const root = await fixture();

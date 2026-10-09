@@ -26,7 +26,8 @@ test("ready proof requires own tab, actual AX and bounded observation time", () 
   const result = evaluate(ready());
   assert.equal(result.status, "READY");
   assert.equal(result.internal_info_timeout_changed, false);
-  assert.equal(result.warmup_seconds, 60);
+  assert.equal(result.warmup_seconds, 180);
+  assert.equal(result.proof_max_age_seconds, 60);
   assert.equal(result.browser_id, "2");
   assert.equal(result.verified_at, at(10));
 });
@@ -49,14 +50,54 @@ test("empty inventories use two bounded backoffs then allow one official initial
 });
 
 test("warmup deadline blocks empty, late creation and late page readback", () => {
-  assert.equal(evaluate({ ...ready(), discoveries: emptyDiscoveries(1), creation: null }, 60).status, "BLOCKED");
+  assert.equal(evaluate({ ...ready(), discoveries: emptyDiscoveries(1), creation: null }, 180).status, "BLOCKED");
   const creation = ready();
-  creation.creation.finished_at = at(61);
-  assert.equal(evaluate(creation, 62).reason, "warmup-window-expired");
+  creation.creation.finished_at = at(181);
+  assert.equal(evaluate(creation, 182).reason, "warmup-window-expired");
   const readback = ready();
-  readback.readback.finished_at = at(61);
-  assert.equal(evaluate(readback, 62).reason, "warmup-window-expired");
+  readback.readback.finished_at = at(181);
+  assert.equal(evaluate(readback, 182).reason, "warmup-window-expired");
   assert.equal(evaluate(ready(), 71).reason, "stale-health-proof");
+});
+
+test("first CUA call accepts an honest external end bound and permits agent round-trip overhead", () => {
+  const input = ready();
+  input.discoveries = [
+    { started_at: at(0), finished_at: null, finished_at_upper_bound: at(26), state: { browsers: [] } },
+    { started_at: at(28), finished_at: at(33), state: { browsers: [] } },
+    { started_at: at(38), finished_at: at(43), state: own() },
+  ];
+  input.creation = { ...input.creation, started_at: at(76), finished_at: at(81) };
+  input.verification.finished_at = at(88);
+  input.readback.finished_at = at(81);
+  const result = evaluate(input, 90);
+  assert.equal(result.status, "READY");
+  assert.equal(result.first_discovery_timing_precision, "external-upper-bound");
+  assert.equal(input.discoveries[0].finished_at, null);
+  input.discoveries[1].finished_at_upper_bound = input.discoveries[1].finished_at;
+  input.discoveries[1].finished_at = null;
+  assert.throws(() => evaluate(input, 90), /首调用外部完成界限/);
+});
+
+test("missing or future first-call bounds fail closed without inferring native timings", () => {
+  const input = ready();
+  input.discoveries[0].finished_at = null;
+  input.discoveries[0].tool_wall_time_seconds = 5;
+  assert.throws(() => evaluate(input), /首调用外部完成界限/);
+  input.discoveries[0].finished_at_upper_bound = at(12);
+  assert.throws(() => evaluate(input), /时间顺序错误/);
+});
+
+test("a single public reset precedes discovery within the same warmup window", () => {
+  const input = ready();
+  input.reset = { attempt_count: 1, started_at: at(0), finished_at: at(1) };
+  input.discoveries[0].started_at = at(1);
+  assert.equal(evaluate(input).public_reset_count, 1);
+  input.reset.attempt_count = 2;
+  assert.throws(() => evaluate(input), /复位最多一次/);
+  input.reset.attempt_count = 1;
+  input.reset.finished_at = at(2);
+  assert.throws(() => evaluate(input), /时间顺序错误/);
 });
 
 test("foreign and ambiguous inventories fail closed", () => {

@@ -106,11 +106,11 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
 1. 读取该题生成的 `scoring_prompt_file`。
    题目隔离限制不禁止读取已独立安装的 `score-web-e2e` Skill、参考文档、受管脚本及其运行依赖；生成的 Prompt 必须明确这项只读授权。不得访问其他项目、父目录或其他用例，所有本题写入仍限定在 `private-scoring/`，候选 `workspace/` 保持只读。
 2. 确认当前题的 `preflight.status=PASSED` 后，调用 Desktop 内置 `create_thread`，目标为已记录的 `projectId`，环境固定为 `{type: "local"}`。除非用户显式指定，不覆盖模型与推理强度。
-3. `create_thread` 返回后，控制任务必须马上调用 Desktop 内置 `open_in_codex`，目标为 `{type: "browser", url: "about:blank"}`，并传入刚返回的 `threadId`；返回 `queued` 只表示请求已入队。0.3.18 新生成的 Prompt 要求在安装依赖、构建、启动站点及评分之前先完成 Browser 就绪检查；既有冻结 Prompt 不改写。
+3. `create_thread` 返回后，控制任务必须马上调用 Desktop 内置 `open_in_codex`，目标为 `{type: "browser", url: "about:blank"}`，并传入刚返回的 `threadId`；返回 `queued` 只表示请求已入队。0.3.23 新生成的 Prompt 要求在安装依赖、构建、启动站点及评分之前先完成 Browser 就绪检查；既有冻结 Prompt 不改写。
 
-   就绪窗口为 60 秒，发现检查最多 3 次，第一次 CUA 调用遵循工具要求，只调用 `cua.getState()`。第一次为空时，评分线程可自己调用一次 `open_in_codex`（`about:blank`，省略 `threadId`）；后续空清单分别退避 2 秒和 5 秒再发现，全部检查仍受总窗口约束。发现唯一属于本线程的 `iab` 后，或三次发现仍为空但窗口尚未耗尽时，仅一次用公开 `cua.createBrowserTab("iab", "about:blank", {visible:false})` 实际初始化，再核验本线程 `metadata.codexSessionId`、创建的唯一 tab 和实际 AX 页面。空清单不证明创建不可用；外国会话、重复 iab、创建失败或窗口耗尽必须停止。禁止父会话 Browser、Chrome、headless、替代运行时及私有管道。
+   就绪窗口为 180 秒，发现检查最多 3 次，窗口计时前先读取评分 Skill 和 helper 文档。在发现前仅一次调用公开 `mcp__cua_repl.js_reset`，记录实际起止时间及 `attempt_count=1`，复位属于180秒总窗口。随后首次 CUA js 调用遵循工具要求，只调用 `cua.getState()`（可以赋给变量）；返回后立即记录外部观察时间 `finished_at_upper_bound`，精确 `finished_at` 未知时保持 null。helper 只对首调用接受这一实际外部界限并标记时间精度，不用工具耗时反推精确结束时间。第一次为空时，评分线程可自己调用一次 `open_in_codex`（`about:blank`，省略 `threadId`）；后续空清单分别退避 2 秒和 5 秒再发现，全部检查仍受总窗口约束。发现唯一属于本线程的 `iab` 后，或三次发现仍为空但窗口尚未耗尽时，仅一次用公开 `cua.createBrowserTab("iab", "about:blank", {visible:false})` 实际初始化，再核验本线程 `metadata.codexSessionId`、创建的唯一 tab 和实际 AX 页面。空清单不证明创建不可用；外国会话、重复 iab、创建失败或窗口耗尽必须停止。禁止父会话 Browser、Chrome、headless、替代运行时及私有管道。
 
-   评分线程将原始观察保存到本题 `private-scoring/evidence/browser-readiness-input.json`，字段为 `task_id`、实际 `thread_id`、`started_at`、`discoveries`（每次 `started_at/finished_at/state`）、`creation`（`attempt_count=1/success/tab_id/started_at/finished_at`）、`verification`（`finished_at/state`）及 `readback`（`finished_at/url/ax_state`，可使用创建返回的实际 AX 状态）。时间使用实际 ISO 时间；未发生的创建或复查省略，不能补造。生成的 Prompt 明确允许读取和运行本次独立安装的编排 helper：
+   评分线程将原始观察保存到本题 `private-scoring/evidence/browser-readiness-input.json`，字段为 `task_id`、实际 `thread_id`、`started_at`、可选 `reset`（`attempt_count/started_at/finished_at`）、`discoveries`（每次 `started_at/finished_at/state`，首调用可为 `finished_at=null/finished_at_upper_bound`）、`creation`（`attempt_count=1/success/tab_id/started_at/finished_at`）、`verification`（`finished_at/state`）及 `readback`（`finished_at/url/ax_state`，可使用创建返回的实际 AX 状态）。时间使用实际 ISO 时间；未发生的创建或复查省略，不能补造。生成的 Prompt 明确允许读取和运行本次独立安装的编排 helper：
 
    ```bash
    node <installed-orchestrate-web-e2e-dir>/scripts/browser-readiness.mjs \
@@ -118,7 +118,7 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
      --input private-scoring/evidence/browser-readiness-input.json
    ```
 
-   helper 原子写入 `browser-readiness.json`，返回 `RETRY_DISCOVERY`、`CHECKING`、`READY` 或 `BLOCKED`；它只核验记录，不操作 Browser。只有 `READY` 才按 `score-web-e2e` 启动受管站点，并让同一 Browser 打开本题固定评分端口的实际入口。`BLOCKED`、校验错误或实际工具失败按评分 Skill 生成 `evaluation_error` 并结束当前 attempt。60 秒是外层有界预热，不修改 Codex 内置 5 秒信息等待，不增加评分 attempt 或恢复预算，也不要求修改 Desktop 安装文件。
+   helper 原子写入 `browser-readiness.json`，返回 `RETRY_DISCOVERY`、`CHECKING`、`READY` 或 `BLOCKED`；它只核验记录，不操作 Browser。只有 `READY` 才按 `score-web-e2e` 启动受管站点，并让同一 Browser 打开本题固定评分端口的实际入口。`BLOCKED`、校验错误或实际工具失败按评分 Skill 生成 `evaluation_error` 并结束当前 attempt。180 秒是外层有界预热，不修改 Codex 内置 5 秒信息等待，不增加评分 attempt 或恢复预算，也不要求修改 Desktop 安装文件。最终健康证明仍须在 60 秒内使用，不能用过期记录启动站点。
 4. 把返回的 `threadId`、`hostId` 记录到状态：
 
    ```bash
@@ -161,6 +161,16 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
 
    Browser 面板没有实例、线程无法绑定 Codex Desktop Browser、或截图/交互因评分基础设施失联时，评分 Agent 必须生成 `evaluation_error`，这不代表候选能力得分；仅美观度取证失败时也可通过 `aesthetic.status=evaluation_error` 进入恢复。控制任务在确认该题已记录 `COMPLETED` 终态、评分文件仍有功能或美观度 `evaluation_error` 且受管服务已清理后，可调用 `grant-evaluation-error-retry --retry-reason <说明>`，为一次基础设施恢复归档旧 attempt、重新回到 `PROJECT_REGISTERED`，然后重新 preflight 和创建独立评分线程。该恢复最多允许两次，仍失败时保留 `evaluation_error` 并停止，不得把离线或父会话取证升级为生产评分。
 
+   0.3.20 增加显式用户授权的单次恢复入口。只有控制会话已直接收到用户针对具体批次/题号“再评分一次”的明确授权，才可登记；诊断线程或评分线程的建议不构成授权。授权记录声明 `schema_version=wildclawbench.web-e2e-user-retry-authorization/v1`、`batch_id`、`harness_id`、唯一 `task_ids`、`decision=approved`、`additional_attempts_per_task=1`、实际 `recorded_at`，以及 `source.kind=direct-human-user-reply`、`controller_thread_id`、`question_item_id`、原 `question/answer`。JSON 用于绑定和保存已经收到的人类回复，脚本不能认证人类或代替用户决定。仅接受当前预算已耗尽、原生 COMPLETED 且正式评分标记 evaluation_error、候选/初始输入未漂移和运行时已清理的题：
+
+   ```bash
+   node <skill-dir>/scripts/scoring-control.mjs grant-user-authorized-retry \
+     --package-root <harness-root> --task-id <authorized-task-id> \
+     --authorization-file <absolute-user-reply-record.json> --retry-reason <说明>
+   ```
+
+   此入口仅登记该题唯一一次额外机会，不自动归档或派发。授权原文复制到控制目录并记录 SHA，恢复时复核；再次登记被拒绝。确认自身 Browser 健康后再调用原 `prepare-retry` 和 preflight，原 `max_retries` 不变，旧分数完整归档，授权绑定的原分数 SHA 在归档后继续复核。额外 attempt 再次失败保留 NEEDS_ATTENTION，不能通过重复登记授权增加次数。独立只读健康诊断因模型容量不足结束时，不记为评分 attempt 或消耗这次评分机会。
+
    一个评分任务必须实际使用 Codex Desktop 内置 Browser，并由 `$score-web-e2e` 生成 `private-scoring/task_score.json`。评分任务只能写 `private-scoring/`；候选 `workspace/` 是只读输入。站点端口冲突时优先改启动参数或环境变量；只有受管启动日志已证明冲突且端口无法外部覆盖时，评分 Skill 才能通过 `managed_runtime.mjs port-override` 修改运行时副本中的唯一数字端口并落审计。execution/score 候选原件仍不可修改，其他源码调整仍禁止。
 5. 完成后让控制脚本校验身份、哈希、执行状态和证据路径：
 
@@ -184,3 +194,10 @@ node <skill-dir>/scripts/scoring-control.mjs resume \
 ```
 
 严格执行返回的 `recommended_actions`；只有串行兼容控制器才读取 `recommended_action`。`WAIT_EXISTING_THREAD` 必须带已保存的 `after_cursor` 查询原 `threadId`；`BUILD_SUBMISSION` 或 `RETRY_SUBMISSION` 执行 `build-submission`；不得因为控制任务或 Desktop 重启而重新 `init`、覆盖 attempt 或直接创建新任务。Desktop 自身重启需要用户或独立外部 watchdog 重新拉起应用，控制任务不能在终止自身宿主后继续执行。
+
+
+## Desktop 重启后的同线程接续
+
+0.3.21 起，用户重启 Desktop 并要求继续尚未完成的评分时，可将 `wait_threads` 原样返回的 INTERRUPTED poll 保存后调用 `record-thread-interruption --terminal-observation <file>`。仅接受当前 SCORING、未记最终终态且原 deadline 未过的同 thread/host；中断 turn 单独留存于 thread-interruptions 并绑定 SHA，原 attempt、评分槽、retry_count、deadline 保持。控制器在消息派发前查询原线程；仍活动时只等待，明确中断后向原线程发送一次继续指令，不创建新线程。新 turn 最终完成时仍走 record-wait/mark-complete，所有历史中断证据持续复核。普通 FAILED/CANCELLED、迟到结果或已收口题不能通过此入口续评。宿主重启后的旧 Browser 健康证明需要另存原件并重核，本题服务和接收器按受管状态恢复。
+
+0.3.22 起，客户端升级可以通过显式 `record-desktop-upgrade --desktop-probe <registrar-probe.json> --project-observation <list-projects.json> --upgrade-reason <说明>` 记录恢复。probe 必须包含真实身份已验证的 Desktop 版本，原生 list_projects 必须按已登记的 projectId/host/规范化绝对路径逐一唯一回读。大清单可保留原件并提供带原始 SHA、尺寸和来源的精确目录子集，项目身份字段不能改写。原项目登记版本作为快照留存，观察文件复制留 SHA；当前 registry 及未完成项目更新为回读版本，待评分题必须重新前检，已完成评分及其旧登记保持。该入口不修改候选、模型、Prompt、旧分数或预算；普通 record-project/preflight 继续拒绝未经记录的版本混用。升级后的 Browser/服务兼容性仍需真实验证，显式升级记录本身不证明生产通过。

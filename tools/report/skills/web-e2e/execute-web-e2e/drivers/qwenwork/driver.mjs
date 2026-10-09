@@ -804,9 +804,12 @@ async function createQwenProject(page, config, state, identityInfo, timeout) {
   }
 
   const baselineProjectIds = new Set((await queryProjects(config.sessionDb)).map((project) => project.projectId));
-  const newProjectButtons = await visibleLocators(page.locator('button[aria-label="新建项目"]'));
-  if (!newProjectButtons.length) throw new Error("QwenWork 找不到“新建项目”入口");
-  await newProjectButtons[newProjectButtons.length - 1].evaluate((element) => element.click());
+  const newProjectButton = await waitForUniqueVisible(
+    () => visibleLocators(page.locator('button[aria-label="新建项目"]')),
+    timeout,
+    "QwenWork 新建项目入口",
+  );
+  await newProjectButton.evaluate((element) => element.click());
   const dialog = page.getByRole("dialog", { name: "新建个人项目" });
   await dialog.waitFor({ state: "visible", timeout });
   const projectName = projectNameForAttempt(identityInfo, state);
@@ -1003,18 +1006,22 @@ async function archiveRetryablePreSendFailure(config, state) {
   return archiveDir;
 }
 
-async function findPromptEditor(page, timeout) {
+export async function findPromptEditor(page, timeout) {
   const candidates = [
-    page.locator('[data-voice-input-target="chat-input"]'),
-    page.getByPlaceholder(/输入你的问题|拖入文件|调用技能与指令/),
+    page.getByRole("textbox", { name: /^(?:描述任务|输入你的问题|Describe (?:a )?task)/iu }).filter({ visible: true }),
+    page.locator('[data-voice-input-target="chat-input"]:is(textarea,[contenteditable="true"]):visible, [data-voice-input-target="chat-input"] :is(textarea,[contenteditable="true"]):visible'),
+    page.getByPlaceholder(/输入你的问题|拖入文件|调用技能与指令/).filter({ visible: true }),
     page.locator("textarea:visible"),
     page.locator('[contenteditable="true"]:visible'),
   ];
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     for (const locator of candidates) {
-      const matches = await visibleLocators(locator);
-      if (matches.length) return matches[matches.length - 1];
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      const count = await withOperationTimeout(locator.count(), remaining, "核验 QwenWork Prompt 输入框");
+      if (count > 1) throw new Error(`QwenWork Prompt 输入框身份不唯一：${count}`);
+      if (count === 1) return locator;
     }
     await sleep(250);
   }
