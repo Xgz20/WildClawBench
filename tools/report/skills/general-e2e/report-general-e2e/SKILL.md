@@ -15,6 +15,8 @@ rollout profile 2 同时提供 Token 和原生任务耗时。Token 从去重并�
 
 ## 当前能力
 
+`0.7.4` 提供 `astronstudio_context_diagnosis.py`：从明确选中的执行身份、rollout SHA和原报告用量做只读诊断，统计思考、助手正文、工具参数和工具返回字符，关联相邻请求的原生输入增量。有新内容但累计usage未推进的区间单独保留，不能套用旧usage或并入下一次响应。字符/Token换算只使用本轮已计量文本的经验分布，并标记为估计；完整请求缺失时不作精确输入角色归因。
+
 `0.7.1` 增加：分组工具表头、逐字段覆盖及部分小计、中文分类与用例数、秒级Excel名称、`--target-unit`领导版，以及独立的 `token_growth_analysis.py` 请求级 Token 增长分析。目标单元用于文字总结，各表保留全部参评单元。`report.display_overrides.unit_model_labels`可带`label/reason`修改展示，不改原模型验证信息。采集后的通用资源补充层会在报告时重新核验并复算。
 
 不同冻结来源使用`scripts/selected_report.py --workspace-root ABS --batch-root ABS --source-index ABS --task-index ABS`显式逐题选择；默认只读，追加输出目录与Excel运行时才发布。保留每条原批次/attempt身份和资源修正谱系。普通报告同时生成`developer-source-index.json`及`developer-task-index.json`供研发打包。
@@ -74,6 +76,20 @@ python scripts/token_growth_analysis.py \
 ```
 
 输出首轮/末轮输入 Token、末轮/首轮增长倍数、每轮输入斜率、输入/输出/推理合计和归一化交互曲线。`system_prompt_tokens` 在没有完整 outbound request role payload 时必须保持 unavailable；首轮输入只能作为混合基线，不能解释为纯系统提示词。
+
+### AstronStudio 输入增长定位
+
+完成结果选择并生成逐题 `TASK_INDEX.json` 后，提供同源报告JSON与绑定rollout，可进一步定位大幅输入增长前的内容来源。支持索引引用的rollout补充层或原执行trace-index。默认报告路径为根目录reports/final，也可显式指定：
+
+```bash
+python scripts/astronstudio_context_diagnosis.py \
+  --round-root /absolute/evaluation-root \
+  --task-index /absolute/evaluation-root/TASK_INDEX.json \
+  --report-json /absolute/evaluation-root/reports/final/general_e2e_report_data.json \
+  --output-dir /absolute/evaluation-root/reports/context-diagnosis-new
+```
+
+输出Markdown、JSON及相邻请求变化CSV；原始内容只保存行号、SHA和长度，不复制完整思考正文。`--jump-threshold`默认为10000 Token，是排查筛选条件，不是能力评分或因果判定阈值。输出目录须为新的目录，原回执和结果不覆盖。
 
 若回传包含 `unit/evidence/timing-supplements/<task-id>/`，须按归档的运行时请求起止时间和原 execution record 的 `prompt.sent_at` 复算，同时核对它绑定的 Token 补采 SHA。原生请求生命周期为 `agent_duration_seconds`，发送到原生完成的流程时间为 `duration_seconds`；不等同于模型推理时间，批次墙钟时间仍按冻结 execution record 计算。任一补采漂移均拒绝报告，不覆盖旧评分、原始证据或旧报告。
 
