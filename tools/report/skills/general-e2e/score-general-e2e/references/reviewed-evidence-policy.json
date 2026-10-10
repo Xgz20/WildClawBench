@@ -193,6 +193,30 @@
       "original_contract_sha256": "c05fee4688e9919ac6701b1f0357069b5aec7b9982f00cdfe3e9ab281be4722d",
       "harness": "astronstudio",
       "trace_schema_version": 1
+    },
+    "764e8ef0bbb00bc1150a1bddaa9ec31979cabfd34f1447386f14038e30d61d61": {
+      "task_id": "03_Social_Interaction_task_003_colleague_leave_reply",
+      "grading_type": "llm_judge",
+      "scoring_input_scope": "candidate_final_response_and_frozen_prompt",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "132a3e46604dd4d0f7dcbd810d77a37a6fc8b029fc1672e3e293ef1f7f98d229"
+    },
+    "f077ef4519db1db596a3ec8302b68503d7272e7c87ecb0702582bf43db22de75": {
+      "task_id": "05_Creative_Synthesis_task_003_brand_name_directions",
+      "grading_type": "llm_judge",
+      "scoring_input_scope": "candidate_final_response_and_frozen_prompt",
+      "tool_history_required": false,
+      "final_response_required": true,
+      "candidate_required": true,
+      "original_contract_sha256": "1df4f143fdb08c699650456e6b7e9ad94409273ad5eeef8227bf70ebf61a39ff"
     }
-  }
+  },
+  "additional_source_audits": [
+    {
+      "file": "reviewed-fast-output-evidence-audit.json",
+      "sha256": "8da456479630df670e09461d66d002fb1a7087cb4c54245ccf96241f96939c84"
+    }
+  ]
 }

@@ -15,7 +15,7 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
-只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.12.4/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt发送固定单槽。AstronStudio/WorkBuddy/QwenWork默认3个后台槽，队列算法支持1–8，并按可信终态动态补位。AstronStudio 切换 Workspace 时先确认项目选择菜单已关闭，再使用侧边栏添加路径；若项目选择控件已经出现但绝对路径尚未显示，会转入原生项目 ID、目标项目行和新对话路由核验，确认 route→project→cwd 一致后才接受；未完成身份回读时不发送 Prompt。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.13.8/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt发送固定单槽。AstronStudio/WorkBuddy/QwenWork默认3个后台槽，队列算法支持1–8，并按可信终态动态补位。AstronStudio 切换 Workspace 时先确认项目选择菜单已关闭，再使用侧边栏添加路径；若项目选择控件已经出现但绝对路径尚未显示，会转入原生项目 ID、目标项目行和新对话路由核验，确认 route→project→cwd 一致后才接受；未完成身份回读时不发送 Prompt。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
 
 ## DoubaoWork macOS 开发入口
 
@@ -135,6 +135,8 @@ QwenWork 1.2.0 可能在 Prompt 发送后先写入 conversation/sub-chat/stream�
 
 ## AstronStudio macOS 只读探针
 
+`0.13.8` 使用共用 `sqlite-snapshot 1.0.0` 复制状态库及已有 WAL/SHM：macOS 优先原生 APFS 克隆，其他文件系统或平台回退到独占文件复制。快照先在私有目录生成，再无覆盖发布；首次冻结配置的预检仍做整库 quick_check；执行前/恢复的新鲜运行期探针逐表完整检查实际使用的运行投影表，不重复扫描历史数据，仍重新核对进程、锁屏、模型、权限和活跃会话。高频执行观察对实际读取的完整投影表逐表 quick_check，冻结配置明确记录范围，空范围、未知表和缺表均拒绝。正式轨迹归档仍做整库检查，原生身份和一次发送门禁保持。大状态库不再依赖 Node 的 FICLONE 标志是否实际启用克隆；失败不能跳过校验或覆盖已有快照。
+
 在发送任何 Prompt 前运行：
 
 ```bash
@@ -191,3 +193,9 @@ AstronStudio的`--run-slots`默认`3`，可显式配置`1–8`但不得超过冻
 QwenWork/DoubaoWork队列可用`--source-repair-manifest`在`--resume`时冻结原队列SHA和原/新源码SHA，保留原attempt及修复历史，不允许借此改题序、并发或重发未知Prompt。QwenWork敏感输出默认人工处理，仅明确的单任务授权文件及SHA允许`allow-original-on-this-task`，实际操作写入人工介入审计。
 
 AstronStudio正式收口并空闲后可运行`scripts/rename_astronstudio_projects.mjs --unit-root ABS --frozen-config ABS [--task-id ID ...]`，按原生project/cwd设本地task_id别名，不改变Workspace或Prompt。
+
+`0.13.8` 提供显式零发送接续：单题使用 `--resume --retry-pre-send-failure`，队列使用 `--resume --retry-pre-send-task-id ID`。只有原状态为发送前基础设施失败、发送次数为0且没有发送意图/原生接受，fresh原生全局空闲时才接续同一attempt；原失败状态与执行记录按SHA无覆盖归档，保留错误历史和接续源码SHA。未知发送和已发送终态均拒绝。原生项目已登记但UI项目行缺失时，仅在原生全局空闲、编辑器为空且无弹窗/停止控件时刷新一次公开页面投影，再按精确project ID核对项目行、新路由和完整cwd；有活动任务时不刷新。
+
+新建任务不能仅凭编辑器为空复用旧路由。只有原生线程无message、turn、session及待交互时才接受未使用的空白路由；已有目标项目按精确project ID点击新建对话，并等待不同的新路由、原生project与完整cwd一致后才填写Prompt；客户端对未使用空白对话的新建操作可能无变化，只有再次证明目标project/cwd和原生pristine线程时才复用。后台已绑定任务继续运行，UI导航不取消任务。
+
+状态库必须由当前监听客户端的唯一后端子进程实际持有；探针通过只读ps/lsof核对文件路径、父进程、启动时间和命令SHA。资料目录不同、后端歧义、PID替换或无法读取时拒绝发送，旧状态库仅有完整性检查成功不能放行。

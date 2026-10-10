@@ -1024,7 +1024,7 @@ def _workspace_only_automated_rule(contract: Mapping[str, Any]) -> bool:
     return uses > 0
 
 
-REVIEWED_EVIDENCE_POLICY_SHA256 = "169dc2d1652450565eba7b9ceae6b397f224aac3fca49673df5be2e1b3acd1a1"
+REVIEWED_EVIDENCE_POLICY_SHA256 = "bc7314305f9c7395dc6f73238c0d298d1a1573d7d44f92baaef0b8f3271977c8"
 OPTIONAL_PROCESS_EVIDENCE = {
     "resource_metrics_complete_coverage", "provider-request-coverage-unavailable",
     "native-tool-trajectory-incomplete", "displayed-tool-without-execution-evidence",

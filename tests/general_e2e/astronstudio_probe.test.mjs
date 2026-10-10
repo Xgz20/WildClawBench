@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -13,9 +13,73 @@ import {
   inspectCdp,
   inspectGui,
   inspectStateDatabase,
+  inspectStateDatabaseOwner,
   parseArgs,
   probeAstronStudio,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/probe_astronstudio_macos.mjs";
+
+test("runtime probe refuses unknown integrity scopes", async () => {
+  await assert.rejects(inspectStateDatabase("unused", { databaseValidationScope: "skip" }), /未知状态库校验范围/u);
+});
+
+test("database ownership binds the open native backend file and rejects old profiles or PID replacement", async () => {
+  const root = await mkdtemp(join(tmpdir(), "general-e2e-db-owner-"));
+  try {
+    const old = join(root, "old", "state.sqlite");
+    const current = join(root, "current", "state.sqlite");
+    await mkdir(join(root, "old")); await mkdir(join(root, "current"));
+    await writeFile(old, "old"); await writeFile(current, "current");
+    const app = { path: "/Applications/AStudio.app", executable_path: "/Applications/AStudio.app/Contents/MacOS/AStudio" };
+    const process = { pid: 100, identity_verified: true };
+    const row = "200 100 Sat Oct 10 10:00:00 2026 /Applications/AStudio.app/Contents/MacOS/AStudio --max-old-space-size=8192 /Applications/AStudio.app/Contents/Resources/app.asar/apps/server/dist/index.mjs\n";
+    const run = async (command, args) => ({ code: 0, stderr: "", stdout: command === "lsof" ? `p200\nn${current}\n` : row });
+    assert.equal((await inspectStateDatabaseOwner(app, process, current, run)).verified, true);
+    assert.equal((await inspectStateDatabaseOwner(app, process, old, run)).verified, false);
+    assert.equal((await inspectStateDatabaseOwner(app, process, current, async (command, args) => (
+      command === "ps" && args[0] === "-p" ? { code: 0, stdout: row.replace("10:00:00", "10:00:01") } : run(command, args)
+    ))).verified, false);
+    assert.equal((await inspectStateDatabaseOwner(app, process, current, async (command, args) => (
+      command === "ps" && args[0] === "-axo" ? { code: 0, stdout: row + row.replace("200 100", "201 100") } : run(command, args)
+    ))).verified, false);
+    const invalid = passingObservation();
+    invalid.state_database.live_source_owner.verified = false;
+    assert.ok(buildProbeReport(invalid).failed_checks.includes("STATE_DATABASE_OWNER_NOT_VERIFIED"));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("runtime table validation is labelled and never substitutes for whole DB integrity", async () => {
+  const root = await mkdtemp(join(tmpdir(), "general-e2e-runtime-probe-scope-"));
+  try {
+    const path = join(root, "state.sqlite");
+    const db = new DatabaseSync(path);
+    db.exec(`
+      CREATE TABLE projection_thread_sessions(thread_id TEXT, status TEXT, active_turn_id TEXT);
+      CREATE TABLE projection_threads(thread_id TEXT, model_selection_json TEXT, runtime_mode TEXT, updated_at TEXT, deleted_at TEXT);
+      CREATE TABLE projection_pending_interactions(thread_id TEXT, status TEXT);
+      CREATE TABLE provider_runtime_open_turns(thread_id TEXT);
+      CREATE TABLE projection_turns(id TEXT);
+      CREATE TABLE projection_projects(id TEXT);
+      CREATE TABLE provider_session_runtime(id TEXT);
+      CREATE TABLE unrelated_history(value TEXT);
+      INSERT INTO unrelated_history VALUES ('historical data');
+    `);
+    const page = Number(db.prepare("PRAGMA page_size;").get().page_size);
+    const historyPage = Number(db.prepare("SELECT rootpage FROM sqlite_schema WHERE name='unrelated_history'").get().rootpage);
+    db.close();
+    const bytes = await readFile(path);
+    bytes[(historyPage - 1) * page] = 0x7f;
+    await writeFile(path, bytes);
+    const runtime = await inspectStateDatabase(path, { databaseValidationScope: "runtime" });
+    assert.equal(runtime.readable, true);
+    assert.equal(runtime.integrity_scope, "complete-runtime-tables");
+    assert.equal(runtime.integrity_tables.length, 7);
+    const initial = await inspectStateDatabase(path);
+    assert.equal(initial.readable, false);
+    assert.match(initial.error, /malformed|quick_check/iu);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
 
 function passingObservation() {
   return {
@@ -109,6 +173,7 @@ function passingObservation() {
       attempts: [],
     },
     state_database: {
+      live_source_owner: { verified: true },
       path: "/tmp/state.sqlite",
       readable: true,
       source_open_mode: "copy-only",
@@ -347,6 +412,7 @@ test("probe orchestration has no mutating callback and preserves read-only audit
       listeningPorts: async () => { calls.push("ports"); return [9240]; },
       inspectActivePortFile: async () => { calls.push("active-port"); return observation.devtools_active_port; },
       inspectStateDatabase: async () => { calls.push("database"); return observation.state_database; },
+      inspectStateDatabaseOwner: async () => { calls.push("database-owner"); return observation.state_database.live_source_owner; },
       inspectDependencies: async () => { calls.push("dependencies"); return observation.dependencies; },
       inspectCdp: async () => { calls.push("cdp-read"); return observation.cdp; },
     },
@@ -356,6 +422,7 @@ test("probe orchestration has no mutating callback and preserves read-only audit
     "app",
     "cdp-read",
     "database",
+    "database-owner",
     "dependencies",
     "discovery",
     "environment",

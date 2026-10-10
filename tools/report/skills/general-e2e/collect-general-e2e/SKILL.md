@@ -5,6 +5,8 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 
 # 采集 General E2E 证据
 
+DoubaoWork 2.31.10 的已验证 dispatcher Profile 可采集队列留存的滚动原生轨迹。归档原件、身份与 SHA 继续严格核验；该 Profile 不继承旧 emitter 的同机时钟证明，合并仅使用原生顺序，无法证明的跨来源顺序保持 partial。未知 Profile 或源码 SHA 仍拒绝，Token 缺失不补零。
+
 DoubaoWork General 收集拒绝 Web 等价终态标记；缺失的原生结束时间不得以采集时刻补齐。新版 dispatcher 的工具子集保持 `partial`，trace-index 必须明确列出缺失原因，并保留实际工具 Profile、原始 SHA 与已知小计。`native-tool-capture-incomplete` 表示已核实子集之外仍有采集缺口，采集成功不等于可评分；评分准入交给冻结 score Skill。已在客户端 TTL 内留存的结果保留首次观测时间，后续采样不刷新 TTL，也不将已验证结果因时间流逝自动降级。
 
 ## AstronStudio rollout 统计
@@ -35,7 +37,7 @@ DoubaoWork General 收集拒绝 Web 等价终态标记；缺失的原生结束�
 python -m eval_general_e2e skills --name collect-general-e2e --json
 ```
 
-当前 `0.9.3/operational` 支持 AstronStudio、WorkBuddy 与 QwenWork macOS 采集；WorkBuddy 支持原生 session JSONL 的模型响应数、Token、缓存读取及运行时请求耗时。QwenWork 对用户/助手/附件等内容行继续要求显式 session/cwd 一致；1.2.0 的 `worktree-state` 与 `file-history-snapshot` 等已知系统 metadata 行可缺少行内 cwd，并保留覆盖与 withheld claim。QwenWorkCN 1.2.0 / SDK 1.0.46 / transcript 1.1.59 的新 Profile 只在冻结的发送前 probe 证明 Token 开关、精确 runtime SHA 匹配，且逐响应非零 usage 与主 turn 终值按 request ID 完整对账时发布输入、输出、总 Token 和 Cache Read；Cache Write、推理 Token、HTTP 尝试仍不可用，旧 masked 样本不回填。finalizer 按正式 `collection.coverage` 和字段状态接受已验证的 observed/partial/unavailable 指标，不再把历史 unavailable 当作固定门禁。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
+当前 `0.9.6/operational` 支持 AstronStudio、WorkBuddy 与 QwenWork macOS 采集；WorkBuddy 支持原生 session JSONL 的模型响应数、Token、缓存读取及运行时请求耗时。QwenWork 对用户/助手/附件等内容行继续要求显式 session/cwd 一致；1.2.0 的 `worktree-state` 与 `file-history-snapshot` 等已知系统 metadata 行可缺少行内 cwd，并保留覆盖与 withheld claim。QwenWorkCN 1.2.0 / SDK 1.0.46 / transcript 1.1.59 的新 Profile 只在冻结的发送前 probe 证明 Token 开关、精确 runtime SHA 匹配，且逐响应非零 usage 与主 turn 终值按 request ID 完整对账时发布输入、输出、总 Token 和 Cache Read；Cache Write、推理 Token、HTTP 尝试仍不可用，旧 masked 样本不回填。finalizer 按正式 `collection.coverage` 和字段状态接受已验证的 observed/partial/unavailable 指标，不再把历史 unavailable 当作固定门禁。不得从最终文件反推或补造工具记录、Token、请求次数及原生会话身份。
 
 新增通用 [CB-B 收口接口](references/general-finalization.md) 接受 CB-A 状态与 trace-index v2，保留多个原始文件和 nullable 原生 ID。必须提供真实平台进程清理 hook；WorkBuddy 已有运行时采集和真实 macOS cleanup/finalizer canary，入口见 [WorkBuddy 收口入口](drivers/workbuddy/finalize.mjs)。QwenWorkCN 1.0.6 / macOS x86_64 已完成单题原生采集、真实 cleanup/finalizer、评分、回传和报告闭环；该证据不外推并发、Apple Silicon、Windows 或全量评测。
 
@@ -120,6 +122,8 @@ node scripts/finalize_astronstudio_execution.mjs \
 校验同时重算冻结候选与原始 Workspace，验证 evidence manifest、receipt 哈希及候选/执行回执身份。任何漂移都必须阻断评分。完整参数、目录策略和失败边界见 [AstronStudio 正式收口](references/astronstudio-finalization.md)。
 
 ## AstronStudio 轨迹子能力
+
+`0.9.6` 的轨迹归档与资源补采使用共用 `sqlite-snapshot 1.0.0`，在 macOS 优先原生 APFS 克隆，失败时回退到独占复制。原始数据库不修改，完整 quick_check、WAL/SHM、会话/目录/Prompt 和来源 SHA 校验不变；既有冻结证据不重写。
 
 归档前必须确认 `automation-state.json` 已终态、Prompt 只发送一次，且 `thread_id / turn_id / session_id / cwd` 已验证。归档器仅读 SQLite/WAL 快照，不读“最近任务”：
 

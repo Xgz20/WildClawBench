@@ -5,6 +5,8 @@ description: 将有效 General E2E 执行回执交接为独立单题评分工作
 
 # 编排 General E2E 评分
 
+冻结 score Skill 的 `prepare` 返回明确 `EXECUTION_NOT_SCORABLE` 时，只将本题保留为 `UNSCORED`，不创建 Judge attempt，也不阻断其他题目。其它错误仍失败关闭；初始化回滚仅清理本控制器尚未发布的 staging，支持其中的只读候选，不修改已发布评分或执行原件。
+
 新轮次优先由 run-general-e2e prepare-score 建立编排，根目录默认当前控制 Harness 会话项目，显式 round-root 覆盖。状态写入 Harness/score/.orchestrations，单题入口为 Harness/score/tasks/<task_id>/current。带 .general-e2e/round-unit.json 的新单元启用完整 trace 交接门禁；旧单元保留显式 legacy 兼容。
 
 新评分任务可以在本题目录读取标准轨迹和 raw_trace 原件。移走原执行目录后仍必须能校验、查询和评分，不把全局 repair-control 或临时运行目录作为评分数据依赖。

@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import subprocess
 import sys
 from typing import Any, Mapping, Sequence
@@ -336,6 +337,14 @@ def _run_score_command(
     )
     if completed.returncode != 0:
         detail = completed.stderr.strip() or completed.stdout.strip()
+        try:
+            rejected = json.loads(detail)
+        except json.JSONDecodeError:
+            rejected = None
+        if (isinstance(rejected, dict) and rejected.get("status") == "FAIL"
+            and isinstance(rejected.get("error"), dict)
+            and rejected["error"].get("code") == "EXECUTION_NOT_SCORABLE"):
+            raise OrchestrationError("EXECUTION_NOT_SCORABLE", str(rejected["error"].get("detail", ""))[:2000])
         raise OrchestrationError("SCORE_SKILL_COMMAND_FAILED", detail[:2000])
     try:
         value = json.loads(completed.stdout)
@@ -346,6 +355,14 @@ def _run_score_command(
     if not isinstance(value, dict) or value.get("status") != "PASS":
         raise OrchestrationError("SCORE_SKILL_OUTPUT_INVALID", repr(value))
     return value
+
+
+def _remove_staging(path: Path) -> None:
+    # Only unpublished, controller-owned staging trees reach this function.
+    # Candidate directories inside them are deliberately read-only.
+    for directory, _children, _files in os.walk(path, followlinks=False):
+        os.chmod(directory, stat.S_IMODE(os.stat(directory).st_mode) | 0o700)
+    shutil.rmtree(path)
 
 
 def _execution_record_map(values: Sequence[str]) -> dict[str, Path]:
@@ -863,7 +880,18 @@ def initialize(
                 prepare_arguments.extend(
                     ["--acceptance-id", validation["acceptance_id"]]
                 )
-            result = _run_score_command(score_skill, prepare_arguments)
+            try:
+                result = _run_score_command(score_skill, prepare_arguments)
+            except OrchestrationError as error:
+                if error.code != "EXECUTION_NOT_SCORABLE":
+                    raise
+                execution["scorable"] = False
+                execution["failure"] = {"code": error.code, "message": error.detail}
+                tasks.append({**common_task, "scoring_attempt_id": None, "attempt_path": None,
+                    "attempt_manifest_sha256": None, "prompt_path": None, "prompt_sha256": None,
+                    "phase": "UNSCORED", "history": [{"at": _timestamp(created),
+                        "event": "SCORING_NOT_STARTED", "error": execution["failure"]}]})
+                continue
             attempt_root = Path(result["attempt_root"]).resolve(strict=True)
             if not _inside(staging, attempt_root):
                 raise OrchestrationError("ATTEMPT_PATH_ESCAPE", str(attempt_root))
@@ -979,7 +1007,7 @@ def initialize(
         os.replace(staging, final_root)
     except BaseException:
         if staging.exists():
-            shutil.rmtree(staging)
+            _remove_staging(staging)
         raise
     return status(final_root, now=created)
 
@@ -1240,7 +1268,7 @@ def initialize_rescore(
         os.replace(staging, final_root)
     except BaseException:
         if staging.exists():
-            shutil.rmtree(staging)
+            _remove_staging(staging)
         raise
     return status(final_root, now=created)
 

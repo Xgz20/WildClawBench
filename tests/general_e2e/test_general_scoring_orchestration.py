@@ -1387,6 +1387,34 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         built = ORCHESTRATOR.build_submission(root, now=self.t0)
         self.assertEqual(built["unscored_count"], 1)
 
+    def test_score_skill_admission_rejection_preserves_other_tasks_and_no_judge_attempt(self) -> None:
+        fixture = Fixture(self.root, task_ids=("task-one", "task-two"))
+        original = ORCHESTRATOR._run_score_command
+        def score_command(lock, arguments, **kwargs):
+            if arguments[0] == "prepare" and arguments[arguments.index("--task-id") + 1] == "task-one":
+                raise ORCHESTRATOR.OrchestrationError("EXECUTION_NOT_SCORABLE", "required tool history is incomplete")
+            return original(lock, arguments, **kwargs)
+        with patch.object(ORCHESTRATOR, "_run_score_command", side_effect=score_command):
+            view = fixture.initialize(now=self.t0)
+        self.assertEqual(view["unscored_count"], 1)
+        self.assertEqual(view["tasks"][0]["phase"], "UNSCORED")
+        self.assertIsNone(view["tasks"][0]["attempt_path"])
+        self.assertEqual(view["tasks"][1]["phase"], "AWAITING_PROJECT")
+        state = ORCHESTRATOR.status(Path(view["orchestration_root"]), now=self.t0)
+        self.assertEqual(state["unscored_count"], 1)
+
+    def test_unexpected_prepare_error_removes_owned_read_only_staging_and_keeps_original_error(self) -> None:
+        fixture = Fixture(self.root, task_ids=("task-one", "task-two"))
+        original = ORCHESTRATOR._run_score_command
+        def score_command(lock, arguments, **kwargs):
+            if arguments[0] == "prepare" and arguments[arguments.index("--task-id") + 1] == "task-two":
+                raise ORCHESTRATOR.OrchestrationError("SCORE_SKILL_COMMAND_FAILED", "unexpected failure")
+            return original(lock, arguments, **kwargs)
+        with patch.object(ORCHESTRATOR, "_run_score_command", side_effect=score_command):
+            with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError, "unexpected failure"):
+                fixture.initialize(now=self.t0)
+        self.assertFalse(any(self.root.rglob("*.staging-*")))
+
     def test_rescore_orchestration_uses_new_attempt_and_preserves_source(self) -> None:
         fixture = Fixture(
             self.root / "source",

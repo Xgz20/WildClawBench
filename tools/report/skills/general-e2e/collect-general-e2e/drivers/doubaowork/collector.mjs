@@ -8,7 +8,7 @@ import { readBoundNativeEvidence, readRegular } from "../../vendor/e2e-shared/do
 import { countBoundTools } from "../../vendor/e2e-shared/doubaowork/tool-counts.mjs";
 export { verifyTrajectoryPrompt, verifyRecoveredDispatchAcknowledgement } from "../../vendor/e2e-shared/doubaowork/bound-evidence.mjs";
 
-const ADAPTER = "doubaowork-native-evidence", VERSION = "0.2.9";
+const ADAPTER = "doubaowork-native-evidence", VERSION = "0.2.10";
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 const json = value => Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
 const artifact = (path, bytes, extra = {}) => ({ path, sha256: sha(bytes), size: bytes.length, ...extra });

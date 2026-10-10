@@ -1,4 +1,4 @@
-import { queryExactProjectsForWorkspace, queryProjectForThread } from "./astronstudio-state.mjs";
+import { queryExactProjectsForWorkspace, queryProjectForThread, queryNativeSessions, queryPristineThread } from "./astronstudio-state.mjs";
 
 function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
@@ -130,6 +130,7 @@ export class CdpClient {
 const HELPERS = `
   const visible = (element) => {
     if (!(element instanceof Element)) return false;
+    if (element.closest('[inert], [aria-hidden="true"]')) return false;
     const style = getComputedStyle(element);
     const rect = element.getBoundingClientRect();
     return style.visibility !== "hidden" && style.display !== "none" && rect.width > 0 && rect.height > 0;
@@ -233,8 +234,10 @@ async function clickSidebarToggle(client) {
   `));
 }
 
-export async function createFreshTask(client, timeoutMs) {
+export async function createFreshTask(client, timeoutMs, stateDatabase) {
   const before = await editorState(client);
+  const pristine = before.thread_id && before.editor_text === "" && stateDatabase
+    ? await queryPristineThread(stateDatabase, before.thread_id) : false;
   let clicked = await clickNewTask(client);
   if (!clicked.clicked && clicked.count === 0) {
     const sidebar = await clickSidebarToggle(client);
@@ -262,7 +265,7 @@ export async function createFreshTask(client, timeoutMs) {
     (value) => value.editor_count === 1
       && Boolean(value.thread_id)
       && value.editor_empty
-      && (value.thread_id !== before.thread_id || before.editor_text === ""),
+      && (value.thread_id !== before.thread_id || pristine),
     timeoutMs,
     "等待 AstronStudio 空白任务路由",
   );
@@ -276,6 +279,8 @@ async function workspaceState(client) {
     return {
       count: triggers.length,
       path: triggers.length === 1 ? (triggers[0].getAttribute('title') || '').trim() || null : null,
+      menu_open: triggers.length === 1 && (triggers[0].getAttribute('aria-expanded') === 'true'
+        || triggers[0].getAttribute('data-state') === 'open'),
       label: triggers.length === 1 ? (triggers[0].innerText || '').trim() || null : null
     };
   `));
@@ -394,19 +399,53 @@ async function addWorkspace(client, workspace, timeoutMs) {
   if (!submitted.clicked) throw new Error("AstronStudio 项目路径提交失败");
 }
 
-async function exactProjectId(stateDatabase, workspace) {
-  const rows = await queryExactProjectsForWorkspace(stateDatabase, workspace);
+export async function waitForExactProjectIdentity(stateDatabase, workspace, timeoutMs, overrides = {}) {
+  const read = overrides.queryExactProjectsForWorkspace || queryExactProjectsForWorkspace;
+  const rows = await waitFor(async () => {
+    const value = await read(stateDatabase, workspace);
+    if (value.length > 1) throw new Error(`AstronStudio 目标项目原生身份不唯一：${value.length}`);
+    return value;
+  }, (value) => value.length === 1, timeoutMs, "等待 AstronStudio 原生项目登记");
   if (rows.length !== 1 || typeof rows[0].project_id !== "string") {
     throw new Error(`AstronStudio 目标项目原生身份不唯一：${rows.length}`);
   }
   return rows[0].project_id;
 }
 
-export async function openExactProjectConversation(client, workspace, stateDatabase, timeoutMs) {
+export async function reloadIdleProjectProjection(client, stateDatabase, overrides = {}) {
+  const sessions = await (overrides.queryNativeSessions || queryNativeSessions)(stateDatabase);
+    if (sessions.some((row) => row.active_turn_id
+      || ["running", "starting", "pending", "needs_attention"].includes(String(row.status).toLowerCase()))) {
+      throw new Error("AstronStudio 项目投影缺失且有活动任务；不能刷新客户端");
+    }
+    const readSafety = () => client.evaluate(expression(`
+      const editors = Array.from(document.querySelectorAll('[data-testid="composer-editor"]')).filter(visible);
+      return { editor_count: editors.length, empty: editors.length === 1 && (editors[0].innerText || '').trim() === '',
+        dialogs: Array.from(document.querySelectorAll('[role="dialog"],[aria-modal="true"]')).filter(visible).length,
+        stops: Array.from(document.querySelectorAll('button[aria-label]')).filter(visible)
+          .filter((button) => /^(?:停止生成|Stop generating)$/iu.test(button.getAttribute('aria-label') || '')).length };
+    `));
+    let safe = await readSafety();
+    if (safe.editor_count === 0 && !safe.dialogs && !safe.stops) {
+      safe = await waitFor(readSafety, (row) => row.editor_count !== 0 || row.dialogs || row.stops,
+        overrides.timeoutMs || 5_000, "等待 AstronStudio 刷新前编辑器就绪");
+    }
+    if (safe.editor_count !== 1 || !safe.empty || safe.dialogs || safe.stops) {
+      throw new Error("AstronStudio 项目投影刷新存在草稿、弹窗或活动任务");
+    }
+    const currentSessions = await (overrides.queryNativeSessions || queryNativeSessions)(stateDatabase);
+    if (currentSessions.some((row) => row.active_turn_id
+      || ["running", "starting", "pending", "needs_attention"].includes(String(row.status).toLowerCase()))) {
+      throw new Error("AstronStudio 刷新前出现活动任务");
+    }
+    await client.send("Page.reload");
+}
+
+export async function openExactProjectConversation(client, workspace, stateDatabase, timeoutMs, options = {}) {
   if (!stateDatabase) throw new Error("AstronStudio 目标项目导航缺少原生状态库路径");
-  const projectId = await exactProjectId(stateDatabase, workspace);
+  const projectId = await waitForExactProjectIdentity(stateDatabase, workspace, timeoutMs);
   const initialRoute = await currentThreadId(client);
-  const activity = await client.evaluate(expression(`
+  const readActivity = () => client.evaluate(expression(`
     const editors = Array.from(document.querySelectorAll('[data-testid="composer-editor"]'))
       .filter(visible);
     const buttons = Array.from(document.querySelectorAll('button')).filter(visible);
@@ -419,33 +458,54 @@ export async function openExactProjectConversation(client, workspace, stateDatab
         (button.getAttribute('aria-label') || '').trim()
       )).length };
   `));
+  let activity = await readActivity();
+  if (activity.editor_count === 0 && activity.dialog_count === 0 && activity.stop_count === 0) {
+    activity = await waitFor(readActivity, (row) => row.editor_count !== 0 || row.dialog_count || row.stop_count,
+      Math.min(timeoutMs, 5_000), "等待 AstronStudio 目标项目编辑器就绪");
+  }
   if (activity.editor_count !== 1 || !activity.editor_empty
     || activity.dialog_count !== 0 || activity.stop_count !== 0) {
     throw new Error("AstronStudio 目标项目导航时存在草稿、弹窗或活动任务");
   }
   const lateWorkspace = await workspaceState(client);
-  if (lateWorkspace.count === 1 && lateWorkspace.path === workspace) {
+  if (lateWorkspace.count === 1 && lateWorkspace.path === workspace
+    && (!options.forceNew || await queryPristineThread(stateDatabase, initialRoute))) {
     const native = await queryProjectForThread(stateDatabase, initialRoute);
     if (native.length !== 1 || native[0].project_id !== projectId
       || native[0].workspace_root !== workspace) {
       throw new Error("AstronStudio 延迟出现的项目路径与原生路由不一致");
     }
-    return { method: "late-visible-current-value", project_id: projectId,
+    return { method: options.forceNew ? "native-pristine-project-conversation" : "late-visible-current-value", project_id: projectId,
       thread_id: initialRoute, editor_count: 1, editor_empty: true, ...lateWorkspace };
   }
-  if (lateWorkspace.count > 1 || (lateWorkspace.count === 1
+  if (lateWorkspace.count > 1 || (!options.forceNew && lateWorkspace.count === 1
     && lateWorkspace.path !== null && lateWorkspace.path !== workspace)) {
     throw new Error(`AstronStudio 目标项目导航前路径歧义：${JSON.stringify(lateWorkspace)}`);
   }
-  const sidebar = await waitFor(
-    () => client.evaluate(expression(`
+  const readProjectRow = () => client.evaluate(expression(`
       const rows = Array.from(document.querySelectorAll(
         '[data-project-hover-anchor="${projectId}"]'
       ));
       const motion = rows.length === 1 ? rows[0].closest('[data-slot="sidebar-content-motion"]') : null;
       return { count: rows.length, inert: motion?.inert ?? null,
         hidden: motion?.getAttribute('aria-hidden') ?? null };
-    `)),
+    `));
+  let projectionReloaded = false;
+  let firstRow = await readProjectRow();
+  if (firstRow.count === 0) {
+    try {
+      firstRow = await waitFor(readProjectRow, (row) => row.count !== 0,
+        Math.min(timeoutMs, 3_000), "等待 AstronStudio 项目投影就绪");
+    } catch { firstRow = await readProjectRow(); }
+  }
+  if (firstRow.count === 0) {
+    // Native registration can succeed while the renderer misses its snapshot.
+    // A reload is safe only before filling a prompt and with all native tasks idle.
+    await reloadIdleProjectProjection(client, stateDatabase);
+    projectionReloaded = true;
+  }
+  const sidebar = await waitFor(
+    readProjectRow,
     (value) => value.count === 1,
     timeoutMs,
     "等待 AstronStudio 目标项目行",
@@ -530,7 +590,8 @@ export async function openExactProjectConversation(client, workspace, stateDatab
         editor_empty: editor.editor_text === "", ...selected };
     },
     (value) => value.thread_id && value.editor_count === 1 && value.editor_empty
-      && value.count === 1 && value.path === workspace,
+      && value.count === 1 && value.path === workspace
+      && (!options.forceNew || value.thread_id !== initialRoute),
     timeoutMs,
     "等待 AstronStudio 目标项目新对话路由和绝对路径",
   );
@@ -541,14 +602,26 @@ export async function openExactProjectConversation(client, workspace, stateDatab
   }
   return { method: confirmed.thread_id === initialRoute
     ? "late-visible-current-value" : "exact-project-new-conversation",
-    project_id: projectId, ...confirmed };
+    project_id: projectId, projection_reloaded: projectionReloaded, ...confirmed };
 }
 
 export async function selectWorkspace(client, workspace, timeoutMs, stateDatabase) {
   const before = await workspaceState(client);
   if (before.count > 1) throw new Error(`AstronStudio 项目选择按钮数量异常：${before.count}`);
   if (before.count === 1 && before.path === workspace) return { method: "visible-current-value", ...before };
-  if (before.count === 1) {
+  const native = stateDatabase ? await queryExactProjectsForWorkspace(stateDatabase, workspace) : null;
+  if (native && native.length > 1) throw new Error("AstronStudio 目标项目原生身份不唯一");
+  if (native && native.length === 0) {
+    // A clean profile has no options in its workspace picker. Register the
+    // exact directory directly, then verify the native project and route below.
+    if (before.menu_open) {
+      await client.send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape" });
+      await client.send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape" });
+      await waitFor(() => workspaceState(client), (row) => !row.menu_open,
+        Math.min(timeoutMs, 5_000), "等待 AstronStudio 项目选择菜单关闭");
+    }
+    await addWorkspace(client, workspace, timeoutMs);
+  } else if (before.count === 1) {
     const trigger = await clickWorkspaceTrigger(client);
     if (!trigger.clicked) throw new Error(`AstronStudio 项目选择按钮数量异常：${trigger.count}`);
     const existing = await waitFor(
@@ -741,9 +814,35 @@ export async function currentThreadId(client) {
 
 export async function prepareExecutionUi(client, config) {
   await client.send("Page.bringToFront");
-  const task = await createFreshTask(client, config.timeoutMs);
-  const workspace = await selectWorkspace(client, config.candidateWorkspace,
-    config.timeoutMs, config.stateDatabase);
+  const projects = await queryExactProjectsForWorkspace(config.stateDatabase, config.candidateWorkspace);
+  if (projects.length > 1) throw new Error("AstronStudio 目标 Workspace 原生项目不唯一");
+  let task;
+  let workspace;
+  if (projects.length === 1) {
+    const current = await editorState(client);
+    const sessions = await queryNativeSessions(config.stateDatabase);
+    if (sessions.some((row) => row.thread_id === current.thread_id && (row.active_turn_id
+      || ["running", "starting", "pending", "needs_attention"].includes(String(row.status).toLowerCase())))) {
+      task = await createFreshTask(client, config.timeoutMs, config.stateDatabase);
+    }
+    workspace = await openExactProjectConversation(client, config.candidateWorkspace,
+      config.stateDatabase, config.timeoutMs, { forceNew: true });
+    task ||= { thread_id: workspace.thread_id, editor_count: 1, editor_empty: true };
+  } else {
+    const current = await editorState(client);
+    const sessions = await queryNativeSessions(config.stateDatabase);
+    const active = sessions.some((row) => row.thread_id === current.thread_id && (row.active_turn_id
+      || ["running", "starting", "pending", "needs_attention"].includes(String(row.status).toLowerCase())));
+    // A startup draft may not have a native thread yet. It is only a landing
+    // surface for project registration; the final native route is verified below.
+    task = current.editor_count === 1 && current.editor_text === "" && !active
+      ? { thread_id: current.thread_id, editor_count: 1, editor_empty: true,
+        method: "empty-editor-for-project-preparation" }
+      : await createFreshTask(client, config.timeoutMs, config.stateDatabase);
+    await selectWorkspace(client, config.candidateWorkspace, config.timeoutMs, config.stateDatabase);
+    workspace = await openExactProjectConversation(client, config.candidateWorkspace,
+      config.stateDatabase, config.timeoutMs, { forceNew: true });
+  }
   const ui = await readUiConfiguration(client);
   if (ui.model_count !== 1 || ui.model !== config.expectedModel) {
     throw new Error(`AstronStudio 当前模型不匹配：${ui.model || "unknown"} vs ${config.expectedModel}`);

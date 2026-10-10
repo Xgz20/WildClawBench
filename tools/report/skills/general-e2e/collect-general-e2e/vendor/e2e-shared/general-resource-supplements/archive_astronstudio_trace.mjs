@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
 import { createHash, randomUUID } from "node:crypto";
-import { constants as fsConstants, realpathSync } from "node:fs";
+import { realpathSync } from "node:fs";
 import {
-  copyFile,
   lstat,
   mkdir,
   mkdtemp,
@@ -18,6 +17,7 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ROLLOUT_PATH, readRolloutFile, analyzeRollout, discoverRollout } from "./astronstudio-rollout.mjs";
+import { copySnapshotFile, configureSnapshotReader } from "../sqlite-snapshot/index.mjs";
 
 export const TRACE_ADAPTER_ID = "astronstudio-provider-runtime-events";
 export const TRACE_ADAPTER_VERSION = "0.1.1";
@@ -103,7 +103,7 @@ async function readJson(path) {
 
 async function copyIfPresent(source, destination) {
   try {
-    await copyFile(source, destination, fsConstants.COPYFILE_FICLONE);
+    await copySnapshotFile(source, destination);
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
   }
@@ -126,12 +126,13 @@ export async function withStateSnapshot(stateDatabase, operation, overrides = {}
     const root = await mkdtemp(join(tmpdir(), "general-e2e-astudio-trace-"));
     const snapshot = join(root, "state.sqlite");
     try {
-      await copyFile(source, snapshot, fsConstants.COPYFILE_FICLONE);
+      await copySnapshotFile(source, snapshot);
       await copyIfPresent(`${source}-wal`, `${snapshot}-wal`);
       await copyIfPresent(`${source}-shm`, `${snapshot}-shm`);
       const sqlite = await (overrides.loadNodeSqlite || loadNodeSqlite)();
       const database = new sqlite.DatabaseSync(snapshot, { readOnly: true });
       try {
+        configureSnapshotReader(database);
         const integrity = String(Object.values(database.prepare("PRAGMA quick_check;").get() || {})[0] || "");
         if (integrity !== "ok") throw new Error(`状态库快照 quick_check=${integrity || "empty"}`);
         return await operation(database, snapshot);

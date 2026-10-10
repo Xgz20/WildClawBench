@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { copyFile, mkdir, mkdtemp, open, readFile, realpath, rm, stat } from "node:fs/promises";
+import { mkdir, mkdtemp, open, readFile, realpath, rm, stat } from "node:fs/promises";
+import { copySnapshotFile, configureSnapshotReader } from "../vendor/e2e-shared/sqlite-snapshot/index.mjs";
+import { SESSION_SNAPSHOT_TABLES } from "./lib/astronstudio-state.mjs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,7 +23,7 @@ import {
 
 export const PROBE_SCHEMA = "wildclawbench.general-e2e-astronstudio-probe/v1";
 export const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
-export const PROBE_VERSION = "0.2.0";
+export const PROBE_VERSION = "0.2.1";
 export const DEFAULT_APP_PATH = "/Applications/AStudio.app";
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
@@ -44,6 +46,7 @@ const READ_ONLY_OPERATIONS = Object.freeze([
   "read-app-bundle",
   "discover-app-installation",
   "read-process-identity",
+  "read-state-database-process-owner",
   "read-gui-session",
   "read-listening-ports",
   "read-devtools-active-port",
@@ -299,6 +302,41 @@ async function inspectProcess(app, runCommand = runCapture) {
     command_sha256: processInfo.command ? sha256(processInfo.command) : null,
     remote_debugging_port: parseDebugPort(processInfo.command),
   };
+}
+
+export async function inspectStateDatabaseOwner(app, processInfo, stateDb, runCommand = runCapture) {
+  const requested = await realpath(stateDb);
+  const result = { verified: false, requested_path: requested, backend_pid: null,
+    backend_started_at: null, backend_command_sha256: null, observed_database_paths: [] };
+  if (!processInfo.identity_verified || !processInfo.pid) return result;
+  const options = { allowFailure: true, timeout: 5_000, env: { ...process.env, LC_ALL: "C" } };
+  const parse = (text) => String(text).split(/\r?\n/u).flatMap((line) => {
+    const match = line.match(/^\s*(\d+)\s+(\d+)\s+(\w{3}\s+\w{3}\s+\d+\s+\d+:\d+:\d+\s+\d+)\s+(.+)$/u);
+    return match ? [{ pid: Number(match[1]), ppid: Number(match[2]), started_at: match[3], command: match[4] }] : [];
+  });
+  const processes = await runCommand("ps", ["-axo", "pid=,ppid=,lstart=,command="], options);
+  if (processes.code !== 0) return result;
+  const serverPath = join(app.path, "Contents/Resources/app.asar/apps/server/dist/index.mjs");
+  const matches = parse(processes.stdout).filter((row) => row.ppid === processInfo.pid
+    && row.command.startsWith(`${app.executable_path} `) && row.command.includes(serverPath));
+  if (matches.length !== 1) return result;
+  const backend = matches[0];
+  result.backend_pid = backend.pid;
+  result.backend_started_at = backend.started_at;
+  result.backend_command_sha256 = sha256(backend.command);
+  const files = await runCommand("lsof", ["-nP", "-a", "-p", String(backend.pid), "-Fn"], options);
+  if (files.code !== 0) return result;
+  const paths = String(files.stdout).split(/\r?\n/u).filter((line) => line.startsWith("n")
+    && line.endsWith("/state.sqlite")).map((line) => line.slice(1));
+  result.observed_database_paths = [...new Set(await Promise.all(paths.map((path) => realpath(path))))];
+  // The same app/version can run with a different SYNARA_HOME. The open file
+  // must belong to this backend, and its process identity must still be current.
+  const after = await runCommand("ps", ["-p", String(backend.pid), "-o", "pid=,ppid=,lstart=,command="], options);
+  const rows = after.code === 0 ? parse(after.stdout) : [];
+  result.verified = rows.length === 1 && rows[0].pid === backend.pid && rows[0].ppid === backend.ppid
+    && rows[0].started_at === backend.started_at && rows[0].command === backend.command
+    && result.observed_database_paths.length === 1 && result.observed_database_paths[0] === requested;
+  return result;
 }
 
 export async function inspectGui(runCommand = runCapture) {
@@ -582,7 +620,7 @@ async function loadNodeSqlite() {
 
 async function copyIfPresent(source, destination) {
   try {
-    await copyFile(source, destination);
+    await copySnapshotFile(source, destination);
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
   }
@@ -624,11 +662,19 @@ WHERE sessions.active_turn_id IS NOT NULL
   );
 `;
 
-async function querySnapshotWithNodeSqlite(snapshotPath, sqliteModule) {
+async function querySnapshotWithNodeSqlite(snapshotPath, sqliteModule, integrityTables = null) {
   const database = new sqliteModule.DatabaseSync(snapshotPath, { readOnly: true });
   try {
-    const quickRows = database.prepare("PRAGMA quick_check;").all();
-    const quickCheck = String(Object.values(quickRows[0] || {})[0] || "");
+    configureSnapshotReader(database);
+    const statements = integrityTables
+      ? integrityTables.map((table) => `PRAGMA quick_check("${table}");`)
+      : ["PRAGMA quick_check;"];
+    let quickCheck = "ok";
+    for (const sql of statements) {
+      const quickRows = database.prepare(sql).all();
+      const value = String(Object.values(quickRows[0] || {})[0] || "");
+      if (quickRows.length !== 1 || value !== "ok") { quickCheck = value || "empty"; break; }
+    }
     const tableRows = database.prepare(
       "SELECT name FROM sqlite_schema WHERE type = 'table' ORDER BY name;",
     ).all();
@@ -670,10 +716,13 @@ LIMIT 1;
   }
 }
 
-async function querySnapshotWithCli(snapshotPath, runCommand = runCapture) {
+async function querySnapshotWithCli(snapshotPath, runCommand = runCapture, integrityTables = null) {
+  const checks = integrityTables
+    ? integrityTables.map((table) => `PRAGMA quick_check("${table}");`)
+    : ["PRAGMA quick_check;"];
   const integrityResult = await runCommand(
     "/usr/bin/sqlite3",
-    ["-readonly", snapshotPath, "PRAGMA quick_check;"],
+    ["-readonly", snapshotPath, checks.join(" ")],
     { capture: true, allowFailure: false },
   );
   const tablesResult = await runCommand(
@@ -715,7 +764,9 @@ LIMIT 1;`],
     );
   }
   return {
-    integrity: integrityResult.stdout.trim(),
+    integrity: integrityResult.stdout.trim().split(/\r?\n/u).length === checks.length
+      && integrityResult.stdout.trim().split(/\r?\n/u).every((line) => line === "ok")
+      ? "ok" : `invalid quick_check output: ${integrityResult.stdout.trim() || "empty"}`,
     table_count: tables.length,
     missing_required_tables: missingTables,
     latest_persisted_model: whitelistPersistedModel(latest),
@@ -726,6 +777,10 @@ LIMIT 1;`],
 }
 
 export async function inspectStateDatabase(stateDb, overrides = {}) {
+  if (overrides.databaseValidationScope != null && overrides.databaseValidationScope !== "runtime") {
+    throw new Error("未知状态库校验范围");
+  }
+  const integrityTables = overrides.databaseValidationScope === "runtime" ? SESSION_SNAPSHOT_TABLES : null;
   const statePath = await realpath(resolve(stateDb));
   const sourceStat = await stat(statePath);
   if (!sourceStat.isFile()) throw new Error(`状态库不是文件：${statePath}`);
@@ -736,12 +791,12 @@ export async function inspectStateDatabase(stateDb, overrides = {}) {
     const snapshotRoot = await mkdtemp(join(tmpdir(), "general-e2e-astudio-state-"));
     const snapshotPath = join(snapshotRoot, "state.sqlite");
     try {
-      await copyFile(statePath, snapshotPath);
+      await copySnapshotFile(statePath, snapshotPath);
       await copyIfPresent(`${statePath}-wal`, `${snapshotPath}-wal`);
       await copyIfPresent(`${statePath}-shm`, `${snapshotPath}-shm`);
       const query = backend === "node:sqlite"
-        ? await querySnapshotWithNodeSqlite(snapshotPath, sqliteModule)
-        : await querySnapshotWithCli(snapshotPath, overrides.runCommand || runCapture);
+        ? await querySnapshotWithNodeSqlite(snapshotPath, sqliteModule, integrityTables)
+        : await querySnapshotWithCli(snapshotPath, overrides.runCommand || runCapture, integrityTables);
       if (query.integrity !== "ok") throw new Error(`快照 quick_check=${query.integrity || "empty"}`);
       return {
         path: statePath,
@@ -750,6 +805,8 @@ export async function inspectStateDatabase(stateDb, overrides = {}) {
         snapshot_backend: backend,
         snapshot_attempts: attempt,
         integrity: query.integrity,
+        integrity_scope: integrityTables ? "complete-runtime-tables" : "whole-database",
+        integrity_tables: integrityTables ? [...integrityTables] : null,
         table_count: query.table_count,
         missing_required_tables: query.missing_required_tables,
         schema_ready: query.missing_required_tables.length === 0,
@@ -821,6 +878,7 @@ function failedChecks(observation) {
     ["GUI_LOCKED_OR_UNKNOWN", observation.gui.unlocked === true],
     ["CDP_NOT_READY", observation.cdp.ready && observation.cdp.owned_by_main_process],
     ["STATE_DATABASE_NOT_READY", observation.state_database.readable && observation.state_database.integrity === "ok" && observation.state_database.schema_ready],
+    ["STATE_DATABASE_OWNER_NOT_VERIFIED", observation.state_database.live_source_owner?.verified === true],
     ["MODEL_NOT_READ_FROM_UI", observation.cdp.model.verified],
     ["REASONING_NOT_READ_FROM_UI", observation.cdp.model.reasoning_verified],
     ["PERMISSION_NOT_READ_FROM_UI", observation.cdp.permission.verified],
@@ -862,6 +920,12 @@ export function buildFrozenRunConfig(observation) {
       path: observation.state_database.path,
       snapshot_backend: observation.state_database.snapshot_backend,
       required_tables: [...REQUIRED_STATE_TABLES],
+      integrity_scope: {
+        initial_probe: "whole-database",
+        runtime_probe: "complete-runtime-tables",
+        execution_observation: "complete-queried-tables",
+        formal_trace_archive: "whole-database",
+      },
     },
     tested_model: {
       display_name: observation.cdp.model.value,
@@ -980,7 +1044,7 @@ export async function probeAstronStudio(config, overrides = {}) {
     identity_verified: false,
     pid: null,
   }, () => (overrides.inspectProcess || inspectProcess)(app, runCommand));
-  const [gui, ports, activePort, stateDatabase, dependencies] = await Promise.all([
+  const [gui, ports, activePort, stateDatabase, dependencies, databaseOwner] = await Promise.all([
     safeObservation("gui", {
       frontmost_application: "unknown",
       screen_locked: null,
@@ -1006,6 +1070,8 @@ export async function probeAstronStudio(config, overrides = {}) {
     safeObservation("dependencies", {
       required_for_probe: { node: true, state_database_backend: false },
     }, () => (overrides.inspectDependencies || inspectDependencies)(runCommand, overrides.loadNodeSqlite || loadNodeSqlite)),
+    safeObservation("state database process owner", { verified: false, requested_path: resolve(config.stateDb) },
+      () => (overrides.inspectStateDatabaseOwner || inspectStateDatabaseOwner)(app, processInfo, config.stateDb, runCommand)),
   ]);
   const cdp = await safeObservation("cdp", {
     ready: false,
@@ -1036,7 +1102,7 @@ export async function probeAstronStudio(config, overrides = {}) {
     gui,
     devtools_active_port: activePort,
     cdp,
-    state_database: stateDatabase,
+    state_database: { ...stateDatabase, live_source_owner: databaseOwner },
     dependencies,
   }, overrides.capturedAt || new Date().toISOString());
 }

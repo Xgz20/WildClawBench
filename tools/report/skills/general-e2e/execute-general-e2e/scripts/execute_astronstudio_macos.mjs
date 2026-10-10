@@ -26,6 +26,7 @@ import {
   ensureSendTargetReady,
   fillPrompt,
   prepareExecutionUi,
+  createFreshTask,
 } from "./lib/astronstudio-cdp.mjs";
 import {
   queryFinalResponse,
@@ -35,7 +36,7 @@ import { waitForThreadStreamLease } from "./lib/astronstudio-stream.mjs";
 import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery/index.mjs";
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.3.8";
+export const EXECUTION_DRIVER_VERSION = "0.4.7";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -51,6 +52,7 @@ function usage() {
 
 选项：
   --resume                       恢复同一 attempt；禁止重复发送 Prompt
+  --retry-pre-send-failure        与 --resume 使用；仅接续已证明零发送的准备失败
   --detach-after-submit          绑定 thread/turn/session/cwd 后退出观察
   --observe-once                 恢复后只执行一次原生状态观察
   --managed-run-slots <1-8>     批队列传入冻结槽位；独立单题默认 1
@@ -82,6 +84,7 @@ export function parseArgs(argv) {
     taskId: "",
     runConfig: "",
     resume: false,
+    retryPreSendFailure: false,
     detachAfterSubmit: false,
     observeOnce: false,
     managedRunSlots: 1,
@@ -104,6 +107,7 @@ export function parseArgs(argv) {
     const arg = argv[index];
     if (arg === "-h" || arg === "--help") values.help = true;
     else if (arg === "--resume") values.resume = true;
+    else if (arg === "--retry-pre-send-failure") values.retryPreSendFailure = true;
     else if (arg === "--detach-after-submit") values.detachAfterSubmit = true;
     else if (arg === "--observe-once") values.observeOnce = true;
     else if (arg === "--allowed-active-session-id") {
@@ -124,6 +128,9 @@ export function parseArgs(argv) {
     }
   }
   if (values.observeOnce && !values.resume) throw new Error("--observe-once 必须与 --resume 一起使用");
+  if (values.retryPreSendFailure && (!values.resume || values.observeOnce)) {
+    throw new Error("--retry-pre-send-failure 要求 --resume 且不能仅观察");
+  }
   if (values.detachAfterSubmit && values.observeOnce) {
     throw new Error("--detach-after-submit 与 --observe-once 不能同时使用");
   }
@@ -541,7 +548,7 @@ function baselineRows(sessions, workspace) {
 }
 
 async function currentProbe(config, dependencies, fresh) {
-  const report = await dependencies.probeAstronStudio({
+  const probeConfig = {
     appPath: config.appPath,
     stateDb: config.stateDatabase,
     endpoint: config.endpoint,
@@ -549,7 +556,41 @@ async function currentProbe(config, dependencies, fresh) {
     output: null,
     configOutput: null,
     timeoutMs: Math.min(config.timeoutMs, 10_000),
-  });
+  };
+  let report = await dependencies.probeAstronStudio(probeConfig, { databaseValidationScope: "runtime" });
+  const uiChecks = new Set(["MODEL_NOT_READ_FROM_UI", "REASONING_NOT_READ_FROM_UI", "PERMISSION_NOT_READ_FROM_UI"]);
+  if (!fresh && !report.ready && report.failed_checks.length
+    && report.failed_checks.every((code) => uiChecks.has(code))) {
+    if (report.app?.version !== config.runConfig.harness.client_version
+      || report.cdp?.endpoint !== config.endpoint) {
+      throw new Error("原生只读观察的客户端或端点偏离冻结配置");
+    }
+    // Observation consumes an already bound attempt. Hidden composer controls
+    // cannot turn a native completed task into a UI failure; this is not PASS
+    // for a new dispatch and never bypasses physical or database-owner checks.
+    return { ...report, native_observation_ready: true, dispatch_ready: false };
+  }
+  if (!report.ready && fresh && config.managedRunSlots > 1 && config.allowedActiveSessionIds.length
+    && report.failed_checks.length && report.failed_checks.every((code) => uiChecks.has(code))) {
+    const allowed = new Set(config.allowedActiveSessionIds);
+    const sessions = await dependencies.queryNativeSessions(config.stateDatabase);
+    const active = sessions.filter(isBlockingActiveSession);
+    if (active.some((row) => !row.session_id || !allowed.has(row.session_id))) {
+      throw new Error("配置控件隐藏时存在队列外或未知活动会话");
+    }
+    const target = await dependencies.discoverMainTarget(config.endpoint, config.timeoutMs);
+    const client = await dependencies.connectCdp(target.webSocketDebuggerUrl, config.timeoutMs);
+    try {
+      const current = await dependencies.currentThreadId(client);
+      if (!sessions.some((row) => row.thread_id === current && allowed.has(row.session_id))) {
+        throw new Error("配置控件隐藏的 UI 路由不是已绑定队列任务");
+      }
+      // Running tasks can hide their composer controls. Move only from a
+      // verified queue-owned task to a blank route, then recheck every gate.
+      await dependencies.createFreshTask(client, config.timeoutMs, config.stateDatabase);
+    } finally { client.close(); }
+    report = await dependencies.probeAstronStudio(probeConfig, { databaseValidationScope: "runtime" });
+  }
   if (!report.ready) throw new Error(`AstronStudio 执行前探针未通过：${report.failed_checks.join(",")}`);
   const current = report.frozen_run_config;
   const frozen = config.runConfig;
@@ -819,6 +860,7 @@ export async function executeSingleTask(config, overrides = {}) {
     discoverMainTarget,
     connectCdp: (url, timeout) => CdpClient.connect(url, timeout),
     prepareExecutionUi,
+    createFreshTask,
     ensureSendTargetReady,
     fillPrompt,
     clickSend,
@@ -829,16 +871,55 @@ export async function executeSingleTask(config, overrides = {}) {
     ...overrides,
   };
   const existing = await readJsonIfPresent(config.stateFile);
+  let state;
   if (existing) {
     if (!config.resume) throw new Error("已有执行状态；必须使用 --resume，禁止创建新 attempt 或重发 Prompt");
-    return resumeExecution(config, existing, dependencies);
+    if (!config.retryPreSendFailure) return resumeExecution(config, existing, dependencies);
+    assertStateIdentity(config, existing);
+    if (!isRetryablePreSendFailure(existing)) throw new Error("非零发送准备失败不能重试");
+    // Recheck both the environment and native source before changing any state.
+    await currentProbe(config, dependencies, true);
+    const sessions = await dependencies.queryNativeSessions(config.stateDatabase);
+    if (sessions.some(isBlockingActiveSession)
+      || sessions.some((session) => resolve(String(session.cwd || "")) === config.candidateWorkspace)) {
+      throw new Error("准备失败接续要求原生空闲且目标 Workspace 没有已接受的会话");
+    }
+    const oldBytes = await readFile(config.stateFile);
+    const oldSha = sha256(oldBytes);
+    const historyRoot = join(config.controlRoot, "pre-send-failures");
+    await mkdir(historyRoot, { recursive: true });
+    const archive = join(historyRoot, `${oldSha}.json`);
+    try { await writeFile(archive, oldBytes, { flag: "wx", mode: 0o600 }); }
+    catch (error) {
+      if (error?.code !== "EEXIST" || sha256(await readFile(archive)) !== oldSha) throw error;
+    }
+    const recordBytes = await readFile(config.recordFile);
+    const recordArchive = join(historyRoot, `${oldSha}.execution-record.json`);
+    try { await writeFile(recordArchive, recordBytes, { flag: "wx", mode: 0o600 }); }
+    catch (error) {
+      if (error?.code !== "EEXIST" || sha256(await readFile(recordArchive)) !== sha256(recordBytes)) throw error;
+    }
+    state = existing;
+    const previousDriverVersion = state.driver.version;
+    state.driver.version = EXECUTION_DRIVER_VERSION;
+    state.phase = "PENDING";
+    state.execution.business_status = null;
+    state.execution.finished_at = null;
+    state.execution.duration_seconds = null;
+    state.execution.error = null;
+    state.history.push({ phase: "PENDING", at: dependencies.now(), event: "ZERO_SEND_PREPARATION_RESUMED",
+      previous_state_sha256: oldSha, previous_state_path: relativePosix(config.unitRoot, archive),
+      previous_record_path: relativePosix(config.unitRoot, recordArchive),
+      previous_record_sha256: sha256(recordBytes), previous_driver_version: previousDriverVersion,
+      driver_version: EXECUTION_DRIVER_VERSION,
+      driver_source_sha256: sha256(await readFile(fileURLToPath(import.meta.url))) });
+    await persist(config, state);
+  } else {
+    if (config.resume) throw new Error("--resume 要求已有 automation-state.json");
+    await currentProbe(config, dependencies, true);
+    state = createInitialState(config, dependencies.now());
+    await persist(config, state);
   }
-  if (config.resume) throw new Error("--resume 要求已有 automation-state.json");
-
-  await currentProbe(config, dependencies, true);
-  const now = dependencies.now();
-  const state = createInitialState(config, now);
-  await persist(config, state);
   let client = null;
   try {
     const target = await dependencies.discoverMainTarget(config.endpoint, config.timeoutMs);
@@ -956,6 +1037,20 @@ export async function executeSingleTask(config, overrides = {}) {
   } finally {
     client?.close();
   }
+}
+
+export function isRetryablePreSendFailure(state) {
+  return state?.phase === "FAILED"
+    && state.execution?.business_status === "infrastructure_error"
+    && state.execution?.error?.code === "PRE_SEND_DRIVER_ERROR"
+    && state.prompt?.send_status === "not_sent"
+    && state.prompt?.sent_at === null
+    && state.send?.dispatch_attempt_count === 0
+    && state.send?.dispatch_armed_at === null
+    && state.send?.dispatch_completed_at === null
+    && state.session?.verified === false
+    && !state.session?.thread_id && !state.session?.turn_id && !state.session?.session_id
+    && !state.history?.some((row) => row.event === "PROMPT_DISPATCH_ARMED" || row.event === "PROMPT_DISPATCH_RETURNED");
 }
 
 function processIsAlive(pid) {

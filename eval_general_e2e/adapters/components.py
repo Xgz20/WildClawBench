@@ -26,7 +26,12 @@ class SharedComponentSpec:
 
 EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     SharedComponentSpec(
-        name="general-resource-supplements", version="1.2.0",
+        name="sqlite-snapshot", version="1.0.0",
+        source_root="tools/report/e2e-shared/sqlite-snapshot",
+        vendor_root="vendor/e2e-shared/sqlite-snapshot", entrypoints=("index.mjs",),
+    ),
+    SharedComponentSpec(
+        name="general-resource-supplements", version="1.2.1",
         source_root="tools/report/e2e-shared/general-resource-supplements",
         vendor_root="vendor/e2e-shared/general-resource-supplements",
         entrypoints=("index.mjs", "archive_astronstudio_trace.mjs", "collect_astronstudio_resource_metrics.mjs", "astronstudio-rollout.mjs"),
@@ -43,7 +48,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="doubaowork",
-        version="0.8.3",
+        version="0.8.4",
         source_root="tools/report/e2e-shared/doubaowork",
         vendor_root="vendor/e2e-shared/doubaowork",
         entrypoints=("controller.mjs", "native-evidence.mjs", "runtime-dispatcher.mjs", "probe.mjs", "process-cleanup.mjs", "select-folder.swift", "tool-counts.mjs"),

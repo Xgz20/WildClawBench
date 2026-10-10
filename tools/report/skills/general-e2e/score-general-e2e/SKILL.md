@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+已按精确冻结契约审核同事请假私信、品牌命名方向两题的纯回复评分输入，见 `references/reviewed-fast-output-evidence-audit.json`。这些 Profile 可使用已绑定最终回复和候选保留可选工具轨迹 partial；安全安装脚本题需要完整执行轨迹证明未发生行为，未加入该例外。
+
 新轮次的 prepare 必须将该题完整 trace 包复制到评分 attempt 的 trace/，包括标准 transcript、trace-index、原始日志与绑定证据。attempt-manifest.trace_bundle 锁定 SHA，verify 每次核验；private/transcript.jsonl 必须与交接的标准轨迹一致。新 CLI 缺少 trace-index 时拒绝，只有旧冻结证据显式 --legacy-transcript-only 或经审核的失败产物契约可按旧口径处理。
 
 语义证据目录包含 raw_trace 与 trace_index，按 catalog/file 分页核验原始会话。不要仅以桌面投影缺少某条工具事件断言没有调用。后补轨迹不得冒充旧裁判已经读取；重评分创建新 attempt，复制并复核完整 trace 包。

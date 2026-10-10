@@ -12,8 +12,22 @@ import { summarizePromptReadback } from "./lib.mjs";
 import { mergeNativeToolTimeline, mergeObservedToolTimeline } from "./trajectory-merge.mjs";
 import { inspectNativeAuthorizationHistory } from "./interactions.mjs";
 import { verifyCancellationEvidence, verifyFailureEvidence } from "./terminal-evidence.mjs";
+import { DISPATCHER_PROFILE, DISPATCHER_SOURCE_SHA256 } from "./runtime-dispatcher.mjs";
 
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
+export function trajectoryArchiveClockPolicy(snapshot) {
+  if (snapshot?.profile === "doubaowork-local-tool-debug-sink/v1"
+      && snapshot.profile_sha256 === "f765c160a6d8661b95cddbbbee9bed1ab90902e910259c5c241ae4cd7df78e75") {
+    return { use_observation_bounds: true, basis: "verified-native-emitter-host-clock/v1" };
+  }
+  if (snapshot?.profile === DISPATCHER_PROFILE && snapshot.profile_sha256 === DISPATCHER_SOURCE_SHA256) {
+    // The dispatcher profile is bound and verified, but its ledger times do
+    // not prove the old emitter clock. Preserve archives without using their
+    // capture times to order dispatcher and model events across sources.
+    return { use_observation_bounds: false, basis: "verified-dispatcher-native-order-only/v1" };
+  }
+  throw new Error("DOUBAOWORK_ARCHIVE_CLOCK_PROFILE_UNVERIFIED");
+}
 export async function readRegular(path) {
   const st = await lstat(path);
   if (!st.isFile() || st.isSymbolicLink() || st.size > 32 * 1024 * 1024 || await realpath(path) !== resolve(path)) throw new Error("DOUBAOWORK_COLLECTOR_INPUT_UNSAFE");
@@ -257,15 +271,10 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   try { archiveIndexBytes = await readRegular(archiveIndexPath); } catch (e) { if (e.code !== "ENOENT") throw e; }
   if (archiveIndexBytes) {
     if (!source) throw new Error("DOUBAOWORK_ARCHIVE_WITHOUT_NATIVE_SOURCE");
-    // The validated native emitter stamps debug events with this host's
-    // Date.now(). Unknown runtimes must not use filesystem time to order them.
-    // The installed 2.31.6 module 955025 was SHA-pinned from the live client;
-    // its emitToolCallDebugEvent stamps ts:Date.now(). The exact source and all
-    // sixty bound tool artifacts are audited in repair-control, and no other
-    // profile is admitted by this independent collector runtime.
-    if (!nativeToolBytes || JSON.parse(nativeToolBytes).profile_sha256 !== "f765c160a6d8661b95cddbbbee9bed1ab90902e910259c5c241ae4cd7df78e75") throw new Error("DOUBAOWORK_ARCHIVE_CLOCK_PROFILE_UNVERIFIED");
+    const clockPolicy = trajectoryArchiveClockPolicy(nativeToolBytes ? JSON.parse(nativeToolBytes) : null);
     const index = JSON.parse(archiveIndexBytes);
     if (index.schema !== "wildclawbench.doubaowork-trajectory-observations/v1"
+        || index.clock !== "same-host-wall-clock-observation-upper-bound"
         || index.identity.attempt_id !== journal.attempt_id || index.identity.conversation_id !== native.conversation_id
         || index.identity.workspace !== workspace || !Array.isArray(index.snapshots) || index.snapshots.length > 256) throw new Error("DOUBAOWORK_ARCHIVE_BINDING_INVALID");
     let previous = 0, bytesTotal = 0;
@@ -277,7 +286,8 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
       if (sha(bytes) !== row.sha256 || bytes.length !== row.size || bytesTotal > 128 * 1024 * 1024) throw new Error("DOUBAOWORK_ARCHIVE_HASH_OR_CAPACITY_INVALID");
       const rawPath = `raw/trajectory-observations/${row.file}`, parsed = parseTrajectoryJsonl(bytes.toString("utf8"), rawPath);
       if (parsed.warnings.length) throw new Error("DOUBAOWORK_ARCHIVE_PARSE_INCOMPLETE");
-      snapshots.push({ captured_at: row.captured_at, events: parsed.events.map(e => ({ ...e, agent_id: row.agent_id })) });
+      snapshots.push({ captured_at: clockPolicy.use_observation_bounds ? row.captured_at : null,
+        clock_policy: clockPolicy.basis, events: parsed.events.map(e => ({ ...e, agent_id: row.agent_id })) });
       archiveRaw.push({ path: rawPath, bytes }); previous = time;
     }
     archiveRaw.push({ path: "raw/trajectory-observations/index.json", bytes: archiveIndexBytes });

@@ -74,6 +74,7 @@ class E2EBuildTests(unittest.TestCase):
         self.assertEqual(
             set(components),
             {
+                "sqlite-snapshot",
                 "desktop-runtime",
                 "task-process-cleanup",
                 "desktop-app-discovery",
@@ -690,7 +691,7 @@ console.log(JSON.stringify(analyzeRollout(Buffer.from(rows.map(JSON.stringify).j
         detached.mkdir()
         installed = BUILD._safe_extract(self.archive_path("collect-general-e2e"), detached / "installed")
         bundled = json.loads((installed / "bundled-components.json").read_text())
-        self.assertEqual(bundled["skill_version"], "0.9.5")
+        self.assertEqual(bundled["skill_version"], "0.9.7")
         component = next(item for item in bundled["components"] if item["name"] == "general-contracts")
         self.assertEqual(component["version"], "1.3.0")
         for relative in ("collection_validation.py", "schemas/trace-index-v2.schema.json"):

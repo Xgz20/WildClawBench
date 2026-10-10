@@ -3,6 +3,8 @@ name: execute-web-e2e
 description: 在 AstronStudio、WorkBuddy、QwenWork、DoubaoWork 等桌面 Harness 中执行单个或批量 Web E2E 用例，持久化可恢复状态、终态证据和 execution_record；用于自动做题阶段，不负责评分或报告。
 ---
 
+DoubaoWork 2.31.10 的队列滚动轨迹复用共用证据核心：只接纳已验证 dispatcher Profile 与精确源码 SHA，不继承旧 emitter 的跨来源时钟证明；原件和捕获时间保留，无法核实的工具顺序保持 partial。
+
 # 执行 Web E2E 用例
 
 本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 AstronStudio、WorkBuddy、QwenWork、DoubaoWork 的单题 Driver 和对应队列入口；先读取 execution 包 `manifest.json` 的 `harness.id`，再选择同名 Driver，不能按文件名或客户端外观猜测。

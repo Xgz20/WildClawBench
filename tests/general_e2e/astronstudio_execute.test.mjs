@@ -11,15 +11,21 @@ import {
   fillPrompt,
   renderExpectedPrompt,
   shouldOpenExactProjectConversation,
+  reloadIdleProjectProjection,
+  waitForExactProjectIdentity,
+  createFreshTask,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs";
 import {
   withStateSnapshot,
+  STATE_SNAPSHOT_TABLES,
+  queryPristineThread,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs";
 import {
   EXECUTION_RECORD_SCHEMA,
   classifyNativeState,
   executeSingleTask,
   isBlockingActiveSession,
+  isRetryablePreSendFailure,
   parseArgs,
   selectRouteBoundSession,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs";
@@ -33,6 +39,82 @@ test("workspace trigger without a visible absolute path uses exact native projec
   assert.equal(shouldOpenExactProjectConversation({ count: 2, path: null }), false);
 });
 
+test("an empty composer on a previous conversation is not a fresh task route", async () => {
+  let reads = 0;
+  const client = { evaluate: async (expression) => {
+    if (expression.includes("buttons[0].click()")) return { clicked: true, count: 1 };
+    return { thread_id: ++reads < 3 ? "previous-conversation" : "new-conversation",
+      editor_count: 1, editor_text: "" };
+  } };
+  const result = await createFreshTask(client, 1_000);
+  assert.equal(result.thread_id, "new-conversation");
+});
+
+test("reusable blank routes require a native thread without messages, turns, sessions or pending interactions", async () => {
+  const root = await mkdtemp(join(tmpdir(), "general-pristine-thread-"));
+  const file = join(root, "state.sqlite");
+  const { DatabaseSync } = await import("node:sqlite");
+  const db = new DatabaseSync(file);
+  try {
+    db.exec(`CREATE TABLE projection_threads(thread_id TEXT, latest_turn_id TEXT, deleted_at TEXT);
+CREATE TABLE projection_thread_messages(thread_id TEXT);
+CREATE TABLE projection_turns(thread_id TEXT);
+CREATE TABLE projection_thread_sessions(thread_id TEXT);
+CREATE TABLE projection_pending_interactions(thread_id TEXT,status TEXT);
+INSERT INTO projection_threads VALUES('empty',NULL,NULL),('old',NULL,NULL);
+INSERT INTO projection_thread_messages VALUES('old');`);
+    assert.equal(await queryPristineThread(file, "empty"), true);
+    assert.equal(await queryPristineThread(file, "old"), false);
+    assert.equal(await queryPristineThread(file, "missing"), false);
+    db.exec("INSERT INTO projection_pending_interactions VALUES('empty','pending');");
+    assert.equal(await queryPristineThread(file, "empty"), false);
+  } finally { db.close(); await rm(root, { recursive: true, force: true }); }
+});
+
+test("project registration waits for its exact native identity and rejects ambiguity", async () => {
+  let reads = 0;
+  assert.equal(await waitForExactProjectIdentity("/db", "/workspace", 1_000, {
+    queryExactProjectsForWorkspace: async () => ++reads === 1 ? [] : [{ project_id: "exact-project" }],
+  }), "exact-project");
+  await assert.rejects(waitForExactProjectIdentity("/db", "/workspace", 1_000, {
+    queryExactProjectsForWorkspace: async () => [{ project_id: "one" }, { project_id: "two" }],
+  }), /身份不唯一/u);
+  await assert.rejects(waitForExactProjectIdentity("/db", "/workspace", 1, {
+    queryExactProjectsForWorkspace: async () => [],
+  }), /原生项目登记.*超时/u);
+});
+
+test("project projection reload requires native idle and an empty unblocked editor", async () => {
+  for (const current of [
+    { native: [{ status: "running" }], ui: { editor_count: 1, empty: true, dialogs: 0, stops: 0 } },
+    { native: [], ui: { editor_count: 1, empty: false, dialogs: 0, stops: 0 } },
+    { native: [], ui: { editor_count: 1, empty: true, dialogs: 1, stops: 0 } },
+    { native: [], ui: { editor_count: 1, empty: true, dialogs: 0, stops: 1 } },
+  ]) {
+    const calls = [];
+    const client = { evaluate: async () => current.ui, send: async (method) => calls.push(method) };
+    await assert.rejects(reloadIdleProjectProjection(client, "/state.sqlite", {
+      queryNativeSessions: async () => current.native,
+    }), /活动任务|草稿|弹窗/u);
+    assert.deepEqual(calls, []);
+  }
+  const calls = [];
+  await reloadIdleProjectProjection({
+    evaluate: async () => ({ editor_count: 1, empty: true, dialogs: 0, stops: 0 }),
+    send: async (method) => calls.push(method),
+  }, "/state.sqlite", { queryNativeSessions: async () => [{ status: "completed", active_turn_id: null }] });
+  assert.deepEqual(calls, ["Page.reload"]);
+  let reads = 0;
+  let nativeReads = 0;
+  const appeared = [];
+  await assert.rejects(reloadIdleProjectProjection({
+    evaluate: async () => ({ editor_count: ++reads === 1 ? 0 : 1, empty: true, dialogs: 0, stops: 0 }),
+    send: async (method) => appeared.push(method),
+  }, "/state.sqlite", { queryNativeSessions: async () => ++nativeReads === 1 ? [] : [{ status: "running" }] }),
+  /刷新前出现活动任务/u);
+  assert.deepEqual(appeared, []);
+});
+
 class FakeElement {
   constructor(text = "") {
     this.innerText = text;
@@ -43,6 +125,8 @@ class FakeElement {
   getBoundingClientRect() {
     return { width: 20, height: 20 };
   }
+
+  closest() { return null; }
 
   click() {
     this.clickCount += 1;
@@ -121,6 +205,8 @@ function nativeSession(state = "running") {
 
 function probeReport(config) {
   return {
+    app: { version: config.runConfig.harness.client_version },
+    cdp: { endpoint: config.endpoint },
     ready: true,
     failed_checks: [],
     state_database: { active_or_pending_session_count: 0 },
@@ -346,6 +432,8 @@ test("managed dispatch rejects an active session outside the frozen queue", asyn
 
 test("global new-task action wins over many per-workspace new-thread actions", async () => {
   const globalNewTask = new FakeElement("新建任务");
+  const hiddenNewTask = new FakeElement("新建任务");
+  hiddenNewTask.closest = () => ({ inert: true });
   const workspaceActions = Array.from({ length: 50 }, () => new FakeElement());
   const context = {
     Element: FakeElement,
@@ -353,7 +441,7 @@ test("global new-task action wins over many per-workspace new-thread actions", a
     location: { hash: "#/existing-thread" },
     document: {
       querySelectorAll(selector) {
-        if (selector === "button") return [globalNewTask, ...workspaceActions];
+        if (selector === "button") return [globalNewTask, hiddenNewTask, ...workspaceActions];
         if (selector === 'button[data-testid="new-thread-button"]') return workspaceActions;
         return [];
       },
@@ -367,6 +455,7 @@ test("global new-task action wins over many per-workspace new-thread actions", a
 
   assert.deepEqual(await clickNewTask(client), { clicked: true, count: 1 });
   assert.equal(globalNewTask.clickCount, 1);
+  assert.equal(hiddenNewTask.clickCount, 0);
   assert.equal(workspaceActions.reduce((total, item) => total + item.clickCount, 0), 0);
 });
 
@@ -376,8 +465,10 @@ test("state snapshot retries with backoff after an inconsistent copy", async () 
   const waits = [];
   let queryCount = 0;
   class FakeDatabaseSync {
+    constructor(_path, options) { assert.deepEqual(options, { readOnly: true }); }
+    exec(sql) { assert.equal(sql, "PRAGMA cache_size=-65536; PRAGMA mmap_size=2147483648;"); }
     prepare(sql) {
-      assert.equal(sql, "PRAGMA quick_check;");
+      assert.match(sql, /^PRAGMA quick_check\("[a-z_]+"\);$/u);
       return {
         all() {
           queryCount += 1;
@@ -401,8 +492,31 @@ test("state snapshot retries with backoff after an inconsistent copy", async () 
       },
     );
     assert.equal(value, "database placeholder");
-    assert.equal(queryCount, 2);
+    assert.equal(queryCount, 1 + STATE_SNAPSHOT_TABLES.length);
     assert.deepEqual(waits, [100]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("snapshot validation cannot be disabled or point at an unknown table", async () => {
+  for (const tables of [[], ["unknown_table"]]) {
+    await assert.rejects(withStateSnapshot("unused", () => assert.fail("operation ran"), {}, tables), /非空、已知/u);
+  }
+});
+
+test("a missing queried table blocks the operation on a real SQLite snapshot", async () => {
+  const { DatabaseSync } = await import("node:sqlite");
+  const root = await mkdtemp(join(tmpdir(), "general-e2e-state-scope-test-"));
+  try {
+    const source = join(root, "state.sqlite");
+    const db = new DatabaseSync(source);
+    db.exec("CREATE TABLE projection_projects(project_id TEXT);");
+    db.close();
+    let invoked = false;
+    await assert.rejects(withStateSnapshot(source, () => { invoked = true; }, { attempts: 1 }, ["projection_threads"]), /no such table/u);
+    assert.equal(invoked, false);
+    assert.equal(await withStateSnapshot(source, () => "checked", {}, ["projection_projects"]), "checked");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -634,4 +748,110 @@ test("obscured send target fails before persisting a send intent", async () => {
   } finally {
     await rm(config.unitRoot, { recursive: true, force: true });
   }
+});
+
+test("explicit zero-send recovery preserves failure bytes and the attempt, and sends once", async () => {
+  const config = await fixture();
+  const clicks = { count: 0 };
+  try {
+    const first = commonDependencies(config, [[]], clicks);
+    first.prepareExecutionUi = async () => { throw new Error("project projection missing"); };
+    const failed = await executeSingleTask(config, first);
+    const oldBytes = await readFile(config.stateFile, "utf8");
+    assert.equal(isRetryablePreSendFailure(failed), true);
+    const result = await executeSingleTask({ ...config, resume: true, retryPreSendFailure: true },
+      commonDependencies(config, [[], [], [nativeSession()], [nativeSession("completed")]], clicks));
+    assert.equal(result.identity.attempt_id, failed.identity.attempt_id);
+    assert.equal(result.phase, "COMPLETED");
+    assert.equal(result.send.dispatch_attempt_count, 1);
+    assert.equal(clicks.count, 1);
+    const audit = result.history.find((item) => item.event === "ZERO_SEND_PREPARATION_RESUMED");
+    assert.equal(await readFile(join(config.unitRoot, audit.previous_state_path), "utf8"), oldBytes);
+    assert.equal(result.history.some((item) => item.event === "PRE_SEND_DRIVER_ERROR"), true);
+    const again = await executeSingleTask({ ...config, resume: true }, commonDependencies(config, [[]], clicks));
+    assert.equal(again.phase, "COMPLETED");
+    assert.equal(clicks.count, 1);
+    await assert.rejects(executeSingleTask({ ...config, resume: true, retryPreSendFailure: true },
+      commonDependencies(config, [[]], clicks)), /非零发送/u);
+  } finally { await rm(config.unitRoot, { recursive: true, force: true }); }
+});
+
+test("zero-send recovery rejects native activity and any persisted dispatch boundary", async () => {
+  const config = await fixture();
+  const clicks = { count: 0 };
+  try {
+    const deps = commonDependencies(config, [[]], clicks);
+    deps.prepareExecutionUi = async () => { throw new Error("project projection missing"); };
+    const failed = await executeSingleTask(config, deps);
+    const original = await readFile(config.stateFile, "utf8");
+    for (const change of [
+      { send: { ...failed.send, dispatch_attempt_count: 1 } },
+      { send: { ...failed.send, dispatch_armed_at: "2026-09-17T15:00:00Z" } },
+      { prompt: { ...failed.prompt, send_status: "uncertain" } },
+      { history: [...failed.history, { event: "PROMPT_DISPATCH_ARMED" }] },
+    ]) assert.equal(isRetryablePreSendFailure({ ...failed, ...change }), false);
+    await assert.rejects(executeSingleTask({ ...config, resume: true, retryPreSendFailure: true },
+      commonDependencies(config, [[nativeSession()]], clicks)), /原生空闲/u);
+    assert.equal(await readFile(config.stateFile, "utf8"), original);
+    assert.equal(clicks.count, 0);
+  } finally { await rm(config.unitRoot, { recursive: true, force: true }); }
+});
+
+test("managed startup restores configuration controls only from a bound queue-owned route", async () => {
+  const config = await fixture();
+  config.managedRunSlots = 3;
+  config.allowedActiveSessionIds = ["provider-session-1"];
+  const clicks = { count: 0 };
+  try {
+    const deps = commonDependencies(config, [[nativeSession()], [], []], clicks);
+    let probes = 0;
+    let navigated = 0;
+    deps.probeAstronStudio = async () => ++probes === 1 ? {
+      ...probeReport(config), ready: false,
+      failed_checks: ["MODEL_NOT_READ_FROM_UI", "REASONING_NOT_READ_FROM_UI", "PERMISSION_NOT_READ_FROM_UI"],
+    } : probeReport(config);
+    deps.createFreshTask = async () => { navigated++; };
+    deps.prepareExecutionUi = async () => { throw new Error("test stops before a send"); };
+    const result = await executeSingleTask(config, deps);
+    assert.equal(navigated, 1);
+    assert.equal(probes, 2);
+    assert.equal(result.send.dispatch_attempt_count, 0);
+    assert.equal(clicks.count, 0);
+  } finally { await rm(config.unitRoot, { recursive: true, force: true }); }
+});
+
+test("hidden configuration controls cannot bypass physical failures or foreign sessions", async () => {
+  for (const physicalFailure of [false, true]) {
+    const config = await fixture();
+    config.managedRunSlots = 3;
+    config.allowedActiveSessionIds = ["different-session"];
+    const clicks = { count: 0 };
+    let navigated = 0;
+    try {
+      const deps = commonDependencies(config, [[nativeSession()]], clicks);
+      deps.probeAstronStudio = async () => ({ ...probeReport(config), ready: false,
+        failed_checks: ["MODEL_NOT_READ_FROM_UI", ...(physicalFailure ? ["STATE_DATABASE_OWNER_NOT_VERIFIED"] : [])] });
+      deps.createFreshTask = async () => { navigated++; };
+      await assert.rejects(executeSingleTask(config, deps), /未知活动|探针未通过/u);
+      assert.equal(navigated, 0);
+      assert.equal(clicks.count, 0);
+    } finally { await rm(config.unitRoot, { recursive: true, force: true }); }
+  }
+});
+
+test("a bound task can be observed when completed-task UI hides configuration controls", async () => {
+  const config = await fixture();
+  const clicks = { count: 0 };
+  try {
+    const started = await executeSingleTask({ ...config, detachAfterSubmit: true },
+      commonDependencies(config, [[], [nativeSession()]], clicks));
+    assert.equal(started.phase, "RUNNING");
+    const deps = commonDependencies(config, [[nativeSession("completed")]], clicks);
+    deps.probeAstronStudio = async () => ({ ...probeReport(config), ready: false,
+      failed_checks: ["MODEL_NOT_READ_FROM_UI", "REASONING_NOT_READ_FROM_UI", "PERMISSION_NOT_READ_FROM_UI"] });
+    const observed = await executeSingleTask({ ...config, resume: true, observeOnce: true }, deps);
+    assert.equal(observed.phase, "COMPLETED");
+    assert.equal(observed.identity.attempt_id, started.identity.attempt_id);
+    assert.equal(clicks.count, 1);
+  } finally { await rm(config.unitRoot, { recursive: true, force: true }); }
 });

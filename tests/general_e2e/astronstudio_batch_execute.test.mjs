@@ -104,6 +104,34 @@ test("batch CLI defaults to three slots and preserves explicit algorithm limits"
   );
 });
 
+test("queue resumes an explicit zero-send preparation failure without replacing its attempt", async () => {
+  const current = await fixture([TASK_IDS[0]]);
+  try {
+    const failed = automation(current.plan, TASK_IDS[0], "preserved-attempt", "FAILED");
+    failed.prompt = { send_status: "not_sent", sent_at: null };
+    failed.send = { dispatch_attempt_count: 0, dispatch_armed_at: null, dispatch_completed_at: null };
+    failed.session = { verified: false, thread_id: null, turn_id: null, session_id: null };
+    failed.execution.business_status = "infrastructure_error";
+    failed.execution.error = { code: "PRE_SEND_DRIVER_ERROR" };
+    failed.history = [];
+    await runQueue(current.plan, current.args, { runTask: async () => {
+      await writeAutomation(current.plan, TASK_IDS[0], failed); return { code: 2, signal: null };
+    } });
+    const calls = [];
+    const resumed = await runQueue(current.plan, { ...current.args, resume: true, retryPreSendTaskId: TASK_IDS[0] }, {
+      runTask: async (taskId, operation) => {
+        calls.push(operation);
+        await writeAutomation(current.plan, taskId, automation(current.plan, taskId, "preserved-attempt", "COMPLETED"));
+        return { code: 0, signal: null };
+      },
+    });
+    assert.deepEqual(calls, ["retry-pre-send"]);
+    assert.equal(resumed.phase, "COMPLETED");
+    assert.equal(resumed.tasks[0].selected_attempt_id, "preserved-attempt");
+    assert.equal(resumed.tasks[0].dispatch_attempt_count, 1);
+  } finally { await rm(current.unitRoot, { recursive: true, force: true }); }
+});
+
 test("five tasks fill default three slots and dynamically refill in manifest order", async () => {
   const current = await fixture();
   const calls = [];

@@ -1,9 +1,9 @@
-import { constants as fsConstants } from "node:fs";
-import { copyFile, mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
+import { copySnapshotFile, configureSnapshotReader } from "../../vendor/e2e-shared/sqlite-snapshot/index.mjs";
 
 const SESSION_QUERY = `
 WITH latest_turn AS (
@@ -67,6 +67,15 @@ ORDER BY COALESCE(
 ) DESC, sessions.thread_id ASC;
 `;
 
+export const SESSION_SNAPSHOT_TABLES = Object.freeze([
+  "projection_turns", "projection_threads", "projection_projects",
+  "projection_thread_sessions", "projection_pending_interactions",
+  "provider_runtime_open_turns", "provider_session_runtime",
+]);
+export const STATE_SNAPSHOT_TABLES = Object.freeze([
+  ...SESSION_SNAPSHOT_TABLES, "projection_thread_messages",
+]);
+
 let sqliteModulePromise;
 
 async function loadNodeSqlite() {
@@ -84,15 +93,16 @@ function sleep(milliseconds) {
 
 async function copyIfPresent(source, destination) {
   try {
-    await copyFile(source, destination, fsConstants.COPYFILE_FICLONE);
+    await copySnapshotFile(source, destination);
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
   }
 }
 
 async function queryWithNodeSqlite(databasePath, sql, sqliteModule) {
-  const database = new sqliteModule.DatabaseSync(databasePath);
+  const database = new sqliteModule.DatabaseSync(databasePath, { readOnly: true });
   try {
+    configureSnapshotReader(database);
     return database.prepare(sql).all();
   } finally {
     database.close();
@@ -102,7 +112,7 @@ async function queryWithNodeSqlite(databasePath, sql, sqliteModule) {
 async function queryWithCli(databasePath, sql, runCommand = runCapture) {
   const result = await runCommand(
     "/usr/bin/sqlite3",
-    ["-json", databasePath, sql],
+    ["-readonly", "-json", databasePath, sql],
     { capture: true, allowFailure: false },
   );
   return result.stdout.trim() ? JSON.parse(result.stdout) : [];
@@ -116,7 +126,10 @@ async function querySnapshot(databasePath, sql, overrides = {}) {
   return queryWithCli(databasePath, sql, overrides.runCommand || runCapture);
 }
 
-export async function withStateSnapshot(stateDatabase, operation, overrides = {}) {
+export async function withStateSnapshot(stateDatabase, operation, overrides = {}, tables = STATE_SNAPSHOT_TABLES) {
+  if (!Array.isArray(tables) || !tables.length || tables.some((table) => !STATE_SNAPSHOT_TABLES.includes(table))) {
+    throw new Error("快照必须声明非空、已知的读取表范围");
+  }
   const source = resolve(stateDatabase);
   const attempts = overrides.attempts || 3;
   const wait = overrides.sleep || sleep;
@@ -125,11 +138,16 @@ export async function withStateSnapshot(stateDatabase, operation, overrides = {}
     const root = await mkdtemp(join(tmpdir(), "general-e2e-astudio-execute-"));
     const snapshot = join(root, "state.sqlite");
     try {
-      await copyFile(source, snapshot, fsConstants.COPYFILE_FICLONE);
+      await copySnapshotFile(source, snapshot);
       await copyIfPresent(`${source}-wal`, `${snapshot}-wal`);
-      const integrityRows = await querySnapshot(snapshot, "PRAGMA quick_check;", overrides);
-      const integrity = String(Object.values(integrityRows[0] || {})[0] || "");
-      if (integrity !== "ok") throw new Error(`状态库快照 quick_check=${integrity || "empty"}`);
+      await copyIfPresent(`${source}-shm`, `${snapshot}-shm`);
+      // High-frequency observations validate every complete table they read.
+      // Probe and formal trace archival retain their whole-database check.
+      for (const table of tables) {
+        const integrityRows = await querySnapshot(snapshot, `PRAGMA quick_check("${table}");`, overrides);
+        const integrity = String(Object.values(integrityRows[0] || {})[0] || "");
+        if (integrityRows.length !== 1 || integrity !== "ok") throw new Error(`状态库快照 ${table} quick_check=${integrity || "empty"}`);
+      }
       return await operation(snapshot, overrides);
     } catch (error) {
       lastError = error;
@@ -196,8 +214,23 @@ export async function queryNativeSessions(stateDatabase, overrides = {}) {
     stateDatabase,
     async (snapshot) => (await querySnapshot(snapshot, SESSION_QUERY, overrides))
       .map(normalizeNativeSession),
-    overrides,
+    overrides, SESSION_SNAPSHOT_TABLES,
   );
+}
+
+export async function queryPristineThread(stateDatabase, threadId, overrides = {}) {
+  const rows = await withStateSnapshot(stateDatabase, (snapshot) => querySnapshot(snapshot, `
+SELECT threads.thread_id, threads.latest_turn_id,
+  (SELECT COUNT(*) FROM projection_thread_messages WHERE thread_id = threads.thread_id) AS message_count,
+  (SELECT COUNT(*) FROM projection_turns WHERE thread_id = threads.thread_id) AS turn_count,
+  (SELECT COUNT(*) FROM projection_thread_sessions WHERE thread_id = threads.thread_id) AS session_count,
+  (SELECT COUNT(*) FROM projection_pending_interactions WHERE thread_id = threads.thread_id AND status = 'pending') AS pending_count
+FROM projection_threads AS threads
+WHERE threads.thread_id = ${sqlString(threadId)} AND threads.deleted_at IS NULL;
+`, overrides), overrides, ["projection_threads", "projection_thread_messages", "projection_turns",
+    "projection_thread_sessions", "projection_pending_interactions"]);
+  return rows.length === 1 && rows[0].latest_turn_id === null
+    && ["message_count", "turn_count", "session_count", "pending_count"].every((key) => rows[0][key] === 0);
 }
 
 export async function queryExactProjectsForWorkspace(stateDatabase, workspace, overrides = {}) {
@@ -205,7 +238,7 @@ export async function queryExactProjectsForWorkspace(stateDatabase, workspace, o
 SELECT project_id, workspace_root
 FROM projection_projects
 WHERE workspace_root = ${sqlString(workspace)} AND deleted_at IS NULL;
-`, overrides), overrides);
+`, overrides), overrides, ["projection_projects"]);
 }
 
 export async function queryProjectForThread(stateDatabase, threadId, overrides = {}) {
@@ -215,7 +248,7 @@ FROM projection_threads AS threads
 JOIN projection_projects AS projects ON projects.project_id = threads.project_id
 WHERE threads.thread_id = ${sqlString(threadId)}
   AND threads.deleted_at IS NULL AND projects.deleted_at IS NULL;
-`, overrides), overrides);
+`, overrides), overrides, ["projection_threads", "projection_projects"]);
 }
 
 export async function queryFinalResponse(stateDatabase, threadId, turnId, overrides = {}) {
@@ -233,7 +266,7 @@ ORDER BY sequence DESC, updated_at DESC, message_id DESC
 LIMIT 1;
 `, overrides);
     return typeof rows[0]?.text === "string" ? rows[0].text.trim() : "";
-  }, overrides);
+  }, overrides, ["projection_thread_messages"]);
 }
 
 export async function readPrompt(path) {

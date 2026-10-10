@@ -15,6 +15,8 @@ rollout profile 2 同时提供 Token 和原生任务耗时。Token 从去重并�
 
 ## 当前能力
 
+`0.7.5` 随资源补充组件分发共用 SQLite 快照复制能力，macOS 优先原生 APFS 克隆；未改变已有报告统计、Token Profile、分母或冻结材料复算政策。
+
 `0.7.4` 提供 `astronstudio_context_diagnosis.py`：从明确选中的执行身份、rollout SHA和原报告用量做只读诊断，统计思考、助手正文、工具参数和工具返回字符，关联相邻请求的原生输入增量。有新内容但累计usage未推进的区间单独保留，不能套用旧usage或并入下一次响应。字符/Token换算只使用本轮已计量文本的经验分布，并标记为估计；完整请求缺失时不作精确输入角色归因。
 
 `0.7.1` 增加：分组工具表头、逐字段覆盖及部分小计、中文分类与用例数、秒级Excel名称、`--target-unit`领导版，以及独立的 `token_growth_analysis.py` 请求级 Token 增长分析。目标单元用于文字总结，各表保留全部参评单元。`report.display_overrides.unit_model_labels`可带`label/reason`修改展示，不改原模型验证信息。采集后的通用资源补充层会在报告时重新核验并复算。

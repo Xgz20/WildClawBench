@@ -100,6 +100,7 @@ export async function fixture(t) {
   await put(journalFile, journal);
   const outputRoot = join(unit, '.general-e2e/collection/task-probe/probe-1');
   return { unit, workspace, control, journal, journalFile, runtime, snapshot, manifest, outputRoot,
+    trajectoryPath, trajectoryBytes, source,
     writeArtifact: put, seal,
     readBound: options => bound.namespace.readBoundNativeEvidence({ journalFile, journal, ...options }),
     collect: async () => { await put(journalFile, journal); return collect.namespace.collectDoubaoGeneral({ unitRoot: unit, journalFile, outputRoot }); },

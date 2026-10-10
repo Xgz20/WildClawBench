@@ -14,6 +14,7 @@ import {
 } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isRetryablePreSendFailure } from "./execute_astronstudio_macos.mjs";
 
 export const QUEUE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-queue/v1";
 export const QUEUE_WORKER_VERSION = "0.1.0";
@@ -38,6 +39,7 @@ function usage() {
 
 选项：
   --resume                       恢复同一 queue 和已登记 attempt；不重发 Prompt
+  --retry-pre-send-task-id <ID>  与 --resume 使用；只接续指定零发送准备失败
   --status                       只读取持久化队列状态
   --continue-on-terminal-failure 明确失败终态后继续下一题
   --run-slots <1-8>              后台 Agent 槽位，默认 3；UI 发送固定单槽
@@ -63,6 +65,7 @@ export function parseBatchArgs(argv) {
     queueId: "",
     taskIds: [],
     resume: false,
+    retryPreSendTaskId: null,
     status: false,
     continueOnTerminalFailure: false,
     runSlots: RUN_SLOTS,
@@ -79,6 +82,7 @@ export function parseBatchArgs(argv) {
     ["--timeout-ms", "timeoutMs"],
     ["--poll-interval-ms", "pollIntervalMs"],
     ["--identity-timeout-ms", "identityTimeoutMs"],
+    ["--retry-pre-send-task-id", "retryPreSendTaskId"],
   ]);
   const numeric = new Set(["runSlots", "timeoutMs", "pollIntervalMs", "identityTimeoutMs"]);
   for (let index = 0; index < argv.length; index += 1) {
@@ -112,6 +116,9 @@ export function parseBatchArgs(argv) {
     throw new Error("必须指定 --unit-root、--run-config 和 --queue-id");
   }
   if (values.status && values.resume) throw new Error("--status 与 --resume 不能同时使用");
+  if (values.retryPreSendTaskId && (!values.resume || values.status)) {
+    throw new Error("--retry-pre-send-task-id 只允许恢复原队列");
+  }
   return values;
 }
 
@@ -412,8 +419,9 @@ async function launchSingleTask(plan, args, taskId, operation, activeSessionIds 
     "--poll-interval-ms", String(args.pollIntervalMs),
     "--identity-timeout-ms", String(args.identityTimeoutMs),
   ];
-  if (operation === "dispatch") {
+  if (operation === "dispatch" || operation === "retry-pre-send") {
     childArgs.push("--detach-after-submit", "--managed-run-slots", String(args.runSlots));
+    if (operation === "retry-pre-send") childArgs.push("--resume", "--retry-pre-send-failure");
     for (const sessionId of activeSessionIds) {
       childArgs.push("--allowed-active-session-id", sessionId);
     }
@@ -516,7 +524,7 @@ export async function runQueue(plan, args, overrides = {}) {
     await persist(plan, state, dependencies.now());
   }
 
-  if (new Set(["COMPLETED", "COMPLETED_WITH_FAILURES"]).has(state.phase)) return state;
+  if (new Set(["COMPLETED", "COMPLETED_WITH_FAILURES"]).has(state.phase) && !args.retryPreSendTaskId) return state;
   const now = dependencies.now();
   if (args.resume) recordUnexpectedWorkerLoss(state, dependencies.isProcessAlive, now);
   const lock = await acquireWorkerLock(plan.workerLockFile, args.resume, dependencies.isProcessAlive);
@@ -534,6 +542,25 @@ export async function runQueue(plan, args, overrides = {}) {
     state.phase = "RUNNING";
     state.error = null;
     await persist(plan, state, dependencies.now());
+
+    if (args.retryPreSendTaskId) {
+      const row = state.tasks.find((task) => task.task_id === args.retryPreSendTaskId);
+      if (!row) throw new Error("指定的准备失败任务不在冻结队列中");
+      const automation = await readJsonIfPresent(controlPath(plan, row.task_id, "automation-state.json"));
+      validateAutomation(plan, row, automation);
+      if (!isRetryablePreSendFailure(automation)
+        || state.tasks.some((task) => ["RUNNING", "NEEDS_ATTENTION"].includes(task.phase))) {
+        throw new Error("准备失败接续要求指定任务零发送且队列没有活动或未知发送任务");
+      }
+      state.history.push({ at: dependencies.now(), event: "ZERO_SEND_PREPARATION_RETRY_REQUESTED",
+        task_id: row.task_id, attempt_id: row.selected_attempt_id });
+      await persist(plan, state, dependencies.now());
+      const result = await dependencies.runTask(row.task_id, "retry-pre-send", []);
+      row.driver_exit_code = result.code;
+      const recovered = await readJsonIfPresent(controlPath(plan, row.task_id, "automation-state.json"));
+      synchronizeTaskFromAutomation(plan, row, recovered, dependencies.now());
+      await persist(plan, state, dependencies.now());
+    }
 
     for (;;) {
       for (const queueTask of state.tasks) {
