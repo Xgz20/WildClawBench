@@ -520,12 +520,12 @@ export async function findNewTaskButtons(page) {
 
 export async function findConversationSidebarToggles(page) {
   const candidates = await visibleLocators(page.locator(
-    'button[aria-label="切换对话侧边栏"], button[aria-label="Toggle conversation sidebar" i]',
+    'button[aria-label="切换对话侧边栏"], button[aria-label="Toggle conversation sidebar" i], button[aria-label="Toggle Sidebar" i]',
   ));
   const matches = [];
   for (const candidate of candidates) {
     const label = (await candidate.getAttribute("aria-label") || "").trim();
-    if (/^(?:切换对话侧边栏|Toggle conversation sidebar)$/i.test(label)) matches.push(candidate);
+    if (/^(?:切换对话侧边栏|Toggle conversation sidebar|Toggle Sidebar)$/i.test(label)) matches.push(candidate);
   }
   return pointerReachableLocators(matches);
 }
@@ -560,11 +560,10 @@ export async function createFreshTask(page, timeout) {
     newTaskButtons = await findNewTaskButtons(page);
   }
   if (newTaskButtons.length === 0) throw new Error("AstronStudio 启动后未在限定时间内加载新建任务入口");
-  const button = await waitForUniqueVisible(
-    () => findNewTaskButtons(page),
-    timeout,
-    "AstronStudio 新建任务按钮",
-  );
+  // Use the uniquely verified control from this snapshot. Re-reading the
+  // sidebar here races its responsive collapse while another turn runs.
+  if (newTaskButtons.length !== 1) throw new Error(`AstronStudio 新建任务按钮数量异常：${newTaskButtons.length}`);
+  const button = newTaskButtons[0];
   await button.click({ timeout });
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
@@ -639,6 +638,16 @@ async function closeProjectPicker(page, timeout) {
   throw new Error("AstronStudio 项目选择弹层未能关闭");
 }
 
+export async function findSidebarProjectTabs(page) {
+  const pickers = await visibleLocators(page.locator(".sidebar-segmented-picker"));
+  if (pickers.length !== 1) throw new Error(`AstronStudio 侧栏分段选择器数量异常：${pickers.length}`);
+  const exact = [];
+  for (const button of await visibleLocators(pickers[0].locator("button"))) {
+    if (/^(?:项目|Projects)$/i.test((await button.innerText()).trim())) exact.push(button);
+  }
+  return exact;
+}
+
 export async function addProjectByManualPath(page, workspace, timeout) {
   const typePathLocator = () => visibleLocators(
     page.locator("button").filter({ hasText: /^(?:输入路径|Type path)$/i }),
@@ -646,14 +655,7 @@ export async function addProjectByManualPath(page, workspace, timeout) {
   let typePathButtons = await typePathLocator();
   if (typePathButtons.length === 0) {
     const projectTab = await waitForUniqueVisible(
-      async () => {
-        const matches = await visibleLocators(page.locator("button").filter({ hasText: /^(?:项目|Projects)$/i }));
-        const exact = [];
-        for (const button of matches) {
-          if (/^(?:项目|Projects)$/i.test((await button.innerText()).trim())) exact.push(button);
-        }
-        return exact;
-      },
+      () => findSidebarProjectTabs(page),
       timeout,
       "AstronStudio 项目侧栏标签",
     );

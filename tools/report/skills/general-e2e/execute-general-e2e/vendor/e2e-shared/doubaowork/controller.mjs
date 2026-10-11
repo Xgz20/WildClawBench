@@ -668,6 +668,16 @@ export function selectComposerProjectControl(controls) {
   return matches[0]?.title ?? null;
 }
 
+export async function fillVerifiedProjectName(input, projectName) {
+  if (typeof projectName !== "string" || !projectName.trim()) throw new Error("DOUBAOWORK_PROJECT_NAME_INVALID");
+  const maximum = await input.getAttribute("maxlength");
+  if (maximum !== null && /^\d+$/u.test(maximum) && projectName.length > Number(maximum)) {
+    throw new Error("DOUBAOWORK_PROJECT_NAME_TOO_LONG");
+  }
+  await input.fill(projectName);
+  if (await input.inputValue() !== projectName) throw new Error("DOUBAOWORK_PROJECT_NAME_READBACK_MISMATCH");
+}
+
 async function createProject(page, state, stateFile, config) {
   const existing = page.getByTestId("project-grouped-section").getByTitle(config.projectName, { exact: true });
   if (await existing.count() > 1) throw new Error("同名项目不唯一，拒绝复用");
@@ -684,13 +694,20 @@ async function createProject(page, state, stateFile, config) {
     return;
   }
   const dialog = await revealAndOpenProjectDialog(page);
-  await dialog.getByTestId("project-shared-create-project-name-input").fill(config.projectName);
+  const nameInput = dialog.getByTestId("project-shared-create-project-name-input");
+  try { await fillVerifiedProjectName(nameInput, config.projectName); }
+  catch (error) {
+    const cancel = dialog.getByRole("button", { name: "取消", exact: true });
+    if (await cancel.count() === 1 && await cancel.isVisible()) await cancel.click();
+    throw error;
+  }
   await dialog.getByRole("button", { name: "添加本地文件夹", exact: true }).click();
   await runFolderHelper(config.workspace, config.outputDir);
   const readback = await readWorkspaceTooltip(page, dialog, config.workspace);
   confirmWorkspaceReadback(state, readback, homedir());
   await atomicWriteAttemptState(stateFile, state);
   const confirm = dialog.getByTestId("project-shared-create-project-confirm");
+  if (await nameInput.inputValue() !== config.projectName) throw new Error("DOUBAOWORK_PROJECT_NAME_READBACK_MISMATCH");
   if (await confirm.isDisabled()) throw new Error("完整路径回读后创建项目按钮仍不可用");
   await confirm.click();
   await dialog.waitFor({ state: "hidden" });

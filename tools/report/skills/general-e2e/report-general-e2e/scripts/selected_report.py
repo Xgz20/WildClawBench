@@ -20,10 +20,12 @@ def safe_file(path,parent=None):
     if parent is not None: require(path.resolve().is_relative_to(Path(parent).resolve()),"SELECTION_FILE_OUTSIDE_ROOT")
     return path
 
-def verify_source_package(root,expected,unit_id,task_ids):
+def verify_source_package(root,expected,unit_id,task_ids,*,allow_subset=False):
     root=Path(root).resolve();require(root.is_relative_to(ROOT),"SELECTION_PACKAGE_OUTSIDE_ROOT")
     p=safe_file(root/"package-manifest.json",ROOT);require(sha(p)==expected,"SELECTION_PACKAGE_MANIFEST_DRIFT")
-    manifest=load(p);require(manifest["identity"]["unit_id"]==unit_id and manifest["identity"]["task_ids"]==task_ids,"SELECTION_PACKAGE_SCOPE")
+    manifest=load(p);scope=manifest["identity"]["task_ids"]
+    valid_scope=(bool(scope) and len(scope)==len(set(scope)) and scope==[t for t in task_ids if t in scope]) if allow_subset else scope==task_ids
+    require(manifest["identity"]["unit_id"]==unit_id and valid_scope,"SELECTION_PACKAGE_SCOPE")
     members={}
     for e in manifest["entries"]:
         rel=report.safe_relative(e["path"],"package member").as_posix();require(rel not in members,"SELECTION_DUPLICATE_MEMBER")
@@ -39,6 +41,28 @@ def verify_source_package(root,expected,unit_id,task_ids):
         require(len(b)==e["size"] and hashlib.sha256(b).hexdigest()==e["sha256"],"SELECTION_MEMBER_SHA_DRIFT")
         members[rel]=e
     return manifest,members
+
+def source_package_items(item):
+    if "packages" not in item:return [item]
+    packages=item["packages"]
+    require(isinstance(packages,list) and packages and all(isinstance(p,dict) for p in packages),"SELECTION_SOURCE_PACKAGES_INVALID")
+    ids=[p.get("package_id") for p in packages]
+    require(all(isinstance(p,str) and p for p in ids) and len(ids)==len(set(ids)),"SELECTION_SOURCE_PACKAGE_DUPLICATE")
+    return packages
+
+def select_source_package(packages,chosen,task_id):
+    package_id=chosen.get("source_package_id")
+    if package_id is None:
+        require(len(packages)==1,"SELECTION_SOURCE_PACKAGE_REQUIRED")
+        package_id=next(iter(packages))
+    require(package_id in packages,"SELECTION_SOURCE_PACKAGE_UNKNOWN")
+    source=packages[package_id]
+    require(task_id in source["task_ids"],"SELECTION_TASK_OUTSIDE_SOURCE_SCOPE")
+    return source
+
+def verify_source_unit_config(unit_doc,target):
+    source_unit=unit_doc.get("unit",{}) if unit_doc else {}
+    require(source_unit.get("unit_id")==target["unit_id"] and all(source_unit.get(k)==target.get(k) for k in ("harness","model","execution_mode")),"SELECTION_SOURCE_UNIT_CONFIG_DRIFT")
 
 def apply_external_resources(row,args,ref,manifest_sha):
     root=args.resource_root.resolve();path=safe_file(root/ref["path"],root)
@@ -196,14 +220,25 @@ def main(argv=None):
         require(len(supplements)==len(m["supplements"]) and set(supplements)<=expected,"SELECTION_RESOURCE_DUPLICATE_OR_SCOPE")
     rows=[];summaries=[];imports=[]
     for uid,item in source["imports"].items():
-        package=Path(item["target"]).resolve();manifest,members=verify_source_package(package,item["package_manifest_sha256"],uid,canonical)
-        unit_root=package/"unit"
-        unit_manifest=unit_root/"manifest.json"
-        metas={t["task_id"]:t for t in load(unit_manifest)["tasks"]} if unit_manifest.is_file() else None
-        if metas is not None: require(set(metas)==set(canonical),"SELECTION_METADATA_SCOPE")
+        packages={}
+        for entry in source_package_items(item):
+            package=Path(entry["target"]).resolve()
+            manifest,members=verify_source_package(package,entry["package_manifest_sha256"],uid,canonical,allow_subset="packages" in item)
+            unit_root=package/"unit";unit_manifest=unit_root/"manifest.json"
+            unit_doc=load(unit_manifest) if unit_manifest.is_file() else None
+            metas={t["task_id"]:t for t in unit_doc["tasks"]} if unit_doc else None
+            scope=manifest["identity"]["task_ids"]
+            if metas is not None:require(len(metas)==len(unit_doc["tasks"]) and set(metas)==set(scope),"SELECTION_METADATA_SCOPE")
+            if "packages" in item:
+                require("unit/manifest.json" in members,"SELECTION_UNIT_MANIFEST_NOT_IN_PACKAGE")
+                verify_source_unit_config(unit_doc,units[uid])
+            require(entry["package_id"] not in packages,"SELECTION_SOURCE_PACKAGE_DUPLICATE")
+            packages[entry["package_id"]]={"entry":entry,"package":package,"members":members,"unit_root":unit_root,"metas":metas,"task_ids":scope}
         current=[]
         for tid in canonical:
-            chosen=selected[(uid,tid)];rp=safe_file(Path(chosen["execution_record"]),package);sp=Path(chosen["score_file"]) if chosen.get("score_file") else None
+            chosen=selected[(uid,tid)];selected_source=select_source_package(packages,chosen,tid)
+            entry=selected_source["entry"];package=selected_source["package"];members=selected_source["members"];unit_root=selected_source["unit_root"];metas=selected_source["metas"]
+            rp=safe_file(Path(chosen["execution_record"]),package);sp=Path(chosen["score_file"]) if chosen.get("score_file") else None
             if metas is None:
                 source_manifest=safe_file(rp.parent/"execution/unit-manifest.json",package)
                 require(source_manifest.relative_to(package).as_posix() in members,"SELECTION_METADATA_NOT_IN_PACKAGE")
@@ -220,8 +255,8 @@ def main(argv=None):
                 score_status="valid" if score["result"]["valid"] else "evaluation_error";scoring_id=score["identity"]["attempt_id"]
             row=selected_task_row(unit=units[uid],meta=meta,unit_root=unit_root,record_path=rp,record_sha=record_sha,
                 score_path=sp,score_sha=score_sha,score_status=score_status,scoring_attempt_id=scoring_id,
-                lineage={"package_id":item["package_id"],"source_unit_root":str(unit_root),"source_execution_record":str(rp),
-                         "source_batch_id":load(rp)["identity"]["batch_id"],"package_manifest_sha256":item["package_manifest_sha256"]})
+                lineage={"package_id":entry["package_id"],"source_unit_root":str(unit_root),"source_execution_record":str(rp),
+                         "source_batch_id":load(rp)["identity"]["batch_id"],"package_manifest_sha256":entry["package_manifest_sha256"]})
             if (uid,tid) in supplements:apply_external_resources(row,args,supplements[(uid,tid)],supplement_sha)
             current.append(row)
         rows.extend(current);summaries.append(report.unit_summary(current,units[uid]));imports.append({"unit_id":uid,**item})

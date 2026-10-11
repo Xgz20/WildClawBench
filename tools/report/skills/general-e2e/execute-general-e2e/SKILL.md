@@ -5,6 +5,12 @@ description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General
 
 # 执行 General E2E 用例
 
+`0.13.16` 的 DoubaoWork 2.31.10 dispatcher 观察器增加独立的原生 LocalToolSSE 入口订阅，只复制收到的工具调用，不代替原消费器或调用工具。新增 `consumer_witness` 与实际 dispatch、首次观测的 uploaded 账本逐项对账；原生准入拒绝还须复制实际 reportAdmissionFailure 结果，缺失的 Agent ID 保持 null，不冒充执行成功；未知路由、无拒绝证据、身份/参数不一致和覆盖缺口均不能证明完整。结束时只移除自身订阅，旧快照不补入口证据。
+
+新建队列使用不超过原生 40 字符限制的项目名，哈希绑定单元目录和队列身份。创建前及确认前均精确回读名称，超长或截断时不创建项目、不发送 Prompt；既有队列保留原项目名。
+
+AstronStudio 3.5.0 的侧栏恢复新增精确 `Toggle Sidebar` 标签；多个匹配继续失败关闭，未改变会话/目录/一次发送门禁。
+
 驱动或协助桌面 Harness 执行 execution 包，并持久化可恢复的发送和原生会话状态。
 
 ## 当前能力门禁

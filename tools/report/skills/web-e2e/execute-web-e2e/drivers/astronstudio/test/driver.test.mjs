@@ -742,7 +742,7 @@ test("AstronStudio terminal --resume backfills cleanup without resending the pro
   }), 0);
   const recovered = JSON.parse(await readFile(config.stateFile, "utf8"));
   assert.equal(recovered.phase, "SUCCEEDED");
-  assert.equal(recovered.driver.version, "1.12.8");
+  assert.equal(recovered.driver.version, "1.12.10");
   assert.equal(recovered.terminal_process_cleanup.supported, false);
   assert.equal(recovered.terminal_process_cleanup.success, true);
   assert.equal(recovered.terminal_process_cleanup.backfill_verification.unchanged, true);
@@ -927,7 +927,7 @@ test("sidebar toggle discovery survives Electron titlebar hit-test overlays", as
   };
   const page = {
     locator: (selector) => {
-      assert.equal(selector, 'button[aria-label="切换对话侧边栏"], button[aria-label="Toggle conversation sidebar" i]');
+      assert.equal(selector, 'button[aria-label="切换对话侧边栏"], button[aria-label="Toggle conversation sidebar" i], button[aria-label="Toggle Sidebar" i]');
       return locatorFor([coveredDuplicate, reachableToggle]);
     },
   };
@@ -1029,14 +1029,14 @@ test("multiple pointer-reachable task controls remain ambiguous and cannot creat
   assert.equal(clicks, 0);
 });
 
-test("fresh task creation opens the collapsed sidebar once and waits for a new route", async () => {
+test("fresh task creation recognizes the 3.5 sidebar and uses one verified entry snapshot", async () => {
   let state = "collapsed";
   let route = "acode://app/index.html#/previous";
   let toggles = 0;
   let newTasks = 0;
   const toggle = {
     isVisible: async () => true,
-    getAttribute: async () => "切换对话侧边栏",
+    getAttribute: async () => "Toggle Sidebar",
     evaluate: async () => true,
     click: async () => { toggles += 1; state = "expanded"; },
   };
@@ -1162,10 +1162,11 @@ test("manual project entry uses Windows-compatible ARIA selectors and bypasses c
   };
   const page = {
     locator: (selector) => {
+      if (selector === ".sidebar-segmented-picker") return locatorFor([{isVisible: async () => true, locator: () => locatorFor([projectTab])}]);
       if (selector === "button") {
         return {
           filter: ({ hasText }) => locatorFor(
-            hasText.test("项目") ? [projectTab] : hasText.test("输入路径") ? [typePath] : [],
+            hasText.test("项目") ? [projectTab, {isVisible: async () => true, innerText: async () => "项目", click: async () => assert.fail("historical group must not be clicked")}] : hasText.test("输入路径") ? [typePath] : [],
           ),
         };
       }
@@ -1229,10 +1230,11 @@ test("workspace selection adds an absolute path when the empty task has no picke
       selected && testId === "project-picker-trigger" ? [selectedTrigger] : [],
     ),
     locator: (selector) => {
+      if (selector === ".sidebar-segmented-picker") return locatorFor([{isVisible: async () => true, locator: () => locatorFor([projectTab])}]);
       if (selector === "button") {
         return {
           filter: ({ hasText }) => locatorFor(
-            hasText.test("项目") ? [projectTab] : hasText.test("输入路径") ? [typePath] : [],
+            hasText.test("项目") ? [projectTab, {isVisible: async () => true, innerText: async () => "项目", click: async () => assert.fail("historical group must not be clicked")}] : hasText.test("输入路径") ? [typePath] : [],
           ),
         };
       }

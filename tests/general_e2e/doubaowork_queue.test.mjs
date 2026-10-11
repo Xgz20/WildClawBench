@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { decideQueueTaskAction, runSerialQueue, selectQueueAction, summarizeQueueConcurrency } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/doubaowork/batch.mjs";
+import { decideQueueTaskAction, queueProjectName, runSerialQueue, selectQueueAction, summarizeQueueConcurrency } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/doubaowork/batch.mjs";
+
+test("new queue project names fit the native limit and distinguish unit, queue and task", () => {
+  const name = queueProjectName("/unit", "q".repeat(64), 1);
+  assert.ok(name.length <= 40);
+  assert.equal(name, queueProjectName("/unit", "q".repeat(64), 1));
+  assert.notEqual(name, queueProjectName("/other-unit", "q".repeat(64), 1));
+  assert.notEqual(name, queueProjectName("/unit", "other-queue", 1));
+  assert.notEqual(name, queueProjectName("/unit", "q".repeat(64), 2));
+});
 
 test("Queue never repeats a dispatch whose journal is missing or uncertain", () => {
   assert.equal(decideQueueTaskAction({ phase: "PENDING" }, null), "dispatch");

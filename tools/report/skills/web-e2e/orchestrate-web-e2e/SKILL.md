@@ -7,6 +7,8 @@ description: 编排桌面 Harness Web E2E 的执行结果交接、Codex Desktop 
 
 本 Skill 是执行与评分之间的控制平面。`execute-web-e2e` 负责被评 Harness 做题，`score-web-e2e` 负责一个 Codex Desktop 任务内的一题评分；本 Skill 只负责确定性地交接工作空间、注册项目、创建和等待评分任务。
 
+`0.3.26` 的新评分状态支持 `init --score-skill-dir ABS`：在首次 Prompt 生成前冻结评分 Skill 的绝对路径、版本和元数据 SHA，并写入单题指令。评分前检须使用同一冻结 Skill；旧状态不补路径、不改写 Prompt，切换来源必须新建编排。
+
 `0.3.25` 对新评分状态冻结默认裁判 `gpt-6.1-sol/high`，并在 `CREATE_THREAD` 动作中返回 `model` 与 `thinking`。已有状态保留原裁判和 Prompt；旧状态未冻结裁判时显示 `judge=null`，不能据此推断实际评分模型。
 
 `0.3.24` 的项目注册器先悬停唯一关联的侧栏项目标题，显露添加入口，再进行普通点击；裁切的隐藏按钮区域不再强制点击。标题或入口歧义继续拒绝，冻结批次、候选与评分材料不变。
@@ -32,6 +34,7 @@ node <skill-dir>/scripts/scoring-control.mjs init \
   --package-root <harness-root> \
   --task-id <task_id> \
   --score-slots 3 \
+  --score-skill-dir /absolute/installed/score-web-e2e \
   --score-port-base 4173 \
   --score-timeout-seconds 7200 \
   --max-retries 1

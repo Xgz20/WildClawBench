@@ -5,9 +5,11 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 
 # 采集 General E2E 证据
 
+`0.9.14` 仅在新增原生 `consumer_witness` 与 dispatcher、uploaded 账本完整对账时承认本地工具协议覆盖；仍须通过远端工具覆盖、消息类型和跨来源顺序门禁，才可形成完整 General 轨迹。无入口证据的历史 dispatcher 快照继续 partial，失败/溢出后的子集不继承完整入口覆盖，不改写旧评分。
+
 DoubaoWork 2.31.10 的已验证 dispatcher Profile 可采集队列留存的滚动原生轨迹。归档原件、身份与 SHA 继续严格核验；该 Profile 不继承旧 emitter 的同机时钟证明，合并仅使用原生顺序，无法证明的跨来源顺序保持 partial。未知 Profile 或源码 SHA 仍拒绝，Token 缺失不补零。
 
-DoubaoWork General 收集拒绝 Web 等价终态标记；缺失的原生结束时间不得以采集时刻补齐。新版 dispatcher 的工具子集保持 `partial`，trace-index 必须明确列出缺失原因，并保留实际工具 Profile、原始 SHA 与已知小计。`native-tool-capture-incomplete` 表示已核实子集之外仍有采集缺口，采集成功不等于可评分；评分准入交给冻结 score Skill。已在客户端 TTL 内留存的结果保留首次观测时间，后续采样不刷新 TTL，也不将已验证结果因时间流逝自动降级。
+DoubaoWork General 收集拒绝 Web 等价终态标记；缺失的原生结束时间不得以采集时刻补齐。未带完整入口对账证据的新版 dispatcher 工具子集保持 `partial`，trace-index 必须明确列出缺失原因，并保留实际工具 Profile、原始 SHA 与已知小计。`native-tool-capture-incomplete` 表示已核实子集之外仍有采集缺口，采集成功不等于可评分；评分准入交给冻结 score Skill。已在客户端 TTL 内留存的结果保留首次观测时间，后续采样不刷新 TTL，也不将已验证结果因时间流逝自动降级。
 
 `0.9.11` 增加 QwenWorkCN 1.2.5 的精确 Token Profile：SDK 1.0.46、runtime SHA 与已验证 1.2.0 相同；仍要求本次发送前 Token 开关证明、transcript 1.1.59 及逐响应/主 turn 对账。未知版本或源码变化不放行，历史回执不重写。
 

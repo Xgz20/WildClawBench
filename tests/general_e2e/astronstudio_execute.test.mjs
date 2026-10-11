@@ -7,6 +7,7 @@ import vm from "node:vm";
 
 import {
   clickNewTask,
+  clickSidebarToggle,
   clickProjectsTab,
   clickSend,
   ensureSendTargetReady,
@@ -33,6 +34,16 @@ import {
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs";
 
 const TASK_ID = "02_Code_Intelligence_task_001_temperature_cli_fix";
+
+test("General sidebar recovery recognizes 3.5 and rejects duplicate toggles", async () => {
+  let clicked=0;
+  class Element { closest(){return null;} getBoundingClientRect(){return {width:10,height:10};} }
+  const button=Object.assign(new Element(),{getAttribute:()=>"Toggle Sidebar",click:()=>clicked++});
+  let buttons=[button];
+  const client={evaluate:expression=>vm.runInNewContext(expression,{Element,getComputedStyle:()=>({visibility:"visible",display:"block"}),document:{querySelectorAll:()=>buttons}})};
+  assert.equal((await clickSidebarToggle(client)).clicked,true);assert.equal(clicked,1);
+  buttons=[button,button];assert.equal((await clickSidebarToggle(client)).clicked,false);assert.equal(clicked,1);
+});
 
 test("project creation clicks the unique sidebar tab and never a same-name project group", async () => {
   let tabClicks = 0, groupClicks = 0;

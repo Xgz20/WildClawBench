@@ -221,11 +221,11 @@ export async function clickNewTask(client) {
   `));
 }
 
-async function clickSidebarToggle(client) {
+export async function clickSidebarToggle(client) {
   return client.evaluate(expression(`
     const buttons = Array.from(document.querySelectorAll('button[aria-label]'))
       .filter(visible)
-      .filter((button) => /^(?:切换对话侧边栏|Toggle conversation sidebar)$/iu.test(
+      .filter((button) => /^(?:切换对话侧边栏|Toggle conversation sidebar|Toggle Sidebar)$/iu.test(
         (button.getAttribute('aria-label') || '').trim()
       ));
     if (buttons.length !== 1) return { clicked: false, count: buttons.length };

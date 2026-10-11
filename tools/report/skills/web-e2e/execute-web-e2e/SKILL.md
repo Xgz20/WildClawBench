@@ -7,6 +7,10 @@ DoubaoWork 2.31.10 的队列滚动轨迹复用共用证据核心：只接纳已�
 
 # 执行 Web E2E 用例
 
+AstronStudio 3.5.0 的侧栏恢复同时识别精确 `Toggle Sidebar` 标签，并复用已验证的唯一新建任务控件，避免重复读取期间侧栏响应式收起。侧栏“项目”标签限定于唯一分段选择器，复用 General 已验收的语义范围，避免命中同名历史项目组。多个控件仍失败关闭，已发送任务只观察、不重发。
+
+`1.21.24` 共用 DoubaoWork 0.8.7 原生工具核心：新增只读 LocalToolSSE 入口订阅与 dispatcher/上传账本对账。只有新增证据通过完整门禁才提高本地工具覆盖；旧 dispatcher 快照和既有 Web 结果继续原统计，不修改一次发送、终态或候选冻结契约。 共用项目创建入口增加长度和精确回读校验，防止客户端截断后绑定错误项目。
+
 本 Skill 是桌面 Harness 执行自动化的唯一实现入口。当前已实现 AstronStudio、WorkBuddy、QwenWork、DoubaoWork 的单题 Driver 和对应队列入口；先读取 execution 包 `manifest.json` 的 `harness.id`，再选择同名 Driver，不能按文件名或客户端外观猜测。
 
 Web E2E 不给被评测 Harness 设置任务级执行时限。题目或数据集中的 `timeout_seconds` 只作为兼容元数据保留，不生成执行 deadline；旧入口的 `--run-timeout-seconds` 已移除。Driver 会持续观察可信原生终态、明确异常或需要人工处理的状态。CDP/UI 单次操作、客户端启停、会话身份捕获、终态进程收口和评分 Worker 仍使用各自独立的有界控制参数，这些参数不限制 Harness 完成题目的总时长。

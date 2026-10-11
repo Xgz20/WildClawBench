@@ -357,6 +357,33 @@ test("new scoring freezes the Codex default and dispatches it separately from th
   assert.deepEqual(persisted.tasks[0].attempts[0].judge, state.judge);
 });
 
+test("new scoring prompts pin the explicit Skill and preserve the binding on resume", async () => {
+  const root = await fixture(), skill = await scoreSkillFixture("4.4.0"), another = await scoreSkillFixture("4.4.0");
+  const {state} = await initialize(root, [], {scoreSkillDir: skill});
+  const prompt = await readFile(state.tasks[0].scoring_prompt_file, "utf8");
+  assert.ok(prompt.includes(`${await realpath(skill)}/SKILL.md`));
+  assert.ok(prompt.includes("score-web-e2e 4.4.0"));
+  assert.deepEqual((await initialize(root)).state.requested_score_skill, state.requested_score_skill);
+  await assert.rejects(initialize(root, [], {scoreSkillDir: another}), /冻结评分 Skill 不可变/);
+  await registerTask(root, state.tasks[0]);
+  await assert.rejects(passPreflight(root, {taskId: "task-1", scoreSkillDir: another}), /初始化冻结路径/);
+  await passPreflight(root, {taskId: "task-1", scoreSkillDir: skill});
+  const raw = await readFile(join(skill, "skill-metadata.json"));
+  await writeJson(join(skill, "skill-metadata.json"), {...JSON.parse(raw), version: "4.5.5"});
+  await assert.rejects(initialize(root), /冻结评分 Skill 不可变/);
+  await writeFile(join(skill, "skill-metadata.json"), raw);
+  const stateFile=join(root,"score/.orchestrate-web-e2e/scoring-automation-state.json");
+  const changed=JSON.parse(await readFile(stateFile,"utf8"));changed.requested_score_skill.path=another;
+  await writeJson(stateFile,changed);await assert.rejects(status(root),/冻结 Skill 配置摘要/);
+});
+
+test("an existing unpinned scoring run cannot silently acquire a new Skill binding", async () => {
+  const root=await fixture();const {state}=await initialize(root);const prompt=await readFile(state.tasks[0].scoring_prompt_file,"utf8");
+  await assert.rejects(initialize(root,[],{scoreSkillDir:await scoreSkillFixture()}),/冻结评分 Skill 不可变/);
+  assert.equal(await readFile(state.tasks[0].scoring_prompt_file,"utf8"),prompt);
+  assert.equal((await initialize(root)).state.requested_score_skill,null);
+});
+
 test("explicit Judge settings survive resume and reject drift before writing prompts", async () => {
   const args = parseArgs(["init", "--package-root", "/fixture", "--judge-model", "gpt-6-sol", "--judge-reasoning-effort", "xhigh"]);
   const root = await fixture();

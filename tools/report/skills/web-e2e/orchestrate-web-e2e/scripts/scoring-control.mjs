@@ -103,7 +103,7 @@ export function usage() {
   return `Web E2E 评分控制状态
 
 用法：
-  node scoring-control.mjs init --package-root <目录> [--task-id <ID> ...] [--score-slots <1..8>] [--score-port-base <端口>] [--score-timeout-seconds <秒>] [--max-retries <次数>] [--judge-model <模型>] [--judge-reasoning-effort <档位>]
+  node scoring-control.mjs init --package-root <目录> [--task-id <ID> ...] [--score-slots <1..8>] [--score-port-base <端口>] [--score-timeout-seconds <秒>] [--max-retries <次数>] [--judge-model <模型>] [--judge-reasoning-effort <档位>] [--score-skill-dir <冻结评分Skill目录>]
   node scoring-control.mjs status --package-root <目录>
   node scoring-control.mjs resume --package-root <目录>
   node scoring-control.mjs record-project --package-root <目录> --task-id <ID> --project-id <ID> --project-path <目录> --host-id <ID> --desktop-version <版本> --registration-method <方式>
@@ -502,6 +502,10 @@ function normalizeState(state) {
   }
   if (!Object.hasOwn(state, "judge")) throw new Error("评分状态缺少冻结 judge 配置");
   if (state.judge_sha256 !== sha256(JSON.stringify(state.judge))) throw new Error("评分状态 judge 配置摘要不一致");
+  if (Object.hasOwn(state, "requested_score_skill")
+    && state.requested_score_skill_sha256 !== sha256(JSON.stringify(state.requested_score_skill))) {
+    throw new Error("评分状态冻结 Skill 配置摘要不一致");
+  }
   if (state.judge !== null) {
     if (state.judge?.protocol !== "codex-agent-judge-v1") throw new Error("评分状态 judge protocol 无效");
     codexJudge(state.judge.model, state.judge.reasoning_effort);
@@ -566,10 +570,12 @@ function retryLimit(task) {
     + (task.user_authorized_retry_grant ? 1 : 0);
 }
 
-function promptForTask(taskId, scoringPort, judge = null) {
+function promptForTask(taskId, scoringPort, judge = null, scoreSkill = null) {
   const readinessHelper = fileURLToPath(new URL("./browser-readiness.mjs", import.meta.url));
   return [
-    `使用 $score-web-e2e 对当前项目中的唯一 Web E2E 用例 ${taskId} 进行完整评分。`,
+    scoreSkill
+      ? `只使用本次冻结的评分 Skill ${scoreSkill.path}/SKILL.md（score-web-e2e ${scoreSkill.version}，元数据 SHA-256 ${scoreSkill.metadata_sha256}）对当前项目中的唯一 Web E2E 用例 ${taskId} 进行完整评分。不要加载其他目录中的同名 Skill；允许只读访问此冻结 Skill 的全部运行依赖。`
+      : `使用 $score-web-e2e 对当前项目中的唯一 Web E2E 用例 ${taskId} 进行完整评分。`,
     ...(judge ? [`本次冻结 Codex 裁判为 ${judge.model}/${judge.reasoning_effort}；控制会话创建评分任务时必须显式传入 model 和 thinking，不沿用控制会话默认值。此身份与 task_contract 中的被评 Harness 模型分开。`] : []),
     "必须使用 Codex Desktop 内置 Browser，按照 private-scoring/task_contract.json 逐项实际操作和截图取证，并生成 private-scoring/task_score.json。",
     `本题独占本地评分端口 ${scoringPort}；启动站点和打开 Browser 时必须使用该端口，不得使用其他题目的端口。若该端口冲突，只能按评分 Skill 的受管端口冲突流程处理并保留审计。`,
@@ -717,7 +723,7 @@ async function validatePreparedTask(
   receiptTask,
   receiptSha256,
   scoringPort,
-  { existingTask = null, preserveLegacyPrompt = false, judge = null } = {},
+  { existingTask = null, preserveLegacyPrompt = false, judge = null, scoreSkill = null } = {},
 ) {
   const scoreDir = await realpath(join(plan.root, "score", "tasks", entry.task_id));
   if (!inside(join(plan.root, "score", "tasks"), scoreDir)) throw new Error(`评分目录越界：${entry.task_id}`);
@@ -749,7 +755,7 @@ async function validatePreparedTask(
   const promptFile = join(plan.promptRoot, `${entry.task_id}.md`);
   await mkdir(plan.promptRoot, { recursive: true });
   const existingPrompt = await readFile(promptFile, "utf8").catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
-  const generatedPrompt = promptForTask(entry.task_id, scoringPort, judge);
+  const generatedPrompt = promptForTask(entry.task_id, scoringPort, judge, scoreSkill);
   let prompt = generatedPrompt;
   if (existingTask) {
     if (existingTask.scoring_prompt_file !== promptFile || existingPrompt === null) {
@@ -944,6 +950,7 @@ function publicStatus(state) {
     scoring_infrastructure_errors: state.tasks.filter(hasEvaluationError).map((task) => task.task_id),
     preflight: state.preflight || null,
     score_skill: state.score_skill || null,
+    requested_score_skill: state.requested_score_skill || null,
     submission: state.submission || null,
     recommended_actions: actions,
     recommended_action: actions[0],
@@ -980,6 +987,21 @@ export async function initialize(packageRoot, selectedTaskIds = [], options = {}
   const existingRaw = await loadJsonIfExists(plan.stateFile);
   const existingSourceRevision = Number(existingRaw?.schema_revision || 1);
   const existing = existingRaw ? normalizeState(existingRaw) : null;
+  let requestedScoreSkill = existing?.requested_score_skill || null;
+  const requestedSkillPath = options.scoreSkillDir || requestedScoreSkill?.path;
+  if (requestedSkillPath) {
+    const path = await realpath(resolve(requestedSkillPath));
+    const raw = await readFile(join(path, "skill-metadata.json"));
+    const metadata = JSON.parse(raw);
+    if (metadata.schema_version !== SCORE_SKILL_SCHEMA || metadata.name !== "score-web-e2e" || !metadata.version) {
+      throw new Error("冻结评分 Skill 元数据无效");
+    }
+    const binding = { path, version: metadata.version, metadata_sha256: sha256(raw) };
+    if (existing && JSON.stringify(binding) !== JSON.stringify(requestedScoreSkill)) {
+      throw new Error("已有评分状态的冻结评分 Skill 不可变；请使用新的评分编排");
+    }
+    requestedScoreSkill = binding;
+  }
   const judge = existing ? existing.judge : codexJudge(
     options.judgeModel === undefined ? DEFAULT_JUDGE_MODEL : options.judgeModel,
     options.judgeReasoningEffort === undefined ? DEFAULT_JUDGE_REASONING_EFFORT : options.judgeReasoningEffort,
@@ -1020,6 +1042,7 @@ export async function initialize(packageRoot, selectedTaskIds = [], options = {}
       {
         existingTask,
         judge,
+        scoreSkill: requestedScoreSkill,
         preserveLegacyPrompt: Boolean(existingTask?.scoring_prompt_port_bound === false
           || (existing && (existingSourceRevision < 5 || existing.judge === null))),
       },
@@ -1077,6 +1100,8 @@ export async function initialize(packageRoot, selectedTaskIds = [], options = {}
     harness_id: plan.manifest.harness.id,
     judge,
     judge_sha256: sha256(JSON.stringify(judge)),
+    requested_score_skill: requestedScoreSkill,
+    requested_score_skill_sha256: sha256(JSON.stringify(requestedScoreSkill)),
     score_slots: scoreSlots,
     score_port_base: scorePortBase,
     score_timeout_seconds: scoreTimeoutSeconds,
@@ -1756,6 +1781,9 @@ export async function preflight(packageRoot, options) {
     version: metadata.version,
     metadata_sha256: sha256(metadataRaw),
   };
+  if (state.requested_score_skill && JSON.stringify(state.requested_score_skill) !== JSON.stringify(scoreSkillBinding)) {
+    throw new Error("评分前检 Skill 与初始化冻结路径、版本或元数据不一致");
+  }
   if (state.score_skill && (
     state.score_skill.path !== scoreSkillBinding.path
     || state.score_skill.version !== scoreSkillBinding.version
@@ -2566,6 +2594,7 @@ async function main() {
       maxRetries: args.maxRetries,
       judgeModel: args.judgeModel,
       judgeReasoningEffort: args.judgeReasoningEffort,
+      scoreSkillDir: args.scoreSkillDir,
     })).state);
     else if (args.command === "status") result = await status(args.packageRoot);
     else if (args.command === "resume") result = await resume(args.packageRoot);

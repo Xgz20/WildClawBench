@@ -39,14 +39,19 @@ export async function dispatcherCall(browser, operation, value) {
       || entry?.type !== "function") throw new Error("DOUBAOWORK_DISPATCH_SOURCE_UNVERIFIED");
     const variables = await closureVariables(entry.objectId, "Closure (168088)");
     const cleanup = variables.find(p => p.name === "f")?.value, holder = variables.find(p => p.name === "bb")?.value;
-    if (cleanup?.type !== "function" || !holder?.objectId) throw new Error("DOUBAOWORK_DISPATCH_NOT_INITIALIZED");
+    const transportHolder = variables.find(p => p.name === "ce")?.value;
+    if (cleanup?.type !== "function" || !holder?.objectId || !transportHolder?.objectId) throw new Error("DOUBAOWORK_DISPATCH_NOT_INITIALIZED");
     const cleanupVariables = await closureVariables(cleanup.objectId, "Closure (wI)");
     const dispatcher = cleanupVariables.find(p => p.name === "e")?.value;
     const store = await cdp.send("Runtime.callFunctionOn", { objectId: holder.objectId, objectGroup: group,
       functionDeclaration: "function(){ return this.current?.store; }", returnByValue: false });
-    if (!dispatcher?.objectId || store.exceptionDetails || !store.result?.objectId) throw new Error("DOUBAOWORK_DISPATCH_NOT_INITIALIZED");
+    const service = await cdp.send("Runtime.callFunctionOn", { objectId: transportHolder.objectId, objectGroup: group,
+      functionDeclaration: "function(){ return this.current?.service; }", returnByValue: false });
+    if (!dispatcher?.objectId || store.exceptionDetails || !store.result?.objectId
+        || service.exceptionDetails || !service.result?.objectId) throw new Error("DOUBAOWORK_DISPATCH_NOT_INITIALIZED");
     const result = await cdp.send("Runtime.callFunctionOn", { objectId: dispatcher.objectId, objectGroup: group, returnByValue: true,
-      arguments: [{ objectId: store.result.objectId }, { value: { ...value, operation, profileSha: DISPATCHER_SOURCE_SHA256 } }],
+      arguments: [{ objectId: store.result.objectId }, { value: { ...value, operation, profileSha: DISPATCHER_SOURCE_SHA256 } },
+        { objectId: service.result.objectId }],
       functionDeclaration: operateDispatcherObserver.toString() });
     if (result.exceptionDetails || !result.result?.value) throw new Error(`DOUBAOWORK_DISPATCH_OBSERVER_FAILED: ${result.exceptionDetails?.exception?.description || operation}`);
     return result.result.value;
@@ -56,7 +61,7 @@ export async function dispatcherCall(browser, operation, value) {
 // Serialized into the renderer: all dependencies must be local. Wrap dispatch
 // only to copy its actual invocation; delegate once and preserve its return.
 // Results are copied after native upload, while still within the native TTL.
-export function operateDispatcherObserver(store, cfg) {
+export function operateDispatcherObserver(store, cfg, service = null) {
   const profile = "doubaowork-tool-dispatch-observer/v1", key = "__wcbDoubaoDispatcherObserver";
   if (this.destroyed !== false || !(this.records instanceof Map) || !(this.pending instanceof Set)
     || !(this.current instanceof Map) || !(this.currentCallIds instanceof WeakMap)
@@ -95,14 +100,19 @@ export function operateDispatcherObserver(store, cfg) {
   };
   if (cfg.operation === "activity") return activity();
   let root = globalThis[key];
-  if (root && (root.manager !== dispatcher || root.store !== store || root.profileSha !== cfg.profileSha)) throw new Error("DISPATCH_OBSERVER_RUNTIME_CHANGED");
+  if (root && (root.manager !== dispatcher || root.store !== store || root.profileSha !== cfg.profileSha
+      || (root.service && root.service !== service))) throw new Error("DISPATCH_OBSERVER_RUNTIME_CHANGED");
   const clone = value => value === undefined ? null : JSON.parse(JSON.stringify(value, (k, v) =>
     /^(signature|authorization|authorization_id|access_token|fetch_token|runtimeSecrets|signedEnvelope)$/i.test(k) ? "[REDACTED_SECRET]" : v));
   const noteError = (o, error) => { const message = String(error.message || error); if (!o.errors.includes(message) && o.errors.length < 100) o.errors.push(message); };
   if (cfg.operation === "install") {
     if (!cfg.attemptId || typeof cfg.workspace !== "string" || !cfg.workspace.startsWith("/")) throw new Error("DISPATCH_OBSERVER_INPUT_INVALID");
     if (!root) {
-      root = { manager: dispatcher, store, profileSha: cfg.profileSha, observers: new Map(), original: dispatcher.dispatch,
+      if (service && (typeof service.subscribe !== "function" || typeof service.getConnectionState !== "function"
+          || service.getConnectionState()?.state === "released")) throw new Error("DISPATCH_CONSUMER_UNAVAILABLE");
+      if (service && typeof dispatcher.reportAdmissionFailure !== "function") throw new Error("DISPATCH_ADMISSION_UNAVAILABLE");
+      root = { manager: dispatcher, store, service, profileSha: cfg.profileSha, observers: new Map(), original: dispatcher.dispatch,
+        originalAdmission: dispatcher.reportAdmissionFailure, admissionDescriptor: Object.getOwnPropertyDescriptor(dispatcher, "reportAdmissionFailure"),
         descriptor: Object.getOwnPropertyDescriptor(dispatcher, "dispatch") };
       root.capture = () => {
         for (const o of root.observers.values()) try {
@@ -147,12 +157,65 @@ export function operateDispatcherObserver(store, cfg) {
         } catch (error) { noteError(o, error); }
         return Reflect.apply(root.original, this, args);
       };
+      // A separate listener copies native inbound packets. It never invokes
+      // receive/dispatch, changes the packet, or replaces the native consumer.
+      root.receive = packet => {
+        if (packet?.type !== "TOOL_CALL") return;
+        const request = packet.toolCall, context = store.contextsBySandboxId.get(packet.sandboxId);
+        // The pinned native consumer returns before admission for these packets.
+        if (!request || typeof request.id !== "string" || !request.id || typeof request.name !== "string" || !request.name) return;
+        for (const o of root.observers.values()) try {
+          if (!context?.cwd) { o.unknown_context_events += 1; continue; }
+          if (context.cwd !== o.workspace) continue;
+          const agentId = request?.option?.agent_id, conversationId = context.sendContext?.conversationId;
+          if (typeof packet.sandboxId !== "string" || !packet.sandboxId || !request?.id || !request.name
+              || typeof conversationId !== "string" || !conversationId) throw new Error("DISPATCH_CONSUMER_BINDING_UNVERIFIED");
+          const event = { tool_call_id: request.id, tool_name: request.name, input: clone(request.input),
+            sandbox_id: packet.sandboxId, native_cwd: context.cwd,
+            native_agent_id: typeof agentId === "string" && agentId.trim() ? agentId.trim() : null,
+            conversation_id: conversationId, observed_at: new Date().toISOString() };
+          const id = `${packet.sandboxId}::${request.id}`, previous = o.received.get(id);
+          if (previous) {
+            if (JSON.stringify({ ...previous, observed_at: null }) !== JSON.stringify({ ...event, observed_at: null })) throw new Error("DISPATCH_CONSUMER_CALL_CONFLICT");
+            continue;
+          }
+          const bytes = new TextEncoder().encode(JSON.stringify(event)).byteLength;
+          if (o.received.size >= 5000 || o.bytes + bytes > 32 * 1024 * 1024) { o.overflow = true; continue; }
+          o.bytes += bytes; o.received.set(id, event);
+        } catch (error) { noteError(o, error); }
+      };
+      if (service) {
+        root.unsubscribeConsumer = service.subscribe(root.receive);
+        if (typeof root.unsubscribeConsumer !== "function") throw new Error("DISPATCH_CONSUMER_SUBSCRIPTION_INVALID");
+      }
+      root.admission = function (...args) {
+        const [request, failure] = args;
+        for (const o of root.observers.values()) try {
+          const id = `${request?.sandboxId}::${request?.id}`, incoming = o.received.get(id);
+          if (!incoming) continue;
+          const result = failure?.result;
+          // Copy the actual native refusal. Never infer one from missing IDs.
+          if (!result?.isError || !["invalid_agent_id", "missing_agent_id_on_agent_route", "agent_id_on_legacy_route"].includes(result.error_code)
+              || o.calls.has(id)) throw new Error("DISPATCH_ADMISSION_RESULT_UNVERIFIED");
+          if (o.admissions.has(id)) return Reflect.apply(root.originalAdmission, this, args);
+          const proof = { ...incoming, received_at: incoming.observed_at, source: "ToolCallManager.reportAdmissionFailure", result: clone(result),
+            observed_at: new Date().toISOString() };
+          const bytes = new TextEncoder().encode(JSON.stringify(proof)).byteLength;
+          if (o.bytes + bytes > 32 * 1024 * 1024) { o.overflow = true; continue; }
+          o.bytes += bytes; o.admissions.set(id, proof);
+          o.events.push({ ...incoming, phase: "started", instance_id: incoming.sandbox_id, admission_rejected: true },
+            { ...proof, phase: "settled", instance_id: incoming.sandbox_id, input: undefined, output: proof.result, status: "error", admission_rejected: true });
+        } catch (error) { noteError(o, error); }
+        return Reflect.apply(root.originalAdmission, this, args);
+      };
+      if (service) dispatcher.reportAdmissionFailure = root.admission;
       dispatcher.dispatch = root.wrapper; globalThis[key] = root;
       root.timer = setInterval(root.capture, 1000); root.timer.unref?.();
     }
     if (root.observers.has(cfg.attemptId) || [...root.observers.values()].some(o => o.workspace === cfg.workspace)) throw new Error("DISPATCH_OBSERVER_ALREADY_EXISTS");
     const o = { attempt_id: cfg.attemptId, workspace: cfg.workspace, installed_at: new Date().toISOString(),
-      calls: new Map(), ledger: new Map(), events: [], errors: [], bytes: 0, overflow: false, ledger_at_capacity: false };
+      calls: new Map(), received: new Map(), admissions: new Map(), unknown_context_events: 0,
+      ledger: new Map(), events: [], errors: [], bytes: 0, overflow: false, ledger_at_capacity: false };
     root.observers.set(cfg.attemptId, o);
     return { installed: true, installed_at: o.installed_at, attempt_id: cfg.attemptId, profile, profile_sha256: cfg.profileSha };
   }
@@ -160,7 +223,7 @@ export function operateDispatcherObserver(store, cfg) {
   const o = root.observers.get(cfg.attemptId);
   if (cfg.workspace !== o.workspace || dispatcher.dispatch !== root.wrapper) throw new Error("DISPATCH_OBSERVER_BINDING_CHANGED");
   if (cfg.operation !== "collect" && cfg.operation !== "discard-unsent") throw new Error("DISPATCH_OPERATION_INVALID");
-  if (cfg.operation === "discard-unsent" && o.events.length) throw new Error("DISPATCH_UNSENT_HAS_EVENTS");
+  if (cfg.operation === "discard-unsent" && (o.events.length || o.received?.size)) throw new Error("DISPATCH_UNSENT_HAS_EVENTS");
   root.capture();
   const current = activity();
   if (current.active.some(r => r.context_verified !== true || r.native_cwd === o.workspace)) throw new Error("DISPATCH_TASK_STILL_ACTIVE");
@@ -168,14 +231,29 @@ export function operateDispatcherObserver(store, cfg) {
   const result = { schema: "wildclawbench.doubaowork-native-tool-events/v1", profile, profile_sha256: cfg.profileSha,
     attempt_id: o.attempt_id, workspace: o.workspace, native_agent_id: cfg.agentId ?? null,
     installed_at: o.installed_at, collected_at: new Date().toISOString(),
-    events: o.events.filter(e => e.native_agent_id === cfg.agentId).map(clone), ledger: samples.map(s => s.row), ledger_samples: samples,
-    contexts: [], overflow: o.overflow, errors: [...o.errors], unknown_context_events: 0, ledger_at_capacity: o.ledger_at_capacity,
+    events: o.events.filter(e => e.native_agent_id === cfg.agentId || e.admission_rejected && e.native_agent_id === null).map(clone), ledger: samples.map(s => s.row), ledger_samples: samples,
+    contexts: [], overflow: o.overflow, errors: [...o.errors], unknown_context_events: o.unknown_context_events || 0, ledger_at_capacity: o.ledger_at_capacity,
     ledger_retention_ms: 1800000, ledger_capacity: 1000, ledger_observation_policy: "uploaded-ledger-observed-within-native-ttl/v1",
     status: "captured-not-normalized" };
+  if (root.service) {
+    if (root.service.getConnectionState()?.state === "released") result.errors.push("DISPATCH_CONSUMER_RELEASED");
+    result.consumer_witness = { schema: "wildclawbench.doubaowork-local-tool-consumer-witness/v1",
+      source_sha256: cfg.profileSha, installed_at: o.installed_at,
+      received_calls: [...o.received.values()].map(clone),
+      admission_rejections: [...o.admissions.values()].map(clone),
+      unbound_agent_event_count: [...o.calls.values(), ...o.received.values()]
+        .filter(e => e.native_agent_id !== cfg.agentId && !(e.native_agent_id === null
+          && o.admissions.has(`${e.sandbox_id}::${e.tool_call_id}`))).length };
+  }
   if (cfg.restore) {
     root.observers.delete(cfg.attemptId);
     if (!root.observers.size) {
       clearInterval(root.timer);
+      root.unsubscribeConsumer?.();
+      if (root.service) {
+        if (root.admissionDescriptor) Object.defineProperty(dispatcher, "reportAdmissionFailure", root.admissionDescriptor);
+        else delete dispatcher.reportAdmissionFailure;
+      }
       if (root.descriptor) Object.defineProperty(dispatcher, "dispatch", root.descriptor); else delete dispatcher.dispatch;
       delete globalThis[key];
     }

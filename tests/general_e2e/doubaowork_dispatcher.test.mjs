@@ -2,23 +2,131 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { operateDispatcherObserver, DISPATCHER_SOURCE_SHA256 } from "../../tools/report/e2e-shared/doubaowork/runtime-dispatcher.mjs";
 import { assertNativeToolActivityAllowed, taskToolDeliveries, normalizeNativeToolEvents } from "../../tools/report/e2e-shared/doubaowork/runtime-tools.mjs";
+import { normalizeVerifiedNonSuccessToolSubset } from "../../tools/report/e2e-shared/doubaowork/bound-evidence.mjs";
 
-function fixture(t) {
+function fixture(t, withConsumer = false) {
   t.mock.timers.enable({ apis: ["Date", "setInterval"], now: Date.parse("2026-10-06T00:00:00Z") });
   t.after(() => { delete globalThis.__wcbDoubaoDispatcherObserver; });
   let delegated = 0;
   const value = {}, error = new Error("native failure");
   const manager = { destroyed: false, records: new Map(), pending: new Set(), current: new Map(), currentCallIds: new WeakMap(),
+    reportAdmissionFailure() { return value; },
     dispatch(request) { delegated++; if (request.id === "throws") throw error; return value; } };
   const owner = { cwd: "/task", instanceId: "sandbox", sendContext: { conversationId: "123" } };
   const store = { contextsBySandboxId: new Map([["sandbox", owner]]) };
   const cfg = { workspace: "/task", attemptId: "attempt", profileSha: DISPATCHER_SOURCE_SHA256 };
-  const call = (operation, extra = {}) => operateDispatcherObserver.call(manager, store, { ...cfg, operation, ...extra });
-  const dispatch = (id = "call", input = { command: "pwd" }) => manager.dispatch({ id, name: "Bash", input, sandboxId: "sandbox" }, null,
-    { track: "agent", agentId: "agent", conversationId: "123", owner }, { cwd: owner.cwd, sandboxId: "sandbox", sendContext: owner.sendContext });
+  const listeners = new Set();
+  const service = withConsumer ? { subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+    getConnectionState() { return { state: "open" }; } } : null;
+  const call = (operation, extra = {}) => operateDispatcherObserver.call(manager, store, { ...cfg, operation, ...extra }, service);
+  const receive = (id = "call", input = { command: "pwd" }, agent = "agent") => {
+    for (const fn of listeners) fn({ type: "TOOL_CALL", sandboxId: "sandbox", toolCall: { id, name: "Bash", input, option: { agent_id: agent } } });
+  };
+  const dispatch = (id = "call", input = { command: "pwd" }) => {
+    receive(id, input);
+    return manager.dispatch({ id, name: "Bash", input, sandboxId: "sandbox" }, null,
+      { track: "agent", agentId: "agent", conversationId: "123", owner }, { cwd: owner.cwd, sandboxId: "sandbox", sendContext: owner.sendContext });
+  };
   const options = { attemptId: "attempt", workspace: "/task", agentId: "agent", conversationId: "123", sentAt: new Date().toISOString() };
-  return { manager, store, owner, cfg, call, dispatch, value, error, options, delegated: () => delegated };
+  return { manager, store, owner, cfg, call, dispatch, receive, service, listeners, value, error, options, delegated: () => delegated };
 }
+
+test("consumer witness reconciles inbound calls, actual dispatch and native uploaded results without changing dispatch", t => {
+  const f = fixture(t, true), original = f.manager.dispatch;
+  f.call("install");
+  assert.equal(f.listeners.size, 1);
+  f.receive(); // A native replay must not add a second logical call.
+  assert.equal(f.dispatch(), f.value);
+  assert.equal(f.delegated(), 1);
+  f.manager.records.set("sandbox::call", { finalizedAt: Date.now(), uploadState: "uploaded", request: { id: "call", name: "Bash" },
+    result: { text: "ok" }, context: { owner: f.owner, agentId: "agent", conversationId: "123" } });
+  const snapshot = f.call("collect", { agentId: "agent", restore: true });
+  const options = { ...f.options, finishedAt: new Date().toISOString() };
+  const result = normalizeNativeToolEvents(snapshot, options);
+  assert.equal(result.status, "complete-for-protocol");
+  assert.equal(result.scope, "bound-native-local-tool-consumer-and-dispatch");
+  assert.equal(snapshot.consumer_witness.received_calls.length, 1);
+  assert.equal(f.listeners.size, 0);
+  assert.equal(f.manager.dispatch, original);
+  const legacy = structuredClone(snapshot); delete legacy.consumer_witness;
+  assert.equal(normalizeNativeToolEvents(legacy, options).status, "partial");
+  const interrupted = structuredClone(snapshot);
+  interrupted.ledger.push({ ...interrupted.ledger[0], toolCallId: "failed", uploadState: "failed" });
+  const subset = normalizeVerifiedNonSuccessToolSubset(interrupted, options, { nonSuccessVerified: true });
+  assert.equal(subset.status, "partial");
+  assert.equal(subset.dropped_failed_upload_count, 1);
+  const overflow = structuredClone(snapshot); overflow.overflow = true;
+  assert.equal(normalizeVerifiedNonSuccessToolSubset(overflow, options).status, "partial");
+  const diagnostic = structuredClone(snapshot); diagnostic.errors = ["DISPATCH_CONSUMER_BINDING_UNVERIFIED"];
+  const retained = normalizeVerifiedNonSuccessToolSubset(diagnostic, options);
+  assert.equal(retained.status, "partial");
+  assert.equal(retained.known_subtotal, 1);
+  assert.equal(retained.capture_incomplete, true);
+  assert.equal(diagnostic.consumer_witness.received_calls.length, 1);
+  diagnostic.errors.push("other-error");
+  assert.throws(() => normalizeVerifiedNonSuccessToolSubset(diagnostic, options), /CAPTURE_INCOMPLETE/);
+  for (const change of [
+    s => { s.consumer_witness.received_calls = []; },
+    s => { s.consumer_witness.received_calls[0].input = { command: "other" }; },
+    s => { s.consumer_witness.received_calls[0].native_agent_id = "other"; },
+    s => { s.consumer_witness.received_calls[0].sandbox_id = "other"; },
+    s => { s.consumer_witness.received_calls[0].observed_at = new Date(Date.now() + 1).toISOString(); },
+    s => { s.consumer_witness.unbound_agent_event_count = 1; },
+    s => { s.consumer_witness.source_sha256 = "a".repeat(64); },
+  ]) {
+    const invalid = structuredClone(snapshot); change(invalid);
+    assert.throws(() => normalizeNativeToolEvents(invalid, options), /CONSUMER/);
+  }
+});
+
+test("admission-only or unbound inbound calls cannot establish complete absence evidence", t => {
+  const f = fixture(t, true); f.call("install"); f.receive();
+  assert.throws(() => f.call("discard-unsent", { restore: true }), /UNSENT_HAS_EVENTS/);
+  const snapshot = f.call("collect", { agentId: "agent", restore: true });
+  assert.throws(() => normalizeNativeToolEvents(snapshot, { ...f.options, finishedAt: new Date().toISOString() }), /CONSUMER_COVERAGE/);
+  f.call("install"); f.receive("unbound", {}, "other-agent");
+  const unbound = f.call("collect", { agentId: "agent", restore: true });
+  assert.equal(unbound.consumer_witness.unbound_agent_event_count, 1);
+  assert.throws(() => normalizeNativeToolEvents(unbound, { ...f.options, finishedAt: new Date().toISOString() }), /CONSUMER_WITNESS/);
+});
+
+test("a missing Agent ID needs the actual native admission refusal and never becomes a dispatched call", t => {
+  const f = fixture(t, true), original = f.manager.reportAdmissionFailure;
+  f.call("install"); f.receive("rejected", { command: "pwd" }, null);
+  const request = { sandboxId: "sandbox", id: "rejected", name: "Bash" };
+  const refusal = { result: { isError: true, error_code: "missing_agent_id_on_agent_route", content: [{ type: "text", text: "native refusal" }] } };
+  assert.equal(f.manager.reportAdmissionFailure(request, refusal), f.value);
+  assert.equal(f.delegated(), 0);
+  const snapshot = f.call("collect", { agentId: "agent", restore: true });
+  assert.equal(f.manager.reportAdmissionFailure, original);
+  const options = { ...f.options, finishedAt: new Date().toISOString() };
+  const normalized = normalizeNativeToolEvents(snapshot, options);
+  assert.equal(normalized.status, "complete-for-protocol");
+  assert.equal(normalized.known_subtotal, 1);
+  assert.equal(normalized.events[0].native_agent_id, null);
+  assert.equal(normalized.events[1].admission_rejected, true);
+  assert.deepEqual(normalized.events[1].output, refusal.result);
+  for (const change of [s => { s.consumer_witness.admission_rejections = []; },
+    s => { s.consumer_witness.admission_rejections[0].source = "inferred"; },
+    s => { s.consumer_witness.admission_rejections[0].result.error_code = "guessed"; },
+    s => { s.events[1].output = { ...s.events[1].output, error_code: "other" }; }]) {
+    const invalid = structuredClone(snapshot); change(invalid);
+    assert.throws(() => normalizeNativeToolEvents(invalid, options), /NATIVE_TOOL_/);
+  }
+});
+
+test("consumer replacement, release and ambiguous native route fail closed", t => {
+  const f = fixture(t, true); f.call("install");
+  assert.throws(() => operateDispatcherObserver.call(f.manager, f.store,
+    { ...f.cfg, operation: "collect", agentId: "agent" }, { ...f.service }), /RUNTIME_CHANGED/);
+  f.store.contextsBySandboxId.clear(); f.receive();
+  const unknown = f.call("collect", { agentId: "agent", restore: true });
+  assert.equal(unknown.unknown_context_events, 1);
+  assert.throws(() => normalizeNativeToolEvents(unknown, { ...f.options, finishedAt: new Date().toISOString() }), /CAPTURE_INCOMPLETE/);
+  f.call("install"); f.service.getConnectionState = () => ({ state: "released" });
+  const released = f.call("collect", { agentId: "agent", restore: true });
+  assert.ok(released.errors.includes("DISPATCH_CONSUMER_RELEASED"));
+});
 
 test("pending read or shell delivery is visible before any file is created; own delivery blocks completion", t => {
   const f = fixture(t), aborter = {};

@@ -288,23 +288,62 @@ export function normalizeNativeToolEvents(snapshot, { attemptId, workspace, agen
     ledger.set(r.toolCallId, r);
   }
   if (snapshot.ledger_observation_policy && sampleTimes.size !== ledger.size) throw new Error("NATIVE_TOOL_LEDGER_COVERAGE_INCOMPLETE");
+  const admissions = new Map();
+  if (snapshot.consumer_witness?.admission_rejections !== undefined) {
+    const witness = snapshot.consumer_witness;
+    if (snapshot.profile !== DISPATCHER_PROFILE || witness.schema !== "wildclawbench.doubaowork-local-tool-consumer-witness/v1"
+        || witness.source_sha256 !== DISPATCHER_SOURCE_SHA256 || !Array.isArray(witness.admission_rejections)) throw new Error("NATIVE_TOOL_CONSUMER_WITNESS_INVALID");
+    for (const proof of witness.admission_rejections) {
+      if (!proof.tool_call_id || admissions.has(proof.tool_call_id) || ledger.has(proof.tool_call_id)
+          || proof.source !== "ToolCallManager.reportAdmissionFailure" || proof.native_cwd !== workspace
+          || proof.conversation_id !== conversationId || proof.native_agent_id !== null && proof.native_agent_id !== agentId
+          || !proof.result?.isError || !["invalid_agent_id", "missing_agent_id_on_agent_route", "agent_id_on_legacy_route"].includes(proof.result.error_code)) throw new Error("NATIVE_TOOL_ADMISSION_PROOF_INVALID");
+      admissions.set(proof.tool_call_id, proof);
+    }
+  }
   const starts = new Map(), results = new Map(), events = [];
   for (const [index, e] of snapshot.events.entries()) {
-    if (e.native_cwd !== workspace || !e.tool_call_id || !e.tool_name || !ledger.has(e.tool_call_id)) throw new Error("NATIVE_TOOL_EVENT_SCOPE_INVALID");
-    const row = ledger.get(e.tool_call_id);
+    const rejected = admissions.get(e.tool_call_id);
+    if (e.native_cwd !== workspace || !e.tool_call_id || !e.tool_name || !ledger.has(e.tool_call_id) && !rejected) throw new Error("NATIVE_TOOL_EVENT_SCOPE_INVALID");
+    if (Boolean(e.admission_rejected) !== Boolean(rejected)) throw new Error("NATIVE_TOOL_ADMISSION_EVENT_MISMATCH");
+    const row = rejected ? { toolName: rejected.tool_name, instanceId: rejected.sandbox_id, result: rejected.result } : ledger.get(e.tool_call_id);
     if (row.toolName !== e.tool_name || row.instanceId !== e.instance_id || (e.native_agent_id && e.native_agent_id !== agentId)
         || (conversationId && e.conversation_id && e.conversation_id !== conversationId)
         || !Number.isFinite(Date.parse(e.observed_at))
         || Date.parse(e.observed_at) < Date.parse(sentAt) || Date.parse(e.observed_at) > Date.parse(finishedAt)) throw new Error("NATIVE_TOOL_EVENT_BINDING_MISMATCH");
     const map = e.phase === "started" ? starts : e.phase === "settled" ? results : null;
     if (!map || map.has(e.tool_call_id) || (e.phase === "settled" && !starts.has(e.tool_call_id))) throw new Error("NATIVE_TOOL_EVENT_ORDER_OR_DUPLICATE");
-    if (e.phase === "started" && e.input === null) throw new Error("NATIVE_TOOL_INPUT_MISSING");
+    if (e.phase === "started" && (e.input === null || rejected && JSON.stringify(e.input) !== JSON.stringify(rejected.input))) throw new Error("NATIVE_TOOL_INPUT_MISSING");
+    if (rejected && (e.phase === "started" && e.observed_at !== rejected.received_at
+        || e.phase === "settled" && e.observed_at !== rejected.observed_at)) throw new Error("NATIVE_TOOL_ADMISSION_EVENT_MISMATCH");
     if (e.phase === "settled" && JSON.stringify(e.output) !== JSON.stringify(row.result)) throw new Error("NATIVE_TOOL_RESULT_LEDGER_MISMATCH");
     map.set(e.tool_call_id, index); events.push({ ...e, raw_event_index: index });
   }
-  if (starts.size !== ledger.size || results.size !== ledger.size) throw new Error("NATIVE_TOOL_LEDGER_COVERAGE_INCOMPLETE");
+  if (starts.size !== ledger.size + admissions.size || results.size !== starts.size) throw new Error("NATIVE_TOOL_LEDGER_COVERAGE_INCOMPLETE");
+  let consumerVerified = false;
+  if (snapshot.consumer_witness !== undefined) {
+    const witness = snapshot.consumer_witness;
+    if (snapshot.profile !== DISPATCHER_PROFILE
+        || witness?.schema !== "wildclawbench.doubaowork-local-tool-consumer-witness/v1"
+        || witness.source_sha256 !== DISPATCHER_SOURCE_SHA256 || witness.installed_at !== snapshot.installed_at
+        || witness.unbound_agent_event_count !== 0 || !Array.isArray(witness.received_calls)) throw new Error("NATIVE_TOOL_CONSUMER_WITNESS_INVALID");
+    const incoming = new Map();
+    for (const event of witness.received_calls) {
+      const index = starts.get(event.tool_call_id), start = snapshot.events[index];
+      if (!event.tool_call_id || incoming.has(event.tool_call_id) || !start
+          || event.native_cwd !== workspace || event.native_agent_id !== agentId && !(event.native_agent_id === null && admissions.has(event.tool_call_id)) || event.conversation_id !== conversationId
+          || event.sandbox_id !== start.sandbox_id || event.tool_name !== start.tool_name
+          || JSON.stringify(event.input) !== JSON.stringify(start.input)
+          || !Number.isFinite(Date.parse(event.observed_at)) || Date.parse(event.observed_at) < Date.parse(sentAt)
+          || Date.parse(event.observed_at) > Date.parse(start.observed_at)) throw new Error("NATIVE_TOOL_CONSUMER_COVERAGE_INCOMPLETE");
+      incoming.set(event.tool_call_id, event);
+    }
+    if (incoming.size !== starts.size) throw new Error("NATIVE_TOOL_CONSUMER_COVERAGE_INCOMPLETE");
+    consumerVerified = true;
+  }
   return { profile: snapshot.profile, profile_sha256: snapshot.profile_sha256,
     events, calls: [...starts.keys()].map(id => ({ call_id: id, start_index: starts.get(id), result_index: results.get(id) })),
-    known_subtotal: ledger.size, scope: snapshot.profile === DISPATCHER_PROFILE ? "modern-runtime-tool-dispatcher-records" : "bound-native-agent-local-tool-protocol",
-    status: snapshot.profile === DISPATCHER_PROFILE ? "partial" : "complete-for-protocol" };
+    known_subtotal: starts.size,
+    scope: consumerVerified ? "bound-native-local-tool-consumer-and-dispatch" : snapshot.profile === DISPATCHER_PROFILE ? "modern-runtime-tool-dispatcher-records" : "bound-native-agent-local-tool-protocol",
+    status: snapshot.profile === DISPATCHER_PROFILE && !consumerVerified ? "partial" : "complete-for-protocol" };
 }

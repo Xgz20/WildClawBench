@@ -80,6 +80,19 @@ export function normalizeVerifiedNonSuccessToolSubset(snapshot, options, { nonSu
   try { return { ...normalizeNativeToolEvents(snapshot, options), dropped_failed_upload_count: 0 }; }
   catch (error) {
     if (!nonSuccessVerified && error.message === "NATIVE_TOOL_CAPTURE_INCOMPLETE"
+        && snapshot.profile === DISPATCHER_PROFILE && snapshot.profile_sha256 === DISPATCHER_SOURCE_SHA256
+        && Array.isArray(snapshot.errors) && snapshot.errors.length > 0
+        && snapshot.errors.every(item => item === "DISPATCH_CONSUMER_BINDING_UNVERIFIED")
+        && snapshot.unknown_context_events === 0 && snapshot.overflow !== true && snapshot.ledger_at_capacity !== true
+        && snapshot.ledger.every(row => row.uploadState === "uploaded")) {
+      const partial = { ...snapshot, errors: [], events: snapshot.events.filter(e => !e.admission_rejected) };
+      delete partial.consumer_witness;
+      const verified = normalizeNativeToolEvents(partial, options);
+      return { ...verified, status: "partial", scope: "modern-dispatcher-consumer-diagnostic", capture_incomplete: true,
+        capture_diagnostics: { errors: [...snapshot.errors], source_ledger_count: snapshot.ledger.length,
+          verified_ledger_count: verified.known_subtotal }, dropped_incomplete_tool_count: 0, dropped_failed_upload_count: 0 };
+    }
+    if (!nonSuccessVerified && error.message === "NATIVE_TOOL_CAPTURE_INCOMPLETE"
         && Array.isArray(snapshot?.events) && Array.isArray(snapshot?.ledger)
         && Array.isArray(snapshot.errors)
         && snapshot.errors.every(item => item === "DISPATCH_LEDGER_CLOCK_INVALID")
@@ -101,7 +114,8 @@ export function normalizeVerifiedNonSuccessToolSubset(snapshot, options, { nonSu
         && Array.isArray(snapshot.contexts) && !snapshot.contexts.some(c => c.active_delivery)) {
       const started = new Set(snapshot.events.filter(e => e.phase === "started").map(e => e.tool_call_id));
       const settled = new Set(snapshot.events.filter(e => e.phase === "settled").map(e => e.tool_call_id));
-      const completeIds = new Set([...started].filter(id => settled.has(id)));
+      const ledgerIds = new Set(snapshot.ledger.map(row => row.toolCallId));
+      const completeIds = new Set([...started].filter(id => settled.has(id) && ledgerIds.has(id)));
       const sourceIds = new Set([...snapshot.ledger.map(row => row.toolCallId), ...snapshot.events.map(row => row.tool_call_id)]);
       const retainedIndexes = snapshot.events.flatMap((event, index) => completeIds.has(event.tool_call_id) ? [index] : []);
       const ledger = snapshot.ledger.filter(row => completeIds.has(row.toolCallId));
@@ -118,6 +132,7 @@ export function normalizeVerifiedNonSuccessToolSubset(snapshot, options, { nonSu
         ...(samples ? { ledger_samples: samples } : {}),
         events: snapshot.events.filter(e => completeIds.has(e.tool_call_id)),
       };
+      delete partial.consumer_witness;
       try {
         const verified = normalizeNativeToolEvents(partial, options);
         const captureDiagnostics = {
@@ -153,6 +168,7 @@ export function normalizeVerifiedNonSuccessToolSubset(snapshot, options, { nonSu
     const strictSubset = { ...snapshot, ledger: uploaded,
       ledger_samples: snapshot.ledger_samples.filter(row => ids.has(row.row?.toolCallId)),
       events: snapshot.events.filter(row => ids.has(row.tool_call_id)) };
+    delete strictSubset.consumer_witness;
     const verified = normalizeNativeToolEvents(strictSubset, options);
     return { ...verified, status: "partial", scope: "bound-native-agent-uploaded-tool-subset",
       dropped_failed_upload_count: failed.length };

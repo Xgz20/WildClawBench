@@ -21,6 +21,8 @@ rollout profile 2 同时提供 Token 和原生任务耗时。Token 从去重并�
 
 `0.7.1` 增加：分组工具表头、逐字段覆盖及部分小计、中文分类与用例数、秒级Excel名称、`--target-unit`领导版，以及独立的 `token_growth_analysis.py` 请求级 Token 增长分析。目标单元用于文字总结，各表保留全部参评单元。`report.display_overrides.unit_model_labels`可带`label/reason`修改展示，不改原模型验证信息。采集后的通用资源补充层会在报告时重新核验并复算。
 
+`0.7.13` 支持同一单元从多个已导入的标准回传包逐题选择：source index 的 `imports[unit_id].packages` 枚举原 package ID、target 和 manifest SHA，task index 每题必须显式指定 `source_package_id`。每个来源范围须为目标任务全集的有序子集，客户端版本、模型和执行模式须一致；原 batch/attempt/回执保持不变。单一来源格式继续兼容，不生成虚构的全五题采集回执。
+
 不同冻结来源使用`scripts/selected_report.py --workspace-root ABS --batch-root ABS --source-index ABS --task-index ABS`显式逐题选择；默认只读，追加输出目录与Excel运行时才发布。保留每条原批次/attempt身份和资源修正谱系。普通报告同时生成`developer-source-index.json`及`developer-task-index.json`供研发打包。
 
 先运行：

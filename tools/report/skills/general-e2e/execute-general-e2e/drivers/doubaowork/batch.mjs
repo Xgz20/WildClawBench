@@ -15,6 +15,11 @@ const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 const now = () => new Date().toISOString();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+export function queueProjectName(unitRoot, queueId, ordinal) {
+  if (!Number.isInteger(ordinal) || ordinal < 1) throw new Error("DOUBAOWORK_PROJECT_ORDINAL_INVALID");
+  return `WCB-DW-General-${sha(`${resolve(unitRoot)}\0${queueId}`).slice(0, 10)}-${String(ordinal).padStart(2, "0")}`;
+}
+
 export function decideQueueTaskAction(row, journal) {
   if (row.phase === "PENDING") return journal ? "reject-existing-attempt" : "dispatch";
   if (["PREPARING", "PREPARED"].includes(row.phase)) {
@@ -133,7 +138,7 @@ export async function runSerialQueue(options) {
       if (options.resume) throw new Error("DOUBAOWORK_QUEUE_NOT_FOUND");
       state = { schema: "wildclawbench.doubaowork-general-queue/v1", config, config_digest: sha(JSON.stringify(config)),
         created_at: now(), status: "RUNNING", tasks: taskIds.map((task_id, i) => ({ task_id, order: i, phase: "PENDING", attempt_id: null,
-          project_name: `WCB-${options.queueId}-${String(i + 1).padStart(2, "0")}`, dispatch_attempt_count: 0, native_started_at: null, native_finished_at: null })), history: [] };
+          project_name: queueProjectName(unitRoot, options.queueId, i + 1), dispatch_attempt_count: 0, native_started_at: null, native_finished_at: null })), history: [] };
       await save(stateFile, state);
     }
     if (state.error) state.history.push({ event: "RESUME_AFTER_ATTENTION", at: now(), previous_error: state.error });
