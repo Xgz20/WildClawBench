@@ -27,7 +27,10 @@ export { inspectLoopbackEndpoint } from "./environment.mjs";
 
 export const QWENWORK_PROBE_SCHEMA = "wildclawbench.general-e2e-qwenwork-readonly-probe/v1";
 const MAX_TRANSCRIPT_BYTES = 32 * 1024 * 1024;
-const MAX_DISCOVERY_FILES = 5000;
+// Segment logs only contribute metadata counts. Keep their inventory budget
+// separate from the more expensive transcript content/version inspection.
+const MAX_TRACE_METADATA_FILES = 100000;
+const MAX_TRANSCRIPT_DISCOVERY_FILES = 5000;
 
 function usage() {
   return `QwenWork macOS General E2E read-only probe
@@ -115,9 +118,10 @@ async function countTraceFiles(root) {
       }
       if (!entry.isFile() || !entry.name.endsWith(".jsonl")) continue;
       inspectedFileCount += 1;
-      if (inspectedFileCount > MAX_DISCOVERY_FILES) throw new Error("QWENWORK_TRACE_FILE_LIMIT_EXCEEDED");
+      if (inspectedFileCount > MAX_TRACE_METADATA_FILES) throw new Error("QWENWORK_TRACE_FILE_LIMIT_EXCEEDED");
       if (path.includes(`${join(root, "projects")}/`)) {
         transcriptFileCount += 1;
+        if (transcriptFileCount > MAX_TRANSCRIPT_DISCOVERY_FILES) throw new Error("QWENWORK_TRANSCRIPT_FILE_LIMIT_EXCEEDED");
         const info = await lstat(path);
         if (info.size > MAX_TRANSCRIPT_BYTES) {
           warnings.push("TRANSCRIPT_TOO_LARGE_FOR_VERSION_INSPECTION");

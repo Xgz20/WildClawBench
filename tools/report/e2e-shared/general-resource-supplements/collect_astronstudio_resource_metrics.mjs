@@ -18,7 +18,7 @@ import { ROLLOUT_PATH, analyzeIndexedRollout } from "./astronstudio-rollout.mjs"
 
 export const RESOURCE_SCHEMA = "urn:wildclawbench:schema:general-e2e:resource-metrics:v1";
 export const RESOURCE_COLLECTOR = "astronstudio-provider-runtime-resource-metrics";
-export const RESOURCE_COLLECTOR_VERSION = "0.1.1";
+export const RESOURCE_COLLECTOR_VERSION = "0.1.2";
 const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 const TRACE_INDEX_SCHEMA = "urn:wildclawbench:schema:general-e2e:trace-index:v1";
 const TRACE_ADAPTER_ID = "astronstudio-provider-runtime-events";
@@ -190,6 +190,19 @@ function safeRelativePath(value) {
   return value;
 }
 
+export function validateRawTraceBinding(row, session) {
+  const auxiliaryGatewayEvent = row.lifecycle_generation === null
+    && row.event_type === "turn.gateway-usage.updated"
+    && row.event?.type === row.event_type
+    && row.event.threadId === session.thread_id && row.event.turnId === session.turn_id
+    && row.event.providerRefs?.providerThreadId === session.session_id
+    && row.event.providerRefs?.providerTurnId === session.turn_id;
+  if (row.thread_id !== session.thread_id || row.turn_id !== session.turn_id
+      || (!auxiliaryGatewayEvent && String(row.lifecycle_generation) !== String(session.lifecycle_generation))) {
+    throw new Error("RAW_TRACE_SESSION_MISMATCH");
+  }
+}
+
 async function readIndexedRawTrace(traceIndexPath, index) {
   const root = await realpath(dirname(resolve(traceIndexPath)));
   const rawArtifact = index.raw_trace.find(r=>r.path==="raw/astronstudio-provider-events.jsonl");
@@ -213,12 +226,13 @@ async function readIndexedRawTrace(traceIndexPath, index) {
     if (Buffer.byteLength(line, "utf8") > 2 * 1024 * 1024) throw new Error("RAW_EVENT_OVERSIZED");
     const row = JSON.parse(line);
     if (!Number.isSafeInteger(row.sequence) || row.sequence <= lastSequence) throw new Error("RAW_TRACE_SEQUENCE_INVALID");
-    if (row.thread_id !== index.session.thread_id || row.turn_id !== index.session.turn_id
-        || String(row.lifecycle_generation) !== String(index.session.lifecycle_generation)) throw new Error("RAW_TRACE_SESSION_MISMATCH");
+    validateRawTraceBinding(row, index.session);
     firstSequence ??= row.sequence; lastSequence = row.sequence; countRows += 1;
     // All bytes/events are hashed and checked. Text deltas have no metric
     // fields; retain their original line offsets while bounding memory.
-    if (row.event_type !== "content.delta") rows.push({ ...row, raw_line: rawLine });
+    // Gateway usage is retained and hashed as raw evidence. Its accounting
+    // units are not this collector's verified rollout/provider usage profile.
+    if (!["content.delta", "turn.gateway-usage.updated"].includes(row.event_type)) rows.push({ ...row, raw_line: rawLine });
   }
   if (hash.digest("hex") !== rawArtifact.sha256) throw new Error("RAW_TRACE_ARTIFACT_MISMATCH");
   const range = index.raw_event_range;
@@ -601,7 +615,7 @@ export async function collectAstronStudioResourceMetrics(options) {
     artifact("trace/trace-index.json", indexSource.bytes),
     { ...rawSource.artifact, path: "trace/raw/astronstudio-provider-events.jsonl" },
   ];
-  const replayLegacy=options.legacyProviderOnly&&indexSource.value.adapter.version!=="0.2.0";
+  const replayLegacy=options.legacyProviderOnly&&!['0.2.0','0.3.0'].includes(indexSource.value.adapter.version);
   const rollout=hasRollout?await analyzeIndexedRollout(indexSource.absolute,stateSource.value,{profileVersion:replayLegacy?1:2}):null;
   if(rollout)sources.push({...rollout.source,path:`trace/${ROLLOUT_PATH}`});
   let document;

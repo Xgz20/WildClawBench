@@ -9,6 +9,7 @@ import {
   buildAstronStudioResourceMetrics,
   collectAstronStudioResourceMetrics,
   parseArgs,
+  validateRawTraceBinding,
 } from "../../tools/report/skills/general-e2e/collect-general-e2e/scripts/collect_astronstudio_resource_metrics.mjs";
 
 const IDENTITY = Object.freeze({
@@ -23,6 +24,24 @@ const SESSION = Object.freeze({
   session_id: "session-fixture",
   cwd: "/tmp/general-e2e-workspace-fixture",
   lifecycle_generation: "lifecycle-fixture",
+});
+
+test("nullable gateway lifecycle requires exact native bindings and does not admit other rows", () => {
+  const gateway = row(1, "turn.gateway-usage.updated", {
+    providerRefs: { providerThreadId: SESSION.session_id, providerTurnId: SESSION.turn_id },
+  });
+  gateway.lifecycle_generation = null;
+  validateRawTraceBinding(gateway, SESSION);
+  for (const change of [
+    r => { r.event_type = "item.started"; },
+    r => { r.lifecycle_generation = "foreign-generation"; },
+    r => { r.event.threadId = "foreign-thread"; },
+    r => { r.event.providerRefs.providerThreadId = "foreign-session"; },
+    r => { r.event.providerRefs.providerTurnId = "foreign-turn"; },
+  ]) {
+    const invalid = structuredClone(gateway); change(invalid);
+    assert.throws(() => validateRawTraceBinding(invalid, SESSION), /RAW_TRACE_SESSION_MISMATCH/);
+  }
 });
 
 function sha256(bytes) {

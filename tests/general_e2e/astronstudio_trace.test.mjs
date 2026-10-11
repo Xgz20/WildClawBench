@@ -324,6 +324,41 @@ FROM provider_runtime_events WHERE thread_id=? AND turn_id=? ORDER BY sequence
   }
 });
 
+test("new archive uses bound SDK transcript when desktop projection omits prompt and items", async () => {
+  const fixture = await createFixture();
+  try {
+    fixture.state.execution = { started_at: "2026-09-17T10:00:01.000Z", finished_at: "2026-09-17T10:00:03.000Z" };
+    await writeFile(fixture.stateFile, JSON.stringify(fixture.state));
+    const database = new DatabaseSync(fixture.stateDatabase);
+    database.prepare("DELETE FROM provider_runtime_events WHERE event_type != 'turn.completed'").run();
+    database.close();
+    const row = (type, payload) => ({ timestamp: "2026-09-17T10:00:02.000Z", type, payload });
+    const rolloutFile = join(fixture.root, "rollout.jsonl");
+    const rows = [row("session_meta", { id: SESSION_ID, cwd: fixture.state.session.cwd }),
+      row("event_msg", { type: "task_started", turn_id: TURN_ID }),
+      row("turn_context", { turn_id: TURN_ID, cwd: fixture.state.session.cwd }),
+      row("event_msg", { type: "user_message", message: "请修复温度换算程序。" }),
+      row("response_item", { type: "function_call", name: "exec_command", call_id: "sdk-call", arguments: '{"cmd":"run tests"}' }),
+      row("response_item", { type: "function_call_output", call_id: "sdk-call", output: "3 TESTS ok" }),
+      row("response_item", { type: "message", role: "assistant", content: [{ type: "output_text", text: "已完成修复，测试 OK。" }] }),
+      row("event_msg", { type: "task_complete", turn_id: TURN_ID, duration_ms: 2000, last_agent_message: "已完成修复，测试 OK。" })];
+    await writeFile(rolloutFile, rows.map(r => JSON.stringify(r)).join("\n") + "\n");
+    const result = await archiveAstronStudioTrace({ stateFile: fixture.stateFile, stateDb: fixture.stateDatabase,
+      outputDir: fixture.outputDir, rolloutFile });
+    assert.equal(result.trace_index.adapter.version, "0.3.0");
+    assert.equal(result.trace_index.completeness.status, "complete");
+    assert.equal(result.trace_index.raw_event_range.event_count, 1);
+    assert.equal(result.trace_index.normalization, undefined);
+    const query = await queryTrace({ traceIndex: join(fixture.outputDir, "trace-index.json"), callId: "sdk-call", page: 1, pageSize: 50 });
+    assert.equal(query.pagination.total_matches, 2);
+    assert.match(query.matches[0].location.raw_ref, /astronstudio-rollout.jsonl#L5$/);
+    const metrics = await collectAstronStudioResourceMetrics({ stateFile: fixture.stateFile, traceIndex: join(fixture.outputDir, "trace-index.json") });
+    const document = JSON.parse(await readFile(metrics.output, "utf8"));
+    assert.equal(document.metrics.tools.call_count.value, 1);
+    assert.equal(document.metrics.timing.agent_duration_seconds.value, 2);
+  } finally { await rm(fixture.root, { recursive: true, force: true }); }
+});
+
 test("provider session mismatch fails closed", async () => {
   const fixture = await createFixture();
   try {

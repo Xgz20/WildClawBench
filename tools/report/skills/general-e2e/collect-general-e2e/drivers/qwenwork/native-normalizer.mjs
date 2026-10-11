@@ -1,4 +1,4 @@
-import { QWENWORK_MACOS_1_2_0_TOKEN_PROFILE } from "./token-profile.mjs";
+import { isAdmittedQwenTokenProfile } from "./token-profile.mjs";
 
 export const QWENWORK_COLLECTOR_ADAPTER_ID = "qwenwork-native-general";
 export const QWENWORK_COLLECTOR_VERSION = "0.1.5";
@@ -307,7 +307,7 @@ export function buildQwenStrictResourceMetrics({
   ]));
   const reconciled = tokenFields.every((field) => safeCount(finish?.data?.[field])
     && finish.data[field] === totals[field]);
-  const tokenObserved = Boolean(tokenProfile?.id === QWENWORK_MACOS_1_2_0_TOKEN_PROFILE.id
+  const tokenObserved = Boolean(isAdmittedQwenTokenProfile(tokenProfile)
     && nonzero && matched && validResponses && reconciled);
   const unavailableToken = (field) => metric(null, "unavailable",
     `QwenWork ${field} has no admitted native coverage`);
@@ -339,7 +339,7 @@ export function buildQwenStrictResourceMetrics({
     knownSubtotals.request_count = requests.size;
     knownSubtotals.call_count = calls.size;
     for (const field of TOKEN_FIELDS) coverageMap[field] = coverage(0, null, "model_response");
-    if (tokenProfile?.id === QWENWORK_MACOS_1_2_0_TOKEN_PROFILE.id && nonzero && validResponses
+    if (isAdmittedQwenTokenProfile(tokenProfile) && nonzero && validResponses
         && [...responseIds].every(id => requests.has(id))) {
       for (const field of [...tokenFields, "total_tokens"]) {
         usage[field] = metric(null, "partial", "Verified native responses before interruption; main-turn total unavailable");

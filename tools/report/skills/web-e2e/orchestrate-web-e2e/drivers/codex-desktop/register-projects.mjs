@@ -239,6 +239,14 @@ async function dismissStaleProjectDialog(page, timeout) {
   await dialogs[0].waitFor({ state: "hidden", timeout });
 }
 
+export async function clickNewProjectControl(page, button, timeout) {
+  const header = page.locator('[class~="group/nav-section-title"]').filter({ has: button });
+  const count = await header.count();
+  if (count > 1) throw new Error("添加项目按钮的侧栏标题不唯一");
+  if (count === 1) await header.hover({ timeout });
+  await button.click({ timeout, noWaitAfter: true });
+}
+
 async function beginProjectRegistration(page, timeout) {
   const openPattern = /^(Open folder|打开文件夹)$/i;
   const direct = await Promise.all([
@@ -256,10 +264,10 @@ async function beginProjectRegistration(page, timeout) {
   const createMatches = await visible(page.getByRole("button", { name: createPattern }));
   if (createMatches.length > 1) throw new Error(`添加新项目入口不唯一，实际 ${createMatches.length} 个`);
   if (createMatches.length === 1) {
-    // 新版 Desktop 的侧栏收缩层可能覆盖图标命中区域；该定位器已经按唯一
-    // aria-label 锁定按钮，force 只绕过装饰层的 pointer-events 拦截。
+    // Reveal the unique hover-only sidebar control before clicking so its
+    // layout box cannot route a forced click to another control underneath.
     try {
-      await createMatches[0].click({ timeout, noWaitAfter: true, force: true });
+      await clickNewProjectControl(page, createMatches[0], timeout);
     } catch (error) {
       // Desktop 26.917 can open the project dialog before its click promise
       // resolves. Accept that timeout only after a unique visible create

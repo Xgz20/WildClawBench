@@ -4,7 +4,7 @@
 
 本控制器把正式 execution record 与独立 scoring ZIP 交接为每题一个私有评分 attempt，并维护 Codex Desktop 项目、线程、wait cursor 和 deadline。它不执行 Harness，不亲自判分，不生成 `score.json` 或 submission。
 
-本页只描述 `codex-agent-judge-v1` 分支。`report-config.json` 中的模型和推理强度必须是已选定的非空值；`unconfigured-*` 占位值会失败关闭。显式的 `api-judge-v1` 使用独立的 [API Judge 编排](api-orchestration.md)，两个分支不会静默互换。
+本页只描述 `codex-agent-judge-v1` 分支。新准备批次默认冻结 `gpt-6.1-sol/high`，显式配置优先；编排器只读取 report-config 的冻结值，不在恢复或加载旧批次时补默认值。`report-config.json` 中的模型和推理强度必须是已选定的非空值；`unconfigured-*` 占位值会失败关闭。显式的 `api-judge-v1` 使用独立的 [API Judge 编排](api-orchestration.md)，两个分支不会静默互换。
 
 ## 初始化
 
@@ -73,6 +73,8 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py record-project \
 ```
 
 不存在时先注册该目录：
+
+侧栏添加按钮只在悬停项目标题时显示的 Desktop 版本，注册器先悬停唯一关联的标题，再进行普通点击。标题或入口歧义继续拒绝；不强制点击被裁切的按钮区域，以免触发其下方其他控件。此操作只恢复注册入口，不创建评分任务或改变冻结材料。
 
 ```bash
 bash <skill-dir>/scripts/run-codex-project-registrar.sh \

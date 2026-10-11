@@ -7,6 +7,10 @@ description: 编排桌面 Harness Web E2E 的执行结果交接、Codex Desktop 
 
 本 Skill 是执行与评分之间的控制平面。`execute-web-e2e` 负责被评 Harness 做题，`score-web-e2e` 负责一个 Codex Desktop 任务内的一题评分；本 Skill 只负责确定性地交接工作空间、注册项目、创建和等待评分任务。
 
+`0.3.25` 对新评分状态冻结默认裁判 `gpt-6.1-sol/high`，并在 `CREATE_THREAD` 动作中返回 `model` 与 `thinking`。已有状态保留原裁判和 Prompt；旧状态未冻结裁判时显示 `judge=null`，不能据此推断实际评分模型。
+
+`0.3.24` 的项目注册器先悬停唯一关联的侧栏项目标题，显露添加入口，再进行普通点击；裁切的隐藏按钮区域不再强制点击。标题或入口歧义继续拒绝，冻结批次、候选与评分材料不变。
+
 ## 1. 生成独立评分工作空间
 
 输入必须是整批执行成功后的 Harness 根目录。`execution-receipt.json` 必须存在、`integrity.valid=true`，每题必须同时为 `automation_phase=SUCCEEDED`、`execution_status=completed`，且 execution workspace 的当前 SHA 必须仍等于回执 `final_sha256`。安全超时或明确失败的完整终态回执只能用于审计与恢复，禁止进入评分。评分不能直接在 `execution/tasks/<task_id>` 中进行，也不能只复制若干网页文件。
@@ -33,7 +37,7 @@ node <skill-dir>/scripts/scoring-control.mjs init \
   --max-retries 1
 ```
 
-省略 `--task-id` 时使用 manifest 中的全部题目。新批次默认 `score_slots=3`，最多 8 路；显式传 `--score-slots 1` 可回退串行。每题固定使用 `score_port_base + task_index` 的独占端口。旧 revision 3 状态恢复时继续保持原 `score_slots=1` 和旧 Prompt，不自动升级。评分槽位、端口基数、deadline（默认 7200 秒）和失败终态重试数（默认 1 次）在同一批次初始化后均不可变。状态和逐题评分 Prompt 保存到 `score/.orchestrate-web-e2e/`，不写入候选 `workspace/`。
+省略 `--task-id` 时使用 manifest 中的全部题目。新评分状态默认 `judge.model=gpt-6.1-sol`、`judge.reasoning_effort=high`，可用 `--judge-model` 和 `--judge-reasoning-effort` 显式覆盖；初始化后不可变，修改需新评分编排，恢复不会套用新的默认值。新批次默认 `score_slots=3`，最多 8 路；显式传 `--score-slots 1` 可回退串行。每题固定使用 `score_port_base + task_index` 的独占端口。旧 revision 3 状态恢复时继续保持原 `score_slots=1` 和旧 Prompt，不自动升级。评分槽位、端口基数、deadline（默认 7200 秒）和失败终态重试数（默认 1 次）在同一批次初始化后均不可变。状态和逐题评分 Prompt 保存到 `score/.orchestrate-web-e2e/`，不写入候选 `workspace/`。
 
 macOS 的 Codex Desktop Browser 路由必须单独验收。`score_slots=3` 是本协议的生产默认值，执行与评分都必须按三路并发控制；它不代表当前 Desktop 会话一定已经提供三个 `iab` 实例。评分线程创建后，控制任务必须核对每个线程的 Browser 路由与 `metadata.codexSessionId`；少于三路时停止评分、保留 `evaluation_error`，并在新的控制会话中重新建立 Browser 路由。不得把路由缺失静默降级为串行，也不得把 `browsers=[]` 或 `Browser unavailable` 转成题目能力分数。
 
@@ -105,7 +109,7 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
 
 1. 读取该题生成的 `scoring_prompt_file`。
    题目隔离限制不禁止读取已独立安装的 `score-web-e2e` Skill、参考文档、受管脚本及其运行依赖；生成的 Prompt 必须明确这项只读授权。不得访问其他项目、父目录或其他用例，所有本题写入仍限定在 `private-scoring/`，候选 `workspace/` 保持只读。
-2. 确认当前题的 `preflight.status=PASSED` 后，调用 Desktop 内置 `create_thread`，目标为已记录的 `projectId`，环境固定为 `{type: "local"}`。除非用户显式指定，不覆盖模型与推理强度。
+2. 确认当前题的 `preflight.status=PASSED` 后，调用 Desktop 内置 `create_thread`，目标为已记录的 `projectId`，环境固定为 `{type: "local"}`。新状态必须同时传入当前 `CREATE_THREAD` 动作的 `model` 与 `thinking`；不能沿用控制会话默认值。兼容恢复的旧状态未冻结裁判时，动作不返回这两个字段，继续原历史行为；用户指定新裁判时需新评分编排。
 3. `create_thread` 返回后，控制任务必须马上调用 Desktop 内置 `open_in_codex`，目标为 `{type: "browser", url: "about:blank"}`，并传入刚返回的 `threadId`；返回 `queued` 只表示请求已入队。0.3.23 新生成的 Prompt 要求在安装依赖、构建、启动站点及评分之前先完成 Browser 就绪检查；既有冻结 Prompt 不改写。
 
    就绪窗口为 180 秒，发现检查最多 3 次，窗口计时前先读取评分 Skill 和 helper 文档。在发现前仅一次调用公开 `mcp__cua_repl.js_reset`，记录实际起止时间及 `attempt_count=1`，复位属于180秒总窗口。随后首次 CUA js 调用遵循工具要求，只调用 `cua.getState()`（可以赋给变量）；返回后立即记录外部观察时间 `finished_at_upper_bound`，精确 `finished_at` 未知时保持 null。helper 只对首调用接受这一实际外部界限并标记时间精度，不用工具耗时反推精确结束时间。第一次为空时，评分线程可自己调用一次 `open_in_codex`（`about:blank`，省略 `threadId`）；后续空清单分别退避 2 秒和 5 秒再发现，全部检查仍受总窗口约束。发现唯一属于本线程的 `iab` 后，或三次发现仍为空但窗口尚未耗尽时，仅一次用公开 `cua.createBrowserTab("iab", "about:blank", {visible:false})` 实际初始化，再核验本线程 `metadata.codexSessionId`、创建的唯一 tab 和实际 AX 页面。空清单不证明创建不可用；外国会话、重复 iab、创建失败或窗口耗尽必须停止。禁止父会话 Browser、Chrome、headless、替代运行时及私有管道。

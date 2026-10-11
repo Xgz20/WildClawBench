@@ -3,9 +3,11 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import vm from "node:vm";
 
 import {
   clickNewTask,
+  clickProjectsTab,
   clickSend,
   ensureSendTargetReady,
   fillPrompt,
@@ -31,6 +33,26 @@ import {
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs";
 
 const TASK_ID = "02_Code_Intelligence_task_001_temperature_cli_fix";
+
+test("project creation clicks the unique sidebar tab and never a same-name project group", async () => {
+  let tabClicks = 0, groupClicks = 0;
+  class Element {
+    closest() { return null; }
+    getBoundingClientRect() { return { width: 10, height: 10 }; }
+  }
+  const tab = Object.assign(new Element(), { innerText: "项目", click: () => tabClicks++ });
+  const group = Object.assign(new Element(), { innerText: "项目", click: () => groupClicks++ });
+  const picker = Object.assign(new Element(), { querySelectorAll: () => [tab] });
+  const client = { evaluate: expression => vm.runInNewContext(expression, {
+    Element, getComputedStyle: () => ({ visibility: "visible", display: "block" }),
+    document: { querySelectorAll: selector => selector === ".sidebar-segmented-picker" ? [picker] : [tab, group] },
+  }) };
+  assert.equal((await clickProjectsTab(client)).clicked, true);
+  assert.equal(tabClicks, 1); assert.equal(groupClicks, 0);
+  picker.querySelectorAll = () => [tab, Object.assign(new Element(), { innerText: "Projects", click: () => tabClicks++ })];
+  await assert.rejects(clickProjectsTab(client), /不唯一/u);
+  assert.equal(tabClicks, 1); assert.equal(groupClicks, 0);
+});
 
 test("workspace trigger without a visible absolute path uses exact native project routing", () => {
   assert.equal(shouldOpenExactProjectConversation({ count: 0, path: null }), true);

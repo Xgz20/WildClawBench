@@ -11,7 +11,6 @@
     "batch_id",
     "task_ids",
     "units",
-    "judge",
     "report"
   ],
   "properties": {
@@ -76,9 +75,10 @@
     "judge": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["protocol", "model", "reasoning_effort"],
+      "description": "新准备配置省略 Codex 字段时使用 gpt-6.1-sol/high；API Judge 必须显式填写全部字段。",
+      "allOf": [{"if": {"required": ["protocol"], "properties": {"protocol": {"const": "api-judge-v1"}}}, "then": {"required": ["protocol", "model", "reasoning_effort"]}}],
       "properties": {
-        "protocol": {"enum": ["codex-agent-judge-v1", "api-judge-v1"]},
+        "protocol": {"enum": ["codex-agent-judge-v1", "api-judge-v1"], "default": "codex-agent-judge-v1"},
         "model": {"type": "string", "minLength": 1},
         "reasoning_effort": {"$ref": "#/$defs/nullableString"}
       }

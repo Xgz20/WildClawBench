@@ -23,6 +23,8 @@ python scripts/prepare_general_e2e_workspaces.py prepare \
 
 配置必须符合 [prepare-config-v1.schema.json](references/prepare-config-v1.schema.json)，可从 [prepare-config.example.json](references/prepare-config.example.json) 修改。批次和 unit 的 `task_ids` 都要沿用 dataset manifest 顺序；unit 合集必须覆盖批次任务。执行前先校验 dataset 和 release 的协议、摘要、成员集合及 Skill ZIP；任何未知版本、重复/越界路径、符号链接类型不一致或哈希漂移都失败关闭。不得改用 Web E2E prepare 或旧 `eval_e2e`。
 
+新准备配置默认使用 `codex-agent-judge-v1 / gpt-6.1-sol / high`；可以省略 `judge`，或仅填写要覆盖的 Codex 字段。完整裁判身份在生成的 `report-config.json` 中冻结。显式 `api-judge-v1` 必须完整填写模型与推理档位，不继承 Codex 默认值。已有批次、报告配置和评分 attempt 不自动改写。
+
 输出目录中每个 unit 都有独立 `__execution.zip` 和 `__scoring.zip`。只把 execution ZIP 交给被评 Harness；执行终态冻结后再由控制端合入 scoring ZIP。可用以下命令复核既有批次：
 
 ```bash

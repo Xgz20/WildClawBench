@@ -56,6 +56,8 @@ node drivers/doubaowork/recover-lock.mjs \
 
 ## WorkBuddy / QwenWork macOS 开发入口
 
+`0.13.12` 将 QwenWork 只读探针的 JSONL 元数据计数预算（100,000 个）与会话内容检查预算（5,000 个）分开，避免大量 segment 历史提前耗尽会话预算。过大 transcript、链接、内容与运行时身份校验保持原门禁；不清理历史，也不改变发送、评分或正式采集准入。
+
 QwenWork Prompt 的 fill 失败可回退到键盘插入，但选择文本和插入前均须确认焦点仍在唯一目标编辑器；焦点漂移或完整回读不一致拒绝发送。General journal 的 `PROMPT_INPUT_FALLBACK` 记录方法、原始错误类型与消息 SHA，不保存可能含敏感输入的错误全文。
 
 QwenWork 的 fresh probe、新建/恢复和最终发送均要求 GUI 已解锁、当前控制台用户已登录且与执行用户一致，并核对精确安装路径的监听 PID/启动身份及同端点 browser WebSocket。锁屏、未知状态、外部监听者或过程身份漂移均拒绝继续；明确发生在 reservation 前的环境暂停保留原 attempt，只有 fresh probe 与最终身份、配置、Prompt 回读重新通过后才允许显式 resume，一旦调用过发送则不适用该分支；原生只读探针仍保留实际观察及阻断原因。
@@ -134,6 +136,8 @@ node drivers/qwenwork/batch.mjs \
 QwenWork 1.2.0 可能在 Prompt 发送后先写入 conversation/sub-chat/stream，再延迟补齐 `session_id`。托管队列只在唯一原生 conversation/sub-chat/project/cwd 绑定时暂占后台槽位；完整 session ID 和 Prompt transcript 校验仍是正式终态和 collect 的门禁。队列恢复 probe 的 SHA 不属于冻结 queue digest；初始托管 probe 通过 `--initial-probe` 传入，不改写 task config 的冻结 digest。托管队列在高频 WAL 写入期间用 SQLite 只读源连接的在线备份生成一致快照；普通单题/只读探针仍使用严格的源文件稳定性检查。
 
 ## AstronStudio macOS 只读探针
+
+`0.13.10` 在状态库完整性检查完成后核实当前后端对数据库的实际持有关系，避免同步大库扫描阻塞事件循环时，并行 ps/lsof 的超时造成错误拒绝；归属、PID/启动时间、目录和其它物理门禁继续严格校验。
 
 `0.13.8` 使用共用 `sqlite-snapshot 1.0.0` 复制状态库及已有 WAL/SHM：macOS 优先原生 APFS 克隆，其他文件系统或平台回退到独占文件复制。快照先在私有目录生成，再无覆盖发布；首次冻结配置的预检仍做整库 quick_check；执行前/恢复的新鲜运行期探针逐表完整检查实际使用的运行投影表，不重复扫描历史数据，仍重新核对进程、锁屏、模型、权限和活跃会话。高频执行观察对实际读取的完整投影表逐表 quick_check，冻结配置明确记录范围，空范围、未知表和缺表均拒绝。正式轨迹归档仍做整库检查，原生身份和一次发送门禁保持。大状态库不再依赖 Node 的 FICLONE 标志是否实际启用克隆；失败不能跳过校验或覆盖已有快照。
 

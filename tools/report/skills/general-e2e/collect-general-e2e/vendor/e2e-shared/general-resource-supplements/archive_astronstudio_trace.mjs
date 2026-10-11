@@ -17,6 +17,7 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ROLLOUT_PATH, readRolloutFile, analyzeRollout, discoverRollout } from "./astronstudio-rollout.mjs";
+import { normalizeRolloutTranscript } from "./astronstudio-rollout-transcript.mjs";
 import { copySnapshotFile, configureSnapshotReader } from "../sqlite-snapshot/index.mjs";
 
 export const TRACE_ADAPTER_ID = "astronstudio-provider-runtime-events";
@@ -764,7 +765,10 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     overrides,
   );
   try {
-  const normalized = normalizeTraceRows(native.rows, state);
+  const providerNormalized = normalizeTraceRows(native.rows, state);
+  const useRolloutTranscript = Boolean(rollout && providerNormalized.completeness.status !== "complete");
+  const normalized = useRolloutTranscript
+    ? normalizeRolloutTranscript(rollout.bytes, state, providerNormalized) : providerNormalized;
   await assertPromptAndFinalResponse(state, normalized.events);
 
   const transcriptBytes = jsonLineBytes(normalized.events);
@@ -774,8 +778,8 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     identity: { ...state.identity },
     adapter: {
       id: TRACE_ADAPTER_ID,
-      version: rollout ? "0.2.0" : TRACE_ADAPTER_VERSION,
-      source: rollout ? "provider_runtime_events+bound_rollout" : "provider_runtime_events",
+      version: useRolloutTranscript ? "0.3.0" : rollout ? "0.2.0" : TRACE_ADAPTER_VERSION,
+      source: useRolloutTranscript ? "bound_rollout_transcript+provider_runtime_events_audit" : rollout ? "provider_runtime_events+bound_rollout" : "provider_runtime_events",
     },
     session: {
       thread_id: state.session.thread_id,
@@ -789,8 +793,10 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     }),
     raw_trace: [native.raw_artifact, ...(rollout ? [artifact(ROLLOUT_PATH, rollout.bytes)] : [])],
     raw_event_range: native.raw_event_range,
-    normalization: { ...normalized.normalization, native_event_count: native.raw_event_range.event_count,
-      filtered_native_event_count: native.raw_event_range.event_count - normalized.events.length },
+    // The range still describes provider rows. Do not mix SDK line counts into
+    // the historical provider-only normalization accounting contract.
+    ...(!useRolloutTranscript ? { normalization: { ...normalized.normalization, native_event_count: native.raw_event_range.event_count,
+      filtered_native_event_count: native.raw_event_range.event_count - normalized.events.length } } : {}),
     completeness: normalized.completeness,
     calls: normalized.calls,
   };

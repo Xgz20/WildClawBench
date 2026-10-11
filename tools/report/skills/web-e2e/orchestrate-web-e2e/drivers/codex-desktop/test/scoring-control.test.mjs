@@ -19,6 +19,7 @@ import {
   grantEvaluationErrorRetry,
   grantUserAuthorizedRetry,
   initialize,
+  parseArgs,
   markComplete,
   markTimeout,
   preflight,
@@ -301,7 +302,7 @@ test("init defaults to three scoring slots and assigns immutable per-task ports"
   const root = await fixture(["task-1", "task-2"]);
   const { state } = await initialize(root, ["task-2", "task-1"]);
   assert.equal(state.score_slots, 3);
-  assert.equal(state.schema_revision, 4);
+  assert.equal(state.schema_revision, 5);
   assert.equal(state.score_port_base, 4173);
   assert.deepEqual(state.tasks.map((task) => task.scoring_port), [4173, 4174]);
   assert.equal(state.score_timeout_seconds, 7200);
@@ -338,6 +339,84 @@ test("init supports explicit serial scoring and keeps slots and port base immuta
   assert.equal((await initialize(root)).state.score_slots, 1);
   await assert.rejects(() => initialize(root, [], { scoreSlots: 3 }), /score_slots 不可变/);
   await assert.rejects(() => initialize(root, [], { scorePortBase: 5101 }), /score_port_base 不可变/);
+});
+
+test("new scoring freezes the Codex default and dispatches it separately from the evaluated model", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  assert.deepEqual(state.judge, { protocol: "codex-agent-judge-v1", model: "gpt-6.1-sol", reasoning_effort: "high" });
+  assert.equal(state.tasks[0].model.id, "xopglm52");
+  await registerTask(root, state.tasks[0]);
+  const skill = await scoreSkillFixture();
+  const ready = await passPreflight(root, { taskId: "task-1", scoreSkillDir: skill });
+  const action = ready.recommended_actions.find((entry) => entry.type === "CREATE_THREAD");
+  assert.equal(action.model, "gpt-6.1-sol");
+  assert.equal(action.thinking, "high");
+  await recordThread(root, "task-1", { threadId: "default-judge-thread", hostId: "local" });
+  const persisted = JSON.parse(await readFile(join(root, "score/.orchestrate-web-e2e/scoring-automation-state.json"), "utf8"));
+  assert.deepEqual(persisted.tasks[0].attempts[0].judge, state.judge);
+});
+
+test("explicit Judge settings survive resume and reject drift before writing prompts", async () => {
+  const args = parseArgs(["init", "--package-root", "/fixture", "--judge-model", "gpt-6-sol", "--judge-reasoning-effort", "xhigh"]);
+  const root = await fixture();
+  const { state } = await initialize(root, [], args);
+  const before = await readFile(state.tasks[0].scoring_prompt_file);
+  assert.equal((await initialize(root)).state.judge.model, "gpt-6-sol");
+  assert.equal((await resume(root)).judge.reasoning_effort, "xhigh");
+  await assert.rejects(initialize(root, [], { judgeModel: "gpt-6.1-sol" }), /judge 配置不可变/);
+  await assert.rejects(initialize(root, [], { judgeReasoningEffort: "high" }), /judge 配置不可变/);
+  assert.deepEqual(await readFile(state.tasks[0].scoring_prompt_file), before);
+  const invalid = await fixture();
+  await assert.rejects(initialize(invalid, [], { judgeModel: "" }), /judge model/);
+  await assert.rejects(initialize(invalid, [], { judgeReasoningEffort: "unsupported" }), /judge reasoning_effort/);
+});
+
+test("revision 4 scoring retains its unfrozen Judge and exact prompt without adopting a new default", async () => {
+  const root = await fixture();
+  const { state } = await initialize(root);
+  const file = join(root, "score/.orchestrate-web-e2e/scoring-automation-state.json");
+  const old = JSON.parse(await readFile(file, "utf8"));
+  old.schema_revision = 4;
+  delete old.judge;
+  delete old.judge_sha256;
+  const prompt = (await readFile(old.tasks[0].scoring_prompt_file, "utf8")).split("\n").filter((line) => !line.startsWith("本次冻结 Codex 裁判为")).join("\n")
+    .replaceAll("180秒就绪窗口", "旧版本冻结就绪窗口");
+  await writeFile(old.tasks[0].scoring_prompt_file, prompt);
+  old.tasks[0].scoring_prompt_sha256 = createHash("sha256").update(prompt).digest("hex");
+  await writeJson(file, old);
+  assert.equal((await status(root)).judge, null);
+  assert.deepEqual(await readFile(file), Buffer.from(`${JSON.stringify(old, null, 2)}\n`));
+  assert.equal((await initialize(root)).state.judge, null);
+  assert.equal((await initialize(root)).state.judge, null);
+  assert.equal((await status(root)).judge, null);
+  assert.equal((await resume(root)).judge, null);
+  assert.equal(await readFile(old.tasks[0].scoring_prompt_file, "utf8"), prompt);
+  await assert.rejects(initialize(root, [], { judgeModel: "gpt-6.1-sol" }), /judge 配置不可变/);
+  await registerTask(root, old.tasks[0]);
+  const ready = await passPreflight(root, { taskId: "task-1" });
+  const action = ready.recommended_actions.find((entry) => entry.type === "CREATE_THREAD");
+  assert.equal(Object.hasOwn(action, "model"), false);
+  assert.equal(Object.hasOwn(action, "thinking"), false);
+});
+
+test("frozen Judge drift fails closed on status without adopting the control model", async () => {
+  const root = await fixture();
+  await initialize(root);
+  const file = join(root, "score/.orchestrate-web-e2e/scoring-automation-state.json");
+  const original = JSON.parse(await readFile(file, "utf8"));
+  for (const mutate of [state => { state.judge.model = "gpt-6-sol"; },
+    state => { state.judge.reasoning_effort = "medium"; },
+    state => { state.judge = null; }, state => { delete state.judge; },
+    state => { delete state.judge_sha256; },
+    state => { state.judge = null; delete state.judge_sha256; }]) {
+    const changed = structuredClone(original);
+    mutate(changed);
+    await writeJson(file, changed);
+    await assert.rejects(status(root), /judge 配置/);
+  }
+  await writeJson(file, original);
+  assert.equal((await status(root)).judge.model, "gpt-6.1-sol");
 });
 
 test("init rejects a scoring port range that exceeds 65535", async () => {

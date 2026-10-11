@@ -23,7 +23,7 @@ import {
 
 export const PROBE_SCHEMA = "wildclawbench.general-e2e-astronstudio-probe/v1";
 export const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
-export const PROBE_VERSION = "0.2.1";
+export const PROBE_VERSION = "0.2.2";
 export const DEFAULT_APP_PATH = "/Applications/AStudio.app";
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
@@ -1044,7 +1044,7 @@ export async function probeAstronStudio(config, overrides = {}) {
     identity_verified: false,
     pid: null,
   }, () => (overrides.inspectProcess || inspectProcess)(app, runCommand));
-  const [gui, ports, activePort, stateDatabase, dependencies, databaseOwner] = await Promise.all([
+  const [gui, ports, activePort, stateDatabase, dependencies] = await Promise.all([
     safeObservation("gui", {
       frontmost_application: "unknown",
       screen_locked: null,
@@ -1070,9 +1070,13 @@ export async function probeAstronStudio(config, overrides = {}) {
     safeObservation("dependencies", {
       required_for_probe: { node: true, state_database_backend: false },
     }, () => (overrides.inspectDependencies || inspectDependencies)(runCommand, overrides.loadNodeSqlite || loadNodeSqlite)),
-    safeObservation("state database process owner", { verified: false, requested_path: resolve(config.stateDb) },
-      () => (overrides.inspectStateDatabaseOwner || inspectStateDatabaseOwner)(app, processInfo, config.stateDb, runCommand)),
   ]);
+  // DatabaseSync integrity scans can block this event loop on large histories.
+  // A parallel ps/lsof subprocess then hits its timeout before stdout drains.
+  // Verify the live owner after the scan, preserving every ownership check.
+  const databaseOwner = await safeObservation("state database process owner", {
+    verified: false, requested_path: resolve(config.stateDb),
+  }, () => (overrides.inspectStateDatabaseOwner || inspectStateDatabaseOwner)(app, processInfo, config.stateDb, runCommand));
   const cdp = await safeObservation("cdp", {
     ready: false,
     endpoint: null,

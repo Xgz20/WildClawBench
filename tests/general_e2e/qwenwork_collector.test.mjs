@@ -18,6 +18,8 @@ import { assessQwenMetadataCoverage } from "../../tools/report/skills/general-e2
 import { normalizeQwenNativeTrace } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/native-normalizer.mjs";
 import {
   QWENWORK_MACOS_1_2_0_TOKEN_PROFILE,
+  QWENWORK_MACOS_1_2_5_TOKEN_PROFILE,
+  matchQwenTokenProfile,
   qwenCanaryConfigDigest,
 } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/qwenwork/token-profile.mjs";
 
@@ -166,7 +168,7 @@ async function createFixture({ mutateBinding = null, mutateSegment = null, token
   let probePath = null;
   if (tokenProfile) {
     probePath = join(await realpath(unitRoot), "token-probe.json");
-    const profile = QWENWORK_MACOS_1_2_0_TOKEN_PROFILE;
+    const profile = typeof tokenProfile === "object" ? tokenProfile : QWENWORK_MACOS_1_2_0_TOKEN_PROFILE;
     const probe = {
       probed_at: "2026-09-17T03:00:00.000Z",
       app: { path: "/Applications/QwenWorkCN.app", identity_verified: true,
@@ -232,6 +234,27 @@ test("QwenWork Token profile refuses a changed send probe", async () => {
       outputRoot: join(unitRoot, ".general-e2e", "collection", "changed-probe"),
       redacted: true,
     }), /QWENWORK_TOKEN_PROBE_DIGEST_MISMATCH/u);
+  } finally {
+    await rm(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test("QwenWork 1.2.5 exact runtime admits reconciled Tokens without admitting adjacent versions or changed SDK bytes", async () => {
+  const fixture = await createFixture({ tokenProfile: QWENWORK_MACOS_1_2_5_TOKEN_PROFILE });
+  try {
+    const unitRoot = await realpath(fixture.unitRoot);
+    const result = await collectQwenWorkEvidence({ unitRoot, journalFile: await realpath(fixture.journalPath),
+      clientTraceRoot: await realpath(fixture.traceRoot), outputRoot: join(unitRoot, ".general-e2e/collection/token-125"),
+      redacted: true, collectedAt: "2026-09-17T03:00:10.000Z" });
+    assert.equal(result.resource.metrics.usage.total_tokens.value, 300);
+    assert.equal(result.resource.metrics.usage.cache_read_input_tokens.value, 200);
+    assert.ok(result.trace.normalization.compatibility_profiles.includes(QWENWORK_MACOS_1_2_5_TOKEN_PROFILE.id));
+    const probe = JSON.parse(await readFile(fixture.probePath, "utf8"));
+    const rows = [{ type: "assistant", version: "1.1.59" }];
+    assert.equal(matchQwenTokenProfile(probe, rows).client_version, "1.2.5");
+    assert.equal(matchQwenTokenProfile({ ...probe, app: { ...probe.app, version: "1.2.6" } }, rows), null);
+    probe.runtime.identity.runtime_sha256 = "f".repeat(64);
+    assert.equal(matchQwenTokenProfile(probe, rows), null);
   } finally {
     await rm(fixture.root, { recursive: true, force: true });
   }

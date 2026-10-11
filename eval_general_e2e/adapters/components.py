@@ -31,7 +31,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         vendor_root="vendor/e2e-shared/sqlite-snapshot", entrypoints=("index.mjs",),
     ),
     SharedComponentSpec(
-        name="general-resource-supplements", version="1.2.1",
+        name="general-resource-supplements", version="1.2.4",
         source_root="tools/report/e2e-shared/general-resource-supplements",
         vendor_root="vendor/e2e-shared/general-resource-supplements",
         entrypoints=("index.mjs", "archive_astronstudio_trace.mjs", "collect_astronstudio_resource_metrics.mjs", "astronstudio-rollout.mjs"),

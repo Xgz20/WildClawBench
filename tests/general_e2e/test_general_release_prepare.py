@@ -50,6 +50,32 @@ PREPARE = load_module("wildclawbench_general_prepare_test", PREPARE_SOURCE_PATH)
 
 
 class GeneralReleasePrepareTests(unittest.TestCase):
+    def test_codex_defaults_are_frozen_in_a_new_batch_without_mutating_input(self) -> None:
+        config = copy.deepcopy(self.config)
+        config.pop("judge")
+        config["batch_id"] = "default-judge-fixture"
+        original = copy.deepcopy(config)
+        source = self.temp_root / "default-judge-config.json"
+        source.write_bytes(PREPARE.pretty_json_bytes(config))
+        result = PREPARE.prepare_batch(self.dataset_bundle, self.release_suite, source, self.temp_root / "defaults")
+        batch = Path(result["batch_root"])
+        report = json.loads((batch / "report-config.json").read_text())
+        self.assertEqual(report["judge"], {"protocol": "codex-agent-judge-v1", "model": "gpt-6.1-sol", "reasoning_effort": "high"})
+        PREPARE.verify_batch(batch)
+        self.assertEqual(config, original)
+        self.assertEqual(json.loads(source.read_text()), original)
+
+    def test_explicit_codex_override_and_api_config_do_not_inherit_defaults(self) -> None:
+        config = copy.deepcopy(self.config)
+        self.assertEqual(PREPARE.validate_config(config, self.manifest)["judge"], config["judge"])
+        config["judge"] = {"protocol": "codex-agent-judge-v1", "model": "gpt-6-sol"}
+        self.assertEqual(PREPARE.validate_config(config, self.manifest)["judge"], {"protocol": "codex-agent-judge-v1", "model": "gpt-6-sol", "reasoning_effort": "high"})
+        config["judge"] = {"protocol": "api-judge-v1"}
+        with self.assertRaisesRegex(PREPARE.PrepareError, "CONFIG_KEYS_INVALID"):
+            PREPARE.validate_config(config, self.manifest)
+        config["judge"] = {"protocol": "api-judge-v1", "model": "api-fixture", "reasoning_effort": "medium"}
+        self.assertEqual(PREPARE.validate_config(config, self.manifest)["judge"], config["judge"])
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.temp_dir = tempfile.TemporaryDirectory(prefix="general-e2e-prepare-test-")
@@ -159,23 +185,23 @@ class GeneralReleasePrepareTests(unittest.TestCase):
         }
         self.assertEqual(
             readiness["prepare-general-e2e-workspaces"],
-            ("0.3.1", "operational"),
+            ("0.3.2", "operational"),
         )
         self.assertEqual(
             readiness["execute-general-e2e"],
-            ("0.12.4", "operational"),
+            ("0.13.12", "operational"),
         )
         self.assertEqual(
             readiness["collect-general-e2e"],
-            ("0.9.5", "operational"),
+            ("0.9.11", "operational"),
         )
         self.assertEqual(
             readiness["score-general-e2e"],
-            ("0.10.2", "operational"),
+            ("0.10.4", "operational"),
         )
         self.assertEqual(
             readiness["orchestrate-general-e2e"],
-            ("0.11.2", "operational"),
+            ("0.11.4", "operational"),
         )
         self.assertEqual(
             readiness["run-general-e2e"],
@@ -183,18 +209,18 @@ class GeneralReleasePrepareTests(unittest.TestCase):
         )
         self.assertEqual(
             readiness["report-general-e2e"],
-            ("0.7.4", "operational"),
+            ("0.7.9", "operational"),
         )
         self.assertEqual(
             set(readiness.values()),
             {
-                ("0.3.1", "operational"),
+                ("0.3.2", "operational"),
                 ("0.7.0", "operational"),
-                ("0.7.4", "operational"),
-                ("0.9.5", "operational"),
-                ("0.10.2", "operational"),
-                ("0.11.2", "operational"),
-                ("0.12.4", "operational"),
+                ("0.7.9", "operational"),
+                ("0.9.11", "operational"),
+                ("0.10.4", "operational"),
+                ("0.11.4", "operational"),
+                ("0.13.12", "operational"),
             },
         )
 

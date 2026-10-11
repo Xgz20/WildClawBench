@@ -12,6 +12,8 @@
 
 当 `attempt-manifest.json` 的 `runtime.path_resolution.mode` 为 `mapped-nested`，且 `semantic/request.json` 的 `evidence.path_resolution` 明确列出候选结果目录时，冻结 Prompt 的 `/tmp_workspace/results` 对应该目录。读取和引用 `candidate-original/workspace/workspace/results/` 中的原始文件，证据路径仍写实际相对路径；文件内容和其他 rubric 条件照常核对。已证明的 `/tmp_workspace → ./workspace` 映射多出一层目录不构成交付位置缺失。仅当上述两份冻结记录一致时使用此解释；`direct` 或目录歧义均不得自行推断别名。
 
+新建 `prepare` 或 `prepare-rescore` attempt 时，显式选择 `--judge-protocol codex-agent-judge-v1` 后，省略模型和推理参数即冻结 `gpt-6.1-sol/high`；attempt ID 仍必填。显式模型/档位优先，已有 attempt 读取原冻结配置，API Judge 不使用这些默认值。控制器调用 `create_thread` 时必须同时传入冻结的 `model` 和 `thinking`。
+
 ## 单题流程
 
 项目根就是私有评分 attempt。先复核输入：

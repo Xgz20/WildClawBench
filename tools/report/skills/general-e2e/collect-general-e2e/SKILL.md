@@ -9,7 +9,11 @@ DoubaoWork 2.31.10 的已验证 dispatcher Profile 可采集队列留存的滚�
 
 DoubaoWork General 收集拒绝 Web 等价终态标记；缺失的原生结束时间不得以采集时刻补齐。新版 dispatcher 的工具子集保持 `partial`，trace-index 必须明确列出缺失原因，并保留实际工具 Profile、原始 SHA 与已知小计。`native-tool-capture-incomplete` 表示已核实子集之外仍有采集缺口，采集成功不等于可评分；评分准入交给冻结 score Skill。已在客户端 TTL 内留存的结果保留首次观测时间，后续采样不刷新 TTL，也不将已验证结果因时间流逝自动降级。
 
+`0.9.11` 增加 QwenWorkCN 1.2.5 的精确 Token Profile：SDK 1.0.46、runtime SHA 与已验证 1.2.0 相同；仍要求本次发送前 Token 开关证明、transcript 1.1.59 及逐响应/主 turn 对账。未知版本或源码变化不放行，历史回执不重写。
+
 ## AstronStudio rollout 统计
+
+`0.9.10` 支持桌面 provider 投影缺失消息或边界时，从精确绑定的原生 SDK rollout 生成标准轨迹。Prompt、session/turn/cwd、终态和最终回复继续严格核验；每条消息、工具参数和返回都引用原始行。桌面原件同时归档，已存在的消息或工具内容与 rollout 冲突时拒绝。缺少工具返回、未知内容类型保留 partial，不从候选文件补齐。该轨迹使用 adapter `0.3.0`；`raw_event_range` 仍描述 provider 行，不混算两种来源的事件数，旧冻结证据保持原样。
 
 归档 CLI 同时保存桌面 provider events 与绑定的 AstronCode rollout。可用 `--rollout-file ABS` 指定原件，或 `--rollout-root ABS` 指定 sessions 目录；默认检索 `~/.acode/acode/acode-home-overlay/sessions` 中唯一匹配 session ID 的文件。缺失或歧义拒绝新采集，不把其他会话补入当前 attempt。
 

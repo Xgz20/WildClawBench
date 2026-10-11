@@ -393,6 +393,7 @@ INSERT INTO projection_threads VALUES(
 test("probe orchestration has no mutating callback and preserves read-only audit", async () => {
   const observation = passingObservation();
   const calls = [];
+  let snapshotFinished = false;
   const report = await probeAstronStudio(
     {
       appPath: observation.app.path,
@@ -411,8 +412,17 @@ test("probe orchestration has no mutating callback and preserves read-only audit
       inspectGui: async () => { calls.push("gui"); return observation.gui; },
       listeningPorts: async () => { calls.push("ports"); return [9240]; },
       inspectActivePortFile: async () => { calls.push("active-port"); return observation.devtools_active_port; },
-      inspectStateDatabase: async () => { calls.push("database"); return observation.state_database; },
-      inspectStateDatabaseOwner: async () => { calls.push("database-owner"); return observation.state_database.live_source_owner; },
+      inspectStateDatabase: async () => {
+        calls.push("database");
+        await new Promise(resolve => setTimeout(resolve, 30));
+        snapshotFinished = true;
+        return observation.state_database;
+      },
+      inspectStateDatabaseOwner: async () => {
+        assert.equal(snapshotFinished, true, "bounded live-process checks must run after synchronous integrity scans");
+        calls.push("database-owner");
+        return observation.state_database.live_source_owner;
+      },
       inspectDependencies: async () => { calls.push("dependencies"); return observation.dependencies; },
       inspectCdp: async () => { calls.push("cdp-read"); return observation.cdp; },
     },

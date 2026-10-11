@@ -14,6 +14,22 @@ export const QWENWORK_MACOS_1_2_0_TOKEN_PROFILE = Object.freeze({
   input_includes_cache_read: true,
 });
 
+// 1.2.5 ships the identical SDK/runtime bytes. Admission still requires the
+// exact client version, pre-send switch proof, transcript version and native
+// response/main-turn reconciliation; no version range or usage inference.
+export const QWENWORK_MACOS_1_2_5_TOKEN_PROFILE = Object.freeze({
+  ...QWENWORK_MACOS_1_2_0_TOKEN_PROFILE,
+  id: "qwenwork-macos-1.2.5-qoder-cache-inclusive-v1",
+  client_version: "1.2.5",
+});
+
+const TOKEN_PROFILES = Object.freeze([QWENWORK_MACOS_1_2_0_TOKEN_PROFILE, QWENWORK_MACOS_1_2_5_TOKEN_PROFILE]);
+
+export function isAdmittedQwenTokenProfile(profile) {
+  return Boolean(profile && TOKEN_PROFILES.some((expected) => Object.entries(expected)
+    .every(([key, value]) => profile[key] === value)));
+}
+
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
   if (value && typeof value === "object") {
@@ -31,7 +47,9 @@ export function qwenCanaryConfigDigest(config) {
 }
 
 export function matchQwenTokenProfile(probe, transcriptRows) {
-  const profile = QWENWORK_MACOS_1_2_0_TOKEN_PROFILE;
+  const profile = TOKEN_PROFILES
+    .find((entry) => entry.client_version === probe?.app?.version);
+  if (!profile) return null;
   const runtime = probe?.runtime?.identity || {};
   const versions = [...new Set((transcriptRows || [])
     .filter((row) => row?.type === "assistant")

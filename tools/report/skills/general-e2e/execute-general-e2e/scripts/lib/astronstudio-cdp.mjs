@@ -322,8 +322,22 @@ async function clickExactButton(client, patternSource, description) {
   if (!result.clicked) throw new Error(`${description}数量异常：${result.count}`);
 }
 
+export async function clickProjectsTab(client) {
+  const result = await client.evaluate(expression(`
+    const pickers = Array.from(document.querySelectorAll('.sidebar-segmented-picker')).filter(visible);
+    if (pickers.length !== 1) return { clicked: false, picker_count: pickers.length, count: 0 };
+    const buttons = Array.from(pickers[0].querySelectorAll('button')).filter(visible)
+      .filter(button => /^(?:项目|Projects)$/iu.test((button.innerText || '').trim()));
+    if (buttons.length !== 1) return { clicked: false, picker_count: 1, count: buttons.length };
+    buttons[0].click();
+    return { clicked: true, picker_count: 1, count: 1 };
+  `));
+  if (!result.clicked) throw new Error(`AstronStudio 侧栏项目标签不唯一：${JSON.stringify(result)}`);
+  return result;
+}
+
 async function addWorkspace(client, workspace, timeoutMs) {
-  await clickExactButton(client, "^(?:项目|Projects)$", "AstronStudio 项目标签");
+  await clickProjectsTab(client);
   await waitFor(
     () => client.evaluate(expression(`
       const pickers = Array.from(document.querySelectorAll('.sidebar-segmented-picker'))

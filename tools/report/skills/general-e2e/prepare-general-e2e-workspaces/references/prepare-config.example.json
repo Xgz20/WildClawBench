@@ -27,7 +27,7 @@
   ],
   "judge": {
     "protocol": "codex-agent-judge-v1",
-    "model": "replace-with-judge-model",
+    "model": "gpt-6.1-sol",
     "reasoning_effort": "high"
   },
   "report": {

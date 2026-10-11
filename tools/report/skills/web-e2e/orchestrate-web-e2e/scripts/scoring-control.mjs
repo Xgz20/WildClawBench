@@ -27,7 +27,7 @@ import {
 } from "./workspace-integrity.mjs";
 
 const STATE_SCHEMA = "wildclawbench.web-e2e-scoring-automation/v1";
-const STATE_REVISION = 4;
+const STATE_REVISION = 5;
 const REGISTRY_SCHEMA = "wildclawbench.codex-project-registry/v1";
 const SCORE_SCHEMA = "wildclawbench.web-e2e-task-score/v1";
 const SCORE_SKILL_SCHEMA = "wildclawbench.web-e2e-score-skill/v1";
@@ -46,6 +46,15 @@ const MAX_SCORE_SLOTS = 8;
 const DEFAULT_SCORE_PORT_BASE = 4173;
 const DEFAULT_SCORE_TIMEOUT_SECONDS = 7200;
 const DEFAULT_MAX_RETRIES = 1;
+const DEFAULT_JUDGE_MODEL = "gpt-6.1-sol";
+const DEFAULT_JUDGE_REASONING_EFFORT = "high";
+const JUDGE_REASONING_EFFORTS = new Set(["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"]);
+
+function codexJudge(model, reasoningEffort) {
+  if (typeof model !== "string" || !model.trim() || model !== model.trim()) throw new Error("judge model 必须是非空模型 ID");
+  if (!JUDGE_REASONING_EFFORTS.has(reasoningEffort)) throw new Error("judge reasoning_effort 无效");
+  return { protocol: "codex-agent-judge-v1", model, reasoning_effort: reasoningEffort };
+}
 const WAIT_STATUSES = new Set([
   "RUNNING",
   "POLL_TIMEOUT",
@@ -94,7 +103,7 @@ export function usage() {
   return `Web E2E 评分控制状态
 
 用法：
-  node scoring-control.mjs init --package-root <目录> [--task-id <ID> ...] [--score-slots <1..8>] [--score-port-base <端口>] [--score-timeout-seconds <秒>] [--max-retries <次数>]
+  node scoring-control.mjs init --package-root <目录> [--task-id <ID> ...] [--score-slots <1..8>] [--score-port-base <端口>] [--score-timeout-seconds <秒>] [--max-retries <次数>] [--judge-model <模型>] [--judge-reasoning-effort <档位>]
   node scoring-control.mjs status --package-root <目录>
   node scoring-control.mjs resume --package-root <目录>
   node scoring-control.mjs record-project --package-root <目录> --task-id <ID> --project-id <ID> --project-path <目录> --host-id <ID> --desktop-version <版本> --registration-method <方式>
@@ -136,6 +145,8 @@ export function parseArgs(argv) {
     else if (token === "--score-port-base") values.scorePortBase = Number(argv[++index]);
     else if (token === "--score-timeout-seconds") values.scoreTimeoutSeconds = Number(argv[++index]);
     else if (token === "--max-retries") values.maxRetries = Number(argv[++index]);
+    else if (token === "--judge-model") values.judgeModel = argv[++index] || "";
+    else if (token === "--judge-reasoning-effort") values.judgeReasoningEffort = argv[++index] || "";
     else if (token === "--wait-sequence") values.waitSequence = Number(argv[++index]);
     else if (token === "--wait-cursor") values.waitCursor = argv[++index] || "";
     else if (token === "--wait-status") values.waitStatus = String(argv[++index] || "").toUpperCase();
@@ -485,6 +496,16 @@ function normalizeAttempt(attempt, task, state) {
 function normalizeState(state) {
   if (state.schema_version !== STATE_SCHEMA) throw new Error(`评分状态 schema 不兼容：${state.schema_version}`);
   const sourceRevision = Number(state.schema_revision || 1);
+  if (sourceRevision < 5 && !Object.hasOwn(state, "judge")) {
+    state.judge = null;
+    state.judge_sha256 = sha256(JSON.stringify(null));
+  }
+  if (!Object.hasOwn(state, "judge")) throw new Error("评分状态缺少冻结 judge 配置");
+  if (state.judge_sha256 !== sha256(JSON.stringify(state.judge))) throw new Error("评分状态 judge 配置摘要不一致");
+  if (state.judge !== null) {
+    if (state.judge?.protocol !== "codex-agent-judge-v1") throw new Error("评分状态 judge protocol 无效");
+    codexJudge(state.judge.model, state.judge.reasoning_effort);
+  }
   state.schema_revision = STATE_REVISION;
   state.score_slots ??= sourceRevision < 4 ? 1 : DEFAULT_SCORE_SLOTS;
   state.score_port_base ??= DEFAULT_SCORE_PORT_BASE;
@@ -545,10 +566,11 @@ function retryLimit(task) {
     + (task.user_authorized_retry_grant ? 1 : 0);
 }
 
-function promptForTask(taskId, scoringPort) {
+function promptForTask(taskId, scoringPort, judge = null) {
   const readinessHelper = fileURLToPath(new URL("./browser-readiness.mjs", import.meta.url));
   return [
     `使用 $score-web-e2e 对当前项目中的唯一 Web E2E 用例 ${taskId} 进行完整评分。`,
+    ...(judge ? [`本次冻结 Codex 裁判为 ${judge.model}/${judge.reasoning_effort}；控制会话创建评分任务时必须显式传入 model 和 thinking，不沿用控制会话默认值。此身份与 task_contract 中的被评 Harness 模型分开。`] : []),
     "必须使用 Codex Desktop 内置 Browser，按照 private-scoring/task_contract.json 逐项实际操作和截图取证，并生成 private-scoring/task_score.json。",
     `本题独占本地评分端口 ${scoringPort}；启动站点和打开 Browser 时必须使用该端口，不得使用其他题目的端口。若该端口冲突，只能按评分 Skill 的受管端口冲突流程处理并保留审计。`,
     `创建评分线程后，控制会话必须立即调用 Codex Desktop 的 open_in_codex，把该线程绑定到本题 Browser 路由（target.type=browser，URL=about:blank，threadId=刚返回的 threadId）。评分线程在启动站点、安装或构建依赖、开始功能与美观度评分之前，先完成独立的 Browser 暖启动检查。仅 create_thread 或 open_in_codex 返回 queued 不代表 Browser 可用。`,
@@ -695,7 +717,7 @@ async function validatePreparedTask(
   receiptTask,
   receiptSha256,
   scoringPort,
-  { existingTask = null, preserveLegacyPrompt = false } = {},
+  { existingTask = null, preserveLegacyPrompt = false, judge = null } = {},
 ) {
   const scoreDir = await realpath(join(plan.root, "score", "tasks", entry.task_id));
   if (!inside(join(plan.root, "score", "tasks"), scoreDir)) throw new Error(`评分目录越界：${entry.task_id}`);
@@ -727,7 +749,7 @@ async function validatePreparedTask(
   const promptFile = join(plan.promptRoot, `${entry.task_id}.md`);
   await mkdir(plan.promptRoot, { recursive: true });
   const existingPrompt = await readFile(promptFile, "utf8").catch((error) => error?.code === "ENOENT" ? null : Promise.reject(error));
-  const generatedPrompt = promptForTask(entry.task_id, scoringPort);
+  const generatedPrompt = promptForTask(entry.task_id, scoringPort, judge);
   let prompt = generatedPrompt;
   if (existingTask) {
     if (existingTask.scoring_prompt_file !== promptFile || existingPrompt === null) {
@@ -889,7 +911,8 @@ function recommendedActions(state, at = new Date()) {
   for (const task of candidates) {
     if (task.phase === "PENDING_PROJECT") actions.push({ type: "REGISTER_PROJECT", task_id: task.task_id });
     else if (task.preflight?.status !== "PASSED") actions.push({ type: "RUN_PREFLIGHT", task_id: task.task_id });
-    else actions.push({ type: "CREATE_THREAD", task_id: task.task_id });
+    else actions.push({ type: "CREATE_THREAD", task_id: task.task_id,
+      ...(state.judge ? { model: state.judge.model, thinking: state.judge.reasoning_effort } : {}) });
   }
   if (!actions.length) actions.push({ type: "NEEDS_ATTENTION", error: "评分状态没有可执行任务" });
   return actions;
@@ -903,6 +926,7 @@ function publicStatus(state) {
     schema_version: state.schema_version,
     batch_id: state.batch_id,
     harness_id: state.harness_id,
+    judge: state.judge,
     phase: state.phase,
     score_slots: state.score_slots,
     score_port_base: state.score_port_base,
@@ -956,6 +980,16 @@ export async function initialize(packageRoot, selectedTaskIds = [], options = {}
   const existingRaw = await loadJsonIfExists(plan.stateFile);
   const existingSourceRevision = Number(existingRaw?.schema_revision || 1);
   const existing = existingRaw ? normalizeState(existingRaw) : null;
+  const judge = existing ? existing.judge : codexJudge(
+    options.judgeModel === undefined ? DEFAULT_JUDGE_MODEL : options.judgeModel,
+    options.judgeReasoningEffort === undefined ? DEFAULT_JUDGE_REASONING_EFFORT : options.judgeReasoningEffort,
+  );
+  // Check before generating or writing any Prompt; existing runs never adopt
+  // the new default, including legacy runs that inherited the session model.
+  if (existing && ((options.judgeModel !== undefined && options.judgeModel !== judge?.model)
+    || (options.judgeReasoningEffort !== undefined && options.judgeReasoningEffort !== judge?.reasoning_effort))) {
+    throw new Error("已有评分状态的 judge 配置不可变；请使用新的评分编排");
+  }
   const scoreSlots = options.scoreSlots ?? existing?.score_slots ?? DEFAULT_SCORE_SLOTS;
   const scorePortBase = options.scorePortBase ?? existing?.score_port_base ?? DEFAULT_SCORE_PORT_BASE;
   const scoreTimeoutSeconds = options.scoreTimeoutSeconds ?? existing?.score_timeout_seconds ?? DEFAULT_SCORE_TIMEOUT_SECONDS;
@@ -985,7 +1019,9 @@ export async function initialize(packageRoot, selectedTaskIds = [], options = {}
       scoringPort,
       {
         existingTask,
-        preserveLegacyPrompt: Boolean(existingTask?.scoring_prompt_port_bound === false || (existing && existingSourceRevision < 4)),
+        judge,
+        preserveLegacyPrompt: Boolean(existingTask?.scoring_prompt_port_bound === false
+          || (existing && (existingSourceRevision < 5 || existing.judge === null))),
       },
     ));
   }
@@ -1039,6 +1075,8 @@ export async function initialize(packageRoot, selectedTaskIds = [], options = {}
     schema_revision: STATE_REVISION,
     batch_id: plan.manifest.batch_id,
     harness_id: plan.manifest.harness.id,
+    judge,
+    judge_sha256: sha256(JSON.stringify(judge)),
     score_slots: scoreSlots,
     score_port_base: scorePortBase,
     score_timeout_seconds: scoreTimeoutSeconds,
@@ -1787,6 +1825,7 @@ export async function recordThread(packageRoot, taskId, thread, options = {}) {
       thread_id: thread.threadId,
       host_id: thread.hostId,
       created_at: now,
+      ...(state.judge ? { judge: { ...state.judge } } : {}),
       deadline_at: deadlineFrom(now, task.score_timeout_seconds),
     }, task, state));
     state.history.push({
@@ -2525,6 +2564,8 @@ async function main() {
       scorePortBase: args.scorePortBase,
       scoreTimeoutSeconds: args.scoreTimeoutSeconds,
       maxRetries: args.maxRetries,
+      judgeModel: args.judgeModel,
+      judgeReasoningEffort: args.judgeReasoningEffort,
     })).state);
     else if (args.command === "status") result = await status(args.packageRoot);
     else if (args.command === "resume") result = await resume(args.packageRoot);

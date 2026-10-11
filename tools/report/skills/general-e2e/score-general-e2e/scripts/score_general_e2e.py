@@ -930,6 +930,13 @@ def _freeze_judge_config(
     judge_attempt_id: str | None,
     api_runtime_config_path: Path | None,
 ) -> dict[str, Any] | None:
+    # Fill omitted Codex settings only while preparing a new, explicitly
+    # selected Codex attempt; legacy no-judge and API paths remain unchanged.
+    if judge_protocol == "codex-agent-judge-v1":
+        if judge_model is None:
+            judge_model = "gpt-6.1-sol"
+        if judge_reasoning_effort is None:
+            judge_reasoning_effort = "high"
     judge_values = (
         judge_protocol,
         judge_model,

@@ -15,6 +15,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 在独立评分工作空间中完成单题规则分、语义分、合分和评分审计。
 
+新 Codex 评分 attempt 默认模型和推理档位为 `gpt-6.1-sol/high`，显式配置优先；已有 attempt 和 API Judge 的冻结身份保持原样。
+
 ## 当前能力门禁
 
 先运行：

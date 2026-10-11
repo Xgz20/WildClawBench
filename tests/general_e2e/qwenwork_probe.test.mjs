@@ -1,7 +1,7 @@
 import { gui } from "./fixtures/qwenwork/environment.mjs";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { access, lstat, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -9,6 +9,7 @@ import test from "node:test";
 
 import {
   buildReadOnlyProbe,
+  inspectQwenTraceMetadata,
   parseProbeArgs,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/probe.mjs";
 import {
@@ -35,6 +36,32 @@ test("probe CLI rejects non-loopback endpoints and exposes no mutating flag", ()
   assert.throws(() => parseProbeArgs(["--restart-app"]), /unknown option/u);
   const parsed = parseProbeArgs(["--endpoint", "http://localhost:9250"]);
   assert.equal(parsed.endpoint, "http://localhost:9250");
+});
+
+test("large segment history does not consume the bounded transcript inspection budget", async () => {
+  const root = await mkdtemp(join(tmpdir(), "qwenwork-large-trace-"));
+  try {
+    const segments = join(root, "logs/sessions/session/segments");
+    const projects = join(root, "projects/project");
+    await mkdir(segments, { recursive: true });
+    await mkdir(projects, { recursive: true });
+    const transcript = '{"version":"1.1.59"}\n';
+    await writeFile(join(projects, "session.jsonl"), transcript);
+    for (let start = 0; start < 5001; start += 64) {
+      await Promise.all(Array.from({ length: Math.min(64, 5001 - start) }, (_, i) => writeFile(join(segments, `${start + i}.jsonl`), "")));
+    }
+    const observed = await inspectQwenTraceMetadata(root);
+    assert.equal(observed.segment_file_count, 5001);
+    assert.equal(observed.transcript_file_count, 1);
+    assert.deepEqual(observed.transcript_versions, ["1.1.59"]);
+    assert.equal(await readFile(join(projects, "session.jsonl"), "utf8"), transcript);
+    // Moving the same inventory into the content-inspection domain still
+    // refuses excessive transcripts; this never touches native user history.
+    await rename(join(root, "logs/sessions"), join(root, "projects/history"));
+    await assert.rejects(inspectQwenTraceMetadata(root), /QWENWORK_TRANSCRIPT_FILE_LIMIT_EXCEEDED/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("native terminal mapping preserves cancelled/interrupted and unknown separately", () => {

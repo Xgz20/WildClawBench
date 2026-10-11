@@ -29,6 +29,11 @@ FIXED_ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 PROMPT_WORKSPACE = "/tmp_workspace"
 PROMPT_WORKSPACE_RE = re.compile(re.escape(PROMPT_WORKSPACE) + r"(?![\w-])")
+DEFAULT_CODEX_JUDGE = {
+    "protocol": "codex-agent-judge-v1",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high",
+}
 
 GENERAL_SKILL_NAMES = (
     "prepare-general-e2e-workspaces",
@@ -389,6 +394,10 @@ def verify_release_suite(suite_path: Path) -> dict[str, Any]:
 
 
 def validate_config(config: dict[str, Any], dataset_manifest: Mapping[str, Any]) -> dict[str, Any]:
+    # Only new preparation inputs receive defaults. Frozen report configs and
+    # existing scoring attempts are validated by their own strict loaders.
+    config = dict(config)
+    config.setdefault("judge", dict(DEFAULT_CODEX_JUDGE))
     _exact_keys(
         config,
         {
@@ -493,6 +502,11 @@ def validate_config(config: dict[str, Any], dataset_manifest: Mapping[str, Any])
     report = config.get("report")
     if not isinstance(judge, dict) or not isinstance(report, dict):
         raise PrepareError("CONFIG_REPORT_OR_JUDGE_INVALID")
+    judge = dict(judge)
+    judge.setdefault("protocol", DEFAULT_CODEX_JUDGE["protocol"])
+    if judge["protocol"] == DEFAULT_CODEX_JUDGE["protocol"]:
+        for key in ("model", "reasoning_effort"):
+            judge.setdefault(key, DEFAULT_CODEX_JUDGE[key])
     _exact_keys(judge, {"protocol", "model", "reasoning_effort"}, label="judge")
     _exact_keys(report, {"title"}, label="report")
     if judge.get("protocol") not in {"codex-agent-judge-v1", "api-judge-v1"}:

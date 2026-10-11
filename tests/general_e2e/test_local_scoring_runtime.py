@@ -305,6 +305,25 @@ class Fixture:
         return Path(result["attempt_root"])
 
 
+class JudgeConfigDefaultsTests(unittest.TestCase):
+    def test_new_codex_defaults_keep_explicit_overrides_and_require_attempt_identity(self) -> None:
+        values = dict(judge_protocol="codex-agent-judge-v1", judge_model=None,
+                      judge_reasoning_effort=None, judge_attempt_id="default-judge", api_runtime_config_path=None)
+        frozen = RUNTIME._freeze_judge_config(**values)
+        self.assertEqual((frozen["model"], frozen["reasoning_effort"]), ("gpt-6.1-sol", "high"))
+        explicit = RUNTIME._freeze_judge_config(**{**values, "judge_model": "gpt-6-sol", "judge_reasoning_effort": "xhigh"})
+        self.assertEqual((explicit["model"], explicit["reasoning_effort"]), ("gpt-6-sol", "xhigh"))
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "JUDGE_CONFIG_INCOMPLETE"):
+            RUNTIME._freeze_judge_config(**{**values, "judge_attempt_id": None})
+
+    def test_legacy_no_judge_and_api_paths_never_receive_codex_defaults(self) -> None:
+        values = dict(judge_protocol=None, judge_model=None, judge_reasoning_effort=None,
+                      judge_attempt_id=None, api_runtime_config_path=None)
+        self.assertIsNone(RUNTIME._freeze_judge_config(**values))
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "JUDGE_CONFIG_INCOMPLETE"):
+            RUNTIME._freeze_judge_config(**{**values, "judge_protocol": "api-judge-v1", "judge_attempt_id": "api-attempt"})
+
+
 class LocalScoringRuntimeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
