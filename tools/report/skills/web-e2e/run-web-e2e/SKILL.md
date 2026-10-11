@@ -7,6 +7,8 @@ description: 按用户明确要求动态组合 Web E2E 的准备、桌面 Harnes
 
 本 Skill 是跨阶段组合器。现有 `prepare-web-e2e-workspaces`、`execute-web-e2e`、`orchestrate-web-e2e`、`score-web-e2e` 和 `report-web-e2e` 仍可人工独立使用；本 Skill 只在用户要求跨阶段串联、离线交接或统一恢复时启用。
 
+`1.4.4` 的 sync/resume 读取 submission 中的功能与美观度异常：任一 `evaluation_error` 均保持评分阶段 `NEEDS_ATTENTION/SCORING_INFRASTRUCTURE_ERROR`，包括修正旧版误标的 COMPLETED。评分任务仍按既有编排和冻结预算恢复；回传建议明确 `audit_only=true`，生成或导入异常材料不代表生产验收通过。正式评分恢复后再次同步才清除该异常状态，候选、评分原件和重试预算不变。
+
 ## 1. 只选择用户明确要求的阶段
 
 把用户 Prompt 映射为以下显式阶段，再传给状态脚本。不要让 Python 猜测自然语言：

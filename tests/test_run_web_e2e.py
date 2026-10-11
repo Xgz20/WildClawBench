@@ -274,6 +274,83 @@ class RunWebE2ETest(unittest.TestCase):
             self.assertEqual(before, (harness / "execution/tasks/task-1/workspace/index.html").read_bytes())
             self.assertTrue((batch / "returns/workbuddy/submission.json").is_file())
 
+    def test_sync_preserves_scoring_infrastructure_errors_and_audit_returns(self) -> None:
+        errors = [
+            {"evaluation": {"status": "evaluation_error"}},
+            {"evaluation": {"status": "completed", "aesthetic": {"status": "evaluation_error"}}},
+            {"evaluation": {"status": "completed"}, "metrics": {"aesthetic": {"status": "evaluation_error"}}},
+        ]
+        for error in errors:
+            with self.subTest(error=error), tempfile.TemporaryDirectory() as tmp:
+                base = Path(tmp)
+                _, harness = materialize_batch(base)
+                run_module.init_state(init_args(harness, "unit", ["execute", "score", "package"]))
+                materialize_results(harness)
+                self.assertEqual(run_module.sync_state(harness, "unit")["stages"]["score"], "COMPLETED")
+                path = harness / "submission.json"
+                submission = json.loads(path.read_text())
+                submission["tasks"][1].update(error)
+                write_json(path, submission)
+                before = path.read_bytes()
+                state = run_module.sync_state(harness, "unit")
+                self.assertEqual(state["stages"]["score"], "NEEDS_ATTENTION")
+                self.assertEqual(state["stages"]["execute"], "COMPLETED")
+                self.assertEqual(state["errors"]["score"]["tasks"][0]["task_id"], "task-2")
+                actions = run_module.recommended_actions(state)
+                score_action = next(a for a in actions if a["stage"] == "score")
+                self.assertEqual(score_action["action"], "NEEDS_ATTENTION")
+                self.assertTrue(next(a for a in actions if a["stage"] == "package")["audit_only"])
+                self.assertEqual(run_module.sync_state(harness, "unit")["stages"]["score"], "NEEDS_ATTENTION")
+                exported = run_module.export_return(argparse.Namespace(package_root=str(harness), output_dir=str(base / "audit")))
+                self.assertTrue(Path(exported["archive"]).is_file())
+                self.assertEqual(run_module.sync_state(harness, "unit")["stages"]["score"], "NEEDS_ATTENTION")
+                self.assertEqual(before, path.read_bytes())
+
+    def test_explicit_score_completion_rejects_infrastructure_error_without_writing_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            _, harness = materialize_batch(Path(tmp))
+            run_module.init_state(init_args(harness, "unit", ["execute", "score"]))
+            materialize_results(harness)
+            path = harness / "submission.json"
+            submission = json.loads(path.read_text())
+            submission["tasks"][0]["evaluation"] = {"status": "evaluation_error"}
+            write_json(path, submission)
+            before = run_module.load_state(harness, "unit")
+            args = argparse.Namespace(root=str(harness), scope="unit", stage="score", status="COMPLETED", error="")
+            with self.assertRaisesRegex(ValueError, "评分基础设施异常"):
+                run_module.set_stage(args)
+            self.assertEqual(before, run_module.load_state(harness, "unit"))
+
+    def test_recovered_submission_clears_error_and_real_zero_is_completed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            _, harness = materialize_batch(Path(tmp))
+            run_module.init_state(init_args(harness, "unit", ["execute", "score"]))
+            materialize_results(harness)
+            path = harness / "submission.json"
+            submission = json.loads(path.read_text())
+            submission["tasks"][0]["evaluation"] = {"status": "evaluation_error"}
+            write_json(path, submission)
+            self.assertEqual(run_module.sync_state(harness, "unit")["stages"]["score"], "NEEDS_ATTENTION")
+            submission["tasks"][0].update(evaluation={"status": "completed"}, metrics={"total_score": 0})
+            write_json(path, submission)
+            state = run_module.sync_state(harness, "unit")
+            self.assertEqual(state["stages"]["score"], "COMPLETED")
+            self.assertNotIn("score", state["errors"])
+            self.assertEqual(state["stages"]["package"], "NOT_SELECTED")
+
+    def test_submission_errors_do_not_select_unrequested_score_stage(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            _, harness = materialize_batch(Path(tmp))
+            run_module.init_state(init_args(harness, "unit", ["execute"]))
+            materialize_results(harness)
+            path = harness / "submission.json"
+            submission = json.loads(path.read_text())
+            submission["tasks"][0]["evaluation"] = {"status": "evaluation_error"}
+            write_json(path, submission)
+            state = run_module.sync_state(harness, "unit")
+            self.assertEqual(state["stages"]["score"], "NOT_SELECTED")
+            self.assertEqual(state["errors"], {})
+
     def test_export_rejects_output_inside_package_before_creating_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             _, harness = materialize_batch(Path(tmp))

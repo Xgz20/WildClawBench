@@ -45,6 +45,21 @@ test("General sidebar recovery recognizes 3.5 and rejects duplicate toggles", as
   buttons=[button,button];assert.equal((await clickSidebarToggle(client)).clicked,false);assert.equal(clicked,1);
 });
 
+test("General sidebar recovery prefers the reachable task action over the seam rail", async () => {
+  let actionClicks=0,railClicks=0;
+  class Element { closest(){return null;} contains(){return false;} getBoundingClientRect(){return {x:10,y:10,width:20,height:20};} }
+  const make=(label,rail,click)=>Object.assign(new Element(),{getAttribute:name=>name==='aria-label'?label:name==='data-sidebar'&&rail?'rail':null,click});
+  const action=make('切换任务侧边栏',false,()=>actionClicks++);
+  const covered=make('切换任务侧边栏',false,()=>{throw new Error('covered action');});
+  const rail=make('Toggle Sidebar',true,()=>railClicks++);
+  rail.getBoundingClientRect=()=>({x:30,y:10,width:20,height:20});
+  covered.getBoundingClientRect=()=>({x:100,y:10,width:20,height:20});
+  let buttons=[covered,rail,action];
+  const client={evaluate:expression=>vm.runInNewContext(expression,{Element,getComputedStyle:()=>({visibility:'visible',display:'block'}),document:{querySelectorAll:()=>buttons,elementFromPoint:x=>x===110?{}:x===40?rail:action}})};
+  assert.equal((await clickSidebarToggle(client)).clicked,true);assert.equal(actionClicks,1);assert.equal(railClicks,0);
+  buttons=[action,action,rail];assert.equal((await clickSidebarToggle(client)).clicked,false);assert.equal(actionClicks,1);
+});
+
 test("project creation clicks the unique sidebar tab and never a same-name project group", async () => {
   let tabClicks = 0, groupClicks = 0;
   class Element {

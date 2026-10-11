@@ -407,14 +407,16 @@ validation_records:
 <a id="integration-progress"></a>
 ## 5. Harness 集成进度与当前任务
 
-更新：2026-09-23。以下依据现有源码和运行记录归并，本次未运行 Harness/Judge。状态必须同时带场景、平台、源码/包和支持范围；当前源码版本不自动继承旧发布的真机结论。历史声明仍仅对其已验身份有效。
+更新：2026-10-11。以下依据当前源码、冻结发行和真实执行/评分/回传/报告归并。状态同时绑定场景、平台、源码/包及支持范围；当前源码版本不自动继承旧发布的真机结论，历史失败或离线测试不升级为通过。
 
 ### 5.1 源码与运行身份
 
 开发在当前仓库工作区 `feature/astroncode-eval` 串行进行，不恢复旧协作档案的派发、平台 worktree 或人工桌面排期。评测运行仍可使用已验的执行/评分并发。当前用户约定：调试产物置于 `/Users/gzx/debug-workspace/e2e-evaluate`，正式分发置于仓库 `report-workspace`，不 push，不主动重启承载控制的 Codex Desktop。
 
-- General 源码 Skill 版本：`collect-general-e2e 0.8.0`、`execute-general-e2e 0.11.0`、`orchestrate-general-e2e 0.9.6`、`prepare-general-e2e-workspaces 0.2.0`、`report-general-e2e 0.5.1`、`run-general-e2e 0.5.2`、`score-general-e2e 0.8.3`。
-- Web 源码 Skill 版本：`execute-web-e2e 1.17.0`、`orchestrate-web-e2e 0.3.2`、`prepare-web-e2e-workspaces 4.4.0`、`report-web-e2e 1.1.1`、`run-web-e2e 1.4.2`、`score-web-e2e 4.5.4`。
+- General 源码 Skill 版本：`collect-general-e2e 0.9.14`、`execute-general-e2e 0.13.17`、`orchestrate-general-e2e 0.11.4`、`prepare-general-e2e-workspaces 0.3.2`、`report-general-e2e 0.7.13`、`run-general-e2e 0.7.0`、`score-general-e2e 0.10.4`。
+- Web 源码 Skill 版本：`execute-web-e2e 1.21.27`、`orchestrate-web-e2e 0.3.27`、`prepare-web-e2e-workspaces 4.4.0`、`report-web-e2e 1.2.0`、`run-web-e2e 1.4.4`、`score-web-e2e 4.5.4`。上述为源码当前值，各验证批次仍绑定自身冻结包及内容 SHA。
+
+- General `selected_report.py` 支持同一单元逐题明确选择多份标准回传包，校验每来源 SHA、范围和 Harness/模型/执行模式。仅报告路径完成适配；`build_developer_bundle.py` 与 `archive_round.py` 的多来源开发导出/归档入口尚未适配，不由这次五题报告结果推定通过。
 
 - QwenWork General 最近执行实现 `190406c`，独立发行 `qwenwork-hardening-190406c`，execute 0.10.27；Qwen 聚焦 Node 115/115、发行/布局 Python 16/16。记录证明对应变更与 canary，不代表全部准入已完成。
 - Web 最近已有分发索引为 `dba9700...` 的 `20260919-125641` 自建 40 / 开源 120 包；历史功能/资源验收另有 `6988b525...`、`ee70a67...`、`24771ce...`、`ff5d476...`、`c257fbd...` 身份。当前源码与这些包按内容 SHA/影响核验，不能只凭重打包继承支持层级。
@@ -423,10 +425,10 @@ validation_records:
 
 | Harness / 平台 | 已验证范围 | 尚未完成 / 当前判定 | 依据 |
 | --- | --- | --- | --- |
-| AstronStudio / macOS Intel | G4-03 五题三槽执行/评分/回传/报告；后续双题 smoke 2/2 valid | 已有对应身份的受控生产证据；公共新版本按影响复验 | [五题](../general-e2e/evidence/g4-03/README.md)、[双题](../general-e2e/evidence/macos-current-smoke-20260919/README.md) |
-| WorkBuddy / macOS Intel | v8 为 5/5 valid、原生峰值 2；v2 加固 canary 为原生峰值 3、2 次补位，评分 2 valid/2 异常/1 容量未评分 | 不把不同批次拼成 5/5 valid 且峰值 3；未知授权/追问、评分稳定性等收尾，完整接入 IN_PROGRESS | [v8](../general-e2e/evidence/workbuddy-macos-general-v8-three-slot-20260921/README.md)、[v2 加固](../general-e2e/evidence/workbuddy-hardening-20260921/README.md) |
-| QwenWork / macOS Intel / 1.2.0 | r21 原生三路五题闭环；r23 核心 Token 5/5 与正式报告；r31–r35 路径/交互/清理；r36–r39 环境、配置防串题与取消回执 | 主流程有限可用，完整接入 IN_PROGRESS；剩余终态分支与四项证据补齐见下文 | [运行证据](../general-e2e/evidence/qwenwork-macos-five3-20260923/README.md) |
-| DoubaoWork / macOS Intel / 2.31.3 | 共享 Driver/原生证据核心、General adapter；r10 S1 与 r12 S2 各自同发行闭环有效 1.0；r11 三题串行、r19/r20 五题原生三路及补位完成 | IN_PROGRESS；r20 S1/S2 自动评分1.0；S3/S4 多源顺序 partial、独立语义评分与完整加固及 Web 闭环未完成 | [本轮证据](../general-e2e/evidence/doubaowork-macos-general-20260924/README.md) |
+| AstronStudio / macOS Intel / 3.5.0 | 独立原生资料目录五题三槽执行/正式采集/独立评分/submission/return/import及三件套报告，5/5 valid、89.25，原生峰值3；原资料目录已恢复 | 对应冻结发行和独立资料目录的五题全流程PASS；原资料目录的旧RPC样本与历史恢复范围不升级，新入口按影响验证 | `/Users/gzx/debug-workspace/e2e-evaluate/general-e2e/as-350-g5-20261010-173001/acceptance-status.json` |
+| WorkBuddy / macOS Intel / 5.5.6 | 本轮快速五题三槽执行/正式采集/独立评分/回传/导入/三件套报告，5/5 valid、86.25；调度占用峰值3，原生峰值2 | 对应冻结五题主流程PASS；不拼接旧canary证明本批原生峰值3，不外推无人值守或其他平台 | `/Users/gzx/debug-workspace/e2e-evaluate/general-e2e/wb-g5-r3-20261010/acceptance-status.json` |
+| QwenWork / macOS Intel / 1.2.5 | 快速五题三槽执行/正式采集/独立评分/回传/导入/三件套报告，5/5 valid、92.75；三槽调度核实，原生峰值2 | 用户接受本轮三槽调度验收，因短题未观测原生峰值3，不为凑峰值重跑；事实仍为2，不外推已证明三条原生turn同时运行 | `/Users/gzx/debug-workspace/e2e-evaluate/general-e2e/qw-g5-20261011-gpt61/acceptance-status.json`及`three-slot-full-flow-review-r1.json` |
+| DoubaoWork / macOS Intel / 2.31.10 | 明确逐题选择两份标准回传包中的五题，5/5 valid、94.5；所选五条轨迹complete，原执行批次原生峰值3；JSON/Markdown/Excel报告通过 | 五题全流程PASS，保留原partial/UNSCORED；不伪造单一来源回执。工具20、原生耗时218秒；Token/请求unavailable，流程耗时仅2/5覆盖 | `/Users/gzx/debug-workspace/e2e-evaluate/general-e2e/db-admission-r3-20261011/acceptance-status.json`及`final-five-selection-r1/` |
 | 全部 Harness / Windows、Apple Silicon | 当前 General 台账没有相应完整真机准入 | Windows 暂缓；Apple Silicon 单独验证；不外推 Intel 结果 | [历史 Windows 实施范围](archive/general/AstronStudio-Windows后续实施清单.md) |
 
 ### 5.3 Web 场景
@@ -436,9 +438,10 @@ validation_records:
 | AstronStudio / Windows | `6988b525...` 对应身份 V00–V17，历史声明无人值守高可用；`ff5d476...` 另验资源 | 后续发行的影响项、跨平台同 revision 包对账仍需明确重绑 |
 | WorkBuddy / Windows | `ee70a67...` 对应 5.5.6.0 身份 V00–V17；`ff5d476...` 另验资源 | 同上；旧双路样本不能自动证明当前默认三路 |
 | QwenWork / Windows | `24771ce...` 单 L1 执行→评分→return 主流程；`c257fbd...` 1.0.6.0 自动 Token 开关与新 L1 采集 | 当前身份串行/并发、管理员 import/report、V12–V17 未全重绑；不声明并发或无人值守全覆盖 |
+| AstronStudio / macOS Intel / 3.5.0 | 当前快速五题每题Prompt恰好一次，5/5正式SUCCEEDED且完整执行回执integrity.valid=true，原生峰值3及补位有真实快照；033沿原消息安全恢复产生首条turn，原失败与一次恢复审计保留；独立gpt-6.1-sol/high三槽评分已正式收口4/5，功能100/100/92.31/100，美观89.13/95.83/76.5/94；五题自身Browser暖启动均READY，首题挂载异常按原预算恢复 | 028删除触发原生confirm后CDP输入/聚焦阻塞，公开getJsDialog为空、取消和关闭接口失败，独立诊断页复现；保留evaluation_error、一次正常恢复预算及四份有效分数。整批NEEDS_ATTENTION，回传与完整报告待恢复，不放行当前3.5.0 Web。侧栏/原生项目修复97项Node回归、39项发行/布局检查通过；新增显示评分会话的暖启动编排68项控制回归、25项打包回归通过，不改既有冻结Prompt。证据为`/Users/gzx/debug-workspace/e2e-evaluate/web-e2e/as350-five3-20261011/acceptance-status-latest.json` |
 | AstronStudio / macOS Intel / 3.3.1 | 20261008 r3 五题执行、功能/美观度评分、return/import幂等及三件套报告完成；Spark X2.5 High/full-access，原生三路峰值有证据 | 当前五题值守及受控恢复范围PASS；保留031控制干预和028前三次Browser失败，不外推新源码自动恢复或10题正式批次 |
 | WorkBuddy / macOS Intel / 5.5.6 | 20261009 r2 快速五题执行与功能/美观度评分5/5，原生执行/评分turn重叠峰值均3；submission、return/import幂等和四表报告校验通过，功能78.72、美观82.57 | 当前五题值守及显式受控恢复范围PASS；031/033各一次用户额外授权、中断turn和Codex升级登记均保留；旧002取证异常不改写，不外推无人值守或10题 |
-| QwenWork / macOS Intel / 1.2.5 | r3五题正式SUCCEEDED、同为标准、每题一次发送，完整回执有效；r7/r8各首题已沿原attempt正式execution_error收口，原生402/error及原始来源SHA留存，候选和未发送题保持；新Web输入/启动竞态修复58项测试通过 | r3原生峰值1，不满足三路验收；r7/r8失败收口完成，各余4题未发送，不能生成有效五题整批回执。用户明确因额度暂停新派发，额度恢复未验证，评分/回传报告未通过，仍不放行生产 |
+| QwenWork / macOS Intel / 1.2.5 | r3五题正式SUCCEEDED、同为标准、每题一次发送，完整回执有效；r7/r8各首题已沿原attempt正式execution_error收口，原生402/error及原始来源SHA留存，候选和未发送题保持；新Web输入/启动竞态修复58项测试通过 | r3原生峰值1，不满足三路验收；r7/r8失败收口完成，各余4题未发送，不能生成有效五题整批回执。用户已恢复额度，1.2.5 General 五题全流程通过；本轮新的 Web 快速五题尚未派发，旧402样本不升级，评分/回传报告仍需新验证，不放行当前 Web 生产 |
 | DoubaoWork / macOS Intel / 2.31.10 | 当前五题完整执行、功能/美观度评分、submission、return/import幂等与JSON/Markdown/四Sheet报告均完成；原生Agent重叠峰值3 | 值守及受控恢复五题范围PASS；保留002窄屏/Browser失败及跨Codex版本恢复，不外推无人值守、10题或未测架构 |
 | DoubaoWork / Windows；其他未声明架构 | 无本场景完整证据 | NOT_RUN，不凭共用接口推定支持 |
 
@@ -446,7 +449,7 @@ Web 逐项 V00–V17、P0–P10、客户端/Skill/包 SHA 和运行路径见[历
 
 ### 5.4 当前推进顺序
 
-2026-09-23先推进DoubaoWork General；2026-09-24按用户后续指令优先补QwenWork General高优先加固，再接续QwenWork Web。DoubaoWork已有结果保留，各场景独立验收。其他已有 Harness 保留各自证据与缺口。Windows 新开发暂缓，历史 Web Windows 结论保留。评分配置在各批次冻结，当前 QwenWork General 后续批次固定 `gpt-6-sol/high`，不回填旧 astra/high 结果。题目时长不作为能力评分条件，不为覆盖状态表改题或逼模型产生指定分数。
+当前按用户要求先核实四端 General 五题三槽执行、评分、回传、报告，再依次完成四端 Web 快速五题三槽全流程；已有效验证的范围允许复用。Web 每端完整验收后进入下一端，未启动的新批次不选需长时间等待的番茄钟等题。QwenWork 额度已恢复，General 1.2.5 已完成；旧 Web 402 样本保留失败，新的 Web 五题待前端完成后启动。后续新 Codex 评分默认并显式冻结 `gpt-6.1-sol/high`，不改旧裁判和分数。Windows/Apple Silicon 不外推 macOS Intel 结果，十题正式批次尚未启动。
 
 ### QwenWork 剩余生产准入事项
 

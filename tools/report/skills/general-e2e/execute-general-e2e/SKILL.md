@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+AstronStudio 3.5.0 的侧栏恢复识别精确“切换任务侧边栏”按钮，核验中心点击可达，并优先使用操作按钮；只有没有可达操作按钮时才兼容旧边缘 rail。多个可达操作按钮仍拒绝点击，恢复不重发 Prompt。
+
 # 执行 General E2E 用例
 
 `0.13.16` 的 DoubaoWork 2.31.10 dispatcher 观察器增加独立的原生 LocalToolSSE 入口订阅，只复制收到的工具调用，不代替原消费器或调用工具。新增 `consumer_witness` 与实际 dispatch、首次观测的 uploaded 账本逐项对账；原生准入拒绝还须复制实际 reportAdmissionFailure 结果，缺失的 Agent ID 保持 null，不冒充执行成功；未知路由、无拒绝证据、身份/参数不一致和覆盖缺口均不能证明完整。结束时只移除自身订阅，旧快照不补入口证据。

@@ -59,7 +59,7 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("execute-general-e2e").version,
                 get_skill_spec("execute-general-e2e").implementation_status,
             ),
-            ("0.13.16", "operational"),
+            ("0.13.17", "operational"),
         )
         self.assertEqual(
             (

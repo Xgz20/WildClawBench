@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { EventEmitter } from "node:events";
-import { mkdtemp, mkdir, readFile, realpath, rename, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, posix, win32 } from "node:path";
 import test from "node:test";
@@ -15,6 +15,7 @@ import {
   isQuiescentThreadEvidence,
   queryQuiescentThreadEvidence,
   queryFinalResponse,
+  queryProjectEvidence,
   querySessions,
   resolveConfig,
   resolveExecutionIdentity,
@@ -59,7 +60,43 @@ import {
   selectRouteConfirmedAttemptSession,
   selectWorkspace,
   terminalProcessCleanupTiming,
+  verifyPristineProjectRoute,
 } from "../driver.mjs";
+
+test("native project navigation binds the full path and rejects populated or deleted routes", async () => {
+  const root=await mkdtemp(join(tmpdir(),'astron-project-proof-'));
+  const db=join(root,'state.sqlite');const workspace="/tmp/target'quoted";
+  try {
+    await initializeSqlite(db, `
+CREATE TABLE projection_projects(project_id TEXT,workspace_root TEXT,deleted_at TEXT);
+CREATE TABLE projection_threads(thread_id TEXT,project_id TEXT,latest_turn_id TEXT,deleted_at TEXT);
+CREATE TABLE projection_thread_messages(thread_id TEXT);
+CREATE TABLE projection_turns(thread_id TEXT);
+CREATE TABLE projection_thread_sessions(thread_id TEXT);
+CREATE TABLE projection_pending_interactions(thread_id TEXT,status TEXT);
+INSERT INTO projection_projects VALUES('p','/tmp/target''quoted',NULL),('other','/tmp/another',NULL);
+INSERT INTO projection_threads VALUES('t','p',NULL,NULL);
+`);
+    const initial=await queryProjectEvidence(db,workspace,'t');
+    verifyPristineProjectRoute(initial,workspace,'p','t');
+    assert.throws(()=>verifyPristineProjectRoute(initial,'/tmp/another','p','t'),/原生项目/);
+    assert.throws(()=>verifyPristineProjectRoute(initial,workspace,'other','t'),/原生项目/);
+    await initializeSqlite(db,"INSERT INTO projection_thread_messages VALUES('t');");
+    const populated=await queryProjectEvidence(db,workspace,'t');
+    assert.throws(()=>verifyPristineProjectRoute(populated,workspace,'p','t'),/空白会话/);
+    await initializeSqlite(db,"UPDATE projection_projects SET deleted_at='deleted' WHERE project_id='p';");
+    const deleted=await queryProjectEvidence(db,workspace,'t');
+    assert.equal(deleted.projects.length,0);assert.equal(deleted.threads.length,0);
+    assert.throws(()=>verifyPristineProjectRoute(deleted,workspace,'p','t'),/原生项目/);
+  } finally { await rm(root,{recursive:true,force:true}); }
+});
+
+test("native project lookup rejects duplicate full paths before any UI navigation", async () => {
+  const page=new Proxy({}, {get(){throw new Error('UI must remain untouched');}});
+  await assert.rejects(selectWorkspace(page,'/tmp/task',100,'state.sqlite',{
+    queryProjectEvidence:async()=>({projects:[{project_id:'one'},{project_id:'two'}],threads:[]}),
+  }),/原生项目不唯一/);
+});
 
 test("AstronStudio state snapshot copy kills a stuck isolated copier at the deadline", async () => {
   const child = new EventEmitter();
@@ -742,7 +779,7 @@ test("AstronStudio terminal --resume backfills cleanup without resending the pro
   }), 0);
   const recovered = JSON.parse(await readFile(config.stateFile, "utf8"));
   assert.equal(recovered.phase, "SUCCEEDED");
-  assert.equal(recovered.driver.version, "1.12.10");
+  assert.equal(recovered.driver.version, "1.12.13");
   assert.equal(recovered.terminal_process_cleanup.supported, false);
   assert.equal(recovered.terminal_process_cleanup.success, true);
   assert.equal(recovered.terminal_process_cleanup.backfill_verification.unchanged, true);
@@ -927,7 +964,7 @@ test("sidebar toggle discovery survives Electron titlebar hit-test overlays", as
   };
   const page = {
     locator: (selector) => {
-      assert.equal(selector, 'button[aria-label="切换对话侧边栏"], button[aria-label="Toggle conversation sidebar" i], button[aria-label="Toggle Sidebar" i]');
+      assert.equal(selector, 'button[aria-label="切换对话侧边栏"], button[aria-label="切换任务侧边栏"], button[aria-label="Toggle conversation sidebar" i], button[aria-label="Toggle Sidebar" i]');
       return locatorFor([coveredDuplicate, reachableToggle]);
     },
   };
@@ -946,6 +983,19 @@ test("collapsed sidebars do not scan or scroll mounted historical project contro
     inspectConversationSidebarState({ evaluate: async () => ["collapsed", "expanded"] }),
     /侧边栏身份不唯一/,
   );
+});
+
+test("3.5 task sidebar action takes precedence over the clickable edge rail", async () => {
+  const make=(label,rail,reachable=true)=>({
+    isVisible:async()=>true,
+    getAttribute:async name=>name==='aria-label'?label:name==='data-sidebar'&&rail?'rail':null,
+    evaluate:async()=>reachable,
+  });
+  const rail=make('Toggle Sidebar',true),action=make('切换任务侧边栏',false),covered=make('切换任务侧边栏',false,false);
+  let candidates=[rail,covered,action];const page={locator:()=>locatorFor(candidates)};
+  assert.deepEqual(await findConversationSidebarToggles(page),[action]);
+  candidates=[rail,action,make('切换任务侧边栏',false)];assert.equal((await findConversationSidebarToggles(page)).length,2);
+  candidates=[rail];assert.deepEqual(await findConversationSidebarToggles(page),[rail]);
 });
 
 function sidebarDomFixture(options) {
@@ -1257,6 +1307,25 @@ test("workspace selection adds an absolute path when the empty task has no picke
       method: "workspace-trigger-title-readback",
     },
   });
+});
+
+test("manual project registration waits for the asynchronously mounted path action", async () => {
+  const calls=[];let added=false,reads=0,entry=false;
+  const visible={isVisible:async()=>true};
+  const tab={...visible,innerText:async()=>"项目",click:async()=>calls.push('tab')};
+  const path={...visible,evaluate:async()=>{entry=true;calls.push('path');}};
+  const add={...visible,isEnabled:async()=>true,evaluate:async()=>{added=true;calls.push('add');}};
+  const submit={...visible,isEnabled:async()=>true,evaluate:async()=>calls.push('submit')};
+  const input={...visible,evaluate:async(_callback,value)=>calls.push(value)};
+  const page={locator:selector=>{
+    if(selector==='.sidebar-segmented-picker')return locatorFor([{...visible,locator:()=>locatorFor([tab])}]);
+    if(selector==='button')return {filter:()=>locatorFor(added&&++reads>=2?[path]:[])};
+    if(selector==='button[aria-label="添加项目"], button[aria-label="Add project"]')return locatorFor([entry?submit:add]);
+    if(selector==='input[aria-label="项目路径"], input[aria-label="Project path"]')return locatorFor([input]);
+    throw new Error(selector);
+  }};
+  assert.deepEqual(await addProjectByManualPath(page,'/tmp/new-project',1000),{method:'sidebar-manual-path'});
+  assert.deepEqual(calls,['tab','add','path','/tmp/new-project','submit']);
 });
 
 test("probe stays ready on a history page where the workspace picker is deferred", () => {

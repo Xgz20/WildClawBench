@@ -7,6 +7,8 @@ description: 编排桌面 Harness Web E2E 的执行结果交接、Codex Desktop 
 
 本 Skill 是执行与评分之间的控制平面。`execute-web-e2e` 负责被评 Harness 做题，`score-web-e2e` 负责一个 Codex Desktop 任务内的一题评分；本 Skill 只负责确定性地交接工作空间、注册项目、创建和等待评分任务。
 
+`0.3.27` 在创建评分线程并打开 Browser 后，要求控制任务使用公开 `navigate_to_codex_page` 显示该线程，直到其自身暖启动返回 READY 或明确失败再切换。隐藏线程的 `open_in_codex=queued` 不保证 webview 已挂载。仅 Browser 暖启动按单槽准备，正式评分仍为三槽并发；已有冻结 Prompt、候选、deadline 和重试预算不变。
+
 `0.3.26` 的新评分状态支持 `init --score-skill-dir ABS`：在首次 Prompt 生成前冻结评分 Skill 的绝对路径、版本和元数据 SHA，并写入单题指令。评分前检须使用同一冻结 Skill；旧状态不补路径、不改写 Prompt，切换来源必须新建编排。
 
 `0.3.25` 对新评分状态冻结默认裁判 `gpt-6.1-sol/high`，并在 `CREATE_THREAD` 动作中返回 `model` 与 `thinking`。已有状态保留原裁判和 Prompt；旧状态未冻结裁判时显示 `judge=null`，不能据此推断实际评分模型。
@@ -113,7 +115,7 @@ node <skill-dir>/scripts/scoring-control.mjs preflight \
 1. 读取该题生成的 `scoring_prompt_file`。
    题目隔离限制不禁止读取已独立安装的 `score-web-e2e` Skill、参考文档、受管脚本及其运行依赖；生成的 Prompt 必须明确这项只读授权。不得访问其他项目、父目录或其他用例，所有本题写入仍限定在 `private-scoring/`，候选 `workspace/` 保持只读。
 2. 确认当前题的 `preflight.status=PASSED` 后，调用 Desktop 内置 `create_thread`，目标为已记录的 `projectId`，环境固定为 `{type: "local"}`。新状态必须同时传入当前 `CREATE_THREAD` 动作的 `model` 与 `thinking`；不能沿用控制会话默认值。兼容恢复的旧状态未冻结裁判时，动作不返回这两个字段，继续原历史行为；用户指定新裁判时需新评分编排。
-3. `create_thread` 返回后，控制任务必须马上调用 Desktop 内置 `open_in_codex`，目标为 `{type: "browser", url: "about:blank"}`，并传入刚返回的 `threadId`；返回 `queued` 只表示请求已入队。0.3.23 新生成的 Prompt 要求在安装依赖、构建、启动站点及评分之前先完成 Browser 就绪检查；既有冻结 Prompt 不改写。
+3. `create_thread` 返回后，控制任务必须马上调用 Desktop 内置 `open_in_codex`，目标为 `{type: "browser", url: "about:blank"}`，并传入刚返回的 `threadId`；随后调用公开 `navigate_to_codex_page`，同样只传刚返回的 `threadId`，显示该评分会话。返回 `queued` 只表示请求已入队，隐藏线程须实际显示后才能挂载 Browser webview。控制任务通过本题原始暖启动记录观察 READY 或明确失败，在此之前保持该评分会话显示，不进行其他项目注册或切换页面；记录导航工具真实结果，不把 `navigated=true` 视为健康证明。Browser 暖启动准备串行，已通过就绪检查的评分继续在后台并发，不降低冻结的 `score_slots`。0.3.23 新生成的 Prompt 要求在安装依赖、构建、启动站点及评分之前先完成 Browser 就绪检查；既有冻结 Prompt 不改写。
 
    就绪窗口为 180 秒，发现检查最多 3 次，窗口计时前先读取评分 Skill 和 helper 文档。在发现前仅一次调用公开 `mcp__cua_repl.js_reset`，记录实际起止时间及 `attempt_count=1`，复位属于180秒总窗口。随后首次 CUA js 调用遵循工具要求，只调用 `cua.getState()`（可以赋给变量）；返回后立即记录外部观察时间 `finished_at_upper_bound`，精确 `finished_at` 未知时保持 null。helper 只对首调用接受这一实际外部界限并标记时间精度，不用工具耗时反推精确结束时间。第一次为空时，评分线程可自己调用一次 `open_in_codex`（`about:blank`，省略 `threadId`）；后续空清单分别退避 2 秒和 5 秒再发现，全部检查仍受总窗口约束。发现唯一属于本线程的 `iab` 后，或三次发现仍为空但窗口尚未耗尽时，仅一次用公开 `cua.createBrowserTab("iab", "about:blank", {visible:false})` 实际初始化，再核验本线程 `metadata.codexSessionId`、创建的唯一 tab 和实际 AX 页面。空清单不证明创建不可用；外国会话、重复 iab、创建失败或窗口耗尽必须停止。禁止父会话 Browser、Chrome、headless、替代运行时及私有管道。
 

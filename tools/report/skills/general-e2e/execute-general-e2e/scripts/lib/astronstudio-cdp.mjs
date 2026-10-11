@@ -223,11 +223,19 @@ export async function clickNewTask(client) {
 
 export async function clickSidebarToggle(client) {
   return client.evaluate(expression(`
-    const buttons = Array.from(document.querySelectorAll('button[aria-label]'))
+    const candidates = Array.from(document.querySelectorAll('button[aria-label]'))
       .filter(visible)
-      .filter((button) => /^(?:切换对话侧边栏|Toggle conversation sidebar|Toggle Sidebar)$/iu.test(
+      .filter((button) => /^(?:切换对话侧边栏|切换任务侧边栏|Toggle conversation sidebar|Toggle Sidebar)$/iu.test(
         (button.getAttribute('aria-label') || '').trim()
-      ));
+      ))
+      .filter((button) => {
+        if (typeof document.elementFromPoint !== 'function') return true;
+        const rect = button.getBoundingClientRect();
+        const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+        return hit === button || button.contains(hit);
+      });
+    const controls = candidates.filter(button => button.getAttribute('data-sidebar') !== 'rail');
+    const buttons = controls.length ? controls : candidates;
     if (buttons.length !== 1) return { clicked: false, count: buttons.length };
     buttons[0].click();
     return { clicked: true, count: 1 };

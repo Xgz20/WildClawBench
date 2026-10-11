@@ -21,6 +21,7 @@ import {
   isQuiescentThreadEvidence,
   parseArgs,
   queryFinalResponse,
+  queryProjectEvidence,
   queryQuiescentThreadEvidence,
   querySessionSummary,
   querySessions,
@@ -520,14 +521,21 @@ export async function findNewTaskButtons(page) {
 
 export async function findConversationSidebarToggles(page) {
   const candidates = await visibleLocators(page.locator(
-    'button[aria-label="切换对话侧边栏"], button[aria-label="Toggle conversation sidebar" i], button[aria-label="Toggle Sidebar" i]',
+    'button[aria-label="切换对话侧边栏"], button[aria-label="切换任务侧边栏"], button[aria-label="Toggle conversation sidebar" i], button[aria-label="Toggle Sidebar" i]',
   ));
   const matches = [];
   for (const candidate of candidates) {
     const label = (await candidate.getAttribute("aria-label") || "").trim();
-    if (/^(?:切换对话侧边栏|Toggle conversation sidebar|Toggle Sidebar)$/i.test(label)) matches.push(candidate);
+    if (/^(?:切换对话侧边栏|切换任务侧边栏|Toggle conversation sidebar|Toggle Sidebar)$/i.test(label)) matches.push(candidate);
   }
-  return pointerReachableLocators(matches);
+  const reachable = await pointerReachableLocators(matches);
+  const controls = [];
+  for (const candidate of reachable) {
+    if (await candidate.getAttribute("data-sidebar") !== "rail") controls.push(candidate);
+  }
+  // The 3.5 header action and the seam rail can coexist. Prefer actual actions;
+  // an edge rail may intercept the center hit test without expanding the pane.
+  return controls.length ? controls : reachable;
 }
 
 export async function isReusableEmptyTaskRoute(page) {
@@ -674,7 +682,7 @@ export async function addProjectByManualPath(page, workspace, timeout) {
       typePathButtons = await typePathLocator();
     }
   }
-  if (typePathButtons.length !== 1) throw new Error(`AstronStudio 输入项目路径按钮数量异常：${typePathButtons.length}`);
+  if (typePathButtons.length > 1) throw new Error(`AstronStudio 输入项目路径按钮数量异常：${typePathButtons.length}`);
   const typePath = await waitForUniqueVisible(
     typePathLocator,
     timeout,
@@ -719,7 +727,80 @@ export async function addProjectByManualPath(page, workspace, timeout) {
   return { method: "sidebar-manual-path" };
 }
 
-export async function selectWorkspace(page, workspace, timeout) {
+export function verifyPristineProjectRoute(evidence, workspace, projectId, threadId) {
+  const row = evidence.threads?.[0];
+  if (evidence.projects?.length !== 1 || evidence.projects[0].project_id !== projectId
+    || evidence.projects[0].workspace_root !== workspace || evidence.threads?.length !== 1
+    || row.thread_id !== threadId || row.project_id !== projectId || row.workspace_root !== workspace
+    || row.latest_turn_id !== null
+    || !["message_count", "turn_count", "session_count", "pending_count"].every(key => row[key] === 0)) {
+    throw new Error("AstronStudio 新任务的原生项目、完整路径或空白会话身份不一致");
+  }
+}
+
+export async function openExactProjectTask(page, workspace, projectId, sessionDb, timeout, overrides = {}) {
+  const readNative = overrides.queryProjectEvidence || queryProjectEvidence;
+  if (!/^[0-9a-f-]{36}$/i.test(projectId)) throw new Error("AstronStudio 原生项目 ID 无效");
+  const initialThread = threadIdFromUrl(page.url());
+  const editors = await visibleLocators(page.getByTestId("composer-editor"));
+  if (editors.length !== 1 || (await editors[0].innerText()).trim() !== ""
+    || (await visibleLocators(page.getByRole("dialog"))).length
+    || (await visibleLocators(page.getByRole("button", { name: /^(?:停止生成|Stop generating)$/i }))).length) {
+    throw new Error("AstronStudio 目标项目导航存在草稿、弹窗或当前活动任务");
+  }
+  await dismissOpenMenus(page, timeout);
+  if (await inspectConversationSidebarState(page) === "collapsed") {
+    const toggles = await findConversationSidebarToggles(page);
+    if (toggles.length !== 1) throw new Error("AstronStudio 目标项目侧栏操作按钮不唯一");
+    await toggles[0].click({ timeout });
+  }
+  const tabs = await findSidebarProjectTabs(page);
+  if (tabs.length !== 1) throw new Error("AstronStudio 目标项目侧栏标签不唯一");
+  await tabs[0].click({ timeout });
+  const row = page.locator(`[data-project-hover-anchor="${projectId}"]`);
+  if (await row.count() !== 1) throw new Error("AstronStudio 原生目标项目行不唯一或投影缺失");
+  await row.scrollIntoViewIfNeeded({ timeout });
+  await row.hover({ timeout });
+  const buttons = await pointerReachableLocators(await visibleLocators(row.getByTestId("new-thread-button")));
+  if (buttons.length !== 1 || !await buttons[0].isEnabled()) throw new Error("AstronStudio 原生目标项目新建任务按钮不唯一或不可达");
+  await buttons[0].click({ timeout });
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const threadId = threadIdFromUrl(page.url());
+    const binding = await inspectWorkspace(page);
+    const inputs = await visibleLocators(page.getByTestId("composer-editor"));
+    if (threadId && threadId !== initialThread && binding.available && binding.path === workspace
+      && inputs.length === 1 && (await inputs[0].innerText()).trim() === "") {
+      const evidence = await readNative(sessionDb, workspace, threadId);
+      verifyPristineProjectRoute(evidence, workspace, projectId, threadId);
+      return { method: "native-exact-project-new-task", project_id: projectId, thread_id: threadId,
+        requested_path: workspace, confirmed_path: binding.path, confirmed_label: binding.label,
+        native_pristine_verified: true };
+    }
+    await sleep(100);
+  }
+  throw new Error("AstronStudio 目标项目新任务未完成路由和完整路径回读");
+}
+
+export async function selectWorkspace(page, workspace, timeout, sessionDb = null, overrides = {}) {
+  if (sessionDb) {
+    const readNative = overrides.queryProjectEvidence || queryProjectEvidence;
+    let evidence = await readNative(sessionDb, workspace);
+    if (evidence.projects.length > 1) throw new Error("AstronStudio 目标完整路径的原生项目不唯一");
+    let registration = null;
+    if (evidence.projects.length === 0) {
+      registration = await addProjectByManualPath(page, workspace, timeout);
+      const deadline = Date.now() + timeout;
+      do {
+        evidence = await readNative(sessionDb, workspace);
+        if (evidence.projects.length) break;
+        await sleep(100);
+      } while (Date.now() < deadline);
+    }
+    if (evidence.projects.length !== 1) throw new Error("AstronStudio 目标完整路径未注册为唯一原生项目");
+    const selected = await openExactProjectTask(page, workspace, evidence.projects[0].project_id, sessionDb, timeout, overrides);
+    return { backend: { method: selected.method, registration }, page: selected };
+  }
   const triggers = await visibleWorkspaceTriggers(page);
   if (triggers.length > 1) {
     throw new Error(`AstronStudio 项目选择按钮数量异常：${triggers.length}`);
@@ -1708,7 +1789,7 @@ async function runAutomation(config, identityInfo, overrides = {}) {
     await takeScreenshot(page, config, state, "02-new-task.png");
     state.workspace_selection = {
       requested_path: config.workspace,
-      ...(await selectWorkspace(page, config.workspace, timeout)),
+      ...(await selectWorkspace(page, config.workspace, timeout, config.sessionDb)),
       confirmed_at: new Date().toISOString(),
     };
     transitionState(state, "WORKSPACE_CONFIRMED");

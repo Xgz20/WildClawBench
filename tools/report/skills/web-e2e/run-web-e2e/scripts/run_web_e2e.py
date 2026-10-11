@@ -277,6 +277,11 @@ def set_stage(args: argparse.Namespace) -> dict:
         raise ValueError(f"阶段未选择，不能更新: {args.stage}")
     if args.status == "NOT_SELECTED":
         raise ValueError("不能用 set-stage 取消已冻结阶段")
+    if args.scope == "unit" and args.stage == "score" and args.status == "COMPLETED":
+        _, manifest = manifest_for(root, args.scope)
+        submission = validate_submission(root, manifest)
+        if submission and scoring_infrastructure_errors(submission[1]):
+            raise ValueError("submission 含评分基础设施异常，不能标记 score=COMPLETED")
     current = state["stages"][args.stage]
     transitions = {
         "PENDING": {"RUNNING", "WAITING_HANDOFF", "COMPLETED", "NEEDS_ATTENTION", "FAILED"},
@@ -350,6 +355,24 @@ def valid_import_receipts(root: Path, manifest: dict) -> list[dict]:
     return receipts
 
 
+def scoring_infrastructure_errors(submission: dict) -> list[dict]:
+    errors = []
+    for task in submission.get("tasks") or []:
+        evaluation = task.get("evaluation") or {}
+        metrics = task.get("metrics") or {}
+        aesthetic_statuses = {
+            (evaluation.get("aesthetic") or {}).get("status"),
+            (metrics.get("aesthetic") or {}).get("status"),
+        }
+        if evaluation.get("status") == "evaluation_error" or "evaluation_error" in aesthetic_statuses:
+            errors.append({
+                "task_id": (task.get("identity") or {}).get("task_id"),
+                "evaluation_status": evaluation.get("status"),
+                "aesthetic_error": "evaluation_error" in aesthetic_statuses,
+            })
+    return errors
+
+
 def sync_state(root: Path, scope: str, report_output: str = "") -> dict:
     state = load_state(root, scope)
     _, manifest = manifest_for(root, scope)
@@ -361,10 +384,20 @@ def sync_state(root: Path, scope: str, report_output: str = "") -> dict:
                 state["stages"]["execute"] = "COMPLETED"
         submission_result = validate_submission(root, manifest)
         if submission_result:
-            submission_path, _ = submission_result
+            submission_path, submission = submission_result
             state["artifacts"]["submission"] = str(submission_path)
             if "score" in state["selected_stages"]:
-                state["stages"]["score"] = "COMPLETED"
+                infrastructure_errors = scoring_infrastructure_errors(submission)
+                if infrastructure_errors:
+                    state["stages"]["score"] = "NEEDS_ATTENTION"
+                    state["errors"]["score"] = {
+                        "message": "SCORING_INFRASTRUCTURE_ERROR",
+                        "tasks": infrastructure_errors,
+                        "recorded_at": utc_now(),
+                    }
+                else:
+                    state["stages"]["score"] = "COMPLETED"
+                    state["errors"].pop("score", None)
         package = state.get("artifacts", {}).get("return_package") or {}
         if "package" in state["selected_stages"] and package:
             archive = Path(package.get("archive", ""))
@@ -407,6 +440,14 @@ def recommended_actions(state: dict) -> list[dict]:
     for stage in state["selected_stages"]:
         if status[stage] in {"COMPLETED", "RUNNING", "WAITING_HANDOFF"}:
             continue
+        if stage == "score" and (state.get("errors", {}).get(stage) or {}).get("message") == "SCORING_INFRASTRUCTURE_ERROR":
+            actions.append({
+                "stage": stage, "status": status[stage], "action": "NEEDS_ATTENTION",
+                "reason": "SCORING_INFRASTRUCTURE_ERROR",
+                "recovery": "恢复既有评分编排并沿用冻结重试预算，不创建重复任务",
+                "blocked_by": None,
+            })
+            continue
         blocked_by = None
         if stage == "score" and status["execute"] != "COMPLETED" and not state["artifacts"].get("execution_receipt"):
             blocked_by = "execution-receipt.json"
@@ -419,6 +460,8 @@ def recommended_actions(state: dict) -> list[dict]:
             "status": status[stage],
             "action": "WAIT_FOR_PREREQUISITE" if blocked_by else f"RUN_{stage.upper()}",
             "blocked_by": blocked_by,
+            **({"audit_only": True} if stage == "package" and
+               (state.get("errors", {}).get("score") or {}).get("message") == "SCORING_INFRASTRUCTURE_ERROR" else {}),
         })
     return actions
 

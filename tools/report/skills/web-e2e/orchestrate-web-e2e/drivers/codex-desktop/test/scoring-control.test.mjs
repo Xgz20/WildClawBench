@@ -319,6 +319,9 @@ test("init defaults to three scoring slots and assigns immutable per-task ports"
   assert.match(prompt, /180秒就绪窗口，最多3次发现检查/);
   assert.match(prompt, /browser-readiness\.mjs/);
   assert.match(prompt, /只有返回READY才能/);
+  assert.match(prompt, /navigate_to_codex_page 显示同一 threadId/);
+  assert.match(prompt, /本题暖启动返回READY或明确失败前保持该会话显示/);
+  assert.match(prompt, /正式评分仍按冻结score_slots并发/);
   assert.match(prompt, /finished_at_upper_bound/);
   assert.match(prompt, /不用工具耗时反推完成时间/);
   assert.match(prompt, /启动站点、安装或构建依赖、开始功能与美观度评分之前/);

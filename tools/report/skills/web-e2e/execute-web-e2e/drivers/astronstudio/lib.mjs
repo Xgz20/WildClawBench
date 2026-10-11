@@ -53,7 +53,7 @@ export {
   transitionState,
 };
 
-export const DRIVER_VERSION = "1.12.10";
+export const DRIVER_VERSION = "1.12.13";
 export const DEFAULT_APP_PATH = defaultAstronAppPath();
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
@@ -404,6 +404,27 @@ WHERE s.thread_id=${sqlStringLiteral(threadId)};
 
 function sqlStringLiteral(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
+}
+
+export async function queryProjectEvidence(sessionDb, workspace, threadId = null, overrides = {}) {
+  const snapshotDir = await mkdtemp(join(tmpdir(), "astudio-project-snapshot-"));
+  const snapshotDb = join(snapshotDir, "state.sqlite");
+  try {
+    await (overrides.copySnapshot || copySqliteSnapshot)(sessionDb, snapshotDb, overrides);
+    const projects = await querySqlite(snapshotDb, `SELECT project_id, workspace_root
+FROM projection_projects WHERE workspace_root=${sqlStringLiteral(workspace)} AND deleted_at IS NULL;`, overrides);
+    const threads = threadId ? await querySqlite(snapshotDb, `
+SELECT t.thread_id, t.latest_turn_id, p.project_id, p.workspace_root,
+ (SELECT COUNT(*) FROM projection_thread_messages m WHERE m.thread_id=t.thread_id) AS message_count,
+ (SELECT COUNT(*) FROM projection_turns v WHERE v.thread_id=t.thread_id) AS turn_count,
+ (SELECT COUNT(*) FROM projection_thread_sessions s WHERE s.thread_id=t.thread_id) AS session_count,
+ (SELECT COUNT(*) FROM projection_pending_interactions i WHERE i.thread_id=t.thread_id AND i.status='pending') AS pending_count
+FROM projection_threads t JOIN projection_projects p ON t.project_id=p.project_id
+WHERE t.thread_id=${sqlStringLiteral(threadId)} AND t.deleted_at IS NULL AND p.deleted_at IS NULL;`, overrides) : [];
+    return { projects, threads };
+  } finally {
+    await rm(snapshotDir, { recursive: true, force: true }).catch(() => {});
+  }
 }
 
 // 精确 thread/turn 映射到原生会话；不从最近会话或 UI 标题猜测。

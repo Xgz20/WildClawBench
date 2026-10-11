@@ -3,9 +3,15 @@ name: execute-web-e2e
 description: 在 AstronStudio、WorkBuddy、QwenWork、DoubaoWork 等桌面 Harness 中执行单个或批量 Web E2E 用例，持久化可恢复状态、终态证据和 execution_record；用于自动做题阶段，不负责评分或报告。
 ---
 
+`1.21.25` / AstronStudio Driver `1.12.11` 识别 3.5.0 的精确“切换任务侧边栏”操作按钮，并优先于同屏边缘 rail；仍核验点击可达且拒绝多个可达操作按钮。General 采用相同恢复规则，已发送任务仍只观察原会话。
+
 DoubaoWork 2.31.10 的队列滚动轨迹复用共用证据核心：只接纳已验证 dispatcher Profile 与精确源码 SHA，不继承旧 emitter 的跨来源时钟证明；原件和捕获时间保留，无法核实的工具顺序保持 partial。
 
 # 执行 Web E2E 用例
+
+`1.21.27` / AstronStudio Driver `1.12.13` 对添加项目后异步出现的“输入路径”入口使用既有有界唯一性等待；短暂零控件不直接失败，多个控件继续拒绝。
+
+`1.21.26` / AstronStudio Driver `1.12.12` 的项目切换采用 General 已验证的原生项目身份规则：只读完整路径绑定唯一 project ID，再在该项目行新建任务，同时核验 UI 路由、完整路径及原生空白会话。已注册项目不重复创建；同名、重复完整路径、非空白会话或投影缺失均失败关闭，不借旧历史路由发送 Prompt。
 
 AstronStudio 3.5.0 的侧栏恢复同时识别精确 `Toggle Sidebar` 标签，并复用已验证的唯一新建任务控件，避免重复读取期间侧栏响应式收起。侧栏“项目”标签限定于唯一分段选择器，复用 General 已验收的语义范围，避免命中同名历史项目组。多个控件仍失败关闭，已发送任务只观察、不重发。
 
