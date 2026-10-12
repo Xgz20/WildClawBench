@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 import { inspectQwenExecutionEnvironment, assertQwenExecutionEnvironment } from "./environment.mjs";
 import { buildQwenGeneralExecutionState } from "./execution-state.mjs";
+import { FLOW_TIMING_PROFILE, flowTiming } from "../../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
 import { preflightQwenExecutionPaths } from "./path-preflight.mjs";
 import {
   applyQwenExecutionProjection,
@@ -805,13 +806,14 @@ async function observeBoundAttempt(config, state, dependencies, recheckStreamMis
     dispatchAttemptCount: state.send.dispatch_attempt_count,
     session,
     bindingEvidence,
-    startedAt: state.send.invoking_at,
+    startedAt: state.prompt.sent_at,
     finishedAt: isNativeTerminal ? now : null,
     durationSeconds: isNativeTerminal
-      ? Math.max(0, (Date.parse(now) - Date.parse(state.send.invoking_at)) / 1000)
+      ? flowTiming(state.prompt.sent_at, now).value
       : null,
     cancellationConfirmed: classification.business_status === "cancelled" && terminalObservation.stop_confirmed === true,
     terminalObservation,
+    flowTimingProfile: FLOW_TIMING_PROFILE,
     humanAssistance: state.authorized_interactions?.length ? {
       mode: "human_assisted", operation_count: state.authorized_interactions.length,
       semantic_intervention_count: 0,

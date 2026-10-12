@@ -3,13 +3,15 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.0` 与 Web 统一展示“流程耗时”和“任务耗时”。新流程计时 Profile 从 Prompt 发送至本机确认终态；旧冻结来源继续按原 Profile 核验，调整历史口径只能使用保留来源身份及 SHA 的补充层。
+
 # 汇总 General E2E 报告
 
 稳定轮次使用 Harness/execution/tasks 与 Harness/score/tasks，报告位于根目录 reports。历史归档可通过 run Skill 的 archive_round.py replay 在临时目录重建输入；selected_report.py 的 --data-output 输出已验证 JSON，不必重新渲染 Excel。原执行、评分、资源与 SHA 均须一致，路径迁移另记映射，不能修改已冻结原件。
 
 AstronStudio 归档含 `raw/astronstudio-rollout.jsonl` 时，工具统计从已验证 rollout 复算真实工具名和唯一调用 ID，不能继续按 `commandExecution/fileChange` 分类。原生工具搜索也计入；结果事件不计。模型请求数为已对账的用量推进次数，区别于 HTTP 尝试。`selected_report.py --resource-root` 支持独立 rollout 补充层及其既有资源补充链，保留原执行和评分 SHA，报告记录新旧指标与 rollout 路径/哈希。
 
-rollout profile 2 同时提供 Token 和原生任务耗时。Token 从去重并对账后的单次用量累计；任务耗时直接采用原生 `duration_ms`。流程耗时仍采用执行器起止。报告必须按补充记录中的 profile 复算：旧 profile 1 的冻结统计保持原样，新评测和新补采使用 profile 2；缺失字段保留 unavailable，不从桌面事件静默回填。
+rollout profile 2 同时提供 Token 和原生任务耗时。Token 从去重并对账后的单次用量累计；任务耗时直接采用原生 `duration_ms`。新流程计时 Profile 采用 Prompt 发送至本机确认终态；旧记录按原执行器边界复核，不静默迁移。报告必须按补充记录中的 profile 复算：旧 profile 1 的冻结统计保持原样，新评测和新补采使用 profile 2；缺失字段保留 unavailable，不从桌面事件静默回填。
 
 从通过身份、哈希和协议校验的回传包生成可复算汇总，显式披露范围、覆盖率与异常分母。
 
@@ -33,7 +35,7 @@ python -m eval_general_e2e skills --name report-general-e2e --json
 
 `0.7.1/operational` 支持按模型@Harness 展示 General 结果、效率和维度对比、每题各单元并列的用例对比明细，以及每单元独立评分详情，生成不含根因分析的领导版 Markdown、Excel 与单独审计报告。新增请求级 Token 增长分析：AstronStudio 只读取绑定 rollout，WorkBuddy/QwenWork 使用冻结标准轨迹；DoubaoWork 在缺少 Token usage 时默认排除。输出首轮/末轮输入、增长倍数、交互斜率和归一化中位数曲线；系统提示词精确拆分需要完整 outbound request payload，不能从 usage 反推。合法 `partial` collect receipt 可进入报告，未知 Token/cache 等字段继续显示为不可用，不补零。保留 WorkBuddy 已冻结评分后的 JSONL 和耗时补采。仍须使用真实回传包；不得把 Web 报告或旧 CLI 报告仅改标题后发布。
 
-DoubaoWork 历史回执的资源展示另做保守复核：按原 source SHA 验证 trace-index 和 execution-state，partial 工具轨迹只保留已知调用小计；只有同一本机时钟的原生完成接收事件才与 dispatch 相减，支持经绑定原件证明的 checkpoint perf_mark_samples.task_finish.receiveTimestamp。服务端完成时间或未知时钟不计流程耗时及批次壁钟覆盖。报告 JSON 的 lineage 记录旧值、原因和证据 SHA；原 execution/resource/score 文件及评分分母保持冻结。
+DoubaoWork 历史回执的资源展示另做保守复核：按原 source SHA 验证 trace-index 和 execution-state，partial 工具轨迹只保留已知调用小计；旧回执只有同一本机时钟的原生完成接收事件才与 dispatch 相减；新流程计时 Profile 使用经绑定的本机终态观察时刻，支持经绑定原件证明的 checkpoint perf_mark_samples.task_finish.receiveTimestamp。服务端完成时间或未知时钟不计流程耗时及批次壁钟覆盖。报告 JSON 的 lineage 记录旧值、原因和证据 SHA；原 execution/resource/score 文件及评分分母保持冻结。
 
 `0.7.0` 将 Markdown、审计和单题文字分数的显示舍入统一为十进制 ROUND_HALF_UP，与 Excel 数字格式一致；只改变显示，不改报告 JSON 中的原始分数、聚合分母或资源值。
 

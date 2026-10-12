@@ -6,7 +6,7 @@ import {
 } from "../../vendor/e2e-shared/resource-metrics/native-parsers.mjs";
 import { verifiedQwenProfile } from "./qwen-profile.mjs";
 
-export const VERSION = "1.1.4";
+export const VERSION = "1.2.0";
 export { TOKEN_KEYS };
 
 const parsers = createNativeResourceMetricParsers({

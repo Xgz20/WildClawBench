@@ -72,6 +72,17 @@ function state() {
   };
 }
 
+test("新流程 Profile 排除发送前准备，旧冻结 Profile 保留原执行边界", () => {
+  const source = state();
+  source.execution.flow_profile = "prompt-send-to-controller-terminal/v1";
+  source.prompt.sent_at = "2026-09-18T00:00:03.000Z";
+  source.execution.duration_seconds = 7;
+  const rows = fixtureRows().map((entry, index) => ({ ...entry, raw_line: index + 1 }));
+  const result = buildAstronStudioResourceMetrics({ state: source, traceIndex: traceIndex(rows), rows, sources: sources() });
+  assert.equal(result.metrics.timing.duration_seconds.value, 7);
+  assert.match(result.metrics.timing.duration_seconds.basis, /prompt-send-to-controller-terminal/);
+});
+
 function row(sequence, eventType, event, persistedAt = event.createdAt) {
   return {
     sequence,

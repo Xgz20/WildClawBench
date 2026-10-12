@@ -211,6 +211,10 @@ test("WorkBuddy native timing distinguishes flow from native lifetime and accept
   let values = workBuddyTiming(binding);
   assert.equal(values.duration_seconds.value, 5);
   assert.equal(values.agent_duration_seconds.value, 4);
+  const controller = workBuddyTiming({ ...binding, controllerTiming: { profile: "prompt-send-to-controller-terminal/v1", observed_at: "2026-09-21T00:00:07.250Z" } });
+  assert.equal(controller.duration_seconds.value, 7.25);
+  assert.equal(controller.agent_duration_seconds.value, 4);
+  assert.match(controller.duration_seconds.basis, /prompt-send-to-controller-terminal/);
   delete f.snapshot.request.completedAt;
   assert.equal(workBuddyTiming(binding).agent_duration_seconds.value, 3.98);
   f.snapshot.request.startedAt = f.snapshot.request.finishTimestamp;

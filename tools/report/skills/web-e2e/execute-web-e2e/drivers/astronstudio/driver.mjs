@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
+import { FLOW_TIMING_PROFILE, flowTiming } from "../../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
 import { captureResourceMetrics } from "../metrics/capture.mjs";
 import { spawn } from "node:child_process";
 import { realpathSync } from "node:fs";
@@ -1309,11 +1310,14 @@ async function finalize(config, state, identityInfo, phase, {
   finalTextSource = "astudio-dom",
   useLastScreenshot = true,
 } = {}) {
+  if (state.timing.flow_profile === FLOW_TIMING_PROFILE) state.timing.terminal_observed_at ||= new Date().toISOString();
   if (!(await collectTerminalProcessCleanup(config, state, phase, identityInfo))) return state;
   transitionState(state, phase, terminalSource ? { terminal_source: terminalSource } : {});
-  const finishedAt = new Date().toISOString();
+  const finishedAt = state.timing.flow_profile === FLOW_TIMING_PROFILE
+    ? state.timing.terminal_observed_at : new Date().toISOString();
   state.timing.finished_at = finishedAt;
-  state.timing.duration_seconds = state.timing.started_at
+  state.timing.duration_seconds = state.timing.flow_profile === FLOW_TIMING_PROFILE
+    ? flowTiming(state.timing.sent_at, finishedAt).value : state.timing.started_at
     ? Math.max(0, (Date.parse(finishedAt) - Date.parse(state.timing.started_at)) / 1000)
     : null;
   state.error = error;
@@ -1354,9 +1358,10 @@ async function finalize(config, state, identityInfo, phase, {
     resourceMetrics: await captureResourceMetrics(config, state, "astronstudio"),
     clientVersion: state.client.version,
     transcriptPath,
+    flowTimingProfile: state.timing.flow_profile,
     execution: {
       status: formalStatus,
-      started_at: state.timing.started_at,
+      started_at: state.timing.flow_profile === FLOW_TIMING_PROFILE ? state.timing.sent_at : state.timing.started_at,
       finished_at: finishedAt,
       duration_seconds: state.timing.duration_seconds,
       error,
@@ -1824,9 +1829,10 @@ async function runAutomation(config, identityInfo, overrides = {}) {
     transitionState(state, "READY_TO_SEND");
     await saveState(config, state);
 
+    const dispatchStartedAt = new Date().toISOString();
     state.send_method = await clickSend(page, timeout);
     promptMayHaveBeenSent = true;
-    state.timing.sent_at = new Date().toISOString();
+    state.timing.sent_at = dispatchStartedAt;
     transitionState(state, "PROMPT_SENT");
     await saveState(config, state);
     await captureAttemptThread(page, config, state, postSendIdentityTimeoutMilliseconds(timeout));

@@ -13,6 +13,7 @@ import {
 } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { FLOW_TIMING_PROFILE, flowTiming } from "../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
 
 import {
   calculateRunConfigDigest,
@@ -36,7 +37,7 @@ import { waitForThreadStreamLease } from "./lib/astronstudio-stream.mjs";
 import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery/index.mjs";
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.4.8";
+export const EXECUTION_DRIVER_VERSION = "0.4.9";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -428,6 +429,7 @@ function createInitialState(config, now) {
     },
     execution: {
       business_status: null,
+      flow_profile: FLOW_TIMING_PROFILE,
       started_at: now,
       finished_at: null,
       duration_seconds: null,
@@ -480,7 +482,7 @@ function recordFromState(config, state) {
     },
     execution: {
       business_status: state.execution.business_status,
-      started_at: state.execution.started_at,
+      started_at: state.execution.flow_profile === FLOW_TIMING_PROFILE ? state.prompt.sent_at : state.execution.started_at,
       finished_at: state.execution.finished_at,
       duration_seconds: state.execution.duration_seconds,
       agent_duration_seconds: state.execution.agent_duration_seconds,
@@ -659,7 +661,7 @@ async function captureIdentity(config, state, dependencies, observedRouteThreadI
       const now = dependencies.now();
       recordSession(state, selected.session, now);
       state.prompt.send_status = "sent";
-      state.prompt.sent_at ||= state.send.dispatch_completed_at || now;
+      state.prompt.sent_at ||= (state.execution.flow_profile === FLOW_TIMING_PROFILE ? state.send.dispatch_armed_at : null) || state.send.dispatch_completed_at || now;
       transition(state, "RUNNING", "NATIVE_IDENTITY_BOUND", {
         thread_id: selected.session.thread_id,
         turn_id: selected.session.turn_id,
@@ -710,7 +712,8 @@ async function finalize(config, state, session, classification, dependencies) {
   }
   state.execution.business_status = classification.businessStatus;
   state.execution.finished_at = now;
-  state.execution.duration_seconds = Math.max(
+  state.execution.duration_seconds = state.execution.flow_profile === FLOW_TIMING_PROFILE
+    ? flowTiming(state.prompt.sent_at, now).value : Math.max(
     0,
     (Date.parse(now) - Date.parse(state.execution.started_at)) / 1000,
   );
@@ -968,7 +971,7 @@ export async function executeSingleTask(config, overrides = {}) {
       }
       state.send.dispatch_completed_at = dependencies.now();
       state.prompt.send_status = "sent";
-      state.prompt.sent_at = state.send.dispatch_completed_at;
+      state.prompt.sent_at = state.send.dispatch_armed_at;
       state.send.post_send_route_thread_id = sendResult.thread_id
         || await dependencies.currentThreadId(client);
       transition(state, "RUNNING", "PROMPT_DISPATCH_RETURNED", {
@@ -1026,7 +1029,8 @@ export async function executeSingleTask(config, overrides = {}) {
     }
     state.execution.business_status = "infrastructure_error";
     state.execution.finished_at = dependencies.now();
-    state.execution.duration_seconds = Math.max(
+    state.execution.duration_seconds = state.execution.flow_profile === FLOW_TIMING_PROFILE
+      ? null : Math.max(
       0,
       (Date.parse(state.execution.finished_at) - Date.parse(state.execution.started_at)) / 1000,
     );

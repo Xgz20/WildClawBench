@@ -662,6 +662,7 @@ async function buildAndPersistPublicState(config, journal, binding, bindingEvide
     sessionSnapshot: binding.session_snapshot,
     history: binding.history,
     bindingEvidence,
+    observedAt: journal.native.last_observed_at,
   });
   state.extensions.client = {
     version: journal.runtime.client_version,
@@ -728,7 +729,7 @@ async function bindAndObserve(config, journal, dependencies, runtimeClient = nul
   journal.native.cwd = binding.session_snapshot.cwd;
   journal.native.last_observed_at = dependencies.now();
   journal.prompt.send_status = "sent";
-  journal.prompt.sent_at ||= journal.send.dispatch_returned_at || journal.send.dispatch_armed_at;
+  journal.prompt.sent_at ||= journal.send.dispatch_armed_at || journal.send.dispatch_returned_at;
   let evidence = await writeBindingEvidence(config, journal, binding);
   let state = await buildAndPersistPublicState(config, journal, binding, evidence);
   transition(journal, state.phase, "NATIVE_BINDING_OBSERVED", dependencies.now(), {
@@ -878,7 +879,7 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
       journal.send.dispatch_returned_at = dependencies.now();
       journal.send.post_send_dom_conversation_id = result?.selected_conversation_id || null;
       journal.prompt.send_status = "sent";
-      journal.prompt.sent_at = journal.send.dispatch_returned_at;
+      journal.prompt.sent_at = journal.send.dispatch_armed_at;
       transition(journal, "RUNNING", "PROMPT_DISPATCH_RETURNED", journal.send.dispatch_returned_at);
       await persistJournal(config, journal);
     } catch (error) {

@@ -101,6 +101,7 @@ export function buildQwenGeneralExecutionState({
   durationSeconds = null,
   cancellationConfirmed = null,
   terminalObservation = null,
+  flowTimingProfile = null,
   humanAssistance = null,
   runtimeIdentity = null,
   recovery = null,
@@ -186,6 +187,7 @@ export function buildQwenGeneralExecutionState({
       semantic_intervention_count: 0,
     },
     extensions: {
+      ...(flowTimingProfile ? { timing: { profile: flowTimingProfile } } : {}),
       qwenwork: {
         conversation_id: session?.conversation_id || null,
         sub_chat_id: session?.sub_chat_id || null,

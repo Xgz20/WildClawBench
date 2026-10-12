@@ -274,8 +274,8 @@ RESOURCE_FIELDS = [
     ("request_count", "usage", "模型请求数（非HTTP尝试）"),
     ("request_attempt_count", "usage", "HTTP尝试次数"),
     ("call_count", "tools", "工具调用数"),
-    ("duration_seconds", "execution", "执行流程耗时(s)"),
-    ("agent_duration_seconds", "execution", "智能体耗时(s)"),
+    ("duration_seconds", "execution", "流程耗时(s)"),
+    ("agent_duration_seconds", "execution", "任务耗时(s)"),
 ]
 
 
@@ -644,14 +644,14 @@ def spread_statement(rows: list[dict], value_getter, labels: dict[str, str]) -> 
 
 
 def append_resource_columns(headers, rows, units):
-    headers.extend(["输入Token", "输出Token", "缓存读取Token", "缓存写入Token", "智能体耗时(s)"])
+    headers.extend(["输入Token", "输出Token", "缓存读取Token", "缓存写入Token", "任务耗时(s)"])
     for row, unit in zip(rows, units):
         row.extend(unit.get(key) for key in ("total_input_tokens", "total_output_tokens", "total_cache_read_input_tokens", "total_cache_creation_input_tokens", "total_agent_duration_seconds"))
 
 
 def resource_coverage_markdown(units):
     lines = ["", "### 资源数据覆盖", "",
-             "总量仅在该指标覆盖全部用例时展示；已知小计包含部分记录，不代表完整总量。输入含缓存，推理输出是输出的子集，均不重复相加。总耗时沿用执行流程壁钟，智能体耗时单列。模型请求数不是包含所有失败重试的 HTTP 次数。后台与子智能体未关联的消耗不计入主任务。", ""]
+             "总量仅在该指标覆盖全部用例时展示；已知小计包含部分记录，不代表完整总量。输入含缓存，推理输出是输出的子集，均不重复相加。新计时 Profile 的流程耗时从 Prompt 发送至本机确认执行终态，排除发送前准备及评分、报告阶段；旧记录按原口径保留，历史边界调整须有独立补充审计。任务耗时来自原生轨迹，两者分别累计。模型请求数不是包含所有失败重试的 HTTP 次数。后台与子智能体未关联的消耗不计入主任务。", ""]
     rows = []
     for unit in units:
         for value in unit.get("resource_metrics", {}).values():
@@ -686,7 +686,7 @@ def render_artifactsbench_markdown(data: dict) -> str:
     ]
     overview_headers = [
         "模型", "Harness", "推理强度", "总平均分", "用例数", "正常完成数", "执行错误数", "超时数", "评测异常数",
-        "完成率", "总tokens", "总请求数", "总耗时(s)", "总成本(USD)", "工具调用数", "格式准确率",
+        "完成率", "总tokens", "总请求数", "流程耗时(s)", "总成本(USD)", "工具调用数", "格式准确率",
     ]
     overview_rows = [[
         item["model"], item["harness"], item["reasoning_effort"], item["total_average_score"], item["case_count"],
@@ -746,7 +746,7 @@ def render_markdown(data: dict) -> str:
     ]
     overview_headers = [
         "模型", "Harness", "推理强度", "总平均分", "美观度总分", "用例数", "正常完成数", "执行错误数", "超时数", "评测异常数",
-        "完成率", "总tokens", "总请求数", "总耗时(s)", "总成本(USD)", "工具调用数", "格式准确率",
+        "完成率", "总tokens", "总请求数", "流程耗时(s)", "总成本(USD)", "工具调用数", "格式准确率",
     ]
     overview_rows = [[
         item["model"], item["harness"], item["reasoning_effort"], item["total_average_score"], item["aesthetic_score"], item["case_count"],

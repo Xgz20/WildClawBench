@@ -6,9 +6,10 @@ import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
 import { readBoundNativeEvidence, readRegular } from "../../vendor/e2e-shared/doubaowork/bound-evidence.mjs";
 import { countBoundTools } from "../../vendor/e2e-shared/doubaowork/tool-counts.mjs";
+import { FLOW_TIMING_PROFILE, flowTiming } from "../../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
 export { verifyTrajectoryPrompt, verifyRecoveredDispatchAcknowledgement } from "../../vendor/e2e-shared/doubaowork/bound-evidence.mjs";
 
-const ADAPTER = "doubaowork-native-evidence", VERSION = "0.2.10";
+const ADAPTER = "doubaowork-native-evidence", VERSION = "0.3.0";
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 const json = value => Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
 const artifact = (path, bytes, extra = {}) => ({ path, sha256: sha(bytes), size: bytes.length, ...extra });
@@ -57,6 +58,8 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const bindings = [binding, dispatchBinding];
   const response = await write("final-response.txt", finalBytes);
   const session = { thread_id: null, turn_id: native.reply_message_id, session_id: native.conversation_id, cwd: workspace, lifecycle_generation: null };
+  const controllerFinishedAt = nonSuccess?.observed_at ?? runtime.observed_at;
+  const flow = flowTiming(journal.timing.sent_at, controllerFinishedAt);
   const state = {
     schema_version: "wildclawbench.general-e2e-execution-state/v1",
     driver: { id: "doubaowork-macos-general", version: VERSION, harness: "doubaowork", platform: manifest.unit.harness.platform },
@@ -65,15 +68,14 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
     send: { dispatch_attempt_count: 1 },
     session: { thread_id: null, turn_id: native.reply_message_id, session_id: native.conversation_id, cwd: workspace, verified: true,
       binding_evidence: bindings.map(row => ({ ...row, path: relative(unitRoot, join(outputRoot, row.path)) })) },
-    execution: { business_status: nonSuccess?.business_status ?? "completed", started_at: journal.timing.sent_at, finished_at: nonSuccess?.observed_at ?? native.finished_at,
-      duration_seconds: nonSuccess ? (Date.parse(nonSuccess.observed_at) - Date.parse(journal.timing.sent_at)) / 1000
-        : lifecycle?.status === "observed" ? lifecycle.duration_seconds : native.raw_terminal.profile === "native-im-api-history/v1" ? null
-        : (Date.parse(native.finished_at) - Date.parse(journal.timing.sent_at)) / 1000,
+    execution: { business_status: nonSuccess?.business_status ?? "completed", started_at: journal.timing.sent_at, finished_at: controllerFinishedAt,
+      duration_seconds: flow.value,
       error: failure ? { code: "DOUBAOWORK_NATIVE_FAILURE", message: "Bound native transport failure confirmed by Error status and idle runtime" }
         : cancellation ? { code: "DOUBAOWORK_CANCELLED", message: "Bound native Stop confirmed by Broken status and idle runtime" } : null,
       cancellation_confirmed: cancellation ? true : null },
     human_assistance: { mode: "automatic", operation_count: 0, semantic_intervention_count: 0 },
     extensions: { evidence: { final_response_path: relative(unitRoot, join(outputRoot, response.path)), final_response_sha256: response.sha256 },
+      timing: { profile: FLOW_TIMING_PROFILE },
       client: { version: journal.client.version, model: journal.actual.model, reasoning: manifest.unit.model.reasoning_effort },
       doubaowork: { native_sources: native.sources, native_request_session_id: native.native_request_session_id,
         raw_terminal: native.raw_terminal, agent_duration_seconds: native.agent_duration_seconds, source_journal_sha256: sha(journalBytes),
@@ -164,10 +166,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const metrics = { usage: Object.fromEntries(usageFields.map(k => [k, metric()])), requests: { request_count: metric(), request_attempt_count: metric() },
     tools: { call_count: toolCountKnown ? metric(knownToolSubtotal, toolCounts?.basis || "Union of bound local-tool protocol and session trajectory; native call IDs deduplicated with retained raw provenance")
       : { value: null, status: "partial", basis: "Unique calls in the bound trajectory; provider total coverage unknown" } },
-    timing: { duration_seconds: metric(state.execution.duration_seconds, nonSuccess ? "Dispatch to observed native terminal and idle runtime; includes controller observation delay, not agent runtime"
-      : lifecycle?.status === "observed" ? `Dispatch boundary to ${lifecycle.source}` : native.raw_terminal.profile === "native-im-api-history/v1"
-      ? "Unavailable: client dispatch and native server finish have different clock domains"
-      : `Dispatch boundary to ${native.sources.finished_at}`), agent_duration_seconds: metric(native.agent_duration_seconds, "Native elapsed_block end_time_s - start_time_s") } };
+    timing: { duration_seconds: flow, agent_duration_seconds: metric(native.agent_duration_seconds, "Native elapsed_block end_time_s - start_time_s") } };
   const flat = { ...metrics.usage, ...metrics.requests, ...metrics.tools, ...metrics.timing };
   const resource = { schema_id: "urn:wildclawbench:schema:general-e2e:resource-metrics:v1", schema_version: 1, identity, metrics,
     collection: { collector: ADAPTER, version: VERSION, status: "partial", collected_at: new Date().toISOString(),

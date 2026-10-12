@@ -14,6 +14,7 @@ import {
 } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { FLOW_TIMING_PROFILE, flowTiming } from "../resource-metrics/flow-timing.mjs";
 import { ROLLOUT_PATH, analyzeIndexedRollout } from "./astronstudio-rollout.mjs";
 
 export const RESOURCE_SCHEMA = "urn:wildclawbench:schema:general-e2e:resource-metrics:v1";
@@ -426,7 +427,8 @@ function parseToolMetric(rows, traceIndex, knownSubtotals, coverages, metricSour
 }
 
 function parseTimingMetrics(rows, state, knownSubtotals, coverages, metricSources) {
-  const start = state.execution.started_at;
+  const modernFlow = state.execution.flow_profile === FLOW_TIMING_PROFILE;
+  const start = modernFlow ? state.prompt.sent_at : state.execution.started_at;
   const finish = state.execution.finished_at;
   const calculatedDuration = typeof finish === "string" ? elapsedSeconds(start, finish) : null;
   const recordedDuration = typeof state.execution.duration_seconds === "number"
@@ -439,13 +441,13 @@ function parseTimingMetrics(rows, state, knownSubtotals, coverages, metricSource
     throw new Error("EXECUTION_DURATION_MISMATCH");
   }
   const duration = recordedDuration ?? calculatedDuration;
-  const durationMetric = metric(
+  const durationMetric = modernFlow ? flowTiming(start, finish) : metric(
     duration,
     duration == null ? "unavailable" : "observed",
     "execution driver wall clock from attempt start through terminal observation",
   );
   coverages.duration_seconds = coverage(duration == null ? 0 : 1, 1, "attempt");
-  metricSources.duration_seconds = ["execution/automation-state.json#/execution"];
+  metricSources.duration_seconds = modernFlow ? ["execution/automation-state.json#/prompt/sent_at", "execution/automation-state.json#/execution/finished_at"] : ["execution/automation-state.json#/execution"];
 
   const starts = rows.filter((row) => row.event_type === "turn.started");
   const finishes = rows.filter((row) => row.event_type === "turn.completed");

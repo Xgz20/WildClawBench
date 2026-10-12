@@ -642,6 +642,34 @@ class DoubaoResourceProjectionTests(unittest.TestCase):
             with self.assertRaisesRegex(REPORT.ReportError, "SOURCE_DRIFT"):
                 REPORT.doubao_resource_projection(root, execution, metrics, path)
 
+    def test_controller_flow_preserves_missing_and_zero_but_rejects_conflicting_metric(self):
+        profile = "prompt-send-to-controller-terminal/v1"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            execution, metrics, path = self.fixture(root, complete=True)
+            metrics["metrics"]["tools"]["call_count"]["value"] = 0
+            state_path = path.parent / "execution/automation-state.json"
+            state = json.loads(state_path.read_text())
+            state["extensions"]["timing"] = {"profile": profile}
+            state["prompt"] = {"sent_at": "2026-10-12T00:00:00Z"}
+            for finish, expected in [(None, None), ("2026-10-12T00:00:00Z", 0),
+                                     ("2026-10-12T00:00:03.125Z", 3.125)]:
+                state["execution"] = {"finished_at": finish}
+                write_json(state_path, state)
+                source = next(row for row in metrics["collection"]["sources"]
+                              if row["path"] == "execution/automation-state.json")
+                source.update(sha256=sha256(state_path), size=state_path.stat().st_size)
+                metric = metrics["metrics"]["timing"]["duration_seconds"]
+                metric.update(value=expected, status="unavailable" if expected is None else "observed",
+                              basis=profile + ": same-host dispatch to terminal observation")
+                projected, adjustments, comparable = REPORT.doubao_resource_projection(root, execution, metrics, path)
+                self.assertEqual(projected["metrics"]["timing"]["duration_seconds"], metric)
+                self.assertEqual(adjustments, [])
+                self.assertTrue(comparable)
+                metric["value"] = 1 if expected is None else expected + 1
+                with self.assertRaisesRegex(REPORT.ReportError, "CONTROLLER_TIMING_MISMATCH"):
+                    REPORT.doubao_resource_projection(root, execution, metrics, path)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -15,6 +15,7 @@ import { mapDoubaoAssessmentToWebReceiptBridge } from "./receipt-bridge.mjs";
 import { snapshotTree, atomicWriteJson, createExecutionRecord } from "../workbuddy/lib.mjs";
 import { buildExecutionReceipt } from "../workbuddy/batch.mjs";
 import { empty, setMetric } from "../metrics/parsers.mjs";
+import { flowTiming } from "../../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
 const sha = value => createHash("sha256").update(value).digest("hex");
 const json = value => Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
 const profile = { id: "doubaowork", displayName: "DoubaoWork" };
@@ -47,12 +48,13 @@ export function projectWebMetrics(proof, calls) {
     }
   }
   setMetric(result, "execution", "agent_duration_seconds", proof.native.agent_duration_seconds, "observed", "Native elapsed_block duration");
-  const duration = proof.nonSuccess ? (Date.parse(proof.nonSuccess.observed_at) - Date.parse(proof.journal.timing.sent_at)) / 1000
+  const flow = proof.controllerObservedAt ? flowTiming(proof.journal.timing.sent_at, proof.controllerObservedAt) : null;
+  const duration = flow ? flow.value : proof.nonSuccess ? (Date.parse(proof.nonSuccess.observed_at) - Date.parse(proof.journal.timing.sent_at)) / 1000
     : proof.lifecycle?.status === "observed" ? proof.lifecycle.duration_seconds
     : proof.native.raw_terminal.profile === "native-im-api-history/v1" ? null
     : (Date.parse(proof.native.finished_at) - Date.parse(proof.journal.timing.sent_at)) / 1000;
   if (duration !== null && (!Number.isFinite(duration) || duration < 0)) throw new Error("DOUBAOWORK_WEB_INVALID_TIMING");
-  result.collection.metrics.duration_seconds = { status: duration === null ? "unavailable" : "observed",
+  result.collection.metrics.duration_seconds = flow ?? { status: duration === null ? "unavailable" : "observed",
     basis: proof.nonSuccess ? "Dispatch to terminal observation; includes observer delay, not agent runtime"
       : proof.lifecycle?.status === "observed" ? proof.lifecycle.source : duration === null ? "Different native and controller clock domains" : proof.native.sources.finished_at };
   result.collection.tool_coverage = { numerator: knownSubtotal, denominator: known ? calls : null };
@@ -148,7 +150,7 @@ export async function finalizeWebObservation({ state, record, outputDir, stateFi
     { type: "assistant_message", content: proof.native.final_text, source: "raw/runtime-messages.json" }];
   await write("transcript.jsonl", Buffer.from(transcript.map(row => JSON.stringify(row)).join("\n") + "\n"));
   const callIds = new Set([...proof.nativeCalls.keys(), ...proof.remoteCalls.map(row => row.call_id)]);
-  const metrics = projectWebMetrics({ ...proof, journal: state }, callIds.size);
+  const metrics = projectWebMetrics({ ...proof, journal: state, controllerObservedAt: record.observed_at }, callIds.size);
   metrics.collection.sources = raw.map(row => ({ ...row, path: relative(config.taskRoot, join(evidenceRoot, row.path)) }));
   await write("resource-metrics.json", json(metrics));
   await write("finalizer.json", json({ assessment, bridge, cleanup }));
@@ -159,7 +161,7 @@ export async function finalizeWebObservation({ state, record, outputDir, stateFi
     multimodal_result_content_unverified: proof.multimodalBypassCount }));
   await assertStable(config, state, stateFile, journalBytes, proof, candidate);
   const phase = proof.nonSuccess ? "INFRA_FAILED" : "SUCCEEDED";
-  const finishedAt = proof.nonSuccess?.observed_at ?? proof.native.finished_at;
+  const finishedAt = record.observed_at;
   const formalState = { ...state, phase, terminal: true, driver: { ...state.driver, version: DRIVER_VERSION },
     timing: { ...state.timing, started_at: state.timing.sent_at, finished_at: finishedAt, duration_seconds: metrics.duration_seconds },
     model_selection: { mode: "current", actual_model: model, method: "native-ui-readback" },

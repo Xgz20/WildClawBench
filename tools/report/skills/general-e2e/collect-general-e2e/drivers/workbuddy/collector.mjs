@@ -365,6 +365,7 @@ export async function collectWorkBuddyEvidence(options) {
     if (runtimeEvidence) {
       resource = applyWorkBuddyTiming(resource, {
         snapshot: runtimeEvidence.value.runtime_snapshot, session: state.session, prompt: state.prompt,
+        controllerTiming: { profile: state.extensions?.timing?.profile, observed_at: state.execution.finished_at },
       }, [artifact("execution/automation-state.json", collectedStateBytes),
         artifact(`trace/${runtimeEvidence.target}`, await readFile(runtimeEvidence.source.path))]);
     }

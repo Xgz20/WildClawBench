@@ -24,7 +24,8 @@ import {
 
 export const AUTOMATION_SCHEMA = "wildclawbench.web-e2e-automation-state/v1";
 export const EXECUTION_SCHEMA = "wildclawbench.web-e2e-execution/v1";
-export const DRIVER_VERSION = "1.10.1";
+import { FLOW_TIMING_PROFILE, FLOW_TIMING_BASIS } from "../../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
+export const DRIVER_VERSION = "1.10.2";
 export const DEFAULT_APP_PATH = defaultWorkBuddyAppPath();
 export const DEFAULT_BUNDLE_ID = MACOS_BUNDLE_ID;
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9229";
@@ -576,7 +577,8 @@ export async function updateExecutionRecord(config, identityInfo, update, profil
     record.execution.agent_duration_seconds = metrics.execution.agent_duration_seconds;
     metrics.collection.metrics.duration_seconds = {
       status: Number.isFinite(record.execution.duration_seconds) && record.execution.duration_seconds >= 0 ? "observed" : "unavailable",
-      basis: "driver wall clock; includes UI setup and terminal cleanup",
+      basis: update.flowTimingProfile === FLOW_TIMING_PROFILE ? FLOW_TIMING_BASIS : "driver wall clock; includes UI setup and terminal cleanup",
+      ...(update.flowTimingProfile === FLOW_TIMING_PROFILE ? { profile: FLOW_TIMING_PROFILE } : {}),
     };
   }
   if (update.transcriptPath) record.artifacts.harness_transcript = relative(config.workspace, update.transcriptPath).split("\\").join("/");
@@ -628,7 +630,7 @@ export function createInitialState(config, identity, initialSnapshot, profile = 
       updated_at_ms: null,
       baseline: [],
     },
-    timing: { prepared_at: now, started_at: null, sent_at: null, finished_at: null, duration_seconds: null },
+    timing: { prepared_at: now, started_at: null, sent_at: null, finished_at: null, duration_seconds: null, flow_profile: FLOW_TIMING_PROFILE },
     runtime: {
       driver_pid: process.pid,
       driver_started_at: now,

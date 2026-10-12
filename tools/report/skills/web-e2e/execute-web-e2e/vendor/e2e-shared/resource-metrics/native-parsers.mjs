@@ -1,7 +1,8 @@
 // Native counters only: missing, masked, partial, or conflicting values never
 // become a measured zero. Scenario adapters supply their output profile.
 export const COMPONENT_NAME = "resource-metrics";
-export const COMPONENT_VERSION = "1.0.0";
+import { nativeDurationSeconds } from "./flow-timing.mjs";
+export const COMPONENT_VERSION = "1.1.0";
 export const TOKEN_KEYS = Object.freeze([
   "input_tokens",
   "output_tokens",
@@ -180,6 +181,7 @@ export function createNativeResourceMetricParsers(inputProfile) {
     let baseline = null;
     let started = null;
     let finished = null;
+    let durationMs = null;
     let last = null;
     const advances = [];
     const calls = new Set();
@@ -210,6 +212,7 @@ export function createNativeResourceMetricParsers(inputProfile) {
       }
       if (active && row.type === "event_msg" && payload.type === "task_complete" && payload.turn_id === turnId) {
         finished = row.timestamp;
+        durationMs = payload.duration_ms;
         break;
       }
     }
@@ -267,10 +270,11 @@ export function createNativeResourceMetricParsers(inputProfile) {
       result,
       "execution",
       "agent_duration_seconds",
-      elapsed(started, finished),
+      finished ? nativeDurationSeconds(durationMs) : null,
       "observed",
-      "native task_started to task_complete",
+      "Bound rollout terminal payload.duration_ms / 1000; native task duration, excluding evaluator preparation and terminal observation delay",
     );
+    if (finished && nativeDurationSeconds(durationMs) === null) result.collection.warnings.push("ROLLOUT_NATIVE_DURATION_UNAVAILABLE");
     if (!reconciled) result.collection.warnings.push("REQUEST_COUNT_NOT_RECONCILED");
     if (!finished) result.collection.warnings.push("INCOMPLETE_NATIVE_TURN");
     return result;

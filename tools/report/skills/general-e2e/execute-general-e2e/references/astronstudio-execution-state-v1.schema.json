@@ -138,6 +138,7 @@
         "started_at": {"type": "string", "format": "date-time"},
         "finished_at": {"$ref": "#/$defs/nullableString"},
         "duration_seconds": {"type": ["number", "null"], "minimum": 0},
+        "flow_profile": {"const": "prompt-send-to-controller-terminal/v1"},
         "agent_duration_seconds": {"type": ["number", "null"], "minimum": 0},
         "deadline_at": {
           "type": ["string", "null"],

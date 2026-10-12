@@ -1,7 +1,8 @@
 import { isAdmittedQwenTokenProfile } from "./token-profile.mjs";
+import { FLOW_TIMING_PROFILE, flowTiming } from "../../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
 
 export const QWENWORK_COLLECTOR_ADAPTER_ID = "qwenwork-native-general";
-export const QWENWORK_COLLECTOR_VERSION = "0.1.5";
+export const QWENWORK_COLLECTOR_VERSION = "0.1.6";
 export const RESOURCE_SCHEMA = "urn:wildclawbench:schema:general-e2e:resource-metrics:v1";
 const TOKEN_FIELDS = Object.freeze([
   "input_tokens",
@@ -287,6 +288,9 @@ export function buildQwenStrictResourceMetrics({
   if (finishes.length !== 1 && !(interrupted && finishes.length === 0)) throw new Error(`QWENWORK_MAIN_TURN_FINISH_COUNT: ${finishes.length}`);
   const finish = finishes[0];
   const duration = typeof state.execution?.duration_seconds === "number" ? state.execution.duration_seconds : NaN;
+  const controllerFlow = state.extensions?.timing?.profile === FLOW_TIMING_PROFILE
+    ? flowTiming(state.prompt?.sent_at, state.execution?.finished_at) : null;
+  if (controllerFlow && controllerFlow.value !== (Number.isFinite(duration) ? duration : null)) throw new Error("QWENWORK_CONTROLLER_TIMING_MISMATCH");
   const agentDuration = typeof finish?.data?.duration_ms === "number" ? finish.data.duration_ms / 1000 : NaN;
   const refs = sources.map((source) => source.path);
   const tokenFields = ["input_tokens", "output_tokens", "cache_read_input_tokens"];
@@ -401,7 +405,7 @@ export function buildQwenStrictResourceMetrics({
       },
       timing: {
         duration_seconds: Number.isFinite(duration) && duration >= 0
-          ? metric(duration, "observed", interrupted ? "Dispatch to observed native interruption, including recovery downtime; not agent runtime" : "CB-A execution state wall-clock duration")
+          ? controllerFlow ?? metric(duration, "observed", interrupted ? "Dispatch to observed native interruption, including recovery downtime; not agent runtime" : "CB-A execution state wall-clock duration")
           : metric(null, "unavailable", "CB-A execution duration unavailable"),
         agent_duration_seconds: Number.isFinite(agentDuration) && agentDuration >= 0
           ? metric(agentDuration, "observed", "SDK turn.finished.duration_ms")

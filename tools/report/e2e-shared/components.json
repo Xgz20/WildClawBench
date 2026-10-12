@@ -13,7 +13,7 @@
     },
     {
       "name": "workbuddy-jsonl-metrics",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "source_root": "tools/report/e2e-shared/workbuddy-jsonl-metrics",
       "vendor_root": "vendor/e2e-shared/workbuddy-jsonl-metrics",
       "entrypoints": [
@@ -62,12 +62,13 @@
     },
     {
       "name": "resource-metrics",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "source_root": "tools/report/e2e-shared/resource-metrics",
       "vendor_root": "vendor/e2e-shared/resource-metrics",
       "entrypoints": [
         "native-parsers.mjs",
-        "trace-io.mjs"
+        "trace-io.mjs",
+        "flow-timing.mjs"
       ]
     },
     {
@@ -156,7 +157,7 @@
     },
     {
       "name": "general-resource-supplements",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "source_root": "tools/report/e2e-shared/general-resource-supplements",
       "vendor_root": "vendor/e2e-shared/general-resource-supplements",
       "entrypoints": [

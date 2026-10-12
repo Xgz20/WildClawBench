@@ -4,9 +4,9 @@
 
 ## 支持范围和口径
 
-| Harness | 输入 / 输出 / 总 Token | 缓存 | 模型请求数 | 工具次数 | 智能体耗时 |
+| Harness | 输入 / 输出 / 总 Token | 缓存 | 模型请求数 | 工具次数 | 任务耗时 |
 | --- | --- | --- | --- | --- | --- |
-| AstronStudio | 原生目标 turn 累计值减前轮基线 | 读取量是输入子集；写入量未知 | 推导值：与增量 usage 对账的累计快照推进次数 | 唯一原生 call_id | task_started 到 task_complete |
+| AstronStudio | 原生目标 turn 累计值减前轮基线 | 读取量是输入子集；写入量未知 | 推导值：与增量 usage 对账的累计快照推进次数 | 唯一原生 call_id | 绑定 rollout 终态 payload.duration_ms / 1000 |
 | WorkBuddy | 原生 messageId 去重的 usage | 读取量是输入子集；写入量未知 | 唯一已持久化响应 ID 数 | 唯一 callId，不含 result | 首个人工消息到最终助手消息，标记 inferred |
 | QwenWork | 默认隐藏；已验运行时中逐响应非零 usage 与主 turn 终值对账后可用；未知组合保留 unverified | 读取量是输入子集；写入量未知 | 主 turn 的 model.request.started ID 数 | 主 turn 的 tool.requested ID 数 | SDK turn.finished.duration_ms |
 
@@ -22,7 +22,7 @@
 
 - `usage`：`input_tokens`、`output_tokens`、`total_tokens`、`cache_read_input_tokens`、`cache_creation_input_tokens`、`reasoning_output_tokens`、`request_count`、`request_attempt_count`。
 - `tools.call_count`：原生工具调用次数。
-- `execution.duration_seconds`：沿用执行控制流程壁钟时间，包含 UI 操作和终态收口。
+- `execution.duration_seconds`：新 Profile 使用 Prompt 发送至本机确认执行终态，排除发送前 UI 准备及评分、报告；暂停与观察等待包含在内。旧冻结记录不静默改写。
 - `execution.agent_duration_seconds`：原生任务耗时或明确标注的推导耗时。
 - `usage.collection`：采集器版本、每指标 `status` / `basis`、`sources` 哈希、会话/attempt、警告、后台操作与排除范围；存在不完整 usage 时可提供 `known_subtotals`，不冒充完整总量。
 

@@ -3,6 +3,8 @@ name: execute-web-e2e
 description: 在 AstronStudio、WorkBuddy、QwenWork、DoubaoWork 等桌面 Harness 中执行单个或批量 Web E2E 用例，持久化可恢复状态、终态证据和 execution_record；用于自动做题阶段，不负责评分或报告。
 ---
 
+`1.22.0` 新执行的流程耗时统一为 Prompt 发送至本机确认执行终态。旧未终态状态继续沿其旧计时 Profile 恢复，不改变一次发送、超时或评分门禁。AstronStudio 任务耗时直接使用绑定 rollout 的终态 `payload.duration_ms / 1000`；缺失不按日志起止时间差回填。
+
 `1.21.25` / AstronStudio Driver `1.12.11` 识别 3.5.0 的精确“切换任务侧边栏”操作按钮，并优先于同屏边缘 rail；仍核验点击可达且拒绝多个可达操作按钮。General 采用相同恢复规则，已发送任务仍只观察原会话。
 
 DoubaoWork 2.31.10 的队列滚动轨迹复用共用证据核心：只接纳已验证 dispatcher Profile 与精确源码 SHA，不继承旧 emitter 的跨来源时钟证明；原件和捕获时间保留，无法核实的工具顺序保持 partial。

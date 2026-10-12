@@ -1,8 +1,9 @@
 import { resolve } from "node:path";
+import { FLOW_TIMING_PROFILE, flowTiming } from "../../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
 
 export const WORKBUDDY_EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-execution-state/v1";
 export const WORKBUDDY_DRIVER_ID = "workbuddy-macos-general";
-export const WORKBUDDY_DRIVER_VERSION = "0.3.0";
+export const WORKBUDDY_DRIVER_VERSION = "0.3.1";
 
 const SUCCESS_STATES = new Set(["complete", "completed", "success", "succeeded"]);
 const FAILURE_STATES = new Set(["failed", "failure", "error", "errored"]);
@@ -60,6 +61,7 @@ export function buildWorkBuddyExecutionState({
   sessionSnapshot,
   history,
   bindingEvidence,
+  observedAt = null,
   cancellationConfirmed = false,
   humanAssistance = { mode: "automatic", operation_count: 0, semantic_intervention_count: 0 },
 }) {
@@ -138,10 +140,10 @@ export function buildWorkBuddyExecutionState({
     };
   }
 
-  const startedAt = isoFromEpoch(history.request?.startedAt ?? history.request?.timestamp)
+  const startedAt = observedAt ? isoTimestamp(prompt.sent_at) : isoFromEpoch(history.request?.startedAt ?? history.request?.timestamp)
     || isoTimestamp(prompt.sent_at);
   const finishedAt = new Set(["COMPLETED", "FAILED"]).has(phase)
-    ? (isoFromEpoch(history.request?.completedAt ?? history.request?.finishTimestamp)
+    ? (observedAt || isoFromEpoch(history.request?.completedAt ?? history.request?.finishTimestamp)
       || isoTimestamp(history.conversation?.lastMessageAt))
     : null;
   return {
@@ -178,7 +180,7 @@ export function buildWorkBuddyExecutionState({
       business_status: businessStatus,
       started_at: startedAt,
       finished_at: finishedAt,
-      duration_seconds: durationSeconds(startedAt, finishedAt),
+      duration_seconds: observedAt ? flowTiming(startedAt, finishedAt).value : durationSeconds(startedAt, finishedAt),
       error,
       cancellation_confirmed: phase === "FAILED" && businessStatus === "cancelled"
         ? true
@@ -186,6 +188,7 @@ export function buildWorkBuddyExecutionState({
     },
     human_assistance: humanAssistance,
     extensions: {
+      ...(observedAt ? { timing: { profile: FLOW_TIMING_PROFILE } } : {}),
       workbuddy: {
         identity_mapping: {
           thread_id: null,

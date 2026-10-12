@@ -413,8 +413,8 @@ validation_records:
 
 开发在当前仓库工作区 `feature/astroncode-eval` 串行进行，不恢复旧协作档案的派发、平台 worktree 或人工桌面排期。评测运行仍可使用已验的执行/评分并发。当前用户约定：调试产物置于 `/Users/gzx/debug-workspace/e2e-evaluate`，正式分发置于仓库 `report-workspace`，不 push，不主动重启承载控制的 Codex Desktop。
 
-- General 源码 Skill 版本：`collect-general-e2e 0.9.14`、`execute-general-e2e 0.13.17`、`orchestrate-general-e2e 0.11.4`、`prepare-general-e2e-workspaces 0.3.2`、`report-general-e2e 0.7.13`、`run-general-e2e 0.7.0`、`score-general-e2e 0.10.4`。
-- Web 源码 Skill 版本：`execute-web-e2e 1.21.29`、`orchestrate-web-e2e 0.3.27`、`prepare-web-e2e-workspaces 4.4.0`、`report-web-e2e 1.2.0`、`run-web-e2e 1.4.4`、`score-web-e2e 4.5.5`。上述为源码当前值，各验证批次仍绑定自身冻结包及内容 SHA。4.5.5 仅补原生确认框公开 API 的并行点击/句柄观察指引，既有冻结评分 Skill、Prompt 和 General 运行代码不改写。
+- General 源码 Skill 版本：`collect-general-e2e 0.10.0`、`execute-general-e2e 0.14.0`、`orchestrate-general-e2e 0.11.4`、`prepare-general-e2e-workspaces 0.3.2`、`report-general-e2e 0.8.0`、`run-general-e2e 0.7.0`、`score-general-e2e 0.10.4`。
+- Web 源码 Skill 版本：`execute-web-e2e 1.22.0`、`orchestrate-web-e2e 0.3.27`、`prepare-web-e2e-workspaces 4.4.0`、`report-web-e2e 1.4.1`、`run-web-e2e 1.4.4`、`score-web-e2e 4.5.5`。上述为源码当前值，各验证批次仍绑定自身冻结包及内容 SHA。4.5.5 仅补原生确认框公开 API 的并行点击/句柄观察指引，既有冻结评分 Skill、Prompt 不改写。当前执行与采集 Skill 统一新流程耗时口径；report-web-e2e 1.4.1 调整 Excel 表头、排序及有标识的 Token 小计展示，任务耗时位于流程耗时前，正式资源 total、裁判和旧评分保持。
 
 - General `selected_report.py` 支持同一单元逐题明确选择多份标准回传包，校验每来源 SHA、范围和 Harness/模型/执行模式。仅报告路径完成适配；`build_developer_bundle.py` 与 `archive_round.py` 的多来源开发导出/归档入口尚未适配，不由这次五题报告结果推定通过。
 
@@ -632,3 +632,5 @@ DoubaoWork 2.31.10 / 自动 高 / 全部允许五题各发送一次，全部原�
 同批次最终收口：QwenWorkCN 1.2.5 / 标准 / full-access 的001、031、033、035、028五题均正式SUCCEEDED，执行回执integrity.valid=true，每题Prompt只发送一次。主任务原生model.request.started至model.response.completed的三题重叠和Codex原生评分turn峰值3均已留证；五个独立Browser分别核验自身codexSessionId并READY。五题均以首个gpt-6.1-sol/high评分attempt完成，原生turn_context逐题核实；功能均分96.92、美观均分91.43、完成率100%。submission、完整return ZIP、管理员import及同内容幂等导入、JSON/Markdown/四Sheet Excel和逐表预览均通过，公式错误0。模型请求340、工具355、执行流程14624.228秒、原生智能体13367.135秒均5/5覆盖；031请求/响应不完全对账，正式Token总量仍null，完整覆盖4/5，37857053的原生已知小计仅以诊断小计展示，成本/缓存写入/HTTP尝试仍unavailable。033原问卷等待计入真实耗时；磁盘提示、导航恢复和原始来源追加后的精确SHA前缀恢复审计均保留。准入为本机五题值守及受控恢复范围PASSED_SCOPED，不能外推全部60题、无人值守或十题正式批次。材料位于同目录acceptance-status-final-r1.json、report-verification-r1.json、offline-return-r1和report-r1；General源码、生产Skill安装与round1未替换。
 
 四端Web接续复核：AstronStudio 3.5.0新五题全流程已完成；WorkBuddy 5.5.6原快速五题按已记录复用范围保留。DoubaoWork 2.31.10 / 自动 高 / 全部允许的原五题评分、submission、return ZIP及报告哈希均复核未变，当前只读CDP/进程身份/GUI/配置检查通过，共用核心0.8.7对五份正式Web终态证据只读回放全部通过。controller、runtime-dispatcher、runtime-tools、bound-evidence、lib五个共用文件与后续General真机验收冻结文件逐字节一致；Web Driver、finalizer、formal、评分终结器及报告脚本与原Web基线一致。原局部工具轨迹仍partial、Token/请求等仍保留缺失，不新增Web Prompt或评分，不重写旧裁判、budget和失败现场。复核为REUSE_PRIOR_LIVE_ACCEPTANCE_SCOPED，证据位于上述Qwen批次目录doubao-reuse-review-r1/review.json；四端五题流程可在各自明确的值守及受控恢复范围投入使用，十题正式批次尚未启动。
+
+2026-10-12 耗时口径统一：新 General/Web 执行采用共用 `prompt-send-to-controller-terminal/v1` Profile，流程耗时由 Prompt 发送开始至本机确认执行终态计算，排除发送前 UI/客户端准备和后续评分、报告。任务耗时直接来自各 Harness 原生主任务记录；AstronStudio 两场景均使用绑定 rollout 终态 `payload.duration_ms / 1000`，缺失不从日志行时间差补齐。内部 `duration_seconds` / `agent_duration_seconds` 保持兼容，仅展示名称统一为流程耗时/任务耗时；两者均为逐题累加，不能替代批次墙钟。旧冻结回执、评分与资源原件保持原 SHA，历史报告的边界调整必须通过显式、有原件身份和哈希的独立补充审计，不能按当前代码升级旧通过结论。

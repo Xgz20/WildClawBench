@@ -7,6 +7,7 @@ import { dirname, resolve, join, sep, isAbsolute } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { nativeDurationSeconds } from '../resource-metrics/flow-timing.mjs';
 
 export const ROLLOUT_PATH = 'raw/astronstudio-rollout.jsonl';
 export const SUPPLEMENT_SCHEMA = 'wildclawbench.astronstudio-rollout-supplement/v1';
@@ -157,7 +158,7 @@ export function analyzeRollout(bytes, state, {profileVersion=ROLLOUT_METRICS_PRO
   ensure(durations.size<=1,'ROLLOUT_DURATION_AMBIGUOUS');
   const duration=terminals[0]?.duration_ms??null;
   result.metrics.usage=usage;
-  result.metrics.timing={agent_duration_seconds:{value:duration===null?null:duration/1000,status:duration===null?'unavailable':'observed',
+  result.metrics.timing={agent_duration_seconds:{value:nativeDurationSeconds(duration),status:duration===null?'unavailable':'observed',
     basis:'Bound rollout terminal payload.duration_ms / 1000; native task duration, excluding evaluator preparation and terminal observation delay'}};
   coverage.agent_duration_seconds={known:duration===null?0:1,total:1,unit:'turn'};
   sources.agent_duration_seconds=terminals.map(t=>`trace/${ROLLOUT_PATH}#L${t.line}`);

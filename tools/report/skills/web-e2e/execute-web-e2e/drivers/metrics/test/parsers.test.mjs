@@ -60,10 +60,19 @@ const event = (type, payload, timestamp = "2026-09-16T00:00:00Z") => ({ type: "e
 const counts = { input_tokens: 10, output_tokens: 2, total_tokens: 12, cached_input_tokens: 5, reasoning_output_tokens: 1 };
 const token = (total = counts, last = counts) => event("token_count", { info: { total_token_usage: total, last_token_usage: last } });
 test("Astron 累计快照重复不计请求，缓存和思考不重复加总", () => {
-  const rows = [event("task_started", { turn_id: "turn" }), token(), token(), event("task_complete", { turn_id: "turn" }, "2026-09-16T00:00:05Z")];
+  const rows = [event("task_started", { turn_id: "turn" }), token(), token(), event("task_complete", { turn_id: "turn", duration_ms: 4234 }, "2026-09-16T00:00:05Z")];
   const result = parseAstron(rows, "turn");
   assert.equal(result.usage.total_tokens, 12); assert.equal(result.usage.request_count, 1);
-  assert.equal(result.execution.agent_duration_seconds, 5);
+  assert.equal(result.execution.agent_duration_seconds, 4.234);
+});
+test("Astron 原生 duration_ms 缺失不从日志时间差回填，真实零保留", () => {
+  const rows = [event("task_started", { turn_id: "turn" }), token(), event("task_complete", { turn_id: "turn" }, "2026-09-16T00:00:05Z")];
+  for (const value of [undefined, null, -1, "5000", 1.5]) {
+    rows.at(-1).payload.duration_ms = value;
+    assert.equal(parseAstron(rows, "turn").execution.agent_duration_seconds, null);
+  }
+  rows.at(-1).payload.duration_ms = 0;
+  assert.equal(parseAstron(rows, "turn").execution.agent_duration_seconds, 0);
 });
 test("Astron 按 turn 减去前轮基线，缺终态标为 partial", () => {
   const doubled = Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, v * 2]));

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
+import { FLOW_TIMING_PROFILE, flowTiming } from "../../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
 import { captureResourceMetrics } from "../metrics/capture.mjs";
 import { spawn } from "node:child_process";
 import { realpathSync } from "node:fs";
@@ -1223,6 +1224,7 @@ export function terminalProcessCleanupTiming(phase) {
 }
 
 async function finalize(config, state, identityInfo, phase, { error = null, terminalSource = null, finalText = "" } = {}) {
+  if (state.timing.flow_profile === FLOW_TIMING_PROFILE) state.timing.terminal_observed_at ||= new Date().toISOString();
   try {
     state.terminal_process_cleanup = await terminateCandidateWorkspaceProcesses(config.candidateWorkspace, {
       taskRoot: config.workspace,
@@ -1253,9 +1255,11 @@ async function finalize(config, state, identityInfo, phase, { error = null, term
     return state;
   }
   transitionState(state, phase, terminalSource ? { terminal_source: terminalSource } : {});
-  const finishedAt = new Date().toISOString();
+  const finishedAt = state.timing.flow_profile === FLOW_TIMING_PROFILE
+    ? state.timing.terminal_observed_at : new Date().toISOString();
   state.timing.finished_at = finishedAt;
-  state.timing.duration_seconds = state.timing.started_at
+  state.timing.duration_seconds = state.timing.flow_profile === FLOW_TIMING_PROFILE
+    ? flowTiming(state.timing.sent_at, finishedAt).value : state.timing.started_at
     ? Math.max(0, (Date.parse(finishedAt) - Date.parse(state.timing.started_at)) / 1000)
     : null;
   state.error = error;
@@ -1299,9 +1303,10 @@ async function finalize(config, state, identityInfo, phase, { error = null, term
     resourceMetrics: await captureResourceMetrics(config, state, "workbuddy"),
     clientVersion: state.client.version,
     transcriptPath,
+    flowTimingProfile: state.timing.flow_profile,
     execution: {
       status: formalStatus,
-      started_at: state.timing.started_at,
+      started_at: state.timing.flow_profile === FLOW_TIMING_PROFILE ? state.timing.sent_at : state.timing.started_at,
       finished_at: finishedAt,
       duration_seconds: state.timing.duration_seconds,
       error: error,

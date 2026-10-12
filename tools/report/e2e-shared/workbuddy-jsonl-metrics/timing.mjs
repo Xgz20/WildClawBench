@@ -3,6 +3,7 @@ import { lstat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { artifact, equal, originalResources, safeRead, verifySupplement } from "./index.mjs";
+import { FLOW_TIMING_PROFILE, flowTiming } from "../resource-metrics/flow-timing.mjs";
 
 export const TIMING_VERSION = "0.1.0";
 export const TIMING_SCHEMA = "wildclawbench.workbuddy-timing-supplement/v1";
@@ -22,7 +23,7 @@ function sentEpoch(value) {
   return Date.parse(value);
 }
 
-export function workBuddyTiming({ snapshot, session, prompt }) {
+export function workBuddyTiming({ snapshot, session, prompt, controllerTiming = null }) {
   const request = snapshot?.request;
   if (!request || snapshot.conversation?.id !== session.session_id || request.id !== session.turn_id
       || snapshot.conversation?.space?.cwd !== session.cwd || session.verified !== true) fail("IDENTITY_MISMATCH");
@@ -44,7 +45,9 @@ export function workBuddyTiming({ snapshot, session, prompt }) {
     basis: `${basis}; ${from === null || end === null ? "required timestamp missing" : "milliseconds converted to seconds"}; not model inference time`,
   });
   return {
-    duration_seconds: metric(sent, `WorkBuddy task flow: prompt.sent_at -> request.${endField}; includes dispatch/queue wait`),
+    duration_seconds: controllerTiming?.profile === FLOW_TIMING_PROFILE
+      ? flowTiming(prompt.sent_at, controllerTiming.observed_at)
+      : metric(sent, `WorkBuddy task flow: prompt.sent_at -> request.${endField}; includes dispatch/queue wait`),
     agent_duration_seconds: metric(start, `WorkBuddy native request lifetime: request.${startField} -> request.${endField}; includes tools and client processing`),
   };
 }

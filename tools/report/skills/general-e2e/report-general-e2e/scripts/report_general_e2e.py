@@ -643,6 +643,17 @@ def doubao_resource_projection(unit_root: Path, execution: Mapping[str, Any], me
         "assistant.local_info.perf_mark_samples.task_finish.receiveTimestamp",
         "native-checkpoint.receivedMessages.extra.local_info.perf_mark_samples.task_finish.receiveTimestamp",
     }
+    flow_profile = state.get("extensions", {}).get("timing", {}).get("profile")
+    if flow_profile == "prompt-send-to-controller-terminal/v1":
+        timing = projected["metrics"]["timing"]["duration_seconds"]
+        sent = parse_timestamp(state.get("prompt", {}).get("sent_at"))
+        finished = parse_timestamp(state.get("execution", {}).get("finished_at"))
+        expected = (finished - sent).total_seconds() if sent and finished and finished >= sent else None
+        expected_status = "unavailable" if expected is None else "observed"
+        if (not timing.get("basis", "").startswith(flow_profile + ":")
+                or timing.get("value") != expected or timing.get("status") != expected_status):
+            raise ReportError("DOUBAOWORK_REPORT_CONTROLLER_TIMING_MISMATCH")
+        comparable = True
     if not comparable:
         metric = projected["metrics"]["timing"]["duration_seconds"]
         adjustments.append({"field": "duration_seconds", "original": copy.deepcopy(metric),

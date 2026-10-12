@@ -25,6 +25,14 @@ CHECK_SKILLS = SKILLS_ROOT / "run-web-e2e/scripts/check_web_e2e_skills.py"
 E2E_SKILL_BUILDER = REPO_ROOT / "tools/e2e-build/build_skill_packages.py"
 
 
+def skill_version(name: str) -> str:
+    return json.loads((SKILLS_ROOT / name / "skill-metadata.json").read_text(encoding="utf-8"))["version"]
+
+
+def skill_archive(name: str) -> str:
+    return f"{name}-skill-v{skill_version(name)}.zip"
+
+
 def load_module(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
@@ -179,11 +187,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             score_task = harness_root / "score/tasks" / self.TASK_ID
             execution_package = batch_root / "packages/web-smoke__codex__execution.zip"
             scoring_package = batch_root / "packages/web-smoke__codex__scoring.zip"
-            score_skill_package = batch_root / "packages/score-web-e2e-skill-v4.5.4.zip"
-            report_skill_package = batch_root / "packages/report-web-e2e-skill-v1.2.0.zip"
-            orchestrate_skill_package = batch_root / "packages/orchestrate-web-e2e-skill-v0.3.12.zip"
-            execute_skill_package = batch_root / "packages/execute-web-e2e-skill-v1.21.7.zip"
-            run_skill_package = batch_root / "packages/run-web-e2e-skill-v1.4.3.zip"
+            score_skill_package = batch_root / "packages" / skill_archive("score-web-e2e")
+            report_skill_package = batch_root / "packages" / skill_archive("report-web-e2e")
+            orchestrate_skill_package = batch_root / "packages" / skill_archive("orchestrate-web-e2e")
+            execute_skill_package = batch_root / "packages" / skill_archive("execute-web-e2e")
+            run_skill_package = batch_root / "packages" / skill_archive("run-web-e2e")
             skills_manifest_path = batch_root / "packages/skills-manifest.json"
             skills_build_manifest_path = batch_root / "packages/skills-build-manifest.json"
             report_config_path = batch_root / "web-smoke__report-config.yaml"
@@ -218,7 +226,7 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertNotIn("model", manifest)
             self.assertFalse(manifest["execution_record_included"])
             self.assertEqual(manifest["scoring_skill"]["name"], "score-web-e2e")
-            self.assertEqual(manifest["scoring_skill"]["version"], "4.5.4")
+            self.assertEqual(manifest["scoring_skill"]["version"], skill_version("score-web-e2e"))
             self.assertIn(manifest["metric_profile"], manifest["scoring_skill"]["supported_metric_profiles"])
             self.assertEqual(len(manifest["required_skills"]), 5)
 
@@ -349,15 +357,15 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             batch_manifest = json.loads((batch_root / "batch_manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(
                 batch_manifest["orchestrate_skill_archive"],
-                "packages/orchestrate-web-e2e-skill-v0.3.12.zip",
+                f"packages/{skill_archive('orchestrate-web-e2e')}",
             )
             self.assertEqual(
                 batch_manifest["execute_skill_archive"],
-                "packages/execute-web-e2e-skill-v1.21.7.zip",
+                f"packages/{skill_archive('execute-web-e2e')}",
             )
             self.assertEqual(
                 batch_manifest["run_skill_archive"],
-                "packages/run-web-e2e-skill-v1.4.3.zip",
+                f"packages/{skill_archive('run-web-e2e')}",
             )
             self.assertEqual(batch_manifest["skills_manifest"], "packages/skills-manifest.json")
             self.assertEqual(
@@ -483,11 +491,11 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
             self.assertIsNone(report_skill_packages[0]["harness"])
             self.assertEqual(
                 manifest["score_skill_archive"],
-                "packages/score-web-e2e-skill-v4.5.4.zip",
+                f"packages/{skill_archive('score-web-e2e')}",
             )
             self.assertEqual(
                 manifest["report_skill_archive"],
-                "packages/report-web-e2e-skill-v1.2.0.zip",
+                f"packages/{skill_archive('report-web-e2e')}",
             )
             self.assertEqual(manifest["report_config"], "web-smoke__report-config.yaml")
             self.assertTrue(manifest["report_config_ready"])
@@ -535,10 +543,10 @@ class PrepareWebE2EWorkspacesTest(unittest.TestCase):
                 "--repo-root", str(REPO_ROOT),
             ])
             result = prepare_module.package_score_skill(args)
-            package_path = Path(tmp).resolve() / "score-web-e2e-skill-v4.5.4.zip"
+            package_path = Path(tmp).resolve() / skill_archive("score-web-e2e")
             self.assertEqual(result["path"], package_path)
             self.assertEqual(result["sha256"], prepare_module.sha256_file(package_path))
-            self.assertEqual(result["version"], "4.5.4")
+            self.assertEqual(result["version"], skill_version("score-web-e2e"))
             self.assertFalse((Path(tmp) / "web-skill-only").exists())
             self.assertFalse(any(Path(tmp).glob("**/batch_manifest.json")))
             self.assertFalse((Path(tmp) / "skills-build-manifest.json").exists())

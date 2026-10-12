@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.10.0` 采集共用流程计时 Profile：Prompt 发送至本机确认终态，不混减客户端与服务端时钟。原生任务耗时单列；AstronStudio profile 2 继续使用 rollout 的终态 `payload.duration_ms`，缺失保留 unavailable。
+
 # 采集 General E2E 证据
 
 `0.9.14` 仅在新增原生 `consumer_witness` 与 dispatcher、uploaded 账本完整对账时承认本地工具协议覆盖；仍须通过远端工具覆盖、消息类型和跨来源顺序门禁，才可形成完整 General 轨迹。无入口证据的历史 dispatcher 快照继续 partial，失败/溢出后的子集不继承完整入口覆盖，不改写旧评分。

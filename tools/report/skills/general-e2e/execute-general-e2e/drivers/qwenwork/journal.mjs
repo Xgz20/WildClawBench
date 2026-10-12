@@ -226,7 +226,7 @@ export function confirmQwenDispatchBinding(state, { session, promptEvidence, now
     prompt_evidence: structuredClone(promptEvidence),
   };
   state.prompt.send_status = "sent";
-  state.prompt.sent_at = state.send.returned_at || state.send.invoking_at;
+  state.prompt.sent_at = state.send.invoking_at || state.send.returned_at;
   state.send.state = "confirmed";
   state.phase = "RUNNING";
   state.attention = null;
