@@ -49,6 +49,34 @@ SELECT
       OR EXISTS (
         SELECT 1 FROM provider_runtime_open_turns AS open_turn
         WHERE open_turn.thread_id = sessions.thread_id
+          AND NOT COALESCE((
+            -- AStudio can leave an unmapped token-usage notification in its
+            -- open-turn ledger. Only discard a resource-only orphan proven
+            -- older than the exact completed head; unknown/activity evidence
+            -- and malformed clocks remain blocking.
+            sessions.status = 'ready'
+            AND latest_turn.turn_id = threads.latest_turn_id
+            AND latest_turn.state = 'completed'
+            AND julianday(latest_turn.completed_at) IS NOT NULL
+            AND julianday(open_turn.updated_at) IS NOT NULL
+            AND julianday(open_turn.updated_at) <= julianday(latest_turn.completed_at)
+            AND NOT EXISTS (
+              SELECT 1 FROM projection_turns AS mapped
+              WHERE mapped.thread_id = open_turn.thread_id AND mapped.turn_id = open_turn.turn_id
+            )
+            AND EXISTS (
+              SELECT 1 FROM provider_runtime_events AS usage
+              WHERE usage.thread_id = open_turn.thread_id AND usage.turn_id = open_turn.turn_id
+                AND usage.event_type = 'thread.token-usage.updated'
+            )
+            AND NOT EXISTS (
+              SELECT 1 FROM provider_runtime_events AS activity
+              WHERE activity.thread_id = open_turn.thread_id AND activity.turn_id = open_turn.turn_id
+                AND (activity.event_type IS NULL OR activity.event_type <> 'thread.token-usage.updated'
+                  OR julianday(activity.persisted_at) IS NULL
+                  OR julianday(activity.persisted_at) > julianday(latest_turn.completed_at))
+            )
+          ), 0)
       ) THEN 'running'
     WHEN latest_turn.state IS NOT NULL THEN latest_turn.state
     ELSE sessions.status
@@ -70,7 +98,7 @@ ORDER BY COALESCE(
 export const SESSION_SNAPSHOT_TABLES = Object.freeze([
   "projection_turns", "projection_threads", "projection_projects",
   "projection_thread_sessions", "projection_pending_interactions",
-  "provider_runtime_open_turns", "provider_session_runtime",
+  "provider_runtime_open_turns", "provider_session_runtime", "provider_runtime_events",
 ]);
 export const STATE_SNAPSHOT_TABLES = Object.freeze([
   ...SESSION_SNAPSHOT_TABLES, "projection_thread_messages",

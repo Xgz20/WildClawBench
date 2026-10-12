@@ -5,6 +5,9 @@ description: 按用户明确选择的阶段串联 General E2E 准备、执行、
 
 # 运行 General E2E 全流程
 
+正式语义评分统一使用独立项目中的独立单题聊天，通过标准 orchestrate-general-e2e 编排；不得由控制会话或协作子代理判分或作为会话失败后的替代。纯自动规则题仍使用受管 Worker。
+
+
 ## 默认工作空间布局
 
 评测根目录未指定时使用控制 Harness 会话项目的当前工作目录；显式 `--round-root` 时采用用户路径。调用本 Skill 的绝对脚本路径，不 cd 到安装目录。新评测不创建顶层 rerun-execution-units、score-attempts、repair-control 等多套工作区。

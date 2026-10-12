@@ -5,6 +5,12 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+正式语义评分使用独立项目中的独立单题聊天，不能用控制会话或协作子代理替代。纯 automated 任务继续由受管规则 Worker 评分。
+
+新编排的 v6 Prompt 冻结 Python 绝对路径、版本与制品 SHA，并给出 `score_cli_argv_prefix` 和 `skill-metadata.json` 的绝对路径及 SHA。实际命令必须使用该 argv 前缀（含 `-X utf8`），不依赖 python/python3 别名。独立分发包直接核验这份元数据的 name/version/implementation_status，无需导入仓库模块；下面的模块能力命令仅用于仓库开发环境。
+
+语义响应使用文件编辑工具写为新的 UTF-8 JSON 文件。临时 Python 脚本须先保存为 UTF-8 文件并声明 `# coding: utf-8`，使用冻结解释器运行；不得直接执行含中文源码的 stdin/heredoc。所有文本读写显式指定 UTF-8，CLI 的 JSON 标准输出和错误输出也固定 UTF-8。旧冻结 attempt 和 Prompt 按原版本复核，不改写历史结果。
+
 已按精确冻结契约审核同事请假私信、品牌命名方向两题的纯回复评分输入，见 `references/reviewed-fast-output-evidence-audit.json`。这些 Profile 可使用已绑定最终回复和候选保留可选工具轨迹 partial；安全安装脚本题需要完整执行轨迹证明未发生行为，未加入该例外。
 
 新轮次的 prepare 必须将该题完整 trace 包复制到评分 attempt 的 trace/，包括标准 transcript、trace-index、原始日志与绑定证据。attempt-manifest.trace_bundle 锁定 SHA，verify 每次核验；private/transcript.jsonl 必须与交接的标准轨迹一致。新 CLI 缺少 trace-index 时拒绝，只有旧冻结证据显式 --legacy-transcript-only 或经审核的失败产物契约可按旧口径处理。
@@ -22,10 +28,10 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 先运行：
 
 ```bash
-python -m eval_general_e2e skills --name score-general-e2e --json
+python3 -m eval_general_e2e skills --name score-general-e2e --json
 ```
 
-当前 `0.10.2/operational` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、中文理由门禁、合分审计和 `verify-score`。自动规则组件会为每个检查点记录中文分值解释，并绑定冻结规则源码、候选清单、轨迹与 Worker 原始返回键值。终态评分可复用冻结候选创建独立重评分 attempt；题目 `timeout_seconds` 与控制线程 deadline 不进入能力评分 Rubric。G4-03 已完成固定 `gpt-6-astra/high` 的三题真实 Codex 语义评分并纳入五题闭环；该生产状态不表示 Windows 或其他 Harness 已验收。
+当前 `0.10.5/operational` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、中文理由门禁、合分审计和 `verify-score`。自动规则组件会为每个检查点记录中文分值解释，并绑定冻结规则源码、候选清单、轨迹与 Worker 原始返回键值。终态评分可复用冻结候选创建独立重评分 attempt；题目 `timeout_seconds` 与控制线程 deadline 不进入能力评分 Rubric。G4-03 已完成固定 `gpt-6-astra/high` 的三题真实 Codex 语义评分并纳入五题闭环；该生产状态不表示 Windows 或其他 Harness 已验收。
 
 评分 Prompt 必须冻结并显式给出本 Skill 根、入口、版本和入口 SHA；不得从项目或仓库中的同名 Skill 猜测入口。普通生产运行的 manifest 不含 validation 标记；显式验收运行仍要求 Prompt 的 acceptance ID 与 `attempt-manifest.json` 完全相同。两种模式都不得省略证据查询、反例检查、合分或 `verify-score`。
 

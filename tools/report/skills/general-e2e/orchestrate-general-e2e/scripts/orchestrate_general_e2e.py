@@ -29,10 +29,11 @@ PACKAGE_SCHEMA = "urn:wildclawbench:schema:general-e2e:package-manifest:v1"
 SCORE_SCHEMA = "urn:wildclawbench:schema:general-e2e:score:v1"
 SUBMISSION_SCHEMA = "urn:wildclawbench:schema:general-e2e:submission:v1"
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
-PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v5"
+PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v6"
 LEGACY_CODEX_PROMPT_PROTOCOLS = {"general-e2e-codex-scoring-prompt/v3"}
 FROZEN_SKILL_PROMPT_PROTOCOLS = {
     "general-e2e-codex-scoring-prompt/v4",
+    "general-e2e-codex-scoring-prompt/v5",
     PROMPT_PROTOCOL,
 }
 API_PROMPT_PROTOCOL = "general-e2e-api-scoring-orchestration/v1"
@@ -283,7 +284,36 @@ def _inside(root: Path, candidate: Path) -> bool:
     return candidate == root or root in candidate.parents
 
 
-def _score_skill_lock(score_skill_dir: Path) -> dict[str, Any]:
+def _score_python_lock(executable: Path) -> dict[str, Any]:
+    # Keep the venv launcher path: resolving its symlink would lose the venv.
+    path = executable.expanduser().absolute()
+    if not path.is_file() or not os.access(path, os.X_OK):
+        raise OrchestrationError("SCORE_PYTHON_INVALID", str(path))
+    try:
+        probe = subprocess.run(
+            [str(path), "-X", "utf8", "-c",
+             "import json,sys; print(json.dumps({'version':list(sys.version_info[:3]),"
+             "'utf8_mode':sys.flags.utf8_mode,'stdout_encoding':sys.stdout.encoding}))"],
+            check=False, capture_output=True, encoding="utf-8",
+            env={"PATH": os.environ.get("PATH", ""), "PYTHONNOUSERSITE": "1",
+                 "PYTHONDONTWRITEBYTECODE": "1"},
+            timeout=10,
+        )
+        runtime = json.loads(probe.stdout)
+    except (OSError, subprocess.TimeoutExpired, UnicodeError, json.JSONDecodeError) as exc:
+        raise OrchestrationError("SCORE_PYTHON_PROBE_FAILED", str(path)) from exc
+    version = runtime.get("version") if isinstance(runtime, dict) else None
+    if (probe.returncode != 0 or not isinstance(version, list) or len(version) != 3
+        or not all(type(part) is int for part in version) or tuple(version[:2]) < (3, 9)
+        or runtime.get("utf8_mode") != 1 or runtime.get("stdout_encoding") != "utf-8"):
+        raise OrchestrationError("SCORE_PYTHON_PROBE_FAILED", str(path))
+    return {"executable": str(path), "version": version, "utf8_mode": True,
+            "executable_sha256": _sha256_file(path)}
+
+
+def _score_skill_lock(
+    score_skill_dir: Path, *, python_runtime: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     root = _regular_directory(score_skill_dir, "SCORE_SKILL_ROOT_INVALID")
     metadata_path = _regular_file(root / "skill-metadata.json", "SCORE_SKILL_METADATA_MISSING")
     metadata = _read_json(metadata_path, "SCORE_SKILL_METADATA_INVALID")
@@ -295,7 +325,7 @@ def _score_skill_lock(score_skill_dir: Path) -> dict[str, Any]:
     runtime_lock = _regular_file(
         root / "references/scoring-runtime-lock.json", "SCORE_RUNTIME_LOCK_MISSING"
     )
-    return {
+    lock = {
         "path": str(root),
         "name": "score-general-e2e",
         "version": _required_string(metadata.get("version"), "score skill version"),
@@ -306,6 +336,11 @@ def _score_skill_lock(score_skill_dir: Path) -> dict[str, Any]:
         "entrypoint_sha256": _sha256_file(script),
         "runtime_lock_sha256": _sha256_file(runtime_lock),
     }
+    if python_runtime is not None:
+        lock["python"] = _score_python_lock(
+            Path(_required_string(python_runtime.get("executable"), "score python executable"))
+        )
+    return lock
 
 
 def _score_entrypoint(lock: Mapping[str, Any]) -> Path:
@@ -329,10 +364,11 @@ def _run_score_command(
         if credential:
             environment[credential_env] = credential
     completed = subprocess.run(
-        [sys.executable, str(_score_entrypoint(lock)), *arguments],
+        [str((lock.get("python") or {}).get("executable", sys.executable)),
+         "-X", "utf8", str(_score_entrypoint(lock)), *arguments],
         check=False,
         capture_output=True,
-        text=True,
+        encoding="utf-8",
         env=environment,
     )
     if completed.returncode != 0:
@@ -568,6 +604,7 @@ def _prompt_text(
     *,
     prompt_protocol: str = PROMPT_PROTOCOL,
 ) -> str:
+    runtime_usage = ""
     rule_instruction = (
         "本题是 hybrid；自动规则组件已由控制器在创建语义会话前运行并冻结。"
         "先复核现有 `rule-component.json`，不得重复运行规则；再准备语义证据、完成语义判定并合分。"
@@ -617,6 +654,37 @@ def _prompt_text(
             f"所有评分命令只调用 `{score_entrypoint}`。不得使用项目、仓库或自动发现路径中的同名 Skill；"
             "冻结目录缺失、身份或哈希不匹配时立即停止"
         )
+        if prompt_protocol == PROMPT_PROTOCOL:
+            python_runtime = score_skill.get("python")
+            if not isinstance(python_runtime, Mapping):
+                raise OrchestrationError("SCORE_PYTHON_LOCK_MISSING")
+            python_executable = _required_string(
+                python_runtime.get("executable"), "score python executable"
+            )
+            metadata_path = str(Path(score_skill_root) / "skill-metadata.json")
+            argv_prefix = json.dumps(
+                [python_executable, "-X", "utf8", score_entrypoint], ensure_ascii=False
+            )
+            frozen_skill_identity += f"""
+- score_skill_metadata：`{metadata_path}`
+- score_skill_metadata_sha256：`{score_skill['metadata_sha256']}`
+- score_python_executable：`{python_executable}`
+- score_python_version：`{'.'.join(str(v) for v in python_runtime['version'])}`
+- score_python_executable_sha256：`{python_runtime['executable_sha256']}`
+- score_cli_argv_prefix：`{argv_prefix}`"""
+            skill_usage = (
+                f"先读取 `{metadata_path}`，核对 name、version、implementation_status 和文件 SHA，"
+                f"再完整读取 `{score_skill_root}/SKILL.md` 及其要求的引用文件。"
+                "独立分发 Skill 的能力门禁使用这份元数据，不需要导入仓库 eval_general_e2e 模块；"
+                f"所有评分命令使用冻结 score_cli_argv_prefix，只调用 `{score_entrypoint}`。"
+                "不得使用项目、仓库或自动发现路径中的同名 Skill；冻结目录、解释器、身份或哈希不匹配时立即停止"
+            )
+            runtime_usage = """
+
+评分命令与编码：使用上面的 Python 绝对路径和 `-X utf8`，不依赖 PATH 中的 python/python3 别名。命令参数按 argv 逐项传入；使用 shell 时完整引用路径，尤其是含空格或中文的路径。元数据文件就是上面给出的 skill-metadata.json，不猜测其他文件名。
+
+将结构化响应写入新的 UTF-8 JSON 文件，优先使用文件编辑工具（如 apply_patch）。不要把含中文的 Python 源码作为 stdin/heredoc 直接执行。确需脚本时，先保存 UTF-8 .py 文件、首行写 `# coding: utf-8`，用冻结解释器加 `-X utf8` 执行，读写文本均显式指定 `encoding=\"utf-8\"`。响应不能覆盖模板或旧评分原件。
+"""
         if implementation_status == "operational" and validation is None:
             readiness_instruction = (
                 "当前冻结 Skill 为 `operational`；按正式评分协议完成本题，"
@@ -643,7 +711,7 @@ def _prompt_text(
 - prompt_protocol：`{prompt_protocol}`
 {validation_identity}{frozen_skill_identity}
 
-项目根目录就是本题私有评分 attempt。先读取 `attempt-manifest.json`，再{skill_usage}。只处理本题，不创建或调度其他任务，不执行被测 Harness，不修改 `candidate-original/`，不把自动规则组件冒充完整分数。{readiness_instruction}
+项目根目录就是本题私有评分 attempt。先读取 `attempt-manifest.json`，再{skill_usage}。只处理本题，不创建或调度其他任务，不执行被测 Harness，不修改 `candidate-original/`，不把自动规则组件冒充完整分数。{readiness_instruction}{runtime_usage}
 
 若 manifest 含 trace_bundle，评分工作空间的 trace/ 内含标准轨迹、trace-index 和原始会话。需要核验工具调用或过程行为时，使用 catalog 的 raw_trace 条目和 file 分页查询读取原件；桌面协议投影不代表模型会话的全部工具调用，不得只因标准轨迹缺少某事件便断言未发生。保留原始工具名与调用ID，不把命令的读写操作重命名为另一个工具。
 
@@ -771,7 +839,7 @@ def initialize(
     unit_root = _regular_directory(unit_root, "UNIT_ROOT_INVALID")
     scoring_package = _regular_file(scoring_package, "SCORING_PACKAGE_INVALID")
     report_config = _regular_file(report_config, "REPORT_CONFIG_INVALID")
-    score_skill = _score_skill_lock(score_skill_dir)
+    score_skill = _score_skill_lock(score_skill_dir, python_runtime={"executable": sys.executable})
     identity, judge, selected = _load_identity(unit_root, report_config, task_ids)
     validation = _validation_marker(acceptance_id)
     if validation is not None and judge["protocol"] != "codex-agent-judge-v1":
@@ -1046,7 +1114,7 @@ def initialize_rescore(
     validation = _validation_marker(acceptance_id)
     if validation is not None and judge["protocol"] != "codex-agent-judge-v1":
         raise OrchestrationError("ACCEPTANCE_MODE_REQUIRES_CODEX_JUDGE")
-    score_skill = _score_skill_lock(score_skill_dir)
+    score_skill = _score_skill_lock(score_skill_dir, python_runtime={"executable": sys.executable})
     source_tasks = source_state["tasks"]
     available = [
         task["task_id"]
@@ -1627,7 +1695,12 @@ def _verify_state(
     score_skill = state.get("score_skill")
     if not isinstance(score_skill, dict):
         raise OrchestrationError("ORCHESTRATION_STATE_INVALID", "score_skill")
-    current_skill = _score_skill_lock(Path(str(score_skill.get("path", ""))))
+    python_runtime = score_skill.get("python")
+    if "python" in score_skill and not isinstance(python_runtime, Mapping):
+        raise OrchestrationError("SCORE_PYTHON_LOCK_INVALID")
+    current_skill = _score_skill_lock(
+        Path(str(score_skill.get("path", ""))), python_runtime=python_runtime,
+    )
     if current_skill != state.get("score_skill"):
         raise OrchestrationError("SCORE_SKILL_DRIFT")
     for task in tasks:
@@ -2670,6 +2743,9 @@ def _print(value: object) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="strict")
     parser = argparse.ArgumentParser(
         description="General E2E Codex 评分项目与可恢复任务编排器"
     )

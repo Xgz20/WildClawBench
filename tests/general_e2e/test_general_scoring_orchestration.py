@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import stat
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -658,6 +659,63 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         self.assertIn("score_skill_root", prompt)
         self.assertIn("prompt_protocol：`general-e2e-codex-scoring-prompt/v4`", prompt)
         self.assertNotIn("使用 `$score-general-e2e`", prompt)
+
+    def test_legacy_v5_prompt_bytes_remain_unchanged(self) -> None:
+        prompt = ORCHESTRATOR._prompt_text(
+            "task-one", "attempt-one",
+            {"protocol": "codex-agent-judge-v1", "model": "gpt-fixture", "reasoning_effort": "high"},
+            "llm_judge", None,
+            {"path": "/frozen/score", "name": "score-general-e2e", "version": "0.10.4",
+             "implementation_status": "operational", "metadata_sha256": "a" * 64,
+             "entrypoint_sha256": "b" * 64, "runtime_lock_sha256": "c" * 64},
+            prompt_protocol="general-e2e-codex-scoring-prompt/v5",
+        )
+        # Captured from the unchanged 0.11.4 distribution, not regenerated.
+        self.assertEqual(sha256_bytes(prompt.encode("utf-8")),
+                         "b3ddd5c252bd484608f3a1666c70301efb0c77685467b490c919ad480e9d5968")
+
+    def test_score_command_uses_frozen_python_without_path_aliases(self) -> None:
+        skill = self.root / "评分 包"
+        scripts = skill / "scripts"
+        scripts.mkdir(parents=True)
+        (scripts / "score_general_e2e.py").write_text(
+            "# coding: utf-8\nimport json\n"
+            "print(json.dumps({'status':'PASS','reason':'中文证据'},ensure_ascii=False))\n",
+            encoding="utf-8",
+        )
+        lock = {"path": str(skill), "python": ORCHESTRATOR._score_python_lock(Path(sys.executable))}
+        with patch.dict(os.environ, {"PATH": "", "PYTHONIOENCODING": "ascii"}):
+            result = ORCHESTRATOR._run_score_command(lock, [])
+        self.assertEqual(result, {"status": "PASS", "reason": "中文证据"})
+
+    def test_resume_rejects_unavailable_frozen_python_without_changing_state(self) -> None:
+        fixture = Fixture(self.root / "python-gate", task_ids=("task-one",))
+        view = fixture.initialize(now=self.t0)
+        root = Path(view["orchestration_root"])
+        state_path = root / "orchestration-state.json"
+        before = state_path.read_bytes()
+        state = json.loads(before)
+        self.assertEqual(state["score_skill"]["python"]["executable"], str(Path(sys.executable).absolute()))
+        with patch.object(ORCHESTRATOR.os, "access", return_value=False):
+            with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError, "SCORE_PYTHON_INVALID"):
+                ORCHESTRATOR.status(root, now=self.t0)
+        self.assertEqual(state_path.read_bytes(), before)
+
+    def test_cli_json_errors_remain_utf8_under_ascii_stdio(self) -> None:
+        missing = self.root / "缺少清单的评分目录"
+        missing.mkdir()
+        environment = dict(os.environ, PYTHONIOENCODING="ascii")
+        for entrypoint, arguments in [
+            (SCORE_RUNTIME_PATH, ["verify", "--attempt-root", str(missing)]),
+            (ORCHESTRATOR_PATH, ["status", "--orchestration-root", str(missing)]),
+        ]:
+            with self.subTest(entrypoint=entrypoint):
+                completed = subprocess.run([sys.executable, str(entrypoint), *arguments],
+                                           capture_output=True, env=environment)
+                self.assertEqual(completed.returncode, 2, completed.stderr)
+                error = json.loads(completed.stderr.decode("utf-8"))
+                self.assertEqual(error["status"], "FAIL")
+                self.assertIn("缺少清单的评分目录", error["error"]["detail"])
 
     def test_acceptance_marker_mismatch_and_api_backend_fail_closed(self) -> None:
         fixture = Fixture(self.root / "acceptance-mismatch", task_ids=("task-one",))

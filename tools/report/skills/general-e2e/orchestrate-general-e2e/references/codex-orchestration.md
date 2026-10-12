@@ -8,6 +8,8 @@
 
 ## 初始化
 
+新编排将启动控制器的 Python 路径、版本和可执行文件 SHA 加入 score_skill 锁，所有评分 CLI 子进程使用该解释器和 -X utf8。v6 Prompt 同时明确 skill-metadata.json 路径/哈希及 UTF-8 响应写入方式；旧编排继续按原版本复核。
+
 输入需要包含：
 
 - 已完成 collect 的 execution unit，且每个选择题只有一个可唯一发现的正式 execution record；存在多个 attempt 时用 `--execution-record TASK_ID=/absolute/path` 明确选择；

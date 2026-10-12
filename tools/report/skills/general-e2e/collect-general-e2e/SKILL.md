@@ -172,3 +172,5 @@ Token 使用逐次原生 `last*` 增量求和并与累计 `total*` 对账；工�
 - `completed` 必须提供 trace 和 resource metrics；非成功终态只归档实际存在的部分证据。
 - `timeout/cancelled` 必须已有执行阶段确认的取消结果，避免后台任务继续写入候选。
 - 不调度评分、不判定 criterion、不导入管理员侧回传包。
+
+`0.10.1` 在命令、工作目录、输出、退出码和耗时均与绑定 rollout 一致时，接受 macOS 原生 `bash` 工具的 `/bin/zsh -lc` 投影及字面量双引号包装；未知包装和内容冲突仍拒绝归档。

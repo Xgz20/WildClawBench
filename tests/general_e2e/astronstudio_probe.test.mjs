@@ -57,6 +57,7 @@ test("runtime table validation is labelled and never substitutes for whole DB in
       CREATE TABLE projection_threads(thread_id TEXT, model_selection_json TEXT, runtime_mode TEXT, updated_at TEXT, deleted_at TEXT);
       CREATE TABLE projection_pending_interactions(thread_id TEXT, status TEXT);
       CREATE TABLE provider_runtime_open_turns(thread_id TEXT);
+      CREATE TABLE provider_runtime_events(thread_id TEXT);
       CREATE TABLE projection_turns(id TEXT);
       CREATE TABLE projection_projects(id TEXT);
       CREATE TABLE provider_session_runtime(id TEXT);
@@ -72,7 +73,7 @@ test("runtime table validation is labelled and never substitutes for whole DB in
     const runtime = await inspectStateDatabase(path, { databaseValidationScope: "runtime" });
     assert.equal(runtime.readable, true);
     assert.equal(runtime.integrity_scope, "complete-runtime-tables");
-    assert.equal(runtime.integrity_tables.length, 7);
+    assert.equal(runtime.integrity_tables.length, 8);
     const initial = await inspectStateDatabase(path);
     assert.equal(initial.readable, false);
     assert.match(initial.error, /malformed|quick_check/iu);

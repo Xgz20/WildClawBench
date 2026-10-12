@@ -5381,6 +5381,9 @@ def _print_result(value: object) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="strict")
     parser = argparse.ArgumentParser(
         description="Prepare and run Docker-free General E2E rule scoring."
     )

@@ -91,3 +91,31 @@ test('known bash and write desktop projections reconcile exact native content an
     p => { p.events[3].tool.result.status = 'failed'; },
   ]) { const changed = structuredClone(provider); mutate(changed); assert.throws(() => normalizeRolloutTranscript(bytes(rows), state, changed), /PROVIDER_ROLLOUT_TOOL_CONFLICT/); }
 });
+
+test('configured macOS zsh and literal double quoted commands reconcile without evaluating shell text', () => {
+  const command = `python3 -c "print('valid JSON')"`;
+  const rows = fixture();
+  rows[4].payload.name = 'bash'; rows[4].payload.arguments = JSON.stringify({ command });
+  rows[5].payload.output = 'Exit code: 0\nWall time: 0.2 seconds\nOutput:\nvalid JSON\n';
+  const provider = { calls: [{ call_id: 'c' }], events: [
+    { type: 'tool_call', tool: { call_id: 'c', name: 'command', arguments: {
+      command: '/bin/zsh -lc "python3 -c \\"print(\'valid JSON\')\\""', cwd: state.session.cwd,
+      command_actions: [{ command }] } } },
+    { type: 'tool_result', tool: { call_id: 'c', name: 'command', result: {
+      output: 'valid JSON\n', exit_code: 0, duration_ms: 217 } } },
+  ] };
+  assert.equal(normalizeRolloutTranscript(bytes(rows), state, provider).completeness.status, 'complete');
+  for (const mutate of [
+    p => { p.events[0].tool.arguments.command += '; touch /tmp/unbound'; },
+    p => { p.events[0].tool.arguments.command = p.events[0].tool.arguments.command.replace('/bin/zsh', '/tmp/zsh'); },
+    p => { p.events[0].tool.arguments.command_actions[0].command = 'different'; },
+    p => { p.events[1].tool.result.exit_code = 1; },
+    p => { p.events[1].tool.result.duration_ms = 319; },
+  ]) { const changed = structuredClone(provider); mutate(changed); assert.throws(() => normalizeRolloutTranscript(bytes(rows), state, changed), /PROVIDER_ROLLOUT_TOOL_CONFLICT/); }
+  const shellText = `printf '%s' "$(touch /tmp/never-execute) $HOME \`uname\`"`;
+  rows[4].payload.arguments = JSON.stringify({ command: shellText });
+  const changed = structuredClone(provider);
+  changed.events[0].tool.arguments.command_actions[0].command = shellText;
+  changed.events[0].tool.arguments.command = `/bin/zsh -lc "${shellText.replaceAll('"', '\\"')}"`;
+  assert.throws(() => normalizeRolloutTranscript(bytes(rows), state, changed), /PROVIDER_ROLLOUT_TOOL_CONFLICT/);
+});

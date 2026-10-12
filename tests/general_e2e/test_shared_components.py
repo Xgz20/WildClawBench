@@ -104,7 +104,7 @@ process.stdout.write(JSON.stringify({{
             {
                 "desktop-runtime": "1.0.0",
                 "desktop-app-discovery": "1.2.0",
-                "resource-metrics": "1.0.0",
+                "resource-metrics": "1.1.0",
                 "workspace-integrity": "1.0.0",
             },
         )
@@ -219,7 +219,7 @@ process.stdout.write(JSON.stringify({{
             payload["metrics"]["schema_version"],
             "wildclawbench.web-e2e-resource-collection/v1",
         )
-        self.assertEqual(payload["metrics"]["version"], "1.1.4")
+        self.assertEqual(payload["metrics"]["version"], "1.2.0")
         self.assertEqual(payload["orchestrate"], payload["score"])
         self.assertEqual(payload["score"]["ignored_directories"], [".cache", ".vite", "node_modules"])
         self.assertEqual(payload["score"]["forbidden_directories"], [".git"])

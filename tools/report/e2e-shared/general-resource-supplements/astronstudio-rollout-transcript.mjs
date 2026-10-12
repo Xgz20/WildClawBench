@@ -5,6 +5,10 @@ const stable = value => Array.isArray(value) ? value.map(stable) : value && type
   ? Object.fromEntries(Object.keys(value).sort().map(k => [k, stable(value[k])])) : value;
 const signature = value => JSON.stringify(stable(value));
 const shellQuote = value => `'${value.replaceAll("'", "'\\''")}'`;
+const shellDoubleQuote = value => `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll('$', '\\$').replaceAll('`', '\\`')}"`;
+// The native "bash" tool uses the configured desktop shell on macOS. Match
+// only literal, fully quoted -lc wrappers; never evaluate a projected command.
+const desktopShells = ['/usr/local/bin/bash', '/bin/bash', '/bin/zsh'];
 
 function verifyProjectedTool(projected, native, call) {
   const p = projected.tool, n = native?.tool, args = call?.tool.arguments;
@@ -18,7 +22,8 @@ function verifyProjectedTool(projected, native, call) {
     ensure(typeof args?.command === 'string', 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
     if (projected.type === 'tool_call') {
       const a = p.arguments;
-      ensure(['/usr/local/bin/bash', '/bin/bash'].some(shell => a.command === `${shell} -lc ${shellQuote(args.command)}`)
+      ensure(desktopShells.some(shell => [shellQuote(args.command), shellDoubleQuote(args.command)]
+        .some(quoted => a.command === `${shell} -lc ${quoted}`))
         && a.command_actions?.length === 1 && a.command_actions[0].command === args.command,
       'PROVIDER_ROLLOUT_TOOL_CONFLICT');
     } else {
