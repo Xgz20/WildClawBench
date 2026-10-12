@@ -5,6 +5,8 @@ description: 在桌面评分智能体中对单个自建或 ArtifactsBench Web �
 
 # Web E2E 单题评分
 
+`4.5.5` 补充 Codex Desktop 原生确认框的公开 API 时序：触发点击与有界 `getJsDialog()` 观察并行，取得句柄后取消/确认并回读页面，避免等待点击完成后才处理弹窗。评分口径、候选保护和裁判身份不变；既有冻结评分 Skill 与 Prompt 不改写。
+
 每个评分会话必须且只能评分一个 `task_id`。测试人员把以下目录选为评分智能体工作空间：
 
 ```text

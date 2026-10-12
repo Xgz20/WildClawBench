@@ -13,6 +13,7 @@ import {
   inspectApprovalPanels,
   inspectPendingAttention,
   inspectUserQuestions,
+  skipQwenClarification,
   isQwenWorkMainPageDescriptor,
   nextScreenshotPath,
   openQwenProjectConversation,
@@ -42,6 +43,58 @@ import {
   gracefulQuitQwenWork,
   terminateQwenWorkProcess,
 } from "../platform.mjs";
+
+function clarificationFixture({ cardCount = 1, skipCount = 1, dialogCount = 0, dismiss = true } = {}) {
+  let visible = true;
+  const actions = [];
+  const collection = items => ({ count: async () => items.length, nth: index => items[index] });
+  const skip = { isVisible: async () => visible, click: async () => { actions.push("skip"); if (dismiss) visible = false; } };
+  const footer = { isVisible: async () => true, getByRole: (role, options) => {
+    assert.equal(role, "button");
+    assert.deepEqual(options, { name: "跳过", exact: true });
+    return collection(Array(skipCount).fill(skip));
+  } };
+  const card = { isVisible: async () => visible, locator: selector => {
+    assert.equal(selector, '[data-slot="user-question-footer"]');
+    return collection([footer]);
+  } };
+  const view = { isVisible: async () => true, locator: selector => {
+    assert.equal(selector, '[data-slot="user-question"]');
+    return collection(Array(cardCount).fill(card));
+  } };
+  const page = { url: () => "file:///QwenWork/index.html?chat=chat-1", locator: selector => {
+    if (selector === '[role="dialog"], [role="alertdialog"]') return collection(Array(dialogCount).fill({ isVisible: async () => true }));
+    assert.equal(selector, ".agents-chat-view-root");
+    return collection([view]);
+  } };
+  return { page, actions };
+}
+
+test("QwenWork 只跳过绑定原会话的唯一问卷且先持久化意图", async () => {
+  const { page, actions } = clarificationFixture();
+  await assert.rejects(() => skipQwenClarification(page, "other-chat", 10), /CONVERSATION_MISMATCH/);
+  assert.deepEqual(actions, []);
+  const result = await skipQwenClarification(page, "chat-1", 10, async () => { actions.push("intent-saved"); });
+  assert.equal(result.skipped, true);
+  assert.deepEqual(actions, ["intent-saved", "skip"]);
+});
+
+test("QwenWork 问卷歧义、阻塞弹层或意图保存失败时不点击", async () => {
+  for (const options of [{ cardCount: 2 }, { skipCount: 2 }, { dialogCount: 1 }]) {
+    const { page, actions } = clarificationFixture(options);
+    await assert.rejects(() => skipQwenClarification(page, "chat-1", 10), /COUNT|BLOCKING_DIALOG/);
+    assert.deepEqual(actions, []);
+  }
+  const { page, actions } = clarificationFixture();
+  await assert.rejects(() => skipQwenClarification(page, "chat-1", 10, async () => { throw new Error("journal failed"); }), /journal failed/);
+  assert.deepEqual(actions, []);
+});
+
+test("QwenWork 跳过后问卷未消失时保留不确定结果且只点击一次", async () => {
+  const { page, actions } = clarificationFixture({ dismiss: false });
+  await assert.rejects(() => skipQwenClarification(page, "chat-1", 0), /SKIP_NOT_DISMISSED/);
+  assert.deepEqual(actions, ["skip"]);
+});
 
 test("Web input fallback refuses focus drift before editing or inserting", async () => {
   for (const failAt of [0, 1, 2]) {
@@ -106,7 +159,7 @@ test("QwenWork automation state 使用独立 Driver profile", () => {
     { sha256: "initial", entries: [] },
   );
   assert.equal(state.driver.id, "qwenwork");
-  assert.equal(state.driver.version, "1.12.11");
+  assert.equal(state.driver.version, "1.12.13");
 });
 
 test("QwenWork 原生目录选择等待异步更新后的目录标签", async () => {

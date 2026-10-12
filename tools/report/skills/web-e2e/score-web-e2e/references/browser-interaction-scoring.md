@@ -70,7 +70,36 @@ fire(source, 'dragend');
 ## 原生对话框和自定义确认层
 
 - 原生 `alert`、`confirm`、`prompt` 不属于页面 DOM，也通常不会出现在网页截图中。必须在触发点击前让评分浏览器准备接收下一次对话框；先取消并验证状态保留，再重新触发、确认并验证状态变化。
+- Codex Desktop 的公开 Browser API 使用 `tab.getJsDialog()` 取得当前句柄。触发点击与句柄观察必须在同一次工具调用中并行进行；不要先 `await click()` 再读取对话框。原生弹窗未处理时，点击本身可能等待 `Input.dispatchMouseEvent`，随后页面操作也可能因聚焦失败而阻塞。下面是公开 API 的有界示例；`trigger` 必须来自刚核实的真实控件，`action` 每次明确选择 `dismiss` 或 `accept`：
+
+  ```js
+  const action = 'dismiss';
+  const observations = [];
+  const results = await Promise.allSettled([
+    trigger.click({timeoutMs: 3000}),
+    (async () => {
+      const deadline = Date.now() + 3000;
+      for (let check = 0; check < 150 && Date.now() < deadline; check++) {
+        const dialog = await tab.getJsDialog();
+        if (!dialog) continue;
+        observations.push({type: dialog.type, observed_at: new Date().toISOString()});
+        if (dialog.type !== 'confirm') throw new Error('Unexpected dialog type');
+        if (action === 'dismiss') await dialog.dismiss();
+        else if (action === 'accept') await dialog.accept();
+        else throw new Error('Unsupported dialog action');
+        observations.push({action, finished_at: new Date().toISOString()});
+        return;
+      }
+      throw new Error('No observable confirm dialog within the bounded window');
+    })(),
+  ]);
+  nodeRepl.write({results, observations});
+  if (results.every(result => result.status === 'fulfilled')) await tab.getAXState();
+  ```
+
+  必须核对两分支的实际结果和操作后公开页面状态，再保存本题证据；不能只因调用成功就判通过。超时、句柄缺失或类型不匹配时保留工具错误，不重复点击制造第二个弹窗，也不修改 `window.confirm` 或用页面脚本代答。此路径已在 Codex Desktop 26.1007.21159 的独立诊断页验证可见取消/确认和后台取消；各评分线程仍须自行取证，诊断页不是候选评分证据。
 - 工具返回的对话框类型、文案和 accept/dismiss 结果属于有效交互证据；自定义弹层则使用页面截图与 DOM 文案取证。
+- 有效 API 只返回类型而未提供文案时，不得猜测文案；Rubric 要求精确文案且没有其他实际观察证据时保留未判定。仅在点击结束后读取到 `undefined`，不能据此断言站点没有确认框。
 - 首次点击后数据立即变化且未观测到对话框时，在干净预设状态下先布置监听再重试一次。只有重试后仍没有原生事件或自定义确认层，才能判定缺少确认流程。
 - Rubric 只要求“出现确认并可取消”时，不要因为原生对话框无法进入页面截图而扣分；Rubric 要求精确文案时必须从工具事件中读取文案，不能猜测。
 

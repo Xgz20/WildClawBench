@@ -1199,6 +1199,30 @@ export async function inspectUserQuestions(page) {
   return questions;
 }
 
+export async function skipQwenClarification(page, conversationId, timeout, beforeClick = async () => {}) {
+  if (new URL(page.url()).searchParams.get("chat") !== conversationId) {
+    throw new Error("QWENWORK_CLARIFICATION_CONVERSATION_MISMATCH");
+  }
+  const dialogs = await visibleLocators(page.locator('[role="dialog"], [role="alertdialog"]'));
+  if (dialogs.length) throw new Error("QWENWORK_CLARIFICATION_BLOCKING_DIALOG");
+  const views = await visibleLocators(page.locator(".agents-chat-view-root"));
+  if (views.length !== 1) throw new Error(`QWENWORK_CLARIFICATION_TASK_VIEW_COUNT:${views.length}`);
+  const cards = await visibleLocators(views[0].locator('[data-slot="user-question"]'));
+  if (cards.length !== 1) throw new Error(`QWENWORK_CLARIFICATION_CARD_COUNT:${cards.length}`);
+  const footers = await visibleLocators(cards[0].locator('[data-slot="user-question-footer"]'));
+  if (footers.length !== 1) throw new Error(`QWENWORK_CLARIFICATION_FOOTER_COUNT:${footers.length}`);
+  const skips = await visibleLocators(footers[0].getByRole("button", { name: "跳过", exact: true }));
+  if (skips.length !== 1) throw new Error(`QWENWORK_CLARIFICATION_SKIP_COUNT:${skips.length}`);
+  await beforeClick();
+  await skips[0].click({ timeout });
+  const deadline = Date.now() + timeout;
+  while (await cards[0].isVisible().catch(() => false)) {
+    if (Date.now() >= deadline) throw new Error("QWENWORK_CLARIFICATION_SKIP_NOT_DISMISSED");
+    await sleep(100);
+  }
+  return { skipped: true, method: "unique-bound-clarification-footer-skip", conversation_id: conversationId };
+}
+
 function normalizedQuestions(questions) {
   return (questions || []).map((question) => ({
     title: String(question?.title || "").trim() || null,
@@ -1732,6 +1756,37 @@ export async function observeAttemptOnce(page, config, state, identityInfo) {
   }
   const dom = await inspectDom(page);
   if (dom.userQuestions.length) {
+    if (!dom.attention.length) {
+      const session = chooseQwenAttemptSession(await querySessions(config.sessionDb), state, config.workspace);
+      if (!session || !hasStableConversationId(state)) {
+        throw new Error("QWENWORK_CLARIFICATION_SESSION_UNVERIFIED");
+      }
+      rememberSession(state, session);
+      const questionSha = createHash("sha256").update(JSON.stringify(normalizedQuestions(dom.userQuestions))).digest("hex");
+      state.evidence.clarification_skips ||= [];
+      if (state.evidence.clarification_skips.some(entry => entry.status === "DISPATCHING" && entry.questions_sha256 === questionSha)) {
+        throw new Error("QWENWORK_CLARIFICATION_SKIP_RESULT_UNCERTAIN");
+      }
+      await takeScreenshot(page, config, state, `09-question-skip-before-${state.evidence.clarification_skips.length + 1}.png`);
+      const entry = {
+        decision: "skip-only", status: "DISPATCHING", started_at: new Date().toISOString(),
+        conversation_id: session.conversationId, session_id: session.sessionId,
+        local_project_id: session.localProjectId, cwd: session.cwd,
+        questions: dom.userQuestions, questions_sha256: questionSha,
+        policy: "qwenwork-clarification-skip-only-v1",
+      };
+      const result = await skipQwenClarification(page, session.conversationId, config.timeoutSeconds * 1000, async () => {
+        state.evidence.clarification_skips.push(entry);
+        await saveState(config, state);
+      });
+      Object.assign(entry, { status: "CONFIRMED", finished_at: new Date().toISOString(), ...result });
+      transitionState(state, "RUNNING", { clarification_skipped: true, questions_sha256: questionSha });
+      state.pending_interaction = null;
+      state.error = null;
+      await saveState(config, state);
+      await updateExecutionRecord(config, identityInfo, { clientVersion: state.client.version, execution: { status: "pending", error: null } });
+      return state;
+    }
     await takeScreenshot(page, config, state, "09-user-input-required.png");
     transitionState(state, "NEEDS_ATTENTION", {
       reason: "visible-user-question",

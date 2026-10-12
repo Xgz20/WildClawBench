@@ -9,9 +9,11 @@ DoubaoWork 2.31.10 的队列滚动轨迹复用共用证据核心：只接纳已�
 
 # 执行 Web E2E 用例
 
+`1.21.29` / QwenWork Driver `1.12.13` 按测试人员明确授权，对绑定当前原生会话的唯一需求澄清问卷选择“跳过”，与 General 已有策略一致。只操作问卷 footer 的精确“跳过”，不选答案或推荐、不新建任务或重发 Prompt；记录问题摘要、原生身份及点击意图和实际消失证据。模糊身份、多个控件、阻塞弹层、未知授权或跳过结果不确定仍停止，原已发送任务沿同一 attempt 观察。
+
 `1.21.27` / AstronStudio Driver `1.12.13` 对添加项目后异步出现的“输入路径”入口使用既有有界唯一性等待；短暂零控件不直接失败，多个控件继续拒绝。
 
-`1.21.26` / AstronStudio Driver `1.12.12` 的项目切换采用 General 已验证的原生项目身份规则：只读完整路径绑定唯一 project ID，再在该项目行新建任务，同时核验 UI 路由、完整路径及原生空白会话。已注册项目不重复创建；同名、重复完整路径、非空白会话或投影缺失均失败关闭，不借旧历史路由发送 Prompt。
+`1.21.26` / AstronStudio Driver `1.12.13` 的项目切换采用 General 已验证的原生项目身份规则：只读完整路径绑定唯一 project ID，再在该项目行新建任务，同时核验 UI 路由、完整路径及原生空白会话。已注册项目不重复创建；同名、重复完整路径、非空白会话或投影缺失均失败关闭，不借旧历史路由发送 Prompt。
 
 AstronStudio 3.5.0 的侧栏恢复同时识别精确 `Toggle Sidebar` 标签，并复用已验证的唯一新建任务控件，避免重复读取期间侧栏响应式收起。侧栏“项目”标签限定于唯一分段选择器，复用 General 已验收的语义范围，避免命中同名历史项目组。多个控件仍失败关闭，已发送任务只观察、不重发。
 
@@ -161,7 +163,7 @@ QwenWork 固定 `ui_slots=1`，新队列默认 `run_slots=3`、最大 8；显式
 
 Prompt 发送后以 `sub_chats.session_id` 作为稳定内核会话 ID，以 `sub_chats.stream_id` 和 `chats.ext.taskStatus` 判断运行/终态，DOM 只补充可见授权、停止控件和最终回复。恢复时必须同时匹配稳定 session ID 和项目绝对路径；项目内会话不唯一或无法定位时进入 `NEEDS_ATTENTION`，不得新建任务或重发 Prompt。客户端重启前如数据库和存活进程共同表明仍有活动任务，Driver 拒绝重启。
 
-QwenWork 出现 `data-slot="user-question"` 问卷或其他明确用户输入请求时，Driver 保存问题标题、分页和问题摘要后进入 `NEEDS_ATTENTION`。控制端不得点击“推荐”“跳过”或提交任何选项，因为这会代替被评测 Agent 作答并产生第二条用户消息。Windows 页面激活和 CDP 截图均有有界超时；原生目录选择器只扫描当前 QwenWork 进程拥有的标准 `#32770` 系统对话框，避免遍历 Electron 主窗口的完整可访问性树。
+QwenWork 出现 `data-slot="user-question"` 需求澄清问卷时，按“仅跳过”策略继续：先核对原生 session、conversation、project、cwd 和当前路由，再在唯一任务视图、问卷卡片与 footer 中点击精确“跳过”，保存问题摘要、操作前截图、发送意图及问卷实际消失结果。该交互单独计入 `clarification_skips`，不并入原 Prompt 发送次数、不选答案或“推荐”、不新增文字 Prompt；报告应披露跳过策略与发生次数。结果不确定时不重复点击同一问卷。其它明确用户输入、未知授权、多个问卷/控件或阻塞弹层仍进入 `NEEDS_ATTENTION`。Windows 页面激活和 CDP 截图均有有界超时；原生目录选择器只扫描当前 QwenWork 进程拥有的标准 `#32770` 系统对话框，避免遍历 Electron 主窗口的完整可访问性树。
 
 已确认不再继续的问卷任务可由控制端显式使用单题 Driver 的 `--resume --abandon-user-question` 收口。该动作只在原 automation 已记录 `NEEDS_ATTENTION`、问卷摘要、稳定 conversation/session/project 和绝对 cwd，且当前页面仍显示同一问卷与唯一停止控件时生效；它只点击停止，不点击“推荐”“跳过”或答案，并在数据库确认 stream 结束、候选 workspace 静默后记录结构化 `INFRA_FAILED`。若客户端重启已把原 session 明确标记为 `interrupted`，则直接按数据库终态失败收口。若原默认 CDP 留下无法响应且找不到所属主进程的 Windows 幽灵监听，可额外显式传新的本机 `--endpoint` 与 `--restart-app`；只有原端点不可达、QwenWork 主进程确实不存在时才允许临时端口恢复。同一已核对的临时 QwenWork 实例可继续收口其他身份完整匹配的旧问卷 session，但不能用于继续做题或重发 Prompt。
 
