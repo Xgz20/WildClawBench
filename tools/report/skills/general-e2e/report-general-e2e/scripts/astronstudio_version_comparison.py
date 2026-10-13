@@ -88,6 +88,32 @@ def prompt_from_transcript(path):
     return matches[0]
 
 
+def shell_commands_for_candidates(data, requests, step_rows):
+    indexes = {r["from_request"] for r in step_rows if r["common_screen"] == "large-tool-result-candidate"}
+    selected = {i["call_id"] for r in requests if r["request_index"] in indexes for i in r["contents"]
+                if i["category"] == "tool_results" and i.get("tool_name") in ("bash", "exec_command")}
+    result = {}
+    for number, line in enumerate(data.decode().splitlines(), 1):
+        if not line.strip():
+            continue
+        event = json.loads(line)
+        payload = event.get("payload") or {}
+        if event["type"] != "response_item" or payload.get("type") != "function_call" or payload.get("call_id") not in selected:
+            continue
+        arguments = payload.get("arguments")
+        arguments = json.loads(arguments) if isinstance(arguments, str) else arguments
+        require(isinstance(arguments, dict), "SHELL_ARGUMENTS_OBJECT_EXPECTED")
+        name = payload["name"]
+        field = "command" if name == "bash" else "cmd"
+        command = arguments.get(field)
+        require(name in ("bash", "exec_command") and isinstance(command, str), "SHELL_COMMAND_MISSING")
+        result[payload["call_id"]] = {"tool_name": name, "call_id": payload["call_id"], "call_line": number,
+            "argument_field": field, "command": command, "command_sha256": digest(command.encode()),
+            "max_output_tokens": arguments.get("max_output_tokens")}
+    require(set(result) == selected, "SHELL_COMMAND_BINDING_INCOMPLETE")
+    return result
+
+
 def characterize(rows):
     result = {}
     for category in OUTPUT_CATEGORIES:
@@ -182,8 +208,10 @@ def analyze(old_root, round2_root, report_path):
             "compaction_lines": parsed["compaction_lines"], "unmetered_windows": parsed["unmetered_windows"],
             "nonadvancing_invalid_last_usage": parsed["nonadvancing_invalid_last_usage"],
             "requests": parsed["requests"], "character_items": characters.items, **_task_summary(series)}
+        task_steps = transitions(identity["task_id"], parsed["requests"])
+        task["candidate_shell_commands"] = shell_commands_for_candidates(raw, parsed["requests"], task_steps)
         current.append(task)
-        step_rows.extend(transitions(identity["task_id"], parsed["requests"]))
+        step_rows.extend(task_steps)
         provenance.extend([ex_ref, trace_ref, {"path": str(rollout_path), "sha256": digest(raw), "size": len(raw)}])
         reconciliation.append({"task_id": identity["task_id"], "responses": len(series), "native_usage": native,
             "formal_report_partial_fields": partial, "formal_receipts_changed": False})
@@ -239,6 +267,30 @@ def fmt(v, decimals=0):
 
 def change(a, b):
     return (b / a - 1) * 100
+
+
+def large_tool_problem_summary_markdown(d, candidates):
+    section = d.get("large_tool_problem_summary")
+    if not section:
+        return []
+    require(section["source_report_sha256"] == d["sources"][3]["sha256"], "EDITORIAL_SOURCE_REPORT_DRIFT")
+    key = lambda r: (r["task_id"], r["from_request"], r["to_request"])
+    selected = {key(r): r for r in candidates}
+    problems = section["specific_problems"]
+    require(len(problems) == len(selected) and {key(r) for r in problems} == set(selected), "EDITORIAL_CANDIDATE_SCOPE_DRIFT")
+    lines = ["", "### 9大工具问题总结", "", "#### 共性问题", "",
+        "从这9个候选窗口看，问题主要集中在以下几方面：", ""]
+    for number, item in enumerate(section["common_problems"], 1):
+        lines += [f"{number}. **{item['title']}**", f"   {item['description']}", ""]
+    lines += [f"**建议优先处理：{section['recommendation']}**", "", "#### 具体9个问题", "",
+        "下面逐条对应9个相邻请求窗口。同类问题可能出现在多个窗口，一个窗口也可能包含多个工具调用；输入增量是相邻请求的观测值，不是已证明的精确工具Token归因。", ""]
+    for number, item in enumerate(problems, 1):
+        row = selected[key(item)]
+        require(item["return_chars"] == row["previous_tool_results_chars"] and
+                item["input_delta_tokens"] == row["input_delta_tokens"], "EDITORIAL_MEASUREMENT_DRIFT")
+        lines += [f"{number}. **{item['title']}**", f"   用例：`{item['task_id']}`；请求变化：{item['from_request']}→{item['to_request']}。",
+            f"   {item['description']} 返回合计 **{fmt(item['return_chars'])}字符**，相邻输入增加 **{fmt(item['input_delta_tokens'])} Token**。", ""]
+    return lines
 
 
 def markdown(d):
@@ -337,7 +389,59 @@ def markdown(d):
     for row in sorted(d["new_transitions"], key=lambda x: -x["input_delta_tokens"])[:12]:
         t = byid[row["task_id"]]
         lines.append(f"| [{row['task_id']}]({t['rollout_path']}:{row['from_usage_line']}) | {row['from_request']}→{row['to_request']} | {fmt(row['input_delta_tokens'])} | {fmt(row['previous_output_tokens'])} | {fmt(row['previous_reasoning_chars'])} | {fmt(row['previous_tool_results_chars'])} | {labels.get(row['common_screen'],'普通/待解释')} |")
-    lines += ["", "### 旧版4个大工具返回用例在新版的表现", "",
+    candidates = [r for r in d["new_transitions"] if r["common_screen"] == "large-tool-result-candidate"]
+    lines += large_tool_problem_summary_markdown(d, candidates)
+    lines += ["", f"### 新版{len(candidates)}次大工具返回候选完整明细", "",
+        f"下表逐条列出全部{len(candidates)}个相邻请求窗口，涉及{len({r['task_id'] for r in candidates})}个用例。`10→11`表示第10次响应及其工具结果之后，第11次请求的输入增长。字符数是该窗口内工具返回的合计，可能包含多个工具结果；它不是每个工具的单次最大返回，也不意味着已证明精确的Token归因。", "",
+        "| 序号 | 用例ID | 请求变化 | 实际工具及返回项数 | 工具返回字符合计 | 输入增加Token | 原始返回行 |", "|---:|---|---|---|---:|---:|---|"]
+    call_details = []
+    for number, row in enumerate(candidates, 1):
+        task = byid[row["task_id"]]
+        request = next(r for r in task["requests"] if r["request_index"] == row["from_request"])
+        results = [i for i in request["contents"] if i["category"] == "tool_results"]
+        counts = collections.Counter(i.get("tool_name") or "unknown-native-tool-name" for i in results)
+        tools = "、".join(f"`{name}` × {count}" for name, count in counts.items())
+        refs = "、".join(f"[{i['line']}]({task['rollout_path']}:{i['line']})" for i in results)
+        lines.append(f"| {number} | {row['task_id']} | {row['from_request']}→{row['to_request']} | {tools} | {fmt(row['previous_tool_results_chars'])} | {fmt(row['input_delta_tokens'])} | {refs} |")
+        argument_refs = {i["call_id"]: i for request in task["requests"] for i in request["contents"]
+                         if i["category"] == "tool_arguments" and i.get("call_id")}
+        for item in results:
+            argument = argument_refs.get(item.get("call_id"))
+            require(argument is not None and argument.get("tool_name") == item.get("tool_name"), "TOOL_CALL_RETURN_BINDING_DRIFT")
+            call_details.append({"window": number, "task_id": row["task_id"], "tool_name": item["tool_name"],
+                "call_id": item["call_id"], "chars": item["chars"], "call_line": argument["line"],
+                "result_line": item["line"], "rollout_path": task["rollout_path"]})
+    lines += ["", "其中SEC题3次窗口使用bash，Apple题2次使用exec_command；RFC题2次、Node题1次、NIST题1次使用原生astron_web_fetch。新版本这4次Web Fetch窗口不能沿用旧版的curl来源解释。工具名可直接由原始调用及返回关联核验；Web Fetch存在调用不代表每条返回都成功。", "",
+        "### 实际工具调用汇总", "",
+        f"上述{len(candidates)}个窗口内共关联{len(call_details)}条工具调用及返回，其中{sum(r['chars'] >= 10000 for r in call_details)}条单独返回达到1万字符。工具名称按rollout中的原始调用名统计，不把bash内部的curl、grep等命令另算为工具。", "",
+        "| 原始工具名 | 覆盖候选窗口数 | 关联调用及返回条数 | 单条返回≥1万字符的条数 |", "|---|---:|---:|---:|"]
+    for name in dict.fromkeys(r["tool_name"] for r in call_details):
+        selected = [r for r in call_details if r["tool_name"] == name]
+        lines.append(f"| `{name}` | {len({r['window'] for r in selected})} | {len(selected)} | {sum(r['chars'] >= 10000 for r in selected)} |")
+    lines += ["", f"### 窗口内{len(call_details)}条工具调用逐项明细", "",
+        "窗口序号对应上一张9行候选表。每条通过call_id将原始function_call与function_call_output关联；行号链接可直接查看调用参数及返回内容。", "",
+        "| 窗口序号 | 原始工具名 | 调用ID | 返回字符数 | 调用行 | 返回行 |", "|---:|---|---|---:|---:|---:|"]
+    for item in call_details:
+        path = item["rollout_path"]
+        lines.append(f"| {item['window']} | `{item['tool_name']}` | `{item['call_id']}` | {fmt(item['chars'])} | [{item['call_line']}]({path}:{item['call_line']}) | [{item['result_line']}]({path}:{item['result_line']}) |")
+    shell_details = [i for i in call_details if i["tool_name"] in ("bash", "exec_command")]
+    lines += ["", "### bash与exec_command的具体命令", "",
+        f"这{len(shell_details)}次shell调用的完整命令可以直接读取：bash取function_call.arguments.command，exec_command取function_call.arguments.cmd。以下保留原始命令文本及当时的/tmp路径，并关联调用和返回原件。", "",
+        "SEC题的5次调用都是对已下载的Microsoft 10-K HTML执行rg；Apple题的第1次是curl下载后打印HTML头部，第2次是在本地HTML中搜索Greater China。head只限制行数，不能保证单行HTML的字符长度较小。", ""]
+    for number, item in enumerate(shell_details, 1):
+        task = byid[item["task_id"]]
+        command = task["candidate_shell_commands"][item["call_id"]]
+        require(command["tool_name"] == item["tool_name"] and command["call_line"] == item["call_line"], "SHELL_COMMAND_REFERENCE_DRIFT")
+        budget = command["max_output_tokens"]
+        budget_text = "未显式设置" if budget is None else json.dumps(budget, ensure_ascii=False)
+        path = item["rollout_path"]
+        lines += [f"#### shell调用{number}：窗口{item['window']} / {item['tool_name']}", "",
+            f"用例：`{item['task_id']}`；call_id：`{item['call_id']}`。",
+            f"原始max_output_tokens参数：{budget_text}；返回{fmt(item['chars'])}字符。"
+            f"[调用行{item['call_line']}]({path}:{item['call_line']})、[返回行{item['result_line']}]({path}:{item['result_line']})。", "",
+            "```bash", command["command"], "```", ""]
+    lines += ["max_output_tokens展示原始参数值；引号表示原件中以字符串传递。这里没有确认该参数在bash实现中实际生效，不能据此认定执行输出已按该Token上限裁剪。", "",
+        "### 旧版4个大工具返回用例在新版的表现", "",
         "| 用例ID | 旧版大返回跃升次数 | 新版大返回跃升次数 | 新版最大输入跃升 |", "|---|---:|---:|---:|"]
     for task_id in os["large_tool_task_ids"]:
         previous = [r for r in d["old_transitions_common_screen"] if r["task_id"] == task_id and r["common_screen"] == "large-tool-result-candidate"]

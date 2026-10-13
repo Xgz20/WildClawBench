@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from pathlib import Path
 import sys
 import unittest
@@ -21,6 +22,28 @@ def request(index, input_tokens, output_tokens, thinking=0, body=0, results=0):
 
 
 class VersionComparisonTests(unittest.TestCase):
+    def test_shell_command_capture_preserves_raw_text_and_selects_only_candidate_calls(self):
+        command = 'rg -n "net income" /tmp/report.htm | head -20'
+        rows = [
+            {"type": "response_item", "payload": {"type": "function_call", "call_id": "selected", "name": "bash",
+                "arguments": json.dumps({"command": command, "max_output_tokens": "3000"})}},
+            {"type": "response_item", "payload": {"type": "function_call", "call_id": "outside", "name": "bash",
+                "arguments": json.dumps({"command": "outside-window-content"})}},
+        ]
+        requests = [{"request_index": 1, "contents": [{"category": "tool_results", "tool_name": "bash", "call_id": "selected"}]},
+                    {"request_index": 2, "contents": [{"category": "tool_results", "tool_name": "bash", "call_id": "outside"}]}]
+        steps = [{"from_request": 1, "common_screen": "large-tool-result-candidate"}]
+        captured = MODULE.shell_commands_for_candidates(("\n".join(json.dumps(r) for r in rows)).encode(), requests, steps)
+        self.assertEqual(set(captured), {"selected"})
+        self.assertEqual(captured["selected"]["command"], command)
+        self.assertEqual(captured["selected"]["max_output_tokens"], "3000")
+
+    def test_missing_original_shell_call_is_rejected(self):
+        requests = [{"request_index": 1, "contents": [{"category": "tool_results", "tool_name": "exec_command", "call_id": "missing"}]}]
+        steps = [{"from_request": 1, "common_screen": "large-tool-result-candidate"}]
+        with self.assertRaisesRegex(ValueError, "SHELL_COMMAND_BINDING_INCOMPLETE"):
+            MODULE.shell_commands_for_candidates(b"", requests, steps)
+
     def test_workspace_root_normalization_does_not_rewrite_similarly_named_files(self):
         text = 'Read ./workspace/data.txt; root `./workspace`; "relative to ./workspace"; ./workspace_notes.txt'
         self.assertEqual(MODULE.normalize_workspace_prompt(text),
