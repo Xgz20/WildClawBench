@@ -37,6 +37,36 @@ def fixture(extra):
 
 
 class ContextDiagnosisTests(unittest.TestCase):
+    def test_compaction_size_in_unchanged_last_usage_is_audited_without_counting_a_response(self):
+        first, second = usage(100, 80, 10, 2), usage(130, 100, 8, 3)
+        malformed = usage(0, 0, 0, 0)
+        malformed["total_tokens"] = 16912
+        data, execution = fixture([
+            item("reasoning", id="r1", summary=[{"text": "abc"}]),
+            event("token_count", info={"total_token_usage": first, "last_token_usage": first}),
+            item("reasoning", id="unmetered", summary=[{"text": "extra"}]),
+            event("token_count", info={"total_token_usage": first, "last_token_usage": malformed}),
+            item("reasoning", id="r2", summary=[{"text": "defgh"}]),
+            event("token_count", info={"total_token_usage": usage(230, 180, 18, 5), "last_token_usage": second}),
+        ])
+        result = MODULE.parse_rollout(data, execution)
+        self.assertEqual(len(result["requests"]), 2)
+        self.assertEqual(sum(r["total_tokens"] for r in result["requests"]), 248)
+        self.assertEqual([r["reasoning_chars"] for r in result["requests"]], [3, 5])
+        self.assertEqual(result["unmetered_windows"][0]["reasoning_chars"], 5)
+        anomaly = result["nonadvancing_invalid_last_usage"][0]
+        self.assertEqual(anomaly["last_token_usage"]["total_tokens"], 16912)
+        self.assertFalse(anomaly["counted_as_model_response"])
+
+    def test_invalid_last_usage_on_an_advancing_checkpoint_remains_rejected(self):
+        malformed = usage(0, 0, 0, 0)
+        malformed["total_tokens"] = 16912
+        data, execution = fixture([
+            event("token_count", info={"total_token_usage": usage(100, 80, 10, 2), "last_token_usage": malformed}),
+        ])
+        with self.assertRaisesRegex(ValueError, "INVALID_NATIVE_USAGE"):
+            MODULE.parse_rollout(data, execution)
+
     def test_fresh_reasoning_at_unchanged_usage_is_not_merged_into_next_response(self):
         first, second = usage(100, 80, 10, 2), usage(130, 100, 8, 3)
         total = usage(230, 180, 18, 5)

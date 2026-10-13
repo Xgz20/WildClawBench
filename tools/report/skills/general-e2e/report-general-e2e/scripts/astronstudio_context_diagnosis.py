@@ -103,6 +103,7 @@ def parse_rollout(data, execution):
     seen, call_names, call_owners = {}, {}, {}
     startup, compactions, context_changes = [], [], []
     repeated_snapshots = late_outputs = 0
+    nonadvancing_invalid_last_usage = []
 
     for number, line in enumerate(data.decode("utf-8").splitlines(), 1):
         if not line.strip():
@@ -140,10 +141,18 @@ def parse_rollout(data, execution):
                 if valid_usage(total):
                     previous = {key: total[key] for key in FIELDS}
                 continue
-            require(valid_usage(total) and valid_usage(last), "INVALID_NATIVE_USAGE")
+            require(valid_usage(total), "INVALID_NATIVE_USAGE")
             total = {key: total[key] for key in FIELDS}
             if total == previous:
                 repeated_snapshots += 1
+                # A compaction checkpoint may carry a context-size snapshot in
+                # last_token_usage while cumulative billable usage is unchanged.
+                # It cannot describe another model response. Preserve the anomaly
+                # and flush fresh content without contaminating the next advance.
+                if not valid_usage(last):
+                    nonadvancing_invalid_last_usage.append({"line": number,
+                        "timestamp": event.get("timestamp"), "last_token_usage": last,
+                        "cumulative_unchanged": True, "counted_as_model_response": False})
                 if buffer:
                     unmetered.append({"checkpoint_line": number,
                         "checkpoint_timestamp": event.get("timestamp"),
@@ -152,6 +161,7 @@ def parse_rollout(data, execution):
                         **summarize_contents(buffer), "contents": buffer})
                 buffer = []
                 continue
+            require(valid_usage(last), "INVALID_NATIVE_USAGE")
             require(all(total[k] == previous[k] + last[k] for k in FIELDS),
                     "NATIVE_USAGE_UNRECONCILED")
             row = {"request_index": len(requests) + 1, "usage_line": number,
@@ -246,6 +256,7 @@ def parse_rollout(data, execution):
             "startup": {**meta, **summarize_contents(startup), "contents": startup},
             "post_initial_context_messages": context_changes,
             "compaction_lines": compactions, "repeated_usage_snapshots": repeated_snapshots,
+            "nonadvancing_invalid_last_usage": nonadvancing_invalid_last_usage,
             "late_tool_results": late_outputs}
 
 
