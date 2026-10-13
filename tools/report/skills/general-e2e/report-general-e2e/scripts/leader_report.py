@@ -7,6 +7,7 @@ from copy import deepcopy
 from decimal import Decimal, ROUND_HALF_UP
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 import xml.etree.ElementTree as ET
@@ -49,6 +50,74 @@ def num(value, digits=2, percent=False, grouping=False):
     d = Decimal(str(value)) * (100 if percent else 1)
     d = d.quantize(Decimal(1).scaleb(-digits), rounding=ROUND_HALF_UP)
     return format(d, ("," if grouping else "") + f".{digits}f") + ("%" if percent else "")
+
+
+def average_token_comparisons(data):
+    """Compare unrounded workbook values while retaining each coverage bound."""
+    label = data["target"]["label"]
+    view = data["tables"]["效率对比"]
+    annotations = view.get("cell_annotations", {})
+    index = next(i for i, row in enumerate(view["rows"]) if row[0] == label)
+    value = view["rows"][index][2]
+    numeric = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+    coverage = annotations.get(f"{index}:2", {})
+    result = {"target_label": label, "target_average_tokens": value if numeric(value) and value >= 0 else None,
+              "target_coverage": coverage, "comparisons": [], "unavailable_peers": [], "zero_peers": []}
+    for i, row in enumerate(view["rows"]):
+        if i == index:
+            continue
+        peer_value = row[2]
+        if not numeric(peer_value) or peer_value < 0:
+            result["unavailable_peers"].append(row[0])
+            continue
+        if peer_value == 0:
+            result["zero_peers"].append(row[0])
+            continue
+        if result["target_average_tokens"] is None:
+            continue
+        peer_coverage = annotations.get(f"{i}:2", {})
+        statuses = (coverage.get("status"), peer_coverage.get("status"))
+        basis = {("complete", "complete"): "complete",
+                 ("partial", "complete"): "lower_bound",
+                 ("complete", "partial"): "upper_bound"}.get(statuses, "observed_values_only")
+        ratio = Decimal(str(value)) / Decimal(str(peer_value))
+        result["comparisons"].append({"peer_label": row[0], "peer_average_tokens": peer_value,
+                                      "peer_coverage": peer_coverage, "ratio": float(ratio),
+                                      "display_ratio": num(ratio), "basis": basis})
+    return result
+
+
+def render_efficiency_summary(data, comparison):
+    label = comparison["target_label"]
+    value = comparison["target_average_tokens"]
+    if value is None:
+        return f"{label} 的 Token 消耗不可用，不能据此作消耗排名。"
+    text = f"{label} 每个冻结用例平均 Token 为 {num(value, grouping=True)}"
+    peers = comparison["comparisons"]
+    if peers:
+        text += "，按当前可核验用量约为" + "、".join(
+            f"{peer['peer_label']} 的 {peer['display_ratio']} 倍" for peer in peers) + "。"
+    else:
+        text += "。本批次没有可用于倍数比较的参照 Token 值。"
+    coverage = comparison["target_coverage"]
+    if coverage.get("status") == "complete":
+        text += f"目标组覆盖全部 {coverage.get('total_cases', data['scope']['unique_task_count'])} 题。"
+    elif coverage.get("status") == "partial":
+        if coverage.get("complete_cases") is not None and coverage.get("partial_cases") is not None:
+            text += f"目标组 {coverage['complete_cases']} 题完整、{coverage['partial_cases']} 题部分统计；"
+        else:
+            text += "目标组覆盖不全；"
+        text += "该均值及相对完整参照的倍数是当前可核验消耗下限。"
+    else:
+        text += "目标组统计覆盖尚未确认，倍数只比较当前观测值。"
+    incomplete_peers = [p["peer_label"] for p in peers if p["peer_coverage"].get("status") != "complete"]
+    if incomplete_peers:
+        text += "、".join(incomplete_peers) + " 的覆盖不完整或未确认，相应倍数不代表全量精确消耗比。"
+    if comparison["unavailable_peers"]:
+        text += "、".join(comparison["unavailable_peers"]) + " 缺少可用 Token 统计，暂不参与这项比较。"
+    if comparison["zero_peers"]:
+        text += "、".join(comparison["zero_peers"]) + " 的平均 Token 为 0，倍数不适用。"
+    return text
 
 
 def extract(workbook, data, target_unit_id):
@@ -105,6 +174,7 @@ def extract(workbook, data, target_unit_id):
             "model_view": [r for r in view["rows"] if r[0] in [labels[u] for u in model_peers]] if len(model_peers) > 1 else [],
             "harness_view": [r for r in view["rows"] if r[0] in [labels[u] for u in harness_peers]] if len(harness_peers) > 1 else [],
         }
+    result["resource_comparisons"] = {"average_tokens": average_token_comparisons(result)}
     result["narratives"] = summaries(result)
     return result
 
@@ -143,18 +213,7 @@ def summaries(data):
         elif name == "Agent能力对比": out[name] += "七维得分来自检查点评分，工具次数不替代能力得分。"
         elif name == "难度对比": out[name] += "各分层的冻结用例数见表头，缺失评分不补零。"
         else: out[name] += "结果范围限于表中列出的输入模态。"
-    e = target("效率对比")
-    refs = [f"{r[0]} 为 {num(r[2], grouping=True)}" for r in peers("效率对比") if numeric(r[2])]
-    index = next(i for i, r in enumerate(tables["效率对比"]["rows"]) if r[0] == label)
-    coverage = tables["效率对比"].get("cell_annotations", {}).get(f"{index}:2", {})
-    if numeric(e[2]):
-        out["效率对比"] = f"{label} 每个冻结用例平均 Token 为 {num(e[2], grouping=True)}。"
-        if refs: out["效率对比"] += "参照组合：" + "，".join(refs) + "。"
-        if coverage.get("status") == "complete":
-            out["效率对比"] += f"目标组覆盖全部 {coverage.get('total_cases', o[2])} 题。"
-        else: out["效率对比"] += "目标组覆盖不全，该值为可核验消耗下限。"
-    else: out["效率对比"] = f"{label} 的 Token 消耗不可用，不能据此作消耗排名。"
-    out["效率对比"] += "未暴露字段保持不可用；部分统计范围另列。"
+    out["效率对比"] = render_efficiency_summary(data, average_token_comparisons(data))
     groups = tables["工具调用对比"].get("groups", [])
     group = next((g for g in groups if g["title"] == label), None)
     total = group["rows"][0][2] if group and group.get("rows") else None
