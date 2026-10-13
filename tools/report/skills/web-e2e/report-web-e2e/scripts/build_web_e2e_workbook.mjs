@@ -89,10 +89,13 @@ function writeResourceCoverage(sheet, row, units) {
   return end;
 }
 
-function subtotalNote(sheet, row, columns) {
+function subtotalNote(sheet, row, columns, includeTaskTiming = false) {
   sheet.mergeCells(`A${row}:${columnName(columns)}${row}`);
-  sheet.getRange(`A${row}`).values = [['浅黄色数值为已知小计或基于小计计算的指标，完整总量仍未知；完整覆盖和来源状态见效率对比下方。平均 Token 使用冻结用例数作分母。']];
-  sheet.getRange(`A${row}:${columnName(columns)}${row}`).format = { wrapText: true, rowHeight: 34, font: { size: 10, color: COLORS.text }, verticalAlignment: 'center' };
+  const note = includeTaskTiming
+    ? '浅黄色数值为已知小计或基于小计计算的指标，完整总量仍未知；平均 Token 和平均任务耗时使用冻结用例数作分母。任务耗时来自原生 agent_duration_seconds；P50/P90仅在逐题计时完整覆盖时按线性插值计算，流程耗时不作替代。覆盖和来源状态见下方。'
+    : '浅黄色数值为已知小计或基于小计计算的指标，完整总量仍未知；完整覆盖和来源状态见效率对比下方。平均 Token 使用冻结用例数作分母。';
+  sheet.getRange(`A${row}`).values = [[note]];
+  sheet.getRange(`A${row}:${columnName(columns)}${row}`).format = { wrapText: true, rowHeight: includeTaskTiming ? 44 : 34, font: { size: 10, color: COLORS.text }, verticalAlignment: 'center' };
 }
 
 function markPartial(sheet, row, column, observation) {
@@ -454,10 +457,11 @@ function buildEfficiencySheet(workbook, data) {
   }
   const timing = timingComparison(data);
   const timingHeaderRow = end + 4;
-  styleSection(sheet, timingHeaderRow - 1, TIMING_HEADERS.length, '流程耗时对比（流程耗时升序，缺失值置末）');
+  styleSection(sheet, timingHeaderRow - 1, TIMING_HEADERS.length, '任务耗时对比（任务耗时升序，缺失值置末）');
   end = writeTable(sheet, timingHeaderRow, TIMING_HEADERS, timing.rows);
   if (timing.rows.length) sheet.getRange(`B${timingHeaderRow + 1}:E${end}`).format.numberFormat = '#,##0.000';
-  subtotalNote(sheet, end + 2, TOKEN_HEADERS.length);
+  timing.cells.forEach((row, i) => row.forEach((cell, j) => markPartial(sheet, i + timingHeaderRow + 1, j + 2, cell)));
+  subtotalNote(sheet, end + 2, TOKEN_HEADERS.length, true);
   writeResourceCoverage(sheet, end + 4, scoreOrder(data.units));
   applyWidths(sheet, { A: 34, B: 20, C: 20, D: 22, E: 20, F: 22, G: 22, H: 20, I: 18 });
   sheet.freezePanes.freezeRows(4);

@@ -120,6 +120,32 @@ def render_efficiency_summary(data, comparison):
     return text
 
 
+def render_task_timing_summary(data):
+    label = data["target"]["label"]
+    timing = data["tables"]["效率对比"].get("timing_table")
+    if not timing:
+        return None
+    index = next(i for i, row in enumerate(timing["rows"]) if row[0] == label)
+    row = timing["rows"][index]
+    if row[2] is None:
+        return f"{label} 的原生任务耗时不可用，不用流程耗时替代。"
+    text = f"{label} 每个冻结用例平均任务耗时为 {num(row[2], 3, grouping=True)} 秒"
+    if row[3] is not None and row[4] is not None:
+        text += f"，P50 为 {num(row[3], 3, grouping=True)} 秒，P90 为 {num(row[4], 3, grouping=True)} 秒"
+    text += "。"
+    peers = [f"{peer[0]} 的 {num(Decimal(str(row[2])) / Decimal(str(peer[2])))} 倍"
+             for peer in timing["rows"] if peer[0] != label and isinstance(peer[2], (int, float)) and peer[2] > 0]
+    if peers:
+        text += "按可核验用量，平均任务耗时约为" + "、".join(peers) + "。"
+    if timing.get("cell_annotations", {}).get(f"{index}:2", {}).get("status") == "partial":
+        text += "目标组计时覆盖不足，平均值是已知用量下限；分位数未补算。"
+    if any(timing.get("cell_annotations", {}).get(f"{i}:2", {}).get("status") == "partial"
+           for i, peer in enumerate(timing["rows"]) if peer[0] != label):
+        text += "部分参照计时不完整，相关倍数只比较已知用量。"
+    text += "任务耗时包含已确认失败任务的原生耗时，流程等待另计。"
+    return text
+
+
 def extract(workbook, data, target_unit_id):
     units = {x["unit_id"]: x for x in data["units"]}
     if target_unit_id not in units: raise ValueError("LEADER_TARGET_UNIT_NOT_FOUND")
@@ -130,12 +156,15 @@ def extract(workbook, data, target_unit_id):
     for name, view in tables.items():
         # Detail sheets are audited separately; leadership consumes seven views.
         if name not in ["总览", "效率对比", "工具调用对比", *DIMENSIONS]: continue
-        row_numbers = [i + 2 for i in range(len(view["rows"]))]
+        header_row = view.get("header_row", 1)
+        row_numbers = [i + header_row + 1 for i in range(len(view["rows"]))]
         if view.get("layout") == "grouped_tools":
             row_numbers = [g["data_start_row"] + i for g in view["groups"] for i in range(len(g["rows"]))]
         else:
             for i, h in enumerate(view["headers"]):
-                assert str(cells[name][column(i + 1) + "1"]).replace("\n", "") == h
+                assert str(cells[name][column(i + 1) + str(header_row)]).replace("\n", "") == h
+            if view.get("title"):
+                assert cells[name]["A" + str(header_row - 1)] == view["title"]
         rows = []
         for rn, expected in zip(row_numbers, view["rows"]):
             row = []
@@ -150,6 +179,25 @@ def extract(workbook, data, target_unit_id):
                 row.append(actual)
             rows.append(row)
         view["rows"] = rows
+        if view.get("timing_table"):
+            timing = view["timing_table"]
+            for i, heading in enumerate(timing["headers"]):
+                assert str(cells[name][column(i + 1) + str(timing["header_row"])]).replace("\n", "") == heading
+            extracted = []
+            for rn, expected in enumerate(timing["rows"], timing["header_row"] + 1):
+                actual_row = []
+                for i, value in enumerate(expected):
+                    actual = cells[name].get(column(i + 1) + str(rn))
+                    if value is None:
+                        assert actual in [None, "-", ""]
+                        actual = None
+                    elif isinstance(value, (int, float)):
+                        assert isinstance(actual, (int, float)) and abs(actual - value) < 1e-8
+                    else:
+                        assert actual == value
+                    actual_row.append(actual)
+                extracted.append(actual_row)
+            timing["rows"] = extracted
     target = units[target_unit_id]
     # Use actual selected task identities; mixed/unknown model values do not
     # establish a controlled model comparison.
@@ -214,6 +262,9 @@ def summaries(data):
         elif name == "难度对比": out[name] += "各分层的冻结用例数见表头，缺失评分不补零。"
         else: out[name] += "结果范围限于表中列出的输入模态。"
     out["效率对比"] = render_efficiency_summary(data, average_token_comparisons(data))
+    task_timing = render_task_timing_summary(data)
+    if task_timing:
+        out["效率对比"] += "\n\n" + task_timing
     groups = tables["工具调用对比"].get("groups", [])
     group = next((g for g in groups if g["title"] == label), None)
     total = group["rows"][0][2] if group and group.get("rows") else None
@@ -266,6 +317,11 @@ def render(data):
         lines += v.get("notes",[])+[""]
         if v.get("coverage_table"):
             c=v["coverage_table"];lines += ["完整统计用例数 / 冻结用例数；部分统计单列：","",*md_table(c["headers"],c["rows"]),""]
+        if v.get("timing_table"):
+            t=v["timing_table"]
+            lines += ["### 任务耗时对比", "", *md_table(t["headers"],t["rows"],t["formats"],t.get("cell_annotations")), "", *t["notes"], ""]
+            c=t["coverage_table"]
+            lines += ["任务耗时完整统计覆盖：", "", *md_table(c["headers"],c["rows"]), ""]
     lines += ["## 总结","",
               f"本轮以 {label} 为目标单元，与参照组合在分类、七维能力和难度分层上的差异已在各章节列明。失败任务的真实产物得分计入均值，完成率单独呈现，不以剔除失败的方式抬高效果指标。",
               "资源缺口保留覆盖说明；组合对照应结合模型与 Harness 的实际配置解释。所有表格数值均从本版 Excel 提取并与同源 JSON 逐项核对。","",

@@ -23,6 +23,41 @@ class GeneralReportViewsTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_task_timing_uses_native_duration_for_all_frozen_runs_and_linear_percentiles(self):
+        for row, value in zip(self.data["tasks"], [1, 2, 3, 100]):
+            row["resource"]["agent_duration_seconds"].update(value=value, known_subtotal=value, complete=True, status="observed")
+            row["resource"]["duration_seconds"].update(value=1000, known_subtotal=1000, complete=True, status="observed")
+        self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
+        view = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]
+        timing = view["timing_table"]
+        self.assertEqual(timing["headers"], ["模型@Harness", "任务耗时(s)", "平均任务耗时(s)", "任务耗时P50(s)", "任务耗时P90(s)"])
+        self.assertEqual(timing["rows"][0][1:4], [106, 26.5, 2.5])
+        self.assertAlmostEqual(timing["rows"][0][4], 70.9)
+        self.assertEqual(timing["metric_field"], "agent_duration_seconds")
+        self.assertGreater(timing["header_row"], len(view["rows"]) + 1)
+        self.assertEqual(len(self.data["tasks"]), 4)  # Includes evaluation_error and unscored runs.
+        self.data["units"][0]["resources"]["agent_duration_seconds"]["total"] = 105
+        with self.assertRaisesRegex(ValueError, "TASK_TIMING_TOTAL_MISMATCH"):
+            VIEWS.build_views(self.data, self.references)
+
+    def test_task_timing_preserves_partial_subtotals_and_never_falls_back_to_flow(self):
+        for row in self.data["tasks"]:
+            row["resource"]["agent_duration_seconds"].update(value=None, known_subtotal=None, complete=False, status="unavailable")
+            row["resource"]["duration_seconds"].update(value=1000, complete=True, status="observed")
+        self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
+        view = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["timing_table"]
+        self.assertEqual(view["rows"][0][1:], [None, None, None, None])
+        self.data["tasks"][0]["resource"]["agent_duration_seconds"].update(value=0, known_subtotal=0, complete=True, status="observed")
+        self.data["tasks"][1]["resource"]["agent_duration_seconds"].update(known_subtotal=10, status="partial")
+        self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
+        view = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["timing_table"]
+        self.assertEqual(view["rows"][0][1:], [10, 2.5, None, None])
+        self.assertEqual(view["cell_annotations"]["0:2"]["status"], "partial")
+        for row in self.data["tasks"]:
+            row["resource"]["agent_duration_seconds"].update(value=0, known_subtotal=0, complete=True, status="observed")
+        self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
+        self.assertEqual(VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["timing_table"]["rows"][0][1:], [0, 0, 0, 0])
+
     def test_overview_has_requested_columns_and_valid_score_denominator(self):
         tables = self.data["presentation"]["tables"]
         self.assertEqual(list(tables)[:2], ["总览", "效率对比"])
@@ -43,6 +78,27 @@ class GeneralReportViewsTests(unittest.TestCase):
         self.assertIn("流程耗时(s)", values)
         request = overview["headers"].index("总请求数")
         self.assertEqual(overview["headers"][request + 1], "工具调用数")
+
+    def test_token_sort_keeps_missing_last_zero_first_and_unit_annotations_aligned(self):
+        rows = [["missing", None], ["big", 100], ["tie-b", 20], ["partial", 10], ["zero", 0], ["tie-a", 20]]
+        view = {
+            "rows": rows,
+            "cell_annotations": {f"{i}:1": {"unit": row[0], "status": "partial" if row[0] == "partial" else "complete"}
+                                 for i, row in enumerate(rows)},
+            "coverage_table": {"rows": [[row[0], "1/2" if row[0] == "partial" else "2/2"] for row in rows]},
+            "timing_table": {"rows": [["big", 1], ["zero", 100]]},
+        }
+        VIEWS.attach_token_comparison(view)
+        self.assertEqual([row[0] for row in view["rows"]], ["zero", "partial", "tie-a", "tie-b", "big", "missing"])
+        self.assertEqual([row[0] for row in view["coverage_table"]["rows"]], [row[0] for row in view["rows"]])
+        for i, row in enumerate(view["rows"]):
+            self.assertEqual(view["cell_annotations"][f"{i}:1"]["unit"], row[0])
+        self.assertEqual(view["cell_annotations"]["1:1"]["status"], "partial")
+        self.assertEqual(view["coverage_table"]["rows"][1], ["partial", "1/2"])
+        self.assertEqual(view["timing_table"]["rows"], [["big", 1], ["zero", 100]])
+        once = copy.deepcopy(view)
+        VIEWS.attach_token_comparison(view)
+        self.assertEqual(view, once)
 
     def test_efficiency_uses_total_denominator_and_distinguishes_cache_write_zero(self):
         def set_metric(key, value):

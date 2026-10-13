@@ -1176,6 +1176,20 @@ def render_markdown(data: Mapping[str, Any]) -> str:
         if view.get("coverage_table"):
             coverage = view["coverage_table"]
             lines.extend(["完整统计用例数 / 冻结用例数；部分统计单列：", "", *markdown_table(coverage["headers"], coverage["rows"]), ""])
+        if view.get("timing_table"):
+            timing = view["timing_table"]
+            timing_rows = []
+            for ri, row in enumerate(timing["rows"]):
+                cells = []
+                for ci, value in enumerate(row):
+                    text = "-" if value is None else fixed_number(value, 3, grouping=True) if isinstance(value, (int, float)) else value
+                    if value is not None and timing["cell_annotations"].get(f"{ri}:{ci}", {}).get("status") == "partial":
+                        text = str(text) + "\\*"
+                    cells.append(text)
+                timing_rows.append(cells)
+            lines.extend(["### 任务耗时对比", "", *markdown_table(timing["headers"], timing_rows), "", *timing["notes"], ""])
+            coverage = timing["coverage_table"]
+            lines.extend(["任务耗时完整统计覆盖：", "", *markdown_table(coverage["headers"], coverage["rows"]), ""])
     score = data["overall"]["score"]
     lines.extend(["## 结论与范围", "", f"本批次共有 {score['frozen_task_run_count']} 次任务运行，有效评分 {score['valid_score_count']} 次，未评分 {score['unscored_count']} 次。",
                   "结果仅覆盖本批次题目和客户端配置。多单元同时改变模型与 Harness 时，属于组合对照，不能把分差归因于单一因素。",

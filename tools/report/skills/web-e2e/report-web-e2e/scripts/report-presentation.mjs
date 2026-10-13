@@ -56,7 +56,7 @@ export function pairedTokens(unit, detailRows, keys, ratio = false) {
 }
 
 export const TOKEN_HEADERS = ['模型@Harness', '总 Token', '平均 Token', '输入 Token（含缓存）', '普通输入 Token', '缓存命中输入 Token', '缓存写入输入 Token', '输出 Token', '缓存命中率'];
-export const TIMING_HEADERS = ['模型@Harness', '流程耗时(s)', '平均流程耗时(s)', '流程耗时P50(s)', '流程耗时P90(s)'];
+export const TIMING_HEADERS = ['模型@Harness', '任务耗时(s)', '平均任务耗时(s)', '任务耗时P50(s)', '任务耗时P90(s)'];
 
 export function tokenComparison(data) {
   const units = [...data.units].sort((a, b) => numericOrder(a, b, unit => metricDisplay(unit, 'total_tokens', unit.total_tokens).value));
@@ -74,6 +74,22 @@ export function tokenComparison(data) {
 }
 
 export function timingComparison(data) {
-  const units = [...data.units].sort((a, b) => numericOrder(a, b, unit => unit.total_duration_seconds));
-  return { units, rows: units.map(unit => [unit.unit, unit.total_duration_seconds, unit.average_duration_seconds, unit.duration_p50_seconds, unit.duration_p90_seconds]) };
+  const units = [...data.units].sort((a, b) => numericOrder(a, b, unit => metricDisplay(unit, 'agent_duration_seconds', unit.total_agent_duration_seconds).value));
+  const percentile = (values, ratio) => {
+    const ordered = [...values].sort((a, b) => a - b), position = (ordered.length - 1) * ratio;
+    const lower = Math.floor(position), upper = Math.min(lower + 1, ordered.length - 1);
+    return ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower);
+  };
+  const cells = units.map(unit => {
+    const total = metricDisplay(unit, 'agent_duration_seconds', unit.total_agent_duration_seconds);
+    const observations = (data.detail_rows ?? []).filter(row => row.unit === unit.unit).map(row => rowMetric(row, 'agent_duration_seconds'));
+    const complete = total.value !== null && !total.partial && observations.length === unit.case_count && observations.length > 0
+      && observations.every(item => item !== null && !item.partial);
+    const values = complete ? observations.map(item => item.value) : [];
+    if (complete && Math.abs(values.reduce((sum, value) => sum + value, 0) - total.value) > 1e-6 * Math.max(1, total.value))
+      throw new Error('TASK_TIMING_TOTAL_MISMATCH');
+    return [total, { ...total, value: total.value !== null && unit.case_count > 0 ? total.value / unit.case_count : null },
+      { value: complete ? percentile(values, .5) : null, partial: false }, { value: complete ? percentile(values, .9) : null, partial: false }];
+  });
+  return { units, cells, rows: units.map((unit, i) => [unit.unit, ...cells[i].map(cell => cell.value)]) };
 }

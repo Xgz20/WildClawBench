@@ -334,6 +334,16 @@ def percentile(values: list[float], ratio: float) -> float | None:
     return round(ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower), 2)
 
 
+def timing_percentile(values: list[float], ratio: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    position = (len(ordered) - 1) * ratio
+    lower = int(position)
+    upper = min(lower + 1, len(ordered) - 1)
+    return ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower)
+
+
 def dimension_average(tasks: list[dict], key: str, level: str) -> float | None:
     values = []
     for task in tasks:
@@ -428,6 +438,7 @@ def unit_summary(
     aesthetic_scored = [value for value in aesthetic_values if value is not None]
     resources = resource_summary(tasks)
     durations = complete_values([resource_value(task, "execution", "duration_seconds") for task in tasks])
+    agent_durations = complete_values([resource_value(task, "execution", "agent_duration_seconds") for task in tasks])
     costs = complete_values([(task.get("usage") or {}).get("cost_usd") for task in tasks])
     total_token_values = complete_values([resource_value(task, "usage", "total_tokens") for task in tasks])
     input_token_values = complete_values([resource_value(task, "usage", "input_tokens") for task in tasks])
@@ -455,6 +466,9 @@ def unit_summary(
         "average_duration_seconds": average(durations),
         "duration_p50_seconds": percentile(durations, 0.5),
         "duration_p90_seconds": percentile(durations, 0.9),
+        "average_agent_duration_seconds": statistics.fmean(agent_durations) if agent_durations else None,
+        "agent_duration_p50_seconds": timing_percentile(agent_durations, .5),
+        "agent_duration_p90_seconds": timing_percentile(agent_durations, .9),
         "average_cost_usd": average(costs),
         "average_total_tokens": average(total_token_values),
         "average_input_tokens": average(input_token_values),

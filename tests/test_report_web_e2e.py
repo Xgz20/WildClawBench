@@ -133,6 +133,23 @@ def report_config():
 
 
 class ReportWebE2ETest(unittest.TestCase):
+    def test_native_task_timing_statistics_are_independent_of_flow_timing(self):
+        item = submission("test", "test", [70, 90])
+        for entry, native, flow in zip(item["tasks"], [2, 8], [100, 200]):
+            entry["execution"].update(agent_duration_seconds=native, duration_seconds=flow)
+        data = report_module.build_report_data([item]);unit = data["units"][0]
+        self.assertEqual(unit["total_agent_duration_seconds"], 10)
+        self.assertEqual(unit["average_agent_duration_seconds"], 5)
+        self.assertEqual(unit["agent_duration_p50_seconds"], 5)
+        self.assertAlmostEqual(unit["agent_duration_p90_seconds"], 7.4)
+        self.assertEqual(unit["total_duration_seconds"], 300)
+        self.assertEqual(unit["average_duration_seconds"], 150)
+        del item["tasks"][1]["execution"]["agent_duration_seconds"]
+        unit = report_module.build_report_data([item])["units"][0]
+        self.assertIsNone(unit["average_agent_duration_seconds"])
+        self.assertIsNone(unit["agent_duration_p50_seconds"])
+        self.assertIsNone(unit["agent_duration_p90_seconds"])
+
     def test_resource_coverage_is_independent_in_both_profiles(self):
         for factory in (submission, artifactsbench_submission):
             item = factory("smoke-only", "qwenwork", [70, 90])

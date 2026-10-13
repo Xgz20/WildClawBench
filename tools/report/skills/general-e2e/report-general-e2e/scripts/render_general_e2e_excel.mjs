@@ -130,27 +130,30 @@ function buildView(workbook, name, view) {
   const sheet = workbook.worksheets.add(name);
   sheet.showGridLines = false;
   const headings = name === "分类对比" ? view.headers.map(h => h.replace("平均分(", "平均分\n(")) : view.headers;
-  const end = table(sheet, 1, headings, view.rows);
+  const headerRow = view.header_row || 1;
+  const dataRow = headerRow + 1;
+  const end = table(sheet, headerRow, headings, view.rows);
   const last = columnName(view.headers.length);
   sheet.getRange(`A1:${last}${Math.max(end, 1)}`).format.font.name = "Arial";
   sheet.getRange(`A1:${last}${Math.max(end, 1)}`).format.font.size = 11;
-  sheet.getRange(`A1:${last}1`).format.rowHeight = 38;
+  sheet.getRange(`A${headerRow}:${last}${headerRow}`).format.rowHeight = 38;
+  if (view.title) section(sheet, headerRow - 1, view.headers.length, view.title);
   sheet.getRange("A:A").format.columnWidth = 31;
   for (let i = 1; i < view.headers.length; i++) {
     const col = columnName(i + 1);
     sheet.getRange(`${col}:${col}`).format.columnWidth = view.headers[i].includes("Cache Write") ? 24 : 18;
     if (view.rows.length) {
-      sheet.getRange(`${col}2:${col}${end}`).format.numberFormat = view.formats[String(i)] || "#,##0";
-      sheet.getRange(`${col}2:${col}${end}`).format.horizontalAlignment = view.rows.some(row => typeof row[i] === "string") ? "left" : "right";
+      sheet.getRange(`${col}${dataRow}:${col}${end}`).format.numberFormat = view.formats[String(i)] || "#,##0";
+      sheet.getRange(`${col}${dataRow}:${col}${end}`).format.horizontalAlignment = view.rows.some(row => typeof row[i] === "string") ? "left" : "right";
     }
   }
   if (name === "效率对比") sheet.getRange("I:I").format.columnWidth = 25;
   if (name === "分类对比") sheet.getRange("C:H").format.columnWidth = 24;
   if (view.rows.length) {
-    sheet.getRange(`A2:${last}${end}`).format.rowHeight = 26;
+    sheet.getRange(`A${dataRow}:${last}${end}`).format.rowHeight = 26;
     if (["总览", "分类对比", "难度对比", "Agent能力对比", "模态对比"].includes(name)) {
       const scoreLast = name === "总览" ? "B" : last;
-      scoreScale(sheet, `B2:${scoreLast}${end}`, 100);
+      scoreScale(sheet, `B${dataRow}:${scoreLast}${end}`, 100);
     }
   }
   for (const [key, annotation] of Object.entries(view.cell_annotations || {})) {
@@ -158,7 +161,7 @@ function buildView(workbook, name, view) {
     if (annotation.status === "partial" && typeof view.rows[row]?.[col] === "number") {
       // Keep supported numeric formats and numeric cell types. Literal-star
       // number formats render as General in this artifact runtime.
-      sheet.getRange(`${columnName(col + 1)}${row + 2}`).format.fill = COLORS.amber;
+      sheet.getRange(`${columnName(col + 1)}${row + dataRow}`).format.fill = COLORS.amber;
     }
   }
   const noteLast = columnName(Math.min(view.headers.length, 7));
@@ -183,7 +186,41 @@ function buildView(workbook, name, view) {
     range.format.wrapText = true;
     range.format.rowHeight = 36;
   }
-  sheet.freezePanes.freezeRows(1);
+  if (view.timing_table) {
+    const timing = view.timing_table;
+    section(sheet, timing.title_row, timing.headers.length, "任务耗时对比（任务耗时升序，缺失值置末）");
+    const timingEnd = table(sheet, timing.header_row, timing.headers, timing.rows);
+    const range = sheet.getRange(`A${timing.header_row}:E${timingEnd}`);
+    range.format.font.name = "Arial";
+    range.format.font.size = 11;
+    range.format.wrapText = true;
+    range.format.rowHeight = 32;
+    for (let i = 1; i < timing.headers.length; i++) {
+      const col = columnName(i + 1);
+      sheet.getRange(`${col}${timing.header_row + 1}:${col}${timingEnd}`).format.numberFormat = timing.formats[String(i)];
+      sheet.getRange(`${col}${timing.header_row + 1}:${col}${timingEnd}`).format.horizontalAlignment = "right";
+    }
+    for (const [key, annotation] of Object.entries(timing.cell_annotations || {})) {
+      const [row, col] = key.split(":").map(Number);
+      if (annotation.status === "partial" && typeof timing.rows[row]?.[col] === "number")
+        sheet.getRange(`${columnName(col + 1)}${timing.header_row + row + 1}`).format.fill = COLORS.amber;
+    }
+    timing.notes.forEach((note, i) => {
+      const row = timingEnd + 3 + i;
+      sheet.mergeCells(`A${row}:G${row}`);
+      sheet.getRange(`A${row}`).values = [[note]];
+      sheet.getRange(`A${row}:G${row}`).format = { font: { name: "Arial", size: 10, color: COLORS.text }, wrapText: true, rowHeight: 38 };
+    });
+    const coverage = timing.coverage_table;
+    section(sheet, timing.coverage_title_row, coverage.headers.length, "任务耗时覆盖");
+    table(sheet, timing.coverage_title_row + 1, coverage.headers, coverage.rows);
+    const timingCoverage = sheet.getRange(`A${timing.coverage_title_row + 1}:D${timing.render_end_row}`);
+    timingCoverage.format.font.name = "Arial";
+    timingCoverage.format.font.size = 10;
+    timingCoverage.format.wrapText = true;
+    timingCoverage.format.rowHeight = 32;
+  }
+  sheet.freezePanes.freezeRows(headerRow);
   sheet.freezePanes.freezeColumns(1);
   return sheet;
 }
@@ -350,6 +387,7 @@ async function main() {
         || (sheetName === "用例对比明细" ? data.presentation.case_comparison : data.presentation.score_details[sheetName]);
       const columns = sheetName === "资源覆盖与异常" ? 13 : view.headers.length;
       const rows = view?.layout === "grouped_tools" ? view.render_row_count
+        : view?.render_row_count ? view.render_row_count
         : view?.coverage_table ? view.rows.length + view.notes.length + view.coverage_table.rows.length + 7
         : sheetName === "资源覆盖与异常" ? 20
         : Math.min(view.rows.length + 1, sheetName === "用例对比明细"
@@ -387,7 +425,8 @@ async function main() {
   });
   const rangeChecks = [];
   for (const [sheetId, range] of [
-    ...data.presentation.sheet_order.map(name => [name, `A1:${columnName(data.presentation.tables[name].headers.length)}${data.presentation.tables[name].rows.length + 1}`]),
+    ...data.presentation.sheet_order.map(name => [name, `A1:${columnName(data.presentation.tables[name].headers.length)}${data.presentation.tables[name].rows.length + (data.presentation.tables[name].header_row || 1)}`]),
+    ...data.presentation.sheet_order.filter(name => data.presentation.tables[name].timing_table).map(name => [name, `A${data.presentation.tables[name].timing_table.header_row}:E${data.presentation.tables[name].timing_table.header_row + data.presentation.tables[name].timing_table.rows.length}`]),
     ["用例对比明细", `A1:${columnName(data.presentation.case_comparison.headers.length)}${data.presentation.case_comparison.rows.length + 1}`],
     ...data.presentation.score_detail_order.map(name => [name, `A1:${columnName(data.presentation.score_details[name].headers.length)}${data.presentation.score_details[name].rows.length + 1}`]),
     ["资源覆盖与异常", `A1:M${10 + data.tasks.length * 11}`],

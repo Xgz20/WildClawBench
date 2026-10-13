@@ -5,7 +5,9 @@ description: 汇总多个独立 Web E2E 评分回传包，校验批次、Profile
 
 # 汇总 Web E2E 报告
 
-`1.4.1` 优化 Excel 的结果与效率视图：站点评测指标和难度表按总平均分降序；结果表和用例明细将任务耗时置于流程耗时前。效率 Sheet 分为按总 Token 升序的 Token 表、按流程耗时升序的耗时表，覆盖情况集中在耗时表下方。各表缺失排序值置末，排序不改输入、分数和原生资源记录。
+`1.4.2` 的效率 Sheet 耗时表改为原生任务耗时（`agent_duration_seconds`）总量、平均值、P50、P90，不再使用流程耗时。平均值以冻结用例数为分母，部分小计标为下限；分位数只在逐题计时完整覆盖时按线性插值计算。流程耗时原值保留在总览、明细和审计，缺失任务耗时不从流程耗时倒推。
+
+`1.4.1` 优化 Excel 的结果与效率视图：站点评测指标和难度表按总平均分降序；结果表和用例明细将任务耗时置于流程耗时前。效率 Sheet 分为按总 Token 升序的 Token 表、按任务耗时升序的耗时表，覆盖情况集中在耗时表下方。各表缺失排序值置末，排序不改输入、分数和原生资源记录。
 
 本 Skill 处理 `score-web-e2e` 生成的 `submission.json`，或测试人员用 ZIP 工具压缩的完整 Harness 根目录。ZIP 内必须恰好存在一个 `submission.json`。默认要求全部回传包具有相同 `batch_id`、`source_revision` 和完整一致的 `task_ids`；不一致时停止，不能静默混算。
 
@@ -20,11 +22,11 @@ description: 汇总多个独立 Web E2E 评分回传包，校验批次、Profile
 
 - `web_e2e_report_data.json`：可复算的统一数据源；
 - `Web站点端到端评测领导版.md`：详细 Profile 含“结论、总览、难度等级、一级维度、二级维度”；ArtifactsBench Profile 只含前三节；
-- `Web站点端到端评测报告.xlsx`：包含 `站点评测指标`、`效率对比`、`难度对比`、`用例对比明细`。
+- `Web站点端到端评测报告_<YYYYMMDD_HHMMSS>.xlsx`：包含 `站点评测指标`、`效率对比`、`难度对比`、`用例对比明细`。Excel 文件名必须带本版报告生成时间；自定义报告标题也保留该时间后缀，交付清单、回执及成员 SHA 清单使用最终文件名。
 
 以下功能与美观度规则仅适用于 `web-e2e-detailed-v1`。页面美观度与总分并列展示，但永远不参与总分、得分率或满分率。`站点评测指标` 的结果与效率表在得分率、满分率之后展示“美观度总分”，并在站点一级/二级维度表之后增加“美观度一级维度汇总”和“美观度二级维度汇总”。
 
-Excel 结果与效率表在完成率后依次展示总请求数、工具调用数、总tokens、总成本、任务耗时、流程耗时，不重复列平均耗时、耗时分位数、平均成本或 Token 明细。效率 Sheet 的 Token 表包含总 Token、平均 Token、输入 Token（含缓存）、普通输入 Token、缓存命中输入 Token、缓存写入输入 Token、输出 Token、缓存命中率；耗时表包含流程耗时、平均耗时、P50、P90。
+Excel 结果与效率表在完成率后依次展示总请求数、工具调用数、总tokens、总成本、任务耗时、流程耗时，不重复列平均耗时、耗时分位数、平均成本或 Token 明细。效率 Sheet 的 Token 表包含总 Token、平均 Token、输入 Token（含缓存）、普通输入 Token、缓存命中输入 Token、缓存写入输入 Token、输出 Token、缓存命中率；耗时表包含任务耗时、平均任务耗时、任务耗时P50、任务耗时P90。
 
 已通过原资源校验的已知 Token 小计可用于填充 Excel 展示值，用浅黄色标识，并在两表旁说明完整总量仍未知。部分数据的平均 Token 为已知小计/冻结用例数，同样标识；正式 JSON 的 total 保持 null，不能把小计写成完整总量。覆盖表同时提供完整总量、小计、完整覆盖及部分记录数。全缺失仍显示“-”。普通输入和缓存命中率必须按同题、同源的输入及缓存指标配对计算，未知 Cache Write 不能按0扣减，不能用来自不同题目的边际小计计算比率。
 
@@ -49,9 +51,10 @@ python3 "$REPORT_SKILL_DIR/scripts/aggregate_web_e2e_results.py" \
 再使用当前 Codex 工作区提供的 Node.js 和 `@oai/artifact-tool` 生成 Excel。必须先按 `spreadsheets` Skill 要求加载工作区依赖、创建临时 `node_modules` 链接，并执行一次 artifact operation 标记；不得改用系统 `openpyxl`。
 
 ```bash
+REPORT_TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 node "$REPORT_SKILL_DIR/scripts/build_web_e2e_workbook.mjs" \
   --input /absolute/report-output/web_e2e_report_data.json \
-  --output /absolute/report-output/Web站点端到端评测报告.xlsx \
+  --output "/absolute/report-output/Web站点端到端评测报告_${REPORT_TIMESTAMP}.xlsx" \
   --preview-dir /tmp/web-e2e-report-preview
 ```
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import Counter
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 import os
@@ -205,6 +206,84 @@ def coverage_label(item):
     return f"{known}完整+{partial}部分/{total}" if partial else f"{known}/{total}"
 
 
+def timing_percentile(values, ratio):
+    """Match Web's linear interpolation at (n - 1) * ratio."""
+    if not values:
+        return None
+    ordered = sorted(values)
+    position = (len(ordered) - 1) * ratio
+    lower = math.floor(position)
+    upper = min(lower + 1, len(ordered) - 1)
+    return ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower)
+
+
+def task_timing_comparison(data, labels):
+    metric = "agent_duration_seconds"
+    prepared = []
+    for unit in data["units"]:
+        rows = [r for r in data["tasks"] if r["unit_id"] == unit["unit_id"]]
+        total = resource_display(unit["resources"][metric])
+        observations = [r["resource"][metric] for r in rows]
+        values = [o["value"] for o in observations if o.get("complete") and number(o.get("value"))
+                  and math.isfinite(o["value"]) and o["value"] >= 0]
+        complete = bool(rows) and len(values) == len(rows) and total["status"] == "complete"
+        if complete and not math.isclose(sum(values), total["value"], rel_tol=1e-9, abs_tol=1e-6):
+            raise ValueError("REPORT_TASK_TIMING_TOTAL_MISMATCH")
+        average = {**total, "value": total["value"] / len(rows) if total["value"] is not None and rows else None,
+                   "denominator": len(rows), "basis": "known-task-duration-sum-divided-by-frozen-task-count"}
+        quantile = {"status": "complete" if complete else "unavailable", "basis": "complete-native-task-duration-samples",
+                    "complete_cases": len(values), "partial_cases": 0, "total_cases": len(rows)}
+        cells = [total, average, {**quantile, "value": timing_percentile(values, .5) if complete else None},
+                 {**quantile, "value": timing_percentile(values, .9) if complete else None}]
+        prepared.append((unit, cells, len(values)))
+    prepared.sort(key=lambda item: (item[1][0]["value"] is None, item[1][0]["value"] or 0, item[0]["unit_id"]))
+    view = table(["模型@Harness", "任务耗时(s)", "平均任务耗时(s)", "任务耗时P50(s)", "任务耗时P90(s)"],
+                 [[labels[u["unit_id"]], *[c["value"] for c in cells]] for u, cells, _ in prepared],
+                 {str(i): "#,##0.000" for i in range(1, 5)},
+                 ["任务耗时来自原生主任务 agent_duration_seconds，包含已确认失败任务；不使用流程耗时 duration_seconds 替代，也不等同于批次壁钟。",
+                  "平均任务耗时=完整总量或已知小计/冻结用例数；部分统计标为下限。P50/P90只在逐题原生耗时完整覆盖时计算，使用排序后(n-1)×p的线性插值；未知不补零，实测零保留。"])
+    view["metric_field"] = metric
+    view["percentile_method"] = "linear-interpolation-(n-1)*p"
+    view["cell_annotations"] = {f"{i}:{j}": c for i, (_, cells, _) in enumerate(prepared) for j, c in enumerate(cells, 1)}
+    view["coverage_table"] = table(["模型@Harness", "任务耗时覆盖", "分位数样本", "冻结用例数"],
+                                  [[labels[u["unit_id"]], coverage_label(cells[0]), f"{known}/{cells[0]['total_cases']}", cells[0]["total_cases"]]
+                                   for u, cells, known in prepared])
+    return view
+
+
+def attach_token_comparison(efficiency):
+    """Sort displayed totals together with their coverage and partial markers."""
+    rows = efficiency["rows"]
+    order = sorted(range(len(rows)), key=lambda i: (rows[i][1] is None, rows[i][1] or 0, rows[i][0]))
+    positions = {old: new for new, old in enumerate(order)}
+    efficiency["rows"] = [rows[i] for i in order]
+    efficiency["cell_annotations"] = {
+        f"{positions[int(key.split(':')[0])]}:{key.split(':')[1]}": value
+        for key, value in efficiency.get("cell_annotations", {}).items()
+    }
+    coverage = efficiency.get("coverage_table")
+    if coverage:
+        if [row[0] for row in coverage["rows"]] != [row[0] for row in rows]:
+            raise ValueError("REPORT_TOKEN_COVERAGE_ORDER_MISMATCH")
+        coverage["rows"] = [coverage["rows"][i] for i in order]
+    efficiency.update(title="Token 对比（总 Token 升序，缺失值置末）", header_row=2)
+    return efficiency
+
+
+def attach_task_timing(data, efficiency, labels):
+    timing = task_timing_comparison(data, labels)
+    end = len(efficiency["rows"]) + efficiency.get("header_row", 1)
+    end += len(efficiency["notes"]) + 6 + len(efficiency["coverage_table"]["rows"])
+    timing["title_row"] = end + 3
+    timing["header_row"] = end + 4
+    timing_end = timing["header_row"] + len(timing["rows"])
+    timing["coverage_title_row"] = timing_end + len(timing["notes"]) + 5
+    timing["render_end_row"] = timing["coverage_title_row"] + 1 + len(timing["coverage_table"]["rows"])
+    efficiency["timing_table"] = timing
+    efficiency["render_row_count"] = timing["render_end_row"]
+    return timing
+
+
 def paired_token_measure(rows, fields, *, ratio=False):
     """Use the same task/source coverage for every operand; never zero-fill."""
     totals = [0 for _ in fields]
@@ -381,6 +460,8 @@ def build_views(data, references):
         if not any(v["status"] == "partial" for v in annotations.values()):
             views[name]["notes"] = [s for s in views[name]["notes"] if not s.startswith("星号或浅黄色")]
             views[name]["notes"].append("各指标的完整统计用例数见下表；客户端未暴露的字段显示 -。" + ("平均 Token=总 Token/冻结用例数。" if name == "效率对比" else ""))
+    attach_token_comparison(views["效率对比"])
+    attach_task_timing(data, views["效率对比"], labels_by_id)
     cursor = 1
     for group in tool_groups:
         group.update(title_row=cursor, header_row=cursor + 1, data_start_row=cursor + 2,
