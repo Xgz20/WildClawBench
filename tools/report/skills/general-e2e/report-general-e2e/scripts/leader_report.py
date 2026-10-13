@@ -146,6 +146,83 @@ def render_task_timing_summary(data):
     return text
 
 
+def tool_call_comparisons(data):
+    """Compare per-frozen-case call counts, retaining partial-count bounds."""
+    label = data["target"]["label"]
+    groups = data["tables"]["工具调用对比"].get("groups", [])
+    cases = {row[0]: row[2] for row in data["tables"].get("总览", {}).get("rows", [])}
+    count = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) and v >= 0 and float(v).is_integer()
+    def observation(group):
+        coverage = group.get("cell_annotations", {}).get("0:2", {})
+        total = group["rows"][0][2] if group.get("rows") else None
+        n = cases.get(group["title"], coverage.get("total_cases"))
+        valid = count(total)
+        return {"label": group["title"], "total_calls": total if valid else None,
+                "frozen_task_count": n if count(n) else None, "coverage": coverage,
+                "average_calls": float(Decimal(str(total)) / Decimal(str(n))) if valid and count(n) and n > 0 else None}
+    target_group = next((group for group in groups if group["title"] == label), None)
+    target = observation(target_group) if target_group else {"label": label, "total_calls": None, "frozen_task_count": None, "coverage": {}, "average_calls": None}
+    result = {"target": target, "comparisons": [], "unavailable_peers": [], "zero_peers": [], "composition": None}
+    for group in groups:
+        if group["title"] == label:
+            continue
+        peer = observation(group)
+        if peer["average_calls"] is None:
+            result["unavailable_peers"].append(peer["label"])
+            continue
+        if peer["average_calls"] == 0:
+            result["zero_peers"].append(peer["label"])
+            continue
+        if target["average_calls"] is None:
+            continue
+        ratio = (Decimal(str(target["total_calls"])) * Decimal(str(peer["frozen_task_count"]))
+                 / (Decimal(str(target["frozen_task_count"])) * Decimal(str(peer["total_calls"]))))
+        basis = {("complete", "complete"): "complete", ("partial", "complete"): "lower_bound",
+                 ("complete", "partial"): "upper_bound"}.get((target["coverage"].get("status"), peer["coverage"].get("status")), "observed_values_only")
+        result["comparisons"].append({**peer, "ratio": float(ratio), "display_ratio": num(ratio), "basis": basis})
+    details = [row for row in target_group.get("rows", [])[1:] if count(row[2]) and row[2] > 0] if target_group else []
+    known = sum(row[2] for row in details)
+    if known:
+        top = sorted(details, key=lambda row: (-row[2], row[1]))[:3]
+        complete = target["coverage"].get("status") == "complete" and known == target["total_calls"] and all(row[3] == "计数完整" for row in details)
+        result["composition"] = {"tools": [{"name": row[1], "calls": row[2]} for row in top],
+                                 "known_detail_calls": known, "share": sum(row[2] for row in top) / known,
+                                 "basis": "complete_calls" if complete else "known_detail_calls"}
+    return result
+
+
+def render_tool_call_summary(comparison):
+    target = comparison["target"]; label = target["label"]
+    if target["total_calls"] is None:
+        return f"{label} 的工具调用计数不可用，无法比较调用频度。"
+    text = f"{label} 本轮共调用工具 {num(target['total_calls'], 0, grouping=True)} 次"
+    if target["average_calls"] is not None:
+        text += f"，平均每个冻结用例 {num(target['average_calls'])} 次"
+        if comparison["comparisons"]:
+            text += "，约为" + "、".join(f"{peer['label']} 的 {peer['display_ratio']} 倍" for peer in comparison["comparisons"])
+    text += "。"
+    coverage = target["coverage"]
+    if coverage.get("status") == "complete":
+        text += f"计数覆盖全部 {int(target['frozen_task_count'])} 题。" if target["frozen_task_count"] is not None else "工具总计数完整。"
+    elif coverage.get("status") == "partial":
+        text += "目标组计数覆盖不全，当前总量和每题均值是已知调用量下限；相对完整参照的倍数也为下限。"
+    else:
+        text += "目标组计数覆盖尚未确认，倍数只比较当前观测值。"
+    incomplete = [peer["label"] for peer in comparison["comparisons"] if peer["coverage"].get("status") != "complete"]
+    if incomplete:
+        text += "、".join(incomplete) + " 的计数覆盖不完整或未确认，相关倍数不代表全量精确调用比。"
+    if comparison["unavailable_peers"]:
+        text += "、".join(comparison["unavailable_peers"]) + " 缺少可用的调用计数或冻结用例数，暂不参与这项比较。"
+    if comparison["zero_peers"]:
+        text += "、".join(comparison["zero_peers"]) + " 的平均调用数为 0，倍数不适用。"
+    composition = comparison["composition"]
+    if composition:
+        names = "、".join(tool["name"] for tool in composition["tools"])
+        basis = "全部工具调用" if composition["basis"] == "complete_calls" else "已知工具明细计数"
+        text += f"调用主要集中在 {names}，合计占{basis}的 {num(composition['share'], percent=True)}。"
+    return text
+
+
 def extract(workbook, data, target_unit_id):
     units = {x["unit_id"]: x for x in data["units"]}
     if target_unit_id not in units: raise ValueError("LEADER_TARGET_UNIT_NOT_FOUND")
@@ -222,7 +299,8 @@ def extract(workbook, data, target_unit_id):
             "model_view": [r for r in view["rows"] if r[0] in [labels[u] for u in model_peers]] if len(model_peers) > 1 else [],
             "harness_view": [r for r in view["rows"] if r[0] in [labels[u] for u in harness_peers]] if len(harness_peers) > 1 else [],
         }
-    result["resource_comparisons"] = {"average_tokens": average_token_comparisons(result)}
+    result["resource_comparisons"] = {"average_tokens": average_token_comparisons(result),
+                                      "tool_calls": tool_call_comparisons(result)}
     result["narratives"] = summaries(result)
     return result
 
@@ -265,18 +343,7 @@ def summaries(data):
     task_timing = render_task_timing_summary(data)
     if task_timing:
         out["效率对比"] += "\n\n" + task_timing
-    groups = tables["工具调用对比"].get("groups", [])
-    group = next((g for g in groups if g["title"] == label), None)
-    total = group["rows"][0][2] if group and group.get("rows") else None
-    out["工具调用对比"] = f"{label} 工具调用为 {num(total, 0)} 次。" if numeric(total) else f"{label} 的工具总调用数不可用。"
-    if group:
-        coverage = group.get("cell_annotations", {}).get("0:2", {})
-        if coverage.get("status") == "complete": out["工具调用对比"] += f"计数覆盖全部 {coverage.get('total_cases', o[2])} 题。"
-        elif numeric(total): out["工具调用对比"] += "当前仅有部分计数。"
-    refs = [f"{g['title']} 为 {num(g['rows'][0][2], 0)} 次" for g in groups
-            if g["title"] != label and g.get("rows") and numeric(g["rows"][0][2])]
-    if refs: out["工具调用对比"] += "参照组合：" + "，".join(refs) + "。"
-    out["工具调用对比"] += "计数覆盖、参数及结果内容完整度、工具成功率和能力得分分别解释。"
+    out["工具调用对比"] = render_tool_call_summary(tool_call_comparisons(data))
     return out
 
 
