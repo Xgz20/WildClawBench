@@ -2,7 +2,7 @@
   "bundle_protocol": "general-e2e-package-v1",
   "contract_version": "general-e2e-contract-v1",
   "created_at": "2026-09-17T00:00:00+08:00",
-  "dataset_digest": "73f186f77daff39edfaa8084a182d1cd7ce761c32c16f2212f171cf4f5a7c1bd",
+  "dataset_digest": "e5fd1ed401b45729d85d7aaf9c94c36d3900c1bcb43446bb7d43cca584a2886c",
   "dataset_id": "general-custom60-v1",
   "digest_algorithm": "wildclawbench.dataset-manifest-sha256/v1",
   "generated_by": "eval_general_e2e.datasets.bundle/1",
@@ -809,12 +809,12 @@
       "category": "02_Code_Intelligence",
       "difficulty": "L1",
       "digests": {
-        "execution_contract_sha256": "02b2ab2be6282ab28c56b761cc3402328a6ce72bc9d54b8556f0819421cc672d",
+        "execution_contract_sha256": "1f7cb7ecff1d6669458a33f71cb58df0197d67d8237bfe1631280344a5d81f28",
         "private_scoring_sha256": "a8e3bb9838fb005b08818f2b83d1b85fd21ac5fe4e41701ff2c8b7d5419adc39",
         "prompt_sha256": "71db4d168b8f5cecb7322ec53cfe10ffd05cad79a6d02ab12cb3d0b5be5b6429",
         "scoring_contract_sha256": "94a2fef163cad49a304110435cb75a0221e04a64c718886e4602d914073959eb",
         "task_sha256": "a5cc4a18b67c0f0241530023a81cedb11c16d4fd2c7f91df6171112f5084951c",
-        "workspace_exec_sha256": "bc7b3c3673f9de9562d199a0b5627898fa67c48f6e5c56564e7884a30e9250ec"
+        "workspace_exec_sha256": "0d15221a40391fbac307548ad90d621d879522f4f0635ca954f13a09bc96fa76"
       },
       "grading_type": "automated",
       "grading_weights": {},
@@ -826,25 +826,6 @@
               "kind": "directory",
               "mode": "0755",
               "path": "project"
-            },
-            {
-              "kind": "directory",
-              "mode": "0755",
-              "path": "project/__pycache__"
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/converter.cpython-310.pyc",
-              "sha256": "deffb35eabb95669587892960bf3ae733dc58472fbdaa6be942e81c3b80641d1",
-              "size": 840
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/test_converter.cpython-310-pytest-8.0.0.pyc",
-              "sha256": "3c6024e0a1e237c005a1473ed8373f6703d709fbcc543e0272da303d984d49f3",
-              "size": 1164
             },
             {
               "kind": "file",
@@ -862,7 +843,7 @@
             }
           ],
           "root": "tasks/02_Code_Intelligence_task_001_temperature_cli_fix/execution/exec",
-          "sha256": "bc7b3c3673f9de9562d199a0b5627898fa67c48f6e5c56564e7884a30e9250ec"
+          "sha256": "0d15221a40391fbac307548ad90d621d879522f4f0635ca954f13a09bc96fa76"
         },
         "private_scoring": {
           "algorithm": "wildclawbench.dataset-tree-sha256/v1",
@@ -901,12 +882,12 @@
       "category": "02_Code_Intelligence",
       "difficulty": "L1",
       "digests": {
-        "execution_contract_sha256": "eff1f422c66442e19955719b4ed9c428db724dafb649cd40f4f06887280ddc09",
+        "execution_contract_sha256": "99d3d5986ce93f8864a9f2af14e08a5588fc8e1fd5a51016e6b4d01ad18a1055",
         "private_scoring_sha256": "714f5575e2b2dc25aa8c5a0fb8d35cfe4886e743d76618a27b9e5e4de0f396bb",
         "prompt_sha256": "4782bb8c7a715b49594058ad8938e652a9fa91514297fa5fdec143f0cf48ab85",
         "scoring_contract_sha256": "ea6c6c4cc22a3c819d92f58ea3c38f6d87c7f5e34c4b93702c8c5c393790ebd1",
         "task_sha256": "4325426a558a4386fd9e24c621ee40b1396c7a75a0d8110f8afc983c3c92d0aa",
-        "workspace_exec_sha256": "20eb3f4bd0c107a60d73d4681e21dab7ea3d5f6d16901c80bb83e13188e7ebe0"
+        "workspace_exec_sha256": "663ee430486104d77a65a0be1ad60bef0956a19b2304886630685282825115b8"
       },
       "grading_type": "automated",
       "grading_weights": {},
@@ -927,25 +908,6 @@
               "path": "project"
             },
             {
-              "kind": "directory",
-              "mode": "0755",
-              "path": "project/__pycache__"
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/inventory.cpython-310.pyc",
-              "sha256": "e5bdb7179dcaa4b6f56a0d6793209500c79dbedc003ff5f4a1740377e98809d8",
-              "size": 1241
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/test_inventory.cpython-310-pytest-8.0.0.pyc",
-              "sha256": "eb4215ec3ebe372fd7f93d48e4ba55b05a7b9f69f1b64b28327ecaab7b3d2d91",
-              "size": 1120
-            },
-            {
               "kind": "file",
               "mode": "0644",
               "path": "project/inventory.py",
@@ -961,7 +923,7 @@
             }
           ],
           "root": "tasks/02_Code_Intelligence_task_002_inventory_aggregator/execution/exec",
-          "sha256": "20eb3f4bd0c107a60d73d4681e21dab7ea3d5f6d16901c80bb83e13188e7ebe0"
+          "sha256": "663ee430486104d77a65a0be1ad60bef0956a19b2304886630685282825115b8"
         },
         "private_scoring": {
           "algorithm": "wildclawbench.dataset-tree-sha256/v1",
@@ -1000,12 +962,12 @@
       "category": "02_Code_Intelligence",
       "difficulty": "L1",
       "digests": {
-        "execution_contract_sha256": "b7723317e62f51cf0cf8d47c2d1ad4f325cd5ba6d624f12496e34a8a80e18a50",
+        "execution_contract_sha256": "9e47c1393879029e3a3b40bbeedda5dd88020d2f6c458e93c5751cb9d1cabeed",
         "private_scoring_sha256": "f5c11caeba3c574265ca7b6a84b633d7042250e2fe84a94d485f348c6d52ac10",
         "prompt_sha256": "a4f98d7846b7c80e4b06a899107b04b455243fbb0fbc44b156e14feb78212ea3",
         "scoring_contract_sha256": "8553fb0185901a4e080c542c88dc393ccbb1ab072ebbc6b4e24f4b07c18a2dfe",
         "task_sha256": "4715cfbdbfc12ea86cc340af65c45b248b4de2bfe13b3652b855697d04a0686f",
-        "workspace_exec_sha256": "a2271b156f7616095e51cadc32137bd7a53f30e2dad3a9679c6246b029c6749d"
+        "workspace_exec_sha256": "8498b6b201e878489245b7b8c29b735ebb892a43275e928d69f950659a0364bd"
       },
       "grading_type": "automated",
       "grading_weights": {
@@ -1020,25 +982,6 @@
               "kind": "directory",
               "mode": "0755",
               "path": "project"
-            },
-            {
-              "kind": "directory",
-              "mode": "0755",
-              "path": "project/__pycache__"
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/pagination.cpython-310.pyc",
-              "sha256": "d7012c3722e91b9abfbd64a2c8d87a1cc22c1dc557143e84c2049be5fe4535f8",
-              "size": 891
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/test_pagination.cpython-310-pytest-8.0.0.pyc",
-              "sha256": "faa6405241d007a0d40a8eeef4fe7f0f8a1ae003ff00f211890430cd9e7370d2",
-              "size": 2108
             },
             {
               "kind": "file",
@@ -1056,7 +999,7 @@
             }
           ],
           "root": "tasks/02_Code_Intelligence_task_003_pagination_boundary_fix/execution/exec",
-          "sha256": "a2271b156f7616095e51cadc32137bd7a53f30e2dad3a9679c6246b029c6749d"
+          "sha256": "8498b6b201e878489245b7b8c29b735ebb892a43275e928d69f950659a0364bd"
         },
         "private_scoring": {
           "algorithm": "wildclawbench.dataset-tree-sha256/v1",
@@ -1102,12 +1045,12 @@
       "category": "02_Code_Intelligence",
       "difficulty": "L2",
       "digests": {
-        "execution_contract_sha256": "42a73df0bce648d2321bba554f37f5a976ac7a77a8917456345b313b3464e06c",
+        "execution_contract_sha256": "3f58be2179f15cb3bf35ea39cb23facd6016e83db7d68a631a7b4d0aa989e688",
         "private_scoring_sha256": "316073f165e73357623d86e32867d683dd3ace30a889df67e760975f1ff6b0c1",
         "prompt_sha256": "fe4b11473f570071457a80f6f15bcccd3f86aecc3cf8663a7f886703ff9808a3",
         "scoring_contract_sha256": "41be48ba1d61dc1629463ec58561898d9c107c8c7d14f3ff298cecd47b80c298",
         "task_sha256": "91bd7bef7b56ea32e4e2886679936ddff3b5205758899d8d3d05557265f9b0d1",
-        "workspace_exec_sha256": "b3698b06a490eff668024b815641c7a3217921f2139af9830abb122e477c18cf"
+        "workspace_exec_sha256": "4a8a4646111392ddc848fde0a017aa92303a4fa7c4f7d0890a3d20c463069a6e"
       },
       "grading_type": "automated",
       "grading_weights": {
@@ -1122,25 +1065,6 @@
               "kind": "directory",
               "mode": "0755",
               "path": "project"
-            },
-            {
-              "kind": "directory",
-              "mode": "0755",
-              "path": "project/__pycache__"
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/csv_parser.cpython-310.pyc",
-              "sha256": "5cbdc21aae6209be2719d30d3e089d1d39e5bcd7ee472dfec3dfffb98a791112",
-              "size": 705
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/test_csv_parser.cpython-310-pytest-8.0.0.pyc",
-              "sha256": "f1d8ca005c74d7eb8c61d73d821807e9556d2d6bd5bf54d79378eb1772ffabcb",
-              "size": 1724
             },
             {
               "kind": "file",
@@ -1158,7 +1082,7 @@
             }
           ],
           "root": "tasks/02_Code_Intelligence_task_004_csv_dialect_fix/execution/exec",
-          "sha256": "b3698b06a490eff668024b815641c7a3217921f2139af9830abb122e477c18cf"
+          "sha256": "4a8a4646111392ddc848fde0a017aa92303a4fa7c4f7d0890a3d20c463069a6e"
         },
         "private_scoring": {
           "algorithm": "wildclawbench.dataset-tree-sha256/v1",
@@ -1204,12 +1128,12 @@
       "category": "02_Code_Intelligence",
       "difficulty": "L2",
       "digests": {
-        "execution_contract_sha256": "446464e8dcb3420fd4175a35cbdf4b93d73127a16ef3bc42d2647927b56cc843",
+        "execution_contract_sha256": "77dde8c78ef8724b330a0db7290af26a91ced42cea37729438876d760b25f54a",
         "private_scoring_sha256": "a60f249ab48a8617aff82a8c702da31fd99454c85b4973deb75f75e75642e57c",
         "prompt_sha256": "b5e80df9e944ea44b0ba613d3f842841f1561ad04f3d7b10756a0946c449cd43",
         "scoring_contract_sha256": "a14bfb43d90e3d8cc341b2217f1bd421332958f91d45f082894de4ca7f6be681",
         "task_sha256": "43f9b7478f39fab4a69746325741b76eae6e14a3d32b5ee1ec6d43785fdd261f",
-        "workspace_exec_sha256": "43f49b89eb58428fd0b1ab3023e3bb7b3a61f4f7b1ffb3611f7f00b761bbfee8"
+        "workspace_exec_sha256": "ed8400bd63753403bac8c255a403673635bf7e0767e30f8021766f1f2747e77e"
       },
       "grading_type": "automated",
       "grading_weights": {
@@ -1224,18 +1148,6 @@
               "kind": "directory",
               "mode": "0755",
               "path": "project"
-            },
-            {
-              "kind": "directory",
-              "mode": "0755",
-              "path": "project/__pycache__"
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/test_report.cpython-310-pytest-8.0.0.pyc",
-              "sha256": "8bd0960b90de244d5c41fca3f8605442e19746c58ddadfe4f75851bac95d525c",
-              "size": 1710
             },
             {
               "kind": "file",
@@ -1267,7 +1179,7 @@
             }
           ],
           "root": "tasks/02_Code_Intelligence_task_005_sql_double_count_fix/execution/exec",
-          "sha256": "43f49b89eb58428fd0b1ab3023e3bb7b3a61f4f7b1ffb3611f7f00b761bbfee8"
+          "sha256": "ed8400bd63753403bac8c255a403673635bf7e0767e30f8021766f1f2747e77e"
         },
         "private_scoring": {
           "algorithm": "wildclawbench.dataset-tree-sha256/v1",
@@ -1384,12 +1296,12 @@
       "category": "02_Code_Intelligence",
       "difficulty": "L3",
       "digests": {
-        "execution_contract_sha256": "8af3bddc2e613a85c75631d2895edd71a01ce6834084e71ca050ded434fc3a75",
+        "execution_contract_sha256": "3f46bd68e23e3cde74a885e6c7a01f532c60d8d856d4ad03ef3cf775a0d60a32",
         "private_scoring_sha256": "95085b160a39732b1b0d47a0d494af132bfa1c9e6426cbbc63c7b1e0acc3ad51",
         "prompt_sha256": "fd2cbb13322fc1577736ec52582579d07ab51e1c1f697aefda9c52b1bf0b257b",
         "scoring_contract_sha256": "5236bf7619ac8b080433697ed5103e9faa5d743562a50114f7b3c843b21e2c6f",
         "task_sha256": "714d26603609ff9efedc7ca4c176c673e5e8b3e14c214f2f8130c16d266395a9",
-        "workspace_exec_sha256": "f3a1478f78a97512bd21ccaa1f09361499723005ec22f75e693a9c0703049cbe"
+        "workspace_exec_sha256": "f0b641e969fe9f83c4fa0b18e0090531ee19736469b29de11519bb681628dfb4"
       },
       "grading_type": "automated",
       "grading_weights": {
@@ -1404,25 +1316,6 @@
               "kind": "directory",
               "mode": "0755",
               "path": "project"
-            },
-            {
-              "kind": "directory",
-              "mode": "0755",
-              "path": "project/__pycache__"
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/cache.cpython-310.pyc",
-              "sha256": "8afe8e2b633aa89711e5c75f8c638b4ea25fead404f6e1d433095426b899c045",
-              "size": 1088
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/test_cache.cpython-310-pytest-8.0.0.pyc",
-              "sha256": "968911a458efb0f7566411577a24a9101cff43de6a7f87cc40bfc98353e6aeaf",
-              "size": 2889
             },
             {
               "kind": "file",
@@ -1440,7 +1333,7 @@
             }
           ],
           "root": "tasks/02_Code_Intelligence_task_007_async_cache_singleflight/execution/exec",
-          "sha256": "f3a1478f78a97512bd21ccaa1f09361499723005ec22f75e693a9c0703049cbe"
+          "sha256": "f0b641e969fe9f83c4fa0b18e0090531ee19736469b29de11519bb681628dfb4"
         },
         "private_scoring": {
           "algorithm": "wildclawbench.dataset-tree-sha256/v1",
@@ -1486,12 +1379,12 @@
       "category": "02_Code_Intelligence",
       "difficulty": "L3",
       "digests": {
-        "execution_contract_sha256": "f26895b4fcff951317831a5a63f7a1db9a1446987b85efcee2943ac6e477e642",
+        "execution_contract_sha256": "a4aef83731b683fb40627eb8881b30f519b73f0184aff053e42c00ed5bc4772e",
         "private_scoring_sha256": "a20ef12f5ed9e0dc73124a21ad33d6e91f661bdc271a372d2d82609ca4ee578b",
         "prompt_sha256": "b26b0c600ad03ed180ef05f102533c4ffa0117ce6cae4e817cfa53140b0b22a2",
         "scoring_contract_sha256": "63a79d24a995d04e39fb1a26bf483da195bfd6434f1a126c36ac5e208dd28898",
         "task_sha256": "cee2eb94acbb88ee0c86ad6b434418ad56f400b11e465c892899f941099c187d",
-        "workspace_exec_sha256": "31911de81a55be2eba91cc01f2ba01d8026c5111d7fc4888bcf1b0e36733f394"
+        "workspace_exec_sha256": "5e39f34896db87259804df1d334e1237e8a7844ae2b94baa427e59065f28dc22"
       },
       "grading_type": "automated",
       "grading_weights": {
@@ -1506,25 +1399,6 @@
               "kind": "directory",
               "mode": "0755",
               "path": "project"
-            },
-            {
-              "kind": "directory",
-              "mode": "0755",
-              "path": "project/__pycache__"
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/migrate.cpython-310.pyc",
-              "sha256": "2cc88bd6ebaf83a4576b441b974d25fd07ac84106462cda67d0849384c85f64a",
-              "size": 1636
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/test_migrate.cpython-310-pytest-8.0.0.pyc",
-              "sha256": "819f966e1275d8ed4c7dbf06ea621015b62b601d20b1703ae9c6a485f5ec5b25",
-              "size": 2385
             },
             {
               "kind": "file",
@@ -1570,7 +1444,7 @@
             }
           ],
           "root": "tasks/02_Code_Intelligence_task_008_config_migrator/execution/exec",
-          "sha256": "31911de81a55be2eba91cc01f2ba01d8026c5111d7fc4888bcf1b0e36733f394"
+          "sha256": "5e39f34896db87259804df1d334e1237e8a7844ae2b94baa427e59065f28dc22"
         },
         "private_scoring": {
           "algorithm": "wildclawbench.dataset-tree-sha256/v1",
@@ -1616,12 +1490,12 @@
       "category": "02_Code_Intelligence",
       "difficulty": "L4",
       "digests": {
-        "execution_contract_sha256": "dcc76243a4f7b21fbb028c5b4028a44becbf982c93789d2f732ea30e0398c8fe",
+        "execution_contract_sha256": "4e273e1791578cb4dea8144de87fb938d6b3ed580e1ae5a0464546e5e145fe92",
         "private_scoring_sha256": "4bfa8241715d59c1b175c2c1739992386ff589275e8bc417cba7e2e125346bbd",
         "prompt_sha256": "d52e27071f5e54bb748e2d8f75b3f713cb1befc0eccde8ce0e0066263cdc4c6a",
         "scoring_contract_sha256": "d787186db1016d52b9eb8270f0198080332344816334e7ed29db75cb45f1f850",
         "task_sha256": "51779c49c6f0b65f62736d27bad0e628fa95df215f2be5989463b5f8434d89c5",
-        "workspace_exec_sha256": "ae2c412085d897ebbb764e8714c2fe29536cdc180ce807684b7995319e25ae3d"
+        "workspace_exec_sha256": "1b32f636e56bcddf5d160941e93b3d21dc13ecd82f8b4c0e03b8621d821ce230"
       },
       "grading_type": "hybrid",
       "grading_weights": {
@@ -1636,25 +1510,6 @@
               "kind": "directory",
               "mode": "0755",
               "path": "project"
-            },
-            {
-              "kind": "directory",
-              "mode": "0755",
-              "path": "project/__pycache__"
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/extractor.cpython-310.pyc",
-              "sha256": "a2bb2106bbd1b209ad402faee2967d9ef8b33fe383ef7aa271e2edb3830ac445",
-              "size": 1899
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/test_extractor.cpython-310-pytest-8.0.0.pyc",
-              "sha256": "ed0b52c7755fd20bebe5c86f1048ad81154f73ca6936d7e5155bbe0893b5f621",
-              "size": 2624
             },
             {
               "kind": "file",
@@ -1672,7 +1527,7 @@
             }
           ],
           "root": "tasks/02_Code_Intelligence_task_009_safe_archive_extract/execution/exec",
-          "sha256": "ae2c412085d897ebbb764e8714c2fe29536cdc180ce807684b7995319e25ae3d"
+          "sha256": "1b32f636e56bcddf5d160941e93b3d21dc13ecd82f8b4c0e03b8621d821ce230"
         },
         "private_scoring": {
           "algorithm": "wildclawbench.dataset-tree-sha256/v1",
@@ -1718,12 +1573,12 @@
       "category": "02_Code_Intelligence",
       "difficulty": "L4",
       "digests": {
-        "execution_contract_sha256": "5ba110e9aaa12ec636d388d2ba29121f00806708b65b880ff2128cf897f402f9",
+        "execution_contract_sha256": "a125fba39aa83c730b3ff3d8d696ddc1308f46c8f9d7b77bc8e55e2b86140fb3",
         "private_scoring_sha256": "b0f1b2c6b551f2b4f29972837b66684cac656d9b358d13a749c106c4ce08d432",
         "prompt_sha256": "e32497eb54b2aee6854bea4a64e85b67a44b68f730f9327c63c87cff5839c5b0",
         "scoring_contract_sha256": "3f65d0ba2dd46f2e3edbd10f32f8a1fdc24158df5ffa3ad5e4d0c1427bcb2c43",
         "task_sha256": "e0c328bae8b91a0d2c0c6aff0f911ec9d905d348674ae7727c16c00065c5bcc3",
-        "workspace_exec_sha256": "066277f6e7117048705339a1a1b0085dd51df135371b33200aef28a31d226d0a"
+        "workspace_exec_sha256": "585d17afa6e9a2891b52f161eb2137ac0e62b7cb81164212a677ce2c713f0574"
       },
       "grading_type": "hybrid",
       "grading_weights": {
@@ -1738,25 +1593,6 @@
               "kind": "directory",
               "mode": "0755",
               "path": "project"
-            },
-            {
-              "kind": "directory",
-              "mode": "0755",
-              "path": "project/__pycache__"
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/pipeline.cpython-310.pyc",
-              "sha256": "8e6f5ca11735b320b4b7296ddf3c1d0e3c48e6255d32fedd1e18b9cc53ef8d3c",
-              "size": 3937
-            },
-            {
-              "kind": "file",
-              "mode": "0644",
-              "path": "project/__pycache__/test_pipeline.cpython-310-pytest-8.0.0.pyc",
-              "sha256": "06e7c0826acb04ac8f4814b219991c5267f9c953335c59ab27d37e4447cdabc7",
-              "size": 4586
             },
             {
               "kind": "file",
@@ -1781,7 +1617,7 @@
             }
           ],
           "root": "tasks/02_Code_Intelligence_task_010_idempotent_event_pipeline/execution/exec",
-          "sha256": "066277f6e7117048705339a1a1b0085dd51df135371b33200aef28a31d226d0a"
+          "sha256": "585d17afa6e9a2891b52f161eb2137ac0e62b7cb81164212a677ce2c713f0574"
         },
         "private_scoring": {
           "algorithm": "wildclawbench.dataset-tree-sha256/v1",

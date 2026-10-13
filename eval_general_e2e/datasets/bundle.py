@@ -192,6 +192,10 @@ def _tree_materials(root: Path, bundle_root: str) -> tuple[dict[str, Any], list[
 
     def visit(directory: Path) -> None:
         for child in sorted(directory.iterdir(), key=lambda item: item.name):
+            # Interpreter/test caches are host-generated, not dataset materials.
+            # Filter before traversal so ignored cache trees are never read.
+            if child.name == "__pycache__" or child.suffix == ".pyc":
+                continue
             relative = child.relative_to(root).as_posix()
             _safe_relative_path(relative, label="material path")
             if child.is_symlink():
