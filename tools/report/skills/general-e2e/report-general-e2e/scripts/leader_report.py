@@ -127,22 +127,39 @@ def render_task_timing_summary(data):
         return None
     index = next(i for i, row in enumerate(timing["rows"]) if row[0] == label)
     row = timing["rows"][index]
-    if row[2] is None:
+    indices = {h: i for i, h in enumerate(timing["headers"])}
+    avg = indices["平均任务耗时(s)"]
+    p50 = indices["任务耗时P50(s)"]
+    p90 = indices["任务耗时P90(s)"]
+    if row[avg] is None:
         return f"{label} 的原生任务耗时不可用，不用流程耗时替代。"
-    text = f"{label} 每个冻结用例平均任务耗时为 {num(row[2], 3, grouping=True)} 秒"
-    if row[3] is not None and row[4] is not None:
-        text += f"，P50 为 {num(row[3], 3, grouping=True)} 秒，P90 为 {num(row[4], 3, grouping=True)} 秒"
+    text = f"{label} 每个冻结用例平均任务耗时为 {num(row[avg], 3, grouping=True)} 秒"
+    if row[p50] is not None and row[p90] is not None:
+        text += f"，P50 为 {num(row[p50], 3, grouping=True)} 秒，P90 为 {num(row[p90], 3, grouping=True)} 秒"
     text += "。"
-    peers = [f"{peer[0]} 的 {num(Decimal(str(row[2])) / Decimal(str(peer[2])))} 倍"
-             for peer in timing["rows"] if peer[0] != label and isinstance(peer[2], (int, float)) and peer[2] > 0]
+    peers = [f"{peer[0]} 的 {num(Decimal(str(row[avg])) / Decimal(str(peer[avg])))} 倍"
+             for peer in timing["rows"] if peer[0] != label and isinstance(peer[avg], (int, float)) and peer[avg] > 0]
     if peers:
         text += "按可核验用量，平均任务耗时约为" + "、".join(peers) + "。"
-    if timing.get("cell_annotations", {}).get(f"{index}:2", {}).get("status") == "partial":
+    if timing.get("cell_annotations", {}).get(f"{index}:{avg}", {}).get("status") == "partial":
         text += "目标组计时覆盖不足，平均值是已知用量下限；分位数未补算。"
-    if any(timing.get("cell_annotations", {}).get(f"{i}:2", {}).get("status") == "partial"
+    if any(timing.get("cell_annotations", {}).get(f"{i}:{avg}", {}).get("status") == "partial"
            for i, peer in enumerate(timing["rows"]) if peer[0] != label):
         text += "部分参照计时不完整，相关倍数只比较已知用量。"
     text += "任务耗时包含已确认失败任务的原生耗时，流程等待另计。"
+    model = indices.get("总模型耗时(s)")
+    if model is not None:
+        if row[model] is not None:
+            model_avg = row[indices["平均模型耗时(s)"]]
+            share = row[indices["总模型耗时占比"]]
+            text += f"目标单元每题累计模型耗时平均 {num(model_avg, 3, grouping=True)} 秒"
+            if share is not None: text += f"，占总任务耗时的 {num(share, percent=True)}"
+            text += "，采用 maas_cube.perf 累计口径。"
+        else:
+            coverage = timing["coverage_table"]
+            coverage_row = next(r for r in coverage["rows"] if r[0] == label)
+            known = coverage_row[coverage["headers"].index("模型耗时完整用例")]
+            text += f"目标单元模型耗时完整覆盖 {known} 题，全量统计暂以“-”展示；口径为 maas_cube.perf。"
     return text
 
 
@@ -275,6 +292,26 @@ def extract(workbook, data, target_unit_id):
                     actual_row.append(actual)
                 extracted.append(actual_row)
             timing["rows"] = extracted
+        for additional in view.get("additional_views", []):
+            for table in [additional, additional.get("timing_table")]:
+                if not table: continue
+                header = table["header_row"]
+                for i, heading in enumerate(table["headers"]):
+                    assert str(cells[name][column(i + 1) + str(header)]).replace("\n", "") == heading
+                extracted = []
+                for rn, expected in enumerate(table["rows"], header + 1):
+                    actual_row = []
+                    for i, value in enumerate(expected):
+                        actual = cells[name].get(column(i + 1) + str(rn))
+                        if value is None:
+                            assert actual in [None, "-", ""]
+                            actual = None
+                        elif isinstance(value, (int, float)):
+                            assert isinstance(actual, (int, float)) and abs(actual - value) < 1e-8
+                        else: assert actual == value
+                        actual_row.append(actual)
+                    extracted.append(actual_row)
+                table["rows"] = extracted
     target = units[target_unit_id]
     # Use actual selected task identities; mixed/unknown model values do not
     # establish a controlled model comparison.
@@ -389,6 +426,17 @@ def render(data):
             lines += ["### 任务耗时对比", "", *md_table(t["headers"],t["rows"],t["formats"],t.get("cell_annotations")), "", *t["notes"], ""]
             c=t["coverage_table"]
             lines += ["任务耗时完整统计覆盖：", "", *md_table(c["headers"],c["rows"]), ""]
+        for extra in v.get("additional_views", []):
+            lines += ["### " + extra["title"], "", *md_table(extra["headers"],extra["rows"],extra["formats"],extra.get("cell_annotations")), "", *extra["notes"], ""]
+            t = extra.get("timing_table")
+            if t:
+                target_row = next(r for r in t["rows"] if r[0] == label)
+                idx = {h:i for i,h in enumerate(t["headers"])}
+                if target_row[idx["总模型耗时(s)"]] is not None:
+                    lines += [f"在共同任务范围内，{label} 每题平均模型耗时为 {num(target_row[idx['平均模型耗时(s)']],3,grouping=True)} 秒，占总任务耗时的 {num(target_row[idx['总模型耗时占比']],percent=True)}。", ""]
+                lines += ["### " + t.get("title", "任务耗时对比"), "", *md_table(t["headers"],t["rows"],t["formats"],t.get("cell_annotations")), "", *t["notes"], ""]
+                c = t["coverage_table"]
+                lines += ["任务与模型耗时覆盖：", "", *md_table(c["headers"],c["rows"]), ""]
     lines += ["## 总结","",
               f"本轮以 {label} 为目标单元，与参照组合在分类、七维能力和难度分层上的差异已在各章节列明。失败任务的真实产物得分计入均值，完成率单独呈现，不以剔除失败的方式抬高效果指标。",
               "资源缺口保留覆盖说明；组合对照应结合模型与 Harness 的实际配置解释。所有表格数值均从本版 Excel 提取并与同源 JSON 逐项核对。","",

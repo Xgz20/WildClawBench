@@ -23,6 +23,7 @@ from typing import Any, Iterable, Mapping, Sequence
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import report_views
 import report_case_views
+import maas_model_timing
 from report_display import fixed_number
 
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
@@ -842,6 +843,9 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
         "tool_calls": tool_calls,
         "task_definition": task_definition,
         "lineage": {
+            "source_unit_root": str(root / "unit"),
+            "source_execution_record": str(execution_path),
+            "source_unit_id": expected_identity["unit_id"],
             "package_id": selected["package_id"],
             "package_manifest_sha256": sha256_file(selected["package_manifest_path"]),
             "import_receipt_sha256": sha256_file(selected["import_receipt_path"]),
@@ -1124,6 +1128,13 @@ def render_audit_markdown(data: Mapping[str, Any]) -> str:
         "- 本 Markdown 与 Excel 均由同目录报告 JSON 生成。",
         "",
     ]
+    if data.get("model_timing_provenance"):
+        import maas_model_timing
+        lines += ["## MaaS模型耗时覆盖", "", "只在报告阶段关联冻结执行身份与SID，采用 maas_cube.perf(ms÷1000) 累计口径。缺失或冲突不补零，不替换原生任务耗时。", "",
+                  f"ES缓存SHA-256：`{data['model_timing_provenance']['es_cache_sha256']}`", "",
+                  *markdown_table(["单元", "完整用例", "匹配请求", "完整总量(s)", "已知小计(s)"],
+                    [[u["unit_id"], f"{s['known_cases']}/{s['total_cases']}", s["matched_requests"], s["total"], s["known_subtotal"]]
+                     for u in data["units"] for s in [maas_model_timing.summarize([r for r in data["tasks"] if r["unit_id"] == u["unit_id"]])]]), ""]
     return "\n".join(lines)
 
 
@@ -1182,7 +1193,10 @@ def render_markdown(data: Mapping[str, Any]) -> str:
             for ri, row in enumerate(timing["rows"]):
                 cells = []
                 for ci, value in enumerate(row):
-                    text = "-" if value is None else fixed_number(value, 3, grouping=True) if isinstance(value, (int, float)) else value
+                    fmt = timing["formats"].get(str(ci), "#,##0")
+                    digits = len(fmt.split(".")[1].replace("%", "")) if "." in fmt else 0
+                    text = "-" if value is None else (fixed_number(value, digits, grouping=True, multiplier=100 if '%' in fmt else 1)
+                            + ("%" if "%" in fmt else "")) if isinstance(value, (int, float)) else value
                     if value is not None and timing["cell_annotations"].get(f"{ri}:{ci}", {}).get("status") == "partial":
                         text = str(text) + "\\*"
                     cells.append(text)
@@ -1469,6 +1483,8 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
         output_root.rmdir()
     staging = Path(tempfile.mkdtemp(prefix=f".{output_root.name}.pending-", dir=output_root.parent))
     try:
+        import maas_model_timing
+        model_artifacts = maas_model_timing.apply_options(data, args, staging)
         data_path = staging / "general_e2e_report_data.json"
         markdown_path = staging / "通用场景端到端自动化评测报告.md"
         audit_path = staging / "通用场景端到端评测审计.md"
@@ -1503,7 +1519,7 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
         receipt = build_report_receipt(
             data,
             batch_root,
-            [data_path, markdown_path, audit_path, excel_path, cli_manifest_path, validation_path, *leader_artifacts, *developer_indexes],
+            [data_path, markdown_path, audit_path, excel_path, cli_manifest_path, validation_path, *leader_artifacts, *developer_indexes, *model_artifacts],
             staged_output_root=staging,
             published_output_root=output_root,
         )
@@ -1558,6 +1574,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="包含 @oai/artifact-tool 的 node_modules 目录",
     )
     generate.add_argument("--skip-preview", action="store_true")
+    import maas_model_timing
+    maas_model_timing.add_arguments(generate)
     generate.set_defaults(handler=command_generate)
     return parser
 
@@ -1567,7 +1585,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         result = args.handler(args)
-    except ReportError as exc:
+    except (ReportError, maas_model_timing.ModelTimingError) as exc:
         print(json.dumps({"status": "FAIL", "error": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return 2
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))

@@ -30,9 +30,9 @@ class GeneralReportViewsTests(unittest.TestCase):
         self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
         view = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]
         timing = view["timing_table"]
-        self.assertEqual(timing["headers"], ["模型@Harness", "任务耗时(s)", "平均任务耗时(s)", "任务耗时P50(s)", "任务耗时P90(s)"])
-        self.assertEqual(timing["rows"][0][1:4], [106, 26.5, 2.5])
-        self.assertAlmostEqual(timing["rows"][0][4], 70.9)
+        self.assertEqual(timing["headers"], ["模型@Harness", "总任务耗时(s)", "总模型耗时(s)", "总模型耗时占比", "平均任务耗时(s)", "平均模型耗时(s)", "任务耗时P50(s)", "模型耗时P50(s)", "任务耗时P90(s)", "模型耗时P90(s)"])
+        self.assertEqual([timing["rows"][0][i] for i in [1, 4, 6]], [106, 26.5, 2.5])
+        self.assertAlmostEqual(timing["rows"][0][8], 70.9)
         self.assertEqual(timing["metric_field"], "agent_duration_seconds")
         self.assertGreater(timing["header_row"], len(view["rows"]) + 1)
         self.assertEqual(len(self.data["tasks"]), 4)  # Includes evaluation_error and unscored runs.
@@ -46,17 +46,17 @@ class GeneralReportViewsTests(unittest.TestCase):
             row["resource"]["duration_seconds"].update(value=1000, complete=True, status="observed")
         self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
         view = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["timing_table"]
-        self.assertEqual(view["rows"][0][1:], [None, None, None, None])
+        self.assertEqual(view["rows"][0][1:], [None] * 9)
         self.data["tasks"][0]["resource"]["agent_duration_seconds"].update(value=0, known_subtotal=0, complete=True, status="observed")
         self.data["tasks"][1]["resource"]["agent_duration_seconds"].update(known_subtotal=10, status="partial")
         self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
         view = VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["timing_table"]
-        self.assertEqual(view["rows"][0][1:], [10, 2.5, None, None])
-        self.assertEqual(view["cell_annotations"]["0:2"]["status"], "partial")
+        self.assertEqual(view["rows"][0][1:], [10, None, None, 2.5, None, None, None, None, None])
+        self.assertEqual(view["cell_annotations"]["0:4"]["status"], "partial")
         for row in self.data["tasks"]:
             row["resource"]["agent_duration_seconds"].update(value=0, known_subtotal=0, complete=True, status="observed")
         self.data["units"][0]["resources"] = REPORT.resource_summary(self.data["tasks"])
-        self.assertEqual(VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["timing_table"]["rows"][0][1:], [0, 0, 0, 0])
+        self.assertEqual(VIEWS.build_views(self.data, self.references)["tables"]["效率对比"]["timing_table"]["rows"][0][1:], [0, None, None, 0, None, 0, None, 0, None])
 
     def test_overview_has_requested_columns_and_valid_score_denominator(self):
         tables = self.data["presentation"]["tables"]
@@ -74,7 +74,7 @@ class GeneralReportViewsTests(unittest.TestCase):
         self.assertEqual(values["正常完成数"], 4)
         for key in ("总成本(USD)", "超时数", "格式准确率", "执行成功率", "不确定占比"):
             self.assertNotIn(key, overview["headers"])
-        self.assertIn("任务耗时(s)", values)
+        self.assertIn("总任务耗时(s)", values)
         self.assertIn("流程耗时(s)", values)
         request = overview["headers"].index("总请求数")
         self.assertEqual(overview["headers"][request + 1], "工具调用数")

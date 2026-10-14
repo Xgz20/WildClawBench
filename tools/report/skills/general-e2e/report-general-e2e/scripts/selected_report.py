@@ -204,6 +204,8 @@ def main(argv=None):
     parser.add_argument("--target-unit");parser.add_argument("--output-dir",type=Path)
     parser.add_argument("--data-output",type=Path,help="Write verified report JSON without rendering a workbook; must be a new file inside workspace-root")
     parser.add_argument("--node",default=os.environ.get("GENERAL_E2E_NODE","node"));parser.add_argument("--node-modules",type=Path)
+    import maas_model_timing
+    maas_model_timing.add_arguments(parser)
     args=parser.parse_args(argv);ROOT=args.workspace_root.resolve();BATCH=args.batch_root.resolve()
     batch=load(safe_file(BATCH/"manifest.json",ROOT));source=load(safe_file(args.source_index,ROOT));selection=load(safe_file(args.task_index,ROOT))
     require(selection["source_index_sha256"]==sha(args.source_index),"SELECTION_SOURCE_INDEX_DRIFT")
@@ -256,7 +258,7 @@ def main(argv=None):
             row=selected_task_row(unit=units[uid],meta=meta,unit_root=unit_root,record_path=rp,record_sha=record_sha,
                 score_path=sp,score_sha=score_sha,score_status=score_status,scoring_attempt_id=scoring_id,
                 lineage={"package_id":entry["package_id"],"source_unit_root":str(unit_root),"source_execution_record":str(rp),
-                         "source_batch_id":load(rp)["identity"]["batch_id"],"package_manifest_sha256":entry["package_manifest_sha256"]})
+                         "source_batch_id":load(rp)["identity"]["batch_id"],"source_unit_id":load(rp)["identity"]["unit_id"],"package_manifest_sha256":entry["package_manifest_sha256"]})
             if (uid,tid) in supplements:apply_external_resources(row,args,supplements[(uid,tid)],supplement_sha)
             current.append(row)
         rows.extend(current);summaries.append(report.unit_summary(current,units[uid]));imports.append({"unit_id":uid,**item})
@@ -277,12 +279,15 @@ def main(argv=None):
     if args.target_unit:require(args.target_unit in data["presentation"]["unit_labels"],"SELECTION_TARGET_UNKNOWN")
     if args.data_output:
         target=args.data_output.resolve();require(target.is_relative_to(ROOT) and not target.exists(),"SELECTION_DATA_OUTPUT_UNSAFE")
+        if not args.output_dir:
+            maas_model_timing.apply_options(data,args,target.with_suffix(""))
         report.write_json(target,data)
     if args.output_dir:
         require(args.node_modules and args.node_modules.is_dir(),"SELECTION_EXCEL_RUNTIME_REQUIRED")
         out=args.output_dir.resolve();require(out.is_relative_to(BATCH) and not out.exists(),"SELECTION_OUTPUT_UNSAFE_OR_EXISTS")
         stage=out.with_name('.'+out.name+'.'+uuid.uuid4().hex+'.staging');stage.mkdir(parents=True)
         try:
+            model_artifacts=maas_model_timing.apply_options(data,args,stage)
             name=report.excel_report_filename(generated);data["artifact_filenames"]={"excel":name,"leader_markdown":"通用场景端到端自动化评测报告.md","audit_markdown":"通用场景端到端评测审计.md"}
             report.write_json(stage/"general_e2e_report_data.json",data)
             report.write_text(stage/"通用场景端到端评测审计.md",report.render_audit_markdown(data))
@@ -294,7 +299,8 @@ def main(argv=None):
             report.write_text(stage/"通用场景端到端自动化评测报告.md",md)
             report.write_json(stage/"composite-report-receipt.json",{"source_json_sha256":sha(stage/"general_e2e_report_data.json"),"excel_sha256":sha(stage/name),
                 "markdown_sha256":sha(stage/"通用场景端到端自动化评测报告.md"),"composite_import_index_sha256":sha(args.source_index),
-                "selection_manifest_sha256":sha(args.task_index),"resource_supplement_manifest_sha256":supplement_sha,"source_mode":data["lineage"]["source_mode"]})
+                "selection_manifest_sha256":sha(args.task_index),"resource_supplement_manifest_sha256":supplement_sha,"source_mode":data["lineage"]["source_mode"],
+                "model_timing_artifacts":[{"path":p.relative_to(stage).as_posix(),"sha256":sha(p)} for p in model_artifacts]})
             shutil.copy2(args.source_index,stage/"developer-source-index.json");shutil.copy2(args.task_index,stage/"developer-task-index.json")
             stage.rename(out)
         except BaseException:shutil.rmtree(stage);raise

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from decimal import Decimal
 import hashlib
 import json
 import math
@@ -210,14 +211,15 @@ def timing_percentile(values, ratio):
     """Match Web's linear interpolation at (n - 1) * ratio."""
     if not values:
         return None
-    ordered = sorted(values)
-    position = (len(ordered) - 1) * ratio
-    lower = math.floor(position)
+    ordered = sorted(Decimal(str(v)) for v in values)
+    position = (len(ordered) - 1) * Decimal(str(ratio))
+    lower = int(position)
     upper = min(lower + 1, len(ordered) - 1)
-    return ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower)
+    return float(ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower))
 
 
 def task_timing_comparison(data, labels):
+    import maas_model_timing as model_timing
     metric = "agent_duration_seconds"
     prepared = []
     for unit in data["units"]:
@@ -229,25 +231,43 @@ def task_timing_comparison(data, labels):
         complete = bool(rows) and len(values) == len(rows) and total["status"] == "complete"
         if complete and not math.isclose(sum(values), total["value"], rel_tol=1e-9, abs_tol=1e-6):
             raise ValueError("REPORT_TASK_TIMING_TOTAL_MISMATCH")
-        average = {**total, "value": total["value"] / len(rows) if total["value"] is not None and rows else None,
+        if complete:
+            total["value"] = float(sum((Decimal(str(v)) for v in values), Decimal(0)))
+        average = {**total, "value": float(Decimal(str(total["value"])) / len(rows)) if total["value"] is not None and rows else None,
                    "denominator": len(rows), "basis": "known-task-duration-sum-divided-by-frozen-task-count"}
         quantile = {"status": "complete" if complete else "unavailable", "basis": "complete-native-task-duration-samples",
                     "complete_cases": len(values), "partial_cases": 0, "total_cases": len(rows)}
-        cells = [total, average, {**quantile, "value": timing_percentile(values, .5) if complete else None},
-                 {**quantile, "value": timing_percentile(values, .9) if complete else None}]
-        prepared.append((unit, cells, len(values)))
+        model = model_timing.summarize(rows)
+        model_cell = {"status": "complete" if model["complete"] else "unavailable", "value": model["total"],
+                      "complete_cases": model["known_cases"], "partial_cases": 0, "total_cases": len(rows),
+                      "known_subtotal": model["known_subtotal"], "basis": model_timing.PROFILE}
+        share = (float(Decimal(str(model["total"])) / Decimal(str(total["value"])))
+                 if model["complete"] and complete and total["value"] > 0 else None)
+        cells = [total, model_cell, {**model_cell, "value": share}, average,
+                 {**model_cell, "value": float(Decimal(str(model["total"])) / len(rows)) if model["complete"] else None},
+                 {**quantile, "value": timing_percentile(values, .5) if complete else None},
+                 {**model_cell, "value": timing_percentile(model["values"], .5) if model["complete"] else None},
+                 {**quantile, "value": timing_percentile(values, .9) if complete else None},
+                 {**model_cell, "value": timing_percentile(model["values"], .9) if model["complete"] else None}]
+        prepared.append((unit, cells, len(values), model))
     prepared.sort(key=lambda item: (item[1][0]["value"] is None, item[1][0]["value"] or 0, item[0]["unit_id"]))
-    view = table(["模型@Harness", "任务耗时(s)", "平均任务耗时(s)", "任务耗时P50(s)", "任务耗时P90(s)"],
-                 [[labels[u["unit_id"]], *[c["value"] for c in cells]] for u, cells, _ in prepared],
-                 {str(i): "#,##0.000" for i in range(1, 5)},
+    view = table(model_timing.HEADERS,
+                 [[labels[u["unit_id"]], *[c["value"] for c in cells]] for u, cells, _, _ in prepared],
+                 {str(i): "0.00%" if i == 3 else "#,##0.000" for i in range(1, 10)},
                  ["任务耗时来自原生主任务 agent_duration_seconds，包含已确认失败任务；不使用流程耗时 duration_seconds 替代，也不等同于批次壁钟。",
-                  "平均任务耗时=完整总量或已知小计/冻结用例数；部分统计标为下限。P50/P90只在逐题原生耗时完整覆盖时计算，使用排序后(n-1)×p的线性插值；未知不补零，实测零保留。"])
+                  "平均任务耗时=完整总量或已知小计/当前比较用例数；部分统计标为下限。P50/P90只在逐题完整覆盖时计算，使用排序后(n-1)×p的线性插值；未知不补零，实测零保留。",
+                  "模型耗时采用关联SID去重后的 maas_cube.perf 累计值(ms÷1000)，包含重试、失败/取消及压缩请求；占比=总模型耗时÷总任务耗时，累计口径在并行请求或服务端尾部处理时可能超过100%。",
+                  "模型均值及P50/P90先按每题累计模型耗时计算；仅当前比较范围内请求与ES日志全覆盖时展示完整统计，部分已知小计保留在覆盖审计。其他Harness无法确定时显示“-”。"])
     view["metric_field"] = metric
     view["percentile_method"] = "linear-interpolation-(n-1)*p"
-    view["cell_annotations"] = {f"{i}:{j}": c for i, (_, cells, _) in enumerate(prepared) for j, c in enumerate(cells, 1)}
-    view["coverage_table"] = table(["模型@Harness", "任务耗时覆盖", "分位数样本", "冻结用例数"],
-                                  [[labels[u["unit_id"]], coverage_label(cells[0]), f"{known}/{cells[0]['total_cases']}", cells[0]["total_cases"]]
-                                   for u, cells, known in prepared])
+    view["title"] = "任务耗时对比（总任务耗时升序，缺失值置末）"
+    view["model_metric_profile"] = model_timing.PROFILE
+    view["cell_annotations"] = {f"{i}:{j}": c for i, (_, cells, _, _) in enumerate(prepared) for j, c in enumerate(cells, 1)}
+    view["coverage_table"] = table(["模型@Harness", "任务耗时覆盖", "任务分位数样本", "比较用例数", "模型耗时完整用例", "模型请求ES覆盖"],
+                                  [[labels[u["unit_id"]], coverage_label(cells[0]), f"{known}/{cells[0]['total_cases']}", cells[0]["total_cases"],
+                                    f"{model['known_cases']}/{len([r for r in data['tasks'] if r['unit_id'] == u['unit_id']])}" if u.get("harness", {}).get("id") == "astronstudio" else "-",
+                                    (f"{model['matched_requests']}已知/总数未知" if model["unknown_request_denominator_cases"] else f"{model['matched_requests']}/{model['expected_requests']}") if u.get("harness", {}).get("id") == "astronstudio" else "-"]
+                                   for u, cells, known, model in prepared])
     return view
 
 
@@ -403,7 +423,7 @@ def build_views(data, references):
                          " / ".join(str(unit["harness"].get(key) or "-") for key in ("id", "platform", "version")), judges])
     views = {
         "总览": table(["模型@Harness", "总平均分", "用例数", "正常完成数", "执行错误数", "评测异常数", "完成率", "有效评分数", "未评分数",
-                       "总 Token", "总请求数", "工具调用数", "任务耗时(s)", "流程耗时(s)"], overview,
+                       "总 Token", "总请求数", "工具调用数", "总任务耗时(s)", "流程耗时(s)"], overview,
                       {"1": "0.00", "6": "0.00%", "12": "#,##0.000", "13": "#,##0.000"},
                       ["得分为百分制，均值只含有效评分；真实零分保留，评测异常和未评分不补零。",
                        "完成率=原生正常完成数/冻结用例数；执行情况与评分状态分别统计，异常数按任务去重，各列不要求相加等于用例数。",
