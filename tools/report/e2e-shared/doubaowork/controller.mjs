@@ -67,6 +67,7 @@ import { installNativeLifecycleObserver, bindNativeLifecycleObserver, collectNat
 import { preflightDoubaoPaths } from "./path-preflight.mjs";
 import { inspectNativeAuthorizationHistory, summarizePendingConfirmations } from "./interactions.mjs";
 import { CANCELLATION_SCHEMA, TERMINAL_OBSERVATION_SCHEMA, hasCancellationRequest } from "./terminal-evidence.mjs";
+import {readProjectConfigurationDirectory} from './project-directory.mjs';
 
 const execFile = promisify(execFileCallback);
 const DRIVER_DIR = dirname(fileURLToPath(import.meta.url));
@@ -741,8 +742,19 @@ async function verifyPreparedProjectWorkspace(page, state) {
   const more = section.getByTestId("conversation-list-v2-project-more-menu-trigger");
   if (await more.count() !== 1) throw new Error("DOUBAOWORK_PREPARED_PROJECT_MENU_AMBIGUOUS");
   await more.click();
-  const edit = page.getByRole("menuitem", { name: "编辑项目", exact: true });
+  const edit = page.getByRole("menuitem", { name: /^(?:编辑项目|编辑项目名称)$/u });
+  await edit.waitFor({ state: "visible", timeout: 10000 });
   if (await edit.count() !== 1) throw new Error("DOUBAOWORK_PREPARED_PROJECT_EDIT_AMBIGUOUS");
+  if((await edit.innerText()).trim()==='编辑项目名称'){
+    const proof=await readProjectConfigurationDirectory(page,{section,more,
+      projectId:await section.getAttribute('data-project-id'),projectName:state.client.project_name,workspace:state.workspace});
+    state.workspace_selection.display_value=proof.path;
+    state.workspace_selection.display_sha256=sha256Text(proof.path);
+    state.workspace_selection.source=proof.source;
+    state.workspace_selection.confirmed_at=proof.observed_at;
+    state.history.push({phase:state.phase,event:'PREPARED_PROJECT_WORKSPACE_REVALIDATED',...proof});
+    return proof.path;
+  }
   await edit.click();
   const dialog = page.getByTestId("project-shared-rename-project-dialog");
   await dialog.waitFor({ state: "visible" });
@@ -1314,6 +1326,11 @@ async function retryPreSendDevelopmentRunUnlocked(options) {
       await atomicWriteAttemptState(stateFile, state);
       await verifyExecutionEnvironment(client);
       await createProject(client.page, state, stateFile, config);
+      if (options.prepareOnly) {
+        state.prepared_project = true;
+        await atomicWriteAttemptState(stateFile, state);
+        return { state: sanitizedStateSummary(state), prepared_only: true, formal_execution_record_created: false };
+      }
       return await dispatchFromSelectedProject({ client, state, stateFile, config, roots });
     }
 
@@ -1377,6 +1394,11 @@ async function retryPreSendDevelopmentRunUnlocked(options) {
       at: new Date().toISOString(),
     });
     await atomicWriteAttemptState(stateFile, state);
+    if (options.prepareOnly) {
+      state.prepared_project = true;
+      await atomicWriteAttemptState(stateFile, state);
+      return { state: sanitizedStateSummary(state), prepared_only: true, formal_execution_record_created: false };
+    }
     return await dispatchFromSelectedProject({ client, state, stateFile, config, roots });
   } catch (error) {
     primaryError = error;

@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 import { createHash, randomUUID } from "node:crypto";
-import { lstat, open, readFile, readdir, realpath, writeFile, mkdir, rename, rm } from "node:fs/promises";
+import { lstat, open, readFile, readdir, realpath, writeFile, mkdir, rename, rm, appendFile } from "node:fs/promises";
 import { hostname } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
-import { inspectQwenExecutionEnvironment, assertQwenExecutionEnvironment } from "./environment.mjs";
+import { inspectQwenExecutionEnvironment, assertQwenExecutionEnvironment, assertQwenNativeFolderDialogOwner } from "./environment.mjs";
 import { buildQwenGeneralExecutionState } from "./execution-state.mjs";
 import { FLOW_TIMING_PROFILE, flowTiming } from "../../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
 import { preflightQwenExecutionPaths } from "./path-preflight.mjs";
@@ -567,8 +567,7 @@ async function bindOrAttend(config, state, dependencies) {
     promptEvidence = await dependencies.verifySessionPrompt(session, config.prompt);
   } catch (error) {
     if (
-      config.managed_queue_id
-      && !session.session_id
+      !session.session_id
       && session.conversation_id
       && session.sub_chat_id
       && session.local_project_id
@@ -1128,6 +1127,10 @@ export async function createLiveDependencies(config) {
   const checkEnvironment = async () => assertQwenExecutionEnvironment(
     await inspectQwenExecutionEnvironment(environmentConfig), config.execution_environment);
   await checkEnvironment();
+  // CDP page focus alone does not reliably activate the macOS application for
+  // native text input and NSOpenPanel. Reuse the already verified installation.
+  await runCapture('/usr/bin/open', ['-a', environmentConfig.appPath], { capture: true });
+  await checkEnvironment();
   const { chromium } = await import("playwright-core");
   const timeout = Number(config.control.timeout_ms || 30_000);
   const browser = await chromium.connectOverCDP(config.client.endpoint, { timeout });
@@ -1136,6 +1139,7 @@ export async function createLiveDependencies(config) {
     page = await chooseQwenWorkMainPage(browser, timeout);
     page.setDefaultTimeout(timeout);
     await checkEnvironment();
+    await page.evaluate(async()=>{if(typeof window.desktopApi?.focusMainWindow==='function')await window.desktopApi.focusMainWindow();});
     await page.bringToFront();
   } catch (error) {
     await browser.close().catch(() => {});
@@ -1148,7 +1152,7 @@ export async function createLiveDependencies(config) {
   // project with the same visible name.
   const projectName = `WCB-GEN-${config.identity.task_id.slice(-40)}-${config.config_digest.slice(0, 8)}`;
   const selectNativeFolder = async (workspace) => {
-    await checkEnvironment();
+    await assertQwenNativeFolderDialogOwner(config.execution_environment);
     const result = await runCapture(
       "/usr/bin/swift",
       [join(SCRIPT_DIR, "select-folder.swift"), BUNDLE_ID, workspace, String(Math.ceil(timeout / 1000))],
@@ -1190,6 +1194,7 @@ export async function createLiveDependencies(config) {
           queryProjects,
           selectNativeFolder,
           timeoutMilliseconds: timeout,
+          onStage: async stage=>appendFile(join(config.evidence_root,'native-ui-stages.jsonl'),JSON.stringify({at:new Date().toISOString(),stage})+'\n'),
         }),
         configuration: await readQwenUiConfiguration(page),
       }),

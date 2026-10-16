@@ -2,6 +2,16 @@ import { createHash, randomUUID } from "node:crypto";
 
 export const DISPATCHER_PROFILE = "doubaowork-tool-dispatch-observer/v1";
 export const DISPATCHER_SOURCE_SHA256 = "40941282dd34f9ff7b5a0c5b399913f97c5b92a03eca90072c8f1b279c004baa";
+export const MERGED_DISPATCHER_SOURCE_SHA256 = 'a7e2a6ab6b87325256a9201904fa7aa95350b6c96b9b8cb6591e5d59570de461';
+const SOURCE_PROFILES=Object.freeze({
+  [DISPATCHER_SOURCE_SHA256]:Object.freeze({module:168088,holder:'bb',transport:'ce',cleanupScope:'Closure (wI)'}),
+  [MERGED_DISPATCHER_SOURCE_SHA256]:Object.freeze({module:985448,holder:'vr',transport:'c7',cleanupScope:'Closure (Ig)'}),
+});
+export const isSupportedDispatcherSource = hash => Object.hasOwn(SOURCE_PROFILES,hash);
+export function dispatcherProfileForSource(hash) {
+  if(!isSupportedDispatcherSource(hash))throw Error('DOUBAOWORK_DISPATCH_SOURCE_UNVERIFIED');
+  return SOURCE_PROFILES[hash];
+}
 
 // Read the initialized 2.31.10 dispatcher and context store. Never call the
 // cleanup/initializer, a tool, a permission API, or a result upload function.
@@ -27,21 +37,33 @@ export async function dispatcherCall(browser, operation, value) {
       if (!Array.isArray(chunks)) throw new Error("DISPATCH_LOADER_UNAVAILABLE");
       let require; const item = [["wcb-dispatch-" + crypto.randomUUID()], {}, r => { require = r; }];
       chunks.push(item); if (chunks.at(-1) === item) chunks.pop();
-      const source = String(require?.m?.[168088] || "");
+      // Inspect cached exports only: do not load a module or initialize a runtime.
+      const moduleId=[985448,168088].find(id=>require?.c?.[id]?.exports?.default);
+      const source = String(require?.m?.[moduleId] || "");
       if (!source.includes("ToolCall consumer is already started") || !source.includes("local-file-local-tools-sse-wiring.ts")) throw new Error("DISPATCH_PROFILE_UNSUPPORTED");
-      return { entry: require(168088).default, source };
+      return { entry: require.c[moduleId].exports.default, source };
     })()` });
     if (root.exceptionDetails || !root.result?.objectId) throw new Error("DOUBAOWORK_DISPATCH_PROFILE_UNAVAILABLE");
     const props = await properties(root.result.objectId);
     const source = props.find(p => p.name === "source")?.value?.value;
     const entry = props.find(p => p.name === "entry")?.value;
-    if (typeof source !== "string" || createHash("sha256").update(source).digest("hex") !== DISPATCHER_SOURCE_SHA256
-      || entry?.type !== "function") throw new Error("DOUBAOWORK_DISPATCH_SOURCE_UNVERIFIED");
-    const variables = await closureVariables(entry.objectId, "Closure (168088)");
-    const cleanup = variables.find(p => p.name === "f")?.value, holder = variables.find(p => p.name === "bb")?.value;
-    const transportHolder = variables.find(p => p.name === "ce")?.value;
+    if (typeof source !== "string" || entry?.type !== "function") throw new Error("DOUBAOWORK_DISPATCH_SOURCE_UNVERIFIED");
+    const sourceSha=createHash('sha256').update(source).digest('hex');
+    const profile=dispatcherProfileForSource(sourceSha);
+    const variables = await closureVariables(entry.objectId, `Closure (${profile.module})`);
+    let nativeClientVersion=null;
+    if(profile.module===985448) {
+      const versionModule=variables.find(p=>p.name==='J')?.value;
+      if(versionModule?.objectId) {
+        const version=await cdp.send('Runtime.callFunctionOn',{objectId:versionModule.objectId,objectGroup:group,
+          functionDeclaration:'function(){ return this.getSamanthaClientVersion(); }',returnByValue:true});
+        if(!version.exceptionDetails&&typeof version.result?.value==='string')nativeClientVersion=version.result.value;
+      }
+    }
+    const cleanup = variables.find(p => p.name === "f")?.value, holder = variables.find(p => p.name === profile.holder)?.value;
+    const transportHolder = variables.find(p => p.name === profile.transport)?.value;
     if (cleanup?.type !== "function" || !holder?.objectId || !transportHolder?.objectId) throw new Error("DOUBAOWORK_DISPATCH_NOT_INITIALIZED");
-    const cleanupVariables = await closureVariables(cleanup.objectId, "Closure (wI)");
+    const cleanupVariables = await closureVariables(cleanup.objectId, profile.cleanupScope);
     const dispatcher = cleanupVariables.find(p => p.name === "e")?.value;
     const store = await cdp.send("Runtime.callFunctionOn", { objectId: holder.objectId, objectGroup: group,
       functionDeclaration: "function(){ return this.current?.store; }", returnByValue: false });
@@ -50,11 +72,11 @@ export async function dispatcherCall(browser, operation, value) {
     if (!dispatcher?.objectId || store.exceptionDetails || !store.result?.objectId
         || service.exceptionDetails || !service.result?.objectId) throw new Error("DOUBAOWORK_DISPATCH_NOT_INITIALIZED");
     const result = await cdp.send("Runtime.callFunctionOn", { objectId: dispatcher.objectId, objectGroup: group, returnByValue: true,
-      arguments: [{ objectId: store.result.objectId }, { value: { ...value, operation, profileSha: DISPATCHER_SOURCE_SHA256 } },
+      arguments: [{ objectId: store.result.objectId }, { value: { ...value, operation, profileSha: sourceSha } },
         { objectId: service.result.objectId }],
       functionDeclaration: operateDispatcherObserver.toString() });
     if (result.exceptionDetails || !result.result?.value) throw new Error(`DOUBAOWORK_DISPATCH_OBSERVER_FAILED: ${result.exceptionDetails?.exception?.description || operation}`);
-    return result.result.value;
+    return { ...result.result.value, native_client_version:nativeClientVersion };
   } finally { await cdp.send("Runtime.releaseObjectGroup", { objectGroup: group }).catch(() => {}); await cdp.detach(); }
 }
 

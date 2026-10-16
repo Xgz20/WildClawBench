@@ -12,7 +12,7 @@ import { summarizePromptReadback } from "./lib.mjs";
 import { mergeNativeToolTimeline, mergeObservedToolTimeline } from "./trajectory-merge.mjs";
 import { inspectNativeAuthorizationHistory } from "./interactions.mjs";
 import { verifyCancellationEvidence, verifyFailureEvidence } from "./terminal-evidence.mjs";
-import { DISPATCHER_PROFILE, DISPATCHER_SOURCE_SHA256 } from "./runtime-dispatcher.mjs";
+import { DISPATCHER_PROFILE, isSupportedDispatcherSource } from "./runtime-dispatcher.mjs";
 
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 export function trajectoryArchiveClockPolicy(snapshot) {
@@ -20,7 +20,7 @@ export function trajectoryArchiveClockPolicy(snapshot) {
       && snapshot.profile_sha256 === "f765c160a6d8661b95cddbbbee9bed1ab90902e910259c5c241ae4cd7df78e75") {
     return { use_observation_bounds: true, basis: "verified-native-emitter-host-clock/v1" };
   }
-  if (snapshot?.profile === DISPATCHER_PROFILE && snapshot.profile_sha256 === DISPATCHER_SOURCE_SHA256) {
+  if (snapshot?.profile === DISPATCHER_PROFILE && isSupportedDispatcherSource(snapshot.profile_sha256)) {
     // The dispatcher profile is bound and verified, but its ledger times do
     // not prove the old emitter clock. Preserve archives without using their
     // capture times to order dispatcher and model events across sources.
@@ -80,7 +80,7 @@ export function normalizeVerifiedNonSuccessToolSubset(snapshot, options, { nonSu
   try { return { ...normalizeNativeToolEvents(snapshot, options), dropped_failed_upload_count: 0 }; }
   catch (error) {
     if (!nonSuccessVerified && error.message === "NATIVE_TOOL_CAPTURE_INCOMPLETE"
-        && snapshot.profile === DISPATCHER_PROFILE && snapshot.profile_sha256 === DISPATCHER_SOURCE_SHA256
+        && snapshot.profile === DISPATCHER_PROFILE && isSupportedDispatcherSource(snapshot.profile_sha256)
         && Array.isArray(snapshot.errors) && snapshot.errors.length > 0
         && snapshot.errors.every(item => item === "DISPATCH_CONSUMER_BINDING_UNVERIFIED")
         && snapshot.unknown_context_events === 0 && snapshot.overflow !== true && snapshot.ledger_at_capacity !== true

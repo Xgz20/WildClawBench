@@ -44,3 +44,15 @@ export function assertQwenExecutionEnvironment(environment, expected = null) {
       || !sameQwenTokenProcess(environment.listener, expected.listener))) throw Error("QWENWORK_EXECUTION_ENVIRONMENT_CHANGED");
   return environment;
 }
+
+export async function assertQwenNativeFolderDialogOwner(expected, overrides = {}) {
+  // NSOpenPanel can block the Electron CDP endpoint. Verify the physical owner
+  // without re-entering CDP while our exact project folder picker is open.
+  assertQwenExecutionEnvironment(expected);
+  const gui=await (overrides.inspectGui??inspectMacGuiSession)();
+  assertMacGuiReady(gui);
+  const listener=await (overrides.inspectListener??readQwenTokenListener)({
+    appPath:expected.app_path,port:Number(new URL(expected.endpoint).port)});
+  if(!listener||!sameQwenTokenProcess(listener,expected.listener))throw Error('QWENWORK_NATIVE_DIALOG_OWNER_CHANGED');
+  return {verified:true,source:'gui-and-exact-os-listener-during-owned-folder-dialog',gui,listener};
+}

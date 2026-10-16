@@ -605,8 +605,9 @@ test("managed queue prepares a project without sending, then dispatches the same
 });
 
 test("provisional QwenWork binding pauses after an inactive identity settle window but never resends", async () => {
+  for (const queue of [null, "qwen-queue-fixture"]) {
   for (const kind of ["unknown", "running", "title-pending"]) {
-    const config = makeConfig({ resume: true, managed_queue_id: "qwen-queue-fixture" });
+    const config = makeConfig({ resume: true, managed_queue_id: queue });
     const state = createQwenAttemptJournal({
       identity: config.identity, dataset: config.dataset, taskRoot: config.task_root,
       candidateWorkspace: config.candidate_workspace, prompt: config.prompt,
@@ -655,6 +656,7 @@ test("provisional QwenWork binding pauses after an inactive identity settle wind
       assert.equal(result.journal.phase, "RUNNING");
       assert.equal(result.journal.attention.code, "QWENWORK_SESSION_ID_PENDING");
     }
+  }
   }
 });
 

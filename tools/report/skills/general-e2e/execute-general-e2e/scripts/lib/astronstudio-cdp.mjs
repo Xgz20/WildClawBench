@@ -1,5 +1,7 @@
 import { queryExactProjectsForWorkspace, queryProjectForThread, queryNativeSessions, queryPristineThread } from "./astronstudio-state.mjs";
 
+export const PROJECT_NEW_TASK_LABEL = /^(?:在 .+ 中新建(?:对话|任务)|New (?:chat|task) in .+)$/iu;
+
 function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
 }
@@ -557,7 +559,7 @@ export async function openExactProjectConversation(client, workspace, stateDatab
   const point = await client.evaluate(expression(`
     const row = document.querySelector('[data-project-hover-anchor="${projectId}"]');
     const buttons = row ? Array.from(row.querySelectorAll('button[aria-label]'))
-      .filter((button) => /^(?:在 .+ 中新建对话|New chat in .+)$/iu.test(
+      .filter((button) => ${PROJECT_NEW_TASK_LABEL}.test(
         (button.getAttribute('aria-label') || '').trim()
       )) : [];
     const rect = buttons.length === 1 ? buttons[0].getBoundingClientRect() : null;
@@ -587,7 +589,7 @@ export async function openExactProjectConversation(client, workspace, stateDatab
       '[data-project-hover-anchor="${projectId}"]'
     ));
     const buttons = rows.length === 1 ? Array.from(rows[0].querySelectorAll('button[aria-label]'))
-      .filter((button) => /^(?:在 .+ 中新建对话|New chat in .+)$/iu.test(
+      .filter((button) => ${PROJECT_NEW_TASK_LABEL}.test(
         (button.getAttribute('aria-label') || '').trim()
       )) : [];
     if (buttons.length !== 1 || buttons[0].disabled || buttons[0].closest('[inert]')) {

@@ -17,6 +17,7 @@ import {
   reloadIdleProjectProjection,
   waitForExactProjectIdentity,
   createFreshTask,
+  PROJECT_NEW_TASK_LABEL,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs";
 import {
   withStateSnapshot,
@@ -34,6 +35,15 @@ import {
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs";
 
 const TASK_ID = "02_Code_Intelligence_task_001_temperature_cli_fix";
+
+test("project task creation recognizes current and legacy labels while excluding terminal tasks", () => {
+  for (const label of ['在 A 中新建任务','在 项目一 中新建对话','New chat in A','New task in A']) {
+    assert.equal(PROJECT_NEW_TASK_LABEL.test(label),true,label);
+  }
+  for (const label of ['在 A 中新建终端任务','新建任务','打开 A','New terminal task in A']) {
+    assert.equal(PROJECT_NEW_TASK_LABEL.test(label),false,label);
+  }
+});
 
 test("General sidebar recovery recognizes 3.5 and rejects duplicate toggles", async () => {
   let clicked=0;

@@ -405,7 +405,9 @@ export async function createQwenLocalProject({
   queryProjects,
   selectNativeFolder,
   timeoutMilliseconds = 30_000,
+  onStage = async () => {},
 }) {
+  await onStage('project-dialog-inspection');
   // Recover only the dialog whose exact name belongs to this attempt.
   const dialogs = await visibleLocators(page.getByRole("dialog", { name: "新建个人项目" }));
   if (dialogs.length > 1) throw new Error("QWENWORK_PROJECT_DIALOG_AMBIGUOUS");
@@ -417,13 +419,17 @@ export async function createQwenLocalProject({
     await cancel.click({ timeout: timeoutMilliseconds });
     await ownDialog.waitFor({ state: "hidden", timeout: timeoutMilliseconds });
   }
+  await onStage('project-query-before');
   const before = await queryProjects();
+  await onStage('project-query-after');
   if (before.some(project => visibleValue(project.project_name || project.name) === visibleValue(projectName)
       && (!project.cwd || resolve(String(project.cwd)) !== resolve(workspace)))) {
     throw new Error("QWENWORK_PROJECT_NAME_AMBIGUOUS");
   }
   const knownProjectNames = before.map((entry) => entry.project_name || entry.name).filter(Boolean);
+  await onStage('new-task-navigation-before');
   await ensureQwenNewTaskView(page, timeoutMilliseconds, projectName, knownProjectNames);
+  await onStage('new-task-navigation-after');
   const existing = before.filter((project) => (
     project.cwd && resolve(String(project.cwd)) === resolve(workspace)
   ));
@@ -445,20 +451,26 @@ export async function createQwenLocalProject({
   }
   const baselineProjectIds = before.map((project) => project.project_id || project.projectId).filter(Boolean);
   const createButton = await requireUniqueVisible(page.locator('button[aria-label="新建项目"]'), "new-project-button");
+  await onStage('new-project-click-before');
   await createButton.evaluate((element) => element.click());
   const dialog = await waitForUniqueVisible(
     () => visibleLocators(page.getByRole("dialog", { name: "新建个人项目" })),
     timeoutMilliseconds,
     "new-project-dialog",
   );
+  await onStage('project-name-fill-before');
   await dialog.getByRole("textbox", { name: "项目名称" }).fill(projectName, { timeout: timeoutMilliseconds });
+  await onStage('project-name-fill-after');
   const selectedPickers = dialog.locator('[data-slot="path-picker-root"][data-selected="true"] [data-slot="path-picker-trigger"]');
   const picker = await requireUniqueVisible(
     (await visibleLocators(selectedPickers)).length ? selectedPickers : dialog.locator('[data-slot="path-picker-trigger"]'),
     "folder-picker",
   );
+  await onStage('folder-picker-click-before');
   await picker.evaluate((element) => element.click());
+  await onStage('native-folder-selection-before');
   await selectNativeFolder(resolve(workspace));
+  await onStage('native-folder-selection-after');
   const label = dialog.locator(
     '[data-slot="path-picker-root"][data-selected="true"] [data-slot="path-picker-value"]',
   );

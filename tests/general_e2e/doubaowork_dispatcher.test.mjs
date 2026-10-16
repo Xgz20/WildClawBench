@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { operateDispatcherObserver, DISPATCHER_SOURCE_SHA256 } from "../../tools/report/e2e-shared/doubaowork/runtime-dispatcher.mjs";
+import { operateDispatcherObserver, DISPATCHER_SOURCE_SHA256, MERGED_DISPATCHER_SOURCE_SHA256, dispatcherProfileForSource } from "../../tools/report/e2e-shared/doubaowork/runtime-dispatcher.mjs";
 import { assertNativeToolActivityAllowed, taskToolDeliveries, normalizeNativeToolEvents } from "../../tools/report/e2e-shared/doubaowork/runtime-tools.mjs";
 import { normalizeVerifiedNonSuccessToolSubset } from "../../tools/report/e2e-shared/doubaowork/bound-evidence.mjs";
 
-function fixture(t, withConsumer = false) {
+function fixture(t, withConsumer = false, sourceSha = DISPATCHER_SOURCE_SHA256) {
   t.mock.timers.enable({ apis: ["Date", "setInterval"], now: Date.parse("2026-10-06T00:00:00Z") });
   t.after(() => { delete globalThis.__wcbDoubaoDispatcherObserver; });
   let delegated = 0;
@@ -14,7 +14,7 @@ function fixture(t, withConsumer = false) {
     dispatch(request) { delegated++; if (request.id === "throws") throw error; return value; } };
   const owner = { cwd: "/task", instanceId: "sandbox", sendContext: { conversationId: "123" } };
   const store = { contextsBySandboxId: new Map([["sandbox", owner]]) };
-  const cfg = { workspace: "/task", attemptId: "attempt", profileSha: DISPATCHER_SOURCE_SHA256 };
+  const cfg = { workspace: "/task", attemptId: "attempt", profileSha: sourceSha };
   const listeners = new Set();
   const service = withConsumer ? { subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     getConnectionState() { return { state: "open" }; } } : null;
@@ -30,6 +30,19 @@ function fixture(t, withConsumer = false) {
   const options = { attemptId: "attempt", workspace: "/task", agentId: "agent", conversationId: "123", sentAt: new Date().toISOString() };
   return { manager, store, owner, cfg, call, dispatch, receive, service, listeners, value, error, options, delegated: () => delegated };
 }
+
+test('merged runtime source keeps exact consumer-witness binding and rejects a different source',t=>{
+  const f=fixture(t,true,MERGED_DISPATCHER_SOURCE_SHA256);
+  f.call('install');f.dispatch();
+  f.manager.records.set('sandbox::call',{finalizedAt:Date.now(),uploadState:'uploaded',request:{id:'call',name:'Bash'},
+    result:{text:'ok'},context:{owner:f.owner,agentId:'agent',conversationId:'123'}});
+  const snapshot=f.call('collect',{agentId:'agent',restore:true}),options={...f.options,finishedAt:new Date().toISOString()};
+  assert.equal(normalizeNativeToolEvents(snapshot,options).status,'complete-for-protocol');
+  const wrong=structuredClone(snapshot);wrong.consumer_witness.source_sha256=DISPATCHER_SOURCE_SHA256;
+  assert.throws(()=>normalizeNativeToolEvents(wrong,options),/CONSUMER_WITNESS/);
+  assert.equal(dispatcherProfileForSource(MERGED_DISPATCHER_SOURCE_SHA256).module,985448);
+  assert.throws(()=>dispatcherProfileForSource('unknown'),/SOURCE_UNVERIFIED/);
+});
 
 test("consumer witness reconciles inbound calls, actual dispatch and native uploaded results without changing dispatch", t => {
   const f = fixture(t, true), original = f.manager.dispatch;
