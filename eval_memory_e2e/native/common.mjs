@@ -94,6 +94,12 @@ export async function withUiLock(ctx, request, action) {
 
 export async function requireGui() { assertMacGuiReady(await inspectMacGuiSession()); }
 
+export async function readQwenMemoryOperationUi({transportAction,frozen,terminal=false},read) {
+  if(transportAction==='observe'&&frozen&&!terminal)return {ui:null,basis:'frozen_pre_send_pending_terminal_readback'};
+  try{return {ui:await read(),basis:'live_ui'};}
+  catch(error){if(terminal||!frozen)throw error;return {ui:null,basis:'frozen_after_unavailable_ui'};}
+}
+
 export function baseReply(request, actualConfig) {
   return { ...Object.fromEntries(["contract", "mode", "experiment_id", "execution_attempt_id", "operation_id", "episode_id", "profile_id", "namespace", "step_id", "prompt_sha256"].map(key => [key, request[key]])),
     actual_config: actualConfig, background_settled: null };

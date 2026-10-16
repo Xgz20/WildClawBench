@@ -1,6 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { targetFor, TARGETS, roundtripValues, runConfiguration, selectClientPage } from '../../eval_memory_e2e/native/configuration.mjs';
+import { targetFor, TARGETS, roundtripValues, runConfiguration, selectClientPage, qwenMemorySettingsUrl } from '../../eval_memory_e2e/native/configuration.mjs';
+
+test('Qwen memory settings use the verified awareness route and retain the window identity',()=>{
+  const root='file:///Applications/QwenWorkCN.app/Contents/Resources/app.asar/out/renderer/';
+  const route=new URL(qwenMemorySettingsUrl(root+'index.html?chat=synthetic#windowId=main',[root+'assets/index-DkViyRcX.js']));
+  assert.equal(route.searchParams.get('view'),'settings');
+  assert.equal(route.searchParams.get('tab'),'awareness');
+  assert.equal(route.searchParams.get('chat'),'synthetic');
+  assert.equal(route.hash,'#windowId=main');
+});
+test('Qwen settings reject another app, remote content and an unknown renderer',()=>{
+  const root='file:///Applications/QwenWorkCN.app/Contents/Resources/app.asar/out/renderer/';
+  for(const [url,scripts] of [[root+'index.html',[root+'assets/index-new.js']],
+    ['https://example.test/index.html',[root+'assets/index-DkViyRcX.js']],
+    [root.replace('QwenWorkCN.app','Other.app')+'index.html',[root+'assets/index-DkViyRcX.js']]]){
+    assert.throws(()=>qwenMemorySettingsUrl(url,scripts),/CONFIG_QWEN_SETTINGS_ROUTE_UNVERIFIED/);
+  }
+});
 
 test('Doubao settings selection follows the verified app URL when the chat title changes',()=>{
   const main={type:'page',title:'记忆测试 - 豆包工作',url:'chrome://doubaowork-chat/chat/123'};

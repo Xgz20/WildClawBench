@@ -9,7 +9,7 @@ import {chooseQwenWorkMainPage,readQwenUiConfiguration,ensureQwenNewTaskView,ope
   confirmQwenWorkspaceProject} from '../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/ui.mjs';
 import {queryQwenProjectRows} from '../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/session-state.mjs';
 import {context,sha,requestHash,readJson,saveState,artifact,withUiLock,requireGui,
-  baseReply,bindReply,verifyConfig,stdinRequest,assertMemoryPreSendRetry} from './common.mjs';
+  baseReply,bindReply,verifyConfig,stdinRequest,assertMemoryPreSendRetry,readQwenMemoryOperationUi} from './common.mjs';
 
 const ENDPOINT='http://127.0.0.1:9250',DB='/Users/gzx/Library/Application Support/QwenWorkCN/data/agents.db';
 const TRACE='/Users/gzx/.qwenworkcn';
@@ -44,8 +44,9 @@ export async function runQwenWork(request) {
   try {
     const page=await chooseQwenWorkMainPage(browser,10000);
     const uid=await authUid(page);if(!uid)throw Error('QWEN_ACCOUNT_ID_UNAVAILABLE');
-    let ui;try{ui=await readQwenUiConfiguration(page)}catch{ui=null}
     const frozen=state?.config??request.expected_config;
+    const observed=await readQwenMemoryOperationUi({transportAction:request.transport_action,frozen},()=>readQwenUiConfiguration(page));
+    const ui=observed.ui;
     config={app_version:probe.app.version,model_display:ui?.model.actual_model??frozen?.model_display,
       permissions:ui?.permission.confirmed_mode??frozen?.permissions,underlying_model:null,account_fingerprint:sha(String(uid))};
     verifyConfig(config,request.expected_config);
@@ -95,7 +96,6 @@ export async function runQwenWork(request) {
       const cfg=await loadQwenCanaryConfig(configPath,{requireLiveAuthorization:true,resume:Boolean(existingJournal),
         ...(existingJournal?{resumeProbePath:probePath,resumeProbeSha256:probeSha}:{})});
       cfg.resume=Boolean(existingJournal);
-      cfg.observe_once=true;
       const live=await createLiveDependencies(cfg);
       try {
         const livePage=await chooseQwenWorkMainPage(live.browser,10000);
@@ -120,7 +120,9 @@ export async function runQwenWork(request) {
         const reply=baseReply(request,config);
         if(journal.phase==='NEEDS_ATTENTION'||journal.phase==='FAILED')return await bindReply(ctx,request,
           {...reply,status:'needs_attention',reason:journal.attention?.message||journal.phase},{general_journal:journal});
-        if(journal.phase!=='COMPLETED')return await bindReply(ctx,request,{...reply,status:'active',reason:'General 原生观察仍未结束；恢复同一发送。'},{general_journal:journal});
+        if(journal.phase!=='COMPLETED')return await bindReply(ctx,request,{...reply,status:'active',reason:'General 原生观察仍未结束；恢复同一发送。'},{general_journal:journal,configuration_basis:observed.basis});
+        const terminal=await readQwenMemoryOperationUi({transportAction:request.transport_action,frozen,terminal:true},()=>readQwenUiConfiguration(livePage));
+        if(terminal.ui.model.actual_model!==config.model_display||terminal.ui.permission.confirmed_mode!==config.permissions)throw Error('QWEN_MEMORY_TERMINAL_CONFIG_DRIFT');
         const evidence=await live.dependencies.verifySessionPrompt(journal.session,cfg.prompt);
         const raw=await readFile(evidence.transcript_path,'utf8');
         if(sha(raw)!==evidence.transcript_sha256)return await bindReply(ctx,request,
@@ -135,7 +137,7 @@ export async function runQwenWork(request) {
         reply.status='completed';reply.memory_observation={status:'unobservable',wait_seconds:seconds};
         reply.final_response=await artifact(ctx,'response',rows.filter(r=>r.type==='assistant').at(-1)?.message?.content?.filter(p=>p.type==='text').map(p=>p.text).join('\n')??'');
         reply.trace=await artifact(ctx,'trace',raw);
-        return await bindReply(ctx,request,reply,{general_journal:journal,transcript_evidence:evidence,native_turn_identity_kind:'user_message_uuid',prompt_binding_status:'verified'});
+        return await bindReply(ctx,request,reply,{general_journal:journal,transcript_evidence:evidence,native_turn_identity_kind:'user_message_uuid',prompt_binding_status:'verified',configuration_basis:terminal.basis,terminal_ui_configuration:terminal.ui});
       }finally{await live.browser.close()}
     });
   }finally{await browser.close()}

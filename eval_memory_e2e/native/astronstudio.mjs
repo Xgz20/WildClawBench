@@ -3,7 +3,7 @@ import {execFileSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
 import {realpath,stat} from 'node:fs/promises';
 import {discoverMainTarget, readUiConfiguration, prepareExecutionUi, fillPrompt, ensureSendTargetReady,
-  clickSend, currentThreadId} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs';
+  inspectSendTarget, currentThreadId} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs';
 import {WorkBuddyCdpClient as CdpClient} from '../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/ui.mjs';
 import {queryNativeSessions, withStateSnapshot} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs';
 import {isBlockingActiveSession, classifyNativeState} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs';
@@ -14,6 +14,54 @@ import {context, sha, requestHash, readJson, saveState, artifact, withUiLock, re
 const DB='/Users/gzx/.acode/acode/userdata/state.sqlite';
 const ENDPOINT='http://127.0.0.1:9240';
 const CAPABILITIES=['new','continue'];
+export function aStudioConfigurationFields(ui,frozen=null) {
+  return {model_display:frozen?frozen.model_display:ui.model,
+    reasoning:frozen?frozen.reasoning:ui.reasoning,permissions:frozen?frozen.permissions:ui.permission};
+}
+export async function clickAStudioStableTarget(client,prompt,workspace,{read=()=>inspectSendTarget(client,prompt,workspace),pause=()=>new Promise(ok=>setTimeout(ok,100)),attempts=10}={}) {
+  let target=await read();if(!target.ready)return {clicked:false,mouse_press_count:0,...target};
+  const threadId=target.thread_id;
+  for(let i=0;i<attempts;i++) {
+    await client.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:target.x,y:target.y,button:'none',buttons:0});
+    await pause();const next=await read();
+    if(!next.ready||next.thread_id!==threadId)return {clicked:false,mouse_press_count:0,reason:'target-or-route-changed-after-hover',target:next};
+    if(next.x===target.x&&next.y===target.y) {
+      const final=await read();
+      if(!final.ready||final.thread_id!==threadId||final.x!==next.x||final.y!==next.y)return {clicked:false,mouse_press_count:0,reason:'target-not-stable-before-press'};
+      await client.send('Input.dispatchMouseEvent',{type:'mousePressed',x:final.x,y:final.y,button:'left',buttons:1,clickCount:1});
+      await client.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:final.x,y:final.y,button:'left',buttons:0,clickCount:1});
+      return {clicked:true,mouse_press_count:1,thread_id:threadId,x:final.x,y:final.y,method:'stable-native-mouse-events'};
+    }
+    target=next;
+  }
+  return {clicked:false,mouse_press_count:0,reason:'target-remained-unstable'};
+}
+export async function dispatchAStudioOnce(state,click,persist) {
+  state.phase='invoking';await persist(state);
+  const result=await click();
+  if(typeof result?.clicked!=='boolean')throw Error('ASTUDIO_SEND_RESULT_UNVERIFIED');
+  state.click_result=result;
+  state.phase=result.clicked?'invoked':'pre_send_rejected';await persist(state);
+  return result;
+}
+export async function waitForAStudioForeground(pid,{attempts=30,read=()=>Number(execFileSync('/usr/bin/osascript',
+  ['-l','JavaScript','-e','ObjC.import("AppKit"); Number($.NSWorkspace.sharedWorkspace.frontmostApplication.processIdentifier);'],
+  {encoding:'utf8',timeout:3000}).trim()),pause=()=>new Promise(ok=>setTimeout(ok,100))}={}) {
+  for(let i=0;i<attempts;i++){if(await read()===pid)return {pid,verified:true,attempts:i+1};await pause();}
+  throw Error('ASTUDIO_FOREGROUND_OWNER_UNVERIFIED');
+}
+export async function waitForAStudioFrozenUi(read,expected,threadId,{attempts=150,pause=()=>new Promise(ok=>setTimeout(ok,200))}={}) {
+  const observations=[];
+  for(let i=0;i<attempts;i++) {
+    const ui=await read();
+    if(ui.thread_id!==threadId)throw Error('ASTUDIO_PENDING_CONFIG_ROUTE_CHANGED');
+    observations.push({model:ui.model,reasoning:ui.reasoning,permission:ui.permission});
+    if(ui.model_count===1&&ui.model===expected.model_display&&ui.reasoning===expected.reasoning
+      &&ui.permission_count===1&&ui.permission===expected.permissions)return {ui,observations};
+    await pause();
+  }
+  throw Error('ASTUDIO_FROZEN_UI_NOT_READY');
+}
 export function readMemoryConfiguration(){
   const code=`import json,tomllib
 from pathlib import Path
@@ -55,11 +103,11 @@ async function connect(frozen=null,observeOnly=false) {
     const uid=await client.evaluate(`(async()=>{const u=new URL(await window.desktopBridge.getWsUrl());u.protocol=u.protocol==='wss:'?'https:':'http:';u.pathname='/api/astron-auth/session';const r=await fetch(u);if(!r.ok)throw Error('auth unavailable');const j=await r.json();return j.session?.uid??null})()`);
     if(!uid)throw Error('ASTUDIO_ACCOUNT_UNVERIFIED');
     const version=execFileSync('/usr/libexec/PlistBuddy',['-c','Print :CFBundleShortVersionString','/Applications/AStudio.app/Contents/Info.plist'],{encoding:'utf8'}).trim();
-    const fallback=observeOnly?frozen:null;
-    const config={app_version:version,model_display:ui.model||fallback?.model_display,reasoning:ui.reasoning||fallback?.reasoning,permissions:ui.permission||fallback?.permissions,
+    const config={app_version:version,...aStudioConfigurationFields(ui,frozen),
       memory_settings:readMemoryConfiguration(),
       underlying_model:null,account_fingerprint:sha(String(uid))};
-    verifyConfig(config,null);return {client,ui,config,config_basis:ui.model?'live_ui':'frozen_pre_send_pending_native_turn_verification'};
+    verifyConfig(config,null);return {client,ui,config,pid:Number(pids[0]),config_basis:frozen
+      ?observeOnly?'frozen_pre_send_pending_native_turn_verification':'frozen_request_pending_target_ui_verification':'live_ui'};
   }catch(error){client.close();throw error}
 }
 async function traceFor(session,promptSha) {
@@ -100,7 +148,10 @@ async function observe(ctx,request,live,state) {
   await saveState(ctx,state);
   const reply={...baseReply(request,live.config),native:state.native};
   if(classification.kind==='running')return bindReply(ctx,request,{...reply,status:'active',reason:'原生 turn 尚未结束。'},{native_session:session});
-  if(classification.kind!=='completed')return bindReply(ctx,request,{...reply,status:'needs_attention',reason:'原生 turn 未正常完成；保留终态，不重发。'},{native_session:session});
+  if(classification.kind!=='completed')return bindReply(ctx,request,{...reply,
+    status:session.status==='interrupted'?'infrastructure_error':'needs_attention',
+    reason:session.status==='interrupted'?'原生 turn 中断，记忆阶段不可评；原因未确认，保留终态且不重发。':'原生 turn 未正常完成；保留终态，不重发。'},
+    {native_session:session});
   const trace=await traceFor(session,request.prompt_sha256);
   const rollout=await rawRollout(session,request.prompt_sha256);
   const nativeConfiguration=verifyRecordedConfiguration(rollout.bytes,session,state.config);
@@ -117,7 +168,7 @@ async function observe(ctx,request,live,state) {
 export async function runAstronStudio(request) {
   const ctx=await context(request,'AstronStudio');let state;
   try{state=await readJson(ctx.stateFile)}catch(e){if(e.code!=='ENOENT')throw e}
-  const live=await connect(state?.config,Boolean(state&&request.transport_action==='observe'));
+  const live=await connect(state?.config??request.expected_config,Boolean(state&&request.transport_action==='observe'));
   try {
     verifyConfig(live.config,request.expected_config);
     if(state&&state.requestHash!==requestHash(request))throw Error('ASTUDIO_MEMORY_REQUEST_DRIFT');
@@ -137,15 +188,28 @@ export async function runAstronStudio(request) {
         admission:{account_policy:'current_signed_in_account',test_scope_only:true,precondition_verified:true,capabilities:CAPABILITIES,
           isolation:'shared_account_cold_first',global_memory_reset_verified:false,precondition_scope:'fresh_workspace_only'}},{native_sessions_baseline:rows.length,account_identity_method:'native astron-auth session uid -> sha256'});
     }
-    if(state){if(request.transport_action!=='observe')throw Error('ASTUDIO_DUPLICATE_DISPATCH');return await observe(ctx,request,live,state)}
+    if(state){if(request.transport_action!=='observe')throw Error('ASTUDIO_DUPLICATE_DISPATCH');
+      if(state.phase==='pre_send_rejected')return bindReply(ctx,request,{...baseReply(request,live.config),status:'needs_attention',reason:'发送函数明确返回未点击成功；保留零发送检查结果，不自动重试。'},{click_result:state.click_result,prompt_sent:false});
+      return await observe(ctx,request,live,state)}
     if(request.transport_action==='observe')throw Error('ASTUDIO_ACCEPTANCE_UNKNOWN_NO_REDISPATCH');
     return await withUiLock(ctx,request,async()=>{
       execFileSync('/usr/bin/open',['-a','/Applications/AStudio.app']);
+      await live.client.send('Page.bringToFront');
+      await artifact(ctx,'foreground-owner',await waitForAStudioForeground(live.pid));
       const rows=await queryNativeSessions(DB);if(rows.some(isBlockingActiveSession))throw Error('ASTUDIO_NOT_IDLE');
       let route;
       if(request.session_action==='new') {
-        await prepareExecutionUi(live.client,{candidateWorkspace:request.workspace,stateDatabase:DB,timeoutMs:30000,
-          expectedModel:live.config.model_display,expectedReasoning:live.config.reasoning,expectedPermission:live.config.permissions});
+        try {
+          await prepareExecutionUi(live.client,{candidateWorkspace:request.workspace,stateDatabase:DB,timeoutMs:30000,
+            expectedModel:live.config.model_display,expectedReasoning:live.config.reasoning,expectedPermission:live.config.permissions});
+        } catch(error) {
+          if(!/^AstronStudio 当前(?:模型|推理强度)不匹配：/.test(error.message))throw error;
+          // This error is raised only after the General engine verifies the new
+          // native project/thread/cwd. Wait for hydration; never select a model.
+          const pendingRoute=await currentThreadId(live.client);
+          const hydrated=await waitForAStudioFrozenUi(()=>readUiConfiguration(live.client),live.config,pendingRoute);
+          await artifact(ctx,'configuration-hydration',{thread_id:pendingRoute,observations:hydrated.observations,model_changed_by_controller:false});
+        }
         route=await currentThreadId(live.client);
       }else if(request.session_action==='continue') {
         const previous=rows.filter(s=>s.session_id===request.previous_native?.session_id&&s.cwd===request.workspace);
@@ -156,9 +220,10 @@ export async function runAstronStudio(request) {
         previous_turn_id:rows.find(s=>s.thread_id===route)?.turn_id??null};await saveState(ctx,state);
       await fillPrompt(live.client,request.prompt,30000);
       await ensureSendTargetReady(live.client,request.prompt,request.workspace);
-      state.phase='invoking';await saveState(ctx,state);
-      await clickSend(live.client,request.prompt,request.workspace);
-      state.phase='invoked';await saveState(ctx,state);
+      const preSend=await waitForAStudioFrozenUi(()=>readUiConfiguration(live.client),live.config,route);
+      await artifact(ctx,'pre-send-configuration',{thread_id:route,ui:preSend.ui,config_basis:live.config_basis,model_changed_by_controller:false});
+      const clicked=await dispatchAStudioOnce(state,()=>clickAStudioStableTarget(live.client,request.prompt,request.workspace),value=>saveState(ctx,value));
+      if(!clicked.clicked)return bindReply(ctx,request,{...baseReply(request,live.config),status:'needs_attention',reason:'发送前检查返回未点击成功，停止在原生发送之前。'},{click_result:clicked,prompt_sent:false});
       return observe(ctx,request,live,state);
     });
   }finally{live.client.close()}

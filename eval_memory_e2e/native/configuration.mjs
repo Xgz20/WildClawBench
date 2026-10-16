@@ -24,6 +24,15 @@ export function selectClientPage(pages,harness){
   if(matches.length!==1)throw Error('CONFIG_CLIENT_PAGE_AMBIGUOUS');
   return matches[0];
 }
+export function qwenMemorySettingsUrl(currentUrl, scriptUrls) {
+  const url=new URL(currentUrl);
+  const renderer='/Applications/QwenWorkCN.app/Contents/Resources/app.asar/out/renderer/';
+  if(url.protocol!=='file:'||url.pathname!==renderer+'index.html'
+    ||!scriptUrls.some(value=>{try{const script=new URL(value);return script.protocol==='file:'
+      &&script.pathname===renderer+'assets/index-DkViyRcX.js';}catch{return false;}}))throw Error('CONFIG_QWEN_SETTINGS_ROUTE_UNVERIFIED');
+  url.searchParams.set('view','settings');url.searchParams.set('tab','awareness');
+  return url.toString();
+}
 const digest = value => createHash('sha256').update(value).digest('hex');
 const pause = ms => new Promise(ok => setTimeout(ok, ms));
 const DOM = `
@@ -49,6 +58,7 @@ function expression(harness, body) { return `(()=>{const h=${JSON.stringify(harn
 async function readSettings(client, harness) {
   return client.evaluate(expression(harness, `
     if(!panel||candidates.length===0)return {ready:false};
+    if(candidates.some(e=>e.disabled||e.getAttribute('aria-disabled')==='true'))return {ready:false,reason:'controls_loading'};
     const keys=${JSON.stringify(targetFor(harness).keys)};
     const observed=k=>{
       try{return value(pick(k));}catch(error){
@@ -120,7 +130,7 @@ const DOUBAO_SETTINGS_MENU = String.raw`(()=>{const es=[...document.querySelecto
   const target=memory.length===1?memory:settings;if(target.length!==1)return false;target[0].click();return true})()`;
 async function waitMemoryPanel(client,harness){
   let entered=false;
-  for(let i=0;i<40;i++){
+  for(let i=0;i<120;i++){
     if((await readSettings(client,harness)).ready)return;
     if(harness==='DoubaoWork'&&!entered)entered=await client.evaluate(DOUBAO_MEMORY_ENTRY);
     await pause(100);
@@ -129,6 +139,25 @@ async function waitMemoryPanel(client,harness){
 }
 async function openSettings(client,harness) {
   if((await readSettings(client,harness)).ready)return;
+  if(harness==='QwenWork') {
+    // The model picker also has a generic Settings control. Open only the
+    // awareness route verified in this installed renderer, preserving window ID.
+    const current=await client.evaluate(`({url:location.href,scripts:[...document.scripts].map(e=>e.src).filter(s=>s.startsWith('file:'))})`);
+    const route=qwenMemorySettingsUrl(current.url,current.scripts);
+    try {
+      const navigation=await client.send('Page.navigate',{url:route});
+      if(navigation.errorText)throw Error('CONFIG_QWEN_SETTINGS_NAVIGATION_FAILED');
+    } catch(error) {
+      // A navigation acknowledgement may be lost while this Electron renderer
+      // reloads. Never navigate twice; require the actual route and panel below.
+      if(!/CDP Page\.navigate 超时/.test(error.message))throw error;
+    }
+    await pause(750);
+    await waitMemoryPanel(client,harness);
+    const applied=await client.evaluate(`({view:new URL(location.href).searchParams.get('view'),tab:new URL(location.href).searchParams.get('tab')})`);
+    if(applied.view!=='settings'||applied.tab!=='awareness')throw Error('CONFIG_QWEN_SETTINGS_ROUTE_MISMATCH');
+    return;
+  }
   if(harness==='DoubaoWork'&&await client.evaluate(`Boolean([...document.querySelectorAll('[data-testid="settings_modal"]')].find(e=>e.getClientRects().length))`)){
     await waitMemoryPanel(client,harness);return;
   }
@@ -231,7 +260,7 @@ export async function runConfiguration(request) {
     baseline=await read();
     await log({kind:'BASELINE',...baseline});
     const screenshot=async name=>{const r=await client.send('Page.captureScreenshot',{format:'png'});
-      await writeFile(join(output,name+'.png'),Buffer.from(r.data,'base64'),{flag:'wx'});};
+      await writeFile(join(output,name+'.png'),Buffer.from(r.data,'base64'),{flag:'wx',mode:0o600});};
     await screenshot('before');
     let result={baseline,final:baseline,restored:true};
     if(request.action==='roundtrip')result=await roundtripValues({read,keys:target.keys,log,

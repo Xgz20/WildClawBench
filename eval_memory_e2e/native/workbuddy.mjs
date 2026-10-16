@@ -119,6 +119,13 @@ export async function runWorkBuddy(request) {
     if (request.transport_action === "observe") throw Error("WORKBUDDY_NATIVE_ACCEPTANCE_UNKNOWN: no Driver state; never redispatch");
     return await withUiLock(ctx, request, async () => {
       execFileSync('/usr/bin/open',['-a','/Applications/WorkBuddy.app']);
+      const closed=await live.client.evaluate(`(()=>{const visible=e=>!!e.getClientRects().length;
+        const modals=[...document.querySelectorAll('.settings-modal')].filter(visible);
+        if(!modals.length)return false;
+        if(modals.length!==1||!modals[0].querySelector('.memory-settings-panel'))throw Error('WORKBUDDY_FOREIGN_SETTINGS_DIALOG');
+        const buttons=[...modals[0].querySelectorAll('button.settings-modal__close[aria-label="Close settings"]')].filter(visible);
+        if(buttons.length!==1)throw Error('WORKBUDDY_MEMORY_SETTINGS_CLOSE_AMBIGUOUS');buttons[0].click();return true})()`);
+      if(closed&&await live.client.evaluate(`Boolean([...document.querySelectorAll('.settings-modal')].find(e=>e.getClientRects().length))`))throw Error('WORKBUDDY_MEMORY_SETTINGS_STILL_OPEN');
       assertWorkBuddyNativeIdle(live.report); assertWorkBuddyUiIdle(await readWorkBuddyUi(live.client));
       const baseline = await snapshotWorkBuddyRuntimeBaseline(live.client, request.workspace);
       if (request.session_action === "new") {
