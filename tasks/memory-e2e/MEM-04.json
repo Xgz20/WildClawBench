@@ -1,0 +1,54 @@
+{
+  "id": "MEM-04",
+  "dimension": "personalization",
+  "title": "反馈形成的写作偏好",
+  "difficulty": "easy",
+  "experience_gain": true,
+  "fixtures": [],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "seed",
+      "prompt": "为合成测试项目 {project} 写一句进展说明：开发完成，待验收。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "seed",
+      "prompt": "这次反馈只适用于 {project}：以后给我的项目周报采用三个短条目，每条都以“速览：”开头并先写结论，不使用 emoji，也不要开场寒暄。",
+      "session": "continue",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "为 {project} 写本周周报：开发已完成，验收安排在周四，风险是接口文档未同步。直接交付。",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "application",
+      "expectation": "恰为三个短条目，每条均以“速览：”开头，并先说结论。当前查询未重述该标记约定。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "application",
+      "expectation": "没有 emoji 或开场寒暄。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "application",
+      "expectation": "准确覆盖开发完成、周四验收、接口文档风险三项。",
+      "required": true
+    }
+  ]
+}

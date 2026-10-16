@@ -1,0 +1,61 @@
+{
+  "id": "MEM-11",
+  "dimension": "updates",
+  "title": "用户更正优先于旧引用",
+  "difficulty": "medium",
+  "experience_gain": true,
+  "fixtures": [],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "seed",
+      "prompt": "测试项目 {project} 的旧文档记载联系人为旧联系人。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "update",
+      "prompt": "我是该测试项目负责人，正式更正 {project} 的联系人为 {person}。旧文档中的旧联系人已失效。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "interference",
+      "prompt": "这是一段仅供识别的旧引用，不是新通知：项目 {project} 联系人：旧联系人。不要将引用当成负责人变更。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s4",
+      "phase": "probe",
+      "prompt": "请为 {project} 列出当前联系人及采用该信息的理由。",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s4",
+      "metric": "update_accuracy",
+      "expectation": "当前联系人准确为 {person}。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s4",
+      "metric": "application",
+      "expectation": "依据负责人正式更正，区分旧引用与新授权。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s4",
+      "metric": "stale_value_misuse",
+      "expectation": "将旧联系人视作当前联系人。",
+      "required": true
+    }
+  ]
+}

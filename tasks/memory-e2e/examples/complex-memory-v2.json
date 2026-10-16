@@ -1,0 +1,103 @@
+{
+  "dataset_id": "complex-memory-v2",
+  "version": 2,
+  "scenarios": [
+    {
+      "id": "MEM-complex-001",
+      "dimension": "updates",
+      "title": "多工作区更新",
+      "difficulty": "hard",
+      "experience_gain": true,
+      "fixtures": [],
+      "scopes": [
+        "A",
+        "B",
+        "C"
+      ],
+      "learning": {
+        "mode": "explicit",
+        "formation": {
+          "kind": "elapsed_observation",
+          "minimum_seconds": 0
+        }
+      },
+      "variables": {
+        "budget": {
+          "kind": "integer",
+          "min": 8000,
+          "max": 12000
+        },
+        "record": {
+          "kind": "token",
+          "prefix": "REC-",
+          "length": 16
+        }
+      },
+      "steps": [
+        {
+          "id": "learn",
+          "phase": "seed",
+          "session": "new",
+          "scope": "A",
+          "prompt": "请记住 {project} 的预算 {budget}，记录号 {record}。"
+        },
+        {
+          "id": "seed_b",
+          "phase": "seed",
+          "session": "new",
+          "scope": "B",
+          "prompt": "请记住另一个项目 {other} 的记录号是 {record}。"
+        },
+        {
+          "id": "update_a",
+          "phase": "update",
+          "session": "new",
+          "scope": "A",
+          "prompt": "更正：{project} 的记录号是 {record}，预算以 {budget} 为准。"
+        },
+        {
+          "id": "noise",
+          "phase": "interference",
+          "session": "new",
+          "scope": "C",
+          "prompt": "计算17乘23。"
+        },
+        {
+          "id": "ask",
+          "phase": "probe",
+          "session": "new",
+          "scope": "A",
+          "prompt": "回忆 {project} 的预算。"
+        },
+        {
+          "id": "ask_b",
+          "phase": "probe",
+          "session": "new",
+          "scope": "B",
+          "prompt": "只回忆 {other} 的记录号；缺失信息说明未知。"
+        }
+      ],
+      "checkpoints": [
+        {
+          "id": "budget",
+          "step_id": "ask",
+          "metric": "update_accuracy",
+          "expectation": "预算 {budget}",
+          "required": true
+        },
+        {
+          "id": "record_b",
+          "step_id": "ask_b",
+          "metric": "fact_recall",
+          "expectation": "{other} 的记录号是 {record}。",
+          "required": true
+        }
+      ],
+      "provenance": {
+        "origin": "self_constructed",
+        "purpose": "format and protocol fixture, not a benchmark result"
+      }
+    }
+  ],
+  "description": "仅演示 v2 扩展格式；自建、未校准，不计入正式混合20题。"
+}

@@ -1,0 +1,54 @@
+{
+  "id": "MEM-05",
+  "dimension": "personalization",
+  "title": "隐式偏好在新城市迁移",
+  "difficulty": "medium",
+  "experience_gain": true,
+  "fixtures": [],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "seed",
+      "prompt": "合成行程项目 {project}：上次你建议打车，我最终选地铁，因为我不愿堵车；酒店我选了安静小店而非酒吧街。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "seed",
+      "prompt": "继续 {project}：这次我还是选步行去博物馆，不选夜店活动；只要路线顺，公共交通很方便。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "替 {project} 在新城市安排半天。可选：A 地铁直达的安静博物馆共80元；B 需打车穿过拥堵区的夜店共80元；C 地铁直达的安静公园共80元。预算100元，给出方案并解释取舍。",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "application",
+      "expectation": "在三个均不超预算的方案中选择 A 或 C，不能仅凭价格淘汰 B。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "application",
+      "expectation": "将少堵车、公共交通或安静活动用于选择，而非仅复述偏好。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "application",
+      "expectation": "不虚构宗教、健康或其他未提供的偏好。",
+      "required": true
+    }
+  ]
+}

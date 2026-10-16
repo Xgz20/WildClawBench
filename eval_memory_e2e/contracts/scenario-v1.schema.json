@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:memory-e2e:scenario:v1",
+  "title": "Memory E2E scenario v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "dimension",
+    "title",
+    "difficulty",
+    "experience_gain",
+    "fixtures",
+    "steps",
+    "checkpoints"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^MEM-[0-9]{2}$"
+    },
+    "dimension": {
+      "enum": [
+        "retention",
+        "personalization",
+        "temporal",
+        "updates",
+        "forgetting",
+        "isolation",
+        "relevance",
+        "procedural"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "difficulty": {
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ]
+    },
+    "experience_gain": {
+      "type": "boolean"
+    },
+    "fixtures": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "phase",
+          "session",
+          "scope",
+          "prompt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "not": {
+              "const": "prepare"
+            }
+          },
+          "phase": {
+            "enum": [
+              "seed",
+              "interference",
+              "update",
+              "forget",
+              "learn",
+              "probe"
+            ]
+          },
+          "session": {
+            "enum": [
+              "new",
+              "continue",
+              "restart_new"
+            ]
+          },
+          "scope": {
+            "enum": [
+              "A",
+              "B"
+            ]
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "checkpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "step_id",
+          "metric",
+          "expectation",
+          "required"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "step_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "metric": {
+            "enum": [
+              "fact_recall",
+              "application",
+              "temporal_accuracy",
+              "update_accuracy",
+              "stale_value_misuse",
+              "forgetting_compliance",
+              "retained_fact",
+              "scope_leakage",
+              "appropriate_abstention",
+              "answerable_accuracy",
+              "irrelevant_interference",
+              "procedure_success"
+            ]
+          },
+          "expectation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object"
+    }
+  }
+}

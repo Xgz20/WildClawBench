@@ -1,0 +1,54 @@
+{
+  "id": "MEM-09",
+  "dimension": "temporal",
+  "title": "跨时区与失效安排",
+  "difficulty": "hard",
+  "experience_gain": true,
+  "fixtures": [],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "seed",
+      "prompt": "测试项目 {project} 最初计划2026-10-20 09:00 Asia/Shanghai同步，后来已取消。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "update",
+      "prompt": "{project} 的有效安排改为2026-10-20 17:30 America/Los_Angeles，会议持续60分钟。请保留新安排，旧安排失效。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "按 {project} 的有效安排，给上海同事写一行会议通知：日期、北京时间起止时间、原时区。",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "temporal_accuracy",
+      "expectation": "北京时间2026-10-21 08:30开始。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "temporal_accuracy",
+      "expectation": "北京时间09:30结束，60分钟。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "stale_value_misuse",
+      "expectation": "错误使用已取消的2026-10-20北京时间09:00安排。",
+      "required": true
+    }
+  ]
+}

@@ -1,0 +1,281 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:memory-e2e:scenario:v2",
+  "title": "Extensible linear memory scenario v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "dimension",
+    "title",
+    "difficulty",
+    "experience_gain",
+    "fixtures",
+    "steps",
+    "checkpoints",
+    "scopes",
+    "learning"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "dimension": {
+      "enum": [
+        "retention",
+        "personalization",
+        "temporal",
+        "updates",
+        "forgetting",
+        "isolation",
+        "relevance",
+        "procedural"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "difficulty": {
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ]
+    },
+    "experience_gain": {
+      "type": "boolean"
+    },
+    "fixtures": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "phase",
+          "session",
+          "scope",
+          "prompt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "not": {
+              "const": "prepare"
+            }
+          },
+          "phase": {
+            "enum": [
+              "seed",
+              "interference",
+              "update",
+              "forget",
+              "learn",
+              "probe"
+            ]
+          },
+          "session": {
+            "enum": [
+              "new",
+              "continue",
+              "restart_new"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,31}$"
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "checkpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "step_id",
+          "metric",
+          "expectation",
+          "required"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "step_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "metric": {
+            "enum": [
+              "fact_recall",
+              "application",
+              "temporal_accuracy",
+              "update_accuracy",
+              "stale_value_misuse",
+              "forgetting_compliance",
+              "retained_fact",
+              "scope_leakage",
+              "appropriate_abstention",
+              "answerable_accuracy",
+              "irrelevant_interference",
+              "procedure_success"
+            ]
+          },
+          "expectation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object"
+    },
+    "scopes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,31}$"
+      }
+    },
+    "learning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "formation"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "explicit",
+            "automatic",
+            "eviction"
+          ]
+        },
+        "formation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "immediate_observation",
+                "elapsed_observation",
+                "native_event"
+              ]
+            },
+            "minimum_seconds": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 604800
+            },
+            "event": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "control_flow": {
+      "const": "linear"
+    },
+    "variables": {
+      "type": "object",
+      "maxProperties": 256,
+      "propertyNames": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "token"
+              },
+              "prefix": {
+                "type": "string"
+              },
+              "length": {
+                "type": "integer",
+                "minimum": 4,
+                "maximum": 32
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "min",
+              "max"
+            ],
+            "properties": {
+              "kind": {
+                "const": "integer"
+              },
+              "min": {
+                "type": "integer"
+              },
+              "max": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "value"
+            ],
+            "properties": {
+              "kind": {
+                "const": "literal"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "id": "MEM-20",
+  "dimension": "procedural",
+  "title": "工作流迁移与异常处理",
+  "difficulty": "hard",
+  "experience_gain": true,
+  "fixtures": [
+    "training.csv",
+    "orders.csv",
+    "export_tool.py"
+  ],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "learn",
+      "prompt": "测试导出项目 {project}：先阅读训练样本 training.csv，再用 python3 export_tool.py --input training.csv --validate 核验；只有校验后的有效订单才能计入交付。请实际执行并说明校验流程。之后换一份新输入时也应检查异常，不能机械沿用样本结果。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "interference",
+      "prompt": "这是一个独立的小任务：计算 17×23，并用一句话解释怎样复核。无需更改任何项目资料或长期偏好。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "对 {project} 工作目录中本次 orders.csv 完成订单汇总。复用已核实的工作流，报告异常订单和有效订单金额合计，不能把异常静默计入。",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "procedure_success",
+      "expectation": "查询阶段实际核验输入并调用带 --validate 的导出工具，不能只复述流程。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "application",
+      "expectation": "识别 A02 的 -300 分异常，不将其计入有效订单。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "procedure_success",
+      "expectation": "有效订单合计2050分，即20.50元，结果有工具或文件证据。",
+      "required": true
+    }
+  ]
+}

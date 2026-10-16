@@ -1,0 +1,54 @@
+{
+  "id": "MEM-03",
+  "dimension": "retention",
+  "title": "客户端重启后的事实保持",
+  "difficulty": "medium",
+  "experience_gain": true,
+  "fixtures": [],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "seed",
+      "prompt": "请保留测试项目 {project} 的交付约束：输出用 UTF-8，金额统一人民币元，复核标记为 {keep}。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "interference",
+      "prompt": "这是一个独立的小任务：计算 17×23，并用一句话解释怎样复核。无需更改任何项目资料或长期偏好。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "请回忆测试项目 {project} 的编码、金额单位和复核标记。",
+      "session": "restart_new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "fact_recall",
+      "expectation": "UTF-8 编码。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "fact_recall",
+      "expectation": "人民币元。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "fact_recall",
+      "expectation": "复核标记准确为 {keep}。",
+      "required": true
+    }
+  ]
+}

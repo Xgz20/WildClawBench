@@ -1,0 +1,54 @@
+{
+  "id": "MEM-02",
+  "dimension": "retention",
+  "title": "相似实体与联系人消歧",
+  "difficulty": "medium",
+  "experience_gain": true,
+  "fixtures": [],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "seed",
+      "prompt": "测试项目 {project} 的李明负责验收，识别码为 {code}；另一项目 {other} 的李明负责采购，识别码为 {secret}。请按项目分别保留这些合成事实。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "interference",
+      "prompt": "讨论另一件事：常见的采购和验收职责有什么区别？不要将常识当成具体项目事实。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "请说出 {project} 的李明负责什么及其识别码，再分别说明另一项目 {other} 的李明负责什么。",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "fact_recall",
+      "expectation": "{project} 的李明负责验收，不能回答采购。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "fact_recall",
+      "expectation": "{project} 的识别码为 {code}，不能混入 {secret}。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "fact_recall",
+      "expectation": "{other} 的李明负责采购。",
+      "required": true
+    }
+  ]
+}

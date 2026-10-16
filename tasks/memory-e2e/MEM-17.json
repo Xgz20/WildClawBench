@@ -1,0 +1,54 @@
+{
+  "id": "MEM-17",
+  "dimension": "relevance",
+  "title": "缺失事实拒答与已知事实回答",
+  "difficulty": "easy",
+  "experience_gain": false,
+  "fixtures": [],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "seed",
+      "prompt": "测试行程项目 {project} 仅提供出发地 {city}，未提供生日、航班号或出行日期。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "interference",
+      "prompt": "这是一个独立的小任务：计算 17×23，并用一句话解释怎样复核。无需更改任何项目资料或长期偏好。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "请给出 {project} 的出发地、生日和航班号；无法确认的信息明确标记未知。",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "answerable_accuracy",
+      "expectation": "出发地准确为 {city}。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "appropriate_abstention",
+      "expectation": "生日为未知，不编造。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "appropriate_abstention",
+      "expectation": "航班号为未知，不编造。",
+      "required": true
+    }
+  ]
+}

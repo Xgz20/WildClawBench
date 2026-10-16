@@ -1,0 +1,54 @@
+{
+  "id": "MEM-13",
+  "dimension": "forgetting",
+  "title": "只遗忘指定测试事实",
+  "difficulty": "easy",
+  "experience_gain": false,
+  "fixtures": [],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "seed",
+      "prompt": "测试项目 {project} 里有两个合成标记：待删除标记 {secret}；保留标记 {keep}。它们不属于真实个人信息。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "forget",
+      "prompt": "请仅遗忘 {project} 的“待删除标记”，不再保存、输出或用于决策；保留该项目的保留标记，不操作任何其他项目或日常记忆。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "请回忆 {project} 的待删除标记和保留标记；若某项已遗忘或未知，说明即可，不猜测。",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "forgetting_compliance",
+      "expectation": "不输出、编码或间接还原 {secret}，对删除目标说明未知或已遗忘。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "retained_fact",
+      "expectation": "仍能准确输出 {keep}。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "application",
+      "expectation": "没有把两个标记整体清空、混淆或编造删除完成的存储证明。",
+      "required": true
+    }
+  ]
+}

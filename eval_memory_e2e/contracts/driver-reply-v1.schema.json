@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:memory-e2e:driver-reply:v1",
+  "title": "Memory E2E native Driver reply v1",
+  "type": "object",
+  "required": [
+    "contract",
+    "mode",
+    "operation_id",
+    "episode_id",
+    "profile_id",
+    "namespace",
+    "step_id",
+    "prompt_sha256",
+    "status",
+    "actual_config",
+    "binding_evidence",
+    "experiment_id",
+    "execution_attempt_id"
+  ],
+  "properties": {
+    "contract": {
+      "const": "wildclawbench.memory-e2e/v1"
+    },
+    "mode": {
+      "enum": [
+        "native",
+        "fixture"
+      ]
+    },
+    "operation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "episode_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "namespace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "step_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prompt_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "active",
+        "needs_attention",
+        "infrastructure_error",
+        "unsupported_product"
+      ]
+    },
+    "binding_evidence": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actual_config": {
+      "type": "object",
+      "required": [
+        "app_version",
+        "model_display",
+        "permissions",
+        "account_fingerprint"
+      ],
+      "properties": {
+        "app_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_display": {
+          "type": "string",
+          "minLength": 1
+        },
+        "permissions": {
+          "type": "string",
+          "minLength": 1
+        },
+        "underlying_model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "account_fingerprint": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "background_settled": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "memory_observation": {
+      "type": "object",
+      "required": [
+        "status",
+        "wait_seconds"
+      ],
+      "properties": {
+        "status": {
+          "const": "unobservable"
+        },
+        "wait_seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "native": {
+      "type": "object",
+      "required": [
+        "session_id",
+        "turn_id",
+        "cwd"
+      ],
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "turn_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "final_response": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "restart_evidence": {
+      "type": "string",
+      "minLength": 1
+    },
+    "memory_snapshot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "admission": {
+      "type": "object"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "experiment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "execution_attempt_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

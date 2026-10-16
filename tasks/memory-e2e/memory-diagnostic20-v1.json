@@ -1,0 +1,30 @@
+{
+  "dataset_id": "memory-diagnostic20-v1",
+  "version": 1,
+  "language": "zh-CN",
+  "timezone": "Asia/Shanghai",
+  "account_policy": "current_signed_in_account",
+  "reset_policy": "synthetic_test_facts_only",
+  "scenarios": [
+    "MEM-01.json",
+    "MEM-02.json",
+    "MEM-03.json",
+    "MEM-04.json",
+    "MEM-05.json",
+    "MEM-06.json",
+    "MEM-07.json",
+    "MEM-08.json",
+    "MEM-09.json",
+    "MEM-10.json",
+    "MEM-11.json",
+    "MEM-12.json",
+    "MEM-13.json",
+    "MEM-14.json",
+    "MEM-15.json",
+    "MEM-16.json",
+    "MEM-17.json",
+    "MEM-18.json",
+    "MEM-19.json",
+    "MEM-20.json"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "id": "MEM-10",
+  "dimension": "updates",
+  "title": "新预算生效与旧值误用",
+  "difficulty": "easy",
+  "experience_gain": true,
+  "fixtures": [],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "seed",
+      "prompt": "测试项目 {project} 的采购预算原为 {old} 元。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "update",
+      "prompt": "正式更正：{project} 的当前采购预算是 {new} 元，取代旧预算，但保留变更历史。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "回忆 {project} 的当前预算和更正前预算，各写一项。",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "update_accuracy",
+      "expectation": "当前预算为 {new} 元。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "fact_recall",
+      "expectation": "更正前预算为 {old} 元。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "stale_value_misuse",
+      "expectation": "把 {old} 元作为当前预算使用。",
+      "required": true
+    }
+  ]
+}

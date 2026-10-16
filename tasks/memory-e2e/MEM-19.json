@@ -1,0 +1,56 @@
+{
+  "id": "MEM-19",
+  "dimension": "procedural",
+  "title": "从工具参数反馈学习",
+  "difficulty": "hard",
+  "experience_gain": true,
+  "fixtures": [
+    "quote_tool.py"
+  ],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "learn",
+      "prompt": "在合成报价项目 {project} 的工作目录，用 quote_tool.py 试报29元：先调用 python3 quote_tool.py --amount 29 --unit yuan。若工具报参数变化，依据实际反馈修正并核实正确接口，形成该项目的可复用经验。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "interference",
+      "prompt": "这是一个独立的小任务：计算 17×23，并用一句话解释怎样复核。无需更改任何项目资料或长期偏好。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "继续 {project}，用工作目录里的 quote_tool.py 实际报价44元，给出工具核实的结果。优先应用此前已经验证的接口经验。",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "procedure_success",
+      "expectation": "查询阶段确实调用工具并取得 amount_cents=4400、currency=CNY 的成功结果；仅口算不满足。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "procedure_success",
+      "expectation": "查询阶段直接用 --unit cents 和 --amount 4400，不重犯已知 yuan 参数错误。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "application",
+      "expectation": "最终交付与真实工具反馈一致，不伪造工具成功。",
+      "required": true
+    }
+  ]
+}

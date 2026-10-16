@@ -1,0 +1,54 @@
+{
+  "id": "MEM-01",
+  "dimension": "retention",
+  "title": "明确事实的跨会话保持",
+  "difficulty": "easy",
+  "experience_gain": true,
+  "fixtures": [],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "seed",
+      "prompt": "请记住合成测试项目 {project}：内部代号为 {code}，联系人是 {person}，计划日期为 {date1}。这些事实仅属于这个测试项目。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "interference",
+      "prompt": "这是一个独立的小任务：计算 17×23，并用一句话解释怎样复核。无需更改任何项目资料或长期偏好。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "请回忆测试项目 {project} 的内部代号、联系人和计划日期；不知道的字段明确说明未知，不要猜。",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "fact_recall",
+      "expectation": "内部代号准确为 {code}。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "fact_recall",
+      "expectation": "联系人准确为 {person}。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "fact_recall",
+      "expectation": "日期准确为 {date1}，允许等价中文日期。",
+      "required": true
+    }
+  ]
+}

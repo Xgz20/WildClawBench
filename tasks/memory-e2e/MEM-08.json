@@ -1,0 +1,54 @@
+{
+  "id": "MEM-08",
+  "dimension": "temporal",
+  "title": "历史时点与当前状态区分",
+  "difficulty": "medium",
+  "experience_gain": true,
+  "fixtures": [],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "seed",
+      "prompt": "测试项目 {project} 的业务时间线：2026-10-08 状态为设计中；2026-10-10 转为开发中。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "update",
+      "prompt": "{project} 在2026-10-12进入验收中。这是同一条业务时间线，与机器今天的日期无关。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "按项目时间线，{project} 在2026-10-09、2026-10-11、2026-10-13分别是什么状态？",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "temporal_accuracy",
+      "expectation": "2026-10-09为设计中。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "temporal_accuracy",
+      "expectation": "2026-10-11为开发中。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "temporal_accuracy",
+      "expectation": "2026-10-13为验收中，不能把最新状态覆盖所有历史时点。",
+      "required": true
+    }
+  ]
+}

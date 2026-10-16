@@ -1,0 +1,38 @@
+{
+  "AstronStudio": {
+    "profile_id": "AstronStudio-current-account",
+    "account_policy": "current_signed_in_account",
+    "reset_policy": "synthetic_test_facts_only",
+    "driver_command": null,
+    "expected_config": null,
+    "isolation": "unverified",
+    "memory_wait_seconds": 10
+  },
+  "WorkBuddy": {
+    "profile_id": "WorkBuddy-current-account",
+    "account_policy": "current_signed_in_account",
+    "reset_policy": "synthetic_test_facts_only",
+    "driver_command": null,
+    "expected_config": null,
+    "isolation": "unverified",
+    "memory_wait_seconds": 10
+  },
+  "QwenWork": {
+    "profile_id": "QwenWork-current-account",
+    "account_policy": "current_signed_in_account",
+    "reset_policy": "synthetic_test_facts_only",
+    "driver_command": null,
+    "expected_config": null,
+    "isolation": "unverified",
+    "memory_wait_seconds": 10
+  },
+  "DoubaoWork": {
+    "profile_id": "DoubaoWork-current-account",
+    "account_policy": "current_signed_in_account",
+    "reset_policy": "synthetic_test_facts_only",
+    "driver_command": null,
+    "expected_config": null,
+    "isolation": "unverified",
+    "memory_wait_seconds": 10
+  }
+}

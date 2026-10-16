@@ -1,0 +1,54 @@
+{
+  "id": "MEM-06",
+  "dimension": "personalization",
+  "title": "临时要求不覆盖长期偏好",
+  "difficulty": "medium",
+  "experience_gain": true,
+  "fixtures": [],
+  "steps": [
+    {
+      "id": "s1",
+      "phase": "seed",
+      "prompt": "测试项目 {project} 的默认摘要格式：两条短句，每句不超过40字。请保留该项目偏好。",
+      "session": "new",
+      "scope": "A"
+    },
+    {
+      "id": "s2",
+      "phase": "seed",
+      "prompt": "只对这一次 {project} 的解释采用详细三段式，不改变默认偏好：说明为什么需要验收。",
+      "session": "continue",
+      "scope": "A"
+    },
+    {
+      "id": "s3",
+      "phase": "probe",
+      "prompt": "为 {project} 摘要：接口联调完成；周四验收；文档待补齐。使用该项目的默认格式。",
+      "session": "new",
+      "scope": "A"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "c1",
+      "step_id": "s3",
+      "metric": "application",
+      "expectation": "回到两条短句，不能沿用临时三段式。",
+      "required": true
+    },
+    {
+      "id": "c2",
+      "step_id": "s3",
+      "metric": "application",
+      "expectation": "每句不超过40个汉字或等价短文本。",
+      "required": true
+    },
+    {
+      "id": "c3",
+      "step_id": "s3",
+      "metric": "application",
+      "expectation": "覆盖联调完成、周四验收和文档待补齐。",
+      "required": true
+    }
+  ]
+}
