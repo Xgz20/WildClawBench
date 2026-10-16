@@ -23,6 +23,14 @@ SPEC.loader.exec_module(MODULE)
 
 
 class AstronCodeProdUsageTests(unittest.TestCase):
+    def test_safe_excel_text_removes_invalid_xml_unicode_before_formula_guard(self) -> None:
+        cleaned, truncated = MODULE.safe_excel_text("示例A\ud800\ufffeB\uffff\x01")
+        self.assertEqual(cleaned, "示例AB")
+        self.assertFalse(truncated)
+        cleaned, truncated = MODULE.safe_excel_text("\ufffe=1+1\uffff")
+        self.assertEqual(cleaned, "'=1+1")
+        self.assertFalse(truncated)
+
     def test_client_disables_ambient_proxy_config(self) -> None:
         client = MODULE.ElasticsearchClient(
             "http://127.0.0.1:9200",

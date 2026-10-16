@@ -173,3 +173,4 @@ python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py analyze \
 - 产品候选 V1 按 Unicode NFKC、合并空白和不区分大小写做精确去重，不做语义聚类。
 - 候选 Query 会自动脱敏常见凭据、邮箱、IP、身份证、手机号和用户主目录，并防止 Excel 公式注入。自动脱敏不替代产品入选前的人工复核。
 - Query 超过 Excel 单元格 32,767 字符上限时，候选表保留可见前缀并在脱敏状态中标记“Excel已截断”。完整原文仍在受控 Parquet 中。
+- Excel XML 不支持的控制字符、孤立代理码点及 U+FFFE/U+FFFF 会在导出时清理；完整原文仍保留在受控 Parquet 中，清理后再次执行公式注入防护。

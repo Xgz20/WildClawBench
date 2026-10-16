@@ -192,6 +192,7 @@ DEFAULT_SCENE_CONFIDENCE_THRESHOLD = 0.70
 DEFAULT_SECONDARY_MIN_QUERY_LENGTH = 8
 LEGACY_FALLBACK_CATEGORY = "未分类（规则未命中）"
 EXCEL_CELL_LIMIT = 32_767
+XML_INVALID_UNICODE_RE = re.compile(r"[\ud800-\udfff\ufffe\uffff]")
 RETRYABLE_STATUS = {429, 502, 503, 504}
 SPLITTABLE_SEMANTIC_STATUS = {400, 413, 422}
 MAX_SINGLE_QUERY_REJECTIONS = 10
@@ -1140,6 +1141,7 @@ def extract_usage_row(hit: Mapping[str, Any], timezone_name: str) -> UsageRow:
 
 def safe_excel_text(value: str) -> tuple[str, bool]:
     cleaned = ILLEGAL_CHARACTERS_RE.sub("", value)
+    cleaned = XML_INVALID_UNICODE_RE.sub("", cleaned)
     if cleaned.startswith(("=", "+", "-", "@")):
         cleaned = "'" + cleaned
     if len(cleaned) <= EXCEL_CELL_LIMIT:
