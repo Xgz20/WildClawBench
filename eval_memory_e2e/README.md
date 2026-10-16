@@ -10,6 +10,8 @@
 
 **2026-10-16 更新：** AStudio 指定配置已验证专用工具、实际笔记写入和新会话回忆；豆包新版目录复核已解决并完成 C0/M+。v2 格式、共享代码影响、回归基线及恢复记录见[优化实施与三个问题澄清](../docs/research/agent-memory/记忆评测优化实施与三个问题澄清-20261016.md)。上段为首轮历史状态，不覆盖旧失败记录。
 
+**同日后续：** 定向遗忘 canary 的三端行为复查完成，WorkBuddy 另发现工作区日志残留；AStudio 原生 turn 中断，未进入学习／遗忘阶段。完整环境重置与周期后无再生成均未验收，正式 20 题未启动。渠道区分、75 项 Python／34 项 Node 回归及配置恢复见[定向遗忘与重置准入验证](../docs/research/agent-memory/记忆定向遗忘与重置准入验证-20261016.md)。
+
 默认数据集位于 [memory-mixed20-v1](../tasks/memory-e2e/memory-mixed20-v1/manifest.json)，由带来源追溯的开源样本和自建场景组合；原自建 [diagnostic20](../tasks/memory-e2e/memory-diagnostic20-v1.json) 保留。它使用独立多会话契约，不是旧单 Prompt Markdown 任务。校验入口为 `python3 -m eval_memory_e2e validate-dataset`，不送入 Markdown/frontmatter 校验器。
 
 ## 运行环境和快速验证
@@ -18,7 +20,8 @@
 
 ```bash
 python3 -m eval_memory_e2e validate-dataset
-python3 -m unittest tests.memory_e2e.test_memory_e2e -v
+python3 -m unittest discover -s tests/memory_e2e -p 'test_*.py'
+node --test tests/memory_e2e/*.test.mjs
 python3 -m eval_memory_e2e selftest \
   --root /Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/protocol-selftest-new
 ```
@@ -56,6 +59,8 @@ AStudio 没有对应 UI 入口，先验证精确应用进程与原生空闲状�
 
 配置探针不清空记忆、不发送评测提示词；被拒绝目标在访问配置文件和 CDP 之前失败。日常账号仍使用测试事实级清理。
 
+千问记忆设置使用已核验 renderer 的意识页路由，避免误选模型菜单中的“设置”；读取前拒绝仍处于加载禁用状态的开关。WorkBuddy 原生执行仅允许关闭明确属于记忆设置的遮挡弹窗，遇到其他设置弹窗仍停止。
+
 ## 原生 Driver 的冒烟条件
 
 ```bash
@@ -83,11 +88,15 @@ python3 -m eval_memory_e2e recover-ui-lock --root /absolute/batch \
 
 新 Profile 中，千问/豆包可显式使用 `retry-pre-send --root ABS --episode FULL_ID`，仅恢复已证明没有原生发送意图、reservation、调用或接受的准备失败。它不适用于不确定发送；旧批次未冻结该能力时不会自动升级。配置、学习条件或题目改变须新建批次，不能借 `repair-runtime` 改题。
 
+`run` 对同一已绑定原生 session/turn、处于 `OBSERVE_ONLY` 的操作，在控制传输异常后最多追加三次观察重试，并写入 journal。它不重派 Prompt；未绑定、新派发及原生明确异常终态保留暂停。这个控制重试预算不是模型任务截止时间。
+
 锁恢复只归档锁并追加证据，不修改旧 journal、不停止客户端任务、不授权再次发送。源码修复通过 `repair-runtime` 留下原／新摘要，题目与 Prompt 保持冻结。
 
 ## v2 复杂用例与状态观察
 
 原混合 20 题保留 v1。v2 支持可变题量、更多工作区作用域、自定义 token/整数/literal 事实、带 SHA 的公开材料及显式学习条件。示例与校验：
+
+[定向遗忘调试用例](../tasks/memory-e2e/canaries/scoped-forgetting-v2.json)是独立自建 canary，不计入正式 20 题。它包含写入、清理前查询、定向遗忘、清理后查询、中性会话及再次查询。只有清理前已确认目标与保留项均可回忆，才能解释后续遗忘和误删指标；否则暂停该端并标记前置条件未满足。此门禁由本轮外部调试控制器执行，普通 `run` 不会自动解释答案或判断该前置条件。60 秒观察窗不能证明每晚／周期整理后的无再生成，也不等于全账号重置。
 
 ```bash
 python3 -m eval_memory_e2e validate-dataset --dataset tasks/memory-e2e/examples/complex-memory-v2.json
