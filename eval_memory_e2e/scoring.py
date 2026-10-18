@@ -22,7 +22,10 @@ def review_template(root, episode_id):
     receipts = _receipts(root, episode_id)
     case = read_json(Path(root) / "private/scenarios.json")[item["private_key"]]
     checks = []
+    planned_steps = {s['id'] for s in read_json(Path(root) / item['plan_path'])['steps']}
     for check in case["checkpoints"]:
+        if check['step_id'] not in planned_steps:
+            continue
         receipt = receipts[operation_id(manifest, episode_id, check["step_id"])]
         checks.append({**check, "direction": METRICS[check["metric"]], "value": None,
                        "reason": "", "evidence": [],

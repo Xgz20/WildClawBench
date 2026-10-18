@@ -36,6 +36,11 @@ def capture_state(root, request, stage):
             if store.exists(): paths.extend(store.rglob('*.md'))
         if request['harness'] == 'WorkBuddy' and Path('/Users/gzx/.workbuddy/MEMORY.md').is_file():
             paths.append(Path('/Users/gzx/.workbuddy/MEMORY.md'))
+        workspace_store = None
+        if request['harness'] == 'WorkBuddy':
+            workspace_store = Path(episode['workspaces'][request.get('scope', next(iter(episode['workspaces'])))]) / '.workbuddy/memory'
+            require(workspace_store.resolve() == workspace_store, 'OBSERVATION_SYMLINK', str(workspace_store))
+            if workspace_store.exists(): paths.extend(workspace_store.rglob('*.md'))
         require(len(paths) <= 200, 'OBSERVATION_BUDGET', 'At most 200 memory files')
         for path in sorted(set(paths)):
             before = path.lstat()
@@ -54,6 +59,7 @@ def capture_state(root, request, stage):
             text = data.decode('utf-8', errors='replace')
             namespace_present = bool(facts.get('project') and facts['project'] in text)
             files.append({'source_path': str(path), 'source_mtime_ns': after.st_mtime_ns,
+                          'channel_location': 'workspace_files' if workspace_store and path.is_relative_to(workspace_store) else 'native_local_files',
                           'artifact': {'path': str(raw.relative_to(root)), 'sha256': checksum, 'size': len(data)},
                           'namespace_present': namespace_present,
                           'scoped_text_presence': {key: bool(namespace_present and str(value) in text) for key, value in facts.items()}})

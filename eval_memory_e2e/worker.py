@@ -56,6 +56,13 @@ def run_worker(root, harness=None, poll_seconds=2):
                     positions[name] += 1
                     completed += 1
                     continue
+                if action['status'] in {'PREREQUISITE_FAILED', 'AWAITING_CHANNEL_REVIEW'}:
+                    from .admission import record_gate_pause
+                    with lock(root):
+                        record_gate_pause(root, action)
+                    blocked[name] = {'episode': item['id'], 'admission_status': action['status'], 'gates': action['gates']}
+                    print(json.dumps(blocked[name], ensure_ascii=False), flush=True)
+                    continue
                 operation = action["request"]["operation_id"]
                 result = advance(root, item["id"])
                 observation_retries.pop((name, operation), None)

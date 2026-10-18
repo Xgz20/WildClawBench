@@ -1,0 +1,452 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:wildclawbench:schema:memory-e2e:scenario:v3",
+  "title": "Linear memory scenario v3 with admission and condition scopes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "dimension",
+    "title",
+    "difficulty",
+    "experience_gain",
+    "fixtures",
+    "steps",
+    "checkpoints",
+    "scopes",
+    "learning"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "dimension": {
+      "enum": [
+        "retention",
+        "personalization",
+        "temporal",
+        "updates",
+        "forgetting",
+        "isolation",
+        "relevance",
+        "procedural"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "difficulty": {
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ]
+    },
+    "experience_gain": {
+      "type": "boolean"
+    },
+    "fixtures": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "phase",
+          "session",
+          "scope",
+          "prompt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "not": {
+              "const": "prepare"
+            }
+          },
+          "phase": {
+            "enum": [
+              "seed",
+              "interference",
+              "update",
+              "forget",
+              "learn",
+              "probe"
+            ]
+          },
+          "session": {
+            "enum": [
+              "new",
+              "continue",
+              "restart_new"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,31}$"
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "checkpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "step_id",
+          "metric",
+          "expectation",
+          "required"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "step_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "metric": {
+            "enum": [
+              "fact_recall",
+              "application",
+              "temporal_accuracy",
+              "update_accuracy",
+              "stale_value_misuse",
+              "forgetting_compliance",
+              "retained_fact",
+              "scope_leakage",
+              "appropriate_abstention",
+              "answerable_accuracy",
+              "irrelevant_interference",
+              "procedure_success"
+            ]
+          },
+          "expectation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object"
+    },
+    "scopes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,31}$"
+      }
+    },
+    "learning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "formation"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "explicit",
+            "automatic",
+            "eviction"
+          ]
+        },
+        "formation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "immediate_observation",
+                "elapsed_observation",
+                "native_event"
+              ]
+            },
+            "minimum_seconds": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 604800
+            },
+            "event": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "control_flow": {
+      "const": "linear"
+    },
+    "variables": {
+      "type": "object",
+      "maxProperties": 256,
+      "propertyNames": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "token"
+              },
+              "prefix": {
+                "type": "string"
+              },
+              "length": {
+                "type": "integer",
+                "minimum": 4,
+                "maximum": 32
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "min",
+              "max"
+            ],
+            "properties": {
+              "kind": {
+                "const": "integer"
+              },
+              "min": {
+                "type": "integer"
+              },
+              "max": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "value"
+            ],
+            "properties": {
+              "kind": {
+                "const": "literal"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "conditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "C0"
+      ],
+      "properties": {
+        "C0": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "probe_steps"
+          ],
+          "properties": {
+            "probe_steps": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "before_step",
+              "source_step",
+              "arms",
+              "kind",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "before_step": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_step": {
+                "type": "string",
+                "minLength": 1
+              },
+              "arms": {
+                "const": [
+                  "M+"
+                ]
+              },
+              "kind": {
+                "const": "response_json_exact"
+              },
+              "expected": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "before_step",
+              "source_step",
+              "arms",
+              "kind",
+              "allowed_channels"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "before_step": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_step": {
+                "type": "string",
+                "minLength": 1
+              },
+              "arms": {
+                "const": [
+                  "M+"
+                ]
+              },
+              "kind": {
+                "const": "channel_review"
+              },
+              "allowed_channels": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "account_profile",
+                    "native_local_memory",
+                    "workspace_files",
+                    "external_injected"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "before_step",
+        "target_fact",
+        "keep_fact",
+        "target_key",
+        "keep_key",
+        "unknown_value",
+        "after_steps"
+      ],
+      "properties": {
+        "before_step": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_fact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "keep_fact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "keep_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unknown_value": {
+          "type": "string",
+          "minLength": 1
+        },
+        "after_steps": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

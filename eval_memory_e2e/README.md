@@ -12,6 +12,8 @@
 
 **同日后续：** 定向遗忘 canary 的三端行为复查完成，WorkBuddy 另发现工作区日志残留；AStudio 原生 turn 中断，未进入学习／遗忘阶段。完整环境重置与周期后无再生成均未验收，正式 20 题未启动。渠道区分、75 项 Python／34 项 Node 回归及配置恢复见[定向遗忘与重置准入验证](../docs/research/agent-memory/记忆定向遗忘与重置准入验证-20261016.md)。
 
+**2026-10-18 更新：** 新增 opt-in v3，普通 `run` 已支持清理前精确回忆和证据绑定的渠道审核门禁；报告分别展示行为、已知文件残留、旧来源、真实周期和环境重置。新增 [v3 canary](../tasks/memory-e2e/canaries/scoped-forgetting-v3.json) 的 C0 为一次查询，M+ 六次，共七次；v1/v2、正式20题与旧批次均保持原范围。实测与限制见[准入门禁与渠道分层实施](../docs/research/agent-memory/记忆评测准入门禁与渠道分层实施-20261018.md)。
+
 默认数据集位于 [memory-mixed20-v1](../tasks/memory-e2e/memory-mixed20-v1/manifest.json)，由带来源追溯的开源样本和自建场景组合；原自建 [diagnostic20](../tasks/memory-e2e/memory-diagnostic20-v1.json) 保留。它使用独立多会话契约，不是旧单 Prompt Markdown 任务。校验入口为 `python3 -m eval_memory_e2e validate-dataset`，不送入 Markdown/frontmatter 校验器。
 
 ## 运行环境和快速验证
@@ -96,7 +98,7 @@ python3 -m eval_memory_e2e recover-ui-lock --root /absolute/batch \
 
 原混合 20 题保留 v1。v2 支持可变题量、更多工作区作用域、自定义 token/整数/literal 事实、带 SHA 的公开材料及显式学习条件。示例与校验：
 
-[定向遗忘调试用例](../tasks/memory-e2e/canaries/scoped-forgetting-v2.json)是独立自建 canary，不计入正式 20 题。它包含写入、清理前查询、定向遗忘、清理后查询、中性会话及再次查询。只有清理前已确认目标与保留项均可回忆，才能解释后续遗忘和误删指标；否则暂停该端并标记前置条件未满足。此门禁由本轮外部调试控制器执行，普通 `run` 不会自动解释答案或判断该前置条件。60 秒观察窗不能证明每晚／周期整理后的无再生成，也不等于全账号重置。
+[v2 定向遗忘调试用例](../tasks/memory-e2e/canaries/scoped-forgetting-v2.json)是独立自建 canary，不计入正式 20 题。它包含写入、清理前查询、定向遗忘、清理后查询、中性会话及再次查询。16 日的形成门禁由外部调试控制器执行；v2 本身仍不带执行门禁。18 日新增的 v3 将门禁纳入普通 `run`，见下文。60 秒观察窗不能证明每晚／周期整理后的无再生成，也不等于全账号重置。
 
 ```bash
 python3 -m eval_memory_e2e validate-dataset --dataset tasks/memory-e2e/examples/complex-memory-v2.json
@@ -111,6 +113,27 @@ python3 -m eval_memory_e2e validate-dataset --dataset tasks/memory-e2e/examples/
 该对照的结论是历史经验增益。C0 的提问本身可能进入账号历史，固定顺序也可能带来时间效应，因此不能声称严格独立状态或记忆模块开关消融。真实记忆作用域由 Driver 的原始证据声明：`verified_namespace` 或 `shared_account_cold_first`，不是由目录名称推定。
 
 记忆渠道使用客户端自身机制并归档可见 Workspace：Agent 自己生成的笔记和文件须在轨迹／阶段快照中可查。开关、模型和专用工具配置变化须单列实验条件，不能把显式开启实验写成出厂默认行为。`mode=native` 仅表示真实客户端执行，不代表已证明独立存储层或排除了所有文件记忆。外部注入统一记忆库需要另建实验条件。
+
+### v3：条件范围、形成前提与渠道审核
+
+v3 是显式选择的新版本，仍为线性多会话。`conditions.C0.probe_steps` 可按原顺序选取冷启动查询；标注 `experience_gain=true` 的题必须保留全部相同 probe/checkpoint 范围，避免用不同考点做差值。评分模板只包含本条件计划内的检查点，M+ 范围不因此缩小。
+
+`gates` 在 `before_step` 发送前生效，目前只支持 M+。`response_json_exact` 从冻结的 `source_step` 最终回复中解析两项或更多字符串字段；必须完整 JSON、键集合与预设字段值全部准确。可接受单个 json 代码块；包含答案子串、额外字段、重复键、猜测或解析失败均不通过。该检查适合合成符号事实，只证明已观察回忆，不能代替自然语言语义裁判或后台形成事件。
+
+`channel_review` 要求独立审核账号画像、原生本地记忆、工作区文件或外部注入渠道。审核同时提交存储位置、写入主体、读取机制和控制开关的依据；每个判断必须引用该来源步骤的冻结原件与原文片段。本地／工作区渠道必须有相应位置的文件原件，不能仅凭回答声明。工作区文件不能单独证明账号画像。代码校验身份、引用与准入条件，审核者仍负责判断引用是否支持机制解释。
+
+```bash
+python3 -m eval_memory_e2e channel-template --root /absolute/batch \
+  --episode WorkBuddy__MEM-cleanup-001__r01__experienced --gate memory-channel \
+  --output /private/channel-review.json
+# 独立上下文查阅 available_evidence 后填写 decision、机制字段及 evidence；不交给候选端。
+python3 -m eval_memory_e2e import-channel-review --root /absolute/batch --review /private/channel-review.json
+python3 -m eval_memory_e2e run --root /absolute/batch --harness WorkBuddy
+```
+
+未满足前提为 `PREREQUISITE_FAILED`，缺渠道审核为 `AWAITING_CHANNEL_REVIEW`。`run`、`advance` 和手工 `intent` 均阻止下一步发送，保留计划与空分数。审核入库后只继续尚未发送的下一步；不能重发已发送请求。有效审核不允许覆盖，错误输入另存审计记录。配置、题目或渠道条件变化须新建批次。
+
+v3 `cleanup` 定义目标、保留项与前后 probe。报告的 `cleanup_layers` 分开记录清理前回忆、后续行为、已知文件命中、旧来源检查、周期再生成和环境重置。WorkBuddy 的工作区 `.workbuddy/memory` 与已知全局文件分别采集，位置标签不推断写入／读取机制。即使行为通过且可见文件无目标，旧会话、缓存、索引与真实周期仍保持未验证，完整环境重置不会自动准入。正式记忆评分仍受 Profile 的 `formal_scoring_allowed` 门禁控制。
 
 ## 准备一个冻结批次
 

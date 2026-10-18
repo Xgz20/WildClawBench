@@ -68,6 +68,8 @@ def aggregate(root, *, include_fixture=False):
             scores[event["episode_id"]] = payload
     scenarios = read_json(Path(root) / "private/scenarios.json")
     latest_receipts = {receipt['operation_id']: receipt for receipt in receipts}
+    from .admission import gate_results
+    from .cleanup import cleanup_layers
     groups = defaultdict(list)
     rows, units, paired = [], {}, {}
     for item in manifest["episodes"]:
@@ -83,9 +85,19 @@ def aggregate(root, *, include_fixture=False):
                    *[operation_id(manifest, item['id'], step['id']) for step in steps]]
         operations = [latest_receipts.get(key) for key in planned]
         completed_operations = sum(bool(receipt and receipt['status'] == 'completed') for receipt in operations)
+        case = scenarios[item['private_key']]
+        gate_steps = list(dict.fromkeys(g['before_step'] for g in case.get('gates', []) if item['arm'] in g['arms']))
+        reached = [step for step in gate_steps if all(
+            latest_receipts.get(operation_id(manifest, item['id'], s['id']), {}).get('status') == 'completed'
+            for s in steps[:next(i for i, s in enumerate(steps) if s['id'] == step)])]
+        row['admission_gates'] = [g for step in reached for g in gate_results(root, manifest, item, step, latest_receipts)]
+        admission_blocked = any(g['status'] != 'passed' for g in row['admission_gates'])
+        if admission_blocked and not score:
+            row['status'] = 'evaluation_error'
+        row['cleanup_layers'] = cleanup_layers(root, manifest, item, case, latest_receipts)
         row['execution_status'] = 'completed' if completed_operations == len(planned) else 'needs_attention' if any(
             receipt and receipt['status'] in {'needs_attention', 'infrastructure_error', 'unsupported_product'} for receipt in operations
-        ) else 'running' if any(operations) else 'pending'
+        ) or admission_blocked else 'running' if any(operations) else 'pending'
         row['planned_prompt_steps'] = len(steps)
         row['completed_prompt_steps'] = sum(bool(receipt and receipt['status'] == 'completed') for receipt in operations[1:])
         provenance = scenarios[item["private_key"]].get("provenance", {"origin": "self_constructed"})
@@ -128,8 +140,8 @@ def aggregate(root, *, include_fixture=False):
         for sid in manifest["scenario_ids"]:
             if not scenarios[f"{sid}/r01"]["experience_gain"]:
                 continue
-            experienced, cold = scenario_results[harness, sid, "M+"], scenario_results[harness, sid, "C0"]
-            if experienced["complete"] and cold["complete"]:
+            experienced, cold = scenario_results[harness, sid, "M+"], scenario_results.get((harness, sid, "C0"))
+            if experienced["complete"] and cold and cold["complete"]:
                 delta = experienced["score"] - cold["score"]
                 deltas.append(delta)
                 pairs.append({"scenario_id": sid, "delta": delta,
@@ -207,6 +219,16 @@ def write_report(root, output, *, include_fixture=False):
     lines += ["", "每个场景先平均检查点与独立重复，再跨场景汇总；未完成重复不进入完整场景均值。",
               "异常与未评分保持在冻结全集中，不补能力零分；经验增益只纳入预先指定的正向场景及完整配对。",
               "完整指标、各次结果、共同集合和场景级 bootstrap 区间见同源 report.json。", ""]
+    gated = [r for r in report['episodes'] if r['admission_gates'] or r['cleanup_layers']]
+    if gated:
+        lines += ['| episode | 准入门禁 | 行为检查通过/已观察 | 已知存储残留 | 环境重置 |', '| --- | --- | --- | --- | --- |']
+        for row in gated:
+            cleanup = row['cleanup_layers'] or {}
+            observed = [b for b in cleanup.get('behavior', []) if b['status'] in {'passed', 'failed'}]
+            gates = ', '.join(g['gate_id'] + ':' + g['status'] for g in row['admission_gates']) or '未到门禁'
+            storage = ', '.join(s['step_id'] + ':' + s['status'] for s in cleanup.get('known_storage', [])) or '-'
+            lines.append(f"| {row['id']} | {gates} | {sum(b['status'] == 'passed' for b in observed)}/{len(observed)} | {storage} | 未准入 |")
+        lines += ['', '精确 JSON 回忆只证明本轮行为。渠道为引用冻结原件的独立审核；行为、可见文件、旧来源、真实周期与环境重置分别判断，不自动升格。', '']
     publish(output / "report.md", "\n".join(lines).encode())
     return {"report_json": str(output / "report.json"), "report_markdown": str(output / "report.md"),
             "status": report["report_status"]}

@@ -84,7 +84,9 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
                     arm_id = "cold" if arm == "C0" else "experienced"
                     episode_id = f"{harness}__{case['id']}__r{run:02d}__{arm_id}"
                     relative = f"public/{episode_id}/steps.json"
-                    chosen = [step for step in variant["steps"] if arm == "M+" or step["phase"] == "probe"]
+                    cold_ids = case.get('conditions', {}).get('C0', {}).get('probe_steps')
+                    chosen = [step for step in variant["steps"] if arm == "M+" or
+                              (step['id'] in cold_ids if cold_ids is not None else step["phase"] == "probe")]
                     chosen = [{**step, "session": "new" if index == 0 and arm == "C0"
                                and step["session"] != "restart_new" else step["session"]}
                               for index, step in enumerate(chosen)]

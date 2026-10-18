@@ -74,6 +74,11 @@ def next_action(root, episode_id):
     intent = next((event for event in history if event["kind"] == "INTENT"
                    and event["payload"]["operation_id"] == operation["operation_id"]), None)
     step = operation["step"]
+    from .admission import gate_results
+    gates = gate_results(root, manifest, item, step['id'], receipts)
+    if any(gate['status'] != 'passed' for gate in gates):
+        return {'status': 'PREREQUISITE_FAILED' if any(g['status'] == 'prerequisite_failed' for g in gates)
+                else 'AWAITING_CHANNEL_REVIEW', 'episode_id': episode_id, 'gates': gates}
     request = {"contract": CONTRACT, "mode": manifest["mode"], "batch_id": manifest["batch_id"],
                "experiment_id": manifest["experiment_id"], "execution_attempt_id": "a01",
                "episode_id": episode_id, "harness": item["harness"], "namespace": item["namespace"],
@@ -239,7 +244,10 @@ def advance(root, episode_id, *, driver_timeout=None, retry_pre_send=False):
             status = next_action(root, candidate["id"])["status"]
             require(status == "COMPLETED", "PREDECESSOR_INCOMPLETE", candidate["id"])
         action = next_action(root, episode_id)
-        if action["status"] == "COMPLETED":
+        if action["status"] in {"COMPLETED", "PREREQUISITE_FAILED", "AWAITING_CHANNEL_REVIEW"}:
+            if action['status'] != 'COMPLETED':
+                from .admission import record_gate_pause
+                record_gate_pause(root, action)
             return action
         command = manifest["profiles"][item["harness"]]["driver_command"]
         require(command is not None, "DRIVER_NOT_CONFIGURED", "Native memory Driver must be validated before sending")
@@ -313,6 +321,10 @@ def register_intent(root, episode_id):
                 require(next_action(root, previous["id"])["status"] == "COMPLETED",
                         "PREDECESSOR_INCOMPLETE", previous["id"])
         action = next_action(root, episode_id)
+        if action['status'] in {'PREREQUISITE_FAILED', 'AWAITING_CHANNEL_REVIEW'}:
+            from .admission import record_gate_pause
+            record_gate_pause(root, action)
+            require(False, 'ADMISSION_BLOCKED', action['status'])
         require(action["status"] == "READY", "ALREADY_ATTEMPTED", "Observe the original operation instead")
         request = action["request"]
         if request["action"] == "execute_step":

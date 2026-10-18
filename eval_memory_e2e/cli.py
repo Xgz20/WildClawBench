@@ -22,6 +22,7 @@ from .runtime_repair import repair_runtime
 from .configuration import configuration_probe
 from .activation import astudio_memory_config
 from .recovery import recover_ui_lock
+from .admission import channel_template, import_channel_review
 
 
 def selftest(root):
@@ -102,6 +103,14 @@ def parser():
     score = commands.add_parser("import-review")
     score.add_argument("--root", type=Path, required=True)
     score.add_argument("--review", type=Path, required=True)
+    channel = commands.add_parser('channel-template', help='private independent review of observed memory channel')
+    channel.add_argument('--root', type=Path, required=True)
+    channel.add_argument('--episode', required=True)
+    channel.add_argument('--gate', required=True)
+    channel.add_argument('--output', type=Path, required=True)
+    channel_import = commands.add_parser('import-channel-review')
+    channel_import.add_argument('--root', type=Path, required=True)
+    channel_import.add_argument('--review', type=Path, required=True)
     report = commands.add_parser("report")
     report.add_argument("--root", type=Path, required=True)
     report.add_argument("--output", type=Path, required=True)
@@ -158,6 +167,14 @@ def run(args):
         return {"review_template": str(output)}
     if args.command == "import-review":
         return import_review(args.root, args.review)
+    if args.command == 'channel-template':
+        output = args.output.absolute()
+        require(not any(output.is_relative_to(args.root.absolute() / d) for d in ('public', 'candidate')),
+                'PRIVATE_MATERIAL_LEAK', 'Channel review stays outside candidate/public directories')
+        publish(output, channel_template(args.root, args.episode, args.gate))
+        return {'channel_template': str(output)}
+    if args.command == 'import-channel-review':
+        return import_channel_review(args.root, args.review)
     if args.command == "report":
         return write_report(args.root, args.output, include_fixture=args.include_fixture)
     if args.command == "selftest":
@@ -170,7 +187,7 @@ def main(argv=None):
     try:
         payload = run(args)
         print(json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False))
-        return 2 if isinstance(payload, dict) and payload.get('status') in {'NEEDS_ATTENTION', 'PARTIAL'} else 0
+        return 2 if isinstance(payload, dict) and payload.get('status') in {'NEEDS_ATTENTION', 'PARTIAL', 'PREREQUISITE_FAILED', 'AWAITING_CHANNEL_REVIEW'} else 0
     except (MemoryEvaluationError, OSError, KeyError, TypeError, UnicodeDecodeError) as exc:
         print(json.dumps({"status": "NEEDS_ATTENTION", "code": getattr(exc, "code", type(exc).__name__),
                           "message": str(exc)}, ensure_ascii=False), file=sys.stderr)

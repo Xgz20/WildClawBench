@@ -9,6 +9,23 @@ from eval_memory_e2e.observation import capture_state
 
 
 class ObservationTests(unittest.TestCase):
+    def test_workbuddy_workspace_store_is_observed_separately_from_global_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp).resolve(); root = base / 'batch'; store = base / 'global-memory'; store.mkdir()
+            profiles = default_profiles(); profiles['WorkBuddy']['state_observation'] = True
+            prepare(root, batch_id='workspace-observe', seed='scope', harnesses=['WorkBuddy'], scenario_ids=['MEM-01'], profiles=profiles)
+            item = load_batch(root)['episodes'][1]; workspace = Path(item['workspaces']['A'])
+            local = workspace / '.workbuddy/memory/MEMORY.md'; local.parent.mkdir(parents=True); local.write_text('workspace note')
+            (store / 'MEMORY.md').write_text('global note')
+            request = {'harness':'WorkBuddy','action':'execute_step','episode_id':item['id'],'operation_id':'op','step_id':'s1','scope':'A'}
+            with patch('eval_memory_e2e.observation.STORE_ROOTS', {'WorkBuddy':(store,)}):
+                result = capture_state(root, request, 'after')
+            snapshot = read_json(root / result['snapshot']['path'])
+            observed = {f['source_path']:f['channel_location'] for f in snapshot['files']}
+            self.assertEqual(observed[str(local)], 'workspace_files')
+            self.assertEqual(observed[str(store/'MEMORY.md')], 'native_local_files')
+            self.assertFalse(snapshot['global_store_exhaustiveness_verified'])
+
     def test_snapshot_distinguishes_before_and_after_replacement_without_scoring(self):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp).resolve(); root = base / 'batch'; store = base / 'native-memory'; store.mkdir()

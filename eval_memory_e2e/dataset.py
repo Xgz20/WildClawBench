@@ -24,6 +24,9 @@ def load_dataset(path=DATA):
         data["scenarios"] = [read_json(safe_file(Path(path).parent / name, Path(path).parent)) for name in references]
         require(all(Path(name).stem == case["id"] for name, case in zip(references, data["scenarios"])),
                 "DATASET_FILENAME", "Scenario ID must match the JSON filename")
+    if data.get('version') == 3:
+        from .dataset_v3 import validate_v3
+        return validate_v3(data, path)
     if data.get('version') == 2:
         from .dataset_v2 import validate_v2
         return validate_v2(data, path)
@@ -128,4 +131,8 @@ def materialize(case, seed, run):
                               for check in case["checkpoints"]]}
     result["variant_id"] = token
     result["facts"] = values
+    if 'gates' in case:
+        result['gates'] = [{**gate, **({'expected': {key: value.format_map(values)
+                            for key, value in gate['expected'].items()}} if 'expected' in gate else {})}
+                           for gate in case['gates']]
     return result
