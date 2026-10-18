@@ -14,6 +14,8 @@
 
 **2026-10-18 更新：** 新增 opt-in v3，普通 `run` 已支持清理前精确回忆和证据绑定的渠道审核门禁；报告分别展示行为、已知文件残留、旧来源、真实周期和环境重置。新增 [v3 canary](../tasks/memory-e2e/canaries/scoped-forgetting-v3.json) 的 C0 为一次查询，M+ 六次，共七次；v1/v2、正式20题与旧批次均保持原范围。实测与限制见[准入门禁与渠道分层实施](../docs/research/agent-memory/记忆评测准入门禁与渠道分层实施-20261018.md)。
 
+**同日真机追加：** WorkBuddy 实际回忆正确但带说明文字，旧 v3 门禁按格式暂停；新 [v3.1 canary](../tasks/memory-e2e/canaries/scoped-forgetting-v3.1.json) 显式允许一个完整 JSON 对象，旧批次不重解释。千问1.3.1改用单一全局读写开关，并增加 SDK SQLite 原生证据来源；豆包2.32.4的新调度器尚未准入。当前实测范围以实施记录第7节为准。
+
 默认数据集位于 [memory-mixed20-v1](../tasks/memory-e2e/memory-mixed20-v1/manifest.json)，由带来源追溯的开源样本和自建场景组合；原自建 [diagnostic20](../tasks/memory-e2e/memory-diagnostic20-v1.json) 保留。它使用独立多会话契约，不是旧单 Prompt Markdown 任务。校验入口为 `python3 -m eval_memory_e2e validate-dataset`，不送入 Markdown/frontmatter 校验器。
 
 ## 运行环境和快速验证
@@ -71,7 +73,9 @@ python3 -m eval_memory_e2e native-profiles --output /private/native-profiles.jso
 
 输出冻结原生 Driver、共用组件、依赖锁定文件和原生文件夹选择器源码。AStudio／WorkBuddy 接入新建与继续会话；千问／豆包当前先验收新会话链，continue 与客户端重启需单独验收。
 
-新 Profile 按本端字面量依赖递归冻结源码，`--harness` 执行只检查本端 Driver；共享源码和 Python 运行时仍严格检查。默认 `run` 按 Harness 轮询，单次控制/UI 调用串行，同端保持原冻结顺序；一端暂停不自动重发，也不阻止其他端继续。多端后台重叠的调度逻辑目前经过离线测试，真机并发须单独验收。
+新 Profile 按本端字面量依赖递归冻结源码，`--harness` 执行只检查本端 Driver；共享源码和 Python 运行时仍严格检查。`run` 按 `strict_harness_serial` 完整执行一个 Harness 的全部计划，再进入下一端，同端保持原冻结顺序。待处理、基础设施异常、未知发送或准入暂停都会停止整批，其他端保持待执行；不跨客户端轮询派发或让其模型后台重叠。先前交替调试记录保留为历史，不作为生产串行条件的验证结果。
+
+新批次同时冻结 `failure_policy=stop_batch` 和调度策略。旧 manifest 不回写；新执行日志明确记录实际串行策略。共享 UI 锁是互斥保护，不能代替 Harness 级完整串行。
 
 新建原生批次在每条实际发送的 Prompt 中冻结相同操作边界：不访问或改动 Codex 记忆，不让其他客户端代做，不清空日常账号记忆，仅处理本轮合成档案。原始开源样本和私有答案不改写；操作边界属于本项目执行条件。旧批次不就地改题。
 
@@ -93,6 +97,8 @@ python3 -m eval_memory_e2e recover-ui-lock --root /absolute/batch \
 `run` 对同一已绑定原生 session/turn、处于 `OBSERVE_ONLY` 的操作，在控制传输异常后最多追加三次观察重试，并写入 journal。它不重派 Prompt；未绑定、新派发及原生明确异常终态保留暂停。这个控制重试预算不是模型任务截止时间。
 
 锁恢复只归档锁并追加证据，不修改旧 journal、不停止客户端任务、不授权再次发送。源码修复通过 `repair-runtime` 留下原／新摘要，题目与 Prompt 保持冻结。
+
+新 Profile 冻结统一的 `ui_lock_path`，不同父目录的批次也互斥；旧 Profile 未声明时保留原锁位置。`advance/intent` 在登记新发送意图前检查占用，不能把锁冲突留下的新意图误当已发送。千问控制调用超时若遗留内部 General-step attempt 锁，可用 `recover-qwen-step-lock --root ABS --episode FULL_ID --operation OP_ID --expected-owner-id UUID --probe FRESH_JSON`；它仅归档同一Memory意图的精确已退出owner，核对原配置、fresh空闲probe与journal摘要，不发送、不改journal。恢复源码与回执一并私有归档。
 
 ## v2 复杂用例与状态观察
 
@@ -119,6 +125,8 @@ python3 -m eval_memory_e2e validate-dataset --dataset tasks/memory-e2e/examples/
 v3 是显式选择的新版本，仍为线性多会话。`conditions.C0.probe_steps` 可按原顺序选取冷启动查询；标注 `experience_gain=true` 的题必须保留全部相同 probe/checkpoint 范围，避免用不同考点做差值。评分模板只包含本条件计划内的检查点，M+ 范围不因此缩小。
 
 `gates` 在 `before_step` 发送前生效，目前只支持 M+。`response_json_exact` 从冻结的 `source_step` 最终回复中解析两项或更多字符串字段；必须完整 JSON、键集合与预设字段值全部准确。可接受单个 json 代码块；包含答案子串、额外字段、重复键、猜测或解析失败均不通过。该检查适合合成符号事实，只证明已观察回忆，不能代替自然语言语义裁判或后台形成事件。
+
+新用例可显式指定 `answer_format=single_json_object`，从完整回复中解析唯一完整 JSON 对象，允许外层说明文字及未闭合的 Markdown 代码块；多对象、数组、重复键和非有限数仍拒绝，字段集合和值仍精确比较。`cleanup.answer_format` 同样需要在准备时冻结。不指定时仍使用旧 `raw_json` 规则，运行时修复不会改变旧输入。
 
 `channel_review` 要求独立审核账号画像、原生本地记忆、工作区文件或外部注入渠道。审核同时提交存储位置、写入主体、读取机制和控制开关的依据；每个判断必须引用该来源步骤的冻结原件与原文片段。本地／工作区渠道必须有相应位置的文件原件，不能仅凭回答声明。工作区文件不能单独证明账号画像。代码校验身份、引用与准入条件，审核者仍负责判断引用是否支持机制解释。
 

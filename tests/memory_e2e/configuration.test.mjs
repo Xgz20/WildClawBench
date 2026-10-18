@@ -1,9 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { targetFor, TARGETS, roundtripValues, runConfiguration, selectClientPage, qwenMemorySettingsUrl } from '../../eval_memory_e2e/native/configuration.mjs';
+import { targetFor, TARGETS, roundtripValues, runConfiguration, selectClientPage, qwenMemorySettingsUrl, qwenMemoryControlPolicy } from '../../eval_memory_e2e/native/configuration.mjs';
+import {MEMORY_UI_LOCK,memoryUiLockPath} from '../../eval_memory_e2e/native/common.mjs';
+
+test('new batches in different parents share the exact UI lock while legacy paths remain frozen',()=>{
+  assert.equal(memoryUiLockPath('/a/batch',{ui_lock_path:MEMORY_UI_LOCK}),memoryUiLockPath('/b/nested/batch',{ui_lock_path:MEMORY_UI_LOCK}));
+  assert.equal(memoryUiLockPath('/old/parent/batch',{}),'/old/parent/.memory-native-ui.lock');
+  assert.throws(()=>memoryUiLockPath('/a/batch',{ui_lock_path:'/Users/gzx/.codex/config.toml'}),/POLICY/);
+});
+
+test('Qwen global memory is one read/write control, without inventing a separate automatic switch',()=>{
+  const policy=qwenMemoryControlPolicy('记忆 全局记忆 开启后读取和更新',1);
+  assert.deepEqual(policy.keys,['global']);assert.equal(policy.separate_automatic_toggle,false);
+  assert.throws(()=>qwenMemoryControlPolicy('全局记忆',2),/AMBIGUOUS/);
+  assert.deepEqual(qwenMemoryControlPolicy('意识模式 自动记忆',2).keys,['automatic','awareness']);
+  assert.throws(()=>qwenMemoryControlPolicy('other settings',1),/UNKNOWN/);
+});
 
 test('Qwen memory settings use the verified awareness route and retain the window identity',()=>{
   const root='file:///Applications/QwenWorkCN.app/Contents/Resources/app.asar/out/renderer/';
+  assert.equal(new URL(qwenMemorySettingsUrl(root+'index.html#windowId=main',[root+'assets/index-D4wDUh3V.js'])).searchParams.get('tab'),'awareness');
   const route=new URL(qwenMemorySettingsUrl(root+'index.html?chat=synthetic#windowId=main',[root+'assets/index-DkViyRcX.js']));
   assert.equal(route.searchParams.get('view'),'settings');
   assert.equal(route.searchParams.get('tab'),'awareness');

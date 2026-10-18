@@ -28,6 +28,50 @@ class MemoryTests(unittest.TestCase):
         self.base = Path(self.temp.name).resolve()
         self.root = self.base / "batch"
 
+    def test_native_ui_lock_blocks_before_creating_a_new_send_intent(self):
+        self.prepare(mode='native')
+        item = self.episodes()[0]
+        shared = self.base / '.memory-native-ui.lock'
+        shared.write_text('{"id":"foreign-owner"}')
+        for action in (advance, register_intent):
+            with self.subTest(action=action.__name__), self.assertRaises(MemoryEvaluationError) as error:
+                action(self.root, item['id'])
+            self.assertEqual(error.exception.code, 'NATIVE_UI_LOCK_PRESENT')
+        self.assertEqual(events(self.root), [])
+        self.assertTrue(shared.exists())
+
+    def test_explicit_global_ui_lock_is_independent_of_batch_parent(self):
+        from eval_memory_e2e.batch import memory_ui_lock_path, MEMORY_UI_LOCK
+        profile = {'WorkBuddy': {'ui_lock_path': str(MEMORY_UI_LOCK)}}
+        self.assertEqual(memory_ui_lock_path('/one/batch', profile), memory_ui_lock_path('/two/nested/batch', profile))
+        self.assertEqual(memory_ui_lock_path('/old/batch', {'WorkBuddy': {}}), Path('/old/.memory-native-ui.lock'))
+        with self.assertRaises(MemoryEvaluationError):
+            memory_ui_lock_path('/one/batch', {'WorkBuddy': {'ui_lock_path': '/Users/gzx/.codex/config.toml'}})
+
+    def test_manual_advance_and_handoff_cannot_start_the_next_harness_early(self):
+        self.prepare(harnesses=('AstronStudio','WorkBuddy'), scenarios=('MEM-01','MEM-10'))
+        first, second = self.episodes()[0], next(e for e in self.episodes() if e['harness']=='WorkBuddy')
+        self.complete(first)
+        for action in (advance, register_intent):
+            with self.subTest(action=action.__name__), self.assertRaises(MemoryEvaluationError) as error:
+                action(self.root,second['id'])
+            self.assertEqual(error.exception.code,'PREDECESSOR_HARNESS_INCOMPLETE')
+        self.assertFalse(any(e['kind']=='INTENT' and e['episode_id']==second['id'] for e in events(self.root)))
+        for item in self.episodes():
+            if item['harness']=='AstronStudio':self.complete(item)
+        self.assertEqual(advance(self.root,second['id'])['status'],'completed')
+
+    def test_unresolved_control_error_is_attention_until_the_same_operation_has_a_new_receipt(self):
+        self.prepare();item=self.episodes()[0]
+        request=register_intent(self.root,item['id'])
+        append(self.root,'UNCERTAIN',item['id'],{'operation_id':request['operation_id'],'error_code':'DRIVER_TRANSPORT_TIMEOUT'})
+        row=aggregate(self.root,include_fixture=True)['episodes'][0]
+        self.assertEqual(row['execution_status'],'needs_attention');self.assertEqual(row['status'],'evaluation_error');self.assertIsNone(row['score'])
+        reply=respond({**request,'transport_action':'dispatch'});path=publish(self.base/'recovered.json',reply)
+        import_receipt(self.root,item['id'],path)
+        row=aggregate(self.root,include_fixture=True)['episodes'][0]
+        self.assertEqual(row['unresolved_control_errors'],[]);self.assertEqual(row['status'],'unscored')
+
     def prepare(self, scenarios=("MEM-01",), repeats=1, mode="fixture", harnesses=("AstronStudio",)):
         return prepare(self.root, batch_id="test-memory", seed="seed-v1", repeats=repeats,
                        scenario_ids=list(scenarios), harnesses=list(harnesses), mode=mode)

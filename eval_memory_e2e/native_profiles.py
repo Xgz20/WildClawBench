@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-from .batch import default_profiles
+from .batch import default_profiles, MEMORY_UI_LOCK
 from .io import publish, sha
 
 
@@ -61,6 +61,7 @@ def native_profiles(output):
              "QwenWork": "verified_native_write_or_declared_behavior_window",
              "DoubaoWork": "active_native_profile_and_explicit_or_periodic_update"}
     for harness in profiles:
+        profiles[harness]['ui_lock_path'] = str(MEMORY_UI_LOCK)
         profiles[harness]["driver_timeout_seconds"] = 180
         profiles[harness]["state_observation"] = True
         profiles[harness]["targeted_cleanup_verified"] = False

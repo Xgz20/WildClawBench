@@ -1,4 +1,4 @@
-"""Round-robin native progress with a single serialized control/UI call."""
+"""Strict Harness-by-Harness execution; attention pauses the whole batch."""
 import json
 import time
 
@@ -35,15 +35,19 @@ def run_worker(root, harness=None, poll_seconds=2):
     blocked, started, previous, completed = {}, set(), {}, 0
     observation_retries = {}
     with lock(root):
-        append(root, 'SCHEDULER_START', None, {'policy': 'round_robin_harnesses_single_control_call',
+        append(root, 'SCHEDULER_START', None, {'policy': 'strict_harness_serial',
                'harnesses': list(groups), 'poll_seconds': poll_seconds, 'task_deadline': None})
-    print(json.dumps({'phase': 'SCHEDULER', 'policy': 'round_robin_harnesses_single_control_call',
+    print(json.dumps({'phase': 'SCHEDULER', 'policy': 'strict_harness_serial',
                       'harnesses': list(groups), 'task_deadline': None}), flush=True)
     while True:
+        if blocked:
+            break
         pending = [name for name in groups if name not in blocked and positions[name] < len(groups[name])]
         if not pending:
             break
-        for name in pending:
+        # Drain every episode of the first Harness before touching the next.
+        # A serialized UI call alone does not prevent cross-client native work.
+        for name in pending[:1]:
             item = groups[name][positions[name]]
             if item['id'] not in started:
                 print(json.dumps({"episode": item["id"], "phase": "START"}), flush=True)
@@ -86,10 +90,12 @@ def run_worker(root, harness=None, poll_seconds=2):
                     print(json.dumps({'phase': 'OBSERVATION_RETRY', **retry}), flush=True)
                     continue
                 blocked[name] = {'episode': item['id'], 'error': error.code}
-        if any(name not in blocked and positions[name] < len(groups[name]) for name in groups):
+        if not blocked and any(positions[name] < len(groups[name]) for name in groups):
             time.sleep(poll_seconds)
     result = {"status": "NEEDS_ATTENTION" if blocked else "EXECUTION_COMPLETED", "episodes": len(targets),
-              'completed_episodes': completed, 'blocked_harnesses': blocked, "scoring": "not_started"}
+              'completed_episodes': completed, 'blocked_harnesses': blocked, "scoring": "not_started",
+              'scheduling_policy': 'strict_harness_serial',
+              'pending_harnesses': [name for name in groups if name not in blocked and positions[name] < len(groups[name])]}
     if harness is not None and harness in blocked:
         result.update(blocked[harness])
     return result

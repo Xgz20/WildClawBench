@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from eval_memory_e2e.admission import channel_template, exact_response, import_channel_review
+from eval_memory_e2e.admission import channel_template, exact_response, import_channel_review, response_json
 from eval_memory_e2e.batch import load_batch, prepare
 from eval_memory_e2e.dataset import load_dataset
 from eval_memory_e2e.fixture_driver import respond
@@ -22,6 +22,32 @@ DATA = Path(__file__).resolve().parents[2] / 'tasks/memory-e2e/canaries/scoped-f
 
 
 class AdmissionTests(unittest.TestCase):
+    def test_tolerant_cleanup_rejects_a_forgotten_value_leaked_outside_the_json(self):
+        from eval_memory_e2e.cleanup import cleanup_layers
+        from eval_memory_e2e.batch import operation_id
+        from eval_memory_e2e.io import archive
+        self.prepare(read_json(DATA.with_name('scoped-forgetting-v3.1.json')))
+        manifest=load_batch(self.root);item=manifest['episodes'][1]
+        case=read_json(self.root/'private/scenarios.json')[item['private_key']]
+        receipts={}
+        for step,text in [('before',json.dumps({'target':self.facts['target_value'],'keep':self.facts['keep_value']})),
+                          ('after','旧值 '+self.facts['target_value'].lower()+'\n'+json.dumps({'target':'未知','keep':self.facts['keep_value']}))]:
+            source=publish(self.base/(step+'.txt'),text.encode())
+            receipts[operation_id(manifest,item['id'],step)]={'status':'completed','artifacts':{'final_response':archive(self.root,source)}}
+        result=cleanup_layers(self.root,manifest,item,case,receipts)
+        self.assertTrue(result['formation_recall']['passed'])
+        self.assertEqual(result['behavior'][0]['status'],'failed')
+        self.assertTrue(result['behavior'][0]['target_leaked_in_response'])
+
+    def test_explicit_object_format_handles_prose_and_unclosed_fences_but_rejects_ambiguity(self):
+        value={'target':'ERASE-A','keep':'KEEP-B'}
+        for text in ['说明：\n```json\n'+json.dumps(value), json.dumps(value)+'\n以上是结果。']:
+            self.assertEqual(response_json(text,'single_json_object'),value)
+            with self.assertRaises(MemoryEvaluationError):response_json(text)
+        for text in ['{"target":"A"} {"target":"B"}', '[{"target":"A"}]',
+                     '{"target":"A","target":"B"}', '{"target":NaN}', 'target=A keep=B']:
+            with self.subTest(text=text), self.assertRaises(MemoryEvaluationError):response_json(text,'single_json_object')
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
         self.base = Path(self.temp.name).resolve(); self.root = self.base / 'batch'

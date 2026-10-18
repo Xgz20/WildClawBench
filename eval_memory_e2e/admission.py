@@ -4,6 +4,7 @@ Passing an exact response gate proves observed recall only, never a background
 formation event. Channel claims require cited review; directory names do not
 establish a mechanism. Nothing here sends or modifies client memory.
 """
+import json
 from pathlib import Path
 
 from .batch import episode, load_batch, operation_id
@@ -12,15 +13,35 @@ from .io import (MemoryEvaluationError, append, archive, decode, digest, events,
                  read_json, require, verify_artifact)
 
 
-def exact_response(root, receipt, expected):
+def response_json(text, answer_format='raw_json'):
+    require(answer_format in {'raw_json', 'single_json_object'}, 'RESPONSE_FORMAT', 'Unknown answer parser')
+    if answer_format == 'raw_json':
+        if text.startswith('```json\n') and text.endswith('\n```'):
+            text = text[8:-4].strip()
+        return decode(text)
+    # One complete container; duplicate keys and nonfinite values still fail.
+    decoder = json.JSONDecoder()
+    candidates, end = [], 0
+    for index, char in enumerate(text):
+        if index < end or char not in '{[':
+            continue
+        try:
+            _, stop = decoder.raw_decode(text, index)
+        except json.JSONDecodeError:
+            continue
+        candidates.append(decode(text[index:stop])); end = stop
+    require(len(candidates) == 1 and isinstance(candidates[0], dict), 'RESPONSE_FORMAT',
+            'Expected one unambiguous JSON object')
+    return candidates[0]
+
+
+def exact_response(root, receipt, expected, answer_format='raw_json'):
     if not receipt or receipt['status'] != 'completed':
         return {'passed': False, 'reason': 'source_not_completed', 'field_matches': {}}
     reference = receipt['artifacts']['final_response']
     text = verify_artifact(root, reference).decode('utf-8').strip()
-    if text.startswith('```json\n') and text.endswith('\n```'):
-        text = text[8:-4].strip()
     try:
-        observed = decode(text)
+        observed = response_json(text, answer_format)
     except MemoryEvaluationError:
         observed = None
     matches = {key: isinstance(observed, dict) and type(observed.get(key)) is str and observed[key] == value
@@ -109,7 +130,7 @@ def gate_results(root, manifest, item, before_step, receipts):
         base = {'gate_id': gate['id'], 'kind': gate['kind'], 'before_step': before_step,
                 'source_step': gate['source_step'], 'score': None}
         if gate['kind'] == 'response_json_exact':
-            outcome = exact_response(root, source, gate['expected'])
+            outcome = exact_response(root, source, gate['expected'], gate.get('answer_format', 'raw_json'))
             results.append({**base, **outcome, 'status': 'passed' if outcome['passed'] else 'prerequisite_failed'})
         else:
             records = [e for e in events(root) if e['kind'] == 'CHANNEL_REVIEW' and e['episode_id'] == item['id']

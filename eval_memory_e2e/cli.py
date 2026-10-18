@@ -21,7 +21,7 @@ from .worker import run_worker
 from .runtime_repair import repair_runtime
 from .configuration import configuration_probe
 from .activation import astudio_memory_config
-from .recovery import recover_ui_lock
+from .recovery import recover_ui_lock, recover_qwen_step_lock
 from .admission import channel_template, import_channel_review
 
 
@@ -30,7 +30,8 @@ def selftest(root):
     prepare(root, batch_id="memory-protocol-selftest", seed="protocol-selftest-v1", mode="fixture",
             scenario_ids=["MEM-01", "MEM-10", "MEM-13", "MEM-19"])
     manifest = load_batch(root)
-    for episode in manifest["episodes"]:
+    ordered = [episode for name in manifest['harnesses'] for episode in manifest['episodes'] if episode['harness'] == name]
+    for episode in ordered:
         while next_action(root, episode["id"])["status"] != "COMPLETED":
             advance(root, episode["id"])
         review = review_template(root, episode["id"])
@@ -80,6 +81,12 @@ def parser():
     recover = commands.add_parser("recover-ui-lock", help="archive an exact dead memory-controller UI lock; never resend")
     recover.add_argument("--root", type=Path, required=True)
     recover.add_argument("--expected-owner-id", required=True)
+    qrecover = commands.add_parser('recover-qwen-step-lock', help='archive one exact dead Memory Qwen step lock; never resend')
+    qrecover.add_argument('--root', type=Path, required=True)
+    qrecover.add_argument('--episode', required=True)
+    qrecover.add_argument('--operation', required=True)
+    qrecover.add_argument('--expected-owner-id', required=True)
+    qrecover.add_argument('--probe', type=Path, required=True)
     init = commands.add_parser("prepare", help="freeze public/private tasks and a paired, cold-first plan")
     init.add_argument("--root", type=Path, required=True)
     init.add_argument("--batch-id", required=True)
@@ -145,6 +152,8 @@ def run(args):
         return repair_runtime(args.root, args.reason)
     if args.command == "recover-ui-lock":
         return recover_ui_lock(args.root, args.expected_owner_id)
+    if args.command == 'recover-qwen-step-lock':
+        return recover_qwen_step_lock(args.root, args.episode, args.operation, args.expected_owner_id, args.probe)
     if args.command == "prepare":
         return prepare(args.root, batch_id=args.batch_id, seed=args.seed, repeats=args.repeats,
                        harnesses=args.harness, scenario_ids=args.scenario, mode="fixture" if args.fixture else "native",

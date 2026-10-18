@@ -2,13 +2,41 @@
 import os
 import re
 import socket
+import subprocess
 from pathlib import Path
 
 from . import HARNESS_PORTS
-from .batch import load_batch
-from .io import append, events, publish, read_json, require, sha, timestamp
+from .batch import load_batch, memory_ui_lock_path
+from .io import append, events, publish, read_json, require, sha, timestamp, lock, encoded, decode, archive
 
 DEBUG_ROOT = Path('/Users/gzx/debug-workspace/e2e-evaluate/memory-e2e')
+
+
+def recover_qwen_step_lock(root, episode_id, operation, expected_owner_id, probe):
+    root = Path(root).absolute()
+    require(root.is_relative_to(DEBUG_ROOT) and root.resolve() == root, 'RECOVERY_ROOT', str(root))
+    require(re.fullmatch(r'[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}', expected_owner_id or '') is not None,
+            'RECOVERY_OWNER', 'Expected a canonical owner UUID')
+    require(re.fullmatch(r'op-[a-f0-9]{64}', operation or '') is not None, 'RECOVERY_OPERATION', 'Expected a frozen operation ID')
+    with lock(root):
+        manifest = load_batch(root, episode_id=episode_id)
+        require(any(e['id'] == episode_id and e['harness'] == 'QwenWork' for e in manifest['episodes']),
+                'RECOVERY_SCOPE', 'Only the QwenWork Memory step lock')
+        output = root / 'runtime-recovery' / ('qwen-step-' + expected_owner_id + '.json')
+        output.parent.mkdir(exist_ok=True)
+        require(not output.exists(), 'RECOVERY_ALREADY_ARCHIVED', str(output))
+        script = Path(__file__).parent / 'native/recover-qwen-lock.mjs'
+        source_artifact = archive(root, script)
+        request = {'root': str(root), 'episode_id': episode_id, 'operation_id': operation,
+                   'expected_owner_id': expected_owner_id, 'probe': str(Path(probe).absolute()), 'output': str(output)}
+        result = subprocess.run(['node', str(script)], input=encoded(request), capture_output=True, timeout=60)
+        publish(output.with_suffix('.stdout'), result.stdout); publish(output.with_suffix('.stderr'), result.stderr)
+        require(result.returncode == 0, 'RECOVERY_QWEN_REJECTED', 'Controlled recovery rejected; private diagnostics retained')
+        receipt = decode(result.stdout)
+        append(root, 'QWEN_STEP_LOCK_RECOVERED', episode_id, {'receipt': archive(root, output),
+               'recovery_source_sha256': source_artifact['sha256'], 'recovery_source_artifact': source_artifact,
+               'prompt_resent': False})
+        return receipt
 
 
 def recover_ui_lock(root, expected_owner_id):
@@ -16,7 +44,7 @@ def recover_ui_lock(root, expected_owner_id):
     require(root.is_relative_to(DEBUG_ROOT) and root.resolve() == root, 'RECOVERY_ROOT', str(root))
     manifest = load_batch(root)
     require(set(manifest['harnesses']) <= set(HARNESS_PORTS), 'RECOVERY_SCOPE', 'Codex is not an evaluation target')
-    path = root.parent / '.memory-native-ui.lock'
+    path = memory_ui_lock_path(root, manifest['profiles'])
     require(not path.is_symlink() and path.is_file(), 'RECOVERY_LOCK_PATH', str(path))
     original = path.read_bytes()
     owner = read_json(path)

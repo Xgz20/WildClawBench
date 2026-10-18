@@ -10,6 +10,18 @@ from . import CONTRACT, HARNESS_PORTS, EXECUTION_GUARD, execution_guard
 from .dataset import load_dataset, materialize
 from .io import digest, encoded, identifier, publish, read_json, require, safe_file, sha, timestamp
 
+MEMORY_UI_LOCK = Path('/Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/.memory-native-ui.lock')
+
+
+def memory_ui_lock_path(root, profiles):
+    paths = set()
+    for profile in profiles.values():
+        value = profile.get('ui_lock_path')
+        require(value is None or value == str(MEMORY_UI_LOCK), 'UI_LOCK_POLICY', 'Only the shared memory UI lock is admitted')
+        paths.add(Path(value) if value is not None else Path(root).absolute().parent / '.memory-native-ui.lock')
+    require(len(paths) == 1, 'UI_LOCK_POLICY', 'All Harnesses must use the same frozen UI lock')
+    return next(iter(paths))
+
 
 def default_profiles():
     return {name: {"profile_id": name + "-current-account", "account_policy": "current_signed_in_account",
@@ -63,6 +75,7 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
         if mode == 'native' and formation.get('kind') == 'native_event':
             require(False, 'FORMATION_ADAPTER_NOT_ADMITTED',
                     'Native-event gates can be declared in v2 but have no admitted execution adapter yet')
+    memory_ui_lock_path(root, {h: profiles[h] for h in harnesses})
     judge = judge or {"protocol": "memory-checkpoint-review/v1", "model": None, "reasoning": None}
     require(judge.get("protocol") == "memory-checkpoint-review/v1", "JUDGE_PROTOCOL", "Unsupported judge")
     root.mkdir(parents=True)
@@ -126,7 +139,8 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
         if not target.exists():
             publish(target, safe_file(source).read_bytes())
     manifest = {"contract": CONTRACT, "batch_id": batch_id, "experiment_id": experiment_id,
-                "created_at": timestamp(), "mode": mode, "failure_policy": "stop_harness",
+                "created_at": timestamp(), "mode": mode, "failure_policy": "stop_batch",
+                "scheduling_policy": "strict_harness_serial",
                 "dataset_id": dataset["dataset_id"], "dataset_sha256": digest(dataset), "seed": seed,
                 "source_composition": dataset.get("composition", {"self_constructed": len(dataset['scenarios'])}),
                 "repeats": repeats, "harnesses": harnesses, "scenario_ids": scope, "arms": ["C0", "M+"],

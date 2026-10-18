@@ -45,14 +45,19 @@ def aggregate(root, *, include_fixture=False):
             observation_counts[snapshot['status']] += 1
             observation_stages[snapshot['stage']] += 1
     scores, failures, receipts, scoring_errors = {}, {}, [], []
+    control_errors, receipt_sequences = {}, {}
     for event in history:
         payload = event["payload"]
         if event["kind"] == "RECEIPT":
+            receipt_sequences[payload['operation_id']] = event['sequence']
             for artifact in payload["artifacts"].values():
                 verify_artifact(root, artifact)
             for entry in payload.get("candidate_snapshot", []):
                 verify_artifact(root, entry["artifact"])
             receipts.append(payload)
+        if event['kind'] == 'UNCERTAIN':
+            control_errors[payload['operation_id']] = {'operation_id': payload['operation_id'],
+                'error_code': payload['error_code'], 'event_sequence': event['sequence']}
         if event["kind"] == "EXECUTION_ERROR":
             failures[event["episode_id"]] = payload
         if event["kind"] == "SCORING_ERROR":
@@ -85,6 +90,9 @@ def aggregate(root, *, include_fixture=False):
                    *[operation_id(manifest, item['id'], step['id']) for step in steps]]
         operations = [latest_receipts.get(key) for key in planned]
         completed_operations = sum(bool(receipt and receipt['status'] == 'completed') for receipt in operations)
+        unresolved = [control_errors[key] for key in planned if key in control_errors
+                      and control_errors[key]['event_sequence'] > receipt_sequences.get(key, -1)]
+        row['unresolved_control_errors'] = unresolved
         case = scenarios[item['private_key']]
         gate_steps = list(dict.fromkeys(g['before_step'] for g in case.get('gates', []) if item['arm'] in g['arms']))
         reached = [step for step in gate_steps if all(
@@ -92,12 +100,12 @@ def aggregate(root, *, include_fixture=False):
             for s in steps[:next(i for i, s in enumerate(steps) if s['id'] == step)])]
         row['admission_gates'] = [g for step in reached for g in gate_results(root, manifest, item, step, latest_receipts)]
         admission_blocked = any(g['status'] != 'passed' for g in row['admission_gates'])
-        if admission_blocked and not score:
+        if (admission_blocked or unresolved) and not score:
             row['status'] = 'evaluation_error'
         row['cleanup_layers'] = cleanup_layers(root, manifest, item, case, latest_receipts)
         row['execution_status'] = 'completed' if completed_operations == len(planned) else 'needs_attention' if any(
             receipt and receipt['status'] in {'needs_attention', 'infrastructure_error', 'unsupported_product'} for receipt in operations
-        ) or admission_blocked else 'running' if any(operations) else 'pending'
+        ) or admission_blocked or unresolved or failure else 'running' if any(operations) else 'pending'
         row['planned_prompt_steps'] = len(steps)
         row['completed_prompt_steps'] = sum(bool(receipt and receipt['status'] == 'completed') for receipt in operations[1:])
         provenance = scenarios[item["private_key"]].get("provenance", {"origin": "self_constructed"})
@@ -170,6 +178,7 @@ def aggregate(root, *, include_fixture=False):
             "manifest_sha256": digest(manifest), "baseline": manifest["baseline"],
             "causal_claim": manifest["causal_claim"], "episode_count": len(rows), "units": units,
             "memory_channel_policy": manifest["memory_channel_policy"],
+            "scheduling_policy": manifest.get('scheduling_policy', 'legacy_unspecified'),
             "source_composition": manifest.get("source_composition", {"self_constructed": 20}),
             "background_observation_counts": dict(Counter("observed_settled" if receipt.get("background_settled") is True
                                                           else receipt.get("memory_observation", {}).get("status", "unverified")

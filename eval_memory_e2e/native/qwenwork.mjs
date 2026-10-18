@@ -10,6 +10,73 @@ import {chooseQwenWorkMainPage,readQwenUiConfiguration,ensureQwenNewTaskView,ope
 import {queryQwenProjectRows} from '../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/session-state.mjs';
 import {context,sha,requestHash,readJson,saveState,artifact,withUiLock,requireGui,
   baseReply,bindReply,verifyConfig,stdinRequest,assertMemoryPreSendRetry,readQwenMemoryOperationUi} from './common.mjs';
+import {execFileSync} from 'node:child_process';
+
+/** QwenWork 1.3.1 SDK projection: preserve native rows, derive a transcript.
+ * Never generate a legacy native JSONL or write the source database.
+ */
+
+const QUERY=String.raw`import sys,json,sqlite3,base64
+from pathlib import Path
+p=Path(sys.argv[1]);s=json.loads(sys.argv[2])
+if p.resolve()!=p: raise ValueError('QWEN_SQLITE_SOURCE_SYMLINK')
+c=sqlite3.connect(p.as_uri()+'?mode=ro',uri=True);c.row_factory=sqlite3.Row
+c.execute('pragma query_only=on');c.execute('BEGIN')
+identity=c.execute('''SELECT sc.id sub_chat_id,sc.chat_id conversation_id,sc.session_id,ch.local_project_id,
+COALESCE(json_extract(lp.root_paths,'$[0]'),pr.path,ch.worktree_path) cwd,
+sc.stream_id,json_extract(ch.ext,'$.taskStatus') native_status
+FROM sub_chats sc JOIN chats ch ON ch.id=sc.chat_id
+LEFT JOIN local_projects lp ON lp.id=ch.local_project_id LEFT JOIN projects pr ON pr.id=ch.project_id
+WHERE sc.id=? AND sc.chat_id=? AND sc.session_id=? AND ch.deleted_at IS NULL''',
+(s['sub_chat_id'],s['conversation_id'],s['session_id'])).fetchall()
+if len(identity)!=1: raise ValueError('QWEN_SQLITE_IDENTITY_COUNT')
+def serial(row):
+ d=dict(row)
+ for k,v in d.items():
+  if isinstance(v,bytes):
+   try:d[k]=v.decode('utf8')
+   except UnicodeDecodeError:d[k]={'encoding':'base64','data':base64.b64encode(v).decode()}
+ return d
+messages=[serial(r) for r in c.execute('SELECT * FROM messages WHERE sub_chat_id=? ORDER BY sequence,id',(s['sub_chat_id'],))]
+trajectory=[serial(r) for r in c.execute('SELECT * FROM agent_trajectory_log WHERE sub_chat_id=? ORDER BY seq,id',(s['sub_chat_id'],))]
+if len(messages)>2000 or len(trajectory)>20000: raise ValueError('QWEN_SQLITE_EVIDENCE_BUDGET')
+print(json.dumps({'source_kind':'qwen-native-sqlite-sdk-projection/v1','identity':dict(identity[0]),'messages':messages,'trajectory':trajectory},ensure_ascii=False))
+c.rollback();c.close()`;
+
+export function normalizeQwenSqliteSnapshot(snapshot,session,promptSha) {
+  if(snapshot?.source_kind!=='qwen-native-sqlite-sdk-projection/v1')throw Error('QWEN_SQLITE_SOURCE_KIND');
+  for(const key of ['session_id','sub_chat_id','conversation_id','local_project_id','cwd'])
+    if(!session[key]||snapshot.identity?.[key]!==session[key])throw Error('QWEN_SQLITE_IDENTITY_MISMATCH:'+key);
+  if(!Array.isArray(snapshot.messages)||!Array.isArray(snapshot.trajectory))throw Error('QWEN_SQLITE_SOURCE_SHAPE');
+  const rows=snapshot.messages.map(m=>{
+    if(m.sub_chat_id!==session.sub_chat_id||m.chat_id!==session.conversation_id||!m.message_id
+      ||!['user','assistant'].includes(m.role))throw Error('QWEN_SQLITE_MESSAGE_IDENTITY');
+    const parts=JSON.parse(m.parts),metadata=JSON.parse(m.metadata||'{}');
+    if(!Array.isArray(parts)||metadata.sessionId!==session.session_id)throw Error('QWEN_SQLITE_MESSAGE_METADATA');
+    return {type:m.role,uuid:m.message_id,sessionId:session.session_id,cwd:session.cwd,
+      message:{content:parts},native_metadata:metadata,source_kind:snapshot.source_kind};
+  });
+  const users=rows.filter(r=>r.type==='user'&&r.message.content.some(p=>p.type==='text'&&typeof p.text==='string'&&sha(p.text)===promptSha));
+  if(users.length!==1)throw Error('QWEN_SQLITE_PROMPT_MATCH_COUNT:'+users.length);
+  if(new Set(rows.map(r=>r.uuid)).size!==rows.length)throw Error('QWEN_SQLITE_MESSAGE_ID_REUSED');
+  for(const e of snapshot.trajectory)if(e.sub_chat_id!==session.sub_chat_id)throw Error('QWEN_SQLITE_TRAJECTORY_IDENTITY');
+  return {rows,user:users[0],terminal:snapshot.identity.native_status==='completed'&&!snapshot.identity.stream_id
+    &&snapshot.trajectory.some(e=>e.event_type==='turn_end')};
+}
+
+export async function qwenSqlitePromptEvidence(ctx,session,prompt) {
+  const bytes=execFileSync(process.env.MEMORY_E2E_PYTHON||'/usr/local/bin/python3.11',
+    ['-c',QUERY,'/Users/gzx/Library/Application Support/QwenWorkCN/data/agents.db',JSON.stringify(session)],
+    {timeout:15000,maxBuffer:25*1024*1024});
+  const snapshot=JSON.parse(bytes),normalized=normalizeQwenSqliteSnapshot(snapshot,session,prompt.sha256);
+  const sourcePath=await artifact(ctx,'sqlite-native-snapshot',snapshot);
+  const transcript=normalized.rows.map(r=>JSON.stringify(r)).join('\n')+'\n';
+  const transcriptPath=await artifact(ctx,'sqlite-derived-transcript',transcript);
+  return {verified:true,prompt_sha256:prompt.sha256,match_count:1,
+    transcript_path:transcriptPath,transcript_sha256:sha(transcript),transcript_size:Buffer.byteLength(transcript),
+    source_kind:snapshot.source_kind,source_snapshot_path:sourcePath,source_snapshot_sha256:sha(JSON.stringify(snapshot,null,2)+'\n'),
+    native_user_message_id:normalized.user.uuid,native_terminal_verified:normalized.terminal};
+}
 
 const ENDPOINT='http://127.0.0.1:9250',DB='/Users/gzx/Library/Application Support/QwenWorkCN/data/agents.db';
 const TRACE='/Users/gzx/.qwenworkcn';
@@ -26,7 +93,7 @@ async function authUid(page) {
   });
 }
 async function closeSettings(page) {
-  const dialog=page.locator('[role=dialog]').filter({has:page.getByText('意识模式',{exact:true})});
+  const dialog=page.locator('[role=dialog]').filter({has:page.getByText(/^(?:意识模式|全局记忆)$/)});
   if(await dialog.count()) {
     await page.evaluate(()=>document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',bubbles:true})));
     await dialog.waitFor({state:'hidden',timeout:5000});
@@ -98,6 +165,7 @@ export async function runQwenWork(request) {
       cfg.resume=Boolean(existingJournal);
       const live=await createLiveDependencies(cfg);
       try {
+        if(probe.app.version==='1.3.1')live.dependencies.verifySessionPrompt=(session,prompt)=>qwenSqlitePromptEvidence(ctx,session,prompt);
         const livePage=await chooseQwenWorkMainPage(live.browser,10000);
         const originalPrepare=live.dependencies.prepareUi;
         live.dependencies.prepareUi=async()=>{
@@ -124,6 +192,7 @@ export async function runQwenWork(request) {
         const terminal=await readQwenMemoryOperationUi({transportAction:request.transport_action,frozen,terminal:true},()=>readQwenUiConfiguration(livePage));
         if(terminal.ui.model.actual_model!==config.model_display||terminal.ui.permission.confirmed_mode!==config.permissions)throw Error('QWEN_MEMORY_TERMINAL_CONFIG_DRIFT');
         const evidence=await live.dependencies.verifySessionPrompt(journal.session,cfg.prompt);
+        if(evidence.source_kind&&evidence.native_terminal_verified!==true)throw Error('QWEN_SQLITE_NATIVE_TERMINAL_UNVERIFIED');
         const raw=await readFile(evidence.transcript_path,'utf8');
         if(sha(raw)!==evidence.transcript_sha256)return await bindReply(ctx,request,
           {...reply,status:'active',reason:'原生轨迹尾部仍在更新，等待稳定快照，不重发。'},{transcript_evidence:evidence});
@@ -136,7 +205,8 @@ export async function runQwenWork(request) {
         if(seconds<request.memory_wait_seconds)return await bindReply(ctx,request,{...reply,status:'active',reason:'等待即时行为观察窗；尚未证明后台记忆形成。'});
         reply.status='completed';reply.memory_observation={status:'unobservable',wait_seconds:seconds};
         reply.final_response=await artifact(ctx,'response',rows.filter(r=>r.type==='assistant').at(-1)?.message?.content?.filter(p=>p.type==='text').map(p=>p.text).join('\n')??'');
-        reply.trace=await artifact(ctx,'trace',raw);
+        reply.trace=evidence.source_kind?await artifact(ctx,'trace',{source_kind:evidence.source_kind,
+          native_snapshot:await readJson(evidence.source_snapshot_path),derived_transcript:rows}):await artifact(ctx,'trace',raw);
         return await bindReply(ctx,request,reply,{general_journal:journal,transcript_evidence:evidence,native_turn_identity_kind:'user_message_uuid',prompt_binding_status:'verified',configuration_basis:terminal.basis,terminal_ui_configuration:terminal.ui});
       }finally{await live.browser.close()}
     });

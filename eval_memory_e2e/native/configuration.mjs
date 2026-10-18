@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { WorkBuddyCdpClient } from '../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/ui.mjs';
-import { requireGui } from './common.mjs';
+import { requireGui, withUiLock } from './common.mjs';
 import { assertWorkBuddyNativeIdle } from '../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/execute.mjs';
 
 export const TARGETS = Object.freeze({
@@ -29,22 +29,32 @@ export function qwenMemorySettingsUrl(currentUrl, scriptUrls) {
   const renderer='/Applications/QwenWorkCN.app/Contents/Resources/app.asar/out/renderer/';
   if(url.protocol!=='file:'||url.pathname!==renderer+'index.html'
     ||!scriptUrls.some(value=>{try{const script=new URL(value);return script.protocol==='file:'
-      &&script.pathname===renderer+'assets/index-DkViyRcX.js';}catch{return false;}}))throw Error('CONFIG_QWEN_SETTINGS_ROUTE_UNVERIFIED');
+      &&['index-DkViyRcX.js','index-D4wDUh3V.js'].some(name=>script.pathname===renderer+'assets/'+name);}catch{return false;}}))throw Error('CONFIG_QWEN_SETTINGS_ROUTE_UNVERIFIED');
   url.searchParams.set('view','settings');url.searchParams.set('tab','awareness');
   return url.toString();
 }
 const digest = value => createHash('sha256').update(value).digest('hex');
 const pause = ms => new Promise(ok => setTimeout(ok, ms));
+export function qwenMemoryControlPolicy(text, count) {
+  if(text.includes('全局记忆')) {
+    if(count!==1)throw Error('CONFIG_QWEN_GLOBAL_SWITCH_AMBIGUOUS');
+    return {profile:'global_memory_v1',keys:['global'],read_and_write_toggle:true,separate_automatic_toggle:false};
+  }
+  if(text.includes('意识模式'))return {profile:'awareness_v1',keys:['automatic','awareness'],separate_automatic_toggle:true};
+  throw Error('CONFIG_QWEN_MEMORY_PROFILE_UNKNOWN');
+}
 const DOM = `
 const visible=e=>e instanceof Element&&e.getBoundingClientRect().width>0&&getComputedStyle(e).visibility!=='hidden';
 const all=s=>[...document.querySelectorAll(s)].filter(visible);
 const panel=h==='WorkBuddy'?document.querySelector('.memory-settings-panel'):
-  h==='QwenWork'?all('[role=dialog]').find(e=>e.innerText.includes('意识模式')):
+  h==='QwenWork'?all('[role=dialog]').find(e=>e.innerText.includes('意识模式')||e.innerText.includes('全局记忆')):
   all('[data-testid="settings_modal"]').find(e=>e.innerText.includes('管理记忆'));
 const candidates=panel?[...panel.querySelectorAll('[role=switch]')].filter(visible):[];
+const qwenPolicy=${qwenMemoryControlPolicy.toString()};
 const pick=k=>{
   const matches=candidates.filter(e=>{
     if(h==='WorkBuddy'||h==='DoubaoWork')return true;
+    if(k==='global')return candidates.length===1&&panel.innerText.includes('全局记忆');
     const t=e.parentElement?.parentElement?.innerText||'';
     return k==='awareness'?t.startsWith('意识模式'):t.startsWith('自动记忆');
   });
@@ -59,7 +69,8 @@ async function readSettings(client, harness) {
   return client.evaluate(expression(harness, `
     if(!panel||candidates.length===0)return {ready:false};
     if(candidates.some(e=>e.disabled||e.getAttribute('aria-disabled')==='true'))return {ready:false,reason:'controls_loading'};
-    const keys=${JSON.stringify(targetFor(harness).keys)};
+    const policy=h==='QwenWork'?qwenPolicy(panel.innerText,candidates.length):null;
+    const keys=policy?policy.keys:${JSON.stringify(targetFor(harness).keys)};
     const observed=k=>{
       try{return value(pick(k));}catch(error){
         if(h==='QwenWork'&&k==='automatic'&&value(pick('awareness'))===false)return null;
@@ -67,6 +78,7 @@ async function readSettings(client, harness) {
       }
     };
     return {ready:true,values:Object.fromEntries(keys.map(k=>[k,observed(k)])),
+      ...(policy?{control_policy:policy}:{}),
       settings_scope:h==='QwenWork'?'local-awareness-main':'current-account',
       memory_data_deleted:false};`));
 }
@@ -249,8 +261,10 @@ export async function runConfiguration(request) {
     const f=await open(join(output,'events.jsonl'),'a');
     try{await f.writeFile(JSON.stringify({at:new Date().toISOString(),...value})+'\n');await f.sync();}finally{await f.close();}
   };
-  let baseline;
-  try {
+  try { return await withUiLock({uiLock:'/Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/.memory-native-ui.lock'},
+    {operation_id:'memory-config-'+randomUUID()},async()=>{
+    let baseline;
+    try {
     await log({kind:'IDENTITY_VERIFIED',identity});
     execFileSync('/usr/bin/open',['-a',target.app]);
     await client.send('Page.bringToFront');
@@ -263,7 +277,7 @@ export async function runConfiguration(request) {
       await writeFile(join(output,name+'.png'),Buffer.from(r.data,'base64'),{flag:'wx',mode:0o600});};
     await screenshot('before');
     let result={baseline,final:baseline,restored:true};
-    if(request.action==='roundtrip')result=await roundtripValues({read,keys:target.keys,log,
+    if(request.action==='roundtrip')result=await roundtripValues({read,keys:Object.keys(baseline.values),log,
       change:async(key,value)=>{
         const current=await read();if(current.values[key]!==value)await clickSwitch(client,request.harness,key);
         const after=await waitValue(client,request.harness,key,value);
@@ -284,7 +298,8 @@ export async function runConfiguration(request) {
       created_at:new Date().toISOString()};
     await writeFile(join(output,'receipt.json'),JSON.stringify(receipt,null,2)+'\n',{flag:'wx'});
     return receipt;
-  } finally { client.close(); }
+    }
+  }); } finally { client.close(); }
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {
   try{let input='';for await(const c of process.stdin)input+=c;console.log(JSON.stringify(await runConfiguration(JSON.parse(input))));}

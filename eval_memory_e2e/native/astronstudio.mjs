@@ -41,6 +41,7 @@ export async function dispatchAStudioOnce(state,click,persist) {
   const result=await click();
   if(typeof result?.clicked!=='boolean')throw Error('ASTUDIO_SEND_RESULT_UNVERIFIED');
   state.click_result=result;
+  state.click_returned_at=new Date().toISOString();
   state.phase=result.clicked?'invoked':'pre_send_rejected';await persist(state);
   return result;
 }
@@ -60,7 +61,37 @@ export async function waitForAStudioFrozenUi(read,expected,threadId,{attempts=15
       &&ui.permission_count===1&&ui.permission===expected.permissions)return {ui,observations};
     await pause();
   }
-  throw Error('ASTUDIO_FROZEN_UI_NOT_READY');
+  const error=Error('ASTUDIO_FROZEN_UI_NOT_READY');error.observations=observations;throw error;
+}
+export function aStudioAcceptanceState(state,now=Date.now(),waitSeconds=30) {
+  if(!['invoked','invoking'].includes(state.phase))return 'not_started';
+  const start=Date.parse(state.click_returned_at||'');
+  return Number.isFinite(start)&&now-start<waitSeconds*1000?'pending':'unconfirmed';
+}
+export function aStudioDomSubmitExpression(prompt,workspace,threadId) {
+  return `(()=>{
+    const expected=${JSON.stringify(prompt.trim().replaceAll('\r\n','\n'))},cwd=${JSON.stringify(workspace)},thread=${JSON.stringify(threadId)};
+    const visible=e=>e.getClientRects().length>0&&getComputedStyle(e).visibility!=='hidden';
+    const route=location.hash.match(/^#\\/([^/?#]+)/u)?.[1];
+    const editors=[...document.querySelectorAll('[data-testid="composer-editor"]')].filter(visible);
+    const workspaces=[...document.querySelectorAll('[data-testid="workspace-picker-trigger"], [data-testid="project-picker-trigger"]')].filter(visible);
+    const buttons=[...document.querySelectorAll('button[type="submit"][aria-label="发送消息"], button[type="submit"][aria-label="Send message"]')].filter(visible).filter(e=>!e.disabled);
+    if(decodeURIComponent(route||'')!==thread||editors.length!==1||workspaces.length!==1||buttons.length!==1
+      ||(editors[0].innerText||'').trim().replaceAll('\\r\\n','\\n')!==expected||workspaces[0].getAttribute('title')!==cwd
+      ||[...document.querySelectorAll('[role="dialog"], [aria-modal="true"]')].some(visible))return {clicked:false,reason:'atomic-send-precondition-changed'};
+    const button=buttons[0],form=button.form,rect=button.getBoundingClientRect(),hit=document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2);
+    if(!form||editors[0].closest('form')!==form||!form.checkValidity()||!hit||!button.contains(hit))return {clicked:false,reason:'submit-form-or-hit-unverified'};
+    const events=[];
+    const capture=e=>events.push({type:e.type,trusted:e.isTrusted,default_prevented:e.defaultPrevented});
+    button.addEventListener('click',capture,true);form.addEventListener('submit',capture,true);
+    try {button.click();return {clicked:true,thread_id:thread,method:'verified-dom-submit-click',dom_events:events};}
+    finally{button.removeEventListener('click',capture,true);form.removeEventListener('submit',capture,true);}
+  })()`;
+}
+async function waitForRecordedUi(ctx,client,expected,route,stage) {
+  try{return await waitForAStudioFrozenUi(()=>readUiConfiguration(client),expected,route);}
+  catch(error){await artifact(ctx,'configuration-failure',{stage,thread_id:route,expected,
+    error:error.message,observations:error.observations??[],model_changed_by_controller:false});throw error;}
 }
 export function readMemoryConfiguration(){
   const code=`import json,tomllib
@@ -141,8 +172,12 @@ async function observe(ctx,request,live,state) {
   verifyConfig(live.config,state.config);
   const rows=await queryNativeSessions(DB);
   const session=rows.find(s=>s.thread_id===state.thread_id&&s.cwd===request.workspace);
-  if(!session?.session_id||!session.turn_id||session.turn_id===state.previous_turn_id)return bindReply(ctx,request,
-    {...baseReply(request,live.config),status:'active',reason:'等待原发送的原生身份；不重新发送。'});
+  if(!session?.session_id||!session.turn_id||session.turn_id===state.previous_turn_id){
+    const acceptance=aStudioAcceptanceState(state);
+    return bindReply(ctx,request,{...baseReply(request,live.config),status:acceptance==='pending'?'active':'needs_attention',
+      reason:acceptance==='pending'?'等待原发送的原生身份；不重新发送。':'原生发送接受未确认，保留原意图并暂停派发；后续只能观察。'},
+      {native_acceptance:acceptance,click_result:state.click_result??null,task_deadline:null,prompt_resend_authorized:false});
+  }
   state.native={session_id:session.session_id,turn_id:session.turn_id,cwd:session.cwd};
   const classification=classifyNativeState(session);
   await saveState(ctx,state);
@@ -207,7 +242,7 @@ export async function runAstronStudio(request) {
           // This error is raised only after the General engine verifies the new
           // native project/thread/cwd. Wait for hydration; never select a model.
           const pendingRoute=await currentThreadId(live.client);
-          const hydrated=await waitForAStudioFrozenUi(()=>readUiConfiguration(live.client),live.config,pendingRoute);
+          const hydrated=await waitForRecordedUi(ctx,live.client,live.config,pendingRoute,'after-navigation');
           await artifact(ctx,'configuration-hydration',{thread_id:pendingRoute,observations:hydrated.observations,model_changed_by_controller:false});
         }
         route=await currentThreadId(live.client);
@@ -220,9 +255,14 @@ export async function runAstronStudio(request) {
         previous_turn_id:rows.find(s=>s.thread_id===route)?.turn_id??null};await saveState(ctx,state);
       await fillPrompt(live.client,request.prompt,30000);
       await ensureSendTargetReady(live.client,request.prompt,request.workspace);
-      const preSend=await waitForAStudioFrozenUi(()=>readUiConfiguration(live.client),live.config,route);
+      const preSend=await waitForRecordedUi(ctx,live.client,live.config,route,'before-send');
       await artifact(ctx,'pre-send-configuration',{thread_id:route,ui:preSend.ui,config_basis:live.config_basis,model_changed_by_controller:false});
-      const clicked=await dispatchAStudioOnce(state,()=>clickAStudioStableTarget(live.client,request.prompt,request.workspace),value=>saveState(ctx,value));
+      const method=ctx.manifest.profiles.AstronStudio.send_method??'native_mouse';
+      if(!['native_mouse','dom_submit_click'].includes(method))throw Error('ASTUDIO_SEND_METHOD_NOT_ADMITTED');
+      const clicked=await dispatchAStudioOnce(state,()=>method==='dom_submit_click'
+        ?live.client.evaluate(aStudioDomSubmitExpression(request.prompt,request.workspace,route))
+        :clickAStudioStableTarget(live.client,request.prompt,request.workspace),value=>saveState(ctx,value));
+      await artifact(ctx,'send-result',{method,result:clicked,native_acceptance_verified:false});
       if(!clicked.clicked)return bindReply(ctx,request,{...baseReply(request,live.config),status:'needs_attention',reason:'发送前检查返回未点击成功，停止在原生发送之前。'},{click_result:clicked,prompt_sent:false});
       return observe(ctx,request,live,state);
     });

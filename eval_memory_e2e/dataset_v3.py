@@ -45,7 +45,9 @@ def validate_v3(data, path):
                     and gate['arms'] == ['M+'], 'GATE_POLICY', 'Admission gates currently apply to M+ only')
             if gate['kind'] == 'response_json_exact':
                 expected = gate.get('expected')
-                require(set(gate) == common | {'expected'} and steps[gate['source_step']]['phase'] == 'probe'
+                require(common | {'expected'} <= set(gate) <= common | {'expected', 'answer_format'}
+                        and gate.get('answer_format', 'raw_json') in {'raw_json', 'single_json_object'}
+                        and steps[gate['source_step']]['phase'] == 'probe'
                         and isinstance(expected, dict) and expected
                         and all(isinstance(k, str) and k and isinstance(v, str) and v for k, v in expected.items()),
                         'GATE_POLICY', 'Exact gate needs a probe and string JSON fields')
@@ -62,8 +64,9 @@ def validate_v3(data, path):
         require(len(ids) == len(set(ids)), 'DUPLICATE_ID', case['id'])
         cleanup = case.get('cleanup')
         if cleanup is not None:
-            require(isinstance(cleanup, dict) and set(cleanup) == {'before_step', 'after_steps', 'target_fact', 'keep_fact',
-                                                                 'target_key', 'keep_key', 'unknown_value'}, 'CLEANUP_POLICY', case['id'])
+            required = {'before_step', 'after_steps', 'target_fact', 'keep_fact', 'target_key', 'keep_key', 'unknown_value'}
+            require(isinstance(cleanup, dict) and required <= set(cleanup) <= required | {'answer_format'}
+                    and cleanup.get('answer_format', 'raw_json') in {'raw_json', 'single_json_object'}, 'CLEANUP_POLICY', case['id'])
             require(cleanup['before_step'] in probes and isinstance(cleanup['after_steps'], list)
                     and cleanup['after_steps'] and len(set(cleanup['after_steps'])) == len(cleanup['after_steps'])
                     and all(s in probes and order.index(s) > order.index(cleanup['before_step']) for s in cleanup['after_steps'])

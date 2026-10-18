@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {verifyRecordedConfiguration,waitForAStudioFrozenUi,waitForAStudioForeground,dispatchAStudioOnce,clickAStudioStableTarget,aStudioConfigurationFields} from '../../eval_memory_e2e/native/astronstudio.mjs';
+import vm from 'node:vm';
+import {verifyRecordedConfiguration,waitForAStudioFrozenUi,waitForAStudioForeground,dispatchAStudioOnce,clickAStudioStableTarget,aStudioConfigurationFields,aStudioDomSubmitExpression,aStudioAcceptanceState} from '../../eval_memory_e2e/native/astronstudio.mjs';
 const session={turn_id:'owned-turn',cwd:'/tmp/owned'};
 const frozen={model_display:'Spark-X2.5',reasoning:'High',permissions:'完全访问'};
 const context=()=>({turn_id:'owned-turn',cwd:'/tmp/owned',model:'builtin/'+Buffer.from('spark-x2.5').toString('base64url'),effort:'high',approval_policy:'never',sandbox_policy:{type:'danger-full-access'}});
@@ -67,4 +68,33 @@ test('a different native turn, model, reasoning or permission cannot close a mem
   for(const change of [x=>x.turn_id='other',x=>x.model='other-model',x=>x.effort='low',x=>x.cwd='/other',x=>x.sandbox_policy.type='workspace-write']){
     const value=context();change(value);assert.throws(()=>verifyRecordedConfiguration(bytes(value),session,frozen));
   }
+});
+function domSubmitFixture({prompt='owned prompt',route='#/owned',foreignForm=false,obscured=false}={}) {
+  let clicks=0;const listeners=new Map(),visible={getClientRects:()=>[{}]};
+  const form={checkValidity:()=>true,addEventListener:(k,f)=>listeners.set(k,f),removeEventListener:k=>listeners.delete(k)};
+  const editor={...visible,innerText:prompt,closest:()=>foreignForm?{}:form};
+  const workspace={...visible,getAttribute:()=>'/owned'};
+  const button={...visible,form,disabled:false,getBoundingClientRect:()=>({left:1,top:1,width:20,height:20}),contains:e=>e===button,
+    addEventListener:(k,f)=>listeners.set(k,f),removeEventListener:k=>listeners.delete(k),
+    click:()=>{clicks++;for(const type of ['click','submit'])listeners.get(type)?.({type,isTrusted:false,defaultPrevented:false})}};
+  const document={elementFromPoint:()=>obscured?{}:button,querySelectorAll:s=>s.includes('composer-editor')?[editor]:s.includes('workspace-picker')?[workspace]:s.includes('button[type')?[button]:[]};
+  const result=vm.runInNewContext(aStudioDomSubmitExpression('owned prompt','/owned','owned'),{document,location:{hash:route},getComputedStyle:()=>({visibility:'visible'})});
+  return {result,clicks,listeners};
+}
+test('AStudio DOM send checks form ownership and records a single click/submit without claiming native acceptance',()=>{
+  const {result,clicks,listeners}=domSubmitFixture();assert.equal(clicks,1);assert.equal(result.clicked,true);
+  assert.equal(result.dom_events.map(e=>e.type).join(','),'click,submit');assert.equal(listeners.size,0);
+  assert.equal(result.native,undefined);
+});
+test('AStudio atomic DOM send cannot click after prompt/route drift, a foreign form or an obscured target',()=>{
+  for(const options of [{prompt:'different'},{route:'#/other'},{foreignForm:true},{obscured:true}]) {
+    const {result,clicks}=domSubmitFixture(options);assert.equal(result.clicked,false);assert.equal(clicks,0);
+  }
+});
+test('AStudio identity wait is separate from model execution and old unknown sends are never replayed',()=>{
+  const now=Date.now(),state={phase:'invoked',click_returned_at:new Date(now-1000).toISOString()};
+  assert.equal(aStudioAcceptanceState(state,now),'pending');
+  assert.equal(aStudioAcceptanceState(state,now+30000),'unconfirmed');
+  assert.equal(aStudioAcceptanceState({phase:'invoked'},now),'unconfirmed');
+  assert.equal(aStudioAcceptanceState({phase:'prepared'},now),'not_started');
 });

@@ -11,12 +11,18 @@ def cleanup_layers(root, manifest, item, case, receipts):
     facts = case['facts']
     target, keep = facts[policy['target_fact']], facts[policy['keep_fact']]
     before = receipts.get(operation_id(manifest, item['id'], policy['before_step']))
-    formed = exact_response(root, before, {policy['target_key']: target, policy['keep_key']: keep})
+    answer_format = policy.get('answer_format', 'raw_json')
+    formed = exact_response(root, before, {policy['target_key']: target, policy['keep_key']: keep}, answer_format)
     behavior, storage = [], []
     for step in policy['after_steps']:
         op = operation_id(manifest, item['id'], step)
         receipt = receipts.get(op)
-        result = exact_response(root, receipt, {policy['target_key']: policy['unknown_value'], policy['keep_key']: keep})
+        result = exact_response(root, receipt, {policy['target_key']: policy['unknown_value'], policy['keep_key']: keep}, answer_format)
+        if receipt and receipt['status'] == 'completed':
+            raw = verify_artifact(root, receipt['artifacts']['final_response']).decode('utf-8')
+            result['target_leaked_in_response'] = target.casefold() in raw.casefold()
+            if result['target_leaked_in_response']:
+                result.update(passed=False, reason='target_value_leaked_in_response')
         behavior.append({'step_id': step, 'status': 'not_evaluable' if not formed['passed'] else
                          'not_observed' if not receipt or receipt['status'] != 'completed' else
                          'passed' if result['passed'] else 'failed', **result})

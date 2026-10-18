@@ -5,6 +5,11 @@ import { hostname } from "node:os";
 import { inspectMacGuiSession, assertMacGuiReady } from "../../tools/report/e2e-shared/desktop-gui/macos.mjs";
 
 export const sha = value => createHash("sha256").update(value).digest("hex");
+export const MEMORY_UI_LOCK='/Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/.memory-native-ui.lock';
+export function memoryUiLockPath(root,profile) {
+  if(profile.ui_lock_path!==undefined&&profile.ui_lock_path!==MEMORY_UI_LOCK)throw Error('NATIVE_UI_LOCK_POLICY');
+  return profile.ui_lock_path??join(dirname(root),'.memory-native-ui.lock');
+}
 export function sorted(value) {
   if (Array.isArray(value)) return value.map(sorted);
   if (value && typeof value === "object") return Object.fromEntries(Object.keys(value).sort().map(key => [key, sorted(value[key])]));
@@ -56,7 +61,7 @@ export async function context(request, harness) {
   await mkdir(control, { recursive: true });
   await assertNoLinks(control);
   return { root, workspace, control, manifest, stateFile: join(control, "state.json"),
-    uiLock: join(dirname(root), ".memory-native-ui.lock") };
+    uiLock: memoryUiLockPath(root,manifest.profiles[harness]) };
 }
 
 export async function saveState(ctx, state) {

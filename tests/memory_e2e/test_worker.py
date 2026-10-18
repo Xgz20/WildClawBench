@@ -72,19 +72,24 @@ class WorkerTests(unittest.TestCase):
             result=run_worker('/not-a-client',poll_seconds=.01)
         return result,order,maximum
 
-    def test_round_robin_keeps_ui_calls_serial_and_background_harnesses_in_flight(self):
+    def test_one_harness_finishes_before_the_next_client_can_start(self):
         result,order,maximum=self.simulate()
         self.assertEqual(result['status'],'EXECUTION_COMPLETED')
         self.assertEqual(result['completed_episodes'],8)
-        self.assertEqual(maximum,4)
-        self.assertEqual(order[:4],['AstronStudio-cold','WorkBuddy-cold','QwenWork-cold','DoubaoWork-cold'])
+        self.assertEqual(maximum,1)
+        self.assertEqual(order[:4],['AstronStudio-cold','AstronStudio-cold','AstronStudio-experienced','AstronStudio-experienced'])
+        self.assertEqual(result['scheduling_policy'],'strict_harness_serial')
         for name in ['AstronStudio','WorkBuddy','QwenWork','DoubaoWork']:
             self.assertLess(order.index(name+'-cold')+1,order.index(name+'-experienced'))
+        for first,second in zip(['AstronStudio','WorkBuddy','QwenWork'],['WorkBuddy','QwenWork','DoubaoWork']):
+            self.assertLess(max(i for i,key in enumerate(order) if key.startswith(first)),min(i for i,key in enumerate(order) if key.startswith(second)))
 
-    def test_one_harness_failure_does_not_discard_other_harnesses_or_replay_it(self):
+    def test_one_harness_failure_pauses_the_batch_without_starting_the_next_client(self):
         result,order,_=self.simulate(failed='QwenWork')
         self.assertEqual(result['status'],'NEEDS_ATTENTION')
-        self.assertEqual(result['completed_episodes'],6)
+        self.assertEqual(result['completed_episodes'],4)
         self.assertEqual(list(result['blocked_harnesses']),['QwenWork'])
         self.assertEqual(order.count('QwenWork-cold'),1)
         self.assertNotIn('QwenWork-experienced',order)
+        self.assertFalse(any(key.startswith('DoubaoWork') for key in order))
+        self.assertEqual(result['pending_harnesses'],['DoubaoWork'])

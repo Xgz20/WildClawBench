@@ -14,7 +14,7 @@ from uuid import uuid4
 from pathlib import Path
 
 from . import CONTRACT
-from .batch import episode, load_batch, operation_id
+from .batch import episode, load_batch, operation_id, memory_ui_lock_path
 from .io import (MemoryEvaluationError, append, archive, decode, digest, encoded, events,
                  lock, publish, read_json, require, safe_file, sha, verify_artifact)
 
@@ -44,6 +44,18 @@ def _initial_config(root, manifest, harness):
             if config:
                 return config
     return manifest["profiles"][harness].get("expected_config")
+
+
+def _require_harness_predecessors(root, manifest, item):
+    if manifest.get('scheduling_policy') != 'strict_harness_serial':
+        return
+    for name in manifest['harnesses']:
+        if name == item['harness']:
+            break
+        for previous in manifest['episodes']:
+            if previous['harness'] == name:
+                require(next_action(root, previous['id'])['status'] == 'COMPLETED',
+                        'PREDECESSOR_HARNESS_INCOMPLETE', name + ': ' + previous['id'])
 
 
 def next_action(root, episode_id):
@@ -249,6 +261,12 @@ def advance(root, episode_id, *, driver_timeout=None, retry_pre_send=False):
                 from .admission import record_gate_pause
                 record_gate_pause(root, action)
             return action
+        if action['status'] == 'READY':
+            _require_harness_predecessors(root, manifest, item)
+        if manifest['mode'] == 'native':
+            shared_lock = memory_ui_lock_path(root, manifest['profiles'])
+            require(not shared_lock.exists(), 'NATIVE_UI_LOCK_PRESENT',
+                    'UI owner still holds the frozen lock; preserve it and do not register a new send intent')
         command = manifest["profiles"][item["harness"]]["driver_command"]
         require(command is not None, "DRIVER_NOT_CONFIGURED", "Native memory Driver must be validated before sending")
         request = action["request"]
@@ -326,6 +344,10 @@ def register_intent(root, episode_id):
             record_gate_pause(root, action)
             require(False, 'ADMISSION_BLOCKED', action['status'])
         require(action["status"] == "READY", "ALREADY_ATTEMPTED", "Observe the original operation instead")
+        _require_harness_predecessors(root, manifest, item)
+        if manifest['mode'] == 'native':
+            require(not memory_ui_lock_path(root, manifest['profiles']).exists(), 'NATIVE_UI_LOCK_PRESENT',
+                    'External dispatch intent requires a free frozen UI lock')
         request = action["request"]
         if request["action"] == "execute_step":
             _install_materials(request)
