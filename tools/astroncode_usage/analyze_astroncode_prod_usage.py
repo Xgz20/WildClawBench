@@ -43,6 +43,7 @@ try:
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import get_column_letter
     from openpyxl.worksheet.datavalidation import DataValidation
+    from openpyxl.worksheet.table import Table, TableStyleInfo
 except (
     ImportError
 ) as error:  # pragma: no cover - exercised only in a broken environment
@@ -316,6 +317,16 @@ class GroupMetrics:
 
 
 @dataclass
+class ModelTokenMetrics:
+    values: dict[str, list[float]] = field(default_factory=lambda: defaultdict(list))
+    cache_input_sum: float = 0
+    cache_denominator_sum: float = 0
+    cache_exceeds_input_count: int = 0
+    reasoning_exceeds_output_count: int = 0
+    non_turn_usage_count: int = 0
+
+
+@dataclass
 class CandidateAggregate:
     representative_query: str
     query_length: int
@@ -363,6 +374,9 @@ class DatasetAnalysis:
     )
     model_metrics: dict[str, GroupMetrics] = field(
         default_factory=lambda: defaultdict(GroupMetrics)
+    )
+    model_token_metrics: dict[str, ModelTokenMetrics] = field(
+        default_factory=lambda: defaultdict(ModelTokenMetrics)
     )
     version_metrics: dict[tuple[str, str, str], GroupMetrics] = field(
         default_factory=lambda: defaultdict(GroupMetrics)
@@ -1249,7 +1263,7 @@ NORMALIZED_FIELD_SPECS: tuple[tuple[str, str, str], ...] = (
     ("input_tokens", "输入 Token", "整数，缺失不按 0 计"),
     ("output_tokens", "输出 Token", "整数，缺失不按 0 计"),
     ("reasoning_tokens", "推理 Token", "整数，缺失不按 0 计"),
-    ("cache_read_tokens", "缓存读取 Token", "整数，缺失不按 0 计"),
+    ("cache_read_tokens", "缓存输入 Token", "整数，缺失不按 0 计；原缓存读取 Token"),
     ("total_tokens", "总 Token", "整数，缺失不按 0 计"),
     ("message_count", "消息数", "turn.message_count"),
     ("input_image_count", "输入图片数", "从用户输入部件派生"),
@@ -1619,12 +1633,47 @@ def linear_percentile(values: Sequence[float], ratio: float) -> float | None:
 
 
 TOKEN_FIELDS: tuple[tuple[str, str], ...] = (
+    ("total_tokens", "总Token"),
     ("input_tokens", "输入 Token"),
     ("output_tokens", "输出 Token"),
     ("reasoning_tokens", "推理 Token"),
-    ("cache_read_tokens", "缓存读取 Token"),
-    ("total_tokens", "总 Token"),
+    ("cache_read_tokens", "缓存输入 Token"),
 )
+
+MODEL_TOKEN_DIMENSIONS = TOKEN_FIELDS + (("cache_hit_rate", "缓存命中率"),)
+MODEL_TOKEN_SUMMARY_HEADERS = [
+    "模型", "任务数", "平均总Token", "平均输入Token", "平均输出Token",
+    "平均推理Token", "平均缓存输入Token", "缓存命中率", "缓存有效样本数",
+    "缓存覆盖率", "推理有效样本数", "推理覆盖率", "推理Token P90", "口径提示",
+]
+MODEL_TOKEN_DETAIL_HEADERS = [
+    "模型", "任务数", "子维度", "有效样本数", "覆盖率", "均值/整体比率",
+    "P50", "P90", "P95", "P99", "统计口径",
+]
+MODEL_TOKEN_NOTES = [
+    (
+        "Token模型对比",
+        "Token分布上方一行一个模型，下方按模型×子维度展示分布。五类Token的均值和分位数均按"
+        "该字段有效非负记录计算，0是有效值，缺失不补0；总Token指日志total_tokens，不是额外的总量合计列。",
+    ),
+    (
+        "缓存命中率",
+        "同一批有效任务的缓存输入Token之和÷输入Token之和，按输入Token加权，不平均单任务百分比。"
+        "仅纳入输入>0且0≤缓存输入≤输入的成对记录；分母为0、缺失及关系异常的记录不纳入，"
+        "覆盖率以该模型全部任务数为分母。缓存命中率的Pxx为单任务比率分布，不是整体加权比率。",
+    ),
+    (
+        "Token包含关系",
+        "缓存输入沿用cache_read_tokens字段，为输入中的缓存部分，不再次加到输入或总Token。"
+        "推理Token保留日志原值，不再次加到输出或总Token；推理Token大于输出Token时单列提示，"
+        "不能据此假设各模型推理统计口径相同，也不计算推理占输出比例。",
+    ),
+    (
+        "模型比较边界",
+        "模型名按日志原值分组，不合并别名或自动路由名称。线上任务、会话上下文和推理强度不同，"
+        "均值及命中率仅描述实际使用，不能直接解释为同题成本、能力或服务速度优劣。",
+    ),
+]
 
 VERSION_DIMENSIONS: tuple[tuple[str, str, str], ...] = (
     ("AstronStudio", "astron.desktop.version", "desktop_version"),
@@ -1643,7 +1692,7 @@ QUALITY_FIELDS: tuple[tuple[str, str, str], ...] = (
     ("input_tokens", "输入 Token", "缺失不按 0 计"),
     ("output_tokens", "输出 Token", "缺失不按 0 计"),
     ("reasoning_tokens", "推理 Token", "缺失不按 0 计"),
-    ("cache_read_tokens", "缓存读取 Token", "缺失不按 0 计"),
+    ("cache_read_tokens", "缓存输入 Token", "缺失不按 0 计；原缓存读取 Token"),
     ("total_tokens", "总 Token", "缺失不按 0 计"),
     ("user_hash", "用户哈希", "用于去标识化用户统计"),
     ("session_hash", "Session 哈希", "用于去标识化会话统计"),
@@ -2749,6 +2798,34 @@ def update_group(metrics: GroupMetrics, record: Mapping[str, Any]) -> None:
         metrics.success_count += int(status_is_success(status))
 
 
+def update_model_tokens(metrics: ModelTokenMetrics, record: Mapping[str, Any]) -> None:
+    valid = {}
+    for name, _ in TOKEN_FIELDS:
+        value = finite_nonnegative(record.get(name))
+        if value is not None:
+            valid[name] = value
+            metrics.values[name].append(value)
+    if valid and record.get("usage_scope") != "turn_total":
+        metrics.non_turn_usage_count += 1
+    input_tokens = valid.get("input_tokens")
+    cache_tokens = valid.get("cache_read_tokens")
+    if input_tokens is not None and cache_tokens is not None:
+        if cache_tokens > input_tokens:
+            metrics.cache_exceeds_input_count += 1
+        elif input_tokens > 0:
+            metrics.values["cache_hit_rate"].append(cache_tokens / input_tokens)
+            metrics.cache_input_sum += cache_tokens
+            metrics.cache_denominator_sum += input_tokens
+    output_tokens = valid.get("output_tokens")
+    reasoning_tokens = valid.get("reasoning_tokens")
+    if (
+        output_tokens is not None
+        and reasoning_tokens is not None
+        and reasoning_tokens > output_tokens
+    ):
+        metrics.reasoning_exceeds_output_count += 1
+
+
 def analyze_parquet(
     input_path: Path,
     rules: Sequence[CategoryRule],
@@ -2879,6 +2956,7 @@ def analyze_parquet(
                 )
             update_group(analysis.length_metrics[length_band], record)
             update_group(analysis.model_metrics[model], record)
+            update_model_tokens(analysis.model_token_metrics[model], record)
             for product, source_field, parquet_field in VERSION_DIMENSIONS:
                 version = str(record.get(parquet_field) or "").strip() or "未记录"
                 update_group(
@@ -3012,6 +3090,112 @@ def format_group_sheet(sheet: Any, start_row: int = 5) -> None:
         for cell in (row[9], row[10]):
             cell.number_format = "#,##0"
         row[11].number_format = "0.0%"
+
+
+def model_token_layout(analysis: DatasetAnalysis) -> dict[str, Any]:
+    ordered = sorted(
+        analysis.model_metrics, key=lambda name: (-analysis.model_metrics[name].count, name)
+    )
+    detail_header_row = len(ordered) + 8
+    detail_first_row = detail_header_row + 1
+    detail_last_row = detail_header_row + len(ordered) * len(MODEL_TOKEN_DIMENSIONS)
+    summary_rows, detail_rows = [], []
+    for model_index, model in enumerate(ordered):
+        count = analysis.model_metrics[model].count
+        metrics = analysis.model_token_metrics[model]
+        model_label = safe_excel_text(model)[0]
+        for field_name, label in MODEL_TOKEN_DIMENSIONS:
+            values = metrics.values[field_name]
+            is_rate = field_name == "cache_hit_rate"
+            if is_rate:
+                center = (
+                    metrics.cache_input_sum / metrics.cache_denominator_sum
+                    if metrics.cache_denominator_sum > 0 else None
+                )
+            else:
+                center = average(values)
+            detail_rows.append([
+                model_label, count, label, len(values), share(len(values), count), center,
+                *[linear_percentile(values, ratio) for ratio in (0.50, 0.90, 0.95, 0.99)],
+                "整体按输入加权" if is_rate else "有效非负值",
+            ])
+        warnings = []
+        if metrics.cache_exceeds_input_count:
+            warnings.append(f"缓存输入>输入：{metrics.cache_exceeds_input_count}条，命中率已排除")
+        if metrics.reasoning_exceeds_output_count:
+            warnings.append(f"推理Token>输出Token：{metrics.reasoning_exceeds_output_count}条，口径需核对")
+        if metrics.non_turn_usage_count:
+            warnings.append(f"Usage范围非turn_total或未标注：{metrics.non_turn_usage_count}条")
+
+        def lookup(offset: int, column: str) -> str:
+            label = MODEL_TOKEN_DIMENSIONS[offset][1]
+            return (
+                f'SUMIFS(${column}${detail_first_row}:${column}${detail_last_row},'
+                f'$A${detail_first_row}:$A${detail_last_row},$A{model_index + 5},'
+                f'$C${detail_first_row}:$C${detail_last_row},"{label}")'
+            )
+
+        def link(offset: int, column: str) -> str:
+            return f'=IF({lookup(offset, "D")}=0,"",{lookup(offset, column)})'
+
+        summary_rows.append([
+            model_label, count,
+            *[link(index, "F") for index in range(5)],
+            link(5, "F"), f'={lookup(5, "D")}', f'={lookup(5, "E")}',
+            f'={lookup(3, "D")}', f'={lookup(3, "E")}', link(3, "H"),
+            "；".join(warnings),
+        ])
+    return {
+        "summary_headers": MODEL_TOKEN_SUMMARY_HEADERS,
+        "summary_rows": summary_rows,
+        "detail_headers": MODEL_TOKEN_DETAIL_HEADERS,
+        "detail_header_row": detail_header_row,
+        "detail_rows": detail_rows,
+    }
+
+
+def write_model_token_sheet(sheet: Any, analysis: DatasetAnalysis) -> None:
+    layout = model_token_layout(analysis)
+    add_sheet_title(sheet, "模型 Token 对比与分布")
+    sheet.append([])
+    sheet.append(layout["summary_headers"])
+    for row in layout["summary_rows"]:
+        sheet.append(row)
+    detail_header = layout["detail_header_row"]
+    sheet.cell(detail_header - 2, 1, "模型 × 子维度分布明细")
+    for column, value in enumerate(layout["detail_headers"], start=1):
+        sheet.cell(detail_header, column, value)
+    for row in layout["detail_rows"]:
+        sheet.append(row)
+    last_row = detail_header + len(layout["detail_rows"])
+    configure_table_sheet(
+        sheet, last_row=last_row, last_column=14,
+        widths=(32, 12, 18, 18, 18, 18, 21, 16, 18, 16, 18, 16, 20, 62),
+    )
+    sheet.freeze_panes = "C5"
+    sheet.auto_filter.ref = None
+    for header_row, columns in ((4, 14), (detail_header, 11)):
+        style_table_header(list(sheet[header_row])[:columns])
+        sheet.row_dimensions[header_row].height = 36
+    for row in sheet.iter_rows(min_row=5, max_row=4 + len(layout["summary_rows"]), max_col=14):
+        for cell in row[2:7] + (row[12],):
+            cell.number_format = "#,##0.00"
+        for index in (7, 9, 11):
+            row[index].number_format = "0.0%"
+        row[13].alignment = Alignment(vertical="center", wrap_text=True)
+        sheet.row_dimensions[row[0].row].height = 40 if row[13].value else 24
+    for row in sheet.iter_rows(min_row=detail_header + 1, max_row=last_row, max_col=11):
+        row[4].number_format = "0.0%"
+        for cell in row[5:10]:
+            cell.number_format = "0.0%" if row[2].value == "缓存命中率" else "#,##0.00"
+        sheet.row_dimensions[row[0].row].height = 24
+    for name, address in (
+        ("ModelTokenComparison", f"A4:N{4 + len(layout['summary_rows'])}"),
+        ("ModelTokenDistribution", f"A{detail_header}:K{last_row}"),
+    ):
+        table = Table(displayName=name, ref=address)
+        table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showRowStripes=True)
+        sheet.add_table(table)
 
 
 def write_analysis_workbook(
@@ -3302,18 +3486,38 @@ def write_analysis_workbook(
         sheet = workbook.create_sheet(sheet_name)
         add_sheet_title(sheet, title)
         sheet.append([])
-        sheet.append(group_headers)
+        sheet.append(
+            group_headers[:6]
+            + ["平均耗时"]
+            + group_headers[6:9]
+            + ["平均总Token"]
+            + group_headers[9:]
+        )
         style_table_header(sheet[4])
         for name, metrics in sorted(
             metrics_map.items(), key=lambda item: (-item[1].count, item[0])
         ):
-            sheet.append(group_row(name, metrics, analysis.total_rows))
-        format_group_sheet(sheet)
+            values = group_row(name, metrics, analysis.total_rows)
+            sheet.append(
+                values[:6]
+                + [average(metrics.durations)]
+                + values[6:9]
+                + [average(metrics.total_tokens)]
+                + values[9:]
+            )
+        for row in sheet.iter_rows(min_row=5, max_row=sheet.max_row):
+            row[2].number_format = "0.0%"
+            for cell in row[6:9]:
+                cell.number_format = '0.000" 秒"'
+            row[10].number_format = "#,##0.00"
+            for cell in row[11:13]:
+                cell.number_format = "#,##0"
+            row[13].number_format = "0.0%"
         configure_table_sheet(
             sheet,
             last_row=sheet.max_row,
-            last_column=12,
-            widths=(32, 12, 10, 12, 12, 15, 14, 14, 17, 15, 15, 14),
+            last_column=14,
+            widths=(32, 12, 10, 12, 12, 15, 20, 14, 14, 17, 18, 15, 15, 14),
         )
 
     version_sheet = workbook.create_sheet("版本分布")
@@ -3366,36 +3570,7 @@ def write_analysis_workbook(
     )
 
     token_sheet = workbook.create_sheet("Token分布")
-    add_sheet_title(token_sheet, "Token 使用分布")
-    token_sheet.append([])
-    token_sheet.append(
-        ["Token类型", "有效记录数", "覆盖率", "平均值", "P50", "P90", "P95", "P99"]
-    )
-    style_table_header(token_sheet[4])
-    for field_name, label in TOKEN_FIELDS:
-        values = analysis.token_values[field_name]
-        token_sheet.append(
-            [
-                label,
-                len(values),
-                share(len(values), analysis.total_rows),
-                average(values),
-                linear_percentile(values, 0.50),
-                linear_percentile(values, 0.90),
-                linear_percentile(values, 0.95),
-                linear_percentile(values, 0.99),
-            ]
-        )
-    for row in token_sheet.iter_rows(min_row=5, max_row=token_sheet.max_row):
-        row[2].number_format = "0.0%"
-        for cell in row[3:8]:
-            cell.number_format = "#,##0"
-    configure_table_sheet(
-        token_sheet,
-        last_row=token_sheet.max_row,
-        last_column=8,
-        widths=(24, 18, 12, 16, 14, 14, 14, 14),
-    )
+    write_model_token_sheet(token_sheet, analysis)
 
     status_sheet = workbook.create_sheet("状态分布")
     add_sheet_title(status_sheet, "任务状态分布")
@@ -3515,6 +3690,13 @@ def write_analysis_workbook(
             "Trace ID + Span ID；缺失时回退 _index + _id，在 Parquet 中仅保留加盐哈希",
         ),
         ("缺失值", "缺失的耗时、Token 和状态不按 0 计"),
+        (
+            "模型均值",
+            "平均耗时按该模型有效非负 duration_seconds 计算，单位为秒；平均总Token按有效非负 total_tokens 计算。"
+            "两项分母分别为有效耗时数和有效总Token记录数，有效 0 纳入统计，无有效记录时对应均值为空；"
+            "不额外叠加输入、输出、推理或缓存 Token。",
+        ),
+        *MODEL_TOKEN_NOTES,
         ("分位数", "线性插值，仅使用有效非负数"),
         (
             "场景分类",

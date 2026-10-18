@@ -658,6 +658,143 @@ class AstronCodeProdUsageTests(unittest.TestCase):
         self.assertNotIn("alice", redacted)
         self.assertGreaterEqual(len(labels), 4)
 
+    def test_model_token_comparison_uses_paired_weighted_cache_rate(self) -> None:
+        analysis = MODULE.DatasetAnalysis(
+            total_rows=0, timezone_name="Asia/Shanghai", schema_version="test"
+        )
+        records = [
+            dict(input_tokens=100, cache_read_tokens=80, output_tokens=20, reasoning_tokens=5, total_tokens=120),
+            dict(input_tokens=900, cache_read_tokens=90, output_tokens=100, reasoning_tokens=50, total_tokens=1000),
+            dict(input_tokens=0, cache_read_tokens=0, output_tokens=0, reasoning_tokens=0, total_tokens=0),
+            dict(input_tokens=None, cache_read_tokens=9, output_tokens=7, reasoning_tokens=None, total_tokens=7),
+            dict(input_tokens=10, cache_read_tokens=11, output_tokens=4, reasoning_tokens=5, total_tokens=14),
+            dict(input_tokens=float("inf"), cache_read_tokens=-1, output_tokens=float("nan"), reasoning_tokens=-1, total_tokens=-1),
+        ]
+        for record in records:
+            record["usage_scope"] = "turn_total"
+            MODULE.update_group(analysis.model_metrics["model-a"], record)
+            MODULE.update_model_tokens(analysis.model_token_metrics["model-a"], record)
+            analysis.total_rows += 1
+        MODULE.update_group(analysis.model_metrics["model-b"], {})
+        MODULE.update_model_tokens(analysis.model_token_metrics["model-b"], {})
+        analysis.total_rows += 1
+        metrics = analysis.model_token_metrics["model-a"]
+        self.assertEqual(metrics.cache_exceeds_input_count, 1)
+        self.assertEqual(metrics.reasoning_exceeds_output_count, 1)
+        self.assertEqual(metrics.non_turn_usage_count, 0)
+        layout = MODULE.model_token_layout(analysis)
+        self.assertEqual(len(layout["summary_rows"]), 2)
+        self.assertEqual(len(layout["detail_rows"]), 12)
+        cache_row = layout["detail_rows"][5]
+        self.assertEqual(cache_row[2], "缓存命中率")
+        self.assertEqual(cache_row[3], 2)
+        self.assertAlmostEqual(cache_row[4], 2 / 6)
+        self.assertAlmostEqual(cache_row[5], 170 / 1000)
+        self.assertAlmostEqual(cache_row[6], 0.45)
+        self.assertNotAlmostEqual(cache_row[5], cache_row[6])
+        self.assertEqual(layout["detail_rows"][1][3], 4)
+        self.assertEqual(layout["detail_rows"][1][5], 252.5)
+        self.assertEqual(layout["detail_rows"][3][5], 15)
+        self.assertTrue(all(row[5] is None for row in layout["detail_rows"][6:]))
+        self.assertIn("缓存输入>输入：1条", layout["summary_rows"][0][-1])
+        self.assertIn("推理Token>输出Token：1条", layout["summary_rows"][0][-1])
+        with tempfile.TemporaryDirectory() as temporary_dir:
+            path = Path(temporary_dir) / "tokens.xlsx"
+            workbook = MODULE.Workbook()
+            MODULE.write_model_token_sheet(workbook.active, analysis)
+            workbook.save(path)
+            saved = load_workbook(path, data_only=False)
+            try:
+                sheet = saved.active
+                self.assertEqual(sheet.freeze_panes, "C5")
+                self.assertEqual(len(sheet.tables), 2)
+                self.assertIn('SUMIFS($D$11:$D$22', sheet["H5"].value)
+                self.assertIn('$A5,$C$11:$C$22,"缓存命中率"', sheet["H5"].value)
+                self.assertEqual(sheet["H5"].number_format, "0.0%")
+                self.assertAlmostEqual(sheet["F16"].value, 0.17)
+                self.assertEqual(sheet["F16"].number_format, "0.0%")
+                self.assertEqual(sheet["A6"].value, "model-b")
+                self.assertIn('$A6,$C$11:$C$22,"总Token"', sheet["C6"].value)
+            finally:
+                saved.close()
+
+    def test_model_averages_exclude_missing_and_preserve_zero(self) -> None:
+        analysis = MODULE.DatasetAnalysis(
+            total_rows=0, timezone_name="Asia/Shanghai", schema_version="test"
+        )
+        category_version, rules = MODULE.load_category_rules(
+            MODULE.DEFAULT_CATEGORY_RULES
+        )
+        for model, values in {
+            "model-a": [100, 201, 0, None, -1, float("nan"), float("inf")],
+            "model-b": [None, -1],
+            "model-c": [0],
+        }.items():
+            for value in values:
+                duration = value / 100 if value is not None else None
+                if model == "model-a" and value is None:
+                    duration = 6
+                record = {
+                    "total_tokens": value,
+                    "duration_seconds": duration,
+                }
+                MODULE.update_group(analysis.model_metrics[model], record)
+                MODULE.update_group(analysis.category_metrics[rules[-1].name], record)
+                MODULE.update_group(
+                    analysis.classification_method_metrics["规则未命中"], record
+                )
+                MODULE.update_group(
+                    analysis.length_metrics[MODULE.query_length_band(0)], record
+                )
+                for product, source_field, _ in MODULE.VERSION_DIMENSIONS:
+                    MODULE.update_group(
+                        analysis.version_metrics[product, source_field, "未记录"], record
+                    )
+                analysis.total_rows += 1
+        with tempfile.TemporaryDirectory() as temporary_dir:
+            path = Path(temporary_dir) / "analysis.xlsx"
+            MODULE.write_analysis_workbook(
+                analysis,
+                path,
+                input_path=Path("test.parquet"),
+                category_version=category_version,
+                rules=rules,
+            )
+            workbook = load_workbook(path, read_only=False, data_only=True)
+            try:
+                sheet = workbook["模型分布"]
+                self.assertEqual(sheet.max_column, 14)
+                self.assertEqual(sheet.auto_filter.ref, "A4:N7")
+                headers = [cell.value for cell in sheet[4]]
+                self.assertEqual(headers, [
+                    "维度值", "任务数", "占比", "用户数", "会话数", "有效耗时数",
+                    "平均耗时", "耗时P50", "耗时P90", "有效总Token记录数",
+                    "平均总Token", "总Token P50", "总Token P90", "Turn成功率",
+                ])
+                self.assertNotIn("总Token合计", headers)
+                rows = {
+                    row[0]: dict(zip(headers, row))
+                    for row in sheet.iter_rows(min_row=5, values_only=True)
+                }
+                self.assertEqual(rows["model-a"]["有效总Token记录数"], 3)
+                self.assertEqual(rows["model-a"]["有效耗时数"], 4)
+                self.assertAlmostEqual(rows["model-a"]["平均耗时"], 9.01 / 4)
+                self.assertAlmostEqual(rows["model-a"]["平均总Token"], 301 / 3)
+                self.assertEqual(rows["model-a"]["总Token P50"], 100)
+                self.assertAlmostEqual(rows["model-a"]["总Token P90"], 180.8)
+                self.assertIsNone(rows["model-b"]["平均耗时"])
+                self.assertIsNone(rows["model-b"]["平均总Token"])
+                self.assertEqual(rows["model-c"]["平均耗时"], 0)
+                self.assertEqual(rows["model-c"]["平均总Token"], 0)
+                self.assertEqual(sheet["G5"].number_format, '0.000" 秒"')
+                self.assertEqual(sheet["K5"].number_format, "#,##0.00")
+                self.assertEqual(sheet["N5"].number_format, "0.0%")
+                self.assertEqual(workbook["场景分类"].max_column, 13)
+                self.assertEqual(workbook["版本分布"].max_column, 14)
+                self.assertEqual(workbook["推理强度"].max_column, 12)
+            finally:
+                workbook.close()
+
     def test_snapshot_parquet_and_workbooks_reconcile(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_dir:
             directory = Path(temporary_dir)
@@ -782,6 +919,14 @@ class AstronCodeProdUsageTests(unittest.TestCase):
             self.assertEqual(
                 sum(metric.count for metric in analysis_stats.model_metrics.values()),
                 2,
+            )
+            self.assertEqual(
+                analysis_stats.model_token_metrics["model-a"].values["input_tokens"],
+                [90],
+            )
+            self.assertEqual(
+                analysis_stats.model_token_metrics["model-b"].values["output_tokens"],
+                [10],
             )
             self.assertEqual(
                 sum(
