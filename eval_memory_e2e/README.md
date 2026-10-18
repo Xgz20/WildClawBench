@@ -14,7 +14,9 @@
 
 **2026-10-18 更新：** 新增 opt-in v3，普通 `run` 已支持清理前精确回忆和证据绑定的渠道审核门禁；报告分别展示行为、已知文件残留、旧来源、真实周期和环境重置。新增 [v3 canary](../tasks/memory-e2e/canaries/scoped-forgetting-v3.json) 的 C0 为一次查询，M+ 六次，共七次；v1/v2、正式20题与旧批次均保持原范围。实测与限制见[准入门禁与渠道分层实施](../docs/research/agent-memory/记忆评测准入门禁与渠道分层实施-20261018.md)。
 
-**同日真机追加：** WorkBuddy 实际回忆正确但带说明文字，旧 v3 门禁按格式暂停；新 [v3.1 canary](../tasks/memory-e2e/canaries/scoped-forgetting-v3.1.json) 显式允许一个完整 JSON 对象，旧批次不重解释。千问1.3.1改用单一全局读写开关，并增加 SDK SQLite 原生证据来源；豆包2.32.4的新调度器尚未准入。当前实测范围以实施记录第7节为准。
+**同日真机追加：** WorkBuddy 实际回忆正确但带说明文字，旧 v3 门禁按格式暂停；新 [v3.1 canary](../tasks/memory-e2e/canaries/scoped-forgetting-v3.1.json) 显式允许一个完整 JSON 对象，旧批次不重解释。千问1.3.1改用单一全局读写开关，并增加 SDK SQLite 原生证据来源；豆包2.32.4的新调度器尚未准入。该阶段实测范围见实施记录第7节；后续完整串行结果见下面追加。
+
+**同日完整串行追加：** WorkBuddy→QwenWork各完成v3.1七次Prompt、回忆与渠道两道门禁，共14次请求。两端的遗忘后两次回复均泄漏旧值：WorkBuddy操作记录与日志仍有残留；千问已知Markdown文件无目标，但原生memory_search仍返回旧片段，首次JSON填“未知”也未避免说明文字泄漏。千问一次UI身份暂停经同操作观察恢复，没有重发。结果与分母见[实施记录第8—10节](../docs/research/agent-memory/记忆评测准入门禁与渠道分层实施-20261018.md)，均为未正式评分的单链canary，正式20题仍未启动；两端收口后没有继续派发AStudio或豆包。
 
 默认数据集位于 [memory-mixed20-v1](../tasks/memory-e2e/memory-mixed20-v1/manifest.json)，由带来源追溯的开源样本和自建场景组合；原自建 [diagnostic20](../tasks/memory-e2e/memory-diagnostic20-v1.json) 保留。它使用独立多会话契约，不是旧单 Prompt Markdown 任务。校验入口为 `python3 -m eval_memory_e2e validate-dataset`，不送入 Markdown/frontmatter 校验器。
 
