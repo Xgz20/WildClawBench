@@ -139,7 +139,7 @@ function buildView(workbook, name, view, existingSheet = null) {
   sheet.getRange(`A${formatStart}:${last}${Math.max(end, 1)}`).format.font.size = 11;
   sheet.getRange(`A${headerRow}:${last}${headerRow}`).format.rowHeight = 38;
   if (view.title) section(sheet, headerRow - 1, view.headers.length, view.title);
-  sheet.getRange("A:A").format.columnWidth = 31;
+  sheet.getRange("A:A").format.columnWidth = 46;
   for (let i = 1; i < view.headers.length; i++) {
     const col = columnName(i + 1);
     sheet.getRange(`${col}:${col}`).format.columnWidth = view.headers[i].includes("Cache Write") ? 24 : 18;
@@ -151,7 +151,8 @@ function buildView(workbook, name, view, existingSheet = null) {
   if (name === "效率对比") sheet.getRange("I:I").format.columnWidth = 25;
   if (name === "分类对比") sheet.getRange("C:H").format.columnWidth = 24;
   if (view.rows.length) {
-    sheet.getRange(`A${dataRow}:${last}${end}`).format.rowHeight = 26;
+    sheet.getRange(`A${dataRow}:${last}${end}`).format.rowHeight = 42;
+    sheet.getRange(`A${dataRow}:A${end}`).format.wrapText = true;
     if (["总览", "分类对比", "难度对比", "Agent能力对比", "模态对比"].includes(name)) {
       const scoreLast = name === "总览" ? "B" : last;
       scoreScale(sheet, `B${dataRow}:${scoreLast}${end}`, 100);
@@ -243,14 +244,15 @@ function buildView(workbook, name, view, existingSheet = null) {
 function buildGroupedTools(workbook, name, view) {
   const sheet = workbook.worksheets.add(name);
   sheet.showGridLines = false;
-  widths(sheet, { A: 31, B: 54, C: 18, D: 28 });
+  widths(sheet, { A: 46, B: 54, C: 18, D: 28 });
   for (const group of view.groups) {
     section(sheet, group.title_row, group.headers.length, group.title);
     table(sheet, group.header_row, group.headers, group.rows);
     const body = sheet.getRange(`A${group.data_start_row}:D${group.data_end_row}`);
     body.format.font.name = "Arial";
     body.format.font.size = 11;
-    body.format.rowHeight = 26;
+    body.format.rowHeight = 42;
+    sheet.getRange(`A${group.data_start_row}:A${group.data_end_row}`).format.wrapText = true;
     sheet.getRange(`B${group.data_start_row}:B${group.data_end_row}`).format.wrapText = true;
     sheet.getRange(`C${group.data_start_row}:C${group.data_end_row}`).format.numberFormat = "#,##0";
     sheet.getRange(`C${group.data_start_row}:C${group.data_end_row}`).format.horizontalAlignment = "right";
@@ -329,7 +331,8 @@ function buildCoverage(workbook, data) {
   );
   if (rows.length) {
     sheet.getRange(`E5:F${end}`).format.numberFormat = "#,##0.000";
-    sheet.getRange(`A5:M${end}`).format.rowHeight = 32;
+    sheet.getRange(`A5:M${end}`).format.rowHeight = 72;
+    sheet.getRange(`A5:A${end}`).format.wrapText = true;
     sheet.getRange(`K5:K${end}`).format.wrapText = true;
   }
   const exceptionRow = end + 2;

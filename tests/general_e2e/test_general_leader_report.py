@@ -2,6 +2,7 @@ import copy
 import importlib.util
 from pathlib import Path
 import unittest
+from types import SimpleNamespace
 
 PATH = Path(__file__).resolve().parents[2] / "tools/report/skills/general-e2e/report-general-e2e/scripts/leader_report.py"
 spec = importlib.util.spec_from_file_location("leader_token_comparison", PATH)
@@ -27,6 +28,106 @@ def tool_fixture(totals, statuses, cases=None, target=0):
     return {"target": {"label": labels[target]}, "tables": {
         "总览": {"rows": [[label, None, n] for label, n in zip(labels, cases)]},
         "工具调用对比": {"groups": groups}}}
+
+
+def comparison_fixture():
+    units = [{"unit_id": uid, "harness": {"id": harness, "version": version}}
+             for uid, harness, version in [("target", "studio", "3.5"), ("peer", "studio", "3.5"),
+                                          ("old", "studio", "3.3"), ("external", "other", "1.0")]]
+    labels = {u["unit_id"]: f"{u['unit_id']}@{u['harness']['id']} {u['harness']['version']}" for u in units}
+    source = {"units": units, "presentation": {"unit_labels": labels}}
+    order = [labels[u["unit_id"]] for u in units]
+    def table(headers, rows):
+        return {"headers": headers, "rows": rows, "formats": {"1": "0.00", "2": "0.00"}, "notes": []}
+    tables = {"总览": table(["模型@Harness", "总平均分", "用例数"], [[label, score, 60] for label, score in zip(order, [90, 80, 98, 100])]),
+              "效率对比": table(["模型@Harness", "总 Token", "平均 Token"], [[label, 60*v, v] for label, v in zip(order, [100, 200, 300, 50])])}
+    tables["效率对比"]["cell_annotations"] = {f"{i}:2": {"status": "complete", "complete_cases": 60, "total_cases": 60} for i in range(4)}
+    for name in LEADER.DIMENSIONS:
+        tables[name] = table(["模型@Harness", "总平均分", "维度甲", "维度乙"],
+                             [[label, 90, a, b] for label, a, b in zip(order, [90.004, 89.996, 99, 100], [70, 80, 100, 100])])
+    timing = table(["模型@Harness", "总任务耗时(s)", "总模型耗时(s)", "总模型耗时占比", "平均任务耗时(s)",
+                    "平均模型耗时(s)", "任务耗时P50(s)", "模型耗时P50(s)", "任务耗时P90(s)", "模型耗时P90(s)"],
+                   [[label, 60*v, None, None, v, None, v, None, v, None] for label, v in zip(order, [10, 20, 100, 1])])
+    timing["coverage_table"] = table(["模型@Harness", "模型耗时完整用例"], [[label, "0/60"] for label in order])
+    tables["效率对比"]["timing_table"] = timing
+    tool = tool_fixture([100, 200, 300, 50], ["complete"]*4)["tables"]["工具调用对比"]
+    for group, label in zip(tool["groups"], order):
+        group["title"] = label
+        group["rows"][0][0] = label
+        group["headers"] = ["模型@Harness", "工具", "调用数", "计数覆盖"]
+    tool["formats"] = {"2": "#,##0"};tool["notes"] = [];tables["工具调用对比"] = tool
+    data = {"target": {"label": labels["target"], "harness": "studio"},
+            "scope": {"unique_task_count": 60, "unit_count": 4}, "tables": tables,
+            "comparison_context": LEADER.comparison_context(source, "target"),
+            "dimensions": {name: {"combination_view": tables[name]["rows"]} for name in LEADER.DIMENSIONS}}
+    return source, data, labels
+
+
+class GeneralLeaderScopeAndLayoutTests(unittest.TestCase):
+    def test_same_client_version_is_primary_and_all_comparison_rows_remain(self):
+        source, data, labels = comparison_fixture()
+        before = copy.deepcopy(data)
+        self.assertEqual(data["comparison_context"]["primary_unit_ids"], ["peer"])
+        text = LEADER.summaries(data)
+        self.assertIn(labels["peer"], text["分类对比"])
+        self.assertNotIn(labels["old"], text["分类对比"])
+        self.assertNotIn(labels["external"], text["分类对比"])
+        self.assertIn(labels["external"], text["总览"])
+        self.assertNotIn(labels["external"], text["效率对比"])
+        self.assertIn("0.50", text["效率对比"])
+        self.assertEqual(data, before)
+        self.assertTrue(all(len(data["tables"][name]["rows"]) == 4 for name in LEADER.DIMENSIONS))
+
+    def test_differences_use_unrounded_scores_and_secondary_reference_is_explicit(self):
+        source, data, labels = comparison_fixture()
+        source["leader_config"] = {"secondary_tables": ["难度对比"]}
+        data["comparison_context"] = LEADER.comparison_context(source, "target")
+        text = LEADER.summaries(data)
+        self.assertIn("维度甲高 0.01 分", text["分类对比"])
+        self.assertIn(labels["external"], text["难度对比"])
+        self.assertNotIn(labels["external"], text["总览"])
+        source["leader_config"]["secondary_tables"] = ["not-a-table"]
+        with self.assertRaisesRegex(ValueError, "SECONDARY_CONFIG_INVALID"):
+            LEADER.comparison_context(source, "target")
+
+    def test_no_matching_version_falls_back_and_all_scope_is_available(self):
+        source, _, _ = comparison_fixture()
+        source["units"][1]["harness"]["version"] = "3.4"
+        context = LEADER.comparison_context(source, "target")
+        self.assertEqual(context["primary_scope"], "all-combinations")
+        self.assertEqual(context["fallback_reason"], "no-same-version-peer")
+        self.assertIsNone(context["fixed_version"])
+        source["units"][1]["harness"]["version"] = "3.5"
+        source["leader_config"] = {"comparison_scope": "all-combinations"}
+        self.assertEqual(len(LEADER.comparison_context(source, "target")["primary_unit_ids"]), 3)
+
+    def test_filtering_resource_peers_preserves_original_partial_coverage_indices(self):
+        data = fixture([None, 100, 20, 5], ["unavailable", "complete", "partial", "complete"], target=1)
+        result = LEADER.average_token_comparisons(data, ["Model2@Harness2"])
+        self.assertEqual(len(result["comparisons"]), 1)
+        self.assertEqual(result["comparisons"][0]["basis"], "upper_bound")
+        self.assertEqual(result["unavailable_peers"], [])
+        self.assertEqual(result["comparisons"][0]["ratio"], 5)
+
+    def test_token_and_task_timing_summaries_are_in_their_own_subsections(self):
+        _, data, _ = comparison_fixture()
+        data["narratives"] = LEADER.summaries(data)
+        token = data["narratives"]["效率对比"]
+        timing = data["narratives"]["任务耗时对比"]
+        markdown = LEADER.render(data)
+        self.assertIn("### Token对比\n\n" + token + "\n\n|", markdown)
+        self.assertIn("### 任务耗时对比\n\n" + timing + "\n\n|", markdown)
+        self.assertEqual(markdown.count(timing), 1)
+        self.assertLess(markdown.index(token), markdown.index("### 任务耗时对比"))
+        # Previously saved leader JSON stored both paragraphs in one field.
+        del data["narratives"]["任务耗时对比"]
+        data["narratives"]["效率对比"] = token + "\n\n" + timing
+        self.assertIn("### 任务耗时对比\n\n" + timing + "\n\n|", LEADER.render(data))
+
+    def test_cli_options_do_not_allow_a_peer_scope_without_a_target(self):
+        args = SimpleNamespace(target_unit=None, leader_comparison_scope="same-harness-version")
+        with self.assertRaisesRegex(ValueError, "REQUIRE_TARGET"):
+            LEADER.configure({}, args)
 
 
 class GeneralLeaderToolComparisonTests(unittest.TestCase):

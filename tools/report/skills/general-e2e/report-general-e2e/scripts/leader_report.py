@@ -16,6 +16,66 @@ import zipfile
 DIMENSIONS = ["分类对比", "Agent能力对比", "难度对比", "模态对比"]
 
 
+def add_arguments(parser):
+    parser.add_argument("--leader-comparison-scope", choices=["same-harness-version", "all-combinations"],
+                        help="领导版主要比较范围；默认优先同Harness、同客户端版本，表格始终保留全部单元")
+    parser.add_argument("--leader-secondary-table", action="append", choices=["none", "总览", *DIMENSIONS],
+                        help="可重复：允许补充总体最高分外部参照的章节；默认仅总览，none关闭补充")
+
+
+def configure(data, args):
+    target = getattr(args, "target_unit", None)
+    scope = getattr(args, "leader_comparison_scope", None)
+    secondary = getattr(args, "leader_secondary_table", None)
+    if not target:
+        if scope is not None or secondary is not None:
+            raise ValueError("LEADER_OPTIONS_REQUIRE_TARGET")
+        return
+    config = deepcopy(data.get("leader_config", {}))
+    config["target_unit_id"] = target
+    if scope is not None:
+        config["comparison_scope"] = scope
+    if secondary is not None:
+        if "none" in secondary and secondary != ["none"]:
+            raise ValueError("LEADER_SECONDARY_CONFIG_INVALID")
+        config["secondary_tables"] = [] if secondary == ["none"] else list(dict.fromkeys(secondary))
+    data["leader_config"] = config
+
+
+def comparison_context(data, target_unit_id):
+    units = {u["unit_id"]: u for u in data["units"]}
+    if len(units) != len(data["units"]):
+        raise ValueError("LEADER_DUPLICATE_UNIT")
+    config = data.get("leader_config", {})
+    scope = config.get("comparison_scope", "same-harness-version")
+    secondary = config.get("secondary_tables", ["总览"])
+    if scope not in ["same-harness-version", "all-combinations"]:
+        raise ValueError("LEADER_COMPARISON_SCOPE_INVALID")
+    if (not isinstance(secondary, list) or any(s not in ["总览", *DIMENSIONS] for s in secondary)
+            or len(secondary) != len(set(secondary))):
+        raise ValueError("LEADER_SECONDARY_CONFIG_INVALID")
+    target = units[target_unit_id]
+    harness = target["harness"]
+    peers = [u for u in units if u != target_unit_id]
+    matching = [u for u in peers if harness.get("version") and
+                units[u]["harness"].get("id") == harness.get("id") and
+                units[u]["harness"].get("version") == harness["version"]]
+    use_matching = scope == "same-harness-version" and bool(matching)
+    primary = matching if use_matching else peers
+    labels = data["presentation"]["unit_labels"]
+    return {"requested_scope": scope, "primary_scope": "same-harness-version" if use_matching else "all-combinations",
+            "fallback_reason": "no-same-version-peer" if scope == "same-harness-version" and not matching else None,
+            "fixed_harness": harness.get("id") if use_matching else None,
+            "fixed_version": harness.get("version") if use_matching else None,
+            "fixed_client_label": labels[target_unit_id].rsplit("@", 1)[-1] if use_matching else None,
+            "primary_unit_ids": primary, "primary_labels": [labels[u] for u in primary],
+            "secondary_tables": secondary, "all_units_retained_in_tables": True}
+
+
+def narrative_peer_labels(data):
+    return data.get("comparison_context", {}).get("primary_labels")
+
+
 def workbook_cells(path):
     ns = {"s": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
     with zipfile.ZipFile(path) as z:
@@ -52,7 +112,7 @@ def num(value, digits=2, percent=False, grouping=False):
     return format(d, ("," if grouping else "") + f".{digits}f") + ("%" if percent else "")
 
 
-def average_token_comparisons(data):
+def average_token_comparisons(data, peer_labels=None):
     """Compare unrounded workbook values while retaining each coverage bound."""
     label = data["target"]["label"]
     view = data["tables"]["效率对比"]
@@ -65,6 +125,8 @@ def average_token_comparisons(data):
               "target_coverage": coverage, "comparisons": [], "unavailable_peers": [], "zero_peers": []}
     for i, row in enumerate(view["rows"]):
         if i == index:
+            continue
+        if peer_labels is not None and row[0] not in peer_labels:
             continue
         peer_value = row[2]
         if not numeric(peer_value) or peer_value < 0:
@@ -120,7 +182,7 @@ def render_efficiency_summary(data, comparison):
     return text
 
 
-def render_task_timing_summary(data):
+def render_task_timing_summary(data, peer_labels=None):
     label = data["target"]["label"]
     timing = data["tables"]["效率对比"].get("timing_table")
     if not timing:
@@ -138,13 +200,14 @@ def render_task_timing_summary(data):
         text += f"，P50 为 {num(row[p50], 3, grouping=True)} 秒，P90 为 {num(row[p90], 3, grouping=True)} 秒"
     text += "。"
     peers = [f"{peer[0]} 的 {num(Decimal(str(row[avg])) / Decimal(str(peer[avg])))} 倍"
-             for peer in timing["rows"] if peer[0] != label and isinstance(peer[avg], (int, float)) and peer[avg] > 0]
+             for peer in timing["rows"] if peer[0] != label and (peer_labels is None or peer[0] in peer_labels)
+             and isinstance(peer[avg], (int, float)) and peer[avg] > 0]
     if peers:
         text += "按可核验用量，平均任务耗时约为" + "、".join(peers) + "。"
     if timing.get("cell_annotations", {}).get(f"{index}:{avg}", {}).get("status") == "partial":
         text += "目标组计时覆盖不足，平均值是已知用量下限；分位数未补算。"
     if any(timing.get("cell_annotations", {}).get(f"{i}:{avg}", {}).get("status") == "partial"
-           for i, peer in enumerate(timing["rows"]) if peer[0] != label):
+           for i, peer in enumerate(timing["rows"]) if peer[0] != label and (peer_labels is None or peer[0] in peer_labels)):
         text += "部分参照计时不完整，相关倍数只比较已知用量。"
     text += "任务耗时包含已确认失败任务的原生耗时，流程等待另计。"
     model = indices.get("总模型耗时(s)")
@@ -163,7 +226,7 @@ def render_task_timing_summary(data):
     return text
 
 
-def tool_call_comparisons(data):
+def tool_call_comparisons(data, peer_labels=None):
     """Compare per-frozen-case call counts, retaining partial-count bounds."""
     label = data["target"]["label"]
     groups = data["tables"]["工具调用对比"].get("groups", [])
@@ -182,6 +245,8 @@ def tool_call_comparisons(data):
     result = {"target": target, "comparisons": [], "unavailable_peers": [], "zero_peers": [], "composition": None}
     for group in groups:
         if group["title"] == label:
+            continue
+        if peer_labels is not None and group["title"] not in peer_labels:
             continue
         peer = observation(group)
         if peer["average_calls"] is None:
@@ -326,8 +391,9 @@ def extract(workbook, data, target_unit_id):
               "scope": {**data["scope"], "model_view_applicable": len(model_peers) > 1,
                         "harness_view_applicable": len(harness_peers) > 1,
                         "comparison_design": "selected-model-harness-combinations",
-                        "comparison_gap_basis": "difference-of-displayed-two-decimal-scores"},
+                        "comparison_gap_basis": "difference-of-unrounded-final-excel-values"},
               "tables": tables, "dimensions": {}, "narratives": {}}
+    result["comparison_context"] = comparison_context(data, target_unit_id)
     for name in DIMENSIONS:
         view = tables[name]
         result["dimensions"][name] = {
@@ -339,49 +405,84 @@ def extract(workbook, data, target_unit_id):
     result["resource_comparisons"] = {"average_tokens": average_token_comparisons(result),
                                       "tool_calls": tool_call_comparisons(result)}
     result["narratives"] = summaries(result)
+    result["efficiency_subsections"] = {
+        "token_summary": result["narratives"]["效率对比"],
+        "task_timing_summary": result["narratives"].get("任务耗时对比"),
+    }
     return result
 
 
 def summaries(data):
     label, tables = data["target"]["label"], data["tables"]
     target = lambda name: next(r for r in tables[name]["rows"] if r[0] == label)
-    peers = lambda name: [r for r in tables[name]["rows"] if r[0] != label]
+    primary = narrative_peer_labels(data)
+    peers = lambda name: [r for r in tables[name]["rows"] if r[0] != label and (primary is None or r[0] in primary)]
     numeric = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)
     o = target("总览")
-    other = [r[1] for r in peers("总览") if numeric(r[1])]
-    ref = (f"参照组合均分范围为 {num(min(other))}–{num(max(other))}。" if other
-           else "本批次没有可比较的参照均分。")
-    out = {"总览": f"{label} 本轮均分为 {num(o[1])}。" + ref + "执行完成情况与能力得分分别统计，已确认的执行失败按真实产物评分。"}
+    context = data.get("comparison_context", {})
+    prefix = (f"固定 {context['fixed_client_label']}，"
+              if context.get("primary_scope") == "same-harness-version" else "")
+    def compare(delta):
+        if delta == 0:
+            return "相同"
+        return f"{'高' if delta > 0 else '低'} {num(abs(delta))} 分"
+    overall = [f"相较{r[0]}{compare(Decimal(str(o[1]))-Decimal(str(r[1])))}" for r in peers("总览") if numeric(r[1]) and numeric(o[1])]
+    out = {"总览": prefix + f"{label} 均分为 {num(o[1])}。" + ("；".join(overall)+"。" if overall else "没有可比较的参照均分。") +
+           "执行完成情况与有效评分分母分别统计，真实能力零分保留。"}
     clean = lambda h: re.sub(r"平均分.*$", "", re.sub(r"^\d+_", "", h))
-    def gaps(name):
+    def gaps(name, peer):
         row = target(name)
         values = []
         for i, heading in enumerate(tables[name]["headers"][2:], 2):
-            other_values = [r[i] for r in peers(name) if numeric(r[i])]
-            if numeric(row[i]) and other_values:
-                values.append((clean(heading), Decimal(num(row[i])) - Decimal(num(max(other_values)))))
+            if numeric(row[i]) and numeric(peer[i]):
+                values.append((clean(heading), Decimal(str(row[i])) - Decimal(str(peer[i]))))
         return sorted(values, key=lambda x: x[1], reverse=True)
     for name in DIMENSIONS:
-        values = gaps(name)
-        if not values:
+        descriptions = []
+        for peer in peers(name):
+            values = gaps(name, peer)
+            if not values:
+                continue
+            chosen = [values[0]] if len(values) == 1 else [values[0], values[-1]]
+            descriptions.append(f"相较{peer[0]}，" + "，".join(f"{heading}{compare(delta)}" for heading, delta in chosen))
+        if not descriptions:
             out[name] = f"{label} 的有效维度得分与覆盖范围见表；本批次没有可比较的参照维度分数。"
             continue
-        def compare(item):
-            heading, delta = item
-            if delta == 0: return f"{heading}与参照最高值相同"
-            return f"{heading}{'高于' if delta > 0 else '低于'}参照最高值 {num(abs(delta))} 分"
-        chosen = [values[0]] if len(values) == 1 else [values[0], values[-1]]
-        out[name] = f"{label} 在" + "，在".join(compare(item) for item in chosen) + "。"
+        out[name] = prefix + f"{label}：" + "；".join(descriptions) + "。"
         if name == "分类对比": out[name] += "表中为模型与客户端的组合对照，不能单独归因于某一因素。"
         elif name == "Agent能力对比": out[name] += "七维得分来自检查点评分，工具次数不替代能力得分。"
         elif name == "难度对比": out[name] += "各分层的冻结用例数见表头，缺失评分不补零。"
         else: out[name] += "结果范围限于表中列出的输入模态。"
-    out["效率对比"] = render_efficiency_summary(data, average_token_comparisons(data))
-    task_timing = render_task_timing_summary(data)
+    out["效率对比"] = render_efficiency_summary(data, average_token_comparisons(data, primary))
+    task_timing = render_task_timing_summary(data, primary)
     if task_timing:
-        out["效率对比"] += "\n\n" + task_timing
-    out["工具调用对比"] = render_tool_call_summary(tool_call_comparisons(data))
+        out["任务耗时对比"] = task_timing
+    out["工具调用对比"] = render_tool_call_summary(tool_call_comparisons(data, primary))
+    # Supplemental references never change the primary peer group or the tables.
+    references = [r for r in tables["总览"]["rows"] if r[0] != label and numeric(r[1])]
+    best = max(references, key=lambda r: r[1]) if references else None
+    if best is not None and primary is not None and best[0] not in primary:
+        for name in context.get("secondary_tables", []):
+            if name == "总览" and numeric(o[1]):
+                out[name] += f"补充跨配置参照：其余参照中总体均分最高的{best[0]}为{num(best[1])}，目标单元{compare(Decimal(str(o[1]))-Decimal(str(best[1])))}。"
+            elif name in DIMENSIONS:
+                peer = next((r for r in tables[name]["rows"] if r[0] == best[0]), None)
+                values = gaps(name, peer) if peer else []
+                if values:
+                    heading, delta = max(values, key=lambda x: abs(x[1]))
+                    out[name] += f"补充跨配置参照：与总体均分最高的{best[0]}相比，{heading}{compare(delta)}。"
     return out
+
+
+def efficiency_sections(data):
+    sections = data.get("efficiency_subsections")
+    if sections:
+        return sections["token_summary"], sections.get("task_timing_summary")
+    token = data["narratives"]["效率对比"]
+    timing = data["narratives"].get("任务耗时对比")
+    if timing is None and "\n\n" in token and data["tables"]["效率对比"].get("timing_table"):
+        token, timing = token.split("\n\n", 1)
+    return token, timing
 
 
 def md_table(headers, rows, formats=None, annotations=None):
@@ -410,7 +511,12 @@ def render(data):
              "以下结论只基于得分、执行状态和可核验资源，不包含低分用例的模型侧／Harness 侧因果归因。", ""]
     titles={"总览":"一、总览","分类对比":"二、分类维度","Agent能力对比":"三、Agent能力","难度对比":"四、难度等级","模态对比":"五、模态对比","效率对比":"六、效率与资源","工具调用对比":"七、工具调用"}
     for name in ["总览",*DIMENSIONS,"效率对比","工具调用对比"]:
-        v=tables[name]; lines += ["## "+titles[name], "",data["narratives"][name], ""]
+        v=tables[name]; lines += ["## "+titles[name], ""]
+        if name == "效率对比":
+            token_summary, timing_summary = efficiency_sections(data)
+            lines += ["### Token对比", "", token_summary, ""]
+        else:
+            lines += [data["narratives"][name], ""]
         if name in DIMENSIONS:
             lines += md_table(v["headers"],data["dimensions"][name]["combination_view"],v["formats"])+[""]
         elif name=="工具调用对比":
@@ -423,7 +529,10 @@ def render(data):
             c=v["coverage_table"];lines += ["完整统计用例数 / 冻结用例数；部分统计单列：","",*md_table(c["headers"],c["rows"]),""]
         if v.get("timing_table"):
             t=v["timing_table"]
-            lines += ["### 任务耗时对比", "", *md_table(t["headers"],t["rows"],t["formats"],t.get("cell_annotations")), "", *t["notes"], ""]
+            lines += ["### 任务耗时对比", ""]
+            if name == "效率对比" and timing_summary:
+                lines += [timing_summary, ""]
+            lines += [*md_table(t["headers"],t["rows"],t["formats"],t.get("cell_annotations")), "", *t["notes"], ""]
             c=t["coverage_table"]
             lines += ["任务耗时完整统计覆盖：", "", *md_table(c["headers"],c["rows"]), ""]
         for extra in v.get("additional_views", []):

@@ -14,6 +14,22 @@ SPEC.loader.exec_module(REPORT)
 
 
 class SelectedReportSourcesTest(unittest.TestCase):
+    def test_explicit_data_output_root_does_not_change_source_verification_boundary(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp)/"source";source.mkdir()
+            output = Path(temp)/"admin";output.mkdir()
+            path = output/"verified.json"
+            with self.assertRaisesRegex(ValueError, "DATA_OUTPUT_UNSAFE"):
+                REPORT.data_output_path(path, source)
+            self.assertEqual(REPORT.data_output_path(path, source, output), path.resolve())
+            path.write_text("existing")
+            with self.assertRaisesRegex(ValueError, "DATA_OUTPUT_UNSAFE"):
+                REPORT.data_output_path(path, source, output)
+            with self.assertRaisesRegex(ValueError, "DATA_OUTPUT_UNSAFE"):
+                REPORT.data_output_path(Path(temp)/"escape.json", source, output)
+            REPORT.ROOT = source.resolve()
+            with self.assertRaisesRegex(ValueError, "PACKAGE_OUTSIDE_ROOT"):
+                REPORT.verify_source_package(output, "0"*64, "unit", ["task"])
     def test_source_config_uses_frozen_unit_and_rejects_client_or_model_drift(self):
         target={"unit_id":"unit","harness":{"id":"doubaowork","version":"2.31.10"},"model":{"requested_id":"current"},"execution_mode":"automatic"}
         REPORT.verify_source_unit_config({"unit":target},target)

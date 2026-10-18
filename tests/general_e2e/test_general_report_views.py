@@ -195,6 +195,60 @@ class GeneralReportViewsTests(unittest.TestCase):
         self.assertNotEqual(rows[0][0], rows[1][0])
         self.assertTrue(all(row[0].startswith("未知模型@") for row in rows))
 
+    def test_client_versions_distinguish_units_without_a_round_suffix(self):
+        other = copy.deepcopy(self.data["units"][0]);other["unit_id"] = "second-version"
+        other["harness"]["version"] = "99.0"
+        copied = copy.deepcopy(self.data["tasks"])
+        for row in copied:row["unit_id"] = other["unit_id"]
+        self.data["units"].append(other);self.data["tasks"].extend(copied)
+        views = VIEWS.build_views(self.data, self.references)
+        labels = views["unit_labels"]
+        self.assertNotEqual(labels[other["unit_id"]], labels[self.data["units"][0]["unit_id"]])
+        self.assertIn("99.0", labels[other["unit_id"]])
+        self.assertEqual(len(views["score_details"]), 2)
+        self.assertTrue(all("round" not in label for label in labels.values()))
+
+    def test_client_option_display_override_preserves_unknown_actual_model(self):
+        unit = self.data["units"][0];unit["harness"].update(id="qwenwork", version="1.2.0")
+        for row in self.data["tasks"]:row["model"].update(actual_id=None, verification_status="unverified")
+        before = copy.deepcopy(self.data["tasks"])
+        self.data["display_overrides"] = {"unit_model_labels": {unit["unit_id"]: {"label":"高级", "reason":"用户指定客户端选项名"}}}
+        views = VIEWS.build_views(self.data, self.references)
+        self.assertEqual(views["unit_labels"][unit["unit_id"]], "高级@QwenWork 1.2.0")
+        self.assertEqual(self.data["tasks"], before)
+
+    def test_compatibility_exception_requires_exact_audited_runs_and_immutable_audit(self):
+        rows = {}
+        proofs = []
+        signatures = {(s*64, s*64) for s in ['a','b']}
+        for uid, token in [('first','a'),('second','b')]:
+            row = {"unit_id":uid, "execution_attempt_id":"exec-"+uid,
+                   "task_definition":{"status":"complete", "task_sha256":token*64, "contract_sha256":token*64},
+                   "lineage":{"execution_record_sha256":"e"*64,"score_sha256":"f"*64,"source_batch_id":"batch-"+uid}}
+            rows[uid] = row
+            proofs.append({"unit_id":uid,"task_id":"task","execution_attempt_id":row["execution_attempt_id"],
+                           "source_batch_id":row["lineage"]["source_batch_id"],"execution_record_sha256":"e"*64,
+                           "score_sha256":"f"*64,"task_sha256":token*64,"contract_sha256":token*64})
+        path = self.root/'compatibility.json';write_json(path,{"status":"PASS","material_runs":proofs})
+        entry = {"status":"PASS","accepted_signatures":[list(x) for x in signatures],
+                 "comparison_signature":["a"*64,"a"*64],"audit_path":str(path),"audit_sha256":sha256(path)}
+        data = {"definition_compatibility":{"task":entry},"lineage":{"compatibility_audit_sha256":sha256(path)}}
+        self.assertEqual(CASES.compatible_definition_signatures(data,'task',rows,signatures),{('a'*64,'a'*64)})
+        changed = copy.deepcopy(rows);changed['first']['execution_attempt_id']='different'
+        with self.assertRaisesRegex(ValueError,'RUN_SCOPE'):
+            CASES.compatible_definition_signatures(data,'task',changed,signatures)
+        changed = copy.deepcopy(rows);changed['first']['lineage']['score_sha256']='0'*64
+        with self.assertRaisesRegex(ValueError,'RUN_BINDING_DRIFT'):
+            CASES.compatible_definition_signatures(data,'task',changed,signatures)
+        changed = copy.deepcopy(rows);changed['first']['task_definition']['status']='unavailable'
+        with self.assertRaisesRegex(ValueError,'MATERIAL_UNAVAILABLE'):
+            CASES.compatible_definition_signatures(data,'task',changed,signatures)
+        with self.assertRaisesRegex(ValueError,'BINDING_INVALID'):
+            CASES.compatible_definition_signatures(data,'task',rows,signatures|{('c'*64,'c'*64)})
+        path.write_text(path.read_text()+' ')
+        with self.assertRaisesRegex(ValueError,'AUDIT_DRIFT'):
+            CASES.compatible_definition_signatures(data,'task',rows,signatures)
+
     def test_infrastructure_and_scoring_anomalies_count_once_per_task(self):
         row = next(row for row in self.data["tasks"] if row["score_status"] == "evaluation_error")
         row["execution_status"] = "infrastructure_error"

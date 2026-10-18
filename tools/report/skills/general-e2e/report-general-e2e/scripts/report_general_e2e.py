@@ -1462,10 +1462,25 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
     validated = validate_batch_inputs(Path(args.batch_root))
     generated_at = generated_at_value(args.generated_at)
     data = aggregate(validated, generated_at)
+    if getattr(args, "display_config", None):
+        display_path = Path(args.display_config).expanduser()
+        if display_path.is_symlink():
+            raise ReportError("REPORT_DISPLAY_CONFIG_UNSAFE")
+        data["display_overrides"] = read_json(display_path, "REPORT_DISPLAY_CONFIG_INVALID")
+        data["lineage"]["display_config_sha256"] = sha256_file(display_path)
+        try:
+            data["presentation"] = report_views.build_views(data, report_views.load_references())
+        except (ValueError, KeyError, OSError) as exc:
+            raise ReportError(f"REPORT_DISPLAY_CONFIG_INVALID: {exc}") from exc
     if getattr(args, "target_unit", None):
         if args.target_unit not in data["presentation"]["unit_labels"]:
             raise ReportError("REPORT_TARGET_UNIT_NOT_FOUND")
         data["leader_config"] = {"target_unit_id": args.target_unit, "mode": "preview", "style": "eval-report-target-focused"}
+    import leader_report
+    try:
+        leader_report.configure(data, args)
+    except ValueError as exc:
+        raise ReportError(str(exc)) from exc
     excel_name = excel_report_filename(generated_at)
     data["artifact_filenames"] = {"excel": excel_name, "leader_markdown": "通用场景端到端自动化评测报告.md", "audit_markdown": "通用场景端到端评测审计.md"}
     if getattr(args, "target_unit", None):
@@ -1566,6 +1581,9 @@ def build_parser() -> argparse.ArgumentParser:
     generate.add_argument("--output-dir", required=True)
     generate.add_argument("--generated-at")
     generate.add_argument("--target-unit", help="目标 unit ID；从导出的 Excel 提取领导版数据，生成目标单元总结")
+    generate.add_argument("--display-config", type=Path, help="报告展示覆盖JSON；不改变来源模型验证信息")
+    import leader_report
+    leader_report.add_arguments(generate)
     generate.add_argument("--node", default=os.environ.get("GENERAL_E2E_NODE", "node"))
     generate.add_argument(
         "--node-modules",

@@ -3,6 +3,7 @@ from collections import Counter
 import hashlib
 import json
 import re
+from pathlib import Path
 from report_display import fixed_number
 
 SECTION_KEYS = {"Prompt": "prompt", "Expected Behavior": "expected", "Grading Criteria": "criteria",
@@ -155,6 +156,51 @@ def detail_sheet_names(units, labels):
     return result
 
 
+def compatible_definition_signatures(data, task_id, rows, signatures):
+    """Accept only explicitly audited signatures bound to these exact source runs."""
+    entry = data.get("definition_compatibility", {}).get(task_id)
+    if entry is None:
+        return signatures
+    try:
+        path = Path(entry["audit_path"])
+        expected = entry["audit_sha256"]
+        approved = {tuple(s) for s in entry["accepted_signatures"]}
+        comparison = tuple(entry["comparison_signature"])
+        if (entry.get("status") != "PASS" or not path.is_absolute() or not path.is_file() or path.is_symlink()
+                or not re.fullmatch(r"[0-9a-f]{64}", expected)
+                or expected != data["lineage"].get("compatibility_audit_sha256")
+                or not signatures or not signatures <= approved or comparison not in approved
+                or any(len(s) != 2 for s in approved)):
+            raise ValueError("REPORT_COMPATIBILITY_BINDING_INVALID")
+        raw = path.read_bytes()
+        if hashlib.sha256(raw).hexdigest() != expected:
+            raise ValueError("REPORT_COMPATIBILITY_AUDIT_DRIFT")
+        audit = json.loads(raw)
+        if audit.get("status") != "PASS":
+            raise ValueError("REPORT_COMPATIBILITY_AUDIT_NOT_PASSED")
+        for row in rows.values():
+            definition = row.get("task_definition", {})
+            if definition.get("status") != "complete":
+                raise ValueError("REPORT_COMPATIBILITY_MATERIAL_UNAVAILABLE")
+            source_unit = row.get("source_unit_id", row["unit_id"])
+            attempt = row["execution_attempt_id"]
+            proofs = [p for p in audit["material_runs"] if p.get("task_id") == task_id
+                      and p.get("unit_id") == source_unit and p.get("execution_attempt_id") == attempt]
+            if len(proofs) != 1 or not attempt:
+                raise ValueError("REPORT_COMPATIBILITY_RUN_SCOPE")
+            proof, lineage = proofs[0], row["lineage"]
+            signature = (definition.get("task_sha256"), definition.get("contract_sha256"))
+            if (signature not in approved or signature != (proof.get("task_sha256"), proof.get("contract_sha256"))
+                    or not lineage.get("execution_record_sha256") or not lineage.get("source_batch_id")
+                    or proof.get("execution_record_sha256") != lineage["execution_record_sha256"]
+                    or proof.get("source_batch_id") != lineage["source_batch_id"]
+                    or proof.get("score_sha256") != lineage.get("score_sha256")):
+                raise ValueError("REPORT_COMPATIBILITY_RUN_BINDING_DRIFT")
+    except (KeyError, TypeError, OSError) as exc:
+        raise ValueError("REPORT_COMPATIBILITY_BINDING_INVALID") from exc
+    return {comparison}
+
+
 def build_case_views(data, units, labels, table, categories, modalities):
     by_task = {}
     for row in data["tasks"]:
@@ -170,6 +216,7 @@ def build_case_views(data, units, labels, table, categories, modalities):
             raise ValueError("REPORT_TASK_METADATA_CONFLICT")
         definitions = [r.get("task_definition", {}) for r in rows.values() if r.get("task_definition", {}).get("status") == "complete"]
         signatures = {(d.get("task_sha256"), d.get("contract_sha256")) for d in definitions}
+        signatures = compatible_definition_signatures(data, task_id, rows, signatures)
         if len(signatures) > 1:
             raise ValueError("REPORT_TASK_DEFINITION_CONFLICT")
         definition = definitions[0] if definitions else {}

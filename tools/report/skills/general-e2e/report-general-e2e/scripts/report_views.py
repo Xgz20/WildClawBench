@@ -359,6 +359,9 @@ def build_views(data, references):
             applied_overrides[unit["unit_id"]] = dict(requested_label)
         harness_id = unit["harness"]["id"]
         harness = references["harnesses"].get(harness_id, HARNESSES.get(harness_id, harness_id))
+        version = unit["harness"].get("version")
+        if version:
+            harness += " " + str(version)
         label = f"{model}@{harness}"
         labels[label] += 1
         prepared.append((unit, rows, label))

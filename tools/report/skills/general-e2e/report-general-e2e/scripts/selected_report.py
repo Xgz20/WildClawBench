@@ -20,6 +20,11 @@ def safe_file(path,parent=None):
     if parent is not None: require(path.resolve().is_relative_to(Path(parent).resolve()),"SELECTION_FILE_OUTSIDE_ROOT")
     return path
 
+def data_output_path(path, workspace_root, output_root=None):
+    target=Path(path).resolve();boundary=Path(output_root or workspace_root).resolve()
+    require(target.is_relative_to(boundary) and not target.exists(),"SELECTION_DATA_OUTPUT_UNSAFE")
+    return target
+
 def verify_source_package(root,expected,unit_id,task_ids,*,allow_subset=False):
     root=Path(root).resolve();require(root.is_relative_to(ROOT),"SELECTION_PACKAGE_OUTSIDE_ROOT")
     p=safe_file(root/"package-manifest.json",ROOT);require(sha(p)==expected,"SELECTION_PACKAGE_MANIFEST_DRIFT")
@@ -203,10 +208,13 @@ def main(argv=None):
     parser.add_argument("--resource-root",type=Path);parser.add_argument("--display-config",type=Path)
     parser.add_argument("--target-unit");parser.add_argument("--output-dir",type=Path)
     parser.add_argument("--data-output",type=Path,help="Write verified report JSON without rendering a workbook; must be a new file inside workspace-root")
+    parser.add_argument("--data-output-root",type=Path,help="Explicit destination boundary for data-output; source verification still uses workspace-root")
+    leader_report.add_arguments(parser)
     parser.add_argument("--node",default=os.environ.get("GENERAL_E2E_NODE","node"));parser.add_argument("--node-modules",type=Path)
     import maas_model_timing
     maas_model_timing.add_arguments(parser)
     args=parser.parse_args(argv);ROOT=args.workspace_root.resolve();BATCH=args.batch_root.resolve()
+    require(not args.data_output_root or args.data_output,"SELECTION_DATA_OUTPUT_ROOT_REQUIRES_DATA_OUTPUT")
     batch=load(safe_file(BATCH/"manifest.json",ROOT));source=load(safe_file(args.source_index,ROOT));selection=load(safe_file(args.task_index,ROOT))
     require(selection["source_index_sha256"]==sha(args.source_index),"SELECTION_SOURCE_INDEX_DRIFT")
     canonical=batch["task_ids"];units={u["unit_id"]:u for u in batch["units"]}
@@ -277,8 +285,9 @@ def main(argv=None):
         for entry in data["display_overrides"].get("unit_model_labels",{}).values():entry.setdefault("reason",entry.get("source"))
     data["presentation"]=report.report_views.build_views(data,report.report_views.load_references())
     if args.target_unit:require(args.target_unit in data["presentation"]["unit_labels"],"SELECTION_TARGET_UNKNOWN")
+    leader_report.configure(data,args)
     if args.data_output:
-        target=args.data_output.resolve();require(target.is_relative_to(ROOT) and not target.exists(),"SELECTION_DATA_OUTPUT_UNSAFE")
+        target=data_output_path(args.data_output,ROOT,args.data_output_root)
         if not args.output_dir:
             maas_model_timing.apply_options(data,args,target.with_suffix(""))
         report.write_json(target,data)
