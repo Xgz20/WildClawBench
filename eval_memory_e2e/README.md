@@ -24,6 +24,8 @@ AStudio传输状态读取只准入已核验的renderer源码指纹，客户端�
 
 默认数据集位于 [memory-mixed20-v1](../tasks/memory-e2e/memory-mixed20-v1/manifest.json)，由带来源追溯的开源样本和自建场景组合；原自建 [diagnostic20](../tasks/memory-e2e/memory-diagnostic20-v1.json) 保留。它使用独立多会话契约，不是旧单 Prompt Markdown 任务。校验入口为 `python3 -m eval_memory_e2e validate-dataset`，不送入 Markdown/frontmatter 校验器。
 
+**2026-10-19 观察与准备加固：** 已发送且点击回执完整的AStudio原操作可只读沿原生库／rollout恢复观察，保留发送前账号依据并明确标记当前账号未重查；新派发仍走完整桌面UI。新Profile冻结30秒发送前RPC恢复预算和120秒原生接受观察窗，旧Profile不升级。新增Memory专用项目导航恢复、刷新后只读等待、CDP准备诊断与被动DOM发送事件取证；General/Web共享源码没有修改。旧成功C0只读重观察与一个新C0均已完成；完整三步控制仍未通过，一次点击后原生接受未确认，后续暂停。具体结果与豆包队列采集缺口见[实施记录第12节](../docs/research/agent-memory/记忆评测准入门禁与渠道分层实施-20261018.md#12-2026-10-19astudio-观察传输与项目准备加固)。
+
 ## 运行环境和快速验证
 
 从当前 checkout/worktree 根运行。编排、数据和报告只需要 Python 3.11 标准库；原生预检另外需要 Node ≥22、现有 General Driver 依赖及受支持的客户端。DoubaoWork Driver 的锁定依赖安装在其目录，未安装时预检保留进程错误，不能当成产品不支持。

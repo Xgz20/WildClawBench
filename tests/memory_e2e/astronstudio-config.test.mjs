@@ -1,6 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import {verifyRecordedConfiguration,aStudioCatalogModelId,aStudioGatewayCatalogProjection,aStudioTransportProfileForSource,readAStudioRpcTransport,waitForAStudioRpcReady,waitForAStudioFrozenUi,waitForAStudioForeground,dispatchAStudioOnce,clickAStudioStableTarget,aStudioConfigurationFields,aStudioDomSubmitExpression,aStudioAcceptanceState} from '../../eval_memory_e2e/native/astronstudio.mjs';
+import {verifyRecordedConfiguration,aStudioCatalogModelId,aStudioGatewayCatalogProjection,aStudioTransportProfileForSource,readAStudioRpcTransport,waitForAStudioRpcReady,waitForAStudioClickTransport,aStudioNativeObservationEligible,connectAStudioNativeObservation,aStudioProjectUiExpression,aStudioProjectNavigationExpression,waitForAStudioReload,traceAStudioPreparation,waitForAStudioProjectBinding,waitForAStudioFrozenUi,waitForAStudioForeground,dispatchAStudioOnce,aStudioSendEventsExpression,withAStudioSendEvents,clickAStudioStableTarget,aStudioConfigurationFields,aStudioDomSubmitExpression,aStudioAcceptanceState} from '../../eval_memory_e2e/native/astronstudio.mjs';
+import {requestHash} from '../../eval_memory_e2e/native/common.mjs';
 const session={turn_id:'owned-turn',cwd:'/tmp/owned'};
 const frozen={model_display:'Spark-X2.5',reasoning:'High',permissions:'完全访问'};
 const context=()=>({turn_id:'owned-turn',cwd:'/tmp/owned',model:'builtin/'+Buffer.from('spark-x2.5').toString('base64url'),effort:'high',approval_policy:'never',sandbox_policy:{type:'danger-full-access'}});
@@ -46,6 +47,74 @@ test('RPC readiness requires consecutive observations of the same live connectio
   const result=await waitForAStudioRpcReady(async()=>sequence[i++],{attempts:4,pause:async()=>{}});
   assert.equal(result.samples,4);
   await assert.rejects(()=>waitForAStudioRpcReady(async()=>({ready:false}),{attempts:2,pause:async()=>{}}),/TRANSPORT_NOT_READY/);
+});
+test('a transient pre-click disconnect waits for stable open and presses only once',async()=>{
+  let tick=0,reads=0;const events=[],sequence=[false,true,true];
+  const result=await clickAStudioStableTarget({send:async(_,v)=>events.push(v)},'p','/w',{
+    read:async()=>({ready:true,thread_id:'owned',x:1,y:2}),pause:async()=>{},
+    beforePress:()=>waitForAStudioClickTransport(async()=>({ready:sequence[reads++],identities:[{host:'owned'}]}),{
+      maxWaitMs:100,now:()=>tick,pause:async()=>{tick+=20}})});
+  assert.equal(result.clicked,true);assert.equal(reads,3);assert.equal(events.filter(e=>e.type==='mousePressed').length,1);
+});
+test('pre-click wait expiry leaves zero presses and the legacy zero-wait policy remains unchanged',async()=>{
+  let tick=0,reads=0;const read=async()=>{reads++;return {ready:false,state:'connecting'}};
+  const old=await waitForAStudioClickTransport(read,{maxWaitMs:0,now:()=>tick});assert.equal(old.ready,false);assert.equal(reads,1);
+  const events=[];const result=await clickAStudioStableTarget({send:async(_,v)=>events.push(v)},'p','/w',{
+    read:async()=>({ready:true,thread_id:'owned',x:1,y:2}),pause:async()=>{},
+    beforePress:()=>waitForAStudioClickTransport(read,{maxWaitMs:100,now:()=>tick,pause:async()=>{tick+=50}})});
+  assert.equal(result.clicked,false);assert.equal(result.rpc.transport_wait_expired,true);assert.equal(events.some(e=>e.type==='mousePressed'),false);
+  await assert.rejects(()=>waitForAStudioClickTransport(read,{maxWaitMs:Infinity}),/WAIT_POLICY/);
+});
+function sentObservation() {
+  const config={app_version:'3.5.0',model_display:'GLM-5.2',reasoning:'High',permissions:'完全访问',account_fingerprint:'a'.repeat(64),memory_settings:{primary:{enabled:false}}};
+  const request={mode:'native',harness:'AstronStudio',action:'execute_step',transport_action:'observe',expected_config:config};
+  return {request,state:{phase:'invoked',thread_id:'12345678-1234-1234-1234-123456789abc',requestHash:requestHash(request),
+    config,click_result:{clicked:true},click_returned_at:'2026-10-19T03:00:00.000Z'}};
+}
+test('native-only observation requires the exact sent intent and cannot become a first send',()=>{
+  const original=sentObservation();assert.equal(aStudioNativeObservationEligible(original.request,original.state),true);
+  for(const change of [x=>x.request.transport_action='dispatch',x=>x.request.mode='fixture',x=>x.request.harness='Codex',
+    x=>x.state.phase='prepared',x=>x.state.phase='invoking',x=>x.state.phase='pre_send_rejected',
+    x=>x.state.click_result.clicked=false,x=>x.state.requestHash='other',x=>x.state.thread_id='unverified',x=>x.state.click_returned_at='unknown']) {
+    const value=structuredClone(original);change(value);assert.equal(aStudioNativeObservationEligible(value.request,value.state),false);
+  }
+});
+test('native observation uses dispatch account evidence without UI or auth calls and rejects config drift',async()=>{
+  const {state}=sentObservation();const calls=[];const deps={checkEnvironment:async()=>calls.push('environment'),
+    readIdentity:()=>{calls.push('identity');return {pid:42,version:'3.5.0'}},
+    readMemory:()=>{calls.push('memory');return structuredClone(state.config.memory_settings)}};
+  const live=await connectAStudioNativeObservation(state,deps);
+  assert.equal(live.client,null);assert.equal(live.observation_evidence.current_account_rechecked,false);
+  assert.equal(live.observation_evidence.account_identity_basis,'verified-dispatch-auth-session-uid');
+  assert.deepEqual(calls,['environment','identity','memory']);
+  await assert.rejects(()=>connectAStudioNativeObservation(state,{...deps,readIdentity:()=>({pid:42,version:'other'})}),/NATIVE_CONFIG_DRIFT/);
+  await assert.rejects(()=>connectAStudioNativeObservation(state,{...deps,readMemory:()=>({primary:{enabled:true}})}),/NATIVE_CONFIG_DRIFT/);
+});
+test('the opt-in native acceptance window does not change the legacy identity budget',()=>{
+  const now=Date.now(),state={phase:'invoked',click_returned_at:new Date(now-31000).toISOString()};
+  assert.equal(aStudioAcceptanceState(state,now),'unconfirmed');assert.equal(aStudioAcceptanceState(state,now,120),'pending');
+  assert.equal(aStudioAcceptanceState(state,now+120000,120),'unconfirmed');
+});
+const projectReady=()=>({thread_id:'new',editor_count:1,editor_empty:true,workspace_count:1,workspace_path:'/owned',
+  dialog_count:0,blocking_count:0,stable_ui:true,pristine:true,projects:[{project_id:'target',workspace_root:'/owned'}]});
+test('the serialized project observation reads the visible route and full workspace path without mutations',()=>{
+  const editor={getClientRects:()=>[1],innerText:''},workspace={getClientRects:()=>[1],getAttribute:()=>'/owned'};
+  const document={querySelectorAll:s=>s.includes('composer-editor')?[editor]:s.includes('workspace-picker')?[workspace]:[]};
+  const value=vm.runInNewContext(aStudioProjectUiExpression(),{document,location:{hash:'#/owned-thread'},getComputedStyle:()=>({visibility:'visible'})});
+  assert.equal(value.thread_id,'owned-thread');assert.equal(value.workspace_path,'/owned');assert.equal(value.editor_empty,true);
+});
+test('workspace hydration refreshes the current route and accepts only exact native project binding',async()=>{
+  let i=0;const ready=projectReady(),old={...ready,thread_id:'old',projects:[{project_id:'previous',workspace_root:'/previous'}]};
+  const result=await waitForAStudioProjectBinding(async()=>i++===0?old:ready,'/owned','target',{attempts:2,pause:async()=>{}});
+  assert.equal(result.observation.thread_id,'new');assert.equal(result.observations.length,2);
+  await assert.rejects(()=>waitForAStudioProjectBinding(async()=>old,'/owned','target',{attempts:2,pause:async()=>{}}),/NOT_READY/);
+});
+test('project hydration never adopts a draft, another directory, a modal, active work or unstable UI',async()=>{
+  for(const mutate of [x=>x.editor_empty=false,x=>x.workspace_path='/other',x=>x.dialog_count=1,x=>x.blocking_count=1,
+    x=>x.projects.push({project_id:'duplicate',workspace_root:'/owned'}),x=>x.stable_ui=false,x=>x.pristine=false]) {
+    const value=projectReady();mutate(value);
+    await assert.rejects(()=>waitForAStudioProjectBinding(async()=>value,'/owned','target',{attempts:1,pause:async()=>{}}));
+  }
 });
 test('the transport getter read rejects offline and unknown states and never returns the auth token',async()=>{
   for(const state of ['open','connecting','closed','authentication-required','unknown']) {
@@ -165,4 +234,89 @@ test('AStudio identity wait is separate from model execution and old unknown sen
   assert.equal(aStudioAcceptanceState(state,now+30000),'unconfirmed');
   assert.equal(aStudioAcceptanceState({phase:'invoked'},now),'unconfirmed');
   assert.equal(aStudioAcceptanceState({phase:'prepared'},now),'not_started');
+});
+
+function navigationDom(change=()=>{}) {
+  let clicks=0;
+  const visible={getClientRects:()=>[1]};
+  const button={...visible,disabled:false,closest:()=>null,getAttribute:()=>'在 测试 中新建任务',
+    getBoundingClientRect:()=>({x:20,y:20,width:30,height:20}),contains:e=>e===button,click:()=>clicks++};
+  const motion={inert:false,getAttribute:()=>null};
+  const row={closest:()=>motion,querySelectorAll:()=>[button]};
+  const editor={...visible,innerText:''},workspace={...visible,getAttribute:()=>'/owned'};
+  const env={document:{querySelectorAll:s=>s.includes('composer-editor')?[editor]:s.includes('workspace-picker')?[workspace]:s.includes('data-project-hover-anchor')?[row]:[],elementFromPoint:()=>button},
+    location:{hash:'#/owned-thread'},getComputedStyle:()=>({visibility:'visible'}),innerWidth:500,innerHeight:500};
+  change({env,editor,workspace,motion,row,button});return {env,clicks:()=>clicks};
+}
+test('exact project navigation clicks only its new-task button and rechecks safety atomically',()=>{
+  const project='12345678-1234-1234-1234-123456789abc';
+  for(const mutate of [null,x=>x.editor.innerText='draft',x=>x.env.location.hash='#/other',x=>x.motion.inert=true,
+    x=>x.button.disabled=true,x=>x.row.querySelectorAll=()=>[x.button,x.button],x=>x.env.document.elementFromPoint=()=>({})]) {
+    const dom=navigationDom(mutate??(()=>{}));
+    const result=vm.runInNewContext(aStudioProjectNavigationExpression(project,'/owned','owned-thread','click'),dom.env);
+    assert.equal(dom.clicks(),mutate?0:1);assert.equal(result.clicked,!mutate);
+  }
+  assert.throws(()=>aStudioProjectNavigationExpression('unsafe-selector','/owned','owned-thread','click'),/NAVIGATION_POLICY/);
+});
+test('preparation diagnostics retain the failed CDP call and callsite without payloads or replay',async()=>{
+  let calls=0;const records=[];
+  const client={send:async()=>{calls++;throw Error('timeout SECRET')},evaluate(expression){return this.send('Runtime.evaluate',{expression})}};
+  await assert.rejects(()=>traceAStudioPreparation(client,c=>c.evaluate('SECRET_PAYLOAD'),async r=>records.push(r)),/timeout/);
+  assert.equal(calls,1);assert.equal(records.length,1);assert.equal(records[0].commands[0].status,'failed');
+  assert.equal(records[0].commands[0].method,'Runtime.evaluate');assert.equal(records[0].commands[0].expression_sha256.length,64);
+  assert.equal(records[0].commands[0].call_site.length>0,true);assert.equal(JSON.stringify(records).includes('SECRET'),false);
+  assert.equal(records[0].prompt_sent,false);
+});
+
+test('an idle projection reload runs once and waits through context replacement using only reads',async()=>{
+  let reloaded=0,reads=0,tick=0;const methods=[];
+  const client={send:async method=>{methods.push(method);return {frameTree:{frame:{id:'main',loaderId:reloaded?'new':'old'}}}},
+    evaluate:async expression=>{assert.equal(expression,'document.readyState === "complete"');if(++reads===1)throw Error('Inspected target navigated or closed');return true;}};
+  const result=await waitForAStudioReload(client,async()=>{reloaded++;return {native:'result'}},{maxWaitMs:50,now:()=>tick,pause:async()=>{tick+=10}});
+  assert.equal(reloaded,1);assert.equal(reads,2);assert.equal(result.evidence.loader_id,'new');assert.equal(result.evidence.reload_count,1);
+  assert.deepEqual(new Set(methods),new Set(['Page.getFrameTree']));
+});
+test('reload observation never repeats navigation on deadline, foreign frame or unknown error',async()=>{
+  for(const mode of ['stale','foreign','unknown']){
+    let reloads=0,tick=0;
+    const client={send:async()=>({frameTree:{frame:{id:mode==='foreign'&&reloads?'other':'main',loaderId:mode==='stale'||!reloads?'old':'new'}}}),
+      evaluate:async()=>{throw Error('unclassified failure')}};
+    await assert.rejects(()=>waitForAStudioReload(client,async()=>{reloads++},{maxWaitMs:20,now:()=>tick,pause:async()=>{tick+=10}}));
+    assert.equal(reloads,1);
+  }
+});
+test('project binding uses an elapsed control budget even when native reads are slow',async()=>{
+  let tick=0,reads=0;const value={...projectReady(),stable_ui:false};
+  await assert.rejects(()=>waitForAStudioProjectBinding(async()=>{reads++;tick+=40;return value},'/owned','target',{
+    attempts:150,maxWaitMs:30,now:()=>tick,pause:async()=>{}}),/NOT_READY/);
+  assert.equal(reads,1);
+});
+
+function eventDom(){
+  const queue=[],listeners=new Map();
+  const element=name=>({getClientRects:()=>[1],addEventListener:(t,fn,c)=>{assert.equal(c,true);listeners.set(name+':'+t,fn)},
+    removeEventListener:(t,fn,c)=>{assert.equal(listeners.get(name+':'+t),fn);assert.equal(c,true);listeners.delete(name+':'+t)}});
+  const form=element('form'),button={...element('button'),form},editor={...element('editor'),closest:()=>form};
+  const env=vm.createContext({document:{querySelectorAll:s=>s.includes('composer-editor')?[editor]:[button]},
+    location:{hash:'#/owned-thread'},getComputedStyle:()=>({visibility:'visible'}),queueMicrotask:fn=>queue.push(fn)});
+  return {listeners,env,client:{evaluate:async expression=>vm.runInContext(expression,env)},emit:(name,type)=>{
+    const event={isTrusted:true,defaultPrevented:false};listeners.get(name+':'+type)?.(event);event.defaultPrevented=true;
+    while(queue.length)queue.shift()();
+  }};
+}
+test('passive send evidence records click and submit without altering the send or retaining listeners',async()=>{
+  const dom=eventDom(),evidence=[];let sends=0;const op='op-'+'a'.repeat(64);
+  const result=await withAStudioSendEvents(dom.client,op,'owned-thread',async()=>{sends++;dom.emit('button','click');dom.emit('form','submit');return {clicked:true}},async r=>evidence.push(r));
+  assert.equal(result.clicked,true);assert.equal(sends,1);assert.equal(dom.listeners.size,0);
+  assert.deepEqual(Array.from(evidence[0].events,e=>e.type),['click','submit']);assert.equal(evidence[0].events[0].default_prevented_after_dispatch,true);
+  assert.equal(evidence[0].intercepted,false);assert.equal(evidence[0].dropped_events,0);
+});
+test('passive event cleanup never retries an unknown send and does not remove a foreign observer',async()=>{
+  const dom=eventDom();let sends=0,recorded=0;const op='op-'+'b'.repeat(64);
+  await assert.rejects(()=>withAStudioSendEvents(dom.client,op,'owned-thread',async()=>{sends++;throw Error('unknown click result')},async()=>recorded++),/unknown click/);
+  assert.equal(sends,1);assert.equal(recorded,1);assert.equal(dom.listeners.size,0);
+  await dom.client.evaluate(aStudioSendEventsExpression(op,'owned-thread','install'));
+  await assert.rejects(()=>dom.client.evaluate(aStudioSendEventsExpression('op-'+'c'.repeat(64),'owned-thread','take')),/OWNER_UNVERIFIED/);
+  assert.equal(dom.listeners.size,6);
+  await dom.client.evaluate(aStudioSendEventsExpression(op,'owned-thread','take'));assert.equal(dom.listeners.size,0);
 });

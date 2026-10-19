@@ -3,9 +3,9 @@ import {execFileSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
 import {realpath,stat,readFile} from 'node:fs/promises';
 import {discoverMainTarget, readUiConfiguration, prepareExecutionUi, fillPrompt, ensureSendTargetReady,
-  inspectSendTarget, currentThreadId} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs';
+  inspectSendTarget, currentThreadId, clickSidebarToggle, PROJECT_NEW_TASK_LABEL} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs';
 import {WorkBuddyCdpClient as CdpClient} from '../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/ui.mjs';
-import {queryNativeSessions, withStateSnapshot} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs';
+import {queryNativeSessions, withStateSnapshot,queryPristineThread,queryProjectForThread,queryExactProjectsForWorkspace} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs';
 import {isBlockingActiveSession, classifyNativeState} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs';
 import {readRolloutFile,analyzeRollout} from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-rollout.mjs';
 import {context, sha, requestHash, readJson, saveState, artifact, withUiLock, requireGui,
@@ -85,6 +85,17 @@ export async function waitForAStudioRpcReady(read,{attempts=300,pause=()=>new Pr
   }
   const error=Error('ASTUDIO_RPC_TRANSPORT_NOT_READY');error.observation=last;throw error;
 }
+export async function waitForAStudioClickTransport(read,{maxWaitMs=0,now=Date.now,pause=()=>new Promise(ok=>setTimeout(ok,200))}={}) {
+  if(!Number.isFinite(maxWaitMs)||maxWaitMs<0||maxWaitMs>60000)throw Error('ASTUDIO_PRE_CLICK_WAIT_POLICY');
+  const started=now();let previous=null,samples=0;
+  for(;;) {
+    const observed=await read();samples++;
+    const identity=observed?.ready===true?JSON.stringify(observed.identities):null;
+    if(identity&&(maxWaitMs===0||identity===previous))return {...observed,samples,waited_ms:now()-started};
+    if(now()-started>=maxWaitMs)return {...observed,ready:false,samples,waited_ms:now()-started,transport_wait_expired:true};
+    previous=identity;await pause();
+  }
+}
 export async function dispatchAStudioOnce(state,click,persist) {
   state.phase='invoking';await persist(state);
   const result=await click();
@@ -93,6 +104,45 @@ export async function dispatchAStudioOnce(state,click,persist) {
   state.click_returned_at=new Date().toISOString();
   state.phase=result.clicked?'invoked':'pre_send_rejected';await persist(state);
   return result;
+}
+export function aStudioSendEventsExpression(operationId,threadId,action) {
+  if(!/^op-[a-f0-9]{64}$/u.test(operationId)||!['install','take'].includes(action))throw Error('ASTUDIO_SEND_OBSERVER_POLICY');
+  return `(()=>{
+    const key='__wcbMemoryAStudioSendEvents',id=${JSON.stringify(operationId)},thread=${JSON.stringify(threadId)},action=${JSON.stringify(action)};
+    if(action==='take'){
+      const saved=globalThis[key];if(!saved||saved.id!==id)throw Error('ASTUDIO_SEND_OBSERVER_OWNER_UNVERIFIED');
+      for(const [element,type,listener] of saved.listeners)element.removeEventListener(type,listener,true);
+      delete globalThis[key];return {events:saved.events,event_count:saved.event_count,dropped_events:Math.max(0,saved.event_count-saved.events.length),thread_id:thread,observed_route:location.hash,
+        source:'passive-dom-event-listeners',intercepted:false};
+    }
+    if(globalThis[key])throw Error('ASTUDIO_SEND_OBSERVER_BUSY');
+    const visible=e=>e.getClientRects().length>0&&getComputedStyle(e).visibility!=='hidden';
+    const buttons=[...document.querySelectorAll('button[type="submit"][aria-label="发送消息"],button[type="submit"][aria-label="Send message"]')].filter(visible).filter(e=>!e.disabled);
+    const editors=[...document.querySelectorAll('[data-testid="composer-editor"]')].filter(visible);
+    const button=buttons.length===1?buttons[0]:null,form=button?.form;
+    if(decodeURIComponent(location.hash.match(/^#\\/([^/?#]+)/u)?.[1]||'')!==thread||!form||editors.length!==1||editors[0].closest('form')!==form)throw Error('ASTUDIO_SEND_OBSERVER_TARGET_UNVERIFIED');
+    const saved={id,events:[],listeners:[],event_count:0};
+    for(const [element,types] of [[button,['pointerdown','pointerup','mousedown','mouseup','click']],[form,['submit']]])for(const type of types){
+      const listener=event=>{
+        const row={type,trusted:event.isTrusted,observed_at:Date.now(),default_prevented_at_capture:event.defaultPrevented};
+        saved.event_count++;if(saved.events.length<32)saved.events.push(row);
+        queueMicrotask(()=>{row.default_prevented_after_dispatch=event.defaultPrevented;});
+      };
+      element.addEventListener(type,listener,true);saved.listeners.push([element,type,listener]);
+    }
+    globalThis[key]=saved;return {installed:true,thread_id:thread,intercepted:false};
+  })()`;
+}
+export async function withAStudioSendEvents(client,operationId,threadId,send,record) {
+  const installed=await client.evaluate(aStudioSendEventsExpression(operationId,threadId,'install'));
+  if(installed?.installed!==true)throw Error('ASTUDIO_SEND_OBSERVER_NOT_INSTALLED');
+  try{return await send();}
+  finally {
+    let evidence;
+    try {evidence=await client.evaluate(aStudioSendEventsExpression(operationId,threadId,'take'));}
+    catch(error){evidence={status:'unavailable',error_sha256:sha(error.message),observer_may_remain:true};}
+    await record(evidence);
+  }
 }
 export async function waitForAStudioForeground(pid,{attempts=30,read=()=>Number(execFileSync('/usr/bin/osascript',
   ['-l','JavaScript','-e','ObjC.import("AppKit"); Number($.NSWorkspace.sharedWorkspace.frontmostApplication.processIdentifier);'],
@@ -141,6 +191,148 @@ async function waitForRecordedUi(ctx,client,expected,route,stage) {
   try{return await waitForAStudioFrozenUi(()=>readUiConfiguration(client),expected,route);}
   catch(error){await artifact(ctx,'configuration-failure',{stage,thread_id:route,expected,
     error:error.message,observations:error.observations??[],model_changed_by_controller:false});throw error;}
+}
+export async function waitForAStudioProjectBinding(read,workspace,projectId,{attempts=150,maxWaitMs=30000,now=Date.now,pause=()=>new Promise(ok=>setTimeout(ok,200))}={}) {
+  const observations=[],started=now();
+  for(let i=0;i<attempts;i++) {
+    const value=await read();observations.push(value);
+    if(value.blocking_count||value.dialog_count||value.editor_count>1||value.workspace_count>1||value.projects.length>1
+      ||value.editor_count===1&&!value.editor_empty||value.workspace_path&&value.workspace_path!==workspace){
+      const error=Error('ASTUDIO_PROJECT_BINDING_CONFLICT');error.observations=observations;throw error;
+    }
+    const native=value.projects[0];
+    if(value.stable_ui&&value.editor_count===1&&value.editor_empty&&value.workspace_path===workspace
+      &&value.pristine&&native?.project_id===projectId&&native.workspace_root===workspace)return {observation:value,observations};
+    if(now()-started>=maxWaitMs)break;
+    await pause();
+  }
+  const error=Error('ASTUDIO_PROJECT_BINDING_NOT_READY');error.observations=observations;throw error;
+}
+export function aStudioProjectUiExpression() {
+  return `(()=>{const v=e=>e.getClientRects().length>0&&getComputedStyle(e).visibility!=='hidden';
+      const editors=[...document.querySelectorAll('[data-testid="composer-editor"]')].filter(v);
+      const workspaces=[...document.querySelectorAll('[data-testid="workspace-picker-trigger"],[data-testid="project-picker-trigger"]')].filter(v);
+      return {thread_id:decodeURIComponent(location.hash.match(/^#\\/([^/?#]+)/u)?.[1]||''),editor_count:editors.length,
+        editor_empty:editors.length===1&&editors[0].innerText.trim()==='',workspace_count:workspaces.length,
+        workspace_path:workspaces.length===1?workspaces[0].getAttribute('title'):null,
+        dialog_count:[...document.querySelectorAll('[role="dialog"],[aria-modal="true"]')].filter(v).length}})()`;
+}
+export function aStudioProjectNavigationExpression(projectId,workspace,threadId,action='inspect') {
+  if(!/^[a-f0-9-]{36}$/i.test(projectId)||!['inspect','scroll','click'].includes(action))throw Error('ASTUDIO_PROJECT_NAVIGATION_POLICY');
+  return `(()=>{
+    const visible=e=>e.getClientRects().length>0&&getComputedStyle(e).visibility!=='hidden';
+    const route=decodeURIComponent(location.hash.match(/^#\\/([^/?#]+)/u)?.[1]||'');
+    const editors=[...document.querySelectorAll('[data-testid="composer-editor"]')].filter(visible);
+    const workspaces=[...document.querySelectorAll('[data-testid="workspace-picker-trigger"],[data-testid="project-picker-trigger"]')].filter(visible);
+    const unsafe=route!==${JSON.stringify(threadId)}||editors.length!==1||editors[0].innerText.trim()!==''
+      ||workspaces.length!==1||workspaces[0].getAttribute('title')!==${JSON.stringify(workspace)}
+      ||[...document.querySelectorAll('[role="dialog"],[aria-modal="true"]')].some(visible)
+      ||[...document.querySelectorAll('button[aria-label]')].filter(visible).some(e=>/^(?:停止生成|Stop generating)$/iu.test(e.getAttribute('aria-label')||''));
+    if(unsafe)return {clicked:false,ready:false,reason:'navigation-safety-changed'};
+    const rows=[...document.querySelectorAll('[data-project-hover-anchor="${projectId}"]')];
+    const row=rows.length===1?rows[0]:null,motion=row?.closest('[data-slot="sidebar-content-motion"]');
+    if(!row||!motion)return {clicked:false,ready:false,reason:'project-row-unverified',row_count:rows.length};
+    if(motion.inert||motion.getAttribute('aria-hidden')==='true')return {clicked:false,ready:false,sidebar_hidden:true};
+    if(${JSON.stringify(action)}==='scroll'){row.scrollIntoView({block:'center',inline:'nearest'});return {scrolled:true};}
+    const buttons=[...row.querySelectorAll('button[aria-label]')].filter(e=>${PROJECT_NEW_TASK_LABEL}.test((e.getAttribute('aria-label')||'').trim()));
+    const button=buttons.length===1?buttons[0]:null;
+    if(!button||button.disabled||button.closest('[inert]')||!visible(button))return {clicked:false,ready:false,reason:'project-new-task-unverified',button_count:buttons.length};
+    const rect=button.getBoundingClientRect(),x=rect.x+rect.width/2,y=rect.y+rect.height/2,hit=document.elementFromPoint(x,y);
+    if(x<=0||x>=innerWidth||y<=0||y>=innerHeight||!hit||!button.contains(hit))return {clicked:false,ready:false,reason:'project-new-task-occluded'};
+    if(${JSON.stringify(action)}==='click'){button.click();return {clicked:true,method:'exact-project-new-task',project_id:${JSON.stringify(projectId)},previous_thread_id:route};}
+    return {ready:true,x,y};
+  })()`;
+}
+export async function waitForAStudioReload(client,reload,{maxWaitMs=30000,now=Date.now,pause=()=>new Promise(ok=>setTimeout(ok,200))}={}) {
+  if(!Number.isFinite(maxWaitMs)||maxWaitMs<0||maxWaitMs>60000)throw Error('ASTUDIO_RELOAD_WAIT_POLICY');
+  const frame=async()=>{
+    const value=(await client.send('Page.getFrameTree')).frameTree?.frame;
+    if(!value?.id||!value.loaderId)throw Error('ASTUDIO_RELOAD_FRAME_UNVERIFIED');
+    return value;
+  };
+  const before=await frame();const result=await reload();const started=now();let samples=0;
+  do {
+    const current=await frame();samples++;
+    if(current.id!==before.id)throw Error('ASTUDIO_RELOAD_TARGET_CHANGED');
+    if(current.loaderId!==before.loaderId) {
+      let ready=false;
+      try {ready=await client.evaluate('document.readyState === "complete"');}
+      catch(error){if(!/^(?:Inspected target navigated or closed|Execution context was destroyed\.?|Cannot find context with specified id)$/u.test(error.message))throw error;}
+      const after=await frame();
+      if(after.id!==before.id)throw Error('ASTUDIO_RELOAD_TARGET_CHANGED');
+      if(ready&&after.loaderId===current.loaderId)return {result,evidence:{frame_id:before.id,previous_loader_id:before.loaderId,
+        loader_id:after.loaderId,samples,waited_ms:now()-started,reload_count:1,prompt_sent:false}};
+    }
+    if(now()-started>=maxWaitMs)break;
+    await pause();
+  }while(now()-started<maxWaitMs);
+  throw Error('ASTUDIO_RELOAD_NOT_READY');
+}
+export async function traceAStudioPreparation(client,prepare,record,{now=Date.now}={}) {
+  const commands=[];const started=now();
+  const traced=new Proxy(client,{get(target,key,receiver){
+    if(key!=='send')return Reflect.get(target,key,receiver);
+    return async(method,params={})=>{
+      const command={method,started_ms:now()-started,call_site:new Error().stack.split('\n').slice(2,6),
+        ...(typeof params.expression==='string'?{expression_sha256:sha(params.expression)}:{})};
+      commands.push(command);
+      try {
+        let result;
+        if(method==='Page.reload'){
+          const settled=await waitForAStudioReload(traced,()=>target.send(method,params));
+          command.reload_observation=settled.evidence;result=settled.result;
+        }else result=await target.send(method,params);
+        command.status='completed';return result;
+      }
+      catch(error){command.status='failed';command.error_sha256=sha(error.message);throw error;}
+      finally{command.duration_ms=now()-started-command.started_ms;}
+    };
+  }});
+  try {const result=await prepare(traced);await record({status:'completed',duration_ms:now()-started,commands,prompt_sent:false});return result;}
+  catch(error){await record({status:'failed',duration_ms:now()-started,commands,error_sha256:sha(error.message),prompt_sent:false});throw error;}
+}
+async function prepareAStudioExecutionUi(ctx,client,config) {
+  try{return await prepareExecutionUi(client,config)}catch(error) {
+    if(error.message!=='AstronStudio 延迟出现的项目路径与原生路由不一致')throw error;
+    const projects=await queryExactProjectsForWorkspace(DB,config.candidateWorkspace);
+    if(projects.length!==1)throw Error('ASTUDIO_TARGET_PROJECT_AMBIGUOUS');
+    const readUi=()=>client.evaluate(aStudioProjectUiExpression());
+    const readBinding=async()=>{
+      const before=await readUi();const native=before.thread_id?await queryProjectForThread(DB,before.thread_id):[];
+      const pristine=before.thread_id?await queryPristineThread(DB,before.thread_id):false;
+      const blocking=(await queryNativeSessions(DB)).filter(isBlockingActiveSession).length;
+      const after=await readUi();return {...after,projects:native,pristine,blocking_count:blocking,stable_ui:JSON.stringify(before)===JSON.stringify(after)};
+    };
+    let recovered;
+    try {
+      const before=await readBinding();
+      if(!before.stable_ui||!before.pristine||before.blocking_count||before.dialog_count||before.editor_count!==1
+        ||!before.editor_empty||before.workspace_count!==1||before.workspace_path!==config.candidateWorkspace)throw Error('ASTUDIO_PROJECT_NAVIGATION_UNSAFE');
+      if(before.projects.length!==1||before.projects[0].project_id!==projects[0].project_id||before.projects[0].workspace_root!==config.candidateWorkspace){
+        const expression=action=>aStudioProjectNavigationExpression(projects[0].project_id,config.candidateWorkspace,before.thread_id,action);
+        let point=await client.evaluate(expression('inspect'));
+        if(point.sidebar_hidden){const opened=await clickSidebarToggle(client);if(!opened.clicked)throw Error('ASTUDIO_PROJECT_SIDEBAR_UNVERIFIED');}
+        const scrolled=await client.evaluate(expression('scroll'));if(!scrolled.scrolled)throw Error('ASTUDIO_PROJECT_SCROLL_UNVERIFIED');
+        point=await client.evaluate(expression('inspect'));if(!point.ready)throw Error('ASTUDIO_PROJECT_NAVIGATION_TARGET_UNVERIFIED');
+        await client.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:point.x,y:point.y,button:'none',buttons:0});
+        const safe=await readBinding();
+        if(JSON.stringify(safe)!==JSON.stringify(before))throw Error('ASTUDIO_PROJECT_NAVIGATION_STATE_CHANGED');
+        await artifact(ctx,'project-navigation-intent',{project_id:projects[0].project_id,workspace:config.candidateWorkspace,before,prompt_sent:false});
+        const clicked=await client.evaluate(expression('click'));
+        await artifact(ctx,'project-navigation-result',{...clicked,prompt_sent:false});
+        if(!clicked.clicked)throw Error('ASTUDIO_PROJECT_NAVIGATION_REJECTED');
+      }
+      recovered=await waitForAStudioProjectBinding(readBinding,config.candidateWorkspace,projects[0].project_id);
+    }catch(failure) {
+      await artifact(ctx,'project-binding-failure',{initial_error:error.message,error:failure.message,observations:failure.observations??[]});throw failure;
+    }
+    await artifact(ctx,'project-binding-recovered',{initial_error:error.message,...recovered,prompt_sent:false});
+    const ui=await readUiConfiguration(client);
+    if(ui.model_count!==1||ui.model!==config.expectedModel)throw Error('AstronStudio 当前模型不匹配：'+ui.model+' vs '+config.expectedModel);
+    if(ui.reasoning!==config.expectedReasoning)throw Error('AstronStudio 当前推理强度不匹配：'+ui.reasoning+' vs '+config.expectedReasoning);
+    if(ui.permission_count!==1||ui.permission!==config.expectedPermission)throw Error('ASTUDIO_PROJECT_PERMISSION_MISMATCH');
+    return {task:{thread_id:recovered.observation.thread_id,editor_count:1,editor_empty:true},workspace:recovered.observation,ui};
+  }
 }
 export function readMemoryConfiguration(){
   const code=`import json,tomllib
@@ -217,21 +409,40 @@ export function verifyRecordedConfiguration(bytes,session,frozen,modelCatalog=nu
     approval_policy:value.approval_policy,sandbox_type:value.sandbox_policy.type,source:'exact-native-turn-context',
     model_identity_basis:modelIdentityBasis,model_catalog:modelIdentityBasis==='exact-display-id'?null:modelCatalog};
 }
-async function connect(frozen=null,observeOnly=false) {
-  await requireGui();
+function aStudioRuntimeIdentity() {
   const pids=[...new Set(execFileSync('/usr/sbin/lsof',['-nP','-iTCP:9240','-sTCP:LISTEN','-t'],{encoding:'utf8'}).trim().split(/\s+/))];
   if(pids.length!==1||!execFileSync('/bin/ps',['-p',pids[0],'-o','command='],{encoding:'utf8'}).startsWith('/Applications/AStudio.app/Contents/MacOS/AStudio '))throw Error('ASTUDIO_LISTENER_OWNER');
+  const version=execFileSync('/usr/libexec/PlistBuddy',['-c','Print :CFBundleShortVersionString','/Applications/AStudio.app/Contents/Info.plist'],{encoding:'utf8'}).trim();
+  return {pid:Number(pids[0]),version};
+}
+export function aStudioNativeObservationEligible(request,state) {
+  return request?.mode==='native'&&request.harness==='AstronStudio'&&request.action==='execute_step'&&request.transport_action==='observe'
+    &&state?.phase==='invoked'&&state.click_result?.clicked===true&&typeof state.click_returned_at==='string'&&Number.isFinite(Date.parse(state.click_returned_at))
+    &&/^[a-f0-9-]{36}$/i.test(state.thread_id??'')&&/^[a-f0-9]{64}$/.test(state.config?.account_fingerprint??'')
+    &&state.config.account_fingerprint===request.expected_config?.account_fingerprint
+    &&state.requestHash===requestHash(request);
+}
+export async function connectAStudioNativeObservation(state,{checkEnvironment=requireGui,readIdentity=aStudioRuntimeIdentity,readMemory=readMemoryConfiguration}={}) {
+  await checkEnvironment();const identity=await readIdentity();
+  const config={...state.config,app_version:identity.version,memory_settings:await readMemory()};
+  verifyConfig(config,state.config);
+  return {client:null,config,pid:identity.pid,account_scope_hash:config.account_fingerprint,
+    config_basis:'verified-dispatch-config-pending-native-turn-verification',
+    observation_evidence:{observation_transport:'native-state-and-rollout-only',
+      account_identity_basis:'verified-dispatch-auth-session-uid',current_account_rechecked:false}};
+}
+async function connect(frozen=null,observeOnly=false) {
+  await requireGui();const {pid,version}=aStudioRuntimeIdentity();
   const target=await discoverMainTarget(ENDPOINT,4000);
   const client=await CdpClient.connect(target.webSocketDebuggerUrl,10000);
   try {
     const ui=await readUiConfiguration(client);
-    const uid=await client.evaluate(`(async()=>{const u=new URL(await window.desktopBridge.getWsUrl());u.protocol=u.protocol==='wss:'?'https:':'http:';u.pathname='/api/astron-auth/session';const r=await fetch(u);if(!r.ok)throw Error('auth unavailable');const j=await r.json();return j.session?.uid??null})()`);
+    const uid=await client.evaluate(`(async()=>{const u=new URL(await window.desktopBridge.getWsUrl());u.protocol=u.protocol==='wss:'?'https:':'http:';u.pathname='/api/astron-auth/session';const r=await fetch(u,{signal:AbortSignal.timeout(6000)});if(!r.ok)throw Error('auth unavailable');const j=await r.json();return j.session?.uid??null})()`);
     if(!uid)throw Error('ASTUDIO_ACCOUNT_UNVERIFIED');
-    const version=execFileSync('/usr/libexec/PlistBuddy',['-c','Print :CFBundleShortVersionString','/Applications/AStudio.app/Contents/Info.plist'],{encoding:'utf8'}).trim();
     const config={app_version:version,...aStudioConfigurationFields(ui,frozen),
       memory_settings:readMemoryConfiguration(),
       underlying_model:null,account_fingerprint:sha(String(uid))};
-    verifyConfig(config,null);return {client,ui,config,pid:Number(pids[0]),
+    verifyConfig(config,null);return {client,ui,config,pid,
       account_scope_hash:sha(String(uid)),config_basis:frozen
       ?observeOnly?'frozen_pre_send_pending_native_turn_verification':'frozen_request_pending_target_ui_verification':'live_ui'};
   }catch(error){client.close();throw error}
@@ -265,11 +476,14 @@ async function rawRollout(session,promptSha) {
 }
 async function observe(ctx,request,live,state) {
   verifyConfig(live.config,state.config);
+  const bind=(reply,extra={})=>bindReply(ctx,request,reply,{...live.observation_evidence,...extra});
   const rows=await queryNativeSessions(DB);
   const session=rows.find(s=>s.thread_id===state.thread_id&&s.cwd===request.workspace);
   if(!session?.session_id||!session.turn_id||session.turn_id===state.previous_turn_id){
-    const acceptance=aStudioAcceptanceState(state);
-    return bindReply(ctx,request,{...baseReply(request,live.config),status:acceptance==='pending'?'active':'needs_attention',
+    const waitSeconds=ctx.manifest.profiles.AstronStudio.native_acceptance_wait_seconds??30;
+    if(!Number.isInteger(waitSeconds)||waitSeconds<30||waitSeconds>600)throw Error('ASTUDIO_ACCEPTANCE_WAIT_POLICY');
+    const acceptance=aStudioAcceptanceState(state,Date.now(),waitSeconds);
+    return bind({...baseReply(request,live.config),status:acceptance==='pending'?'active':'needs_attention',
       reason:acceptance==='pending'?'等待原发送的原生身份；不重新发送。':'原生发送接受未确认，保留原意图并暂停派发；后续只能观察。'},
       {native_acceptance:acceptance,click_result:state.click_result??null,task_deadline:null,prompt_resend_authorized:false});
   }
@@ -277,8 +491,8 @@ async function observe(ctx,request,live,state) {
   const classification=classifyNativeState(session);
   await saveState(ctx,state);
   const reply={...baseReply(request,live.config),native:state.native};
-  if(classification.kind==='running')return bindReply(ctx,request,{...reply,status:'active',reason:'原生 turn 尚未结束。'},{native_session:session});
-  if(classification.kind!=='completed')return bindReply(ctx,request,{...reply,
+  if(classification.kind==='running')return bind({...reply,status:'active',reason:'原生 turn 尚未结束。'},{native_session:session});
+  if(classification.kind!=='completed')return bind({...reply,
     status:session.status==='interrupted'?'infrastructure_error':'needs_attention',
     reason:session.status==='interrupted'?'原生 turn 中断，记忆阶段不可评；原因未确认，保留终态且不重发。':'原生 turn 未正常完成；保留终态，不重发。'},
     {native_session:session});
@@ -289,18 +503,20 @@ async function observe(ctx,request,live,state) {
   const nativeConfiguration=verifyRecordedConfiguration(rollout.bytes,session,state.config,catalog);
   state.firstTerminalObservedAt??=Date.now();await saveState(ctx,state);
   const seconds=(Date.now()-state.firstTerminalObservedAt)/1000;
-  if(seconds<request.memory_wait_seconds)return bindReply(ctx,request,{...reply,status:'active',reason:'等待本轮明确声明的即时行为观察窗；不宣称长期记忆已形成。'});
+  if(seconds<request.memory_wait_seconds)return bind({...reply,status:'active',reason:'等待本轮明确声明的即时行为观察窗；不宣称长期记忆已形成。'});
   reply.status='completed';reply.memory_observation={status:'unobservable',wait_seconds:seconds};
   reply.final_response=await artifact(ctx,'response',trace.messages.filter(m=>m.role==='assistant').map(m=>m.text||'').filter(Boolean).join('\n\n'));
   reply.trace=await artifact(ctx,'trace',rollout.bytes.toString('utf8'));
-  return bindReply(ctx,request,reply,{native_session:session,prompt_binding_status:'verified',memory_observation:reply.memory_observation,
+  return bind(reply,{native_session:session,prompt_binding_status:'verified',memory_observation:reply.memory_observation,
     native_projection:trace,raw_rollout:{source_path:rollout.source_path,sha256:rollout.sha256,size:rollout.size},
     resource_metrics:rollout.analysis,native_configuration:nativeConfiguration,config_basis:live.config_basis});
 }
 export async function runAstronStudio(request) {
   const ctx=await context(request,'AstronStudio');let state;
   try{state=await readJson(ctx.stateFile)}catch(e){if(e.code!=='ENOENT')throw e}
-  const live=await connect(state?.config??request.expected_config,Boolean(state&&request.transport_action==='observe'));
+  if(state&&state.requestHash!==requestHash(request))throw Error('ASTUDIO_MEMORY_REQUEST_DRIFT');
+  const live=aStudioNativeObservationEligible(request,state)?await connectAStudioNativeObservation(state)
+    :await connect(state?.config??request.expected_config,Boolean(state&&request.transport_action==='observe'));
   try {
     verifyConfig(live.config,request.expected_config);
     if(state&&state.requestHash!==requestHash(request))throw Error('ASTUDIO_MEMORY_REQUEST_DRIFT');
@@ -333,8 +549,9 @@ export async function runAstronStudio(request) {
       let route;
       if(request.session_action==='new') {
         try {
-          await prepareExecutionUi(live.client,{candidateWorkspace:request.workspace,stateDatabase:DB,timeoutMs:30000,
-            expectedModel:live.config.model_display,expectedReasoning:live.config.reasoning,expectedPermission:live.config.permissions});
+          await traceAStudioPreparation(live.client,client=>prepareAStudioExecutionUi(ctx,client,{candidateWorkspace:request.workspace,stateDatabase:DB,timeoutMs:30000,
+            expectedModel:live.config.model_display,expectedReasoning:live.config.reasoning,expectedPermission:live.config.permissions}),
+            value=>artifact(ctx,'ui-preparation-diagnostics',value));
         } catch(error) {
           if(!/^AstronStudio 当前(?:模型|推理强度)不匹配：/.test(error.message))throw error;
           // This error is raised only after the General engine verifies the new
@@ -359,17 +576,20 @@ export async function runAstronStudio(request) {
       await artifact(ctx,'rpc-ready-before-send',await waitForAStudioRpcReady(()=>readAStudioRpcTransport(live.client)));
       const method=ctx.manifest.profiles.AstronStudio.send_method??'native_mouse';
       if(!['native_mouse','dom_submit_click'].includes(method))throw Error('ASTUDIO_SEND_METHOD_NOT_ADMITTED');
-      const clicked=await dispatchAStudioOnce(state,async()=>{
-        const rpc=await readAStudioRpcTransport(live.client);
+      const waitSeconds=ctx.manifest.profiles.AstronStudio.pre_click_rpc_wait_seconds??0;
+      if(!Number.isInteger(waitSeconds)||waitSeconds<0||waitSeconds>60)throw Error('ASTUDIO_PRE_CLICK_WAIT_POLICY');
+      const beforePress=()=>waitForAStudioClickTransport(()=>readAStudioRpcTransport(live.client),{maxWaitMs:waitSeconds*1000});
+      const clicked=await withAStudioSendEvents(live.client,request.operation_id,route,()=>dispatchAStudioOnce(state,async()=>{
+        const rpc=await beforePress();
         if(!rpc.ready)return {clicked:false,mouse_press_count:0,reason:'rpc-transport-not-ready',rpc};
         return method==='dom_submit_click'?live.client.evaluate(aStudioDomSubmitExpression(request.prompt,request.workspace,route))
-          :clickAStudioStableTarget(live.client,request.prompt,request.workspace,{beforePress:()=>readAStudioRpcTransport(live.client)});
-      },value=>saveState(ctx,value));
+          :clickAStudioStableTarget(live.client,request.prompt,request.workspace,{beforePress});
+      },value=>saveState(ctx,value)),value=>artifact(ctx,'send-dom-events',value));
       await artifact(ctx,'send-result',{method,result:clicked,native_acceptance_verified:false});
       if(!clicked.clicked)return bindReply(ctx,request,{...baseReply(request,live.config),status:'needs_attention',reason:'发送前检查返回未点击成功，停止在原生发送之前。'},{click_result:clicked,prompt_sent:false});
       return observe(ctx,request,live,state);
     });
-  }finally{live.client.close()}
+  }finally{live.client?.close()}
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   try{console.log(JSON.stringify(await runAstronStudio(await stdinRequest())))}catch(error){console.error(error.stack||error);process.exitCode=2}
