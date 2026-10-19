@@ -34,6 +34,10 @@ AStudio传输状态读取只准入已核验的renderer源码指纹，客户端�
 
 ## Apple Silicon 迁移
 
+**当前发送门禁：** 新机 canary 的 AStudio 在遗忘步骤自行尝试搜索 `~/.codex/memories`，违反冻结操作边界。Prompt 不能充当文件系统访问控制。新生成 Profile 现在标记非目标记忆隔离未核验，控制器在登记评测 Prompt 意图之前阻断，原生 Driver 也拒绝新派发；已存在操作的只读观察仍保留。目前没有已准入的 OS deny adapter，不接受布尔值或手填“verified”代替隔离证据。正式20题及新的记忆 Prompt 均不启动，下一步先实现并独立验收访问隔离。
+
+本机适配、3/3基础控制、7/7七步canary、旧值再现、边界违规和恢复原件见 [M芯片Mac迁移适配与实测记录](../docs/research/agent-memory/M芯片Mac迁移适配与实测记录-20261019.md)。七步完成不等于合规准入或遗忘通过。
+
 2026-10-19 起，memory 专用层按操作系统当前账号解析 home、AStudio 两个 home、千问数据库／轨迹、WorkBuddy 存储及统一 UI 锁；不读取 Codex 记忆目录，也不接受外部 home 覆盖。AStudio 配置读回从安装包选择架构匹配的 arm64／x64 或 universal 内核，并保留路径、版本及 SHA。
 
 新 `native-profiles` 冻结本机、架构、路径、Python、Node 和可用的 AStudio 内核身份；准备与加载批次均检查漂移。跨机器应新建 Profile 和批次，不迁移旧机未知操作。旧 Profile 不回写；此次修复仅涉及 memory 层、其测试与独立 canary，未修改 General/Web 共享源码。
@@ -51,7 +55,7 @@ python3 -m eval_memory_e2e validate-dataset
 python3 -m unittest discover -s tests/memory_e2e -p 'test_*.py'
 node --test tests/memory_e2e/*.test.mjs
 python3 -m eval_memory_e2e selftest \
-  --root /Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/protocol-selftest-new
+  --root $HOME/debug-workspace/e2e-evaluate/memory-e2e/protocol-selftest-new
 ```
 
 `selftest` 执行四个场景 MEM-01、10、13、19 × 四端标识 × C0/M+，共 32 条协议模拟任务链。它不连接客户端、不调用模型，输出固定测试值。结果始终为 `FIXTURE_ONLY`；普通 `report` 拒绝把它当正式评测，只有显式 `--include-fixture` 才用于协议 QA。
@@ -66,9 +70,9 @@ python3 -m eval_memory_e2e selftest \
 
 ```bash
 python3 -m eval_memory_e2e scan \
-  --output /Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/client-scan-new.json
+  --output $HOME/debug-workspace/e2e-evaluate/memory-e2e/client-scan-new.json
 python3 -m eval_memory_e2e native-preflight \
-  --output-dir /Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/native-preflight-new
+  --output-dir $HOME/debug-workspace/e2e-evaluate/memory-e2e/native-preflight-new
 ```
 
 `scan` 只读取安装元数据和 loopback CDP 版本。`native-preflight` 复用现有四端 General 只读探针，保留原始 JSON、stdout/stderr、入口源码和原件 SHA。二者都不启动／重启客户端、不发 Prompt、不重置记忆；General `PASS` 不会自动升级成 memory admission。
@@ -78,7 +82,7 @@ python3 -m eval_memory_e2e native-preflight \
 ```bash
 python3 -m eval_memory_e2e config-probe \
   --roundtrip --preflight-dir /absolute/fresh-native-preflight \
-  --output-dir /Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/config-roundtrip-new
+  --output-dir $HOME/debug-workspace/e2e-evaluate/memory-e2e/config-roundtrip-new
 ```
 
 三端 UI 探针逐项执行原值 → 相反值 → 回读 → 原值恢复，持久化每次意图与最终状态，并保留前后截图。千问关闭意识模式时会移除自动记忆控件，该控件记为暂不可观察，重新开启后再核对原值。失败回执中的 `restored` 必须按原件确认；不能仅因命令退出就假定恢复。
@@ -171,7 +175,7 @@ v3 `cleanup` 定义目标、保留项与前后 probe。报告的 `cleanup_layers
 
 ```bash
 python3 -m eval_memory_e2e prepare \
-  --root /Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/diagnostic20-new \
+  --root $HOME/debug-workspace/e2e-evaluate/memory-e2e/diagnostic20-new \
   --batch-id diagnostic20-new --seed diagnostic20-new --repeats 3
 ```
 
