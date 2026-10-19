@@ -7,6 +7,12 @@ import { inspectMacGuiSession, assertMacGuiReady } from "../../tools/report/e2e-
 export const sha = value => createHash("sha256").update(value).digest("hex");
 import {MACHINE_PATHS,verifyMachine,verifyNodeRuntime} from './machine.mjs';
 export const MEMORY_UI_LOCK=MACHINE_PATHS.ui_lock;
+export function assertMemoryFilesystemBoundary(request,profile) {
+  if(request.action==='execute_step'&&request.transport_action!=='observe'
+    &&profile.non_target_memory_boundary!==undefined)throw Error('NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED');
+  // Read-only observation of existing accepted/unknown operations remains
+  // available. Neither a boolean nor a claimed proof enables a new dispatch.
+}
 export function memoryUiLockPath(root,profile) {
   if(profile.ui_lock_path!==undefined&&profile.ui_lock_path!==MEMORY_UI_LOCK)throw Error('NATIVE_UI_LOCK_POLICY');
   return profile.ui_lock_path??join(dirname(root),'.memory-native-ui.lock');
@@ -39,6 +45,7 @@ export async function context(request, harness) {
   const manifest = await readJson(join(root, "manifest.json"));
   verifyMachine(manifest.profiles[harness].machine);
   verifyNodeRuntime(manifest.profiles[harness].node_runtime);
+  assertMemoryFilesystemBoundary(request,manifest.profiles[harness]);
   const episode = manifest.episodes.find(row => row.id === request.episode_id);
   if (!episode || episode.harness !== harness || episode.namespace !== request.namespace
       || episode.workspaces[request.scope] !== workspace || manifest.experiment_id !== request.experiment_id

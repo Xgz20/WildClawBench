@@ -263,6 +263,10 @@ def advance(root, episode_id, *, driver_timeout=None, retry_pre_send=False):
             return action
         if action['status'] == 'READY':
             _require_harness_predecessors(root, manifest, item)
+            if (manifest['mode'] == 'native' and action['request'].get('action') == 'execute_step'
+                    and manifest['profiles'][item['harness']].get('non_target_memory_boundary') is not None):
+                require(False, 'NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED',
+                        'New native Profiles require a verified OS deny adapter for non-target memory; none is admitted. No Prompt intent was registered.')
         if manifest['mode'] == 'native':
             shared_lock = memory_ui_lock_path(root, manifest['profiles'])
             require(not shared_lock.exists(), 'NATIVE_UI_LOCK_PRESENT',

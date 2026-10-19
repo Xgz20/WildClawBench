@@ -68,6 +68,12 @@ def native_profiles(output):
     for harness in profiles:
         profiles[harness]['machine'] = machine
         profiles[harness]['node_runtime'] = node
+        # A real canary attempted to search another client's memory despite the
+        # frozen Prompt. A Prompt is not a filesystem access control boundary.
+        # No OS deny adapter has been admitted yet: new profiles fail closed.
+        profiles[harness]['non_target_memory_boundary'] = {
+            'required': True, 'status': 'not_enforced',
+            'admitted_adapter': None, 'policy': 'deny_non_target_memory_access'}
         profiles[harness]['ui_lock_path'] = str(MEMORY_UI_LOCK)
         profiles[harness]["driver_timeout_seconds"] = 180
         profiles[harness]["state_observation"] = True
