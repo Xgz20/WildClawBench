@@ -1,14 +1,19 @@
-"""Verified terminal failures may be graded against an output-only contract.
+"""Verify native terminal failures for scoring admission or quota exclusion.
 
 This admission preserves FAILED and the source failure; it never manufactures
-a successful execution or decides a score. The ordinary grader and Judge run.
+a successful execution or decides a score. Reviewed candidate failures use the
+ordinary grader/Judge; verified external quota failures remain unscored.
 """
 import hashlib
 import json
+import re
 from pathlib import Path
 
 ADMISSION = "verified-failed-output-evidence/v1"
 POLICY_PATH = Path(__file__).resolve().parents[1] / "references/reviewed-failure-evidence-policy.json"
+NATIVE_QUOTA_MESSAGE = re.compile(
+    r"unexpected status 402(?: Payment Required)?: astron_points_exhausted(?:, url: \S+)?\Z"
+)
 
 
 def sha(data):
@@ -18,6 +23,16 @@ def sha(data):
 def require(condition, code):
     if not condition:
         raise ValueError("FAILED_OUTPUT_ADMISSION_" + code)
+
+
+def _native_failure_profile(execution):
+    require(execution.get("harness", {}).get("id") == "astronstudio", "NATIVE_FAILURE_PROFILE_UNSUPPORTED")
+    require(execution.get("phase") == "FAILED"
+            and execution["execution"]["business_status"] == "candidate_error"
+            and execution["prompt"]["send_status"] == "sent"
+            and execution["session"]["verified"] is True
+            and execution["candidate"]["drift_status"] == "stable"
+            and execution.get("failure_evidence", {}).get("schema") == ADMISSION, "EXECUTION_INVALID")
 
 
 def profile(execution, contract):
@@ -31,13 +46,7 @@ def profile(execution, contract):
             and reviewed.get("candidate_required") is True
             and reviewed.get("tool_history_required") is False
             and reviewed.get("final_response_required") is False, "CONTRACT_NOT_REVIEWED")
-    require(execution.get("harness", {}).get("id") == "astronstudio", "NATIVE_FAILURE_PROFILE_UNSUPPORTED")
-    require(execution.get("phase") == "FAILED"
-            and execution["execution"]["business_status"] == "candidate_error"
-            and execution["prompt"]["send_status"] == "sent"
-            and execution["session"]["verified"] is True
-            and execution["candidate"]["drift_status"] == "stable"
-            and execution.get("failure_evidence", {}).get("schema") == ADMISSION, "EXECUTION_INVALID")
+    _native_failure_profile(execution)
     return ADMISSION
 
 
@@ -57,8 +66,9 @@ def read_files(unit_root, execution):
     return files
 
 
-def validate(execution, contract, files):
-    profile(execution, contract)
+def _validate_sources(execution, files):
+    """Validate native failure provenance independently of scoring policy."""
+    _native_failure_profile(execution)
     require(sha(files["proof.json"]) == execution["failure_evidence"]["sha256"], "PROOF_SHA")
     proof = json.loads(files["proof.json"])
     require(proof["identity"] == execution["identity"], "IDENTITY")
@@ -93,6 +103,48 @@ def validate(execution, contract, files):
         require(len(entry) == 1 and entry[0]["sha256"] == sha(files["original-state.json"]), "ASTRON_STATE_BINDING")
     else:
         raise ValueError("FAILED_OUTPUT_ADMISSION_HARNESS_UNSUPPORTED")
+    return proof, original, state
+
+
+def is_external_quota(execution):
+    """Recognize only the native provider error format, never candidate text."""
+    native = execution.get("execution")
+    error = native.get("error") if isinstance(native, dict) else None
+    harness = execution.get("harness")
+    if not isinstance(error, dict) or not isinstance(harness, dict):
+        return False
+    return (harness.get("id") == "astronstudio"
+            and isinstance(error.get("code"), str)
+            and error["code"] in {"ASTRONSTUDIO_TURN_ERROR", "ASTRONSTUDIO_TURN_FAILED"}
+            and isinstance(error.get("message"), str)
+            and NATIVE_QUOTA_MESSAGE.fullmatch(error["message"]) is not None)
+
+
+def validate_external_quota(execution, files):
+    """Prove an infrastructure exclusion without grading or an ID allowlist.
+
+    Both source records and the state must bind the same native error; edited
+    messages, unbound proofs and arbitrary HTTP 402 responses remain failures.
+    """
+    proof, original, state = _validate_sources(execution, files)
+    require(proof.get("schema") == ADMISSION, "PROOF_SCHEMA")
+    manifest = json.loads(files["original-evidence-manifest.json"])
+    require(manifest.get("identity") == execution["identity"], "EVIDENCE_IDENTITY")
+    require(original.get("phase") == "FAILED"
+            and original["execution"].get("business_status") == "candidate_error"
+            and original["session"].get("verified") is True, "ORIGINAL_TERMINAL")
+    for key in ("thread_id", "turn_id", "session_id", "cwd"):
+        value = execution["session"].get(key)
+        require(isinstance(value, str) and bool(value)
+                and value == original["session"].get(key) == state["session"].get(key), "NATIVE_SESSION_BINDING")
+    error = execution["execution"].get("error")
+    require(error == original["execution"].get("error") == state["execution"].get("error"), "NATIVE_ERROR_BINDING")
+    require(is_external_quota(execution), "EXTERNAL_QUOTA_INVALID")
+
+
+def validate(execution, contract, files):
+    profile(execution, contract)
+    _validate_sources(execution, files)
     return {"schema_version": ADMISSION, "identity": execution["identity"],
             "policy_sha256": sha(POLICY_PATH.read_bytes()),
             "contract_canonical_sha256": sha(json.dumps(dict(contract), ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()),

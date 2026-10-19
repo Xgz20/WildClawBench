@@ -11,6 +11,8 @@ description: 将有效 General E2E 执行回执交接为独立单题评分工作
 
 冻结 score Skill 的 `prepare` 返回明确 `EXECUTION_NOT_SCORABLE` 时，只将本题保留为 `UNSCORED`，不创建 Judge attempt，也不阻断其他题目。其它错误仍失败关闭；初始化回滚仅清理本控制器尚未发布的 staging，支持其中的只读候选，不修改已发布评分或执行原件。
 
+`0.11.7` 与 score-general-e2e 0.10.7 配合，通过上述标准拒绝通道处理经原生失败证明核验的 AstronStudio HTTP 402 `astron_points_exhausted`。编排器不按错误字符串自行豁免、不写死运行 ID 或证据 SHA；源记录仍保留原 `candidate_error`，submission 保留完整范围及 `unscored`，不创建能力零分、不自动重发或重测。证据损坏继续阻断；其他原生失败仍需原输出契约审核政策准入。
+
 新轮次优先由 run-general-e2e prepare-score 建立编排，根目录默认当前控制 Harness 会话项目，显式 round-root 覆盖。状态写入 Harness/score/.orchestrations，单题入口为 Harness/score/tasks/<task_id>/current。带 .general-e2e/round-unit.json 的新单元启用完整 trace 交接门禁；旧单元保留显式 legacy 兼容。
 
 新评分任务可以在本题目录读取标准轨迹和 raw_trace 原件。移走原执行目录后仍必须能校验、查询和评分，不把全局 repair-control 或临时运行目录作为评分数据依赖。
@@ -25,7 +27,7 @@ description: 将有效 General E2E 执行回执交接为独立单题评分工作
 python3 -m eval_general_e2e skills --name orchestrate-general-e2e --json
 ```
 
-当前 `0.11.5/operational` 已交付 automated/hybrid/llm_judge 路由、默认 3 槽且上限 8 的语义评分调度、Codex 项目/任务编排、API Judge 队列与崩溃恢复、统一 `verify-score` 准入、完整范围 submission、独立重评分编排、动态 Codex Desktop 发现、macOS 一次性托管重启入口，以及保留审计的迟到完成评分恢复。v5 评分 Prompt 明确容量异常与候选能力失败的控制策略。评分任务提交前还必须自检 evidence/query 绑定和未发生类完整 transcript 覆盖。迟到恢复发生在旧 submission 之后时，可用显式入口严格复算恢复前内容、按原 SHA 归档并原子替换 submission；其他内容漂移仍失败关闭。G4-03 已用旧版本 AstronStudio macOS 五题覆盖两题 automated、一题 hybrid、两题 llm_judge，得到 5/5 有效评分、回传和三种报告；语义评分固定为 `gpt-6-astra/high`，三会话并发。该证据只支持当时已验证的平台与版本组合，不能自动升级到本版共享发现/重启实现，也不能外推 Windows 或其他 Harness。
+当前 `0.11.7/operational` 已交付 automated/hybrid/llm_judge 路由、默认 3 槽且上限 8 的语义评分调度、Codex 项目/任务编排、API Judge 队列与崩溃恢复、统一 `verify-score` 准入、完整范围 submission、独立重评分编排、动态 Codex Desktop 发现、macOS 一次性托管重启入口，以及保留审计的迟到完成评分恢复。v5 评分 Prompt 明确容量异常与候选能力失败的控制策略。评分任务提交前还必须自检 evidence/query 绑定和未发生类完整 transcript 覆盖。迟到恢复发生在旧 submission 之后时，可用显式入口严格复算恢复前内容、按原 SHA 归档并原子替换 submission；其他内容漂移仍失败关闭。G4-03 已用旧版本 AstronStudio macOS 五题覆盖两题 automated、一题 hybrid、两题 llm_judge，得到 5/5 有效评分、回传和三种报告；语义评分固定为 `gpt-6-astra/high`，三会话并发。该证据只支持当时已验证的平台与版本组合，不能自动升级到本版共享发现/重启实现，也不能外推 Windows 或其他 Harness。
 
 普通生产调用不传 `--acceptance-id`。该参数仅用于显式验收留证；传入后，编排状态、队列摘要、评分 Prompt 与每题 `attempt-manifest.json` 中的 acceptance ID 必须完全一致。API Judge 不接受此标记，缺失或不一致时失败关闭。
 

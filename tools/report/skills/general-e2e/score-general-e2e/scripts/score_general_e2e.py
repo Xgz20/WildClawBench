@@ -1344,6 +1344,19 @@ def prepare_attempt(
         raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", str(exc)) from exc
     if not isinstance(contract, dict) or contract.get("task_id") != task_id:
         raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", "task_id")
+    if execution.get("failure_evidence") is not None and failure_evidence.is_external_quota(execution):
+        try:
+            failure_files = failure_evidence.read_files(unit_root, execution)
+            failure_evidence.validate_external_quota(execution, failure_files)
+        except (ValueError, KeyError, TypeError, OSError) as exc:
+            raise ScoringRuntimeError("EXTERNAL_QUOTA_EVIDENCE_INVALID", str(exc)) from exc
+        # The orchestrator already preserves EXECUTION_NOT_SCORABLE as an
+        # UNSCORED task with no Judge attempt. Do this before output-contract
+        # admission: external quota failures are not candidate ability scores.
+        raise ScoringRuntimeError(
+            "EXECUTION_NOT_SCORABLE",
+            "EXECUTION_EXTERNAL_QUOTA_EXHAUSTED: verified native HTTP 402 astron_points_exhausted",
+        )
     evidence_admission = _validate_evidence_admission(execution, contract)
     if evidence_admission not in {"standard", failure_evidence.ADMISSION}:
         _verify_partial_trace_bundle(unit_root, execution, contract)

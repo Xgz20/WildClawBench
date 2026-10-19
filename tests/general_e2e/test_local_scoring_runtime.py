@@ -332,10 +332,10 @@ class LocalScoringRuntimeTests(unittest.TestCase):
         )
         cls.venv_root = Path(cls.venv_temp.name) / "venv"
         uv = shutil.which("uv")
-        if uv is None:
-            raise unittest.SkipTest("uv is required for the managed runtime fixture")
+        command = ([uv, "venv", "--python", sys.executable, str(cls.venv_root)] if uv else
+                   [sys.executable, "-m", "venv", "--without-pip", str(cls.venv_root)])
         subprocess.run(
-            [uv, "venv", "--python", sys.executable, str(cls.venv_root)],
+            command,
             check=True,
             capture_output=True,
             text=True,

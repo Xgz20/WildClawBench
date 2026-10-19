@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { normalizeRolloutTranscript } from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-rollout-transcript.mjs';
+import { normalizeRolloutTranscript as vendoredNormalizer } from '../../tools/report/skills/general-e2e/collect-general-e2e/vendor/e2e-shared/general-resource-supplements/astronstudio-rollout-transcript.mjs';
 
 const prompt = 'Inspect installer without executing it.';
 const state = { identity: { batch_id: 'b', unit_id: 'u', task_id: 't', attempt_id: 'a' }, phase: 'COMPLETED',
@@ -119,3 +120,83 @@ test('configured macOS zsh and literal double quoted commands reconcile without 
   changed.events[0].tool.arguments.command = `/bin/zsh -lc "${shellText.replaceAll('"', '\\"')}"`;
   assert.throws(() => normalizeRolloutTranscript(bytes(rows), state, changed), /PROVIDER_ROLLOUT_TOOL_CONFLICT/);
 });
+
+const singleQuote = value => `'${value.replaceAll("'", "'\\''")}'`;
+function staticSearchFixture(command = 'wc -l "/tmp/another run/log.txt" && rg -c "CVE-2021-44228" "/tmp/another run/log.txt"') {
+  const rows = fixture();
+  rows[4].payload.name = 'bash'; rows[4].payload.arguments = JSON.stringify({ command });
+  rows[5].payload.output = 'Exit code: 0\nWall time: 0.2 seconds\nOutput:\n12\n3\n';
+  const provider = { calls: [{ call_id: 'c' }], events: [
+    { type: 'tool_call', tool: { call_id: 'c', name: 'command', arguments: {
+      command: `/bin/zsh -lc ${singleQuote(command.replaceAll('"', '\\"'))}`, cwd: state.session.cwd,
+      command_actions: [{ type: 'search', command: `rg -c 'CVE-2021-44228' '/tmp/another run/log.txt'`,
+        query: 'CVE-2021-44228', path: 'log.txt' }] } } },
+    { type: 'tool_result', tool: { call_id: 'c', name: 'command', result: {
+      output: '12\n3\n', exit_code: 0, duration_ms: 217 } } },
+  ] };
+  return { rows, provider, command };
+}
+
+for (const [implementation, normalize] of [['canonical', normalizeRolloutTranscript], ['vendored', vendoredNormalizer]]) {
+  test(`${implementation}: literal compound search summaries preserve the complete SDK command`, () => {
+    for (const shell of ['/bin/zsh', '/bin/bash', '/usr/local/bin/bash']) {
+      const { rows, provider, command } = staticSearchFixture();
+      for (const wrapped of [singleQuote(command), JSON.stringify(command), singleQuote(command.replaceAll('"', '\\"'))]) {
+        provider.events[0].tool.arguments.command = `${shell} -lc ${wrapped}`;
+        const result = normalize(bytes(rows), state, provider);
+        assert.equal(result.completeness.status, 'complete');
+        const tool = result.events.find(e => e.type === 'tool_call');
+        assert.equal(tool.tool.name, 'bash');
+        assert.deepEqual(tool.tool.arguments, { command });
+        assert.equal(result.events.find(e => e.type === 'tool_result').tool.result, rows[5].payload.output);
+      }
+    }
+    // Different identities/materials and a longer literal prefix use the same profile.
+    const command = `printf '统计' && wc -l '/tmp/新目录/记录.txt' && rg -c '警告' '/tmp/新目录/记录.txt'`;
+    const { rows, provider } = staticSearchFixture(command);
+    provider.events[0].tool.arguments.command_actions[0] = {
+      type: 'search', command: `rg -c "警告" "/tmp/新目录/记录.txt"`, query: '警告', path: '/tmp/新目录/记录.txt' };
+    assert.equal(normalize(bytes(rows), state, provider).completeness.status, 'complete');
+  });
+
+  test(`${implementation}: static search compatibility retains command, source and result gates`, () => {
+    for (const mutate of [
+      p => { p.events[0].tool.arguments.command = p.events[0].tool.arguments.command.replace('wc -l', 'wc -c'); },
+      p => { p.events[0].tool.arguments.command_actions[0].command = 'rg -c other other.txt'; },
+      p => { p.events[0].tool.arguments.command_actions[0].query = 'other'; },
+      p => { p.events[0].tool.arguments.command_actions[0].path = 'other.txt'; },
+      p => { p.events[0].tool.arguments.command_actions[0].type = 'read'; },
+      p => { p.events[0].tool.arguments.command_actions.push(p.events[0].tool.arguments.command_actions[0]); },
+      p => { p.events[0].tool.arguments.command = p.events[0].tool.arguments.command.replace('/bin/zsh', '/tmp/zsh'); },
+      p => { p.events[1].tool.result.output = 'changed'; },
+      p => { p.events[1].tool.result.exit_code = 1; },
+      p => { p.events[1].tool.result.duration_ms = 319; },
+    ]) {
+      const { rows, provider } = staticSearchFixture(); mutate(provider);
+      assert.throws(() => normalize(bytes(rows), state, provider), /PROVIDER_ROLLOUT_TOOL_CONFLICT/);
+    }
+    const { rows, provider } = staticSearchFixture();
+    provider.events[0].tool.arguments.cwd = '/tmp/wrong';
+    assert.throws(() => normalize(bytes(rows), state, provider), /PROVIDER_ROLLOUT_TOOL_CWD_CONFLICT/);
+    provider.events[0].tool.arguments.cwd = state.session.cwd;
+    provider.events[0].tool.call_id = 'unknown';
+    assert.throws(() => normalize(bytes(rows), state, provider), /PROVIDER_ROLLOUT_TOOL_CONFLICT/);
+  });
+
+  test(`${implementation}: summaries with expansion, comments or ambiguous operators fail closed`, () => {
+    for (const prefix of ['echo $HOME', 'echo $(uname)', 'echo `uname`', 'echo x # comment',
+      'echo x; echo y', 'echo x | cat', 'echo x > out', 'echo *', 'echo x &&', 'echo "unterminated', 'echo x\necho y']) {
+      const { rows, provider } = staticSearchFixture(`${prefix} && rg -c "CVE-2021-44228" "/tmp/another run/log.txt"`);
+      assert.throws(() => normalize(bytes(rows), state, provider), /PROVIDER_ROLLOUT_TOOL_CONFLICT/);
+    }
+    for (const suffix of [' && echo later', ' || echo fallback', '; echo later', ' > out']) {
+      const initial = staticSearchFixture();
+      const { rows, provider } = staticSearchFixture(initial.command + suffix);
+      assert.throws(() => normalize(bytes(rows), state, provider), /PROVIDER_ROLLOUT_TOOL_CONFLICT/);
+    }
+    for (const separator of ['\u00a0', '\v', '\0']) {
+      const { rows, provider } = staticSearchFixture(`true && rg${separator}-c${separator}"CVE-2021-44228"${separator}"/tmp/another run/log.txt"`);
+      assert.throws(() => normalize(bytes(rows), state, provider), /PROVIDER_ROLLOUT_TOOL_CONFLICT/);
+    }
+  });
+}

@@ -10,6 +10,54 @@ const shellDoubleQuote = value => `"${value.replaceAll('\\', '\\\\').replaceAll(
 // only literal, fully quoted -lc wrappers; never evaluate a projected command.
 const desktopShells = ['/usr/local/bin/bash', '/bin/bash', '/bin/zsh'];
 
+// Parse only literal words and && separators. This is a comparison grammar,
+// never a shell evaluator: expansion, comments, redirection and other operators
+// are deliberately unsupported, including inside the search summary.
+function literalShellTokens(value) {
+  if (typeof value !== 'string' || /[\u0000-\u0008\u000a-\u001f\u007f$`]/u.test(value)) return null;
+  const tokens = [];
+  let word = '', started = false, quote = null;
+  const flush = () => { if (started) tokens.push({ word }); word = ''; started = false; };
+  for (let i = 0; i < value.length; i += 1) {
+    const c = value[i];
+    if (quote === "'") { if (c === "'") quote = null; else word += c; continue; }
+    if (quote === '"') {
+      if (c === '"') quote = null;
+      else if (c === '\\') { const next = value[++i]; if (!['"', '\\'].includes(next)) return null; word += next; }
+      else word += c;
+      continue;
+    }
+    if (c === ' ' || c === '\t') { flush(); continue; }
+    if (c === "'" || c === '"') { quote = c; started = true; continue; }
+    if (c === '&' && value[i + 1] === '&') { flush(); tokens.push({ operator: '&&' }); i += 1; continue; }
+    if ('|;&<>()*?[]{}~!#'.includes(c)) return null;
+    if (c === '\\') {
+      const next = value[++i];
+      if (next === undefined || !/[ \t'"\\]/u.test(next)) return null;
+      word += next; started = true; continue;
+    }
+    word += c; started = true;
+  }
+  if (quote) return null;
+  flush();
+  if (tokens.some((token, i) => token.operator && (!i || i === tokens.length - 1 || tokens[i - 1].operator))) return null;
+  return tokens;
+}
+
+function verifiedStaticRgTail(command, actions) {
+  if (actions?.length !== 1 || actions[0]?.type !== 'search') return false;
+  const original = literalShellTokens(command), projected = literalShellTokens(actions[0].command);
+  if (!original || !projected || projected.some(token => token.operator)) return false;
+  const last = original.findLastIndex(token => token.operator === '&&');
+  if (last <= 0) return false;
+  const tail = original.slice(last + 1);
+  if (tail.length !== 4 || tail.some(token => token.operator) || tail[0].word !== 'rg' || tail[1].word !== '-c') return false;
+  const words = tail.map(token => token.word);
+  return signature(words) === signature(projected.map(token => token.word))
+    && actions[0].query === words[2]
+    && [words[3], words[3].split('/').at(-1)].includes(actions[0].path);
+}
+
 function verifyProjectedTool(projected, native, call) {
   const p = projected.tool, n = native?.tool, args = call?.tool.arguments;
   ensure(n && call, 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
@@ -22,9 +70,12 @@ function verifyProjectedTool(projected, native, call) {
     ensure(typeof args?.command === 'string', 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
     if (projected.type === 'tool_call') {
       const a = p.arguments;
-      ensure(desktopShells.some(shell => [shellQuote(args.command), shellDoubleQuote(args.command)]
-        .some(quoted => a.command === `${shell} -lc ${quoted}`))
-        && a.command_actions?.length === 1 && a.command_actions[0].command === args.command,
+      const staticTail = verifiedStaticRgTail(args.command, a?.command_actions);
+      const wrappers = [shellQuote(args.command), shellDoubleQuote(args.command),
+        ...(staticTail ? [shellQuote(args.command.replaceAll('"', '\\"'))] : [])];
+      ensure(desktopShells.some(shell => wrappers.some(quoted => a?.command === `${shell} -lc ${quoted}`))
+        && a?.command_actions?.length === 1
+        && (a.command_actions[0].command === args.command || staticTail),
       'PROVIDER_ROLLOUT_TOOL_CONFLICT');
     } else {
       const match = typeof n.result === 'string' && /^Exit code: (-?\d+)\nWall time: (\d+(?:\.\d+)?) seconds\nOutput:\n([\s\S]*)$/.exec(n.result);

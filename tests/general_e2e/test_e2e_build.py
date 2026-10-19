@@ -658,6 +658,24 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
         self.assertIn("EXECUTION_DRIVER_BINDING_MISMATCH", rejected.stderr + rejected.stdout)
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required")
+    def test_static_search_projection_runs_from_detached_collect_skill(self) -> None:
+        detached = self.temp_root / "detached-static-search-projection"
+        installed = BUILD._safe_extract(self.archive_path("collect-general-e2e"), detached)
+        entry = installed / "vendor/e2e-shared/general-resource-supplements/astronstudio-rollout-transcript.mjs"
+        # Reuse the positive, tampering and legacy projection cases against the
+        # installed ZIP alone. Neither normalizer import may resolve a checkout.
+        source = (REPO_ROOT / "tests/general_e2e/astronstudio_rollout_transcript.test.mjs").read_text()
+        for original in [
+            "../../tools/report/e2e-shared/general-resource-supplements/astronstudio-rollout-transcript.mjs",
+            "../../tools/report/skills/general-e2e/collect-general-e2e/vendor/e2e-shared/general-resource-supplements/astronstudio-rollout-transcript.mjs",
+        ]:
+            self.assertIn(original, source)
+            source = source.replace(original, entry.as_uri())
+        result = subprocess.run([shutil.which("node"), "--input-type=module", "-e", source],
+                                cwd=detached, env={"PATH": ""}, text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required")
     def test_rollout_metrics_profile_runs_from_detached_collect_skill(self) -> None:
         detached = self.temp_root / "detached-rollout-profile"
         installed = BUILD._safe_extract(self.archive_path("collect-general-e2e"), detached)
