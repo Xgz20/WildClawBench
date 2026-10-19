@@ -35,14 +35,20 @@ class ExtensionTests(unittest.TestCase):
         from eval_memory_e2e.native_profiles import native_profiles
         path = self.base / 'profiles.json'; native_profiles(path); profiles = read_json(path)
         self.assertEqual(profiles['AstronStudio']['pre_click_rpc_wait_seconds'], 30)
+        self.assertEqual(profiles['AstronStudio']['pre_click_focus_wait_seconds'], 60)
+        self.assertEqual(profiles['AstronStudio']['driver_timeout_seconds'], 300)
+        self.assertEqual(profiles['AstronStudio']['cdp_timeout_ms'], 30000)
         self.assertEqual(profiles['AstronStudio']['native_acceptance_wait_seconds'], 120)
         self.assertNotIn('native_acceptance_wait_seconds', default_profiles()['AstronStudio'])
+        self.assertNotIn('cdp_timeout_ms', default_profiles()['AstronStudio'])
         self.assertNotIn('pre_click_rpc_wait_seconds', profiles['WorkBuddy'])
         root = self.base / 'batch'
         prepare(root, batch_id='new-budgets', seed='new-budgets', dataset_path=self.dataset(recipe()),
                 profiles=profiles, harnesses=['AstronStudio'])
         profiles['AstronStudio']['native_acceptance_wait_seconds'] = 600
+        profiles['AstronStudio']['pre_click_focus_wait_seconds'] = 120
         self.assertEqual(load_batch(root)['profiles']['AstronStudio']['native_acceptance_wait_seconds'], 120)
+        self.assertEqual(load_batch(root)['profiles']['AstronStudio']['pre_click_focus_wait_seconds'], 60)
 
     def test_v2_variable_cardinality_three_scopes_and_recovery_roundtrip(self):
         path = self.dataset(recipe()); data = load_dataset(path)

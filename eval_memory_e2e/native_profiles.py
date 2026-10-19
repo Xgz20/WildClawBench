@@ -80,6 +80,9 @@ def native_profiles(output):
             profiles[harness]["driver_source_scope"] = "local-dependency-closure/v1"
             profiles[harness]["isolation"] = "shared_account_cold_first"
     profiles['AstronStudio']['pre_click_rpc_wait_seconds'] = 30
+    profiles['AstronStudio']['pre_click_focus_wait_seconds'] = 60
+    profiles['AstronStudio']['driver_timeout_seconds'] = 300
+    profiles['AstronStudio']['cdp_timeout_ms'] = 30000
     profiles['AstronStudio']['native_acceptance_wait_seconds'] = 120
     publish(output, profiles)
     return {"output": str(output), "configured_harnesses": [name for name, value in profiles.items() if value["driver_command"]],

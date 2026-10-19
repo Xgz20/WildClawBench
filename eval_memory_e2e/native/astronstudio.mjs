@@ -18,10 +18,16 @@ export function aStudioConfigurationFields(ui,frozen=null) {
   return {model_display:frozen?frozen.model_display:ui.model,
     reasoning:frozen?frozen.reasoning:ui.reasoning,permissions:frozen?frozen.permissions:ui.permission};
 }
-export async function clickAStudioStableTarget(client,prompt,workspace,{read=()=>inspectSendTarget(client,prompt,workspace),beforePress=async()=>({ready:true}),pause=()=>new Promise(ok=>setTimeout(ok,100)),attempts=10}={}) {
+export async function clickAStudioStableTarget(client,prompt,workspace,{read=()=>inspectSendTarget(client,prompt,workspace),beforeMove=null,beforePress=async()=>({ready:true}),finalFocus=()=>({ready:true}),pause=()=>new Promise(ok=>setTimeout(ok,100)),attempts=10}={}) {
   let target=await read();if(!target.ready)return {clicked:false,mouse_press_count:0,...target};
-  const threadId=target.thread_id;
+  const threadId=target.thread_id,focusLosses=[];
   for(let i=0;i<attempts;i++) {
+    if(beforeMove){
+      const focus=await beforeMove();if(focus?.ready!==true)return {clicked:false,mouse_press_count:0,reason:'foreground-not-ready-before-hover',focus};
+      const beforeHover=await read();
+      if(!beforeHover.ready||beforeHover.thread_id!==threadId)return {clicked:false,mouse_press_count:0,reason:'target-or-route-changed-during-focus-wait'};
+      target=beforeHover;
+    }
     await client.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:target.x,y:target.y,button:'none',buttons:0});
     await pause();const next=await read();
     if(!next.ready||next.thread_id!==threadId)return {clicked:false,mouse_press_count:0,reason:'target-or-route-changed-after-hover',target:next};
@@ -29,17 +35,21 @@ export async function clickAStudioStableTarget(client,prompt,workspace,{read=()=
       const final=await read();
       if(!final.ready||final.thread_id!==threadId||final.x!==next.x||final.y!==next.y)return {clicked:false,mouse_press_count:0,reason:'target-not-stable-before-press'};
       const rpc=await beforePress();
-      if(rpc?.ready!==true)return {clicked:false,mouse_press_count:0,reason:'rpc-transport-not-ready-before-press',rpc};
+      if(rpc?.ready!==true)return {clicked:false,mouse_press_count:0,reason:rpc?.focus?.ready===false?'foreground-not-ready-before-press':'rpc-transport-not-ready-before-press',rpc};
       const afterRpc=await read();
       if(!afterRpc.ready||afterRpc.thread_id!==threadId||afterRpc.x!==final.x||afterRpc.y!==final.y)
         return {clicked:false,mouse_press_count:0,reason:'target-changed-after-rpc-read'};
+      // No async work between this native foreground read and the mouse press.
+      const lastFocus=finalFocus();
+      if(lastFocus?.ready!==true){focusLosses.push(lastFocus);await pause();continue;}
       await client.send('Input.dispatchMouseEvent',{type:'mousePressed',x:final.x,y:final.y,button:'left',buttons:1,clickCount:1});
       await client.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:final.x,y:final.y,button:'left',buttons:0,clickCount:1});
-      return {clicked:true,mouse_press_count:1,thread_id:threadId,x:final.x,y:final.y,method:'stable-native-mouse-events'};
+      return {clicked:true,mouse_press_count:1,thread_id:threadId,x:final.x,y:final.y,method:'stable-native-mouse-events',
+        final_foreground:lastFocus,foreground_losses:focusLosses};
     }
     target=next;
   }
-  return {clicked:false,mouse_press_count:0,reason:'target-remained-unstable'};
+  return {clicked:false,mouse_press_count:0,reason:focusLosses.length?'foreground-remained-unstable':'target-remained-unstable',foreground_losses:focusLosses};
 }
 const ASTUDIO_TRANSPORT_PROFILE=Object.freeze({
   url:'acode://app/assets/with-selector-DcLfjZsV.js',
@@ -112,7 +122,9 @@ export function aStudioSendEventsExpression(operationId,threadId,action) {
     if(action==='take'){
       const saved=globalThis[key];if(!saved||saved.id!==id)throw Error('ASTUDIO_SEND_OBSERVER_OWNER_UNVERIFIED');
       for(const [element,type,listener] of saved.listeners)element.removeEventListener(type,listener,true);
+      for(const [row,event] of saved.eventRefs)row.default_prevented_after_dispatch=event.defaultPrevented;
       delete globalThis[key];return {events:saved.events,event_count:saved.event_count,dropped_events:Math.max(0,saved.event_count-saved.events.length),thread_id:thread,observed_route:location.hash,
+        button_connected:saved.button?.isConnected??null,form_connected:saved.form?.isConnected??null,
         source:'passive-dom-event-listeners',intercepted:false};
     }
     if(globalThis[key])throw Error('ASTUDIO_SEND_OBSERVER_BUSY');
@@ -121,12 +133,11 @@ export function aStudioSendEventsExpression(operationId,threadId,action) {
     const editors=[...document.querySelectorAll('[data-testid="composer-editor"]')].filter(visible);
     const button=buttons.length===1?buttons[0]:null,form=button?.form;
     if(decodeURIComponent(location.hash.match(/^#\\/([^/?#]+)/u)?.[1]||'')!==thread||!form||editors.length!==1||editors[0].closest('form')!==form)throw Error('ASTUDIO_SEND_OBSERVER_TARGET_UNVERIFIED');
-    const saved={id,events:[],listeners:[],event_count:0};
+    const saved={id,events:[],eventRefs:[],listeners:[],event_count:0,button,form};
     for(const [element,types] of [[button,['pointerdown','pointerup','mousedown','mouseup','click']],[form,['submit']]])for(const type of types){
       const listener=event=>{
         const row={type,trusted:event.isTrusted,observed_at:Date.now(),default_prevented_at_capture:event.defaultPrevented};
-        saved.event_count++;if(saved.events.length<32)saved.events.push(row);
-        queueMicrotask(()=>{row.default_prevented_after_dispatch=event.defaultPrevented;});
+        saved.event_count++;if(saved.events.length<32){saved.events.push(row);saved.eventRefs.push([row,event]);}
       };
       element.addEventListener(type,listener,true);saved.listeners.push([element,type,listener]);
     }
@@ -144,9 +155,28 @@ export async function withAStudioSendEvents(client,operationId,threadId,send,rec
     await record(evidence);
   }
 }
-export async function waitForAStudioForeground(pid,{attempts=30,read=()=>Number(execFileSync('/usr/bin/osascript',
+export function readAStudioForegroundPid(){return Number(execFileSync('/usr/bin/osascript',
   ['-l','JavaScript','-e','ObjC.import("AppKit"); Number($.NSWorkspace.sharedWorkspace.frontmostApplication.processIdentifier);'],
-  {encoding:'utf8',timeout:3000}).trim()),pause=()=>new Promise(ok=>setTimeout(ok,100))}={}) {
+  {encoding:'utf8',timeout:3000}).trim());}
+export function aStudioForegroundCheck(pid,read=readAStudioForegroundPid){
+  const current=read();return {ready:Number.isSafeInteger(current)&&current===pid,expected_pid:pid,foreground_pid:Number.isSafeInteger(current)?current:null};
+}
+export async function waitForAStudioSendFocus(pid,{maxWaitMs=60000,read=readAStudioForegroundPid,readDocument=async()=>({focused:true,visible:true}),now=Date.now,pause=()=>new Promise(ok=>setTimeout(ok,200))}={}) {
+  if(!Number.isFinite(maxWaitMs)||maxWaitMs<0||maxWaitMs>120000)throw Error('ASTUDIO_FOCUS_WAIT_POLICY');
+  const started=now(),observations=[];let stable=0;
+  do {
+    const before=aStudioForegroundCheck(pid,read);
+    const document=before.ready?await readDocument():null;
+    const after=aStudioForegroundCheck(pid,read);
+    const ready=before.ready&&after.ready&&document?.focused===true&&document?.visible===true;
+    observations.push({before,after,document});stable=ready?stable+1:0;
+    if(stable>=2||ready&&maxWaitMs===0)return {ready:true,waited_ms:now()-started,observations};
+    if(now()-started>=maxWaitMs)break;
+    await pause();
+  }while(now()-started<maxWaitMs);
+  return {ready:false,reason:'foreground-wait-expired',waited_ms:now()-started,observations};
+}
+export async function waitForAStudioForeground(pid,{attempts=30,read=readAStudioForegroundPid,pause=()=>new Promise(ok=>setTimeout(ok,100))}={}) {
   for(let i=0;i<attempts;i++){if(await read()===pid)return {pid,verified:true,attempts:i+1};await pause();}
   throw Error('ASTUDIO_FOREGROUND_OWNER_UNVERIFIED');
 }
@@ -167,7 +197,7 @@ export function aStudioAcceptanceState(state,now=Date.now(),waitSeconds=30) {
   const start=Date.parse(state.click_returned_at||'');
   return Number.isFinite(start)&&now-start<waitSeconds*1000?'pending':'unconfirmed';
 }
-export function aStudioDomSubmitExpression(prompt,workspace,threadId) {
+export function aStudioDomSubmitExpression(prompt,workspace,threadId,{requireFocus=false}={}) {
   return `(()=>{
     const expected=${JSON.stringify(prompt.trim().replaceAll('\r\n','\n'))},cwd=${JSON.stringify(workspace)},thread=${JSON.stringify(threadId)};
     const visible=e=>e.getClientRects().length>0&&getComputedStyle(e).visibility!=='hidden';
@@ -175,7 +205,7 @@ export function aStudioDomSubmitExpression(prompt,workspace,threadId) {
     const editors=[...document.querySelectorAll('[data-testid="composer-editor"]')].filter(visible);
     const workspaces=[...document.querySelectorAll('[data-testid="workspace-picker-trigger"], [data-testid="project-picker-trigger"]')].filter(visible);
     const buttons=[...document.querySelectorAll('button[type="submit"][aria-label="发送消息"], button[type="submit"][aria-label="Send message"]')].filter(visible).filter(e=>!e.disabled);
-    if(decodeURIComponent(route||'')!==thread||editors.length!==1||workspaces.length!==1||buttons.length!==1
+    if(${requireFocus?'(!document.hasFocus()||document.visibilityState!=="visible")||':''}decodeURIComponent(route||'')!==thread||editors.length!==1||workspaces.length!==1||buttons.length!==1
       ||(editors[0].innerText||'').trim().replaceAll('\\r\\n','\\n')!==expected||workspaces[0].getAttribute('title')!==cwd
       ||[...document.querySelectorAll('[role="dialog"], [aria-modal="true"]')].some(visible))return {clicked:false,reason:'atomic-send-precondition-changed'};
     const button=buttons[0],form=button.form,rect=button.getBoundingClientRect(),hit=document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2);
@@ -431,13 +461,28 @@ export async function connectAStudioNativeObservation(state,{checkEnvironment=re
     observation_evidence:{observation_transport:'native-state-and-rollout-only',
       account_identity_basis:'verified-dispatch-auth-session-uid',current_account_rechecked:false}};
 }
-async function connect(frozen=null,observeOnly=false) {
+export function aStudioCdpBudget(profile) {
+  const value=profile.cdp_timeout_ms??10000;
+  if(!Number.isInteger(value)||value<5000||value>60000)throw Error('ASTUDIO_CDP_TIMEOUT_POLICY');
+  return value;
+}
+async function connect(frozen=null,observeOnly=false,{activate=false,timeoutMs=10000,record=async()=>{}}={}) {
   await requireGui();const {pid,version}=aStudioRuntimeIdentity();
+  if(activate){
+    execFileSync('/usr/bin/open',['-a','/Applications/AStudio.app']);
+    await record({stage:'connect-foreground',...(await waitForAStudioForeground(pid)),prompt_sent:false});
+  }
   const target=await discoverMainTarget(ENDPOINT,4000);
-  const client=await CdpClient.connect(target.webSocketDebuggerUrl,10000);
+  const client=await CdpClient.connect(target.webSocketDebuggerUrl,timeoutMs);
+  const stage=async(name,read)=>{
+    const started=Date.now();await record({stage:name,status:'started',at:new Date().toISOString(),prompt_sent:false});
+    try {const result=await read();await record({stage:name,status:'completed',duration_ms:Date.now()-started,prompt_sent:false});return result;}
+    catch(error){await record({stage:name,status:'failed',duration_ms:Date.now()-started,error_sha256:sha(error.message),prompt_sent:false});throw error;}
+  };
   try {
-    const ui=await readUiConfiguration(client);
-    const uid=await client.evaluate(`(async()=>{const u=new URL(await window.desktopBridge.getWsUrl());u.protocol=u.protocol==='wss:'?'https:':'http:';u.pathname='/api/astron-auth/session';const r=await fetch(u,{signal:AbortSignal.timeout(6000)});if(!r.ok)throw Error('auth unavailable');const j=await r.json();return j.session?.uid??null})()`);
+    if(activate)await client.send('Page.bringToFront');
+    const ui=await stage('connect-ui',()=>readUiConfiguration(client));
+    const uid=await stage('connect-auth',()=>client.evaluate(`(async()=>{const u=new URL(await window.desktopBridge.getWsUrl());u.protocol=u.protocol==='wss:'?'https:':'http:';u.pathname='/api/astron-auth/session';const r=await fetch(u,{signal:AbortSignal.timeout(6000)});if(!r.ok)throw Error('auth unavailable');const j=await r.json();return j.session?.uid??null})()`));
     if(!uid)throw Error('ASTUDIO_ACCOUNT_UNVERIFIED');
     const config={app_version:version,...aStudioConfigurationFields(ui,frozen),
       memory_settings:readMemoryConfiguration(),
@@ -516,7 +561,9 @@ export async function runAstronStudio(request) {
   try{state=await readJson(ctx.stateFile)}catch(e){if(e.code!=='ENOENT')throw e}
   if(state&&state.requestHash!==requestHash(request))throw Error('ASTUDIO_MEMORY_REQUEST_DRIFT');
   const live=aStudioNativeObservationEligible(request,state)?await connectAStudioNativeObservation(state)
-    :await connect(state?.config??request.expected_config,Boolean(state&&request.transport_action==='observe'));
+    :await withUiLock(ctx,request,()=>connect(state?.config??request.expected_config,Boolean(state&&request.transport_action==='observe'),{
+      activate:!state&&request.transport_action==='dispatch',timeoutMs:aStudioCdpBudget(ctx.manifest.profiles.AstronStudio),
+      record:value=>artifact(ctx,'connection-stage',value)}));
   try {
     verifyConfig(live.config,request.expected_config);
     if(state&&state.requestHash!==requestHash(request))throw Error('ASTUDIO_MEMORY_REQUEST_DRIFT');
@@ -578,12 +625,27 @@ export async function runAstronStudio(request) {
       if(!['native_mouse','dom_submit_click'].includes(method))throw Error('ASTUDIO_SEND_METHOD_NOT_ADMITTED');
       const waitSeconds=ctx.manifest.profiles.AstronStudio.pre_click_rpc_wait_seconds??0;
       if(!Number.isInteger(waitSeconds)||waitSeconds<0||waitSeconds>60)throw Error('ASTUDIO_PRE_CLICK_WAIT_POLICY');
-      const beforePress=()=>waitForAStudioClickTransport(()=>readAStudioRpcTransport(live.client),{maxWaitMs:waitSeconds*1000});
+      const focusSeconds=ctx.manifest.profiles.AstronStudio.pre_click_focus_wait_seconds??0;
+      if(!Number.isInteger(focusSeconds)||focusSeconds<0||focusSeconds>120)throw Error('ASTUDIO_FOCUS_WAIT_POLICY');
+      const waitFocus=async()=>{
+        const focus=await waitForAStudioSendFocus(live.pid,{maxWaitMs:focusSeconds*1000,
+          readDocument:()=>live.client.evaluate('({focused:document.hasFocus(),visible:document.visibilityState === "visible"})')});
+        await artifact(ctx,'send-focus-check',focus);return focus;
+      };
+      const finalFocus=()=>aStudioForegroundCheck(live.pid);
+      const beforePress=async()=>{
+        const rpc=await waitForAStudioClickTransport(()=>readAStudioRpcTransport(live.client),{maxWaitMs:waitSeconds*1000});
+        if(!rpc.ready)return rpc;
+        const focus=await waitFocus();return {...rpc,ready:focus.ready,focus};
+      };
       const clicked=await withAStudioSendEvents(live.client,request.operation_id,route,()=>dispatchAStudioOnce(state,async()=>{
         const rpc=await beforePress();
-        if(!rpc.ready)return {clicked:false,mouse_press_count:0,reason:'rpc-transport-not-ready',rpc};
-        return method==='dom_submit_click'?live.client.evaluate(aStudioDomSubmitExpression(request.prompt,request.workspace,route))
-          :clickAStudioStableTarget(live.client,request.prompt,request.workspace,{beforePress});
+        if(!rpc.ready)return {clicked:false,mouse_press_count:0,reason:rpc.focus?.ready===false?'foreground-not-ready':'rpc-transport-not-ready',rpc};
+        if(method==='dom_submit_click'){
+          const focus=finalFocus();if(!focus.ready)return {clicked:false,mouse_press_count:0,reason:'foreground-not-ready-before-dom-click',focus};
+          return live.client.evaluate(aStudioDomSubmitExpression(request.prompt,request.workspace,route,{requireFocus:true}));
+        }
+        return clickAStudioStableTarget(live.client,request.prompt,request.workspace,{beforePress,beforeMove:waitFocus,finalFocus});
       },value=>saveState(ctx,value)),value=>artifact(ctx,'send-dom-events',value));
       await artifact(ctx,'send-result',{method,result:clicked,native_acceptance_verified:false});
       if(!clicked.clicked)return bindReply(ctx,request,{...baseReply(request,live.config),status:'needs_attention',reason:'发送前检查返回未点击成功，停止在原生发送之前。'},{click_result:clicked,prompt_sent:false});

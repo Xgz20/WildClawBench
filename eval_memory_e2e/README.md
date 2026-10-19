@@ -26,6 +26,8 @@ AStudio传输状态读取只准入已核验的renderer源码指纹，客户端�
 
 **2026-10-19 观察与准备加固：** 已发送且点击回执完整的AStudio原操作可只读沿原生库／rollout恢复观察，保留发送前账号依据并明确标记当前账号未重查；新派发仍走完整桌面UI。新Profile冻结30秒发送前RPC恢复预算和120秒原生接受观察窗，旧Profile不升级。新增Memory专用项目导航恢复、刷新后只读等待、CDP准备诊断与被动DOM发送事件取证；General/Web共享源码没有修改。旧成功C0只读重观察与一个新C0均已完成；完整三步控制仍未通过，一次点击后原生接受未确认，后续暂停。具体结果与豆包队列采集缺口见[实施记录第12节](../docs/research/agent-memory/记忆评测准入门禁与渠道分层实施-20261018.md#12-2026-10-19astudio-观察传输与项目准备加固)。
 
+**同日焦点恢复：** 用户确认采用核验后清理测试草稿、保留旧失败并新建独立项目重跑。已完成精确草稿清理，增加发送前的前台PID／页面焦点等待和按下前即时检查；新AStudio Profile冻结60秒焦点等待、30秒CDP读取和300秒Driver控制预算。焦点等待不主动激活应用，首次连接准备的激活在UI锁内进行。独立三步基础控制已完成3/3，回复391、391、437；每条仅一次发送且DOM与原生证据齐全。期间一次namespace只读核验异常沿原操作恢复，未重发Prompt；用户配合保前台，仍不作为无人值守或记忆成绩。实测状态与限制见[实施记录第13节](../docs/research/agent-memory/记忆评测准入门禁与渠道分层实施-20261018.md#13-2026-10-19桌面焦点门禁与清草稿后独立重跑)。
+
 ## 运行环境和快速验证
 
 从当前 checkout/worktree 根运行。编排、数据和报告只需要 Python 3.11 标准库；原生预检另外需要 Node ≥22、现有 General Driver 依赖及受支持的客户端。DoubaoWork Driver 的锁定依赖安装在其目录，未安装时预检保留进程错误，不能当成产品不支持。
@@ -87,7 +89,7 @@ python3 -m eval_memory_e2e native-profiles --output /private/native-profiles.jso
 
 新建原生批次在每条实际发送的 Prompt 中冻结相同操作边界：不访问或改动 Codex 记忆，不让其他客户端代做，不清空日常账号记忆，仅处理本轮合成档案。原始开源样本和私有答案不改写；操作边界属于本项目执行条件。旧批次不就地改题。
 
-原生 Profile 的控制调用预算为 180 秒，覆盖多个 UI 准备步骤；它不是模型做题时限。超时将保存部分 stdout／stderr 和原意图，只允许观察恢复。AStudio 轨迹优先绑定原始 rollout 的 session／turn／cwd／Prompt 摘要，不能把会被回收的桌面事件缓存视作完整模型轨迹。
+原生 Profile 的控制调用预算通常为180秒；本轮新增AStudio Profile为300秒，以覆盖UI准备与焦点等待。它不是模型做题时限。超时将保存部分 stdout／stderr 和原意图，只允许观察恢复。AStudio 轨迹优先绑定原始 rollout 的 session／turn／cwd／Prompt 摘要，不能把会被回收的桌面事件缓存视作完整模型轨迹。
 
 该入口明确生成 `memory_protocol.purpose=immediate_automation_smoke`、`formal_scoring_allowed=false` 的 Profile。短观察窗只验证自动化与即时跨会话行为，评分模板入口拒绝将它作为正式能力成绩。AStudio 的历史候选与两阶段整理、WorkBuddy 的每晚整理、千问的写入／反思、豆包主动与周期记忆分别记录 formation gate；正式测量需要另行冻结相应学习条件。
 

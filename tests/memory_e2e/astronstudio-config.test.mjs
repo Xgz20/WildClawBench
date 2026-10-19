@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import {verifyRecordedConfiguration,aStudioCatalogModelId,aStudioGatewayCatalogProjection,aStudioTransportProfileForSource,readAStudioRpcTransport,waitForAStudioRpcReady,waitForAStudioClickTransport,aStudioNativeObservationEligible,connectAStudioNativeObservation,aStudioProjectUiExpression,aStudioProjectNavigationExpression,waitForAStudioReload,traceAStudioPreparation,waitForAStudioProjectBinding,waitForAStudioFrozenUi,waitForAStudioForeground,dispatchAStudioOnce,aStudioSendEventsExpression,withAStudioSendEvents,clickAStudioStableTarget,aStudioConfigurationFields,aStudioDomSubmitExpression,aStudioAcceptanceState} from '../../eval_memory_e2e/native/astronstudio.mjs';
+import {verifyRecordedConfiguration,aStudioCatalogModelId,aStudioGatewayCatalogProjection,aStudioTransportProfileForSource,readAStudioRpcTransport,waitForAStudioRpcReady,waitForAStudioClickTransport,aStudioNativeObservationEligible,connectAStudioNativeObservation,aStudioProjectUiExpression,aStudioProjectNavigationExpression,waitForAStudioReload,traceAStudioPreparation,waitForAStudioProjectBinding,waitForAStudioFrozenUi,waitForAStudioForeground,readAStudioForegroundPid,aStudioForegroundCheck,waitForAStudioSendFocus,dispatchAStudioOnce,aStudioSendEventsExpression,withAStudioSendEvents,clickAStudioStableTarget,aStudioConfigurationFields,aStudioCdpBudget,aStudioDomSubmitExpression,aStudioAcceptanceState} from '../../eval_memory_e2e/native/astronstudio.mjs';
 import {requestHash} from '../../eval_memory_e2e/native/common.mjs';
 const session={turn_id:'owned-turn',cwd:'/tmp/owned'};
 const frozen={model_display:'Spark-X2.5',reasoning:'High',permissions:'完全访问'};
@@ -299,8 +299,9 @@ function eventDom(){
   const form=element('form'),button={...element('button'),form},editor={...element('editor'),closest:()=>form};
   const env=vm.createContext({document:{querySelectorAll:s=>s.includes('composer-editor')?[editor]:[button]},
     location:{hash:'#/owned-thread'},getComputedStyle:()=>({visibility:'visible'}),queueMicrotask:fn=>queue.push(fn)});
-  return {listeners,env,client:{evaluate:async expression=>vm.runInContext(expression,env)},emit:(name,type)=>{
-    const event={isTrusted:true,defaultPrevented:false};listeners.get(name+':'+type)?.(event);event.defaultPrevented=true;
+  return {listeners,env,client:{evaluate:async expression=>vm.runInContext(expression,env)},emit:(name,type,{earlyMicrotask=false}={})=>{
+    const event={isTrusted:true,defaultPrevented:false};listeners.get(name+':'+type)?.(event);
+    if(earlyMicrotask)while(queue.length)queue.shift()();event.defaultPrevented=true;
     while(queue.length)queue.shift()();
   }};
 }
@@ -319,4 +320,50 @@ test('passive event cleanup never retries an unknown send and does not remove a 
   await assert.rejects(()=>dom.client.evaluate(aStudioSendEventsExpression('op-'+'c'.repeat(64),'owned-thread','take')),/OWNER_UNVERIFIED/);
   assert.equal(dom.listeners.size,6);
   await dom.client.evaluate(aStudioSendEventsExpression(op,'owned-thread','take'));assert.equal(dom.listeners.size,0);
+});
+
+test('send focus waits for the same foreground owner and a focused visible renderer without activating it',async()=>{
+  let tick=0,reads=0;const pids=[99,99,42,42,42,42];let documents=0;
+  const result=await waitForAStudioSendFocus(42,{maxWaitMs:100,read:()=>pids[reads++],
+    readDocument:async()=>{documents++;return {focused:true,visible:true}},now:()=>tick,pause:async()=>{tick+=10}});
+  assert.equal(result.ready,true);assert.equal(result.observations.length,3);assert.equal(documents,2);
+});
+test('a foreign or unknown foreground and an unfocused renderer expire without admitting a send',async()=>{
+  for(const [pid,document] of [[99,{focused:true,visible:true}],[NaN,{focused:true,visible:true}],
+    [42,{focused:false,visible:true}],[42,{focused:true,visible:false}]]){
+    let tick=0;const result=await waitForAStudioSendFocus(42,{maxWaitMs:20,read:()=>pid,readDocument:async()=>document,
+      now:()=>tick,pause:async()=>{tick+=10}});
+    assert.equal(result.ready,false);
+  }
+  assert.equal(aStudioForegroundCheck(42,()=>NaN).ready,false);
+  assert.equal((await waitForAStudioSendFocus(42,{maxWaitMs:0,read:()=>42})).ready,true);
+});
+test('losing foreground after the final target read prevents the press and waits for a fresh verified target',async()=>{
+  const events=[];let checks=0;
+  const result=await clickAStudioStableTarget({send:async(_,v)=>events.push(v)},'p','/w',{
+    read:async()=>({ready:true,thread_id:'owned',x:1,y:2}),beforeMove:async()=>({ready:true}),
+    finalFocus:()=>aStudioForegroundCheck(42,()=>++checks===1?99:42),pause:async()=>{}});
+  assert.equal(result.clicked,true);assert.equal(result.foreground_losses.length,1);
+  assert.equal(events.filter(e=>e.type==='mousePressed').length,1);assert.equal(result.final_foreground.foreground_pid,42);
+});
+test('no hover or press occurs while focus is unavailable and a changed route after waiting is rejected',async()=>{
+  for(const changedRoute of [false,true]){
+    const events=[];let reads=0;
+    const result=await clickAStudioStableTarget({send:async(_,v)=>events.push(v)},'p','/w',{
+      read:async()=>({ready:true,thread_id:++reads>1&&changedRoute?'other':'owned',x:1,y:2}),
+      beforeMove:async()=>({ready:changedRoute}),pause:async()=>{}});
+    assert.equal(result.clicked,false);assert.equal(events.length,0);
+  }
+});
+
+test('new CDP budgets are explicit and invalid values fail before any connection',()=>{
+  assert.equal(aStudioCdpBudget({}),10000);assert.equal(aStudioCdpBudget({cdp_timeout_ms:30000}),30000);
+  for(const cdp_timeout_ms of [0,4999,60001,Infinity,'30000'])assert.throws(()=>aStudioCdpBudget({cdp_timeout_ms}),/CDP_TIMEOUT_POLICY/);
+});
+
+test('event snapshots read final default prevention even if a microtask ran before bubbling handlers',async()=>{
+  const dom=eventDom();let captured;
+  await withAStudioSendEvents(dom.client,'op-'+'d'.repeat(64),'owned-thread',async()=>dom.emit('form','submit',{earlyMicrotask:true}),async raw=>captured=raw);
+  assert.equal(captured.events[0].default_prevented_at_capture,false);
+  assert.equal(captured.events[0].default_prevented_after_dispatch,true);assert.equal(dom.listeners.size,0);
 });
