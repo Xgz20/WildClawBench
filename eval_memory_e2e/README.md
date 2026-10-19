@@ -18,6 +18,10 @@
 
 **同日完整串行追加：** WorkBuddy→QwenWork各完成v3.1七次Prompt、回忆与渠道两道门禁，共14次请求。两端的遗忘后两次回复均泄漏旧值：WorkBuddy操作记录与日志仍有残留；千问已知Markdown文件无目标，但原生memory_search仍返回旧片段，首次JSON填“未知”也未避免说明文字泄漏。千问一次UI身份暂停经同操作观察恢复，没有重发。结果与分母见[实施记录第8—10节](../docs/research/agent-memory/记忆评测准入门禁与渠道分层实施-20261018.md)，均为未正式评分的单链canary，正式20题仍未启动；两端收口后没有继续派发AStudio或豆包。
 
+**2026-10-19准入加固：** AStudio模型显示名通过账号范围内的网关目录映射到原生slug核验，并增加已加载客户端传输状态的发送前门禁；真机connecting状态已实现零点击拦截。三个独立记忆关闭控制批次的完成数分别为1/3、0/3、1/3，不能拼成稳定运行证明，尚未开启记忆。豆包安装版本更新为2.32.12，缓存调度模块仍未适配，未派发题目。修复、观察恢复、控制失败和测试边界见[实施记录第11节](../docs/research/agent-memory/记忆评测准入门禁与渠道分层实施-20261018.md)。General/Web共享源码未改动。
+
+AStudio传输状态读取只准入已核验的renderer源码指纹，客户端资源变化须重新核验。open仅是发送前提，原生session、turn、Prompt、模型目录和权限校验仍保留；未知点击继续只观察，不自动重发。
+
 默认数据集位于 [memory-mixed20-v1](../tasks/memory-e2e/memory-mixed20-v1/manifest.json)，由带来源追溯的开源样本和自建场景组合；原自建 [diagnostic20](../tasks/memory-e2e/memory-diagnostic20-v1.json) 保留。它使用独立多会话契约，不是旧单 Prompt Markdown 任务。校验入口为 `python3 -m eval_memory_e2e validate-dataset`，不送入 Markdown/frontmatter 校验器。
 
 ## 运行环境和快速验证

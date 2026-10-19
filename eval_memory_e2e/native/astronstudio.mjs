@@ -1,7 +1,7 @@
 import {pathToFileURL} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
-import {realpath,stat} from 'node:fs/promises';
+import {realpath,stat,readFile} from 'node:fs/promises';
 import {discoverMainTarget, readUiConfiguration, prepareExecutionUi, fillPrompt, ensureSendTargetReady,
   inspectSendTarget, currentThreadId} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs';
 import {WorkBuddyCdpClient as CdpClient} from '../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/ui.mjs';
@@ -18,7 +18,7 @@ export function aStudioConfigurationFields(ui,frozen=null) {
   return {model_display:frozen?frozen.model_display:ui.model,
     reasoning:frozen?frozen.reasoning:ui.reasoning,permissions:frozen?frozen.permissions:ui.permission};
 }
-export async function clickAStudioStableTarget(client,prompt,workspace,{read=()=>inspectSendTarget(client,prompt,workspace),pause=()=>new Promise(ok=>setTimeout(ok,100)),attempts=10}={}) {
+export async function clickAStudioStableTarget(client,prompt,workspace,{read=()=>inspectSendTarget(client,prompt,workspace),beforePress=async()=>({ready:true}),pause=()=>new Promise(ok=>setTimeout(ok,100)),attempts=10}={}) {
   let target=await read();if(!target.ready)return {clicked:false,mouse_press_count:0,...target};
   const threadId=target.thread_id;
   for(let i=0;i<attempts;i++) {
@@ -28,6 +28,11 @@ export async function clickAStudioStableTarget(client,prompt,workspace,{read=()=
     if(next.x===target.x&&next.y===target.y) {
       const final=await read();
       if(!final.ready||final.thread_id!==threadId||final.x!==next.x||final.y!==next.y)return {clicked:false,mouse_press_count:0,reason:'target-not-stable-before-press'};
+      const rpc=await beforePress();
+      if(rpc?.ready!==true)return {clicked:false,mouse_press_count:0,reason:'rpc-transport-not-ready-before-press',rpc};
+      const afterRpc=await read();
+      if(!afterRpc.ready||afterRpc.thread_id!==threadId||afterRpc.x!==final.x||afterRpc.y!==final.y)
+        return {clicked:false,mouse_press_count:0,reason:'target-changed-after-rpc-read'};
       await client.send('Input.dispatchMouseEvent',{type:'mousePressed',x:final.x,y:final.y,button:'left',buttons:1,clickCount:1});
       await client.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:final.x,y:final.y,button:'left',buttons:0,clickCount:1});
       return {clicked:true,mouse_press_count:1,thread_id:threadId,x:final.x,y:final.y,method:'stable-native-mouse-events'};
@@ -35,6 +40,50 @@ export async function clickAStudioStableTarget(client,prompt,workspace,{read=()=
     target=next;
   }
   return {clicked:false,mouse_press_count:0,reason:'target-remained-unstable'};
+}
+const ASTUDIO_TRANSPORT_PROFILE=Object.freeze({
+  url:'acode://app/assets/with-selector-DcLfjZsV.js',
+  sha256:'b6350faa1efd5faa42907b2a52497b356d6a4d6ab9f07d034364d89d01a0d537',
+  getter:'h',getter_source:'function Os(){return Ts}',event:'astudio:ws-transport-state',
+});
+export function aStudioTransportProfileForSource(source,url) {
+  if(url!==ASTUDIO_TRANSPORT_PROFILE.url||sha(source)!==ASTUDIO_TRANSPORT_PROFILE.sha256)throw Error('ASTUDIO_RPC_SOURCE_UNVERIFIED');
+  return ASTUDIO_TRANSPORT_PROFILE;
+}
+async function loadedAStudioTransportProfile(client) {
+  const scripts=[];
+  const listener=e=>{const m=JSON.parse(String(e.data));
+    if(m.method==='Debugger.scriptParsed'&&m.params.url===ASTUDIO_TRANSPORT_PROFILE.url&&m.params.isModule)scripts.push(m.params)};
+  client.socket.addEventListener('message',listener);
+  try {
+    await client.send('Debugger.enable');
+    if(!scripts.length)throw Error('ASTUDIO_RPC_LOADED_MODULE_UNVERIFIED');
+    const {scriptSource}=await client.send('Debugger.getScriptSource',{scriptId:scripts.at(-1).scriptId});
+    return aStudioTransportProfileForSource(scriptSource,scripts.at(-1).url);
+  } finally {client.socket.removeEventListener('message',listener);await client.send('Debugger.disable').catch(()=>{})}
+}
+export async function readAStudioRpcTransport(client,{readProfile=loadedAStudioTransportProfile}={}) {
+  const profile=await readProfile(client);
+  // Import only the exact, already-loaded ES module verified above. Read its
+  // existing state getter; do not construct sockets, invoke RPCs or enumerate the heap.
+  return client.evaluate(`(async()=>{
+    const module=await import(${JSON.stringify(profile.url)}),getter=module[${JSON.stringify(profile.getter)}];
+    if(typeof getter!=='function'||String(getter)!==${JSON.stringify(profile.getter_source)})throw Error('ASTUDIO_RPC_GETTER_UNVERIFIED');
+    const state=getter(),host=new URL(await window.desktopBridge.getWsUrl()).host;
+    if(state!==null&&!['connecting','open','closed','incompatible','authentication-required','disposed'].includes(state))throw Error('ASTUDIO_RPC_STATE_UNVERIFIED');
+    return {source:'installed-renderer-transport-state',state,ready:state==='open',
+      identities:[{host,source_url:${JSON.stringify(profile.url)},source_sha256:${JSON.stringify(profile.sha256)}}]};
+  })()`);
+}
+export async function waitForAStudioRpcReady(read,{attempts=300,pause=()=>new Promise(ok=>setTimeout(ok,200))}={}) {
+  let previous=null,last=null;
+  for(let i=0;i<attempts;i++) {
+    last=await read();
+    const identity=last?.ready===true?JSON.stringify(last.identities):null;
+    if(identity&&identity===previous)return {ready:true,samples:i+1,observation:last};
+    previous=identity;await pause();
+  }
+  const error=Error('ASTUDIO_RPC_TRANSPORT_NOT_READY');error.observation=last;throw error;
 }
 export async function dispatchAStudioOnce(state,click,persist) {
   state.phase='invoking';await persist(state);
@@ -105,7 +154,44 @@ for name,root in [('primary','/Users/gzx/.acode'),('overlay','/Users/gzx/.acode/
 print(json.dumps(result))`;
   return JSON.parse(execFileSync(process.env.MEMORY_E2E_PYTHON||'/usr/local/bin/python3.11',['-c',code],{encoding:'utf8',timeout:5000}));
 }
-export function verifyRecordedConfiguration(bytes,session,frozen) {
+export function aStudioCatalogModelId(catalog,accountScopeHash,displayName) {
+  if(catalog?.schemaVersion!==1||catalog.accountScopeHash!==accountScopeHash
+    ||!Array.isArray(catalog.models)||!Number.isFinite(Date.parse(catalog.fetchedAt)))throw Error('ASTUDIO_MODEL_CATALOG_SCOPE_UNVERIFIED');
+  const matches=catalog.models.filter(m=>typeof m.name==='string'&&m.name.toLowerCase()===displayName.toLowerCase());
+  if(matches.length!==1||typeof matches[0].slug!=='string'||!matches[0].slug.trim())throw Error('ASTUDIO_MODEL_CATALOG_ALIAS_AMBIGUOUS');
+  return matches[0].slug;
+}
+export function aStudioGatewayCatalogProjection(raw,accountFingerprint) {
+  if(raw?.version!==1||raw.accountHash!==accountFingerprint||!Number.isFinite(raw.refreshedAt)
+    ||!Array.isArray(raw.builtins?.models))throw Error('ASTUDIO_MODEL_CATALOG_SCOPE_UNVERIFIED');
+  return {schemaVersion:1,accountScopeHash:raw.accountHash,fetchedAt:new Date(raw.refreshedAt).toISOString(),
+    models:raw.builtins.models.map(m=>({slug:m.slug,name:m.display_name}))};
+}
+async function modelCatalogEvidence(ctx,live,saved=null) {
+  const source='/Users/gzx/.acode/acode/userdata/model-gateway/catalog-'+live.config.account_fingerprint+'.json';
+  let bytes,proof=saved;
+  if(saved) {
+    if(saved.source_kind!=='astudio-scoped-model-catalog/v1'||saved.account_fingerprint!==live.config.account_fingerprint
+      ||saved.account_scope_hash!==live.account_scope_hash||typeof saved.snapshot_path!=='string'
+      ||!saved.snapshot_path.startsWith(ctx.control+'/')||await realpath(saved.snapshot_path)!==saved.snapshot_path)throw Error('ASTUDIO_MODEL_CATALOG_PROOF_DRIFT');
+    bytes=await readFile(saved.snapshot_path);
+    if(sha(bytes)!==saved.sha256)throw Error('ASTUDIO_MODEL_CATALOG_PROOF_DRIFT');
+  } else {
+    let before;try{before=await stat(source)}catch(e){if(e.code==='ENOENT')return null;throw e}
+    if(!before.isFile()||before.size>1048576||await realpath(source)!==source)throw Error('ASTUDIO_MODEL_CATALOG_SOURCE_UNVERIFIED');
+    const sourceBytes=await readFile(source);const after=await stat(source);
+    if(before.size!==after.size||before.mtimeMs!==after.mtimeMs)throw Error('ASTUDIO_MODEL_CATALOG_UNSTABLE');
+    const projection=aStudioGatewayCatalogProjection(JSON.parse(sourceBytes),live.config.account_fingerprint);
+    aStudioCatalogModelId(projection,live.account_scope_hash,live.config.model_display);
+    bytes=Buffer.from(JSON.stringify(projection,null,2)+'\n');
+    proof={source_kind:'astudio-scoped-model-catalog/v1',source_path:source,account_fingerprint:live.config.account_fingerprint,
+      account_scope_hash:live.account_scope_hash,source_sha256:sha(sourceBytes),sha256:sha(bytes),snapshot_path:await artifact(ctx,'model-catalog',bytes.toString('utf8'))};
+  }
+  const catalog=JSON.parse(bytes);
+  aStudioCatalogModelId(catalog,live.account_scope_hash,live.config.model_display);
+  return {...proof,catalog};
+}
+export function verifyRecordedConfiguration(bytes,session,frozen,modelCatalog=null) {
   const rows=bytes.toString('utf8').trim().split(/\r?\n/).map(line=>JSON.parse(line));
   const contexts=rows.filter(row=>row.type==='turn_context'&&row.payload?.turn_id===session.turn_id).map(row=>row.payload);
   if(contexts.length!==1)throw Error('ASTUDIO_NATIVE_CONFIGURATION_UNBOUND');
@@ -115,13 +201,21 @@ export function verifyRecordedConfiguration(bytes,session,frozen) {
     const decoded=Buffer.from(encoded,'base64url');if(decoded.toString('base64url')!==encoded)throw Error('ASTUDIO_NATIVE_MODEL_ENCODING');
     model=decoded.toString('utf8');
   }
-  if(typeof model!=='string'||model.toLowerCase()!==frozen.model_display.toLowerCase()
+  let expectedModel=frozen.model_display,modelIdentityBasis='exact-display-id';
+  if(modelCatalog) {
+    if(modelCatalog.source_kind!=='astudio-scoped-model-catalog/v1'
+      ||!frozen.account_fingerprint||modelCatalog.account_fingerprint!==frozen.account_fingerprint)throw Error('ASTUDIO_MODEL_CATALOG_ACCOUNT_MISMATCH');
+    expectedModel=aStudioCatalogModelId(modelCatalog.catalog,modelCatalog.account_scope_hash,frozen.model_display);
+    modelIdentityBasis='account-scoped-catalog-name-to-slug';
+  }
+  if(typeof model!=='string'||model.toLowerCase()!==expectedModel.toLowerCase()
     ||String(value.effort).toLowerCase()!==String(frozen.reasoning).toLowerCase()
     ||value.cwd!==session.cwd)throw Error('ASTUDIO_NATIVE_CONFIGURATION_MISMATCH');
   if(!['完全访问','Full access'].includes(frozen.permissions)||value.approval_policy!=='never'
     ||value.sandbox_policy?.type!=='danger-full-access')throw Error('ASTUDIO_NATIVE_PERMISSION_UNVERIFIED');
   return {client_model_id:value.model,decoded_model_id:model,effort:value.effort,
-    approval_policy:value.approval_policy,sandbox_type:value.sandbox_policy.type,source:'exact-native-turn-context'};
+    approval_policy:value.approval_policy,sandbox_type:value.sandbox_policy.type,source:'exact-native-turn-context',
+    model_identity_basis:modelIdentityBasis,model_catalog:modelIdentityBasis==='exact-display-id'?null:modelCatalog};
 }
 async function connect(frozen=null,observeOnly=false) {
   await requireGui();
@@ -137,7 +231,8 @@ async function connect(frozen=null,observeOnly=false) {
     const config={app_version:version,...aStudioConfigurationFields(ui,frozen),
       memory_settings:readMemoryConfiguration(),
       underlying_model:null,account_fingerprint:sha(String(uid))};
-    verifyConfig(config,null);return {client,ui,config,pid:Number(pids[0]),config_basis:frozen
+    verifyConfig(config,null);return {client,ui,config,pid:Number(pids[0]),
+      account_scope_hash:sha(String(uid)),config_basis:frozen
       ?observeOnly?'frozen_pre_send_pending_native_turn_verification':'frozen_request_pending_target_ui_verification':'live_ui'};
   }catch(error){client.close();throw error}
 }
@@ -189,7 +284,9 @@ async function observe(ctx,request,live,state) {
     {native_session:session});
   const trace=await traceFor(session,request.prompt_sha256);
   const rollout=await rawRollout(session,request.prompt_sha256);
-  const nativeConfiguration=verifyRecordedConfiguration(rollout.bytes,session,state.config);
+  const catalog=await modelCatalogEvidence(ctx,live,state.model_catalog_evidence??null);
+  if(catalog&&!state.model_catalog_evidence){state.model_catalog_evidence=catalog;state.model_catalog_capture_basis='post-dispatch-observation';await saveState(ctx,state)}
+  const nativeConfiguration=verifyRecordedConfiguration(rollout.bytes,session,state.config,catalog);
   state.firstTerminalObservedAt??=Date.now();await saveState(ctx,state);
   const seconds=(Date.now()-state.firstTerminalObservedAt)/1000;
   if(seconds<request.memory_wait_seconds)return bindReply(ctx,request,{...reply,status:'active',reason:'等待本轮明确声明的即时行为观察窗；不宣称长期记忆已形成。'});
@@ -232,6 +329,7 @@ export async function runAstronStudio(request) {
       await live.client.send('Page.bringToFront');
       await artifact(ctx,'foreground-owner',await waitForAStudioForeground(live.pid));
       const rows=await queryNativeSessions(DB);if(rows.some(isBlockingActiveSession))throw Error('ASTUDIO_NOT_IDLE');
+      await artifact(ctx,'rpc-ready-before-navigation',await waitForAStudioRpcReady(()=>readAStudioRpcTransport(live.client)));
       let route;
       if(request.session_action==='new') {
         try {
@@ -252,16 +350,21 @@ export async function runAstronStudio(request) {
         if(previous.length!==1||route!==previous[0].thread_id)throw Error('ASTUDIO_CONTINUATION_ROUTE_CHANGED');
       }else throw Error('ASTUDIO_RESTART_NOT_ADMITTED');
       state={requestHash:requestHash(request),phase:'prepared',config:live.config,thread_id:route,
-        previous_turn_id:rows.find(s=>s.thread_id===route)?.turn_id??null};await saveState(ctx,state);
+        previous_turn_id:rows.find(s=>s.thread_id===route)?.turn_id??null,
+        model_catalog_evidence:await modelCatalogEvidence(ctx,live),model_catalog_capture_basis:'pre-dispatch'};await saveState(ctx,state);
       await fillPrompt(live.client,request.prompt,30000);
       await ensureSendTargetReady(live.client,request.prompt,request.workspace);
       const preSend=await waitForRecordedUi(ctx,live.client,live.config,route,'before-send');
       await artifact(ctx,'pre-send-configuration',{thread_id:route,ui:preSend.ui,config_basis:live.config_basis,model_changed_by_controller:false});
+      await artifact(ctx,'rpc-ready-before-send',await waitForAStudioRpcReady(()=>readAStudioRpcTransport(live.client)));
       const method=ctx.manifest.profiles.AstronStudio.send_method??'native_mouse';
       if(!['native_mouse','dom_submit_click'].includes(method))throw Error('ASTUDIO_SEND_METHOD_NOT_ADMITTED');
-      const clicked=await dispatchAStudioOnce(state,()=>method==='dom_submit_click'
-        ?live.client.evaluate(aStudioDomSubmitExpression(request.prompt,request.workspace,route))
-        :clickAStudioStableTarget(live.client,request.prompt,request.workspace),value=>saveState(ctx,value));
+      const clicked=await dispatchAStudioOnce(state,async()=>{
+        const rpc=await readAStudioRpcTransport(live.client);
+        if(!rpc.ready)return {clicked:false,mouse_press_count:0,reason:'rpc-transport-not-ready',rpc};
+        return method==='dom_submit_click'?live.client.evaluate(aStudioDomSubmitExpression(request.prompt,request.workspace,route))
+          :clickAStudioStableTarget(live.client,request.prompt,request.workspace,{beforePress:()=>readAStudioRpcTransport(live.client)});
+      },value=>saveState(ctx,value));
       await artifact(ctx,'send-result',{method,result:clicked,native_acceptance_verified:false});
       if(!clicked.clicked)return bindReply(ctx,request,{...baseReply(request,live.config),status:'needs_attention',reason:'发送前检查返回未点击成功，停止在原生发送之前。'},{click_result:clicked,prompt_sent:false});
       return observe(ctx,request,live,state);
