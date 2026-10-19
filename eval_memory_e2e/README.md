@@ -34,7 +34,9 @@ AStudio传输状态读取只准入已核验的renderer源码指纹，客户端�
 
 ## Apple Silicon 迁移
 
-**当前发送门禁：** 新机 canary 的 AStudio 在遗忘步骤自行尝试搜索 `~/.codex/memories`，违反冻结操作边界。Prompt 不能充当文件系统访问控制。新生成 Profile 现在标记非目标记忆隔离未核验，控制器在登记评测 Prompt 意图之前阻断，原生 Driver 也拒绝新派发；已存在操作的只读观察仍保留。目前没有已准入的 OS deny adapter，不接受布尔值或手填“verified”代替隔离证据。正式20题及新的记忆 Prompt 均不启动，下一步先实现并独立验收访问隔离。
+**当前发送门禁：** 上轮AStudio曾自行尝试搜索Codex记忆目录，原失败保留。默认新Profile仍在非目标记忆访问隔离未核验时阻断。AStudio现可通过 `--astudio-boundary-lease` 绑定已完成合成拒绝测试、实际进程OS检查的 `macos-seatbelt-astudio-backend/v1` 租约；控制器在Prompt INTENT前、原生Driver入口及按下发送前检查真实生效状态。手填verified或布尔标记不能代替这些检查，已有操作只读观察仍保留。
+
+额外OS限制覆盖AStudio安装包后端、内核及工具子进程的直接文件访问；UI保留产品原有Chromium沙箱，不声称整机／所有外部代理隔离。合成验收未访问Codex真实记忆。新七步canary已完成7/7，但追加撤销笔记后旧值仍在最后查询泄漏，保持UNSCORED；正式20题未启动。实现、失败尝试、52项合成文件操作、实际进程证明、105项Python／82项Node回归及配置恢复见 [OS隔离验收记录](../docs/research/agent-memory/AStudio-OS非目标记忆隔离验收-20261019.md)。其他三端尚无该适配器，默认仍阻断。
 
 本机适配、3/3基础控制、7/7七步canary、旧值再现、边界违规和恢复原件见 [M芯片Mac迁移适配与实测记录](../docs/research/agent-memory/M芯片Mac迁移适配与实测记录-20261019.md)。七步完成不等于合规准入或遗忘通过。
 
@@ -45,6 +47,21 @@ AStudio传输状态读取只准入已核验的renderer源码指纹，客户端�
 先选择本机实际 Python 3.11+；Node 单独运行测试／驱动时设置 `MEMORY_E2E_PYTHON` 为该解释器。`run` 自动传递控制器的 Python。默认系统 Python 版本不足会在访问客户端数据之前被拒绝。
 
 `tasks/memory-e2e/canaries/runtime-control-v1.json` 是三次 UI 运行控制：C0 一次，M+ 两次，预期391、391、437；须使用 `requires_enabled_memory=false` 的独立控制 Profile。该控制不测记忆，不能计入正式20题成绩。
+
+使用已经选择的本机Python3.11+，在新目录执行以下准入。`launch` 不会退出或重启已有客户端；先只读确认原生任务及相关后台作业状态，接受未知的旧操作只观察，再从客户端正常退出。租约只可启动一次；本次验收后已恢复普通启动，旧租约不能复用。
+
+```bash
+"$MEMORY_E2E_PYTHON" -m eval_memory_e2e.os_boundary selftest \
+  --lease-dir "$HOME/debug-workspace/e2e-evaluate/memory-e2e/os-admission-new/lease"
+# 核验空闲并正常退出AStudio后再launch；不强退任务。
+"$MEMORY_E2E_PYTHON" -m eval_memory_e2e.os_boundary launch \
+  --lease-dir "$HOME/debug-workspace/e2e-evaluate/memory-e2e/os-admission-new/lease"
+"$MEMORY_E2E_PYTHON" -m eval_memory_e2e.os_boundary attest \
+  --lease-dir "$HOME/debug-workspace/e2e-evaluate/memory-e2e/os-admission-new/lease"
+"$MEMORY_E2E_PYTHON" -m eval_memory_e2e native-profiles \
+  --astudio-boundary-lease "$HOME/debug-workspace/e2e-evaluate/memory-e2e/os-admission-new/lease/lease.json" \
+  --output "$HOME/debug-workspace/e2e-evaluate/memory-e2e/os-admission-new/profiles.json"
+```
 
 ## 运行环境和快速验证
 
