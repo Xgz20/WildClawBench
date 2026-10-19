@@ -5,7 +5,8 @@ import { hostname } from "node:os";
 import { inspectMacGuiSession, assertMacGuiReady } from "../../tools/report/e2e-shared/desktop-gui/macos.mjs";
 
 export const sha = value => createHash("sha256").update(value).digest("hex");
-export const MEMORY_UI_LOCK='/Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/.memory-native-ui.lock';
+import {MACHINE_PATHS,verifyMachine,verifyNodeRuntime} from './machine.mjs';
+export const MEMORY_UI_LOCK=MACHINE_PATHS.ui_lock;
 export function memoryUiLockPath(root,profile) {
   if(profile.ui_lock_path!==undefined&&profile.ui_lock_path!==MEMORY_UI_LOCK)throw Error('NATIVE_UI_LOCK_POLICY');
   return profile.ui_lock_path??join(dirname(root),'.memory-native-ui.lock');
@@ -36,6 +37,8 @@ export async function context(request, harness) {
   await assertNoLinks(workspace);
   const root = resolve(workspace, "../../..");
   const manifest = await readJson(join(root, "manifest.json"));
+  verifyMachine(manifest.profiles[harness].machine);
+  verifyNodeRuntime(manifest.profiles[harness].node_runtime);
   const episode = manifest.episodes.find(row => row.id === request.episode_id);
   if (!episode || episode.harness !== harness || episode.namespace !== request.namespace
       || episode.workspaces[request.scope] !== workspace || manifest.experiment_id !== request.experiment_id

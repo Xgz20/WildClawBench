@@ -1,3 +1,4 @@
+import {MACHINE_PATHS} from './machine.mjs';
 /** Archive one dead Qwen General-step lock bound to a frozen Memory intent. */
 import {readFile,open,link,unlink,writeFile} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
@@ -14,7 +15,7 @@ export function assertMemoryQwenRecoveryOwner(owner,input,cfg,status) {
 
 export async function recoverMemoryQwenLock(input,{inspect=inspectLockOwner}={}) {
   const root=resolve(input.root);
-  if(!root.startsWith('/Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/')
+  if(!root.startsWith(MACHINE_PATHS.debug+'/')
     ||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(input.expected_owner_id||''))throw Error('MEMORY_QWEN_RECOVERY_SCOPE');
   if(input.output!==join(root,'runtime-recovery','qwen-step-'+input.expected_owner_id+'.json'))throw Error('MEMORY_QWEN_RECOVERY_OUTPUT');
   const manifest=await readJson(join(root,'manifest.json'));

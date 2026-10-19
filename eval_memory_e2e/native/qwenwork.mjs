@@ -11,6 +11,7 @@ import {queryQwenProjectRows} from '../../tools/report/skills/general-e2e/execut
 import {context,sha,requestHash,readJson,saveState,artifact,withUiLock,requireGui,
   baseReply,bindReply,verifyConfig,stdinRequest,assertMemoryPreSendRetry,readQwenMemoryOperationUi} from './common.mjs';
 import {execFileSync} from 'node:child_process';
+import {MACHINE_PATHS,memoryPython} from './machine.mjs';
 
 /** QwenWork 1.3.1 SDK projection: preserve native rows, derive a transcript.
  * Never generate a legacy native JSONL or write the source database.
@@ -65,8 +66,8 @@ export function normalizeQwenSqliteSnapshot(snapshot,session,promptSha) {
 }
 
 export async function qwenSqlitePromptEvidence(ctx,session,prompt) {
-  const bytes=execFileSync(process.env.MEMORY_E2E_PYTHON||'/usr/local/bin/python3.11',
-    ['-c',QUERY,'/Users/gzx/Library/Application Support/QwenWorkCN/data/agents.db',JSON.stringify(session)],
+  const bytes=execFileSync(memoryPython(),
+    ['-c',QUERY,MACHINE_PATHS.qwen_db,JSON.stringify(session)],
     {timeout:15000,maxBuffer:25*1024*1024});
   const snapshot=JSON.parse(bytes),normalized=normalizeQwenSqliteSnapshot(snapshot,session,prompt.sha256);
   const sourcePath=await artifact(ctx,'sqlite-native-snapshot',snapshot);
@@ -78,8 +79,8 @@ export async function qwenSqlitePromptEvidence(ctx,session,prompt) {
     native_user_message_id:normalized.user.uuid,native_terminal_verified:normalized.terminal};
 }
 
-const ENDPOINT='http://127.0.0.1:9250',DB='/Users/gzx/Library/Application Support/QwenWorkCN/data/agents.db';
-const TRACE='/Users/gzx/.qwenworkcn';
+const ENDPOINT='http://127.0.0.1:9250',DB=MACHINE_PATHS.qwen_db;
+const TRACE=MACHINE_PATHS.qwen_trace;
 const CAPABILITIES=['new'];
 async function authUid(page) {
   return page.evaluate(async()=>{

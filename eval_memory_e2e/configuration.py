@@ -11,6 +11,7 @@ import tomllib
 from pathlib import Path
 
 from . import HARNESS_PORTS
+from .machine import machine_paths, kernel_identity
 from .io import publish, read_json, require, sha, timestamp
 
 ASTUDIO_MEMORY_FIELDS = {
@@ -113,7 +114,9 @@ def astudio_configuration_probe(folder, roundtrip=False):
         publish(folder / 'receipt.json', result)
         return result
     identity = json.loads(guard.stdout)
-    roots = [Path('/Users/gzx/.acode'), Path('/Users/gzx/.acode/acode/acode-home-overlay')]
+    paths = machine_paths()
+    kernel = kernel_identity()  # Validate before any configuration write.
+    roots = [paths['acode'], paths['overlay']]
     records = []
     for i, home in enumerate(roots):
         path = home / 'config.toml'
@@ -148,7 +151,7 @@ def astudio_configuration_probe(folder, roundtrip=False):
                 record['owned'] = data
                 # ACode's supported home override is ACODE_HOME. Never change CODEX_HOME.
                 env = dict(os.environ, ACODE_HOME=record['home'])
-                process = subprocess.run(['/Applications/AStudio.app/Contents/Resources/bin/acode-darwin-x64',
+                process = subprocess.run([kernel['path'],
                                           'features', 'list'], env=env, capture_output=True, timeout=20)
                 selected = [line for line in process.stdout.decode().splitlines() if line.startswith('memories\t') or line.startswith('memories ')]
                 require(process.returncode == 0 and len(selected) == 1, 'ASTUDIO_FEATURE_READBACK', 'Installed kernel did not report exactly one memories feature')
@@ -168,7 +171,7 @@ def astudio_configuration_probe(folder, roundtrip=False):
     restored = all(Path(r['path']).read_bytes() == r['original'] for r in records)
     result = {'contract': 'wildclawbench.memory-config/v1', 'harness': 'AstronStudio',
               'status': 'PASS' if error is None and restored else 'NEEDS_ATTENTION', 'action': 'roundtrip' if roundtrip else 'inspect',
-              'identity': identity, 'baseline': [{k: r[k] for k in ['path', 'before', 'before_sha256']} for r in records],
+              'identity': identity, 'kernel': kernel, 'baseline': [{k: r[k] for k in ['path', 'before', 'before_sha256']} for r in records],
               'restored': restored, 'error': error, 'verification': 'installed-kernel-feature-list-and-file-sha',
               'running_session_apply_verified': False, 'memory_write_verified': False,
               'global_memory_reset_performed': False, 'excluded_clients': ['Codex']}
@@ -182,7 +185,7 @@ def configuration_probe(output_dir, harnesses=None, roundtrip=False, preflight_d
     require(selected and len(selected) == len(set(selected)) and set(selected) <= set(HARNESS_PORTS),
             "HARNESS_SCOPE", "Only AStudio, WorkBuddy, QwenWork and DoubaoWork are evaluation targets; Codex is excluded")
     output = Path(output_dir).absolute()
-    debug = Path('/Users/gzx/debug-workspace/e2e-evaluate/memory-e2e')
+    debug = machine_paths()['debug']
     require(output.is_relative_to(debug) and output.resolve() == output and not output.exists(),
             "CONFIG_OUTPUT", "Use a new directory under the memory-e2e debug root")
     require(not roundtrip or preflight_dir is not None, "CONFIG_PREFLIGHT_REQUIRED", "A fresh native preflight directory is required")

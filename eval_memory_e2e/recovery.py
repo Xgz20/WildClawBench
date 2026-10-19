@@ -9,7 +9,9 @@ from . import HARNESS_PORTS
 from .batch import load_batch, memory_ui_lock_path
 from .io import append, events, publish, read_json, require, sha, timestamp, lock, encoded, decode, archive
 
-DEBUG_ROOT = Path('/Users/gzx/debug-workspace/e2e-evaluate/memory-e2e')
+from .machine import machine_paths
+
+DEBUG_ROOT = machine_paths()['debug']
 
 
 def recover_qwen_step_lock(root, episode_id, operation, expected_owner_id, probe):

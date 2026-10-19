@@ -6,11 +6,12 @@ import tomllib
 from pathlib import Path
 
 from .configuration import ASTUDIO_MEMORY_FIELDS, _replace_owned, set_toml_fields
+from .machine import machine_paths, kernel_identity
 from .io import publish, read_json, require, sha, timestamp
 
-HOMES = (Path('/Users/gzx/.acode'), Path('/Users/gzx/.acode/acode/acode-home-overlay'))
-KERNEL = '/Applications/AStudio.app/Contents/Resources/bin/acode-darwin-x64'
-DEBUG = Path('/Users/gzx/debug-workspace/e2e-evaluate/memory-e2e')
+PATHS = machine_paths()
+HOMES = (PATHS['acode'], PATHS['overlay'])
+DEBUG = PATHS['debug']
 
 
 def _idle(folder):
@@ -31,6 +32,7 @@ def astudio_memory_config(folder, action):
     else:
         require(folder.is_dir() and not (folder / 'restoration.json').exists(), 'ASTUDIO_LEASE_STATE', str(folder))
     _idle(folder)
+    kernel = kernel_identity()
     if action == 'enable':
         records = []
         for index, home in enumerate(HOMES):
@@ -51,14 +53,14 @@ def astudio_memory_config(folder, action):
         # Keep secrets in private backups, never in the public lease or stdout.
         lease = {'harness': 'AstronStudio', 'created_at': timestamp(), 'fields': ASTUDIO_MEMORY_FIELDS,
                  'records': [{k: v for k, v in record.items() if k != 'desired'} for record in records],
-                 'runtime_apply_verified': False, 'codex_memory_touched': False}
+                 'runtime_apply_verified': False, 'codex_memory_touched': False, 'kernel': kernel}
         publish(folder / 'lease.json', lease)
         try:
             for record in records:
                 path = Path(record['path'])
                 _replace_owned(path, Path(record['backup']).read_bytes(), record['desired'].encode(), record['mode'])
                 env = dict(os.environ, ACODE_HOME=str(path.parent))
-                checked = subprocess.run([KERNEL, 'features', 'list'], env=env, capture_output=True, timeout=30)
+                checked = subprocess.run([kernel['path'], 'features', 'list'], env=env, capture_output=True, timeout=30)
                 lines = [line for line in checked.stdout.decode().splitlines() if line.split()[:1] == ['memories']]
                 require(checked.returncode == 0 and len(lines) == 1 and lines[0].split()[-1] == 'true',
                         'ASTUDIO_CONFIG_READBACK', 'Installed ACode did not confirm memories=true')

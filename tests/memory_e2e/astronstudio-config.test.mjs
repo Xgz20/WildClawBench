@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import {verifyRecordedConfiguration,aStudioCatalogModelId,aStudioGatewayCatalogProjection,aStudioTransportProfileForSource,readAStudioRpcTransport,waitForAStudioRpcReady,waitForAStudioClickTransport,aStudioNativeObservationEligible,connectAStudioNativeObservation,aStudioProjectUiExpression,aStudioProjectNavigationExpression,waitForAStudioReload,traceAStudioPreparation,waitForAStudioProjectBinding,waitForAStudioFrozenUi,waitForAStudioForeground,readAStudioForegroundPid,aStudioForegroundCheck,waitForAStudioSendFocus,dispatchAStudioOnce,aStudioSendEventsExpression,withAStudioSendEvents,clickAStudioStableTarget,aStudioConfigurationFields,aStudioCdpBudget,aStudioDomSubmitExpression,aStudioAcceptanceState} from '../../eval_memory_e2e/native/astronstudio.mjs';
+import {verifyAStudioTransportWitness,verifyRecordedConfiguration,aStudioCatalogModelId,aStudioGatewayCatalogProjection,aStudioTransportProfileForSource,readAStudioRpcTransport,waitForAStudioRpcReady,waitForAStudioClickTransport,aStudioNativeObservationEligible,connectAStudioNativeObservation,aStudioProjectUiExpression,aStudioProjectNavigationExpression,waitForAStudioReload,traceAStudioPreparation,waitForAStudioProjectBinding,waitForAStudioFrozenUi,waitForAStudioForeground,readAStudioForegroundPid,aStudioForegroundCheck,waitForAStudioSendFocus,dispatchAStudioOnce,aStudioSendEventsExpression,withAStudioSendEvents,clickAStudioStableTarget,aStudioConfigurationFields,aStudioCdpBudget,aStudioDomSubmitExpression,aStudioAcceptanceState} from '../../eval_memory_e2e/native/astronstudio.mjs';
 import {requestHash} from '../../eval_memory_e2e/native/common.mjs';
 const session={turn_id:'owned-turn',cwd:'/tmp/owned'};
 const frozen={model_display:'Spark-X2.5',reasoning:'High',permissions:'完全访问'};
@@ -366,4 +366,11 @@ test('event snapshots read final default prevention even if a microtask ran befo
   await withAStudioSendEvents(dom.client,'op-'+'d'.repeat(64),'owned-thread',async()=>dom.emit('form','submit',{earlyMicrotask:true}),async raw=>captured=raw);
   assert.equal(captured.events[0].default_prevented_at_capture,false);
   assert.equal(captured.events[0].default_prevented_after_dispatch,true);assert.equal(dom.listeners.size,0);
+});
+
+test('AStudio ARM renderer witness must bind the pure getter, export, setter and event',()=>{
+  const source='function Os(){return Ts};export{Os as h,other};bs=`astudio:ws-transport-state`;function Es(e){Ts=e,window.dispatchEvent(new CustomEvent(bs,{detail:{state:e}}))}';
+  assert.equal(verifyAStudioTransportWitness(source),true);
+  for(const marker of ['function Os(){return Ts}','Os as h,','function Es(e){Ts=e,','astudio:ws-transport-state','new CustomEvent(bs,{detail:{state:e}})'])
+    assert.throws(()=>verifyAStudioTransportWitness(source.replace(marker,'changed')),/WITNESS_UNVERIFIED/);
 });

@@ -11,7 +11,8 @@ import {readRolloutFile,analyzeRollout} from '../../tools/report/e2e-shared/gene
 import {context, sha, requestHash, readJson, saveState, artifact, withUiLock, requireGui,
   baseReply, bindReply, verifyConfig, stdinRequest} from './common.mjs';
 
-const DB='/Users/gzx/.acode/acode/userdata/state.sqlite';
+import {MACHINE_PATHS,memoryPython} from './machine.mjs';
+const DB=MACHINE_PATHS.astudio_db;
 const ENDPOINT='http://127.0.0.1:9240';
 const CAPABILITIES=['new','continue'];
 export function aStudioConfigurationFields(ui,frozen=null) {
@@ -51,23 +52,39 @@ export async function clickAStudioStableTarget(client,prompt,workspace,{read=()=
   }
   return {clicked:false,mouse_press_count:0,reason:focusLosses.length?'foreground-remained-unstable':'target-remained-unstable',foreground_losses:focusLosses};
 }
-const ASTUDIO_TRANSPORT_PROFILE=Object.freeze({
+const ASTUDIO_TRANSPORT_PROFILES=Object.freeze([Object.freeze({
   url:'acode://app/assets/with-selector-DcLfjZsV.js',
   sha256:'b6350faa1efd5faa42907b2a52497b356d6a4d6ab9f07d034364d89d01a0d537',
   getter:'h',getter_source:'function Os(){return Ts}',event:'astudio:ws-transport-state',
-});
+}),Object.freeze({
+  // AStudio 3.5.2 arm64: installed ASAR and loaded ES module were compared.
+  // Os only reads Ts; Es updates Ts and emits the same transport-state event.
+  url:'acode://app/assets/with-selector-DAVYFJ8l.js',
+  sha256:'1aae52e9227ee61fdd9c460b2d25aae1a50ad0b825628379d356f10e727b3fbf',
+  getter:'h',getter_source:'function Os(){return Ts}',event:'astudio:ws-transport-state',
+  source_witness:true,
+})]);
+export function verifyAStudioTransportWitness(source) {
+  if(source.split('function Os(){return Ts}').length!==2
+    ||!source.includes('Os as h,')||!source.includes('bs=`astudio:ws-transport-state`')
+    ||!source.includes('function Es(e){Ts=e,')
+    ||!source.includes('window.dispatchEvent(new CustomEvent(bs,{detail:{state:e}}))'))throw Error('ASTUDIO_RPC_SOURCE_WITNESS_UNVERIFIED');
+  return true;
+}
 export function aStudioTransportProfileForSource(source,url) {
-  if(url!==ASTUDIO_TRANSPORT_PROFILE.url||sha(source)!==ASTUDIO_TRANSPORT_PROFILE.sha256)throw Error('ASTUDIO_RPC_SOURCE_UNVERIFIED');
-  return ASTUDIO_TRANSPORT_PROFILE;
+  const profile=ASTUDIO_TRANSPORT_PROFILES.find(p=>p.url===url&&sha(source)===p.sha256);
+  if(!profile)throw Error('ASTUDIO_RPC_SOURCE_UNVERIFIED');
+  if(profile.source_witness)verifyAStudioTransportWitness(source);
+  return profile;
 }
 async function loadedAStudioTransportProfile(client) {
   const scripts=[];
   const listener=e=>{const m=JSON.parse(String(e.data));
-    if(m.method==='Debugger.scriptParsed'&&m.params.url===ASTUDIO_TRANSPORT_PROFILE.url&&m.params.isModule)scripts.push(m.params)};
+    if(m.method==='Debugger.scriptParsed'&&ASTUDIO_TRANSPORT_PROFILES.some(p=>p.url===m.params.url)&&m.params.isModule)scripts.push(m.params)};
   client.socket.addEventListener('message',listener);
   try {
     await client.send('Debugger.enable');
-    if(!scripts.length)throw Error('ASTUDIO_RPC_LOADED_MODULE_UNVERIFIED');
+    if(scripts.length!==1)throw Error('ASTUDIO_RPC_LOADED_MODULE_UNVERIFIED');
     const {scriptSource}=await client.send('Debugger.getScriptSource',{scriptId:scripts.at(-1).scriptId});
     return aStudioTransportProfileForSource(scriptSource,scripts.at(-1).url);
   } finally {client.socket.removeEventListener('message',listener);await client.send('Debugger.disable').catch(()=>{})}
@@ -365,16 +382,16 @@ async function prepareAStudioExecutionUi(ctx,client,config) {
   }
 }
 export function readMemoryConfiguration(){
-  const code=`import json,tomllib
+  const code=`import json,tomllib,sys
 from pathlib import Path
 result={}
-for name,root in [('primary','/Users/gzx/.acode'),('overlay','/Users/gzx/.acode/acode/acode-home-overlay')]:
+for name,root in [('primary',sys.argv[1]),('overlay',sys.argv[2])]:
  p=Path(root)/'config.toml'
  if p.resolve()!=p: raise ValueError('AStudio config path must not be a symlink')
  d=tomllib.loads(p.read_text()); m=d.get('memories',{})
  result[name]={'enabled':d.get('features',{}).get('memories',False),'generate_memories':m.get('generate_memories',True),'use_memories':m.get('use_memories',True),'dedicated_tools':m.get('dedicated_tools',False),'extract_model':m.get('extract_model'),'consolidation_model':m.get('consolidation_model')}
 print(json.dumps(result))`;
-  return JSON.parse(execFileSync(process.env.MEMORY_E2E_PYTHON||'/usr/local/bin/python3.11',['-c',code],{encoding:'utf8',timeout:5000}));
+  return JSON.parse(execFileSync(memoryPython(),['-c',code,MACHINE_PATHS.acode,MACHINE_PATHS.overlay],{encoding:'utf8',timeout:5000}));
 }
 export function aStudioCatalogModelId(catalog,accountScopeHash,displayName) {
   if(catalog?.schemaVersion!==1||catalog.accountScopeHash!==accountScopeHash
@@ -390,7 +407,7 @@ export function aStudioGatewayCatalogProjection(raw,accountFingerprint) {
     models:raw.builtins.models.map(m=>({slug:m.slug,name:m.display_name}))};
 }
 async function modelCatalogEvidence(ctx,live,saved=null) {
-  const source='/Users/gzx/.acode/acode/userdata/model-gateway/catalog-'+live.config.account_fingerprint+'.json';
+  const source=MACHINE_PATHS.acode+'/acode/userdata/model-gateway/catalog-'+live.config.account_fingerprint+'.json';
   let bytes,proof=saved;
   if(saved) {
     if(saved.source_kind!=='astudio-scoped-model-catalog/v1'||saved.account_fingerprint!==live.config.account_fingerprint
@@ -504,16 +521,16 @@ async function traceFor(session,promptSha) {
 }
 async function rawRollout(session,promptSha) {
   if(!/^[a-f0-9-]{36}$/i.test(session.session_id))throw Error('ASTUDIO_ROLLOUT_SESSION_ID');
-  const roots=['/Users/gzx/.acode/acode/acode-home-overlay/sessions','/Users/gzx/.acode/sessions'];
+  const roots=[MACHINE_PATHS.overlay+'/sessions',MACHINE_PATHS.acode+'/sessions'];
   const matches=[];
   for(const root of roots) {
     if(!await stat(root).catch(()=>null))continue;
-    const canonical=await realpath(root);if(!canonical.startsWith('/Users/gzx/.acode/'))throw Error('ASTUDIO_ROLLOUT_ROOT_OUTSIDE_TARGET');
+    const canonical=await realpath(root);if(!canonical.startsWith(MACHINE_PATHS.acode+'/'))throw Error('ASTUDIO_ROLLOUT_ROOT_OUTSIDE_TARGET');
     try {matches.push(...execFileSync('rg',['--files','-g','*'+session.session_id+'.jsonl',root],{encoding:'utf8',maxBuffer:1048576}).trim().split('\n').filter(Boolean));}
     catch(error){if(error.status!==1)throw error}
   }
   const unique=[...new Set(await Promise.all(matches.map(p=>realpath(p))))];
-  if(unique.length!==1||!unique[0].startsWith('/Users/gzx/.acode/'))throw Error('ASTUDIO_ROLLOUT_NOT_UNIQUE');
+  if(unique.length!==1||!unique[0].startsWith(MACHINE_PATHS.acode+'/'))throw Error('ASTUDIO_ROLLOUT_NOT_UNIQUE');
   const raw=await readRolloutFile(unique[0]);
   const analysis=analyzeRollout(raw.bytes,{phase:'COMPLETED',prompt:{send_status:'sent',sha256:promptSha},
     session:{...session,verified:true}});

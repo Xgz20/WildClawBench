@@ -32,6 +32,16 @@ AStudio传输状态读取只准入已核验的renderer源码指纹，客户端�
 
 **迁移接续：** [M芯片Mac迁移与接续Prompt](../docs/research/agent-memory/M芯片Mac迁移与接续Prompt-20261019.md)提供双远程分支拉取、项目内worktree、已知home／Python／x64内核路径适配项和可复制的新会话指令。新机须重新核验架构、客户端版本、账号和原生执行，不恢复旧机未知提交，不将专用机器等同于已解决全部发送阻断。
 
+## Apple Silicon 迁移
+
+2026-10-19 起，memory 专用层按操作系统当前账号解析 home、AStudio 两个 home、千问数据库／轨迹、WorkBuddy 存储及统一 UI 锁；不读取 Codex 记忆目录，也不接受外部 home 覆盖。AStudio 配置读回从安装包选择架构匹配的 arm64／x64 或 universal 内核，并保留路径、版本及 SHA。
+
+新 `native-profiles` 冻结本机、架构、路径、Python、Node 和可用的 AStudio 内核身份；准备与加载批次均检查漂移。跨机器应新建 Profile 和批次，不迁移旧机未知操作。旧 Profile 不回写；此次修复仅涉及 memory 层、其测试与独立 canary，未修改 General/Web 共享源码。
+
+先选择本机实际 Python 3.11+；Node 单独运行测试／驱动时设置 `MEMORY_E2E_PYTHON` 为该解释器。`run` 自动传递控制器的 Python。默认系统 Python 版本不足会在访问客户端数据之前被拒绝。
+
+`tasks/memory-e2e/canaries/runtime-control-v1.json` 是三次 UI 运行控制：C0 一次，M+ 两次，预期391、391、437；须使用 `requires_enabled_memory=false` 的独立控制 Profile。该控制不测记忆，不能计入正式20题成绩。
+
 ## 运行环境和快速验证
 
 从当前 checkout/worktree 根运行。编排、数据和报告只需要 Python 3.11 标准库；原生预检另外需要 Node ≥22、现有 General Driver 依赖及受支持的客户端。DoubaoWork Driver 的锁定依赖安装在其目录，未安装时预检保留进程错误，不能当成产品不支持。

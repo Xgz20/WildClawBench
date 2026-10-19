@@ -1,0 +1,25 @@
+{
+  "dataset_id": "memory-runtime-control-v1",
+  "version": 3,
+  "description": "三次独立桌面UI基础运行控制，不测记忆，不计入正式20题。C0一次，M+两次；使用记忆关闭的独立Profile。",
+  "scenarios": [{
+    "id": "MEM-runtime-001",
+    "dimension": "retention",
+    "title": "三步基础运行控制",
+    "difficulty": "easy",
+    "experience_gain": false,
+    "fixtures": [],
+    "scopes": ["A"],
+    "learning": {"mode": "explicit", "formation": {"kind": "immediate_observation", "minimum_seconds": 0}},
+    "steps": [
+      {"id": "calc1", "phase": "probe", "session": "new", "scope": "A", "prompt": "计算17乘23，只输出结果，不保存为个人资料。"},
+      {"id": "calc2", "phase": "probe", "session": "new", "scope": "A", "prompt": "计算19乘23，只输出结果，不保存为个人资料。"}
+    ],
+    "checkpoints": [
+      {"id": "calc1", "step_id": "calc1", "metric": "fact_recall", "expectation": "基础运行回复391；不作为记忆成绩。", "required": true},
+      {"id": "calc2", "step_id": "calc2", "metric": "fact_recall", "expectation": "基础运行回复437；不作为记忆成绩。", "required": true}
+    ],
+    "conditions": {"C0": {"probe_steps": ["calc1"]}},
+    "provenance": {"origin": "self_constructed", "purpose": "runtime admission only, not memory capability scoring"}
+  }]
+}

@@ -10,7 +10,9 @@ from . import CONTRACT, HARNESS_PORTS, EXECUTION_GUARD, execution_guard
 from .dataset import load_dataset, materialize
 from .io import digest, encoded, identifier, publish, read_json, require, safe_file, sha, timestamp
 
-MEMORY_UI_LOCK = Path('/Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/.memory-native-ui.lock')
+from .machine import machine_paths, machine_identity, kernel_identity, node_identity
+
+MEMORY_UI_LOCK = machine_paths()['ui_lock']
 
 
 def memory_ui_lock_path(root, profiles):
@@ -53,6 +55,12 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
     require(set(harnesses) <= set(profiles), "PROFILE_SCOPE", "Each selected Harness requires a profile")
     for harness in harnesses:
         profile = profiles[harness]
+        if profile.get('machine') is not None:
+            require(profile['machine'] == machine_identity(), 'MACHINE_DRIFT', 'Create a new local native Profile')
+        if profile.get('kernel') is not None:
+            require(harness == 'AstronStudio' and profile['kernel'] == kernel_identity(), 'KERNEL_DRIFT', 'Create a new local native Profile')
+        if profile.get('node_runtime') is not None:
+            require(profile['node_runtime'] == node_identity(), 'NODE_DRIFT', 'Create a new local native Profile')
         identifier(profile["profile_id"])
         require(profile.get("account_policy") == "current_signed_in_account"
                 and profile.get("reset_policy") == "synthetic_test_facts_only",
@@ -170,6 +178,13 @@ def load_batch(root, *, harness=None, episode_id=None):
             "MANIFEST_DRIFT", str(root))
     from .runtime_repair import effective_sources
     implementation, drivers, _, _ = effective_sources(root, manifest)
+    for name, profile in manifest['profiles'].items():
+        if profile.get('machine') is not None:
+            require(profile['machine'] == machine_identity(), 'MACHINE_DRIFT', 'Frozen Profile belongs to another host or runtime')
+        if profile.get('kernel') is not None:
+            require(name == 'AstronStudio' and profile['kernel'] == kernel_identity(), 'KERNEL_DRIFT', 'Installed kernel changed')
+        if profile.get('node_runtime') is not None:
+            require(profile['node_runtime'] == node_identity(), 'NODE_DRIFT', 'Frozen Node runtime changed')
     for relative, checksum in implementation.items():
         source = safe_file(Path(__file__).parent / relative, Path(__file__).parent)
         require(sha(source.read_bytes()) == checksum, "IMPLEMENTATION_DRIFT", relative)

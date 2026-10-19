@@ -1,3 +1,4 @@
+import {MACHINE_PATHS} from './machine.mjs';
 /** Reversible settings validation for the evaluated desktop clients only. */
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, open, readFile, writeFile, chmod } from 'node:fs/promises';
@@ -250,7 +251,7 @@ export async function runConfiguration(request) {
     if(request.harness==='DoubaoWork'&&probe.status!=='passed')throw Error('CONFIG_DOUBAO_PREFLIGHT_FAILED');
   }
   const output=resolve(request.output_dir);
-  if(!output.startsWith('/Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/'))throw Error('CONFIG_EVIDENCE_ROOT');
+  if(!output.startsWith(MACHINE_PATHS.debug+'/'))throw Error('CONFIG_EVIDENCE_ROOT');
   await mkdir(output,{recursive:true,mode:0o700});
   await chmod(output,0o700);
   const handle=await open(join(output,'owner.json'),'wx');
@@ -261,7 +262,7 @@ export async function runConfiguration(request) {
     const f=await open(join(output,'events.jsonl'),'a');
     try{await f.writeFile(JSON.stringify({at:new Date().toISOString(),...value})+'\n');await f.sync();}finally{await f.close();}
   };
-  try { return await withUiLock({uiLock:'/Users/gzx/debug-workspace/e2e-evaluate/memory-e2e/.memory-native-ui.lock'},
+  try { return await withUiLock({uiLock:MACHINE_PATHS.ui_lock},
     {operation_id:'memory-config-'+randomUUID()},async()=>{
     let baseline;
     try {

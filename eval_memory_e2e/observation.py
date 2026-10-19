@@ -6,11 +6,14 @@ from uuid import uuid4
 from . import HARNESS_PORTS
 from .io import append, digest, events, publish, read_json, require, safe_file, sha, timestamp
 
+from .machine import machine_paths
+
+PATHS = machine_paths()
 STORE_ROOTS = {
-    'AstronStudio': (Path('/Users/gzx/.acode/acode/acode-home-overlay/memories'),
-                    Path('/Users/gzx/.acode/acode/acode-home-overlay/memories_extensions')),
-    'QwenWork': (Path('/Users/gzx/.qwenworkcn/awareness/main'),),
-    'WorkBuddy': (Path('/Users/gzx/.workbuddy/memory'),),
+    'AstronStudio': (PATHS['overlay'] / 'memories',
+                    PATHS['overlay'] / 'memories_extensions'),
+    'QwenWork': (PATHS['qwen_trace'] / 'awareness/main',),
+    'WorkBuddy': (PATHS['workbuddy'] / 'memory',),
     'DoubaoWork': (),
 }
 
@@ -34,8 +37,8 @@ def capture_state(root, request, stage):
         for store in roots:
             require(store.resolve() == store, 'OBSERVATION_SYMLINK', str(store))
             if store.exists(): paths.extend(store.rglob('*.md'))
-        if request['harness'] == 'WorkBuddy' and Path('/Users/gzx/.workbuddy/MEMORY.md').is_file():
-            paths.append(Path('/Users/gzx/.workbuddy/MEMORY.md'))
+        if request['harness'] == 'WorkBuddy' and (PATHS['workbuddy'] / 'MEMORY.md').is_file():
+            paths.append((PATHS['workbuddy'] / 'MEMORY.md'))
         workspace_store = None
         if request['harness'] == 'WorkBuddy':
             workspace_store = Path(episode['workspaces'][request.get('scope', next(iter(episode['workspaces'])))]) / '.workbuddy/memory'

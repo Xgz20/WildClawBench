@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 
 from .batch import default_profiles, MEMORY_UI_LOCK
+from .machine import machine_identity, kernel_identity, node_identity
 from .io import publish, sha
 
 
@@ -60,7 +61,13 @@ def native_profiles(output):
              "WorkBuddy": "nightly_summary_or_verified_explicit_update",
              "QwenWork": "verified_native_write_or_declared_behavior_window",
              "DoubaoWork": "active_native_profile_and_explicit_or_periodic_update"}
+    machine = machine_identity()
+    node = node_identity()
+    if int(node['version'].split('.')[0].lstrip('v')) < 22:
+        raise ValueError('Native memory Drivers require Node >=22')
     for harness in profiles:
+        profiles[harness]['machine'] = machine
+        profiles[harness]['node_runtime'] = node
         profiles[harness]['ui_lock_path'] = str(MEMORY_UI_LOCK)
         profiles[harness]["driver_timeout_seconds"] = 180
         profiles[harness]["state_observation"] = True
@@ -84,6 +91,8 @@ def native_profiles(output):
     profiles['AstronStudio']['driver_timeout_seconds'] = 300
     profiles['AstronStudio']['cdp_timeout_ms'] = 30000
     profiles['AstronStudio']['native_acceptance_wait_seconds'] = 120
+    if Path('/Applications/AStudio.app').is_dir():
+        profiles['AstronStudio']['kernel'] = kernel_identity()
     publish(output, profiles)
     return {"output": str(output), "configured_harnesses": [name for name, value in profiles.items() if value["driver_command"]],
             "memory_admission": "requires_live_scoped_preflight"}
