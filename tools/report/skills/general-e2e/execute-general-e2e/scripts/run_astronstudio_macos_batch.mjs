@@ -7,6 +7,7 @@ import {
   open,
   readFile,
   realpath,
+  lstat,
   rename,
   rm,
   stat,
@@ -15,9 +16,11 @@ import {
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isRetryablePreSendFailure } from "./execute_astronstudio_macos.mjs";
+import { isQuotaError, pristineUnsentAttempt, readQuotaAuthorization, assertQuotaAuthorization, assertRetryableQuotaState,
+  recoveryFiles, digest } from './lib/astronstudio-quota-retry.mjs';
 
 export const QUEUE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-queue/v1";
-export const QUEUE_WORKER_VERSION = "0.1.1";
+export const QUEUE_WORKER_VERSION = "0.1.2";
 export const QUEUE_REVISION = 1;
 export const UI_SLOTS = 1;
 export const RUN_SLOTS = 3;
@@ -29,11 +32,7 @@ const SINGLE_TASK_SCRIPT = resolve(
 const TASK_TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
 
 function externalQuotaFailure(task) {
-  return task.phase === "FAILED"
-    && ["ASTRONSTUDIO_TURN_ERROR", "ASTRONSTUDIO_TURN_FAILED"].includes(task.error?.code)
-    && typeof task.error?.message === "string"
-    && /^unexpected status 402(?: Payment Required)?: astron_points_exhausted(?:, url: \S+)?$/u.test(task.error.message)
-    && !/[\r\n]/u.test(task.error.message);
+  return task.phase === "FAILED" && isQuotaError(task.error);
 }
 
 function usage() {
@@ -48,6 +47,8 @@ function usage() {
 选项：
   --resume                       恢复同一 queue 和已登记 attempt；不重发 Prompt
   --retry-pre-send-task-id <ID>  与 --resume 使用；只接续指定零发送准备失败
+  --retry-quota-task-id <ID>     与 --resume 及额度恢复授权一起使用；仅重试指定失败题
+  --quota-retry-authorization <JSON> 绑定旧 attempt/SHA/原队列的一次性人工授权
   --status                       只读取持久化队列状态
   --continue-on-terminal-failure 明确失败终态后继续下一题
   --run-slots <1-8>              后台 Agent 槽位，默认 3；UI 发送固定单槽
@@ -57,7 +58,8 @@ function usage() {
   -h, --help                     显示帮助
 
 未指定 --task-id 时按 execution manifest.task_ids 的冻结顺序执行全部任务。
-queue digest、任务顺序、并发策略和 attempt 选择一经创建不可变。UI 发送固定单槽，后台 Agent 动态补位。`;
+queue digest、任务顺序和并发策略保持冻结；attempt 只可通过受审计额度授权显式更换。
+成功题不重跑；重试发送一经 armed，恢复只观察，不再发送。`;
 }
 
 function positiveInteger(value, name) {
@@ -74,6 +76,8 @@ export function parseBatchArgs(argv) {
     taskIds: [],
     resume: false,
     retryPreSendTaskId: null,
+    retryQuotaTaskId: null,
+    quotaRetryAuthorization: null,
     status: false,
     continueOnTerminalFailure: false,
     runSlots: RUN_SLOTS,
@@ -91,6 +95,8 @@ export function parseBatchArgs(argv) {
     ["--poll-interval-ms", "pollIntervalMs"],
     ["--identity-timeout-ms", "identityTimeoutMs"],
     ["--retry-pre-send-task-id", "retryPreSendTaskId"],
+    ["--retry-quota-task-id", "retryQuotaTaskId"],
+    ["--quota-retry-authorization", "quotaRetryAuthorization"],
   ]);
   const numeric = new Set(["runSlots", "timeoutMs", "pollIntervalMs", "identityTimeoutMs"]);
   for (let index = 0; index < argv.length; index += 1) {
@@ -127,6 +133,10 @@ export function parseBatchArgs(argv) {
   if (values.retryPreSendTaskId && (!values.resume || values.status)) {
     throw new Error("--retry-pre-send-task-id 只允许恢复原队列");
   }
+  if (Boolean(values.retryQuotaTaskId) !== Boolean(values.quotaRetryAuthorization)
+      || (values.retryQuotaTaskId && (!values.resume || values.status || values.retryPreSendTaskId))) {
+    throw new Error("额度重试须同时指定 --resume、--retry-quota-task-id 和 --quota-retry-authorization，不能与零发送重试混用");
+  }
   return values;
 }
 
@@ -160,12 +170,27 @@ async function readJsonIfPresent(path) {
 async function atomicWriteJson(path, value) {
   await mkdir(dirname(path), { recursive: true });
   const temporary = `${path}.tmp-${process.pid}-${randomUUID()}`;
-  await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  const file = await open(temporary, 'wx');
+  try { await file.writeFile(`${JSON.stringify(value, null, 2)}\n`, 'utf8'); await file.sync(); }
+  finally { await file.close(); }
   try {
     await rename(temporary, path);
+    const directory = await open(dirname(path), 'r');
+    try { await directory.sync(); } finally { await directory.close(); }
   } catch (error) {
     await rm(temporary, { force: true }).catch(() => {});
     throw error;
+  }
+}
+
+async function ownedDirectory(root, destination) {
+  if (!isInside(root, destination)) throw new Error('QUOTA_DIRECTORY_SCOPE');
+  let current = root;
+  for (const part of relative(root, destination).split('/').filter(Boolean)) {
+    current = join(current, part);
+    try { await mkdir(current); } catch (error) { if (error?.code !== 'EEXIST') throw error; }
+    const info = await lstat(current);
+    if (!info.isDirectory() || info.isSymbolicLink()) throw new Error('QUOTA_DIRECTORY_SYMLINK');
   }
 }
 
@@ -369,7 +394,7 @@ async function acquireWorkerLock(path, allowStaleRecovery, isAlive = processIsAl
   };
 }
 
-function validateAutomation(plan, queueTask, automation) {
+function validateAutomation(plan, queueTask, automation, quotaProof = null) {
   if (
     automation?.identity?.batch_id !== plan.manifest.batch_id
     || automation?.identity?.unit_id !== plan.manifest.unit_id
@@ -382,7 +407,28 @@ function validateAutomation(plan, queueTask, automation) {
     throw new Error(`automation-state 缺少 attempt_id：${queueTask.task_id}`);
   }
   if (queueTask.selected_attempt_id && queueTask.selected_attempt_id !== attemptId) {
-    throw new Error(
+    const recovery = queueTask.quota_recoveries?.at(-1);
+    if (recovery?.old_attempt_id === queueTask.selected_attempt_id && recovery.new_attempt_id === attemptId
+        && quotaProof?.authorization_sha256 === recovery.authorization_sha256
+        && quotaProof?.new_attempt_id === attemptId) {
+      const old = queueTask.attempts.find(item => item.attempt_id === recovery.old_attempt_id);
+      if (!old || queueTask.attempts.some(item => item.attempt_id === attemptId)) throw new Error('QUOTA_ATTEMPT_LINEAGE_INVALID');
+      old.selected = false;
+      old.dispatch_attempt_count = queueTask.dispatch_attempt_count;
+      old.started_at = queueTask.started_at;
+      old.finished_at = queueTask.finished_at;
+      old.session = { ...queueTask.session };
+      old.error = queueTask.error;
+      old.state_path = `.general-e2e/quota-recoveries/${queueTask.task_id}/${attemptId}/failed-control/automation-state.json`;
+      old.state_sha256 = recovery.old_state_sha256;
+      queueTask.selected_attempt_id = attemptId;
+      queueTask.attempts.push({ attempt_id: attemptId, state_path: queueTask.execution_state_path,
+        registered_at: new Date().toISOString(), selected: true, previous_attempt_id: recovery.old_attempt_id,
+        authorization_sha256: recovery.authorization_sha256 });
+      recovery.status = 'ADOPTED';
+      queueTask.started_at = null;
+      queueTask.finished_at = null;
+    } else throw new Error(
       `ATTEMPT_SWITCH_REQUIRES_NEW_QUEUE: ${queueTask.task_id}: `
       + `${queueTask.selected_attempt_id} -> ${attemptId}`,
     );
@@ -399,8 +445,8 @@ function validateAutomation(plan, queueTask, automation) {
   return automation;
 }
 
-export function synchronizeTaskFromAutomation(plan, queueTask, automation, now = new Date().toISOString()) {
-  validateAutomation(plan, queueTask, automation);
+export function synchronizeTaskFromAutomation(plan, queueTask, automation, now = new Date().toISOString(), quotaProof = null) {
+  validateAutomation(plan, queueTask, automation, quotaProof);
   queueTask.phase = automation.phase;
   queueTask.started_at ||= automation.execution?.started_at || null;
   queueTask.finished_at = TASK_TERMINAL_PHASES.has(automation.phase)
@@ -417,7 +463,112 @@ export function synchronizeTaskFromAutomation(plan, queueTask, automation, now =
   return queueTask;
 }
 
-async function launchSingleTask(plan, args, taskId, operation, activeSessionIds = []) {
+async function cachedAuthorization(plan, state, row, transaction) {
+  const path = resolve(plan.unitRoot, transaction.authorization_path);
+  if (!isInside(plan.queueRoot, path) || await realpath(path) !== path) throw new Error('QUOTA_AUTHORIZATION_CACHE_PATH');
+  const authorization = await readQuotaAuthorization(path);
+  authorization.path = path;
+  if (authorization.sha256 !== transaction.authorization_sha256) throw new Error('QUOTA_AUTHORIZATION_CACHE_SHA');
+  assertQuotaAuthorization(authorization.auth, { identity: state.identity, configuration: state.configuration, taskId: row.task_id });
+  if (authorization.auth.old_attempt_id !== transaction.old_attempt_id || authorization.auth.new_attempt_id !== transaction.new_attempt_id) {
+    throw new Error('QUOTA_TRANSACTION_IDENTITY');
+  }
+  if (transaction.previous_queue_receipt) {
+    const previous = resolve(plan.unitRoot, transaction.previous_queue_receipt.path);
+    if (!isInside(plan.queueRoot, previous)) throw new Error('QUOTA_PREVIOUS_RECEIPT_SCOPE');
+    let bytes;
+    try { bytes = await readFile(previous); }
+    catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+      bytes = await readFile(plan.queueReceiptFile);
+    }
+    if (digest(bytes) !== transaction.previous_queue_receipt.sha256) throw new Error('QUOTA_PREVIOUS_RECEIPT_SHA');
+  }
+  return authorization;
+}
+
+async function synchronizationProof(plan, state, row, automation, dependencies) {
+  if (!row.selected_attempt_id || row.selected_attempt_id === automation.identity?.attempt_id) return null;
+  const transaction = row.quota_recoveries?.at(-1);
+  if (!transaction || transaction.old_attempt_id !== row.selected_attempt_id || transaction.new_attempt_id !== automation.identity?.attempt_id) return null;
+  const authorization = await cachedAuthorization(plan, state, row, transaction);
+  return dependencies.recoveryFiles(plan.unitRoot, authorization, true);
+}
+
+async function refreshAutomations(plan, state, dependencies) {
+  for (const row of state.tasks) {
+    for (const transaction of row.quota_recoveries || []) {
+      const authorization = await cachedAuthorization(plan, state, row, transaction);
+      if (transaction.status === 'ADOPTED' && !dependencies.verifiedQuotaReceipts.has(transaction.authorization_sha256)) {
+        await dependencies.recoveryFiles(plan.unitRoot, authorization, true);
+        dependencies.verifiedQuotaReceipts.add(transaction.authorization_sha256);
+      }
+    }
+    const automation = await readJsonIfPresent(controlPath(plan, row.task_id, 'automation-state.json'));
+    if (automation) synchronizeTaskFromAutomation(plan, row, automation, dependencies.now(),
+      await synchronizationProof(plan, state, row, automation, dependencies));
+  }
+}
+
+async function registerQuotaAuthorization(plan, state, args, dependencies) {
+  if (!args.retryQuotaTaskId) return;
+  const row = state.tasks.find(task => task.task_id === args.retryQuotaTaskId);
+  if (!row) throw new Error('QUOTA_TASK_NOT_IN_QUEUE');
+  const authorization = await readQuotaAuthorization(args.quotaRetryAuthorization);
+  authorization.path = resolve(args.quotaRetryAuthorization);
+  assertQuotaAuthorization(authorization.auth, { identity: state.identity, configuration: state.configuration, taskId: row.task_id });
+  const previous = row.quota_recoveries?.find(tx => tx.authorization_sha256 === authorization.sha256);
+  if (previous) { await cachedAuthorization(plan, state, row, previous); return; }
+  if (!externalQuotaFailure(row) || row.selected_attempt_id !== authorization.auth.old_attempt_id) throw new Error('QUOTA_TASK_NOT_ELIGIBLE');
+  if (row.attempts.filter(attempt => attempt.selected).length !== 1
+      || !row.attempts.some(attempt => attempt.selected && attempt.attempt_id === row.selected_attempt_id)) {
+    throw new Error('QUOTA_OLD_ATTEMPT_LINEAGE_INVALID');
+  }
+  if (row.quota_recoveries?.at(-1)?.status === 'REQUESTED') throw new Error('QUOTA_RECOVERY_ALREADY_PENDING');
+  if (state.tasks.some(task => task.attempts.some(attempt => attempt.attempt_id === authorization.auth.new_attempt_id))) {
+    throw new Error('QUOTA_NEW_ATTEMPT_ALREADY_USED');
+  }
+  const raw = await readFile(controlPath(plan, row.task_id, 'automation-state.json'));
+  const record = await readFile(controlPath(plan, row.task_id, 'execution-record.json'));
+  assertRetryableQuotaState(JSON.parse(raw), authorization.auth);
+  if (digest(raw) !== authorization.auth.old_state_sha256 || digest(record) !== authorization.auth.old_record_sha256) {
+    throw new Error('QUOTA_SOURCE_SHA_MISMATCH');
+  }
+  await dependencies.recoveryFiles(plan.unitRoot, authorization, false, false, true);
+  const path = join(plan.queueRoot, 'quota-authorizations', authorization.auth.authorization_id + '.json');
+  await ownedDirectory(plan.unitRoot, dirname(path));
+  try { await writeFile(path, authorization.bytes, { flag: 'wx', mode: 0o600 }); }
+  catch (error) {
+    if (error?.code !== 'EEXIST' || digest(await readFile(path)) !== authorization.sha256) throw error;
+  }
+  (row.quota_recoveries ||= []).push({ authorization_id: authorization.auth.authorization_id,
+    authorization_sha256: authorization.sha256, authorization_path: relativePosix(plan.unitRoot, path),
+    old_attempt_id: authorization.auth.old_attempt_id, new_attempt_id: authorization.auth.new_attempt_id,
+    old_state_sha256: authorization.auth.old_state_sha256, status: 'REQUESTED' });
+  state.history.push({ at: dependencies.now(), event: 'QUOTA_RETRY_AUTHORIZED', task_id: row.task_id,
+    old_attempt_id: authorization.auth.old_attempt_id, new_attempt_id: authorization.auth.new_attempt_id,
+    authorization_sha256: authorization.sha256 });
+  await persist(plan, state, dependencies.now());
+}
+
+async function archivePreviousReceipt(plan, state, transaction, dependencies) {
+  let bytes;
+  try { bytes = await readFile(plan.queueReceiptFile); }
+  catch (error) { if (error?.code === 'ENOENT') return; throw error; }
+  const receiptSha = digest(bytes);
+  const target = join(plan.queueRoot, 'receipt-history', receiptSha + '.json');
+  await ownedDirectory(plan.unitRoot, dirname(target));
+  if (transaction.previous_queue_receipt && transaction.previous_queue_receipt.sha256 !== receiptSha) {
+    throw new Error('QUOTA_PREVIOUS_RECEIPT_DRIFT');
+  }
+  transaction.previous_queue_receipt = { path: relativePosix(plan.unitRoot, target), sha256: receiptSha };
+  await persist(plan, state, dependencies.now());
+  try { await writeFile(target, bytes, { flag: 'wx' }); }
+  catch (error) { if (error?.code !== 'EEXIST' || digest(await readFile(target)) !== receiptSha) throw error; }
+  await rm(plan.queueReceiptFile);
+}
+
+async function launchSingleTask(plan, args, taskId, operation, activeSessionIds = [], authorizationPath = null) {
   const childArgs = [
     SINGLE_TASK_SCRIPT,
     "--unit-root", plan.unitRoot,
@@ -427,9 +578,11 @@ async function launchSingleTask(plan, args, taskId, operation, activeSessionIds 
     "--poll-interval-ms", String(args.pollIntervalMs),
     "--identity-timeout-ms", String(args.identityTimeoutMs),
   ];
-  if (operation === "dispatch" || operation === "retry-pre-send") {
+  if (operation === "dispatch" || operation === "retry-pre-send" || operation === 'retry-quota') {
     childArgs.push("--detach-after-submit", "--managed-run-slots", String(args.runSlots));
     if (operation === "retry-pre-send") childArgs.push("--resume", "--retry-pre-send-failure");
+    if (operation === 'retry-pre-send' && authorizationPath) childArgs.push('--quota-retry-authorization', authorizationPath);
+    if (operation === 'retry-quota') childArgs.push('--resume', '--quota-retry-authorization', authorizationPath);
     for (const sessionId of activeSessionIds) {
       childArgs.push("--allowed-active-session-id", sessionId);
     }
@@ -448,10 +601,15 @@ async function launchSingleTask(plan, args, taskId, operation, activeSessionIds 
 function buildQueueReceipt(plan, state, now) {
   const allTerminal = state.tasks.every((task) => TASK_TERMINAL_PHASES.has(task.phase));
   const attemptsUnique = state.tasks.every((task) => (
-    task.attempts.length <= 1
-    && (!task.selected_attempt_id || task.attempts[0]?.attempt_id === task.selected_attempt_id)
+    new Set(task.attempts.map(item => item.attempt_id)).size === task.attempts.length
+    && (!task.selected_attempt_id || (task.attempts.filter(item => item.selected).length === 1
+      && task.attempts.find(item => item.selected)?.attempt_id === task.selected_attempt_id))
+    && task.attempts.every((item, index) => index === 0 || task.quota_recoveries?.some(tx =>
+      tx.new_attempt_id === item.attempt_id && tx.old_attempt_id === item.previous_attempt_id
+      && tx.authorization_sha256 === item.authorization_sha256))
   ));
-  const noDuplicateDispatch = state.tasks.every((task) => task.dispatch_attempt_count <= 1);
+  const noDuplicateDispatch = state.tasks.every((task) => task.dispatch_attempt_count <= 1
+    && task.attempts.every(attempt => (attempt.dispatch_attempt_count || 0) <= 1));
   return {
     schema_version: "wildclawbench.general-e2e-astronstudio-execution-queue-receipt/v1",
     generated_at: now,
@@ -466,6 +624,8 @@ function buildQueueReceipt(plan, state, now) {
       dispatch_attempt_count: task.dispatch_attempt_count,
       session: { ...task.session },
       error: task.error,
+      attempts: task.attempts,
+      quota_recoveries: task.quota_recoveries || [],
     })),
     integrity: {
       queue_digest_matches: state.identity.queue_digest === plan.queueDigest,
@@ -506,8 +666,10 @@ export async function runQueue(plan, args, overrides = {}) {
     now: () => new Date().toISOString(),
     pid: process.pid,
     isProcessAlive: processIsAlive,
-    runTask: (taskId, operation, activeSessionIds) => (
-      launchSingleTask(plan, args, taskId, operation, activeSessionIds)
+    recoveryFiles,
+    verifiedQuotaReceipts: new Set(),
+    runTask: (taskId, operation, activeSessionIds, authorizationPath) => (
+      launchSingleTask(plan, args, taskId, operation, activeSessionIds, authorizationPath)
     ),
     sleep: (milliseconds) => new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds)),
     ...overrides,
@@ -533,7 +695,18 @@ export async function runQueue(plan, args, overrides = {}) {
   }
 
   if (new Set(["COMPLETED", "COMPLETED_WITH_FAILURES"]).has(state.phase)
-    && !args.retryPreSendTaskId && !state.tasks.some(externalQuotaFailure)) return state;
+    && !args.retryPreSendTaskId && !state.tasks.some(externalQuotaFailure)) {
+    if (state.tasks.some(task => task.quota_recoveries?.length)) await refreshAutomations(plan, state, dependencies);
+    if (args.retryQuotaTaskId) {
+      const row = state.tasks.find(task => task.task_id === args.retryQuotaTaskId);
+      const authorization = await readQuotaAuthorization(args.quotaRetryAuthorization);
+      const transaction = row?.quota_recoveries?.find(tx => tx.authorization_sha256 === authorization.sha256);
+      if (!transaction) throw new Error('QUOTA_TASK_NOT_ELIGIBLE');
+      await cachedAuthorization(plan, state, row, transaction);
+      await dependencies.recoveryFiles(plan.unitRoot, { ...authorization, path: resolve(args.quotaRetryAuthorization) }, true);
+    }
+    return state;
+  }
   const now = dependencies.now();
   if (args.resume) recordUnexpectedWorkerLoss(state, dependencies.isProcessAlive, now);
   const lock = await acquireWorkerLock(plan.workerLockFile, args.resume, dependencies.isProcessAlive);
@@ -552,11 +725,48 @@ export async function runQueue(plan, args, overrides = {}) {
     state.error = null;
     await persist(plan, state, dependencies.now());
 
-    if (args.retryPreSendTaskId) {
-      for (const task of state.tasks) {
-        const automation = await readJsonIfPresent(controlPath(plan, task.task_id, "automation-state.json"));
-        if (automation) synchronizeTaskFromAutomation(plan, task, automation, dependencies.now());
+    if (args.retryQuotaTaskId || state.tasks.some(task => task.quota_recoveries?.length)) await ownedDirectory(plan.unitRoot, plan.queueRoot);
+    await refreshAutomations(plan, state, dependencies);
+    await registerQuotaAuthorization(plan, state, args, dependencies);
+    for (const row of state.tasks) {
+      const transaction = row.quota_recoveries?.at(-1);
+      if (!transaction) continue;
+      const automation = await readJsonIfPresent(controlPath(plan, row.task_id, 'automation-state.json'));
+      const retryPending = row.selected_attempt_id === transaction.old_attempt_id
+        || (row.selected_attempt_id === transaction.new_attempt_id && ['PENDING', 'NEEDS_ATTENTION'].includes(automation?.phase));
+      if (!retryPending) continue;
+      // Drain already accepted peers by observation only. Successful tasks are
+      // never redispatched; a retry starts only after native activity settles.
+      const needsNewSend = row.selected_attempt_id === transaction.old_attempt_id || pristineUnsentAttempt(automation);
+      for (const peer of state.tasks.filter(task => needsNewSend && task !== row && task.phase === 'RUNNING')) {
+        await dependencies.runTask(peer.task_id, 'observe', []);
+        const observed = await readJsonIfPresent(controlPath(plan, peer.task_id, 'automation-state.json'));
+        if (observed) synchronizeTaskFromAutomation(plan, peer, observed, dependencies.now());
       }
+      if (needsNewSend && state.tasks.some(task => task !== row && ['RUNNING', 'NEEDS_ATTENTION'].includes(task.phase))) {
+        state.phase = 'NEEDS_ATTENTION';
+        state.error = 'QUOTA_RECOVERY_WAIT_FOR_INFLIGHT_TASKS';
+        await persist(plan, state, dependencies.now());
+        return state;
+      }
+      const authorization = await cachedAuthorization(plan, state, row, transaction);
+      await archivePreviousReceipt(plan, state, transaction, dependencies);
+      const result = await dependencies.runTask(row.task_id, 'retry-quota', [], authorization.path);
+      row.driver_exit_code = result.code;
+      const current = await readJsonIfPresent(controlPath(plan, row.task_id, 'automation-state.json'));
+      if (current) synchronizeTaskFromAutomation(plan, row, current, dependencies.now(),
+        await synchronizationProof(plan, state, row, current, dependencies));
+      await persist(plan, state, dependencies.now());
+      if (!current || current.identity.attempt_id !== transaction.new_attempt_id || current.phase === 'PENDING') {
+        state.phase = 'NEEDS_ATTENTION';
+        state.error = 'QUOTA_RECOVERY_INCOMPLETE: 保留授权和原状态，只能恢复同一事务，不得新发重复 Prompt';
+        await persist(plan, state, dependencies.now());
+        return state;
+      }
+    }
+
+    if (args.retryPreSendTaskId) {
+      await refreshAutomations(plan, state, dependencies);
     }
     if (args.retryPreSendTaskId && !state.tasks.some(externalQuotaFailure)) {
       const row = state.tasks.find((task) => task.task_id === args.retryPreSendTaskId);
@@ -570,7 +780,10 @@ export async function runQueue(plan, args, overrides = {}) {
       state.history.push({ at: dependencies.now(), event: "ZERO_SEND_PREPARATION_RETRY_REQUESTED",
         task_id: row.task_id, attempt_id: row.selected_attempt_id });
       await persist(plan, state, dependencies.now());
-      const result = await dependencies.runTask(row.task_id, "retry-pre-send", []);
+      const quotaTransaction = row.quota_recoveries?.at(-1);
+      const quotaAuthorization = quotaTransaction?.new_attempt_id === row.selected_attempt_id
+        ? await cachedAuthorization(plan, state, row, quotaTransaction) : null;
+      const result = await dependencies.runTask(row.task_id, "retry-pre-send", [], quotaAuthorization?.path || null);
       row.driver_exit_code = result.code;
       const recovered = await readJsonIfPresent(controlPath(plan, row.task_id, "automation-state.json"));
       synchronizeTaskFromAutomation(plan, row, recovered, dependencies.now());
@@ -578,12 +791,7 @@ export async function runQueue(plan, args, overrides = {}) {
     }
 
     for (;;) {
-      for (const queueTask of state.tasks) {
-        const automation = await readJsonIfPresent(
-          controlPath(plan, queueTask.task_id, "automation-state.json"),
-        );
-        if (automation) synchronizeTaskFromAutomation(plan, queueTask, automation, dependencies.now());
-      }
+      await refreshAutomations(plan, state, dependencies);
 
       let running = state.tasks.filter((task) => task.phase === "RUNNING");
       const attention = state.tasks.filter((task) => task.phase === "NEEDS_ATTENTION");
@@ -592,6 +800,14 @@ export async function runQueue(plan, args, overrides = {}) {
       state.current_task_id = state.active_task_ids[0] || null;
 
       const quotaFailures = failed.filter(externalQuotaFailure);
+      const unsentRecoveryFailures = failed.filter(task => task.selected_attempt_id === task.quota_recoveries?.at(-1)?.new_attempt_id
+        && task.dispatch_attempt_count === 0);
+      if (unsentRecoveryFailures.length) {
+        state.phase = 'NEEDS_ATTENTION';
+        state.error = 'QUOTA_RETRY_PRE_SEND_FAILURE: 新 attempt 尚未发送，保留现场等待人工处理';
+        await persist(plan, state, dependencies.now());
+        return state;
+      }
       if (quotaFailures.length) {
         state.phase = "NEEDS_ATTENTION";
         state.current_task_id = quotaFailures[0].task_id;

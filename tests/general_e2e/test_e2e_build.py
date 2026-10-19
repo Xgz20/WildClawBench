@@ -4,6 +4,7 @@ import copy
 import importlib.util
 import json
 import hashlib
+import os
 from pathlib import Path, PurePosixPath
 import shutil
 import stat
@@ -657,6 +658,19 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
         rejected = subprocess.run(command, cwd=detached, env={"PATH": ""}, capture_output=True, text=True)
         self.assertNotEqual(rejected.returncode, 0)
         self.assertIn("EXECUTION_DRIVER_BINDING_MISMATCH", rejected.stderr + rejected.stdout)
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required")
+    def test_quota_recovery_runs_from_detached_execute_skill(self) -> None:
+        detached = self.temp_root / "detached-quota-recovery"
+        installed = BUILD._safe_extract(self.archive_path("execute-general-e2e"), detached)
+        source = (REPO_ROOT / "tests/general_e2e/astronstudio_quota_recovery.test.mjs").read_text()
+        for filename in ["run_astronstudio_macos_batch.mjs", "execute_astronstudio_macos.mjs", "prepare_quota_retry.py"]:
+            original = "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/" + filename
+            self.assertIn(original, source)
+            source = source.replace(original, (installed / "scripts" / filename).as_uri())
+        result = subprocess.run([shutil.which("node"), "--input-type=module", "-e", source],
+                                cwd=detached, env={"PATH": os.environ.get("PATH", "")}, text=True, capture_output=True, timeout=60)
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required")
     def test_static_search_projection_runs_from_detached_collect_skill(self) -> None:

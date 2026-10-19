@@ -11,7 +11,7 @@ import {
   stat,
   writeFile,
 } from "node:fs/promises";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { FLOW_TIMING_PROFILE, flowTiming } from "../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
 
@@ -36,8 +36,9 @@ import {
 import { waitForThreadStreamLease } from "./lib/astronstudio-stream.mjs";
 import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery/index.mjs";
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
+import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTerminal } from "./lib/astronstudio-quota-retry.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.4.9";
+export const EXECUTION_DRIVER_VERSION = "0.4.10";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -54,6 +55,7 @@ function usage() {
 选项：
   --resume                       恢复同一 attempt；禁止重复发送 Prompt
   --retry-pre-send-failure        与 --resume 使用；仅接续已证明零发送的准备失败
+  --quota-retry-authorization <JSON> 原队列已登记的额度恢复授权；新 attempt 只发送一次
   --detach-after-submit          绑定 thread/turn/session/cwd 后退出观察
   --observe-once                 恢复后只执行一次原生状态观察
   --managed-run-slots <1-8>     批队列传入冻结槽位；独立单题默认 1
@@ -86,6 +88,7 @@ export function parseArgs(argv) {
     runConfig: "",
     resume: false,
     retryPreSendFailure: false,
+    quotaRetryAuthorization: null,
     detachAfterSubmit: false,
     observeOnce: false,
     managedRunSlots: 1,
@@ -103,6 +106,7 @@ export function parseArgs(argv) {
     ["--poll-interval-ms", "pollIntervalMs"],
     ["--identity-timeout-ms", "identityTimeoutMs"],
     ["--managed-run-slots", "managedRunSlots"],
+    ["--quota-retry-authorization", "quotaRetryAuthorization"],
   ]);
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -131,6 +135,9 @@ export function parseArgs(argv) {
   if (values.observeOnce && !values.resume) throw new Error("--observe-once 必须与 --resume 一起使用");
   if (values.retryPreSendFailure && (!values.resume || values.observeOnce)) {
     throw new Error("--retry-pre-send-failure 要求 --resume 且不能仅观察");
+  }
+  if (values.quotaRetryAuthorization && (!values.resume || values.observeOnce)) {
+    throw new Error("额度恢复授权仅允许 --resume 的原队列重试，不能仅观察");
   }
   if (values.detachAfterSubmit && values.observeOnce) {
     throw new Error("--detach-after-submit 与 --observe-once 不能同时使用");
@@ -178,9 +185,13 @@ function isInside(parent, child) {
 async function atomicWriteJson(path, value) {
   await mkdir(dirname(path), { recursive: true });
   const temporary = `${path}.tmp-${process.pid}-${randomUUID()}`;
-  await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  const file = await open(temporary, 'wx');
+  try { await file.writeFile(`${JSON.stringify(value, null, 2)}\n`, 'utf8'); await file.sync(); }
+  finally { await file.close(); }
   try {
     await rename(temporary, path);
+    const directory = await open(dirname(path), 'r');
+    try { await directory.sync(); } finally { await directory.close(); }
   } catch (error) {
     await rm(temporary, { force: true }).catch(() => {});
     throw error;
@@ -248,11 +259,20 @@ export async function resolveExecutionConfig(parsed) {
   const task = matches[0];
   const promptPath = await realpath(join(unitRoot, task.prompt.path));
   const taskRoot = await realpath(dirname(promptPath));
-  const candidateWorkspace = await realpath(join(unitRoot, task.workspace.path));
+  let candidateWorkspace, restoringWorkspace = false;
+  const workspacePath = join(unitRoot, task.workspace.path);
+  try { candidateWorkspace = await realpath(workspacePath); }
+  catch (error) {
+    if (error?.code !== 'ENOENT' || !parsed.quotaRetryAuthorization) throw error;
+    // The authorized transaction may have been interrupted between the two
+    // workspace renames. Validate/recover it under the locks before any UI use.
+    candidateWorkspace = join(await realpath(dirname(workspacePath)), basename(workspacePath));
+    restoringWorkspace = true;
+  }
   if (!isInside(unitRoot, taskRoot) || !isInside(taskRoot, promptPath)) {
     throw new Error("Prompt 路径越出当前 execution task");
   }
-  if (!isInside(taskRoot, candidateWorkspace) || !(await stat(candidateWorkspace)).isDirectory()) {
+  if (!isInside(taskRoot, candidateWorkspace) || (!restoringWorkspace && !(await stat(candidateWorkspace)).isDirectory())) {
     throw new Error("候选 workspace 路径无效");
   }
   const prompt = await readFile(promptPath, "utf8");
@@ -875,7 +895,54 @@ export async function executeSingleTask(config, overrides = {}) {
   };
   const existing = await readJsonIfPresent(config.stateFile);
   let state;
-  if (existing) {
+  if (config.quotaRetryAuthorization) {
+    if (!config.resume || !existing) throw new Error("QUOTA_EXISTING_ATTEMPT_REQUIRED");
+    assertStateIdentity(config, existing);
+    const context = await quotaContext(config, existing);
+    const { auth } = context.authorization;
+    const zeroSendRecovery = Boolean(config.retryPreSendFailure);
+    if (zeroSendRecovery && (existing.identity.attempt_id !== auth.new_attempt_id || !isRetryablePreSendFailure(existing))) {
+      throw new Error('QUOTA_ZERO_SEND_RETRY_NOT_ELIGIBLE');
+    }
+    if (existing.identity.attempt_id === auth.new_attempt_id && !pristineUnsentAttempt(existing) && !zeroSendRecovery) {
+      // An armed/accepted retry is only observed, including uncertain sends.
+      return resumeExecution(config, existing, dependencies);
+    }
+    await currentProbe(config, dependencies, true);
+    const sessions = await dependencies.queryNativeSessions(config.stateDatabase);
+    assertNativeQuotaTerminal(sessions, context.old, config.candidateWorkspace, isBlockingActiveSession);
+    if (context.receipt) await recoveryFiles(config.unitRoot, context.authorization, true, true);
+    const receipt = context.receipt || await recoveryFiles(config.unitRoot, context.authorization);
+    state = existing.identity.attempt_id === auth.new_attempt_id ? existing : createInitialState(config, dependencies.now());
+    state.identity.attempt_id = auth.new_attempt_id;
+    if (zeroSendRecovery) {
+      const previousState = await readFile(config.stateFile), previousRecord = await readFile(config.recordFile);
+      const history = join(config.controlRoot, 'pre-send-failures');
+      await mkdir(history, { recursive: true });
+      const realControl = await realpath(config.controlRoot);
+      if (await realpath(history) !== join(realControl, 'pre-send-failures')) throw new Error('QUOTA_PRE_SEND_HISTORY_SCOPE');
+      for (const [suffix, bytes] of [['json', previousState], ['execution-record.json', previousRecord]]) {
+        const path = join(history, `${sha256(previousState)}.${suffix}`);
+        try { await writeFile(path, bytes, { flag: 'wx', mode: 0o600 }); }
+        catch (error) { if (error?.code !== 'EEXIST' || sha256(await readFile(path)) !== sha256(bytes)) throw error; }
+      }
+      state.phase = 'PENDING';
+      state.execution.business_status = null;
+      state.execution.finished_at = null;
+      state.execution.duration_seconds = null;
+      state.execution.error = null;
+      state.history.push({ phase: 'PENDING', at: dependencies.now(), event: 'AUTHORIZED_QUOTA_ZERO_SEND_RESUMED',
+        previous_state_sha256: sha256(previousState), previous_record_sha256: sha256(previousRecord),
+        authorization_sha256: context.authorization.sha256 });
+    }
+    if (!state.history.some(row => row.event === 'AUTHORIZED_QUOTA_RETRY_CREATED')) {
+      state.human_assistance.operation_count += 1;
+      state.history.push({ phase: 'PENDING', at: dependencies.now(), event: 'AUTHORIZED_QUOTA_RETRY_CREATED',
+        old_attempt_id: auth.old_attempt_id, new_attempt_id: auth.new_attempt_id,
+        authorization_sha256: context.authorization.sha256, recovery_receipt: receipt.receipt_path });
+    }
+    await persist(config, state);
+  } else if (existing) {
     if (!config.resume) throw new Error("已有执行状态；必须使用 --resume，禁止创建新 attempt 或重发 Prompt");
     if (!config.retryPreSendFailure) return resumeExecution(config, existing, dependencies);
     assertStateIdentity(config, existing);
@@ -924,6 +991,7 @@ export async function executeSingleTask(config, overrides = {}) {
     await persist(config, state);
   }
   let client = null;
+  let capturedNative = null;
   try {
     const target = await dependencies.discoverMainTarget(config.endpoint, config.timeoutMs);
     client = await dependencies.connectCdp(target.webSocketDebuggerUrl, config.timeoutMs);
@@ -986,6 +1054,7 @@ export async function executeSingleTask(config, overrides = {}) {
         dependencies,
         state.send.post_send_route_thread_id,
       );
+      capturedNative = captured;
       if (!captured) {
         return persistAttention(
           config,
@@ -1004,6 +1073,7 @@ export async function executeSingleTask(config, overrides = {}) {
         dependencies,
         state.send.post_send_route_thread_id,
       );
+      capturedNative = captured;
       if (!captured) {
         return persistAttention(
           config,
@@ -1014,7 +1084,13 @@ export async function executeSingleTask(config, overrides = {}) {
         );
       }
     }
-    if (config.detachAfterSubmit) return state;
+    if (config.detachAfterSubmit) {
+      // Identity capture may already have observed an immediate provider
+      // failure. Publish that terminal before a batch can refill more slots.
+      const classification = capturedNative ? classifyNativeState(capturedNative) : null;
+      if (classification?.kind === 'failed') return await finalize(config, state, capturedNative, classification, dependencies);
+      return state;
+    }
     return await waitForTerminal(config, state, dependencies);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
