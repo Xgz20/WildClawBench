@@ -1,8 +1,8 @@
-"""Verify native terminal failures for scoring admission or quota exclusion.
+"""Verify native terminal failures for scoring admission or a quota stop.
 
 This admission preserves FAILED and the source failure; it never manufactures
 a successful execution or decides a score. Reviewed candidate failures use the
-ordinary grader/Judge; verified external quota failures remain unscored.
+ordinary grader/Judge; verified external quota failures require human recovery.
 """
 import hashlib
 import json
@@ -121,7 +121,7 @@ def is_external_quota(execution):
 
 
 def validate_external_quota(execution, files):
-    """Prove an infrastructure exclusion without grading or an ID allowlist.
+    """Prove an infrastructure stop without grading or an ID allowlist.
 
     Both source records and the state must bind the same native error; edited
     messages, unbound proofs and arbitrary HTTP 402 responses remain failures.

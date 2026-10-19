@@ -54,47 +54,50 @@ def native_failure(fixture, task_id, message=QUOTA_MESSAGE):
 
 
 class ExternalQuotaAdmissionTests(unittest.TestCase):
-    def test_native_quota_is_unscored_for_arbitrary_tasks_without_judge_or_score(self):
-        with tempfile.TemporaryDirectory() as temp:
-            fixture = Fixture(Path(temp), task_ids=('arbitrary-search', 'arbitrary-writing', 'arbitrary-code'),
-                              grading_types=('hybrid', 'llm_judge', 'automated'))
-            before = {}
-            for tid in fixture.task_ids:
-                native_failure(fixture, tid)
-                before[tid] = fixture.execution_records[tid].read_bytes()
-            view = fixture.initialize()
-            self.assertEqual(view['status'], 'COMPLETED_WITH_FAILURES')
-            self.assertEqual(view['unscored_count'], 3)
-            for task in view['tasks']:
-                self.assertEqual(task['phase'], 'UNSCORED')
-                self.assertIsNone(task['scoring_attempt_id'])
-                self.assertIsNone(task['attempt_path'])
-            root = Path(view['orchestration_root'])
-            self.assertFalse((root / 'attempts').exists())
-            self.assertFalse(list(root.rglob('score.json')))
-            result = ORCHESTRATOR.build_submission(root)
-            self.assertEqual(result['unscored_count'], 3)
-            submission = json.loads((root / 'submission.json').read_bytes())
-            self.assertEqual(submission['task_ids'], fixture.task_ids)
-            for task in submission['tasks']:
-                self.assertEqual(task['execution_status'], 'candidate_error')
-                self.assertEqual(task['score_status'], 'unscored')
-                self.assertIsNone(task['score_path'])
-                self.assertIsNone(task['scoring_attempt_id'])
-            for tid in fixture.task_ids:
-                self.assertEqual(fixture.execution_records[tid].read_bytes(), before[tid])
+    def test_native_quota_stops_all_grading_types_without_score_or_submission(self):
+        for grading_type in ('automated', 'hybrid', 'llm_judge'):
+            with self.subTest(grading_type=grading_type), tempfile.TemporaryDirectory() as temp:
+                fixture = Fixture(Path(temp), task_ids=('arbitrary-task',), grading_type=grading_type)
+                native_failure(fixture, 'arbitrary-task')
+                before = fixture.execution_records['arbitrary-task'].read_bytes()
+                with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError, 'EXECUTION_EXTERNAL_QUOTA_EXHAUSTED'):
+                    fixture.initialize()
+                self.assertFalse(list(fixture.output_root.rglob('score.json')))
+                self.assertFalse(list(fixture.output_root.rglob('submission.json')))
+                self.assertFalse(list(fixture.output_root.glob('*.staging-*')))
+                self.assertEqual(fixture.execution_records['arbitrary-task'].read_bytes(), before)
 
-    def test_quota_exclusion_does_not_roll_back_other_tasks(self):
+    def test_quota_stop_does_not_prepare_later_tasks(self):
         with tempfile.TemporaryDirectory() as temp:
             fixture = Fixture(Path(temp), task_ids=('quota-task', 'normal-task'))
             native_failure(fixture, 'quota-task')
-            view = fixture.initialize()
-            self.assertEqual(view['unscored_count'], 1)
-            self.assertEqual(view['tasks'][0]['phase'], 'UNSCORED')
-            self.assertEqual(view['tasks'][1]['phase'], 'AWAITING_PROJECT')
-            self.assertIsNotNone(view['tasks'][1]['attempt_path'])
+            original = ORCHESTRATOR._run_score_command
+            prepared = []
+            def command(lock, arguments, **kwargs):
+                if arguments[0] == 'prepare':
+                    prepared.append(arguments[arguments.index('--task-id') + 1])
+                return original(lock, arguments, **kwargs)
+            with patch.object(ORCHESTRATOR, '_run_score_command', side_effect=command):
+                with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError, 'EXECUTION_EXTERNAL_QUOTA_EXHAUSTED'):
+                    fixture.initialize()
+            self.assertEqual(prepared, ['quota-task'])
+            self.assertFalse(list(fixture.output_root.rglob('submission.json')))
 
-    def test_detached_score_skill_keeps_the_same_unscored_contract(self):
+    def test_missing_quota_proof_is_not_silently_unscored(self):
+        for missing_proof in (True, False):
+            with self.subTest(missing_proof=missing_proof), tempfile.TemporaryDirectory() as temp:
+                fixture = Fixture(Path(temp), task_ids=('quota-task',))
+                execution, _ = native_failure(fixture, 'quota-task')
+                if missing_proof:
+                    execution.pop('failure_evidence')
+                else:
+                    execution['execution']['business_status'] = 'infrastructure_error'
+                fixture.execution_records['quota-task'].write_bytes(encoded(execution))
+                with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError, 'EXTERNAL_QUOTA_EVIDENCE_INVALID'):
+                    fixture.initialize()
+                self.assertFalse(list(fixture.output_root.rglob('submission.json')))
+
+    def test_detached_score_skill_preserves_the_human_recovery_stop(self):
         from tests.general_e2e.test_e2e_build import BUILD, FIXED_REVISION, REPO_ROOT
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -105,10 +108,9 @@ class ExternalQuotaAdmissionTests(unittest.TestCase):
             fixture = Fixture(root / 'fixture', task_ids=('detached-quota',))
             native_failure(fixture, 'detached-quota')
             with patch('tests.general_e2e.test_general_scoring_orchestration.SCORE_SKILL', installed):
-                view = fixture.initialize()
-            self.assertEqual(view['unscored_count'], 1)
-            self.assertIsNone(view['tasks'][0]['scoring_attempt_id'])
-            self.assertFalse((Path(view['orchestration_root']) / 'attempts').exists())
+                with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError, 'EXECUTION_EXTERNAL_QUOTA_EXHAUSTED'):
+                    fixture.initialize()
+            self.assertFalse(list(fixture.output_root.rglob('orchestration-state.json')))
 
     def test_recognition_requires_native_error_code_and_exact_provider_status(self):
         with tempfile.TemporaryDirectory() as temp:

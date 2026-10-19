@@ -1277,6 +1277,13 @@ def prepare_attempt(
         raise ScoringRuntimeError("EXECUTION_RECORD_INVALID", "required objects")
     if identity.get("task_id") != task_id:
         raise ScoringRuntimeError("EXECUTION_TASK_MISMATCH")
+    quota_binding = execution.get("failure_evidence")
+    if failure_evidence.is_external_quota(execution) and not (
+        execution.get("phase") == "FAILED"
+        and execution.get("execution", {}).get("business_status") == "candidate_error"
+        and isinstance(quota_binding, dict) and quota_binding.get("schema") == failure_evidence.ADMISSION
+    ):
+        raise ScoringRuntimeError("EXTERNAL_QUOTA_EVIDENCE_INVALID", "Native quota error without a bound failure proof; pause for human inspection")
     if (
         not (execution.get("phase") == "COMPLETED" and execution.get("execution", {}).get("business_status") == "completed"
              or execution.get("phase") == "FAILED" and execution.get("execution", {}).get("business_status") == "candidate_error" and execution.get("failure_evidence"))
@@ -1350,12 +1357,11 @@ def prepare_attempt(
             failure_evidence.validate_external_quota(execution, failure_files)
         except (ValueError, KeyError, TypeError, OSError) as exc:
             raise ScoringRuntimeError("EXTERNAL_QUOTA_EVIDENCE_INVALID", str(exc)) from exc
-        # The orchestrator already preserves EXECUTION_NOT_SCORABLE as an
-        # UNSCORED task with no Judge attempt. Do this before output-contract
-        # admission: external quota failures are not candidate ability scores.
+        # External quota exhaustion blocks the evaluation for human recovery.
+        # It must never take the ordinary per-task UNSCORED-and-continue path.
         raise ScoringRuntimeError(
-            "EXECUTION_NOT_SCORABLE",
-            "EXECUTION_EXTERNAL_QUOTA_EXHAUSTED: verified native HTTP 402 astron_points_exhausted",
+            "EXECUTION_EXTERNAL_QUOTA_EXHAUSTED",
+            "Pause evaluation for human quota recovery and explicit resumption; preserve the failed execution and do not skip, score zero or resend automatically",
         )
     evidence_admission = _validate_evidence_admission(execution, contract)
     if evidence_admission not in {"standard", failure_evidence.ADMISSION}:

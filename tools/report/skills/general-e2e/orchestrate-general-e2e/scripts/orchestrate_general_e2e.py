@@ -379,8 +379,8 @@ def _run_score_command(
             rejected = None
         if (isinstance(rejected, dict) and rejected.get("status") == "FAIL"
             and isinstance(rejected.get("error"), dict)
-            and rejected["error"].get("code") == "EXECUTION_NOT_SCORABLE"):
-            raise OrchestrationError("EXECUTION_NOT_SCORABLE", str(rejected["error"].get("detail", ""))[:2000])
+            and rejected["error"].get("code") in {"EXECUTION_NOT_SCORABLE", "EXECUTION_EXTERNAL_QUOTA_EXHAUSTED"}):
+            raise OrchestrationError(rejected["error"]["code"], str(rejected["error"].get("detail", ""))[:2000])
         raise OrchestrationError("SCORE_SKILL_COMMAND_FAILED", detail[:2000])
     try:
         value = json.loads(completed.stdout)
@@ -483,7 +483,19 @@ def _execution_summary(
             raise OrchestrationError("EVIDENCE_MANIFEST_IDENTITY_MISMATCH", task_id)
         evidence_sha = _sha256_file(evidence_manifest)
     failure: dict[str, str] | None = None
-    if business_status == "candidate_error" and record.get("phase") == "FAILED" and record.get("failure_evidence", {}).get("schema") == "verified-failed-output-evidence/v1":
+    native_error = execution.get("error") if isinstance(execution, dict) else None
+    failure_binding = record.get("failure_evidence")
+    verified_failure_profile = (isinstance(failure_binding, dict)
+                                and failure_binding.get("schema") == "verified-failed-output-evidence/v1")
+    if (isinstance(native_error, dict)
+            and native_error.get("code") in ("ASTRONSTUDIO_TURN_ERROR", "ASTRONSTUDIO_TURN_FAILED")
+            and isinstance(native_error.get("message"), str)
+            and re.fullmatch(r"unexpected status 402(?: Payment Required)?: astron_points_exhausted(?:, url: \S+)?", native_error["message"])
+            and not (business_status == "candidate_error" and record.get("phase") == "FAILED" and verified_failure_profile)):
+        # Missing proof cannot turn an apparent quota incident into the generic
+        # UNSCORED-and-continue route. Stop conservatively for human inspection.
+        raise OrchestrationError("EXTERNAL_QUOTA_EVIDENCE_INVALID", "Native quota error without a bound failure proof; pause for human inspection")
+    if business_status == "candidate_error" and record.get("phase") == "FAILED" and verified_failure_profile:
         pass  # Frozen score Skill independently verifies every native source.
     elif business_status != "completed":
         failure = {

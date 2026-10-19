@@ -190,6 +190,68 @@ test("five tasks fill default three slots and dynamically refill in manifest ord
   }
 });
 
+test("native quota failure pauses even with continue enabled and resume cannot skip it", async () => {
+  const current = await fixture(TASK_IDS.slice(0, 2), ["--run-slots", "1", "--continue-on-terminal-failure"]);
+  const calls = [];
+  try {
+    const result = await runQueue(current.plan, current.args, {
+      sleep: async () => {},
+      runTask: async (taskId, operation) => {
+        calls.push({ taskId, operation });
+        const failed = automation(current.plan, taskId, "preserved-quota-attempt", "FAILED");
+        failed.execution.business_status = "candidate_error";
+        failed.execution.error = { code: "ASTRONSTUDIO_TURN_ERROR",
+          message: "unexpected status 402 Payment Required: astron_points_exhausted, url: http://127.0.0.1:12345/v1/responses" };
+        await writeAutomation(current.plan, taskId, failed);
+        return { code: 2, signal: null };
+      },
+    });
+    assert.equal(result.phase, "NEEDS_ATTENTION");
+    assert.match(result.error, /EXECUTION_EXTERNAL_QUOTA_EXHAUSTED/u);
+    assert.deepEqual(calls, [{ taskId: TASK_IDS[0], operation: "dispatch" }]);
+    assert.equal(result.tasks[1].phase, "PENDING");
+    const path = join(current.unitRoot, ".general-e2e", "execution", TASK_IDS[0], "automation-state.json");
+    const original = await readFile(path);
+    for (const extra of [{}, { retryPreSendTaskId: TASK_IDS[1] }]) {
+      const resumed = await runQueue(current.plan, { ...current.args, resume: true, ...extra }, {
+        runTask: async () => { throw new Error("Quota stop must not dispatch, observe or retry automatically"); },
+      });
+      assert.equal(resumed.phase, "NEEDS_ATTENTION");
+      assert.equal(resumed.tasks[0].selected_attempt_id, "preserved-quota-attempt");
+      assert.equal(resumed.tasks[0].dispatch_attempt_count, 1);
+      assert.equal(resumed.tasks[1].phase, "PENDING");
+    }
+    assert.deepEqual(await readFile(path), original);
+  } finally { await rm(current.unitRoot, { recursive: true, force: true }); }
+});
+
+test("quota discovered during observation stops refilling slots and preserves in-flight sessions", async () => {
+  const current = await fixture(TASK_IDS, ["--continue-on-terminal-failure"]);
+  const calls = [];
+  try {
+    const result = await runQueue(current.plan, current.args, {
+      sleep: async () => {},
+      runTask: async (taskId, operation) => {
+        calls.push({ taskId, operation });
+        const value = automation(current.plan, taskId, `attempt-${taskId}`, operation === "dispatch" ? "RUNNING" : "FAILED");
+        if (operation !== "dispatch") {
+          value.execution.business_status = "candidate_error";
+          value.execution.error = { code: "ASTRONSTUDIO_TURN_ERROR",
+            message: "unexpected status 402 Payment Required: astron_points_exhausted" };
+        }
+        await writeAutomation(current.plan, taskId, value);
+        return { code: operation === "dispatch" ? 0 : 2, signal: null };
+      },
+    });
+    assert.equal(result.phase, "NEEDS_ATTENTION");
+    assert.deepEqual(calls.map(c => c.operation), ["dispatch", "dispatch", "dispatch", "observe"]);
+    assert.deepEqual(result.active_task_ids, TASK_IDS.slice(1, 3));
+    assert.equal(result.tasks[3].phase, "PENDING");
+    assert.equal(result.tasks[4].phase, "PENDING");
+    assert.equal(result.tasks[0].selected_attempt_id, `attempt-${TASK_IDS[0]}`);
+  } finally { await rm(current.unitRoot, { recursive: true, force: true }); }
+});
+
 test("worker-loss recovery observes original attempts without redispatch", async () => {
   const current = await fixture(TASK_IDS.slice(0, 2));
   const calls = [];

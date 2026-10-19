@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 import { isRetryablePreSendFailure } from "./execute_astronstudio_macos.mjs";
 
 export const QUEUE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-queue/v1";
-export const QUEUE_WORKER_VERSION = "0.1.0";
+export const QUEUE_WORKER_VERSION = "0.1.1";
 export const QUEUE_REVISION = 1;
 export const UI_SLOTS = 1;
 export const RUN_SLOTS = 3;
@@ -27,6 +27,14 @@ const SINGLE_TASK_SCRIPT = resolve(
   fileURLToPath(new URL("./execute_astronstudio_macos.mjs", import.meta.url)),
 );
 const TASK_TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
+
+function externalQuotaFailure(task) {
+  return task.phase === "FAILED"
+    && ["ASTRONSTUDIO_TURN_ERROR", "ASTRONSTUDIO_TURN_FAILED"].includes(task.error?.code)
+    && typeof task.error?.message === "string"
+    && /^unexpected status 402(?: Payment Required)?: astron_points_exhausted(?:, url: \S+)?$/u.test(task.error.message)
+    && !/[\r\n]/u.test(task.error.message);
+}
 
 function usage() {
   return `AstronStudio General E2E macOS 并发队列 Worker
@@ -524,7 +532,8 @@ export async function runQueue(plan, args, overrides = {}) {
     await persist(plan, state, dependencies.now());
   }
 
-  if (new Set(["COMPLETED", "COMPLETED_WITH_FAILURES"]).has(state.phase) && !args.retryPreSendTaskId) return state;
+  if (new Set(["COMPLETED", "COMPLETED_WITH_FAILURES"]).has(state.phase)
+    && !args.retryPreSendTaskId && !state.tasks.some(externalQuotaFailure)) return state;
   const now = dependencies.now();
   if (args.resume) recordUnexpectedWorkerLoss(state, dependencies.isProcessAlive, now);
   const lock = await acquireWorkerLock(plan.workerLockFile, args.resume, dependencies.isProcessAlive);
@@ -544,6 +553,12 @@ export async function runQueue(plan, args, overrides = {}) {
     await persist(plan, state, dependencies.now());
 
     if (args.retryPreSendTaskId) {
+      for (const task of state.tasks) {
+        const automation = await readJsonIfPresent(controlPath(plan, task.task_id, "automation-state.json"));
+        if (automation) synchronizeTaskFromAutomation(plan, task, automation, dependencies.now());
+      }
+    }
+    if (args.retryPreSendTaskId && !state.tasks.some(externalQuotaFailure)) {
       const row = state.tasks.find((task) => task.task_id === args.retryPreSendTaskId);
       if (!row) throw new Error("指定的准备失败任务不在冻结队列中");
       const automation = await readJsonIfPresent(controlPath(plan, row.task_id, "automation-state.json"));
@@ -575,6 +590,17 @@ export async function runQueue(plan, args, overrides = {}) {
       const failed = state.tasks.filter((task) => task.phase === "FAILED");
       state.active_task_ids = running.map((task) => task.task_id);
       state.current_task_id = state.active_task_ids[0] || null;
+
+      const quotaFailures = failed.filter(externalQuotaFailure);
+      if (quotaFailures.length) {
+        state.phase = "NEEDS_ATTENTION";
+        state.current_task_id = quotaFailures[0].task_id;
+        state.error = `EXECUTION_EXTERNAL_QUOTA_EXHAUSTED: ${quotaFailures.map(task => task.task_id).join(",")}; 等待人工恢复额度及明确恢复/重测决定，不自动跳过或重发`;
+        state.history.push({ at: dependencies.now(), event: "QUEUE_BLOCKED_EXTERNAL_QUOTA",
+          task_ids: quotaFailures.map(task => task.task_id), active_task_ids: [...state.active_task_ids] });
+        await persist(plan, state, dependencies.now());
+        return state;
+      }
 
       if (attention.length) {
         state.phase = "NEEDS_ATTENTION";
@@ -634,6 +660,7 @@ export async function runQueue(plan, args, overrides = {}) {
           driver_signal: driverResult.signal || null,
         });
         await persist(plan, state, dependencies.now());
+        if (externalQuotaFailure(pending)) break;
         if (pending.phase === "NEEDS_ATTENTION") break;
         if (pending.phase === "FAILED" && !args.continueOnTerminalFailure) {
           dispatchBlocked = true;
@@ -644,6 +671,7 @@ export async function runQueue(plan, args, overrides = {}) {
       running = state.tasks.filter((task) => task.phase === "RUNNING");
       const pending = state.tasks.filter((task) => task.phase === "PENDING");
       const currentAttention = state.tasks.filter((task) => task.phase === "NEEDS_ATTENTION");
+      if (state.tasks.some(externalQuotaFailure)) continue;
       if (currentAttention.length) continue;
       if (!running.length && !pending.length) {
         const terminalFailures = state.tasks.filter((task) => task.phase === "FAILED");
@@ -708,6 +736,7 @@ export async function runQueue(plan, args, overrides = {}) {
           driver_signal: driverResult.signal || null,
         });
         await persist(plan, state, dependencies.now());
+        if (externalQuotaFailure(queueTask)) break;
       }
       if (!observedChange) await dependencies.sleep(args.pollIntervalMs);
     }

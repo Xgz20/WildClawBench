@@ -9,6 +9,8 @@ AstronStudio 3.5.0 的侧栏恢复识别精确“切换任务侧边栏”按钮�
 
 # 执行 General E2E 用例
 
+`0.14.3` 在批量执行发现原生 HTTP 402 `astron_points_exhausted` 时，将队列暂停为 NEEDS_ATTENTION 并停止新派发；即使开启 --continue-on-terminal-failure 也不跳过额度失败。普通 --resume 和零发送重试不能自动解除该阻断。保留失败 attempt、原生状态和并发在途会话，向人工报告；不得擅自取消、重发、重测或记零分。额度恢复后须由人工明确恢复方案，终态失败如需重测另建获授权的新 attempt，不改写旧证据。
+
 `0.14.1` 只读会话分类识别已完成 head 之前、未映射到真实 turn 且只有 Token 用量事件的残留 open-turn。会话必须 ready，事件与残留时间都有效且不晚于完成时间；未知事件、真实映射、待交互或活动会话仍阻断发送。原生库不改写，probe 的原始 open-turn 计数仍保留。
 
 `0.13.16` 的 DoubaoWork 2.31.10 dispatcher 观察器增加独立的原生 LocalToolSSE 入口订阅，只复制收到的工具调用，不代替原消费器或调用工具。新增 `consumer_witness` 与实际 dispatch、首次观测的 uploaded 账本逐项对账；原生准入拒绝还须复制实际 reportAdmissionFailure 结果，缺失的 Agent ID 保持 null，不冒充执行成功；未知路由、无拒绝证据、身份/参数不一致和覆盖缺口均不能证明完整。结束时只移除自身订阅，旧快照不补入口证据。

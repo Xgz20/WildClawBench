@@ -31,13 +31,13 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 python3 -m eval_general_e2e skills --name score-general-e2e --json
 ```
 
-当前 `0.10.7/operational` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、中文理由门禁、合分审计和 `verify-score`。自动规则组件会为每个检查点记录中文分值解释，并绑定冻结规则源码、候选清单、轨迹与 Worker 原始返回键值。终态评分可复用冻结候选创建独立重评分 attempt；题目 `timeout_seconds` 与控制线程 deadline 不进入能力评分 Rubric。G4-03 已完成固定 `gpt-6-astra/high` 的三题真实 Codex 语义评分并纳入五题闭环；该生产状态不表示 Windows 或其他 Harness 已验收。
+当前 `0.10.8/operational` 已提供不依赖 Docker 的私有评分目录、本地受管规则 Worker、`codex-agent-judge-v1` 证据查询，以及 `api-judge-v1` 的 Anthropic Messages、OpenAI Chat Completions、OpenAI Responses 三种 transport、重试与独立审计；两类语义结果均经过结构化校验、中文理由门禁、合分审计和 `verify-score`。自动规则组件会为每个检查点记录中文分值解释，并绑定冻结规则源码、候选清单、轨迹与 Worker 原始返回键值。终态评分可复用冻结候选创建独立重评分 attempt；题目 `timeout_seconds` 与控制线程 deadline 不进入能力评分 Rubric。G4-03 已完成固定 `gpt-6-astra/high` 的三题真实 Codex 语义评分并纳入五题闭环；该生产状态不表示 Windows 或其他 Harness 已验收。
 
 评分 Prompt 必须冻结并显式给出本 Skill 根、入口、版本和入口 SHA；不得从项目或仓库中的同名 Skill 猜测入口。普通生产运行的 manifest 不含 validation 标记；显式验收运行仍要求 Prompt 的 acceptance ID 与 `attempt-manifest.json` 完全相同。两种模式都不得省略证据查询、反例检查、合分或 `verify-score`。
 
 ## 责任边界
 
-`0.10.7` 在契约评分准入前，识别已绑定原生错误中的 HTTP 402 `astron_points_exhausted`。只有失败证明、原记录/状态/候选/Prompt 的 SHA、完整原生会话身份及三份记录的错误内容均一致时，才返回 `EXECUTION_NOT_SCORABLE` 并说明 `EXECUTION_EXTERNAL_QUOTA_EXHAUSTED`，交由编排器保留 UNSCORED；不创建评分 attempt、不运行规则或 Judge。该规则不含固定批次、题号或 SHA，不把任意 402、候选正文中的额度文字或未知 Harness 当作外部额度失败。证明损坏返回 `EXTERNAL_QUOTA_EVIDENCE_INVALID` 并停止。其他原生失败仍走原审核契约，历史候选、评分、回执和冻结发行保持不变。
+`0.10.8` 在契约评分准入前核验 AstronStudio HTTP 402 `astron_points_exhausted` 的原生失败证明、原记录/状态/候选/Prompt SHA、完整会话身份及错误绑定。核验通过返回独立阻断错误 `EXECUTION_EXTERNAL_QUOTA_EXHAUSTED`，停止评测等待人工恢复和明确恢复指令；不得进入普通 `EXECUTION_NOT_SCORABLE → UNSCORED` 继续路径，不记能力零分、不创建 Judge、不自动重发。证明损坏继续返回 `EXTERNAL_QUOTA_EVIDENCE_INVALID` 并停止。其他原生失败仍走原审核契约；历史候选、评分、回执和冻结发行保持不变。
 
 partial 执行证据必须显式列出缺失项，空列表不得按 standard 准入。`native-tool-capture-incomplete` 仅能由已经验证的 Workspace-only automated 规则按 `automated-workspace-only/v1` 使用；不得因此放行 hybrid、llm_judge 或消费轨迹的自动规则。身份、候选稳定性、原始文件和 SHA 门禁保持有效；旧冻结评分 attempt 不重写。
 
