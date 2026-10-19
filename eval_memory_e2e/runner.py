@@ -265,8 +265,15 @@ def advance(root, episode_id, *, driver_timeout=None, retry_pre_send=False):
             _require_harness_predecessors(root, manifest, item)
             if (manifest['mode'] == 'native' and action['request'].get('action') == 'execute_step'
                     and manifest['profiles'][item['harness']].get('non_target_memory_boundary') is not None):
-                require(False, 'NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED',
-                        'New native Profiles require a verified OS deny adapter for non-target memory; none is admitted. No Prompt intent was registered.')
+                boundary = manifest['profiles'][item['harness']]['non_target_memory_boundary']
+                require(item['harness'] == 'AstronStudio' and boundary.get('admitted_adapter') == 'macos-seatbelt-astudio-backend/v1',
+                        'NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED', 'No admitted OS adapter; no Prompt intent was registered')
+                from .os_boundary import attest
+                proof = attest(boundary['lease'], boundary)
+                proof_path = Path(root) / 'os-boundary-checks' / (uuid4().hex + '.json')
+                publish(proof_path, proof)
+                append(root, 'OS_BOUNDARY_VERIFIED', episode_id, {'proof': archive(root, proof_path),
+                       'operation_id': action['request']['operation_id'], 'prompt_intent_registered': False})
         if manifest['mode'] == 'native':
             shared_lock = memory_ui_lock_path(root, manifest['profiles'])
             require(not shared_lock.exists(), 'NATIVE_UI_LOCK_PRESENT',

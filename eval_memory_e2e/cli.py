@@ -63,6 +63,7 @@ def parser():
     native.add_argument("--harness", action="append", choices=list(HARNESS_PORTS))
     profiles = commands.add_parser("native-profiles", help="freeze real Driver commands and source hashes")
     profiles.add_argument("--output", type=Path, required=True)
+    profiles.add_argument("--astudio-boundary-lease", type=Path)
     config = commands.add_parser("config-probe", help="four-client settings readback or reversible switch roundtrip; Codex excluded")
     config.add_argument("--output-dir", type=Path, required=True)
     config.add_argument("--harness", action="append", choices=list(HARNESS_PORTS))
@@ -141,7 +142,7 @@ def run(args):
     if args.command == "native-preflight":
         return native_preflight(args.output_dir, args.harness)
     if args.command == "native-profiles":
-        return native_profiles(args.output)
+        return native_profiles(args.output, args.astudio_boundary_lease)
     if args.command == "config-probe":
         return configuration_probe(args.output_dir, args.harness, args.roundtrip, args.preflight_dir)
     if args.command == "astudio-memory-config":

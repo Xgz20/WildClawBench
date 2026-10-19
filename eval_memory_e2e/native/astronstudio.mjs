@@ -9,7 +9,7 @@ import {queryNativeSessions, withStateSnapshot,queryPristineThread,queryProjectF
 import {isBlockingActiveSession, classifyNativeState} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs';
 import {readRolloutFile,analyzeRollout} from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-rollout.mjs';
 import {context, sha, requestHash, readJson, saveState, artifact, withUiLock, requireGui,
-  baseReply, bindReply, verifyConfig, stdinRequest} from './common.mjs';
+  baseReply, bindReply, verifyConfig, stdinRequest,assertMemoryFilesystemBoundary} from './common.mjs';
 
 import {MACHINE_PATHS,memoryPython} from './machine.mjs';
 const DB=MACHINE_PATHS.astudio_db;
@@ -653,7 +653,15 @@ export async function runAstronStudio(request) {
       const beforePress=async()=>{
         const rpc=await waitForAStudioClickTransport(()=>readAStudioRpcTransport(live.client),{maxWaitMs:waitSeconds*1000});
         if(!rpc.ready)return rpc;
-        const focus=await waitFocus();return {...rpc,ready:focus.ready,focus};
+        const focus=await waitFocus();
+        if(focus.ready){
+          const proof=assertMemoryFilesystemBoundary(request,ctx.manifest.profiles.AstronStudio);
+          if(proof){
+            if(proof.launch_identity.pid!==live.pid)throw Error('ASTUDIO_BOUNDARY_LISTENER_MISMATCH');
+            ctx.memoryBoundary=proof;await artifact(ctx,'os-boundary-before-press',proof);
+          }
+        }
+        return {...rpc,ready:focus.ready,focus};
       };
       const clicked=await withAStudioSendEvents(live.client,request.operation_id,route,()=>dispatchAStudioOnce(state,async()=>{
         const rpc=await beforePress();

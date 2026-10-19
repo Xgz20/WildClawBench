@@ -2,16 +2,25 @@ import { createHash, randomUUID } from "node:crypto";
 import { readFile, writeFile, mkdir, lstat, open, rename, unlink } from "node:fs/promises";
 import { dirname, resolve, basename, join } from "node:path";
 import { hostname } from "node:os";
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 import { inspectMacGuiSession, assertMacGuiReady } from "../../tools/report/e2e-shared/desktop-gui/macos.mjs";
 
 export const sha = value => createHash("sha256").update(value).digest("hex");
-import {MACHINE_PATHS,verifyMachine,verifyNodeRuntime} from './machine.mjs';
+import {MACHINE_PATHS,verifyMachine,verifyNodeRuntime,memoryPython} from './machine.mjs';
 export const MEMORY_UI_LOCK=MACHINE_PATHS.ui_lock;
 export function assertMemoryFilesystemBoundary(request,profile) {
-  if(request.action==='execute_step'&&request.transport_action!=='observe'
-    &&profile.non_target_memory_boundary!==undefined)throw Error('NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED');
-  // Read-only observation of existing accepted/unknown operations remains
-  // available. Neither a boolean nor a claimed proof enables a new dispatch.
+  const boundary=profile.non_target_memory_boundary;
+  if(request.action!=='execute_step'||request.transport_action==='observe'||boundary===undefined)return null;
+  if(request.harness!=='AstronStudio'||boundary?.admitted_adapter!=='macos-seatbelt-astudio-backend/v1'
+    ||boundary.required!==true||!/^\/[\s\S]+\/lease\.json$/.test(boundary.lease??'')
+    ||!/^[a-f0-9]{64}$/.test(boundary.profile_sha256??'')||!/^[a-f0-9]{64}$/.test(boundary.selftest_sha256??''))
+    throw Error('NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED');
+  const helper=fileURLToPath(new URL('../os_boundary.py',import.meta.url));
+  const proof=JSON.parse(execFileSync(memoryPython(),[helper,'attest','--lease-dir',dirname(boundary.lease),
+    '--expected-json',JSON.stringify(boundary)],{encoding:'utf8',timeout:20000,maxBuffer:2097152}));
+  if(proof.status!=='PASS'||proof.profile_sha256!==boundary.profile_sha256)throw Error('NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED');
+  return proof;
 }
 export function memoryUiLockPath(root,profile) {
   if(profile.ui_lock_path!==undefined&&profile.ui_lock_path!==MEMORY_UI_LOCK)throw Error('NATIVE_UI_LOCK_POLICY');
@@ -45,7 +54,7 @@ export async function context(request, harness) {
   const manifest = await readJson(join(root, "manifest.json"));
   verifyMachine(manifest.profiles[harness].machine);
   verifyNodeRuntime(manifest.profiles[harness].node_runtime);
-  assertMemoryFilesystemBoundary(request,manifest.profiles[harness]);
+  const memoryBoundary=assertMemoryFilesystemBoundary(request,manifest.profiles[harness]);
   const episode = manifest.episodes.find(row => row.id === request.episode_id);
   if (!episode || episode.harness !== harness || episode.namespace !== request.namespace
       || episode.workspaces[request.scope] !== workspace || manifest.experiment_id !== request.experiment_id
@@ -70,7 +79,7 @@ export async function context(request, harness) {
   const control = join(root, ".native", harness, request.operation_id);
   await mkdir(control, { recursive: true });
   await assertNoLinks(control);
-  return { root, workspace, control, manifest, stateFile: join(control, "state.json"),
+  return { root, workspace, control, manifest, memoryBoundary, stateFile: join(control, "state.json"),
     uiLock: memoryUiLockPath(root,manifest.profiles[harness]) };
 }
 
@@ -123,7 +132,8 @@ export function baseReply(request, actualConfig) {
 export async function bindReply(ctx, request, reply, raw = {}) {
   const binding = { source_kind: "native_memory_binding", operation_id: request.operation_id,
     profile_id: request.profile_id, namespace: request.namespace, prompt_sha256: request.prompt_sha256,
-    actual_config: reply.actual_config, native: reply.native ?? null, ...raw };
+    actual_config: reply.actual_config, native: reply.native ?? null,
+    os_memory_boundary:ctx.memoryBoundary??null, ...raw };
   reply.binding_evidence = await artifact(ctx, "binding", binding);
   return reply;
 }

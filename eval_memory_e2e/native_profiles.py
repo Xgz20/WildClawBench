@@ -54,7 +54,7 @@ def driver_dependencies(entry, repository):
     return {str(path): sha(path.read_bytes()) for path in sorted(found)}
 
 
-def native_profiles(output):
+def native_profiles(output, astudio_boundary_lease=None):
     root = Path(__file__).resolve().parents[1]
     profiles = default_profiles()
     gates = {"AstronStudio": "eligible_idle_history_and_two_phase_completion",
@@ -70,7 +70,8 @@ def native_profiles(output):
         profiles[harness]['node_runtime'] = node
         # A real canary attempted to search another client's memory despite the
         # frozen Prompt. A Prompt is not a filesystem access control boundary.
-        # No OS deny adapter has been admitted yet: new profiles fail closed.
+        # Default profiles fail closed. AStudio may bind a separately verified
+        # live backend Seatbelt lease below; other clients remain blocked.
         profiles[harness]['non_target_memory_boundary'] = {
             'required': True, 'status': 'not_enforced',
             'admitted_adapter': None, 'policy': 'deny_non_target_memory_access'}
@@ -99,6 +100,11 @@ def native_profiles(output):
     profiles['AstronStudio']['native_acceptance_wait_seconds'] = 120
     if Path('/Applications/AStudio.app').is_dir():
         profiles['AstronStudio']['kernel'] = kernel_identity()
+    if astudio_boundary_lease is not None:
+        from .os_boundary import frozen_boundary, BRIDGE, GUARD, LAUNCHER
+        profiles['AstronStudio']['non_target_memory_boundary'] = frozen_boundary(astudio_boundary_lease)
+        profiles['AstronStudio']['driver_sources'].update({str(p):sha(p.read_bytes()) for p in (BRIDGE,GUARD,LAUNCHER)})
     publish(output, profiles)
     return {"output": str(output), "configured_harnesses": [name for name, value in profiles.items() if value["driver_command"]],
-            "memory_admission": "requires_live_scoped_preflight"}
+            "memory_admission": "requires_live_scoped_preflight",
+            "os_boundary_admitted_harnesses": ['AstronStudio'] if astudio_boundary_lease is not None else []}
