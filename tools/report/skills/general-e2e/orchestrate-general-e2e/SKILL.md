@@ -5,6 +5,8 @@ description: 将有效 General E2E 执行回执交接为独立单题评分工作
 
 # 编排 General E2E 评分
 
+`0.11.9` 在前序 hybrid 规则完成、进入待注册状态时，保留已注册项目、已绑定线程、等待/超时和待验分任务的语义槽，避免原线程被 TASK_NOT_ACTIVE 拒绝。空槽按冻结题序补位；规则 Worker 仍不占语义槽，已有预留超过配置容量时以 SEMANTIC_SLOT_OVERCOMMITTED 失败关闭。不创建替代线程、不改 Judge 或评分内容；旧冻结实现和状态保持原样。
+
 正式评测的语义评分统一为每题独立项目、项目内新建独立聊天。协作子代理不作为该路径的评分 transport；注册或会话创建失败时保留编排错误，不静默替代。纯 automated 任务仍由受管规则 Worker 执行，不占语义评分会话槽。
 
 `0.11.5` 的 v6 Prompt 冻结运行评分 CLI 的 Python 绝对路径、版本和制品 SHA，明确元数据文件 `skill-metadata.json` 的绝对路径及 SHA，并要求 UTF-8 文件响应。控制器的子进程和 JSON 输出固定 UTF-8；恢复时复核冻结解释器。v3/v4/v5 的旧 Prompt 和无解释器锁的旧编排保持原契约，不重写历史。

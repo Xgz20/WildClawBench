@@ -7,6 +7,8 @@ description: 校验并汇总 General E2E submission 和回传包，生成同源 
 
 # 汇总 General E2E 报告
 
+`0.8.9` 的独立发行同步 general-resource-supplements 1.2.9 已知原生投影对账组件；报告聚合、分母、分数、资源口径不变，不据此重算或覆盖历史回执。裸 Excel 被宿主追加属性时保留变化字节和审计，以登记后封存 ZIP 内的原始成员为严格 SHA 权威，不移除标记或改旧哈希。
+
 `0.8.8` 更新随包 general-resource-supplements 至 1.2.8，以分发静态复合命令 search 投影兼容。仅更新共享依赖，不改变报告统计口径、评分或历史原件；旧发行与旧报告不覆盖。
 
 稳定轮次使用 Harness/execution/tasks 与 Harness/score/tasks，报告位于根目录 reports。历史归档可通过 run Skill 的 archive_round.py replay 在临时目录重建输入；selected_report.py 的 --data-output 输出已验证 JSON，不必重新渲染 Excel。原执行、评分、资源与 SHA 均须一致，路径迁移另记映射，不能修改已冻结原件。

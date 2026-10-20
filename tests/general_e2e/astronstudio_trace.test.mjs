@@ -359,6 +359,48 @@ test("new archive uses bound SDK transcript when desktop projection omits prompt
   } finally { await rm(fixture.root, { recursive: true, force: true }); }
 });
 
+for (const tool of ['astron_publish_artifact', 'astron_allocate_artifact']) {
+  test(`archive forwards original provider rows for exact ${tool} reconciliation`, async () => {
+    const fixture = await createFixture();
+    try {
+      const success = tool === 'astron_publish_artifact';
+      const output = success ? 'Published synthetic artifact.' : 'Synthetic target exists.';
+      const args = { path: 'synthetic.txt' };
+      fixture.state.execution = { started_at: '2026-09-17T10:00:01.000Z', finished_at: '2026-09-17T10:00:07.000Z' };
+      await writeFile(fixture.stateFile, JSON.stringify(fixture.state));
+      const db = new DatabaseSync(fixture.stateDatabase);
+      // Missing provider Prompt/boundary forces the actual SDK fallback route.
+      db.prepare("DELETE FROM provider_runtime_events WHERE event_id IN ('event-user', 'event-turn-start')").run();
+      for (const [eventId,status] of [['event-call','inProgress'],['event-result',success?'completed':'failed']]) {
+        const original = JSON.parse(db.prepare('SELECT event_json FROM provider_runtime_events WHERE event_id=?').get(eventId).event_json);
+        const item = {type:'dynamicToolCall',namespace:'acode_artifacts',tool,id:'call-command-1',arguments:args,status};
+        if (eventId === 'event-result') Object.assign(item,{success,durationMs:5,contentItems:[{type:'inputText',text:output}]});
+        original.payload=itemPayload(item,'dynamic_tool_call');
+        db.prepare('UPDATE provider_runtime_events SET event_json=? WHERE event_id=?').run(JSON.stringify(original),eventId);
+      }
+      db.close();
+      const r=(type,payload)=>({type,timestamp:'2026-09-17T10:00:02.000Z',payload});
+      const native=[r('session_meta',{id:SESSION_ID,cwd:fixture.workspace}),
+        r('event_msg',{type:'task_started',turn_id:TURN_ID}),r('turn_context',{turn_id:TURN_ID,cwd:fixture.workspace}),
+        r('event_msg',{type:'user_message',message:'请修复温度换算程序。'}),
+        r('response_item',{type:'function_call',name:`acode_artifacts__${tool}`,call_id:'call-command-1',arguments:JSON.stringify(args)}),
+        r('response_item',{type:'function_call_output',call_id:'call-command-1',output}),
+        r('response_item',{type:'message',role:'assistant',content:[{type:'output_text',text:'已完成修复，测试 OK。'}]}),
+        r('event_msg',{type:'task_complete',turn_id:TURN_ID,duration_ms:100,last_agent_message:'已完成修复，测试 OK。'})];
+      const rolloutFile=join(fixture.root,'synthetic-rollout.jsonl');
+      await writeFile(rolloutFile,native.map(r=>JSON.stringify(r)).join('\n')+'\n');
+      const result=await archiveAstronStudioTrace({stateFile:fixture.stateFile,stateDb:fixture.stateDatabase,outputDir:fixture.outputDir,rolloutFile});
+      assert.equal(result.trace_index.completeness.status,'complete');
+      const events=(await readFile(join(fixture.outputDir,'transcript.jsonl'),'utf8')).trim().split('\n').map(JSON.parse);
+      const returned=events.find(e=>e.type==='tool_result');
+      assert.equal(returned.tool.result,output);
+      assert.equal(returned.tool.status,'unknown');
+      const raw=await readFile(join(fixture.outputDir,'raw/astronstudio-provider-events.jsonl'),'utf8');
+      assert.match(raw,success?/"success":true/:/"success":false/);
+    } finally { await rm(fixture.root,{recursive:true,force:true}); }
+  });
+}
+
 test("provider session mismatch fails closed", async () => {
   const fixture = await createFixture();
   try {

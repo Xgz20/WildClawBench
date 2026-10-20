@@ -66,14 +66,14 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("collect-general-e2e").version,
                 get_skill_spec("collect-general-e2e").implementation_status,
             ),
-            ("0.10.3", "operational"),
+            ("0.10.4", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("orchestrate-general-e2e").version,
                 get_skill_spec("orchestrate-general-e2e").implementation_status,
             ),
-            ("0.11.8", "operational"),
+            ("0.11.9", "operational"),
         )
         self.assertEqual(
             (
@@ -87,14 +87,14 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("run-general-e2e").version,
                 get_skill_spec("run-general-e2e").implementation_status,
             ),
-            ("0.7.3", "operational"),
+            ("0.7.4", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("report-general-e2e").version,
                 get_skill_spec("report-general-e2e").implementation_status,
             ),
-            ("0.8.8", "operational"),
+            ("0.8.9", "operational"),
         )
         self.assertTrue(
             all(

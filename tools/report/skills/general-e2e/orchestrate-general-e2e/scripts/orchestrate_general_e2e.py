@@ -1372,7 +1372,15 @@ def _semantic_active_tasks(state: Mapping[str, Any]) -> list[dict[str, Any]]:
         if task.get("grading_type") != "automated"
         and task.get("phase") not in TERMINAL_PHASES | RULE_PHASES
     ]
-    return candidates[:slots]
+    # A completed hybrid rule can make an earlier task eligible while later
+    # semantic projects/threads are already bound. Keep those reservations;
+    # otherwise record-wait/record-score rejects the original running thread.
+    reserved = [task for task in candidates if task.get("phase") != "AWAITING_PROJECT"
+                and task.get("phase") != "API_READY"]
+    if len(reserved) > slots:
+        raise OrchestrationError("SEMANTIC_SLOT_OVERCOMMITTED", str(len(reserved)))
+    waiting = [task for task in candidates if task not in reserved]
+    return reserved + waiting[:slots - len(reserved)]
 
 
 def _active_task(state: Mapping[str, Any]) -> dict[str, Any] | None:

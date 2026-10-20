@@ -22,6 +22,7 @@ from eval_general_e2e.datasets.bundle import (
     load_manifest_lock,
     write_dataset_bundle,
 )
+from eval_general_e2e.stages import GENERAL_E2E_SKILLS
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -183,46 +184,10 @@ class GeneralReleasePrepareTests(unittest.TestCase):
             row["name"]: (row["version"], row["implementation_status"])
             for row in catalog["skills"]
         }
-        self.assertEqual(
-            readiness["prepare-general-e2e-workspaces"],
-            ("0.3.2", "operational"),
-        )
-        self.assertEqual(
-            readiness["execute-general-e2e"],
-            ("0.13.17", "operational"),
-        )
-        self.assertEqual(
-            readiness["collect-general-e2e"],
-            ("0.9.14", "operational"),
-        )
-        self.assertEqual(
-            readiness["score-general-e2e"],
-            ("0.10.4", "operational"),
-        )
-        self.assertEqual(
-            readiness["orchestrate-general-e2e"],
-            ("0.11.4", "operational"),
-        )
-        self.assertEqual(
-            readiness["run-general-e2e"],
-            ("0.7.0", "operational"),
-        )
-        self.assertEqual(
-            readiness["report-general-e2e"],
-            ("0.7.13", "operational"),
-        )
-        self.assertEqual(
-            set(readiness.values()),
-            {
-                ("0.3.2", "operational"),
-                ("0.7.0", "operational"),
-                ("0.7.13", "operational"),
-                ("0.9.14", "operational"),
-                ("0.10.4", "operational"),
-                ("0.11.4", "operational"),
-                ("0.13.17", "operational"),
-            },
-        )
+        # The public registry locks versions in test_skill_layout. Here verify
+        # that a fresh deterministic release publishes those actual identities.
+        self.assertEqual(readiness, {spec.name: (spec.version, spec.implementation_status)
+                                     for spec in GENERAL_E2E_SKILLS})
 
     def test_packaged_prepare_runs_without_checkout_or_pythonpath(self) -> None:
         detached = self.temp_root / "detached"
@@ -273,6 +238,52 @@ class GeneralReleasePrepareTests(unittest.TestCase):
         self.assertEqual(payload["status"], "PASS")
         self.assertEqual(payload["unit_count"], 2)
         self.assertEqual(payload["task_count"], 2)
+
+    def test_packaged_round5_entrypoints_run_without_checkout_or_pythonpath(self) -> None:
+        detached = self.temp_root / 'detached-round5'
+        detached.mkdir()
+        builder = RELEASE._load_skill_builder(REPO_ROOT)
+        installed = {}
+        with zipfile.ZipFile(self.release_suite) as suite:
+            catalog_name = next(n for n in suite.namelist() if n.endswith('/release-catalog.json'))
+            catalog = json.loads(suite.read(catalog_name))
+            prefix = catalog_name.split('/')[0]
+            for skill in ('collect-general-e2e','run-general-e2e','orchestrate-general-e2e','report-general-e2e'):
+                row = next(r for r in catalog['skills'] if r['name'] == skill)
+                archive = detached / (skill + '.zip')
+                archive.write_bytes(suite.read(prefix + '/' + row['archive']))
+                builder.verify_skill_package(archive)
+                installed[skill] = builder._safe_extract(archive,detached / (skill + '-installed'))
+        environment = dict(os.environ, PYTHONPATH='')
+        run_script = installed['run-general-e2e'] / 'scripts/run_general_e2e.py'
+        help_result = subprocess.run([sys.executable,str(run_script),'prepare-score','--help'],
+            cwd=detached,env=environment,capture_output=True,text=True,check=True)
+        self.assertIn('--keep-scoring-external', help_result.stdout)
+        orchestration = installed['orchestrate-general-e2e'] / 'scripts/orchestrate_general_e2e.py'
+        code = ('import importlib.util; '
+                f's=importlib.util.spec_from_file_location("detached_orchestrator",{str(orchestration)!r}); '
+                'm=importlib.util.module_from_spec(s);s.loader.exec_module(m); '
+                'waiting={"task_id":"earlier","grading_type":"hybrid","phase":"AWAITING_PROJECT"}; '
+                'bound={"task_id":"bound","grading_type":"llm_judge","phase":"THREAD_RUNNING"}; '
+                'assert m._semantic_active_tasks({"score_slots":1,"tasks":[waiting,bound]})==[bound]')
+        subprocess.run([sys.executable,'-c',code],cwd=detached,env=environment,check=True,capture_output=True)
+        # Inline only the synthetic fixture definitions; no subprocess imports
+        # this checkout or tests. Exercise the installed collect and report copies.
+        fixture_source = (REPO_ROOT / 'tests/general_e2e/astronstudio_projection_compat.test.mjs').read_text()
+        fixture_source = fixture_source.split('for (const [name,normalize] of')[0]
+        fixture_source = '\n'.join(line for line in fixture_source.splitlines()
+            if 'normalizeRolloutTranscript as' not in line)
+        node = shutil.which('node')
+        self.assertIsNotNone(node, 'Node runtime required for detached General Skill verification')
+        for skill in ('collect-general-e2e','report-general-e2e'):
+            normalizer = installed[skill] / 'vendor/e2e-shared/general-resource-supplements/astronstudio-rollout-transcript.mjs'
+            check = (f'const normalize=(await import({json.dumps(normalizer.as_uri())})).normalizeRolloutTranscript;'
+                     'for(const tool of ["astron_publish_artifact","astron_allocate_artifact"]) {'
+                     'const f=artifactFixture(tool);assert.equal(normalize(bytes(f.rows),state,f.provider).completeness.status,"complete");}'
+                     'const f=commandFixture("bash",false,state.session.cwd+"/sub");'
+                     'assert.equal(normalize(bytes(f.rows),state,f.provider).completeness.status,"complete");')
+            subprocess.run([node,'--input-type=module','-e',fixture_source+check],cwd=detached,
+                env=environment,check=True,capture_output=True,text=True)
 
     def test_execution_and_scoring_packages_are_isolated_and_ordered(self) -> None:
         execution = (

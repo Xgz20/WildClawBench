@@ -768,7 +768,7 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   const providerNormalized = normalizeTraceRows(native.rows, state);
   const useRolloutTranscript = Boolean(rollout && providerNormalized.completeness.status !== "complete");
   const normalized = useRolloutTranscript
-    ? normalizeRolloutTranscript(rollout.bytes, state, providerNormalized) : providerNormalized;
+    ? normalizeRolloutTranscript(rollout.bytes, state, { ...providerNormalized, projection_rows: native.rows }) : providerNormalized;
   await assertPromptAndFinalResponse(state, normalized.events);
 
   const transcriptBytes = jsonLineBytes(normalized.events);

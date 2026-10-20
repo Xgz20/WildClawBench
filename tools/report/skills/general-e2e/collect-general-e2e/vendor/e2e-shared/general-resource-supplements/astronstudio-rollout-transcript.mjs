@@ -1,3 +1,4 @@
+import { posix as path } from 'node:path';
 import { analyzeRollout, ROLLOUT_PATH } from './astronstudio-rollout.mjs';
 
 const ensure = (ok, code) => { if (!ok) throw Error(code); };
@@ -7,7 +8,7 @@ const signature = value => JSON.stringify(stable(value));
 const shellQuote = value => `'${value.replaceAll("'", "'\\''")}'`;
 const shellDoubleQuote = value => `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll('$', '\\$').replaceAll('`', '\\`')}"`;
 // The native "bash" tool uses the configured desktop shell on macOS. Match
-// only literal, fully quoted -lc wrappers; never evaluate a projected command.
+// only literal, fully quoted wrappers; never evaluate a projected command.
 const desktopShells = ['/usr/local/bin/bash', '/bin/bash', '/bin/zsh'];
 
 // Parse only literal words and && separators. This is a comparison grammar,
@@ -58,30 +59,82 @@ function verifiedStaticRgTail(command, actions) {
     && [words[3], words[3].split('/').at(-1)].includes(actions[0].path);
 }
 
-function verifyProjectedTool(projected, native, call) {
+function verifyArtifactProjection(projected, native, call, row) {
+  const p = projected.tool, n = native.tool, item = row?.event?.payload?.data?.item;
+  // These are two observed profiles, not a general namespace-stripping rule.
+  const profile = p.name === 'astron_publish_artifact' ? { status: 'completed', success: true }
+    : { status: 'failed', success: false };
+  ensure(item?.type === 'dynamicToolCall' && item.namespace === 'acode_artifacts'
+    && item.tool === p.name && item.id === p.call_id && p.call_id === n.call_id
+    && p.call_id === call.tool.call_id && signature(item.arguments) === signature(call.tool.arguments),
+  'PROVIDER_ROLLOUT_TOOL_CONFLICT');
+  if (projected.type === 'tool_call') {
+    ensure(row.event_type === 'item.started' && item.status === 'inProgress'
+      && signature(p.arguments) === signature(call.tool.arguments), 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
+  } else {
+    ensure(row.event_type === 'item.completed' && item.status === profile.status
+      && item.success === profile.success && item.error == null && item.contentItems?.length === 1
+      && item.contentItems[0].type === 'inputText' && typeof item.contentItems[0].text === 'string'
+      && item.contentItems[0].text === n.result
+      && (profile.success || n.result.length > 0)
+      && p.result?.status === profile.status && p.result.error == null && p.result.result == null
+      && p.result.server == null && p.result.plugin_id == null
+      && Number.isFinite(item.durationMs) && item.durationMs >= 0 && p.result.duration_ms === item.durationMs,
+    'PROVIDER_ROLLOUT_TOOL_CONFLICT');
+  }
+}
+
+function verifyProjectedCwd(projected, call, workspace) {
+  if (projected.tool.name !== 'command') return;
+  const declared = call?.tool.arguments?.workdir;
+  const expected = declared == null ? workspace : declared;
+  ensure(typeof workspace === 'string' && path.isAbsolute(workspace) && path.resolve(workspace) === workspace
+    && typeof expected === 'string' && path.isAbsolute(expected) && path.resolve(expected) === expected,
+  'PROVIDER_ROLLOUT_TOOL_CWD_CONFLICT');
+  const child = path.relative(workspace, expected);
+  ensure((expected === workspace || ['bash', 'exec_command'].includes(call?.tool.name))
+    && child !== '..' && !child.startsWith('../') && !path.isAbsolute(child)
+    && projected.tool.arguments?.cwd === expected, 'PROVIDER_ROLLOUT_TOOL_CWD_CONFLICT');
+}
+
+function verifyProjectedTool(projected, native, call, projectionRow) {
   const p = projected.tool, n = native?.tool, args = call?.tool.arguments;
   ensure(n && call, 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
+  if (['astron_publish_artifact', 'astron_allocate_artifact'].includes(p.name)
+      && n.name === `acode_artifacts__${p.name}`) {
+    verifyArtifactProjection(projected, native, call, projectionRow);
+    return;
+  }
   if (p.name === n.name) {
     ensure(signature(projected.type === 'tool_call' ? p.arguments : p.result)
       === signature(projected.type === 'tool_call' ? n.arguments : n.result), 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
     return;
   }
-  if (p.name === 'command' && n.name === 'bash') {
-    ensure(typeof args?.command === 'string', 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
+  if (p.name === 'command' && ['bash', 'exec_command'].includes(n.name)) {
+    const command = n.name === 'bash' ? args?.command : args?.cmd;
+    ensure(typeof command === 'string' && (args.login == null || typeof args.login === 'boolean'), 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
     if (projected.type === 'tool_call') {
       const a = p.arguments;
-      const staticTail = verifiedStaticRgTail(args.command, a?.command_actions);
-      const wrappers = [shellQuote(args.command), shellDoubleQuote(args.command),
-        ...(staticTail ? [shellQuote(args.command.replaceAll('"', '\\"'))] : [])];
-      ensure(desktopShells.some(shell => wrappers.some(quoted => a?.command === `${shell} -lc ${quoted}`))
+      const staticTail = n.name === 'bash' && verifiedStaticRgTail(command, a?.command_actions);
+      const wrappers = [shellQuote(command), shellDoubleQuote(command),
+        ...(staticTail ? [shellQuote(command.replaceAll('"', '\\"'))] : [])];
+      const shells = args.shell == null ? desktopShells : desktopShells.filter(shell => shell === args.shell);
+      const flag = args.login === false ? '-c' : '-lc';
+      ensure(shells.some(shell => wrappers.some(quoted => a?.command === `${shell} ${flag} ${quoted}`))
         && a?.command_actions?.length === 1
-        && (a.command_actions[0].command === args.command || staticTail),
+        && (a.command_actions[0].command === command || staticTail),
       'PROVIDER_ROLLOUT_TOOL_CONFLICT');
-    } else {
+    } else if (n.name === 'bash') {
       const match = typeof n.result === 'string' && /^Exit code: (-?\d+)\nWall time: (\d+(?:\.\d+)?) seconds\nOutput:\n([\s\S]*)$/.exec(n.result);
       ensure(match && p.result?.exit_code === Number(match[1]) && (p.result.output ?? '') === match[3]
         && (p.result.duration_ms == null || Math.round(p.result.duration_ms / 100) / 10 === Number(match[2])),
       'PROVIDER_ROLLOUT_TOOL_CONFLICT');
+    } else {
+      const match = typeof n.result === 'string'
+        && /^Chunk ID: [a-zA-Z0-9_-]+\nWall time: (\d+(?:\.\d+)?) seconds\nProcess exited with code (-?\d+)\nOriginal token count: \d+\nOutput:\n([\s\S]*)$/.exec(n.result);
+      ensure(match && p.result?.exit_code === Number(match[2]) && (p.result.output ?? '') === match[3]
+        && (p.result.duration_ms == null || (Number.isFinite(p.result.duration_ms) && p.result.duration_ms >= 0
+          && Math.round(p.result.duration_ms * 10) / 10000 === Number(match[1]))), 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
     }
     return;
   }
@@ -211,8 +264,11 @@ export function normalizeRolloutTranscript(bytes, state, provider) {
     for (const e of provider.events.filter(e => ['tool_call', 'tool_result'].includes(e.type))) {
       const native = events.find(n => n.type === e.type && n.tool.call_id === e.tool.call_id);
       const call = events.find(n => n.type === 'tool_call' && n.tool.call_id === e.tool.call_id);
-      verifyProjectedTool(e, native, call);
-      if (e.tool.name === 'command' && e.type === 'tool_call') ensure(e.tool.arguments.cwd === state.session.cwd, 'PROVIDER_ROLLOUT_TOOL_CWD_CONFLICT');
+      const rows = provider.projection_rows?.filter(row =>
+        `raw/astronstudio-provider-events.jsonl#L${row.raw_line}` === e.source?.raw_ref) ?? [];
+      ensure(rows.length <= 1, 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
+      verifyProjectedTool(e, native, call, rows[0]);
+      if (e.type === 'tool_call') verifyProjectedCwd(e, call, state.session.cwd);
     }
   }
   return { events, calls: [...calls].map(([call_id, c]) => ({ call_id, call_sequence: c.call_sequence, result_sequence: c.result_sequence })),

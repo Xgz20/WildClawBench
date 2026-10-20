@@ -5,6 +5,16 @@ description: 按用户明确选择的阶段串联 General E2E 准备、执行、
 
 # 运行 General E2E 全流程
 
+`0.7.4` 的 prepare-score 新增 --keep-scoring-external：对 install-unit 安装的公开单元，将外置 scoring ZIP 的绝对路径和 SHA 绑定到 round 状态，不复制 ZIP 到 round-root。显式提供 --scoring-package ABS、--report-config ABS；后续调用仍须保留外置模式并重验路径/SHA。评分包实际在 round-root 内（含指向内部的链接）、已安装内部评分包或模式漂移均拒绝。默认缓存行为保持兼容。
+
+此选项只是材料放置方式，不是 OS 隔离或停机屏障。原生分阶段评测必须先完成全部执行、正式采集/不可变校验和被测进程收尾，并保存屏障证明，再准备评分。外置目录在同 UID 下仍可能可读，按实际访问证据披露；prepare-score 不自动停止被测客户端，也不声称已拒绝私有读取。
+
+```text
+python -X utf8 /absolute/run-general-e2e/scripts/run_general_e2e.py prepare-score --round-root /absolute/round --harness AstronStudio --orchestration-id score-001 --scoring-package /external/private/scoring.zip --report-config /external/private/report-config.json --keep-scoring-external
+```
+
+报告登记后立即核验并封存规范 ZIP，保留原报告 receipt 和成员 SHA。若裸 XLSX 被宿主追加属性，保留变化字节与 OPC 成员差异，以封存 ZIP 内的原成员为字节权威；不得删宿主标记、改旧哈希或将重写文件冒充原件。研发打包可消费从规范 ZIP 安全重建并校验的报告目录；需要跨目录 workspace-root 时仅选择明确来源，不扫描整个用户目录。新增源码版本不替换已完成轮次的冻结 Skill 或规范交接包。
+
 `0.7.3` 支持 execute-general-e2e 0.14.4 的原队列额度恢复；先读取该已安装 Skill 实际根目录的 `references/quota-recovery.md`。控制会话先生成未批准的授权草稿，只有取得人类“额度已恢复且授权重执行指定失败题”的直接指令后才填写确认及授权引用；保留旧 attempt 和完整现场，仅选择一个新 attempt 重执行该题。成功题不重跑、在途题不重发；后续恢复复用已持久化的一次授权，发送一经 armed 就只观察原生 turn。不得借恢复之名重评分、覆盖旧结果或执行已封存轮次。
 
 `0.7.2` 的默认额度故障策略是暂停等待人工：发现原生额度耗尽，立即停止新任务/评分/打包，将当前阶段置为 NEEDS_HUMAN 并报告原生在途会话和恢复入口。不得自动转 UNSCORED 后继续，也不得计能力零分或自动重发。人工恢复额度后，还须明确授权恢复；已经终态失败的用例如需重测、建立新 attempt 或选择替代来源，单独保留授权与审计。历史轮次的一次排除授权不扩展为后续默认豁免。

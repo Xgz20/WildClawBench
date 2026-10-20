@@ -134,14 +134,22 @@ def init_round(round_root,batch_root,prepare_skill):
         return {'status':'PASS','round_root':str(root),'units':units}
     except BaseException:shutil.rmtree(stage,ignore_errors=True);raise
 
-def prepare_score(round_root,harness,skill_root,orchestration_id,task_ids=(),scoring_package=None,report_config=None):
+def prepare_score(round_root,harness,skill_root,orchestration_id,task_ids=(),scoring_package=None,report_config=None,*,keep_scoring_external=False):
     root=Path(round_root).resolve();doc=load(root/'.general-e2e/round.json');require(doc['kind']=='live','ROUND_HISTORY_NOT_EXECUTABLE')
     rows=[u for u in doc['units'] if harness in (u['harness'],u['directory'],u['unit_id'])];require(len(rows)==1,'ROUND_UNIT_NOT_UNIQUE');u=rows[0]
     unit=root/u['directory']
+    external=u.get('scoring_external')
+    require(not external or keep_scoring_external,'ROUND_SCORING_STORAGE_MODE_DRIFT')
+    if keep_scoring_external:
+        require(not u.get('scoring_package'),'ROUND_SCORING_ALREADY_INTERNAL')
+        require(scoring_package or external,'ROUND_EXTERNAL_SCORING_PACKAGE_REQUIRED')
+        scoring=Path(scoring_package or external['path']).resolve()
+        require(scoring.is_file() and not scoring.is_relative_to(root),'ROUND_SCORING_PACKAGE_NOT_EXTERNAL')
+        if external:require(str(scoring)==external['path'] and sha(scoring)==external['sha256'],'ROUND_SCORING_PACKAGE_DRIFT')
     if scoring_package:
         scoring=Path(scoring_package).resolve()
         if u.get('scoring_sha256'):require(sha(scoring)==u['scoring_sha256'],'ROUND_SCORING_PACKAGE_DRIFT')
-    else:
+    elif not keep_scoring_external:
         require(u.get('scoring_package'),'ROUND_SCORING_PACKAGE_REQUIRED');scoring=root/u['scoring_package']
         require(sha(scoring)==u['scoring_sha256'],'ROUND_SCORING_PACKAGE_DRIFT')
     config=Path(report_config).resolve() if report_config else root/'.general-e2e/batch/report-config.json'
@@ -155,7 +163,9 @@ def prepare_score(round_root,harness,skill_root,orchestration_id,task_ids=(),sco
     result=subprocess.run(command,capture_output=True,text=True);require(result.returncode==0,'ROUND_SCORING_HANDOFF_FAILED:'+result.stderr[-2000:])
     if not doc.get('report_config_sha256'):
         copy(config,root/'.general-e2e/batch/report-config.json');doc['report_config_sha256']=sha(config)
-    if not u.get('scoring_package'):
+    if keep_scoring_external:
+        u['scoring_external']={'path':str(scoring),'sha256':sha(scoring)}
+    elif not u.get('scoring_package'):
         target=root/'.general-e2e/packages'/u['directory']/'scoring.zip';copy(scoring,target)
         u['scoring_package']=str(target.relative_to(root));u['scoring_sha256']=sha(target)
     write(root/'.general-e2e/round.json',doc)
@@ -170,15 +180,17 @@ def prepare_score(round_root,harness,skill_root,orchestration_id,task_ids=(),sco
         for name,ref in [('workspace','current/runtime/workspace'),('private-scoring','current/private'),('trace','current/trace')]:
             alias=current.parent/name
             if not os.path.lexists(alias):alias.symlink_to(ref,target_is_directory=True)
-    return {'status':'PASS','orchestration_root':str(orch),'task_root':str(unit/'score/tasks'),'result':json.loads(result.stdout)}
+    return {'status':'PASS','orchestration_root':str(orch),'task_root':str(unit/'score/tasks'),
+        'scoring_package_storage':'external' if keep_scoring_external else 'round-cache','result':json.loads(result.stdout)}
 
 def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__);sub=p.add_subparsers(dest='command',required=True)
     s=sub.add_parser('init');s.add_argument('--round-root',type=Path,default=Path.cwd(),help='Default: control conversation project cwd');s.add_argument('--batch-root',type=Path,required=True);s.add_argument('--prepare-skill',type=Path,required=True)
     s=sub.add_parser('install-unit');s.add_argument('--round-root',type=Path,default=Path.cwd());s.add_argument('--execution-package',type=Path,required=True);s.add_argument('--prepare-skill',type=Path,required=True)
     s=sub.add_parser('prepare-score');s.add_argument('--round-root',type=Path,default=Path.cwd());s.add_argument('--harness',required=True);s.add_argument('--skill-root',type=Path,required=True);s.add_argument('--orchestration-id',required=True);s.add_argument('--task-id',action='append',default=[]);s.add_argument('--scoring-package',type=Path);s.add_argument('--report-config',type=Path)
+    s.add_argument('--keep-scoring-external',action='store_true',help='Bind an external scoring ZIP by path/SHA without copying it into round-root')
     a=p.parse_args(argv)
-    result=init_round(a.round_root,a.batch_root,a.prepare_skill) if a.command=='init' else install_unit(a.round_root,a.execution_package,a.prepare_skill) if a.command=='install-unit' else prepare_score(a.round_root,a.harness,a.skill_root,a.orchestration_id,a.task_id,a.scoring_package,a.report_config)
+    result=init_round(a.round_root,a.batch_root,a.prepare_skill) if a.command=='init' else install_unit(a.round_root,a.execution_package,a.prepare_skill) if a.command=='install-unit' else prepare_score(a.round_root,a.harness,a.skill_root,a.orchestration_id,a.task_id,a.scoring_package,a.report_config,keep_scoring_external=a.keep_scoring_external)
     print(json.dumps(result,ensure_ascii=False));return result
 
 if __name__=='__main__':main()

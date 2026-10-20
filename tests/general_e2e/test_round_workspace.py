@@ -93,4 +93,57 @@ class RoundLayoutTests(unittest.TestCase):
             with self.assertRaises(ValueError):ROUND.extract_zip(z,root/'out')
             self.assertFalse((root/'out').exists())
 
+class ExternalScoringPackageTests(unittest.TestCase):
+    def setUp(self):
+        self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
+        self.base=Path(self.temp.name);self.root=self.base/'round';self.root.mkdir()
+        self.unit=self.root/'AstronStudio';self.unit.mkdir()
+        self.scoring=self.base/'external-scoring.zip';self.scoring.write_bytes(b'frozen private ZIP')
+        self.config=self.base/'report-config.json';self.config.write_text('{}',encoding='utf-8')
+        ROUND.write(self.root/'.general-e2e/round.json',{'kind':'live','units':[
+            {'harness':'astronstudio','directory':'AstronStudio','unit_id':'unit'}]})
+
+    def prepare(self,**kw):
+        import types
+        def fake_init(command,**unused):
+            output=Path(command[command.index('--output-root')+1])/command[command.index('--orchestration-id')+1]
+            ROUND.write(output/'orchestration-state.json',{'tasks':[]})
+            return types.SimpleNamespace(returncode=0,stdout='{}',stderr='')
+        with patch.object(ROUND.subprocess,'run',side_effect=fake_init):
+            # Keep the test portable; cp -c is not involved in the storage policy.
+            with patch.object(ROUND,'copy',side_effect=lambda src,dst:(Path(dst).parent.mkdir(parents=True,exist_ok=True),shutil.copyfile(src,dst))):
+                return ROUND.prepare_score(self.root,'AstronStudio',ROOT/'tools/report/skills/general-e2e',
+                    'score-fixture',report_config=self.config,**kw)
+
+    def test_explicit_external_mode_binds_sha_and_never_caches_private_zip(self):
+        original=self.scoring.read_bytes()
+        result=self.prepare(scoring_package=self.scoring,keep_scoring_external=True)
+        unit=ROUND.load(self.root/'.general-e2e/round.json')['units'][0]
+        self.assertEqual(result['scoring_package_storage'],'external')
+        self.assertEqual(unit['scoring_external'],{'path':str(self.scoring.resolve()),'sha256':ROUND.sha(self.scoring)})
+        self.assertNotIn('scoring_package',unit)
+        self.assertFalse(list(self.root.rglob('*.zip')))
+        self.assertEqual(self.scoring.read_bytes(),original)
+        self.prepare(keep_scoring_external=True)
+        with self.assertRaisesRegex(ValueError,'STORAGE_MODE_DRIFT'):self.prepare(scoring_package=self.scoring)
+        self.scoring.write_bytes(b'changed')
+        with self.assertRaisesRegex(ValueError,'PACKAGE_DRIFT'):self.prepare(keep_scoring_external=True)
+
+    def test_default_mode_retains_existing_cache_behavior(self):
+        result=self.prepare(scoring_package=self.scoring)
+        self.assertEqual(result['scoring_package_storage'],'round-cache')
+        self.assertEqual((self.root/'.general-e2e/packages/AstronStudio/scoring.zip').read_bytes(),self.scoring.read_bytes())
+        with self.assertRaisesRegex(ValueError,'ALREADY_INTERNAL'):
+            self.prepare(scoring_package=self.scoring,keep_scoring_external=True)
+
+    def test_external_mode_rejects_missing_internal_and_symlinked_internal_paths_before_init(self):
+        with self.assertRaisesRegex(ValueError,'EXTERNAL_SCORING_PACKAGE_REQUIRED'):self.prepare(keep_scoring_external=True)
+        internal=self.root/'private.zip';internal.write_bytes(b'private')
+        alias=self.base/'alias.zip';alias.symlink_to(internal)
+        for source in (internal,alias):
+            with self.subTest(source=source):
+                with self.assertRaisesRegex(ValueError,'NOT_EXTERNAL'):
+                    self.prepare(scoring_package=source,keep_scoring_external=True)
+        self.assertFalse((self.unit/'score').exists())
+
 if __name__=='__main__':unittest.main()

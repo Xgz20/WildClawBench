@@ -800,6 +800,44 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
                     now=self.t0,
                 )
 
+    def test_earlier_hybrid_rules_cannot_evict_registered_semantic_projects(self) -> None:
+        ids = ("hybrid-prefix", "running-one", "running-two", "running-three", "waiting")
+        fixture = Fixture(self.root, task_ids=ids,
+                          grading_types=("hybrid", "llm_judge", "llm_judge", "llm_judge", "llm_judge"))
+        view = fixture.initialize(now=self.t0)
+        root = Path(view["orchestration_root"])
+        for tid in ids[1:4]:
+            task = next(t for t in view["tasks"] if t["task_id"] == tid)
+            view = ORCHESTRATOR.record_project(root, task_id=tid, project_id="project-" + tid,
+                host_id="host-local",project_path=Path(task["attempt_path"]),
+                desktop_version="2026.918.1",now=self.t0)
+        with patch.object(ORCHESTRATOR, "_run_score_command", side_effect=self._direct_local_score_command):
+            view = ORCHESTRATOR.run_rule_score_task(root,task_id=ids[0],runtime_python=Path(sys.executable),now=self.t0)
+        state = json.loads((root / "orchestration-state.json").read_text())
+        self.assertEqual([t["task_id"] for t in ORCHESTRATOR._semantic_active_tasks(state)], list(ids[1:4]))
+        with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError, "TASK_NOT_ACTIVE"):
+            ORCHESTRATOR.record_project(root,task_id=ids[0],project_id="too-early",host_id="host-local",
+                project_path=Path(view["tasks"][0]["attempt_path"]),desktop_version="2026.918.1",now=self.t0)
+        self._record_fixture_score(root, ids[1], valid=True, total_score=0.8)
+        with patch.object(ORCHESTRATOR,"_run_score_command",side_effect=self._fixture_score_command):
+            ORCHESTRATOR.status(root,now=self.t0)
+        state = json.loads((root / "orchestration-state.json").read_text())
+        self.assertEqual([t["task_id"] for t in ORCHESTRATOR._semantic_active_tasks(state)], [ids[2],ids[3],ids[0]])
+
+    def test_semantic_reservations_cover_wait_verification_timeout_and_api(self) -> None:
+        for phase in ("PROJECT_REGISTERED", "PREFLIGHT_PASSED", "THREAD_RUNNING", "NEEDS_ATTENTION",
+                      "THREAD_TIMEOUT_PENDING", "SCORE_VERIFICATION_PENDING", "API_RUNNING"):
+            with self.subTest(phase=phase):
+                waiting = {"task_id":"earlier", "grading_type":"hybrid", "phase":"AWAITING_PROJECT"}
+                active = {"task_id":"bound", "grading_type":"llm_judge", "phase":phase}
+                state = {"score_slots":1,"tasks":[waiting,active]}
+                self.assertEqual(ORCHESTRATOR._semantic_active_tasks(state), [active])
+                active["phase"] = "SCORE_RECORDED"
+                self.assertEqual(ORCHESTRATOR._semantic_active_tasks(state), [waiting])
+        with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError,"SEMANTIC_SLOT_OVERCOMMITTED"):
+            ORCHESTRATOR._semantic_active_tasks({"score_slots":1,"tasks":[
+                {"task_id":str(i),"grading_type":"llm_judge","phase":"THREAD_RUNNING"} for i in range(2)]})
+
     def test_automated_and_hybrid_rules_do_not_consume_semantic_slots(self) -> None:
         hybrid = Fixture(
             self.root / "hybrid",
