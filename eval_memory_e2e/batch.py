@@ -69,7 +69,6 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
     require(type(repeats) is int and 1 <= repeats <= 20, "INVALID_REPEATS", "Expected 1..20")
     require(mode in {"native", "fixture"}, "INVALID_MODE", mode)
     require(isinstance(seed, str) and seed.strip(), "INVALID_SEED", "Explicit seed required")
-    require(not root.exists(), "OUTPUT_EXISTS", str(root))
     for ancestor in root.parents:
         require(not ancestor.is_symlink(), "SYMLINK_REJECTED", str(ancestor))
     dataset = load_dataset() if dataset_path is None else load_dataset(dataset_path)
@@ -82,8 +81,19 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
             "SCENARIO_SCOPE", "Unknown, empty or duplicate scenario scope")
     profiles = default_profiles() if profiles is None else profiles
     require(set(harnesses) <= set(profiles), "PROFILE_SCOPE", "Each selected Harness requires a profile")
+    precreated = root.exists() and harnesses == ['WorkBuddy'] and profiles.get('WorkBuddy', {}).get('workbuddy_scope') is not None
+    require(not root.exists() or precreated, 'OUTPUT_EXISTS', str(root))
+    if precreated:
+        require(not any((root / name).exists() for name in ('manifest.json', 'events.jsonl', 'public', 'private', 'runtime-source', 'evidence'))
+                and (root / 'candidate').is_dir() and not any((root / 'candidate').iterdir()),
+                'WB_SCOPE_BATCH_NOT_FRESH', 'Only an unused prepared unit root may host its first batch')
     for harness in harnesses:
         profile = profiles[harness]
+        if profile.get('workbuddy_scope') is not None:
+            require(harnesses == ['WorkBuddy'] and mode == 'native', 'WB_SCOPE_HARNESS', 'WorkBuddy native units only')
+            require(dataset['dataset_id'] != 'memory-mixed20-v1', 'WB_SCOPE_FORMAL_NOT_ADMITTED', 'Formal mixed20 remains stopped')
+            from .workbuddy_scope import bind_batch
+            bind_batch(profile, root, profile['workbuddy_scope'], scope, repeats)
         if profile.get('astudio_scope') is not None:
             require(harnesses == ['AstronStudio'] and mode == 'native', 'SCOPE_HARNESS', 'AStudio native units only')
             from .astudio_scope import bind_batch
@@ -118,10 +128,11 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
     memory_ui_lock_path(root, {h: profiles[h] for h in harnesses})
     judge = judge or {"protocol": "memory-checkpoint-review/v1", "model": None, "reasoning": None}
     require(judge.get("protocol") == "memory-checkpoint-review/v1", "JUDGE_PROTOCOL", "Unsupported judge")
-    root.mkdir(parents=True)
+    root.mkdir(parents=True, exist_ok=precreated)
     experiment_id = uuid4().hex
     private, inputs, episodes, guard_hashes = {}, {}, [], {}
-    first_repetition = profiles.get('AstronStudio', {}).get('astudio_scope', {}).get('repetition', 1)
+    unit = profiles.get('AstronStudio', {}).get('astudio_scope') or profiles.get('WorkBuddy', {}).get('workbuddy_scope') or {}
+    first_repetition = unit.get('repetition', 1)
     for run in range(first_repetition, first_repetition + repeats):
         for case in dataset["scenarios"]:
             if case["id"] not in scope:
@@ -193,7 +204,7 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
                 "implementation": {str(path.relative_to(Path(__file__).parent)): sha(path.read_bytes())
                                    for path in sorted(Path(__file__).parent.rglob("*.py"))},
                 "inputs": inputs, "episodes": episodes}
-    if profiles.get('AstronStudio', {}).get('astudio_scope'):
+    if unit:
         manifest['first_repetition'] = first_repetition
     if mode == "fixture":
         manifest["profiles"] = {key: {**manifest["profiles"][key], "driver_command":
@@ -214,6 +225,12 @@ def load_batch(root, *, harness=None, episode_id=None):
     from .runtime_repair import effective_sources
     implementation, drivers, _, _ = effective_sources(root, manifest)
     for name, profile in manifest['profiles'].items():
+        if profile.get('workbuddy_scope') is not None:
+            from .workbuddy_scope import bind_batch
+            unit = bind_batch(profile, root, profile['workbuddy_scope'], manifest['scenario_ids'], manifest['repeats'])
+            require(manifest.get('first_repetition') == unit['repetition']
+                    and all(row['run'] == unit['repetition'] for row in manifest['episodes']),
+                    'WB_SCOPE_BATCH_BINDING', 'Frozen repetition differs from its unit')
         if profile.get('astudio_scope') is not None:
             from .astudio_scope import load
             unit = load(profile['astudio_scope']['scope'], profile['astudio_scope'])

@@ -6,21 +6,24 @@ import { WorkBuddyCdpClient, discoverWorkBuddyMainTarget, readWorkBuddyUi, asser
   createFreshWorkBuddyTask, selectWorkBuddyWorkspace, assertWorkBuddyUiConfiguration,
   fillWorkBuddyPrompt, dispatchWorkBuddyPrompt, readWorkBuddyPromptState } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/ui.mjs";
 import { snapshotWorkBuddyRuntimeBaseline, selectWorkBuddyRuntimeBinding } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/runtime-binding.mjs";
+import {connectWorkBuddyUnit,attestWorkBuddyUnit} from './workbuddy-unit.mjs';
 import { context, sha, requestHash, readJson, saveState, artifact, withUiLock, requireGui,
   baseReply, bindReply, verifyConfig, stdinRequest } from "./common.mjs";
 
 const ENDPOINT = "http://127.0.0.1:9229";
 const CAPABILITIES = ["new", "continue"];
 
-export function requestedModelReady(history, expected) {
+export function requestedModelReady(history, expected, verifiedUnit=false) {
   const actual=history.request.requestedModel?.name;
   if(actual===expected)return true;
+  if(verifiedUnit&&expected==='xopglm52'&&actual==='custom-local:xopglm52')return true;
   if(!['success','failure'].includes(history.runtime_terminal.request_state))return false;
   throw Error('WORKBUDDY_REQUESTED_MODEL_MISMATCH');
 }
 
-async function connect(frozen = null) {
+async function connect(frozen = null, profile=null) {
   await requireGui();
+  if(profile?.workbuddy_scope)return connectWorkBuddyUnit(profile,frozen);
   const report = await inspectWorkBuddyMacos({ ...probeDefaults([]), appPath: "/Applications/WorkBuddy.app", endpoint: ENDPOINT, timeoutMs: 3000 });
   if (report.status !== "PASS" || !report.process?.running || report.cdp?.status !== "observed") throw Error("WORKBUDDY_NATIVE_PREFLIGHT_FAILED");
   const target = await discoverWorkBuddyMainTarget(ENDPOINT, 3000);
@@ -60,7 +63,7 @@ async function observe(ctx, request, live, state) {
   if (state.native.cwd !== request.workspace || history.prompt.sha256 !== request.prompt_sha256) throw Error("WORKBUDDY_NATIVE_PROMPT_OR_CWD_MISMATCH");
   reply.native = state.native;
   const terminal = history.runtime_terminal;
-  if(!requestedModelReady(history,state.config.model_display)) {
+  if(!requestedModelReady(history,state.config.model_display,live.scoped===true)) {
     await saveState(ctx,state);
     return bindReply(ctx,request,{...reply,status:'active',reason:'等待原生请求的模型元数据完整；不重发。'},
       {native_terminal:terminal,prompt_binding_status:'verified',requested_model_metadata_status:'pending'});
@@ -94,7 +97,8 @@ export async function runWorkBuddy(request) {
   const ctx = await context(request, "WorkBuddy");
   let state;
   try { state = await readJson(ctx.stateFile); } catch (error) { if (error.code !== "ENOENT") throw error; }
-  const live = await connect(state?.config ?? request.expected_config);
+  const profile=ctx.manifest.profiles.WorkBuddy;
+  const live = await connect(state?.config ?? request.expected_config,profile);
   try {
     verifyConfig(live.config, request.expected_config);
     if (state && state.requestHash !== requestHash(request)) throw Error("WORKBUDDY_MEMORY_REQUEST_DRIFT");
@@ -108,8 +112,9 @@ export async function runWorkBuddy(request) {
       if (!state) await saveState(ctx, { requestHash: requestHash(request), phase: "namespace_prepared", config: live.config, baseline });
       return bindReply(ctx, request, { ...baseReply(request, live.config), status: "completed", background_settled: true,
         admission: { account_policy: "current_signed_in_account", test_scope_only: true, precondition_verified: true,
-          capabilities: CAPABILITIES, isolation: "shared_account_cold_first",
-          precondition_scope: "new_experiment_and_fresh_local_workspace_only", global_memory_reset_verified: false } },
+          capabilities: CAPABILITIES, isolation: live.scoped?'verified_namespace':"shared_account_cold_first",
+          precondition_scope: live.scoped?'case_repeat_os_memory_unit':"new_experiment_and_fresh_local_workspace_only", global_memory_reset_verified: false,
+          ...(live.scoped?{unit_id:profile.workbuddy_scope.unit_id,case_repeat_behavior_isolation_verified:false}:{}) } },
         { general_probe: live.report, namespace_baseline: baseline, account_identity_method: "window.wb.account.profile.uid -> sha256" });
     }
     if (state) {
@@ -147,6 +152,7 @@ export async function runWorkBuddy(request) {
       const input = await readWorkBuddyPromptState(live.client);
       state.prompt_input_evidence = input;
       state.phase = "invoking";
+      if(live.scoped){ctx.memoryBoundary=attestWorkBuddyUnit(profile);await artifact(ctx,'os-boundary-before-press',ctx.memoryBoundary)}
       await saveState(ctx, state);
       await dispatchWorkBuddyPrompt(live.client, 15000);
       state.phase = "invoked";

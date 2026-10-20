@@ -12,3 +12,9 @@ test('a completed request must name the exact frozen model',()=>{
   assert.throws(()=>requestedModelReady(history('success',null),'model-x'),/MISMATCH/);
   assert.throws(()=>requestedModelReady(history('success','other-model'),'model-x'),/MISMATCH/);
 });
+test('the custom-local wire mapping is admitted only by a verified private unit',()=>{
+  assert.throws(()=>requestedModelReady(history('success','custom-local:xopglm52'),'xopglm52'),/MISMATCH/);
+  assert.equal(requestedModelReady(history('success','custom-local:xopglm52'),'xopglm52',true),true);
+  assert.throws(()=>requestedModelReady(history('success','glm-5.2'),'xopglm52',true),/MISMATCH/);
+  assert.throws(()=>requestedModelReady(history('success','custom-local:other'),'xopglm52',true),/MISMATCH/);
+});

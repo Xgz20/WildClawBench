@@ -32,6 +32,17 @@ def capture_state(root, request, stage):
     os.chmod(folder, 0o700)
     files, total, error = [], 0, None
     roots = STORE_ROOTS[request['harness']]
+    workbuddy_base = PATHS['workbuddy']
+    if request['harness'] == 'WorkBuddy' and manifest['profiles']['WorkBuddy'].get('workbuddy_scope'):
+        from .workbuddy_scope import load
+        unit = manifest['profiles']['WorkBuddy']['workbuddy_scope']
+        workbuddy_base = Path(load(unit['scope'], unit)['app_home'])
+        roots = (workbuddy_base / 'memories', workbuddy_base / 'memory', workbuddy_base / 'agent-memory')
+        project_root = workbuddy_base / 'projects'
+        if project_root.exists():
+            additional = tuple(p for p in project_root.rglob('memory') if p.is_dir())
+            require(len(additional) <= 100, 'OBSERVATION_BUDGET', 'At most 100 private project memory roots')
+            roots += additional
     if request['harness'] == 'AstronStudio' and manifest['profiles']['AstronStudio'].get('astudio_scope'):
         from .astudio_scope import load
         frozen = manifest['profiles']['AstronStudio']['astudio_scope']
@@ -43,13 +54,20 @@ def capture_state(root, request, stage):
         for store in roots:
             require(store.resolve() == store, 'OBSERVATION_SYMLINK', str(store))
             if store.exists(): paths.extend(store.rglob('*.md'))
-        if request['harness'] == 'WorkBuddy' and (PATHS['workbuddy'] / 'MEMORY.md').is_file():
-            paths.append((PATHS['workbuddy'] / 'MEMORY.md'))
+        if request['harness'] == 'WorkBuddy' and (workbuddy_base / 'MEMORY.md').is_file():
+            paths.append((workbuddy_base / 'MEMORY.md'))
         workspace_store = None
+        workspace_roots = []
         if request['harness'] == 'WorkBuddy':
             workspace_store = Path(episode['workspaces'][request.get('scope', next(iter(episode['workspaces'])))]) / '.workbuddy/memory'
             require(workspace_store.resolve() == workspace_store, 'OBSERVATION_SYMLINK', str(workspace_store))
+            workspace_roots.append(workspace_store)
             if workspace_store.exists(): paths.extend(workspace_store.rglob('*.md'))
+            if manifest['profiles']['WorkBuddy'].get('workbuddy_scope'):
+                codebuddy = Path(episode['workspaces'][request.get('scope', next(iter(episode['workspaces'])))]) / '.codebuddy'
+                require(codebuddy.resolve() == codebuddy, 'OBSERVATION_SYMLINK', str(codebuddy))
+                workspace_roots.append(codebuddy)
+                if codebuddy.exists(): paths.extend(codebuddy.rglob('*.md'))
         require(len(paths) <= 200, 'OBSERVATION_BUDGET', 'At most 200 memory files')
         for path in sorted(set(paths)):
             before = path.lstat()
@@ -68,7 +86,7 @@ def capture_state(root, request, stage):
             text = data.decode('utf-8', errors='replace')
             namespace_present = bool(facts.get('project') and facts['project'] in text)
             files.append({'source_path': str(path), 'source_mtime_ns': after.st_mtime_ns,
-                          'channel_location': 'workspace_files' if workspace_store and path.is_relative_to(workspace_store) else 'native_local_files',
+                          'channel_location': 'workspace_files' if any(path.is_relative_to(p) for p in workspace_roots) else 'native_local_files',
                           'artifact': {'path': str(raw.relative_to(root)), 'sha256': checksum, 'size': len(data)},
                           'namespace_present': namespace_present,
                           'scoped_text_presence': {key: bool(namespace_present and str(value) in text) for key, value in facts.items()}})

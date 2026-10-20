@@ -9,6 +9,24 @@ from eval_memory_e2e.observation import capture_state
 
 
 class ObservationTests(unittest.TestCase):
+    def test_scoped_workbuddy_never_falls_back_to_ordinary_memory(self):
+        import json
+        class ForbiddenOrdinary:
+            def __truediv__(self, other):raise AssertionError('ordinary memory must not be inspected')
+        with tempfile.TemporaryDirectory() as tmp:
+            base=Path(tmp).resolve();root=base/'batch';home=base/'private-home'
+            note=home/'memories/global/MEMORY.md';note.parent.mkdir(parents=True);note.write_text('synthetic private note')
+            profiles=default_profiles();profiles['WorkBuddy']['state_observation']=True
+            prepare(root,batch_id='scoped-observe',seed='scope',harnesses=['WorkBuddy'],scenario_ids=['MEM-01'],profiles=profiles)
+            manifest=read_json(root/'manifest.json');manifest['profiles']['WorkBuddy']['workbuddy_scope']={'scope':'synthetic-scope'}
+            (root/'manifest.json').write_text(json.dumps(manifest));ep=manifest['episodes'][0]
+            request={'harness':'WorkBuddy','action':'execute_step','episode_id':ep['id'],'operation_id':'op','step_id':'s1','scope':'A'}
+            with patch('eval_memory_e2e.observation.PATHS',{'workbuddy':ForbiddenOrdinary()}), \
+                 patch('eval_memory_e2e.workbuddy_scope.load',return_value={'app_home':str(home)}):
+                result=capture_state(root,request,'before')
+            snapshot=read_json(root/result['snapshot']['path'])
+            self.assertEqual([x['source_path'] for x in snapshot['files']],[str(note)])
+
     def test_workbuddy_workspace_store_is_observed_separately_from_global_files(self):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp).resolve(); root = base / 'batch'; store = base / 'global-memory'; store.mkdir()

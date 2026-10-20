@@ -12,6 +12,14 @@ export const MEMORY_UI_LOCK=MACHINE_PATHS.ui_lock;
 export function assertMemoryFilesystemBoundary(request,profile) {
   const boundary=profile.non_target_memory_boundary;
   if(request.action!=='execute_step'||request.transport_action==='observe'||boundary===undefined)return null;
+  if(request.harness==='WorkBuddy'&&boundary?.admitted_adapter==='macos-seatbelt-workbuddy-unit/v1'){
+    if(!profile.workbuddy_scope||boundary.required!==true||boundary.status!=='os_enforced')throw Error('NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED');
+    const helper=fileURLToPath(new URL('../workbuddy_scope.py',import.meta.url));
+    const proof=JSON.parse(execFileSync(memoryPython(),[helper,'attest','--scope',profile.workbuddy_scope.scope,
+      '--frozen-json',JSON.stringify(profile.workbuddy_scope),'--boundary-json',JSON.stringify(boundary)],{encoding:'utf8',timeout:30000,maxBuffer:2097152}));
+    if(proof.status!=='PASS'||proof.unit_id!==profile.workbuddy_scope.unit_id)throw Error('NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED');
+    return proof;
+  }
   if(request.harness!=='AstronStudio'||!['macos-seatbelt-astudio-backend/v1','macos-seatbelt-astudio-native-executor/v2','macos-seatbelt-astudio-compiled-kernel/v3'].includes(boundary?.admitted_adapter)
     ||boundary.required!==true||!/^\/[\s\S]+\/lease\.json$/.test(boundary.lease??'')
     ||!/^[a-f0-9]{64}$/.test(boundary.profile_sha256??'')||!/^[a-f0-9]{64}$/.test(boundary.selftest_sha256??''))
