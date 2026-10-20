@@ -3,6 +3,7 @@
  */
 const fs=require('node:fs'),crypto=require('node:crypto'),cp=require('node:child_process');
 const {EventEmitter}=require('node:events'),mod=require('node:module');
+const {PassThrough}=require('node:stream'),{StringDecoder}=require('node:string_decoder');
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
 function install(specPath){
   const bytes=fs.readFileSync(specPath),spec=JSON.parse(bytes);
@@ -28,24 +29,37 @@ function install(specPath){
   cp.spawn=function(command,args,options){
     if(command!==spec.native_cli.path)return originalSpawn.apply(this,arguments);
     frozen();
-    if(!Array.isArray(args)||!options||JSON.stringify(options.stdio)!=='["ignore","ignore","ignore"]'
+    if(!Array.isArray(args)||!options||!['["ignore","ignore","ignore"]','["ignore","ignore","pipe"]'].includes(JSON.stringify(options.stdio))
       ||options.detached===true||options.shell)throw Error('WB_EXEC_NATIVE_SPAWN_SHAPE');
-    const launched=control('spawn',{command,args,env:options.env,cwd:options.cwd??null});
+    const stderrMode=options.stdio[2];
+    const launched=control('spawn',{command,args,env:options.env,cwd:options.cwd??null,stderr_mode:stderrMode});
     const child=new EventEmitter();
+    const stderr=stderrMode==='pipe'?new PassThrough():null;
     Object.assign(child,{pid:launched.pid,spawnfile:command,spawnargs:[command,...args],killed:false,
-      exitCode:null,signalCode:null,connected:false,stdin:null,stdout:null,stderr:null,stdio:[null,null,null]});
+      exitCode:null,signalCode:null,connected:false,stdin:null,stdout:null,stderr,stdio:[null,null,stderr]});
     child.kill=function(signal='SIGTERM'){
       const response=control('kill',{job:launched.job,signal});this.killed=response.sent===true;return this.killed;
     };
     const watcher=originalSpawn(spec.node,helperArgs('watch'),{env:environment(),stdio:['pipe','pipe','pipe']});
-    let output='',errors='';watcher.stdin.end(JSON.stringify({job:launched.job}));
-    watcher.stdout.on('data',b=>{output+=b});watcher.stderr.on('data',b=>{errors+=b});
+    let output='',errors='',terminal=null,transportError=null;const decoder=new StringDecoder('utf8');
+    watcher.stdin.end(JSON.stringify({job:launched.job}));
+    watcher.stdout.on('data',b=>{
+      try{
+        output+=decoder.write(b);if(Buffer.byteLength(output)>16*1024*1024)throw Error('WB_EXEC_WATCH_FRAME_SIZE');
+        let at;while((at=output.indexOf('\n'))>=0){const raw=output.slice(0,at);output=output.slice(at+1);const event=JSON.parse(raw);
+          if(!event.ok||event.pid!==child.pid)throw Error('WB_EXEC_WATCH_IDENTITY');
+          if(event.event==='stderr'&&stderr)stderr.write(Buffer.from(event.data,'base64'));
+          else if(event.event==='exit'&&!terminal)terminal=event.exit;
+          else throw Error('WB_EXEC_WATCH_EVENT');
+        }
+      }catch(error){transportError=error;child.emit('error',error)}
+    });watcher.stderr.on('data',b=>{errors+=b});
     watcher.on('error',error=>child.emit('error',error));
     watcher.on('close',code=>{
       try{
-        if(code!==0)throw Error('WB_EXEC_WATCH_TRANSPORT:'+errors.slice(-300));
-        const response=JSON.parse(output);if(!response.ok||response.pid!==child.pid)throw Error('WB_EXEC_WATCH_IDENTITY');
-        child.exitCode=response.exit.code;child.signalCode=response.exit.signal;
+        if(transportError)return;
+        if(code!==0||!terminal||output.length||decoder.end().length)throw Error('WB_EXEC_WATCH_TRANSPORT:'+errors.slice(-300));
+        stderr?.end();child.exitCode=terminal.code;child.signalCode=terminal.signal;
         child.emit('exit',child.exitCode,child.signalCode);child.emit('close',child.exitCode,child.signalCode);
       }catch(error){child.emit('error',error)}
     });

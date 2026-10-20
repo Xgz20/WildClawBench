@@ -31,6 +31,8 @@ function frozen(){
   check(sha(fs.readFileSync(specPath))===sha(specBytes),'WB_GATEWAY_SPEC_DRIFT');
   for(const item of [spec.native_cli,spec.peer_addon,...Object.values(spec.sources)])
     check(fs.realpathSync(item.path)===item.path&&sha(fs.readFileSync(item.path))===item.sha256,'WB_GATEWAY_SOURCE_DRIFT');
+  if(spec.memory_unit)for(const value of [...spec.memory_unit.allowedPaths,...spec.memory_unit.readLiterals])
+    check(fs.realpathSync(value)===value,'WB_GATEWAY_UNIT_CANONICAL_DRIFT');
 }
 function processRow(pid){
   try{
@@ -115,22 +117,29 @@ async function launch(request){
     &&/^(WorkBuddy_|EditorSdk_|SYNTHETIC_)[a-zA-Z0-9_-]+$/.test(original.ipcAddress),'WB_GATEWAY_NATIVE_CONFIG');
   check(request.env&&request.env.HOME===spec.os_home&&request.env.SANDBOX_CENTER_UID===spec.account_uid
     &&request.env.SANDBOX_CENTER_IPC_ADDRESS===spec.center_socket,'WB_GATEWAY_NATIVE_ENV');
-  check(!request.cwd||request.cwd===spec.app_home,'WB_GATEWAY_NATIVE_CWD');
+  check(!request.cwd||[spec.app_home,path.dirname(spec.native_cli.path)].includes(request.cwd),'WB_GATEWAY_NATIVE_CWD');
+  check(['ignore','pipe'].includes(request.stderr_mode),'WB_GATEWAY_NATIVE_STDERR');
   const id=crypto.randomBytes(24).toString('hex'),privateAddress='wcbm-wb-worker-'+crypto.randomBytes(8).toString('hex');
   const profileSocket='/tmp/wcbm-wb-profile-'+crypto.randomBytes(8).toString('hex')+'.sock';
-  const job={id,watchers:new Set(),exit:null,child:null,identity:null};
+  const job={id,watchers:new Set(),exit:null,child:null,identity:null,stderrBacklog:[]};
   job.profile=await startNativeProfileProxy({socketPath:profileSocket,upstreamPath:spec.center_socket,
     uid:spec.account_uid,deniedRoots:spec.denied_roots,memoryUnit:spec.memory_unit??null,assertFrozen:frozen,authorize:socket=>nativePeer(socket,job),
     audit:event=>log({...event,event:'profile_'+event.event,job:id})});
   const out=fs.openSync(root+'/'+id+'.stdout','wx',0o600),err=fs.openSync(root+'/'+id+'.stderr','wx',0o600);
   const changed=[...args];changed[1]=JSON.stringify({...original,ipcAddress:privateAddress});
   const env={...request.env,SANDBOX_CENTER_IPC_ADDRESS:profileSocket};
-  job.child=spawn(spec.native_cli.path,changed,{cwd:spec.app_home,env,stdio:['ignore',out,err]});
-  fs.closeSync(out);fs.closeSync(err);jobs.set(id,job);
+  job.child=spawn(spec.native_cli.path,changed,{cwd:request.cwd??spec.app_home,env,stdio:['ignore',out,request.stderr_mode==='pipe'?'pipe':err]});
+  fs.closeSync(out);jobs.set(id,job);
+  if(request.stderr_mode==='pipe')job.child.stderr.on('data',bytes=>{
+    fs.writeSync(err,bytes);
+    const event=JSON.stringify({ok:true,pid:job.child.pid,event:'stderr',data:bytes.toString('base64')})+'\n';
+    if(job.watchers.size)for(const socket of job.watchers)socket.write(event);else job.stderrBacklog.push(event);
+  });
   job.child.on('error',error=>log({event:'native_spawn_error',job:id,reason:error.message}));
-  job.child.on('exit',async(code,signal)=>{
+  job.child.on('close',async(code,signal)=>{
+    fs.closeSync(err);
     job.exit={code,signal};log({event:'native_exit',job:id,pid:job.child.pid,...job.exit});
-    for(const socket of job.watchers)socket.end(JSON.stringify({ok:true,pid:job.child.pid,exit:job.exit})+'\n');
+    for(const socket of job.watchers)socket.end(JSON.stringify({ok:true,pid:job.child.pid,event:'exit',exit:job.exit})+'\n');
     job.watchers.clear();await job.profile.close();job.executor?.close();
   });
   await new Promise((ok,no)=>{job.child.once('spawn',ok);job.child.once('error',no)});
@@ -156,7 +165,9 @@ const server=net.createServer(socket=>{
       if(request.action==='spawn'){socket.end(JSON.stringify(await launch(request))+'\n');return}
       const job=jobs.get(request.job);check(job,'WB_GATEWAY_JOB_UNKNOWN');
       if(request.action==='watch'){
-        if(job.exit)socket.end(JSON.stringify({ok:true,pid:job.child.pid,exit:job.exit})+'\n');
+        check(job.watchers.size===0,'WB_GATEWAY_DUPLICATE_WATCHER');
+        for(const event of job.stderrBacklog)socket.write(event);job.stderrBacklog.length=0;
+        if(job.exit)socket.end(JSON.stringify({ok:true,pid:job.child.pid,event:'exit',exit:job.exit})+'\n');
         else {socket.setTimeout(0);job.watchers.add(socket)}
       }else{
         check(['SIGTERM','SIGKILL','SIGINT','SIGHUP'].includes(request.signal),'WB_GATEWAY_SIGNAL');

@@ -18,10 +18,15 @@ function userPath(value) {
   return value;
 }
 
+const fnv=value=>{let state=0xcbf29ce484222325n;for(const byte of Buffer.from(value))state=BigInt.asUintN(64,(state^BigInt(byte))*0x100000001b3n);
+  return state.toString(16).padStart(16,'0')};
+const centerSocket=value=>/^\/tmp\/(?:wcbm-wb-[a-f0-9]+|workbuddy-sandbox-center-[a-f0-9]{16}-[1-9][0-9]*)\.sock$/.test(value);
+export function nativeCenterEpochPath(appHome,pid) {
+  userPath(appHome);check(Number.isSafeInteger(pid)&&pid>0,'WB_POLICY_CENTER_PID');
+  return '/tmp/workbuddy-sandbox-center-'+fnv(appHome)+'-'+pid+'.sock';
+}
 export function centerCoordinationPaths(appHome,socketPath) {
-  userPath(appHome);check(/^\/tmp\/wcbm-wb-[a-f0-9]+\.sock$/.test(socketPath),'WB_POLICY_CENTER_SOCKET');
-  const fnv=value=>{let state=0xcbf29ce484222325n;for(const byte of Buffer.from(value))state=BigInt.asUintN(64,(state^BigInt(byte))*0x100000001b3n);
-    return state.toString(16).padStart(16,'0')};
+  userPath(appHome);check(centerSocket(socketPath),'WB_POLICY_CENTER_SOCKET');
   return [socketPath,'/tmp/workbuddy-sandbox-center-epoch-'+fnv(socketPath)+'.lock',
     '/tmp/workbuddy-sandbox-center-'+fnv(appHome)+'.lock'];
 }
@@ -32,7 +37,7 @@ export function buildUnitMemoryRules({debugRoot,allowedPaths,readLiterals=[],wri
     &&Array.isArray(readLiterals)&&readLiterals.length<=16&&Array.isArray(writeLiterals)&&writeLiterals.length<=4,'WB_POLICY_UNIT_PATHS');
   // A trusted Center may create its one owned IPC socket. Data-worker policy
   // rejects this option below and never receives a writable control endpoint.
-  for(const value of writeLiterals)check(/^\/tmp\/(?:wcbm-wb-[a-z-]*[a-f0-9]+\.sock|workbuddy-sandbox-center-(?:epoch-)?[a-f0-9]{16}\.lock)$/.test(value),'WB_POLICY_UNIT_IPC_LITERAL');
+  for(const value of writeLiterals)check(centerSocket(value)||/^\/tmp\/workbuddy-sandbox-center-(?:epoch-)?[a-f0-9]{16}\.lock$/.test(value),'WB_POLICY_UNIT_IPC_LITERAL');
   for(const value of [...allowedPaths,...readLiterals])
     check(userPath(value).startsWith(debugRoot+'/'),'WB_POLICY_UNIT_ROOT');
   const aliases=values=>values.flatMap(p=>[p,'/System/Volumes/Data'+p]);
@@ -50,7 +55,8 @@ export function buildUnitMemoryRules({debugRoot,allowedPaths,readLiterals=[],wri
   const writes=[...pathExclusions,...writeLiterals.flatMap(p=>[p,'/private'+p]).map(p=>'(require-not '+predicate('literal',p)+')'),
     '(require-not (literal "/dev/null"))','(require-not (literal "/dev/tty"))'].join('\n');
   return ['(deny file-read*\n'+read+')','(deny file-read-data\n'+metadata.map(p=>predicate('literal',p)).join('\n')+')',
-    '(deny file-write* (require-all\n'+writes+'))'];
+    '(deny file-write* (require-all\n'+writes+'))',
+    '(deny file-write-unlink\n'+aliases(allowedPaths).map(p=>predicate('literal',p)).join('\n')+')'];
 }
 
 export class NativeProfileBinding {
@@ -120,7 +126,8 @@ export class NativeProfileBinding {
 }
 
 export async function startNativeProfileProxy({socketPath,upstreamPath,authorize,assertFrozen,uid,deniedRoots,memoryUnit=null,audit}) {
-  for(const value of [socketPath,upstreamPath])check(/^\/tmp\/wcbm-wb-[a-z-]*[a-f0-9]+\.sock$/.test(value),'WB_POLICY_SOCKET');
+  check(/^\/tmp\/wcbm-wb-[a-z-]*[a-f0-9]+\.sock$/.test(socketPath),'WB_POLICY_SOCKET');
+  check(/^\/tmp\/wcbm-wb-[a-z-]*[a-f0-9]+\.sock$/.test(upstreamPath)||centerSocket(upstreamPath),'WB_POLICY_SOCKET');
   check(socketPath!==upstreamPath&&!fs.existsSync(socketPath),'WB_POLICY_FRESH_SOCKET');
   const sockets=new Set();
   const server=net.createServer(front=>{

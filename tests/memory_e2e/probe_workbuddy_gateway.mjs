@@ -56,26 +56,31 @@ if(mode==='backend'){
       catch(error){result.direct_fs.push({name:'old-unit',error:error.code})}
       try{fs.writeFileSync(spec.isolation_probe.external_write,'SHOULD-NOT-BE-WRITTEN');result.direct_fs.push({name:'outside-write',written:true})}
       catch(error){result.direct_fs.push({name:'outside-write',error:error.code})}
+      try{fs.renameSync(spec.app_home,spec.temp+'/replaced-app-home');throw Error('UNIT_ROOT_RENAME_WAS_ALLOWED')}
+      catch(error){if(error.code!=='EPERM')throw error;result.direct_fs.push({name:'unit-root-rename',error:error.code})}
     }
     const address='SYNTHETIC_'+crypto.randomBytes(8).toString('hex');
     service=cp.spawn(spec.native_cli.path,['--config',JSON.stringify({extraPath:[],enableGlobalProjection:false,ipcAddress:address}),
       '--rule_decision','center','--uid',spec.account_uid,'--app_home',spec.app_home],
-      {stdio:['ignore','ignore','ignore'],env:{PATH:'/usr/bin:/bin',HOME:spec.os_home,USER:process.env.USER,LOGNAME:process.env.LOGNAME,
+      {stdio:['ignore','ignore',spec.editor_sdk_shape?'pipe':'ignore'],...(spec.editor_sdk_shape?{cwd:path.dirname(spec.native_cli.path)}:{}),env:{PATH:'/usr/bin:/bin',HOME:spec.os_home,USER:process.env.USER,LOGNAME:process.env.LOGNAME,
         LANG:'en_US.UTF-8',TMPDIR:spec.temp+'/',SANDBOX_CENTER_UID:spec.account_uid,SANDBOX_CENTER_IPC_ADDRESS:spec.center_socket}});
     let serviceExit=null,serviceError=null;service.on('close',(code,signal)=>{serviceExit={code,signal}});service.on('error',error=>{serviceError=error.message});
+    result.stderr_pipe_verified=spec.editor_sdk_shape?!!service.stderr&&service.stdio[2]===service.stderr:true;
+    let nativeStderr='';service.stderr?.on('data',bytes=>{nativeStderr+=bytes});
     result.native_pid=service.pid;
     const sdk=load(84283),commands=load(68331).SANDBOX_COMMANDS,events=[];client=sdk.createSandboxCliClient();
     client.addReverseListener({commands:[commands.PROCESS_OUTPUT,commands.PROCESS_EXIT,commands.REPORT_EVENT]},message=>events.push(message));
     await client.connect({address,connectTimeoutMs:5000,requestTimeoutMs:5000});
     const session='SYNTHETIC-gateway-session';await client.sendRequest(session,commands.OPEN_SESSION,{workingDir:spec.app_home});
     fs.symlinkSync(root+'/synthetic-non-target',spec.app_home+'/protected-alias','dir');
-    for(const name of ['control','write-control','protected','native-private','alias-read','write-denied',...(spec.isolation_probe?['old-unit','outside-write']:[])]){
+    for(const name of ['control','write-control','protected','native-private','alias-read','write-denied',...(spec.isolation_probe?['old-unit','outside-write','unit-root-rename']:[])]){
       const target=name==='control'?spec.app_home+'/control.txt':name==='alias-read'?spec.app_home+'/protected-alias/fact.txt':
         name==='write-control'?spec.app_home+'/allowed-write':
         name==='old-unit'?spec.isolation_probe.old_fact:name==='outside-write'?spec.isolation_probe.external_write:
         name==='write-denied'?root+'/synthetic-non-target/denied-write':root+'/'+(name==='protected'?'synthetic-non-target':name)+'/fact.txt';
-      const command=['write-control','write-denied','outside-write'].includes(name)?'/usr/bin/touch':'/bin/cat';
-      const started=await client.sendRequest(session,commands.RUN_EXECUTABLE,{executable:command,args:[target],cwdDir:spec.app_home,
+      const command=name==='unit-root-rename'?'/bin/mv':['write-control','write-denied','outside-write'].includes(name)?'/usr/bin/touch':'/bin/cat';
+      const args=name==='unit-root-rename'?[spec.app_home,spec.temp+'/replaced-app-home']:[target];
+      const started=await client.sendRequest(session,commands.RUN_EXECUTABLE,{executable:command,args,cwdDir:spec.app_home,
         timeoutMs:3000,executionMode:'sandbox',stdoutMode:'pipe',stdinMode:'pipe',killProcessTree:true,env:{PATH:'/usr/bin:/bin',LANG:'en_US.UTF-8',TMPDIR:spec.temp+'/'}});
       await until(()=>events.some(e=>e.command===commands.PROCESS_EXIT&&e.data?.processId===started.processId));
       const observed=events.filter(e=>e.data?.processId===started.processId);
@@ -95,9 +100,10 @@ if(mode==='backend'){
     result.service_exit=serviceExit;result.service_error=serviceError;
     result.pass=result.direct_fs[0]?.read?.includes('SYNTHETIC-ALLOW')&&result.direct_fs[1]?.error==='EPERM'
       &&(!spec.isolation_probe||result.direct_fs.slice(2).every(t=>t.error==='EPERM'))
-      &&result.tests.length===(spec.isolation_probe?8:6)&&result.tests.every(t=>t.name==='control'?t.exit===0&&t.output.includes('SYNTHETIC-ALLOW'):
+      &&result.tests.length===(spec.isolation_probe?9:6)&&result.tests.every(t=>t.name==='control'?t.exit===0&&t.output.includes('SYNTHETIC-ALLOW'):
         t.name==='write-control'?t.exit===0&&fs.existsSync(spec.app_home+'/allowed-write'):
-        t.exit!==0&&t.output.includes('Operation not permitted'))&&result.unsafe_mode_rejected&&serviceExit?.code===0&&!serviceError;
+        t.exit!==0&&t.output.includes('Operation not permitted'))&&result.unsafe_mode_rejected&&serviceExit?.code===0&&!serviceError&&result.stderr_pipe_verified;
+    result.native_stderr=nativeStderr;
   }catch(error){if(error.message==='SYNTHETIC_CENTER_LOCK_DISCOVERY_COMPLETED')result.discovery_complete=true;else result.error=String(error.stack||error)}
   finally{
     if(client)await client.disconnect();

@@ -62,13 +62,14 @@ test('unit policy denies other debug units and outside writes without adding nat
   const memoryUnit={debugRoot:'/Users/SYNTHETIC/debug',allowedPaths:['/Users/SYNTHETIC/debug/unit/home','/Users/SYNTHETIC/debug/unit/tmp'],
     readLiterals:['/Users/SYNTHETIC/debug/unit/gateway.json']};
   const rules=buildUnitMemoryRules(memoryUnit);
-  assert.equal(rules.length,3);assert.ok(rules.every(x=>x.startsWith('(deny ')));
+  assert.ok(rules.every(x=>x.startsWith('(deny ')));
   assert.ok(rules[0].includes('/System/Volumes/Data/Users/SYNTHETIC/debug'));
   assert.ok(rules[0].includes('(require-not (literal "/Users/SYNTHETIC/debug/unit/gateway.json"))'));
   assert.ok(!rules[2].includes('gateway.json'));
+  assert.ok(rules.some(x=>x.startsWith('(deny file-write-unlink')&&x.includes('(literal "/Users/SYNTHETIC/debug/unit/home")')));
   const b=new NativeProfileBinding({uid:'synthetic',peerPid:42,deniedRoots:roots,memoryUnit});
   b.request(request());const output=b.response(response()).message;
-  assert.equal(JSON.parse(output.data.profile).length,5);
+  assert.ok(JSON.parse(output.data.profile).some(x=>x.startsWith('(deny file-write-unlink')));
   assert.deepEqual(output.data.execParams.grantedPaths,['**']);
 });
 
