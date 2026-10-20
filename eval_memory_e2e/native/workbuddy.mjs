@@ -14,7 +14,7 @@ const ENDPOINT = "http://127.0.0.1:9229";
 const CAPABILITIES = ["new", "continue"];
 
 export function requestedModelReady(history, expected, verifiedUnit=false) {
-  const actual=history.request.requestedModel?.name;
+  const actual=history.request.requestedModel?.name??(verifiedUnit?history.request.requestedModel?.id:undefined);
   if(actual===expected)return true;
   if(verifiedUnit&&expected==='xopglm52'&&actual==='custom-local:xopglm52')return true;
   if(!['success','failure'].includes(history.runtime_terminal.request_state))return false;
@@ -71,7 +71,8 @@ async function observe(ctx, request, live, state) {
   if ([terminal.request_state, terminal.user_message_state, terminal.assistant_message_state].includes("failure")) {
     await saveState(ctx, state);
     return bindReply(ctx, request, { ...reply, status: "infrastructure_error", reason: "原生请求异常终态，保留实际状态和消息，不计能力零分。" },
-      { runtime_snapshot: binding.runtime_snapshot, native_terminal: terminal, prompt_binding_status: "verified" });
+      { runtime_snapshot: binding.runtime_snapshot, native_terminal: terminal, prompt_binding_status: "verified",
+        native_request:history.request });
   }
   if (terminal.request_state !== "success" || terminal.user_message_state !== "success" || terminal.assistant_message_state !== "success") {
     await saveState(ctx, state);

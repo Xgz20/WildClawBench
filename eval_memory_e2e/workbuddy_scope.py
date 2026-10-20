@@ -140,6 +140,9 @@ def create(folder, case_id, repetition, peer_addon, model_preferences=None):
     publish(folder / 'app-home/models.json', model_config)
     (folder / 'app-home/models.json').chmod(0o600)
     unit_id = uuid4().hex
+    temp_alias = Path('/tmp/wbme-' + unit_id[:12])
+    require(not temp_alias.exists() and not temp_alias.is_symlink(), 'WB_SCOPE_TEMP_ALIAS_EXISTS', str(temp_alias))
+    temp_alias.symlink_to(folder / 'tmp', target_is_directory=True)
     publish(folder / 'app-home/synthetic-control.txt', b'SYNTHETIC-ALLOW\n')
     publish(folder / 'synthetic-non-target/fact.txt', ('SYNTHETIC-DENY-' + unit_id + '\n').encode())
     (folder / 'app-home/protected-alias').symlink_to(folder / 'synthetic-non-target', target_is_directory=True)
@@ -151,6 +154,7 @@ def create(folder, case_id, repetition, peer_addon, model_preferences=None):
     spec = {'contract': CONTRACT, 'created_at': timestamp(), 'unit_id': unit_id, 'case_id': case_id,
             'repetition': repetition, 'root': str(folder), 'app_home': str(folder / 'app-home'),
             'temp': str(folder / 'tmp'), 'candidate': str(folder / 'candidate'),
+            'temp_alias': str(temp_alias),
             'os_home': str(machine_paths()['home']), 'debug_root': str(machine_paths()['debug']),
             'account_uid': uid, 'account_fingerprint': sha(uid.encode()), 'account_verified_in_isolated_ui': False,
             'account_basis': 'ordinary_native_ui_profile_receipt_rechecked_before_isolated_ui_preparation', 'installation': witness,
@@ -184,9 +188,21 @@ def load(scope, frozen=None):
             and spec['app_home'] == str(root / 'app-home') and spec['temp'] == str(root / 'tmp')
             and spec['candidate'] == str(root / 'candidate') and spec['os_home'] == str(machine_paths()['home']),
             'WB_SCOPE_PATH_BINDING', str(path))
-    require(spec['installation'] == installation_witness(), 'WB_SCOPE_INSTALLATION_DRIFT', str(path))
+    closed = (root / 'desktop-main-exited.json').exists()
+    if not closed:
+        require(spec['installation'] == installation_witness(), 'WB_SCOPE_INSTALLATION_DRIFT', str(path))
     for descriptor in spec['sources'].values():
-        require(item(descriptor['path']) == descriptor, 'WB_SCOPE_SOURCE_DRIFT', descriptor['path'])
+        try:
+            actual = item(descriptor['path'])
+        except (OSError, ValueError):
+            require(closed, 'WB_SCOPE_SOURCE_DRIFT', descriptor['path'])
+            actual = None
+        if actual != descriptor and closed:
+            archive = root / 'source-snapshot' / Path(descriptor['path']).name
+            require(archive.is_file() and sha(archive.read_bytes()) == descriptor['sha256'],
+                    'WB_SCOPE_SOURCE_DRIFT', descriptor['path'])
+        else:
+            require(actual == descriptor, 'WB_SCOPE_SOURCE_DRIFT', descriptor['path'])
     # A v1 producer remains auditable after adding a compatible consumer. Runtime
     # actor sources stay exact; this does not relabel an old producer as current.
     creator = Path(__file__)
@@ -196,6 +212,11 @@ def load(scope, frozen=None):
             'WB_SCOPE_CREATOR_SOURCE', 'Preserve the exact unit creation source')
     for name in ('app-home', 'tmp', 'candidate'):
         require((root / name).resolve() == root / name, 'WB_SCOPE_SYMLINK', name)
+    if spec.get('temp_alias') and not closed:
+        alias = Path(spec['temp_alias'])
+        require(re.fullmatch(r'/tmp/wbme-[a-f0-9]{12}', str(alias)) and alias.is_symlink()
+                and os.readlink(alias) == spec['temp'] and alias.resolve() == Path(spec['temp'])
+                and alias.lstat().st_uid == os.getuid(), 'WB_SCOPE_TEMP_ALIAS_DRIFT', 'Wrong private temp alias')
     if frozen is not None:
         require(frozen == freeze(path, spec), 'WB_SCOPE_FROZEN_DRIFT', str(path))
     return spec

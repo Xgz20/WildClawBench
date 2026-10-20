@@ -84,6 +84,15 @@ test('a trusted Center socket exception can never enter the data-worker policy',
   assert.ok(buildUnitMemoryRules(memoryUnit)[2].includes('(literal "/private/tmp/wcbm-wb-abcd.sock")'));
   assert.throws(()=>new NativeProfileBinding({uid:'synthetic',peerPid:42,deniedRoots:roots,memoryUnit}),/DATA_WORKER_CONTROL_SOCKET/);
 });
+test('the short temp alias is protected without granting another writable directory',()=>{
+  const rules=buildUnitMemoryRules({debugRoot:'/Users/SYNTHETIC/debug',allowedPaths:['/Users/SYNTHETIC/debug/unit/tmp'],
+    protectedAliases:['/tmp/wbme-012345abcdef']});
+  assert.ok(rules.every(x=>x.startsWith('(deny ')));
+  const unlink=rules.find(x=>x.startsWith('(deny file-write-unlink'));
+  assert.ok(unlink.includes('(literal "/tmp/wbme-012345abcdef")'));
+  assert.ok(unlink.includes('(literal "/private/tmp/wbme-012345abcdef")'));
+  assert.ok(!rules.find(x=>x.startsWith('(deny file-write*')).includes('wbme-'));
+});
 
 test('Center coordination paths match the two actual native FDs from the frozen synthetic witness',()=>{
   const root='/Users/LQ4T7293TX/debug-workspace/e2e-evaluate/memory-e2e/workbuddy-admission-20261021-r1/center-lock-discovery-01/app-home';

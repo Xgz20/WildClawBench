@@ -22,7 +22,7 @@ exports.install=function(spec){
       frozen();home(options?.env);
       if(options.env.ELECTRON_RUN_AS_NODE!=='1'||JSON.stringify(options.stdio)!=='["pipe","pipe","pipe","pipe","pipe"]')
         throw Error('WB_MAIN_BACKEND_RPC_SHAPE');
-      const env={...options.env,WCB_MEMORY_WB_GATEWAY:spec.gateway_spec.path,TMPDIR:spec.temp+'/'};
+      const env={...options.env,WCB_MEMORY_WB_GATEWAY:spec.gateway_spec.path,TMPDIR:(spec.temp_alias??spec.temp)+'/'};
       const selected={...options,env};
       const debug=spec.backend_inspector_port?['--inspect=127.0.0.1:'+spec.backend_inspector_port]:[];
       const child=spawn.call(this,'/usr/bin/sandbox-exec',['-f',spec.backend_profile.path,command,...debug,'--require',spec.backend_guard.path,...args],selected);

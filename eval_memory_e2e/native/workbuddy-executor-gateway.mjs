@@ -33,6 +33,9 @@ function frozen(){
     check(fs.realpathSync(item.path)===item.path&&sha(fs.readFileSync(item.path))===item.sha256,'WB_GATEWAY_SOURCE_DRIFT');
   if(spec.memory_unit)for(const value of [...spec.memory_unit.allowedPaths,...spec.memory_unit.readLiterals])
     check(fs.realpathSync(value)===value,'WB_GATEWAY_UNIT_CANONICAL_DRIFT');
+  if(spec.temp_alias)check(/^\/tmp\/wbme-[a-f0-9]{12}$/.test(spec.temp_alias)
+    &&fs.lstatSync(spec.temp_alias).isSymbolicLink()&&fs.readlinkSync(spec.temp_alias)===spec.temp
+    &&fs.realpathSync(spec.temp_alias)===spec.temp,'WB_GATEWAY_TEMP_ALIAS_DRIFT');
 }
 function processRow(pid){
   try{

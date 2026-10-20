@@ -17,4 +17,7 @@ test('the custom-local wire mapping is admitted only by a verified private unit'
   assert.equal(requestedModelReady(history('success','custom-local:xopglm52'),'xopglm52',true),true);
   assert.throws(()=>requestedModelReady(history('success','glm-5.2'),'xopglm52',true),/MISMATCH/);
   assert.throws(()=>requestedModelReady(history('success','custom-local:other'),'xopglm52',true),/MISMATCH/);
+  const current={request:{requestedModel:{id:'custom-local:xopglm52'}},runtime_terminal:{request_state:'failure'}};
+  assert.equal(requestedModelReady(current,'xopglm52',true),true);
+  assert.throws(()=>requestedModelReady(current,'xopglm52'),/MISMATCH/);
 });

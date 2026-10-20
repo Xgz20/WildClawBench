@@ -31,13 +31,15 @@ export function centerCoordinationPaths(appHome,socketPath) {
     '/tmp/workbuddy-sandbox-center-'+fnv(appHome)+'.lock'];
 }
 
-export function buildUnitMemoryRules({debugRoot,allowedPaths,readLiterals=[],writeLiterals=[]}) {
+export function buildUnitMemoryRules({debugRoot,allowedPaths,readLiterals=[],writeLiterals=[],protectedAliases=[]}) {
   userPath(debugRoot);
   check(Array.isArray(allowedPaths)&&allowedPaths.length>0&&allowedPaths.length<=8
     &&Array.isArray(readLiterals)&&readLiterals.length<=16&&Array.isArray(writeLiterals)&&writeLiterals.length<=4,'WB_POLICY_UNIT_PATHS');
   // A trusted Center may create its one owned IPC socket. Data-worker policy
   // rejects this option below and never receives a writable control endpoint.
   for(const value of writeLiterals)check(centerSocket(value)||/^\/tmp\/workbuddy-sandbox-center-(?:epoch-)?[a-f0-9]{16}\.lock$/.test(value),'WB_POLICY_UNIT_IPC_LITERAL');
+  check(Array.isArray(protectedAliases)&&protectedAliases.length<=1,'WB_POLICY_TEMP_ALIAS');
+  for(const value of protectedAliases)check(/^\/tmp\/wbme-[a-f0-9]{12}$/.test(value),'WB_POLICY_TEMP_ALIAS');
   for(const value of [...allowedPaths,...readLiterals])
     check(userPath(value).startsWith(debugRoot+'/'),'WB_POLICY_UNIT_ROOT');
   const aliases=values=>values.flatMap(p=>[p,'/System/Volumes/Data'+p]);
@@ -56,7 +58,7 @@ export function buildUnitMemoryRules({debugRoot,allowedPaths,readLiterals=[],wri
     '(require-not (literal "/dev/null"))','(require-not (literal "/dev/tty"))'].join('\n');
   return ['(deny file-read*\n'+read+')','(deny file-read-data\n'+metadata.map(p=>predicate('literal',p)).join('\n')+')',
     '(deny file-write* (require-all\n'+writes+'))',
-    '(deny file-write-unlink\n'+aliases(allowedPaths).map(p=>predicate('literal',p)).join('\n')+')'];
+    '(deny file-write-unlink\n'+[...aliases(allowedPaths),...protectedAliases.flatMap(p=>[p,'/private'+p])].map(p=>predicate('literal',p)).join('\n')+')'];
 }
 
 export class NativeProfileBinding {

@@ -34,7 +34,7 @@ for(const port of Object.values(scope.ports)){
 }
 publish('launching.json',{at:new Date().toISOString(),supervisor:row(process.pid),scope_sha256:hash(fs.readFileSync(scopePath)),model_prompts:0});
 const env={...process.env,WORKBUDDY_CONFIG_DIR:scope.app_home,CODEBUDDY_CONFIG_DIR:scope.app_home,
-  WORKBUDDY_USER_DATA_DIR:scope.app_home+'/app',TMPDIR:scope.temp+'/'};
+  WORKBUDDY_USER_DATA_DIR:scope.app_home+'/app',TMPDIR:(scope.temp_alias??scope.temp)+'/'};
 delete env.ELECTRON_RUN_AS_NODE;delete env.NODE_OPTIONS;delete env.WCB_MEMORY_WB_GATEWAY;
 for(const key of ['CODEX_HOME','CODEX_API_KEY','OPENAI_API_KEY','OPENAI_BASE_URL','ACODE_HOME','ACODE_API_KEY',
   'ASTUDIO_HOME','ASTUDIO_ACODE_HOME','ASTUDIO_ACODE_BIN','ACODE_EXEC_SERVER_URL'])delete env[key];
@@ -53,7 +53,8 @@ try{
   const pause=await Promise.race([paused,new Promise((_,no)=>setTimeout(()=>no(Error('WB_UNIT_ENTRY_PAUSE_TIMEOUT')),10000))]);
   const centerSocket=nativeCenterEpochPath(scope.app_home,main.pid);
   const memoryUnit={debugRoot:scope.debug_root,allowedPaths:[scope.app_home,scope.temp,scope.candidate],
-    readLiterals:[root+'/gateway.json',root+'/scope.json',root+'/backend.sb',root+'/center.sb']};
+    readLiterals:[root+'/gateway.json',root+'/scope.json',root+'/backend.sb',root+'/center.sb'],
+    protectedAliases:scope.temp_alias?[scope.temp_alias]:[]};
   const home=scope.os_home;
   const denied=['.codex','.workbuddy','.qwenworkcn','.doubaowork','.acode','.codebuddy',
     'Library/Application Support/Codex','Library/Application Support/ChatGPT','Library/Application Support/WorkBuddy',
@@ -72,6 +73,7 @@ try{
     '/Applications/WorkBuddy.app/Contents/Resources/app.asar/main/daemon-app-server-entry.js','--stdio'];
   const gatewaySpec={contract:'workbuddy-owned-executor-gateway/v1',mode:'workbuddy-owned-session',application_admitted:false,
     main:row(main.pid),backend_command:[app,...backendArgs].join(' '),node:app,os_home:home,app_home:scope.app_home,temp:scope.temp,
+    ...(scope.temp_alias?{temp_alias:scope.temp_alias}:{}),
     account_uid:scope.account_uid,native_cli:scope.installation.native_cli,peer_addon:scope.peer_addon,sources:scope.sources,
     control_socket:'/tmp/wcbm-wb-control-'+crypto.randomBytes(8).toString('hex')+'.sock',center_socket:centerSocket,
     denied_roots:[...denied,auth],memory_unit:memoryUnit};
@@ -80,6 +82,7 @@ try{
   gateway.on('exit',(code,signal)=>{gatewayExit={code,signal}});
   await until(()=>{check(!gatewayExit,'WB_UNIT_GATEWAY_EXITED');return fs.existsSync(root+'/gateway-ready.json')});
   const spec={contract:'workbuddy-main-os-boundary/v1',main_pid:main.pid,app_home:scope.app_home,temp:scope.temp,
+    ...(scope.temp_alias?{temp_alias:scope.temp_alias}:{}),
     backend_profile:item(root+'/backend.sb'),center_profile:item(root+'/center.sb'),gateway_spec:item(root+'/gateway.json'),
     backend_guard:backendGuard,center_binary:scope.installation.center,native_cli:scope.installation.native_cli,
     center_socket:centerSocket,backend_inspector_port:scope.ports.backend_inspector};
@@ -131,3 +134,7 @@ await until(()=>!!mainExit,12*60*60*1000);
 publish('desktop-main-exited.json',{at:new Date().toISOString(),exit:mainExit,model_prompts_sent_by_supervisor:0});
 if(gateway&&!gatewayExit){gateway.kill('SIGTERM');await until(()=>!!gatewayExit,10000)}
 publish('desktop-supervisor-exited.json',{at:new Date().toISOString(),main_exit:mainExit,gateway_exit:gatewayExit});
+if(scope.temp_alias){
+  if(!fs.lstatSync(scope.temp_alias).isSymbolicLink()||fs.readlinkSync(scope.temp_alias)!==scope.temp)throw Error('WB_UNIT_TEMP_ALIAS_CLEANUP_REFUSED');
+  fs.unlinkSync(scope.temp_alias);publish('temp-alias-restored.json',{at:new Date().toISOString(),alias:scope.temp_alias,removed:true,unit_temp_data_preserved:true});
+}

@@ -17,7 +17,7 @@ function install(specPath){
   }
   function environment(){
     return {PATH:'/usr/bin:/bin:/usr/sbin:/sbin',HOME:spec.os_home,USER:process.env.USER,LOGNAME:process.env.LOGNAME,
-      ELECTRON_RUN_AS_NODE:'1',LANG:'en_US.UTF-8',TMPDIR:spec.temp+'/'};
+      ELECTRON_RUN_AS_NODE:'1',LANG:'en_US.UTF-8',TMPDIR:(spec.temp_alias??spec.temp)+'/'};
   }
   function helperArgs(action){return [helper.path,action,specPath]}
   function control(action,input){
