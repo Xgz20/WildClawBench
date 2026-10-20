@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {NativeProfileBinding} from '../../eval_memory_e2e/native/workbuddy-native-policy.mjs';
+import {NativeProfileBinding,buildUnitMemoryRules,centerCoordinationPaths} from '../../eval_memory_e2e/native/workbuddy-native-policy.mjs';
 
 const roots=['/Users/SYNTHETIC/protected'];
 const binding=()=>new NativeProfileBinding({uid:'synthetic',peerPid:42,deniedRoots:roots});
@@ -56,4 +56,36 @@ test('forwards non-profile native requests and errors without payload mutation',
   assert.equal(b.response(reply).message,reply);
   b.request(request('r2'));const error={messageId:'r2',success:false,error:'native denial'};
   assert.equal(b.response(error).message,error);
+});
+
+test('unit policy denies other debug units and outside writes without adding native grants',()=>{
+  const memoryUnit={debugRoot:'/Users/SYNTHETIC/debug',allowedPaths:['/Users/SYNTHETIC/debug/unit/home','/Users/SYNTHETIC/debug/unit/tmp'],
+    readLiterals:['/Users/SYNTHETIC/debug/unit/gateway.json']};
+  const rules=buildUnitMemoryRules(memoryUnit);
+  assert.equal(rules.length,3);assert.ok(rules.every(x=>x.startsWith('(deny ')));
+  assert.ok(rules[0].includes('/System/Volumes/Data/Users/SYNTHETIC/debug'));
+  assert.ok(rules[0].includes('(require-not (literal "/Users/SYNTHETIC/debug/unit/gateway.json"))'));
+  assert.ok(!rules[2].includes('gateway.json'));
+  const b=new NativeProfileBinding({uid:'synthetic',peerPid:42,deniedRoots:roots,memoryUnit});
+  b.request(request());const output=b.response(response()).message;
+  assert.equal(JSON.parse(output.data.profile).length,5);
+  assert.deepEqual(output.data.execParams.grantedPaths,['**']);
+});
+
+test('unit path exclusions cannot cover all debug data or escape the declared debug root',()=>{
+  for(const allowedPaths of [[],['/Users/SYNTHETIC/debug'],['/Users/SYNTHETIC/other']])
+    assert.throws(()=>buildUnitMemoryRules({debugRoot:'/Users/SYNTHETIC/debug',allowedPaths}),/WB_POLICY_UNIT_/);
+});
+
+test('a trusted Center socket exception can never enter the data-worker policy',()=>{
+  const memoryUnit={debugRoot:'/Users/SYNTHETIC/debug',allowedPaths:['/Users/SYNTHETIC/debug/unit/home'],
+    writeLiterals:['/tmp/wcbm-wb-abcd.sock']};
+  assert.ok(buildUnitMemoryRules(memoryUnit)[2].includes('(literal "/private/tmp/wcbm-wb-abcd.sock")'));
+  assert.throws(()=>new NativeProfileBinding({uid:'synthetic',peerPid:42,deniedRoots:roots,memoryUnit}),/DATA_WORKER_CONTROL_SOCKET/);
+});
+
+test('Center coordination paths match the two actual native FDs from the frozen synthetic witness',()=>{
+  const root='/Users/LQ4T7293TX/debug-workspace/e2e-evaluate/memory-e2e/workbuddy-admission-20261021-r1/center-lock-discovery-01/app-home';
+  assert.deepEqual(centerCoordinationPaths(root,'/tmp/wcbm-wb-ba69add84ce9f8b4.sock'),
+    ['/tmp/wcbm-wb-ba69add84ce9f8b4.sock','/tmp/workbuddy-sandbox-center-epoch-26f904b596bb8212.lock','/tmp/workbuddy-sandbox-center-d080f67f00ff15e7.lock']);
 });

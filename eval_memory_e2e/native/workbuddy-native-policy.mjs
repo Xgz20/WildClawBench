@@ -12,13 +12,55 @@ const record=value=>value&&typeof value==='object'&&!Array.isArray(value);
 const check=(ok,reason)=>{if(!ok)throw Error(reason)};
 const FETCH='sandbox.rules.fetch_profile';
 
+function userPath(value) {
+  check(typeof value==='string'&&value.startsWith('/Users/')&&path.posix.normalize(value)===value
+    &&!value.endsWith('/')&&!/[\x00-\x1f\x7f"\\]/.test(value),'WB_POLICY_DENY_PATH');
+  return value;
+}
+
+export function centerCoordinationPaths(appHome,socketPath) {
+  userPath(appHome);check(/^\/tmp\/wcbm-wb-[a-f0-9]+\.sock$/.test(socketPath),'WB_POLICY_CENTER_SOCKET');
+  const fnv=value=>{let state=0xcbf29ce484222325n;for(const byte of Buffer.from(value))state=BigInt.asUintN(64,(state^BigInt(byte))*0x100000001b3n);
+    return state.toString(16).padStart(16,'0')};
+  return [socketPath,'/tmp/workbuddy-sandbox-center-epoch-'+fnv(socketPath)+'.lock',
+    '/tmp/workbuddy-sandbox-center-'+fnv(appHome)+'.lock'];
+}
+
+export function buildUnitMemoryRules({debugRoot,allowedPaths,readLiterals=[],writeLiterals=[]}) {
+  userPath(debugRoot);
+  check(Array.isArray(allowedPaths)&&allowedPaths.length>0&&allowedPaths.length<=8
+    &&Array.isArray(readLiterals)&&readLiterals.length<=16&&Array.isArray(writeLiterals)&&writeLiterals.length<=4,'WB_POLICY_UNIT_PATHS');
+  // A trusted Center may create its one owned IPC socket. Data-worker policy
+  // rejects this option below and never receives a writable control endpoint.
+  for(const value of writeLiterals)check(/^\/tmp\/(?:wcbm-wb-[a-z-]*[a-f0-9]+\.sock|workbuddy-sandbox-center-(?:epoch-)?[a-f0-9]{16}\.lock)$/.test(value),'WB_POLICY_UNIT_IPC_LITERAL');
+  for(const value of [...allowedPaths,...readLiterals])
+    check(userPath(value).startsWith(debugRoot+'/'),'WB_POLICY_UNIT_ROOT');
+  const aliases=values=>values.flatMap(p=>[p,'/System/Volumes/Data'+p]);
+  const predicate=(kind,value)=>'('+kind+' '+JSON.stringify(value)+')';
+  const pathExclusions=aliases(allowedPaths).map(p=>'(require-not '+predicate('subpath',p)+')');
+  const ancestors=new Set();
+  for(const value of [...allowedPaths,...readLiterals]){
+    let parent=path.posix.dirname(value);
+    while(parent===debugRoot||parent.startsWith(debugRoot+'/')){ancestors.add(parent);if(parent===debugRoot)break;parent=path.posix.dirname(parent)}
+  }
+  const metadata=aliases([...ancestors]);
+  const readExclusions=[...pathExclusions,...aliases(readLiterals).map(p=>'(require-not '+predicate('literal',p)+')'),
+    ...metadata.map(p=>'(require-not '+predicate('literal',p)+')')].join('\n');
+  const read=aliases([debugRoot]).map(p=>'(require-all '+predicate('subpath',p)+'\n'+readExclusions+')').join('\n');
+  const writes=[...pathExclusions,...writeLiterals.flatMap(p=>[p,'/private'+p]).map(p=>'(require-not '+predicate('literal',p)+')'),
+    '(require-not (literal "/dev/null"))','(require-not (literal "/dev/tty"))'].join('\n');
+  return ['(deny file-read*\n'+read+')','(deny file-read-data\n'+metadata.map(p=>predicate('literal',p)).join('\n')+')',
+    '(deny file-write* (require-all\n'+writes+'))'];
+}
+
 export class NativeProfileBinding {
-  constructor({uid,peerPid,deniedRoots,audit=()=>{}}) {
+  constructor({uid,peerPid,deniedRoots,memoryUnit=null,audit=()=>{}}) {
     check(typeof uid==='string'&&uid.length>0&&Number.isSafeInteger(peerPid)&&peerPid>0,'WB_POLICY_IDENTITY');
     check(Array.isArray(deniedRoots)&&deniedRoots.length>0&&deniedRoots.length<=256,'WB_POLICY_DENIES');
-    for(const root of deniedRoots)check(typeof root==='string'&&root.startsWith('/Users/')
-      &&path.posix.normalize(root)===root&&!root.endsWith('/')&&!/[\x00-\x1f\x7f"\\]/.test(root),'WB_POLICY_DENY_PATH');
+    for(const root of deniedRoots)userPath(root);
     this.uid=uid;this.peerPid=peerPid;this.deniedRoots=Object.freeze([...new Set(deniedRoots)]);
+    check(!memoryUnit?.writeLiterals?.length,'WB_POLICY_DATA_WORKER_CONTROL_SOCKET');
+    this.unitRules=memoryUnit?buildUnitMemoryRules(memoryUnit):[];
     this.pending=new Map();this.profiles=new Map();this.audit=audit;this.highestRevision=-1;
   }
   request(message) {
@@ -58,7 +100,7 @@ export class NativeProfileBinding {
     const original=data.profile,rules=JSON.parse(original);
     check(Array.isArray(rules)&&rules.length>0&&rules.every(x=>typeof x==='string'),'WB_POLICY_NATIVE_FRAGMENTS');
     const escaped=rules.some(x=>x.includes('\\"'));
-    const added=this.deniedRoots.map(root=>'(deny file-read* file-write* (subpath '+JSON.stringify(root)+'))')
+    const added=[...this.deniedRoots.map(root=>'(deny file-read* file-write* (subpath '+JSON.stringify(root)+'))'),...this.unitRules]
       .map(rule=>escaped?rule.replaceAll('"','\\"'):rule);
     const end=original.lastIndexOf(']');
     check(end>=0,'WB_POLICY_PROFILE_END');
@@ -72,12 +114,12 @@ export class NativeProfileBinding {
     this.profiles.set(request.key,{revision:data.serverRevision,sha256:fingerprint});
     this.audit({event:'profile_composed',peer_pid:this.peerPid,key:request.key,revision:data.serverRevision,
       original_sha256:hash(original),composed_sha256:fingerprint,original_native_fragments_preserved:true,
-      controller_grants_appended:false,mandatory_denies:this.deniedRoots});
+      controller_grants_appended:false,mandatory_denies:this.deniedRoots,memory_unit_rules:this.unitRules.length});
     return {message:output,changed:true};
   }
 }
 
-export async function startNativeProfileProxy({socketPath,upstreamPath,authorize,assertFrozen,uid,deniedRoots,audit}) {
+export async function startNativeProfileProxy({socketPath,upstreamPath,authorize,assertFrozen,uid,deniedRoots,memoryUnit=null,audit}) {
   for(const value of [socketPath,upstreamPath])check(/^\/tmp\/wcbm-wb-[a-z-]*[a-f0-9]+\.sock$/.test(value),'WB_POLICY_SOCKET');
   check(socketPath!==upstreamPath&&!fs.existsSync(socketPath),'WB_POLICY_FRESH_SOCKET');
   const sockets=new Set();
@@ -87,7 +129,7 @@ export async function startNativeProfileProxy({socketPath,upstreamPath,authorize
     try {
       assertFrozen();const peer=authorize(front);
       check(record(peer)&&Number.isSafeInteger(peer.pid)&&peer.pid>0,'WB_POLICY_PEER');
-      binding=new NativeProfileBinding({uid,peerPid:peer.pid,deniedRoots,audit});
+      binding=new NativeProfileBinding({uid,peerPid:peer.pid,deniedRoots,memoryUnit,audit});
       upstream=net.createConnection(upstreamPath);sockets.add(front);sockets.add(upstream);
       audit({event:'connection_authorized',peer});
     }catch(error){reject(error);return}
