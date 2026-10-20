@@ -3,9 +3,11 @@ import {readFile,readdir,realpath,mkdir} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
 import {createHash} from 'node:crypto';
+import {staleRunningProjectionHasTerminalWitness} from './astudio-bound-continuation.mjs';
 import {queryNativeSessions} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs';
 import {isBlockingActiveSession} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs';
 let spec=JSON.parse(await readFile(process.argv[2],'utf8'));
+const continuation=spec.contract==='astudio-memory-unit-continuation/v1';
 if(spec.contract==='astudio-memory-unit-continuation/v1'){
   const bytes=await readFile(spec.origin_scope),base=JSON.parse(bytes);
   if(spec.diagnostic_only!==true||createHash('sha256').update(bytes).digest('hex')!==spec.origin_scope_sha256
@@ -38,7 +40,24 @@ for(const root of [spec.paths.acode,spec.paths.overlay]){
     }finally{db.close()}
   }
 }
-const blocking=sessions.filter(isBlockingActiveSession).length;
+const terminalWitnesses=[];
+if(continuation){
+  for(const row of sessions.filter(isBlockingActiveSession)){
+    const matches=[];
+    for(const home of [spec.paths.acode,spec.paths.overlay])for(const name of await readdir(home)){
+      if(!/^state_\d+\.sqlite$/.test(name))continue;
+      const db=new DatabaseSync(home+'/'+name,{readOnly:true});
+      try{matches.push(...db.prepare('SELECT rollout_path FROM threads WHERE id=?').all(row.session_id))}finally{db.close()}
+    }
+    if(matches.length!==1)continue;
+    const file=await realpath(matches[0].rollout_path);
+    if(![spec.paths.acode,spec.paths.overlay].some(home=>file.startsWith(home+'/sessions/')))throw Error('UNIT_IDLE_ROLLOUT_OUTSIDE_SCOPE');
+    const bytes=await readFile(file),events=bytes.toString('utf8').trim().split(/\r?\n/).map(s=>JSON.parse(s));
+    if(staleRunningProjectionHasTerminalWitness(row,events))terminalWitnesses.push({thread_id:row.thread_id,turn_id:row.turn_id,
+      source_path:file,sha256:createHash('sha256').update(bytes).digest('hex'),basis:'native task_complete plus completed latest turn, ready session and no active turn'});
+  }
+}
+const blocking=sessions.filter(row=>isBlockingActiveSession(row)&&!terminalWitnesses.some(t=>t.thread_id===row.thread_id)).length;
 console.log(JSON.stringify({unit_id:spec.unit_id,at:new Date().toISOString(),native_session_count:sessions.length,
-  blocking_session_count:blocking,jobs,running_jobs:jobs.reduce((n,x)=>n+x.running,0),source_database_write:false,
+  blocking_session_count:blocking,terminal_witnesses:terminalWitnesses,jobs,running_jobs:jobs.reduce((n,x)=>n+x.running,0),source_database_write:false,
   idle:blocking===0&&jobs.every(x=>x.running===0)}));

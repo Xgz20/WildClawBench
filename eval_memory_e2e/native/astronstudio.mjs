@@ -12,6 +12,7 @@ import {context, sha, requestHash, readJson, saveState, artifact, withUiLock, re
   baseReply, bindReply, verifyConfig, stdinRequest,assertMemoryFilesystemBoundary,assertNoLinks} from './common.mjs';
 
 import {MACHINE_PATHS,memoryPython} from './machine.mjs';
+import {assertNativeContinuationBinding,inspectBoundContinuation,readNativeContinuationBinding,verifiedBlockingSessions} from './astudio-bound-continuation.mjs';
 let ASTUDIO_PATHS=MACHINE_PATHS,DB=MACHINE_PATHS.astudio_db;
 export function aStudioAutomaticGenerationDiagnosticAllowed(profile) {
   return profile.memory_protocol?.automatic_generation_diagnostic_allowed===true
@@ -643,7 +644,9 @@ export async function runAstronStudio(request) {
       }
       if(request.required_capabilities.some(k=>!CAPABILITIES.includes(k)))return bindReply(ctx,request,{...baseReply(request,live.config),status:'needs_attention',reason:'该任务链的客户端重启尚未验收。'});
       const rows=await queryNativeSessions(DB);
-      if(rows.some(isBlockingActiveSession)||rows.some(s=>s.cwd===request.workspace))throw Error('ASTUDIO_NAMESPACE_NOT_IDLE_OR_FRESH');
+      const allowed=ctx.manifest.episodes.flatMap(item=>Object.values(item.workspaces));
+      const idle=await verifiedBlockingSessions(rows,ASTUDIO_PATHS,allowed,isBlockingActiveSession);
+      if(idle.blocking.length||rows.some(s=>s.cwd===request.workspace))throw Error('ASTUDIO_NAMESPACE_NOT_IDLE_OR_FRESH');
       if(!state)await saveState(ctx,{requestHash:requestHash(request),config:live.config,phase:'namespace_prepared'});
       return bindReply(ctx,request,{...baseReply(request,live.config),status:'completed',background_settled:true,
         admission:{account_policy:'current_signed_in_account',test_scope_only:true,precondition_verified:true,capabilities:CAPABILITIES,
@@ -658,9 +661,13 @@ export async function runAstronStudio(request) {
       execFileSync('/usr/bin/open',['-a','/Applications/AStudio.app']);
       await live.client.send('Page.bringToFront');
       await artifact(ctx,'foreground-owner',await waitForAStudioForeground(live.pid));
-      const rows=await queryNativeSessions(DB);if(rows.some(isBlockingActiveSession))throw Error('ASTUDIO_NOT_IDLE');
+      const rows=await queryNativeSessions(DB);
+      const allowed=ctx.manifest.episodes.flatMap(item=>Object.values(item.workspaces));
+      const idle=await verifiedBlockingSessions(rows,ASTUDIO_PATHS,allowed,isBlockingActiveSession);
+      if(idle.blocking.length)throw Error('ASTUDIO_NOT_IDLE');
+      if(idle.terminal.length)await artifact(ctx,'native-terminal-idle-witness',idle.terminal);
       await artifact(ctx,'rpc-ready-before-navigation',await waitForAStudioRpcReady(()=>readAStudioRpcTransport(live.client)));
-      let route;
+      let route,boundTarget;
       if(request.session_action==='new') {
         try {
           await traceAStudioPreparation(live.client,client=>prepareAStudioExecutionUi(ctx,client,{candidateWorkspace:request.workspace,stateDatabase:DB,timeoutMs:30000,
@@ -679,17 +686,27 @@ export async function runAstronStudio(request) {
         const previous=rows.filter(s=>s.session_id===request.previous_native?.session_id&&s.cwd===request.workspace);
         route=await currentThreadId(live.client);
         if(previous.length!==1||route!==previous[0].thread_id)throw Error('ASTUDIO_CONTINUATION_ROUTE_CHANGED');
+        const projects=await queryExactProjectsForWorkspace(DB,request.workspace);
+        if(projects.length!==1)throw Error('ASTUDIO_CONTINUATION_PROJECT_AMBIGUOUS');
+        const expected={thread_id:route,session_id:request.previous_native.session_id,previous_turn_id:request.previous_native.turn_id,
+          workspace:request.workspace,project_id:projects[0].project_id};
+        const binding=()=>readNativeContinuationBinding(DB,ASTUDIO_PATHS,expected);
+        const initial=await binding();assertNativeContinuationBinding(initial,expected);
+        await artifact(ctx,'native-continuation-binding',{expected,sessions:initial.sessions,projects:initial.projects});
+        boundTarget=()=>inspectBoundContinuation(live.client,request.prompt,expected,binding);
       }else throw Error('ASTUDIO_RESTART_NOT_ADMITTED');
       state={requestHash:requestHash(request),phase:'prepared',config:live.config,thread_id:route,
         previous_turn_id:rows.find(s=>s.thread_id===route)?.turn_id??null,
         model_catalog_evidence:await modelCatalogEvidence(ctx,live),model_catalog_capture_basis:'pre-dispatch'};await saveState(ctx,state);
       await fillPrompt(live.client,request.prompt,30000);
-      await ensureSendTargetReady(live.client,request.prompt,request.workspace);
+      if(boundTarget){const target=await boundTarget();if(!target.ready)throw Error('ASTUDIO_CONTINUATION_TARGET_NOT_READY')}
+      else await ensureSendTargetReady(live.client,request.prompt,request.workspace);
       const preSend=await waitForRecordedUi(ctx,live.client,live.config,route,'before-send');
       await artifact(ctx,'pre-send-configuration',{thread_id:route,ui:preSend.ui,config_basis:live.config_basis,model_changed_by_controller:false});
       await artifact(ctx,'rpc-ready-before-send',await waitForAStudioRpcReady(()=>readAStudioRpcTransport(live.client)));
       const method=ctx.manifest.profiles.AstronStudio.send_method??'native_mouse';
       if(!['native_mouse','dom_submit_click'].includes(method))throw Error('ASTUDIO_SEND_METHOD_NOT_ADMITTED');
+      if(boundTarget&&method!=='native_mouse')throw Error('ASTUDIO_CONTINUATION_NATIVE_MOUSE_REQUIRED');
       const waitSeconds=ctx.manifest.profiles.AstronStudio.pre_click_rpc_wait_seconds??0;
       if(!Number.isInteger(waitSeconds)||waitSeconds<0||waitSeconds>60)throw Error('ASTUDIO_PRE_CLICK_WAIT_POLICY');
       const focusSeconds=ctx.manifest.profiles.AstronStudio.pre_click_focus_wait_seconds??0;
@@ -720,7 +737,8 @@ export async function runAstronStudio(request) {
           const focus=finalFocus();if(!focus.ready)return {clicked:false,mouse_press_count:0,reason:'foreground-not-ready-before-dom-click',focus};
           return live.client.evaluate(aStudioDomSubmitExpression(request.prompt,request.workspace,route,{requireFocus:true}));
         }
-        return clickAStudioStableTarget(live.client,request.prompt,request.workspace,{beforePress,beforeMove:waitFocus,finalFocus});
+        return clickAStudioStableTarget(live.client,request.prompt,request.workspace,{beforePress,beforeMove:waitFocus,finalFocus,
+          ...(boundTarget?{read:boundTarget}:{})});
       },value=>saveState(ctx,value)),value=>artifact(ctx,'send-dom-events',value));
       await artifact(ctx,'send-result',{method,result:clicked,native_acceptance_verified:false});
       if(!clicked.clicked)return bindReply(ctx,request,{...baseReply(request,live.config),status:'needs_attention',reason:'发送前检查返回未点击成功，停止在原生发送之前。'},{click_result:clicked,prompt_sent:false});
