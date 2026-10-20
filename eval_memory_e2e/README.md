@@ -6,6 +6,12 @@
 
 被评测客户端固定为 AStudio（内部 ID 为 `AstronStudio`）、WorkBuddy、QwenWork、DoubaoWork。**Codex 仅作为调研参考，配置操作、Profile 与批次 CLI 均不接受 Codex；不得操作其记忆开关或数据。**
 
+**2026-10-21 AStudio默认周期追加：** 同一合成单元自然闲置超过6小时后，默认Stage1实际形成1份非空输出、
+另1项JSON解析失败；Stage2消费有效输出后自然完成，经典bash4/4 exit0，130份策略保留原生SBPL且仅追加deny。
+已用新维护视图/租约保留同一case×repetition状态，没有重发旧UI请求、复制运行历史或改变时间戳。
+自动产物的客户端只读回验目前在零点击发送前暂停，不能将执行兼容性扩展成完整自动记忆准入。
+原件、失败和后续接续见[默认门槛下自动抽取与整理](../docs/research/agent-memory/AStudio默认空闲门槛下自动抽取与整理实测-20261021.md)。
+
 **2026-10-21 WorkBuddy 真实桌面追加：** 已接入签名客户端的私有数据目录、五条原生RPC管道和OS文件边界，
 真实后端/原生工作进程的合成访问检查通过，并复用当前账号的MaaS自定义 `custom-local:xopglm52` 与high思考配置。
 内置GLM-5.2没有被当作该自定义路由的替代。新批次r4七步链已完成7/7；学习后回忆通过，

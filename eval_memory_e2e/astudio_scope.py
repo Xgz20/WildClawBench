@@ -25,6 +25,7 @@ from eval_memory_e2e.machine import machine_paths, kernel_identity
 from eval_memory_e2e.configuration import ASTUDIO_MEMORY_FIELDS, set_toml_fields
 
 CONTRACT = 'astudio-case-memory-unit/v1'
+CONTINUATION = 'astudio-memory-unit-continuation/v1'
 SELF = Path(__file__).resolve()
 APP = '/Applications/AStudio.app/Contents/MacOS/AStudio'
 
@@ -142,20 +143,74 @@ def create(folder, *, case_id, repetition, batch_root, generate_memories=False):
             'account_fingerprint': spec['account_fingerprint'], 'paths': paths}
 
 
-def load(path, frozen=None):
-    path = _path(path)
-    require(path.name == 'scope.json', 'SCOPE_SPEC_PATH', str(path))
-    spec = read_json(path)
-    runtime = path.parent / 'runtime'
+def _validate_paths(spec, origin):
+    runtime = origin.parent / 'runtime'
     expected = {'runtime': str(runtime), 'acode': str(runtime / 'source-home'),
                 'desktop': str(runtime / 'desktop'), 'overlay': str(runtime / 'desktop/acode-home-overlay'),
                 'astudio_db': str(runtime / 'desktop/userdata/state.sqlite'),
                 'temp': str(runtime / 'tmp'), 'candidate': str(_path(spec['batch_root']) / 'candidate')}
-    require(spec['contract'] == CONTRACT and spec['paths'] == expected
-            and spec['scope_helper_sha256'] == sha(SELF.read_bytes()), 'SCOPE_SPEC_DRIFT', str(path))
-    require(spec['installation'] == installation_witness(), 'SCOPE_INSTALLATION_DRIFT', str(path))
+    require(spec['contract'] == CONTRACT and spec['paths'] == expected, 'SCOPE_SPEC_DRIFT', str(origin))
+    require(spec['installation'] == installation_witness(), 'SCOPE_INSTALLATION_DRIFT', str(origin))
     for value in expected.values():
         _path(value)
+
+
+def _continuation_base(view):
+    require(view.get('contract') == CONTINUATION and view.get('diagnostic_only') is True
+            and view.get('within_unit_reset') is False and view.get('imported_history') is False
+            and view.get('scope_helper_sha256') == sha(SELF.read_bytes()),
+            'SCOPE_CONTINUATION_CONTRACT', 'A continuation is never a fresh evaluation unit')
+    origin = _path(view['origin_scope'])
+    require(origin.name == 'scope.json' and sha(origin.read_bytes()) == view['origin_scope_sha256'],
+            'SCOPE_CONTINUATION_ORIGIN', str(origin))
+    spec = read_json(origin)
+    _validate_paths(spec, origin)
+    creator = _path(view['origin_creator'])
+    require(creator.is_file() and sha(creator.read_bytes()) == spec['scope_helper_sha256'] == view['origin_creator_sha256'],
+            'SCOPE_CONTINUATION_CREATOR', 'Keep the exact historical creator source; do not execute it')
+    closed = origin.parent / 'closed.json'
+    require(sha(closed.read_bytes()) == view['origin_closed_sha256'], 'SCOPE_CONTINUATION_CLOSE_DRIFT', str(closed))
+    prior = read_json(closed)
+    require(prior.get('status') == 'CLOSED' and prior.get('unit_id') == spec['unit_id']
+            and prior.get('all_execution_roots_exited') is True and prior.get('stores_preserved') is True,
+            'SCOPE_CONTINUATION_NOT_CLOSED', 'Only a normally closed unit may continue under a new lease')
+    require(view['unit_id'] == spec['unit_id'] and view['case_id'] == spec['case_id']
+            and view['repetition'] == spec['repetition'] and view['paths'] == spec['paths']
+            and view['account_fingerprint'] == spec['account_fingerprint'],
+            'SCOPE_CONTINUATION_UNIT', 'Never change the unit key, paths or account')
+    return spec
+
+
+def create_continuation(folder, *, scope, creator):
+    """Reference a closed synthetic unit in place, without modifying old evidence."""
+    folder, origin, creator = _path(folder), _path(scope), _path(creator)
+    require(not folder.exists() and not folder.is_relative_to(origin.parent),
+            'SCOPE_CONTINUATION_FRESH_CONTROL', 'Use a new separate diagnostic control directory')
+    original = read_json(origin)
+    view = {'contract': CONTINUATION, 'created_at': timestamp(), 'diagnostic_only': True,
+            'within_unit_reset': False, 'imported_history': False,
+            'origin_scope': str(origin), 'origin_scope_sha256': sha(origin.read_bytes()),
+            'origin_creator': str(creator), 'origin_creator_sha256': sha(creator.read_bytes()),
+            'origin_closed_sha256': sha((origin.parent / 'closed.json').read_bytes()),
+            'scope_helper_sha256': sha(SELF.read_bytes()),
+            **{key: original[key] for key in ('unit_id', 'case_id', 'repetition', 'paths', 'account_fingerprint')}}
+    _continuation_base(view)
+    folder.mkdir(parents=True, mode=0o700)
+    _private(folder / 'scope.json', (json.dumps(view, ensure_ascii=False, indent=2)+'\n').encode())
+    return {'scope': str(folder / 'scope.json'), 'unit_id': view['unit_id'], 'diagnostic_only': True}
+
+
+def load(path, frozen=None):
+    path = _path(path)
+    require(path.name == 'scope.json', 'SCOPE_SPEC_PATH', str(path))
+    raw = read_json(path)
+    if raw.get('contract') == CONTINUATION:
+        spec = {**_continuation_base(raw), 'continuation': {'view': str(path), 'origin_scope': raw['origin_scope'],
+                'origin_scope_sha256': raw['origin_scope_sha256'], 'diagnostic_only': True}}
+    else:
+        spec = raw
+        require(spec['scope_helper_sha256'] == sha(SELF.read_bytes()), 'SCOPE_SPEC_DRIFT', str(path))
+        _validate_paths(spec, path)
     if frozen is not None:
         require(frozen == freeze(path, spec=spec), 'SCOPE_FROZEN_DRIFT', str(path))
     return spec
@@ -167,7 +222,8 @@ def freeze(path, *, spec=None):
     return {'contract': CONTRACT, 'scope': str(path), 'scope_sha256': sha(path.read_bytes()),
             'unit_id': spec['unit_id'], 'case_id': spec['case_id'], 'repetition': spec['repetition'],
             'batch_root': spec['batch_root'], 'paths': spec['paths'],
-            'account_fingerprint': spec['account_fingerprint']}
+            'account_fingerprint': spec['account_fingerprint'],
+            **({'continuation': spec['continuation']} if spec.get('continuation') else {})}
 
 
 def profile_rules(spec, fixture_allowed):
@@ -198,6 +254,8 @@ def profile_rules(spec, fixture_allowed):
 
 def bind_batch(profile, root, scope, scenarios, repeats):
     spec = load(scope)
+    require(not spec.get('continuation'), 'SCOPE_CONTINUATION_NOT_FRESH_BATCH',
+            'Maintenance continuations cannot enter a paired cold-start evaluation batch')
     require(str(Path(root).absolute()) == spec['batch_root'] and scenarios == [spec['case_id']] and repeats == 1,
             'SCOPE_BATCH_BINDING', 'One case per unit; use a new unit for each case/repetition')
     profile['astudio_scope'] = freeze(scope)
@@ -324,7 +382,7 @@ def close(scope, boundary):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['create', 'verify-ordinary', 'attest', 'close'])
+    parser.add_argument('action', choices=['create', 'continue-maintenance', 'verify-ordinary', 'attest', 'close'])
     parser.add_argument('--scope', type=Path, required=True)
     parser.add_argument('--case-id')
     parser.add_argument('--repetition', type=int)
@@ -333,10 +391,14 @@ def main():
     parser.add_argument('--boundary-lease', type=Path)
     parser.add_argument('--generate-memories', action='store_true', help='diagnostic only; nested native sandbox is not admitted')
     parser.add_argument('--frozen-json')
+    parser.add_argument('--origin-scope', type=Path)
+    parser.add_argument('--origin-creator', type=Path)
     args = parser.parse_args()
     if args.action == 'create':
         result = create(args.scope.parent, case_id=args.case_id, repetition=args.repetition,
                         batch_root=args.batch_root, generate_memories=args.generate_memories)
+    elif args.action == 'continue-maintenance':
+        result = create_continuation(args.scope.parent, scope=args.origin_scope, creator=args.origin_creator)
     elif args.action == 'verify-ordinary':
         result = verify_ordinary(args.scope)
     elif args.action == 'close':

@@ -2,9 +2,16 @@
 import {readFile,readdir,realpath,mkdir} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
+import {createHash} from 'node:crypto';
 import {queryNativeSessions} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs';
 import {isBlockingActiveSession} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs';
-const spec=JSON.parse(await readFile(process.argv[2],'utf8'));
+let spec=JSON.parse(await readFile(process.argv[2],'utf8'));
+if(spec.contract==='astudio-memory-unit-continuation/v1'){
+  const bytes=await readFile(spec.origin_scope),base=JSON.parse(bytes);
+  if(spec.diagnostic_only!==true||createHash('sha256').update(bytes).digest('hex')!==spec.origin_scope_sha256
+    ||base.unit_id!==spec.unit_id||JSON.stringify(base.paths)!==JSON.stringify(spec.paths))throw Error('UNIT_IDLE_CONTINUATION_DRIFT');
+  spec=base;
+}
 if(spec.contract!=='astudio-case-memory-unit/v1')throw Error('UNIT_IDLE_SCOPE');
 const privateTmp=dirname(process.argv[2])+'/control/idle-tmp';
 await mkdir(privateTmp,{recursive:true,mode:0o700});

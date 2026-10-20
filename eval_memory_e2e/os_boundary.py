@@ -150,7 +150,7 @@ def fixture_probe(folder, child=False):
             'pass': all(x['pass'] for x in results) and all(x['pass'] for x in descendants)}
 
 
-def selftest(folder, scope=None, native_build=None, compiled_kernel=None):
+def selftest(folder, scope=None, native_build=None, compiled_kernel=None, sdk_root=None):
     require(sys.platform == 'darwin' and platform.machine() == 'arm64', 'BOUNDARY_PLATFORM', 'This admission is macOS arm64 only')
     require(native_build is None or scope is not None, 'BOUNDARY_NATIVE_SCOPE_REQUIRED', 'Native composition requires a fresh case/repetition scope')
     folder = _folder(folder, True)
@@ -163,7 +163,9 @@ def selftest(folder, scope=None, native_build=None, compiled_kernel=None):
     roots = non_target_roots() + [protected]
     control_folder = folder / 'control'; control_folder.mkdir()
     binary = control_folder / 'seatbelt.node'
-    sdk = Path('/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk').resolve()
+    sdk = Path(sdk_root or '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk').resolve()
+    require(sdk.parent == Path('/Library/Developer/CommandLineTools/SDKs') and (sdk / 'SDKSettings.json').is_file(),
+            'BOUNDARY_SDK_PATH', 'Use an installed Command Line Tools SDK')
     build = ['xcrun','clang','-bundle','-undefined','dynamic_lookup','-fvisibility=hidden',
              '-arch','arm64','-Wall','-Wextra','-isysroot',str(sdk),str(BRIDGE),'-o',str(binary)]
     compiled = subprocess.run(build,capture_output=True,timeout=60)
@@ -439,10 +441,11 @@ def main():
     parser.add_argument('--child', action='store_true')
     parser.add_argument('--expected-json')
     parser.add_argument('--astudio-scope', type=Path)
+    parser.add_argument('--sdk-root', type=Path)
     parser.add_argument('--native-executor-build', type=Path)
     parser.add_argument('--compiled-kernel-build', type=Path)
     args = parser.parse_args()
-    if args.action == 'selftest': result = selftest(args.lease_dir, args.astudio_scope, args.native_executor_build, args.compiled_kernel_build)
+    if args.action == 'selftest': result = selftest(args.lease_dir, args.astudio_scope, args.native_executor_build, args.compiled_kernel_build, args.sdk_root)
     elif args.action == 'launch': result = launch(args.lease_dir)
     elif args.action == 'attest': result = attest(args.lease_dir / 'lease.json', json.loads(args.expected_json) if args.expected_json else None)
     else: result = fixture_probe(args.lease_dir, args.child)

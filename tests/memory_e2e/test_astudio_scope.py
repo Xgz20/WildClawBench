@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from eval_memory_e2e.astudio_scope import minimal_config, create, load, freeze, bind_batch, profile_rules
+from eval_memory_e2e.astudio_scope import minimal_config, create, load, freeze, bind_batch, profile_rules, create_continuation, SELF
 from eval_memory_e2e.configuration import ASTUDIO_MEMORY_FIELDS
 from eval_memory_e2e.io import MemoryEvaluationError
 
@@ -102,6 +102,47 @@ use_memories = false
         self.assertIn('(subpath "/System/Volumes/Data/Users/synthetic/debug")', source)
         self.assertIn('(deny file-write* (require-all', source)
         self.assertIn('(require-not (subpath "/Users/synthetic/debug/unit/runtime"))', source)
+
+    def test_closed_unit_continues_in_place_but_cannot_become_a_cold_batch(self):
+        with tempfile.TemporaryDirectory() as raw:
+            base = Path(raw).resolve(); machine = self._created(base)
+            with patch('eval_memory_e2e.astudio_scope.machine_paths', return_value=machine), \
+                 patch('eval_memory_e2e.astudio_scope.installation_witness', return_value={'synthetic': True}):
+                unit = create(base/'debug/unit',case_id='CASE-A',repetition=1,batch_root=base/'debug/batch')
+                old = Path(unit['scope']); original = old.read_bytes()
+                memory = Path(unit['paths']['acode'])/'fact.md'; memory.write_text('SYNTHETIC-OLD-FACT')
+                creator = base/'debug/creator.py'; creator.write_bytes(SELF.read_bytes())
+                (old.parent/'closed.json').write_text(json.dumps({'status':'CLOSED','unit_id':unit['unit_id'],
+                    'all_execution_roots_exited':True,'stores_preserved':True}))
+                continuation = create_continuation(base/'debug/maintenance',scope=old,creator=creator)
+                current = load(continuation['scope']); frozen = freeze(continuation['scope'])
+                self.assertEqual(current['paths'],unit['paths'])
+                self.assertEqual(current['unit_id'],unit['unit_id'])
+                self.assertTrue(frozen['continuation']['diagnostic_only'])
+                self.assertEqual(old.read_bytes(),original)
+                self.assertEqual(memory.read_text(),'SYNTHETIC-OLD-FACT')
+                with self.assertRaises(MemoryEvaluationError):
+                    bind_batch({},base/'debug/batch',continuation['scope'],['CASE-A'],1)
+                data=json.loads(old.read_text()); data['repetition']=2; old.write_text(json.dumps(data))
+                with self.assertRaises(MemoryEvaluationError):
+                    load(continuation['scope'],frozen)
+
+    def test_continuation_requires_exact_creator_and_normal_closed_state(self):
+        with tempfile.TemporaryDirectory() as raw:
+            base=Path(raw).resolve();machine=self._created(base)
+            with patch('eval_memory_e2e.astudio_scope.machine_paths', return_value=machine), \
+                 patch('eval_memory_e2e.astudio_scope.installation_witness', return_value={'synthetic': True}):
+                unit=create(base/'debug/unit',case_id='CASE-A',repetition=1,batch_root=base/'debug/batch')
+                old=Path(unit['scope']);creator=base/'debug/creator.py';creator.write_bytes(b'wrong source')
+                closed=old.parent/'closed.json';closed.write_text(json.dumps({'status':'CLOSED','unit_id':unit['unit_id'],
+                    'all_execution_roots_exited':True,'stores_preserved':True}))
+                with self.assertRaises(MemoryEvaluationError):
+                    create_continuation(base/'debug/rejected-source',scope=old,creator=creator)
+                creator.write_bytes(SELF.read_bytes())
+                closed.write_text(json.dumps({'status':'CLOSED','unit_id':unit['unit_id'],
+                    'all_execution_roots_exited':False,'stores_preserved':True}))
+                with self.assertRaises(MemoryEvaluationError):
+                    create_continuation(base/'debug/rejected-live',scope=old,creator=creator)
 
 
 if __name__ == '__main__':
