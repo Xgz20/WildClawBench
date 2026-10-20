@@ -33,6 +33,35 @@ def default_profiles():
             for name in HARNESS_PORTS}
 
 
+def verify_profile_kernel(harness, profile):
+    """Bind either the installed kernel or the explicit, frozen v3 diagnosis."""
+    kernel = profile.get('kernel')
+    boundary = profile.get('non_target_memory_boundary', {})
+    protocol = profile.get('memory_protocol', {})
+    adapter = 'macos-seatbelt-astudio-compiled-kernel/v3'
+    compiled = ('installed_kernel_reference' in profile or protocol.get('compiled_kernel_diagnostic') is True
+                or boundary.get('admitted_adapter') == adapter)
+    if kernel is None:
+        require(not compiled, 'KERNEL_DRIFT', 'A compiled diagnosis must freeze the actual application kernel')
+        return
+    require(harness == 'AstronStudio', 'KERNEL_DRIFT', 'AStudio kernel identity cannot be applied to another Harness')
+    installed = kernel_identity()
+    if not compiled:
+        require(kernel == installed, 'KERNEL_DRIFT', 'Installed kernel changed; create a new local native Profile')
+        return
+    require(boundary.get('admitted_adapter') == adapter and boundary.get('status') == 'os_enforced'
+            and boundary.get('required') is True and protocol.get('compiled_kernel_diagnostic') is True
+            and protocol.get('formal_scoring_allowed') is False and profile.get('astudio_scope')
+            and profile.get('installed_kernel_reference') == installed,
+            'KERNEL_DRIFT', 'Compiled kernels require an explicit unscored v3 unit and unchanged installed reference')
+    from .os_boundary import load_lease
+    lease = load_lease(boundary['lease'], boundary)
+    require(lease['contract'] == adapter and lease['kernel'] == installed
+            and lease.get('compiled_kernel', {}).get('identity') == kernel
+            and lease.get('astudio_scope') == profile['astudio_scope'],
+            'KERNEL_DRIFT', 'Actual compiled kernel, unit and frozen OS lease must match exactly')
+
+
 def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=None,
             mode="native", profiles=None, judge=None, dataset_path=None):
     root = Path(root).absolute()
@@ -61,8 +90,7 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
             bind_batch(profile, root, profile['astudio_scope']['scope'], scope, repeats)
         if profile.get('machine') is not None:
             require(profile['machine'] == machine_identity(), 'MACHINE_DRIFT', 'Create a new local native Profile')
-        if profile.get('kernel') is not None:
-            require(harness == 'AstronStudio' and profile['kernel'] == kernel_identity(), 'KERNEL_DRIFT', 'Create a new local native Profile')
+        verify_profile_kernel(harness, profile)
         if profile.get('node_runtime') is not None:
             require(profile['node_runtime'] == node_identity(), 'NODE_DRIFT', 'Create a new local native Profile')
         identifier(profile["profile_id"])
@@ -196,8 +224,7 @@ def load_batch(root, *, harness=None, episode_id=None):
                     'SCOPE_BATCH_BINDING', 'Frozen unit does not belong to this batch')
         if profile.get('machine') is not None:
             require(profile['machine'] == machine_identity(), 'MACHINE_DRIFT', 'Frozen Profile belongs to another host or runtime')
-        if profile.get('kernel') is not None:
-            require(name == 'AstronStudio' and profile['kernel'] == kernel_identity(), 'KERNEL_DRIFT', 'Installed kernel changed')
+        verify_profile_kernel(name, profile)
         if profile.get('node_runtime') is not None:
             require(profile['node_runtime'] == node_identity(), 'NODE_DRIFT', 'Frozen Node runtime changed')
     for relative, checksum in implementation.items():
