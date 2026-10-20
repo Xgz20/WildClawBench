@@ -74,3 +74,43 @@ Center及CLI均正常退出，保护文件内容不变。旧失败与可读反�
 spec/result/stdout/stderr。06额外保留探针自身源码、原生profile合成审计和缓存证明。
 
 AStudio 完整 Rust 套件仍待用户确认；此处没有把合成机制成功、配置存在或UI空闲扩大为端到端准入。
+
+## 同日追加：OS 连接身份、策略缓存及安装版目录解析
+
+新增 `workbuddy-native-policy.mjs` 将原生策略合成与传输分开校验。`unix-peer.c` 使用系统
+`LOCAL_PEERPID` / `getpeereid` 获取 Unix socket 的真实 PID/UID/GID，不以 JSON 中声明的 PID 作为身份。
+合成探针 v2 只接受本次直接启动的原生 sandbox-cli，额外绑定父 PID、进程启动信息和完整命令。
+所有原生 SBPL 片段与原有 grants 保留，仅追加拒绝；每条请求与响应 ID 绑定，拒绝重复或未知响应。
+空的 `upToDate` 策略必须已有同连接、同会话、同 macOS 平台和同 serverRevision 的合成记录，拒绝版本回退。
+
+`native-center-07` 的实测：
+
+- 正控 cat 退出0；两个合成保护目录的直接读取、符号链接读取和写入共4项均实际 EPERM。
+- 同一系统 UID、携带正确合成 UID 的控制端连接，因 OS PID 不匹配被拒绝，未转发到原生服务。
+- 真实原生执行器连接通过身份核验；原生片段保留，4次缓存校验通过。
+- CLI/Center 均退出0，3个合成文件内容未变，拒绝写入的目标不存在。
+- 首次编译默认 SDK27 因系统 linker 无法解析新架构失败；原失败 build.json 保留。
+  使用本机已安装 SDK26.5 编译 Node-API 模块成功，没有修改系统 SDK 或客户端签名。
+
+目录证据进一步区分两套配置：`ACC_PRODUCT_CONFIG_*` 是主进程产品配置入口；影响
+`resolveCliHomeDir()` 优先级的是 CLI `customization.json` 引导的快照，不能把两者视为同一入口。
+本次完整检查安装 ASAR 目录树与实际 CLI 根目录，未发现 `customization.json`。
+
+`home-runtime-03` 将安装版 Electron 以 RUN_AS_NODE 执行安装版 CLI 的 `--version`，
+附加 OS 拒绝日常目录和 network-outbound，绑定本机 loopback Inspector 的真实 PID。
+在原生入口暂停后调用其原有 customization bootstrap 和 `PathUtils.getHomeDir()`，实际得到
+该试验的新 app-home；原生快照为 null，OS home 仍为真实用户目录，进程退出0。
+这是**安装版函数在合成进程中的运行证据**，调用由诊断器触发，尚不证明真实桌面后端的最终目录。
+CLI 显示2.161.0，不能替代 GUI 应用5.8.3或沙箱组件5.8.6的身份。
+
+`home-runtime-01/02` 均保留为失败：版本命令未自然调用目录解析器，未取得断点证据；
+01另遇退出后的 Inspector context 不存在。两次均退出0、零模型请求，不重解释为隔离成功。
+
+新增5项离线安全测试覆盖原生片段保留、跨连接/跨会话缓存拒绝、版本回退、伪造身份、重复 ID、
+非法路径以及不修改原生错误响应。完整 memory Node 测试 **94/94**、Python **127/127** 通过。
+首次 Node 测试未显式绑定 Python，系统3.9被门禁拒绝；指定本机已核验3.12.14后完整通过，未放宽版本门禁。
+
+收尾证据 `native-policy-and-home-close-audit.json` 确认上述合成进程均已退出，普通 WorkBuddy 主进程
+仍为原 PID；ASAR/CLI 摘要与初次清点一致。未重启普通客户端，未导入认证、修改日常配置或清空记忆。
+**真实应用准入仍为 false**：仍需接入桌面后端、可信原生服务的启动/生命周期和执行请求边界，
+再验收同账号、GLM5.2、完整后台状态与新批次 UI 七步链和“用例×重复”隔离；正式20题继续暂缓。

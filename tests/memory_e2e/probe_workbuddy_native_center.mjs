@@ -6,20 +6,22 @@ import net from 'node:net';
 import vm from 'node:vm';
 import crypto from 'node:crypto';
 import {StringDecoder} from 'node:string_decoder';
-import {spawn} from 'node:child_process';
+import {spawn,execFileSync} from 'node:child_process';
+import {createRequire} from 'node:module';
+import {startNativeProfileProxy} from '../../eval_memory_e2e/native/workbuddy-native-policy.mjs';
 import * as childProcess from 'node:child_process';
 import * as asyncHooks from 'node:async_hooks';
 import {fileURLToPath} from 'node:url';
 
 const checksum=data=>crypto.createHash('sha256').update(data).digest('hex');
 const specPath=path.resolve(process.argv[2]),spec=JSON.parse(fs.readFileSync(specPath));
-if(spec.contract!=='workbuddy-native-center-synthetic-probe/v1'||spec.synthetic_only!==true
+if(spec.contract!=='workbuddy-native-center-synthetic-probe/v2'||spec.synthetic_only!==true
   ||spec.application_integration_allowed!==false||!spec.uid.startsWith('SYNTHETIC-')
   ||!/^\/tmp\/wcbm-wb-[a-f0-9]+\.sock$/.test(spec.socket))throw Error('SYNTHETIC_SPEC_REQUIRED');
 const root=path.dirname(specPath);
 if(!root.includes('/debug-workspace/e2e-evaluate/memory-e2e/')||fs.realpathSync(root)!==root
   ||spec.app_home!==root+'/app-home'||spec.tmp!==root+'/tmp')throw Error('SYNTHETIC_ROOT_REQUIRED');
-for(const item of [spec.binary,spec.profile,...Object.values(spec.modules)]){
+for(const item of [spec.binary,spec.profile,...Object.values(spec.modules),...(spec.profile_proxy?[spec.peer_addon,spec.policy_module]:[])]){
   if(fs.realpathSync(item.path)!==item.path||checksum(fs.readFileSync(item.path))!==item.sha256)
     throw Error('FROZEN_SOURCE_DRIFT');
 }
@@ -53,61 +55,40 @@ const result={contract:spec.contract,at:new Date().toISOString(),pid:child.pid,s
   requests:[],application_admitted:false};
 fs.writeFileSync(root+'/running.json',JSON.stringify(result,null,2)+'\n',{flag:'wx',mode:0o600});
 let exit=null;child.on('exit',(code,signal)=>{exit={code,signal}});
-let proxy=null;const proxySockets=new Set();
+let proxy=null,expectedCli=null;
 if(spec.profile_proxy){
   const socketPath=spec.profile_proxy.socket;
-  if(!/^\/tmp\/wcbm-wb-proxy-[a-f0-9]+\.sock$/.test(socketPath)||fs.existsSync(socketPath))
-    throw Error('FRESH_SYNTHETIC_PROXY_SOCKET_REQUIRED');
   const denied=[root+'/synthetic-non-target',root+'/native-private',...spec.profile_proxy.real_non_target_literals];
-  if(denied.some(p=>typeof p!=='string'||!p.startsWith('/Users/')||/[\n\0]/.test(p)))throw Error('PROXY_DENY_PATH');
-  result.profile_proxy={socket:socketPath,requests:[],audits:[],application_admitted:false};
-  proxy=net.createServer(front=>{
-    const upstream=net.createConnection(spec.socket);proxySockets.add(front);proxySockets.add(upstream);
-    let input='',output='',composedRevision=null;const pending=new Map();
-    front.on('data',bytes=>{
-      input+=bytes.toString('utf8');let at;
-      while((at=input.indexOf('\n'))>=0){const line=input.slice(0,at);input=input.slice(at+1);if(!line.trim())continue;
-        try{const message=JSON.parse(line);if(message.uid!==spec.uid)throw Error('SYNTHETIC_UID_ONLY');
-          pending.set(message.messageId,message.command);result.profile_proxy.requests.push({command:message.command,sessionId:message.sessionId??null});upstream.write(line+'\n');
-        }catch(error){result.profile_proxy.error=String(error.message);front.destroy();upstream.destroy()}
-      }
-    });
-    upstream.on('data',bytes=>{
-      output+=bytes.toString('utf8');let at;
-      while((at=output.indexOf('\n'))>=0){let line=output.slice(0,at);output=output.slice(at+1);if(!line.trim())continue;
-        try{const message=JSON.parse(line),command=pending.get(message.messageId);pending.delete(message.messageId);
-          if(command===protocol.SANDBOX_RULES_COMMANDS.FETCH_PROFILE&&message.success===true){
-            const original=message.data.profile;
-            if(message.data.upToDate===true&&!original){
-              if(composedRevision===null||message.data.serverRevision!==composedRevision)
-                throw Error('UNBOUND_CACHED_NATIVE_PROFILE');
-              result.profile_proxy.cached_profiles_verified=(result.profile_proxy.cached_profiles_verified??0)+1;
-              front.write(line+'\n');continue;
-            }
-            const rules=JSON.parse(original);
-            if(!Array.isArray(rules)||rules.some(x=>typeof x!=='string'))throw Error('NATIVE_PROFILE_SHAPE');
-            const escaped=rules.some(x=>x.includes('\\"'));
-            const extra=denied.map(p=>'(deny file-read* file-write* (subpath '+JSON.stringify(p)+'))')
-              .map(x=>escaped?x.replaceAll('"','\\"'):x);
-            const end=original.lastIndexOf(']');if(end<0)throw Error('NATIVE_PROFILE_END');
-            message.data.profile=original.slice(0,end)+(rules.length?',':'')+extra.map(x=>JSON.stringify(x)).join(',')+original.slice(end);
-            message.data.execParams.deniedReadPaths=[...new Set([...(message.data.execParams.deniedReadPaths??[]),...denied.map(p=>p+'/**')])];
-            result.profile_proxy.audits.push({original_profile:original,combined_profile:message.data.profile,
-              original_native_fragments_preserved:JSON.stringify(JSON.parse(message.data.profile).slice(0,rules.length))===JSON.stringify(rules),
-              mandatory_denies:denied,controller_grants_appended:false});
-            composedRevision=message.data.serverRevision;
-            line=JSON.stringify(message);
-          }
-          front.write(line+'\n');
-        }catch(error){result.profile_proxy.error=String(error.message);front.destroy();upstream.destroy()}
-      }
-    });
-    for(const s of [front,upstream]){
-      s.on('error',error=>{result.profile_proxy.last_transport_error=String(error.message);front.destroy();upstream.destroy()});
-      s.on('close',()=>{proxySockets.delete(s);front.destroy();upstream.destroy()});
-    }
+  const kernelPeer=createRequire(import.meta.url)(spec.peer_addon.path).peer;
+  result.profile_proxy={socket:socketPath,requests:[],audits:[],rejections:[],application_admitted:false};
+  proxy=await startNativeProfileProxy({socketPath,upstreamPath:spec.socket,uid:spec.uid,deniedRoots:denied,
+    assertFrozen(){
+      for(const item of [spec.profile,spec.peer_addon,spec.policy_module])
+        if(checksum(fs.readFileSync(item.path))!==item.sha256)throw Error('POLICY_SOURCE_DRIFT');
+    },
+    authorize(socket){
+      const peer=kernelPeer(socket._handle.fd);
+      if(!expectedCli||peer.pid!==expectedCli.pid||peer.uid!==process.getuid())throw Error('UNAUTHORIZED_OS_PEER');
+      const row=execFileSync('/bin/ps',['-p',String(peer.pid),'-o','ppid=,lstart=,command='],{encoding:'utf8'}).trim();
+      if(!row.startsWith(String(process.pid)+' ')||!row.includes(spec.native_executor.path+' --config '))
+        throw Error('NATIVE_EXECUTOR_IDENTITY');
+      if(expectedCli.row&&expectedCli.row!==row)throw Error('NATIVE_EXECUTOR_IDENTITY_DRIFT');
+      expectedCli.row=row;
+      return {...peer,process_identity:row};
+    },
+    audit(event){
+      if(event.event==='request')result.profile_proxy.requests.push(event);
+      else if(event.event==='connection_rejected')result.profile_proxy.rejections.push(event);
+      else result.profile_proxy.audits.push(event);
+      if(event.event==='cached_profile_verified')result.profile_proxy.cached_profiles_verified=(result.profile_proxy.cached_profiles_verified??0)+1;
+    }});
+  // A controller process with the correct synthetic UID still has the wrong OS PID.
+  result.profile_proxy.unauthorized_peer={pid:process.pid,attempted:true};
+  await new Promise((ok,no)=>{const socket=net.createConnection(socketPath),timer=setTimeout(()=>{socket.destroy();no(Error('UNAUTHORIZED_PEER_NOT_CLOSED'))},2000);
+    socket.on('connect',()=>socket.write(JSON.stringify({messageId:'spoofed',command:'sandbox.rules.get_rules',uid:spec.uid,data:{_client:{pid:process.pid}}})+'\n'));
+    socket.on('data',()=>{clearTimeout(timer);socket.destroy();no(Error('UNAUTHORIZED_PEER_RECEIVED_DATA'))});
+    socket.on('error',()=>{});socket.on('close',()=>{clearTimeout(timer);ok()});
   });
-  await new Promise((ok,no)=>{proxy.once('error',no);proxy.listen(socketPath,ok)});fs.chmodSync(socketPath,0o600);
 }
 const client=sdk.createSandboxCenterClient({clientRole:'memory-e2e-synthetic-probe',startMode:'connect-only',
   resolveRuntimeContext:()=>({appHome:spec.app_home,uid:spec.uid,socketPath:spec.socket,executablePath:spec.binary.path})});
@@ -148,6 +129,7 @@ try{
         LOGNAME:process.env.LOGNAME,LANG:'en_US.UTF-8',TMPDIR:spec.tmp+'/',
         SANDBOX_CENTER_IPC_ADDRESS:spec.profile_proxy?.socket??spec.socket,SANDBOX_CENTER_UID:spec.uid,
         WORKBUDDY_CONFIG_DIR:spec.app_home,CODEBUDDY_CONFIG_DIR:spec.app_home},stdio:['ignore',cliOut,cliErr]});
+    expectedCli={pid:cli.pid};
     fs.closeSync(cliOut);fs.closeSync(cliErr);let cliExit=null;cli.on('exit',(code,signal)=>{cliExit={code,signal}});
     const cliSdk=load(84283),commands=load(68331).SANDBOX_COMMANDS;
     const cliClient=cliSdk.createSandboxCliClient();const notifications=[];
@@ -188,7 +170,7 @@ finally{
   await request(protocol.SANDBOX_SESSION_COMMANDS.CLOSE_SESSION,{sessionId:session});
   await request(protocol.SANDBOX_CENTER_LIFECYCLE_COMMANDS.SHUTDOWN);
   client.close();
-  for(const s of proxySockets)s.destroy();if(proxy)await new Promise(ok=>proxy.close(ok));
+  if(proxy)await proxy.close();
   for(let i=0;i<100&&!exit;i++)await new Promise(ok=>setTimeout(ok,100));
   result.exit=exit;result.native_shutdown_verified=exit?.code===0;
   if(result.native_executor){
@@ -200,8 +182,10 @@ finally{
       result.synthetic_data_worker_boundary_pass=samples.length===5&&samples.every(t=>t.name==='control'
         ?t.exit_codes.length===1&&t.exit_codes[0]===0&&t.output.includes('SYNTHETIC-ALLOW')
         :t.exit_codes.length===1&&t.exit_codes[0]!==0&&t.output.includes('Operation not permitted'))
-        &&!result.profile_proxy.error&&result.profile_proxy.audits.length>0
-        &&result.profile_proxy.audits.every(a=>a.original_native_fragments_preserved&&!a.controller_grants_appended)
+        &&result.profile_proxy.rejections.length===1&&result.profile_proxy.rejections[0].reason==='UNAUTHORIZED_OS_PEER'
+        &&result.profile_proxy.audits.some(a=>a.event==='connection_authorized')
+        &&result.profile_proxy.audits.filter(a=>a.event==='profile_composed').length>0
+        &&result.profile_proxy.audits.filter(a=>a.event==='profile_composed').every(a=>a.original_native_fragments_preserved&&!a.controller_grants_appended)
         &&result.profile_proxy.cached_profiles_verified>0
         &&!fs.existsSync(root+'/synthetic-non-target/denied-write');
       if(!result.synthetic_data_worker_boundary_pass)process.exitCode=2;
