@@ -13,10 +13,13 @@ from eval_memory_e2e.admission import exact_response
 parser = argparse.ArgumentParser()
 parser.add_argument('--root', type=Path, required=True)
 parser.add_argument('--output', type=Path, required=True)
+parser.add_argument('--generation-enabled', action='store_true',
+                    help='Verify the same explicit-note isolation chain with native generation left enabled; not an automatic-fact-formation claim')
 args = parser.parse_args()
-units = [('explicit-A-r1', 'MEM-unit-A', 1, 'a'), ('explicit-B-r1', 'MEM-unit-B', 1, 'b'),
-         ('explicit-A-r2', 'MEM-unit-A', 2, 'a')]
-results, previous, queries, configs, native_ids, intents = [], [], [], [], [], []
+prefix = 'generated' if args.generation_enabled else 'explicit'
+units = [(prefix + '-A-r1', 'MEM-unit-A', 1, 'a'), (prefix + '-B-r1', 'MEM-unit-B', 1, 'b'),
+         (prefix + '-A-r2', 'MEM-unit-A', 2, 'a')]
+results, previous, queries, configs, native_ids, intents, kernels = [], [], [], [], [], [], []
 for name, case_id, repetition, own_key in units:
     batch = args.root / 'batches' / name
     manifest = load_batch(batch)
@@ -24,6 +27,7 @@ for name, case_id, repetition, own_key in units:
             and manifest['repeats'] == 1 and manifest['first_repetition'] == repetition,
             'VERIFY_SCOPE', name)
     profile = manifest['profiles']['AstronStudio']
+    kernels.append(profile.get('kernel'))
     require(profile['memory_protocol']['formal_scoring_allowed'] is False, 'VERIFY_NO_FORMAL', name)
     scope = profile['astudio_scope']
     require(scope['case_id'] == case_id and scope['repetition'] == repetition, 'VERIFY_UNIT_BINDING', name)
@@ -124,20 +128,25 @@ require(len({json.dumps(c['memory_settings'], sort_keys=True) for c in configs})
 for config in configs:
     require(config['app_version'] == '3.5.0' and config['model_display'] == 'GLM-5.2'
             and config['reasoning'] == 'High' and config['permissions'] == '完全访问', 'VERIFY_CONFIGURATION', 'Configuration differs')
-    require(all(x['enabled'] and x['use_memories'] and x['dedicated_tools'] and x['generate_memories'] is False
+    require(all(x['enabled'] and x['use_memories'] and x['dedicated_tools'] and x['generate_memories'] is args.generation_enabled
                 for x in config['memory_settings'].values()), 'VERIFY_MEMORY_CONFIGURATION', 'Memory condition differs')
+require(all(kernels) and len({json.dumps(x, sort_keys=True) for x in kernels}) == 1,
+        'VERIFY_SAME_KERNEL', 'All case/repetition units must use the same frozen kernel')
 cross = [read_json(args.root / name) for name in ('B1-deny-A1.json', 'A2-deny-A1-B1.json')]
 require(all(x['status'] == 'PASS' and x['filesystem_probe']['pass'] for x in cross), 'VERIFY_CROSS_UNIT_FS', 'Cross-unit denial failed')
 for proof in cross:
     require(all(sha(Path(row['path']).read_bytes()) == row['sha256'] for row in proof['old_synthetic_notes']),
             'VERIFY_OLD_NOTES_PRESERVED', 'First-round facts were changed or removed')
-record = {'status': 'PASS_EXPLICIT_MEMORY_UNIT_ISOLATION', 'at': timestamp(), 'completed_prompts': 9,
+record = {'status': 'PASS_MEMORY_UNIT_ISOLATION_GENERATION_ENABLED' if args.generation_enabled else 'PASS_EXPLICIT_MEMORY_UNIT_ISOLATION',
+          'at': timestamp(), 'completed_prompts': 9,
           'distinct_native_sessions': 9, 'identical_query_sha256': queries[0], 'within_unit_recall_passed': 3,
           'cross_case_passed': True, 'cross_repetition_passed': True, 'units': results,
           'actual_cross_unit_fs_denials': sum(len(x['filesystem_probe']['operations']) for x in cross),
           'actual_backend_kernel_denial_queries': sum(len(x['actual_backend_kernel_policy']) * 4 for x in cross),
           'old_notes_preserved': True, 'ordinary_account_memory_reset': False, 'formal20_started': False,
           'automatic_consolidation_admitted': False, 'scoring': 'UNSCORED',
+          'generation_enabled': args.generation_enabled, 'learning_mode': 'explicit_native_notes',
+          'automatic_fact_formation_verified': False, 'frozen_kernel': kernels[0],
           'source_sha256': sha(Path(__file__).read_bytes())}
 publish(args.output, record)
 print(json.dumps({k: v for k, v in record.items() if k != 'units'}, ensure_ascii=False))
