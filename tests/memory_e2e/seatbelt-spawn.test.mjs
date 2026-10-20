@@ -40,3 +40,30 @@ test('drift and a wrong backend execution mode stop before any spawn',()=>{
   f.mutate();assert.throws(()=>f.cp.spawn(app,[entry],{env:{ELECTRON_RUN_AS_NODE:'1'}}),/SPAWN_REJECTED/);
   assert.equal(f.calls.length,0);
 });
+test('a scoped backend redirects only its native data homes and preserves login/IPC environment',()=>{
+  const calls=[],exports={},paths={runtime:'/Users/synthetic/debug/unit/runtime',desktop:'/Users/synthetic/debug/unit/runtime/desktop',
+    acode:'/Users/synthetic/debug/unit/runtime/source-home',temp:'/Users/synthetic/debug/unit/runtime/tmp'};
+  const saved={unit_id:'unit1',paths},profile=Buffer.from('(version 1)'),scopeBytes=Buffer.from(JSON.stringify(saved));
+  const cp={spawn(...args){calls.push(args);return {pid:123}},execFileSync(){return app+' '+entry}};
+  vm.runInNewContext(source,{exports,process:{execPath:app,stderr:{write(){}}},Date,
+    require:n=>({'node:fs':{realpathSync:p=>p,readFileSync:(p,encoding)=>{
+      const value=p.endsWith('scope.json')?scopeBytes:profile;return encoding?value.toString(encoding):value;
+    }},'node:crypto':{createHash},'node:child_process':cp,'node:module':{syncBuiltinESMExports(){}}})[n]});
+  // Frozen JSON sorts keys; ordering must not make an equivalent scope fail.
+  const astudio_scope={contract:'astudio-case-memory-unit/v1',scope:'/Users/synthetic/debug/unit/scope.json',unit_id:'unit1',
+    scope_sha256:createHash('sha256').update(scopeBytes).digest('hex'),paths:Object.fromEntries(Object.entries(paths).reverse())};
+  const spec={contract:'macos-seatbelt-astudio-backend/v1',profile:'/Users/synthetic/profile.sb',
+    profile_sha256:createHash('sha256').update(profile).digest('hex'),astudio_scope};
+  exports.install(spec);
+  const options={env:{ELECTRON_RUN_AS_NODE:'1',ASTUDIO_HOME:paths.desktop,ASTUDIO_ACODE_HOME:'/ordinary',HOME:'/Users/synthetic',existing:'keep'},stdio:['ignore','pipe','pipe','ipc']};
+  cp.spawn(app,[entry],options);
+  assert.equal(calls[0][2].env.ASTUDIO_ACODE_HOME,paths.acode);
+  assert.equal(calls[0][2].env.ACODE_HOME,paths.acode);
+  assert.equal(calls[0][2].env.TMPDIR,paths.temp+'/');
+  assert.equal(calls[0][2].env.HOME,'/Users/synthetic');
+  assert.equal(calls[0][2].env.existing,'keep');
+  assert.equal(calls[0][2].stdio,options.stdio);
+  assert.equal(options.env.ASTUDIO_ACODE_HOME,'/ordinary');
+  assert.throws(()=>cp.spawn(app,[entry],{env:{...options.env,ASTUDIO_HOME:'/foreign'}}),/UNIT_ENVIRONMENT_REJECTED/);
+  assert.equal(calls.length,1);
+});

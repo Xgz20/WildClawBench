@@ -51,9 +51,13 @@ def profile_text(roots, readonly=(), immutable=()):
             + ('(deny file-write*\n' + readonly_rules + ')\n' if readonly or immutable else ''))
 
 
-def lease_profile(folder):
-    return profile_text(non_target_roots() + [folder / 'synthetic/non-target'],
-                        readonly=[SELF.parent, folder / 'control'], immutable=[folder, folder / 'lease.json'])
+def lease_profile(folder, scope=None):
+    result = profile_text(non_target_roots() + [folder / 'synthetic/non-target'],
+                          readonly=[SELF.parent, folder / 'control'], immutable=[folder, folder / 'lease.json'])
+    if scope is not None:
+        from .astudio_scope import load, profile_rules
+        result += profile_rules(load(scope['scope'], scope), folder / 'synthetic/allowed')
+    return result
 
 
 def _folder(value, new=False):
@@ -144,7 +148,7 @@ def fixture_probe(folder, child=False):
             'pass': all(x['pass'] for x in results) and all(x['pass'] for x in descendants)}
 
 
-def selftest(folder):
+def selftest(folder, scope=None):
     require(sys.platform == 'darwin' and platform.machine() == 'arm64', 'BOUNDARY_PLATFORM', 'This admission is macOS arm64 only')
     folder = _folder(folder, True)
     protected, allowed = folder / 'synthetic/non-target', folder / 'synthetic/allowed'
@@ -163,7 +167,10 @@ def selftest(folder):
     publish(folder / 'build.stdout',compiled.stdout); publish(folder / 'build.stderr',compiled.stderr)
     require(compiled.returncode == 0,'BOUNDARY_BRIDGE_BUILD',compiled.stderr.decode()[-1000:])
     publish(folder / 'build.json',{'command':build,'source_sha256':sha(BRIDGE.read_bytes()),'binary_sha256':sha(binary.read_bytes())})
-    source = lease_profile(folder)
+    if scope is not None:
+        from .astudio_scope import freeze
+        scope = freeze(scope)
+    source = lease_profile(folder, scope)
     publish(control_folder / 'profile.sb', source.encode())
     parent_policy = {op: check_policy(os.getpid(), secret, op) for op in OPERATIONS}
     require(all(x == 0 for x in parent_policy.values()), 'BOUNDARY_POSITIVE_CONTROL', 'Controller must be able to access its synthetic fixture')
@@ -177,13 +184,18 @@ def selftest(folder):
             'BOUNDARY_SELFTEST_FAILED', 'Synthetic protected bytes and positive control must survive unchanged')
     # Same native Node bridge and installed Electron RunAsNode runtime as the
     # actual backend; no business RPC, model, real memory or Chrome flags.
-    code = "const fs=require('fs');require(process.argv[1]).apply(fs.readFileSync(process.argv[2],'utf8'));const p=require('child_process').spawnSync(process.argv[3],[process.argv[4],'_fixture-probe','--lease-dir',process.argv[5]],{encoding:'utf8'});process.stdout.write(p.stdout);process.stderr.write(p.stderr);process.exit(p.status??1)"
+    code = "const fs=require('fs');require(process.argv[1]).apply(fs.readFileSync(process.argv[2],'utf8'));fs.realpathSync(process.argv[5]+'/synthetic/allowed/control.txt');const p=require('child_process').spawnSync(process.argv[3],[process.argv[4],'_fixture-probe','--lease-dir',process.argv[5]],{encoding:'utf8'});process.stdout.write(p.stdout);process.stderr.write(p.stderr);process.exit(p.status??1)"
     node_command = [APP,'-e',code,str(binary),str(control_folder / 'profile.sb'),sys.executable,str(SELF),str(folder)]
     node_result = subprocess.run(node_command,env=dict(os.environ,ELECTRON_RUN_AS_NODE='1'),capture_output=True,timeout=60)
     publish(folder / 'node-selftest.stdout',node_result.stdout);publish(folder / 'node-selftest.stderr',node_result.stderr)
     require(node_result.returncode == 0 and json.loads(node_result.stdout)['pass'],
             'BOUNDARY_NODE_SELFTEST_FAILED',node_result.stderr.decode()[-1000:])
     require(sha(secret.read_bytes()) == before,'BOUNDARY_FIXTURE_DRIFT','Synthetic protected bytes changed')
+    nested = subprocess.run(['/usr/bin/sandbox-exec', '-f', str(control_folder / 'profile.sb'),
+                             '/usr/bin/sandbox-exec', '-p', '(version 1)(allow default)', '/bin/cat', str(control)],
+                            capture_output=True, timeout=20)
+    publish(folder / 'nested-sandbox.stdout', nested.stdout)
+    publish(folder / 'nested-sandbox.stderr', nested.stderr)
     lease = {'contract': ADAPTER, 'created_at': timestamp(), 'machine': machine_identity(),
              'kernel': kernel_identity(), 'profile': str(control_folder / 'profile.sb'), 'profile_sha256': sha(source.encode()),
              'protected_root_literals': [str(x) for x in roots], 'synthetic_root': str(protected),
@@ -193,9 +205,14 @@ def selftest(folder):
              'bridge_source_sha256':sha(BRIDGE.read_bytes()),'spawn_guard_sha256':sha(GUARD.read_bytes()),
              'launch_helper_sha256':sha(LAUNCHER.read_bytes()),
              'bridge':str(binary),'bridge_sha256':sha(binary.read_bytes())}
+    if scope is not None:
+        lease['astudio_scope'] = scope
     publish(folder / 'selftest.json', {'status': 'PASS', 'at': timestamp(), 'command': command,
             'controller_policy': parent_policy, 'probe': probe, 'node_command':node_command,
-            'node_bridge_probe':json.loads(node_result.stdout),'real_memory_read': False})
+            'node_bridge_probe':json.loads(node_result.stdout),'real_memory_read': False,
+            'nested_native_sandbox': {'returncode': nested.returncode,
+                'compatible': nested.returncode == 0 and nested.stdout == control.read_bytes(),
+                'automatic_consolidation_admitted': False}})
     lease['selftest_sha256'] = sha((folder / 'selftest.json').read_bytes())
     publish(folder / 'lease.json', lease)
     return {'status': 'PASS', 'adapter': ADAPTER, 'lease': str(folder / 'lease.json'),
@@ -213,7 +230,7 @@ def load_lease(path, expected=None):
     roots = non_target_roots() + [folder / 'synthetic/non-target']
     require(data['protected_root_literals'] == [str(x) for x in roots]
             and data['profile'] == str(profile) and profile.resolve() == profile
-            and profile.read_text() == lease_profile(folder)
+            and profile.read_text() == lease_profile(folder, data.get('astudio_scope'))
             and sha(profile.read_bytes()) == data['profile_sha256'], 'BOUNDARY_PROFILE_DRIFT', str(profile))
     require(data['bridge_source_sha256'] == sha(BRIDGE.read_bytes()) and data['spawn_guard_sha256'] == sha(GUARD.read_bytes())
             and data['launch_helper_sha256'] == sha(LAUNCHER.read_bytes())
@@ -238,8 +255,12 @@ def launch(folder):
             'Confirm native/background idle and quit AStudio normally first')
     require(not os.environ.get('NODE_OPTIONS'),'BOUNDARY_NODE_OPTIONS','Do not inherit an unknown Node preload')
     command = [APP,'--inspect-brk=127.0.0.1:9271','--remote-debugging-port=9240', '--remote-debugging-address=127.0.0.1']
+    extra_env = {}
+    if data.get('astudio_scope') is not None:
+        from .astudio_scope import load, environment
+        extra_env = environment(load(data['astudio_scope']['scope'], data['astudio_scope']))
     with (folder / 'app.stdout').open('xb') as out, (folder / 'app.stderr').open('xb') as err:
-        child = subprocess.Popen(command, stdout=out, stderr=err, start_new_session=True)
+        child = subprocess.Popen(command, env=dict(os.environ, **extra_env), stdout=out, stderr=err, start_new_session=True)
     for _ in range(100):
         table = process_table(); identity = table.get(child.pid)
         if identity and identity['command'].startswith(APP + ' '):
@@ -249,7 +270,7 @@ def launch(folder):
     else:
         require(False, 'BOUNDARY_APP_START_UNVERIFIED', str(child.pid))
     data['launch'] = {'command': command, 'identity': identity, 'at': timestamp(),
-                      'bootstrap_mode':'paused-main-inspector-exact-backend-spawn-wrapper','environment_added':{}}
+                      'bootstrap_mode':'paused-main-inspector-exact-backend-spawn-wrapper','environment_added':extra_env}
     # The only lease mutation is recording this one launch before profile binding.
     (folder / 'lease.json').write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
     bootstrap = subprocess.run(['node',str(LAUNCHER),str(folder/'lease.json'),str(child.pid)],capture_output=True,timeout=90)
@@ -323,8 +344,9 @@ def main():
     parser.add_argument('--lease-dir', type=Path, required=True)
     parser.add_argument('--child', action='store_true')
     parser.add_argument('--expected-json')
+    parser.add_argument('--astudio-scope', type=Path)
     args = parser.parse_args()
-    if args.action == 'selftest': result = selftest(args.lease_dir)
+    if args.action == 'selftest': result = selftest(args.lease_dir, args.astudio_scope)
     elif args.action == 'launch': result = launch(args.lease_dir)
     elif args.action == 'attest': result = attest(args.lease_dir / 'lease.json', json.loads(args.expected_json) if args.expected_json else None)
     else: result = fixture_probe(args.lease_dir, args.child)

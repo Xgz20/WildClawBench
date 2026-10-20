@@ -101,9 +101,24 @@ def native_profiles(output, astudio_boundary_lease=None):
     if Path('/Applications/AStudio.app').is_dir():
         profiles['AstronStudio']['kernel'] = kernel_identity()
     if astudio_boundary_lease is not None:
-        from .os_boundary import frozen_boundary, BRIDGE, GUARD, LAUNCHER
+        from .os_boundary import frozen_boundary, load_lease, BRIDGE, GUARD, LAUNCHER
         profiles['AstronStudio']['non_target_memory_boundary'] = frozen_boundary(astudio_boundary_lease)
+        profiles['AstronStudio']['memory_protocol']['automatic_generation_compatible'] = False
         profiles['AstronStudio']['driver_sources'].update({str(p):sha(p.read_bytes()) for p in (BRIDGE,GUARD,LAUNCHER)})
+        unit = load_lease(astudio_boundary_lease).get('astudio_scope')
+        if unit is not None:
+            from .astudio_scope import SELF, attest, load
+            from .io import require
+            condition = load(unit['scope'], unit)['memory_condition']
+            require(condition['generate_memories'] is False, 'SCOPE_AUTOMATIC_NOT_ADMITTED',
+                    'Native automatic consolidation cannot nest Seatbelt; explicit-memory isolation only')
+            attest(unit, profiles['AstronStudio']['non_target_memory_boundary'])
+            profiles['AstronStudio']['astudio_scope'] = unit
+            profiles['AstronStudio']['isolation'] = 'verified_namespace'
+            profiles['AstronStudio']['driver_sources'][str(SELF)] = sha(SELF.read_bytes())
+            idle = SELF.parent / 'native/astudio-unit-idle.mjs'
+            profiles['AstronStudio']['driver_sources'][str(idle)] = sha(idle.read_bytes())
+            profiles['AstronStudio']['memory_protocol']['purpose'] = 'explicit_memory_case_repeat_isolation'
     publish(output, profiles)
     return {"output": str(output), "configured_harnesses": [name for name, value in profiles.items() if value["driver_command"]],
             "memory_admission": "requires_live_scoped_preflight",

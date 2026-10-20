@@ -55,6 +55,10 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
     require(set(harnesses) <= set(profiles), "PROFILE_SCOPE", "Each selected Harness requires a profile")
     for harness in harnesses:
         profile = profiles[harness]
+        if profile.get('astudio_scope') is not None:
+            require(harnesses == ['AstronStudio'] and mode == 'native', 'SCOPE_HARNESS', 'AStudio native units only')
+            from .astudio_scope import bind_batch
+            bind_batch(profile, root, profile['astudio_scope']['scope'], scope, repeats)
         if profile.get('machine') is not None:
             require(profile['machine'] == machine_identity(), 'MACHINE_DRIFT', 'Create a new local native Profile')
         if profile.get('kernel') is not None:
@@ -89,7 +93,8 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
     root.mkdir(parents=True)
     experiment_id = uuid4().hex
     private, inputs, episodes, guard_hashes = {}, {}, [], {}
-    for run in range(1, repeats + 1):
+    first_repetition = profiles.get('AstronStudio', {}).get('astudio_scope', {}).get('repetition', 1)
+    for run in range(first_repetition, first_repetition + repeats):
         for case in dataset["scenarios"]:
             if case["id"] not in scope:
                 continue
@@ -160,6 +165,8 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
                 "implementation": {str(path.relative_to(Path(__file__).parent)): sha(path.read_bytes())
                                    for path in sorted(Path(__file__).parent.rglob("*.py"))},
                 "inputs": inputs, "episodes": episodes}
+    if profiles.get('AstronStudio', {}).get('astudio_scope'):
+        manifest['first_repetition'] = first_repetition
     if mode == "fixture":
         manifest["profiles"] = {key: {**manifest["profiles"][key], "driver_command":
                                      [sys.executable, "-m", "eval_memory_e2e.fixture_driver"],
@@ -179,6 +186,14 @@ def load_batch(root, *, harness=None, episode_id=None):
     from .runtime_repair import effective_sources
     implementation, drivers, _, _ = effective_sources(root, manifest)
     for name, profile in manifest['profiles'].items():
+        if profile.get('astudio_scope') is not None:
+            from .astudio_scope import load
+            unit = load(profile['astudio_scope']['scope'], profile['astudio_scope'])
+            require(str(Path(root).absolute()) == unit['batch_root']
+                    and manifest['scenario_ids'] == [unit['case_id']] and manifest['repeats'] == 1
+                    and manifest.get('first_repetition') == unit['repetition']
+                    and all(item['run'] == unit['repetition'] for item in manifest['episodes']),
+                    'SCOPE_BATCH_BINDING', 'Frozen unit does not belong to this batch')
         if profile.get('machine') is not None:
             require(profile['machine'] == machine_identity(), 'MACHINE_DRIFT', 'Frozen Profile belongs to another host or runtime')
         if profile.get('kernel') is not None:

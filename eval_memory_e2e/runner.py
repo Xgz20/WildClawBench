@@ -268,8 +268,13 @@ def advance(root, episode_id, *, driver_timeout=None, retry_pre_send=False):
                 boundary = manifest['profiles'][item['harness']]['non_target_memory_boundary']
                 require(item['harness'] == 'AstronStudio' and boundary.get('admitted_adapter') == 'macos-seatbelt-astudio-backend/v1',
                         'NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED', 'No admitted OS adapter; no Prompt intent was registered')
-                from .os_boundary import attest
-                proof = attest(boundary['lease'], boundary)
+                profile = manifest['profiles'][item['harness']]
+                if profile.get('astudio_scope') is not None:
+                    from .astudio_scope import attest
+                    proof = attest(profile['astudio_scope'], boundary)
+                else:
+                    from .os_boundary import attest
+                    proof = attest(boundary['lease'], boundary)
                 proof_path = Path(root) / 'os-boundary-checks' / (uuid4().hex + '.json')
                 publish(proof_path, proof)
                 append(root, 'OS_BOUNDARY_VERIFIED', episode_id, {'proof': archive(root, proof_path),

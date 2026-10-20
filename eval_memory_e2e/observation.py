@@ -32,6 +32,12 @@ def capture_state(root, request, stage):
     os.chmod(folder, 0o700)
     files, total, error = [], 0, None
     roots = STORE_ROOTS[request['harness']]
+    if request['harness'] == 'AstronStudio' and manifest['profiles']['AstronStudio'].get('astudio_scope'):
+        from .astudio_scope import load
+        frozen = manifest['profiles']['AstronStudio']['astudio_scope']
+        spec = load(frozen['scope'], frozen)
+        base = Path(spec['paths']['overlay'])
+        roots = (base / 'memories', base / 'memories_extensions')
     try:
         paths = []
         for store in roots:

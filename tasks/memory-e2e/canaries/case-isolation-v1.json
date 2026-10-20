@@ -1,0 +1,51 @@
+{
+  "dataset_id": "memory-case-isolation-v1",
+  "version": 3,
+  "description": "同账号跨用例与跨重复隔离准入。A1、B1、A2使用相同项目与查询；先证明各单元能跨会话记忆，再验证其他单元不能读取旧事实。不计入正式20题。",
+  "scenarios": [
+    {
+      "id": "MEM-unit-A",
+      "dimension": "isolation",
+      "title": "独立记忆单元A",
+      "difficulty": "easy",
+      "experience_gain": false,
+      "fixtures": [],
+      "scopes": ["A"],
+      "learning": {"mode": "explicit", "formation": {"kind": "immediate_observation", "minimum_seconds": 0}},
+      "variables": {
+        "project_a": {"kind": "literal", "value": "WildClawBench隔离验收项目A-v1"},
+        "project_b": {"kind": "literal", "value": "WildClawBench隔离验收项目B-v1"},
+        "own_value": {"kind": "token", "prefix": "UNIT-A-", "length": 24}
+      },
+      "steps": [
+        {"id": "seed", "phase": "seed", "session": "new", "scope": "A", "prompt": "这是评测合成事实：项目「{project_a}」的校验码是 {own_value}。请保存到AStudio当前原生记忆中，并使用可用的原生记忆工具或笔记读回确认，供后续新会话使用。该事实只属于这个项目。"},
+        {"id": "recall", "phase": "probe", "session": "new", "scope": "A", "prompt": "请检索AStudio当前可用原生记忆，分别给出项目「{project_a}」和「{project_b}」的校验码。没有记忆依据时填「未知」，不要推测，不要搜索工作区外的历史评测目录。只输出一个JSON对象：{{\"a\":\"校验码或未知\",\"b\":\"校验码或未知\"}}。"}
+      ],
+      "checkpoints": [{"id": "recall", "step_id": "recall", "metric": "fact_recall", "expectation": "仅作隔离准入：C0两项未知；M+ a精确为{own_value}且b未知。", "required": true}],
+      "conditions": {"C0": {"probe_steps": ["recall"]}},
+      "provenance": {"origin": "self_constructed", "purpose": "case/repetition isolation admission only"}
+    },
+    {
+      "id": "MEM-unit-B",
+      "dimension": "isolation",
+      "title": "独立记忆单元B",
+      "difficulty": "easy",
+      "experience_gain": false,
+      "fixtures": [],
+      "scopes": ["A"],
+      "learning": {"mode": "explicit", "formation": {"kind": "immediate_observation", "minimum_seconds": 0}},
+      "variables": {
+        "project_a": {"kind": "literal", "value": "WildClawBench隔离验收项目A-v1"},
+        "project_b": {"kind": "literal", "value": "WildClawBench隔离验收项目B-v1"},
+        "own_value": {"kind": "token", "prefix": "UNIT-B-", "length": 24}
+      },
+      "steps": [
+        {"id": "seed", "phase": "seed", "session": "new", "scope": "A", "prompt": "这是评测合成事实：项目「{project_b}」的校验码是 {own_value}。请保存到AStudio当前原生记忆中，并使用可用的原生记忆工具或笔记读回确认，供后续新会话使用。该事实只属于这个项目。"},
+        {"id": "recall", "phase": "probe", "session": "new", "scope": "A", "prompt": "请检索AStudio当前可用原生记忆，分别给出项目「{project_a}」和「{project_b}」的校验码。没有记忆依据时填「未知」，不要推测，不要搜索工作区外的历史评测目录。只输出一个JSON对象：{{\"a\":\"校验码或未知\",\"b\":\"校验码或未知\"}}。"}
+      ],
+      "checkpoints": [{"id": "recall", "step_id": "recall", "metric": "fact_recall", "expectation": "仅作隔离准入：C0两项未知；M+ b精确为{own_value}且a未知。", "required": true}],
+      "conditions": {"C0": {"probe_steps": ["recall"]}},
+      "provenance": {"origin": "self_constructed", "purpose": "case/repetition isolation admission only"}
+    }
+  ]
+}

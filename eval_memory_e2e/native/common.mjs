@@ -16,10 +16,12 @@ export function assertMemoryFilesystemBoundary(request,profile) {
     ||boundary.required!==true||!/^\/[\s\S]+\/lease\.json$/.test(boundary.lease??'')
     ||!/^[a-f0-9]{64}$/.test(boundary.profile_sha256??'')||!/^[a-f0-9]{64}$/.test(boundary.selftest_sha256??''))
     throw Error('NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED');
-  const helper=fileURLToPath(new URL('../os_boundary.py',import.meta.url));
-  const proof=JSON.parse(execFileSync(memoryPython(),[helper,'attest','--lease-dir',dirname(boundary.lease),
-    '--expected-json',JSON.stringify(boundary)],{encoding:'utf8',timeout:20000,maxBuffer:2097152}));
-  if(proof.status!=='PASS'||proof.profile_sha256!==boundary.profile_sha256)throw Error('NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED');
+  const scoped=profile.astudio_scope;
+  const helper=fileURLToPath(new URL(scoped?'../astudio_scope.py':'../os_boundary.py',import.meta.url));
+  const args=scoped?['attest','--scope',scoped.scope,'--frozen-json',JSON.stringify(scoped),'--boundary-json',JSON.stringify(boundary)]
+    :['attest','--lease-dir',dirname(boundary.lease),'--expected-json',JSON.stringify(boundary)];
+  const proof=JSON.parse(execFileSync(memoryPython(),[helper,...args],{encoding:'utf8',timeout:30000,maxBuffer:2097152}));
+  if(proof.status!=='PASS'||(scoped?proof.unit_id!==scoped.unit_id:proof.profile_sha256!==boundary.profile_sha256))throw Error('NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED');
   return proof;
 }
 export function memoryUiLockPath(root,profile) {

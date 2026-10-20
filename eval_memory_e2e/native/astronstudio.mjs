@@ -1,7 +1,7 @@
 import {pathToFileURL} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
-import {realpath,stat,readFile} from 'node:fs/promises';
+import {realpath,stat,readFile,mkdir} from 'node:fs/promises';
 import {discoverMainTarget, readUiConfiguration, prepareExecutionUi, fillPrompt, ensureSendTargetReady,
   inspectSendTarget, currentThreadId, clickSidebarToggle, PROJECT_NEW_TASK_LABEL} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs';
 import {WorkBuddyCdpClient as CdpClient} from '../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/ui.mjs';
@@ -9,10 +9,38 @@ import {queryNativeSessions, withStateSnapshot,queryPristineThread,queryProjectF
 import {isBlockingActiveSession, classifyNativeState} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs';
 import {readRolloutFile,analyzeRollout} from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-rollout.mjs';
 import {context, sha, requestHash, readJson, saveState, artifact, withUiLock, requireGui,
-  baseReply, bindReply, verifyConfig, stdinRequest,assertMemoryFilesystemBoundary} from './common.mjs';
+  baseReply, bindReply, verifyConfig, stdinRequest,assertMemoryFilesystemBoundary,assertNoLinks} from './common.mjs';
 
 import {MACHINE_PATHS,memoryPython} from './machine.mjs';
-const DB=MACHINE_PATHS.astudio_db;
+let ASTUDIO_PATHS=MACHINE_PATHS,DB=MACHINE_PATHS.astudio_db;
+export function selectAStudioPaths(profile,root) {
+  const scope=profile.astudio_scope;
+  if(!scope)return MACHINE_PATHS;
+  if(scope.contract!=='astudio-case-memory-unit/v1'||scope.batch_root!==root
+    ||!scope.paths?.runtime?.startsWith(MACHINE_PATHS.debug+'/')
+    ||scope.paths.acode!==scope.paths.runtime+'/source-home'
+    ||scope.paths.desktop!==scope.paths.runtime+'/desktop'
+    ||scope.paths.overlay!==scope.paths.desktop+'/acode-home-overlay'
+    ||scope.paths.astudio_db!==scope.paths.desktop+'/userdata/state.sqlite')throw Error('ASTUDIO_UNIT_PATHS_UNVERIFIED');
+  return {...MACHINE_PATHS,...scope.paths};
+}
+export function aStudioBoundaryListener(proof,pid) {
+  if(proof?.status!=='PASS'||!Number.isSafeInteger(proof.launch_identity?.pid)||proof.launch_identity.pid!==pid)
+    throw Error('ASTUDIO_BOUNDARY_LISTENER_MISMATCH');
+  return true;
+}
+export function aStudioRolloutPathAllowed(path,paths=ASTUDIO_PATHS) {
+  return [paths.acode,paths.overlay].some(home=>typeof home==='string'&&path.startsWith(home+'/'));
+}
+export async function configureAStudioControllerTmp(ctx,profile) {
+  if(!profile.astudio_scope)return null;
+  if(!ctx.control.startsWith(ctx.root+'/.native/AstronStudio/'))throw Error('ASTUDIO_CONTROLLER_TMP_SCOPE');
+  const directory=ctx.control+'/controller-tmp';
+  await mkdir(directory,{recursive:true,mode:0o700});await assertNoLinks(directory);
+  // These SQLite snapshots contain prior prompts. Keep even crash leftovers in
+  // the protected controller tree, separate from the app's allowed TMPDIR.
+  process.env.TMPDIR=directory;return directory;
+}
 const ENDPOINT='http://127.0.0.1:9240';
 const CAPABILITIES=['new','continue'];
 export function aStudioConfigurationFields(ui,frozen=null) {
@@ -56,6 +84,12 @@ const ASTUDIO_TRANSPORT_PROFILES=Object.freeze([Object.freeze({
   url:'acode://app/assets/with-selector-DcLfjZsV.js',
   sha256:'b6350faa1efd5faa42907b2a52497b356d6a4d6ab9f07d034364d89d01a0d537',
   getter:'h',getter_source:'function Os(){return Ts}',event:'astudio:ws-transport-state',
+}),Object.freeze({
+  // Installed 3.5.0 arm64 on 2026-10-20: loaded ES module equals ASAR bytes.
+  // Os is a pure Ts getter, exported as h; Es writes Ts and emits the event.
+  url:'acode://app/assets/with-selector-DJgh1YYs.js',
+  sha256:'29a96dbbed30c8034ade2365ca9c4b2269919a8060853efac82c9a221ebe7e6b',
+  getter:'h',getter_source:'function Os(){return Ts}',event:'astudio:ws-transport-state',source_witness:true,
 }),Object.freeze({
   // AStudio 3.5.2 arm64: installed ASAR and loaded ES module were compared.
   // Os only reads Ts; Es updates Ts and emits the same transport-state event.
@@ -391,7 +425,7 @@ for name,root in [('primary',sys.argv[1]),('overlay',sys.argv[2])]:
  d=tomllib.loads(p.read_text()); m=d.get('memories',{})
  result[name]={'enabled':d.get('features',{}).get('memories',False),'generate_memories':m.get('generate_memories',True),'use_memories':m.get('use_memories',True),'dedicated_tools':m.get('dedicated_tools',False),'extract_model':m.get('extract_model'),'consolidation_model':m.get('consolidation_model')}
 print(json.dumps(result))`;
-  return JSON.parse(execFileSync(memoryPython(),['-c',code,MACHINE_PATHS.acode,MACHINE_PATHS.overlay],{encoding:'utf8',timeout:5000}));
+  return JSON.parse(execFileSync(memoryPython(),['-c',code,ASTUDIO_PATHS.acode,ASTUDIO_PATHS.overlay],{encoding:'utf8',timeout:5000}));
 }
 export function aStudioCatalogModelId(catalog,accountScopeHash,displayName) {
   if(catalog?.schemaVersion!==1||catalog.accountScopeHash!==accountScopeHash
@@ -407,7 +441,7 @@ export function aStudioGatewayCatalogProjection(raw,accountFingerprint) {
     models:raw.builtins.models.map(m=>({slug:m.slug,name:m.display_name}))};
 }
 async function modelCatalogEvidence(ctx,live,saved=null) {
-  const source=MACHINE_PATHS.acode+'/acode/userdata/model-gateway/catalog-'+live.config.account_fingerprint+'.json';
+  const source=(ASTUDIO_PATHS.desktop??MACHINE_PATHS.acode+'/acode')+'/userdata/model-gateway/catalog-'+live.config.account_fingerprint+'.json';
   let bytes,proof=saved;
   if(saved) {
     if(saved.source_kind!=='astudio-scoped-model-catalog/v1'||saved.account_fingerprint!==live.config.account_fingerprint
@@ -521,16 +555,16 @@ async function traceFor(session,promptSha) {
 }
 async function rawRollout(session,promptSha) {
   if(!/^[a-f0-9-]{36}$/i.test(session.session_id))throw Error('ASTUDIO_ROLLOUT_SESSION_ID');
-  const roots=[MACHINE_PATHS.overlay+'/sessions',MACHINE_PATHS.acode+'/sessions'];
+  const roots=[ASTUDIO_PATHS.overlay+'/sessions',ASTUDIO_PATHS.acode+'/sessions'];
   const matches=[];
   for(const root of roots) {
     if(!await stat(root).catch(()=>null))continue;
-    const canonical=await realpath(root);if(!canonical.startsWith(MACHINE_PATHS.acode+'/'))throw Error('ASTUDIO_ROLLOUT_ROOT_OUTSIDE_TARGET');
+    const canonical=await realpath(root);if(!aStudioRolloutPathAllowed(canonical))throw Error('ASTUDIO_ROLLOUT_ROOT_OUTSIDE_TARGET');
     try {matches.push(...execFileSync('rg',['--files','-g','*'+session.session_id+'.jsonl',root],{encoding:'utf8',maxBuffer:1048576}).trim().split('\n').filter(Boolean));}
     catch(error){if(error.status!==1)throw error}
   }
   const unique=[...new Set(await Promise.all(matches.map(p=>realpath(p))))];
-  if(unique.length!==1||!unique[0].startsWith(MACHINE_PATHS.acode+'/'))throw Error('ASTUDIO_ROLLOUT_NOT_UNIQUE');
+  if(unique.length!==1||!aStudioRolloutPathAllowed(unique[0]))throw Error('ASTUDIO_ROLLOUT_NOT_UNIQUE');
   const raw=await readRolloutFile(unique[0]);
   const analysis=analyzeRollout(raw.bytes,{phase:'COMPLETED',prompt:{send_status:'sent',sha256:promptSha},
     session:{...session,verified:true}});
@@ -575,6 +609,8 @@ async function observe(ctx,request,live,state) {
 }
 export async function runAstronStudio(request) {
   const ctx=await context(request,'AstronStudio');let state;
+  ASTUDIO_PATHS=selectAStudioPaths(ctx.manifest.profiles.AstronStudio,ctx.root);DB=ASTUDIO_PATHS.astudio_db;
+  await configureAStudioControllerTmp(ctx,ctx.manifest.profiles.AstronStudio);
   try{state=await readJson(ctx.stateFile)}catch(e){if(e.code!=='ENOENT')throw e}
   if(state&&state.requestHash!==requestHash(request))throw Error('ASTUDIO_MEMORY_REQUEST_DRIFT');
   const live=aStudioNativeObservationEligible(request,state)?await connectAStudioNativeObservation(state)
@@ -587,6 +623,10 @@ export async function runAstronStudio(request) {
     if(request.action==='prepare_namespace') {
       if(ctx.manifest.profiles.AstronStudio.memory_protocol?.requires_enabled_memory===true){
         const configs=Object.values(live.config.memory_settings);
+        if(ctx.manifest.profiles.AstronStudio.memory_protocol.automatic_generation_compatible===false
+          && configs.some(c=>c.generate_memories!==false))return bindReply(ctx,request,
+          {...baseReply(request,live.config),status:'needs_attention',reason:'外层OS隔离与本机原生自动整理沙箱不兼容，自动生成未准入；不得发送Prompt。'},
+          {precondition:'automatic_generation_sandbox_not_admitted',prompt_sent:false});
         if(configs.some(c=>c.enabled!==true||c.use_memories!==true
           ||request.learning?.mode==='automatic'&&c.generate_memories!==true))return bindReply(ctx,request,
           {...baseReply(request,live.config),status:'needs_attention',reason:'AStudio 记忆配置未满足本批条件，停止在评测 Prompt 发送之前。'},
@@ -598,7 +638,8 @@ export async function runAstronStudio(request) {
       if(!state)await saveState(ctx,{requestHash:requestHash(request),config:live.config,phase:'namespace_prepared'});
       return bindReply(ctx,request,{...baseReply(request,live.config),status:'completed',background_settled:true,
         admission:{account_policy:'current_signed_in_account',test_scope_only:true,precondition_verified:true,capabilities:CAPABILITIES,
-          isolation:'shared_account_cold_first',global_memory_reset_verified:false,precondition_scope:'fresh_workspace_only'}},{native_sessions_baseline:rows.length,account_identity_method:'native astron-auth session uid -> sha256'});
+          isolation:ctx.manifest.profiles.AstronStudio.astudio_scope?'verified_namespace':'shared_account_cold_first',
+          global_memory_reset_verified:false,precondition_scope:ctx.manifest.profiles.AstronStudio.astudio_scope?'os_enforced_case_repeat_unit':'fresh_workspace_only'}},{native_sessions_baseline:rows.length,account_identity_method:'native astron-auth session uid -> sha256'});
     }
     if(state){if(request.transport_action!=='observe')throw Error('ASTUDIO_DUPLICATE_DISPATCH');
       if(state.phase==='pre_send_rejected')return bindReply(ctx,request,{...baseReply(request,live.config),status:'needs_attention',reason:'发送函数明确返回未点击成功；保留零发送检查结果，不自动重试。'},{click_result:state.click_result,prompt_sent:false});
@@ -657,7 +698,7 @@ export async function runAstronStudio(request) {
         if(focus.ready){
           const proof=assertMemoryFilesystemBoundary(request,ctx.manifest.profiles.AstronStudio);
           if(proof){
-            if(proof.launch_identity.pid!==live.pid)throw Error('ASTUDIO_BOUNDARY_LISTENER_MISMATCH');
+            aStudioBoundaryListener(proof,live.pid);
             ctx.memoryBoundary=proof;await artifact(ctx,'os-boundary-before-press',proof);
           }
         }

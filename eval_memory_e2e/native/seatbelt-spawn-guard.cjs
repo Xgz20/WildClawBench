@@ -9,11 +9,24 @@ exports.install=function(spec) {
     ||fs.realpathSync(spec.profile)!==spec.profile||hash(fs.readFileSync(spec.profile))!==spec.profile_sha256)
     throw Error('SEATBELT_SPAWN_SPEC_UNVERIFIED');
   const original=cp.spawn,profile=spec.profile,checksum=spec.profile_sha256;
+  const scope=spec.astudio_scope;
+  function scopedEnvironment(env) {
+    if(!scope)return env;
+    if(scope.contract!=='astudio-case-memory-unit/v1'||fs.realpathSync(scope.scope)!==scope.scope
+      ||hash(fs.readFileSync(scope.scope))!==scope.scope_sha256)throw Error('SEATBELT_UNIT_SPEC_DRIFT');
+    const saved=JSON.parse(fs.readFileSync(scope.scope,'utf8'));
+    if(saved.unit_id!==scope.unit_id||Object.keys(saved.paths).length!==Object.keys(scope.paths).length
+      ||Object.keys(saved.paths).some(key=>saved.paths[key]!==scope.paths[key])
+      ||env.ASTUDIO_HOME!==scope.paths.desktop)throw Error('SEATBELT_UNIT_ENVIRONMENT_REJECTED');
+    return {...env,ASTUDIO_HOME:scope.paths.desktop,ASTUDIO_ACODE_HOME:scope.paths.acode,
+      ACODE_HOME:scope.paths.acode,TMPDIR:scope.paths.temp+'/'};
+  }
   cp.spawn=function(command,args,options) {
     if(command!==app||!Array.isArray(args)||!args.includes(entry))return original.apply(this,arguments);
     if(options?.env?.ELECTRON_RUN_AS_NODE!=='1'||fs.realpathSync(profile)!==profile||hash(fs.readFileSync(profile))!==checksum)
       throw Error('SEATBELT_BACKEND_SPAWN_REJECTED');
-    const child=original.call(this,'/usr/bin/sandbox-exec',['-f',profile,command,...args],options);
+    const selected=scope?{...options,env:scopedEnvironment(options.env)}:options;
+    const child=original.call(this,'/usr/bin/sandbox-exec',['-f',profile,command,...args],selected);
     // Existing desktop identity/watchdog code must see the final exec identity,
     // rather than the brief sandbox-exec image of this same PID.
     const started=Date.now();let bound=false;

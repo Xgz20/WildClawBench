@@ -146,7 +146,8 @@ def aggregate(root, *, include_fixture=False):
         deltas = []
         pairs = []
         for sid in manifest["scenario_ids"]:
-            if not scenarios[f"{sid}/r01"]["experience_gain"]:
+            case = next(value for key, value in scenarios.items() if key.startswith(sid + '/r'))
+            if not case["experience_gain"]:
                 continue
             experienced, cold = scenario_results[harness, sid, "M+"], scenario_results.get((harness, sid, "C0"))
             if experienced["complete"] and cold and cold["complete"]:
