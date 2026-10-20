@@ -267,7 +267,7 @@ def advance(root, episode_id, *, driver_timeout=None, retry_pre_send=False):
                     and manifest['profiles'][item['harness']].get('non_target_memory_boundary') is not None):
                 boundary = manifest['profiles'][item['harness']]['non_target_memory_boundary']
                 require(item['harness'] == 'AstronStudio' and boundary.get('admitted_adapter') in
-                        ('macos-seatbelt-astudio-backend/v1', 'macos-seatbelt-astudio-native-executor/v2'),
+                        ('macos-seatbelt-astudio-backend/v1', 'macos-seatbelt-astudio-native-executor/v2', 'macos-seatbelt-astudio-compiled-kernel/v3'),
                         'NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED', 'No admitted OS adapter; no Prompt intent was registered')
                 profile = manifest['profiles'][item['harness']]
                 if profile.get('astudio_scope') is not None:

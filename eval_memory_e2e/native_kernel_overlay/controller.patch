@@ -1,3 +1,71 @@
+diff --git a/codex-rs/core/src/exec.rs b/codex-rs/core/src/exec.rs
+index 683ce8b..4d10913 100644
+--- a/codex-rs/core/src/exec.rs
++++ b/codex-rs/core/src/exec.rs
+@@ -55,6 +55,10 @@ use codex_utils_path_uri::PathUri;
+ use codex_utils_pty::DEFAULT_OUTPUT_BYTES_CAP;
+ use codex_utils_pty::process_group::kill_child_process_group;
+ 
++#[path = "exec_remote.rs"]
++mod remote;
++pub(crate) use remote::execute_remote;
++
+ pub const DEFAULT_EXEC_COMMAND_TIMEOUT_MS: u64 = 10_000;
+ 
+ // Hardcode these since it does not seem worth including the libc crate just
+diff --git a/codex-rs/core/src/tools/runtimes/shell.rs b/codex-rs/core/src/tools/runtimes/shell.rs
+index 3ff50f3..1f5f70f 100644
+--- a/codex-rs/core/src/tools/runtimes/shell.rs
++++ b/codex-rs/core/src/tools/runtimes/shell.rs
+@@ -297,7 +297,8 @@ impl ToolRuntime<ShellRequest, ExecToolCallOutput> for ShellRuntime {
+             command
+         };
+ 
+-        if self.backend == ShellRuntimeBackend::ShellCommandZshFork {
++        let remote_environment = req.turn_environment.environment.is_remote();
++        if !remote_environment && self.backend == ShellRuntimeBackend::ShellCommandZshFork {
+             match zsh_fork_backend::maybe_run_shell_command(req, attempt, ctx, &command).await? {
+                 Some(out) => return Ok(out),
+                 None => {
+@@ -319,17 +320,33 @@ impl ToolRuntime<ShellRequest, ExecToolCallOutput> for ShellRuntime {
+             expiration,
+             capture_policy: ExecCapturePolicy::ShellTool,
+         };
+-        let env = attempt
+-            .env_for(
++        let env = if remote_environment {
++            attempt.env_for_exec_server(
+                 command,
+                 options,
+                 managed_network,
+                 Some(&req.turn_environment.environment_id),
+             )
+-            .map_err(ToolError::Codex)?;
+-        let out = execute_env(env, Self::stdout_stream(ctx))
++        } else {
++            attempt.env_for(
++                command,
++                options,
++                managed_network,
++                Some(&req.turn_environment.environment_id),
++            )
++        }
++        .map_err(ToolError::Codex)?;
++        let out = if remote_environment {
++            crate::exec::execute_remote(
++                env,
++                req.turn_environment.environment.get_exec_backend().as_ref(),
++                Self::stdout_stream(ctx),
++            )
+             .await
+-            .map_err(ToolError::Codex)?;
++        } else {
++            execute_env(env, Self::stdout_stream(ctx)).await
++        }
++        .map_err(ToolError::Codex)?;
+         Ok(out)
+     }
+ }
 diff --git a/codex-rs/exec-server/src/file_read.rs b/codex-rs/exec-server/src/file_read.rs
 index 8cc84b6..b5c5f4c 100644
 --- a/codex-rs/exec-server/src/file_read.rs
@@ -504,6 +572,491 @@ index b15019a..9150ca0 100644
          empty_root,
          empty_root_canonical,
      }
+diff --git a/codex-rs/core/src/exec_remote.rs b/codex-rs/core/src/exec_remote.rs
+new file mode 100644
+index 0000000..42be393
+--- /dev/null
++++ b/codex-rs/core/src/exec_remote.rs
+@@ -0,0 +1,165 @@
++//! The classic shell runtime must use its selected remote executor too.
++//!
++//! Reuse the core shell output/error contract while the executor, rather than
++//! this host, compiles and installs the portable native permission profile.
++use super::*;
++use codex_exec_server::ExecBackend;
++use codex_exec_server::ExecEnvPolicy;
++use codex_exec_server::ExecServerError;
++use codex_protocol::config_types::ShellEnvironmentPolicyInherit;
++use uuid::Uuid;
++
++pub(crate) async fn execute_remote(
++    request: ExecRequest,
++    backend: &dyn ExecBackend,
++    stdout_stream: Option<StdoutStream>,
++) -> Result<ExecToolCallOutput> {
++    let started_at = Instant::now();
++    let started = backend
++        .start(codex_exec_server::ExecParams {
++            process_id: format!("shell-{}", Uuid::new_v4()).into(),
++            argv: request.command,
++            cwd: request.cwd,
++            // `request.env` already contains the shell policy's complete
++            // projection. Do not inherit the execution service's environment.
++            env_policy: Some(ExecEnvPolicy {
++                inherit: ShellEnvironmentPolicyInherit::None,
++                ignore_default_excludes: false,
++                exclude: Vec::new(),
++                r#set: HashMap::new(),
++                include_only: Vec::new(),
++            }),
++            env: request.env,
++            tty: false,
++            pipe_stdin: false,
++            arg0: request.arg0,
++            sandbox: request.exec_server_sandbox,
++            enforce_managed_network: request.exec_server_enforce_managed_network,
++            managed_network: request.exec_server_managed_network,
++        })
++        .await
++        .map_err(remote_error)?;
++    let process = started.process;
++    let mut stdout = Vec::new();
++    let mut stderr = Vec::new();
++    let mut after_seq = None;
++    let mut emitted = 0;
++    let mut sandbox_denied = false;
++    let mut expiration = Box::pin(request.expiration.wait_with_outcome());
++    let mut expired = None;
++    let mut drain_deadline = None;
++    let exit_code = loop {
++        let read = process.read(after_seq, Some(READ_CHUNK_SIZE), Some(100));
++        let response = tokio::select! {
++            biased;
++            outcome = &mut expiration, if expired.is_none() && request.capture_policy.uses_expiration() => {
++                process.terminate().await.map_err(remote_error)?;
++                expired = Some(outcome);
++                drain_deadline = Some(tokio::time::Instant::now() + request.capture_policy.io_drain_timeout());
++                continue;
++            }
++            _ = async {
++                if let Some(deadline) = drain_deadline {
++                    tokio::time::sleep_until(deadline).await;
++                } else {
++                    std::future::pending::<()>().await;
++                }
++            } => break 1,
++            response = read => match response {
++                Ok(response) => response,
++                Err(err) => {
++                    let _ = process.terminate().await;
++                    return Err(remote_error(err));
++                }
++            },
++        };
++        if let Some(failure) = response.failure {
++            let _ = process.terminate().await;
++            return Err(remote_error(ExecServerError::Protocol(failure)));
++        }
++        sandbox_denied |= response.sandbox_denied;
++        let page_empty = response.chunks.is_empty();
++        for chunk in response.chunks {
++            after_seq = Some(chunk.seq);
++            let is_stderr = match chunk.stream {
++                codex_exec_server::ExecOutputStream::Stderr => true,
++                codex_exec_server::ExecOutputStream::Stdout
++                | codex_exec_server::ExecOutputStream::Pty => false,
++            };
++            let output = if is_stderr { &mut stderr } else { &mut stdout };
++            if let Some(limit) = request.capture_policy.retained_bytes_cap() {
++                append_capped(output, &chunk.chunk.0, limit);
++            } else {
++                output.extend_from_slice(&chunk.chunk.0);
++            }
++            if let Some(stream) = &stdout_stream
++                && emitted < MAX_EXEC_OUTPUT_DELTAS_PER_CALL
++            {
++                let _ = stream
++                    .tx_event
++                    .send(Event {
++                        id: stream.sub_id.clone(),
++                        msg: EventMsg::ExecCommandOutputDelta(ExecCommandOutputDeltaEvent {
++                            call_id: stream.call_id.clone(),
++                            stream: if is_stderr {
++                                ExecOutputStream::Stderr
++                            } else {
++                                ExecOutputStream::Stdout
++                            },
++                            chunk: chunk.chunk.0,
++                        }),
++                    })
++                    .await;
++                emitted += 1;
++            }
++        }
++        // `closed` can be true before all retained chunks fit in this page;
++        // `next_seq` is page-relative, not the process's final sequence.
++        if response.closed && page_empty {
++            break response.exit_code.ok_or_else(|| {
++                remote_error(ExecServerError::Protocol(
++                    "remote shell closed without an exit status".into(),
++                ))
++            })?;
++        }
++    };
++    let stdout = StreamOutput {
++        text: stdout,
++        truncated_after_lines: None,
++    };
++    let stderr = StreamOutput {
++        text: stderr,
++        truncated_after_lines: None,
++    };
++    let aggregated_output = aggregate_output(
++        &stdout,
++        &stderr,
++        request.capture_policy.retained_bytes_cap(),
++    );
++    let output = finalize_exec_result(
++        Ok(RawExecToolCallOutput {
++            exit_status: synthetic_exit_status_for_code(exit_code),
++            stdout,
++            stderr,
++            aggregated_output,
++            timed_out: expired == Some(ExecExpirationOutcome::TimedOut),
++        }),
++        request.sandbox,
++        started_at.elapsed(),
++    )?;
++    if sandbox_denied {
++        return Err(CodexErr::Sandbox(SandboxErr::Denied {
++            output: Box::new(output),
++            network_policy_decision: None,
++        }));
++    }
++    Ok(output)
++}
++
++fn remote_error(error: ExecServerError) -> CodexErr {
++    CodexErr::Io(io::Error::other(format!("remote shell: {error}")))
++}
++
++#[cfg(test)]
++#[path = "exec_remote_tests.rs"]
++mod tests;
+diff --git a/codex-rs/core/src/exec_remote_tests.rs b/codex-rs/core/src/exec_remote_tests.rs
+new file mode 100644
+index 0000000..68282f4
+--- /dev/null
++++ b/codex-rs/core/src/exec_remote_tests.rs
+@@ -0,0 +1,308 @@
++use super::*;
++use codex_exec_server::ExecBackendFuture;
++use codex_exec_server::ExecProcess;
++use codex_exec_server::ExecProcessEventReceiver;
++use codex_exec_server::ExecProcessFuture;
++use codex_exec_server::ProcessId;
++use codex_exec_server::ProcessOutputChunk;
++use codex_exec_server::ProcessSignal;
++use codex_exec_server::ReadResponse;
++use codex_exec_server::StartedExecProcess;
++use codex_exec_server::WriteResponse;
++use pretty_assertions::assert_eq;
++use std::collections::VecDeque;
++use std::sync::Arc;
++use std::sync::Mutex;
++use std::sync::atomic::AtomicUsize;
++use std::sync::atomic::Ordering;
++use tokio::sync::watch;
++
++#[derive(Default)]
++struct FakeBackend {
++    starts: Mutex<Vec<codex_exec_server::ExecParams>>,
++    process: Arc<FakeProcess>,
++}
++
++struct FakeProcess {
++    id: ProcessId,
++    pages: Mutex<VecDeque<std::result::Result<ReadResponse, ExecServerError>>>,
++    cursors: Mutex<Vec<Option<u64>>>,
++    terminated: AtomicUsize,
++}
++
++impl Default for FakeProcess {
++    fn default() -> Self {
++        Self {
++            id: "fake-remote-process".into(),
++            pages: Mutex::default(),
++            cursors: Mutex::default(),
++            terminated: AtomicUsize::new(0),
++        }
++    }
++}
++
++impl ExecBackend for FakeBackend {
++    fn start(&self, params: codex_exec_server::ExecParams) -> ExecBackendFuture<'_> {
++        self.starts.lock().unwrap().push(params);
++        Box::pin(async {
++            Ok(StartedExecProcess {
++                process: self.process.clone(),
++            })
++        })
++    }
++}
++
++impl ExecProcess for FakeProcess {
++    fn process_id(&self) -> &ProcessId {
++        &self.id
++    }
++    fn subscribe_wake(&self) -> watch::Receiver<u64> {
++        watch::channel(0).1
++    }
++    fn subscribe_events(&self) -> ExecProcessEventReceiver {
++        ExecProcessEventReceiver::empty()
++    }
++    fn read(
++        &self,
++        after_seq: Option<u64>,
++        _: Option<usize>,
++        _: Option<u64>,
++    ) -> ExecProcessFuture<'_, ReadResponse> {
++        self.cursors.lock().unwrap().push(after_seq);
++        let pending_page = self.pages.lock().unwrap().pop_front();
++        Box::pin(async move {
++            if let Some(page) = pending_page {
++                return page;
++            }
++            if self.terminated.load(Ordering::SeqCst) > 0 {
++                return Ok(page(Vec::new(), 1));
++            }
++            std::future::pending().await
++        })
++    }
++    fn write(&self, _: Vec<u8>) -> ExecProcessFuture<'_, WriteResponse> {
++        panic!("classic shell has closed stdin")
++    }
++    fn signal(&self, _: ProcessSignal) -> ExecProcessFuture<'_, ()> {
++        panic!("unexpected signal")
++    }
++    fn terminate(&self) -> ExecProcessFuture<'_, ()> {
++        self.terminated.fetch_add(1, Ordering::SeqCst);
++        Box::pin(async { Ok(()) })
++    }
++}
++
++fn request() -> ExecRequest {
++    let cwd = AbsolutePathBuf::try_from(std::env::current_dir().unwrap()).unwrap();
++    let permissions = PermissionProfile::workspace_write();
++    let mut request = ExecRequest::new(
++        vec!["remote-only-shell".into(), "do-work".into()],
++        cwd.clone(),
++        HashMap::from([("SYNTHETIC_ENV".into(), "fixture".into())]),
++        /*network*/ None,
++        /*network_environment_id*/ None,
++        ExecExpiration::DefaultTimeout,
++        ExecCapturePolicy::ShellTool,
++        SandboxType::MacosSeatbelt,
++        vec![cwd.clone()],
++        codex_protocol::config_types::WindowsSandboxLevel::Disabled,
++        /*windows_sandbox_private_desktop*/ false,
++        permissions.clone(),
++        Some("native-argv0".into()),
++    );
++    let mut sandbox =
++        codex_exec_server::FileSystemSandboxContext::from_permission_profile(permissions);
++    sandbox.cwd = Some(cwd.into());
++    request.exec_server_sandbox = Some(sandbox);
++    request
++}
++
++fn page(chunks: Vec<ProcessOutputChunk>, code: i32) -> ReadResponse {
++    ReadResponse {
++        next_seq: chunks.last().map_or(1, |chunk| chunk.seq + 1),
++        chunks,
++        exited: true,
++        exit_code: Some(code),
++        closed: true,
++        failure: None,
++        sandbox_denied: false,
++    }
++}
++
++fn chunk(
++    seq: u64,
++    stream: codex_exec_server::ExecOutputStream,
++    bytes: &[u8],
++) -> ProcessOutputChunk {
++    ProcessOutputChunk {
++        seq,
++        stream,
++        chunk: bytes.to_vec().into(),
++    }
++}
++
++#[tokio::test]
++async fn exec_remote_forwards_native_permissions_and_drains_closed_pages() {
++    let backend = FakeBackend::default();
++    backend.process.pages.lock().unwrap().extend([
++        Ok(page(
++            vec![chunk(
++                1,
++                codex_exec_server::ExecOutputStream::Stdout,
++                b"hello",
++            )],
++            7,
++        )),
++        Ok(page(
++            vec![chunk(
++                2,
++                codex_exec_server::ExecOutputStream::Stderr,
++                b"problem",
++            )],
++            7,
++        )),
++        Ok(page(Vec::new(), 7)),
++    ]);
++    let request = request();
++    let expected = (
++        request.command.clone(),
++        request.cwd.clone(),
++        request.env.clone(),
++        request.arg0.clone(),
++        request.exec_server_sandbox.clone(),
++    );
++    let (tx_event, rx_event) = async_channel::unbounded();
++    let output = execute_remote(
++        request,
++        &backend,
++        Some(StdoutStream {
++            sub_id: "turn".into(),
++            call_id: "call".into(),
++            tx_event,
++        }),
++    )
++    .await
++    .unwrap();
++    assert_eq!(
++        (
++            output.exit_code,
++            output.stdout.text,
++            output.stderr.text,
++            output.aggregated_output.text,
++            output.timed_out
++        ),
++        (
++            7,
++            "hello".into(),
++            "problem".into(),
++            "helloproblem".into(),
++            false
++        )
++    );
++    let mut starts = backend.starts.lock().unwrap();
++    assert_eq!(starts.len(), 1);
++    let actual = starts.pop().unwrap();
++    assert_eq!(
++        (
++            actual.argv,
++            actual.cwd,
++            actual.env,
++            actual.arg0,
++            actual.sandbox
++        ),
++        expected
++    );
++    assert_eq!(
++        actual.env_policy.unwrap().inherit,
++        ShellEnvironmentPolicyInherit::None
++    );
++    assert_eq!(
++        *backend.process.cursors.lock().unwrap(),
++        vec![None, Some(1), Some(2)]
++    );
++    assert_eq!(rx_event.len(), 2);
++    assert_eq!(backend.process.terminated.load(Ordering::SeqCst), 0);
++}
++
++#[tokio::test]
++async fn exec_remote_timeout_terminates_the_executor_process() {
++    let backend = FakeBackend::default();
++    let mut request = request();
++    request.expiration = ExecExpiration::Timeout(Duration::from_millis(1));
++    let result = execute_remote(request, &backend, None).await;
++    let Err(CodexErr::Sandbox(SandboxErr::Timeout { output })) = result else {
++        panic!("missing shell timeout")
++    };
++    assert_eq!((output.exit_code, output.timed_out), (124, true));
++    assert_eq!(backend.process.terminated.load(Ordering::SeqCst), 1);
++}
++
++#[tokio::test]
++async fn exec_remote_cancellation_terminates_without_reporting_timeout() {
++    let backend = FakeBackend::default();
++    let mut request = request();
++    let cancellation = CancellationToken::new();
++    cancellation.cancel();
++    request.expiration = ExecExpiration::Cancellation(cancellation);
++    let output = execute_remote(request, &backend, None).await.unwrap();
++    assert_eq!((output.exit_code, output.timed_out), (1, false));
++    assert_eq!(backend.process.terminated.load(Ordering::SeqCst), 1);
++}
++
++#[tokio::test]
++async fn exec_remote_preserves_executor_denial_classification() {
++    let backend = FakeBackend::default();
++    let mut denied = page(Vec::new(), 1);
++    denied.sandbox_denied = true;
++    backend.process.pages.lock().unwrap().push_back(Ok(denied));
++    assert!(matches!(
++        execute_remote(request(), &backend, None).await,
++        Err(CodexErr::Sandbox(SandboxErr::Denied { .. }))
++    ));
++}
++
++#[tokio::test]
++async fn exec_remote_disconnect_fails_without_local_fallback() {
++    let backend = FakeBackend::default();
++    backend
++        .process
++        .pages
++        .lock()
++        .unwrap()
++        .push_back(Err(ExecServerError::Closed));
++    assert!(matches!(
++        execute_remote(request(), &backend, None).await,
++        Err(CodexErr::Io(_))
++    ));
++    assert_eq!(backend.starts.lock().unwrap().len(), 1);
++    assert_eq!(backend.process.terminated.load(Ordering::SeqCst), 1);
++}
++
++#[tokio::test]
++async fn exec_remote_caps_retained_shell_output_and_still_drains() {
++    let backend = FakeBackend::default();
++    backend.process.pages.lock().unwrap().extend([
++        Ok(page(
++            vec![chunk(
++                1,
++                codex_exec_server::ExecOutputStream::Stdout,
++                &vec![b'x'; EXEC_OUTPUT_MAX_BYTES + 99],
++            )],
++            0,
++        )),
++        Ok(page(
++            vec![chunk(
++                2,
++                codex_exec_server::ExecOutputStream::Stderr,
++                b"last",
++            )],
++            0,
++        )),
++        Ok(page(Vec::new(), 0)),
++    ]);
++    let output = execute_remote(request(), &backend, None).await.unwrap();
++    assert_eq!(output.stdout.text.len(), EXEC_OUTPUT_MAX_BYTES);
++    assert_eq!(output.stderr.text, "last");
++    assert_eq!(output.aggregated_output.text.len(), EXEC_OUTPUT_MAX_BYTES);
++    assert_eq!(backend.process.cursors.lock().unwrap().len(), 3);
++}
 diff --git a/codex-rs/exec-server/src/bin/acode-memory-executor.rs b/codex-rs/exec-server/src/bin/acode-memory-executor.rs
 new file mode 100644
 index 0000000..c6637b9

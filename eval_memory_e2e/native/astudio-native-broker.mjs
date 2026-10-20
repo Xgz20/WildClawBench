@@ -43,7 +43,8 @@ function peer(socket){
   }else{
     const main=rows.get(spec.main.pid);
     if(!main||main.started_at!==spec.main.started_at||main.command!==spec.main.command
-      ||!row.command.startsWith(spec.installed_kernel+' ')||!row.command.includes('app-server'))throw Error('NATIVE_BROKER_APP_PEER_REJECTED');
+      ||!row.command.startsWith(spec.application_kernel.path+' ')||!row.command.includes('app-server')
+      ||hash(fs.readFileSync(spec.application_kernel.path))!==spec.application_kernel.sha256)throw Error('NATIVE_BROKER_APP_PEER_REJECTED');
     let ancestor=row,seen=new Set();
     while(ancestor&&ancestor.pid!==main.pid&&!seen.has(ancestor.pid)){seen.add(ancestor.pid);ancestor=rows.get(ancestor.ppid)}
     if(ancestor?.pid!==main.pid)throw Error('NATIVE_BROKER_APP_TREE_REJECTED');

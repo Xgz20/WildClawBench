@@ -31,7 +31,7 @@ def build(path):
     return value
 
 
-def specification(folder, manifest, profile, *, mode, runtime, acode_home, temp, main=None, test_peer=None):
+def specification(folder, manifest, profile, *, mode, runtime, acode_home, temp, main=None, test_peer=None, application_kernel=None):
     value = build(manifest)
     sources = [BROKER, Path(__file__).resolve(), BUNDLE, BUNDLE.parent / 'utilsBundleImpl/index.js']
     return {'contract': 'astudio-composed-native-executor/v2', 'mode': mode,
@@ -42,7 +42,7 @@ def specification(folder, manifest, profile, *, mode, runtime, acode_home, temp,
             'token_path': '/' + secrets.token_hex(32), 'runtime': str(runtime), 'acode_home': str(acode_home),
             'temp': str(temp), 'os_home': str(machine_paths()['home']), 'path_env': os.environ.get('PATH', ''),
             'policy_audit_dir': str(Path(folder) / 'policies'), 'main': main, 'test_peer': test_peer,
-            'installed_kernel': '/Applications/AStudio.app/Contents/Resources/bin/acode-darwin-arm64'}
+            'application_kernel': application_kernel}
 
 
 def start(folder, spec):
@@ -77,6 +77,9 @@ def inspect(folder, *, expected_mode='astudio-owned-session', main_exited_ok=Fal
     require(current and all(current[k] == identity[k] for k in ('pid', 'started_at', 'command')),
             'NATIVE_BROKER_REPLACED', str(identity['pid']))
     if expected_mode == 'astudio-owned-session':
+        selected = spec['application_kernel']
+        require(selected and sha(Path(selected['path']).read_bytes()) == selected['sha256'],
+                'NATIVE_BROKER_APP_KERNEL_DRIFT', str(folder))
         main = table.get(spec['main']['pid'])
         require((main is None and main_exited_ok) or main and all(main[k] == spec['main'][k] for k in ('pid', 'started_at', 'command')),
                 'NATIVE_BROKER_MAIN_REPLACED', str(spec['main']['pid']))
@@ -84,6 +87,11 @@ def inspect(folder, *, expected_mode='astudio-owned-session', main_exited_ok=Fal
     for session in status['sessions']:
         row = session.get('identity'); require(row, 'NATIVE_CONTROLLER_STARTING', 'Await a fresh native controller identity')
         actual = table.get(row['pid'])
+        if expected_mode == 'astudio-owned-session':
+            owner = session['owner']; live_owner = table.get(owner['pid'])
+            require((live_owner is None and main_exited_ok) or live_owner and all(live_owner[k] == owner[k] for k in ('pid', 'started_at', 'command'))
+                    and live_owner['command'].startswith(spec['application_kernel']['path'] + ' ')
+                    and 'app-server' in live_owner['command'], 'NATIVE_BROKER_APP_OWNER_REPLACED', str(owner['pid']))
         command = f"{spec['executor']} --deny-profile {spec['profile']} --audit-dir {spec['policy_audit_dir']}"
         require(actual and actual['ppid'] == identity['pid'] and actual['command'] == command
                 and actual['started_at'] == row['started_at'], 'NATIVE_CONTROLLER_REPLACED', str(row['pid']))

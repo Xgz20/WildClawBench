@@ -217,21 +217,27 @@ def attest(frozen, boundary):
     lease = load_lease(boundary['lease'], boundary)
     require(lease.get('astudio_scope') == frozen, 'SCOPE_BOUNDARY_BINDING', 'OS lease belongs to another unit')
     proof = os_attest(boundary['lease'], boundary)
+    application_kernel = lease.get('compiled_kernel', {}).get('identity', lease['kernel'])
+    kernel_command = application_kernel['path'] + ' '
     selected = []
     for process in proof['processes']:
-        if '/app.asar/apps/server/dist/index.mjs' not in process['command'] and '/bin/acode-darwin-' not in process['command']:
+        is_kernel = process['command'].startswith(kernel_command)
+        is_backend = '/app.asar/apps/server/dist/index.mjs' in process['command']
+        if not is_backend and not is_kernel:
             continue
         raw = subprocess.check_output(['/bin/ps', 'eww', '-p', str(process['pid']), '-o', 'command='], text=True)
         found = {}
         # Never persist the full environment: it contains authentication tokens.
         keys = ('ASTUDIO_HOME', 'ASTUDIO_ACODE_HOME', 'ACODE_HOME', 'TMPDIR')
         if lease.get('native_executor'): keys += ('ACODE_EXEC_SERVER_URL',)
+        if is_backend and lease.get('compiled_kernel'): keys += ('ASTUDIO_ACODE_BIN',)
         for key in keys:
             matches = re.findall(r'(?:^| )' + key + r'=([^ ]+)', raw)
             found[key] = matches[-1] if matches else None
         expected = environment(spec)
         if lease.get('native_executor'): expected['ACODE_EXEC_SERVER_URL'] = lease['native_executor']['launch']['url']
-        if '/bin/acode-darwin-' in process['command']:
+        if is_backend and lease.get('compiled_kernel'): expected['ASTUDIO_ACODE_BIN'] = application_kernel['path']
+        if is_kernel:
             expected['ACODE_HOME'] = spec['paths']['overlay']
             # The installed backend deliberately strips desktop-only variables
             # from the app-server child; its actual write root is ACODE_HOME.
@@ -297,9 +303,11 @@ def close(scope, boundary):
                             capture_output=True, text=True, timeout=30)
     require(result.returncode == 0, 'SCOPE_NATIVE_QUIT_FAILED', result.stderr[-800:])
     deadline = time.monotonic() + 30
+    kernel_command = data.get('compiled_kernel', {}).get('identity', data['kernel'])['path'] + ' '
     while time.monotonic() < deadline:
         roots = [x for x in process_table().values() if x['command'].startswith(APP)
-                 or x['command'].startswith('/Applications/AStudio.app/Contents/Resources/bin/acode-')]
+                 or x['command'].startswith('/Applications/AStudio.app/Contents/Resources/bin/acode-')
+                 or x['command'].startswith(kernel_command)]
         if not roots:
             native_closed = None
             if data.get('native_executor'):

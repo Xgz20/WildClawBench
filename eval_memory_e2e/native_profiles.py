@@ -101,11 +101,21 @@ def native_profiles(output, astudio_boundary_lease=None):
     if Path('/Applications/AStudio.app').is_dir():
         profiles['AstronStudio']['kernel'] = kernel_identity()
     if astudio_boundary_lease is not None:
-        from .os_boundary import frozen_boundary, load_lease, BRIDGE, GUARD, LAUNCHER, COMPOSED_ADAPTER
+        from .os_boundary import frozen_boundary, load_lease, BRIDGE, GUARD, LAUNCHER, COMPOSED_ADAPTER, COMPILED_ADAPTER
         profiles['AstronStudio']['non_target_memory_boundary'] = frozen_boundary(astudio_boundary_lease)
         lease = load_lease(astudio_boundary_lease)
-        composed = lease['contract'] == COMPOSED_ADAPTER
-        profiles['AstronStudio']['memory_protocol']['automatic_generation_compatible'] = composed
+        composed = lease['contract'] in (COMPOSED_ADAPTER, COMPILED_ADAPTER)
+        if lease.get('compiled_kernel'):
+            from . import native_kernel
+            profiles['AstronStudio']['installed_kernel_reference'] = profiles['AstronStudio']['kernel']
+            profiles['AstronStudio']['kernel'] = lease['compiled_kernel']['identity']
+            profiles['AstronStudio']['memory_protocol']['compiled_kernel_diagnostic'] = True
+            profiles['AstronStudio']['driver_sources'][str(Path(native_kernel.__file__).resolve())] = sha(Path(native_kernel.__file__).read_bytes())
+        # A build and synthetic service probe cannot establish real automatic
+        # consolidation. Only v3 may attempt the explicitly unscored diagnosis.
+        diagnostic_generation = lease['contract'] == COMPILED_ADAPTER
+        profiles['AstronStudio']['memory_protocol']['automatic_generation_compatible'] = False
+        profiles['AstronStudio']['memory_protocol']['automatic_generation_diagnostic_allowed'] = diagnostic_generation
         if composed:
             profiles['AstronStudio']['driver_sources'].update(lease['native_executor']['sources'])
         profiles['AstronStudio']['driver_sources'].update({str(p):sha(p.read_bytes()) for p in (BRIDGE,GUARD,LAUNCHER)})
@@ -114,8 +124,8 @@ def native_profiles(output, astudio_boundary_lease=None):
             from .astudio_scope import SELF, attest, load
             from .io import require
             condition = load(unit['scope'], unit)['memory_condition']
-            require(condition['generate_memories'] is False or composed, 'SCOPE_AUTOMATIC_NOT_ADMITTED',
-                    'Automatic generation requires the source-built composed native executor and its live lease')
+            require(condition['generate_memories'] is False or diagnostic_generation, 'SCOPE_AUTOMATIC_NOT_ADMITTED',
+                    'The installed classic shell path is incompatible; automatic diagnosis requires the compiled v3 kernel and native executor')
             attest(unit, profiles['AstronStudio']['non_target_memory_boundary'])
             profiles['AstronStudio']['astudio_scope'] = unit
             profiles['AstronStudio']['isolation'] = 'verified_namespace'

@@ -46,26 +46,33 @@ test('v1 cannot smuggle an unverified executor and v2 requires a scoped loopback
   assert.throws(()=>f.exports.install({...f.spec,contract:'macos-seatbelt-astudio-native-executor/v2'}),/NATIVE_EXECUTOR_REQUIRED/);
   assert.throws(()=>f.exports.install({...f.spec,contract:'macos-seatbelt-astudio-native-executor/v2',astudio_scope:{},
     native_executor:{launch:{url:'ws://example.invalid:7777/'+'a'.repeat(64)}}}),/NATIVE_EXECUTOR_REQUIRED/);
+  assert.throws(()=>f.exports.install({...f.spec,compiled_kernel:{}}),/COMPILED_KERNEL_CONTRACT/);
+  assert.throws(()=>f.exports.install({...f.spec,contract:'macos-seatbelt-astudio-compiled-kernel/v3'}),/COMPILED_KERNEL_CONTRACT/);
   assert.equal(f.calls.length,0);
 });
 test('a scoped backend redirects only its native data homes and preserves login/IPC environment',()=>{
-  for(const contract of ['macos-seatbelt-astudio-backend/v1','macos-seatbelt-astudio-native-executor/v2']){
+  for(const contract of ['macos-seatbelt-astudio-backend/v1','macos-seatbelt-astudio-native-executor/v2','macos-seatbelt-astudio-compiled-kernel/v3']){
   const calls=[],exports={},paths={runtime:'/Users/synthetic/debug/unit/runtime',desktop:'/Users/synthetic/debug/unit/runtime/desktop',
     acode:'/Users/synthetic/debug/unit/runtime/source-home',temp:'/Users/synthetic/debug/unit/runtime/tmp'};
   const saved={unit_id:'unit1',paths},profile=Buffer.from('(version 1)'),scopeBytes=Buffer.from(JSON.stringify(saved));
+  const kernelBytes=Buffer.from('SYNTHETIC-COMPILED-KERNEL');let driftKernel=false;
+  const kernelIdentity={path:'/Users/synthetic/approved-kernel/acode',sha256:createHash('sha256').update(kernelBytes).digest('hex'),version:'synthetic-eval',architecture:'arm64'};
+  const kernelManifest=Buffer.from(JSON.stringify({contract:'astudio-compiled-app-kernel/v1',...kernelIdentity,diagnostic_only:true,installed_astudio_modified:false}));
   const cp={spawn(...args){calls.push(args);return {pid:123}},execFileSync(){return app+' '+entry}};
   vm.runInNewContext(source,{exports,process:{execPath:app,stderr:{write(){}}},Date,
     require:n=>({'node:fs':{realpathSync:p=>p,readFileSync:(p,encoding)=>{
-      const value=p.endsWith('scope.json')?scopeBytes:profile;return encoding?value.toString(encoding):value;
+      const value=p.endsWith('scope.json')?scopeBytes:p.endsWith('compiled-kernel.json')?kernelManifest:p===kernelIdentity.path?(driftKernel?Buffer.from('drift'):kernelBytes):profile;
+      return encoding?value.toString(encoding):value;
     }},'node:crypto':{createHash},'node:child_process':cp,'node:module':{syncBuiltinESMExports(){}}})[n]});
   // Frozen JSON sorts keys; ordering must not make an equivalent scope fail.
   const astudio_scope={contract:'astudio-case-memory-unit/v1',scope:'/Users/synthetic/debug/unit/scope.json',unit_id:'unit1',
     scope_sha256:createHash('sha256').update(scopeBytes).digest('hex'),paths:Object.fromEntries(Object.entries(paths).reverse())};
   const spec={contract,profile:'/Users/synthetic/profile.sb',
     profile_sha256:createHash('sha256').update(profile).digest('hex'),astudio_scope};
-  if(contract.endsWith('/v2'))spec.native_executor={launch:{url:'ws://127.0.0.1:7777/'+'a'.repeat(64)}};
+  if(!contract.endsWith('/v1'))spec.native_executor={launch:{url:'ws://127.0.0.1:7777/'+'a'.repeat(64)}};
+  if(contract.endsWith('/v3'))spec.compiled_kernel={manifest:'/Users/synthetic/compiled-kernel.json',manifest_sha256:createHash('sha256').update(kernelManifest).digest('hex'),identity:kernelIdentity};
   exports.install(spec);
-  const options={env:{ELECTRON_RUN_AS_NODE:'1',ASTUDIO_HOME:paths.desktop,ASTUDIO_ACODE_HOME:'/ordinary',HOME:'/Users/synthetic',existing:'keep'},stdio:['ignore','pipe','pipe','ipc']};
+  const options={env:{ELECTRON_RUN_AS_NODE:'1',ASTUDIO_HOME:paths.desktop,ASTUDIO_ACODE_HOME:'/ordinary',ASTUDIO_ACODE_BIN:'/installed-kernel',HOME:'/Users/synthetic',existing:'keep'},stdio:['ignore','pipe','pipe','ipc']};
   cp.spawn(app,[entry],options);
   assert.equal(calls[0][2].env.ASTUDIO_ACODE_HOME,paths.acode);
   assert.equal(calls[0][2].env.ACODE_HOME,paths.acode);
@@ -76,7 +83,14 @@ test('a scoped backend redirects only its native data homes and preserves login/
   assert.equal(options.env.ASTUDIO_ACODE_HOME,'/ordinary');
   assert.equal(calls[0][2].env.ACODE_EXEC_SERVER_URL,spec.native_executor?.launch.url);
   assert.equal(options.env.ACODE_EXEC_SERVER_URL,undefined);
+  assert.equal(calls[0][2].env.ASTUDIO_ACODE_BIN,spec.compiled_kernel?.identity.path??'/installed-kernel');
+  assert.equal(options.env.ASTUDIO_ACODE_BIN,'/installed-kernel');
   assert.throws(()=>cp.spawn(app,[entry],{env:{...options.env,ASTUDIO_HOME:'/foreign'}}),/UNIT_ENVIRONMENT_REJECTED/);
   assert.equal(calls.length,1);
+  if(spec.compiled_kernel){
+    driftKernel=true;
+    assert.throws(()=>cp.spawn(app,[entry],options),/COMPILED_KERNEL_BINARY_DRIFT/);
+    assert.equal(calls.length,1);
+  }
   }
 });

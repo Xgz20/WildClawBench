@@ -13,6 +13,14 @@ import {context, sha, requestHash, readJson, saveState, artifact, withUiLock, re
 
 import {MACHINE_PATHS,memoryPython} from './machine.mjs';
 let ASTUDIO_PATHS=MACHINE_PATHS,DB=MACHINE_PATHS.astudio_db;
+export function aStudioAutomaticGenerationDiagnosticAllowed(profile) {
+  return profile.memory_protocol?.automatic_generation_diagnostic_allowed===true
+    &&profile.memory_protocol.formal_scoring_allowed===false
+    &&profile.memory_protocol.compiled_kernel_diagnostic===true
+    &&profile.non_target_memory_boundary?.admitted_adapter==='macos-seatbelt-astudio-compiled-kernel/v3'
+    &&profile.non_target_memory_boundary.status==='os_enforced'
+    &&profile.astudio_scope?.contract==='astudio-case-memory-unit/v1';
+}
 export function selectAStudioPaths(profile,root) {
   const scope=profile.astudio_scope;
   if(!scope)return MACHINE_PATHS;
@@ -624,6 +632,7 @@ export async function runAstronStudio(request) {
       if(ctx.manifest.profiles.AstronStudio.memory_protocol?.requires_enabled_memory===true){
         const configs=Object.values(live.config.memory_settings);
         if(ctx.manifest.profiles.AstronStudio.memory_protocol.automatic_generation_compatible===false
+          &&!aStudioAutomaticGenerationDiagnosticAllowed(ctx.manifest.profiles.AstronStudio)
           && configs.some(c=>c.generate_memories!==false))return bindReply(ctx,request,
           {...baseReply(request,live.config),status:'needs_attention',reason:'外层OS隔离与本机原生自动整理沙箱不兼容，自动生成未准入；不得发送Prompt。'},
           {precondition:'automatic_generation_sandbox_not_admitted',prompt_sent:false});

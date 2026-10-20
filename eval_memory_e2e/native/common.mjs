@@ -12,7 +12,7 @@ export const MEMORY_UI_LOCK=MACHINE_PATHS.ui_lock;
 export function assertMemoryFilesystemBoundary(request,profile) {
   const boundary=profile.non_target_memory_boundary;
   if(request.action!=='execute_step'||request.transport_action==='observe'||boundary===undefined)return null;
-  if(request.harness!=='AstronStudio'||!['macos-seatbelt-astudio-backend/v1','macos-seatbelt-astudio-native-executor/v2'].includes(boundary?.admitted_adapter)
+  if(request.harness!=='AstronStudio'||!['macos-seatbelt-astudio-backend/v1','macos-seatbelt-astudio-native-executor/v2','macos-seatbelt-astudio-compiled-kernel/v3'].includes(boundary?.admitted_adapter)
     ||boundary.required!==true||!/^\/[\s\S]+\/lease\.json$/.test(boundary.lease??'')
     ||!/^[a-f0-9]{64}$/.test(boundary.profile_sha256??'')||!/^[a-f0-9]{64}$/.test(boundary.selftest_sha256??''))
     throw Error('NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED');

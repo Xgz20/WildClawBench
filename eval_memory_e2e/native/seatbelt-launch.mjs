@@ -34,6 +34,7 @@ try {
   if(hash!==lease.spawn_guard_sha256)throw Error('SEATBELT_SPAWN_SOURCE_DRIFT');
   const spec={contract:lease.contract,profile:lease.profile,profile_sha256:lease.profile_sha256,
     ...(lease.astudio_scope?{astudio_scope:lease.astudio_scope}:{}),
+    ...(lease.compiled_kernel?{compiled_kernel:lease.compiled_kernel}:{}),
     ...(lease.native_executor?{native_executor:lease.native_executor}:{})};
   const expression=`(()=>{const m=process.getBuiltinModule('node:module');return m.createRequire(${JSON.stringify(guard)})(${JSON.stringify(guard)}).install(${JSON.stringify(spec)})})()`;
   const evaluated=await client.send('Debugger.evaluateOnCallFrame',{callFrameId:pause.callFrames[0].callFrameId,
