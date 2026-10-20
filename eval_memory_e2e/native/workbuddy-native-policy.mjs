@@ -56,7 +56,7 @@ export function buildUnitMemoryRules({debugRoot,allowedPaths,readLiterals=[],wri
   const read=aliases([debugRoot]).map(p=>'(require-all '+predicate('subpath',p)+'\n'+readExclusions+')').join('\n');
   const writes=[...pathExclusions,...writeLiterals.flatMap(p=>[p,'/private'+p]).map(p=>'(require-not '+predicate('literal',p)+')'),
     '(require-not (literal "/dev/null"))','(require-not (literal "/dev/tty"))',
-    '(require-not (literal "/dev/ptmx"))','(require-not (regex #"^/dev/ttys[0-9]{3}$"))'].join('\n');
+    '(require-not (literal "/dev/ptmx"))','(require-not (regex #"^/dev/ttys[0-9][0-9][0-9]$"))'].join('\n');
   return ['(deny file-read*\n'+read+')','(deny file-read-data\n'+metadata.map(p=>predicate('literal',p)).join('\n')+')',
     '(deny file-write* (require-all\n'+writes+'))',
     '(deny file-write-unlink\n'+[...aliases(allowedPaths),...protectedAliases.flatMap(p=>[p,'/private'+p])].map(p=>predicate('literal',p)).join('\n')+')'];
