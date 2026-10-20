@@ -224,10 +224,13 @@ def attest(frozen, boundary):
         raw = subprocess.check_output(['/bin/ps', 'eww', '-p', str(process['pid']), '-o', 'command='], text=True)
         found = {}
         # Never persist the full environment: it contains authentication tokens.
-        for key in ('ASTUDIO_HOME', 'ASTUDIO_ACODE_HOME', 'ACODE_HOME', 'TMPDIR'):
+        keys = ('ASTUDIO_HOME', 'ASTUDIO_ACODE_HOME', 'ACODE_HOME', 'TMPDIR')
+        if lease.get('native_executor'): keys += ('ACODE_EXEC_SERVER_URL',)
+        for key in keys:
             matches = re.findall(r'(?:^| )' + key + r'=([^ ]+)', raw)
             found[key] = matches[-1] if matches else None
         expected = environment(spec)
+        if lease.get('native_executor'): expected['ACODE_EXEC_SERVER_URL'] = lease['native_executor']['launch']['url']
         if '/bin/acode-darwin-' in process['command']:
             expected['ACODE_HOME'] = spec['paths']['overlay']
             # The installed backend deliberately strips desktop-only variables
@@ -235,6 +238,8 @@ def attest(frozen, boundary):
             expected['ASTUDIO_HOME'] = None
             expected['ASTUDIO_ACODE_HOME'] = None
         require(found == expected, 'SCOPE_RUNTIME_ENVIRONMENT', str(process['pid']))
+        if 'ACODE_EXEC_SERVER_URL' in found:
+            found['native_executor_url_sha256'] = sha(found.pop('ACODE_EXEC_SERVER_URL').encode())
         tests = {}
         # Query only synthetic paths and the policy for the ordinary home literal.
         for name, value in [('ordinary_home', machine_paths()['acode'] / 'scope-deny-canary'),
@@ -284,6 +289,9 @@ def close(scope, boundary):
     require(idle['idle'], 'SCOPE_NOT_IDLE', 'Native session or memory job remains active')
     folder = Path(scope).parent
     publish(folder / ('close-idle-' + uuid4().hex + '.json'), idle)
+    if data.get('native_executor'):
+        from eval_memory_e2e.native_executor import require_idle
+        publish(folder / ('close-native-idle-' + uuid4().hex + '.json'), require_idle(data['native_executor']['launch']['control']))
     # Native application quit; no signal, cancellation or mutation of sessions.
     result = subprocess.run(['/usr/bin/osascript', '-e', 'tell application id "cn.xfyun.acode" to quit'],
                             capture_output=True, text=True, timeout=30)
@@ -293,9 +301,13 @@ def close(scope, boundary):
         roots = [x for x in process_table().values() if x['command'].startswith(APP)
                  or x['command'].startswith('/Applications/AStudio.app/Contents/Resources/bin/acode-')]
         if not roots:
+            native_closed = None
+            if data.get('native_executor'):
+                from eval_memory_e2e.native_executor import stop
+                native_closed = stop(data['native_executor']['launch']['control'])
             record = {'status': 'CLOSED', 'unit_id': spec['unit_id'], 'at': timestamp(),
                       'native_quit': True, 'all_execution_roots_exited': True,
-                      'ordinary': verify_ordinary(scope), 'stores_preserved': True}
+                      'ordinary': verify_ordinary(scope), 'stores_preserved': True, 'native_executor_closed': native_closed}
             publish(folder / 'closed.json', record)
             return record
         time.sleep(.2)

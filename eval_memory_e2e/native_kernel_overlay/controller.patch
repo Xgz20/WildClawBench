@@ -1,0 +1,1090 @@
+diff --git a/codex-rs/exec-server/src/file_read.rs b/codex-rs/exec-server/src/file_read.rs
+index 8cc84b6..b5c5f4c 100644
+--- a/codex-rs/exec-server/src/file_read.rs
++++ b/codex-rs/exec-server/src/file_read.rs
+@@ -16,7 +16,14 @@ pub(crate) struct FileReadBlock {
+ 
+ #[derive(Clone, Default)]
+ pub(crate) struct FileReadHandleManager {
+-    handles: Arc<Mutex<HashMap<String, Arc<File>>>>,
++    handles: Arc<Mutex<HashMap<String, ReadHandle>>>,
++}
++
++#[derive(Clone)]
++enum ReadHandle {
++    Direct(Arc<File>),
++    #[cfg(target_os = "macos")]
++    Controller(Arc<Mutex<crate::controller_read::ControllerRead>>),
+ }
+ 
+ impl FileReadHandleManager {
+@@ -25,7 +32,27 @@ impl FileReadHandleManager {
+         handle_id: String,
+         file: tokio::fs::File,
+     ) -> io::Result<String> {
+-        let file = Arc::new(file.into_std().await);
++        self.register(
++            handle_id,
++            ReadHandle::Direct(Arc::new(file.into_std().await)),
++        )
++        .await
++    }
++
++    #[cfg(target_os = "macos")]
++    pub(crate) async fn open_controller(
++        &self,
++        handle_id: String,
++        reader: crate::controller_read::ControllerRead,
++    ) -> io::Result<String> {
++        self.register(
++            handle_id,
++            ReadHandle::Controller(Arc::new(Mutex::new(reader))),
++        )
++        .await
++    }
++
++    async fn register(&self, handle_id: String, file: ReadHandle) -> io::Result<String> {
+         let mut handles = self.handles.lock().await;
+         if handles.contains_key(&handle_id) {
+             return Err(io::Error::new(
+@@ -57,13 +84,18 @@ impl FileReadHandleManager {
+                 .cloned()
+                 .ok_or_else(|| unknown_handle_error(handle_id))?
+         };
+-        let result =
+-            match tokio::task::spawn_blocking(move || read_block_at(&file, offset, len)).await {
+-                Ok(result) => result,
+-                Err(error) => Err(io::Error::other(format!(
+-                    "file read task stopped unexpectedly: {error}"
+-                ))),
+-            };
++        let result = match file {
++            ReadHandle::Direct(file) => {
++                match tokio::task::spawn_blocking(move || read_block_at(&file, offset, len)).await {
++                    Ok(result) => result,
++                    Err(error) => Err(io::Error::other(format!(
++                        "file read task stopped unexpectedly: {error}"
++                    ))),
++                }
++            }
++            #[cfg(target_os = "macos")]
++            ReadHandle::Controller(reader) => reader.lock().await.read(offset, len).await,
++        };
+         if result.is_err() {
+             self.close(handle_id).await;
+         }
+diff --git a/codex-rs/exec-server/src/fs_sandbox.rs b/codex-rs/exec-server/src/fs_sandbox.rs
+index dac0194..f3685f9 100644
+--- a/codex-rs/exec-server/src/fs_sandbox.rs
++++ b/codex-rs/exec-server/src/fs_sandbox.rs
+@@ -66,6 +66,15 @@ impl FileSystemSandboxRunner {
+         sandbox: &FileSystemSandboxContext,
+         request: FsHelperRequest,
+     ) -> Result<FsHelperPayload, JSONRPCErrorError> {
++        let command = self.prepare_command(sandbox)?;
++        let request_json = serde_json::to_vec(&request).map_err(json_error)?;
++        run_command(command, request_json).await
++    }
++
++    pub(crate) fn prepare_command(
++        &self,
++        sandbox: &FileSystemSandboxContext,
++    ) -> Result<SandboxExecRequest, JSONRPCErrorError> {
+         let cwd = sandbox_cwd(sandbox)?;
+         let native_permissions: PermissionProfile =
+             sandbox.permissions.clone().try_into().map_err(|err| {
+@@ -89,9 +98,7 @@ impl FileSystemSandboxRunner {
+             &file_system_policy,
+             network_policy,
+         );
+-        let command = self.sandbox_exec_request(&permission_profile, &cwd, sandbox)?;
+-        let request_json = serde_json::to_vec(&request).map_err(json_error)?;
+-        run_command(command, request_json).await
++        self.sandbox_exec_request(&permission_profile, &cwd, sandbox)
+     }
+ 
+     fn sandbox_exec_request(
+@@ -325,7 +332,7 @@ async fn run_command(
+     }
+ }
+ 
+-fn spawn_command(
++pub(crate) fn spawn_command(
+     SandboxExecRequest {
+         command: argv,
+         cwd,
+diff --git a/codex-rs/exec-server/src/lib.rs b/codex-rs/exec-server/src/lib.rs
+index 882c832..5a9f631 100644
+--- a/codex-rs/exec-server/src/lib.rs
++++ b/codex-rs/exec-server/src/lib.rs
+@@ -2,6 +2,9 @@ mod client;
+ mod client_api;
+ mod client_transport;
+ mod connection;
++mod controller_boundary;
++#[cfg(target_os = "macos")]
++mod controller_read;
+ mod environment;
+ mod environment_provider;
+ mod environment_registry;
+@@ -60,6 +63,10 @@ pub use codex_file_system::WalkEntryKind;
+ pub use codex_file_system::WalkError;
+ pub use codex_file_system::WalkOptions;
+ pub use codex_file_system::WalkOutcome;
++#[cfg(target_os = "macos")]
++pub use controller_read::CONTROLLER_READ_ARG1;
++#[cfg(target_os = "macos")]
++pub use controller_read::worker_main as run_controller_read_main;
+ pub use environment::CODEX_EXEC_SERVER_NOISE_AUTH_TOKEN_ENV_VAR;
+ pub use environment::CODEX_EXEC_SERVER_NOISE_CHATGPT_ACCOUNT_ID_ENV_VAR;
+ pub use environment::CODEX_EXEC_SERVER_NOISE_ENVIRONMENT_ID_ENV_VAR;
+diff --git a/codex-rs/exec-server/src/local_file_system.rs b/codex-rs/exec-server/src/local_file_system.rs
+index 281fd1e..a1500b1 100644
+--- a/codex-rs/exec-server/src/local_file_system.rs
++++ b/codex-rs/exec-server/src/local_file_system.rs
+@@ -84,7 +84,10 @@ impl LocalFileSystem {
+         &'a dyn ExecutorFileSystem,
+         Option<&'a FileSystemSandboxContext>,
+     )> {
+-        if sandbox.is_some_and(FileSystemSandboxContext::should_run_in_sandbox) {
++        let sandbox = crate::controller_boundary::context(sandbox);
++        if crate::controller_boundary::active()
++            || sandbox.is_some_and(FileSystemSandboxContext::should_run_in_sandbox)
++        {
+             Ok((self.sandboxed()?, sandbox))
+         } else {
+             Ok((&self.unsandboxed, sandbox))
+@@ -98,7 +101,9 @@ impl LocalFileSystem {
+         path: &PathUri,
+         sandbox: Option<&FileSystemSandboxContext>,
+     ) -> FileSystemResult<tokio::fs::File> {
+-        if sandbox.is_some_and(FileSystemSandboxContext::should_run_in_sandbox) {
++        if crate::controller_boundary::active()
++            || sandbox.is_some_and(FileSystemSandboxContext::should_run_in_sandbox)
++        {
+             return Err(io::Error::new(
+                 io::ErrorKind::InvalidInput,
+                 "streaming file reads do not support platform sandboxing",
+diff --git a/codex-rs/exec-server/src/process_sandbox.rs b/codex-rs/exec-server/src/process_sandbox.rs
+index b5dd54e..c4e1761 100644
+--- a/codex-rs/exec-server/src/process_sandbox.rs
++++ b/codex-rs/exec-server/src/process_sandbox.rs
+@@ -31,7 +31,7 @@ pub(crate) fn prepare_exec_request(
+     env: HashMap<String, String>,
+     runtime_paths: Option<&ExecServerRuntimePaths>,
+ ) -> Result<PreparedExecRequest, JSONRPCErrorError> {
+-    let Some(sandbox_context) = params.sandbox.as_ref() else {
++    let Some(sandbox_context) = crate::controller_boundary::context(params.sandbox.as_ref()) else {
+         return Ok(PreparedExecRequest {
+             command: params.argv.clone(),
+             cwd: native_path(&params.cwd, "cwd")?,
+@@ -100,8 +100,24 @@ pub(crate) fn prepare_exec_request(
+         }
+         SandboxType::MacosSeatbelt | SandboxType::LinuxSeccomp => {}
+     }
+-    let (program, args) = params
+-        .argv
++    let mut argv = params.argv.clone();
++    if crate::controller_boundary::active()
++        && let Some(arg0) = &params.arg0
++    {
++        let mut wrapper = vec![
++            runtime_paths
++                .codex_self_exe
++                .as_path()
++                .to_str()
++                .ok_or_else(|| invalid_params("controller executable path must be UTF-8".into()))?
++                .to_owned(),
++            "--astudio-controller-exec-arg0".into(),
++            arg0.clone(),
++        ];
++        wrapper.append(&mut argv);
++        argv = wrapper;
++    }
++    let (program, args) = argv
+         .split_first()
+         .ok_or_else(|| invalid_params("argv must not be empty".to_string()))?;
+     let request = sandbox_manager
+diff --git a/codex-rs/exec-server/src/sandboxed_file_system.rs b/codex-rs/exec-server/src/sandboxed_file_system.rs
+index 5feefe3..5c5f31f 100644
+--- a/codex-rs/exec-server/src/sandboxed_file_system.rs
++++ b/codex-rs/exec-server/src/sandboxed_file_system.rs
+@@ -390,8 +390,8 @@ fn validate_native_path(path: &PathUri) -> FileSystemResult<()> {
+ fn require_platform_sandbox(
+     sandbox: Option<&FileSystemSandboxContext>,
+ ) -> FileSystemResult<&FileSystemSandboxContext> {
+-    sandbox
+-        .filter(|sandbox| sandbox.should_run_in_sandbox())
++    crate::controller_boundary::context(sandbox)
++        .filter(|sandbox| crate::controller_boundary::active() || sandbox.should_run_in_sandbox())
+         .ok_or_else(|| {
+             io::Error::new(
+                 io::ErrorKind::InvalidInput,
+diff --git a/codex-rs/exec-server/src/server/file_system_handler.rs b/codex-rs/exec-server/src/server/file_system_handler.rs
+index cbf263d..00bfe24 100644
+--- a/codex-rs/exec-server/src/server/file_system_handler.rs
++++ b/codex-rs/exec-server/src/server/file_system_handler.rs
+@@ -47,13 +47,15 @@ const MAX_FILE_READ_HANDLE_ID_BYTES: usize = 32;
+ pub(crate) struct FileSystemHandler {
+     file_system: LocalFileSystem,
+     file_reads: FileReadHandleManager,
++    runtime_paths: ExecServerRuntimePaths,
+ }
+ 
+ impl FileSystemHandler {
+     pub(crate) fn new(runtime_paths: ExecServerRuntimePaths) -> Self {
+         Self {
+-            file_system: LocalFileSystem::with_runtime_paths(runtime_paths),
++            file_system: LocalFileSystem::with_runtime_paths(runtime_paths.clone()),
+             file_reads: FileReadHandleManager::default(),
++            runtime_paths,
+         }
+     }
+ 
+@@ -66,6 +68,22 @@ impl FileSystemHandler {
+         params: FsOpenParams,
+     ) -> Result<FsOpenResponse, JSONRPCErrorError> {
+         validate_file_read_handle_id(&params.handle_id)?;
++        #[cfg(target_os = "macos")]
++        if crate::controller_boundary::active() {
++            let reader = crate::controller_read::ControllerRead::open(
++                self.runtime_paths.clone(),
++                &params.path,
++                params.sandbox.as_ref(),
++            )
++            .await
++            .map_err(map_fs_error)?;
++            let handle_id = self
++                .file_reads
++                .open_controller(params.handle_id, reader)
++                .await
++                .map_err(map_fs_error)?;
++            return Ok(FsOpenResponse { handle_id });
++        }
+         let file = self
+             .file_system
+             .open_file_for_read(&params.path, params.sandbox.as_ref())
+diff --git a/codex-rs/sandboxing/src/lib.rs b/codex-rs/sandboxing/src/lib.rs
+index c910914..24d368c 100644
+--- a/codex-rs/sandboxing/src/lib.rs
++++ b/codex-rs/sandboxing/src/lib.rs
+@@ -1,5 +1,7 @@
+ #[cfg(target_os = "linux")]
+ mod bwrap;
++#[cfg(target_os = "macos")]
++pub mod controller_seatbelt;
+ mod denial;
+ pub mod landlock;
+ mod manager;
+diff --git a/codex-rs/sandboxing/src/manager.rs b/codex-rs/sandboxing/src/manager.rs
+index 83fcd24..a04c598 100644
+--- a/codex-rs/sandboxing/src/manager.rs
++++ b/codex-rs/sandboxing/src/manager.rs
+@@ -285,6 +285,10 @@ impl SandboxManager {
+         windows_sandbox_level: WindowsSandboxLevel,
+         has_managed_network_requirements: bool,
+     ) -> SandboxType {
++        #[cfg(target_os = "macos")]
++        if crate::controller_seatbelt::is_active() {
++            return SandboxType::MacosSeatbelt;
++        }
+         if self.should_sandbox(
+             file_system_policy,
+             network_policy,
+diff --git a/codex-rs/sandboxing/src/seatbelt.rs b/codex-rs/sandboxing/src/seatbelt.rs
+index f53569d..97dbf28 100644
+--- a/codex-rs/sandboxing/src/seatbelt.rs
++++ b/codex-rs/sandboxing/src/seatbelt.rs
+@@ -758,6 +758,8 @@ pub fn create_seatbelt_command_args(
+     ]
+     .concat();
+ 
++    let full_policy = crate::controller_seatbelt::compose(full_policy, &dir_params)?;
++
+     let mut seatbelt_args: Vec<String> = vec!["-p".to_string(), full_policy];
+     let definition_args = dir_params
+         .into_iter()
+diff --git a/codex-rs/sandboxing/src/seatbelt_tests.rs b/codex-rs/sandboxing/src/seatbelt_tests.rs
+index b15019a..9150ca0 100644
+--- a/codex-rs/sandboxing/src/seatbelt_tests.rs
++++ b/codex-rs/sandboxing/src/seatbelt_tests.rs
+@@ -253,7 +253,7 @@ fn explicit_unreadable_paths_are_excluded_from_full_disk_read_and_write_access()
+         writable_definitions,
+         vec![
+             "-DWRITABLE_ROOT_0=/".to_string(),
+-            "-DWRITABLE_ROOT_0_EXCLUDED_0=/.codex".to_string(),
++            "-DWRITABLE_ROOT_0_EXCLUDED_0=/.acode".to_string(),
+             format!("-DWRITABLE_ROOT_0_EXCLUDED_1={}", unreadable_root.display()),
+         ],
+         "unexpected write carveout parameters in args: {args:#?}"
+@@ -877,7 +877,7 @@ fn create_seatbelt_args_with_read_only_git_and_codex_subpaths() {
+         vulnerable_root_canonical,
+         dot_git_canonical,
+         dot_agents_canonical: _,
+-        dot_codex_canonical,
++        dot_acode_canonical,
+         empty_root,
+         empty_root_canonical,
+     } = populate_tmpdir(tmp.path());
+@@ -897,13 +897,13 @@ fn create_seatbelt_args_with_read_only_git_and_codex_subpaths() {
+     };
+ 
+     // Create the Seatbelt command to wrap a shell command that tries to
+-    // write to .codex/config.toml in the vulnerable root.
++    // write to .acode/config.toml in the vulnerable root.
+     let shell_command: Vec<String> = [
+         "bash",
+         "-c",
+         "echo 'sandbox_mode = \"danger-full-access\"' > \"$1\"",
+         "bash",
+-        dot_codex_canonical
++        dot_acode_canonical
+             .join("config.toml")
+             .to_string_lossy()
+             .as_ref(),
+@@ -937,7 +937,7 @@ fn create_seatbelt_args_with_read_only_git_and_codex_subpaths() {
+     assert!(
+         policy_text.contains("WRITABLE_ROOT_1_EXCLUDED_0")
+             && policy_text.contains("WRITABLE_ROOT_1_EXCLUDED_1"),
+-        "expected explicit writable root .git/.codex carveouts in policy:\n{policy_text}",
++        "expected explicit writable root .git/.acode carveouts in policy:\n{policy_text}",
+     );
+     assert!(
+         policy_text.contains(&seatbelt_protected_metadata_name_requirements(
+@@ -969,21 +969,21 @@ fn create_seatbelt_args_with_read_only_git_and_codex_subpaths() {
+             "-DWRITABLE_ROOT_0_EXCLUDED_0={}",
+             cwd.canonicalize()
+                 .expect("canonicalize cwd")
+-                .join(".codex")
++                .join(".git")
+                 .display()
+         ),
+         format!(
+             "-DWRITABLE_ROOT_0_EXCLUDED_1={}",
+             cwd.canonicalize()
+                 .expect("canonicalize cwd")
+-                .join(".git")
++                .join(".agents")
+                 .display()
+         ),
+         format!(
+             "-DWRITABLE_ROOT_0_EXCLUDED_2={}",
+             cwd.canonicalize()
+                 .expect("canonicalize cwd")
+-                .join(".agents")
++                .join(".acode")
+                 .display()
+         ),
+         format!(
+@@ -996,7 +996,7 @@ fn create_seatbelt_args_with_read_only_git_and_codex_subpaths() {
+         ),
+         format!(
+             "-DWRITABLE_ROOT_1_EXCLUDED_1={}",
+-            dot_codex_canonical.to_string_lossy()
++            dot_acode_canonical.to_string_lossy()
+         ),
+         format!(
+             "-DWRITABLE_ROOT_2={}",
+@@ -1018,9 +1018,9 @@ fn create_seatbelt_args_with_read_only_git_and_codex_subpaths() {
+         .expect("seatbelt args should include command separator");
+     assert_eq!(args[command_index + 1..], shell_command);
+ 
+-    // Verify that .codex/config.toml cannot be modified under the generated
++    // Verify that .acode/config.toml cannot be modified under the generated
+     // Seatbelt policy.
+-    let config_toml = dot_codex_canonical.join("config.toml");
++    let config_toml = dot_acode_canonical.join("config.toml");
+     let output = Command::new(MACOS_PATH_TO_SEATBELT_EXECUTABLE)
+         .args(&args)
+         .current_dir(&cwd)
+@@ -1076,7 +1076,7 @@ fn create_seatbelt_args_with_read_only_git_and_codex_subpaths() {
+     );
+     assert_seatbelt_denied(&output.stderr, &pre_commit_hook);
+ 
+-    // Verify that writing a file to the folder containing .git and .codex is allowed.
++    // Verify that writing a file to the folder containing .git and .acode is allowed.
+     let allowed_file = vulnerable_root_canonical.join("allowed.txt");
+     let shell_command_allowed: Vec<String> = [
+         "bash",
+@@ -1280,7 +1280,7 @@ fn create_seatbelt_args_for_cwd_as_git_repo() {
+         vulnerable_root_canonical,
+         dot_git_canonical,
+         dot_agents_canonical,
+-        dot_codex_canonical,
++        dot_acode_canonical,
+         ..
+     } = populate_tmpdir(tmp.path());
+ 
+@@ -1299,7 +1299,7 @@ fn create_seatbelt_args_for_cwd_as_git_repo() {
+         "-c",
+         "echo 'sandbox_mode = \"danger-full-access\"' > \"$1\"",
+         "bash",
+-        dot_codex_canonical
++        dot_acode_canonical
+             .join("config.toml")
+             .to_string_lossy()
+             .as_ref(),
+@@ -1359,21 +1359,21 @@ fn create_seatbelt_args_for_cwd_as_git_repo() {
+         args.contains(&expected_dot_git),
+         "missing {expected_dot_git}: {args:#?}"
+     );
+-    let expected_dot_codex = format!(
+-        "-DWRITABLE_ROOT_0_EXCLUDED_1={}",
+-        dot_codex_canonical.to_string_lossy()
++    let expected_dot_acode = format!(
++        "-DWRITABLE_ROOT_0_EXCLUDED_2={}",
++        dot_acode_canonical.to_string_lossy()
+     );
+     assert!(
+-        args.contains(&expected_dot_codex),
+-        "missing {expected_dot_codex}: {args:#?}"
++        args.contains(&expected_dot_acode),
++        "missing {expected_dot_acode}: {args:#?}"
+     );
+-    let unexpected_dot_agents = format!(
++    let expected_dot_agents = format!(
+         "-DWRITABLE_ROOT_0_EXCLUDED_1={}",
+         dot_agents_canonical.to_string_lossy()
+     );
+     assert!(
+-        !args.contains(&unexpected_dot_agents),
+-        "missing .agents should be handled by regex rather than materialized as a path param: {args:#?}"
++        args.contains(&expected_dot_agents),
++        "cwd .agents must retain its explicit protected path parameter even when missing: {args:#?}"
+     );
+     let expected_slash_tmp = format!("-DWRITABLE_ROOT_1={}", slash_tmp.to_string_lossy());
+     assert!(
+@@ -1392,14 +1392,14 @@ struct PopulatedTmp {
+     /// For the purposes of this test, we consider this a "vulnerable" root
+     /// because a bad actor could write to .git/hooks/pre-commit so an
+     /// unsuspecting user would run code as privileged the next time they
+-    /// ran `git commit` themselves, or modified .codex/config.toml to
++    /// ran `git commit` themselves, or modified .acode/config.toml to
+     /// contain `sandbox_mode = "danger-full-access"` so the agent would
+     /// have full privileges the next time it ran in that repo.
+     vulnerable_root: PathBuf,
+     vulnerable_root_canonical: PathBuf,
+     dot_git_canonical: PathBuf,
+     dot_agents_canonical: PathBuf,
+-    dot_codex_canonical: PathBuf,
++    dot_acode_canonical: PathBuf,
+ 
+     /// Path without protected metadata subfolders.
+     empty_root: PathBuf,
+@@ -1420,12 +1420,12 @@ fn populate_tmpdir(tmp: &Path) -> PopulatedTmp {
+         .output()
+         .expect("git init .");
+ 
+-    fs::create_dir_all(vulnerable_root.join(".codex")).expect("create .codex");
++    fs::create_dir_all(vulnerable_root.join(".acode")).expect("create .acode");
+     fs::write(
+-        vulnerable_root.join(".codex").join("config.toml"),
++        vulnerable_root.join(".acode").join("config.toml"),
+         "sandbox_mode = \"read-only\"\n",
+     )
+-    .expect("write .codex/config.toml");
++    .expect("write .acode/config.toml");
+ 
+     let empty_root = tmp.join("empty_root");
+     fs::create_dir_all(&empty_root).expect("create empty_root");
+@@ -1436,14 +1436,14 @@ fn populate_tmpdir(tmp: &Path) -> PopulatedTmp {
+         .expect("canonicalize vulnerable_root");
+     let dot_git_canonical = vulnerable_root_canonical.join(".git");
+     let dot_agents_canonical = vulnerable_root_canonical.join(".agents");
+-    let dot_codex_canonical = vulnerable_root_canonical.join(".codex");
++    let dot_acode_canonical = vulnerable_root_canonical.join(".acode");
+     let empty_root_canonical = empty_root.canonicalize().expect("canonicalize empty_root");
+     PopulatedTmp {
+         vulnerable_root,
+         vulnerable_root_canonical,
+         dot_git_canonical,
+         dot_agents_canonical,
+-        dot_codex_canonical,
++        dot_acode_canonical,
+         empty_root,
+         empty_root_canonical,
+     }
+diff --git a/codex-rs/exec-server/src/bin/acode-memory-executor.rs b/codex-rs/exec-server/src/bin/acode-memory-executor.rs
+new file mode 100644
+index 0000000..c6637b9
+--- /dev/null
++++ b/codex-rs/exec-server/src/bin/acode-memory-executor.rs
+@@ -0,0 +1,67 @@
++//! Controller-only native execution service; never loads user configuration,
++//! login credentials or model state. Every worker retains native Seatbelt.
++use std::error::Error;
++
++fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
++    let args: Vec<String> = std::env::args().skip(1).collect();
++    if args.as_slice() == ["--version"] {
++        println!(
++            "{}",
++            serde_json::json!({"contract":"astudio-composed-native-executor/v2",
++            "package_version":env!("CARGO_PKG_VERSION"),
++            "source_commit":option_env!("ASTUDIO_EVAL_SOURCE_COMMIT"),
++            "patch_sha256":option_env!("ASTUDIO_EVAL_PATCH_SHA256")})
++        );
++        return Ok(());
++    }
++    #[cfg(target_os = "macos")]
++    if args
++        .first()
++        .is_some_and(|arg| arg == "--astudio-controller-exec-arg0")
++    {
++        use std::os::unix::process::CommandExt;
++        if args.len() < 3 {
++            return Err("missing inner argv0/executable".into());
++        }
++        return Err(std::process::Command::new(&args[2])
++            .arg0(&args[1])
++            .args(&args[3..])
++            .exec()
++            .into());
++    }
++    if args
++        .first()
++        .is_some_and(|arg| arg == codex_exec_server::CODEX_FS_HELPER_ARG1)
++    {
++        codex_exec_server::run_fs_helper_main();
++    }
++    #[cfg(target_os = "macos")]
++    if args
++        .first()
++        .is_some_and(|arg| arg == codex_exec_server::CONTROLLER_READ_ARG1)
++    {
++        codex_exec_server::run_controller_read_main();
++    }
++    #[cfg(target_os = "macos")]
++    {
++        if args.len() != 4 || args[0] != "--deny-profile" || args[2] != "--audit-dir" {
++            return Err(
++                "required: --deny-profile <frozen SBPL> --audit-dir <private directory>".into(),
++            );
++        }
++        let profile = std::fs::read_to_string(&args[1])?;
++        codex_sandboxing::controller_seatbelt::install(&profile, std::path::Path::new(&args[3]))?;
++        let paths = codex_exec_server::ExecServerRuntimePaths::new(
++            std::env::current_exe()?,
++            /*codex_linux_sandbox_exe*/ None,
++        )?;
++        tokio::runtime::Builder::new_multi_thread()
++            .enable_all()
++            .build()?
++            .block_on(codex_exec_server::run_main("stdio://", paths))
++    }
++    #[cfg(not(target_os = "macos"))]
++    {
++        Err("the memory execution controller requires macOS Seatbelt".into())
++    }
++}
+diff --git a/codex-rs/exec-server/src/controller_boundary.rs b/codex-rs/exec-server/src/controller_boundary.rs
+new file mode 100644
+index 0000000..db373f5
+--- /dev/null
++++ b/codex-rs/exec-server/src/controller_boundary.rs
+@@ -0,0 +1,31 @@
++//! The dedicated controller never executes a request outside native Seatbelt,
++//! including a missing, disabled or externally-enforced native sandbox intent.
++use std::sync::LazyLock;
++
++use crate::FileSystemSandboxContext;
++use codex_protocol::models::PermissionProfile;
++
++static UNRESTRICTED_NATIVE_INTENT: LazyLock<FileSystemSandboxContext> = LazyLock::new(|| {
++    FileSystemSandboxContext::from_permission_profile(PermissionProfile::Disabled)
++});
++
++pub(crate) fn active() -> bool {
++    #[cfg(target_os = "macos")]
++    {
++        codex_sandboxing::controller_seatbelt::is_active()
++    }
++    #[cfg(not(target_os = "macos"))]
++    {
++        false
++    }
++}
++
++pub(crate) fn context(
++    sandbox: Option<&FileSystemSandboxContext>,
++) -> Option<&FileSystemSandboxContext> {
++    if active() {
++        sandbox.or(Some(&UNRESTRICTED_NATIVE_INTENT))
++    } else {
++        sandbox
++    }
++}
+diff --git a/codex-rs/exec-server/src/controller_read.rs b/codex-rs/exec-server/src/controller_read.rs
+new file mode 100644
+index 0000000..4f9d9fc
+--- /dev/null
++++ b/codex-rs/exec-server/src/controller_read.rs
+@@ -0,0 +1,192 @@
++//! A streaming read handle whose file descriptor remains in a native-sandboxed
++//! worker. The controller never opens the requested data path itself.
++use std::io;
++use std::io::BufRead;
++use std::io::Write;
++use std::os::unix::fs::FileExt;
++use std::os::unix::fs::OpenOptionsExt;
++use tokio::io::AsyncBufReadExt;
++use tokio::io::AsyncWriteExt;
++
++use crate::ExecServerRuntimePaths;
++use crate::FileSystemSandboxContext;
++use crate::file_read::FileReadBlock;
++use crate::fs_sandbox::FileSystemSandboxRunner;
++use crate::fs_sandbox::spawn_command;
++use codex_utils_path_uri::PathUri;
++
++pub const CONTROLLER_READ_ARG1: &str = "--astudio-controller-read";
++
++pub(crate) struct ControllerRead {
++    _child: tokio::process::Child,
++    input: tokio::process::ChildStdin,
++    output: tokio::io::BufReader<tokio::process::ChildStdout>,
++}
++
++impl ControllerRead {
++    pub(crate) async fn open(
++        runtime: ExecServerRuntimePaths,
++        path: &PathUri,
++        sandbox: Option<&FileSystemSandboxContext>,
++    ) -> io::Result<Self> {
++        let context = crate::controller_boundary::context(sandbox)
++            .ok_or_else(|| io::Error::other("controller boundary is required"))?;
++        let mut command = FileSystemSandboxRunner::new(runtime)
++            .prepare_command(context)
++            .map_err(|error| io::Error::other(error.message))?;
++        let flag = command
++            .command
++            .last_mut()
++            .ok_or_else(|| io::Error::other("missing native file helper"))?;
++        if flag.as_str() != crate::CODEX_FS_HELPER_ARG1 {
++            return Err(io::Error::other("unexpected native file helper"));
++        }
++        *flag = CONTROLLER_READ_ARG1.into();
++        let mut child = spawn_command(command).map_err(|error| io::Error::other(error.message))?;
++        let input = child
++            .stdin
++            .take()
++            .ok_or_else(|| io::Error::other("missing controller read stdin"))?;
++        let output = child
++            .stdout
++            .take()
++            .ok_or_else(|| io::Error::other("missing controller read stdout"))?;
++        let mut reader = Self {
++            _child: child,
++            input,
++            output: tokio::io::BufReader::new(output),
++        };
++        reader.exchange(serde_json::json!({"path":path})).await?;
++        Ok(reader)
++    }
++
++    async fn exchange(&mut self, value: serde_json::Value) -> io::Result<serde_json::Value> {
++        let mut bytes = serde_json::to_vec(&value)?;
++        bytes.push(b'\n');
++        self.input.write_all(&bytes).await?;
++        self.input.flush().await?;
++        let mut line = String::new();
++        let length = tokio::time::timeout(
++            std::time::Duration::from_secs(30),
++            self.output.read_line(&mut line),
++        )
++        .await
++        .map_err(|_| {
++            io::Error::new(io::ErrorKind::TimedOut, "sandboxed read helper timed out")
++        })??;
++        if length == 0 || length > 2 * crate::FILE_READ_CHUNK_SIZE + 1024 {
++            return Err(io::Error::other("invalid sandboxed read helper response"));
++        }
++        let reply: serde_json::Value = serde_json::from_str(&line)?;
++        if let Some(error) = reply.get("error") {
++            return Err(reply
++                .get("os_error")
++                .and_then(serde_json::Value::as_i64)
++                .map(|code| io::Error::from_raw_os_error(code as i32))
++                .unwrap_or_else(|| io::Error::other(error.to_string())));
++        }
++        Ok(reply)
++    }
++
++    pub(crate) async fn read(&mut self, offset: u64, len: usize) -> io::Result<FileReadBlock> {
++        use base64::Engine as _;
++        let reply = self
++            .exchange(serde_json::json!({"offset":offset,"len":len}))
++            .await?;
++        let bytes = reply
++            .get("data")
++            .and_then(serde_json::Value::as_str)
++            .ok_or_else(|| io::Error::other("missing sandboxed read data"))?;
++        let bytes = base64::engine::general_purpose::STANDARD
++            .decode(bytes)
++            .map_err(io::Error::other)?;
++        if bytes.len() > len {
++            return Err(io::Error::other("oversized sandboxed read block"));
++        }
++        let eof = reply
++            .get("eof")
++            .and_then(serde_json::Value::as_bool)
++            .ok_or_else(|| io::Error::other("missing sandboxed read EOF"))?;
++        Ok(FileReadBlock { bytes, eof })
++    }
++}
++
++fn worker() -> io::Result<()> {
++    use base64::Engine as _;
++    let mut input = io::stdin().lock();
++    let mut output = io::stdout().lock();
++    let mut header = String::new();
++    input.read_line(&mut header)?;
++    if header.len() > 64 * 1024 {
++        return Err(io::Error::other("oversized sandboxed read path"));
++    }
++    let init: serde_json::Value = serde_json::from_str(&header)?;
++    let uri: PathUri = serde_json::from_value(
++        init.get("path")
++            .cloned()
++            .ok_or_else(|| io::Error::other("missing sandboxed read path"))?,
++    )?;
++    let path = uri.to_abs_path()?;
++    let file = std::fs::OpenOptions::new()
++        .read(true)
++        .custom_flags(libc::O_NONBLOCK)
++        .open(path.as_path())?;
++    if !file.metadata()?.is_file() {
++        return Err(io::Error::other(
++            "sandboxed streaming reads require a regular file",
++        ));
++    }
++    writeln!(output, "{{\"opened\":true}}")?;
++    output.flush()?;
++    for line in input.lines() {
++        let line = line?;
++        if line.len() > 4096 {
++            return Err(io::Error::other("oversized sandboxed read request"));
++        }
++        let request: serde_json::Value = serde_json::from_str(&line)?;
++        let offset = request
++            .get("offset")
++            .and_then(serde_json::Value::as_u64)
++            .ok_or_else(|| io::Error::other("missing read offset"))?;
++        let len = request
++            .get("len")
++            .and_then(serde_json::Value::as_u64)
++            .ok_or_else(|| io::Error::other("missing read length"))?;
++        if len == 0 || len > crate::FILE_READ_CHUNK_SIZE as u64 {
++            return Err(io::Error::other("invalid read length"));
++        }
++        let mut bytes = vec![0; len as usize];
++        let mut read = 0;
++        while read < bytes.len() {
++            let position = offset
++                .checked_add(read as u64)
++                .ok_or_else(|| io::Error::other("read offset overflow"))?;
++            match file.read_at(&mut bytes[read..], position) {
++                Ok(0) => break,
++                Ok(count) => read += count,
++                Err(error) if error.kind() == io::ErrorKind::Interrupted => {}
++                Err(error) => return Err(error),
++            }
++        }
++        bytes.truncate(read);
++        let reply = serde_json::json!({"data":base64::engine::general_purpose::STANDARD.encode(&bytes),"eof":read < len as usize});
++        serde_json::to_writer(&mut output, &reply)?;
++        writeln!(output)?;
++        output.flush()?;
++    }
++    Ok(())
++}
++
++/// Entered only after the parent has installed the composed native sandbox.
++pub fn worker_main() -> ! {
++    match worker() {
++        Ok(()) => std::process::exit(0),
++        Err(error) => {
++            println!(
++                "{}",
++                serde_json::json!({"error":error.to_string(),"os_error":error.raw_os_error()})
++            );
++            std::process::exit(1);
++        }
++    }
++}
+diff --git a/codex-rs/sandboxing/src/controller_seatbelt.rs b/codex-rs/sandboxing/src/controller_seatbelt.rs
+new file mode 100644
+index 0000000..ce08def
+--- /dev/null
++++ b/codex-rs/sandboxing/src/controller_seatbelt.rs
+@@ -0,0 +1,209 @@
++//! An immutable controller deny boundary for a dedicated macOS execution service.
++//! Native grants are generated first and retained byte-for-byte. This boundary
++//! can only append literal explicit denies, never replace or enlarge grants.
++
++use std::fs;
++use std::path::Path;
++use std::path::PathBuf;
++use std::sync::OnceLock;
++use std::sync::atomic::AtomicU64;
++use std::sync::atomic::Ordering;
++
++const HEADER: &str = "(version 1)\n(allow default)\n";
++static BOUNDARY: OnceLock<ControllerBoundary> = OnceLock::new();
++
++struct ControllerBoundary {
++    denies: String,
++    audit_dir: PathBuf,
++    sequence: AtomicU64,
++}
++
++#[derive(Debug, PartialEq)]
++enum Form {
++    Atom(String),
++    Text(String),
++    List(Vec<Form>),
++}
++
++fn parse(source: &str, cursor: &mut usize) -> Result<Form, String> {
++    let bytes = source.as_bytes();
++    while bytes.get(*cursor).is_some_and(u8::is_ascii_whitespace) {
++        *cursor += 1;
++    }
++    match bytes.get(*cursor) {
++        Some(b'(') => {
++            *cursor += 1;
++            let mut items = Vec::new();
++            loop {
++                while bytes.get(*cursor).is_some_and(u8::is_ascii_whitespace) {
++                    *cursor += 1;
++                }
++                match bytes.get(*cursor) {
++                    Some(b')') => {
++                        *cursor += 1;
++                        return Ok(Form::List(items));
++                    }
++                    None => return Err("unclosed controller deny form".into()),
++                    _ => items.push(parse(source, cursor)?),
++                }
++            }
++        }
++        Some(b'"') => {
++            let start = *cursor;
++            *cursor += 1;
++            loop {
++                match bytes.get(*cursor) {
++                    Some(b'\\') => *cursor += 2,
++                    Some(b'"') => {
++                        *cursor += 1;
++                        let text = serde_json::from_str(&source[start..*cursor])
++                            .map_err(|error| format!("invalid controller literal: {error}"))?;
++                        return Ok(Form::Text(text));
++                    }
++                    Some(_) => *cursor += 1,
++                    None => return Err("unclosed controller literal".into()),
++                }
++            }
++        }
++        Some(b')') | None => Err("unexpected controller deny token".into()),
++        Some(_) => {
++            let start = *cursor;
++            while bytes
++                .get(*cursor)
++                .is_some_and(|byte| !byte.is_ascii_whitespace() && !matches!(byte, b'(' | b')'))
++            {
++                *cursor += 1;
++            }
++            Ok(Form::Atom(source[start..*cursor].into()))
++        }
++    }
++}
++
++fn filter(form: &Form) -> Result<(), String> {
++    let Form::List(items) = form else {
++        return Err("controller filter must be a list".into());
++    };
++    let Some(Form::Atom(name)) = items.first() else {
++        return Err("missing controller filter name".into());
++    };
++    match name.as_str() {
++        "literal" | "subpath" => match items.as_slice() {
++            [_, Form::Text(path)] if path.starts_with('/') && !path.contains('\0') => Ok(()),
++            _ => Err("controller paths must be absolute literals".into()),
++        },
++        "require-all" | "require-any" | "require-not" => {
++            if items.len() < 2 || (name == "require-not" && items.len() != 2) {
++                return Err("invalid controller filter arity".into());
++            }
++            items[1..].iter().try_for_each(filter)
++        }
++        _ => Err("code, includes, macros and grants are forbidden in controller denies".into()),
++    }
++}
++
++fn deny_fragment(profile: &str) -> Result<&str, String> {
++    if profile.len() > 256 * 1024 {
++        return Err("controller profile exceeds 256 KiB".into());
++    }
++    let body = profile
++        .strip_prefix(HEADER)
++        .ok_or("invalid controller profile header")?;
++    let mut cursor = 0;
++    let mut count = 0;
++    while !body[cursor..].trim().is_empty() {
++        let Form::List(items) = parse(body, &mut cursor)? else {
++            return Err("controller policy must contain only explicit denies".into());
++        };
++        if !matches!(items.first(), Some(Form::Atom(name)) if name == "deny") {
++            return Err("controller policy cannot append grants".into());
++        }
++        let mut operations = 0;
++        let mut filters_started = false;
++        for item in &items[1..] {
++            if let Form::Atom(operation) = item {
++                if filters_started
++                    || !matches!(
++                        operation.as_str(),
++                        "file-read*" | "file-write*" | "file-read-data" | "appleevent-send"
++                    )
++                {
++                    return Err("unsupported controller operation".into());
++                }
++                operations += 1;
++            } else {
++                if operations == 0 {
++                    return Err("missing controller deny operation".into());
++                }
++                filters_started = true;
++                filter(item)?;
++            }
++        }
++        if operations == 0 {
++            return Err("missing controller deny operation".into());
++        }
++        count += 1;
++    }
++    if count == 0 {
++        return Err("empty controller boundary".into());
++    }
++    Ok(body)
++}
++
++/// Install once, before starting the dedicated controller's RPC service.
++/// No request or child environment can replace this process-owned boundary.
++pub fn install(profile: &str, audit_dir: &Path) -> Result<(), String> {
++    let denies = deny_fragment(profile)?.to_owned();
++    if !audit_dir.is_absolute()
++        || fs::canonicalize(audit_dir).map_err(|e| e.to_string())? != audit_dir
++    {
++        return Err(
++            "controller audit directory must be an existing canonical absolute path".into(),
++        );
++    }
++    let loaded = audit_dir.join(format!("loaded-denies-{}.sb", std::process::id()));
++    let mut file = fs::OpenOptions::new()
++        .create_new(true)
++        .write(true)
++        .open(loaded)
++        .map_err(|e| e.to_string())?;
++    std::io::Write::write_all(&mut file, profile.as_bytes()).map_err(|e| e.to_string())?;
++    BOUNDARY
++        .set(ControllerBoundary {
++            denies,
++            audit_dir: audit_dir.into(),
++            sequence: AtomicU64::new(0),
++        })
++        .map_err(|_| "controller boundary already installed".into())
++}
++
++/// Whether every execution/file request must use native Seatbelt enforcement.
++pub fn is_active() -> bool {
++    BOUNDARY.get().is_some()
++}
++
++pub(crate) fn compose(native: String, parameters: &[(String, PathBuf)]) -> Result<String, String> {
++    let Some(boundary) = BOUNDARY.get() else {
++        return Ok(native);
++    };
++    let combined = format!(
++        "{native}\n; immutable controller deny boundary\n{}",
++        boundary.denies
++    );
++    let sequence = boundary.sequence.fetch_add(1, Ordering::Relaxed);
++    let record = serde_json::json!({"native_profile": native, "combined_profile": combined,
++        "parameters": parameters, "controller_grants_appended": false});
++    let target = boundary
++        .audit_dir
++        .join(format!("policy-{}-{sequence}.json", std::process::id()));
++    let mut file = fs::OpenOptions::new()
++        .create_new(true)
++        .write(true)
++        .open(target)
++        .map_err(|e| e.to_string())?;
++    serde_json::to_writer(&mut file, &record).map_err(|e| e.to_string())?;
++    Ok(combined)
++}
++
++#[cfg(test)]
++#[path = "controller_seatbelt_tests.rs"]
++mod tests;
+diff --git a/codex-rs/sandboxing/src/controller_seatbelt_tests.rs b/codex-rs/sandboxing/src/controller_seatbelt_tests.rs
+new file mode 100644
+index 0000000..fd761c9
+--- /dev/null
++++ b/codex-rs/sandboxing/src/controller_seatbelt_tests.rs
+@@ -0,0 +1,55 @@
++use super::compose;
++use super::deny_fragment;
++use super::install;
++use pretty_assertions::assert_eq;
++
++#[test]
++fn literal_denies_preserve_native_bytes_and_parameters() {
++    let dir = tempfile::tempdir().expect("audit directory");
++    let profile = "(version 1)\n(allow default)\n(deny file-read* file-write* (subpath \"/synthetic/old\"))\n(deny appleevent-send)\n";
++    install(profile, dir.path()).expect("install immutable controller boundary");
++    let native = "(version 1)\n(deny default)\n(allow file-read* (subpath (param \"ROOT\")))\n";
++    let parameters = vec![("ROOT".to_owned(), "/synthetic/current".into())];
++    let result = compose(native.into(), &parameters).expect("compose");
++    assert_eq!(
++        result,
++        format!(
++            "{native}\n; immutable controller deny boundary\n{}",
++            deny_fragment(profile).expect("deny fragment")
++        )
++    );
++    assert!(
++        install(profile, dir.path()).is_err(),
++        "an RPC cannot replace the boundary"
++    );
++    let recorded: serde_json::Value = serde_json::from_slice(
++        &std::fs::read(
++            dir.path()
++                .join(format!("policy-{}-0.json", std::process::id())),
++        )
++        .expect("audit policy"),
++    )
++    .expect("audit JSON");
++    assert_eq!(
++        recorded,
++        serde_json::json!({"native_profile":native,"combined_profile":result,"parameters":parameters,"controller_grants_appended":false})
++    );
++}
++
++#[test]
++fn controller_policy_cannot_inject_grants_code_or_relative_paths() {
++    for body in [
++        "(allow file-read*)",
++        "(include \"/file\")",
++        "(define deny allow)",
++        "(deny file-read* (begin (allow default)))",
++        "(deny file-read* (subpath \"relative\"))",
++        "(deny file-read* (subpath \"/ok\") file-write*)",
++        "(deny)",
++        "(deny file-read* (subpath \"/ok\")",
++        "",
++    ] {
++        let profile = format!("(version 1)\n(allow default)\n{body}");
++        assert!(deny_fragment(&profile).is_err(), "{body}");
++    }
++}

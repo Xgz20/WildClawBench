@@ -5,11 +5,16 @@ exports.install=function(spec) {
   const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
   const app='/Applications/AStudio.app/Contents/MacOS/AStudio';
   const entry='/Applications/AStudio.app/Contents/Resources/app.asar/apps/server/dist/index.mjs';
-  if(spec.contract!=='macos-seatbelt-astudio-backend/v1'||process.execPath!==app
+  if(!['macos-seatbelt-astudio-backend/v1','macos-seatbelt-astudio-native-executor/v2'].includes(spec.contract)||process.execPath!==app
     ||fs.realpathSync(spec.profile)!==spec.profile||hash(fs.readFileSync(spec.profile))!==spec.profile_sha256)
     throw Error('SEATBELT_SPAWN_SPEC_UNVERIFIED');
   const original=cp.spawn,profile=spec.profile,checksum=spec.profile_sha256;
   const scope=spec.astudio_scope;
+  const native=spec.native_executor;
+  if(spec.contract==='macos-seatbelt-astudio-backend/v1'&&native)throw Error('SEATBELT_NATIVE_CONTRACT');
+  if(spec.contract==='macos-seatbelt-astudio-native-executor/v2'
+    &&(!scope||!/^ws:\/\/127\.0\.0\.1:\d+\/[a-f0-9]{64}$/.test(native?.launch?.url??'')))
+    throw Error('SEATBELT_NATIVE_EXECUTOR_REQUIRED');
   function scopedEnvironment(env) {
     if(!scope)return env;
     if(scope.contract!=='astudio-case-memory-unit/v1'||fs.realpathSync(scope.scope)!==scope.scope
@@ -19,7 +24,8 @@ exports.install=function(spec) {
       ||Object.keys(saved.paths).some(key=>saved.paths[key]!==scope.paths[key])
       ||env.ASTUDIO_HOME!==scope.paths.desktop)throw Error('SEATBELT_UNIT_ENVIRONMENT_REJECTED');
     return {...env,ASTUDIO_HOME:scope.paths.desktop,ASTUDIO_ACODE_HOME:scope.paths.acode,
-      ACODE_HOME:scope.paths.acode,TMPDIR:scope.paths.temp+'/'};
+      ACODE_HOME:scope.paths.acode,TMPDIR:scope.paths.temp+'/',
+      ...(native?{ACODE_EXEC_SERVER_URL:native.launch.url}:{})};
   }
   cp.spawn=function(command,args,options) {
     if(command!==app||!Array.isArray(args)||!args.includes(entry))return original.apply(this,arguments);

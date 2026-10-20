@@ -84,3 +84,7 @@ output_qwen.rar
 # 评测集校验 Skill 及报告工具的运行产物
 report-workspace/
 .superpowers
+
+# Private, reproducible AStudio native-executor source/toolchain/build caches.
+/.kernel-source/
+/.kernel-tools/
