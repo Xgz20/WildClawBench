@@ -10,6 +10,8 @@ import readline from 'node:readline';
 import {createRequire} from 'node:module';
 import {spawn,execFileSync} from 'node:child_process';
 
+throw Error('ASTUDIO_PRODUCTION_PACKAGE_REQUIRED: archived custom ACode execution service is disabled');
+
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 const specPath=path.resolve(process.argv[2]),root=path.dirname(specPath),specBytes=fs.readFileSync(specPath),spec=JSON.parse(specBytes);
 if(spec.contract!=='astudio-composed-native-executor/v2'||!['synthetic-admission','astudio-owned-session'].includes(spec.mode))throw Error('NATIVE_BROKER_SPEC');

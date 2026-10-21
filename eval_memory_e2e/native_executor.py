@@ -15,6 +15,7 @@ from .io import publish, read_json, require, sha, timestamp
 from .machine import machine_paths
 from .os_boundary import profile_text, non_target_roots, process_table, check_policy, OPERATIONS
 from .astudio_scope import profile_rules
+from .production import reject_source_build
 
 ROOT = Path(__file__).resolve().parents[1]
 BROKER = ROOT / 'eval_memory_e2e/native/astudio-native-broker.mjs'
@@ -32,6 +33,7 @@ def build(path):
 
 
 def specification(folder, manifest, profile, *, mode, runtime, acode_home, temp, main=None, test_peer=None, application_kernel=None):
+    reject_source_build()
     value = build(manifest)
     sources = [BROKER, Path(__file__).resolve(), BUNDLE, BUNDLE.parent / 'utilsBundleImpl/index.js']
     return {'contract': 'astudio-composed-native-executor/v2', 'mode': mode,
@@ -46,6 +48,7 @@ def specification(folder, manifest, profile, *, mode, runtime, acode_home, temp,
 
 
 def start(folder, spec):
+    reject_source_build()
     folder = Path(folder)
     (folder / 'policies').mkdir(mode=0o700)
     path = folder / 'broker-spec.json'; publish(path, spec)
@@ -161,6 +164,7 @@ def stop(folder):
 
 
 def selftest(folder, manifest):
+    reject_source_build()
     folder = Path(folder).absolute()
     require(folder.is_relative_to(machine_paths()['debug']) and folder.resolve() == folder and not folder.exists(),
             'NATIVE_EXECUTOR_FRESH_TEST', str(folder))

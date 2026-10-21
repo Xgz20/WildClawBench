@@ -267,8 +267,8 @@ def advance(root, episode_id, *, driver_timeout=None, retry_pre_send=False):
                     and manifest['profiles'][item['harness']].get('non_target_memory_boundary') is not None):
                 boundary = manifest['profiles'][item['harness']]['non_target_memory_boundary']
                 wb = item['harness'] == 'WorkBuddy' and boundary.get('admitted_adapter') == 'macos-seatbelt-workbuddy-unit/v1'
-                require(wb or item['harness'] == 'AstronStudio' and boundary.get('admitted_adapter') in
-                        ('macos-seatbelt-astudio-backend/v1', 'macos-seatbelt-astudio-native-executor/v2', 'macos-seatbelt-astudio-compiled-kernel/v3'),
+                require(wb or item['harness'] == 'AstronStudio' and boundary.get('admitted_adapter') ==
+                        'macos-seatbelt-astudio-backend/v1',
                         'NATIVE_MEMORY_FILESYSTEM_BOUNDARY_UNVERIFIED', 'No admitted OS adapter; no Prompt intent was registered')
                 profile = manifest['profiles'][item['harness']]
                 if wb:

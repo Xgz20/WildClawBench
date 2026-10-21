@@ -5,6 +5,7 @@ from pathlib import Path
 from .batch import default_profiles, MEMORY_UI_LOCK
 from .machine import machine_identity, kernel_identity, node_identity
 from .io import publish, sha
+from .production import POLICY
 
 
 def driver_dependencies(entry, repository):
@@ -67,6 +68,7 @@ def native_profiles(output, astudio_boundary_lease=None):
         raise ValueError('Native memory Drivers require Node >=22')
     for harness in profiles:
         profiles[harness]['machine'] = machine
+        profiles[harness]['product_integrity_policy'] = POLICY
         profiles[harness]['node_runtime'] = node
         # A real canary attempted to search another client's memory despite the
         # frozen Prompt. A Prompt is not a filesystem access control boundary.
@@ -101,38 +103,29 @@ def native_profiles(output, astudio_boundary_lease=None):
     if Path('/Applications/AStudio.app').is_dir():
         profiles['AstronStudio']['kernel'] = kernel_identity()
     if astudio_boundary_lease is not None:
-        from .os_boundary import frozen_boundary, load_lease, BRIDGE, GUARD, LAUNCHER, COMPOSED_ADAPTER, COMPILED_ADAPTER
-        profiles['AstronStudio']['non_target_memory_boundary'] = frozen_boundary(astudio_boundary_lease)
+        from .os_boundary import frozen_boundary, load_lease, BRIDGE, GUARD, LAUNCHER
+        # Validate before any live attestation. Legacy composed builds are no
+        # longer eligible even when their manifests say diagnostic/unscored.
         lease = load_lease(astudio_boundary_lease)
-        composed = lease['contract'] in (COMPOSED_ADAPTER, COMPILED_ADAPTER)
-        if lease.get('compiled_kernel'):
-            from . import native_kernel
-            profiles['AstronStudio']['installed_kernel_reference'] = profiles['AstronStudio']['kernel']
-            profiles['AstronStudio']['kernel'] = lease['compiled_kernel']['identity']
-            profiles['AstronStudio']['memory_protocol']['compiled_kernel_diagnostic'] = True
-            profiles['AstronStudio']['driver_sources'][str(Path(native_kernel.__file__).resolve())] = sha(Path(native_kernel.__file__).read_bytes())
-        # A build and synthetic service probe cannot establish real automatic
-        # consolidation. Only v3 may attempt the explicitly unscored diagnosis.
-        diagnostic_generation = lease['contract'] == COMPILED_ADAPTER
+        profiles['AstronStudio']['non_target_memory_boundary'] = frozen_boundary(astudio_boundary_lease)
+        # The installed native sandbox composition is still blocked. Never use
+        # a custom kernel to turn this compatibility gate into a pass.
         profiles['AstronStudio']['memory_protocol']['automatic_generation_compatible'] = False
-        profiles['AstronStudio']['memory_protocol']['automatic_generation_diagnostic_allowed'] = diagnostic_generation
-        if composed:
-            profiles['AstronStudio']['driver_sources'].update(lease['native_executor']['sources'])
         profiles['AstronStudio']['driver_sources'].update({str(p):sha(p.read_bytes()) for p in (BRIDGE,GUARD,LAUNCHER)})
         unit = lease.get('astudio_scope')
         if unit is not None:
             from .astudio_scope import SELF, attest, load
             from .io import require
             condition = load(unit['scope'], unit)['memory_condition']
-            require(condition['generate_memories'] is False or diagnostic_generation, 'SCOPE_AUTOMATIC_NOT_ADMITTED',
-                    'The installed classic shell path is incompatible; automatic diagnosis requires the compiled v3 kernel and native executor')
+            require(condition['generate_memories'] is False, 'SCOPE_AUTOMATIC_NOT_ADMITTED',
+                    'Production automatic memory remains blocked by nested sandbox installation; do not substitute a source build')
             attest(unit, profiles['AstronStudio']['non_target_memory_boundary'])
             profiles['AstronStudio']['astudio_scope'] = unit
             profiles['AstronStudio']['isolation'] = 'verified_namespace'
             profiles['AstronStudio']['driver_sources'][str(SELF)] = sha(SELF.read_bytes())
             idle = SELF.parent / 'native/astudio-unit-idle.mjs'
             profiles['AstronStudio']['driver_sources'][str(idle)] = sha(idle.read_bytes())
-            profiles['AstronStudio']['memory_protocol']['purpose'] = 'composed_native_memory_case_repeat_validation' if composed else 'explicit_memory_case_repeat_isolation'
+            profiles['AstronStudio']['memory_protocol']['purpose'] = 'explicit_memory_case_repeat_isolation'
     publish(output, profiles)
     return {"output": str(output), "configured_harnesses": [name for name, value in profiles.items() if value["driver_command"]],
             "memory_admission": "requires_live_scoped_preflight",

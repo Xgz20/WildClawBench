@@ -1,7 +1,7 @@
-"""Reproducible private ACode controller build; never replace the installed app.
+"""Archived source-build diagnostics. All build/mutation entry points are disabled.
 
-The upstream source and all edits/build caches live inside the memory worktree.
-Only the small patch and this build driver are committed to the evaluation repo.
+load_kernel verifies historical artifacts without executing them. These artifacts
+are not eligible for production-package evaluation, even when labelled unscored.
 """
 import argparse
 import json
@@ -12,6 +12,7 @@ import tomllib
 from pathlib import Path
 
 from .io import publish, require, sha, timestamp
+from .production import reject_source_build
 
 ROOT = Path(__file__).resolve().parents[1]
 COPY = ROOT / '.kernel-source/acode'
@@ -29,6 +30,7 @@ def allowed_source(path):
 
 
 def environment(target='controller'):
+    reject_source_build()
     require(target in ('controller', 'application'), 'KERNEL_BUILD_TARGET', target)
     result = dict(os.environ)
     # ACode builds/tests use the private ACODE_HOME below. Never inherit the
@@ -71,6 +73,7 @@ def environment(target='controller'):
 
 
 def export_patch():
+    reject_source_build()
     changed = subprocess.check_output(['git', 'diff', '--name-only'], cwd=COPY, text=True).splitlines()
     extra = subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard'], cwd=COPY, text=True).splitlines()
     require(all(allowed_source(p) for p in changed + extra), 'KERNEL_PATCH_SCOPE', repr(changed + extra))
@@ -88,6 +91,7 @@ def export_patch():
 
 
 def approve_binary(output):
+    reject_source_build()
     source = export_patch()
     binary = Path(environment()['CARGO_TARGET_DIR']) / 'debug/acode-memory-executor'
     require(binary.is_file() and not binary.is_symlink(), 'KERNEL_BINARY_MISSING', str(binary))
@@ -112,7 +116,7 @@ def approve_binary(output):
 
 
 def load_kernel(path):
-    """Only a frozen diagnostic ACode build, never a replacement installed CLI."""
+    """Read-only integrity check for historical artifacts; does not admit or run them."""
     path = Path(path).absolute()
     value = json.loads(path.read_text())
     require(value.get('contract') == 'astudio-compiled-app-kernel/v1' and value.get('diagnostic_only') is True
@@ -133,6 +137,7 @@ def load_kernel(path):
 
 
 def approve_kernel(output, evidence):
+    reject_source_build()
     source = export_patch()
     records = sorted(Path(evidence).glob('build-kernel-*.json'))
     require(records, 'KERNEL_BUILD_RECEIPT_MISSING', str(evidence))
@@ -166,6 +171,7 @@ def approve_kernel(output, evidence):
 
 
 def run(action, evidence):
+    reject_source_build()
     evidence = Path(evidence).absolute()
     require(evidence.is_dir(), 'KERNEL_EVIDENCE', str(evidence))
     commands = {

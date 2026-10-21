@@ -4,6 +4,8 @@ import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {WorkBuddyCdpClient} from '../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/ui.mjs';
 const [leaseFile,pidText]=process.argv.slice(2),pid=Number(pidText),lease=JSON.parse(await readFile(leaseFile,'utf8'));
+if(lease.contract!=='macos-seatbelt-astudio-backend/v1'
+  ||Object.hasOwn(lease,'compiled_kernel')||Object.hasOwn(lease,'native_executor'))throw Error('ASTUDIO_PRODUCTION_PACKAGE_REQUIRED');
 if(!Number.isSafeInteger(pid)||pid<2)throw Error('SEATBELT_LAUNCH_PID');
 const folder=fileURLToPath(new URL('.', 'file://'+leaseFile));
 const waitStarted=Date.now();let owner='';
@@ -33,9 +35,7 @@ try {
   const hash=createHash('sha256').update(await readFile(guard)).digest('hex');
   if(hash!==lease.spawn_guard_sha256)throw Error('SEATBELT_SPAWN_SOURCE_DRIFT');
   const spec={contract:lease.contract,profile:lease.profile,profile_sha256:lease.profile_sha256,
-    ...(lease.astudio_scope?{astudio_scope:lease.astudio_scope}:{}),
-    ...(lease.compiled_kernel?{compiled_kernel:lease.compiled_kernel}:{}),
-    ...(lease.native_executor?{native_executor:lease.native_executor}:{})};
+    kernel:lease.kernel,...(lease.astudio_scope?{astudio_scope:lease.astudio_scope}:{})};
   const expression=`(()=>{const m=process.getBuiltinModule('node:module');return m.createRequire(${JSON.stringify(guard)})(${JSON.stringify(guard)}).install(${JSON.stringify(spec)})})()`;
   const evaluated=await client.send('Debugger.evaluateOnCallFrame',{callFrameId:pause.callFrames[0].callFrameId,
     expression,returnByValue:true});

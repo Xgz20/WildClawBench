@@ -15,6 +15,7 @@ if __package__ in (None, ''):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from eval_memory_e2e.io import publish, read_json, require, sha, timestamp
 from eval_memory_e2e.machine import machine_paths, machine_identity, kernel_identity
+from eval_memory_e2e.production import require_production_lease, require_production_environment, reject_source_build
 
 ADAPTER = 'macos-seatbelt-astudio-backend/v1'
 COMPOSED_ADAPTER = 'macos-seatbelt-astudio-native-executor/v2'
@@ -151,6 +152,8 @@ def fixture_probe(folder, child=False):
 
 
 def selftest(folder, scope=None, native_build=None, compiled_kernel=None, sdk_root=None):
+    if native_build is not None or compiled_kernel is not None:
+        reject_source_build()
     require(sys.platform == 'darwin' and platform.machine() == 'arm64', 'BOUNDARY_PLATFORM', 'This admission is macOS arm64 only')
     require(native_build is None or scope is not None, 'BOUNDARY_NATIVE_SCOPE_REQUIRED', 'Native composition requires a fresh case/repetition scope')
     folder = _folder(folder, True)
@@ -201,37 +204,7 @@ def selftest(folder, scope=None, native_build=None, compiled_kernel=None, sdk_ro
                             capture_output=True, timeout=20)
     publish(folder / 'nested-sandbox.stdout', nested.stdout)
     publish(folder / 'nested-sandbox.stderr', nested.stderr)
-    native = None
-    if native_build is not None:
-        from .native_executor import selftest as native_selftest, build as native_build_info, BROKER, PROBE
-        from . import native_executor
-        admitted = native_selftest(folder / 'native-executor-selftest', native_build)
-        require(admitted['status'] == 'PASS', 'BOUNDARY_NATIVE_SELFTEST', 'Preserve this failed lease and use a fresh directory')
-        closeout = read_json(folder / 'native-executor-selftest/closeout.json')
-        require(closeout['broker_exit'] == 0 and closeout['client_exit'] == 0, 'BOUNDARY_NATIVE_SELFTEST_NOT_CLOSED', str(folder))
-        info = native_build_info(native_build)
-        admission_spec = read_json(folder / 'native-executor-selftest/control/broker-spec.json')
-        native = {'build_manifest': str(Path(native_build).absolute()), 'build_manifest_sha256': sha(Path(native_build).read_bytes()),
-                  'binary': info['binary'], 'binary_sha256': info['sha256'],
-                  'selftest': str(folder / 'native-executor-selftest/selftest.json'),
-                  'selftest_sha256': sha((folder / 'native-executor-selftest/selftest.json').read_bytes()),
-                  'sources': admission_spec['sources'], 'launch': None}
-    compiled = None
-    if compiled_kernel is not None:
-        from .native_kernel import load_kernel
-        from . import native_kernel
-        require(native is not None and scope is not None, 'BOUNDARY_COMPILED_REQUIRES_NATIVE', 'Use a scoped composed executor')
-        info = load_kernel(compiled_kernel)
-        identity = {key: info[key] for key in ('path', 'sha256', 'version', 'architecture')}
-        result = subprocess.run(['/usr/bin/sandbox-exec', '-f', str(control_folder / 'profile.sb'), identity['path'], '--version'],
-                                env=dict(os.environ, ACODE_HOME=scope['paths']['acode']), capture_output=True, timeout=30)
-        publish(folder / 'compiled-kernel-version.stdout', result.stdout)
-        publish(folder / 'compiled-kernel-version.stderr', result.stderr)
-        require(result.returncode == 0 and result.stdout.decode().strip() == identity['version'],
-                'BOUNDARY_COMPILED_KERNEL_PROBE', 'Compiled kernel cannot start under the unchanged outer deny policy')
-        compiled = {'manifest': str(Path(compiled_kernel).absolute()), 'manifest_sha256': sha(Path(compiled_kernel).read_bytes()),
-                    'identity': identity, 'loader_sha256': sha(Path(native_kernel.__file__).read_bytes())}
-    adapter = COMPILED_ADAPTER if compiled else COMPOSED_ADAPTER if native else ADAPTER
+    adapter = ADAPTER
     lease = {'contract': adapter, 'created_at': timestamp(), 'machine': machine_identity(),
              'kernel': kernel_identity(), 'profile': str(control_folder / 'profile.sb'), 'profile_sha256': sha(source.encode()),
              'protected_root_literals': [str(x) for x in roots], 'synthetic_root': str(protected),
@@ -243,10 +216,6 @@ def selftest(folder, scope=None, native_build=None, compiled_kernel=None, sdk_ro
              'bridge':str(binary),'bridge_sha256':sha(binary.read_bytes())}
     if scope is not None:
         lease['astudio_scope'] = scope
-    if native is not None:
-        lease['native_executor'] = native
-    if compiled is not None:
-        lease['compiled_kernel'] = compiled
     publish(folder / 'selftest.json', {'status': 'PASS', 'at': timestamp(), 'command': command,
             'controller_policy': parent_policy, 'probe': probe, 'node_command':node_command,
             'node_bridge_probe':json.loads(node_result.stdout),'real_memory_read': False,
@@ -263,21 +232,8 @@ def load_lease(path, expected=None):
     path = Path(path).absolute(); folder = _folder(path.parent)
     require(path.name == 'lease.json' and path.resolve() == path, 'BOUNDARY_LEASE_PATH', str(path))
     data = read_json(path)
+    require_production_lease(data)
     require(data['contract'] in (ADAPTER, COMPOSED_ADAPTER, COMPILED_ADAPTER) and data['machine'] == machine_identity(), 'BOUNDARY_MACHINE_DRIFT', str(path))
-    require((data['contract'] in (COMPOSED_ADAPTER, COMPILED_ADAPTER)) == bool(data.get('native_executor')),
-            'BOUNDARY_NATIVE_CONTRACT', 'A v1 lease cannot introduce an unverified external executor')
-    require((data['contract'] == COMPILED_ADAPTER) == bool(data.get('compiled_kernel')),
-            'BOUNDARY_COMPILED_CONTRACT', 'Only an explicit v3 lease may select a compiled application kernel')
-    if data.get('compiled_kernel'):
-        from .native_kernel import load_kernel
-        from . import native_kernel
-        compiled = data['compiled_kernel']
-        require(compiled['loader_sha256'] == sha(Path(native_kernel.__file__).read_bytes()),
-                'BOUNDARY_COMPILED_LOADER_DRIFT', str(path))
-        selected = load_kernel(compiled['manifest'])
-        require(sha(Path(compiled['manifest']).read_bytes()) == compiled['manifest_sha256']
-                and compiled['identity'] == {key: selected[key] for key in ('path', 'sha256', 'version', 'architecture')},
-                'BOUNDARY_COMPILED_KERNEL_DRIFT', str(path))
     require(data['helper_sha256'] == sha(SELF.read_bytes()) and data['kernel'] == kernel_identity(),
             'BOUNDARY_RUNTIME_DRIFT', 'Create a fresh lease for changed source/kernel')
     profile = folder / 'control/profile.sb'
@@ -292,29 +248,6 @@ def load_lease(path, expected=None):
             , 'BOUNDARY_BRIDGE_DRIFT',str(path))
     require(sha((folder / 'selftest.json').read_bytes()) == data['selftest_sha256']
             and read_json(folder / 'selftest.json')['status'] == 'PASS', 'BOUNDARY_SELFTEST_DRIFT', str(path))
-    if data['contract'] in (COMPOSED_ADAPTER, COMPILED_ADAPTER):
-        from .native_executor import build as check_build
-        native = data['native_executor']; info = check_build(native['build_manifest'])
-        require(data.get('astudio_scope') and sha(Path(native['build_manifest']).read_bytes()) == native['build_manifest_sha256']
-                and info['binary'] == native['binary'] and info['sha256'] == native['binary_sha256']
-                and sha(Path(native['selftest']).read_bytes()) == native['selftest_sha256']
-                and read_json(native['selftest'])['status'] == 'PASS', 'BOUNDARY_NATIVE_BUILD_DRIFT', str(path))
-        for file, digest in native['sources'].items():
-            require(sha(Path(file).read_bytes()) == digest, 'BOUNDARY_NATIVE_SOURCE_DRIFT', file)
-        if native.get('launch') is not None:
-            launched = native['launch']; control = folder / 'control/native-broker'
-            require(launched['control'] == str(control)
-                    and sha((control / 'broker-ready.json').read_bytes()) == launched['ready_sha256'],
-                    'BOUNDARY_NATIVE_LAUNCH_DRIFT', str(control))
-            spec = read_json(control / 'broker-spec.json'); ready = read_json(control / 'broker-ready.json')
-            paths = data['astudio_scope']['paths']
-            require(spec['mode'] == 'astudio-owned-session' and spec['main'] == data['launch']['identity']
-                    and spec['profile'] == data['profile'] and spec['profile_sha256'] == data['profile_sha256']
-                    and spec['executor'] == native['binary'] and spec['executor_sha256'] == native['binary_sha256']
-                    and spec['runtime'] == paths['runtime'] and spec['acode_home'] == paths['overlay'] and spec['temp'] == paths['temp']
-                    and spec['synthetic_secret'] == data['synthetic_secret'] and ready['identity'] == launched['broker_identity']
-                    and spec['application_kernel'] == data.get('compiled_kernel', {}).get('identity', data['kernel'])
-                    and ready['url'] == launched['url'], 'BOUNDARY_NATIVE_SCOPE_BINDING', str(control))
     if expected is not None:
         require(expected.get('admitted_adapter') == data['contract'] and expected.get('lease') == str(path)
                 and expected.get('profile_sha256') == data['profile_sha256']
@@ -325,6 +258,7 @@ def load_lease(path, expected=None):
 
 
 def launch(folder):
+    require_production_environment()
     folder = _folder(folder); data = load_lease(folder / 'lease.json')
     require(data['launch'] is None, 'BOUNDARY_ALREADY_LAUNCHED', 'Never silently restart a lease')
     table = process_table()
@@ -348,16 +282,6 @@ def launch(folder):
         require(False, 'BOUNDARY_APP_START_UNVERIFIED', str(child.pid))
     data['launch'] = {'command': command, 'identity': identity, 'at': timestamp(),
                       'bootstrap_mode':'paused-main-inspector-exact-backend-spawn-wrapper','environment_added':extra_env}
-    if data.get('native_executor'):
-        from .native_executor import specification, start
-        paths = data['astudio_scope']['paths']; control = folder / 'control/native-broker'; control.mkdir()
-        spec = specification(control, data['native_executor']['build_manifest'], data['profile'],
-                             mode='astudio-owned-session', runtime=paths['runtime'], acode_home=paths['overlay'], temp=paths['temp'], main=identity,
-                             application_kernel=data.get('compiled_kernel', {}).get('identity', data['kernel']))
-        spec['synthetic_secret'] = data['synthetic_secret']
-        broker, ready = start(control, spec)
-        data['native_executor']['launch'] = {'control': str(control), 'broker_identity': ready['identity'],
-                                            'ready_sha256': sha((control / 'broker-ready.json').read_bytes()), 'url': ready['url']}
     # The only lease mutation is recording this one launch before profile binding.
     (folder / 'lease.json').write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n')
     bootstrap = subprocess.run(['node',str(LAUNCHER),str(folder/'lease.json'),str(child.pid)],capture_output=True,timeout=90)
@@ -385,7 +309,7 @@ def attest(path, expected=None):
         selected |= more
     # Reject another independent AStudio main/backend/kernel. Pre-existing
     # orphan crash reporters are not tool execution roots and are not claimed.
-    application_kernel = data.get('compiled_kernel', {}).get('identity', data['kernel'])
+    application_kernel = data['kernel']
     kernel_command = application_kernel['path'] + ' '
     foreign = [x for p,x in table.items() if p not in selected and (x['command'].startswith(APP)
                or x['command'].startswith('/Applications/AStudio.app/Contents/Resources/bin/acode-')
@@ -411,18 +335,13 @@ def attest(path, expected=None):
     for row in processes:
         if row['pid'] in backend_roots or row['command'].startswith(kernel_command):
             require(row['allowed_read'] == 0, 'BOUNDARY_POSITIVE_CONTROL', str(row['pid']))
-    native_proof = None
-    if data.get('native_executor'):
-        from .native_executor import inspect as inspect_native
-        native_proof = inspect_native(data['native_executor']['launch']['control'])
     require(same_process(), 'BOUNDARY_PROCESS_REPLACED', 'Identity changed during OS checks')
     return {'contract': data['contract'], 'status': 'PASS', 'at': timestamp(), 'profile_sha256': data['profile_sha256'],
             'selftest_sha256': data['selftest_sha256'], 'lease': str(Path(path).absolute()),
             'launch_identity': identity, 'processes': processes, 'real_memory_probed': False,
-            'enforcement_scope': ('installed backend and explicitly selected kernel inherit the outer policy; native data workers apply native SBPL plus mandatory denies once'
-                                  if native_proof else 'installed backend, ACode kernel and their descendant filesystem operations'),
+            'enforcement_scope': 'installed backend, ACode kernel and their descendant filesystem operations',
             'ui_chromium_sandbox': 'unchanged; UI process not covered by this additional backend deny profile',
-            'external_broker_isolation_exhaustive': False, 'native_executor': native_proof,
+            'external_broker_isolation_exhaustive': False, 'native_executor': None,
             'application_kernel': application_kernel, 'installed_kernel_reference': data['kernel']}
 
 

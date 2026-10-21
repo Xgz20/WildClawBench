@@ -1,23 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {selectAStudioPaths,aStudioBoundaryListener,aStudioRolloutPathAllowed,configureAStudioControllerTmp,aStudioAutomaticGenerationDiagnosticAllowed} from '../../eval_memory_e2e/native/astronstudio.mjs';
+import {selectAStudioPaths,aStudioBoundaryListener,aStudioRolloutPathAllowed,configureAStudioControllerTmp} from '../../eval_memory_e2e/native/astronstudio.mjs';
 import {MACHINE_PATHS} from '../../eval_memory_e2e/native/machine.mjs';
 import {mkdtemp,rm,realpath} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {DatabaseSync} from 'node:sqlite';
 import {withStateSnapshot} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs';
-test('automatic generation diagnosis requires a compiled v3 unit and remains unscored',()=>{
-  const profile={memory_protocol:{automatic_generation_diagnostic_allowed:true,compiled_kernel_diagnostic:true,formal_scoring_allowed:false},
-    non_target_memory_boundary:{admitted_adapter:'macos-seatbelt-astudio-compiled-kernel/v3',status:'os_enforced'},
-    astudio_scope:{contract:'astudio-case-memory-unit/v1'}};
-  assert.equal(aStudioAutomaticGenerationDiagnosticAllowed(profile),true);
-  for(const changed of [{...profile,memory_protocol:{...profile.memory_protocol,formal_scoring_allowed:true}},
-    {...profile,memory_protocol:{...profile.memory_protocol,compiled_kernel_diagnostic:false}},
-    {...profile,memory_protocol:{...profile.memory_protocol,automatic_generation_diagnostic_allowed:false}},
-    {...profile,non_target_memory_boundary:{...profile.non_target_memory_boundary,status:'not_enforced'}},
-    {...profile,non_target_memory_boundary:{...profile.non_target_memory_boundary,admitted_adapter:'macos-seatbelt-astudio-native-executor/v2'}},
-    {...profile,astudio_scope:undefined}])assert.equal(aStudioAutomaticGenerationDiagnosticAllowed(changed),false);
-});
 test('unit-specific DB and memory observation paths cannot fall back to the ordinary account home',()=>{
   const root=MACHINE_PATHS.debug+'/test/batch',runtime=MACHINE_PATHS.debug+'/test/unit/runtime';
   const astudio_scope={contract:'astudio-case-memory-unit/v1',batch_root:root,paths:{runtime,

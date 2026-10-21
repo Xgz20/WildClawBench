@@ -11,6 +11,7 @@ from .dataset import load_dataset, materialize
 from .io import digest, encoded, identifier, publish, read_json, require, safe_file, sha, timestamp
 
 from .machine import machine_paths, machine_identity, kernel_identity, node_identity
+from .production import require_production_profile
 
 MEMORY_UI_LOCK = machine_paths()['ui_lock']
 
@@ -34,32 +35,13 @@ def default_profiles():
 
 
 def verify_profile_kernel(harness, profile):
-    """Bind either the installed kernel or the explicit, frozen v3 diagnosis."""
+    """Only the installed product kernel may back a new evaluation operation."""
+    require_production_profile(harness, profile)
     kernel = profile.get('kernel')
-    boundary = profile.get('non_target_memory_boundary', {})
-    protocol = profile.get('memory_protocol', {})
-    adapter = 'macos-seatbelt-astudio-compiled-kernel/v3'
-    compiled = ('installed_kernel_reference' in profile or protocol.get('compiled_kernel_diagnostic') is True
-                or boundary.get('admitted_adapter') == adapter)
     if kernel is None:
-        require(not compiled, 'KERNEL_DRIFT', 'A compiled diagnosis must freeze the actual application kernel')
         return
     require(harness == 'AstronStudio', 'KERNEL_DRIFT', 'AStudio kernel identity cannot be applied to another Harness')
-    installed = kernel_identity()
-    if not compiled:
-        require(kernel == installed, 'KERNEL_DRIFT', 'Installed kernel changed; create a new local native Profile')
-        return
-    require(boundary.get('admitted_adapter') == adapter and boundary.get('status') == 'os_enforced'
-            and boundary.get('required') is True and protocol.get('compiled_kernel_diagnostic') is True
-            and protocol.get('formal_scoring_allowed') is False and profile.get('astudio_scope')
-            and profile.get('installed_kernel_reference') == installed,
-            'KERNEL_DRIFT', 'Compiled kernels require an explicit unscored v3 unit and unchanged installed reference')
-    from .os_boundary import load_lease
-    lease = load_lease(boundary['lease'], boundary)
-    require(lease['contract'] == adapter and lease['kernel'] == installed
-            and lease.get('compiled_kernel', {}).get('identity') == kernel
-            and lease.get('astudio_scope') == profile['astudio_scope'],
-            'KERNEL_DRIFT', 'Actual compiled kernel, unit and frozen OS lease must match exactly')
+    require(kernel == kernel_identity(), 'KERNEL_DRIFT', 'Installed kernel changed; create a new local native Profile')
 
 
 def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=None,
@@ -89,6 +71,7 @@ def prepare(root, *, batch_id, seed, repeats=1, harnesses=None, scenario_ids=Non
                 'WB_SCOPE_BATCH_NOT_FRESH', 'Only an unused prepared unit root may host its first batch')
     for harness in harnesses:
         profile = profiles[harness]
+        require_production_profile(harness, profile)
         if profile.get('workbuddy_scope') is not None:
             require(harnesses == ['WorkBuddy'] and mode == 'native', 'WB_SCOPE_HARNESS', 'WorkBuddy native units only')
             require(dataset['dataset_id'] != 'memory-mixed20-v1', 'WB_SCOPE_FORMAL_NOT_ADMITTED', 'Formal mixed20 remains stopped')
@@ -225,6 +208,7 @@ def load_batch(root, *, harness=None, episode_id=None):
     from .runtime_repair import effective_sources
     implementation, drivers, _, _ = effective_sources(root, manifest)
     for name, profile in manifest['profiles'].items():
+        require_production_profile(name, profile)
         if profile.get('workbuddy_scope') is not None:
             from .workbuddy_scope import bind_batch
             unit = bind_batch(profile, root, profile['workbuddy_scope'], manifest['scenario_ids'], manifest['repeats'])

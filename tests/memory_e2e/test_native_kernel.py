@@ -1,7 +1,6 @@
 import json
 import tempfile
 import unittest
-from copy import deepcopy
 from pathlib import Path
 from unittest.mock import patch
 
@@ -101,53 +100,38 @@ class ProfileKernelTests(unittest.TestCase):
             with self.assertRaises(MemoryEvaluationError):
                 verify_profile_kernel(harness, profile)
 
-    def test_diagnostic_kernel_requires_every_scoped_unscored_v3_binding(self):
-        verify_profile_kernel('AstronStudio', self.profile)
-        self.loader.assert_called_once_with(self.boundary['lease'], self.boundary)
-        for field, key, value in [('memory_protocol', 'formal_scoring_allowed', True),
-                                  ('memory_protocol', 'compiled_kernel_diagnostic', False),
-                                  ('non_target_memory_boundary', 'admitted_adapter', 'macos-seatbelt-astudio-native-executor/v2'),
-                                  ('non_target_memory_boundary', 'status', 'not_enforced'),
-                                  ('non_target_memory_boundary', 'required', False)]:
-            profile = deepcopy(self.profile); profile[field][key] = value
-            with self.assertRaises(MemoryEvaluationError):
+    def test_legacy_diagnostic_profiles_are_rejected_even_when_fully_bound_and_unscored(self):
+        for profile in [self.profile, {'installed_kernel_reference': self.installed},
+                        {'memory_protocol': {'automatic_generation_diagnostic_allowed': True}},
+                        {'non_target_memory_boundary': {'admitted_adapter': 'macos-seatbelt-astudio-native-executor/v2'}}]:
+            with self.subTest(profile=profile), self.assertRaises(MemoryEvaluationError) as error:
                 verify_profile_kernel('AstronStudio', profile)
-        for key in ('kernel', 'installed_kernel_reference', 'astudio_scope'):
-            profile = deepcopy(self.profile); profile.pop(key)
-            with self.assertRaises(MemoryEvaluationError):
-                verify_profile_kernel('AstronStudio', profile)
+            self.assertEqual(error.exception.code, 'ASTUDIO_PRODUCTION_PACKAGE_REQUIRED')
+        self.loader.assert_not_called()
 
-    def test_lease_cannot_substitute_another_kernel_or_unit(self):
-        for replacement in [
-            {**self.lease, 'kernel': self.compiled},
-            {**self.lease, 'compiled_kernel': {'identity': self.installed}},
-            {**self.lease, 'astudio_scope': {**self.unit, 'unit_id': 'another-unit'}},
-        ]:
-            self.loader.return_value = replacement
-            with self.assertRaises(MemoryEvaluationError):
-                verify_profile_kernel('AstronStudio', self.profile)
+    def test_invalid_profile_cannot_create_a_batch_or_bind_a_unit(self):
+        with tempfile.TemporaryDirectory() as raw, patch('eval_memory_e2e.astudio_scope.bind_batch') as bind:
+            batch = Path(raw).resolve() / 'batch'
+            with self.assertRaises(MemoryEvaluationError) as error:
+                prepare(batch, batch_id='rejected', seed='synthetic', harnesses=['AstronStudio'],
+                        profiles={'AstronStudio': self.profile})
+            self.assertEqual(error.exception.code, 'ASTUDIO_PRODUCTION_PACKAGE_REQUIRED')
+            self.assertFalse(batch.exists())
+            bind.assert_not_called()
 
-    def test_real_batch_prepare_and_load_keep_the_compiled_binding_and_detect_later_drift(self):
-        from eval_memory_e2e.astudio_scope import create, freeze
+    def test_loading_an_old_batch_cannot_reenable_the_diagnostic_kernel(self):
+        from eval_memory_e2e.io import digest
+        dataset = Path(__file__).resolve().parents[2] / 'tasks/memory-e2e/canaries/scoped-forgetting-v3.1.json'
         with tempfile.TemporaryDirectory() as raw:
-            base = Path(raw).resolve(); ordinary = base / 'ordinary'
-            desktop = ordinary / 'acode/userdata'; desktop.mkdir(parents=True)
-            (desktop / 'astron-session.json').write_text(json.dumps({'uid': 'synthetic', 'loginMethod': 'sms'}))
-            (ordinary / 'config.toml').write_text('[model_providers.astron-spark]\nname="Synthetic"\n')
-            (desktop / 'state.sqlite').write_bytes(b'SYNTHETIC-SOURCE-DB')
-            batch = base / 'debug/batch'
-            paths = {'debug': base / 'debug', 'acode': ordinary,
-                     'overlay': ordinary / 'overlay', 'astudio_db': desktop / 'state.sqlite'}
-            with patch('eval_memory_e2e.astudio_scope.machine_paths', return_value=paths), \
-                 patch('eval_memory_e2e.astudio_scope.installation_witness', return_value={'synthetic': True}):
-                unit = create(base / 'debug/unit', case_id='MEM-cleanup-001', repetition=1, batch_root=batch)
-                profile = deepcopy(self.profile); profile['astudio_scope'] = freeze(unit['scope'])
-                self.lease['astudio_scope'] = profile['astudio_scope']
-                dataset = Path(__file__).resolve().parents[2] / 'tasks/memory-e2e/canaries/scoped-forgetting-v3.1.json'
-                prepare(batch, batch_id='compiled-binding', seed='synthetic', harnesses=['AstronStudio'],
-                        scenario_ids=['MEM-cleanup-001'], profiles={'AstronStudio': profile}, dataset_path=dataset)
-                self.assertEqual(load_batch(batch)['profiles']['AstronStudio']['kernel'], self.compiled)
-                self.lease['compiled_kernel'] = {'identity': {**self.compiled, 'sha256': '2' * 64}}
-                with self.assertRaises(MemoryEvaluationError) as error:
-                    load_batch(batch)
-                self.assertEqual(error.exception.code, 'KERNEL_DRIFT')
+            batch = Path(raw).resolve() / 'batch'
+            profile = {**default_profiles()['AstronStudio'], 'kernel': self.installed}
+            prepare(batch, batch_id='production-binding', seed='synthetic', harnesses=['AstronStudio'],
+                    profiles={'AstronStudio': profile}, dataset_path=dataset)
+            self.assertEqual(load_batch(batch)['profiles']['AstronStudio']['kernel'], self.installed)
+            manifest = json.loads((batch / 'manifest.json').read_text())
+            manifest['profiles']['AstronStudio'] = self.profile
+            (batch / 'manifest.json').write_text(json.dumps(manifest))
+            (batch / 'manifest.sha256').write_text(digest(manifest) + '\n')
+            with self.assertRaises(MemoryEvaluationError) as error:
+                load_batch(batch)
+            self.assertEqual(error.exception.code, 'ASTUDIO_PRODUCTION_PACKAGE_REQUIRED')
