@@ -543,8 +543,46 @@ def validate_receipt_artifacts(root: Path, receipt: Mapping[str, Any]) -> None:
             raise FlowError(f"RECEIPT_ARTIFACT_DRIFT: {relative.as_posix()}")
 
 
+def validate_canonical_report_archive(path: Path, receipt_path: Path, receipt: Mapping[str, Any]) -> None:
+    """Use exact sealed report bytes, never changed live workbook metadata."""
+    with zipfile.ZipFile(path) as archive:
+        names = archive.namelist()
+        seals = [name for name in names if name.count('/') == 1 and name.endswith('/REPORT_SEAL.json')]
+        if len(names) != len(set(names)) or len(seals) != 1:
+            raise FlowError('CANONICAL_REPORT_MEMBER_SCOPE')
+        prefix = seals[0].split('/')[0] + '/'
+        document = json.loads(archive.read(seals[0]))
+        files = document.get('files', [])
+        members = {row['path']: row for row in files}
+        if len(members) != len(files) or set(names) != {prefix + name for name in members} | {seals[0]}:
+            raise FlowError('CANONICAL_REPORT_MEMBER_SCOPE')
+        for relative, ref in members.items():
+            safe_relative(relative, 'canonical report member')
+            info = archive.getinfo(prefix + relative)
+            data = archive.read(info)
+            # Generic report ZIP writers may omit POSIX file-type bits while
+            # retaining permission bits. Directories/symlinks remain rejected.
+            if info.is_dir() or stat.S_IFMT(info.external_attr >> 16) not in (0, stat.S_IFREG) or len(data) != ref['size'] or sha256_bytes(data) != ref['sha256']:
+                raise FlowError('CANONICAL_REPORT_MEMBER_DRIFT')
+        if archive.read(prefix + 'receipts/report-receipt.json') != receipt_path.read_bytes():
+            raise FlowError('CANONICAL_REPORT_RECEIPT_DRIFT')
+        json_refs = [row for row in receipt.get('artifacts', []) if PurePosixPath(row['path']).name == 'general_e2e_report_data.json']
+        if len(json_refs) != 1:
+            raise FlowError('CANONICAL_REPORT_SOURCE_SCOPE')
+        report_prefix = safe_relative(json_refs[0]['path'], 'report data').parent
+        for ref in receipt['artifacts']:
+            try:
+                relative = safe_relative(ref['path'], 'report artifact').relative_to(report_prefix).as_posix()
+            except ValueError as exc:
+                raise FlowError('CANONICAL_REPORT_ARTIFACT_SCOPE') from exc
+            sealed = members.get(relative)
+            if not sealed or sealed['sha256'] != ref['sha256'] or sealed['size'] != ref['size']:
+                raise FlowError('CANONICAL_REPORT_RECEIPT_ARTIFACT_DRIFT')
+
+
 def validate_receipt_for_state(
-    root: Path, state: Mapping[str, Any], receipt: Mapping[str, Any], stage: str
+    root: Path, state: Mapping[str, Any], receipt: Mapping[str, Any], stage: str,
+    *, canonical_report_archive: Path | None = None, receipt_path: Path | None = None,
 ) -> None:
     validate_contract(receipt, RECEIPT_SCHEMA)
     scope, dataset, task_ids = expected_scope(state)
@@ -559,7 +597,12 @@ def validate_receipt_for_state(
         or not (receipt.get("integrity") or {}).get("valid")
     ):
         raise FlowError(f"RECEIPT_IDENTITY_INVALID: {stage}")
-    validate_receipt_artifacts(root, receipt)
+    if canonical_report_archive is not None:
+        if stage != 'report' or receipt_path is None:
+            raise FlowError('CANONICAL_ARCHIVE_ONLY_FOR_REPORT')
+        validate_canonical_report_archive(canonical_report_archive, receipt_path, receipt)
+    else:
+        validate_receipt_artifacts(root, receipt)
 
 
 def record_receipt(args: argparse.Namespace) -> dict[str, Any]:
@@ -573,12 +616,16 @@ def record_receipt(args: argparse.Namespace) -> dict[str, Any]:
     if not _inside(root, receipt_path):
         raise FlowError("RECEIPT_OUTSIDE_ROOT")
     receipt = read_json(receipt_path, code="RECEIPT_INVALID")
-    validate_receipt_for_state(root, state, receipt, args.stage)
+    canonical = getattr(args, 'canonical_report_archive', None)
+    canonical = resolve_regular_file(Path(canonical), 'CANONICAL_REPORT_ARCHIVE_MISSING') if canonical else None
+    validate_receipt_for_state(root, state, receipt, args.stage, canonical_report_archive=canonical, receipt_path=receipt_path)
     state["artifacts"][args.stage] = {
         "path": str(receipt_path),
         "sha256": sha256_file(receipt_path),
         "size": receipt_path.stat().st_size,
     }
+    if canonical:
+        state['artifacts'][args.stage]['canonical_report_archive'] = {'path': str(canonical), 'sha256': sha256_file(canonical), 'size': canonical.stat().st_size}
     state["stages"][args.stage] = "COMPLETED"
     if args.stage == "collect-evidence" and "execute" in state["selected_stages"]:
         state["stages"]["execute"] = "COMPLETED"
@@ -774,6 +821,13 @@ def verify_recorded_artifacts(root: Path, state: dict[str, Any]) -> None:
                 continue
             raise FlowError(f"STATE_ARTIFACT_INVALID: {stage}")
         validate_file_lock(artifact, stage)
+        if artifact.get('canonical_report_archive'):
+            if stage != 'report':
+                raise FlowError('CANONICAL_ARCHIVE_ONLY_FOR_REPORT')
+            canonical = artifact['canonical_report_archive']
+            validate_file_lock(canonical, 'canonical-report')
+            path = Path(artifact['path'])
+            validate_canonical_report_archive(Path(canonical['path']), path, read_json(path, code='RECEIPT_INVALID'))
 
 
 def recommended_actions(state: Mapping[str, Any]) -> list[dict[str, Any]]:
@@ -1772,6 +1826,7 @@ def build_parser() -> argparse.ArgumentParser:
     receipt_parser.add_argument("--root", required=True)
     receipt_parser.add_argument("--stage", required=True, choices=tuple(RECEIPT_STAGE_MAP))
     receipt_parser.add_argument("--receipt", required=True)
+    receipt_parser.add_argument("--canonical-report-archive", type=Path, help="Verify report artifacts from exact sealed ZIP members while preserving changed standalone copies")
 
     submission_parser = subparsers.add_parser("record-submission")
     submission_parser.add_argument("--root", required=True)

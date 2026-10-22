@@ -313,7 +313,12 @@ async function loadTraceBundle(indexPath, state, profile) {
   }
   const traceArtifacts = [];
   const seen = new Set(["trace-index.json", "transcript.jsonl"]);
-  for (const item of [...index.raw_trace, ...(profile.generic ? index.binding_evidence : [])]) {
+  const bindings = index.binding_evidence ?? [];
+  if (!Array.isArray(bindings)) throw new Error('TRACE_BINDING_ARTIFACTS_INVALID');
+  if (bindings.some(item => typeof item?.path !== 'string' || !item.path.startsWith('bindings/'))) {
+    throw new Error('TRACE_BINDING_ARTIFACT_PATH_INVALID');
+  }
+  for (const item of [...index.raw_trace, ...bindings]) {
     const artifactRelative = safeRelativePath(item.path, "trace artifact");
     if (seen.has(artifactRelative)) throw new Error("TRACE_ARTIFACT_PATH_DUPLICATE");
     seen.add(artifactRelative);
@@ -759,6 +764,28 @@ export async function verifyGeneralCollection(options) {
     throw new Error("COLLECT_RECEIPT_ARTIFACT_SCOPE_MISMATCH");
   }
   for (const item of receipt.artifacts || []) await verifyArtifactPath(unitRoot, { ...item, type: "file" });
+
+  // Inventory verification alone cannot detect an index reference whose file
+  // was never copied. Verify the complete archived reference closure as well.
+  if (record.evidence?.trace_index_path) {
+    const indexSource = await readJsonFile(resolveWithin(unitRoot, record.evidence.trace_index_path, 'archived trace index'));
+    const index = indexSource.value;
+    if (!sameIdentity(index.identity, record.identity)) throw new Error('TRACE_IDENTITY_MISMATCH');
+    for (const key of ['thread_id', 'turn_id', 'session_id', 'cwd']) {
+      if (key in (record.session ?? {}) && record.session[key] !== index.session?.[key]) throw new Error(`TRACE_SESSION_MISMATCH: ${key}`);
+    }
+    const traceRoot = dirname(indexSource.absolute);
+    const transcript = resolveWithin(traceRoot, index.transcript.path, 'archived transcript');
+    if (transcript !== resolveWithin(unitRoot, record.evidence.transcript_path, 'record transcript')) throw new Error('TRACE_TRANSCRIPT_BINDING_MISMATCH');
+    const declared = new Map(evidenceManifest.artifacts.map(item => [item.path, item]));
+    for (const ref of [index.transcript, ...index.raw_trace, ...(index.binding_evidence ?? [])]) {
+      const path = resolveWithin(traceRoot, ref.path, 'archived trace artifact');
+      const source = await hashRegularFile(path);
+      assertArtifact(source, ref, ref.path);
+      const artifact = declared.get(relative(unitRoot, path).split(sep).join('/'));
+      if (!artifact || artifact.sha256 !== ref.sha256 || artifact.size !== ref.size) throw new Error('TRACE_ARTIFACT_NOT_IN_EVIDENCE_MANIFEST');
+    }
+  }
 
   const runtimePolicy = candidate.runtime_directory_policy;
   const integrity = createWorkspaceIntegrity({

@@ -21,6 +21,74 @@ const fixture = () => [r('session_meta', { id: 's', cwd: state.session.cwd }),
 const bytes = rows => Buffer.from(rows.map(v => JSON.stringify(v)).join('\n') + '\n');
 const projection = { events: [], calls: [] };
 
+function toolSearchFixture() {
+  const rows=fixture();
+  rows[4].payload={type:'tool_search_call',call_id:'search',id:'search',status:'completed',execution:'client',arguments:{query:'read browser text'}};
+  rows[5].payload={type:'tool_search_output',call_id:'search',status:'completed',execution:'client',tools:[
+    {type:'function',name:'mcp__fixture__snapshot',description:'Synthetic schema',defer_loading:true,parameters:{type:'object',properties:{scope:{type:'string'}}}},
+  ]};
+  return rows;
+}
+
+for (const [name,normalize] of [['canonical',normalizeRolloutTranscript],['vendored',vendoredNormalizer]]) {
+  test(`${name}: a retained SDK message can lack only its redundant mirror at adjacent compaction`,()=>{
+    const rows=fixture();rows.splice(6,0,
+      r('response_item',{type:'message',id:'before-compaction',role:'assistant',content:[{type:'output_text',text:'Retained original.'}],internal_chat_message_metadata_passthrough:{turn_id:'turn'}}),
+      r('compacted',{message:'Synthetic compacted context',replacement_history:[]}));
+    const result=normalize(bytes(rows),state,projection);
+    assert.equal(result.completeness.status,'complete');assert.equal(result.compaction_mirror_gaps.length,1);
+    assert.ok(result.events.some(e=>e.content==='Retained original.'));
+    for(const mutate of [
+      rows=>rows[7].timestamp='2026-10-10T15:00:02Z',
+      rows=>rows[7].payload.replacement_history=null,
+      rows=>rows[6].payload.internal_chat_message_metadata_passthrough.turn_id='wrong',
+      rows=>rows[7].type='unknown',
+    ]) {const changed=structuredClone(rows);mutate(changed);assert.throws(()=>normalize(bytes(changed),state,projection));}
+  });
+  test(`${name}: structured tool search results preserve complete schemas and raw references`,()=>{
+    for(const tools of [toolSearchFixture()[5].payload.tools,[]]) {
+      const rows=toolSearchFixture();rows[5].payload.tools=tools;
+      const result=normalize(bytes(rows),state,projection),output=result.events.find(e=>e.type==='tool_result');
+      assert.equal(result.completeness.status,'complete');assert.deepEqual(output.tool.result,{tools});
+      assert.deepEqual(output.message.content[0].content,{tools});assert.equal(output.source.raw_ref,'raw/astronstudio-rollout.jsonl#L6');
+    }
+  });
+  test(`${name}: missing, malformed, ambiguous and failed tool searches do not become complete`,()=>{
+    for(const [mutate,error] of [
+      [p=>p.tools={},/TOOLS_INVALID/],[p=>p.tools=[{type:'unknown'}],/TOOLS_INVALID/],
+      [p=>p.tools=[p.tools[0],p.tools[0]],/TOOLS_INVALID/],
+      [p=>p.status='failed',/STATUS_UNSUPPORTED/],[p=>p.execution='server',/STATUS_UNSUPPORTED/],
+      [p=>p.output='conflicting',/OUTPUT_AMBIGUOUS/],
+    ]){const rows=toolSearchFixture();mutate(rows[5].payload);assert.throws(()=>normalize(bytes(rows),state,projection),error);}
+    const rows=toolSearchFixture();delete rows[5].payload.tools;
+    assert.deepEqual(normalize(bytes(rows),state,projection).completeness.missing,['tool_result_content:search']);
+    const repeated=toolSearchFixture();repeated.splice(6,0,structuredClone(repeated[5]));
+    assert.equal(normalize(bytes(repeated),state,projection).calls.length,1);
+    repeated[6].payload.tools=[];assert.throws(()=>normalize(bytes(repeated),state,projection),/RESULT_CONFLICT/);
+  });
+  test(`${name}: SDK canonical policy retains projection differences separately and leaves strict mode unchanged`,()=>{
+    const provider={completeness:{status:'complete',missing:[]},calls:[{call_id:'c'}],events:[
+      {type:'tool_result',source:{raw_ref:'raw/astronstudio-provider-events.jsonl#L9'},tool:{call_id:'c',name:'exec_command',result:'projected suffix'}},
+    ]};
+    assert.throws(()=>normalize(bytes(fixture()),state,provider),/TOOL_CONFLICT/);
+    const r=normalize(bytes(fixture()),state,provider,{sourcePolicy:'bound-native-sdk'});
+    assert.equal(r.completeness.status,'complete');assert.equal(r.source_reconciliation.status,'partial');
+    assert.equal(r.source_reconciliation.source_content_identity_verified,false);assert.equal(r.projection_conflicts.length,1);
+    assert.equal(r.events.find(e=>e.type==='tool_result').tool.result,'unsafe command');
+    const incomplete=fixture();delete incomplete[5].payload.output;
+    assert.equal(normalize(bytes(incomplete),state,provider,{sourcePolicy:'bound-native-sdk'}).completeness.status,'partial');
+    const missingResult=fixture().filter(r=>r.payload.type!=='function_call_output');
+    assert.ok(normalize(bytes(missingResult),state,provider,{sourcePolicy:'bound-native-sdk'}).completeness.missing.includes('tool_result:c'));
+    assert.throws(()=>normalize(bytes(fixture()),state,provider,{sourcePolicy:'unknown'}),/POLICY_UNSUPPORTED/);
+    for(const bad of [
+      {...provider,calls:[{call_id:'unbound'}]},
+      {...provider,events:[{type:'user_message',content:'wrong'}]},
+      {...provider,events:[{type:'assistant_message',content:'wrong',final:true}]},
+      {...provider,events:[{type:'tool_result',tool:{call_id:'unbound',name:'exec_command',result:'unbound'}}]},
+    ])assert.throws(()=>normalize(bytes(fixture()),state,bad,{sourcePolicy:'bound-native-sdk'}));
+  });
+}
+
 test('SDK transcript preserves native tool arguments/results and line references despite absent projection', () => {
   const rows = fixture(), result = normalizeRolloutTranscript(bytes(rows), state, projection);
   assert.equal(result.completeness.status, 'complete');

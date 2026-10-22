@@ -5,6 +5,14 @@ description: 按用户明确选择的阶段串联 General E2E 准备、执行、
 
 # 运行 General E2E 全流程
 
+`0.7.5` 的研发包保留完整报告选择范围，包括 valid、evaluation_error、unscored 和真实零分；未知分数保持 null，不为导出删题。支持实际评分采用的补采执行记录，保留原始回传成员和旧记录，不强制它与初始记录字节相同。
+
+独立 XLSX 已被宿主追加属性时，`build_developer_bundle.py --canonical-report-archive ABS` 可从满足原回执的规范报告 ZIP 导出报告；独立副本作为变体保留，禁止改旧 SHA。规范 ZIP 可由 report `generate/selected_report.py --seal-output-dir ABS` 在生成进程内封存。该选项不放宽评分、来源包、JSON 或选择索引校验。
+
+报告回执登记同样可显式使用 `record-receipt --root BATCH --stage report --receipt ABS --canonical-report-archive ABS`。必须逐字节匹配 ZIP 内的原回执并验证全部封存成员与回执制品 SHA；state 额外冻结该 ZIP 的路径/大小/SHA，恢复时继续核验。此参数只适用于报告，不替代 collect 回执或其他阶段验证；不提供时仍按原规则核验独立文件。
+
+管理员只接收已有成绩时，可在新来源目录保留原 manifest/report-config，直接使用冻结 `import-return/select-import` 生成标准导入回执与选择索引，不必初始化原完整生产 run state。生产 init 会要求 manifest 中所有历史输入包存在；不能删 manifest 的制品锁、伪造评分包或手写完成状态来避开它。跨批次/同 unit_id 的比较仍需单独的派生报告映射，原身份不改。
+
 `0.7.4` 的 prepare-score 新增 --keep-scoring-external：对 install-unit 安装的公开单元，将外置 scoring ZIP 的绝对路径和 SHA 绑定到 round 状态，不复制 ZIP 到 round-root。显式提供 --scoring-package ABS、--report-config ABS；后续调用仍须保留外置模式并重验路径/SHA。评分包实际在 round-root 内（含指向内部的链接）、已安装内部评分包或模式漂移均拒绝。默认缓存行为保持兼容。
 
 此选项只是材料放置方式，不是 OS 隔离或停机屏障。原生分阶段评测必须先完成全部执行、正式采集/不可变校验和被测进程收尾，并保存屏障证明，再准备评分。外置目录在同 UID 下仍可能可读，按实际访问证据披露；prepare-score 不自动停止被测客户端，也不声称已拒绝私有读取。

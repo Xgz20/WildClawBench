@@ -228,6 +228,55 @@ test("CLI separates finalization from immutable verification", () => {
   assert.equal(parseArgs(["--help"]).help, true);
 });
 
+async function addBinding(value) {
+  const index=JSON.parse(await readFile(value.indexPath,'utf8'));
+  const directory=join(value.indexPath,'..','bindings');await mkdir(directory,{recursive:true});
+  const data=Buffer.from('{"synthetic":"native provenance"}\n');
+  await writeFile(join(directory,'native.json'),data);
+  index.binding_evidence=[{path:'bindings/native.json',sha256:digest(data),size:data.length}];
+  await writeJson(value.indexPath,index);
+  const metrics=JSON.parse(await readFile(value.metricsPath,'utf8')),bytes=await readFile(value.indexPath);
+  Object.assign(metrics.collection.sources.find(r=>r.path==='trace/trace-index.json'),{sha256:digest(bytes),size:bytes.length});
+  metrics.collection.sources.push({path:'trace/bindings/native.json',sha256:digest(data),size:data.length});
+  await writeJson(value.metricsPath,metrics);return data;
+}
+
+test('AstronStudio v1 copies every binding file and verifies its archived reference closure',async()=>{
+  const value=await fixture();
+  try {
+    const original=await addBinding(value);
+    const result=await finalizeAstronStudioExecution(options(value),{terminateProcesses:async()=>successfulCleanup()});
+    const archived=join(result.evidence_root,'trace/bindings/native.json');
+    assert.deepEqual(await readFile(archived),original);
+    await verifyAstronStudioCollection({unitRoot:value.root,taskId:value.taskId});
+    // Reproduce a collector that omitted a referenced binding and then wrote
+    // otherwise self-consistent manifest/receipt inventories.
+    await rm(archived);
+    const manifestPath=join(result.evidence_root,'evidence-manifest.json'),manifest=JSON.parse(await readFile(manifestPath,'utf8'));
+    manifest.artifacts=manifest.artifacts.filter(r=>!r.path.endsWith('/trace/bindings/native.json'));await writeJson(manifestPath,manifest);
+    const receiptPath=join(value.root,'receipts/collect-evidence-receipt.json'),receipt=JSON.parse(await readFile(receiptPath,'utf8')),bytes=await readFile(manifestPath);
+    Object.assign(receipt.artifacts.find(r=>r.path.endsWith('/evidence-manifest.json')),{sha256:digest(bytes),size:bytes.length});await writeJson(receiptPath,receipt);
+    await assert.rejects(verifyAstronStudioCollection({unitRoot:value.root,taskId:value.taskId}),/ENOENT|TRACE_ARTIFACT/);
+  } finally {await rm(value.root,{recursive:true,force:true});}
+});
+
+test('missing or tampered binding evidence rejects before freezing a candidate',async()=>{
+  for(const change of ['missing','hash','escape']) {
+    const value=await fixture();
+    try {
+      await addBinding(value);
+      if(change==='missing')await rm(join(value.indexPath,'..','bindings/native.json'));
+      else {
+        const index=JSON.parse(await readFile(value.indexPath,'utf8'));
+        if(change==='hash')index.binding_evidence[0].sha256='0'.repeat(64);
+        else index.binding_evidence[0].path='../escaped.json';
+        await writeJson(value.indexPath,index);
+      }
+      await assert.rejects(finalizeAstronStudioExecution(options(value),{terminateProcesses:async()=>{throw Error('cleanup must not run');}}),/ENOENT|ARTIFACT|artifact/);
+    } finally {await rm(value.root,{recursive:true,force:true});}
+  }
+});
+
 test("completed execution freezes an exact candidate and creates a verified receipt", async () => {
   const value = await fixture();
   try {

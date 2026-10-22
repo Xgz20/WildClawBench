@@ -11,6 +11,7 @@ import html
 import io
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -33,13 +34,32 @@ def sha(path):
 
 def safe_rel(value):
     p = PurePosixPath(value)
-    assert value and not p.is_absolute() and ".." not in p.parts and "\\" not in value, value
+    assert value and not p.is_absolute() and ".." not in p.parts and "\\" not in value and p.as_posix()==value and not re.match(r'^[A-Za-z]:',value), value
     return p
 
 
 def write_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def canonical_report_files(archive):
+    """Validate sealed report members; never normalize a host-modified XLSX."""
+    with zipfile.ZipFile(archive) as z:
+        names=z.namelist()
+        assert len(names)==len(set(names)), 'duplicate canonical report member'
+        seals=[n for n in names if n.count('/')==1 and n.endswith('/REPORT_SEAL.json')]
+        assert len(seals)==1, 'canonical report seal count'
+        prefix=seals[0].split('/')[0]+'/'
+        document=json.loads(z.read(seals[0]));files=document['files']
+        assert len({r['path'] for r in files})==len(files)
+        assert set(names)=={prefix+r['path'] for r in files}|{seals[0]}, 'canonical report scope'
+        for ref in files:
+            safe_rel(ref['path']);info=z.getinfo(prefix+ref['path'])
+            assert not info.is_dir() and stat.S_IFMT(info.external_attr>>16) in (0,stat.S_IFREG), 'canonical report file type'
+            data=z.read(info)
+            assert len(data)==ref['size'] and digest(data)==ref['sha256'], 'canonical report member drift'
+    return prefix,{r['path']:r for r in files}
 
 
 def entry_bytes(path, kind):
@@ -99,6 +119,7 @@ def check(target):
     target = Path(target)
     z = zipfile.ZipFile(target) if target.is_file() else None
     if z:
+        assert len(z.namelist())==len(set(z.namelist())), 'duplicate ZIP member'
         manifests = [n for n in z.namelist() if n.count('/') == 1 and n.endswith('/INTEGRITY.json')]
         assert len(manifests) == 1, 'manifest count'
         root = manifests[0].split('/')[0] + '/'
@@ -157,12 +178,26 @@ def check(target):
     selection=json.loads(read('SELECTION.json'))
     assert len(tasks)==selection['selected_runs'] and len({(r['unit_id'],r['task_id']) for r in tasks})==len(tasks)
     for r in tasks:
-        ex=json.loads(read(r['execution_record']));score=json.loads(read(r['score_file']))
-        assert ex['identity']['task_id']==score['identity']['task_id']==r['task_id']
+        ex=json.loads(read(r['execution_record']))
+        assert ex['identity']['task_id']==r['task_id']
+        if r.get('trace_index'):
+            ix=json.loads(read(r['trace_index']));assert ix['identity']==ex['identity']
+            parent=PurePosixPath(r['trace_index']).parent
+            for ref in [ix['transcript'],*ix['raw_trace'],*ix.get('binding_evidence',[])]:
+                p=PurePosixPath(ref['path']);assert not p.is_absolute() and '..' not in p.parts and '\\' not in ref['path']
+                payload=read((parent/p).as_posix());assert len(payload)==ref['size'] and hashlib.sha256(payload).hexdigest()==ref['sha256']
+        if not r['score_file']:
+            assert r['score_status']=='unscored' and r['score_0_1'] is None and r['score_sha256'] is None
+            continue
+        score=json.loads(read(r['score_file']))
+        assert hash_file(r['score_file'])==r['score_sha256']
+        assert score['identity']['task_id']==r['task_id']
         assert ex['identity']['attempt_id']==score['execution']['attempt_id']==r['execution_attempt_id']
         assert score['identity']['attempt_id']==r['scoring_attempt_id']
         assert score['execution']['record_sha256']==hash_file(r['execution_record'])
-        assert score['result']['valid'] is True and score['result']['total_score']==r['score_0_1']
+        assert (score['result']['valid'] is True)==(r['score_status']=='valid')
+        assert score['result']['total_score']==r['score_0_1']
+        if r['score_status']=='evaluation_error':assert r['score_0_1'] is None
     supplement_count=0
     if 'ResourceSupplements/supplement-manifest.json' in actual:
         sm = json.loads(read('ResourceSupplements/supplement-manifest.json'))
@@ -185,7 +220,7 @@ def check(target):
             for a in ref['artifacts']: assert hash_file('ResourceSupplements/'+a['path']) == a['sha256']
         supplement_count=len(sm['supplements'])
     if z: z.close()
-    return {'status':'PASS','units':len({r['unit_id'] for r in tasks}),'selected_runs':len(tasks),'valid_scores':len(tasks),'verified_files':files,'verified_symlinks':links,'resource_supplements':supplement_count,'archived_transcripts':sum(bool(r['transcript']) for r in tasks)}
+    return {'status':'PASS','units':len({r['unit_id'] for r in tasks}),'selected_runs':len(tasks),'valid_scores':sum(r['score_status']=='valid' for r in tasks),'score_status_counts':{s:sum(r['score_status']==s for r in tasks) for s in ('valid','evaluation_error','unscored')},'verified_files':files,'verified_symlinks':links,'resource_supplements':supplement_count,'archived_transcripts':sum(bool(r['transcript']) for r in tasks)}
 
 if __name__=='__main__':
     result=check(sys.argv[1] if len(sys.argv)>1 else Path(__file__).resolve().parent)
@@ -201,21 +236,22 @@ def build_html(tasks, summaries, report_excel):
     trs = []
     for row in tasks:
         search = html.escape((row["harness"]+" "+row["task_id"]+" "+row["task_name"]).lower(), quote=True)
-        status = "执行错误 · 有效评分" if row["execution_status"] == "candidate_error" else "完成 · 有效评分"
-        links = [link(row["execution_record"], "执行记录"), link(row["candidate_workspace"]+"/", "产物"),
+        status = row['execution_status'] + ' · ' + {'valid':'有效评分','evaluation_error':'评测异常','unscored':'未评分'}[row['score_status']]
+        links = [link(row["execution_record"], "执行记录"), link(row["candidate_workspace"]+"/" if row['candidate_workspace'] else None, "产物"),
                  link(row["transcript"], "会话轨迹"), link(row["raw_trace_directory"]+"/" if row["raw_trace_directory"] else None,"原始轨迹"),
                  link(row["score_file"],"评分"), link(row.get("resource_supplement") or row["resource_metrics"],"资源统计"), link(row["grading_contract"],"评分标准"),
-                 link(row["scoring_directory"]+"/", "评分过程")]
+                 link(row["scoring_directory"]+"/" if row['scoring_directory'] else None, "评分过程")]
         if row.get("rollout"):
             links.insert(3, link(row["rollout"], "rollout 原件"))
+        score_text=f'{row["score_100"]:.2f}' if row['score_100'] is not None else '—'
         trs.append(f'<tr data-unit="{row["harness"]}" data-search="{search}"><td>{row["harness"]}</td><td>{row["ordinal"]:02d}</td>'
                    f'<td><strong>{html.escape(row["task_name"])}</strong><small>{html.escape(row["task_id"])}</small></td>'
-                   f'<td>{status}</td><td class="score">{row["score_100"]:.2f}</td><td class="links">'+" · ".join(links)+"</td></tr>")
+                   f'<td>{status}</td><td class="score">{score_text}</td><td class="links">'+" · ".join(links)+"</td></tr>")
     cards = "".join(f'<section><b>{x["harness"]}</b><div>{x["selected_runs"]} 题 · {x["valid_scores"]} 个有效评分</div><small>原始轨迹已归档 {x["raw_trace_present"]}/{x["selected_runs"]}</small></section>' for x in summaries)
     return '''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>General E2E · 有效评测数据</title><style>
+<title>General E2E · 评测数据</title><style>
 body{font:14px/1.65 system-ui,-apple-system,sans-serif;margin:0;background:#f4f7fb;color:#193047}main{max-width:1560px;margin:auto;padding:28px}h1{font-size:25px;margin:0 0 8px}a{color:#176baf;text-decoration:none}a:hover{text-decoration:underline}.muted,small{color:#61758a}small{display:block}nav{margin:14px 0}.cards{display:flex;gap:12px;flex-wrap:wrap}.cards section{background:white;border:1px solid #d9e3ed;border-radius:8px;padding:14px 22px;flex:1;min-width:200px}.controls{display:flex;gap:12px;align-items:center;margin:20px 0}input,select{font:inherit;padding:8px;border:1px solid #b7c9da;border-radius:5px}input{flex:1}table{border-collapse:collapse;width:100%;background:white}th{background:#235d89;color:white;text-align:left;position:sticky;top:0}td,th{padding:10px 12px;border-bottom:1px solid #e1e8ef;vertical-align:top}td.score{text-align:right;font-variant-numeric:tabular-nums}.links{min-width:265px}tr:hover{background:#edf5fc}.table{overflow-x:auto;border:1px solid #d9e3ed;border-radius:8px}footer{margin-top:20px;color:#61758a}tr[hidden]{display:none}</style>
-<main><h1>General E2E · 有效评测数据</h1><div>已核验的最终选择 · 执行、评分、资源及原始轨迹。选择用例后直接查看本包中的执行、评分和原始证据。</div>
+<main><h1>General E2E · 评测数据</h1><div>已核验的完整最终选择 · 执行、评分、资源及原始轨迹。未评分和评测异常保留为空值，不补零。</div>
 <nav>''' + link("README.md", "阅读说明") + " · " + link("TASK_INDEX.csv", "CSV 索引") + " · " + link(report_excel, "Excel 报告") + " · " + link("Reports/通用场景端到端自动化评测报告.md", "领导版报告") + '</nav><div class="cards">' + cards + '''</div>
 <div class="controls"><select id="unit"><option value="">全部 Harness</option>''' + "".join(f"<option>{n}</option>" for n in UNITS.values()) + '''</select><input id="search" type="search" placeholder="搜索用例 ID、名称或 Harness"><span id="count">全部用例</span></div>
 <div class="table"><table><thead><tr><th>Harness</th><th>序号</th><th>用例</th><th>状态</th><th>得分</th><th>原始数据入口</th></tr></thead><tbody>''' + "\n".join(trs) + '''</tbody></table></div>
@@ -231,6 +267,7 @@ def main(argv=None):
     parser.add_argument("--source-index", type=Path)
     parser.add_argument("--task-index", type=Path)
     parser.add_argument("--resource-root", type=Path, help="Optional explicit external immutable resource-supplement manifest root")
+    parser.add_argument("--canonical-report-archive", type=Path, help="Use verified sealed report members; preserve separate host-modified files as variants")
     args=parser.parse_args(argv)
     UNITS = {}
     ROOT=args.workspace_root.resolve(); REPORT=args.report_dir.resolve()
@@ -246,7 +283,8 @@ def main(argv=None):
         if label in UNITS.values():label=key
         safe_rel(label);UNITS[key]=label
     now = datetime.now(ZoneInfo("Asia/Shanghai"))
-    name = "general-e2e-valid_" + now.strftime("%Y%m%d_%H%M%S")
+    full_scope=any(t['score_status']!='valid' for t in report_input['tasks'])
+    name = ("general-e2e-full_" if full_scope else "general-e2e-valid_") + now.strftime("%Y%m%d_%H%M%S")
     destination = OUTPUT_ROOT / name
     staging = destination.with_name("." + name + ".pending")
     archive = destination.with_suffix(".zip")
@@ -268,15 +306,21 @@ def main(argv=None):
                    "composite_import_index_sha256": report_artifact(SOURCE_INDEX.name)}
     assert selected["source_index_sha256"] == sha(SOURCE_INDEX)
     assert receipt["source_json_sha256"] == sha(REPORT / "general_e2e_report_data.json")
-    assert receipt["excel_sha256"] == sha(REPORT / report["artifact_filenames"]["excel"])
+    canonical=args.canonical_report_archive.resolve() if args.canonical_report_archive else None
+    sealed=canonical_report_files(canonical) if canonical else None
+    excel_relative=report["artifact_filenames"]["excel"]
+    assert receipt["excel_sha256"] == (sealed[1][excel_relative]['sha256'] if sealed else sha(REPORT/excel_relative))
+    if sealed:
+        assert sealed[1]['general_e2e_report_data.json']['sha256']==receipt['source_json_sha256']
+        assert sealed[1][SOURCE_INDEX.name]['sha256']==sha(SOURCE_INDEX) and sealed[1][TASK_INDEX.name]['sha256']==sha(TASK_INDEX)
     assert receipt["composite_import_index_sha256"] == sha(SOURCE_INDEX)
     assert set(index["imports"]) == set(UNITS) and len(selected["selected_tasks"]) == report["scope"]["task_run_count"]
     reports = {x["run_id"]: x for x in report["tasks"]}
     ordinal = {tid:i+1 for i,tid in enumerate(report["scope"]["task_ids"])}
-    assert len(ordinal) > 0 and all(x["score_status"] == "valid" for x in reports.values())
+    assert len(ordinal) > 0 and all(x["score_status"] in {'valid','evaluation_error','unscored'} for x in reports.values())
     manifests = {}
     for uid, item in index["imports"].items():
-        source = Path(item["target"])
+        source = Path(item["target"]).resolve()
         assert source.resolve().is_relative_to(ROOT) and sha(source/"package-manifest.json") == item["package_manifest_sha256"]
         manifests[uid] = load(source/"package-manifest.json")
         assert not any(part == ".DS_Store" or part == "__MACOSX" or part.startswith("._")
@@ -288,7 +332,7 @@ def main(argv=None):
     staging.mkdir(parents=True)
     source_summary = []
     for uid, harness in UNITS.items():
-        source = Path(index["imports"][uid]["target"]); target = staging/harness
+        source = Path(index["imports"][uid]["target"]).resolve(); target = staging/harness
         manifest = manifests[uid]
         assert len({e["path"] for e in manifest["entries"]}) == len(manifest["entries"])
         for entry in manifest["entries"]: copy_verified(source,target,entry)
@@ -340,16 +384,26 @@ def main(argv=None):
     tasks = []
     for source_row in selected["selected_tasks"]:
         uid, tid = source_row["unit_id"],source_row["task_id"]
-        source = Path(index["imports"][uid]["target"]); harness=UNITS[uid]
+        source = Path(index["imports"][uid]["target"]).resolve(); harness=UNITS[uid]
         r = reports[uid+"::"+tid]
-        ex_path, sc_path = Path(source_row["execution_record"]),Path(source_row["score_file"])
-        ex, score = load(ex_path),load(sc_path)
-        assert sha(ex_path)==r["lineage"]["execution_record_sha256"]==score["execution"]["record_sha256"]
-        assert sha(sc_path)==r["lineage"]["score_sha256"]
-        assert ex["identity"]["attempt_id"]==r["execution_attempt_id"]==score["execution"]["attempt_id"]
-        assert ex["execution"]["business_status"]==score["execution"]["business_status"]==r["execution_status"]
-        assert score["identity"]["attempt_id"]==r["scoring_attempt_id"]
-        assert score["result"]["valid"] is True and score["result"]["total_score"]==r["total_score"]
+        ex_path=Path(source_row['execution_record']);sc_path=Path(source_row['score_file']) if source_row.get('score_file') else None
+        member_rows={entry['path']:entry for entry in manifests[uid]['entries']}
+        for selected_path in [ex_path,*([sc_path] if sc_path else [])]:
+            assert not selected_path.is_symlink() and selected_path.is_file() and selected_path.resolve().is_relative_to(source)
+            relative_path=selected_path.resolve().relative_to(source).as_posix()
+            assert member_rows[relative_path]['kind']=='file' and member_rows[relative_path]['sha256']==sha(selected_path)
+        ex_path=ex_path.resolve();sc_path=sc_path.resolve() if sc_path else None
+        ex=load(ex_path);score=load(sc_path) if sc_path else None
+        assert member_rows[ex_path.relative_to(source).as_posix()]['sha256']==sha(ex_path)==r['lineage']['execution_record_sha256']
+        assert ex['identity']['attempt_id']==r['execution_attempt_id'] and ex['execution']['business_status']==r['execution_status']
+        if score:
+            assert sc_path.is_relative_to(source) and member_rows[sc_path.relative_to(source).as_posix()]['sha256']==sha(sc_path)==r['lineage']['score_sha256']
+            assert score['execution']['record_sha256']==sha(ex_path) and score['execution']['attempt_id']==r['execution_attempt_id']
+            assert score['execution']['business_status']==r['execution_status'] and score['identity']['attempt_id']==r['scoring_attempt_id']
+            assert (score['result']['valid'] is True)==(r['score_status']=='valid') and score['result']['total_score']==r['total_score']
+            if r['score_status']=='evaluation_error':assert r['total_score'] is None
+        else:
+            assert r['score_status']=='unscored' and r['total_score'] is None and r['scoring_attempt_id'] is None and r['lineage']['score_sha256'] is None
         relative = lambda p: (PurePosixPath(harness)/p.relative_to(source).as_posix()).as_posix()
         optional = lambda p: relative(p) if p.is_file() else None
         unit = source/"unit"
@@ -361,15 +415,15 @@ def main(argv=None):
             raw_paths.append(relative(p))
         transcript=unit/ex["evidence"]["transcript_path"] if ex["evidence"].get("transcript_path") else None
         task={"harness":harness,"unit_id":uid,"ordinal":ordinal[tid],"task_id":tid,"task_name":r["task_name"],
-              "execution_status":r["execution_status"],"score_status":"valid","score_0_1":r["total_score"],"score_100":r["total_score"]*100,
+              "execution_status":r["execution_status"],"score_status":r['score_status'],"score_0_1":r["total_score"],"score_100":r["total_score"]*100 if r['total_score'] is not None else None,
               "execution_attempt_id":r["execution_attempt_id"],"scoring_attempt_id":r["scoring_attempt_id"],
-              "execution_record":relative(ex_path),"score_file":relative(sc_path),"scoring_directory":relative(sc_path.parent),
-              "score_audit":optional(sc_path.with_name("score-audit.json")),"grading_contract":optional(sc_path.parent/"private/contract.json"),
-              "candidate_workspace":relative(unit/ex["candidate"]["path"]),"transcript":optional(transcript) if transcript else None,
+              "execution_record":relative(ex_path),"score_file":relative(sc_path) if sc_path else None,"scoring_directory":relative(sc_path.parent) if sc_path else None,
+              "score_audit":optional(sc_path.with_name("score-audit.json")) if sc_path else None,"grading_contract":optional(sc_path.parent/"private/contract.json") if sc_path else None,
+              "candidate_workspace":relative(unit/ex['candidate']['path']) if ex.get('candidate',{}).get('path') and (unit/ex['candidate']['path']).is_dir() else None,"transcript":optional(transcript) if transcript else None,
               "trace_index":relative(trace) if trace else None,"raw_trace_directory":relative(trace.parent/"raw") if trace and (trace.parent/"raw").is_dir() else None,
               "raw_trace_files":raw_paths,"trace_completeness":ti.get("completeness",{}),"execution_evidence_completeness":ex["evidence"]["completeness"],
               "resource_metrics":relative(unit/ex["resource_metrics_path"]) if ex.get("resource_metrics_path") else None,
-              "execution_record_sha256":sha(ex_path),"score_sha256":sha(sc_path)}
+              "execution_record_sha256":sha(ex_path),"score_sha256":sha(sc_path) if sc_path else None}
         task["resource_supplement"] = r["lineage"].get("resource_supplement", {}).get("path")
         task["effective_resource"] = r["resource"]
         if task["resource_supplement"] and RESOURCE is not None:
@@ -420,14 +474,16 @@ def main(argv=None):
     for uid,h in UNITS.items():
         selected_tasks=[x for x in tasks if x["unit_id"]==uid]
         assert len(selected_tasks)==len(ordinal) and {x["task_id"] for x in selected_tasks}==set(ordinal)
-        primary_ex={p.relative_to(staging).as_posix() for p in (staging/h/"unit/evidence/tasks").glob("*/*/execution-record.json")}
-        score_files={p.relative_to(staging).as_posix() for p in (staging/h/"scoring/attempts").rglob("score.json")}
-        assert primary_ex=={x["execution_record"] for x in selected_tasks}
-        assert score_files=={x["score_file"] for x in selected_tasks}
+        # Original collection records may coexist with explicitly selected
+        # evidence supplements. They are retained, never substituted for the
+        # score-bound selected records verified above.
+        assert all((staging/x['execution_record']).is_file() for x in selected_tasks)
+        assert all((staging/x['score_file']).is_file() for x in selected_tasks if x['score_file'])
     summaries=[]
     for uid,h in UNITS.items():
         rr=[x for x in tasks if x["unit_id"]==uid]
-        summaries.append({"harness":h,"unit_id":uid,"selected_runs":len(rr),"valid_scores":len(rr),
+        summaries.append({"harness":h,"unit_id":uid,"selected_runs":len(rr),"valid_scores":sum(x['score_status']=='valid' for x in rr),
+                          "score_status_counts":dict(Counter(x['score_status'] for x in rr)),
                           "execution_status_counts":dict(Counter(x["execution_status"] for x in rr)),
                           "zero_scores":sum(x["score_0_1"]==0 for x in rr),"transcript_present":sum(bool(x["transcript"]) for x in rr),
                           "raw_trace_present":sum(bool(x["raw_trace_files"]) for x in rr)})
@@ -439,12 +495,23 @@ def main(argv=None):
     write_json(staging/"SELECTION.json",{"schema_version":1,"selection_rule":"one final execution and score per unit/task selected by the supplied report",
                 "selected_runs":len(tasks),"unique_tasks":len(ordinal),"units":source_summary,"source_index_sha256":sha(SOURCE_INDEX),
                 "source_task_index_sha256":sha(TASK_INDEX),"source_report_sha256":sha(REPORT/"general_e2e_report_data.json"),"summaries":summaries})
-    shutil.copytree(REPORT,staging/"Reports",ignore=shutil.ignore_patterns(".DS_Store","__pycache__"))
+    if sealed:
+        with zipfile.ZipFile(canonical) as z:
+            for report_member,ref in sealed[1].items():
+                path=staging/'Reports'/safe_rel(report_member);path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(z.read(sealed[0]+report_member))
+        (staging/'CanonicalReportArchive').mkdir();shutil.copy2(canonical,staging/'CanonicalReportArchive'/canonical.name)
+        live=REPORT/excel_relative
+        if live.is_file() and sha(live)!=receipt['excel_sha256']:
+            (staging/'HostReportVariants').mkdir();shutil.copy2(live,staging/'HostReportVariants'/live.name)
+        write_json(staging/'REPORT_AUTHORITY.json',{'authority':'verified sealed ZIP members','canonical_archive_sha256':sha(canonical),
+            'canonical_excel_sha256':receipt['excel_sha256'],'separate_live_excel_sha256':sha(live) if live.is_file() else None})
+    else:
+        shutil.copytree(REPORT,staging/"Reports",ignore=shutil.ignore_patterns(".DS_Store","__pycache__"))
     assert sha(staging/"Reports/general_e2e_report_data.json")==receipt["source_json_sha256"]
     table="\n".join(f'| {x["harness"]} | {x["selected_runs"]} | {x["valid_scores"]} | {x["transcript_present"]} | {x["raw_trace_present"]} |' for x in summaries)
     readme=f"""# General E2E 研发审阅数据包
 
-生成时间：{now.isoformat()}。本包包含所提供报告显式选择的{len(UNITS)}个单元、{len(tasks)}条运行。每个单元/用例只采用一个执行和评分，保留执行失败的有效零分，不混入被替代轮次。
+生成时间：{now.isoformat()}。本包包含所提供报告显式选择的{len(UNITS)}个单元、{len(tasks)}条运行。每个单元/用例只采用明确选择的执行和评分；有效零分、评测异常与未评分均保留，未知分数不补零。来源包中的历史原件保留，不替代当前选择。
 
 打开 `INDEX.html` 按客户端和用例筛选，进入执行记录、产物、原始/标准轨迹、资源、评分过程及冻结评分标准。`TASK_INDEX.json/csv` 提供精确相对路径，`SELECTION.json` 记录来源和哈希，`Reports/` 保留同源报告。
 
@@ -460,7 +527,8 @@ def main(argv=None):
     (staging/"VERIFY.py").write_text(VERIFY_SCRIPT,encoding="utf-8")
     (staging/"INDEX.html").write_text(build_html(tasks,summaries,"Reports/"+report["artifact_filenames"]["excel"]),encoding="utf-8")
     write_json(staging/"INPUT_VALIDATION.json",{"status":"PASS","selected_runs":len(tasks),"units":len(UNITS),"original_package_member_hashes_verified":True,
-               "original_execution_and_score_hashes_verified_against_report":True,"extra_execution_attempts":0,"extra_scoring_attempts":0,
+               "original_execution_and_score_hashes_verified_against_report":True,"score_status_counts":dict(Counter(x['score_status'] for x in tasks)),
+               "initial_collection_records_preserved":True,
                "excluded_files":["unselected package versions",".DS_Store","runtime environments already excluded by return protocol"]})
     entries=[]
     for base,dirs,files in os.walk(staging,followlinks=False):

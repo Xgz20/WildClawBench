@@ -14,6 +14,12 @@ SPEC.loader.exec_module(REPORT)
 
 
 class SelectedReportSourcesTest(unittest.TestCase):
+    def test_sealing_requires_a_new_report_output(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaisesRegex(ValueError, 'SEAL_REQUIRES_REPORT_OUTPUT'):
+                REPORT.main(['--workspace-root',temp,'--batch-root',temp,'--source-index',temp+'/source.json',
+                             '--task-index',temp+'/tasks.json','--seal-output-dir',temp+'/sealed'])
+
     def test_explicit_data_output_root_does_not_change_source_verification_boundary(self):
         with tempfile.TemporaryDirectory() as temp:
             source = Path(temp)/"source";source.mkdir()

@@ -41,6 +41,8 @@ function usage() {
   --output-dir /absolute/evidence   默认为执行状态目录下的 trace/
   --rollout-file /absolute/rollout.jsonl  显式绑定模型会话原件
   --rollout-root /absolute/sessions      默认检索 AStudio overlay sessions
+  --source-policy provider-reconciled|bound-native-sdk
+                                    默认严格对账；SDK规范来源须显式选择并保留投影差异
   --legacy-provider-only            仅用于旧证据兼容，不用于新评测
   --replace                         原子覆盖已有轨迹产物
   -h, --help                        显示帮助
@@ -63,6 +65,7 @@ export function parseArgs(argv) {
     ["--output-dir", "outputDir"],
     ["--rollout-file", "rolloutFile"],
     ["--rollout-root", "rolloutRoot"],
+    ["--source-policy", "sourcePolicy"],
   ]);
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -79,6 +82,8 @@ export function parseArgs(argv) {
     }
   }
   if (!values.help && !values.stateFile) throw new Error("必须指定 --state-file");
+  if (values.sourcePolicy && !['provider-reconciled', 'bound-native-sdk'].includes(values.sourcePolicy)) throw new Error('ROLLOUT_SOURCE_POLICY_UNSUPPORTED');
+  if (values.sourcePolicy === 'bound-native-sdk' && values.legacyProviderOnly) throw new Error('ROLLOUT_LEGACY_MODE_CONFLICT');
   return values;
 }
 
@@ -727,6 +732,9 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   const indexPath = join(outputDir, "trace-index.json");
   const rolloutPath = join(outputDir, ROLLOUT_PATH);
   if(options.legacyProviderOnly&&options.rolloutFile)throw Error("ROLLOUT_LEGACY_MODE_CONFLICT");
+  const sourcePolicy = options.sourcePolicy ?? 'provider-reconciled';
+  if (!['provider-reconciled', 'bound-native-sdk'].includes(sourcePolicy)) throw Error('ROLLOUT_SOURCE_POLICY_UNSUPPORTED');
+  if (sourcePolicy === 'bound-native-sdk' && options.legacyProviderOnly) throw Error('ROLLOUT_LEGACY_MODE_CONFLICT');
   const rolloutFile=options.rolloutFile||(options.legacyProviderOnly?null:await discoverRollout(state.session.session_id,options.rolloutRoot));
   const rollout = rolloutFile ? await readRolloutFile(rolloutFile) : null;
   if (rollout) analyzeRollout(rollout.bytes, state);
@@ -766,9 +774,9 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   );
   try {
   const providerNormalized = normalizeTraceRows(native.rows, state);
-  const useRolloutTranscript = Boolean(rollout && providerNormalized.completeness.status !== "complete");
+  const useRolloutTranscript = Boolean(rollout && (sourcePolicy === 'bound-native-sdk' || providerNormalized.completeness.status !== "complete"));
   const normalized = useRolloutTranscript
-    ? normalizeRolloutTranscript(rollout.bytes, state, { ...providerNormalized, projection_rows: native.rows }) : providerNormalized;
+    ? normalizeRolloutTranscript(rollout.bytes, state, { ...providerNormalized, projection_rows: native.rows }, { sourcePolicy }) : providerNormalized;
   await assertPromptAndFinalResponse(state, normalized.events);
 
   const transcriptBytes = jsonLineBytes(normalized.events);
@@ -797,6 +805,12 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     // the historical provider-only normalization accounting contract.
     ...(!useRolloutTranscript ? { normalization: { ...normalized.normalization, native_event_count: native.raw_event_range.event_count,
       filtered_native_event_count: native.raw_event_range.event_count - normalized.events.length } } : {}),
+    ...(sourcePolicy === 'bound-native-sdk' ? {
+      canonical_source_policy: { id: 'bound-native-sdk-canonical/v1', effective_cross_source_admission_changed: true, scoring_rules_changed: false },
+      source_reconciliation: normalized.source_reconciliation,
+      provider_sdk_projection_conflicts: normalized.projection_conflicts,
+    } : {}),
+    ...(normalized.compaction_mirror_gaps?.length ? { sdk_compaction_mirror_gaps: normalized.compaction_mirror_gaps } : {}),
     completeness: normalized.completeness,
     calls: normalized.calls,
   };

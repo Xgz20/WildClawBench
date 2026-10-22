@@ -208,12 +208,14 @@ def main(argv=None):
     parser.add_argument("--resource-root",type=Path);parser.add_argument("--display-config",type=Path)
     parser.add_argument("--target-unit");parser.add_argument("--output-dir",type=Path)
     parser.add_argument("--data-output",type=Path,help="Write verified report JSON without rendering a workbook; must be a new file inside workspace-root")
+    parser.add_argument("--seal-output-dir",type=Path,help="Immediately seal a newly generated report into this separate directory")
     parser.add_argument("--data-output-root",type=Path,help="Explicit destination boundary for data-output; source verification still uses workspace-root")
     leader_report.add_arguments(parser)
     parser.add_argument("--node",default=os.environ.get("GENERAL_E2E_NODE","node"));parser.add_argument("--node-modules",type=Path)
     import maas_model_timing
     maas_model_timing.add_arguments(parser)
     args=parser.parse_args(argv);ROOT=args.workspace_root.resolve();BATCH=args.batch_root.resolve()
+    require(not args.seal_output_dir or args.output_dir,"SELECTION_SEAL_REQUIRES_REPORT_OUTPUT")
     require(not args.data_output_root or args.data_output,"SELECTION_DATA_OUTPUT_ROOT_REQUIRES_DATA_OUTPUT")
     batch=load(safe_file(BATCH/"manifest.json",ROOT));source=load(safe_file(args.source_index,ROOT));selection=load(safe_file(args.task_index,ROOT))
     require(selection["source_index_sha256"]==sha(args.source_index),"SELECTION_SOURCE_INDEX_DRIFT")
@@ -312,7 +314,12 @@ def main(argv=None):
                 "model_timing_artifacts":[{"path":p.relative_to(stage).as_posix(),"sha256":sha(p)} for p in model_artifacts]})
             shutil.copy2(args.source_index,stage/"developer-source-index.json");shutil.copy2(args.task_index,stage/"developer-task-index.json")
             stage.rename(out)
-        except BaseException:shutil.rmtree(stage);raise
+            if args.seal_output_dir:
+                import seal_report
+                seal_report.seal_report(out,args.seal_output_dir)
+        except BaseException:
+            if stage.exists():shutil.rmtree(stage)
+            raise
     return data
 
 if __name__=="__main__":

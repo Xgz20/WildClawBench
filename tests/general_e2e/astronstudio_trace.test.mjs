@@ -359,11 +359,11 @@ test("new archive uses bound SDK transcript when desktop projection omits prompt
   } finally { await rm(fixture.root, { recursive: true, force: true }); }
 });
 
-for (const tool of ['astron_publish_artifact', 'astron_allocate_artifact']) {
+for (const tool of ['astron_publish_artifact', 'astron_bind_artifact', 'astron_allocate_artifact']) {
   test(`archive forwards original provider rows for exact ${tool} reconciliation`, async () => {
     const fixture = await createFixture();
     try {
-      const success = tool === 'astron_publish_artifact';
+      const success = tool !== 'astron_allocate_artifact';
       const output = success ? 'Published synthetic artifact.' : 'Synthetic target exists.';
       const args = { path: 'synthetic.txt' };
       fixture.state.execution = { started_at: '2026-09-17T10:00:01.000Z', finished_at: '2026-09-17T10:00:07.000Z' };
@@ -508,4 +508,37 @@ test("new capture cannot silently omit the rollout when discovery has no match",
   try{
     await assert.rejects(archiveAstronStudioTrace({stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir,rolloutRoot:f.root}),/ROLLOUT_FILE_NOT_UNIQUE/);
   }finally{await rm(f.root,{recursive:true,force:true});}
+});
+
+test('source policy is explicit and incompatible with provider-only legacy mode',()=>{
+  assert.equal(parseArchiveArgs(['--state-file','/tmp/state.json','--source-policy','bound-native-sdk']).sourcePolicy,'bound-native-sdk');
+  assert.throws(()=>parseArchiveArgs(['--state-file','/tmp/state.json','--source-policy','unknown']),/POLICY_UNSUPPORTED/);
+  assert.throws(()=>parseArchiveArgs(['--state-file','/tmp/state.json','--source-policy','bound-native-sdk','--legacy-provider-only']),/LEGACY_MODE_CONFLICT/);
+});
+
+test('explicit SDK source is used even when provider coverage is complete, with unresolved differences retained',async()=>{
+  const f=await createFixture();
+  try {
+    f.state.execution={started_at:'2026-09-17T10:00:01.000Z',finished_at:'2026-09-17T10:00:07.000Z'};
+    await writeFile(f.stateFile,JSON.stringify(f.state));
+    const r=(type,payload)=>({timestamp:'2026-09-17T10:00:02.000Z',type,payload});
+    const rows=[r('session_meta',{id:SESSION_ID,cwd:f.workspace}),r('event_msg',{type:'task_started',turn_id:TURN_ID}),
+      r('turn_context',{turn_id:TURN_ID,cwd:f.workspace}),r('event_msg',{type:'user_message',message:'请修复温度换算程序。'}),
+      r('response_item',{type:'function_call',name:'exec_command',call_id:'call-command-1',arguments:JSON.stringify({cmd:'printf full-native-log',workdir:f.workspace})}),
+      r('response_item',{type:'function_call_output',call_id:'call-command-1',output:'Chunk ID: native\nWall time: 0.1 seconds\nProcess exited with code 0\nOriginal token count: 4\nOutput:\nfull-native-log'}),
+      r('response_item',{type:'message',role:'assistant',content:[{type:'output_text',text:'已完成修复，测试 OK。'}]}),
+      r('event_msg',{type:'task_complete',turn_id:TURN_ID,duration_ms:100,last_agent_message:'已完成修复，测试 OK。'})];
+    const rollout=join(f.root,'native.jsonl'),bytes=Buffer.from(rows.map(JSON.stringify).join('\n')+'\n');await writeFile(rollout,bytes);
+    const result=await archiveAstronStudioTrace({stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir,rolloutFile:rollout,sourcePolicy:'bound-native-sdk'});
+    assert.equal(result.trace_index.canonical_source_policy.id,'bound-native-sdk-canonical/v1');
+    assert.equal(result.trace_index.completeness.status,'complete');assert.equal(result.trace_index.source_reconciliation.status,'partial');
+    assert.ok(result.trace_index.provider_sdk_projection_conflicts.length>0);
+    assert.deepEqual(await readFile(join(f.outputDir,'raw/astronstudio-rollout.jsonl')),bytes);
+    const events=(await readFile(join(f.outputDir,'transcript.jsonl'),'utf8')).trim().split('\n').map(JSON.parse);
+    assert.equal(events.find(e=>e.type==='tool_result').tool.result,rows[5].payload.output);
+    delete rows[5].payload.output;await writeFile(rollout,rows.map(JSON.stringify).join('\n')+'\n');
+    const partial=await archiveAstronStudioTrace({stateFile:f.stateFile,stateDb:f.stateDatabase,outputDir:f.outputDir+'-missing',rolloutFile:rollout,sourcePolicy:'bound-native-sdk'});
+    assert.equal(partial.trace_index.completeness.status,'partial');
+    assert.ok(partial.trace_index.completeness.missing.includes('tool_result_content:call-command-1'));
+  } finally {await rm(f.root,{recursive:true,force:true});}
 });

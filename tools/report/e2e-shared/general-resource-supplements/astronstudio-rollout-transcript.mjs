@@ -1,5 +1,6 @@
 import { posix as path } from 'node:path';
 import { analyzeRollout, ROLLOUT_PATH } from './astronstudio-rollout.mjs';
+import { verifyAssistantMirrors } from './assistant-mirror-compaction.mjs';
 
 const ensure = (ok, code) => { if (!ok) throw Error(code); };
 const stable = value => Array.isArray(value) ? value.map(stable) : value && typeof value === 'object'
@@ -10,6 +11,7 @@ const shellDoubleQuote = value => `"${value.replaceAll('\\', '\\\\').replaceAll(
 // The native "bash" tool uses the configured desktop shell on macOS. Match
 // only literal, fully quoted wrappers; never evaluate a projected command.
 const desktopShells = ['/usr/local/bin/bash', '/bin/bash', '/bin/zsh'];
+export const TRANSCRIPT_SOURCE_POLICIES = ['provider-reconciled', 'bound-native-sdk'];
 
 // Parse only literal words and && separators. This is a comparison grammar,
 // never a shell evaluator: expansion, comments, redirection and other operators
@@ -61,8 +63,8 @@ function verifiedStaticRgTail(command, actions) {
 
 function verifyArtifactProjection(projected, native, call, row) {
   const p = projected.tool, n = native.tool, item = row?.event?.payload?.data?.item;
-  // These are two observed profiles, not a general namespace-stripping rule.
-  const profile = p.name === 'astron_publish_artifact' ? { status: 'completed', success: true }
+  // Exact observed artifact profiles, not a general namespace-stripping rule.
+  const profile = ['astron_publish_artifact', 'astron_bind_artifact'].includes(p.name) ? { status: 'completed', success: true }
     : { status: 'failed', success: false };
   ensure(item?.type === 'dynamicToolCall' && item.namespace === 'acode_artifacts'
     && item.tool === p.name && item.id === p.call_id && p.call_id === n.call_id
@@ -100,7 +102,7 @@ function verifyProjectedCwd(projected, call, workspace) {
 function verifyProjectedTool(projected, native, call, projectionRow) {
   const p = projected.tool, n = native?.tool, args = call?.tool.arguments;
   ensure(n && call, 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
-  if (['astron_publish_artifact', 'astron_allocate_artifact'].includes(p.name)
+  if (['astron_publish_artifact', 'astron_bind_artifact', 'astron_allocate_artifact'].includes(p.name)
       && n.name === `acode_artifacts__${p.name}`) {
     verifyArtifactProjection(projected, native, call, projectionRow);
     return;
@@ -159,9 +161,10 @@ const text = content => {
 
 // Only native rows in the verified turn may become transcript events. Provider
 // projections are retained separately; never insert text from evaluator files.
-export function normalizeRolloutTranscript(bytes, state, provider) {
+export function normalizeRolloutTranscript(bytes, state, provider, { sourcePolicy = 'provider-reconciled' } = {}) {
+  ensure(TRANSCRIPT_SOURCE_POLICIES.includes(sourcePolicy), 'ROLLOUT_SOURCE_POLICY_UNSUPPORTED');
   const analysis = analyzeRollout(bytes, state);
-  const events = [], calls = new Map(), missing = [], assistants = [], mirrors = [];
+  const events = [], calls = new Map(), missing = [], assistants = [], mirrors = [], projectionConflicts = [];
   let current = null, terminal = null;
   const append = (row, line, event) => {
     const value = {
@@ -222,7 +225,17 @@ export function normalizeRolloutTranscript(bytes, state, provider) {
       ensure(!terminal, 'ROLLOUT_CONTENT_AFTER_TERMINAL');
       const id = p.call_id ?? p.id;
       ensure(typeof id === 'string' && id, 'ROLLOUT_RESULT_ID_MISSING');
-      const call = calls.get(id), output = p.output;
+      const call = calls.get(id);
+      let output = p.output;
+      if (p.type === 'tool_search_output' && p.tools != null) {
+        ensure(output == null, 'ROLLOUT_TOOL_SEARCH_OUTPUT_AMBIGUOUS');
+        ensure(p.status === 'completed' && p.execution === 'client', 'ROLLOUT_TOOL_SEARCH_STATUS_UNSUPPORTED');
+        ensure(Array.isArray(p.tools) && p.tools.every(t => t && typeof t === 'object'
+          && !Array.isArray(t) && t.type === 'function' && typeof t.name === 'string' && t.name.length > 0
+          && t.parameters && typeof t.parameters === 'object' && !Array.isArray(t.parameters))
+          && new Set(p.tools.map(t => t.name)).size === p.tools.length, 'ROLLOUT_TOOL_SEARCH_TOOLS_INVALID');
+        output = { tools: p.tools };
+      }
       if (!call) { missing.push(`tool_call:${id}`); continue; }
       if (call.result_sequence !== null) { ensure(call.output === signature(output), 'ROLLOUT_RESULT_CONFLICT'); continue; }
       if (output === undefined || output === null) missing.push(`tool_result_content:${id}`);
@@ -234,7 +247,7 @@ export function normalizeRolloutTranscript(bytes, state, provider) {
     else if (!['message', 'reasoning'].includes(p.type)) missing.push(`unsupported_response_item:${p.type}`);
   }
   // SDK event_msg mirrors and response_item messages must agree if both exist.
-  if (assistants.length && mirrors.length) ensure(signature(assistants.map(e => e.content)) === signature(mirrors.map(e => e.content)), 'ROLLOUT_ASSISTANT_MIRROR_CONFLICT');
+  const mirrorGaps = assistants.length && mirrors.length ? verifyAssistantMirrors(assistants, mirrors, bytes, state) : [];
   if (!assistants.length) {
     for (const mirror of mirrors) assistants.push(append(mirror.row, mirror.line,
       { type: 'assistant_message', role: 'assistant', content: mirror.content, final: false }));
@@ -264,13 +277,29 @@ export function normalizeRolloutTranscript(bytes, state, provider) {
     for (const e of provider.events.filter(e => ['tool_call', 'tool_result'].includes(e.type))) {
       const native = events.find(n => n.type === e.type && n.tool.call_id === e.tool.call_id);
       const call = events.find(n => n.type === 'tool_call' && n.tool.call_id === e.tool.call_id);
+      ensure(call, 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
       const rows = provider.projection_rows?.filter(row =>
         `raw/astronstudio-provider-events.jsonl#L${row.raw_line}` === e.source?.raw_ref) ?? [];
       ensure(rows.length <= 1, 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
-      verifyProjectedTool(e, native, call, rows[0]);
-      if (e.type === 'tool_call') verifyProjectedCwd(e, call, state.session.cwd);
+      try {
+        verifyProjectedTool(e, native, call, rows[0]);
+        if (e.type === 'tool_call') verifyProjectedCwd(e, call, state.session.cwd);
+      } catch (error) {
+        if (sourcePolicy !== 'bound-native-sdk'
+            || !['PROVIDER_ROLLOUT_TOOL_CONFLICT', 'PROVIDER_ROLLOUT_TOOL_CWD_CONFLICT'].includes(error.message)) throw error;
+        projectionConflicts.push({ error: error.message, call_id: e.tool.call_id, event_type: e.type,
+          provider_tool: e.tool.name, sdk_tool: native?.tool.name ?? call.tool.name, provider_raw_ref: e.source?.raw_ref ?? null,
+          sdk_raw_ref: native?.source.raw_ref ?? null, source_content_identity_verified: false });
+      }
     }
   }
   return { events, calls: [...calls].map(([call_id, c]) => ({ call_id, call_sequence: c.call_sequence, result_sequence: c.result_sequence })),
+    ...(mirrorGaps.length ? { compaction_mirror_gaps: mirrorGaps } : {}),
+    ...(sourcePolicy === 'bound-native-sdk' ? { projection_conflicts: projectionConflicts,
+      source_reconciliation: { status: provider && provider.completeness?.status === 'complete' && !projectionConflicts.length ? 'verified' : 'partial',
+        source_content_identity_verified: Boolean(provider && provider.completeness?.status === 'complete' && !projectionConflicts.length),
+        verification_scope: 'observed retained provider projections only',
+        provider_completeness: provider?.completeness ?? null, observed_provider_calls: provider?.calls.length ?? 0,
+        sdk_calls: calls.size, unknown_shapes_accepted_as_equivalent: false } } : {}),
     completeness: { status: missing.length ? 'partial' : 'complete', omitted_event_count: 0, missing: [...new Set(missing)].sort() } };
 }

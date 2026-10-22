@@ -7,6 +7,10 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 
 # 采集 General E2E 证据
 
+`0.11.0` 解析原生 `tool_search_output.tools`，完整保留工具定义及原始行；非法、失败、歧义或真正缺失的结果不转成完整证据。成功 bind 的精确 acode_artifacts 投影采用与 publish 相同的逐项核验。AstronStudio v1 同样归档所有 `binding_evidence`，正式 `--verify-only` 检查索引引用闭包，避免采集通过后到评分时才发现遗漏文件。
+
+新评测可在执行前明确选择 `archive_astronstudio_trace.mjs --source-policy bound-native-sdk`：绑定 SDK 为规范轨迹，provider 投影原件、差异和独立 `source_reconciliation` 审计保留。它改变跨来源评分准入依据，必须记录在本轮配置/身份审计中；不是“两个来源已完全等价”。默认 `provider-reconciled` 保持严格模式，不自动升级旧采集或改写历史回执。SDK 自身缺失仍为 partial；错会话、Prompt、最终回复和未知调用 ID 均失败关闭。选择来源策略不授权重跑或重评分。
+
 `0.10.4` 严格对账 AstronStudio 已知投影：bash/exec_command 的显式 login=false 对应 -c，已声明 workdir 仅可为同一 Workspace 内规范绝对子目录；未声明仍要求根目录。只支持 acode_artifacts 的成功 publish 和失败 allocate 两种命名空间投影，必须逐项核对绑定原生行、call ID、参数、状态、唯一 inputText、错误及耗时；SDK 原文/unknown 工具状态保留，不把工具失败改成成功或整题能力失败。其他命名空间、结果或 cwd 继续拒绝。源码与脱仓 vendor 同步，旧冻结回执不改写。
 
 同一正式采集 attempt 只运行一个控制器。自建轮询控制器须持有单例锁；替换前核对精确 PID/命令和存活子进程，在无修改型子进程的边界停旧控制器，再恢复同一 attempt，不能仅按 python/python3 名称判断已退出。收口等待可显式配置 --process-wait-ms（默认15000）；有原生进程仍在收尾时按真实证据调整预算，不能把收口失败变成能力零分或绕过候选稳定性门禁。

@@ -36,6 +36,18 @@ trace/
 
 ## 完整性
 
+### 明确选择规范来源
+
+默认 `--source-policy provider-reconciled` 保持原严格对账行为。新评测若在准备阶段明确选定原生 SDK 规范来源，归档命令增加 `--source-policy bound-native-sdk`；该选择必须在本轮配置/来源审计中提前冻结，不能按结果、采集成功率或得分在运行中切换。
+
+SDK 模式仍核验同一 session/turn/cwd、原始 Prompt、终态、最终回复及调用集合；未知 provider 调用 ID 或消息冲突继续拒绝。标准转录来自精确绑定的 SDK，provider 原件不改写；正文、命名、cwd、timing 等无法证明等价的工具投影进入 `provider_sdk_projection_conflicts`，并保留独立 `source_reconciliation=partial`。`canonical_source_policy` 明确记录该策略改变跨来源准入依据，不能声称两端已完整一致。真正缺失的 SDK 工具返回仍为 partial。
+
+原生 `tool_search_output` 的工具定义从 `tools` 字段解析为结构化结果，空数组也是一次已返回的搜索；完整 schema 和原始行保留。失败/未知执行状态、非法工具定义、重复工具名或同时出现歧义 output/tools 均不伪装成功。
+
+SDK 原始 assistant 消息在显式 compaction 前可能没有冗余 UI mirror。仅对同 turn、有原生响应 ID、紧邻 compaction（中间只允许 usage 事件且不超过一秒）的形状保留缺失 mirror 审计；原 SDK 消息仍在标准转录中。普通消息内容冲突不放行。
+
+最终正式归档复制索引引用的全部 `binding_evidence`。收口与 `--verify-only` 均核验 transcript、SDK/provider 和绑定文件的存在、SHA、大小及引用闭包；旧冻结原件不自动修复或改写。
+
 `complete` 表示原生 turn 已归档、存在 start/completed 边界、唯一 user message、至少一个 assistant message，且每个已归档工具调用都有关联返回。标准化有意过滤的流式 delta、reasoning 摘要和重复 item update 仍存在原始 JSONL 中，不等于原始事件丢失。
 
 缺少边界、消息、call/result 一侧或出现不支持的 item 类型时写入 `partial` 和具体 `missing`。`omitted_event_count` 只表示原生归档层已知遗漏，不用来统计有意不转换的流式事件。只有摘要或索引、没有原始归档时不得标记 `complete`。

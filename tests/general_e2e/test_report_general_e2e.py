@@ -561,12 +561,16 @@ class ReportGeneralE2ETests(unittest.TestCase):
                     node="node",
                     node_modules=str(self.root),
                     skip_preview=True,
+                    seal_output_dir=str(self.root / "sealed-reports"),
                 )
             )
         finally:
             REPORT.render_excel = original_render_excel
 
         receipt_path = Path(result["receipt"])
+        sealed = Path(result["canonical_report_archive"])
+        self.assertTrue(sealed.is_file())
+        self.assertEqual(sha256(sealed), result["canonical_report_archive_sha256"])
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
         self.assertTrue(
             all(item["path"].startswith("reports/final-smoke/") for item in receipt["artifacts"])
@@ -588,6 +592,18 @@ class ReportGeneralE2ETests(unittest.TestCase):
                 receipt=str(receipt_path),
             )
         )
+        # A later host metadata variant remains separate; the explicit sealed
+        # authority can still register/resume using the untouched receipt.
+        Path(result['excel']).write_bytes(b'host workbook metadata variant')
+        with self.assertRaisesRegex(RUN.FlowError, 'RECEIPT_ARTIFACT_DRIFT'):
+            RUN.record_receipt(argparse.Namespace(root=str(self.fixture.batch), stage='report', receipt=str(receipt_path)))
+        canonical = RUN.record_receipt(argparse.Namespace(root=str(self.fixture.batch), stage='report',
+            receipt=str(receipt_path), canonical_report_archive=str(sealed)))
+        self.assertEqual(canonical['state']['artifacts']['report']['canonical_report_archive']['sha256'], sha256(sealed))
+        RUN.verify_recorded_artifacts(self.fixture.batch, canonical['state'])
+        sealed.write_bytes(sealed.read_bytes() + b'changed archive')
+        with self.assertRaisesRegex(RUN.FlowError, 'DRIFT'):
+            RUN.verify_recorded_artifacts(self.fixture.batch, canonical['state'])
         self.assertEqual(recorded["state"]["stages"]["report"], "COMPLETED")
 
 

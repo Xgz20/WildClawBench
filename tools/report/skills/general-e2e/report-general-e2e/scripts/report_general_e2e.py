@@ -1427,15 +1427,40 @@ def write_developer_indexes(validated, output_root):
         unit_id = selected["unit"]["unit_id"]
         sources["imports"][unit_id] = {"target": str(root), "package_id": selected["package_id"],
             "package_manifest_sha256": sha256_file(selected["package_manifest_path"])}
+        members = {item["path"]: item for item in selected["package_manifest"]["entries"]}
         for row in selected["submission"]["tasks"]:
             task_id = row["task_id"]
             record = root / "unit/evidence/tasks" / task_id / row["execution_attempt_id"] / "execution-record.json"
-            scoring_record = root / "scoring/execution-records" / f"{task_id}.json"
-            if record.exists() and sha256_file(record) != sha256_file(scoring_record):
-                raise ReportError("DEVELOPER_EXECUTION_COPY_DRIFT")
-            tasks.append({"unit_id": unit_id, "task_id": task_id,
-                "execution_record": str(record if record.exists() else scoring_record),
-                "score_file": str(root / "scoring" / row["score_path"]) if row.get("score_path") else None})
+            relative = f"scoring/execution-records/{task_id}.json"
+            scoring_record = resolve_file(root, relative, "selected execution record")
+            member = members.get(relative)
+            if not member or member.get("kind") != "file" or member.get("sha256") != sha256_file(scoring_record) or member.get("size") != scoring_record.stat().st_size:
+                raise ReportError("DEVELOPER_SELECTED_EXECUTION_DRIFT")
+            execution = validate_contract(scoring_record, EXECUTION_SCHEMA)
+            expected = {"batch_id": selected["package_manifest"]["identity"]["batch_id"], "unit_id": unit_id,
+                        "task_id": task_id, "attempt_id": row["execution_attempt_id"]}
+            if execution["identity"] != expected:
+                raise ReportError("DEVELOPER_SELECTED_EXECUTION_IDENTITY")
+            score_path = resolve_file(root, "scoring/" + row["score_path"], "selected score") if row.get("score_path") else None
+            if score_path:
+                score = validate_contract(score_path, SCORE_SCHEMA)
+                score_member = members.get(score_path.relative_to(root).as_posix())
+                if not score_member or score_member.get("sha256") != row["score_sha256"] or sha256_file(score_path) != row["score_sha256"] or score["execution"]["record_sha256"] != member["sha256"]:
+                    raise ReportError("DEVELOPER_SELECTED_SCORE_BINDING")
+            task = {"unit_id": unit_id, "task_id": task_id,
+                    "execution_record": str(scoring_record), "score_file": str(score_path) if score_path else None,
+                    "execution_record_sha256": member["sha256"], "selection_basis": "verified-submission"}
+            # The initial collection is history, not an alternative scoring
+            # source. Preserve its location/SHA without claiming equivalence.
+            if record.exists():
+                record = resolve_file(root, record.relative_to(root).as_posix(), "initial execution record")
+                original = members.get(record.relative_to(root).as_posix())
+                if not original or original.get("sha256") != sha256_file(record):
+                    raise ReportError("DEVELOPER_ORIGINAL_EXECUTION_DRIFT")
+                if validate_contract(record, EXECUTION_SCHEMA)["identity"] != expected:
+                    raise ReportError("DEVELOPER_ORIGINAL_EXECUTION_IDENTITY")
+                task.update(original_execution_record=str(record), original_execution_record_sha256=original["sha256"])
+            tasks.append(task)
     source_path = output_root / "developer-source-index.json"
     task_path = output_root / "developer-task-index.json"
     write_json(source_path, sources)
@@ -1555,7 +1580,15 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
     cli_manifest_path = output_root / "cli-adapter/manifest.json"
     excel_result["output"] = str(excel_path)
     excel_result["validation"] = str(output_root / "previews/excel-validation.json")
+    sealed = None
+    if getattr(args, "seal_output_dir", None):
+        import seal_report
+        try:
+            sealed = seal_report.seal_report(output_root, args.seal_output_dir, batch_root=batch_root)
+        except ValueError as exc:
+            raise ReportError(str(exc)) from exc
     return {
+        **({"canonical_report_archive": sealed["archive"], "canonical_report_archive_sha256": sealed["archive_sha256"]} if sealed else {}),
         "status": "PASS",
         "batch_id": data["batch_id"],
         "output_dir": str(output_root),
@@ -1592,6 +1625,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="包含 @oai/artifact-tool 的 node_modules 目录",
     )
     generate.add_argument("--skip-preview", action="store_true")
+    generate.add_argument("--seal-output-dir", type=Path, help="Seal verified report bytes before returning; separate XLSX host variants remain unchanged")
     import maas_model_timing
     maas_model_timing.add_arguments(generate)
     generate.set_defaults(handler=command_generate)
