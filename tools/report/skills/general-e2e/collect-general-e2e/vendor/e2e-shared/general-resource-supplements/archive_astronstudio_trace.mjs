@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import { ROLLOUT_PATH, readRolloutFile, analyzeRollout, discoverRollout } from "./astronstudio-rollout.mjs";
 import { normalizeRolloutTranscript } from "./astronstudio-rollout-transcript.mjs";
 import { copySnapshotFile, configureSnapshotReader } from "../sqlite-snapshot/index.mjs";
+import { readBoundNativeLogBundle } from "./astronstudio-native-provider-log.mjs";
 
 export const TRACE_ADAPTER_ID = "astronstudio-provider-runtime-events";
 export const TRACE_ADAPTER_VERSION = "0.1.1";
@@ -43,6 +44,7 @@ function usage() {
   --rollout-root /absolute/sessions      默认检索 AStudio overlay sessions
   --source-policy provider-reconciled|bound-native-sdk
                                     默认严格对账；SDK规范来源须显式选择并保留投影差异
+  --native-provider-log-manifest ABS  Explicit bound native log bundle; requires SDK policy and missing runtime turn projection
   --legacy-provider-only            仅用于旧证据兼容，不用于新评测
   --replace                         原子覆盖已有轨迹产物
   -h, --help                        显示帮助
@@ -66,6 +68,7 @@ export function parseArgs(argv) {
     ["--rollout-file", "rolloutFile"],
     ["--rollout-root", "rolloutRoot"],
     ["--source-policy", "sourcePolicy"],
+    ["--native-provider-log-manifest", "nativeProviderLogManifest"],
   ]);
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -84,6 +87,7 @@ export function parseArgs(argv) {
   if (!values.help && !values.stateFile) throw new Error("必须指定 --state-file");
   if (values.sourcePolicy && !['provider-reconciled', 'bound-native-sdk'].includes(values.sourcePolicy)) throw new Error('ROLLOUT_SOURCE_POLICY_UNSUPPORTED');
   if (values.sourcePolicy === 'bound-native-sdk' && values.legacyProviderOnly) throw new Error('ROLLOUT_LEGACY_MODE_CONFLICT');
+  if (values.nativeProviderLogManifest && values.sourcePolicy !== 'bound-native-sdk') throw Error('NATIVE_LOG_REQUIRES_EXPLICIT_SDK_POLICY');
   return values;
 }
 
@@ -211,7 +215,7 @@ function parseNativeEvent(row) {
   };
 }
 
-export async function queryBoundNativeTrace(database, state, { onRow = null, omitContentDeltas = false } = {}) {
+export function queryBoundTurnBinding(database, state) {
   const { thread_id: threadId, turn_id: turnId, session_id: sessionId, cwd } = state.session;
   const bindingRows = database.prepare(`
 SELECT
@@ -233,6 +237,12 @@ WHERE turns.thread_id = ${sqlString(threadId)}
   if (!samePath(binding.cwd, cwd)) {
     throw new Error(`TRACE_CWD_MISMATCH: expected=${cwd} actual=${binding.cwd}`);
   }
+  return binding;
+}
+
+export async function queryBoundNativeTrace(database, state, { onRow = null, omitContentDeltas = false } = {}) {
+  const { thread_id: threadId, turn_id: turnId, session_id: sessionId } = state.session;
+  const binding = queryBoundTurnBinding(database, state);
   const statement = database.prepare(`
 SELECT sequence, event_id, thread_id, turn_id, lifecycle_generation,
        event_type, event_json, persisted_at
@@ -425,7 +435,7 @@ function resultStatus(item) {
 function sourceFor(row, rawLine) {
   return {
     adapter: `${TRACE_ADAPTER_ID}@${TRACE_ADAPTER_VERSION}`,
-    raw_ref: `raw/astronstudio-provider-events.jsonl#L${rawLine}`,
+    raw_ref: row.raw_ref ?? `raw/astronstudio-provider-events.jsonl#L${rawLine}`,
     redacted: false,
   };
 }
@@ -715,7 +725,8 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   const stateFile = resolve(options.stateFile);
   const stateInfo = await stat(stateFile);
   if (!stateInfo.isFile()) throw new Error(`STATE_FILE_INVALID: ${stateFile}`);
-  const state = await readJson(stateFile);
+  const stateBytes = await readFile(stateFile);
+  const state = JSON.parse(stateBytes.toString('utf8'));
   assertExecutionState(state);
   let stateDatabase = options.stateDb ? resolve(options.stateDb) : "";
   if (!stateDatabase) {
@@ -727,23 +738,38 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   }
   if (!stateDatabase) throw new Error("STATE_DATABASE_MISSING");
   const outputDir = resolve(options.outputDir || join(dirname(stateFile), "trace"));
-  const rawPath = join(outputDir, "raw", "astronstudio-provider-events.jsonl");
+  const nativeLog = options.nativeProviderLogManifest
+    ? await readBoundNativeLogBundle(resolve(options.nativeProviderLogManifest), state, stateBytes) : null;
+  const rawPath = join(outputDir, nativeLog?.raw_path ?? "raw/astronstudio-provider-events.jsonl");
   const transcriptPath = join(outputDir, "transcript.jsonl");
   const indexPath = join(outputDir, "trace-index.json");
   const rolloutPath = join(outputDir, ROLLOUT_PATH);
   if(options.legacyProviderOnly&&options.rolloutFile)throw Error("ROLLOUT_LEGACY_MODE_CONFLICT");
   const sourcePolicy = options.sourcePolicy ?? 'provider-reconciled';
   if (!['provider-reconciled', 'bound-native-sdk'].includes(sourcePolicy)) throw Error('ROLLOUT_SOURCE_POLICY_UNSUPPORTED');
+  if (nativeLog && sourcePolicy !== 'bound-native-sdk') throw Error('NATIVE_LOG_REQUIRES_EXPLICIT_SDK_POLICY');
   if (sourcePolicy === 'bound-native-sdk' && options.legacyProviderOnly) throw Error('ROLLOUT_LEGACY_MODE_CONFLICT');
   const rolloutFile=options.rolloutFile||(options.legacyProviderOnly?null:await discoverRollout(state.session.session_id,options.rolloutRoot));
   const rollout = rolloutFile ? await readRolloutFile(rolloutFile) : null;
   if (rollout) analyzeRollout(rollout.bytes, state);
-  await assertWritableTargets([rawPath, transcriptPath, indexPath, ...(rollout ? [rolloutPath] : [])], Boolean(options.replace));
+  await assertWritableTargets([rawPath, transcriptPath, indexPath, ...(rollout ? [rolloutPath] : []),
+    ...(nativeLog?.binding_artifacts ?? []).map(a => join(outputDir, a.path))], Boolean(options.replace));
 
   await mkdir(join(outputDir, "raw"), { recursive: true });
   const native = await withStateSnapshot(
     stateDatabase,
     async (database) => {
+      if (nativeLog) {
+        const binding = queryBoundTurnBinding(database, state);
+        const count = database.prepare(`SELECT COUNT(*) AS count FROM provider_runtime_events
+          WHERE thread_id=${sqlString(state.session.thread_id)} AND turn_id=${sqlString(state.session.turn_id)}`).get().count;
+        if (count !== 0) throw Error('NATIVE_LOG_REQUIRES_MISSING_RUNTIME_TURN_PROJECTION');
+        const temporary = `${rawPath}.tmp-${randomUUID()}`;
+        await writeFile(temporary, nativeLog.original_bytes, { flag: 'wx', mode: 0o600 });
+        return { binding: { ...binding, lifecycle_generation: nativeLog.lifecycle_generation },
+          rows: nativeLog.rows, temporary_raw: temporary,
+          raw_artifact: artifact(nativeLog.raw_path, nativeLog.original_bytes) };
+      }
       const temporary = `${rawPath}.tmp-${randomUUID()}`;
       const handle = await open(temporary, "wx", 0o600);
       const hash = createHash("sha256");
@@ -786,8 +812,8 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     identity: { ...state.identity },
     adapter: {
       id: TRACE_ADAPTER_ID,
-      version: useRolloutTranscript ? "0.3.0" : rollout ? "0.2.0" : TRACE_ADAPTER_VERSION,
-      source: useRolloutTranscript ? "bound_rollout_transcript+provider_runtime_events_audit" : rollout ? "provider_runtime_events+bound_rollout" : "provider_runtime_events",
+      version: nativeLog ? "0.3.1" : useRolloutTranscript ? "0.3.0" : rollout ? "0.2.0" : TRACE_ADAPTER_VERSION,
+      source: nativeLog ? "bound_rollout_transcript+bound_native_provider_log_audit" : useRolloutTranscript ? "bound_rollout_transcript+provider_runtime_events_audit" : rollout ? "provider_runtime_events+bound_rollout" : "provider_runtime_events",
     },
     session: {
       thread_id: state.session.thread_id,
@@ -800,14 +826,22 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
       event_count: normalized.events.length,
     }),
     raw_trace: [native.raw_artifact, ...(rollout ? [artifact(ROLLOUT_PATH, rollout.bytes)] : [])],
-    raw_event_range: native.raw_event_range,
+    ...(native.raw_event_range ? { raw_event_range: native.raw_event_range } : {}),
+    ...(nativeLog ? {
+      native_provider_log_profile: { id: 'bound-native-provider-log/v1', runtime_turn_projection_event_count: 0,
+        native_notification_count: nativeLog.native_line_count, comparison_rows_are_database_sequences: false },
+      binding_evidence: nativeLog.binding_artifacts.map(a => artifact(a.path, a.bytes)),
+    } : {}),
     // The range still describes provider rows. Do not mix SDK line counts into
     // the historical provider-only normalization accounting contract.
     ...(!useRolloutTranscript ? { normalization: { ...normalized.normalization, native_event_count: native.raw_event_range.event_count,
       filtered_native_event_count: native.raw_event_range.event_count - normalized.events.length } } : {}),
     ...(sourcePolicy === 'bound-native-sdk' ? {
       canonical_source_policy: { id: 'bound-native-sdk-canonical/v1', effective_cross_source_admission_changed: true, scoring_rules_changed: false },
-      source_reconciliation: normalized.source_reconciliation,
+      source_reconciliation: { ...normalized.source_reconciliation,
+        ...(nativeLog ? { projection_source: 'bound-native-provider-notification-log',
+          runtime_projection_status: 'absent-at-collection',
+          comparison_view_is_derived: true, original_native_notifications_preserved: true } : {}) },
       provider_sdk_projection_conflicts: normalized.projection_conflicts,
     } : {}),
     ...(normalized.compaction_mirror_gaps?.length ? { sdk_compaction_mirror_gaps: normalized.compaction_mirror_gaps } : {}),
@@ -819,6 +853,10 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   await rename(native.temporary_raw, rawPath);
   await atomicWrite(transcriptPath, transcriptBytes);
   if (rollout) await atomicWrite(rolloutPath, rollout.bytes);
+  for (const a of nativeLog?.binding_artifacts ?? []) {
+    await mkdir(dirname(join(outputDir, a.path)), { recursive: true });
+    await atomicWrite(join(outputDir, a.path), a.bytes);
+  }
   await atomicWrite(indexPath, indexBytes);
   return {
     status: "PASS",

@@ -7,6 +7,10 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 
 # 采集 General E2E 证据
 
+`0.11.1` 新增显式 `--native-provider-log-manifest ABS` 来源入口，仅与 `--source-policy bound-native-sdk` 联用，且要求精确 turn 的 runtime 投影当前为 0 行、原执行已正常完成。它核验不可变原生通知日志、来源行号/字节摘要、执行状态 SHA、thread/turn/provider session、有效 lifecycle、唯一开始/完成边界及已知 item/method；原 SDK 解析器继续核验 Prompt、最终回复、未知 call ID 和调用返回覆盖。未知形状仍拒绝。
+
+原始通知日志、确定性派生比较视图和 SDK 分别归档；通知行号不冒充数据库 sequence，索引不填造数据库事件范围。资源使用 SDK profile 2，HTTP 尝试与未知缓存继续保持 unavailable。正式 finalize、verify-only 都复核原通知与派生视图，并检查完整绑定引用闭包。此入口须在新的源码/发行身份中显式冻结，不自动回退，不改旧证据或评分政策；仅有“没有 provider 行”的声明不能准入。
+
 `0.11.0` 解析原生 `tool_search_output.tools`，完整保留工具定义及原始行；非法、失败、歧义或真正缺失的结果不转成完整证据。成功 bind 的精确 acode_artifacts 投影采用与 publish 相同的逐项核验。AstronStudio v1 同样归档所有 `binding_evidence`，正式 `--verify-only` 检查索引引用闭包，避免采集通过后到评分时才发现遗漏文件。
 
 新评测可在执行前明确选择 `archive_astronstudio_trace.mjs --source-policy bound-native-sdk`：绑定 SDK 为规范轨迹，provider 投影原件、差异和独立 `source_reconciliation` 审计保留。它改变跨来源评分准入依据，必须记录在本轮配置/身份审计中；不是“两个来源已完全等价”。默认 `provider-reconciled` 保持严格模式，不自动升级旧采集或改写历史回执。SDK 自身缺失仍为 partial；错会话、Prompt、最终回复和未知调用 ID 均失败关闭。选择来源策略不授权重跑或重评分。

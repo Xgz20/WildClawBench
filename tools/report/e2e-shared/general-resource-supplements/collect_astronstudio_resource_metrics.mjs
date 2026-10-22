@@ -17,6 +17,8 @@ import { fileURLToPath } from "node:url";
 import { FLOW_TIMING_PROFILE, flowTiming } from "../resource-metrics/flow-timing.mjs";
 import { ROLLOUT_PATH, analyzeIndexedRollout } from "./astronstudio-rollout.mjs";
 
+import { verifyArchivedNativeLog } from './astronstudio-native-provider-log.mjs';
+
 export const RESOURCE_SCHEMA = "urn:wildclawbench:schema:general-e2e:resource-metrics:v1";
 export const RESOURCE_COLLECTOR = "astronstudio-provider-runtime-resource-metrics";
 export const RESOURCE_COLLECTOR_VERSION = "0.1.2";
@@ -171,11 +173,14 @@ function assertTraceBinding(state, index) {
   if (index.adapter?.id !== TRACE_ADAPTER_ID) throw new Error("TRACE_ADAPTER_UNSUPPORTED");
   if (!sameIdentity(state.identity, index.identity)) throw new Error("TRACE_IDENTITY_MISMATCH");
   if (!sameSession(state, index)) throw new Error("TRACE_SESSION_MISMATCH");
-  const allowed = new Set(["raw/astronstudio-provider-events.jsonl", ROLLOUT_PATH]);
+  const nativeLog = index.native_provider_log_profile?.id === 'bound-native-provider-log/v1';
+  const rawPath = nativeLog ? 'raw/astronstudio-native-provider-notifications.log' : 'raw/astronstudio-provider-events.jsonl';
+  if (nativeLog && index.canonical_source_policy?.id !== 'bound-native-sdk-canonical/v1') throw Error('NATIVE_LOG_PROFILE_INVALID');
+  const allowed = new Set([rawPath, ROLLOUT_PATH]);
   if (!Array.isArray(index.raw_trace) || ![1,2].includes(index.raw_trace.length)
       || new Set(index.raw_trace.map(r=>r.path)).size !== index.raw_trace.length
       || index.raw_trace.some(r=>!allowed.has(r.path))
-      || !index.raw_trace.some(r=>r.path==="raw/astronstudio-provider-events.jsonl")) {
+      || !index.raw_trace.some(r=>r.path===rawPath)) {
     throw new Error("RAW_TRACE_AMBIGUOUS");
   }
 }
@@ -609,13 +614,19 @@ export async function collectAstronStudioResourceMetrics(options) {
   assertTraceBinding(stateSource.value, indexSource.value);
   const hasRollout=indexSource.value.raw_trace.some(r=>r.path===ROLLOUT_PATH);
   if(!hasRollout&&!options.legacyProviderOnly)throw Error("ROLLOUT_REQUIRED_FOR_NEW_COLLECTION");
-  const rawSource = await readIndexedRawTrace(indexSource.absolute, indexSource.value);
+  const nativeLog = indexSource.value.native_provider_log_profile?.id === 'bound-native-provider-log/v1';
+  if (nativeLog && options.legacyProviderOnly) throw Error('NATIVE_LOG_LEGACY_MODE_CONFLICT');
+  const nativeArtifact = nativeLog ? indexSource.value.raw_trace.find(r => r.path === 'raw/astronstudio-native-provider-notifications.log') : null;
+  const rawSource = nativeLog ? {
+    rows: (await verifyArchivedNativeLog(indexSource.value, stateSource.value, stateSource.bytes, dirname(indexSource.absolute))).rows,
+    artifact: nativeArtifact,
+  } : await readIndexedRawTrace(indexSource.absolute, indexSource.value);
   const outputPath = resolve(options.output || resolve(dirname(indexSource.absolute), "resource-metrics.json"));
   await assertWritableTarget(outputPath, Boolean(options.replace));
   const sources = [
     artifact("execution/automation-state.json", stateSource.bytes),
     artifact("trace/trace-index.json", indexSource.bytes),
-    { ...rawSource.artifact, path: "trace/raw/astronstudio-provider-events.jsonl" },
+    { ...rawSource.artifact, path: `trace/${rawSource.artifact.path}` },
   ];
   const replayLegacy=options.legacyProviderOnly&&!['0.2.0','0.3.0'].includes(indexSource.value.adapter.version);
   const rollout=hasRollout?await analyzeIndexedRollout(indexSource.absolute,stateSource.value,{profileVersion:replayLegacy?1:2}):null;

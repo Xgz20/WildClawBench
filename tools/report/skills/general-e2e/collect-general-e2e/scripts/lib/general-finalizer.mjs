@@ -28,6 +28,7 @@ import {
 import { fileURLToPath } from "node:url";
 
 import { createWorkspaceIntegrity } from "../../vendor/e2e-shared/handoff/workspace-integrity.mjs";
+import { verifyArchivedNativeLog } from "../../vendor/e2e-shared/general-resource-supplements/astronstudio-native-provider-log.mjs";
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
@@ -288,7 +289,7 @@ async function assertUnitAndState(unitRoot, manifestSource, stateSource, profile
   return { manifest, state, task, taskRoot: actualTaskRoot, workspace: actualWorkspace, promptSource };
 }
 
-async function loadTraceBundle(indexPath, state, profile) {
+async function loadTraceBundle(indexPath, state, profile, stateBytes) {
   if (!indexPath) return null;
   const indexSource = await readJsonFile(indexPath);
   const index = indexSource.value;
@@ -305,7 +306,8 @@ async function loadTraceBundle(indexPath, state, profile) {
   const transcriptRelative = safeRelativePath(index.transcript?.path, "trace transcript");
   const transcriptSource = await readRegularFile(resolve(root, transcriptRelative));
   assertArtifact(transcriptSource, index.transcript, "trace transcript");
-  const astronRawPaths = new Set(["raw/astronstudio-provider-events.jsonl", "raw/astronstudio-rollout.jsonl"]);
+  const nativeLog = index.native_provider_log_profile?.id === 'bound-native-provider-log/v1';
+  const astronRawPaths = new Set([nativeLog ? "raw/astronstudio-native-provider-notifications.log" : "raw/astronstudio-provider-events.jsonl", "raw/astronstudio-rollout.jsonl"]);
   if (!Array.isArray(index.raw_trace) || (!profile.generic && (!index.raw_trace.length
       || index.raw_trace.length > 2 || index.raw_trace.some(r=>!astronRawPaths.has(r.path))))
       || (profile.generic && index.raw_trace.length === 0)) {
@@ -328,6 +330,7 @@ async function loadTraceBundle(indexPath, state, profile) {
     assertArtifact(source, item, artifactRelative);
     traceArtifacts.push({ relative: artifactRelative, source });
   }
+  if (nativeLog) await verifyArchivedNativeLog(index, state, stateBytes, root);
   return { indexSource, index, transcriptSource, transcriptRelative, traceArtifacts };
 
 }
@@ -775,6 +778,10 @@ export async function verifyGeneralCollection(options) {
       if (key in (record.session ?? {}) && record.session[key] !== index.session?.[key]) throw new Error(`TRACE_SESSION_MISMATCH: ${key}`);
     }
     const traceRoot = dirname(indexSource.absolute);
+    if (index.native_provider_log_profile) {
+      const archivedState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
+      await verifyArchivedNativeLog(index, archivedState.value, archivedState.bytes, traceRoot);
+    }
     const transcript = resolveWithin(traceRoot, index.transcript.path, 'archived transcript');
     if (transcript !== resolveWithin(unitRoot, record.evidence.transcript_path, 'record transcript')) throw new Error('TRACE_TRANSCRIPT_BINDING_MISMATCH');
     const declared = new Map(evidenceManifest.artifacts.map(item => [item.path, item]));
@@ -919,7 +926,7 @@ export async function finalizeExecution(options, profile, overrides = {}) {
     assertNoOtherCollectedAttempt(unitRoot, identity.task_id, identity.attempt_id),
   ]);
   const [traceBundle, resource, finalResponse, policy] = await Promise.all([
-    loadTraceBundle(options.traceIndex, state, profile),
+    loadTraceBundle(options.traceIndex, state, profile, stateSource.bytes),
     options.resourceMetrics ? null : Promise.resolve(null),
     loadFinalResponse(unitRoot, state),
     loadCandidatePolicy(options.candidatePolicy),

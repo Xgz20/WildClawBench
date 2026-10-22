@@ -279,7 +279,7 @@ export function normalizeRolloutTranscript(bytes, state, provider, { sourcePolic
       const call = events.find(n => n.type === 'tool_call' && n.tool.call_id === e.tool.call_id);
       ensure(call, 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
       const rows = provider.projection_rows?.filter(row =>
-        `raw/astronstudio-provider-events.jsonl#L${row.raw_line}` === e.source?.raw_ref) ?? [];
+        (row.raw_ref ?? `raw/astronstudio-provider-events.jsonl#L${row.raw_line}`) === e.source?.raw_ref) ?? [];
       ensure(rows.length <= 1, 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
       try {
         verifyProjectedTool(e, native, call, rows[0]);
