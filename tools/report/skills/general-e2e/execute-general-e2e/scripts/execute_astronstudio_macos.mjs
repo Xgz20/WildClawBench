@@ -28,17 +28,20 @@ import {
   fillPrompt,
   prepareExecutionUi,
   createFreshTask,
+  readUiConfiguration,
 } from "./lib/astronstudio-cdp.mjs";
 import {
   queryFinalResponse,
   queryNativeSessions,
+  queryNativeCustomModelBinding,
 } from "./lib/astronstudio-state.mjs";
+import { verifyNativeCustomBinding } from "./lib/astronstudio-custom-model.mjs";
 import { waitForThreadStreamLease } from "./lib/astronstudio-stream.mjs";
 import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery/index.mjs";
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTerminal } from "./lib/astronstudio-quota-retry.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.4.10";
+export const EXECUTION_DRIVER_VERSION = "0.4.11";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -622,6 +625,8 @@ async function currentProbe(config, dependencies, fresh) {
   if (current.tested_model.display_name !== frozen.tested_model.display_name) mismatches.push("model");
   if (current.tested_model.reasoning_display !== frozen.tested_model.reasoning_display) mismatches.push("reasoning");
   if (current.tested_model.permission_display !== frozen.tested_model.permission_display) mismatches.push("permission");
+  if (JSON.stringify(current.tested_model.custom_mapping || null)
+    !== JSON.stringify(frozen.tested_model.custom_mapping || null)) mismatches.push("custom_model_binding");
   if (mismatches.length) throw new Error(`当前 AstronStudio 配置偏离冻结值：${mismatches.join(",")}`);
   const activeCount = report.state_database.active_or_pending_session_count;
   if (fresh && config.managedRunSlots === 1 && activeCount !== 0) {
@@ -680,6 +685,11 @@ async function captureIdentity(config, state, dependencies, observedRouteThreadI
     if (selected.session) {
       const now = dependencies.now();
       recordSession(state, selected.session, now);
+      if (config.runConfig.tested_model.custom_mapping) {
+        state.client.custom_model_binding = verifyNativeCustomBinding(
+          config.runConfig.tested_model.custom_mapping,
+          await dependencies.queryNativeCustomModelBinding(config.stateDatabase, selected.session.thread_id));
+      }
       state.prompt.send_status = "sent";
       state.prompt.sent_at ||= (state.execution.flow_profile === FLOW_TIMING_PROFILE ? state.send.dispatch_armed_at : null) || state.send.dispatch_completed_at || now;
       transition(state, "RUNNING", "NATIVE_IDENTITY_BOUND", {
@@ -878,11 +888,13 @@ export async function executeSingleTask(config, overrides = {}) {
   const dependencies = {
     probeAstronStudio,
     queryNativeSessions,
+    queryNativeCustomModelBinding,
     queryFinalResponse,
     waitForThreadStreamLease,
     discoverMainTarget,
     connectCdp: (url, timeout) => CdpClient.connect(url, timeout),
     prepareExecutionUi,
+    readUiConfiguration,
     createFreshTask,
     ensureSendTargetReady,
     fillPrompt,
@@ -1022,6 +1034,16 @@ export async function executeSingleTask(config, overrides = {}) {
     });
     await persist(config, state);
     await dependencies.ensureSendTargetReady(client, config.prompt, config.candidateWorkspace);
+    if (config.runConfig.tested_model.custom_mapping) {
+      const lastUi = await dependencies.readUiConfiguration(client, config.stateDatabase);
+      if (lastUi.model !== config.expectedModel || lastUi.reasoning !== config.expectedReasoning
+        || lastUi.permission !== config.expectedPermission
+        || JSON.stringify(lastUi.custom_mapping || null)
+          !== JSON.stringify(config.runConfig.tested_model.custom_mapping)) {
+        throw new Error("CUSTOM_MODEL_CONFIGURATION_CHANGED_BEFORE_SEND");
+      }
+      state.client.final_custom_model_check = lastUi;
+    }
     state.prompt.send_status = "intent_persisted";
     state.send.dispatch_armed_at = dependencies.now();
     state.send.dispatch_attempt_count = 1;

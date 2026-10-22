@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
 import { copySnapshotFile, configureSnapshotReader } from "../../vendor/e2e-shared/sqlite-snapshot/index.mjs";
+import { createHash } from "node:crypto";
 
 const SESSION_QUERY = `
 WITH latest_turn AS (
@@ -155,7 +156,7 @@ async function querySnapshot(databasePath, sql, overrides = {}) {
 }
 
 export async function withStateSnapshot(stateDatabase, operation, overrides = {}, tables = STATE_SNAPSHOT_TABLES) {
-  if (!Array.isArray(tables) || !tables.length || tables.some((table) => !STATE_SNAPSHOT_TABLES.includes(table))) {
+  if (!Array.isArray(tables) || !tables.length || tables.some((table) => ![...STATE_SNAPSHOT_TABLES, "custom_model_configs"].includes(table))) {
     throw new Error("快照必须声明非空、已知的读取表范围");
   }
   const source = resolve(stateDatabase);
@@ -244,6 +245,59 @@ export async function queryNativeSessions(stateDatabase, overrides = {}) {
       .map(normalizeNativeSession),
     overrides, SESSION_SNAPSHOT_TABLES,
   );
+}
+
+// No credential value, credential reference, endpoint, or complete config is returned.
+export async function queryCustomModelConfigurations(stateDatabase, overrides = {}) {
+  return withStateSnapshot(stateDatabase, async (snapshot) => {
+    const rows = await querySnapshot(snapshot, `SELECT config_id, owner_scope,
+      json_extract(payload_json,'$.ownerScope') AS payload_owner_scope,
+      json_extract(payload_json,'$.id') AS stored_config_id,
+      json_extract(payload_json,'$.displayName') AS display_name,
+      json_extract(payload_json,'$.model') AS model,
+      json_extract(payload_json,'$.protocol') AS protocol,
+      json_extract(payload_json,'$.defaultReasoning') AS default_reasoning,
+      json_extract(payload_json,'$.reasoningMode') AS reasoning_mode,
+      json_extract(payload_json,'$.executionRevision') AS execution_revision,
+      json_extract(payload_json,'$.lifecycle') AS lifecycle,
+      json_extract(payload_json,'$.credentialRef') IS NOT NULL AS has_credential,
+      json_extract(payload_json,'$.lastTest.revision') AS test_revision,
+      json_extract(payload_json,'$.lastTest.status') AS test_status,
+      json_extract(payload_json,'$.lastTest.httpStatus') AS test_http_status,
+      json_extract(payload_json,'$.lastTest.requestedReasoning') AS test_reasoning
+      FROM custom_model_configs;`, overrides);
+    return rows.map(row => {
+      if (row.stored_config_id !== row.config_id || row.owner_scope !== row.payload_owner_scope) {
+        throw new Error("CUSTOM_CONFIG_STORED_IDENTITY_MISMATCH");
+      }
+      const { owner_scope, payload_owner_scope, stored_config_id, test_revision,
+        test_status, test_http_status, test_reasoning, ...publicFields } = row;
+      return { ...publicFields,
+        owner_scope_sha256: createHash("sha256").update(owner_scope).digest("hex"),
+        last_test: { revision: test_revision, status: test_status,
+          httpStatus: test_http_status, requestedReasoning: test_reasoning } };
+    });
+  }, overrides, ["custom_model_configs"]);
+}
+
+export async function queryNativeCustomModelBinding(stateDatabase, threadId, overrides = {}) {
+  return withStateSnapshot(stateDatabase, async (snapshot) => {
+    const rows = await querySnapshot(snapshot, `SELECT threads.model_selection_json,
+      runtime.resume_cursor_json FROM projection_threads AS threads
+      JOIN provider_session_runtime AS runtime ON runtime.thread_id = threads.thread_id
+      WHERE threads.thread_id = ${sqlString(threadId)} AND threads.deleted_at IS NULL;`, overrides);
+    if (rows.length !== 1) throw new Error("NATIVE_CUSTOM_BINDING_NOT_UNIQUE");
+    const selection = JSON.parse(rows[0].model_selection_json);
+    const raw = JSON.parse(rows[0].resume_cursor_json)?.customModelBinding;
+    if (!raw) throw new Error("NATIVE_CUSTOM_BINDING_MISSING");
+    return { selection: { provider: selection.provider, model: selection.model,
+      options: { reasoningEffort: selection.options?.reasoningEffort },
+      customModel: { configId: selection.customModel?.configId,
+        executionRevision: selection.customModel?.executionRevision } },
+    binding: { configId: raw.configId, revision: raw.revision, kernelProviderId: raw.kernelProviderId,
+      model: raw.model, effort: raw.effort, protocol: raw.protocol,
+      ownerScopeSha256: createHash("sha256").update(String(raw.ownerScope || "")).digest("hex") } };
+  }, overrides, ["projection_threads", "provider_session_runtime"]);
 }
 
 export async function queryPristineThread(stateDatabase, threadId, overrides = {}) {

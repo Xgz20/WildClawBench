@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, open, readFile, realpath, rm, stat } from "node:fs/promises";
 import { copySnapshotFile, configureSnapshotReader } from "../vendor/e2e-shared/sqlite-snapshot/index.mjs";
 import { SESSION_SNAPSHOT_TABLES } from "./lib/astronstudio-state.mjs";
+import { readCurrentCustomModel } from "./lib/astronstudio-custom-model.mjs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,7 +24,7 @@ import {
 
 export const PROBE_SCHEMA = "wildclawbench.general-e2e-astronstudio-probe/v1";
 export const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
-export const PROBE_VERSION = "0.2.2";
+export const PROBE_VERSION = "0.2.3";
 export const DEFAULT_APP_PATH = "/Applications/AStudio.app";
 export const DEFAULT_BUNDLE_ID = "cn.xfyun.acode";
 export const DEFAULT_ENDPOINT = "http://127.0.0.1:9240";
@@ -441,7 +442,7 @@ export const READ_ONLY_DOM_EXPRESSION = `(() => {
     const rect = element.getBoundingClientRect();
     return style.visibility !== "hidden" && style.display !== "none" && rect.width > 0 && rect.height > 0;
   };
-  const modelSelector = 'button[aria-label="切换模型和推理设置"], button[aria-label="Change model and reasoning"]';
+  const modelSelector = 'button[aria-label="切换模型和推理设置"], button[aria-label="Change model and reasoning"], button[aria-label="切换模型"], button[aria-label="Change model"]';
   const models = Array.from(document.querySelectorAll(modelSelector)).filter(visible);
   const permissions = Array.from(document.querySelectorAll('button.runtime-permission-trigger')).filter(visible);
   return {
@@ -564,6 +565,15 @@ export async function inspectCdp(config, processInfo, activePort, ownedPorts, ov
       const dom = normalizeModelDom(
         await evaluateDom(target.webSocketDebuggerUrl, config.timeoutMs, overrides.WebSocketImpl),
       );
+      if (["自定义", "Custom"].includes(dom.model.reasoning_display)) {
+        const mapping = await (overrides.readCurrentCustomModel || readCurrentCustomModel)(
+          config.stateDb, { count: dom.model.visible_match_count,
+            text: `${dom.model.value}\n${dom.model.reasoning_display}` });
+        dom.model.reasoning_display = mapping.reasoning_effort;
+        dom.model.source = "cdp-visible-selection+account-scoped-custom-config";
+        dom.model.custom_mapping = mapping;
+        dom.model.reasoning_verified = true;
+      }
       attempt.ready = true;
       return {
         ready: true,
@@ -931,7 +941,10 @@ export function buildFrozenRunConfig(observation) {
       display_name: observation.cdp.model.value,
       reasoning_display: observation.cdp.model.reasoning_display,
       permission_display: observation.cdp.permission.display,
-      verification: "cdp-visible-current-value",
+      verification: observation.cdp.model.custom_mapping
+        ? "cdp-visible-selection+account-scoped-custom-config" : "cdp-visible-current-value",
+      ...(observation.cdp.model.custom_mapping
+        ? { custom_mapping: observation.cdp.model.custom_mapping } : {}),
     },
     dependencies: observation.dependencies,
     execution_policy: {

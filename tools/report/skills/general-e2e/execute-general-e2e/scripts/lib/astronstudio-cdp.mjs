@@ -1,4 +1,5 @@
 import { queryExactProjectsForWorkspace, queryProjectForThread, queryNativeSessions, queryPristineThread } from "./astronstudio-state.mjs";
+import { readCurrentCustomModel } from "./astronstudio-custom-model.mjs";
 
 function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
@@ -159,10 +160,10 @@ async function waitFor(read, accept, timeoutMs, description, pollMs = 200) {
   throw new Error(`${description}超时：${JSON.stringify(last)}`);
 }
 
-export async function readUiConfiguration(client) {
-  return client.evaluate(expression(`
+export async function readUiConfiguration(client, stateDatabase) {
+  const ui = await client.evaluate(expression(`
     const models = Array.from(document.querySelectorAll(
-      'button[aria-label="切换模型和推理设置"], button[aria-label="Change model and reasoning"]'
+      'button[aria-label="切换模型和推理设置"], button[aria-label="Change model and reasoning"], button[aria-label="切换模型"], button[aria-label="Change model"]'
     )).filter(visible);
     const permissions = Array.from(document.querySelectorAll('button.runtime-permission-trigger')).filter(visible);
     const lines = models.length === 1
@@ -177,6 +178,13 @@ export async function readUiConfiguration(client) {
       permission: permissions.length === 1 ? (permissions[0].innerText || "").trim() || null : null
     };
   `));
+  if (["自定义", "Custom"].includes(ui.reasoning)) {
+    ui.custom_mapping = await readCurrentCustomModel(stateDatabase,
+      { count: ui.model_count, text: `${ui.model}\n${ui.reasoning}` });
+    ui.reasoning = ui.custom_mapping.reasoning_effort;
+    ui.reasoning_source = "account-scoped-custom-config.explicit-defaultReasoning";
+  }
+  return ui;
 }
 
 async function editorState(client) {
@@ -557,7 +565,7 @@ export async function openExactProjectConversation(client, workspace, stateDatab
   const point = await client.evaluate(expression(`
     const row = document.querySelector('[data-project-hover-anchor="${projectId}"]');
     const buttons = row ? Array.from(row.querySelectorAll('button[aria-label]'))
-      .filter((button) => /^(?:在 .+ 中新建对话|New chat in .+)$/iu.test(
+      .filter((button) => /^(?:在 .+ 中新建(?:对话|任务)|New chat in .+|New task in .+)$/iu.test(
         (button.getAttribute('aria-label') || '').trim()
       )) : [];
     const rect = buttons.length === 1 ? buttons[0].getBoundingClientRect() : null;
@@ -587,7 +595,7 @@ export async function openExactProjectConversation(client, workspace, stateDatab
       '[data-project-hover-anchor="${projectId}"]'
     ));
     const buttons = rows.length === 1 ? Array.from(rows[0].querySelectorAll('button[aria-label]'))
-      .filter((button) => /^(?:在 .+ 中新建对话|New chat in .+)$/iu.test(
+      .filter((button) => /^(?:在 .+ 中新建(?:对话|任务)|New chat in .+|New task in .+)$/iu.test(
         (button.getAttribute('aria-label') || '').trim()
       )) : [];
     if (buttons.length !== 1 || buttons[0].disabled || buttons[0].closest('[inert]')) {
@@ -865,7 +873,7 @@ export async function prepareExecutionUi(client, config) {
     workspace = await openExactProjectConversation(client, config.candidateWorkspace,
       config.stateDatabase, config.timeoutMs, { forceNew: true });
   }
-  const ui = await readUiConfiguration(client);
+  const ui = await readUiConfiguration(client, config.stateDatabase);
   if (ui.model_count !== 1 || ui.model !== config.expectedModel) {
     throw new Error(`AstronStudio 当前模型不匹配：${ui.model || "unknown"} vs ${config.expectedModel}`);
   }
@@ -874,6 +882,10 @@ export async function prepareExecutionUi(client, config) {
   }
   if (ui.permission_count !== 1 || ui.permission !== config.expectedPermission) {
     throw new Error(`AstronStudio 当前权限不匹配：${ui.permission || "unknown"} vs ${config.expectedPermission}`);
+  }
+  if (JSON.stringify(ui.custom_mapping || null)
+    !== JSON.stringify(config.runConfig.tested_model.custom_mapping || null)) {
+    throw new Error("AstronStudio custom model/account/revision differs from frozen configuration");
   }
   return { task, workspace, ui };
 }

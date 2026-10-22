@@ -17,6 +17,7 @@
 - 读取当前 Skill、source revision（发行包中可用）和 vendored 组件版本/哈希；
 - 对本机 loopback CDP 执行 `/json/version`、`/json/list` GET；
 - 通过 `Runtime.evaluate` 查询可见模型/推理按钮和权限按钮的文本；
+- 自定义模型的“自定义”徽标不表示推理强度。以唯一可见选择绑定当前登录账号内的配置 ID、execution revision、协议及显式推理设置，并核对同 revision 的连接测试；仅返回白名单字段和账号摘要，不获取 API Key、认证头或端点；
 - 复制 `state.sqlite`、`-wal`、`-shm` 到临时目录，在快照上执行 `quick_check` 和白名单查询；
 - 读取 Node、Python、SQLite、Docker 和 Codex 版本；
 - 在用户指定的新路径写探针结果和通过后的冻结配置。
@@ -38,6 +39,8 @@
 - Node 或状态库读取后端不可用。
 
 状态库中的最近线程模型只记录为 `latest_persisted_model`，其 `current_ui_verified=false`。它用于解释现场和后续对账，不参与 PASS 判定，也不能写入冻结运行配置。
+
+自定义条目使用 `verification=cdp-visible-selection+account-scoped-custom-config`，将 `custom_mapping` 纳入配置摘要。它与“使用最近线程猜测当前选择”不同：必须先有当前唯一可见的自定义条目，再限定当前账号配置；重名、账号变化、未知协议、非显式推理或测试 revision/请求 effort 不一致均拒绝。连接测试接受 effort 不证明服务端实际采用相应推理行为，该项固定为未验证。
 
 ## 输出和退出码
 

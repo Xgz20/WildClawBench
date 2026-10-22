@@ -91,6 +91,69 @@
     }
   },
   "$defs": {
+    "customModelMapping": {
+      "type": "object",
+      "required": [
+        "display_name",
+        "configured_model_name",
+        "config_id",
+        "execution_revision",
+        "account_scope_sha256",
+        "protocol",
+        "reasoning_effort",
+        "verification",
+        "reasoning_source",
+        "connection_requested_reasoning_accepted",
+        "server_reasoning_behavior_verified"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "configured_model_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "config_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "account_scope_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "protocol": {
+          "enum": [
+            "chat_completions",
+            "responses"
+          ]
+        },
+        "reasoning_effort": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verification": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reasoning_source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "execution_revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "connection_requested_reasoning_accepted": {
+          "const": true
+        },
+        "server_reasoning_behavior_verified": {
+          "const": false
+        }
+      }
+    },
     "nullableString": {
       "type": ["string", "null"]
     },
@@ -312,6 +375,7 @@
         "reasoning_verified": {
           "type": "boolean"
         },
+        "custom_mapping": { "$ref": "#/$defs/customModelMapping" },
         "visible_match_count": {
           "type": "integer",
           "minimum": 0
