@@ -130,8 +130,7 @@ function binding(config, state = "running") {
   };
 }
 
-function dependencies(config, counters, selectedBinding) {
-  let clock = Date.parse("2026-09-19T08:00:00.000Z");
+function dependencies(config, counters, selectedBinding, clock = { value: Date.parse("2026-09-19T08:00:00.000Z") }) {
   return {
     inspectRuntime: async () => runtime(),
     prepareUi: async () => {
@@ -156,8 +155,8 @@ function dependencies(config, counters, selectedBinding) {
     selectBinding: async () => ({ binding: selectedBinding(), ambiguous: false, match_count: 1 }),
     closeUi: async () => { counters.close += 1; },
     sleep: async () => {},
-    now: () => new Date(clock += 1_000).toISOString(),
-    nowMilliseconds: () => clock,
+    now: () => new Date(clock.value += 1_000).toISOString(),
+    nowMilliseconds: () => clock.value,
   };
 }
 
@@ -438,10 +437,11 @@ test("WorkBuddy ignores task timeout_seconds while polling the native terminal s
 test("WorkBuddy P2 resume observes the same attempt without redispatch", async () => {
   const fixture = await createExecutionUnit();
   try {
+    const clock = { value: Date.parse("2026-09-19T08:00:00.000Z") };
     const firstCounters = { prepare: 0, fill: 0, dispatch: 0, close: 0 };
     const first = await executeWorkBuddyTask(
       fixture.config,
-      dependencies(fixture.config, firstCounters, () => binding(fixture.config, "running")),
+      dependencies(fixture.config, firstCounters, () => binding(fixture.config, "running"), clock),
     );
     const attemptId = first.journal.identity.attempt_id;
     fixture.config.manifest.unit.harness.platform = "macos-x86-64";
@@ -449,7 +449,7 @@ test("WorkBuddy P2 resume observes the same attempt without redispatch", async (
     const resumedCounters = { prepare: 0, fill: 0, dispatch: 0, close: 0 };
     const resumed = await executeWorkBuddyTask(
       resumedConfig,
-      dependencies(resumedConfig, resumedCounters, () => binding(resumedConfig, "complete")),
+      dependencies(resumedConfig, resumedCounters, () => binding(resumedConfig, "complete"), clock),
     );
     assert.equal(resumed.journal.identity.attempt_id, attemptId);
     assert.equal(resumedCounters.prepare, 0);

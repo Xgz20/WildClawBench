@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.10.9` 随Skill分发[离线页面观察脚本与协议](references/offline-browser-validation.md)。新版编排在HTML候选评分前验证公共浏览器runtime并冻结judge-environment.json；独立裁判使用禁网字节观察及真实截图验证原Rubric，不依赖被URL策略拒绝的file导航，不绕过安全策略，不把环境故障变成候选能力分。评分core、Worker、原规则及证据政策未改变。
+
 正式语义评分使用独立项目中的独立单题聊天，不能用控制会话或协作子代理替代。纯 automated 任务继续由受管规则 Worker 评分。
 
 新编排的 v6 Prompt 冻结 Python 绝对路径、版本与制品 SHA，并给出 `score_cli_argv_prefix` 和 `skill-metadata.json` 的绝对路径及 SHA。实际命令必须使用该 argv 前缀（含 `-X utf8`），不依赖 python/python3 别名。独立分发包直接核验这份元数据的 name/version/implementation_status，无需导入仓库模块；下面的模块能力命令仅用于仓库开发环境。

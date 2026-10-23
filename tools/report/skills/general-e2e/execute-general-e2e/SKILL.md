@@ -9,6 +9,14 @@ AstronStudio 3.5.0 的侧栏恢复识别精确“切换任务侧边栏”按钮�
 
 # 执行 General E2E 用例
 
+`0.14.6` 按completed turn明确绑定的assistant_message_id读取终稿，不再使用最后一条助手消息；消息尚未落盘时继续观察同一turn，读取失败保留attention，不冻结中间评论或重发。队列遇到零发送准备错误会停止补位并收尾在途观察，即使启用了continue-on-terminal-failure也不级联派发。已知草稿恢复使用下列标准入口：
+
+```text
+node scripts/prepare_astronstudio_zero_send_ui.mjs --unit-root ABS --state-database ABS --endpoint URL --audit-dir NEW_AUDIT_DIR
+```
+
+该入口只在全局原生空闲时清除唯一匹配冻结Prompt、同Workspace、原生pristine thread且仍满足零发送恢复契约的草稿；先保留文本、chips、state SHA及原生归属，再以物理Backspace操作并复核，绝不发送Prompt、改Workspace或处理已受理/不确定/外来草稿。随后沿原队列、原attempt显式resume零发送恢复，不能手改完成状态。
+
 `0.14.5` 支持当前自定义模型控件与项目“新建任务”标签。自定义标签不代表推理强度：探针将唯一 UI 选择与当前登录账号内的配置 ID、execution revision、模型名、协议及显式推理设置绑定，并核对同 revision 的连接测试。发送前再次复核账号/配置；原生接受后核对 custom reference、kernel binding 与 effort。只输出白名单字段和账号摘要，不读取或输出 API Key。运行配置明确记录 UI 选择加账号配置的来源，不能假称 High 直接显示在按钮上；绑定 SDK 的模型编码、session/turn/cwd/effort仍须按原件审计。客户端接受参数不证明服务端实际推理行为。
 
 `0.14.4` 增加[受审计额度恢复](references/quota-recovery.md)：人工确认额度恢复并授权指定失败题后，原队列通过 `--resume --retry-quota-task-id ID --quota-retry-authorization JSON` 接续。授权绑定旧 attempt、原状态/记录/现场 SHA 与新 attempt；只归档及恢复失败题 workspace，成功题不重跑，在途题只观察。授权持久化后普通 resume 接续同一事务；已 armed/受理/不确定发送绝不重发。旧失败证据、队列身份和原始评分保留，新重试再次额度耗尽需新授权。

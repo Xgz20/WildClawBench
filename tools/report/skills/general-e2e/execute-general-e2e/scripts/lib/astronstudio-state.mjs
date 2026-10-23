@@ -333,22 +333,33 @@ WHERE threads.thread_id = ${sqlString(threadId)}
 `, overrides), overrides, ["projection_threads", "projection_projects"]);
 }
 
-export async function queryFinalResponse(stateDatabase, threadId, turnId, overrides = {}) {
-  if (!threadId || !turnId) return "";
+export async function queryTerminalFinalResponse(stateDatabase, threadId, turnId, overrides = {}) {
+  if (!threadId || !turnId) return { ready: false, text: "", reason: "missing_identity" };
   return withStateSnapshot(stateDatabase, async (snapshot) => {
     const rows = await querySnapshot(snapshot, `
-SELECT text
-FROM projection_thread_messages
-WHERE thread_id = ${sqlString(threadId)}
-  AND turn_id = ${sqlString(turnId)}
-  AND role = 'assistant'
-  AND is_streaming = 0
-  AND trim(text) <> ''
-ORDER BY sequence DESC, updated_at DESC, message_id DESC
-LIMIT 1;
+SELECT turns.assistant_message_id AS terminal_message_id,
+  messages.message_id, messages.text, messages.role, messages.is_streaming
+FROM projection_turns AS turns
+LEFT JOIN projection_thread_messages AS messages
+  ON messages.message_id = turns.assistant_message_id
+  AND messages.thread_id = turns.thread_id AND messages.turn_id = turns.turn_id
+WHERE turns.thread_id = ${sqlString(threadId)}
+  AND turns.turn_id = ${sqlString(turnId)} AND turns.state = 'completed'
+  AND turns.checkpoint_turn_count IS NULL;
 `, overrides);
-    return typeof rows[0]?.text === "string" ? rows[0].text.trim() : "";
-  }, overrides, ["projection_thread_messages"]);
+    const row = rows[0];
+    if (rows.length !== 1 || typeof row?.terminal_message_id !== "string"
+      || !row.terminal_message_id || row.message_id !== row.terminal_message_id
+      || row.role !== "assistant" || row.is_streaming !== 0 || typeof row.text !== "string") {
+      return { ready: false, text: "", reason: "bound_terminal_message_not_materialized" };
+    }
+    return { ready: true, text: row.text.trim(), message_id: row.message_id,
+      source: "completed-turn.assistant_message_id" };
+  }, overrides, ["projection_turns", "projection_thread_messages"]);
+}
+
+export async function queryFinalResponse(stateDatabase, threadId, turnId, overrides = {}) {
+  return (await queryTerminalFinalResponse(stateDatabase, threadId, turnId, overrides)).text;
 }
 
 export async function readPrompt(path) {

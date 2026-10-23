@@ -647,6 +647,21 @@ test("fresh execution dispatches exactly once and binds all native identities", 
   }
 });
 
+test("completed status waits for its bound final without freezing commentary or redispatching", async () => {
+  const config=await fixture(), clicks={count:0};
+  try {
+    const dependencies=commonDependencies(config,[[],[nativeSession('running')],[nativeSession('completed')],[nativeSession('completed')]],clicks);
+    let reads=0;
+    dependencies.queryTerminalFinalResponse=async()=>++reads===1
+      ? {ready:false,text:'',reason:'bound_terminal_message_not_materialized'}
+      : {ready:true,text:'bound final',message_id:'final',source:'completed-turn.assistant_message_id'};
+    const result=await executeSingleTask(config,dependencies);
+    assert.equal(result.phase,'COMPLETED');assert.equal(clicks.count,1);assert.equal(reads,2);
+    assert.ok(result.history.some(row=>row.event==='TERMINAL_FINAL_RESPONSE_PENDING'));
+    assert.equal(await readFile(config.finalResponseFile,'utf8'),'bound final\n');
+  } finally {await rm(config.unitRoot,{recursive:true,force:true});}
+});
+
 test("task timeout_seconds does not stop AstronStudio before its native terminal state", async () => {
   const config = await fixture();
   const clickCounter = { count: 0 };

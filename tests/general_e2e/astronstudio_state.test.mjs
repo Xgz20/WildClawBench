@@ -4,7 +4,32 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { queryNativeSessions } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs';
+import { queryNativeSessions, queryTerminalFinalResponse } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs';
+
+test('completed turn binds its named final message rather than a newer commentary', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'astronstudio-bound-final-'));
+  const file = join(root, 'state.sqlite');
+  const db = new DatabaseSync(file);
+  try {
+    db.exec(`CREATE TABLE projection_turns(thread_id TEXT,turn_id TEXT,state TEXT,assistant_message_id TEXT,checkpoint_turn_count INTEGER);
+      CREATE TABLE projection_thread_messages(thread_id TEXT,turn_id TEXT,message_id TEXT,role TEXT,is_streaming INTEGER,text TEXT,sequence INTEGER);
+      INSERT INTO projection_turns VALUES('thread','turn','completed','final',NULL);
+      INSERT INTO projection_thread_messages VALUES('thread','turn','commentary','assistant',0,'still working',99);
+      INSERT INTO projection_thread_messages VALUES('thread','turn','final','assistant',0,'actual final',2);`);
+    const read = () => queryTerminalFinalResponse(file, 'thread', 'turn');
+    assert.deepEqual(await read(), { ready: true, text: 'actual final', message_id: 'final', source: 'completed-turn.assistant_message_id' });
+    db.exec("UPDATE projection_thread_messages SET is_streaming=1 WHERE message_id='final'");
+    assert.equal((await read()).ready, false);
+    db.exec("UPDATE projection_thread_messages SET is_streaming=0,text='' WHERE message_id='final'");
+    assert.equal((await read()).ready, true);
+    assert.equal((await read()).text, '');
+    db.exec("UPDATE projection_thread_messages SET turn_id='other' WHERE message_id='final'");
+    assert.equal((await read()).ready, false);
+    db.exec("UPDATE projection_thread_messages SET turn_id='turn' WHERE message_id='final'");
+    db.exec("UPDATE projection_turns SET assistant_message_id='not-materialized'");
+    assert.equal((await read()).ready, false);
+  } finally { db.close(); await rm(root, {recursive:true,force:true}); }
+});
 
 test('completed sessions reject active/unknown evidence but accept an old usage-only orphan', async () => {
   const root = await mkdtemp(join(tmpdir(), 'astronstudio-orphan-usage-'));

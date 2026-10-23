@@ -5,10 +5,10 @@
 | 项目 | 值 |
 | --- | --- |
 | 数据集 | `general-custom60-v1` |
-| dataset digest | `73f186f77daff39edfaa8084a182d1cd7ce761c32c16f2212f171cf4f5a7c1bd` |
+| dataset digest | `e5fd1ed401b45729d85d7aaf9c94c36d3900c1bcb43446bb7d43cca584a2886c` |
 | contract | `general-e2e-contract-v1` |
 | source revision | `c064bd224a73a1b56fae280e3e39f31569503e26` |
-| audit digest | `e12eac3d30157ec92244507cb0fb85f7c22286278d3326b8c578d3bfa2401330` |
+| audit digest | `0e95e9bec6bf0f853e978e32c1e2897c143846d24f11f193b124e7e078620b54` |
 | 用例数 | 60 |
 
 ## 1. 结论
@@ -93,16 +93,16 @@ Windows 通用基线还包括短工作根、UTF-8/中文与空格路径、候选
 | 8 | `01_Productivity_Flow_task_008_paper_reading_pack`<br>Transformer论文组会材料 | hybrid | required | material:0，placeholder:1；— | workspace_artifacts | 仅接口接收，当前未读取 | `POSIX_WORKSPACE_ROOT` |
 | 9 | `01_Productivity_Flow_task_009_action_reconciliation`<br>订单到实物证据核对 | hybrid | not_declared | material:5；.csv:3、.md:2 | workspace_artifacts | 仅接口接收，当前未读取 | `POSIX_WORKSPACE_ROOT` |
 | 10 | `01_Productivity_Flow_task_010_launch_program_pack`<br>Atlas phased launch program pack | hybrid | not_declared | material:5；.csv:2、.json:1、.md:2 | workspace_artifacts | 仅接口接收，当前未读取 | `POSIX_WORKSPACE_ROOT` |
-| 11 | `02_Code_Intelligence_task_001_temperature_cli_fix`<br>修复温度换算命令行程序 | automated | forbidden | material:4；.py:2、.pyc:2 | workspace_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK` |
-| 12 | `02_Code_Intelligence_task_002_inventory_aggregator`<br>实现库存聚合函数 | automated | forbidden | material:5；.csv:1、.py:2、.pyc:2 | workspace_artifacts_and_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT` |
-| 13 | `02_Code_Intelligence_task_003_pagination_boundary_fix`<br>Fix the exact-multiple pagination boundary | automated | forbidden | material:4；.py:2、.pyc:2 | workspace_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK` |
-| 14 | `02_Code_Intelligence_task_004_csv_dialect_fix`<br>修复Windows CSV边界解析 | automated | forbidden | material:4；.py:2、.pyc:2 | workspace_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK`<br>`CRLF_DATA_SEMANTICS` |
-| 15 | `02_Code_Intelligence_task_005_sql_double_count_fix`<br>Fix child-table double counting | automated | forbidden | material:5；.py:1、.pyc:1、.sql:3 | workspace_artifacts_and_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK` |
+| 11 | `02_Code_Intelligence_task_001_temperature_cli_fix`<br>修复温度换算命令行程序 | automated | forbidden | material:2；.py:2 | workspace_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK` |
+| 12 | `02_Code_Intelligence_task_002_inventory_aggregator`<br>实现库存聚合函数 | automated | forbidden | material:3；.csv:1、.py:2 | workspace_artifacts_and_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT` |
+| 13 | `02_Code_Intelligence_task_003_pagination_boundary_fix`<br>Fix the exact-multiple pagination boundary | automated | forbidden | material:2；.py:2 | workspace_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK` |
+| 14 | `02_Code_Intelligence_task_004_csv_dialect_fix`<br>修复Windows CSV边界解析 | automated | forbidden | material:2；.py:2 | workspace_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK`<br>`CRLF_DATA_SEMANTICS` |
+| 15 | `02_Code_Intelligence_task_005_sql_double_count_fix`<br>Fix child-table double counting | automated | forbidden | material:4；.py:1、.sql:3 | workspace_artifacts_and_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK` |
 | 16 | `02_Code_Intelligence_task_006_tomllib_reader`<br>Python项目元数据读取器 | automated | required | material:0，placeholder:1；— | workspace_artifacts | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS` |
-| 17 | `02_Code_Intelligence_task_007_async_cache_singleflight`<br>Coalesce concurrent cache misses | automated | forbidden | material:4；.py:2、.pyc:2 | workspace_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK` |
-| 18 | `02_Code_Intelligence_task_008_config_migrator`<br>多版本配置安全迁移 | automated | forbidden | material:8；.json:4、.py:2、.pyc:2 | workspace_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK` |
-| 19 | `02_Code_Intelligence_task_009_safe_archive_extract`<br>Harden plugin ZIP extraction | hybrid | forbidden | material:4；.py:2、.pyc:2 | workspace_artifacts_and_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK`<br>`ARCHIVE_WINDOWS_PATH_RULES` |
-| 20 | `02_Code_Intelligence_task_010_idempotent_event_pipeline`<br>Recoverable ordered event pipeline | hybrid | forbidden | material:5；.jsonl:1、.py:2、.pyc:2 | workspace_artifacts_and_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK` |
+| 17 | `02_Code_Intelligence_task_007_async_cache_singleflight`<br>Coalesce concurrent cache misses | automated | forbidden | material:2；.py:2 | workspace_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK` |
+| 18 | `02_Code_Intelligence_task_008_config_migrator`<br>多版本配置安全迁移 | automated | forbidden | material:6；.json:4、.py:2 | workspace_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK` |
+| 19 | `02_Code_Intelligence_task_009_safe_archive_extract`<br>Harden plugin ZIP extraction | hybrid | forbidden | material:2；.py:2 | workspace_artifacts_and_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK`<br>`ARCHIVE_WINDOWS_PATH_RULES` |
+| 20 | `02_Code_Intelligence_task_010_idempotent_event_pipeline`<br>Recoverable ordered event pipeline | hybrid | forbidden | material:3；.jsonl:1、.py:2 | workspace_artifacts_and_mutation | 当前规则不读取 | `POSIX_WORKSPACE_ROOT`<br>`PYTHON3_ALIAS`<br>`POSIX_SHELL_BLOCK` |
 | 21 | `03_Social_Interaction_task_001_meeting_reschedule_draft`<br>会议改期草稿 | automated | not_declared | material:1；.json:1 | workspace_artifacts | 当前规则不读取 | `POSIX_WORKSPACE_ROOT` |
 | 22 | `03_Social_Interaction_task_002_support_ticket_summary`<br>客服工单摘要与回复草稿 | automated | not_declared | material:1；.json:1 | workspace_artifacts | 当前规则不读取 | `POSIX_WORKSPACE_ROOT` |
 | 23 | `03_Social_Interaction_task_003_colleague_leave_reply`<br>同事紧急请假私信回复 | llm_judge | not_declared | material:0，placeholder:1；— | final_response | 当前规则不读取 | `POSIX_WORKSPACE_ROOT` |

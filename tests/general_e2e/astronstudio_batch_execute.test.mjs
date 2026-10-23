@@ -190,6 +190,29 @@ test("five tasks fill default three slots and dynamically refill in manifest ord
   }
 });
 
+test('a zero-send preparation fault drains accepted work without cascading even when continue is enabled', async()=>{
+  const current=await fixture(TASK_IDS,['--continue-on-terminal-failure']);const calls=[];
+  try {
+    const result=await runQueue(current.plan,current.args,{sleep:async()=>{},runTask:async(taskId,operation)=>{
+      calls.push([taskId,operation]);
+      if(taskId===TASK_IDS[1]){
+        const failed=automation(current.plan,taskId,'unsent-original','FAILED');
+        failed.prompt={send_status:'not_sent',sent_at:null};failed.send={dispatch_attempt_count:0,dispatch_armed_at:null,dispatch_completed_at:null};
+        failed.session={verified:false};failed.execution.business_status='infrastructure_error';failed.execution.error={code:'PRE_SEND_DRIVER_ERROR',message:'UNSENT_DRAFT_BLOCKS_NEW_TASK'};
+        await writeAutomation(current.plan,taskId,failed);return {code:2,signal:null};
+      }
+      assert.equal(taskId,TASK_IDS[0]);
+      await writeAutomation(current.plan,taskId,automation(current.plan,taskId,'accepted-original',operation==='dispatch'?'RUNNING':'COMPLETED'));
+      return {code:0,signal:null};
+    }});
+    assert.equal(result.phase,'NEEDS_ATTENTION');
+    assert.equal(result.tasks[0].phase,'COMPLETED');assert.equal(result.tasks[0].selected_attempt_id,'accepted-original');
+    assert.equal(result.tasks[1].selected_attempt_id,'unsent-original');
+    assert.ok(result.tasks.slice(2).every(t=>t.phase==='PENDING'));
+    assert.deepEqual(calls.filter(c=>c[1]==='dispatch').map(c=>c[0]),TASK_IDS.slice(0,2));
+  } finally {await rm(current.unitRoot,{recursive:true,force:true});}
+});
+
 test("native quota failure pauses even with continue enabled and resume cannot skip it", async () => {
   const current = await fixture(TASK_IDS.slice(0, 2), ["--run-slots", "1", "--continue-on-terminal-failure"]);
   const calls = [];

@@ -1,9 +1,9 @@
 {
-  "audit_digest": "e12eac3d30157ec92244507cb0fb85f7c22286278d3326b8c578d3bfa2401330",
+  "audit_digest": "0e95e9bec6bf0f853e978e32c1e2897c143846d24f11f193b124e7e078620b54",
   "audit_method": "deterministic static inspection of Prompt, workspace manifest, and grader AST; no task, grader, network request, or Judge was executed",
   "dataset": {
     "contract_version": "general-e2e-contract-v1",
-    "dataset_digest": "73f186f77daff39edfaa8084a182d1cd7ce761c32c16f2212f171cf4f5a7c1bd",
+    "dataset_digest": "e5fd1ed401b45729d85d7aaf9c94c36d3900c1bcb43446bb7d43cca584a2886c",
     "dataset_id": "general-custom60-v1",
     "manifest_path": "eval_general_e2e/datasets/manifests/general-custom60-v1.json",
     "source_revision": "c064bd224a73a1b56fae280e3e39f31569503e26"
@@ -1779,24 +1779,20 @@
       "grading_weights": {},
       "materials": {
         "execution": {
-          "directory_count": 2,
-          "effective_file_count": 4,
-          "entry_count": 6,
+          "directory_count": 1,
+          "effective_file_count": 2,
+          "entry_count": 3,
           "extensions": {
-            ".py": 2,
-            ".pyc": 2
+            ".py": 2
           },
-          "file_count": 4,
+          "file_count": 2,
           "paths": [
             "project",
-            "project/__pycache__",
-            "project/__pycache__/converter.cpython-310.pyc",
-            "project/__pycache__/test_converter.cpython-310-pytest-8.0.0.pyc",
             "project/converter.py",
             "project/test_converter.py"
           ],
           "root": "tasks/02_Code_Intelligence_task_001_temperature_cli_fix/execution/exec",
-          "sha256": "bc7b3c3673f9de9562d199a0b5627898fa67c48f6e5c56564e7884a30e9250ec",
+          "sha256": "0d15221a40391fbac307548ad90d621d879522f4f0635ca954f13a09bc96fa76",
           "symlink_count": 0
         },
         "private_scoring": {
@@ -1936,26 +1932,22 @@
       "grading_weights": {},
       "materials": {
         "execution": {
-          "directory_count": 2,
-          "effective_file_count": 5,
-          "entry_count": 7,
+          "directory_count": 1,
+          "effective_file_count": 3,
+          "entry_count": 4,
           "extensions": {
             ".csv": 1,
-            ".py": 2,
-            ".pyc": 2
+            ".py": 2
           },
-          "file_count": 5,
+          "file_count": 3,
           "paths": [
             "inventory.csv",
             "project",
-            "project/__pycache__",
-            "project/__pycache__/inventory.cpython-310.pyc",
-            "project/__pycache__/test_inventory.cpython-310-pytest-8.0.0.pyc",
             "project/inventory.py",
             "project/test_inventory.py"
           ],
           "root": "tasks/02_Code_Intelligence_task_002_inventory_aggregator/execution/exec",
-          "sha256": "20eb3f4bd0c107a60d73d4681e21dab7ea3d5f6d16901c80bb83e13188e7ebe0",
+          "sha256": "663ee430486104d77a65a0be1ad60bef0956a19b2304886630685282825115b8",
           "symlink_count": 0
         },
         "private_scoring": {
@@ -2095,24 +2087,20 @@
       },
       "materials": {
         "execution": {
-          "directory_count": 2,
-          "effective_file_count": 4,
-          "entry_count": 6,
+          "directory_count": 1,
+          "effective_file_count": 2,
+          "entry_count": 3,
           "extensions": {
-            ".py": 2,
-            ".pyc": 2
+            ".py": 2
           },
-          "file_count": 4,
+          "file_count": 2,
           "paths": [
             "project",
-            "project/__pycache__",
-            "project/__pycache__/pagination.cpython-310.pyc",
-            "project/__pycache__/test_pagination.cpython-310-pytest-8.0.0.pyc",
             "project/pagination.py",
             "project/test_pagination.py"
           ],
           "root": "tasks/02_Code_Intelligence_task_003_pagination_boundary_fix/execution/exec",
-          "sha256": "a2271b156f7616095e51cadc32137bd7a53f30e2dad3a9679c6246b029c6749d",
+          "sha256": "8498b6b201e878489245b7b8c29b735ebb892a43275e928d69f950659a0364bd",
           "symlink_count": 0
         },
         "private_scoring": {
@@ -2257,24 +2245,20 @@
       },
       "materials": {
         "execution": {
-          "directory_count": 2,
-          "effective_file_count": 4,
-          "entry_count": 6,
+          "directory_count": 1,
+          "effective_file_count": 2,
+          "entry_count": 3,
           "extensions": {
-            ".py": 2,
-            ".pyc": 2
+            ".py": 2
           },
-          "file_count": 4,
+          "file_count": 2,
           "paths": [
             "project",
-            "project/__pycache__",
-            "project/__pycache__/csv_parser.cpython-310.pyc",
-            "project/__pycache__/test_csv_parser.cpython-310-pytest-8.0.0.pyc",
             "project/csv_parser.py",
             "project/test_csv_parser.py"
           ],
           "root": "tasks/02_Code_Intelligence_task_004_csv_dialect_fix/execution/exec",
-          "sha256": "b3698b06a490eff668024b815641c7a3217921f2139af9830abb122e477c18cf",
+          "sha256": "4a8a4646111392ddc848fde0a017aa92303a4fa7c4f7d0890a3d20c463069a6e",
           "symlink_count": 0
         },
         "private_scoring": {
@@ -2426,26 +2410,23 @@
       },
       "materials": {
         "execution": {
-          "directory_count": 2,
-          "effective_file_count": 5,
-          "entry_count": 7,
+          "directory_count": 1,
+          "effective_file_count": 4,
+          "entry_count": 5,
           "extensions": {
             ".py": 1,
-            ".pyc": 1,
             ".sql": 3
           },
-          "file_count": 5,
+          "file_count": 4,
           "paths": [
             "project",
-            "project/__pycache__",
-            "project/__pycache__/test_report.cpython-310-pytest-8.0.0.pyc",
             "project/fixtures.sql",
             "project/report.sql",
             "project/schema.sql",
             "project/test_report.py"
           ],
           "root": "tasks/02_Code_Intelligence_task_005_sql_double_count_fix/execution/exec",
-          "sha256": "43f49b89eb58428fd0b1ab3023e3bb7b3a61f4f7b1ffb3611f7f00b761bbfee8",
+          "sha256": "ed8400bd63753403bac8c255a403673635bf7e0767e30f8021766f1f2747e77e",
           "symlink_count": 0
         },
         "private_scoring": {
@@ -2741,24 +2722,20 @@
       },
       "materials": {
         "execution": {
-          "directory_count": 2,
-          "effective_file_count": 4,
-          "entry_count": 6,
+          "directory_count": 1,
+          "effective_file_count": 2,
+          "entry_count": 3,
           "extensions": {
-            ".py": 2,
-            ".pyc": 2
+            ".py": 2
           },
-          "file_count": 4,
+          "file_count": 2,
           "paths": [
             "project",
-            "project/__pycache__",
-            "project/__pycache__/cache.cpython-310.pyc",
-            "project/__pycache__/test_cache.cpython-310-pytest-8.0.0.pyc",
             "project/cache.py",
             "project/test_cache.py"
           ],
           "root": "tasks/02_Code_Intelligence_task_007_async_cache_singleflight/execution/exec",
-          "sha256": "f3a1478f78a97512bd21ccaa1f09361499723005ec22f75e693a9c0703049cbe",
+          "sha256": "f0b641e969fe9f83c4fa0b18e0090531ee19736469b29de11519bb681628dfb4",
           "symlink_count": 0
         },
         "private_scoring": {
@@ -2904,20 +2881,16 @@
       },
       "materials": {
         "execution": {
-          "directory_count": 2,
-          "effective_file_count": 8,
-          "entry_count": 10,
+          "directory_count": 1,
+          "effective_file_count": 6,
+          "entry_count": 7,
           "extensions": {
             ".json": 4,
-            ".py": 2,
-            ".pyc": 2
+            ".py": 2
           },
-          "file_count": 8,
+          "file_count": 6,
           "paths": [
             "project",
-            "project/__pycache__",
-            "project/__pycache__/migrate.cpython-310.pyc",
-            "project/__pycache__/test_migrate.cpython-310-pytest-8.0.0.pyc",
             "project/migrate.py",
             "project/sample_v1.json",
             "project/sample_v2.json",
@@ -2926,7 +2899,7 @@
             "project/test_migrate.py"
           ],
           "root": "tasks/02_Code_Intelligence_task_008_config_migrator/execution/exec",
-          "sha256": "31911de81a55be2eba91cc01f2ba01d8026c5111d7fc4888bcf1b0e36733f394",
+          "sha256": "5e39f34896db87259804df1d334e1237e8a7844ae2b94baa427e59065f28dc22",
           "symlink_count": 0
         },
         "private_scoring": {
@@ -3080,24 +3053,20 @@
       },
       "materials": {
         "execution": {
-          "directory_count": 2,
-          "effective_file_count": 4,
-          "entry_count": 6,
+          "directory_count": 1,
+          "effective_file_count": 2,
+          "entry_count": 3,
           "extensions": {
-            ".py": 2,
-            ".pyc": 2
+            ".py": 2
           },
-          "file_count": 4,
+          "file_count": 2,
           "paths": [
             "project",
-            "project/__pycache__",
-            "project/__pycache__/extractor.cpython-310.pyc",
-            "project/__pycache__/test_extractor.cpython-310-pytest-8.0.0.pyc",
             "project/extractor.py",
             "project/test_extractor.py"
           ],
           "root": "tasks/02_Code_Intelligence_task_009_safe_archive_extract/execution/exec",
-          "sha256": "ae2c412085d897ebbb764e8714c2fe29536cdc180ce807684b7995319e25ae3d",
+          "sha256": "1b32f636e56bcddf5d160941e93b3d21dc13ecd82f8b4c0e03b8621d821ce230",
           "symlink_count": 0
         },
         "private_scoring": {
@@ -3250,26 +3219,22 @@
       },
       "materials": {
         "execution": {
-          "directory_count": 2,
-          "effective_file_count": 5,
-          "entry_count": 7,
+          "directory_count": 1,
+          "effective_file_count": 3,
+          "entry_count": 4,
           "extensions": {
             ".jsonl": 1,
-            ".py": 2,
-            ".pyc": 2
+            ".py": 2
           },
-          "file_count": 5,
+          "file_count": 3,
           "paths": [
             "project",
-            "project/__pycache__",
-            "project/__pycache__/pipeline.cpython-310.pyc",
-            "project/__pycache__/test_pipeline.cpython-310-pytest-8.0.0.pyc",
             "project/events.jsonl",
             "project/pipeline.py",
             "project/test_pipeline.py"
           ],
           "root": "tasks/02_Code_Intelligence_task_010_idempotent_event_pipeline/execution/exec",
-          "sha256": "066277f6e7117048705339a1a1b0085dd51df135371b33200aef28a31d226d0a",
+          "sha256": "585d17afa6e9a2891b52f161eb2137ac0e62b7cb81164212a677ce2c713f0574",
           "symlink_count": 0
         },
         "private_scoring": {

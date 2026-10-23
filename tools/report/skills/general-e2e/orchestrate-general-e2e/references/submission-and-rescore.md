@@ -1,5 +1,15 @@
 # Submission 与重评分编排
 
+## 将获授权重评分纳入完整原范围
+
+先使新rescore编排终态并build-submission，再调用：
+
+```text
+python scripts/orchestrate_general_e2e.py compose-rescore-selection --source-orchestration-root ORIGINAL --replacement-orchestration-root RESCORE --task-id ID --output-root NEW_SELECTION
+```
+
+只有显式选择的题目会替换；新编排范围须与选择清单完全一致。原/新batch、unit、dataset、Judge、执行身份与候选必须相同，新attempt及source score/state/submission SHA谱系必须匹配。复制后逐题verify-score --archived，保留原顺序和完整分母，不按高分选择。源目录不改，目标已存在失败关闭。输出submission和selection-lineage是完整选择，不是伪造的新Judge编排，可用于run record-submission与package-return的orchestration-root参数。
+
 ## 生成 submission
 
 只有冻结范围中的所有任务进入终态后才运行：

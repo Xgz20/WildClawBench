@@ -5,6 +5,10 @@ description: 按用户明确选择的阶段串联 General E2E 准备、执行、
 
 # 运行 General E2E 全流程
 
+`0.7.6` 提供`prepare-imported-source --source-batch-root ABS --archive RETURN_ZIP --receipt PACKAGE_RECEIPT --output-root NEW_ROOT [--node ABS]`。它按原身份复制manifest/report-config、严格import/select并生成可移植source/task索引和只读JSON回放argv，不要求历史生产scoring ZIP，不初始化生产run state，不改制品锁或伪造完成状态。接收已有成绩时优先使用此入口；跨来源合并仍须逐条材料兼容与唯一报告单元映射，不能从旧Excel抄分或自动取交集。
+
+经授权重评分的完整范围选择可由orchestrate的compose-rescore-selection生成，再通过本Skill的record-submission/package-return标准入口收口；保留旧submission、评分、回传和报告。该选择目录本身不含伪造的orchestration state。
+
 `0.7.5` 的研发包保留完整报告选择范围，包括 valid、evaluation_error、unscored 和真实零分；未知分数保持 null，不为导出删题。支持实际评分采用的补采执行记录，保留原始回传成员和旧记录，不强制它与初始记录字节相同。
 
 独立 XLSX 已被宿主追加属性时，`build_developer_bundle.py --canonical-report-archive ABS` 可从满足原回执的规范报告 ZIP 导出报告；独立副本作为变体保留，禁止改旧 SHA。规范 ZIP 可由 report `generate/selected_report.py --seal-output-dir ABS` 在生成进程内封存。该选项不放宽评分、来源包、JSON 或选择索引校验。

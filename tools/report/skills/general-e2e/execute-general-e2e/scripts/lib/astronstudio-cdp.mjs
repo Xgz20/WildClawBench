@@ -252,6 +252,9 @@ export async function clickSidebarToggle(client) {
 
 export async function createFreshTask(client, timeoutMs, stateDatabase) {
   const before = await editorState(client);
+  if (before.editor_count === 1 && before.editor_text) {
+    throw new Error("UNSENT_DRAFT_BLOCKS_NEW_TASK: preserve draft; use the bound zero-send preparation entrypoint before retrying");
+  }
   const pristine = before.thread_id && before.editor_text === "" && stateDatabase
     ? await queryPristineThread(stateDatabase, before.thread_id) : false;
   let clicked = await clickNewTask(client);

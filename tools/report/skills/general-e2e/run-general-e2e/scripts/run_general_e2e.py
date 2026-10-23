@@ -1800,6 +1800,9 @@ def build_parser() -> argparse.ArgumentParser:
     entry.add_argument("--skill-root",type=Path,default=suite_root);entry.add_argument("--orchestration-id",required=True)
     entry.add_argument("--task-id",action="append",default=[]);entry.add_argument("--scoring-package",type=Path);entry.add_argument("--report-config",type=Path)
     entry.add_argument("--keep-scoring-external",action="store_true",help="Keep the scoring ZIP outside round-root, binding its absolute path and SHA")
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from prepare_imported_source import add_arguments as imported_source_arguments
+    imported_source_arguments(subparsers.add_parser("prepare-imported-source",help="Import existing frozen results into a new original-identity report source without production inputs or run state"))
 
     init = subparsers.add_parser("init")
     init.add_argument("--scope", required=True, choices=tuple(SCOPE_STAGES))
@@ -1856,7 +1859,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        if args.command in {"init-round","install-unit","prepare-score"}:
+        if args.command == "prepare-imported-source":
+            from prepare_imported_source import prepare
+            result = prepare(args)
+        elif args.command in {"init-round","install-unit","prepare-score"}:
             sys.path.insert(0,str(Path(__file__).resolve().parent))
             import round_workspace
             if args.command=="init-round":result=round_workspace.init_round(args.round_root,args.batch_root,args.prepare_skill)

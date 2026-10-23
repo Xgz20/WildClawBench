@@ -7,16 +7,11 @@ import unittest
 import zipfile
 
 from eval_general_e2e.contracts import validate_contract_file
+from eval_general_e2e.datasets.bundle import build_default_bundle
 from tests.general_e2e.test_local_scoring_runtime import Fixture, MAPPED_RESULTS_RULE, RUNTIME
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DATASET_BUNDLE = (
-    REPO_ROOT
-    / "report-workspace/general-e2e/datasets/general-custom60-v1"
-    / "general-custom60-v1.dataset.zip"
-)
-
 RUBRIC = """Judge only the declared criteria. Each score must use a declared anchor.
 
 ### Criterion 1: Answer fidelity (key: answer_fidelity, weight: 0.6)
@@ -99,7 +94,12 @@ class GeneralSemanticScoringTests(unittest.TestCase):
 
     def test_all_frozen_semantic_contracts_parse_exact_keys_weights_and_anchors(self) -> None:
         parsed_count = 0
-        with zipfile.ZipFile(DATASET_BUNDLE) as archive:
+        # A clean checkout must not rely on a previous administrator's cache.
+        # Build from the locked source into this test's private temporary root;
+        # build_default_bundle rejects source drift and never updates the lock.
+        bundle = self.root / "general-custom60-v1.dataset.zip"
+        build_default_bundle(REPO_ROOT, bundle)
+        with zipfile.ZipFile(bundle) as archive:
             contracts = sorted(
                 name
                 for name in archive.namelist()

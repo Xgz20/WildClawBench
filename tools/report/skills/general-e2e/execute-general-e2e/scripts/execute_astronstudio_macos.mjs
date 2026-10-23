@@ -32,6 +32,7 @@ import {
 } from "./lib/astronstudio-cdp.mjs";
 import {
   queryFinalResponse,
+  queryTerminalFinalResponse,
   queryNativeSessions,
   queryNativeCustomModelBinding,
 } from "./lib/astronstudio-state.mjs";
@@ -41,7 +42,7 @@ import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTerminal } from "./lib/astronstudio-quota-retry.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.4.11";
+export const EXECUTION_DRIVER_VERSION = "0.4.12";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -720,12 +721,13 @@ async function finalize(config, state, session, classification, dependencies) {
   const now = dependencies.now();
   recordSession(state, session, now);
   let finalResponse = "";
+  let finalBinding = null;
   try {
-    finalResponse = classification.kind === "completed" ? await dependencies.queryFinalResponse(
-      config.stateDatabase,
-      session.thread_id,
-      session.turn_id,
-    ) : "";
+    if (classification.kind === "completed") {
+      finalBinding = await dependencies.queryTerminalFinalResponse(
+        config.stateDatabase, session.thread_id, session.turn_id);
+      finalResponse = finalBinding.text;
+    }
   } catch (error) {
     state.history.push({
       phase: state.phase,
@@ -733,12 +735,22 @@ async function finalize(config, state, session, classification, dependencies) {
       event: "FINAL_RESPONSE_READ_FAILED",
       error: error instanceof Error ? error.message : String(error),
     });
+    return persistAttention(config, state, "FINAL_RESPONSE_READ_FAILED",
+      "原生终态回复绑定读取失败，保留原attempt，不冻结中间回复或重发", dependencies);
   }
-  if (finalResponse) {
+  if (classification.kind === "completed" && !finalBinding?.ready) {
+    transition(state, "RUNNING", "TERMINAL_FINAL_RESPONSE_PENDING",
+      { reason: finalBinding?.reason || "terminal_message_not_ready" }, now);
+    await persist(config, state);
+    return state;
+  }
+  if (finalBinding?.ready) {
     const finalResponseContent = `${finalResponse}\n`;
     await writeFile(config.finalResponseFile, finalResponseContent, "utf8");
     state.evidence.final_response_path = relativePosix(config.unitRoot, config.finalResponseFile);
     state.evidence.final_response_sha256 = sha256(finalResponseContent);
+    state.history.push({ phase: state.phase, at: now, event: "TERMINAL_FINAL_RESPONSE_BOUND",
+      message_id: finalBinding.message_id || null, source: finalBinding.source || "test-override" });
   }
   state.execution.business_status = classification.businessStatus;
   state.execution.finished_at = now;
@@ -890,6 +902,7 @@ export async function executeSingleTask(config, overrides = {}) {
     queryNativeSessions,
     queryNativeCustomModelBinding,
     queryFinalResponse,
+    queryTerminalFinalResponse,
     waitForThreadStreamLease,
     discoverMainTarget,
     connectCdp: (url, timeout) => CdpClient.connect(url, timeout),
@@ -905,6 +918,14 @@ export async function executeSingleTask(config, overrides = {}) {
     nowMilliseconds: () => Date.now(),
     ...overrides,
   };
+  // Preserve the existing test/integration dependency seam; live defaults always
+  // use the completed turn's explicit assistant_message_id, never latest text.
+  if (overrides.queryFinalResponse && !overrides.queryTerminalFinalResponse) {
+    dependencies.queryTerminalFinalResponse = async (...args) => {
+      const text = await overrides.queryFinalResponse(...args);
+      return { ready: Boolean(text), text: text || "", source: "injected-final-response-reader" };
+    };
+  }
   const existing = await readJsonIfPresent(config.stateFile);
   let state;
   if (config.quotaRetryAuthorization) {

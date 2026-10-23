@@ -1,5 +1,13 @@
 # General E2E 流程状态与离线回传
 
+## 只接收已有结果的管理员来源
+
+```text
+python scripts/run_general_e2e.py prepare-imported-source --source-batch-root ORIGINAL_CONTEXT --archive RETURN_ZIP --receipt PACKAGE_RECEIPT --output-root NEW_SOURCE_ROOT --node NODE_ABS
+```
+
+ORIGINAL_CONTEXT包含原manifest.json/report-config.json。工具按原身份直接import/select，保留这些原字节和制品锁，不初始化需要历史scoring ZIP等输入的生产run。生成source/task索引、输入SHA锁和PREPARE_RECEIPT，其中source_only_replay_argv只读复算该来源JSON。unscored/evaluation_error和真实0原样保留，模型显示覆盖需同时给model-display-label/display-reason，不把显示名当原模型身份。跨来源合并仍须原身份验证及必要派生报告映射，不能改原unit/version/digest来消除冲突。
+
 ## 两级状态
 
 `run_general_e2e.py` 不代替单阶段 Skill，而是锁定输入、阶段选择和已验证产物：

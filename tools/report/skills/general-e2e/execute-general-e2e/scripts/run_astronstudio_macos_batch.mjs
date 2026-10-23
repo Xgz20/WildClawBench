@@ -20,7 +20,7 @@ import { isQuotaError, pristineUnsentAttempt, readQuotaAuthorization, assertQuot
   recoveryFiles, digest } from './lib/astronstudio-quota-retry.mjs';
 
 export const QUEUE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-queue/v1";
-export const QUEUE_WORKER_VERSION = "0.1.2";
+export const QUEUE_WORKER_VERSION = "0.1.3";
 export const QUEUE_REVISION = 1;
 export const UI_SLOTS = 1;
 export const RUN_SLOTS = 3;
@@ -33,6 +33,11 @@ const TASK_TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
 
 function externalQuotaFailure(task) {
   return task.phase === "FAILED" && isQuotaError(task.error);
+}
+
+export function preSendInfrastructureFailure(task) {
+  return task.phase === "FAILED" && task.dispatch_attempt_count === 0
+    && task.error?.code === "PRE_SEND_DRIVER_ERROR";
 }
 
 function usage() {
@@ -796,6 +801,7 @@ export async function runQueue(plan, args, overrides = {}) {
       let running = state.tasks.filter((task) => task.phase === "RUNNING");
       const attention = state.tasks.filter((task) => task.phase === "NEEDS_ATTENTION");
       const failed = state.tasks.filter((task) => task.phase === "FAILED");
+      const preparationFailures = failed.filter(preSendInfrastructureFailure);
       state.active_task_ids = running.map((task) => task.task_id);
       state.current_task_id = state.active_task_ids[0] || null;
 
@@ -825,7 +831,15 @@ export async function runQueue(plan, args, overrides = {}) {
         return state;
       }
 
-      let dispatchBlocked = failed.length > 0 && !args.continueOnTerminalFailure;
+      if (preparationFailures.length && !running.length) {
+        state.phase = "NEEDS_ATTENTION";
+        state.error = "PRE_SEND_PREPARATION_BLOCKED: preserve the unsent draft and original attempts; no further dispatch";
+        state.current_task_id = preparationFailures[0].task_id;
+        await persist(plan, state, dependencies.now());
+        return state;
+      }
+
+      let dispatchBlocked = preparationFailures.length > 0 || (failed.length > 0 && !args.continueOnTerminalFailure);
       while (!dispatchBlocked && running.length < args.runSlots) {
         const pending = state.tasks.find((task) => task.phase === "PENDING");
         if (!pending) break;
@@ -877,6 +891,7 @@ export async function runQueue(plan, args, overrides = {}) {
         });
         await persist(plan, state, dependencies.now());
         if (externalQuotaFailure(pending)) break;
+        if (preSendInfrastructureFailure(pending)) { dispatchBlocked = true; break; }
         if (pending.phase === "NEEDS_ATTENTION") break;
         if (pending.phase === "FAILED" && !args.continueOnTerminalFailure) {
           dispatchBlocked = true;
@@ -888,6 +903,7 @@ export async function runQueue(plan, args, overrides = {}) {
       const pending = state.tasks.filter((task) => task.phase === "PENDING");
       const currentAttention = state.tasks.filter((task) => task.phase === "NEEDS_ATTENTION");
       if (state.tasks.some(externalQuotaFailure)) continue;
+      if (!running.length && state.tasks.some(preSendInfrastructureFailure)) continue;
       if (currentAttention.length) continue;
       if (!running.length && !pending.length) {
         const terminalFailures = state.tasks.filter((task) => task.phase === "FAILED");

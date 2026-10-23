@@ -5,6 +5,12 @@ description: 将有效 General E2E 执行回执交接为独立单题评分工作
 
 # 编排 General E2E 评分
 
+`0.11.10` 的v7 Prompt及preflight将HTML离线验证环境前置；hybrid沿用冻结规则runtime，纯语义HTML可通过preflight的browser-runtime-python/playwright-browsers-path显式配置。预检只读合成fixture，失败不创建Judge；具体协议见冻结score Skill的references/offline-browser-validation.md。旧v3–v6 Prompt与已完成attempt保持原契约。
+
+创建原生评分聊天后及COMPLETED后，用`verify-native-context --orchestration-root ABS --task-id ID --sdk-file ABS [--allow-running] --output NEW_JSON`核对真实thread/cwd/唯一workspace root/model/high/冻结Prompt与turn边界；原生桥XML输入严格解码后比对完整SHA，不使用模糊匹配，也不导出思考正文。初始头未到齐时等待原thread，不新建替代聊天。allow-running只证明已观察身份，不证明完成。
+
+经明确授权的单题重评分完成后，使用`compose-rescore-selection --source-orchestration-root ABS --replacement-orchestration-root ABS --task-id ID --output-root NEW_ROOT`将明确新attempt纳入原完整范围。它复核原/新谱系、相同Judge和冻结输入，归档校验复制的评分，原评分与编排不变；不按高分挑选、不缩小分母、不伪造COMPLETED state。输出是独立完整submission选择目录，可交run的record-submission/package-return，不是新的Judge编排。
+
 `0.11.9` 在前序 hybrid 规则完成、进入待注册状态时，保留已注册项目、已绑定线程、等待/超时和待验分任务的语义槽，避免原线程被 TASK_NOT_ACTIVE 拒绝。空槽按冻结题序补位；规则 Worker 仍不占语义槽，已有预留超过配置容量时以 SEMANTIC_SLOT_OVERCOMMITTED 失败关闭。不创建替代线程、不改 Judge 或评分内容；旧冻结实现和状态保持原样。
 
 正式评测的语义评分统一为每题独立项目、项目内新建独立聊天。协作子代理不作为该路径的评分 transport；注册或会话创建失败时保留编排错误，不静默替代。纯 automated 任务仍由受管规则 Worker 执行，不占语义评分会话槽。

@@ -29,9 +29,10 @@ PACKAGE_SCHEMA = "urn:wildclawbench:schema:general-e2e:package-manifest:v1"
 SCORE_SCHEMA = "urn:wildclawbench:schema:general-e2e:score:v1"
 SUBMISSION_SCHEMA = "urn:wildclawbench:schema:general-e2e:submission:v1"
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
-PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v6"
+PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v7"
 LEGACY_CODEX_PROMPT_PROTOCOLS = {"general-e2e-codex-scoring-prompt/v3"}
 FROZEN_SKILL_PROMPT_PROTOCOLS = {
+    "general-e2e-codex-scoring-prompt/v6",
     "general-e2e-codex-scoring-prompt/v4",
     "general-e2e-codex-scoring-prompt/v5",
     PROMPT_PROTOCOL,
@@ -340,6 +341,10 @@ def _score_skill_lock(
         lock["python"] = _score_python_lock(
             Path(_required_string(python_runtime.get("executable"), "score python executable"))
         )
+    browser = root / "scripts/offline_browser_validate.py"
+    if browser.is_file():
+        browser = _regular_file(browser, "SCORE_BROWSER_VALIDATOR_INVALID")
+        lock["browser_validator"] = {"path": str(browser), "sha256": _sha256_file(browser)}
     return lock
 
 
@@ -666,7 +671,7 @@ def _prompt_text(
             f"所有评分命令只调用 `{score_entrypoint}`。不得使用项目、仓库或自动发现路径中的同名 Skill；"
             "冻结目录缺失、身份或哈希不匹配时立即停止"
         )
-        if prompt_protocol == PROMPT_PROTOCOL:
+        if prompt_protocol in {"general-e2e-codex-scoring-prompt/v6", PROMPT_PROTOCOL}:
             python_runtime = score_skill.get("python")
             if not isinstance(python_runtime, Mapping):
                 raise OrchestrationError("SCORE_PYTHON_LOCK_MISSING")
@@ -711,6 +716,13 @@ def _prompt_text(
             )
     else:
         raise OrchestrationError("SCORING_PROMPT_PROTOCOL_UNSUPPORTED", prompt_protocol)
+    if prompt_protocol == PROMPT_PROTOCOL:
+        runtime_usage += """
+
+离线页面的独立验证：网页产物需要实际渲染/交互观察时，先读取控制器预检后冻结的 `judge-environment.json`，核验其中的解释器、Playwright/browser runtime与离线观察脚本SHA。仅使用该脚本加载SHA绑定的候选HTML字节到全新 about:blank 上下文；页面请求offline且全部abort，service workers禁用，不导航file/HTTP URL、不启动localhost服务、不使用CDP或修改浏览器URL策略，不声称OS级网络隔离。按原Rubric独立编写视口、键盘、状态和截图观察计划；工具只记录事实，不产生分数，输出必须在候选之外的新目录。用本地图片查看工具检查实际截图，不以自动规则或源码推断冒充独立实测。
+
+调用脚本时使用 `--html`、`--expected-sha256`、`--plan`、`--output-dir`；操作格式见冻结Skill的 references/offline-browser-validation.md。已有浏览器工具若拒绝URL，不绕过其策略；这套预检的离线字节观察不需要被阻断的URL导航或网络出口权限。若约束仍拒绝该离线方法，保留错误并停止依赖动作，不尝试其它绕行。缺少或失败的裁判验证环境属于基础设施问题，应在创建/继续评分前修复；不得因此扣候选能力分，也不能把支持证据当成充分实测。真实候选缺陷仍只按冻结Rubric判分，不修补候选。
+"""
     return f"""{skill_instruction}
 
 冻结身份：
@@ -1817,6 +1829,15 @@ def _verify_state(
             )
         ):
             raise OrchestrationError("SCORING_PROMPT_DRIFT", str(task.get("task_id")))
+        browser_ref = (task.get("preflight") or {}).get("browser_environment")
+        if browser_ref:
+            browser_path = _regular_file(attempt / browser_ref["path"], "JUDGE_BROWSER_PROFILE_MISSING")
+            if not _inside(attempt, browser_path) or _sha256_file(browser_path) != browser_ref["sha256"]:
+                raise OrchestrationError("JUDGE_BROWSER_PROFILE_DRIFT")
+            for ref in _read_json(browser_path, "JUDGE_BROWSER_PROFILE_INVALID")["artifacts"]:
+                item = _regular_file(attempt / ref["path"], "JUDGE_BROWSER_PROBE_ARTIFACT_MISSING")
+                if not _inside(attempt, item) or _sha256_file(item) != ref["sha256"]:
+                    raise OrchestrationError("JUDGE_BROWSER_PROBE_ARTIFACT_DRIFT")
         manifest = attempt / "attempt-manifest.json"
         if (
             attempt.is_symlink()
@@ -2367,11 +2388,80 @@ def record_project(
     return _save(root, state, event_time)
 
 
+def needs_browser_preflight(attempt: Path, state: Mapping[str, Any]) -> bool:
+    if state.get("prompt_protocol") != PROMPT_PROTOCOL:
+        return False
+    return any(path.is_file() and path.suffix.lower() in {".html", ".htm"}
+               for path in (attempt / "candidate-original").rglob("*"))
+
+
+def prepare_browser_environment(attempt, state, task, python, browsers):
+    validator = state["score_skill"].get("browser_validator")
+    if not isinstance(validator, dict):
+        raise OrchestrationError("JUDGE_BROWSER_VALIDATOR_MISSING")
+    script = _regular_file(Path(validator["path"]), "JUDGE_BROWSER_VALIDATOR_INVALID")
+    if _sha256_file(script) != validator["sha256"]:
+        raise OrchestrationError("JUDGE_BROWSER_VALIDATOR_DRIFT")
+    runtime = task.get("rule_runtime") or {}
+    python = python or (Path(runtime["python"]["executable"]) if runtime.get("python") else None)
+    browsers = browsers or (Path(runtime["playwright_browsers_path"]) if runtime.get("playwright_browsers_path") else None)
+    if python is None:
+        raise OrchestrationError("JUDGE_BROWSER_RUNTIME_REQUIRED", "Provide --browser-runtime-python and optional --playwright-browsers-path before creating a Judge")
+    python_lock = _score_python_lock(python)
+    probe_args = ["probe-runtime", "--runtime-python", python_lock["executable"]]
+    if browsers is not None:
+        browsers = _regular_directory(browsers, "JUDGE_BROWSER_DIRECTORY_INVALID")
+        probe_args += ["--playwright-browsers-path", str(browsers)]
+    # Reuse the unchanged dependency/browser lock and verifier; never install
+    # dependencies globally or execute a candidate to admit the environment.
+    pinned_runtime = _run_score_command(state["score_skill"], probe_args)
+    expected = {"profile": "offline-inline-html-observation/v1", "python": python_lock,
+                "validator": dict(validator), "playwright_browsers_path": str(browsers) if browsers else None,
+                "scoring_attempt_id": task["scoring_attempt_id"], "runtime_lock_sha256": state["score_skill"]["runtime_lock_sha256"]}
+    path = attempt / "judge-environment.json"
+    if path.exists():
+        existing = _read_json(_regular_file(path, "JUDGE_BROWSER_PROFILE_INVALID"), "JUDGE_BROWSER_PROFILE_INVALID")
+        if any(existing.get(k) != v for k, v in expected.items()):
+            raise OrchestrationError("JUDGE_BROWSER_PROFILE_DRIFT")
+        for ref in existing["artifacts"]:
+            item = _regular_file(attempt / ref["path"], "JUDGE_BROWSER_PROBE_ARTIFACT_MISSING")
+            if not _inside(attempt, item) or _sha256_file(item) != ref["sha256"]:
+                raise OrchestrationError("JUDGE_BROWSER_PROBE_ARTIFACT_DRIFT")
+    else:
+        output = attempt / "judge-browser-preflight" / uuid.uuid4().hex
+        output.parent.mkdir(parents=True, exist_ok=True)
+        environment = {k:os.environ[k] for k in ("PATH", "HOME", "USERPROFILE", "SYSTEMROOT", "WINDIR", "TEMP", "TMP", "TMPDIR", "LOCALAPPDATA") if k in os.environ}
+        environment.update(PYTHONDONTWRITEBYTECODE="1", PYTHONNOUSERSITE="1", PYTHONUTF8="1")
+        if browsers is not None:
+            environment["PLAYWRIGHT_BROWSERS_PATH"] = str(browsers)
+        argv = [python_lock["executable"], "-X", "utf8", str(script), "--probe", "--output-dir", str(output)]
+        completed = subprocess.run(argv,
+                                   capture_output=True, encoding="utf-8", env=environment)
+        logs = [output.with_suffix(suffix) for suffix in (".argv.json", ".stdout", ".stderr")]
+        logs[0].write_text(json.dumps(argv, ensure_ascii=False) + "\n", encoding="utf-8")
+        logs[1].write_text(completed.stdout, encoding="utf-8")
+        logs[2].write_text(completed.stderr, encoding="utf-8")
+        if completed.returncode:
+            raise OrchestrationError("JUDGE_BROWSER_PREFLIGHT_FAILED", (completed.stderr or completed.stdout)[-2000:])
+        try:
+            result = json.loads(completed.stdout)
+        except json.JSONDecodeError as exc:
+            raise OrchestrationError("JUDGE_BROWSER_PROBE_OUTPUT_INVALID") from exc
+        if result.get("status") != "PASS" or result.get("candidate_used") is not False:
+            raise OrchestrationError("JUDGE_BROWSER_PROBE_OUTPUT_INVALID")
+        artifacts = [{"path": p.relative_to(attempt).as_posix(), "sha256": _sha256_file(p)} for p in sorted([*output.rglob("*"), *logs]) if p.is_file()]
+        _write_new_json(path, {**expected, "probe": result, "pinned_runtime": pinned_runtime, "artifacts": artifacts,
+                               "candidate_modified": False, "os_network_isolation_claimed": False})
+    return {"path": "judge-environment.json", "sha256": _sha256_file(path)}
+
+
 def preflight(
     orchestration_root: Path,
     *,
     task_id: str,
     desktop_version: str,
+    browser_runtime_python: Path | None = None,
+    playwright_browsers_path: Path | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     root = _state_root(orchestration_root)
@@ -2386,6 +2476,10 @@ def preflight(
     verification = _run_score_command(
         state["score_skill"], ["verify", "--attempt-root", str(attempt)]
     )
+    browser_environment = None
+    if needs_browser_preflight(attempt, state):
+        browser_environment = prepare_browser_environment(
+            attempt, state, task, browser_runtime_python, playwright_browsers_path)
     event_time = now or _now()
     task["preflight"] = {
         "status": "PASSED",
@@ -2394,6 +2488,8 @@ def preflight(
         "candidate_sha256": verification.get("candidate_sha256"),
         "queue_digest": state["queue_digest"],
     }
+    if browser_environment:
+        task["preflight"]["browser_environment"] = browser_environment
     task["phase"] = "PREFLIGHT_PASSED"
     task["history"].append({"at": _timestamp(event_time), "event": "PREFLIGHT_PASSED"})
     return _save(root, state, event_time)
@@ -2655,6 +2751,9 @@ def run_rule_score_task(
         {"at": _timestamp(event_time), "event": "RULE_COMPONENT_RECORDED"}
     )
     if grading_type == "hybrid":
+        if state.get("prompt_protocol") == PROMPT_PROTOCOL:
+            task["rule_runtime"] = {"python": _score_python_lock(runtime_python),
+                "playwright_browsers_path": str(playwright_browsers_path.expanduser().absolute()) if playwright_browsers_path else None}
         task["phase"] = "AWAITING_PROJECT"
         return _save(root, state, event_time)
 
@@ -2815,6 +2914,11 @@ def main(argv: list[str] | None = None) -> int:
     build = subparsers.add_parser("build-submission")
     _parse_common(build)
     build.add_argument("--replace-after-late-completion", action="store_true")
+    compose = subparsers.add_parser("compose-rescore-selection", help="Select explicit rescored tasks into the complete original scope; preserve all source orchestrations")
+    compose.add_argument("--source-orchestration-root", required=True, type=Path, dest="source")
+    compose.add_argument("--replacement-orchestration-root", required=True, type=Path, dest="replacement")
+    compose.add_argument("--task-id", required=True, action="append")
+    compose.add_argument("--output-root", required=True, type=Path)
 
     project = subparsers.add_parser("record-project")
     _parse_common(project)
@@ -2829,6 +2933,14 @@ def main(argv: list[str] | None = None) -> int:
     _parse_common(check)
     check.add_argument("--task-id", required=True)
     check.add_argument("--desktop-version", required=True)
+    check.add_argument("--browser-runtime-python", type=Path)
+    check.add_argument("--playwright-browsers-path", type=Path)
+    native = subparsers.add_parser("verify-native-context", help="Read-only native model/cwd/prompt/turn verification without exporting reasoning")
+    _parse_common(native)
+    native.add_argument("--task-id", required=True)
+    native.add_argument("--sdk-file", type=Path, required=True)
+    native.add_argument("--allow-running", action="store_true")
+    native.add_argument("--output", type=Path)
 
     thread = subparsers.add_parser("record-thread")
     _parse_common(thread)
@@ -2921,11 +3033,29 @@ def main(argv: list[str] | None = None) -> int:
                 registration_evidence=args.registration_evidence,
                 desktop_version=args.desktop_version,
             )
+        elif args.command == "verify-native-context":
+            from verify_judge_context import verify_context
+            root = _state_root(args.orchestration_root)
+            state = _verify_state(root)
+            task = _task_by_id(state, _identifier(args.task_id, "task_id"))
+            if state["judge"]["protocol"] != "codex-agent-judge-v1" or not task.get("thread"):
+                raise OrchestrationError("NATIVE_JUDGE_THREAD_REQUIRED")
+            result = verify_context(args.sdk_file, thread_id=task["thread"]["thread_id"],
+                cwd=str((root/task["attempt_path"]).resolve()), model=state["judge"]["model"],
+                effort=state["judge"]["reasoning_effort"], prompt=(root/task["prompt_path"]).read_text(encoding="utf-8"),
+                allow_running=args.allow_running)
+            if args.output:
+                _write_new_json(args.output, result)
+        elif args.command == "compose-rescore-selection":
+            from compose_rescore_selection import compose
+            result = compose(args, frozen=sys.modules[__name__])
         elif args.command == "preflight":
             result = preflight(
                 args.orchestration_root,
                 task_id=args.task_id,
                 desktop_version=args.desktop_version,
+                browser_runtime_python=args.browser_runtime_python,
+                playwright_browsers_path=args.playwright_browsers_path,
             )
         elif args.command == "record-thread":
             result = record_thread(

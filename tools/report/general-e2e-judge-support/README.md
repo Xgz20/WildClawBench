@@ -1,5 +1,7 @@
 # Offline General E2E judge environment support v0.1
 
+The canonical implementations now ship inside score-general-e2e (offline_browser_validate.py) and orchestrate-general-e2e (compose_rescore_selection.py). These two files are compatibility launchers only. Use the distributed Skill instructions and the orchestration compose-rescore-selection CLI for new work. Native identity audits use verify-native-context, including strict XML input decoding. HTML preflight is part of the v7 protocol; no per-round environment annex or hardcoded machine path is required.
+
 This additive operator support does not replace frozen Skills or alter scoring core, rules, Rubrics or weights.
 
 `offline_browser_validate.py` uses the pinned public Playwright runtime to observe a SHA-bound self-contained HTML buffer in a fresh `about:blank` context. It never navigates file/HTTP URLs, starts a server, uses CDP or changes Browser Use policy. Offline context plus abort-all page requests materially reduces the authority needed relative to browser URL navigation. Service workers are blocked. It makes no OS-level network-isolation claim and produces no score. If a governing policy refuses this offline method, stop dependent actions. External-resource-dependent pages may need a different explicitly authorized validation environment; blocked resources remain observable rather than being silently repaired.

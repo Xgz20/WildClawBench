@@ -98,6 +98,8 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py preflight \
 
 前置检查会重算队列、Prompt、项目证据、attempt manifest、候选原件和私有评分材料，并复核 score Skill 及 runtime lock 未漂移。
 
+v7 对含 HTML 的候选另做公开合成页面预检，创建 Judge 前必须通过。hybrid 任务复用规则阶段锁定的专用 runtime；纯语义 HTML 任务给 `preflight` 增加 `--browser-runtime-python /absolute/runtime/bin/python`，浏览器不在默认安装位置时同时提供 `--playwright-browsers-path /absolute/browser-cache`。预检只运行公开 fixture，冻结 `judge-environment.json`、运行库校验和截图等原件，不读取候选内容或 GT，也不产生分数。失败时修复环境后重新预检，保留失败日志；不能先创建 Judge 再将环境故障计为能力失分。历史 v6 及更早冻结 Prompt 不改写。
+
 ## 创建与等待评分任务
 
 按 `status` 或 `resume` 返回的 `recommended_actions` 执行动作。最多同时出现冻结槽位数的语义任务；每个任务的状态更新仍单独、原子记录。`CREATE_THREAD` 时读取 `prompt_file`，调用 Desktop 内置 `create_thread`：
@@ -114,6 +116,17 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py record-thread \
   --thread-id THREAD_ID \
   --host-id HOST_ID
 ```
+
+原生 SDK 头部和本轮 Prompt 已落盘后，执行只读上下文检查：
+
+```bash
+python <skill-dir>/scripts/orchestrate_general_e2e.py verify-native-context \
+  --orchestration-root /absolute/path/to/orchestration \
+  --task-id TASK_ID --sdk-file /absolute/native/rollout.jsonl \
+  --allow-running --output /private/path/new-running-proof.json
+```
+
+它验证 thread、cwd、唯一 workspace root、模型、effort 与完整冻结 Prompt；原生桥使用 XML envelope 时严格解码 input 后比较，不使用模糊匹配，不导出思考正文。文件未完整落盘时只等待原 thread，不因检查失败重建聊天。`COMPLETED` 后去掉 `--allow-running` 再写一份全新 proof，确认唯一完成区间；运行中 proof 不能证明完成。旧评测额外冻结的完整 Prompt 附件应依其原始绑定规则审计，不能修改旧 Prompt 来适配新命令。
 
 `WAIT_EXISTING_THREAD` 使用动作中的 `thread_id`、`host_id`、`after_cursor` 和 `next_wait_sequence` 调用 `wait_threads`。每次返回后立即记录：
 
