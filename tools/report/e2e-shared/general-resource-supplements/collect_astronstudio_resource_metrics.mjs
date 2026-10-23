@@ -16,6 +16,7 @@ import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { FLOW_TIMING_PROFILE, flowTiming } from "../resource-metrics/flow-timing.mjs";
 import { ROLLOUT_PATH, analyzeIndexedRollout } from "./astronstudio-rollout.mjs";
+import { assertRecaptureDeclaration } from './astronstudio-terminal-final-recapture.mjs';
 
 import { verifyArchivedNativeLog } from './astronstudio-native-provider-log.mjs';
 
@@ -167,6 +168,7 @@ function assertExecutionState(state) {
 }
 
 function assertTraceBinding(state, index) {
+  assertRecaptureDeclaration(state, index);
   if (index?.schema_id !== TRACE_INDEX_SCHEMA || index?.schema_version !== 1) {
     throw new Error("TRACE_INDEX_UNSUPPORTED");
   }

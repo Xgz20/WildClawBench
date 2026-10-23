@@ -9,6 +9,10 @@ import { readBoundNativeLogBundle } from '../../tools/report/e2e-shared/general-
 import { normalizeTraceRows } from '../../tools/report/e2e-shared/general-resource-supplements/archive_astronstudio_trace.mjs';
 import { normalizeRolloutTranscript } from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-rollout-transcript.mjs';
 import { collectAstronStudioResourceMetrics } from '../../tools/report/e2e-shared/general-resource-supplements/collect_astronstudio_resource_metrics.mjs';
+import { prepareTerminalFinalRecapture, recaptureCandidateTree } from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-terminal-final-recapture.mjs';
+import { archiveAstronStudioTrace } from '../../tools/report/e2e-shared/general-resource-supplements/archive_astronstudio_trace.mjs';
+import { recaptureFixture, writeRecaptureInput } from './fixtures/terminal-final-recapture.mjs';
+import { DatabaseSync } from 'node:sqlite';
 
 import {
   finalizeAstronStudioExecution,
@@ -285,6 +289,52 @@ test('native log resource production includes binding closure and passes real fi
     assert.equal(result.status,'PASS');
     await verifyAstronStudioCollection({unitRoot:value.root,taskId:value.taskId});
   } finally { await rm(value.root,{recursive:true,force:true}); }
+});
+
+test('authorized terminal recapture passes archive, metrics, finalize and immutable verify with original proof closure', async () => {
+  const value = await fixture({ includeTrace: false, includeResource: false });
+  try {
+    const data = recaptureFixture(JSON.parse(await readFile(value.statePath, 'utf8')));
+    data.candidateBefore = data.candidateAfter = await recaptureCandidateTree(value.workspace);
+    await writeJson(value.statePath, data.originalState);
+    await writeFile(join(value.root, data.originalState.evidence.final_response_path), data.originalFinal);
+    const originalState = await readFile(value.statePath);
+    const inputManifest = await writeRecaptureInput(join(value.root, 'input'), data);
+    const prepared = await prepareTerminalFinalRecapture({ inputManifest, outputDir: join(value.root, 'recapture') });
+    const databasePath = join(value.root, 'native.sqlite'), db = new DatabaseSync(databasePath);
+    db.exec(`CREATE TABLE projection_projects(project_id TEXT,workspace_root TEXT);
+      CREATE TABLE projection_threads(thread_id TEXT,project_id TEXT);
+      CREATE TABLE projection_turns(thread_id TEXT,turn_id TEXT,state TEXT,requested_at TEXT,started_at TEXT,completed_at TEXT);
+      CREATE TABLE provider_runtime_events(sequence INTEGER,event_id TEXT,thread_id TEXT,turn_id TEXT,lifecycle_generation TEXT,event_type TEXT,event_json TEXT,persisted_at TEXT);`);
+    db.prepare('INSERT INTO projection_projects VALUES(?,?)').run('project', data.originalState.session.cwd);
+    db.prepare('INSERT INTO projection_threads VALUES(?,?)').run(data.originalState.session.thread_id, 'project');
+    db.prepare('INSERT INTO projection_turns VALUES(?,?,?,?,?,?)').run(data.originalState.session.thread_id, data.originalState.session.turn_id,
+      'completed', '2026-09-18T00:00:00.000Z', '2026-09-18T00:00:01.000Z', '2026-09-18T00:00:10.000Z');
+    const insert = db.prepare('INSERT INTO provider_runtime_events VALUES(?,?,?,?,?,?,?,?)');
+    for (const r of data.provider) insert.run(r.sequence,r.event_id,r.thread_id,r.turn_id,r.lifecycle_generation,r.event_type,r.event_json,r.persisted_at);
+    db.close();
+    const trace = join(value.root, 'recapture/trace');
+    const sdkFile = join(value.root, 'input/inputs/sdk.json');
+    await assert.rejects(archiveAstronStudioTrace({ stateFile: value.statePath, stateDb: databasePath, rolloutFile: sdkFile,
+      sourcePolicy: 'bound-native-sdk', outputDir: join(value.root, 'original-rejected-trace') }), /ARCHIVED_FINAL_RESPONSE_MISMATCH/);
+    const archived = await archiveAstronStudioTrace({ stateFile: prepared.state_file, stateDb: databasePath, rolloutFile: sdkFile,
+      sourcePolicy: 'bound-native-sdk', terminalFinalRecaptureManifest: prepared.manifest, outputDir: trace });
+    assert.equal(archived.status, 'PASS');
+    await assert.rejects(archiveAstronStudioTrace({ stateFile: prepared.state_file, stateDb: databasePath, rolloutFile: sdkFile,
+      sourcePolicy: 'bound-native-sdk', outputDir: join(value.root, 'missing-manifest-rejected') }), /RECAPTURE_MANIFEST_REQUIRED/);
+    value.statePath = prepared.state_file; value.indexPath = join(trace, 'trace-index.json'); value.metricsPath = join(trace, 'resource-metrics.json');
+    await collectAstronStudioResourceMetrics({ stateFile: value.statePath, traceIndex: value.indexPath, output: value.metricsPath });
+    const metrics = JSON.parse(await readFile(value.metricsPath, 'utf8'));
+    assert.equal(metrics.collection.sources.length, 19);
+    const result = await finalizeAstronStudioExecution(options(value), { terminateProcesses: async () => successfulCleanup() });
+    assert.equal(result.status, 'PASS');
+    await verifyAstronStudioCollection({ unitRoot: value.root, taskId: value.taskId });
+    assert.deepEqual(await readFile(join(value.root, '.general-e2e/execution', value.taskId, 'automation-state.json')), originalState);
+    const frozen = join(result.evidence_root, 'trace/bindings/terminal-final-recapture/inputs/original_final.md');
+    assert.deepEqual(await readFile(frozen), data.originalFinal);
+    await rm(frozen);
+    await assert.rejects(verifyAstronStudioCollection({ unitRoot: value.root, taskId: value.taskId }), /ENOENT|EVIDENCE|ARTIFACT/);
+  } finally { await rm(value.root, { recursive: true, force: true }); }
 });
 
 test("CLI separates finalization from immutable verification", () => {

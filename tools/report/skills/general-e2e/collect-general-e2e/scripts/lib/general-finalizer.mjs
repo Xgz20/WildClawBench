@@ -29,6 +29,7 @@ import { fileURLToPath } from "node:url";
 
 import { createWorkspaceIntegrity } from "../../vendor/e2e-shared/handoff/workspace-integrity.mjs";
 import { verifyArchivedNativeLog } from "../../vendor/e2e-shared/general-resource-supplements/astronstudio-native-provider-log.mjs";
+import { verifyArchivedTerminalFinalRecapture, assertRecaptureDeclaration } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-final-recapture.mjs';
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
@@ -293,6 +294,7 @@ async function loadTraceBundle(indexPath, state, profile, stateBytes) {
   if (!indexPath) return null;
   const indexSource = await readJsonFile(indexPath);
   const index = indexSource.value;
+  assertRecaptureDeclaration(state, index);
   if (index?.schema_id !== profile.traceIndexSchema || index?.schema_version !== profile.traceVersion
       || !sameIdentity(index.identity, state.identity)) {
     throw new Error("TRACE_INDEX_IDENTITY_MISMATCH");
@@ -331,6 +333,7 @@ async function loadTraceBundle(indexPath, state, profile, stateBytes) {
     traceArtifacts.push({ relative: artifactRelative, source });
   }
   if (nativeLog) await verifyArchivedNativeLog(index, state, stateBytes, root);
+  if (index.terminal_final_recapture_profile) await verifyArchivedTerminalFinalRecapture(index, state, stateBytes, root, { candidateRoot: state.candidate_workspace });
   return { indexSource, index, transcriptSource, transcriptRelative, traceArtifacts };
 
 }
@@ -778,9 +781,18 @@ export async function verifyGeneralCollection(options) {
       if (key in (record.session ?? {}) && record.session[key] !== index.session?.[key]) throw new Error(`TRACE_SESSION_MISMATCH: ${key}`);
     }
     const traceRoot = dirname(indexSource.absolute);
+    if (record.harness?.id === 'astronstudio') {
+      const declaredState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
+      assertRecaptureDeclaration(declaredState.value, index);
+    }
     if (index.native_provider_log_profile) {
       const archivedState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
       await verifyArchivedNativeLog(index, archivedState.value, archivedState.bytes, traceRoot);
+    }
+    if (index.terminal_final_recapture_profile) {
+      const archivedState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
+      await verifyArchivedTerminalFinalRecapture(index, archivedState.value, archivedState.bytes, traceRoot,
+        { candidateRoot: resolveWithin(unitRoot, record.candidate.path, 'archived candidate') });
     }
     const transcript = resolveWithin(traceRoot, index.transcript.path, 'archived transcript');
     if (transcript !== resolveWithin(unitRoot, record.evidence.transcript_path, 'record transcript')) throw new Error('TRACE_TRANSCRIPT_BINDING_MISMATCH');

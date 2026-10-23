@@ -7,6 +7,8 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 
 # 采集 General E2E 证据
 
+`0.11.3` 新增显式 `bound-terminal-final-recapture/v1`。只有本轮已授权该 profile、旧冻结回复精确匹配同 turn 唯一较早助手消息、原生 completed 消息/provider/SDK 终稿逐字一致且候选树未变时，才创建新的补采 state/回复。原 state、旧 execution record、旧回复、授权与三源证明全部进入 `binding_evidence`，不重发、不修改候选、不放宽原终稿一致性门禁。finalize 与 verify-only 重新计算补采证明和引用闭包；原 run-config、attempt、评分规则不改。已获得覆盖该严格 profile 的授权后，无需逐题重复询问；超出已授权范围仍暂停。详见 [终态回复补采](references/terminal-final-recapture.md)。
+
 `0.11.2` 补齐资源采集回执的绑定来源闭包：独立校验全部 `binding_evidence` 的路径、字节 SHA 和大小，并将其纳入 `collection.sources`。新增原生日志→资源采集→真实 finalize→verify-only 的完整合成回归；缺失或篡改来源仍拒绝。旧制品和旧发行不改写。
 
 `0.11.1` 新增显式 `--native-provider-log-manifest ABS` 来源入口，仅与 `--source-policy bound-native-sdk` 联用，且要求精确 turn 的 runtime 投影当前为 0 行、原执行已正常完成。它核验不可变原生通知日志、来源行号/字节摘要、执行状态 SHA、thread/turn/provider session、有效 lifecycle、唯一开始/完成边界及已知 item/method；原 SDK 解析器继续核验 Prompt、最终回复、未知 call ID 和调用返回覆盖。未知形状仍拒绝。

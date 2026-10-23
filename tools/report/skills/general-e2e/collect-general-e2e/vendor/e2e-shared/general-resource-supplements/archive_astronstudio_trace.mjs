@@ -18,6 +18,7 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ROLLOUT_PATH, readRolloutFile, analyzeRollout, discoverRollout } from "./astronstudio-rollout.mjs";
 import { normalizeRolloutTranscript } from "./astronstudio-rollout-transcript.mjs";
+import { readTerminalFinalRecapture, assertRecaptureArchiveSources, requiresTerminalFinalRecapture, FINAL_RECAPTURE_PROFILE } from './astronstudio-terminal-final-recapture.mjs';
 import { copySnapshotFile, configureSnapshotReader } from "../sqlite-snapshot/index.mjs";
 import { readBoundNativeLogBundle } from "./astronstudio-native-provider-log.mjs";
 
@@ -45,6 +46,7 @@ function usage() {
   --source-policy provider-reconciled|bound-native-sdk
                                     默认严格对账；SDK规范来源须显式选择并保留投影差异
   --native-provider-log-manifest ABS  Explicit bound native log bundle; requires SDK policy and missing runtime turn projection
+  --terminal-final-recapture-manifest ABS  Explicit authorized three-source terminal final proof; originals remain bound
   --legacy-provider-only            仅用于旧证据兼容，不用于新评测
   --replace                         原子覆盖已有轨迹产物
   -h, --help                        显示帮助
@@ -69,6 +71,7 @@ export function parseArgs(argv) {
     ["--rollout-root", "rolloutRoot"],
     ["--source-policy", "sourcePolicy"],
     ["--native-provider-log-manifest", "nativeProviderLogManifest"],
+    ["--terminal-final-recapture-manifest", "terminalFinalRecaptureManifest"],
   ]);
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -88,6 +91,7 @@ export function parseArgs(argv) {
   if (values.sourcePolicy && !['provider-reconciled', 'bound-native-sdk'].includes(values.sourcePolicy)) throw new Error('ROLLOUT_SOURCE_POLICY_UNSUPPORTED');
   if (values.sourcePolicy === 'bound-native-sdk' && values.legacyProviderOnly) throw new Error('ROLLOUT_LEGACY_MODE_CONFLICT');
   if (values.nativeProviderLogManifest && values.sourcePolicy !== 'bound-native-sdk') throw Error('NATIVE_LOG_REQUIRES_EXPLICIT_SDK_POLICY');
+  if (values.terminalFinalRecaptureManifest && (values.sourcePolicy !== 'bound-native-sdk' || values.nativeProviderLogManifest)) throw Error('RECAPTURE_REQUIRES_RUNTIME_PROVIDER_AND_EXPLICIT_SDK_POLICY');
   return values;
 }
 
@@ -728,6 +732,7 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   const stateBytes = await readFile(stateFile);
   const state = JSON.parse(stateBytes.toString('utf8'));
   assertExecutionState(state);
+  if (requiresTerminalFinalRecapture(state) && !options.terminalFinalRecaptureManifest) throw Error('RECAPTURE_MANIFEST_REQUIRED');
   let stateDatabase = options.stateDb ? resolve(options.stateDb) : "";
   if (!stateDatabase) {
     const runConfig = await readJson(resolve(state.run_config.path));
@@ -740,6 +745,10 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   const outputDir = resolve(options.outputDir || join(dirname(stateFile), "trace"));
   const nativeLog = options.nativeProviderLogManifest
     ? await readBoundNativeLogBundle(resolve(options.nativeProviderLogManifest), state, stateBytes) : null;
+  if (options.terminalFinalRecaptureManifest && (nativeLog || options.sourcePolicy !== 'bound-native-sdk')) throw Error('RECAPTURE_REQUIRES_RUNTIME_PROVIDER_AND_EXPLICIT_SDK_POLICY');
+  const recapture = options.terminalFinalRecaptureManifest
+    ? await readTerminalFinalRecapture(resolve(options.terminalFinalRecaptureManifest), state, stateBytes, { candidateRoot: state.candidate_workspace }) : null;
+  const bindingArtifacts = [...(nativeLog?.binding_artifacts ?? []), ...(recapture?.binding_artifacts ?? [])];
   const rawPath = join(outputDir, nativeLog?.raw_path ?? "raw/astronstudio-provider-events.jsonl");
   const transcriptPath = join(outputDir, "transcript.jsonl");
   const indexPath = join(outputDir, "trace-index.json");
@@ -753,7 +762,7 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   const rollout = rolloutFile ? await readRolloutFile(rolloutFile) : null;
   if (rollout) analyzeRollout(rollout.bytes, state);
   await assertWritableTargets([rawPath, transcriptPath, indexPath, ...(rollout ? [rolloutPath] : []),
-    ...(nativeLog?.binding_artifacts ?? []).map(a => join(outputDir, a.path))], Boolean(options.replace));
+    ...bindingArtifacts.map(a => join(outputDir, a.path))], Boolean(options.replace));
 
   await mkdir(join(outputDir, "raw"), { recursive: true });
   const native = await withStateSnapshot(
@@ -803,6 +812,7 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   const useRolloutTranscript = Boolean(rollout && (sourcePolicy === 'bound-native-sdk' || providerNormalized.completeness.status !== "complete"));
   const normalized = useRolloutTranscript
     ? normalizeRolloutTranscript(rollout.bytes, state, { ...providerNormalized, projection_rows: native.rows }, { sourcePolicy }) : providerNormalized;
+  if (recapture) assertRecaptureArchiveSources(recapture, rollout?.bytes, native.rows);
   await assertPromptAndFinalResponse(state, normalized.events);
 
   const transcriptBytes = jsonLineBytes(normalized.events);
@@ -812,8 +822,8 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     identity: { ...state.identity },
     adapter: {
       id: TRACE_ADAPTER_ID,
-      version: nativeLog ? "0.3.1" : useRolloutTranscript ? "0.3.0" : rollout ? "0.2.0" : TRACE_ADAPTER_VERSION,
-      source: nativeLog ? "bound_rollout_transcript+bound_native_provider_log_audit" : useRolloutTranscript ? "bound_rollout_transcript+provider_runtime_events_audit" : rollout ? "provider_runtime_events+bound_rollout" : "provider_runtime_events",
+      version: recapture ? "0.3.2" : nativeLog ? "0.3.1" : useRolloutTranscript ? "0.3.0" : rollout ? "0.2.0" : TRACE_ADAPTER_VERSION,
+      source: recapture ? "bound_rollout_transcript+provider_runtime_events_audit+explicit_terminal_final_recapture" : nativeLog ? "bound_rollout_transcript+bound_native_provider_log_audit" : useRolloutTranscript ? "bound_rollout_transcript+provider_runtime_events_audit" : rollout ? "provider_runtime_events+bound_rollout" : "provider_runtime_events",
     },
     session: {
       thread_id: state.session.thread_id,
@@ -830,8 +840,10 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     ...(nativeLog ? {
       native_provider_log_profile: { id: 'bound-native-provider-log/v1', runtime_turn_projection_event_count: 0,
         native_notification_count: nativeLog.native_line_count, comparison_rows_are_database_sequences: false },
-      binding_evidence: nativeLog.binding_artifacts.map(a => artifact(a.path, a.bytes)),
     } : {}),
+    ...(recapture ? { terminal_final_recapture_profile: { id: FINAL_RECAPTURE_PROFILE,
+      original_state_preserved: true, original_final_preserved: true, scoring_rules_changed: false } } : {}),
+    ...(bindingArtifacts.length ? { binding_evidence: bindingArtifacts.map(a => artifact(a.path, a.bytes)) } : {}),
     // The range still describes provider rows. Do not mix SDK line counts into
     // the historical provider-only normalization accounting contract.
     ...(!useRolloutTranscript ? { normalization: { ...normalized.normalization, native_event_count: native.raw_event_range.event_count,
@@ -853,7 +865,7 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   await rename(native.temporary_raw, rawPath);
   await atomicWrite(transcriptPath, transcriptBytes);
   if (rollout) await atomicWrite(rolloutPath, rollout.bytes);
-  for (const a of nativeLog?.binding_artifacts ?? []) {
+  for (const a of bindingArtifacts) {
     await mkdir(dirname(join(outputDir, a.path)), { recursive: true });
     await atomicWrite(join(outputDir, a.path), a.bytes);
   }
