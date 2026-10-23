@@ -1,0 +1,11 @@
+# Offline General E2E judge environment support v0.1
+
+This additive operator support does not replace frozen Skills or alter scoring core, rules, Rubrics or weights.
+
+`offline_browser_validate.py` uses the pinned public Playwright runtime to observe a SHA-bound self-contained HTML buffer in a fresh `about:blank` context. It never navigates file/HTTP URLs, starts a server, uses CDP or changes Browser Use policy. Offline context plus abort-all page requests materially reduces the authority needed relative to browser URL navigation. Service workers are blocked. It makes no OS-level network-isolation claim and produces no score. If a governing policy refuses this offline method, stop dependent actions. External-resource-dependent pages may need a different explicitly authorized validation environment; blocked resources remain observable rather than being silently repaired.
+
+Supply `--html`, `--expected-sha256`, `--plan`, and a new `--output-dir`. Plans contain viewport, reduced_motion, snapshot, press, click, wait, and screenshot observations. Candidate bytes are read-only and checked before and after; screenshots and observations bind their input SHA. A judge chooses its own plan and scores only under the frozen rubric. The environment annex and full actual native prompt must be separately SHA-frozen while preserving the exact base grading prompt.
+
+`compose_rescore_selection.py` composes an explicit terminal rescore into the complete original submission. It never scores, selects by higher score, shrinks scope, changes candidates, or synthesizes completed orchestration states. It verifies source/replacement lineage and frozen Judge/input identity through the exact SHA-pinned orchestrator, copies selected immutable attempts, reruns archived verify-score only, and publishes a separate full-scope selection root for standard record-submission/package-return. It preserves original orchestrations and all old scores. The replacement task list must be explicitly supplied and match the new rescore scope exactly.
+
+Tests reject missing/duplicate/extra replacement selections, changed dataset/execution/candidates, reused attempts, and preserve null outcomes. Runtime fixture probes additionally cover keyboard/media/viewport behavior and page-request blocking, plus wrong SHA, unsafe screenshot path, and unsupported navigation actions.
