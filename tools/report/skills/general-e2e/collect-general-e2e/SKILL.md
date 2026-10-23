@@ -7,6 +7,8 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 
 # 采集 General E2E 证据
 
+`0.11.2` 补齐资源采集回执的绑定来源闭包：独立校验全部 `binding_evidence` 的路径、字节 SHA 和大小，并将其纳入 `collection.sources`。新增原生日志→资源采集→真实 finalize→verify-only 的完整合成回归；缺失或篡改来源仍拒绝。旧制品和旧发行不改写。
+
 `0.11.1` 新增显式 `--native-provider-log-manifest ABS` 来源入口，仅与 `--source-policy bound-native-sdk` 联用，且要求精确 turn 的 runtime 投影当前为 0 行、原执行已正常完成。它核验不可变原生通知日志、来源行号/字节摘要、执行状态 SHA、thread/turn/provider session、有效 lifecycle、唯一开始/完成边界及已知 item/method；原 SDK 解析器继续核验 Prompt、最终回复、未知 call ID 和调用返回覆盖。未知形状仍拒绝。
 
 原始通知日志、确定性派生比较视图和 SDK 分别归档；通知行号不冒充数据库 sequence，索引不填造数据库事件范围。资源使用 SDK profile 2，HTTP 尝试与未知缓存继续保持 unavailable。正式 finalize、verify-only 都复核原通知与派生视图，并检查完整绑定引用闭包。此入口须在新的源码/发行身份中显式冻结，不自动回退，不改旧证据或评分政策；仅有“没有 provider 行”的声明不能准入。

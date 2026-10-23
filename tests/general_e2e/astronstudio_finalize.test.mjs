@@ -5,6 +5,10 @@ import { chmod, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { readBoundNativeLogBundle } from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-native-provider-log.mjs';
+import { normalizeTraceRows } from '../../tools/report/e2e-shared/general-resource-supplements/archive_astronstudio_trace.mjs';
+import { normalizeRolloutTranscript } from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-rollout-transcript.mjs';
+import { collectAstronStudioResourceMetrics } from '../../tools/report/e2e-shared/general-resource-supplements/collect_astronstudio_resource_metrics.mjs';
 
 import {
   finalizeAstronStudioExecution,
@@ -217,6 +221,71 @@ function options(value) {
     processWaitMilliseconds: 0,
   };
 }
+
+test('native log resource production includes binding closure and passes real finalize plus verify-only', async () => {
+  const value = await fixture({ includeTrace: false, includeResource: false });
+  try {
+    const stateBytes = await readFile(value.statePath), state = JSON.parse(stateBytes);
+    const time = n => `2026-09-18T00:00:${String(n).padStart(2,'0')}.000Z`;
+    const notification = (id, method, payload, n) => ({ id, kind:'notification', method,
+      threadId:state.session.thread_id, turnId:state.session.turn_id,
+      providerThreadId:state.session.session_id, lifecycleGeneration:'native-life', createdAt:time(n),
+      ...(payload.item ? { itemId:payload.item.id } : {}), payload });
+    const notifications = [
+      notification('start','turn/started',{turn:{id:state.session.turn_id,status:'inProgress'}},1),
+      notification('user','item/completed',{item:{id:'user-item',type:'userMessage',content:[{text:'Do the task.\n'}]}},2),
+      notification('assistant','item/completed',{item:{id:'assistant-item',type:'agentMessage',text:'Done.'}},9),
+      notification('end','turn/completed',{turn:{id:state.session.turn_id,status:'completed',error:null}},10),
+    ];
+    const nativeBytes = Buffer.from(notifications.map(e=>`[${e.createdAt}] NTIVE: ${JSON.stringify(e)}`).join('\n')+'\n');
+    const input = join(value.root,'native-input'); await mkdir(input);
+    const nativeSource = join(input,'native.log'); await writeFile(nativeSource,nativeBytes);
+    const provenanceBytes = Buffer.from(JSON.stringify({selected_lines:4,selected_bytes_sha256:digest(nativeBytes),
+      sources:[{source_path:'/synthetic/provider.log',captured_source_sha256:digest(nativeBytes),captured_size:nativeBytes.length,selected_original_line_numbers:[1,2,3,4]}]}));
+    await writeFile(join(input,'provenance.json'),provenanceBytes);
+    const sourceManifest = {schema_version:'wildclawbench.astronstudio-native-provider-log-bundle/v1',
+      identity:state.identity,session:state.session,execution_state_sha256:digest(stateBytes),
+      native_log:{path:'native.log',sha256:digest(nativeBytes),size:nativeBytes.length},
+      provenance:{path:'provenance.json',sha256:digest(provenanceBytes),size:provenanceBytes.length}};
+    await writeJson(join(input,'manifest.json'),sourceManifest);
+    const parsed = await readBoundNativeLogBundle(join(input,'manifest.json'),state,stateBytes);
+    const r=(type,payload,n)=>({timestamp:time(n),type,payload});
+    const sdkRows = [r('session_meta',{id:state.session.session_id,cwd:state.session.cwd},0),
+      r('event_msg',{type:'task_started',turn_id:state.session.turn_id},1),
+      r('turn_context',{turn_id:state.session.turn_id,cwd:state.session.cwd},1),
+      r('event_msg',{type:'user_message',message:'Do the task.\n'},2),
+      r('event_msg',{type:'agent_message',message:'Done.'},9),
+      r('response_item',{type:'message',role:'assistant',content:[{type:'output_text',text:'Done.'}]},9),
+      r('event_msg',{type:'task_complete',turn_id:state.session.turn_id,last_agent_message:'Done.',duration_ms:9000},10)];
+    const sdkBytes=Buffer.from(sdkRows.map(e=>JSON.stringify(e)).join('\n')+'\n');
+    const provider=normalizeTraceRows(parsed.rows,state);
+    const normalized=normalizeRolloutTranscript(sdkBytes,state,{...provider,projection_rows:parsed.rows},{sourcePolicy:'bound-native-sdk'});
+    const trace=join(value.root,'fixture-input','trace');await mkdir(join(trace,'raw'),{recursive:true});
+    const transcript=Buffer.from(normalized.events.map(e=>JSON.stringify(e)).join('\n')+'\n');
+    const ref=(path,bytes)=>({path,sha256:digest(bytes),size:bytes.length});
+    await writeFile(join(trace,parsed.raw_path),nativeBytes);
+    await writeFile(join(trace,'raw/astronstudio-rollout.jsonl'),sdkBytes);
+    await writeFile(join(trace,'transcript.jsonl'),transcript);
+    for(const a of parsed.binding_artifacts){await mkdir(join(trace,'bindings'),{recursive:true});await writeFile(join(trace,a.path),a.bytes);}
+    const index={schema_id:'urn:wildclawbench:schema:general-e2e:trace-index:v1',schema_version:1,identity:state.identity,
+      adapter:{id:'astronstudio-provider-runtime-events',version:'0.3.1',source:'bound_rollout_transcript+bound_native_provider_log_audit'},
+      session:{thread_id:state.session.thread_id,turn_id:state.session.turn_id,session_id:state.session.session_id,cwd:state.session.cwd,lifecycle_generation:parsed.lifecycle_generation},
+      transcript:{...ref('transcript.jsonl',transcript),event_count:normalized.events.length},
+      raw_trace:[ref(parsed.raw_path,nativeBytes),ref('raw/astronstudio-rollout.jsonl',sdkBytes)],
+      binding_evidence:parsed.binding_artifacts.map(a=>ref(a.path,a.bytes)),
+      native_provider_log_profile:{id:'bound-native-provider-log/v1',runtime_turn_projection_event_count:0,native_notification_count:4,comparison_rows_are_database_sequences:false},
+      canonical_source_policy:{id:'bound-native-sdk-canonical/v1'},completeness:normalized.completeness,calls:normalized.calls};
+    value.indexPath=join(trace,'trace-index.json');await writeJson(value.indexPath,index);
+    value.metricsPath=join(trace,'resource-metrics.json');
+    await collectAstronStudioResourceMetrics({stateFile:value.statePath,traceIndex:value.indexPath,output:value.metricsPath});
+    const metrics=JSON.parse(await readFile(value.metricsPath,'utf8'));
+    assert.equal(metrics.collection.sources.length,7);
+    assert.equal(metrics.collection.sources.filter(s=>s.path.startsWith('trace/bindings/')).length,3);
+    const result=await finalizeAstronStudioExecution(options(value),{terminateProcesses:async()=>successfulCleanup()});
+    assert.equal(result.status,'PASS');
+    await verifyAstronStudioCollection({unitRoot:value.root,taskId:value.taskId});
+  } finally { await rm(value.root,{recursive:true,force:true}); }
+});
 
 test("CLI separates finalization from immutable verification", () => {
   assert.throws(() => parseArgs([]), /--unit-root/u);

@@ -21,7 +21,7 @@ import { verifyArchivedNativeLog } from './astronstudio-native-provider-log.mjs'
 
 export const RESOURCE_SCHEMA = "urn:wildclawbench:schema:general-e2e:resource-metrics:v1";
 export const RESOURCE_COLLECTOR = "astronstudio-provider-runtime-resource-metrics";
-export const RESOURCE_COLLECTOR_VERSION = "0.1.2";
+export const RESOURCE_COLLECTOR_VERSION = "0.1.3";
 const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 const TRACE_INDEX_SCHEMA = "urn:wildclawbench:schema:general-e2e:trace-index:v1";
 const TRACE_ADAPTER_ID = "astronstudio-provider-runtime-events";
@@ -246,6 +246,27 @@ async function readIndexedRawTrace(traceIndexPath, index) {
     throw new Error("RAW_TRACE_RANGE_MISMATCH");
   }
   return { absolute: resolved, rows, artifact: rawArtifact };
+}
+
+async function readIndexedBindingSources(traceIndexPath, index) {
+  const root = await realpath(dirname(resolve(traceIndexPath)));
+  const sources = [];
+  const seen = new Set();
+  for (const entry of index.binding_evidence ?? []) {
+    const path = safeRelativePath(entry.path);
+    if (!path.startsWith('bindings/') || seen.has(path)) throw Error('TRACE_BINDING_ARTIFACT_PATH_INVALID');
+    seen.add(path);
+    const file = resolve(root, path), actual = await realpath(file);
+    const rel = relative(root, actual);
+    if (!rel || rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) throw Error('TRACE_BINDING_ARTIFACT_OUTSIDE_ROOT');
+    const info = await lstat(file);
+    if (!info.isFile() || info.isSymbolicLink()) throw Error('TRACE_BINDING_ARTIFACT_INVALID');
+    const bytes = await readFile(file);
+    const observed = artifact(`trace/${path}`, bytes);
+    if (entry.sha256 !== observed.sha256 || entry.size !== observed.size) throw Error('TRACE_BINDING_ARTIFACT_SHA_MISMATCH');
+    sources.push(observed);
+  }
+  return sources;
 }
 
 function rawRef(row) {
@@ -631,6 +652,7 @@ export async function collectAstronStudioResourceMetrics(options) {
   const replayLegacy=options.legacyProviderOnly&&!['0.2.0','0.3.0'].includes(indexSource.value.adapter.version);
   const rollout=hasRollout?await analyzeIndexedRollout(indexSource.absolute,stateSource.value,{profileVersion:replayLegacy?1:2}):null;
   if(rollout)sources.push({...rollout.source,path:`trace/${ROLLOUT_PATH}`});
+  sources.push(...await readIndexedBindingSources(indexSource.absolute, indexSource.value));
   let document;
   if(rollout?.profile_version===2){
     const flowSubtotals={},flowCoverage={},flowSources={};
